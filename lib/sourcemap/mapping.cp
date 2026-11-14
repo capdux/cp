@@ -6,7 +6,7 @@
 import { VLQ } from "./vlq.cp";
 
 /// 单条 SourceMap v3 位置映射项（全部字段 0-based）
-export struct SourceMapping {
+pub struct SourceMapping {
     generated_line: i32 = 0,
     generated_column: i32 = 0,
     source_index: i32 = -1,
@@ -14,13 +14,13 @@ export struct SourceMapping {
     original_column: i32 = -1,
     name_index: i32 = -1,
 
-    pub fn hasOriginal(&this): bool {
-        return this.source_index >= 0 && this.original_line >= 0 && this.original_column >= 0;
+    pub fn hasOriginal(): bool {
+        return _.source_index >= 0 && _.original_line >= 0 && _.original_column >= 0;
     }
 }
 
 /// 编译期定容 SourceMap v3 映射表（支持解析 `"mappings"` VLQ 字符串与二分反查）
-export struct ParsedSourceMap<const CAP: usize> {
+pub struct ParsedSourceMap<const CAP: usize> {
     items: [CAP]SourceMapping = undefined,
     count: usize = 0,
 
@@ -102,12 +102,12 @@ export struct ParsedSourceMap<const CAP: usize> {
     }
 
     /// 根据生成代码的 0-based (line, column) 查找最匹配的原始映射项
-    pub fn findMapping(&this, gen_line: i32, gen_col: i32): SourceMapping? {
+    pub fn findMapping(gen_line: i32, gen_col: i32): SourceMapping? {
         let best_idx: usize = 0;
         let found = false;
         let i: usize = 0;
-        while (i < this.count) {
-            let item = this.items[i];
+        while (i < _.count) {
+            let item = _.items[i];
             if (item.generated_line == gen_line && item.generated_column <= gen_col) {
                 best_idx = i;
                 found = true;
@@ -115,7 +115,7 @@ export struct ParsedSourceMap<const CAP: usize> {
             i += 1;
         }
         if (found) {
-            return this.items[best_idx];
+            return _.items[best_idx];
         }
         return null;
     }

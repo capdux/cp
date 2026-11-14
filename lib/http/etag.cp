@@ -1,6 +1,5 @@
 // lib/http/etag.cp
 // HTTP ETag and If-None-Match evaluation in CP
-const std = @import("std");
 
 pub const ParsedETag = struct {
     tag: []const u8,
@@ -9,8 +8,8 @@ pub const ParsedETag = struct {
 
 pub const ETag = struct {
     pub fn parse(tag_str: []const u8): ParsedETag {
-        var str = std.mem.trim(u8, tag_str, " \t");
-        var is_weak = false;
+        let str = std.mem.trim(u8, tag_str, " \t");
+        let is_weak = false;
         if (std.mem.startsWith(u8, str, "W/")) {
             is_weak = true;
             str = str[2..];
@@ -31,7 +30,7 @@ pub const ETag = struct {
             return true;
         }
 
-        var iter = std.mem.splitScalar(u8, if_none_match, ',');
+        let iter = std.mem.splitScalar(u8, if_none_match, ',');
         while (iter.next()) |tag_str| {
             const parsed = parse(tag_str);
             if (std.mem.eql(u8, our_parsed.tag, parsed.tag)) {

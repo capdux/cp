@@ -2,15 +2,14 @@
 // High-performance IPv4 / IPv6 SocketAddress representation & parser
 // Absorbed from Bun src/runtime/socket/SocketAddress.cp and src/uws/uws.cp
 
-const std = @import("std");
 
-export enum AddressFamily: u8 {
+pub enum AddressFamily: u8 {
     INET = 4,
     INET6 = 6,
 }
 
-export struct Ipv4Addr {
-    pub octets: [4]u8 = [0, 0, 0, 0];
+pub struct Ipv4Addr {
+    octets: [4]u8 = [0, 0, 0, 0];
 
     pub static fn init(a: u8, b: u8, c: u8, d: u8): Ipv4Addr {
         return Ipv4Addr { octets: [a, b, c, d] };
@@ -29,12 +28,12 @@ export struct Ipv4Addr {
     }
 
     pub static fn parse(text: []const u8): Ipv4Addr? {
-        var result: [4]u8 = [0, 0, 0, 0];
-        var part_idx: usize = 0;
-        var current: u32 = 0;
-        var has_digit: bool = false;
+        let result: [4]u8 = [0, 0, 0, 0];
+        let part_idx: usize = 0;
+        let current: u32 = 0;
+        let has_digit: bool = false;
 
-        var i: usize = 0;
+        let i: usize = 0;
         while (i < text.len) {
             const ch = text[i];
             if (ch >= 48 && ch <= 57) {
@@ -64,36 +63,36 @@ export struct Ipv4Addr {
         return Ipv4Addr { octets: result };
     }
 
-    pub fn isLoopback(&this): bool {
-        return this.octets[0] == 127;
+    pub fn isLoopback(): bool {
+        return _.octets[0] == 127;
     }
 
-    pub fn isUnspecified(&this): bool {
-        return this.octets[0] == 0 && this.octets[1] == 0 && this.octets[2] == 0 && this.octets[3] == 0;
+    pub fn isUnspecified(): bool {
+        return _.octets[0] == 0 && _.octets[1] == 0 && _.octets[2] == 0 && _.octets[3] == 0;
     }
 
-    pub fn isPrivate(&this): bool {
-        if (this.octets[0] == 10) {
+    pub fn isPrivate(): bool {
+        if (_.octets[0] == 10) {
             return true;
         }
-        if (this.octets[0] == 172 && this.octets[1] >= 16 && this.octets[1] <= 31) {
+        if (_.octets[0] == 172 && _.octets[1] >= 16 && _.octets[1] <= 31) {
             return true;
         }
-        if (this.octets[0] == 192 && this.octets[1] == 168) {
+        if (_.octets[0] == 192 && _.octets[1] == 168) {
             return true;
         }
         return false;
     }
 
-    pub fn isMulticast(&this): bool {
-        return this.octets[0] >= 224 && this.octets[0] <= 239;
+    pub fn isMulticast(): bool {
+        return _.octets[0] >= 224 && _.octets[0] <= 239;
     }
 
-    pub fn toU32(&this): u32 {
-        const b0 = (this.octets[0] as u32) << 24;
-        const b1 = (this.octets[1] as u32) << 16;
-        const b2 = (this.octets[2] as u32) << 8;
-        const b3 = this.octets[3] as u32;
+    pub fn toU32(): u32 {
+        const b0 = (_.octets[0] as u32) << 24;
+        const b1 = (_.octets[1] as u32) << 16;
+        const b2 = (_.octets[2] as u32) << 8;
+        const b3 = _.octets[3] as u32;
         return b0 | b1 | b2 | b3;
     }
 
@@ -109,8 +108,8 @@ export struct Ipv4Addr {
     }
 }
 
-export struct Ipv6Addr {
-    pub segments: [8]u16 = [0, 0, 0, 0, 0, 0, 0, 0];
+pub struct Ipv6Addr {
+    segments: [8]u16 = [0, 0, 0, 0, 0, 0, 0, 0];
 
     pub static fn loopback(): Ipv6Addr {
         return Ipv6Addr { segments: [0, 0, 0, 0, 0, 0, 0, 1] };
@@ -126,21 +125,21 @@ export struct Ipv6Addr {
         return Ipv6Addr { segments: [0, 0, 0, 0, 0, 0xFFFF, hi, lo] };
     }
 
-    pub fn isLoopback(&this): bool {
-        return this.segments[0] == 0 &&
-            this.segments[1] == 0 &&
-            this.segments[2] == 0 &&
-            this.segments[3] == 0 &&
-            this.segments[4] == 0 &&
-            this.segments[5] == 0 &&
-            this.segments[6] == 0 &&
-            this.segments[7] == 1;
+    pub fn isLoopback(): bool {
+        return _.segments[0] == 0 &&
+            _.segments[1] == 0 &&
+            _.segments[2] == 0 &&
+            _.segments[3] == 0 &&
+            _.segments[4] == 0 &&
+            _.segments[5] == 0 &&
+            _.segments[6] == 0 &&
+            _.segments[7] == 1;
     }
 
-    pub fn isUnspecified(&this): bool {
-        var i: usize = 0;
+    pub fn isUnspecified(): bool {
+        let i: usize = 0;
         while (i < 8) {
-            if (this.segments[i] != 0) {
+            if (_.segments[i] != 0) {
                 return false;
             }
             i += 1;
@@ -148,23 +147,23 @@ export struct Ipv6Addr {
         return true;
     }
 
-    pub fn isIpv4Mapped(&this): bool {
-        return this.segments[0] == 0 &&
-            this.segments[1] == 0 &&
-            this.segments[2] == 0 &&
-            this.segments[3] == 0 &&
-            this.segments[4] == 0 &&
-            this.segments[5] == 0xFFFF;
+    pub fn isIpv4Mapped(): bool {
+        return _.segments[0] == 0 &&
+            _.segments[1] == 0 &&
+            _.segments[2] == 0 &&
+            _.segments[3] == 0 &&
+            _.segments[4] == 0 &&
+            _.segments[5] == 0xFFFF;
     }
 }
 
-export struct SocketAddress {
-    pub family: AddressFamily = AddressFamily.INET;
-    pub ipv4: Ipv4Addr = Ipv4Addr {};
-    pub ipv6: Ipv6Addr = Ipv6Addr {};
-    pub port: u16 = 0;
-    pub flowlabel: u32 = 0;
-    pub scope_id: u32 = 0;
+pub struct SocketAddress {
+    family: AddressFamily = AddressFamily.INET;
+    ipv4: Ipv4Addr = Ipv4Addr {};
+    ipv6: Ipv6Addr = Ipv6Addr {};
+    port: u16 = 0;
+    flowlabel: u32 = 0;
+    scope_id: u32 = 0;
 
     pub static fn v4(addr: Ipv4Addr, port: u16): SocketAddress {
         return SocketAddress {
@@ -203,12 +202,12 @@ export struct SocketAddress {
         return null;
     }
 
-    pub fn isIPv6(&this): bool {
-        return this.family == AddressFamily.INET6;
+    pub fn isIPv6(): bool {
+        return _.family == AddressFamily.INET6;
     }
 
-    pub fn socklen(&this): u32 {
-        if (this.family == AddressFamily.INET6) {
+    pub fn socklen(): u32 {
+        if (_.family == AddressFamily.INET6) {
             return 28;
         }
         return 16;

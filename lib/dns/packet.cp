@@ -3,7 +3,7 @@
 
 import { NSClass, NSType } from "./_cares.cp";
 
-export enum DnsRCode: u8 {
+pub enum DnsRCode: u8 {
     NoError = 0,
     FormErr = 1,
     ServFail = 2,
@@ -13,55 +13,55 @@ export enum DnsRCode: u8 {
 }
 
 // RFC 1035 Section 4.1.1 12-byte DNS Wire Header
-export struct DnsHeader {
-    pub id: u16 = 0;
-    pub is_response: bool = false;
-    pub opcode: u8 = 0;
-    pub authoritative: bool = false;
-    pub truncated: bool = false;
-    pub recursion_desired: bool = true;
-    pub recursion_available: bool = false;
-    pub rcode: DnsRCode = .NoError;
-    pub qd_count: u16 = 1;
-    pub an_count: u16 = 0;
-    pub ns_count: u16 = 0;
-    pub ar_count: u16 = 0;
+pub struct DnsHeader {
+    id: u16 = 0;
+    is_response: bool = false;
+    opcode: u8 = 0;
+    authoritative: bool = false;
+    truncated: bool = false;
+    recursion_desired: bool = true;
+    recursion_available: bool = false;
+    rcode: DnsRCode = .NoError;
+    qd_count: u16 = 1;
+    an_count: u16 = 0;
+    ns_count: u16 = 0;
+    ar_count: u16 = 0;
 
-    pub fn encode(this, out: []u8): usize {
+    pub fn encode(out: []u8): usize {
         if (out.len < 12) {
             return 0;
         }
-        out[0] = (this.id >> 8) as u8;
-        out[1] = (this.id & 0xFF) as u8;
+        out[0] = (_.id >> 8) as u8;
+        out[1] = (_.id & 0xFF) as u8;
 
-        let flags_hi: u8 = (this.opcode & 0x0F) << 3;
-        if (this.is_response) {
+        let flags_hi: u8 = (_.opcode & 0x0F) << 3;
+        if (_.is_response) {
             flags_hi = flags_hi | 0x80;
         }
-        if (this.authoritative) {
+        if (_.authoritative) {
             flags_hi = flags_hi | 0x04;
         }
-        if (this.truncated) {
+        if (_.truncated) {
             flags_hi = flags_hi | 0x02;
         }
-        if (this.recursion_desired) {
+        if (_.recursion_desired) {
             flags_hi = flags_hi | 0x01;
         }
-        let flags_lo: u8 = (this.rcode as u8) & 0x0F;
-        if (this.recursion_available) {
+        let flags_lo: u8 = (_.rcode as u8) & 0x0F;
+        if (_.recursion_available) {
             flags_lo = flags_lo | 0x80;
         }
         out[2] = flags_hi;
         out[3] = flags_lo;
 
-        out[4] = (this.qd_count >> 8) as u8;
-        out[5] = (this.qd_count & 0xFF) as u8;
-        out[6] = (this.an_count >> 8) as u8;
-        out[7] = (this.an_count & 0xFF) as u8;
-        out[8] = (this.ns_count >> 8) as u8;
-        out[9] = (this.ns_count & 0xFF) as u8;
-        out[10] = (this.ar_count >> 8) as u8;
-        out[11] = (this.ar_count & 0xFF) as u8;
+        out[4] = (_.qd_count >> 8) as u8;
+        out[5] = (_.qd_count & 0xFF) as u8;
+        out[6] = (_.an_count >> 8) as u8;
+        out[7] = (_.an_count & 0xFF) as u8;
+        out[8] = (_.ns_count >> 8) as u8;
+        out[9] = (_.ns_count & 0xFF) as u8;
+        out[10] = (_.ar_count >> 8) as u8;
+        out[11] = (_.ar_count & 0xFF) as u8;
         return 12;
     }
 
@@ -98,12 +98,12 @@ export struct DnsHeader {
     }
 }
 
-export struct DecodedDomain {
-    pub name_len: usize = 0;
-    pub packet_bytes_consumed: usize = 0;
+pub struct DecodedDomain {
+    name_len: usize = 0;
+    packet_bytes_consumed: usize = 0;
 }
 
-export struct DnsWireCodec {
+pub struct DnsWireCodec {
     // Encodes "api.cap.dev" -> "\x03api\x03cap\x03dev\x00"
     pub static fn encodeDomainName(domain: []const u8, out: []u8): usize {
         if (domain.len == 0 || domain.len > 253) {

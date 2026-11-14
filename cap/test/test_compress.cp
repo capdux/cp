@@ -14,7 +14,7 @@ import {
     RleCodec
 } from "cap:compress";
 
-fn main(): void {
+fn main() {
     test("1. CompressionFormat negotiation & CompressBoundEstimator", () => {
         expect_eq(Z_MIN_WBITS, 8);
         expect_eq(Z_MAX_WBITS, 15);
@@ -65,7 +65,7 @@ fn main(): void {
 
         let parsed_opt = GzipHeader.parse(hdr_buf[0..10]);
         expect_eq(parsed_opt != null, true);
-        if (parsed_opt) |parsed| {
+        if (parsed := parsed_opt) {
             expect_eq(parsed.flags, GZIP_FNAME);
             expect_eq(parsed.mtime, 1700000000 as u32);
             expect_eq(parsed.xfl, 2 as u8);

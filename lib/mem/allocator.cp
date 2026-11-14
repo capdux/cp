@@ -2,27 +2,27 @@
 // High-performance Arena, StackFallbackAllocator, BumpArena, MaybeOwnedBuf, and SharedTensor
 // Absorbed from bun/src/bun_alloc/ (BufferFallbackAllocator, MaxHeapAllocator, maybe_owned, MimallocArena)
 
-export class Arena {
-    pub fn alloc(this, size: usize): *! {
+pub class Arena {
+    pub fn alloc(size: usize): *! {
         return @alloc(size);
     }
-    pub fn free(this): void {
+    pub fn free() {
         @free();
     }
 }
 
-export fn get_arena(): Arena {
+pub fn get_arena(): Arena {
     return @get_arena();
 }
 
-export class SharedTensor {
+pub class SharedTensor {
     pub size: usize = 0;
     pub ref_count: usize = 0;
     pub ptr: [*]u8! = undefined;
 
-    pub fn init(*this, size: usize): void {
-        this.size = size;
-        this.ref_count = 1;
+    pub fn init(*_, size: usize) {
+        _.size = size;
+        _.ref_count = 1;
         if (size > 0) {
             zig {
                 const buf = std.heap.page_allocator.alloc(u8, size) catch unreachable;
@@ -32,16 +32,16 @@ export class SharedTensor {
         }
     }
 
-    pub fn retain(*this): void {
-        if (this.ref_count > 0) {
+    pub fn retain(*_) {
+        if (_.ref_count > 0) {
             zig {
                 _ = @atomicRmw(usize, &self.ref_count, .Add, 1, .monotonic);
             }
         }
     }
 
-    pub fn release(*this): void {
-        if (this.ref_count == 0) {
+    pub fn release(*_) {
+        if (_.ref_count == 0) {
             return;
         }
         let prev: usize = 0;
@@ -58,18 +58,18 @@ export class SharedTensor {
         }
     }
 
-    pub fn get_size(this): usize {
-        return this.size;
+    pub fn get_size(): usize {
+        return _.size;
     }
 
-    pub fn get_ref_count(this): usize {
-        return this.ref_count;
+    pub fn get_ref_count(): usize {
+        return _.ref_count;
     }
 }
 
 // Stack-first allocator with seamless fallback to heap when stack capacity is exceeded
 // (Absorbed from bun/src/bun_alloc/BufferFallbackAllocator.cp)
-export struct StackFallbackAllocator<const CAP: usize> {
+pub struct StackFallbackAllocator<const CAP: usize> {
     buffer: [CAP]u8 = undefined;
     stack_used: usize = 0;
     heap_allocs: usize = 0;
@@ -84,34 +84,34 @@ export struct StackFallbackAllocator<const CAP: usize> {
         };
     }
 
-    pub fn allocStack(*this, len: usize): ([]u8)? {
-        if (this.stack_used + len > CAP) {
+    pub fn allocStack(*_, len: usize): ([]u8)? {
+        if (_.stack_used + len > CAP) {
             return null;
         }
-        const start = this.stack_used;
-        this.stack_used += len;
-        return this.buffer[start .. start + len];
+        const start = _.stack_used;
+        _.stack_used += len;
+        return _.buffer[start .. start + len];
     }
 
-    pub fn recordFallback(*this, len: usize): void {
-        this.heap_allocs += 1;
-        this.heap_bytes += len;
+    pub fn recordFallback(*_, len: usize) {
+        _.heap_allocs += 1;
+        _.heap_bytes += len;
     }
 
-    pub fn stackRemaining(this): usize {
-        return CAP - this.stack_used;
+    pub fn stackRemaining(): usize {
+        return CAP - _.stack_used;
     }
 
-    pub fn reset(*this): void {
-        this.stack_used = 0;
+    pub fn reset(*_) {
+        _.stack_used = 0;
     }
 }
 
 // Contiguous region bump allocator (Absorbed from bun/src/bun_alloc/MaxHeapAllocator.cp)
-export struct BumpArena {
-    pub ptr: [*]u8! = undefined;
-    pub cap: usize = 0;
-    pub offset: usize = 0;
+pub struct BumpArena {
+    ptr: [*]u8! = undefined;
+    cap: usize = 0;
+    offset: usize = 0;
 
     pub static fn initCapacity(capacity: usize): BumpArena {
         const cap = if (capacity == 0) 4096 else capacity;
@@ -125,12 +125,12 @@ export struct BumpArena {
         }
     }
 
-    pub fn allocBytes(*this, len: usize): ([]u8)? {
-        if (this.offset + len > this.cap) {
+    pub fn allocBytes(*_, len: usize): ([]u8)? {
+        if (_.offset + len > _.cap) {
             return null;
         }
-        const start = this.offset;
-        this.offset += len;
+        const start = _.offset;
+        _.offset += len;
         let out: []u8 = &[];
         zig {
             out = self.ptr[start .. start + len];
@@ -138,13 +138,13 @@ export struct BumpArena {
         return out;
     }
 
-    pub fn allocAligned(*this, len: usize, align_pow2: usize): ([]u8)? {
+    pub fn allocAligned(*_, len: usize, align_pow2: usize): ([]u8)? {
         const mask = align_pow2 - 1;
-        const aligned_offset = (this.offset + mask) & ~mask;
-        if (aligned_offset + len > this.cap) {
+        const aligned_offset = (_.offset + mask) & ~mask;
+        if (aligned_offset + len > _.cap) {
             return null;
         }
-        this.offset = aligned_offset + len;
+        _.offset = aligned_offset + len;
         let out: []u8 = &[];
         zig {
             out = self.ptr[aligned_offset .. aligned_offset + len];
@@ -152,19 +152,19 @@ export struct BumpArena {
         return out;
     }
 
-    pub fn used(this): usize {
-        return this.offset;
+    pub fn used(): usize {
+        return _.offset;
     }
 
-    pub fn remaining(this): usize {
-        return this.cap - this.offset;
+    pub fn remaining(): usize {
+        return _.cap - _.offset;
     }
 
-    pub fn reset(*this): void {
-        this.offset = 0;
+    pub fn reset(*_) {
+        _.offset = 0;
     }
 
-    pub fn release(*this): void {
+    pub fn release(*_) {
         zig {
             if (self.cap > 0) {
                 std.heap.page_allocator.free(self.ptr[0..self.cap]);
@@ -176,7 +176,7 @@ export struct BumpArena {
 }
 
 // Ownership-aware buffer wrapper (Absorbed from bun/src/bun_alloc/maybe_owned.cp)
-export struct MaybeOwnedBuf {
+pub struct MaybeOwnedBuf {
     data: []const u8 = &[];
     owned: bool = false;
 
@@ -198,25 +198,25 @@ export struct MaybeOwnedBuf {
         };
     }
 
-    pub fn isOwned(this): bool {
-        return this.owned;
+    pub fn isOwned(): bool {
+        return _.owned;
     }
 
-    pub fn slice(this): []const u8 {
-        return this.data;
+    pub fn slice(): []const u8 {
+        return _.data;
     }
 
-    pub fn len(this): usize {
-        return this.data.len;
+    pub fn len(): usize {
+        return _.data.len;
     }
 
-    pub fn release(*this): void {
-        if (this.owned && this.data.len > 0) {
+    pub fn release(*_) {
+        if (_.owned && _.data.len > 0) {
             zig {
                 std.heap.page_allocator.free(self.data);
             }
         }
-        this.data = &[];
-        this.owned = false;
+        _.data = &[];
+        _.owned = false;
     }
 }

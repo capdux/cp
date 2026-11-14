@@ -2,14 +2,14 @@
 // PicoHTTPParser C-FFI declarations & zero-copy HTTP/1.x request/response wire parser
 // Absorbed from bun/src/picohttp_sys/picohttpparser.cp & bun/src/picohttp/picohttp.cp
 
-export @c struct phr_header {
-    pub name: [*]const u8! = undefined;
-    pub name_len: usize = 0;
-    pub value: [*]const u8! = undefined;
-    pub value_len: usize = 0;
+pub @c struct phr_header {
+    name: [*]const u8! = undefined;
+    name_len: usize = 0;
+    value: [*]const u8! = undefined;
+    value_len: usize = 0;
 }
 
-export enum ChunkedEncodingState: u8 {
+pub enum ChunkedEncodingState: u8 {
     CHUNKED_IN_CHUNK_SIZE = 0,
     CHUNKED_IN_CHUNK_EXT = 1,
     CHUNKED_IN_CHUNK_DATA = 2,
@@ -18,11 +18,11 @@ export enum ChunkedEncodingState: u8 {
     CHUNKED_IN_TRAILERS_LINE_MIDDLE = 5,
 }
 
-export @c struct phr_chunked_decoder {
-    pub bytes_left_in_chunk: usize = 0;
-    pub consume_trailer: u8 = 0;
-    pub _hex_count: u8 = 0;
-    pub _state: u8 = 0;
+pub @c struct phr_chunked_decoder {
+    bytes_left_in_chunk: usize = 0;
+    consume_trailer: u8 = 0;
+    _hex_count: u8 = 0;
+    _state: u8 = 0;
 
     pub static fn init(bytes_left: usize, consume_trailer: u8, state: ChunkedEncodingState): phr_chunked_decoder {
         const st_val = state as u8;
@@ -37,8 +37,8 @@ export @c struct phr_chunked_decoder {
     }
 }
 
-@c {
-    pub fn phr_parse_request(
+pub @c {
+    fn phr_parse_request(
         buf: [*]const u8!,
         len: usize,
         method: *([*]const u8!),
@@ -51,7 +51,7 @@ export @c struct phr_chunked_decoder {
         last_len: usize
     ): i32;
 
-    pub fn phr_parse_response(
+    fn phr_parse_response(
         buf: [*]const u8!,
         len: usize,
         minor_version: *i32!,
@@ -63,7 +63,7 @@ export @c struct phr_chunked_decoder {
         last_len: usize
     ): i32;
 
-    pub fn phr_parse_headers(
+    fn phr_parse_headers(
         buf: [*]const u8!,
         len: usize,
         headers: [*]phr_header!,
@@ -71,40 +71,40 @@ export @c struct phr_chunked_decoder {
         last_len: usize
     ): i32;
 
-    pub fn phr_decode_chunked(
+    fn phr_decode_chunked(
         decoder: *phr_chunked_decoder!,
         buf: [*]u8!,
         bufsz: *usize!
     ): isize;
 
-    pub fn phr_decode_chunked_is_in_data(
+    fn phr_decode_chunked_is_in_data(
         decoder: *phr_chunked_decoder!
     ): i32;
 }
 
-export struct PicoHeader {
-    pub name: []const u8 = "";
-    pub value: []const u8 = "";
+pub struct PicoHeader {
+    name: []const u8 = "";
+    value: []const u8 = "";
 
-    pub fn isMultiline(this): bool {
-        return this.name.len == 0;
+    pub fn isMultiline(*_): bool {
+        return _.name.len == 0;
     }
 }
 
-export struct PicoRequest {
-    pub method: []const u8 = "";
-    pub path: []const u8 = "";
-    pub minor_version: i32 = 1;
-    pub header_count: usize = 0;
-    pub bytes_read: usize = 0;
+pub struct PicoRequest {
+    method: []const u8 = "";
+    path: []const u8 = "";
+    minor_version: i32 = 1;
+    header_count: usize = 0;
+    bytes_read: usize = 0;
 }
 
-export struct PicoResponse {
-    pub minor_version: i32 = 1;
-    pub status: i32 = 200;
-    pub message: []const u8 = "";
-    pub header_count: usize = 0;
-    pub bytes_read: usize = 0;
+pub struct PicoResponse {
+    minor_version: i32 = 1;
+    status: i32 = 200;
+    message: []const u8 = "";
+    header_count: usize = 0;
+    bytes_read: usize = 0;
 }
 
 fn trimSpaces(s: []const u8): []const u8 {
@@ -142,7 +142,7 @@ fn eqlIgnoreCase(a: []const u8, b: []const u8): bool {
 }
 
 // Zero-copy HTTP/1.x request & response header wire parser
-export struct PicoHttpParser {
+pub struct PicoHttpParser {
     // Returns PicoRequest on complete headers, or null if incomplete/malformed
     pub static fn parseRequest(buf: []const u8, out_headers: []PicoHeader): PicoRequest? {
         if (buf.len < 14) {

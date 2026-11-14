@@ -1,7 +1,6 @@
 // lib/crypto/hash.cp
 // High-performance cryptographic hashing (SHA256, SHA512, SHA1, MD5)
 
-const std = @import("std");
 
 pub enum HashAlgorithm {
     Sha256,
@@ -9,7 +8,7 @@ pub enum HashAlgorithm {
     Sha1,
     Md5,
 
-    pub static fn fromString(str: []const u8): ?HashAlgorithm {
+    static fn fromString(str: []const u8): HashAlgorithm? {
         if (std.mem.eql(u8, str, "sha256") or std.mem.eql(u8, str, "SHA256")) return HashAlgorithm.Sha256;
         if (std.mem.eql(u8, str, "sha512") or std.mem.eql(u8, str, "SHA512")) return HashAlgorithm.Sha512;
         if (std.mem.eql(u8, str, "sha1") or std.mem.eql(u8, str, "SHA1")) return HashAlgorithm.Sha1;
@@ -19,7 +18,7 @@ pub enum HashAlgorithm {
 }
 
 pub fn sha256(data: string): string {
-    var out: [32]u8 = undefined;
+    let out: [32]u8 = undefined;
     std.crypto.hash.sha2.Sha256.hash(data, &out, .{});
     const hex = std.fmt.bytesToHex(out, .lower);
     const res = std.heap.page_allocator.alloc(u8, 64) catch unreachable;
@@ -28,7 +27,7 @@ pub fn sha256(data: string): string {
 }
 
 pub fn sha512(data: string): string {
-    var out: [64]u8 = undefined;
+    let out: [64]u8 = undefined;
     std.crypto.hash.sha2.Sha512.hash(data, &out, .{});
     const hex = std.fmt.bytesToHex(out, .lower);
     const res = std.heap.page_allocator.alloc(u8, 128) catch unreachable;
@@ -37,7 +36,7 @@ pub fn sha512(data: string): string {
 }
 
 pub fn sha1(data: string): string {
-    var out: [20]u8 = undefined;
+    let out: [20]u8 = undefined;
     std.crypto.hash.Sha1.hash(data, &out, .{});
     const hex = std.fmt.bytesToHex(out, .lower);
     const res = std.heap.page_allocator.alloc(u8, 40) catch unreachable;
@@ -46,7 +45,7 @@ pub fn sha1(data: string): string {
 }
 
 pub fn md5(data: string): string {
-    var out: [16]u8 = undefined;
+    let out: [16]u8 = undefined;
     std.crypto.hash.Md5.hash(data, &out, .{});
     const hex = std.fmt.bytesToHex(out, .lower);
     const res = std.heap.page_allocator.alloc(u8, 32) catch unreachable;
@@ -54,7 +53,7 @@ pub fn md5(data: string): string {
     return res;
 }
 
-export class Hash {
+pub class Hash {
     algo: HashAlgorithm = HashAlgorithm.Sha256;
     h256: std.crypto.hash.sha2.Sha256 = undefined;
     h512: std.crypto.hash.sha2.Sha512 = undefined;
@@ -74,45 +73,45 @@ export class Hash {
         return h;
     }
 
-    pub fn update(mut self: *Hash, data: string): *Hash {
-        switch (self.algo) {
-            .Sha256 => { self.h256.update(data); },
-            .Sha512 => { self.h512.update(data); },
-            .Sha1 => { self.h1.update(data); },
-            .Md5 => { self.hmd5.update(data); },
+    pub fn update(*_, data: string): *Hash {
+        switch (_.algo) {
+            .Sha256 => { _.h256.update(data); },
+            .Sha512 => { _.h512.update(data); },
+            .Sha1 => { _.h1.update(data); },
+            .Md5 => { _.hmd5.update(data); },
         }
-        return self;
+        return _;
     }
 
-    pub fn digest(mut self: *Hash): string {
-        switch (self.algo) {
+    pub fn digest(*_): string {
+        switch (_.algo) {
             .Sha256 => {
-                var out: [32]u8 = undefined;
-                self.h256.final(&out);
+                let out: [32]u8 = undefined;
+                _.h256.final(&out);
                 const hex = std.fmt.bytesToHex(out, .lower);
                 const res = std.heap.page_allocator.alloc(u8, 64) catch unreachable;
                 @memcpy(res, hex[0..64]);
                 return res;
             },
             .Sha512 => {
-                var out: [64]u8 = undefined;
-                self.h512.final(&out);
+                let out: [64]u8 = undefined;
+                _.h512.final(&out);
                 const hex = std.fmt.bytesToHex(out, .lower);
                 const res = std.heap.page_allocator.alloc(u8, 128) catch unreachable;
                 @memcpy(res, hex[0..128]);
                 return res;
             },
             .Sha1 => {
-                var out: [20]u8 = undefined;
-                self.h1.final(&out);
+                let out: [20]u8 = undefined;
+                _.h1.final(&out);
                 const hex = std.fmt.bytesToHex(out, .lower);
                 const res = std.heap.page_allocator.alloc(u8, 40) catch unreachable;
                 @memcpy(res, hex[0..40]);
                 return res;
             },
             .Md5 => {
-                var out: [16]u8 = undefined;
-                self.hmd5.final(&out);
+                let out: [16]u8 = undefined;
+                _.hmd5.final(&out);
                 const hex = std.fmt.bytesToHex(out, .lower);
                 const res = std.heap.page_allocator.alloc(u8, 32) catch unreachable;
                 @memcpy(res, hex[0..32]);
@@ -122,7 +121,7 @@ export class Hash {
     }
 }
 
-pub fn createHash(algo: string): ?*Hash {
+pub fn createHash(algo: string): (*Hash)? {
     const parsed = HashAlgorithm.fromString(algo);
     if (parsed == null) {
         return null;

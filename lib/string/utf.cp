@@ -4,15 +4,15 @@
 
 import { SimdScanner } from "./simd_scan.cp";
 
-export const REPLACEMENT_CHAR: u32 = 0xFFFD;
+pub const REPLACEMENT_CHAR: u32 = 0xFFFD;
 
-export struct DecodeResult {
-    pub codepoint: u32 = 0xFFFD;
-    pub bytes_consumed: u8 = 1;
-    pub valid: bool = false;
+pub struct DecodeResult {
+    codepoint: u32 = 0xFFFD;
+    bytes_consumed: u8 = 1;
+    valid: bool = false;
 }
 
-export struct Utf8 {
+pub struct Utf8 {
     // Returns 1..4 for valid UTF-8 leading byte, or 0 for invalid / continuation byte
     pub static fn sequenceLength(lead: u8): u8 {
         if (lead < 0x80) {
@@ -165,7 +165,7 @@ export struct Utf8 {
     }
 }
 
-export struct Utf16 {
+pub struct Utf16 {
     // Computes exact UTF-16 code unit length from UTF-8 input (matching Bun elementLengthUTF8IntoUTF16)
     pub static fn utf16LengthFromUtf8(input: []const u8): usize {
         let u16_len: usize = 0;
@@ -245,7 +245,7 @@ export struct Utf16 {
 }
 
 // Terminal & East-Asian visible display width (absorbed from bun/src/string/immutable/visible.zig & unicode/uucode)
-export struct UnicodeWidth {
+pub struct UnicodeWidth {
     pub static fn codepointWidth(cp: u32): usize {
         if (cp == 0) {
             return 0;

@@ -1,8 +1,7 @@
 // Atomic reference-counted slice in CP
 // Enables zero-copy, lock-free, immutable data sharing across threads and actors
-const std = @import("std");
 
-export fn ArcSlice(comptime T: type): type {
+pub fn ArcSlice(comptime T: type): type {
     const Header = struct {
         ref_count: std.atomic.Value(usize),
         allocator: std.mem.Allocator,
@@ -11,8 +10,8 @@ export fn ArcSlice(comptime T: type): type {
     return struct {
         const Self = @This();
 
-        items: []T = &.{},
-        header: ?*Header = null,
+        items: []T = [],
+        header: (*Header)? = null,
 
         pub fn init(allocator: std.mem.Allocator, data: []const T): !Self {
             const hdr = try allocator.create(Header);
@@ -33,48 +32,48 @@ export fn ArcSlice(comptime T: type): type {
             };
         }
 
-        pub fn clone(self: *const Self): Self {
-            if (self.header) |hdr| {
-                _ = hdr.ref_count.fetchAdd(1, .monotonic);
+        pub fn clone(*_): Self {
+            if (hdr := _.header) {
+                * = hdr.ref_count.fetchAdd(1, .monotonic);
             }
             return Self{
-                .items = self.items,
-                .header = self.header,
+                .items = _.items,
+                .header = _.header,
             };
         }
 
-        pub fn release(self: *Self): void {
-            if (self.header) |hdr| {
-                self.header = null;
+        pub fn release(*_) {
+            if (hdr := _.header) {
+                _.header = null;
                 if (hdr.ref_count.fetchSub(1, .acq_rel) == 1) {
-                    hdr.allocator.free(self.items);
+                    hdr.allocator.free(_.items);
                     hdr.allocator.destroy(hdr);
                 }
             }
         }
 
-        pub fn deinit(self: *Self): void {
-            self.release();
+        pub fn deinit(*_) {
+            _.release();
         }
 
-        pub fn slice(self: *const Self): []const T {
-            return self.items;
+        pub fn slice(*_): []const T {
+            return _.items;
         }
 
-        pub fn len(self: *const Self): usize {
-            return self.items.len;
+        pub fn len(*_): usize {
+            return _.items.len;
         }
 
-        pub fn refCount(self: *const Self): usize {
-            if (self.header) |hdr| {
+        pub fn refCount(*_): usize {
+            if (hdr := _.header) {
                 return hdr.ref_count.load(.monotonic);
             }
             return 0;
         }
 
-        pub fn get(self: *const Self, index: usize): ?T {
-            if (index >= self.items.len) return null;
-            return self.items[index];
+        pub fn get(*_, index: usize): T? {
+            if (index >= _.items.len) return null;
+            return _.items[index];
         }
     };
 }

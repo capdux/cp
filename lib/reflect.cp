@@ -3,25 +3,25 @@
  * Zero-cost introspection & metadata reflection
  */
 
-export class FieldInfo {
+pub class FieldInfo {
     name: string;
     typeName: string;
-    meta: any;
+    meta: *!;
 }
 
-export class MethodInfo {
+pub class MethodInfo {
     name: string;
     returnTypeName: string;
     paramNames: Array<string>;
     isAsync: bool;
     isStatic: bool;
-    meta: any;
+    meta: *!;
 }
 
-export class TypeInfo {
+pub class TypeInfo {
     name: string;
     isRef: bool;
     fields: Array<FieldInfo>;
     methods: Array<MethodInfo>;
-    meta: any;
+    meta: *!;
 }

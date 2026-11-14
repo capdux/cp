@@ -1,15 +1,14 @@
 // lib/glob/matcher.cp
 // High-performance Unix Glob matcher in CP
-const std = @import("std");
 
 pub const Matcher = struct {
     pub fn hasMagic(pattern: []const u8): bool {
-        var i: usize = 0;
+        let i: usize = 0;
         while (i < pattern.len) : (i += 1) {
             const c = pattern[i];
             if (c == '*' or c == '?' or c == '[' or c == '{' or c == '!') {
-                var backslashes: usize = 0;
-                var j = i;
+                let backslashes: usize = 0;
+                let j = i;
                 while (j > 0 and pattern[j - 1] == '\\') {
                     backslashes += 1;
                     j -= 1;
@@ -21,16 +20,16 @@ pub const Matcher = struct {
     }
 
     pub fn match(pattern: []const u8, path: []const u8): bool {
-        var pat = pattern;
-        var negated = false;
+        let pat = pattern;
+        let negated = false;
         while (pat.len > 0 and pat[0] == '!') {
             negated = !negated;
             pat = pat[1..];
         }
 
-        var pat_segs: [32][]const u8 = undefined;
-        var pat_count: usize = 0;
-        var iter_pat = std.mem.splitScalar(u8, pat, '/');
+        let pat_segs: [32][]const u8 = undefined;
+        let pat_count: usize = 0;
+        let iter_pat = std.mem.splitScalar(u8, pat, '/');
         while (iter_pat.next()) |s| {
             if (s.len == 0) continue;
             if (pat_count < 32) {
@@ -39,9 +38,9 @@ pub const Matcher = struct {
             }
         }
 
-        var path_segs: [32][]const u8 = undefined;
-        var path_count: usize = 0;
-        var iter_path = std.mem.splitScalar(u8, path, '/');
+        let path_segs: [32][]const u8 = undefined;
+        let path_count: usize = 0;
+        let iter_path = std.mem.splitScalar(u8, path, '/');
         while (iter_path.next()) |s| {
             if (s.len == 0) continue;
             if (path_count < 32) {
@@ -61,7 +60,7 @@ pub const Matcher = struct {
 
         if (std.mem.eql(u8, pat[0], "**")) {
             // ** matches 0 or more segments
-            var i: usize = 0;
+            let i: usize = 0;
             while (i <= p.len) : (i += 1) {
                 if (matchSegments(pat[1..], p[i..])) {
                     return true;
@@ -82,29 +81,29 @@ pub const Matcher = struct {
     }
 
     fn matchSingleSegment(pat: []const u8, str: []const u8): bool {
-        var p: usize = 0;
-        var s: usize = 0;
-        var star_p: ?usize = null;
-        var star_s: usize = 0;
+        let p: usize = 0;
+        let s: usize = 0;
+        let star_p: usize? = null;
+        let star_s: usize = 0;
 
         while (s < str.len) {
             if (p < pat.len and pat[p] == '?') {
                 p += 1;
                 s += 1;
             } else if (p < pat.len and pat[p] == '[') {
-                var close_idx: ?usize = null;
-                var k = p + 1;
+                let close_idx: usize? = null;
+                let k = p + 1;
                 while (k < pat.len) : (k += 1) {
                     if (pat[k] == ']') {
                         close_idx = k;
                         break;
                     }
                 }
-                if (close_idx) |c_idx| {
+                if (c_idx := close_idx) {
                     if (matchCharClass(pat[p + 1 .. c_idx], str[s])) {
                         p = c_idx + 1;
                         s += 1;
-                    } else if (star_p) |sp| {
+                    } else if (sp := star_p) {
                         star_s += 1;
                         s = star_s;
                         p = sp;
@@ -124,7 +123,7 @@ pub const Matcher = struct {
             } else if (p < pat.len and pat[p] == str[s]) {
                 p += 1;
                 s += 1;
-            } else if (star_p) |sp| {
+            } else if (sp := star_p) {
                 star_s += 1;
                 s = star_s;
                 p = sp;
@@ -141,15 +140,15 @@ pub const Matcher = struct {
     }
 
     fn matchCharClass(content: []const u8, c: u8): bool {
-        var inverted = false;
-        var s = content;
+        let inverted = false;
+        let s = content;
         if (s.len > 0 and (s[0] == '!' or s[0] == '^')) {
             inverted = true;
             s = s[1..];
         }
 
-        var matched = false;
-        var i: usize = 0;
+        let matched = false;
+        let i: usize = 0;
         while (i < s.len) {
             if (i + 2 < s.len and s[i + 1] == '-') {
                 const start = s[i];

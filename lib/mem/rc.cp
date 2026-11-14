@@ -1,13 +1,13 @@
 // lib/mem/rc.cp
 // Deterministic Reference Counting & Weak Control Block (absorbed from bun/src/ptr/raw_ref_count.cp, ref_count.cp, weak_ptr.cp)
 
-export enum DecrementResult {
+pub enum DecrementResult {
     KeepAlive,
     ShouldDestroy,
 }
 
 // Single-threaded deterministic reference counter
-export struct RefCounter {
+pub struct RefCounter {
     raw_value: u32 = 1;
 
     pub static fn init(initial_count: u32): RefCounter {
@@ -16,30 +16,30 @@ export struct RefCounter {
         };
     }
 
-    pub fn increment(*this): u32 {
-        this.raw_value += 1;
-        return this.raw_value;
+    pub fn increment(*_): u32 {
+        _.raw_value += 1;
+        return _.raw_value;
     }
 
-    pub fn decrement(*this): DecrementResult {
-        this.raw_value -= 1;
-        if (this.raw_value == 0) {
+    pub fn decrement(*_): DecrementResult {
+        _.raw_value -= 1;
+        if (_.raw_value == 0) {
             return .ShouldDestroy;
         }
         return .KeepAlive;
     }
 
-    pub fn count(this): u32 {
-        return this.raw_value;
+    pub fn count(): u32 {
+        return _.raw_value;
     }
 
-    pub fn isUnique(this): bool {
-        return this.raw_value == 1;
+    pub fn isUnique(*_): bool {
+        return _.raw_value == 1;
     }
 }
 
 // Thread-safe atomic reference counter
-export struct AtomicRefCounter {
+pub struct AtomicRefCounter {
     raw_value: u32 = 1;
 
     pub static fn init(initial_count: u32): AtomicRefCounter {
@@ -48,7 +48,7 @@ export struct AtomicRefCounter {
         };
     }
 
-    pub fn increment(*this): u32 {
+    pub fn increment(*_): u32 {
         let prev: u32 = 0;
         zig {
             prev = @atomicRmw(u32, &self.raw_value, .Add, 1, .monotonic);
@@ -56,7 +56,7 @@ export struct AtomicRefCounter {
         return prev + 1;
     }
 
-    pub fn decrement(*this): DecrementResult {
+    pub fn decrement(*_): DecrementResult {
         let prev: u32 = 0;
         zig {
             prev = @atomicRmw(u32, &self.raw_value, .Sub, 1, .acq_rel);
@@ -67,7 +67,7 @@ export struct AtomicRefCounter {
         return .KeepAlive;
     }
 
-    pub fn count(this): u32 {
+    pub fn count(): u32 {
         let cur: u32 = 0;
         zig {
             cur = @atomicLoad(u32, &self.raw_value, .monotonic);
@@ -77,7 +77,7 @@ export struct AtomicRefCounter {
 }
 
 // Weak reference control block (Absorbed from bun/src/ptr/weak_ptr.cp)
-export struct WeakControlBlock {
+pub struct WeakControlBlock {
     strong_count: u32 = 1;
     weak_count: u32 = 0;
     finalized: bool = false;
@@ -90,46 +90,46 @@ export struct WeakControlBlock {
         };
     }
 
-    pub fn incStrong(*this): bool {
-        if (this.finalized || this.strong_count == 0) {
+    pub fn incStrong(*_): bool {
+        if (_.finalized || _.strong_count == 0) {
             return false;
         }
-        this.strong_count += 1;
+        _.strong_count += 1;
         return true;
     }
 
-    pub fn decStrong(*this): DecrementResult {
-        this.strong_count -= 1;
-        if (this.strong_count == 0) {
-            this.finalized = true;
+    pub fn decStrong(*_): DecrementResult {
+        _.strong_count -= 1;
+        if (_.strong_count == 0) {
+            _.finalized = true;
             return .ShouldDestroy;
         }
         return .KeepAlive;
     }
 
-    pub fn incWeak(*this): u32 {
-        this.weak_count += 1;
-        return this.weak_count;
+    pub fn incWeak(*_): u32 {
+        _.weak_count += 1;
+        return _.weak_count;
     }
 
-    pub fn decWeak(*this): bool {
-        this.weak_count -= 1;
-        return this.finalized && this.weak_count == 0;
+    pub fn decWeak(*_): bool {
+        _.weak_count -= 1;
+        return _.finalized && _.weak_count == 0;
     }
 
-    pub fn isAlive(this): bool {
-        return !this.finalized && this.strong_count > 0;
+    pub fn isAlive(): bool {
+        return !_.finalized && _.strong_count > 0;
     }
 
-    pub fn canDeallocate(this): bool {
-        return this.finalized && this.strong_count == 0 && this.weak_count == 0;
+    pub fn canDeallocate(*_): bool {
+        return _.finalized && _.strong_count == 0 && _.weak_count == 0;
     }
 
-    pub fn strongCount(this): u32 {
-        return this.strong_count;
+    pub fn strongCount(): u32 {
+        return _.strong_count;
     }
 
-    pub fn weakCount(this): u32 {
-        return this.weak_count;
+    pub fn weakCount(): u32 {
+        return _.weak_count;
     }
 }

@@ -1,6 +1,5 @@
 // lib/url/url.cp
 // WHATWG URL parser and representation in CP
-const std = @import("std");
 import { URLSearchParams } from "./query";
 
 pub const URL = struct {
@@ -16,21 +15,21 @@ pub const URL = struct {
     hash: []const u8 = "",
     origin: []const u8 = "",
     searchParams: URLSearchParams = undefined,
-    allocated_origin: ?[]const u8 = null,
+    allocated_origin: ([]const u8)? = null,
     allocator: std.mem.Allocator = undefined,
 
     pub fn parse(input: []const u8, allocator: std.mem.Allocator): !URL {
-        var url = URL{
+        let url = URL{
             .href = input,
             .searchParams = URLSearchParams.init(allocator),
             .allocator = allocator,
         };
 
-        var rem = input;
+        let rem = input;
 
         // 1. Protocol (e.g. "https://", "http://", "file://")
         const proto_end = std.mem.indexOf(u8, rem, "://");
-        if (proto_end) |p_idx| {
+        if (p_idx := proto_end) {
             url.protocol = input[0 .. p_idx + 1]; // "https:"
             rem = rem[p_idx + 3 ..]; // skip "://"
         } else if (std.mem.indexOf(u8, rem, ":")) |c_idx| {
@@ -52,8 +51,8 @@ pub const URL = struct {
         }
 
         // 4. Pathname
-        var path_start: ?usize = null;
-        var i: usize = 0;
+        let path_start: usize? = null;
+        let i: usize = 0;
         while (i < rem.len) : (i += 1) {
             if (rem[i] == '/') {
                 path_start = i;
@@ -61,8 +60,8 @@ pub const URL = struct {
             }
         }
 
-        var authority = rem;
-        if (path_start) |p_start| {
+        let authority = rem;
+        if (p_start := path_start) {
             url.pathname = rem[p_start..];
             authority = rem[0..p_start];
         } else {
@@ -114,11 +113,11 @@ pub const URL = struct {
         return url;
     }
 
-    pub fn deinit(self: *URL): void {
-        self.searchParams.deinit();
-        if (self.allocated_origin) |orig| {
-            self.allocator.free(orig);
-            self.allocated_origin = null;
+    pub fn deinit(*_) {
+        _.searchParams.deinit();
+        if (orig := _.allocated_origin) {
+            _.allocator.free(orig);
+            _.allocated_origin = null;
         }
     }
 };

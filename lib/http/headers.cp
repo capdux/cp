@@ -1,6 +1,5 @@
 // lib/http/headers.cp
 // High-performance case-insensitive HTTP Headers collection
-const std = @import("std");
 
 pub const HeaderEntry = struct {
     name: []const u8,
@@ -9,7 +8,7 @@ pub const HeaderEntry = struct {
 
 pub const Headers = struct {
     entries: [32]HeaderEntry = undefined,
-    dynamic_entries: ?[]HeaderEntry = null,
+    dynamic_entries: ([]HeaderEntry)? = null,
     len: usize = 0,
     allocator: std.mem.Allocator = undefined,
 
@@ -22,22 +21,22 @@ pub const Headers = struct {
         };
     }
 
-    pub fn deinit(self: *Headers): void {
-        if (self.dynamic_entries) |dyn| {
-            self.allocator.free(dyn);
-            self.dynamic_entries = null;
+    pub fn deinit(*_) {
+        if (dyn := _.dynamic_entries) {
+            _.allocator.free(dyn);
+            _.dynamic_entries = null;
         }
-        self.len = 0;
+        _.len = 0;
     }
 
-    pub fn count(self: *const Headers): usize {
-        return self.len;
+    pub fn count(*_): usize {
+        return _.len;
     }
 
-    pub fn get(self: *const Headers, name: []const u8): ?[]const u8 {
-        var i: usize = 0;
-        while (i < self.len) : (i += 1) {
-            const entry = if (self.dynamic_entries) |dyn| dyn[i] else self.entries[i];
+    pub fn get(*_, name: []const u8): ([]const u8)? {
+        let i: usize = 0;
+        while (i < _.len) : (i += 1) {
+            const entry = if (dyn := _.dynamic_entries) dyn[i] else _.entries[i];
             if (std.ascii.eqlIgnoreCase(entry.name, name)) {
                 return entry.value;
             }
@@ -45,85 +44,85 @@ pub const Headers = struct {
         return null;
     }
 
-    pub fn has(self: *const Headers, name: []const u8): bool {
-        return self.get(name) != null;
+    pub fn has(*_, name: []const u8): bool {
+        return _.get(name) != null;
     }
 
-    pub fn set(self: *Headers, name: []const u8, value: []const u8) void {
-        var i: usize = 0;
-        while (i < self.len) : (i += 1) {
-            if (self.dynamic_entries) |dyn| {
+    pub fn set(*_, name: []const u8, value: []const u8) {
+        let i: usize = 0;
+        while (i < _.len) : (i += 1) {
+            if (dyn := _.dynamic_entries) {
                 if (std.ascii.eqlIgnoreCase(dyn[i].name, name)) {
                     dyn[i].value = value;
                     return;
                 }
             } else {
-                if (std.ascii.eqlIgnoreCase(self.entries[i].name, name)) {
-                    self.entries[i].value = value;
+                if (std.ascii.eqlIgnoreCase(_.entries[i].name, name)) {
+                    _.entries[i].value = value;
                     return;
                 }
             }
         }
-        self.append(name, value);
+        _.append(name, value);
     }
 
-    pub fn append(self: *Headers, name: []const u8, value: []const u8) void {
-        if (self.len < 32 and self.dynamic_entries == null) {
-            self.entries[self.len] = HeaderEntry{ .name = name, .value = value };
-            self.len += 1;
+    pub fn append(*_, name: []const u8, value: []const u8) {
+        if (_.len < 32 and _.dynamic_entries == null) {
+            _.entries[_.len] = HeaderEntry{ .name = name, .value = value };
+            _.len += 1;
             return;
         }
-        if (self.dynamic_entries == null) {
-            const new_slice = self.allocator.alloc(HeaderEntry, 64) catch return;
-            var i: usize = 0;
-            while (i < self.len) : (i += 1) {
-                new_slice[i] = self.entries[i];
+        if (_.dynamic_entries == null) {
+            const new_slice = _.allocator.alloc(HeaderEntry, 64) catch return;
+            let i: usize = 0;
+            while (i < _.len) : (i += 1) {
+                new_slice[i] = _.entries[i];
             }
-            new_slice[self.len] = HeaderEntry{ .name = name, .value = value };
-            self.dynamic_entries = new_slice;
-            self.len += 1;
-        } else if (self.dynamic_entries) |dyn| {
-            if (self.len < dyn.len) {
-                dyn[self.len] = HeaderEntry{ .name = name, .value = value };
-                self.len += 1;
+            new_slice[_.len] = HeaderEntry{ .name = name, .value = value };
+            _.dynamic_entries = new_slice;
+            _.len += 1;
+        } else if (dyn := _.dynamic_entries) {
+            if (_.len < dyn.len) {
+                dyn[_.len] = HeaderEntry{ .name = name, .value = value };
+                _.len += 1;
             } else {
-                const new_slice = self.allocator.realloc(dyn, dyn.len * 2) catch return;
-                new_slice[self.len] = HeaderEntry{ .name = name, .value = value };
-                self.dynamic_entries = new_slice;
-                self.len += 1;
+                const new_slice = _.allocator.realloc(dyn, dyn.len * 2) catch return;
+                new_slice[_.len] = HeaderEntry{ .name = name, .value = value };
+                _.dynamic_entries = new_slice;
+                _.len += 1;
             }
         }
     }
 
-    pub fn delete(self: *Headers, name: []const u8) void {
-        var i: usize = 0;
-        while (i < self.len) {
-            const matches = if (self.dynamic_entries) |dyn|
+    pub fn delete(*_, name: []const u8) {
+        let i: usize = 0;
+        while (i < _.len) {
+            const matches = if (dyn := _.dynamic_entries)
                 std.ascii.eqlIgnoreCase(dyn[i].name, name)
             else
-                std.ascii.eqlIgnoreCase(self.entries[i].name, name);
+                std.ascii.eqlIgnoreCase(_.entries[i].name, name);
 
             if (matches) {
-                var j = i;
-                while (j + 1 < self.len) : (j += 1) {
-                    if (self.dynamic_entries) |dyn| {
+                let j = i;
+                while (j + 1 < _.len) : (j += 1) {
+                    if (dyn := _.dynamic_entries) {
                         dyn[j] = dyn[j + 1];
                     } else {
-                        self.entries[j] = self.entries[j + 1];
+                        _.entries[j] = _.entries[j + 1];
                     }
                 }
-                self.len -= 1;
+                _.len -= 1;
             } else {
                 i += 1;
             }
         }
     }
 
-    pub fn at(self: *const Headers, index: usize): ?HeaderEntry {
-        if (index >= self.len) return null;
-        if (self.dynamic_entries) |dyn| {
+    pub fn at(*_, index: usize): HeaderEntry? {
+        if (index >= _.len) return null;
+        if (dyn := _.dynamic_entries) {
             return dyn[index];
         }
-        return self.entries[index];
+        return _.entries[index];
     }
 };

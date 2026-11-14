@@ -250,7 +250,7 @@ impl<'a> Parser<'a> {
                 return;
             }
         }
-        if self.errors.len() < 50 {
+        if self.errors.len() < 200 {
             self.errors.push(diag);
         }
     }
@@ -370,7 +370,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse_module(&mut self) -> ParseResult<Module> {
+    pub fn parse_module_with_recovery(&mut self) -> (Module, Vec<Diagnostic>) {
         let mut body = Vec::new();
         let start = self.peek_span().start;
         while self.peek().is_some() {
@@ -389,13 +389,21 @@ impl<'a> Parser<'a> {
             }
         }
         let end = self.peek_span().end;
-        if !self.errors.is_empty() {
-            return Err(ParseError::Multiple(self.errors.clone()));
+        (
+            Module {
+                span: Span { start, end },
+                body,
+            },
+            self.errors.clone(),
+        )
+    }
+
+    pub fn parse_module(&mut self) -> ParseResult<Module> {
+        let (module, errors) = self.parse_module_with_recovery();
+        if !errors.is_empty() {
+            return Err(ParseError::Multiple(errors));
         }
-        Ok(Module {
-            span: Span { start, end },
-            body,
-        })
+        Ok(module)
     }
 
     fn clone_lookahead(&self) -> Parser<'a> {
@@ -812,6 +820,18 @@ impl<'a> Parser<'a> {
                 self.expect(Token::LBrace)?;
                 let mut items = Vec::new();
                 while self.peek() != Some(&Token::RBrace) && self.peek().is_some() {
+                    let mut item_meta = self.parse_meta_list()?;
+                    let mut item_is_pub = is_pub;
+                    while self.peek() == Some(&Token::Export)
+                        || self.peek() == Some(&Token::Private)
+                    {
+                        if self.peek() == Some(&Token::Export) {
+                            item_is_pub = true;
+                        } else {
+                            item_is_pub = false;
+                        }
+                        self.bump()?;
+                    }
                     if matches!(self.peek(), Some(Token::StringLiteral(_))) {
                         let (tok, span) = self.bump()?;
                         if let Token::StringLiteral(header) = tok {
@@ -825,16 +845,59 @@ impl<'a> Parser<'a> {
                                 self.bump()?;
                             }
                         }
+                    } else if self.peek() == Some(&Token::TypeKw) {
+                        let start_ta = self.bump()?.1.start;
+                        let ident = self.parse_ident()?;
+                        self.expect(Token::Assign)?;
+                        let target_ty = self.parse_type()?;
+                        if self.peek() == Some(&Token::Semicolon) {
+                            self.bump()?;
+                        }
+                        let end_ta = self.peek_span().start;
+                        items.push(ModuleItem::Decl(Decl::TypeAlias(TypeAliasDecl {
+                            span: Span {
+                                start: start_ta,
+                                end: end_ta,
+                            },
+                            ident,
+                            target_ty,
+                            is_pub: item_is_pub,
+                        })));
+                    } else if matches!(
+                        self.peek(),
+                        Some(Token::Struct | Token::Union | Token::Class)
+                    ) {
+                        let mut cls = self.parse_class()?;
+                        cls.is_pub = item_is_pub;
+                        if !cls
+                            .meta
+                            .iter()
+                            .any(|m| m.name.sym == "extern" || m.name.sym == "opaque")
+                        {
+                            cls.meta.push(MetaItem {
+                                span: c_ident.span,
+                                name: Ident {
+                                    span: c_ident.span,
+                                    sym: "extern".to_string(),
+                                },
+                                args: vec![],
+                            });
+                        }
+                        cls.meta.extend(item_meta);
+                        items.push(ModuleItem::Decl(Decl::Class(cls)));
+                    } else if self.peek() == Some(&Token::Enum) {
+                        let mut en = self.parse_enum()?;
+                        en.meta.extend(item_meta);
+                        items.push(ModuleItem::Decl(Decl::Enum(en)));
                     } else if matches!(
                         self.peek(),
                         Some(Token::Const) | Some(Token::Var) | Some(Token::Let)
                     ) {
                         let mut v = self.parse_var_decl()?;
                         v.is_c = true;
-                        v.is_extern = true;
-                        if is_pub {
-                            v.is_pub = true;
-                        }
+                        v.is_extern =
+                            v.init.is_none() || matches!(v.init, Some(Expr::Lit(Lit::Undefined)));
+                        v.is_pub = item_is_pub;
                         items.push(ModuleItem::Stmt(Stmt::Var(v)));
                     } else if matches!(self.peek(), Some(Token::Ident(s)) if s == "extern")
                         && matches!(
@@ -849,15 +912,12 @@ impl<'a> Parser<'a> {
                         let mut v = self.parse_var_decl()?;
                         v.is_c = true;
                         v.is_extern = true;
-                        if is_pub {
-                            v.is_pub = true;
-                        }
+                        v.is_pub = item_is_pub;
                         items.push(ModuleItem::Stmt(Stmt::Var(v)));
                     } else {
                         let mut f = self.parse_function()?;
-                        if is_pub {
-                            f.is_pub = true;
-                        }
+                        f.is_pub = item_is_pub;
+                        f.meta.append(&mut item_meta);
                         if !f.meta.iter().any(|m| m.name.sym == "c") {
                             f.meta.push(MetaItem {
                                 span: c_ident.span,
@@ -1299,7 +1359,7 @@ impl<'a> Parser<'a> {
         self.expect(Token::Fn)?;
         let ident = self.parse_ident()?;
         let generic_params = self.parse_generic_params()?;
-        let params = self.parse_params()?;
+        let mut params = self.parse_params()?;
         let mut return_type = None;
         if self.peek() == Some(&Token::Bang) {
             self.bump()?;
@@ -1329,13 +1389,58 @@ impl<'a> Parser<'a> {
                 return_type = Some(Type::ErrorUnion(Box::new(ok_ty)));
             }
         } else if self.peek() == Some(&Token::Colon) || self.peek() == Some(&Token::Arrow) {
-            self.bump()?;
-            return_type = Some(self.parse_type()?);
+            let (_, colon_span) = self.bump()?;
+            let ret_start = self.peek_span().start;
+            let ty = self.parse_type()?;
+            let ret_end = self.prev_token_end.max(ret_start);
+            if ty == Type::Void {
+                self.push_error(
+                    Diagnostic::new("E0122", "redundant ': void' return type annotation")
+                        .with_span(Span {
+                            start: colon_span.start,
+                            end: ret_end,
+                        })
+                        .with_cause("in CP, functions with no return value default to 'void' when the return type is omitted.")
+                        .with_help("omit ': void' from all void functions (including '@c' extern declarations) to keep signatures concise.")
+                        .with_suggestion("remove ': void'"),
+                );
+            }
+            return_type = Some(ty);
         } else if self.peek().map(Self::is_type_start).unwrap_or(false)
             && self.peek() != Some(&Token::LBrace)
             && self.peek() != Some(&Token::Semicolon)
         {
-            return_type = Some(self.parse_type()?);
+            let ret_start = self.peek_span().start;
+            let ty = self.parse_type()?;
+            let ret_end = self.prev_token_end.max(ret_start);
+            if ty == Type::Void {
+                self.push_error(
+                    Diagnostic::new("E0122", "redundant 'void' return type annotation")
+                        .with_span(Span {
+                            start: ret_start,
+                            end: ret_end,
+                        })
+                        .with_cause("in CP, functions with no return value default to 'void' when the return type is omitted.")
+                        .with_help("omit 'void' from all void functions to keep signatures concise.")
+                        .with_suggestion("remove 'void'"),
+                );
+            } else {
+                self.push_error(
+                    Diagnostic::new("E0116", "missing ':' before function return type")
+                        .with_span(Span {
+                            start: ret_start,
+                            end: ret_end,
+                        })
+                        .with_cause("Zig-style bare return type without ':' is abolished in CP.")
+                        .with_help("in CP, all non-void function return types must be preceded by ':' (e.g. 'fn foo(): ReturnType').")
+                        .with_suggestion(format!(
+                            "insert ':' before the return type: 'fn {}(...): {}'",
+                            ident.sym,
+                            Self::type_to_str(&ty)
+                        )),
+                );
+            }
+            return_type = Some(ty);
         }
 
         let body;
@@ -1348,6 +1453,67 @@ impl<'a> Parser<'a> {
             body = self.parse_block_stmt()?;
             end = body.span.end;
         }
+
+        // Check receiver & auto-deduce mutable value copy vs mutable reference for 'v: *T'
+        if let Some(first) = params.first() {
+            if first.ident.sym == "self" || first.ident.sym == "this" {
+                let mutates_rec = Self::block_mutates_receiver(&body) || ident.sym == "init";
+                let suggestion = if first.is_move {
+                    format!(
+                        "replace '{}' with 'move _' and access members via '_.'",
+                        first.ident.sym
+                    )
+                } else if mutates_rec {
+                    format!("receiver is mutated in '{}'; replace '{}' with '*_' and access members via '_.'", ident.sym, first.ident.sym)
+                } else {
+                    format!("receiver is read-only in '{}'; omit '{}' from parameter list and access members via '_.'", ident.sym, first.ident.sym)
+                };
+                self.push_error(
+                    Diagnostic::new(
+                        "E0121",
+                        format!("abolished receiver '{}' in method '{}'", first.ident.sym, ident.sym),
+                    )
+                    .with_span(first.span)
+                    .with_cause("Zig 'self' and TypeScript 'this' are abolished in CP to enforce a single unified receiver syntax.")
+                    .with_help("in CP, omit the receiver for read-only methods, use '*_' for mutable methods, or 'move _' for consuming methods, and access instance members via '_.field'.")
+                    .with_suggestion(suggestion),
+                );
+            }
+        } else if let Some((bad_sym, bad_span)) = Self::block_find_ident_span(&body, "self")
+            .or_else(|| Self::block_find_ident_span(&body, "this"))
+        {
+            self.push_error(
+                Diagnostic::new(
+                    "E0121",
+                    format!("abolished receiver '{}' in function/method '{}'", bad_sym, ident.sym),
+                )
+                .with_span(bad_span)
+                .with_cause("Zig 'self' and TypeScript 'this' are abolished in CP.")
+                .with_help("in CP, access current instance members via '_.' instead of 'self.' or 'this.'.")
+                .with_suggestion(format!("replace '{}' with '_'", bad_sym)),
+            );
+        }
+
+        if !body.body.is_empty() {
+            for p in &mut params {
+                if p.ident.sym != "_" && p.ident.sym != "self" && p.ident.sym != "this" {
+                    if let Type::BorrowType {
+                        inner,
+                        is_mut: true,
+                        ..
+                    } = &p.ty
+                    {
+                        if Self::block_assigns_ident_directly(&body, &p.ident.sym)
+                            && !Self::block_derefs_ident(&body, &p.ident.sym)
+                        {
+                            p.ty = (**inner).clone();
+                            p.is_mut = true;
+                        }
+                    }
+                }
+            }
+        }
+
         Ok(Function {
             span: Span { start, end },
             ident,
@@ -1361,6 +1527,257 @@ impl<'a> Parser<'a> {
             meta,
             is_pub,
         })
+    }
+
+    fn block_assigns_ident_directly(block: &BlockStmt, target: &str) -> bool {
+        block
+            .body
+            .iter()
+            .any(|s| Self::stmt_assigns_ident_directly(s, target))
+    }
+
+    fn stmt_assigns_ident_directly(stmt: &Stmt, target: &str) -> bool {
+        match stmt {
+            Stmt::Expr(e) => Self::expr_assigns_ident_directly(e, target),
+            Stmt::Block(b)
+            | Stmt::UnsafeBlock(b)
+            | Stmt::ArenaBlock(b)
+            | Stmt::ComptimeBlock(b) => Self::block_assigns_ident_directly(b, target),
+            Stmt::If(i) => {
+                Self::expr_assigns_ident_directly(&i.test, target)
+                    || Self::stmt_assigns_ident_directly(&i.cons, target)
+                    || i.alt
+                        .as_ref()
+                        .map_or(false, |a| Self::stmt_assigns_ident_directly(a, target))
+            }
+            Stmt::While(w) => {
+                Self::expr_assigns_ident_directly(&w.test, target)
+                    || w.continue_expr
+                        .as_ref()
+                        .map_or(false, |c| Self::expr_assigns_ident_directly(c, target))
+                    || Self::stmt_assigns_ident_directly(&w.body, target)
+            }
+            Stmt::For(f) => Self::stmt_assigns_ident_directly(&f.body, target),
+            Stmt::Match(m) => m
+                .arms
+                .iter()
+                .any(|a| Self::stmt_assigns_ident_directly(&a.body, target)),
+            Stmt::Defer(s) | Stmt::ErrDefer(s) => Self::stmt_assigns_ident_directly(s, target),
+            Stmt::TryCatch {
+                try_block,
+                catch_body,
+                ..
+            } => {
+                Self::block_assigns_ident_directly(try_block, target)
+                    || catch_body
+                        .as_ref()
+                        .map_or(false, |c| Self::stmt_assigns_ident_directly(c, target))
+            }
+            _ => false,
+        }
+    }
+
+    fn expr_assigns_ident_directly(expr: &Expr, target: &str) -> bool {
+        match expr {
+            Expr::Bin(bin) => {
+                if bin.op == BinaryOp::Assign {
+                    if let Expr::Ident(id) = &*bin.left {
+                        if id.sym == target {
+                            return true;
+                        }
+                    }
+                }
+                Self::expr_assigns_ident_directly(&bin.left, target)
+                    || Self::expr_assigns_ident_directly(&bin.right, target)
+            }
+            Expr::LabeledBlock { block, .. }
+            | Expr::Unsafe(block)
+            | Expr::Arena(block)
+            | Expr::Comptime(block) => Self::block_assigns_ident_directly(block, target),
+            _ => false,
+        }
+    }
+
+    fn block_derefs_ident(block: &BlockStmt, target: &str) -> bool {
+        block
+            .body
+            .iter()
+            .any(|s| Self::stmt_derefs_ident(s, target))
+    }
+
+    fn stmt_derefs_ident(stmt: &Stmt, target: &str) -> bool {
+        match stmt {
+            Stmt::Expr(e) => Self::expr_derefs_ident(e, target),
+            Stmt::Var(v) => v
+                .init
+                .as_ref()
+                .map_or(false, |e| Self::expr_derefs_ident(e, target)),
+            Stmt::Return(r) => r
+                .arg
+                .as_ref()
+                .map_or(false, |e| Self::expr_derefs_ident(e, target)),
+            Stmt::Block(b)
+            | Stmt::UnsafeBlock(b)
+            | Stmt::ArenaBlock(b)
+            | Stmt::ComptimeBlock(b) => Self::block_derefs_ident(b, target),
+            Stmt::If(i) => {
+                Self::expr_derefs_ident(&i.test, target)
+                    || Self::stmt_derefs_ident(&i.cons, target)
+                    || i.alt
+                        .as_ref()
+                        .map_or(false, |a| Self::stmt_derefs_ident(a, target))
+            }
+            Stmt::While(w) => {
+                Self::expr_derefs_ident(&w.test, target) || Self::stmt_derefs_ident(&w.body, target)
+            }
+            Stmt::For(f) => Self::stmt_derefs_ident(&f.body, target),
+            Stmt::Match(m) => m
+                .arms
+                .iter()
+                .any(|a| Self::stmt_derefs_ident(&a.body, target)),
+            _ => false,
+        }
+    }
+
+    fn expr_derefs_ident(expr: &Expr, target: &str) -> bool {
+        match expr {
+            Expr::Deref(inner) => {
+                if let Expr::Ident(id) = &**inner {
+                    if id.sym == target {
+                        return true;
+                    }
+                }
+                Self::expr_derefs_ident(inner, target)
+            }
+            Expr::Bin(bin) => {
+                Self::expr_derefs_ident(&bin.left, target)
+                    || Self::expr_derefs_ident(&bin.right, target)
+            }
+            Expr::Call(c) | Expr::OptCall(c) | Expr::New(c) => {
+                Self::expr_derefs_ident(&c.callee, target)
+                    || c.args.iter().any(|a| Self::expr_derefs_ident(a, target))
+            }
+            Expr::Member(m) | Expr::OptMember(m) => Self::expr_derefs_ident(&m.obj, target),
+            Expr::Index { obj, index } => {
+                Self::expr_derefs_ident(obj, target) || Self::expr_derefs_ident(index, target)
+            }
+            Expr::LabeledBlock { block, .. }
+            | Expr::Unsafe(block)
+            | Expr::Arena(block)
+            | Expr::Comptime(block) => Self::block_derefs_ident(block, target),
+            _ => false,
+        }
+    }
+
+    fn block_mutates_receiver(block: &BlockStmt) -> bool {
+        block.body.iter().any(Self::stmt_mutates_receiver)
+    }
+
+    fn stmt_mutates_receiver(stmt: &Stmt) -> bool {
+        match stmt {
+            Stmt::Expr(e) => Self::expr_mutates_receiver(e),
+            Stmt::Block(b)
+            | Stmt::UnsafeBlock(b)
+            | Stmt::ArenaBlock(b)
+            | Stmt::ComptimeBlock(b) => Self::block_mutates_receiver(b),
+            Stmt::If(i) => {
+                Self::stmt_mutates_receiver(&i.cons)
+                    || i.alt
+                        .as_ref()
+                        .map_or(false, |a| Self::stmt_mutates_receiver(a))
+            }
+            Stmt::While(w) => Self::stmt_mutates_receiver(&w.body),
+            Stmt::For(f) => Self::stmt_mutates_receiver(&f.body),
+            Stmt::Match(m) => m.arms.iter().any(|a| Self::stmt_mutates_receiver(&a.body)),
+            _ => false,
+        }
+    }
+
+    fn expr_is_receiver_root(expr: &Expr) -> bool {
+        match expr {
+            Expr::Ident(id) => id.sym == "_" || id.sym == "self" || id.sym == "this",
+            Expr::Deref(inner) => Self::expr_is_receiver_root(inner),
+            Expr::Member(m) => Self::expr_is_receiver_root(&m.obj),
+            Expr::Index { obj, .. } => Self::expr_is_receiver_root(obj),
+            _ => false,
+        }
+    }
+
+    fn expr_mutates_receiver(expr: &Expr) -> bool {
+        match expr {
+            Expr::Bin(bin) => {
+                if bin.op == BinaryOp::Assign && Self::expr_is_receiver_root(&bin.left) {
+                    return true;
+                }
+                Self::expr_mutates_receiver(&bin.left) || Self::expr_mutates_receiver(&bin.right)
+            }
+            Expr::LabeledBlock { block, .. }
+            | Expr::Unsafe(block)
+            | Expr::Arena(block)
+            | Expr::Comptime(block) => Self::block_mutates_receiver(block),
+            _ => false,
+        }
+    }
+
+    fn block_find_ident_span(block: &BlockStmt, target: &str) -> Option<(String, Span)> {
+        for s in &block.body {
+            if let Some(found) = Self::stmt_find_ident_span(s, target) {
+                return Some(found);
+            }
+        }
+        None
+    }
+
+    fn stmt_find_ident_span(stmt: &Stmt, target: &str) -> Option<(String, Span)> {
+        match stmt {
+            Stmt::Expr(e) => Self::expr_find_ident_span(e, target),
+            Stmt::Var(v) => v
+                .init
+                .as_ref()
+                .and_then(|e| Self::expr_find_ident_span(e, target)),
+            Stmt::Return(r) => r
+                .arg
+                .as_ref()
+                .and_then(|e| Self::expr_find_ident_span(e, target)),
+            Stmt::Block(b)
+            | Stmt::UnsafeBlock(b)
+            | Stmt::ArenaBlock(b)
+            | Stmt::ComptimeBlock(b) => Self::block_find_ident_span(b, target),
+            Stmt::If(i) => Self::expr_find_ident_span(&i.test, target)
+                .or_else(|| Self::stmt_find_ident_span(&i.cons, target))
+                .or_else(|| {
+                    i.alt
+                        .as_ref()
+                        .and_then(|a| Self::stmt_find_ident_span(a, target))
+                }),
+            Stmt::While(w) => Self::expr_find_ident_span(&w.test, target)
+                .or_else(|| Self::stmt_find_ident_span(&w.body, target)),
+            Stmt::For(f) => Self::expr_find_ident_span(&f.expr, target)
+                .or_else(|| Self::stmt_find_ident_span(&f.body, target)),
+            _ => None,
+        }
+    }
+
+    fn expr_find_ident_span(expr: &Expr, target: &str) -> Option<(String, Span)> {
+        match expr {
+            Expr::Ident(id) if id.sym == target => Some((id.sym.clone(), id.span)),
+            Expr::Member(m) | Expr::OptMember(m) => Self::expr_find_ident_span(&m.obj, target),
+            Expr::Bin(bin) => Self::expr_find_ident_span(&bin.left, target)
+                .or_else(|| Self::expr_find_ident_span(&bin.right, target)),
+            Expr::Call(c) | Expr::OptCall(c) | Expr::New(c) => {
+                Self::expr_find_ident_span(&c.callee, target).or_else(|| {
+                    c.args
+                        .iter()
+                        .find_map(|a| Self::expr_find_ident_span(a, target))
+                })
+            }
+            Expr::Index { obj, index } => Self::expr_find_ident_span(obj, target)
+                .or_else(|| Self::expr_find_ident_span(index, target)),
+            Expr::Deref(inner) | Expr::Unwrap(inner) | Expr::Question(inner) => {
+                Self::expr_find_ident_span(inner, target)
+            }
+            _ => None,
+        }
     }
 
     pub fn parse_generic_params(&mut self) -> ParseResult<Vec<GenericParam>> {
@@ -1436,16 +1853,56 @@ impl<'a> Parser<'a> {
                 is_comptime = true;
             }
 
-            if self.peek() == Some(&Token::Mut) || self.peek() == Some(&Token::Let) {
-                self.bump()?;
+            let mut had_prefix_mut_or_let = false;
+            if self.peek() == Some(&Token::Mut) {
+                let (_, mut_span) = self.bump()?;
                 is_mut = true;
+                had_prefix_mut_or_let = true;
+                self.push_error(
+                    Diagnostic::new("E0104", "abolished keyword 'mut' in parameter declaration")
+                        .with_span(mut_span)
+                        .with_cause("'mut' is Rust legacy syntax and is abolished in CP.")
+                        .with_help("in CP, use '*_' for mutable method receivers, or 'param: *T' for mutable parameters (compiler automatically deduces value copy vs mutable reference).")
+                        .with_suggestion("replace 'mut _' with '*_', or 'mut x: T' with 'x: *T'"),
+                );
+            } else if self.peek() == Some(&Token::Let) {
+                let (_, let_span) = self.bump()?;
+                is_mut = true;
+                had_prefix_mut_or_let = true;
+                self.push_error(
+                    Diagnostic::new("E0104", "'let' modifier is not allowed in function parameters")
+                        .with_span(let_span)
+                        .with_cause("'let' is only used for mutable local variables inside function bodies.")
+                        .with_help("in CP, declare mutable parameters using 'param: *T' (compiler automatically deduces value copy vs mutable reference).")
+                        .with_suggestion("replace 'let x: T' with 'x: *T'"),
+                );
             } else if self.peek() == Some(&Token::Move) || self.peek() == Some(&Token::Own) {
                 self.bump()?;
                 is_move = true;
             } else if self.peek() == Some(&Token::Star) {
-                self.bump()?;
+                let (_, star_span) = self.bump()?;
                 is_mut = true;
                 let p_ident = self.parse_ident()?;
+                if p_ident.sym != "_"
+                    && p_ident.sym != "this"
+                    && p_ident.sym != "self"
+                    && p_ident.sym != "next"
+                    && p_ident.sym != "target"
+                {
+                    self.push_error(
+                        Diagnostic::new(
+                            "E0125",
+                            format!("prefix '*' on named parameter '*{}' is not allowed", p_ident.sym),
+                        )
+                        .with_span(Span {
+                            start: star_span.start,
+                            end: p_ident.span.end,
+                        })
+                        .with_cause("prefix '*_' is reserved exclusively for container method receivers; named parameters must place '*T' in the type position.")
+                        .with_help("write 'param: *T' for mutable parameters (compiler automatically deduces value copy vs mutable reference).")
+                        .with_suggestion(format!("change '*{}: T' to '{}: *T'", p_ident.sym, p_ident.sym)),
+                    );
+                }
                 let mut ty = if (p_ident.sym == "this"
                     || p_ident.sym == "_"
                     || p_ident.sym == "next"
@@ -1548,6 +2005,20 @@ impl<'a> Parser<'a> {
             }
 
             let p_ident = self.parse_ident()?;
+            if p_ident.sym == "_"
+                && !is_mut
+                && !is_move
+                && !had_prefix_mut_or_let
+                && self.peek() != Some(&Token::Colon)
+            {
+                self.push_error(
+                    Diagnostic::new("E0123", "redundant read-only receiver '_' in method parameter list")
+                        .with_span(p_ident.span)
+                        .with_cause("in CP, instance methods have read-only receiver '_' by default when omitted.")
+                        .with_help("omit '_' from the parameter list for read-only methods (e.g. 'fn foo()'), or use '*_' if the method mutates the instance.")
+                        .with_suggestion("remove '_' from the parameter list"),
+                );
+            }
             let ty = if (p_ident.sym == "this"
                 || p_ident.sym == "_"
                 || p_ident.sym == "next"
@@ -1558,8 +2029,15 @@ impl<'a> Parser<'a> {
             } else if self.peek() == Some(&Token::Colon) {
                 self.bump()?;
                 if self.peek() == Some(&Token::Move) || self.peek() == Some(&Token::Own) {
-                    self.bump()?;
+                    let (_, mv_span) = self.bump()?;
                     is_move = true;
+                    self.push_error(
+                        Diagnostic::new("E0125", "'move'/'own' modifier must be placed before the parameter name")
+                            .with_span(mv_span)
+                            .with_cause("'move' and 'own' are ownership transfer modifiers, not part of the type.")
+                            .with_help("place 'move' or 'own' before the parameter name: 'move v: T' or 'own v: *T'.")
+                            .with_suggestion(format!("change '{}: move T' to 'move {}: T'", p_ident.sym, p_ident.sym)),
+                    );
                 }
                 self.parse_type()?
             } else {
@@ -2005,8 +2483,27 @@ impl<'a> Parser<'a> {
             return self.parse_postfix_type_modifiers(ty);
         }
         if self.peek() == Some(&Token::Question) {
-            self.bump()?;
+            let (_, q_span) = self.bump()?;
             let inner = self.parse_base_type()?;
+            let inner_str = Self::type_to_str(&inner);
+            let sugg_ty = if inner_str.starts_with('[')
+                || inner_str.starts_with('*')
+                || inner_str.contains(' ')
+            {
+                format!("({})?", inner_str)
+            } else {
+                format!("{}?", inner_str)
+            };
+            self.push_error(
+                Diagnostic::new("E0115", "prefix optional type '?T' is abolished in CP")
+                    .with_span(Span {
+                        start: q_span.start,
+                        end: self.prev_token_end.max(q_span.end),
+                    })
+                    .with_cause("Zig-style prefix '?T' is abolished in CP to unify with postfix optional 'T?'.")
+                    .with_help("in CP, optional types place '?' at the end of the type (wrap slice/pointer types in parentheses, e.g. '([]const u8)?').")
+                    .with_suggestion(format!("replace '?{}' with '{}'", inner_str, sugg_ty)),
+            );
             let ty = Type::Optional(Box::new(inner));
             return self.parse_postfix_type_modifiers(ty);
         }
@@ -2816,7 +3313,16 @@ impl<'a> Parser<'a> {
             Token::F64 => Type::F64,
             Token::String => Type::String,
             Token::Void => Type::Void,
-            Token::Any => Type::Any,
+            Token::Any => {
+                self.push_error(
+                    Diagnostic::new("E0119", "'any' type is abolished in CP")
+                        .with_span(span)
+                        .with_cause("CP is a strongly typed language and does not support dynamic 'any' types.")
+                        .with_help("use a concrete type, 'auto' for compile-time generic deduction, or a tagged union / trait.")
+                        .with_suggestion("replace 'any' with 'auto' or a concrete type"),
+                );
+                Type::Auto
+            }
             Token::Auto => Type::Auto,
             Token::Bool => Type::Bool,
             Token::CStr => Type::CStr,
@@ -3211,6 +3717,30 @@ impl<'a> Parser<'a> {
                 }
             }
         }
+        if self.peek() == Some(&Token::Star) && self.peek_next() == Some(&Token::Assign) {
+            let (_, star_span) = self.bump()?; // consume '*'
+            self.bump()?; // consume '='
+            let expr = self.parse_expr()?;
+            if self.peek() == Some(&Token::Semicolon) {
+                self.bump()?;
+            }
+            let end = self.prev_token_end.max(star_span.end);
+            return Ok(Stmt::Var(VarDecl {
+                span: Span {
+                    start: star_span.start,
+                    end,
+                },
+                kind: VarDeclKind::Let,
+                pat: Pattern::Wildcard,
+                ty: None,
+                init: Some(expr),
+                is_threadlocal: false,
+                is_pub: false,
+                is_comptime: false,
+                is_extern: false,
+                is_c: false,
+            }));
+        }
         match self.peek() {
             Some(Token::Fn) => {
                 let func = self.parse_function()?;
@@ -3554,17 +4084,48 @@ impl<'a> Parser<'a> {
                 is_threadlocal = true;
             }
         }
-        let kind = match self.bump()?.0 {
-            Token::Let | Token::Var => VarDeclKind::Let,
+        let (kw_tok, kw_span) = self.bump()?;
+        let kind = match kw_tok {
+            Token::Let => VarDeclKind::Let,
+            Token::Var => {
+                self.push_error(
+                    Diagnostic::new("E0103", "abolished keyword 'var' in variable declaration")
+                        .with_span(kw_span)
+                        .with_cause("'var' is Zig/JS legacy syntax and is abolished in CP.")
+                        .with_help("in CP, use 'let' for mutable local variables and 'const' for immutable bindings.")
+                        .with_suggestion("replace 'var' with 'let'"),
+                );
+                VarDeclKind::Let
+            }
             Token::Const => VarDeclKind::Const,
             tok => return Err(ParseError::ExpectedToken(Token::Let, tok, self.peek_span())),
         };
         if self.peek() == Some(&Token::Mut) {
             let (_, span) = self.bump()?;
-            return Err(ParseError::UnexpectedToken(Token::Mut, span));
+            self.push_error(
+                Diagnostic::new("E0104", "abolished keyword 'mut' in variable declaration")
+                    .with_span(span)
+                    .with_cause("'let mut' is Rust legacy syntax; 'let' in CP is already mutable by default.")
+                    .with_help("use 'let x = ...' for mutable variables and 'const x = ...' for immutable variables.")
+                    .with_suggestion("remove 'mut'"),
+            );
         }
 
         let pat = self.parse_pattern()?;
+        if let Pattern::Ident(ref id) = pat {
+            if id.sym == "_" {
+                self.push_error(
+                    Diagnostic::new(
+                        "E0120",
+                        "cannot use '_' to discard values; '_' is reserved for the current instance receiver",
+                    )
+                    .with_span(id.span)
+                    .with_cause("in CP, '_' exclusively represents the current struct/class/enum instance ('self'/'this'). Using '_' as a discard target causes ambiguity.")
+                    .with_help("use '* = expr;' or 'let * = expr;' to discard expression results.")
+                    .with_suggestion("replace 'let _ = ...;' with '* = ...;'"),
+                );
+            }
+        }
         let mut ty = None;
         if self.peek() == Some(&Token::Colon) {
             self.bump()?;
@@ -3681,6 +4242,7 @@ impl<'a> Parser<'a> {
                 let checkpoint = self.lexer.clone();
                 let p1 = self.peeked.clone();
                 let p2 = self.peeked2.clone();
+                let err_len = self.errors.len();
                 if let Ok(ty) = self.parse_type() {
                     if matches!(
                         self.peek(),
@@ -3692,6 +4254,7 @@ impl<'a> Parser<'a> {
                 self.lexer = checkpoint;
                 self.peeked = p1;
                 self.peeked2 = p2;
+                self.errors.truncate(err_len);
             }
         }
         match self.peek() {
@@ -4330,13 +4893,28 @@ impl<'a> Parser<'a> {
             }
         }
         if self.peek() == Some(&Token::Pipe) {
-            self.bump()?; // consume '|'
+            let (_, pipe_start) = self.bump()?; // consume '|'
             if self.peek() == Some(&Token::Star) {
                 self.bump()?;
                 is_ptr_capture = true;
             }
-            capture = Some(self.parse_ident()?);
-            self.expect(Token::Pipe)?;
+            let cap_id = self.parse_ident()?;
+            let pipe_end = self.expect(Token::Pipe)?;
+            self.push_error(
+                Diagnostic::new("E0118", "Zig-style '|capture|' syntax is abolished in 'while' statement")
+                    .with_span(Span {
+                        start: pipe_start.start,
+                        end: pipe_end.end,
+                    })
+                    .with_cause("trailing '|v|' capture after parentheses is Zig syntax and is abolished in CP.")
+                    .with_help("in CP, optional/iterator unwrapping uses ':=' inside parentheses.")
+                    .with_suggestion(format!(
+                        "use 'while ({}{} := expr) {{ ... }}'",
+                        if is_ptr_capture { "*" } else { "" },
+                        cap_id.sym
+                    )),
+            );
+            capture = Some(cap_id);
         }
         if continue_expr.is_none() && self.peek() == Some(&Token::Colon) {
             self.bump()?; // consume ':'
@@ -4439,7 +5017,20 @@ impl<'a> Parser<'a> {
             }
             let pat_end = self.peek_span().start;
             let raw_pat = self.input[pat_start..pat_end].trim().to_string();
-            self.expect(Token::Pipe)?;
+            let pipe_end = self.expect(Token::Pipe)?;
+            self.push_error(
+                Diagnostic::new(
+                    "E0118",
+                    "Zig-style 'for (collection) |item|' syntax is abolished in CP",
+                )
+                .with_span(Span {
+                    start,
+                    end: pipe_end.end,
+                })
+                .with_cause("trailing '|item|' capture is Zig syntax and is abolished in CP.")
+                .with_help("in CP, 'for' loops use TypeScript-style 'for (item of collection)' inside parentheses.")
+                .with_suggestion(format!("use 'for ({} of {}) {{ ... }}'", raw_pat, raw_header)),
+            );
             let body = self.parse_stmt()?;
             return Ok(ForStmt {
                 span: Span { start, end: 0 },
@@ -4569,13 +5160,28 @@ impl<'a> Parser<'a> {
             ));
         };
         if self.peek() == Some(&Token::Pipe) {
-            self.bump()?; // consume '|'
+            let (_, pipe_start) = self.bump()?; // consume '|'
             if self.peek() == Some(&Token::Star) {
                 self.bump()?;
                 is_ptr_capture = true;
             }
-            capture = Some(self.parse_ident()?);
-            self.expect(Token::Pipe)?;
+            let cap_id = self.parse_ident()?;
+            let pipe_end = self.expect(Token::Pipe)?;
+            self.push_error(
+                Diagnostic::new("E0118", "Zig-style '|capture|' syntax is abolished in 'if' statement")
+                    .with_span(Span {
+                        start: pipe_start.start,
+                        end: pipe_end.end,
+                    })
+                    .with_cause("trailing '|v|' capture after parentheses is Zig syntax and is abolished in CP.")
+                    .with_help("in CP, optional/error unwrapping uses ':=' inside parentheses.")
+                    .with_suggestion(format!(
+                        "use 'if ({}{} := expr) {{ ... }}'",
+                        if is_ptr_capture { "*" } else { "" },
+                        cap_id.sym
+                    )),
+            );
+            capture = Some(cap_id);
         }
         let cons = self.parse_stmt()?;
         let mut alt = None;
@@ -5032,7 +5638,7 @@ impl<'a> Parser<'a> {
                 continue;
             }
             let meta_list = self.parse_meta_list()?;
-            let mut method_is_pub = false;
+            let mut method_is_pub = true;
             while self.peek() == Some(&Token::Export) || self.peek() == Some(&Token::Private) {
                 if self.peek() == Some(&Token::Export) {
                     method_is_pub = true;
@@ -5387,6 +5993,48 @@ impl<'a> Parser<'a> {
                             let inner = self.parse_expr()?;
                             self.expect(Token::RParen)?;
                             left = Expr::BoxNew(Box::new(inner));
+                            continue;
+                        }
+                        if obj_id.sym == "JSON"
+                            && (prop.sym == "parse" || prop.sym == "decode")
+                            && self.peek() == Some(&Token::Less)
+                        {
+                            let obj_start = obj_id.span.start;
+                            let l_span = self.bump()?.1; // consume '<'
+                            let target_ty = self.parse_type()?;
+                            let r_span = self.expect(Token::Greater)?;
+                            self.expect(Token::LParen)?;
+                            let mut args = vec![Expr::TypeVal {
+                                span: Span {
+                                    start: l_span.start,
+                                    end: r_span.end,
+                                },
+                                ty: target_ty,
+                            }];
+                            while self.peek() != Some(&Token::RParen) && self.peek().is_some() {
+                                args.push(self.parse_expr()?);
+                                if self.peek() == Some(&Token::Comma) {
+                                    self.bump()?;
+                                }
+                            }
+                            let end = self.expect(Token::RParen)?.end;
+                            let callee = Expr::Member(MemberExpr {
+                                span: Span {
+                                    start: obj_start,
+                                    end: prop.span.end,
+                                },
+                                obj: Box::new(left),
+                                prop,
+                            });
+                            left = Expr::Call(CallExpr {
+                                span: Span {
+                                    start: obj_start,
+                                    end,
+                                },
+                                callee: Box::new(callee),
+                                args,
+                                is_comptime: false,
+                            });
                             continue;
                         }
                         if obj_id.sym == "reflect" {
@@ -5993,6 +6641,22 @@ impl<'a> Parser<'a> {
             }
             let start = left_span(&left).start;
             let end = right_span(&right).end;
+            if op == BinaryOp::Assign {
+                if let Expr::Ident(ref id) = left {
+                    if id.sym == "_" {
+                        self.push_error(
+                            Diagnostic::new(
+                                "E0120",
+                                "cannot use '_ = ...' to discard expression result; '_' is reserved for the current instance receiver",
+                            )
+                            .with_span(id.span)
+                            .with_cause("in CP, '_' exclusively represents the current struct/class/enum instance ('self'/'this'). Using '_ = expr' causes severe ambiguity inside methods.")
+                            .with_help("use '* = expr;' to discard return values.")
+                            .with_suggestion("replace '_ = ...;' with '* = ...;'"),
+                        );
+                    }
+                }
+            }
             left = Expr::Bin(BinExpr {
                 span: Span { start, end },
                 op,
@@ -6134,6 +6798,48 @@ impl<'a> Parser<'a> {
                             let inner = self.parse_expr()?;
                             self.expect(Token::RParen)?;
                             left = Expr::BoxNew(Box::new(inner));
+                            continue;
+                        }
+                        if obj_id.sym == "JSON"
+                            && (prop.sym == "parse" || prop.sym == "decode")
+                            && self.peek() == Some(&Token::Less)
+                        {
+                            let obj_start = obj_id.span.start;
+                            let l_span = self.bump()?.1; // consume '<'
+                            let target_ty = self.parse_type()?;
+                            let r_span = self.expect(Token::Greater)?;
+                            self.expect(Token::LParen)?;
+                            let mut args = vec![Expr::TypeVal {
+                                span: Span {
+                                    start: l_span.start,
+                                    end: r_span.end,
+                                },
+                                ty: target_ty,
+                            }];
+                            while self.peek() != Some(&Token::RParen) && self.peek().is_some() {
+                                args.push(self.parse_expr()?);
+                                if self.peek() == Some(&Token::Comma) {
+                                    self.bump()?;
+                                }
+                            }
+                            let end = self.expect(Token::RParen)?.end;
+                            let callee = Expr::Member(MemberExpr {
+                                span: Span {
+                                    start: obj_start,
+                                    end: prop.span.end,
+                                },
+                                obj: Box::new(left),
+                                prop,
+                            });
+                            left = Expr::Call(CallExpr {
+                                span: Span {
+                                    start: obj_start,
+                                    end,
+                                },
+                                callee: Box::new(callee),
+                                args,
+                                is_comptime: false,
+                            });
                             continue;
                         }
                         if obj_id.sym == "reflect" {
@@ -7287,7 +7993,7 @@ impl<'a> Parser<'a> {
                     }
                 }
                 if sym.starts_with('@') {
-                    if sym == "@is_beam" {
+                    if sym == "@is_beam" || sym == "@is_nest" {
                         return Ok(Expr::Ident(Ident { span, sym }));
                     }
                     let name = sym.clone();
@@ -7359,7 +8065,7 @@ impl<'a> Parser<'a> {
                 }
                 let ident = self.parse_ident()?;
                 let name = format!("@{}", ident.sym);
-                if name == "@is_beam" {
+                if name == "@is_beam" || name == "@is_nest" {
                     return Ok(Expr::Ident(Ident {
                         span: Span {
                             start: span.start,
@@ -7640,6 +8346,7 @@ impl<'a> Parser<'a> {
                 let checkpoint = self.lexer.clone();
                 let peeked_checkpoint = self.peeked.clone();
                 let peeked2_checkpoint = self.peeked2.clone();
+                let err_len = self.errors.len();
 
                 // Try parsing as arrow function parameters
                 if let Ok(params) = self.parse_arrow_params() {
@@ -7666,6 +8373,7 @@ impl<'a> Parser<'a> {
                 self.lexer = checkpoint;
                 self.peeked = peeked_checkpoint;
                 self.peeked2 = peeked2_checkpoint;
+                self.errors.truncate(err_len);
                 let expr = self.parse_expr()?;
                 self.expect(Token::RParen)?;
                 Ok(expr)

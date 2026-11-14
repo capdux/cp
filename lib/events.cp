@@ -3,30 +3,30 @@
  * 提供对标 Node.js/TypeScript 的高层发布订阅 (EventEmitter) 与协程同步原语 (Event)
  */
 
-export class EventEmitter {
+pub class EventEmitter {
     _count: i32;
 
-    fn init(mut this): void {
-        this._count = 0;
+    fn init(*_) {
+        _._count = 0;
     }
 
     /**
      * 注册事件监听器。
      * 返回退订函数 (Unsubscribe)，可直接用于 defer unsub(); 自动杜绝内存泄漏。
      */
-    fn on(mut this, event: string, handler: any): any {
+    fn on(*_, event: string, handler: auto): *! {
         __zig__ {
             self._count += 1;
         }
         return () => {
-            this.off(event, handler);
+            _.off(event, handler);
         };
     }
 
     /**
      * 移除特定事件的指定监听器。
      */
-    fn off(mut this, event: string, handler: any): void {
+    fn off(*_, event: string, handler: auto) {
         __zig__ {
             if (self._count > 0) self._count -= 1;
         }
@@ -35,7 +35,7 @@ export class EventEmitter {
     /**
      * 触发指定事件。
      */
-    fn emit(this, event: string): bool {
+    fn emit(*_, event: string): bool {
         __zig__ {
             return true;
         }
@@ -45,20 +45,20 @@ export class EventEmitter {
      * 单次事件监听。
      * 直接返回原生 Task，支持 await emitter.once("ready");
      */
-    fn once(mut this, event: string): any {
+    fn once(*_, event: string): *! {
         let task = @create_pending_task();
         let h = () => {
-            this.off(event, h);
+            _.off(event, h);
             @complete_task(task, true);
         };
-        this.on(event, h);
+        _.on(event, h);
         return task;
     }
 
     /**
      * 获取指定事件当前注册的监听器数量。
      */
-    fn listenerCount(this, event: string): i32 {
+    fn listenerCount(event: string): i32 {
         __zig__ {
             return self._count;
         }
@@ -67,7 +67,7 @@ export class EventEmitter {
     /**
      * 移除所有监听器。
      */
-    fn removeAllListeners(mut this, event: string): void {
+    fn removeAllListeners(*_, event: string) {
         __zig__ {
             self._count = 0;
         }
@@ -78,37 +78,37 @@ export class EventEmitter {
  * 协程/任务同步事件原语 (Event / Signal)
  * 支持多任务并发屏障与一键唤醒
  */
-export class Event {
+pub class Event {
     _is_set: bool;
 
-    fn init(mut this): void {
-        this._is_set = false;
+    fn init(*_) {
+        _._is_set = false;
     }
 
-    fn isSet(this): bool {
-        return this._is_set;
+    fn isSet(): bool {
+        return _._is_set;
     }
 
     /**
      * 触发事件信号，并一键唤醒所有等待者。
      */
-    fn set(mut this): void {
-        this._is_set = true;
+    fn set(*_) {
+        _._is_set = true;
     }
 
     /**
      * 重置事件信号。
      */
-    fn reset(mut this): void {
-        this._is_set = false;
+    fn reset(*_) {
+        _._is_set = false;
     }
 
     /**
      * 挂起等待事件就绪。直接返回可 await 的任务句柄。
      */
-    fn wait(mut this): any {
+    fn wait(*_): *! {
         let t = @create_pending_task();
-        if (this._is_set) {
+        if (_._is_set) {
             @complete_task(t, true);
         }
         return t;

@@ -1,6 +1,5 @@
 // lib/router/param_map.cp
 // High-performance route parameter dictionary with inline stack storage
-const std = @import("std");
 
 pub const Param = struct {
     name: []const u8,
@@ -18,37 +17,37 @@ pub const ParamMap = struct {
         };
     }
 
-    pub fn count(self: *const ParamMap): usize {
-        return self.len;
+    pub fn count(*_): usize {
+        return _.len;
     }
 
-    pub fn isEmpty(self: *const ParamMap): bool {
-        return self.len == 0;
+    pub fn isEmpty(*_): bool {
+        return _.len == 0;
     }
 
-    pub fn get(self: *const ParamMap, name: []const u8): ?[]const u8 {
-        var i: usize = 0;
-        while (i < self.len) : (i += 1) {
-            if (std.mem.eql(u8, self.entries[i].name, name)) {
-                return self.entries[i].value;
+    pub fn get(*_, name: []const u8): ([]const u8)? {
+        let i: usize = 0;
+        while (i < _.len) : (i += 1) {
+            if (std.mem.eql(u8, _.entries[i].name, name)) {
+                return _.entries[i].value;
             }
         }
         return null;
     }
 
-    pub fn at(self: *const ParamMap, index: usize): ?Param {
-        if (index >= self.len) return null;
-        return self.entries[index];
+    pub fn at(*_, index: usize): Param? {
+        if (index >= _.len) return null;
+        return _.entries[index];
     }
 
-    pub fn has(self: *const ParamMap, name: []const u8): bool {
-        return self.get(name) != null;
+    pub fn has(*_, name: []const u8): bool {
+        return _.get(name) != null;
     }
 
-    pub fn append(self: *ParamMap, name: []const u8, value: []const u8): void {
-        if (self.len < 16) {
-            self.entries[self.len] = Param{ .name = name, .value = value };
-            self.len += 1;
+    pub fn append(*_, name: []const u8, value: []const u8) {
+        if (_.len < 16) {
+            _.entries[_.len] = Param{ .name = name, .value = value };
+            _.len += 1;
         }
     }
 };

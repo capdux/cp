@@ -9,12 +9,12 @@ pub const Opcode = enum(u4) {
     Ping = 0x9,
     Pong = 0xA,
 
-    pub fn isControl(self: Opcode): bool {
-        return (@intFromEnum(self) & 0x8) != 0;
+    pub fn isControl(): bool {
+        return (@intFromEnum(_) & 0x8) != 0;
     }
 
-    pub fn isData(self: Opcode): bool {
-        return self == .Text or self == .Binary or self == .Continue;
+    pub fn isData(): bool {
+        return _ == .Text or _ == .Binary or _ == .Continue;
     }
 };
 

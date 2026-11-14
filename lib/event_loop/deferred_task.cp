@@ -1,17 +1,16 @@
 // lib/event_loop/deferred_task.cp
 // Deferred microtask queue for batching I/O and non-reentrant event execution
 
-const std = @import("std");
 
-export type DeferredFn = *const fn (ctx: ?*anyopaque) void;
+pub type DeferredFn = fn(ctx: *!?);
 
-export struct DeferredEntry {
-    pub ctx: ?*anyopaque = null;
-    pub task: DeferredFn = undefined;
+pub struct DeferredEntry {
+    ctx: *!? = null;
+    task: DeferredFn = undefined;
 }
 
-export class DeferredTaskQueue {
-    entries: []DeferredEntry = &.{};
+pub class DeferredTaskQueue {
+    entries: []DeferredEntry = [];
     capacity: usize = 0;
     len: usize = 0;
 
@@ -23,46 +22,46 @@ export class DeferredTaskQueue {
         return q;
     }
 
-    pub fn count(self: *DeferredTaskQueue): usize {
-        return self.len;
+    pub fn count(*_): usize {
+        return _.len;
     }
 
-    pub fn postTask(self: *DeferredTaskQueue, ctx: ?*anyopaque, task: DeferredFn): bool {
+    pub fn postTask(*_, ctx: *!?, task: DeferredFn): bool {
         // Check for duplicate context to deduplicate flush requests
         if (ctx != null) {
-            for (0..self.len) |i| {
-                if (self.entries[i].ctx == ctx) {
-                    self.entries[i].task = task;
+            for (i of 0.._.len) {
+                if (_.entries[i].ctx == ctx) {
+                    _.entries[i].task = task;
                     return true;
                 }
             }
         }
 
-        if (self.len >= self.capacity) {
-            const new_cap = self.capacity * 2;
-            var new_entries = std.heap.page_allocator.alloc(DeferredEntry, new_cap) catch unreachable;
-            for (0..self.len) |i| {
-                new_entries[i] = self.entries[i];
+        if (_.len >= _.capacity) {
+            const new_cap = _.capacity * 2;
+            let new_entries = std.heap.page_allocator.alloc(DeferredEntry, new_cap) catch unreachable;
+            for (i of 0.._.len) {
+                new_entries[i] = _.entries[i];
             }
-            std.heap.page_allocator.free(self.entries);
-            self.entries = new_entries;
-            self.capacity = new_cap;
+            std.heap.page_allocator.free(_.entries);
+            _.entries = new_entries;
+            _.capacity = new_cap;
         }
 
-        const idx = self.len;
-        self.len += 1;
-        self.entries[idx].ctx = ctx;
-        self.entries[idx].task = task;
+        const idx = _.len;
+        _.len += 1;
+        _.entries[idx].ctx = ctx;
+        _.entries[idx].task = task;
         return false;
     }
 
-    pub fn unregisterTask(self: *DeferredTaskQueue, ctx: ?*anyopaque): bool {
-        if (ctx == null or self.len == 0) return false;
-        for (0..self.len) |i| {
-            if (self.entries[i].ctx == ctx) {
-                self.len -= 1;
-                if (i < self.len) {
-                    self.entries[i] = self.entries[self.len];
+    pub fn unregisterTask(*_, ctx: *!?): bool {
+        if (ctx == null or _.len == 0) return false;
+        for (i of 0.._.len) {
+            if (_.entries[i].ctx == ctx) {
+                _.len -= 1;
+                if (i < _.len) {
+                    _.entries[i] = _.entries[_.len];
                 }
                 return true;
             }
@@ -70,14 +69,14 @@ export class DeferredTaskQueue {
         return false;
     }
 
-    pub fn run(self: *DeferredTaskQueue): usize {
-        if (self.len == 0) return 0;
-        const total = self.len;
-        for (0..total) |i| {
-            const entry = self.entries[i];
+    pub fn run(*_): usize {
+        if (_.len == 0) return 0;
+        const total = _.len;
+        for (i of 0..total) {
+            const entry = _.entries[i];
             entry.task(entry.ctx);
         }
-        self.len = 0;
+        _.len = 0;
         return total;
     }
 }

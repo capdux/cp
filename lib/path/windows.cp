@@ -1,6 +1,5 @@
 // lib/path/windows.cp
 // Windows path utilities in CP
-const std = @import("std");
 
 pub const WindowsPath = struct {
     pub const sep: u8 = '\\';
@@ -21,15 +20,15 @@ pub const WindowsPath = struct {
         return false;
     }
 
-    pub fn basename(filepath: []const u8, ext: ?[]const u8): []const u8 {
-        var p = filepath;
+    pub fn basename(filepath: []const u8, ext: ([]const u8)?): []const u8 {
+        let p = filepath;
         while (p.len > 1 and isSeparator(p[p.len - 1])) {
             p = p[0 .. p.len - 1];
         }
         if (p.len == 0) return "";
 
-        var last_slash: ?usize = null;
-        var i: usize = p.len;
+        let last_slash: usize? = null;
+        let i: usize = p.len;
         while (i > 0) {
             i -= 1;
             if (isSeparator(p[i])) {
@@ -38,8 +37,8 @@ pub const WindowsPath = struct {
             }
         }
 
-        var base = if (last_slash) |idx| p[idx + 1 ..] else p;
-        if (ext) |e| {
+        let base = if (idx := last_slash) p[idx + 1 ..] else p;
+        if (e := ext) {
             if (e.len > 0 and std.ascii.endsWithIgnoreCase(base, e) and base.len > e.len) {
                 base = base[0 .. base.len - e.len];
             }
@@ -48,14 +47,14 @@ pub const WindowsPath = struct {
     }
 
     pub fn dirname(filepath: []const u8): []const u8 {
-        var p = filepath;
+        let p = filepath;
         while (p.len > 1 and isSeparator(p[p.len - 1])) {
             p = p[0 .. p.len - 1];
         }
         if (p.len == 0) return ".";
 
-        var last_slash: ?usize = null;
-        var i: usize = p.len;
+        let last_slash: usize? = null;
+        let i: usize = p.len;
         while (i > 0) {
             i -= 1;
             if (isSeparator(p[i])) {
@@ -64,7 +63,7 @@ pub const WindowsPath = struct {
             }
         }
 
-        if (last_slash) |idx| {
+        if (idx := last_slash) {
             if (idx == 0) return "\\";
             if (idx == 2 and p[1] == ':') return p[0..3]; // C:\
             return p[0..idx];
@@ -76,7 +75,7 @@ pub const WindowsPath = struct {
         const base = basename(filepath, null);
         if (base.len <= 1) return "";
 
-        var i: usize = base.len;
+        let i: usize = base.len;
         while (i > 0) {
             i -= 1;
             if (base[i] == '.') {

@@ -5,7 +5,7 @@ import {
     ParsedSourceMap
 } from "cap:sourcemap";
 
-fn main(): void {
+fn main() {
     test("1. Base64 VLQ encode & decode signed integers roundtrip", () => {
         let v0 = VLQ.encode(0);
         expect_eq(v0.slice(), "A");
@@ -60,7 +60,7 @@ fn main(): void {
 
         let m0_opt = sm.findMapping(0, 2);
         expect_eq(m0_opt != null, true);
-        if (m0_opt) |m0| {
+        if (m0 := m0_opt) {
             expect_eq(m0.generated_column, 0);
             expect_eq(m0.source_index, 0);
             expect_eq(m0.original_line, 0);
@@ -69,7 +69,7 @@ fn main(): void {
 
         let m1_opt = sm.findMapping(0, 6);
         expect_eq(m1_opt != null, true);
-        if (m1_opt) |m1| {
+        if (m1 := m1_opt) {
             expect_eq(m1.generated_column, 4);
             expect_eq(m1.original_column, 4);
             expect_eq(m1.name_index, 0);
@@ -77,7 +77,7 @@ fn main(): void {
 
         let m2_opt = sm.findMapping(1, 5);
         expect_eq(m2_opt != null, true);
-        if (m2_opt) |m2| {
+        if (m2 := m2_opt) {
             expect_eq(m2.generated_line, 1);
             expect_eq(m2.generated_column, 2);
             expect_eq(m2.source_index, 1);

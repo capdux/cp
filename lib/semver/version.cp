@@ -1,6 +1,5 @@
 // lib/semver/version.cp
 // Semver 2.0 Semantic Version specification in CP
-const std = @import("std");
 
 pub const Version = struct {
     major: u32 = 0,
@@ -10,7 +9,7 @@ pub const Version = struct {
     build: []const u8 = "",
 
     pub fn parse(input_str: []const u8): !Version {
-        var str = std.mem.trim(u8, input_str, " \t\r\n");
+        let str = std.mem.trim(u8, input_str, " \t\r\n");
         if (str.len == 0) return error.InvalidVersion;
 
         // Strip leading 'v' or 'V' or '='
@@ -20,7 +19,7 @@ pub const Version = struct {
         }
         if (str.len == 0) return error.InvalidVersion;
 
-        var v = Version{};
+        let v = Version{};
 
         // Extract build metadata (+...)
         if (std.mem.indexOfScalar(u8, str, '+')) |plus_idx| {
@@ -35,7 +34,7 @@ pub const Version = struct {
         }
 
         // Parse major.minor.patch
-        var iter = std.mem.splitScalar(u8, str, '.');
+        let iter = std.mem.splitScalar(u8, str, '.');
 
         const major_str = iter.next() orelse return error.InvalidVersion;
         v.major = std.fmt.parseInt(u32, major_str, 10) catch return error.InvalidVersion;
@@ -69,8 +68,8 @@ pub const Version = struct {
         if (a.prerelease.len > 0 and b.prerelease.len == 0) return .lt;
 
         // Both have prereleases: compare dot-separated identifiers
-        var it_a = std.mem.splitScalar(u8, a.prerelease, '.');
-        var it_b = std.mem.splitScalar(u8, b.prerelease, '.');
+        let it_a = std.mem.splitScalar(u8, a.prerelease, '.');
+        let it_b = std.mem.splitScalar(u8, b.prerelease, '.');
 
         while (true) {
             const next_a = it_a.next();
@@ -126,25 +125,25 @@ pub const Version = struct {
         return ord == .gt or ord == .eq;
     }
 
-    pub fn format(self: Version, buf: []u8) []const u8 {
-        var len: usize = 0;
-        const main_part = std.fmt.bufPrint(buf, "{d}.{d}.{d}", .{ self.major, self.minor, self.patch }) catch return "";
+    pub fn format(buf: []u8) []const u8 {
+        let len: usize = 0;
+        const main_part = std.fmt.bufPrint(buf, "{d}.{d}.{d}", .{ _.major, _.minor, _.patch }) catch return "";
         len += main_part.len;
 
-        if (self.prerelease.len > 0) {
-            if (len + 1 + self.prerelease.len > buf.len) return "";
+        if (_.prerelease.len > 0) {
+            if (len + 1 + _.prerelease.len > buf.len) return "";
             buf[len] = '-';
             len += 1;
-            @memcpy(buf[len .. len + self.prerelease.len], self.prerelease);
-            len += self.prerelease.len;
+            @memcpy(buf[len .. len + _.prerelease.len], _.prerelease);
+            len += _.prerelease.len;
         }
 
-        if (self.build.len > 0) {
-            if (len + 1 + self.build.len > buf.len) return "";
+        if (_.build.len > 0) {
+            if (len + 1 + _.build.len > buf.len) return "";
             buf[len] = '+';
             len += 1;
-            @memcpy(buf[len .. len + self.build.len], self.build);
-            len += self.build.len;
+            @memcpy(buf[len .. len + _.build.len], _.build);
+            len += _.build.len;
         }
 
         return buf[0..len];

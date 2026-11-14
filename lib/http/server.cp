@@ -5,27 +5,27 @@
 import { SystemAction } from "cap:beam";
 import { Response } from "./response";
 
-export class Server {
+pub class Server {
     pub port: i32;
     pub fd: i32;
 
-    pub fn init(this, port: i32, fd: i32): void {
-        this.port = port;
-        this.fd = fd;
+    pub fn init(*_, port: i32, fd: i32) {
+        _.port = port;
+        _.fd = fd;
     }
 
-    pub fn stop(this): void {
-        @net_close(this.fd);
+    pub fn stop(*_) {
+        @net_close(_.fd);
     }
 }
 
 /**
  * 生产级 fetch 实现
  */
-export async fn fetch(url: string, options: any): Response {
+pub async fn fetch(url: string, options: auto): Response {
     let raw_body = "";
 
-    if (@is_beam) {
+    if (@is_nest) {
         // --- BEAM 模式：外包给 Bun I/O Gateway ---
         raw_body = await @yield_to_beam(@intFromEnum(SystemAction.HTTP_FETCH), url);
     } else {
@@ -40,8 +40,8 @@ export async fn fetch(url: string, options: any): Response {
 /**
  * 快速 JSON 响应构造函数 (对标 Bun 的 Response.json)
  */
-export fn json(data: any): Response {
-    let raw_json = @json_stringify(data);
+pub fn json(data: auto): Response {
+    let raw_json = JSON.stringify(data);
     let res = new Response(raw_json);
     res.contentType = "application/json";
     return res;
@@ -50,8 +50,8 @@ export fn json(data: any): Response {
 /**
  * 极速 HTTP Server (对标 Bun.serve)
  */
-export fn serve(config: any): Server {
-    if (@is_beam) {
+pub fn serve(config: auto): Server {
+    if (@is_nest) {
         @yield_to_beam(@intFromEnum(SystemAction.HTTP_SERVE), config);
         let s = new Server(3000, 0);
         return s;

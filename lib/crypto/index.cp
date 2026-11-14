@@ -36,3 +36,12 @@ export {
     Aes256Gcm,
     ChaCha20Poly1305,
 } from "./cipher.cp";
+
+export {
+    load as loadBoringSSL,
+    isSafeAltName,
+    matchDnsName,
+    checkX509ServerIdentity,
+    checkServerIdentity,
+} from "./tls.cp";
+

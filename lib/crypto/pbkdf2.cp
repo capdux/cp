@@ -1,12 +1,12 @@
 // lib/crypto/pbkdf2.cp
 // Password-Based Key Derivation Function 2 (PBKDF2)
 
-const std = @import("std");
 
 pub fn bytesToHex(bytes: []const u8): string {
     const charset = "0123456789abcdef";
-    var result = std.heap.page_allocator.alloc(u8, bytes.len * 2) catch unreachable;
-    for (bytes, 0..) |b, i| {
+    let result = std.heap.page_allocator.alloc(u8, bytes.len * 2) catch unreachable;
+    for (i of 0..bytes.len) {
+        const b = bytes[i];
         result[i * 2 + 0] = charset[b >> 4];
         result[i * 2 + 1] = charset[b & 15];
     }

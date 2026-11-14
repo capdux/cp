@@ -8,20 +8,20 @@ import {
     SigV4Signer
 } from "cap:s3";
 
-fn main(): void {
+fn main() {
     test("1. S3Acl, S3StorageClass & S3Error mapping", () => {
         expect_eq(S3Acl.toString(S3Acl.PublicRead), "public-read");
         expect_eq(S3Acl.toString(S3Acl.BucketOwnerFullControl), "bucket-owner-full-control");
         let parsed_acl = S3Acl.fromString("authenticated-read");
         expect_eq(parsed_acl != null, true);
-        if (parsed_acl) |acl| {
+        if (acl := parsed_acl) {
             expect_eq(acl == S3Acl.AuthenticatedRead, true);
         }
 
         expect_eq(S3StorageClass.toString(S3StorageClass.IntelligentTiering), "INTELLIGENT_TIERING");
         let parsed_sc = S3StorageClass.fromString("DEEP_ARCHIVE");
         expect_eq(parsed_sc != null, true);
-        if (parsed_sc) |sc| {
+        if (sc := parsed_sc) {
             expect_eq(sc == S3StorageClass.DeepArchive, true);
         }
 

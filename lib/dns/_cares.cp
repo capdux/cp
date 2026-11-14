@@ -2,37 +2,37 @@
 // Low-level c-ares C-FFI bindings, NSClass/NSType & ARES status codes
 // Absorbed from bun/src/cares_sys/c_ares.cp
 
-export @opaque struct ares_channeldata {}
-export @opaque struct ares_addrinfo {}
-export @opaque struct ares_options {}
+pub @opaque struct ares_channeldata {}
+pub @opaque struct ares_addrinfo {}
+pub @opaque struct ares_options {}
 
-export const ARES_SUCCESS: i32 = 0;
-export const ARES_ENODATA: i32 = 1;
-export const ARES_EFORMERR: i32 = 2;
-export const ARES_ESERVFAIL: i32 = 3;
-export const ARES_ENOTFOUND: i32 = 4;
-export const ARES_ENOTIMP: i32 = 5;
-export const ARES_EREFUSED: i32 = 6;
-export const ARES_EBADQUERY: i32 = 7;
-export const ARES_EBADNAME: i32 = 8;
-export const ARES_EBADFAMILY: i32 = 9;
-export const ARES_EBADRESP: i32 = 10;
-export const ARES_ECONNREFUSED: i32 = 11;
-export const ARES_ETIMEOUT: i32 = 12;
-export const ARES_EOF: i32 = 13;
-export const ARES_EFILE: i32 = 14;
-export const ARES_ENOMEM: i32 = 15;
-export const ARES_EDESTRUCTION: i32 = 16;
-export const ARES_EBADSTR: i32 = 17;
-export const ARES_EBADFLAGS: i32 = 18;
-export const ARES_ENONAME: i32 = 19;
-export const ARES_EBADHINTS: i32 = 20;
-export const ARES_ENOTINITIALIZED: i32 = 21;
-export const ARES_ECANCELLED: i32 = 24;
-export const ARES_ESERVICE: i32 = 25;
-export const ARES_ENOSERVER: i32 = 26;
+pub const ARES_SUCCESS: i32 = 0;
+pub const ARES_ENODATA: i32 = 1;
+pub const ARES_EFORMERR: i32 = 2;
+pub const ARES_ESERVFAIL: i32 = 3;
+pub const ARES_ENOTFOUND: i32 = 4;
+pub const ARES_ENOTIMP: i32 = 5;
+pub const ARES_EREFUSED: i32 = 6;
+pub const ARES_EBADQUERY: i32 = 7;
+pub const ARES_EBADNAME: i32 = 8;
+pub const ARES_EBADFAMILY: i32 = 9;
+pub const ARES_EBADRESP: i32 = 10;
+pub const ARES_ECONNREFUSED: i32 = 11;
+pub const ARES_ETIMEOUT: i32 = 12;
+pub const ARES_EOF: i32 = 13;
+pub const ARES_EFILE: i32 = 14;
+pub const ARES_ENOMEM: i32 = 15;
+pub const ARES_EDESTRUCTION: i32 = 16;
+pub const ARES_EBADSTR: i32 = 17;
+pub const ARES_EBADFLAGS: i32 = 18;
+pub const ARES_ENONAME: i32 = 19;
+pub const ARES_EBADHINTS: i32 = 20;
+pub const ARES_ENOTINITIALIZED: i32 = 21;
+pub const ARES_ECANCELLED: i32 = 24;
+pub const ARES_ESERVICE: i32 = 25;
+pub const ARES_ENOSERVER: i32 = 26;
 
-export enum NSClass: u16 {
+pub enum NSClass: u16 {
     Invalid = 0,
     In = 1,
     Chaos = 3,
@@ -41,7 +41,7 @@ export enum NSClass: u16 {
     Any = 255,
 }
 
-export enum NSType: u16 {
+pub enum NSType: u16 {
     Invalid = 0,
     A = 1,
     NS = 2,
@@ -59,7 +59,7 @@ export enum NSType: u16 {
     ANY = 255,
 }
 
-export struct CaresStatus {
+pub struct CaresStatus {
     pub static fn codeName(code: i32): []const u8 {
         return switch (code) {
             0 => "SUCCESS",
@@ -89,13 +89,13 @@ export struct CaresStatus {
     }
 }
 
-@c {
-    pub fn ares_library_init(flags: i32): i32;
-    pub fn ares_library_cleanup(): void;
-    pub fn ares_init(channelptr: *(*ares_channeldata?!)): i32;
-    pub fn ares_destroy(channel: *ares_channeldata!): void;
-    pub fn ares_cancel(channel: *ares_channeldata!): void;
-    pub fn ares_strerror(code: i32): cstr;
-    pub fn ares_free_data(dataptr: *!): void;
-    pub fn ares_freeaddrinfo(ai: *ares_addrinfo!): void;
+pub @c {
+    fn ares_library_init(flags: i32): i32;
+    fn ares_library_cleanup();
+    fn ares_init(channelptr: *(*ares_channeldata?!)): i32;
+    fn ares_destroy(channel: *ares_channeldata!);
+    fn ares_cancel(channel: *ares_channeldata!);
+    fn ares_strerror(code: i32): cstr;
+    fn ares_free_data(dataptr: *!);
+    fn ares_freeaddrinfo(ai: *ares_addrinfo!);
 }

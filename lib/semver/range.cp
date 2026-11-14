@@ -1,6 +1,5 @@
 // lib/semver/range.cp
 // Semver Range matching (^, ~, >=, <=, >, <, =, *, ||) in CP
-const std = @import("std");
 import { Version } from "./version";
 
 pub const Op = enum {
@@ -16,14 +15,14 @@ pub const Comparator = struct {
     op: Op = .any,
     version: Version = .{},
 
-    pub fn satisfies(self: Comparator, v: Version): bool {
-        return switch (self.op) {
+    pub fn satisfies(v: Version): bool {
+        return switch (_.op) {
             .any => true,
-            .eq => v.eql(self.version),
-            .lt => v.lt(self.version),
-            .lte => v.lte(self.version),
-            .gt => v.gt(self.version),
-            .gte => v.gte(self.version),
+            .eq => v.eql(_.version),
+            .lt => v.lt(_.version),
+            .lte => v.lte(_.version),
+            .gt => v.gt(_.version),
+            .gte => v.gte(_.version),
         };
     }
 };
@@ -39,7 +38,7 @@ pub const SemverRange = struct {
         if (trimmed.len == 0 or std.mem.eql(u8, trimmed, "*")) return true;
 
         // Split by logical OR: "||"
-        var or_iter = std.mem.splitSequence(u8, trimmed, "||");
+        let or_iter = std.mem.splitSequence(u8, trimmed, "||");
         while (or_iter.next()) |clause| {
             const trimmed_clause = std.mem.trim(u8, clause, " \t\r\n");
             if (trimmed_clause.len == 0) continue;
@@ -62,7 +61,7 @@ pub const SemverRange = struct {
         }
 
         // Split by whitespace: all conditions in clause must be satisfied (AND)
-        var iter = std.mem.tokenizeAny(u8, clause, " \t\r\n");
+        let iter = std.mem.tokenizeAny(u8, clause, " \t\r\n");
         while (iter.next()) |token| {
             if (!matchesToken(v, token)) {
                 return false;

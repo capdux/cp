@@ -8,7 +8,7 @@ import { IOError, SeekOrigin, Reader, Writer, Closer, Seeker } from "./traits";
 /**
  * 内存只读流：直接在源切片上无堆分配零拷贝读取与寻址
  */
-export class BufferReader implements Reader, Seeker {
+pub class BufferReader implements Reader, Seeker {
     data: []const u8;
     pos: usize;
 
@@ -17,7 +17,7 @@ export class BufferReader implements Reader, Seeker {
         _.pos = 0;
     }
 
-    pub fn read(mut _, *buf: []u8): usize! {
+    pub fn read(*_, buf: *[]u8): usize! {
         if (_.pos >= _.data.len) {
             return 0; // EOF
         }
@@ -35,7 +35,7 @@ export class BufferReader implements Reader, Seeker {
         return to_copy;
     }
 
-    pub fn seek(mut _, offset: i64, origin: SeekOrigin): u64! {
+    pub fn seek(*_, offset: i64, origin: SeekOrigin): u64! {
         let new_pos: i64 = 0;
         match (origin) {
             SeekOrigin.Start => {
@@ -62,7 +62,7 @@ export class BufferReader implements Reader, Seeker {
         return _.data.len - _.pos;
     }
 
-    pub fn reset(mut _) {
+    pub fn reset(*_) {
         _.pos = 0;
     }
 }
@@ -70,7 +70,7 @@ export class BufferReader implements Reader, Seeker {
 /**
  * 内存写入器：栈/堆定长缓冲区写入流
  */
-export class BufferWriter implements Writer {
+pub class BufferWriter implements Writer {
     buf: [4096]u8;
     written: usize;
 
@@ -79,7 +79,7 @@ export class BufferWriter implements Writer {
         _.written = 0;
     }
 
-    pub fn write(mut _, data: []const u8): usize! {
+    pub fn write(*_, data: []const u8): usize! {
         let available: usize = (4096 as usize) - _.written;
         if (available == 0) {
             return err.BufferFull;
@@ -105,7 +105,7 @@ export class BufferWriter implements Writer {
         return _.written;
     }
 
-    pub fn reset(mut _) {
+    pub fn reset(*_) {
         _.written = 0;
     }
 }
@@ -113,7 +113,7 @@ export class BufferWriter implements Writer {
 /**
  * 带缓冲读取器：内部 256 字节缓存，消灭高频系统调用损耗
  */
-export class BufferedReader<R: Reader> implements Reader {
+pub class BufferedReader<R: Reader> implements Reader {
     reader: *R;
     cache: [256]u8;
     cache_len: usize;
@@ -126,7 +126,7 @@ export class BufferedReader<R: Reader> implements Reader {
         _.cache_pos = 0;
     }
 
-    pub fn readByte(mut _): u8! {
+    pub fn readByte(*_): u8! {
         if (_.cache_pos >= _.cache_len) {
             let slice = _.cache[0..256];
             let n = _.reader.read(slice)?;
@@ -141,7 +141,7 @@ export class BufferedReader<R: Reader> implements Reader {
         return b;
     }
 
-    pub fn read(mut _, *buf: []u8): usize! {
+    pub fn read(*_, buf: *[]u8): usize! {
         if (buf.len == 0) {
             return 0;
         }
@@ -177,7 +177,7 @@ export class BufferedReader<R: Reader> implements Reader {
 /**
  * 带缓冲写入器：内部 256 字节缓存聚合写入与自动 flush
  */
-export class BufferedWriter<W: Writer> implements Writer {
+pub class BufferedWriter<W: Writer> implements Writer {
     writer: *W;
     cache: [256]u8;
     cache_len: usize;
@@ -188,15 +188,15 @@ export class BufferedWriter<W: Writer> implements Writer {
         _.cache_len = 0;
     }
 
-    pub fn flush(mut _): void! {
+    pub fn flush(*_): void! {
         if (_.cache_len > 0) {
             let slice = _.cache[0.._.cache_len];
-            let _ = _.writer.write(slice)?;
+            * = _.writer.write(slice)?;
             _.cache_len = 0;
         }
     }
 
-    pub fn write(mut _, data: []const u8): usize! {
+    pub fn write(*_, data: []const u8): usize! {
         let in_idx: usize = 0;
         while (in_idx < data.len) {
             let avail = (256 as usize) - _.cache_len;
@@ -225,7 +225,7 @@ export class BufferedWriter<W: Writer> implements Writer {
  * 将数据从读取器全量流式写入到写入器直至 EOF
  * 返回累计传输的总字节数
  */
-export fn copyStream<R: Reader, W: Writer>(mut r: R, mut w: W): usize! {
+pub fn copyStream<R: Reader, W: Writer>(r: *R, w: *W): usize! {
     let chunk_buf: [256]u8 = [0 as u8; 256];
     let slice = chunk_buf[0..256];
     let total: usize = 0;
@@ -243,7 +243,7 @@ export fn copyStream<R: Reader, W: Writer>(mut r: R, mut w: W): usize! {
 /**
  * 精确从读取器复制 n 字节至写入器
  */
-export fn copyN<R: Reader, W: Writer>(mut r: R, mut w: W, limit: usize): usize! {
+pub fn copyN<R: Reader, W: Writer>(r: *R, w: *W, limit: usize): usize! {
     let chunk_buf: [256]u8 = [0 as u8; 256];
     let total: usize = 0;
     while (total < limit) {

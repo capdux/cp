@@ -115,7 +115,7 @@ impl Codegen {
                         i.sym
                     );
                 }
-                if i.sym == "@is_beam" {
+                if i.sym == "@is_beam" || i.sym == "@is_nest" {
                     return if self.is_beam_mode {
                         "true".to_string()
                     } else {
@@ -637,6 +637,33 @@ impl Codegen {
                         if (id.sym == "string" || id.sym == "String") && prop == "from" && call.args.len() == 1 {
                             let arg = self.generate_expr(&call.args[0]);
                             return format!("cp_string_from({})", arg);
+                        }
+                        if id.sym == "JSON" {
+                            if (prop == "stringify" || prop == "encode") && !call.args.is_empty() {
+                                let arg = self.generate_expr(&call.args[0]);
+                                return format!(
+                                    "(blk: {{ const __jv = {}; break :blk std.fmt.allocPrint(std.heap.page_allocator, \"{{f}}\", .{{std.json.fmt(if (@typeInfo(@TypeOf(__jv)) == .pointer and @typeInfo(@TypeOf(__jv)).pointer.size == .one) __jv.* else __jv, .{{}})}}) catch unreachable; }})",
+                                    arg
+                                );
+                            }
+                            if (prop == "parse" || prop == "decode") && !call.args.is_empty() {
+                                if let Some(Expr::TypeVal { ty: target_ty, .. }) = call.args.first() {
+                                    if call.args.len() >= 2 {
+                                        let zig_ty = self.map_type(target_ty);
+                                        let str_arg = self.generate_expr(&call.args[1]);
+                                        return format!(
+                                            "std.json.parseFromSliceLeaky({}, std.heap.page_allocator, {}, .{{ .ignore_unknown_fields = true }})",
+                                            zig_ty, str_arg
+                                        );
+                                    }
+                                } else {
+                                    let str_arg = self.generate_expr(&call.args[0]);
+                                    return format!(
+                                        "std.json.parseFromSliceLeaky(std.json.Value, std.heap.page_allocator, {}, .{{}})",
+                                        str_arg
+                                    );
+                                }
+                            }
                         }
                         let is_enum = self.enum_defs.contains_key(&id.sym)
                             || (!self.locals.contains_key(&id.sym)
@@ -3704,6 +3731,9 @@ impl Codegen {
                 }
             }
             Expr::Array(items) => {
+                if items.is_empty() {
+                    return "&.{}".to_string();
+                }
                 let mut s = String::from(".{ ");
                 for (idx, item) in items.iter().enumerate() {
                     s.push_str(&self.generate_expr(item));

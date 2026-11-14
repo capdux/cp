@@ -46,9 +46,9 @@ import { query_user as getUser } from "./db";
 import DirInfo from "../resolver/dir_info.zig";
 import Fs from "../resolver/fs.zig";
 
-// 姿态 2：原生 Zig 风格 @import 直接导入（完全合法）
+// 2. 原生 Zig 标准库 `std` 已由编译器默认内置，无需手写 const std = @import("std"); 即可直接调用 std.*！
+// 其他外部 Zig 模块支持 @import 直接导入：
 const bun = @import("bun");
-const std = @import("std");
 
 // 前柔后刚两级类型模型：
 // 1. 前端 (cpc)：赋予透明穿透 Type::Any，不因未展开 Zig 宏而中断
@@ -101,11 +101,11 @@ export * from "./sub_module.cp";
 | :--- | :--- |
 | `cap <file>` / `cap run <file>` | Debug 模式百毫秒级直接构建并运行 |
 | `cap init [template]` / `add [-g]` | 初始化脚手架工程（`app`/`agent`/`lib`）；`add`/`remove`/`update` 管理依赖 |
-| `cap build [dir]` (`-r`/`-f`/`-s`/`-B`/`-b`) | 构建产物：`-r` 全平台矩阵、`-f` ReleaseFast、`-s` ReleaseSmall、`-B` 强制全量、`-b` Nest BEAM 动态库 |
+| `cap build [dir]` (`-r`/`-f`/`-s`/`-B`/`-n`) | 构建产物：`-r` 全平台矩阵、`-f` ReleaseFast、`-s` ReleaseSmall、`-B` 强制全量、`-n` (`--nest`) Nest 动态库 |
 | `cap build --lib` / `--obj` | 输出静态库 `.a` 或底层 `.o` 目标文件 |
 | `cap test [dir]` / `bench` / `clean` | 运行测试（`bin/test/`）、`bench` 基准测试、`clean` 清理 `.cap/` 与 `bin/` |
-| `cpc [compile] <file.cp> -o <out.zig> [--lib]` | 编译为 Zig 源码（`--lib` 省略 main 并保留导出符号开启 DCE） |
-| `cpc check [--json] <file.cp>` | 极速静态语法与借用检查（`--json` 输出机器自愈诊断） |
+| `cpc [compile] <file.cp> -o <out.zig> [--lib] [--nest]` | 编译为 Zig 源码（`--lib` 省略 main；`--nest`/`-n` 开启 `@is_nest` 模式，整文件错误一次性输出） |
+| `cpc check [--json] <file.cp>` | 极速整文件静态语法与借用检查（一次性输出全文件所有错误与修复建议，`--json` 输出机器自愈诊断） |
 | `cpc emit-types` / `demangle` / `lsp` | 生成 `.d.cp` 类型契约 / 反解崩溃堆栈（亦可用 `cap demangle`）/ 启动 LSP |
 
 ---
@@ -132,7 +132,7 @@ CP 彻底废除 `let mut`、`var` 与 `threadlocal var`，全面拥抱清晰确�
 ```typescript
 class InternalLoopData { q_len: i32; active_timer: i32; }
 
-fn process_loop(*data: InternalLoopData) {
+fn process_loop(data: *InternalLoopData) {
     let q = *data.q_len;
     let t = *data.active_timer; // 多字段分离借用：合法并行持有
     q.* = 42;
@@ -335,39 +335,43 @@ let rc = asm volatile (
 
 ## 五、 函数系统、形参契约、闭包、静态容器与泛型 (Functions & Generics)
 
-### 1. 函数声明与五维形参传递契约矩阵
+### 1. 函数声明与正交形参传递契约矩阵
+> **正交黄金法则**：
+> - **接收者（首参无类型）**：修饰符在前（只读**直接省略 `_`**；可变写 **`*_`**；移动所有权写 **`move _`** 或 **`own _`**）。
+> - **具名参数（有类型）**：可变修饰符在 `:` 后的类型位写 **`v: *T`**（编译器自动推导是值拷贝本地可变还是可变引用借用！）；所有权修饰符在参数名前写 **`move v: T`** 或 **`own v: *T`**。
+> - **绝对禁手**：具名参数严禁写 `*v: T`、`let v: T`、`mut v: T` 或 `v: move T`！
+
 ```typescript
-// 1. 默认值参 / 只读借用（默认不可变！函数体内禁止重新赋值或修改字段）
+// 1. 默认只读参数（默认不可变！函数体内禁止重新赋值或修改字段）
 fn inspect(data: Point, limit: i32) {
-    // limit = 10; // ❌ 编译报错：Cannot mutate read-only variable 'limit'
+    // limit = 10; // ❌ 编译报错 E0201：parameter 'limit' is a read-only borrow
     print(data.x, limit);
 }
 
-// 2. 可变本地值拷贝形参（fn foo(let p: T) —— 官方唯一规范，彻底淘汰 mut）
-// 允许在函数局部栈帧内自由重新赋值，对调用方原变量无任何副作用！
-fn accumulate(let cursor: usize, steps: usize): usize {
+// 2. 统一可变具名参数（v: *T —— 编译器自动推导值拷贝 vs 可变借用！）
+// 2.1 函数体内对 cursor 直接重赋值 -> 编译器自动按本地可变值拷贝处理（不走借用检查，对调用方无副作用）
+fn accumulate(cursor: *usize, steps: usize): usize {
     cursor += steps;
     return cursor;
 }
-
-// 3. 可变借用参数（独占可变访问，就地修改调用方数据）
+// 2.2 函数体内修改 pt 字段 -> 编译器自动作为独占可变借用处理（就地修改调用方数据）
 fn modifyPoint(pt: *Point, dx: i32) { pt.x += dx; }
-fn modifyPointAlt(*pt: Point, dx: i32) { pt.x += dx; }
 
-// 4. 类型化裸指针形参（unsafe 级别）
+// 3. 类型化裸指针形参（unsafe 级别）
 fn rawOperation(ptr: *i32!) { unsafe { ptr.* = 100; } }
 
-// 5. 所有权转移参数（move / own，函数接管生命周期，调用方原变量失效）
+// 4. 所有权转移参数（move v: T / own v: *T，修饰符在参数名前，调用方原变量失效）
 fn consumeUser(move u: User) { u.saveToDb(); }
-fn consumeUserOwn(own u: User) { ... }
+fn consumeBuffer(own buf: *Buffer) { buf.release(); }
 
-// 6. 极简无冒号返回签名（省略 void 与冒号）
-fn logMessage(msg: string) { ... }
-fn flushSocket()! { ... }                           // 等价于 : void!
-fn findToken()?! { ... }                            // 等价于 : void?!
+// 5. 函数返回签名铁律（有返回值必写 `: ReturnType`；无返回值一律省略 `: void`！）
+fn getCount(): usize { return 42; }                 // ✅ 有返回值必须写 `:`
+fn logMessage(msg: string) { ... }                  // ✅ 无返回值直接省略 `: void`（严禁写 `: void`）
+fn flushSocket()! { ... }                           // ✅ 仅可能报错的无返回值函数
+fn findToken()?! { ... }                            // ✅ 可空且可能报错的无返回值函数
 fn writeExact(): void ! std.Io.Writer.Error { ... } // 点路径显式错误集
 
-// 7. 编译期自动推导参数、unsafe 函数声明与内联修饰符 (@inline)
+// 6. 编译期自动推导参数（彻底淘汰 any，泛型入参用 auto）、unsafe 函数声明与内联修饰符 (@inline)
 fn handleCallback(@comptime callback: auto) { ... }
 pub unsafe fn direct_io_write(ptr: [*]const u8!, len: usize): ! { ... }
 @inline pub fn fastAdd(a: i32, b: i32): i32 { return a + b; } // 发射为 pub inline fn
@@ -427,12 +431,12 @@ let trimmed = std.mem.trim(u8, raw_str, " \t"); // 支持原生类型标识符 (
 let is_same = std.mem.eql(u8, slice_a, slice_b);
 ```
 
-### 4. 方法接收者（Receiver）统一规范：`*this` / `this` 与 `*_` / `_`
-- **只读实例方法**：首参写 `this` 或 `_`（无二义性时可省略，直接裸写字段名 `return balance;`）；
-- **独占可变方法**：首参必须显式声明为 **`*this`** 或 **`*_`**；
-- **所有权消耗方法**：首参声明为 `move this` 或 `move _`；
+### 4. 方法接收者（Receiver）统一规范：省略 `_` vs `*_` vs `move _`
+- **只读实例方法**：**直接省略首参 `_`**（如 `pub fn text(): string { return _.body; }` 或 `return body;`，编译器拦截冗余显式只读 `_` `E0123`）；
+- **独占可变方法**：首参必须显式声明为 **`*_`**（如 `pub fn init(*_, url: string)`、`pub fn reset(*_) { _.remaining = 0; }`）；
+- **所有权消耗方法**：首参声明为 **`move _`**（或 **`own _`**）；
 - **静态方法**：冠以 `static` 修饰，不含接收者，通过 `ClassName.method()` 调用；
-- **🚨 绝对禁手**：**严禁书写 `self: *Foo` 或 `self: &Foo`！**
+- **🚨 绝对禁手**：**严禁书写 `self`、`this`、`*this` 或 `mut _`（触发 `E0121` / `E0104` 报错）！**
 
 ### 5. 纯静态命名空间容器 (`static class` 与 `static struct`)
 - 内部所有字段、常量与方法**默认全自动静态**，无需逐个写 `static`；
@@ -455,16 +459,21 @@ let is_same = std.mem.eql(u8, slice_a, slice_b);
   - 析构清理钩子声明为 **`pub fn release(*_)`**，离开作用域自动触发确定性释放。
 
 ### 2. 枚举全特性与自洽映射体系 (Enums)
+> **可见性与静态规则**：与 `struct` 一致，**`enum` 内部所有变体与成员方法默认即为 `pub`（禁止加冗余 `pub`）**；实例方法省略只读 `_`，静态方法必须显式标注 `static fn`。
 ```typescript
-// 1. 指定底层整数位宽、特殊逃逸标识符、内嵌方法与 zig {}
-export enum FetchRequestMode: u2 {
+// 1. 指定底层整数位宽、特殊逃逸标识符、内嵌实例/静态方法（成员默认 pub，无需写 pub）
+pub enum FetchRequestMode: u2 {
     same_origin = 0,
     @"no-cors" = 1,       // 逃逸含连字符或保留字的标识符
     cors = 2,
     navigate = 3,
 
-    pub fn isCors(_): bool {
+    fn isCors(): bool {
         return _ == .cors || _ == .@"no-cors";
+    }
+
+    static fn defaultMode(): FetchRequestMode {
+        return .cors;
     }
 }
 
@@ -505,24 +514,30 @@ pub union ValueUnion { int_val: i32, byte_val: u8 }
 ```
 
 ### 4. C-FFI 零样板头文件吸纳、导出修饰符与系统布局装饰器
+> **`@c { ... }` vs `pub @c { ... }` 极简契约**：
+> - `@c { ... }` 声明**仅当前模块内可见**；**`pub @c { ... }`** 声明**向外部模块导出**。
+> - 块内直接写 `fn`、`struct`、`union`、`enum`、`type`、`const`，**无需再写重复的 `pub` 或 `extern`**；无返回值 C 函数**同样直接省略 `: void`**！
 ```typescript
-// 1. @c { ... } 零样板头文件吸纳（自动注入 c.* 全局安全命名空间）与自定义原型混写
-@c {
+// 1. @c { ... }（模块私有）与 pub @c { ... }（模块导出）
+pub @c {
     "stdio.h",
-    "sqlite3.h",
-    fn custom_native_helper(fd: i32, flags: u32): i32;
+    "zlib.h",
+    type z_streamp = *z_stream!;
+    struct z_stream { next_in: [*]const u8!; avail_in: u32; }
+    fn zlibVersion(): cstr;
+    fn deflateEnd( strm: z_streamp); // 无返回值直接省略 : void
 }
-_ = c.puts("Hello via C-FFI");
+* = c.puts("Hello via C-FFI");
 
 // 2. @c("alias") 符号重命名导入
 @c("phr_parse_request")
 pub fn parse_http_request(buf: cstr, len: usize): i32;
 
-// 3. 单行外部变量/函数声明与导出 C-ABI 函数
-@c fn getpid(): i32;                             // 极简无 extern 单行外部 C 函数声明
-pub extern fn mimalloc_free(ptr: *!): void;      // 显式 extern 外部 C 函数声明
-extern const c_global_version: u32;              // 外部 C 符号常量/变量 (extern const / extern let)
-@c pub fn on_open_trampoline(s: *!): void { ... } // 生成 callconv(.c)（亦支持 @c export fn 导出动态库符号）
+// 3. 单行外部变量/函数声明与导出 C-ABI 函数（无返回值一律省略 : void）
+@c fn getpid(): i32;                        // 极简无 extern 单行外部 C 函数声明
+pub extern fn mimalloc_free(ptr: *!);       // 显式 extern 外部 C 函数声明（省略 : void）
+extern const c_global_version: u32;         // 外部 C 符号常量/变量 (extern const / extern let)
+@c pub fn on_open_trampoline(s: *!) { ... } // 生成 callconv(.c)
 ```
 
 | 装饰器注解 | 语义与底层发射 | 典型应用场景 |
@@ -627,12 +642,19 @@ switch (expr) {
 }
 ```
 
-### 3. 字符串模板插值（必须反引号）、内置 `RegExp` 字面量 (`/pat/flags`) 与管道 (`|>`)
-- **`RegExp` 为语言内建类，无需任何 `import`**：同时支持 TypeScript 风格正则字面量 **`/pattern/flags`**（支持 `\/` 转义与 `i` 忽略大小写、`m` 多行等标志）及 `new RegExp(pattern, flags)`，二者均受确定性 RAII 自动释放。
+### 3. 字符串模板插值（必须反引号）、一等公民内置 `JSON` 与 `RegExp`（无需 `import`）及管道 (`|>`)
+- **`JSON` 与 `RegExp` 均为语言全局内建一等公民，无需任何 `import`**：
+  - **`JSON.stringify(val)`**：将任意结构体、类、数组、字典或基础值序列化为 `string`；
+  - **`JSON.parse<T>(str)?`**：强类型零拷贝反序列化为目标类型 `T`；
+  - **`JSON.parse(str)?`**：动态解析为 `std.json.Value` 树；
+  - **`RegExp`**：支持 TypeScript 风格正则字面量 **`/pattern/flags`** 及 `new RegExp(pattern, flags)`，自动确定性 RAII 释放。
 ```typescript
 let summary = `Agent ${agent_name} executed ${task_count} reductions.`;
+let json_str = JSON.stringify({ id: 1, name: "cp" });                   // 无需 import
+let cfg = JSON.parse<ServerConfig>(raw_body)?;                          // 强类型反序列化，无需 import
+let dyn_val = JSON.parse(raw_body)?;                                    // 动态 JSON 解析，无需 import
 let email_regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i; // 无需 import
-let re_alt = new RegExp("^hello [a-z]+$", "i");                          // 二者等价
+let re_alt = new RegExp("^hello [a-z]+$", "i");                         // 二者等价
 let ok = email_regex.test("dev@cp-lang.org");
 
 let r1 = x |> mul(2);                          // 默认传入首参 -> mul(x, 2)
@@ -710,8 +732,8 @@ let computed = init_blk: {
     break :init_blk computeExpensive();
 };
 let direct_val: i32 = ({ let base = 50; break base * 2; });
-_ = computeExpensive();       // 忽略未使用返回值；同一作用域多次忽略/避免遮蔽 `_` 亦支持 `let * = expr;`
-const [h, *, t, ...] = items; // 解构忽略元素用 `*`，方法接收者用 `_`
+* = computeExpensive();       // 忽略未使用返回值必须用 `* = expr;`（或 `let * = expr;`），严禁 `_ = expr;`！
+const [h, *, t, ...] = items; // 解构忽略元素用 `*`，方法接收者唯一保留 `_`
 ```
 - **分号可选与 ASI**：语句末尾分号 `;` 可选，推荐使用分号保证工程清晰度；历史关键字 `match` 兼容等同于 `switch`，统一首选 `switch`。
 
@@ -793,7 +815,7 @@ inline for (field of fields) { processField(field); }
 @for (i of 0..4) { ... }
 
 // 3. 类型内省与底层 SIMD/位计数/原子原语（用于 ptr/collections/unicode/string/sync 高性能库）
-// 反射内省：@This(), @typeInfo(T) (.pointer / .@"struct" / .@"enum" / .@"union"), @is_beam, @panic(msg)
+// 反射内省：@This(), @typeInfo(T) (.pointer / .@"struct" / .@"enum" / .@"union"), @is_nest, @panic(msg)
 // 位重解释与地址：@bitCast(expr), @intFromPtr, @ptrFromInt, @intFromEnum, @enumFromInt, @intFromBool, @bitSizeOf, @byteSwap
 // SIMD 向量与位计数：@Vector(N, T), @splat, @clz, @ctz, @popCount, @reduce, @select, @atomicLoad, @atomicStore
 
@@ -982,17 +1004,17 @@ switch (msg) {
 | :---: | :--- | :--- | :--- |
 | **#1** | `var x: i32 = 0;` | `let x: i32 = 0;` | CP 不存在 `var` 关键字，可变变量 100% 写作 `let` |
 | **#2** | `let mut x = 1;` | `let x = 1;` | CP 彻底废除 `let mut` |
-| **#3** | `fn foo(mut x: i32)` | `fn foo(let x: i32)` | 可变本地拷贝形参使用 `let`，彻底淘汰 `mut` 关键字 |
-| **#4** | `threadlocal var x: i32 = 0;` | `@tls let x: i32 = 0;` | 线程局部存储使用 `@tls let`（或 `threadlocal let`） |
-| **#5** | `try func();` / `try { ... } catch` | `func()?;` / `expr catch e => ...` | 废除前缀 `try` 与 Java 式 `try/catch` 块，使用后缀 `?` 与表达式 `catch` |
-| **#6** | `for (0..n) \|i\|` 或 `for (list) \|x\|` | `for (i of 0..n)` / `for (x of list)` | 循环一律使用 `for (... of ...)`，严禁 Zig 竖线管道 `\|x\|` |
+| **#3** | `fn foo(mut x: i32)` / `fn foo(let x: i32)` / `fn foo(*x: i32)` | `fn foo(x: *i32)` | 具名可变参数统一写 `v: *T`（编译器自动推导值拷贝或可变借用），严禁 `mut`/`let`/`*v: T` |
+| **#4** | `fn save(v: move User)` | `fn save(move v: User)` / `fn save(own v: *User)` | 所有权转移修饰符 `move`/`own` 必须置于参数名前，严禁置于 `:` 之后 |
+| **#5** | `_ = close(fd);` 或 `let _ = close(fd);` | `* = close(fd);` | `_` 是实例接收者保留字，抛弃返回值必须使用 `* = expr;` |
+| **#6** | `if (opt) \|v\|` / `while (opt) \|v\|` / `for (arr) \|v\|` | `if (v := opt)` / `while (v := opt)` / `for (v of arr)` | 严禁 Zig 竖线管道捕获 `\|v\|`，条件解包用 `:=`，循环用 `for ... of` |
 | **#7** | `for (x of vec) { vec.push(1); }` | 先收集或使用索引，严禁遍历中增删 | `Loop-Borrow Lock`：遍历期间容器被借用锁死，禁止内部结构修改 |
-| **#8** | `cond1 and cond2` / `cond1 or cond2` | `cond1 && cond2` / `cond1 \|\| cond2` | 智能体编码规范强制用 `&&`/`||`（编译器保留 `and`/`or`/`orelse` 作上下文软关键字） |
-| **#9** | `fn f(): !usize` 或 `fn f(): ?User` | `fn f(): usize!` / `fn f(): User?` | 彻底废除前缀 `!T`/`?T`，确立类型主体居首的纯后缀体系 |
+| **#8** | `fn next() ([]const u8)?` 或 `fn close(): void` | `fn next(): ([]const u8)?` / `fn close()` | 有返回值必须写 `: ReturnType`；无返回值一律省略 `: void`（含 `@c` 声明） |
+| **#9** | `fn f(): !usize` 或 `fn f(): ?[]const u8` | `fn f(): usize!` / `fn f(): ([]const u8)?` | 彻底废除前缀 `!T`/`?T`，确立类型主体居首的纯后缀体系 |
 | **#10** | `let n = "123" as i32;` | `let n = i32.parse("123")?;` | 禁止对字符串用 `as` 转换数值，必须走标准受检 `parse` 方法 |
-| **#11** | `let big: usize = (small as usize);` | `let big: usize = small;` | 数值小转大无损拓宽全自动流转，禁止写冗余 `as` 噪音 |
-| **#12** | `@extern struct Bar { ... }` | `@c struct Bar { ... }` | C-ABI 内存对齐结构体统一使用 `@c struct` |
-| **#13** | `@callconv("c") pub fn f()` | `@c pub fn f()` | C 调用约定函数统一使用 `@c`，彻底废除 `@callconv` |
+| **#11** | `fn fetch(url: string, opts: any)` | `fn fetch(url: string, opts: auto)` | CP 彻底废除 `any` 类型，泛型参数推导使用 `auto` |
+| **#12** | `@extern struct Bar` / `@c { pub extern fn f(): void; }` | `@c struct Bar` / `@c { fn f(); }` | `@c {}` 内无需重复写 `pub` 或 `extern`，导出整个块用 `pub @c {}` |
+| **#13** | `if (@is_beam)` | `if (@is_nest)` | 运行时模式宏统一升级为 `@is_nest`（编译参数 `--nest`） |
 | **#14** | `Point{ .x = 1, .y = 2 }` | `Point{ x: 1, y: 2 }` | 结构体初始化无前导点 |
 | **#15** | `const p = .{ 10, 20 };` / `.{ .x = 1 }` | `const p = [10, 20];` / `{ x: 1 }` | 元组用方括号 `[...]`，匿名对象用花括号 `{ ... }` |
 | **#16** | `items: []*Timer = &.{};` | `items: []*Timer = [];` | 切片字面量用方括号 `[]`，严禁 `&.{}` |
@@ -1001,8 +1023,8 @@ switch (msg) {
 | **#19** | `const [first, _] = pair;` | `const [first, *] = pair;` | 模式匹配忽略符是 `*`，`_` 是方法接收者保留字 |
 | **#20** | `let p: *any! = ...;` | `let p: *! = ...;` / `let p: *!? = ...;` | 通用裸指针推荐省略 `any`，直接写 `*!` 与 `*!?` |
 | **#21** | 纯 CP 代码中滥用 `[*c]T` | `*T!` / `[*]T!` / `[]T` | `[*c]T` 仅限用于 C-FFI 头文件边界，业务代码中严禁使用 |
-| **#22** | 根目录创建 `lib/io.cp` 门面 | 仅经 `lib/io/index.cp` 对外导出 | 复合目录库单一真理出口规范 |
-| **#23** | `pub fn count(self: *Foo)` | `pub fn count(*this)` / `count(*_)` | 接收者必须用 `*this`/`this` 或 `*_`/`_`，严禁自定 `self` 形参 |
+| **#22** | `struct` / `enum` 成员加冗余 `pub` | 直接写字段名与 `fn`，仅静态方法加 `static` | `struct` 与 `enum` 内部成员默认全部 `pub`，仅顶层模块导出统一用 `pub` |
+| **#23** | `fn set(self: *Foo)` / `fn init(this)` / `fn get(_)` | 可变写 `fn set(*_)`；只读直接省略 `fn get()` | 严禁 `self`/`this`；只读方法省略 `_`，修改字段（含 `init`）必须写 `*_` |
 | **#24** | 在 `unsafe {}` 外部 `ptr.*` 或强转 | `unsafe { const p = ptr as *T!; p.* = 1; }` | 裸指针操作必须在 `unsafe {}` 内，否则触发 `E0209` |
 | **#25** | `ptr.*.field = val` | `ptr.field = val` | 结构体指针字段访问自动解引用，严禁 `.*.` |
 | **#26** | 手写 `@ptrCast(@alignCast(p))` / `@intCast(x)` | `p as *T!` / `u32(x)`（位模式重解释用 `@bitCast`） | 数值与指针强转走 `as`/`T(x)`；物理位重解释保留 `@bitCast` |

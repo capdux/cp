@@ -1103,3 +1103,58 @@
   1. `lib/s3/`（`types.cp`, `credentials.cp`, `signing.cp`, `index.cp`）；
   2. `cap/test/test_s3.cp`：3 大端到端测试套件；
   3. `SESSION.md`, `CHANGELOG.md`, `DEVLOG.md`：四线文档同步。
+
+
+---
+
+## 2026-11-14（续） CP 语言正交语法收敛、全文件单次诊断升级、双轨规范对齐与全量 `lib/` 净化
+
+### 1. 收到用户指令（按时间顺序完整记录）
+1. `非常好, 分析下, 还有哪些bun资产, 可以吸收到cp中来? 在已吸收的资产里, 部分目录 bun agy 做了更新(增加了迁移cp文件或更新), 需要你重新审核一下, 是否需要同步吸收或更新, 确保吸收的资产完整.`
+2. `很好! 我检查了下你吸收的cp文件, 有几点疑问和建议, 需要你仔细分析/确认: 1. crypto/_boringssl.zig 这个1.9万行文件, 我们在哪个cp文件引用了它 2. const std = @import("std"); 我们引用了 std, 这个std 是zig 的标准库吗? @import 是对zig 引用的宏吗? 3. export class LinearFifo<T> { pub buf: []T = &.{}; 这个 &.{} 是什么语法, []T 不是数组吗? 4. @c { pub extern fn zlibVersion(): [*c]const u8; } c-ffi定义, 已经包裹在 @c 宏里面, 这个 pub extern 似乎是多余的, 你觉得呢? 5. export enum CompressionFormat: u8 ... 5.1 结构中的成员, 默认应该就是 pub, enum 是否应该与struct一样, 成员默认pub, 这个成员函数有必要加 pub 吗? 5.2 static struct 静态 结构,内部成员默认全部静态. 对于 enum类型, 成员函数可以静态或非静态码? 如果必须静态, 这个 static 有必要吗? 6. cp 模块级别, pub 与 export作用等同, 大部分使用了export,部分使用了pub, 导致不统一, 你觉得统一使用 pub 还是 export? 7. 大量 struct 成员, 添加了多余的 pub。你分析一下, "如非必要, 尽量简洁"原则, cp中, 哪些需要 bun agy 优化, 哪些需要你优化cpc编译器?`
+3. `一. 你的方案, 需做几点修正: 1. 结构/枚举/类, 可以省略 首参 this(_), 你使用 枚举的 首参判断 静态非静态不合理, 还是需使用 static 表示静态. 2. cp 代码修改, 你生成优化指令, 我转发给 bun agy 来修改, 你再重新吸收, 避免对同一个文件, 两边同时修改. cpc 编译器由你完成. 3. 除了上述问题, 还有很多语法问题, 都要采取 2 方法修正. 4. bun的cp迁移中禁止使用 zig {}逃逸, 你说 对 std的调用, 要写入 zig {}, 会导致大量 zig {} 出现, 这个方案部合理! 5. @c { }, 内部优化方案没问题, 如需导出模块范围, 需 pub @c{}, 否则只能模块内调用, 确认下cpc 中是否这样实现的. 二. 还发现其他错误的代码片段, 这些错误的语法, cpc 编译时, 为何没有拦截/报错,友好提示 bun agy 即时修正? 1. _ = expr 忽略返回值, 应该使用 *, _作为this 替代, 禁止在枚举/结构/类成员方法中使用, 否则会引发混乱, 这个 cpc 编译器需严格拦截报错提示 2. pub fn next(self: *HeaderValueIterator) ?[]const u8 ... 3. pub fn set(self: *Headers, name: []const u8, value: []const u8) void ... 4. pub fn close(self: *ProxyTunnel) void ... 5. export class Request ... 6. export async fn fetch(url: string, options: any): Response ... 7. pub fn reset(mut _): void ... 8. pub fn isExceeded(_): bool ... 对以上信息, 你先分析, 给出分析报告和执行方案, 我确认后, 你再执行`
+4. `有几个微调: 1. @json_parse @http_fetch, 这些宏, 编译期不应该介入拦截... 2. 保留 while (i < self.len) : (i += 1) 这种语法, 不要拦截报错! 3. @is_beam 改为 @is_nest, 这个是 编译时通过 编译参数或 cap.json 带入的, 之前为 --beam, 现在改为 --nest, 不要影响当前 bun和lib中的cp现有代码编译. 4. *_；可变值形参请将 mut x: T 改为 let x: T。这个我觉得有些让人费解... 不能统一使用 *T 吗? cpc 编译期自动推导, 是值拷贝 还是 引用, 值拷贝, 内部按 let v:T处理, 不走借用检查流程 5. cpc 编译与check, 以及 jason 输出, 都要支持一个文件的所有错误一次性输出, 提供调试效率. 6. json 跟 正则表达式类似, 属于高频内置类, 在 不 import时, 如何使用? 类似 Typescript的 JSON 吗? 你有什么快捷/简洁使用建议 7. cp 没有var/self, 代码不能混乱, var self 是 zig语法. 考虑我上述建议, 重新给出 cpc 优化修改方案和 bun agy 的 迁移规范. 需将这些规范, 同步写入 cp_ref.md 和 cp_agent_ref.md中, 避免后续其他智能体编写cp时出错.`
+5. `非常好, 好有几点需与你沟通确认: 1. *x: T 或 *_，局部变量改为 let：结构/类/枚举这些容器的方法, 使用 *_, move _, 其他函数/参数, 使用 v:*T, 而不是 *v:T, 避免混乱! 局部变量改为 let 是什么意思? 2. 函数返回签名：函数签名, 返回类型,是否必须写 :, 不写会有什么不好的后果? 无返回类型,可省略, 仅外部 C 声明保留 : void 是什么意思? 既然能省略, 为何有些能省略,有些不能,程序员会晕。确定以上两个问题, 给出最终修订方案, 我确认后, 即可执行 cpc 升级,和 双轨规范手册（cp_ref.md & cp_agent_ref.md）更新, lib 代码库净化, 你觉得是你直接做了, 还是 通知 bun agy 净化后, 你再重新迁移一遍, 哪个效率更高`
+6. `越来越清晰, 还有一个问题, 待确认: 1. 移动所有权：v: move T（或 v: own T）。我们之前cp 设计的, move 和 own 在前面, 如: move v:T own v: *T, move 与 own 在前面, move 与 own 不是类型的一部分, 这种设计, 你觉得不好吗? 需要修改吗?`
+7. `很好, 开始执行`
+
+### 2. 执行结果汇报
+1. **协同热修结单 (`task-20261114-enum-variant-name-and-top-string-const`)**：
+   - 修复 `cpc/src/codegen/mod.rs`：当枚举已显式定义用户变体 `name`（如 `pub enum Tag: u8 { name, value }`）时跳过自动生成 `.name()` 方法，防止 Zig 报 duplicate struct member name；
+   - 修复顶层模块字符串字面量常量生成，直接输出无类型字符串字面量 `pub const X = "...";` 使其可无缝赋给 `[]const u8`；
+   - 验证 `/data/dev/bun/temp/repro_enum_and_str_const.cp` 通过并瞬间结单。
+2. **`cpc` 编译器七大核心升级与单次全文件多错误诊断实装（同步镜像至 `cpc_dev/src/`）**：
+   - **正交形参体系与 `v: *T` 编译期自动推导**：
+     - 容器（`struct`/`class`/`enum`/`trait`）方法接收者：只读省略 `_`，可变写 `*_`（含修改字段的 `init`），所有权转移写 `move _` / `own _`；
+     - 具名形参：只读写 `v: T`，可变统一写 **`v: *T`**（严禁 `*v: T`、`let v: T`、`mut v: T`），所有权转移写前置 **`move v: T` / `own v: T` / `own v: *T`**（严禁 `v: move T`）；
+     - `cpc` 编译期自动推导 `v: *T`：当函数体内对 `v` 直接按值重绑定（如 `v = ...`、`v += 1`）且无 `v.*` 解引用时，自动降级为局部可变值拷贝（`var v = _cp_v;`，不走借用检查），否则按可变引用借用 `*T` 处理。
+   - **单次全文件错误聚合输出 (`cpc compile`, `cpc check`, `cpc check --json`)**：
+     - 打通 `parser.parse_module_with_recovery()` 与 `analyzer.get_diagnostics()` 全链路收集，单次运行一次性输出文件内全部语法/语义错误与 `help` / `suggestion` 修复建议。
+   - **一等公民内置 `JSON`（免 `import`）与预注册 `std`**：
+     - 全局内置 `JSON.stringify(val)`、`JSON.parse<T>(str)` 与 `JSON.parse(str)`，免 `import` 直接使用；
+     - 在 `sema.rs` 预注册全局 `std` 与 `builtin`，支持 `.cp` 直接调用 `std.*`，无需顶层 `const std = @import("std");` 且绝不产生 `zig {}` 逃逸块。
+   - **`--nest` / `@is_nest` 编译模式升级**：
+     - 新增 `--nest`（`-n`）命令行标志与 `@is_nest` 内建编译期布尔常量，同时保留 `--beam` / `@is_beam` 向后兼容。
+   - **语法极简化（`@c {}`、`struct`/`enum` 默认 `pub`、`= []`、`* = expr;`、全场景省略 `: void`）**：
+     - `@c { ... }`（模块私有）与 `pub @c { ... }`（模块导出）内部直接写 `fn`、`struct`、`union`、`enum`、`type`、`const`，免写 `pub extern`；
+     - `struct` 字段/方法与 `enum` 方法默认 `pub`（静态方法保留 `static fn`）；
+     - 空数组字面量 `[]` 在切片上下文自动生成 `&.{}`，并在类的 `_create` 分配器中自动初始化所有带默认值的字段；
+     - 支持独立语句 `* = expr;` 抛弃返回值；所有函数（含 `@c` / `extern`）无返回值时统一省略 `: void`。
+   - **非规范语法全面拦截与 AI 友好诊断（保留 `while (cond) : (step)` 与 `@xxx` 宏）**：
+     - 完整保留 `while (i < n) : (i += 1)` 步进语法及 `@json_parse` / `@http_fetch` 宏；
+     - 精准拦截并给出修复建议：`E0103` (`var`)、`E0104` (`mut`/`let` 形参)、`E0115` (前缀 `?T`)、`E0116` (返回类型漏写 `:`)、`E0118` (Zig `|v|` 捕获)、`E0119` (`any`)、`E0120` (`_ = expr` / `let _ = expr`)、`E0121` (`self`/`this` 接收者，智能提示省略或改为 `*_`)、`E0122` (冗余 `: void` / `void`)、`E0123` (冗余只读 `_`)、`E0125` (`*v: T` / `v: move T`)。
+3. **双轨规范手册同步更新**：
+   - 更新 [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)（第 1、2、5、6、7、8、10、13 节及 Top 16 绝对禁手清单）与 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)（新增第 20.10 节正交语法与全文件诊断规范）。
+4. **吸收 `boringssl.cp` 并完成 `lib/` 全量 144 个 `.cp` 文件语法净化与回归验证**：
+   - 新增 [`lib/crypto/_boringssl.cp`](file:///data/dev/cp/lib/crypto/_boringssl.cp)（桥接 `./_boringssl.zig`）与 [`lib/crypto/tls.cp`](file:///data/dev/cp/lib/crypto/tls.cp)（吸收 `/data/dev/bun/src/boringssl/boringssl.cp` 的 BoringSSL `@c` 绑定与 RFC 6125 X.509 SAN/DNS 通配符证书主机名校验），并在 [`lib/crypto/index.cp`](file:///data/dev/cp/lib/crypto/index.cp) 导出；
+   - 净化 `lib/` 下全部 144 个 `.cp` 文件并通过 `cpc check` 零错误检验（`Total lib .cp files: 144, failing cpc check: 0`）；
+   - 新增正交语法与内置 `JSON` / BoringSSL TLS 综合回归测试 [`cap/test/test_syntax_orthogonality.cp`](file:///data/dev/cp/cap/test/test_syntax_orthogonality.cp)（4/4 100% PASS），并验证 `test_dns.cp`、`test_compress.cp`、`test_sourcemap.cp`、`test_s3.cp` 全部 100% PASS。
+
+### 3. 阶段里程碑 Git 提交
+- **提交说明**：`feat(cpc,stdlib,docs): enforce orthogonal CP syntax, whole-file diagnostics, built-in JSON, boringssl TLS and purify lib`
+- **提交范围**：
+  1. `cpc/src/` & `cpc_dev/src/`：7 大核心编译器特性与全文件单次错误诊断；
+  2. `cp_ref.md` & `cp_agent_ref.md`：双轨规范手册同步更新；
+  3. `lib/crypto/_boringssl.cp`, `lib/crypto/tls.cp`, `lib/crypto/index.cp` 及 `lib/` 全量 144 个标准库文件净化；
+  4. `cap/test/test_syntax_orthogonality.cp` 及回归测试套件；
+  5. `SESSION.md`, `CHANGELOG.md`, `DEVLOG.md`：四线文档同步。

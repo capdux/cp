@@ -1,9 +1,8 @@
 // Mutex synchronization primitive in CP
 // Ported from Bun.js core threading architecture
 import { Futex } from "./futex";
-const std = @import("std");
 
-export struct Mutex {
+pub struct Mutex {
     impl: Impl = .{},
 
     const unlocked: u32 = 0b00;
@@ -18,43 +17,43 @@ export struct Mutex {
         locking_thread: std.atomic.Value(std.Thread.Id) = std.atomic.Value(std.Thread.Id).init(0),
         impl: ReleaseImpl = .{},
 
-        inline fn tryLock(this: *DebugImpl) bool {
-            const locking = this.impl.tryLock();
+        inline fn tryLock(*_): bool {
+            const locking = _.impl.tryLock();
             if (locking) {
-                this.locking_thread.store(std.Thread.getCurrentId(), .unordered);
+                _.locking_thread.store(std.Thread.getCurrentId(), .unordered);
             }
             return locking;
         }
 
-        inline fn lock(this: *DebugImpl) void {
+        inline fn lock(*_) {
             const current_id = std.Thread.getCurrentId();
-            if (this.locking_thread.load(.unordered) == current_id and current_id != 0) {
+            if (_.locking_thread.load(.unordered) == current_id and current_id != 0) {
                 @panic("Deadlock detected");
             }
-            this.impl.lock();
-            this.locking_thread.store(current_id, .unordered);
+            _.impl.lock();
+            _.locking_thread.store(current_id, .unordered);
         }
 
-        inline fn unlock(this: *DebugImpl) void {
-            std.debug.assert(this.locking_thread.load(.unordered) == std.Thread.getCurrentId());
-            this.locking_thread.store(0, .unordered);
-            this.impl.unlock();
+        inline fn unlock(*_) {
+            std.debug.assert(_.locking_thread.load(.unordered) == std.Thread.getCurrentId());
+            _.locking_thread.store(0, .unordered);
+            _.impl.unlock();
         }
     };
 
     const WindowsImpl = struct {
         srwlock: std.os.windows.SRWLOCK = .{},
 
-        fn tryLock(this: *WindowsImpl) bool {
-            return std.os.windows.kernel32.TryAcquireSRWLockExclusive(&this.srwlock) != std.os.windows.FALSE;
+        fn tryLock(*_): bool {
+            return std.os.windows.kernel32.TryAcquireSRWLockExclusive(&_.srwlock) != std.os.windows.FALSE;
         }
 
-        fn lock(this: *WindowsImpl) void {
-            std.os.windows.kernel32.AcquireSRWLockExclusive(&this.srwlock);
+        fn lock(*_) {
+            std.os.windows.kernel32.AcquireSRWLockExclusive(&_.srwlock);
         }
 
-        fn unlock(this: *WindowsImpl) void {
-            std.os.windows.kernel32.ReleaseSRWLockExclusive(&this.srwlock);
+        fn unlock(*_) {
+            std.os.windows.kernel32.ReleaseSRWLockExclusive(&_.srwlock);
         }
 
         pub const Type = std.os.windows.SRWLOCK;
@@ -63,16 +62,16 @@ export struct Mutex {
     const DarwinImpl = struct {
         oul: std.c.os_unfair_lock = .{},
 
-        fn tryLock(this: *DarwinImpl) bool {
-            return std.c.os_unfair_lock_trylock(&this.oul);
+        fn tryLock(*_): bool {
+            return std.c.os_unfair_lock_trylock(&_.oul);
         }
 
-        fn lock(this: *DarwinImpl) void {
-            std.c.os_unfair_lock_lock(&this.oul);
+        fn lock(*_) {
+            std.c.os_unfair_lock_lock(&_.oul);
         }
 
-        fn unlock(this: *DarwinImpl) void {
-            std.c.os_unfair_lock_unlock(&this.oul);
+        fn unlock(*_) {
+            std.c.os_unfair_lock_unlock(&_.oul);
         }
 
         pub const Type = std.c.os_unfair_lock;
@@ -81,39 +80,39 @@ export struct Mutex {
     const FutexImpl = struct {
         state: std.atomic.Value(u32) = std.atomic.Value(u32).init(unlocked),
 
-        fn lock(this: *FutexImpl) void {
-            if (!this.tryLock()) {
-                this.lockSlow();
+        fn lock(*_) {
+            if (!_.tryLock()) {
+                _.lockSlow();
             }
         }
 
-        fn tryLock(this: *FutexImpl) bool {
+        fn tryLock(*_): bool {
             if (comptime @import("builtin").target.cpu.arch.isX86()) {
                 const locked_bit = @ctz(locked);
-                return this.state.bitSet(locked_bit, .acquire) == 0;
+                return _.state.bitSet(locked_bit, .acquire) == 0;
             }
 
-            return this.state.cmpxchgWeak(unlocked, locked, .acquire, .monotonic) == null;
+            return _.state.cmpxchgWeak(unlocked, locked, .acquire, .monotonic) == null;
         }
 
-        fn lockSlow(this: *FutexImpl) void {
+        fn lockSlow(*_) {
             @branchHint(.cold);
 
-            if (this.state.load(.monotonic) == contended) {
-                Futex.waitForever(&this.state, contended);
+            if (_.state.load(.monotonic) == contended) {
+                Futex.waitForever(&_.state, contended);
             }
 
-            while (this.state.swap(contended, .acquire) != unlocked) {
-                Futex.waitForever(&this.state, contended);
+            while (_.state.swap(contended, .acquire) != unlocked) {
+                Futex.waitForever(&_.state, contended);
             }
         }
 
-        fn unlock(this: *FutexImpl) void {
-            const state = this.state.swap(unlocked, .release);
+        fn unlock(*_) {
+            const state = _.state.swap(unlocked, .release);
             std.debug.assert(state != unlocked);
 
             if (state == contended) {
-                Futex.wake(&this.state, 1);
+                Futex.wake(&_.state, 1);
             }
         }
 
@@ -121,31 +120,31 @@ export struct Mutex {
     };
 
     /// Tries to acquire the mutex without blocking the caller's thread.
-    pub fn tryLock(this: *Mutex): bool {
-        return this.impl.tryLock();
+    pub fn tryLock(*_): bool {
+        return _.impl.tryLock();
     }
 
     /// Acquires the mutex, blocking the caller's thread until it can.
-    pub fn lock(this: *Mutex): void {
-        this.impl.lock();
+    pub fn lock(*_) {
+        _.impl.lock();
     }
 
     /// Releases the mutex which was previously acquired with `lock()` or `tryLock()`.
-    pub fn unlock(this: *Mutex): void {
-        this.impl.unlock();
+    pub fn unlock(*_) {
+        _.impl.unlock();
     }
 
     /// Scoped RAII lock execution helper
-    pub fn withLock(this: *Mutex, cb: any): void {
-        this.lock();
-        defer this.unlock();
+    pub fn withLock(*_, cb: auto) {
+        _.lock();
+        defer _.unlock();
         cb();
     }
 
-    pub fn release(this: *Mutex): void {
-        _ = this;
+    pub fn release(*_) {
+        * = _;
     }
-    pub fn deinit(this: *Mutex): void {
-        this.release();
+    pub fn deinit(*_) {
+        _.release();
     }
 }

@@ -13,7 +13,7 @@ import {
     DnsCache,
 } from "cap:dns";
 
-fn main(): void {
+fn main() {
     test("1. c-ares status codes, retryability & NSClass/NSType constants", () => {
         expect_eq(CaresStatus.codeName(ARES_SUCCESS), "SUCCESS");
         expect_eq(CaresStatus.codeName(ARES_ETIMEOUT), "ETIMEOUT");

@@ -24,9 +24,13 @@ struct Cli {
     #[arg(short = 'I', long)]
     include: Vec<PathBuf>,
 
-    /// Enable BEAM runtime mode
+    /// Enable BEAM runtime mode (legacy alias for --nest)
     #[arg(short = 'b', long)]
     beam: bool,
+
+    /// Enable Nest runtime mode
+    #[arg(short = 'n', long)]
+    nest: bool,
 
     /// Compile as library module (omit main entry point)
     #[arg(long)]
@@ -47,6 +51,8 @@ enum Commands {
         include: Vec<PathBuf>,
         #[arg(short = 'b', long)]
         beam: bool,
+        #[arg(short = 'n', long)]
+        nest: bool,
         #[arg(long)]
         lib: bool,
     },
@@ -83,13 +89,13 @@ fn compile_file(
 ) -> anyhow::Result<()> {
     let mut all_items = Vec::new();
     let mut processed_sources = HashSet::new();
+    let mut all_diags = Vec::new();
 
     if lib {
         let code = fs::read_to_string(input)?;
         let mut parser = CPParser::new(&code);
-        let parsed_module = parser
-            .parse_module()
-            .map_err(|e| anyhow::anyhow!("{}", e.render_all(Some(&code), Some(input))))?;
+        let (parsed_module, p_diags) = parser.parse_module_with_recovery();
+        all_diags.extend(p_diags);
         all_items = parsed_module.body;
     } else {
         resolve_imports(input, include, &mut all_items, &mut processed_sources)?;
@@ -101,14 +107,18 @@ fn compile_file(
     };
 
     let mut analyzer = Analyzer::new();
-    analyzer.analyze_module(&mut module).map_err(|e| {
-        let known = analyzer.get_known_symbols();
+    let _ = analyzer.analyze_module(&mut module);
+    all_diags.extend(analyzer.get_diagnostics());
+
+    if !all_diags.is_empty() {
         let code = fs::read_to_string(input).ok();
-        anyhow::anyhow!(
-            "{}",
-            e.to_diagnostic(&known).render(code.as_deref(), Some(input))
-        )
-    })?;
+        let rendered = all_diags
+            .iter()
+            .map(|d| d.render(code.as_deref(), Some(input)))
+            .collect::<Vec<_>>()
+            .join("\n");
+        return Err(anyhow::anyhow!("{}", rendered));
+    }
 
     let code_str = fs::read_to_string(input).ok();
     let zig_code_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
@@ -189,9 +199,10 @@ fn run(cli: Cli) -> anyhow::Result<()> {
                 output,
                 include,
                 beam,
+                nest,
                 lib,
             } => {
-                compile_file(&input, output.as_ref(), &include, beam, lib)?;
+                compile_file(&input, output.as_ref(), &include, beam || nest, lib)?;
             }
             Commands::Check { input, json } => {
                 let code = match fs::read_to_string(&input) {
@@ -210,32 +221,34 @@ fn run(cli: Cli) -> anyhow::Result<()> {
                     }
                 };
                 let mut parser = CPParser::new(&code);
-                let mut module = match parser.parse_module() {
-                    Ok(m) => m,
-                    Err(e) => {
-                        if json {
-                            println!("{}", e.to_json_report(Some(&code), Some(&input)));
-                            std::process::exit(1);
-                        } else {
-                            return Err(anyhow::anyhow!(
-                                "{}",
-                                e.render_all(Some(&code), Some(&input))
-                            ));
-                        }
-                    }
-                };
+                let (mut module, mut all_diags) = parser.parse_module_with_recovery();
                 let mut analyzer = Analyzer::new();
-                if let Err(e) = analyzer.analyze_module(&mut module) {
-                    let known = analyzer.get_known_symbols();
-                    let diag = e.to_diagnostic(&known);
+                let _ = analyzer.analyze_module(&mut module);
+                all_diags.extend(analyzer.get_diagnostics());
+                if !all_diags.is_empty() {
                     if json {
-                        println!("{}", diag.to_json(Some(&code), Some(&input)));
+                        let diagnostics = all_diags
+                            .iter()
+                            .map(|d| d.to_diagnostic_json(Some(&code), Some(&input)))
+                            .collect();
+                        let report = cpc::diagnostic::DiagnosticReport {
+                            status: "error".to_string(),
+                            diagnostics,
+                        };
+                        println!(
+                            "{}",
+                            serde_json::to_string(&report).unwrap_or_else(|_| {
+                                "{\"status\":\"error\",\"diagnostics\":[]}".to_string()
+                            })
+                        );
                         std::process::exit(1);
                     } else {
-                        return Err(anyhow::anyhow!(
-                            "{}",
-                            diag.render(Some(&code), Some(&input))
-                        ));
+                        let rendered = all_diags
+                            .iter()
+                            .map(|d| d.render(Some(&code), Some(&input)))
+                            .collect::<Vec<_>>()
+                            .join("\n");
+                        return Err(anyhow::anyhow!("{}", rendered));
                     }
                 }
                 if json {
@@ -283,7 +296,13 @@ fn run(cli: Cli) -> anyhow::Result<()> {
             }
         }
     } else if let Some(input) = cli.input {
-        compile_file(&input, cli.output.as_ref(), &cli.include, cli.beam, cli.lib)?;
+        compile_file(
+            &input,
+            cli.output.as_ref(),
+            &cli.include,
+            cli.beam || cli.nest,
+            cli.lib,
+        )?;
     } else {
         use clap::CommandFactory;
         Cli::command().print_help()?;

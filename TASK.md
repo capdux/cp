@@ -4382,3 +4382,118 @@ pub fn connect(): NetworkError!Socket { ... }
    • 后台守护任务监听保持常驻，零等待响应 Bun AGY 的热修请求。
 
 _ = expr 忽略返回值
+
+pub fn next(self: *HeaderValueIterator) ?[]const u8 {
+if (self.pos >= self.raw.len) {
+return null;
+}
+
+     const start = self.pos;
+     var end = start;
+     while (end < self.raw.len and self.raw[end] != ',') : (end += 1) {}
+
+     const slice = std.mem.trim(u8, self.raw[start..end], " \t");
+     self.pos = if (end < self.raw.len) end + 1 else self.raw.len;
+
+     if (slice.len == 0) {
+         return self.next();
+     }
+     return slice;
+
+}
+
+    pub fn set(self: *Headers, name: []const u8, value: []const u8) void {
+        var i: usize = 0;
+        while (i < self.len) : (i += 1) {
+            if (self.dynamic_entries) |dyn| {
+                if (std.ascii.eqlIgnoreCase(dyn[i].name, name)) {
+                    dyn[i].value = value;
+                    return;
+                }
+            } else {
+                if (std.ascii.eqlIgnoreCase(self.entries[i].name, name)) {
+                    self.entries[i].value = value;
+                    return;
+                }
+            }
+        }
+        self.append(name, value);
+    }
+
+    pub fn close(self: *ProxyTunnel) void {
+        if (self.socket_fd >= 0) {
+            _ = std.os.linux.close(self.socket_fd);
+            self.socket_fd = -1;
+        }
+        self.is_established = false;
+    }
+
+    export class Request {
+        pub method: string;
+        pub url: string;
+        pub body: string;
+
+        pub fn init(this, method: string, url: string, body: string): void {
+            this.method = method;
+            this.url = url;
+            this.body = body;
+        }
+
+        pub fn text(this): string {
+            return this.body;
+        }
+
+        pub fn json(this): any {
+            return @json_parse(this.body);
+        }
+    }
+
+    pub fn text(this): string {
+        return this.body;
+    }
+
+    pub fn json(this): any {
+        return @json_parse(this.body);
+    }
+
+    pub fn ok(this): bool {
+        if (this.status >= 200) {
+            if (this.status < 300) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+/**
+
+- 生产级 fetch 实现
+  */
+  export async fn fetch(url: string, options: any): Response {
+  let raw_body = "";
+
+  if (@is_beam) {
+  // --- BEAM 模式：外包给 Bun I/O Gateway ---
+  raw_body = await @yield_to_beam(@intFromEnum(SystemAction.HTTP_FETCH), url);
+  } else {
+  // --- Native 模式：调用本地 Zig HTTP Client ---
+  raw_body = await @http_fetch(url, options);
+  }
+
+  let res = new Response(raw_body);
+  return res;
+  }
+
+pub fn read(mut _, \*buf: []u8): usize! {
+if (_.pos >= _.data.len) {
+return 0; // EOF
+}
+}
+
+    pub fn reset(mut _): void {
+        _.remaining_bytes = _.initial_bytes;
+    }
+
+    pub fn isExceeded(_): bool {
+        return _.remaining_bytes < 0;
+    }

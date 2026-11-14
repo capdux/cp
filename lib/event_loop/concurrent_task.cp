@@ -1,18 +1,17 @@
 // lib/event_loop/concurrent_task.cp
 // 16-byte lock-free cross-thread task representation and thread-safe queue
 
-const std = @import("std");
 import { Mutex } from "../sync/mutex.cp";
 
-export type TaskFn = *const fn (ctx: ?*anyopaque) void;
+pub type TaskFn = fn(ctx: *!?);
 
-export class ConcurrentTask {
+pub class ConcurrentTask {
     pub callback: TaskFn = undefined;
-    pub ctx: ?*anyopaque = null;
+    pub ctx: *!? = null;
     pub auto_delete: bool = true;
-    pub next: ?*ConcurrentTask = null;
+    pub next: (*ConcurrentTask)? = null;
 
-    pub static fn create(cb: TaskFn, ctx: ?*anyopaque, auto_delete: bool): *ConcurrentTask {
+    pub static fn create(cb: TaskFn, ctx: *!?, auto_delete: bool): *ConcurrentTask {
         let t = std.heap.page_allocator.create(ConcurrentTask) catch unreachable;
         t.callback = cb;
         t.ctx = ctx;
@@ -21,20 +20,20 @@ export class ConcurrentTask {
         return t;
     }
 
-    pub fn run(self: *ConcurrentTask) {
-        const cb = self.callback;
-        const c = self.ctx;
-        const auto_del = self.auto_delete;
+    pub fn run(*_) {
+        const cb = _.callback;
+        const c = _.ctx;
+        const auto_del = _.auto_delete;
         cb(c);
         if (auto_del) {
-            std.heap.page_allocator.destroy(self);
+            std.heap.page_allocator.destroy(_);
         }
     }
 }
 
-export class ConcurrentQueue {
-    head: ?*ConcurrentTask = null;
-    tail: ?*ConcurrentTask = null;
+pub class ConcurrentQueue {
+    head: (*ConcurrentTask)? = null;
+    tail: (*ConcurrentTask)? = null;
     lock: Mutex = .{};
     count: usize = 0;
 
@@ -47,45 +46,45 @@ export class ConcurrentQueue {
         return q;
     }
 
-    pub fn push(self: *ConcurrentQueue, task: *ConcurrentTask) {
-        self.lock.lock();
-        defer self.lock.unlock();
+    pub fn push(*_, task: *ConcurrentTask) {
+        _.lock.lock();
+        defer _.lock.unlock();
 
         task.next = null;
-        if (self.tail) |t| {
+        if (t := _.tail) {
             t.next = task;
-            self.tail = task;
+            _.tail = task;
         } else {
-            self.head = task;
-            self.tail = task;
+            _.head = task;
+            _.tail = task;
         }
-        self.count += 1;
+        _.count += 1;
     }
 
-    pub fn pop(self: *ConcurrentQueue): ?*ConcurrentTask {
-        self.lock.lock();
-        defer self.lock.unlock();
+    pub fn pop(*_): (*ConcurrentTask)? {
+        _.lock.lock();
+        defer _.lock.unlock();
 
-        let h = self.head orelse return null;
-        self.head = h.next;
-        if (self.head == null) {
-            self.tail = null;
+        let h = _.head orelse return null;
+        _.head = h.next;
+        if (_.head == null) {
+            _.tail = null;
         }
-        self.count -= 1;
+        _.count -= 1;
         h.next = null;
         return h;
     }
 
-    pub fn len(self: *ConcurrentQueue): usize {
-        self.lock.lock();
-        defer self.lock.unlock();
-        return self.count;
+    pub fn len(*_): usize {
+        _.lock.lock();
+        defer _.lock.unlock();
+        return _.count;
     }
 
-    pub fn drain(self: *ConcurrentQueue, limit: usize): usize {
-        var processed: usize = 0;
+    pub fn drain(*_, limit: usize): usize {
+        let processed: usize = 0;
         while (processed < limit) {
-            const task = self.pop() orelse break;
+            const task = _.pop() orelse break;
             task.run();
             processed += 1;
         }

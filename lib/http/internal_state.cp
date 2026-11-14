@@ -6,30 +6,30 @@
 import { Encoding } from "./encoding";
 import { CertificateInfo } from "./cert";
 
-export enum HTTPVerboseLevel {
+pub enum HTTPVerboseLevel {
     None,
     Headers,
     Curl,
 }
 
-export enum HTTPUpgradeState: u2 {
+pub enum HTTPUpgradeState: u2 {
     None = 0,
     Pending = 1,
     Upgraded = 2,
 }
 
-export enum Protocol: u2 {
+pub enum Protocol: u2 {
     Http1_1 = 0,
     Http2 = 1,
     Http3 = 2,
 }
 
-export enum ShouldContinue {
+pub enum ShouldContinue {
     ContinueStreaming,
     Finished,
 }
 
-export enum HTTPStage {
+pub enum HTTPStage {
     Pending,
     Opened,
     Headers,
@@ -42,14 +42,14 @@ export enum HTTPStage {
     ProxyBody,
 }
 
-export enum Stage: u8 {
+pub enum Stage: u8 {
     Pending,
     Connect,
     Done,
     Fail,
 }
 
-export const Flags = struct {
+pub const Flags = struct {
     disable_timeout: bool = false,
     disable_keepalive: bool = false,
     disable_decompression: bool = false,
@@ -69,7 +69,7 @@ export const Flags = struct {
     h3_retried: bool = false,
 };
 
-export const InternalStateFlags = struct {
+pub const InternalStateFlags = struct {
     allow_keepalive: bool = true,
     received_last_chunk: bool = false,
     did_set_content_encoding: bool = false,
@@ -78,30 +78,30 @@ export const InternalStateFlags = struct {
     resend_request_body_on_redirect: bool = false,
 };
 
-export const InternalState = struct {
+pub const InternalState = struct {
     flags: InternalStateFlags = InternalStateFlags{},
     transfer_encoding: Encoding = Encoding.Identity,
     encoding: Encoding = Encoding.Identity,
     stage: Stage = Stage.Pending,
     request_stage: HTTPStage = HTTPStage.Pending,
     response_stage: HTTPStage = HTTPStage.Pending,
-    content_length: ?usize = null,
+    content_length: usize? = null,
     total_body_received: usize = 0,
     request_body: []const u8 = "",
     request_sent_len: usize = 0,
-    certificate_info: ?CertificateInfo = null,
+    certificate_info: CertificateInfo? = null,
 
-    pub fn isChunkedEncoding(self: InternalState) bool {
-        return self.transfer_encoding == Encoding.Chunked;
+    pub fn isChunkedEncoding(*_): bool {
+        return _.transfer_encoding == Encoding.Chunked;
     }
 
-    pub fn isDone(self: InternalState) bool {
-        if (self.isChunkedEncoding()) {
-            return self.flags.received_last_chunk;
+    pub fn isDone(): bool {
+        if (_.isChunkedEncoding()) {
+            return _.flags.received_last_chunk;
         }
-        if (self.content_length) |cl| {
-            return self.total_body_received >= cl;
+        if (cl := _.content_length) {
+            return _.total_body_received >= cl;
         }
-        return self.flags.received_last_chunk;
+        return _.flags.received_last_chunk;
     }
 };

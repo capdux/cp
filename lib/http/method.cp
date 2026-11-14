@@ -1,8 +1,7 @@
 // lib/http/method.cp
 // HTTP Method enumeration and helper functions
-const std = @import("std");
 
-export enum Method: u8 {
+pub enum Method: u8 {
     ACL,
     BIND,
     CHECKOUT,
@@ -38,21 +37,21 @@ export enum Method: u8 {
     UNLOCK,
     UNSUBSCRIBE,
 
-    pub fn isIdempotent(this): bool {
-        return switch (this) {
+    fn isIdempotent(): bool {
+        return switch (_) {
             .GET, .HEAD, .PUT, .DELETE, .OPTIONS, .TRACE, .QUERY => true,
             else => false,
         };
     }
 
-    pub fn hasRequestBody(this): bool {
-        return switch (this) {
+    fn hasRequestBody(): bool {
+        return switch (_) {
             .GET, .HEAD, .OPTIONS, .TRACE => false,
             else => true,
         };
     }
 
-    pub fn toString(this): string {
-        return @tagName(this);
+    fn toString(): string {
+        return @tagName(_);
     }
 }

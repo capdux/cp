@@ -1128,6 +1128,20 @@ impl Codegen {
                                 sym: "Task".to_string(),
                             }));
                         }
+                        if oid.sym == "JSON" {
+                            if mem.prop.sym == "stringify" || mem.prop.sym == "encode" {
+                                return Some(Type::String);
+                            }
+                            if mem.prop.sym == "parse" || mem.prop.sym == "decode" {
+                                if let Some(Expr::TypeVal { ty, .. }) = c.args.first() {
+                                    return Some(Type::ErrorUnion(Box::new(ty.clone())));
+                                }
+                                return Some(Type::ErrorUnion(Box::new(Type::Ref(Ident {
+                                    span: mem.prop.span,
+                                    sym: "std.json.Value".to_string(),
+                                }))));
+                            }
+                        }
                         let oid_base = oid
                             .sym
                             .split(|ch| ch == '<' || ch == '(')

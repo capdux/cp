@@ -3,18 +3,18 @@
  * Ported from Bun.js http/HTTPRequestBody.cp
  */
 
-export enum HTTPRequestBodyTag {
+pub enum HTTPRequestBodyTag {
     Empty,
     Bytes,
     Stream,
 }
 
-export const HTTPRequestBody = struct {
+pub const HTTPRequestBody = struct {
     tag: HTTPRequestBodyTag = HTTPRequestBodyTag.Empty,
     bytes: []const u8 = "",
 
     pub fn fromBytes(data: []const u8) HTTPRequestBody {
-        var body = HTTPRequestBody{};
+        let body = HTTPRequestBody{};
         body.tag = HTTPRequestBodyTag.Bytes;
         body.bytes = data;
         return body;
@@ -24,14 +24,14 @@ export const HTTPRequestBody = struct {
         return HTTPRequestBody{};
     }
 
-    pub fn len(self: HTTPRequestBody) usize {
-        return switch (self.tag) {
-            .Bytes => self.bytes.len,
+    pub fn len() usize {
+        return switch (_.tag) {
+            .Bytes => _.bytes.len,
             else => 0,
         };
     }
 
-    pub fn isStream(self: HTTPRequestBody) bool {
-        return self.tag == .Stream;
+    pub fn isStream(*_): bool {
+        return _.tag == .Stream;
     }
 };

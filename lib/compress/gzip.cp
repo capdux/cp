@@ -4,36 +4,36 @@
 
 import { Crc32 } from "./checksum.cp";
 
-export const GZIP_MAGIC_ID1: u8 = 0x1F;
-export const GZIP_MAGIC_ID2: u8 = 0x8B;
-export const GZIP_METHOD_DEFLATE: u8 = 8;
+pub const GZIP_MAGIC_ID1: u8 = 0x1F;
+pub const GZIP_MAGIC_ID2: u8 = 0x8B;
+pub const GZIP_METHOD_DEFLATE: u8 = 8;
 
-export const GZIP_FTEXT: u8 = 0x01;
-export const GZIP_FHCRC: u8 = 0x02;
-export const GZIP_FEXTRA: u8 = 0x04;
-export const GZIP_FNAME: u8 = 0x08;
-export const GZIP_FCOMMENT: u8 = 0x10;
+pub const GZIP_FTEXT: u8 = 0x01;
+pub const GZIP_FHCRC: u8 = 0x02;
+pub const GZIP_FEXTRA: u8 = 0x04;
+pub const GZIP_FNAME: u8 = 0x08;
+pub const GZIP_FCOMMENT: u8 = 0x10;
 
 /// RFC 1952 10 字节 Gzip 帧头与 8 字节帧尾 (CRC32 + ISIZE)
-export struct GzipHeader {
+pub struct GzipHeader {
     flags: u8 = 0,
     mtime: u32 = 0,
     xfl: u8 = 0,
     os: u8 = 3, // 3 = Unix
 
     /// 将 10 字节标准 Gzip Header 写入 out[0..10]
-    pub fn write(&this, out: []u8): usize {
+    pub fn write(out: []u8): usize {
         if (out.len < 10) { return 0; }
         out[0] = GZIP_MAGIC_ID1;
         out[1] = GZIP_MAGIC_ID2;
         out[2] = GZIP_METHOD_DEFLATE;
-        out[3] = this.flags;
-        out[4] = (this.mtime & 0xFF) as u8;
-        out[5] = ((this.mtime >> 8) & 0xFF) as u8;
-        out[6] = ((this.mtime >> 16) & 0xFF) as u8;
-        out[7] = ((this.mtime >> 24) & 0xFF) as u8;
-        out[8] = this.xfl;
-        out[9] = this.os;
+        out[3] = _.flags;
+        out[4] = (_.mtime & 0xFF) as u8;
+        out[5] = ((_.mtime >> 8) & 0xFF) as u8;
+        out[6] = ((_.mtime >> 16) & 0xFF) as u8;
+        out[7] = ((_.mtime >> 24) & 0xFF) as u8;
+        out[8] = _.xfl;
+        out[9] = _.os;
         return 10;
     }
 
@@ -90,7 +90,7 @@ export struct GzipHeader {
 /// 控制字节约定：
 /// - `0xFF, count, byte`：连续重复 `count` 次 `byte`（当连续重复 >= 4 次或原字节本身为 `0xFF` 时触发）
 /// - 其他字节：原样直通输出
-export struct RleCodec {
+pub struct RleCodec {
     pub static fn compress(src: []const u8, out: []u8): usize {
         let in_pos: usize = 0;
         let out_pos: usize = 0;

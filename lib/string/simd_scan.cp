@@ -4,7 +4,7 @@
 
 type Vec16u8 = @Vector(16, u8);
 
-export struct SimdScanner {
+pub struct SimdScanner {
     // Returns the index of the first non-ASCII byte (>= 0x80), or null if 100% ASCII
     pub static fn firstNonAsciiIndex(input: []const u8): usize? {
         let i: usize = 0;

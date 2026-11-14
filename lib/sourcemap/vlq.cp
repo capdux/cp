@@ -6,13 +6,13 @@
 const BASE64_CHARS: []const u8 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 /// Base64 VLQ 编码结果（最多 7 字节栈内联，零堆分配）
-export struct VLQ {
+pub struct VLQ {
     bytes: [7]u8 = [0, 0, 0, 0, 0, 0, 0],
     len: u8 = 0,
 
-    pub fn slice(*this): []const u8 {
-        let n = this.len as usize;
-        return this.bytes[0..n];
+    pub fn slice(*_): []const u8 {
+        let n = _.len as usize;
+        return _.bytes[0..n];
     }
 
     pub static fn encode(value: i32): VLQ {
@@ -82,7 +82,7 @@ export struct VLQ {
     }
 }
 
-export struct VLQResult {
+pub struct VLQResult {
     value: i32 = 0,
     next_offset: usize = 0,
     valid: bool = false,

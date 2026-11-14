@@ -497,9 +497,9 @@ pub fn from_compiler_error_msg(raw_msg: &str, source_code: Option<&str>) -> Diag
             "parameter '{}' is a read-only borrow (immutable by default in CP).",
             param_name
         ))
-        .with_help("in CP, function parameters are read-only borrows by default. To modify arguments in-place, declare them as exclusive mutable borrows using '*' prefix.")
+        .with_help("in CP, function parameters are read-only by default. Use '*_' for mutable method receivers or 'v: *T' for mutable parameters.")
         .with_suggestion(format!(
-            "parameter '{}' is a read-only borrow. Add '*' to declare it as mutable borrow: '*{}: <Type>'",
+            "parameter '{}' is a read-only borrow. Add '*' to declare it as mutable: '{}: *<Type>'",
             param_name, param_name
         ))
     } else if msg.contains("read-only method") {
@@ -508,8 +508,10 @@ pub fn from_compiler_error_msg(raw_msg: &str, source_code: Option<&str>) -> Diag
             "cannot perform mutable operation in a read-only method",
         )
         .with_cause("method receiver is read-only by default.")
-        .with_help("methods that modify instance fields must declare a mutable receiver parameter '*_' or '*this'.")
-        .with_suggestion("add '*_' or '*this' as the first parameter of the method: fn method(*_) { ... }")
+        .with_help(
+            "methods that modify instance fields must declare a mutable receiver parameter '*_'.",
+        )
+        .with_suggestion("add '*_' as the first parameter of the method: fn method(*_) { ... }")
     } else if msg.contains("read-only borrow") {
         let parts: Vec<&str> = msg.split('\'').collect();
         let var_name = if parts.len() >= 4 {
@@ -530,9 +532,9 @@ pub fn from_compiler_error_msg(raw_msg: &str, source_code: Option<&str>) -> Diag
             "'{}' is borrowed as read-only (immutable).",
             var_name
         ))
-        .with_help("in CP, mutable operations require exclusive mutable borrows ('*...').")
+        .with_help("in CP, mutable operations require exclusive mutable borrows ('v: *T' or '*_').")
         .with_suggestion(format!(
-            "declare '{}' with '*' for mutable borrowing: '*{}'",
+            "declare '{}' with '*' for mutable borrowing: '{}: *<Type>'",
             var_name, var_name
         ))
     } else if msg.contains("Borrow conflict") {

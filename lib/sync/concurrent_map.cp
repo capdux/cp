@@ -2,9 +2,8 @@
 // Lock contention partitioned across stripes using Wyhash
 import { Mutex } from "./mutex";
 import { Wyhash } from "./wyhash";
-const std = @import("std");
 
-export fn ConcurrentMap(comptime K: type, comptime V: type): type {
+pub fn ConcurrentMap(comptime K: type, comptime V: type): type {
     const StripeCount: usize = 32;
     const is_string = @comptime (@typeInfo(K) == .pointer and @typeInfo(K).pointer.size == .slice and @typeInfo(K).pointer.child == u8);
     const MapType = @if (is_string) std.StringHashMap(V) else std.AutoHashMap(K, V);
@@ -21,19 +20,19 @@ export fn ConcurrentMap(comptime K: type, comptime V: type): type {
         allocator: std.mem.Allocator = undefined,
 
         pub fn init(allocator: std.mem.Allocator): Self {
-            var self: Self = .{
+            let self: Self = .{
                 .stripes = undefined,
                 .allocator = allocator,
             };
-            for (&self.stripes) |*s| {
+            for (*s of &self.stripes) {
                 s.mutex = .{};
                 s.map = MapType.init(allocator);
             }
             return self;
         }
 
-        pub fn deinit(self: *Self): void {
-            for (&self.stripes) |*s| {
+        pub fn deinit(*_) {
+            for (*s of &_.stripes) {
                 s.mutex.lock();
                 s.map.deinit();
                 s.mutex.unlock();
@@ -49,41 +48,41 @@ export fn ConcurrentMap(comptime K: type, comptime V: type): type {
             return @as(usize, @intCast(hash_val % StripeCount));
         }
 
-        pub fn get(self: *Self, key: K): ?V {
+        pub fn get(*_, key: K): V? {
             const idx = getStripeIndex(key);
-            const s = &self.stripes[idx];
+            const s = &_.stripes[idx];
             s.mutex.lock();
             defer s.mutex.unlock();
             return s.map.get(key);
         }
 
-        pub fn put(self: *Self, key: K, value: V): !void {
+        pub fn put(*_, key: K, value: V): !void {
             const idx = getStripeIndex(key);
-            const s = &self.stripes[idx];
+            const s = &_.stripes[idx];
             s.mutex.lock();
             defer s.mutex.unlock();
             try s.map.put(key, value);
         }
 
-        pub fn remove(self: *Self, key: K): bool {
+        pub fn remove(*_, key: K): bool {
             const idx = getStripeIndex(key);
-            const s = &self.stripes[idx];
+            const s = &_.stripes[idx];
             s.mutex.lock();
             defer s.mutex.unlock();
             return s.map.remove(key);
         }
 
-        pub fn contains(self: *Self, key: K): bool {
+        pub fn contains(*_, key: K): bool {
             const idx = getStripeIndex(key);
-            const s = &self.stripes[idx];
+            const s = &_.stripes[idx];
             s.mutex.lock();
             defer s.mutex.unlock();
             return s.map.contains(key);
         }
 
-        pub fn count(self: *Self): usize {
-            var total: usize = 0;
-            for (&self.stripes) |*s| {
+        pub fn count(*_): usize {
+            let total: usize = 0;
+            for (*s of &_.stripes) {
                 s.mutex.lock();
                 total += s.map.count();
                 s.mutex.unlock();
@@ -91,8 +90,8 @@ export fn ConcurrentMap(comptime K: type, comptime V: type): type {
             return total;
         }
 
-        pub fn clear(self: *Self): void {
-            for (&self.stripes) |*s| {
+        pub fn clear(*_) {
+            for (*s of &_.stripes) {
                 s.mutex.lock();
                 s.map.clearRetainingCapacity();
                 s.mutex.unlock();

@@ -3,7 +3,7 @@
 // Absorbed from bun/src/string/HashedString.zig, SmolStr.zig, StringBuilder.zig
 
 // Fast 32-bit FNV-1a hash for HashedString O(1) comparison
-export fn hashBytes32(data: []const u8): u32 {
+pub fn hashBytes32(data: []const u8): u32 {
     let h: u32 = 2166136261;
     let i: usize = 0;
     while (i < data.len) {
@@ -14,9 +14,9 @@ export fn hashBytes32(data: []const u8): u32 {
 }
 
 // Pre-hashed string view for O(1) fast rejection in identifier/header tables
-export struct HashedString {
-    pub data: []const u8 = "";
-    pub hash: u32 = 0;
+pub struct HashedString {
+    data: []const u8 = "";
+    hash: u32 = 0;
 
     pub static fn init(buf: []const u8): HashedString {
         return HashedString{
@@ -25,12 +25,12 @@ export struct HashedString {
         };
     }
 
-    pub fn len(this): usize {
-        return this.data.len;
+    pub fn len(): usize {
+        return _.data.len;
     }
 
-    pub fn eql(this, other: HashedString): bool {
-        if (this.hash != other.hash || this.data.len != other.data.len) {
+    pub fn eql(other: HashedString): bool {
+        if (_.hash != other.hash || _.data.len != other.data.len) {
             return false;
         }
         let eq = false;
@@ -41,10 +41,10 @@ export struct HashedString {
     }
 }
 
-export const SMOL_MAX_INLINE: usize = 15;
+pub const SMOL_MAX_INLINE: usize = 15;
 
 // Small-string optimized container: stores <= 15 bytes inline on the stack without heap allocation
-export struct SmolStr {
+pub struct SmolStr {
     inline_buf: [15]u8 = undefined;
     heap_ptr: [*]u8! = undefined;
     length: u32 = 0;
@@ -76,21 +76,21 @@ export struct SmolStr {
         }
     }
 
-    pub fn isInlined(this): bool {
-        return this.inlined;
+    pub fn isInlined(): bool {
+        return _.inlined;
     }
 
-    pub fn len(this): usize {
-        return this.length as usize;
+    pub fn len(): usize {
+        return _.length as usize;
     }
 
-    pub fn slice(*this): []const u8 {
-        const n = this.length as usize;
+    pub fn slice(*_): []const u8 {
+        const n = _.length as usize;
         if (n == 0) {
             return &[];
         }
-        if (this.inlined) {
-            return this.inline_buf[0..n];
+        if (_.inlined) {
+            return _.inline_buf[0..n];
         }
         let s: []const u8 = &[];
         zig {
@@ -99,24 +99,24 @@ export struct SmolStr {
         return s;
     }
 
-    pub fn release(*this): void {
-        if (!this.inlined && this.length > 0) {
-            const n = this.length as usize;
+    pub fn release(*_) {
+        if (!_.inlined && _.length > 0) {
+            const n = _.length as usize;
             zig {
                 std.heap.page_allocator.free(self.heap_ptr[0..n]);
             }
         }
-        this.length = 0;
-        this.inlined = true;
+        _.length = 0;
+        _.inlined = true;
     }
 }
 
 // Two-pass zero-reallocation StringBuilder (Absorbed from bun/src/string/StringBuilder.zig)
-export struct StringBuilder {
-    pub ptr: [*]u8! = undefined;
-    pub len: usize = 0;
-    pub cap: usize = 0;
-    pub allocated: bool = false;
+pub struct StringBuilder {
+    ptr: [*]u8! = undefined;
+    len: usize = 0;
+    cap: usize = 0;
+    allocated: bool = false;
 
     pub static fn init(): StringBuilder {
         return StringBuilder{
@@ -128,20 +128,20 @@ export struct StringBuilder {
     }
 
     // Pass 1: accumulate required byte capacity
-    pub fn count(*this, s: []const u8): void {
-        this.cap += s.len;
+    pub fn count(*_, s: []const u8) {
+        _.cap += s.len;
     }
 
-    pub fn countByte(*this): void {
-        this.cap += 1;
+    pub fn countByte(*_) {
+        _.cap += 1;
     }
 
     // Allocate exact buffer once between Pass 1 and Pass 2
-    pub fn allocate(*this): void {
-        const c = if (this.cap == 0) 64 else this.cap;
-        this.cap = c;
-        this.len = 0;
-        this.allocated = true;
+    pub fn allocate(*_) {
+        const c = if (_.cap == 0) 64 else _.cap;
+        _.cap = c;
+        _.len = 0;
+        _.allocated = true;
         zig {
             const buf = std.heap.page_allocator.alloc(u8, c) catch unreachable;
             self.ptr = buf.ptr;
@@ -149,15 +149,15 @@ export struct StringBuilder {
     }
 
     // Pass 2: append slices into pre-counted buffer without any reallocation
-    pub fn append(*this, s: []const u8): []const u8 {
-        if (!this.allocated) {
-            this.cap += s.len + 64;
-            this.allocate();
+    pub fn append(*_, s: []const u8): []const u8 {
+        if (!_.allocated) {
+            _.cap += s.len + 64;
+            _.allocate();
         }
-        if (this.len + s.len > this.cap) {
-            const new_cap = (this.cap + s.len) * 2;
-            const old_len = this.len;
-            const old_cap = this.cap;
+        if (_.len + s.len > _.cap) {
+            const new_cap = (_.cap + s.len) * 2;
+            const old_len = _.len;
+            const old_cap = _.cap;
             zig {
                 const new_buf = std.heap.page_allocator.alloc(u8, new_cap) catch unreachable;
                 if (old_len > 0) {
@@ -170,12 +170,12 @@ export struct StringBuilder {
                 self.cap = new_cap;
             }
         }
-        const start = this.len;
+        const start = _.len;
         const n = s.len;
         zig {
             @memcpy(self.ptr[start .. start + n], s);
         }
-        this.len += n;
+        _.len += n;
         let out: []const u8 = &[];
         zig {
             out = self.ptr[start .. start + n];
@@ -183,13 +183,13 @@ export struct StringBuilder {
         return out;
     }
 
-    pub fn appendByte(*this, b: u8): void {
+    pub fn appendByte(*_, b: u8) {
         let single: [1]u8 = [b];
-        _ = this.append(single[0..1]);
+        * = _.append(single[0..1]);
     }
 
-    pub fn slice(this): []const u8 {
-        if (!this.allocated || this.len == 0) {
+    pub fn slice(*_): []const u8 {
+        if (!_.allocated || _.len == 0) {
             return &[];
         }
         let out: []const u8 = &[];
@@ -199,18 +199,18 @@ export struct StringBuilder {
         return out;
     }
 
-    pub fn reset(*this): void {
-        this.len = 0;
+    pub fn reset(*_) {
+        _.len = 0;
     }
 
-    pub fn release(*this): void {
-        if (this.allocated && this.cap > 0) {
+    pub fn release(*_) {
+        if (_.allocated && _.cap > 0) {
             zig {
                 std.heap.page_allocator.free(self.ptr[0..self.cap]);
             }
         }
-        this.len = 0;
-        this.cap = 0;
-        this.allocated = false;
+        _.len = 0;
+        _.cap = 0;
+        _.allocated = false;
     }
 }

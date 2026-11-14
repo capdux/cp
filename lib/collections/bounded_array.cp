@@ -2,9 +2,9 @@
 // Zero-heap stack-allocated bounded array with compile-time capacity
 // Absorbed from Bun src/collections/bounded_array.cp
 
-export struct BoundedArray<T, const CAP: usize> {
-    pub buffer: [CAP]T = undefined;
-    pub len: usize = 0;
+pub struct BoundedArray<T, const CAP: usize> {
+    buffer: [CAP]T = undefined;
+    len: usize = 0;
 
     pub static fn init(): BoundedArray<T, CAP> {
         return BoundedArray<T, CAP> {
@@ -13,82 +13,82 @@ export struct BoundedArray<T, const CAP: usize> {
         };
     }
 
-    pub fn capacity(&this): usize {
+    pub fn capacity(): usize {
         return CAP;
     }
 
-    pub fn isEmpty(&this): bool {
-        return this.len == 0;
+    pub fn isEmpty(): bool {
+        return _.len == 0;
     }
 
-    pub fn isFull(&this): bool {
-        return this.len >= CAP;
+    pub fn isFull(): bool {
+        return _.len >= CAP;
     }
 
-    pub fn unusedCapacity(&this): usize {
-        return CAP - this.len;
+    pub fn unusedCapacity(): usize {
+        return CAP - _.len;
     }
 
-    pub fn clear(*this): void {
-        this.len = 0;
+    pub fn clear(*_) {
+        _.len = 0;
     }
 
-    pub fn append(*this, item: T): bool {
-        if (this.len >= CAP) {
+    pub fn append(*_, item: T): bool {
+        if (_.len >= CAP) {
             return false;
         }
-        this.buffer[this.len] = item;
-        this.len += 1;
+        _.buffer[_.len] = item;
+        _.len += 1;
         return true;
     }
 
-    pub fn appendSlice(*this, items: []const T): bool {
-        if (this.len + items.len > CAP) {
+    pub fn appendSlice(*_, items: []const T): bool {
+        if (_.len + items.len > CAP) {
             return false;
         }
-        var i: usize = 0;
+        let i: usize = 0;
         while (i < items.len) {
-            this.buffer[this.len + i] = items[i];
+            _.buffer[_.len + i] = items[i];
             i += 1;
         }
-        this.len += items.len;
+        _.len += items.len;
         return true;
     }
 
-    pub fn get(&this, i: usize): T {
-        return this.buffer[i];
+    pub fn get(i: usize): T {
+        return _.buffer[i];
     }
 
-    pub fn set(*this, i: usize, item: T): void {
-        if (i < this.len) {
-            this.buffer[i] = item;
+    pub fn set(*_, i: usize, item: T) {
+        if (i < _.len) {
+            _.buffer[i] = item;
         }
     }
 
-    pub fn pop(*this): T? {
-        if (this.len == 0) {
+    pub fn pop(*_): T? {
+        if (_.len == 0) {
             return null;
         }
-        this.len -= 1;
-        return this.buffer[this.len];
+        _.len -= 1;
+        return _.buffer[_.len];
     }
 
-    pub fn orderedRemove(*this, idx: usize): T {
-        const val = this.buffer[idx];
-        var i: usize = idx;
-        while (i + 1 < this.len) {
-            this.buffer[i] = this.buffer[i + 1];
+    pub fn orderedRemove(*_, idx: usize): T {
+        const val = _.buffer[idx];
+        let i: usize = idx;
+        while (i + 1 < _.len) {
+            _.buffer[i] = _.buffer[i + 1];
             i += 1;
         }
-        this.len -= 1;
+        _.len -= 1;
         return val;
     }
 
-    pub fn swapRemove(*this, idx: usize): T {
-        const val = this.buffer[idx];
-        this.len -= 1;
-        if (idx != this.len) {
-            this.buffer[idx] = this.buffer[this.len];
+    pub fn swapRemove(*_, idx: usize): T {
+        const val = _.buffer[idx];
+        _.len -= 1;
+        if (idx != _.len) {
+            _.buffer[idx] = _.buffer[_.len];
         }
         return val;
     }

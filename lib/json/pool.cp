@@ -1,7 +1,6 @@
 // Thread-local memory pool for JSON parsing (Ported from Bun.js HashMapPool)
-const std = @import("std");
 
-export struct JsonBufferPool {
+pub struct JsonBufferPool {
     const BufferList = std.SinglyLinkedList([4096]u8);
 
     pub static fn acquire(allocator: std.mem.Allocator): *BufferList.Node {
@@ -22,7 +21,7 @@ export struct JsonBufferPool {
         }
     }
 
-    pub static fn release(node: *BufferList.Node): void {
+    pub static fn release(node: *BufferList.Node) {
         zig {
             const S = struct {
                 threadlocal var pool_head: ?*BufferList.Node = null;

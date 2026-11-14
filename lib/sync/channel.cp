@@ -2,9 +2,8 @@
 // High-throughput CSP communication primitive
 import { Mutex } from "./mutex";
 import { Condition } from "./condition";
-const std = @import("std");
 
-export fn Channel(comptime T: type): type {
+pub fn Channel(comptime T: type): type {
     return struct {
         const Self = @This();
 
@@ -36,101 +35,101 @@ export fn Channel(comptime T: type): type {
             };
         }
 
-        pub fn deinit(self: *Self): void {
-            self.close();
-            if (self.capacity > 0) {
-                self.allocator.free(self.buf);
-                self.buf = &.{};
-                self.capacity = 0;
+        pub fn deinit(*_) {
+            _.close();
+            if (_.capacity > 0) {
+                _.allocator.free(_.buf);
+                _.buf = [];
+                _.capacity = 0;
             }
-            self.mutex.deinit();
-            self.not_empty.deinit();
-            self.not_full.deinit();
+            _.mutex.deinit();
+            _.not_empty.deinit();
+            _.not_full.deinit();
         }
 
-        pub fn close(self: *Self): void {
-            self.mutex.lock();
-            defer self.mutex.unlock();
+        pub fn close(*_) {
+            _.mutex.lock();
+            defer _.mutex.unlock();
 
-            if (self.is_closed) return;
-            self.is_closed = true;
-            self.not_full.broadcast();
-            self.not_empty.broadcast();
+            if (_.is_closed) return;
+            _.is_closed = true;
+            _.not_full.broadcast();
+            _.not_empty.broadcast();
         }
 
-        pub fn isClosed(self: *Self): bool {
-            self.mutex.lock();
-            defer self.mutex.unlock();
-            return self.is_closed;
+        pub fn isClosed(*_): bool {
+            _.mutex.lock();
+            defer _.mutex.unlock();
+            return _.is_closed;
         }
 
-        pub fn len(self: *Self): usize {
-            self.mutex.lock();
-            defer self.mutex.unlock();
-            return self.count;
+        pub fn len(*_): usize {
+            _.mutex.lock();
+            defer _.mutex.unlock();
+            return _.count;
         }
 
-        pub fn send(self: *Self, item: T): !void {
-            self.mutex.lock();
-            defer self.mutex.unlock();
+        pub fn send(*_, item: T): !void {
+            _.mutex.lock();
+            defer _.mutex.unlock();
 
-            while (self.count == self.capacity and !self.is_closed) {
-                self.not_full.wait(&self.mutex);
+            while (_.count == _.capacity and !_.is_closed) {
+                _.not_full.wait(&_.mutex);
             }
 
-            if (self.is_closed) {
+            if (_.is_closed) {
                 return error.Closed;
             }
 
-            self.buf[self.tail] = item;
-            self.tail = (self.tail + 1) % self.capacity;
-            self.count += 1;
-            self.not_empty.signal();
+            _.buf[_.tail] = item;
+            _.tail = (_.tail + 1) % _.capacity;
+            _.count += 1;
+            _.not_empty.signal();
         }
 
-        pub fn trySend(self: *Self, item: T): !bool {
-            self.mutex.lock();
-            defer self.mutex.unlock();
+        pub fn trySend(*_, item: T): !bool {
+            _.mutex.lock();
+            defer _.mutex.unlock();
 
-            if (self.is_closed) return error.Closed;
-            if (self.count == self.capacity) return false;
+            if (_.is_closed) return error.Closed;
+            if (_.count == _.capacity) return false;
 
-            self.buf[self.tail] = item;
-            self.tail = (self.tail + 1) % self.capacity;
-            self.count += 1;
-            self.not_empty.signal();
+            _.buf[_.tail] = item;
+            _.tail = (_.tail + 1) % _.capacity;
+            _.count += 1;
+            _.not_empty.signal();
             return true;
         }
 
-        pub fn recv(self: *Self): !?T {
-            self.mutex.lock();
-            defer self.mutex.unlock();
+        pub fn recv(*_): !?T {
+            _.mutex.lock();
+            defer _.mutex.unlock();
 
-            while (self.count == 0 and !self.is_closed) {
-                self.not_empty.wait(&self.mutex);
+            while (_.count == 0 and !_.is_closed) {
+                _.not_empty.wait(&_.mutex);
             }
 
-            if (self.count == 0 and self.is_closed) {
+            if (_.count == 0 and _.is_closed) {
                 return null;
             }
 
-            const item = self.buf[self.head];
-            self.head = (self.head + 1) % self.capacity;
-            self.count -= 1;
-            self.not_full.signal();
+            const item = _.buf[_.head];
+            _.head = (_.head + 1) % _.capacity;
+            _.count -= 1;
+            _.not_full.signal();
             return item;
         }
 
-        pub fn tryRecv(self: *Self): ?T {
-            self.mutex.lock();
-            defer self.mutex.unlock();
+        pub fn tryRecv(*_): T? {
+            _.mutex.lock();
+            defer _.mutex.unlock();
 
-            if (self.count == 0) return null;
+            if (_.count == 0) return null;
 
-            const item = self.buf[self.head];
-            self.head = (self.head + 1) % self.capacity;
-            self.count -= 1;
-            self.not_full.signal();
+            const item = _.buf[_.head];
+            _.head = (_.head + 1) % _.capacity;
+            _.count -= 1;
+            _.not_full.signal();
             return item;
         }
     };

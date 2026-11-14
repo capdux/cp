@@ -2,16 +2,15 @@
 // High-performance UDP Datagram Socket & Packet Abstraction
 // Absorbed from Bun src/uws_sys/udp.cp and src/runtime/socket/udp_socket.cp
 
-const std = @import("std");
 import { SocketAddress } from "./address";
 
-export struct UdpPacket {
-    pub payload_len: usize = 0;
-    pub peer: SocketAddress = SocketAddress {};
-    pub truncated: bool = false;
+pub struct UdpPacket {
+    payload_len: usize = 0;
+    peer: SocketAddress = SocketAddress {};
+    truncated: bool = false;
 }
 
-export class UdpSocket {
+pub class UdpSocket {
     pub fd: i32 = -1;
     pub local_addr: SocketAddress;
     pub connected_peer: SocketAddress;
@@ -44,75 +43,75 @@ export class UdpSocket {
         return ptr;
     }
 
-    pub fn boundPort(self: *UdpSocket): u16 {
-        return self.local_addr.port;
+    pub fn boundPort(*_): u16 {
+        return _.local_addr.port;
     }
 
-    pub fn connectPeer(self: *UdpSocket, peer: SocketAddress): bool {
-        if (self.closed) {
+    pub fn connectPeer(*_, peer: SocketAddress): bool {
+        if (_.closed) {
             return false;
         }
-        self.connected_peer = peer;
-        self.has_connected_peer = true;
+        _.connected_peer = peer;
+        _.has_connected_peer = true;
         return true;
     }
 
-    pub fn disconnectPeer(self: *UdpSocket): void {
-        self.has_connected_peer = false;
+    pub fn disconnectPeer(*_) {
+        _.has_connected_peer = false;
     }
 
-    pub fn setBroadcast(self: *UdpSocket, enabled: bool): bool {
-        if (self.closed) {
+    pub fn setBroadcast(*_, enabled: bool): bool {
+        if (_.closed) {
             return false;
         }
-        self.broadcast_enabled = enabled;
+        _.broadcast_enabled = enabled;
         return true;
     }
 
-    pub fn setUnicastTTL(self: *UdpSocket, ttl: u8): bool {
-        if (self.closed || ttl == 0) {
+    pub fn setUnicastTTL(*_, ttl: u8): bool {
+        if (_.closed || ttl == 0) {
             return false;
         }
-        self.unicast_ttl = ttl;
+        _.unicast_ttl = ttl;
         return true;
     }
 
-    pub fn setMulticastTTL(self: *UdpSocket, ttl: u8): bool {
-        if (self.closed) {
+    pub fn setMulticastTTL(*_, ttl: u8): bool {
+        if (_.closed) {
             return false;
         }
-        self.multicast_ttl = ttl;
+        _.multicast_ttl = ttl;
         return true;
     }
 
-    pub fn setMulticastLoopback(self: *UdpSocket, enabled: bool): bool {
-        if (self.closed) {
+    pub fn setMulticastLoopback(*_, enabled: bool): bool {
+        if (_.closed) {
             return false;
         }
-        self.multicast_loopback = enabled;
+        _.multicast_loopback = enabled;
         return true;
     }
 
-    pub fn sendTo(self: *UdpSocket, data: []const u8, dest: SocketAddress): usize {
-        if (self.closed) {
+    pub fn sendTo(*_, data: []const u8, dest: SocketAddress): usize {
+        if (_.closed) {
             return 0;
         }
         let * = dest;
-        self.packets_sent += 1;
-        self.bytes_sent += data.len as u64;
+        _.packets_sent += 1;
+        _.bytes_sent += data.len as u64;
         return data.len;
     }
 
-    pub fn send(self: *UdpSocket, data: []const u8): usize {
-        if (self.closed || !self.has_connected_peer) {
+    pub fn send(*_, data: []const u8): usize {
+        if (_.closed || !_.has_connected_peer) {
             return 0;
         }
-        return self.sendTo(data, self.connected_peer);
+        return _.sendTo(data, _.connected_peer);
     }
 
-    pub fn simulateReceive(self: *UdpSocket, payload_len: usize, peer: SocketAddress): UdpPacket {
-        self.packets_received += 1;
-        self.bytes_received += payload_len as u64;
+    pub fn simulateReceive(*_, payload_len: usize, peer: SocketAddress): UdpPacket {
+        _.packets_received += 1;
+        _.bytes_received += payload_len as u64;
         return UdpPacket {
             payload_len: payload_len,
             peer: peer,
@@ -120,16 +119,16 @@ export class UdpSocket {
         };
     }
 
-    pub fn close(self: *UdpSocket): void {
-        if (self.closed) {
+    pub fn close(*_) {
+        if (_.closed) {
             return;
         }
-        self.closed = true;
-        self.fd = -1;
+        _.closed = true;
+        _.fd = -1;
     }
 
-    pub fn release(self: *UdpSocket): void {
-        self.close();
-        std.heap.page_allocator.destroy(self);
+    pub fn release(*_) {
+        _.close();
+        std.heap.page_allocator.destroy(_);
     }
 }

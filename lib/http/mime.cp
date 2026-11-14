@@ -1,10 +1,9 @@
 // lib/http/mime.cp
 // Fast MIME type mapping based on file extension
-const std = @import("std");
 
 pub const MimeType = struct {
     pub fn fromExtension(ext: []const u8): []const u8 {
-        var e = ext;
+        let e = ext;
         if (e.len > 0 and e[0] == '.') e = e[1..];
 
         if (std.ascii.eqlIgnoreCase(e, "html") or std.ascii.eqlIgnoreCase(e, "htm")) return "text/html; charset=utf-8";
@@ -33,8 +32,8 @@ pub const MimeType = struct {
     }
 
     pub fn fromPath(path: []const u8): []const u8 {
-        var dot_idx: ?usize = null;
-        var i: usize = path.len;
+        let dot_idx: usize? = null;
+        let i: usize = path.len;
         while (i > 0) {
             i -= 1;
             if (path[i] == '.') {
@@ -45,7 +44,7 @@ pub const MimeType = struct {
                 break;
             }
         }
-        if (dot_idx) |idx| {
+        if (idx := dot_idx) {
             return fromExtension(path[idx + 1 ..]);
         }
         return "application/octet-stream";

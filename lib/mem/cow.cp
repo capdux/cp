@@ -1,10 +1,10 @@
 // lib/mem/cow.cp
 // Copy-on-Write byte slice (absorbed from bun/src/ptr/CowSlice.cp & Cow.cp)
 
-export struct CowBytes {
-    pub ptr: [*]u8! = undefined;
-    pub length: usize = 0;
-    pub is_owned: bool = false;
+pub struct CowBytes {
+    ptr: [*]u8! = undefined;
+    length: usize = 0;
+    is_owned: bool = false;
 
     pub static fn initBorrowed(data: []const u8): CowBytes {
         zig {
@@ -27,24 +27,24 @@ export struct CowBytes {
         }
     }
 
-    pub fn borrow(this): CowBytes {
+    pub fn borrow(): CowBytes {
         return CowBytes{
-            ptr: this.ptr,
-            length: this.length,
+            ptr: _.ptr,
+            length: _.length,
             is_owned: false,
         };
     }
 
-    pub fn isOwned(this): bool {
-        return this.is_owned;
+    pub fn isOwned(): bool {
+        return _.is_owned;
     }
 
-    pub fn len(this): usize {
-        return this.length;
+    pub fn len(): usize {
+        return _.length;
     }
 
-    pub fn slice(this): []const u8 {
-        if (this.length == 0) {
+    pub fn slice(*_): []const u8 {
+        if (_.length == 0) {
             return &[];
         }
         let s: []const u8 = &[];
@@ -55,30 +55,30 @@ export struct CowBytes {
     }
 
     // Ensures the buffer is uniquely owned on the heap before mutation (Copy-on-Write)
-    pub fn ensureOwned(*this): void {
-        if (!this.is_owned && this.length > 0) {
+    pub fn ensureOwned(*_) {
+        if (!_.is_owned && _.length > 0) {
             zig {
                 const duped = std.heap.page_allocator.dupe(u8, self.ptr[0..self.length]) catch unreachable;
                 self.ptr = duped.ptr;
                 self.is_owned = true;
             }
-        } else if (!this.is_owned) {
-            this.is_owned = true;
+        } else if (!_.is_owned) {
+            _.is_owned = true;
         }
     }
 
-    pub fn setByte(*this, index: usize, val: u8): bool {
-        if (index >= this.length) {
+    pub fn setByte(*_, index: usize, val: u8): bool {
+        if (index >= _.length) {
             return false;
         }
-        this.ensureOwned();
+        _.ensureOwned();
         unsafe {
-            this.ptr[index] = val;
+            _.ptr[index] = val;
         }
         return true;
     }
 
-    pub fn release(*this): void {
+    pub fn release(*_) {
         zig {
             if (self.is_owned and self.length > 0) {
                 std.heap.page_allocator.free(self.ptr[0..self.length]);

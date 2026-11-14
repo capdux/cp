@@ -3,14 +3,14 @@
  * Zero-overhead native test runner
  */
 
-export class Expectation {
+pub class Expectation {
     actual: i32, // placeholder, wait, I can just use macros directly in the test!
 }
 
-export fn test(name: string, callback: auto): void {
+pub fn test(name: string, callback: auto) {
     @test(name, callback);
 }
 
-export fn expect_eq(actual: auto, expected: auto): void {
+pub fn expect_eq(actual: auto, expected: auto) {
     @expect_eq(actual, expected);
 }

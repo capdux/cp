@@ -3,9 +3,8 @@
  * Ported from Bun.js http_types/URLPath.cp
  */
 
-const std = @import("std");
 
-export const URLPath = struct {
+pub const URLPath = struct {
     extname: []const u8 = "",
     path: []const u8 = "",
     pathname: []const u8 = "",
@@ -14,8 +13,8 @@ export const URLPath = struct {
     needs_redirect: bool = false,
     is_source_map: bool = false,
 
-    pub fn isRoot(self: URLPath) bool {
-        return self.path.len == 0 or (self.path.len == 1 and self.path[0] == '/') or std.mem.eql(u8, self.path, "index");
+    pub fn isRoot(*_): bool {
+        return _.path.len == 0 or (_.path.len == 1 and _.path[0] == '/') or std.mem.eql(u8, _.path, "index");
     }
 
     pub fn parse(raw_pathname: []const u8) URLPath {
@@ -23,13 +22,13 @@ export const URLPath = struct {
             return URLPath{};
         }
 
-        var question_idx: i32 = -1;
-        var period_idx: i32 = -1;
-        var first_slash: i32 = -1;
-        var last_slash: i32 = -1;
+        let question_idx: i32 = -1;
+        let period_idx: i32 = -1;
+        let first_slash: i32 = -1;
+        let last_slash: i32 = -1;
 
         const len = raw_pathname.len;
-        var i: usize = 0;
+        let i: usize = 0;
         while (i < len) : (i += 1) {
             const c = raw_pathname[i];
             if (c == '?' and question_idx < 0) {
@@ -58,7 +57,7 @@ export const URLPath = struct {
 
         const is_map = std.mem.eql(u8, ext_slice, "map");
 
-        var res = URLPath{};
+        let res = URLPath{};
         res.extname = ext_slice;
         res.path = path_slice;
         res.pathname = raw_pathname;

@@ -3,13 +3,12 @@
  * 原生管道读取器与写入器，满足 Reader / Writer / Closer Trait 契约
  */
 
-const std = @import("std");
 import { Reader, Writer, Closer } from "./traits";
 
 /**
  * 原生非阻塞/阻塞管道读取器
  */
-export class PipeReader implements Reader, Closer {
+pub class PipeReader implements Reader, Closer {
     fd: i32;
     closed: bool;
 
@@ -18,7 +17,7 @@ export class PipeReader implements Reader, Closer {
         _.closed = false;
     }
 
-    pub fn read(mut _, *buf: []u8): usize! {
+    pub fn read(*_, buf: *[]u8): usize! {
         if (_.closed || _.fd < 0) {
             return err.Closed;
         }
@@ -32,19 +31,19 @@ export class PipeReader implements Reader, Closer {
         return rc as usize;
     }
 
-    pub fn close(mut _): void {
+    pub fn close(*_) {
         if (!_.closed && _.fd >= 0) {
-            _ = std.c.close(_.fd);
+            * = std.c.close(_.fd);
             _.closed = true;
             _.fd = -1;
         }
     }
 
-    pub fn getFd(_): i32 {
+    pub fn getFd(): i32 {
         return _.fd;
     }
 
-    pub fn isClosed(_): bool {
+    pub fn isClosed(): bool {
         return _.closed;
     }
 }
@@ -52,7 +51,7 @@ export class PipeReader implements Reader, Closer {
 /**
  * 原生非阻塞/阻塞管道写入器
  */
-export class PipeWriter implements Writer, Closer {
+pub class PipeWriter implements Writer, Closer {
     fd: i32;
     closed: bool;
 
@@ -61,7 +60,7 @@ export class PipeWriter implements Writer, Closer {
         _.closed = false;
     }
 
-    pub fn write(mut _, data: []const u8): usize! {
+    pub fn write(*_, data: []const u8): usize! {
         if (_.closed || _.fd < 0) {
             return err.Closed;
         }
@@ -75,19 +74,19 @@ export class PipeWriter implements Writer, Closer {
         return rc as usize;
     }
 
-    pub fn close(mut _): void {
+    pub fn close(*_) {
         if (!_.closed && _.fd >= 0) {
-            _ = std.c.close(_.fd);
+            * = std.c.close(_.fd);
             _.closed = true;
             _.fd = -1;
         }
     }
 
-    pub fn getFd(_): i32 {
+    pub fn getFd(): i32 {
         return _.fd;
     }
 
-    pub fn isClosed(_): bool {
+    pub fn isClosed(): bool {
         return _.closed;
     }
 }
@@ -95,7 +94,7 @@ export class PipeWriter implements Writer, Closer {
 /**
  * 管道工厂：创建一对相互连通的 PipeReader 与 PipeWriter
  */
-export class Pipe {
+pub class Pipe {
     reader: PipeReader;
     writer: PipeWriter;
 
@@ -105,7 +104,7 @@ export class Pipe {
     }
 
     pub static fn create(): Pipe! {
-        var fds: [2]i32 = undefined;
+        let fds: [2]i32 = undefined;
         const rc = std.c.pipe(&fds);
         if (rc != 0) {
             return err.Closed;

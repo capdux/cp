@@ -147,9 +147,15 @@ pub fn resolve_dependencies(
 
     let code = fs::read_to_string(path)?;
     let mut parser = CPParser::new(&code);
-    let module = parser
-        .parse_module()
-        .map_err(|e| anyhow::anyhow!("{}", e.render_all(Some(&code), Some(path))))?;
+    let (module, p_diags) = parser.parse_module_with_recovery();
+    if !p_diags.is_empty() {
+        let rendered = p_diags
+            .iter()
+            .map(|d| d.render(Some(&code), Some(path)))
+            .collect::<Vec<_>>()
+            .join("\n");
+        return Err(anyhow::anyhow!("{}", rendered));
+    }
 
     for item in module.body {
         match item {
@@ -186,9 +192,15 @@ pub fn resolve_imports(
 
     let code = fs::read_to_string(path)?;
     let mut parser = CPParser::new(&code);
-    let module = parser
-        .parse_module()
-        .map_err(|e| anyhow::anyhow!("{}", e.render_all(Some(&code), Some(path))))?;
+    let (module, p_diags) = parser.parse_module_with_recovery();
+    if !p_diags.is_empty() {
+        let rendered = p_diags
+            .iter()
+            .map(|d| d.render(Some(&code), Some(path)))
+            .collect::<Vec<_>>()
+            .join("\n");
+        return Err(anyhow::anyhow!("{}", rendered));
+    }
 
     for item in module.body {
         match item {

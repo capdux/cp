@@ -1,6 +1,5 @@
 // lib/ini/parser.cp
 // High-performance INI file parser in CP
-const std = @import("std");
 
 pub const Property = struct {
     section: []const u8 = "",
@@ -13,48 +12,48 @@ pub const Ini = struct {
     count: usize = 0,
 
     pub fn parse(content: []const u8): Ini {
-        var res = Ini{};
+        let res = Ini{};
         res.parseContent(content);
         return res;
     }
 
-    pub fn get(self: *const Ini, section: []const u8, key: []const u8): ?[]const u8 {
-        var i: usize = self.count;
+    pub fn get(*_, section: []const u8, key: []const u8): ([]const u8)? {
+        let i: usize = _.count;
         while (i > 0) {
             i -= 1;
-            if (std.mem.eql(u8, self.props[i].section, section) and
-                std.mem.eql(u8, self.props[i].key, key))
+            if (std.mem.eql(u8, _.props[i].section, section) and
+                std.mem.eql(u8, _.props[i].key, key))
             {
-                return self.props[i].value;
+                return _.props[i].value;
             }
         }
         return null;
     }
 
-    pub fn getGlobal(self: *const Ini, key: []const u8): ?[]const u8 {
-        return self.get("", key);
+    pub fn getGlobal(*_, key: []const u8): ([]const u8)? {
+        return _.get("", key);
     }
 
-    pub fn getOr(self: *const Ini, section: []const u8, key: []const u8, default_val: []const u8): []const u8 {
-        if (self.get(section, key)) |v| {
+    pub fn getOr(*_, section: []const u8, key: []const u8, default_val: []const u8): []const u8 {
+        if (_.get(section, key)) |v| {
             return v;
         }
         return default_val;
     }
 
-    pub fn hasSection(self: *const Ini, section: []const u8) bool {
-        var i: usize = 0;
-        while (i < self.count) : (i += 1) {
-            if (std.mem.eql(u8, self.props[i].section, section)) {
+    pub fn hasSection(*_, section: []const u8): bool {
+        let i: usize = 0;
+        while (i < _.count) : (i += 1) {
+            if (std.mem.eql(u8, _.props[i].section, section)) {
                 return true;
             }
         }
         return false;
     }
 
-    fn parseContent(self: *Ini, content: []const u8) void {
-        var current_section: []const u8 = "";
-        var line_iter = std.mem.splitScalar(u8, content, '\n');
+    fn parseContent(*_, content: []const u8) {
+        let current_section: []const u8 = "";
+        let line_iter = std.mem.splitScalar(u8, content, '\n');
 
         while (line_iter.next()) |raw_line| {
             const line = std.mem.trim(u8, raw_line, " \t\r");
@@ -71,8 +70,8 @@ pub const Ini = struct {
             }
 
             // Key-value pair
-            var delim_idx: ?usize = null;
-            var i: usize = 0;
+            let delim_idx: usize? = null;
+            let i: usize = 0;
             while (i < line.len) : (i += 1) {
                 if (line[i] == '=' or line[i] == ':') {
                     delim_idx = i;
@@ -89,7 +88,7 @@ pub const Ini = struct {
             const raw_val = std.mem.trim(u8, line[idx + 1 ..], " \t");
             const val = parseValue(raw_val);
 
-            self.put(current_section, raw_key, val);
+            _.put(current_section, raw_key, val);
         }
     }
 
@@ -107,8 +106,8 @@ pub const Ini = struct {
         }
 
         // Strip inline comments ; or #
-        var end = raw.len;
-        var i: usize = 0;
+        let end = raw.len;
+        let i: usize = 0;
         while (i < raw.len) : (i += 1) {
             if ((raw[i] == ';' or raw[i] == '#') and i > 0 and (raw[i - 1] == ' ' or raw[i - 1] == '\t')) {
                 end = i - 1;
@@ -119,24 +118,24 @@ pub const Ini = struct {
         return std.mem.trim(u8, raw[0..end], " \t\r");
     }
 
-    fn put(self: *Ini, section: []const u8, key: []const u8, value: []const u8) void {
-        var i: usize = 0;
-        while (i < self.count) : (i += 1) {
-            if (std.mem.eql(u8, self.props[i].section, section) and
-                std.mem.eql(u8, self.props[i].key, key))
+    fn put(*_, section: []const u8, key: []const u8, value: []const u8) {
+        let i: usize = 0;
+        while (i < _.count) : (i += 1) {
+            if (std.mem.eql(u8, _.props[i].section, section) and
+                std.mem.eql(u8, _.props[i].key, key))
             {
-                self.props[i].value = value;
+                _.props[i].value = value;
                 return;
             }
         }
 
-        if (self.count < self.props.len) {
-            self.props[self.count] = Property{
+        if (_.count < _.props.len) {
+            _.props[_.count] = Property{
                 .section = section,
                 .key = key,
                 .value = value,
             };
-            self.count += 1;
+            _.count += 1;
         }
     }
 };

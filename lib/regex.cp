@@ -1,4 +1,4 @@
-export class RegExp {
+pub class RegExp {
     let _preg: usize;
 
     fn init(pattern: string, flags: string) {

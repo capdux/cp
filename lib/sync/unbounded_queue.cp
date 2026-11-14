@@ -1,6 +1,5 @@
 // Intrusive lock-free unbounded queue in CP
 // Ported from Bun.js core threading architecture
-const std = @import("std");
 
 pub fn UnboundedQueue(comptime T: type, comptime next_field: std.meta.FieldEnum(T)): type {
     const field_info = std.meta.fieldInfo(T, next_field);
@@ -16,73 +15,73 @@ pub fn UnboundedQueue(comptime T: type, comptime next_field: std.meta.FieldEnum(
     return struct {
         const Self = @This();
 
-        inline fn getNext(item: *T): ?*T {
+        inline fn getNext(item: *T): (*T)? {
             return @field(item, next_name);
         }
 
-        inline fn setNext(item: *T, ptr: ?*T): void {
+        inline fn setNext(item: *T, ptr: (*T)?) {
             @field(item, next_name) = ptr;
         }
 
-        inline fn atomicLoadNext(item: *T, ordering: std.builtin.AtomicOrder): ?*T {
-            return @atomicLoad(?*T, &@field(item, next_name), ordering);
+        inline fn atomicLoadNext(item: *T, ordering: std.builtin.AtomicOrder): (*T)? {
+            return @atomicLoad((*T)?, &@field(item, next_name), ordering);
         }
 
-        inline fn atomicStoreNext(item: *T, ptr: ?*T, ordering: std.builtin.AtomicOrder): void {
-            @atomicStore(?*T, &@field(item, next_name), ptr, ordering);
+        inline fn atomicStoreNext(item: *T, ptr: (*T)?, ordering: std.builtin.AtomicOrder) {
+            @atomicStore((*T)?, &@field(item, next_name), ptr, ordering);
         }
 
         pub const Batch = struct {
             pub const Iterator = struct {
                 batch: Self.Batch,
 
-                pub fn next(self: *Self.Batch.Iterator): ?*T {
-                    if (self.batch.count == 0) return null;
-                    const front = self.batch.front orelse unreachable;
-                    self.batch.front = getNext(front);
-                    self.batch.count -= 1;
+                pub fn next(*_): (*T)? {
+                    if (_.batch.count == 0) return null;
+                    const front = _.batch.front orelse unreachable;
+                    _.batch.front = getNext(front);
+                    _.batch.count -= 1;
                     return front;
                 }
             };
 
-            front: ?*T = null,
-            last: ?*T = null,
+            front: (*T)? = null,
+            last: (*T)? = null,
             count: usize = 0,
 
-            pub fn iterator(self: Self.Batch): Self.Batch.Iterator {
-                return .{ .batch = self };
+            pub fn iterator(): Self.Batch.Iterator {
+                return .{ .batch = _ };
             }
         };
 
         pub const queue_padding_length = cache_line_length / 2;
 
-        back: std.atomic.Value(?*T) align(queue_padding_length) = .init(null),
-        front: std.atomic.Value(?*T) align(queue_padding_length) = .init(null),
+        back: std.atomic.Value((*T)?) align(queue_padding_length) = .init(null),
+        front: std.atomic.Value((*T)?) align(queue_padding_length) = .init(null),
 
-        pub fn push(self: *Self, item: *T): void {
-            self.pushBatch(item, item);
+        pub fn push(*_, item: *T) {
+            _.pushBatch(item, item);
         }
 
-        pub fn pushBatch(self: *Self, first: *T, last: *T): void {
+        pub fn pushBatch(*_, first: *T, last: *T) {
             setNext(last, null);
-            if (self.back.swap(last, .acq_rel)) |old_back| {
+            if (_.back.swap(last, .acq_rel)) |old_back| {
                 atomicStoreNext(old_back, first, .release);
             } else {
-                self.front.store(first, .release);
+                _.front.store(first, .release);
             }
         }
 
-        pub fn pop(self: *Self): ?*T {
-            var first = self.front.load(.acquire) orelse return null;
+        pub fn pop(*_): (*T)? {
+            let first = _.front.load(.acquire) orelse return null;
             const next_item = while (true) {
                 const next_ptr = atomicLoadNext(first, .acquire);
-                const maybe_first = self.front.cmpxchgWeak(
+                const maybe_first = _.front.cmpxchgWeak(
                     first,
                     next_ptr,
                     .acquire,
                     .monotonic,
                 );
-                if (maybe_first) |actual_first| {
+                if (actual_first := maybe_first) {
                     first = actual_first;
                 } else {
                     break next_ptr;
@@ -90,31 +89,31 @@ pub fn UnboundedQueue(comptime T: type, comptime next_field: std.meta.FieldEnum(
             };
 
             if (next_item == null) {
-                _ = self.back.cmpxchgStrong(first, null, .acq_rel, .monotonic);
+                * = _.back.cmpxchgStrong(first, null, .acq_rel, .monotonic);
             }
 
             return first;
         }
 
-        pub fn popBatch(self: *Self): ?Self.Batch {
-            var first = self.front.load(.acquire) orelse return null;
+        pub fn popBatch(*_): Self.Batch? {
+            let first = _.front.load(.acquire) orelse return null;
             while (true) {
-                const maybe_first = self.front.cmpxchgWeak(
+                const maybe_first = _.front.cmpxchgWeak(
                     first,
                     null,
                     .acquire,
                     .monotonic,
                 );
-                if (maybe_first) |actual_first| {
+                if (actual_first := maybe_first) {
                     first = actual_first;
                 } else {
                     break;
                 }
             }
 
-            const last = self.back.swap(null, .acq_rel) orelse unreachable;
-            var count: usize = 1;
-            var curr = first;
+            const last = _.back.swap(null, .acq_rel) orelse unreachable;
+            let count: usize = 1;
+            let curr = first;
             while (curr != last) {
                 count += 1;
                 while (atomicLoadNext(curr, .acquire)) |next_item| {

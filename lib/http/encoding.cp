@@ -3,7 +3,7 @@
  * Ported from Bun.js http_types/Encoding.cp
  */
 
-export enum Encoding {
+pub enum Encoding {
     Identity,
     Gzip,
     Deflate,
@@ -11,15 +11,15 @@ export enum Encoding {
     Zstd,
     Chunked,
 
-    pub fn canUseLibDeflate(self: Encoding) bool {
-        return switch (self) {
+    fn canUseLibDeflate(): bool {
+        return switch (_) {
             .Gzip, .Deflate => true,
             else => false,
         };
     }
 
-    pub fn isCompressed(self: Encoding) bool {
-        return switch (self) {
+    fn isCompressed(): bool {
+        return switch (_) {
             .Gzip, .Deflate, .Brotli, .Zstd => true,
             else => false,
         };

@@ -2,9 +2,8 @@
 // Ported from Bun.js core threading architecture
 import { Futex, Deadline } from "./futex";
 import { Mutex } from "./mutex";
-const std = @import("std");
 
-export struct Condition {
+pub struct Condition {
     impl: Impl = .{},
 
     pub const Notify = enum {
@@ -17,11 +16,11 @@ export struct Condition {
     const WindowsImpl = struct {
         condition: std.os.windows.CONDITION_VARIABLE = .{},
 
-        fn wait(this: *WindowsImpl, mutex: *Mutex, timeout: ?u64) !void {
-            var timeout_overflowed = false;
-            var timeout_ms: std.os.windows.DWORD = std.os.windows.INFINITE;
+        fn wait(*_, mutex: *Mutex, timeout: u64?) !void {
+            let timeout_overflowed = false;
+            let timeout_ms: std.os.windows.DWORD = std.os.windows.INFINITE;
 
-            if (timeout) |timeout_ns| {
+            if (timeout_ns := timeout) {
                 const ms = (timeout_ns + (std.time.ns_per_ms / 2)) / std.time.ns_per_ms;
                 timeout_ms = std.math.cast(std.os.windows.DWORD, ms) orelse std.math.maxInt(std.os.windows.DWORD);
 
@@ -35,7 +34,7 @@ export struct Condition {
                 mutex.impl.locking_thread.store(0, .unordered);
             }
             const rc = std.os.windows.kernel32.SleepConditionVariableSRW(
-                &this.condition,
+                &_.condition,
                 if (@import("builtin").mode == .debug) &mutex.impl.impl.srwlock else &mutex.impl.srwlock,
                 timeout_ms,
                 0,
@@ -50,10 +49,10 @@ export struct Condition {
             }
         }
 
-        fn wake(this: *WindowsImpl, comptime notify: Notify) void {
+        fn wake(*_, comptime notify: Notify) {
             switch (notify) {
-                .one => std.os.windows.kernel32.WakeConditionVariable(&this.condition),
-                .all => std.os.windows.kernel32.WakeAllConditionVariable(&this.condition),
+                .one => std.os.windows.kernel32.WakeConditionVariable(&_.condition),
+                .all => std.os.windows.kernel32.WakeAllConditionVariable(&_.condition),
             }
         }
     };
@@ -67,30 +66,30 @@ export struct Condition {
         const one_signal: u32 = 1 << 16;
         const signal_mask: u32 = 0xffff << 16;
 
-        fn wait(this: *FutexImpl, mutex: *Mutex, timeout: ?u64) !void {
-            var epoch = this.epoch.load(.acquire);
-            var state = this.state.fetchAdd(one_waiter, .monotonic);
+        fn wait(*_, mutex: *Mutex, timeout: u64?) !void {
+            let epoch = _.epoch.load(.acquire);
+            let state = _.state.fetchAdd(one_waiter, .monotonic);
             std.debug.assert((state & waiter_mask) != waiter_mask);
             state += one_waiter;
 
             mutex.unlock();
             defer mutex.lock();
 
-            var futex_deadline = Deadline.init(timeout);
+            let futex_deadline = Deadline.init(timeout);
 
             while (true) {
-                futex_deadline.wait(&this.epoch, epoch) catch |err| switch (err) {
+                futex_deadline.wait(&_.epoch, epoch) catch |err| switch (err) {
                     error.Timeout => {
                         while (true) {
                             while ((state & signal_mask) != 0) {
                                 const new_state = state - one_waiter - one_signal;
-                                const res = this.state.cmpxchgWeak(state, new_state, .acquire, .monotonic);
+                                const res = _.state.cmpxchgWeak(state, new_state, .acquire, .monotonic);
                                 if (res == null) return;
                                 state = res.?;
                             }
 
                             const new_state = state - one_waiter;
-                            const res = this.state.cmpxchgWeak(state, new_state, .monotonic, .monotonic);
+                            const res = _.state.cmpxchgWeak(state, new_state, .monotonic, .monotonic);
                             if (res == null) return err;
                             state = res.?;
                         }
@@ -98,20 +97,20 @@ export struct Condition {
                     else => {},
                 };
 
-                epoch = this.epoch.load(.acquire);
-                state = this.state.load(.monotonic);
+                epoch = _.epoch.load(.acquire);
+                state = _.state.load(.monotonic);
 
                 while ((state & signal_mask) != 0) {
                     const new_state = state - one_waiter - one_signal;
-                    const res = this.state.cmpxchgWeak(state, new_state, .acquire, .monotonic);
+                    const res = _.state.cmpxchgWeak(state, new_state, .acquire, .monotonic);
                     if (res == null) return;
                     state = res.?;
                 }
             }
         }
 
-        fn wake(this: *FutexImpl, comptime notify: Notify) void {
-            var state = this.state.load(.monotonic);
+        fn wake(*_, comptime notify: Notify) {
+            let state = _.state.load(.monotonic);
             while (true) {
                 const waiters = (state & waiter_mask) / one_waiter;
                 const signals = (state & signal_mask) / one_signal;
@@ -127,12 +126,12 @@ export struct Condition {
                 };
 
                 const new_state = state + (one_signal * to_wake);
-                const res = this.state.cmpxchgWeak(state, new_state, .release, .monotonic);
-                if (res) |s| {
+                const res = _.state.cmpxchgWeak(state, new_state, .release, .monotonic);
+                if (s := res) {
                     state = s;
                 } else {
-                    _ = this.epoch.fetchAdd(1, .release);
-                    Futex.wake(&this.epoch, to_wake);
+                    * = _.epoch.fetchAdd(1, .release);
+                    Futex.wake(&_.epoch, to_wake);
                     return;
                 }
             }
@@ -140,29 +139,29 @@ export struct Condition {
     };
 
     /// Atomically releases the Mutex, blocks the caller thread, then re-acquires the Mutex on return.
-    pub fn wait(this: *Condition, mutex: *Mutex): void {
-        this.impl.wait(mutex, null) catch unreachable;
+    pub fn wait(*_, mutex: *Mutex) {
+        _.impl.wait(mutex, null) catch unreachable;
     }
 
     /// Atomically releases the Mutex, blocks the caller thread, then re-acquires the Mutex on return with timeout.
-    pub fn timedWait(this: *Condition, mutex: *Mutex, timeout_ns: u64): !void {
-        return this.impl.wait(mutex, timeout_ns);
+    pub fn timedWait(*_, mutex: *Mutex, timeout_ns: u64): !void {
+        return _.impl.wait(mutex, timeout_ns);
     }
 
     /// Unblocks at least one thread blocked in a call to `wait()` or `timedWait()` with a given Mutex.
-    pub fn signal(this: *Condition): void {
-        this.impl.wake(.one);
+    pub fn signal(*_) {
+        _.impl.wake(.one);
     }
 
     /// Unblocks all threads currently blocked in a call to `wait()` or `timedWait()` with a given Mutex.
-    pub fn broadcast(this: *Condition): void {
-        this.impl.wake(.all);
+    pub fn broadcast(*_) {
+        _.impl.wake(.all);
     }
 
-    pub fn release(this: *Condition): void {
-        _ = this;
+    pub fn release(*_) {
+        * = _;
     }
-    pub fn deinit(this: *Condition): void {
-        this.release();
+    pub fn deinit(*_) {
+        _.release();
     }
 }

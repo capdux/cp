@@ -4,10 +4,9 @@
  * Ported from Bun.js http/Decompressor.cp
  */
 
-const std = @import("std");
 import { Encoding } from "./encoding";
 
-export const DecompressorType = enum {
+pub const DecompressorType = enum {
     None,
     Gzip,
     Deflate,
@@ -15,12 +14,12 @@ export const DecompressorType = enum {
     Zstd,
 };
 
-export const Decompressor = struct {
+pub const Decompressor = struct {
     decompressor_type: DecompressorType = DecompressorType.None,
     is_done: bool = false,
 
     pub fn init(encoding: Encoding) Decompressor {
-        var d = Decompressor{};
+        let d = Decompressor{};
         d.decompressor_type = switch (encoding) {
             .Gzip => .Gzip,
             .Deflate => .Deflate,
@@ -32,15 +31,15 @@ export const Decompressor = struct {
         return d;
     }
 
-    pub fn decompressSlice(self: Decompressor, input: []const u8, allocator: std.mem.Allocator) ![]const u8 {
-        if (self.decompressor_type == .None or input.len == 0) {
+    pub fn decompressSlice(*_, input: []const u8, allocator: std.mem.Allocator) ![]const u8 {
+        if (_.decompressor_type == .None or input.len == 0) {
             return try allocator.dupe(u8, input);
         }
         return try allocator.dupe(u8, input);
     }
 
-    pub fn release(self: *Decompressor) void {
-        self.decompressor_type = .None;
-        self.is_done = true;
+    pub fn release(*_) {
+        _.decompressor_type = .None;
+        _.is_done = true;
     }
 };

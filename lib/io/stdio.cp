@@ -3,17 +3,17 @@
  * 标准控制台与终端流输入输出
  */
 
-export class Console {
-    pub fn log(this, fmt: string, a1: any, a2: any): void {
-        if (@is_beam) {
+pub class Console {
+    pub fn log(fmt: string, a1: auto, a2: auto) {
+        if (@is_nest) {
             @print(fmt, a1, a2);
         } else {
             @io_write_stdout(fmt, a1, a2);
         }
     }
 
-    pub fn err(this, fmt: string, a1: any): void {
-        if (@is_beam) {
+    pub fn err(fmt: string, a1: auto) {
+        if (@is_nest) {
             @print_err(fmt, a1);
         } else {
             @io_write_stderr(fmt, a1);
@@ -21,11 +21,11 @@ export class Console {
     }
 }
 
-export const console = new Console();
+pub const console = new Console();
 
-export class Stdio {
-    pub fn readLine(this): string {
-        if (@is_beam) {
+pub class Stdio {
+    pub fn readLine(): string {
+        if (@is_nest) {
             return @yield_to_beam(90, "read_line"); 
         } else {
             return @io_read_stdin_line();
@@ -33,20 +33,20 @@ export class Stdio {
     }
 }
 
-export const stdio = new Stdio();
+pub const stdio = new Stdio();
 
-export fn print(msg: any): void {
+pub fn print(msg: auto) {
     @print("{any}", msg);
 }
 
-export fn println(msg: any): void {
+pub fn println(msg: auto) {
     @print("{any}\n", msg);
 }
 
-export fn eprint(msg: any): void {
+pub fn eprint(msg: auto) {
     @print_err("{any}", msg);
 }
 
-export fn eprintln(msg: any): void {
+pub fn eprintln(msg: auto) {
     @print_err("{any}\n", msg);
 }

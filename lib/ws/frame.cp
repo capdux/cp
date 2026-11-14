@@ -1,6 +1,5 @@
 // lib/ws/frame.cp
 // RFC 6455 WebSocket Frame Header & Builder in CP
-const std = @import("std");
 import { Opcode, CloseCode } from "./opcode";
 import { Mask } from "./mask";
 
@@ -12,47 +11,47 @@ pub const FrameHeader = struct {
     mask_key: [4]u8 = .{ 0, 0, 0, 0 },
     header_len: usize = 2,
 
-    pub fn encode(self: FrameHeader, out: []u8) !usize {
-        var needed_len: usize = 2;
-        if (self.payload_len >= 126 and self.payload_len <= 0xFFFF) {
+    pub fn encode(out: []u8) !usize {
+        let needed_len: usize = 2;
+        if (_.payload_len >= 126 and _.payload_len <= 0xFFFF) {
             needed_len += 2;
-        } else if (self.payload_len > 0xFFFF) {
+        } else if (_.payload_len > 0xFFFF) {
             needed_len += 8;
         }
-        if (self.masked) {
+        if (_.masked) {
             needed_len += 4;
         }
 
         if (out.len < needed_len) return error.BufferTooSmall;
 
         // Byte 0: FIN + RSV + Opcode
-        var b0: u8 = @intFromEnum(self.opcode);
-        if (self.fin) b0 |= 0x80;
+        let b0: u8 = @intFromEnum(_.opcode);
+        if (_.fin) b0 |= 0x80;
         out[0] = b0;
 
         // Byte 1: Mask bit + 7-bit length
-        var b1: u8 = 0;
-        if (self.masked) b1 |= 0x80;
+        let b1: u8 = 0;
+        if (_.masked) b1 |= 0x80;
 
-        var offset: usize = 2;
-        if (self.payload_len <= 125) {
-            b1 |= @as(u8, @truncate(self.payload_len));
+        let offset: usize = 2;
+        if (_.payload_len <= 125) {
+            b1 |= @as(u8, @truncate(_.payload_len));
             out[1] = b1;
-        } else if (self.payload_len <= 0xFFFF) {
+        } else if (_.payload_len <= 0xFFFF) {
             b1 |= 126;
             out[1] = b1;
-            std.mem.writeInt(u16, out[offset .. offset + 2][0..2], @as(u16, @truncate(self.payload_len)), .big);
+            std.mem.writeInt(u16, out[offset .. offset + 2][0..2], @as(u16, @truncate(_.payload_len)), .big);
             offset += 2;
         } else {
             b1 |= 127;
             out[1] = b1;
-            std.mem.writeInt(u64, out[offset .. offset + 8][0..8], @as(u64, self.payload_len), .big);
+            std.mem.writeInt(u64, out[offset .. offset + 8][0..8], @as(u64, _.payload_len), .big);
             offset += 8;
         }
 
         // Masking Key
-        if (self.masked) {
-            @memcpy(out[offset .. offset + 4], &self.mask_key);
+        if (_.masked) {
+            @memcpy(out[offset .. offset + 4], &_.mask_key);
             offset += 4;
         }
 
@@ -71,8 +70,8 @@ pub const FrameHeader = struct {
         const masked = (b1 & 0x80) != 0;
         const len7 = b1 & 0x7F;
 
-        var offset: usize = 2;
-        var payload_len: usize = 0;
+        let offset: usize = 2;
+        let payload_len: usize = 0;
 
         if (len7 <= 125) {
             payload_len = len7;
@@ -86,7 +85,7 @@ pub const FrameHeader = struct {
             offset += 8;
         }
 
-        var mask_key: [4]u8 = .{ 0, 0, 0, 0 };
+        let mask_key: [4]u8 = .{ 0, 0, 0, 0 };
         if (masked) {
             if (buf.len < offset + 4) return error.IncompleteHeader;
             @memcpy(&mask_key, buf[offset .. offset + 4]);
@@ -111,7 +110,7 @@ pub const FrameBuilder = struct {
             .opcode = opcode,
             .masked = mask != null,
             .payload_len = payload.len,
-            .mask_key = if (mask) |k| k else .{ 0, 0, 0, 0 },
+            .mask_key = if (k := mask) k else .{ 0, 0, 0, 0 },
         };
 
         const header_len = try header.encode(out);
@@ -119,7 +118,7 @@ pub const FrameBuilder = struct {
 
         @memcpy(out[header_len .. header_len + payload.len], payload);
 
-        if (mask) |k| {
+        if (k := mask) {
             Mask.apply(out[header_len .. header_len + payload.len], k);
         }
 
@@ -143,9 +142,9 @@ pub const FrameBuilder = struct {
     }
 
     pub fn buildClose(out: []u8, code: CloseCode, reason: []const u8, mask: ?[4]u8) !usize {
-        var payload_buf: [128]u8 = undefined;
+        let payload_buf: [128]u8 = undefined;
         std.mem.writeInt(u16, payload_buf[0..2], @intFromEnum(code), .big);
-        var total_len: usize = 2;
+        let total_len: usize = 2;
         if (reason.len > 0) {
             const copy_len = @min(reason.len, payload_buf.len - 2);
             @memcpy(payload_buf[2 .. 2 + copy_len], reason[0..copy_len]);

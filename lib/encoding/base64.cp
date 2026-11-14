@@ -1,11 +1,10 @@
 // lib/encoding/base64.cp
 // High-performance Base64 encoder and decoder in pure CP
-const std = @import("std");
 
 const standard_alphabet: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 const url_safe_alphabet: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
-export class Base64 {
+pub class Base64 {
     pub static fn encodeLen(len: usize): usize {
         return ((len + 2) / 3) * 4;
     }
@@ -37,9 +36,9 @@ export class Base64 {
     }
 
     static fn encodeWithAlphabet(alphabet: []const u8, dest: []u8, source: []const u8, pad: bool): usize {
-        var acc: u32 = 0;
-        var acc_len: u32 = 0;
-        var out_idx: usize = 0;
+        let acc: u32 = 0;
+        let acc_len: u32 = 0;
+        let out_idx: usize = 0;
 
         for (byte of source) {
             acc = (acc << 8) | @as(u32, byte);
@@ -90,7 +89,7 @@ export class Base64 {
     }
 
     static fn decodeUnified(dest: []u8, source: []const u8): usize! {
-        var decode_table: [256]u8 = undefined;
+        let decode_table: [256]u8 = undefined;
         for (i of 0..256) {
             decode_table[i] = 0xFF;
         }
@@ -102,9 +101,9 @@ export class Base64 {
         decode_table['-'] = 62;
         decode_table['_'] = 63;
 
-        var acc: u32 = 0;
-        var acc_len: u32 = 0;
-        var out_idx: usize = 0;
+        let acc: u32 = 0;
+        let acc_len: u32 = 0;
+        let out_idx: usize = 0;
 
         for (c of source) {
             if (c == '=') break;

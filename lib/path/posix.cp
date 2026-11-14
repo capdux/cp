@@ -1,6 +1,5 @@
 // lib/path/posix.cp
 // POSIX path utilities in CP
-const std = @import("std");
 
 pub const PosixPath = struct {
     pub const sep: u8 = '/';
@@ -11,8 +10,8 @@ pub const PosixPath = struct {
         return filepath.len > 0 and filepath[0] == '/';
     }
 
-    pub fn basename(filepath: []const u8, ext: ?[]const u8): []const u8 {
-        var p = filepath;
+    pub fn basename(filepath: []const u8, ext: ([]const u8)?): []const u8 {
+        let p = filepath;
         // Trim trailing slashes
         while (p.len > 1 and p[p.len - 1] == '/') {
             p = p[0 .. p.len - 1];
@@ -20,8 +19,8 @@ pub const PosixPath = struct {
         if (p.len == 0) return "";
         if (p.len == 1 and p[0] == '/') return "/";
 
-        var last_slash: ?usize = null;
-        var i: usize = p.len;
+        let last_slash: usize? = null;
+        let i: usize = p.len;
         while (i > 0) {
             i -= 1;
             if (p[i] == '/') {
@@ -30,8 +29,8 @@ pub const PosixPath = struct {
             }
         }
 
-        var base = if (last_slash) |idx| p[idx + 1 ..] else p;
-        if (ext) |e| {
+        let base = if (idx := last_slash) p[idx + 1 ..] else p;
+        if (e := ext) {
             if (e.len > 0 and std.mem.endsWith(u8, base, e) and base.len > e.len) {
                 base = base[0 .. base.len - e.len];
             }
@@ -40,15 +39,15 @@ pub const PosixPath = struct {
     }
 
     pub fn dirname(filepath: []const u8): []const u8 {
-        var p = filepath;
+        let p = filepath;
         while (p.len > 1 and p[p.len - 1] == '/') {
             p = p[0 .. p.len - 1];
         }
         if (p.len == 0 or std.mem.eql(u8, p, ".")) return ".";
         if (p.len == 1 and p[0] == '/') return "/";
 
-        var last_slash: ?usize = null;
-        var i: usize = p.len;
+        let last_slash: usize? = null;
+        let i: usize = p.len;
         while (i > 0) {
             i -= 1;
             if (p[i] == '/') {
@@ -57,7 +56,7 @@ pub const PosixPath = struct {
             }
         }
 
-        if (last_slash) |idx| {
+        if (idx := last_slash) {
             if (idx == 0) return "/";
             return p[0..idx];
         }
@@ -68,7 +67,7 @@ pub const PosixPath = struct {
         const base = basename(filepath, null);
         if (base.len <= 1) return "";
 
-        var i: usize = base.len;
+        let i: usize = base.len;
         while (i > 0) {
             i -= 1;
             if (base[i] == '.') {
@@ -83,10 +82,10 @@ pub const PosixPath = struct {
         if (filepath.len == 0) return ".";
 
         const is_abs = isAbsolute(filepath);
-        var segments: [64][]const u8 = undefined;
-        var seg_count: usize = 0;
+        let segments: [64][]const u8 = undefined;
+        let seg_count: usize = 0;
 
-        var iter = std.mem.splitScalar(u8, filepath, '/');
+        let iter = std.mem.splitScalar(u8, filepath, '/');
         while (iter.next()) |seg| {
             if (seg.len == 0 or std.mem.eql(u8, seg, ".")) {
                 continue;
@@ -108,13 +107,13 @@ pub const PosixPath = struct {
             return if (is_abs) "/" else ".";
         }
 
-        var out_idx: usize = 0;
+        let out_idx: usize = 0;
         if (is_abs) {
             buf[out_idx] = '/';
             out_idx += 1;
         }
 
-        var s_i: usize = 0;
+        let s_i: usize = 0;
         while (s_i < seg_count) : (s_i += 1) {
             if (s_i > 0 or is_abs) {
                 if (out_idx > 1 or (!is_abs and out_idx > 0)) {
@@ -131,10 +130,10 @@ pub const PosixPath = struct {
     }
 
     pub fn join(paths: []const []const u8, buf: *[1024]u8): []const u8 {
-        var joined_buf: [1024]u8 = undefined;
-        var joined_len: usize = 0;
+        let joined_buf: [1024]u8 = undefined;
+        let joined_len: usize = 0;
 
-        for (paths) |p| {
+        for (p of paths) {
             if (p.len == 0) continue;
             if (joined_len > 0 and joined_buf[joined_len - 1] != '/' and p[0] != '/') {
                 joined_buf[joined_len] = '/';

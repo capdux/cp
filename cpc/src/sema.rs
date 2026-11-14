@@ -4,7 +4,7 @@ use crate::Span;
 use std::collections::HashMap;
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Clone)]
 pub enum SemaError {
     #[error("Diagnostic: {0:?}")]
     Diagnostic(Diagnostic),
@@ -186,11 +186,15 @@ impl SemaError {
                 "parameter '{}' is a read-only borrow (immutable by default in CP).",
                 name
             ))
-            .with_help("in CP, function parameters are read-only borrows by default. To modify arguments in-place, declare them as exclusive mutable borrows using '*' prefix.")
-            .with_suggestion(format!(
-                "parameter '{}' is a read-only borrow. Add '*' to declare it as mutable borrow: '*{}: <Type>'",
-                name, name
-            )),
+            .with_help("in CP, function parameters are read-only by default. Use '*_' for mutable method receivers or 'v: *T' for mutable parameters.")
+            .with_suggestion(if name == "_" || name == "this" || name == "self" {
+                "receiver is read-only. Add '*' to declare mutable receiver: fn method(*_)".to_string()
+            } else {
+                format!(
+                    "parameter '{}' is a read-only borrow. Add '*' to declare it as mutable: '{}: *<Type>'",
+                    name, name
+                )
+            }),
 
             SemaError::MutableBorrowConflict(name, span) => Diagnostic::new(
                 "E0202",
@@ -462,9 +466,18 @@ pub struct Analyzer {
     pub type_aliases: HashMap<String, Type>,
     pub known_lengths_stack: Vec<HashMap<String, usize>>,
     pub const_int_vars_stack: Vec<HashMap<String, i64>>,
+    pub errors: Vec<SemaError>,
 }
 
 impl Analyzer {
+    pub fn get_diagnostics(&self) -> Vec<Diagnostic> {
+        let known = self.get_known_symbols();
+        self.errors
+            .iter()
+            .map(|e| e.to_diagnostic(&known))
+            .collect()
+    }
+
     pub fn get_known_symbols(&self) -> Vec<String> {
         let mut symbols = std::collections::HashSet::new();
         for scope in &self.scopes {
@@ -577,6 +590,7 @@ impl Analyzer {
             type_aliases: HashMap::new(),
             known_lengths_stack: vec![HashMap::new()],
             const_int_vars_stack: vec![HashMap::new()],
+            errors: Vec::new(),
         }
     }
 
@@ -745,6 +759,42 @@ impl Analyzer {
         };
         self.classes.insert("Box".to_string(), box_class.clone());
         self.scopes[0].insert("Box".to_string(), SymbolKind::Class(box_class));
+
+        let json_class = crate::ast::Class {
+            span: mock_span.clone(),
+            ident: crate::ast::Ident {
+                span: mock_span.clone(),
+                sym: "JSON".to_string(),
+            },
+            fields: vec![],
+            methods: vec![],
+            implements: vec![],
+            extends: None,
+            is_ref: true,
+            meta: Vec::new(),
+            extra_zig: vec![],
+            is_pub: true,
+            is_static: true,
+            is_union: false,
+            nested_classes: vec![],
+            generic_params: vec![],
+        };
+        self.classes.insert("JSON".to_string(), json_class.clone());
+        self.scopes[0].insert("JSON".to_string(), SymbolKind::Class(json_class));
+        self.scopes[0].insert(
+            "std".to_string(),
+            SymbolKind::Var {
+                ty: Type::Any,
+                kind: VarDeclKind::Const,
+            },
+        );
+        self.scopes[0].insert(
+            "builtin".to_string(),
+            SymbolKind::Var {
+                ty: Type::Any,
+                kind: VarDeclKind::Const,
+            },
+        );
 
         for reflect_name in &["TypeInfo", "FieldInfo", "MethodInfo"] {
             let cls = crate::ast::Class {
@@ -1042,12 +1092,18 @@ impl Analyzer {
         }
 
         for item in &module.body {
-            match item {
-                ModuleItem::Decl(decl) => self.analyze_decl(decl)?,
-                ModuleItem::Stmt(stmt) => self.analyze_stmt(stmt)?,
-                ModuleItem::Import(_) => {}
-                ModuleItem::Export(_) => {}
+            let res = match item {
+                ModuleItem::Decl(decl) => self.analyze_decl(decl),
+                ModuleItem::Stmt(stmt) => self.analyze_stmt(stmt),
+                ModuleItem::Import(_) => Ok(()),
+                ModuleItem::Export(_) => Ok(()),
+            };
+            if let Err(e) = res {
+                self.errors.push(e);
             }
+        }
+        if let Some(first) = self.errors.first().cloned() {
+            return Err(first);
         }
         Ok(())
     }
@@ -2262,7 +2318,9 @@ impl Analyzer {
                     self.symbol_map.insert(p.ident.span, p_kind);
                 }
                 for stmt in &f.body.body {
-                    self.analyze_stmt(stmt)?;
+                    if let Err(e) = self.analyze_stmt(stmt) {
+                        self.errors.push(e);
+                    }
                 }
                 self.exit_scope();
                 for k in added_generic_bounds {
@@ -2493,7 +2551,9 @@ impl Analyzer {
                         }
                     }
                     for stmt in &m.body.body {
-                        self.analyze_stmt(stmt)?;
+                        if let Err(e) = self.analyze_stmt(stmt) {
+                            self.errors.push(e);
+                        }
                     }
                     self.exit_scope();
                     self.exit_scope();
@@ -3121,7 +3181,9 @@ impl Analyzer {
                     self.symbol_map.insert(p.ident.span, p_kind);
                 }
                 for stmt in &f.body.body {
-                    self.analyze_stmt(stmt)?;
+                    if let Err(e) = self.analyze_stmt(stmt) {
+                        self.errors.push(e);
+                    }
                 }
                 self.exit_scope();
                 self.current_fn_is_async = old_async;
@@ -5526,7 +5588,9 @@ impl Analyzer {
     fn analyze_block(&mut self, block: &BlockStmt) -> SemaResult<()> {
         self.enter_scope();
         for stmt in &block.body {
-            self.analyze_stmt(stmt)?;
+            if let Err(e) = self.analyze_stmt(stmt) {
+                self.errors.push(e);
+            }
         }
         self.exit_scope();
         Ok(())
@@ -5825,6 +5889,17 @@ impl Analyzer {
                                 span: mem.prop.span,
                                 sym: "Task".to_string(),
                             }));
+                        }
+                        if oid.sym == "JSON" {
+                            if mem.prop.sym == "stringify" || mem.prop.sym == "encode" {
+                                return Ok(Type::String);
+                            }
+                            if mem.prop.sym == "parse" || mem.prop.sym == "decode" {
+                                if let Some(Expr::TypeVal { ty, .. }) = call.args.first() {
+                                    return Ok(Type::ErrorUnion(Box::new(ty.clone())));
+                                }
+                                return Ok(Type::ErrorUnion(Box::new(Type::Any)));
+                            }
                         }
                     }
                 }

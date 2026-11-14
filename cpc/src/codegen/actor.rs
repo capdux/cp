@@ -559,6 +559,7 @@ impl Codegen {
                 "pub "
             };
             if is_c && func.body.body.is_empty() {
+                let c_pub_prefix = if func.is_pub { "pub " } else { "" };
                 if let Some(alias) = c_alias {
                     writeln!(
                         self.output,
@@ -566,12 +567,17 @@ impl Codegen {
                         alias, params_str, callconv_clause, zig_ret_ty
                     )
                     .unwrap();
-                    writeln!(self.output, "{}const {} = {};", pub_prefix, zig_name, alias).unwrap();
+                    writeln!(
+                        self.output,
+                        "{}const {} = {};",
+                        c_pub_prefix, zig_name, alias
+                    )
+                    .unwrap();
                 } else {
                     writeln!(
                         self.output,
                         "\n{}extern \"c\" fn {}({}) {}{};",
-                        pub_prefix, zig_name, params_str, callconv_clause, zig_ret_ty
+                        c_pub_prefix, zig_name, params_str, callconv_clause, zig_ret_ty
                     )
                     .unwrap();
                 }

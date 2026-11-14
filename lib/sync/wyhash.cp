@@ -58,7 +58,7 @@ fn mix1(a: u64, b: u64, seed: u64): u64 {
 // Wyhash version which does not store internal state for handling partial buffers.
 // This is needed so that we can maximize the speed for the short key case, which will
 // use the non-iterative api which the public Wyhash exposes.
-export struct WyhashStateless {
+pub struct WyhashStateless {
     seed: u64,
     msg_len: usize,
 
@@ -69,33 +69,33 @@ export struct WyhashStateless {
         };
     }
 
-    pub fn round(this: *WyhashStateless, b: []const u8): void {
-        this.seed = mix0(
+    pub fn round(*_, b: []const u8) {
+        _.seed = mix0(
             read_bytes8(b[0..]),
             read_bytes8(b[8..]),
-            this.seed,
+            _.seed,
         ) ^ mix1(
             read_bytes8(b[16..]),
             read_bytes8(b[24..]),
-            this.seed,
+            _.seed,
         );
     }
 
-    pub fn update(this: *WyhashStateless, b: []const u8): void {
-        var off: usize = 0;
+    pub fn update(*_, b: []const u8) {
+        let off: usize = 0;
         while (off + 32 <= b.len) {
-            this.round(b[off..off + 32]);
+            _.round(b[off..off + 32]);
             off += 32;
         }
-        this.msg_len += b.len;
+        _.msg_len += b.len;
     }
 
-    pub fn final(this: *WyhashStateless, b: []const u8): u64 {
-        const s = this.seed;
+    pub fn final(*_, b: []const u8): u64 {
+        const s = _.seed;
         const rem_len = b.len;
         const rem_key = b[0..rem_len];
 
-        this.seed = switch (rem_len) {
+        _.seed = switch (rem_len) {
             0 => s,
             1 => mix0(read_bytes1(rem_key), primes[4], s),
             2 => mix0(read_bytes2(rem_key), primes[4], s),
@@ -131,19 +131,19 @@ export struct WyhashStateless {
             else => s,
         };
 
-        this.msg_len += b.len;
-        return mum(this.seed ^ (this.msg_len as u64), primes[4]);
+        _.msg_len += b.len;
+        return mum(_.seed ^ (_.msg_len as u64), primes[4]);
     }
 
     pub static fn hash(seed: u64, input: []const u8): u64 {
         const aligned_len = input.len - (input.len % 32);
-        var c = WyhashStateless.init(seed);
+        let c = WyhashStateless.init(seed);
         c.update(input[0..aligned_len]);
         return c.final(input[aligned_len..]);
     }
 }
 
-export struct Wyhash {
+pub struct Wyhash {
     state: WyhashStateless,
     buf: [32]u8,
     buf_len: usize,
@@ -156,36 +156,36 @@ export struct Wyhash {
         };
     }
 
-    pub fn update(this: *Wyhash, b: []const u8): void {
-        var off: usize = 0;
+    pub fn update(*_, b: []const u8) {
+        let off: usize = 0;
 
-        if (this.buf_len != 0 and this.buf_len + b.len >= 32) {
-            off += 32 - this.buf_len;
-            var i: usize = 0;
+        if (_.buf_len != 0 and _.buf_len + b.len >= 32) {
+            off += 32 - _.buf_len;
+            let i: usize = 0;
             while (i < off) {
-                this.buf[this.buf_len + i] = b[i];
+                _.buf[_.buf_len + i] = b[i];
                 i += 1;
             }
-            this.state.update(this.buf[0..32]);
-            this.buf_len = 0;
+            _.state.update(_.buf[0..32]);
+            _.buf_len = 0;
         }
 
         const remain_len = b.len - off;
         const aligned_len = remain_len - (remain_len % 32);
-        this.state.update(b[off..off + aligned_len]);
+        _.state.update(b[off..off + aligned_len]);
 
         const rem_slice = b[off + aligned_len..b.len];
-        var j: usize = 0;
+        let j: usize = 0;
         while (j < rem_slice.len) {
-            this.buf[this.buf_len + j] = rem_slice[j];
+            _.buf[_.buf_len + j] = rem_slice[j];
             j += 1;
         }
-        this.buf_len += rem_slice.len;
+        _.buf_len += rem_slice.len;
     }
 
-    pub fn final(this: *Wyhash): u64 {
-        const rem_key = this.buf[0..this.buf_len];
-        return this.state.final(rem_key);
+    pub fn final(*_): u64 {
+        const rem_key = _.buf[0.._.buf_len];
+        return _.state.final(rem_key);
     }
 
     pub static fn hash(seed: u64, input: []const u8): u64 {

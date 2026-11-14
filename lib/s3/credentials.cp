@@ -5,7 +5,7 @@
 
 import { S3Acl, S3StorageClass, S3SignErrorCode } from "./types.cp";
 
-export struct S3Credentials {
+pub struct S3Credentials {
     access_key_id: []const u8 = "",
     secret_access_key: []const u8 = "",
     region: []const u8 = "us-east-1",
@@ -17,23 +17,23 @@ export struct S3Credentials {
     insecure_http: bool = false,
     virtual_hosted_style: bool = false,
 
-    pub fn validate(&this): S3SignErrorCode {
-        if (this.access_key_id.len == 0 || this.secret_access_key.len == 0 || this.bucket.len == 0) {
+    pub fn validate(): S3SignErrorCode {
+        if (_.access_key_id.len == 0 || _.secret_access_key.len == 0 || _.bucket.len == 0) {
             return S3SignErrorCode.MissingCredentials;
         }
-        if (this.endpoint.len == 0) {
+        if (_.endpoint.len == 0) {
             return S3SignErrorCode.InvalidEndpoint;
         }
         return S3SignErrorCode.Ok;
     }
 
-    pub fn effectiveRegion(&this): []const u8 {
-        if (this.region.len > 0) { return this.region; }
+    pub fn effectiveRegion(): []const u8 {
+        if (_.region.len > 0) { return _.region; }
         return "us-east-1";
     }
 
-    pub fn effectiveEndpoint(&this): []const u8 {
-        if (this.endpoint.len > 0) { return this.endpoint; }
+    pub fn effectiveEndpoint(): []const u8 {
+        if (_.endpoint.len > 0) { return _.endpoint; }
         return "s3.us-east-1.amazonaws.com";
     }
 
@@ -44,34 +44,34 @@ export struct S3Credentials {
     /// 构造 S3 请求的 Host 头与 Canonical URI（写入调用方栈缓冲区）
     /// - Virtual-Hosted Style: Host = `<bucket>.<endpoint>`, URI = `/<key>`
     /// - Path Style:           Host = `<endpoint>`,          URI = `/<bucket>/<key>`
-    pub fn formatHost(&this, out: []u8): usize {
-        let ep = this.effectiveEndpoint();
-        if (!this.virtual_hosted_style) {
+    pub fn formatHost(out: []u8): usize {
+        let ep = _.effectiveEndpoint();
+        if (!_.virtual_hosted_style) {
             if (out.len < ep.len) { return 0; }
             copyBytes(out, 0, ep);
             return ep.len;
         }
-        let needed = this.bucket.len + 1 + ep.len;
+        let needed = _.bucket.len + 1 + ep.len;
         if (out.len < needed) { return 0; }
-        let pos = copyBytes(out, 0, this.bucket);
+        let pos = copyBytes(out, 0, _.bucket);
         out[pos] = 46; // '.'
         pos += 1;
         pos = copyBytes(out, pos, ep);
         return pos;
     }
 
-    pub fn formatCanonicalUri(&this, key: []const u8, out: []u8): usize {
+    pub fn formatCanonicalUri(key: []const u8, out: []u8): usize {
         let clean_key = if (key.len > 0 && key[0] == 47) key[1..key.len] else key;
-        if (this.virtual_hosted_style) {
+        if (_.virtual_hosted_style) {
             let needed = 1 + clean_key.len;
             if (out.len < needed) { return 0; }
             out[0] = 47; // '/'
             return copyBytes(out, 1, clean_key);
         }
-        let needed = 1 + this.bucket.len + 1 + clean_key.len;
+        let needed = 1 + _.bucket.len + 1 + clean_key.len;
         if (out.len < needed) { return 0; }
         out[0] = 47; // '/'
-        let pos = copyBytes(out, 1, this.bucket);
+        let pos = copyBytes(out, 1, _.bucket);
         out[pos] = 47; // '/'
         pos += 1;
         return copyBytes(out, pos, clean_key);

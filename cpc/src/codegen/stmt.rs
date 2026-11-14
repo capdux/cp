@@ -140,6 +140,9 @@ impl Codegen {
                     if matches!(&var.pat, Pattern::Wildcard)
                         || matches!(&var.pat, Pattern::Ident(ident) if ident.sym == "_")
                     {
+                        if matches!(init, Expr::Ident(_)) {
+                            return;
+                        }
                         let init_val = if is_try {
                             format!("try {}", final_expr)
                         } else {

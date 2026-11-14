@@ -3,7 +3,7 @@
 // 吸收自 Bun src/s3_signing/acl.cp, storage_class.cp, error.cp
 // ============================================================================
 
-export enum S3Acl: u8 {
+pub enum S3Acl: u8 {
     Private = 0,
     PublicRead = 1,
     PublicReadWrite = 2,
@@ -13,7 +13,7 @@ export enum S3Acl: u8 {
     BucketOwnerFullControl = 6,
     LogDeliveryWrite = 7,
 
-    pub static fn toString(acl: S3Acl): []const u8 {
+    static fn toString(acl: S3Acl): []const u8 {
         if (acl == S3Acl.Private) { return "private"; }
         if (acl == S3Acl.PublicRead) { return "public-read"; }
         if (acl == S3Acl.PublicReadWrite) { return "public-read-write"; }
@@ -24,7 +24,7 @@ export enum S3Acl: u8 {
         return "log-delivery-write";
     }
 
-    pub static fn fromString(text: []const u8): S3Acl? {
+    static fn fromString(text: []const u8): S3Acl? {
         if (text == "private") { return S3Acl.Private; }
         if (text == "public-read") { return S3Acl.PublicRead; }
         if (text == "public-read-write") { return S3Acl.PublicReadWrite; }
@@ -37,7 +37,7 @@ export enum S3Acl: u8 {
     }
 }
 
-export enum S3StorageClass: u8 {
+pub enum S3StorageClass: u8 {
     Standard = 0,
     StandardIa = 1,
     IntelligentTiering = 2,
@@ -50,7 +50,7 @@ export enum S3StorageClass: u8 {
     DeepArchive = 9,
     Snow = 10,
 
-    pub static fn toString(sc: S3StorageClass): []const u8 {
+    static fn toString(sc: S3StorageClass): []const u8 {
         if (sc == S3StorageClass.Standard) { return "STANDARD"; }
         if (sc == S3StorageClass.StandardIa) { return "STANDARD_IA"; }
         if (sc == S3StorageClass.IntelligentTiering) { return "INTELLIGENT_TIERING"; }
@@ -64,7 +64,7 @@ export enum S3StorageClass: u8 {
         return "SNOW";
     }
 
-    pub static fn fromString(text: []const u8): S3StorageClass? {
+    static fn fromString(text: []const u8): S3StorageClass? {
         if (text == "STANDARD") { return S3StorageClass.Standard; }
         if (text == "STANDARD_IA") { return S3StorageClass.StandardIa; }
         if (text == "INTELLIGENT_TIERING") { return S3StorageClass.IntelligentTiering; }
@@ -80,7 +80,7 @@ export enum S3StorageClass: u8 {
     }
 }
 
-export enum S3SignErrorCode: u8 {
+pub enum S3SignErrorCode: u8 {
     Ok = 0,
     MissingCredentials = 1,
     InvalidMethod = 2,
@@ -90,7 +90,7 @@ export enum S3SignErrorCode: u8 {
     SignError = 6,
 }
 
-export struct S3Error {
+pub struct S3Error {
     code: []const u8 = "",
     message: []const u8 = "",
 

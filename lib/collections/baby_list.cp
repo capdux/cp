@@ -2,10 +2,9 @@
 // Ultra-compact u32-indexed dynamic list & OffsetByteList
 // Absorbed from Bun src/collections/baby_list.cp
 
-const std = @import("std");
 
-export class BabyList<T> {
-    pub items: []T = &.{};
+pub class BabyList<T> {
+    pub items: []T = [];
     pub len: u32 = 0;
     pub cap: u32 = 0;
 
@@ -26,113 +25,113 @@ export class BabyList<T> {
         return list;
     }
 
-    pub fn isEmpty(self: *BabyList<T>): bool {
-        return self.len == 0;
+    pub fn isEmpty(*_): bool {
+        return _.len == 0;
     }
 
-    pub fn count(self: *BabyList<T>): usize {
-        return self.len as usize;
+    pub fn count(*_): usize {
+        return _.len as usize;
     }
 
-    pub fn capacity(self: *BabyList<T>): usize {
-        return self.cap as usize;
+    pub fn capacity(*_): usize {
+        return _.cap as usize;
     }
 
-    pub fn ensureTotalCapacity(self: *BabyList<T>, needed: u32): void {
-        if (needed <= self.cap) {
+    pub fn ensureTotalCapacity(*_, needed: u32) {
+        if (needed <= _.cap) {
             return;
         }
-        var new_cap: u32 = if (self.cap > 0) self.cap else 8;
+        let new_cap: u32 = if (_.cap > 0) _.cap else 8;
         while (new_cap < needed) {
             new_cap = new_cap * 2;
         }
-        var new_items = std.heap.page_allocator.alloc(T, new_cap as usize) catch unreachable;
-        var i: usize = 0;
-        const n = self.len as usize;
+        let new_items = std.heap.page_allocator.alloc(T, new_cap as usize) catch unreachable;
+        let i: usize = 0;
+        const n = _.len as usize;
         while (i < n) {
-            new_items[i] = self.items[i];
+            new_items[i] = _.items[i];
             i += 1;
         }
-        if (self.cap > 0) {
-            std.heap.page_allocator.free(self.items);
+        if (_.cap > 0) {
+            std.heap.page_allocator.free(_.items);
         }
-        self.items = new_items;
-        self.cap = new_cap;
+        _.items = new_items;
+        _.cap = new_cap;
     }
 
-    pub fn append(self: *BabyList<T>, value: T): void {
-        self.ensureTotalCapacity(self.len + 1);
-        self.items[self.len as usize] = value;
-        self.len += 1;
+    pub fn append(*_, value: T) {
+        _.ensureTotalCapacity(_.len + 1);
+        _.items[_.len as usize] = value;
+        _.len += 1;
     }
 
-    pub fn appendSlice(self: *BabyList<T>, values: []const T): void {
+    pub fn appendSlice(*_, values: []const T) {
         const add_len = values.len as u32;
         if (add_len == 0) {
             return;
         }
-        self.ensureTotalCapacity(self.len + add_len);
-        const base = self.len as usize;
-        var i: usize = 0;
+        _.ensureTotalCapacity(_.len + add_len);
+        const base = _.len as usize;
+        let i: usize = 0;
         while (i < values.len) {
-            self.items[base + i] = values[i];
+            _.items[base + i] = values[i];
             i += 1;
         }
-        self.len += add_len;
+        _.len += add_len;
     }
 
-    pub fn at(self: *BabyList<T>, index: usize): T {
-        return self.items[index];
+    pub fn at(*_, index: usize): T {
+        return _.items[index];
     }
 
-    pub fn set(self: *BabyList<T>, index: usize, value: T): void {
-        if (index < (self.len as usize)) {
-            self.items[index] = value;
+    pub fn set(*_, index: usize, value: T) {
+        if (index < (_.len as usize)) {
+            _.items[index] = value;
         }
     }
 
-    pub fn first(self: *BabyList<T>): T? {
-        if (self.len == 0) {
+    pub fn first(*_): T? {
+        if (_.len == 0) {
             return null;
         }
-        return self.items[0];
+        return _.items[0];
     }
 
-    pub fn last(self: *BabyList<T>): T? {
-        if (self.len == 0) {
+    pub fn last(*_): T? {
+        if (_.len == 0) {
             return null;
         }
-        return self.items[(self.len - 1) as usize];
+        return _.items[(_.len - 1) as usize];
     }
 
-    pub fn pop(self: *BabyList<T>): T? {
-        if (self.len == 0) {
+    pub fn pop(*_): T? {
+        if (_.len == 0) {
             return null;
         }
-        self.len -= 1;
-        return self.items[self.len as usize];
+        _.len -= 1;
+        return _.items[_.len as usize];
     }
 
-    pub fn clearRetainingCapacity(self: *BabyList<T>): void {
-        self.len = 0;
+    pub fn clearRetainingCapacity(*_) {
+        _.len = 0;
     }
 
-    pub fn deinit(self: *BabyList<T>): void {
-        if (self.cap > 0) {
-            std.heap.page_allocator.free(self.items);
-            self.cap = 0;
-            self.len = 0;
+    pub fn deinit(*_) {
+        if (_.cap > 0) {
+            std.heap.page_allocator.free(_.items);
+            _.cap = 0;
+            _.len = 0;
         }
     }
 
-    pub fn release(self: *BabyList<T>): void {
-        self.deinit();
-        std.heap.page_allocator.destroy(self);
+    pub fn release(*_) {
+        _.deinit();
+        std.heap.page_allocator.destroy(_);
     }
 }
 
 // Absorbed from Bun OffsetByteList: BabyList<u8> with a read head offset
-export class OffsetByteList {
+pub class OffsetByteList {
     pub list: *BabyList<u8>;
     pub head: u32 = 0;
 
@@ -143,35 +142,35 @@ export class OffsetByteList {
         return obl;
     }
 
-    pub fn remainingLen(self: *OffsetByteList): u32 {
-        if (self.head >= self.list.len) {
+    pub fn remainingLen(*_): u32 {
+        if (_.head >= _.list.len) {
             return 0;
         }
-        return self.list.len - self.head;
+        return _.list.len - _.head;
     }
 
-    pub fn write(self: *OffsetByteList, bytes: []const u8): void {
-        self.list.appendSlice(bytes);
+    pub fn write(*_, bytes: []const u8) {
+        _.list.appendSlice(bytes);
     }
 
-    pub fn consume(self: *OffsetByteList, n: u32): u32 {
-        const rem = self.remainingLen();
+    pub fn consume(*_, n: u32): u32 {
+        const rem = _.remainingLen();
         const step = if (n < rem) n else rem;
-        self.head += step;
-        if (self.head == self.list.len) {
-            self.head = 0;
-            self.list.clearRetainingCapacity();
+        _.head += step;
+        if (_.head == _.list.len) {
+            _.head = 0;
+            _.list.clearRetainingCapacity();
         }
         return step;
     }
 
-    pub fn reset(self: *OffsetByteList): void {
-        self.head = 0;
-        self.list.clearRetainingCapacity();
+    pub fn reset(*_) {
+        _.head = 0;
+        _.list.clearRetainingCapacity();
     }
 
-    pub fn release(self: *OffsetByteList): void {
-        self.list.release();
-        std.heap.page_allocator.destroy(self);
+    pub fn release(*_) {
+        _.list.release();
+        std.heap.page_allocator.destroy(_);
     }
 }

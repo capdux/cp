@@ -3,11 +3,11 @@
  * 专为单机多核多线程并行计算与高并发任务汇聚设计
  */
 
-export class Task {
-    ptr: any;
+pub class Task {
+    ptr: *!;
 
-    fn init(this, ptr: any): void {
-        this.ptr = ptr;
+    fn init(*_, ptr: *!) {
+        _.ptr = ptr;
     }
 }
 
@@ -16,7 +16,7 @@ export class Task {
  * 立即返回轻量级 Task 任务句柄。
  * 对于重度 CPU 密集型或同步阻塞计算，可使用 `spawn.cpu(() => { ... })` 派发至专用计算线程。
  */
-export fn spawn(task_fn: any): any {
+pub fn spawn(task_fn: auto): *! {
     return @task_spawn(task_fn);
 }
 
@@ -25,6 +25,6 @@ export fn spawn(task_fn: any): any {
  * 阻塞挂起当前协程，待所有任务全部就绪后返回元组结果。
  * 示例: let [r1, r2] = await join(t1, t2);
  */
-export async fn join(t1: any, t2: any = null, t3: any = null, t4: any = null): any {
+pub async fn join(t1: auto, t2: auto = null, t3: auto = null, t4: auto = null): *! {
     return await @task_join(t1, t2, t3, t4);
 }

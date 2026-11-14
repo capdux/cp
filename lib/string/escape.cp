@@ -2,7 +2,7 @@
 // High-speed HTML entity escaping & RegExp pattern escaping
 // Absorbed from bun/src/string/immutable/escapeHTML.zig & bun/src/string/escapeRegExp.cp
 
-export struct StringEscape {
+pub struct StringEscape {
     pub static fn needsHtmlEscape(input: []const u8): bool {
         let i: usize = 0;
         while (i < input.len) {

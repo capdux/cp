@@ -1,6 +1,5 @@
 // lib/path/index.cp
 // Cross-platform path standard library for CP (cap:path)
-const std = @import("std");
 const builtin = @import("builtin");
 export { PosixPath } from "./posix";
 export { WindowsPath } from "./windows";
@@ -20,7 +19,7 @@ pub const Path = struct {
         }
     }
 
-    pub fn basename(filepath: []const u8, ext: ?[]const u8): []const u8 {
+    pub fn basename(filepath: []const u8, ext: ([]const u8)?): []const u8 {
         if (builtin.os.tag == .windows) {
             return WindowsPath.basename(filepath, ext);
         } else {

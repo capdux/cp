@@ -1,29 +1,28 @@
 // Futex thread synchronization primitive in CP
 // Ported from Bun.js core threading architecture
-const std = @import("std");
 
-export struct Futex {
+pub struct Futex {
     pub const UnsupportedImpl = struct {
-        fn wait(ptr: *const std.atomic.Value(u32), expect: u32, timeout: ?u64) error{Timeout}!void {
+        fn wait(ptr: *const std.atomic.Value(u32), expect: u32, timeout: u64?) error{Timeout}!void {
             return unsupported(.{ ptr, expect, timeout });
         }
 
-        fn wake(ptr: *const std.atomic.Value(u32), max_waiters: u32) void {
+        fn wake(ptr: *const std.atomic.Value(u32), max_waiters: u32) {
             return unsupported(.{ ptr, max_waiters });
         }
 
         fn unsupported(unused: anytype) noreturn {
-            _ = unused;
+            * = unused;
             @compileError("Unsupported operating system " ++ @tagName(@import("builtin").target.os.tag));
         }
     };
 
     pub const WindowsImpl = struct {
-        fn wait(ptr: *const std.atomic.Value(u32), expect: u32, timeout: ?u64) error{Timeout}!void {
-            var timeout_value: std.os.windows.LARGE_INTEGER = undefined;
-            var timeout_ptr: ?*const std.os.windows.LARGE_INTEGER = null;
+        fn wait(ptr: *const std.atomic.Value(u32), expect: u32, timeout: u64?) error{Timeout}!void {
+            let timeout_value: std.os.windows.LARGE_INTEGER = undefined;
+            let timeout_ptr: (*const std.os.windows.LARGE_INTEGER)? = null;
 
-            if (timeout) |delay| {
+            if (delay := timeout) {
                 timeout_value = @as(std.os.windows.LARGE_INTEGER, @intCast(delay / 100));
                 timeout_value = -timeout_value;
                 timeout_ptr = &timeout_value;
@@ -46,8 +45,8 @@ export struct Futex {
             }
         }
 
-        fn wake(ptr: *const std.atomic.Value(u32), max_waiters: u32) void {
-            const address: ?*const anyopaque = ptr;
+        fn wake(ptr: *const std.atomic.Value(u32), max_waiters: u32) {
+            const address: *const !? = ptr;
             std.debug.assert(max_waiters != 0);
 
             switch (max_waiters) {
@@ -58,18 +57,18 @@ export struct Futex {
     };
 
     pub const DarwinImpl = struct {
-        fn wait(ptr: *const std.atomic.Value(u32), expect: u32, timeout: ?u64) error{Timeout}!void {
+        fn wait(ptr: *const std.atomic.Value(u32), expect: u32, timeout: u64?) error{Timeout}!void {
             const supports_ulock_wait2 = @import("builtin").target.os.version_range.semver.min.major >= 11;
 
-            var timeout_ns: u64 = 0;
-            if (timeout) |delay| {
+            let timeout_ns: u64 = 0;
+            if (delay := timeout) {
                 std.debug.assert(delay != 0);
                 timeout_ns = delay;
             }
 
-            var timeout_overflowed = false;
+            let timeout_overflowed = false;
 
-            const addr: *const anyopaque = ptr;
+            const addr: *const ! = ptr;
             const flags: std.c.UL = .{
                 .op = .COMPARE_AND_WAIT,
                 .NO_ERRNO = true,
@@ -104,8 +103,8 @@ export struct Futex {
             }
         }
 
-        fn wake(ptr: *const std.atomic.Value(u32), max_waiters: u32) void {
-            const addr: *const anyopaque = ptr;
+        fn wake(ptr: *const std.atomic.Value(u32), max_waiters: u32) {
+            const addr: *const ! = ptr;
             const flags: std.c.UL = .{
                 .op = .COMPARE_AND_WAIT,
                 .WAKE_ALL = max_waiters > 1,
@@ -123,11 +122,11 @@ export struct Futex {
     };
 
     pub const LinuxImpl = struct {
-        fn wait(ptr: *const std.atomic.Value(u32), expect: u32, timeout: ?u64) error{Timeout}!void {
-            var timeout_timespec: std.os.linux.timespec = undefined;
-            var timeout_ptr: ?*const std.os.linux.timespec = null;
+        fn wait(ptr: *const std.atomic.Value(u32), expect: u32, timeout: u64?) error{Timeout}!void {
+            let timeout_timespec: std.os.linux.timespec = undefined;
+            let timeout_ptr: (*const std.os.linux.timespec)? = null;
 
-            if (timeout) |timeout_ns| {
+            if (timeout_ns := timeout) {
                 timeout_timespec = .{
                     .sec = @intCast(timeout_ns / std.time.ns_per_s),
                     .nsec = @intCast(timeout_ns % std.time.ns_per_s),
@@ -156,7 +155,7 @@ export struct Futex {
             }
         }
 
-        fn wake(ptr: *const std.atomic.Value(u32), max_waiters: u32) void {
+        fn wake(ptr: *const std.atomic.Value(u32), max_waiters: u32) {
             const rc = std.os.linux.futex_3arg(
                 &ptr.raw,
                 .{ .cmd = .WAKE, .private = true },
@@ -173,12 +172,12 @@ export struct Futex {
     };
 
     pub const FreebsdImpl = struct {
-        fn wait(ptr: *const std.atomic.Value(u32), expect: u32, timeout: ?u64) error{Timeout}!void {
-            var tm_size: usize = 0;
-            var tm: std.c._umtx_time = undefined;
-            var tm_ptr: ?*const std.c._umtx_time = null;
+        fn wait(ptr: *const std.atomic.Value(u32), expect: u32, timeout: u64?) error{Timeout}!void {
+            let tm_size: usize = 0;
+            let tm: std.c._umtx_time = undefined;
+            let tm_ptr: (*const std.c._umtx_time)? = null;
 
-            if (timeout) |timeout_ns| {
+            if (timeout_ns := timeout) {
                 tm_ptr = &tm;
                 tm_size = @sizeOf(@TypeOf(tm));
 
@@ -209,7 +208,7 @@ export struct Futex {
             }
         }
 
-        fn wake(ptr: *const std.atomic.Value(u32), max_waiters: u32) void {
+        fn wake(ptr: *const std.atomic.Value(u32), max_waiters: u32) {
             const n: std.c.c_ulong = @min(max_waiters, std.math.maxInt(std.c.c_int));
             const rc = std.c._umtx_op(@intFromPtr(&ptr.raw), @intFromEnum(std.c.UMTX_OP.WAKE_PRIVATE), n, 0, 0);
             switch (std.posix.errno(rc)) {
@@ -222,11 +221,11 @@ export struct Futex {
     };
 
     pub const WasmImpl = struct {
-        fn wait(ptr: *const std.atomic.Value(u32), expect: u32, timeout: ?u64) !void {
+        fn wait(ptr: *const std.atomic.Value(u32), expect: u32, timeout: u64?) !void {
             if (!comptime std.Target.wasm.featureSetHas(@import("builtin").target.cpu.features, .atomics)) {
                 @compileError("WASI target missing cpu feature 'atomics'");
             }
-            const to: i64 = if (timeout) |t| @intCast(t) else -1;
+            const to: i64 = if (t := timeout) @intCast(t) else -1;
             const result = asm volatile (
                 "local.get %[ptr]\nlocal.get %[expected]\nlocal.get %[timeout]\nmemory.atomic.wait32 0\nlocal.set %[ret]"
                 : [ret] "=r" (-> u32),
@@ -242,7 +241,7 @@ export struct Futex {
             }
         }
 
-        fn wake(ptr: *const std.atomic.Value(u32), max_waiters: u32) void {
+        fn wake(ptr: *const std.atomic.Value(u32), max_waiters: u32) {
             if (!comptime std.Target.wasm.featureSetHas(@import("builtin").target.cpu.features, .atomics)) {
                 @compileError("WASI target missing cpu feature 'atomics'");
             }
@@ -253,7 +252,7 @@ export struct Futex {
                 : [ptr] "r" (&ptr.raw),
                   [waiters] "r" (max_waiters),
             );
-            _ = woken_count;
+            * = woken_count;
         }
     };
 
@@ -269,8 +268,8 @@ export struct Futex {
             UnsupportedImpl,
     };
 
-    pub static fn wait(ptr: *const std.atomic.Value(u32), expect: u32, timeout_ns: ?u64): !void {
-        if (timeout_ns) |t| {
+    pub static fn wait(ptr: *const std.atomic.Value(u32), expect: u32, timeout_ns: u64?): !void {
+        if (t := timeout_ns) {
             if (t == 0) {
                 if (ptr.load(.seq_cst) != expect) return;
                 return error.Timeout;
@@ -279,27 +278,27 @@ export struct Futex {
         return Impl.wait(ptr, expect, timeout_ns);
     }
 
-    pub static fn waitForever(ptr: *const std.atomic.Value(u32), expect: u32) void {
+    pub static fn waitForever(ptr: *const std.atomic.Value(u32), expect: u32) {
         zig {
             Impl.wait(ptr, expect, null) catch unreachable;
         }
     }
 
-    pub static fn wake(ptr: *const std.atomic.Value(u32), max_waiters: u32): void {
+    pub static fn wake(ptr: *const std.atomic.Value(u32), max_waiters: u32) {
         if (max_waiters == 0) return;
         Impl.wake(ptr, max_waiters);
     }
 }
 
-export struct Deadline {
-    timeout: ?u64,
+pub struct Deadline {
+    timeout: u64?,
     started_ns: u64,
 
-    pub static fn init(expires_in_ns: ?u64): Deadline {
-        var start: u64 = 0;
+    pub static fn init(expires_in_ns: u64?): Deadline {
+        let start: u64 = 0;
         if (expires_in_ns != null) {
-            var ts: std.os.linux.timespec = undefined;
-            _ = std.os.linux.clock_gettime(.MONOTONIC, &ts);
+            let ts: std.os.linux.timespec = undefined;
+            * = std.os.linux.clock_gettime(.MONOTONIC, &ts);
             start = @as(u64, @intCast(ts.sec)) * std.time.ns_per_s + @as(u64, @intCast(ts.nsec));
         }
         return Deadline{
@@ -308,16 +307,16 @@ export struct Deadline {
         };
     }
 
-    pub fn wait(self: *Deadline, ptr: *const std.atomic.Value(u32), expect: u32): !void {
-        if (self.timeout == null) {
+    pub fn wait(*_, ptr: *const std.atomic.Value(u32), expect: u32): !void {
+        if (_.timeout == null) {
             Futex.waitForever(ptr, expect);
             return;
         }
-        const timeout_ns = self.timeout.?;
-        var ts: std.os.linux.timespec = undefined;
-        _ = std.os.linux.clock_gettime(.MONOTONIC, &ts);
+        const timeout_ns = _.timeout.?;
+        let ts: std.os.linux.timespec = undefined;
+        * = std.os.linux.clock_gettime(.MONOTONIC, &ts);
         const now = @as(u64, @intCast(ts.sec)) * std.time.ns_per_s + @as(u64, @intCast(ts.nsec));
-        const elapsed_ns = if (now > self.started_ns) now - self.started_ns else 0;
+        const elapsed_ns = if (now > _.started_ns) now - _.started_ns else 0;
         const until_timeout_ns = if (timeout_ns > elapsed_ns) timeout_ns - elapsed_ns else 0;
         return Futex.wait(ptr, expect, until_timeout_ns);
     }

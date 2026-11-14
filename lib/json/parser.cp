@@ -1,7 +1,6 @@
 // Ultra-fast zero-copy streaming JSON parser in CP
 // String keys and values borrow directly from input slice without heap allocation
 import { JsonValue, JsonField, JsonTag } from "./value";
-const std = @import("std");
 
 export error JsonError {
     UnexpectedEof,
@@ -10,7 +9,7 @@ export error JsonError {
     ExpectedComma,
 }
 
-export struct JsonParser {
+pub struct JsonParser {
     src: []const u8 = "",
     pos: usize = 0,
     allocator: std.mem.Allocator = undefined,
@@ -23,7 +22,7 @@ export struct JsonParser {
         };
     }
 
-    fn skipWhitespace(*this): void {
+    fn skipWhitespace(*_) {
         while (pos < src.len) {
             const b = src[pos];
             if (b == ' ' or b == '\t' or b == '\r' or b == '\n') {
@@ -34,13 +33,13 @@ export struct JsonParser {
         }
     }
 
-    fn peek(*this): ?u8 {
+    fn peek(*_): u8? {
         skipWhitespace();
         if (pos >= src.len) return null;
         return src[pos];
     }
 
-    fn next(*this): ?u8 {
+    fn next(*_): u8? {
         skipWhitespace();
         if (pos >= src.len) return null;
         const b = src[pos];
@@ -48,7 +47,7 @@ export struct JsonParser {
         return b;
     }
 
-    fn parseString(*this): ![]const u8 {
+    fn parseString(*_): ![]const u8 {
         skipWhitespace();
         if (pos >= src.len or src[pos] != '"') {
             return error.InvalidToken;
@@ -70,7 +69,7 @@ export struct JsonParser {
         return error.UnexpectedEof;
     }
 
-    fn parseNumber(*this): !f64 {
+    fn parseNumber(*_): !f64 {
         skipWhitespace();
         const start = pos;
         if (pos < src.len and src[pos] == '-') {
@@ -88,7 +87,7 @@ export struct JsonParser {
         return std.fmt.parseFloat(f64, num_str) catch return error.InvalidToken;
     }
 
-    pub fn parseValue(*this): !JsonValue {
+    pub fn parseValue(*_): !JsonValue {
         skipWhitespace();
         if (pos >= src.len) return error.UnexpectedEof;
         const ch = src[pos];
@@ -138,14 +137,14 @@ export struct JsonParser {
         return error.InvalidToken;
     }
 
-    fn parseArray(*this): !JsonValue {
+    fn parseArray(*_): !JsonValue {
         pos += 1; // skip '['
         skipWhitespace();
 
-        var list: std.ArrayList(JsonValue) = .empty;
+        let list: std.ArrayList(JsonValue) = .empty;
         errdefer list.deinit(allocator);
 
-        if (peek()) |next_ch| {
+        if (next_ch := _.peek()) {
             if (next_ch == ']') {
                 pos += 1;
                 return JsonValue{ .tag = .Array, .arr_val = try list.toOwnedSlice(allocator) };
@@ -172,14 +171,14 @@ export struct JsonParser {
         return JsonValue{ .tag = .Array, .arr_val = try list.toOwnedSlice(allocator) };
     }
 
-    fn parseObject(*this): !JsonValue {
+    fn parseObject(*_): !JsonValue {
         pos += 1; // skip '{'
         skipWhitespace();
 
-        var list: std.ArrayList(JsonField) = .empty;
+        let list: std.ArrayList(JsonField) = .empty;
         errdefer list.deinit(allocator);
 
-        if (peek()) |next_ch| {
+        if (next_ch := _.peek()) {
             if (next_ch == '}') {
                 pos += 1;
                 return JsonValue{ .tag = .Object, .obj_val = try list.toOwnedSlice(allocator) };
@@ -214,7 +213,7 @@ export struct JsonParser {
     }
 
     pub static fn parse(allocator: std.mem.Allocator, src: []const u8): !JsonValue {
-        var parser = JsonParser.init(allocator, src);
+        let parser = JsonParser.init(allocator, src);
         return parser.parseValue();
     }
 }

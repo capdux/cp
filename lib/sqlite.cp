@@ -9,10 +9,10 @@ __zig__ {
     extern "c" fn sqlite3_finalize(stmt: ?*anyopaque) c_int;
 }
 
-export class Database {
-    pub ptr: any?,
+pub class Database {
+    pub ptr: *!?,
 
-    pub fn init(this, path: string): void! {
+    pub fn init(*_, path: string): void! {
         __zig__ {
             var db: ?*anyopaque = null;
             const allocator = std.heap.page_allocator;
@@ -32,7 +32,7 @@ export class Database {
         }
     }
 
-    pub fn exec(this, sql: string): void! {
+    pub fn exec(sql: string): void! {
         __zig__ {
             std.debug.print("Executing SQL on db={*}...\n", .{self.ptr});
             const allocator = std.heap.page_allocator;
@@ -49,7 +49,7 @@ export class Database {
         }
     }
 
-    pub fn query_string(this, sql: string): string?! {
+    pub fn query_string(sql: string): string?! {
         __zig__ {
             const allocator = std.heap.page_allocator;
             const sql_z = allocator.alloc(u8, sql.len + 1) catch return error.OutOfMemory;
@@ -76,7 +76,7 @@ export class Database {
         }
     }
 
-    fn release(this): void {
+    fn release(*_) {
         __zig__ {
             if (self.ptr) |db_ptr| {
                 _ = sqlite3_close(db_ptr);

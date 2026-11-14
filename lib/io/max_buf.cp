@@ -6,13 +6,13 @@
 
 import { IOError } from "./traits";
 
-export enum MaxBufKind {
+pub enum MaxBufKind {
     Stdout,
     Stderr,
     Custom,
 }
 
-export class MaxBuf {
+pub class MaxBuf {
     remaining_bytes: i64;
     initial_bytes: i64;
     kind: MaxBufKind;
@@ -31,7 +31,7 @@ export class MaxBuf {
         return mb;
     }
 
-    pub fn onReadBytes(mut _, bytes: usize): bool! {
+    pub fn onReadBytes(*_, bytes: usize): bool! {
         if (_.remaining_bytes < 0) {
             return false;
         }
@@ -42,15 +42,15 @@ export class MaxBuf {
         return true;
     }
 
-    pub fn remaining(_): i64 {
+    pub fn remaining(): i64 {
         return _.remaining_bytes;
     }
 
-    pub fn reset(mut _): void {
+    pub fn reset(*_) {
         _.remaining_bytes = _.initial_bytes;
     }
 
-    pub fn isExceeded(_): bool {
+    pub fn isExceeded(): bool {
         return _.remaining_bytes < 0;
     }
 }

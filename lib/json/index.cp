@@ -6,16 +6,15 @@
 export { JsonTag, JsonField, JsonValue } from "./value";
 export { JsonParser, JsonError } from "./parser";
 export { JsonBufferPool } from "./pool";
-const std = @import("std");
 
-export class JSON {
+pub class JSON {
     pub static fn parse(allocator: std.mem.Allocator, src: []const u8): !JsonValue {
         return JsonParser.parse(allocator, src);
     }
 
-    pub fn stringify(this, obj: any): string {
-        return @json_stringify(obj);
+    pub fn stringify(obj: auto): string {
+        return JSON.stringify(obj);
     }
 }
 
-export const json = new JSON();
+pub const json = new JSON();

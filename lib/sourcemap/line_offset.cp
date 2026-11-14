@@ -3,13 +3,13 @@
 // 吸收自 Bun src/sourcemap/LineOffsetTable.cp
 // ============================================================================
 
-export struct SourceLocation {
+pub struct SourceLocation {
     line: u32 = 0,      // 0-based line index
     column: u32 = 0,    // 0-based byte column within line
 }
 
 /// 零堆分配编译期定容行偏移查找表（支持 O(log N) 二分字节偏移定位）
-export struct LineOffsetTable<const MAX_LINES: usize> {
+pub struct LineOffsetTable<const MAX_LINES: usize> {
     offsets: [MAX_LINES]u32 = undefined,
     line_count: usize = 0,
 
@@ -38,14 +38,14 @@ export struct LineOffsetTable<const MAX_LINES: usize> {
     }
 
     /// 二分查找给定字节偏移对应的 0-based 行号
-    pub fn findLine(&this, byte_offset: u32): u32 {
-        if (this.line_count == 0) { return 0; }
+    pub fn findLine(byte_offset: u32): u32 {
+        if (_.line_count == 0) { return 0; }
         let low: usize = 0;
-        let count: usize = this.line_count;
+        let count: usize = _.line_count;
         while (count > 0) {
             let step = count / 2;
             let mid = low + step;
-            if (this.offsets[mid] <= byte_offset) {
+            if (_.offsets[mid] <= byte_offset) {
                 low = mid + 1;
                 count = count - step - 1;
             } else {
@@ -57,9 +57,9 @@ export struct LineOffsetTable<const MAX_LINES: usize> {
     }
 
     /// 将字节偏移转换为 0-based (line, column)
-    pub fn resolveLocation(&this, byte_offset: u32): SourceLocation {
-        let line_idx = this.findLine(byte_offset);
-        let line_start = this.offsets[line_idx as usize];
+    pub fn resolveLocation(byte_offset: u32): SourceLocation {
+        let line_idx = _.findLine(byte_offset);
+        let line_start = _.offsets[line_idx as usize];
         let col: u32 = if (byte_offset >= line_start) (byte_offset - line_start) else (0 as u32);
         return SourceLocation{
             line: line_idx,

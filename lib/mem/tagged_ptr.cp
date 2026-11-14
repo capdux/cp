@@ -1,12 +1,12 @@
 // lib/mem/tagged_ptr.cp
 // 64-bit NaN-boxing / upper-16-bit & low-3-bit Tagged Pointers (absorbed from bun/src/ptr/tagged_pointer.cp)
 
-export const TAG_SHIFT: u6 = 48;
-export const ADDR_MASK: u64 = 0x0000FFFFFFFFFFFF;
-export const LOW_TAG_MASK: usize = 7;
+pub const TAG_SHIFT: u6 = 48;
+pub const ADDR_MASK: u64 = 0x0000FFFFFFFFFFFF;
+pub const LOW_TAG_MASK: usize = 7;
 
 // Upper 16-bit tagged pointer (48-bit canonical address + 16-bit tag payload)
-export struct TaggedPointer {
+pub struct TaggedPointer {
     raw: u64 = 0;
 
     pub static fn pack(addr: usize, tag_val: u16): TaggedPointer {
@@ -32,28 +32,28 @@ export struct TaggedPointer {
         return TaggedPointer{ raw: raw_bits };
     }
 
-    pub fn address(this): usize {
-        return (this.raw & ADDR_MASK) as usize;
+    pub fn address(): usize {
+        return (_.raw & ADDR_MASK) as usize;
     }
 
-    pub fn tag(this): u16 {
-        return (this.raw >> 48) as u16;
+    pub fn tag(): u16 {
+        return (_.raw >> 48) as u16;
     }
 
-    pub fn withTag(this, new_tag: u16): TaggedPointer {
-        return TaggedPointer.pack(this.address(), new_tag);
+    pub fn withTag(new_tag: u16): TaggedPointer {
+        return TaggedPointer.pack(_.address(), new_tag);
     }
 
-    pub fn isNull(this): bool {
-        return (this.raw & ADDR_MASK) == 0;
+    pub fn isNull(): bool {
+        return (_.raw & ADDR_MASK) == 0;
     }
 
-    pub fn bits(this): u64 {
-        return this.raw;
+    pub fn bits(): u64 {
+        return _.raw;
     }
 
-    pub fn toRawPtr(this): *!? {
-        const addr = this.address();
+    pub fn toRawPtr(): *!? {
+        const addr = _.address();
         if (addr == 0) {
             return null;
         }
@@ -64,7 +64,7 @@ export struct TaggedPointer {
 }
 
 // Low 3-bit tagged pointer for 8-byte aligned allocations
-export struct LowTagPointer {
+pub struct LowTagPointer {
     raw: usize = 0;
 
     pub static fn pack(aligned_addr: usize, low_tag: u8): LowTagPointer {
@@ -75,19 +75,19 @@ export struct LowTagPointer {
         };
     }
 
-    pub fn address(this): usize {
-        return this.raw & ~LOW_TAG_MASK;
+    pub fn address(): usize {
+        return _.raw & ~LOW_TAG_MASK;
     }
 
-    pub fn tag(this): u8 {
-        return (this.raw & LOW_TAG_MASK) as u8;
+    pub fn tag(): u8 {
+        return (_.raw & LOW_TAG_MASK) as u8;
     }
 
-    pub fn withTag(this, new_tag: u8): LowTagPointer {
-        return LowTagPointer.pack(this.address(), new_tag);
+    pub fn withTag(new_tag: u8): LowTagPointer {
+        return LowTagPointer.pack(_.address(), new_tag);
     }
 
-    pub fn isNull(this): bool {
-        return this.address() == 0;
+    pub fn isNull(): bool {
+        return _.address() == 0;
     }
 }

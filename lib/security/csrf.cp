@@ -2,19 +2,18 @@
 // CSRF Token Generation and Verification in pure CP
 // Uses CSPRNG nonces, HMAC-SHA256 signatures, and constant-time comparison
 
-const std = @import("std");
 import { randomBytes, fillRandom, hmacSha256Raw } from "../crypto/index.cp";
 import { Base64 } from "../encoding/index.cp";
 
-export enum TokenFormat {
+pub enum TokenFormat {
     Base64Url,
     Base64,
     Hex,
 }
 
-export const DEFAULT_EXPIRATION_MS: u64 = 24 * 60 * 60 * 1000; // 24 hours
+pub const DEFAULT_EXPIRATION_MS: u64 = 24 * 60 * 60 * 1000; // 24 hours
 
-export fn constantTimeEql(a: []const u8, b: []const u8): bool {
+pub fn constantTimeEql(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let diff: u8 = 0;
     for (i of 0..a.len) {
@@ -33,7 +32,7 @@ fn getWallTimeMs(): u64 {
     }
 }
 
-export class CSRF {
+pub class CSRF {
     pub static fn generateRaw(secret: []const u8, expires_in_ms: u64, out: []u8): usize! {
         if (out.len < 64) return error.BufferTooSmall;
 

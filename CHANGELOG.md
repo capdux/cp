@@ -530,3 +530,19 @@
   - 新增 [`lib/s3/index.cp`](file:///data/dev/cp/lib/s3/index.cp)：`cap:s3` 对外统一出口。
 - [`cap/test/test_s3.cp`](file:///data/dev/cp/cap/test/test_s3.cp):
   - 新增覆盖 S3 ACL/StorageClass、凭证 URL 格式化与 AWS SigV4 官方测试向量的 3 大测试套件（3/3 PASS）。
+
+- [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs), [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs), [`cpc/src/diagnostic.rs`](file:///data/dev/cp/cpc/src/diagnostic.rs), [`cpc/src/main.rs`](file:///data/dev/cp/cpc/src/main.rs), [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs), [`cpc/src/codegen/`](file:///data/dev/cp/cpc/src/codegen/)（及 `cpc_dev/src/*` 镜像同步）:
+  - 结单 `task-20261114-enum-variant-name-and-top-string-const`（枚举显式 `name` 变体防冲突与顶层无类型字符串常量输出）；
+  - 实装正交参数体系（接收者省略 `_` / `*_` / `move _`，具名参数 `v: T` / `v: *T` 编译期自动推导值拷贝或可变借用 / 前置 `move v: T`、`own v: *T`）；
+  - 实装 `cpc compile`、`cpc check`、`cpc check --json` 单次全文件多错误聚合诊断输出；
+  - 实装免 `import` 一等公民内置 `JSON`（`JSON.stringify`、`JSON.parse<T>`、`JSON.parse`）及 `sema.rs` 全局预注册 `std`/`builtin`；
+  - 新增 `--nest`（`-n`）命令行标志与 `@is_nest` 编译期常量（兼容 `--beam` / `@is_beam`）；
+  - 支持 `@c { ... }` / `pub @c { ... }` 内部免 `pub extern` 极简声明、`enum` 方法默认 `pub`、`= []` 空切片字面量与类 `_create` 默认字段值初始化、`* = expr;` 返回值丢弃及全场景省略 `: void`；
+  - 新增 `E0103`/`E0104`/`E0115`/`E0116`/`E0118`/`E0119`/`E0120`/`E0121`/`E0122`/`E0123`/`E0125` 智能拦截与修复建议（保留 `while (cond) : (step)` 与 `@xxx` 宏）。
+- [`lib/crypto/_boringssl.cp`](file:///data/dev/cp/lib/crypto/_boringssl.cp), [`lib/crypto/tls.cp`](file:///data/dev/cp/lib/crypto/tls.cp) & [`lib/crypto/index.cp`](file:///data/dev/cp/lib/crypto/index.cp):
+  - 新增 BoringSSL 底垫片引用与 X.509 SAN / DNS 通配符主机名校验库 `tls.cp`，并在 `lib/crypto/index.cp` 统一导出；
+  - 完成 `lib/` 下全部 144 个 `.cp` 标准库文件的正交语法净化（144/144 零错误通过 `cpc check`）。
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md) & [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md):
+  - 同步更新双轨语法规范手册，写入正交参数修饰符、内置 `JSON`、`@c` 块、`@is_nest` 及 Top 16 绝对禁手清单。
+- [`cap/test/test_syntax_orthogonality.cp`](file:///data/dev/cp/cap/test/test_syntax_orthogonality.cp):
+  - 新增覆盖正交语法、`v: *T` 自动推导、内置 `JSON`、预注册 `std` 与 BoringSSL TLS 证书校验的 4 大端到端测试套件（4/4 PASS）。

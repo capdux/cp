@@ -2,7 +2,6 @@
 // High-performance TCP Server, ListenConfig, and legacy Server / listen() API
 // Absorbed from Bun src/runtime/socket/Listener.cp and src/uws_sys/ListenSocket.cp
 
-const std = @import("std");
 import {
     LIBUS_LISTEN_DEFAULT,
     LIBUS_LISTEN_EXCLUSIVE_PORT,
@@ -16,15 +15,15 @@ import { SocketAddress } from "./address";
 import { Socket } from "./socket";
 import { TcpStream } from "./tcp_stream";
 
-export struct ListenConfig {
-    pub port: u16 = 0;
-    pub reuse_port: bool = true;
-    pub reuse_addr: bool = true;
-    pub exclusive_port: bool = false;
-    pub allow_half_open: bool = false;
-    pub ipv6_only: bool = false;
-    pub disallow_reuse_port_failure: bool = false;
-    pub backlog: i32 = 511;
+pub struct ListenConfig {
+    port: u16 = 0;
+    reuse_port: bool = true;
+    reuse_addr: bool = true;
+    exclusive_port: bool = false;
+    allow_half_open: bool = false;
+    ipv6_only: bool = false;
+    disallow_reuse_port_failure: bool = false;
+    backlog: i32 = 511;
 
     pub static fn defaultForPort(port: u16): ListenConfig {
         return ListenConfig {
@@ -39,31 +38,31 @@ export struct ListenConfig {
         };
     }
 
-    pub fn toLibusOptions(&this): i32 {
-        var flags: i32 = LIBUS_LISTEN_DEFAULT;
-        if (this.exclusive_port) {
+    pub fn toLibusOptions(): i32 {
+        let flags: i32 = LIBUS_LISTEN_DEFAULT;
+        if (_.exclusive_port) {
             flags |= LIBUS_LISTEN_EXCLUSIVE_PORT;
         }
-        if (this.allow_half_open) {
+        if (_.allow_half_open) {
             flags |= LIBUS_SOCKET_ALLOW_HALF_OPEN;
         }
-        if (this.reuse_port) {
+        if (_.reuse_port) {
             flags |= LIBUS_LISTEN_REUSE_PORT;
         }
-        if (this.ipv6_only) {
+        if (_.ipv6_only) {
             flags |= LIBUS_SOCKET_IPV6_ONLY;
         }
-        if (this.reuse_addr) {
+        if (_.reuse_addr) {
             flags |= LIBUS_LISTEN_REUSE_ADDR;
         }
-        if (this.disallow_reuse_port_failure) {
+        if (_.disallow_reuse_port_failure) {
             flags |= LIBUS_LISTEN_DISALLOW_REUSE_PORT_FAILURE;
         }
         return flags;
     }
 }
 
-export class TcpServer {
+pub class TcpServer {
     pub fd: i32 = -1;
     pub bind_addr: SocketAddress;
     pub config: ListenConfig;
@@ -84,47 +83,47 @@ export class TcpServer {
         return ptr;
     }
 
-    pub fn localPort(self: *TcpServer): u16 {
-        return self.bind_addr.port;
+    pub fn localPort(*_): u16 {
+        return _.bind_addr.port;
     }
 
-    pub fn acceptConnection(self: *TcpServer, remote_addr: SocketAddress): (*TcpStream)? {
-        if (!self.is_listening) {
+    pub fn acceptConnection(*_, remote_addr: SocketAddress): (*TcpStream)? {
+        if (!_.is_listening) {
             return null;
         }
-        self.active_connections += 1;
-        self.total_accepted += 1;
-        const client_fd: i32 = self.fd + (self.total_accepted as i32);
-        return TcpStream.init(client_fd, self.bind_addr, remote_addr);
+        _.active_connections += 1;
+        _.total_accepted += 1;
+        const client_fd: i32 = _.fd + (_.total_accepted as i32);
+        return TcpStream.init(client_fd, _.bind_addr, remote_addr);
     }
 
-    pub fn onClientClosed(self: *TcpServer): void {
-        if (self.active_connections > 0) {
-            self.active_connections -= 1;
+    pub fn onClientClosed(*_) {
+        if (_.active_connections > 0) {
+            _.active_connections -= 1;
         }
     }
 
-    pub fn stop(self: *TcpServer): void {
-        if (!self.is_listening) {
+    pub fn stop(*_) {
+        if (!_.is_listening) {
             return;
         }
-        self.is_listening = false;
-        self.fd = -1;
+        _.is_listening = false;
+        _.fd = -1;
     }
 
-    pub fn release(self: *TcpServer): void {
-        self.stop();
-        std.heap.page_allocator.destroy(self);
+    pub fn release(*_) {
+        _.stop();
+        std.heap.page_allocator.destroy(_);
     }
 }
 
 // ============================================================================
 // Backward-Compatible Actor / Async Server & listen() (from legacy lib/net.cp)
 // ============================================================================
-export class Server {
+pub class Server {
     pub fd: i32;
 
-    pub fn init(fd: i32): void {
+    pub fn init(fd: i32) {
         this.fd = fd;
     }
 
@@ -134,18 +133,18 @@ export class Server {
         return s;
     }
 
-    pub fn close(): void {
+    pub fn close() {
         @net_close(this.fd);
     }
 }
 
-export fn listen(port: i32): Server {
+pub fn listen(port: i32): Server {
     let s = new Server(0);
     let fd = @net_listen(port);
     s.fd = fd;
     return s;
 }
 
-export fn connect(port: i32): Socket {
+pub fn connect(port: i32): Socket {
     return new Socket(port);
 }

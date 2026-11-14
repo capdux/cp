@@ -770,3 +770,14 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
 ### 1. 架构设计与核心实现
 - **S3 类型契约与双模式端点构造 (`types.cp`, `credentials.cp`)**：吸收 `/data/dev/bun/src/s3_signing/acl.cp`、`storage_class.cp`、`error.cp` 与 `credentials.cp`，支持 8 种 `S3Acl`、11 种 `S3StorageClass` 以及 Virtual-Hosted Style 与 Path Style 双模式 Host/URI 栈上格式化（注意枚举静态方法参数命名避开编译器自动生成的 `.name()` 方法名以防 Zig 局部变量遮蔽）。
 - **AWS Signature Version 4 四级 HMAC-SHA256 密钥派生 (`signing.cp`)**：实现完整的 `kDate = HMAC("AWS4" + secret, date)` -> `kRegion = HMAC(kDate, region)` -> `kService = HMAC(kRegion, service)` -> `kSigning = HMAC(kService, "aws4_request")` 四级派生链与 Canonical Request 签名，并通过 AWS S3 官方文档标准测试向量（`f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41`）100% 精确校验。
+
+
+## 2026-11-14 CP 语言正交语法收敛、`v: *T` 编译期自动推导、全文件单次诊断与 `lib/` 全量净化
+
+### 1. 正交参数修饰符与 `v: *T` 值拷贝/可变借用自动推导
+- **设计原理**：容器（`struct`/`class`/`enum`/`trait`）方法首参接收者统一使用省略 `_`（只读）、`*_`（可变）、`move _`（所有权转移）；普通具名形参统一将可变修饰符置于冒号后的类型位 `v: *T`，所有权修饰符置于形参名前 `move v: T` / `own v: *T`。
+- **编译期推导机制**：在 `cpc/src/parser.rs` 的 `parse_fn_decl` 与 `parse_class_member` 中，扫描函数体 AST 是否对形参 `v` 存在按值直接重绑定（`Stmt::Assign` 的左侧为 `Expr::Ident(v)` 且非 `v.*` 解引用）。若存在直接重绑定，则编译器自动将 `p.ty` 从 `*T` 拆包为值类型 `T` 并置 `p.is_mut = true`，在 `codegen` 中生成函数栈内局部可变副本 `var v = _cp_v;`，不触发借用检查器；反之则保留为可变指针借用 `*T`。
+
+### 2. 单次全文件错误聚合输出与类默认字段初始化自愈
+- **全文件诊断管线**：在 `cpc/src/main.rs` 中将 `cpc check`、`cpc check --json` 与 `cpc compile` 统一接入 `parser.parse_module_with_recovery()` + `sema.analyze_module()` 聚合管线，消除“遇首个语法错误即退出”的串行往返瓶颈。
+- **类默认字段初始化修复**：在 `cpc/src/codegen/mod.rs` 生成类的 `_create(allocator)` 时，此前仅执行 `self_ptr.* = undefined;`，导致未在 `init` 中显式赋值的带默认值字段（如 `pub items: []const u8 = [];`）残留 `0xaa` 未定义内存；现已在 `_create` 中为所有带默认值的非静态字段自动注入 `self_ptr.<field> = <default>;`，保障类字段默认值 100% 确定性生效。

@@ -1,13 +1,12 @@
 // lib/crypto/hmac.cp
 // HMAC message authentication code (SHA256, SHA512)
 
-const std = @import("std");
 
 pub enum HmacAlgorithm {
     Sha256,
     Sha512,
 
-    pub static fn fromString(str: []const u8): ?HmacAlgorithm {
+    static fn fromString(str: []const u8): HmacAlgorithm? {
         if (std.mem.eql(u8, str, "sha256") or std.mem.eql(u8, str, "SHA256")) return HmacAlgorithm.Sha256;
         if (std.mem.eql(u8, str, "sha512") or std.mem.eql(u8, str, "SHA512")) return HmacAlgorithm.Sha512;
         return null;
@@ -15,7 +14,7 @@ pub enum HmacAlgorithm {
 }
 
 pub fn hmacSha256(key: string, data: string): string {
-    var out: [32]u8 = undefined;
+    let out: [32]u8 = undefined;
     std.crypto.auth.hmac.sha2.HmacSha256.create(&out, data, key);
     const hex = std.fmt.bytesToHex(out, .lower);
     const res = std.heap.page_allocator.alloc(u8, 64) catch unreachable;
@@ -23,11 +22,11 @@ pub fn hmacSha256(key: string, data: string): string {
     return res;
 }
 
-pub fn hmacSha256Raw(out: *[32]u8, key: string, data: string): void {
+pub fn hmacSha256Raw(out: *[32]u8, key: string, data: string) {
     std.crypto.auth.hmac.sha2.HmacSha256.create(out, data, key);
 }
 
-export class Hmac {
+pub class Hmac {
     algo: HmacAlgorithm = HmacAlgorithm.Sha256;
     h256: std.crypto.auth.hmac.sha2.HmacSha256 = undefined;
     h512: std.crypto.auth.hmac.sha2.HmacSha512 = undefined;
@@ -43,27 +42,27 @@ export class Hmac {
         return h;
     }
 
-    pub fn update(mut self: *Hmac, data: string): *Hmac {
-        switch (self.algo) {
-            .Sha256 => { self.h256.update(data); },
-            .Sha512 => { self.h512.update(data); },
+    pub fn update(*_, data: string): *Hmac {
+        switch (_.algo) {
+            .Sha256 => { _.h256.update(data); },
+            .Sha512 => { _.h512.update(data); },
         }
-        return self;
+        return _;
     }
 
-    pub fn digest(mut self: *Hmac): string {
-        switch (self.algo) {
+    pub fn digest(*_): string {
+        switch (_.algo) {
             .Sha256 => {
-                var out: [32]u8 = undefined;
-                self.h256.final(&out);
+                let out: [32]u8 = undefined;
+                _.h256.final(&out);
                 const hex = std.fmt.bytesToHex(out, .lower);
                 const res = std.heap.page_allocator.alloc(u8, 64) catch unreachable;
                 @memcpy(res, hex[0..64]);
                 return res;
             },
             .Sha512 => {
-                var out: [64]u8 = undefined;
-                self.h512.final(&out);
+                let out: [64]u8 = undefined;
+                _.h512.final(&out);
                 const hex = std.fmt.bytesToHex(out, .lower);
                 const res = std.heap.page_allocator.alloc(u8, 128) catch unreachable;
                 @memcpy(res, hex[0..128]);
@@ -73,7 +72,7 @@ export class Hmac {
     }
 }
 
-pub fn createHmac(algo: string, key: string): ?*Hmac {
+pub fn createHmac(algo: string, key: string): (*Hmac)? {
     const parsed = HmacAlgorithm.fromString(algo);
     if (parsed == null) {
         return null;

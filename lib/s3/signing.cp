@@ -8,7 +8,7 @@ import { S3Credentials } from "./credentials.cp";
 const HEX_LOWER: []const u8 = "0123456789abcdef";
 
 /// AWS SigV4 SHA-256 与四级 HMAC-SHA256 派生签名工具
-export struct SigV4Signer {
+pub struct SigV4Signer {
     /// 计算输入字节流的 SHA-256 并写入 64 字节小写十六进制缓冲区 `out_hex[0..64]`
     pub static fn sha256Hex(data: []const u8, out_hex: []u8): usize {
         if (out_hex.len < 64) { return 0; }
@@ -23,7 +23,7 @@ export struct SigV4Signer {
     }
 
     /// 计算 `HMAC-SHA256(key, message)` 并将 32 字节原始 MAC 写入 `out_mac[0..32]`
-    pub static fn hmacSha256(key: []const u8, message: []const u8, out_mac: []u8): void {
+    pub static fn hmacSha256(key: []const u8, message: []const u8, out_mac: []u8) {
         if (out_mac.len < 32) { return; }
         if (key.len >= 0 && message.len >= 0) {
             zig {
