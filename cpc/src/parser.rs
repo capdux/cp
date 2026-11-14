@@ -8916,8 +8916,17 @@ impl<'a> Parser<'a> {
                             chars.next();
                             pattern.push('/');
                         } else if let Some(next_c) = chars.next() {
-                            pattern.push('\\');
-                            pattern.push(next_c);
+                            if matches!(next_c, 'n' | 'r' | 't' | '0') {
+                                pattern.push('\\');
+                                pattern.push(next_c);
+                            } else if next_c == '"' {
+                                pattern.push('\\');
+                                pattern.push('"');
+                            } else {
+                                pattern.push('\\');
+                                pattern.push('\\');
+                                pattern.push(next_c);
+                            }
                         }
                     } else {
                         pattern.push(c);
@@ -9152,6 +9161,7 @@ impl<'a> Parser<'a> {
     fn peek_op(&mut self) -> Option<BinaryOp> {
         match self.peek() {
             Some(Token::Plus) => Some(BinaryOp::Add),
+            Some(Token::PlusPlus) => Some(BinaryOp::Concat),
             Some(Token::Minus) => Some(BinaryOp::Sub),
             Some(Token::Star) => Some(BinaryOp::Mul),
             Some(Token::WrappingAdd) => Some(BinaryOp::WrappingAdd),
@@ -9195,6 +9205,7 @@ impl<'a> Parser<'a> {
             BinaryOp::Pipe => 9,
             BinaryOp::Shl | BinaryOp::Shr => 10,
             BinaryOp::Add
+            | BinaryOp::Concat
             | BinaryOp::Sub
             | BinaryOp::WrappingAdd
             | BinaryOp::WrappingSub

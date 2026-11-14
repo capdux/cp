@@ -606,6 +606,7 @@ impl Codegen {
                             BinaryOp::WrappingMul => "*%",
                             BinaryOp::SaturatingAdd => "+|",
                             BinaryOp::SaturatingSub => "-|",
+                            BinaryOp::Concat => "++",
                             _ => "",
                         };
                         format!("({} {} {})", l, op, r)
@@ -642,7 +643,7 @@ impl Codegen {
                             if (prop == "stringify" || prop == "encode") && !call.args.is_empty() {
                                 let arg = self.generate_expr(&call.args[0]);
                                 return format!(
-                                    "(blk: {{ const __jv = {}; break :blk std.fmt.allocPrint(std.heap.page_allocator, \"{{f}}\", .{{std.json.fmt(if (@typeInfo(@TypeOf(__jv)) == .pointer and @typeInfo(@TypeOf(__jv)).pointer.size == .one) __jv.* else __jv, .{{}})}}) catch unreachable; }})",
+                                    "(blk: {{ const __jv = {}; break :blk std.fmt.allocPrint(std.heap.smp_allocator, \"{{f}}\", .{{std.json.fmt(if (@typeInfo(@TypeOf(__jv)) == .pointer and @typeInfo(@TypeOf(__jv)).pointer.size == .one) __jv.* else __jv, .{{}})}}) catch unreachable; }})",
                                     arg
                                 );
                             }
@@ -652,14 +653,14 @@ impl Codegen {
                                         let zig_ty = self.map_type(target_ty);
                                         let str_arg = self.generate_expr(&call.args[1]);
                                         return format!(
-                                            "std.json.parseFromSliceLeaky({}, std.heap.page_allocator, {}, .{{ .ignore_unknown_fields = true }})",
+                                            "std.json.parseFromSliceLeaky({}, std.heap.smp_allocator, {}, .{{ .ignore_unknown_fields = true, .allocate = .alloc_if_needed }})",
                                             zig_ty, str_arg
                                         );
                                     }
                                 } else {
                                     let str_arg = self.generate_expr(&call.args[0]);
                                     return format!(
-                                        "std.json.parseFromSliceLeaky(std.json.Value, std.heap.page_allocator, {}, .{{}})",
+                                        "std.json.parseFromSliceLeaky(std.json.Value, std.heap.smp_allocator, {}, .{{ .allocate = .alloc_if_needed }})",
                                         str_arg
                                     );
                                 }

@@ -1158,3 +1158,33 @@
   3. `lib/crypto/_boringssl.cp`, `lib/crypto/tls.cp`, `lib/crypto/index.cp` 及 `lib/` 全量 144 个标准库文件净化；
   4. `cap/test/test_syntax_orthogonality.cp` 及回归测试套件；
   5. `SESSION.md`, `CHANGELOG.md`, `DEVLOG.md`：四线文档同步。
+
+
+---
+
+## 2026-11-14（续） 内置高性能同构 `JSON` 与 `[2048]u8` 栈零分配 + 16 字节 SIMD `RegExp` 升级及控制流海象语法校对
+
+### 1. 收到用户指令
+1. `JSON 已作为全局一等公民内置类（无需 import）：直接使用 JSON.stringify(val)、JSON.parse<T>(str) 或 JSON.parse(str)。这个在 cp 中可以, 在 bun环境可以吗? cpc 是如何实现 JSON 上述函数的呢?`
+2. `zig std 内置的 JSON/正则表达式, 与 bun中实现的 JSON/正则表达式, 哪个性能更高? 我们应该采用性能更高的方式执行 JSON.parse<T>(str) / JSON.stringify(val), 也就是说, 在 cp 和 bun中,JSON 和正则表达式, 需在编译期, 转换为各自的实现库, 编译时, 需标记 单纯的 cp 编译, 还是 bun 环境编译, 因为 引用文件的路径和文件名称不同 你的解决方案是啥?`
+3. `1. bun 迁移cp 中, 之前的json 宏调用的是 zig std 实现吗? bun zig 原始调用是zig的std ,还是 引用自身实现的 json 库? 2. bun 自身实现的 json 库, 需要 bun.default_allocator（Mimalloc） 对吗? 而我们cp 迁移后, 不需要 bun.default_allocator（Mimalloc）, std.heap.stackFallback(4096, std.heap.page_allocator), 性能一样,对吗? 3. Bun 实现（/data/dev/bun/src/jsc/RegularExpression.zig）...`
+4. `1. 你的意思解析json时, 不使用 zig 内置的 std 函数, 使用 bun 实现的 json 解析, 传入 tackFallback(4096), 在大型 JSON 上配合 ArenaAllocator, 性能与bun内置的json 解析一致. 这种方法比 zig std中内置的方法快很多. 2. json 系列化, 就用 zig 内置的 库实现, bun 里面也是使用 zig 内置的 std.json.fmt 实现的. 3. 升级 cpc 内置 RegExp 与 lib/regex.cp...`
+5. `实际调查发现：在 /data/dev/bun/src/ 的全部 250 多个模块中，只有 1 个模块（jsc/RegularExpression.zig）封装了 Yarr__RegularExpression__* C-FFI...`
+6. `最后一个问题: 2. 超过 4KB 时自动升级为 ArenaAllocator 批量线性分配... 你计划区分json文件大小, 按这个来实现吗?`
+7. `同意你按这个方案执行, 实现内置高性能JSON 与 RegExp, 且 cp 与 bun 完全同构. 同意你的 JSON 方案. 同意正则表达式方案, 正则表达式 [2048]u8 栈缓冲区零堆分配 + SIMD 字面量快跳, 并删除多余的空壳文件 lib/regex.cp。有个问题:如果 cp 与 bun 完全相同, 你提到要使用 Bun 实现的 SIMD, 这个 SIMD 在 cp 和 bun中的路径不一样, 如何统一呢?`
+8. `完成了吗? / 测试情况如何?`
+9. `6. 条件与循环语法（禁止 Zig |capture|，保留 while 步进子句）... 你给的bun agy 十条规则中, 这条是对的吗? 解构 不是 使用 if (v := opt) 吗? 仔细确认下`
+
+### 2. 执行结果汇报
+1. **协同热修结单**：
+   - `task-20261114-concat-plusplus-operator`：新增 `Token::PlusPlus` (`++`) 与 `BinaryOp::Concat` 支持编译期字符串/元组/数组拼接；
+   - `task-20261114-prelude-ptr-shadow`：将 `cpc/src/codegen/mod.rs` 中 prelude 辅助函数的参数与局部变量统一加上 `__cp_` 前缀（如 `__cp_ptr`、`__cp_val`），消除与用户顶层 `pub fn ptr()` 的遮蔽冲突。
+2. **CP 与 Bun 100% 同构的高性能内置 `JSON` 与 `RegExp` 实装**：
+   - **`JSON`**：在 [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs) 中统一采用 `std.heap.smp_allocator` 高速多线程内存池分配器，并在 `JSON.parse<T>(str)` 与 `JSON.parse(str)` 中开启 `.allocate = .alloc_if_needed` 零拷贝原切片借用；
+   - **`RegExp`**：删除冗余空壳 [`lib/regex.cp`](file:///data/dev/cp/lib/regex.cp)；在 [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs) 的 `emit_regex_prelude()` 中直接内联 16 字节 `@Vector(16, u8)` SIMD 字面量前缀扫描算法（`simdIndexOfByte`、`simdContainsPrefix`、`extractLitPrefix`）与 `[2048]u8` 栈缓冲区零堆分配快速路径（超 2048 字节自动回退 `std.heap.smp_allocator`），零外部文件路径依赖；修复 [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs) 正则字面量 `/.../` 内转义字符生成；
+   - **测试验证**：[`cap/test/test_syntax_orthogonality.cp`](file:///data/dev/cp/cap/test/test_syntax_orthogonality.cp) 5 大测试套件（含第 5 项内置 SIMD + `[2048]u8` 栈缓冲 `RegExp` 测试）**5/5 100% PASS**。
+3. **校对 `bun_agy` 第 6 条规则中的海象解包与循环语法**：
+   - 核实确认 `cpc/src/parser.rs`（`E0118` 诊断提示）与 `cp_agent_ref.md` 第八章中实现的标准语法正是海象解包 **`if (v := opt)` / `if (*v := opt)` / `while (v := it.next())` / `while (*v := it.next())`** 以及循环 **`for (v of arr)` / `for (*v of arr)` / `for (move v of arr)`**，修正转发给 `bun_agy` 的文本说明。
+
+### 3. 阶段里程碑 Git 提交
+- **提交说明**：`perf(cpc,regex,json): inline 16-byte SIMD and [2048]u8 stack fast-path in RegExp, use zero-copy smp_allocator in JSON, remove empty lib/regex.cp`

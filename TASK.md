@@ -4041,23 +4041,6 @@ P1（中期生产化） │ 并发与调度落地 │ 1. 循环回边 Auto-Reduc
 P2（生态成熟期） │ 工具链与生态底座 │ 1. 完整生产级 LSP（跳转/引用/重构）2. 官方格式化器 cpc fmt3. 零拷贝 I/O │ 开发者与 AI 体验媲美
 │ │ 流与无锁并发容器标准库 │ TypeScript/Rust，具备企业级承载力
 
-topt99755@gmail.com 35h
-walteryu99@gmail.com 111h
-walteryu66@gmail.com 108h
-walteryu33@gmail.com 118h
-yuway566@gmail.com 123h
-waywayyu66@gmail.com 145h 32元，需取消 11-12
-
-agyr --json | jq -r '.[].id'
-640a7490-6bcb-4d2f-a6af-60d7b8d6c522 最早
-8bef6f4a-c26e-465d-92a9-5acea965ca44 v 主用
-1cbf7ce8-4f03-449e-9336-1386a194b3cb c 沟通
-root@beam-01:/data/dev/bun# agy --conversation=
-
-root@beam-01:/data/dev/cp# agyr --json | jq -r '.[].id'
-de9839a1-1501-421e-94ad-6d4216f98b34 v
-ebe8932a-593c-40d2-a931-f9ce1d4de5b9
-
 1. 合并到 cpc 正式版, 合并时注意， bun agy 可能更新了 cpc，需仔细审核 bun的修改是否合理、必要、完备、无缺陷、无隐患。相关内容更新到 cp_ref.md 规范文档。
 
 2. git 提交版本
@@ -4497,3 +4480,61 @@ return 0; // EOF
     pub fn isExceeded(_): bool {
         return _.remaining_bytes < 0;
     }
+
+请先阅读最新的 `/data/dev/cp/cp_agent_ref.md`，并按以下 10 条规则对 `/data/dev/bun/src/` 下已迁移的 `.cp` 文件执行批量净化与后续迁移：
+
+    1. **容器（`struct` / `class` / `enum` / `trait`）方法首参（接收者）规范**：
+       - 严禁使用 `self` 或 `this`（编译器报 `E0121`）。在方法体内统一使用 `_` 访问当前实例（如 `_.field`）。
+       - **只读接收者**：直接省略首参 `_`（如 `fn len(): usize { return _.items.len; }`，写 `fn len(_)` 会报 `E0123`）。
+       - **可变接收者**：当方法（包括构造函数 `init`）修改了 `_.field` 时，首参必须写 **`*_`**（如 `fn init(*_, cap: usize)`、`fn reset(*_)`）。
+       - **所有权转移接收者**：写 **`move _`**（或 `own _`）。
+
+    2. **普通函数与方法的具名形参规范（正交区分 `*` 与 `move`/`own`）**：
+       - **只读形参**：`v: T`。
+       - **可变形参（含可变引用借用与函数内可变值拷贝）**：统一将 `*` 写在冒号后的类型位置 **`v:
+       *T`**（编译器会自动推导是可变引用借用还是按值拷贝的局部可变变量）。**严禁**在具名参数前写 `*v: T`、`mut v: T` 或 `let v: T`（报 `E0104` /
+       `E0125`）。
+       - **移动/独占所有权形参**：`move` 与 `own` 属于参数绑定修饰符，必须写在参数名前面：**`move v: T`**、**`own v: T`**、**`own v: *T`**（严禁写 `v:
+       move T`）。
+
+    3. **局部变量声明与返回值忽略**：
+       - 局部变量只有不可变 `const` 与可变 `let`，**彻底废除 `var` 与 `mut`**（报 `E0103` / `E0104`）。
+       - 忽略函数返回值必须写 **`* = expr;`**（或 `let * = expr;`），**严禁写 `_ = expr;` 或 `let _ = expr;`**（`_` 专用于 `this` 简写，报 `E0120`）。
+
+    4. **函数返回类型签名（強制 `:` + 全场景省略 `: void`）**：
+       - 有返回值时，右括号 `)` 后**必须写冒号 `: ReturnType`**（如 `fn next(): ([]const u8)?`，漏写 `:` 报 `E0116`）。
+       - 无返回值（`void`）时，**所有函数（含普通函数、类/结构体/枚举方法、`@c` 块与 `extern fn`）统一直接省略 `: void`**（写 `: void` 或 `void` 报
+       `E0122`；注意：`*void` 指针保留）。
+
+    5. **后缀类型修饰符与泛型推导**：
+       - 可选类型一律后缀 **`T?`**（严禁前缀 `?T`，报 `E0115`）；错误联合一律后缀 **`T!`** 或 **`T!E`**。
+       - **严禁使用 `any`**（报 `E0119`），编译期泛型参数推导统一使用 **`auto`**。
+
+    6. **条件与循环语法（禁止 Zig `|capture|`，保留 `while` 步进子句）**：
+       - **严禁** Zig 管道捕获 `if (opt) |v|` / `while (it.next()) |v|` / `for (arr) |v|`（报 `E0118`）；
+       - 请使用 `if (let v = opt)`、`while (let v = it.next())`、`for (const v of arr)`。
+       - **保留支持**：`while (i < _.len) : (i += 1) { ... }` 带步进子句的循环语法是合法的 CP 语法，可继续正常使用。
+
+    7. **`@c { ... }` 极简 C-FFI 声明块**：
+       - 模块内私有 C 绑定写 `@c { ... }`，跨模块导出写 `pub @c { ... }`。
+       - 块内直接写 `fn foo(a: i32): i32;`、`struct bar { ... }`、`enum baz: c_int { ... }`、`type X = ...;`、`const K: c_int = 1;`，**无需重复写 `pub`
+       或 `extern`**。
+
+    8. **`struct` / `enum` 默认可见性与空切片字面量 `[]`**：
+       - `struct` 的字段与方法、`enum` 的方法默认均为 `pub`，请删除内部多余的 `pub`（注：`enum`/`struct`/`class` 的静态方法仍需写 `static fn`）。
+       - 模块顶层导出统一使用 **`pub`**（`pub fn`、`pub struct`、`pub class`、`pub enum`、`pub const`）。
+       - 空切片初始化直接写 **`= []`**（如 `buf: []T = [];`），不再写 Zig 的 `= &.{}`。
+
+    9. **直接调用 `std.*` **：
+       - `cpc` 已在全局预注册 `std` 与 `builtin`，请删除文件顶部的 `const std = @import("std");`，直接在 CP 代码中调用 `std.*`，**严禁为了调用 `std`
+       而使用 `zig {}` 块**。
+
+    10. **编译模式宏升级**：
+        - 编译参数已支持 `--nest`，代码中请使用 **`@is_nest`** 替代旧的 `@is_beam`。
+
+与一等公民内置 `JSON`（严禁 `zig {}` 逃逸）- `JSON` 已作为全局一等公民内置类（无需 `import`）：直接使用 `JSON.stringify(val)`、`JSON.parse<T>(str)` 或 `JSON.parse(str)`。- 请将早期遗留的 `@json_parse`、`@http_fetch` 等临时宏替换为已迁移的 Bun 内置 CP 模块或直接 import 对应的 `.zig` / `.cp` 实现（除非原 Zig
+源码本身就是宏）。
+
+【CP 语法极简化与严格统一规范指令】
+`cpc` 编译器已全面支持单文件全量错误一次性输出（`cpc check` / `cpc check --json` / `cpc compile`
+会一次性列出文件内所有语法/语义问题及修复建议）。请严格按照以下 10 条无特例规则修正并推进 `/data/dev/bun/src/` 的迁移：

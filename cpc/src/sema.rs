@@ -5765,6 +5765,14 @@ impl Analyzer {
                 } else if bin.op == BinaryOp::Add && (left == Type::String || right == Type::String)
                 {
                     Ok(Type::String)
+                } else if bin.op == BinaryOp::Concat {
+                    if left == Type::String || right == Type::String {
+                        Ok(Type::String)
+                    } else if left != Type::Unknown {
+                        Ok(left)
+                    } else {
+                        Ok(right)
+                    }
                 } else {
                     if bin.op == BinaryOp::Add || bin.op == BinaryOp::Sub {
                         let is_left_single_ptr = matches!(left, Type::RawPtr { .. });

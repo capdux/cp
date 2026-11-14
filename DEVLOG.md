@@ -781,3 +781,13 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
 ### 2. 单次全文件错误聚合输出与类默认字段初始化自愈
 - **全文件诊断管线**：在 `cpc/src/main.rs` 中将 `cpc check`、`cpc check --json` 与 `cpc compile` 统一接入 `parser.parse_module_with_recovery()` + `sema.analyze_module()` 聚合管线，消除“遇首个语法错误即退出”的串行往返瓶颈。
 - **类默认字段初始化修复**：在 `cpc/src/codegen/mod.rs` 生成类的 `_create(allocator)` 时，此前仅执行 `self_ptr.* = undefined;`，导致未在 `init` 中显式赋值的带默认值字段（如 `pub items: []const u8 = [];`）残留 `0xaa` 未定义内存；现已在 `_create` 中为所有带默认值的非静态字段自动注入 `self_ptr.<field> = <default>;`，保障类字段默认值 100% 确定性生效。
+
+
+## 2026-11-14 内置同构高性能 `JSON` 与 `[2048]u8` 栈零分配 + 16 字节 SIMD `RegExp` 落地
+
+### 1. 零路径依赖的内联 `@Vector(16, u8)` SIMD + `[2048]u8` 栈缓冲 `RegExp`
+- 在 `cpc/src/codegen/mod.rs` 的 `emit_regex_prelude()` 中，直接将 16 字节 `@Vector(16, u8)` SIMD 字面量前缀预扫描（`simdIndexOfByte`、`simdContainsPrefix`、`extractLitPrefix`）内联进 `RegExp` 结构体，完全不依赖任何外部文件路径，在纯 CP 与 Bun 环境下 100% 同构；
+- 在 `init`、`test`、`exec` 中采用 `var stack_buf: [2048]u8 = undefined;` 栈上直接构造 `\0` 结尾字符串（仅当长度 $\ge 2048$ 时回退 `std.heap.smp_allocator`），使常规正则匹配实现零堆内存分配。
+
+### 2. `JSON` 零拷贝切片借用与 `smp_allocator`
+- 在 `cpc/src/codegen/expr.rs` 中将 `JSON.stringify`、`JSON.parse<T>` 与 `JSON.parse` 的分配器从 `page_allocator` 升级为 `std.heap.smp_allocator`，并在 `parseFromSliceLeaky` 中启用 `.allocate = .alloc_if_needed`，使无转义 JSON 字符串直接零拷贝借用输入切片。

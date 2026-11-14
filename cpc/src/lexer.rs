@@ -262,6 +262,8 @@ pub enum Token {
     SaturatingAdd,
     #[token("-|")]
     SaturatingSub,
+    #[token("++")]
+    PlusPlus,
     #[token("+")]
     Plus,
     #[token("-")]

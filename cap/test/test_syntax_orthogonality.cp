@@ -97,4 +97,15 @@ fn main(): void! {
         expect_eq(matchDnsName("*.example.com", "example.com"), false);
         expect_eq(matchDnsName("Example.COM", "example.com"), true);
     });
+
+    test("5. Built-in RegExp with [2048]u8 stackFallback & 16-byte SIMD literal prefix fast-skip", () => {
+        const re_lit = /https:\/\/api\.example/;
+        expect_eq(re_lit.test("GET https://api.example.com/v1 HTTP/1.1"), true);
+        expect_eq(re_lit.test("GET http://other.org/v1 HTTP/1.1"), false);
+
+        const re_num = new RegExp("user_[0-9]+", "");
+        expect_eq(re_num.test("id=user_98765&active=1"), true);
+        expect_eq(re_num.test("id=guest_abc"), false);
+        expect_eq(re_num.exec("id=user_42&ok=1"), "user_42");
+    });
 }

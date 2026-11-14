@@ -624,6 +624,7 @@ pub enum BinaryOp {
     WrappingMul,
     SaturatingAdd,
     SaturatingSub,
+    Concat,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

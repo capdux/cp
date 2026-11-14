@@ -546,3 +546,11 @@
   - 同步更新双轨语法规范手册，写入正交参数修饰符、内置 `JSON`、`@c` 块、`@is_nest` 及 Top 16 绝对禁手清单。
 - [`cap/test/test_syntax_orthogonality.cp`](file:///data/dev/cp/cap/test/test_syntax_orthogonality.cp):
   - 新增覆盖正交语法、`v: *T` 自动推导、内置 `JSON`、预注册 `std` 与 BoringSSL TLS 证书校验的 4 大端到端测试套件（4/4 PASS）。
+
+- [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs), [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs), [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs), [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs), [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs), [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)（及 `cpc_dev/src/*` 镜像同步）:
+  - 新增 `Token::PlusPlus` (`++`) 与 `BinaryOp::Concat` 支持（结单 `task-20261114-concat-plusplus-operator`）；
+  - 为 prelude 辅助函数形参与局部变量统一添加 `__cp_` 前缀防止同名遮蔽（结单 `task-20261114-prelude-ptr-shadow`）；
+  - 升级内置 `JSON.stringify`、`JSON.parse<T>`、`JSON.parse` 采用 `std.heap.smp_allocator` 与 `.allocate = .alloc_if_needed` 零拷贝借用；
+  - 升级内置 `RegExp`（`emit_regex_prelude`）：内联 16 字节 `@Vector(16, u8)` SIMD 字面量前缀快跳与 `[2048]u8` 栈缓冲区零堆分配快速路径，修复正则字面量反斜杠转义；
+  - 删除冗余空壳文件 `lib/regex.cp`；
+  - 扩充 [`cap/test/test_syntax_orthogonality.cp`](file:///data/dev/cp/cap/test/test_syntax_orthogonality.cp) 第 5 项 `RegExp` 测试套件（5/5 PASS）。
