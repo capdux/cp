@@ -9,6 +9,7 @@
 //   - hive_array.cp    : Hardware @ctz/@popCount BitSet64 and O(1) HiveArray<T, CAP> slot pool
 //   - bit_set.cp       : Multi-word static BitSet256 with hardware @ctz/@popCount
 //   - string_map.cp    : Length-filtered FastStringMap<V, CAP> (exact & ASCII case-insensitive)
+//   - object_pool.cp   : Fixed-capacity zero-heap free-list ObjectPool<T, CAP>
 
 export * from "./bounded_array.cp";
 export * from "./baby_list.cp";
@@ -16,3 +17,4 @@ export * from "./linear_fifo.cp";
 export * from "./hive_array.cp";
 export * from "./bit_set.cp";
 export * from "./string_map.cp";
+export * from "./object_pool.cp";

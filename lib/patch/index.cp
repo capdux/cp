@@ -2,3 +2,4 @@
 // Unified Public Exports for cap:patch
 
 export * from "./diff.cp";
+export * from "./myers.cp";

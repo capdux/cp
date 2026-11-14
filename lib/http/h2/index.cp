@@ -25,3 +25,10 @@ export {
     H2Stream,
     H2ClientSession
 } from "./client";
+
+export {
+    HpackIntResult,
+    HpackStaticEntry,
+    HpackDecodedHeader,
+    HpackCodec
+} from "./hpack";

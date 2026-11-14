@@ -3,3 +3,4 @@
 
 export * from "./args.cp";
 export * from "./tty.cp";
+export * from "./table.cp";

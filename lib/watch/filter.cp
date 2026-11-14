@@ -1,0 +1,119 @@
+// lib/watch/filter.cp
+// Filesystem Watch Path Ignore Filter & Timestamp-Based Event Debouncer
+// Absorbed from Bun src/watcher/
+
+const std = @import("std");
+
+pub struct WatchFilter {
+    /// Returns `true` if `path` matches common VCS, package cache, build output, or editor swap patterns.
+    pub static fn shouldIgnore(path: []const u8): bool {
+        if (path.len == 0) {
+            return true;
+        }
+        // Editor backup / swap files
+        if (path[path.len - 1] == '~' ||
+            std.mem.endsWith(u8, path, ".swp") ||
+            std.mem.endsWith(u8, path, ".swo") ||
+            std.mem.endsWith(u8, path, ".tmp") ||
+            std.mem.endsWith(u8, path, ".DS_Store"))
+        {
+            return true;
+        }
+
+        // Segment-level directory filters (.git, node_modules, .cap)
+        let iter = std.mem.splitScalar(u8, path, '/');
+        while (seg := iter.next()) {
+            if (seg.len == 0) {
+                continue;
+            }
+            if (std.mem.eql(u8, seg, ".git") ||
+                std.mem.eql(u8, seg, "node_modules") ||
+                std.mem.eql(u8, seg, ".cap") ||
+                std.mem.eql(u8, seg, "zig-cache"))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+pub struct DebounceEntry {
+    path: []const u8 = "";
+    last_ns: u64 = 0;
+    active: bool = false;
+}
+
+/// Fixed-capacity timestamp debouncer that suppresses duplicate file events within `window_ns`.
+pub struct DebounceTracker<const CAP: usize> {
+    entries: [CAP]DebounceEntry = undefined;
+    window_ns: u64 = 50000000; // default 50ms
+    count: usize = 0;
+    next_evict: usize = 0;
+
+    pub static fn init(window_ns: u64): DebounceTracker<CAP> {
+        let tracker = DebounceTracker<CAP> {
+            entries: undefined,
+            window_ns: window_ns,
+            count: 0,
+            next_evict: 0,
+        };
+        let i: usize = 0;
+        while (i < CAP) {
+            tracker.entries[i] = DebounceEntry {
+                path: "",
+                last_ns: 0,
+                active: false,
+            };
+            i += 1;
+        }
+        return tracker;
+    }
+
+    /// Checks whether an event on `path` at `now_ns` should be emitted.
+    /// Returns `true` and updates the timestamp if outside the debounce window; returns `false` if suppressed.
+    pub fn shouldEmit(*_, path: []const u8, now_ns: u64): bool {
+        let i: usize = 0;
+        while (i < _.count) {
+            if (_.entries[i].active && std.mem.eql(u8, _.entries[i].path, path)) {
+                const prev = _.entries[i].last_ns;
+                if (now_ns >= prev && (now_ns - prev) < _.window_ns) {
+                    return false;
+                }
+                _.entries[i].last_ns = now_ns;
+                return true;
+            }
+            i += 1;
+        }
+
+        if (_.count < CAP) {
+            _.entries[_.count] = DebounceEntry {
+                path: path,
+                last_ns: now_ns,
+                active: true,
+            };
+            _.count += 1;
+            return true;
+        }
+
+        // Ring eviction when full
+        const slot = _.next_evict;
+        _.next_evict = (_.next_evict + 1) % CAP;
+        _.entries[slot] = DebounceEntry {
+            path: path,
+            last_ns: now_ns,
+            active: true,
+        };
+        return true;
+    }
+
+    pub fn clear(*_) {
+        let i: usize = 0;
+        while (i < CAP) {
+            _.entries[i].active = false;
+            i += 1;
+        }
+        _.count = 0;
+        _.next_evict = 0;
+    }
+}

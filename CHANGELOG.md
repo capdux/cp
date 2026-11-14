@@ -597,3 +597,24 @@
 - [`lib/mem/`](file:///data/dev/cp/lib/mem/)：扩充 [`cow.cp`](file:///data/dev/cp/lib/mem/cow.cp) (`CowSlice`) 与 [`tagged_ptr.cp`](file:///data/dev/cp/lib/mem/tagged_ptr.cp) (`TaggedPtr`)。
 - [`lib/string/`](file:///data/dev/cp/lib/string/)：新增 [`grapheme.cp`](file:///data/dev/cp/lib/string/grapheme.cp) (`Utf8Grapheme` UTF-8 校验与 UAX #29 字素簇计数)。
 - 测试套件：新增 [`cap/test/test_stdlib_phase_b1.cp`](file:///data/dev/cp/cap/test/test_stdlib_phase_b1.cp)（8/8 PASS）与 [`cap/test/test_stdlib_phase_b2_c.cp`](file:///data/dev/cp/cap/test/test_stdlib_phase_b2_c.cp)（9/9 PASS）。
+
+### 2026-11-15（续） 双子智能体并行深化 12 个标准库子模块与第 6 项 `bun_agy` 急修结单
+- **编译器热修 (`cpc/src/` & `cpc_dev/src/`)**：
+  - [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：修复 `generate_zig_or_struct` 中泛型函数返回匿名 `struct`（`return struct { ... }`）内省略 `_` 的只读实例方法被误判为 `static` 的问题（结单 `task-20261115-generic-return-struct-readonly-receiver`）。
+- **双子智能体并行深化标准库模块 (`lib/`)**：
+  - [`lib/sql/postgres.cp`](file:///data/dev/cp/lib/sql/postgres.cp) & [`lib/sql/mysql.cp`](file:///data/dev/cp/lib/sql/mysql.cp)：PostgreSQL v3 认证挑战/数据行/命令完成帧与 MySQL `lenenc_int`/能力位图/OK/ERR 包解析；
+  - [`lib/redis/command.cp`](file:///data/dev/cp/lib/redis/command.cp)：RESP2 命令编码器 `RedisCommand` 与批量管道 `RedisPipeline`；
+  - [`lib/http/h2/hpack.cp`](file:///data/dev/cp/lib/http/h2/hpack.cp)：RFC 7541 HTTP/2 HPACK 整数前缀、静态表与首部字段编解码器 `HpackCodec`；
+  - [`lib/col/object_pool.cp`](file:///data/dev/cp/lib/col/object_pool.cp)：零堆碎片侵入式空闲链表对象池 `ObjectPool<T, CAP>`；
+  - [`lib/pack/zip.cp`](file:///data/dev/cp/lib/pack/zip.cp)：PKZIP Local/Central/EOCD 解析与零拷贝 `ZipReader`；
+  - [`lib/md/table.cp`](file:///data/dev/cp/lib/md/table.cp)：GFM 表格对齐与 HTML `<table>` 渲染器 `MdTable`；
+  - [`lib/html/escape.cp`](file:///data/dev/cp/lib/html/escape.cp)：零拷贝快跳 HTML 实体转义与反转义器 `HtmlEscape`；
+  - [`lib/cli/table.cp`](file:///data/dev/cp/lib/cli/table.cp)：终端 ASCII 表格格式化渲染器 `CliTable`；
+  - [`lib/watch/filter.cp`](file:///data/dev/cp/lib/watch/filter.cp)：文件监控忽略过滤 `WatchFilter` 与防抖器 `DebounceTracker`；
+  - [`lib/patch/myers.cp`](file:///data/dev/cp/lib/patch/myers.cp)：行级差异比对与 Unified Diff 生成器 `LineDiffer`；
+  - [`lib/bench/histogram.cp`](file:///data/dev/cp/lib/bench/histogram.cp)：8 桶对数纳秒延迟直方图 `LatencyHistogram`。
+- **新增端到端测试套件**：
+  - [`cap/test/test_sql_redis_hpack.cp`](file:///data/dev/cp/cap/test/test_sql_redis_hpack.cp)（4/4 PASS）；
+  - [`cap/test/test_col_pack_md_html.cp`](file:///data/dev/cp/cap/test/test_col_pack_md_html.cp)（4/4 PASS）；
+  - [`cap/test/test_cli_watch_patch_bench.cp`](file:///data/dev/cp/cap/test/test_cli_watch_patch_bench.cp)（4/4 PASS）。
+

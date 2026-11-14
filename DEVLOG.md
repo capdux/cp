@@ -814,3 +814,8 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
 ### 2. 标准库目录瘦身合并与 Bun 高价值子系统全量收编
 - **双向兼容路由 (`resolver.rs`)**：在 `resolve_source_path` 中将 `cap:col`/`cap:collections`、`cap:event`/`cap:event_loop`/`cap:events`、`cap:conf`/`cap:dotenv`/`cap:ini`、`cap:pack`/`cap:compress` 统一路由至精简目录 `lib/col/`、`lib/event/`、`lib/conf/`、`lib/pack/`，兼顾极简输入体验与 100% 存量测试向后兼容。
 - **10 大新建模块与 4 大模块增强**：全面吸收 `/data/dev/bun/src/` 中的 `redis` (Valkey RESP2/3)、`cli` (clap/tty/Progress)、`watch` (watcher)、`patch` (Unified Diff)、`bench` (perf timer/stats)、`elf` (ELF64/Mach-O/PE)、`md` (CommonMark/GFM)、`html` (CSS Selector/HtmlRewriter)、`ffi` (dlopen/TinyCC)、`sql` (Postgres v3/MySQL Wire) 及 `http`/`net`/`mem`/`string` 扩展，全部转化为 100% 正交 CP 语法并通过 `test_stdlib_phase_b1.cp` (8/8) 与 `test_stdlib_phase_b2_c.cp` (9/9) 端到端验证。
+
+### 3. 双子智能体并行深化与匿名返回结构体只读接收者自愈 (`task-20261115-generic-return-struct-readonly-receiver`)
+- **匿名返回结构体只读接收者判定**：在 `generate_zig_or_struct` 中，旧逻辑仅检查首参是否为显式 `this`/`_`，导致采用 CP 正交语法省略 `_` 的只读实例方法（如 `fn get(): T { return _.x; }`）被误置 `m.is_static = true`。现通过联合检测方法体是否引用 `_`/`this`/`self` 以及结构体是否包含字段，精准保留实例方法属性并发射 `self: @This()`，使 `zig ast-check` 100% 通过。
+- **三路无重叠并行架构**：主智能体常驻维护 `cpc/` 热修通道与 `watch_task.py` 守护进程，子智能体 1 与子智能体 2 分别在协议栈轨道（`sql`/`redis`/`http`）与容器/工具轨道（`col`/`pack`/`md`/`html`/`cli`/`watch`/`patch`/`bench`）并行推进，一次性完成 12 个深化子模块与 3 套端到端回归测试（12/12 PASS）。
+

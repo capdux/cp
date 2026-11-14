@@ -38,7 +38,11 @@ export {
     FrameHeader,
     H2StreamState,
     H2Stream,
-    H2ClientSession
+    H2ClientSession,
+    HpackIntResult,
+    HpackStaticEntry,
+    HpackDecodedHeader,
+    HpackCodec
 } from "./h2/index";
 
 export {

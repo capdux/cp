@@ -2,3 +2,4 @@
 // Unified Public Exports for cap:md
 
 export * from "./markdown.cp";
+export * from "./table.cp";

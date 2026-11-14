@@ -40,7 +40,7 @@ pub async fn fetch(url: string, options: *!?): Response {
 /**
  * 快速 JSON 响应构造函数 (对标 Bun 的 Response.json)
  */
-pub fn json(data: *!?): Response {
+pub fn json(data: auto): Response {
     let raw_json = JSON.stringify(data);
     let res = new Response(raw_json);
     res.contentType = "application/json";
@@ -50,7 +50,10 @@ pub fn json(data: *!?): Response {
 /**
  * 极速 HTTP Server (对标 Bun.serve)
  */
-pub fn serve(config: *!?): HttpServer {
+pub fn serve(config: auto): HttpServer {
+    zig {
+        const Server = HttpServer;
+    }
     if (@is_nest) {
         @yield_to_beam(@intFromEnum(SystemAction.HTTP_SERVE), config);
         let s = new HttpServer(3000, 0);

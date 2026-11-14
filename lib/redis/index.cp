@@ -2,3 +2,4 @@
 // Unified Public Exports for cap:redis
 
 export * from "./resp.cp";
+export * from "./command.cp";

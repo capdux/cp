@@ -2727,12 +2727,19 @@ impl Codegen {
 
     pub(crate) fn generate_zig_or_struct(&mut self, code: &str) -> String {
         if let Some(mut cls) = Self::parse_anon_struct_or_union(code) {
+            let has_fields = !cls.fields.is_empty();
             for m in &mut cls.methods {
-                let has_explicit_self = m
-                    .params
-                    .first()
-                    .map_or(false, |p| p.ident.sym == "this" || p.ident.sym == "_");
-                if !has_explicit_self {
+                let has_explicit_self = m.params.first().map_or(false, |p| {
+                    p.ident.sym == "this" || p.ident.sym == "_" || p.ident.sym == "self"
+                });
+                let uses_implicit_self = Self::block_contains_ident(&m.body, "_")
+                    || Self::block_contains_ident(&m.body, "this")
+                    || Self::block_contains_ident(&m.body, "self");
+                let has_callconv = m.meta.iter().any(|mt| mt.name.sym == "callconv");
+                if !has_explicit_self
+                    && !uses_implicit_self
+                    && (!has_fields || has_callconv || m.ident.sym == "init")
+                {
                     m.is_static = true;
                 }
             }

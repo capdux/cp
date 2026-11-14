@@ -5903,26 +5903,26 @@ export class SocketContext<Handler> {
 
 | 标准库协议通道    | 核心导出功能                                                           | 状态           |
 | :---------------- | :--------------------------------------------------------------------- | :------------- |
-| `cap:col`（兼容 `cap:collections`） | `BoundedArray`, `BabyList`, `LinearFifo`, `HiveArray`, `BitSet256`, `StaticStringMap`, `VecDeque`, `BinaryHeap`, `BTreeMap`, `BTreeSet`, `HashMap`, `HashSet` | **已全面实装** |
+| `cap:col`（兼容 `cap:collections`） | `BoundedArray`, `BabyList`, `LinearFifo`, `HiveArray`, `ObjectPool`, `BitSet256`, `StaticStringMap`, `VecDeque`, `BinaryHeap`, `BTreeMap`, `BTreeSet`, `HashMap`, `HashSet` | **已全面实装** |
 | `cap:event`（兼容 `cap:event_loop` / `cap:events`） | 统一事件循环与事件总线：`EventLoop`, `Timer`, `TimerHeap`, `ConcurrentTask`, `ConcurrentQueue`, `DeferredTaskQueue`, `PollEngine`, `EventEmitter` | **已全面实装** |
 | `cap:conf`（兼容 `cap:dotenv` / `cap:ini`） | 统一配置中心：`DotEnv` (`.env`)、`Ini` / `IniParser`、`TOML` (`TomlDoc`)、`YAML` (`YamlDoc`)、`JSON5` (`Json5Scanner`) | **已全面实装** |
-| `cap:pack`（兼容 `cap:compress`） | 流式压缩与归档打包：`Zlib`, `Deflate`, `Zstd`, `Brotli`, `CompressionFormat`, `Crc32`, `Adler32`, `GzipHeader`, `RleCodec`, `TarHeader`, `TarReader` | **已全面实装** |
-| `cap:redis`       | Redis / Valkey RESP2 & RESP3 零拷贝协议帧解析与编码器（`RESPType`, `RESPFrame`, `RESPParser`, `RESPEncoder`） | **已全面实装** |
-| `cap:cli`         | 命令行标志与参数解析器（`CliArgs`, `CliOption`）、ANSI 转义剥离（`AnsiColor`）与终端进度条（`ProgressBar`） | **已全面实装** |
-| `cap:watch`       | 跨平台文件系统监控引擎（`FileWatcher`, `WatchEvent`, `WatchEventKind`, `WatchMask`） | **已全面实装** |
-| `cap:patch`       | Unified Diff 解析、Hunk 行级统计与补丁渲染应用（`UnifiedDiff`, `UnifiedHunkHeader`, `HunkRange`） | **已全面实装** |
-| `cap:bench`       | 纳秒级硬件单调计时器（`HwTimer`, `Stopwatch`）与吞吐率/分位数统计（`BenchStats`：P50/P95/P99） | **已全面实装** |
+| `cap:pack`（兼容 `cap:compress`） | 流式压缩与归档打包：`Zlib`, `Deflate`, `Zstd`, `Brotli`, `CompressionFormat`, `Crc32`, `Adler32`, `GzipHeader`, `RleCodec`, `TarHeader`, `TarReader`, `ZipReader`, `ZipLocalHeader`, `ZipCentralHeader`, `ZipEocd` | **已全面实装** |
+| `cap:redis`       | Redis / Valkey RESP2 & RESP3 零拷贝协议帧、命令构建与 Pipeline 批处理（`RESPType`, `RESPFrame`, `RESPParser`, `RESPEncoder`, `RedisCommand`, `RedisPipeline`） | **已全面实装** |
+| `cap:cli`         | 命令行参数解析（`CliArgs`, `CliOption`）、ANSI 转义剥离（`AnsiColor`）、终端进度条（`ProgressBar`）与 ASCII 表格渲染器（`CliTable`, `CliTableAlign`） | **已全面实装** |
+| `cap:watch`       | 跨平台文件系统监控引擎、路径忽略过滤与防抖器（`FileWatcher`, `WatchEvent`, `WatchMask`, `WatchFilter`, `DebounceTracker`） | **已全面实装** |
+| `cap:patch`       | Unified Diff 解析、Hunk 渲染与行级差异比对生成（`UnifiedDiff`, `UnifiedHunkHeader`, `LineDiffer`, `DiffOp`） | **已全面实装** |
+| `cap:bench`       | 纳秒级硬件计时器（`HwTimer`, `Stopwatch`）、分位数统计（`BenchStats`）与对数桶延迟直方图（`LatencyHistogram`） | **已全面实装** |
 | `cap:elf`         | 可执行文件魔数嗅探与 ELF64 / Mach-O / PE 头部解析（`ExeFormat`, `Elf64HeaderInfo`, `ElfInspector`） | **已全面实装** |
-| `cap:md`          | CommonMark / GFM 解析器与 HTML / ANSI 终端渲染器（`Markdown.renderHtml`, `Markdown.renderAnsi`） | **已全面实装** |
-| `cap:html`        | CSS 选择器解析（`CssSelector`）与流式 HTML 标签重写器（`HtmlRewriter`） | **已全面实装** |
+| `cap:md`          | CommonMark / GFM 解析器、HTML / ANSI 终端渲染与 GFM 表格引擎（`Markdown`, `MdTable`, `MdTableAlign`） | **已全面实装** |
+| `cap:html`        | CSS 选择器解析（`CssSelector`）、流式 HTML 重写器（`HtmlRewriter`）与零拷贝实体转义器（`HtmlEscape`） | **已全面实装** |
 | `cap:ffi`         | 跨平台动态库加载（`DynLib`）、FFI 调用签名布局（`FFISignature`）与 TinyCC 内存编译声明（`TccOutputFormat`） | **已全面实装** |
-| `cap:sql`         | 统一 SQL 协议栈：参数化预编译语句（`SqlStatement`）、PostgreSQL v3 Wire 帧（`PostgresWire`）与 MySQL 包头编解码（`MySqlPacketHeader`） | **已全面实装** |
+| `cap:sql`         | 统一 SQL 协议栈：参数化预编译语句（`SqlStatement`）、PostgreSQL v3 Wire/认证/数据行（`PostgresWire`, `PostgresAuthChallenge`, `PostgresDataRow`, `PostgresCommandComplete`）与 MySQL Wire/变长整数/OK/ERR 包（`MySqlPacketHeader`, `MySqlLenEnc`, `MySqlCapabilities`, `MySqlOkPacket`, `MySqlErrPacket`） | **已全面实装** |
 | `cap:io`          | `Reader`, `Writer`, `Closer`, `Seeker`, `BufferReader`, `BufferWriter`, `BufferedReader`, `BufferedWriter`, `copyStream`, `PipeReader`, `PipeWriter`, `MaxBuf`, `Pipe`, `print`, `console` | **已全面实装** |
 | `cap:stream`      | 工业级零拷贝流式 I/O 管道（重导出 `cap:io` 中的统一流接口）             | **已全面实装** |
 | `cap:sync`        | `Futex`, `Mutex`, `RwLock`, `Condition`, `WaitGroup`, `Channel`, `MpmcQueue`, `UnboundedQueue`, `ConcurrentMap`, `ArcSlice`, `Wyhash`, `Atomic`, `Shared` | **已全面实装** |
 | `cap:json` / `cap:serde` | 零拷贝 JSON 流式解析器 `JsonParser`、`JsonValue`、内存池 `JsonBufferPool`、`@json_parse` / `@json_stringify` | **已全面实装** |
 | `cap:router`      | 超高性能 Radix-Tree 路由引擎 `Router<T>`, `RadixNode<T>`, `ParamMap`, `RouteMatch` | **已全面实装** |
-| `cap:http`        | `Method`, `Headers`, `ETag`, `MimeType`, `CookieMap`, `FormData`, `Request`, `Response`, `HttpServer`, `HTTPClient`, `H2ClientSession`, `H3ClientSession`, `fetch`, `serve`, `json` | **已全面实装** |
+| `cap:http`        | `Method`, `Headers`, `ETag`, `MimeType`, `CookieMap`, `FormData`, `Request`, `Response`, `HttpServer`, `HTTPClient`, `H2ClientSession`, `HpackCodec`, `H3ClientSession`, `fetch`, `serve`, `json` | **已全面实装** |
 | `cap:path`        | 跨平台路径计算 `Path`, `PosixPath`, `WindowsPath`（`join`, `resolve`, `normalize`, `dirname`, `basename`, `extname`, `isAbsolute`） | **已全面实装** |
 | `cap:url`         | WHATWG 规范 `URL`, `URLSearchParams`, `QueryParam`                     | **已全面实装** |
 | `cap:encoding`    | 极速 Base64 编解码器（Standard, URL-Safe, 无填充, 内存池, 统一解码）  | **已全面实装** |

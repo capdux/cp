@@ -1288,5 +1288,22 @@
     - **问题描述**：当返回类型为 `type` 的泛型函数形参仅在 `return struct { ... } / union { ... }` 类型定义内部被引用时，`cpc` 误判形参未在函数体内引用，生成多余的 `_ = T;`，导致 `zig ast-check` 报错 `pointless discard of function parameter`。
     - **修复方案与验证**：在 [`cpc/src/ast_visitor.rs`](file:///data/dev/cp/cpc/src/ast_visitor.rs) 中新增 `extract_words_from_str` 与 `find_referenced_vars_in_type`，使 `find_referenced_vars_in_expr` 与 `find_referenced_vars_in_stmt` 穿透扫描 `Expr::Zig`（如 `return struct { x: T }`）、类型注解与强转目标中的全部标识符，`repro_generic_struct_unused_param.cp` 不再生成多余的 `_ = T;` 并 100% 通过 `zig ast-check`。
 11. **阶段里程碑双轨规范同步与 Git 提交**：
+    - 同步更新 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)、[`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)、[`SESSION.md`](file:///data/dev/cp/SESSION.md)、[`CHANGELOG.md`](file:///data/dev/cp/CHANGELOG.md)、[`DEVLOG.md`](file:///data/dev/cp/DEVLOG.md)，并执行单次干净的 Git Commit（`d487aba`）。
+12. **启动双子智能体并行深挖吸收（用户指令：`你是否可以启动两个子智能体并行工作提高效率呢?`）**：
+    - 主智能体常驻守卫 [`cpc/`](file:///data/dev/cp/cpc/) 热修通道与后台守护任务 `task-26799`（`watch_task.py --creator bun_agy`）；
+    - **并行子智能体 1**（[`54c36637-a80e-40ea-bf78-74a6c7a7b19b`](conversation://54c36637-a80e-40ea-bf78-74a6c7a7b19b)）：
+      - **Batch 1（✅ 已完成并 4/4 100% PASS）**：完成 [`lib/sql/postgres.cp`](file:///data/dev/cp/lib/sql/postgres.cp)（`PostgresAuthChallenge`, `PostgresDataRow`, `PostgresCommandComplete`）、[`lib/sql/mysql.cp`](file:///data/dev/cp/lib/sql/mysql.cp)（`MySqlLenEnc`, `MySqlCapabilities`, `MySqlOkPacket`, `MySqlErrPacket`）、[`lib/redis/command.cp`](file:///data/dev/cp/lib/redis/command.cp)（`RedisCommand`, `RedisPipeline`）、[`lib/http/h2/hpack.cp`](file:///data/dev/cp/lib/http/h2/hpack.cp)（RFC 7541 `HpackCodec`）及测试 [`cap/test/test_sql_redis_hpack.cp`](file:///data/dev/cp/cap/test/test_sql_redis_hpack.cp)（4/4 PASS）；
+    - **并行子智能体 2**（[`e78c0e34-1699-4a31-a1c5-30a0ea342dc7`](conversation://e78c0e34-1699-4a31-a1c5-30a0ea342dc7)）：
+      - **Batch 1（✅ 已完成并 4/4 100% PASS）**：完成 [`lib/col/object_pool.cp`](file:///data/dev/cp/lib/col/object_pool.cp)（`ObjectPool<T, CAP>`）、[`lib/pack/zip.cp`](file:///data/dev/cp/lib/pack/zip.cp)（PKZIP Local/Central/EOCD 与 `ZipReader`）、[`lib/md/table.cp`](file:///data/dev/cp/lib/md/table.cp)（GFM `MdTable`）、[`lib/html/escape.cp`](file:///data/dev/cp/lib/html/escape.cp)（`HtmlEscape`）及测试 [`cap/test/test_col_pack_md_html.cp`](file:///data/dev/cp/cap/test/test_col_pack_md_html.cp)（4/4 PASS）；
+      - **Batch 2（✅ 已完成并 4/4 100% PASS）**：完成 [`lib/cli/table.cp`](file:///data/dev/cp/lib/cli/table.cp)（`CliTable`, `CliTableAlign`）、[`lib/watch/filter.cp`](file:///data/dev/cp/lib/watch/filter.cp)（`WatchFilter`, `DebounceTracker`）、[`lib/patch/myers.cp`](file:///data/dev/cp/lib/patch/myers.cp)（`LineDiffer`, `DiffOp`）、[`lib/bench/histogram.cp`](file:///data/dev/cp/lib/bench/histogram.cp)（`LatencyHistogram`）及测试 [`cap/test/test_cli_watch_patch_bench.cp`](file:///data/dev/cp/cap/test/test_cli_watch_patch_bench.cp)（4/4 PASS）。
+13. **实时接收并极速修复 `bun_agy` 第 6 项急修工单 `task-20261115-generic-return-struct-readonly-receiver` — ✅ 已修复并结单**：
+    - **复现文件**：`/data/dev/bun/temp/repro_generic_return_struct_readonly_receiver.cp`
+    - **问题描述**：在泛型函数返回匿名 `struct`（`return struct { ... }`）中，当实例方法采用 CP 只读接收者省略首参规范（`fn get(): T { return _.x; }`）时，`cpc` 在 codegen 输出 Zig 时方法体内生成了 `self.x`，但方法形参列表漏掉了 `self: @This()`，导致 `zig ast-check` 报 `use of undeclared identifier 'self'`。
+    - **修复方案与验证**：在 [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs) 的 `generate_zig_or_struct()` 中检测方法体是否引用 `_` / `this` / `self` 及结构体是否包含字段，不再盲目将省略 `_` 的只读实例方法强制覆盖为 `m.is_static = true`；`repro_generic_return_struct_readonly_receiver.cp` 转译输出 `pub fn get(self: @This()) T { return self.x; }` 并 100% 通过 `zig ast-check`，已完成结单并重启常驻监听守护进程 `task-26890`。
+14. **阶段里程碑双轨规范同步与 Git 提交**：
     - 同步更新 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)、[`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)、[`SESSION.md`](file:///data/dev/cp/SESSION.md)、[`CHANGELOG.md`](file:///data/dev/cp/CHANGELOG.md)、[`DEVLOG.md`](file:///data/dev/cp/DEVLOG.md)，并执行单次干净的 Git Commit。
+
+
+
+
 
