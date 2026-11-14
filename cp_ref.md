@@ -9782,7 +9782,11 @@ flowchart TD
 - **空切片字面量 `[]`**：`buf: []T = [];` 自动映射为底层空切片 `&.{}`，淘汰手写 `&.{}`；
 - **保留 `while (cond) : (step)`**：`while (i < _.len) : (i += 1)` 作为 CP 一等公民循环步进语法保留；
 - **运行时模式宏 `@is_nest`（编译参数 `--nest` / `-n`）**：全面替代旧版 `@is_beam` / `--beam`（向下兼容保留）；
-- **整文件全量错误一次性输出**：`cpc compile`、`cpc check` 与 `cpc check --json` 在单次运行中收集并输出整个文件的所有语法与语义错误及修复建议。
+- **整文件全量错误一次性输出与 AI Token 极速压缩自愈 (`--brief`, `--max`, `--fix`)**：
+  - `cpc check --brief` (`-b`) 与 `cpc check --json --brief`：按错误码 (`code`) 聚合去重，每类错误仅输出一次 `message`/`help`/`suggestion` 及 `lines: [...]` 行号数组，并自动识别与折叠解析恢复引发的连带错误（`cascade_of: <root_index>`），在 4700+ 行大文件上可将 60KB 报错压缩至 2KB 以内；
+  - `cpc check --max <N>`：限制输出的根因诊断条数（或 `--brief` 下的错误码分组数）；
+  - `cpc check --fix`（或 `cpc fix <file.cp>`）：为机械性语法错误（`E0101`..`E0104`, `E0115`, `E0116`, `E0118`, `E0119`..`E0123`, `E0126` 等）填充精确字节范围替换字段 `edits`（`{span_start, span_end, replacement}`），支持一键自动修复就地落盘；
+  - 针对误写 `if (let v = opt)` / `while (let v = it.next())` 场景，精准报出 `E0126` 并通过 `--fix` 自动重写为标准海象解包语法 `if (v := opt)` / `while (v := it.next())`。
 
 ---
 

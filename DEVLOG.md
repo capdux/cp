@@ -791,3 +791,14 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
 
 ### 2. `JSON` 零拷贝切片借用与 `smp_allocator`
 - 在 `cpc/src/codegen/expr.rs` 中将 `JSON.stringify`、`JSON.parse<T>` 与 `JSON.parse` 的分配器从 `page_allocator` 升级为 `std.heap.smp_allocator`，并在 `parseFromSliceLeaky` 中启用 `.allocate = .alloc_if_needed`，使无转义 JSON 字符串直接零拷贝借用输入切片。
+
+
+## 2026-11-14 `cpc` 诊断 Token 极速压缩 (`--brief` / `cascade_of`) 与 `--fix` 机械错误一键自愈体系
+
+### 1. 连锁错误 (`cascade_of`) 抑制与解析器边界加固
+- **根因分析**：在大型文件（如 1400 行的 `FrameworkRouter.cp` 与 4780 行的 `DevServer.cp`）中，单个未识别的语法结构（如 `.{ key: val }` 混写、`bun.OOM!void` 未消费 `void`、`error{ ... }` 集合定义）会导致解析器跳出当前块并产生数十个连带 `E0100`/`E0111`/`E0206` 错误，消耗大量上下文 Token；
+- **双重治理**：一方面在 `parser.rs` 中直接支持上述结构并优雅识别 `if (let v = opt)`（报 `E0126`）；另一方面在 `diagnostic.rs` 中实现 `mark_cascades()`，将紧随根因语法错误之后产生的恢复期 `E0100`/`E0111`/`E0206` 标记为 `cascade_of: Some(root_idx)` 并在默认输出与 `--brief` 模式中自动折叠。
+
+### 2. 机械错误 `edits` 填充与 `cpc check --fix` 自动修复闭环
+- 在 `DiagnosticEdit` 中同时提供 `{span_start, span_end, replacement}` 与向后兼容的 `{offset, delete_len, insert}`；
+- 为所有高频机械错误（`E0101`..`E0104`, `E0115`, `E0116`, `E0118`, `E0119`..`E0123`, `E0126`）生成精确到字节偏移的替换指令，并通过 `apply_fixes()` 按逆序无重叠方式支持最多 3 轮迭代自愈（处理同一行同时存在缺冒号 `E0116` 与前缀可选类型 `E0115` 等复合场景）。

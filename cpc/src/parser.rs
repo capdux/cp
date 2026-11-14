@@ -124,12 +124,16 @@ impl ParseError {
 
     pub fn to_json_report(&self, source: Option<&str>, path: Option<&Path>) -> String {
         let diags = self.to_diagnostics();
-        let json_diags = diags
+        let json_diags: Vec<_> = diags
             .iter()
             .map(|d| d.to_diagnostic_json(source, path))
             .collect();
+        let errors = json_diags.len();
+        let root_errors = json_diags.iter().filter(|d| d.cascade_of.is_none()).count();
         let report = crate::diagnostic::DiagnosticReport {
             status: "error".to_string(),
+            errors,
+            root_errors,
             diagnostics: json_diags,
         };
         serde_json::to_string(&report).unwrap_or_else(|_| "{}".to_string())
@@ -1468,6 +1472,13 @@ impl<'a> Parser<'a> {
                 } else {
                     format!("receiver is read-only in '{}'; omit '{}' from parameter list and access members via '_.'", ident.sym, first.ident.sym)
                 };
+                let replacement = if first.is_move {
+                    "move _"
+                } else if mutates_rec || first.is_mut {
+                    "*_"
+                } else {
+                    "_"
+                };
                 self.push_error(
                     Diagnostic::new(
                         "E0121",
@@ -1476,7 +1487,8 @@ impl<'a> Parser<'a> {
                     .with_span(first.span)
                     .with_cause("Zig 'self' and TypeScript 'this' are abolished in CP to enforce a single unified receiver syntax.")
                     .with_help("in CP, omit the receiver for read-only methods, use '*_' for mutable methods, or 'move _' for consuming methods, and access instance members via '_.field'.")
-                    .with_suggestion(suggestion),
+                    .with_suggestion(suggestion)
+                    .with_edit(first.span.start, first.span.end, replacement),
                 );
             }
         } else if let Some((bad_sym, bad_span)) = Self::block_find_ident_span(&body, "self")
@@ -1490,7 +1502,8 @@ impl<'a> Parser<'a> {
                 .with_span(bad_span)
                 .with_cause("Zig 'self' and TypeScript 'this' are abolished in CP.")
                 .with_help("in CP, access current instance members via '_.' instead of 'self.' or 'this.'.")
-                .with_suggestion(format!("replace '{}' with '_'", bad_sym)),
+                .with_suggestion(format!("replace '{}' with '_'", bad_sym))
+                .with_edit(bad_span.start, bad_span.end, "_"),
             );
         }
 
@@ -3584,7 +3597,9 @@ impl<'a> Parser<'a> {
                 }
                 if id.sym.ends_with("Error")
                     || id.sym.ends_with("Err")
+                    || id.sym.ends_with("OOM")
                     || id.sym.starts_with("error{")
+                    || self.peek() == Some(&Token::Void)
                 {
                     let ok_ty = self.parse_type()?;
                     return Ok(Type::ResultType {
@@ -4861,9 +4876,53 @@ impl<'a> Parser<'a> {
             ));
         }
         self.expect(Token::LParen)?;
+        let cond_start = self.peek_span().start;
         let mut capture = None;
         let mut is_ptr_capture = false;
-        if (self.peek() == Some(&Token::Star) || self.peek() == Some(&Token::Mut))
+        if self.peek() == Some(&Token::Let) || self.peek() == Some(&Token::Const) {
+            let (kw_tok, kw_span) = self.bump()?;
+            let kw_str = if kw_tok == Token::Const {
+                "const"
+            } else {
+                "let"
+            };
+            if self.peek() == Some(&Token::Star) || self.peek() == Some(&Token::Mut) {
+                self.bump()?;
+                is_ptr_capture = true;
+            }
+            let cap_id = self.parse_ident()?;
+            let assign_span = if self.peek() == Some(&Token::ColonAssign) {
+                self.bump()?.1
+            } else {
+                self.expect(Token::Assign)?
+            };
+            let replacement = format!("{}{} :=", if is_ptr_capture { "*" } else { "" }, cap_id.sym);
+            self.push_error(
+                Diagnostic::new(
+                    "E0126",
+                    format!(
+                        "'{}' is not used in 'while' optional/iterator unwrapping; use ':='",
+                        kw_str
+                    ),
+                )
+                .with_span(Span {
+                    start: kw_span.start,
+                    end: assign_span.end,
+                })
+                .with_cause(
+                    "in CP, conditional optional/iterator unwrapping uses Walrus ':=' syntax without 'let' or 'const'.",
+                )
+                .with_help(
+                    "use 'while (v := expr)' for value capture or 'while (*v := expr)' for pointer/mutable capture.",
+                )
+                .with_suggestion(format!(
+                    "replace '{} {} =' with '{}'",
+                    kw_str, cap_id.sym, replacement
+                ))
+                .with_edit(kw_span.start, assign_span.end, replacement),
+            );
+            capture = Some(cap_id);
+        } else if (self.peek() == Some(&Token::Star) || self.peek() == Some(&Token::Mut))
             && matches!(
                 self.peek_next(),
                 Some(Token::Ident(_)) | Some(Token::ErrorKw)
@@ -4880,7 +4939,7 @@ impl<'a> Parser<'a> {
             self.expect(Token::ColonAssign)?;
         }
         let test = self.parse_expr()?;
-        self.expect(Token::RParen)?;
+        let rparen_span = self.expect(Token::RParen)?;
         let mut continue_expr = None;
         if self.peek() == Some(&Token::Colon) {
             self.bump()?; // consume ':'
@@ -4900,20 +4959,37 @@ impl<'a> Parser<'a> {
             }
             let cap_id = self.parse_ident()?;
             let pipe_end = self.expect(Token::Pipe)?;
-            self.push_error(
-                Diagnostic::new("E0118", "Zig-style '|capture|' syntax is abolished in 'while' statement")
-                    .with_span(Span {
-                        start: pipe_start.start,
-                        end: pipe_end.end,
-                    })
-                    .with_cause("trailing '|v|' capture after parentheses is Zig syntax and is abolished in CP.")
-                    .with_help("in CP, optional/iterator unwrapping uses ':=' inside parentheses.")
-                    .with_suggestion(format!(
-                        "use 'while ({}{} := expr) {{ ... }}'",
+            let mut diag = Diagnostic::new(
+                "E0118",
+                "Zig-style '|capture|' syntax is abolished in 'while' statement",
+            )
+            .with_span(Span {
+                start: pipe_start.start,
+                end: pipe_end.end,
+            })
+            .with_cause(
+                "trailing '|v|' capture after parentheses is Zig syntax and is abolished in CP.",
+            )
+            .with_help("in CP, optional/iterator unwrapping uses ':=' inside parentheses.")
+            .with_suggestion(format!(
+                "use 'while ({}{} := expr) {{ ... }}'",
+                if is_ptr_capture { "*" } else { "" },
+                cap_id.sym
+            ));
+            if continue_expr.is_none() && rparen_span.start >= cond_start {
+                let cond_text = self.input[cond_start..rparen_span.start].trim();
+                diag = diag.with_edit(
+                    cond_start,
+                    pipe_end.end,
+                    format!(
+                        "{}{} := {})",
                         if is_ptr_capture { "*" } else { "" },
-                        cap_id.sym
-                    )),
-            );
+                        cap_id.sym,
+                        cond_text
+                    ),
+                );
+            }
+            self.push_error(diag);
             capture = Some(cap_id);
         }
         if continue_expr.is_none() && self.peek() == Some(&Token::Colon) {
@@ -5018,19 +5094,27 @@ impl<'a> Parser<'a> {
             let pat_end = self.peek_span().start;
             let raw_pat = self.input[pat_start..pat_end].trim().to_string();
             let pipe_end = self.expect(Token::Pipe)?;
-            self.push_error(
-                Diagnostic::new(
-                    "E0118",
-                    "Zig-style 'for (collection) |item|' syntax is abolished in CP",
-                )
-                .with_span(Span {
-                    start,
-                    end: pipe_end.end,
-                })
-                .with_cause("trailing '|item|' capture is Zig syntax and is abolished in CP.")
-                .with_help("in CP, 'for' loops use TypeScript-style 'for (item of collection)' inside parentheses.")
-                .with_suggestion(format!("use 'for ({} of {}) {{ ... }}'", raw_pat, raw_header)),
-            );
+            let mut diag = Diagnostic::new(
+                "E0118",
+                "Zig-style 'for (collection) |item|' syntax is abolished in CP",
+            )
+            .with_span(Span {
+                start,
+                end: pipe_end.end,
+            })
+            .with_cause("trailing '|item|' capture is Zig syntax and is abolished in CP.")
+            .with_help(
+                "in CP, 'for' loops use TypeScript-style 'for (item of collection)' inside parentheses.",
+            )
+            .with_suggestion(format!("use 'for ({} of {}) {{ ... }}'", raw_pat, raw_header));
+            if !raw_header.contains(',') && !raw_pat.contains(',') {
+                diag = diag.with_edit(
+                    header_start,
+                    pipe_end.end,
+                    format!("{} of {})", raw_pat, raw_header),
+                );
+            }
+            self.push_error(diag);
             let body = self.parse_stmt()?;
             return Ok(ForStmt {
                 span: Span { start, end: 0 },
@@ -5128,13 +5212,59 @@ impl<'a> Parser<'a> {
         };
         let mut capture = None;
         let mut is_ptr_capture = false;
+        let mut cond_range_for_pipe: Option<(usize, usize)> = None;
         let test = if self.peek() == Some(&Token::LParen) {
             self.bump()?;
+            let cond_start = self.peek_span().start;
             if matches!(self.peek(), Some(Token::Ident(id)) if id == "comptime") {
                 self.bump()?;
                 is_comptime = true;
             }
-            if (self.peek() == Some(&Token::Star) || self.peek() == Some(&Token::Mut))
+            if self.peek() == Some(&Token::Let) || self.peek() == Some(&Token::Const) {
+                let (kw_tok, kw_span) = self.bump()?;
+                let kw_str = if kw_tok == Token::Const {
+                    "const"
+                } else {
+                    "let"
+                };
+                if self.peek() == Some(&Token::Star) || self.peek() == Some(&Token::Mut) {
+                    self.bump()?;
+                    is_ptr_capture = true;
+                }
+                let cap_id = self.parse_ident()?;
+                let assign_span = if self.peek() == Some(&Token::ColonAssign) {
+                    self.bump()?.1
+                } else {
+                    self.expect(Token::Assign)?
+                };
+                let replacement =
+                    format!("{}{} :=", if is_ptr_capture { "*" } else { "" }, cap_id.sym);
+                self.push_error(
+                    Diagnostic::new(
+                        "E0126",
+                        format!(
+                            "'{}' is not used in 'if' optional/error unwrapping; use ':='",
+                            kw_str
+                        ),
+                    )
+                    .with_span(Span {
+                        start: kw_span.start,
+                        end: assign_span.end,
+                    })
+                    .with_cause(
+                        "in CP, conditional optional/error unwrapping uses Walrus ':=' syntax without 'let' or 'const'.",
+                    )
+                    .with_help(
+                        "use 'if (v := opt)' for value capture or 'if (*v := opt)' for pointer/mutable capture.",
+                    )
+                    .with_suggestion(format!(
+                        "replace '{} {} =' with '{}'",
+                        kw_str, cap_id.sym, replacement
+                    ))
+                    .with_edit(kw_span.start, assign_span.end, replacement),
+                );
+                capture = Some(cap_id);
+            } else if (self.peek() == Some(&Token::Star) || self.peek() == Some(&Token::Mut))
                 && matches!(
                     self.peek_next(),
                     Some(Token::Ident(_)) | Some(Token::ErrorKw)
@@ -5151,7 +5281,8 @@ impl<'a> Parser<'a> {
                 self.expect(Token::ColonAssign)?;
             }
             let t = self.parse_expr()?;
-            self.expect(Token::RParen)?;
+            let rparen_span = self.expect(Token::RParen)?;
+            cond_range_for_pipe = Some((cond_start, rparen_span.start));
             t
         } else {
             return Err(ParseError::Generic(
@@ -5167,20 +5298,39 @@ impl<'a> Parser<'a> {
             }
             let cap_id = self.parse_ident()?;
             let pipe_end = self.expect(Token::Pipe)?;
-            self.push_error(
-                Diagnostic::new("E0118", "Zig-style '|capture|' syntax is abolished in 'if' statement")
-                    .with_span(Span {
-                        start: pipe_start.start,
-                        end: pipe_end.end,
-                    })
-                    .with_cause("trailing '|v|' capture after parentheses is Zig syntax and is abolished in CP.")
-                    .with_help("in CP, optional/error unwrapping uses ':=' inside parentheses.")
-                    .with_suggestion(format!(
-                        "use 'if ({}{} := expr) {{ ... }}'",
-                        if is_ptr_capture { "*" } else { "" },
-                        cap_id.sym
-                    )),
-            );
+            let mut diag = Diagnostic::new(
+                "E0118",
+                "Zig-style '|capture|' syntax is abolished in 'if' statement",
+            )
+            .with_span(Span {
+                start: pipe_start.start,
+                end: pipe_end.end,
+            })
+            .with_cause(
+                "trailing '|v|' capture after parentheses is Zig syntax and is abolished in CP.",
+            )
+            .with_help("in CP, optional/error unwrapping uses ':=' inside parentheses.")
+            .with_suggestion(format!(
+                "use 'if ({}{} := expr) {{ ... }}'",
+                if is_ptr_capture { "*" } else { "" },
+                cap_id.sym
+            ));
+            if let Some((cond_start, cond_end)) = cond_range_for_pipe {
+                if cond_end >= cond_start {
+                    let cond_text = self.input[cond_start..cond_end].trim();
+                    diag = diag.with_edit(
+                        cond_start,
+                        pipe_end.end,
+                        format!(
+                            "{}{} := {})",
+                            if is_ptr_capture { "*" } else { "" },
+                            cap_id.sym,
+                            cond_text
+                        ),
+                    );
+                }
+            }
+            self.push_error(diag);
             capture = Some(cap_id);
         }
         let cons = self.parse_stmt()?;
@@ -7350,10 +7500,11 @@ impl<'a> Parser<'a> {
                     self.expect(Token::RParen)?;
                     return Ok(Expr::ErrWrap(Box::new(first)));
                 }
-                if (text == "packed" || text == "extern")
+                if ((text == "packed" || text == "extern")
                     && (self.peek() == Some(&Token::Struct)
                         || self.peek() == Some(&Token::Union)
-                        || self.peek() == Some(&Token::Enum))
+                        || self.peek() == Some(&Token::Enum)))
+                    || (text == "error" && self.peek() == Some(&Token::LBrace))
                 {
                     let start_idx = span.start;
                     let mut brace_depth: i32 = 0;
@@ -8974,7 +9125,7 @@ impl<'a> Parser<'a> {
                     is_spread: true,
                 });
             } else if is_dot_brace {
-                let is_keyed = if self.peek() == Some(&Token::Dot)
+                let is_dot_keyed = if self.peek() == Some(&Token::Dot)
                     && self.peek_next() != Some(&Token::LBrace)
                 {
                     let checkpoint = self.lexer.clone();
@@ -8993,9 +9144,27 @@ impl<'a> Parser<'a> {
                 } else {
                     false
                 };
+                let is_bare_keyed = if !is_dot_keyed {
+                    let checkpoint = self.lexer.clone();
+                    let peeked_checkpoint = self.peeked.clone();
+                    let peeked2_checkpoint = self.peeked2.clone();
+                    let has_key = if self.parse_ident().is_ok() {
+                        self.peek() == Some(&Token::Colon)
+                    } else {
+                        false
+                    };
+                    self.lexer = checkpoint;
+                    self.peeked = peeked_checkpoint;
+                    self.peeked2 = peeked2_checkpoint;
+                    has_key
+                } else {
+                    false
+                };
 
-                if is_keyed {
-                    self.bump()?;
+                if is_dot_keyed || is_bare_keyed {
+                    if is_dot_keyed {
+                        self.bump()?;
+                    }
                     let key = self.parse_ident()?;
                     self.bump()?;
                     let val = self.parse_expr()?;

@@ -1,12 +1,31 @@
 use crate::Span;
 use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, HashSet};
 use std::path::Path;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct DiagnosticEdit {
+    pub span_start: usize,
+    pub span_end: usize,
+    pub replacement: String,
     pub offset: usize,
     pub delete_len: usize,
     pub insert: String,
+}
+
+impl DiagnosticEdit {
+    pub fn new(span_start: usize, span_end: usize, replacement: impl Into<String>) -> Self {
+        let rep = replacement.into();
+        let delete_len = span_end.saturating_sub(span_start);
+        Self {
+            span_start,
+            span_end,
+            replacement: rep.clone(),
+            offset: span_start,
+            delete_len,
+            insert: rep,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -22,6 +41,8 @@ pub struct DiagnosticJson {
     pub cause: Option<String>,
     pub help: Option<String>,
     pub suggestion: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cascade_of: Option<usize>,
     pub edits: Vec<DiagnosticEdit>,
 }
 
@@ -34,6 +55,8 @@ impl DiagnosticJson {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct DiagnosticReport {
     pub status: String,
+    pub errors: usize,
+    pub root_errors: usize,
     pub diagnostics: Vec<DiagnosticJson>,
 }
 
@@ -41,21 +64,48 @@ impl DiagnosticReport {
     pub fn ok() -> Self {
         Self {
             status: "ok".to_string(),
+            errors: 0,
+            root_errors: 0,
             diagnostics: Vec::new(),
         }
     }
 
     pub fn ok_json() -> String {
-        serde_json::to_string(&Self::ok())
-            .unwrap_or_else(|_| "{\"status\":\"ok\",\"diagnostics\":[]}".to_string())
+        serde_json::to_string(&Self::ok()).unwrap_or_else(|_| {
+            "{\"status\":\"ok\",\"errors\":0,\"root_errors\":0,\"diagnostics\":[]}".to_string()
+        })
     }
 
     pub fn error(diag: DiagnosticJson) -> Self {
         Self {
             status: "error".to_string(),
+            errors: 1,
+            root_errors: if diag.cascade_of.is_none() { 1 } else { 0 },
             diagnostics: vec![diag],
         }
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct BriefGroup {
+    pub count: usize,
+    pub message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub help: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub suggestion: Option<String>,
+    pub lines: Vec<usize>,
+    pub fixable_count: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct BriefDiagnosticReport {
+    pub status: String,
+    pub errors: usize,
+    pub root_errors: usize,
+    pub cascades_hidden: usize,
+    pub fixable: usize,
+    pub groups: BTreeMap<String, BriefGroup>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -66,6 +116,8 @@ pub struct Diagnostic {
     pub cause: Option<String>,
     pub help: Option<String>,
     pub suggestion: Option<String>,
+    pub cascade_of: Option<usize>,
+    pub explicit_edits: Vec<DiagnosticEdit>,
 }
 
 impl Diagnostic {
@@ -77,6 +129,8 @@ impl Diagnostic {
             cause: None,
             help: None,
             suggestion: None,
+            cascade_of: None,
+            explicit_edits: Vec::new(),
         }
     }
 
@@ -100,7 +154,27 @@ impl Diagnostic {
         self
     }
 
+    pub fn with_edit(
+        mut self,
+        span_start: usize,
+        span_end: usize,
+        replacement: impl Into<String>,
+    ) -> Self {
+        self.explicit_edits
+            .push(DiagnosticEdit::new(span_start, span_end, replacement));
+        self
+    }
+
     pub fn render(&self, source_code: Option<&str>, file_path: Option<&Path>) -> String {
+        self.render_dedup(source_code, file_path, false)
+    }
+
+    pub fn render_dedup(
+        &self,
+        source_code: Option<&str>,
+        file_path: Option<&Path>,
+        seen_code_before: bool,
+    ) -> String {
         let mut out = String::new();
         out.push_str(&format!("error[{}]: {}\n", self.code, self.message));
 
@@ -146,11 +220,13 @@ impl Diagnostic {
             ));
         }
 
-        if let Some(cause) = &self.cause {
-            out.push_str(&format!("   = cause: {}\n", cause));
-        }
-        if let Some(help) = &self.help {
-            out.push_str(&format!("   = help: {}\n", help));
+        if !seen_code_before {
+            if let Some(cause) = &self.cause {
+                out.push_str(&format!("   = cause: {}\n", cause));
+            }
+            if let Some(help) = &self.help {
+                out.push_str(&format!("   = help: {}\n", help));
+            }
         }
         if let Some(suggestion) = &self.suggestion {
             out.push_str(&format!("   = suggestion: {}\n", suggestion));
@@ -194,6 +270,7 @@ impl Diagnostic {
             cause: self.cause.clone(),
             help: self.help.clone(),
             suggestion: self.suggestion.clone(),
+            cascade_of: self.cascade_of,
             edits,
         }
     }
@@ -205,6 +282,10 @@ impl Diagnostic {
     }
 
     pub fn generate_edits(&self, source_code: Option<&str>) -> Vec<DiagnosticEdit> {
+        if !self.explicit_edits.is_empty() {
+            return self.explicit_edits.clone();
+        }
+
         let mut edits = Vec::new();
 
         // 1. Missing parentheses in control flow statements (E0101)
@@ -218,27 +299,11 @@ impl Diagnostic {
             if let Some(span) = self.span {
                 if let Some(code) = source_code {
                     let (start, end) = find_condition_range(code, span.start);
-                    edits.push(DiagnosticEdit {
-                        offset: start,
-                        delete_len: 0,
-                        insert: "(".to_string(),
-                    });
-                    edits.push(DiagnosticEdit {
-                        offset: end,
-                        delete_len: 0,
-                        insert: ")".to_string(),
-                    });
+                    edits.push(DiagnosticEdit::new(start, start, "("));
+                    edits.push(DiagnosticEdit::new(end, end, ")"));
                 } else {
-                    edits.push(DiagnosticEdit {
-                        offset: span.start,
-                        delete_len: 0,
-                        insert: "(".to_string(),
-                    });
-                    edits.push(DiagnosticEdit {
-                        offset: span.end,
-                        delete_len: 0,
-                        insert: ")".to_string(),
-                    });
+                    edits.push(DiagnosticEdit::new(span.start, span.start, "("));
+                    edits.push(DiagnosticEdit::new(span.end, span.end, ")"));
                 }
                 return edits;
             }
@@ -252,16 +317,20 @@ impl Diagnostic {
                 .map_or(false, |s| s.contains("replace 'interface' with 'trait'"))
         {
             if let Some(span) = self.span {
-                edits.push(DiagnosticEdit {
-                    offset: span.start,
-                    delete_len: span.end.saturating_sub(span.start),
-                    insert: "trait".to_string(),
-                });
+                edits.push(DiagnosticEdit::new(span.start, span.end, "trait"));
                 return edits;
             }
         }
 
-        // 3. Abolished 'mut' in var decl (E0104) -> remove 'mut'
+        // 3. Abolished 'var' keyword (E0103) -> replace with 'let'
+        if self.code == "E0103" {
+            if let Some(span) = self.span {
+                edits.push(DiagnosticEdit::new(span.start, span.end, "let"));
+                return edits;
+            }
+        }
+
+        // 4. Abolished 'mut' in var decl (E0104) -> remove 'mut'
         if self.code == "E0104"
             || self
                 .suggestion
@@ -269,25 +338,129 @@ impl Diagnostic {
                 .map_or(false, |s| s.contains("remove 'mut'"))
         {
             if let Some(span) = self.span {
-                let del_len = if let Some(code) = source_code {
+                let del_end = if let Some(code) = source_code {
                     if code.as_bytes().get(span.end) == Some(&b' ') {
-                        span.end - span.start + 1
+                        span.end + 1
                     } else {
-                        span.end - span.start
+                        span.end
                     }
                 } else {
-                    span.end - span.start
+                    span.end
                 };
-                edits.push(DiagnosticEdit {
-                    offset: span.start,
-                    delete_len: del_len,
-                    insert: String::new(),
-                });
+                edits.push(DiagnosticEdit::new(span.start, del_end, ""));
                 return edits;
             }
         }
 
-        // 4. Parameter read-only borrow (E0201) -> add '*' for mutable borrow
+        // 5. Prefix '?T' optional type (E0115) -> postfix 'T?'
+        if self.code == "E0115" {
+            if let (Some(span), Some(code)) = (self.span, source_code) {
+                if span.end > span.start && span.end <= code.len() {
+                    let snippet = &code[span.start..span.end];
+                    if let Some(inner) = snippet.strip_prefix('?') {
+                        edits.push(DiagnosticEdit::new(
+                            span.start,
+                            span.end,
+                            format!("{}?", inner.trim()),
+                        ));
+                        return edits;
+                    }
+                }
+            }
+        }
+
+        // 6. Missing ':' before function return type (E0116) -> insert ': '
+        if self.code == "E0116" {
+            if let Some(span) = self.span {
+                let start = if let Some(code) = source_code {
+                    if span.start > 0 && code.as_bytes().get(span.start - 1) == Some(&b' ') {
+                        span.start - 1
+                    } else {
+                        span.start
+                    }
+                } else {
+                    span.start
+                };
+                edits.push(DiagnosticEdit::new(start, span.start, ": "));
+                return edits;
+            }
+        }
+
+        // 7. Abolished 'any' type (E0119) -> replace with 'auto'
+        if self.code == "E0119" {
+            if let Some(span) = self.span {
+                edits.push(DiagnosticEdit::new(span.start, span.end, "auto"));
+                return edits;
+            }
+        }
+
+        // 8. Abolished '_ = expr' discard (E0120) -> replace '_' with '*'
+        if self.code == "E0120" {
+            if let Some(span) = self.span {
+                edits.push(DiagnosticEdit::new(span.start, span.end, "*"));
+                return edits;
+            }
+        }
+
+        // 9. Explicit 'self'/'this' receiver (E0121) -> replace with '*_'
+        if self.code == "E0121" {
+            if let Some(span) = self.span {
+                edits.push(DiagnosticEdit::new(span.start, span.end, "*_"));
+                return edits;
+            }
+        }
+
+        // 10. Redundant ': void' return type (E0122) -> remove ': void'
+        if self.code == "E0122" {
+            if let Some(span) = self.span {
+                if let Some(code) = source_code {
+                    let bytes = code.as_bytes();
+                    let mut start = span.start.min(bytes.len());
+                    let mut p = start;
+                    while p > 0 && (bytes[p - 1] == b' ' || bytes[p - 1] == b'\t') {
+                        p -= 1;
+                    }
+                    if p > 0 && bytes[p - 1] == b':' {
+                        p -= 1;
+                        while p > 0 && (bytes[p - 1] == b' ' || bytes[p - 1] == b'\t') {
+                            p -= 1;
+                        }
+                        start = p;
+                    }
+                    edits.push(DiagnosticEdit::new(start, span.end, ""));
+                } else {
+                    edits.push(DiagnosticEdit::new(span.start, span.end, ""));
+                }
+                return edits;
+            }
+        }
+
+        // 11. Redundant read-only '_' receiver (E0123) -> remove '_' (and trailing ', ')
+        if self.code == "E0123" {
+            if let Some(span) = self.span {
+                if let Some(code) = source_code {
+                    let bytes = code.as_bytes();
+                    let mut end = span.end.min(bytes.len());
+                    let mut p = end;
+                    while p < bytes.len() && (bytes[p] == b' ' || bytes[p] == b'\t') {
+                        p += 1;
+                    }
+                    if p < bytes.len() && bytes[p] == b',' {
+                        p += 1;
+                        while p < bytes.len() && (bytes[p] == b' ' || bytes[p] == b'\t') {
+                            p += 1;
+                        }
+                        end = p;
+                    }
+                    edits.push(DiagnosticEdit::new(span.start, end, ""));
+                } else {
+                    edits.push(DiagnosticEdit::new(span.start, span.end, ""));
+                }
+                return edits;
+            }
+        }
+
+        // 12. Parameter read-only borrow (E0201) -> add '*' for mutable borrow
         if self.code == "E0201"
             && self
                 .suggestion
@@ -295,39 +468,27 @@ impl Diagnostic {
                 .map_or(false, |s| s.contains("Add '*'"))
         {
             if let Some(span) = self.span {
-                edits.push(DiagnosticEdit {
-                    offset: span.start,
-                    delete_len: 0,
-                    insert: "*".to_string(),
-                });
+                edits.push(DiagnosticEdit::new(span.start, span.start, "*"));
                 return edits;
             }
         }
 
-        // 5. Const reassignment (E0204) -> change 'const' to 'let'
+        // 13. Const reassignment (E0204) -> change 'const' to 'let'
         if self.code == "E0204" {
             if let (Some(code), Some(target)) = (source_code, self.message.split('\'').nth(1)) {
                 let pattern = format!("const {}", target);
                 if let Some(pos) = code.find(&pattern) {
-                    edits.push(DiagnosticEdit {
-                        offset: pos,
-                        delete_len: 5,
-                        insert: "let".to_string(),
-                    });
+                    edits.push(DiagnosticEdit::new(pos, pos + 5, "let"));
                     return edits;
                 }
             }
         }
 
-        // 6. Undefined symbol with standard library import suggestion (E0206)
+        // 14. Undefined symbol with standard library import suggestion (E0206)
         if self.code == "E0206" {
             if let Some(sug) = &self.suggestion {
                 if sug.starts_with("import { ") {
-                    edits.push(DiagnosticEdit {
-                        offset: 0,
-                        delete_len: 0,
-                        insert: format!("{}\n", sug),
-                    });
+                    edits.push(DiagnosticEdit::new(0, 0, format!("{}\n", sug)));
                     return edits;
                 }
             }
@@ -335,6 +496,178 @@ impl Diagnostic {
 
         edits
     }
+}
+
+/// Annotate cascade errors (`cascade_of: Some(root_index)`) caused by earlier parser recovery.
+pub fn mark_cascades(diags: &mut [Diagnostic], source_code: Option<&str>) {
+    let mut last_root_syntax: Option<(usize, usize)> = None; // (index, line)
+    for i in 0..diags.len() {
+        let line = match (source_code, diags[i].span) {
+            (Some(code), Some(span)) => find_line_and_col(code, span.start).0 + 1,
+            _ => 1,
+        };
+        let code_str = diags[i].code.as_str();
+        let is_generic_recovery = code_str == "E0100" || code_str == "E0111";
+        let is_specific_syntax = code_str.starts_with("E01") && !is_generic_recovery;
+
+        if is_specific_syntax {
+            last_root_syntax = Some((i, line));
+        } else if is_generic_recovery {
+            if let Some((root_idx, root_line)) = last_root_syntax {
+                if line >= root_line && line.saturating_sub(root_line) <= 60 {
+                    diags[i].cascade_of = Some(root_idx);
+                } else {
+                    last_root_syntax = Some((i, line));
+                }
+            } else {
+                last_root_syntax = Some((i, line));
+            }
+        } else if code_str == "E0206" {
+            if let Some((root_idx, root_line)) = last_root_syntax {
+                if line >= root_line && line.saturating_sub(root_line) <= 45 {
+                    diags[i].cascade_of = Some(root_idx);
+                }
+            }
+        }
+    }
+}
+
+/// Build a deduplicated brief report grouping root errors by code and folding cascades.
+pub fn build_brief_report(
+    diags: &[Diagnostic],
+    source_code: Option<&str>,
+    file_path: Option<&Path>,
+    max_groups: Option<usize>,
+) -> BriefDiagnosticReport {
+    use std::collections::BTreeMap;
+
+    let mut groups: BTreeMap<String, BriefGroup> = BTreeMap::new();
+    let mut total_errors = 0usize;
+    let mut root_errors = 0usize;
+    let mut cascades_hidden = 0usize;
+    let mut fixable = 0usize;
+
+    for diag in diags {
+        total_errors += 1;
+        let json_d = diag.to_diagnostic_json(source_code, file_path);
+        if !json_d.edits.is_empty() {
+            fixable += 1;
+        }
+        if diag.cascade_of.is_some() {
+            cascades_hidden += 1;
+            continue;
+        }
+        root_errors += 1;
+        let entry = groups
+            .entry(diag.code.clone())
+            .or_insert_with(|| BriefGroup {
+                count: 0,
+                message: diag.message.clone(),
+                help: diag.help.clone(),
+                suggestion: diag.suggestion.clone(),
+                lines: Vec::new(),
+                fixable_count: 0,
+            });
+        entry.count += 1;
+        if !entry.lines.contains(&json_d.line) {
+            entry.lines.push(json_d.line);
+        }
+        if !json_d.edits.is_empty() {
+            entry.fixable_count += 1;
+        }
+    }
+
+    if let Some(limit) = max_groups {
+        let keys_to_keep: Vec<String> = groups.keys().take(limit).cloned().collect();
+        groups.retain(|k, _| keys_to_keep.contains(k));
+    }
+
+    BriefDiagnosticReport {
+        status: if total_errors == 0 {
+            "ok".to_string()
+        } else {
+            "error".to_string()
+        },
+        errors: total_errors,
+        root_errors,
+        cascades_hidden,
+        fixable,
+        groups,
+    }
+}
+
+/// Render a human/AI compact text summary from a `BriefDiagnosticReport`.
+pub fn render_brief_text(report: &BriefDiagnosticReport, file_path: Option<&Path>) -> String {
+    let file_display = file_path
+        .map(|p| p.display().to_string())
+        .unwrap_or_else(|| "<input>".to_string());
+    if report.errors == 0 {
+        return format!("ok: {} (0 errors)\n", file_display);
+    }
+    let mut out = format!(
+        "{}: {} errors ({} root, {} cascades folded, {} auto-fixable with --fix)\n",
+        file_display, report.errors, report.root_errors, report.cascades_hidden, report.fixable
+    );
+    for (code, grp) in &report.groups {
+        let lines_str = grp
+            .lines
+            .iter()
+            .map(|l| l.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        out.push_str(&format!(
+            "  [{}] ({}x, lines: {}): {}\n",
+            code, grp.count, lines_str, grp.message
+        ));
+        if let Some(help) = &grp.help {
+            out.push_str(&format!("    = help: {}\n", help));
+        }
+        if let Some(sug) = &grp.suggestion {
+            out.push_str(&format!("    = suggestion: {}\n", sug));
+        }
+    }
+    out
+}
+
+/// Apply non-overlapping mechanical edits from diagnostics to `source_code`.
+/// Returns `(fixed_source, applied_edit_count)`.
+pub fn apply_fixes(source_code: &str, diags: &[Diagnostic]) -> (String, usize) {
+    let mut all_edits: Vec<DiagnosticEdit> = Vec::new();
+    for diag in diags {
+        if diag.cascade_of.is_some() {
+            continue;
+        }
+        let edits = diag.generate_edits(Some(source_code));
+        all_edits.extend(edits);
+    }
+
+    // Sort by span_start ascending, then span_end ascending
+    all_edits.sort_by(|a, b| {
+        a.span_start
+            .cmp(&b.span_start)
+            .then(a.span_end.cmp(&b.span_end))
+    });
+
+    // Filter out overlapping or out-of-bounds edits
+    let mut valid_edits: Vec<DiagnosticEdit> = Vec::new();
+    let mut last_end = 0usize;
+    for edit in all_edits {
+        if edit.span_start > edit.span_end || edit.span_end > source_code.len() {
+            continue;
+        }
+        if !valid_edits.is_empty() && edit.span_start < last_end {
+            continue;
+        }
+        last_end = edit.span_end;
+        valid_edits.push(edit);
+    }
+
+    let applied = valid_edits.len();
+    let mut result = source_code.to_string();
+    for edit in valid_edits.into_iter().rev() {
+        result.replace_range(edit.span_start..edit.span_end, &edit.replacement);
+    }
+    (result, applied)
 }
 
 pub fn find_condition_range(code: &str, span_start: usize) -> (usize, usize) {

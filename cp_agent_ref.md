@@ -1007,7 +1007,7 @@ switch (msg) {
 | **#3** | `fn foo(mut x: i32)` / `fn foo(let x: i32)` / `fn foo(*x: i32)` | `fn foo(x: *i32)` | 具名可变参数统一写 `v: *T`（编译器自动推导值拷贝或可变借用），严禁 `mut`/`let`/`*v: T` |
 | **#4** | `fn save(v: move User)` | `fn save(move v: User)` / `fn save(own v: *User)` | 所有权转移修饰符 `move`/`own` 必须置于参数名前，严禁置于 `:` 之后 |
 | **#5** | `_ = close(fd);` 或 `let _ = close(fd);` | `* = close(fd);` | `_` 是实例接收者保留字，抛弃返回值必须使用 `* = expr;` |
-| **#6** | `if (opt) \|v\|` / `while (opt) \|v\|` / `for (arr) \|v\|` | `if (v := opt)` / `while (v := opt)` / `for (v of arr)` | 严禁 Zig 竖线管道捕获 `\|v\|`，条件解包用 `:=`，循环用 `for ... of` |
+| **#6** | `if (opt) \|v\|` / `if (let v = opt)` / `for (arr) \|v\|` | `if (v := opt)` / `while (v := opt)` / `for (v of arr)` | 严禁 Zig 竖线捕获 `\|v\|`（`E0118`）与 `if (let v = ...)`（`E0126`），条件解包唯一合法语法为 Walrus `:=`，循环用 `for ... of` |
 | **#7** | `for (x of vec) { vec.push(1); }` | 先收集或使用索引，严禁遍历中增删 | `Loop-Borrow Lock`：遍历期间容器被借用锁死，禁止内部结构修改 |
 | **#8** | `fn next() ([]const u8)?` 或 `fn close(): void` | `fn next(): ([]const u8)?` / `fn close()` | 有返回值必须写 `: ReturnType`；无返回值一律省略 `: void`（含 `@c` 声明） |
 | **#9** | `fn f(): !usize` 或 `fn f(): ?[]const u8` | `fn f(): usize!` / `fn f(): ([]const u8)?` | 彻底废除前缀 `!T`/`?T`，确立类型主体居首的纯后缀体系 |

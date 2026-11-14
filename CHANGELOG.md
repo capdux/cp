@@ -554,3 +554,9 @@
   - 升级内置 `RegExp`（`emit_regex_prelude`）：内联 16 字节 `@Vector(16, u8)` SIMD 字面量前缀快跳与 `[2048]u8` 栈缓冲区零堆分配快速路径，修复正则字面量反斜杠转义；
   - 删除冗余空壳文件 `lib/regex.cp`；
   - 扩充 [`cap/test/test_syntax_orthogonality.cp`](file:///data/dev/cp/cap/test/test_syntax_orthogonality.cp) 第 5 项 `RegExp` 测试套件（5/5 PASS）。
+- [`cpc/src/diagnostic.rs`](file:///data/dev/cp/cpc/src/diagnostic.rs), [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs), [`cpc/src/main.rs`](file:///data/dev/cp/cpc/src/main.rs), [`scripts/sync_cpc.sh`](file:///data/dev/cp/scripts/sync_cpc.sh)（及 `cpc_dev/src/*` 镜像同步）:
+  - 新增 `cpc check --brief` (`-b`)、`cpc check --json --brief`、`cpc check --max <N>`、`cpc check --fix` 与 `cpc fix` 子命令；
+  - 新增 `mark_cascades` 连锁错误识别与 `cascade_of` 标注/折叠，以及 `errors`、`root_errors`、`cascades_hidden`、`fixable` 汇总计数；
+  - 为 `E0101`..`E0104`, `E0115`, `E0116`, `E0118`, `E0119`..`E0123`, `E0126` 填充 `{span_start, span_end, replacement}` 机械修复 `edits` 并实装 `apply_fixes` 多轮自动修复；
+  - 新增 `if (let v = opt)` / `while (let v = opt)` 解析恢复与 `E0126` 自动转 `:=` 诊断；
+  - 修复 `.{ key: val }`、`ErrorSet!void` 与 `error{ ... }` 解析，消除假性连锁报错。

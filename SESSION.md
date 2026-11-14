@@ -1188,3 +1188,38 @@
 
 ### 3. 阶段里程碑 Git 提交
 - **提交说明**：`perf(cpc,regex,json): inline 16-byte SIMD and [2048]u8 stack fast-path in RegExp, use zero-copy smp_allocator in JSON, remove empty lib/regex.cp`
+
+
+---
+
+## 2026-11-14（续 2） 评估并实装 `bun_agy` 提出的 `cpc` 诊断压缩、连锁错误折叠与 `--fix` 机械自动修复体系
+
+### 1. 收到用户指令
+1. 转发 `bun_agy` 在 `FrameworkRouter.cp` 与 `DevServer.cp` 上的实测反馈与 5 项建议：
+   - 加 `cpc check --json --brief`（或 `--max N`）按 `code` 去重；
+   - 标注并默认折叠连锁错误（`"cascade_of": <root_index>`）；
+   - 填充机械错误的 `edits` 字段（`{span_start, span_end, replacement}`）并增加 `cpc fix` 或 `cpc check --fix` 直接应用；
+   - 处理 `if (let v = opt)` / `while (let v = ...)` 报 `E0100 unexpected 'Let'` 的问题；
+   - 给聚合模式稳定的退出码和计数（`errors`, `root_errors`, `cascades_hidden`, `fixable`）。
+2. `你仔细评估下上述 bun agy 需求, 是否合理, 如合理, 需你实现`
+3. `汇报进度`
+
+### 2. 执行结果汇报
+1. **新增 `cpc check --brief` (`-b`)、`--max <N>` 与稳定计数/退出码（`cpc/src/diagnostic.rs` & `cpc/src/main.rs`）**：
+   - 支持 `cpc check --brief`（紧凑文本摘要）与 `cpc check --json --brief`（结构化聚合 JSON）；
+   - 按错误码 `code` 聚合去重，每类错误仅输出一次 `message`/`help`/`suggestion` 与 `lines: [...]` 行号列表；普通文本模式亦对重复出现的同错误码自动省略重复的 `= cause:` 与 `= help:`；
+   - 顶层输出稳定的统计字段：`errors`（总错误数）、`root_errors`（根因错误数）、`cascades_hidden`（已折叠连锁错误数）、`fixable`（可自动修复错误数），有错误稳定返回退出码 `1`，无错误返回 `0`。
+2. **连锁错误标注与折叠 (`cascade_of`) + 消除 `FrameworkRouter.cp` 解析器假性连锁报错（`cpc/src/parser.rs`）**：
+   - 实现 `mark_cascades()`：自动识别因前序语法错误恢复而引发的连带 `E0100`/`E0111`/`E0206` 错误并打上 `"cascade_of": <root_index>`，在默认文本与 `--brief` 模式下自动折叠；
+   - 修复 `FrameworkRouter.cp` 暴露的 3 处解析器恢复根因：
+     - `parse_object_fields` 支持 `.{ part: val }` 混写无前导点的键值对；
+     - `parse_type` 支持 `bun.OOM!void` 等命名错误集后跟 `!void` 的完整消费，消除遗留 `void` 触发的 `E0111`；
+     - `Token::ErrorKw` 支持 `error{ RouteCollision, OutOfMemory }` 达式捕获，消除假性 `E0206`；
+   - 实测效果：`/data/dev/bun/src/bake/FrameworkRouter.cp` 已实现 **0 错误通过 (`ok: 0 errors`)**；`/data/dev/bun/src/bake/DevServer.cp`（4,783 行）从旧版 60KB 报错压缩至 **35 行（约 2KB，109 个连锁错误自动折叠）**。
+3. **填充机械错误的 `edits` (`{span_start, span_end, replacement}`) 并实装 `cpc check --fix` / `cpc fix`**：
+   - 为 `E0101`（补括号）、`E0102`（`interface`->`trait`）、`E0103`（`var`->`let`）、`E0104`（移除 `mut`）、`E0115`（`?T`->`T?`）、`E0116`（补 `: `）、`E0118`（`if/while (e) |v|` -> `if/while (v := e)`，`for (arr) |v|` -> `for (v of arr)`）、`E0119`（`any`->`auto`）、`E0120`（`_ =` -> `* =`）、`E0121`（`self`/`this` -> `*_`/`_`）、`E0122`（移除 `: void`）、`E0123`（移除只读 `_`）、`E0126`（`if/while (let v = e)` -> `if/while (v := e)`）全量生成精确字节范围 `edits`；
+   - 新增 `cpc check --fix <file.cp>` 与子命令 `cpc fix <file.cp>`：自动按字节偏移逆序进行多轮无重叠就地修复，实测包含 7 类典型机械错误的夹具单条命令 **100% 自动修复并 `Check successful`**。
+4. **优雅解析与自愈 `if (let v = opt)` / `while (let v = ...)`（`E0126`）**：
+   - 在 `parse_if_stmt_with_comptime` 与 `parse_while_stmt` 中识别 `let`/`const` 解包写法，不再报 `E0100 unexpected 'Let'`，而是正常构建 `capture` AST 节点并给出专属 `E0126` 诊断与 `v :=` 自动修复 `edit`。
+5. **修复 `scripts/sync_cpc.sh` 部署命令**：
+   - 使用 `install -m 755` 替代 `cp`，彻底杜绝交互式 `cp -i` 或二进制占用导致的阻塞。

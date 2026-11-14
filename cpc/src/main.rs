@@ -61,6 +61,23 @@ enum Commands {
         input: PathBuf,
         #[arg(long)]
         json: bool,
+        /// Deduplicate diagnostics by error code and fold cascade errors
+        #[arg(short = 'b', long)]
+        brief: bool,
+        /// Maximum number of diagnostics (or groups in --brief mode) to display
+        #[arg(long)]
+        max: Option<usize>,
+        /// Automatically apply mechanical fixes in-place
+        #[arg(long)]
+        fix: bool,
+    },
+    /// Automatically apply mechanical syntax fixes in-place (alias for 'check --fix')
+    Fix {
+        input: PathBuf,
+        #[arg(long)]
+        json: bool,
+        #[arg(short = 'b', long)]
+        brief: bool,
     },
     /// Emit .d.cp type declarations
     EmitTypes {
@@ -112,9 +129,15 @@ fn compile_file(
 
     if !all_diags.is_empty() {
         let code = fs::read_to_string(input).ok();
+        cpc::diagnostic::mark_cascades(&mut all_diags, code.as_deref());
+        let mut seen_codes = HashSet::new();
         let rendered = all_diags
             .iter()
-            .map(|d| d.render(code.as_deref(), Some(input)))
+            .filter(|d| d.cascade_of.is_none())
+            .map(|d| {
+                let seen = !seen_codes.insert(d.code.clone());
+                d.render_dedup(code.as_deref(), Some(input), seen)
+            })
             .collect::<Vec<_>>()
             .join("\n");
         return Err(anyhow::anyhow!("{}", rendered));
@@ -204,59 +227,17 @@ fn run(cli: Cli) -> anyhow::Result<()> {
             } => {
                 compile_file(&input, output.as_ref(), &include, beam || nest, lib)?;
             }
-            Commands::Check { input, json } => {
-                let code = match fs::read_to_string(&input) {
-                    Ok(c) => c,
-                    Err(e) => {
-                        if json {
-                            let diag = cpc::diagnostic::Diagnostic::new(
-                                "E0001",
-                                format!("failed to read input file '{}': {}", input.display(), e),
-                            );
-                            println!("{}", diag.to_json(None, Some(&input)));
-                            std::process::exit(1);
-                        } else {
-                            return Err(anyhow::anyhow!("failed to read file {:?}: {}", input, e));
-                        }
-                    }
-                };
-                let mut parser = CPParser::new(&code);
-                let (mut module, mut all_diags) = parser.parse_module_with_recovery();
-                let mut analyzer = Analyzer::new();
-                let _ = analyzer.analyze_module(&mut module);
-                all_diags.extend(analyzer.get_diagnostics());
-                if !all_diags.is_empty() {
-                    if json {
-                        let diagnostics = all_diags
-                            .iter()
-                            .map(|d| d.to_diagnostic_json(Some(&code), Some(&input)))
-                            .collect();
-                        let report = cpc::diagnostic::DiagnosticReport {
-                            status: "error".to_string(),
-                            diagnostics,
-                        };
-                        println!(
-                            "{}",
-                            serde_json::to_string(&report).unwrap_or_else(|_| {
-                                "{\"status\":\"error\",\"diagnostics\":[]}".to_string()
-                            })
-                        );
-                        std::process::exit(1);
-                    } else {
-                        let rendered = all_diags
-                            .iter()
-                            .map(|d| d.render(Some(&code), Some(&input)))
-                            .collect::<Vec<_>>()
-                            .join("\n");
-                        return Err(anyhow::anyhow!("{}", rendered));
-                    }
-                }
-                if json {
-                    println!("{}", cpc::diagnostic::DiagnosticReport::ok_json());
-                    std::process::exit(0);
-                } else {
-                    println!("Check successful");
-                }
+            Commands::Check {
+                input,
+                json,
+                brief,
+                max,
+                fix,
+            } => {
+                run_check(&input, json, brief, max, fix)?;
+            }
+            Commands::Fix { input, json, brief } => {
+                run_check(&input, json, brief, None, true)?;
             }
             Commands::EmitTypes { input, output } => {
                 let code = fs::read_to_string(&input)?;
@@ -309,4 +290,138 @@ fn run(cli: Cli) -> anyhow::Result<()> {
         println!();
     }
     Ok(())
+}
+
+fn collect_diagnostics(code: &str) -> Vec<cpc::diagnostic::Diagnostic> {
+    let mut parser = CPParser::new(code);
+    let (mut module, mut all_diags) = parser.parse_module_with_recovery();
+    let mut analyzer = Analyzer::new();
+    let _ = analyzer.analyze_module(&mut module);
+    all_diags.extend(analyzer.get_diagnostics());
+    cpc::diagnostic::mark_cascades(&mut all_diags, Some(code));
+    all_diags
+}
+
+fn run_check(
+    input: &PathBuf,
+    json: bool,
+    brief: bool,
+    max: Option<usize>,
+    fix: bool,
+) -> anyhow::Result<()> {
+    let mut code = match fs::read_to_string(input) {
+        Ok(c) => c,
+        Err(e) => {
+            if json {
+                let diag = cpc::diagnostic::Diagnostic::new(
+                    "E0001",
+                    format!("failed to read input file '{}': {}", input.display(), e),
+                );
+                println!("{}", diag.to_json(None, Some(input)));
+                std::process::exit(1);
+            } else {
+                return Err(anyhow::anyhow!("failed to read file {:?}: {}", input, e));
+            }
+        }
+    };
+
+    let mut all_diags = collect_diagnostics(&code);
+    let mut total_fixed = 0usize;
+
+    if fix && !all_diags.is_empty() {
+        // Run up to 3 passes of mechanical non-overlapping edits
+        for _ in 0..3 {
+            let (fixed_code, applied) = cpc::diagnostic::apply_fixes(&code, &all_diags);
+            if applied == 0 || fixed_code == code {
+                break;
+            }
+            total_fixed += applied;
+            code = fixed_code;
+            all_diags = collect_diagnostics(&code);
+            if all_diags.is_empty() {
+                break;
+            }
+        }
+        if total_fixed > 0 {
+            fs::write(input, &code)?;
+            if !json {
+                eprintln!(
+                    "Applied {} mechanical fix(es) to {}",
+                    total_fixed,
+                    input.display()
+                );
+            }
+        }
+    }
+
+    if brief {
+        let report = cpc::diagnostic::build_brief_report(&all_diags, Some(&code), Some(input), max);
+        if json {
+            println!(
+                "{}",
+                serde_json::to_string(&report).unwrap_or_else(|_| "{}".to_string())
+            );
+        } else {
+            eprint!(
+                "{}",
+                cpc::diagnostic::render_brief_text(&report, Some(input))
+            );
+        }
+        if report.errors > 0 {
+            std::process::exit(1);
+        } else {
+            std::process::exit(0);
+        }
+    }
+
+    if !all_diags.is_empty() {
+        let total_errors = all_diags.len();
+        let root_errors = all_diags.iter().filter(|d| d.cascade_of.is_none()).count();
+        if json {
+            let mut diagnostics: Vec<_> = all_diags
+                .iter()
+                .map(|d| d.to_diagnostic_json(Some(&code), Some(input)))
+                .collect();
+            if let Some(limit) = max {
+                diagnostics.truncate(limit);
+            }
+            let report = cpc::diagnostic::DiagnosticReport {
+                status: "error".to_string(),
+                errors: total_errors,
+                root_errors,
+                diagnostics,
+            };
+            println!(
+                "{}",
+                serde_json::to_string(&report)
+                    .unwrap_or_else(|_| "{\"status\":\"error\",\"diagnostics\":[]}".to_string())
+            );
+            std::process::exit(1);
+        } else {
+            let mut seen_codes = HashSet::new();
+            let root_iter = all_diags.iter().filter(|d| d.cascade_of.is_none());
+            let items: Vec<_> = if let Some(limit) = max {
+                root_iter.take(limit).collect()
+            } else {
+                root_iter.collect()
+            };
+            let rendered = items
+                .into_iter()
+                .map(|d| {
+                    let seen = !seen_codes.insert(d.code.clone());
+                    d.render_dedup(Some(&code), Some(input), seen)
+                })
+                .collect::<Vec<_>>()
+                .join("\n");
+            return Err(anyhow::anyhow!("{}", rendered));
+        }
+    }
+
+    if json {
+        println!("{}", cpc::diagnostic::DiagnosticReport::ok_json());
+        std::process::exit(0);
+    } else {
+        println!("Check successful");
+        Ok(())
+    }
 }
