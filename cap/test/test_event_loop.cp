@@ -25,24 +25,22 @@ class CounterState {
     }
 }
 
-fn timer_callback(ctx: ?*anyopaque) void {
-    if (ctx) |p| {
+fn timer_callback(ctx: *anyopaque?)  {
+    if (p := ctx) {
         let state: *CounterState = @ptrCast(@alignCast(p));
         state.count += 1;
     }
 }
 
-fn deferred_callback(ctx: ?*anyopaque) void {
-    if (ctx) |p| {
+fn deferred_callback(ctx: *anyopaque?)  {
+    if (p := ctx) {
         let state: *CounterState = @ptrCast(@alignCast(p));
         state.count += 10;
     }
 }
 
-fn pipe_poll_callback(fd: i32, events: u32, ctx: ?*anyopaque) void {
-    _ = fd;
-    _ = events;
-    if (ctx) |p| {
+fn pipe_poll_callback(_fd: i32, _events: u32, ctx: *anyopaque?)  {
+    if (p := ctx) {
         let state: *CounterState = @ptrCast(@alignCast(p));
         state.count += 100;
     }
@@ -143,16 +141,16 @@ fn testPollEngine(): !void {
     let pe = PollEngine.init();
     expect_eq(pe.count(), 0);
 
-    var r_fd: i32 = 0;
-    var w_fd: i32 = 0;
+    let r_fd: i32 = 0;
+    let w_fd: i32 = 0;
     __zig__ {
         var fds: [2]i32 = undefined;
         _ = std.os.linux.pipe(&fds);
         r_fd = fds[0];
         w_fd = fds[1];
     }
-    defer _ = std.os.linux.close(r_fd);
-    defer _ = std.os.linux.close(w_fd);
+    defer * = std.os.linux.close(r_fd);
+    defer * = std.os.linux.close(w_fd);
 
     const state = CounterState.create();
     const state_ptr: *anyopaque = @ptrCast(state);
@@ -169,7 +167,7 @@ fn testPollEngine(): !void {
 
     // Write a byte to the pipe
     const data = "x";
-    _ = std.os.linux.write(w_fd, data.ptr, data.len);
+    * = std.os.linux.write(w_fd, data.ptr, data.len);
 
     // Poll -> should be readable and invoke callback
     const polled_ready = pe.poll(50);
@@ -190,26 +188,25 @@ fn testEventLoopIntegration(): !void {
     const state_ptr: *anyopaque = @ptrCast(state);
 
     // Schedule a deferred task and a short timer
-    _ = loop.deferTask(deferred_callback, state_ptr);
-    const t = loop.setTimeout(timer_callback, 10, state_ptr);
-    _ = t;
+    * = loop.deferTask(deferred_callback, state_ptr);
+    * = loop.setTimeout(timer_callback, 10, state_ptr);
 
     expect_eq(loop.hasActiveHandles(), true);
 
     // First tick with 0 timeout: should run deferred microtask (+10) but timer not yet expired
-    _ = loop.tick(0);
+    * = loop.tick(0);
     expect_eq(state.count, 10);
 
     // Sleep 15ms and tick again: timer should fire (+1)
     TimerHeap.sleepMs(15);
-    _ = loop.tick(0);
+    * = loop.tick(0);
     expect_eq(state.count, 11);
 
     // All tasks completed
     expect_eq(loop.hasActiveHandles(), false);
 }
 
-fn main(): void {
+fn main() {
     test("Intrusive Binary Min-Heap Timer Scheduling", () => {
         testTimerHeap()?;
     });

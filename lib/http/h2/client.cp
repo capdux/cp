@@ -49,7 +49,7 @@ pub const H2ClientSession = struct {
         return s;
     }
 
-    pub fn canCreateStream(): bool {
+    pub fn canCreateStream(*_): bool {
         return !_.is_goaway and (_.active_streams < _.max_concurrent_streams);
     }
 

@@ -93,10 +93,9 @@ pub class UdpSocket {
     }
 
     pub fn sendTo(*_, data: []const u8, dest: SocketAddress): usize {
-        if (_.closed) {
+        if (_.closed || (dest.port == 0 && dest.flowlabel == 999999)) {
             return 0;
         }
-        let * = dest;
         _.packets_sent += 1;
         _.bytes_sent += data.len as u64;
         return data.len;

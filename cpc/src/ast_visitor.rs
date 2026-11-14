@@ -1,6 +1,85 @@
 use crate::ast::*;
 use std::collections::HashSet;
 
+pub fn extract_words_from_str(s: &str, vars: &mut HashSet<String>) {
+    let mut cur = String::new();
+    for ch in s.chars() {
+        if ch.is_ascii_alphanumeric() || ch == '_' {
+            cur.push(ch);
+        } else {
+            if !cur.is_empty() {
+                if !cur.chars().next().unwrap().is_ascii_digit() {
+                    vars.insert(std::mem::take(&mut cur));
+                } else {
+                    cur.clear();
+                }
+            }
+        }
+    }
+    if !cur.is_empty() && !cur.chars().next().unwrap().is_ascii_digit() {
+        vars.insert(cur);
+    }
+}
+
+pub fn find_referenced_vars_in_type(ty: &Type, vars: &mut HashSet<String>) {
+    match ty {
+        Type::Ref(id) | Type::BoxDyn(id) | Type::BareDyn(id) => {
+            extract_words_from_str(&id.sym, vars);
+        }
+        Type::Array(inner)
+        | Type::Optional(inner)
+        | Type::ErrorUnion(inner)
+        | Type::Set(inner)
+        | Type::Shared(inner)
+        | Type::SentinelPtr(inner, _)
+        | Type::SentinelSlice(inner, _) => find_referenced_vars_in_type(inner, vars),
+        Type::FixedArray(inner, size) => {
+            find_referenced_vars_in_type(inner, vars);
+            match size {
+                ArraySize::Ident(id) => {
+                    extract_words_from_str(&id.sym, vars);
+                }
+                ArraySize::Expr(s) => {
+                    extract_words_from_str(s, vars);
+                }
+                _ => {}
+            }
+        }
+        Type::BorrowType { inner, .. }
+        | Type::RawPtr { inner, .. }
+        | Type::ManyRawPtr(inner)
+        | Type::CPtr(inner)
+        | Type::Aligned { inner, .. } => find_referenced_vars_in_type(inner, vars),
+        Type::ResultType { ok, .. } => find_referenced_vars_in_type(ok, vars),
+        Type::Map(k, v) | Type::Dict(k, v) => {
+            find_referenced_vars_in_type(k, vars);
+            find_referenced_vars_in_type(v, vars);
+        }
+        Type::Tuple(elems) => {
+            for e in elems {
+                find_referenced_vars_in_type(e, vars);
+            }
+        }
+        Type::Object(fields) => {
+            for f in fields {
+                find_referenced_vars_in_type(&f.ty, vars);
+            }
+        }
+        Type::Fn(params, ret) | Type::CFn(params, ret) => {
+            for p in params {
+                find_referenced_vars_in_type(p, vars);
+            }
+            find_referenced_vars_in_type(ret, vars);
+        }
+        Type::Conditional(cond, cons, alt) => {
+            find_referenced_vars_in_expr(cond, vars);
+            find_referenced_vars_in_type(cons, vars);
+            find_referenced_vars_in_type(alt, vars);
+        }
+        _ => {}
+    }
+}
+
 pub fn find_referenced_vars_in_expr(expr: &Expr, vars: &mut HashSet<String>) {
     match expr {
         Expr::Ident(i) => {
@@ -126,7 +205,9 @@ pub fn find_referenced_vars_in_expr(expr: &Expr, vars: &mut HashSet<String>) {
             ArrowBody::Expr(e) => find_referenced_vars_in_expr(e, vars),
             ArrowBody::Block(b) => find_referenced_vars_in_block(b, vars),
         },
-        Expr::ReflectType { .. } | Expr::TypeVal { .. } => {}
+        Expr::ReflectType { target_ty, .. } | Expr::TypeVal { ty: target_ty, .. } => {
+            find_referenced_vars_in_type(target_ty, vars);
+        }
         Expr::ReflectOf { expr, .. } => {
             find_referenced_vars_in_expr(expr, vars);
         }
@@ -134,7 +215,15 @@ pub fn find_referenced_vars_in_expr(expr: &Expr, vars: &mut HashSet<String>) {
             find_referenced_vars_in_expr(start, vars);
             find_referenced_vars_in_expr(end, vars);
         }
-        Expr::Cast { expr, .. } => find_referenced_vars_in_expr(expr, vars),
+        Expr::Cast {
+            expr, target_ty, ..
+        } => {
+            find_referenced_vars_in_expr(expr, vars);
+            find_referenced_vars_in_type(target_ty, vars);
+        }
+        Expr::Zig(z) => {
+            extract_words_from_str(&z.code, vars);
+        }
         Expr::Deref(d) | Expr::Unwrap(d) | Expr::BitNot(d) | Expr::ComptimeExpr(d) => {
             find_referenced_vars_in_expr(d, vars)
         }
@@ -171,6 +260,9 @@ pub fn find_referenced_vars_in_stmt(stmt: &Stmt, vars: &mut HashSet<String>) {
     match stmt {
         Stmt::Expr(e) => find_referenced_vars_in_expr(e, vars),
         Stmt::Var(v) => {
+            if let Some(ty) = &v.ty {
+                find_referenced_vars_in_type(ty, vars);
+            }
             if let Some(init) = &v.init {
                 find_referenced_vars_in_expr(init, vars);
             }

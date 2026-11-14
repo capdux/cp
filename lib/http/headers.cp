@@ -1,29 +1,29 @@
 // lib/http/headers.cp
 // High-performance case-insensitive HTTP Headers collection
 
-pub const HeaderEntry = struct {
-    name: []const u8,
-    value: []const u8,
-};
+pub struct HeaderEntry {
+    pub name: []const u8 = "";
+    pub value: []const u8 = "";
+}
 
-pub const Headers = struct {
-    entries: [32]HeaderEntry = undefined,
-    dynamic_entries: ([]HeaderEntry)? = null,
-    len: usize = 0,
-    allocator: std.mem.Allocator = undefined,
+pub struct Headers {
+    pub entries: [32]HeaderEntry = undefined;
+    pub dynamic_entries: ([]HeaderEntry)? = null;
+    pub len: usize = 0;
+    pub allocator: std.mem.Allocator = undefined;
 
     pub fn init(allocator: std.mem.Allocator): Headers {
         return Headers{
-            .entries = undefined,
-            .dynamic_entries = null,
-            .len = 0,
-            .allocator = allocator,
+            entries: undefined,
+            dynamic_entries: null,
+            len: 0,
+            allocator: allocator,
         };
     }
 
     pub fn deinit(*_) {
-        if (dyn := _.dynamic_entries) {
-            _.allocator.free(dyn);
+        if (dynamic_buf := _.dynamic_entries) {
+            _.allocator.free(dynamic_buf);
             _.dynamic_entries = null;
         }
         _.len = 0;
@@ -35,11 +35,17 @@ pub const Headers = struct {
 
     pub fn get(*_, name: []const u8): ([]const u8)? {
         let i: usize = 0;
-        while (i < _.len) : (i += 1) {
-            const entry = if (dyn := _.dynamic_entries) dyn[i] else _.entries[i];
-            if (std.ascii.eqlIgnoreCase(entry.name, name)) {
-                return entry.value;
+        while (i < _.len) {
+            if (dynamic_buf := _.dynamic_entries) {
+                if (std.ascii.eqlIgnoreCase(dynamic_buf[i].name, name)) {
+                    return dynamic_buf[i].value;
+                }
+            } else {
+                if (std.ascii.eqlIgnoreCase(_.entries[i].name, name)) {
+                    return _.entries[i].value;
+                }
             }
+            i += 1;
         }
         return null;
     }
@@ -50,10 +56,11 @@ pub const Headers = struct {
 
     pub fn set(*_, name: []const u8, value: []const u8) {
         let i: usize = 0;
-        while (i < _.len) : (i += 1) {
-            if (dyn := _.dynamic_entries) {
-                if (std.ascii.eqlIgnoreCase(dyn[i].name, name)) {
-                    dyn[i].value = value;
+        while (i < _.len) {
+            if (dynamic_buf_opt := _.dynamic_entries) {
+                let dynamic_buf = dynamic_buf_opt;
+                if (std.ascii.eqlIgnoreCase(dynamic_buf[i].name, name)) {
+                    dynamic_buf[i].value = value;
                     return;
                 }
             } else {
@@ -62,32 +69,35 @@ pub const Headers = struct {
                     return;
                 }
             }
+            i += 1;
         }
         _.append(name, value);
     }
 
     pub fn append(*_, name: []const u8, value: []const u8) {
-        if (_.len < 32 and _.dynamic_entries == null) {
-            _.entries[_.len] = HeaderEntry{ .name = name, .value = value };
+        if (_.len < 32 && _.dynamic_entries == null) {
+            _.entries[_.len] = HeaderEntry{ name: name, value: value };
             _.len += 1;
             return;
         }
         if (_.dynamic_entries == null) {
-            const new_slice = _.allocator.alloc(HeaderEntry, 64) catch return;
+            let new_slice = _.allocator.alloc(HeaderEntry, 64) catch return;
             let i: usize = 0;
-            while (i < _.len) : (i += 1) {
+            while (i < _.len) {
                 new_slice[i] = _.entries[i];
+                i += 1;
             }
-            new_slice[_.len] = HeaderEntry{ .name = name, .value = value };
+            new_slice[_.len] = HeaderEntry{ name: name, value: value };
             _.dynamic_entries = new_slice;
             _.len += 1;
-        } else if (dyn := _.dynamic_entries) {
-            if (_.len < dyn.len) {
-                dyn[_.len] = HeaderEntry{ .name = name, .value = value };
+        } else if (dynamic_buf_opt := _.dynamic_entries) {
+            let dynamic_buf = dynamic_buf_opt;
+            if (_.len < dynamic_buf.len) {
+                dynamic_buf[_.len] = HeaderEntry{ name: name, value: value };
                 _.len += 1;
             } else {
-                const new_slice = _.allocator.realloc(dyn, dyn.len * 2) catch return;
-                new_slice[_.len] = HeaderEntry{ .name = name, .value = value };
+                let new_slice = _.allocator.realloc(dynamic_buf, dynamic_buf.len * 2) catch return;
+                new_slice[_.len] = HeaderEntry{ name: name, value: value };
                 _.dynamic_entries = new_slice;
                 _.len += 1;
             }
@@ -97,19 +107,23 @@ pub const Headers = struct {
     pub fn delete(*_, name: []const u8) {
         let i: usize = 0;
         while (i < _.len) {
-            const matches = if (dyn := _.dynamic_entries)
-                std.ascii.eqlIgnoreCase(dyn[i].name, name)
-            else
-                std.ascii.eqlIgnoreCase(_.entries[i].name, name);
+            let matches = false;
+            if (dynamic_buf := _.dynamic_entries) {
+                matches = std.ascii.eqlIgnoreCase(dynamic_buf[i].name, name);
+            } else {
+                matches = std.ascii.eqlIgnoreCase(_.entries[i].name, name);
+            }
 
             if (matches) {
                 let j = i;
-                while (j + 1 < _.len) : (j += 1) {
-                    if (dyn := _.dynamic_entries) {
-                        dyn[j] = dyn[j + 1];
+                while (j + 1 < _.len) {
+                    if (dynamic_buf_opt := _.dynamic_entries) {
+                        let dynamic_buf = dynamic_buf_opt;
+                        dynamic_buf[j] = dynamic_buf[j + 1];
                     } else {
                         _.entries[j] = _.entries[j + 1];
                     }
+                    j += 1;
                 }
                 _.len -= 1;
             } else {
@@ -119,10 +133,12 @@ pub const Headers = struct {
     }
 
     pub fn at(*_, index: usize): HeaderEntry? {
-        if (index >= _.len) return null;
-        if (dyn := _.dynamic_entries) {
-            return dyn[index];
+        if (index >= _.len) {
+            return null;
+        }
+        if (dynamic_buf := _.dynamic_entries) {
+            return dynamic_buf[index];
         }
         return _.entries[index];
     }
-};
+}

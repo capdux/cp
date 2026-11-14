@@ -69,7 +69,13 @@ pub fn resolve_source_path(
 ) -> Option<PathBuf> {
     let mut search_source = source.to_string();
     let is_cap_builtin = if let Some(stripped) = search_source.strip_prefix("cap:") {
-        search_source = stripped.to_string();
+        search_source = match stripped {
+            "col" | "collections" => "col".to_string(),
+            "event" | "event_loop" | "events" => "event".to_string(),
+            "conf" | "dotenv" | "ini" => "conf".to_string(),
+            "pack" | "compress" => "pack".to_string(),
+            other => other.to_string(),
+        };
         true
     } else {
         false
@@ -97,6 +103,18 @@ pub fn resolve_source_path(
     {
         let base_path = path.parent().unwrap().join(&search_source);
         resolved_path = resolve_file_or_dir(&base_path);
+
+        if resolved_path.is_none() {
+            let remapped = search_source
+                .replace("lib/event_loop", "lib/event")
+                .replace("lib/collections", "lib/col")
+                .replace("lib/compress", "lib/pack")
+                .replace("lib/events.cp", "lib/event/emitter.cp");
+            if remapped != search_source {
+                let remapped_base = path.parent().unwrap().join(&remapped);
+                resolved_path = resolve_file_or_dir(&remapped_base);
+            }
+        }
 
         if resolved_path.is_none() {
             for inc in include_paths {

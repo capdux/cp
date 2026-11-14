@@ -46,7 +46,7 @@ fn testIniParsing(): !void {
     expect_eq(std.mem.eql(u8, conf.getOr("server", "workers", "4"), "4"), true);
 }
 
-fn main(): void {
+fn main() {
     test("DotEnv configuration parsing and variable retrieval", () => {
         try testDotEnvParsing();
     });

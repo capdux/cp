@@ -5903,30 +5903,44 @@ export class SocketContext<Handler> {
 
 | 标准库协议通道    | 核心导出功能                                                           | 状态           |
 | :---------------- | :--------------------------------------------------------------------- | :------------- |
-| `cap:collections` | `VecDeque`, `BinaryHeap`, `BTreeMap`, `BTreeSet`, `HashMap`, `HashSet` | **已全面实装** |
+| `cap:col`（兼容 `cap:collections`） | `BoundedArray`, `BabyList`, `LinearFifo`, `HiveArray`, `BitSet256`, `StaticStringMap`, `VecDeque`, `BinaryHeap`, `BTreeMap`, `BTreeSet`, `HashMap`, `HashSet` | **已全面实装** |
+| `cap:event`（兼容 `cap:event_loop` / `cap:events`） | 统一事件循环与事件总线：`EventLoop`, `Timer`, `TimerHeap`, `ConcurrentTask`, `ConcurrentQueue`, `DeferredTaskQueue`, `PollEngine`, `EventEmitter` | **已全面实装** |
+| `cap:conf`（兼容 `cap:dotenv` / `cap:ini`） | 统一配置中心：`DotEnv` (`.env`)、`Ini` / `IniParser`、`TOML` (`TomlDoc`)、`YAML` (`YamlDoc`)、`JSON5` (`Json5Scanner`) | **已全面实装** |
+| `cap:pack`（兼容 `cap:compress`） | 流式压缩与归档打包：`Zlib`, `Deflate`, `Zstd`, `Brotli`, `CompressionFormat`, `Crc32`, `Adler32`, `GzipHeader`, `RleCodec`, `TarHeader`, `TarReader` | **已全面实装** |
+| `cap:redis`       | Redis / Valkey RESP2 & RESP3 零拷贝协议帧解析与编码器（`RESPType`, `RESPFrame`, `RESPParser`, `RESPEncoder`） | **已全面实装** |
+| `cap:cli`         | 命令行标志与参数解析器（`CliArgs`, `CliOption`）、ANSI 转义剥离（`AnsiColor`）与终端进度条（`ProgressBar`） | **已全面实装** |
+| `cap:watch`       | 跨平台文件系统监控引擎（`FileWatcher`, `WatchEvent`, `WatchEventKind`, `WatchMask`） | **已全面实装** |
+| `cap:patch`       | Unified Diff 解析、Hunk 行级统计与补丁渲染应用（`UnifiedDiff`, `UnifiedHunkHeader`, `HunkRange`） | **已全面实装** |
+| `cap:bench`       | 纳秒级硬件单调计时器（`HwTimer`, `Stopwatch`）与吞吐率/分位数统计（`BenchStats`：P50/P95/P99） | **已全面实装** |
+| `cap:elf`         | 可执行文件魔数嗅探与 ELF64 / Mach-O / PE 头部解析（`ExeFormat`, `Elf64HeaderInfo`, `ElfInspector`） | **已全面实装** |
+| `cap:md`          | CommonMark / GFM 解析器与 HTML / ANSI 终端渲染器（`Markdown.renderHtml`, `Markdown.renderAnsi`） | **已全面实装** |
+| `cap:html`        | CSS 选择器解析（`CssSelector`）与流式 HTML 标签重写器（`HtmlRewriter`） | **已全面实装** |
+| `cap:ffi`         | 跨平台动态库加载（`DynLib`）、FFI 调用签名布局（`FFISignature`）与 TinyCC 内存编译声明（`TccOutputFormat`） | **已全面实装** |
+| `cap:sql`         | 统一 SQL 协议栈：参数化预编译语句（`SqlStatement`）、PostgreSQL v3 Wire 帧（`PostgresWire`）与 MySQL 包头编解码（`MySqlPacketHeader`） | **已全面实装** |
 | `cap:io`          | `Reader`, `Writer`, `Closer`, `Seeker`, `BufferReader`, `BufferWriter`, `BufferedReader`, `BufferedWriter`, `copyStream`, `PipeReader`, `PipeWriter`, `MaxBuf`, `Pipe`, `print`, `console` | **已全面实装** |
 | `cap:stream`      | 工业级零拷贝流式 I/O 管道（重导出 `cap:io` 中的统一流接口）             | **已全面实装** |
 | `cap:sync`        | `Futex`, `Mutex`, `RwLock`, `Condition`, `WaitGroup`, `Channel`, `MpmcQueue`, `UnboundedQueue`, `ConcurrentMap`, `ArcSlice`, `Wyhash`, `Atomic`, `Shared` | **已全面实装** |
 | `cap:json` / `cap:serde` | 零拷贝 JSON 流式解析器 `JsonParser`、`JsonValue`、内存池 `JsonBufferPool`、`@json_parse` / `@json_stringify` | **已全面实装** |
 | `cap:router`      | 超高性能 Radix-Tree 路由引擎 `Router<T>`, `RadixNode<T>`, `ParamMap`, `RouteMatch` | **已全面实装** |
-| `cap:http`        | `Method`, `Headers`, `ETag`, `MimeType`, `Request`, `Response`, `Server`, `fetch`, `serve`, `json` | **已全面实装** |
+| `cap:http`        | `Method`, `Headers`, `ETag`, `MimeType`, `CookieMap`, `FormData`, `Request`, `Response`, `HttpServer`, `HTTPClient`, `H2ClientSession`, `H3ClientSession`, `fetch`, `serve`, `json` | **已全面实装** |
 | `cap:path`        | 跨平台路径计算 `Path`, `PosixPath`, `WindowsPath`（`join`, `resolve`, `normalize`, `dirname`, `basename`, `extname`, `isAbsolute`） | **已全面实装** |
 | `cap:url`         | WHATWG 规范 `URL`, `URLSearchParams`, `QueryParam`                     | **已全面实装** |
 | `cap:encoding`    | 极速 Base64 编解码器（Standard, URL-Safe, 无填充, 内存池, 统一解码）  | **已全面实装** |
 | `cap:glob`        | Unix Glob 模式匹配（递归 `**`、单级 `*`、`?`、字符集 `[a-z]`、`!`、`hasMagic`） | **已全面实装** |
 | `cap:semver`      | Semver 2.0 版本解析、全语义比较排序与范围匹配（`^`, `~`, `>=`, `<=`, `-`, `||`, `*`） | **已全面实装** |
-| `cap:dotenv`      | 环境变量 `.env` 极速加载器（支持单/双引号、转义符、内联注释、`export` 语法） | **已全面实装** |
-| `cap:ini`         | 工业级 INI 配置文件解析器（多 Section 划分、全局/分段键值提取、默认值回退） | **已全面实装** |
 | `cap:which`       | 跨平台可执行二进制定位器（支持 `PATH` 环境变量遍历、相对/绝对路径解析与执行权限校验） | **已全面实装** |
 | `cap:ws`          | RFC 6455 现代 WebSocket 协议帧处理（Opcode、打包分片、4 字节极速异或掩码、控制帧） | **已全面实装** |
-| `cap:crypto`      | 工业级密码学体系：CSPRNG、UUID v4、散列哈希（SHA256/512/1/MD5/流式）、HMAC 消息认证、PBKDF2 密钥派生、AEAD 现代对称加密（AES-256-GCM、ChaCha20-Poly1305） | **已全面实装** |
-| `cap:event_loop`  | 工业级统一事件循环体系：侵入式二叉最小堆定时器、16 字节无锁跨线程任务、微任务防风暴去重、POSIX poll 描述符监听与调度引擎 | **已全面实装** |
+| `cap:crypto`      | 工业级密码学体系：CSPRNG、UUID v4、散列哈希（SHA256/512/1/MD5/流式）、HMAC、PBKDF2、AEAD 对称加密（AES-256-GCM、ChaCha20-Poly1305）、BoringSSL X.509 校验 | **已全面实装** |
 | `cap:security`    | 安全防护与防跨站请求伪造子系统：CSPRNG 随机 Nonce、HMAC-SHA256 签名与篡改校验、恒定时间防时序攻击比对（`constantTimeEql`）、多格式编解码（Base64Url, Base64, Hex） | **已全面实装** |
-| `cap:mem`         | `Arena`, `SharedTensor`, 全局共享堆, 原子引用计数                      | **已全面实装** |
+| `cap:mem`         | `Arena`, `SharedTensor`, `Cow`, `CowSlice`, `TaggedPointer`, `TaggedPtr`, `MaxHeapAllocator` | **已全面实装** |
+| `cap:string`      | `ZigString`, `WTF8`, `SimdUtf`, `Utf8Grapheme`（UTF-8 校验、码点解码与 UAX #29 字素簇计数） | **已全面实装** |
 | `cap:parallel`    | `spawn`, `join`, `Task`（注：`cap:task` / `Task.all` / `Task.race` 规划中） | **已全面实装** |
 | `cap:actor`       | `yield`, `receive`, `sleep`, `join`, `self_pid`, `sender`, `send`, `reply`（内建 `@spawn`/`@receive`/`@reply`/`@send`/`@self`/`@sender`） | **已全面实装** |
 | `cap:fs`          | 异步/同步文件读取、写入、目录创建、流式 I/O                            | **已全面实装** |
-| `cap:net`         | TCP 套接字、UDP 广播、轻量 HTTP 协议栈                                 | **已全面实装** |
+| `cap:net`         | `SocketAddress`, `UdpSocket`, `UdpPacket`, `TcpStream`, `TcpServer`, `SafeSocket` | **已全面实装** |
+| `cap:dns`         | RFC 1035 DNS 报文头/域名压缩编解码与 `/etc/hosts` 解析器               | **已全面实装** |
+| `cap:s3`          | AWS S3 凭证格式化与 Signature Version 4 (`AWS4-HMAC-SHA256`) 签名引擎  | **已全面实装** |
+| `cap:sourcemap`   | Base64 VLQ 编解码、二分行偏移表与 SourceMap v3 状态机映射              | **已全面实装** |
 | `cap:reflect`     | 编译期与运行时 `type_of`, `fields_of`, 结构体自省                      | **已全面实装** |
 
 ---

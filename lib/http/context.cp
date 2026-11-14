@@ -14,7 +14,7 @@ pub const PooledSocket = struct {
     in_use: bool = false,
     last_used: i64 = 0,
 
-    pub fn isValid(): bool {
+    pub fn isValid(*_): bool {
         return _.fd >= 0 and _.in_use;
     }
 

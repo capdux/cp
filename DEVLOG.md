@@ -802,3 +802,15 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
 ### 2. 机械错误 `edits` 填充与 `cpc check --fix` 自动修复闭环
 - 在 `DiagnosticEdit` 中同时提供 `{span_start, span_end, replacement}` 与向后兼容的 `{offset, delete_len, insert}`；
 - 为所有高频机械错误（`E0101`..`E0104`, `E0115`, `E0116`, `E0118`, `E0119`..`E0123`, `E0126`）生成精确到字节偏移的替换指令，并通过 `apply_fixes()` 按逆序无重叠方式支持最多 3 轮迭代自愈（处理同一行同时存在缺冒号 `E0116` 与前缀可选类型 `E0115` 等复合场景）。
+
+
+## 2026-11-15 `bun_agy` 4 项急修结单与标准库瘦身合并及 14 大模块资产吸收
+
+### 1. `bun_agy` 急修工单根因剖析与自愈
+- **`extra_zig` 嵌套常量 Lowering (`task-20261115-nested-const-codegen-lowering`)**：`struct`/`enum` 内部的 `pub const empty: Foo = .{ had_flag: false };` 被 `parser.rs` 存入 `extra_zig` 原始字符串列表，此前 `codegen/mod.rs` 原样输出导致未将 CP 风格 `had_flag: false` 降级为 Zig 的 `.had_flag = false`。通过在 `Codegen` 上新增 `lower_extra_zig_member()`，对 `extra_zig` 条目调用 `Parser::new(code)` 解析 `Stmt::Var` 并通过 `self.generate_expr(init)` 穿透执行完整表达式 Lowering，彻底消除 `zig ast-check` 错误。
+- **拦截 `let x: auto = undefined;` (`task-20261115-ban-auto-undefined-semantic`)**：`auto` 在 `parse_type` 中对应 `Type::Auto`，当初始化表达式为 `undefined` 时无具体类型可供推导，codegen 此前映射为非法的 `var x: anytype = undefined;`。在 `parse_var_decl` 中直接检测 `Type::Auto | Type::Any` 与 `undefined` 的组合并抛出 `E0212` 语义错误。
+- **未引用形参与局部常量静默 (`task-20261115-unused-param-codegen-silence`)**：将 `block_contains_ident` 中对 `Expr::Zig` 的子串包含检查改为词边界检查 `code_contains_word`，防止短参数名（如 `dev`、`req`）误命中长标识符而漏打 `_ = param;`，同时对非实例方法的 `self` 形参、未引用 `comptime` 形参及未引用局部 `const` 自动发射 `_ = ...;`。
+
+### 2. 标准库目录瘦身合并与 Bun 高价值子系统全量收编
+- **双向兼容路由 (`resolver.rs`)**：在 `resolve_source_path` 中将 `cap:col`/`cap:collections`、`cap:event`/`cap:event_loop`/`cap:events`、`cap:conf`/`cap:dotenv`/`cap:ini`、`cap:pack`/`cap:compress` 统一路由至精简目录 `lib/col/`、`lib/event/`、`lib/conf/`、`lib/pack/`，兼顾极简输入体验与 100% 存量测试向后兼容。
+- **10 大新建模块与 4 大模块增强**：全面吸收 `/data/dev/bun/src/` 中的 `redis` (Valkey RESP2/3)、`cli` (clap/tty/Progress)、`watch` (watcher)、`patch` (Unified Diff)、`bench` (perf timer/stats)、`elf` (ELF64/Mach-O/PE)、`md` (CommonMark/GFM)、`html` (CSS Selector/HtmlRewriter)、`ffi` (dlopen/TinyCC)、`sql` (Postgres v3/MySQL Wire) 及 `http`/`net`/`mem`/`string` 扩展，全部转化为 100% 正交 CP 语法并通过 `test_stdlib_phase_b1.cp` (8/8) 与 `test_stdlib_phase_b2_c.cp` (9/9) 端到端验证。

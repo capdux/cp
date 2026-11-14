@@ -24,3 +24,5 @@ export {
 export {
     StringEscape,
 } from "./escape.cp";
+
+export * from "./grapheme.cp";

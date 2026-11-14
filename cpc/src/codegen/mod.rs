@@ -2521,7 +2521,8 @@ impl Codegen {
             }
             for code in &e.extra_zig {
                 self.writeln("");
-                for line in code.lines() {
+                let lowered = self.lower_extra_zig_member(code);
+                for line in lowered.lines() {
                     self.writeln(line);
                 }
             }
@@ -2606,7 +2607,8 @@ impl Codegen {
         }
         for code in &e.extra_zig {
             self.writeln("");
-            for line in code.lines() {
+            let lowered = self.lower_extra_zig_member(code);
+            for line in lowered.lines() {
                 self.writeln(line);
             }
         }
@@ -2686,6 +2688,41 @@ impl Codegen {
             return Some(cls);
         }
         None
+    }
+
+    pub(crate) fn lower_extra_zig_member(&mut self, code: &str) -> String {
+        let mut parser = crate::parser::Parser::new(code);
+        let (module, diags) = parser.parse_module_with_recovery();
+        if diags.is_empty() && module.body.len() == 1 {
+            if let ModuleItem::Stmt(Stmt::Var(var)) = &module.body[0] {
+                if let Pattern::Ident(ident) = &var.pat {
+                    if let Some(init) = &var.init {
+                        let pub_prefix = if var.is_pub { "pub " } else { "" };
+                        let tls_prefix = if var.is_threadlocal {
+                            "threadlocal "
+                        } else {
+                            ""
+                        };
+                        let kw = if var.kind == VarDeclKind::Const {
+                            "const"
+                        } else {
+                            "var"
+                        };
+                        let ty_str = if let Some(t) = &var.ty {
+                            format!(": {}", self.map_type(t))
+                        } else {
+                            String::new()
+                        };
+                        let init_str = self.generate_expr(init);
+                        return format!(
+                            "{}{}{} {}{} = {};",
+                            pub_prefix, tls_prefix, kw, ident.sym, ty_str, init_str
+                        );
+                    }
+                }
+            }
+        }
+        lower_struct_body(code)
     }
 
     pub(crate) fn generate_zig_or_struct(&mut self, code: &str) -> String {
@@ -2781,7 +2818,8 @@ impl Codegen {
                 self.generate_function_decorated(m, Some(&class.ident.sym));
             }
             for code in &class.extra_zig {
-                for line in code.lines() {
+                let lowered = self.lower_extra_zig_member(code);
+                for line in lowered.lines() {
                     self.writeln(line);
                 }
             }
@@ -3052,7 +3090,8 @@ impl Codegen {
             self.generate_function_decorated(m, method_owner.as_ref());
         }
         for code in &class.extra_zig {
-            for line in code.lines() {
+            let lowered = self.lower_extra_zig_member(code);
+            for line in lowered.lines() {
                 self.writeln(line);
             }
         }

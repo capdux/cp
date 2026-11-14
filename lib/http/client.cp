@@ -26,11 +26,11 @@ pub const HTTPClientResult = struct {
         return _.err_msg == null and _.status >= 200 and _.status < 400;
     }
 
-    pub fn isTimeout(): bool {
+    pub fn isTimeout(*_): bool {
         return _.is_timeout;
     }
 
-    pub fn isAbort(): bool {
+    pub fn isAbort(*_): bool {
         return _.is_abort;
     }
 };
@@ -71,8 +71,13 @@ pub const HTTPClient = struct {
 
         // Parse host and optional port
         const slash_idx = std.mem.indexOfScalar(u8, remaining, '/');
-        const host_part = if (idx := slash_idx) remaining[0..idx] else remaining;
-        _.path = if (idx := slash_idx) remaining[idx..] else "/";
+        let host_part = remaining;
+        if (idx := slash_idx) {
+            host_part = remaining[0..idx];
+            _.path = remaining[idx..];
+        } else {
+            _.path = "/";
+        }
 
         if (std.mem.indexOfScalar(u8, host_part, ':')) |colon| {
             _.hostname = host_part[0..colon];

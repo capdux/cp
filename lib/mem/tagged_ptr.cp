@@ -91,3 +91,24 @@ pub struct LowTagPointer {
         return _.address() == 0;
     }
 }
+
+pub struct TaggedPtr {
+    raw: u64 = 0;
+
+    pub static fn pack(addr: usize, tag_val: u16): TaggedPtr {
+        const tp = TaggedPointer.pack(addr, tag_val);
+        return TaggedPtr { raw: tp.raw };
+    }
+
+    pub fn address(): usize {
+        return (_.raw & ADDR_MASK) as usize;
+    }
+
+    pub fn tag(): u16 {
+        return (_.raw >> 48) as u16;
+    }
+
+    pub fn withTag(new_tag: u16): TaggedPtr {
+        return TaggedPtr.pack(_.address(), new_tag);
+    }
+}

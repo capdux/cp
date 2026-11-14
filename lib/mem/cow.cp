@@ -45,9 +45,9 @@ pub struct CowBytes {
 
     pub fn slice(*_): []const u8 {
         if (_.length == 0) {
-            return &[];
+            return "";
         }
-        let s: []const u8 = &[];
+        let s: []const u8 = "";
         zig {
             s = self.ptr[0..self.length];
         }
@@ -86,5 +86,41 @@ pub struct CowBytes {
             self.length = 0;
             self.is_owned = false;
         }
+    }
+}
+
+pub struct CowSlice {
+    inner: CowBytes = CowBytes {};
+
+    pub static fn initBorrowed(data: []const u8): CowSlice {
+        return CowSlice {
+            inner: CowBytes.initBorrowed(data),
+        };
+    }
+
+    pub static fn initOwned(data: []const u8): CowSlice {
+        return CowSlice {
+            inner: CowBytes.initOwned(data),
+        };
+    }
+
+    pub fn isOwned(): bool {
+        return _.inner.isOwned();
+    }
+
+    pub fn len(): usize {
+        return _.inner.len();
+    }
+
+    pub fn slice(*_): []const u8 {
+        return _.inner.slice();
+    }
+
+    pub fn setByte(*_, index: usize, val: u8): bool {
+        return _.inner.setByte(index, val);
+    }
+
+    pub fn release(*_) {
+        _.inner.release();
     }
 }

@@ -1,9 +1,23 @@
-// lib/event_loop/concurrent_task.cp
+// lib/event/concurrent_task.cp
 // 16-byte lock-free cross-thread task representation and thread-safe queue
 
-import { Mutex } from "../sync/mutex.cp";
+const std = @import("std");
 
 pub type TaskFn = fn(ctx: *!?);
+
+pub struct TaskSpinLock {
+    state: std.atomic.Value(u32) = std.atomic.Value(u32).init(0);
+
+    pub fn lock(*_) {
+        while (_.state.cmpxchgWeak(0, 1, .acquire, .monotonic) != null) {
+            std.atomic.spinLoopHint();
+        }
+    }
+
+    pub fn unlock(*_) {
+        _.state.store(0, .release);
+    }
+}
 
 pub class ConcurrentTask {
     pub callback: TaskFn = undefined;
@@ -34,14 +48,14 @@ pub class ConcurrentTask {
 pub class ConcurrentQueue {
     head: (*ConcurrentTask)? = null;
     tail: (*ConcurrentTask)? = null;
-    lock: Mutex = .{};
+    lock: TaskSpinLock = TaskSpinLock {};
     count: usize = 0;
 
     pub static fn init(): *ConcurrentQueue {
         let q = std.heap.page_allocator.create(ConcurrentQueue) catch unreachable;
         q.head = null;
         q.tail = null;
-        q.lock = .{};
+        q.lock = TaskSpinLock {};
         q.count = 0;
         return q;
     }
@@ -65,14 +79,16 @@ pub class ConcurrentQueue {
         _.lock.lock();
         defer _.lock.unlock();
 
-        let h = _.head orelse return null;
-        _.head = h.next;
-        if (_.head == null) {
-            _.tail = null;
+        if (h := _.head) {
+            _.head = h.next;
+            if (_.head == null) {
+                _.tail = null;
+            }
+            _.count -= 1;
+            h.next = null;
+            return h;
         }
-        _.count -= 1;
-        h.next = null;
-        return h;
+        return null;
     }
 
     pub fn len(*_): usize {
@@ -84,9 +100,12 @@ pub class ConcurrentQueue {
     pub fn drain(*_, limit: usize): usize {
         let processed: usize = 0;
         while (processed < limit) {
-            const task = _.pop() orelse break;
-            task.run();
-            processed += 1;
+            if (task := _.pop()) {
+                task.run();
+                processed += 1;
+            } else {
+                break;
+            }
         }
         return processed;
     }

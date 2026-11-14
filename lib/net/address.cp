@@ -202,6 +202,10 @@ pub struct SocketAddress {
         return null;
     }
 
+    pub static fn parseIpv4(host: []const u8, port: u16): SocketAddress? {
+        return SocketAddress.parseV4(host, port);
+    }
+
     pub fn isIPv6(): bool {
         return _.family == AddressFamily.INET6;
     }

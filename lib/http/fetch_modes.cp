@@ -1,73 +1,52 @@
-/**
- * CP Web Fetch Request Enums & Modes (cap:http)
- * Ported from Bun.js http_types (FetchCacheMode, FetchRedirect, FetchRequestMode)
- */
+// lib/http/fetch_modes.cp
+// CP Web Fetch Request Enums & Modes (cap:http)
+// Ported from Bun.js http_types (FetchCacheMode, FetchRedirect, FetchRequestMode)
 
+const std = @import("std");
 
-/**
- * https://developer.mozilla.org/en-US/docs/Web/API/Request/cache
- */
-pub const FetchCacheMode = enum(u3) {
-    Default,
-    NoStore,
-    Reload,
-    NoCache,
-    ForceCache,
-    OnlyIfCached,
+pub enum FetchCacheMode: u8 {
+    Default = 0,
+    NoStore = 1,
+    Reload = 2,
+    NoCache = 3,
+    ForceCache = 4,
+    OnlyIfCached = 5,
 
-    pub fn fromString(str: []const u8): FetchCacheMode? {
-        if (std.mem.eql(u8, str, "default")) return .Default;
-        if (std.mem.eql(u8, str, "no-store")) return .NoStore;
-        if (std.mem.eql(u8, str, "reload")) return .Reload;
-        if (std.mem.eql(u8, str, "no-cache")) return .NoCache;
-        if (std.mem.eql(u8, str, "force-cache")) return .ForceCache;
-        if (std.mem.eql(u8, str, "only-if-cached")) return .OnlyIfCached;
+    pub static fn fromString(str: []const u8): FetchCacheMode? {
+        if (std.mem.eql(u8, str, "default")) { return FetchCacheMode.Default; }
+        if (std.mem.eql(u8, str, "no-store")) { return FetchCacheMode.NoStore; }
+        if (std.mem.eql(u8, str, "reload")) { return FetchCacheMode.Reload; }
+        if (std.mem.eql(u8, str, "no-cache")) { return FetchCacheMode.NoCache; }
+        if (std.mem.eql(u8, str, "force-cache")) { return FetchCacheMode.ForceCache; }
+        if (std.mem.eql(u8, str, "only-if-cached")) { return FetchCacheMode.OnlyIfCached; }
         return null;
     }
+}
 
-    pub fn get(str: []const u8): FetchCacheMode? {
-        return fromString(str);
-    }
-};
+pub enum FetchRedirect: u8 {
+    Follow = 0,
+    Manual = 1,
+    Error = 2,
 
-/**
- * https://developer.mozilla.org/en-US/docs/Web/API/Request/redirect
- */
-pub const FetchRedirect = enum(u2) {
-    Follow,
-    Manual,
-    Error,
-
-    pub fn fromString(str: []const u8): FetchRedirect? {
-        if (std.mem.eql(u8, str, "follow")) return .Follow;
-        if (std.mem.eql(u8, str, "manual")) return .Manual;
-        if (std.mem.eql(u8, str, "error")) return .Error;
+    pub static fn fromString(str: []const u8): FetchRedirect? {
+        if (std.mem.eql(u8, str, "follow")) { return FetchRedirect.Follow; }
+        if (std.mem.eql(u8, str, "manual")) { return FetchRedirect.Manual; }
+        if (std.mem.eql(u8, str, "error")) { return FetchRedirect.Error; }
         return null;
     }
+}
 
-    pub fn get(str: []const u8): FetchRedirect? {
-        return fromString(str);
-    }
-};
+pub enum FetchRequestMode: u8 {
+    SameOrigin = 0,
+    NoCors = 1,
+    Cors = 2,
+    Navigate = 3,
 
-/**
- * https://developer.mozilla.org/en-US/docs/Web/API/Request/mode
- */
-pub const FetchRequestMode = enum(u2) {
-    SameOrigin,
-    NoCors,
-    Cors,
-    Navigate,
-
-    pub fn fromString(str: []const u8): FetchRequestMode? {
-        if (std.mem.eql(u8, str, "same-origin")) return .SameOrigin;
-        if (std.mem.eql(u8, str, "no-cors")) return .NoCors;
-        if (std.mem.eql(u8, str, "cors")) return .Cors;
-        if (std.mem.eql(u8, str, "navigate")) return .Navigate;
+    pub static fn fromString(str: []const u8): FetchRequestMode? {
+        if (std.mem.eql(u8, str, "same-origin")) { return FetchRequestMode.SameOrigin; }
+        if (std.mem.eql(u8, str, "no-cors")) { return FetchRequestMode.NoCors; }
+        if (std.mem.eql(u8, str, "cors")) { return FetchRequestMode.Cors; }
+        if (std.mem.eql(u8, str, "navigate")) { return FetchRequestMode.Navigate; }
         return null;
     }
-
-    pub fn get(str: []const u8): FetchRequestMode? {
-        return fromString(str);
-    }
-};
+}

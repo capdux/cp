@@ -5,7 +5,7 @@
 import { SystemAction } from "cap:beam";
 import { Response } from "./response";
 
-pub class Server {
+pub class HttpServer {
     pub port: i32;
     pub fd: i32;
 
@@ -22,7 +22,7 @@ pub class Server {
 /**
  * 生产级 fetch 实现
  */
-pub async fn fetch(url: string, options: auto): Response {
+pub async fn fetch(url: string, options: *!?): Response {
     let raw_body = "";
 
     if (@is_nest) {
@@ -40,7 +40,7 @@ pub async fn fetch(url: string, options: auto): Response {
 /**
  * 快速 JSON 响应构造函数 (对标 Bun 的 Response.json)
  */
-pub fn json(data: auto): Response {
+pub fn json(data: *!?): Response {
     let raw_json = JSON.stringify(data);
     let res = new Response(raw_json);
     res.contentType = "application/json";
@@ -50,10 +50,10 @@ pub fn json(data: auto): Response {
 /**
  * 极速 HTTP Server (对标 Bun.serve)
  */
-pub fn serve(config: auto): Server {
+pub fn serve(config: *!?): HttpServer {
     if (@is_nest) {
         @yield_to_beam(@intFromEnum(SystemAction.HTTP_SERVE), config);
-        let s = new Server(3000, 0);
+        let s = new HttpServer(3000, 0);
         return s;
     } else {
         return @http_serve(config);

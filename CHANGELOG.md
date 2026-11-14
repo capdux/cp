@@ -560,3 +560,40 @@
   - 为 `E0101`..`E0104`, `E0115`, `E0116`, `E0118`, `E0119`..`E0123`, `E0126` 填充 `{span_start, span_end, replacement}` 机械修复 `edits` 并实装 `apply_fixes` 多轮自动修复；
   - 新增 `if (let v = opt)` / `while (let v = opt)` 解析恢复与 `E0126` 自动转 `:=` 诊断；
   - 修复 `.{ key: val }`、`ErrorSet!void` 与 `error{ ... }` 解析，消除假性连锁报错。
+
+## [2026-11-15] - 核心里程碑：`bun_agy` 4 项编译器急修结单、标准库 4 大目录瘦身合并与 10 大新模块 + 4 大模块增强全面落地
+
+### 编译器协同热修 (Compiler Hotfixes & Resolver)
+- [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs) & [`cpc_dev/src/parser.rs`](file:///data/dev/cp/cpc_dev/src/parser.rs):
+  - 拦截 `let/const x: auto = undefined;` 组合并输出三段式诊断 `E0212: cannot infer type 'auto' from 'undefined'; explicit concrete type is required`（结单 `task-20261115-ban-auto-undefined-semantic`）。
+- [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs) & [`cpc_dev/src/codegen/mod.rs`](file:///data/dev/cp/cpc_dev/src/codegen/mod.rs):
+  - 新增 `lower_extra_zig_member()`：对 `struct`/`enum` 内部 `extra_zig` 常量/变量声明穿透执行完整表达式 lowering（如 `.{ had_flag: false }` -> `.{ .had_flag = false }`），结单 `task-20261115-nested-const-codegen-lowering`。
+- [`cpc/src/codegen/actor.rs`](file:///data/dev/cp/cpc/src/codegen/actor.rs) & [`cpc/src/codegen/stmt.rs`](file:///data/dev/cp/cpc/src/codegen/stmt.rs):
+  - 将 `Expr::Zig` 参数引用检测升级为精确词边界匹配 `code_contains_word`，补全非实例方法 `self` 形参、`comptime` 形参的 `_ = param;` 注入以及未引用局部 `const` 的 `_ = &var;` 注入（结单 `task-20261115-unused-param-codegen-silence` 与 `task-20261115-cpc-fix-e0120-e0122`）。
+- [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs) & [`cpc_dev/src/resolver.rs`](file:///data/dev/cp/cpc_dev/src/resolver.rs):
+  - 实现 `cap:col`/`cap:collections`、`cap:event`/`cap:event_loop`/`cap:events`、`cap:conf`/`cap:dotenv`/`cap:ini`、`cap:pack`/`cap:compress` 双向兼容模块路径映射。
+
+### 标准库目录瘦身合并 (Phase A: Consolidated Modules)
+- [`lib/col/`](file:///data/dev/cp/lib/col/) (`cap:col`)：由 `lib/collections/` 重命名瘦身，新增吸收自 Bun 的 256 位静态位集 [`lib/col/bit_set.cp`](file:///data/dev/cp/lib/col/bit_set.cp) (`BitSet256`)。
+- [`lib/event/`](file:///data/dev/cp/lib/event/) (`cap:event`)：合并原 `lib/event_loop/` 与 `lib/events.cp`（迁入 [`lib/event/emitter.cp`](file:///data/dev/cp/lib/event/emitter.cp)）。
+- [`lib/conf/`](file:///data/dev/cp/lib/conf/) (`cap:conf`)：合并原 `lib/dotenv/` 与 `lib/ini/`，并吸收 Bun 的 [`lib/conf/toml.cp`](file:///data/dev/cp/lib/conf/toml.cp)、[`lib/conf/yaml.cp`](file:///data/dev/cp/lib/conf/yaml.cp)、[`lib/conf/json5.cp`](file:///data/dev/cp/lib/conf/json5.cp)。
+- [`lib/pack/`](file:///data/dev/cp/lib/pack/) (`cap:pack`)：由 `lib/compress/` 升级，保留流式压缩并吸收 Bun 的 [`lib/pack/_archive.cp`](file:///data/dev/cp/lib/pack/_archive.cp) 与 [`lib/pack/tar.cp`](file:///data/dev/cp/lib/pack/tar.cp)（POSIX USTAR 归档打包与零拷贝 `TarReader`）。
+
+### 新建 10 大简洁标准库模块 (Phase B: New Concise Modules)
+- [`lib/redis/`](file:///data/dev/cp/lib/redis/) (`cap:redis`)：`resp.cp`、`index.cp`（RESP2/RESP3 零拷贝协议帧解析与编码器）。
+- [`lib/cli/`](file:///data/dev/cp/lib/cli/) (`cap:cli`)：`args.cp`、`tty.cp`、`index.cp`（命令行标志解析、ANSI 转义剥离与终端进度条 `ProgressBar`）。
+- [`lib/watch/`](file:///data/dev/cp/lib/watch/) (`cap:watch`)：`watcher.cp`、`index.cp`（跨平台文件变更监控掩码与路径表 `FileWatcher`）。
+- [`lib/patch/`](file:///data/dev/cp/lib/patch/) (`cap:patch`)：`diff.cp`、`index.cp`（Unified Diff 解析与 Hunk 渲染应用）。
+- [`lib/bench/`](file:///data/dev/cp/lib/bench/) (`cap:bench`)：`timer.cp`、`index.cp`（纳秒级硬件单调计时器 `Stopwatch` 与分位数统计 `BenchStats`）。
+- [`lib/elf/`](file:///data/dev/cp/lib/elf/) (`cap:elf`)：`format.cp`、`index.cp`（ELF64 / Mach-O / PE 二进制格式嗅探与头部解析）。
+- [`lib/md/`](file:///data/dev/cp/lib/md/) (`cap:md`)：`markdown.cp`、`index.cp`（CommonMark/GFM 解析与 HTML/ANSI 渲染）。
+- [`lib/html/`](file:///data/dev/cp/lib/html/) (`cap:html`)：`selector.cp`、`index.cp`（CSS 选择器解析与流式 `HtmlRewriter`）。
+- [`lib/ffi/`](file:///data/dev/cp/lib/ffi/) (`cap:ffi`)：`_tcc.cp`、`dlopen.cp`、`index.cp`（动态库加载 `DynLib`、FFI 签名布局与 TinyCC 声明）。
+- [`lib/sql/`](file:///data/dev/cp/lib/sql/) (`cap:sql`)：`protocol.cp`、`index.cp`（PostgreSQL v3 Wire 帧、MySQL 包头编解码与预编译语句绑定）。
+
+### 现有 4 大模块能力扩充 (Phase C: Module Extensions)
+- [`lib/http/`](file:///data/dev/cp/lib/http/)：新增 [`cookie.cp`](file:///data/dev/cp/lib/http/cookie.cp) (`CookieMap`) 与 [`form_data.cp`](file:///data/dev/cp/lib/http/form_data.cp) (`FormData`)。
+- [`lib/net/`](file:///data/dev/cp/lib/net/)：新增 [`udp.cp`](file:///data/dev/cp/lib/net/udp.cp) (`UdpSocket`, `UdpPacket`) 与 `SocketAddress.parseIpv4`。
+- [`lib/mem/`](file:///data/dev/cp/lib/mem/)：扩充 [`cow.cp`](file:///data/dev/cp/lib/mem/cow.cp) (`CowSlice`) 与 [`tagged_ptr.cp`](file:///data/dev/cp/lib/mem/tagged_ptr.cp) (`TaggedPtr`)。
+- [`lib/string/`](file:///data/dev/cp/lib/string/)：新增 [`grapheme.cp`](file:///data/dev/cp/lib/string/grapheme.cp) (`Utf8Grapheme` UTF-8 校验与 UAX #29 字素簇计数)。
+- 测试套件：新增 [`cap/test/test_stdlib_phase_b1.cp`](file:///data/dev/cp/cap/test/test_stdlib_phase_b1.cp)（8/8 PASS）与 [`cap/test/test_stdlib_phase_b2_c.cp`](file:///data/dev/cp/cap/test/test_stdlib_phase_b2_c.cp)（9/9 PASS）。

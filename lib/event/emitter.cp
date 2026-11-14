@@ -14,20 +14,24 @@ pub class EventEmitter {
      * 注册事件监听器。
      * 返回退订函数 (Unsubscribe)，可直接用于 defer unsub(); 自动杜绝内存泄漏。
      */
-    fn on(*_, event: string, handler: auto): *! {
+    fn on(*_, event: string, handler: *!?): *! {
         __zig__ {
+            _ = event;
+            _ = handler;
             self._count += 1;
         }
         return () => {
-            _.off(event, handler);
+            _.off(event, null);
         };
     }
 
     /**
      * 移除特定事件的指定监听器。
      */
-    fn off(*_, event: string, handler: auto) {
+    fn off(*_, event: string, handler: *!?) {
         __zig__ {
+            _ = event;
+            _ = handler;
             if (self._count > 0) self._count -= 1;
         }
     }
@@ -37,6 +41,8 @@ pub class EventEmitter {
      */
     fn emit(*_, event: string): bool {
         __zig__ {
+            _ = self;
+            _ = event;
             return true;
         }
     }
@@ -60,6 +66,7 @@ pub class EventEmitter {
      */
     fn listenerCount(event: string): i32 {
         __zig__ {
+            _ = event;
             return self._count;
         }
     }
@@ -69,6 +76,7 @@ pub class EventEmitter {
      */
     fn removeAllListeners(*_, event: string) {
         __zig__ {
+            _ = event;
             self._count = 0;
         }
     }

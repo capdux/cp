@@ -1,6 +1,6 @@
-// lib/event_loop/index.cp
-// Unified Event Loop Subsystem (cap:event_loop)
-// High-performance monotonic timer heap, 16-byte lock-free tasks, deferred microtasks & I/O poller
+// lib/event/index.cp
+// Unified Event Loop & EventEmitter Subsystem (cap:event / cap:event_loop / cap:events)
+// High-performance monotonic timer heap, 16-byte lock-free tasks, deferred microtasks, I/O poller & EventEmitter
 
 export {
     Timer,
@@ -30,3 +30,5 @@ export {
 export {
     EventLoop,
 } from "./loop";
+
+export * from "./emitter.cp";

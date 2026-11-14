@@ -24,7 +24,7 @@ pub const HTTPRequestBody = struct {
         return HTTPRequestBody{};
     }
 
-    pub fn len() usize {
+    pub fn len(*_) usize {
         return switch (_.tag) {
             .Bytes => _.bytes.len,
             else => 0,

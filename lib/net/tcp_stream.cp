@@ -105,8 +105,7 @@ pub class TcpStream {
             if (buffered == data.len) {
                 return buffered;
             }
-            const flushed = _.flush();
-            let * = flushed;
+            let * = _.flush();
             const rem = data.len - buffered;
             let * = _.sock.recordWrite(rem);
             return data.len;

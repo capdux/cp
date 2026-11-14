@@ -361,6 +361,11 @@ impl Codegen {
                             } else if !self.is_state_machine {
                                 if !is_const {
                                     self.write_to_case(&format!("_ = &{};", ident.sym));
+                                } else if !is_type_ns && !var.is_comptime {
+                                    let is_used = self.last_use_map.contains_key(&ident.sym);
+                                    if !is_used {
+                                        self.write_to_case(&format!("_ = &{};", ident.sym));
+                                    }
                                 }
                             }
                             if let Expr::Ident(id) = init {

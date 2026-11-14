@@ -19,7 +19,7 @@ pub const H3Stream = struct {
         _.closed = true;
     }
 
-    pub fn isOpen(): bool {
+    pub fn isOpen(*_): bool {
         return !_.closed;
     }
 };

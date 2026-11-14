@@ -55,10 +55,12 @@ export {
     LOW_TAG_MASK,
     TaggedPointer,
     LowTagPointer,
+    TaggedPtr,
 } from "./tagged_ptr.cp";
 
 export {
     CowBytes,
+    CowSlice,
 } from "./cow.cp";
 
 export {

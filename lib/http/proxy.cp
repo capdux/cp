@@ -34,7 +34,7 @@ pub const ProxyTunnel = struct {
         return tunnel;
     }
 
-    pub fn formatConnectRequest(buf: []u8) ![]const u8 {
+    pub fn formatConnectRequest(*_, buf: []u8) ![]const u8 {
         return try std.fmt.bufPrint(
             buf,
             "CONNECT {s}:{d} HTTP/1.1\r\nHost: {s}:{d}\r\nProxy-Connection: keep-alive\r\nUser-Agent: CP/1.0\r\n\r\n",

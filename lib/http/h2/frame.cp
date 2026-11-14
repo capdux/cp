@@ -85,7 +85,7 @@ pub const FrameHeader = struct {
 
     pub const byte_size: usize = 9;
 
-    pub fn encode(out: *[9]u8) {
+    pub fn encode(*_, out: *[9]u8) {
         out[0] = @as(u8, @intCast((_.length >> 16) & 0xFF));
         out[1] = @as(u8, @intCast((_.length >> 8) & 0xFF));
         out[2] = @as(u8, @intCast(_.length & 0xFF));
@@ -115,7 +115,7 @@ pub const SettingsPayloadUnit = struct {
 
     pub const byte_size: usize = 6;
 
-    pub fn encode(out: *[6]u8) {
+    pub fn encode(*_, out: *[6]u8) {
         std.mem.writeInt(u16, out[0..2], @intFromEnum(_.type), .big);
         std.mem.writeInt(u32, out[2..6], _.value, .big);
     }

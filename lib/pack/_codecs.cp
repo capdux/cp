@@ -140,3 +140,27 @@ pub struct CompressBoundEstimator {
         return source_len + (source_len >> 8) + margin + 64;
     }
 }
+
+pub struct Zlib {
+    pub static fn bound(source_len: usize): usize {
+        return CompressBoundEstimator.zlibBound(source_len);
+    }
+}
+
+pub struct Deflate {
+    pub static fn bound(source_len: usize): usize {
+        return CompressBoundEstimator.zlibBound(source_len);
+    }
+}
+
+pub struct Zstd {
+    pub static fn bound(source_len: usize): usize {
+        return CompressBoundEstimator.zstdBound(source_len);
+    }
+}
+
+pub struct Brotli {
+    pub static fn bound(source_len: usize): usize {
+        return source_len + (source_len >> 4) + 64;
+    }
+}

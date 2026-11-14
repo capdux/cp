@@ -225,6 +225,33 @@ impl Codegen {
         self.generate_function_decorated(func, None);
     }
 
+    pub(crate) fn code_contains_word(code: &str, word: &str) -> bool {
+        if word.is_empty() {
+            return false;
+        }
+        let bytes = code.as_bytes();
+        let wbytes = word.as_bytes();
+        let n = bytes.len();
+        let m = wbytes.len();
+        if m > n {
+            return false;
+        }
+        for i in 0..=(n - m) {
+            if &bytes[i..i + m] == wbytes {
+                let prev_ok = i == 0
+                    || (!bytes[i - 1].is_ascii_alphanumeric()
+                        && bytes[i - 1] != b'_'
+                        && bytes[i - 1] != b'.');
+                let next_ok = i + m == n
+                    || (!bytes[i + m].is_ascii_alphanumeric() && bytes[i + m] != b'_');
+                if prev_ok && next_ok {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
     pub(crate) fn block_contains_ident(block: &BlockStmt, id: &str) -> bool {
         let mut vars = std::collections::HashSet::new();
         crate::ast_visitor::find_referenced_vars_in_block(block, &mut vars);
@@ -235,7 +262,7 @@ impl Codegen {
         for s in &block.body {
             match s {
                 Stmt::Expr(Expr::Zig(z)) => {
-                    if z.code.contains(id) {
+                    if Self::code_contains_word(&z.code, id) {
                         return true;
                     }
                 }
@@ -612,11 +639,23 @@ impl Codegen {
                 self.writeln(&format!("var {0} = _cp_{0}; _ = &{0};", name));
             }
             for p in &func.params {
-                if p.ident.sym != "this" && p.ident.sym != "_" && p.ident.sym != "self" {
+                if p.ident.sym != "this"
+                    && p.ident.sym != "_"
+                    && !(self.is_class_method && p.ident.sym == "self")
+                {
                     let is_used = mutable_copy_params.contains(&p.ident.sym)
                         || self.last_use_map.contains_key(&p.ident.sym)
-                        || Self::block_contains_ident(&func.body, &p.ident.sym);
-                    if !p.is_comptime && !is_used {
+                        || Self::block_contains_ident(&func.body, &p.ident.sym)
+                        || (p.is_comptime
+                            && (Self::code_contains_word(&zig_ret_ty, &p.ident.sym)
+                                || func.params.iter().any(|other| {
+                                    other.ident.sym != p.ident.sym
+                                        && Self::code_contains_word(
+                                            &self.map_type(&other.ty),
+                                            &p.ident.sym,
+                                        )
+                                })));
+                    if !is_used {
                         self.writeln(&format!("_ = {};", p.ident.sym));
                     }
                     if p.is_move {

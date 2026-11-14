@@ -4156,6 +4156,21 @@ impl<'a> Parser<'a> {
             self.bump()?;
         }
         let end = self.peek_span().end;
+        if matches!(ty, Some(Type::Auto) | Some(Type::Any))
+            && (matches!(init, Some(Expr::Lit(Lit::Undefined)))
+                || matches!(&init, Some(Expr::Ident(id)) if id.sym == "undefined"))
+        {
+            self.push_error(
+                Diagnostic::new(
+                    "E0212",
+                    "cannot infer type 'auto' from 'undefined'; explicit concrete type is required",
+                )
+                .with_span(Span { start, end })
+                .with_cause("'auto' requires a concrete initializer expression for type inference, but 'undefined' carries no type information and would lower to invalid Zig 'anytype'.")
+                .with_help("annotate the variable with an explicit concrete type, e.g. 'let x: u32 = undefined;'.")
+                .with_suggestion("replace 'auto' with a concrete type"),
+            );
+        }
         Ok(VarDecl {
             span: Span { start, end },
             kind,

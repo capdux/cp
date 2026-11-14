@@ -95,7 +95,7 @@ pub const InternalState = struct {
         return _.transfer_encoding == Encoding.Chunked;
     }
 
-    pub fn isDone(): bool {
+    pub fn isDone(*_): bool {
         if (_.isChunkedEncoding()) {
             return _.flags.received_last_chunk;
         }

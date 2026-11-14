@@ -7,7 +7,7 @@ export { ETag, ParsedETag } from "./etag";
 export { MimeType } from "./mime";
 export { Request } from "./request";
 export { Response } from "./response";
-export { Server, fetch, json, serve } from "./server";
+export { HttpServer, fetch, json, serve } from "./server";
 
 // --- Step 1: HTTP Infrastructure Types & Enums ---
 export { Encoding } from "./encoding";
@@ -91,3 +91,7 @@ export {
     PicoResponse,
     PicoHttpParser
 } from "./_picohttp";
+
+// --- Step 5: RFC 6265 CookieMap & RFC 7578 FormData ---
+export * from "./cookie.cp";
+export * from "./form_data.cp";

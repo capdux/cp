@@ -12,9 +12,9 @@ import {
     FastStringMap
 } from "cap:collections";
 
-fn main(): void {
+fn main() {
     test("1. BoundedArray<T, CAP> zero-heap stack-allocated bounded array", () => {
-        var arr = BoundedArray<i32, 8>.init();
+        let arr = BoundedArray<i32, 8>.init();
         expect_eq(arr.capacity() as i64, 8);
         expect_eq(arr.isEmpty(), true);
 
@@ -121,7 +121,7 @@ fn main(): void {
     });
 
     test("4. BitSet64 & HiveArray<T, CAP> O(1) hardware @ctz/@popCount slot pool", () => {
-        var bs = BitSet64.initEmpty();
+        let bs = BitSet64.initEmpty();
         expect_eq(bs.count() as i64, 0);
         bs.set(3);
         bs.set(7);
@@ -135,7 +135,7 @@ fn main(): void {
             expect_eq(1, 0);
         }
 
-        var hive = HiveArray<i64, 8>.init();
+        let hive = HiveArray<i64, 8>.init();
         expect_eq(hive.capacity() as i64, 8);
         expect_eq(hive.isEmpty(), true);
 
@@ -161,7 +161,7 @@ fn main(): void {
     });
 
     test("5. FastStringMap<V, CAP> length-filtered exact & case-insensitive lookup", () => {
-        var smap = FastStringMap<i32, 16>.init();
+        let smap = FastStringMap<i32, 16>.init();
         expect_eq(smap.put("Content-Type", 1), true);
         expect_eq(smap.put("Content-Length", 2), true);
         expect_eq(smap.put("Host", 3), true);
