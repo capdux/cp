@@ -105,7 +105,9 @@ export * from "./sub_module.cp";
 | `cap build --lib` / `--obj` | 输出静态库 `.a` 或底层 `.o` 目标文件 |
 | `cap test [dir]` / `bench` / `clean` | 运行测试（`bin/test/`）、`bench` 基准测试、`clean` 清理 `.cap/` 与 `bin/` |
 | `cpc [compile] <file.cp> -o <out.zig> [--lib] [--nest]` | 编译为 Zig 源码（`--lib` 省略 main；`--nest`/`-n` 开启 `@is_nest` 模式，整文件错误一次性输出） |
-| `cpc check [--json] <file.cp>` | 极速整文件静态语法与借用检查（一次性输出全文件所有错误与修复建议，`--json` 输出机器自愈诊断） |
+| `cpc check [--json] <file.cp>` | 极速整文件静态语法与借用检查（自动折叠连锁错误 `cascade_of`，`--json` 输出含 `errors`/`root_errors` 与 `edits` 字节替换范围） |
+| `cpc check --brief [--json] [--max N] <file.cp>` | **AI 省 Token 聚合去重摘要模式（`-b`）**：按错误码 `code` 归并，每类仅输出一次 `help`/`suggestion` 及 `lines: [...]` 行号数组 |
+| `cpc check --fix <file.cp>` / `cpc fix <file.cp>` | **机械错误一键自动修复**：自动就地修复 `E0101`..`E0104`, `E0115`(`?T`->`T?`), `E0116`(补`:`), `E0118`(`\|v\|`->`:=`/`of`), `E0119`..`E0123`, `E0126`(`if (let v = e)`->`if (v := e)`) |
 | `cpc emit-types` / `demangle` / `lsp` | 生成 `.d.cp` 类型契约 / 反解崩溃堆栈（亦可用 `cap demangle`）/ 启动 LSP |
 
 ---
@@ -974,7 +976,7 @@ switch (msg) {
 | `cap:mem` | `Arena`, `SharedTensor`, 全局共享堆 | 区域内存分配与跨 Actor 零拷贝大张量 |
 | `cap:json` | `JsonParser`, `JsonValue`, `JsonBufferPool`, `parse`, `stringify` | 零拷贝流式 JSON 解析框架 |
 | `cap:serde` | `@json_parse`, `@json_stringify`, 零拷贝序列化契约 | 高性能编解码与结构化映射 |
-| `cap:regex` | **内置 `RegExp`**（`/pattern/flags` 字面量与 `new RegExp(pat, flags)`，无需 `import`） | ES6 风格正则表达式引擎 |
+| 内置 `RegExp`（无需 `import`） | **内置 `RegExp`**（`/pattern/flags` 字面量与 `new RegExp(pat, flags)`，提供 `.test(str)` 与 `.exec(str)`） | 内联 16 字节 `@Vector(16, u8)` SIMD 字面量快跳 + `[2048]u8` 栈缓冲零堆分配正则引擎 |
 | `cap:sqlite` | `Database`（`init`, `exec`, `query_string`） | 原生轻量级 SQLite 嵌入式数据库驱动 |
 | `cap:http` | `Method`, `Headers`, `ETag`, `MimeType`, `Request`, `Response`, `Server`, `HttpClient`, `H2ClientSession`, `H3ClientSession`, `fetch`, `serve` | 现代 HTTP/1.1、HTTP/2、HTTP/3 全协议栈 |
 | `cap:ws` | `Opcode`, `CloseCode`, `FrameHeader`, `FrameBuilder`, `Mask` | RFC 6455 WebSocket 协议帧编解码 |

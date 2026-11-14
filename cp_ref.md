@@ -9769,11 +9769,14 @@ flowchart TD
 - `_` 在 CP 中严格专用于当前实例接收者（`_`）；
 - 忽略/抛弃函数调用返回值**必须使用 `* = expr;`**（或 `let * = expr;`），写 `_ = expr;` 或 `let _ = expr;` 触发 `E0120` 报错。
 
-##### 4. 一等公民内置 `JSON` 与默认预置 `std`
-- **全局内建 `JSON`（无需 `import`）**：
-  - `JSON.stringify(val)` -> `string`（任意结构体/类/容器序列化）；
-  - `JSON.parse<T>(str)?` -> `T`（编译期强类型反序列化）；
-  - `JSON.parse(str)?` -> 动态 `std.json.Value` 树。
+##### 4. 一等公民内置 `JSON`、`RegExp` 与默认预置 `std`
+- **全局内建 `JSON`（无需 `import`，CP 与 Bun 100% 同构）**：
+  - `JSON.stringify(val)` -> `string`（任意结构体/类/容器序列化，基于 `std.heap.smp_allocator`）；
+  - `JSON.parse<T>(str)?` -> `T`（编译期强类型反序列化，开启 `.allocate = .alloc_if_needed` 零拷贝原切片借用）；
+  - `JSON.parse(str)?` -> 动态 `std.json.Value` 树（开启 `.allocate = .alloc_if_needed` 零拷贝借用）。
+- **全局内建 `RegExp`（无需 `import`，废除 `lib/regex.cp`）**：
+  - 支持正则字面量 `/pattern/flags` 与 `new RegExp(pattern, flags)`，提供 `.test(str)`、`exec(str)` 与 `.deinit(*_)`；
+  - 编译器 prelude 直接内联 16 字节 `@Vector(16, u8)` SIMD 字面量前缀预扫描（不命中直接 $O(n/16)$ 秒退）与 `[2048]u8` 栈缓冲区零堆分配快速路径（超 2048 字节回退 `std.heap.smp_allocator`）。
 - **编译器默认预置 `std`**：`.cp` 文件可直接调用 `std.mem.eql(...)`、`std.ascii.eqlIgnoreCase(...)` 等，无需手写 `const std = @import("std");`，且绝无需包裹在 `zig {}` 块中。
 
 ##### 5. `@c { ... }` / `pub @c { ... }`、`enum`/`struct` 默认 `pub` 与 `--nest` / `@is_nest`
