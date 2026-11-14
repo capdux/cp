@@ -967,17 +967,17 @@ switch (msg) {
 | :--- | :--- | :--- |
 | `cap:col`（兼容 `cap:collections`） | **`Vec<T>`, `VecDeque<T>`, `BinaryHeap<T>`, `BTreeMap<K, V>`, `BTreeSet<T>`, `HashMap<K, V>`, `HashSet<T>`, `BoundedArray<T, CAP>`, `BabyList<T>`, `LinearFifo<T>`, `HiveArray<T, CAP>`, `ObjectPool<T, CAP>`, `BitSet256`, `StaticStringMap`** | 完备标准容器与零堆分配紧凑集合 |
 | `cap:event`（兼容 `cap:event_loop` / `cap:events`） | `EventLoop`, `Timer`, `TimerHeap`, `ConcurrentTask`, `ConcurrentQueue`, `DeferredTaskQueue`, `PollEngine`, `EventEmitter` | 统一事件循环驱动、最小堆定时器与事件总线 |
-| `cap:conf`（兼容 `cap:dotenv` / `cap:ini`） | `DotEnv`, `Ini`, `IniParser`, `TOML`, `TomlDoc`, `YAML`, `YamlDoc`, `JSON5`, `Json5Scanner` | `.env`、INI、TOML、YAML、JSON5 统一配置解析 |
+| `cap:conf`（兼容 `cap:dotenv` / `cap:ini`） | `DotEnv`, `Ini`, `IniParser`, `TOML`, `TomlDoc`, `YAML`, `YamlDoc`, `JSON5`, `Json5Scanner`, `ConfValueParser` | `.env`、INI、TOML、YAML、JSON5 统一配置解析与类型转换 |
 | `cap:pack`（兼容 `cap:compress`） | `Zlib`, `Deflate`, `Zstd`, `Brotli`, `CompressionFormat`, `Crc32`, `Adler32`, `GzipHeader`, `RleCodec`, `TarHeader`, `TarReader`, `ZipReader`, `ZipLocalHeader`, `ZipCentralHeader`, `ZipEocd` | 流式压缩（Zlib/Zstd/Brotli/Gzip）与 TAR/ZIP 归档 |
 | `cap:redis` | `RESPType`, `RESPFrame`, `RESPParser`, `RESPEncoder`, `RedisCommand`, `RedisPipeline` | Redis / Valkey RESP2 & RESP3 协议编解码、命令与 Pipeline |
 | `cap:cli` | `CliArgs`, `CliOption`, `SliceIterator`, `TtyMode`, `AnsiColor`, `ProgressBar`, `Progress`, `CliTable`, `CliTableAlign` | 命令行参数解析、ANSI 色彩、进度条与终端表格渲染 |
 | `cap:watch` | `FileWatcher`, `WatchEvent`, `WatchEventKind`, `WatchMask`, `WatchEntry`, `WatchFilter`, `DebounceTracker` | 跨平台文件系统变更监控、忽略过滤与防抖器 |
 | `cap:patch` | `UnifiedDiff`, `UnifiedHunkHeader`, `HunkRange`, `DiffOpKind`, `LineDiffStats`, `LineDiffer`, `DiffOp` | Unified Diff 解析、行级差异生成与补丁应用 |
 | `cap:bench` | `HwTimer`, `Stopwatch`, `BenchStats`, `LatencyHistogram` | 纳秒级硬件计时器、分位数统计与对数桶延迟直方图 |
-| `cap:elf` | `ExeFormat`, `Elf64HeaderInfo`, `ElfInspector` | ELF64 / Mach-O / PE 可执行文件头解析与节区嗅探 |
+| `cap:elf` | `ExeFormat`, `Elf64HeaderInfo`, `ElfInspector`, `MachHeader64`, `MachoInspector`, `PeCoffHeader`, `PeInspector` | ELF64 / Mach-O / PE 可执行文件头解析与节区嗅探 |
 | `cap:md` | `Markdown`（`renderHtml`, `renderAnsi`）, `MdTable`, `MdTableAlign` | CommonMark / GFM 解析器、HTML / ANSI 渲染与 GFM 表格 |
 | `cap:html` | `CssSelector`, `HtmlRewriter`, `HtmlEscape` | CSS 选择器解析、流式 HTML 标签重写与实体转义器 |
-| `cap:ffi` | `DynLib`, `FFIType`, `FFISignature`, `TccOutputFormat` | 跨平台动态库加载（dlopen）与 TinyCC 内存编译声明 |
+| `cap:ffi` | `DynLib`, `FFIType`, `FFISignature`, `CStructLayout`, `CStructField`, `TccOutputFormat` | 跨平台动态库加载（dlopen）、C-ABI 布局计算与 TinyCC 声明 |
 | `cap:sql` | `SqlType`, `SqlDialect`, `SqlStatement`, `PostgresWire`, `PostgresAuthChallenge`, `PostgresDataRow`, `PostgresCommandComplete`, `MySqlPacketHeader`, `MySqlLenEnc`, `MySqlCapabilities`, `MySqlOkPacket`, `MySqlErrPacket` | PostgreSQL v3 / MySQL 二进制协议帧与预编译语句绑定 |
 | `cap:io` | `Reader`, `Writer`, `Closer`, `Seeker`, `BufferReader`, `BufferWriter`, `BufferedReader`, `BufferedWriter`, `copyStream`, `PipeReader`, `PipeWriter`, `MaxBuf`, `Pipe`, `print` | 统一流契约、零拷贝管道与标准 I/O |
 | `cap:stream` | `Pipe`, `PipeReader`, `PipeWriter`, `MaxBuf`, 统一零拷贝流接口重导出 | 工业级零拷贝流式 I/O 管道 |
@@ -987,25 +987,25 @@ switch (msg) {
 | `cap:beam` | `PID`, `Message`, `Agent`, `SystemAction` | BEAM 节点信箱协议、系统调度动作码 |
 | `cap:worker` | `Worker` 与 `PID` 联动封装 | 独立隔离工作线程管理 |
 | `cap:mem` | `Arena`, `SharedTensor`, `Cow`, `CowSlice`, `TaggedPointer`, `TaggedPtr`, `MaxHeapAllocator` | 区域内存分配、写时复制切片、打标指针与共享大张量 |
-| `cap:string` | `ZigString`, `WTF8`, `SimdUtf`, `Utf8Grapheme`（`isValidUtf8`, `countCodepoints`, `countGraphemes`） | SIMD UTF-8/16 校验转换与 UAX #29 字素簇分词 |
+| `cap:string` | `ZigString`, `WTF8`, `SimdUtf`, `Utf8Grapheme`, `CaseConverter`（`isValidUtf8`, `countCodepoints`, `countGraphemes`, 命名风格互转） | SIMD UTF-8/16 校验转换、UAX #29 字素簇与命名转换 |
 | `cap:json` | `JsonParser`, `JsonValue`, `JsonBufferPool`, `parse`, `stringify`（另有免 import 内置 `JSON`） | 零拷贝流式 JSON 解析框架 |
 | `cap:serde` | `@json_parse`, `@json_stringify`, 零拷贝序列化契约 | 高性能编解码与结构化映射 |
 | 内置 `RegExp` / `JSON`（无需 `import`） | **`RegExp`**（`/pattern/flags`）与 **`JSON`**（`JSON.stringify`、`JSON.parse<T>`） | 内联 16 字节 SIMD + `[2048]u8` 栈零分配正则与零拷贝 JSON |
 | `cap:sqlite` | `Database`（`init`, `exec`, `query_string`） | 原生轻量级 SQLite 嵌入式数据库驱动 |
 | `cap:http` | `Method`, `Headers`, `ETag`, `MimeType`, `CookieMap`, `FormData`, `Request`, `Response`, `HttpServer`, `HTTPClient`, `H2ClientSession`, `HpackCodec`, `H3ClientSession`, `fetch`, `serve` | 现代 HTTP/1.1、H2/HPACK、H3、Cookie、Multipart 全协议栈 |
 | `cap:ws` | `Opcode`, `CloseCode`, `FrameHeader`, `FrameBuilder`, `Mask` | RFC 6455 WebSocket 协议帧编解码 |
-| `cap:router` | `Router<T>`, `RadixNode<T>`, `ParamMap`, `RouteMatch`, `Route` | 极速 Radix-Tree 路由匹配引擎 |
-| `cap:net` | `SocketAddress`, `UdpSocket`, `UdpPacket`, `TcpStream`, `TcpServer`, `SafeSocket` | TCP/UDP/QUIC 套接字与网络反应堆抽象 |
+| `cap:router` | `Router<T>`, `RadixNode<T>`, `ParamMap`, `RouteMatch`, `Route`, `RouteFormatter` | 极速 Radix-Tree 路由匹配与反向路径格式化引擎 |
+| `cap:net` | `SocketAddress`, `UdpSocket`, `UdpPacket`, `TcpStream`, `TcpServer`, `SafeSocket`, `HttpConnectTunnel`, `Socks5Codec` | TCP/UDP/QUIC 套接字、HTTP CONNECT 与 SOCKS5 代理隧道 |
 | `cap:dns` | `DnsHeader`, `DnsRecordType`, `NameEncodeResult`, `HostsTable` | RFC 1035 DNS 报文编解码与 hosts 解析 |
 | `cap:s3` | `S3Acl`, `S3StorageClass`, `S3Credentials`, `SigV4Signer` | AWS S3 凭证与 SigV4 签名引擎 |
 | `cap:sourcemap` | `VLQ`, `LineOffsetTable`, `ParsedSourceMap` | Base64 VLQ 与 SourceMap v3 映射反查 |
 | `cap:fs` | `readFile`, `writeFile`, `exists`, `stat`, `tmpDir`, `tmpPath`, `writeAtomic` | 同步/异步现代文件系统高阶抽象 |
 | `cap:path` | `path`, `Path`, `PosixPath`, `WindowsPath` | 跨平台路径计算引擎 |
-| `cap:url` | `URL`, `URLSearchParams`, `QueryParam` | WHATWG 标准 URL 解析与查询参数管理 |
+| `cap:url` | `URL`, `URLSearchParams`, `QueryParam`, `PercentEncoding` | WHATWG 标准 URL、查询参数与 RFC 3986 百分号编解码 |
 | `cap:glob` | `Glob`（`match`, `hasMagic`） | 极速 Unix Glob 通配符匹配 |
 | `cap:semver` | `Semver`, `Version`（`parse`, `satisfiesStr`） | Semver 2.0 语义化版本解析与范围匹配 |
 | `cap:which` | `which`, `isExecutable`, `WhichOptions` | 跨平台 `PATH` 可执行程序定位器 |
-| `cap:encoding` | `Base64`（Standard, URL-Safe, 无填充） | 高性能数据编解码库 |
+| `cap:encoding` | `Base64`（Standard, URL-Safe, 无填充）, `Hex`（`encodeLower`, `encodeUpper`, `decode`） | 高性能 Base64 与十六进制数据编解码库 |
 | `cap:crypto` | `sha256`, `sha512`, `randomBytes`, `fillRandom`, `randomUUID`, `Aes256Gcm`, `ChaCha20Poly1305`, `Hmac`, `pbkdf2`, `TlsHostnameVerifier` | 密码学随机数、散列、AEAD 加密与 BoringSSL X.509 校验 |
 | `cap:security` | `CSRF`, `TokenFormat`, `constantTimeEql` | 防 CSRF 签名与恒定时间安全比对 |
 | `cap:reflect` | `reflect.type<T>()`, `reflect.of()`, `reflect.has()`, `reflect.hasField()`, `reflect.hasMethod()` | 编译期与运行时统一反射内省库 |

@@ -818,4 +818,6 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
 ### 3. 双子智能体并行深化与匿名返回结构体只读接收者自愈 (`task-20261115-generic-return-struct-readonly-receiver`)
 - **匿名返回结构体只读接收者判定**：在 `generate_zig_or_struct` 中，旧逻辑仅检查首参是否为显式 `this`/`_`，导致采用 CP 正交语法省略 `_` 的只读实例方法（如 `fn get(): T { return _.x; }`）被误置 `m.is_static = true`。现通过联合检测方法体是否引用 `_`/`this`/`self` 以及结构体是否包含字段，精准保留实例方法属性并发射 `self: @This()`，使 `zig ast-check` 100% 通过。
 - **三路无重叠并行架构**：主智能体常驻维护 `cpc/` 热修通道与 `watch_task.py` 守护进程，子智能体 1 与子智能体 2 分别在协议栈轨道（`sql`/`redis`/`http`）与容器/工具轨道（`col`/`pack`/`md`/`html`/`cli`/`watch`/`patch`/`bench`）并行推进，一次性完成 12 个深化子模块与 3 套端到端回归测试（12/12 PASS）。
+- **第二波 8 模块并行深化**：子智能体 1 深化 `lib/elf/macho_pe.cp`、`lib/ffi/layout.cp`、`lib/net/proxy.cp`、`lib/conf/getter.cp`（`test_elf_ffi_net_conf.cp` 4/4 PASS），子智能体 2 深化 `lib/encoding/hex.cp`、`lib/url/percent.cp`、`lib/string/case.cp`、`lib/router/pattern.cp`（`test_hex_url_case_router.cp` 4/4 PASS），累计已完成 20 个标准库深度增强模块并全部通过端到端验证。
+
 

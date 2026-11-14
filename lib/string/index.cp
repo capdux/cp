@@ -26,3 +26,4 @@ export {
 } from "./escape.cp";
 
 export * from "./grapheme.cp";
+export * from "./case.cp";

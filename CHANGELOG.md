@@ -618,3 +618,18 @@
   - [`cap/test/test_col_pack_md_html.cp`](file:///data/dev/cp/cap/test/test_col_pack_md_html.cp)（4/4 PASS）；
   - [`cap/test/test_cli_watch_patch_bench.cp`](file:///data/dev/cp/cap/test/test_cli_watch_patch_bench.cp)（4/4 PASS）。
 
+### 2026-11-15（续 2） 第二波双子智能体并行深化 8 个标准库子模块
+- **新增与更新标准库文件 (`lib/`)**：
+  - [`lib/elf/macho_pe.cp`](file:///data/dev/cp/lib/elf/macho_pe.cp) & [`lib/elf/index.cp`](file:///data/dev/cp/lib/elf/index.cp)：Mach-O 64 位头部与 PE/COFF 头部解析器（`MachHeader64`, `MachoInspector`, `PeCoffHeader`, `PeInspector`）；
+  - [`lib/ffi/layout.cp`](file:///data/dev/cp/lib/ffi/layout.cp) & [`lib/ffi/index.cp`](file:///data/dev/cp/lib/ffi/index.cp)：C-ABI 结构体字段偏移与自然对齐计算器（`CStructLayout`, `CStructField`）；
+  - [`lib/net/proxy.cp`](file:///data/dev/cp/lib/net/proxy.cp) & [`lib/net/index.cp`](file:///data/dev/cp/lib/net/index.cp)：HTTP `CONNECT` 代理隧道与 SOCKS5 握手/连接帧编解码器（`HttpConnectTunnel`, `Socks5Codec`）；
+  - [`lib/conf/getter.cp`](file:///data/dev/cp/lib/conf/getter.cp) & [`lib/conf/index.cp`](file:///data/dev/cp/lib/conf/index.cp)：配置值强类型解析器 `ConfValueParser`（布尔、端口、时长 `ms/s/m/h`、容量 `b/kb/mb/gb`）；
+  - [`lib/encoding/hex.cp`](file:///data/dev/cp/lib/encoding/hex.cp) & [`lib/encoding/index.cp`](file:///data/dev/cp/lib/encoding/index.cp)：零堆分配查表十六进制编解码器 `Hex`；
+  - [`lib/url/percent.cp`](file:///data/dev/cp/lib/url/percent.cp)、[`lib/url/query.cp`](file:///data/dev/cp/lib/url/query.cp) & [`lib/url/index.cp`](file:///data/dev/cp/lib/url/index.cp)：RFC 3986 URI 百分号编解码器 `PercentEncoding`；
+  - [`lib/string/case.cp`](file:///data/dev/cp/lib/string/case.cp) & [`lib/string/index.cp`](file:///data/dev/cp/lib/string/index.cp)：标识符命名风格转换器 `CaseConverter`（`toSnakeCase`, `toKebabCase`, `toCamelCase`, `toPascalCase`, `toScreamingSnakeCase`）；
+  - [`lib/router/pattern.cp`](file:///data/dev/cp/lib/router/pattern.cp)、[`lib/router/radix.cp`](file:///data/dev/cp/lib/router/radix.cp) & [`lib/router/index.cp`](file:///data/dev/cp/lib/router/index.cp)：路由模板参数提取与反向 URL 格式化器 `RouteFormatter`。
+- **新增端到端测试套件**：
+  - [`cap/test/test_elf_ffi_net_conf.cp`](file:///data/dev/cp/cap/test/test_elf_ffi_net_conf.cp)（4/4 PASS）；
+  - [`cap/test/test_hex_url_case_router.cp`](file:///data/dev/cp/cap/test/test_hex_url_case_router.cp)（4/4 PASS）。
+
+

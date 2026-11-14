@@ -65,3 +65,9 @@ export {
     UdpPacket,
     UdpSocket
 } from "./udp";
+
+export {
+    HttpConnectTunnel,
+    Socks5AddrType,
+    Socks5Codec
+} from "./proxy";

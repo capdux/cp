@@ -36,7 +36,10 @@ pub const URLSearchParams = struct {
     pub fn get(*_, key: []const u8): ([]const u8)? {
         let i: usize = 0;
         while (i < _.len) : (i += 1) {
-            const entry = if (dyn := _.dynamic_entries) dyn[i] else _.entries[i];
+            let entry = _.entries[i];
+            if (dyn := _.dynamic_entries) {
+                entry = dyn[i];
+            }
             if (std.mem.eql(u8, entry.key, key)) {
                 return entry.value;
             }
@@ -97,10 +100,10 @@ pub const URLSearchParams = struct {
     pub fn delete(*_, key: []const u8) {
         let i: usize = 0;
         while (i < _.len) {
-            const matches = if (dyn := _.dynamic_entries)
-                std.mem.eql(u8, dyn[i].key, key)
-            else
-                std.mem.eql(u8, _.entries[i].key, key);
+            let matches = std.mem.eql(u8, _.entries[i].key, key);
+            if (dyn := _.dynamic_entries) {
+                matches = std.mem.eql(u8, dyn[i].key, key);
+            }
 
             if (matches) {
                 let j = i;
@@ -147,7 +150,10 @@ pub const URLSearchParams = struct {
         let out_idx: usize = 0;
         let i: usize = 0;
         while (i < _.len) : (i += 1) {
-            const entry = if (dyn := _.dynamic_entries) dyn[i] else _.entries[i];
+            let entry = _.entries[i];
+            if (dyn := _.dynamic_entries) {
+                entry = dyn[i];
+            }
             if (i > 0 and out_idx < 1024) {
                 buf[out_idx] = '&';
                 out_idx += 1;

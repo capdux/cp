@@ -21,7 +21,7 @@ pub fn RadixNode(comptime T: type): type {
         wildcard_child: (*Self)? = null,
 
         pub fn create(allocator: std.mem.Allocator, segment: []const u8) *Self {
-            const node = allocator.create(Self) catch unreachable;
+            let node = allocator.create(Self) catch unreachable;
             node.segment = segment;
             node.is_param = false;
             node.is_wildcard = false;
@@ -132,7 +132,7 @@ pub fn Router(comptime T: type): type {
                 if (existing := parent.param_child) {
                     return existing;
                 }
-                const child = Node.create(_.allocator, seg);
+                let child = Node.create(_.allocator, seg);
                 child.is_param = true;
                 child.param_name = name;
                 parent.param_child = child;
@@ -145,7 +145,7 @@ pub fn Router(comptime T: type): type {
                 if (existing := parent.wildcard_child) {
                     return existing;
                 }
-                const child = Node.create(_.allocator, seg);
+                let child = Node.create(_.allocator, seg);
                 child.is_wildcard = true;
                 child.wildcard_name = name;
                 parent.wildcard_child = child;
@@ -177,7 +177,7 @@ pub fn Router(comptime T: type): type {
         }
 
         fn lookupInTree(*_, root: *Node, path: []const u8): Match? {
-            * = _;
+            if (_.trees.len == 0) return null;
             let params = ParamMap.init();
             let p = path;
             if (p.len > 0 and p[0] == '/') p = p[1..];

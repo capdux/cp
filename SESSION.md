@@ -1300,8 +1300,13 @@
     - **复现文件**：`/data/dev/bun/temp/repro_generic_return_struct_readonly_receiver.cp`
     - **问题描述**：在泛型函数返回匿名 `struct`（`return struct { ... }`）中，当实例方法采用 CP 只读接收者省略首参规范（`fn get(): T { return _.x; }`）时，`cpc` 在 codegen 输出 Zig 时方法体内生成了 `self.x`，但方法形参列表漏掉了 `self: @This()`，导致 `zig ast-check` 报 `use of undeclared identifier 'self'`。
     - **修复方案与验证**：在 [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs) 的 `generate_zig_or_struct()` 中检测方法体是否引用 `_` / `this` / `self` 及结构体是否包含字段，不再盲目将省略 `_` 的只读实例方法强制覆盖为 `m.is_static = true`；`repro_generic_return_struct_readonly_receiver.cp` 转译输出 `pub fn get(self: @This()) T { return self.x; }` 并 100% 通过 `zig ast-check`，已完成结单并重启常驻监听守护进程 `task-26890`。
-14. **阶段里程碑双轨规范同步与 Git 提交**：
-    - 同步更新 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)、[`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)、[`SESSION.md`](file:///data/dev/cp/SESSION.md)、[`CHANGELOG.md`](file:///data/dev/cp/CHANGELOG.md)、[`DEVLOG.md`](file:///data/dev/cp/DEVLOG.md)，并执行单次干净的 Git Commit。
+14. **阶段里程碑双轨规范同步与 Git 提交（`42966c3`）**：
+    - 同步更新 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)、[`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)、[`SESSION.md`](file:///data/dev/cp/SESSION.md)、[`CHANGELOG.md`](file:///data/dev/cp/CHANGELOG.md)、[`DEVLOG.md`](file:///data/dev/cp/DEVLOG.md)，并执行单次干净的 Git Commit（`42966c3`）。
+15. **第二波双子智能体并行深化 8 个标准库子模块（全部 100% PASS）**：
+    - **并行子智能体 1（Batch 2 — ✅ 4/4 PASS）**：完成 [`lib/elf/macho_pe.cp`](file:///data/dev/cp/lib/elf/macho_pe.cp)（`MachHeader64`, `MachoInspector`, `PeCoffHeader`, `PeInspector`）、[`lib/ffi/layout.cp`](file:///data/dev/cp/lib/ffi/layout.cp)（`CStructLayout`, `CStructField`）、[`lib/net/proxy.cp`](file:///data/dev/cp/lib/net/proxy.cp)（`HttpConnectTunnel`, `Socks5Codec`）、[`lib/conf/getter.cp`](file:///data/dev/cp/lib/conf/getter.cp)（`ConfValueParser`）及测试 [`cap/test/test_elf_ffi_net_conf.cp`](file:///data/dev/cp/cap/test/test_elf_ffi_net_conf.cp)（4/4 PASS）；
+    - **并行子智能体 2（Batch 3 — ✅ 4/4 PASS）**：完成 [`lib/encoding/hex.cp`](file:///data/dev/cp/lib/encoding/hex.cp)（`Hex` 十六进制查表编解码）、[`lib/url/percent.cp`](file:///data/dev/cp/lib/url/percent.cp)（RFC 3986 `PercentEncoding`）、[`lib/string/case.cp`](file:///data/dev/cp/lib/string/case.cp)（`CaseConverter` 命名风格转换）、[`lib/router/pattern.cp`](file:///data/dev/cp/lib/router/pattern.cp)（`RouteFormatter` 反向路径填充）及测试 [`cap/test/test_hex_url_case_router.cp`](file:///data/dev/cp/cap/test/test_hex_url_case_router.cp)（4/4 PASS）；
+    - 同步更新双轨规范与四线文档并执行 Git 提交。
+
 
 
 
