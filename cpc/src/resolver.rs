@@ -72,6 +72,9 @@ pub fn resolve_source_path(
         search_source = match stripped {
             "col" | "collections" => "col".to_string(),
             "event" | "event_loop" | "events" => "event".to_string(),
+            "sync" | "threading" => "sync".to_string(),
+            "shell" | "sh" => "shell".to_string(),
+            "image" | "img" | "png" => "image".to_string(),
             "conf" | "dotenv" | "ini" => "conf".to_string(),
             "pack" | "compress" => "pack".to_string(),
             "css" => "css".to_string(),
@@ -109,6 +112,7 @@ pub fn resolve_source_path(
             let remapped = search_source
                 .replace("lib/event_loop", "lib/event")
                 .replace("lib/collections", "lib/col")
+                .replace("lib/threading", "lib/sync")
                 .replace("lib/compress", "lib/pack")
                 .replace("lib/events.cp", "lib/event/emitter.cp");
             if remapped != search_source {

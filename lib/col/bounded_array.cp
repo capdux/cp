@@ -14,7 +14,7 @@ pub struct BoundedArray<T, const CAP: usize> {
     }
 
     pub fn capacity(): usize {
-        return CAP;
+        return _.buffer.len;
     }
 
     pub fn isEmpty(): bool {

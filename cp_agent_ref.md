@@ -965,8 +965,8 @@ switch (msg) {
 
 | 标准库协议通道 | 核心导出符号（精确 API 命名） | 核心职责 |
 | :--- | :--- | :--- |
-| `cap:col`（兼容 `cap:collections`） | **`Vec<T>`, `VecDeque<T>`, `BinaryHeap<T>`, `BTreeMap<K, V>`, `BTreeSet<T>`, `HashMap<K, V>`, `HashSet<T>`, `BoundedArray<T, CAP>`, `BabyList<T>`, `LinearFifo<T>`, `HiveArray<T, CAP>`, `ObjectPool<T, CAP>`, `BitSet256`, `StaticStringMap`** | 完备标准容器与零堆分配紧凑集合 |
-| `cap:event`（兼容 `cap:event_loop` / `cap:events`） | `EventLoop`, `Timer`, `TimerHeap`, `ConcurrentTask`, `ConcurrentQueue`, `DeferredTaskQueue`, `PollEngine`, `EventEmitter` | 统一事件循环驱动、最小堆定时器与事件总线 |
+| `cap:col`（兼容 `cap:collections`） | **`Vec<T>`, `VecDeque<T>`, `BinaryHeap<T>`, `BTreeMap<K, V>`, `BTreeSet<T>`, `HashMap<K, V>`, `HashSet<T>`, `BoundedArray<T, CAP>`, `BabyList<T>`, `LinearFifo<T>`, `HiveArray<T, CAP>`, `ObjectPool<T, CAP>`, `BitSet256`, `StaticStringMap`, `StaticHashMap<K, V, CAP>`** | 完备标准容器与零堆分配紧凑集合 |
+| `cap:event`（兼容 `cap:event_loop` / `cap:events`） | `EventLoop`, `Timer`, `TimerHeap`, `ConcurrentTask`, `ConcurrentQueue`, `DeferredTaskQueue`, `PollEngine`, `EventEmitter`, `AnyTask`, `ManagedTask` | 统一事件循环驱动、最小堆定时器与事件总线 |
 | `cap:conf`（兼容 `cap:dotenv` / `cap:ini`） | `DotEnv`, `Ini`, `IniParser`, `TOML`, `TomlDoc`, `YAML`, `YamlDoc`, `JSON5`, `Json5Scanner`, `ConfValueParser` | `.env`、INI、TOML、YAML、JSON5 统一配置解析与类型转换 |
 | `cap:pack`（兼容 `cap:compress`） | `Zlib`, `Deflate`, `Zstd`, `Brotli`, `CompressionFormat`, `Crc32`, `Adler32`, `GzipHeader`, `RleCodec`, `TarHeader`, `TarReader`, `ZipReader`, `ZipLocalHeader`, `ZipCentralHeader`, `ZipEocd` | 流式压缩（Zlib/Zstd/Brotli/Gzip）与 TAR/ZIP 归档 |
 | `cap:redis` | `RESPType`, `RESPFrame`, `RESPParser`, `RESPEncoder`, `RedisCommand`, `RedisPipeline` | Redis / Valkey RESP2 & RESP3 协议编解码、命令与 Pipeline |
@@ -978,17 +978,19 @@ switch (msg) {
 | `cap:md` | `Markdown`（`renderHtml`, `renderAnsi`）, `MdTable`, `MdTableAlign` | CommonMark / GFM 解析器、HTML / ANSI 渲染与 GFM 表格 |
 | `cap:html` | `CssSelector`, `HtmlRewriter`, `HtmlEscape` | CSS 选择器解析、流式 HTML 标签重写与实体转义器 |
 | `cap:css` | `CssColor`, `CssUnit`, `CssLength`, `CssCalc`, `CssSpecificity`, `CssSelector`, `CssProperty`, `CssRuleKind`, `CssMediaQuery`, `CssKeyframeStep`, `CssKeyframes`, `CssRule`, `CssStylesheetParser`（及 `selectors/`、`rules/`、`values/`、`properties/` 99 模块引擎） | 工业级 CSS 解析、OKLCH/HSL/RGB 颜色空间、calc() 计算、选择器权重与样式表压缩引擎 |
+| `cap:image`（兼容 `cap:png` / `cap:img`） | `Png`, `PngImage`, `RgbaColor`, `PngColorType`, `PngFilterType`, `Codecs`, `ImageFormat`, `Bmp`, `BmpHeader`, `Quantizer`, `QuantizeResult` | 原生 PNG 截图编码/解码、像素检查、BMP DIB 编解码、颜色量化与多格式二进制嗅探 |
 | `cap:ffi` | `DynLib`, `FFIType`, `FFISignature`, `CStructLayout`, `CStructField`, `TccOutputFormat` | 跨平台动态库加载（dlopen）、C-ABI 布局计算与 TinyCC 声明 |
-| `cap:sql` | `SqlType`, `SqlDialect`, `SqlStatement`, `PostgresWire`, `PostgresAuthChallenge`, `PostgresDataRow`, `PostgresCommandComplete`, `MySqlPacketHeader`, `MySqlLenEnc`, `MySqlCapabilities`, `MySqlOkPacket`, `MySqlErrPacket` | PostgreSQL v3 / MySQL 二进制协议帧与预编译语句绑定 |
+| `cap:sql` | `SqlType`, `SqlDialect`, `SqlStatement`, `PostgresWire`, `PostgresAuthChallenge`, `PostgresDataRow`, `PostgresCommandComplete`, `MySqlPacketHeader`, `MySqlLenEnc`, `MySqlCapabilities`, `MySqlOkPacket`, `MySqlErrPacket`, `SqliteDatabase`, `SqliteRows` | PostgreSQL v3 / MySQL / SQLite3 数据库协议与零依赖驱动 |
+| `cap:shell`（兼容 `cap:sh`） | `Lexer`, `Parser`, `Shell`, `sh`, `ShellResult`, `Command`, `Pipeline`, `Statement`, `Redirection` | 原生嵌入式 Shell 执行引擎、AST 解析器、内置指令与管道重定向 |
 | `cap:io` | `Reader`, `Writer`, `Closer`, `Seeker`, `BufferReader`, `BufferWriter`, `BufferedReader`, `BufferedWriter`, `copyStream`, `PipeReader`, `PipeWriter`, `MaxBuf`, `Pipe`, `print` | 统一流契约、零拷贝管道与标准 I/O |
 | `cap:stream` | `Pipe`, `PipeReader`, `PipeWriter`, `MaxBuf`, 统一零拷贝流接口重导出 | 工业级零拷贝流式 I/O 管道 |
-| `cap:sync` | `Mutex`, `RwLock`, `Atomic`, `Shared`, `Futex`, `Condition`, `WaitGroup`, `Channel`, `MpmcQueue`, `UnboundedQueue`, `ConcurrentMap`, `ArcSlice`, `Wyhash` | 锁、无锁队列、共享智能指针与并发原语 |
+| `cap:sync` | `Mutex`, `RwLock`, `Atomic`, `Shared`, `Futex`, `Condition`, `WaitGroup`, `Channel`, `MpmcQueue`, `UnboundedQueue`, `ConcurrentMap`, `ArcSlice`, `Wyhash`, `Guarded<T>`, `WorkPool` | 锁、无锁队列、共享智能指针、并发池与底层同步原语 |
 | `cap:parallel` | `spawn`, `join`, `Task` | 多核 Worker 线程池与异步任务汇聚 |
 | `cap:actor` | `yield`, `receive`, `sleep`, `join`, `self_pid`, `sender`, `send`, `reply`（内建 `@spawn`/`@receive`/`@reply`/`@send`/`@self`/`@sender`） | BEAM 级轻量级 Actor 消息并发模型 |
 | `cap:beam` | `PID`, `Message`, `Agent`, `SystemAction` | BEAM 节点信箱协议、系统调度动作码 |
 | `cap:worker` | `Worker` 与 `PID` 联动封装 | 独立隔离工作线程管理 |
 | `cap:mem` | `Arena`, `SharedTensor`, `Cow`, `CowSlice`, `TaggedPointer`, `TaggedPtr`, `MaxHeapAllocator` | 区域内存分配、写时复制切片、打标指针与共享大张量 |
-| `cap:string` | `ZigString`, `WTF8`, `SimdUtf`, `Utf8Grapheme`, `CaseConverter`（`isValidUtf8`, `countCodepoints`, `countGraphemes`, 命名风格互转） | SIMD UTF-8/16 校验转换、UAX #29 字素簇与命名转换 |
+| `cap:string` | `ZigString`, `WTF8`, `SimdUtf`, `Utf8Grapheme`, `CaseConverter`, `SmolStr`, `HashedString`, `PathString`, `StringJoiner` | SIMD UTF-8/16 校验转换、UAX #29 字素簇、15B 纯栈 SSO 字符串与零拷贝路径解析 |
 | `cap:json` | `JsonParser`, `JsonValue`, `JsonBufferPool`, `parse`, `stringify`（另有免 import 内置 `JSON`） | 零拷贝流式 JSON 解析框架 |
 | `cap:serde` | `@json_parse`, `@json_stringify`, 零拷贝序列化契约 | 高性能编解码与结构化映射 |
 | 内置 `RegExp` / `JSON`（无需 `import`） | **`RegExp`**（`/pattern/flags`）与 **`JSON`**（`JSON.stringify`、`JSON.parse<T>`） | 内联 16 字节 SIMD + `[2048]u8` 栈零分配正则与零拷贝 JSON |

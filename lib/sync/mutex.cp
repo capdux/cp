@@ -142,7 +142,6 @@ pub struct Mutex {
     }
 
     pub fn release(*_) {
-        * = _;
     }
     pub fn deinit(*_) {
         _.release();

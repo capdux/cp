@@ -14,23 +14,25 @@ pub fn MpmcQueue(comptime T: type, comptime Capacity: usize): type {
         tail: std.atomic.Value(usize) = .{ .raw = 0 },
 
         pub fn init(): Self {
-            let self: Self = undefined;
-            self.head = .{ .raw = 0 };
-            self.tail = .{ .raw = 0 };
+            let q: Self = .{
+                .head = .{ .raw = 0 },
+                .tail = .{ .raw = 0 },
+                .slots = undefined,
+            };
             let i: usize = 0;
             while (i < Capacity) : (i += 1) {
-                self.slots[i] = .{
+                q.slots[i] = .{
                     .turn = .{ .raw = i },
                     .storage = undefined,
                 };
             }
-            return self;
+            return q;
         }
 
         pub fn tryPush(*_, item: T): bool {
             let head = _.head.load(.monotonic);
             while (true) {
-                const slot = &_.slots[head % Capacity];
+                let slot = &_.slots[head % Capacity];
                 const turn = slot.turn.load(.acquire);
                 const diff = @as(i64, @intCast(turn)) - @as(i64, @intCast(head));
                 if (diff == 0) {

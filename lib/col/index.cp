@@ -10,6 +10,7 @@
 //   - bit_set.cp       : Multi-word static BitSet256 with hardware @ctz/@popCount
 //   - string_map.cp    : Length-filtered FastStringMap<V, CAP> (exact & ASCII case-insensitive)
 //   - object_pool.cp   : Fixed-capacity zero-heap free-list ObjectPool<T, CAP>
+//   - hash_map.cp      : Fixed-capacity zero-heap StaticHashMap<K, V, CAP>
 
 export * from "./bounded_array.cp";
 export * from "./baby_list.cp";
@@ -18,3 +19,4 @@ export * from "./hive_array.cp";
 export * from "./bit_set.cp";
 export * from "./string_map.cp";
 export * from "./object_pool.cp";
+export * from "./hash_map.cp";

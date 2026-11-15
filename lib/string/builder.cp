@@ -1,125 +1,15 @@
 // lib/string/builder.cp
-// HashedString, SmolStr (15-byte inline small string), and two-pass StringBuilder
-// Absorbed from bun/src/string/HashedString.zig, SmolStr.zig, StringBuilder.zig
+// Two-pass zero-reallocation StringBuilder
+// Absorbed from bun/src/string/StringBuilder.zig with pure CP semantics
 
-// Fast 32-bit FNV-1a hash for HashedString O(1) comparison
-pub fn hashBytes32(data: []const u8): u32 {
-    let h: u32 = 2166136261;
-    let i: usize = 0;
-    while (i < data.len) {
-        h = (h ^ (data[i] as u32)) *% 16777619;
-        i += 1;
-    }
-    return if (h == 0) 1 else h;
-}
-
-// Pre-hashed string view for O(1) fast rejection in identifier/header tables
-pub struct HashedString {
-    data: []const u8 = "";
-    hash: u32 = 0;
-
-    pub static fn init(buf: []const u8): HashedString {
-        return HashedString{
-            data: buf,
-            hash: hashBytes32(buf),
-        };
-    }
-
-    pub fn len(): usize {
-        return _.data.len;
-    }
-
-    pub fn eql(other: HashedString): bool {
-        if (_.hash != other.hash || _.data.len != other.data.len) {
-            return false;
-        }
-        let eq = false;
-        zig {
-            eq = std.mem.eql(u8, self.data, other.data);
-        }
-        return eq;
-    }
-}
-
-pub const SMOL_MAX_INLINE: usize = 15;
-
-// Small-string optimized container: stores <= 15 bytes inline on the stack without heap allocation
-pub struct SmolStr {
-    inline_buf: [15]u8 = undefined;
-    heap_ptr: [*]u8! = undefined;
-    length: u32 = 0;
-    inlined: bool = true;
-
-    pub static fn init(s: []const u8): SmolStr {
-        if (s.len <= SMOL_MAX_INLINE) {
-            let res = SmolStr{
-                inline_buf: undefined,
-                heap_ptr: undefined,
-                length: s.len as u32,
-                inlined: true,
-            };
-            let i: usize = 0;
-            while (i < s.len) {
-                res.inline_buf[i] = s[i];
-                i += 1;
-            }
-            return res;
-        }
-        zig {
-            const duped = std.heap.page_allocator.dupe(u8, s) catch unreachable;
-            return SmolStr{
-                .inline_buf = undefined,
-                .heap_ptr = duped.ptr,
-                .length = @intCast(s.len),
-                .inlined = false,
-            };
-        }
-    }
-
-    pub fn isInlined(): bool {
-        return _.inlined;
-    }
-
-    pub fn len(): usize {
-        return _.length as usize;
-    }
-
-    pub fn slice(*_): []const u8 {
-        const n = _.length as usize;
-        if (n == 0) {
-            return &[];
-        }
-        if (_.inlined) {
-            return _.inline_buf[0..n];
-        }
-        let s: []const u8 = &[];
-        zig {
-            s = self.heap_ptr[0..n];
-        }
-        return s;
-    }
-
-    pub fn release(*_) {
-        if (!_.inlined && _.length > 0) {
-            const n = _.length as usize;
-            zig {
-                std.heap.page_allocator.free(self.heap_ptr[0..n]);
-            }
-        }
-        _.length = 0;
-        _.inlined = true;
-    }
-}
-
-// Two-pass zero-reallocation StringBuilder (Absorbed from bun/src/string/StringBuilder.zig)
 pub struct StringBuilder {
-    ptr: [*]u8! = undefined;
-    len: usize = 0;
-    cap: usize = 0;
-    allocated: bool = false;
+    ptr: [*]u8! = undefined,
+    len: usize = 0,
+    cap: usize = 0,
+    allocated: bool = false,
 
     pub static fn init(): StringBuilder {
-        return StringBuilder{
+        return StringBuilder {
             ptr: undefined,
             len: 0,
             cap: 0,

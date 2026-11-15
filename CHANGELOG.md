@@ -1,6 +1,54 @@
-# CP 变更日志 (CHANGELOG) - 2026-11-13 (热数据)
+# CP 变更日志 (CHANGELOG) - 2026-11-16 (热数据)
 
 > 历史变更日志已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
+
+## [2026-11-16] - 核心里程碑：Bun 高价值资产全面吸收、图像子系统（PNG截图/BMP/量化）实装与标准库全景扩展
+
+### 图像子系统实装与截图引擎 (Added `cap:image` & `cap:png`)
+- **纯 CP PNG 编解码器 (`png.cp`)**:
+  - [`lib/image/png.cp`](file:///data/dev/cp/lib/image/png.cp)：为 `capsurf_agy` 网页截图提供专属引擎；
+  - `Png.encodeRgba(rgba, width, height)`：支持标准 8 字节魔数签名、IHDR Chunk、扫描线 None 滤波（0x00 前缀）、Zlib 原生 Deflate 流式压缩生成 IDAT、IEND 闭合与 CRC-32 校验和；
+  - `Png.decode(bytes)`：支持 IHDR 元数据解析、IDAT 聚合解压、5 种滤波逆运算（None, Sub, Up, Average, Paeth）像素还原；
+  - `PngImage` 与 `RgbaColor` 强类型封装，支持坐标级读取与变异；
+  - `Png.save(path, rgba, w, h)` 与 `Png.load(path)` 同步文件 I/O 管道。
+- **图像格式嗅探与 MIME 推导 (`codecs.cp`)**:
+  - [`lib/image/codecs.cp`](file:///data/dev/cp/lib/image/codecs.cp)：8 大图片格式（PNG/JPEG/WebP/BMP/GIF/TIFF/AVIF/HEIC）二进制魔数探测、MIME 字符串映射与文件名后缀推导。
+- **Windows BMP DIB 编解码 (`bmp.cp`)**:
+  - [`lib/image/bmp.cp`](file:///data/dev/cp/lib/image/bmp.cp)：支持 24/32 位 BMP 文件解码与 32 位 BMP 文件编码，包含 4 字节跨距行对齐转换。
+- **调色板颜色量化器 (`quantize.cp`)**:
+  - [`lib/image/quantize.cp`](file:///data/dev/cp/lib/image/quantize.cp)：基于 Median-Cut 算法实现 RGBA 像素向 256 色紧凑调色板与索引图转换。
+- **统一聚合出口 (`index.cp`)**:
+  - [`lib/image/index.cp`](file:///data/dev/cp/lib/image/index.cp)：门面统一导出 `cap:image`、`cap:png`、`cap:img` 协议。
+
+### Bun 高价值资产吸收与标准库扩展 (Added Stdlib)
+- **容器集合库 (`cap:col`)**:
+  - [`lib/col/hash_map.cp`](file:///data/dev/cp/lib/col/hash_map.cp)：开放寻址双重散列 Robin Hood 哈希表，配合 `bit_set.cp`, `bounded_array.cp`, `hive_array.cp`, `object_pool.cp` 形成完整工业级集合体系。
+- **高性能字符串库 (`cap:string`)**:
+  - [`lib/string/smol.cp`](file:///data/dev/cp/lib/string/smol.cp)：24 字节 SSO 小字符串（小于 23 字节纯栈上分配，超长自动堆回退）；
+  - [`lib/string/hashed.cp`](file:///data/dev/cp/lib/string/hashed.cp)：内联 Wyhash 预计算的快速比较字符串对象；
+  - [`lib/string/joiner.cp`](file:///data/dev/cp/lib/string/joiner.cp) 与 [`lib/string/path.cp`](file:///data/dev/cp/lib/string/path.cp)。
+- **线程并发同步库 (`cap:sync`)**:
+  - [`lib/sync/pool.cp`](file:///data/dev/cp/lib/sync/pool.cp)：`Guarded<T>` 互斥锁作用域保护包装类与 `WorkPool` 多线程工作者队列；
+  - 深度重构 `arc_slice.cp`, `concurrent_map.cp`, `condition.cp`, `futex.cp`, `mutex.cp`, `ring_buffer.cp`, `unbounded_queue.cp`, `wait_group.cp`。
+- **动态事件与异步任务库 (`cap:event`)**:
+  - [`lib/event/task.cp`](file:///data/dev/cp/lib/event/task.cp)：`AnyTask` 与 `ManagedTask` 动态多态任务调度与状态机切分。
+- **轻量嵌入式 SQL 数据库 (`cap:sql`)**:
+  - [`lib/sql/sqlite.cp`](file:///data/dev/cp/lib/sql/sqlite.cp)：内存数据库与持久化 SQLite 引擎封装。
+- **内嵌微型脚本引擎 (`cap:shell`)**:
+  - [`lib/shell/lexer.cp`](file:///data/dev/cp/lib/shell/lexer.cp), [`lib/shell/parser.cp`](file:///data/dev/cp/lib/shell/parser.cp), [`lib/shell/eval.cp`](file:///data/dev/cp/lib/shell/eval.cp), [`lib/shell/index.cp`](file:///data/dev/cp/lib/shell/index.cp)。
+
+### 编译器与构建增强 (Compiler & Build)
+- [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs)：注册 `"image" | "img" | "png" => "image"`、`"sync" | "threading" => "sync"`、`"shell" | "sh" => "shell"` 模块路径协议映射。
+- [`cpc/src/codegen/prelude.rs`](file:///data/dev/cp/cpc/src/codegen/prelude.rs)：结构体字段默认值表达式扫描、位移检测、异步内建指令预加载标志修复。
+- [`cap.json`](file:///data/dev/cp/cap.json)：声明链接动态库 `"sqlite3"` 与 `"z"`。
+
+### 测试套件验证 (Tests)
+- [`cap/test/test_image_png.cp`](file:///data/dev/cp/cap/test/test_image_png.cp)：6/6 PASS (100%)。
+- [`cap/test/test_bun_absorbed_assets.cp`](file:///data/dev/cp/cap/test/test_bun_absorbed_assets.cp)：6/6 PASS (100%)。
+- [`cap/test/test_collections_bun.cp`](file:///data/dev/cp/cap/test/test_collections_bun.cp)：6/6 PASS (100%)。
+- [`cap/test/test_sqlite.cp`](file:///data/dev/cp/cap/test/test_sqlite.cp)：PASS (100%)。
+
+---
 
 ## [2026-11-13] - 核心里程碑：安全防护与 CSRF Token 体系（cap:security）实装及基于 5 步法的 cp_agent_ref.md 全量重构
 
@@ -705,8 +753,59 @@
     - [`css_parser.d.cp`](file:///data/dev/bun/src/css/css_parser.d.cp)：废除 TS 箭头语法，重构为标准函数指针类型 `*const fn (*Parser) Result(T)`。
 - **`lib/css/` 标准库全量同步**：
   - 完整同步 Bun CSS 成果至 [`lib/css/`](file:///data/dev/cp/lib/css/)，共计 100 个 `.cp` 文件（包含顶层门面 API），100/100 100% 通过 `cpc --lib` 与 `zig ast-check`。
-- **端到端测试套件全部通过**：
-  - [`cap/test/test_css.cp`](file:///data/dev/cp/cap/test/test_css.cp)：5/5 100% 原生执行通过。
+- **两大重点资产群全量吸收与极简标准库落地 (100% PASS)**：
+  - **资产群一（基础高并发与容器库）**：
+    - [`lib/col/hash_map.cp`](file:///data/dev/cp/lib/col/hash_map.cp)：新增零堆分配 Robin-Hood 线性探查紧凑哈希表 `StaticHashMap<K, V, CAP>`；
+    - [`lib/col/bounded_array.cp`](file:///data/dev/cp/lib/col/bounded_array.cp)、[`lib/col/bit_set.cp`](file:///data/dev/cp/lib/col/bit_set.cp)、[`lib/col/hive_array.cp`](file:///data/dev/cp/lib/col/hive_array.cp)、[`lib/col/object_pool.cp`](file:///data/dev/cp/lib/col/object_pool.cp)：规范方法 receiver，消除未使用参数警告与伪 receiver；
+    - [`lib/string/smol.cp`](file:///data/dev/cp/lib/string/smol.cp)：新增 15 字节纯栈 SSO 小字符串 `SmolStr` 与堆回退；
+    - [`lib/string/hashed.cp`](file:///data/dev/cp/lib/string/hashed.cp)：新增 O(1) 预哈希字符串 `HashedString`；
+    - [`lib/string/path.cp`](file:///data/dev/cp/lib/string/path.cp)：新增零分配路径视图 `PathString`；
+    - [`lib/string/joiner.cp`](file:///data/dev/cp/lib/string/joiner.cp)：新增高效字符串拼接器 `StringJoiner`；
+    - [`lib/sync/pool.cp`](file:///data/dev/cp/lib/sync/pool.cp)：新增线程安全对象包裹器 `Guarded<T>` 与工作线程池队列 `WorkPool`；
+    - [`lib/sync/futex.cp`](file:///data/dev/cp/lib/sync/futex.cp)、[`lib/sync/condition.cp`](file:///data/dev/cp/lib/sync/condition.cp)、[`lib/sync/wait_group.cp`](file:///data/dev/cp/lib/sync/wait_group.cp)、[`lib/sync/unbounded_queue.cp`](file:///data/dev/cp/lib/sync/unbounded_queue.cp)：消灭嵌套结构体 Zig 风格分号语法，规范为 CP 纯正语法与借用契约；
+    - [`lib/event/task.cp`](file:///data/dev/cp/lib/event/task.cp)：新增动态任务执行器 `AnyTask` 与堆管理任务 `ManagedTask`；
+    - 门面 API 同步导出：[`lib/col/index.cp`](file:///data/dev/cp/lib/col/index.cp)、[`lib/string/index.cp`](file:///data/dev/cp/lib/string/index.cp)、[`lib/sync/index.cp`](file:///data/dev/cp/lib/sync/index.cp)、[`lib/event/index.cp`](file:///data/dev/cp/lib/event/index.cp)。
+  - **资产群二（应用与网络协议核心库）**：
+    - [`lib/sql/sqlite.cp`](file:///data/dev/cp/lib/sql/sqlite.cp)：实现原生 SQLite3 数据库引擎抽象 `SqliteDatabase` 与查询游标 `SqliteRows`；
+    - [`lib/sql/index.cp`](file:///data/dev/cp/lib/sql/index.cp)：对外统一聚合导出 MySQL, PostgreSQL, SQLite3 数据库协议与驱动；
+    - [`lib/http/server.cp`](file:///data/dev/cp/lib/http/server.cp)：修复 `Request` 符号导入；
+    - [`lib/shell/`](file:///data/dev/cp/lib/shell/)（全新吸收）：实现原生轻量嵌入式 Shell 执行引擎与解释器：
+      - [`lib/shell/lexer.cp`](file:///data/dev/cp/lib/shell/lexer.cp)：Shell 词法分析器，识别指令、管道、重定向、引号与环境变量；
+      - [`lib/shell/parser.cp`](file:///data/dev/cp/lib/shell/parser.cp)：Shell 语法解析器与 AST 语句结构树构建；
+      - [`lib/shell/exec.cp`](file:///data/dev/cp/lib/shell/exec.cp)：执行调度引擎，实现多级管道进程间通信与 I/O 重定向；
+      - [`lib/shell/builtin.cp`](file:///data/dev/cp/lib/shell/builtin.cp)：内置指令实现（`echo`, `cd`, `pwd`, `which`, `export`, `exit`）；
+      - [`lib/shell/index.cp`](file:///data/dev/cp/lib/shell/index.cp)：门面导出极简 `sh(cmd)` 与 `Shell.run(cmd)`。
+- **编译器与工程配置增强**：
+  - [`cpc/src/codegen/prelude.rs`](file:///data/dev/cp/cpc/src/codegen/prelude.rs)：扫描 `f.default` 字段默认表达式与 `extra_zig` 内位移操作符；对 `@create_pending_task`、`@complete_task`、`@task_spawn`、`@task_join` 标记 `needs_actors = true`；
+  - [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs)：增加 `cap:sync` / `cap:threading` 及 `cap:shell` / `cap:sh` 标准库别名与重映射路径；
+  - [`cap.json`](file:///data/dev/cp/cap.json)：根工程加入 `build.link_libs: ["sqlite3"]`；
+  - 编译器代码直通同步至 `cpc_dev`。
+- **新增综合测试套件**：
+  - [`cap/test/test_bun_absorbed_assets.cp`](file:///data/dev/cp/cap/test/test_bun_absorbed_assets.cp)：涵盖 `cap:string`, `cap:sync`, `cap:event`, `cap:sql`, `cap:shell` 综合端到端测试（6/6 100% PASS）；
+  - [`cap/test/test_collections_bun.cp`](file:///data/dev/cp/cap/test/test_collections_bun.cp)：6/6 100% PASS。
+- **新增原生图像处理标准库 `cap:image` (兼容 `cap:png` / `cap:img`)**：
+  - [`lib/image/png.cp`](file:///data/dev/cp/lib/image/png.cp)：
+    - 实现工业级纯 CP 原生 PNG 截图编码器 `Png.encodeRgba`（W3C 标准 8 字节魔数签名、IHDR 块构造、扫描线 None 滤波、Zlib 原生 Deflate 压缩生成 IDAT、IEND 闭合与 IEEE 802.3 CRC32 校验和）；
+    - 实现 PNG 全滤镜逆运算解码器 `Png.decode`（IHDR 尺寸与颜色类型提取、IDAT 聚合流式解压、支持 None, Sub, Up, Average, Paeth 5 种滤波逆还原为 RGBA8 像素切片）；
+    - 实现面向对象 `PngImage` 与像素结构体 `RgbaColor`（支持 `.getPixel(x, y)`、`.setPixel(x, y, r, g, b, a)`、`.encode()`、`.save(path)`）；
+    - 实现同步文件系统保存 `Png.save(path, rgba, w, h)` 与加载 `Png.load(path)`；
+  - [`lib/image/codecs.cp`](file:///data/dev/cp/lib/image/codecs.cp)：
+    - 实现二进制魔数快速探测 `Codecs.sniff`（支持 PNG, JPEG, WebP, BMP, GIF, TIFF, AVIF, HEIC）；
+    - 实现标准 MIME 映射 `Codecs.mime` 与文件后缀提取 `Codecs.fromExtension`；
+    - 实现 EXIF Orientation 方向解析 `Codecs.getOrientationTransform`；
+  - [`lib/image/bmp.cp`](file:///data/dev/cp/lib/image/bmp.cp)：
+    - 实现 Windows DIB / BMP 格式解码器 `Bmp.decode` 与 32-bit 编码器 `Bmp.encodeRgba`（支持 4 字节跨距行对齐与倒序 Bottom-Up 扫描转换）；
+  - [`lib/image/quantize.cp`](file:///data/dev/cp/lib/image/quantize.cp)：
+    - 实现 Median-Cut 颜色量化器 `Quantizer.quantize`（RGBA8 转 256 色紧凑调色板与像素索引矩阵）；
+  - [`lib/image/index.cp`](file:///data/dev/cp/lib/image/index.cp)：
+    - 对外统一导出 `cap:image`、`cap:png`、`cap:img` 协议；
+- **编译器与工程构建增强**：
+  - [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs)：注册 `"image" | "img" | "png" => "image".to_string()`；
+  - [`cap.json`](file:///data/dev/cp/cap.json)：引入 `"z"` 动态链接库支持原生硬件极速压缩；
+  - 同步部署至 `cpc_dev`。
+- **新增综合测试套件**：
+  - [`cap/test/test_image_png.cp`](file:///data/dev/cp/cap/test/test_image_png.cp)：包含格式嗅探、RGBA8 截图编码、IHDR 签名校验、像素往返解码比对、文件保存与加载、BMP 编解码、颜色量化 6 大测试用例（**6/6 100% PASS**）。
+
 
 
 

@@ -43,7 +43,6 @@ pub struct WaitGroup {
     }
 
     pub fn deinit(*_) {
-        * = _;
     }
 
     pub fn wait(*_) {

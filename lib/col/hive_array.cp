@@ -75,7 +75,7 @@ pub struct HiveArray<T, const CAP: usize> {
     }
 
     pub fn capacity(): usize {
-        return CAP;
+        return _.buffer.len;
     }
 
     pub fn usedCount(): usize {

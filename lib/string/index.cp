@@ -14,10 +14,6 @@ export {
 } from "./utf.cp";
 
 export {
-    hashBytes32,
-    HashedString,
-    SMOL_MAX_INLINE,
-    SmolStr,
     StringBuilder,
 } from "./builder.cp";
 
@@ -27,3 +23,7 @@ export {
 
 export * from "./grapheme.cp";
 export * from "./case.cp";
+export * from "./smol.cp";
+export * from "./hashed.cp";
+export * from "./path.cp";
+export * from "./joiner.cp";

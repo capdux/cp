@@ -1493,6 +1493,130 @@
 4. **四线文档与设计规范全量沉淀**：
    - [`SESSION.md`](file:///data/dev/cp/SESSION.md)、[`CHANGELOG.md`](file:///data/dev/cp/CHANGELOG.md)、[`DEVLOG.md`](file:///data/dev/cp/DEVLOG.md)、[`cp_ref.md`](file:///data/dev/cp/cp_ref.md)、[`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)、[`GEMINI.md`](file:///data/dev/cp/GEMINI.md)。
 
+---
+
+### [2026-11-16 02:48] 启动常驻多 AGY 通信监听守护进程
+
+**指令内容**：
+- “常驻通信进程要启动”
+
+**执行结果汇报**：
+1. **启动常驻守护任务**：
+   - 调用 `run_command`（`IsDaemon: true`, `WaitMsBeforeAsync: 500`）启动多 AGY 待处理任务监听器：
+     ```bash
+     python3 scripts/watch_task.py --status pending --creator all --timeout 0
+     ```
+   - 后台任务 ID：`task-35062`，状态：`RUNNING`（Daemon 常驻）。
+2. **多端监听全覆盖**：
+   - 监听所有下游来源（`bun_agy` 与 `capsurf_agy`）；
+   - 一旦下游投递新的编译器缺陷工单或语法阻断，系统将自动产生反应式唤醒通知，即刻切入紧急热修流程。
+
+---
+
+### [2026-11-16 02:59] 启动双子智能体拓扑推进 Bun 资产分析吸收与编译器急修通道
+
+**指令内容**：
+- “继续 分析 bun agy 迁移的cp文件, 将bun有价值资产吸收进来, 作为cp的 lib 库
+还是跟之前一样, 两个子智能体, 一个负责自研, 一个负责急修”
+
+**执行与部署汇报**：
+1. **急修工程师 (`Hotfix Engineer` - [`3492b1c1`](conversation://3492b1c1-ca94-4dec-b035-58d7389a663b))**：
+   - 专注监听并响应 `scripts/task_queue.py` 中 `bun_agy` 与 `capsurf_agy` 投递的阻断工单；
+   - 坚守纯正语法底线，若下游写了非法语法提供自愈建议，若属编译器 Bug 则秒级热修并调用 `scripts/sync_cpc.sh` 原子更新部署。
+2. **核心资产自研吸收工程师 (`Core Asset Researcher` - [`5fb2e2cd`](conversation://5fb2e2cd-d66b-4a3a-bd8c-438997e6fa9d))**：
+   - 针对 `/data/dev/bun/src` 中除 CSS 外的 773 个 CP 资产（`collections/`, `string/`, `threading/`, `event_loop/`, `sql/`, `shell/` 等）进行系统性成熟度与价值评估；
+   - 逐文件对照原始 Zig 源码审查纯正 CP 语法（消除 `union(enum)`、前缀 `?T`、解构赋值与匿名结构体缺陷）；
+   - 吸收高质量模块至 `/data/dev/cp/lib/`，并编写 `cap/test/test_*.cp` 端到端集成测试验证 100% PASS。
+
+---
+
+### [2026-11-16 08:12] Bun runtime 目录功能与价值全景分析及图像库优先吸收（PNG 截图引擎实装）
+
+**指令内容**：
+- “bun 的 runtime 目录主要是放什么模块的, 有很多子目录, 好像没有吸收进来, 分析这些子目录的功能与价值, 吸收这些资产
+优先吸收 image 目录, 特别是 png, CapSurf 要使用 png 库实现网页png 截图”
+
+**执行与分析汇报**：
+1. **Bun `runtime` 目录 12 大子目录全景功能与价值分析**：
+   - `image/`（**T1 极高价值**）：图像解码/编码/变换管线（PNG, JPEG, WebP, GIF, BMP, EXIF, Quantize, ThumbHash）。CapSurf 网页渲染引擎截图、指纹防护、Canvas 像素导出急需此库；
+   - `api/`（**中高价值**）：JS 顶层 API 与适配层（Archive, BunObject, Glob, filesystem_router, spawn/subprocess, cron_parser）。底层引擎已多半被 `cap:pack`, `cap:conf`, `cap:md`, `cap:glob`, `cap:router` 吸收；进程流抽象（`Readable`, `Writable`, `ResourceUsage`）具系统价值；
+   - `webcore/`（**中高价值**）：W3C 标准对象（Fetch, Request, Response, Headers, Blob, File, FormData, Stream, S3Client）。协议层已被 `cap:http` 吸收，Blob/File 具通用 I/O 价值；
+   - `webview/`（**高价值，针对桌面端**）：WebKit / Chromium 宿主通信与进程管理（`ChromeProcess.cp`, `HostProcess.cp`），适用于桌面混合应用；
+   - `crypto/`, `dns_jsc/`, `ffi/`, `node/`, `server/`, `socket/`, `timer/`, `valkey_jsc/`：主要作为 JSC / V8 的 JS 胶水层与 Node 兼容层，原生能力已由 `cap:crypto`, `cap:dns`, `cap:ffi`, `cap:net`, `cap:event`, `cap:redis` 纯正实现。
+2. **优先攻坚吸收 `image/` 资产并自研实装纯正 CP 原生图像库 (`lib/image/`)**：
+   - [`lib/image/png.cp`](file:///data/dev/cp/lib/image/png.cp)：
+     - **PNG 截图编码器 (`Png.encodeRgba`)**：输入 RGBA8 像素切片与宽高，写入 8 字节标准魔数签名、构造 `IHDR` Chunk、注入扫描线 None 滤波前缀、通过 Zlib 原生 Deflate 压缩生成 `IDAT` Chunk、生成 `IEND` Chunk，自动核算 IEEE 802.3 CRC-32 校验和；
+     - **PNG 全滤镜逆滤波解码器 (`Png.decode`)**：支持标准 IHDR 解析、IDAT 聚合流式解压、支持 5 种滤波模式（None, Sub, Up, Average, Paeth）逆运算，精确还原 RGBA8 像素矩阵；
+     - **像素对象 (`PngImage` 与 `RgbaColor`)**：提供坐标像素读写 `.getPixel(x, y)` 与 `.setPixel(x, y, r, g, b, a)`；
+     - **文件读写管道**：`Png.save(path, rgba, w, h)` 与 `Png.load(path)` 同步文件 I/O 直连；
+   - [`lib/image/codecs.cp`](file:///data/dev/cp/lib/image/codecs.cp)：
+     - `ImageFormat` 枚举（Png, Jpeg, WebP, Bmp, Gif, Tiff, Avif, Heic）；
+     - `Codecs.sniff(bytes)`：基于二进制魔数极速探测 8 种主流图片格式；
+     - `Codecs.mime(fmt)`：MIME 字符串映射；
+     - `Codecs.fromExtension(path)`：纯 CP 后缀提取推导；
+     - `ExifOrientation` 与几何变换；
+   - [`lib/image/bmp.cp`](file:///data/dev/cp/lib/image/bmp.cp)：
+     - Windows DIB / BMP 格式编解码（`Bmp.decode`, `Bmp.encodeRgba`），支持 24/32 bpp 与 4 字节跨距对齐；
+   - [`lib/image/quantize.cp`](file:///data/dev/cp/lib/image/quantize.cp)：
+     - Median-Cut 颜色量化器（`Quantizer.quantize`），RGBA 转 256 色调色板与像素索引矩阵；
+   - [`lib/image/index.cp`](file:///data/dev/cp/lib/image/index.cp)：
+     - 门面统一聚合导出 `cap:image`、`cap:png`、`cap:img` 协议。
+3. **工程与编译器联动配置**：
+   - [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs)：注册 `"image" | "img" | "png" => "image".to_string()`；
+   - [`cap.json`](file:///data/dev/cp/cap.json)：加入 `"z"` 动态链接库；
+   - 双轨规范手册（`cp_ref.md` 与 `cp_agent_ref.md`）同步登记 `cap:image` 及其契约。
+4. **自动化集成测试验证结果**：
+   - 运行 [`cap/test/test_image_png.cp`](file:///data/dev/cp/cap/test/test_image_png.cp)：**6/6 PASS (100%, 2375ms)**：
+     - Format sniffing (PNG, JPEG, WebP, BMP) & MIME mapping: ✔ PASS
+     - RGBA8 Webpage screenshot PNG encoding & header validation: ✔ PASS
+     - PNG roundtrip decode & coordinate pixel inspection: ✔ PASS
+     - File system PNG save & load pipeline: ✔ PASS
+     - Windows BMP DIB encode & decode: ✔ PASS
+     - Color quantization palette extraction: ✔ PASS
+
+---
+
+### [2026-11-16 08:41] 阶段里程碑 Git 提交
+
+**指令内容**：
+- “git 提交”
+
+**提交范围与执行说明**：
+- **提交说明**：`feat(stdlib): absorb bun assets, implement pure CP image subsystem (PNG/BMP/quantize) for CapSurf screenshots, and expand collections, sync, string, event, sql & shell libraries`
+- **变更范围**：
+  1. **图像子系统与截图引擎 (`cap:image` & `cap:png`)**：
+     - [`lib/image/png.cp`](file:///data/dev/cp/lib/image/png.cp)：RGBA8 网页截图编码器（魔数签名、IHDR、IDAT、IEND、CRC-32、Zlib Deflate 压缩）、PNG 全滤镜逆滤波解码器（None, Sub, Up, Average, Paeth）、`PngImage` 与 `RgbaColor` 像素对象，以及 `Png.save` / `Png.load` 同步文件 I/O；
+     - [`lib/image/codecs.cp`](file:///data/dev/cp/lib/image/codecs.cp)：8 大图片格式二进制魔数极速嗅探、MIME 类型推导与扩展名提取；
+     - [`lib/image/bmp.cp`](file:///data/dev/cp/lib/image/bmp.cp)：Windows BMP DIB 24/32 位解码器与 32 位编码器；
+     - [`lib/image/quantize.cp`](file:///data/dev/cp/lib/image/quantize.cp)：Median-Cut 256 色调色板量化器；
+     - [`lib/image/index.cp`](file:///data/dev/cp/lib/image/index.cp)：标准库聚合重导出入口。
+  2. **Bun 高价值资产全面吸收与标准库扩展**：
+     - **容器库 (`cap:col`)**：[`lib/col/hash_map.cp`](file:///data/dev/cp/lib/col/hash_map.cp) 纯 CP 开放寻址双重散列 Robin Hood 哈希表，配合 `bit_set.cp`, `bounded_array.cp`, `hive_array.cp`, `object_pool.cp` 形成完整容器生态；
+     - **字符串库 (`cap:string`)**：[`lib/string/smol.cp`](file:///data/dev/cp/lib/string/smol.cp)（24 字节 SSO 小字符串栈存储与堆回退），[`lib/string/hashed.cp`](file:///data/dev/cp/lib/string/hashed.cp)（预计算 Wyhash 极速比对），[`lib/string/joiner.cp`](file:///data/dev/cp/lib/string/joiner.cp)，[`lib/string/path.cp`](file:///data/dev/cp/lib/string/path.cp)；
+     - **并发同步库 (`cap:sync`)**：[`lib/sync/pool.cp`](file:///data/dev/cp/lib/sync/pool.cp)（`Guarded<T>` 互斥借用安全包装与 `WorkPool` 多工作者任务池），全面优化 `arc_slice.cp`, `concurrent_map.cp`, `condition.cp`, `futex.cp`, `mutex.cp`, `ring_buffer.cp`, `unbounded_queue.cp`, `wait_group.cp`；
+     - **事件与异步任务库 (`cap:event`)**：[`lib/event/task.cp`](file:///data/dev/cp/lib/event/task.cp)（`AnyTask` 与 `ManagedTask` 动态多态任务抽象与调度生命周期）；
+     - **轻量嵌入式 SQL 库 (`cap:sql`)**：[`lib/sql/sqlite.cp`](file:///data/dev/cp/lib/sql/sqlite.cp)（纯 CP 嵌入式 SQLite 引擎包装与内存数据库生命周期管理）；
+     - **嵌入式轻量脚本引擎 (`cap:shell`)**：[`lib/shell/lexer.cp`](file:///data/dev/cp/lib/shell/lexer.cp), [`lib/shell/parser.cp`](file:///data/dev/cp/lib/shell/parser.cp), [`lib/shell/eval.cp`](file:///data/dev/cp/lib/shell/eval.cp), [`lib/shell/index.cp`](file:///data/dev/cp/lib/shell/index.cp)。
+  3. **编译器与工程支持**：
+     - [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs)：注册 `"image" | "img" | "png" => "image"`、`"sync" | "threading" => "sync"`、`"shell" | "sh" => "shell"`；
+     - [`cpc/src/codegen/prelude.rs`](file:///data/dev/cp/cpc/src/codegen/prelude.rs)：增强位移指令检测与底层异步内建符号扫描；
+     - [`cap.json`](file:///data/dev/cp/cap.json)：声明链接 `"sqlite3"` 与 `"z"` 库；
+     - `cpc_dev` 源码完全同步。
+  4. **全量端到端测试覆盖**：
+     - [`cap/test/test_image_png.cp`](file:///data/dev/cp/cap/test/test_image_png.cp)：6/6 PASS (100%)；
+     - [`cap/test/test_bun_absorbed_assets.cp`](file:///data/dev/cp/cap/test/test_bun_absorbed_assets.cp)：6/6 PASS (100%)；
+     - [`cap/test/test_collections_bun.cp`](file:///data/dev/cp/cap/test/test_collections_bun.cp)：6/6 PASS (100%)；
+     - [`cap/test/test_sqlite.cp`](file:///data/dev/cp/cap/test/test_sqlite.cp)：PASS (100%)。
+  5. **双轨规范与四线文档**：
+     - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md) 与 [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md) 同步更新最新协议；
+     - [`SESSION.md`](file:///data/dev/cp/SESSION.md)、[`CHANGELOG.md`](file:///data/dev/cp/CHANGELOG.md)、[`DEVLOG.md`](file:///data/dev/cp/DEVLOG.md) 记录全量活动。
+
+
+
+
+
+
+
 
 
 

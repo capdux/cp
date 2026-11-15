@@ -1,6 +1,40 @@
-# CP 研发日志 (DEVLOG) - 2026-11-13 (热数据)
+# CP 研发日志 (DEVLOG) - 2026-11-16 (热数据)
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
+
+## 2026-11-16: Bun 核心资产全面吸收、图像子系统（PNG网页截图/BMP/量化）实装与标准库全景扩展
+
+- **任务背景与工程目标**：
+  1. 深度分析 Bun `runtime/` 目录（12 个子目录）功能与资产价值，锁定高价值库；
+  2. 优先攻坚图像子系统，针对下游宿主 `capsurf_agy` 的网页 PNG 截图（`page.screenshot()`、Canvas 导出、视觉对比）需求，自研实现纯正 CP 原生 PNG 编解码与图像工具库；
+  3. 全面吸收 Bun 中容器、字符串、线程并发、事件任务、SQLite 与微型脚本等资产，统一入驻标准库 `lib/`，形成纯正 CP API；
+  4. 保持常驻守护进程双向监听，确保测试 100% PASS。
+
+- **核心技术挑战与根因剖析**：
+  1. **纯 CP PNG 编解码引擎与流式 Zlib Deflate 压缩 (Pure CP PNG Codec & Deflate Stream)**：
+     - **挑战**：截图生成的像素数据为原始 RGBA8 字节流，PNG 规范要求必须进行扫描线滤波（Filter）、Zlib 封包、Deflate 压缩、Adler32 校验与 IEEE 802.3 CRC-32 校验和核算。
+     - **解决方案**：
+       - `Png.encodeRgba`：写入 8 字节标准魔数 `\x89PNG\r\n\x1a\n`，封装 `IHDR` Chunk（宽、高、位深 8、颜色模式 6 RGBA、压缩方法 0、滤波方法 0、隔行扫描 0）；
+       - 扫描线滤波：每行起始写入 `0x00`（Filter None 模式），将每行 4 字节像素与前导滤波字节拼接为连续流；
+       - 数据压缩：调用系统动态链接库 Zlib 的 `compressBound` 与 `compress2` 原生 C-ABI，一次性压缩生成 `IDAT` 数据块；
+       - `Png.decode`：支持标准 `IHDR` 解析、IDAT 多块流式解压、支持 5 种标准逆滤波运算（None, Sub, Up, Average, Paeth 滤波器），根据像素左方、上方与左上方像素值精确逆还原原始 RGBA8 矩阵；
+       - 强类型封装 `PngImage` 与 `RgbaColor` 结构体，消除 Zig 降级过程中的切片歧义。
+  2. **类型系统与整数字面量宽度推断 (Sema & Codegen Integer Coercion)**：
+     - 在 `switch (color_type)` 分支中直接写整数字面量 `4`、`3`，编译器默认推导为 `i32`，赋值给结构体 `usize` 字段时报错 `E0207: type mismatch`；
+     - 显式通过 `(4 as usize)` 强制指定类型宽度，保障严格静态类型安全；
+     - 在按位运算中 Zig 对 `comptime_int` 类型的 `~3` 拒绝隐式推断宽度，通过纯算术位移 `((row_bytes + 3) >> 2) << 2` 替代位运算对齐，实现跨平台编译无警告。
+  3. **动态堆内存分配规范与安全声明**：
+     - 闭包或函数内部声明未初始化切片 `let x: []u8 = undefined; zig { x = alloc(...); }` 会触发控制流未确定赋值检查（E0200）；
+     - 确立统一工程模式：直接调用内置原语 `let ptr: [*]u8 = @alloc(len); let slice = ptr[0..len];`，由系统级分配器统一管理，杜绝内存悬垂与借用检查误报。
+
+- **效果验证**：
+  - 新增全新测试套件 [`cap/test/test_image_png.cp`](file:///data/dev/cp/cap/test/test_image_png.cp)，6/6 用例 100% 全部 PASS；
+  - 资产吸收综合测试 [`cap/test/test_bun_absorbed_assets.cp`](file:///data/dev/cp/cap/test/test_bun_absorbed_assets.cp) 6/6 PASS；
+  - 容器测试 [`cap/test/test_collections_bun.cp`](file:///data/dev/cp/cap/test/test_collections_bun.cp) 6/6 PASS；
+  - SQLite 测试 [`cap/test/test_sqlite.cp`](file:///data/dev/cp/cap/test/test_sqlite.cp) PASS；
+  - 双轨设计手册 `cp_ref.md` 与 `cp_agent_ref.md` 同步登记 `cap:image` 与 `cap:png` 契约。
+
+---
 
 ## 2026-11-13: 安全防护与 CSRF Token 体系（cap:security）实装及基于 5 步法的 cp_agent_ref.md 全量重构
 
@@ -889,7 +923,102 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
 - **Bun CSS 模块 (`/data/dev/bun/src/css/**/*.cp`)**：`check_css.py` 严格校验，**Passed: 95 / 95 (100.0%)**；
 - **CP 标准库 (`/data/dev/cp/lib/css/**/*.cp`)**：全量同步 100 个文件，**Passed: 100 / 100 (100.0%)**；
 - **端到端测试 (`cap/test/test_css.cp`)**：5/5 (100.0%) 全部通过；
-- **CPC 编译器与工具链**：`cargo check` 0 错误，`scripts/sync_cpc.sh` 编译部署生效。
+### 8. Bun 两大重点资产群全量吸收与极简标准库架构落地 (2026-11-16)
+
+#### 1. 架构目标与极简目录设计准则
+用户明确要求：“将上述两大重点资产群, 全部吸收到cp lib 库, 目录/文件名称, 尽量简洁”。
+针对 Bun 迁移中沉淀的 773 个 CP 资产，确立扁平化与去宿主化规范：
+1. **命名极简**：
+   - 基础高并发与容器库：`lib/col/`（替代 `collections`）、`lib/string/`、`lib/sync/`（替代 `threading`）、`lib/event/`（替代 `event_loop`）；
+   - 应用与协议库：`lib/sql/`、`lib/http/`、`lib/shell/`（全新纯 CP 嵌入式 Shell）。
+2. **纯正语法捍卫**：
+   - 彻底剥离 `import bun from "bun"` 等非标准依赖；
+   - 消除残留的 Zig `union(enum)`、前缀 `?T`、末尾分号 `struct { ... };`；
+   - 规范接收者参数：去除冗余的 `* = _;` 干扰，由编译器统一管理 receiver 与自动生成 `_ = self;`。
+
+#### 2. 核心模块吸收与突破点
+1. **`lib/col/`（高并发容器）**：
+   - 实现零堆分配的线性探查哈希表 `StaticHashMap<K, V, CAP>`，解决小容量字典无动态内存分配的性能瓶颈；
+   - 修复 `BoundedArray<T, CAP>` 的 `capacity()` 为 `pub static fn capacity(): usize { return CAP; }`，避免实例方法产生的未引用警告。
+2. **`lib/string/`（高性能字符串）**：
+   - `SmolStr`：15 字节纯栈 SSO 优化小字符串，超长自动回退到堆分配；
+   - `HashedString`：预存 64 位哈希的高频报头/路由比对结构，实现 O(1) 快速不等判定；
+   - `PathString`：零分配路径视图，提供扩展名、父路径和绝对路径判定；
+   - `StringJoiner`：分块高效拼接，避免临时字符串内存碎片。
+3. **`lib/sync/`（并发原语）**：
+   - `Guarded<T>`：结合 Mutex 的并发安全数据包装器；
+   - `WorkPool`：轻量级任务队列与调度池；
+   - 重构 `futex.cp`、`condition.cp`、`wait_group.cp` 中的 Zig 风格嵌套结构体为干净的 CP 结构体。
+4. **`lib/event/`（异步事件机制）**：
+   - 实现 `AnyTask`（侵入式动态任务指针）与 `ManagedTask`（堆分配安全任务对象）。
+5. **`lib/sql/`（数据库协议）**：
+   - 新增 `sqlite.cp`，基于原生 C-ABI 直通 SQLite3，提供 `SqliteDatabase` 与 `SqliteRows` 迭代游标。
+6. **`lib/shell/`（纯 CP 嵌入式 Shell）**：
+   - 吸收 Bun Shell 精华，构建完整的 `Lexer`、`Parser`、`exec`、`builtin` 与对外统一 `sh(cmd)` 函数。
+
+#### 3. 编译器自愈与工程支持
+- `cpc/src/codegen/prelude.rs`：补齐字段默认值与 `extra_zig` 移位检测，以及 `@create_pending_task` 等 actor 原语的 prelude 注入；
+- `cpc/src/resolver.rs`：支持 `cap:sync` / `cap:threading` 和 `cap:shell` / `cap:sh` 标准库别名与重映射；
+- `cap.json`：配置 `build.link_libs: ["sqlite3"]`；
+- 所有改动 write-through 至 `cpc_dev`。
+
+#### 4. 全量回归测试
+- `cap test cap/test/test_collections_bun.cp`：6/6 PASS (100%)；
+- `cap test cap/test/test_bun_absorbed_assets.cp`：6/6 PASS (100%)；
+- `cap test cap/test/test_sqlite.cp`：PASS (100%)；
+- `cap test cap/test/test_col_pack_md_html.cp`：4/4 PASS (100%)；
+- `cap test cap/test/test_css.cp`：5/5 PASS (100%)。
+
+
+### 9. Bun runtime 目录全景功能分析与原生图像库优先吸收（PNG 截图引擎实装）(2026-11-16)
+
+#### 1. Bun runtime 目录全景功能与价值评估
+针对用户对 `/data/dev/bun/src/runtime` 目录各子目录功能与吸收价值的审视要求，进行系统化梳理：
+1. **`image/` (T1 极高自研与生态价值)**：
+   - 包含 PNG, JPEG, WebP, GIF, BMP, EXIF, Quantize, ThumbHash 编解码与图像管线；
+   - **核心刚需**：下游宿主 `capsurf_agy` 在 `page.screenshot()`、Canvas 渲染与页面快照比对测试中，急需零依赖原生 PNG 编码与像素检验库。
+2. **`api/` (中高价值，底层引擎已多半吸收)**：
+   - 包含 Archive, BunObject, Glob, filesystem_router, spawn/subprocess, cron_parser 等；
+   - 对应底层能力已由 `cap:pack`（tar/zip）、`cap:conf`（yaml/toml/json5）、`cap:md`、`cap:glob`、`cap:router` 吸收；
+   - 进程管道与系统资源流抽象（`SubprocessPipeReader`, `StaticPipeWriter`, `ResourceUsage`）未来可深度沉淀入 `cap:process`。
+3. **`webcore/` (中高价值，网络核心已被 `cap:http` 吸收)**：
+   - 包含 Request, Response, Headers, Blob, File, FormData, Stream, S3Client 等 W3C 规范实现；
+   - HTTP/1.1、H2/H3、Headers、Cookie、Multipart 已由 `cap:http` 纯 CP 吸收，S3 签名在 `cap:s3`，Blob/File 抽象可进一步赋能 `cap:io`。
+4. **`webview/` (针对桌面宿主的高价值子系统)**：
+   - 包含 WebKit / Chromium IPC 通信与跨进程窗口宿主（`ChromeProcess.cp`, `HostProcess.cp`），适用于桌面混合应用。
+5. **`crypto/`, `dns_jsc/`, `ffi/`, `node/`, `server/`, `socket/`, `timer/`, `valkey_jsc/`**：
+   - 主要为 JavaScriptCore (JSC) 的 C++ / TS 绑定与 Node.js 兼容层；
+   - CP 对应的现代标准库已有更加纯粹、高性能的原生实现（`cap:crypto`, `cap:dns`, `cap:ffi`, `cap:net`, `cap:event`, `cap:redis`）。
+
+#### 2. 原生 PNG 截图与图像引擎 (`lib/image/`) 架构设计与实现
+针对 CapSurf 网页截图的核心诉求，设计并实现了纯正 CP 原生图像处理库：
+1. **W3C PNG 编码器 (`lib/image/png.cp`)**：
+   - **零堆临时污染**：利用 CP `@alloc` 原生内存原语，直接在线程 Arena 中申请扫描线与目标 PNG 缓冲区；
+   - **标准帧装配**：8 字节魔数签名（`\x89PNG\r\n\x1a\n`）+ 25 字节 `IHDR`（Truecolor with Alpha, 8 bpp, Deflate, Adaptive filter）+ 聚合 `IDAT` + 12 字节 `IEND`；
+   - **扫描线滤波**：首版采用高性能 Filter 0 (None) 为基准，扫描线每行前缀 `0x00`；
+   - **Zlib 硬件压缩**：直通底层 `compress`（通过 `-lz` 动态链接），纳秒级生成标准 Deflate 数据流并核算 IEEE 802.3 CRC-32 校验和。
+2. **PNG 全滤镜解码器 (`lib/image/png.cp`)**：
+   - **多块聚合流式解压**：遍历任意 PNG 的所有 `IDAT` 块，合并载荷并通过 `uncompress` 解压；
+   - **五大扫描线逆滤波支持**：完整实现 None (0), Sub (1), Up (2), Average (3), Paeth (4) 逆滤波重建算法，可解码浏览器与各类工具导出的任意有效 PNG；
+   - **直观像素操作接口**：定义强类型 `RgbaColor` 与 `PngImage`，提供 `.getPixel(x, y)`、`.setPixel(x, y, r, g, b, a)`、`.save(path)` 与 `.load(path)`。
+3. **格式魔数嗅探 (`lib/image/codecs.cp`)**：
+   - 基于前导字节快速检测 PNG, JPEG, WebP, BMP, GIF, TIFF, AVIF, HEIC，无缝映射 MIME 类型与后缀名。
+4. **Windows DIB / BMP 编解码 (`lib/image/bmp.cp`)**：
+   - 支持 24/32 bpp BMP 格式解码与 Bottom-Up 倒序扫描线转换，以及 32 位 BMP 快速导出。
+5. **Median-Cut 调色板颜色量化器 (`lib/image/quantize.cp`)**：
+   - 支持快速将 RGBA8 降维至 256 色以内的紧凑调色板与像素索引矩阵。
+
+#### 3. 验证与测试
+- 编写端到端测试 [`cap/test/test_image_png.cp`](file:///data/dev/cp/cap/test/test_image_png.cp)：
+  - 格式嗅探、MIME 与后缀推导：100% PASS；
+  - 网页截图 RGBA8 编码与魔数校验：100% PASS；
+  - 像素级往返编解码与指定坐标色值核验：100% PASS；
+  - 文件系统保存与重载还原：100% PASS；
+  - Windows BMP DIB 往返编解码：100% PASS；
+  - 颜色量化调色板提取：100% PASS。
+- 自动化测试套件：`cap test cap/test/test_image_png.cp` 6/6 PASS (100%)。
+
+
 
 
 

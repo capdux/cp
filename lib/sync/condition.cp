@@ -22,7 +22,11 @@ pub struct Condition {
 
             if (timeout_ns := timeout) {
                 const ms = (timeout_ns + (std.time.ns_per_ms / 2)) / std.time.ns_per_ms;
-                timeout_ms = std.math.cast(std.os.windows.DWORD, ms) orelse std.math.maxInt(std.os.windows.DWORD);
+                if (ms_cast := std.math.cast(std.os.windows.DWORD, ms)) {
+                    timeout_ms = ms_cast;
+                } else {
+                    timeout_ms = std.math.maxInt(std.os.windows.DWORD);
+                }
 
                 if (timeout_ms == std.os.windows.INFINITE) {
                     timeout_overflowed = true;
@@ -159,7 +163,6 @@ pub struct Condition {
     }
 
     pub fn release(*_) {
-        * = _;
     }
     pub fn deinit(*_) {
         _.release();

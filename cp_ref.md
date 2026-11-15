@@ -5916,11 +5916,13 @@ export class SocketContext<Handler> {
 | `cap:md`          | CommonMark / GFM 解析器、HTML / ANSI 终端渲染与 GFM 表格引擎（`Markdown`, `MdTable`, `MdTableAlign`） | **已全面实装** |
 | `cap:html`        | CSS 选择器解析（`CssSelector`）、流式 HTML 重写器（`HtmlRewriter`）与零拷贝实体转义器（`HtmlEscape`） | **已全面实装** |
 | `cap:css`         | 工业级 CSS 全栈解析、颜色空间（HEX/RGB/HSL/OKLCH/WCAG 对比度）、尺寸计算（`CssLength`/`CssCalc`）、W3C 选择器权重（`CssSpecificity`）与 94 模块完整样式表/规则/属性引擎（`CssStylesheetParser`, `CssRule`, `CssMediaQuery`, `CssKeyframes`） | **已全面实装** |
+| `cap:image`（兼容 `cap:png` / `cap:img`） | 原生现代图像处理标准库：PNG 截图编码器（`Png.encodeRgba`）、PNG 全滤镜解码器（`Png.decode`）、`PngImage`、像素四元组（`RgbaColor`）、BMP/DIB 编解码（`Bmp`）、Median-Cut 调色板颜色量化（`Quantizer`）与多格式魔数探测（`Codecs.sniff`） | **已全面实装** |
 | `cap:ffi`         | 跨平台动态库加载（`DynLib`）、FFI 调用签名布局（`FFISignature`, `CStructLayout`, `CStructField`）与 TinyCC 内存编译声明（`TccOutputFormat`） | **已全面实装** |
-| `cap:sql`         | 统一 SQL 协议栈：参数化预编译语句（`SqlStatement`）、PostgreSQL v3 Wire/认证/数据行（`PostgresWire`, `PostgresAuthChallenge`, `PostgresDataRow`, `PostgresCommandComplete`）与 MySQL Wire/变长整数/OK/ERR 包（`MySqlPacketHeader`, `MySqlLenEnc`, `MySqlCapabilities`, `MySqlOkPacket`, `MySqlErrPacket`） | **已全面实装** |
+| `cap:sql`         | 统一 SQL 协议栈：参数化预编译语句（`SqlStatement`）、PostgreSQL v3 Wire/认证/数据行（`PostgresWire`, `PostgresAuthChallenge`, `PostgresDataRow`, `PostgresCommandComplete`）、MySQL Wire/变长整数/OK/ERR 包（`MySqlPacketHeader`, `MySqlLenEnc`, `MySqlCapabilities`, `MySqlOkPacket`, `MySqlErrPacket`）与原生 SQLite3 驱动（`SqliteDatabase`, `SqliteRows`） | **已全面实装** |
+| `cap:shell`（兼容 `cap:sh`） | 原生嵌入式 Shell 执行引擎与解释器：词法分析（`Lexer`）、语法解析（`Parser`）、管道与重定向（`Pipeline`, `Redirection`）、内置指令（`cd`, `pwd`, `echo`, `export`）与同步执行（`sh`, `Shell.run`） | **已全面实装** |
 | `cap:io`          | `Reader`, `Writer`, `Closer`, `Seeker`, `BufferReader`, `BufferWriter`, `BufferedReader`, `BufferedWriter`, `copyStream`, `PipeReader`, `PipeWriter`, `MaxBuf`, `Pipe`, `print`, `console` | **已全面实装** |
 | `cap:stream`      | 工业级零拷贝流式 I/O 管道（重导出 `cap:io` 中的统一流接口）             | **已全面实装** |
-| `cap:sync`        | `Futex`, `Mutex`, `RwLock`, `Condition`, `WaitGroup`, `Channel`, `MpmcQueue`, `UnboundedQueue`, `ConcurrentMap`, `ArcSlice`, `Wyhash`, `Atomic`, `Shared` | **已全面实装** |
+| `cap:sync`        | `Futex`, `Mutex`, `RwLock`, `Condition`, `WaitGroup`, `Channel`, `MpmcQueue`, `UnboundedQueue`, `ConcurrentMap`, `ArcSlice`, `Wyhash`, `Atomic`, `Shared`, `Guarded<T>`, `WorkPool` | **已全面实装** |
 | `cap:json` / `cap:serde` | 零拷贝 JSON 流式解析器 `JsonParser`、`JsonValue`、内存池 `JsonBufferPool`、`@json_parse` / `@json_stringify` | **已全面实装** |
 | `cap:router`      | 超高性能 Radix-Tree 路由引擎与路径反向生成器 `Router<T>`, `RadixNode<T>`, `ParamMap`, `RouteMatch`, `RouteFormatter` | **已全面实装** |
 | `cap:http`        | `Method`, `Headers`, `ETag`, `MimeType`, `CookieMap`, `FormData`, `Request`, `Response`, `HttpServer`, `HTTPClient`, `H2ClientSession`, `HpackCodec`, `H3ClientSession`, `fetch`, `serve`, `json` | **已全面实装** |
@@ -5934,7 +5936,7 @@ export class SocketContext<Handler> {
 | `cap:crypto`      | 工业级密码学体系：CSPRNG、UUID v4、散列哈希（SHA256/512/1/MD5/流式）、HMAC、PBKDF2、AEAD 对称加密（AES-256-GCM、ChaCha20-Poly1305）、BoringSSL X.509 校验 | **已全面实装** |
 | `cap:security`    | 安全防护与防跨站请求伪造子系统：CSPRNG 随机 Nonce、HMAC-SHA256 签名与篡改校验、恒定时间防时序攻击比对（`constantTimeEql`）、多格式编解码（Base64Url, Base64, Hex） | **已全面实装** |
 | `cap:mem`         | `Arena`, `SharedTensor`, `Cow`, `CowSlice`, `TaggedPointer`, `TaggedPtr`, `MaxHeapAllocator` | **已全面实装** |
-| `cap:string`      | `ZigString`, `WTF8`, `SimdUtf`, `Utf8Grapheme`, `CaseConverter`（UTF-8 校验、UAX #29 字素簇计数与命名风格互转） | **已全面实装** |
+| `cap:string`      | `ZigString`, `WTF8`, `SimdUtf`, `Utf8Grapheme`, `CaseConverter`, `SmolStr` (15B 纯栈 SSO 字符串), `HashedString` (O(1) 预哈希字符串), `PathString`, `StringJoiner` | **已全面实装** |
 | `cap:parallel`    | `spawn`, `join`, `Task`（注：`cap:task` / `Task.all` / `Task.race` 规划中） | **已全面实装** |
 | `cap:actor`       | `yield`, `receive`, `sleep`, `join`, `self_pid`, `sender`, `send`, `reply`（内建 `@spawn`/`@receive`/`@reply`/`@send`/`@self`/`@sender`） | **已全面实装** |
 | `cap:fs`          | 异步/同步文件读取、写入、目录创建、流式 I/O                            | **已全面实装** |

@@ -4,7 +4,7 @@ export { Condition } from "./condition";
 export { WaitGroup } from "./wait_group";
 export { Channel } from "./channel";
 export { MpmcQueue } from "./ring_buffer";
-export { UnboundedQueue } from "./unbounded_queue";
 export { ConcurrentMap } from "./concurrent_map";
 export { ArcSlice } from "./arc_slice";
 export { Wyhash, WyhashStateless } from "./wyhash";
+export { Guarded, TaskDesc, WorkPool } from "./pool.cp";

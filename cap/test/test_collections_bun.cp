@@ -9,7 +9,8 @@ import {
     LinearFifo,
     BitSet64,
     HiveArray,
-    FastStringMap
+    FastStringMap,
+    StaticHashMap
 } from "cap:collections";
 
 fn main() {
@@ -181,5 +182,45 @@ fn main() {
         } else {
             expect_eq(1, 0);
         }
+    });
+
+    test("6. StaticHashMap<K, V, CAP> zero-heap static robin hood linear probing hash map", () => {
+        let map = StaticHashMap<i64, i64, 16>.init();
+        expect_eq(map.capacity() as i64, 16);
+        expect_eq(map.isEmpty(), true);
+        expect_eq(map.count() as i64, 0);
+
+        expect_eq(map.put(100, 1000), true);
+        expect_eq(map.put(200, 2000), true);
+        expect_eq(map.put(300, 3000), true);
+        expect_eq(map.count() as i64, 3);
+        expect_eq(map.has(200), true);
+        expect_eq(map.has(999), false);
+
+        if (val := map.get(200)) {
+            expect_eq(val, 2000);
+        } else {
+            expect_eq(1, 0);
+        }
+
+        // Overwrite
+        expect_eq(map.put(200, 2500), true);
+        expect_eq(map.count() as i64, 3);
+        if (v2 := map.get(200)) {
+            expect_eq(v2, 2500);
+        } else {
+            expect_eq(1, 0);
+        }
+
+        // Delete
+        expect_eq(map.delete(200), true);
+        expect_eq(map.count() as i64, 2);
+        expect_eq(map.has(200), false);
+        expect_eq(map.has(100), true);
+        expect_eq(map.has(300), true);
+
+        map.clear();
+        expect_eq(map.isEmpty(), true);
+        expect_eq(map.count() as i64, 0);
     });
 }

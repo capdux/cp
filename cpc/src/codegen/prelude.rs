@@ -120,6 +120,9 @@ impl ModuleFeatures {
                 }
                 for f in &c.fields {
                     self.scan_type(&f.ty);
+                    if let Some(def) = &f.default {
+                        self.scan_expr(def);
+                    }
                 }
                 for m in &c.methods {
                     if m.is_async {
@@ -135,6 +138,11 @@ impl ModuleFeatures {
                 }
                 for nc in &c.nested_classes {
                     self.scan_decl(&Decl::Class(nc.clone()));
+                }
+                for code in &c.extra_zig {
+                    if code.contains("<<") || code.contains(">>") {
+                        self.needs_shift = true;
+                    }
                 }
             }
             Decl::Trait(t) => {
@@ -533,7 +541,14 @@ impl ModuleFeatures {
                     self.needs_not = true;
                 } else if matches!(
                     b.name.as_str(),
-                    "@net_listen" | "@net_accept_async" | "@net_read_async" | "@net_write_async"
+                    "@net_listen"
+                        | "@net_accept_async"
+                        | "@net_read_async"
+                        | "@net_write_async"
+                        | "@create_pending_task"
+                        | "@complete_task"
+                        | "@task_spawn"
+                        | "@task_join"
                 ) {
                     self.needs_actors = true;
                 }

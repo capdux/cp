@@ -3,6 +3,7 @@
  */
 
 import { SystemAction } from "cap:beam";
+import { Request } from "./request";
 import { Response } from "./response";
 
 pub class HttpServer {

@@ -23,7 +23,7 @@ pub struct BitSet256 {
     }
 
     pub fn capacity(): usize {
-        return 256;
+        return _.words.len * 64;
     }
 
     pub fn isSet(index: usize): bool {

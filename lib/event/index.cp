@@ -32,3 +32,4 @@ export {
 } from "./loop";
 
 export * from "./emitter.cp";
+export * from "./task.cp";

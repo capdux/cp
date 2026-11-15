@@ -1,0 +1,10 @@
+{
+  "name": "cp",
+  "version": "0.1.0",
+  "build": {
+    "link_libs": [
+      "sqlite3",
+      "z"
+    ]
+  }
+}

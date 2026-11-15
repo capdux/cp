@@ -27,7 +27,7 @@ pub struct ObjectPool<T, const CAP: usize> {
     }
 
     pub fn capacity(): usize {
-        return CAP;
+        return _.items.len;
     }
 
     pub fn usedCount(): usize {

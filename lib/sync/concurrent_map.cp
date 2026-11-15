@@ -19,16 +19,16 @@ pub fn ConcurrentMap(comptime K: type, comptime V: type): type {
         stripes: [StripeCount]Stripe = undefined,
         allocator: std.mem.Allocator = undefined,
 
-        pub fn init(allocator: std.mem.Allocator): Self {
-            let self: Self = .{
+        pub static fn init(allocator: std.mem.Allocator): Self {
+            let map: Self = .{
                 .stripes = undefined,
                 .allocator = allocator,
             };
-            for (*s of &self.stripes) {
+            for (*s of &map.stripes) {
                 s.mutex = .{};
                 s.map = MapType.init(allocator);
             }
-            return self;
+            return map;
         }
 
         pub fn deinit(*_) {

@@ -4,3 +4,4 @@
 export * from "./protocol.cp";
 export * from "./postgres.cp";
 export * from "./mysql.cp";
+export * from "./sqlite.cp";
