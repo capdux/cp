@@ -77,22 +77,22 @@
 
 ---
 
-## 双工作区拓扑与下游编译器权限授权 (CRITICAL)
+## 多工作区拓扑与下游编译器权限授权 (CRITICAL)
 
-在执行 Bun.js 部分库到cp的迁移任务时，你拥有 **两套紧密联动的核心工作区**，并且拥有对下游源代码的完全读取、拷贝权限，复用 bun agy 将 zig 迁移到 cp的 成果, 不用重新造轮子。
+在执行下游生态迁移与编译器协同任务时，你（`cp_agy`）拥有 **多套紧密联动的核心工作区**（包括 `bun_agy` 与 `capsurf_agy`），并且拥有对下游源代码的完全读取、拷贝权限，复用下游智能体迁移到 CP 的成果，不用重新造轮子。
 
 ```text
 /data/dev/
-├── bun/                      # 🔴 宿主工作区：Bun.js 1.3.14 源码仓库
+├── bun/                      # 🔴 下游宿主工作区 1 (bun_agy)：Bun.js 1.3.14 源码仓库
 │   ├── src/                  # 待迁移与已迁移的 Zig / CP 源码
 │   ├── test/                 # Bun 原生测试套件
-│   ├── build/                # Bun 构建产物区 (Ninja/CMake)
-│
+│   └── build/                # Bun 构建产物区 (Ninja/CMake)
+├── capsurf/                  # 🔴 下游宿主工作区 2 (capsurf_agy)：CapSurf 源码仓库
 ```
 
 ### 授权直通声明（编译器自愈权限）
 
-- **权限开放**：下目录 `/data/dev/bun` 对你完全开放**读取权限**，不开放**修改、删除权限**！
+- **权限开放**：下游目录 `/data/dev/bun` 与 `/data/dev/capsurf` 对你完全开放**读取权限**，不开放**修改、删除权限**！
 
 ## 二、 CP 语言架构总览与设计规范
 
@@ -282,7 +282,7 @@ hello/
 
 #### 2.1 **📝 操作记录规范（必须牢记并严格执行）：**
 
-1. **SESSION.md**: 排除执行过程中输出的日志，将我发给你的指令和你执行的结果汇报，按日期及执行顺序追加到文件底部，记录我们之间交互。**绝不允许遗漏我发给你的指令，绝不允许覆盖、删除或丢失之前的内容！**
+1. **SESSION.md**: 排除执行过程中输出的日志，将我发给你的完整指令和你执行的结果汇报，按日期及执行顺序追加到文件底部，记录我们之间交互。**绝不允许遗漏我发给你的指令，绝不允许覆盖、删除或丢失之前的内容！**
 2. **CHANGELOG.md**: 对每个文件的修改、删除、新增，按日期追加记录，让我知道你新增、删除、修改了什么文件。**之前的记录绝不能丢失！**
 3. **DEVLOG.md**: 开发日志文件。按日期往后追加你每次执行任务解决问题的思路、原理及规划的执行方案与步骤，让我知道你为何这样执行。**绝不能删除之前的记录！**
 4. **语言规范手册（权威准则）**：`/data/dev/cp/cp_ref.md` 作为cp语言设计唯一最高准则保持全量更新，所有新增或完善的语言功能（语法特性、标准库契约、类型系统等），在阶段里程碑时必须同步写入，并提供简要代码示例。
@@ -315,12 +315,12 @@ hello/
 
 1. **面向程序员的权威规范手册（`cp_ref.md`）**：
    - 作为 CP 语言唯一最高设计准则，全量维护，必须包含详尽的 RFC 设计背景、设计哲学、形式化推演与全套完整的可运行示例代码，供人类开发者查阅与学习。
-2. **面向智能体的专用语法契约手册（`cp_agent_ref.md`）**：
-   - 作为主智能体与 Bun AGY 交互的**最高唯一精简语法契约**（严格控制在 300~500 行以内）；
-   - 剔除所有历史哲学与冗长阐述，仅包含高密度 BNF 语法规则、标量与指针矩阵、类与结构体语义、现代错误处理以及《Top 8 绝对禁手清单》；
-   - 智能体开发和转译时优先以该手册为准绳，首轮代码生成准确率达到 95% 以上，并节省 80% Token。
+2. **面向智能体的专用语法与标准库契约手册（`cp_agent_ref.md`）**：
+   - 作为主智能体与下游 AGY（`bun_agy`、`capsurf_agy`）交互的**最高唯一精简语法与标准库契约**（**解除 300~500 行行数限制，内容与 `cp_ref.md` 同步保留**）；
+   - 剔除所有历史哲学与冗长推演阐述，完整保留高密度语法规则、标量与指针矩阵、类与结构体语义、现代错误处理、官方标准库协议矩阵（`cap:*`）以及《绝对禁手清单》；
+   - 智能体开发和转译时优先以该手册为准绳，首轮代码生成准确率达到 95% 以上。
 3. **双轨同步铁律**：
-   - 每当实装或完善新语法、类型系统或标准库核心特性时，**必须同时同步更新 `cp_ref.md` 与 `cp_agent_ref.md`**，严禁出现两份规范不一致。
+   - 每当实装或完善新语法、类型系统或标准库（`lib/*` / `cap:*`）核心特性时，**必须同时同步更新 `cp_ref.md` 与 `cp_agent_ref.md`**，严禁出现两份规范不一致。
 
 ### 3. Git 提交三步规范
 
@@ -539,71 +539,95 @@ git status --porcelain cpc_dev/src
 
 ## 七、跨智能体异步协作看板协议 (Task Mailbox) 与工程提速脚本指南
 
-在分布式双智能体（Bun AGY 负责下游工程迁移，CP AGY 负责上游编译器特性支持）协同作业中，为**彻底杜绝人工盯梢与传话等待**，采用 **“Maildir 目录级原子操作（防并发写穿） + 仅追加事件日志（防数据损坏） + Reactive Wakeup（零 Token 休眠唤醒）”** 架构。
+在分布式多智能体（下游 `bun_agy` `/data/dev/bun` 与 `capsurf_agy` `/data/dev/capsurf` 负责工程迁移，上游 `cp_agy` `/data/dev/cp` 负责编译器特性支持与标准库演进）协同作业中，为**彻底杜绝人工盯梢与传话等待**，采用 **“Maildir 目录级多 AGY 原子隔离（防并发写穿） + 微批聚合排空（200ms Micro-batching） + 仅追加事件日志（防数据损坏） + Reactive Wakeup（零 Token 休眠唤醒）”** 架构。
 
-### 1. 跨智能体异步任务看板架构
+### 1. 跨智能体异步任务看板架构（支持双下游 `bun_agy` & `capsurf_agy`）
 
-- **任务存储核心（Maildir 架构，POSIX 系统级原子隔离）**：
+- **任务存储核心（Maildir 多 AGY 隔离架构，POSIX 系统级原子操作）**：
   - 待处理队列：`/data/dev/cp/.tasks/pending/<task-id>.json`
-  - 已完成归档：`/data/dev/cp/.tasks/resolved/<task-id>.json`
-  - 机制保证：状态流转通过底层 `os.rename` 瞬间原子完成，物理级杜绝多进程并发读写冲突与写穿。
+  - 已完成归档（按目标 AGY 物理隔离路由）：
+    - `/data/dev/cp/.tasks/resolved/bun_agy/<task-id>.json`
+    - `/data/dev/cp/.tasks/resolved/capsurf_agy/<task-id>.json`
+  - 机制保证：状态流转通过底层 `os.replace` 瞬间原子完成，物理级杜绝多进程并发读写冲突与跨项目结单通知混淆。
 - **全局事件审计流（仅追加，Append-Only Event Stream）**：
   - 看板文件：`/data/dev/cp/TASK_QUEUE.jsonl`
-  - 任何任务提交与结单均以单行 JSON 仅追加写入（Append-Only），杜绝全文件重写覆盖风险。
+  - 任何任务提交、批量结单与语法广播均以单行 JSON 仅追加写入（Append-Only），杜绝全文件重写覆盖风险。
+- **四大核心多 AGY 通信规则（必须严格遵守）**：
+  1. **双下游识别**：待处理工单包含 `"created_by": "bun_agy"` 或 `"capsurf_agy"`（CapSurf 工单前缀为 `task-capsurf-*`）。
+  2. **精准路由与批量结单**：结单时支持一次传入多个工单 ID：
+     ```bash
+     python3 scripts/task_queue.py resolve <id1> [id2 ...] --note "修复说明"
+     ```
+     脚本会自动根据工单的 `created_by`/`target_agy` 将结单通知分发至 `/data/dev/cp/.tasks/resolved/bun_agy/` 或 `resolved/capsurf_agy/`，不再需要人为间隔 2 秒或手写汇总文件。
+  3. **CP 语法更新双端广播**：每当你新增或修改了 CP 语言语法规范 / `cpc` 规则时，必须运行广播命令同时通知 `bun_agy` 和 `capsurf_agy`：
+     ```bash
+     python3 scripts/task_queue.py broadcast --id "syntax-YYYYMMDD-<slug>" --note "详细语法变更说明"
+     ```
+     （或在结单含语法变更的工单时加上 `--broadcast` 参数）。
+  4. **常驻监听命令更新**：启动待处理监听时使用 `--creator all`（同时监听 `bun_agy` 与 `capsurf_agy`，底层内置 200ms 微批聚合与批量排空）：
+     ```bash
+     python3 scripts/watch_task.py --status pending --creator all --timeout 0
+     ```
 - **任务定义标准格式**：
   ```json
   {
-    "id": "task-20261110-01",
+    "id": "task-20261115-01 | task-capsurf-20261115-01",
     "repro": "cap/test/repro/repro_xxx.cp",
     "error": "详细报错信息与预期行为",
     "status": "pending | resolved",
-    "created_by": "bun_agy",
-    "timestamp": "2026-11-10T08:30:00"
+    "created_by": "bun_agy | capsurf_agy",
+    "target_agy": "bun_agy | capsurf_agy",
+    "timestamp": "2026-11-15T08:30:00"
   }
   ```
 
 #### 1.1 CP AGY 行为军规（被动唤醒，闭环自愈）
 
-1. **无任务时挂起监听**：在待命状态下调用：
-   `python3 scripts/watch_task.py`
-   - **零延迟即时检测**：启动首轮立即扫描目录，若已有 pending 任务直接 0 延迟退出开工；
-   - **抗并发与容错**：自动忽略半写入文件（`JSONDecodeError` 自动重试）；
-   - 利用 Antigravity CLI 的后台任务退出即唤醒机制（Reactive Wakeup），CP AGY 结束当前轮次，**进入完全休眠（0 Token 消耗）**。
-2. **自动唤醒与认领**：一旦检测到新任务，`watch_task.py` 立即正常退出（Exit 0），**系统毫秒级被动唤醒 CP AGY**！
-3. **修改与部署**：读取 repro 用例并修复 `cpc/src` 源码后，运行 `bash scripts/sync_cpc.sh` 完成极速编译生效。
-4. **验收与结单**：通过 `./cap/bin/cap <repro_case>` 验证通过后，调用：
+1. **无任务时挂起常驻监听**：在待命状态下启动后台守护进程（`IsDaemon: true, WaitMsBeforeAsync: 500`）：
    ```bash
-   python3 scripts/task_queue.py resolve <task_id> --note "已修复并验证"
+   python3 scripts/watch_task.py --status pending --creator all --timeout 0
    ```
-   （底层原子将任务文件移入 `.tasks/resolved/` 并追加事件日志）。
-5. **重回监听**：再次运行 `python3 scripts/watch_task.py`，进入下一轮待命休眠。
+   - **零延迟即时检测与 200ms 微批聚合**：启动首轮立即扫描目录，发现新任务后等待 200ms 微批窗口收集并发到达的全部工单，一次性批量输出并通知；
+   - **抗并发与容错**：自动忽略半写入文件（`JSONDecodeError` 自动重试）；
+   - 利用 Antigravity CLI 的后台守护通知机制（Reactive Wakeup），无任务时 0 Token 消耗。
+2. **自动唤醒与认领**：一旦检测到来自 `bun_agy` 或 `capsurf_agy` 的新任务，`watch_task.py` 立即触发高优先级输出唤醒 CP AGY！
+3. **修改与部署**：读取 repro 用例并修复 `cpc/src` 源码后，运行 `bash scripts/sync_cpc.sh` 完成极速编译生效，并同步至 `cpc_dev/src`。
+4. **验收、批量结单与语法广播**：通过验证后，调用支持多 ID 的 `resolve` 命令精准路由结单：
+   ```bash
+   python3 scripts/task_queue.py resolve <id1> [id2 ...] --note "已修复并验证"
+   ```
+   若涉及 CP 语言语法规范或 `cpc` 规则变更，附加 `--broadcast` 参数或单独执行：
+   ```bash
+   python3 scripts/task_queue.py broadcast --id "syntax-YYYYMMDD-<slug>" --note "详细语法变更说明"
+   ```
 
-#### 1.2 Bun AGY 行为军规（保通降级，绝不单点死锁）
+#### 1.2 下游 AGY (`bun_agy` / `capsurf_agy`) 行为军规（保通降级，绝不单点死锁）
 
 1. **遇到阻断级编译器缺陷**：若某 `.cp` 文件遇到当前 `cpc` 编译器缺失特性或深层借用报错，**严禁在当前文件死磕停滞**。
 2. **提取最小复现用例**：编写 $\le 10$ 行最小复现代码，写入 `cap/test/repro/repro_<name>.cp`（或 `temp/`）。
-3. **投递异步任务**：直接调用一键投递工具（脚本自动归一化为绝对路径，杜绝跨工作区相对路径解析歧义）：
+3. **投递异步任务**：直接调用一键投递工具（可通过 `--creator bun_agy` 或 `--creator capsurf_agy` 指定，或由 `task-capsurf-*` 前缀自动识别）：
    ```bash
-   python3 scripts/task_queue.py submit --id task-001 --repro temp/repro_xxx.cp --error "简明报错说明"
+   python3 scripts/task_queue.py submit --id task-capsurf-001 --repro temp/repro_xxx.cp --error "简明报错说明" --creator capsurf_agy
    ```
 4. **就地保通降级（核心动作）**：
-   - 在当前 Bun 代码中，使用 `zig { ... }` 原生逃逸块包裹该疑难逻辑，或打上 `// TODO(cpc): [task-id] 待上游支持后重构`。
+   - 在当前下游代码中，使用 `zig { ... }` 原生逃逸块包裹该疑难逻辑，或打上 `// TODO(cpc): [task-id] 待上游支持后重构`。
    - **绝不死等，立即继续推进后续文件或整个模块的宏观编译与测试！**
-5. **任务查询与唤醒（可选）**：若需同步等待某任务修复，可运行：
-   `python3 scripts/watch_task.py --status resolved --id task-001`
+5. **任务查询与唤醒（按各自隔离队列排空）**：
+   - `bun_agy` 监听：`python3 scripts/watch_task.py --status resolved --target bun_agy --timeout 0`
+   - `capsurf_agy` 监听：`python3 scripts/watch_task.py --status resolved --target capsurf_agy --timeout 0`
 
 #### 1.3 协同透明化显式回显与守护进程自启规范 (Visual Notification & Auto-Daemon)
 
 1. **会话启动自检后台监听守护（Auto-Start Watcher Daemon）**：
    - 每次进入/恢复会话，主智能体必须首先调用 `manage_task(Action='list')` 检查 `watch_task.py` 是否已在后台常驻；
-   - 若未启动，必须在首轮自动启动后台监听守护：
-     `python3 scripts/watch_task.py --creator bun_agy --timeout 0`（以 `IsDaemon=true, WaitMsBeforeAsync=500` 启动）；
+   - 若未启动（或仍为旧版参数），必须终止旧任务并在首轮自动启动多 AGY 后台监听守护：
+     `python3 scripts/watch_task.py --status pending --creator all --timeout 0`（以 `IsDaemon=true, WaitMsBeforeAsync=500` 启动）；
    - 确保守护进程永远在后台常驻，无需用户手动下达启动指令。
 2. **屏幕显式回显与记录铁律（Visual Echo & SESSION.md Logging）**：
-   - **严禁静默处理**：当接收到、处理中或完成交付来自 Bun AGY 的任务时，必须在屏幕对话中显式输出结构化通知卡片，格式如下：
+   - **严禁静默处理**：当接收到、处理中或完成交付来自 `bun_agy` 或 `capsurf_agy` 的任务时，必须在屏幕对话中显式输出结构化通知卡片，格式如下：
      ```text
      ┌──────────────────────────────────────────────────────────────┐
-     │ [双向协同任务通知] 来自 Bun AGY 的编译器优化/热修诉求          │
+     │ [双向协同任务通知] 来自 <bun_agy | capsurf_agy> 的编译器诉求 │
      │ • 任务编号: <task_id>                                        │
      │ • 复现用例: <repro_path>                                     │
      │ • 故障现象: <error_description>                              │
@@ -616,11 +640,11 @@ git status --porcelain cpc_dev/src
 
 ### 2. 工程提速脚本指南 (Scripts Reference)
 
-两工作区均已内置以下提速工具脚本（位于 `scripts/` 下），所有 AGY 必须严格按指引调用：
+各工作区均已内置以下提速工具脚本（位于 `scripts/` 下），所有 AGY 必须严格按指引调用：
 
-| 脚本路径                  | 核心作用                                                                                                      | 适用场景与调用时机                                                                                                   | 具体调用命令示例                                                                                                                                                                                                             |
-| :------------------------ | :------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `scripts/sync_cpc.sh`     | **原子构建并部署 cpc**<br>运行 `cargo check` + Debug `cargo build` + 覆盖部署到 `/data/dev/cp/cap/bin/cpc`    | 只要修改了 `/data/dev/cp/cpc/src` 编译器源码，**必须且只能**调用此脚本完成生效。严禁在对话中手写长串 cargo/cp 命令！ | `bash scripts/sync_cpc.sh`                                                                                                                                                                                                   |
-| `scripts/task_queue.py`   | **原子任务队列管理器**<br>Maildir 目录级原子写入与迁移，杜绝并发竞争；自动同步仅追加审计日志                  | • Bun 投递任务：`submit`<br>• CP 结单任务：`resolve`<br>• 查看看板状态：`list`                                       | • 投递：`python3 scripts/task_queue.py submit --id task-001 --repro path/repro.cp --error "..."`<br>• 结单：`python3 scripts/task_queue.py resolve task-001 --note "已修复"`<br>• 查看：`python3 scripts/task_queue.py list` |
-| `scripts/watch_task.py`   | **事件驱动任务监听器**<br>启动即时零延迟检查；检测到匹配状态的任务时瞬间退出(Exit 0)，触发 CLI 反应式自动唤醒 | CP AGY 无任务时挂起休眠；或 Bun AGY 需要等待特定任务被修复时挂起等待。                                               | • CP AGY 监听新任务：<br>`python3 scripts/watch_task.py`<br>• Bun AGY 等待特定修复：<br>`python3 scripts/watch_task.py --status resolved --id task-001`                                                                      |
-| `scripts/resolve_task.py` | **原子更新任务状态（快捷别名）**<br>自动转发调用 `task_queue.py resolve`                                      | CP AGY 完成编译器 Bug 修复并验证通过后，调用此脚本通知任务结单。                                                     | `python3 scripts/resolve_task.py task-001 --note "修复借用检查器解构问题"`                                                                                                                                                   |
+| 脚本路径                  | 核心作用                                                                                                             | 适用场景与调用时机                                                                                                                          | 具体调用命令示例                                                                                                                                                                                                                                                                                                                                               |
+| :------------------------ | :------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/sync_cpc.sh`     | **原子构建并部署 cpc**<br>运行 `cargo check` + Debug `cargo build` + 覆盖部署到 `/data/dev/cp/cap/bin/cpc`           | 只要修改了 `/data/dev/cp/cpc/src` 编译器源码，**必须且只能**调用此脚本完成生效。严禁在对话中手写长串 cargo/cp 命令！                        | `bash scripts/sync_cpc.sh`                                                                                                                                                                                                                                                                                                                                     |
+| `scripts/task_queue.py`   | **多 AGY 原子任务队列管理器**<br>Maildir 按 `bun_agy` / `capsurf_agy` 物理隔离路由；支持单次多 ID 批量结单与双端广播 | • 下游投递任务：`submit`<br>• CP 批量结单：`resolve`<br>• CP 语法变更双端广播：`broadcast`<br>• 下游消费排空：`drain`<br>• 查看看板：`list` | • 投递：`python3 scripts/task_queue.py submit --id task-001 --repro path/repro.cp --error "..." --creator bun_agy`<br>• 批量结单：`python3 scripts/task_queue.py resolve <id1> [id2 ...] --note "修复说明"`<br>• 语法广播：`python3 scripts/task_queue.py broadcast --id "syntax-YYYYMMDD-slug" --note "说明"`<br>• 查看：`python3 scripts/task_queue.py list` |
+| `scripts/watch_task.py`   | **微批聚合事件驱动监听器**<br>内置 200ms 微批窗口收集与批量排空；`--timeout 0` 常驻后台守护模式                      | • CP AGY 同时监听双下游待处理工单（`--creator all`）<br>• 下游 AGY 监听各自已解决通知（`--target bun_agy` 或 `capsurf_agy`）                | • CP AGY 常驻监听：<br>`python3 scripts/watch_task.py --status pending --creator all --timeout 0`<br>• 下游监听：<br>`python3 scripts/watch_task.py --status resolved --target capsurf_agy --timeout 0`                                                                                                                                                        |
+| `scripts/resolve_task.py` | **原子批量结单（快捷别名）**<br>支持传入多个任务 ID 及 `--broadcast`，自动转发调用 `task_queue.py resolve`           | CP AGY 完成编译器 Bug 修复并验证通过后，调用此脚本通知对应下游任务结单。                                                                    | `python3 scripts/resolve_task.py <id1> [id2 ...] --note "修复说明"`                                                                                                                                                                                                                                                                                            |

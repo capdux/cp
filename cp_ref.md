@@ -5915,6 +5915,7 @@ export class SocketContext<Handler> {
 | `cap:elf`         | 可执行文件魔数嗅探与 ELF64 / Mach-O / PE 头部解析（`ExeFormat`, `Elf64HeaderInfo`, `ElfInspector`, `MachHeader64`, `MachoInspector`, `PeCoffHeader`, `PeInspector`） | **已全面实装** |
 | `cap:md`          | CommonMark / GFM 解析器、HTML / ANSI 终端渲染与 GFM 表格引擎（`Markdown`, `MdTable`, `MdTableAlign`） | **已全面实装** |
 | `cap:html`        | CSS 选择器解析（`CssSelector`）、流式 HTML 重写器（`HtmlRewriter`）与零拷贝实体转义器（`HtmlEscape`） | **已全面实装** |
+| `cap:css`         | 工业级 CSS 全栈解析、颜色空间（HEX/RGB/HSL/OKLCH/WCAG 对比度）、尺寸计算（`CssLength`/`CssCalc`）、W3C 选择器权重（`CssSpecificity`）与 94 模块完整样式表/规则/属性引擎（`CssStylesheetParser`, `CssRule`, `CssMediaQuery`, `CssKeyframes`） | **已全面实装** |
 | `cap:ffi`         | 跨平台动态库加载（`DynLib`）、FFI 调用签名布局（`FFISignature`, `CStructLayout`, `CStructField`）与 TinyCC 内存编译声明（`TccOutputFormat`） | **已全面实装** |
 | `cap:sql`         | 统一 SQL 协议栈：参数化预编译语句（`SqlStatement`）、PostgreSQL v3 Wire/认证/数据行（`PostgresWire`, `PostgresAuthChallenge`, `PostgresDataRow`, `PostgresCommandComplete`）与 MySQL Wire/变长整数/OK/ERR 包（`MySqlPacketHeader`, `MySqlLenEnc`, `MySqlCapabilities`, `MySqlOkPacket`, `MySqlErrPacket`） | **已全面实装** |
 | `cap:io`          | `Reader`, `Writer`, `Closer`, `Seeker`, `BufferReader`, `BufferWriter`, `BufferedReader`, `BufferedWriter`, `copyStream`, `PipeReader`, `PipeWriter`, `MaxBuf`, `Pipe`, `print`, `console` | **已全面实装** |
@@ -7049,6 +7050,47 @@ if (!is_valid) {
 
 // 3. 恒定时间缓冲区对比
 const equal = constantTimeEql(token_a, token_b);
+```
+
+---
+
+### 12.20.1 现代工业级 CSS 样式表解析、颜色空间与选择器引擎（`cap:css`） 【已全面实装】
+
+`cap:css`（位于 `lib/css/`，共包含 99 个 `.cp` 模块文件，完整吸收自 Bun LightningCSS 核心引擎并封装纯正零堆分配高层门面 API）提供从 W3C CSS Color Level 4 颜色空间转换、WCAG 2.1 无障碍对比度计算、CSS Values & Units 尺寸折算与 `calc()` 表达式求值，到 W3C Selectors Level 4 权重（Specificity）计算及 `@media` / `@keyframes` 样式表解析与压缩的全套能力：
+
+```typescript
+import {
+    CssColor, CssUnit, CssLength, CssCalc,
+    CssSpecificity, CssSelector,
+    CssProperty, CssRuleKind, CssMediaQuery,
+    CssKeyframeStep, CssKeyframes, CssRule, CssStylesheetParser
+} from "cap:css";
+
+// 1. CSS Color Level 4 解析（#hex, rgb/rgba, hsl/hsla, oklch, 命名色）与 WCAG 对比度
+if (c := CssColor.parse("oklch(0.628 0.258 29.23)")) {
+    const lum = c.relativeLuminance();
+    const white = CssColor.rgba(255, 255, 255, 255);
+    const ratio = c.contrastRatio(white); // WCAG 2.1 contrast ratio
+}
+
+// 2. CSS 尺寸单位折算与 calc() 表达式求值
+const rem_len = CssLength.parse("1.5rem")!;
+const px_val = rem_len.toPx(16.0, 1920.0, 1080.0); // 24.0px
+const calc_px = CssCalc.evalPx("100vw - 2rem", 16.0, 1280.0, 720.0); // 1248.0px
+
+// 3. W3C 选择器权重 (a, b, c) 计算与 DOM 元素匹配
+const sel = CssSelector.parse("ul#nav > li.active:hover")!;
+// sel.specificity => CssSpecificity{ ids: 1, classes: 2, elements: 2 } (weight: 0x010202)
+
+// 4. 样式表规则、@media 查询、@keyframes 动画解析与极速压缩 (Minify)
+let rules: [8]CssRule = undefined;
+const count = CssStylesheetParser.parseRules(
+    ".btn { color: #ff0000; padding: 8px; } @media (min-width: 768px) { .btn { padding: 16px; } }",
+    rules[0..]
+);
+let min_buf: [256]u8 = undefined;
+const minified = CssStylesheetParser.minify("/* comment */ .btn { color: #ffffff;  padding: 10px; }", min_buf[0..]);
+// minified => ".btn{color:#ffffff;padding:10px}"
 ```
 
 ---

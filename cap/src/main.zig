@@ -613,7 +613,17 @@ fn runFileWithOpt(allocator: std.mem.Allocator, filename: []const u8, opt_mode: 
     defer allocator.free(emit_bin_arg);
     fs_shim.cwd().createDirPath(global_io, ".cap/zig-cache") catch {};
 
-    var build_args_buf: [32][]const u8 = undefined;
+    // 1. Try to load cap.json if present
+    var mf_opt: ?manifest.Manifest = null;
+    if (fs_shim.cwd().readFileAlloc(allocator, "cap.json", 1024 * 1024)) |content| {
+        defer allocator.free(content);
+        if (manifest.Manifest.parse(allocator, content)) |mf| {
+            mf_opt = mf;
+        } else |_| {}
+    } else |_| {}
+    defer if (mf_opt) |*m| m.deinit(allocator);
+
+    var build_args_buf: [100][]const u8 = undefined;
     var build_argc: usize = 0;
     build_args_buf[build_argc] = "zig"; build_argc += 1;
     build_args_buf[build_argc] = "build-exe"; build_argc += 1;
@@ -629,6 +639,30 @@ fn runFileWithOpt(allocator: std.mem.Allocator, filename: []const u8, opt_mode: 
     if (fs_shim.cwd().statFile("zig-out/lib/libusockets.a") catch null != null) {
         build_args_buf[build_argc] = "-Lzig-out/lib"; build_argc += 1;
         build_args_buf[build_argc] = "-lusockets"; build_argc += 1;
+    }
+
+    var allocated_libs: [64][]const u8 = undefined;
+    var allocated_libs_len: usize = 0;
+    defer for (allocated_libs[0..allocated_libs_len]) |al| allocator.free(al);
+
+    if (mf_opt) |mf| {
+        if (mf.build_config) |bc| {
+            for (bc.c_flags) |cf| {
+                if (build_argc < 100) {
+                    build_args_buf[build_argc] = cf;
+                    build_argc += 1;
+                }
+            }
+            for (bc.link_libs) |ll| {
+                if (build_argc < 100) {
+                    const lib_arg = try std.fmt.allocPrint(allocator, "-l{s}", .{ll});
+                    allocated_libs[allocated_libs_len] = lib_arg;
+                    allocated_libs_len += 1;
+                    build_args_buf[build_argc] = lib_arg;
+                    build_argc += 1;
+                }
+            }
+        }
     }
 
     var build_child = try std.process.spawn(global_io, .{ .argv = build_args_buf[0..build_argc] });
@@ -1352,18 +1386,59 @@ fn runTestSingleFile(allocator: std.mem.Allocator, filename: []const u8) !void {
     defer allocator.free(emit_arg);
     fs_shim.cwd().createDirPath(global_io, ".cap/zig-cache") catch {};
 
-    const build_args = &[_][]const u8{
-        "zig",
-        "build-exe",
-        zig_file,
-        emit_arg,
-        "--cache-dir",
-        ".cap/zig-cache",
-        "-O",
-        "Debug",
-        "-lc",
-    };
-    var build_child = try std.process.spawn(global_io, .{ .argv = build_args });
+    // 1. Try to load cap.json if present
+    var mf_opt: ?manifest.Manifest = null;
+    if (fs_shim.cwd().readFileAlloc(allocator, "cap.json", 1024 * 1024)) |content| {
+        defer allocator.free(content);
+        if (manifest.Manifest.parse(allocator, content)) |mf| {
+            mf_opt = mf;
+        } else |_| {}
+    } else |_| {}
+    defer if (mf_opt) |*m| m.deinit(allocator);
+
+    var build_args_buf: [100][]const u8 = undefined;
+    var build_argc: usize = 0;
+    build_args_buf[build_argc] = "zig"; build_argc += 1;
+    build_args_buf[build_argc] = "build-exe"; build_argc += 1;
+    build_args_buf[build_argc] = zig_file; build_argc += 1;
+    build_args_buf[build_argc] = emit_arg; build_argc += 1;
+    build_args_buf[build_argc] = "--cache-dir"; build_argc += 1;
+    build_args_buf[build_argc] = ".cap/zig-cache"; build_argc += 1;
+    build_args_buf[build_argc] = "-O"; build_argc += 1;
+    build_args_buf[build_argc] = "Debug"; build_argc += 1;
+    build_args_buf[build_argc] = "-lc"; build_argc += 1;
+
+    // 自动检测并链接底层 C 静态库 (如 uSockets 与 picohttpparser)
+    if (fs_shim.cwd().statFile("zig-out/lib/libusockets.a") catch null != null) {
+        build_args_buf[build_argc] = "-Lzig-out/lib"; build_argc += 1;
+        build_args_buf[build_argc] = "-lusockets"; build_argc += 1;
+    }
+
+    var allocated_libs: [64][]const u8 = undefined;
+    var allocated_libs_len: usize = 0;
+    defer for (allocated_libs[0..allocated_libs_len]) |al| allocator.free(al);
+
+    if (mf_opt) |mf| {
+        if (mf.build_config) |bc| {
+            for (bc.c_flags) |cf| {
+                if (build_argc < 100) {
+                    build_args_buf[build_argc] = cf;
+                    build_argc += 1;
+                }
+            }
+            for (bc.link_libs) |ll| {
+                if (build_argc < 100) {
+                    const lib_arg = try std.fmt.allocPrint(allocator, "-l{s}", .{ll});
+                    allocated_libs[allocated_libs_len] = lib_arg;
+                    allocated_libs_len += 1;
+                    build_args_buf[build_argc] = lib_arg;
+                    build_argc += 1;
+                }
+            }
+        }
+    }
+
+    var build_child = try std.process.spawn(global_io, .{ .argv = build_args_buf[0..build_argc] });
     const build_res = try build_child.wait(global_io);
     if (build_res.exited != 0) return error.BuildFailed;
 

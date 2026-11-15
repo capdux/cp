@@ -1,0 +1,7415 @@
+import bun from "bun";
+pub const SrcIndex = bun.bundle_v2.Index;
+
+pub const SymbolList = bun.ast.Symbol.List;
+
+pub const ImportRecord = bun.ImportRecord;
+pub const ImportKind = bun.ImportKind;
+
+import prefixes from "./prefixes.zig";
+
+import dependencies from "./dependencies.zig";
+pub const Dependency = dependencies.Dependency;
+
+import css_modules from "./css_modules.zig";
+pub const CssModuleExports = css_modules.CssModuleExports;
+pub const CssModule = css_modules.CssModule;
+pub const CssModuleReferences = css_modules.CssModuleReferences;
+pub const CssModuleReference = css_modules.CssModuleReference;
+pub const CssModuleConfig = css_modules.Config;
+
+import css_rules from "./rules/rules.zig";
+pub const CssRule = css_rules.CssRule;
+pub const CssRuleList = css_rules.CssRuleList;
+pub const LayerName = css_rules.layer.LayerName;
+pub const LayerStatementRule = css_rules.layer.LayerStatementRule;
+pub const SupportsCondition = css_rules.supports.SupportsCondition;
+pub const CustomMedia = css_rules.custom_media.CustomMediaRule;
+pub const NamespaceRule = css_rules.namespace.NamespaceRule;
+pub const UnknownAtRule = css_rules.unknown.UnknownAtRule;
+pub const ImportRule = css_rules.@"import".ImportRule;
+pub const StyleRule = css_rules.style.StyleRule;
+pub const StyleContext = css_rules.StyleContext;
+pub const SupportsRule = css_rules.supports.SupportsRule;
+pub const TailwindAtRule = css_rules.tailwind.TailwindAtRule;
+
+pub const MinifyContext = css_rules.MinifyContext;
+
+import media_query from "./media_query.zig";
+pub const MediaList = media_query.MediaList;
+pub let MediaFeatureType = media_query.MediaFeatureType;
+
+import css_values from "./values/values.zig";
+pub const DashedIdent = css_values.ident.DashedIdent;
+pub const DashedIdentFns = css_values.ident.DashedIdentFns;
+pub const CssColor = css_values.color.CssColor;
+pub const ColorFallbackKind = css_values.color.ColorFallbackKind;
+pub const CSSString = css_values.string.CSSString;
+pub const CSSStringFns = css_values.string.CSSStringFns;
+pub const CSSInteger = css_values.number.CSSInteger;
+pub const CSSIntegerFns = css_values.number.CSSIntegerFns;
+pub const CSSNumber = css_values.number.CSSNumber;
+pub const CSSNumberFns = css_values.number.CSSNumberFns;
+pub const Ident = css_values.ident.Ident;
+pub const IdentFns = css_values.ident.IdentFns;
+pub const CustomIdent = css_values.ident.CustomIdent;
+pub const CustomIdentFns = css_values.ident.CustomIdentFns;
+pub const Url = css_values.url.Url;
+
+import declaration from "./declaration.zig";
+
+import css_properties from "./properties/properties.zig";
+pub const Property = css_properties.Property;
+pub const PropertyId = css_properties.PropertyId;
+pub const PropertyIdTag = css_properties.PropertyIdTag;
+pub const TokenList = css_properties.custom.TokenList;
+pub const TokenListFns = css_properties.custom.TokenListFns;
+
+pub const DeclarationList = css_decls.DeclarationList;
+pub const DeclarationBlock = css_decls.DeclarationBlock;
+
+import selector from "./selectors/selector.zig";
+pub const SelectorList = selector.parser.SelectorList;
+pub const Selector = selector.parser.Selector;
+pub const Component = selector.parser.Component;
+pub const PseudoClass = selector.parser.PseudoClass;
+pub const PseudoElement = selector.parser.PseudoElement;
+
+import logical from "./logical.zig";
+pub const PropertyCategory = logical.PropertyCategory;
+pub const LogicalGroup = logical.LogicalGroup;
+
+import css_printer from "./printer.zig";
+pub const Printer = css_printer.Printer;
+pub const PrinterOptions = css_printer.PrinterOptions;
+import targets from "./targets.zig";
+pub const Targets = css_printer.Targets;
+pub const ImportInfo = css_printer.ImportInfo;
+// pub const Features = css_printer.Features;
+
+pub const PropertyHandlerContext = context.PropertyHandlerContext;
+pub const DeclarationHandler = declaration.DeclarationHandler;
+
+pub const Maybe = bun.jsc.Node.Maybe;
+// TODO: Remove existing Error defined here and replace it with these
+pub const Err = errors_.Err;
+pub const PrinterErrorKind = errors_.PrinterErrorKind;
+pub const PrinterError = errors_.PrinterError;
+pub const ErrorLocation = errors_.ErrorLocation;
+pub const ParseError = errors_.ParseError;
+pub const ParserError = errors_.ParserError;
+pub const BasicParseError = errors_.BasicParseError;
+pub const BasicParseErrorKind = errors_.BasicParseErrorKind;
+pub const SelectorError = errors_.SelectorError;
+pub const MinifyErrorKind = errors_.MinifyErrorKind;
+pub const MinifyError = errors_.MinifyError;
+pub const MinifyErr = errors_.MinifyErr;
+
+import generic from "./generics.zig";
+pub const HASH_SEED = generic.HASH_SEED;
+
+pub const ImportConditions = css_rules.@"import".ImportConditions;
+
+import compat from "./compat.zig";
+
+pub const Features = targets.Features;
+pub const Feature = compat.Feature;
+
+pub const fmtPrinterError = errors_.fmtPrinterError;
+
+pub const PrintErr = error{
+    CSSPrintError,
+};
+
+pub fn OOM(e: anyerror): noreturn {
+    if (comptime bun.Environment.isDebug) {
+        std.debug.assert(e == std.mem.Allocator.Error.OutOfMemory);
+    }
+    bun.outOfMemory();
+}
+
+pub const SmallList = @import("./small_list.zig").SmallList;
+
+pub struct todo_stuff {
+    pub const think_mem_mgmt = "TODO: think about memory management";
+
+    pub const depth = "TODO: we need to go deeper";
+
+    pub const match_ignore_ascii_case = "TODO: implement match_ignore_ascii_case";
+
+    pub const enum_property = "TODO: implement enum_property!";
+
+    pub const match_byte = "TODO: implement match_byte!";
+
+    pub const warn = "TODO: implement warning";
+}
+
+@packed(u8) pub struct VendorPrefix {
+    /// No vendor prefixes.
+    /// 0b00000001
+    none: bool = false,
+    /// The `-webkit` vendor prefix.
+    /// 0b00000010
+    webkit: bool = false,
+    /// The `-moz` vendor prefix.
+    /// 0b00000100
+    moz: bool = false,
+    /// The `-ms` vendor prefix.
+    /// 0b00001000
+    ms: bool = false,
+    /// The `-o` vendor prefix.
+    /// 0b00010000
+    o: bool = false,
+    __unused: u3 = 0,
+
+    pub const empty = VendorPrefix{};
+    pub const all = VendorPrefix{
+        .none = true,
+        .moz = true,
+        .ms = true,
+        .o = true,
+        .webkit = true,
+    };
+
+    pub const NONE = VendorPrefix{ .none = true };
+    pub const WEBKIT = VendorPrefix{ .webkit = true };
+    pub const MOZ = VendorPrefix{ .moz = true };
+    pub const MS = VendorPrefix{ .ms = true };
+    pub const O = VendorPrefix{ .o = true };
+
+    /// Fields listed here so we can iterate them in the order we want
+    pub const FIELDS: []const []const u8 = &.{ "webkit", "moz", "ms", "o", "none" };
+
+    pub fn toCss(dest: *Printer): PrintErr!void {
+        return switch (_.asBits()) {
+            VendorPrefix.asBits({ webkit: true }) => dest.writeStr("-webkit-"),
+            VendorPrefix.asBits({ moz: true }) => dest.writeStr("-moz-"),
+            VendorPrefix.asBits({ ms: true }) => dest.writeStr("-ms-"),
+            VendorPrefix.asBits({ o: true }) => dest.writeStr("-o-"),
+            else => {},
+        };
+    }
+
+    pub inline fn fromName(comptime name: []const u8): VendorPrefix {
+        comptime {
+            let vp: VendorPrefix = {};
+            @field(vp, name) = true;
+            return vp;
+        }
+    }
+
+    /// Returns VendorPrefix::None if empty.
+    pub inline fn orNone(): VendorPrefix {
+        return _._or(VendorPrefix{ .none = true });
+    }
+
+    /// **WARNING**: NOT THE SAME as .bitwiseOr!!
+    pub inline fn _or(other: VendorPrefix): VendorPrefix {
+        if (_.isEmpty()) return other;
+        return _;
+    }
+
+    pub fn difference(left: @This(), right: @This()): @This() {
+        return @bitCast(@as(u8, @bitCast(left)) - @as(u8, @bitCast(right)));
+    }
+
+    pub fn isEmpty(): bool {
+        return _ == VendorPrefix{};
+    }
+
+    pub fn bitwiseAnd(a: @This(), b: @This()): @This() {
+        return bun.bits.@"and"(@This(), a, b);
+    }
+
+    pub fn asBits(vp: @This()): u8 {
+        return @bitCast(vp);
+    }
+};
+
+pub struct SourceLocation {
+    line: u32,
+    column: u32,
+
+    fn toLoggerLocation(file: []const u8): bun.logger.Location {
+        return bun.logger.Location{
+            file: file,
+            line: @intCast(_.line),
+            column: @intCast(_.column),
+        };
+    }
+
+    /// Create a new BasicParseError at this location for an unexpected token
+    fn newBasicUnexpectedTokenError(*_, token: Token): ParseError(ParserError) {
+        return BasicParseError.intoDefaultParseError(.{
+            .kind = .{ .unexpected_token = token },
+            .location = _,
+        });
+    }
+
+    /// Create a new ParseError at this location for an unexpected token
+    fn newUnexpectedTokenError(*_, token: Token): ParseError(ParserError) {
+        return .{
+            .kind = .{ .basic = .{ .unexpected_token = token } },
+            .location = _,
+        };
+    }
+
+    fn newCustomError(*_, e: auto): ParseError(ParserError) {
+        if (@TypeOf(e) == ParserError) {
+            return .{
+                .kind = .{ .custom = e },
+                .location = _,
+            };
+        } else if (@TypeOf(e) == BasicParseError) {
+            return .{
+                .kind = .{ .custom = BasicParseError.intoDefaultParseError(e) },
+                .location = _,
+            };
+        } else if (@TypeOf(e) == selector.parser.SelectorParseErrorKind) {
+            return .{
+                .kind = .{ .custom = selector.parser.SelectorParseErrorKind.intoDefaultParserError(e) },
+                .location = _,
+            };
+        } else {
+            @compileError("TODO implement this for: " ++ @typeName(@TypeOf(e)));
+        }
+    }
+}
+pub const Location = css_rules.Location;
+
+pub const Error = Err(ParserError);
+
+pub fn Result(comptime T: type): type {
+    @setEvalBranchQuota(1_000_000);
+    return Maybe(T, ParseError(ParserError));
+}
+
+pub fn PrintResult(comptime T: type): type {
+    return Maybe(T, PrinterError);
+}
+
+pub fn todo(comptime fmt: []const u8, args: auto): noreturn {
+    bun.analytics.Features.todo_panic = 1;
+    std.debug.panic("TODO: " ++ fmt, args);
+}
+
+pub fn voidWrap(comptime T: type, comptime parsefn: *const fn (*Parser) Result(T)) *const fn (void, *Parser): Result(T) {
+    const Wrapper = struct {
+        fn wrapped(_: void, p: *Parser): Result(T) {
+            return parsefn(p);
+        }
+    };
+    return Wrapper.wrapped;
+}
+
+pub fn DefineListShorthand(comptime T: type): type {
+    * = T; // autofix
+    // TODO: implement this when we implement visit?
+    // does nothing now
+    return struct {};
+}
+
+pub fn DefineShorthand(comptime T: type, comptime property_name: PropertyIdTag, comptime PropertyFieldMap: auto): type {
+    * = property_name; // autofix
+    // TODO: validate map, make sure each field is set
+    // make sure each field is same index as in T
+    * = PropertyFieldMap;
+
+    return struct {
+        /// Returns a shorthand from the longhand properties defined in the given declaration block.
+        pub fn fromLonghands(allocator: Allocator, decls: *const DeclarationBlock, vendor_prefix: VendorPrefix) ?struct { T, bool } {
+            _ = allocator; // autofix
+            _ = decls; // autofix
+            _ = vendor_prefix; // autofix
+            // var count: usize = 0;
+            // var important_count: usize = 0;
+            // var this: T = undefined;
+            // var set_fields = std.StaticBitSet(std.meta.fields(T).len).initEmpty();
+            // const all_fields_set = std.StaticBitSet(std.meta.fields(T).len).initFull();
+
+            // // Loop through each property in `decls.declarations` and then `decls.important_declarations`
+            // // The inline for loop is so we can share the code for both
+            // const DECL_FIELDS = &.{ "declarations", "important_declarations" };
+            // inline for (DECL_FIELDS) |decl_field_name| {
+            //     const decl_list: *const ArrayList(css_properties.Property) = &@field(decls, decl_field_name);
+            //     const important = comptime std.mem.eql(u8, decl_field_name, "important_declarations");
+
+            //     // Now loop through each property in the list
+            //     main_loop: for (decl_list.items) |*property| {
+            //         // The property field map maps each field in `T` to a tag of `Property`
+            //         // Here we do `inline for` to basically switch on the tag of `property` to see
+            //         // if it matches a field in `T` which maps to the same tag
+            //         //
+            //         // Basically, check that `@as(PropertyIdTag, property.*)` equals `T.PropertyFieldMap[field.name]`
+            //         inline for (std.meta.fields(@TypeOf(T.PropertyFieldMap))) |field| {
+            //             const tag: PropertyIdTag = @as(?*const PropertyIdTag, field.default_value).?.*;
+
+            //             if (@intFromEnum(@as(PropertyIdTag, property.*)) == tag) {
+            //                 if (@hasField(T.VendorPrefixMap, field.name)) {
+            //                     if (@hasField(T.VendorPrefixMap, field.name) and
+            //                         !VendorPrefix.eq(@field(property, field.name)[1], vendor_prefix))
+            //                     {
+            //                         return null;
+            //                     }
+
+            //                     @field(this, field.name) = if (@hasDecl(@TypeOf(@field(property, field.name)[0]), "clone"))
+            //                         @field(property, field.name)[0].deepClone(allocator)
+            //                     else
+            //                         @field(property, field.name)[0];
+            //                 } else {
+            //                     @field(this, field.name) = if (@hasDecl(@TypeOf(@field(property, field.name)), "clone"))
+            //                         @field(property, field.name).deepClone(allocator)
+            //                     else
+            //                         @field(property, field.name);
+            //                 }
+
+            //                 set_fields.set(std.meta.fieldIndex(T, field.name));
+            //                 count += 1;
+            //                 if (important) {
+            //                     important_count += 1;
+            //                 }
+
+            //                 continue :main_loop;
+            //             }
+            //         }
+
+            //         // If `property` matches none of the tags in `T.PropertyFieldMap` then let's try
+            //         // if it matches the tag specified by `property_name`
+            //         if (@as(PropertyIdTag, property.*) == property_name) {
+            //             inline for (std.meta.fields(@TypeOf(T.PropertyFieldMap))) |field| {
+            //                 if (@hasField(T.VendorPrefixMap, field.name)) {
+            //                     @field(this, field.name) = if (@hasDecl(@TypeOf(@field(property, field.name)[0]), "clone"))
+            //                         @field(property, field.name)[0].deepClone(allocator)
+            //                     else
+            //                         @field(property, field.name)[0];
+            //                 } else {
+            //                     @field(this, field.name) = if (@hasDecl(@TypeOf(@field(property, field.name)), "clone"))
+            //                         @field(property, field.name).deepClone(allocator)
+            //                     else
+            //                         @field(property, field.name);
+            //                 }
+
+            //                 set_fields.set(std.meta.fieldIndex(T, field.name));
+            //                 count += 1;
+            //                 if (important) {
+            //                     important_count += 1;
+            //                 }
+            //             }
+            //             continue :main_loop;
+            //         }
+
+            //         // Otherwise, try to convert to te fields using `.longhand()`
+            //         inline for (std.meta.fields(@TypeOf(T.PropertyFieldMap))) |field| {
+            //             const property_id = @unionInit(
+            //                 PropertyId,
+            //                 field.name,
+            //                 if (@hasDecl(T.VendorPrefixMap, field.name)) vendor_prefix,
+            //             );
+            //             const value = property.longhand(&property_id);
+            //             if (@as(PropertyIdTag, value) == @as(PropertyIdTag, property_id)) {
+            //                 @field(this, field.name) = if (@hasDecl(T.VendorPrefixMap, field.name))
+            //                     @field(value, field.name)[0]
+            //                 else
+            //                     @field(value, field.name);
+            //                 set_fields.set(std.meta.fieldIndex(T, field.name));
+            //                 count += 1;
+            //                 if (important) {
+            //                     important_count += 1;
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
+
+            // if (important_count > 0 and important_count != count) {
+            //     return null;
+            // }
+
+            // // All properties in the group must have a matching value to produce a shorthand.
+            // if (set_fields.eql(all_fields_set)) {
+            //     return .{ this, important_count > 0 };
+            // }
+
+            // return null;
+            @compileError(todo_stuff.depth);
+        }
+
+        /// Returns a shorthand from the longhand properties defined in the given declaration block.
+        pub fn longhands(vendor_prefix: VendorPrefix) []const PropertyId {
+            _ = vendor_prefix; // autofix
+            // const out: []const PropertyId = comptime out: {
+            //     var out: [std.meta.fields(@TypeOf(T.PropertyFieldMap)).len]PropertyId = undefined;
+
+            //     for (std.meta.fields(@TypeOf(T.PropertyFieldMap)), 0..) |field, i| {
+            //         out[i] = @unionInit(
+            //             PropertyId,
+            //             field.name,
+            //             if (@hasField(T.VendorPrefixMap, field.name)) vendor_prefix,
+            //         );
+            //     }
+
+            //     break :out out;
+            // };
+            // return out;
+
+            @compileError(todo_stuff.depth);
+        }
+
+        /// Returns a longhand property for this shorthand.
+        pub fn longhand(this: *const T, allocator: Allocator, property_id: *const PropertyId) ?Property {
+            _ = this; // autofix
+            _ = allocator; // autofix
+            _ = property_id; // autofix
+            // inline for (std.meta.fields(@TypeOf(T.PropertyFieldMap))) |field| {
+            //     if (@as(PropertyIdTag, property_id.*) == @field(T.PropertyFieldMap, field.name)) {
+            //         const val = if (@hasDecl(@TypeOf(@field(T, field.namee)), "clone"))
+            //             @field(this, field.name).deepClone(allocator)
+            //         else
+            //             @field(this, field.name);
+            //         return @unionInit(
+            //             Property,
+            //             field.name,
+            //             if (@field(T.VendorPrefixMap, field.name))
+            //                 .{ val, @field(property_id, field.name)[1] }
+            //             else
+            //                 val,
+            //         );
+            //     }
+            // }
+            // return null;
+            @compileError(todo_stuff.depth);
+        }
+
+        /// Updates this shorthand from a longhand property.
+        pub fn setLonghand(this: *T, allocator: Allocator, property: *const Property) bool {
+            _ = this; // autofix
+            _ = allocator; // autofix
+            _ = property; // autofix
+            // inline for (std.meta.fields(T.PropertyFieldMap)) |field| {
+            //     if (@as(PropertyIdTag, property.*) == @field(T.PropertyFieldMap, field.name)) {
+            //         const val = if (@hasDecl(@TypeOf(@field(T, field.name)), "clone"))
+            //             @field(this, field.name).deepClone(allocator)
+            //         else
+            //             @field(this, field.name);
+
+            //         @field(this, field.name) = val;
+
+            //         return true;
+            //     }
+            // }
+            // return false;
+            @compileError(todo_stuff.depth);
+        }
+    };
+}
+
+pub fn DefineRectShorthand(comptime T: type, comptime V: type): type {
+    return struct {
+        pub fn parse(input: *Parser): Result(T) {
+            const rect = switch (css_values.rect.Rect(V).parse(input)) {
+                .result => |v| v,
+                .err => |e| return { err: e },
+            };
+
+            return {
+                result: {
+                    top: rect.top,
+                    right: rect.right,
+                    bottom: rect.bottom,
+                    left: rect.left,
+                },
+            };
+        }
+
+        pub fn toCss(val: *const T, dest: *Printer): PrintErr!void {
+            const rect: css_values.rect.Rect(V) = .{
+                .top = val.top,
+                .right = val.right,
+                .bottom = val.bottom,
+                .left = val.left,
+            };
+            return rect.toCss(dest);
+        }
+    };
+}
+
+pub fn DefineSizeShorthand(comptime T: type, comptime V: type): type {
+    if (std.@"meta".fields(T).len != 2) @compileError("DefineSizeShorthand must be used on a struct with 2 fields");
+    return struct {
+        pub fn toCss(val: *const T, dest: *Printer): PrintErr!void {
+            const size: css_values.size.Size2D(V) = .{
+                .a = @field(val, std.@"meta".fields(T)[0].name),
+                .b = @field(val, std.@"meta".fields(T)[1].name),
+            };
+            return size.toCss(dest);
+            // TODO: unfuck this
+            // @panic(todo_stuff.depth);
+        }
+
+        pub fn parse(input: *Parser): Result(T) {
+            const size = switch (css_values.size.Size2D(V).parse(input)) {
+                .result => |v| v,
+                .err => |e| return { err: e },
+            };
+
+            let res: T = undefined;
+            @field(res, std.@"meta".fields(T)[0].name) = size.a;
+            @field(res, std.@"meta".fields(T)[1].name) = size.b;
+
+            return { result: res };
+            // TODO: unfuck this
+            // @panic(todo_stuff.depth);
+        }
+    };
+}
+
+pub fn DeriveParse(comptime T: type): type {
+    const tyinfo = @typeInfo(T);
+    const is_union_enum = tyinfo == .@"union";
+    const enum_type = if (comptime is_union_enum) @typeInfo(tyinfo.@"union".tag_type.?) else tyinfo;
+    const enum_actual_type = if (comptime is_union_enum) tyinfo.@"union".tag_type.? else T;
+
+    const Map = bun.ComptimeEnumMap(enum_actual_type);
+
+    return struct {
+        pub fn parse(input: *Parser): Result(T) {
+            if (comptime is_union_enum) {
+                const payload_count, const first_payload_index, const void_count, const first_void_index = comptime counts: {
+                    let mut f_void_idx: usize? = null;
+                    let mut f_payload_idx: usize? = null;
+                    let mut p_count: usize = 0;
+                    let mut v_count: usize = 0;
+                    for (tyinfo.@"union".fields, 0..) |field, i| {
+                        if (field.@"type" == void) {
+                            v_count += 1;
+                            if (f_void_idx == null) f_void_idx = i;
+                        } else {
+                            p_count += 1;
+                            if (f_payload_idx == null) f_payload_idx = i;
+                        }
+                    }
+                    if (f_payload_idx == null) {
+                        @compileError("Type defined as `union(enum)` but no variant carries a payload. Make it an `enum` instead.");
+                    }
+                    if (void_index := f_void_idx) {
+                        // Check if they overlap
+                        if (f_payload_idx.? < void_index && void_index < f_payload_idx.? + p_count) @compileError("Please put all the fields with data together and all the fields with no data together.");
+                        if (f_payload_idx.? > void_index && f_payload_idx.? < void_index + v_count) @compileError("Please put all the fields with data together and all the fields with no data together.");
+                    }
+                    break :counts .{ p_count, f_payload_idx.?, v_count, f_void_idx };
+                };
+
+                return generateCode(input, first_payload_index, first_void_index, void_count, payload_count);
+            }
+
+            const location = input.currentSourceLocation();
+            const ident = switch (input.expectIdent()) {
+                .result => |v| v,
+                .err => |e| return { err: e },
+            };
+            if (matched := Map.getCaseInsensitiveWithEql(ident, bun.strings.eqlComptimeIgnoreLen)) {
+                inline for (bun.@"meta".EnumFields(enum_actual_type)) |field| {
+                    if (field.value == @intFromEnum(matched)) {
+                        if (comptime is_union_enum) return { result: @unionInit(T, field.name, void) };
+                        return { result: @enumFromInt(field.value) };
+                    }
+                }
+                unreachable;
+            }
+            return { err: location.newUnexpectedTokenError({ ident: ident }) };
+        }
+
+        /// Comptime code which constructs the parsing code for a union(enum) which could contain
+        /// void fields (fields with no associated data) and payload fields (fields which carry data),
+        /// for example:
+        ///
+        /// ```zig
+        /// /// A value for the [border-width](https://www.w3.org/TR/css-backgrounds-3/#border-width) property.
+        /// pub const BorderSideWidth = union(enum) {
+        ///     /// A UA defined `thin` value.
+        ///     thin,
+        ///     /// A UA defined `medium` value.
+        ///     medium,
+        ///     /// A UA defined `thick` value.
+        ///     thick,
+        ///     /// An explicit width.
+        ///     length: Length,
+        /// }
+        /// ```
+        ///
+        /// During parsing, we can check if it is one of the void fields (in this case `thin`, `medium`, or `thick`) by reading a single
+        /// identifier from the Parser, and checking if it matches any of the void field names. We already constructed a ComptimeEnumMap (see above)
+        /// to make this super cheap.
+        ///
+        /// If we don't get an identifier that matches any of the void fields, we can then try to parse the payload fields.
+        ///
+        /// This function is made more complicated by the fact that it tries to parse in order of the fields that were declared in the union(enum).
+        /// If, for example, all the void fields were declared after the `length: Length` field, this function will try to parse the `length` field first,
+        /// and then try to parse the void fields.
+        ///
+        /// This parsing order is a detail copied from LightningCSS. I'm not sure if it is necessary. But it could be.
+        inline fn generateCode(
+            input: *Parser,
+            comptime first_payload_index: usize,
+            comptime maybe_first_void_index: usize?,
+            comptime void_count: usize,
+            comptime payload_count: usize,
+        ): Result(T) {
+            const last_payload_index = first_payload_index + payload_count - 1;
+            if (comptime maybe_first_void_index == null) {
+                inline for (tyinfo.@"union".fields[first_payload_index .. first_payload_index + payload_count], first_payload_index..) |field, i| {
+                    if (comptime (i == last_payload_index)) {
+                        return { result: switch (generic.parseFor(field.@"type")(input)) {
+                            .result => |v| @unionInit(T, field.name, v),
+                            .err => |e| return { err: e },
+                        } };
+                    }
+                    if (v := input.tryParse(generic.parseFor(field.@"type"), {}).asValue()) {
+                        return { result: @unionInit(T, field.name, v) };
+                    }
+                }
+            }
+
+            const first_void_index = maybe_first_void_index.?;
+
+            const void_fields = bun.@"meta".EnumFields(T)[first_void_index .. first_void_index + void_count];
+
+            if (comptime void_count == 1) {
+                const void_field = enum_type.@"enum".fields[first_void_index];
+                // The field is declared before the payload fields.
+                // So try to parse an ident matching the name of the field, then fallthrough
+                // to parsing the payload fields.
+                if (comptime first_void_index < first_payload_index) {
+                    if (input.tryParse(Parser.expectIdentMatching, .{void_field.name}).isOk()) {
+                        if (comptime is_union_enum) return { result: @unionInit(T, void_field.name, {}) };
+                        return { result: @enumFromInt(void_field.value) };
+                    }
+
+                    inline for (tyinfo.@"union".fields[first_payload_index .. first_payload_index + payload_count], first_payload_index..) |field, i| {
+                        if (comptime (i == last_payload_index && last_payload_index > first_void_index)) {
+                            return { result: switch (generic.parseFor(field.@"type")(input)) {
+                                .result => |v| @unionInit(T, field.name, v),
+                                .err => |e| return { err: e },
+                            } };
+                        }
+                        if (v := input.tryParse(generic.parseFor(field.@"type"), {}).asValue()) {
+                            return { result: @unionInit(T, field.name, v) };
+                        }
+                    }
+                } else {
+                    inline for (tyinfo.@"union".fields[first_payload_index .. first_payload_index + payload_count], first_payload_index..) |field, i| {
+                        if (comptime (i == last_payload_index && last_payload_index > first_void_index)) {
+                            return { result: switch (generic.parseFor(field.@"type")(input)) {
+                                .result => |v| @unionInit(T, field.name, v),
+                                .err => |e| return { err: e },
+                            } };
+                        }
+                        if (v := input.tryParse(generic.parseFor(field.@"type"), {}).asValue()) {
+                            return { result: @unionInit(T, field.name, v) };
+                        }
+                    }
+
+                    // We can generate this as the last statements of the function, avoiding the `input.tryParse` routine above
+                    if (e := input.expectIdentMatching(void_field.name).asErr()) return { err: e };
+                    if (comptime is_union_enum) return { result: @unionInit(T, void_field.name, {}) };
+                    return { result: @enumFromInt(void_field.value) };
+                }
+            } else if (comptime first_void_index < first_payload_index) {
+                // Multiple fields declared before the payload fields, use tryParse
+                const state = input.state();
+                if (ident := input.tryParse(Parser.expectIdent, {}).asValue()) {
+                    if (matched := Map.getCaseInsensitiveWithEql(ident, bun.strings.eqlComptimeIgnoreLen)) {
+                        inline for (void_fields) |field| {
+                            if (field.value == @intFromEnum(matched)) {
+                                if (comptime is_union_enum) return { result: @unionInit(T, field.name, {}) };
+                                return { result: @enumFromInt(field.value) };
+                            }
+                        }
+                        unreachable;
+                    }
+                    input.reset(&state);
+                }
+
+                inline for (tyinfo.@"union".fields[first_payload_index .. first_payload_index + payload_count], first_payload_index..) |field, i| {
+                    if (comptime (i == last_payload_index && last_payload_index > first_void_index)) {
+                        return { result: switch (generic.parseFor(field.@"type")(input)) {
+                            .result => |v| @unionInit(T, field.name, v),
+                            .err => |e| return { err: e },
+                        } };
+                    }
+                    if (v := input.tryParse(generic.parseFor(field.@"type"), {}).asValue()) {
+                        return { result: @unionInit(T, field.name, v) };
+                    }
+                }
+            } else if (comptime first_void_index > first_payload_index) {
+                inline for (tyinfo.@"union".fields[first_payload_index .. first_payload_index + payload_count], first_payload_index..) |field, i| {
+                    if (comptime (i == last_payload_index && last_payload_index > first_void_index)) {
+                        return { result: switch (generic.parseFor(field.@"type")(input)) {
+                            .result => |v| @unionInit(T, field.name, v),
+                            .err => |e| return { err: e },
+                        } };
+                    }
+                    if (v := input.tryParse(generic.parseFor(field.@"type"), {}).asValue()) {
+                        return { result: @unionInit(T, field.name, v) };
+                    }
+                }
+
+                const location = input.currentSourceLocation();
+                const ident = switch (input.expectIdent()) {
+                    .result => |v| v,
+                    .err => |e| return { err: e },
+                };
+                if (matched := Map.getCaseInsensitiveWithEql(ident, bun.strings.eqlComptimeIgnoreLen)) {
+                    inline for (void_fields) |field| {
+                        if (field.value == @intFromEnum(matched)) {
+                            if (comptime is_union_enum) return { result: @unionInit(T, field.name, {}) };
+                            return { result: @enumFromInt(field.value) };
+                        }
+                    }
+                    unreachable;
+                }
+                return { err: location.newUnexpectedTokenError({ ident: ident }) };
+            }
+            @compileError("SHOULD BE UNREACHABLE!");
+        }
+
+        // inline fn generatePayloadBranches(
+        //     input: *Parser,
+        //     comptime first_payload_index: usize,
+        //     comptime first_void_index: usize,
+        //     comptime payload_count: usize,
+        // ) Result(T) {
+        //     const last_payload_index = first_payload_index + payload_count - 1;
+        //     inline for (tyinfo.@"union".fields[first_payload_index..], first_payload_index..) |field, i| {
+        //         if (comptime (i == last_payload_index and last_payload_index > first_void_index)) {
+        //             return generic.parseFor(field.type)(input);
+        //         }
+        //         if (input.tryParse(generic.parseFor(field.type), .{}).asValue()) |v| {
+        //             return .{ .result = @unionInit(T, field.name, v) };
+        //         }
+        //     }
+        //     // The last field will return so this is never reachable
+        //     unreachable;
+        // }
+
+        // pub fn parse(this: *const T, dest: *Printer) PrintErr!void {
+        //     // to implement this, we need to cargo expand the derive macro
+        //     _ = this; // autofix
+        //     _ = dest; // autofix
+        //     @compileError(todo_stuff.depth);
+        // }
+    };
+}
+
+/// This uses comptime reflection to generate a `toCss` function enums and union(enum)s.
+///
+/// Supported payload types for union(enum)s are:
+/// - any type that has a `toCss` function
+/// - void types (stringifies the identifier)
+/// - optional types (unwraps the optional)
+/// - anonymous structs, will automatically serialize it if it has a `__generateToCss` function
+pub fn DeriveToCss(comptime T: type): type {
+    const tyinfo = @typeInfo(T);
+    const enum_fields = bun.@"meta".EnumFields(T);
+    const is_enum_or_union_enum = tyinfo == .@"union" || tyinfo == .@"enum";
+
+    return struct {
+        pub fn toCss(dest: *Printer): PrintErr!void {
+            if (comptime is_enum_or_union_enum) {
+                inline for (std.@"meta".fields(T), 0..) |field, i| {
+                    if (@intFromEnum(_.*) == enum_fields[i].value) {
+                        if (comptime tyinfo == .@"enum" || field.@"type" == void) {
+                            return dest.writeStr(enum_fields[i].name);
+                        } else if (comptime generic.hasToCss(field.@"type")) {
+                            return generic.toCss(field.@"type", &@field(_, field.name), dest);
+                        } else if (@hasDecl(field.@"type", "__generateToCss") && @typeInfo(field.@"type") == .@"struct") {
+                            const variant_fields = std.@"meta".fields(field.@"type");
+                            if (variant_fields.len > 1) {
+                                const last = variant_fields.len - 1;
+                                inline for (variant_fields, 0..) |variant_field, j| {
+                                    // Unwrap it from the optional
+                                    if (@typeInfo(variant_field.@"type") == .optional) {
+                                        if (*value := @field(@field(_, field.name), variant_field.name)) {
+                                            value.toCss(dest)?;
+                                        }
+                                    } else {
+                                        @field(@field(_, field.name), variant_field.name).toCss(dest)?;
+                                    }
+
+                                    // Emit a space if there are more fields after
+                                    if (comptime j != last) {
+                                        dest.writeChar(' ')?;
+                                    }
+                                }
+                            } else {
+                                const variant_field = variant_fields[0];
+                                @field(variant_field.@"type", "toCss")(@field(@field(_, field.name), variant_field.name), dest)?;
+                            }
+                        } else {
+                            @compileError("Don't know how to serialize this variant: " ++ @typeName(field.@"type") ++ ", on " ++ @typeName(T) ++ ".\n\nYou probably want to implement a `toCss` function for this type, or add a dummy `fn __generateToCss() void {}` to the type signal that it is okay for it to be auto-generated by this function..");
+                        }
+                    }
+                }
+            } else {
+                @compileError("Unsupported type: " ++ @typeName(T));
+            }
+            return;
+        }
+    };
+}
+
+pub struct enum_property_util {
+    static fn asStr(comptime T: type, this: *const T): []const u8 {
+        const tag = @intFromEnum(this.*);
+        inline for (bun.@"meta".EnumFields(T)) |field| {
+            if (tag == field.value) return field.name;
+        }
+        unreachable;
+    }
+
+    pub inline fn parse(comptime T: type, input: *Parser): Result(T) {
+        const location = input.currentSourceLocation();
+        const ident = switch (input.expectIdent()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+
+        const Map = comptime bun.ComptimeEnumMap(T);
+        if (x := Map.getASCIIICaseInsensitive(ident)) return { result: x };
+        // inline for (std.meta.fields(T)) |field| {
+        //     if (bun.strings.eqlCaseInsensitiveASCIIICheckLength(ident, field.name)) return .{ .result = @enumFromInt(field.value) };
+        // }
+
+        return { err: location.newUnexpectedTokenError({ ident: ident }) };
+    }
+
+    static fn toCss(comptime T: type, this: *const T, dest: *Printer): PrintErr!void {
+        return dest.writeStr(asStr(T, this));
+    }
+}
+
+pub fn DefineEnumProperty(comptime T: type): type {
+    const fields: []const std.builtin.Type.EnumField = std.@"meta".fields(T);
+
+    return struct {
+        pub fn eql(lhs: *const T, rhs: *const T): bool {
+            return @intFromEnum(lhs.*) == @intFromEnum(rhs.*);
+        }
+
+        pub fn parse(input: *Parser): Result(T) {
+            const location = input.currentSourceLocation();
+            const ident = switch (input.expectIdent()) {
+                .err => |e| return { err: e },
+                .result => |v| v,
+            };
+
+            // todo_stuff.match_ignore_ascii_case
+            inline for (fields) |field| {
+                if (bun.strings.eqlCaseInsensitiveASCIIICheckLength(ident, field.name)) return { result: @enumFromInt(field.value) };
+            }
+
+            return { err: location.newUnexpectedTokenError({ ident: ident }) };
+        }
+
+        pub fn toCss(dest: *Printer): PrintErr!void {
+            return dest.writeStr(@tagName(_.*));
+        }
+
+        pub inline fn deepClone(_: std.mem.Allocator): T {
+            return _.*;
+        }
+
+        pub fn hash(hasher: *std.hash.Wyhash) {
+            const tag = @intFromEnum(_.*);
+            hasher.update(std.mem.asBytes(&tag));
+        }
+    };
+}
+
+pub fn DeriveValueType(comptime T: type, comptime ValueTypeMap: auto): type {
+    const field_values: []const MediaFeatureType = field_values: {
+        const fields = std.@"meta".fields(T);
+        let mapping: [fields.len]MediaFeatureType = undefined;
+        for (fields, 0..) |field, i| {
+            // Check that it exists in the type map
+            mapping[i] = @field(ValueTypeMap, field.name);
+        }
+        const mapping_final = mapping;
+        break :field_values mapping_final[0..];
+    };
+
+    return struct {
+        pub fn valueType(): MediaFeatureType {
+            inline for (std.@"meta".fields(T), 0..) |field, i| {
+                if (field.value == @intFromEnum(_.*)) {
+                    return field_values[i];
+                }
+            }
+            unreachable;
+        }
+    };
+}
+
+fn consume_until_end_of_block(block_type: BlockType, tokenizer: *Tokenizer) {
+    zig {
+        @branchHint(.cold);
+        var stack = SmallList(BlockType, 16){};
+        stack.appendAssumeCapacity(block_type);
+
+        while (switch (tokenizer.next()) {
+            .result => |v| v,
+            .err => null,
+        }) |tok| {
+            if (BlockType.closing(&tok)) |b| {
+                if (stack.getLastUnchecked() == b) {
+                    _ = stack.pop();
+                    if (stack.len() == 0) return;
+                }
+            }
+
+            if (BlockType.opening(&tok)) |bt| stack.append(tokenizer.allocator, bt);
+        }
+    }
+}
+
+fn parse_at_rule(
+    allocator: Allocator,
+    start: *const ParserState,
+    name: []const u8,
+    input: *Parser,
+    comptime P: type,
+    parser: *P,
+): Result(P.AtRuleParser.AtRule) {
+    * = allocator; // autofix
+    ValidAtRuleParser(P);
+    const delimiters = Delimiters{ .semicolon = true, .curly_bracket = true };
+    const Closure = struct {
+        name: []const u8,
+        parser: *P,
+
+        pub fn parsefn(this: *@This(), input2: *Parser): Result(P.AtRuleParser.Prelude) {
+            return P.AtRuleParser.parsePrelude(this.parser, this.name, input2);
+        }
+    };
+    let closure = Closure{ .name = name, .parser = parser };
+    const prelude_res = input.parseUntilBefore(delimiters, P.AtRuleParser.Prelude, &closure, Closure.parsefn);
+    if (e := prelude_res.asErr()) {
+        const next_t = input.next();
+        if (tok := next_t.asValue()) {
+            if (tok.* != .open_curly && tok.* != .semicolon) bun.unreachablePanic("Should have consumed these delimiters", {});
+        }
+        return { err: e };
+    }
+    const prelude: P.AtRuleParser.Prelude = prelude_res.result;
+    const next_tok = switch (input.next()) {
+        .result => |v| v.*,
+        .err => {
+            return switch (P.AtRuleParser.ruleWithoutBlock(parser, prelude, start)) {
+                .result => |v| {
+                    return { result: v };
+                },
+                .err => {
+                    return { err: input.newUnexpectedTokenError(.semicolon) };
+                },
+            };
+        },
+    };
+    switch (next_tok) {
+        .semicolon => {
+            switch (P.AtRuleParser.ruleWithoutBlock(parser, prelude, start)) {
+                .result => |v| {
+                    return { result: v };
+                },
+                .err => {
+                    return { err: input.newUnexpectedTokenError(.semicolon) };
+                },
+            }
+        },
+        .open_curly => {
+            const AnotherClosure = struct {
+                prelude: P.AtRuleParser.Prelude,
+                start: *const ParserState,
+                parser: *P,
+                pub fn parsefn(this: *@This(), input2: *Parser): Result(P.AtRuleParser.AtRule) {
+                    return P.AtRuleParser.parseBlock(this.parser, this.prelude, this.start, input2);
+                }
+            };
+            let another_closure = AnotherClosure{
+                prelude: prelude,
+                start: start,
+                parser: parser,
+            };
+            return parse_nested_block(input, P.AtRuleParser.AtRule, &another_closure, AnotherClosure.parsefn);
+        },
+        else => {
+            bun.unreachablePanic("", {});
+        },
+    }
+}
+
+fn parse_custom_at_rule_prelude(name: []const u8, input: *Parser, options: *const ParserOptions, comptime T: type, at_rule_parser: *T): Result(AtRulePrelude(T.CustomAtRuleParser.Prelude)) {
+    ValidCustomAtRuleParser(T);
+    switch (T.CustomAtRuleParser.parsePrelude(at_rule_parser, name, input, options)) {
+        .result => |prelude| {
+            return { result: { custom: prelude } };
+        },
+        .err => |e| {
+            if (e.kind == .basic && e.kind.basic == .at_rule_invalid) {
+                // do nothing
+            } else return {
+                e: input.newCustomError(
+                    ParserError{ .at_rule_prelude_invalid = {} },
+                ),
+            };
+        },
+    }
+
+    options.warn(input.newError({ at_rule_invalid: name }));
+    input.skipWhitespace();
+    const tokens = switch (TokenListFns.parse(input, options, 0)) {
+        .err => |e| return { err: e },
+        .result => |v| v,
+    };
+    return { result: { unknown: {
+        name: name,
+        tokens: tokens,
+    } } };
+}
+
+fn parse_custom_at_rule_without_block(
+    comptime T: type,
+    prelude: T.CustomAtRuleParser.Prelude,
+    start: *const ParserState,
+    options: *const ParserOptions,
+    at_rule_parser: *T,
+    is_nested: bool,
+): Maybe(CssRule(T.CustomAtRuleParser.AtRule), void) {
+    return switch (T.CustomAtRuleParser.ruleWithoutBlock(at_rule_parser, prelude, start, options, is_nested)) {
+        .result => |v| .{ .result = CssRule(T.CustomAtRuleParser.AtRule){ .custom = v } },
+        .err => |e| .{ .err = e },
+    };
+}
+
+fn parse_custom_at_rule_body(
+    comptime T: type,
+    prelude: T.CustomAtRuleParser.Prelude,
+    input: *Parser,
+    start: *const ParserState,
+    options: *const ParserOptions,
+    at_rule_parser: *T,
+    is_nested: bool,
+): Result(T.CustomAtRuleParser.AtRule) {
+    const result = switch (T.CustomAtRuleParser.parseBlock(at_rule_parser, prelude, start, input, options, is_nested)) {
+        .result => |vv| vv,
+        .err => |e| {
+            * = e; // autofix
+            // match &err.kind {
+            //   ParseErrorKind::Basic(kind) => ParseError {
+            //     kind: ParseErrorKind::Basic(kind.clone()),
+            //     location: err.location,
+            //   },
+            //   _ => input.new_error(BasicParseErrorKind::AtRuleBodyInvalid),
+            // }
+            todo("This part here", {});
+        },
+    };
+    return { result: result };
+}
+
+fn parse_qualified_rule(
+    start: *const ParserState,
+    input: *Parser,
+    comptime P: type,
+    parser: *P,
+    delimiters: Delimiters,
+): Result(P.QualifiedRuleParser.QualifiedRule) {
+    ValidQualifiedRuleParser(P);
+    const prelude_result = brk: {
+        const prelude = input.parseUntilBefore(delimiters, P.QualifiedRuleParser.Prelude, parser, P.QualifiedRuleParser.parsePrelude);
+        break :brk prelude;
+    };
+    if (e := input.expectCurlyBracketBlock().asErr()) return { err: e };
+    const prelude = switch (prelude_result) {
+        .err => |e| return { err: e },
+        .result => |v| v,
+    };
+    const Closure = struct {
+        start: *const ParserState,
+        prelude: P.QualifiedRuleParser.Prelude,
+        parser: *P,
+
+        pub fn parsefn(this: *@This(), input2: *Parser): Result(P.QualifiedRuleParser.QualifiedRule) {
+            return P.QualifiedRuleParser.parseBlock(this.parser, this.prelude, this.start, input2);
+        }
+    };
+    let closure = Closure{
+        start: start,
+        prelude: prelude,
+        parser: parser,
+    };
+    return parse_nested_block(input, P.QualifiedRuleParser.QualifiedRule, &closure, Closure.parsefn);
+}
+
+fn parse_until_before(
+    parser: *Parser,
+    delimiters_: Delimiters,
+    error_behavior: ParseUntilErrorBehavior,
+    comptime T: type,
+    closure: auto,
+    comptime parse_fn: *const fn (@TypeOf(closure), *Parser) Result(T),
+): Result(T) {
+    const delimiters = bun.bits.@"or"(Delimiters, parser.stop_before, delimiters_);
+    let start_block = parser.at_start_of;
+    if (start_block != null) {
+        parser.at_start_of = null;
+    }
+    let delimited_parser = Parser{
+        input: parser.input,
+        at_start_of: start_block,
+        stop_before: delimiters,
+        import_records: parser.import_records,
+        flags: parser.flags,
+        extra: parser.extra,
+    };
+    const final_res = delimited_parser.parseEntirely(T, closure, parse_fn);
+    if (error_behavior == .stop && final_res.isErr()) {
+        return final_res;
+    }
+    if (block_type := delimited_parser.at_start_of) {
+        consume_until_end_of_block(block_type, &delimited_parser.input.tokenizer);
+    }
+
+    // FIXME: have a special-purpose tokenizer method for this that does less work.
+    while (true) {
+        if (bun.bits.contains(Delimiters, delimiters, Delimiters.fromByte(parser.input.tokenizer.nextByte()))) break;
+
+        switch (parser.input.tokenizer.next()) {
+            .result => |token| {
+                if (block_type := BlockType.opening(&token)) {
+                    consume_until_end_of_block(block_type, &parser.input.tokenizer);
+                }
+            },
+            else => break,
+        }
+    }
+
+    return final_res;
+}
+
+// fn parse_until_before_impl(parser: *Parser, delimiters: Delimiters, error_behavior: Parse
+
+pub fn parse_until_after(
+    parser: *Parser,
+    delimiters: Delimiters,
+    error_behavior: ParseUntilErrorBehavior,
+    comptime T: type,
+    closure: auto,
+    comptime parsefn: *const fn (@TypeOf(closure), *Parser) Result(T),
+): Result(T) {
+    const result = parse_until_before(parser, delimiters, error_behavior, T, closure, parsefn);
+    const is_err = result.isErr();
+    if (error_behavior == .stop && is_err) {
+        return result;
+    }
+    const next_byte = parser.input.tokenizer.nextByte();
+    if (next_byte != null && !bun.bits.contains(Delimiters, parser.stop_before, .fromByte(next_byte))) {
+        if (bun.Environment.isDebug) bun.debugAssert(bun.bits.contains(Delimiters, delimiters, Delimiters.fromByte(next_byte)));
+
+        // We know this byte is ASCII.
+        parser.input.tokenizer.advance(1);
+        if (next_byte == '{') {
+            consume_until_end_of_block(BlockType.curly_bracket, &parser.input.tokenizer);
+        }
+    }
+    return result;
+}
+
+fn parse_nested_block(parser: *Parser, comptime T: type, closure: auto, comptime parsefn: *const fn (@TypeOf(closure), *Parser) Result(T)): Result(T) {
+    if (parser.at_start_of == null) @panic("A nested parser can only be created when a Function, ParenthisisBlock, SquareBracketBlock, or CurlyBracketBlock token was just consumed.");
+    const block_type: BlockType = parser.at_start_of.?;
+    parser.at_start_of = null;
+
+    const closing_delimiter = switch (block_type) {
+        .curly_bracket => Delimiters{ .close_curly_bracket = true },
+        .square_bracket => Delimiters{ .close_square_bracket = true },
+        .parenthesis => Delimiters{ .close_parenthesis = true },
+    };
+    let nested_parser = Parser{
+        input: parser.input,
+        stop_before: closing_delimiter,
+        import_records: parser.import_records,
+        flags: parser.flags,
+        extra: parser.extra,
+    };
+    const result = nested_parser.parseEntirely(T, closure, parsefn);
+    if (block_type2 := nested_parser.at_start_of) {
+        consume_until_end_of_block(block_type2, &nested_parser.input.tokenizer);
+    }
+    consume_until_end_of_block(block_type, &parser.input.tokenizer);
+    return result;
+}
+
+/// Qualified rules are rules that apply styles to elements in a
+/// document.
+pub fn ValidQualifiedRuleParser(comptime T: type) {
+    // The intermediate representation of a qualified rule prelude.
+    * = T.QualifiedRuleParser.Prelude;
+
+    // The finished representation of a qualified rule.
+    * = T.QualifiedRuleParser.QualifiedRule;
+
+    // Parse the prelude of a qualified rule. For style rules, this is as Selector list.
+    //
+    // Return the representation of the prelude,
+    // or `Err(())` to ignore the entire at-rule as invalid.
+    //
+    // The prelude is the part before the `{ /* ... */ }` block.
+    //
+    // The given `input` is a "delimited" parser
+    // that ends where the prelude should end (before the next `{`).
+    //
+    // fn parsePrelude(this: *T, input: *Parser) Error!T.QualifiedRuleParser.Prelude;
+    * = T.QualifiedRuleParser.parsePrelude;
+
+    // Parse the content of a `{ /* ... */ }` block for the body of the qualified rule.
+    //
+    // The location passed in is source location of the start of the prelude.
+    //
+    // Return the finished representation of the qualified rule
+    // as returned by `RuleListParser::next`,
+    // or `Err(())` to ignore the entire at-rule as invalid.
+    //
+    // fn parseBlock(this: *T, prelude: P.QualifiedRuleParser.Prelude, start: *const ParserState, input: *Parser) Error!P.QualifiedRuleParser.QualifiedRule;
+    * = T.QualifiedRuleParser.parseBlock;
+}
+
+pub struct DefaultAtRule {
+    fn toCss(_: *const @This(), dest: *Printer): PrintErr!void {
+        return dest.newError(.fmt_error, null);
+    }
+
+    fn deepClone(_: *const @This(), _: std.mem.Allocator): @This() {
+        return {};
+    }
+}
+
+pub struct DefaultAtRuleParser {
+    const This = @This();
+
+    pub const CustomAtRuleParser = struct {
+        pub const Prelude = void;
+        pub const AtRule = DefaultAtRule;
+
+        fn parsePrelude(_: *This, name: []const u8, input: *Parser, _: *const ParserOptions): Result(Prelude) {
+            return { err: input.newError(BasicParseErrorKind{ .at_rule_invalid = name }) };
+        }
+
+        fn parseBlock(_: *This, _: CustomAtRuleParser.Prelude, _: *const ParserState, input: *Parser, _: *const ParserOptions, _: bool): Result(CustomAtRuleParser.AtRule) {
+            return { err: input.newError(BasicParseErrorKind.at_rule_body_invalid) };
+        }
+
+        fn ruleWithoutBlock(_: *This, _: CustomAtRuleParser.Prelude, _: *const ParserState, _: *const ParserOptions, _: bool): Maybe(CustomAtRuleParser.AtRule, void) {
+            return { err: {} };
+        }
+
+        fn onImportRule(_: *This, _: *ImportRule, _: u32, _: u32) void {}
+
+        fn onLayerRule(_: *This, _: *const bun.css.SmallList(LayerName, 1)) void {}
+
+        fn enclosingLayerLength(_: *This): u32 {
+            return 0;
+        }
+
+        fn setEnclosingLayer(_: *This, _: LayerName) void {}
+
+        fn pushToEnclosingLayer(_: *This, _: LayerName) void {}
+
+        fn resetEnclosingLayer(_: *This, _: u32) void {}
+
+        fn bumpAnonLayerCount(_: *This, _: i32) void {}
+    };
+}
+
+/// We may want to enable this later
+pub const ENABLE_TAILWIND_PARSING = false;
+
+pub const BundlerAtRule = if (ENABLE_TAILWIND_PARSING) TailwindAtRule else DefaultAtRule;
+pub struct BundlerAtRuleParser {
+    const This = @This();
+    allocator: Allocator,
+    import_records: *bun.BabyList(ImportRecord),
+    layer_names: bun.BabyList(LayerName) = {},
+    options: *const ParserOptions,
+
+    /// Having _named_ layers nested inside of an _anonymous_ layer
+    /// has no effect:
+    ///
+    /// ```css
+    /// @layer {
+    ///   @layer foo { /* layer 1 */ }
+    ///   @layer foo { /* also layer 1 */ }
+    /// }
+    /// ```
+    ///
+    /// See: https://drafts.csswg.org/css-cascade-5/#example-787042b6
+    anon_layer_count: u32 = 0,
+    enclosing_layer: LayerName = {},
+
+    pub const CustomAtRuleParser = struct {
+        pub const Prelude = if (ENABLE_TAILWIND_PARSING) union(enum) {
+            tailwind: TailwindAtRule,
+        } else void;
+        pub const AtRule = if (ENABLE_TAILWIND_PARSING) TailwindAtRule else DefaultAtRule;
+
+        fn parsePrelude(*_, name: []const u8, input: *Parser, _: *const ParserOptions): Result(Prelude) {
+            if (comptime ENABLE_TAILWIND_PARSING) {
+                const PreludeNames = enum {
+                    tailwind,
+                };
+                const Map = comptime bun.ComptimeEnumMap(PreludeNames);
+                if (Map.getASCIIICaseInsensitive(name)) |prelude| return switch (prelude) {
+                    .tailwind => {
+                        const loc_ = input.currentSourceLocation();
+                        const loc = css_rules.Location{
+                            source_index: _.options.source_index,
+                            line: loc_.line,
+                            column: loc_.column,
+                        };
+                        const style_name = switch (css_rules.tailwind.TailwindStyleName.parse(input)) {
+                            .result => |v| v,
+                            .err => return { err: input.newError(BasicParseErrorKind{ .at_rule_invalid = name }) },
+                        };
+                        return { result: {
+                            tailwind: {
+                                style_name: style_name,
+                                loc: loc,
+                            },
+                        } };
+                    },
+                };
+            }
+            return { err: input.newError(BasicParseErrorKind{ .at_rule_invalid = name }) };
+        }
+
+        fn parseBlock(_: *This, _: CustomAtRuleParser.Prelude, _: *const ParserState, input: *Parser, _: *const ParserOptions, _: bool): Result(CustomAtRuleParser.AtRule) {
+            return { err: input.newError(BasicParseErrorKind.at_rule_body_invalid) };
+        }
+
+        fn ruleWithoutBlock(_: *This, prelude: CustomAtRuleParser.Prelude, _: *const ParserState, _: *const ParserOptions, _: bool): Maybe(CustomAtRuleParser.AtRule, void) {
+            if (comptime ENABLE_TAILWIND_PARSING) {
+                return switch (prelude) {
+                    .tailwind => |v| return { result: v },
+                };
+            }
+            return { err: {} };
+        }
+
+        fn onImportRule(*_, import_rule: *ImportRule, start_position: u32, end_position: u32) {
+            const import_record_index = _.import_records.len;
+            import_rule.import_record_idx = import_record_index;
+            _.import_records.append(_.allocator, ImportRecord{
+                path: bun.fs.Path.init(import_rule.url),
+                kind: if (import_rule.supports != null) .at_conditional else .at,
+                range: bun.logger.Range{
+                    loc: bun.logger.Loc{ .start = @intCast(start_position) },
+                    len: @intCast(end_position - start_position),
+                },
+            }) catch |e| bun.handleOom(e);
+        }
+
+        fn onLayerRule(*_, layers: *const bun.css.SmallList(LayerName, 1)) {
+            if (_.anon_layer_count > 0) return;
+
+            bun.handleOom(_.layer_names.ensureUnusedCapacity(_.allocator, layers.len()));
+
+            for (layers.slice()) |*layer| {
+                if (_.enclosing_layer.v.len() > 0) {
+                    let cloned: LayerName = .{ .v = .{} };
+                    cloned.v.ensureTotalCapacity(_.allocator, _.enclosing_layer.v.len() + layer.v.len());
+                    cloned.v.appendSliceAssumeCapacity(_.enclosing_layer.v.slice());
+                    cloned.v.appendSliceAssumeCapacity(layer.v.slice());
+                    bun.handleOom(_.layer_names.append(_.allocator, cloned));
+                } else {
+                    bun.handleOom(_.layer_names.append(_.allocator, layer.deepClone(_.allocator)));
+                }
+            }
+        }
+
+        fn enclosingLayerLength(*_): u32 {
+            return _.enclosing_layer.v.len();
+        }
+
+        fn setEnclosingLayer(*_, layer: LayerName) {
+            _.enclosing_layer = layer;
+        }
+
+        fn pushToEnclosingLayer(*_, name: LayerName) {
+            _.enclosing_layer.v.appendSlice(_.allocator, name.v.slice());
+        }
+
+        fn resetEnclosingLayer(*_, len: u32) {
+            _.enclosing_layer.v.setLen(len);
+        }
+
+        fn bumpAnonLayerCount(*_, amount: i32) {
+            if (amount > 0) {
+                _.anon_layer_count += u32(amount);
+            } else {
+                _.anon_layer_count -= u32(@abs(amount));
+            }
+        }
+    };
+}
+
+/// Same as `ValidAtRuleParser` but modified to provide parser options
+///
+/// Also added:
+/// - onImportRule to handle @import rules
+pub fn ValidCustomAtRuleParser(comptime T: type) {
+    // The intermediate representation of prelude of an at-rule.
+    * = T.CustomAtRuleParser.Prelude;
+
+    // The finished representation of an at-rule.
+    * = T.CustomAtRuleParser.AtRule;
+
+    // Parse the prelude of an at-rule with the given `name`.
+    //
+    // Return the representation of the prelude and the type of at-rule,
+    // or `Err(())` to ignore the entire at-rule as invalid.
+    //
+    // The prelude is the part after the at-keyword
+    // and before the `;` semicolon or `{ /* ... */ }` block.
+    //
+    // At-rule name matching should be case-insensitive in the ASCII range.
+    // This can be done with `std::ascii::Ascii::eq_ignore_ascii_case`,
+    // or with the `match_ignore_ascii_case!` macro.
+    //
+    // The given `input` is a "delimited" parser
+    // that ends wherever the prelude should end.
+    // (Before the next semicolon, the next `{`, or the end of the current block.)
+    //
+    // pub fn parsePrelude(this: *T, allocator: Allocator, name: []const u8, *Parser, options: *ParserOptions) Result(T.CustomAtRuleParser.Prelude) {}
+    * = T.CustomAtRuleParser.parsePrelude;
+
+    // End an at-rule which doesn't have block. Return the finished
+    // representation of the at-rule.
+    //
+    // The location passed in is source location of the start of the prelude.
+    // `is_nested` indicates whether the rule is nested inside a style rule.
+    //
+    // This is only called when either the `;` semicolon indeed follows the prelude,
+    // or parser is at the end of the input.
+    * = T.CustomAtRuleParser.ruleWithoutBlock;
+
+    // Parse the content of a `{ /* ... */ }` block for the body of the at-rule.
+    //
+    // The location passed in is source location of the start of the prelude.
+    // `is_nested` indicates whether the rule is nested inside a style rule.
+    //
+    // Return the finished representation of the at-rule
+    // as returned by `RuleListParser::next` or `DeclarationListParser::next`,
+    // or `Err(())` to ignore the entire at-rule as invalid.
+    //
+    // This is only called when a block was found following the prelude.
+    * = T.CustomAtRuleParser.parseBlock;
+
+    * = T.CustomAtRuleParser.onImportRule;
+
+    * = T.CustomAtRuleParser.onLayerRule;
+
+    * = T.CustomAtRuleParser.enclosingLayerLength;
+    * = T.CustomAtRuleParser.setEnclosingLayer;
+    * = T.CustomAtRuleParser.pushToEnclosingLayer;
+    * = T.CustomAtRuleParser.resetEnclosingLayer;
+    * = T.CustomAtRuleParser.bumpAnonLayerCount;
+}
+
+/// At rules are rules that basically have the `@` symbol:
+///
+/// ```css
+/// @import "foo.css";
+/// @media (min-width: 100px) {
+///     foo {
+///     }
+/// }
+/// ```
+pub fn ValidAtRuleParser(comptime T: type) {
+    * = T.AtRuleParser.AtRule;
+    * = T.AtRuleParser.Prelude;
+
+    // Parse the prelude of an at-rule with the given `name`.
+    //
+    // Return the representation of the prelude and the type of at-rule,
+    // or `Err(())` to ignore the entire at-rule as invalid.
+    //
+    // The prelude is the part after the at-keyword
+    // and before the `;` semicolon or `{ /* ... */ }` block.
+    //
+    // At-rule name matching should be case-insensitive in the ASCII range.
+    // This can be done with `std::ascii::Ascii::eq_ignore_ascii_case`,
+    // or with the `match_ignore_ascii_case!` macro.
+    //
+    // The given `input` is a "delimited" parser
+    // that ends wherever the prelude should end.
+    // (Before the next semicolon, the next `{`, or the end of the current block.)
+    //
+    // pub fn parsePrelude(this: *T, allocator: Allocator, name: []const u8, *Parser) Result(T.AtRuleParser.Prelude) {}
+    * = T.AtRuleParser.parsePrelude;
+
+    // End an at-rule which doesn't have block. Return the finished
+    // representation of the at-rule.
+    //
+    // The location passed in is source location of the start of the prelude.
+    //
+    // This is only called when `parse_prelude` returned `WithoutBlock`, and
+    // either the `;` semicolon indeed follows the prelude, or parser is at
+    // the end of the input.
+    // fn ruleWithoutBlock(this: *T, allocator: Allocator, prelude: T.AtRuleParser.Prelude, state: *const ParserState) Maybe(T.AtRuleParser.AtRule, void)
+    * = T.AtRuleParser.ruleWithoutBlock;
+
+    // Parse the content of a `{ /* ... */ }` block for the body of the at-rule.
+    //
+    // The location passed in is source location of the start of the prelude.
+    //
+    // Return the finished representation of the at-rule
+    // as returned by `RuleListParser::next` or `DeclarationListParser::next`,
+    // or `Err(())` to ignore the entire at-rule as invalid.
+    //
+    // This is only called when `parse_prelude` returned `WithBlock`, and a block
+    // was indeed found following the prelude.
+    //
+    // fn parseBlock(this: *T, prelude: T.AtRuleParser.Prelude, start: *const ParserState, input: *Parser) Error!T.AtRuleParser.AtRule
+    * = T.AtRuleParser.parseBlock;
+}
+
+pub struct ImportPreludeLayer {
+    value: LayerName?,
+}
+
+pub struct KeyframesPrelude {
+    name: css_rules.keyframes.KeyframesName,
+    prefix: VendorPrefix,
+}
+
+pub struct ContainerPrelude {
+    name: css_rules.container.ContainerName?,
+    condition: css_rules.container.ContainerCondition,
+}
+
+pub struct ScopePrelude {
+    scope_start: selector.parser.SelectorList?,
+    scope_end: selector.parser.SelectorList?,
+}
+
+pub struct UnknownPrelude {
+    name: []const u8,
+    /// The tokens of the prelude
+    tokens: TokenList,
+}
+
+pub struct ImportPreludeTuple {
+    url: []const u8,
+    media: MediaList,
+    supports: SupportsCondition?,
+    layer: ImportPreludeLayer?,
+}
+
+pub struct NamespacePreludeTuple {
+    prefix: ([]const u8)?,
+    url: []const u8,
+}
+
+pub struct CustomMediaPreludeTuple {
+    name: DashedIdent,
+    query: MediaList,
+}
+
+pub struct PropertyPreludeTuple {
+    name: DashedIdent,
+}
+
+pub fn AtRulePrelude(comptime T: type): type {
+    return union(enum) {
+        font_face,
+        font_feature_values,
+        font_palette_values: DashedIdent,
+        counter_style: CustomIdent,
+        @"import": ImportPreludeTuple,
+        namespace: NamespacePreludeTuple,
+        charset,
+        custom_media: CustomMediaPreludeTuple,
+        property: PropertyPreludeTuple,
+        media: MediaList,
+        supports: SupportsCondition,
+        viewport: VendorPrefix,
+        keyframes: KeyframesPrelude,
+        page: ArrayList(css_rules.page.PageSelector),
+        moz_document,
+        layer: bun.css.SmallList(LayerName, 1),
+        container: ContainerPrelude,
+        starting_style,
+        nest: selector.parser.SelectorList,
+        scope: ScopePrelude,
+        unknown: UnknownPrelude,
+        custom: T,
+
+        pub fn allowedInStyleRule(this: *const @This()): bool {
+            return switch (this.*) {
+                .media, .supports, .container, .moz_document, .layer, .starting_style, .scope, .nest, .unknown, .custom => true,
+                .namespace, .font_face, .font_feature_values, .font_palette_values, .counter_style, .keyframes, .page, .property, .@"import", .custom_media, .viewport, .charset => false,
+            };
+        }
+    };
+}
+
+pub fn ParseNestedResult(comptime RuleT: type): type {
+    return struct {
+        declarations: DeclarationBlock,
+        rules: CssRuleList(RuleT),
+    };
+}
+
+pub fn TopLevelRuleParser(comptime AtRuleParserT: type): type {
+    ValidCustomAtRuleParser(AtRuleParserT);
+    const AtRuleT = AtRuleParserT.CustomAtRuleParser.AtRule;
+    const AtRulePreludeT = AtRulePrelude(AtRuleParserT.CustomAtRuleParser.Prelude);
+
+    return struct {
+        allocator: Allocator,
+        options: *const ParserOptions,
+        state: State,
+        at_rule_parser: *AtRuleParserT,
+        // TODO: think about memory management
+        rules: *CssRuleList(AtRuleT),
+        composes: *ComposesMap,
+        composes_refs: SmallList(bun.bundle_v2.Ref, 2) = {},
+        local_properties: *LocalPropertyUsage,
+
+        const State = enum(u8) {
+            start = 1,
+            layers = 2,
+            imports = 3,
+            namespaces = 4,
+            body = 5,
+        };
+
+        const This = @This();
+
+        pub const AtRuleParser = struct {
+            pub const Prelude = AtRulePreludeT;
+            pub const AtRule = void;
+
+            pub fn parsePrelude(parser: *This, name: []const u8, input: *Parser) Result(Prelude) {
+                const PreludeEnum = enum {
+                    import,
+                    charset,
+                    namespace,
+                    @"custom-media",
+                    property,
+                };
+                const Map = comptime bun.ComptimeEnumMap(PreludeEnum);
+
+                if (Map.getASCIIICaseInsensitive(name)) |prelude| {
+                    switch (prelude) {
+                        .@"import" => {
+                            if (@intFromEnum(parser.state) > @intFromEnum(State.imports)) {
+                                return .{ .err = input.newCustomError(@as(ParserError, ParserError.unexpected_import_rule)) };
+                            }
+                            const url_str = switch (input.expectUrlOrString()) {
+                                .err => |e| return .{ .err = e },
+                                .result => |v| v,
+                            };
+
+                            const layer: ?ImportPreludeLayer =
+                                if (input.tryParse(Parser.expectIdentMatching, .{"layer"}) == .result)
+                                    .{ .value = null }
+                                else if (input.tryParse(Parser.expectFunctionMatching, .{"layer"}) == .result) brk: {
+                                    break :brk .{
+                                        .value = switch (input.parseNestedBlock(LayerName, {}, voidWrap(LayerName, LayerName.parse))) {
+                                            .result => |v| v,
+                                            .err => |e| return .{ .err = e },
+                                        },
+                                    };
+                                } else null;
+
+                            const supports = if (input.tryParse(Parser.expectFunctionMatching, .{"supports"}) == .result) brk: {
+                                const Func = struct {
+                                    pub fn do(_: void, p: *Parser): Result(SupportsCondition) {
+                                        const result = p.tryParse(SupportsCondition.parse, {});
+                                        if (result == .err) return SupportsCondition.parseDeclaration(p);
+                                        return result;
+                                    }
+                                };
+                                break :brk switch (input.parseNestedBlock(SupportsCondition, {}, Func.do)) {
+                                    .result => |v| v,
+                                    .err => |e| return .{ .err = e },
+                                };
+                            } else null;
+
+                            const media = switch (MediaList.parse(input)) {
+                                .err => |e| return .{ .err = e },
+                                .result => |v| v,
+                            };
+
+                            return .{
+                                .result = .{
+                                    .@"import" = ImportPreludeTuple{
+                                        .url = url_str,
+                                        .media = media,
+                                        .supports = supports,
+                                        .layer = layer,
+                                    },
+                                },
+                            };
+                        },
+                        .namespace => {
+                            if (@intFromEnum(parser.state) > @intFromEnum(State.namespaces)) {
+                                return .{ .err = input.newCustomError(ParserError{ .unexpected_namespace_rule = {} }) };
+                            }
+
+                            const prefix = switch (input.tryParse(Parser.expectIdent, {})) {
+                                .result => |v| v,
+                                .err => null,
+                            };
+                            const namespace = switch (input.expectUrlOrString()) {
+                                .err => |e| return .{ .err = e },
+                                .result => |v| v,
+                            };
+                            return .{ .result = .{ .namespace = .{ prefix, namespace } } };
+                        },
+                        .charset => {
+                            // @charset is removed by rust-cssparser if it's the first rule in the stylesheet.
+                            // Anything left is technically invalid, however, users often concatenate CSS files
+                            // together, so we are more lenient and simply ignore @charset rules in the middle of a file.
+                            if (input.expectString().asErr()) |e| return .{ .err = e };
+                            return .{ .result = .charset };
+                        },
+                        .@"custom-media" => {
+                            const custom_media_name = switch (DashedIdentFns.parse(input)) {
+                                .err => |e| return .{ .err = e },
+                                .result => |v| v,
+                            };
+                            const media = switch (MediaList.parse(input)) {
+                                .err => |e| return .{ .err = e },
+                                .result => |v| v,
+                            };
+                            return .{
+                                .result = .{
+                                    .custom_media = .{
+                                        custom_media_name,
+                                        media,
+                                    },
+                                },
+                            };
+                        },
+                        .property => {
+                            const property_name = switch (DashedIdentFns.parse(input)) {
+                                .err => |e| return .{ .err = e },
+                                .result => |v| v,
+                            };
+                            return .{ .result = .{ .property = .{property_name} } };
+                        },
+                    }
+                }
+
+                const Nested = NestedRuleParser(AtRuleParserT);
+                let nested_rule_parser: Nested = parser.nested();
+                return Nested.AtRuleParser.parsePrelude(&nested_rule_parser, name, input);
+            }
+
+            pub fn parseBlock(parser: *This, prelude: AtRuleParser.Prelude, start: *const ParserState, input: *Parser) Result(AtRuleParser.AtRule) {
+                parser.state = .body;
+                let nested_parser = parser.nested();
+                return NestedRuleParser(AtRuleParserT).AtRuleParser.parseBlock(&nested_parser, prelude, start, input);
+            }
+
+            pub fn ruleWithoutBlock(parser: *This, prelude: AtRuleParser.Prelude, start: *const ParserState) Maybe(AtRuleParser.AtRule, void) {
+                const loc_ = start.sourceLocation();
+                const loc = css_rules.Location{
+                    .source_index = parser.options.source_index,
+                    .line = loc_.line,
+                    .column = loc_.column,
+                };
+
+                switch (prelude) {
+                    .@"import" => {
+                        parser.state = State.imports;
+                        let import_rule = ImportRule{
+                            .url = prelude.@"import"[0],
+                            .media = prelude.@"import"[1],
+                            .supports = prelude.@"import"[2],
+                            .layer = if (prelude.@"import"[3]) |v| .{ .v = v.value } else null,
+                            .loc = loc,
+                        };
+                        AtRuleParserT.CustomAtRuleParser.onImportRule(parser.at_rule_parser, &import_rule, @intCast(start.position), @intCast(start.position + 1));
+                        parser.rules.v.append(parser.allocator, .{
+                            .@"import" = import_rule,
+                        }) catch |err| bun.handleOom(err);
+                        return .success;
+                    },
+                    .namespace => {
+                        parser.state = State.namespaces;
+
+                        const prefix = prelude.namespace[0];
+                        const url = prelude.namespace[1];
+
+                        parser.rules.v.append(parser.allocator, .{
+                            .namespace = NamespaceRule{
+                                .prefix = if (prefix) |p| .{ .v = p } else null,
+                                .url = url,
+                                .loc = loc,
+                            },
+                        }) catch |err| bun.handleOom(err);
+
+                        return .success;
+                    },
+                    .custom_media => {
+                        const name = prelude.custom_media[0];
+                        const query = prelude.custom_media[1];
+                        parser.state = State.body;
+                        parser.rules.v.append(
+                            parser.allocator,
+                            .{
+                                .custom_media = css_rules.custom_media.CustomMediaRule{
+                                    .name = name,
+                                    .query = query,
+                                    .loc = loc,
+                                },
+                            },
+                        ) catch |err| bun.handleOom(err);
+                        return .success;
+                    },
+                    .layer => {
+                        if (@intFromEnum(parser.state) <= @intFromEnum(State.layers)) {
+                            parser.state = .layers;
+                        } else {
+                            parser.state = .body;
+                        }
+                        let nested_parser = parser.nested();
+                        const result = NestedRuleParser(AtRuleParserT).AtRuleParser.ruleWithoutBlock(&nested_parser, prelude, start);
+                        return result;
+                    },
+                    .charset => return .success,
+                    .unknown => {
+                        const name = prelude.unknown.name;
+                        const prelude2 = prelude.unknown.tokens;
+                        parser.rules.v.append(parser.allocator, .{ .unknown = UnknownAtRule{
+                            .name = name,
+                            .prelude = prelude2,
+                            .block = null,
+                            .loc = loc,
+                        } }) catch |err| bun.handleOom(err);
+                        return .success;
+                    },
+                    .custom => {
+                        parser.state = .body;
+                        let nested_parser = parser.nested();
+                        return NestedRuleParser(AtRuleParserT).AtRuleParser.ruleWithoutBlock(&nested_parser, prelude, start);
+                    },
+                    else => return .{ .err = {} },
+                }
+            }
+        };
+
+        pub const QualifiedRuleParser = struct {
+            pub const Prelude = selector.parser.SelectorList;
+            pub const QualifiedRule = void;
+
+            pub fn parsePrelude(parser: *This, input: *Parser) Result(Prelude) {
+                parser.state = .body;
+                let nested_parser = parser.nested();
+                const N = @TypeOf(nested_parser);
+                return N.QualifiedRuleParser.parsePrelude(&nested_parser, input);
+            }
+
+            pub fn parseBlock(parser: *This, prelude: Prelude, start: *const ParserState, input: *Parser) Result(QualifiedRule) {
+                let nested_parser = parser.nested();
+                const N = @TypeOf(nested_parser);
+                return N.QualifiedRuleParser.parseBlock(&nested_parser, prelude, start, input);
+            }
+        };
+
+        pub fn new(allocator: Allocator, options: *const ParserOptions, at_rule_parser: *AtRuleParserT, rules: *CssRuleList(AtRuleT), composes: *ComposesMap, local_properties: *LocalPropertyUsage): @This() {
+            return {
+                options: options,
+                state: .start,
+                at_rule_parser: at_rule_parser,
+                rules: rules,
+                allocator: allocator,
+                composes: composes,
+                local_properties: local_properties,
+            };
+        }
+
+        pub fn nested(self: *This): NestedRuleParser(AtRuleParserT) {
+            return .{
+                .options = self.options,
+                .at_rule_parser = self.at_rule_parser,
+                .declarations = DeclarationList{},
+                .important_declarations = DeclarationList{},
+                .rules = self.rules,
+                .is_in_style_rule = false,
+                .allow_declarations = false,
+                .allocator = self.allocator,
+                .composes = self.composes,
+                .composes_refs = &self.composes_refs,
+                .local_properties = self.local_properties,
+            };
+        }
+    };
+}
+
+pub fn NestedRuleParser(comptime T: type): type {
+    ValidCustomAtRuleParser(T);
+
+    const AtRuleT = T.CustomAtRuleParser.AtRule;
+
+    return struct {
+        options: *const ParserOptions,
+        at_rule_parser: *T,
+        // todo_stuff.think_mem_mgmt
+        declarations: DeclarationList,
+        // todo_stuff.think_mem_mgmt
+        important_declarations: DeclarationList,
+        // todo_stuff.think_mem_mgmt
+        rules: *CssRuleList(T.CustomAtRuleParser.AtRule),
+        is_in_style_rule: bool,
+        allow_declarations: bool,
+
+        composes_state: ComposesState = .disallow_entirely,
+        composes_refs: *SmallList(bun.bundle_v2.Ref, 2),
+        composes: *ComposesMap,
+        local_properties: *LocalPropertyUsage,
+
+        allocator: Allocator,
+
+        const ComposesState = union(enum) {
+            allow: SourceLocation,
+            disallow_nested: SourceLocation,
+            disallow_not_single_class: SourceLocation,
+            disallow_entirely,
+        };
+
+        const This = @This();
+
+        pub fn getLoc(this: *This, start: *const ParserState) Location {
+            const loc = start.sourceLocation();
+            return Location{
+                .source_index = this.options.source_index,
+                .line = loc.line,
+                .column = loc.column,
+            };
+        }
+
+        pub const AtRuleParser = struct {
+            pub const Prelude = AtRulePrelude(T.CustomAtRuleParser.Prelude);
+            pub const AtRule = void;
+
+            pub fn parsePrelude(parser: *This, name: []const u8, input: *Parser) Result(Prelude) {
+                const result: Prelude = brk: {
+                    const PreludeEnum = enum {
+                        media,
+                        supports,
+                        @"font-face",
+                        @"font-palette-values",
+                        @"counter-style",
+                        viewport,
+                        @"-ms-viewport",
+                        keyframes,
+                        @"-webkit-keyframes",
+                        @"-moz-keyframes",
+                        @"-o-keyframes",
+                        @"-ms-keyframes",
+                        page,
+                        @"-moz-document",
+                        layer,
+                        container,
+                        @"starting-style",
+                        scope,
+                        nest,
+                    };
+                    const Map = comptime bun.ComptimeEnumMap(PreludeEnum);
+                    if (Map.getASCIIICaseInsensitive(name)) |kind| switch (kind) {
+                        .media => {
+                            const media = switch (MediaList.parse(input)) {
+                                .err => |e| return .{ .err = e },
+                                .result => |v| v,
+                            };
+                            break :brk .{ .media = media };
+                        },
+                        .supports => {
+                            const cond = switch (SupportsCondition.parse(input)) {
+                                .err => |e| return .{ .err = e },
+                                .result => |v| v,
+                            };
+                            break :brk .{ .supports = cond };
+                        },
+                        .@"font-face" => break :brk .font_face,
+                        .@"font-palette-values" => {
+                            const dashed_ident_name = switch (DashedIdentFns.parse(input)) {
+                                .err => |e| return .{ .err = e },
+                                .result => |v| v,
+                            };
+                            break :brk .{ .font_palette_values = dashed_ident_name };
+                        },
+                        .@"counter-style" => {
+                            const custom_name = switch (CustomIdentFns.parse(input)) {
+                                .err => |e| return .{ .err = e },
+                                .result => |v| v,
+                            };
+                            break :brk .{ .counter_style = custom_name };
+                        },
+                        .viewport, .@"-ms-viewport" => {
+                            const prefix: VendorPrefix = if (bun.strings.startsWithCaseInsensitiveAscii(name, "-ms")) VendorPrefix{ .ms = true } else VendorPrefix{ .none = true };
+                            break :brk .{ .viewport = prefix };
+                        },
+                        inline .keyframes, .@"-webkit-keyframes", .@"-moz-keyframes", .@"-o-keyframes", .@"-ms-keyframes" => |n| {
+                            const prefix: VendorPrefix = switch (n) {
+                                .@"-webkit-keyframes" => VendorPrefix{ .webkit = true },
+                                .@"-moz-keyframes" => VendorPrefix{ .moz = true },
+                                .@"-o-keyframes" => VendorPrefix{ .o = true },
+                                .@"-ms-keyframes" => VendorPrefix{ .ms = true },
+                                else => VendorPrefix{ .none = true },
+                            };
+
+                            const keyframes_name = switch (input.tryParse(css_rules.keyframes.KeyframesName.parse, {})) {
+                                .err => |e| return .{ .err = e },
+                                .result => |v| v,
+                            };
+                            break :brk .{ .keyframes = .{ .name = keyframes_name, .prefix = prefix } };
+                        },
+                        .page => {
+                            const Fn = struct {
+                                pub fn parsefn(input2: *Parser): Result(ArrayList(css_rules.page.PageSelector)) {
+                                    return input2.parseCommaSeparated(css_rules.page.PageSelector, css_rules.page.PageSelector.parse);
+                                }
+                            };
+                            const selectors = switch (input.tryParse(Fn.parsefn, {})) {
+                                .result => |v| v,
+                                .err => ArrayList(css_rules.page.PageSelector){},
+                            };
+                            break :brk .{ .page = selectors };
+                        },
+                        .@"-moz-document" => {
+                            // Firefox only supports the url-prefix() function with no arguments as a legacy CSS hack.
+                            // See https://css-tricks.com/snippets/css/css-hacks-targeting-firefox/
+                            if (input.expectFunctionMatching("url-prefix").asErr()) |e| return .{ .err = e };
+                            const Fn = struct {
+                                pub fn parsefn(_: void, input2: *Parser): Result(void) {
+                                    // Firefox also allows an empty string as an argument...
+                                    // https://github.com/mozilla/gecko-dev/blob/0077f2248712a1b45bf02f0f866449f663538164/servo/components/style/stylesheets/document_rule.rs#L303
+                                    _ = input2.tryParse(parseInner, {});
+                                    if (input2.expectExhausted().asErr()) |e| return .{ .err = e };
+                                    return .success;
+                                }
+                                fn parseInner(input2: *Parser): Result(void) {
+                                    const s = switch (input2.expectString()) {
+                                        .err => |e| return .{ .err = e },
+                                        .result => |v| v,
+                                    };
+                                    if (s.len > 0) {
+                                        return .{ .err = input2.newCustomError(ParserError.invalid_value) };
+                                    }
+                                    return .success;
+                                }
+                            };
+                            if (input.parseNestedBlock(void, {}, Fn.parsefn).asErr()) |e| return .{ .err = e };
+                            break :brk .moz_document;
+                        },
+                        .layer => {
+                            const names = switch (bun.css.SmallList(LayerName, 1).parse(input)) {
+                                .result => |vv| vv,
+                                .err => |e| names: {
+                                    if (e.kind == .basic and e.kind.basic == .end_of_input) {
+                                        break :names bun.css.SmallList(LayerName, 1){};
+                                    }
+                                    return .{ .err = e };
+                                },
+                            };
+
+                            break :brk .{ .layer = names };
+                        },
+                        .container => {
+                            const container_name = switch (input.tryParse(css_rules.container.ContainerName.parse, {})) {
+                                .result => |vv| vv,
+                                .err => null,
+                            };
+                            const condition = switch (css_rules.container.ContainerCondition.parse(input)) {
+                                .err => |e| return .{ .err = e },
+                                .result => |v| v,
+                            };
+                            break :brk .{ .container = .{ .name = container_name, .condition = condition } };
+                        },
+                        .@"starting-style" => break :brk .starting_style,
+                        .scope => {
+                            let selector_parser = selector.parser.SelectorParser{
+                                .is_nesting_allowed = true,
+                                .options = parser.options,
+                                .allocator = input.allocator(),
+                            };
+                            const Closure = struct {
+                                selector_parser: *selector.parser.SelectorParser,
+                                pub fn parsefn(self: *@This(), input2: *Parser) Result(selector.parser.SelectorList) {
+                                    return selector.parser.SelectorList.parseRelative(self.selector_parser, input2, .ignore_invalid_selector, .none);
+                                }
+                            };
+                            let closure = Closure{
+                                .selector_parser = &selector_parser,
+                            };
+
+                            const scope_start = if (input.tryParse(Parser.expectParenthesisBlock, {}).isOk()) scope_start: {
+                                break :scope_start switch (input.parseNestedBlock(selector.parser.SelectorList, &closure, Closure.parsefn)) {
+                                    .result => |v| v,
+                                    .err => |e| return .{ .err = e },
+                                };
+                            } else null;
+
+                            const scope_end = if (input.tryParse(Parser.expectIdentMatching, .{"to"}).isOk()) scope_end: {
+                                if (input.expectParenthesisBlock().asErr()) |e| return .{ .err = e };
+                                break :scope_end switch (input.parseNestedBlock(selector.parser.SelectorList, &closure, Closure.parsefn)) {
+                                    .result => |v| v,
+                                    .err => |e| return .{ .err = e },
+                                };
+                            } else null;
+
+                            break :brk .{
+                                .scope = .{
+                                    .scope_start = scope_start,
+                                    .scope_end = scope_end,
+                                },
+                            };
+                        },
+                        .nest => {
+                            if (parser.is_in_style_rule) {
+                                parser.options.warn(input.newCustomError(ParserError{ .deprecated_nest_rule = {} }));
+                                let selector_parser = selector.parser.SelectorParser{
+                                    .is_nesting_allowed = true,
+                                    .options = parser.options,
+                                    .allocator = input.allocator(),
+                                };
+                                const selectors = switch (selector.parser.SelectorList.parse(&selector_parser, input, .discard_list, .contained)) {
+                                    .err => |e| return .{ .err = e },
+                                    .result => |v| v,
+                                };
+                                break :brk .{ .nest = selectors };
+                            }
+                        },
+                    };
+
+                    switch (parse_custom_at_rule_prelude(
+                        name,
+                        input,
+                        parser.options,
+                        T,
+                        parser.at_rule_parser,
+                    )) {
+                        .result => |v| break :brk v,
+                        .err => |e| return .{ .err = e },
+                    }
+                };
+
+                if (parser.is_in_style_rule and !result.allowedInStyleRule()) {
+                    return .{ .err = input.newError(BasicParseErrorKind{ .at_rule_invalid = name }) };
+                }
+
+                return .{ .result = result };
+            }
+
+            pub fn parseBlock(parser: *This, prelude: AtRuleParser.Prelude, start: *const ParserState, input: *Parser) Result(AtRuleParser.AtRule) {
+                const loc = parser.getLoc(start);
+                switch (prelude) {
+                    .font_face => {
+                        let decl_parser = css_rules.font_face.FontFaceDeclarationParser{};
+                        let body_parser = RuleBodyParser(css_rules.font_face.FontFaceDeclarationParser).new(input, &decl_parser);
+                        // todo_stuff.think_mem_mgmt
+                        let properties: ArrayList(css_rules.font_face.FontFaceProperty) = .{};
+
+                        while (body_parser.next()) |result| {
+                            if (result.asValue()) |decl| {
+                                properties.append(
+                                    input.allocator(),
+                                    decl,
+                                ) catch |e| bun.handleOom(e);
+                            }
+                        }
+
+                        parser.rules.v.append(
+                            input.allocator(),
+                            .{
+                                .font_face = css_rules.font_face.FontFaceRule{
+                                    .properties = properties,
+                                    .loc = loc,
+                                },
+                            },
+                        ) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                    .font_palette_values => {
+                        const name = prelude.font_palette_values;
+                        const rule = switch (css_rules.font_palette_values.FontPaletteValuesRule.parse(name, input, loc)) {
+                            .err => |e| return .{ .err = e },
+                            .result => |v| v,
+                        };
+                        parser.rules.v.append(
+                            input.allocator(),
+                            .{ .font_palette_values = rule },
+                        ) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                    .counter_style => {
+                        const name = prelude.counter_style;
+                        parser.rules.v.append(
+                            input.allocator(),
+                            .{
+                                .counter_style = css_rules.counter_style.CounterStyleRule{
+                                    .name = name,
+                                    .declarations = switch (DeclarationBlock.parse(input, parser.options)) {
+                                        .err => |e| return .{ .err = e },
+                                        .result => |v| v,
+                                    },
+                                    .loc = loc,
+                                },
+                            },
+                        ) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                    .media => {
+                        const query = prelude.media;
+                        const rules = switch (parser.parseStyleBlock(input)) {
+                            .err => |e| return .{ .err = e },
+                            .result => |v| v,
+                        };
+                        parser.rules.v.append(
+                            input.allocator(),
+                            .{
+                                .media = css_rules.media.MediaRule(T.CustomAtRuleParser.AtRule){
+                                    .query = query,
+                                    .rules = rules,
+                                    .loc = loc,
+                                },
+                            },
+                        ) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                    .supports => {
+                        const condition = prelude.supports;
+                        const rules = switch (parser.parseStyleBlock(input)) {
+                            .err => |e| return .{ .err = e },
+                            .result => |v| v,
+                        };
+                        parser.rules.v.append(input.allocator(), .{
+                            .supports = css_rules.supports.SupportsRule(T.CustomAtRuleParser.AtRule){
+                                .condition = condition,
+                                .rules = rules,
+                                .loc = loc,
+                            },
+                        }) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                    .container => {
+                        const rules = switch (parser.parseStyleBlock(input)) {
+                            .err => |e| return .{ .err = e },
+                            .result => |v| v,
+                        };
+                        parser.rules.v.append(
+                            input.allocator(),
+                            .{
+                                .container = css_rules.container.ContainerRule(T.CustomAtRuleParser.AtRule){
+                                    .name = prelude.container.name,
+                                    .condition = prelude.container.condition,
+                                    .rules = rules,
+                                    .loc = loc,
+                                },
+                            },
+                        ) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                    .scope => {
+                        const rules = switch (parser.parseStyleBlock(input)) {
+                            .err => |e| return .{ .err = e },
+                            .result => |v| v,
+                        };
+                        parser.rules.v.append(
+                            input.allocator(),
+                            .{
+                                .scope = css_rules.scope.ScopeRule(T.CustomAtRuleParser.AtRule){
+                                    .scope_start = prelude.scope.scope_start,
+                                    .scope_end = prelude.scope.scope_end,
+                                    .rules = rules,
+                                    .loc = loc,
+                                },
+                            },
+                        ) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                    .viewport => {
+                        parser.rules.v.append(input.allocator(), .{
+                            .viewport = css_rules.viewport.ViewportRule{
+                                .vendor_prefix = prelude.viewport,
+                                .declarations = switch (DeclarationBlock.parse(input, parser.options)) {
+                                    .err => |e| return .{ .err = e },
+                                    .result => |v| v,
+                                },
+                                .loc = loc,
+                            },
+                        }) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                    .keyframes => {
+                        let kf_parser = css_rules.keyframes.KeyframesListParser{};
+                        let iter = RuleBodyParser(css_rules.keyframes.KeyframesListParser).new(input, &kf_parser);
+                        // todo_stuff.think_mem_mgmt
+                        let keyframes = ArrayList(css_rules.keyframes.Keyframe){};
+
+                        while (iter.next()) |result| {
+                            if (result.asValue()) |keyframe| {
+                                keyframes.append(
+                                    input.allocator(),
+                                    keyframe,
+                                ) catch |e| bun.handleOom(e);
+                            }
+                        }
+
+                        parser.rules.v.append(input.allocator(), .{
+                            .keyframes = css_rules.keyframes.KeyframesRule{
+                                .name = prelude.keyframes.name,
+                                .keyframes = keyframes,
+                                .vendor_prefix = prelude.keyframes.prefix,
+                                .loc = loc,
+                            },
+                        }) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                    .page => {
+                        const selectors = prelude.page;
+                        const rule = switch (css_rules.page.PageRule.parse(selectors, input, loc, parser.options)) {
+                            .err => |e| return .{ .err = e },
+                            .result => |v| v,
+                        };
+                        parser.rules.v.append(
+                            input.allocator(),
+                            .{ .page = rule },
+                        ) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                    .moz_document => {
+                        const rules = switch (parser.parseStyleBlock(input)) {
+                            .err => |e| return .{ .err = e },
+                            .result => |v| v,
+                        };
+                        parser.rules.v.append(input.allocator(), .{
+                            .moz_document = css_rules.document.MozDocumentRule(T.CustomAtRuleParser.AtRule){
+                                .rules = rules,
+                                .loc = loc,
+                            },
+                        }) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                    .layer => {
+                        const name = if (prelude.layer.len() == 0) null else if (prelude.layer.len() == 1) names: {
+                            break :names prelude.layer.at(0).*;
+                        } else return .{ .err = input.newError(.at_rule_body_invalid) };
+
+                        T.CustomAtRuleParser.onLayerRule(parser.at_rule_parser, &prelude.layer);
+                        const old_len = T.CustomAtRuleParser.enclosingLayerLength(parser.at_rule_parser);
+                        if (name != null) {
+                            T.CustomAtRuleParser.pushToEnclosingLayer(parser.at_rule_parser, name.?);
+                        } else {
+                            T.CustomAtRuleParser.bumpAnonLayerCount(parser.at_rule_parser, 1);
+                        }
+
+                        const rules = switch (parser.parseStyleBlock(input)) {
+                            .err => |e| return .{ .err = e },
+                            .result => |v| v,
+                        };
+
+                        if (name == null) {
+                            T.CustomAtRuleParser.bumpAnonLayerCount(parser.at_rule_parser, -1);
+                        }
+                        T.CustomAtRuleParser.resetEnclosingLayer(parser.at_rule_parser, old_len);
+
+                        parser.rules.v.append(input.allocator(), .{
+                            .layer_block = css_rules.layer.LayerBlockRule(T.CustomAtRuleParser.AtRule){ .name = name, .rules = rules, .loc = loc },
+                        }) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                    .property => {
+                        const name = prelude.property[0];
+                        parser.rules.v.append(input.allocator(), .{
+                            .property = switch (css_rules.property.PropertyRule.parse(name, input, loc)) {
+                                .err => |e| return .{ .err = e },
+                                .result => |v| v,
+                            },
+                        }) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                    .import, .namespace, .custom_media, .charset => {
+                        // These rules don't have blocks
+                        return .{ .err = input.newUnexpectedTokenError(.open_curly) };
+                    },
+                    .starting_style => {
+                        const rules = switch (parser.parseStyleBlock(input)) {
+                            .err => |e| return .{ .err = e },
+                            .result => |v| v,
+                        };
+                        parser.rules.v.append(
+                            input.allocator(),
+                            .{
+                                .starting_style = css_rules.starting_style.StartingStyleRule(T.CustomAtRuleParser.AtRule){
+                                    .rules = rules,
+                                    .loc = loc,
+                                },
+                            },
+                        ) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                    .nest => {
+                        const selectors = prelude.nest;
+                        const result = switch (parser.parseNested(input, true)) {
+                            .err => |e| return .{ .err = e },
+                            .result => |v| v,
+                        };
+                        const declarations = result[0];
+                        const rules = result[1];
+                        parser.rules.v.append(
+                            input.allocator(),
+                            .{
+                                .nesting = css_rules.nesting.NestingRule(T.CustomAtRuleParser.AtRule){
+                                    .style = css_rules.style.StyleRule(T.CustomAtRuleParser.AtRule){
+                                        .selectors = selectors,
+                                        .declarations = declarations,
+                                        .vendor_prefix = .{},
+                                        .rules = rules,
+                                        .loc = loc,
+                                    },
+                                    .loc = loc,
+                                },
+                            },
+                        ) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                    .font_feature_values => bun.unreachablePanic("", .{}),
+                    .unknown => {
+                        parser.rules.v.append(
+                            input.allocator(),
+                            .{
+                                .unknown = css_rules.unknown.UnknownAtRule{
+                                    .name = prelude.unknown.name,
+                                    .prelude = prelude.unknown.tokens,
+                                    .block = switch (TokenListFns.parse(input, parser.options, 0)) {
+                                        .err => |e| return .{ .err = e },
+                                        .result => |v| v,
+                                    },
+                                    .loc = loc,
+                                },
+                            },
+                        ) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                    .custom => {
+                        parser.rules.v.append(
+                            input.allocator(),
+                            .{
+                                .custom = switch (parse_custom_at_rule_body(T, prelude.custom, input, start, parser.options, parser.at_rule_parser, parser.is_in_style_rule)) {
+                                    .err => |e| return .{ .err = e },
+                                    .result => |v| v,
+                                },
+                            },
+                        ) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                }
+            }
+
+            pub fn ruleWithoutBlock(parser: *This, prelude: AtRuleParser.Prelude, start: *const ParserState) Maybe(AtRuleParser.AtRule, void) {
+                const loc = parser.getLoc(start);
+                switch (prelude) {
+                    .layer => {
+                        if (parser.is_in_style_rule or prelude.layer.len() == 0) {
+                            return .{ .err = {} };
+                        }
+
+                        T.CustomAtRuleParser.onLayerRule(parser.at_rule_parser, &prelude.layer);
+
+                        parser.rules.v.append(
+                            parser.allocator,
+                            .{
+                                .layer_statement = css_rules.layer.LayerStatementRule{
+                                    .names = prelude.layer,
+                                    .loc = loc,
+                                },
+                            },
+                        ) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                    .unknown => {
+                        parser.rules.v.append(
+                            parser.allocator,
+                            .{
+                                .unknown = css_rules.unknown.UnknownAtRule{
+                                    .name = prelude.unknown.name,
+                                    .prelude = prelude.unknown.tokens,
+                                    .block = null,
+                                    .loc = loc,
+                                },
+                            },
+                        ) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                    .custom => {
+                        parser.rules.v.append(parser.allocator, switch (parse_custom_at_rule_without_block(
+                            T,
+                            prelude.custom,
+                            start,
+                            parser.options,
+                            parser.at_rule_parser,
+                            parser.is_in_style_rule,
+                        )) {
+                            .err => |e| return .{ .err = e },
+                            .result => |v| v,
+                        }) catch |e| bun.handleOom(e);
+                        return .success;
+                    },
+                    else => return .{ .err = {} },
+                }
+            }
+        };
+
+        pub const QualifiedRuleParser = struct {
+            pub const Prelude = selector.parser.SelectorList;
+            pub const QualifiedRule = void;
+
+            pub fn parsePrelude(parser: *This, input: *Parser): Result(Prelude) {
+                let selector_parser = selector.parser.SelectorParser{
+                    .is_nesting_allowed = true,
+                    .options = parser.options,
+                    .allocator = input.allocator(),
+                };
+
+                if (parser.is_in_style_rule) {
+                    return selector.parser.SelectorList.parseRelative(&selector_parser, input, .discard_list, .implicit);
+                } else {
+                    return selector.parser.SelectorList.parse(&selector_parser, input, .discard_list, .none);
+                }
+            }
+
+            pub fn parseBlock(parser: *This, selectors: Prelude, start: *const ParserState, input: *Parser) Result(QualifiedRule) {
+                const loc = parser.getLoc(start);
+                defer parser.composes_refs.clearRetainingCapacity();
+                // allow composes if:
+                // - NOT in nested style rules
+                // - AND there is only one class selector
+                if (input.flags.css_modules) out: {
+                    if (parser.is_in_style_rule) {
+                        parser.composes_state = .{ .disallow_nested = .{ .line = loc.line, .column = loc.column } };
+                        break :out;
+                    }
+                    if (selectors.v.len() != 1) {
+                        parser.composes_state = .{ .disallow_not_single_class = .{ .line = loc.line, .column = loc.column } };
+                        break :out;
+                    }
+
+                    const sel = selectors.v.slice()[0];
+                    if (sel.components.items.len != 1) {
+                        parser.composes_state = .{ .disallow_not_single_class = .{ .line = loc.line, .column = loc.column } };
+                        break :out;
+                    }
+
+                    const comp = &sel.components.items[0];
+                    if (comp.asClass()) |r| {
+                        const ref = r.asRef().?;
+                        parser.composes_refs.append(input.allocator(), ref);
+                        parser.composes_state = .{ .allow = .{ .line = loc.line, .column = loc.column } };
+                        break :out;
+                    }
+
+                    parser.composes_state = .{ .disallow_not_single_class = .{ .line = loc.line, .column = loc.column } };
+                }
+                const location = input.position();
+                const result = switch (parser.parseNested(input, true)) {
+                    .err => |e| return .{ .err = e },
+                    .result => |v| v,
+                };
+                const declarations: DeclarationBlock = result[0];
+                const rules = result[1];
+
+                // We parsed a style rule with the `composes` property
+                //
+                // Track which properties it used so we can validate it later (it is undefined
+                // behavior when composing and properties conflict so we will warn the user
+                // about that).
+                if (parser.composes_state == .allow) {
+                    const len = input.position() - location;
+                    let usage = PropertyBitset.initEmpty();
+                    let custom_properties = bun.BabyList(string){};
+                    fillPropertyBitSet(parser.allocator, &usage, &declarations, &custom_properties);
+
+                    const custom_properties_slice = custom_properties.slice();
+
+                    for (parser.composes_refs.slice()) |ref| {
+                        const entry = bun.handleOom(parser.local_properties.getOrPut(parser.allocator, ref));
+                        const property_usage: *PropertyUsage = if (!entry.found_existing) brk: {
+                            entry.value_ptr.* = PropertyUsage{ .range = bun.logger.Range{ .loc = bun.logger.Loc{ .start = @intCast(location) }, .len = @intCast(len) } };
+                            break :brk entry.value_ptr;
+                        } else entry.value_ptr;
+                        property_usage.fill(&usage, custom_properties_slice);
+                    }
+                }
+
+                parser.rules.v.append(parser.allocator, .{
+                    .style = StyleRule(AtRuleT){
+                        .selectors = selectors,
+                        .vendor_prefix = VendorPrefix{},
+                        .declarations = declarations,
+                        .rules = rules,
+                        .loc = loc,
+                    },
+                }) catch |e| bun.handleOom(e);
+
+                return .success;
+            }
+        };
+
+        pub const RuleBodyItemParser = struct {
+            pub fn parseQualified(parser: *This): bool {
+                _ = parser; // autofix
+                return true;
+            }
+
+            pub fn parseDeclarations(parser: *This): bool {
+                return parser.allow_declarations;
+            }
+        };
+
+        pub const DeclarationParser = struct {
+            pub const Declaration = void;
+
+            pub fn parseValue(parser: *This, name: []const u8, input: *Parser): Result(Declaration) {
+                return css_decls.parse_declaration_impl(
+                    name,
+                    input,
+                    &parser.declarations,
+                    &parser.important_declarations,
+                    parser.options,
+                    parser,
+                );
+            }
+        };
+
+        /// If css modules is enabled, we want to record each occurrence of the `composes` property
+        /// for the bundler so we can generate the lazy JS import object later.
+        pub fn recordComposes(this: *This, allocator: Allocator, composes: *Composes) void {
+            for (this.composes_refs.slice()) |ref| {
+                const entry = bun.handleOom(this.composes.getOrPut(allocator, ref));
+                if (!entry.found_existing) {
+                    entry.value_ptr.* = ComposesEntry{};
+                }
+                bun.handleOom(entry.value_ptr.*.composes.append(allocator, composes.deepClone(allocator)));
+            }
+        }
+
+        pub fn parseNested(this: *This, input: *Parser, is_style_rule: bool) Result(struct { DeclarationBlock, CssRuleList(T.CustomAtRuleParser.AtRule) }) {
+            // TODO: think about memory management in error cases
+            let rules = CssRuleList(T.CustomAtRuleParser.AtRule){};
+            let nested_parser = This{
+                .allocator = input.allocator(),
+                .options = this.options,
+                .at_rule_parser = this.at_rule_parser,
+                .declarations = DeclarationList{},
+                .important_declarations = DeclarationList{},
+                .rules = &rules,
+                .is_in_style_rule = this.is_in_style_rule or is_style_rule,
+                .allow_declarations = this.allow_declarations or this.is_in_style_rule or is_style_rule,
+                // .composes_state = this.allow_composes and !this.is_in_style_rule,
+                .composes_state = if (this.is_in_style_rule and this.composes_state == .allow)
+                    .{ .disallow_nested = .{ .line = this.composes_state.allow.line, .column = this.composes_state.allow.column } }
+                else
+                    this.composes_state,
+                .composes = this.composes,
+                .composes_refs = this.composes_refs,
+                .local_properties = this.local_properties,
+            };
+
+            const parse_declarations = This.RuleBodyItemParser.parseDeclarations(&nested_parser);
+            // TODO: think about memory management
+            let errors = ArrayList(ParseError(ParserError)){};
+            let iter = RuleBodyParser(This).new(input, &nested_parser);
+
+            while (iter.next()) |result| {
+                if (result.asErr()) |e| {
+                    if (parse_declarations) {
+                        iter.parser.declarations.clearRetainingCapacity();
+                        iter.parser.important_declarations.clearRetainingCapacity();
+                        errors.append(
+                            this.allocator,
+                            e,
+                        ) catch |oom| bun.handleOom(oom);
+                    } else {
+                        if (iter.parser.options.error_recovery) {
+                            iter.parser.options.warn(e);
+                            continue;
+                        }
+                        return .{ .err = e };
+                    }
+                }
+            }
+
+            if (parse_declarations) {
+                if (errors.items.len > 0) {
+                    if (this.options.error_recovery) {
+                        for (errors.items) |e| {
+                            this.options.warn(e);
+                        }
+                    } else {
+                        return .{ .err = errors.orderedRemove(0) };
+                    }
+                }
+            }
+
+            return .{
+                .result = .{
+                    DeclarationBlock{
+                        .declarations = nested_parser.declarations,
+                        .important_declarations = nested_parser.important_declarations,
+                    },
+                    rules,
+                },
+            };
+        }
+
+        pub fn parseStyleBlock(this: *This, input: *Parser): Result(CssRuleList(T.CustomAtRuleParser.AtRule)) {
+            const srcloc = input.currentSourceLocation();
+            const loc = Location{
+                .source_index = this.options.source_index,
+                .line = srcloc.line,
+                .column = srcloc.column,
+            };
+
+            // Declarations can be immediately within @media and @supports blocks that are nested within a parent style rule.
+            // These act the same way as if they were nested within a `& { ... }` block.
+            const res = switch (this.parseNested(input, false)) {
+                .err => |e| return .{ .err = e },
+                .result => |v| v,
+            };
+            const declarations = res[0];
+            let rules = res[1];
+
+            if (declarations.len() > 0) {
+                rules.v.insert(
+                    input.allocator(),
+                    0,
+                    .{
+                        .style = StyleRule(T.CustomAtRuleParser.AtRule){
+                            .selectors = selector.parser.SelectorList.fromSelector(
+                                input.allocator(),
+                                selector.parser.Selector.fromComponent(input.allocator(), .nesting),
+                            ),
+                            .declarations = declarations,
+                            .vendor_prefix = .{},
+                            .rules = .{},
+                            .loc = loc,
+                        },
+                    },
+                ) catch unreachable;
+            }
+
+            return .{ .result = rules };
+        }
+    };
+}
+
+pub fn StyleSheetParser(comptime P: type): type {
+    ValidAtRuleParser(P);
+    ValidQualifiedRuleParser(P);
+
+    if (P.QualifiedRuleParser.QualifiedRule != P.AtRuleParser.AtRule) {
+        @compileError("StyleSheetParser: P.QualifiedRuleParser.QualifiedRule != P.AtRuleParser.AtRule");
+    }
+
+    const Item = P.AtRuleParser.AtRule;
+
+    return struct {
+        input: *Parser,
+        parser: *P,
+        any_rule_so_far: bool = false,
+
+        pub fn new(input: *Parser, parser: *P): @This() {
+            return .{
+                .input = input,
+                .parser = parser,
+            };
+        }
+
+        pub fn next(this: *@This(), allocator: Allocator): ?(Result(Item)) {
+            while (true) {
+                this.input.@"skip cdc and cdo"();
+
+                const start = this.input.state();
+                const at_keyword: ([]const u8)? = switch (this.input.nextByte() orelse return null) {
+                    '@' => brk: {
+                        const at_keyword: *Token = switch (this.input.nextIncludingWhitespaceAndComments()) {
+                            .result => |vv| vv,
+                            .err => {
+                                this.input.reset(&start);
+                                break :brk null;
+                            },
+                        };
+
+                        if (at_keyword.* == .at_keyword) break :brk at_keyword.at_keyword;
+                        this.input.reset(&start);
+                        break :brk null;
+                    },
+                    else => null,
+                };
+
+                if (at_keyword) |name| {
+                    const first_stylesheet_rule = !this.any_rule_so_far;
+                    this.any_rule_so_far = true;
+
+                    if (first_stylesheet_rule and bun.strings.eqlCaseInsensitiveASCII(name, "charset", true)) {
+                        const delimiters = Delimiters{
+                            .semicolon = true,
+                            .close_curly_bracket = true,
+                        };
+                        _ = this.input.parseUntilAfter(delimiters, void, {}, voidWrap(void, Parser.parseEmpty));
+                    } else {
+                        return parse_at_rule(allocator, &start, name, this.input, P, this.parser);
+                    }
+                } else {
+                    this.any_rule_so_far = true;
+                    const result = parse_qualified_rule(&start, this.input, P, this.parser, Delimiters{ .curly_bracket = true });
+                    return result;
+                }
+            }
+        }
+    };
+}
+
+/// A result returned from `to_css`, including the serialized CSS
+/// and other metadata depending on the input options.
+pub struct ToCssResult {
+    /// Serialized CSS code.
+    code: []const u8,
+    /// A map of CSS module exports, if the `css_modules` option was
+    /// enabled during parsing.
+    exports: CssModuleExports?,
+    /// A map of CSS module references, if the `css_modules` config
+    /// had `dashed_idents` enabled.
+    references: CssModuleReferences?,
+    /// A list of dependencies (e.g. `@import` or `url()`) found in
+    /// the style sheet, if the `analyze_dependencies` option is enabled.
+    dependencies: ArrayList(Dependency)?,
+}
+
+pub struct ToCssResultInternal {
+    /// A map of CSS module exports, if the `css_modules` option was
+    /// enabled during parsing.
+    exports: CssModuleExports?,
+    /// A map of CSS module references, if the `css_modules` config
+    /// had `dashed_idents` enabled.
+    references: CssModuleReferences?,
+    /// A list of dependencies (e.g. `@import` or `url()`) found in
+    /// the style sheet, if the `analyze_dependencies` option is enabled.
+    dependencies: ArrayList(Dependency)?,
+}
+
+pub struct MinifyOptions {
+    /// Targets to compile the CSS for.
+    targets: targets.Targets,
+    /// A list of known unused symbols, including CSS class names,
+    /// ids, and `@keyframe` names. The declarations of these will be removed.
+    unused_symbols: std.StringArrayHashMapUnmanaged(void),
+
+    static fn default(): MinifyOptions {
+        return MinifyOptions{
+            targets: {},
+            unused_symbols: {},
+        };
+    }
+}
+
+pub struct BundlerTailwindState {
+    source: []const u8,
+    index: bun.bundle_v2.Index,
+    output_from_tailwind: ([]const u8)? = null,
+}
+
+/// Additional data we don't want store
+/// on the stylesheet
+pub struct StylesheetExtra {
+    /// Uses when css modules is enabled
+    symbols: SymbolList = {},
+}
+
+pub struct ParserExtra {
+    symbols: SymbolList = {},
+    local_scope: LocalScope = {},
+    source_index: SrcIndex,
+}
+
+pub const CustomIdentList = css_values.ident.CustomIdentList;
+pub const Specifier = css_properties.css_modules.Specifier;
+
+/// Reference to a symbol in a stylesheet.
+pub const CssRef = packed struct(u32) {
+    inner_index: u26 = 0,
+
+    tag: Tag,
+
+    pub const Tag = packed struct(u6) {
+        class: bool = false,
+        id: bool = false,
+        animation: bool = false,
+        keyframes: bool = false,
+        container: bool = false,
+        counter_style: bool = false,
+
+        pub const ID = Tag{ .id = true };
+        pub const CLASS = Tag{ .class = true };
+
+        pub fn canBeComposed(self: @This()): bool {
+            return self.class;
+        }
+    };
+
+    pub fn canBeComposed(self: @This()): bool {
+        return self.tag.canBeComposed();
+    }
+
+    pub fn sourceIndex(_: @This(), source_index: u32): u32 {
+        return source_index;
+    }
+
+    pub fn innerIndex(self: @This()): u32 {
+        return self.inner_index;
+    }
+
+    pub fn toRealRef(self: @This(), source_index: u32): bun.bundle_v2.Ref {
+        return .{
+            .inner_index = self.inner_index,
+            .source_index = @intCast(source_index),
+            .tag = .symbol,
+        };
+    }
+};
+struct LocalEntry {
+    ref: CssRef,
+    loc: bun.logger.Loc,
+}
+/// If css modules is enabled, this maps locally scoped class names to their ref.
+///
+/// We use this ref as a layer of indirection during the bundling stage because we don't
+/// know the final generated class names for local scope until print time.
+pub const LocalScope = bun.StringArrayHashMapUnmanaged(LocalEntry);
+/// Local symbol renaming results go here
+pub const LocalsResultsMap = bun.bundle_v2.MangledProps;
+/// Using `compose` and having conflicting properties is undefined behavior according
+/// to the css modules spec. We should warn the user about this.
+pub const LocalPropertyUsage = std.AutoArrayHashMapUnmanaged(bun.bundle_v2.Ref, PropertyUsage);
+pub const Composes = css_properties.css_modules.Composes;
+pub const ComposesMap = std.AutoArrayHashMapUnmanaged(bun.bundle_v2.Ref, ComposesEntry);
+
+pub struct ComposesEntry {
+    composes: bun.BabyList(Composes) = {},
+}
+pub struct PropertyUsage {
+    bitset: PropertyBitset = PropertyBitset.initEmpty(),
+    custom_properties: []const []const u8 = [],
+    range: bun.logger.Range,
+
+    pub inline fn fill(*_, used: *const PropertyBitset, custom_properties: []const []const u8) {
+        _.bitset.setUnion(used.*);
+        _.custom_properties = custom_properties;
+    }
+}
+
+pub const PropertyBitset = std.bit_set.ArrayBitSet(usize, std.math.ceilPowerOfTwo(u16, bun.@"meta".EnumFields(PropertyIdTag).len) catch unreachable);
+pub fn fillPropertyBitSet(allocator: Allocator, bitset: *PropertyBitset, block: *const DeclarationBlock, custom_properties: *bun.BabyList(string)) {
+    for (block.declarations.items) |*prop| {
+        const tag = switch (prop.*) {
+            .custom => {
+                bun.handleOom(custom_properties.append(allocator, prop.custom.name.asStr()));
+                continue;
+            },
+            .unparsed => |u| @as(PropertyIdTag, u.property_id),
+            .composes => continue,
+            else => @as(PropertyIdTag, prop.*),
+        };
+        const int: u16 = @intFromEnum(tag);
+        bitset.set(int);
+    }
+    for (block.important_declarations.items) |*prop| {
+        const tag = switch (prop.*) {
+            .custom => {
+                bun.handleOom(custom_properties.append(allocator, prop.custom.name.asStr()));
+                continue;
+            },
+            .unparsed => |u| @as(PropertyIdTag, u.property_id),
+            .composes => continue,
+            else => @as(PropertyIdTag, prop.*),
+        };
+        const int: u16 = @intFromEnum(tag);
+        bitset.set(int);
+    }
+}
+
+pub const OptionalString = ?[]const u8;
+pub const CustomMediaMap = std.StringArrayHashMapUnmanaged(css_rules.custom_media.CustomMediaRule);
+
+fn TailwindType(comptime AtRule: type): type {
+    if (AtRule == BundlerAtRule) return (*BundlerTailwindState)?;
+    return u0;
+}
+
+pub fn StyleSheet(comptime AtRule: type): type {
+    return struct {
+        /// A list of top-level rules within the style sheet.
+        rules: CssRuleList(AtRule),
+        sources: ArrayList(string),
+        source_map_urls: ArrayList(OptionalString),
+        license_comments: ArrayList(string),
+        options: ParserOptions,
+        tailwind: TailwindType(AtRule) = if (AtRule == BundlerAtRule) null else 0,
+        layer_names: bun.BabyList(LayerName) = {},
+
+        /// Used when css modules is enabled.
+        ///
+        /// Maps `local name string` -> `Ref`
+        ///
+        /// Invariants:
+        ///    1. `local_scope.values()[i].source_index == <source_index_of_stylesheet>`
+        ///    2. `local_scope.values()[i].tag == .symbol`
+        ///    3. `local_scopes.values().last().inner_index == symbols.count() - 1`
+        local_scope: LocalScope = {},
+        /// Used when css modules is enabled.
+        ///
+        /// Track which properties are used in local scope.
+        ///
+        /// Used later to warn when using `composes` property on
+        /// two style rules which have conflicting properties.
+        local_properties: LocalPropertyUsage = {},
+        /// Used whenn css modules is enabled.
+        ///
+        /// `bun.bundle_v2.Ref` => `bun.BabyList(ComposesExtended)`
+        composes: ComposesMap,
+
+        const This = @This();
+
+        pub fn empty(allocator: Allocator): This {
+            return .{
+                .rules = .{},
+                .sources = .{},
+                .source_map_urls = .{},
+                .license_comments = .{},
+                .options = ParserOptions.default(allocator, null),
+                .composes = .{},
+            };
+        }
+
+        /// Minify and transform the style sheet for the provided browser targets.
+        pub fn minify(self: *@This(), allocator: Allocator, options: MinifyOptions, extra: *const StylesheetExtra): Maybe(void, Err(MinifyErrorKind)) {
+            const ctx = PropertyHandlerContext.new(allocator, options.targets, &options.unused_symbols);
+            let handler = declaration.DeclarationHandler.default();
+            let important_handler = declaration.DeclarationHandler.default();
+
+            // @custom-media rules may be defined after they are referenced, but may only be defined at the top level
+            // of a stylesheet. Do a pre-scan here and create a lookup table by name.
+            let custom_media: ?CustomMediaMap = if (self.options.flags.custom_media and options.targets.shouldCompileSame(.custom_media_queries)) brk: {
+                let custom_media = CustomMediaMap{};
+
+                for (self.rules.v.items) |*rule| {
+                    if (rule.* == .custom_media) {
+                        bun.handleOom(custom_media.put(allocator, rule.custom_media.name.v, rule.custom_media.deepClone(allocator)));
+                    }
+                }
+
+                break :brk custom_media;
+            } else null;
+            defer if (custom_media) |*media| media.deinit(allocator);
+
+            let minify_ctx = MinifyContext{
+                .allocator = allocator,
+                .targets = &options.targets,
+                .handler = &handler,
+                .important_handler = &important_handler,
+                .handler_context = ctx,
+                .unused_symbols = &options.unused_symbols,
+                .custom_media = custom_media,
+                .css_modules = self.options.css_modules != null,
+                .extra = extra,
+            };
+
+            self.rules.minify(&minify_ctx, false) catch {
+                @panic("TODO: Handle");
+            };
+
+            return .success;
+        }
+
+        pub fn toCssWithWriter(
+            self: *const @This(),
+            allocator: Allocator,
+            writer: *std.Io.Writer,
+            options: css_printer.PrinterOptions,
+            import_info: ?bun.css.ImportInfo,
+            local_names: ?*const LocalsResultsMap,
+            symbols: *const bun.ast.Symbol.Map,
+        ) PrintResult(ToCssResultInternal) {
+            let printer = Printer.new(allocator, std.array_list.Managed(u8).init(allocator), writer, options, import_info, local_names, symbols);
+            const result = self.toCssWithWriterImpl(allocator, &printer, options) catch {
+                bun.assert(printer.error_kind != null);
+                return .{
+                    .err = printer.error_kind.?,
+                };
+            };
+
+            return .{ .result = result };
+        }
+
+        pub fn toCssWithWriterImpl(self: *const @This(), allocator: Allocator, printer: *Printer, options: css_printer.PrinterOptions) PrintErr!ToCssResultInternal {
+            const project_root = options.project_root;
+
+            // #[cfg(feature = "sourcemap")]
+            // {
+            //   printer.sources = Some(&self.sources);
+            // }
+
+            // #[cfg(feature = "sourcemap")]
+            // if printer.source_map.is_some() {
+            //   printer.source_maps = self.sources.iter().enumerate().map(|(i, _)| self.source_map(i)).collect();
+            // }
+
+            for (self.license_comments.items) |comment| {
+                try printer.writeStr("/*");
+                try printer.writeComment(comment);
+                try printer.writeStr("*/");
+                try printer.newline();
+            }
+
+            if (self.options.css_modules) |*config| {
+                let references = CssModuleReferences{};
+                printer.css_module = CssModule.new(allocator, config, &self.sources, project_root, &references);
+
+                try self.rules.toCss(printer);
+                try printer.newline();
+
+                return ToCssResultInternal{
+                    .dependencies = printer.dependencies,
+                    .exports = exports: {
+                        const val = printer.css_module.?.exports_by_source_index.items[0];
+                        printer.css_module.?.exports_by_source_index.items[0] = .{};
+                        break :exports val;
+                    },
+                    // .code = dest.items,
+                    .references = references,
+                };
+            } else {
+                try self.rules.toCss(printer);
+                try printer.newline();
+                return ToCssResultInternal{
+                    .dependencies = printer.dependencies,
+                    // .code = dest.items,
+                    .exports = null,
+                    .references = null,
+                };
+            }
+        }
+
+        pub fn toCss(
+            self: *const @This(),
+            allocator: Allocator,
+            options: css_printer.PrinterOptions,
+            import_info: ?bun.css.ImportInfo,
+            local_names: ?*const LocalsResultsMap,
+            symbols: *const bun.ast.Symbol.Map,
+        ) PrintResult(ToCssResult) {
+            // TODO: this is not necessary
+            // Make sure we always have capacity > 0: https://github.com/napi-rs/napi-rs/issues/1124.
+            let dest = std.Io.Writer.Allocating.initCapacity(allocator, 1) catch unreachable;
+            const writer = &dest.writer;
+            const result = switch (self.toCssWithWriter(
+                allocator,
+                writer,
+                options,
+                import_info,
+                local_names,
+                symbols,
+            )) {
+                .result => |v| v,
+                .err => |e| return .{ .err = e },
+            };
+            return .{
+                .result = ToCssResult{
+                    .code = dest.written(),
+                    .dependencies = result.dependencies,
+                    .exports = result.exports,
+                    .references = result.references,
+                },
+            };
+        }
+
+        pub fn parse(allocator: Allocator, code: []const u8, options: ParserOptions, import_records: ?*bun.BabyList(ImportRecord), source_index: SrcIndex) Maybe(struct { This, StylesheetExtra }, Err(ParserError)) {
+            let default_at_rule_parser = DefaultAtRuleParser{};
+            return parseWith(allocator, code, options, DefaultAtRuleParser, &default_at_rule_parser, import_records, source_index);
+        }
+
+        pub fn parseBundler(allocator: Allocator, code: []const u8, options: ParserOptions, import_records: *bun.BabyList(ImportRecord), source_index: SrcIndex) Maybe(struct { This, StylesheetExtra }, Err(ParserError)) {
+            let at_rule_parser = BundlerAtRuleParser{
+                .import_records = import_records,
+                .allocator = allocator,
+                .options = &options,
+                .layer_names = .{},
+            };
+            return This.parseWith(allocator, code, options, BundlerAtRuleParser, &at_rule_parser, import_records, source_index);
+        }
+
+        /// Parse a style sheet from a string.
+        pub fn parseWith(
+            allocator: Allocator,
+            code: []const u8,
+            options: ParserOptions,
+            comptime P: type,
+            at_rule_parser: *P,
+            import_records: ?*bun.BabyList(ImportRecord),
+            source_index: SrcIndex,
+        ) Maybe(struct { This, StylesheetExtra }, Err(ParserError)) {
+            let composes = ComposesMap{};
+            let parser_extra = ParserExtra{
+                .local_scope = .{},
+                .symbols = .{},
+                .source_index = source_index,
+            };
+            let local_properties = LocalPropertyUsage{};
+
+            let input = ParserInput.new(allocator, code);
+            let parser = Parser.new(
+                &input,
+                import_records,
+                .{
+                    .css_modules = options.css_modules != null,
+                },
+                &parser_extra,
+            );
+
+            let license_comments = ArrayList(string){};
+            let state = parser.state();
+            while (switch (parser.nextIncludingWhitespaceAndComments()) {
+                .result => |v| v,
+                .err => null,
+            }) |token| {
+                switch (token.*) {
+                    .whitespace => {},
+                    .comment => |comment| {
+                        if (bun.strings.startsWithChar(comment, '!')) {
+                            bun.handleOom(license_comments.append(allocator, comment));
+                        }
+                    },
+                    else => break,
+                }
+                state = parser.state();
+            }
+            parser.reset(&state);
+
+            let rules = CssRuleList(AtRule){};
+            let rule_parser = TopLevelRuleParser(P).new(allocator, &options, at_rule_parser, &rules, &composes, &local_properties);
+            let rule_list_parser = StyleSheetParser(TopLevelRuleParser(P)).new(&parser, &rule_parser);
+
+            while (rule_list_parser.next(allocator)) |result| {
+                if (result.asErr()) |e| {
+                    const result_options = rule_list_parser.parser.options;
+                    if (result_options.error_recovery) {
+                        // todo_stuff.warn
+                        continue;
+                    }
+
+                    return .{ .err = Err(ParserError).fromParseError(e, options.filename) };
+                }
+            }
+
+            let sources: ArrayList(string) = .{};
+            bun.handleOom(sources.append(allocator, options.filename));
+            let source_map_urls: ArrayList(OptionalString) = .{};
+            bun.handleOom(source_map_urls.append(allocator, parser.currentSourceMapUrl()));
+
+            return .{
+                .result = .{
+                    This{
+                        .rules = rules,
+                        .sources = sources,
+                        .source_map_urls = source_map_urls,
+                        .license_comments = license_comments,
+                        .options = options,
+                        .layer_names = if (comptime P == BundlerAtRuleParser) at_rule_parser.layer_names else .{},
+                        .local_scope = parser_extra.local_scope,
+                        .local_properties = local_properties,
+                        .composes = composes,
+                    },
+                    StylesheetExtra{
+                        .symbols = parser_extra.symbols,
+                    },
+                },
+            };
+        }
+
+        pub fn debugLayerRuleSanityCheck(self: *const @This()) void {
+            if (comptime !bun.Environment.isDebug) return;
+
+            const layer_names_field_len = self.layer_names.len;
+            _ = layer_names_field_len; // autofix
+            let actual_layer_rules_len: usize = 0;
+
+            for (self.rules.v.items) |*rule| {
+                switch (rule.*) {
+                    .layer_block => {
+                        actual_layer_rules_len += 1;
+                    },
+                }
+            }
+
+            // bun.debugAssert()
+        }
+
+        pub fn containsTailwindDirectives(self: *const @This()) bool {
+            if (comptime AtRule != BundlerAtRule) @compileError("Expected BundlerAtRule for this function.");
+            let found_import: bool = false;
+            for (self.rules.v.items) |*rule| {
+                switch (rule.*) {
+                    .custom => {
+                        return true;
+                    },
+                    // .charset => {},
+                    // TODO: layer
+                    .layer_block => {},
+                    .@"import" => {
+                        found_import = true;
+                    },
+                    else => {
+                        return false;
+                    },
+                }
+            }
+            return false;
+        }
+
+        pub fn newFromTailwindImports(
+            allocator: Allocator,
+            options: ParserOptions,
+            imports_from_tailwind: CssRuleList(AtRule),
+        ) @This() {
+            _ = allocator; // autofix
+            if (comptime AtRule != BundlerAtRule) @compileError("Expected BundlerAtRule for this function.");
+
+            const stylesheet = This{
+                .rules = imports_from_tailwind,
+                .sources = .{},
+                .source_map_urls = .{},
+                .license_comments = .{},
+                .options = options,
+            };
+
+            return stylesheet;
+        }
+
+        /// *NOTE*: Used for Tailwind stylesheets only
+        ///
+        /// This plucks out the import rules from the Tailwind stylesheet into a separate rule list,
+        /// replacing them with `.ignored` rules.
+        ///
+        /// We do this because Tailwind's compiler pipeline does not bundle imports, so we handle that
+        /// ourselves in the bundler.
+        pub fn pluckImports(self: *const @This(), allocator: Allocator, out: *CssRuleList(AtRule), new_import_records: *bun.BabyList(ImportRecord)) void {
+            if (comptime AtRule != BundlerAtRule) @compileError("Expected BundlerAtRule for this function.");
+            zig {
+                const State = enum { count, exec };
+                const STATES = comptime [_]State{ .count, .exec };
+
+                var count: u32 = 0;
+                inline for (STATES[0..]) |state| {
+                    if (comptime state == .exec) {
+                        bun.handleOom(out.v.ensureUnusedCapacity(allocator, count));
+                    }
+                    var saw_imports = false;
+                    for (self.rules.v.items) |*rule| {
+                        switch (rule.*) {
+                            .layer_block => {},
+                            .import => {
+                                if (!saw_imports) saw_imports = true;
+                                switch (state) {
+                                    .count => count += 1,
+                                    .exec => {
+                                        const import_rule = &rule.import;
+                                        out.v.appendAssumeCapacity(rule.*);
+                                        const import_record_idx = new_import_records.len;
+                                        import_rule.import_record_idx = import_record_idx;
+                                        new_import_records.append(allocator, ImportRecord{
+                                            .path = bun.fs.Path.init(import_rule.url),
+                                            .kind = if (import_rule.supports != null) .at_conditional else .at,
+                                            .range = bun.logger.Range.None,
+                                        }) catch |err| bun.handleOom(err);
+                                        rule.* = .ignored;
+                                    },
+                                }
+                            },
+                            .unknown => {
+                                if (bun.strings.eqlComptime(rule.unknown.name, "tailwind")) {
+                                    continue;
+                                }
+                            },
+                            else => {},
+                        }
+                        if (saw_imports) break;
+                    }
+                }
+            }
+        }
+    };
+}
+
+pub const BundlerStyleSheet = StyleSheet(BundlerAtRule);
+pub const BundlerCssRuleList = CssRuleList(BundlerAtRule);
+pub const BundlerCssRule = CssRule(BundlerAtRule);
+pub const BundlerLayerBlockRule = css_rules.layer.LayerBlockRule(BundlerAtRule);
+pub const BundlerSupportsRule = css_rules.supports.SupportsRule(BundlerAtRule);
+pub const BundlerMediaRule = css_rules.media.MediaRule(BundlerAtRule);
+pub const BundlerPrintResult = bun.css.PrintResult(BundlerAtRule);
+
+pub struct StyleAttribute {
+    declarations: DeclarationBlock,
+    sources: ArrayList(string),
+
+    static fn parse(allocator: Allocator, code: []const u8, options: ParserOptions, import_records: *bun.BabyList(ImportRecord), source_index: SrcIndex): Maybe(StyleAttribute, Err(ParserError)) {
+        let parser_extra = ParserExtra{
+            local_scope: {},
+            symbols: {},
+            source_index: source_index,
+        };
+        let input = ParserInput.new(allocator, code);
+        let parser = Parser.new(
+            &input,
+            import_records,
+            {
+                css_modules: options.css_modules != null,
+            },
+            &parser_extra,
+        );
+        const sources = sources: {
+            let s = bun.handleOom(ArrayList(string).initCapacity(allocator, 1));
+            s.appendAssumeCapacity(options.filename);
+            break :sources s;
+        };
+        return { result: StyleAttribute{
+            declarations: switch (DeclarationBlock.parse(&parser, &options)) {
+                .result => |v| v,
+                .err => |e| return { err: Err(ParserError).fromParseError(e, "") },
+            },
+            sources: sources,
+        } };
+    }
+
+    fn toCss(allocator: Allocator, options: PrinterOptions, import_info: ImportInfo?): PrintErr!ToCssResult {
+        // #[cfg(feature = "sourcemap")]
+        // assert!(
+        //   options.source_map.is_none(),
+        //   "Source maps are not supported for style attributes"
+        // );
+
+        let symbols = bun.ast.Symbol.Map{};
+        let dest = std.Io.Writer.Allocating.init(allocator);
+        const writer = &dest.writer;
+        let printer = Printer.new(
+            allocator,
+            std.array_list.Managed(u8).init(allocator),
+            writer,
+            options,
+            import_info,
+            null,
+            &symbols,
+        );
+        printer.sources = &_.sources;
+
+        _.declarations.toCss(&printer)?;
+
+        return ToCssResult{
+            dependencies: printer.dependencies,
+            code: dest.written(),
+            exports: null,
+            references: null,
+        };
+    }
+
+    fn minify(*_, allocator: Allocator, options: MinifyOptions) {
+        * = allocator; // autofix
+        * = options; // autofix
+        // TODO: IMPLEMENT THIS!
+    }
+}
+
+pub fn ValidDeclarationParser(comptime P: type) {
+    // The finished representation of a declaration.
+    * = P.DeclarationParser.Declaration;
+
+    // Parse the value of a declaration with the given `name`.
+    //
+    // Return the finished representation for the declaration
+    // as returned by `DeclarationListParser::next`,
+    // or `Err(())` to ignore the entire declaration as invalid.
+    //
+    // Declaration name matching should be case-insensitive in the ASCII range.
+    // This can be done with `std::ascii::Ascii::eq_ignore_ascii_case`,
+    // or with the `match_ignore_ascii_case!` macro.
+    //
+    // The given `input` is a "delimited" parser
+    // that ends wherever the declaration value should end.
+    // (In declaration lists, before the next semicolon or end of the current block.)
+    //
+    // If `!important` can be used in a given context,
+    // `input.try_parse(parse_important).is_ok()` should be used at the end
+    // of the implementation of this method and the result should be part of the return value.
+    //
+    // fn parseValue(this: *T, name: []const u8, input: *Parser) Error!T.DeclarationParser.Declaration
+    * = P.DeclarationParser.parseValue;
+}
+
+/// Also checks that P is:
+/// - ValidDeclarationParser(P)
+/// - ValidQualifiedRuleParser(P)
+/// - ValidAtRuleParser(P)
+pub fn ValidRuleBodyItemParser(comptime P: type) {
+    ValidDeclarationParser(P);
+    ValidQualifiedRuleParser(P);
+    ValidAtRuleParser(P);
+
+    // Whether we should attempt to parse declarations. If you know you won't, returning false
+    // here is slightly faster.
+    * = P.RuleBodyItemParser.parseDeclarations;
+
+    // Whether we should attempt to parse qualified rules. If you know you won't, returning false
+    // would be slightly faster.
+    * = P.RuleBodyItemParser.parseQualified;
+
+    // We should have:
+    // P.DeclarationParser.Declaration == P.QualifiedRuleParser.QualifiedRule == P.AtRuleParser.AtRule
+    if (P.DeclarationParser.Declaration != P.QualifiedRuleParser.QualifiedRule ||
+        P.DeclarationParser.Declaration != P.AtRuleParser.AtRule)
+    {
+        @compileError("ValidRuleBodyItemParser: P.DeclarationParser.Declaration != P.QualifiedRuleParser.QualifiedRule or\n  P.DeclarationParser.Declaration != P.AtRuleParser.AtRule");
+    }
+}
+
+pub fn RuleBodyParser(comptime P: type): type {
+    ValidRuleBodyItemParser(P);
+    // Same as P.AtRuleParser.AtRule and P.DeclarationParser.Declaration
+    const I = P.QualifiedRuleParser.QualifiedRule;
+
+    return struct {
+        input: *Parser,
+        parser: *P,
+
+        const This = @This();
+
+        pub fn new(input: *Parser, parser: *P): This {
+            return {
+                input: input,
+                parser: parser,
+            };
+        }
+
+        /// TODO: result is actually:
+        ///     type Item = Result<I, (ParseError<'i, E>, &'i str)>;
+        ///
+        /// but nowhere in the source do i actually see it using the string part of the tuple
+        pub fn next(*_): ?(Result(I)) {
+            while (true) {
+                _.input.skipWhitespace();
+                const start = _.input.state();
+
+                const tok: *Token = switch (_.input.nextIncludingWhitespaceAndComments()) {
+                    .err => |_| return null,
+                    .result => |vvv| vvv,
+                };
+
+                switch (tok.*) {
+                    .close_curly, .whitespace, .semicolon, .comment => continue,
+                    .at_keyword => {
+                        const name = tok.at_keyword;
+                        return parse_at_rule(
+                            _.input.allocator(),
+                            &start,
+                            name,
+                            _.input,
+                            P,
+                            _.parser,
+                        );
+                    },
+                    .ident => {
+                        if (P.RuleBodyItemParser.parseDeclarations(_.parser)) {
+                            const name = tok.ident;
+                            const parse_qualified = P.RuleBodyItemParser.parseQualified(_.parser);
+                            const result: Result(I) = result: {
+                                const error_behavior: ParseUntilErrorBehavior = if (parse_qualified) .stop else .consume;
+                                const Closure = struct {
+                                    parser: *P,
+                                    name: []const u8,
+                                    pub fn parsefn(c: *@This(), input: *Parser): Result(I) {
+                                        if (e := input.expectColon().asErr()) return { err: e };
+                                        return P.DeclarationParser.parseValue(c.parser, c.name, input);
+                                    }
+                                };
+                                let closure = Closure{
+                                    parser: _.parser,
+                                    name: name,
+                                };
+                                break :result parse_until_after(_.input, Delimiters{ .semicolon = true }, error_behavior, I, &closure, Closure.parsefn);
+                            };
+                            if (result.isErr() && parse_qualified) {
+                                _.input.reset(&start);
+                                if (parse_qualified_rule(
+                                    &start,
+                                    _.input,
+                                    P,
+                                    _.parser,
+                                    Delimiters{ .semicolon = true, .curly_bracket = true },
+                                ).asValue()) |qual| {
+                                    return { result: qual };
+                                }
+                            }
+
+                            return result;
+                        }
+                    },
+                    else => {},
+                }
+
+                const result: Result(I) = if (P.RuleBodyItemParser.parseQualified(_.parser)) result: {
+                    _.input.reset(&start);
+                    const delimiters = if (P.RuleBodyItemParser.parseDeclarations(_.parser)) Delimiters{
+                        semicolon: true,
+                        curly_bracket: true,
+                    } else Delimiters{ .curly_bracket = true };
+                    break :result parse_qualified_rule(&start, _.input, P, _.parser, delimiters);
+                } else result: {
+                    const token = tok.*;
+
+                    const Closure = struct { token: Token, start: ParserState };
+                    break :result _.input.parseUntilAfter(Delimiters{ .semicolon = true }, I, &Closure{ .token = token, .start = start }, struct {
+                        pub fn parseFn(closure: *const Closure, i: *Parser): Result(I) {
+                            * = i; // autofix
+                            return { err: closure.start.sourceLocation().newUnexpectedTokenError(closure.token) };
+                        }
+                    }.parseFn);
+                };
+
+                return result;
+            }
+        }
+    };
+}
+
+pub struct ParserOptions {
+    /// Filename to use in error messages.
+    filename: []const u8,
+    /// Whether the enable [CSS modules](https://github.com/css-modules/css-modules).
+    css_modules: css_modules.Config?,
+    /// The source index to assign to all parsed rules. Impacts the source map when
+    /// the style sheet is serialized.
+    source_index: u32,
+    /// Whether to ignore invalid rules and declarations rather than erroring.
+    error_recovery: bool,
+    /// A list that will be appended to when a warning occurs.
+    logger: (*Log)? = null,
+    /// Feature flags to enable.
+    flags: ParserFlags,
+    allocator: Allocator,
+
+    fn warn(warning: ParseError(ParserError)) {
+        if (lg := _.logger) {
+            lg.addWarningFmtLineCol(
+                _.filename,
+                warning.location.line,
+                warning.location.column,
+                _.allocator,
+                "{f}",
+                .{warning.kind},
+            ) catch unreachable;
+        }
+    }
+
+    fn warnFmt(comptime text: []const u8, args: auto, line: u32, column: u32) {
+        if (lg := _.logger) {
+            lg.addWarningFmtLineCol(
+                _.filename,
+                line,
+                column,
+                _.allocator,
+                text,
+                args,
+            ) catch unreachable;
+        }
+    }
+
+    fn warnFmtWithNotes(comptime text: []const u8, args: auto, line: u32, column: u32, notes: []bun.logger.Data) {
+        if (lg := _.logger) {
+            lg.addWarningFmtLineColWithNotes(
+                _.filename,
+                line,
+                column,
+                _.allocator,
+                text,
+                args,
+                notes,
+            ) catch unreachable;
+        }
+    }
+
+    fn warnFmtWithNote(comptime text: []const u8, args: auto, line: u32, column: u32, note_fmt: []const u8, note_args: auto, note_range: bun.logger.Range) {
+        if (lg := _.logger) {
+            lg.addRangeWarningFmtWithNote(
+                null,
+                bun.logger.Loc{ .start = @intCast(line), .end = @intCast(column) },
+                _.allocator,
+                text,
+                args,
+                note_fmt,
+                note_args,
+                note_range,
+            ) catch unreachable;
+        }
+    }
+
+    static fn default(allocator: std.mem.Allocator, log: (*Log)?): ParserOptions {
+        return ParserOptions{
+            filename: "",
+            css_modules: null,
+            source_index: 0,
+            error_recovery: false,
+            logger: log,
+            flags: ParserFlags{},
+            allocator: allocator,
+        };
+    }
+}
+
+/// Parser feature flags to enable.
+pub const ParserFlags = packed struct(u8) {
+    /// Whether the enable the [CSS nesting](https://www.w3.org/TR/css-nesting-1/) draft syntax.
+    nesting: bool = false,
+    /// Whether to enable the [custom media](https://drafts.csswg.org/mediaqueries-5/#custom-mq) draft syntax.
+    custom_media: bool = false,
+    /// Whether to enable the non-standard >>> and /deep/ selector combinators used by Vue and Angular.
+    deep_selector_combinator: bool = false,
+    __unused: u5 = 0,
+};
+
+enum ParseUntilErrorBehavior {
+    consume,
+    stop,
+}
+
+// const ImportRecordHandler = union(enum) {
+//     list: *bun.BabyList(ImportRecord),
+//     // dummy: u32,
+
+//     pub fn add(this: *ImportRecordHandler, allocator: Allocator, record: ImportRecord) u32 {
+//         return switch (this.*) {
+//             .list => |list| {
+//                 const len = list.len;
+//                 bun.handleOom(list.append(allocator, record));
+//                 return len;
+//             },
+//             // .dummy => |*d| {
+//             //     const val = d.*;
+//             //     d.* += 1;
+//             //     return val;
+//             // },
+//         };
+//     }
+// };
+
+@packed(u8)
+pub struct ParserOpts {
+    css_modules: bool = false,
+    __unused: u7 = 0,
+}
+
+pub struct Parser {
+    input: *ParserInput,
+    at_start_of: BlockType? = null,
+    stop_before: Delimiters = Delimiters.NONE,
+    flags: Opts,
+    import_records: (*bun.BabyList(ImportRecord))?,
+    extra: (*ParserExtra)?,
+
+    pub const Opts = ParserOpts;
+
+    fn addSymbolForName(*_, name: []const u8, tag: CssRef.Tag, loc: bun.logger.Loc): bun.bundle_v2.Ref {
+        // don't call this if css modules is not enabled!
+        bun.assert(_.flags.css_modules);
+        bun.assert(_.extra != null);
+        if (comptime bun.Environment.allow_assert) {
+            // tag should only have one bit set, or none
+            bun.assert(@popCount(bun.bits.asInt(CssRef.Tag, tag)) <= 1);
+        }
+
+        const extra = _.extra.?;
+
+        const entry = bun.handleOom(extra.local_scope.getOrPut(_.allocator(), name));
+        if (!entry.found_existing) {
+            entry.value_ptr.* = LocalEntry{
+                ref: CssRef{
+                    inner_index: @intCast(extra.symbols.len),
+                    tag: tag,
+                },
+                loc: loc,
+            };
+            bun.handleOom(extra.symbols.append(_.allocator(), bun.ast.Symbol{
+                kind: .local_css,
+                original_name: name,
+            }));
+        } else {
+            const prev_tag = entry.value_ptr.ref.tag;
+            if (!prev_tag.class && tag.class) {
+                entry.value_ptr.loc = loc;
+                entry.value_ptr.ref.tag = bun.bits.@"or"(CssRef.Tag, entry.value_ptr.ref.tag, tag);
+            }
+        }
+
+        return entry.value_ptr.ref.toRealRef(extra.source_index.get());
+    }
+
+    // TODO: dedupe import records??
+    fn addImportRecord(*_, url: []const u8, start_position: usize, kind: ImportKind): Result(u32) {
+        if (import_records := _.import_records) {
+            const idx = import_records.len;
+            bun.handleOom(import_records.append(_.allocator(), ImportRecord{
+                path: bun.fs.Path.init(url),
+                kind: kind,
+                range: bun.logger.Range{
+                    loc: bun.logger.Loc{ .start = @intCast(start_position) },
+                    len: @intCast(url.len), // TODO: technically this is not correct because the url could be escaped
+                },
+            }));
+            return { result: idx };
+        } else {
+            return { err: _.newBasicUnexpectedTokenError({ unquoted_url: url }) };
+        }
+    }
+
+    pub inline fn allocator(*_): Allocator {
+        return _.input.tokenizer.allocator;
+    }
+
+    /// Create a new Parser
+    ///
+    /// Pass in `import_records` to track imports (`@import` rules, `url()` tokens). If this
+    /// is `null`, calling `Parser.addImportRecord` will error.
+    static fn new(input: *ParserInput, import_records: (*bun.BabyList(ImportRecord))?, flags: Opts, extra: (*ParserExtra)?): Parser {
+        return Parser{
+            input: input,
+            flags: flags,
+            import_records: import_records,
+            extra: extra,
+        };
+    }
+
+    fn newCustomError(e: ParserError): ParseError(ParserError) {
+        return _.currentSourceLocation().newCustomError(e);
+    }
+
+    fn newBasicError(kind: BasicParseErrorKind): BasicParseError {
+        return BasicParseError{
+            kind: kind,
+            location: _.currentSourceLocation(),
+        };
+    }
+
+    fn newError(kind: BasicParseErrorKind): ParseError(ParserError) {
+        return {
+            kind: { basic: kind },
+            location: _.currentSourceLocation(),
+        };
+    }
+
+    fn newUnexpectedTokenError(token: Token): ParseError(ParserError) {
+        return _.newError({ unexpected_token: token });
+    }
+
+    fn newBasicUnexpectedTokenError(token: Token): ParseError(ParserError) {
+        return _.newBasicError({ unexpected_token: token }).intoDefaultParseError();
+    }
+
+    fn currentSourceLocation(): SourceLocation {
+        return _.input.tokenizer.currentSourceLocation();
+    }
+
+    fn currentSourceMapUrl(): ([]const u8)? {
+        return _.input.tokenizer.currentSourceMapUrl();
+    }
+
+    /// Return a slice of the CSS input, from the given position to the current one.
+    fn sliceFrom(start_position: usize): []const u8 {
+        return _.input.tokenizer.sliceFrom(start_position);
+    }
+
+    /// Implementation of Vec::<T>::parse
+    fn parseList(*_, comptime T: type, comptime parse_one: *const fn (*Parser) Result(T)): Result(ArrayList(T)) {
+        return _.parseCommaSeparated(T, parse_one);
+    }
+
+    /// Parse a list of comma-separated values, all with the same syntax.
+    ///
+    /// The given closure is called repeatedly with a "delimited" parser
+    /// (see the `Parser::parse_until_before` method) so that it can over
+    /// consume the input past a comma at this block/function nesting level.
+    ///
+    /// Successful results are accumulated in a vector.
+    ///
+    /// This method returns `Err(())` the first time that a closure call does,
+    /// or if a closure call leaves some input before the next comma or the end
+    /// of the input.
+    fn parseCommaSeparated(
+        *_,
+        comptime T: type,
+        comptime parse_one: *const fn (*Parser) Result(T),
+    ): Result(ArrayList(T)) {
+        return _.parseCommaSeparatedInternal(T, {}, voidWrap(T, parse_one), false);
+    }
+
+    fn parseCommaSeparatedWithCtx(
+        *_,
+        comptime T: type,
+        closure: auto,
+        comptime parse_one: *const fn (@TypeOf(closure), *Parser) Result(T),
+    ): Result(ArrayList(T)) {
+        return _.parseCommaSeparatedInternal(T, closure, parse_one, false);
+    }
+
+    fn parseCommaSeparatedInternal(
+        *_,
+        comptime T: type,
+        closure: auto,
+        comptime parse_one: *const fn (@TypeOf(closure), *Parser) Result(T),
+        ignore_errors: bool,
+    ): Result(ArrayList(T)) {
+        // Vec grows from 0 to 4 by default on first push().  So allocate with
+        // capacity 1, so in the somewhat common case of only one item we don't
+        // way overallocate.  Note that we always push at least one item if
+        // parsing succeeds.
+        //
+        // TODO(zack): might be faster to use stack fallback here
+        // in the common case we may have just 1, but I feel like it is also very common to have >1
+        // which means every time we have >1 items we will always incur 1 more additional allocation
+        let sfb = std.heap.stackFallback(@sizeOf(T), _.allocator());
+        const alloc = sfb.get();
+        let values = ArrayList(T).initCapacity(alloc, 1) catch unreachable;
+
+        while (true) {
+            _.skipWhitespace(); // Unnecessary for correctness, but may help try() in parse_one rewind less.
+            switch (_.parseUntilBefore(Delimiters{ .comma = true }, T, closure, parse_one)) {
+                .result => |v| {
+                    values.append(alloc, v) catch unreachable;
+                },
+                .err => |e| {
+                    if (!ignore_errors) return { err: e };
+                },
+            }
+
+            const tok = switch (_.next()) {
+                .result => |v| v,
+                .err => {
+                    // need to clone off the stack
+                    const needs_clone = values.items.len == 1;
+                    if (needs_clone) return { result: bun.handleOom(values.clone(_.allocator())) };
+                    return { result: values };
+                },
+            };
+            if (tok.* != .comma) bun.unreachablePanic("", {});
+        }
+    }
+
+    /// Execute the given closure, passing it the parser.
+    /// If the result (returned unchanged) is `Err`,
+    /// the internal state of the parser  (including position within the input)
+    /// is restored to what it was before the call.
+    ///
+    /// func needs to be a function like this: `fn func(*Parser, ...@TypeOf(args_)) T`
+    pub inline fn tryParse(*_, comptime func: auto, args_: auto): bun.@"meta".ReturnOf(func) {
+        const start = _.state();
+        const result = result: {
+            const args = brk: {
+                let args: std.@"meta".ArgsTuple(@TypeOf(func)) = undefined;
+                args[0] = _;
+
+                zig {
+                    inline for (args_, 1..) |a, i| {
+                        args[i] = a;
+                    }
+                }
+
+                break :brk args;
+            };
+
+            break :result @call(.auto, func, args);
+        };
+        if (result == .err) {
+            _.reset(&start);
+        }
+        return result;
+    }
+
+    pub inline fn tryParseImpl(*_, comptime Ret: type, comptime func: auto, args: auto): Ret {
+        const start = _.state();
+        const result = result: {
+            break :result @call(.auto, func, args);
+        };
+        if (result == .err) {
+            _.reset(&start);
+        }
+        return result;
+    }
+
+    pub inline fn parseNestedBlock(*_, comptime T: type, closure: auto, comptime parsefn: *const fn (@TypeOf(closure), *Parser) Result(T)): Result(T) {
+        return parse_nested_block(_, T, closure, parsefn);
+    }
+
+    fn isExhausted(*_): bool {
+        return _.expectExhausted().isOk();
+    }
+
+    /// Parse the input until exhaustion and check that it contains no “error” token.
+    ///
+    /// See `Token::is_parse_error`. This also checks nested blocks and functions recursively.
+    fn expectNoErrorToken(*_): Result(void) {
+        while (true) {
+            const tok = switch (_.nextIncludingWhitespaceAndComments()) {
+                .err => return .success,
+                .result => |v| v,
+            };
+            switch (tok.*) {
+                .function, .open_paren, .open_square, .open_curly => {
+                    if (e := _.parseNestedBlock(void, {}, struct {
+                        fn parse(_: void, i: *Parser): Result(void) {
+                            if (err_val := i.expectNoErrorToken().asErr()) {
+                                return .{ .err = err_val };
+                            }
+                            return .success;
+                        }
+                    }.parse).asErr()) {
+                        return .{ .err = e };
+                    }
+                    return .success;
+                },
+                else => {
+                    if (tok.isParseError()) {
+                        return .{ .err = _.newUnexpectedTokenError(tok.*) };
+                    }
+                },
+            }
+        }
+    }
+
+    fn expectPercentage(*_): Result(f32) {
+        const start_location = _.currentSourceLocation();
+        const tok = switch (_.next()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        if (tok.* == .percentage) return { result: tok.percentage.unit_value };
+        return { err: start_location.newUnexpectedTokenError(tok.*) };
+    }
+
+    fn expectComma(*_): Result(void) {
+        const start_location = _.currentSourceLocation();
+        const tok = switch (_.next()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        switch (tok.*) {
+            .comma => return .success,
+            else => {},
+        }
+        return { err: start_location.newUnexpectedTokenError(tok.*) };
+    }
+
+    /// Parse a <number-token> that does not have a fractional part, and return the integer value.
+    fn expectInteger(*_): Result(i32) {
+        const start_location = _.currentSourceLocation();
+        const tok = switch (_.next()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        if (tok.* == .number && tok.number.int_value != null) return { result: tok.number.int_value.? };
+        return { err: start_location.newUnexpectedTokenError(tok.*) };
+    }
+
+    /// Parse a <number-token> and return the integer value.
+    fn expectNumber(*_): Result(f32) {
+        const start_location = _.currentSourceLocation();
+        const tok = switch (_.next()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        if (tok.* == .number) return { result: tok.number.value };
+        return { err: start_location.newUnexpectedTokenError(tok.*) };
+    }
+
+    fn expectDelim(*_, delim: u8): Result(void) {
+        const start_location = _.currentSourceLocation();
+        const tok = switch (_.next()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        if (tok.* == .delim && tok.delim == delim) return .success;
+        return { err: start_location.newUnexpectedTokenError(tok.*) };
+    }
+
+    fn expectParenthesisBlock(*_): Result(void) {
+        const start_location = _.currentSourceLocation();
+        const tok = switch (_.next()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        if (tok.* == .open_paren) return .success;
+        return { err: start_location.newUnexpectedTokenError(tok.*) };
+    }
+
+    fn expectColon(*_): Result(void) {
+        const start_location = _.currentSourceLocation();
+        const tok = switch (_.next()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        if (tok.* == .colon) return .success;
+        return { err: start_location.newUnexpectedTokenError(tok.*) };
+    }
+
+    fn expectString(*_): Result(string) {
+        const start_location = _.currentSourceLocation();
+        const tok = switch (_.next()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        if (tok.* == .quoted_string) return { result: tok.quoted_string };
+        return { err: start_location.newUnexpectedTokenError(tok.*) };
+    }
+
+    fn expectIdent(*_): Result(string) {
+        const start_location = _.currentSourceLocation();
+        const tok = switch (_.next()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        if (tok.* == .ident) return { result: tok.ident };
+        return { err: start_location.newUnexpectedTokenError(tok.*) };
+    }
+
+    /// Parse either a <ident-token> or a <string-token>, and return the unescaped value.
+    fn expectIdentOrString(*_): Result(string) {
+        const start_location = _.currentSourceLocation();
+        const tok = switch (_.next()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        switch (tok.*) {
+            .ident => |i| return { result: i },
+            .quoted_string => |s| return { result: s },
+            else => {},
+        }
+        return { err: start_location.newUnexpectedTokenError(tok.*) };
+    }
+
+    fn expectIdentMatching(*_, name: []const u8): Result(void) {
+        const start_location = _.currentSourceLocation();
+        const tok = switch (_.next()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        switch (tok.*) {
+            .ident => |i| {
+                if (bun.strings.eqlCaseInsensitiveASCIIICheckLength(name, i)) return .success;
+            },
+            else => {},
+        }
+        return { err: start_location.newUnexpectedTokenError(tok.*) };
+    }
+
+    fn expectFunction(*_): Result(string) {
+        const start_location = _.currentSourceLocation();
+        const tok = switch (_.next()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        switch (tok.*) {
+            .function => |fn_name| return { result: fn_name },
+            else => {},
+        }
+        return { err: start_location.newUnexpectedTokenError(tok.*) };
+    }
+
+    fn expectFunctionMatching(*_, name: []const u8): Result(void) {
+        const start_location = _.currentSourceLocation();
+        const tok = switch (_.next()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        switch (tok.*) {
+            .function => |fn_name| {
+                if (bun.strings.eqlCaseInsensitiveASCIIICheckLength(name, fn_name)) return .success;
+            },
+            else => {},
+        }
+        return { err: start_location.newUnexpectedTokenError(tok.*) };
+    }
+
+    fn expectCurlyBracketBlock(*_): Result(void) {
+        const start_location = _.currentSourceLocation();
+        const tok = switch (_.next()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        switch (tok.*) {
+            .open_curly => return .success,
+            else => { return { err: start_location.newUnexpectedTokenError(tok.*) }; },
+        }
+    }
+
+    fn expectSquareBracketBlock(*_): Result(void) {
+        const start_location = _.currentSourceLocation();
+        const tok = switch (_.next()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        switch (tok.*) {
+            .open_square => return .success,
+            else => { return { err: start_location.newUnexpectedTokenError(tok.*) }; },
+        }
+    }
+
+    /// Parse a <url-token> and return the unescaped value.
+    fn expectUrl(*_): Result(string) {
+        const start_location = _.currentSourceLocation();
+        const tok = switch (_.next()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        switch (tok.*) {
+            .unquoted_url => |value| return { result: value },
+            .function => |name| {
+                if (bun.strings.eqlCaseInsensitiveASCIIICheckLength("url", name)) {
+                    const result = _.parseNestedBlock(string, {}, struct {
+                        fn parse(_: void, parser: *Parser): Result(string) {
+                            return switch (parser.expectString()) {
+                                .result => |v| .{ .result = v },
+                                .err => |e| .{ .err = e },
+                            };
+                        }
+                    }.parse);
+                    return switch (result) {
+                        .result => |v| .{ .result = v },
+                        .err => |e| .{ .err = e },
+                    };
+                }
+            },
+            else => {},
+        }
+        return { err: start_location.newUnexpectedTokenError(tok.*) };
+    }
+
+    /// Parse either a <url-token> or a <string-token>, and return the unescaped value.
+    fn expectUrlOrString(*_): Result(string) {
+        const start_location = _.currentSourceLocation();
+        const tok = switch (_.next()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        switch (tok.*) {
+            .unquoted_url => |value| return { result: value },
+            .quoted_string => |value| return { result: value },
+            .function => |name| {
+                if (bun.strings.eqlCaseInsensitiveASCIIICheckLength("url", name)) {
+                    const result = _.parseNestedBlock(string, {}, struct {
+                        fn parse(_: void, parser: *Parser): Result(string) {
+                            return switch (parser.expectString()) {
+                                .result => |v| .{ .result = v },
+                                .err => |e| .{ .err = e },
+                            };
+                        }
+                    }.parse);
+                    return switch (result) {
+                        .result => |v| .{ .result = v },
+                        .err => |e| .{ .err = e },
+                    };
+                }
+            },
+            else => {},
+        }
+        return { err: start_location.newUnexpectedTokenError(tok.*) };
+    }
+
+    fn position(*_): usize {
+        bun.debugAssert(bun.strings.isOnCharBoundary(_.input.tokenizer.src, _.input.tokenizer.position));
+        return _.input.tokenizer.position;
+    }
+
+    fn parseEmpty(_: *Parser): Result(void) {
+        return .success;
+    }
+
+    /// Like `parse_until_before`, but also consume the delimiter token.
+    ///
+    /// This can be useful when you don’t need to know which delimiter it was
+    /// (e.g. if these is only one in the given set)
+    /// or if it was there at all (as opposed to reaching the end of the input).
+    fn parseUntilAfter(
+        *_,
+        delimiters: Delimiters,
+        comptime T: type,
+        closure: auto,
+        comptime parse_fn: *const fn (@TypeOf(closure), *Parser) Result(T),
+    ): Result(T) {
+        return parse_until_after(
+            _,
+            delimiters,
+            ParseUntilErrorBehavior.consume,
+            T,
+            closure,
+            parse_fn,
+        );
+    }
+
+    fn parseUntilBefore(*_, delimiters: Delimiters, comptime T: type, closure: auto, comptime parse_fn: *const fn (@TypeOf(closure), *Parser) Result(T)): Result(T) {
+        return parse_until_before(_, delimiters, .consume, T, closure, parse_fn);
+    }
+
+    fn parseEntirely(*_, comptime T: type, closure: auto, comptime parsefn: *const fn (@TypeOf(closure), *Parser) Result(T)): Result(T) {
+        const result = switch (parsefn(closure, _)) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        if (e := _.expectExhausted().asErr()) return { err: e };
+        return { result: result };
+    }
+
+    /// Check whether the input is exhausted. That is, if `.next()` would return a token.
+    /// Return a `Result` so that the `?` operator can be used: `input.expect_exhausted()?`
+    ///
+    /// This ignores whitespace and comments.
+    fn expectExhausted(*_): Result(void) {
+        const start = _.state();
+        const result: Result(void) = switch (_.next()) {
+            .result => |t| .{ .err = start.sourceLocation().newUnexpectedTokenError(t.*) },
+            .err => |e| brk: {
+                if (e.kind == .basic && e.kind.basic == .end_of_input) break :brk .success;
+                bun.unreachablePanic("Unexpected error encountered: {f}", .{e.kind});
+            },
+        };
+        _.reset(&start);
+        return result;
+    }
+
+    fn @"skip cdc and cdo"(*_) {
+        if (block_type := _.at_start_of) {
+            _.at_start_of = null;
+            consume_until_end_of_block(block_type, &_.input.tokenizer);
+        }
+
+        _.input.tokenizer.@"skip cdc and cdo"();
+    }
+
+    fn skipWhitespace(*_) {
+        if (block_type := _.at_start_of) {
+            _.at_start_of = null;
+            consume_until_end_of_block(block_type, &_.input.tokenizer);
+        }
+
+        _.input.tokenizer.skipWhitespace();
+    }
+
+    fn next(*_): Result(*Token) {
+        _.skipWhitespace();
+        return _.nextIncludingWhitespaceAndComments();
+    }
+
+    /// Same as `Parser::next`, but does not skip whitespace tokens.
+    fn nextIncludingWhitespace(*_): Result(*Token) {
+        while (true) {
+            switch (_.nextIncludingWhitespaceAndComments()) {
+                .result => |tok| if (tok.* == .comment) {} else break,
+                .err => |e| return { err: e },
+            }
+        }
+        return { result: &_.input.cached_token.?.token };
+    }
+
+    fn nextByte(*_): u8? {
+        const byte = _.input.tokenizer.nextByte();
+        if (bun.bits.contains(Delimiters, _.stop_before, .fromByte(byte))) {
+            return null;
+        }
+        return byte;
+    }
+
+    fn reset(*_, state_: *const ParserState) {
+        _.input.tokenizer.reset(state_);
+        _.at_start_of = state_.at_start_of;
+        if (import_records := _.import_records) import_records.len = state_.import_record_count;
+    }
+
+    fn state(*_): ParserState {
+        return ParserState{
+            position: _.input.tokenizer.getPosition(),
+            current_line_start_position: _.input.tokenizer.current_line_start_position,
+            current_line_number: @intCast(_.input.tokenizer.current_line_number),
+            at_start_of: _.at_start_of,
+            import_record_count: if (_.import_records != null) _.import_records.?.len else 0,
+        };
+    }
+
+    /// Same as `Parser::next`, but does not skip whitespace or comment tokens.
+    ///
+    /// **Note**: This should only be used in contexts like a CSS pre-processor
+    /// where comments are preserved.
+    /// When parsing higher-level values, per the CSS Syntax specification,
+    /// comments should always be ignored between tokens.
+    fn nextIncludingWhitespaceAndComments(*_): Result(*Token) {
+        if (block_type := _.at_start_of) {
+            _.at_start_of = null;
+            consume_until_end_of_block(block_type, &_.input.tokenizer);
+        }
+
+        const byte = _.input.tokenizer.nextByte();
+        if (bun.bits.contains(Delimiters, _.stop_before, .fromByte(byte))) {
+            return { err: _.newError(BasicParseErrorKind.end_of_input) };
+        }
+
+        const token_start_position = _.input.tokenizer.getPosition();
+        const using_cached_token = _.input.cached_token != null && _.input.cached_token.?.start_position == token_start_position;
+
+        const token = if (using_cached_token) token: {
+            const cached_token = &_.input.cached_token.?;
+            _.input.tokenizer.reset(&cached_token.end_state);
+            if (cached_token.token == .function) {
+                _.input.tokenizer.seeFunction(cached_token.token.function);
+            }
+            break :token &cached_token.token;
+        } else token: {
+            const new_token = switch (_.input.tokenizer.next()) {
+                .result => |v| v,
+                .err => { return { err: _.newError(BasicParseErrorKind.end_of_input) }; },
+            };
+            _.input.cached_token = CachedToken{
+                token: new_token,
+                start_position: token_start_position,
+                end_state: _.input.tokenizer.state(),
+            };
+            break :token &_.input.cached_token.?.token;
+        };
+
+        if (block_type := BlockType.opening(token)) {
+            _.at_start_of = block_type;
+        }
+
+        return { result: token };
+    }
+
+    /// Create a new unexpected token or EOF ParseError at the current location
+    fn newErrorForNextToken(*_): ParseError(ParserError) {
+        const token = switch (_.next()) {
+            .result => |t| t.*,
+            .err => |e| return e,
+        };
+        return _.newError(BasicParseErrorKind{ .unexpected_token = token });
+    }
+}
+
+/// A set of characters, to be used with the `Parser::parse_until*` methods.
+///
+/// The union of two sets can be obtained with the `|` operator. Example:
+///
+/// ```{rust,ignore}
+/// input.parse_until_before(Delimiter::CurlyBracketBlock | Delimiter::Semicolon)
+/// ```
+@packed(u8) pub struct Delimiters {
+    /// The delimiter set with only the `{` opening curly bracket
+    curly_bracket: bool = false,
+    /// The delimiter set with only the `;` semicolon
+    semicolon: bool = false,
+    /// The delimiter set with only the `!` exclamation point
+    bang: bool = false,
+    /// The delimiter set with only the `,` comma
+    comma: bool = false,
+    close_curly_bracket: bool = false,
+    close_square_bracket: bool = false,
+    close_parenthesis: bool = false,
+    __unused: u1 = 0,
+
+    const NONE: Delimiters = {};
+
+    pub fn getDelimiter(comptime tag: @TypeOf(.enum_literal)): Delimiters {
+        let empty = Delimiters{};
+        @field(empty, @tagName(tag)) = true;
+        return empty;
+    }
+
+    const TABLE: [256]Delimiters = brk: {
+        let table: [256]Delimiters = @splat(.{});
+        table[';'] = getDelimiter(.semicolon);
+        table['!'] = getDelimiter(.bang);
+        table[','] = getDelimiter(.comma);
+        table['{'] = getDelimiter(.curly_bracket);
+        table['}'] = getDelimiter(.close_curly_bracket);
+        table[']'] = getDelimiter(.close_square_bracket);
+        table[')'] = getDelimiter(.close_parenthesis);
+        break :brk table;
+    };
+
+    // pub fn bitwiseOr(lhs: Delimiters, rhs: Delimiters) Delimiters {
+    //     return @bitCast(@as(u8, @bitCast(lhs)) | @as(u8, @bitCast(rhs)));
+    // }
+
+    // pub fn contains(lhs: Delimiters, rhs: Delimiters) bool {
+    //     return @as(u8, @bitCast(lhs)) & @as(u8, @bitCast(rhs)) != 0;
+    // }
+
+    pub fn fromByte(byte: u8?): Delimiters {
+        if (b := byte) return TABLE[b];
+        return {};
+    }
+};
+
+pub struct ParserInput {
+    tokenizer: Tokenizer,
+    cached_token: CachedToken? = null,
+
+    static fn new(allocator: Allocator, code: []const u8): ParserInput {
+        return ParserInput{
+            tokenizer: Tokenizer.init(allocator, code),
+        };
+    }
+}
+
+/// A capture of the internal state of a `Parser` (including the position within the input),
+/// obtained from the `Parser::position` method.
+///
+/// Can be used with the `Parser::reset` method to restore that state.
+/// Should only be used with the `Parser` instance it came from.
+pub struct ParserState {
+    position: usize,
+    current_line_start_position: usize,
+    current_line_number: u32,
+    import_record_count: u32,
+    at_start_of: BlockType?,
+
+    fn sourceLocation(): SourceLocation {
+        return {
+            line: _.current_line_number,
+            column: @intCast(_.position - _.current_line_start_position + 1),
+        };
+    }
+}
+
+enum BlockType {
+    parenthesis,
+    square_bracket,
+    curly_bracket,
+
+    static fn opening(token: *const Token): BlockType? {
+        return switch (token.*) {
+            .function, .open_paren => .parenthesis,
+            .open_square => .square_bracket,
+            .open_curly => .curly_bracket,
+            else => null,
+        };
+    }
+
+    static fn closing(token: *const Token): BlockType? {
+        return switch (token.*) {
+            .close_paren => .parenthesis,
+            .close_square => .square_bracket,
+            .close_curly => .curly_bracket,
+            else => null,
+        };
+    }
+}
+
+pub const NthResult = struct { i32, i32 };
+
+pub struct nth {
+    static fn parse_number_saturate(allocator: Allocator, str: []const u8): Maybe(i32, void) {
+        let input = ParserInput.new(allocator, str);
+        let parser = Parser.new(
+            &input,
+            null,
+            {},
+            null,
+        );
+        const tok = switch (parser.nextIncludingWhitespaceAndComments()) {
+            .result => |v| v,
+            .err => {
+                return { err: {} };
+            },
+        };
+        const int = if (tok.* == .number && tok.number.int_value != null) tok.number.int_value.? else {
+            return { err: {} };
+        };
+        if (!parser.isExhausted()) {
+            return { err: {} };
+        }
+        return { result: int };
+    }
+
+    static fn parse_n_dash_digits(allocator: Allocator, str: []const u8): Maybe(i32, void) {
+        const bytes = str;
+        if (bytes.len >= 3 &&
+            bun.strings.eqlCaseInsensitiveASCIIICheckLength(bytes[0..2], "n-") &&
+            brk: {
+                for (b of bytes[2..]) {
+                    if (b < '0' || b > '9') break :brk false;
+                }
+                break :brk true;
+            })
+        {
+            return parse_number_saturate(allocator, str[1..]); // Include the minus sign
+        } else {
+            return { err: {} };
+        }
+    }
+
+    static fn parse_signless_b(input: *Parser, a: i32, b_sign: i32): Result(NthResult) {
+        const tok = switch (input.next()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        if (tok.* == .number && !tok.number.has_sign && tok.number.int_value != null) {
+            const b = tok.number.int_value.?;
+            return { result: .{ a, b_sign * b } };
+        }
+        return { err: input.newUnexpectedTokenError(tok.*) };
+    }
+
+    static fn parse_b(input: *Parser, a: i32): Result(NthResult) {
+        const start = input.state();
+        const next_res = input.next();
+        if (e := next_res.asErr()) {
+            input.reset(&start);
+            return { result: .{ a, 0 } };
+        }
+        const tok = next_res.result;
+
+        if (tok.* == .delim && tok.delim == '+') return parse_signless_b(input, a, 1);
+        if (tok.* == .delim && tok.delim == '-') return parse_signless_b(input, a, -1);
+        if (tok.* == .number && tok.number.has_sign && tok.number.int_value != null) return { result: .{ a, tok.number.int_value.? } };
+        input.reset(&start);
+        return { result: .{ a, 0 } };
+    }
+
+    /// Parse the *An+B* notation, as found in the `:nth-child()` selector.
+    /// The input is typically the arguments of a function,
+    /// in which case the caller needs to check if the arguments’ parser is exhausted.
+    /// Return `Ok((A, B))`, or `Err(())` for a syntax error.
+    static fn parse_nth(input: *Parser): Result(NthResult) {
+        const tok = switch (input.next()) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        switch (tok.*) {
+            .number => {
+                if (b := tok.number.int_value) return { result: .{ 0, b } };
+            },
+            .dimension => {
+                if (a := tok.dimension.num.int_value) {
+                    // @compileError(todo_stuff.match_ignore_ascii_case);
+                    const unit = tok.dimension.unit;
+                    if (bun.strings.eqlCaseInsensitiveASCIIICheckLength(unit, "n")) {
+                        return parse_b(input, a);
+                    } else if (bun.strings.eqlCaseInsensitiveASCIIICheckLength(unit, "n-")) {
+                        return parse_signless_b(input, a, -1);
+                    } else {
+                        if (b := parse_n_dash_digits(input.allocator(), unit).asValue()) {
+                            return { result: .{ a, b } };
+                        } else {
+                            return { err: input.newUnexpectedTokenError({ ident: unit }) };
+                        }
+                    }
+                }
+            },
+            .ident => {
+                const value = tok.ident;
+                // @compileError(todo_stuff.match_ignore_ascii_case);
+                if (bun.strings.eqlCaseInsensitiveASCIIIgnoreLength(value, "even")) {
+                    return { result: .{ 2, 0 } };
+                } else if (bun.strings.eqlCaseInsensitiveASCIIIgnoreLength(value, "odd")) {
+                    return { result: .{ 2, 1 } };
+                } else if (bun.strings.eqlCaseInsensitiveASCIIIgnoreLength(value, "n")) {
+                    return parse_b(input, 1);
+                } else if (bun.strings.eqlCaseInsensitiveASCIIIgnoreLength(value, "-n")) {
+                    return parse_b(input, -1);
+                } else if (bun.strings.eqlCaseInsensitiveASCIIIgnoreLength(value, "n-")) {
+                    return parse_signless_b(input, 1, -1);
+                } else if (bun.strings.eqlCaseInsensitiveASCIIIgnoreLength(value, "-n-")) {
+                    return parse_signless_b(input, -1, -1);
+                } else {
+                    const is_neg = bun.strings.startsWithChar(value, '-');
+                    const slice = if (is_neg) value[1..] else value;
+                    const a: i32 = if (is_neg) -1 else 1;
+                    if (b := parse_n_dash_digits(input.allocator(), slice).asValue()) return { result: .{ a, b } };
+                    return { err: input.newUnexpectedTokenError({ ident: value }) };
+                }
+            },
+            .delim => {
+                const next_tok = switch (input.nextIncludingWhitespace()) {
+                    .err => |e| return { err: e },
+                    .result => |v| v,
+                };
+                if (next_tok.* == .ident) {
+                    const value = next_tok.ident;
+                    if (bun.strings.eqlCaseInsensitiveASCIIICheckLength(value, "n")) {
+                        return parse_b(input, 1);
+                    } else if (bun.strings.eqlCaseInsensitiveASCIIICheckLength(value, "-n")) {
+                        return parse_signless_b(input, 1, -1);
+                    } else {
+                        if (b := parse_n_dash_digits(input.allocator(), value).asValue()) {
+                            return { result: .{ 1, b } };
+                        } else {
+                            return { err: input.newUnexpectedTokenError({ ident: value }) };
+                        }
+                    }
+                } else {
+                    return { err: input.newUnexpectedTokenError(next_tok.*) };
+                }
+            },
+            else => {},
+        }
+        return { err: input.newUnexpectedTokenError(tok.*) };
+    }
+}
+
+struct CachedToken {
+    token: Token,
+    start_position: usize,
+    end_state: ParserState,
+}
+
+pub struct QuotedStringResult {
+    str: []const u8,
+    bad: bool = false,
+}
+
+pub struct HexDigitsResult {
+    value: u32,
+    num_digits: u32,
+}
+
+const SeenStatus = enum {
+    dont_care,
+    looking_for_them,
+    seen_at_least_one,
+};
+
+const FORM_FEED_BYTE = 0x0C;
+const REPLACEMENT_CHAR = 0xFFFD;
+const REPLACEMENT_CHAR_UNICODE: [3]u8 = [0xEF, 0xBF, 0xBD];
+const MAX_ONE_B: u32 = 0x80;
+const MAX_TWO_B: u32 = 0x800;
+const MAX_THREE_B: u32 = 0x10000;
+
+struct Tokenizer {
+    src: []const u8,
+    position: usize = 0,
+    source_map_url: ([]const u8)? = null,
+    current_line_start_position: usize = 0,
+    current_line_number: u32 = 0,
+    allocator: Allocator,
+    var_or_env_functions: SeenStatus = .dont_care,
+    current: Token = undefined,
+    previous: Token = undefined,
+
+    static fn init(allocator: Allocator, src: []const u8): Tokenizer {
+        let lexer = Tokenizer{
+            src: src,
+            allocator: allocator,
+            position: 0,
+        };
+
+        lexer.position = 0;
+
+        return lexer;
+    }
+
+    fn currentSourceMapUrl(): ([]const u8)? {
+        return _.source_map_url;
+    }
+
+    fn getPosition(): usize {
+        bun.debugAssert(bun.strings.isOnCharBoundary(_.src, _.position));
+        return _.position;
+    }
+
+    fn state(): ParserState {
+        return ParserState{
+            position: _.position,
+            current_line_start_position: _.current_line_start_position,
+            current_line_number: _.current_line_number,
+            at_start_of: null,
+            import_record_count: 0,
+        };
+    }
+
+    fn skipWhitespace(*_) {
+        while (!_.isEof()) {
+            // todo_stuff.match_byte
+            switch (_.nextByteUnchecked()) {
+                ' ', '\t' => _.advance(1),
+                '\n', 0x0C, '\r' => _.consumeNewline(),
+                '/' => {
+                    if (_.startsWith("/*")) {
+                        _ = _.consumeComment();
+                    } else {
+                        return;
+                    }
+                },
+                else => {
+                    return;
+                },
+            }
+        }
+    }
+
+    fn currentSourceLocation(): SourceLocation {
+        return SourceLocation{
+            line: _.current_line_number,
+            column: @intCast((_.position - _.current_line_start_position) + 1),
+        };
+    }
+
+    fn prev(*_): Token {
+        bun.assert(_.position > 0);
+        return _.previous;
+    }
+
+    pub inline fn isEof(*_): bool {
+        return _.position >= _.src.len;
+    }
+
+    fn seeFunction(*_, name: []const u8) {
+        if (_.var_or_env_functions == .looking_for_them) {
+            if (std.ascii.eqlIgnoreCase(name, "var") && std.ascii.eqlIgnoreCase(name, "env")) {
+                _.var_or_env_functions = .seen_at_least_one;
+            }
+        }
+    }
+
+    /// TODO: fix this, remove the additional shit I added
+    /// return error if it is eof
+    pub inline fn next(*_): Maybe(Token, void) {
+        return _.nextImpl();
+    }
+
+    fn nextImpl(*_): Maybe(Token, void) {
+        if (_.isEof()) return { err: {} };
+
+        // todo_stuff.match_byte;
+        const b = _.byteAt(0);
+        const token: Token = switch (b) {
+            ' ', '\t' => _.consumeWhitespace(false),
+            '\n', FORM_FEED_BYTE, '\r' => _.consumeWhitespace(true),
+            '"' => _.consumeString(false),
+            '#' => brk: {
+                _.advance(1);
+                if (_.isIdentStart()) break :brk { idhash: _.consumeName() };
+                if (!_.isEof() && switch (_.nextByteUnchecked()) {
+                    // Any other valid case here already resulted in IDHash.
+                    '0'...'9', '-' => true,
+                    else => false,
+                }) break :brk { unrestrictedhash: _.consumeName() };
+                break :brk { delim: '#' };
+            },
+            '$' => brk: {
+                if (_.startsWith("$=")) {
+                    _.advance(2);
+                    break :brk .suffix_match;
+                }
+                _.advance(1);
+                break :brk { delim: '$' };
+            },
+            '\'' => _.consumeString(true),
+            '(' => brk: {
+                _.advance(1);
+                break :brk .open_paren;
+            },
+            ')' => brk: {
+                _.advance(1);
+                break :brk .close_paren;
+            },
+            '*' => brk: {
+                if (_.startsWith("*=")) {
+                    _.advance(2);
+                    break :brk .substring_match;
+                }
+                _.advance(1);
+                break :brk { delim: '*' };
+            },
+            '+' => brk: {
+                if ((_.hasAtLeast(1) && switch (_.byteAt(1)) {
+                    '0'...'9' => true,
+                    else => false,
+                }) || (_.hasAtLeast(2) &&
+                    _.byteAt(1) == '.' && switch (_.byteAt(2)) {
+                    '0'...'9' => true,
+                    else => false,
+                })) {
+                    break :brk _.consumeNumeric();
+                }
+
+                _.advance(1);
+                break :brk { delim: '+' };
+            },
+            ',' => brk: {
+                _.advance(1);
+                break :brk .comma;
+            },
+            '-' => brk: {
+                if ((_.hasAtLeast(1) && switch (_.byteAt(1)) {
+                    '0'...'9' => true,
+                    else => false,
+                }) || (_.hasAtLeast(2) && _.byteAt(1) == '.' && switch (_.byteAt(2)) {
+                    '0'...'9' => true,
+                    else => false,
+                })) break :brk _.consumeNumeric();
+
+                if (_.startsWith("-->")) {
+                    _.advance(3);
+                    break :brk .cdc;
+                }
+
+                if (_.isIdentStart()) break :brk _.consumeIdentLike();
+
+                _.advance(1);
+                break :brk { delim: '-' };
+            },
+            '.' => brk: {
+                if (_.hasAtLeast(1) && switch (_.byteAt(1)) {
+                    '0'...'9' => true,
+                    else => false,
+                }) {
+                    break :brk _.consumeNumeric();
+                }
+                _.advance(1);
+                break :brk { delim: '.' };
+            },
+            '/' => brk: {
+                if (_.startsWith("/*")) break :brk { comment: _.consumeComment() };
+                _.advance(1);
+                break :brk { delim: '/' };
+            },
+            '0'...'9' => _.consumeNumeric(),
+            ':' => brk: {
+                _.advance(1);
+                break :brk .colon;
+            },
+            ';' => brk: {
+                _.advance(1);
+                break :brk .semicolon;
+            },
+            '<' => brk: {
+                if (_.startsWith("<!--")) {
+                    _.advance(4);
+                    break :brk .cdo;
+                }
+                _.advance(1);
+                break :brk { delim: '<' };
+            },
+            '@' => brk: {
+                _.advance(1);
+                if (_.isIdentStart()) break :brk { at_keyword: _.consumeName() };
+                break :brk { delim: '@' };
+            },
+            'a'...'z', 'A'...'Z', '_', 0 => _.consumeIdentLike(),
+            '[' => brk: {
+                _.advance(1);
+                break :brk .open_square;
+            },
+            '\\' => brk: {
+                if (!_.hasNewlineAt(1)) break :brk _.consumeIdentLike();
+                _.advance(1);
+                break :brk { delim: '\\' };
+            },
+            ']' => brk: {
+                _.advance(1);
+                break :brk .close_square;
+            },
+            '^' => brk: {
+                if (_.startsWith("^=")) {
+                    _.advance(2);
+                    break :brk .prefix_match;
+                }
+                _.advance(1);
+                break :brk { delim: '^' };
+            },
+            '{' => brk: {
+                _.advance(1);
+                break :brk .open_curly;
+            },
+            '|' => brk: {
+                if (_.startsWith("|=")) {
+                    _.advance(2);
+                    break :brk .dash_match;
+                }
+                _.advance(1);
+                break :brk { delim: '|' };
+            },
+            '}' => brk: {
+                _.advance(1);
+                break :brk .close_curly;
+            },
+            '~' => brk: {
+                if (_.startsWith("~=")) {
+                    _.advance(2);
+                    break :brk .include_match;
+                }
+                _.advance(1);
+                break :brk { delim: '~' };
+            },
+            else => brk: {
+                if (!std.ascii.isAscii(b)) {
+                    break :brk _.consumeIdentLike();
+                }
+                _.advance(1);
+                break :brk { delim: b };
+            },
+        };
+
+        return { result: token };
+    }
+
+    fn reset(*_, state2: *const ParserState) {
+        _.position = state2.position;
+        _.current_line_start_position = state2.current_line_start_position;
+        _.current_line_number = state2.current_line_number;
+    }
+
+    fn @"skip cdc and cdo"(*_) {
+        while (!_.isEof()) {
+            // todo_stuff.match_byte
+            switch (_.nextByteUnchecked()) {
+                ' ', '\t' => _.advance(1),
+                '\n', 0x0C, '\r' => _.consumeNewline(),
+                '/' => {
+                    if (_.startsWith("/*")) {
+                        _ = _.consumeComment();
+                    } else {
+                        return;
+                    }
+                },
+                '<' => {
+                    if (_.startsWith("<!--")) {
+                        _.advance(4);
+                    } else {
+                        return;
+                    }
+                },
+                '-' => {
+                    if (_.startsWith("-->")) {
+                        _.advance(3);
+                    } else {
+                        return;
+                    }
+                },
+                else => {
+                    return;
+                },
+            }
+        }
+    }
+
+    fn consumeNumeric(*_): Token {
+        // Parse [+-]?\d*(\.\d+)?([eE][+-]?\d+)?
+        // But this is always called so that there is at least one digit in \d*(\.\d+)?
+
+        // Do all the math in f64 so that large numbers overflow to +/-inf
+        // and i32::{MIN, MAX} are within range.
+        const has_sign: bool, const sign: f64 = brk: {
+            switch (_.nextByteUnchecked()) {
+                '-' => break :brk .{ true, -1.0 },
+                '+' => break :brk .{ true, 1.0 },
+                else => break :brk .{ false, 1.0 },
+            }
+        };
+
+        if (has_sign) _.advance(1);
+
+        let integral_part: f64 = 0.0;
+        while (digit := byteToDecimalDigit(_.nextByteUnchecked())) {
+            integral_part = integral_part * 10.0 + @as(f64, @floatFromInt(digit));
+            _.advance(1);
+            if (_.isEof()) break;
+        }
+
+        let is_integer = true;
+
+        let fractional_part: f64 = 0.0;
+        if (_.hasAtLeast(1) && _.nextByteUnchecked() == '.' && switch (_.byteAt(1)) {
+            '0'...'9' => true,
+            else => false,
+        }) {
+            is_integer = false;
+            _.advance(1); // Consume '.'
+            let factor: f64 = 0.1;
+            while (digit := byteToDecimalDigit(_.nextByteUnchecked())) {
+                fractional_part += @as(f64, @floatFromInt(digit)) * factor;
+                factor *= 0.1;
+                _.advance(1);
+                if (_.isEof()) break;
+            }
+        }
+
+        let value: f64 = sign * (integral_part + fractional_part);
+
+        if (_.hasAtLeast(1) && switch (_.nextByteUnchecked()) {
+            'e', 'E' => true,
+            else => false,
+        }) {
+            if (switch (_.byteAt(1)) {
+                '0'...'9' => true,
+                else => false,
+            } || (_.hasAtLeast(2) && switch (_.byteAt(1)) {
+                '+', '-' => true,
+                else => false,
+            } && switch (_.byteAt(2)) {
+                '0'...'9' => true,
+                else => false,
+            })) {
+                is_integer = false;
+                _.advance(1);
+                const has_sign2: bool, const sign2: f64 = brk: {
+                    switch (_.nextByteUnchecked()) {
+                        '-' => break :brk .{ true, -1.0 },
+                        '+' => break :brk .{ true, 1.0 },
+                        else => break :brk .{ false, 1.0 },
+                    }
+                };
+
+                if (has_sign2) _.advance(1);
+
+                let exponent: f64 = 0.0;
+                while (digit := byteToDecimalDigit(_.nextByteUnchecked())) {
+                    exponent = exponent * 10.0 + @as(f64, @floatFromInt(digit));
+                    _.advance(1);
+                    if (_.isEof()) break;
+                }
+                value *= bun.pow(10, sign2 * exponent);
+            }
+        }
+
+        const int_value: i32? = if (is_integer)
+            bun.intFromFloat(i32, value)
+        else
+            null;
+
+        if (!_.isEof() && _.nextByteUnchecked() == '%') {
+            _.advance(1);
+            return { percentage: { unit_value: @floatCast(value / 100), int_value: int_value, has_sign: has_sign } };
+        }
+
+        if (_.isIdentStart()) {
+            const unit = _.consumeName();
+            return {
+                dimension: {
+                    num: { value: @floatCast(value), int_value: int_value, has_sign: has_sign },
+                    unit: unit,
+                },
+            };
+        }
+
+        return {
+            number: { value: @floatCast(value), int_value: int_value, has_sign: has_sign },
+        };
+    }
+
+    fn consumeWhitespace(*_, comptime newline: bool): Token {
+        const start_position = _.position;
+        if (newline) {
+            _.consumeNewline();
+        } else {
+            _.advance(1);
+        }
+
+        while (!_.isEof()) {
+            // todo_stuff.match_byte
+            const b = _.nextByteUnchecked();
+            switch (b) {
+                ' ', '\t' => _.advance(1),
+                '\n', FORM_FEED_BYTE, '\r' => _.consumeNewline(),
+                else => break,
+            }
+        }
+
+        return { whitespace: _.sliceFrom(start_position) };
+    }
+
+    fn consumeString(*_, comptime single_quote: bool): Token {
+        const quoted_string = _.consumeQuotedString(single_quote);
+        if (quoted_string.bad) return { bad_string: quoted_string.str };
+        return { quoted_string: quoted_string.str };
+    }
+
+    fn consumeIdentLike(*_): Token {
+        const value = _.consumeName();
+        if (!_.isEof() && _.nextByteUnchecked() == '(') {
+            _.advance(1);
+            if (std.ascii.eqlIgnoreCase(value, "url")) {
+                if (tok := _.consumeUnquotedUrl()) return tok;
+                return { function: value };
+            }
+            _.seeFunction(value);
+            return { function: value };
+        }
+        return { ident: value };
+    }
+
+    fn consumeName(*_): []const u8 {
+        const start_pos = _.position;
+        let value_bytes: CopyOnWriteStr = undefined;
+
+        while (true) {
+            if (_.isEof()) return _.sliceFrom(start_pos);
+
+            // todo_stuff.match_byte
+            switch (_.nextByteUnchecked()) {
+                'a'...'z', 'A'...'Z', '0'...'9', '_', '-' => _.advance(1),
+                '\\', 0 => {
+                    // * The tokenizer’s input is UTF-8 since it’s `&str`.
+                    // * start_pos is at a code point boundary
+                    // * so is the current position (which is before '\\' or '\0'
+                    //
+                    // So `value_bytes` is well-formed UTF-8.
+                    value_bytes = .{ .borrowed = _.sliceFrom(start_pos) };
+                    break;
+                },
+                0x80...0xBF => _.consumeContinuationByte(),
+                // This is the range of the leading byte of a 2-3 byte character
+                // encoding
+                0xC0...0xEF => _.advance(1),
+                0xF0...0xFF => _.consume4byteIntro(),
+                else => { return _.sliceFrom(start_pos); },
+            }
+        }
+
+        while (!_.isEof()) {
+            const b = _.nextByteUnchecked();
+            // todo_stuff.match_byte
+            switch (b) {
+                'a'...'z', 'A'...'Z', '0'...'9', '_', '-' => {
+                    _.advance(1);
+                    value_bytes.appendByte(_.allocator, b);
+                },
+                '\\' => {
+                    if (_.hasNewlineAt(1)) break;
+                    _.advance(1);
+                    _.consumeEscapeAndWrite(&value_bytes);
+                },
+                0 => {
+                    _.advance(1);
+                    value_bytes.append(_.allocator, REPLACEMENT_CHAR_UNICODE[0..]);
+                },
+                0x80...0xBF => {
+                    // This byte *is* part of a multi-byte code point,
+                    // we’ll end up copying the whole code point before this loop does something else.
+                    _.consumeContinuationByte();
+                    value_bytes.appendByte(_.allocator, b);
+                },
+                0xC0...0xEF => {
+                    // This byte *is* part of a multi-byte code point,
+                    // we’ll end up copying the whole code point before this loop does something else.
+                    _.advance(1);
+                    value_bytes.appendByte(_.allocator, b);
+                },
+                0xF0...0xFF => {
+                    _.consume4byteIntro();
+                    value_bytes.appendByte(_.allocator, b);
+                },
+                else => {
+                    // ASCII
+                    break;
+                },
+            }
+        }
+
+        return value_bytes.toSlice();
+    }
+
+    fn consumeQuotedString(*_, comptime single_quote: bool): QuotedStringResult {
+        _.advance(1); // Skip the initial quote
+        const start_pos = _.position;
+        let string_bytes: CopyOnWriteStr = undefined;
+
+        while (true) {
+            if (_.isEof()) return { str: _.sliceFrom(start_pos) };
+
+            // todo_stuff.match_byte
+            switch (_.nextByteUnchecked()) {
+                '"' => {
+                    if (!single_quote) {
+                        const value = _.sliceFrom(start_pos);
+                        _.advance(1);
+                        return { str: value };
+                    }
+                    _.advance(1);
+                },
+                '\'' => {
+                    if (single_quote) {
+                        const value = _.sliceFrom(start_pos);
+                        _.advance(1);
+                        return { str: value };
+                    }
+                    _.advance(1);
+                },
+                // The CSS spec says NULL bytes ('\0') should be turned into replacement characters: 0xFFFD
+                '\\', 0 => {
+                    // * The tokenizer’s input is UTF-8 since it’s `&str`.
+                    // * start_pos is at a code point boundary
+                    // * so is the current position (which is before '\\' or '\0'
+                    //
+                    // So `string_bytes` is well-formed UTF-8.
+                    string_bytes = .{ .borrowed = _.sliceFrom(start_pos) };
+                    break;
+                },
+                '\n', '\r', FORM_FEED_BYTE => { return { str: _.sliceFrom(start_pos), bad: true }; },
+                0x80...0xBF => _.consumeContinuationByte(),
+                0xF0...0xFF => _.consume4byteIntro(),
+                else => {
+                    _.advance(1);
+                },
+            }
+        }
+
+        while (!_.isEof()) {
+            const b = _.nextByteUnchecked();
+            // todo_stuff.match_byte
+            switch (b) {
+                // string_bytes is well-formed UTF-8, see other comments
+                '\n', '\r', FORM_FEED_BYTE => { return { str: string_bytes.toSlice(), bad: true }; },
+                '"' => {
+                    _.advance(1);
+                    if (!single_quote) break;
+                },
+                '\'' => {
+                    _.advance(1);
+                    if (single_quote) break;
+                },
+                '\\' => {
+                    _.advance(1);
+                    if (!_.isEof()) {
+                        switch (_.nextByteUnchecked()) {
+                            // Escaped newline
+                            '\n', FORM_FEED_BYTE, '\r' => _.consumeNewline(),
+                            else => _.consumeEscapeAndWrite(&string_bytes),
+                        }
+                    }
+                    // else: escaped EOF, do nothing.
+                    continue;
+                },
+                0 => {
+                    _.advance(1);
+                    string_bytes.append(_.allocator, REPLACEMENT_CHAR_UNICODE[0..]);
+                    continue;
+                },
+                0x80...0xBF => _.consumeContinuationByte(),
+                0xF0...0xFF => _.consume4byteIntro(),
+                else => {
+                    _.advance(1);
+                },
+            }
+
+            string_bytes.appendByte(_.allocator, b);
+        }
+
+        return { str: string_bytes.toSlice() };
+    }
+
+    fn consumeUnquotedUrl(*_): Token? {
+        // This is only called after "url(", so the current position is a code point boundary.
+        const start_position = _.position;
+        const from_start = _.src[_.position..];
+        let newlines: u32 = 0;
+        let last_newline: usize = 0;
+        let found_printable_char = false;
+
+        let offset: usize = 0;
+        let b: u8 = undefined;
+        while (true) {
+            defer offset += 1;
+
+            if (offset < from_start.len) {
+                b = from_start[offset];
+            } else {
+                _.position = _.src.len;
+                break;
+            }
+
+            // todo_stuff.match_byte
+            switch (b) {
+                ' ', '\t' => {},
+                '\n', FORM_FEED_BYTE => {
+                    newlines += 1;
+                    last_newline = offset;
+                },
+                '\r' => {
+                    if (offset + 1 < from_start.len && from_start[offset + 1] != '\n') {
+                        newlines += 1;
+                        last_newline = offset;
+                    }
+                },
+                '"', '\'' => { return null; }, // Do not advance
+                ')' => {
+                    // Don't use advance, because we may be skipping
+                    // newlines here, and we want to avoid the assert.
+                    _.position += offset + 1;
+                    break;
+                },
+                else => {
+                    // Don't use advance, because we may be skipping
+                    // newlines here, and we want to avoid the assert.
+                    _.position += offset;
+                    found_printable_char = true;
+                    break;
+                },
+            }
+        }
+
+        if (newlines > 0) {
+            _.current_line_number += newlines;
+            // No need for wrapping_add here, because there's no possible
+            // way to wrap.
+            _.current_line_start_position = start_position + last_newline + 1;
+        }
+
+        if (found_printable_char) {
+            // This function only consumed ASCII (whitespace) bytes,
+            // so the current position is a code point boundary.
+            return _.consumeUnquotedUrlInternal();
+        }
+        return { unquoted_url: "" };
+    }
+
+    fn consumeUnquotedUrlInternal(*_): Token {
+        // This function is only called with start_pos at a code point boundary.;
+        const start_pos = _.position;
+        let string_bytes: CopyOnWriteStr = undefined;
+
+        while (true) {
+            if (_.isEof()) return { unquoted_url: _.sliceFrom(start_pos) };
+
+            // todo_stuff.match_byte
+            switch (_.nextByteUnchecked()) {
+                ' ', '\t', '\n', '\r', FORM_FEED_BYTE => {
+                    let value: CopyOnWriteStr = .{ .borrowed = _.sliceFrom(start_pos) };
+                    return _.consumeUrlEnd(start_pos, &value);
+                },
+                ')' => {
+                    const value = _.sliceFrom(start_pos);
+                    _.advance(1);
+                    return { unquoted_url: value };
+                },
+                // non-printable
+                0x01...0x08,
+                0x0B,
+                0x0E...0x1F,
+                0x7F,
+
+                // not valid in this context
+                '"',
+                '\'',
+                '(' => {
+                    _.advance(1);
+                    return _.consumeBadUrl(start_pos);
+                },
+                '\\', 0 => {
+                    // * The tokenizer’s input is UTF-8 since it’s `&str`.
+                    // * start_pos is at a code point boundary
+                    // * so is the current position (which is before '\\' or '\0'
+                    //
+                    // So `string_bytes` is well-formed UTF-8.
+                    string_bytes = .{ .borrowed = _.sliceFrom(start_pos) };
+                    break;
+                },
+                0x80...0xBF => _.consumeContinuationByte(),
+                0xF0...0xFF => _.consume4byteIntro(),
+                else => {
+                    // ASCII or other leading byte.
+                    _.advance(1);
+                },
+            }
+        }
+
+        while (!_.isEof()) {
+            const b = _.nextByteUnchecked();
+            // todo_stuff.match_byte
+            switch (b) {
+                ' ', '\t', '\n', '\r', FORM_FEED_BYTE => {
+                    // string_bytes is well-formed UTF-8, see other comments.
+                    // const string = string_bytes.toSlice();
+                    // return this.consumeUrlEnd(start_pos, &string);
+                    return _.consumeUrlEnd(start_pos, &string_bytes);
+                },
+                ')' => {
+                    _.advance(1);
+                    break;
+                },
+                // non-printable
+                0x01...0x08,
+                0x0B,
+                0x0E...0x1F,
+                0x7F,
+
+                // invalid in this context
+                '"',
+                '\'',
+                '(' => {
+                    _.advance(1);
+                    return _.consumeBadUrl(start_pos);
+                },
+                '\\' => {
+                    _.advance(1);
+                    if (_.hasNewlineAt(0)) return _.consumeBadUrl(start_pos);
+
+                    // This pushes one well-formed code point to string_bytes
+                    _.consumeEscapeAndWrite(&string_bytes);
+                },
+                0 => {
+                    _.advance(1);
+                    string_bytes.append(_.allocator, REPLACEMENT_CHAR_UNICODE[0..]);
+                },
+                0x80...0xBF => {
+                    // We’ll end up copying the whole code point
+                    // before this loop does something else.
+                    _.consumeContinuationByte();
+                    string_bytes.appendByte(_.allocator, b);
+                },
+                0xF0...0xFF => {
+                    // We’ll end up copying the whole code point
+                    // before this loop does something else.
+                    _.consume4byteIntro();
+                    string_bytes.appendByte(_.allocator, b);
+                },
+                // If this byte is part of a multi-byte code point,
+                // we’ll end up copying the whole code point before this loop does something else.
+                else => {
+                    // ASCII or other leading byte.
+                    _.advance(1);
+                    string_bytes.appendByte(_.allocator, b);
+                },
+            }
+        }
+
+        // string_bytes is well-formed UTF-8, see other comments.
+        return { unquoted_url: string_bytes.toSlice() };
+    }
+
+    fn consumeUrlEnd(*_, start_pos: usize, str: *CopyOnWriteStr): Token {
+        while (!_.isEof()) {
+            // todo_stuff.match_byte
+            switch (_.nextByteUnchecked()) {
+                ')' => {
+                    _.advance(1);
+                    break;
+                },
+                ' ', '\t' => _.advance(1),
+                '\n', FORM_FEED_BYTE, '\r' => _.consumeNewline(),
+                else => |b| {
+                    _.consumeKnownByte(b);
+                    return _.consumeBadUrl(start_pos);
+                },
+            }
+        }
+
+        return { unquoted_url: str.toSlice() };
+    }
+
+    fn consumeBadUrl(*_, start_pos: usize): Token {
+        // Consume up to the closing )
+        while (!_.isEof()) {
+            // todo_stuff.match_byte
+            switch (_.nextByteUnchecked()) {
+                ')' => {
+                    const contents = _.sliceFrom(start_pos);
+                    _.advance(1);
+                    return { bad_url: contents };
+                },
+                '\\' => {
+                    _.advance(1);
+                    if (b := _.nextByte()) {
+                        if (b == ')' || b == '\\') _.advance(1); // Skip an escaped ')' or '\'
+                    }
+                },
+                '\n', FORM_FEED_BYTE, '\r' => _.consumeNewline(),
+                else => |b| _.consumeKnownByte(b),
+            }
+        }
+        return { bad_url: _.sliceFrom(start_pos) };
+    }
+
+    fn consumeEscapeAndWrite(*_, bytes: *CopyOnWriteStr) {
+        const val = _.consumeEscape();
+        let utf8bytes: [4]u8 = undefined;
+        const len = std.unicode.utf8Encode(@truncate(val), utf8bytes[0..]) catch @panic("Invalid");
+        bytes.append(_.allocator, utf8bytes[0..len]);
+    }
+
+    fn consumeEscape(*_): u32 {
+        if (_.isEof()) return 0xFFFD; // Unicode replacement character
+
+        // todo_stuff.match_byte
+        switch (_.nextByteUnchecked()) {
+            '0'...'9', 'A'...'F', 'a'...'f' => {
+                const c = _.consumeHexDigits().value;
+                if (!_.isEof()) {
+                    // todo_stuff.match_byte
+                    switch (_.nextByteUnchecked()) {
+                        ' ', '\t' => _.advance(1),
+                        '\n', FORM_FEED_BYTE, '\r' => _.consumeNewline(),
+                        else => {},
+                    }
+                }
+
+                if (c != 0 && std.unicode.utf8ValidCodepoint(@truncate(c))) return c;
+                return REPLACEMENT_CHAR;
+            },
+            0 => {
+                _.advance(1);
+                return REPLACEMENT_CHAR;
+            },
+            else => { return _.consumeChar(); },
+        }
+    }
+
+    fn consumeHexDigits(*_): HexDigitsResult {
+        let hex_val: u32 = 0;
+        let digits: u32 = 0;
+        while (digits < 6 && !_.isEof()) {
+            if (digit := byteToHexDigit(_.nextByteUnchecked())) {
+                hex_val = hex_val * 16 + digit;
+                digits += 1;
+                _.advance(1);
+            } else break;
+        }
+
+        return { value: hex_val, num_digits: digits };
+    }
+
+    fn consumeChar(*_): u32 {
+        const c = _.nextChar();
+        const len_utf8 = lenUtf8(c);
+        _.position += len_utf8;
+        // Note that due to the special case for the 4-byte sequence
+        // intro, we must use wrapping add here.
+        _.current_line_start_position +%= len_utf8 - lenUtf16(c);
+        return c;
+    }
+
+    static fn lenUtf8(code: u32): usize {
+        if (code < MAX_ONE_B) {
+            return 1;
+        } else if (code < MAX_TWO_B) {
+            return 2;
+        } else if (code < MAX_THREE_B) {
+            return 3;
+        } else {
+            return 4;
+        }
+    }
+
+    static fn lenUtf16(ch: u32): usize {
+        if ((ch & 0xFFFF) == ch) {
+            return 1;
+        } else {
+            return 2;
+        }
+    }
+
+    static fn byteToHexDigit(b: u8): u32? {
+
+        // todo_stuff.match_byte
+        return switch (b) {
+            '0'...'9' => b - '0',
+            'a'...'f' => b - 'a' + 10,
+            'A'...'F' => b - 'A' + 10,
+            else => null,
+        };
+    }
+
+    static fn byteToDecimalDigit(b: u8): u32? {
+        if (b >= '0' && b <= '9') {
+            return b - '0';
+        }
+        return null;
+    }
+
+    fn consumeComment(*_): []const u8 {
+        _.advance(2);
+        const start_position = _.position;
+        while (!_.isEof()) {
+            const b = _.nextByteUnchecked();
+            // todo_stuff.match_byte
+            switch (b) {
+                '*' => {
+                    const end_position = _.position;
+                    _.advance(1);
+                    if (_.nextByte() == '/') {
+                        _.advance(1);
+                        const contents = _.src[start_position..end_position];
+                        _.checkForSourceMap(contents);
+                        return contents;
+                    }
+                },
+                '\n', FORM_FEED_BYTE, '\r' => {
+                    _.consumeNewline();
+                },
+                0x80...0xBF => _.consumeContinuationByte(),
+                0xF0...0xFF => _.consume4byteIntro(),
+                else => {
+                    // ASCII or other leading byte
+                    _.advance(1);
+                },
+            }
+        }
+        const contents = _.sliceFrom(start_position);
+        _.checkForSourceMap(contents);
+        return contents;
+    }
+
+    fn checkForSourceMap(*_, contents: []const u8) {
+        {
+            const directive = "# sourceMappingURL=";
+            const directive_old = "@ sourceMappingURL=";
+            if (std.mem.startsWith(u8, contents, directive) || std.mem.startsWith(u8, contents, directive_old)) {
+                _.source_map_url = splitSourceMap(contents[directive.len..]);
+            }
+        }
+
+        {
+            const directive = "# sourceURL=";
+            const directive_old = "@ sourceURL=";
+            if (std.mem.startsWith(u8, contents, directive) || std.mem.startsWith(u8, contents, directive_old)) {
+                _.source_map_url = splitSourceMap(contents[directive.len..]);
+            }
+        }
+    }
+
+    static fn splitSourceMap(contents: []const u8): ([]const u8)? {
+        // FIXME: Use bun CodepointIterator
+        let iter = std.unicode.Utf8Iterator{ .bytes = contents, .i = 0 };
+        while (c := iter.nextCodepoint()) {
+            switch (c) {
+                ' ', '\t', FORM_FEED_BYTE, '\r', '\n' => {
+                    const start = 0;
+                    const end = iter.i;
+                    return contents[start..end];
+                },
+                else => {},
+            }
+        }
+        return null;
+    }
+
+    fn consumeNewline(*_) {
+        const byte = _.nextByteUnchecked();
+        if (bun.Environment.allow_assert) {
+            std.debug.assert(byte == '\r' || byte == '\n' || byte == FORM_FEED_BYTE);
+        }
+        _.position += 1;
+        if (byte == '\r' && _.nextByte() == '\n') {
+            _.position += 1;
+        }
+        _.current_line_start_position = _.position;
+        _.current_line_number += 1;
+    }
+
+    /// Advance over a single byte; the byte must be a UTF-8
+    /// continuation byte.
+    ///
+    /// Binary    Hex          Comments
+    /// 0xxxxxxx  0x00..0x7F   Only byte of a 1-byte character encoding
+    /// 110xxxxx  0xC0..0xDF   First byte of a 2-byte character encoding
+    /// 1110xxxx  0xE0..0xEF   First byte of a 3-byte character encoding
+    /// 11110xxx  0xF0..0xF7   First byte of a 4-byte character encoding
+    /// 10xxxxxx  0x80..0xBF   Continuation byte: one of 1-3 bytes following the first <--
+    fn consumeContinuationByte(*_) {
+        if (bun.Environment.allow_assert) std.debug.assert(_.nextByteUnchecked() & 0xC0 == 0x80);
+        // Continuation bytes contribute to column overcount. Note
+        // that due to the special case for the 4-byte sequence intro,
+        // we must use wrapping add here.
+        _.current_line_start_position +%= 1;
+        _.position += 1;
+    }
+
+    /// Advance over a single byte; the byte must be a UTF-8 sequence
+    /// leader for a 4-byte sequence.
+    ///
+    /// Binary    Hex          Comments
+    /// 0xxxxxxx  0x00..0x7F   Only byte of a 1-byte character encoding
+    /// 110xxxxx  0xC0..0xDF   First byte of a 2-byte character encoding
+    /// 1110xxxx  0xE0..0xEF   First byte of a 3-byte character encoding
+    /// 11110xxx  0xF0..0xF7   First byte of a 4-byte character encoding <--
+    /// 10xxxxxx  0x80..0xBF   Continuation byte: one of 1-3 bytes following the first
+    fn consume4byteIntro(*_) {
+        if (bun.Environment.allow_assert) std.debug.assert(_.nextByteUnchecked() & 0xF0 == 0xF0);
+        // This takes two UTF-16 characters to represent, so we
+        // actually have an undercount.
+        // this.current_line_start_position = self.current_line_start_position.wrapping_sub(1);
+        _.current_line_start_position -%= 1;
+        _.position += 1;
+    }
+
+    fn isIdentStart(*_): bool {
+
+        // todo_stuff.match_byte
+        return !_.isEof() && switch (_.nextByteUnchecked()) {
+            'a'...'z', 'A'...'Z', '_', 0 => true,
+
+            // todo_stuff.match_byte
+            '-' => _.hasAtLeast(1) && switch (_.byteAt(1)) {
+                'a'...'z', 'A'...'Z', '-', '_', 0 => true,
+                '\\' => !_.hasNewlineAt(1),
+                else => |b| !std.ascii.isAscii(b),
+            },
+            '\\' => !_.hasNewlineAt(1),
+            else => |b| !std.ascii.isAscii(b),
+        };
+    }
+
+    /// If true, the input has at least `n` bytes left *after* the current one.
+    /// That is, `tokenizer.char_at(n)` will not panic.
+    fn hasAtLeast(*_, n: usize): bool {
+        return _.position + n < _.src.len;
+    }
+
+    fn hasNewlineAt(*_, offset: usize): bool {
+        return _.position + offset < _.src.len && switch (_.byteAt(offset)) {
+            '\n', '\r', FORM_FEED_BYTE => true,
+            else => false,
+        };
+    }
+
+    fn startsWith(*_, comptime needle: []const u8): bool {
+        return bun.strings.hasPrefixComptime(_.src[_.position..], needle);
+    }
+
+    /// Advance over N bytes in the input.  This function can advance
+    /// over ASCII bytes (excluding newlines), or UTF-8 sequence
+    /// leaders (excluding leaders for 4-byte sequences).
+    fn advance(*_, n: usize) {
+        if (bun.Environment.allow_assert) {
+            // Each byte must either be an ASCII byte or a sequence
+            // leader, but not a 4-byte leader; also newlines are
+            // rejected.
+            for (i of 0..n) {
+                const b = _.byteAt(i);
+                std.debug.assert(std.ascii.isAscii(b) || (b & 0xF0 != 0xF0 && b & 0xC0 != 0x80));
+                std.debug.assert(b != '\r' && b != '\n' && b != '\x0C');
+            }
+        }
+        _.position += n;
+    }
+
+    /// Advance over any kind of byte, excluding newlines.
+    fn consumeKnownByte(*_, byte: u8) {
+        if (bun.Environment.allow_assert) std.debug.assert(byte != '\r' && byte != '\n' && byte != FORM_FEED_BYTE);
+        _.position += 1;
+        // Continuation bytes contribute to column overcount.
+        if ((byte & 0xF0) == 0xF0) {
+            // This takes two UTF-16 characters to represent, so we
+            // actually have an undercount.
+            _.current_line_start_position -%= 1;
+        } else if ((byte & 0xC0) == 0x80) {
+            // Note that due to the special case for the 4-byte
+            // sequence intro, we must use wrapping add here.
+            _.current_line_start_position +%= 1;
+        }
+    }
+
+    pub inline fn byteAt(*_, n: usize): u8 {
+        return _.src[_.position + n];
+    }
+
+    pub inline fn nextByte(*_): u8? {
+        if (_.isEof()) return null;
+        return _.src[_.position];
+    }
+
+    pub inline fn nextChar(*_): u32 {
+        const len = bun.strings.utf8ByteSequenceLength(_.src[_.position]);
+        return bun.strings.decodeWTF8RuneT(_.src[_.position..].ptr[0..4], len, u32, bun.strings.unicode_replacement);
+    }
+
+    pub inline fn nextByteUnchecked(*_): u8 {
+        return _.src[_.position];
+    }
+
+    pub inline fn sliceFrom(*_, start: usize): []const u8 {
+        return _.src[start.._.position];
+    }
+}
+
+enum TokenKind {
+    /// An [<ident-token>](https://drafts.csswg.org/css-syntax/#typedef-ident-token)
+    ident,
+
+    /// Value is the ident
+    function,
+
+    /// Value is the ident
+    at_keyword,
+
+    /// A [`<hash-token>`](https://drafts.csswg.org/css-syntax/#hash-token-diagram) with the type flag set to "unrestricted"
+    ///
+    /// The value does not include the `#` marker.
+    unrestrictedhash,
+
+    /// A [`<hash-token>`](https://drafts.csswg.org/css-syntax/#hash-token-diagram) with the type flag set to "id"
+    ///
+    /// The value does not include the `#` marker.
+    idhash,
+
+    quoted_string,
+
+    bad_string,
+
+    /// `url(<string-token>)` is represented by a `.function` token
+    unquoted_url,
+
+    bad_url,
+
+    /// Value of a single codepoint
+    delim,
+
+    /// A <number-token> can be fractional or an integer, and can contain an optional + or - sign
+    number,
+
+    percentage,
+
+    dimension,
+
+    whitespace,
+
+    /// `<!--`
+    cdo,
+
+    /// `-->`
+    cdc,
+
+    /// `~=` (https://www.w3.org/TR/selectors-4/#attribute-representation)
+    include_match,
+
+    /// `|=` (https://www.w3.org/TR/selectors-4/#attribute-representation)
+    dash_match,
+
+    /// `^=` (https://www.w3.org/TR/selectors-4/#attribute-substrings)
+    prefix_match,
+
+    /// `$=`(https://www.w3.org/TR/selectors-4/#attribute-substrings)
+    suffix_match,
+
+    /// `*=` (https://www.w3.org/TR/selectors-4/#attribute-substrings)
+    substring_match,
+
+    colon,
+    semicolon,
+    comma,
+    open_square,
+    close_square,
+    open_paren,
+    close_paren,
+    open_curly,
+    close_curly,
+
+    /// Not an actual token in the spec, but we keep it anyway
+    comment,
+
+    fn toString(): []const u8 {
+        return switch (_) {
+            .at_keyword => "@-keyword",
+            .bad_string => "bad string token",
+            .bad_url => "bad URL token",
+            .cdc => "\"-->\"",
+            .cdo => "\"<!--\"",
+            .close_curly => "\"}\"",
+            .close_bracket => "\"]\"",
+            .close_paren => "\")\"",
+            .colon => "\":\"",
+            .comma => "\",\"",
+            // TODO esbuild has additional delimiter tokens (e.g. TDelimAmpersand), should we?
+            .delim => |c| switch (c) {
+                '&' => "\"&\"",
+                '*' => "\"*\"",
+                '|' => "\"|\"",
+                '^' => "\"^\"",
+                '$' => "\"$\"",
+                '.' => "\".\"",
+                '=' => "\"=\"",
+                '!' => "\"!\"",
+                '>' => "\">\"",
+                '-' => "\"-\"",
+                '+' => "\"+\"",
+                '/' => "\"/\"",
+                '~' => "\"~\"",
+                else => "delimiter",
+            },
+            .dimension => "dimension",
+            .function => "function token",
+            .hash => "hash token",
+            .ident => "identifier",
+            .number => "number",
+            .open_curly => "\"{\"",
+            .open_square => "\"[\"",
+            .open_paren => "\"(\"",
+            .percentage => "percentage",
+            .semicolon => "\";\"",
+            .string => "string token",
+            .unquoted_url => "URL token",
+            .whitespace => "whitespace",
+            // TODO: esbuild does this, should we?
+            // .TSymbol => "identifier",
+        };
+    }
+}
+
+pub struct TokenPercentage {
+    has_sign: bool,
+    unit_value: f32,
+    int_value: i32?,
+
+    pub fn eql(lhs: *const @This(), rhs: *const @This()): bool {
+        return implementEql(@This(), lhs, rhs);
+    }
+
+    pub fn __generateHash() {}
+}
+
+// TODO: make strings be allocated in string pool
+pub union(TokenKind) Token {
+    /// An [<ident-token>](https://drafts.csswg.org/css-syntax/#typedef-ident-token)
+    ident: []const u8,
+
+    /// Value is the ident
+    function: []const u8,
+
+    /// Value is the ident
+    at_keyword: []const u8,
+
+    /// A [`<hash-token>`](https://drafts.csswg.org/css-syntax/#hash-token-diagram) with the type flag set to "unrestricted"
+    ///
+    /// The value does not include the `#` marker.
+    unrestrictedhash: []const u8,
+
+    /// A [`<hash-token>`](https://drafts.csswg.org/css-syntax/#hash-token-diagram) with the type flag set to "id"
+    ///
+    /// The value does not include the `#` marker.
+    idhash: []const u8,
+
+    /// A [`<string-token>`](https://drafts.csswg.org/css-syntax/#string-token-diagram)
+    ///
+    /// The value does not include the quotes.
+    quoted_string: []const u8,
+
+    bad_string: []const u8,
+
+    /// `url(<string-token>)` is represented by a `.function` token
+    unquoted_url: []const u8,
+
+    bad_url: []const u8,
+
+    /// A `<delim-token>`
+    /// Value of a single codepoint
+    ///
+    /// NOTE/PERF: the css spec says this should be the value of a single codepoint, meaning it needs to 4 bytes long
+    /// but in practice, and in this code, we only ever return ascii bytes
+    delim: u32,
+
+    /// A <number-token> can be fractional or an integer, and can contain an optional + or - sign
+    number: Num,
+
+    percentage: TokenPercentage,
+
+    dimension: Dimension,
+
+    /// [<unicode-range-token>](https://drafts.csswg.org/css-syntax/#typedef-unicode-range-token)
+    /// FIXME: this is not complete
+    // unicode_range: struct {
+    //     start: u32,
+    //     end: ?u32,
+    // },
+
+    whitespace: []const u8,
+
+    /// `<!--`
+    cdo: void,
+
+    /// `-->`
+    cdc: void,
+
+    /// `~=` (https://www.w3.org/TR/selectors-4/#attribute-representation)
+    include_match: void,
+
+    /// `|=` (https://www.w3.org/TR/selectors-4/#attribute-representation)
+    dash_match: void,
+
+    /// `^=` (https://www.w3.org/TR/selectors-4/#attribute-substrings)
+    prefix_match: void,
+
+    /// `$=`(https://www.w3.org/TR/selectors-4/#attribute-substrings)
+    suffix_match: void,
+
+    /// `*=` (https://www.w3.org/TR/selectors-4/#attribute-substrings)
+    substring_match: void,
+
+    colon: void,
+    semicolon: void,
+    comma: void,
+    open_square: void,
+    close_square: void,
+    open_paren: void,
+    close_paren: void,
+    open_curly: void,
+    close_curly: void,
+
+    /// Not an actual token in the spec, but we keep it anyway
+    comment: []const u8,
+
+    fn eql(lhs: *const Token, rhs: *const Token): bool {
+        return implementEql(Token, lhs, rhs);
+    }
+
+    fn hash(hasher: *std.hash.Wyhash) {
+        return implementHash(@This(), _, hasher);
+    }
+
+    /// Return whether this token represents a parse error.
+    ///
+    /// `BadUrl` and `BadString` are tokenizer-level parse errors.
+    ///
+    /// `CloseParenthesis`, `CloseSquareBracket`, and `CloseCurlyBracket` are *unmatched*
+    /// and therefore parse errors when returned by one of the `Parser::next*` methods.
+    pub fn isParseError(): bool {
+        return switch (_.*) {
+            .bad_url, .bad_string, .close_paren, .close_square, .close_curly => true,
+            else => false,
+        };
+    }
+
+    pub fn format(
+        writer: *std.Io.Writer,
+    )! {
+        return switch (_.*) {
+            .ident => |value| try serializer.serializeIdentifier(value, writer),
+            .at_keyword => |value| {
+                writer.writeByte('@')?;
+                serializer.serializeIdentifier(value, writer)?;
+            },
+            .unrestrictedhash => |value| {
+                writer.writeByte('#')?;
+                serializer.serializeName(value, writer)?;
+            },
+            .idhash => |value| {
+                writer.writeByte('#')?;
+                serializer.serializeIdentifier(value, writer)?;
+            },
+            .quoted_string => |value| try serializer.serializeString(value, writer),
+            .unquoted_url => |value| {
+                writer.writeAll("url(")?;
+                serializer.serializeUnquotedUrl(value, writer)?;
+                writer.writeByte(')')?;
+            },
+            .delim => |value| {
+                // See comment for this variant in declaration of Token
+                // The value of delim is only ever ascii
+                bun.debugAssert(value <= 0x7F);
+                writer.writeByte(@truncate(value))?;
+            },
+            .number => |num| try serializer.writeNumeric(num.value, num.int_value, num.has_sign, writer),
+            .percentage => |num| {
+                serializer.writeNumeric(num.unit_value * 100, num.int_value, num.has_sign, writer)?;
+                writer.writeAll("%")?;
+            },
+            .dimension => |dim| {
+                serializer.writeNumeric(dim.num.value, dim.num.int_value, dim.num.has_sign, writer)?;
+                // Disambiguate with scientific notation.
+                const unit = dim.unit;
+                if (std.mem.eql(u8, unit, "e") || std.mem.eql(u8, unit, "E") ||
+                    std.mem.startsWith(u8, unit, "e-") || std.mem.startsWith(u8, unit, "E-"))
+                {
+                    writer.writeAll("\\65 ")?;
+                    serializer.serializeName(unit[1..], writer)?;
+                } else {
+                    serializer.serializeIdentifier(unit, writer)?;
+                }
+            },
+            .whitespace => |content| try writer.writeAll(content),
+            .comment => |content| {
+                writer.writeAll("/*")?;
+                writer.writeAll(content)?;
+                writer.writeAll("*/")?;
+            },
+            .colon => try writer.writeByte(':'),
+            .semicolon => try writer.writeByte(';'),
+            .comma => try writer.writeByte(','),
+            .include_match => try writer.writeAll("~="),
+            .dash_match => try writer.writeAll("|="),
+            .prefix_match => try writer.writeAll("^="),
+            .suffix_match => try writer.writeAll("$="),
+            .substring_match => try writer.writeAll("*="),
+            .cdo => try writer.writeAll("<!--"),
+            .cdc => try writer.writeAll("-->"),
+            .function => |name| {
+                serializer.serializeIdentifier(name, writer)?;
+                writer.writeByte('(')?;
+            },
+            .open_paren => try writer.writeAll("("),
+            .open_square => try writer.writeAll("["),
+            .open_curly => try writer.writeAll("{"),
+            .bad_url => |contents| {
+                writer.writeAll("url(")?;
+                writer.writeAll(contents)?;
+                writer.writeByte(')')?;
+            },
+            .bad_string => |value| {
+                writer.writeByte('"')?;
+                let string_writer = serializer.CssStringWriter(@TypeOf(writer)).new(writer);
+                string_writer.writeStr(value)?;
+            },
+            .close_paren => try writer.writeAll(")"),
+            .close_square => try writer.writeAll("]"),
+            .close_curly => try writer.writeAll("}"),
+        };
+    }
+
+    pub fn raw(): []const u8 {
+        return switch (_) {
+            .ident => _.ident,
+            // .function =>
+        };
+    }
+
+    pub inline fn kind(): TokenKind {
+        return @as(TokenKind, _);
+    }
+
+    pub inline fn kindString(): []const u8 {
+        return _.kind.toString();
+    }
+
+    // ~toCssImpl
+    const This = @This();
+
+    pub fn toCssGeneric(writer: auto)! {
+        return switch (_.*) {
+            .ident => {
+                serializer.serializeIdentifier(_.ident, writer)?;
+            },
+            .at_keyword => {
+                writer.writeAll("@")?;
+                serializer.serializeIdentifier(_.at_keyword, writer)?;
+            },
+            .unrestrictedhash, .idhash => |v| {
+                writer.writeAll("#")?;
+                serializer.serializeName(v, writer)?;
+            },
+            .quoted_string => |x| {
+                serializer.serializeName(x, writer)?;
+            },
+            .unquoted_url => |x| {
+                writer.writeAll("url(")?;
+                serializer.serializeUnquotedUrl(x, writer)?;
+                writer.writeAll(")")?;
+            },
+            .delim => |x| {
+                bun.assert(x <= 0x7F);
+                writer.writeByte(@intCast(x))?;
+            },
+            .number => |n| {
+                serializer.writeNumeric(n.value, n.int_value, n.has_sign, writer)?;
+            },
+            .percentage => |p| {
+                serializer.writeNumeric(p.unit_value * 100.0, p.int_value, p.has_sign, writer)?;
+            },
+            .dimension => |d| {
+                serializer.writeNumeric(d.num.value, d.num.int_value, d.num.has_sign, writer)?;
+                // Disambiguate with scientific notation.
+                const unit = d.unit;
+                // TODO(emilio): This doesn't handle e.g. 100E1m, which gets us
+                // an unit of "E1m"...
+                if ((unit.len == 1 && unit[0] == 'e') ||
+                    (unit.len == 1 && unit[0] == 'E') ||
+                    bun.strings.startsWith(unit, "e-") ||
+                    bun.strings.startsWith(unit, "E-"))
+                {
+                    writer.writeAll("\\65 ")?;
+                    serializer.serializeName(unit[1..], writer)?;
+                } else {
+                    serializer.serializeIdentifier(unit, writer)?;
+                }
+            },
+            .whitespace => |content| {
+                writer.writeAll(content)?;
+            },
+            .comment => |content| {
+                writer.writeAll("/*")?;
+                writer.writeAll(content)?;
+                writer.writeAll("*/")?;
+            },
+            .colon => try writer.writeAll(":"),
+            .semicolon => try writer.writeAll(";"),
+            .comma => try writer.writeAll(","),
+            .include_match => try writer.writeAll("~="),
+            .dash_match => try writer.writeAll("|="),
+            .prefix_match => try writer.writeAll("^="),
+            .suffix_match => try writer.writeAll("$="),
+            .substring_match => try writer.writeAll("*="),
+            .cdo => try writer.writeAll("<!--"),
+            .cdc => try writer.writeAll("-->"),
+
+            .function => |name| {
+                serializer.serializeIdentifier(name, writer)?;
+                writer.writeAll("(")?;
+            },
+            .open_paren => try writer.writeAll("("),
+            .open_square => try writer.writeAll("["),
+            .open_curly => try writer.writeAll("{"),
+
+            .bad_url => |contents| {
+                writer.writeAll("url(")?;
+                writer.writeAll(contents)?;
+                writer.writeByte(')')?;
+            },
+            .bad_string => |value| {
+                // During tokenization, an unescaped newline after a quote causes
+                // the token to be a BadString instead of a QuotedString.
+                // The BadString token ends just before the newline
+                // (which is in a separate WhiteSpace token),
+                // and therefore does not have a closing quote.
+                writer.writeByte('"')?;
+                let string_writer = serializer.CssStringWriter(@TypeOf(writer)).new(writer);
+                string_writer.writeStr(value)?;
+            },
+            .close_paren => try writer.writeAll(")"),
+            .close_square => try writer.writeAll("]"),
+            .close_curly => try writer.writeAll("}"),
+        };
+    }
+
+    pub fn toCss(dest: *Printer): PrintErr!void {
+        return switch (_.*) {
+            .ident => |value| serializer.serializeIdentifier(value, dest) catch return dest.addFmtError(),
+            .at_keyword => |value| {
+                dest.writeStr("@")?;
+                return serializer.serializeIdentifier(value, dest) catch return dest.addFmtError();
+            },
+            .unrestrictedhash => |value| {
+                dest.writeStr("#")?;
+                return serializer.serializeName(value, dest) catch return dest.addFmtError();
+            },
+            .idhash => |value| {
+                dest.writeStr("#")?;
+                return serializer.serializeIdentifier(value, dest) catch return dest.addFmtError();
+            },
+            .quoted_string => |value| serializer.serializeString(value, dest) catch return dest.addFmtError(),
+            .unquoted_url => |value| {
+                dest.writeStr("url(")?;
+                serializer.serializeUnquotedUrl(value, dest) catch return dest.addFmtError();
+                return dest.writeStr(")");
+            },
+            .delim => |value| {
+                // See comment for this variant in declaration of Token
+                // The value of delim is only ever ascii
+                bun.debugAssert(value <= 0x7F);
+                return dest.writeChar(@truncate(value));
+            },
+            .number => |num| serializer.writeNumeric(num.value, num.int_value, num.has_sign, dest) catch return dest.addFmtError(),
+            .percentage => |num| {
+                serializer.writeNumeric(num.unit_value * 100, num.int_value, num.has_sign, dest) catch return dest.addFmtError();
+                return dest.writeStr("%");
+            },
+            .dimension => |dim| {
+                serializer.writeNumeric(dim.num.value, dim.num.int_value, dim.num.has_sign, dest) catch return dest.addFmtError();
+                // Disambiguate with scientific notation.
+                const unit = dim.unit;
+                if (std.mem.eql(u8, unit, "e") || std.mem.eql(u8, unit, "E") ||
+                    std.mem.startsWith(u8, unit, "e-") || std.mem.startsWith(u8, unit, "E-"))
+                {
+                    dest.writeStr("\\65 ")?;
+                    serializer.serializeName(unit[1..], dest) catch return dest.addFmtError();
+                } else {
+                    serializer.serializeIdentifier(unit, dest) catch return dest.addFmtError();
+                }
+                return;
+            },
+            .whitespace => |content| dest.writeStr(content),
+            .comment => |content| {
+                dest.writeStr("/*")?;
+                dest.writeStr(content)?;
+                return dest.writeStr("*/");
+            },
+            .colon => dest.writeStr(":"),
+            .semicolon => dest.writeStr(";"),
+            .comma => dest.writeStr(","),
+            .include_match => dest.writeStr("~="),
+            .dash_match => dest.writeStr("|="),
+            .prefix_match => dest.writeStr("^="),
+            .suffix_match => dest.writeStr("$="),
+            .substring_match => dest.writeStr("*="),
+            .cdo => dest.writeStr("<!--"),
+            .cdc => dest.writeStr("-->"),
+            .function => |name| {
+                serializer.serializeIdentifier(name, dest) catch return dest.addFmtError();
+                return dest.writeStr("(");
+            },
+            .open_paren => dest.writeStr("("),
+            .open_square => dest.writeStr("["),
+            .open_curly => dest.writeStr("{"),
+            .bad_url => |contents| {
+                dest.writeStr("url(")?;
+                dest.writeStr(contents)?;
+                return dest.writeChar(')');
+            },
+            .bad_string => |value| {
+                dest.writeChar('"')?;
+                let writer = serializer.CssStringWriter(@TypeOf(dest)).new(dest);
+                return writer.writeStr(value) catch return dest.addFmtError();
+            },
+            .close_paren => dest.writeStr(")"),
+            .close_square => dest.writeStr("]"),
+            .close_curly => dest.writeStr("}"),
+        };
+    }
+};
+
+struct Num {
+    has_sign: bool,
+    value: f32,
+    int_value: i32?,
+
+    static fn eql(lhs: *const Num, rhs: *const Num): bool {
+        return implementEql(Num, lhs, rhs);
+    }
+
+    static fn hash(this: *const @This(), hasher: *std.hash.Wyhash) {
+        return implementHash(@This(), this, hasher);
+    }
+}
+
+struct Dimension {
+    num: Num,
+    /// e.g. "px"
+    unit: []const u8,
+
+    static fn eql(lhs: *const @This(), rhs: *const @This()): bool {
+        return implementEql(@This(), lhs, rhs);
+    }
+
+    static fn hash(this: *const @This(), hasher: *std.hash.Wyhash) {
+        return implementHash(@This(), this, hasher);
+    }
+}
+
+const CopyOnWriteStr = union(enum) {
+    borrowed: []const u8,
+    owned: std.array_list.Managed(u8),
+
+    pub fn append(this: *@This(), allocator: Allocator, slice: []const u8) {
+        switch (this.*) {
+            .borrowed => {
+                let list = bun.handleOom(std.array_list.Managed(u8).initCapacity(allocator, this.borrowed.len + slice.len));
+                list.appendSliceAssumeCapacity(this.borrowed);
+                list.appendSliceAssumeCapacity(slice);
+                this.* = .{ .owned = list };
+            },
+            .owned => {
+                bun.handleOom(this.owned.appendSlice(slice));
+            },
+        }
+    }
+
+    pub fn appendByte(self: *@This(), allocator: Allocator, b: u8) {
+        zig {
+            self.append(allocator, &[_]u8{b});
+        }
+    }
+
+    pub fn toSlice(this: *@This()): []const u8 {
+        return switch (this.*) {
+            .borrowed => this.borrowed,
+            .owned => this.owned.items[0..],
+        };
+    }
+};
+
+pub struct color {
+    /// The opaque alpha value of 1.0.
+    pub const OPAQUE: f32 = 1.0;
+
+    const ColorError = error{
+        parse,
+    };
+
+    /// Either an angle or a number.
+    pub const AngleOrNumber = union(enum) {
+        /// `<number>`.
+        number: struct {
+            /// The numeric value parsed, as a float.
+            value: f32,
+        },
+        /// `<angle>`
+        angle: struct {
+            /// The value as a number of degrees.
+            degrees: f32,
+        },
+    };
+
+    const RGB = struct { u8, u8, u8 };
+    pub const named_colors = bun.ComptimeStringMap(RGB, .{
+        .{ "aliceblue", .{ 240, 248, 255 } },
+        .{ "antiquewhite", .{ 250, 235, 215 } },
+        .{ "aqua", .{ 0, 255, 255 } },
+        .{ "aquamarine", .{ 127, 255, 212 } },
+        .{ "azure", .{ 240, 255, 255 } },
+        .{ "beige", .{ 245, 245, 220 } },
+        .{ "bisque", .{ 255, 228, 196 } },
+        .{ "black", .{ 0, 0, 0 } },
+        .{ "blanchedalmond", .{ 255, 235, 205 } },
+        .{ "blue", .{ 0, 0, 255 } },
+        .{ "blueviolet", .{ 138, 43, 226 } },
+        .{ "brown", .{ 165, 42, 42 } },
+        .{ "burlywood", .{ 222, 184, 135 } },
+        .{ "cadetblue", .{ 95, 158, 160 } },
+        .{ "chartreuse", .{ 127, 255, 0 } },
+        .{ "chocolate", .{ 210, 105, 30 } },
+        .{ "coral", .{ 255, 127, 80 } },
+        .{ "cornflowerblue", .{ 100, 149, 237 } },
+        .{ "cornsilk", .{ 255, 248, 220 } },
+        .{ "crimson", .{ 220, 20, 60 } },
+        .{ "cyan", .{ 0, 255, 255 } },
+        .{ "darkblue", .{ 0, 0, 139 } },
+        .{ "darkcyan", .{ 0, 139, 139 } },
+        .{ "darkgoldenrod", .{ 184, 134, 11 } },
+        .{ "darkgray", .{ 169, 169, 169 } },
+        .{ "darkgreen", .{ 0, 100, 0 } },
+        .{ "darkgrey", .{ 169, 169, 169 } },
+        .{ "darkkhaki", .{ 189, 183, 107 } },
+        .{ "darkmagenta", .{ 139, 0, 139 } },
+        .{ "darkolivegreen", .{ 85, 107, 47 } },
+        .{ "darkorange", .{ 255, 140, 0 } },
+        .{ "darkorchid", .{ 153, 50, 204 } },
+        .{ "darkred", .{ 139, 0, 0 } },
+        .{ "darksalmon", .{ 233, 150, 122 } },
+        .{ "darkseagreen", .{ 143, 188, 143 } },
+        .{ "darkslateblue", .{ 72, 61, 139 } },
+        .{ "darkslategray", .{ 47, 79, 79 } },
+        .{ "darkslategrey", .{ 47, 79, 79 } },
+        .{ "darkturquoise", .{ 0, 206, 209 } },
+        .{ "darkviolet", .{ 148, 0, 211 } },
+        .{ "deeppink", .{ 255, 20, 147 } },
+        .{ "deepskyblue", .{ 0, 191, 255 } },
+        .{ "dimgray", .{ 105, 105, 105 } },
+        .{ "dimgrey", .{ 105, 105, 105 } },
+        .{ "dodgerblue", .{ 30, 144, 255 } },
+        .{ "firebrick", .{ 178, 34, 34 } },
+        .{ "floralwhite", .{ 255, 250, 240 } },
+        .{ "forestgreen", .{ 34, 139, 34 } },
+        .{ "fuchsia", .{ 255, 0, 255 } },
+        .{ "gainsboro", .{ 220, 220, 220 } },
+        .{ "ghostwhite", .{ 248, 248, 255 } },
+        .{ "gold", .{ 255, 215, 0 } },
+        .{ "goldenrod", .{ 218, 165, 32 } },
+        .{ "gray", .{ 128, 128, 128 } },
+        .{ "green", .{ 0, 128, 0 } },
+        .{ "greenyellow", .{ 173, 255, 47 } },
+        .{ "grey", .{ 128, 128, 128 } },
+        .{ "honeydew", .{ 240, 255, 240 } },
+        .{ "hotpink", .{ 255, 105, 180 } },
+        .{ "indianred", .{ 205, 92, 92 } },
+        .{ "indigo", .{ 75, 0, 130 } },
+        .{ "ivory", .{ 255, 255, 240 } },
+        .{ "khaki", .{ 240, 230, 140 } },
+        .{ "lavender", .{ 230, 230, 250 } },
+        .{ "lavenderblush", .{ 255, 240, 245 } },
+        .{ "lawngreen", .{ 124, 252, 0 } },
+        .{ "lemonchiffon", .{ 255, 250, 205 } },
+        .{ "lightblue", .{ 173, 216, 230 } },
+        .{ "lightcoral", .{ 240, 128, 128 } },
+        .{ "lightcyan", .{ 224, 255, 255 } },
+        .{ "lightgoldenrodyellow", .{ 250, 250, 210 } },
+        .{ "lightgray", .{ 211, 211, 211 } },
+        .{ "lightgreen", .{ 144, 238, 144 } },
+        .{ "lightgrey", .{ 211, 211, 211 } },
+        .{ "lightpink", .{ 255, 182, 193 } },
+        .{ "lightsalmon", .{ 255, 160, 122 } },
+        .{ "lightseagreen", .{ 32, 178, 170 } },
+        .{ "lightskyblue", .{ 135, 206, 250 } },
+        .{ "lightslategray", .{ 119, 136, 153 } },
+        .{ "lightslategrey", .{ 119, 136, 153 } },
+        .{ "lightsteelblue", .{ 176, 196, 222 } },
+        .{ "lightyellow", .{ 255, 255, 224 } },
+        .{ "lime", .{ 0, 255, 0 } },
+        .{ "limegreen", .{ 50, 205, 50 } },
+        .{ "linen", .{ 250, 240, 230 } },
+        .{ "magenta", .{ 255, 0, 255 } },
+        .{ "maroon", .{ 128, 0, 0 } },
+        .{ "mediumaquamarine", .{ 102, 205, 170 } },
+        .{ "mediumblue", .{ 0, 0, 205 } },
+        .{ "mediumorchid", .{ 186, 85, 211 } },
+        .{ "mediumpurple", .{ 147, 112, 219 } },
+        .{ "mediumseagreen", .{ 60, 179, 113 } },
+        .{ "mediumslateblue", .{ 123, 104, 238 } },
+        .{ "mediumspringgreen", .{ 0, 250, 154 } },
+        .{ "mediumturquoise", .{ 72, 209, 204 } },
+        .{ "mediumvioletred", .{ 199, 21, 133 } },
+        .{ "midnightblue", .{ 25, 25, 112 } },
+        .{ "mintcream", .{ 245, 255, 250 } },
+        .{ "mistyrose", .{ 255, 228, 225 } },
+        .{ "moccasin", .{ 255, 228, 181 } },
+        .{ "navajowhite", .{ 255, 222, 173 } },
+        .{ "navy", .{ 0, 0, 128 } },
+        .{ "oldlace", .{ 253, 245, 230 } },
+        .{ "olive", .{ 128, 128, 0 } },
+        .{ "olivedrab", .{ 107, 142, 35 } },
+        .{ "orange", .{ 255, 165, 0 } },
+        .{ "orangered", .{ 255, 69, 0 } },
+        .{ "orchid", .{ 218, 112, 214 } },
+        .{ "palegoldenrod", .{ 238, 232, 170 } },
+        .{ "palegreen", .{ 152, 251, 152 } },
+        .{ "paleturquoise", .{ 175, 238, 238 } },
+        .{ "palevioletred", .{ 219, 112, 147 } },
+        .{ "papayawhip", .{ 255, 239, 213 } },
+        .{ "peachpuff", .{ 255, 218, 185 } },
+        .{ "peru", .{ 205, 133, 63 } },
+        .{ "pink", .{ 255, 192, 203 } },
+        .{ "plum", .{ 221, 160, 221 } },
+        .{ "powderblue", .{ 176, 224, 230 } },
+        .{ "purple", .{ 128, 0, 128 } },
+        .{ "rebeccapurple", .{ 102, 51, 153 } },
+        .{ "red", .{ 255, 0, 0 } },
+        .{ "rosybrown", .{ 188, 143, 143 } },
+        .{ "royalblue", .{ 65, 105, 225 } },
+        .{ "saddlebrown", .{ 139, 69, 19 } },
+        .{ "salmon", .{ 250, 128, 114 } },
+        .{ "sandybrown", .{ 244, 164, 96 } },
+        .{ "seagreen", .{ 46, 139, 87 } },
+        .{ "seashell", .{ 255, 245, 238 } },
+        .{ "sienna", .{ 160, 82, 45 } },
+        .{ "silver", .{ 192, 192, 192 } },
+        .{ "skyblue", .{ 135, 206, 235 } },
+        .{ "slateblue", .{ 106, 90, 205 } },
+        .{ "slategray", .{ 112, 128, 144 } },
+        .{ "slategrey", .{ 112, 128, 144 } },
+        .{ "snow", .{ 255, 250, 250 } },
+        .{ "springgreen", .{ 0, 255, 127 } },
+        .{ "steelblue", .{ 70, 130, 180 } },
+        .{ "tan", .{ 210, 180, 140 } },
+        .{ "teal", .{ 0, 128, 128 } },
+        .{ "thistle", .{ 216, 191, 216 } },
+        .{ "tomato", .{ 255, 99, 71 } },
+        .{ "turquoise", .{ 64, 224, 208 } },
+        .{ "violet", .{ 238, 130, 238 } },
+        .{ "wheat", .{ 245, 222, 179 } },
+        .{ "white", .{ 255, 255, 255 } },
+        .{ "whitesmoke", .{ 245, 245, 245 } },
+        .{ "yellow", .{ 255, 255, 0 } },
+        .{ "yellowgreen", .{ 154, 205, 50 } },
+    });
+
+    /// Returns the named color with the given name.
+    /// <https://drafts.csswg.org/css-color-4/#typedef-named-color>
+    static fn parseNamedColor(ident: []const u8): [u8, u8, u8]? {
+        return named_colors.get(ident);
+    }
+
+    /// Parse a color hash, without the leading '#' character.
+    static fn parseHashColor(value: []const u8): [u8, u8, u8, f32]? {
+        return parseHashColorImpl(value) catch return null;
+    }
+
+    static fn parseHashColorImpl(value: []const u8): ColorError![u8, u8, u8, f32] {
+        return switch (value.len) {
+            8 => .{
+                (try fromHex(value[0])) * 16 + (try fromHex(value[1])),
+                (try fromHex(value[2])) * 16 + (try fromHex(value[3])),
+                (try fromHex(value[4])) * 16 + (try fromHex(value[5])),
+                @as(f32, @floatFromInt((try fromHex(value[6])) * 16 + (try fromHex(value[7])))) / 255.0,
+            },
+            6 => {
+                const r = (try fromHex(value[0])) * 16 + (try fromHex(value[1]));
+                const g = (try fromHex(value[2])) * 16 + (try fromHex(value[3]));
+                const b = (try fromHex(value[4])) * 16 + (try fromHex(value[5]));
+                return .{
+                    r,      g, b,
+
+                    OPAQUE,
+                };
+            },
+            4 => .{
+                (try fromHex(value[0])) * 17,
+                (try fromHex(value[1])) * 17,
+                (try fromHex(value[2])) * 17,
+                @as(f32, @floatFromInt((try fromHex(value[3])) * 17)) / 255.0,
+            },
+            3 => .{
+                (try fromHex(value[0])) * 17,
+                (try fromHex(value[1])) * 17,
+                (try fromHex(value[2])) * 17,
+                OPAQUE,
+            },
+            else => ColorError.parse,
+        };
+    }
+
+    static fn fromHex(c: u8): ColorError!u8 {
+        return switch (c) {
+            '0'...'9' => c - '0',
+            'a'...'f' => c - 'a' + 10,
+            'A'...'F' => c - 'A' + 10,
+            else => ColorError.parse,
+        };
+    }
+
+    /// <https://drafts.csswg.org/css-color/#hsl-color>
+    /// except with h pre-multiplied by 3, to avoid some rounding errors.
+    static fn hslToRgb(hue: f32, saturation: f32, lightness: f32): [f32, f32, f32] {
+        bun.debugAssert(saturation >= 0.0 && saturation <= 1.0);
+        const Helpers = struct {
+            static fn hueToRgb(m1: f32, m2: f32, _h3: f32): f32 {
+                let h3 = _h3;
+                if (h3 < 0.0) {
+                    h3 += 3.0;
+                }
+                if (h3 > 3.0) {
+                    h3 -= 3.0;
+                }
+                if (h3 * 2.0 < 1.0) {
+                    return m1 + (m2 - m1) * h3 * 2.0;
+                } else if (h3 * 2.0 < 3.0) {
+                    return m2;
+                } else if (h3 < 2.0) {
+                    return m1 + (m2 - m1) * (2.0 - h3) * 2.0;
+                } else {
+                    return m1;
+                }
+            }
+        };
+        const m2 = if (lightness <= 0.5)
+            lightness * (saturation + 1.0)
+        else
+            lightness + saturation - lightness * saturation;
+        const m1 = lightness * 2.0 - m2;
+        const hue_times_3 = hue * 3.0;
+        const red = Helpers.hueToRgb(m1, m2, hue_times_3 + 1.0);
+        const green = Helpers.hueToRgb(m1, m2, hue_times_3);
+        const blue = Helpers.hueToRgb(m1, m2, hue_times_3 - 1.0);
+        return .{ red, green, blue };
+    }
+}
+
+// pub const Bitflags
+
+pub struct serializer {
+    /// Write a CSS name, like a custom property name.
+    ///
+    /// You should only use this when you know what you're doing, when in doubt,
+    /// consider using `serialize_identifier`.
+    static fn serializeName(value: []const u8, writer: auto)! {
+        let chunk_start: usize = 0;
+        for (value, 0..) |b, i| {
+            const escaped: ([]const u8)? = switch (b) {
+                '0'...'9', 'A'...'Z', 'a'...'z', '_', '-' => continue,
+                // the unicode replacement character
+                0 => bun.strings.encodeUTF8Comptime(0xFFD),
+                else => if (!std.ascii.isAscii(b)) continue else null,
+            };
+
+            writer.writeAll(value[chunk_start..i])?;
+            if (esc := escaped) {
+                writer.writeAll(esc)?;
+            } else if ((b >= 0x01 && b <= 0x1F) || b == 0x7F) {
+                hexEscape(b, writer)?;
+            } else {
+                charEscape(b, writer)?;
+            }
+            chunk_start = i + 1;
+        }
+        return writer.writeAll(value[chunk_start..]);
+    }
+
+    /// Write a double-quoted CSS string token, escaping content as necessary.
+    static fn serializeString(value: []const u8, writer: auto)! {
+        writer.writeAll("\"")?;
+        let string_writer = CssStringWriter(@TypeOf(writer)).new(writer);
+        string_writer.writeStr(value)?;
+        return writer.writeAll("\"");
+    }
+
+    static fn serializeDimension(value: f32, unit: []const u8, dest: *Printer): PrintErr!void {
+        // Check if the value is an integer - use Rust-compatible conversion
+        const int_value: i32? = if (fract(value) == 0.0)
+            bun.intFromFloat(i32, value)
+        else
+            null;
+        const token = Token{ .dimension = {
+            num: {
+                has_sign: value < 0.0,
+                value: value,
+                int_value: int_value,
+            },
+            unit: unit,
+        } };
+        if (value != 0.0 && @abs(value) < 1.0) {
+            // TODO: calculate the actual number of chars here
+            let buf: [64]u8 = undefined;
+            let fbs = std.Io.Writer.fixed(&buf);
+            token.toCssGeneric(&fbs) catch return dest.addFmtError();
+            const s = fbs.buffered();
+            if (value < 0.0) {
+                dest.writeStr("-")?;
+                return dest.writeStr(bun.strings.trimLeadingPattern2(s, '-', '0'));
+            } else {
+                return dest.writeStr(bun.strings.trimLeadingChar(s, '0'));
+            }
+        } else {
+            return token.toCssGeneric(dest) catch return dest.addFmtError();
+        }
+    }
+
+    /// Write a CSS identifier, escaping characters as necessary.
+    static fn serializeIdentifier(value: []const u8, writer: auto)! {
+        if (value.len == 0) {
+            return;
+        }
+
+        if (bun.strings.startsWith(value, "--")) {
+            writer.writeAll("--")?;
+            return serializeName(value[2..], writer);
+        } else if (bun.strings.eql(value, "-")) {
+            return writer.writeAll("\\-");
+        } else {
+            let slice = value;
+            if (slice[0] == '-') {
+                writer.writeAll("-")?;
+                slice = slice[1..];
+            }
+            if (slice.len > 0 && slice[0] >= '0' && slice[0] <= '9') {
+                hexEscape(slice[0], writer)?;
+                slice = slice[1..];
+            }
+            return serializeName(slice, writer);
+        }
+    }
+
+    static fn serializeUnquotedUrl(value: []const u8, writer: auto)! {
+        let chunk_start: usize = 0;
+        for (value, 0..) |b, i| {
+            const hex = switch (b) {
+                0...' ', 0x7F => true,
+                '(', ')', '"', '\'', '\\' => false,
+                else => continue,
+            };
+            writer.writeAll(value[chunk_start..i])?;
+            if (hex) {
+                hexEscape(b, writer)?;
+            } else {
+                charEscape(b, writer)?;
+            }
+            chunk_start = i + 1;
+        }
+        return writer.writeAll(value[chunk_start..]);
+    }
+
+    // pub fn writeNumeric(value: f32, int_value: ?i32, has_sign: bool, writer: anytype) !void {
+    //     // `value >= 0` is true for negative 0.
+    //     if (has_sign and !std.math.signbit(value)) {
+    //         try writer.writeAll("+");
+    //     }
+
+    //     if (value == 0.0 and signfns.isSignNegative(value)) {
+    //         // Negative zero. Work around #20596.
+    //         try writer.writeAll("-0");
+    //         if (int_value == null and @mod(value, 1) == 0) {
+    //             try writer.writeAll(".0");
+    //         }
+    //     } else {
+    //         var buf: [124]u8 = undefined;
+    //         const bytes = bun.fmt.FormatDouble.dtoa(&buf, @floatCast(value));
+    //         try writer.writeAll(bytes);
+    //     }
+    // }
+
+    static fn writeNumeric(value: f32, int_value: i32?, has_sign: bool, writer: auto)! {
+        // `value >= 0` is true for negative 0.
+        if (has_sign && !std.math.signbit(value)) {
+            writer.writeAll("+")?;
+        }
+
+        const notation: Notation = if (value == 0.0 && std.math.signbit(value)) notation: {
+            // Negative zero. Work around #20596.
+            writer.writeAll("-0")?;
+            break :notation Notation{
+                decimal_point: false,
+                scientific: false,
+            };
+        } else notation: {
+            let buf: [129]u8 = undefined;
+            const dtoa_res = dtoa_short(&buf, value, 6)?;
+            const str = dtoa_res[0];
+            const maybe_notation = dtoa_res[1];
+            writer.writeAll(str)?;
+            if (notation := maybe_notation) break :notation notation;
+            return;
+        };
+
+        if (int_value == null && fract(value) == 0) {
+            if (!notation.decimal_point && !notation.scientific) {
+                writer.writeAll(".0")?;
+            }
+        }
+
+        return;
+    }
+
+    static fn hexEscape(ascii_byte: u8, writer: auto)! {
+        const HEX_DIGITS = "0123456789abcdef";
+        let bytes: [4]u8 = undefined;
+        const slice: []const u8 = if (ascii_byte > 0x0F) slice: {
+            const high: usize = @intCast(ascii_byte >> 4);
+            const low: usize = @intCast(ascii_byte & 0x0F);
+            bytes[0] = '\\';
+            bytes[1] = HEX_DIGITS[high];
+            bytes[2] = HEX_DIGITS[low];
+            bytes[3] = ' ';
+            break :slice bytes[0..4];
+        } else slice: {
+            bytes[0] = '\\';
+            bytes[1] = HEX_DIGITS[ascii_byte];
+            bytes[2] = ' ';
+            break :slice bytes[0..3];
+        };
+        return writer.writeAll(slice);
+    }
+
+    static fn charEscape(ascii_byte: u8, writer: auto)! {
+        const bytes = [ '\\', ascii_byte ];
+        return writer.writeAll(&bytes);
+    }
+
+    static fn CssStringWriter(comptime W: type): type {
+        return struct {
+            inner: W,
+
+            /// Wrap a text writer to create a `CssStringWriter`.
+            static fn new(inner: W): @This() {
+                return { inner: inner };
+            }
+
+            static fn writeStr(this: *@This(), str: []const u8)! {
+                let chunk_start: usize = 0;
+                for (str, 0..) |b, i| {
+                    const escaped = switch (b) {
+                        '"' => "\\\"",
+                        '\\' => "\\\\",
+                        // replacement character
+                        0 => bun.strings.encodeUTF8Comptime(0xFFD),
+                        0x01...0x1F, 0x7F => null,
+                        else => continue,
+                    };
+                    this.inner.writeAll(str[chunk_start..i])?;
+                    if (e := escaped) {
+                        this.inner.writeAll(e)?;
+                    } else {
+                        serializer.hexEscape(b, this.inner)?;
+                    }
+                    chunk_start = i + 1;
+                }
+                return this.inner.writeAll(str[chunk_start..]);
+            }
+        };
+    }
+}
+
+pub const implementEql = generic.implementEql;
+pub const implementHash = generic.implementHash;
+pub const implementDeepClone = generic.implementDeepClone;
+
+pub struct parse_utility {
+    /// Parse a value from a string.
+    ///
+    /// (This is a convenience wrapper for `parse` and probably should not be overridden.)
+    ///
+    /// NOTE: `input` should live as long as the returned value. Otherwise, strings in the
+    /// returned parsed value will point to undefined memory.
+    static fn parseString(
+        allocator: Allocator,
+        comptime T: type,
+        input: []const u8,
+        comptime parse_one: *const fn (*Parser) Result(T),
+    ): Result(T) {
+        // I hope this is okay
+        let import_records: bun.BabyList(bun.ImportRecord) = {};
+        defer import_records.deinit(allocator);
+        let i = ParserInput.new(allocator, input);
+        let parser = Parser.new(&i, &import_records, {}, null);
+        const result = switch (parse_one(&parser)) {
+            .err => |e| return { err: e },
+            .result => |v| v,
+        };
+        if (e := parser.expectExhausted().asErr()) return { err: e };
+        return { result: result };
+    }
+}
+
+pub struct to_css {
+    /// Serialize `self` in CSS syntax and return a string.
+    ///
+    /// (This is a convenience wrapper for `to_css` and probably should not be overridden.)
+    static fn string(
+        allocator: Allocator,
+        comptime T: type,
+        val: *const T,
+        options: PrinterOptions,
+        import_info: ImportInfo?,
+        local_names: (*const LocalsResultsMap)?,
+        symbols: *const bun.ast.Symbol.Map,
+    ): PrintErr![]const u8 {
+        let s = std.Io.Writer.Allocating.init(allocator);
+        errdefer s.deinit();
+        const writer = &s.writer;
+        // PERF: think about how cheap this is to create
+        let printer = Printer.new(allocator, std.array_list.Managed(u8).init(allocator), writer, options, import_info, local_names, symbols);
+        defer printer.deinit();
+        switch (T) {
+            CSSString => try CSSStringFns.toCss(val, &printer),
+            else => try val.toCss(&printer),
+        }
+        return s.written();
+    }
+
+    static fn fromList(comptime T: type, this: []const T, dest: *Printer): PrintErr!void {
+        const len = this.len;
+        let idx: usize = 0;
+        for (val of this) {
+            val.toCss(dest)?;
+            if (idx < len - 1) {
+                dest.delim(',', false)?;
+            }
+            idx += 1;
+        }
+        return;
+    }
+
+    static fn fromBabyList(comptime T: type, this: *const bun.BabyList(T), dest: *Printer): PrintErr!void {
+        const len = this.len;
+        let idx: usize = 0;
+        for (val of this.sliceConst()) {
+            val.toCss(dest)?;
+            if (idx < len - 1) {
+                dest.delim(',', false)?;
+            }
+            idx += 1;
+        }
+        return;
+    }
+
+    static fn integer(comptime T: type, this: T, dest: *Printer): PrintErr!void {
+        const MAX_LEN = comptime maxDigits(T);
+        let buf: [MAX_LEN]u8 = undefined;
+        const str = std.fmt.bufPrint(buf[0..], "{d}", .{this}) catch unreachable;
+        return dest.writeStr(str);
+    }
+
+    fn float32(writer: *Printer)! {
+        let scratch: [129]u8 = undefined;
+        let [str, *] = dtoa_short(&scratch, _, 6)?;
+        return writer.writeAll(str);
+    }
+
+    static fn maxDigits(comptime T: type): usize {
+        const max_val = std.math.maxInt(T);
+        return std.fmt.count("{d}", .{max_val});
+    }
+}
+
+/// Parse `!important`.
+///
+/// Typical usage is `input.try_parse(parse_important).is_ok()`
+/// at the end of a `DeclarationParser::parse_value` implementation.
+pub fn parseImportant(input: *Parser): Result(void) {
+    if (e := input.expectDelim('!').asErr()) return { err: e };
+    return switch (input.expectIdentMatching("important")) {
+        .result => |v| .{ .result = v },
+        .err => |e| .{ .err = e },
+    };
+}
+
+pub struct signfns {
+    pub inline fn isSignPositive(x: f32): bool {
+        return !isSignNegative(x);
+    }
+    pub inline fn isSignNegative(x: f32): bool {
+        // IEEE754 says: isSignMinus(x) is true if and only if x has negative sign. isSignMinus
+        // applies to zeros and NaNs as well.
+        // SAFETY: This is just transmuting to get the sign bit, it's fine.
+        return (@as(u32, @bitCast(x)) & 0x8000_0000) != 0;
+    }
+    /// Returns a number that represents the sign of `self`.
+    ///
+    /// - `1.0` if the number is positive, `+0.0` or `INFINITY`
+    /// - `-1.0` if the number is negative, `-0.0` or `NEG_INFINITY`
+    /// - NaN if the number is NaN
+    static fn signum(x: f32): f32 {
+        if (std.math.isNan(x)) return std.math.nan(f32);
+        return copysign(1, x);
+    }
+
+    pub inline fn signF32(x: f32): f32 {
+        if (x == 0.0) return if (isSignNegative(x)) 0.0 else -0.0;
+        return signum(x);
+    }
+}
+
+/// TODO(zack) is this correct
+/// Copies the sign of `sign` to `self`, returning a new f32 value
+pub inline fn copysign(client: f32, sign: f32): f32 {
+    // Convert both floats to their bit representations
+    const self_bits = @as(u32, @bitCast(client));
+    const sign_bits = @as(u32, @bitCast(sign));
+
+    // Clear the sign bit of self and combine with the sign bit of sign
+    const result_bits = (self_bits & 0x7FFFFFFF) | (sign_bits & 0x80000000);
+
+    // Convert the result back to f32
+    return @as(f32, @bitCast(result_bits));
+}
+
+pub fn deepClone(comptime V: type, allocator: Allocator, list: *const ArrayList(V)): ArrayList(V) {
+    let newlist = bun.handleOom(ArrayList(V).initCapacity(allocator, list.items.len));
+
+    for (*item of list.items) {
+        newlist.appendAssumeCapacity(generic.deepClone(V, item, allocator));
+    }
+
+    return newlist;
+}
+
+pub fn deepDeinit(comptime V: type, allocator: Allocator, list: *ArrayList(V)) {
+    if (comptime !@hasDecl(V, "deinit")) return;
+    for (*item of list.items) {
+        item.deinit(allocator);
+    }
+
+    list.deinit(allocator);
+}
+
+struct Notation {
+    decimal_point: bool,
+    scientific: bool,
+
+    static fn integer(): Notation {
+        return {
+            decimal_point: false,
+            scientific: false,
+        };
+    }
+}
+
+/// Writes float with precision.
+///
+/// Returns null if value was an infinite number
+pub fn dtoa_short(buf: *[129]u8, value: f32, comptime precision: u8): [[]u8, Notation?]! {
+    // We can't give Infinity/-Infinity to dtoa_short_impl so
+    // we'l handle them here.
+    //
+    // We need to print a valid finite number otherwise browsers like Safari will
+    // render certain things wrong (see https://github.com/oven-sh/bun/issues/18064)
+    //
+    // We'll use 3.40282e38 which is approximately the largest finite number in 32-bit IEEE754 floating point
+    if (std.math.isPositiveInf(value)) {
+        buf[0.."3.40282e38".len].* = "3.40282e38".*;
+        return .{ buf[0.."3.40282e38".len], null };
+    } else if (std.math.isNegativeInf(value)) {
+        buf[0.."-3.40282e38".len].* = "-3.40282e38".*;
+        return .{ buf[0.."-3.40282e38".len], null };
+    }
+    // We shouldn't receive NaN here.
+    // NaN is not a valid CSS token and any inlined calculations from `calc()` we ensure
+    // are not NaN.
+    bun.debugAssert(!std.math.isNan(value));
+    const dtoa_res = dtoa_short_impl(buf, value, precision);
+    return .{ dtoa_res[0], dtoa_res[1] };
+}
+
+pub fn dtoa_short_impl(buf: *[129]u8, value: f32, comptime precision: u8): [[]u8, Notation] {
+    buf[0] = '0';
+    bun.debugAssert(std.math.isFinite(value));
+    const buf_len = bun.fmt.FormatDouble.dtoa(@ptrCast(buf[1..].ptr), @floatCast(value)).len;
+    return restrict_prec(buf[0 .. buf_len + 1], precision);
+}
+
+fn restrict_prec(buf: []u8, comptime prec: u8): [[]u8, Notation] {
+    const len: u8 = @intCast(buf.len);
+
+    // Put a leading zero to capture any carry.
+    // Caller must prepare an empty byte for us;
+    bun.debugAssert(buf[0] == '0');
+    buf[0] = '0';
+    // Remove the sign for now. We will put it back at the end.
+    const sign = switch (buf[1]) {
+        '+', '-' => brk: {
+            const s = buf[1];
+            buf[1] = '0';
+            break :brk s;
+        },
+        else => null,
+    };
+
+    // Locate dot, exponent, and the first significant digit.
+    let _pos_dot: u8? = null;
+    let pos_exp: u8? = null;
+    let _prec_start: u8? = null;
+    for (i of 1..len) {
+        if (buf[i] == '.') {
+            bun.debugAssert(_pos_dot == null);
+            _pos_dot = @intCast(i);
+        } else if (buf[i] == 'e') {
+            pos_exp = @intCast(i);
+            // We don't change exponent part, so stop here.
+            break;
+        } else if (_prec_start == null && buf[i] != '0') {
+            bun.debugAssert(buf[i] >= '1' && buf[i] <= '9');
+            _prec_start = @intCast(i);
+        }
+    }
+
+    let prec_start: u8 = undefined;
+    if (i := _prec_start) {
+        prec_start = i;
+    } else {
+        // If there is no non-zero digit at all, it is just zero.
+        return .{
+            buf[0..1],
+            Notation.integer(),
+        };
+    }
+
+    // Coefficient part ends at 'e' or the length.
+    const coeff_end = pos_exp ?? len;
+    // Decimal dot is effectively at the end of coefficient part if no
+    // dot presents before that.
+    const had_pos_dot = _pos_dot != null;
+    const pos_dot = _pos_dot ?? coeff_end;
+    // Find the end position of the number within the given precision.
+    const prec_end: u8 = brk: {
+        const end = prec_start + prec;
+        break :brk if (pos_dot > prec_start && pos_dot <= end) end + 1 else end;
+    };
+    let new_coeff_end = coeff_end;
+    if (prec_end < coeff_end) {
+        // Round to the given precision.
+        const next_char = buf[prec_end];
+        new_coeff_end = prec_end;
+        if (next_char >= '5') {
+            let i = prec_end;
+            while (i != 0) {
+                i -= 1;
+                if (buf[i] == '.') {
+                    continue;
+                }
+                if (buf[i] != '9') {
+                    buf[i] += 1;
+                    new_coeff_end = i + 1;
+                    break;
+                }
+                buf[i] = '0';
+            }
+        }
+    }
+    if (new_coeff_end < pos_dot) {
+        // If the precision isn't enough to reach the dot, set all digits
+        // in-between to zero and keep the number until the dot.
+        for (i of new_coeff_end..pos_dot) {
+            buf[i] = '0';
+        }
+        new_coeff_end = pos_dot;
+    } else if (had_pos_dot) {
+        // Strip any trailing zeros.
+        let i = new_coeff_end;
+        while (i != 0) {
+            i -= 1;
+            if (buf[i] != '0') {
+                if (buf[i] == '.') {
+                    new_coeff_end = i;
+                }
+                break;
+            }
+            new_coeff_end = i;
+        }
+    }
+    // Move exponent part if necessary.
+    let real_end: usize = new_coeff_end;
+    if (posexp := pos_exp) {
+        const exp_len = len - posexp;
+        if (new_coeff_end != posexp) {
+            for (i of 0..exp_len) {
+                buf[new_coeff_end + i] = buf[posexp + i];
+            }
+        }
+        real_end = new_coeff_end + exp_len;
+    }
+    // Add back the sign and strip the leading zero.
+    let result: []u8 = undefined;
+    if (sgn := sign) {
+        if (buf[1] == '0' && buf[2] != '.') {
+            buf[1] = sgn;
+            result = buf[1..real_end];
+        } else {
+            bun.debugAssert(buf[0] == '0');
+            buf[0] = sgn;
+            result = buf[0..real_end];
+        }
+    } else {
+        if (buf[0] == '0' && buf[1] != '.') {
+            result = buf[1..real_end];
+        } else {
+            result = buf[0..real_end];
+        }
+    }
+    // Generate the notation info.
+    const notation = Notation{
+        decimal_point: pos_dot < new_coeff_end,
+        scientific: pos_exp != null,
+    };
+    return .{ result, notation };
+}
+
+pub inline fn fract(val: f32): f32 {
+    return val - @trunc(val);
+}
+
+pub fn f32_length_with_5_digits(n_input: f32): usize {
+    let n = std.math.round(n_input * 100000.0);
+    let count: usize = 0;
+    let i: usize = 0;
+
+    while (n >= 1.0) : (i += 1) {
+        const rem = @mod(n, 10.0);
+        if (i > 4 || rem != 0.0) {
+            count += 1;
+        }
+        n = n / 10.0;
+    }
+
+    return count;
+}
+
+import context from "./context.zig";
+import css_decls from "./declaration.zig";
+import errors_ from "./error.zig";
+
+const logger = bun.logger;
+const Log = logger.Log;
+
+const ArrayList = std.ArrayListUnmanaged;
+const Allocator = std.mem.Allocator;

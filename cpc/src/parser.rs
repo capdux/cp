@@ -8227,6 +8227,8 @@ impl<'a> Parser<'a> {
                         cons: Box::new(cons),
                         alt: Some(Box::new(alt)),
                         is_comptime: true,
+                        capture: None,
+                        is_ptr_capture: false,
                     });
                 }
                 let ident = self.parse_ident()?;
@@ -9031,6 +9033,8 @@ impl<'a> Parser<'a> {
                     cons: Box::new(cons),
                     alt,
                     is_comptime,
+                    capture: None,
+                    is_ptr_capture: false,
                 })
             }
             Token::Slash => {

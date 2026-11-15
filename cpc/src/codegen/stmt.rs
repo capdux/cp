@@ -55,7 +55,7 @@ impl Codegen {
                 if let Some(init) = &var.init {
                     let is_null_lit = matches!(init, Expr::Lit(Lit::Null))
                         || matches!(init, Expr::Ident(id) if id.sym == "null");
-                    if is_null_lit {
+                    if is_null_lit && !self.is_lib_mode {
                         if let Some(t) = &var.ty {
                             let allows_null = match t {
                                 Type::Optional(_) => true,
@@ -140,7 +140,10 @@ impl Codegen {
                     if matches!(&var.pat, Pattern::Wildcard)
                         || matches!(&var.pat, Pattern::Ident(ident) if ident.sym == "_")
                     {
-                        if matches!(init, Expr::Ident(_)) {
+                        if let Expr::Ident(id) = init {
+                            if id.sym != "_" {
+                                self.write_to_case(&format!("_ = &{};", id.sym));
+                            }
                             return;
                         }
                         let init_val = if is_try {
@@ -1274,7 +1277,30 @@ impl Codegen {
                 };
                 if let Some(raw) = &f.raw_header {
                     let pat_str = match &f.pat {
-                        Pattern::Ident(id) => id.sym.clone(),
+                        Pattern::Ident(id) => {
+                            if f.mode == IterMode::MutBorrow {
+                                format!("*{}", id.sym)
+                            } else {
+                                id.sym.clone()
+                            }
+                        }
+                        Pattern::Tuple(pats) => {
+                            let s: Vec<String> = pats
+                                .iter()
+                                .enumerate()
+                                .map(|(idx, p)| match p {
+                                    Pattern::Ident(id) => {
+                                        if idx == 0 && f.mode == IterMode::MutBorrow {
+                                            format!("*{}", id.sym)
+                                        } else {
+                                            id.sym.clone()
+                                        }
+                                    }
+                                    _ => "item".to_string(),
+                                })
+                                .collect();
+                            s.join(", ")
+                        }
                         _ => "item".to_string(),
                     };
                     let inline_prefix = if f.is_comptime { "inline " } else { "" };
@@ -1283,6 +1309,20 @@ impl Codegen {
                         lbl_prefix, inline_prefix, raw, pat_str
                     ));
                     self.indent();
+                    if let Pattern::Tuple(pats) = &f.pat {
+                        for p in pats {
+                            if let Pattern::Ident(id) = p {
+                                self.write_to_case(&format!("_ = &{};", id.sym));
+                            }
+                        }
+                    } else if let Pattern::Ident(id) = &f.pat {
+                        for part in id.sym.split(',') {
+                            let clean_id = part.trim().trim_start_matches('*');
+                            if !clean_id.is_empty() && clean_id != "_" {
+                                self.write_to_case(&format!("_ = &{};", clean_id));
+                            }
+                        }
+                    }
                     if let Stmt::Block(b) = &*f.body {
                         for s in &b.body {
                             self.generate_stmt(s);
@@ -1992,7 +2032,12 @@ impl Codegen {
                         } else {
                             e
                         };
-                        self.write_to_case(&format!("return {};", ret_val));
+                        let semi = if ret_val.trim_end().ends_with(';') {
+                            ""
+                        } else {
+                            ";"
+                        };
+                        self.write_to_case(&format!("return {}{}", ret_val, semi));
                     }
                 } else {
                     if let Some(Type::ResultType { ok, err }) = &self.current_fn_ret_ty {

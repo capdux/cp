@@ -8,4 +8,7 @@ cargo build --manifest-path /data/dev/cp/cpc/Cargo.toml --quiet
 echo "[3/3] 部署 cpc 到 /data/dev/cp/cap/bin/cpc 与 target/release/cpc..."
 install -m 755 /data/dev/cp/cpc/target/debug/cpc /data/dev/cp/cap/bin/cpc
 install -m 755 /data/dev/cp/cpc/target/debug/cpc /data/dev/cp/cpc/target/release/cpc
+if [ -d "/dev/shm/cpc_target/debug" ]; then
+    install -m 755 /data/dev/cp/cpc/target/debug/cpc /dev/shm/cpc_target/debug/cpc
+fi
 echo "[CPC_SYNC_OK] cpc 编译器已更新并成功部署生效！"

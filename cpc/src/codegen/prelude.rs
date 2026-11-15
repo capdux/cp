@@ -219,6 +219,8 @@ impl ModuleFeatures {
             }
             Stmt::Match(m) => {
                 self.needs_result_error = true;
+                self.needs_string_helpers = true;
+                self.needs_equality = true;
                 self.scan_expr(&m.disc);
                 for arm in &m.arms {
                     self.scan_pat(&arm.pat);
@@ -281,7 +283,11 @@ impl ModuleFeatures {
                 }
             }
             Pattern::Binding { subpat, .. } => self.scan_pat(subpat),
-            Pattern::Expr(expr) => self.scan_expr(expr),
+            Pattern::Expr(expr) => {
+                self.needs_equality = true;
+                self.scan_expr(expr);
+            }
+            Pattern::Lit(_) => self.needs_equality = true,
             _ => {}
         }
     }
@@ -594,6 +600,8 @@ impl ModuleFeatures {
             }
             Expr::Match(m) => {
                 self.needs_result_error = true;
+                self.needs_string_helpers = true;
+                self.needs_equality = true;
                 self.scan_expr(&m.disc);
                 for arm in &m.arms {
                     self.scan_pat(&arm.pat);

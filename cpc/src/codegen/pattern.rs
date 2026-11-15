@@ -148,6 +148,9 @@ impl Codegen {
     }
 
     pub(crate) fn check_switch_exhaustiveness(&self, m: &MatchExpr, disc_cp_ty: Option<&Type>) {
+        if self.is_lib_mode {
+            return;
+        }
         let has_global_wildcard = m
             .arms
             .iter()
@@ -1032,6 +1035,7 @@ impl Codegen {
                 *has_else = true;
                 "else".to_string()
             }
+            Pattern::Ident(id) => id.sym.clone(),
             Pattern::Enum(ep) if ep.fields.is_none() && ep.tuple_pats.is_none() => {
                 if ep.enum_name.sym.is_empty() {
                     format!(".{}", ep.variant_name.sym)
@@ -1232,8 +1236,12 @@ impl Codegen {
                         if let Some(tup) = &ep.tuple_pats {
                             if tup.len() == 1 {
                                 if let Pattern::Ident(id) = &tup[0] {
-                                    bound_ident = Some(id.sym.clone());
-                                    format!("{}{} => |{}|", inline_prefix, base, id.sym)
+                                    if id.sym == "_" {
+                                        format!("{}{} =>", inline_prefix, base)
+                                    } else {
+                                        bound_ident = Some(id.sym.clone());
+                                        format!("{}{} => |{}|", inline_prefix, base, id.sym)
+                                    }
                                 } else {
                                     format!("{}{} =>", inline_prefix, base)
                                 }
@@ -1241,25 +1249,44 @@ impl Codegen {
                                 format!("{}{} =>", inline_prefix, base)
                             }
                         } else if let Some(cap) = &arm.capture {
-                            bound_ident = Some(cap.sym.clone());
-                            let ptr_prefix = if arm.is_capture_ptr { "*" } else { "" };
-                            format!("{}{} => |{}{}|", inline_prefix, base, ptr_prefix, cap.sym)
+                            if cap.sym == "_" {
+                                format!("{}{} =>", inline_prefix, base)
+                            } else {
+                                bound_ident = Some(cap.sym.clone());
+                                let ptr_prefix = if arm.is_capture_ptr { "*" } else { "" };
+                                format!("{}{} => |{}{}|", inline_prefix, base, ptr_prefix, cap.sym)
+                            }
                         } else {
                             format!("{}{} =>", inline_prefix, base)
                         }
                     }
                     Pattern::Ident(id) if id.sym != "_" && id.sym != "else" => {
-                        has_else = true;
-                        bound_ident = Some(id.sym.clone());
-                        format!("else => |{}|", id.sym)
+                        let inline_prefix = if arm.is_inline { "inline " } else { "" };
+                        let is_constant_match =
+                            self.const_vars.contains(&id.sym)
+                                || self.locals.contains_key(&id.sym)
+                                || (id.sym.chars().all(|c| {
+                                    c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_'
+                                }) && id.sym.chars().any(|c| c.is_ascii_uppercase()));
+                        if is_constant_match {
+                            format!("{}{} =>", inline_prefix, id.sym)
+                        } else {
+                            has_else = true;
+                            bound_ident = Some(id.sym.clone());
+                            format!("else => |{}|", id.sym)
+                        }
                     }
                     other => {
                         let s = Self::format_simple_pat(other, &mut has_else);
                         let inline_prefix = if arm.is_inline { "inline " } else { "" };
                         let cap_suffix = if let Some(cap) = &arm.capture {
-                            bound_ident = Some(cap.sym.clone());
-                            let ptr_prefix = if arm.is_capture_ptr { "*" } else { "" };
-                            format!(" |{}{}|", ptr_prefix, cap.sym)
+                            if cap.sym == "_" {
+                                "".to_string()
+                            } else {
+                                bound_ident = Some(cap.sym.clone());
+                                let ptr_prefix = if arm.is_capture_ptr { "*" } else { "" };
+                                format!(" |{}{}|", ptr_prefix, cap.sym)
+                            }
                         } else {
                             "".to_string()
                         };

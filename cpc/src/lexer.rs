@@ -180,10 +180,14 @@ pub enum Token {
         let s: String = lex.slice().chars().filter(|&c| c != '_').collect();
         s.parse::<i64>().or_else(|_| s.parse::<u64>().map(|v| v as i64)).ok()
     })]
-    #[regex(r"'([^'\\]|\\.)'", |lex| {
+    #[regex(r"'([^'\\]|\\x[0-9a-fA-F]{2}|\\u\{[0-9a-fA-F]+\}|\\.)'", |lex| {
         let s = lex.slice();
         let content = &s[1..s.len()-1];
-        if content.starts_with('\\') {
+        if content.starts_with("\\x") && content.len() == 4 {
+            u8::from_str_radix(&content[2..], 16).ok().map(|b| b as i64)
+        } else if content.starts_with("\\u{") && content.ends_with('}') {
+            u32::from_str_radix(&content[3..content.len()-1], 16).ok().map(|c| c as i64)
+        } else if content.starts_with('\\') {
             match content {
                 "\\n" => Some(b'\n' as i64),
                 "\\r" => Some(b'\r' as i64),
@@ -207,6 +211,9 @@ pub enum Token {
     #[regex(r#""([^"\\]|\\.)*""#, |lex| {
         let s = lex.slice();
         s[1..s.len()-1].to_string()
+    })]
+    #[regex(r"\\\\[^\n]*", |lex| {
+        lex.slice()[2..].replace('\\', "\\\\").replace('"', "\\\"")
     })]
     StringLiteral(String),
     #[regex(r#"`([^`\\]|\\.)*`"#, |lex| {

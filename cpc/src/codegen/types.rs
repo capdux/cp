@@ -604,6 +604,21 @@ impl Codegen {
         None
     }
 
+    pub fn resolve_type_alias_sym<'a>(&'a self, mut sym: &'a str) -> &'a str {
+        let mut depth = 0;
+        while depth < 20 {
+            if let Some(ta) = self.type_aliases.get(sym) {
+                if let Type::Ref(id) = &ta.target_ty {
+                    sym = &id.sym;
+                    depth += 1;
+                    continue;
+                }
+            }
+            break;
+        }
+        sym
+    }
+
     pub fn resolve_var_type_name(&self, var_name: &str) -> Option<String> {
         if var_name == "this" || var_name == "_" || var_name == "self" {
             return self.current_class_name.clone();
@@ -1147,16 +1162,9 @@ impl Codegen {
                             .split(|ch| ch == '<' || ch == '(')
                             .next()
                             .unwrap_or(&oid.sym);
+                        let resolved_base = self.resolve_type_alias_sym(oid_base);
                         let is_enum = self.enum_defs.contains_key(&oid.sym)
-                            || (!self.locals.contains_key(&oid.sym)
-                                && !mock_types.contains_key(&oid.sym)
-                                && !self.global_var_types.contains_key(&oid.sym)
-                                && oid
-                                    .sym
-                                    .chars()
-                                    .next()
-                                    .map_or(false, |c| c.is_ascii_uppercase())
-                                && !self.class_defs.contains_key(oid_base));
+                            || self.enum_defs.contains_key(resolved_base);
                         if is_enum {
                             if mem.prop.sym == "fromName"
                                 || mem.prop.sym == "fromString"
@@ -1167,7 +1175,23 @@ impl Codegen {
                             if mem.prop.sym == "has" {
                                 return Some(Type::Bool);
                             }
-                            return Some(Type::Ref(oid.clone()));
+                            let en_opt = self
+                                .enum_defs
+                                .get(&oid.sym)
+                                .or_else(|| self.enum_defs.get(resolved_base));
+                            if let Some(en) = en_opt {
+                                if let Some(m) =
+                                    en.methods.iter().find(|m| m.ident.sym == mem.prop.sym)
+                                {
+                                    return m.return_type.clone();
+                                }
+                                if en.variants.iter().any(|v| v.ident.sym == mem.prop.sym)
+                                    || en.variants.is_empty()
+                                {
+                                    return Some(Type::Ref(oid.clone()));
+                                }
+                                return None;
+                            }
                         }
                         let tname_opt = if let Some(mty) = mock_types.get(&oid.sym) {
                             match mty {
@@ -1185,6 +1209,8 @@ impl Codegen {
                             self.resolve_var_type_name(&oid.sym).or_else(|| {
                                 if self.class_defs.contains_key(oid_base) {
                                     Some(oid.sym.clone())
+                                } else if self.class_defs.contains_key(resolved_base) {
+                                    Some(resolved_base.to_string())
                                 } else {
                                     None
                                 }
@@ -2402,6 +2428,12 @@ impl Codegen {
                 }
                 if ident.sym.starts_with('[') {
                     return ident.sym.clone();
+                }
+                if ident.sym.starts_with("struct")
+                    || ident.sym.starts_with("?struct")
+                    || ident.sym.starts_with("union")
+                {
+                    return super::lower_struct_body(&ident.sym);
                 }
                 let is_custom_int = (ident.sym.starts_with('u') || ident.sym.starts_with('i'))
                     && ident.sym.len() > 1

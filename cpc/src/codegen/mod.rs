@@ -685,6 +685,15 @@ impl Codegen {
             ModuleItem::Decl(Decl::TypeAlias(ta)) => {
                 ta.ident.sym == "string" || ta.ident.sym == "@\"string\""
             }
+            ModuleItem::Import(imp) => {
+                imp.default_specifier
+                    .as_ref()
+                    .map_or(false, |id| id.sym == "string" || id.sym == "@\"string\"")
+                    || imp
+                        .specifiers
+                        .iter()
+                        .any(|id| id.sym == "string" || id.sym == "@\"string\"")
+            }
             _ => false,
         });
 

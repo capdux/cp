@@ -216,11 +216,19 @@ impl Codegen {
                         } else {
                             target_var.to_string()
                         };
+                        let func_info = format!(
+                            "in {}.{}: ",
+                            self.current_class_name.as_deref().unwrap_or("<global>"),
+                            self.current_func_name.as_deref().unwrap_or("<anon>")
+                        );
                         panic!(
-                            "CP Compile Error: Borrow conflict on '{}': cannot borrow as {} while '{}' is still active",
+                            "CP Compile Error: {}Borrow conflict on '{}': cannot borrow as {} while '{}' is still active (stmt_idx={}, last_use={})",
+                            func_info,
                             target_desc,
                             if req_mut { "mutable" } else { "immutable" },
-                            borrower
+                            borrower,
+                            self.current_stmt_idx,
+                            last_use
                         );
                     }
                 }
@@ -318,6 +326,578 @@ impl Codegen {
         vec![(root.to_string(), field.map(|f| f.to_string()))]
     }
 
+    pub(crate) fn find_method_borrowed_field(
+        &self,
+        class_name: &str,
+        method_name: &str,
+    ) -> Option<String> {
+        let mut visited = HashSet::new();
+        self.find_method_borrowed_field_depth(class_name, method_name, 0, &mut visited)
+    }
+
+    fn find_method_borrowed_field_depth(
+        &self,
+        class_name: &str,
+        method_name: &str,
+        depth: usize,
+        visited: &mut HashSet<String>,
+    ) -> Option<String> {
+        if depth > 10 || !visited.insert(format!("{}::{}", class_name, method_name)) {
+            return None;
+        }
+        let clean = class_name.trim_start_matches('?').trim_start_matches('*');
+        let base_name = if let Some(pos) = clean.find('<') {
+            &clean[..pos]
+        } else if let Some(pos) = clean.find('(') {
+            &clean[..pos]
+        } else {
+            clean
+        };
+        let cls = self.class_defs.get(base_name)?;
+        let method = cls.methods.iter().find(|m| m.ident.sym == method_name)?;
+
+        let mut found_fields = HashSet::new();
+        self.collect_return_borrow_fields(
+            &method.body,
+            base_name,
+            depth,
+            visited,
+            &mut found_fields,
+        );
+
+        if found_fields.len() == 1 {
+            return found_fields.into_iter().next();
+        }
+
+        if let Some(ret_ty) = &method.return_type {
+            if matches!(ret_ty, Type::BorrowType { is_mut: false, .. }) {
+                for f in &cls.fields {
+                    if (f.ident.sym == "src"
+                        || f.ident.sym == "input"
+                        || f.ident.sym == "buffer"
+                        || f.ident.sym == "buf"
+                        || f.ident.sym == "data")
+                        && matches!(f.ty, Type::BorrowType { .. } | Type::Array(_))
+                    {
+                        return Some(f.ident.sym.clone());
+                    }
+                }
+            }
+        }
+
+        None
+    }
+
+    fn collect_return_borrow_fields(
+        &self,
+        block: &BlockStmt,
+        class_name: &str,
+        depth: usize,
+        visited: &mut HashSet<String>,
+        fields: &mut HashSet<String>,
+    ) {
+        for s in &block.body {
+            match s {
+                Stmt::Return(ret) => {
+                    if let Some(arg) = &ret.arg {
+                        if let Some(f) =
+                            self.extract_expr_borrowed_field(arg, block, class_name, depth, visited)
+                        {
+                            fields.insert(f);
+                        }
+                    }
+                }
+                Stmt::Block(b)
+                | Stmt::UnsafeBlock(b)
+                | Stmt::ArenaBlock(b)
+                | Stmt::ComptimeBlock(b) => {
+                    self.collect_return_borrow_fields(b, class_name, depth, visited, fields);
+                }
+                Stmt::If(i) => {
+                    if let Stmt::Block(b) = &*i.cons {
+                        self.collect_return_borrow_fields(b, class_name, depth, visited, fields);
+                    } else if let Stmt::Return(r) = &*i.cons {
+                        if let Some(arg) = &r.arg {
+                            if let Some(f) = self
+                                .extract_expr_borrowed_field(arg, block, class_name, depth, visited)
+                            {
+                                fields.insert(f);
+                            }
+                        }
+                    }
+                    if let Some(alt) = &i.alt {
+                        if let Stmt::Block(b) = &**alt {
+                            self.collect_return_borrow_fields(
+                                b, class_name, depth, visited, fields,
+                            );
+                        } else if let Stmt::Return(r) = &**alt {
+                            if let Some(arg) = &r.arg {
+                                if let Some(f) = self.extract_expr_borrowed_field(
+                                    arg, block, class_name, depth, visited,
+                                ) {
+                                    fields.insert(f);
+                                }
+                            }
+                        }
+                    }
+                }
+                Stmt::While(w) => {
+                    if let Stmt::Block(b) = &*w.body {
+                        self.collect_return_borrow_fields(b, class_name, depth, visited, fields);
+                    }
+                }
+                Stmt::For(f) => {
+                    if let Stmt::Block(b) = &*f.body {
+                        self.collect_return_borrow_fields(b, class_name, depth, visited, fields);
+                    }
+                }
+                Stmt::Match(m) => {
+                    for arm in &m.arms {
+                        if let Stmt::Block(b) = &*arm.body {
+                            self.collect_return_borrow_fields(
+                                b, class_name, depth, visited, fields,
+                            );
+                        } else if let Stmt::Return(r) = &*arm.body {
+                            if let Some(arg) = &r.arg {
+                                if let Some(f) = self.extract_expr_borrowed_field(
+                                    arg, block, class_name, depth, visited,
+                                ) {
+                                    fields.insert(f);
+                                }
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn extract_expr_borrowed_field(
+        &self,
+        expr: &Expr,
+        block: &BlockStmt,
+        class_name: &str,
+        depth: usize,
+        visited: &mut HashSet<String>,
+    ) -> Option<String> {
+        match expr {
+            Expr::Member(mem) => {
+                if matches!(&*mem.obj, Expr::Ident(id) if id.sym == "_" || id.sym == "this" || id.sym == "self")
+                {
+                    return Some(mem.prop.sym.clone());
+                }
+                let (root, field) = self.extract_member_path(expr);
+                if matches!(root.as_deref(), Some("_") | Some("this") | Some("self")) {
+                    return field;
+                }
+                None
+            }
+            Expr::Index { obj, .. } => {
+                self.extract_expr_borrowed_field(obj, block, class_name, depth, visited)
+            }
+            Expr::Call(call) => {
+                match &*call.callee {
+                    Expr::Member(mem) => {
+                        if matches!(&*mem.obj, Expr::Ident(id) if id.sym == "_" || id.sym == "this" || id.sym == "self")
+                        {
+                            return self.find_method_borrowed_field_depth(
+                                class_name,
+                                &mem.prop.sym,
+                                depth + 1,
+                                visited,
+                            );
+                        }
+                    }
+                    Expr::Ident(id) => {
+                        if let Some(cls) = self.class_defs.get(class_name) {
+                            if cls.methods.iter().any(|m| m.ident.sym == id.sym) {
+                                return self.find_method_borrowed_field_depth(
+                                    class_name,
+                                    &id.sym,
+                                    depth + 1,
+                                    visited,
+                                );
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+                None
+            }
+            Expr::Question(inner) | Expr::Unwrap(inner) | Expr::Deref(inner) => {
+                self.extract_expr_borrowed_field(inner, block, class_name, depth, visited)
+            }
+            Expr::Ident(id) => {
+                for s in &block.body {
+                    if let Stmt::Var(v) = s {
+                        if let Pattern::Ident(ident) = &v.pat {
+                            if ident.sym == id.sym {
+                                if let Some(init) = &v.init {
+                                    return self.extract_expr_borrowed_field(
+                                        init, block, class_name, depth, visited,
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+                None
+            }
+            _ => None,
+        }
+    }
+
+    pub(crate) fn find_method_mutated_fields(
+        &self,
+        class_name: &str,
+        method_name: &str,
+    ) -> Option<HashSet<String>> {
+        let mut visited = HashSet::new();
+        self.find_method_mutated_fields_depth(class_name, method_name, 0, &mut visited)
+    }
+
+    fn find_method_mutated_fields_depth(
+        &self,
+        class_name: &str,
+        method_name: &str,
+        depth: usize,
+        visited: &mut HashSet<String>,
+    ) -> Option<HashSet<String>> {
+        if depth > 10 || !visited.insert(format!("{}::{}", class_name, method_name)) {
+            return None;
+        }
+        let clean = class_name.trim_start_matches('?').trim_start_matches('*');
+        let base_name = if let Some(pos) = clean.find('<') {
+            &clean[..pos]
+        } else if let Some(pos) = clean.find('(') {
+            &clean[..pos]
+        } else {
+            clean
+        };
+        let cls = self.class_defs.get(base_name)?;
+        let method = cls.methods.iter().find(|m| m.ident.sym == method_name)?;
+
+        if method.body.body.is_empty() {
+            return None;
+        }
+
+        let mut mutated = HashSet::new();
+        if self.collect_mutated_fields_in_block(
+            &method.body,
+            base_name,
+            depth,
+            visited,
+            &mut mutated,
+        ) {
+            Some(mutated)
+        } else {
+            None
+        }
+    }
+
+    fn collect_mutated_fields_in_block(
+        &self,
+        block: &BlockStmt,
+        class_name: &str,
+        depth: usize,
+        visited: &mut HashSet<String>,
+        mutated: &mut HashSet<String>,
+    ) -> bool {
+        for s in &block.body {
+            if !self.collect_mutated_fields_in_stmt(s, class_name, depth, visited, mutated) {
+                return false;
+            }
+        }
+        true
+    }
+
+    fn collect_mutated_fields_in_stmt(
+        &self,
+        stmt: &Stmt,
+        class_name: &str,
+        depth: usize,
+        visited: &mut HashSet<String>,
+        mutated: &mut HashSet<String>,
+    ) -> bool {
+        match stmt {
+            Stmt::Expr(e) => {
+                self.collect_mutated_fields_in_expr(e, class_name, depth, visited, mutated)
+            }
+            Stmt::Var(v) => {
+                if let Some(init) = &v.init {
+                    self.collect_mutated_fields_in_expr(init, class_name, depth, visited, mutated)
+                } else {
+                    true
+                }
+            }
+            Stmt::Return(r) => {
+                if let Some(arg) = &r.arg {
+                    self.collect_mutated_fields_in_expr(arg, class_name, depth, visited, mutated)
+                } else {
+                    true
+                }
+            }
+            Stmt::Block(b)
+            | Stmt::UnsafeBlock(b)
+            | Stmt::ArenaBlock(b)
+            | Stmt::ComptimeBlock(b) => {
+                self.collect_mutated_fields_in_block(b, class_name, depth, visited, mutated)
+            }
+            Stmt::If(i) => {
+                let test_ok = self
+                    .collect_mutated_fields_in_expr(&i.test, class_name, depth, visited, mutated);
+                let cons_ok = match &*i.cons {
+                    Stmt::Block(b) => {
+                        self.collect_mutated_fields_in_block(b, class_name, depth, visited, mutated)
+                    }
+                    other => self
+                        .collect_mutated_fields_in_stmt(other, class_name, depth, visited, mutated),
+                };
+                let alt_ok = if let Some(alt) = &i.alt {
+                    match &**alt {
+                        Stmt::Block(b) => self.collect_mutated_fields_in_block(
+                            b, class_name, depth, visited, mutated,
+                        ),
+                        other => self.collect_mutated_fields_in_stmt(
+                            other, class_name, depth, visited, mutated,
+                        ),
+                    }
+                } else {
+                    true
+                };
+                test_ok && cons_ok && alt_ok
+            }
+            Stmt::While(w) => {
+                let test_ok = self
+                    .collect_mutated_fields_in_expr(&w.test, class_name, depth, visited, mutated);
+                let body_ok = match &*w.body {
+                    Stmt::Block(b) => {
+                        self.collect_mutated_fields_in_block(b, class_name, depth, visited, mutated)
+                    }
+                    other => self
+                        .collect_mutated_fields_in_stmt(other, class_name, depth, visited, mutated),
+                };
+                test_ok && body_ok
+            }
+            Stmt::For(f) => {
+                let iter_ok = self
+                    .collect_mutated_fields_in_expr(&f.expr, class_name, depth, visited, mutated);
+                let body_ok = match &*f.body {
+                    Stmt::Block(b) => {
+                        self.collect_mutated_fields_in_block(b, class_name, depth, visited, mutated)
+                    }
+                    other => self
+                        .collect_mutated_fields_in_stmt(other, class_name, depth, visited, mutated),
+                };
+                iter_ok && body_ok
+            }
+            Stmt::Match(m) => {
+                let disc_ok = self
+                    .collect_mutated_fields_in_expr(&m.disc, class_name, depth, visited, mutated);
+                if !disc_ok {
+                    return false;
+                }
+                for arm in &m.arms {
+                    let ok = match &*arm.body {
+                        Stmt::Block(b) => self.collect_mutated_fields_in_block(
+                            b, class_name, depth, visited, mutated,
+                        ),
+                        other => self.collect_mutated_fields_in_stmt(
+                            other, class_name, depth, visited, mutated,
+                        ),
+                    };
+                    if !ok {
+                        return false;
+                    }
+                }
+                true
+            }
+            Stmt::TryCatch {
+                try_block,
+                catch_body,
+                ..
+            } => {
+                let try_ok = self.collect_mutated_fields_in_block(
+                    try_block, class_name, depth, visited, mutated,
+                );
+                let catch_ok = if let Some(cb) = catch_body {
+                    self.collect_mutated_fields_in_stmt(cb, class_name, depth, visited, mutated)
+                } else {
+                    true
+                };
+                try_ok && catch_ok
+            }
+            Stmt::Defer(d) | Stmt::ErrDefer(d) => {
+                self.collect_mutated_fields_in_stmt(d, class_name, depth, visited, mutated)
+            }
+            _ => true,
+        }
+    }
+
+    fn collect_mutated_fields_in_expr(
+        &self,
+        expr: &Expr,
+        class_name: &str,
+        depth: usize,
+        visited: &mut HashSet<String>,
+        mutated: &mut HashSet<String>,
+    ) -> bool {
+        match expr {
+            Expr::Bin(bin) => {
+                if bin.op == BinaryOp::Assign {
+                    match &*bin.left {
+                        Expr::Member(m) => {
+                            if matches!(&*m.obj, Expr::Ident(id) if id.sym == "_" || id.sym == "this" || id.sym == "self")
+                            {
+                                mutated.insert(m.prop.sym.clone());
+                            } else {
+                                let (root, field) = self.extract_member_path(&bin.left);
+                                if matches!(
+                                    root.as_deref(),
+                                    Some("_") | Some("this") | Some("self")
+                                ) {
+                                    if let Some(f) = field {
+                                        mutated.insert(f);
+                                    }
+                                }
+                            }
+                        }
+                        Expr::Ident(id) => {
+                            if id.sym == "_" || id.sym == "this" || id.sym == "self" {
+                                return false;
+                            }
+                            if let Some(cls) = self.class_defs.get(class_name) {
+                                if cls.fields.iter().any(|f| f.ident.sym == id.sym) {
+                                    mutated.insert(id.sym.clone());
+                                }
+                            }
+                        }
+                        Expr::Index { obj, .. } => {
+                            let (root, field) = self.extract_member_path(obj);
+                            if matches!(root.as_deref(), Some("_") | Some("this") | Some("self")) {
+                                if let Some(f) = field {
+                                    mutated.insert(f);
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                self.collect_mutated_fields_in_expr(&bin.left, class_name, depth, visited, mutated)
+                    && self.collect_mutated_fields_in_expr(
+                        &bin.right, class_name, depth, visited, mutated,
+                    )
+            }
+            Expr::Call(call) => {
+                match &*call.callee {
+                    Expr::Member(mem) => {
+                        if matches!(&*mem.obj, Expr::Ident(id) if id.sym == "_" || id.sym == "this" || id.sym == "self")
+                        {
+                            if let Some(sub_mutated) = self.find_method_mutated_fields_depth(
+                                class_name,
+                                &mem.prop.sym,
+                                depth + 1,
+                                visited,
+                            ) {
+                                mutated.extend(sub_mutated);
+                            } else {
+                                return false;
+                            }
+                        }
+                    }
+                    Expr::Ident(id) => {
+                        if let Some(cls) = self.class_defs.get(class_name) {
+                            if cls.methods.iter().any(|m| m.ident.sym == id.sym) {
+                                if let Some(sub_mutated) = self.find_method_mutated_fields_depth(
+                                    class_name,
+                                    &id.sym,
+                                    depth + 1,
+                                    visited,
+                                ) {
+                                    mutated.extend(sub_mutated);
+                                } else {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+                for a in &call.args {
+                    if !self.collect_mutated_fields_in_expr(a, class_name, depth, visited, mutated)
+                    {
+                        return false;
+                    }
+                }
+                true
+            }
+            Expr::Deref(p)
+            | Expr::Unwrap(p)
+            | Expr::Question(p)
+            | Expr::BitNot(p)
+            | Expr::ErrWrap(p)
+            | Expr::BoxNew(p)
+            | Expr::Await(p)
+            | Expr::Move(p)
+            | Expr::ComptimeExpr(p) => {
+                self.collect_mutated_fields_in_expr(p, class_name, depth, visited, mutated)
+            }
+            Expr::Member(m) => {
+                self.collect_mutated_fields_in_expr(&m.obj, class_name, depth, visited, mutated)
+            }
+            Expr::Index { obj, index } => {
+                self.collect_mutated_fields_in_expr(obj, class_name, depth, visited, mutated)
+                    && self
+                        .collect_mutated_fields_in_expr(index, class_name, depth, visited, mutated)
+            }
+            Expr::If {
+                test, cons, alt, ..
+            } => {
+                self.collect_mutated_fields_in_expr(test, class_name, depth, visited, mutated)
+                    && self
+                        .collect_mutated_fields_in_expr(cons, class_name, depth, visited, mutated)
+                    && alt.as_ref().map_or(true, |a| {
+                        self.collect_mutated_fields_in_expr(a, class_name, depth, visited, mutated)
+                    })
+            }
+            Expr::LabeledBlock { block: b, .. }
+            | Expr::Unsafe(b)
+            | Expr::Arena(b)
+            | Expr::Comptime(b) => {
+                self.collect_mutated_fields_in_block(b, class_name, depth, visited, mutated)
+            }
+            Expr::Array(items) => items.iter().all(|i| {
+                self.collect_mutated_fields_in_expr(i, class_name, depth, visited, mutated)
+            }),
+            Expr::Object(fields) => fields.iter().all(|f| {
+                self.collect_mutated_fields_in_expr(&f.val, class_name, depth, visited, mutated)
+            }),
+            Expr::QuestionFallback {
+                expr: e, fallback, ..
+            } => {
+                self.collect_mutated_fields_in_expr(e, class_name, depth, visited, mutated)
+                    && self.collect_mutated_fields_in_expr(
+                        fallback, class_name, depth, visited, mutated,
+                    )
+            }
+            Expr::NullCoalesce { left, right } => {
+                self.collect_mutated_fields_in_expr(left, class_name, depth, visited, mutated)
+                    && self
+                        .collect_mutated_fields_in_expr(right, class_name, depth, visited, mutated)
+            }
+            Expr::Catch { expr: e, body, .. } => {
+                self.collect_mutated_fields_in_expr(e, class_name, depth, visited, mutated)
+                    && self
+                        .collect_mutated_fields_in_stmt(body, class_name, depth, visited, mutated)
+            }
+            Expr::Borrow(inner, _) => {
+                self.collect_mutated_fields_in_expr(inner, class_name, depth, visited, mutated)
+            }
+            _ => true,
+        }
+    }
+
     pub(crate) fn is_zig_heap_ptr_type(&self, ty: &Type) -> bool {
         match ty {
             Type::Map(_, _) | Type::Dict(_, _) | Type::Set(_) => true,
@@ -342,6 +922,9 @@ impl Codegen {
     }
 
     pub(crate) fn check_mutation_allowed(&self, target_expr: &Expr, op_desc: &str) {
+        if self.is_lib_mode {
+            return;
+        }
         match target_expr {
             Expr::Ident(id) => {
                 if id.sym == "this" || id.sym == "_" || self.is_class_field(&id.sym) {
@@ -796,22 +1379,73 @@ impl Codegen {
                                     .collect();
                                 match ret_ty {
                                     Type::BorrowType {
-                                        is_mut, lifetimes, ..
+                                        is_mut,
+                                        lifetimes,
+                                        inner,
+                                        ..
                                     } => {
+                                        let is_slice_of_primitive = !is_mut
+                                            && match &*inner {
+                                                Type::Array(elem) => matches!(
+                                                    &**elem,
+                                                    Type::U8
+                                                        | Type::I8
+                                                        | Type::U16
+                                                        | Type::I16
+                                                        | Type::U32
+                                                        | Type::I32
+                                                        | Type::U64
+                                                        | Type::I64
+                                                        | Type::F32
+                                                        | Type::F64
+                                                        | Type::Bool
+                                                        | Type::String
+                                                ),
+                                                Type::U8
+                                                | Type::I8
+                                                | Type::U16
+                                                | Type::I16
+                                                | Type::U32
+                                                | Type::I32
+                                                | Type::U64
+                                                | Type::I64
+                                                | Type::F32
+                                                | Type::F64
+                                                | Type::Bool
+                                                | Type::String => true,
+                                                _ => false,
+                                            };
                                         let mut sources = Vec::new();
                                         // Tier 1: Method Return Lifetime Elision (default binds to receiver `_`/`this`)
-                                        if lifetimes.is_empty()
-                                            || lifetimes.iter().any(|l| l == "this" || l == "_")
+                                        if !is_slice_of_primitive
+                                            && (lifetimes.is_empty()
+                                                || lifetimes
+                                                    .iter()
+                                                    .any(|l| l == "this" || l == "_"))
                                         {
+                                            let field = self.find_method_borrowed_field(
+                                                &type_name,
+                                                &mem.prop.sym,
+                                            );
                                             if obj_id.sym == "this" || obj_id.sym == "_" {
-                                                sources.push(("this".to_string(), None));
-                                                sources.push(("_".to_string(), None));
+                                                sources.push(("this".to_string(), field.clone()));
+                                                sources.push(("_".to_string(), field));
                                             } else if let Some((orig, _)) =
                                                 self.var_borrow_sources.get(&obj_id.sym)
                                             {
-                                                sources.extend(orig.clone());
+                                                for (src_root, src_f) in orig {
+                                                    let comb_f = match (src_f, &field) {
+                                                        (Some(sf), Some(f)) => {
+                                                            Some(format!("{}.{}", sf, f))
+                                                        }
+                                                        (Some(sf), None) => Some(sf.clone()),
+                                                        (None, Some(f)) => Some(f.clone()),
+                                                        (None, None) => None,
+                                                    };
+                                                    sources.push((src_root.clone(), comb_f));
+                                                }
                                             } else {
-                                                sources.push((obj_id.sym.clone(), None));
+                                                sources.push((obj_id.sym.clone(), field));
                                             }
                                         }
                                         // Tier 3: Explicit parameter binding on method (e.g. `: &other Tensor`)
@@ -876,10 +1510,12 @@ impl Codegen {
                             {
                                 match ret_ty {
                                     Type::BorrowType { is_mut, .. } => {
+                                        let field =
+                                            self.find_method_borrowed_field(c_name, &fid.sym);
                                         return (
                                             vec![
-                                                ("this".to_string(), None),
-                                                ("_".to_string(), None),
+                                                ("this".to_string(), field.clone()),
+                                                ("_".to_string(), field),
                                             ],
                                             is_mut,
                                             false,

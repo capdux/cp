@@ -74,6 +74,7 @@ pub fn resolve_source_path(
             "event" | "event_loop" | "events" => "event".to_string(),
             "conf" | "dotenv" | "ini" => "conf".to_string(),
             "pack" | "compress" => "pack".to_string(),
+            "css" => "css".to_string(),
             other => other.to_string(),
         };
         true

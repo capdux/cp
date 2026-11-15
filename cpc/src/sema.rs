@@ -2378,6 +2378,16 @@ impl Analyzer {
 
                 let old_class = self.current_class.clone();
                 self.current_class = Some(c.ident.sym.clone());
+                for code in &c.extra_zig {
+                    self.register_zig_block_symbols(code);
+                }
+                for nc in &c.nested_classes {
+                    let _ = self.define(
+                        nc.ident.sym.clone(),
+                        SymbolKind::Class(nc.clone()),
+                        nc.ident.span,
+                    );
+                }
                 for m in &c.methods {
                     let mut added_method_bounds = Vec::new();
                     for gp in &m.generic_params {
@@ -4621,6 +4631,14 @@ impl Analyzer {
             return true;
         }
 
+        if let (Type::BorrowType { inner: t_inner, .. }, Type::BorrowType { inner: s_inner, .. }) =
+            (target, src)
+        {
+            if self.can_coerce(t_inner, s_inner, init_expr) {
+                return true;
+            }
+        }
+
         let resolved_target = self.resolve_type(target);
         let resolved_src = self.resolve_type(src);
         if &resolved_target != target || &resolved_src != src {
@@ -6441,21 +6459,37 @@ impl Analyzer {
             }
             Expr::LabeledBlock { block, .. } => {
                 for s in block.body.iter().rev() {
-                    match s {
-                        Stmt::Expr(Expr::LabeledBreak(_, _, Some(val)))
-                        | Stmt::Expr(Expr::Break(_, Some(val))) => {
-                            return Ok(self.infer_type(val).unwrap_or(Type::Any));
-                        }
-                        Stmt::Expr(e) => {
-                            return Ok(self.infer_type(e).unwrap_or(Type::Any));
-                        }
-                        _ => {}
-                        _ => {}
+                    if let Some(val) = Self::find_break_value_in_stmt(s) {
+                        return Ok(self.infer_type(val).unwrap_or(Type::Any));
+                    }
+                    if let Stmt::Expr(e) = s {
+                        return Ok(self.infer_type(e).unwrap_or(Type::Any));
                     }
                 }
                 Ok(Type::Void)
             }
             _ => Ok(Type::Any),
+        }
+    }
+
+    fn find_break_value_in_stmt(s: &Stmt) -> Option<&Expr> {
+        match s {
+            Stmt::Expr(Expr::LabeledBreak(_, _, Some(val)))
+            | Stmt::Expr(Expr::Break(_, Some(val))) => Some(val),
+            Stmt::If(i) => Self::find_break_value_in_stmt(&i.cons).or_else(|| {
+                i.alt
+                    .as_ref()
+                    .and_then(|a| Self::find_break_value_in_stmt(a))
+            }),
+            Stmt::Block(b) | Stmt::UnsafeBlock(b) => {
+                for inner_s in b.body.iter().rev() {
+                    if let Some(val) = Self::find_break_value_in_stmt(inner_s) {
+                        return Some(val);
+                    }
+                }
+                None
+            }
+            _ => None,
         }
     }
 

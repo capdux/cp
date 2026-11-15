@@ -5,12 +5,50 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 
 impl Codegen {
+    pub(crate) fn is_receiver_param_type(ty: &Type, class_name: Option<&String>) -> bool {
+        match ty {
+            Type::Auto | Type::Any => true,
+            Type::Ref(id) => {
+                if id.sym == "@This()" || id.sym == "This" || id.sym == "Self" {
+                    return true;
+                }
+                if let Some(c) = class_name {
+                    if &id.sym == c {
+                        return true;
+                    }
+                }
+                false
+            }
+            Type::BorrowType { inner, .. } | Type::RawPtr { inner, .. } => {
+                Self::is_receiver_param_type(inner, class_name)
+            }
+            _ => false,
+        }
+    }
+
     pub fn get_func_receiver_mode(func: &Function) -> ReceiverMode {
         if func.is_static {
             return ReceiverMode::Static;
         }
         if let Some(first) = func.params.first() {
-            if first.ident.sym == "this" || first.ident.sym == "_" {
+            let is_receiver_name = first.ident.sym == "this"
+                || first.ident.sym == "self"
+                || (first.ident.sym == "_"
+                    && !matches!(
+                        &first.ty,
+                        Type::Void
+                            | Type::F32
+                            | Type::F64
+                            | Type::U8
+                            | Type::I32
+                            | Type::U32
+                            | Type::U64
+                            | Type::I64
+                            | Type::USize
+                    ));
+            if is_receiver_name
+                || matches!(&first.ty, Type::Ref(id) if id.sym == "@This()" || id.sym == "This" || id.sym == "Self")
+            {
                 if first.is_move {
                     return ReceiverMode::Move;
                 } else if first.is_mut {
@@ -31,15 +69,27 @@ impl Codegen {
             || func.ident.sym == "__super_init"
             || func.ident.sym == "__super_release"
         {
-            ReceiverMode::Mut
-        } else {
-            ReceiverMode::ReadOnly
+            return ReceiverMode::Mut;
         }
+        if Self::block_contains_ident(&func.body, "this")
+            || Self::block_contains_ident(&func.body, "_")
+            || Self::block_contains_ident(&func.body, "self")
+        {
+            return ReceiverMode::ReadOnly;
+        }
+        if !func.params.is_empty() {
+            return ReceiverMode::Static;
+        }
+        ReceiverMode::Static
     }
 
     pub fn get_sig_receiver_mode(sig: &MethodSig) -> ReceiverMode {
         if let Some(first) = sig.params.first() {
-            if first.ident.sym == "this" || first.ident.sym == "_" {
+            if first.ident.sym == "this"
+                || first.ident.sym == "_"
+                || first.ident.sym == "self"
+                || matches!(&first.ty, Type::Ref(id) if id.sym == "@This()" || id.sym == "This" || id.sym == "Self")
+            {
                 if first.is_move {
                     return ReceiverMode::Move;
                 } else if first.is_mut {
@@ -48,8 +98,9 @@ impl Codegen {
                     return ReceiverMode::ReadOnly;
                 }
             }
+            return ReceiverMode::Static;
         }
-        ReceiverMode::ReadOnly
+        ReceiverMode::Static
     }
 
     pub(crate) fn prepare_decorator_stmts(
@@ -151,8 +202,13 @@ impl Codegen {
             .filter(|m| self.dec_defs.contains_key(&m.name.sym))
             .collect();
 
+        let saved_const = self.const_vars.clone();
+        let saved_ns = self.type_namespace_vars.clone();
+
         if active_decs.is_empty() {
             self.generate_function_logic(func, class_name);
+            self.const_vars = saved_const;
+            self.type_namespace_vars = saved_ns;
             return;
         }
 
@@ -219,6 +275,8 @@ impl Codegen {
             self.current_next_callee = old_callee;
             self.current_forward_params = old_forward;
         }
+        self.const_vars = saved_const;
+        self.type_namespace_vars = saved_ns;
     }
 
     pub(crate) fn generate_function(&mut self, func: &Function) {
@@ -242,8 +300,8 @@ impl Codegen {
                     || (!bytes[i - 1].is_ascii_alphanumeric()
                         && bytes[i - 1] != b'_'
                         && bytes[i - 1] != b'.');
-                let next_ok = i + m == n
-                    || (!bytes[i + m].is_ascii_alphanumeric() && bytes[i + m] != b'_');
+                let next_ok =
+                    i + m == n || (!bytes[i + m].is_ascii_alphanumeric() && bytes[i + m] != b'_');
                 if prev_ok && next_ok {
                     return true;
                 }
@@ -444,7 +502,10 @@ impl Codegen {
                         c.clone()
                     };
                     let ptr_type = if let Some(first) = func.params.first().filter(|p| {
-                        p.ident.sym == "this" || p.ident.sym == "_" || p.ident.sym == "self"
+                        p.ident.sym == "this"
+                            || p.ident.sym == "self"
+                            || (p.ident.sym == "_"
+                                && Self::is_receiver_param_type(&p.ty, class_name))
                     }) {
                         if first.is_mut
                             || matches!(
@@ -477,10 +538,17 @@ impl Codegen {
             let is_c = c_meta.is_some() || func.meta.iter().any(|m| m.name.sym == "extern");
             let is_extern_decl = is_c && func.body.body.is_empty();
             let mut mutable_copy_params: Vec<String> = Vec::new();
-            for p in &func.params {
+            let mut receiver_skipped = false;
+            for (idx, p) in func.params.iter().enumerate() {
                 if self.is_class_method
-                    && (p.ident.sym == "this" || p.ident.sym == "_" || p.ident.sym == "self")
+                    && !receiver_skipped
+                    && (p.ident.sym == "this"
+                        || p.ident.sym == "self"
+                        || (idx == 0
+                            && p.ident.sym == "_"
+                            && Self::is_receiver_param_type(&p.ty, class_name)))
                 {
+                    receiver_skipped = true;
                     continue;
                 }
                 if p.ident.sym == "..." {
@@ -524,6 +592,16 @@ impl Codegen {
                 let emit_name = if needs_mut_copy {
                     mutable_copy_params.push(p.ident.sym.clone());
                     format!("_cp_{}", p.ident.sym)
+                } else if p.ident.sym == "_"
+                    && !self.locals.contains_key("self")
+                    && (Self::block_contains_ident(&func.body, "this")
+                        || Self::block_contains_ident(&func.body, "self"))
+                {
+                    self.locals.insert("self".to_string(), mapped_ty.clone());
+                    "self".to_string()
+                } else if p.ident.sym == "this" {
+                    self.locals.insert("self".to_string(), mapped_ty.clone());
+                    "self".to_string()
                 } else {
                     p.ident.sym.clone()
                 };
@@ -626,9 +704,10 @@ impl Codegen {
                     || self.last_use_map.contains_key("this")
                     || self.last_use_map.contains_key("_")
                     || Self::block_contains_ident(&func.body, "self")
-                    || Self::block_contains_ident(&func.body, "this");
+                    || Self::block_contains_ident(&func.body, "this")
+                    || Self::block_contains_ident(&func.body, "_");
                 if !is_self_used {
-                    self.writeln("_ = &self;");
+                    self.writeln("_ = self;");
                 }
                 if self.current_receiver_mode == ReceiverMode::Move && func.ident.sym != "release" {
                     self.writeln("var __self_moved = false; _ = &__self_moved;");
@@ -639,24 +718,35 @@ impl Codegen {
                 self.writeln(&format!("var {0} = _cp_{0}; _ = &{0};", name));
             }
             for p in &func.params {
-                if p.ident.sym != "this"
-                    && p.ident.sym != "_"
-                    && !(self.is_class_method && p.ident.sym == "self")
+                let emitted_name = if p.ident.sym == "this" {
+                    "self"
+                } else if p.ident.sym == "_" {
+                    "_"
+                } else {
+                    &p.ident.sym
+                };
+                if emitted_name != "_"
+                    && !(self.is_class_method && (p.ident.sym == "this" || p.ident.sym == "self"))
                 {
                     let is_used = mutable_copy_params.contains(&p.ident.sym)
                         || self.last_use_map.contains_key(&p.ident.sym)
+                        || self.last_use_map.contains_key(emitted_name)
                         || Self::block_contains_ident(&func.body, &p.ident.sym)
-                        || (p.is_comptime
-                            && (Self::code_contains_word(&zig_ret_ty, &p.ident.sym)
-                                || func.params.iter().any(|other| {
-                                    other.ident.sym != p.ident.sym
-                                        && Self::code_contains_word(
-                                            &self.map_type(&other.ty),
-                                            &p.ident.sym,
-                                        )
-                                })));
+                        || Self::block_contains_ident(&func.body, emitted_name)
+                        || Self::code_contains_word(&zig_ret_ty, &p.ident.sym)
+                        || Self::code_contains_word(&zig_ret_ty, emitted_name)
+                        || func.params.iter().any(|other| {
+                            other.ident.sym != p.ident.sym
+                                && (Self::code_contains_word(
+                                    &self.map_type(&other.ty),
+                                    &p.ident.sym,
+                                ) || Self::code_contains_word(
+                                    &self.map_type(&other.ty),
+                                    emitted_name,
+                                ))
+                        });
                     if !is_used {
-                        self.writeln(&format!("_ = {};", p.ident.sym));
+                        self.writeln(&format!("_ = {};", emitted_name));
                     }
                     if p.is_move {
                         self.drop_flag_vars.insert(p.ident.sym.clone());

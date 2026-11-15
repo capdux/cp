@@ -500,6 +500,10 @@ pub enum Expr {
         cons: Box<Expr>,
         alt: Option<Box<Expr>>,
         is_comptime: bool,
+        #[serde(default)]
+        capture: Option<Ident>,
+        #[serde(default)]
+        is_ptr_capture: bool,
     },
     Continue(Span),
     LabeledContinue(Span, Ident),

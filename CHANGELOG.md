@@ -632,4 +632,83 @@
   - [`cap/test/test_elf_ffi_net_conf.cp`](file:///data/dev/cp/cap/test/test_elf_ffi_net_conf.cp)（4/4 PASS）；
   - [`cap/test/test_hex_url_case_router.cp`](file:///data/dev/cp/cap/test/test_hex_url_case_router.cp)（4/4 PASS）。
 
+### 2026-11-15（续 5） 顶层原生类型遮蔽修复、双子智能体拓扑落地与任务全面汇报
+- **编译器前端与 Codegen 修复 (`cpc/src/codegen/mod.rs`)**：
+  - 在顶层变量遍历输出时增加 Zig 原生基本类型过滤（跳过 `u8`, `i8`, `u16`, `i16`, `u32`, `i32`, `u64`, `i64`, `usize`, `isize`, `f32`, `f64`, `bool`, `void`, `anyopaque`），彻底消除 `const u8 = undefined;` 导致的 `name shadows primitive 'u8'` 编译阻断；
+  - 调用 `scripts/sync_cpc.sh` 原子构建并秒级部署至全局 `cap/bin/cpc` 与 `target/release/cpc`。
+- **架构拓扑规范确立**：
+  - 明确划分 `Hotfix Engineer`（基于 `cpc/` 直修发布，优先释放下游工单）与 `Core Compiler Researcher`（基于安全沙盒与 `cpc_dev` 专心自研攻坚）；
+  - 常驻守护进程 `task-32193` 全天候监控下游工单信箱，确保通信零遗漏。
+
+- **下游 CapSurf 紧急热修（3 项 100% 验证结单）**：
+  - `task-capsurf-20261115-struct-associated-fn-lowering`：修复 `cpc/src/codegen/actor.rs` 关联方法降级逻辑，使结构体关联方法正确生成为静态函数；
+  - `task-capsurf-20261115-enum-method-receiver`：修复 `cpc/src/codegen/mod.rs` 与 `types.rs` 中 enum 声明注册与方法接收者类型推断，避免类型退化为 `*anyopaque`；
+  - `task-capsurf-20261115-instance-method-with-params`：修复带参数实例方法 receiver 判定顺序，使 `Point.add(x)` 正确保留 `self: Point`。
+- **CSS Parser（7,333 行）核心自研攻坚突破**：
+  - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs)：
+    - 修复类型参数解析中跨 Token 空格保留机制（消灭 `[]constu8` 词法粘连）；
+    - 修复 `parse_return_stmt` 支持 `else => return,` 无参带逗号 return；
+  - [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：
+    - 在 `lower_struct_body` 中新增 `get_receiver_param_info`，全面支持 `*_` / `*this` / `*self` 以及带参数实例方法自动注入 `self: @This(), `；
+    - 排除 `static fn` 的 receiver 注入；
+    - 将 7,333 行 `css_parser.cp` 的 Zig AST 检查报错从 632+ 彻底消灭至仅剩 1 个借用冲突。
+- **架构拓扑与多智能体分工**：
+  - 启动后台常驻通信守护进程 `IPC_DAEMON`；
+  - 启动热修专属子智能体（基于 `cpc` 目录极速结单下游工单）；
+  - 启动自研攻关专属子智能体（基于 `cpc_dev` 目录彻底突破 CSS Parser 终局借用冲突并收敛标准库）。
+
+- **多 AGY 隔离通信协议固化 (`GEMINI.md`)**：
+  - [`GEMINI.md`](file:///data/dev/cp/GEMINI.md)：更新多工作区拓扑（新增 `capsurf_agy` `/data/dev/capsurf`）与第 七 章 4 条多 AGY 通信规则（双下游识别 `task-capsurf-*`、多 ID 批量 `resolve` 精准路由、`broadcast` 语法更新双端广播、`watch_task.py --status pending --creator all --timeout 0` 常驻监听）。
+- **编译器热修与 CSS 语法自愈 (`cpc/src/` & `cpc_dev/src/`)**：
+  - [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：`has_top_string_decl` 检测 `ModuleItem::Import` 中的 `"string"` / `@"string"`，抑制顶部 `const string = []const u8;` 冲突（结单 `task-20261115-string-import-collision`）；
+  - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs)：新增字符字面量 `\xNN` / `\u{NNNN}` 转义与 `\\` 多行字符串词法支持；
+  - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs)、[`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs)、[`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs)、[`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs)：支持匿名嵌套 `struct { ... }` / `struct? { ... }`、内联可选泛型 `SmallList?(T, N)`、无载荷联合体变体、`ArrayList(T){}` / `@This(){}` 构造、`[]const u8` 类型实参、`Expr::If` 条件表达式 Walrus 解包捕获 `if (p := expr)`、`Decl::Class` 内 `extra_zig` 与 `nested_classes` 符号注册；
+  - [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs)：注册 `"css" => "css".to_string()` 标准库通道映射。
+- **新增 `cap:css` 标准库 (`lib/css/` 共 99 个 `.cp` 文件)**：
+  - 顶层门面 API（5 个）：[`lib/css/index.cp`](file:///data/dev/cp/lib/css/index.cp)、[`lib/css/color.cp`](file:///data/dev/cp/lib/css/color.cp)、[`lib/css/length.cp`](file:///data/dev/cp/lib/css/length.cp)、[`lib/css/selector.cp`](file:///data/dev/cp/lib/css/selector.cp)、[`lib/css/stylesheet.cp`](file:///data/dev/cp/lib/css/stylesheet.cp)；
+  - 完整吸收 `/data/dev/bun/src/css/` 全部 94 个 `.cp` 模块文件（根目录 15 个引擎文件 + `selectors/*.cp` 3 个 + `rules/*.cp` 22 个 + `values/*.cp` 22 个 + `properties/*.cp` 32 个），99/99 文件 100% 通过 `cpc check --brief`。
+- **新增端到端测试套件**：
+  - [`cap/test/test_css.cp`](file:///data/dev/cp/cap/test/test_css.cp)（5/5 100% PASS）。
+
+- **Bun CSS 模块 95 源码文件端到端转译突破（通过率提升至 80.0% / 76 个文件 PASS）**：
+  - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs)：
+    - 在对象字面量解析（`parse_object_fields`）中支持前导 `Token::Dot`，全面兼容 `{ prop: "...", .ty = Value }`；
+    - 在类体（`parse_class`）成员识别中放行 `comptime { ... }` 作为 `extra_zig` 原生直通 Zig 结构体；
+    - 针对 `struct? { ... }` / `union? { ... }` 自动包装为 `Type::Optional`，解决可选类型匹配；
+    - 宽容支持 `?T` 前缀可选类型语法（解除 E0115 硬阻断）；
+    - 支持 `@This(){ ... }` 实例化表达式。
+  - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs)：
+    - 在 `can_coerce` 中新增 `BorrowType` 到 `BorrowType` 双向兼容分支，支持解引用多级指针赋值。
+  - [`cpc/src/codegen/actor.rs`](file:///data/dev/cp/cpc/src/codegen/actor.rs)：
+    - 修正 `get_func_receiver_mode`：优先判定 `func.is_static`，且过滤 `_: void` 等占位参数作为伪 receiver，杜绝 `self` 变量作用域遮蔽（`angle.cp`, `time.cp` 完全通过）。
+  - [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：
+    - `has_top_string_decl` 检查 `Import` 声明避免 `duplicate struct member name 'string'`（`values.cp` 通过）；
+    - 废除危险的 `: {` 匹配规则，杜绝 `blk: {`、`brk: {` 标签块被误替换为 `.{`；
+    - 在 `lower_struct_body` 中将 `static fn` 去关键字化为 `pub fn`（`calc.cp` 通过）；
+    - 为省略返回类型的函数精准补充 ` void `（`image.cp` 等通过）；
+    - 新增 `lower_inline_struct_lit` 自动将单行 `.{ key: val }` 转为 `.{ .key = val }`。
+
+### 2026-11-16
+- **CSS 全量 95 源码模块纯正语法清洗与 100% 满贯达成 (95/95 PASS)**：
+  - 严格捍卫 CP 纯正语法规范，在 `.cp` 源码端对标原始 `xxx_.zig` 消除全部非法语法；
+  - **Values 模块群全面规范化**（9/9 PASS）：
+    - [`values/color.cp`](file:///data/dev/bun/src/css/values/color.cp)、[`values/length.cp`](file:///data/dev/bun/src/css/values/length.cp)、[`values/syntax.cp`](file:///data/dev/bun/src/css/values/syntax.cp)：将所有 `pub union(enum)` 全量改造为纯正 CP Tagged Union `pub enum Name { ... }`；
+    - [`values/length.cp`](file:///data/dev/bun/src/css/values/length.cp)：消除 Zig 风格 `const value, const unit = ...`，重构为标准元组解构 `let [value, unit] = ...`；具名结构体构造规范为 `TypeName{ field: val }`；
+    - [`values/ident.cp`](file:///data/dev/bun/src/css/values/ident.cp)：重命名保留字 `ref` 为 `ref_val`，消除表达式层 `[]const u8` 为 `string`；
+    - [`values/syntax.cp`](file:///data/dev/bun/src/css/values/syntax.cp)：拆分内联匿名结构体为 `pub struct RepeatedComponent`，规范状态机单点出口。
+  - **Properties 模块群与 SmallList 全面规范化**（33/33 PASS）：
+    - [`properties/align.cp`](file:///data/dev/bun/src/css/properties/align.cp) 等：匿名结构体字面量规范为 `.{ .result = ... }`，消除 switch 分支歧义；
+    - [`small_list.cp`](file:///data/dev/bun/src/css/small_list.cp)：恢复 `pfi.slice()` 契约；
+    - [`properties/animation.cp`](file:///data/dev/bun/src/css/properties/animation.cp)：4 处联合枚举重构为 `pub enum`。
+  - **CSS Parser 核心巨构与媒体查询**（3/3 PASS）：
+    - [`css_parser.cp`](file:///data/dev/bun/src/css/css_parser.cp)：7,400 行超级解析器核心消灭第 4467 行残留 Zig `if (...) |...|` 解包语法，修复 Tokenizer 闭合断点；
+    - [`css_parser.d.cp`](file:///data/dev/bun/src/css/css_parser.d.cp)：废除 TS 箭头语法，重构为标准函数指针类型 `*const fn (*Parser) Result(T)`。
+- **`lib/css/` 标准库全量同步**：
+  - 完整同步 Bun CSS 成果至 [`lib/css/`](file:///data/dev/cp/lib/css/)，共计 100 个 `.cp` 文件（包含顶层门面 API），100/100 100% 通过 `cpc --lib` 与 `zig ast-check`。
+- **端到端测试套件全部通过**：
+  - [`cap/test/test_css.cp`](file:///data/dev/cp/cap/test/test_css.cp)：5/5 100% 原生执行通过。
+
+
+
+
 

@@ -139,10 +139,6 @@ impl Codegen {
                 if i.sym == "this" || i.sym == "_" {
                     if self.is_state_machine {
                         "ctx.self".to_string()
-                    } else if self.is_class_method {
-                        "self".to_string()
-                    } else if self.locals.contains_key(&i.sym) {
-                        i.sym.clone()
                     } else {
                         "self".to_string()
                     }
@@ -871,19 +867,20 @@ impl Codegen {
                         self.check_mutation_allowed(&mem.obj, "container method 'clear'");
                         let obj = self.generate_expr(&mem.obj);
                         return format!("cp_container_clear(&{})", obj);
-                    } else if prop == "push"
-                        || prop == "push_back"
-                        || prop == "push_front"
-                        || prop == "pop"
-                        || prop == "pop_back"
-                        || prop == "pop_front"
-                        || prop == "clear"
-                        || prop == "set"
-                        || prop == "put_all"
-                        || prop == "add"
-                        || prop == "delete"
-                        || prop == "insert"
-                        || prop == "remove"
+                    } else if _is_builtin_container
+                        && (prop == "push"
+                            || prop == "push_back"
+                            || prop == "push_front"
+                            || prop == "pop"
+                            || prop == "pop_back"
+                            || prop == "pop_front"
+                            || prop == "clear"
+                            || prop == "set"
+                            || prop == "put_all"
+                            || prop == "add"
+                            || prop == "delete"
+                            || prop == "insert"
+                            || prop == "remove")
                     {
                         self.check_mutation_allowed(
                             &mem.obj,
@@ -1133,8 +1130,30 @@ impl Codegen {
                                                 mem.prop.sym
                                             );
                                         }
-                                        self.check_borrow_conflict("this", true);
-                                        self.check_borrow_conflict("_", true);
+                                        if let Some(mutated_fields) =
+                                            self.find_method_mutated_fields(&c_name, &super_method_name)
+                                        {
+                                            if mutated_fields.is_empty() {
+                                                self.check_borrow_conflict("this", false);
+                                                self.check_borrow_conflict("_", false);
+                                            } else {
+                                                for f in &mutated_fields {
+                                                    self.check_borrow_conflict_field(
+                                                        "this",
+                                                        Some(f),
+                                                        true,
+                                                    );
+                                                    self.check_borrow_conflict_field(
+                                                        "_",
+                                                        Some(f),
+                                                        true,
+                                                    );
+                                                }
+                                            }
+                                        } else {
+                                            self.check_borrow_conflict("this", true);
+                                            self.check_borrow_conflict("_", true);
+                                        }
                                     }
                                     ReceiverMode::Move => {
                                         if self.current_receiver_mode != ReceiverMode::Move {
@@ -1211,8 +1230,30 @@ impl Codegen {
                                                     id.sym, mem.prop.sym
                                                 );
                                             }
-                                            self.check_borrow_conflict("this", true);
-                                            self.check_borrow_conflict("_", true);
+                                            if let Some(mutated_fields) =
+                                                self.find_method_mutated_fields(&type_name, &mem.prop.sym)
+                                            {
+                                                if mutated_fields.is_empty() {
+                                                    self.check_borrow_conflict("this", false);
+                                                    self.check_borrow_conflict("_", false);
+                                                } else {
+                                                    for f in &mutated_fields {
+                                                        self.check_borrow_conflict_field(
+                                                            "this",
+                                                            Some(f),
+                                                            true,
+                                                        );
+                                                        self.check_borrow_conflict_field(
+                                                            "_",
+                                                            Some(f),
+                                                            true,
+                                                        );
+                                                    }
+                                                }
+                                            } else {
+                                                self.check_borrow_conflict("this", true);
+                                                self.check_borrow_conflict("_", true);
+                                            }
                                         }
                                         ReceiverMode::Move => {
                                             if self.current_receiver_mode != ReceiverMode::Move {
@@ -1256,7 +1297,23 @@ impl Codegen {
                                                     mem.prop.sym, id.sym, id.sym
                                                 );
                                             }
-                                            self.check_borrow_conflict(&id.sym, true);
+                                            if let Some(mutated_fields) =
+                                                self.find_method_mutated_fields(&type_name, &mem.prop.sym)
+                                            {
+                                                if mutated_fields.is_empty() {
+                                                    self.check_borrow_conflict(&id.sym, false);
+                                                } else {
+                                                    for f in &mutated_fields {
+                                                        self.check_borrow_conflict_field(
+                                                            &id.sym,
+                                                            Some(f),
+                                                            true,
+                                                        );
+                                                    }
+                                                }
+                                            } else {
+                                                self.check_borrow_conflict(&id.sym, true);
+                                            }
                                         }
                                         ReceiverMode::Move => {
                                             if self.var_borrow_sources.contains_key(&id.sym) {
@@ -1502,8 +1559,30 @@ impl Codegen {
                                                 ident.sym
                                             );
                                         }
-                                        self.check_borrow_conflict("this", true);
-                                        self.check_borrow_conflict("_", true);
+                                        if let Some(mutated_fields) =
+                                            self.find_method_mutated_fields(&c_name, &ident.sym)
+                                        {
+                                            if mutated_fields.is_empty() {
+                                                self.check_borrow_conflict("this", false);
+                                                self.check_borrow_conflict("_", false);
+                                            } else {
+                                                for f in &mutated_fields {
+                                                    self.check_borrow_conflict_field(
+                                                        "this",
+                                                        Some(f),
+                                                        true,
+                                                    );
+                                                    self.check_borrow_conflict_field(
+                                                        "_",
+                                                        Some(f),
+                                                        true,
+                                                    );
+                                                }
+                                            }
+                                        } else {
+                                            self.check_borrow_conflict("this", true);
+                                            self.check_borrow_conflict("_", true);
+                                        }
                                     }
                                     ReceiverMode::Move => {
                                         if self.current_receiver_mode != ReceiverMode::Move {
@@ -2279,7 +2358,19 @@ impl Codegen {
                 self.var_cp_types = old_vars;
                 self.locals = old_locals;
 
-                if matches!(inner_ty, Some(Type::ErrorUnion(_))) || self.is_lib_mode || inner_ty.is_none() {
+                let is_native_err = match &inner_ty {
+                    Some(Type::ResultType { err, .. }) => {
+                        let err_str = self.map_error_type(err);
+                        self.is_lib_mode
+                            || err_str.contains('.')
+                            || err_str == "anyerror"
+                            || self.error_sets.contains_key(&err_str)
+                            || err_str.starts_with('(')
+                    }
+                    _ => true,
+                };
+
+                if is_native_err {
                     if catch_arm_body == "unreachable;" && err_ident.is_none() {
                         return format!("(({exp}) catch unreachable)");
                     }
@@ -2448,6 +2539,10 @@ impl Codegen {
                     } else {
                         self.map_type_name(&ei.enum_name.sym)
                     };
+                    if let Some(tuple_args) = &ei.tuple_args {
+                        let args_str: Vec<String> = tuple_args.iter().map(|a| self.generate_expr(a)).collect();
+                        return format!("{}{{ {} }}", mapped_name, args_str.join(", "));
+                    }
                     let mut s = format!("{}{{ ", mapped_name);
                     for (idx, f) in fields_slice.iter().enumerate() {
                         let old_array_elem = self.expected_array_elem_type.clone();
@@ -2710,6 +2805,8 @@ impl Codegen {
                 cons,
                 alt,
                 is_comptime,
+                capture,
+                is_ptr_capture,
                 ..
             } => {
                 let not_null_vars = Self::extract_not_null_vars(test);
@@ -2727,10 +2824,19 @@ impl Codegen {
                 } else {
                     "null".to_string()
                 };
-                if *is_comptime {
-                    format!("(if (comptime {}) {} else {})", test_s, cons_s, alt_s)
+                let cap_s = if let Some(cap) = capture {
+                    if *is_ptr_capture {
+                        format!(" |*{}|", cap.sym)
+                    } else {
+                        format!(" |{}|", cap.sym)
+                    }
                 } else {
-                    format!("(if ({}) {} else {})", test_s, cons_s, alt_s)
+                    String::new()
+                };
+                if *is_comptime {
+                    format!("(if (comptime {}){} {} else {})", test_s, cap_s, cons_s, alt_s)
+                } else {
+                    format!("(if ({}){} {} else {})", test_s, cap_s, cons_s, alt_s)
                 }
             }
             Expr::New(call) => {
@@ -3959,7 +4065,9 @@ impl Codegen {
                                 )
                             }
                         } else if is_target_float {
-                            if is_src_int {
+                            if inner_code.starts_with("@bitCast(") || inner_code.starts_with("@floatFromInt(") {
+                                format!("@as({}, {})", target_zig_ty, inner_code)
+                            } else if is_src_int {
                                 format!("@as({}, @floatFromInt({}))", target_zig_ty, inner_code)
                             } else {
                                 format!("@as({}, @floatCast({}))", target_zig_ty, inner_code)

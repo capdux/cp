@@ -84,8 +84,19 @@ pub fn find_referenced_vars_in_expr(expr: &Expr, vars: &mut HashSet<String>) {
     match expr {
         Expr::Ident(i) => {
             vars.insert(i.sym.clone());
+            if i.sym.contains(',') || i.sym.contains(' ') || i.sym.contains('.') {
+                extract_words_from_str(&i.sym, vars);
+            }
         }
         Expr::Bin(b) => {
+            if b.op == BinaryOp::Assign {
+                if let Expr::Ident(id) = &*b.left {
+                    if id.sym == "_" {
+                        find_referenced_vars_in_expr(&b.right, vars);
+                        return;
+                    }
+                }
+            }
             find_referenced_vars_in_expr(&b.left, vars);
             find_referenced_vars_in_expr(&b.right, vars);
         }
