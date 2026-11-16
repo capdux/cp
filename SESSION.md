@@ -1,3 +1,53 @@
+# CP 协同开发执行记录 (SESSION) - 2026-11-16 (热数据)
+
+> 历史执行记录已完整归档至 [SESSION_H.md](file:///data/dev/cp/SESSION_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
+
+## 指令：Phase 2 人体工程学语法糖审核与第一批特性落地（??=、@pre/@ret、万能降级双重解包、SIMD向量原语、@[Default]宏）
+
+- **用户需求**：
+  1. 深度分析与审核 Phase 2（高频人体工程学语法糖）与 Phase 3（系统级黑科技）建议，评估已实现、没必要、需现在实现、需完善后实现的清单；
+  2. 解答用户 3 点裁决：
+     - 后置契约定名：正式裁决为 `@ret(cond)`，坚决废弃歧义词 `@post`，保持与 `@pre` 4 字符对称；
+     - 坚持语法正交性，彻底废除引入 `else` 关键字，坚持“错误用 `catch`，空值用 `??`，通杀用 `?`”；
+     - 确认万能降级符 `?` 必须支持 `{}` 多行发散块，且对复合类型 `(?T)!` 自动链式双重解包；
+  3. 执行第一批建议特性落地，并更新 `cp_ref.md` 和 `cp_agent_ref.md` 设计规范；
+  4. 继续推进工作并闭环；
+  5. 指令：“git 提交”。
+
+- **执行结果**：
+  1. **第一批核心特性在编译器全面实装并测试通过 (100% PASS)**：
+     - `??=` 空值合并赋值：`lexer.rs`、`parser.rs`、`stmt.rs`，Lowering 为天然短路的 `if (lhs == null) { lhs = rhs; }`，0 堆开销；
+     - 契约式设计 `@pre` 与 `@ret`：`parser.rs` 扩展二元断言表达式并支持函数尾随契约；`sema.rs` 豁免常量检查；`actor.rs` 入口断言发射；`stmt.rs` 在 `return` 前捕获 `ret` 发射断言；
+     - 万能降级符 `? { ... }` 与双重链式解包：`parser.rs` 支持代码块表达式；`expr.rs` 对 `(?T)!` 自动发射双重解包 `((expr catch { ... }) orelse { ... })`；
+     - 内建定长 SIMD 向量原语：`types.rs` 与 `sema.rs` 支持 `u8x16`..`f64x4` 映射至底层 `@Vector(N, T)`，原生支持 `@splat` 与向量算术运算符（`+`, `-`, `*`, `/`）；
+     - 派生宏全家桶 `@[Default]`：`sema.rs` 实现 `derive_default_method`，自动生成 `pub static fn default(): ClassName` 零值初始化静态工厂；
+     - 切片糖消歧保护：`expr.rs` 采用白名单机制，保留用户自定义类型的同名 `.slice()` 成员方法。
+  2. **端到端测试覆盖**：
+     - 编写新测试 [`cap/test/test_phase2_ergonomics.cp`](file:///data/dev/cp/cap/test/test_phase2_ergonomics.cp)，覆盖全部 6 项特性，运行验证 100% PASS；全量测试 `test_all.cp` 回归 100% PASS。
+  3. **双轨规范全面更新**：
+     - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)：新增第 20.11 节《高频人体工程学优化、契约式设计与 SIMD 原语》；
+     - [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)：同步精简更新向量类型、`??=`、`@pre`/`@ret` 尾随契约、`? { ... }` 块降级与双重解包、`@[Default]` 派生宏。
+  4. **代码库与开发沙盒双向同步**：
+     - `cpc/src/*` 已完成原子编译部署并向 `cpc_dev/src/*` 完整同步。
+
+## 阶段里程碑 Git 提交
+
+- **提交说明**：`feat(cpc): implement phase 2 ergonomics sugar, design-by-contract, SIMD primitives and default derive`
+- **变更范围**：
+  1. `cpc/src/lexer.rs`：新增空值合并赋值操作符 `Token::QuestionQuestionAssign` (`??=`)；
+  2. `cpc/src/parser.rs`：支持 `??=` 复合赋值解析、`parse_meta_arg` 二元断言表达式解析、函数签名尾随契约 `@pre` 与 `@ret`、万能降级解包 `?` 后接代码块 `{ ... }`；
+  3. `cpc/src/sema.rs`：登记内建 `@[Default]` 派生宏生成全零值构造工厂、注册 14 大定长 SIMD 向量类型、对 `@pre`/`@ret` 契约实参豁免常量校验；
+  4. `cpc/src/codegen/actor.rs`：在函数入口发射 `@import("std").debug.assert(cond)` 前置契约守卫；
+  5. `cpc/src/codegen/stmt.rs`：`??=` 短路赋值展开为 `if (lhs == null) { lhs = rhs; }`，在各 `return` 前捕获 `ret` 发射返回值后置契约断言；
+  6. `cpc/src/codegen/expr.rs`：`.slice` 白名单消歧保护，针对复合类型 `(?T)!` 自动发射 `((expr catch { ... }) orelse { ... })` 链式双重解包；
+  7. `cpc/src/codegen/types.rs`：映射 `u8x16`..`f64x4` 等定长向量类型至底层 `@Vector(N, T)`；
+  8. `cpc/src/codegen/mod.rs`：管理当前函数返回值契约上下文及解包类型推断；
+  9. `cap/test/test_phase2_ergonomics.cp`：新增端到端综合测试套件（6/6 全部 100% PASS）；
+  10. `cp_ref.md` & `cp_agent_ref.md`：双轨设计规范与智能体语法契约同步更新；
+  11. `SESSION.md`、`CHANGELOG.md`、`DEVLOG.md`：记录 2026-11-16 研发热日志。
+
+---
+
 # CP 协同开发执行记录 (SESSION) - 2026-11-13 (热数据)
 
 > 历史执行记录已完整归档至 [SESSION_H.md](file:///data/dev/cp/SESSION_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。

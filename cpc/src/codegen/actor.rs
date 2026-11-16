@@ -386,6 +386,12 @@ impl Codegen {
         };
         self.current_fn_zig_name = zig_name.clone();
         self.drop_flag_vars.clear();
+        self.current_fn_contracts_ret = func
+            .meta
+            .iter()
+            .filter(|m| m.name.sym == "ret")
+            .cloned()
+            .collect();
         self.current_class_name = class_name.cloned();
         self.current_receiver_mode = if let Some(c) = class_name {
             if self.value_classes.contains(c) {
@@ -853,6 +859,14 @@ impl Codegen {
             self.dedent();
             self.indent();
             self.current_case_content.clear();
+            for m in &func.meta {
+                if m.name.sym == "pre" {
+                    if let Some(crate::ast::MetaArg::Positional(expr)) = m.args.first() {
+                        let cond_code = self.generate_expr(expr);
+                        self.write_to_case(&format!("@import(\"std\").debug.assert({});\n", cond_code));
+                    }
+                }
+            }
             for stmt in &func.body.body {
                 self.generate_stmt(stmt);
             }

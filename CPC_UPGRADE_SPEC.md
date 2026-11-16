@@ -128,7 +128,7 @@ let *mut_node := doc.getMutNode(id) else {
 };
 
 // 2. 错误联合类型守卫解包（带错误载荷捕获）
-const parsed := StyleSheet.parse(raw_css) else |e| {
+const parsed := StyleSheet.parse(raw_css) else （e) {
     return e;
 };
 ```
@@ -137,22 +137,18 @@ const parsed := StyleSheet.parse(raw_css) else |e| {
 
 - 对于 `const v := opt_expr else <divergent>`：
   直接转化为 Zig 的 `const v = opt_expr orelse <divergent>;`（指针解包 `*v` 对应 `&*` 捕获）。
-- 对于错误联合类型 `const v := res_expr else |e| <divergent>`：
+- 对于错误联合类型 `const v := res_expr else (e) <divergent>`：
   直接转化为 `const v = res_expr catch |e| <divergent>;`。
 
 ---
 
-### Spec 4：原生可选链（`?.`）与空值合并赋值（`??=`）
+### Spec 4：空值合并赋值（`??=`）
 
 #### 4.1 语法定义
 
-1. **可选链访问（Optional Chaining `?.`）**：
-   - 字段访问：`expr?.field`
-   - 方法调用：`expr?.method(args...)`
-   - 索引访问：`expr?[index]`
-   - 若 `expr` 的类型为 `T?`（或 `(*T)?`），整个链式表达式的结果类型自动提升为可空类型 ` FieldType?`，且当中间任意一环为 `null` 时立即短路求值为 `null`（右侧参数表达式不执行）。
-2. **空值合并赋值（Nullish Coalescing Assignment `??=`）**：
-   - `lhs ??= rhs`：当且仅当可空左值 `lhs` 为 `null` 时，计算 `rhs` 并赋给 `lhs`，同时返回解包后的非空值或更新原变量。
+**空值合并赋值（Nullish Coalescing Assignment `??=`）**：
+
+- `lhs ??= rhs`：当且仅当可空左值 `lhs` 为 `null` 时，计算 `rhs` 并赋给 `lhs`，同时返回解包后的非空值或更新原变量。
 
 #### 4.2 Lowering 规则示例
 
@@ -215,14 +211,14 @@ pub struct CdpBoxModel {
 
 #### 6.2 编译器 Codegen 行为
 
-- `@derive(Eq)`：生成 `pub fn eql(_: *const @This(), other: *const @This()): bool`（递归比对所有非忽略字段/变体）。
-- `@derive(Clone)`：生成 `pub fn clone(_: *const @This(), allocator: std.mem.Allocator): @This()!`（对切片/动态数组执行深拷贝）。
-- `@derive(Hash)`：生成 `pub fn hash(_: *const @This(), hasher: anytype)`。
-- `@derive(JSON)`：生成与全局一等公民 `JSON.stringify` / `JSON.parse<T>` 深度集成的编译期字段映射表（支持 `@json("alias")` 重命名与 `@json_ignore` 跳过字段）。
+- `@Eq`：生成 `pub fn eql(_: *const @This(), other: *const @This()): bool`（递归比对所有非忽略字段/变体）。
+- `@Clone`：生成 `pub fn clone(_: *const @This(), allocator: std.mem.Allocator): @This()!`（对切片/动态数组执行深拷贝）。
+- `@Hash`：生成 `pub fn hash(_: *const @This(), hasher: anytype)`。
+- `@JSON`：生成与全局一等公民 `JSON.stringify` / `JSON.parse<T>` 深度集成的编译期字段映射表（支持 `@json("alias")` 重命名与 `@json_ignore` 跳过字段）。
 
 ---
 
-## Phase 3：面向百万 Agent 与 Nest 云原生运行时的系统级黑科技
+## Phase 3：面向运行时的系统级黑科技
 
 ### Spec 7：语言级一等公民 `@arena` 作用域内存区域（Scoped Arena Regions）
 
@@ -255,31 +251,6 @@ pub struct CdpBoxModel {
 
 1. **严禁跨异步边界传递非拥有借用**：若参数类型包含局部借用指针 `*T`、`&T` 或未标注所有权转移的切片，直接报编译期错误 **`E0305: Borrowed reference cannot cross async/coroutine boundary without 'move' or 'own'`**。
 2. **强制所有权移交或纯值传递**：跨边界数据必须为纯值类型（POD 数值/结构体），或显式通过 `move v` / `own v: T` 移交独占所有权，确保发送方在移交后立即失效（Move Semantics），彻底杜绝多线程/多协程数据竞争与 Use-After-Free。
-
----
-
-### Spec 9：`@is_nest` 编译期 Reductions 抢占式自动插桩
-
-#### 9.1 设计动机
-
-当 CP 代码以 `cap build -b` 编译为运行在 Nest 多租户容器中的高并发模块时，必须防止单个恶意或死循环协程饿死整个工作线程。
-
-#### 9.2 编译器自动插桩规范
-
-当检测到编译处于 `@is_nest` 模式时，`cpc` 在 Codegen 阶段自动对所有非 `@no_preempt` 标注的普通函数执行轻量级指令注入：
-
-1. **TLS Reductions 计数器**：在运行时线程局部存储（`@tls`）维护 `__cp_reductions_left: i32`（默认时间片配额为 `cap.json` 中的 `reduction_slice: 2000`）。
-2. **插桩位置**：
-   - **所有循环回边（`while`、`for` 循环体首部）**；
-   - **所有非内联递归/普通函数入口**。
-3. **注入代码模板**：
-   ```zig
-   __cp_reductions_left -= 1;
-   if (@expect(__cp_reductions_left <= 0, false)) {
-       __cp_nest_yield_or_check_cancel();
-   }
-   ```
-   利用 `@expect(..., false)`（对应 LLVM `__builtin_expect` 分支预测提示），在正常执行路径上仅占 1 个 CPU 时钟周期，而在死循环发生时可在微秒级平滑触发抢占挂起或会话终止。
 
 ---
 
@@ -317,7 +288,7 @@ const px = metrics[i].x;
 
 #### 11.1 语法规范
 
-1. **内建定长向量原语**：直接支持 `u8x16`、`u8x32`、`i32x4`、`i32x8`、`f32x4`、`f32x8`（无需写 `@Vector(16, u8)`），直接支持算术运算符 `+`, `-`, `*`, `/` 与按位运算。
+1. **内建定长向量原语**：直接支持 `u8x16`、`u8x32`、`i32x4`、`i32x8`、`f32x4`、`f32x8`（无需写 `@Vec(16, u8)`），直接支持算术运算符 `+`, `-`, `*`, `/` 与按位运算。
 2. **`@simd` 循环修饰符**：
    ```cp
    // 用于 HTML Tokenizer 快速扫描字符或 Canvas 像素 Alpha 混合
@@ -331,12 +302,14 @@ const px = metrics[i].x;
 
 ### Spec 12：编译期契约式设计、消除边界检查与内建 Fuzzing 块
 
-#### 12.1 函数级契约标注（`@requires` / `@ensures`）
+#### 12.1 函数级契约标注（精简统一规范：`@pre` / `@post`）
+
+为了极致压缩 Token 并保持工业级形式化验证标准，采用行业公认最精简的 Precondition / Postcondition 命名：
 
 ```cp
 fn getNode(id: NodeId): *NodeData
-    @requires(id > 0 && id < _.nodes.len)
-    @ensures(return.id == id)
+    @pre(id > 0 && id < _.nodes.len)
+    @post(ret.id == id)
 {
     return &_.nodes[id]; // 编译器据此证明 id < _.nodes.len 恒成立，自动消除 Release 模式下的越界检查！
 }
@@ -373,3 +346,28 @@ fuzz "html5 tokenizer resilience" (input: []const u8) {
    - **验收指标**：在 `cpc/tests/ergonomics_test.cp` 中覆盖全部嵌套可选链短路与守卫提前返回用例。
 3. **Milestone C（系统级深化迭代）**：
    - 依次完成 **Spec 6**（`@derive`）、**Spec 7**（`@arena`）、**Spec 8**（跨协程借用隔离检查）、**Spec 9**（`@is_nest` Reductions 插桩）、**Spec 10 ~ 12**（`@soa`、`@simd`、`@requires`/`fuzz`）。
+
+### Spec 9：`@is_nest` 编译期 Reductions 抢占式自动插桩
+
+#### 9.1 设计动机
+
+当 CP 代码以 `cap build -b` 编译为运行在 Nest 多租户容器中的高并发模块时，必须防止单个恶意或死循环协程饿死整个工作线程。
+
+#### 9.2 编译器自动插桩规范
+
+当检测到编译处于 `@is_nest` 模式时，`cpc` 在 Codegen 阶段自动对所有非 `@no_preempt` 标注的普通函数执行轻量级指令注入：
+
+1. **TLS Reductions 计数器**：在运行时线程局部存储（`@tls`）维护 `__cp_reductions_left: i32`（默认时间片配额为 `cap.json` 中的 `reduction_slice: 2000`）。
+2. **插桩位置**：
+   - **所有循环回边（`while`、`for` 循环体首部）**；
+   - **所有非内联递归/普通函数入口**。
+3. **注入代码模板**：
+   ```zig
+   __cp_reductions_left -= 1;
+   if (@expect(__cp_reductions_left <= 0, false)) {
+       __cp_nest_yield_or_check_cancel();
+   }
+   ```
+   利用 `@expect(..., false)`（对应 LLVM `__builtin_expect` 分支预测提示），在正常执行路径上仅占 1 个 CPU 时钟周期，而在死循环发生时可在微秒级平滑触发抢占挂起或会话终止。
+
+---

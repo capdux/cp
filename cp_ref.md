@@ -9852,6 +9852,74 @@ flowchart TD
   - `cpc check --fix`（或 `cpc fix <file.cp>`）：为机械性语法错误（`E0101`..`E0104`, `E0115`, `E0116`, `E0118`, `E0119`..`E0123`, `E0126` 等）填充精确字节范围替换字段 `edits`（`{span_start, span_end, replacement}`），支持一键自动修复就地落盘；
   - 针对误写 `if (let v = opt)` / `while (let v = it.next())` 场景，精准报出 `E0126` 并通过 `--fix` 自动重写为标准海象解包语法 `if (v := opt)` / `while (v := it.next())`。
 
+#### 20.11 高频人体工程学优化、契约式设计与 SIMD 原语 【已全面实装】
+
+##### 1. 空值合并赋值操作符（Nullish Coalescing Assignment `??=`）
+- **语法语义**：`lhs ??= rhs;`
+- **运行时特征**：零运行时与堆开销短路求值。当且仅当左侧可空变量 `lhs` 为 `null` 时，才执行右侧表达式 `rhs` 计算并赋值给 `lhs`；若 `lhs` 不为 `null`，右侧表达式短路跳过，彻底避免重复计算与无谓重赋值。
+- **Lowering 映射**：
+  ```cp
+  cache.entry ??= computeHeavyEntry();
+  ```
+  展开为：
+  ```zig
+  if (cache.entry == null) {
+      cache.entry = computeHeavyEntry();
+  }
+  ```
+
+##### 2. 万能降级解包 `? { ... }` 与复合类型 `(?T)!` 双重解包
+- **多行发散块支持**：`let v = expr ? { ...; return; };`，当左侧为空或发生错误时，执行降级代码块（必须以发散控制流如 `return`、`break`、`continue`、`unreachable` 结尾）。
+- **复合类型 `(?T)!` 智能双重解包**：若表达式类型既可能抛出错误又可能返回空值（如 `(?T)!`），降级解包符 `?` 自动执行链式双重解包——第一层捕获错误，第二层捕获空值。任意一层失败均执行降级分支；两层皆成功则直接解包出纯净基础类型 `T`。
+  ```cp
+  let node = doc.findNullableNode() ? {
+      log.warn("lookup failed or node not found");
+      return null;
+  };
+  ```
+
+##### 3. 契约式设计注解（Design-by-Contract：`@pre` 与 `@ret`）
+- **前置契约 `@pre(cond)`**：标注在函数签名之后，在进入函数体第一行前自动生成对入参的断言守卫校验。
+- **返回值后置契约 `@ret(cond)`**：标注在函数签名之后，在函数体内所有 `return` 返回前，自动捕获返回值绑定为 `ret` 变量并断言后置状态。
+- **正交性与命名约定**：采用 `@ret`（Return Postcondition）完美替代容易与网络请求混淆的 `@post`，与 `@pre` 高度对称简洁（仅 4 字符）。
+  ```cp
+  pub fn divide(a: i32, b: i32): i32
+      @pre(b != 0)
+      @ret(ret >= 0)
+  {
+      if (a < 0) return 0;
+      return a / b;
+  }
+  ```
+
+##### 4. 原生定长 SIMD 向量类型别名与向量算术
+- **类型矩阵**：直接支持 `u8x16`, `u8x32`, `u8x64`, `i16x8`, `i16x16`, `i32x4`, `i32x8`, `u32x4`, `u32x8`, `f32x4`, `f32x8`, `f32x16`, `f64x2`, `f64x4`。
+- **底层映射**：映射至底层 `@Vector(N, T)`，原生享有硬件 SIMD 指令集加速（AVX2/AVX-512/Neon）。
+- **算术原语**：原生支持向量并行加减乘除（`+`, `-`, `*`, `/`）以及标量填充 `@splat`。
+  ```cp
+  let a: f32x4 = @splat(1.5);
+  let b: f32x4 = @splat(2.0);
+  let c = a + b; // [3.5, 3.5, 3.5, 3.5]
+  ```
+
+##### 5. 官方派生宏全家桶之零值构造工厂（`@[Default]`）
+- 为 `struct` 或 `class` 自动派生静态构造工厂方法 `pub static fn default(): Self`。
+- 自动按各字段物理类型的全零基态（数值为 0，布尔为 false，可选类型/指针为 null）进行静态初始化，大幅减少样板代码并保障内存确定性。
+  ```cp
+  @[Default]
+  pub class Viewport {
+      pub width: f32;
+      pub height: f32;
+      pub scale: f32;
+      pub active: bool;
+  }
+  let vp = Viewport.default(); // width=0.0, height=0.0, scale=0.0, active=false
+  ```
+
+##### 6. 切片属性语法糖消歧保护（Disambiguation of `.slice`）
+- 针对基础类型（字符串 `string`、定长数组 `[N]T` 与切片 `[]T`），保持 `.slice(start, len)` 语法糖便利；
+- 对用户自定义的结构体与类，豁免语法糖拦截，100% 保留用户自定义的同名 `.slice()` 成员方法调用与传参行为。
+
 ---
 
 _本规范由 CP 架构设计委员会制定，作为全体编译器研发、运行时对接与开发者生态的唯一最高准则。_

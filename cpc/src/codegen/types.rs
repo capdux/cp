@@ -2321,6 +2321,20 @@ impl Codegen {
             "f64" => "f64".to_string(),
             "bool" => "bool".to_string(),
             "string" => "[]const u8".to_string(),
+            "u8x16" => "@Vector(16, u8)".to_string(),
+            "u8x32" => "@Vector(32, u8)".to_string(),
+            "u8x64" => "@Vector(64, u8)".to_string(),
+            "i16x8" => "@Vector(8, i16)".to_string(),
+            "i16x16" => "@Vector(16, i16)".to_string(),
+            "i32x4" => "@Vector(4, i32)".to_string(),
+            "i32x8" => "@Vector(8, i32)".to_string(),
+            "u32x4" => "@Vector(4, u32)".to_string(),
+            "u32x8" => "@Vector(8, u32)".to_string(),
+            "f32x4" => "@Vector(4, f32)".to_string(),
+            "f32x8" => "@Vector(8, f32)".to_string(),
+            "f32x16" => "@Vector(16, f32)".to_string(),
+            "f64x2" => "@Vector(2, f64)".to_string(),
+            "f64x4" => "@Vector(4, f64)".to_string(),
             _ => {
                 if name.starts_with("Mutex<") {
                     let inner = &name[6..name.len() - 1];
@@ -2375,6 +2389,23 @@ impl Codegen {
             Type::Dict(_, _) => "*Dict".to_string(),
             Type::Set(_) => "*Set".to_string(),
             Type::Ref(ident) => {
+                match ident.sym.as_str() {
+                    "u8x16" => return "@Vector(16, u8)".to_string(),
+                    "u8x32" => return "@Vector(32, u8)".to_string(),
+                    "u8x64" => return "@Vector(64, u8)".to_string(),
+                    "i16x8" => return "@Vector(8, i16)".to_string(),
+                    "i16x16" => return "@Vector(16, i16)".to_string(),
+                    "i32x4" => return "@Vector(4, i32)".to_string(),
+                    "i32x8" => return "@Vector(8, i32)".to_string(),
+                    "u32x4" => return "@Vector(4, u32)".to_string(),
+                    "u32x8" => return "@Vector(8, u32)".to_string(),
+                    "f32x4" => return "@Vector(4, f32)".to_string(),
+                    "f32x8" => return "@Vector(8, f32)".to_string(),
+                    "f32x16" => return "@Vector(16, f32)".to_string(),
+                    "f64x2" => return "@Vector(2, f64)".to_string(),
+                    "f64x4" => return "@Vector(4, f64)".to_string(),
+                    _ => {}
+                }
                 if ident.sym == "TypeInfo" {
                     return "*const TypeInfo".to_string();
                 }

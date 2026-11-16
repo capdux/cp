@@ -245,6 +245,8 @@ pub enum Token {
     ShlAssign,
     #[token(">>=")]
     ShrAssign,
+    #[token("??=")]
+    QuestionQuestionAssign,
     #[token("<<")]
     Shl,
     #[token(">>")]

@@ -2,6 +2,37 @@
 
 > 历史变更日志已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## [2026-11-16] - 核心里程碑：Phase 2 人体工程学语法糖实装、契约式设计、SIMD原语与双轨规范同步
+
+### 编译器人体工程学与黑科技语法 (Compiler Ergonomics & Contracts)
+- **空值合并赋值 (`??=`)**:
+  - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs) & [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs)：支持 `Token::QuestionQuestionAssign` 复合赋值解析；
+  - [`cpc/src/codegen/stmt.rs`](file:///data/dev/cp/cpc/src/codegen/stmt.rs)：Lowering 为 `if (lhs == null) { lhs = rhs; }`，实现零堆开销天然短路求值。
+- **契约式设计注解 (`@pre` 与 `@ret`)**:
+  - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs)：`parse_meta_arg` 扩展二元断言表达式解析；支持在函数签名后尾随注解 `@pre(cond)` 和 `@ret(cond)`；
+  - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs)：元注解校验对 `@pre` 和 `@ret` 豁免静态常量检查；
+  - [`cpc/src/codegen/actor.rs`](file:///data/dev/cp/cpc/src/codegen/actor.rs)：在函数入口自动发射前置条件断言 `std.debug.assert(cond)`；
+  - [`cpc/src/codegen/stmt.rs`](file:///data/dev/cp/cpc/src/codegen/stmt.rs)：在函数体各 `return` 返回处捕获返回值 `ret` 并发射后置条件断言 `std.debug.assert(cond)`。
+- **万能降级解包 `?` 多行块与复合类型 `(?T)!` 双重解包**:
+  - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs)：`?` 降级操作符全面支持后接代码块 `{ ... }`（`Expr::LabeledBlock`）；
+  - [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs) & [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：对可空且可能报错的复合类型 `(?T)!` 自动发射双重链式解包（先 `catch` 再 `orelse`），若成功直接解包出底层基型 `T`。
+- **内建定长 SIMD 向量类型别名**:
+  - [`cpc/src/codegen/types.rs`](file:///data/dev/cp/cpc/src/codegen/types.rs) & [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs)：内置 `u8x16`、`u8x32`、`u8x64`、`i16x8`、`i16x16`、`i32x4`、`i32x8`、`u32x4`、`u32x8`、`f32x4`、`f32x8`、`f32x16`、`f64x2`、`f64x4` 映射至底层 `@Vector(N, T)`，原生支持标量广播 `@splat` 与向量算术运算（`+`, `-`, `*`, `/`）。
+- **派生宏全家桶扩展 (`@[Default]`)**:
+  - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs)：登记并实装 `derive_default_method`，为结构体/类自动派生全零值初始化静态工厂 `pub static fn default(): Self`。
+- **切片属性语法糖消歧保护 (`.slice`)**:
+  - [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs)：将 `.slice` 改为白名单判定（仅对字符串/数组/切片生效），保留用户自定义类型的同名 `.slice()` 成员方法。
+
+### 双轨规范与文档同步 (Documentation & Specs)
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)：新增第 20.11 小节，全面收录 Phase 2 人体工程学语法糖、契约式设计、SIMD 原语与派生宏规范。
+- [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)：同步精简更新标量向量类型、`??=` 复合赋值、`@pre`/`@ret` 契约注解、`? { ... }` 万能降级与双重解包、`@[Default]` 派生宏。
+
+### 测试验证 (Tests)
+- [`cap/test/test_phase2_ergonomics.cp`](file:///data/dev/cp/cap/test/test_phase2_ergonomics.cp)：6 大特性全量端到端验证通过（100% PASS）。
+- 回归测试：`test_all.cp` 验证 100% 通过。
+
+---
+
 ## [2026-11-16] - 核心里程碑：Bun 高价值资产全面吸收、图像子系统（PNG截图/BMP/量化）实装与标准库全景扩展
 
 ### 图像子系统实装与截图引擎 (Added `cap:image` & `cap:png`)

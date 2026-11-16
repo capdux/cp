@@ -2,6 +2,44 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-16: Phase 2 高频人体工程学语法糖实装、契约式设计、SIMD原语与双轨规范落地
+
+- **任务背景与工程目标**：
+  1. 深度审核用户提出的 Phase 2（高频人体工程学语法糖）与 Phase 3（系统级黑科技）升级提案，针对 14 大特性进行必要性、技术可行性、与现有语法正交性分析；
+  2. 针对争议点确立最高裁决：
+     - **后置契约定名**：正式裁决采用 `@ret(cond)` 命名，坚决废弃容易与 HTTP 网络请求混淆的 `@post`，与 `@pre(cond)` 形成 4 字符高度对称；
+     - **语法正交性裁决**：CP 已拥有成熟正交的错误处理主线（`catch`）与空值处理主线（`??`），坚决废除引入冗余 `else` 关键字的提议，坚持“错误用 `catch`，空值用 `??`，通杀用 `?`”；
+     - **万能降级符 `?`**：全面支持多行代码块 `{ ... }`，并对复合类型 `(?T)!` 自动执行双重链式解包（先捕获错误，再捕获空值）；
+  3. 第一批优化特性落地开发并在 `cpc/src` 与 `cpc_dev/src` 闭环验证；
+  4. 编写全新端到端测试 `cap/test/test_phase2_ergonomics.cp`，同步更新双轨设计规范（`cp_ref.md` 和 `cp_agent_ref.md`）。
+
+- **核心技术挑战与根因剖析**：
+  1. **空值合并赋值 (`??=`) 的短路求值与零堆开销展开**：
+     - **方案**：在 `lexer.rs` 新增 `Token::QuestionQuestionAssign`，在 `parser.rs` 纳入复合赋值解析，在 `stmt.rs` 直接 Lowering 为 `if (lhs == null) { lhs = rhs; }`。零函数开销、零堆分配，且天然具备短路求值特性。
+  2. **契约式设计注解 (`@pre` 与 `@ret`) 的 AST 扩展与状态机拦截**：
+     - **挑战**：此前 `parse_meta_arg` 遇到非 `:` 标识符后直接返回单标识符，无法解析复杂的二元逻辑表达式（如 `b != 0`，`ret >= 0`）；且 `sema.rs` 强制要求所有元注解参数必须为常量表达式。
+     - **解法**：
+       - `parser.rs`：仅当标识符紧随 `:` 时作为命名参数，其余一律通过 `parse_expr` 解析完整表达式；
+       - `sema.rs`：在 `validate_meta_items` 中对 `@pre` 与 `@ret` 增加常量检查豁免；
+       - `actor.rs`：在函数入口处发射 `@import("std").debug.assert(cond);`；
+       - `stmt.rs`：在所有 `Stmt::Return` 前注入代码块，将返回值绑定至 `ret` 常量，执行断言后再执行返回：`{ const ret = e; @import("std").debug.assert(cond); }`。
+  3. **复合类型 `(?T)!` 的双重链式解包体系**：
+     - **挑战**：当左侧表达式既可空又可能报错时，单一的 `catch` 或 `orelse` 无法彻底剥离全部包裹层，容易在 Zig 端留下未解包的可选类型。
+     - **解法**：在 `cpc/src/codegen/expr.rs` 中，识别外层为 `error_union` 且内层为 `optional` 的场景，自动生成嵌套链式解包 `((expr catch { ... }) orelse { ... })`，任意一层失败均触发发散块，成功则获得纯净基型 `T`。
+  4. **原生定长 SIMD 向量类型映射**：
+     - 在 `types.rs` 与 `sema.rs` 中登记 14 个高频向量别名（如 `f32x4`, `i32x4`, `u8x16` 等），直接映射到底层 `@Vector(N, T)`，并全面支持向量并行运算（`+`, `-`, `*`, `/`）与标量广播 `@splat`。
+  5. **派生宏 `@[Default]`**：
+     - 在 `sema.rs` 预置宏字典登记 `"Default"`，派生 `pub static fn default(): ClassName` 静态构造工厂，按各字段类型基态全零初始化。
+  6. **`.slice` 属性消歧保护**：
+     - 将原黑名单机制改为白名单机制，仅在目标对象为原生字符串、数组或切片时才展开为切片语法糖，彻底保护用户自定义类型上的同名 `.slice()` 成员方法。
+
+- **效果验证**：
+  - 新增测试套件 [`cap/test/test_phase2_ergonomics.cp`](file:///data/dev/cp/cap/test/test_phase2_ergonomics.cp)：6 大特性全量通过（100% PASS）；
+  - 全量回归测试 `cap cap/test/test_all.cp` 验证 100% 通过；
+  - 双轨设计规范（`cp_ref.md` 与 `cp_agent_ref.md`）完成全面同步更新。
+
+---
+
 ## 2026-11-16: Bun 核心资产全面吸收、图像子系统（PNG网页截图/BMP/量化）实装与标准库全景扩展
 
 - **任务背景与工程目标**：

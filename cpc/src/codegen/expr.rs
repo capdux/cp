@@ -944,7 +944,33 @@ impl Codegen {
                     } else if (prop == "slice" || prop == "substring")
                         && !call.args.is_empty()
                         && call.args.len() <= 2
-                        && !matches!(raw_obj_ty, Some(Type::Ref(ref id)) if id.sym != "string" && id.sym != "String")
+                        && {
+                            let is_sliceable = match &raw_obj_ty {
+                                Some(Type::Array(_)) | Some(Type::SentinelSlice(_, _)) => true,
+                                Some(Type::Ref(ref id)) => {
+                                    id.sym == "string"
+                                        || id.sym == "String"
+                                        || id.sym == "Array"
+                                        || id.sym == "Vec"
+                                        || id.sym.starts_with("[]")
+                                        || id.sym.starts_with("[*]")
+                                }
+                                Some(Type::BorrowType { inner, .. }) => match &**inner {
+                                    Type::Array(_) | Type::SentinelSlice(_, _) => true,
+                                    Type::Ref(ref id) => {
+                                        id.sym == "string"
+                                            || id.sym == "String"
+                                            || id.sym == "Array"
+                                            || id.sym == "Vec"
+                                            || id.sym.starts_with("[]")
+                                            || id.sym.starts_with("[*]")
+                                    }
+                                    _ => false,
+                                },
+                                _ => false,
+                            };
+                            is_sliceable
+                        }
                     {
                         self.check_read_allowed(&mem.obj);
                         let obj = self.generate_expr(&mem.obj);
@@ -2084,6 +2110,11 @@ impl Codegen {
                 self.lambda_counter += 1;
 
                 let is_inner_optional = matches!(inner_ty, Some(Type::Optional(_)));
+                let is_inner_error_and_optional = match &inner_ty {
+                    Some(Type::ResultType { ok, .. }) => matches!(&**ok, Type::Optional(_)),
+                    Some(Type::ErrorUnion(ok)) => matches!(&**ok, Type::Optional(_)),
+                    _ => false,
+                };
 
                 if *is_return_fallback || matches!(&**fallback, Expr::Return(_, _)) {
                     let ret_inner = match &**fallback {
@@ -2093,15 +2124,13 @@ impl Codegen {
                     let ret_stmt = self.build_ret_stmt_for_fallback(ret_inner);
 
                     if self.is_lib_mode {
-                        if is_inner_optional {
+                        if is_inner_error_and_optional {
+                            format!("((({exp}) catch {{ {ret_stmt} }}) orelse {{ {ret_stmt} }})")
+                        } else if is_inner_optional {
                             format!("(({exp}) orelse {{ {ret_stmt} }})")
                         } else {
                             format!("(({exp}) catch {{ {ret_stmt} }})")
                         }
-                    } else if is_inner_optional {
-                        format!(
-                            "(blk_qf_{id}: {{ const __v_{id} = {exp}; if (__v_{id} == null) {{ {ret_stmt} }} break :blk_qf_{id} __v_{id}.?; }})"
-                        )
                     } else {
                         format!(
                             "(blk_qf_{id}: {{ const __r_{id} = {exp}; if (cp_has_ok_val(__r_{id})) break :blk_qf_{id} cp_unwrap_ok_val(__r_{id}); {ret_stmt} }})"
@@ -2109,15 +2138,13 @@ impl Codegen {
                     }
                 } else if matches!(&**fallback, Expr::Continue(_)) {
                     if self.is_lib_mode {
-                        if is_inner_optional {
+                        if is_inner_error_and_optional {
+                            format!("((({exp}) catch continue) orelse continue)")
+                        } else if is_inner_optional {
                             format!("(({exp}) orelse continue)")
                         } else {
                             format!("(({exp}) catch continue)")
                         }
-                    } else if is_inner_optional {
-                        format!(
-                            "(blk_qf_{id}: {{ const __v_{id} = {exp}; if (__v_{id} == null) continue; break :blk_qf_{id} __v_{id}.?; }})"
-                        )
                     } else {
                         format!(
                             "(blk_qf_{id}: {{ const __r_{id} = {exp}; if (cp_has_ok_val(__r_{id})) break :blk_qf_{id} cp_unwrap_ok_val(__r_{id}); continue; }})"
@@ -2130,15 +2157,13 @@ impl Codegen {
                         "break".to_string()
                     };
                     if self.is_lib_mode {
-                        if is_inner_optional {
+                        if is_inner_error_and_optional {
+                            format!("((({exp}) catch {brk_action}) orelse {brk_action})")
+                        } else if is_inner_optional {
                             format!("(({exp}) orelse {brk_action})")
                         } else {
                             format!("(({exp}) catch {brk_action})")
                         }
-                    } else if is_inner_optional {
-                        format!(
-                            "(blk_qf_{id}: {{ const __v_{id} = {exp}; if (__v_{id} == null) {brk_action}; break :blk_qf_{id} __v_{id}.?; }})"
-                        )
                     } else {
                         format!(
                             "(blk_qf_{id}: {{ const __r_{id} = {exp}; if (cp_has_ok_val(__r_{id})) break :blk_qf_{id} cp_unwrap_ok_val(__r_{id}); {brk_action}; }})"
@@ -2147,15 +2172,13 @@ impl Codegen {
                 } else {
                     let fb_c = self.generate_expr(fallback);
                     if self.is_lib_mode {
-                        if is_inner_optional {
+                        if is_inner_error_and_optional {
+                            format!("((({exp}) catch {fb_c}) orelse {fb_c})")
+                        } else if is_inner_optional {
                             format!("(({exp}) orelse {fb_c})")
                         } else {
                             format!("(({exp}) catch {fb_c})")
                         }
-                    } else if is_inner_optional {
-                        format!(
-                            "(blk_qf_{id}: {{ const __v_{id} = {exp}; if (__v_{id} == null) break :blk_qf_{id} cp_val({fb_c}); break :blk_qf_{id} __v_{id}.?; }})"
-                        )
                     } else {
                         format!(
                             "(blk_qf_{id}: {{ const __r_{id} = {exp}; if (cp_has_ok_val(__r_{id})) break :blk_qf_{id} cp_unwrap_ok_val(__r_{id}); break :blk_qf_{id} cp_val({fb_c}); }})"

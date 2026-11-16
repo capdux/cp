@@ -218,7 +218,9 @@ let dyn_dict = #{ "key": "value", "env": "prod" };    // 动态堆哈希字典 M
 ### 4. 编译期自动推导占位符 (`auto`) 与内省原语
 - **`auto`**：仅用于函数形参触发编译期单态化推导：`pub fn print(v: auto)`、`pub fn wrapper(@comptime cb: auto)`；🚨 严禁用于局部变量或结构体字段（`anytype` 仅作历史兼容）。
 - **核心内省与散列指令**：`@sizeOf(T)`, `@bitSizeOf(T)`, `@alignOf(T)`, `@typeOf(expr)`, `@typeName(T)`, `@typeInfo(T)`（判断 `.pointer`, `.@"struct"`, `.@"enum"`, `.@"union"` 等）, `@fieldsOf(T)`, `@field(obj, name)`, `@hasDecl(T, name)`, `@hasField(T, name)`, `@as(T, expr)`, `@bitCast(expr)`, `@byteSwap(v)`, `@hash(v1, v2, ...)`, `@compileError(msg)`, `@compileLog(...)`。
-- **SIMD 向量与硬件位计数原语**：`@Vector(N, T)`, `@splat(v)`, `@clz(v)`, `@ctz(v)`, `@popCount(v)`, `@reduce(op, vec)`, `@select(T, pred, a, b)`（广泛用于字符串/Unicode SIMD 高速扫描）。
+- **SIMD 向量与硬件位计数原语**：
+  - **内建定长向量类型**：`u8x16`, `u8x32`, `u8x64`, `i16x8`, `i16x16`, `i32x4`, `i32x8`, `u32x4`, `u32x8`, `f32x4`, `f32x8`, `f32x16`, `f64x2`, `f64x4`（映射为 `@Vector(N, T)`，原生支持标量广播 `@splat` 与向量算术 `+`, `-`, `*`, `/`）。
+  - **硬件指令内置**：`@Vector(N, T)`, `@splat(v)`, `@clz(v)`, `@ctz(v)`, `@popCount(v)`, `@reduce(op, vec)`, `@select(T, pred, a, b)`（广泛用于字符串/Unicode SIMD 高速扫描）。
 
 ### 5. 一等公民 C 字符串体系：`cstr` vs `cstring` vs `string`
 | 字符串类型 | 底层物理映射 | 是否带长度 | 安全级别 | 典型应用场景 |
@@ -269,7 +271,7 @@ pub type SimpleCb = fn (x: u8) bool;                     // Zig 兼容简写函�
 ```
 - **算术**：`+`, `-`, `*`, `/`, `%`；**环绕运算**：`+%`, `-%`, `*%`；**饱和运算**：`+|`, `-|`
 - **位运算**：`&`, `|`, `^`, `~`, `<<`, `>>`；**比较运算**：`==`, `!=`, `<`, `<=`, `>`, `>=`
-- **复合赋值**：`=`, `+=`, `-=`, `*=`, `/=`, `%=`, `&=`, `|=`, `^=`, `<<=`, `>>=`
+- **复合赋值**：`=`, `+=`, `-=`, `*=`, `/=`, `%=`, `&=`, `|=`, `^=`, `<<=`, `>>=`, `??=`（空值合并赋值：`lhs ??= rhs`，当且仅当 `lhs == null` 时计算 `rhs` 并赋值，零运行时开销短路求值）
 - **空值与链式解包**：`?.`（可选链：如 `user?.profile?.name`）、`.?`（强制解包可空值，空则 panic）、`??`（空值兜底，不捕获错误）、`orelse`（上下文软关键字空值/错误兜底）
 - **逻辑与管道**：`&&`, `||`, `!`（智能体统一写 `&&`/`||`；`and`/`or` 仅作为编译器上下文软关键字兼容）、`|>`（管道：`data |> filter() |> process()`）
 
@@ -377,6 +379,14 @@ fn writeExact(): void ! std.Io.Writer.Error { ... } // 点路径显式错误集
 fn handleCallback(@comptime callback: auto) { ... }
 pub unsafe fn direct_io_write(ptr: [*]const u8!, len: usize): ! { ... }
 @inline pub fn fastAdd(a: i32, b: i32): i32 { return a + b; } // 发射为 pub inline fn
+
+// 7. 契约式设计注解 (@pre 与 @ret —— 函数级前置与返回值后置断言)
+pub fn divide(a: i32, b: i32): i32
+    @pre(b != 0)
+    @ret(ret >= 0)
+{
+    return a / b;
+}
 ```
 
 ### 2. 匿名函数、闭包 (`=>`) 与函数类型
@@ -697,9 +707,15 @@ while (i < max_len) {
     let entry = fetch_next_opt() ?? continue;
     let user = find_user(id) ?? return null;
 
-    // 3. ? 错误联合守卫解包：error 时触发发散，成功直接解包赋值
+    // 3. ? 错误联合/万能降级解包：error 或 null 时触发发散，成功直接解包赋值
     let packet = read_socket() ? break;
     let res = execute_step() ? return err(500, "step failed");
+
+    // 4. ? 多行块降级与双重链式解包：支持多行语句，且对 (?T)! 自动先剥错误再剥空值
+    let item = fetch_nested_opt_or_err() ? {
+        log.warn("fetch failed or empty");
+        return null;
+    };
 }
 ```
 
@@ -830,16 +846,17 @@ let acl = ACL_MAP.get("public-read"); // 返回 ACL?
 let ok = ACL_MAP.has("private");      // 返回 bool
 ```
 
-### 3. 7 大官方内置派生宏 (`@[...]`) 与自定义宏
+### 3. 8 大官方内置派生宏 (`@[...]`) 与自定义宏
 > **最高规范**：CP 彻底废除 `@derive(...)`，统一使用原生批量注解 **`@[...]`**。
 ```typescript
 // 一键静态织入 7 大工业级能力（支持单写 @Json 或批量 @[...]）：
-@[Clone, Comparable, Hash, ToString, Debug, Json, Table("t_orders")]
+@[Clone, Comparable, Hash, ToString, Debug, Json, Default, Table("t_orders")]
 pub class OrderItem {
     pub sku: string;
     pub price: f64;
 }
-// 自动合成：clone()、cmp()/eq()、hash()、toString()、fmt_debug()、toJson()、getTableName()
+// 自动合成：clone()、cmp()/eq()、hash()、toString()、fmt_debug()、toJson()、default()、getTableName()
+// 注：@[Default] 派生生成 pub static fn default(): ClassName 零值/空值初始化工厂函数
 
 // AST 模板宏与 Comptime 过程宏（macro 定义 + ${field} 插值 + @fieldsOf/@for/@if）
 macro AutoReset(target) {

@@ -516,28 +516,13 @@ impl<'a> Parser<'a> {
                 | Some(Token::From)
                 | Some(Token::Unsafe)
         );
-        if is_ident_like {
+        if is_ident_like && self.peek_next() == Some(&Token::Colon) {
             let ident = self.parse_meta_ident()?;
-            if self.peek() == Some(&Token::Colon) {
-                self.bump()?; // consume Colon
-                let expr = self.parse_primary_expr()?;
-                return Ok(MetaArg::Named(ident, expr));
-            } else if self.peek() == Some(&Token::Dot) {
-                self.bump()?; // consume Dot
-                let prop = self.parse_ident()?;
-                return Ok(MetaArg::Positional(Expr::Member(MemberExpr {
-                    span: Span {
-                        start: ident.span.start,
-                        end: prop.span.end,
-                    },
-                    obj: Box::new(Expr::Ident(ident)),
-                    prop,
-                })));
-            } else {
-                return Ok(MetaArg::Positional(Expr::Ident(ident)));
-            }
+            self.bump()?; // consume Colon
+            let expr = self.parse_expr()?;
+            return Ok(MetaArg::Named(ident, expr));
         }
-        let expr = self.parse_primary_expr()?;
+        let expr = self.parse_expr()?;
         Ok(MetaArg::Positional(expr))
     }
 
@@ -1446,6 +1431,9 @@ impl<'a> Parser<'a> {
             }
             return_type = Some(ty);
         }
+
+        let trailing_meta = self.parse_meta_list()?;
+        meta.extend(trailing_meta);
 
         let body;
         let end;
@@ -6428,6 +6416,14 @@ impl<'a> Parser<'a> {
                             fallback: Box::new(Expr::Return(span, val)),
                             is_return_fallback: true,
                         };
+                    } else if self.peek() == Some(&Token::LBrace) {
+                        let block = self.parse_block_stmt()?;
+                        let fallback = Expr::LabeledBlock { label: None, block };
+                        left = Expr::QuestionFallback {
+                            expr: Box::new(left),
+                            fallback: Box::new(fallback),
+                            is_return_fallback: false,
+                        };
                     } else if matches!(
                         self.peek(),
                         Some(Token::IntLiteral(_))
@@ -6747,6 +6743,26 @@ impl<'a> Parser<'a> {
                     left: Box::new(left.clone()),
                     right: Box::new(right),
                 });
+                left = Expr::Bin(BinExpr {
+                    span: Span { start, end },
+                    op: BinaryOp::Assign,
+                    left: Box::new(left),
+                    right: Box::new(desugared_rhs),
+                });
+                continue;
+            }
+            if self.peek() == Some(&Token::QuestionQuestionAssign) {
+                if 1 < min_prec {
+                    break;
+                }
+                self.bump()?;
+                let right = self.parse_bin_expr(1)?;
+                let start = left_span(&left).start;
+                let end = right_span(&right).end;
+                let desugared_rhs = Expr::NullCoalesce {
+                    left: Box::new(left.clone()),
+                    right: Box::new(right),
+                };
                 left = Expr::Bin(BinExpr {
                     span: Span { start, end },
                     op: BinaryOp::Assign,

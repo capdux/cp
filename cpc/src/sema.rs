@@ -610,6 +610,7 @@ impl Analyzer {
             "Comparable",
             "Hash",
             "Debug",
+            "Default",
         ] {
             macro_defs.insert(
                 name.to_string(),
@@ -1328,6 +1329,7 @@ impl Analyzer {
             "Clone" => Ok(vec![self.derive_clone_method(cls)]),
             "Comparable" => Ok(self.derive_comparable_methods(cls)),
             "Hash" => Ok(vec![self.derive_hash_method(cls)]),
+            "Default" => Ok(vec![self.derive_default_method(cls)]),
             _ => self.derive_custom_macro_methods(macro_name, cls, meta_item),
         }
     }
@@ -1380,6 +1382,56 @@ impl Analyzer {
             },
             is_async: false,
             is_static: false,
+            is_unsafe: false,
+            meta: vec![],
+            is_pub: true,
+        }
+    }
+
+    fn derive_default_method(&self, cls: &Class) -> Function {
+        let mock_span = Span { start: 0, end: 0 };
+        let mut args = Vec::new();
+        for f in &cls.fields {
+            let default_val = match &f.ty {
+                Type::I8 | Type::I16 | Type::I32 | Type::I64 | Type::I128 | Type::ISize => {
+                    Expr::Lit(Lit::Int(0))
+                }
+                Type::U8 | Type::U16 | Type::U32 | Type::U64 | Type::U128 | Type::USize => {
+                    Expr::Lit(Lit::Int(0))
+                }
+                Type::F32 | Type::F64 => Expr::Lit(Lit::Float(0.0)),
+                Type::Bool => Expr::Lit(Lit::Bool(false)),
+                Type::String => Expr::Lit(Lit::Str(String::new())),
+                Type::Optional(_) => Expr::Lit(Lit::Null),
+                Type::Array(_) => Expr::Array(vec![]),
+                _ => Expr::Lit(Lit::Null),
+            };
+            args.push(default_val);
+        }
+        let ret_expr = Expr::New(CallExpr {
+            span: mock_span,
+            callee: Box::new(Expr::Ident(cls.ident.clone())),
+            args,
+            is_comptime: false,
+        });
+        Function {
+            span: mock_span,
+            ident: Ident {
+                span: mock_span,
+                sym: "default".to_string(),
+            },
+            generic_params: vec![],
+            params: vec![],
+            return_type: Some(Type::Ref(cls.ident.clone())),
+            body: BlockStmt {
+                span: mock_span,
+                body: vec![Stmt::Return(crate::ast::ReturnStmt {
+                    span: mock_span,
+                    arg: Some(ret_expr),
+                })],
+            },
+            is_async: false,
+            is_static: true,
             is_unsafe: false,
             meta: vec![],
             is_pub: true,
@@ -2215,6 +2267,10 @@ impl Analyzer {
         let mut counts: HashMap<String, usize> = HashMap::new();
         for item in items {
             *counts.entry(item.name.sym.clone()).or_insert(0) += 1;
+
+            if item.name.sym == "pre" || item.name.sym == "ret" {
+                continue;
+            }
 
             for arg in &item.args {
                 let expr = match arg {
@@ -5815,6 +5871,20 @@ impl Analyzer {
                             | "void"
                             | "anytype"
                             | "anyopaque"
+                            | "u8x16"
+                            | "u8x32"
+                            | "u8x64"
+                            | "i16x8"
+                            | "i16x16"
+                            | "i32x4"
+                            | "i32x8"
+                            | "u32x4"
+                            | "u32x8"
+                            | "f32x4"
+                            | "f32x8"
+                            | "f32x16"
+                            | "f64x2"
+                            | "f64x4"
                     )
                 {
                     return Ok(Type::Any);
