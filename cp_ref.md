@@ -9641,6 +9641,13 @@ flowchart TD
          let raw_ptr = @alloc(64); // 👈 自动绑定当前活跃的作用域 Arena 分配器
          raw_ptr[0] = 77;
      }
+
+     // 4. 函数级作用域内存区域修饰器 @arena
+     @arena
+     pub fn processMetrics(items: []i32): i32 {
+         let msg = `Processing ${items.len} items`; // 临时分配全部归入函数级 arena
+         return items.len; // 标量安全返回，函数退出时自动 defer __fn_arena.deinit() 整块 O(1) 清空
+     }
      ```
 3. **状态机与生命周期无缝集成**：
    - 编译器前端在 `extract_locals_simple` 与 `extract_local_vars_to_str` 完整支持 `ArenaBlock` 与 `Expr::Arena` 嵌套提取，确保异步协程/状态机上下文字段安全注入；
@@ -9919,6 +9926,101 @@ flowchart TD
 ##### 6. 切片属性语法糖消歧保护（Disambiguation of `.slice`）
 - 针对基础类型（字符串 `string`、定长数组 `[N]T` 与切片 `[]T`），保持 `.slice(start, len)` 语法糖便利；
 - 对用户自定义的结构体与类，豁免语法糖拦截，100% 保留用户自定义的同名 `.slice()` 成员方法调用与传参行为。
+
+##### 7. 字段级序列化定制（`@json("alias")` 与 `@json_ignore`）
+- **字段键别名重命名 `@json("alias")`**：
+  在结构体/类字段前标注 `@json("alias_name")`，派生的 `toJson()` 序列化器自动使用别名替换源码字段名作为输出 JSON 键名：
+  ```cp
+  @[Json]
+  pub class CdpNode {
+      @json("nodeId")
+      pub id: i32;
+      pub name: string;
+  }
+  // 序列化输出: {"nodeId": 123, "name": "root"}
+  ```
+- **字段序列化过滤 `@json_ignore`**：
+  在结构体/类字段前标注 `@json_ignore`，派生的 `toJson()` 序列化器完全跳过该字段，不参与序列化输出：
+  ```cp
+  @[Json]
+  pub class SessionState {
+      pub id: string;
+      @json_ignore
+      pub secret_token: string;
+  }
+  // 序列化输出: {"id": "sess_1"}
+  ```
+
+##### 8. 函数级作用域内存区域修饰器（`@arena`）
+- **修饰器语法**：在普通函数/方法前标注 `@arena` 修饰器。
+- **运行时特征**：
+  - 编译器在函数序言（prologue）处自动声明并初始化本地栈 Arena（`std.heap.ArenaAllocator.init(std.heap.page_allocator)`）；
+  - 自动注入 `defer __fn_arena.deinit()`，保证函数无论是正常退出还是发生错误提前返回，函数体内所有通过局部 Arena 分配的内存均 $O(1)$ 瞬间整块清空释放；
+  - 内部临时格式化、字符串内插与缓冲区构建均优先走此 Arena，消除频繁申请和逐个 `free` 开销。
+  ```cp
+  @arena
+  pub fn processBatchMetrics(items: []i32): i32 {
+      let mut_log = `items count = ${items.len}`; // 临时字符串直接入 arena
+      let total: i32 = 0;
+      for (x of items) { total += x; }
+      return total; // 标量安全返回，临时分配整块 O(1) 瞬时清空
+  }
+  ```
+
+##### 9. 一等公民 Fuzz 模糊测试声明（`fuzz` 块）与 libFuzzer 驱动接入
+- **语法语义**：`fuzz <name>(<data_param>) { ... }` 作为一等公民顶层或模块项声明。
+- **自动化模糊驱动**：
+  - 编译器自动为 `fuzz` 块生成内置测试执行器及高质量测试语料库（Corpus，包含空串、畸形 UTF-8 序列、边界整数与长字符串变异样本）；
+  - 自动注入伪随机切片变异驱动循环（100 轮动态变异测试）；
+  - 在常规测试模式下直接编译映射为 `test "fuzz: <name>"`，通过 `cap test` 或 `zig test` 执行回归测试。
+- **LLVM libFuzzer 与 AddressSanitizer 深度集成**：
+  - 当启用 `--fuzz` 编译选项时，编译器省略普通 `pub fn main`，自动生成 C-ABI 标准导出入口：
+    ```zig
+    export fn LLVMFuzzerTestOneInput(data: [*c]const u8, size: usize) callconv(.c) c_int {
+        if (size == 0 or data == null) return 0;
+        const input = data[0..size];
+        __cp_fuzz_target_0(input);
+        return 0;
+    }
+    ```
+  - **构建工具端 `cap` 命令行指令**：
+    - `cap test --fuzz [target]` 或 `cap fuzz [target]`：调用底层 `clang -fsanitize=fuzzer,address` 进行插桩链接，每秒执行上百万次变异输入；
+    - `--timeout <sec>`：指定输入超时与最大执行时长；
+    - `--jobs <n>`：指定并行模糊测试 Worker 数量；
+    - `cap test --repro <crash_file.bin>`：使用崩溃样本二进制复现缺陷，秒级定位堆栈现场。
+  ```cp
+  fuzz parsePacket(input) {
+      if (input.len < 4) return;
+      // 模糊压力测试目标解码函数
+      * = tryDecodePacket(input);
+  }
+  ```
+
+##### 10. 模板字符串零堆分配流式直写（Zero-Allocation Stream Write）
+- **痛点与核心机制**：
+  在高性能网络服务与大规模 Agent 日志场景下，避免频繁的堆内存分配与垃圾回收压力。
+- **Lowering 优化规范**：
+  - 当模板字符串（`` `...${expr}...` ``）作为以下流式 I/O 函数的直接实参时：
+    1. 成员写入方法：`writer.print(...)`、`writer.write(...)`、`writer.writeAll(...)`；
+    2. 标准输出全局打印：`print(...)`、`println(...)`、`eprint(...)`、`eprintln(...)`；
+    3. 内置 I/O 原语：`@print(...)`、`@print_err(...)`、`@io_write_stdout(...)`、`@io_write_stderr(...)`；
+  - 编译器跳过 `std.fmt.allocPrint` 堆分配，直接 Lowering 为底层流直写：
+    `writer.print("pattern", .{ args... })` 或 `std.debug.print("pattern\n", .{ args... })`；
+  - 仅当模板字符串作为独立表达式、变量赋值或返回值（如 `let s = \`hello ${name}\``）时，才走逃逸分配（`allocPrint`），兼顾极端性能与内存安全。
+
+##### 11. 跨协程/异步边界静态安全隔离检查（E0305）
+- **核心契约**：
+  当调用 `spawn`、`@spawn`、`spawn.cpu`、`send` 或跨协程通道传递数据时，严禁传递非拥有局部借用指针 `*T`、`&T` 或未转移所有权的局部切片。
+- **静态规则矩阵**：
+  - ✅ **放行安全并发类型**：POD 纯值类型（数值、布尔）、标注 `move v` / `own v` 显式所有权移交、线程安全并发容器（`Shared<T>`、`Atomic<T>`、`Mutex<T>`、`RwLock<T>`、`SharedTensor`、`ArcSlice`）；
+  - ❌ **红线拦截（报错 `error[E0305]`）**：
+    若参数或闭包捕获变量为栈局部借用或切片，编译器直接阻断编译并输出三段式自愈诊断：
+    ```text
+    error[E0305]: borrowed reference cannot cross async/coroutine boundary without 'move' or 'own'
+      = cause: variable is a borrowed reference or slice and cannot safely cross async/coroutine boundary.
+      = help: cross-coroutine boundary transfer requires owned data (move/own) or concurrency-safe types (Shared<T>, Atomic<T>).
+      = suggestion: transfer ownership with 'move' or wrap in thread-safe container 'Shared.new(...)'
+    ```
 
 ---
 

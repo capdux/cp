@@ -806,12 +806,13 @@ fn processFile(path: string): ! {
 
 ## 十、 特殊代码块、编译期元编程、内置派生宏与 AOP 装饰器 (Comptime, Macros & Reflection)
 
-### 1. 四大原生代码块矩阵
+### 1. 五大原生代码块矩阵
 | 代码块语法 | 核心语义与职责 | 安全边界 |
 | :--- | :--- | :--- |
 | `unsafe { ... }` | 允许裸指针解引用、强转与裸切片写入 | unsafe |
 | `zig { ... }` | Native Zig 原生逃逸舱（严禁 `__zig__`） | 底层交互 |
 | `arena { ... }` | 作用域区域分配器：支持语句/表达式返回值，退出时 $O(1)$ 销毁（如 `let v: i32 = arena { let p = @alloc(64); ... };`） | 安全 |
+| `fuzz <name>(<data>) { ... }` | 一等公民模糊测试块：内置语料变异驱动，支持 `cap test --fuzz` (LLVM libFuzzer + ASan) 与 `--repro` 崩溃复现 | 测试 |
 | `@c { ... }` | 内联 C 头文件吸纳块（`"stdio.h"`）与 C 原型混合声明 | FFI |
 
 ### 2. 编译期元编程、静态计算块与 `@map` 完美哈希表
@@ -857,6 +858,24 @@ pub class OrderItem {
 }
 // 自动合成：clone()、cmp()/eq()、hash()、toString()、fmt_debug()、toJson()、default()、getTableName()
 // 注：@[Default] 派生生成 pub static fn default(): ClassName 零值/空值初始化工厂函数
+
+// 字段级序列化控制（@json("alias") 重命名与 @json_ignore 过滤）
+@[Json]
+pub class UserProfile {
+    @json("user_id")
+    pub id: i32;
+    pub name: string;
+    @json_ignore
+    pub secret_token: string;
+}
+// toJson() 输出: {"user_id": 1, "name": "alice"}（secret_token 被完全忽略）
+
+// 函数级作用域区域分配器 @arena 修饰器（退出时 defer __fn_arena.deinit() O(1) 瞬时清空临时分配）
+@arena
+pub fn processBatch(items: []i32): i32 {
+    let msg = `Processing ${items.len} items`; // 临时分配自动进入函数级 arena
+    return items.len; // 标量安全返回，离开函数时零碎片一键整块销毁
+}
 
 // AST 模板宏与 Comptime 过程宏（macro 定义 + ${field} 插值 + @fieldsOf/@for/@if）
 macro AutoReset(target) {
@@ -1033,7 +1052,7 @@ switch (msg) {
 
 ---
 
-## 十三、 智能体 Top 28 绝对禁手清单 (Top 28 Antipatterns)
+## 十三、 智能体 Top 29 绝对禁手清单 (Top 29 Antipatterns)
 
 | 禁手序号 | 错误幻觉写法 (WRONG) | CP 唯一合法写法 (CORRECT) | 根因与规则说明 |
 | :---: | :--- | :--- | :--- |
@@ -1065,3 +1084,4 @@ switch (msg) {
 | **#26** | 手写 `@ptrCast(@alignCast(p))` / `@intCast(x)` | `p as *T!` / `u32(x)`（位模式重解释用 `@bitCast`） | 数值与指针强转走 `as`/`T(x)`；物理位重解释保留 `@bitCast` |
 | **#27** | `@derive(Clone, Json)` 或 `@meta(k = 1)` | `@[Clone, Json]` 与 `@meta(k: 1)` | 派生宏用 `@[...]`，元数据键值对用冒号 `:` |
 | **#28** | 使用 `ArrayList` / `RingBuffer` | `Vec<T>` / `VecDeque<T>` | 标准容器使用 `cap:collections` 的 `Vec`/`VecDeque`/`HashMap` |
+| **#29** | `spawn { local_ptr.* = 1; }` 或 `spawn fn(&buf)` | `spawn { move buf; ... }` 或使用 `Shared<T>` | `E0305`：严禁跨异步协程边界传递局部借用指针或切片，必须 `move` 转移所有权或使用 `Shared<T>` |

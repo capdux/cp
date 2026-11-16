@@ -36,6 +36,14 @@ struct Cli {
     #[arg(long)]
     lib: bool,
 
+    /// Compile with libFuzzer C-ABI entry point
+    #[arg(long)]
+    fuzz: bool,
+
+    /// Filter fuzz targets by name or index
+    #[arg(long)]
+    fuzz_target: Option<String>,
+
     #[command(subcommand)]
     command: Option<Commands>,
 }
@@ -55,6 +63,10 @@ enum Commands {
         nest: bool,
         #[arg(long)]
         lib: bool,
+        #[arg(long)]
+        fuzz: bool,
+        #[arg(long)]
+        fuzz_target: Option<String>,
     },
     /// Perform static syntax and borrow-checker check
     Check {
@@ -103,6 +115,8 @@ fn compile_file(
     include: &[PathBuf],
     beam: bool,
     lib: bool,
+    fuzz: bool,
+    fuzz_target: Option<String>,
 ) -> anyhow::Result<()> {
     let mut all_items = Vec::new();
     let mut processed_sources = HashSet::new();
@@ -143,11 +157,16 @@ fn compile_file(
         return Err(anyhow::anyhow!("{}", rendered));
     }
 
+    let is_fuzz = fuzz || std::env::var("CP_FUZZ").is_ok();
+    let fuzz_tgt = fuzz_target.or_else(|| std::env::var("CP_FUZZ_TARGET").ok());
+
     let code_str = fs::read_to_string(input).ok();
     let zig_code_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         let mut codegen = Codegen::new();
         codegen.is_beam_mode = beam;
         codegen.is_lib_mode = lib;
+        codegen.is_fuzz_mode = is_fuzz;
+        codegen.fuzz_target_filter = fuzz_tgt;
         codegen.source_dir = input.parent().map(|p| p.to_path_buf());
         if let Some(ref c) = code_str {
             codegen.init_source(Some(&input.display().to_string()), Some(c));
@@ -225,8 +244,18 @@ fn run(cli: Cli) -> anyhow::Result<()> {
                 beam,
                 nest,
                 lib,
+                fuzz,
+                fuzz_target,
             } => {
-                compile_file(&input, output.as_ref(), &include, beam || nest, lib)?;
+                compile_file(
+                    &input,
+                    output.as_ref(),
+                    &include,
+                    beam || nest,
+                    lib,
+                    fuzz,
+                    fuzz_target,
+                )?;
             }
             Commands::Check {
                 input,
@@ -284,6 +313,8 @@ fn run(cli: Cli) -> anyhow::Result<()> {
             &cli.include,
             cli.beam || cli.nest,
             cli.lib,
+            cli.fuzz,
+            cli.fuzz_target,
         )?;
     } else {
         use clap::CommandFactory;

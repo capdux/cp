@@ -336,6 +336,9 @@ pub fn find_referenced_vars_in_stmt(stmt: &Stmt, vars: &mut HashSet<String>) {
         Stmt::Func(f) => {
             find_referenced_vars_in_block(&f.body, vars);
         }
+        Stmt::Fuzz(f) => {
+            find_referenced_vars_in_block(&f.body, vars);
+        }
     }
 }
 

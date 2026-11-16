@@ -2,6 +2,80 @@
 
 > 历史变更日志已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## [2026-11-16] - 核心里程碑：Spec 5 零堆分配流式直写与 Spec 8 跨协程静态隔离检查 E0305 实装
+
+### 编译器新特性与优化 (Compiler Features & Optimizations)
+- **零分配模板字符串流式直写 (Spec 5)**:
+  - [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs)：实现 `lower_template_stream`，为 `print`、`println`、`@print`、`writer.write`、`writer.print` 等提供流式直写 Lowering，彻底跳过 `allocPrint` 堆分配，常量内插编译期静态折叠，动态参数包覆 `cp_fmt` 直写底层流。
+- **跨协程/异步边界静态隔离检查 E0305 (Spec 8)**:
+  - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs)：引入 `local_borrow_vars` 追踪与 `check_async_boundary_arg` 检查；拦截 `spawn`、`@spawn`、`spawn.cpu`、`send` 边界传递局部借用指针 `*T`、`&T` 或裸切片，报出三段式 AI-First 智能诊断 `error[E0305]`。
+
+### 双轨规范与文档 (Documentation & Specs)
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)：在第 20.11 节增加第 10 小节（流式直写优化）与第 11 小节（跨协程隔离检查 E0305）。
+- [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)：升级为 Top 29 绝对禁手清单，登记 #29 条（跨协程传递局部借用拦截）。
+
+### 测试验证 (Tests)
+- [`cap/test/test_stream_template_and_isolation.cp`](file:///data/dev/cp/cap/test/test_stream_template_and_isolation.cp)：Spec 5 流式直写与 Spec 8 安全并发 100% PASS。
+- [`cap/test/test_parallel_fail_borrow.cp`](file:///data/dev/cp/cap/test/test_parallel_fail_borrow.cp)：精准触发 E0305 拦截。
+- `test_all.cp` 回归验证：100% PASS。
+
+---
+
+## [2026-11-16] - 核心里程碑：LLVM libFuzzer 驱动接入、AddressSanitizer 内存检查与 cap 模糊测试指令矩阵 (Spec 12 第二部分)
+
+### 编译器与构建工具链 (Compiler & Toolchain)
+- **libFuzzer C-ABI 标准符号导出与构建模式**:
+  - [`cpc/src/main.rs`](file:///data/dev/cp/cpc/src/main.rs)：新增 `--fuzz` 与 `--fuzz-target <name>` 编译命令行选项，支持环境标识 `CP_FUZZ`；
+  - [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：在 `--fuzz` 模式下抑制普通 `pub fn main` 生成，提取所有 `fuzz` 目标块，导出标准 C-ABI 入口函数 `export fn LLVMFuzzerTestOneInput(data: [*c]const u8, size: usize) callconv(.c) c_int`；
+  - [`cpc/src/codegen/actor.rs`](file:///data/dev/cp/cpc/src/codegen/actor.rs)：登记所有 `fuzz` 目标块上下文，支持单独隔离为函数并安全分发。
+- **构建工具端 `cap` 命令行指令矩阵与两阶段插桩链接**:
+  - [`cap/src/main.zig`](file:///data/dev/cp/cap/src/main.zig)：
+    - 扩展 `cap test` 支持 `--fuzz`（及一等子命令 `cap fuzz [target]`）；
+    - 采用 `zig build-obj` + `clang -fsanitize=fuzzer,address` 两阶段构建，无缝引入 Coverage-guided 变异与 ASan 内存安全检查；
+    - 支持可选参数 `--timeout <sec>` 与 `--jobs <n>` 控制执行时长与并发 Worker；
+    - 支持崩溃复现指令 `cap test --repro <crash_file.bin>`，单次喂入输入文件，秒级触发崩溃并回溯堆栈现场；
+    - `usage()` 帮助文档同步增补 Fuzz Options 指引。
+
+### 双轨规范与文档 (Documentation & Specs)
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)：在第 20.11 节补充 libFuzzer C-ABI 导出与 `cap test --fuzz`、`--repro` 官方规范。
+- [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)：更新原生代码块矩阵中的 `fuzz` 块契约描述。
+
+### 测试验证 (Tests)
+- [`cap/test/test_fuzz_driver.cp`](file:///data/dev/cp/cap/test/test_fuzz_driver.cp)：新增专用模糊测试与崩溃复现器验证用例；
+- 实测验证：
+  - 常规测试模式 `cap test`: 100% PASS；
+  - libFuzzer 模式 `cap test --fuzz`: 100% PASS (1000 轮动态变异)；
+  - 超高吞吐测试 `cap fuzz --timeout 1`: 100% PASS (1 秒 220 万次执行，110 万 exec/s)；
+  - 崩溃复现 `cap test --repro temp/crash_sample.bin`: 精准复现 panic 与堆栈定位。
+
+---
+
+## [2026-11-16] - 核心里程碑：Fuzz 模糊测试块、函数级 @arena 内存区域修饰器与字段级 @json 注解定制
+
+### 编译器新特性与语法扩展 (Compiler Features)
+- **一级 `fuzz` 模糊测试块 (Spec 12.2)**:
+  - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs)：新增保留字 `Token::Fuzz`；
+  - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs) & [`cpc/src/ast_visitor.rs`](file:///data/dev/cp/cpc/src/ast_visitor.rs)：新增 `FuzzDecl` 声明与 AST 节点；
+  - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs)：支持顶层与模块项 `fuzz <name> (<param>) { ... }` 语法解析；
+  - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs)：语义分析自动将变异样本形参绑定为 `[]const u8`；
+  - [`cpc/src/codegen/actor.rs`](file:///data/dev/cp/cpc/src/codegen/actor.rs)、[`cpc/src/codegen/stmt.rs`](file:///data/dev/cp/cpc/src/codegen/stmt.rs)、[`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：发射集成 16+ 高危边界样本语料库（Corpus）与 100 轮动态切片变异驱动循环的 `test "fuzz: <name>"`。
+- **函数级 `@arena` 作用域内存区域修饰器 (Spec 7)**:
+  - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs)：在 `parse_meta_ident` 映射 `Token::Arena` 为 `"arena"` 注解；
+  - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs)：元注解校验增加 `@arena` 函数修饰器豁免；
+  - [`cpc/src/codegen/actor.rs`](file:///data/dev/cp/cpc/src/codegen/actor.rs)：在函数序言处初始化栈 Arena 并压入活跃 Arena 作用域栈，退出时自动注入 `defer __fn_arena.deinit()`，使函数内局部临时分配离开时 $O(1)$ 瞬时整块释放，实现零堆碎片与强异常安全。
+- **字段级 `@json("alias")` 与 `@json_ignore` 序列化定制 (Spec 6)**:
+  - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs)：重构 `derive_json_method`，跳过标注 `@json_ignore` 的字段，提取 `@json("alias")` 别名作为 JSON 键，无有效字段时输出 `"{}"`。
+
+### 双轨规范与文档同步 (Documentation & Specs)
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)：在第 20.2 节补充函数级 `@arena`，并在第 20.11 节增补字段级 JSON 定制、函数级 `@arena` 与 `fuzz` 模糊测试块权威规范。
+- [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)：扩充原生代码块矩阵至五大代码块（引入 `fuzz` 块），并同步更新字段级 `@json`、函数级 `@arena` 的精炼可运行契约示例。
+
+### 测试验证 (Tests)
+- [`cap/test/test_fuzz_arena_json.cp`](file:///data/dev/cp/cap/test/test_fuzz_arena_json.cp)：字段别名重命名、字段忽略过滤、函数级 `@arena` 作用域计算与 `fuzz` 驱动验证 100% PASS。
+- `test_all.cp` 回归验证：100% PASS。
+
+---
+
 ## [2026-11-16] - 核心里程碑：Phase 2 人体工程学语法糖实装、契约式设计、SIMD原语与双轨规范同步
 
 ### 编译器人体工程学与黑科技语法 (Compiler Ergonomics & Contracts)

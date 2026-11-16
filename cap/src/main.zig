@@ -92,6 +92,8 @@ pub fn main(init: std.process.Init) !void {
         try handleInstall(allocator);
     } else if (std.mem.eql(u8, cmd, "test")) {
         try handleTest(allocator, args[2..]);
+    } else if (std.mem.eql(u8, cmd, "fuzz")) {
+        try handleFuzz(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "bench")) {
         try handleBench(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "demangle")) {
@@ -164,7 +166,8 @@ fn usage() void {
         \\  cap run <file|script>         Run a script or file explicitly
         \\  cap build [target] [options]  Build a CP package or directory
         \\  cap clean                     Clean intermediate Zig code and build caches
-        \\  cap test [dir]                Run test suite (default: test/)
+        \\  cap test [dir] [--fuzz]       Run test suite (default: test/) or libFuzzer
+        \\  cap fuzz [target] [options]   Fuzz test target using LLVM libFuzzer + ASan
         \\  cap bench <file.cp>           Run microsecond benchmark (ReleaseFast)
         \\  cap demangle [trace_file]     Demangle Zig stack traces to original CP lines
         \\  cap init [app|agent|lib]      Initialize a new CP project template
@@ -174,6 +177,12 @@ fn usage() void {
         \\  cap install                   Install all dependencies from cap.json
         \\  cap sniff                     Detect hardware features (AVX2, CPU, OS)
         \\  cap help                      Show this help message
+        \\
+        \\Fuzz Options:
+        \\  --fuzz                        Enable LLVM libFuzzer mode with AddressSanitizer
+        \\  --timeout <sec>               Set per-input timeout / max execution time in seconds
+        \\  --jobs <n>                    Number of parallel fuzzer workers
+        \\  --repro <crash_file.bin>      Reproduce crash using saved input artifact
         \\
         \\Build Options:
         \\  -B, --force                   Force rebuild even if targets are up to date
@@ -625,20 +634,31 @@ fn runFileWithOpt(allocator: std.mem.Allocator, filename: []const u8, opt_mode: 
 
     var build_args_buf: [100][]const u8 = undefined;
     var build_argc: usize = 0;
-    build_args_buf[build_argc] = "zig"; build_argc += 1;
-    build_args_buf[build_argc] = "build-exe"; build_argc += 1;
-    build_args_buf[build_argc] = zig_file; build_argc += 1;
-    build_args_buf[build_argc] = emit_bin_arg; build_argc += 1;
-    build_args_buf[build_argc] = "--cache-dir"; build_argc += 1;
-    build_args_buf[build_argc] = ".cap/zig-cache"; build_argc += 1;
-    build_args_buf[build_argc] = "-O"; build_argc += 1;
-    build_args_buf[build_argc] = opt_mode; build_argc += 1;
-    build_args_buf[build_argc] = "-lc"; build_argc += 1;
+    build_args_buf[build_argc] = "zig";
+    build_argc += 1;
+    build_args_buf[build_argc] = "build-exe";
+    build_argc += 1;
+    build_args_buf[build_argc] = zig_file;
+    build_argc += 1;
+    build_args_buf[build_argc] = emit_bin_arg;
+    build_argc += 1;
+    build_args_buf[build_argc] = "--cache-dir";
+    build_argc += 1;
+    build_args_buf[build_argc] = ".cap/zig-cache";
+    build_argc += 1;
+    build_args_buf[build_argc] = "-O";
+    build_argc += 1;
+    build_args_buf[build_argc] = opt_mode;
+    build_argc += 1;
+    build_args_buf[build_argc] = "-lc";
+    build_argc += 1;
 
     // 自动检测并链接底层 C 静态库 (如 uSockets 与 picohttpparser)
     if (fs_shim.cwd().statFile("zig-out/lib/libusockets.a") catch null != null) {
-        build_args_buf[build_argc] = "-Lzig-out/lib"; build_argc += 1;
-        build_args_buf[build_argc] = "-lusockets"; build_argc += 1;
+        build_args_buf[build_argc] = "-Lzig-out/lib";
+        build_argc += 1;
+        build_args_buf[build_argc] = "-lusockets";
+        build_argc += 1;
     }
 
     var allocated_libs: [64][]const u8 = undefined;
@@ -1265,21 +1285,79 @@ fn handleInit(allocator: std.mem.Allocator, args: []const []const u8) !void {
     std.debug.print("\nDone! Run `cap start` to run your project, or `cap test` to run tests.\n", .{});
 }
 
+pub const FuzzOptions = struct {
+    is_fuzz: bool = false,
+    timeout: ?[]const u8 = null,
+    jobs: ?[]const u8 = null,
+    repro: ?[]const u8 = null,
+};
+
 fn handleTest(allocator: std.mem.Allocator, args: []const []const u8) !void {
+    try handleTestWithFuzz(allocator, args, false);
+}
+
+fn handleFuzz(allocator: std.mem.Allocator, args: []const []const u8) !void {
+    try handleTestWithFuzz(allocator, args, true);
+}
+
+fn handleTestWithFuzz(allocator: std.mem.Allocator, args: []const []const u8, default_fuzz: bool) !void {
+    var fuzz_opts = FuzzOptions{ .is_fuzz = default_fuzz };
     var test_target: []const u8 = "test";
-    if (args.len > 0) {
-        test_target = args[0];
+
+    var i: usize = 0;
+    while (i < args.len) : (i += 1) {
+        const arg = args[i];
+        if (std.mem.eql(u8, arg, "--fuzz")) {
+            fuzz_opts.is_fuzz = true;
+        } else if (std.mem.eql(u8, arg, "--timeout")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                fuzz_opts.timeout = args[i];
+            }
+        } else if (std.mem.startsWith(u8, arg, "--timeout=")) {
+            fuzz_opts.timeout = arg["--timeout=".len..];
+        } else if (std.mem.eql(u8, arg, "--jobs")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                fuzz_opts.jobs = args[i];
+            }
+        } else if (std.mem.startsWith(u8, arg, "--jobs=")) {
+            fuzz_opts.jobs = arg["--jobs=".len..];
+        } else if (std.mem.eql(u8, arg, "--repro")) {
+            fuzz_opts.is_fuzz = true;
+            if (i + 1 < args.len) {
+                i += 1;
+                fuzz_opts.repro = args[i];
+            }
+        } else if (std.mem.startsWith(u8, arg, "--repro=")) {
+            fuzz_opts.is_fuzz = true;
+            fuzz_opts.repro = arg["--repro=".len..];
+        } else if (!std.mem.startsWith(u8, arg, "-")) {
+            test_target = arg;
+        }
     }
 
-    std.debug.print(
-        \\  ██████╗      ██╗     ██████╗ 
-        \\ ██╔════╝     ████╗    ██╔══██╗   CAP Test Runner v0.1.0
-        \\ ██║         ██╔═██╗   ██████╔╝   Fast & Native CP Testing Engine
-        \\ ██║        ██╔╝ ╚██╗  ██╔═══╝    [ Test Discovery • Parallel • Debug Mode ]
-        \\ ╚██████╗  ██╔╝   ╚██╗ ██║        CAP : Concurrent Application Plus
-        \\  ╚═════╝  ╚═╝     ╚═╝ ╚═╝
-        \\
-    , .{});
+    if (fuzz_opts.is_fuzz) {
+        std.debug.print(
+            \\  ██████╗      ██╗     ██████╗ 
+            \\ ██╔════╝     ████╗    ██╔══██╗   CAP libFuzzer Engine v0.1.0
+            \\ ██║         ██╔═██╗   ██████╔╝   Fast & Native Coverage-Guided Fuzzing
+            \\ ██║        ██╔╝ ╚██╗  ██╔═══╝    [ AddressSanitizer • Mutation Loop • Reproducer ]
+            \\ ╚██████╗  ██╔╝   ╚██╗ ██║        CAP : Concurrent Application Plus
+            \\  ╚═════╝  ╚═╝     ╚═╝ ╚═╝
+            \\
+        , .{});
+    } else {
+        std.debug.print(
+            \\  ██████╗      ██╗     ██████╗ 
+            \\ ██╔════╝     ████╗    ██╔══██╗   CAP Test Runner v0.1.0
+            \\ ██║         ██╔═██╗   ██████╔╝   Fast & Native CP Testing Engine
+            \\ ██║        ██╔╝ ╚██╗  ██╔═══╝    [ Test Discovery • Parallel • Debug Mode ]
+            \\ ╚██████╗  ██╔╝   ╚██╗ ██║        CAP : Concurrent Application Plus
+            \\  ╚═════╝  ╚═╝     ╚═╝ ╚═╝
+            \\
+        , .{});
+    }
 
     const stat = fs_shim.cwd().statFile(test_target) catch {
         std.debug.print("Error: Test target '{s}' not found.\n", .{test_target});
@@ -1303,7 +1381,11 @@ fn handleTest(allocator: std.mem.Allocator, args: []const []const u8) !void {
         return;
     }
 
-    std.debug.print("Discovered {d} test file(s). Running in Debug mode...\n\n", .{test_files.items.len});
+    if (fuzz_opts.is_fuzz) {
+        std.debug.print("Discovered {d} fuzz target(s). Running with LLVM libFuzzer + ASan...\n\n", .{test_files.items.len});
+    } else {
+        std.debug.print("Discovered {d} test file(s). Running in Debug mode...\n\n", .{test_files.items.len});
+    }
 
     var passed_count: usize = 0;
     var failed_count: usize = 0;
@@ -1311,9 +1393,17 @@ fn handleTest(allocator: std.mem.Allocator, args: []const []const u8) !void {
 
     for (test_files.items) |tfile| {
         const file_start = std.Io.Timestamp.now(global_io, .awake);
-        std.debug.print("  ▶ Running {s} ... ", .{tfile});
+        if (fuzz_opts.is_fuzz) {
+            std.debug.print("  ▶ [libFuzzer] Fuzzing {s} ...\n", .{tfile});
+        } else {
+            std.debug.print("  ▶ Running {s} ... ", .{tfile});
+        }
 
-        const run_res = runTestSingleFile(allocator, tfile);
+        const run_res = if (fuzz_opts.is_fuzz)
+            runFuzzSingleFile(allocator, tfile, fuzz_opts)
+        else
+            runTestSingleFile(allocator, tfile);
+
         const duration = file_start.durationTo(std.Io.Timestamp.now(global_io, .awake)).toMilliseconds();
 
         if (run_res) |_| {
@@ -1327,7 +1417,8 @@ fn handleTest(allocator: std.mem.Allocator, args: []const []const u8) !void {
 
     const total_time = start_ts.durationTo(std.Io.Timestamp.now(global_io, .awake)).toMilliseconds();
     std.debug.print("\n--------------------------------------------------\n", .{});
-    std.debug.print("Tests:  {d} passed, {d} failed, {d} total\n", .{ passed_count, failed_count, test_files.items.len });
+    const label: []const u8 = if (fuzz_opts.is_fuzz) "Fuzzing" else "Tests";
+    std.debug.print("{s}:  {d} passed, {d} failed, {d} total\n", .{ label, passed_count, failed_count, test_files.items.len });
     std.debug.print("Time:   {d}ms\n", .{total_time});
     std.debug.print("--------------------------------------------------\n", .{});
 
@@ -1402,20 +1493,31 @@ fn runTestSingleFile(allocator: std.mem.Allocator, filename: []const u8) !void {
 
     var build_args_buf: [100][]const u8 = undefined;
     var build_argc: usize = 0;
-    build_args_buf[build_argc] = "zig"; build_argc += 1;
-    build_args_buf[build_argc] = "build-exe"; build_argc += 1;
-    build_args_buf[build_argc] = zig_file; build_argc += 1;
-    build_args_buf[build_argc] = emit_arg; build_argc += 1;
-    build_args_buf[build_argc] = "--cache-dir"; build_argc += 1;
-    build_args_buf[build_argc] = ".cap/zig-cache"; build_argc += 1;
-    build_args_buf[build_argc] = "-O"; build_argc += 1;
-    build_args_buf[build_argc] = "Debug"; build_argc += 1;
-    build_args_buf[build_argc] = "-lc"; build_argc += 1;
+    build_args_buf[build_argc] = "zig";
+    build_argc += 1;
+    build_args_buf[build_argc] = "build-exe";
+    build_argc += 1;
+    build_args_buf[build_argc] = zig_file;
+    build_argc += 1;
+    build_args_buf[build_argc] = emit_arg;
+    build_argc += 1;
+    build_args_buf[build_argc] = "--cache-dir";
+    build_argc += 1;
+    build_args_buf[build_argc] = ".cap/zig-cache";
+    build_argc += 1;
+    build_args_buf[build_argc] = "-O";
+    build_argc += 1;
+    build_args_buf[build_argc] = "Debug";
+    build_argc += 1;
+    build_args_buf[build_argc] = "-lc";
+    build_argc += 1;
 
     // 自动检测并链接底层 C 静态库 (如 uSockets 与 picohttpparser)
     if (fs_shim.cwd().statFile("zig-out/lib/libusockets.a") catch null != null) {
-        build_args_buf[build_argc] = "-Lzig-out/lib"; build_argc += 1;
-        build_args_buf[build_argc] = "-lusockets"; build_argc += 1;
+        build_args_buf[build_argc] = "-Lzig-out/lib";
+        build_argc += 1;
+        build_args_buf[build_argc] = "-lusockets";
+        build_argc += 1;
     }
 
     var allocated_libs: [64][]const u8 = undefined;
@@ -1452,6 +1554,173 @@ fn runTestSingleFile(allocator: std.mem.Allocator, filename: []const u8) !void {
     if (test_res.exited != 0) return error.TestExecutionFailed;
 }
 
+fn runFuzzSingleFile(allocator: std.mem.Allocator, filename: []const u8, fuzz_opts: FuzzOptions) !void {
+    const base_name = filename[0 .. filename.len - 3];
+    const zig_file = try std.fmt.allocPrint(allocator, ".cap/zig/{s}.zig", .{base_name});
+    defer allocator.free(zig_file);
+
+    if (std.Io.Dir.path.dirname(zig_file)) |dirname| {
+        fs_shim.cwd().createDirPath(global_io, dirname) catch {};
+    }
+
+    // 1. Compile CP source with cpc --fuzz
+    const cpc_bin = getCpcBin();
+    const cpc_args = &[_][]const u8{
+        cpc_bin,
+        "compile",
+        filename,
+        "--output",
+        zig_file,
+        "--fuzz",
+        "-I",
+        "/data/dev/cp/cap/cap_modules",
+        "-I",
+        "/data/dev/cp/lib",
+    };
+    var compile_child = try std.process.spawn(global_io, .{ .argv = cpc_args });
+    const compile_res = try compile_child.wait(global_io);
+    if (compile_res.exited != 0) return error.CompileFailed;
+
+    // 2. Build object file with zig build-obj
+    const obj_path = try std.fmt.allocPrint(allocator, ".cap/obj/{s}.o", .{std.Io.Dir.path.basename(base_name)});
+    defer allocator.free(obj_path);
+    if (std.Io.Dir.path.dirname(obj_path)) |dirname| {
+        fs_shim.cwd().createDirPath(global_io, dirname) catch {};
+    }
+
+    const emit_obj_arg = try std.fmt.allocPrint(allocator, "-femit-bin={s}", .{obj_path});
+    defer allocator.free(emit_obj_arg);
+    fs_shim.cwd().createDirPath(global_io, ".cap/zig-cache") catch {};
+
+    const zig_obj_args = &[_][]const u8{
+        "zig",
+        "build-obj",
+        zig_file,
+        emit_obj_arg,
+        "--cache-dir",
+        ".cap/zig-cache",
+        "-O",
+        "Debug",
+        "-lc",
+    };
+    var build_child = try std.process.spawn(global_io, .{ .argv = zig_obj_args });
+    const build_res = try build_child.wait(global_io);
+    if (build_res.exited != 0) return error.BuildFailed;
+
+    // 3. Link with clang -fsanitize=fuzzer,address
+    const bin_path = try std.fmt.allocPrint(allocator, "bin/test/{s}_fuzz", .{std.Io.Dir.path.basename(base_name)});
+    defer allocator.free(bin_path);
+    if (std.Io.Dir.path.dirname(bin_path)) |dirname| {
+        fs_shim.cwd().createDirPath(global_io, dirname) catch {};
+    }
+
+    var link_args_buf: [100][]const u8 = undefined;
+    var link_argc: usize = 0;
+    link_args_buf[link_argc] = "clang";
+    link_argc += 1;
+    link_args_buf[link_argc] = "-fsanitize=fuzzer,address";
+    link_argc += 1;
+    link_args_buf[link_argc] = obj_path;
+    link_argc += 1;
+    link_args_buf[link_argc] = "-o";
+    link_argc += 1;
+    link_args_buf[link_argc] = bin_path;
+    link_argc += 1;
+
+    // C dependencies if available
+    if (fs_shim.cwd().statFile("zig-out/lib/libusockets.a") catch null != null) {
+        link_args_buf[link_argc] = "-Lzig-out/lib";
+        link_argc += 1;
+        link_args_buf[link_argc] = "-lusockets";
+        link_argc += 1;
+    }
+
+    // Also support custom link_libs from cap.json if present
+    var mf_opt: ?manifest.Manifest = null;
+    if (fs_shim.cwd().readFileAlloc(allocator, "cap.json", 1024 * 1024)) |content| {
+        defer allocator.free(content);
+        if (manifest.Manifest.parse(allocator, content)) |mf| {
+            mf_opt = mf;
+        } else |_| {}
+    } else |_| {}
+    defer if (mf_opt) |*m| m.deinit(allocator);
+
+    var allocated_libs: [64][]const u8 = undefined;
+    var allocated_libs_len: usize = 0;
+    defer for (allocated_libs[0..allocated_libs_len]) |al| allocator.free(al);
+
+    if (mf_opt) |mf| {
+        if (mf.build_config) |bc| {
+            for (bc.c_flags) |cf| {
+                if (link_argc < 100) {
+                    link_args_buf[link_argc] = cf;
+                    link_argc += 1;
+                }
+            }
+            for (bc.link_libs) |ll| {
+                if (link_argc < 100) {
+                    const lib_arg = try std.fmt.allocPrint(allocator, "-l{s}", .{ll});
+                    allocated_libs[allocated_libs_len] = lib_arg;
+                    allocated_libs_len += 1;
+                    link_args_buf[link_argc] = lib_arg;
+                    link_argc += 1;
+                }
+            }
+        }
+    }
+
+    var link_child = try std.process.spawn(global_io, .{ .argv = link_args_buf[0..link_argc] });
+    const link_res = try link_child.wait(global_io);
+    if (link_res.exited != 0) return error.LinkFailed;
+
+    // 4. Execute: Reproduce mode or Fuzzing mode
+    if (fuzz_opts.repro) |repro_file| {
+        std.debug.print("  [libFuzzer Repro] Executing crash artifact: {s} ...\n", .{repro_file});
+        var repro_child = try std.process.spawn(global_io, .{ .argv = &[_][]const u8{ bin_path, repro_file } });
+        const repro_res = try repro_child.wait(global_io);
+        if (repro_res.exited != 0) {
+            std.debug.print("  [libFuzzer Repro] Crash successfully reproduced! (exit code: {d})\n", .{repro_res.exited});
+        } else {
+            std.debug.print("  [libFuzzer Repro] Input finished cleanly (no crash triggered).\n", .{});
+        }
+        return;
+    }
+
+    var run_args_buf: [16][]const u8 = undefined;
+    var run_argc: usize = 0;
+    run_args_buf[run_argc] = bin_path;
+    run_argc += 1;
+
+    var timeout_arg_buf: ?[]const u8 = null;
+    defer if (timeout_arg_buf) |tab| allocator.free(tab);
+    var max_time_buf: ?[]const u8 = null;
+    defer if (max_time_buf) |mtb| allocator.free(mtb);
+
+    if (fuzz_opts.timeout) |t| {
+        timeout_arg_buf = try std.fmt.allocPrint(allocator, "-timeout={s}", .{t});
+        run_args_buf[run_argc] = timeout_arg_buf.?;
+        run_argc += 1;
+        max_time_buf = try std.fmt.allocPrint(allocator, "-max_total_time={s}", .{t});
+        run_args_buf[run_argc] = max_time_buf.?;
+        run_argc += 1;
+    } else {
+        run_args_buf[run_argc] = "-runs=1000";
+        run_argc += 1;
+    }
+
+    var jobs_arg_buf: ?[]const u8 = null;
+    defer if (jobs_arg_buf) |jab| allocator.free(jab);
+    if (fuzz_opts.jobs) |j| {
+        jobs_arg_buf = try std.fmt.allocPrint(allocator, "-jobs={s}", .{j});
+        run_args_buf[run_argc] = jobs_arg_buf.?;
+        run_argc += 1;
+    }
+
+    var fuzz_child = try std.process.spawn(global_io, .{ .argv = run_args_buf[0..run_argc] });
+    const fuzz_res = try fuzz_child.wait(global_io);
+    if (fuzz_res.exited != 0) return error.FuzzExecutionFailed;
+}
+
 fn handleBench(allocator: std.mem.Allocator, args: []const []const u8) !void {
     if (args.len == 0) {
         std.debug.print("Usage: cap bench <bench_file.cp>\n", .{});
@@ -1485,11 +1754,14 @@ fn handleDemangle(allocator: std.mem.Allocator, args: []const []const u8) !void 
     const cpc_bin = getCpcBin();
     var cmd_list: [16][]const u8 = undefined;
     var argc: usize = 0;
-    cmd_list[argc] = cpc_bin; argc += 1;
-    cmd_list[argc] = "demangle"; argc += 1;
+    cmd_list[argc] = cpc_bin;
+    argc += 1;
+    cmd_list[argc] = "demangle";
+    argc += 1;
     for (args) |arg| {
         if (argc < 16) {
-            cmd_list[argc] = arg; argc += 1;
+            cmd_list[argc] = arg;
+            argc += 1;
         }
     }
     var child = try std.process.spawn(global_io, .{ .argv = cmd_list[0..argc] });

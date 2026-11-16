@@ -107,6 +107,9 @@ impl From<String> for OutputBuffer {
 pub struct Codegen {
     pub is_beam_mode: bool,
     pub is_lib_mode: bool,
+    pub is_fuzz_mode: bool,
+    pub fuzz_target_filter: Option<String>,
+    pub(crate) fuzz_targets: Vec<(String, String, OutputBuffer)>,
     pub agent_classes: Vec<crate::ast::Class>,
     pub(crate) output: OutputBuffer,
     pub(crate) cases: Vec<String>,
@@ -191,6 +194,9 @@ impl Codegen {
         Self {
             is_beam_mode: false,
             is_lib_mode: false,
+            is_fuzz_mode: false,
+            fuzz_target_filter: None,
+            fuzz_targets: Vec::new(),
             agent_classes: Vec::new(),
             output: OutputBuffer::new(),
             cases: Vec::new(),
@@ -2335,6 +2341,12 @@ impl Codegen {
                 ModuleItem::Decl(Decl::Func(f)) => {
                     self.generate_function(f);
                 }
+                ModuleItem::Decl(Decl::Fuzz(f)) => {
+                    self.generate_fuzz_decl(f);
+                }
+                ModuleItem::Stmt(Stmt::Fuzz(f)) => {
+                    self.generate_fuzz_decl(f);
+                }
                 ModuleItem::Decl(Decl::Dec(_)) => {}
                 ModuleItem::Decl(Decl::Macro(_)) => {}
                 ModuleItem::Import(_) => {}
@@ -2407,7 +2419,7 @@ impl Codegen {
             }
 
             let has_main = self.fn_sigs.contains_key("main");
-            if !self.is_lib_mode && has_main {
+            if !self.is_lib_mode && !self.is_fuzz_mode && has_main {
                 self.writeln("pub fn main(init: std.process.Init) !void {");
                 self.indent();
                 self.writeln("global_io = init.io;");
@@ -2492,6 +2504,56 @@ impl Codegen {
                 self.writeln("}"); // Close main
             }
         }
+
+        if self.is_fuzz_mode {
+            self.writeln("\n// --- libFuzzer C-ABI Standard Entrypoint ---");
+            let fuzz_targets = self.fuzz_targets.clone();
+            let filter_opt = self.fuzz_target_filter.clone();
+            if fuzz_targets.is_empty() {
+                self.writeln("export fn LLVMFuzzerTestOneInput(data: [*c]const u8, size: usize) callconv(.c) c_int {");
+                self.indent();
+                self.writeln("_ = data;");
+                self.writeln("_ = size;");
+                self.writeln("return 0;");
+                self.dedent();
+                self.writeln("}");
+            } else {
+                for (idx, (name, param_name, body)) in fuzz_targets.iter().enumerate() {
+                    self.writeln(&format!("// Fuzz target [{}]: \"{}\"", idx, name));
+                    self.writeln(&format!(
+                        "fn __cp_fuzz_target_{}(__fuzz_slice: []const u8) void {{",
+                        idx
+                    ));
+                    self.indent();
+                    self.writeln(&format!("const {} = __fuzz_slice;", param_name));
+                    self.writeln(&format!("_ = &{};", param_name));
+                    self.output.push_buffer(body);
+                    self.dedent();
+                    self.writeln("}\n");
+                }
+
+                self.writeln(
+                    "export fn LLVMFuzzerTestOneInput(data: [*c]const u8, size: usize) callconv(.c) c_int {",
+                );
+                self.indent();
+                self.writeln("if (size == 0 or data == null) return 0;");
+                self.writeln("const input = data[0..size];");
+                for (idx, (name, _, _)) in fuzz_targets.iter().enumerate() {
+                    let should_run = if let Some(ref filter) = filter_opt {
+                        filter == name || filter == &format!("{}", idx)
+                    } else {
+                        true
+                    };
+                    if should_run {
+                        self.writeln(&format!("__cp_fuzz_target_{}(input);", idx));
+                    }
+                }
+                self.writeln("return 0;");
+                self.dedent();
+                self.writeln("}");
+            }
+        }
+
         self.output.content.clone()
     }
 

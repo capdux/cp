@@ -81,6 +81,53 @@ impl Codegen {
         }
     }
 
+    pub(crate) fn lower_template_stream(&mut self, t: &TemplateLit) -> (String, Vec<String>) {
+        if t.expressions.is_empty() {
+            let quasi_str = if t.quasis.is_empty() {
+                String::new()
+            } else {
+                Self::escape_zig_fmt_string(&t.quasis[0])
+            };
+            return (quasi_str, Vec::new());
+        }
+
+        // Constant folding if all are literals
+        let all_lits = t.expressions.iter().all(|e| matches!(e, Expr::Lit(_)));
+        if all_lits {
+            let mut folded = String::new();
+            for (idx, quasi) in t.quasis.iter().enumerate() {
+                folded.push_str(quasi);
+                if idx < t.expressions.len() {
+                    if let Expr::Lit(lit) = &t.expressions[idx] {
+                        match lit {
+                            Lit::Int(n) => folded.push_str(&n.to_string()),
+                            Lit::Float(f) => folded.push_str(&f.to_string()),
+                            Lit::Str(s) => folded.push_str(s),
+                            Lit::Bool(b) => folded.push_str(if *b { "true" } else { "false" }),
+                            Lit::Null => folded.push_str("null"),
+                            Lit::Undefined => folded.push_str("undefined"),
+                        }
+                    }
+                }
+            }
+            return (Self::escape_zig_fmt_string(&folded), Vec::new());
+        }
+
+        let mut fmt_pattern = String::new();
+        let mut args_code = Vec::new();
+
+        for (idx, quasi) in t.quasis.iter().enumerate() {
+            fmt_pattern.push_str(&Self::escape_zig_fmt_string(quasi));
+            if idx < t.expressions.len() {
+                fmt_pattern.push_str("{s}");
+                let expr_code = self.generate_expr(&t.expressions[idx]);
+                args_code.push(format!("cp_fmt({})", expr_code));
+            }
+        }
+
+        (fmt_pattern, args_code)
+    }
+
     pub(crate) fn generate_expr(&mut self, expr: &Expr) -> String {
         match expr {
             Expr::Lit(Lit::Int(v)) => v.to_string(),
@@ -614,6 +661,19 @@ impl Codegen {
             Expr::Call(call) => {
                 if let Expr::Member(mem) = &*call.callee {
                     let prop = mem.prop.sym.as_str();
+
+                    if (prop == "write" || prop == "print" || prop == "writeAll") && call.args.len() == 1 {
+                        if let Expr::Template(t) = &call.args[0] {
+                            let (pattern, args) = self.lower_template_stream(t);
+                            let args_joined = if args.is_empty() {
+                                String::new()
+                            } else {
+                                format!(" {}", args.join(", "))
+                            };
+                            let obj = self.generate_expr(&mem.obj);
+                            return format!("{}.print(\"{}\", .{{{}}})", obj, pattern, args_joined);
+                        }
+                    }
 
                     if let Expr::Ident(id) = &*mem.obj {
                         if id.sym == "reflect" {
@@ -1724,6 +1784,33 @@ impl Codegen {
                 } else {
                     false
                 };
+
+                if let Expr::Ident(ident) = &*call.callee {
+                    if (ident.sym == "print" || ident.sym == "println") && call.args.len() == 1 {
+                        if let Expr::Template(t) = &call.args[0] {
+                            let (pattern, args) = self.lower_template_stream(t);
+                            let args_joined = if args.is_empty() {
+                                String::new()
+                            } else {
+                                format!(" {}", args.join(", "))
+                            };
+                            return format!("std.debug.print(\"{}\\n\", .{{{}}})", pattern, args_joined);
+                        }
+                    }
+                    if (ident.sym == "eprint" || ident.sym == "eprintln") && call.args.len() == 1 {
+                        if let Expr::Template(t) = &call.args[0] {
+                            let (pattern, args) = self.lower_template_stream(t);
+                            let args_joined = if args.is_empty() {
+                                String::new()
+                            } else {
+                                format!(" {}", args.join(", "))
+                            };
+                            let nl = if ident.sym == "eprintln" { "\\n" } else { "" };
+                            return format!("std.debug.print(\"{}{}\", .{{{}}})", pattern, nl, args_joined);
+                        }
+                    }
+                }
+
                 let callee = if is_spawn_cpu {
                     "@task_spawn_cpu".to_string()
                 } else {
@@ -3234,6 +3321,17 @@ impl Codegen {
                     }
                 }
                 "@print" => {
+                    if call.args.len() == 1 {
+                        if let Expr::Template(t) = &call.args[0] {
+                            let (pattern, args) = self.lower_template_stream(t);
+                            let args_joined = if args.is_empty() {
+                                String::new()
+                            } else {
+                                format!(" {}", args.join(", "))
+                            };
+                            return format!("std.debug.print(\"{}\\n\", .{{{}}})", pattern, args_joined);
+                        }
+                    }
                     let fmt = self.generate_expr(&call.args[0]);
                     if call.args.len() == 1 {
                         format!("std.debug.print(\"{{s}}\\n\", .{{ {} }})", fmt)
@@ -3377,6 +3475,17 @@ impl Codegen {
                     "ctx.received_msg.?.string".to_string()
                 }
                 "@print_err" => {
+                    if call.args.len() == 1 {
+                        if let Expr::Template(t) = &call.args[0] {
+                            let (pattern, args) = self.lower_template_stream(t);
+                            let args_joined = if args.is_empty() {
+                                String::new()
+                            } else {
+                                format!(" {}", args.join(", "))
+                            };
+                            return format!("std.debug.print(\"{}\\n\", .{{{}}})", pattern, args_joined);
+                        }
+                    }
                     let fmt = self.generate_expr(&call.args[0]);
                     let mut args = String::from(".{ ");
                     for idx in 1..call.args.len() {
@@ -3389,6 +3498,17 @@ impl Codegen {
                     format!("std.debug.print({} ++ \"\\n\", {})", fmt, args)
                 }
                 "@io_write_stdout" => {
+                    if call.args.len() == 1 {
+                        if let Expr::Template(t) = &call.args[0] {
+                            let (pattern, args) = self.lower_template_stream(t);
+                            let args_joined = if args.is_empty() {
+                                String::new()
+                            } else {
+                                format!(" {}", args.join(", "))
+                            };
+                            return format!("(blk: {{ const out = std.io.getStdOut().writer(); try out.print(\"{}\\n\", .{{{}}}); break :blk {{}}; }})", pattern, args_joined);
+                        }
+                    }
                     let fmt = self.generate_expr(&call.args[0]);
                     let mut args = String::from(".{ ");
                     for idx in 1..call.args.len() {
@@ -3401,6 +3521,17 @@ impl Codegen {
                     format!("(blk: {{ const out = std.io.getStdOut().writer(); try out.print({} ++ \"\\n\", {}); break :blk {{}}; }})", fmt, args)
                 }
                 "@io_write_stderr" => {
+                    if call.args.len() == 1 {
+                        if let Expr::Template(t) = &call.args[0] {
+                            let (pattern, args) = self.lower_template_stream(t);
+                            let args_joined = if args.is_empty() {
+                                String::new()
+                            } else {
+                                format!(" {}", args.join(", "))
+                            };
+                            return format!("(blk: {{ const err_w = std.io.getStdErr().writer(); try err_w.print(\"{}\\n\", .{{{}}}); break :blk {{}}; }})", pattern, args_joined);
+                        }
+                    }
                     let fmt = self.generate_expr(&call.args[0]);
                     let mut args = String::from(".{ ");
                     for idx in 1..call.args.len() {

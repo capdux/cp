@@ -116,6 +116,8 @@ pub enum Token {
     ErrDefer,
     #[token("arena")]
     Arena,
+    #[token("fuzz")]
+    Fuzz,
     #[token("void")]
     Void,
     #[token("any")]

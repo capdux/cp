@@ -46,12 +46,22 @@ pub enum Decl {
     Macro(MacroDef),
     TypeAlias(TypeAliasDecl),
     CInclude(CIncludeDecl),
+    Fuzz(FuzzDecl),
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CIncludeDecl {
     pub span: Span,
     pub header: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct FuzzDecl {
+    pub span: Span,
+    pub name: String,
+    pub param_name: String,
+    pub param_type: Option<Type>,
+    pub body: BlockStmt,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -263,6 +273,7 @@ pub enum Stmt {
         catch_body: Option<Box<Stmt>>,
     },
     Func(Box<Function>),
+    Fuzz(Box<FuzzDecl>),
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -1123,6 +1134,7 @@ impl Stmt {
             Stmt::ArenaBlock(b) => b.span,
             Stmt::TryCatch { span, .. } => *span,
             Stmt::Func(f) => f.span,
+            Stmt::Fuzz(f) => f.span,
         }
     }
 }

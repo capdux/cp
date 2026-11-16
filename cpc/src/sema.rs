@@ -104,6 +104,10 @@ pub enum SemaError {
         missing_method: String,
         span: Span,
     },
+    #[error(
+        "Compile Error: borrowed reference cannot cross async/coroutine boundary without 'move' or 'own' at {span:?}"
+    )]
+    AsyncIsolationViolation { name: String, span: Span },
 }
 
 impl SemaError {
@@ -472,6 +476,31 @@ impl SemaError {
             .with_help("raw pointers and unbounded cstr buffers do not carry runtime length metadata. Modifying memory through them can lead to buffer overflows.")
             .with_suggestion(format!("wrap the mutation in 'unsafe {{ {}[...] = ...; }}' or slice it first: 'let slice = {}[0..len]; slice[...] = ...;'", name, name)),
 
+            SemaError::AsyncIsolationViolation { name, span } => {
+                let mut diag = Diagnostic::new(
+                    "E0305",
+                    "borrowed reference cannot cross async/coroutine boundary without 'move' or 'own'",
+                )
+                .with_span(*span)
+                .with_help("cross-coroutine boundary transfer requires owned data (move/own) or concurrency-safe types (Shared<T>, Atomic<T>).");
+                if !name.is_empty() {
+                    diag = diag
+                        .with_cause(format!(
+                            "variable '{}' is a borrowed reference or slice and cannot safely cross async/coroutine boundary.",
+                            name
+                        ))
+                        .with_suggestion(format!(
+                            "transfer ownership with 'move {}' or wrap in thread-safe container 'Shared.new({})'",
+                            name, name
+                        ));
+                } else {
+                    diag = diag
+                        .with_cause("borrowed reference or slice cannot safely cross async/coroutine boundary.")
+                        .with_suggestion("transfer ownership with 'move' or wrap in thread-safe container 'Shared<T>'");
+                }
+                diag
+            }
+
             _ => Diagnostic::new("E0290", format!("semantic error: {}", self))
                 .with_help("check semantic rules and types according to CP specification."),
         }
@@ -525,6 +554,7 @@ pub struct Analyzer {
     pub known_lengths_stack: Vec<HashMap<String, usize>>,
     pub const_int_vars_stack: Vec<HashMap<String, i64>>,
     pub fn_param_vars: Vec<std::collections::HashSet<String>>,
+    pub local_borrow_vars: std::collections::HashSet<String>,
     pub current_method_is_mut: bool,
     pub errors: Vec<SemaError>,
 }
@@ -654,6 +684,7 @@ impl Analyzer {
             known_lengths_stack: vec![HashMap::new()],
             const_int_vars_stack: vec![HashMap::new()],
             fn_param_vars: Vec::new(),
+            local_borrow_vars: std::collections::HashSet::new(),
             current_method_is_mut: false,
             errors: Vec::new(),
         }
@@ -1656,15 +1687,38 @@ impl Analyzer {
 
     fn derive_json_method(&self, cls: &Class) -> Function {
         let mock_span = Span { start: 0, end: 0 };
-        let ret_expr = if cls.fields.is_empty() {
+
+        // 过滤 @json_ignore 字段，并提取 @json("alias") 重命名
+        let mut active_fields: Vec<(&Field, String)> = Vec::new();
+        for f in &cls.fields {
+            let is_ignored = f.meta.iter().any(|m| m.name.sym == "json_ignore");
+            if is_ignored {
+                continue;
+            }
+            let mut key_name = f.ident.sym.clone();
+            for m in &f.meta {
+                if m.name.sym == "json" {
+                    if let Some(arg) = m.args.first() {
+                        match arg {
+                            MetaArg::Positional(Expr::Lit(Lit::Str(s))) => key_name = s.clone(),
+                            MetaArg::Named(_, Expr::Lit(Lit::Str(s))) => key_name = s.clone(),
+                            _ => {}
+                        }
+                    }
+                }
+            }
+            active_fields.push((f, key_name));
+        }
+
+        let ret_expr = if active_fields.is_empty() {
             Expr::Lit(Lit::Str("{}".to_string()))
         } else {
             let mut expr = Expr::Lit(Lit::Str("{".to_string()));
-            for (idx, f) in cls.fields.iter().enumerate() {
+            for (idx, (f, key_name)) in active_fields.iter().enumerate() {
                 let prefix = if idx == 0 {
-                    format!("\"{}\":", f.ident.sym)
+                    format!("\"{}\":", key_name)
                 } else {
-                    format!(",\"{}\":", f.ident.sym)
+                    format!(",\"{}\":", key_name)
                 };
                 expr = Expr::Bin(BinExpr {
                     span: mock_span,
@@ -2268,7 +2322,12 @@ impl Analyzer {
         for item in items {
             *counts.entry(item.name.sym.clone()).or_insert(0) += 1;
 
-            if item.name.sym == "pre" || item.name.sym == "ret" {
+            if item.name.sym == "pre"
+                || item.name.sym == "ret"
+                || item.name.sym == "arena"
+                || item.name.sym == "json"
+                || item.name.sym == "json_ignore"
+            {
                 continue;
             }
 
@@ -2812,6 +2871,21 @@ impl Analyzer {
                 self.type_aliases
                     .insert(ta.ident.sym.clone(), ta.target_ty.clone());
             }
+            Decl::Fuzz(f) => {
+                self.enter_scope();
+                let p_ty = f
+                    .param_type
+                    .clone()
+                    .unwrap_or(Type::Array(Box::new(Type::U8)));
+                let p_kind = SymbolKind::Var {
+                    ty: p_ty,
+                    kind: VarDeclKind::Const,
+                };
+                let _ = self.define(f.param_name.clone(), p_kind, f.span);
+                let mut b = f.body.clone();
+                self.analyze_block(&mut b)?;
+                self.exit_scope();
+            }
             _ => {}
         }
         Ok(())
@@ -3038,6 +3112,17 @@ impl Analyzer {
                 self.analyze_pattern(&var.pat, ty.clone(), &var.kind)?;
                 if let Pattern::Ident(ident) = &var.pat {
                     let var_name = ident.sym.clone();
+                    if matches!(
+                        ty,
+                        Type::BorrowType { .. }
+                            | Type::RawPtr { .. }
+                            | Type::ManyRawPtr(_)
+                            | Type::CPtr(_)
+                    ) || var.init.as_ref().map_or(false, |init| {
+                        matches!(init, Expr::Borrow(..) | Expr::Slice(..))
+                    }) {
+                        self.local_borrow_vars.insert(var_name.clone());
+                    }
                     if let Some(known_len) = self.infer_known_length(&ty, var.init.as_ref()) {
                         self.set_known_length(var_name.clone(), known_len);
                     }
@@ -3076,6 +3161,21 @@ impl Analyzer {
                 res?;
             }
             Stmt::ArenaBlock(block) => self.analyze_block(block)?,
+            Stmt::Fuzz(f) => {
+                self.enter_scope();
+                let p_ty = f
+                    .param_type
+                    .clone()
+                    .unwrap_or(Type::Array(Box::new(Type::U8)));
+                let p_kind = SymbolKind::Var {
+                    ty: p_ty,
+                    kind: VarDeclKind::Const,
+                };
+                let _ = self.define(f.param_name.clone(), p_kind, f.span);
+                let mut b = f.body.clone();
+                self.analyze_block(&mut b)?;
+                self.exit_scope();
+            }
             Stmt::If(i) => {
                 self.infer_type(&i.test)?;
                 self.analyze_expr(&i.test)?;
@@ -3476,6 +3576,7 @@ impl Analyzer {
                 return Err(SemaError::PipePlaceholderOutsidePipeline(*span));
             }
             Expr::Call(call) | Expr::OptCall(call) => {
+                self.check_async_isolation_for_call(call)?;
                 if let Expr::Ident(fid) = &*call.callee {
                     if fid.sym == "num" || fid.sym == "Number" {
                         return Err(SemaError::InvalidCast(
@@ -3897,6 +3998,7 @@ impl Analyzer {
                 self.analyze_expr(obj)?;
             }
             Expr::Builtin(call) => {
+                self.check_async_isolation_for_builtin(call)?;
                 for arg in &call.args {
                     self.analyze_expr(arg)?;
                 }
@@ -4080,6 +4182,17 @@ impl Analyzer {
                 if let Some(v) = val {
                     self.analyze_expr(v)?;
                 }
+            }
+            Expr::Arrow(arrow) => {
+                self.enter_scope();
+                for p in &arrow.params {
+                    self.analyze_pattern(p, Type::Auto, &VarDeclKind::Let)?;
+                }
+                match &*arrow.body {
+                    ArrowBody::Expr(e) => self.analyze_expr(e)?,
+                    ArrowBody::Block(b) => self.analyze_block(b)?,
+                }
+                self.exit_scope();
             }
             _ => {}
             _ => {}
@@ -4326,6 +4439,337 @@ impl Analyzer {
 
         Ok(())
     }
+
+    pub fn is_safe_concurrency_type(&self, ty: &Type) -> bool {
+        match ty {
+            Type::U8
+            | Type::I8
+            | Type::U16
+            | Type::I16
+            | Type::I32
+            | Type::U32
+            | Type::I64
+            | Type::U64
+            | Type::I128
+            | Type::U128
+            | Type::ISize
+            | Type::USize
+            | Type::F32
+            | Type::F64
+            | Type::Bool
+            | Type::Void
+            | Type::PID
+            | Type::String => true,
+
+            Type::Shared(_) => true,
+            Type::Ref(id) => {
+                let name = &id.sym;
+                if name == "Shared"
+                    || name.starts_with("Shared<")
+                    || name == "Atomic"
+                    || name.starts_with("Atomic<")
+                    || name == "SharedTensor"
+                    || name == "Mutex"
+                    || name.starts_with("Mutex<")
+                    || name == "RwLock"
+                    || name.starts_with("RwLock<")
+                    || name == "PID"
+                {
+                    return true;
+                }
+                if let Some(cls) = self.classes.get(name) {
+                    if cls.is_ref {
+                        return false;
+                    }
+                    if cls
+                        .fields
+                        .iter()
+                        .all(|f| self.is_safe_concurrency_type(&f.ty))
+                    {
+                        return true;
+                    }
+                }
+                false
+            }
+            Type::Optional(inner) | Type::ErrorUnion(inner) => self.is_safe_concurrency_type(inner),
+            Type::ResultType { ok, .. } => self.is_safe_concurrency_type(ok),
+            Type::Tuple(elems) => elems.iter().all(|t| self.is_safe_concurrency_type(t)),
+            Type::FixedArray(elem, _) => self.is_safe_concurrency_type(elem),
+            _ => false,
+        }
+    }
+
+    pub fn find_ident_span_in_arrow(arrow: &ArrowExpr, name: &str) -> Option<Span> {
+        fn find_in_expr(expr: &Expr, name: &str) -> Option<Span> {
+            match expr {
+                Expr::Ident(id) if id.sym == name => Some(id.span),
+                Expr::Bin(b) => {
+                    find_in_expr(&b.left, name).or_else(|| find_in_expr(&b.right, name))
+                }
+                Expr::Deref(inner) => find_in_expr(inner, name),
+                Expr::Borrow(inner, _) => find_in_expr(inner, name),
+                Expr::Call(c) => find_in_expr(&c.callee, name).or_else(|| {
+                    for a in &c.args {
+                        if let Some(s) = find_in_expr(a, name) {
+                            return Some(s);
+                        }
+                    }
+                    None
+                }),
+                Expr::Member(m) => find_in_expr(&m.obj, name),
+                _ => None,
+            }
+        }
+        fn find_in_block(block: &BlockStmt, name: &str) -> Option<Span> {
+            for s in &block.body {
+                match s {
+                    Stmt::Expr(e) => {
+                        if let Some(sp) = find_in_expr(e, name) {
+                            return Some(sp);
+                        }
+                    }
+                    Stmt::Var(v) => {
+                        if let Some(init) = &v.init {
+                            if let Some(sp) = find_in_expr(init, name) {
+                                return Some(sp);
+                            }
+                        }
+                    }
+                    Stmt::Block(b) => {
+                        if let Some(sp) = find_in_block(b, name) {
+                            return Some(sp);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            None
+        }
+        match &*arrow.body {
+            ArrowBody::Expr(e) => find_in_expr(e, name),
+            ArrowBody::Block(b) => find_in_block(b, name),
+        }
+    }
+
+    fn find_moved_vars_in_arrow(arrow: &ArrowExpr, moved: &mut std::collections::HashSet<String>) {
+        fn find_in_expr(expr: &Expr, moved: &mut std::collections::HashSet<String>) {
+            match expr {
+                Expr::Move(inner) => {
+                    if let Expr::Ident(id) = &**inner {
+                        moved.insert(id.sym.clone());
+                    }
+                }
+                Expr::Bin(b) => {
+                    find_in_expr(&b.left, moved);
+                    find_in_expr(&b.right, moved);
+                }
+                Expr::Call(c) => {
+                    find_in_expr(&c.callee, moved);
+                    for a in &c.args {
+                        find_in_expr(a, moved);
+                    }
+                }
+                _ => {}
+            }
+        }
+        fn find_in_block(block: &BlockStmt, moved: &mut std::collections::HashSet<String>) {
+            for s in &block.body {
+                match s {
+                    Stmt::Expr(e) => find_in_expr(e, moved),
+                    Stmt::Var(v) => {
+                        if let Some(init) = &v.init {
+                            find_in_expr(init, moved);
+                        }
+                    }
+                    Stmt::Block(b) => find_in_block(b, moved),
+                    _ => {}
+                }
+            }
+        }
+        match &*arrow.body {
+            ArrowBody::Expr(e) => find_in_expr(e, moved),
+            ArrowBody::Block(b) => find_in_block(b, moved),
+        }
+    }
+
+    pub fn check_async_boundary_arg(&mut self, arg: &Expr, _call_span: Span) -> SemaResult<()> {
+        if let Expr::Arrow(arrow) = arg {
+            let mut refs = std::collections::HashSet::new();
+            match &*arrow.body {
+                ArrowBody::Expr(e) => {
+                    crate::ast_visitor::find_referenced_vars_in_expr(e, &mut refs);
+                }
+                ArrowBody::Block(b) => {
+                    crate::ast_visitor::find_referenced_vars_in_block(b, &mut refs);
+                }
+            }
+            let decls = match &*arrow.body {
+                ArrowBody::Expr(_) => std::collections::HashSet::new(),
+                ArrowBody::Block(b) => crate::ast_visitor::get_declared_vars_in_block(b),
+            };
+            for d in decls {
+                refs.remove(&d);
+            }
+            for param in &arrow.params {
+                let mut param_vars = std::collections::HashSet::new();
+                crate::ast_visitor::extract_idents_from_pat(param, &mut param_vars);
+                for pv in param_vars {
+                    refs.remove(&pv);
+                }
+            }
+
+            let mut moved_in_closure = std::collections::HashSet::new();
+            Self::find_moved_vars_in_arrow(arrow, &mut moved_in_closure);
+
+            for r in refs {
+                if r == "this" || r == "_" || r == "self" {
+                    continue;
+                }
+                if let Some(kind) = self.resolve(&r) {
+                    if let SymbolKind::Var { ty, .. } = kind {
+                        let is_borrow_ptr = matches!(
+                            ty,
+                            Type::BorrowType { .. }
+                                | Type::RawPtr { .. }
+                                | Type::ManyRawPtr(_)
+                                | Type::CPtr(_)
+                        );
+                        let is_local_borrow = self.local_borrow_vars.contains(&r);
+                        if is_borrow_ptr || is_local_borrow {
+                            let span =
+                                Self::find_ident_span_in_arrow(arrow, &r).unwrap_or(arrow.span);
+                            return Err(SemaError::AsyncIsolationViolation {
+                                name: r.clone(),
+                                span,
+                            });
+                        }
+                        if !self.is_safe_concurrency_type(ty) && !moved_in_closure.contains(&r) {
+                            let span =
+                                Self::find_ident_span_in_arrow(arrow, &r).unwrap_or(arrow.span);
+                            return Err(SemaError::AsyncIsolationViolation {
+                                name: r.clone(),
+                                span,
+                            });
+                        }
+                    }
+                }
+            }
+            return Ok(());
+        }
+
+        match arg {
+            Expr::Move(_) => Ok(()),
+            Expr::Borrow(_, _) => Err(SemaError::AsyncIsolationViolation {
+                name: String::new(),
+                span: arg.span(),
+            }),
+            Expr::Slice(_) => Err(SemaError::AsyncIsolationViolation {
+                name: String::new(),
+                span: arg.span(),
+            }),
+            Expr::Lit(Lit::Str(_)) => Ok(()),
+            Expr::Ident(id) => {
+                if self.local_borrow_vars.contains(&id.sym) {
+                    return Err(SemaError::AsyncIsolationViolation {
+                        name: id.sym.clone(),
+                        span: id.span,
+                    });
+                }
+                if let Some(SymbolKind::Var { ty, .. }) = self.resolve(&id.sym) {
+                    if matches!(
+                        ty,
+                        Type::BorrowType { .. }
+                            | Type::RawPtr { .. }
+                            | Type::ManyRawPtr(_)
+                            | Type::CPtr(_)
+                    ) {
+                        return Err(SemaError::AsyncIsolationViolation {
+                            name: id.sym.clone(),
+                            span: id.span,
+                        });
+                    }
+                }
+                Ok(())
+            }
+            _ => {
+                if let Ok(arg_ty) = self.infer_type(arg) {
+                    if matches!(
+                        arg_ty,
+                        Type::BorrowType { .. }
+                            | Type::RawPtr { .. }
+                            | Type::ManyRawPtr(_)
+                            | Type::CPtr(_)
+                    ) {
+                        return Err(SemaError::AsyncIsolationViolation {
+                            name: String::new(),
+                            span: arg.span(),
+                        });
+                    }
+                }
+                Ok(())
+            }
+        }
+    }
+
+    pub fn check_async_isolation_for_call(&mut self, call: &CallExpr) -> SemaResult<()> {
+        let callee_name = match &*call.callee {
+            Expr::Ident(id) => id.sym.clone(),
+            Expr::Member(mem) => {
+                if let Expr::Ident(obj_id) = &*mem.obj {
+                    if obj_id.sym == "spawn" && mem.prop.sym == "cpu" {
+                        "spawn.cpu".to_string()
+                    } else if mem.prop.sym == "send" {
+                        "method_send".to_string()
+                    } else {
+                        String::new()
+                    }
+                } else if mem.prop.sym == "send" {
+                    "method_send".to_string()
+                } else {
+                    String::new()
+                }
+            }
+            _ => String::new(),
+        };
+
+        if callee_name == "spawn"
+            || callee_name == "@task_spawn"
+            || callee_name == "@task_spawn_cpu"
+            || callee_name == "@worker_spawn"
+            || callee_name == "spawn.cpu"
+        {
+            for arg in &call.args {
+                self.check_async_boundary_arg(arg, call.span)?;
+            }
+        } else if callee_name == "send" {
+            if call.args.len() >= 2 {
+                self.check_async_boundary_arg(&call.args[1], call.span)?;
+            }
+        } else if callee_name == "method_send" {
+            if !call.args.is_empty() {
+                self.check_async_boundary_arg(&call.args[0], call.span)?;
+            }
+        }
+        Ok(())
+    }
+
+    pub fn check_async_isolation_for_builtin(&mut self, call: &BuiltinCall) -> SemaResult<()> {
+        if call.name == "@spawn"
+            || call.name == "@task_spawn"
+            || call.name == "@task_spawn_cpu"
+            || call.name == "@worker_spawn"
+        {
+            for arg in &call.args {
+                self.check_async_boundary_arg(arg, call.span)?;
+            }
+        } else if call.name == "@send" {
+            if call.args.len() >= 2 {
+                self.check_async_boundary_arg(&call.args[1], call.span)?;
+            }
+        }
+        Ok(())
+    }
+
     fn define(&mut self, name: String, kind: SymbolKind, _span: Span) -> SemaResult<()> {
         if self.scopes.last().unwrap().contains_key(&name) {
             // Already defined in current scope

@@ -859,16 +859,34 @@ impl Codegen {
             self.dedent();
             self.indent();
             self.current_case_content.clear();
+            let is_fn_arena = func.meta.iter().any(|m| m.name.sym == "arena");
+            if is_fn_arena {
+                let arena_id = self.tmp_counter;
+                self.tmp_counter += 1;
+                let arena_var = format!("__fn_arena_{}", arena_id);
+                let alloc_var = format!("__fn_alloc_{}", arena_id);
+                self.write_to_case(&format!(
+                    "var {} = std.heap.ArenaAllocator.init(std.heap.page_allocator);\ndefer {}.deinit();\nconst {} = {}.allocator(); _ = &{};\n",
+                    arena_var, arena_var, alloc_var, arena_var, alloc_var
+                ));
+                self.arena_allocator_stack.push(alloc_var);
+            }
             for m in &func.meta {
                 if m.name.sym == "pre" {
                     if let Some(crate::ast::MetaArg::Positional(expr)) = m.args.first() {
                         let cond_code = self.generate_expr(expr);
-                        self.write_to_case(&format!("@import(\"std\").debug.assert({});\n", cond_code));
+                        self.write_to_case(&format!(
+                            "@import(\"std\").debug.assert({});\n",
+                            cond_code
+                        ));
                     }
                 }
             }
             for stmt in &func.body.body {
                 self.generate_stmt(stmt);
+            }
+            if is_fn_arena {
+                self.arena_allocator_stack.pop();
             }
             let body_str = self.current_case_content.clone();
             self.current_case_content.clear();
@@ -1971,6 +1989,9 @@ impl Codegen {
                         }
                     }
                 }
+                Stmt::Fuzz(f) => {
+                    self.extract_local_vars_to_str(&f.body, output);
+                }
                 _ => {}
             }
         }
@@ -1997,5 +2018,69 @@ impl Codegen {
                 self.writeln(&format!("{}: {} = undefined,", name, ty_str));
             }
         }
+    }
+
+    pub(crate) fn generate_fuzz_decl(&mut self, f: &FuzzDecl) {
+        let test_name = format!("fuzz: {}", f.name);
+        self.writeln(&format!("\ntest \"{}\" {{", test_name));
+        self.indent();
+        self.writeln("// --- CP Fuzz Engine Built-in Corpus & Mutation Driver ---");
+        self.writeln("const __corpus = [_][]const u8{");
+        self.indent();
+        self.writeln("\"\",");
+        self.writeln("\"\\x00\",");
+        self.writeln("\"{}\",");
+        self.writeln("\"[]\",");
+        self.writeln("\"\\\"\\\"\",");
+        self.writeln("\"null\",");
+        self.writeln("\"true\",");
+        self.writeln("\"false\",");
+        self.writeln("\"0\",");
+        self.writeln("\"-1\",");
+        self.writeln("\"999999999999999999\",");
+        self.writeln("\"3.141592653589793\",");
+        self.writeln("\"\\xff\\xfe\\xfd\\x80\\xc0\",");
+        self.writeln("\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",");
+        self.writeln("\"\\r\\n\\r\\n\",");
+        self.writeln("\"{\\\"a\\\": 1, \\\"b\\\": [2, 3]}\",");
+        self.dedent();
+        self.writeln("};");
+
+        let saved_case = self.current_case_content.clone();
+        self.current_case_content.clear();
+        for stmt in &f.body.body {
+            self.generate_stmt(stmt);
+        }
+        let body_code = self.current_case_content.clone();
+        self.current_case_content = saved_case;
+
+        self.writeln(&format!("for (__corpus) |__{}_seed| {{", f.param_name));
+        self.indent();
+        self.writeln(&format!(
+            "const {} = __{}_seed;",
+            f.param_name, f.param_name
+        ));
+        self.output.push_buffer(&body_code);
+        self.dedent();
+        self.writeln("}");
+
+        self.writeln("var __prng = std.Random.DefaultPrng.init(0x1337cafe);");
+        self.writeln("const __rand = __prng.random();");
+        self.writeln("var __fuzz_buf: [256]u8 = undefined;");
+        self.writeln("var __iter: usize = 0;");
+        self.writeln("while (__iter < 100) : (__iter += 1) {");
+        self.indent();
+        self.writeln("const __len = __rand.intRangeAtMost(usize, 0, 256);");
+        self.writeln("__rand.bytes(__fuzz_buf[0..__len]);");
+        self.writeln(&format!("const {} = __fuzz_buf[0..__len];", f.param_name));
+        self.output.push_buffer(&body_code);
+        self.dedent();
+        self.writeln("}");
+
+        self.dedent();
+        self.writeln("}");
+
+        self.fuzz_targets
+            .push((f.name.clone(), f.param_name.clone(), body_code));
     }
 }

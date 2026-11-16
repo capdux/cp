@@ -855,9 +855,15 @@ impl Codegen {
                         } else {
                             self.generate_expr(&bin.left)
                         };
-                        if let Expr::NullCoalesce { right: ref nc_r, .. } = &*bin.right {
+                        if let Expr::NullCoalesce {
+                            right: ref nc_r, ..
+                        } = &*bin.right
+                        {
                             let r_code = self.generate_expr(nc_r);
-                            self.write_to_case(&format!("if ({} == null) {{ {} = {}; }}", l, l, r_code));
+                            self.write_to_case(&format!(
+                                "if ({} == null) {{ {} = {}; }}",
+                                l, l, r_code
+                            ));
                         } else {
                             self.write_to_case(&format!("{} = {};", l, r));
                         }
@@ -2040,7 +2046,8 @@ impl Codegen {
                         if !self.current_fn_contracts_ret.is_empty() {
                             self.locals.insert("ret".to_string(), "anytype".to_string());
                             for m in &self.current_fn_contracts_ret.clone() {
-                                if let Some(crate::ast::MetaArg::Positional(expr)) = m.args.first() {
+                                if let Some(crate::ast::MetaArg::Positional(expr)) = m.args.first()
+                                {
                                     let cond_code = self.generate_expr(expr);
                                     self.write_to_case(&format!("{{ const ret = {}; @import(\"std\").debug.assert({}); }}\n", ret_val, cond_code));
                                 }
@@ -2260,6 +2267,9 @@ impl Codegen {
                 self.write_to_case("}");
                 self.dedent();
                 self.write_to_case("};");
+            }
+            Stmt::Fuzz(f) => {
+                self.generate_fuzz_decl(f);
             }
             _ => {}
         }

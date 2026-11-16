@@ -479,6 +479,7 @@ impl<'a> Parser<'a> {
             Token::As => "as".to_string(),
             Token::From => "from".to_string(),
             Token::Unsafe => "unsafe".to_string(),
+            Token::Arena => "arena".to_string(),
             _ => {
                 return Err(ParseError::ExpectedToken(
                     Token::Ident("identifier".to_string()),
@@ -1064,6 +1065,7 @@ impl<'a> Parser<'a> {
             | Some(Token::Enum)
             | Some(Token::Async)
             | Some(Token::Static)
+            | Some(Token::Fuzz)
             | Some(Token::TypeKw) => Ok(vec![ModuleItem::Decl(self.parse_decl(vec![], is_pub)?)]),
             Some(Token::Ident(ref id)) if id == "extern" || id == "inline" || id == "noinline" => {
                 if id == "extern"
@@ -1200,6 +1202,47 @@ impl<'a> Parser<'a> {
         })
     }
 
+    fn parse_fuzz_decl(&mut self) -> ParseResult<FuzzDecl> {
+        let (_, start_span) = self.bump()?;
+        let name = match self.peek() {
+            Some(Token::StringLiteral(s)) => {
+                let name_str = s.clone();
+                self.bump()?;
+                name_str
+            }
+            _ => "fuzz_test".to_string(),
+        };
+
+        let mut param_name = "input".to_string();
+        let mut param_type = None;
+        if self.peek() == Some(&Token::LParen) {
+            self.bump()?;
+            if self.peek() != Some(&Token::RParen) {
+                let p_ident = self.parse_ident()?;
+                param_name = p_ident.sym;
+                if self.peek() == Some(&Token::Colon) {
+                    self.bump()?;
+                    param_type = Some(self.parse_type()?);
+                }
+            }
+            self.expect(Token::RParen)?;
+        }
+
+        let body = self.parse_block_stmt()?;
+        let span = Span {
+            start: start_span.start,
+            end: body.span.end,
+        };
+
+        Ok(FuzzDecl {
+            span,
+            name,
+            param_name,
+            param_type,
+            body,
+        })
+    }
+
     fn parse_decl(&mut self, meta: Vec<MetaItem>, mut is_pub: bool) -> ParseResult<Decl> {
         while self.peek() == Some(&Token::Export) || self.peek() == Some(&Token::Private) {
             if self.peek() == Some(&Token::Export) {
@@ -1213,6 +1256,7 @@ impl<'a> Parser<'a> {
             Some(Token::Meta) => Ok(Decl::Meta(self.parse_meta_def(meta)?)),
             Some(Token::Dec) => Ok(Decl::Dec(self.parse_dec_def(meta)?)),
             Some(Token::Macro) => Ok(Decl::Macro(self.parse_macro_def(meta)?)),
+            Some(Token::Fuzz) => Ok(Decl::Fuzz(self.parse_fuzz_decl()?)),
             Some(Token::Static) => {
                 if matches!(
                     self.peek_next(),
@@ -4047,6 +4091,10 @@ impl<'a> Parser<'a> {
             Some(Token::Arena) => {
                 self.bump()?;
                 Ok(Stmt::ArenaBlock(self.parse_block_stmt()?))
+            }
+            Some(Token::Fuzz) => {
+                let f = self.parse_fuzz_decl()?;
+                Ok(Stmt::Fuzz(Box::new(f)))
             }
             Some(Token::LBrace) => Ok(Stmt::Block(self.parse_block_stmt()?)),
             Some(Token::ZigEscape) => {
