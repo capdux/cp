@@ -1706,4 +1706,11 @@
     2. 一次性将编译器前端修补、标准库模块、测试套件自愈补丁、双轨设计规范（`cp_ref.md` / `cp_agent_ref.md`）及四线文档暂存并提交；
     3. 提交信息规范清晰，提交后工作区保持 100% 干净。
 
+- 任务通知：`task-capsurf-20261116-codegen-quadratic-line-count`（来自 capsurf_agy）
+- 现象：`cpc::codegen::Codegen::current_generated_line` 在每次记录源码映射（`record_source_location`）时执行全量字节扫描统计换行符（`self.output.bytes().filter(|&b| b == b'\n').count()`），导致 O(N^2) 二次复杂度性能悬崖（15,000 条语句耗时 41s，大型项目转译卡死 60s+）；
+- 修复：设计 `OutputBuffer` 结构体封装 `String` 与增量换行计数 `newline_count`，实现 `std::ops::Deref`、`std::fmt::Write`、`std::fmt::Display` 与 `push_buffer`，使 `current_generated_line` 彻底退化为 O(1) 整数相加；
+- 实测性能：10,000 条语句耗时从 18.582s 骤降至 0.211s（**88 倍极速提升**），25,000 条语句仅需 0.526s；
+- 结单：调用 `python3 scripts/task_queue.py resolve task-capsurf-20261116-codegen-quadratic-line-count` 结单并重启后台任务监听守卫。
+
+
 

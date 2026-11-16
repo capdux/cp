@@ -852,6 +852,15 @@
 - **测试套件回归验证**：
   - `test_unified_errors.cp`、`test_trait_class_pass.cp`、`test_semver.cp`、`test_dec_pass.cp`、`test_unsafe_pass.cp`、`test_blob.cp`、`test_collections_matrix.cp`、`test_all.cp`、`test_stdlib_phase_b2_c.cp`、`test_basic.cp`、`test_string.cp`、`test_json.cp`、`test_crypto.cp` **100% PASS**。
 
+- **热修性能优化 (`task-capsurf-20261116-codegen-quadratic-line-count`)**：
+  - [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：
+    - 新增 `OutputBuffer` 结构体，封装 `content` 与 `newline_count`，实现 `std::ops::Deref`、`std::fmt::Write`、`std::fmt::Display` 与 `push_buffer`；
+    - 将 `current_generated_line()` 从 O(N) 全量字节扫描重构为 O(1) 增量整型加法，消除语句数膨胀时的 O(N^2) 性能二次爆炸（10,000 条语句转译从 18.58s 缩短至 0.21s，提速 88 倍）；
+  - [`cpc/src/codegen/actor.rs`](file:///data/dev/cp/cpc/src/codegen/actor.rs)：
+    - 使用 `self.output.push_buffer(&body_str)` 零扫描高效拼接函数体；
+  - 结单 `task-capsurf-20261116-codegen-quadratic-line-count` 并同步回写 `cpc_dev`。
+
+
 
 
 

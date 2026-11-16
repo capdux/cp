@@ -1069,6 +1069,34 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
   - `test_stdlib_phase_b2_c.cp`：✓ PASSED (9945ms)
   - `test_basic.cp`、`test_string.cp`、`test_json.cp`、`test_crypto.cp`：全部 ✓ PASSED。
 
+---
+
+### 2026-11-16 紧急热修: 消除 Codegen 源码映射 O(N^2) 二次复杂度换行扫描悬崖 (`task-capsurf-20261116-codegen-quadratic-line-count`)
+
+#### 1. 缺陷定位与根因
+- **工单来源**：`capsurf_agy` 报告转译卡死，大文件或大规模语句转译耗时高达数十秒至数分钟；
+- **根因分析**：
+  - 在 `src/codegen/mod.rs` 中，`record_source_location` 在每次处理语句时均调用 `current_generated_line()`；
+  - `current_generated_line()` 原实现：
+    `let out_newlines = self.output.bytes().filter(|&b| b == b'\n').count();`
+    `let case_newlines = self.current_case_content.bytes().filter(|&b| b == b'\n').count();`
+  - 伴随累积生成的 Zig 代码膨胀至数万行，每一条语句的进入都会对历史积累的全部字节进行全量 O(N) 字节扫描，导致总耗时呈现极其严重的 O(N^2) 二次曲线增长。10,000 条语句耗时即达 18.5s，15,000 条达 41s。
+
+#### 2. 解决方案与架构重构
+- **设计增量输出缓冲区 `OutputBuffer`**：
+  - 内部组合 `content: String` 与 `newline_count: usize`；
+  - 实现 `push_str`、`push`、`push_buffer`、`clear`；在文本写入时增量统计换行符（仅扫描当前写入的碎片，成本均摊为 O(1)）；
+  - 实现 `std::ops::Deref<Target = str>`、`std::fmt::Write`、`std::fmt::Display` 与 `From` 转换，与原有 `writeln!(self.output, ...)` 无缝兼容且不可绕过；
+  - `current_generated_line()` 彻底降为纯整型相加：
+    `(self.output.newline_count + self.current_case_content.newline_count + 1) as u32`（纯 O(1)）。
+
+#### 3. 性能测试验证
+- **基准测试对比**：
+  - 10,000 条语句生成：从 **18.582s** 暴降至 **0.211s**（**加速 88 倍**）；
+  - 25,000 条语句生成：仅耗时 **0.526s**；
+- **结单与回写**：完成直通回写 `cpc_dev`，成功结单 `task-capsurf-20261116-codegen-quadratic-line-count`。
+
+
 
 
 

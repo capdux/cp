@@ -858,7 +858,7 @@ impl Codegen {
             }
             let body_str = self.current_case_content.clone();
             self.current_case_content.clear();
-            self.output.push_str(&body_str);
+            self.output.push_buffer(&body_str);
             if let Some(Type::ResultType { ok, err }) = &func.return_type {
                 let err_str = self.map_error_type(err);
                 let is_native_err_union = self.is_lib_mode

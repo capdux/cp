@@ -19,17 +19,102 @@ pub use prelude::*;
 pub use stmt::*;
 pub use types::*;
 
+#[derive(Clone, Default, Debug, PartialEq, Eq)]
+pub struct OutputBuffer {
+    pub content: String,
+    pub newline_count: usize,
+}
+
+impl OutputBuffer {
+    pub fn new() -> Self {
+        Self {
+            content: String::new(),
+            newline_count: 0,
+        }
+    }
+
+    pub fn push_str(&mut self, s: &str) {
+        self.newline_count += s.bytes().filter(|&b| b == b'\n').count();
+        self.content.push_str(s);
+    }
+
+    pub fn push_buffer(&mut self, other: &OutputBuffer) {
+        self.newline_count += other.newline_count;
+        self.content.push_str(&other.content);
+    }
+
+    pub fn push(&mut self, ch: char) {
+        if ch == '\n' {
+            self.newline_count += 1;
+        }
+        self.content.push(ch);
+    }
+
+    pub fn clear(&mut self) {
+        self.content.clear();
+        self.newline_count = 0;
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.content.is_empty()
+    }
+
+    pub fn len(&self) -> usize {
+        self.content.len()
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.content
+    }
+}
+
+impl std::ops::Deref for OutputBuffer {
+    type Target = str;
+    fn deref(&self) -> &Self::Target {
+        &self.content
+    }
+}
+
+impl std::fmt::Write for OutputBuffer {
+    fn write_str(&mut self, s: &str) -> std::fmt::Result {
+        self.push_str(s);
+        Ok(())
+    }
+}
+
+impl std::fmt::Display for OutputBuffer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.content)
+    }
+}
+
+impl From<&str> for OutputBuffer {
+    fn from(s: &str) -> Self {
+        let mut buf = Self::new();
+        buf.push_str(s);
+        buf
+    }
+}
+
+impl From<String> for OutputBuffer {
+    fn from(s: String) -> Self {
+        let mut buf = Self::new();
+        buf.push_str(&s);
+        buf
+    }
+}
+
 pub struct Codegen {
     pub is_beam_mode: bool,
     pub is_lib_mode: bool,
     pub agent_classes: Vec<crate::ast::Class>,
-    pub(crate) output: String,
+    pub(crate) output: OutputBuffer,
     pub(crate) cases: Vec<String>,
     pub(crate) indent_level: usize,
     pub(crate) pc_counter: u32,
     pub(crate) tmp_counter: u32,
     pub(crate) lambda_counter: u32,
-    pub(crate) current_case_content: String,
+    pub(crate) current_case_content: OutputBuffer,
     pub(crate) is_comptime: bool,
     pub(crate) is_state_machine: bool,
     pub(crate) current_fn_is_async: bool,
@@ -106,13 +191,13 @@ impl Codegen {
             is_beam_mode: false,
             is_lib_mode: false,
             agent_classes: Vec::new(),
-            output: String::new(),
+            output: OutputBuffer::new(),
             cases: Vec::new(),
             indent_level: 0,
             pc_counter: 0,
             tmp_counter: 0,
             lambda_counter: 0,
-            current_case_content: String::new(),
+            current_case_content: OutputBuffer::new(),
             is_comptime: false,
             is_state_machine: false,
             current_fn_is_async: false,
@@ -212,13 +297,7 @@ impl Codegen {
     }
 
     pub fn current_generated_line(&self) -> u32 {
-        let out_newlines = self.output.bytes().filter(|&b| b == b'\n').count();
-        let case_newlines = self
-            .current_case_content
-            .bytes()
-            .filter(|&b| b == b'\n')
-            .count();
-        (out_newlines + case_newlines + 1) as u32
+        (self.output.newline_count + self.current_case_content.newline_count + 1) as u32
     }
 
     pub fn offset_to_line_col(&self, offset: usize) -> (u32, u32) {
@@ -2411,7 +2490,7 @@ impl Codegen {
                 self.writeln("}"); // Close main
             }
         }
-        self.output.clone()
+        self.output.content.clone()
     }
 
     pub(crate) fn generate_trait(&mut self, t: &TraitDecl) {
