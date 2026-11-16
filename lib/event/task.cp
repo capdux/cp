@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/event_loop/task.cp
+// Upstream Sync: Refer to bun/src/event_loop/task.zig for future upstream updates.
+// ============================================================================
 // lib/event/task.cp
 // AnyTask and ManagedTask dynamic task abstractions for event loop dispatch
 // Absorbed from Bun src/event_loop/AnyTask.cp and ManagedTask.cp with pure CP semantics

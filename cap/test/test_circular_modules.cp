@@ -2,7 +2,7 @@ import { print } from "cap:io";
 import { NodeA } from "./fixtures/circ_a.cp";
 import { NodeB } from "./fixtures/circ_b.cp";
 
-pub fn main(): void {
+pub fn main() {
     print("Testing Two-Pass Circular Module Resolution...");
 
     let a = new NodeA(101, null);

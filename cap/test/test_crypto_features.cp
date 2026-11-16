@@ -52,7 +52,7 @@ fn testHashAlgorithms(): !void {
     expect_eq(h512.len, 128);
 
     // 2. Streaming Hasher
-    var stream_hasher = createHash("sha256").?;
+    let stream_hasher = createHash("sha256").?;
     stream_hasher.update("hello ");
     stream_hasher.update("world");
     const stream_digest = stream_hasher.digest();
@@ -65,7 +65,7 @@ fn testHmacAndPbkdf2(): !void {
     expect_eq(hmac_res.len, 64);
 
     // 2. Streaming HMAC
-    var stream_hmac = createHmac("sha256", "secret").?;
+    let stream_hmac = createHmac("sha256", "secret").?;
     stream_hmac.update("hello ");
     stream_hmac.update("world");
     const stream_digest = stream_hmac.digest();
@@ -78,40 +78,40 @@ fn testHmacAndPbkdf2(): !void {
 
 fn testAeadCiphers(): !void {
     // 1. AES-256-GCM Round-trip
-    var aes_key: [32]u8 = undefined;
+    let aes_key: [32]u8 = undefined;
     @memset(&aes_key, 1);
-    var aes_nonce: [12]u8 = undefined;
+    let aes_nonce: [12]u8 = undefined;
     @memset(&aes_nonce, 2);
 
     const plaintext = "Hello Secret World!";
-    var ciphertext: [19]u8 = undefined;
-    var tag: [16]u8 = undefined;
+    let ciphertext: [19]u8 = undefined;
+    let tag: [16]u8 = undefined;
 
     Aes256Gcm.encrypt(&aes_key, &aes_nonce, plaintext, "auth-data", &ciphertext, &tag);
 
-    var decrypted: [19]u8 = undefined;
+    let decrypted: [19]u8 = undefined;
     const ok = Aes256Gcm.decrypt(&aes_key, &aes_nonce, &ciphertext, tag, "auth-data", &decrypted);
     expect_eq(ok, true);
     expect_eq(decrypted[0..19], plaintext);
 
     // 2. ChaCha20-Poly1305 Round-trip
-    var chacha_key: [32]u8 = undefined;
+    let chacha_key: [32]u8 = undefined;
     @memset(&chacha_key, 3);
-    var chacha_nonce: [12]u8 = undefined;
+    let chacha_nonce: [12]u8 = undefined;
     @memset(&chacha_nonce, 4);
 
-    var chacha_ciphertext: [19]u8 = undefined;
-    var chacha_tag: [16]u8 = undefined;
+    let chacha_ciphertext: [19]u8 = undefined;
+    let chacha_tag: [16]u8 = undefined;
 
     ChaCha20Poly1305.encrypt(&chacha_key, &chacha_nonce, plaintext, "", &chacha_ciphertext, &chacha_tag);
 
-    var chacha_decrypted: [19]u8 = undefined;
+    let chacha_decrypted: [19]u8 = undefined;
     const chacha_ok = ChaCha20Poly1305.decrypt(&chacha_key, &chacha_nonce, &chacha_ciphertext, chacha_tag, "", &chacha_decrypted);
     expect_eq(chacha_ok, true);
     expect_eq(chacha_decrypted[0..19], plaintext);
 }
 
-fn main(): void {
+fn main() {
     test("CSPRNG Random & RFC 4122 v4 UUID Generation", () => {
         testRandomAndUUID()?;
     });

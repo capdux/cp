@@ -27,12 +27,21 @@
      - 闭包或函数内部声明未初始化切片 `let x: []u8 = undefined; zig { x = alloc(...); }` 会触发控制流未确定赋值检查（E0200）；
      - 确立统一工程模式：直接调用内置原语 `let ptr: [*]u8 = @alloc(len); let slice = ptr[0..len];`，由系统级分配器统一管理，杜绝内存悬垂与借用检查误报。
 
+  4. **GIF LZW 流式解压与查表消除类型宽度溢出 (GIF LZW & Type Alignment)**：
+     - GIF 规范中 `lsd_packed & 7` 编码全局调色板大小 `2^(N+1)`（取值范围 2..256），若使用动态位移 `((1 as usize) << (((lsd & 7) + 1) as u5))`，底层 Zig 对无符号 5-bit 整数推导容易出现宽度不确定报错；
+     - **创新解法**：采用 `inline fn getTableSize(idx)` 纯模式匹配查表，0 运行时计算、0 数组开销、0 溢出风险，瞬间消除类型推断阻断；
+     - 4096 节点 LZW 字典解压及 4-pass 交织扫描（Interlace）完整保真还原 RGBA8 像素。
+  5. **Evan Wallace ThumbHash 微缩占位图与 EXIF 方向解析**：
+     - 实装 ThumbHash 算法，将任意 RGBA 像素矩阵压缩为 ≤25 字节极简哈希串，并能解码为平滑模糊占位图，专为 CapSurf 浏览器网页资源预加载设计；
+     - 解析 JPEG APP1 / TIFF IFD0 0x0112 旋转标签，驱动 `Image` 类的矩阵旋转（`rotate90/180/270`）、水平镜像（`flop`）与垂直翻转（`flip`）。
+  6. **全量资产 Bun 溯源规范化工程落地**：
+     - 为标准库中全部 52 个从 Bun 吸收的文件统一注入了标准溯源注释头部，明确标出对应的 Bun 原文件路径及 Zig 参考源码，确保未来 Bun 对应文件演进时能够无缝重新吸收比对与合并。
+
 - **效果验证**：
-  - 新增全新测试套件 [`cap/test/test_image_png.cp`](file:///data/dev/cp/cap/test/test_image_png.cp)，6/6 用例 100% 全部 PASS；
+  - 新增全新测试套件 [`cap/test/test_image_all.cp`](file:///data/dev/cp/cap/test/test_image_all.cp)，5/5 用例 100% 全部 PASS；
+  - 现有测试 [`cap/test/test_image_png.cp`](file:///data/dev/cp/cap/test/test_image_png.cp) 6/6 用例 100% 全部 PASS；
   - 资产吸收综合测试 [`cap/test/test_bun_absorbed_assets.cp`](file:///data/dev/cp/cap/test/test_bun_absorbed_assets.cp) 6/6 PASS；
-  - 容器测试 [`cap/test/test_collections_bun.cp`](file:///data/dev/cp/cap/test/test_collections_bun.cp) 6/6 PASS；
-  - SQLite 测试 [`cap/test/test_sqlite.cp`](file:///data/dev/cp/cap/test/test_sqlite.cp) PASS；
-  - 双轨设计手册 `cp_ref.md` 与 `cp_agent_ref.md` 同步登记 `cap:image` 与 `cap:png` 契约。
+  - 双轨设计手册 `cp_ref.md` 与 `cp_agent_ref.md` 同步登记 `cap:image` 全景资产。
 
 ---
 
@@ -1017,6 +1026,49 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
   - Windows BMP DIB 往返编解码：100% PASS；
   - 颜色量化调色板提取：100% PASS。
 - 自动化测试套件：`cap test cap/test/test_image_png.cp` 6/6 PASS (100%)。
+
+---
+
+### 2026-11-16: 编译器语义自愈升级、Zig 0.17 全套适配与 BEAM/集合类型深度解耦
+
+#### 1. 背景与核心问题
+随着下游生态（`bun_agy`、`capsurf_agy`）高频转译与回归测试套件升级至 Zig 0.17，编译器面临多项深层次结构性挑战：
+1. **统一错误系统模式匹配报错**：`open_file(flag): i32 ! FileErr` 返回错误联合类型，`switch (disc)` 在 Zig 0.17 中直接拦截报错 `switch on error union type`；
+2. **堆对象引用类型与借用取地址冲突**：`VecDeque`、`BinaryHeap` 等标准集合容器为引用堆类型，在作为形参传递 `*q` 时，`is_zig_heap_ptr_type` 遗漏了内置容器与 `ref_classes`，导致误加 `&` 取地址变为 `**T`；
+3. **状态机标志污染全局作用域**：当编译包含 async actor 方法的模块时，函数末尾未重置 `self.is_state_machine`，导致后续模块顶层常量 `pub const console = ...` 误使用 `ctx.arena.?.allocator()` 报错 `undeclared identifier 'ctx'`；
+4. **BEAM 模式过度污染普通函数**：`cpc -b` 粗暴将所有非 async 函数返回类型覆写为 `anyerror!beam.Term`，并在 `return;` 时错误发射 `return beam.Beam.makeAtom(ctx.self.env.?, "ok")`，破坏普通结构体与工具函数；
+5. **AST/Sema 语义自愈引擎升级 (E0130, E0133, E0134)**：针对只读接收者误修改、只读形参二次赋值及关键字保留字冲突，提供高精度诊断与一键修复建议。
+
+#### 2. 核心架构与编译器修复原理
+1. **模式匹配解包流分离 (`cpc/src/codegen/pattern.rs`)**：
+   - 提取 `is_result_disc` 预判：若判别式类型为 `ResultType`、`ErrorUnion` 或分支包含 `err(...)` / `Enum`（属于 `error_sets`），严格禁止进入 Zig 原生 `switch (disc)` 快速分支；
+   - 自动路由至状态机安全解包流：生成 `if (cp_has_ok_val(disc))` 与 `cp_unwrap_ok_val` / `cp_unwrap_err_val`，实现对错误联合类型的全自动化零成本安全分支调度；
+   - 修复 `generate_err_value` 中对 `Type::BoxDyn` 变量的移动语义识别，防止误将其当作枚举字面量 `@as(CustomErr, .boxed)`。
+2. **堆指针类型判定矩阵完善 (`cpc/src/codegen/borrow.rs`)**：
+   - 在 `is_zig_heap_ptr_type` 中系统性补齐：`VecDeque`、`BinaryHeap`、`BTreeMap`、`BTreeSet`、`HashMap`、`HashSet` 以及所有动态注册的引用类 `self.ref_classes.contains(&cid.sym)`；
+   - 确保 `q: *VecDeque` 或 `q: VecDeque` 在调用 `mutate_deque(*q, 99)` 时，直接透传指针 `q`，彻底消除 `(&ctx.q)` 二次取地址导致的类型不兼容。
+3. **状态机生命周期作用域重置 (`cpc/src/codegen/actor.rs`)**：
+   - 在状态机函数代码生成完成的收尾点（`emit_current_case` 闭合大括号后），严格执行 `self.is_state_machine = false;`；
+   - 确保模块顶层变量、全局常量与后续同步类方法使用全局 `std.heap.page_allocator`，彻底隔离 `ctx.arena`。
+4. **BEAM 编译模式精准解耦 (`cpc/src/codegen/actor.rs` & `stmt.rs`)**：
+   - 将 `anyerror!beam.Term` 返回类型严格限定于真实的 Actor 消息处理状态机（`self.is_state_machine && self.is_beam_mode`）；
+   - 普通结构体方法与顶层同步函数保留原有强类型返回签名 `ret_ty`；
+   - `Stmt::Return(None)` 仅在 `self.is_beam_mode && self.is_state_machine` 时发射 `beam.Beam.makeAtom(ctx.self.env.?, "ok")`，普通函数恢复标准 `return;`。
+
+#### 3. 验证与回归测试
+- **热修工单闭环**：验证 `/data/dev/capsurf/temp/repro_beam_non_actor_return.cp` 转译产物通过 `zig ast-check` 校验，结单 `task-capsurf-20261116-beam-non-actor-return`；
+- **全量核心回归测试 100% 通过**：
+  - `test_unified_errors.cp`：✓ PASSED (1083ms)
+  - `test_trait_class_pass.cp`：✓ PASSED (1100ms)
+  - `test_semver.cp`：✓ PASSED (759ms)
+  - `test_dec_pass.cp`：✓ PASSED (1016ms)
+  - `test_unsafe_pass.cp`：✓ PASSED (975ms)
+  - `test_blob.cp`：✓ PASSED (889ms)
+  - `test_collections_matrix.cp`：✓ PASSED (2281ms)
+  - `test_all.cp`：✓ PASSED (5026ms)
+  - `test_stdlib_phase_b2_c.cp`：✓ PASSED (9945ms)
+  - `test_basic.cp`、`test_string.cp`、`test_json.cp`、`test_crypto.cp`：全部 ✓ PASSED。
+
 
 
 

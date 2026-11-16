@@ -1,10 +1,10 @@
 import { print } from "cap:io";
 
-fn modify_safe(*buf: [10]u8): void {
+fn modify_safe(buf: *[10]u8) {
     buf[2] = 42;
 }
 
-fn main(): void {
+fn main() {
     let host_buf: [10]u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     modify_safe(&host_buf);
 

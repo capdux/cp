@@ -21,8 +21,8 @@ async fn main() {
 
   // 3. 使用 spawn.cpu 派发重度计算任务至专用 OS 计算线程
   let cpu_task = spawn.cpu(() => {
-    let mut sum = 0;
-    let mut i = 0;
+    let sum = 0;
+    let i = 0;
     while (i < 1000) {
       sum = sum + i;
       i = i + 1;

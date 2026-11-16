@@ -61,7 +61,7 @@ fn testVersionComparison(): !void {
 
 fn testVersionFormatting(): !void {
     const v = try Version.parse("1.5.12-rc.1+arm64");
-    var buf: [64]u8 = undefined;
+    let buf: [64]u8 = undefined;
     const formatted = v.format(&buf);
     expect_eq(std.mem.eql(u8, formatted, "1.5.12-rc.1+arm64"), true);
 }
@@ -106,7 +106,7 @@ fn testSemverRanges(): !void {
     expect_eq(Semver.satisfiesStr("9.9.9", "*"), true);
 }
 
-fn main(): void {
+fn main() {
     test("Semver 2.0 version string parsing", () => {
         try testVersionParsing();
     });

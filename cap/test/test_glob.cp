@@ -50,7 +50,7 @@ fn testHasMagic(): !void {
     expect_eq(Glob.hasMagic("plain_filename.cp"), false);
 }
 
-fn main(): void {
+fn main() {
     test("Glob basic wildcards (* and ?)", () => {
         try testGlobBasics();
     });

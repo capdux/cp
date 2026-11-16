@@ -32,14 +32,14 @@ fn test_shorthand_bang(fail: bool): i32! {
 
 fn main() {
     // 1. Test walrus := in if statement
-    let mut if_ok = false;
+    let if_ok = false;
     if (found := find_value(42)) {
         if (found == "positive") {
             if_ok = true;
         }
     }
 
-    let mut else_ok = false;
+    let else_ok = false;
     if (not_found := find_value(-5)) {
         if_ok = false;
     } else {
@@ -47,8 +47,8 @@ fn main() {
     }
 
     // 2. Test walrus := in while loop
-    let mut iter = SimpleIter { current: 0, max: 3 };
-    let mut sum: i32 = 0;
+    let iter = SimpleIter { current: 0, max: 3 };
+    let sum: i32 = 0;
     while (item := iter.next()) {
         sum += item;
     }

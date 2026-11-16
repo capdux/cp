@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/collections/hash_map.cp
+// Upstream Sync: Refer to bun/src/collections/hash_map.zig for future upstream updates.
+// ============================================================================
 // lib/col/hash_map.cp
 // High-performance fixed-capacity zero-heap StaticHashMap<K, V, CAP> & AutoHashMap<K, V>
 // Absorbed from Bun src/collections/StaticHashMap.cp with pure CP semantics

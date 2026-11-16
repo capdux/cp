@@ -24,6 +24,10 @@ pub enum SemaError {
     UseOfMovedValue(String, Span),
     #[error("Cannot mutate a read-only borrow '{0}' at {1:?}")]
     CannotMutateReadOnlyBorrow(String, Span),
+    #[error("Cannot reassign to read-only parameter '{0}' at {1:?}")]
+    ParameterReassignment(String, Span),
+    #[error("Reserved identifier '{0}' at {1:?}")]
+    ReservedIdentifier(String, Span, bool),
     #[error("Cannot borrow '{0}' as mutable because it is also borrowed as immutable in the current scope at {1:?}")]
     MutableBorrowConflict(String, Span),
     #[error(
@@ -177,24 +181,78 @@ impl SemaError {
                 "implement method '{}' in class '{}':\n  fn {}(...): void {{ ... }}",
                 missing_method, class_name, missing_method
             )),
-            SemaError::CannotMutateReadOnlyBorrow(name, span) => Diagnostic::new(
-                "E0201",
-                format!("cannot mutate read-only borrow '{}'", name),
+            SemaError::CannotMutateReadOnlyBorrow(name, span) => {
+                let code = if name == "_" || name == "this" || name == "self" {
+                    "E0130"
+                } else {
+                    "E0201"
+                };
+                Diagnostic::new(
+                    code,
+                    if code == "E0130" {
+                        "cannot perform mutable operation in a read-only method".to_string()
+                    } else {
+                        format!("cannot mutate read-only borrow '{}'", name)
+                    },
+                )
+                .with_span(*span)
+                .with_cause(if code == "E0130" {
+                    "method receiver is read-only by default in CP.".to_string()
+                } else {
+                    format!(
+                        "parameter '{}' is a read-only borrow (immutable by default in CP).",
+                        name
+                    )
+                })
+                .with_help(if code == "E0130" {
+                    "methods that modify instance fields must declare a mutable receiver parameter '*_'."
+                } else {
+                    "in CP, function parameters are read-only by default. Use '*_' for mutable method receivers or 'v: *T' for mutable parameters."
+                })
+                .with_suggestion(if code == "E0130" {
+                    "add '*_' as the first parameter of the method: fn method(*_) { ... }".to_string()
+                } else {
+                    format!(
+                        "parameter '{}' is a read-only borrow. Add '*' to declare it as mutable: '{}: *<Type>'",
+                        name, name
+                    )
+                })
+            }
+            SemaError::ParameterReassignment(name, span) => Diagnostic::new(
+                "E0133",
+                format!("cannot reassign to read-only parameter '{}'", name),
             )
             .with_span(*span)
             .with_cause(format!(
-                "parameter '{}' is a read-only borrow (immutable by default in CP).",
+                "function parameter '{}' is a read-only borrow (immutable by default in CP).",
                 name
             ))
-            .with_help("in CP, function parameters are read-only by default. Use '*_' for mutable method receivers or 'v: *T' for mutable parameters.")
-            .with_suggestion(if name == "_" || name == "this" || name == "self" {
-                "receiver is read-only. Add '*' to declare mutable receiver: fn method(*_)".to_string()
-            } else {
-                format!(
-                    "parameter '{}' is a read-only borrow. Add '*' to declare it as mutable: '{}: *<Type>'",
-                    name, name
-                )
-            }),
+            .with_help("in CP, function parameters are immutable by default.")
+            .with_suggestion(format!(
+                "- 需修改调用者数据，请将形参改为可变借用: '{}: *<Type>'\n- 函数内局部游标，请在首行显式声明: 'let {}_local = {};'",
+                name, name, name
+            )),
+            SemaError::ReservedIdentifier(name, span, is_catch_err) => {
+                if *is_catch_err {
+                    Diagnostic::new(
+                        "E0134",
+                        format!("reserved identifier '{}' used as catch payload", name),
+                    )
+                    .with_span(*span)
+                    .with_cause(format!("'{}' is a reserved identifier in CP/Zig.", name))
+                    .with_help("error catch payload should use 'e' or a descriptive non-reserved identifier.")
+                    .with_suggestion("replace 'err' with 'e'")
+                } else {
+                    Diagnostic::new(
+                        "E0134",
+                        format!("reserved keyword '{}' used as identifier", name),
+                    )
+                    .with_span(*span)
+                    .with_cause(format!("'{}' is a reserved language keyword in CP/Zig.", name))
+                    .with_help("escape the identifier with @\"...\" or rename it.")
+                    .with_suggestion(format!("replace with @\"{}\"", name))
+                }
+            }
 
             SemaError::MutableBorrowConflict(name, span) => Diagnostic::new(
                 "E0202",
@@ -466,8 +524,12 @@ pub struct Analyzer {
     pub type_aliases: HashMap<String, Type>,
     pub known_lengths_stack: Vec<HashMap<String, usize>>,
     pub const_int_vars_stack: Vec<HashMap<String, i64>>,
+    pub fn_param_vars: Vec<std::collections::HashSet<String>>,
+    pub current_method_is_mut: bool,
     pub errors: Vec<SemaError>,
 }
+
+pub const RESERVED_WORDS: &[&str] = &["in", "as", "type", "arena", "macro"];
 
 impl Analyzer {
     pub fn get_diagnostics(&self) -> Vec<Diagnostic> {
@@ -590,6 +652,8 @@ impl Analyzer {
             type_aliases: HashMap::new(),
             known_lengths_stack: vec![HashMap::new()],
             const_int_vars_stack: vec![HashMap::new()],
+            fn_param_vars: Vec::new(),
+            current_method_is_mut: false,
             errors: Vec::new(),
         }
     }
@@ -2309,7 +2373,25 @@ impl Analyzer {
                         }
                     }
                 }
+                let mut ro_params = std::collections::HashSet::new();
                 for p in &f.params {
+                    if !p.ident.sym.starts_with("@\"")
+                        && RESERVED_WORDS.contains(&p.ident.sym.as_str())
+                    {
+                        self.errors.push(SemaError::ReservedIdentifier(
+                            p.ident.sym.clone(),
+                            p.ident.span,
+                            false,
+                        ));
+                    }
+                    if !p.is_mut
+                        && !matches!(p.ty, Type::BorrowType { is_mut: true, .. })
+                        && p.ident.sym != "_"
+                        && p.ident.sym != "this"
+                        && p.ident.sym != "self"
+                    {
+                        ro_params.insert(p.ident.sym.clone());
+                    }
                     let p_kind = SymbolKind::Var {
                         ty: p.ty.clone(),
                         kind: VarDeclKind::Let,
@@ -2317,11 +2399,13 @@ impl Analyzer {
                     self.define(p.ident.sym.clone(), p_kind.clone(), p.ident.span)?;
                     self.symbol_map.insert(p.ident.span, p_kind);
                 }
+                self.fn_param_vars.push(ro_params);
                 for stmt in &f.body.body {
                     if let Err(e) = self.analyze_stmt(stmt) {
                         self.errors.push(e);
                     }
                 }
+                self.fn_param_vars.pop();
                 self.exit_scope();
                 for k in added_generic_bounds {
                     self.active_generic_bounds.remove(&k);
@@ -2539,7 +2623,39 @@ impl Analyzer {
                             }
                         }
                     }
+                    let is_static = m.is_static;
+                    let is_mut = !is_static
+                        && (m.ident.sym == "init"
+                            || m.ident.sym == "release"
+                            || m.ident.sym == "__super_init"
+                            || m.ident.sym == "__super_release"
+                            || m.params.iter().any(|p| {
+                                (p.ident.sym == "_" || p.ident.sym == "this")
+                                    && (p.is_mut
+                                        || matches!(p.ty, Type::BorrowType { is_mut: true, .. }))
+                            }));
+                    let old_method_mut = self.current_method_is_mut;
+                    self.current_method_is_mut = is_mut;
+
+                    let mut ro_params = std::collections::HashSet::new();
                     for p in &m.params {
+                        if !p.ident.sym.starts_with("@\"")
+                            && RESERVED_WORDS.contains(&p.ident.sym.as_str())
+                        {
+                            self.errors.push(SemaError::ReservedIdentifier(
+                                p.ident.sym.clone(),
+                                p.ident.span,
+                                false,
+                            ));
+                        }
+                        if !p.is_mut
+                            && !matches!(p.ty, Type::BorrowType { is_mut: true, .. })
+                            && p.ident.sym != "_"
+                            && p.ident.sym != "this"
+                            && p.ident.sym != "self"
+                        {
+                            ro_params.insert(p.ident.sym.clone());
+                        }
                         if p.ident.sym == "this" || p.ident.sym == "_" {
                             let p_kind = SymbolKind::Var {
                                 ty: p.ty.clone(),
@@ -2549,6 +2665,7 @@ impl Analyzer {
                             self.symbol_map.insert(p.ident.span, p_kind);
                         }
                     }
+                    self.fn_param_vars.push(ro_params);
                     self.enter_scope();
                     for p in &m.params {
                         if p.ident.sym != "this" && p.ident.sym != "_" {
@@ -2565,6 +2682,8 @@ impl Analyzer {
                             self.errors.push(e);
                         }
                     }
+                    self.fn_param_vars.pop();
+                    self.current_method_is_mut = old_method_mut;
                     self.exit_scope();
                     self.exit_scope();
                     for k in added_method_bounds {
@@ -3221,6 +3340,14 @@ impl Analyzer {
                             self.analyze_expr(&bin.right)?;
                             return Ok(());
                         }
+                        if let Some(ro_set) = self.fn_param_vars.last() {
+                            if ro_set.contains(&id.sym) {
+                                return Err(SemaError::ParameterReassignment(
+                                    id.sym.clone(),
+                                    bin.span,
+                                ));
+                            }
+                        }
                         if let Some(SymbolKind::Var {
                             kind: VarDeclKind::Const,
                             ..
@@ -3233,6 +3360,18 @@ impl Analyzer {
                                 id.sym.clone(),
                                 id.span,
                             ));
+                        }
+                    } else if let Expr::Member(mem) = &*bin.left {
+                        if let Expr::Ident(obj_id) = &*mem.obj {
+                            if (obj_id.sym == "_" || obj_id.sym == "this")
+                                && !self.current_method_is_mut
+                                && self.current_class.is_some()
+                            {
+                                return Err(SemaError::CannotMutateReadOnlyBorrow(
+                                    "_".to_string(),
+                                    bin.span,
+                                ));
+                            }
                         }
                     } else if let Expr::Index { obj, index } = &*bin.left {
                         if let Expr::Ident(id) = &**obj {
@@ -3679,6 +3818,13 @@ impl Analyzer {
                 self.analyze_expr(expr)?;
                 self.enter_scope();
                 if let Some(ev) = err_ident {
+                    if ev.sym == "err" {
+                        self.errors.push(SemaError::ReservedIdentifier(
+                            ev.sym.clone(),
+                            ev.span,
+                            true,
+                        ));
+                    }
                     let _ = self.define(
                         ev.sym.clone(),
                         SymbolKind::Var {
@@ -5328,6 +5474,13 @@ impl Analyzer {
     fn analyze_pattern(&mut self, pat: &Pattern, ty: Type, kind: &VarDeclKind) -> SemaResult<()> {
         match pat {
             Pattern::Ident(ident) => {
+                if !ident.sym.starts_with("@\"") && RESERVED_WORDS.contains(&ident.sym.as_str()) {
+                    self.errors.push(SemaError::ReservedIdentifier(
+                        ident.sym.clone(),
+                        ident.span,
+                        false,
+                    ));
+                }
                 if self.scopes.len() > 1 {
                     if let Some(SymbolKind::Var { .. }) =
                         self.scopes.last().unwrap().get(&ident.sym)
@@ -6302,6 +6455,7 @@ impl Analyzer {
                         | Stmt::Expr(Expr::Break(..))
                         | Stmt::Expr(Expr::LabeledBreak(..))
                         | Stmt::Expr(Expr::Continue(..)) => Type::Void,
+                        Stmt::Expr(Expr::Lit(Lit::Int(_))) => Type::Any,
                         Stmt::Expr(e) => self.infer_type(e).unwrap_or(Type::Any),
                         Stmt::Block(b) => {
                             if let Some(last) = b.body.last() {
@@ -6448,7 +6602,10 @@ impl Analyzer {
                     } else {
                         self.infer_type(a)?
                     };
-                    if cons_ty == alt_ty {
+                    let is_lit = |e: &Expr| matches!(e, Expr::Lit(Lit::Int(_)));
+                    if is_lit(&**cons) && is_lit(&**a) {
+                        Ok(Type::Any)
+                    } else if cons_ty == alt_ty {
                         Ok(cons_ty)
                     } else {
                         Ok(Type::Any)

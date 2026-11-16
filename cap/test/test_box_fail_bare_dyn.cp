@@ -1,5 +1,5 @@
 trait PluginError {
-    fn code(_) : i32;
+    fn code() : i32;
 }
 
 struct CustomErr {
@@ -7,7 +7,7 @@ struct CustomErr {
 }
 
 impl PluginError for CustomErr {
-    fn code(_) : i32 {
+    fn code() : i32 {
         return _.c;
     }
 }

@@ -71,7 +71,7 @@ class NetError implements CustomErr {
         this.status = s;
     }
     fn code(): i32 {
-        return this.status;
+        return _.status;
     }
 }
 
@@ -93,7 +93,7 @@ fn test_bubble_http(): i32 ! Err {
     return h;
 }
 
-pub fn main(): void {
+pub fn main() {
     // Test 1: FileErr matching
     let res1 = open_file(1);
     let msg1 = switch res1 {

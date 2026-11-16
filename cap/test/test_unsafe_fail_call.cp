@@ -7,7 +7,7 @@ unsafe fn setAge(p: *User!, val: i32) {
 }
 
 fn main() {
-    let mut u = User{age: 20};
+    let u = User{age: 20};
     unsafe {
         let p: *User! = &u as *User!;
     }

@@ -2013,12 +2013,17 @@ impl Codegen {
                         if let Some(sig) = self.fn_sigs.get(&id.sym) {
                             if let Some(ret_ty) = &sig.return_type {
                                 return self.map_type(ret_ty);
+                            } else {
+                                return "void".to_string();
                             }
                         }
                         if let Some(c_name) = &self.current_class_name {
-                            if let Some((_, Some(ret_ty), _)) = self.lookup_method(c_name, &id.sym)
-                            {
-                                return self.map_type(&ret_ty);
+                            if let Some((_, ret_ty_opt, _)) = self.lookup_method(c_name, &id.sym) {
+                                if let Some(ret_ty) = ret_ty_opt {
+                                    return self.map_type(&ret_ty);
+                                } else {
+                                    return "void".to_string();
+                                }
                             }
                         }
                         if id.sym == "listen" {

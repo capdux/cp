@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/ws/opcode.cp
+// Upstream Sync: Refer to bun/src/ws/opcode.zig for future upstream updates.
+// ============================================================================
 // lib/ws/opcode.cp
 // RFC 6455 WebSocket Opcodes & Close Status Codes in CP
 

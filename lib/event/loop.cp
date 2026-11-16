@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/event_loop/loop.cp
+// Upstream Sync: Refer to bun/src/event_loop/loop.zig for future upstream updates.
+// ============================================================================
 // lib/event_loop/loop.cp
 // Unified EventLoop integrating intrusive timers, deferred microtasks, cross-thread tasks, and I/O polling
 

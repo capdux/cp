@@ -5,20 +5,20 @@ struct Counter {
 }
 
 // 1. 测试值参数可变本地拷贝 (fn foo(let x: i32))
-fn add_locally(let x: i32, delta: i32): i32 {
+fn add_locally(x: i32, delta: i32): i32 {
     x += delta;
     x *= 2;
     return x;
 }
 
 // 2. 测试结构体值参数可变本地拷贝 (不影响外部调用方)
-fn bump_struct_copy(let c: Counter): i32 {
+fn bump_struct_copy(c: Counter): i32 {
     c.val += 100;
     return c.val;
 }
 
 // 3. 测试默认值参 (不可变) 与可变值参组合
-fn sum_range(let start: i32, end: i32): i32 {
+fn sum_range(start: i32, end: i32): i32 {
     let total: i32 = 0;
     while (start <= end) {
         total += start;

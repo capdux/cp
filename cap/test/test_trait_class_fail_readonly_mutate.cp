@@ -4,7 +4,7 @@ class Counter {
         _.val = v;
     }
     // Default read-only borrow receiver (omitted `_`)
-    fn badMutate(): i32 {
+    fn badMutate(*_): i32 {
         _.val = _.val + 1;
         return _.val;
     }

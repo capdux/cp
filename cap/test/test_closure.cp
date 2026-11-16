@@ -1,7 +1,7 @@
 import { print } from "cap:io";
 import { sleep } from "cap:actor";
 
-async fn test_closure(): void {
+async fn test_closure() {
     let outer_var = 999;
     
     @spawn(() => {
@@ -10,6 +10,6 @@ async fn test_closure(): void {
     });
 }
 
-fn main(): void {
+fn main() {
     @spawn(test_closure);
 }

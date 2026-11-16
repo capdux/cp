@@ -20,7 +20,7 @@ pub fn checkTag(tag: Tag): i32 {
     }
 }
 
-fn main(): void {
+fn main() {
     let r1 = checkTag(Tag.foo);
     let r2 = checkTag(Tag.bar);
     let r3 = checkTag(Tag.baz);

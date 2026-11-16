@@ -39,7 +39,7 @@ unsafe fn setScalar(p: *i32!, val: i32) {
 }
 
 fn main() {
-    let mut user = User{age: 20};
+    let user = User{age: 20};
 
     unsafe {
         // 1. Direct raw pointer expression (*user!) and explicit cast
@@ -48,13 +48,13 @@ fn main() {
         @print("User age after setAge: {d}", user.age);
 
         // 2. Double raw pointer (**p_copy!)
-        let mut p_copy: *User! = p;
+        let p_copy: *User! = p;
         let pp: **User! = **p_copy!;
         modifyViaDoublePtr(pp, 45);
         @print("User age after modifyViaDoublePtr: {d}", user.age);
 
         // 3. Scalar raw pointer (*num!, &num as *i32!, *num as *i32!)
-        let mut num: i32 = 100;
+        let num: i32 = 100;
         let pnum: *i32! = *num!;
         setScalar(pnum, 200);
         @print("Scalar num after setScalar: {d}", num);

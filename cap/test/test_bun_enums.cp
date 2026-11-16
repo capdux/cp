@@ -6,8 +6,8 @@ export enum FetchRequestMode: u2 {
     cors,
     navigate,
 
-    fn isSameOrigin(self): bool {
-        return self == FetchRequestMode.@"same-origin";
+    fn isSameOrigin(): bool {
+        return _ == FetchRequestMode.@"same-origin";
     }
 
     zig {
@@ -26,7 +26,7 @@ fn checkMode(mode: FetchRequestMode): i32 {
     };
 }
 
-fn main(): void {
+fn main() {
     let mode: FetchRequestMode = FetchRequestMode.@"same-origin";
     if (!mode.isSameOrigin()) {
         print("Expected mode to be same-origin\n");

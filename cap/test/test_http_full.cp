@@ -67,14 +67,14 @@ fn testStep1_TypesAndInfrastructure(): !void {
     expect_eq(root_path.isRoot(), true);
 
     // 4. Signals
-    var store = SignalStore{};
+    let store = SignalStore{};
     const sigs = store.toSignals();
     expect_eq(sigs.isAborted(), false);
     sigs.abort();
     expect_eq(sigs.isAborted(), true);
 
     // 5. HeaderValueIterator
-    var iter = HeaderValueIterator.init("gzip, deflate, br;q=1.0, zstd");
+    let iter = HeaderValueIterator.init("gzip, deflate, br;q=1.0, zstd");
     expect_eq(std.mem.eql(u8, iter.next().?, "gzip"), true);
     expect_eq(std.mem.eql(u8, iter.next().?, "deflate"), true);
     expect_eq(std.mem.eql(u8, iter.next().?, "br;q=1.0"), true);
@@ -89,13 +89,13 @@ fn testStep1_TypesAndInfrastructure(): !void {
 
 fn testStep2_H2AndH3Subsystems(): !void {
     // 1. HTTP/2 Frame Header Wire Encoding & Decoding
-    var orig_header = FrameHeader{};
+    let orig_header = FrameHeader{};
     orig_header.length = 1024;
     orig_header.type = FrameType.Data;
     orig_header.flags = 0x01; // EndStream
     orig_header.stream_id = 7;
 
-    var wire_buf: [9]u8 = undefined;
+    let wire_buf: [9]u8 = undefined;
     orig_header.encode(&wire_buf);
 
     const decoded_opt = FrameHeader.decode(&wire_buf);
@@ -107,14 +107,14 @@ fn testStep2_H2AndH3Subsystems(): !void {
     expect_eq(decoded.stream_id, 7);
 
     // 2. HTTP/2 Client Session & Stream Multiplexing
-    var h2_session = H2ClientSession{};
+    let h2_session = H2ClientSession{};
     expect_eq(h2_session.canCreateStream(), true);
 
-    var s1 = h2_session.newStream();
+    let s1 = h2_session.newStream();
     expect_eq(s1.id, 1);
     expect_eq(s1.isOpen(), true);
 
-    var s2 = h2_session.newStream();
+    let s2 = h2_session.newStream();
     expect_eq(s2.id, 3);
 
     s1.close();
@@ -132,12 +132,12 @@ fn testStep2_H2AndH3Subsystems(): !void {
     expect_eq(std.mem.eql(u8, alt.protocol, "h3"), true);
 
     // 4. HTTP/3 Client Session & Bidi Stream Allocation
-    var h3_session = H3ClientSession{};
-    var h3_s1 = h3_session.newRequestStream();
+    let h3_session = H3ClientSession{};
+    let h3_s1 = h3_session.newRequestStream();
     expect_eq(h3_s1.id, 0);
     expect_eq(h3_s1.isOpen(), true);
 
-    var h3_s2 = h3_session.newRequestStream();
+    let h3_s2 = h3_session.newRequestStream();
     expect_eq(h3_s2.id, 4);
 
     h3_s1.close();
@@ -147,19 +147,19 @@ fn testStep2_H2AndH3Subsystems(): !void {
 fn testStep3_CoreClientEngine(): !void {
     // 1. Proxy Tunnel Request Formatting & Validation
     const tunnel = ProxyTunnel.init("127.0.0.1", 8080, "api.example.com", 443);
-    var connect_buf: [256]u8 = undefined;
+    let connect_buf: [256]u8 = undefined;
     const connect_req = tunnel.formatConnectRequest(&connect_buf)?;
     expect_eq(std.mem.startsWith(u8, connect_req, "CONNECT api.example.com:443 HTTP/1.1\r\n"), true);
     expect_eq(ProxyTunnel.verifyConnectResponse("HTTP/1.1 200 Connection Established\r\n\r\n"), true);
     expect_eq(ProxyTunnel.verifyConnectResponse("HTTP/1.1 502 Bad Gateway\r\n\r\n"), false);
 
     // 2. SendFile Kernel Zero-Copy State Machine
-    var sf = SendFile.init(3, 4096);
+    let sf = SendFile.init(3, 4096);
     expect_eq(sf.isDone(), false);
     expect_eq(sf.remain, 4096);
 
     // 3. HTTPContext Keep-Alive Connection Pooling
-    var ctx = HTTPContext.init();
+    let ctx = HTTPContext.init();
     defer ctx.deinit();
 
     // Release mock socket fd 101 into pool
@@ -183,14 +183,14 @@ fn testStep3_CoreClientEngine(): !void {
     expect_eq(ctx.acquireSocket("api.example.com", 443, true) == null, true);
 
     // 4. HTTPClient Request Serialization (RFC 7230)
-    var client = HTTPClient.init(Method.POST, "http://api.myserver.org:9000/v1/chat/completions");
+    let client = HTTPClient.init(Method.POST, "http://api.myserver.org:9000/v1/chat/completions");
     expect_eq(std.mem.eql(u8, client.hostname, "api.myserver.org"), true);
     expect_eq(client.port, 9000);
     expect_eq(std.mem.eql(u8, client.path, "/v1/chat/completions"), true);
 
     client.body = "{\"model\":\"cp-gemini\",\"stream\":false}";
 
-    var req_buf: [1024]u8 = undefined;
+    let req_buf: [1024]u8 = undefined;
     const req_str = client.formatRequest(&req_buf)?;
     expect_eq(std.mem.startsWith(u8, req_str, "POST /v1/chat/completions HTTP/1.1\r\n"), true);
     expect_eq(std.mem.indexOf(u8, req_str, "Host: api.myserver.org:9000\r\n") != null, true);
@@ -208,19 +208,19 @@ fn testStep3_CoreClientEngine(): !void {
 
     // 6. Chunked Transfer Encoding Decoding
     const chunked_payload = "5\r\nHello\r\n8\r\n CP-Lang\r\n1\r\n!\r\n0\r\n\r\n";
-    var decoded_buf: [128]u8 = undefined;
+    let decoded_buf: [128]u8 = undefined;
     const decoded_len = HTTPClient.decodeChunkedBody(chunked_payload, &decoded_buf)?;
     expect_eq(decoded_len, 14);
     expect_eq(std.mem.eql(u8, decoded_buf[0..decoded_len], "Hello CP-Lang!"), true);
 
     // 7. Decompressor Lifecycle
-    var decomp = Decompressor.init(Encoding.Gzip);
+    let decomp = Decompressor.init(Encoding.Gzip);
     expect_eq(decomp.is_done, false);
     decomp.release();
     expect_eq(decomp.is_done, true);
 }
 
-fn main(): void {
+fn main() {
     test("HTTP Step 1: Types, Enums & Path/Header Infrastructure", () => {
         testStep1_TypesAndInfrastructure()?;
     });

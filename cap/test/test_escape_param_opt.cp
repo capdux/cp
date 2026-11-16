@@ -10,14 +10,14 @@ zig {
 }
 
 fn computeWithEscape(cfg: MyConfig, unused_flag: bool): u32 {
-    let mut res: u32 = 0;
+    let res: u32 = 0;
     zig {
         res = getMagicNumber(cfg);
     }
     return res;
 }
 
-fn main(): void {
+fn main() {
     let cfg = MyConfig{ id: 21 };
     let result = computeWithEscape(cfg, false);
     if (result != 42) {

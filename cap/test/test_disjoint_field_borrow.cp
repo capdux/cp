@@ -11,7 +11,7 @@ class HTTPContext {
     body_read: i32;
     active_timer: i32;
 
-    fn update_fields(*this): void {
+    fn update_fields(**_) {
         // Disjoint borrows on `this` fields
         let status_ref = &mut this.status_code;
         let timer_ref = &mut this.active_timer;
@@ -26,7 +26,7 @@ class InternalLoopData {
     max_batch: i32;
 }
 
-fn process_internal_loop(*data: InternalLoopData): void {
+fn process_internal_loop(*data: InternalLoopData) {
     // 1. Simultaneous mutable borrows to disjoint fields
     let q = &mut data.q_len;
     let t = &mut data.active_timer;
@@ -37,7 +37,7 @@ fn process_internal_loop(*data: InternalLoopData): void {
     b.* = 1024;
 }
 
-fn process_nested(*ctx: HTTPContext): void {
+fn process_nested(*ctx: HTTPContext) {
     // 2. Disjoint borrows on nested struct fields
     let h_len = &mut ctx.header.content_len;
     let b_read = &mut ctx.body_read;
@@ -46,7 +46,7 @@ fn process_nested(*ctx: HTTPContext): void {
     b_read.* = 128;
 }
 
-pub fn main(): void {
+pub fn main() {
     let loop_data = new InternalLoopData(0, 0, 0);
     process_internal_loop(&loop_data);
     if (loop_data.q_len != 42) {

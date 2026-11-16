@@ -4,17 +4,17 @@ struct BufferHelper {
     len: usize = 0;
 
     @inline
-    fn inc(*_, amount: usize): void {
+    fn inc(*_, amount: usize) {
         len = len + amount;
     }
 
     @inline
-    fn getLen(_): usize {
+    fn getLen(): usize {
         return len;
     }
 }
 
-fn main(): void {
+fn main() {
     let buf = BufferHelper{ len: 5 };
     buf.inc(10);
     if (buf.getLen() != 15) {

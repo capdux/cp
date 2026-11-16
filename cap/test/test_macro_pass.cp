@@ -7,7 +7,7 @@ import { print } from "cap:io";
 
 // 1. User-Defined Custom Template Macro
 macro Accessor(target, field) {
-    pub fn get_${field}(_): string {
+    pub fn get_${field}(): string {
         return _.${field};
     }
 }
@@ -115,7 +115,7 @@ class NumberStream {
     }
 }
 
-fn main(): void {
+fn main() {
     @print("=== [Test 1] @Json serialization method derivation ===");
     let u = new User(1, "Alice");
     let user_json = u.toJson();
@@ -208,9 +208,9 @@ fn main(): void {
     expect_eq(cust.fmt_debug(), "Customer(name=Bob, level=5)");
 
     @print("=== [Test 10] Custom Iterator Stream for...of Loop ===");
-    let mut stream = new NumberStream(1, 6);
-    let mut stream_sum = 0;
-    for n of stream {
+    let stream = new NumberStream(1, 6);
+    let stream_sum = 0;
+    for (n of stream) {
         stream_sum = stream_sum + n;
     }
     @print("Iterator Stream Sum: {d}", stream_sum);

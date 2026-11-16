@@ -16,7 +16,7 @@ fn consume(own res: Resource): i32 {
     return res.id;
 }
 
-pub fn main(): void {
+pub fn main() {
     let r1 = Resource.create(42);
     let val = consume(own r1);
     // ❌ 错误：r1 已被 own 移交，再次读取必须被编译器拦截！

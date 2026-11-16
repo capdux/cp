@@ -1,5 +1,5 @@
-pub fn main(): void {
-    if true {
+pub fn main() {
+    if (true) {
         return;
     }
 }

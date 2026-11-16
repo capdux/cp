@@ -18,7 +18,7 @@ pub fn testWhileStep(): i32 {
     return count;
 }
 
-fn main(): void {
+fn main() {
     let f: MyFunc = check_even;
     let is_even = f(4);
     if (!is_even) {

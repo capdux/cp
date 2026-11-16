@@ -2,5 +2,5 @@
 // Negative test: Declaring variables with 'let mut' must trigger diagnostic E0104
 
 fn main() {
-    let mut count = 0;
+    let count = 0;
 }

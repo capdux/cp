@@ -1,4 +1,8 @@
 // ============================================================================
+// Absorbed from Bun: bun/src/runtime/image/codecs.cp
+// Upstream Sync: Refer to bun/src/runtime/image/codecs.zig for future upstream updates.
+// ============================================================================
+// ============================================================================
 // lib/image/codecs.cp — 图像格式探测器、MIME 映射与 EXIF 方向解析
 // 吸收自 Bun src/runtime/image/codecs.cp 与 exif.cp
 // ============================================================================

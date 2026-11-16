@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/ws/frame.cp
+// Upstream Sync: Refer to bun/src/ws/frame.zig for future upstream updates.
+// ============================================================================
 // lib/ws/frame.cp
 // RFC 6455 WebSocket Frame Header & Builder in CP
 import { Opcode, CloseCode } from "./opcode";

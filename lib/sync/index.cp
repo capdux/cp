@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/threading/
+// Upstream Sync: Refer to bun/src/threading/ for future upstream updates.
+// ============================================================================
 export { Futex, Deadline } from "./futex";
 export { Mutex } from "./mutex";
 export { Condition } from "./condition";

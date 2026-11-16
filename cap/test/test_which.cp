@@ -4,12 +4,12 @@ import { test, expect_eq } from "cap:test";
 import { Which, which, isExecutable } from "cap:which";
 
 fn testWhichBasics(): !void {
-    var out_buf: [512]u8 = undefined;
+    let out_buf: [512]u8 = undefined;
 
     // 1. Locate standard system binary 'sh'
     const sh_path = which("sh", .{}, &out_buf);
     expect_eq(sh_path != null, true);
-    if (sh_path) |p| {
+    if (p := sh_path) {
         expect_eq(std.mem.endsWith(u8, p, "/sh"), true);
         expect_eq(isExecutable(p), true);
     }
@@ -17,7 +17,7 @@ fn testWhichBasics(): !void {
     // 2. Locate absolute path
     const ls_path = which("/bin/sh", .{}, &out_buf);
     expect_eq(ls_path != null, true);
-    if (ls_path) |p| {
+    if (p := ls_path) {
         expect_eq(std.mem.eql(u8, p, "/bin/sh"), true);
     }
 
@@ -26,12 +26,12 @@ fn testWhichBasics(): !void {
     expect_eq(nonexistent == null, true);
 
     // 4. Custom PATH search
-    var custom_buf: [512]u8 = undefined;
+    let custom_buf: [512]u8 = undefined;
     const custom_found = which("sh", .{ .path = "/bin:/usr/bin" }, &custom_buf);
     expect_eq(custom_found != null, true);
 }
 
-fn main(): void {
+fn main() {
     test("Which binary locator and PATH resolution", () => {
         try testWhichBasics();
     });

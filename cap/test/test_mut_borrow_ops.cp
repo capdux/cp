@@ -1,28 +1,28 @@
 import { print } from "cap:io";
 
-fn mutate_int(*x: i32, val: i32): void {
+fn mutate_int(*x: i32, val: i32) {
     x.* = val;
 }
 
-fn mutate_arr(*arr: i32[], val: i32): void {
+fn mutate_arr(*arr: i32[], val: i32) {
     arr.push(val);
     arr[0] = 99;
 }
 
-fn mutate_map(*m: Map<string, i32>): void {
+fn mutate_map(*m: Map<string, i32>) {
     m.set("k2", 200);
 }
 
-fn mutate_set(*s: Set<string>): void {
+fn mutate_set(*s: Set<string>) {
     s.add("item2");
 }
 
-fn mutate_dict(*d: Dict<string, i32>): void {
+fn mutate_dict(*d: Dict<string, i32>) {
     d.set("d2", 88);
     d["d1"] = 77;
 }
 
-fn demo_primitive(): void {
+fn demo_primitive() {
     print("=== 1. Primitive Mutable Borrow (*v & p.* = 20) ===");
     let v = 10;
     let p = *v;
@@ -32,7 +32,7 @@ fn demo_primitive(): void {
     print(`v after mutate_int(*v, 35): ${v}`);
 }
 
-fn demo_object(): void {
+fn demo_object() {
     print("=== 2. Object Literal Mutable Borrow (*v & p.a = 10) ===");
     let v = {a: 10, b: 20};
     let p = *v;
@@ -41,7 +41,7 @@ fn demo_object(): void {
     print(`p.a=${p.a}, v.a=${v.a}, v.b=${v.b}`);
 }
 
-fn demo_array(): void {
+fn demo_array() {
     print("=== 3. Array / Vec Mutable Borrow (*v & p.push(30)) ===");
     let v = [10, 20];
     let p = *v;
@@ -53,7 +53,7 @@ fn demo_array(): void {
     print(`v after mutate_arr: len=${v.length}, v[0]=${v[0]}, v[2]=${v[2]}`);
 
     print("=== 4. Mutable For Iteration (*item of v) & Wildcard (*) / Rest (...) ===");
-    for *item of v {
+    for (*item of v) {
         item = item + 1;
     }
     let [*, second, ...] = v;
@@ -66,7 +66,7 @@ fn demo_array(): void {
     print(`Rest destructure: second_num=${second_num}, fourth_num=${fourth_num}, first=${first}, last=${last}, head=${head}, middle_len=${middle.length}, middle[0]=${middle[0]}, middle[1]=${middle[1]}, tail=${tail}`);
 }
 
-fn main(): void {
+fn main() {
     demo_primitive();
     demo_object();
     demo_array();

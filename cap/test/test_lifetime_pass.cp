@@ -23,7 +23,7 @@ ref struct TensorView {
     }
 
     fn addOffset() {
-        this.target.size = this.target.size + this.offset;
+        _.target.size = _.target.size + _.offset;
     }
 }
 

@@ -45,7 +45,7 @@ class Counter {
     fn init() {
         _.count = 0;
     }
-    fn get_seed(mut _): i32 {
+    fn get_seed(*): i32 {
         _.count = _.count + 1;
         return 7;
     }
@@ -72,7 +72,7 @@ fn simulate_agent_llm(prompt: string): string {
     return "AGENT_REPLY(" + prompt + ")";
 }
 
-fn main(): void {
+fn main() {
     @print("=== [Test 1] Rule 1: Bare function call (x |> f) ===");
     let r1 = 21 |> double_num;
     @print("21 |> double_num = {d}", r1);

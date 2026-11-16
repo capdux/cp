@@ -11,10 +11,10 @@ class User {
     }
 
     pub fn get_age(): i32 {
-        return this.age;
+        return _.age;
     }
 
-    pub fn have_birthday(mut _) {
+    pub fn have_birthday(*) {
         this.age += 1;
     }
 }
@@ -23,7 +23,7 @@ fn takes_i32(val: i32): i32 {
     return val * 2;
 }
 
-fn main(): void {
+fn main() {
     test("object flow-sensitive narrowing in if (u != null)", () => {
         let u: User? = new User("Alice", 25);
         if (u != null) {
@@ -45,7 +45,7 @@ fn main(): void {
     });
 
     test("primitive flow-sensitive narrowing in if (x != null)", () => {
-        let mut count: i32? = 15;
+        let count: i32? = 15;
         if (count != null) {
             // 1. Direct arithmetic
             let sum = count + 5;
@@ -63,14 +63,14 @@ fn main(): void {
 
     test("short-circuit && narrowing and inverted null != u", () => {
         let u: User? = new User("Bob", 22);
-        let mut reached_and = false;
+        let reached_and = false;
         if (u != null && u.age > 20) {
             expect_eq(u.name, "Bob");
             reached_and = true;
         }
         expect_eq(reached_and, true);
 
-        let mut reached_inv = false;
+        let reached_inv = false;
         if (null != u) {
             expect_eq(u.age, 22);
             reached_inv = true;
@@ -80,7 +80,7 @@ fn main(): void {
 
     test("else-branch narrowing in if (u == null) ... else", () => {
         let u: User? = new User("Charlie", 40);
-        let mut reached_else = false;
+        let reached_else = false;
         if (u == null) {
             expect_eq(1, 0);
         } else {
@@ -93,7 +93,7 @@ fn main(): void {
 
     test("nested if narrowing", () => {
         let u: User? = new User("Dave", 18);
-        let mut age_val = 0;
+        let age_val = 0;
         if (u != null) {
             if (u.age >= 18) {
                 age_val = u.age;

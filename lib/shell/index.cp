@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/shell/
+// Upstream Sync: Refer to bun/src/shell/ for future upstream updates.
+// ============================================================================
 // lib/shell/index.cp
 // Unified Public Exports for CP Shell Engine (cap:shell)
 // Absorbed from Bun Shell architecture with pure CP semantics

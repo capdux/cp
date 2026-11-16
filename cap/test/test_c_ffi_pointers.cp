@@ -21,20 +21,20 @@ struct AlignedBlock {
 
 // 3. VTable with @c fn(...) : Ret function pointer types
 struct VTable {
-    on_data: (@c fn(ctx: *any!, code: i32): void)?,
+    on_data: (@c fn(ctx: *auto!, code: i32): void)?,
     on_close: @c fn(code: i32): void,
 }
 
-@c fn dummy_close(code: i32): void {
-    _ = code;
+@c fn dummy_close(code: i32) {
+    * = code;
 }
 
 // 4. Const generic class and type aliases
 class App<const ssl: bool> {
     is_ssl: bool = ssl;
 
-    fn get_ssl(this): bool {
-        return this.is_ssl;
+    fn get_ssl(): bool {
+        return _.is_ssl;
     }
 }
 
@@ -49,10 +49,10 @@ enum TaskState {
 }
 
 class Handler {
-    fn onOpen(this): void {}
+    fn onOpen() {}
 }
 
-fn main(): void {
+fn main() {
     test("Structure Escapes: @align(N) on struct and fields", () => {
         let block: AlignedBlock = AlignedBlock{ val: 42, other: 7 };
         expect_eq(block.val, 42);

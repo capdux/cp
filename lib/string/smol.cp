@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/string/smol.cp
+// Upstream Sync: Refer to bun/src/string/smol.zig for future upstream updates.
+// ============================================================================
 // lib/string/smol.cp
 // SmolStr: Small String Optimization (SSO) container
 // Stores <= 15 bytes inline on stack without heap allocation; falls back to heap for longer strings.

@@ -75,6 +75,21 @@ pub fn resolve_source_path(
             "sync" | "threading" => "sync".to_string(),
             "shell" | "sh" => "shell".to_string(),
             "image" | "img" | "png" => "image".to_string(),
+            "blob" | "file" => "blob".to_string(),
+            "conf" | "dotenv" | "ini" => "conf".to_string(),
+            "pack" | "compress" => "pack".to_string(),
+            "css" => "css".to_string(),
+            other => other.to_string(),
+        };
+        true
+    } else if let Some(stripped) = search_source.strip_prefix("std/") {
+        search_source = match stripped {
+            "col" | "collections" => "col".to_string(),
+            "event" | "event_loop" | "events" => "event".to_string(),
+            "sync" | "threading" => "sync".to_string(),
+            "shell" | "sh" => "shell".to_string(),
+            "image" | "img" | "png" => "image".to_string(),
+            "blob" | "file" => "blob".to_string(),
             "conf" | "dotenv" | "ini" => "conf".to_string(),
             "pack" | "compress" => "pack".to_string(),
             "css" => "css".to_string(),

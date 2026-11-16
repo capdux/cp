@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/string/hashed.cp
+// Upstream Sync: Refer to bun/src/string/hashed.zig for future upstream updates.
+// ============================================================================
 // lib/string/hashed.cp
 // HashedString: Pre-hashed string slice view with O(1) hash comparison rejection
 // Absorbed from Bun src/string/HashedString.cp with pure CP semantics

@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import { print } from "cap:io";
 
-async fn main(): void {
+async fn main() {
     // -------------------------------------------------------------
     // 1. Map (ES6 Interface & Index Access)
     // -------------------------------------------------------------

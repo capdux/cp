@@ -9,14 +9,14 @@ fn testTmpAndAtomicWrite(): !void {
     expect_eq(tmp.len > 0, true);
 
     // 2. tmpPath generation
-    var buf: [512]u8 = undefined;
+    let buf: [512]u8 = undefined;
     const path = tmpPath("agent_test", ".log", &buf);
     expect_eq(path.len > 0, true);
     expect_eq(std.mem.startsWith(u8, path, tmp), true);
     expect_eq(std.mem.endsWith(u8, path, ".log"), true);
 
     // 3. writeAtomic and read
-    var dest_buf: [512]u8 = undefined;
+    let dest_buf: [512]u8 = undefined;
     const dest_path = tmpPath("atomic_test", ".txt", &dest_buf);
     const content = "Atomic Content Payload in CP Standard Library";
 
@@ -31,7 +31,7 @@ fn testTmpAndAtomicWrite(): !void {
     expect_eq(exists(dest_path), false);
 }
 
-fn main(): void {
+fn main() {
     test("File system tmp directory and atomic write operations", () => {
         try testTmpAndAtomicWrite();
     });

@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/threading/ring_buffer.cp
+// Upstream Sync: Refer to bun/src/threading/ring_buffer.zig for future upstream updates.
+// ============================================================================
 // Bounded MPMC lock-free ring buffer in CP
 // Based on Dmitry Vyukov's MPMC queue algorithm
 

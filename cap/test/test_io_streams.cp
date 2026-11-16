@@ -14,14 +14,14 @@ import {
     Pipe,
 } from "cap:io";
 
-fn expect(cond: bool, msg: string): void {
+fn expect(cond: bool, msg: string) {
     if (!cond) {
         print(`ASSERTION FAILED: ${msg}`);
         @panic("assertion failed");
     }
 }
 
-pub fn main(): void {
+pub fn main() {
     print("=== Running Industrial-grade I/O Stream Suite (cap:io / cap:stream) ===");
 
     // Test 1: BufferReader slicing and byte reads

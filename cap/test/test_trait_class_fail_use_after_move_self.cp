@@ -6,7 +6,7 @@ class Connection {
     fn ping(): i32 {
         return _.fd;
     }
-    fn close(move _) {
+    fn close(*_, move _) {
         _.fd = 0;
     }
 }

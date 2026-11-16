@@ -5916,7 +5916,7 @@ export class SocketContext<Handler> {
 | `cap:md`          | CommonMark / GFM 解析器、HTML / ANSI 终端渲染与 GFM 表格引擎（`Markdown`, `MdTable`, `MdTableAlign`） | **已全面实装** |
 | `cap:html`        | CSS 选择器解析（`CssSelector`）、流式 HTML 重写器（`HtmlRewriter`）与零拷贝实体转义器（`HtmlEscape`） | **已全面实装** |
 | `cap:css`         | 工业级 CSS 全栈解析、颜色空间（HEX/RGB/HSL/OKLCH/WCAG 对比度）、尺寸计算（`CssLength`/`CssCalc`）、W3C 选择器权重（`CssSpecificity`）与 94 模块完整样式表/规则/属性引擎（`CssStylesheetParser`, `CssRule`, `CssMediaQuery`, `CssKeyframes`） | **已全面实装** |
-| `cap:image`（兼容 `cap:png` / `cap:img`） | 原生现代图像处理标准库：PNG 截图编码器（`Png.encodeRgba`）、PNG 全滤镜解码器（`Png.decode`）、`PngImage`、像素四元组（`RgbaColor`）、BMP/DIB 编解码（`Bmp`）、Median-Cut 调色板颜色量化（`Quantizer`）与多格式魔数探测（`Codecs.sniff`） | **已全面实装** |
+| `cap:image`（兼容 `cap:png` / `cap:img`） | 工业级现代全景图像处理标准库：PNG 截图编码器（`Png.encodeRgba`）、PNG 全滤镜解码器（`Png.decode`）、`PngImage`、像素四元组（`RgbaColor`）、BMP/DIB 编解码（`Bmp`）、Median-Cut 调色板颜色量化（`Quantizer`）、GIF89a/87a LZW 解码（`Gif`）、ThumbHash 模糊微缩占位图算法（`ThumbHash`）、EXIF Orientation 方向解析（`Exif`）、高阶图像几何变换与裁切缩放管线（`Image.flop`, `Image.flip`, `Image.rotate`, `Image.crop`, `Image.resize`）与 JPEG/WebP/8大格式嗅探（`Codecs.sniff`, `Jpeg.probe`, `Webp.probe`） | **已全面实装** |
 | `cap:ffi`         | 跨平台动态库加载（`DynLib`）、FFI 调用签名布局（`FFISignature`, `CStructLayout`, `CStructField`）与 TinyCC 内存编译声明（`TccOutputFormat`） | **已全面实装** |
 | `cap:sql`         | 统一 SQL 协议栈：参数化预编译语句（`SqlStatement`）、PostgreSQL v3 Wire/认证/数据行（`PostgresWire`, `PostgresAuthChallenge`, `PostgresDataRow`, `PostgresCommandComplete`）、MySQL Wire/变长整数/OK/ERR 包（`MySqlPacketHeader`, `MySqlLenEnc`, `MySqlCapabilities`, `MySqlOkPacket`, `MySqlErrPacket`）与原生 SQLite3 驱动（`SqliteDatabase`, `SqliteRows`） | **已全面实装** |
 | `cap:shell`（兼容 `cap:sh`） | 原生嵌入式 Shell 执行引擎与解释器：词法分析（`Lexer`）、语法解析（`Parser`）、管道与重定向（`Pipeline`, `Redirection`）、内置指令（`cd`, `pwd`, `echo`, `export`）与同步执行（`sh`, `Shell.run`） | **已全面实装** |
@@ -8120,16 +8120,19 @@ CP 编译器的诊断错误码分为三大正交区间：
 
 ### 17.3 现代系统级语法规范与指针类型字典
 
-#### 17.3.1 禁止字段访问前冗余解引用 `.*.`
+#### 17.3.1 单级指针自动解引用与多级裸指针显式解引用
 
-在 CP 语言中，值类型、引用（`*T`）和裸指针（`*T!`）在访问成员字段与方法时**统一采用点号 `.` 直接访问**（编译器自动完成寻址与解引用）。严禁书写 Zig 遗留的 `ptr.*.field` 冗余解引用语法：
+在 CP 语言中，对于单级值类型、借用（`*T`）和单级裸指针（`*T!`），在访问成员字段与方法时**统一采用点号 `.` 直接访问**（编译器自动完成寻址与解引用，单级指针无需写 `.*.`）：
 
 ```typescript
-// ❌ 错误（编译器 E0107 拦截并提示修正）：
-in6.*.family = AF.INET6;
-
-// ✅ 正确：
+// 单级指针自动解引用：
+// ❌ 冗余写法：in6.*.family = AF.INET6;
+// ✅ 推荐标准写法：
 in6.family = AF.INET6;
+
+// 多级裸指针（如二级指针 pp: **User!）：
+// ✅ 显式逐级解引用后访问字段：
+pp.*.age = 45;
 ```
 
 #### 17.3.2 `pub` 与 `_` 极简规范

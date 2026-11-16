@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/event_loop/timer.cp
+// Upstream Sync: Refer to bun/src/event_loop/timer.zig for future upstream updates.
+// ============================================================================
 // lib/event_loop/timer.cp
 // High-performance intrusive binary min-heap timer system
 

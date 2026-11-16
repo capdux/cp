@@ -69,6 +69,11 @@ impl Codegen {
             || func.ident.sym == "__super_init"
             || func.ident.sym == "__super_release"
         {
+            if let Some(ret) = &func.return_type {
+                if *ret != Type::Void {
+                    return ReceiverMode::Static;
+                }
+            }
             return ReceiverMode::Mut;
         }
         if Self::block_contains_ident(&func.body, "this")
@@ -98,9 +103,8 @@ impl Codegen {
                     return ReceiverMode::ReadOnly;
                 }
             }
-            return ReceiverMode::Static;
         }
-        ReceiverMode::Static
+        ReceiverMode::ReadOnly
     }
 
     pub(crate) fn prepare_decorator_stmts(
@@ -383,8 +387,36 @@ impl Codegen {
         self.current_fn_zig_name = zig_name.clone();
         self.drop_flag_vars.clear();
         self.current_class_name = class_name.cloned();
-        self.current_receiver_mode = if class_name.is_some() {
-            Self::get_func_receiver_mode(func)
+        self.current_receiver_mode = if let Some(c) = class_name {
+            if self.value_classes.contains(c) {
+                Self::get_func_receiver_mode(func)
+            } else if func.is_static {
+                ReceiverMode::Static
+            } else if func.ident.sym == "init"
+                || func.ident.sym == "release"
+                || func.ident.sym == "__super_init"
+                || func.ident.sym == "__super_release"
+            {
+                if let Some(ret) = &func.return_type {
+                    if *ret != Type::Void {
+                        ReceiverMode::Static
+                    } else {
+                        ReceiverMode::Mut
+                    }
+                } else {
+                    ReceiverMode::Mut
+                }
+            } else if let Some(first) = func.params.first() {
+                if first.is_move {
+                    ReceiverMode::Move
+                } else if first.is_mut {
+                    ReceiverMode::Mut
+                } else {
+                    ReceiverMode::ReadOnly
+                }
+            } else {
+                ReceiverMode::ReadOnly
+            }
         } else {
             ReceiverMode::Static
         };
@@ -478,11 +510,7 @@ impl Codegen {
 
         if !func.is_async && !self.is_main {
             self.is_state_machine = false;
-            let zig_ret_ty = if self.is_beam_mode {
-                "anyerror!beam.Term".to_string()
-            } else {
-                ret_ty.clone()
-            };
+            let zig_ret_ty = ret_ty.clone();
             let mut params_str = String::new();
             self.locals.clear();
             self.moved_vars.clear();
@@ -560,12 +588,18 @@ impl Codegen {
                 }
                 let mapped_ty = match &p.ty {
                     Type::Ref(id) if self.trait_defs.contains_key(&id.sym) => "anytype".to_string(),
+                    Type::BorrowType { inner, .. } | Type::RawPtr { inner, .. } if matches!(&**inner, Type::Ref(id) if self.trait_defs.contains_key(&id.sym)) => {
+                        "anytype".to_string()
+                    }
                     Type::Ref(id)
                         if func.generic_params.iter().any(|gp| match gp {
                             GenericParam::Type { ident, .. } => ident.sym == id.sym,
                             _ => false,
                         }) =>
                     {
+                        "anytype".to_string()
+                    }
+                    Type::BorrowType { inner, .. } | Type::RawPtr { inner, .. } if matches!(&**inner, Type::Ref(id) if func.generic_params.iter().any(|gp| matches!(gp, GenericParam::Type { ident, .. } if ident.sym == id.sym))) => {
                         "anytype".to_string()
                     }
                     Type::CStr => {
@@ -700,12 +734,66 @@ impl Codegen {
             .unwrap();
             self.indent();
             if self.is_class_method {
-                let is_self_used = self.last_use_map.contains_key("self")
+                let mut is_self_used = self.current_next_callee.is_some()
+                    || self.last_use_map.contains_key("self")
                     || self.last_use_map.contains_key("this")
                     || self.last_use_map.contains_key("_")
                     || Self::block_contains_ident(&func.body, "self")
                     || Self::block_contains_ident(&func.body, "this")
                     || Self::block_contains_ident(&func.body, "_");
+                if !is_self_used {
+                    if let Some(c_name) = &self.current_class_name {
+                        if let Some(cls) = self.class_defs.get(c_name) {
+                            for f in &cls.fields {
+                                if Self::block_contains_ident(&func.body, &f.ident.sym) {
+                                    is_self_used = true;
+                                    break;
+                                }
+                            }
+                            if !is_self_used {
+                                for m in &cls.methods {
+                                    if Self::block_contains_ident(&func.body, &m.ident.sym) {
+                                        is_self_used = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if !is_self_used {
+                                if let Some(base_name) = &cls.extends {
+                                    if let Some(base_cls) = self.class_defs.get(&base_name.sym) {
+                                        for m in &base_cls.methods {
+                                            if Self::block_contains_ident(&func.body, &m.ident.sym)
+                                            {
+                                                is_self_used = true;
+                                                break;
+                                            }
+                                        }
+                                        for f in &base_cls.fields {
+                                            if Self::block_contains_ident(&func.body, &f.ident.sym)
+                                            {
+                                                is_self_used = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if !is_self_used {
+                                for tr_name in &cls.implements {
+                                    if let Some(tr) = self.trait_defs.get(&tr_name.sym) {
+                                        for tm in &tr.methods {
+                                            if Self::block_contains_ident(&func.body, &tm.ident.sym)
+                                            {
+                                                is_self_used = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
                 if !is_self_used {
                     self.writeln("_ = self;");
                 }
@@ -731,6 +819,10 @@ impl Codegen {
                     let is_used = mutable_copy_params.contains(&p.ident.sym)
                         || self.last_use_map.contains_key(&p.ident.sym)
                         || self.last_use_map.contains_key(emitted_name)
+                        || self
+                            .current_forward_params
+                            .iter()
+                            .any(|s| s == &p.ident.sym || s == emitted_name)
                         || Self::block_contains_ident(&func.body, &p.ident.sym)
                         || Self::block_contains_ident(&func.body, emitted_name)
                         || Self::code_contains_word(&zig_ret_ty, &p.ident.sym)
@@ -779,12 +871,6 @@ impl Codegen {
                     && !body_str.trim_end().ends_with("return .{ .ok = {} };")
                 {
                     self.writeln("return .{ .ok = {} };");
-                }
-            } else if self.is_beam_mode && !body_str.contains("return") {
-                if self.is_class_method {
-                    self.writeln(r#"return beam.Beam.makeAtom(self.env.?, "ok");"#);
-                } else {
-                    self.writeln("return 0;");
                 }
             }
             self.dedent();
@@ -925,6 +1011,7 @@ impl Codegen {
         self.writeln("} }");
         self.dedent();
         self.writeln("}");
+        self.is_state_machine = false;
     }
 
     pub(crate) fn emit_current_case(&mut self) {

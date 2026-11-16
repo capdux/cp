@@ -1,7 +1,7 @@
 import { print } from "cap:io";
 
 // 测试 CP 指针捕获与海象解包特性: if (*val := opt)
-fn main(): void {
+fn main() {
     let mut_val: i32? = 100;
 
     // 1. 测试 if (*val := mut_val) 指针捕获与就地修改
@@ -23,6 +23,6 @@ fn main(): void {
     }
 
     // 3. 测试赋值忽略 _ = ...
-    _ = mut_val;
+    * = mut_val;
     print("all ptr capture tests passed!");
 }

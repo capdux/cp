@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/event_loop/file_poll.cp
+// Upstream Sync: Refer to bun/src/event_loop/file_poll.zig for future upstream updates.
+// ============================================================================
 // lib/event_loop/file_poll.cp
 // Cross-platform I/O file descriptor poller based on std.posix.poll
 

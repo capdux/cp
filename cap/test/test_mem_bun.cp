@@ -13,7 +13,7 @@ import {
     WeakControlBlock,
 } from "cap:mem";
 
-fn main(): void {
+fn main() {
     test("1. StackFallbackAllocator<CAP> zero-heap stack fast-path & fallback tracking", () => {
         let sfa = StackFallbackAllocator<64>.init();
         expect_eq(sfa.stackRemaining(), 64);

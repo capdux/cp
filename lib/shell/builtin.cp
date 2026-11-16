@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/shell/builtin.cp
+// Upstream Sync: Refer to bun/src/shell/builtin.zig for future upstream updates.
+// ============================================================================
 // lib/shell/builtin.cp
 // Built-in command implementations for CP Shell (cap:shell)
 // Absorbed from Bun Shell builtins with pure CP semantics

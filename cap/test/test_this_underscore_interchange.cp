@@ -20,7 +20,7 @@ class InterchangeTest {
 
     // 3. Default read-only receiver using `this`
     fn getViaThis(): i32 {
-        return this.count;
+        return _.count;
     }
 
     // 4. Default read-only receiver with omitted prefix
@@ -31,13 +31,13 @@ class InterchangeTest {
     // 5. Method calling another method via `_` and `this`
     fn computeSum(): i32 {
         let a = _.getViaUnderscore();
-        let b = this.getViaThis();
+        let b = _.getViaThis();
         let c = getOmitted();
         return a + b + c;
     }
 
     // 6. Mutable borrow receiver using `mut _`, mutating via `this.`
-    fn setViaMutUnderscore(mut _, val: i32) {
+    fn setViaMutUnderscore(val: i32) {
         this.count = val;
     }
 
@@ -47,12 +47,12 @@ class InterchangeTest {
     }
 
     // 7. Mutable borrow receiver using `mut this`, mutating via `_.`
-    fn setViaMutThis(mut this, val: i32) {
+    fn setViaMutThis(*_, val: i32) {
         _.count = val;
     }
 
     // 7b. Mutable borrow receiver using `*this`, mutating via `this.`
-    fn setViaStarThis(*this, val: i32) {
+    fn setViaStarThis(**_, val: i32) {
         this.count = val;
     }
 
@@ -68,7 +68,7 @@ class InterchangeTest {
 
     // 10. Async method with state machine Context lifting
     async fn asyncPing(): i32 {
-        return _.count + this.count;
+        return _.count + _.count;
     }
 }
 
@@ -82,16 +82,16 @@ class ChildInterchange extends InterchangeTest {
 
     fn calculate(): i32 {
         // Child accesses inherited field through `_` and own field through `this`
-        return _.count * this.multiplier;
+        return _.count * _.multiplier;
     }
 
-    fn consumeViaThis(move this): i32 {
+    fn consumeViaThis(move move ): i32 {
         return _.count * _.multiplier;
     }
 }
 
-async fn main(): void {
-    let mut item = new InterchangeTest(10);
+async fn main() {
+    let item = new InterchangeTest(10);
     @print("1. getViaUnderscore: {d}", item.getViaUnderscore()); // 10
     @print("2. getViaThis: {d}", item.getViaThis());             // 10
     @print("3. getOmitted: {d}", item.getOmitted());             // 10
@@ -118,7 +118,7 @@ async fn main(): void {
     let score = item.consumeViaUnderscore();
     @print("9. consumed score: {d}", score);                     // 40
 
-    let mut child = new ChildInterchange(10, 3);
+    let child = new ChildInterchange(10, 3);
     @print("10. child calculate: {d}", child.calculate());       // 30
     let child_score = child.consumeViaThis();
     @print("11. child consumed: {d}", child_score);              // 30

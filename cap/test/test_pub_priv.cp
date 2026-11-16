@@ -9,21 +9,21 @@ class BankAccount {
         this.balance = initial_balance;
     }
 
-    pub fn deposit(*this, amount: i32): i32 {
+    pub fn deposit(**_, amount: i32): i32 {
         this.balance += amount;
         return this.get_balance();
     }
 
-    priv fn get_balance(this): i32 {
-        return this.balance;
+    priv fn get_balance(): i32 {
+        return _.balance;
     }
 
-    pub fn check_balance(this): i32 {
-        return this.get_balance();
+    pub fn check_balance(): i32 {
+        return _.get_balance();
     }
 }
 
-pub fn main(): void {
+pub fn main() {
     let acc = new BankAccount("Alice", 100);
     print(acc.owner);
     let b1 = acc.check_balance();

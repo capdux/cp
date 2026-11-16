@@ -10,7 +10,7 @@ pub fn testStartsWith(name: []const u8): bool {
     return std.mem.startsWith(u8, name, "task_");
 }
 
-async fn main(): void {
+async fn main() {
     let name1 = "task_solve_reply";
     let name2 = "other_name";
 

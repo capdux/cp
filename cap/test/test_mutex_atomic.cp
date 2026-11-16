@@ -9,7 +9,7 @@ struct State {
     value: i32,
 }
 
-fn main(): void {
+fn main() {
     test("Mutex<T> basic withLock, lock, tryLock", () => {
         let mu = Mutex(Counter { count: 0 });
         mu.withLock((*s) => {

@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/event_loop/
+// Upstream Sync: Refer to bun/src/event_loop/ for future upstream updates.
+// ============================================================================
 // lib/event/index.cp
 // Unified Event Loop & EventEmitter Subsystem (cap:event / cap:event_loop / cap:events)
 // High-performance monotonic timer heap, 16-byte lock-free tasks, deferred microtasks, I/O poller & EventEmitter

@@ -1,7 +1,7 @@
 import { Agent } from "cap:beam";
 
 class ProductionAgent extends Agent {
-    async fn onMessage(this, action_id: u32, payload: any): void {
+    async fn onMessage(action_id: u32, payload: string) {
         __zig__ { _ = ctx.payload; }
         @print("Agent ID: {d}", this.id);
         const test_path = "./prod_test.txt";
@@ -10,6 +10,6 @@ class ProductionAgent extends Agent {
         @print("Read complete: {s}", content);
     }
 }
-fn main(): void {
+fn main() {
     @print("CP Standalone entry point.");
 }

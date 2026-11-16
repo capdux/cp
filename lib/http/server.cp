@@ -52,9 +52,6 @@ pub fn json(data: auto): Response {
  * 极速 HTTP Server (对标 Bun.serve)
  */
 pub fn serve(config: auto): HttpServer {
-    zig {
-        const Server = HttpServer;
-    }
     if (@is_nest) {
         @yield_to_beam(@intFromEnum(SystemAction.HTTP_SERVE), config);
         let s = new HttpServer(3000, 0);

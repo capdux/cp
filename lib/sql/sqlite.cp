@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/sql/sqlite.cp
+// Upstream Sync: Refer to bun/src/sql/sqlite.zig for future upstream updates.
+// ============================================================================
 // lib/sql/sqlite.cp
 // High-performance embedded SQLite database engine wrapper
 // Pure CP modern syntax with RAII cleanup and zero-copy queries

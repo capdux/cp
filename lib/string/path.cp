@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/string/path.cp
+// Upstream Sync: Refer to bun/src/string/path.zig for future upstream updates.
+// ============================================================================
 // lib/string/path.cp
 // PathString: Lightweight zero-alloc path slice view
 // Absorbed from Bun src/string/PathString.cp with pure CP semantics

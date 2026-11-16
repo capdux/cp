@@ -5,7 +5,7 @@ const std = @import("std");
 
 fn testStaticRouting(): !void {
     const allocator = std.heap.page_allocator;
-    var router = Router(string).init(allocator);
+    let router = Router(string).init(allocator);
     router.get("/", "home");
     router.get("/users", "users_list");
     router.post("/users", "create_user");
@@ -37,7 +37,7 @@ fn testStaticRouting(): !void {
 
 fn testDynamicParameters(): !void {
     const allocator = std.heap.page_allocator;
-    var router = Router(string).init(allocator);
+    let router = Router(string).init(allocator);
     router.get("/users/:id", "get_user");
     router.get("/users/:id/posts/:postId", "get_user_post");
     router.get("/org/[orgId]/members/[memberId]", "get_member");
@@ -65,7 +65,7 @@ fn testDynamicParameters(): !void {
 
 fn testWildcardCatchAll(): !void {
     const allocator = std.heap.page_allocator;
-    var router = Router(string).init(allocator);
+    let router = Router(string).init(allocator);
     router.get("/static/*filepath", "serve_static");
     router.get("/docs/[...docpath]", "serve_doc");
     router.all("/health", "health_check");
@@ -92,7 +92,7 @@ fn testWildcardCatchAll(): !void {
     expect_eq(std.mem.eql(u8, m_post.?.handler, "health_check"), true);
 }
 
-fn main(): void {
+fn main() {
     test("Static route matching and method discrimination", () => {
         try testStaticRouting();
     });

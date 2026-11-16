@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/collections/bit_set.cp
+// Upstream Sync: Refer to bun/src/collections/bit_set.zig for future upstream updates.
+// ============================================================================
 // lib/col/bit_set.cp
 // Multi-word static bit set (ArrayBitSet / BitSet256) with hardware @ctz/@popCount acceleration
 // Absorbed from Bun src/collections/bit_set.cp

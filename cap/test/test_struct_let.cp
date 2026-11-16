@@ -8,7 +8,7 @@ const S = struct {
     }
 };
 
-pub fn main(): void {
+pub fn main() {
     let res: i32 = S.testFn();
     if (res != 2) {
         print("Test failed: res != 2\n");

@@ -4,7 +4,7 @@ import { Base64 } from "cap:encoding";
 const std = @import("std");
 
 fn testBase64Standard(): !void {
-    var out_buf: [128]u8 = undefined;
+    let out_buf: [128]u8 = undefined;
 
     // 1 byte: "M" -> "TQ=="
     const len1 = Base64.encode(&out_buf, "M");
@@ -22,7 +22,7 @@ fn testBase64Standard(): !void {
     const msg = "Hello, CP Concurrency!";
     const enc_len = Base64.encode(&out_buf, msg);
 
-    var dec_buf: [128]u8 = undefined;
+    let dec_buf: [128]u8 = undefined;
     const dec_len = try Base64.decode(&dec_buf, out_buf[0..enc_len]);
     expect_eq(std.mem.eql(u8, dec_buf[0..dec_len], msg), true);
 }
@@ -61,7 +61,7 @@ fn testBase64URLSafe(): !void {
     expect_eq(std.mem.eql(u8, decoded, binary_data), true);
 }
 
-fn main(): void {
+fn main() {
     test("Base64 standard encoding and decoding with padding", () => {
         try testBase64Standard();
     });

@@ -5,7 +5,7 @@ import { URL, URLSearchParams } from "cap:url";
 const std = @import("std");
 
 fn testPosixPath(): !void {
-    var buf: [1024]u8 = undefined;
+    let buf: [1024]u8 = undefined;
 
     // Basename
     expect_eq(std.mem.eql(u8, PosixPath.basename("/var/log/syslog", null), "syslog"), true);
@@ -53,7 +53,7 @@ fn testWindowsPath(): !void {
 
 fn testURLSearchParams(): !void {
     const allocator = std.heap.page_allocator;
-    var params = URLSearchParams.parse("?name=alice&role=engineer&team=deepmind", allocator);
+    let params = URLSearchParams.parse("?name=alice&role=engineer&team=deepmind", allocator);
     defer params.deinit();
 
     expect_eq(params.count(), 3);
@@ -69,14 +69,14 @@ fn testURLSearchParams(): !void {
     expect_eq(params.count(), 2);
     expect_eq(params.has("team"), false);
 
-    var buf: [1024]u8 = undefined;
+    let buf: [1024]u8 = undefined;
     const qs = params.toString(&buf);
     expect_eq(std.mem.eql(u8, qs, "name=alice&role=architect"), true);
 }
 
 fn testURLParsing(): !void {
     const allocator = std.heap.page_allocator;
-    var u = try URL.parse("https://agent:secret@example.com:8080/api/v1/query?sort=desc#results", allocator);
+    let u = try URL.parse("https://agent:secret@example.com:8080/api/v1/query?sort=desc#results", allocator);
     defer u.deinit();
 
     expect_eq(std.mem.eql(u8, u.protocol, "https:"), true);
@@ -94,7 +94,7 @@ fn testURLParsing(): !void {
     expect_eq(std.mem.eql(u8, u.searchParams.get("sort").?, "desc"), true);
 }
 
-fn main(): void {
+fn main() {
     test("POSIX path operations (basename, dirname, extname, isAbsolute, normalize, join)", () => {
         try testPosixPath();
     });

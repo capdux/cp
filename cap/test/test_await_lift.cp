@@ -5,7 +5,7 @@ async fn compute(): string {
     return "CP-BEAM Master";
 }
 
-async fn test_lifting(): void {
+async fn test_lifting() {
     @print("--- Test Context Lifting ---");
     // Local variables declared before await
     const a: i32 = 100;
@@ -36,6 +36,6 @@ async fn test_lifting(): void {
     }
 }
 
-fn main(): void {
+fn main() {
     @spawn(test_lifting);
 }

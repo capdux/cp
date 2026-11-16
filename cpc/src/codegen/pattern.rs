@@ -1039,6 +1039,8 @@ impl Codegen {
             Pattern::Enum(ep) if ep.fields.is_none() && ep.tuple_pats.is_none() => {
                 if ep.enum_name.sym.is_empty() {
                     format!(".{}", ep.variant_name.sym)
+                } else if ep.enum_name.sym == "err" || ep.enum_name.sym == "error" {
+                    format!("error.{}", ep.variant_name.sym)
                 } else {
                     format!("{}.{}", ep.enum_name.sym, ep.variant_name.sym)
                 }
@@ -1115,6 +1117,19 @@ impl Codegen {
         let disc_cp_ty = self.infer_cp_type(&m.disc);
         self.check_switch_exhaustiveness(m, disc_cp_ty.as_ref());
 
+        let is_result_disc = matches!(
+            disc_cp_ty,
+            Some(Type::ResultType { .. }) | Some(Type::ErrorUnion(_))
+        ) || m.arms.iter().any(|a| match &a.pat {
+            Pattern::Err(_) => true,
+            Pattern::Enum(ep) => {
+                ep.enum_name.sym == "err"
+                    || ep.enum_name.sym == "error"
+                    || self.error_sets.contains_key(&ep.enum_name.sym)
+            }
+            _ => false,
+        });
+
         let is_type_switch = matches!(&disc_cp_ty, Some(Type::Ref(id)) if id.sym == "type")
             || m.arms.iter().any(|a| Self::pattern_contains_type(&a.pat));
         if is_type_switch && Self::is_simple_literal_switch(m) {
@@ -1188,7 +1203,7 @@ impl Codegen {
             return if is_expr { format!("({})", out) } else { out };
         }
 
-        if Self::is_simple_literal_switch(m) {
+        if !is_result_disc && Self::is_simple_literal_switch(m) {
             let disc_code = self.generate_expr(&m.disc);
             let mut arms_code = String::new();
             let mut has_else = false;
@@ -1229,6 +1244,8 @@ impl Codegen {
                     Pattern::Enum(ep) if ep.fields.is_none() => {
                         let base = if ep.enum_name.sym.is_empty() {
                             format!(".{}", ep.variant_name.sym)
+                        } else if ep.enum_name.sym == "err" || ep.enum_name.sym == "error" {
+                            format!("error.{}", ep.variant_name.sym)
                         } else {
                             format!("{}.{}", ep.enum_name.sym, ep.variant_name.sym)
                         };
@@ -1272,8 +1289,17 @@ impl Codegen {
                             format!("{}{} =>", inline_prefix, id.sym)
                         } else {
                             has_else = true;
-                            bound_ident = Some(id.sym.clone());
-                            format!("else => |{}|", id.sym)
+                            let mut body_vars = std::collections::HashSet::new();
+                            crate::ast_visitor::find_referenced_vars_in_stmt(
+                                &arm.body,
+                                &mut body_vars,
+                            );
+                            if body_vars.contains(&id.sym) {
+                                bound_ident = Some(id.sym.clone());
+                                format!("else => |{}|", id.sym)
+                            } else {
+                                "else =>".to_string()
+                            }
                         }
                     }
                     other => {
@@ -1283,9 +1309,18 @@ impl Codegen {
                             if cap.sym == "_" {
                                 "".to_string()
                             } else {
-                                bound_ident = Some(cap.sym.clone());
-                                let ptr_prefix = if arm.is_capture_ptr { "*" } else { "" };
-                                format!(" |{}{}|", ptr_prefix, cap.sym)
+                                let mut body_vars = std::collections::HashSet::new();
+                                crate::ast_visitor::find_referenced_vars_in_stmt(
+                                    &arm.body,
+                                    &mut body_vars,
+                                );
+                                if body_vars.contains(&cap.sym) {
+                                    bound_ident = Some(cap.sym.clone());
+                                    let ptr_prefix = if arm.is_capture_ptr { "*" } else { "" };
+                                    format!(" |{}{}|", ptr_prefix, cap.sym)
+                                } else {
+                                    "".to_string()
+                                }
                             }
                         } else {
                             "".to_string()
@@ -1367,11 +1402,6 @@ impl Codegen {
         let disc_code = self.generate_expr(&m.disc);
         let blk_label = format!("__sw_blk_{}", sw_id);
         let disc_var = format!("__disc_{}", sw_id);
-
-        let is_result_disc = matches!(
-            disc_cp_ty,
-            Some(Type::ResultType { .. }) | Some(Type::ErrorUnion(_))
-        ) || m.arms.iter().any(|a| matches!(a.pat, Pattern::Err(_)));
 
         let (ok_cp_ty, err_cp_ty, err_variants) = match &disc_cp_ty {
             Some(Type::ResultType { ok, err }) => {
@@ -1671,7 +1701,9 @@ impl Codegen {
                 self.generate_expr(err_inner)
             }
             Expr::Ident(id)
-                if !self.locals.contains_key(&id.sym) && !self.is_class_field(&id.sym) =>
+                if !self.locals.contains_key(&id.sym)
+                    && !self.var_cp_types.contains_key(&id.sym)
+                    && !self.is_class_field(&id.sym) =>
             {
                 if let Some(dst_err) = target_err {
                     let dst_zig = self.map_error_type(dst_err);

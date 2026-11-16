@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/event_loop/concurrent_task.cp
+// Upstream Sync: Refer to bun/src/event_loop/concurrent_task.zig for future upstream updates.
+// ============================================================================
 // lib/event/concurrent_task.cp
 // 16-byte lock-free cross-thread task representation and thread-safe queue
 

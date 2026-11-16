@@ -34,17 +34,17 @@ fn phr_parse_req(
 // 3. 通过 @c { ... } 批量导入 C 函数，使用 unsafe 裸指针与后缀可选指针 (*T!?)
 @c {
     fn us_create_loop(
-        hint: *any!?,
-        wakeup_cb: *any!?,
-        pre_cb: *any!?,
-        post_cb: *any!?,
+        hint: *auto!?,
+        wakeup_cb: *auto!?,
+        pre_cb: *auto!?,
+        post_cb: *auto!?,
         ext_size: u32,
     ): *us_loop_t!?;
 
-    fn us_loop_free(loop: *us_loop_t!?): void;
+    fn us_loop_free(loop: *us_loop_t!?);
 }
 
-fn test_pico_http(): void {
+fn test_pico_http() {
     @print("Testing picohttpparser HTTP parsing in pure CP via @c(\"phr_parse_request\")...");
     let req: cstr = "POST /api/v1/agent/chat HTTP/1.1\r\nHost: 127.0.0.1:8080\r\nContent-Type: application/json\r\nContent-Length: 18\r\n\r\n{\"message\":\"ping\"}";
     let req_len: usize = req.len;
@@ -89,7 +89,7 @@ fn test_pico_http(): void {
     }
 }
 
-fn test_usockets_event_loop(): void {
+fn test_usockets_event_loop() {
     @print("Testing uSockets Event Loop in pure CP via @c block...");
     let loop = us_create_loop(null, null, null, null, 0);
     if (loop != null) {
@@ -101,7 +101,7 @@ fn test_usockets_event_loop(): void {
     }
 }
 
-export fn main(): void {
+export fn main() {
     test_pico_http();
     test_usockets_event_loop();
     @print("ALL PURE CP USOCKETS & PICOHTTPPARSER TESTS PASSED!");

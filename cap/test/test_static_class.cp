@@ -29,7 +29,7 @@ static struct StringHelper {
     }
 }
 
-fn main(): void {
+fn main() {
     test("static class methods and fields without instance receiver", () => {
         expect_eq(MathUtils.square(6), 36);
         expect_eq(MathUtils.add(10, 25), 35);

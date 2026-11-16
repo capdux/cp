@@ -13,7 +13,7 @@ err MyError {
     }
 
     fn getId(): i32 {
-        return self.id;
+        return _.id;
     }
 }
 

@@ -23,7 +23,7 @@ pub class MaxBuf {
         _.kind = MaxBufKind.Custom;
     }
 
-    pub fn withKind(limit: i64, kind: MaxBufKind): MaxBuf {
+    pub static fn withKind(limit: i64, kind: MaxBufKind): MaxBuf {
         let mb = new MaxBuf();
         mb.remaining_bytes = limit;
         mb.initial_bytes = limit;

@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/shell/lexer.cp
+// Upstream Sync: Refer to bun/src/shell/lexer.zig for future upstream updates.
+// ============================================================================
 // lib/shell/lexer.cp
 // Fast lexical analyzer for CP Shell (cap:shell)
 // Absorbed from Bun Shell lexer architecture with pure CP semantics

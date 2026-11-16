@@ -83,7 +83,7 @@ fn main() {
     let h: hostent_int = 1024;
     let addr: struct_sockaddr = undefined;
     let p_addr: &std.posix.sockaddr = &addr;
-    _ = &p_addr;
+    * = &p_addr;
     if (s != 42 || h != 1024) {
         print("FAIL: conditional type variables");
         return;

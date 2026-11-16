@@ -6,7 +6,7 @@ class Config {
     host: string,
 }
 
-fn main(): void {
+fn main() {
     @print("--- JSON Module Test ---");
     
     // Test Parse

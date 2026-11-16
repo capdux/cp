@@ -8,14 +8,14 @@ pub struct MyContext {
     pub received_timeouts: i32,
 }
 
-fn my_user_callback(ctx: *MyContext, status: i32, timeouts: i32, hostent: *!?): void {
+fn my_user_callback(ctx: *MyContext, status: i32, timeouts: i32, hostent: *!?) {
     ctx.received_status = status;
     ctx.received_timeouts = timeouts;
 }
 
 // 使用统一的 @comptime 元编程注解修饰编译期参数，使用标准 auto 语法
 pub fn hostCallbackWrapper(@comptime Type: type, @comptime callback: auto): ares_host_callback {
-    @c fn handle(ctx: *!?, status: i32, timeouts: i32, hostent: *!?): void {
+    @c fn handle(ctx: *!?, status: i32, timeouts: i32, hostent: *!?) {
         unsafe {
             // 使用 CP 规范的 'as' 显式强转，编译器自动安全注入底层 @ptrCast(@alignCast(...))
             let this_ptr = ctx.? as *Type;
@@ -26,7 +26,7 @@ pub fn hostCallbackWrapper(@comptime Type: type, @comptime callback: auto): ares
     return &handle;
 }
 
-fn main(): void {
+fn main() {
     // 遵循 CP 哲学：'let' 变量默认可变，废除冗余的 'mut'
     let my_ctx = MyContext {
         received_status: 0,

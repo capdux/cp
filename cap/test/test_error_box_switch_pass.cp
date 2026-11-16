@@ -240,8 +240,8 @@ fn main(): void {
     @print("5. ? return default => {s} | {s} | {s}", early1, early2, early3);
 
     // Inline `catch` + pure `??` null coalescing
-    let c1 = (readFile("secret.txt") catch err => "caught_secret") ?? "null_coalesced";
-    let c2 = (readFile("empty.txt") catch err => "caught_err") ?? "null_coalesced";
+    let c1 = (readFile("secret.txt") catch e => "caught_secret") ?? "null_coalesced";
+    let c2 = (readFile("empty.txt") catch e => "caught_err") ?? "null_coalesced";
     @print("6. catch + ?? => {s} | {s}", c1, c2);
 
     // --- C. Anonymous Error Set, Declarative `from`, and `try { ... } catch` ---

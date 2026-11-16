@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/collections/bounded_array.cp
+// Upstream Sync: Refer to bun/src/collections/bounded_array.zig for future upstream updates.
+// ============================================================================
 // lib/collections/bounded_array.cp
 // Zero-heap stack-allocated bounded array with compile-time capacity
 // Absorbed from Bun src/collections/bounded_array.cp

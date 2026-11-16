@@ -5,11 +5,11 @@ class BufferNode {
     tag: string;
 
     fn get_val(): i32 {
-        return this.val;
+        return _.val;
     }
 }
 
-pub fn main(): void {
+pub fn main() {
     print("Testing Scoped Arena (P0 Item 3)...");
 
     // 1. Basic arena statement block

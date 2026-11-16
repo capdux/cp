@@ -18,7 +18,7 @@ pub fn testRestDestructure(): i32 {
     return first + i32(rest.len);
 }
 
-fn main(): void {
+fn main() {
     test("anonymous struct tuple destructuring (positional and named)", () => {
         const res1 = testObjDestructure();
         expect_eq(res1, 42);

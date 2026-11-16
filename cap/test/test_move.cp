@@ -1,6 +1,6 @@
 import { print } from "cap:io";
 
-async fn test_move(): void {
+async fn test_move() {
     let big_data = "Super heavy string";
     
     @spawn(() => {
@@ -12,6 +12,6 @@ async fn test_move(): void {
     @print("Can I use it? {s}", big_data);
 }
 
-fn main(): void {
+fn main() {
     @spawn(test_move);
 }

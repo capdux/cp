@@ -5,7 +5,7 @@ fn add_num(a: i32, b: i32): i32 {
     return a + b;
 }
 
-fn main(): void {
+fn main() {
     // Error: Standalone '.' used outside pipeline operator
     let invalid = add_num(., 5);
 }

@@ -11,13 +11,13 @@ fn test_wyhash(): !void {
 }
 
 fn test_futex(): !void {
-    var val: std.atomic.Value(u32) = .{ .raw = 100 };
+    let val: std.atomic.Value(u32) = .{ .raw = 100 };
     Futex.wake(&val, 1);
     expect_eq(val.raw, 100);
 }
 
 fn test_mutex(): !void {
-    var mu: Mutex = .{};
+    let mu: Mutex = .{};
     defer mu.deinit();
 
     expect_eq(mu.tryLock(), true);
@@ -28,7 +28,7 @@ fn test_mutex(): !void {
 }
 
 fn test_wait_group(): !void {
-    var wg: WaitGroup = .{};
+    let wg: WaitGroup = .{};
     defer wg.deinit();
 
     wg.add(2);
@@ -38,7 +38,7 @@ fn test_wait_group(): !void {
 }
 
 fn test_mpmc(): !void {
-    var q = MpmcQueue(i32, 4).init();
+    let q = MpmcQueue(i32, 4).init();
 
     expect_eq(q.tryPush(10), true);
     expect_eq(q.tryPush(20), true);
@@ -55,7 +55,7 @@ fn test_mpmc(): !void {
 
 fn test_channel(): !void {
     const allocator = std.heap.page_allocator;
-    var ch = Channel(i32).init(allocator, 2)?;
+    let ch = Channel(i32).init(allocator, 2)?;
     defer ch.deinit();
 
     ch.send(100)?;
@@ -69,7 +69,7 @@ fn test_channel(): !void {
 
 fn test_concurrent_map(): !void {
     const allocator = std.heap.page_allocator;
-    var map = ConcurrentMap(i32, i32).init(allocator);
+    let map = ConcurrentMap(i32, i32).init(allocator);
     defer map.deinit();
 
     map.put(1, 10)?;
@@ -86,12 +86,12 @@ fn test_concurrent_map(): !void {
 fn test_arc_slice(): !void {
     const allocator = std.heap.page_allocator;
     const data = "hello cp";
-    var arc = ArcSlice(u8).init(allocator, data)?;
+    let arc = ArcSlice(u8).init(allocator, data)?;
 
     expect_eq(arc.len(), 8);
     expect_eq(arc.refCount(), 1);
 
-    var cloned = arc.clone();
+    let cloned = arc.clone();
     expect_eq(arc.refCount(), 2);
     expect_eq(cloned.refCount(), 2);
     cloned.release();
@@ -101,7 +101,7 @@ fn test_arc_slice(): !void {
     expect_eq(arc.get(1), 'e');
 }
 
-fn main(): void {
+fn main() {
     test("Wyhash deterministic 64-bit hashing", () => {
         test_wyhash()?;
     });

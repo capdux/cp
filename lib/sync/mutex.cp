@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/threading/mutex.cp
+// Upstream Sync: Refer to bun/src/threading/mutex.zig for future upstream updates.
+// ============================================================================
 // Mutex synchronization primitive in CP
 // Ported from Bun.js core threading architecture
 import { Futex } from "./futex";

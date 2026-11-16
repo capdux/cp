@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/shell/parser.cp
+// Upstream Sync: Refer to bun/src/shell/parser.zig for future upstream updates.
+// ============================================================================
 // lib/shell/parser.cp
 // AST nodes and parser for CP Shell (cap:shell)
 // Absorbed from Bun Shell parser architecture with pure CP semantics

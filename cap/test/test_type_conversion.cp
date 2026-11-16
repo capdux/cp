@@ -44,7 +44,7 @@ fn test_layer2_explicit_casts() {
 }
 
 fn test_layer3_raw_pointers() {
-    let mut num: i32 = 42;
+    let num: i32 = 42;
     unsafe {
         let p: *i32! = &num as *i32!;
         let raw_u8: *u8! = p as *u8!;

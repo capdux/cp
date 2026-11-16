@@ -27,7 +27,7 @@ fn testMethod(): !void {
 
 fn testHeaders(): !void {
     const allocator = std.heap.page_allocator;
-    var headers = Headers.init(allocator);
+    let headers = Headers.init(allocator);
     defer headers.deinit();
 
     headers.append("Content-Type", "application/json");
@@ -52,7 +52,7 @@ fn testHeaders(): !void {
 }
 
 fn testETag(): !void {
-    var buf: [32]u8 = undefined;
+    let buf: [32]u8 = undefined;
     const tag1 = ETag.generate("Hello CP World", &buf);
     expect_eq(tag1.len > 2, true);
 
@@ -82,7 +82,7 @@ fn testMimeType(): !void {
     expect_eq(std.mem.eql(u8, MimeType.fromPath("unknown.xyz"), "application/octet-stream"), true);
 }
 
-fn main(): void {
+fn main() {
     test("HTTP Method enumeration and attributes", () => {
         testMethod()?;
     });

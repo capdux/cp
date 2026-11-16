@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/ws/
+// Upstream Sync: Refer to bun/src/ws/ for future upstream updates.
+// ============================================================================
 // lib/ws/index.cp
 export { Opcode, CloseCode } from "./opcode";
 export { Mask } from "./mask";

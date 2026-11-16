@@ -9,18 +9,18 @@ class Player {
     }
 }
 
-async fn main(): void {
+async fn main() {
     // -------------------------------------------------------------
     // 1. Range Iteration (0..N and 1..=N)
     // -------------------------------------------------------------
     let sum_range = 0;
-    for i of 0..5 {
+    for (i of 0..5) {
         sum_range = sum_range + i;
     }
     expect_eq(sum_range, 10);
 
     let sum_inclusive = 0;
-    for i of 1..=5 {
+    for (i of 1..=5) {
         sum_inclusive = sum_inclusive + i;
     }
     expect_eq(sum_inclusive, 15);
@@ -29,7 +29,7 @@ async fn main(): void {
     let start = 3;
     let end = 7;
     let sum_dynamic = 0;
-    for i of start..end {
+    for (i of start..end) {
         sum_dynamic = sum_dynamic + i;
     }
     expect_eq(sum_dynamic, 18);
@@ -48,7 +48,7 @@ async fn main(): void {
     // -------------------------------------------------------------
     let nums: i32[] = [10, 20, 30];
     let sum_nums = 0;
-    for x of nums {
+    for (x of nums) {
         sum_nums = sum_nums + x;
     }
     expect_eq(sum_nums, 60);
@@ -69,7 +69,7 @@ async fn main(): void {
     __zig__ {
         ctx.mut_list = try ctx.arena.?.allocator().dupe(i32, ctx.mut_list);
     }
-    for *x of mut_list {
+    for (*x of mut_list) {
         x = x * 10;
     }
     expect_eq(mut_list[0], 10);
@@ -91,7 +91,7 @@ async fn main(): void {
     // -------------------------------------------------------------
     let move_list: i32[] = [100, 200, 300];
     let sum_moved = 0;
-    for move x of move_list {
+    for (move x of move_list) {
         sum_moved = sum_moved + x;
     }
     expect_eq(sum_moved, 600);
@@ -113,7 +113,7 @@ async fn main(): void {
         new Player(2, 200)
     ];
     let total_score = 0;
-    for { id, score } of players {
+    for (){ id, score } of players {
         total_score = total_score + score;
     }
     expect_eq(total_score, 300);

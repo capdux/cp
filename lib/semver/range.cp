@@ -15,14 +15,14 @@ pub const Comparator = struct {
     op: Op = .any,
     version: Version = .{},
 
-    pub fn satisfies(v: Version): bool {
-        return switch (_.op) {
+    pub fn satisfies(self: Comparator, v: Version) bool {
+        return switch (self.op) {
             .any => true,
-            .eq => v.eql(_.version),
-            .lt => v.lt(_.version),
-            .lte => v.lte(_.version),
-            .gt => v.gt(_.version),
-            .gte => v.gte(_.version),
+            .eq => v.eql(self.version),
+            .lt => v.lt(self.version),
+            .lte => v.lte(self.version),
+            .gt => v.gt(self.version),
+            .gte => v.gte(self.version),
         };
     }
 };

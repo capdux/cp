@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/threading/concurrent_map.cp
+// Upstream Sync: Refer to bun/src/threading/concurrent_map.zig for future upstream updates.
+// ============================================================================
 // Striped concurrent hash map in CP
 // Lock contention partitioned across stripes using Wyhash
 import { Mutex } from "./mutex";

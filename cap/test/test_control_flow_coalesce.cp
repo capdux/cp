@@ -19,8 +19,8 @@ fn is_positive(val: i32): bool {
 }
 
 fn test_opt_coalesce(): i32 {
-    let mut sum: i32 = 0;
-    let mut i: i32 = -2;
+    let sum: i32 = 0;
+    let i: i32 = -2;
 
     // 1. ?? continue
     while (i <= 3) {
@@ -35,10 +35,10 @@ fn test_opt_coalesce(): i32 {
     }
 
     // 2. ?? break
-    let mut count: i32 = 0;
-    let mut j: i32 = 1;
+    let count: i32 = 0;
+    let j: i32 = 1;
     while (j < 10) {
-        let mut cur: i32 = -1;
+        let cur: i32 = -1;
         if (j < 4) {
             cur = j;
         }
@@ -55,8 +55,8 @@ fn test_opt_coalesce(): i32 {
 }
 
 fn test_err_coalesce(): i32 {
-    let mut sum: i32 = 0;
-    let mut i: i32 = -2;
+    let sum: i32 = 0;
+    let i: i32 = -2;
 
     // 1. ? continue
     while (i <= 3) {
@@ -71,10 +71,10 @@ fn test_err_coalesce(): i32 {
     }
 
     // 2. ? break
-    let mut count: i32 = 0;
-    let mut j: i32 = 1;
+    let count: i32 = 0;
+    let j: i32 = 1;
     while (j < 10) {
-        let mut cur: i32 = -1;
+        let cur: i32 = -1;
         if (j < 4) {
             cur = j;
         }
@@ -91,8 +91,8 @@ fn test_err_coalesce(): i32 {
 }
 
 fn test_logical_or_guards(): i32 {
-    let mut sum: i32 = 0;
-    let mut i: i32 = -2;
+    let sum: i32 = 0;
+    let i: i32 = -2;
 
     // 1. || continue
     while (i <= 3) {
@@ -106,8 +106,8 @@ fn test_logical_or_guards(): i32 {
     }
 
     // 2. || break
-    let mut count: i32 = 0;
-    let mut j: i32 = 1;
+    let count: i32 = 0;
+    let j: i32 = 1;
     while (j < 10) {
         let cur = j;
         j += 1;

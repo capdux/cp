@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/shell/exec.cp
+// Upstream Sync: Refer to bun/src/shell/exec.zig for future upstream updates.
+// ============================================================================
 // lib/shell/exec.cp
 // Pipeline execution and process management for CP Shell (cap:shell)
 // Absorbed from Bun Shell interpreter and subproc with pure CP semantics

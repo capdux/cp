@@ -6,7 +6,7 @@ import { Agent } from "cap:beam";
 // Multi-library test suite
 
 class ComplexAgent extends Agent {
-    async fn onMessage(this, action_id: u32, payload: any): void {
+    async fn onMessage(action_id: u32, payload: string) {
         __zig__ { _ = ctx.payload; }
         @print("Agent received action {d}", action_id);
         
@@ -18,6 +18,6 @@ class ComplexAgent extends Agent {
         @print("HTTP Test OK: {s}", res.text());
     }
 }
-fn main(): void {
+fn main() {
     @print("--- CP SDK Multi-Library Test Run ---");
 }

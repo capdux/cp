@@ -107,8 +107,8 @@ pub struct Socks5Codec {
     }
 
     /// Verifies a 2-byte SOCKS5 server greeting reply (`[0x05, 0x00]`).
-    pub static fn verifyGreetingReply(reply: []const u8): bool {
-        return reply.len >= 2 && reply[0] == 0x05 && reply[1] == 0x00;
+    pub static fn verifyGreetingReply(reply_buf: []const u8): bool {
+        return reply_buf.len >= 2 && reply_buf[0] == 0x05 && reply_buf[1] == 0x00;
     }
 
     /// Encodes a 10-byte SOCKS5 CONNECT request to an IPv4 address and port.
@@ -151,7 +151,7 @@ pub struct Socks5Codec {
     }
 
     /// Verifies a SOCKS5 CONNECT reply (`VER == 0x05` and `REP == 0x00` succeeded).
-    pub static fn verifyConnectReply(reply: []const u8): bool {
-        return reply.len >= 4 && reply[0] == 0x05 && reply[1] == 0x00;
+    pub static fn verifyConnectReply(reply_buf: []const u8): bool {
+        return reply_buf.len >= 4 && reply_buf[0] == 0x05 && reply_buf[1] == 0x00;
     }
 }

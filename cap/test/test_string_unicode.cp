@@ -11,7 +11,7 @@ import {
     StringEscape,
 } from "cap:string";
 
-fn main(): void {
+fn main() {
     test("1. SimdScanner 16-byte @Vector(16, u8) ASCII & byte scanning", () => {
         const ascii_text = "0123456789abcdef_hello_simd_world!";
         expect_eq(SimdScanner.isAscii(ascii_text), true);
@@ -100,9 +100,9 @@ fn main(): void {
         sb.count("cap.dev");
         sb.count("/v1/string");
         sb.allocate();
-        _ = sb.append("https://");
-        _ = sb.append("cap.dev");
-        _ = sb.append("/v1/string");
+        * = sb.append("https://");
+        * = sb.append("cap.dev");
+        * = sb.append("/v1/string");
         expect_eq(sb.slice(), "https://cap.dev/v1/string");
         sb.release();
     });

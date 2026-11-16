@@ -11,7 +11,7 @@ struct Resource {
         };
     }
 
-    pub fn release(this): void {
+    pub fn release(*_) {
         this.is_released = true;
     }
 }
@@ -20,7 +20,7 @@ fn consume(own res: Resource): i32 {
     return res.id * 2;
 }
 
-pub fn main(): void {
+pub fn main() {
     let r1 = Resource.create(42);
     // 使用 own 关键字进行独占所有权转移
     let val = consume(own r1);

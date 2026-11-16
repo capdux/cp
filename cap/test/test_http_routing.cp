@@ -16,7 +16,7 @@ fn handle(req: Request): Response {
     return not_found;
 }
 
-fn main(): void {
+fn main() {
     let server = serve({
         port: 8130,
         fetch: handle

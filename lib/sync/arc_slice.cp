@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/threading/arc_slice.cp
+// Upstream Sync: Refer to bun/src/threading/arc_slice.zig for future upstream updates.
+// ============================================================================
 // Atomic reference-counted slice in CP
 // Enables zero-copy, lock-free, immutable data sharing across threads and actors
 

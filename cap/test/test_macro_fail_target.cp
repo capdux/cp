@@ -3,9 +3,9 @@
 
 class Service {
     @Json
-    fn doSomething(): void {
+    fn doSomething() {
     }
 }
 
-fn main(): void {
+fn main() {
 }

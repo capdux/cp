@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/string/builder.cp
+// Upstream Sync: Refer to bun/src/string/builder.zig for future upstream updates.
+// ============================================================================
 // lib/string/builder.cp
 // Two-pass zero-reallocation StringBuilder
 // Absorbed from bun/src/string/StringBuilder.zig with pure CP semantics

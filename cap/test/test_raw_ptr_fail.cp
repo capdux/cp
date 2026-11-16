@@ -1,9 +1,9 @@
 import { print } from "cap:io";
 
-fn test_unbounded(*ptr: [*]u8!): void {
+fn test_unbounded(*ptr: [*]u8!) {
     ptr[10] = 99;
 }
 
-fn main(): void {
+fn main() {
     print("fail\n");
 }

@@ -6,12 +6,12 @@ trait Printable {
 
 class Cat implements Printable {
     name: string;
-    fn display(): void {
-        print(this.name);
+    fn display() {
+        print(_.name);
     }
 }
 
-fn show<T: Printable>(item: T): void {
+fn show<T: Printable>(item: T) {
     item.display();
 }
 
@@ -22,7 +22,7 @@ fn max_val<T: Comparable>(a: T, b: T): T {
     return b;
 }
 
-fn main(): void {
+fn main() {
     let cat = new Cat("Luna");
     show(cat);
 

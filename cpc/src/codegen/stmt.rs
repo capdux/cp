@@ -735,7 +735,7 @@ impl Codegen {
                                 && !self.mutable_fn_params.contains(&lhs_id.sym)
                             {
                                 panic!(
-                                    "CP Compile Error: Cannot mutate read-only variable or captured outer variable '{}'",
+                                    "CP Compile Error: Cannot mutate read-only parameter '{}'",
                                     lhs_id.sym
                                 );
                             }
@@ -2051,7 +2051,7 @@ impl Codegen {
                     }
                     if self.is_main {
                         self.write_to_case("return;");
-                    } else if self.is_beam_mode {
+                    } else if self.is_beam_mode && self.is_state_machine {
                         self.write_to_case(r#"return beam.Beam.makeAtom(ctx.self.env.?, "ok");"#);
                     } else if self.current_fn_is_async {
                         self.write_to_case(

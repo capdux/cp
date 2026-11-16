@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/sql/
+// Upstream Sync: Refer to bun/src/sql/ for future upstream updates.
+// ============================================================================
 // lib/sql/index.cp
 // Unified Public Exports for cap:sql
 

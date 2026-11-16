@@ -3,10 +3,10 @@
 // via panic-mode synchronization instead of aborting at the first error.
 
 fn test_recovery() {
-    let mut a = 1;
+    let a = 1;
     let b = 2;
-    if x > 0 {
+    if (x > 0) {
         return;
     }
-    let mut c = 3;
+    let c = 3;
 }

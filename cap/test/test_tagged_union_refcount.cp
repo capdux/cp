@@ -12,11 +12,11 @@ class SharedResource {
     pub cleaned: bool;
 
     pub fn init() {
-        this.ref_count = 1;
-        this.cleaned = false;
+        _.ref_count = 1;
+        _.cleaned = false;
     }
 
-    pub fn cleanup(mut _) {
+    pub fn cleanup(*) {
         this.cleaned = true;
     }
 }
@@ -51,7 +51,7 @@ fn main() {
         expect_eq(res.ref_count, 1);
         expect_eq(res.cleaned, false);
 
-        _ = res.ref();
+        * = res.ref();
         expect_eq(res.ref_count, 2);
 
         res.deref();

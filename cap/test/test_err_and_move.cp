@@ -39,7 +39,7 @@ fn query_upper(ok: bool): string?!NetworkErr {
     return "ok_upper";
 }
 
-export fn main(): void {
+export fn main() {
     let s1 = new UserSession(101);
     let id1 = take_ownership_prefix(s1);
     @print("Prefix move id: {d}", id1);

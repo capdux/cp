@@ -26,6 +26,10 @@ pub fn sha256(data: string): string {
     return res;
 }
 
+pub fn hash(data: string): string {
+    return sha256(data);
+}
+
 pub fn sha512(data: string): string {
     let out: [64]u8 = undefined;
     std.crypto.hash.sha2.Sha512.hash(data, &out, .{});

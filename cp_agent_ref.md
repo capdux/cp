@@ -314,7 +314,7 @@ unsafe {
 2. 底层裸指针类型转换：`p as *T!`、`p as usize`；
 3. 裸指针切片化与切片写入：`raw_ptr[0..len]`、`raw_ptr[0..len] = data;`；
 4. C-FFI 外部裸函数调用与 **`unsafe fn`**：调用标记了 `unsafe fn` 的危险函数必须在 `unsafe {}` 内；
-- **🚨 自动解引用铁律**：通过结构体指针/借用访问成员字段时**全自动解引用**（写 `alloc.is_active = true;`），**严禁写 `alloc.*.is_active`**！
+- **🚨 自动解引用铁律**：通过单级结构体指针/借用访问成员字段时**全自动解引用**（写 `alloc.is_active = true;`）；对于多级裸指针（如双指针 `pp: **User!`），支持显式逐级解引用访问字段：`pp.*.age = 45;`！
 
 ### 4. 原生内联汇编表达式 (`@asm(...)` / `asm volatile (...)`)
 ```typescript
@@ -978,7 +978,7 @@ switch (msg) {
 | `cap:md` | `Markdown`（`renderHtml`, `renderAnsi`）, `MdTable`, `MdTableAlign` | CommonMark / GFM 解析器、HTML / ANSI 渲染与 GFM 表格 |
 | `cap:html` | `CssSelector`, `HtmlRewriter`, `HtmlEscape` | CSS 选择器解析、流式 HTML 标签重写与实体转义器 |
 | `cap:css` | `CssColor`, `CssUnit`, `CssLength`, `CssCalc`, `CssSpecificity`, `CssSelector`, `CssProperty`, `CssRuleKind`, `CssMediaQuery`, `CssKeyframeStep`, `CssKeyframes`, `CssRule`, `CssStylesheetParser`（及 `selectors/`、`rules/`、`values/`、`properties/` 99 模块引擎） | 工业级 CSS 解析、OKLCH/HSL/RGB 颜色空间、calc() 计算、选择器权重与样式表压缩引擎 |
-| `cap:image`（兼容 `cap:png` / `cap:img`） | `Png`, `PngImage`, `RgbaColor`, `PngColorType`, `PngFilterType`, `Codecs`, `ImageFormat`, `Bmp`, `BmpHeader`, `Quantizer`, `QuantizeResult` | 原生 PNG 截图编码/解码、像素检查、BMP DIB 编解码、颜色量化与多格式二进制嗅探 |
+| `cap:image`（兼容 `cap:png` / `cap:img`） | `Png`, `PngImage`, `RgbaColor`, `PngColorType`, `PngFilterType`, `Codecs`, `ImageFormat`, `Bmp`, `BmpHeader`, `Quantizer`, `QuantizeResult`, `Gif`, `GifHeader`, `GifImage`, `ThumbHash`, `Exif`, `ExifOrientation`, `ExifTransform`, `Image`, `Jpeg`, `JpegHeader`, `Webp`, `WebpHeader` | 工业级全景图像套件：PNG 截图编码解码、BMP DIB 编解码、GIF LZW 解码、ThumbHash 模糊占位图算法、EXIF Orientation 解析、图像几何变换（Flop/Flip/Rotate/Crop/Resize）与 JPEG/WebP/8大格式嗅探 |
 | `cap:ffi` | `DynLib`, `FFIType`, `FFISignature`, `CStructLayout`, `CStructField`, `TccOutputFormat` | 跨平台动态库加载（dlopen）、C-ABI 布局计算与 TinyCC 声明 |
 | `cap:sql` | `SqlType`, `SqlDialect`, `SqlStatement`, `PostgresWire`, `PostgresAuthChallenge`, `PostgresDataRow`, `PostgresCommandComplete`, `MySqlPacketHeader`, `MySqlLenEnc`, `MySqlCapabilities`, `MySqlOkPacket`, `MySqlErrPacket`, `SqliteDatabase`, `SqliteRows` | PostgreSQL v3 / MySQL / SQLite3 数据库协议与零依赖驱动 |
 | `cap:shell`（兼容 `cap:sh`） | `Lexer`, `Parser`, `Shell`, `sh`, `ShellResult`, `Command`, `Pipeline`, `Statement`, `Redirection` | 原生嵌入式 Shell 执行引擎、AST 解析器、内置指令与管道重定向 |

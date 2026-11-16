@@ -2,7 +2,7 @@ import { writeFileSync, readFileSync, exists, mkdir, remove, rmdir, rename, copy
 import { expect_eq } from "cap:test";
 import { print } from "cap:io";
 
-async fn main(): void {
+async fn main() {
     let test_dir = "test_output_dir";
     let test_file = "test_output_dir/hello.txt";
     let copied_file = "test_output_dir/hello_copy.txt";

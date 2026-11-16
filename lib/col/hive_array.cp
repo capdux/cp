@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/collections/hive_array.cp
+// Upstream Sync: Refer to bun/src/collections/hive_array.zig for future upstream updates.
+// ============================================================================
 // lib/collections/hive_array.cp
 // O(1) BitSet64 and HiveArray slot pool with pointer/index stability
 // Absorbed from Bun src/collections/hive_array.cp and bit_set.zig

@@ -3,7 +3,7 @@ import { print } from "cap:io";
 import { self_pid, sender, send, receive, sleep } from "cap:actor";
 import { PID } from "cap:beam";
 
-async fn worker_entry(): void {
+async fn worker_entry() {
     @print("▶ Worker thread started. PID = {d}:{d}", @self().node_id, @self().local_id);
 
     // 1. Wait for ping message from main thread
@@ -25,7 +25,7 @@ async fn worker_entry(): void {
     @print("✔ Worker thread finished successfully.");
 }
 
-async fn main(): void {
+async fn main() {
     @print("=== Test Cross-Thread Mailbox Channel (Inter-Worker Communication) ===");
 
     let main_self = @self();

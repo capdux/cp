@@ -5,6 +5,7 @@ export {
     HashAlgorithm,
     Hash,
     sha256,
+    hash,
     sha512,
     sha1,
     md5,

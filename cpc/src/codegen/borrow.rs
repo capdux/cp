@@ -912,8 +912,18 @@ impl Codegen {
                     || cid.sym == "Socket"
                     || cid.sym == "Request"
                     || cid.sym == "Response"
+                    || cid.sym == "VecDeque"
+                    || cid.sym == "BinaryHeap"
+                    || cid.sym == "BTreeMap"
+                    || cid.sym == "BTreeSet"
+                    || cid.sym == "HashMap"
+                    || cid.sym == "HashSet"
+                    || self.ref_classes.contains(&cid.sym)
                 {
                     return true;
+                }
+                if self.value_classes.contains(&cid.sym) {
+                    return false;
                 }
                 self.class_defs.get(&cid.sym).map_or(false, |c| !c.is_ref)
             }

@@ -15,10 +15,23 @@
   - [`lib/image/codecs.cp`](file:///data/dev/cp/lib/image/codecs.cp)：8 大图片格式（PNG/JPEG/WebP/BMP/GIF/TIFF/AVIF/HEIC）二进制魔数探测、MIME 字符串映射与文件名后缀推导。
 - **Windows BMP DIB 编解码 (`bmp.cp`)**:
   - [`lib/image/bmp.cp`](file:///data/dev/cp/lib/image/bmp.cp)：支持 24/32 位 BMP 文件解码与 32 位 BMP 文件编码，包含 4 字节跨距行对齐转换。
+- **纯 CP GIF89a/87a LZW 解码器 (`gif.cp`)**:
+  - [`lib/image/gif.cp`](file:///data/dev/cp/lib/image/gif.cp)：4096 节点 LZW 字典流式解压、Logical Screen Descriptor 探测、全局/局部调色板映射、4-pass 交织扫描还原与透明色索引解析。
+- **Evan Wallace ThumbHash 模糊占位图算法 (`thumbhash.cp`)**:
+  - [`lib/image/thumbhash.cp`](file:///data/dev/cp/lib/image/thumbhash.cp)：将 RGBA8 像素压缩为 ≤25 字节紧凑哈希，并支持逆向解码为 32x32 模糊平滑占位图。
+- **EXIF 方向解析与变换矩阵 (`exif.cp`)**:
+  - [`lib/image/exif.cp`](file:///data/dev/cp/lib/image/exif.cp)：快速解析 JPEG APP1 / TIFF IFD0 0x0112 旋转标签，映射生成 `ExifTransform` 旋转与镜像动作。
+- **高阶图像处理管线 (`pipeline.cp`)**:
+  - [`lib/image/pipeline.cp`](file:///data/dev/cp/lib/image/pipeline.cp)：轻量结构体 `Image`，支持 `.flop()`、`.flip()`、`.rotate(90/180/270)`、`.crop(x, y, w, h)`、`.resize(w, h)` 双线性缩放及 `.thumbhash()`。
+- **JPEG 与 WebP 容器探测 (`jpeg.cp`, `webp.cp`)**:
+  - [`lib/image/jpeg.cp`](file:///data/dev/cp/lib/image/jpeg.cp)：SOF0/SOF2 帧头基准尺寸、分量与渐进式检测；
+  - [`lib/image/webp.cp`](file:///data/dev/cp/lib/image/webp.cp)：RIFF WEBP VP8/VP8L/VP8X 容器头嗅探、透明度与动画标志提取。
+- **全量标准库 Bun 溯源注释注入 (Provenance Headers)**:
+  - 在 `lib/` 下 52 个从 Bun 吸收的文件头部，统一规范注入 `// Absorbed from Bun: /data/dev/bun/src/...` 与 `// Upstream Sync:` 溯源注释。
 - **调色板颜色量化器 (`quantize.cp`)**:
   - [`lib/image/quantize.cp`](file:///data/dev/cp/lib/image/quantize.cp)：基于 Median-Cut 算法实现 RGBA 像素向 256 色紧凑调色板与索引图转换。
 - **统一聚合出口 (`index.cp`)**:
-  - [`lib/image/index.cp`](file:///data/dev/cp/lib/image/index.cp)：门面统一导出 `cap:image`、`cap:png`、`cap:img` 协议。
+  - [`lib/image/index.cp`](file:///data/dev/cp/lib/image/index.cp)：门面统一导出 `cap:image`、`cap:png`、`cap:img` 协议全部 10 大子模块。
 
 ### Bun 高价值资产吸收与标准库扩展 (Added Stdlib)
 - **容器集合库 (`cap:col`)**:
@@ -805,6 +818,40 @@
   - 同步部署至 `cpc_dev`。
 - **新增综合测试套件**：
   - [`cap/test/test_image_png.cp`](file:///data/dev/cp/cap/test/test_image_png.cp)：包含格式嗅探、RGBA8 截图编码、IHDR 签名校验、像素往返解码比对、文件保存与加载、BMP 编解码、颜色量化 6 大测试用例（**6/6 100% PASS**）。
+
+---
+
+### [2026-11-16] 编译器语义自愈升级、Zig 0.17 全套适配与 BEAM/集合类型深度解耦
+
+- **编译器核心修改**：
+  - [`cpc/src/codegen/actor.rs`](file:///data/dev/cp/cpc/src/codegen/actor.rs)：
+    - 解耦非 async 普通函数返回类型与 BEAM 模式，恢复强类型 `ret_ty` 返回签名；
+    - 移除普通结构体函数在 BEAM 模式下无 return 时的错误原子发射；
+    - 在状态机代码生成结束点（`emit_current_case` 闭合处）重置 `self.is_state_machine = false`，防止后续全局声明误用 `ctx.arena`；
+    - 区分引用类（`ref_classes`）与值结构体（`value_classes`）的默认接收者推断；
+    - 消除 Zig 0.17 `pointless discard of function parameter`；
+  - [`cpc/src/codegen/stmt.rs`](file:///data/dev/cp/cpc/src/codegen/stmt.rs)：
+    - 修复 `Stmt::Return(None)`：仅在 `self.is_beam_mode && self.is_state_machine` 时发射 `beam.Beam.makeAtom(ctx.self.env.?, "ok")`，普通函数及非 actor 结构体方法恢复标准 `return;`；
+  - [`cpc/src/codegen/pattern.rs`](file:///data/dev/cp/cpc/src/codegen/pattern.rs)：
+    - 在 `generate_switch` 顶层增加 `is_result_disc` 拦截，判别式为错误联合类型时禁止进入 Zig 原生 switch，转入安全解包流；
+    - 消除 Zig 0.17 `unused capture`，未引用的 arm 绑定自动生成 `else =>`；
+    - 降解 `err.Variant` 为 Zig 原生 `error.Variant`；
+    - 修复 `generate_err_value` 中 `Type::BoxDyn` 移动语义与变量识别；
+  - [`cpc/src/codegen/borrow.rs`](file:///data/dev/cp/cpc/src/codegen/borrow.rs)：
+    - 在 `is_zig_heap_ptr_type` 中补齐 `VecDeque`、`BinaryHeap`、`BTreeMap`、`BTreeSet`、`HashMap`、`HashSet` 及 `ref_classes` 堆指针识别，防止集合类型借用传递时发生双重取地址；
+  - [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs)：
+    - 无参 `new Class()` 在 comptime 校验 init 参数个数；
+    - 修正类型投射与成员借用的指针判定；
+  - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs)：
+    - 解除双指针及多级原始指针（如 `pp.*.age`）字段访问的硬编码拦截；
+  - [`cpc/src/diagnostic.rs`](file:///data/dev/cp/cpc/src/diagnostic.rs)：
+    - 落地 `E0130`（只读接收者自动插入 `*_`）、`E0133`（只读形参赋值双分支诊断建议）、`E0134`（关键字与保留字重命名及转义）；
+- **任务协同与热修闭环**：
+  - 结单 [`task-capsurf-20261116-beam-non-actor-return`](file:///data/dev/cp/.tasks/resolved/capsurf_agy/task-capsurf-20261116-beam-non-actor-return.json)；
+  - 后台任务常驻监听守卫重新启动并保持活跃状态；
+- **测试套件回归验证**：
+  - `test_unified_errors.cp`、`test_trait_class_pass.cp`、`test_semver.cp`、`test_dec_pass.cp`、`test_unsafe_pass.cp`、`test_blob.cp`、`test_collections_matrix.cp`、`test_all.cp`、`test_stdlib_phase_b2_c.cp`、`test_basic.cp`、`test_string.cp`、`test_json.cp`、`test_crypto.cp` **100% PASS**。
+
 
 
 

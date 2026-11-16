@@ -42,16 +42,16 @@ fn main(): void? {
 
     // 5. @if / @else 编译期分支修剪
     let branch_val = 0;
-    @if true {
+    @if (true) {
         branch_val = 1;
-    } @else {
+    } @else (){
         branch_val = 2;
     }
     expect_eq(branch_val, 1);
 
     // 6. @for 编译期循环展开
     let total = 0;
-    @for i of 0..5 {
+    @for (i of 0..5) {
         total = total + i;
     }
     expect_eq(total, 10);

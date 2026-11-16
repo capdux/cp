@@ -9,7 +9,7 @@ fn handle(req: Request): Response {
     return new Response("Hello from Bun-style CP HTTP Server!");
 }
 
-fn main(): void {
+fn main() {
     let server = serve({
         port: 8128,
         fetch: handle

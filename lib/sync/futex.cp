@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/threading/futex.cp
+// Upstream Sync: Refer to bun/src/threading/futex.zig for future upstream updates.
+// ============================================================================
 // lib/sync/futex.cp
 // Futex thread synchronization primitive in CP
 // Ported from Bun.js core threading architecture with pure CP semantics

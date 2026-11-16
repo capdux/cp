@@ -47,7 +47,7 @@ class AdHocService {
 class CompileOnlyService {
     val: i32;
     fn getVal(): i32 {
-        return this.val;
+        return _.val;
     }
 }
 

@@ -6,24 +6,24 @@ import { fetch, serve, Response } from "cap:http";
 import { SharedTensor } from "cap:mem";
 
 class Worker extends Agent {
-    async fn onMessage(msg: Message): void {
+    async fn onMessage(msg: Message) {
         @print("Worker received message");
     }
 }
 
-async fn test_nested_await(data_a: string, data_b: string): void {
+async fn test_nested_await(data_a: string, data_b: string) {
     @print("Nested await executed with args: {s} {s}", data_a, data_b);
 }
 
-fn test_auto_drop(): void? {
+fn test_auto_drop() {
     @print("Testing Auto-Drop (Compiler injected defer)...");
     const sync_t = new SharedTensor(512 * 1024);
     sync_t.retain();
     // NO defer sync_t.release() written here! The compiler will inject it based on AST reflection!
 }
 
-async fn run_tests(): void {
-    test_auto_drop()?;
+async fn run_tests() {
+    test_auto_drop();
     @print("Testing nested await...");
     await test_nested_await("Hello", "World");
     @print("Returned from nested await!");
@@ -45,10 +45,10 @@ async fn run_tests(): void {
 
     @print("Testing net...");
     // test class instantiation
-    const server: Server = new Server();
+    const server: Server = new Server(0);
     
     @print("Testing http...");
-    const res: Response = new Response();
+    const res: Response = new Response("ok");
     @print("HTTP fetch ok: {}", res.ok());
 
     @print("Testing sleep...");
@@ -56,7 +56,7 @@ async fn run_tests(): void {
     @print("Done tests.");
 }
 
-fn main(): void {
+fn main() {
     @print("Start");
     const pid = @spawn(run_tests);
     @print("Spawned test runner: {}", pid.local_id);

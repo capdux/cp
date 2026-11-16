@@ -7,7 +7,7 @@ pub const T = enum {
 
 pub fn iterate_slice(items: []const u8): usize {
     let count: usize = 0;
-    for (items) |c| {
+    for (c of items) {
         if (c > 0) {
             count = count + 1;
         }
@@ -15,7 +15,7 @@ pub fn iterate_slice(items: []const u8): usize {
     return count;
 }
 
-pub fn main(): void {
+pub fn main() {
     test("Prelude helper T shadowing resistance", () => {
         let val: T = T.Alpha;
         expect_eq(val, T.Alpha);

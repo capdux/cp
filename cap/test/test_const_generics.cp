@@ -13,7 +13,7 @@ class Tensor<T, const shape: [usize; 2]> {
 type Embedding = Tensor<f32, [1, 4096]>;
 type PacketBuffer = Buffer<1024>;
 
-fn main(): void {
+fn main() {
     test("Const Generics: Buffer<N>", () => {
         let buf: PacketBuffer = PacketBuffer{ data: [0; 1024] };
         expect_eq(buf.data.len, 1024);

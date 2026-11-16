@@ -9,7 +9,7 @@ fn assert(ok: bool, msg: string) {
 }
 
 fn test_cptr_basics() {
-    let mut val: i32 = 42;
+    let val: i32 = 42;
     let ptr: [*c]i32 = &mut val;
     assert(ptr.* == 42, "cptr dereference failed");
 
@@ -28,7 +28,7 @@ fn test_const_var_protection() {
 }
 
 fn test_control_flow() {
-    let mut count = 0;
+    let count = 0;
     while (count < 5) {
         count = count + 1;
         if (count == 3) {

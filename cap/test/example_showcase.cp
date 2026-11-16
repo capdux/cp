@@ -223,7 +223,7 @@ fn main() {
     @print("3. '? default' 赋予缺省值: {s}", ret_val);
 
     // D. 内联 catch 与纯 null 合并 (??)
-    let inline_res = (readConfigFile("forbidden.json") catch err => "FALLBACK_FROM_ERR") ?? "FALLBACK_FROM_NULL";
+    let inline_res = (readConfigFile("forbidden.json") catch e => "FALLBACK_FROM_ERR") ?? "FALLBACK_FROM_NULL";
     @print("4. catch + ?? 链式处理: {s}", inline_res);
 
     // E. 匿名错误集与 switch 解构

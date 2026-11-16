@@ -1,10 +1,10 @@
-interface Logger {
-    fn log(this, msg: string): void;
+interface trait {
+    fn log(msg: string);
 }
 
 class MyLogger implements Logger {
     prefix: string,
-    fn log(this, msg: string): void {
+    fn log(msg: string) {
         @print("LOG: {s}", msg);
     }
 }

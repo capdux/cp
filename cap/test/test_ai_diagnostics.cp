@@ -1,6 +1,6 @@
 import { print } from "cap:io";
 
-fn modify_buffer(*buf: [4]i32) {
+fn modify_buffer(buf: *[4]i32) {
     buf[0] = 42;
     buf[1] = 100;
 }

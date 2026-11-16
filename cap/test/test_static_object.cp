@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import { print } from "cap:io";
 
-async fn main(): void {
+async fn main() {
     // 1. Static anonymous object creation & field access
     let user = { id: 101, name: "Alice", active: true };
     expect_eq(user.id, 101);

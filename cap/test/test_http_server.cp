@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import { listen, Server } from "cap:net";
 import { print } from "cap:io";
 
-async fn acceptLoop(s: Server): void {
+async fn acceptLoop(s: Server) {
     let client = await s.accept();
     @spawn(() => {
         let c = client; // Capture client
@@ -15,12 +15,12 @@ async fn acceptLoop(s: Server): void {
     await acceptLoop(s);
 }
 
-async fn startServer(): void {
+async fn startServer() {
     let s = listen(8080);
     @print("Server listening on port 8080...");
     await acceptLoop(s);
 }
 
-fn main(): void {
+fn main() {
     @print("cap:http async tail-call OOP compiles successfully!");
 }

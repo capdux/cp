@@ -1,7 +1,7 @@
 import { print } from "cap:io";
 import { readFileSync, writeFileSync } from "cap:fs";
 
-fn main(): void {
+fn main() {
     @print("--- FS Standard Library Test ---");
     const path = "test_data.txt";
     const data = "CP-BEAM File System Rocks!";

@@ -1,4 +1,8 @@
 // ============================================================================
+// Absorbed from Bun: bun/src/runtime/image/codec_png.cp
+// Upstream Sync: Refer to bun/src/runtime/image/codec_png.zig for future upstream updates.
+// ============================================================================
+// ============================================================================
 // lib/image/png.cp — 工业级纯 CP 原生 PNG 图像编解码器
 // 专为 CapSurf 网页截图、Canvas 像素导出与无损图像处理设计
 // 符合 W3C PNG 规范与 RFC 2083，支持 RGBA/RGB 编码、全滤镜解码与 CRC32 校验

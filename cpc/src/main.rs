@@ -166,6 +166,7 @@ fn compile_file(
             } else {
                 "Internal compiler error".to_string()
             };
+            eprintln!("DEBUG PANIC: {}", msg);
             let code = fs::read_to_string(input).ok();
             let diag = cpc::diagnostic::from_compiler_error_msg(&msg, code.as_deref());
             return Err(anyhow::anyhow!(

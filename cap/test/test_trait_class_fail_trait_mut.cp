@@ -1,5 +1,5 @@
 trait MutableWorker {
-    fn step(mut _);
+    fn step();
 }
 
 class Worker implements MutableWorker {
@@ -7,7 +7,7 @@ class Worker implements MutableWorker {
     fn init() {
         _.count = 0;
     }
-    fn step(mut _) {
+    fn step(*) {
         _.count = _.count + 1;
     }
 }

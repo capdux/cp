@@ -16,7 +16,7 @@ fn test_primitive_json(): !void {
 
     const v_num = try JSON.parse(allocator, "123.45");
     expect_eq(v_num.tag == JsonTag.Number, true);
-    if (v_num.asNumber()) |n| {
+    if (n := v_num.asNumber()) {
         expect_eq(n > 123.0 and n < 124.0, true);
     }
 }
@@ -27,7 +27,7 @@ fn test_zero_copy_string_borrow(): !void {
     const v_str = try JSON.parse(allocator, raw_input);
 
     expect_eq(v_str.tag == JsonTag.String, true);
-    if (v_str.asString()) |s| {
+    if (s := v_str.asString()) {
         expect_eq(s.len, 21);
         // Verify that the slice points directly into raw_input (zero-copy borrow!)
         const input_ptr = @intFromPtr(raw_input.ptr);
@@ -47,22 +47,22 @@ fn test_complex_object_and_array(): !void {
 
     const name_val = root.get("name");
     expect_eq(name_val != null, true);
-    if (name_val) |nv| {
+    if (nv := name_val) {
         expect_eq(nv.tag == JsonTag.String, true);
-        if (nv.asString()) |s| {
+        if (s := nv.asString()) {
             expect_eq(std.mem.eql(u8, s, "agent"), true);
         }
     }
 
     const active_val = root.get("active");
     expect_eq(active_val != null, true);
-    if (active_val) |av| {
+    if (av := active_val) {
         expect_eq(av.asBool(), true);
     }
 
     const scores_val = root.get("scores");
     expect_eq(scores_val != null, true);
-    if (scores_val) |sv| {
+    if (sv := scores_val) {
         expect_eq(sv.tag == JsonTag.Array, true);
         expect_eq(sv.len(), 3);
         const item0 = sv.getIndex(0);
@@ -70,7 +70,7 @@ fn test_complex_object_and_array(): !void {
     }
 }
 
-fn main(): void {
+fn main() {
     test("Primitive JSON tokens null, bool, number", () => {
         try test_primitive_json();
     });

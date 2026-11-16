@@ -1,4 +1,8 @@
 // ============================================================================
+// Absorbed from Bun: bun/src/runtime/image/codec_bmp.cp
+// Upstream Sync: Refer to bun/src/runtime/image/codec_bmp.zig for future upstream updates.
+// ============================================================================
+// ============================================================================
 // lib/image/bmp.cp — Windows DIB / BMP 图像编解码器
 // 吸收自 Bun src/runtime/image/codec_bmp.cp
 // 支持 BITMAPINFOHEADER (40 字节)、24/32 bpp、Top-Down / Bottom-Up 扫描

@@ -1,4 +1,8 @@
 // ============================================================================
+// Absorbed from Bun: bun/src/runtime/image/quantize.cp
+// Upstream Sync: Refer to bun/src/runtime/image/quantize.zig for future upstream updates.
+// ============================================================================
+// ============================================================================
 // lib/image/quantize.cp — 调色板颜色量化器 (Median-Cut)
 // 吸收自 Bun src/runtime/image/quantize.cp
 // 用于 Indexed PNG 与小体积调色板生成，将 RGBA8 降维至 256 色以内的紧凑调色板

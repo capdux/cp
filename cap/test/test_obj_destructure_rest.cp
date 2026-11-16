@@ -35,7 +35,7 @@ fn test_for_obj_rest() {
         { id: 2, val: 20, tag: "B" }
     ];
 
-    for { id, ...rest } of items {
+    for (){ id, ...rest } of items {
         print(id);
         print(rest.val);
         print(rest.tag);

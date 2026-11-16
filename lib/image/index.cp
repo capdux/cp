@@ -1,9 +1,14 @@
 // ============================================================================
-// lib/image/index.cp — CP 原生现代图像处理标准库 (cap:image / cap:png / cap:img) 对外统一出口
-// 提供 PNG 截图编码/解码、BMP 处理、调色板颜色量化与多格式媒体类型探测
+// Absorbed from Bun: bun/src/runtime/image/
+// Upstream Sync: Refer to bun/src/runtime/image/ for future upstream updates.
 // ============================================================================
-
 export * from "./codecs.cp";
 export * from "./png.cp";
 export * from "./bmp.cp";
 export * from "./quantize.cp";
+export * from "./gif.cp";
+export * from "./thumbhash.cp";
+export * from "./exif.cp";
+export * from "./jpeg.cp";
+export * from "./webp.cp";
+export * from "./pipeline.cp";

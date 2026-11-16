@@ -1,7 +1,7 @@
 import { serve, Response, Request } from "cap:http";
 import { print } from "cap:io";
 
-fn main(): void {
+fn main() {
     let server = serve({
         port: 8129,
         fetch: (req: Request) => {

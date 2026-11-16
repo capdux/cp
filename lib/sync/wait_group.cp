@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/threading/wait_group.cp
+// Upstream Sync: Refer to bun/src/threading/wait_group.zig for future upstream updates.
+// ============================================================================
 // WaitGroup synchronization primitive in CP
 // Ported from Bun.js core threading architecture
 import { Mutex } from "./mutex";

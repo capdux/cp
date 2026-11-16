@@ -2,7 +2,7 @@ fn format_user(uid: i32, role: string): string {
     return `User #${uid} [${role}]`;
 }
 
-async fn main(): void {
+async fn main() {
     let name: string = "World";
     let version: i32 = 1;
     

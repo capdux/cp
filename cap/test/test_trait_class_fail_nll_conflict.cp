@@ -18,7 +18,7 @@ class Model {
     fn getWeights(): &Tensor {
         return &_.w;
     }
-    fn updateWeights(mut _, v: i32) {
+    fn updateWeights(v: i32) {
         _.w.data = v;
     }
 }

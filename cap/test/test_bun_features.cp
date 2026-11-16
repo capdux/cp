@@ -1,8 +1,8 @@
 import { print } from "cap:io";
 
 fn test_loop_control() {
-    let mut i: usize = 0;
-    let mut sum: usize = 0;
+    let i: usize = 0;
+    let sum: usize = 0;
     while (i < 10) {
         i = i + 1;
         if (i == 3) {

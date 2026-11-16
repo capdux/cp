@@ -43,7 +43,7 @@ class NetError implements CustomErr {
         this.status = s;
     }
     fn code(): i32 {
-        return this.status;
+        return _.status;
     }
 }
 
@@ -54,7 +54,7 @@ fn fail_with_box(s: i32): i32 ! Err {
     return err(e);
 }
 
-pub fn main(): void {
+pub fn main() {
     // 1. Test Anon Union pattern match
     let r1 = test_anon_union(2);
     let out1 = switch r1 {

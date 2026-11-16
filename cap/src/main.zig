@@ -1341,9 +1341,13 @@ fn collectTestFiles(allocator: std.mem.Allocator, dir_path: []const u8, list: *s
     while (try it.next(global_io)) |entry| {
         const child_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ dir_path, entry.name });
         if (entry.kind == .directory) {
+            if (std.mem.eql(u8, entry.name, "fixtures") or std.mem.eql(u8, entry.name, ".cap") or std.mem.eql(u8, entry.name, "temp")) {
+                allocator.free(child_path);
+                continue;
+            }
             try collectTestFiles(allocator, child_path, list);
             allocator.free(child_path);
-        } else if (entry.kind == .file and std.mem.endsWith(u8, entry.name, ".cp")) {
+        } else if (entry.kind == .file and std.mem.endsWith(u8, entry.name, ".cp") and !std.mem.endsWith(u8, entry.name, ".d.cp")) {
             try list.append(allocator, child_path);
         } else {
             allocator.free(child_path);

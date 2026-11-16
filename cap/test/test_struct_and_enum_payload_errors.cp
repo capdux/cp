@@ -64,7 +64,7 @@ fn fail_payload_dot_inference(): i32 ! TaskErr {
     return err(.Compute { batch: 128, priority: 2 });
 }
 
-fn main(): void {
+fn main() {
     // 1. Struct Error direct destructuring match
     let r1 = fail_struct();
     switch r1 {

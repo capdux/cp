@@ -136,7 +136,9 @@ impl Codegen {
                         "PID{ .node_id = 0, .local_id = 0 }".to_string()
                     };
                 }
-                if i.sym == "this" || i.sym == "_" {
+                if i.sym == "c" && !self.c_includes.is_empty() && !self.locals.contains_key("c") {
+                    "__c_stdlib".to_string()
+                } else if i.sym == "this" || i.sym == "_" {
                     if self.is_state_machine {
                         "ctx.self".to_string()
                     } else {
@@ -264,7 +266,9 @@ impl Codegen {
                         format!("*const {}", inner_code)
                     };
                 }
-                let already_ptr = if matches!(&**inner, Expr::Member(_) | Expr::Index { .. }) {
+                let already_ptr = if let Some(ty) = self.infer_cp_type(inner) {
+                    self.is_zig_heap_ptr_type(&ty)
+                } else if matches!(&**inner, Expr::Member(_) | Expr::Index { .. }) {
                     false
                 } else if let Expr::Ident(id) = &**inner {
                     if let Some(zig_ty) = self.locals.get(&id.sym) {
@@ -284,8 +288,6 @@ impl Codegen {
                     } else {
                         false
                     }
-                } else if let Some(ty) = self.infer_cp_type(inner) {
-                    self.is_zig_heap_ptr_type(&ty)
                 } else {
                     false
                 };
@@ -939,7 +941,11 @@ impl Codegen {
                         let obj = self.generate_expr(&mem.obj);
                         let arg = self.generate_expr(&call.args[0]);
                         return format!("@import(\"std\").mem.endsWith(u8, {}, {})", obj, arg);
-                    } else if (prop == "slice" || prop == "substring") && !call.args.is_empty() {
+                    } else if (prop == "slice" || prop == "substring")
+                        && !call.args.is_empty()
+                        && call.args.len() <= 2
+                        && !matches!(raw_obj_ty, Some(Type::Ref(ref id)) if id.sym != "string" && id.sym != "String")
+                    {
                         self.check_read_allowed(&mem.obj);
                         let obj = self.generate_expr(&mem.obj);
                         let start = self.generate_expr(&call.args[0]);
@@ -2920,7 +2926,11 @@ impl Codegen {
                 }
                 self.tmp_counter += 1;
                 let blk_lbl = format!("blk_new_{}", self.tmp_counter);
-                format!("({}: {{ const _obj = {}._create({}) catch unreachable; if (@hasDecl({}, \"init\")) {{ const RType = @typeInfo(@TypeOf({}.init)).@\"fn\".return_type.?; if (@typeInfo(RType) == .error_union) {{ _obj.init({}) catch unreachable; }} else {{ _obj.init({}); }} }} break :{} _obj; }})", blk_lbl, class_name, self.current_allocator(), class_name, class_name, args, args, blk_lbl)
+                if args.is_empty() {
+                    format!("({}: {{ const _obj = {}._create({}) catch unreachable; if (@hasDecl({}, \"init\")) {{ if (@typeInfo(@TypeOf({}.init)).@\"fn\".param_types.len == 1) {{ const RType = @typeInfo(@TypeOf({}.init)).@\"fn\".return_type.?; if (@typeInfo(RType) == .error_union) {{ _obj.init() catch unreachable; }} else {{ _obj.init(); }} }} }} break :{} _obj; }})", blk_lbl, class_name, self.current_allocator(), class_name, class_name, class_name, blk_lbl)
+                } else {
+                    format!("({}: {{ const _obj = {}._create({}) catch unreachable; if (@hasDecl({}, \"init\")) {{ const RType = @typeInfo(@TypeOf({}.init)).@\"fn\".return_type.?; if (@typeInfo(RType) == .error_union) {{ _obj.init({}) catch unreachable; }} else {{ _obj.init({}); }} }} break :{} _obj; }})", blk_lbl, class_name, self.current_allocator(), class_name, class_name, args, args, blk_lbl)
+                }
             }
             Expr::Await(inner) => {
                 if let Expr::Call(call) = &**inner {
@@ -3949,8 +3959,8 @@ impl Codegen {
                     Expr::Borrow(inner, _) => {
                         let inner_code = self.generate_expr(inner);
                         let is_class_ref = if let Expr::Ident(id) = &**inner {
-                            if let Some(Type::Ref(cid)) = self.var_cp_types.get(&id.sym) {
-                                self.class_defs.get(&cid.sym).map_or(false, |c| !c.is_ref)
+                            if let Some(ty) = self.var_cp_types.get(&id.sym) {
+                                self.is_zig_heap_ptr_type(ty)
                             } else {
                                 false
                             }
@@ -4592,7 +4602,7 @@ impl Codegen {
     const state_ptr = std.heap.page_allocator.create(_HttpState) catch unreachable;
     state_ptr.* = .{{ .server_fd = _s_fd }};
     register_fd(_s_fd, &_HttpState.on_accept, state_ptr, std.posix.POLL.IN);
-    const s_obj = Server._create(std.heap.page_allocator) catch unreachable;
+    const s_obj = HttpServer._create(std.heap.page_allocator) catch unreachable;
     s_obj.port = _port;
     s_obj.fd = _s_fd;
     break :blk s_obj;

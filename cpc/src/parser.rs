@@ -2295,7 +2295,11 @@ impl<'a> Parser<'a> {
         loop {
             if self.peek() == Some(&Token::Question) {
                 self.bump()?;
-                ty = Type::Optional(Box::new(ty));
+                if ty == Type::Void {
+                    ty = Type::ErrorUnion(Box::new(Type::Void));
+                } else {
+                    ty = Type::Optional(Box::new(ty));
+                }
             } else if self.peek() == Some(&Token::Bang) {
                 if self.peek_next() == Some(&Token::Question) {
                     if matches!(ty, Type::CStr) {
@@ -6140,13 +6144,6 @@ impl<'a> Parser<'a> {
                         });
                         continue;
                     }
-                    if let Expr::Deref(_) = left {
-                        let span = self.peek_span();
-                        return Err(ParseError::Generic(
-                            "Redundant dereference '.*.' before field access. In CP, pointer and reference fields are accessed directly using '.' (e.g., write 'obj.field' instead of 'obj.*.field').".to_string(),
-                            span,
-                        ));
-                    }
                     self.bump()?;
                     let prop = self.parse_ident()?;
                     if let Expr::Ident(ref obj_id) = left {
@@ -6944,13 +6941,6 @@ impl<'a> Parser<'a> {
                             prop,
                         });
                         continue;
-                    }
-                    if let Expr::Deref(_) = left {
-                        let span = self.peek_span();
-                        return Err(ParseError::Generic(
-                            "Redundant dereference '.*.' before field access. In CP, pointer and reference fields are accessed directly using '.' (e.g., write 'obj.field' instead of 'obj.*.field').".to_string(),
-                            span,
-                        ));
                     }
                     self.bump()?;
                     let prop = self.parse_ident()?;

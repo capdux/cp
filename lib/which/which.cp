@@ -1,3 +1,7 @@
+// ============================================================================
+// Absorbed from Bun: bun/src/which/which.cp
+// Upstream Sync: Refer to bun/src/which/which.zig for future upstream updates.
+// ============================================================================
 // lib/which/which.cp
 // Cross-platform executable binary locator in CP
 const builtin = @import("builtin");

@@ -10,7 +10,7 @@ class Tensor {
     pub fn get(): i32 {
         return _.data;
     }
-    pub fn set(mut _, v: i32) {
+    pub fn set(*_, v: i32) {
         _.data = v;
     }
     pub fn release() {
@@ -20,8 +20,8 @@ class Tensor {
 
 // 1. Trait with default implementation and `mut _` contract
 trait Resettable {
-    fn reset(mut _);
-    fn resetAndGetCode(mut _): i32 {
+    fn reset(*_);
+    fn resetAndGetCode(*_): i32 {
         // Omitted `_.` call to required method inside trait default implementation
         reset();
         return 200;
@@ -71,12 +71,12 @@ class BaseEngine implements Resettable {
         return &_.weights;
     }
 
-    // Mutable borrow receiver (`mut _`)
-    pub fn boost(mut _, delta: i32) {
+    // Mutable borrow receiver (`*_`)
+    pub fn boost(*_, delta: i32) {
         _.power = _.power + delta;
     }
 
-    pub fn reset(mut _) {
+    pub fn reset(*_) {
         _.power = 0;
     }
 
@@ -96,7 +96,7 @@ class TurboEngine extends BaseEngine {
     }
 
     // Override mutable method and delegate to `super.boost`
-    pub fn boost(mut _, delta: i32) {
+    pub fn boost(*_, delta: i32) {
         super.boost(delta * _.turbo_mult);
     }
 
@@ -125,7 +125,7 @@ fn readInspectable(item: Inspectable): i32 {
     return item.inspect();
 }
 
-fn triggerReset(mut item: Resettable): i32 {
+fn triggerReset(item: *Resettable): i32 {
     return item.resetAndGetCode();
 }
 

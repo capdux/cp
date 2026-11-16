@@ -26,7 +26,7 @@ import {
     listen
 } from "cap:net";
 
-fn main(): void {
+fn main() {
     test("1. Backward-compatible listen() and Server API", () => {
         let server = listen(18080);
         server.close();
@@ -145,7 +145,7 @@ fn main(): void {
         expect_eq(fed as i64, 6);
         expect_eq(stream.recv_len as i64, 6);
 
-        var out: [4]u8 = [0, 0, 0, 0];
+        let out: [4]u8 = [0, 0, 0, 0];
         const read_n = stream.readAvailable(out[0..4]);
         expect_eq(read_n as i64, 4);
         expect_eq(stream.recv_len as i64, 2);
@@ -154,7 +154,7 @@ fn main(): void {
     });
 
     test("5. ListenConfig bitmask & TcpServer connection lifecycle", () => {
-        var cfg = ListenConfig.defaultForPort(8088);
+        let cfg = ListenConfig.defaultForPort(8088);
         expect_eq(cfg.toLibusOptions() as i64, (LIBUS_LISTEN_REUSE_PORT | LIBUS_LISTEN_REUSE_ADDR) as i64);
 
         cfg.exclusive_port = true;

@@ -73,7 +73,7 @@ fn testCsrfTamperProtection(): void! {
     expect_eq(valid, false);
 }
 
-fn main(): void {
+fn main() {
     test("Constant-time buffer comparison", () => {
         testConstantTimeEql()?;
     });

@@ -9,7 +9,7 @@ import {
     PicoHttpParser,
 } from "cap:http";
 
-fn main(): void {
+fn main() {
     test("1. PicoHttpParser.parseRequest zero-copy HTTP/1.1 request wire parsing", () => {
         const raw_req = "POST /api/v1/agents?limit=10 HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/json\r\nX-Agent-Id: agy-007\r\nContent-Length: 15\r\n\r\n{\"hello\":\"cap\"}";
         let headers: [8]PicoHeader = [PicoHeader{}; 8];

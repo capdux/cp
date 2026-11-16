@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import { print } from "cap:io";
 import { VecDeque, BinaryHeap, BTreeMap, BTreeSet, HashMap, HashSet } from "cap:collections";
 
-fn mutate_deque(*q: VecDeque, val: i32): void {
+fn mutate_deque(q: *VecDeque, val: i32) {
     q.push_back(val);
 }
 
@@ -10,15 +10,15 @@ fn query_deque(&q: VecDeque): usize {
     return q.len();
 }
 
-fn mutate_heap(*h: BinaryHeap, val: i32): void {
+fn mutate_heap(h: *BinaryHeap, val: i32) {
     h.push(val);
 }
 
-fn mutate_btree(*b: BTreeMap, k: string, v: i32): void {
+fn mutate_btree(b: *BTreeMap, k: string, v: i32) {
     b.insert(k, v);
 }
 
-fn main(): void {
+fn main() {
     print("=== [Test 1] VecDeque Double-Ended Ring Buffer ===");
     let q = new VecDeque();
     expect_eq(q.is_empty(), true);

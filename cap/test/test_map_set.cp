@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import { print } from "cap:io";
 
-async fn main(): void {
+async fn main() {
     let map = new Map();
     map.set("name", "CP-BEAM");
     map.set("version", 1.0);

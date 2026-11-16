@@ -31,15 +31,15 @@ pub let global_counter: i32 = 100;
 // --- 2. 上下文软关键字测试：验证 and/or 作为方法名时不被误伤 ---
 pub struct LogicCalculator {
     pub value: i32,
-    pub fn and(self: *LogicCalculator, mask: i32): i32 {
+    pub fn and(*_: *LogicCalculator, mask: i32): i32 {
         return self.value & mask;
     }
-    pub fn or(self: *LogicCalculator, mask: i32): i32 {
+    pub fn or(*_: *LogicCalculator, mask: i32): i32 {
         return self.value | mask;
     }
 }
 
-fn main(): void {
+fn main() {
     // 验证透明导入外部 .zig 模块及顶层属性别名
     let dir_info: DirInfo = SubModule.get_mock_dir();
     if (dir_info.id != 88 || dir_info.name != "mock_dir") {

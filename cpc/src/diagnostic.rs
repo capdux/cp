@@ -494,6 +494,91 @@ impl Diagnostic {
             }
         }
 
+        // 15. Read-only method mutation (E0130) -> auto insert '*_' into method signature
+        if self.code == "E0130"
+            || (self.code == "E0201"
+                && (self.message.contains("read-only method")
+                    || self
+                        .suggestion
+                        .as_ref()
+                        .map_or(false, |s| s.contains("add '*_'"))))
+        {
+            if let (Some(span), Some(code)) = (self.span, source_code) {
+                let bytes = code.as_bytes();
+                let search_start = span.start.min(bytes.len());
+                if let Some(fn_pos) = code[..search_start].rfind("fn ") {
+                    if let Some(open_paren_offset) = code[fn_pos..search_start].find('(') {
+                        let open_paren = fn_pos + open_paren_offset;
+                        let mut p = open_paren + 1;
+                        while p < bytes.len()
+                            && (bytes[p] == b' '
+                                || bytes[p] == b'\t'
+                                || bytes[p] == b'\n'
+                                || bytes[p] == b'\r')
+                        {
+                            p += 1;
+                        }
+                        if p < bytes.len() && bytes[p] == b')' {
+                            edits.push(DiagnosticEdit::new(open_paren + 1, open_paren + 1, "*_"));
+                            return edits;
+                        } else if p < bytes.len()
+                            && bytes[p] == b'_'
+                            && (p == 0 || bytes[p - 1] != b'*')
+                        {
+                            edits.push(DiagnosticEdit::new(p, p, "*"));
+                            return edits;
+                        } else {
+                            edits.push(DiagnosticEdit::new(open_paren + 1, open_paren + 1, "*_, "));
+                            return edits;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 16. Reserved identifier (E0134) -> rename 'err' to 'e', or wrap with @""
+        if self.code == "E0134" {
+            if let Some(span) = self.span {
+                if let Some(sug) = &self.suggestion {
+                    if sug.contains("replace 'err' with 'e'") {
+                        edits.push(DiagnosticEdit::new(span.start, span.end, "e"));
+                        return edits;
+                    } else if let Some(escaped) = sug.strip_prefix("replace with ") {
+                        edits.push(DiagnosticEdit::new(span.start, span.end, escaped.trim()));
+                        return edits;
+                    }
+                }
+            }
+        }
+
+        // 17. Prefix '*' on named parameter (E0125) -> change '*param: T' to 'param: *T'
+        if self.code == "E0125" {
+            if let (Some(span), Some(code)) = (self.span, source_code) {
+                let bytes = code.as_bytes();
+                if span.start < bytes.len() && bytes[span.start] == b'*' {
+                    edits.push(DiagnosticEdit::new(span.start, span.start + 1, ""));
+                    let mut p = span.end;
+                    while p < bytes.len()
+                        && bytes[p] != b':'
+                        && bytes[p] != b','
+                        && bytes[p] != b')'
+                    {
+                        p += 1;
+                    }
+                    if p < bytes.len() && bytes[p] == b':' {
+                        p += 1;
+                        while p < bytes.len() && (bytes[p] == b' ' || bytes[p] == b'\t') {
+                            p += 1;
+                        }
+                        if p < bytes.len() {
+                            edits.push(DiagnosticEdit::new(p, p, "*"));
+                        }
+                    }
+                    return edits;
+                }
+            }
+        }
+
         edits
     }
 }
@@ -837,14 +922,31 @@ pub fn from_compiler_error_msg(raw_msg: &str, source_code: Option<&str>) -> Diag
         ))
     } else if msg.contains("read-only method") {
         Diagnostic::new(
-            "E0201",
+            "E0130",
             "cannot perform mutable operation in a read-only method",
         )
-        .with_cause("method receiver is read-only by default.")
+        .with_cause("method receiver is read-only by default in CP.")
         .with_help(
             "methods that modify instance fields must declare a mutable receiver parameter '*_'.",
         )
         .with_suggestion("add '*_' as the first parameter of the method: fn method(*_) { ... }")
+    } else if msg.contains("Cannot mutate read-only parameter")
+        || msg.contains("Cannot mutate read-only variable or captured outer variable")
+    {
+        let var_name = msg.split('\'').nth(1).unwrap_or("param");
+        Diagnostic::new(
+            "E0133",
+            format!("cannot reassign to read-only parameter '{}'", var_name),
+        )
+        .with_cause(format!(
+            "function parameter '{}' is a read-only borrow (immutable by default in CP).",
+            var_name
+        ))
+        .with_help("in CP, function parameters are immutable by default.")
+        .with_suggestion(format!(
+            "- 需修改调用者数据，请将形参改为可变借用: '{}: *<Type>'\n- 函数内局部游标，请在首行显式声明: 'let {}_local = {};'",
+            var_name, var_name, var_name
+        ))
     } else if msg.contains("read-only borrow") {
         let parts: Vec<&str> = msg.split('\'').collect();
         let var_name = if parts.len() >= 4 {
