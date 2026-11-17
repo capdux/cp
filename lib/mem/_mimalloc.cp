@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/mem/_mimalloc.cp
 // Low-level Mimalloc C-FFI bindings and opaque heap handles (absorbed from bun/src/mimalloc_sys/mimalloc.cp)
 

@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun bun/src/threading/pool.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/pool.cp
 // Upstream Sync: Refer to bun/src/threading/pool.zig for future upstream updates.

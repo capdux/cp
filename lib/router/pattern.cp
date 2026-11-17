@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/router/
 // lib/router/pattern.cp
 // Reverse Route Path Formatter & Parameter Placeholder Extractor
 // Absorbed from Bun src/router/

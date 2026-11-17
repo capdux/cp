@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 /**
  * CP Test SDK (cap:test)
  * Zero-overhead native test runner

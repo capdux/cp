@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun bun/src/collections/hash_map.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/collections/hash_map.cp
 // Upstream Sync: Refer to bun/src/collections/hash_map.zig for future upstream updates.

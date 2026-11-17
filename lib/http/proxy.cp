@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun path-not-recorded
 /**
  * CP HTTP Proxy Tunnel (cap:http)
  * RFC 7231 HTTP CONNECT Tunneling

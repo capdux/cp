@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 /**
  * CP Native OS Pipe (cap:io)
  * 原生管道读取器与写入器，满足 Reader / Writer / Closer Trait 契约

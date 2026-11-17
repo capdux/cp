@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/dns/packet.cp
 // RFC 1035 DNS Wire Packet Header, Domain Label Codec & Pointer Decompression
 

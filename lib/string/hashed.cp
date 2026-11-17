@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun bun/src/string/hashed.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/string/hashed.cp
 // Upstream Sync: Refer to bun/src/string/hashed.zig for future upstream updates.

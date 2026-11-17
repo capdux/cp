@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/css/values/length.cp
 // lib/css/length.cp
 // CSS Values & Units Level 4: CssUnit, CssLength, and CssCalc Evaluator
 // Absorbed and unified from Bun src/css/values/length.cp, angle.cp, time.cp, percentage.cp, calc.cp

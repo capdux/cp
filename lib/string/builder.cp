@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun bun/src/string/builder.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/string/builder.cp
 // Upstream Sync: Refer to bun/src/string/builder.zig for future upstream updates.

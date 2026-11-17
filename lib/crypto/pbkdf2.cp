@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/crypto/pbkdf2.cp
 // Password-Based Key Derivation Function 2 (PBKDF2)
 

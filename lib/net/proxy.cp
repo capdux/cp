@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/http/ProxyTunnel.cp
 // lib/net/proxy.cp
 // HTTP CONNECT Proxy Tunnel & SOCKS5 Wire Handshake Codec
 // Absorbed from Bun src/http/ProxyTunnel.cp

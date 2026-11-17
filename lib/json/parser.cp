@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // Ultra-fast zero-copy streaming JSON parser in CP
 // String keys and values borrow directly from input slice without heap allocation
 import { JsonValue, JsonField, JsonTag } from "./value";

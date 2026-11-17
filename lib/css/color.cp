@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/css/values/color.cp
 // lib/css/color.cp
 // CSS Color Level 4 Parser & Color Space Converter (Hex, RGB/RGBA, HSL/HSLA, OKLCH, Named Colors)
 // Absorbed and unified from Bun src/css/values/color.cp & color_generated.cp

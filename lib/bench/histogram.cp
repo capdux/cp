@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/perf/
 // lib/bench/histogram.cp
 // Fixed-Bucket Nanosecond Latency Histogram with Min/Max/Mean & Percentile Estimation
 // Absorbed from Bun src/perf/

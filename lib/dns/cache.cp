@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/dns/cache.cp
 // High-speed TTL-aware DNS Resolver Cache & Options (absorbed from bun/src/dns/dns.cp)
 

@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/unicode/uucode_lib/
 // lib/string/grapheme.cp
 // High-Speed UTF-8 Validator, Codepoint Counter & UAX #29 Extended Grapheme Cluster Analyzer
 // Absorbed from Bun src/unicode/uucode_lib/ & src/simdutf_sys/

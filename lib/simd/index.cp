@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // ============================================================================
 // lib/simd/index.cp — SIMD Acceleration & Vector Processing Primitives (cap:simd)
 // ============================================================================

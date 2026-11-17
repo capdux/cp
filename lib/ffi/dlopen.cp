@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/runtime/ffi/
 // lib/ffi/dlopen.cp
 // Dynamic Library Loader (dlopen/dlsym/dlclose) & FFI Type Descriptors
 // Absorbed from Bun src/runtime/ffi/ & tcc_sys/tcc.cp

@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun path-not-recorded
 /**
  * CP HTTP/3 Alt-Svc Parser (cap:http)
  * RFC 7838 Alt-Svc header handling for HTTP/3 client upgrade

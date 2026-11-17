@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/s3_signing/credentials.cp
 // ============================================================================
 // lib/s3/signing.cp — AWS Signature Version 4 (AWS4-HMAC-SHA256) 签名引擎
 // 吸收自 Bun src/s3_signing/credentials.cp

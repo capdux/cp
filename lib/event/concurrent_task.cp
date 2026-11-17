@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun bun/src/event_loop/concurrent_task.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/event_loop/concurrent_task.cp
 // Upstream Sync: Refer to bun/src/event_loop/concurrent_task.zig for future upstream updates.

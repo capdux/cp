@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/http/http.cp
 /**
  * CP Industrial HTTP/1.1 Client Engine (cap:http)
  * RFC 7230, RFC 7231, RFC 2616 HTTP/1.1 Protocol Implementation

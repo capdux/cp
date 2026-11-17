@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/crypto/_boringssl.cp
 // Low-level BoringSSL Zig C-FFI binding entry for CP (cap:crypto)
 

@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun bun/src/shell/parser.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/shell/parser.cp
 // Upstream Sync: Refer to bun/src/shell/parser.zig for future upstream updates.

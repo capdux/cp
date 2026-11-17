@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 /**
  * CP Standard Console and Stdio (cap:io)
  * 标准控制台与终端流输入输出

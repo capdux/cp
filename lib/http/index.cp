@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/http/index.cp
 // CP Standard HTTP Library (cap:http) - Industrial-grade unified HTTP subsystem
 

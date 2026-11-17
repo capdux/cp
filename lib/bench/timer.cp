@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/perf/hw_timer.cp
 // lib/bench/timer.cp
 // High-Resolution Monotonic Hardware Timer (Stopwatch) & Benchmark Percentile Statistics
 // Absorbed from Bun src/perf/hw_timer.cp, system_timer.cp & perf.cp

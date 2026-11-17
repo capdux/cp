@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/path/index.cp
 // Cross-platform path standard library for CP (cap:path)
 const builtin = @import("builtin");

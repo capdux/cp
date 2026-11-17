@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/cli/
 // lib/cli/table.cp
 // Terminal ASCII Table Formatter with Auto Column Width, Alignment & Header Separator
 // Absorbed from Bun src/cli/

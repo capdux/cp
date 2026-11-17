@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/http/etag.cp
 // HTTP ETag and If-None-Match evaluation in CP
 

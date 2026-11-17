@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun path-not-recorded
 /**
  * CP HTTP/2 Frame & Wire Protocol (cap:http)
  * RFC 7540 HTTP/2 binary framing types and constants

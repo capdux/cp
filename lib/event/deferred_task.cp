@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/event_loop/deferred_task.cp
 // Deferred microtask queue for batching I/O and non-reentrant event execution
 

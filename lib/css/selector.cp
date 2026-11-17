@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/css/selectors/parser.cp
 // lib/css/selector.cp
 // CSS Selectors Level 4 Parser, Specificity Calculator & Element Matcher
 // Absorbed and unified from Bun src/css/selectors/parser.cp, selector.cp, builder.cp

@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/string/
 // lib/encoding/hex.cp
 // Zero-heap table-driven Hexadecimal Encoder & Decoder
 // Absorbed from Bun src/string/ & encoding utilities

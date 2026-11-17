@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun path-not-recorded
 // lib/net/tcp_stream.cp
 // High-throughput TCP Stream with Corking & StreamBuffer
 // Absorbed from Bun us_socket_stream_buffer_t and SocketHandler

@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 /**
  * CP Parallel Computation and Task Orchestration (cap:parallel)
  * 专为单机多核多线程并行计算与高并发任务汇聚设计

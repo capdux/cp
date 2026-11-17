@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/libarchive/
 // ============================================================================
 // lib/pack/zip.cp — PKZIP Local File Header, Central Directory, EOCD & Zero-Copy Reader
 // Absorbed from Bun src/libarchive/

@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun path-not-recorded
 /**
  * CP HTTP/3 Client Session & Stream Manager (cap:http)
  * Ported from Bun.js http/H3Client.cp & http/h3_client/

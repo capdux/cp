@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun path-not-recorded
 /**
  * CP HTTP Content & Transfer Encoding (cap:http)
  * Ported from Bun.js http_types/Encoding.cp

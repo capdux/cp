@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/semver/index.cp
 export { Version } from "./version";
 export { SemverRange, Comparator, Op } from "./range";

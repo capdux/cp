@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/mem/index.cp
 // Unified Cap Memory & Smart Pointer Subsystem (cap:mem)
 

@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/bun_core/tty.cp
 // lib/cli/tty.cp
 // Terminal Mode, ANSI Escape Color Formatting & Progress Bar Renderer
 // Absorbed from Bun src/bun_core/tty.cp & Progress.cp

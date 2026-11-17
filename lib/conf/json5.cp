@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/interchange/json5.cp
 // lib/conf/json5.cp
 // JSON5 Token Scanner & Comment-Stripping Preprocessor
 // Absorbed from Bun src/interchange/json5.cp

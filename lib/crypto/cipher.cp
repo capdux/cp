@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/crypto/cipher.cp
 // Authenticated Encryption with Associated Data (AEAD) Ciphers: AES-256-GCM & ChaCha20-Poly1305
 

@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun bun/src/threading/
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/
 // Upstream Sync: Refer to bun/src/threading/ for future upstream updates.

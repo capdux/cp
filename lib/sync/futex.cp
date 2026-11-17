@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun bun/src/threading/futex.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/futex.cp
 // Upstream Sync: Refer to bun/src/threading/futex.zig for future upstream updates.

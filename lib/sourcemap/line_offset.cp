@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/sourcemap/LineOffsetTable.cp
 // ============================================================================
 // lib/sourcemap/line_offset.cp — 源码行起始字节偏移表与二分行号/列号定位器
 // 吸收自 Bun src/sourcemap/LineOffsetTable.cp

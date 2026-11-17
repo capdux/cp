@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/security/index.cp
 // Unified Entry Point for Security Subsystem (cap:security)
 

@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 const Position = position.Position;
 
 pub const CustomPropertyName = @import("./custom.zig").CustomPropertyName;

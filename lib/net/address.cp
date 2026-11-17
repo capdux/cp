@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/runtime/socket/SocketAddress.cp
 // lib/net/address.cp
 // High-performance IPv4 / IPv6 SocketAddress representation & parser
 // Absorbed from Bun src/runtime/socket/SocketAddress.cp and src/uws/uws.cp

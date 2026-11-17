@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun bun/src/string/path.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/string/path.cp
 // Upstream Sync: Refer to bun/src/string/path.zig for future upstream updates.

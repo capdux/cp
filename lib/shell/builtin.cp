@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun bun/src/shell/builtin.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/shell/builtin.cp
 // Upstream Sync: Refer to bun/src/shell/builtin.zig for future upstream updates.

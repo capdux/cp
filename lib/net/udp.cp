@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/uws_sys/udp.cp
 // lib/net/udp.cp
 // High-performance UDP Datagram Socket & Packet Abstraction
 // Absorbed from Bun src/uws_sys/udp.cp and src/runtime/socket/udp_socket.cp

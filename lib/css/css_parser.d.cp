@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 import bun from "bun";
 pub const SrcIndex = bun.bundle_v2.Index;
 pub const SymbolList = bun.ast.Symbol.List;

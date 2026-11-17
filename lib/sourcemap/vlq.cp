@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/sourcemap/VLQ.cp
 // ============================================================================
 // lib/sourcemap/vlq.cp — Base64 VLQ (Variable-Length Quantity) 编解码器
 // 吸收自 Bun src/sourcemap/VLQ.cp

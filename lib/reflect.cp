@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 /**
  * CP Reflection Standard Library (cap:reflect)
  * Zero-cost introspection & metadata reflection

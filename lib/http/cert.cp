@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun path-not-recorded
 /**
  * CP HTTP TLS Certificate Info & Errors (cap:http)
  * Ported from Bun.js http/CertificateInfo.cp & HTTPCertError.cp

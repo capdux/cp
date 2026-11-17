@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 /**
  * CP Standard JSON & Serde (cap:json / cap:serde)
  * 工业级零拷贝序列化与反序列化体系

@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun path-not-recorded
 /**
  * CP HTTP Internal State & Protocols (cap:http)
  * Ported from Bun.js http/InternalState.cp & http/http.cp

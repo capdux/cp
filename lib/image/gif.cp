@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun bun/src/runtime/image/codec_gif.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/codec_gif.cp
 // Upstream Sync: Refer to bun/src/runtime/image/codec_gif.zig for future upstream updates.

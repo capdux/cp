@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/s3_signing/credentials.cp
 // ============================================================================
 // lib/s3/credentials.cp — S3 凭证模型、校验与 Path-Style / Virtual-Hosted 端点拼接
 // 吸收自 Bun src/s3_signing/credentials.cp

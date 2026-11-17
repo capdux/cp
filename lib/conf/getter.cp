@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/conf/getter.cp
 // Type-Safe Configuration Value Parser (Booleans, Ports, Durations & Byte Sizes)
 

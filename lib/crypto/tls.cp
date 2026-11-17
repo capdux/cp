@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/crypto/tls.cp
 // BoringSSL TLS & X.509 Server Identity Verification for CP (cap:crypto)
 

@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/mem/allocator.cp
 // High-performance Arena, StackFallbackAllocator, BumpArena, MaybeOwnedBuf, and SharedTensor
 // Absorbed from bun/src/bun_alloc/ (BufferFallbackAllocator, MaxHeapAllocator, maybe_owned, MimallocArena)

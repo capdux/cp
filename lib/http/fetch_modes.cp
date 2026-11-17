@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun path-not-recorded
 // lib/http/fetch_modes.cp
 // CP Web Fetch Request Enums & Modes (cap:http)
 // Ported from Bun.js http_types (FetchCacheMode, FetchRedirect, FetchRequestMode)

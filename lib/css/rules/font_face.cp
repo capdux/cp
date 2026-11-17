@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 import css from "../css_parser.zig";
 const Printer = css.Printer;
 const Maybe = css.Maybe;

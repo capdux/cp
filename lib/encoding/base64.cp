@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/encoding/base64.cp
 // High-performance Base64 encoder and decoder in pure CP
 

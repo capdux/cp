@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/http/h3/index.cp
 // HTTP/3 protocol client subsystem (QUIC)
 

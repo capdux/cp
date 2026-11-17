@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/interchange/toml.cp
 // lib/conf/toml.cp
 // Lightweight zero-allocation TOML configuration parser
 // Absorbed from Bun src/interchange/toml.cp

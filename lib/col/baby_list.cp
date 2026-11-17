@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/collections/baby_list.cp
 // lib/collections/baby_list.cp
 // Ultra-compact u32-indexed dynamic list & OffsetByteList
 // Absorbed from Bun src/collections/baby_list.cp

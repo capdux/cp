@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 pub inline fn implementDeepClone(comptime T: type, this: *const T, allocator: Allocator): T {
     const tyinfo = @typeInfo(T);
 

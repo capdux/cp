@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/css/rules/
 // lib/css/stylesheet.cp
 // CSS Rules, Declarations, @media Queries, @keyframes, Stylesheet Parser & Minifier
 // Absorbed and unified from Bun src/css/rules/{rules,style,media,keyframes,supports,layer,container,font_face,import}.cp

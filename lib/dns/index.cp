@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/dns/index.cp
 // Unified Cap DNS Resolution, Wire Codec & c-ares Subsystem (cap:dns)
 

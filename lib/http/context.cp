@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun path-not-recorded
 /**
  * CP HTTP Context & Keep-Alive Connection Pool (cap:http)
  * Ported from Bun.js http/HTTPContext.cp

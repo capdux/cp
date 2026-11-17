@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/string/
 // lib/string/case.cp
 // Zero-heap Identifier Naming Case Converter (snake_case, kebab-case, camelCase, PascalCase, SCREAMING_SNAKE_CASE)
 // Absorbed from Bun src/string/

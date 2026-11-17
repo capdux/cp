@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 /// This is a type whose items can either be heap-allocated (essentially the
 /// same as a BabyList(T)) or inlined in the struct itself.
 ///

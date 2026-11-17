@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun bun/src/event_loop/
 // ============================================================================
 // Absorbed from Bun: bun/src/event_loop/
 // Upstream Sync: Refer to bun/src/event_loop/ for future upstream updates.

@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/http/CookieMap.cp
 // lib/http/cookie.cp
 // RFC 6265 HTTP Cookie Header Parser, CookieMap & Set-Cookie Serializer
 // Absorbed from Bun src/http/CookieMap.cp

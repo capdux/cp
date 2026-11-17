@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 //
 // Wyhash port to CP language for Bun.js
 // Based on Wyhash from the zig standard library, version v0.11.0-dev.2609+5e19250a1

@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/md/root.cp
 // lib/md/markdown.cp
 // CommonMark / GFM Markdown Parser, HTML Renderer & Terminal ANSI Renderer
 // Absorbed from Bun src/md/root.cp, html_renderer.cp & ansi_renderer.cp

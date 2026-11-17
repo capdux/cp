@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // Zero-copy JSON value representation in CP
 // String keys and string values borrow directly from source slice without heap duplication
 

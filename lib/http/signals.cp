@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun path-not-recorded
 // lib/http/signals.cp
 // CP HTTP Atomic Signals & Flags (cap:http)
 // Ported from Bun.js http/Signals.cp

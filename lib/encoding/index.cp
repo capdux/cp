@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/encoding/index.cp
 export { Base64 } from "./base64";
 export { Hex } from "./hex.cp";

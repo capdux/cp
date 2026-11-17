@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/dns/_cares.cp
 // Low-level c-ares C-FFI bindings, NSClass/NSType & ARES status codes
 // Absorbed from bun/src/cares_sys/c_ares.cp

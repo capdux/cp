@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun bun/src/string/joiner.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/string/joiner.cp
 // Upstream Sync: Refer to bun/src/string/joiner.zig for future upstream updates.

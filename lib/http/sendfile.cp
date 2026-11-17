@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun path-not-recorded
 /**
  * CP HTTP SendFile Kernel Zero-Copy File Upload (cap:http)
  * Ported from Bun.js http/SendFile.cp

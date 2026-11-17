@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun path-not-recorded
 /**
  * CP HTTP Header Value Iterator (cap:http)
  * Ported from Bun.js http/HeaderValueIterator.cp

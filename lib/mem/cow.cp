@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/mem/cow.cp
 // Copy-on-Write byte slice (absorbed from bun/src/ptr/CowSlice.cp & Cow.cp)
 

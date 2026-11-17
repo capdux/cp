@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun bun/src/shell/lexer.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/shell/lexer.cp
 // Upstream Sync: Refer to bun/src/shell/lexer.zig for future upstream updates.

@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // lib/mem/rc.cp
 // Deterministic Reference Counting & Weak Control Block (absorbed from bun/src/ptr/raw_ref_count.cp, ref_count.cp, weak_ptr.cp)
 

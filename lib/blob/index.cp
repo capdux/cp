@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun bun/src/runtime/webcore/
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/webcore/
 // Upstream Sync: Refer to bun/src/runtime/webcore/ for future upstream updates.

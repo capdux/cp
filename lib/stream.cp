@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 /**
  * CP Standard Stream Library (cap:stream)
  * 工业级统一流式 Trait 契约与管道体系

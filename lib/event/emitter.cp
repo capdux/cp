@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 /**
  * CP Event-Driven Subsystem (cap:events)
  * 提供对标 Node.js/TypeScript 的高层发布订阅 (EventEmitter) 与协程同步原语 (Event)

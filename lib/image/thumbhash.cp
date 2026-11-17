@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun bun/src/runtime/image/thumbhash.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/thumbhash.cp
 // Upstream Sync: Refer to bun/src/runtime/image/thumbhash.zig for future upstream updates.

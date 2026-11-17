@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
 // ============================================================================
 // lib/compress/gzip.cp — RFC 1952 Gzip 帧头/帧尾编解码与高速 RLE 字节压缩器
 // ============================================================================

@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Bun src/sql/postgres/
 // lib/sql/protocol.cp
 // Unified SQL Parameterized Statement, Postgres v3 Wire Frame & MySQL Packet Protocol
 // Absorbed from Bun src/sql/postgres/, src/sql/mysql/ & src/sql/shared/
