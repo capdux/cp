@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 /**
  * CP HTTP Content & Transfer Encoding (cap:http)
  * Ported from Bun.js http_types/Encoding.cp

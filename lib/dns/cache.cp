@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/dns/cache.cp
 // High-speed TTL-aware DNS Resolver Cache & Options (absorbed from bun/src/dns/dns.cp)
 

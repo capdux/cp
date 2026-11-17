@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/cli/args.cp
 // Zero-allocation Command-Line Flag, Option, and Positional Argument Parser
 // Absorbed from Bun src/clap/args.cp & clap.cp

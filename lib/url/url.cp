@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/url/url.cp
 // WHATWG URL parser and representation in CP
 import { URLSearchParams } from "./query";

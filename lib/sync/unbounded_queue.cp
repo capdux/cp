@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/unbounded_queue.cp
 // Upstream Sync: Refer to bun/src/threading/unbounded_queue.zig for future upstream updates.

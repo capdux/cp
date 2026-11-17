@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/condition.cp
 // Upstream Sync: Refer to bun/src/threading/condition.zig for future upstream updates.

@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 /**
  * CP HTTP/2 Client Session & Stream Manager (cap:http)
  * Ported from Bun.js http/H2Client.cp & http/h2_client/

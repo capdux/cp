@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/watch/watcher.cp
 // Cross-Platform Filesystem Watcher & Linux inotify / macOS kqueue Event Abstraction
 // Absorbed from Bun src/watcher/INotifyWatcher.cp, KEventWatcher.cp & Watcher.cp

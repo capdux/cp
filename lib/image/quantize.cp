@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/quantize.cp
 // Upstream Sync: Refer to bun/src/runtime/image/quantize.zig for future upstream updates.

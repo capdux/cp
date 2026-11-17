@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // lib/col/soa.cp
 // High-performance SoA (Struct of Arrays) column-oriented container

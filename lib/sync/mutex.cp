@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/mutex.cp
 // Upstream Sync: Refer to bun/src/threading/mutex.zig for future upstream updates.

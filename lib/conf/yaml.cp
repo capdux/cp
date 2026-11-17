@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/conf/yaml.cp
 // Lightweight zero-allocation YAML key-value & block configuration parser
 // Absorbed from Bun src/interchange/yaml.cp

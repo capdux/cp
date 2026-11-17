@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/http/index.cp
 // CP Standard HTTP Library (cap:http) - Industrial-grade unified HTTP subsystem
 

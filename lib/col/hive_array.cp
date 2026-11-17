@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // Absorbed from Bun: bun/src/collections/hive_array.cp
 // Upstream Sync: Refer to bun/src/collections/hive_array.zig for future upstream updates.

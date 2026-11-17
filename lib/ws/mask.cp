@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // Absorbed from Bun: bun/src/ws/mask.cp
 // Upstream Sync: Refer to bun/src/ws/mask.zig for future upstream updates.

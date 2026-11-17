@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/security/csrf.cp
 // CSRF Token Generation and Verification in pure CP
 // Uses CSPRNG nonces, HMAC-SHA256 signatures, and constant-time comparison

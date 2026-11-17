@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/collections/linear_fifo.cp
 // High-throughput power-of-two ring-buffer FIFO queue
 // Absorbed from Bun src/collections/linear_fifo.cp

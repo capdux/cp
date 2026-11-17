@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/elf/macho_pe.cp
 // Mach-O 64-bit Header & PE/COFF Header Binary Inspectors
 // Absorbed from Bun src/exe_format/macho.cp & src/exe_format/pe.cp

@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/encoding/index.cp
 export { Base64 } from "./base64";
 export { Hex } from "./hex.cp";

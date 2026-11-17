@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // Absorbed from Bun: bun/src/ws/frame.cp
 // Upstream Sync: Refer to bun/src/ws/frame.zig for future upstream updates.

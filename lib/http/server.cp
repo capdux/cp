@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 /**
  * CP HTTP Server & Client (cap:http)
  */

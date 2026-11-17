@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/url/query.cp
 // URLSearchParams query string parser and serializer
 

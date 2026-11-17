@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 /**
  * CP Reflection Standard Library (cap:reflect)
  * Zero-cost introspection & metadata reflection

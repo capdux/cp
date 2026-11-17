@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // lib/pack/_archive.cp — Libarchive C-FFI Bindings & Constants
 // Absorbed from Bun src/libarchive_sys/bindings.cp

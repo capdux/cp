@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/http/headers.cp
 // High-performance case-insensitive HTTP Headers collection
 

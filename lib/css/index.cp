@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/css/index.cp
 // Unified Public Exports for cap:css
 // Absorbed from Bun src/css/ (rules/, selectors/, values/)

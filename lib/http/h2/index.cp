@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/http/h2/index.cp
 // HTTP/2 protocol client subsystem
 

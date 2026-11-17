@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/dns/index.cp
 // Unified Cap DNS Resolution, Wire Codec & c-ares Subsystem (cap:dns)
 

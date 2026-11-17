@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/crypto/hmac.cp
 // HMAC message authentication code (SHA256, SHA512)
 

@@ -1,3 +1,4 @@
+// Source: Zig Standard Library: std.hash
 // ============================================================================
 // lib/hash/index.cp — High-Speed Non-Cryptographic Hashing Matrix (cap:hash)
 // Absorbed from Zig Standard Library: std.hash (XxHash3, Murmur, CityHash, CRC32, Adler32, SipHash)

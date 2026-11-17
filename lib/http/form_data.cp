@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/http/form_data.cp
 // RFC 7578 multipart/form-data & URL-Encoded FormData Parser
 // Absorbed from Bun src/http/FormData.cp & mime.cp

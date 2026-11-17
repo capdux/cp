@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/security/index.cp
 // Unified Entry Point for Security Subsystem (cap:security)
 

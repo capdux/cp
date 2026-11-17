@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/ring_buffer.cp
 // Upstream Sync: Refer to bun/src/threading/ring_buffer.zig for future upstream updates.

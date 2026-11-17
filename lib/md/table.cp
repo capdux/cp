@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/md/table.cp
 // GFM Markdown Table Alignment Parser, Row Cell Splitter & HTML <table> Renderer
 // Absorbed from Bun src/md/

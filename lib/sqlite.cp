@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 __zig__ {
     extern "c" fn sqlite3_open(filename: [*c]const u8, ppDb: *?*anyopaque) c_int;
     extern "c" fn sqlite3_close(db: ?*anyopaque) c_int;

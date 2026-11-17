@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/wait_group.cp
 // Upstream Sync: Refer to bun/src/threading/wait_group.zig for future upstream updates.

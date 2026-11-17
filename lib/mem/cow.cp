@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/mem/cow.cp
 // Copy-on-Write byte slice (absorbed from bun/src/ptr/CowSlice.cp & Cow.cp)
 

@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 /**
  * CP Buffer Limit Guard (cap:io)
  * 缓冲区最大字节限制守卫 (Ported from Bun.js MaxBuf)

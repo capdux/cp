@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/mem/index.cp
 // Unified Cap Memory & Smart Pointer Subsystem (cap:mem)
 

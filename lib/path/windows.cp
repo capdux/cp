@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/path/windows.cp
 // Windows path utilities in CP
 

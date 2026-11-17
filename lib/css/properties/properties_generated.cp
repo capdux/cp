@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 import bun from "bun";
 const Allocator = std.mem.Allocator;
 

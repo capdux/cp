@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 const Position = position.Position;
 
 pub const CustomPropertyName = @import("./custom.zig").CustomPropertyName;

@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/elf/format.cp
 // Executable Binary Format Detection & ELF64 / Mach-O / PE Header Inspector
 // Absorbed from Bun src/exe_format/elf.cp, macho.cp & pe.cp

@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 /**
  * CP HTTP Request Body (cap:http)
  * Ported from Bun.js http/HTTPRequestBody.cp

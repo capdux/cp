@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/sql/mysql.cp
 // MySQL Wire Protocol: Length-Encoded Integer, OK_Packet, ERR_Packet & Capabilities
 // Absorbed from Bun src/sql/mysql/Capabilities.cp & src/sql/mysql/protocol/

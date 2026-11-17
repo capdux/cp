@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/webcore/blob/Store.cp
 // Upstream Sync: Refer to bun/src/runtime/webcore/blob/Store.zig for future upstream updates.

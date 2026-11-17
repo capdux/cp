@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/http/method.cp
 // HTTP Method enumeration and helper functions
 

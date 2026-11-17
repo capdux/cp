@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 /**
  * CP Test SDK (cap:test)
  * Zero-overhead native test runner

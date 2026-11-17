@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/conf/ini.cp
 // High-performance INI file parser in CP
 

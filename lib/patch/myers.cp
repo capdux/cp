@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/patch/myers.cp
 // Line-Level Text Differ (Common Prefix/Suffix Trimming, DiffOp Sequence & Unified Diff Formatter)
 // Absorbed from Bun src/patch/

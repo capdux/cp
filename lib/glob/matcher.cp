@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/glob/matcher.cp
 // High-performance Unix Glob matcher in CP
 

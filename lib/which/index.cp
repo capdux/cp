@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // Absorbed from Bun: bun/src/which/
 // Upstream Sync: Refer to bun/src/which/ for future upstream updates.

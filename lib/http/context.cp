@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 /**
  * CP HTTP Context & Keep-Alive Connection Pool (cap:http)
  * Ported from Bun.js http/HTTPContext.cp

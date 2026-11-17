@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 //! This is the selector builder module ported from the copypasted implementation from
 //! servo in lightningcss.
 //!

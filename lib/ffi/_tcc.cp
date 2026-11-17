@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/ffi/_tcc.cp
 // TinyCC In-Memory C Compiler C-FFI Bindings
 // Absorbed from Bun src/tcc_sys/tcc.cp

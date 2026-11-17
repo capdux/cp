@@ -4538,3 +4538,25 @@ return 0; // EOF
 【CP 语法极简化与严格统一规范指令】
 `cpc` 编译器已全面支持单文件全量错误一次性输出（`cpc check` / `cpc check --json` / `cpc compile`
 会一次性列出文件内所有语法/语义问题及修复建议）。请严格按照以下 10 条无特例规则修正并推进 `/data/dev/bun/src/` 的迁移：
+
+三、 七大目前在 CP 中 100% 空白、被严重埋没的 Zig 原生资产
+以下 7 项在 Bun 生态中并不存在（因 Bun 依赖 JavaScriptCore），但 Zig 官方将其调优至世界顶级水准：
+
+1. cap:sort — 工业级自适应排序引擎（std.sort.pdq）：
+   • 采用 Orson Peters 的 Pattern-defeating Quicksort，遇到特定模式（已排序/大量重复）退化为 O(N)，最坏情况保底 O(N log N)，0 堆内存分配；
+   • 彻底填补 CP 目前在通用切片排序上的绝对空白。
+2. cap:hash — 非密码学极速散列全家桶（std.hash）：
+   • XxHash3：现代 CPU 利用 AVX2/NEON SIMD 实现 30 ~ 50 GB/s 的极限吞吐；
+   • 补齐 Murmur3、Google CityHash、硬件直通指令 CRC32、Adler32，专为内存哈希表与分布式缓存而生。
+3. cap:bigint — 任意精度大整数与有理数（std.math.big）：
+   • 内置 Karatsuba 高速乘法与 Miller-Rabin 素性检测；
+   • 专门提供纯栈上零分配的 256 位大数 BigInt256，直通 Web3 以太坊 EVM（uint256）与现代金融精准计算。
+4. cap:sys — 多核 CPU 绑核与运行时动态库热载（std.posix / std.DynLib）：
+   • 精准控制线程绑定到特定 NUMA 节点核心（sched_setaffinity）；
+   • 跨平台 DynLib（在 Linux 下自带独立 ELF 解析器，脱离 libdl.so 亦可安全载入动态库）。
+5. cap:simd — 硬件自适应通用 SIMD 矩阵（std.simd）：
+   • 自适应宿主向量宽度（suggestVectorLength），提供并行对数前缀扫描（prefixScan）、离散内存并行读写（gather/scatter）。
+6. Treap 平衡树与优先队列（std.treap / std.priority_queue）：
+   • 内存远小于红黑树的随机平衡二叉树，天然适配 Actor 优先级调度信箱与最小堆定时器。
+7. 纯 Zig TAR / ZIP 归档遍历与解包（std.tar / std.zip）：
+   • 零 C 依赖解包工程包与资产包。

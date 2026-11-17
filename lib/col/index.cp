@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // Absorbed from Bun: bun/src/collections/
 // Upstream Sync: Refer to bun/src/collections/ for future upstream updates.
@@ -26,3 +27,7 @@ export * from "./string_map.cp";
 export * from "./object_pool.cp";
 export * from "./hash_map.cp";
 export * from "./soa.cp";
+
+export * from "./priority_queue.cp";
+export * from "./leb128.cp";
+export * from "./treap.cp";

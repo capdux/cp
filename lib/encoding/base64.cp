@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/encoding/base64.cp
 // High-performance Base64 encoder and decoder in pure CP
 

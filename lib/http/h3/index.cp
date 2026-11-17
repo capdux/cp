@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/http/h3/index.cp
 // HTTP/3 protocol client subsystem (QUIC)
 

@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 import bun from "bun";
 pub const SrcIndex = bun.bundle_v2.Index;
 

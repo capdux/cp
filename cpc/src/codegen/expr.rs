@@ -740,6 +740,24 @@ impl Codegen {
                             let arg = self.generate_expr(&call.args[0]);
                             return format!("{}.has({})", id.sym, arg);
                         }
+                        if id.sym == "Managed" {
+                            let mut args_code = Vec::new();
+                            for a in call.args.iter() {
+                                let mut gen_arg = self.generate_expr(a);
+                                let arg_ty = self.infer_cp_type(a);
+                                let mut ty = arg_ty.clone();
+                                if let Some(Type::BorrowType { inner, .. }) = ty {
+                                    ty = Some(*inner);
+                                }
+                                if let Some(Type::Ref(id)) = ty {
+                                if id.sym == "Managed" && !gen_arg.starts_with('&') && !gen_arg.starts_with('*') {
+                                        gen_arg = format!("&{}", gen_arg);
+                                    }
+                                }
+                                args_code.push(gen_arg);
+                            }
+                            return format!("{}.{}({})", id.sym, prop, args_code.join(", "));
+                        }
                         if id.sym == "Shared" && prop == "new" && !call.args.is_empty() {
                             let arg = self.generate_expr(&call.args[0]);
                             return format!(
@@ -2112,7 +2130,17 @@ impl Codegen {
                             }
                         }
                     }
+                    let param = fn_sig_opt.as_ref().and_then(|sig| sig.params.get(idx));
                     let mut gen_arg = self.generate_expr(arg);
+                    if let Some(p) = param {
+                        if let Type::Ref(id) = &p.ty {
+                            if id.sym == "BigInt" {
+                                if !gen_arg.starts_with('&') {
+                                    gen_arg = format!("&{}", gen_arg);
+                                }
+                            }
+                        }
+                    }
                     if gen_arg.starts_with("lambda_") {
                         gen_arg = format!("@ptrCast(@constCast(&{}))", gen_arg);
                     }

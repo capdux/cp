@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/crypto/cipher.cp
 // Authenticated Encryption with Associated Data (AEAD) Ciphers: AES-256-GCM & ChaCha20-Poly1305
 

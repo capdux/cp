@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/semver/index.cp
 export { Version } from "./version";
 export { SemverRange, Comparator, Op } from "./range";

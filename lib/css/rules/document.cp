@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 import css from "../css_parser.zig";
 const Printer = css.Printer;
 const PrintErr = css.PrintErr;

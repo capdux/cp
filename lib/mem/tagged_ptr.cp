@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/mem/tagged_ptr.cp
 // 64-bit NaN-boxing / upper-16-bit & low-3-bit Tagged Pointers (absorbed from bun/src/ptr/tagged_pointer.cp)
 

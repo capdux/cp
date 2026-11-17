@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // Absorbed from Bun: bun/src/sql/sqlite.cp
 // Upstream Sync: Refer to bun/src/sql/sqlite.zig for future upstream updates.

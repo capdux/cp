@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // Zero-copy JSON value representation in CP
 // String keys and string values borrow directly from source slice without heap duplication
 

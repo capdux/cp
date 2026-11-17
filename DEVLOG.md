@@ -1270,3 +1270,10 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
 
 
 
+## 2026-11-17: Implementing Col & Pack Modules
+- Task: Implement `lib/col/priority_queue.cp`, `lib/col/treap.cp`, `lib/col/leb128.cp`, `lib/pack/native.cp`.
+- Update `lib/col/index.cp` and `lib/pack/index.cp`.
+- Create tests and documentation.
+## 2026-11-17: Finalizing Implementation
+- Task: Finalized implementation of `lib/col/treap.cp`, `cap/test/test_treap_leb128.cp`, `cap/test/test_pack_native.cp`, `docs/stdlib/col_advanced.md`, `docs/stdlib/pack_native.md`.
+- All files created.

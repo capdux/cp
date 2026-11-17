@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 /**
  * CP Standard Console and Stdio (cap:io)
  * 标准控制台与终端流输入输出

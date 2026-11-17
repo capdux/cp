@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // lib/sourcemap/mapping.cp — SourceMap v3 映射表解析与 O(log N) 源码位置反查
 // 吸收自 Bun src/sourcemap/ParsedSourceMap.cp & sourcemap.zig

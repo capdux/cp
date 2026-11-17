@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/path/posix.cp
 // POSIX path utilities in CP
 

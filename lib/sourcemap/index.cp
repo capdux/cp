@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // lib/sourcemap/index.cp — CP 标准 SourceMap v3 与 VLQ 模块 (cap:sourcemap)
 // ============================================================================

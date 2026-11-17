@@ -1,3 +1,4 @@
+// Source: Zig Standard Library: std.sort
 // ============================================================================
 // lib/sort/index.cp — High-Performance Sorting & Slice Query Primitives (cap:sort)
 // Absorbed from Zig Standard Library: std.sort (PDQSort, BlockSort, HeapSort)

@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/glob/index.cp
 export { Matcher } from "./matcher";
 

@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 /**
  * CP Standard JSON & Serde (cap:json / cap:serde)
  * 工业级零拷贝序列化与反序列化体系

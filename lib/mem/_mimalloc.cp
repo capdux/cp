@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/mem/_mimalloc.cp
 // Low-level Mimalloc C-FFI bindings and opaque heap handles (absorbed from bun/src/mimalloc_sys/mimalloc.cp)
 

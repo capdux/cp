@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/redis/resp.cp
 // RESP2 / RESP3 (Redis / Valkey Serialization Protocol) Frame Parser & Encoder
 // Absorbed from Bun src/valkey/valkey_protocol.cp

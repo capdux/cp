@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/http/_picohttp.cp
 // PicoHTTPParser C-FFI declarations & zero-copy HTTP/1.x request/response wire parser
 // Absorbed from bun/src/picohttp_sys/picohttpparser.cp & bun/src/picohttp/picohttp.cp

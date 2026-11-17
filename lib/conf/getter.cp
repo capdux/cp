@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/conf/getter.cp
 // Type-Safe Configuration Value Parser (Booleans, Ports, Durations & Byte Sizes)
 

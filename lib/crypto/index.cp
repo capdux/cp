@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/crypto/index.cp
 // Unified Entry Point for Industrial Cryptography Subsystem (cap:crypto)
 

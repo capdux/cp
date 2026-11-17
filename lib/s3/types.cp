@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // lib/s3/types.cp — S3 访问控制列表 (ACL)、存储类型 (StorageClass) 与错误码
 // 吸收自 Bun src/s3_signing/acl.cp, storage_class.cp, error.cp

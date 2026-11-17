@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/path/index.cp
 // Cross-platform path standard library for CP (cap:path)
 const builtin = @import("builtin");

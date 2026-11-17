@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/ffi/layout.cp
 // C-ABI Struct Memory Alignment & Offset Calculator for FFI
 

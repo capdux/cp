@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/patch/diff.cp
 // Unified Diff Hunk Parser, Patch Applicator & Line-Level Diff Statistics
 // Absorbed from Bun src/patch/patch.cp

@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/event_loop/deferred_task.cp
 // Deferred microtask queue for batching I/O and non-reentrant event execution
 

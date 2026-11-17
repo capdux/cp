@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // Absorbed from Bun: bun/src/collections/bit_set.cp
 // Upstream Sync: Refer to bun/src/collections/bit_set.zig for future upstream updates.

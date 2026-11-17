@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/url/percent.cp
 // RFC 3986 URI Component Percent-Encoder & Decoder
 // Absorbed from Bun src/url/percent-encoding.cp

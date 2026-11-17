@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 /**
  * CP Standard I/O Traits (cap:io)
  * 统一流式 Trait 契约与错误集

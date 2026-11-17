@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/crypto/pbkdf2.cp
 // Password-Based Key Derivation Function 2 (PBKDF2)
 

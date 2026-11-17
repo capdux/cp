@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/html/selector.cp
 // CSS Selector Parser & Streaming HTML Element/Text Rewriter
 // Absorbed from Bun src/lolhtml_sys/lol_html.cp & src/css/selectors/

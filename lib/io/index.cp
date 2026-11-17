@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 /**
  * CP Standard I/O (cap:io)
  * 工业级统一高性能 I/O 流体系、管道与标准终端

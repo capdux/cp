@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // Absorbed from Bun: bun/src/collections/object_pool.cp
 // Upstream Sync: Refer to bun/src/collections/object_pool.zig for future upstream updates.

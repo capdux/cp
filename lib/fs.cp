@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 /**
  * CP File System SDK (cap:fs)
  * 使用 @is_nest 进行显式双模分支逻辑重构

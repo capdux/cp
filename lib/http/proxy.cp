@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 /**
  * CP HTTP Proxy Tunnel (cap:http)
  * RFC 7231 HTTP CONNECT Tunneling

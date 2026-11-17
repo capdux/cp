@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/conf/dotenv.cp
 // High-performance, zero-allocation .env loader in CP
 

@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/crypto/hash.cp
 // High-performance cryptographic hashing (SHA256, SHA512, SHA1, MD5)
 

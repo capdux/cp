@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 /**
  * CP Standard Stream Library (cap:stream)
  * 工业级统一流式 Trait 契约与管道体系

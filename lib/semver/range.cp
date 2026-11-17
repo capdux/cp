@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/semver/range.cp
 // Semver Range matching (^, ~, >=, <=, >, <, =, *, ||) in CP
 import { Version } from "./version";

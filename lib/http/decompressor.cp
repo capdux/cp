@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 /**
  * CP HTTP Stream Decompressor (cap:http)
  * RFC 1952 (Gzip), RFC 1951 (Deflate), RFC 7932 (Brotli), RFC 8478 (Zstd)

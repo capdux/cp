@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/html/escape.cp
 // Zero-copy fast-path HTML Entity Escaper & Unescaper
 // Absorbed from Bun src/md/entity.cp & HTML escaping utilities

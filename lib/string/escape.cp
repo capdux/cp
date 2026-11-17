@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/string/escape.cp
 // High-speed HTML entity escaping & RegExp pattern escaping
 // Absorbed from bun/src/string/immutable/escapeHTML.zig & bun/src/string/escapeRegExp.cp

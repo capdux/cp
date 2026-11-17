@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/http/etag.cp
 // HTTP ETag and If-None-Match evaluation in CP
 

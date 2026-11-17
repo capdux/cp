@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/router/param_map.cp
 // High-performance route parameter dictionary with inline stack storage
 

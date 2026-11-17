@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/codec_bmp.cp
 // Upstream Sync: Refer to bun/src/runtime/image/codec_bmp.zig for future upstream updates.

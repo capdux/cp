@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/semver/version.cp
 // Semver 2.0 Semantic Version specification in CP
 

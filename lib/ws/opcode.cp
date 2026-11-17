@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // Absorbed from Bun: bun/src/ws/opcode.cp
 // Upstream Sync: Refer to bun/src/ws/opcode.zig for future upstream updates.

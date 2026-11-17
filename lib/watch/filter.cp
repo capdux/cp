@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/watch/filter.cp
 // Filesystem Watch Path Ignore Filter & Timestamp-Based Event Debouncer
 // Absorbed from Bun src/watcher/

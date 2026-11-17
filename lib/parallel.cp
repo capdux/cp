@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 /**
  * CP Parallel Computation and Task Orchestration (cap:parallel)
  * 专为单机多核多线程并行计算与高并发任务汇聚设计

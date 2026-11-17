@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/crypto/random.cp
 // Cryptographically secure pseudorandom number generator (CSPRNG) & RFC 4122 v4 UUID
 

@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/redis/command.cp
 // Redis / Valkey Command Builders & Pipelined Batch Buffer
 // Absorbed from Bun src/valkey/valkey_protocol.cp

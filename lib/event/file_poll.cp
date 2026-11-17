@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // ============================================================================
 // Absorbed from Bun: bun/src/event_loop/file_poll.cp
 // Upstream Sync: Refer to bun/src/event_loop/file_poll.zig for future upstream updates.

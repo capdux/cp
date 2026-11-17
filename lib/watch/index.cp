@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/watch/index.cp
 // Unified Public Exports for cap:watch
 

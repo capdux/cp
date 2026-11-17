@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/net/_usockets.cp
 // Low-level uSockets C-FFI bindings, opaque handles, and constants
 // Absorbed from Bun src/uws_sys/ and src/uws/uws.cp

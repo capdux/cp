@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/net/socket.cp
 // SafeSocket with RAII, socket options, long-timeout splitting, and legacy Socket compatibility
 // Absorbed from Bun src/uws_sys/socket.cp and src/uws_sys/us_socket_t.cp

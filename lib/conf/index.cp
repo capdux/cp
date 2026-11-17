@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/conf/index.cp
 // Unified Configuration & Interchange Subsystem (cap:conf / cap:dotenv / cap:ini)
 

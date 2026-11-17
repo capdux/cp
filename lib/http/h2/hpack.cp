@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/http/h2/hpack.cp
 // RFC 7541 HPACK Header Compression for HTTP/2
 // Prefix integer codec, static table lookup, and header block encoder/decoder

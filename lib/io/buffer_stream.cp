@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 /**
  * CP Buffer Streams (cap:io)
  * 内存切片与缓冲流

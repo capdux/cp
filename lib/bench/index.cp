@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/bench/index.cp
 // Unified Public Exports for cap:bench
 

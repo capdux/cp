@@ -694,6 +694,9 @@ impl Codegen {
                 if let Some(t) = mock_types.get(&id.sym) {
                     return Some(t.clone());
                 }
+                if id.sym == "Managed" {
+                    return Some(Type::Ref(Ident { sym: "Managed".to_string(), span: id.span }));
+                }
                 if id.sym == "true" || id.sym == "false" {
                     return Some(Type::Bool);
                 }
@@ -2229,7 +2232,7 @@ impl Codegen {
                     return format!("*{}", inner_z);
                 }
                 Expr::Ident(id) => {
-                    if id.sym == "true" || id.sym == "false" {
+                if id.sym == "true" || id.sym == "false" {
                         return "bool".to_string();
                     }
                     if id.sym == "@self" || id.sym == "@sender" {
@@ -2458,6 +2461,9 @@ impl Codegen {
                         let mapped_args = Self::map_generic_args_str(args);
                         return format!("{}({})", base, mapped_args);
                     }
+                }
+                if ident.sym == "Managed" {
+                    return ident.sym.clone();
                 }
                 if ident.sym == "cstring" {
                     return "[:0]const u8".to_string();

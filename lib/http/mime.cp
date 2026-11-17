@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/http/mime.cp
 // Fast MIME type mapping based on file extension
 

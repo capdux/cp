@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/collections/string_map.cp
 // Length-filtered fast string lookup map
 // Absorbed from Bun src/collections/comptime_string_map.cp & StaticHashMap.cp

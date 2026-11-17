@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // Thread-safe bounded channel in CP
 // High-throughput CSP communication primitive
 import { Mutex } from "./mutex";

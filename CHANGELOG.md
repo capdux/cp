@@ -1002,3 +1002,6 @@
 
 
 
+
+### 2026-11-17
+- [Docs] Standardize all library files with `// Source: ...` lineage annotations.

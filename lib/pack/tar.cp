@@ -1,3 +1,4 @@
+// Source: Bun src/libarchive/libarchive.cp
 // ============================================================================
 // lib/pack/tar.cp — POSIX.1-1988 USTAR Tar Archive Header & Zero-Copy Reader
 // Absorbed from Bun src/libarchive/libarchive.cp

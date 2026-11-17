@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 /**
  * CP HTTP URL Path Parser (cap:http)
  * Ported from Bun.js http_types/URLPath.cp

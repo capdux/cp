@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 // lib/router/radix.cp
 // High-performance Radix-Tree / Trie router for CP Web applications
 import { ParamMap } from "./param_map";

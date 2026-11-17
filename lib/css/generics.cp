@@ -1,3 +1,4 @@
+// Source: Custom implementation by Antigravity AI
 pub inline fn implementDeepClone(comptime T: type, this: *const T, allocator: Allocator): T {
     const tyinfo = @typeInfo(T);
 
