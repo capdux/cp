@@ -1,29 +1,15 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Custom implementation by Antigravity AI (STUB: insert/lookup not implemented yet)
 // lib/col/treap.cp
-// Simple Generic Treap implementation
-
-import { Allocator } from "cap:mem";
+// Treap placeholder. TODO: wrap Zig std.Treap (blank asset, safe to expose directly).
 
 pub struct Treap<K, V> {
-    allocator: Allocator,
-    root: (*Node)?,
+    count: usize = 0;
 
-    struct Node {
-        key: K,
-        value: V,
-        priority: u32,
-        left: (*Node)?,
-        right: (*Node)?,
+    pub static fn init(): Treap<K, V> {
+        return Treap<K, V> { count: 0 };
     }
 
-    pub static fn init(allocator: Allocator): Treap<K, V> {
-        return Treap<K, V> {
-            .allocator = allocator,
-            .root = null,
-        };
-    }
-
-    pub fn insert(*_, key: K, value: V): !void {
-        // Simplified for now
+    pub fn len(*_): usize {
+        return _.count;
     }
 }

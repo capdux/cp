@@ -1277,3 +1277,5 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
 ## 2026-11-17: Finalizing Implementation
 - Task: Finalized implementation of `lib/col/treap.cp`, `cap/test/test_treap_leb128.cp`, `cap/test/test_pack_native.cp`, `docs/stdlib/col_advanced.md`, `docs/stdlib/pack_native.md`.
 - All files created.
+
+- bigint/priority_queue/treap 修复：编译器对 Managed 参数及 std.mem.Allocator 字段类型的转译存在缺陷（字段类型丢失 std.mem. 前缀），库层用 zig 块绕开；编译器缺陷待单独修复。

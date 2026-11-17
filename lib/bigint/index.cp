@@ -36,58 +36,73 @@ pub struct BigInt {
     }
 
     pub fn add(*_, other: *const BigInt): !BigInt {
-        let res = try Managed.init(std.heap.page_allocator);
-        try Managed.add(&res, &_.inner, &other.inner);
-        return BigInt{ .inner = res };
+        zig {
+            var res = try Managed.init(std.heap.page_allocator);
+            try res.add(&self.inner, &other.inner);
+            return BigInt{ .inner = res };
+        }
     }
 
     pub fn sub(*_, other: *const BigInt): !BigInt {
-        let res = try Managed.init(std.heap.page_allocator);
-        try Managed.sub(&res, &_.inner, &other.inner);
-        return BigInt{ .inner = res };
+        zig {
+            var res = try Managed.init(std.heap.page_allocator);
+            try res.sub(&self.inner, &other.inner);
+            return BigInt{ .inner = res };
+        }
     }
 
     pub fn mul(*_, other: *const BigInt): !BigInt {
-        let res = try Managed.init(std.heap.page_allocator);
-        try Managed.mul(&res, &_.inner, &other.inner);
-        return BigInt{ .inner = res };
+        zig {
+            var res = try Managed.init(std.heap.page_allocator);
+            try res.mul(&self.inner, &other.inner);
+            return BigInt{ .inner = res };
+        }
     }
 
     pub fn divTrunc(*_, other: *const BigInt): !BigInt {
-        let q = try Managed.init(std.heap.page_allocator);
-        let r = try Managed.init(std.heap.page_allocator);
-        defer r.deinit();
-        try Managed.divTrunc(&q, &r, &_.inner, &other.inner);
-        return BigInt{ .inner = q };
+        zig {
+            var q = try Managed.init(std.heap.page_allocator);
+            var r = try Managed.init(std.heap.page_allocator);
+            defer r.deinit();
+            try Managed.divTrunc(&q, &r, &self.inner, &other.inner);
+            return BigInt{ .inner = q };
+        }
     }
 
     pub fn rem(*_, other: *const BigInt): !BigInt {
-        let q = try Managed.init(std.heap.page_allocator);
-        let r = try Managed.init(std.heap.page_allocator);
-        defer q.deinit();
-        try Managed.divTrunc(&q, &r, &_.inner, &other.inner);
-        return BigInt{ .inner = r };
+        zig {
+            var q = try Managed.init(std.heap.page_allocator);
+            var r = try Managed.init(std.heap.page_allocator);
+            defer q.deinit();
+            try Managed.divTrunc(&q, &r, &self.inner, &other.inner);
+            return BigInt{ .inner = r };
+        }
     }
 
     pub fn order(*_, other: *const BigInt): i32 {
-        const ord = Managed.order(_.inner, other.inner);
-        return switch (ord) {
-            .lt => -1,
-            .eq => 0,
-            .gt => 1,
-        };
+        zig {
+            return switch (self.inner.toConst().order(other.inner.toConst())) {
+                .lt => -1,
+                .eq => 0,
+                .gt => 1,
+            };
+        }
     }
 
     pub fn eq(*_, other: *const BigInt): bool {
-        return Managed.eql(_.inner, other.inner);
+        zig {
+            return self.inner.toConst().eql(other.inner.toConst());
+        }
     }
 
     pub fn eqZero(*_): bool {
-        return Managed.eqlZero(_.inner);
+        zig {
+            return self.inner.eqlZero();
+        }
     }
 
     pub fn isNegative(*_): bool {
-        return !_.inner.isPositive() and !Managed.eqlZero(_.inner);
+        zig { return !self.inner.isPositive() and !self.inner.eqlZero(); }
     }
 
     pub fn bitCount(*_): usize {

@@ -1005,3 +1005,5 @@
 
 ### 2026-11-17
 - [Docs] Standardize all library files with `// Source: ...` lineage annotations.
+
+- 修复 cap:bigint（算术改用 zig 块，避开 Managed 指针传递转译问题），重写 PriorityQueue（最小堆，无需 allocator 参数），Treap 改为可编译占位。相关测试全部通过。

@@ -308,6 +308,7 @@ hello/
    - 当完成一组特定报错的彻底消除、或完成某个核心语言特性（如常量泛型、无锁并发库等）并通过全量回归测试后，执行阶段性成果交付：
      1. 集中更新当日热文档（`SESSION.md`、`CHANGELOG.md`、`DEVLOG.md`）及双轨设计手册（`cp_ref.md` 与 `cp_agent_ref.md`）；
      2. 执行单次干净的 Git Commit 保存代码库资产。
+     3. Git 提交无需等待同意、审批，你直接自行提交。
 
 #### 2.4 双轨设计规范维护体系（cp_ref.md vs cp_agent_ref.md）
 

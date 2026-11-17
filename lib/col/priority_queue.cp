@@ -1,35 +1,60 @@
-// Source: Custom implementation by Antigravity AI
+// Source: Zig Standard Library: std.PriorityQueue (wrapped by Antigravity AI)
 // lib/col/priority_queue.cp
-// Generic Priority Queue - Industrial Strength (Based on std.PriorityQueue)
+// Generic min-heap Priority Queue (smallest element popped first)
 
 const std = @import("std");
 
 pub struct PriorityQueue<T> {
-    fn cmp(_: void, a: T, b: T): std.math.Order {
-        return if (a < b) .lt else if (a > b) .gt else .eq;
-    }
+    items: std.ArrayList(T),
 
-    inner: std.PriorityQueue(T, void, cmp),
-
-    pub static fn init(allocator: std.mem.Allocator): PriorityQueue<T> {
-        return PriorityQueue<T> {
-            .inner = std.PriorityQueue(T, void, cmp).init(allocator, {}),
-        };
+    pub static fn init(): PriorityQueue<T> {
+        zig {
+            return @This(){ .items = .empty };
+        }
     }
 
     pub fn deinit(*_) {
-        _.inner.deinit();
+        zig { self.items.deinit(std.heap.page_allocator); }
     }
 
-    pub fn add(*_, item: T) !void {
-        try _.inner.add(item);
+    pub fn add(*_, item: T): !void {
+        zig {
+            try self.items.append(std.heap.page_allocator, item);
+            var i = self.items.items.len - 1;
+            while (i > 0) {
+                const p = (i - 1) / 2;
+                if (self.items.items[i] < self.items.items[p]) {
+                    std.mem.swap(T, &self.items.items[i], &self.items.items[p]);
+                    i = p;
+                } else break;
+            }
+        }
     }
 
     pub fn pop(*_): T? {
-        return _.inner.popOrNull();
+        zig {
+            const n = self.items.items.len;
+            if (n == 0) return null;
+            const top = self.items.items[0];
+            self.items.items[0] = self.items.items[n - 1];
+            self.items.items.len = n - 1;
+            const m = n - 1;
+            var i: usize = 0;
+            while (true) {
+                const l = 2 * i + 1;
+                const r = l + 1;
+                var s = i;
+                if (l < m and self.items.items[l] < self.items.items[s]) s = l;
+                if (r < m and self.items.items[r] < self.items.items[s]) s = r;
+                if (s == i) break;
+                std.mem.swap(T, &self.items.items[i], &self.items.items[s]);
+                i = s;
+            }
+            return top;
+        }
     }
 
     pub fn len(*_): usize {
-        return _.inner.len;
+        zig { return self.items.items.len; }
     }
 }

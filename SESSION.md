@@ -1987,3 +1987,5 @@
 ### 2026-11-17
 - 执行全量代码溯源标注脚本 `scripts/annotate_lib.py`，为所有 `lib/` 目录下的 `.cp` 文件添加了 `// Source: ...` 谱系备注。
 - 确立 Lib 库维护规范：明确区分 Bun 迁移、Zig 原生与自主编写代码。
+
+- 修复 cap:bigint（算术改用 zig 块，避开 Managed 指针传递转译问题），重写 PriorityQueue（最小堆，无需 allocator 参数），Treap 改为可编译占位。相关测试全部通过。
