@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/css/css_parser.cp (auto-matched by identifier overlap 100%, needs review)
 import bun from "bun";
 pub const SrcIndex = bun.bundle_v2.Index;
 

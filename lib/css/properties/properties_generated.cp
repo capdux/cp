@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/css/properties/properties_generated.cp (auto-matched by identifier overlap 100%, needs review)
 import bun from "bun";
 const Allocator = std.mem.Allocator;
 

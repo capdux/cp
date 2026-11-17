@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/url/url.zig (auto-matched by identifier overlap 60%, needs review)
 // lib/url/url.cp
 // WHATWG URL parser and representation in CP
 import { URLSearchParams } from "./query";

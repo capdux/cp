@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/mimalloc_sys/mimalloc.zig (auto-matched by identifier overlap 97%, needs review)
 // lib/mem/_mimalloc.cp
 // Low-level Mimalloc C-FFI bindings and opaque heap handles (absorbed from bun/src/mimalloc_sys/mimalloc.cp)
 

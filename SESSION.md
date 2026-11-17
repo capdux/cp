@@ -1991,3 +1991,5 @@
 - 修复 cap:bigint（算术改用 zig 块，避开 Managed 指针传递转译问题），重写 PriorityQueue（最小堆，无需 allocator 参数），Treap 改为可编译占位。相关测试全部通过。
 
 - 修正溯源标注：此前脚本把未识别文件一律标 Custom（误标 323 个）。现改为：有 Bun 来源线索 131 个标 Bun+路径；192 个标 UNVERIFIED 待确认。新增 scripts/fix_lineage.py。test_http_full 为既有失败（*T/*const T），与本次无关。
+
+- 溯源二次校验：按标识符重合度对照 /data/dev/bun/src 自动匹配 101 个文件（标注 needs review）；仅修改各文件第 1 行头部注释（git numstat 验证每文件 +1/-1）。剩余 91 个 UNVERIFIED。

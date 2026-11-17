@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/threading/channel_.zig (auto-matched by identifier overlap 54%, needs review)
 // Thread-safe bounded channel in CP
 // High-throughput CSP communication primitive
 import { Mutex } from "./mutex";

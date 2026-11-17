@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/router/ParamMap.zig (auto-matched by identifier overlap 100%, needs review)
 // lib/router/param_map.cp
 // High-performance route parameter dictionary with inline stack storage
 

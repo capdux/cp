@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/css/logical.zig (auto-matched by identifier overlap 100%, needs review)
 import css from "./css_parser.zig";
 pub const Error = css.Error;
 

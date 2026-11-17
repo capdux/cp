@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/css/generics.cp (auto-matched by identifier overlap 100%, needs review)
 pub inline fn implementDeepClone(comptime T: type, this: *const T, allocator: Allocator): T {
     const tyinfo = @typeInfo(T);
 

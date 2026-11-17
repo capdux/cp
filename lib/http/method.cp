@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/http_types/Method_.zig (auto-matched by identifier overlap 75%, needs review)
 // lib/http/method.cp
 // HTTP Method enumeration and helper functions
 

@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/css/properties/properties_.zig (auto-matched by identifier overlap 100%, needs review)
 const Position = position.Position;
 
 pub const CustomPropertyName = @import("./custom.zig").CustomPropertyName;
