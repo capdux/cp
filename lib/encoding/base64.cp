@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/base64/base64.zig (name-matched, needs review)
 // lib/encoding/base64.cp
 // High-performance Base64 encoder and decoder in pure CP
 

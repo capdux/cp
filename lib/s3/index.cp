@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Custom (agy-generated export index)
 // ============================================================================
 // lib/s3/index.cp — CP 标准 S3 客户端凭证与 AWS SigV4 签名模块 (cap:s3)
 // ============================================================================

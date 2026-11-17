@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/ini/ini.zig (name-matched, needs review)
 // lib/conf/ini.cp
 // High-performance INI file parser in CP
 

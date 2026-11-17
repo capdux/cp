@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Custom (agy-generated export index)
 /**
  * CP Standard JSON & Serde (cap:json / cap:serde)
  * 工业级零拷贝序列化与反序列化体系

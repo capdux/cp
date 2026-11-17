@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/css/values/values.zig (name-matched, needs review)
 import css from "../css_parser.zig";
 
 pub struct css_modules {

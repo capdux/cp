@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Custom (agy-generated export index)
 // lib/crypto/index.cp
 // Unified Entry Point for Industrial Cryptography Subsystem (cap:crypto)
 

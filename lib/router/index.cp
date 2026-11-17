@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Custom (agy-generated export index)
 // lib/router/index.cp
 export { Param, ParamMap } from "./param_map";
 export { RouteMatch, SegmentKind, RouteSegment } from "./route";

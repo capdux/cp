@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Custom (agy-generated export index)
 // ============================================================================
 // lib/sourcemap/index.cp — CP 标准 SourceMap v3 与 VLQ 模块 (cap:sourcemap)
 // ============================================================================

@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/runtime/crypto/PBKDF2.zig (name-matched, needs review)
 // lib/crypto/pbkdf2.cp
 // Password-Based Key Derivation Function 2 (PBKDF2)
 

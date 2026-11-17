@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/glob/matcher.zig (name-matched, needs review)
 // lib/glob/matcher.cp
 // High-performance Unix Glob matcher in CP
 

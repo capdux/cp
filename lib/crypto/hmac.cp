@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/sha_hmac/hmac.zig (name-matched, needs review)
 // lib/crypto/hmac.cp
 // HMAC message authentication code (SHA256, SHA512)
 

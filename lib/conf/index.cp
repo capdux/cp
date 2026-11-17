@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Custom (agy-generated export index)
 // lib/conf/index.cp
 // Unified Configuration & Interchange Subsystem (cap:conf / cap:dotenv / cap:ini)
 

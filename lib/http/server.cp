@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/runtime/server/server.zig (name-matched, needs review)
 /**
  * CP HTTP Server & Client (cap:http)
  */

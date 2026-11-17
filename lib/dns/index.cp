@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Custom (agy-generated export index)
 // lib/dns/index.cp
 // Unified Cap DNS Resolution, Wire Codec & c-ares Subsystem (cap:dns)
 

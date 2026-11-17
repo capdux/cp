@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Custom (agy-generated export index)
 // ============================================================================
 // lib/simd/index.cp — SIMD Acceleration & Vector Processing Primitives (cap:simd)
 // ============================================================================

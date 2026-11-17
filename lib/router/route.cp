@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/router/Route.zig (name-matched, needs review)
 // lib/router/route.cp
 import { ParamMap } from "./param_map";
 

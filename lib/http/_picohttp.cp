@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/picohttp/picohttp.zig (name-matched, needs review)
 // lib/http/_picohttp.cp
 // PicoHTTPParser C-FFI declarations & zero-copy HTTP/1.x request/response wire parser
 // Absorbed from bun/src/picohttp_sys/picohttpparser.cp & bun/src/picohttp/picohttp.cp

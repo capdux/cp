@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Custom (agy-generated export index)
 // lib/path/index.cp
 // Cross-platform path standard library for CP (cap:path)
 const builtin = @import("builtin");

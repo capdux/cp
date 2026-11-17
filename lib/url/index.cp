@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Custom (agy-generated export index)
 // lib/url/index.cp
 export { URLSearchParams, QueryParam } from "./query";
 export { URL } from "./url";

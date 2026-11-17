@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/http/Headers.zig (name-matched, needs review)
 // lib/http/headers.cp
 // High-performance case-insensitive HTTP Headers collection
 

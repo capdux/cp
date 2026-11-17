@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/runtime/webcore/Response.zig (name-matched, needs review)
 /**
  * CP HTTP Response (cap:http)
  */

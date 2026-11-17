@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Custom (agy-generated export index)
 // lib/http/h3/index.cp
 // HTTP/3 protocol client subsystem (QUIC)
 

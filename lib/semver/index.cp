@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Custom (agy-generated export index)
 // lib/semver/index.cp
 export { Version } from "./version";
 export { SemverRange, Comparator, Op } from "./range";

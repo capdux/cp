@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/csrf/csrf.zig (name-matched, needs review)
 // lib/security/csrf.cp
 // CSRF Token Generation and Verification in pure CP
 // Uses CSPRNG nonces, HMAC-SHA256 signatures, and constant-time comparison

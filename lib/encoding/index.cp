@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Custom (agy-generated export index)
 // lib/encoding/index.cp
 export { Base64 } from "./base64";
 export { Hex } from "./hex.cp";
