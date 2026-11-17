@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Custom (CP native worker runtime, per CHANGELOG)
 /**
  * CP Worker Management (cap:worker)
  */

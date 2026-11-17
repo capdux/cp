@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Custom (cap:test harness, per CHANGELOG)
 /**
  * CP Test SDK (cap:test)
  * Zero-overhead native test runner

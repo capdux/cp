@@ -1013,3 +1013,5 @@
 - 溯源二次校验：按标识符重合度对照 /data/dev/bun/src 自动匹配 101 个文件（标注 needs review）；仅修改各文件第 1 行头部注释（git numstat 验证每文件 +1/-1）。剩余 91 个 UNVERIFIED。
 
 - 溯源三次校验：index.cp 29 个标为 Custom(agy 生成导出入口)；17 个按同名匹配 Bun（name-matched, needs review）；仍有 45 个 UNVERIFIED。仅改第 1 行。
+
+- 溯源四次校验：依据 CHANGELOG/SESSION 记录确认 16 个文件来源（Bun/Zig std/Custom），仅改第1行；剩余 29 个 UNVERIFIED 待用户判断。

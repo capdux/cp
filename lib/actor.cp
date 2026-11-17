@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Custom (CP native actor runtime, per CHANGELOG)
 /**
  * CP Actor Management (cap:actor)
  */

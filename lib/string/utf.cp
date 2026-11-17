@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/string/immutable/unicode.zig, src/string/wtf.zig, src/string/immutable/visible.zig (per CHANGELOG)
 // lib/string/utf.cp
 // High-speed UTF-8 / UTF-16 / WTF-8 codecs & East-Asian / ANSI visible display width
 // Absorbed from bun/src/string/immutable/unicode.zig, wtf.zig, visible.zig & unicode/uucode/

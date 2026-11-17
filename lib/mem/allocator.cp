@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/bun_alloc/BufferFallbackAllocator.zig, src/bun_alloc/MaxHeapAllocator.zig, src/bun_alloc/maybe_owned.zig (per CHANGELOG)
 // lib/mem/allocator.cp
 // High-performance Arena, StackFallbackAllocator, BumpArena, MaybeOwnedBuf, and SharedTensor
 // Absorbed from bun/src/bun_alloc/ (BufferFallbackAllocator, MaxHeapAllocator, maybe_owned, MimallocArena)

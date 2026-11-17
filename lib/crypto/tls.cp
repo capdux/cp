@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/boringssl/boringssl.cp (per CHANGELOG)
 // lib/crypto/tls.cp
 // BoringSSL TLS & X.509 Server Identity Verification for CP (cap:crypto)
 

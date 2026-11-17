@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Custom (cap:sqlite binding, per CHANGELOG)
 __zig__ {
     extern "c" fn sqlite3_open(filename: [*c]const u8, ppDb: *?*anyopaque) c_int;
     extern "c" fn sqlite3_close(db: ?*anyopaque) c_int;

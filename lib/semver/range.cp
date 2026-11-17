@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Bun src/semver/SemverRange.zig (name+dir match, needs review)
 // lib/semver/range.cp
 // Semver Range matching (^, ~, >=, <=, >, <, =, *, ||) in CP
 import { Version } from "./version";
