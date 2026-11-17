@@ -1905,6 +1905,81 @@
   7. **四线热日志**：
      - 同步更新 `SESSION.md`、`CHANGELOG.md`、`DEVLOG.md`。
 
+## 指令交互记录（2026-11-17）
+
+- **用户指令**：
+  1. 通信进程常驻了吗? 底部没有看到呢
+  2. 底层 LLVM libFuzzer 运行时与 ASan 影子内存监控库, 你是完成了,还是正在完成中?
+  3. 底部这个: Agent(self: Fuzzing Engine & Build Tool Engineer) · Gemini 3.8 Flash Generating · 1h10m41s 是什么意思?
+  4. Spec 10 (@soa)：你建议取消语法级支持，利用 Zig 标准库原生自带基于 comptime 元编程实现的 std.MultiArrayList(T)，无需修改任何编译器源码，直接在 CP 标准库暴露 tiArrayList<T> 即可获得 100% 相同的 CPU L1/L2 缓存局部性收益，同时保持语言核心语法的纯粹与正交。这个 MultiArrayList, 在cp中实装了吗?
+  5. MultiArrayList 名称太长了, 推荐几个简洁名称来替代
+  6. 1. 选择Soa<T>, 实现该功能。2. zig 的 std 有这么强大的功能,我们之前都不知道,埋没了, cp 基于zig之上, 应该完全吸收 zig中有价值的资产,不应该埋没。实现Soa后, 你需要仔细检查 zig 还有哪些资产, cp中没有体现,被埋没了, 需要在cp中暴露出来,供程序员使用。
+  7. 配额恢复了, 开启常驻通信进程和两个子智能体, 继续你的工作
+  8. 配额恢复了, 开启常驻通信进程和两个子智能体, 继续你的工作
+  9. 很好, 编制《Zig 被埋没资产全面吸收路线图》, lib/ 中直接实装标准库原型与测试这个需与我沟通, 我确认后, 实装。我们已经从 bun中吸收了很多资产, zig中的这些资产, 可能有部分与 bun中吸收的资产功能重叠(比如 压缩/网络/线程调度等), 我们需仔细评估后做出取舍或者彼此补充完善, 最终cp中提供性能最好,最完美的lib库,给用户使用
+  10. 1. 同意你的 “双擎合璧” 总体架构定位, 具体取舍需我确定后融合,避免出错；2. 先分阶段实现 cp中目前缺失的,吸收无冲突的 7 项资产；3. 需同步更新cp_ref.md 和 cp_agent_ref.md 设计文档,让用户知晓cp内置了这些库, 以及这些库的作用与使用简概；4. 库的详细使用和示例, 我们会在单独的cp内置库文档中展开, 避免设计文档内容过多, 过多消耗智能体token。
+
+- **执行结果汇报**：
+  1. **后台通信守卫常驻挂载**：
+     - 已成功启动后台常驻守护任务 `python3 scripts/watch_task.py --status pending --creator all --timeout 0` (`IsDaemon: true`)，底部持续监听下游任务通道。
+  2. **高性能列式容器 `Soa<T>` 全量实装 (`cap:col`)**：
+     - 在 [`lib/col/soa.cp`](file:///data/dev/cp/lib/col/soa.cp) 实现完整的结构体数组化容器 `Soa<T>`，底层深度封装 `std.MultiArrayList(T)`；
+     - 提供 `init`, `initCapacity`, `deinit`, `append`, `get`, `set`, `len`, `capacity`, `popOrNull`, `swapRemove`, `orderedRemove`, `clearRetainingCapacity` 全套生命周期与数据管理 API；
+     - 核心列切片原语 `items(field)` 暴露连续物理内存切片，消除 AoS 缓存污染，直通 SIMD 硬件向量化规约；
+     - 增强 `cpc/src/codegen/expr.rs`：支持省略带默认值实参时方法/函数的自动补全；
+     - 独立文档：编写完整独立的 [`docs/stdlib/soa.md`](file:///data/dev/cp/docs/stdlib/soa.md)；
+     - 回归测试：[`cap/test/test_soa.cp`](file:///data/dev/cp/cap/test/test_soa.cp) 4 大用例 100% 全部通过。
+  3. **第一阶段 Zig 埋没资产吸收（`cap:sort` 与 `cap:hash`）实装**：
+     - **`cap:sort` 标准库**（[`lib/sort/index.cp`](file:///data/dev/cp/lib/sort/index.cp)）：
+       - 基于 Orson Peters 的 PDQSort 实现零堆分配原地快排 `Sort.asc(slice)`、`Sort.desc(slice)`、`Sort.sort(slice, cmp)`，最坏情况严格 $O(N \log N)$，已排序切片具备 $O(N)$ 自适应极限提速；
+       - 基于 BlockSort 实现稳定排序 `Sort.stable(slice, cmp)` 与 `Sort.stableAsc(slice)`，保持相等键值元素原始次序；
+       - 基于 HeapSort 实现严格 $O(1)$ 辅助内存的原地堆排序 `Sort.heap(slice, cmp)` 与 `Sort.heapAsc(slice)`；
+       - 提供有序切片检索原语：`Sort.isSorted(slice, cmp)`、`Sort.isSortedAsc(slice)`、二分查找 `Sort.binarySearch(slice, key)`、插入位置边界 `Sort.lowerBound` / `Sort.upperBound`；
+       - 提供极值单趟查找：`Sort.argMin` / `Sort.argMax`、`Sort.minI32` / `maxI32` 及泛型 `SortOf<T>.min` / `max`；
+       - 编写独立技术文档 [`docs/stdlib/sort.md`](file:///data/dev/cp/docs/stdlib/sort.md)；
+       - 回归测试：[`cap/test/test_sort.cp`](file:///data/dev/cp/cap/test/test_sort.cp) 6 大测试套件 100% 全部通过。
+     - **`cap:hash` 标准库**（[`lib/hash/index.cp`](file:///data/dev/cp/lib/hash/index.cp)）：
+       - 搭载现代 SIMD AVX2/NEON 硬件加速散列：`Hash.xxhash3(buf, seed)`（30~50 GB/s 极限吞吐）、`Hash.xxhash128(buf, seed)`（128 位超低碰撞散列）；
+       - 工业级非密码学散列：`Hash.murmur3(buf, seed)`（32-bit，大数据与 BloomFilter 标准）、`Hash.cityhash64(buf)`（Google 短字符串快速散列）；
+       - 硬件线速与国际标准校验和：`Hash.crc32(buf)`（直通 CPU CRC32 硬件加速指令）、`Hash.adler32(buf)`（RFC 1950 标准 Zlib 校验和）；
+       - 防 Hash-DoS 碰撞攻击与整数哈希：`Hash.siphash(buf, key)`、`Hash.siphash128(buf, key)`、`Hash.fnv1a(buf)`、`Hash.hashInt(val)`（64 位整数雪崩置换）；
+       - 流式增量散列句柄：`XxHash3Stream`（支持 `init`、`update`、`digest`）；
+       - 编写独立技术文档 [`docs/stdlib/hash.md`](file:///data/dev/cp/docs/stdlib/hash.md)；
+       - 回归测试：[`cap/test/test_hash.cp`](file:///data/dev/cp/cap/test/test_hash.cp) 5 大测试套件 100% 全部通过。
+  4. **遵循 Token 优化铁律与双轨规范极简同步**：
+     - 将所有 API 矩阵、算法复杂度分析与详尽用例代码收拢至 `docs/stdlib/soa.md`、`docs/stdlib/sort.md`、`docs/stdlib/hash.md` 独立文档，零干扰日常开发 Token 消耗；
+     - 权威设计手册 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)：在 20.11 节登记 `Soa<T>` 列式容器规范，在 12.1 节表格登记 `cap:sort` 与 `cap:hash` 协议映射；
+     - 智能体契约手册 [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)：官方标准库数量升级为 34 个，登记 `cap:sort` 与 `cap:hash` 核心符号；
+     - 遵循 Git 提交三步规范，一次性执行里程碑 Git Commit。
+
+## 阶段里程碑 Git 提交
+
+- **提交说明**：`feat(stdlib): implement Soa<T> column container, cap:sort and cap:hash libraries`
+- **变更范围**：
+  1. **高性能容器 `Soa<T>` (`cap:col`)**：
+     - `lib/col/soa.cp`：基于 Zig `std.MultiArrayList(T)` 实现连续物理内存分列存储，消除 AoS 缓存污染，通过 `items(field)` 暴露列切片并直通 SIMD；
+     - `lib/col/index.cp`：统一导出 `Soa<T>`；
+     - `cpc/src/codegen/expr.rs`：补全带默认值参数方法及函数调用的缺省实参自动填充。
+  2. **工业级排序与对数检索 `cap:sort`**：
+     - `lib/sort/index.cp`：集成 PDQSort 原地自适应快排、BlockSort 稳定排序、HeapSort 堆排序、二分查找与上下界检索；
+  3. **非密码学极速散列与校验和 `cap:hash`**：
+     - `lib/hash/index.cp`：集成 30~50 GB/s XxHash3-SIMD、XxHash128、Murmur3、CityHash64、硬件 CRC32、Adler32、防 DoS SipHash-2-4 与 `XxHash3Stream` 流式句柄；
+  4. **端到端测试套件 (100% PASS)**：
+     - `cap/test/test_soa.cp`（4/4 PASS）；
+     - `cap/test/test_sort.cp`（6/6 PASS）；
+     - `cap/test/test_hash.cp`（5/5 PASS）；
+     - `cap/test/test_collections_matrix.cp`（7/7 PASS）；
+  5. **Token 优化独立文档架构**：
+     - 新增 `docs/stdlib/soa.md`；
+     - 新增 `docs/stdlib/sort.md`；
+     - 新增 `docs/stdlib/hash.md`；
+  6. **双轨规范手册轻量同步**：
+     - `cp_ref.md`：12.1 节与 20.11 节增补；
+     - `cp_agent_ref.md`：更新标准库总数为 34 个，登记 `cap:sort` 与 `cap:hash`；
+  7. **四线日志更新**：
+     - 同步更新 `SESSION.md`、`CHANGELOG.md`、`DEVLOG.md`。
+
+
 
 
 

@@ -1,6 +1,36 @@
-# CP 变更日志 (CHANGELOG) - 2026-11-16 (热数据)
+# CP 变更日志 (CHANGELOG) - 2026-11-17 (热数据)
 
 > 历史变更日志已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
+
+## [2026-11-17] - 核心里程碑：高性能列式容器 Soa<T> 实装与 Zig 被埋没资产吸收第一阶段（cap:sort 与 cap:hash）
+
+### 新增标准库与容器 (Added Stdlib & Containers)
+- **高性能列式结构体数组容器 `Soa<T>` (`cap:col`)**:
+  - [`lib/col/soa.cp`](file:///data/dev/cp/lib/col/soa.cp)：基于 Zig `std.MultiArrayList(T)` 实现连续内存列式分列存储（Struct of Arrays），支持 `init`, `initCapacity`, `deinit`, `append`, `get`, `set`, `len`, `capacity`, `popOrNull`, `swapRemove`, `orderedRemove`, `clearRetainingCapacity`；
+  - 核心原语 `items(field)` 暴露各字段物理连续切片，彻底消除 AoS 字段跨度缓存污染，直通 SIMD 向量化并行计算；
+  - [`lib/col/index.cp`](file:///data/dev/cp/lib/col/index.cp)：对外统一导出 `Soa<T>`；
+  - [`docs/stdlib/soa.md`](file:///data/dev/cp/docs/stdlib/soa.md)：编写详尽 API 指南与多类型结构体列式计算示例。
+- **工业级排序与对数检索标准库 (`cap:sort`)**:
+  - [`lib/sort/index.cp`](file:///data/dev/cp/lib/sort/index.cp)：基于 Orson Peters 的 PDQSort 实现零堆分配原地快排（`Sort.asc`, `Sort.desc`, `Sort.sort`）；基于 BlockSort 实现原地稳定块排序（`Sort.stable`, `Sort.stableAsc`）；基于 HeapSort 实现严格 O(1) 辅助空间堆排序（`Sort.heap`, `Sort.heapAsc`）；
+  - 提供有序切片检索：`Sort.isSorted`, `Sort.isSortedAsc`, 二分搜索 `Sort.binarySearch`, 插入上/下界 `Sort.lowerBound` / `Sort.upperBound`, 极值检索 `Sort.minI32` / `maxI32` / `argMin` / `argMax` 以及泛型求值器 `SortOf<T>`；
+  - [`docs/stdlib/sort.md`](file:///data/dev/cp/docs/stdlib/sort.md)：独立技术手册与复杂度分析。
+- **非密码学极速散列与校验和标准库 (`cap:hash`)**:
+  - [`lib/hash/index.cp`](file:///data/dev/cp/lib/hash/index.cp)：集成 30~50 GB/s SIMD 硬件加速 XxHash3 与 128 位超低碰撞散列；工业标准 Murmur3 与 CityHash64；硬件线速 CRC32 与 Adler32 校验和；防 Hash-DoS 攻击伪随机散列 SipHash-2-4 与 SipHash-128；Fnv1a 与 64 位整数雪崩置换 `hashInt`；
+  - 导出增量流式散列计算句柄 `XxHash3Stream`；
+  - [`docs/stdlib/hash.md`](file:///data/dev/cp/docs/stdlib/hash.md)：独立技术手册与工业标准测试向量。
+
+### 编译器增强 (Compiler Enhancements)
+- [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs)：
+  - 增强方法调用与普通自由函数调用的缺省参数处理：当调用方传入的实参数量少于形参数量时，自动查找并回填带默认值的参数表达式，消除调用方显式填入冗余默认参数的开销。
+
+### 规范手册与测试验证 (Docs & Tests)
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)：在 12.1 节标准库表格与 20.11 节登记 `Soa<T>`、`cap:sort` 与 `cap:hash`。
+- [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)：官方标准库数量升级为 34 个，在标准库矩阵中登记 `cap:sort` 与 `cap:hash`。
+- [`cap/test/test_soa.cp`](file:///data/dev/cp/cap/test/test_soa.cp)：4/4 用例全部 PASS。
+- [`cap/test/test_sort.cp`](file:///data/dev/cp/cap/test/test_sort.cp)：6/6 用例全部 PASS。
+- [`cap/test/test_hash.cp`](file:///data/dev/cp/cap/test/test_hash.cp)：5/5 用例全部 PASS。
+
+---
 
 ## [2026-11-16] - 核心里程碑：Spec 5 零堆分配流式直写与 Spec 8 跨协程静态隔离检查 E0305 实装
 

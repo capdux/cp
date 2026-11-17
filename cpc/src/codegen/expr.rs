@@ -953,6 +953,32 @@ impl Codegen {
                         for a in &call.args {
                             args_code.push(self.generate_expr(a));
                         }
+                        let mut type_to_lookup = None;
+                        if let Some(ty) = self.infer_cp_type(&mem.obj) {
+                            type_to_lookup = Some(self.map_type(&ty));
+                        }
+                        if type_to_lookup.is_none() {
+                            type_to_lookup = Some(obj.clone());
+                        }
+                        if let Some(target_type) = type_to_lookup {
+                            if let Some((params, _, _)) = self.lookup_method(&target_type, prop) {
+                                let non_recv_params: Vec<Param> = params
+                                    .into_iter()
+                                    .filter(|p| {
+                                        p.ident.sym != "this"
+                                            && p.ident.sym != "_"
+                                            && p.ident.sym != "self"
+                                    })
+                                    .collect();
+                                if call.args.len() < non_recv_params.len() {
+                                    for p in &non_recv_params[call.args.len()..] {
+                                        if let Some(def) = &p.default {
+                                            args_code.push(self.generate_expr(def));
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         return format!("{}.{}({})", obj, prop, args_code.join(", "));
                     } else if prop == "get"
                         || prop == "has"
@@ -974,6 +1000,32 @@ impl Codegen {
                         let mut args_code = Vec::new();
                         for a in &call.args {
                             args_code.push(self.generate_expr(a));
+                        }
+                        let mut type_to_lookup = None;
+                        if let Some(ty) = self.infer_cp_type(&mem.obj) {
+                            type_to_lookup = Some(self.map_type(&ty));
+                        }
+                        if type_to_lookup.is_none() {
+                            type_to_lookup = Some(obj.clone());
+                        }
+                        if let Some(target_type) = type_to_lookup {
+                            if let Some((params, _, _)) = self.lookup_method(&target_type, prop) {
+                                let non_recv_params: Vec<Param> = params
+                                    .into_iter()
+                                    .filter(|p| {
+                                        p.ident.sym != "this"
+                                            && p.ident.sym != "_"
+                                            && p.ident.sym != "self"
+                                    })
+                                    .collect();
+                                if call.args.len() < non_recv_params.len() {
+                                    for p in &non_recv_params[call.args.len()..] {
+                                        if let Some(def) = &p.default {
+                                            args_code.push(self.generate_expr(def));
+                                        }
+                                    }
+                                }
+                            }
                         }
                         return format!("{}.{}({})", obj, prop, args_code.join(", "));
                     } else if prop == "indexOf" && call.args.len() == 1 {
@@ -1965,6 +2017,17 @@ impl Codegen {
 
                 // 4. Free function call: check Trait conformance and `mut` / `move` parameter modifiers
                 let fn_sig_opt = self.fn_sigs.get(&callee).cloned();
+                let mut method_params_opt = None;
+                if let Expr::Member(mem) = &*call.callee {
+                    let type_target = self.generate_expr(&mem.obj);
+                    if let Some((params, _, _)) = self.lookup_method(&type_target, &mem.prop.sym) {
+                        let non_recv: Vec<Param> = params
+                            .into_iter()
+                            .filter(|p| p.ident.sym != "this" && p.ident.sym != "_" && p.ident.sym != "self")
+                            .collect();
+                        method_params_opt = Some(non_recv);
+                    }
+                }
                 let mut args = String::new();
                 for (idx, arg) in call.args.iter().enumerate() {
                     let mut arg_is_move_param = false;
@@ -2074,6 +2137,29 @@ impl Codegen {
                     }
                     if idx < call.args.len() - 1 {
                         args.push_str(", ");
+                    }
+                }
+                if let Some(params) = method_params_opt {
+                    if call.args.len() < params.len() {
+                        for p in &params[call.args.len()..] {
+                            if let Some(def) = &p.default {
+                                if !args.is_empty() {
+                                    args.push_str(", ");
+                                }
+                                args.push_str(&self.generate_expr(def));
+                            }
+                        }
+                    }
+                } else if let Some(sig) = &fn_sig_opt {
+                    if call.args.len() < sig.params.len() {
+                        for p in &sig.params[call.args.len()..] {
+                            if let Some(def) = &p.default {
+                                if !args.is_empty() {
+                                    args.push_str(", ");
+                                }
+                                args.push_str(&self.generate_expr(def));
+                            }
+                        }
                     }
                 }
                 let call_res = if call.is_comptime {

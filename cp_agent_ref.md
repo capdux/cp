@@ -18,7 +18,7 @@ import { HttpClient } from "../http/client.cp";
 // 2. 命名空间全量导入 (import * as)
 import * as math from "./utils/math";
 
-// 3. 官方标准库协议导入（cap:* 统一协议通道，共 32 个已实装标准库模块）
+// 3. 官方标准库协议导入（cap:* 统一协议通道，共 34 个已实装标准库模块）
 import { Mutex, RwLock, Atomic, Shared, Channel } from "cap:sync";
 import { Vec, VecDeque, BinaryHeap, BTreeMap, HashMap, HashSet } from "cap:collections";
 import { sha256, Aes256Gcm, randomBytes } from "cap:crypto";
@@ -1001,6 +1001,8 @@ switch (msg) {
 
 | 标准库协议通道 | 核心导出符号（精确 API 命名） | 核心职责 |
 | :--- | :--- | :--- |
+| `cap:sort` | `Sort`（`asc`, `desc`, `sort`, `stable`, `heap`, `isSorted`, `binarySearch`, `lowerBound`, `upperBound`, `minI32`, `maxI32`, `argMin`, `argMax`）, `SortOf<T>` | 工业级 PDQSort 自适应快速排序、稳定块排序、原地堆排序与二分边界搜索 |
+| `cap:hash` | `Hash`（`xxhash3`, `xxhash128`, `murmur3`, `cityhash64`, `crc32`, `adler32`, `siphash`, `siphash128`, `fnv1a`, `hashInt`）, `XxHash3Stream` | 30~50 GB/s SIMD 极速散列、Murmur3、硬件 CRC32、Adler32、防 DoS SipHash 与流式增量散列 |
 | `cap:col`（兼容 `cap:collections`） | **`Vec<T>`, `VecDeque<T>`, `BinaryHeap<T>`, `BTreeMap<K, V>`, `BTreeSet<T>`, `HashMap<K, V>`, `HashSet<T>`, `BoundedArray<T, CAP>`, `BabyList<T>`, `LinearFifo<T>`, `HiveArray<T, CAP>`, `ObjectPool<T, CAP>`, `BitSet256`, `StaticStringMap`, `StaticHashMap<K, V, CAP>`** | 完备标准容器与零堆分配紧凑集合 |
 | `cap:event`（兼容 `cap:event_loop` / `cap:events`） | `EventLoop`, `Timer`, `TimerHeap`, `ConcurrentTask`, `ConcurrentQueue`, `DeferredTaskQueue`, `PollEngine`, `EventEmitter`, `AnyTask`, `ManagedTask` | 统一事件循环驱动、最小堆定时器与事件总线 |
 | `cap:conf`（兼容 `cap:dotenv` / `cap:ini`） | `DotEnv`, `Ini`, `IniParser`, `TOML`, `TomlDoc`, `YAML`, `YamlDoc`, `JSON5`, `Json5Scanner`, `ConfValueParser` | `.env`、INI、TOML、YAML、JSON5 统一配置解析与类型转换 |

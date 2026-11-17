@@ -15,6 +15,7 @@
 //   - string_map.cp    : Length-filtered FastStringMap<V, CAP> (exact & ASCII case-insensitive)
 //   - object_pool.cp   : Fixed-capacity zero-heap free-list ObjectPool<T, CAP>
 //   - hash_map.cp      : Fixed-capacity zero-heap StaticHashMap<K, V, CAP>
+//   - soa.cp           : High-performance SoA (Struct of Arrays) Soa<T> with SIMD column slices
 
 export * from "./bounded_array.cp";
 export * from "./baby_list.cp";
@@ -24,3 +25,4 @@ export * from "./bit_set.cp";
 export * from "./string_map.cp";
 export * from "./object_pool.cp";
 export * from "./hash_map.cp";
+export * from "./soa.cp";

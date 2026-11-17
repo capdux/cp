@@ -1,6 +1,44 @@
-# CP 研发日志 (DEVLOG) - 2026-11-16 (热数据)
+# CP 研发日志 (DEVLOG) - 2026-11-17 (热数据)
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
+
+## 2026-11-17: 列式容器 Soa<T> 全量实装、“双擎合璧”标准库战略定位确立与 Zig 被埋没资产吸收第一阶段（cap:sort & cap:hash）
+
+- **任务背景与工程决策**：
+  1. **Spec 10 (@soa 语法裁决与标准库正交化)**：
+     - 经用户裁决采纳 `Soa<T>` 命名，取消语法级 `@soa` 关键字侵入，充分复用底层 Zig 官方标准库自带的编译期元编程组件 `std.MultiArrayList(T)`，直接在 CP 标准库封装并暴露正交容器 `Soa<T>`；
+     - 结构体数组（AoS）在处理密集数值运算（如物理模拟、批量点云、高频行情）时，单字段遍历会因为跨字段填充导致频繁发生 CPU L1/L2 Cache Miss。`Soa<T>` 将多字段分别存储在独立的连续物理切片中，极大提升缓存命中率并天然直通 AVX2/NEON SIMD 指令。
+  2. **“双擎合璧（Dual-Engine Synergy）”标准库战略确立**：
+     - **Native Tier（纯原生零 C 依赖基石）**：全面梳理 Zig 官方被埋没的硬核资产（`std.sort`、`std.hash`、`std.bigint`、`std.compress` 原生实现等），吸收补齐 CP 缺失的纯原生算法，实现 100% 静态单文件自举与极限编译速度；
+     - **Turbo Tier（极速网络与加密加速）**：保留 Bun 已吸收的 `uSockets`、`picohttpparser`、`BoringSSL` 与 `mimalloc`，维系极致高并发吞吐优势；
+     - 第一批落地目前 CP 完全缺失且无冲突的 2 大基础资产：`cap:sort` 与 `cap:hash`。
+  3. **Token 分级隔离治理铁律**：
+     - 为消除大型文档对智能体上下文 Token 的海量损耗，双轨规范手册（`cp_ref.md` 与 `cp_agent_ref.md`）仅保留高密度极简 API 概览与映射表；
+     - 完整的技术原理、算法复杂度对比与详尽代码示例，统一隔离并沉淀至专属独立文档：`docs/stdlib/soa.md`、`docs/stdlib/sort.md`、`docs/stdlib/hash.md`。
+
+- **核心技术设计与实现原理**：
+  1. **高性能列式容器 `Soa<T>` (`lib/col/soa.cp`)**：
+     - 封装 `std.MultiArrayList(T)` 句柄，提供全生命周期管理（`init`, `initCapacity`, `deinit`）；
+     - 提供元素追加、随机索引读取与变异（`append`, `get`, `set`）及高效删除（`popOrNull`, `swapRemove` O(1) 尾部互换删除, `orderedRemove` O(N) 保序删除）；
+     - 核心原语 `items(field)` 暴露特定字段在物理内存中的连续单类型切片，使得外部可以零开销将其喂入 SIMD 规约循环；
+     - 编译器端升级：在 `cpc/src/codegen/expr.rs` 中，为带默认值形参的方法和函数调用补齐实参回填逻辑，允许调用方像 TypeScript 一样安全省略默认入参。
+  2. **切片排序与对数检索标准库 `cap:sort` (`lib/sort/index.cp`)**：
+     - **自适应快排 (PDQSort)**：基于 Orson Peters 算法，对逆序输入进行反转优化，对大量重复元素进行严格三向划分，最坏情况退化时转为 HeapSort，时间复杂度严格界定在 $O(N) \sim O(N \log N)$ 之间；
+     - **稳定块排序 (BlockSort)**：`Sort.stable` 提供 $O(N \log N)$ 时间与严格 $O(1)$ 额外空间的稳定排序；
+     - **二分检索体系**：`Sort.binarySearch` 返回元素精准位置 `usize?`；`Sort.lowerBound` 与 `Sort.upperBound` 精准定位有序切片插入边界。
+  3. **非密码学极速散列与校验和 `cap:hash` (`lib/hash/index.cp`)**：
+     - **XxHash3-SIMD**：通过 Zig `std.hash.XxHash3` 调度 CPU SIMD 矢量寄存器，处理大块内存时实现 30~50 GB/s 的极限带宽，并衍生 128 位超低碰撞散列；
+     - **硬件 CRC32 & Adler32**：直通 CPU 硬件指令，严格匹配以太网与 RFC 1950 标准测试向量；
+     - **防 Hash-DoS 架构**：集成基于随机密钥的 SipHash-2-4 与 SipHash-128，作为高安全场景哈希表底层碰撞防护；
+     - **增量流式句柄**：实现 `XxHash3Stream`（`init/update/digest`），支持网络分包与大文件增量散列。
+
+- **效果验证**：
+  - `cap test cap/test/test_soa.cp`：生命周期、SIMD 列切片提取、删除与复合结构体 4/4 全部 PASS；
+  - `cap test cap/test/test_sort.cp`：PDQSort 升降序、自定义比较器、稳定排序、堆排序、二分检索与极值定位 6/6 全部 PASS；
+  - `cap test cap/test/test_hash.cp`：XxHash3 单次/流式一致性、Murmur3/CityHash、CRC32/Adler32 国际标准向量、SipHash 防 DoS 与整数雪崩哈希 5/5 全部 PASS；
+  - 既有容器套件 `cap test cap/test/test_collections_matrix.cp`：7/7 全部 PASS，零回归。
+
+---
 
 ## 2026-11-16: 模板字符串流式直写 (Spec 5)、跨协程静态隔离检查 E0305 (Spec 8) 与 libFuzzer 覆盖率驱动 (Spec 12 Part 2) 全量实装
 

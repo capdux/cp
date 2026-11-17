@@ -5903,6 +5903,8 @@ export class SocketContext<Handler> {
 
 | 标准库协议通道    | 核心导出功能                                                           | 状态           |
 | :---------------- | :--------------------------------------------------------------------- | :------------- |
+| `cap:sort`        | 工业级切片排序与对数检索：`Sort`（`asc`, `desc`, `sort`, `stable`, `heap`, `isSorted`, `binarySearch`, `lowerBound`, `upperBound`, `minI32`, `maxI32`, `argMin`, `argMax`）、`SortOf<T>` | **已全面实装** |
+| `cap:hash`        | 非密码学极速散列与校验和：`Hash`（`xxhash3`, `xxhash128`, `murmur3`, `cityhash64`, `crc32`, `adler32`, `siphash`, `siphash128`, `fnv1a`, `hashInt`）、`XxHash3Stream` | **已全面实装** |
 | `cap:col`（兼容 `cap:collections`） | `BoundedArray`, `BabyList`, `LinearFifo`, `HiveArray`, `ObjectPool`, `BitSet256`, `StaticStringMap`, `VecDeque`, `BinaryHeap`, `BTreeMap`, `BTreeSet`, `HashMap`, `HashSet` | **已全面实装** |
 | `cap:event`（兼容 `cap:event_loop` / `cap:events`） | 统一事件循环与事件总线：`EventLoop`, `Timer`, `TimerHeap`, `ConcurrentTask`, `ConcurrentQueue`, `DeferredTaskQueue`, `PollEngine`, `EventEmitter` | **已全面实装** |
 | `cap:conf`（兼容 `cap:dotenv` / `cap:ini`） | 统一配置中心：`DotEnv` (`.env`)、`Ini` / `IniParser`、`TOML` (`TomlDoc`)、`YAML` (`YamlDoc`)、`JSON5` (`Json5Scanner`)、类型安全解析器 `ConfValueParser` | **已全面实装** |
@@ -10021,6 +10023,11 @@ flowchart TD
       = help: cross-coroutine boundary transfer requires owned data (move/own) or concurrency-safe types (Shared<T>, Atomic<T>).
       = suggestion: transfer ownership with 'move' or wrap in thread-safe container 'Shared.new(...)'
     ```
+
+##### 12. 结构体数组化列式容器（`Soa<T>`）
+- **协议与入口**：`import { Soa } from "cap:col";`
+- **定位与价值**：底层封装 Zig 原生 `std.MultiArrayList(T)`，将结构体各字段在物理内存中拆分为独立连续切片。消除 AoS 内存对齐填充内碎片，使单列遍历时的 CPU L1 缓存命中率逼近 100%，提供直通硬件 SIMD 向量规约的 `items(field)` 列切片投影能力。
+- **详尽规范**：详见内置库独立手册 [`docs/stdlib/soa.md`](file:///data/dev/cp/docs/stdlib/soa.md)。
 
 ---
 
