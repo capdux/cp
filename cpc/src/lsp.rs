@@ -223,7 +223,7 @@ impl Backend {
                     ];
 
                     if let Err(e) =
-                        resolve_dependencies(&path, &include_paths, &mut items, &mut processed)
+                        resolve_dependencies(&path, &include_paths, &mut items, &mut processed, true)
                     {
                         self.client
                             .log_message(

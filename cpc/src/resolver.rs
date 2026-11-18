@@ -1,4 +1,4 @@
-use crate::ast::ModuleItem;
+use crate::ast::{ModuleItem, Decl};
 use crate::parser::Parser as CPParser;
 use std::collections::HashSet;
 use std::fs;
@@ -191,6 +191,7 @@ pub fn resolve_dependencies(
     include_paths: &[PathBuf],
     all_items: &mut Vec<ModuleItem>,
     processed: &mut HashSet<PathBuf>,
+    is_root: bool,
 ) -> anyhow::Result<()> {
     let abs_path = fs::canonicalize(path)?;
     processed.insert(abs_path.clone());
@@ -211,13 +212,13 @@ pub fn resolve_dependencies(
         match item {
             ModuleItem::Import(imp) => {
                 if let Some(p) = resolve_source_path(path, &imp.source, include_paths) {
-                    resolve_dependencies(&p, include_paths, all_items, processed)?;
+                    resolve_dependencies(&p, include_paths, all_items, processed, false)?;
                 }
             }
             ModuleItem::Export(exp) => {
                 if let Some(source) = &exp.source {
                     if let Some(p) = resolve_source_path(path, source, include_paths) {
-                        resolve_dependencies(&p, include_paths, all_items, processed)?;
+                        resolve_dependencies(&p, include_paths, all_items, processed, false)?;
                     }
                 }
             }
@@ -233,6 +234,7 @@ pub fn resolve_imports(
     include_paths: &[PathBuf],
     all_items: &mut Vec<ModuleItem>,
     processed: &mut HashSet<PathBuf>,
+    is_root: bool,
 ) -> anyhow::Result<()> {
     let abs_path = fs::canonicalize(path)?;
     if processed.contains(&abs_path) {
@@ -256,7 +258,7 @@ pub fn resolve_imports(
         match item {
             ModuleItem::Import(imp) => {
                 if let Some(p) = resolve_source_path(path, &imp.source, include_paths) {
-                    resolve_imports(&p, include_paths, all_items, processed)?;
+                    resolve_imports(&p, include_paths, all_items, processed, false)?;
                 } else {
                     all_items.push(ModuleItem::Import(imp));
                 }
@@ -264,7 +266,7 @@ pub fn resolve_imports(
             ModuleItem::Export(exp) => {
                 if let Some(source) = &exp.source {
                     if let Some(p) = resolve_source_path(path, source, include_paths) {
-                        resolve_imports(&p, include_paths, all_items, processed)?;
+                        resolve_imports(&p, include_paths, all_items, processed, false)?;
                     } else {
                         all_items.push(ModuleItem::Export(exp));
                     }
@@ -273,6 +275,13 @@ pub fn resolve_imports(
                 }
             }
             _ => {
+                if !is_root {
+                    if let ModuleItem::Decl(Decl::Func(f)) = &item {
+                        if f.ident.sym == "main" {
+                            continue;
+                        }
+                    }
+                }
                 all_items.push(item);
             }
         }

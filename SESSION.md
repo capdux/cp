@@ -2286,3 +2286,13 @@
 2026-11-19: 迁移 URL 资产至 CP runtime
 2026-11-19: 迁移 Valkey 资产至 CP runtime
 2026-11-19: Valkey 性能调优
+
+## [2026-11-19] Hotfix Task
+- 接收指令：修复 `cpc` 编译器对 `anyerror!void` 类型的可选性转译 Bug。
+- 执行操作：
+    - 检索 `anyerror` 相关定义。
+    - 定位 `cpc/src/codegen/types.rs` 中 `type_to_display_string` 函数。
+    - 修复 `ResultType` 的 Codegen 逻辑。
+    - 运行 `bash scripts/sync_cpc.sh` 完成原子构建校验。
+- 结果：编译成功，问题修复。
+2026-11-19: 迁移 Crypto 资产至 CP runtime

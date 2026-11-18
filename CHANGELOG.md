@@ -1155,3 +1155,9 @@
 - 完成 `lib/valkey/` 资产迁移，实现高性能 Valkey 协议解析。
 - **项目阶段验收完成**：核心资产组全部迁移并审计合规。
 - 优化 Valkey 协议解析，减少内存拷贝，适配 RAII
+
+## [2026-11-19] Hotfix: Fix anyerror!void optionality mapping
+- 修复 `cpc/src/codegen/types.rs` 中 `type_to_display_string` 对 `ResultType` 的转译 Bug，确保 `anyerror!void` 正确映射为 `anyerror!void`。
+- 联动 `Optional` 类型，使得 `?anyerror!void` 能被正确生成。
+- 通过 `bash scripts/sync_cpc.sh` 完成原子构建校验，验证修复有效。
+- 完成 crypto 资产迁移

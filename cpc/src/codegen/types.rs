@@ -2882,7 +2882,14 @@ pub(crate) fn type_to_display_string(ty: &Type) -> String {
         Type::FixedArray(inner, size) => format!("{}[{}]", type_to_display_string(inner), size),
         Type::Ref(id) => id.sym.clone(),
         Type::Optional(inner) => format!("?{}", type_to_display_string(inner)),
-        Type::ResultType { ok, .. } => type_to_display_string(ok),
+        Type::ResultType { ok, err } => {
+            let ok_str = type_to_display_string(ok);
+            match err {
+                ErrorType::AnyErr => format!("anyerror!{}", ok_str),
+                ErrorType::Named(id) => format!("{}!{}", id.sym, ok_str),
+                _ => ok_str,
+            }
+        }
         Type::ErrorUnion(inner) => format!("{}!", type_to_display_string(inner)),
         Type::BorrowType { inner, .. } => type_to_display_string(inner),
         Type::Shared(inner) => type_to_display_string(inner),

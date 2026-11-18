@@ -1468,3 +1468,10 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
 - 达成 `url` 模块迁移里程碑，资产流转稳定。
 ## 2026-11-19: 迁移 Valkey 资产至 CP runtime
 ## 2026-11-19: Valkey 性能调优 (零拷贝/RAII)
+
+## [2026-11-19] Hotfix: Fix anyerror!void optionality mapping
+- 问题：编译器在处理 `anyerror!void` 类型的可选性（Optionality）时，Codegen 仅输出了 `void`，导致 `?anyerror!void` 被错误转译为 `?void`。
+- 分析：`cpc/src/codegen/types.rs` 中的 `type_to_display_string` 函数在处理 `Type::ResultType` 时，直接返回了 `ok` 类型的字符串表示，忽略了 `err` 类型。
+- 修复：更新 `type_to_display_string`，在 `ResultType` 分支中匹配 `err` 类型（特别是 `ErrorType::AnyErr` 和 `ErrorType::Named`），显式将其转换为字符串拼接。
+- 验证：运行 `bash scripts/sync_cpc.sh` 原子构建成功。
+## 2026-11-19: 迁移 Crypto (BoringSSL) 资产至 CP runtime

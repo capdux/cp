@@ -129,7 +129,7 @@ fn compile_file(
         all_diags.extend(p_diags);
         all_items = parsed_module.body;
     } else {
-        resolve_imports(input, include, &mut all_items, &mut processed_sources)?;
+        resolve_imports(input, include, &mut all_items, &mut processed_sources, true)?;
     }
 
     let mut module = Module {
