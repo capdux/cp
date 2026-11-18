@@ -239,6 +239,7 @@ def main():
     )
     parser.add_argument("--interval", type=float, default=1.0, help="Poll interval in seconds (default: 1.0)")
     parser.add_argument("--timeout", type=int, default=0, help="Timeout in seconds (0 = infinite)")
+    parser.add_argument("--loop", action="store_true", help="Keep running continuously as a resident daemon without exiting")
     args = parser.parse_args()
 
     acks = {}
@@ -254,6 +255,7 @@ def main():
             flush=True,
         )
 
+    seen_ids = set()
     start_time = time.time()
     while True:
         if args.status == "pending":
@@ -273,6 +275,9 @@ def main():
             else:
                 tasks = []
 
+        if args.loop and tasks:
+            tasks = [t for t in tasks if t.get("id") not in seen_ids]
+
         if tasks:
             if len(tasks) > 1:
                 print(
@@ -281,6 +286,7 @@ def main():
                 )
             for idx, task in enumerate(tasks, 1):
                 task_id = task.get("id", "unknown")
+                seen_ids.add(task_id)
                 creator = task.get("created_by", "unknown")
                 category = task.get("category", "compiler_bug")
                 is_bcast = task.get("broadcast", False)
@@ -292,7 +298,9 @@ def main():
                     flush=True,
                 )
                 print(json.dumps(task, ensure_ascii=False), flush=True)
-            sys.exit(0)  # 一次性排空全部就绪任务后退出，触发 Antigravity CLI Reactive Wakeup！
+
+            if not args.loop:
+                sys.exit(0)  # 一次性排空全部就绪任务后退出，触发 Antigravity CLI Reactive Wakeup！
 
         if args.timeout > 0 and (time.time() - start_time) > args.timeout:
             print(f"[WATCHER_TIMEOUT] Timed out waiting after {args.timeout}s", file=sys.stderr)

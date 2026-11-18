@@ -6591,6 +6591,40 @@ impl Analyzer {
                                 if let Some(Expr::TypeVal { ty, .. }) = call.args.first() {
                                     return Ok(Type::ErrorUnion(Box::new(ty.clone())));
                                 }
+                                if let Some(Expr::Ident(id)) = call.args.first() {
+                                    let is_type = matches!(
+                                        id.sym.as_str(),
+                                        "i8" | "u8"
+                                            | "i16"
+                                            | "u16"
+                                            | "i32"
+                                            | "u32"
+                                            | "i64"
+                                            | "u64"
+                                            | "i128"
+                                            | "u128"
+                                            | "isize"
+                                            | "usize"
+                                            | "f32"
+                                            | "f64"
+                                            | "bool"
+                                            | "string"
+                                    ) || self.classes.contains_key(&id.sym)
+                                        || matches!(
+                                            self.resolve(&id.sym),
+                                            Some(SymbolKind::Class(_) | SymbolKind::Enum(_))
+                                        )
+                                        || id
+                                            .sym
+                                            .chars()
+                                            .next()
+                                            .map_or(false, |ch| ch.is_ascii_uppercase());
+                                    if is_type {
+                                        return Ok(Type::ErrorUnion(Box::new(Type::Ref(
+                                            id.clone(),
+                                        ))));
+                                    }
+                                }
                                 return Ok(Type::ErrorUnion(Box::new(Type::Any)));
                             }
                         }

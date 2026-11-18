@@ -24,36 +24,56 @@ pub struct JsonValue {
     arr_val: []JsonValue = [],
     obj_val: []JsonField = [],
 
-    pub fn isNull(*_): bool {
+    pub fn isNull(): bool {
         return _.tag == .Null;
     }
 
-    pub fn asBool(*_): bool? {
+    pub fn isBool(): bool {
+        return _.tag == .Bool;
+    }
+
+    pub fn isNumber(): bool {
+        return _.tag == .Number;
+    }
+
+    pub fn isString(): bool {
+        return _.tag == .String;
+    }
+
+    pub fn isArray(): bool {
+        return _.tag == .Array;
+    }
+
+    pub fn isObject(): bool {
+        return _.tag == .Object;
+    }
+
+    pub fn asBool(): bool? {
         if (_.tag == .Bool) return _.bool_val;
         return null;
     }
 
-    pub fn asNumber(*_): f64? {
+    pub fn asNumber(): f64? {
         if (_.tag == .Number) return _.num_val;
         return null;
     }
 
-    pub fn asString(*_): ([]const u8)? {
+    pub fn asString(): ([]const u8)? {
         if (_.tag == .String) return _.str_val;
         return null;
     }
 
-    pub fn asArray(*_): ([]JsonValue)? {
+    pub fn asArray(): ([]JsonValue)? {
         if (_.tag == .Array) return _.arr_val;
         return null;
     }
 
-    pub fn asObject(*_): ([]JsonField)? {
+    pub fn asObject(): ([]JsonField)? {
         if (_.tag == .Object) return _.obj_val;
         return null;
     }
 
-    pub fn len(*_): usize {
+    pub fn len(): usize {
         return switch (_.tag) {
             .Array => _.arr_val.len,
             .Object => _.obj_val.len,
@@ -62,7 +82,7 @@ pub struct JsonValue {
         };
     }
 
-    pub fn get(*_, key: []const u8): JsonValue? {
+    pub fn get(key: []const u8): JsonValue? {
         if (_.tag != .Object) return null;
         for (field of _.obj_val) {
             if (field.key.len == key.len) {
@@ -81,7 +101,7 @@ pub struct JsonValue {
         return null;
     }
 
-    pub fn getIndex(*_, idx: usize): JsonValue? {
+    pub fn getIndex(idx: usize): JsonValue? {
         if (_.tag != .Array or idx >= _.arr_val.len) return null;
         return _.arr_val[idx];
     }

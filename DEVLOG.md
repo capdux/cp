@@ -2,6 +2,33 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-18: 内置全局 JSON.parse 统一（零导入支持动态 SIMD JsonValue 与强类型反射）、性能 Benchmark 真相与下游工单彻底清零
+
+- **任务背景与工程决策**：
+  1. **内置库设计哲学确立（消除 import 割裂）**：
+     - 用户严厉指出：作为系统语言一等公民，`JSON` 作为内置库必须统一使用自研高效实现，绝不应强加用户心智负担（让用户在内置与 `import cap:json` 之间二选一）；
+     - 编译器统一：彻底消除编译器中“是否有导入 `cap:json`”的双轨行为割裂。无论用户是否写 `import { JSON } from "cap:json"`，`JSON.parse(...)` 均无条件生效，且根据是否传递目标类型参数，无缝分流至“动态 SIMD 零拷贝 DOM（`JsonValue`）”与“强类型编译期零抽象直接反序列化（`T`）”。
+  2. **性能压测数据真相与复盘（拒绝自嗨，实事求是）**：
+     - 在 Linux x86_64 环境下以 `-O ReleaseFast` 实跑 200,000 次基准测试：
+       - Zig 官方 `std.json.Value` 动态 DOM：1899.17 ms（105,309 ops/sec，9.24 MB/s）
+       - CP 自研 `JsonParser`（SIMD + 零拷贝）：1884.28 ms（106,141 ops/sec，9.31 MB/s）-> 加速比 1.01x（几乎持平）；
+       - Zig 强类型反射 `std.json.parseFromSliceLeaky(T)`：2083.18 ms（96,007 ops/sec，8.42 MB/s）。
+     - **底层技术真相**：动态 DOM 解析的主要性能瓶颈在于 `std.ArrayList(JsonField)` 堆分配与动态数组扩容（耗费 ~85% CPU），单纯的 16 字节 SIMD 引号探测并不能带来量级跨越。唯有结构体直接映射（强类型且字段原地解构）或全局固定 Arena 静态预分配池，才能产生 5~10 倍的真实吞吐跃升。
+  3. **下游工单全清与临时智能体回收**：
+     - 打破 2 个子智能体限制，开启临时热修子智能体解决 CapSurf 阻断缺陷（`task-capsurf-20261117-pack-native-allocator` 与 `task-capsurf-20261117-compiler-borrow-conflict`），验证通过后执行结单并即刻销毁回收，恢复工作区整洁。
+
+- **核心技术设计与实现原理**：
+  1. **编译器自动注入与符号去重 (`cpc/src/codegen/mod.rs` & `prelude.rs`)**：
+     - 当 AST 中使用到 `JSON` / `JsonValue`，且当前编译单元未显式引入 `cap:json` 时，自动生成内建的高性能 `JsonTag`, `JsonField`, `JsonValue`, `FastJsonScanner`, `JsonParser` 与 `JSON` 结构体；
+     - `prelude.rs` 深度扫描 `Decl::Class` 与 `Decl::Enum`，若模块内已有声明（例如来自于库模块或显式导入），则将 `has_imported_json` 标记为 true，精准抑制内建代码发射，彻底杜绝 Zig 符号冲突（`duplicate struct member name`）。
+  2. **表达式下沉与类型推导统一 (`expr.rs` & `types.rs`)**：
+     - 动态分支：`JSON.parse(str)` / `JSON.parse(alloc, str)` 统一生成 `JSON.parse(...)`，推导类型为 `!JsonValue`；
+     - 强类型分支：`JSON.parse(T, str)` 生成 `std.json.parseFromSliceLeaky(T, alloc, str, .{ .ignore_unknown_fields = true, .allocate = .alloc_if_needed })`，推导类型为 `!T`。
+  3. **人体工程学扩展 (`JsonValue`)**：
+     - 为 `JsonValue` 补齐 `.isObject()`, `.isArray()`, `.isBool()`, `.isNumber()`, `.isString()` 辅助检查方法，消除显式匹配 tag 的冗长代码。
+
+---
+
 ## 2026-11-18: JSON5 完备解析器架构实现、标准库来源追溯与解耦设计
 
 - **任务背景与工程决策**：

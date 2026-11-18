@@ -2,8 +2,6 @@
 // lib/pack/native.cp
 // Native decompression using Zig std.compress
 
-import { Allocator } from "cap:mem";
-
 zig {
     const std = @import("std");
 
@@ -22,25 +20,25 @@ zig {
     }
 }
 
-pub fn decompressDeflateNative(allocator: *Allocator, src: []const u8) ![]u8 {
-    zig {
-        return decompress(allocator.*, src, std.compress.flate.Decompress);
-    }
-}
-
-pub fn decompressZlibNative(allocator: Allocator, src: []const u8) ![]u8 {
+pub fn decompressDeflateNative(allocator: std.mem.Allocator, src: []const u8) ![]u8 {
     zig {
         return decompress(allocator, src, std.compress.flate.Decompress);
     }
 }
 
-pub fn decompressGzipNative(allocator: Allocator, src: []const u8) ![]u8 {
+pub fn decompressZlibNative(allocator: std.mem.Allocator, src: []const u8) ![]u8 {
     zig {
         return decompress(allocator, src, std.compress.flate.Decompress);
     }
 }
 
-pub fn decompressZstdNative(allocator: Allocator, src: []const u8) ![]u8 {
+pub fn decompressGzipNative(allocator: std.mem.Allocator, src: []const u8) ![]u8 {
+    zig {
+        return decompress(allocator, src, std.compress.flate.Decompress);
+    }
+}
+
+pub fn decompressZstdNative(allocator: std.mem.Allocator, src: []const u8) ![]u8 {
     zig {
         return decompress(allocator, src, std.compress.zstd.Decompress);
     }

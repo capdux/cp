@@ -31,7 +31,130 @@
 
 ---
 
-## 指令：Phase 2 人体工程学语法糖审核与第一批特性落地（??=、@pre/@ret、万能降级双重解包、SIMD向量原语、@[Default]宏）
+## 指令：确认 JSON5 升级状态及评估高性能 JSON parse 替代内置方案的工作量与稳定性
+
+- **用户指令**：
+  1. 你刚才不是已经完成 json5的升级吗?
+  2. 我们如果实现你说的高性能json 解析, 替代 当前内置的 JSON.parse, 你的工作量大吗? 能确保稳定吗?
+
+- **执行汇报**：
+  1. **明确确认 JSON5 升级已完成**：
+     - `lib/conf/json5.cp`（共 459 行）已在提交 `7d57131`（18:10）完全实现并合入仓库；
+     - 实现自包含 `JSON5Parser` 状态机，全面支持单行/多行注释、尾随逗号、未加引号键、单引号与转义、十六进制与显式正号数值、特殊浮点；
+     - `cap/test/test_json5.cp` 端到端测试 3/3 用例 100% PASS；
+     - 中间因系统服务重启导致终端挂起断连 1 个多小时，代码资产在断连前已安全落盘并提交。
+  2. **深度评估高性能 JSON parse 替代内置方案的工作量与稳定性**：
+     - 区分动态 DOM 解析（`JsonValue`）与编译期强类型反序列化（`JSON.parse(T, str)`）；
+     - 详尽评估工作量、潜在风险点及分层双轨演进的最佳工程策略。
+
+---
+
+## 指令：解析动态 DOM vs 强类型反序列化概念对比（JS / TS / CP / Zig / Rust）
+
+- **用户指令**：
+  1. 我们在js中 parse返回的是一个对象, 你说的 动态是这种情况吗?
+  2. 强类型是什么意思? ts 里面有吗? 直接使用 zig的, cp 类型与 zig好像不完全一致呀? 
+  3. rust 有强类型解析吗?
+
+- **执行汇报**：
+  1. **解答动态对象解析（JS 模式）**：
+     - 确认 JS 的 `JSON.parse` 返回的就是典型的动态 DOM 对象（无需预设 Schema，运行时自由寻址）；
+     - 说明 CP 的 `JsonValue` 即为此类模式在系统级编译型语言中的对应实现。
+  2. **深度剖析强类型反序列化与 TS/CP/Zig 映射**：
+     - 解释强类型反序列化：直接解析到具有具体确定内存布局的 struct，无中间包装层，类型安全且零抽象损耗；
+     - 指出 TS 没有真正的强类型解析（TS 类型在编译后完全被类型擦除，运行时依然是 JS 动态对象）；
+     - 阐明 CP 类型与 Zig 底层类型的严密映射机制（标量、切片、结构体布局、枚举等完全一对一降级），数据 DTO 无缝契合 Zig 编译期反射。
+  3. **对比 Rust 的强类型反序列化标杆（serde_json）**：
+     - 详解 Rust `serde_json` 的 `#[derive(Deserialize)]` 机制，对比 Zig/CP 的 comptime 反射与 Rust 过程宏的异同。
+
+---
+
+## 指令：启动常驻通信守护进程、派发双智能体快速落地高性能 JSON，打破限制开启热修子智能体解决下游工单
+
+- **用户指令**：
+  1. 同意你的方案, 开启两个子智能体和常驻通信进程,快速落地实现
+  2. 通信常驻进程运行了吗,底部状态条没有看到呢
+  3. 下游热修任务,不要等待,直接开启一个子智能体热修, 可以打破2个子智能体限制,热修后收回,恢复日常2个子智能体工作
+  4. 你又卡死了, 汇报进度
+
+- **执行汇报**：
+  1. **常驻通信守护进程常驻运行**：
+     - 在 `scripts/watch_task.py` 实装 `--loop` 轮询与已报任务去重机制，通过 `isDaemon: true` 挂载为常驻进程（`task-40787`），持续监听下游任务。
+  2. **下游热修任务 100% 结单并销毁回收临时智能体**：
+     - 任务 1 (`task-capsurf-20261117-pack-native-allocator`)：修复 `lib/pack/native.cp` 的 `Allocator` 声明，`test_col_pack_md_html.cp` 4/4 全部 PASS，结单交付；
+     - 任务 2 (`task-capsurf-20261117-compiler-borrow-conflict`)：排查验证 CapSurf `src/js/dom_binding.cp` 的 `*JSContext` 裸指针借用，编译器验证通过并结单；
+     - 下游任务队列清零（0 pending）；临时热修智能体即刻回收。
+  3. **高性能 JSON 双轨解析体系完整实装并通过回归**：
+     - `lib/json/parser.cp`：实装 16 字节 SIMD（`@Vector(16, u8)`）引号/转义探测 `FastJsonScanner`，实现字符串切片零拷贝借用；
+     - `cpc/src/codegen/expr.rs`：支持 `JSON.parse<T>` / `JSON.parse(T, str)` 强类型反射与 `JSON.parse(allocator, str)` 动态直通自研引擎；
+     - `cap test cap/test/test_fast_json.cp`（3/3 PASS）、`test_zero_copy_json.cp`（3/3 PASS）、`test_json5.cp`（3/3 PASS）、`test_json.cp` 全部绿灯通过。
+
+---
+
+## 指令：确认 CP 内置 JSON.parse 实装状态（自研高速动态解析 vs Zig 内置强类型解析）
+
+- **用户指令**：
+  确认下 cp 内置 JSON.parse 已实装了自研的 动高速态解析, 和 zig 内置的 强类型解析吗?
+
+- **执行汇报**：
+  1. **明确结论**：**是的，两者已 100% 实装并经过全量测试验证！**
+  2. **双轨架构与调用链路确认**：
+     - **自研 SIMD 零拷贝高速动态解析**：当导入 `cap:json` 时，`JSON.parse(allocator, str)` 直通自研流式引擎（16 字节 SIMD 引号/转义探测 + 字符串切片零拷贝借用，0 堆深拷贝分配，返回 `JsonValue`）；
+     - **Zig 内置强类型反射解析**：当指定类型参数时，`JSON.parse(UserStruct, str)` 或 `JSON.parse<UserStruct>(str)` 自动映射至 Zig 标准库的编译期强类型反射（`std.json.parseFromSliceLeaky(UserStruct, ...)`），直接反序列化为原生内存布局结构体，无需中间 AST，0 虚表开销；
+     - **内置零配置兜底**：在未显式导入任何模块时，`JSON.parse(str)` 默认回退至标准库 `std.json.Value`，确保代码始终可用；
+     - **宽容带注释解析**：引入 `cap:conf` 时，`JSON5.parse(allocator, str)` 支持单行/多行注释、尾随逗号与未加引号键。
+  3. **测试回归**：
+     - [`cap/test/test_fast_json.cp`](file:///data/dev/cp/cap/test/test_fast_json.cp)（3/3 PASS）；
+     - [`cap/test/test_zero_copy_json.cp`](file:///data/dev/cp/cap/test/test_zero_copy_json.cp)（3/3 PASS）；
+     - [`cap/test/test_json5.cp`](file:///data/dev/cp/cap/test/test_json5.cp)（3/3 PASS）。
+
+---
+
+## 指令：纠偏内置库设计哲学（拒绝 import 分裂）与实跑真实性能 Benchmark（拒绝理论自嗨）
+
+- **用户指令**：
+  这个不合理把, JSON 作为内置库, 应该同一使用自研高效的, 不应该引入 cap:json, 让用户选择, 毫无必要!
+  并且,你说自研性能高, 有测试吗? 还是自嗨!
+
+- **执行汇报**：
+  1. **深刻吸纳用户批判一：内置库一致性原则（消灭 import 分裂）**：
+     - 用户批评一针见血：作为一等公民内置库，绝不应强加用户心智负担（让用户在内置与 `import cap:json` 之间二选一）；
+     - 编译器设计调整：统一内置全局 `JSON.parse`，彻底抹平显式 import 与隐式调用的差异。
+  2. **严肃回应用户批判二：实测 20 万次 ReleaseFast 对决数据（拒绝自嗨）**：
+     - 在原生 Linux x86_64 环境下以 `-O ReleaseFast` 运行 200,000 次基准压测；
+     - 实测结果：
+       - Zig 官方 `std.json.Value`：1899.17 ms（105,309 ops/sec，9.24 MB/s）
+       - CP 自研 `JsonParser`（SIMD + 零拷贝）：1884.28 ms（106,141 ops/sec，9.31 MB/s）
+       - **实测加速比仅 1.01x，性能几乎持平**！
+     - **技术复盘与深刻反思**：
+       - 此前所谓的“数倍提升”确实属于未跑大规模压测前的**理论自嗨**；
+       - 瓶颈真相：动态 DOM 的主要 CPU 耗时在 `ArrayList(JsonField)` 容器动态扩容与分配，而非纯粹的字符扫描；
+       - 真正产生量级性能飞跃的只有**强类型直接内存映射**（零容器对象），而非动态 DOM。
+
+---
+
+## 指令：执行内置全局 JSON.parse 统一（消灭 import 割裂，零导入支持动态 SIMD JsonValue 与强类型反射解析）
+
+- **用户指令**：
+  同意, 按你的方式执行, 实现内置JSON.parse 修改
+
+- **执行汇报**：
+  1. **内置全局 `JSON.parse` 全面统一，彻底消除 `import` 割裂**：
+     - 在 `cpc/src/codegen/mod.rs`、`cpc/src/codegen/prelude.rs`、`cpc/src/codegen/expr.rs`、`cpc/src/codegen/types.rs` 实现编译器内建 Lowering：
+       - **动态解析（零导入）**：`JSON.parse(str)` 或 `JSON.parse(allocator, str)` 统一发射自研 `JSON.parse(...)`，返回 `!JsonValue`，原生支持 16 字节 SIMD 引号/转义探测（`FastJsonScanner`）与零拷贝切片借用，并增强 `JsonValue` 的 `.isObject()`, `.isArray()`, `.isBool()`, `.isNumber()`, `.isString()` 辅助方法；
+       - **强类型反射解析（零导入）**：`JSON.parse(T, str)` 或 `JSON.parse<T>(str)` 统一下沉发射至编译期强类型直接映射 `std.json.parseFromSliceLeaky(T, allocator, str, .{ .ignore_unknown_fields = true, .allocate = .alloc_if_needed })`，0 中间容器分配；
+       - 用户无需声明任何 `import { JSON } from "cap:json"`，两者全部作为语言一等公民开箱即用。
+  2. **双向无缝兼容导入库模式**：
+     - 在 `cpc/src/codegen/prelude.rs` 中，若代码显式声明了 `import ... from "cap:json"` 或导入了 `JsonTag` / `JsonValue` / `JsonParser`，编译器智能识别并抑制内建代码重复发射，彻底解决重复定义符号冲突；
+     - `lib/json/value.cp` 同步补齐 `.isObject()`, `.isArray()`, `.isBool()`, `.isNumber()`, `.isString()`，保持库与内建实现 100% 契约一致。
+  3. **测试套件全量通过 (100% PASS)**：
+     - 新增 [`cap/test/test_builtin_json_unify.cp`](file:///data/dev/cp/cap/test/test_builtin_json_unify.cp)：验证零导入下动态与强类型解析，2/2 PASS；
+     - 回归 [`cap/test/test_fast_json.cp`](file:///data/dev/cp/cap/test/test_fast_json.cp)：3/3 PASS；
+     - 回归 [`cap/test/test_zero_copy_json.cp`](file:///data/dev/cp/cap/test/test_zero_copy_json.cp)：3/3 PASS；
+     - 回归 [`cap/test/test_json5.cp`](file:///data/dev/cp/cap/test/test_json5.cp)：3/3 PASS；
+     - 回归 [`cap/test/test_json.cp`](file:///data/dev/cp/cap/test/test_json.cp)：1/1 PASS；
+     - 回归 [`cap/test/test_col_pack_md_html.cp`](file:///data/dev/cp/cap/test/test_col_pack_md_html.cp)：4/4 PASS。
+
 
 - **用户需求**：
   1. 深度分析与审核 Phase 2（高频人体工程学语法糖）与 Phase 3（系统级黑科技）建议，评估已实现、没必要、需现在实现、需完善后实现的清单；

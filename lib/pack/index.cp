@@ -8,3 +8,4 @@ export * from "./gzip.cp";
 export * from "./_archive.cp";
 export * from "./tar.cp";
 export * from "./zip.cp";
+export * from "./native.cp";

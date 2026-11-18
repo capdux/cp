@@ -657,14 +657,17 @@ switch (expr) {
 ### 3. 字符串模板插值（必须反引号）、一等公民内置 `JSON` 与 `RegExp`（无需 `import`）及管道 (`|>`)
 - **`JSON` 与 `RegExp` 均为语言全局内建一等公民，无需任何 `import`**：
   - **`JSON.stringify(val)`**：将任意结构体、类、数组、字典或基础值序列化为 `string`；
-  - **`JSON.parse<T>(str)?`**：强类型零拷贝反序列化为目标类型 `T`；
-  - **`JSON.parse(str)?`**：动态解析为 `std.json.Value` 树；
+  - **`JSON.parse<T>(str)?` / `JSON.parse(T, str)?`**：强类型零拷贝直接反序列化为目标类型 `T`，0 中间容器开销；
+  - **`JSON.parse(str)?` / `JSON.parse(allocator, str)?`**：动态解析为 CP 自研 SIMD 零拷贝流式 `JsonValue` 树，支持 `.isObject()`, `.isArray()`, `.get("key")`, `.getIndex(0)`, `.asString()`, `.asNumber()`, `.asBool()`, `.len()` 等人体工程学方法；无论是否引入 `cap:json`，行为 100% 统一；
   - **`RegExp`**：支持 TypeScript 风格正则字面量 **`/pattern/flags`** 及 `new RegExp(pattern, flags)`，自动确定性 RAII 释放。
 ```typescript
 let summary = `Agent ${agent_name} executed ${task_count} reductions.`;
 let json_str = JSON.stringify({ id: 1, name: "cp" });                   // 无需 import
 let cfg = JSON.parse<ServerConfig>(raw_body)?;                          // 强类型反序列化，无需 import
-let dyn_val = JSON.parse(raw_body)?;                                    // 动态 JSON 解析，无需 import
+let dyn_val = JSON.parse(raw_body)?;                                    // 动态 SIMD 零拷贝 JsonValue，无需 import
+if (dyn_val.isObject()) {
+    let name = dyn_val.get("name")?.asString() ?? "default";
+}
 let email_regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i; // 无需 import
 let re_alt = new RegExp("^hello [a-z]+$", "i");                         // 二者等价
 let ok = email_regex.test("dev@cp-lang.org");

@@ -9842,8 +9842,8 @@ flowchart TD
 ##### 4. 一等公民内置 `JSON`、`RegExp` 与默认预置 `std`
 - **全局内建 `JSON`（无需 `import`，CP 与 Bun 100% 同构）**：
   - `JSON.stringify(val)` -> `string`（任意结构体/类/容器序列化，基于 `std.heap.smp_allocator`）；
-  - `JSON.parse<T>(str)?` -> `T`（编译期强类型反序列化，开启 `.allocate = .alloc_if_needed` 零拷贝原切片借用）；
-  - `JSON.parse(str)?` -> 动态 `std.json.Value` 树（开启 `.allocate = .alloc_if_needed` 零拷贝借用）。
+  - `JSON.parse<T>(str)?` / `JSON.parse(T, str)?` -> `T`（编译期强类型反序列化，开启 `.allocate = .alloc_if_needed` 零拷贝原切片借用，0 中间容器开销）；
+  - `JSON.parse(str)?` / `JSON.parse(allocator, str)?` -> 动态 `JsonValue` 树（自研 16 字节 SIMD 探测 + 字符串原切片零拷贝借用，提供 `.isObject()`, `.isArray()`, `.get(key)`, `.getIndex(i)`, `.asString()`, `.asNumber()`, `.asBool()`, `.len()` 等方法；无论是否引入 `cap:json`，行为 100% 统一，彻底消除 import 割裂）。
 - **全局内建 `RegExp`（无需 `import`，废除 `lib/regex.cp`）**：
   - 支持正则字面量 `/pattern/flags` 与 `new RegExp(pattern, flags)`，提供 `.test(str)`、`exec(str)` 与 `.deinit(*_)`；
   - 编译器 prelude 直接内联 16 字节 `@Vector(16, u8)` SIMD 字面量前缀预扫描（不命中直接 $O(n/16)$ 秒退）与 `[2048]u8` 栈缓冲区零堆分配快速路径（超 2048 字节回退 `std.heap.smp_allocator`）。

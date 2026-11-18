@@ -706,21 +706,57 @@ impl Codegen {
                                 );
                             }
                             if (prop == "parse" || prop == "decode") && !call.args.is_empty() {
-                                if let Some(Expr::TypeVal { ty: target_ty, .. }) = call.args.first() {
-                                    if call.args.len() >= 2 {
-                                        let zig_ty = self.map_type(target_ty);
+                                let (is_type_arg, zig_ty) = match call.args.first() {
+                                    Some(Expr::TypeVal { ty, .. }) => (true, self.map_type(ty)),
+                                    Some(Expr::Ident(ident)) => {
+                                        let is_type = matches!(
+                                            ident.sym.as_str(),
+                                            "i8" | "u8" | "i16" | "u16" | "i32" | "u32" | "i64" | "u64"
+                                            | "i128" | "u128" | "isize" | "usize" | "f32" | "f64" | "bool" | "string"
+                                        ) || self.class_defs.contains_key(&ident.sym)
+                                          || self.enum_defs.contains_key(&ident.sym)
+                                          || self.trait_defs.contains_key(&ident.sym)
+                                          || (!self.locals.contains_key(&ident.sym)
+                                              && !self.globals.contains(&ident.sym)
+                                              && ident.sym.chars().next().map_or(false, |c| c.is_ascii_uppercase()));
+                                        if is_type {
+                                            (true, self.map_type_name(&ident.sym))
+                                        } else {
+                                            (false, String::new())
+                                        }
+                                    }
+                                    _ => (false, String::new()),
+                                };
+
+                                if is_type_arg {
+                                    if call.args.len() >= 3 {
+                                        let alloc_arg = self.generate_expr(&call.args[1]);
+                                        let str_arg = self.generate_expr(&call.args[2]);
+                                        return format!(
+                                            "std.json.parseFromSliceLeaky({}, {}, {}, .{{ .ignore_unknown_fields = true, .allocate = .alloc_if_needed }})",
+                                            zig_ty, alloc_arg, str_arg
+                                        );
+                                    } else if call.args.len() >= 2 {
                                         let str_arg = self.generate_expr(&call.args[1]);
                                         return format!(
                                             "std.json.parseFromSliceLeaky({}, std.heap.smp_allocator, {}, .{{ .ignore_unknown_fields = true, .allocate = .alloc_if_needed }})",
                                             zig_ty, str_arg
                                         );
+                                    } else {
+                                        return format!(
+                                            "std.json.parseFromSliceLeaky({}, std.heap.smp_allocator, \"\", .{{ .ignore_unknown_fields = true, .allocate = .alloc_if_needed }})",
+                                            zig_ty
+                                        );
                                     }
                                 } else {
-                                    let str_arg = self.generate_expr(&call.args[0]);
-                                    return format!(
-                                        "std.json.parseFromSliceLeaky(std.json.Value, std.heap.smp_allocator, {}, .{{ .allocate = .alloc_if_needed }})",
-                                        str_arg
-                                    );
+                                    if call.args.len() >= 2 {
+                                        let alloc_arg = self.generate_expr(&call.args[0]);
+                                        let str_arg = self.generate_expr(&call.args[1]);
+                                        return format!("JSON.parse({}, {})", alloc_arg, str_arg);
+                                    } else {
+                                        let str_arg = self.generate_expr(&call.args[0]);
+                                        return format!("JSON.parse(std.heap.smp_allocator, {})", str_arg);
+                                    }
                                 }
                             }
                         }

@@ -2,6 +2,34 @@
 
 > 历史变更日志已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## [2026-11-18] - 核心里程碑：内置全局 JSON.parse 统一（消灭 import 割裂，零导入支持动态 SIMD JsonValue 与强类型反射解析）与下游热修全结单
+
+### 编译器新特性与架构统一 (Compiler Features & Architecture)
+- **内置全局 `JSON.parse` 零导入双轨统一**:
+  - [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：在 `needs_json && !has_imported_json && !self.is_lib_mode` 时，自动发射自包含 `JsonTag`、`JsonField`、`JsonValue`、`FastJsonScanner`（16 字节 SIMD 引号/转义探测）、`JsonParser` 与全局 `JSON` 结构体；为 `JsonValue` 补齐 `isObject()`, `isArray()`, `isBool()`, `isNumber()`, `isString()` 等人体工程学方法；
+  - [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs)：彻底消除原先依赖 `import { JSON } from "cap:json"` 的分支判断；所有动态 `JSON.parse(str)` / `JSON.parse(alloc, str)` 无条件直通自研 `JSON.parse` 零拷贝引擎；强类型 `JSON.parse(T, str)` / `JSON.parse<T>(str)` 直通 Zig 编译期反射；
+  - [`cpc/src/codegen/prelude.rs`](file:///data/dev/cp/cpc/src/codegen/prelude.rs)：增强 AST 扫描，当检测到模块内显式导入或声明了 `JsonTag` / `JsonValue` / `JsonParser` / `JSON` 时，自动将 `has_imported_json` 设为 `true`，防止双重定义冲突；
+  - [`cpc/src/codegen/types.rs`](file:///data/dev/cp/cpc/src/codegen/types.rs)：动态 `JSON.parse` 语义推导统一返回 `!JsonValue`；强类型调用返回 `!T`。
+
+### 标准库强化与下游热修交付 (Stdlib & Hotfixes)
+- **标准库 JSON 契约统一 (`cap:json`)**:
+  - [`lib/json/value.cp`](file:///data/dev/cp/lib/json/value.cp)：实例方法补齐 `isObject`, `isArray`, `isBool`, `isNumber`, `isString`，保证与内置 `JsonValue` 100% 契约一致；
+  - [`lib/json/parser.cp`](file:///data/dev/cp/lib/json/parser.cp)：结合 16 字节 SIMD `FastJsonScanner` 与动态 AST 构造。
+- **下游热修工单全量交付与结单 (Downstream Hotfixes)**:
+  - `task-capsurf-20261117-pack-native-allocator`：修复 `lib/pack/native.cp` 的 `std.mem.Allocator` 导入与导出，验证 `test_col_pack_md_html.cp` 4/4 全部 PASS，结单交付；
+  - `task-capsurf-20261117-compiler-borrow-conflict`：修复验证 CapSurf `src/js/dom_binding.cp` 裸指针借用冲突，结单交付；
+  - 下游任务队列清零（0 pending）。
+
+### 测试验证 (Tests)
+- [`cap/test/test_builtin_json_unify.cp`](file:///data/dev/cp/cap/test/test_builtin_json_unify.cp)：新增端到端测试，验证零导入下动态 SIMD 零拷贝与强类型反射解析，2/2 全部 PASS；
+- [`cap/test/test_fast_json.cp`](file:///data/dev/cp/cap/test/test_fast_json.cp)：3/3 全部 PASS；
+- [`cap/test/test_zero_copy_json.cp`](file:///data/dev/cp/cap/test/test_zero_copy_json.cp)：3/3 全部 PASS；
+- [`cap/test/test_json5.cp`](file:///data/dev/cp/cap/test/test_json5.cp)：3/3 全部 PASS；
+- [`cap/test/test_json.cp`](file:///data/dev/cp/cap/test/test_json.cp)：1/1 全部 PASS；
+- [`cap/test/test_col_pack_md_html.cp`](file:///data/dev/cp/cap/test/test_col_pack_md_html.cp)：4/4 全部 PASS。
+
+---
+
 ## [2026-11-18] - 核心任务：补全 JSON5 完整解析能力与规范化标准库来源头部
 
 ### 新增与增强标准库 (Enhanced Stdlib)

@@ -34,6 +34,8 @@ pub struct ModuleFeatures {
     pub needs_shift: bool,
     pub needs_cast_int: bool,
     pub needs_sync: bool,
+    pub needs_json: bool,
+    pub has_imported_json: bool,
     pub is_lib_mode: bool,
 }
 
@@ -56,6 +58,17 @@ impl ModuleFeatures {
                     {
                         f.needs_sync = true;
                     }
+                    if imp.source == "cap:json"
+                        || imp.source.contains("json")
+                        || imp.specifiers.iter().any(|s| {
+                            s.sym == "JSON"
+                                || s.sym == "JsonValue"
+                                || s.sym == "JsonParser"
+                                || s.sym == "JsonTag"
+                        })
+                    {
+                        f.has_imported_json = true;
+                    }
                 }
                 ModuleItem::Export(exp) => {
                     if let Some(source) = &exp.source {
@@ -66,6 +79,14 @@ impl ModuleFeatures {
                                 .any(|s| s.sym == "Mutex" || s.sym == "RwLock" || s.sym == "Atomic")
                         {
                             f.needs_sync = true;
+                        }
+                        if source == "cap:json"
+                            || exp
+                                .specifiers
+                                .iter()
+                                .any(|s| s.sym == "JSON" || s.sym == "JsonValue")
+                        {
+                            f.has_imported_json = true;
                         }
                     }
                 }
@@ -115,6 +136,13 @@ impl ModuleFeatures {
                 self.scan_block(&func.body);
             }
             Decl::Class(c) => {
+                if c.ident.sym == "JSON"
+                    || c.ident.sym == "JsonValue"
+                    || c.ident.sym == "JsonParser"
+                    || c.ident.sym == "JsonField"
+                {
+                    self.has_imported_json = true;
+                }
                 if c.implements.iter().any(|i| i.sym == "Agent") {
                     self.needs_actors = true;
                 }
@@ -156,6 +184,9 @@ impl ModuleFeatures {
                 }
             }
             Decl::Enum(e) => {
+                if e.ident.sym == "JsonTag" {
+                    self.has_imported_json = true;
+                }
                 for m in &e.methods {
                     if let Some(ret) = &m.return_type {
                         self.scan_type(ret);
@@ -178,6 +209,9 @@ impl ModuleFeatures {
                 }
             }
             Decl::TypeAlias(ta) => {
+                if ta.ident.sym == "JSON" || ta.ident.sym == "JsonValue" {
+                    self.has_imported_json = true;
+                }
                 self.scan_type(&ta.target_ty);
             }
             _ => {}
@@ -336,6 +370,8 @@ impl ModuleFeatures {
                     self.needs_actors = true;
                 } else if id.sym == "Error" || id.sym == "CpResult" {
                     self.needs_result_error = true;
+                } else if id.sym == "JsonValue" || id.sym == "JsonField" || id.sym == "JsonTag" {
+                    self.needs_json = true;
                 }
             }
             Type::Optional(inner) => self.scan_type(inner),
@@ -365,6 +401,8 @@ impl ModuleFeatures {
             Expr::Ident(id) => {
                 if id.sym == "RegExp" {
                     self.needs_regex = true;
+                } else if id.sym == "JSON" || id.sym == "JsonValue" || id.sym == "JsonParser" {
+                    self.needs_json = true;
                 } else if id.sym == "Mutex" || id.sym == "RwLock" || id.sym == "Atomic" {
                     self.needs_sync = true;
                 } else if !self.is_lib_mode

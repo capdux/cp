@@ -695,7 +695,10 @@ impl Codegen {
                     return Some(t.clone());
                 }
                 if id.sym == "Managed" {
-                    return Some(Type::Ref(Ident { sym: "Managed".to_string(), span: id.span }));
+                    return Some(Type::Ref(Ident {
+                        sym: "Managed".to_string(),
+                        span: id.span,
+                    }));
                 }
                 if id.sym == "true" || id.sym == "false" {
                     return Some(Type::Bool);
@@ -1154,9 +1157,43 @@ impl Codegen {
                                 if let Some(Expr::TypeVal { ty, .. }) = c.args.first() {
                                     return Some(Type::ErrorUnion(Box::new(ty.clone())));
                                 }
+                                if let Some(Expr::Ident(id)) = c.args.first() {
+                                    let is_type = matches!(
+                                        id.sym.as_str(),
+                                        "i8" | "u8"
+                                            | "i16"
+                                            | "u16"
+                                            | "i32"
+                                            | "u32"
+                                            | "i64"
+                                            | "u64"
+                                            | "i128"
+                                            | "u128"
+                                            | "isize"
+                                            | "usize"
+                                            | "f32"
+                                            | "f64"
+                                            | "bool"
+                                            | "string"
+                                    ) || self.class_defs.contains_key(&id.sym)
+                                        || self.enum_defs.contains_key(&id.sym)
+                                        || self.trait_defs.contains_key(&id.sym)
+                                        || (!self.locals.contains_key(&id.sym)
+                                            && !self.globals.contains(&id.sym)
+                                            && id
+                                                .sym
+                                                .chars()
+                                                .next()
+                                                .map_or(false, |ch| ch.is_ascii_uppercase()));
+                                    if is_type {
+                                        return Some(Type::ErrorUnion(Box::new(Type::Ref(
+                                            id.clone(),
+                                        ))));
+                                    }
+                                }
                                 return Some(Type::ErrorUnion(Box::new(Type::Ref(Ident {
                                     span: mem.prop.span,
-                                    sym: "std.json.Value".to_string(),
+                                    sym: "JsonValue".to_string(),
                                 }))));
                             }
                         }
@@ -2232,7 +2269,7 @@ impl Codegen {
                     return format!("*{}", inner_z);
                 }
                 Expr::Ident(id) => {
-                if id.sym == "true" || id.sym == "false" {
+                    if id.sym == "true" || id.sym == "false" {
                         return "bool".to_string();
                     }
                     if id.sym == "@self" || id.sym == "@sender" {
