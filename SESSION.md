@@ -2149,3 +2149,25 @@
 - 溯源三次校验：index.cp 29 个标为 Custom(agy 生成导出入口)；17 个按同名匹配 Bun（name-matched, needs review）；仍有 45 个 UNVERIFIED。仅改第 1 行。
 
 - 溯源四次校验：依据 CHANGELOG/SESSION 记录确认 16 个文件来源（Bun/Zig std/Custom），仅改第1行；剩余 29 个 UNVERIFIED 待用户判断。
+
+---
+
+## 指令：启动双子智能体自主推进流（吸收 Bun 资产与排查缩水文件），严格添加谱系文件头
+
+- **用户指令**：
+  1. 继续从bun中吸收资产(bun agy正在将bun的zig迁移到cp), 作为cp的lib库.
+  2. 按功能/模块吸收后, 更新文档(cp_ref.md/cp_agent_ref.md中简要说明, 文档目录按库名称, 产生单独详细使用说明), git 提交代码库.
+  3. 自主推进: 吸收一个模块提交代码库后, 继续分析, 吸收下一个模块.
+  4. 一个子智能体吸收bun中的cp代码资产, 一个子智能体检查当前已经吸收的cp文件, 功能是否完整(发现部分吸收过来的cp文件比bun原cp文件小很多,怀疑功能吸收的功能不完整).
+  5. 收到热修任务, 则启动第三个子智能体, 修完回收该子智能体,避免等待.
+  开始你的工作, 自主推进, 不要停!
+  补充一点: 从bun 中吸收的文件, 文件头需备注吸收来源: 对应bun src 中的文件名称, bun 更新后, 方便cp lib库重新吸收bun 资产更新cp lib库.
+
+- **执行结果**：
+  1. **排查并确认缩水文件现状**：
+     - 比对发现 `lib/col/bit_set.cp` (2.8KB vs Bun 63KB)、`baby_list.cp` (4.4KB vs Bun 23KB)、`linear_fifo.cp` (3.6KB vs Bun 16.9KB)、`bounded_array.cp` (2.3KB vs Bun 11.7KB)、`ini.cp` (4.4KB vs Bun 58KB) 等存在严重功能缩水；
+  2. **派发双子智能体自主并发作业**：
+     - 子智能体 1 (`2af95c07`，Role: "Stdlib Completeness Auditor")：全面补全 `lib/col/` 核心容器体系，补齐缺失的位运算、动态扩容、SIMD 扫描与方法，编写回归测试；
+     - 子智能体 2 (`99e6c652`，Role: "Bun CP Asset Ingestion Engineer")：全量吸收 `/data/dev/bun/src/ptr/`（含 `shared.cp`, `weak_ptr.cp`, `Cow.cp`, `CowSlice.cp`, `tagged_pointer.cp`, `owned.cp` 等 11 个文件）构建全新一等公民标准库 `cap:ptr`（`lib/ptr/`），编写单测与 `docs/stdlib/ptr.md`；
+  3. **贯彻来源谱系头部注释铁律**：
+     - 通过 `send_message` 立即向两名子智能体下达最新指示：所有吸收与补齐的文件，第一行必须严格备注吸收来源（如 `// Source: bun/src/ptr/shared.cp`），确保日后 Bun 更新后可无缝自动重新吸收对齐。

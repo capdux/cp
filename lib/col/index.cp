@@ -1,4 +1,4 @@
-// Source: Bun bun/src/collections/
+// Source: bun/src/collections/
 // ============================================================================
 // Absorbed from Bun: bun/src/collections/
 // Upstream Sync: Refer to bun/src/collections/ for future upstream updates.
@@ -12,7 +12,7 @@
 //   - baby_list.cp     : Compact u32-indexed BabyList<T> and OffsetByteList
 //   - linear_fifo.cp   : Power-of-two ring-buffer LinearFifo<T>
 //   - hive_array.cp    : Hardware @ctz/@popCount BitSet64 and O(1) HiveArray<T, CAP> slot pool
-//   - bit_set.cp       : Multi-word static BitSet256 with hardware @ctz/@popCount
+//   - bit_set.cp       : Range, BitSet64, BitSet128, BitSet256, BitSet512, BitSet1024, DynamicBitSet, Iterators
 //   - string_map.cp    : Length-filtered FastStringMap<V, CAP> (exact & ASCII case-insensitive)
 //   - object_pool.cp   : Fixed-capacity zero-heap free-list ObjectPool<T, CAP>
 //   - hash_map.cp      : Fixed-capacity zero-heap StaticHashMap<K, V, CAP>

@@ -5905,7 +5905,7 @@ export class SocketContext<Handler> {
 | :---------------- | :--------------------------------------------------------------------- | :------------- |
 | `cap:sort`        | 工业级切片排序与对数检索：`Sort`（`asc`, `desc`, `sort`, `stable`, `heap`, `isSorted`, `binarySearch`, `lowerBound`, `upperBound`, `minI32`, `maxI32`, `argMin`, `argMax`）、`SortOf<T>` | **已全面实装** |
 | `cap:hash`        | 非密码学极速散列与校验和：`Hash`（`xxhash3`, `xxhash128`, `murmur3`, `cityhash64`, `crc32`, `adler32`, `siphash`, `siphash128`, `fnv1a`, `hashInt`）、`XxHash3Stream` | **已全面实装** |
-| `cap:col`（兼容 `cap:collections`） | `BoundedArray`, `BabyList`, `LinearFifo`, `HiveArray`, `ObjectPool`, `BitSet256`, `StaticStringMap`, `VecDeque`, `BinaryHeap`, `BTreeMap`, `BTreeSet`, `HashMap`, `HashSet` | **已全面实装** |
+| `cap:col`（兼容 `cap:collections`） | `BoundedArray`, `BabyList`, `OffsetByteList`, `LinearFifo`, `HiveArray`, `ObjectPool`, `BitSet64`, `BitSet128`, `BitSet256`, `BitSet512`, `BitSet1024`, `DynamicBitSet`, `Range`, `Soa<T>`, `StaticStringMap`, `VecDeque`, `BinaryHeap`, `BTreeMap`, `BTreeSet`, `HashMap`, `HashSet` | **已全面实装** |
 | `cap:event`（兼容 `cap:event_loop` / `cap:events`） | 统一事件循环与事件总线：`EventLoop`, `Timer`, `TimerHeap`, `ConcurrentTask`, `ConcurrentQueue`, `DeferredTaskQueue`, `PollEngine`, `EventEmitter` | **已全面实装** |
 | `cap:conf`（兼容 `cap:dotenv` / `cap:ini`） | 统一配置中心：`DotEnv` (`.env`)、`Ini` / `IniParser`、`TOML` (`TomlDoc`)、`YAML` (`YamlDoc`)、`JSON5` (`Json5Scanner`)、类型安全解析器 `ConfValueParser` | **已全面实装** |
 | `cap:pack`（兼容 `cap:compress`） | 流式压缩与归档打包：`Zlib`, `Deflate`, `Zstd`, `Brotli`, `CompressionFormat`, `Crc32`, `Adler32`, `GzipHeader`, `RleCodec`, `TarHeader`, `TarReader`, `ZipReader`, `ZipLocalHeader`, `ZipCentralHeader`, `ZipEocd` | **已全面实装** |

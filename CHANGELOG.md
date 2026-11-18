@@ -2,6 +2,26 @@
 
 > 历史变更日志已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## [2026-11-18] - 核心里程碑：`cap:col` 核心容器体系工业级完整性补齐与首行 Bun 溯源注释覆盖
+
+### 标准库增强与完备性补齐 (Enhanced Stdlib)
+- **`cap:col` 容器家族全量补全与谱系溯源**:
+  - [`lib/col/bit_set.cp`](file:///data/dev/cp/lib/col/bit_set.cp)：首行标注 `// Source: bun/src/collections/bit_set.cp`，全面扩充至包含 `BitSet64`, `BitSet128`, `BitSet256`, `BitSet512`, `BitSet1024`, `DynamicBitSet`, `Range`，实装硬件 `@popCount` 与 `@ctz` 极速位扫描、动态重分配 `resize(len, fill)`、全套布尔集合代数与掩码迭代器；
+  - [`lib/col/bounded_array.cp`](file:///data/dev/cp/lib/col/bounded_array.cp)：首行标注 `// Source: bun/src/collections/bounded_array.cp`，补齐 `fromSlice`, `slice`, `constSlice`, `unusedCapacitySlice`, `insert`, `insertSlice`, `replaceRange`, `contains`, `findIndex`, `at` 等 10+ 项高阶栈数组操作；
+  - [`lib/col/linear_fifo.cp`](file:///data/dev/cp/lib/col/linear_fifo.cp)：首行标注 `// Source: bun/src/collections/linear_fifo.cp`，补齐 `realign`（原地消除环形缓冲回绕展开连续物理切片）、`shrink`、`unget`（逆向反弹未消费数据）、`readableSlice` / `writableSlice` 零拷贝 I/O 契约及 `orderedRemoveItem`；
+  - [`lib/col/baby_list.cp`](file:///data/dev/cp/lib/col/baby_list.cp)：首行标注 `// Source: bun/src/collections/baby_list.cp`，补齐 `fromSlice`, `clone`, `memoryCost`, `ensureTotalCapacityPrecise`, `expandToCapacity`, `shrinkAndFree`, `insert`, `insertSlice`, `orderedRemove`, `swapRemove` 及 `OffsetByteList` 结构体；
+  - [`lib/col/hive_array.cp`](file:///data/dev/cp/lib/col/hive_array.cp) & [`lib/col/index.cp`](file:///data/dev/cp/lib/col/index.cp)：统一从 `bit_set.cp` 导出 `BitSet64`，首行标注来源注释，对外暴露统一聚合入口。
+
+### 文档沉淀与规范同步 (Documentation)
+- [`docs/stdlib/col.md`](file:///data/dev/cp/docs/stdlib/col.md)：新增全套 `cap:col` 架构与 API 详细使用手册，提供 BitSet、BoundedArray、LinearFifo、BabyList、Soa 代码用例；
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md) & [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)：在 `cap:col` 标准库矩阵中增补全套位图矩阵、范围与紧凑数组符号。
+
+### 测试验证 (Tests)
+- [`cap/test/test_col_complete.cp`](file:///data/dev/cp/cap/test/test_col_complete.cp)：新增 5 大综合测试用例，覆盖 BoundedArray、LinearFifo、BabyList、静态位图矩阵与 DynamicBitSet，5/5 100% 全部 PASS；
+- 回归测试：`test_collections_bun.cp`（6/6 PASS）、`test_collections_matrix.cp`（7/7 PASS）、`test_col_pack_md_html.cp`（4/4 PASS）。
+
+---
+
 ## [2026-11-18] - 核心里程碑：内置全局 JSON.parse 统一（消灭 import 割裂，零导入支持动态 SIMD JsonValue 与强类型反射解析）与下游热修全结单
 
 ### 编译器新特性与架构统一 (Compiler Features & Architecture)

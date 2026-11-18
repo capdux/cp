@@ -823,7 +823,7 @@ impl Codegen {
         self.writeln("");
 
         // --- Tri-State Result, Built-in Error, String Concat & Pattern Helpers ---
-        if !self.is_lib_mode && features.needs_result_error {
+        if features.needs_result_error {
             self.writeln("pub fn CpResult(comptime __T: type, comptime __E: type) type {");
             self.writeln(
                 "    return union(enum) { ok: __T, err: __E, pub const __IS_CP_RESULT = true; };",
@@ -2081,7 +2081,7 @@ pub const JSON = struct {
             }
         }
 
-        if !self.is_lib_mode && features.needs_result_error {
+        if features.needs_result_error {
             self.writeln("fn CpUnwrapOkType(comptime __T: type) type { if (is_cp_result(__T)) { const OkT = @FieldType(__T, \"ok\"); if (@typeInfo(OkT) == .optional) return @typeInfo(OkT).optional.child; return OkT; } if (@typeInfo(__T) == .error_union) { const Payload = @typeInfo(__T).error_union.payload; if (@typeInfo(Payload) == .optional) return @typeInfo(Payload).optional.child; return Payload; } if (@typeInfo(__T) == .optional) return @typeInfo(__T).optional.child; return __T; }");
             self.writeln("fn CpUnwrapErrType(comptime __T: type) type { if (is_cp_result(__T)) return @FieldType(__T, \"err\"); if (@typeInfo(__T) == .error_union) return @typeInfo(__T).error_union.error_set; return anyerror; }");
             self.writeln("fn cp_has_ok_val(v: anytype) bool { const __T = @TypeOf(v); if (comptime is_cp_result(__T)) { if (v != .ok) return false; const OkT = @FieldType(__T, \"ok\"); if (comptime @typeInfo(OkT) == .optional) { return v.ok != null; } else { return true; } } else if (comptime @typeInfo(__T) == .error_union) { const Payload = @typeInfo(__T).error_union.payload; if (comptime @typeInfo(Payload) == .optional) { if (v) |opt_val| return opt_val != null else |_| return false; } else { if (v) |_| return true else |_| return false; } } else if (comptime @typeInfo(__T) == .optional) { return v != null; } else { return true; } }");

@@ -2,6 +2,33 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-18: `cap:col` 核心容器体系工业级完整性补齐与首行 Bun 溯源注释覆盖
+
+- **任务背景与工程决策**：
+  1. **缩水文件审计与排查**：
+     - 用户指出：部分已吸收的 CP 文件比 Bun 原 CP 文件小很多，怀疑功能吸收不完整；
+     - 自动化比对确认：`lib/col/bit_set.cp`（2.8KB vs Bun 63KB）、`baby_list.cp`（4.4KB vs Bun 23KB）、`linear_fifo.cp`（3.6KB vs Bun 16.9KB）、`bounded_array.cp`（2.3KB vs Bun 11.7KB）确实存在功能严重缩水，缺少大量硬件加速位运算、动态扩容、环形对齐与高阶增删方法；
+     - 启动第一阶段审计补齐任务，由子智能体 1 专攻 `lib/col/`。
+  2. **首行 Bun 来源溯源注释铁律**：
+     - 响应用户最新指示：所有吸收自 Bun 的文件，第一行统一强制标注 `// Source: bun/src/...`，以便后续 Bun 源码演进更新时，CP 标准库可通过自动化工具秒级识别对应源文件，实现高精度的资产重新同步与增量升级。
+
+- **核心技术设计与实现原理**：
+  1. **全套位图家族与布尔集合代数 (`lib/col/bit_set.cp`)**：
+     - 补齐硬件加速单字位图 `BitSet64`（利用 `@popCount` 与 `@ctz` 实现 O(1) 掩码消除与快速查找）；
+     - 扩展静态多字长位图矩阵：`BitSet128`、`BitSet256`、`BitSet512`、`BitSet1024`，支持跨字批量位操作与掩码迭代器；
+     - 完善堆上动态可扩容位图 `DynamicBitSet`，实装 `resize(new_len, fill)` 动态伸缩与自动尾字掩码对齐。
+  2. **环形双端缓冲队列 (`lib/col/linear_fifo.cp`)**：
+     - 实装 `realign()`，原地消除环形缓冲回绕，重整为物理连续切片，提升 I/O 直写性能；
+     - 补齐 `unget(items)` 逆向反弹与 `readableSlice` / `writableSlice` 零拷贝 I/O 契约。
+  3. **有界栈数组与紧凑动态列表 (`bounded_array.cp` & `baby_list.cp`)**：
+     - `BoundedArray`：补齐 `fromSlice`, `slice`, `unusedCapacitySlice`, `insert`, `replaceRange`, `contains`, `findIndex`；
+     - `BabyList` 与 `OffsetByteList`：补齐 u32 索引压缩动态数组的高阶插入、删除、容量扩展与精确回收。
+  4. **文档与回归测试闭环**：
+     - 编写详细使用手册 [docs/stdlib/col.md](file:///data/dev/cp/docs/stdlib/col.md)；
+     - 编写端到端验收测试 [cap/test/test_col_complete.cp](file:///data/dev/cp/cap/test/test_col_complete.cp)，5/5 全部 PASS。
+
+---
+
 ## 2026-11-18: 内置全局 JSON.parse 统一（零导入支持动态 SIMD JsonValue 与强类型反射）、性能 Benchmark 真相与下游工单彻底清零
 
 - **任务背景与工程决策**：
