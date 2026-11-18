@@ -1,28 +1,29 @@
-// Source: Bun src/url/percent-encoding.cp
-// lib/url/percent.cp
-// RFC 3986 URI Component Percent-Encoder & Decoder
-// Absorbed from Bun src/url/percent-encoding.cp
+// Source: bun/src/url/percent-encoding.cp
+// ============================================================================
+// lib/url/percent.cp — RFC 3986 URI Component Percent-Encoder & Decoder
+// ============================================================================
+const std = @import("std");
 
 const url_hex_upper: []const u8 = "0123456789ABCDEF";
 
 pub struct PercentEncoding {
     /// Returns `true` if `c` is an RFC 3986 unreserved character (`ALPHA / DIGIT / "-" / "." / "_" / "~"`).
     pub static fn isUnreserved(c: u8): bool {
-        if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+        if ((c >= (65 as u8) and c <= (90 as u8)) or (c >= (97 as u8) and c <= (122 as u8)) or (c >= (48 as u8) and c <= (57 as u8))) {
             return true;
         }
-        return c == '-' || c == '.' || c == '_' || c == '~';
+        return c == (45 as u8) or c == (46 as u8) or c == (95 as u8) or c == (126 as u8);
     }
 
     pub static fn hexValue(c: u8): u8 {
-        if (c >= '0' && c <= '9') {
-            return c - '0';
+        if (c >= (48 as u8) and c <= (57 as u8)) {
+            return c - (48 as u8);
         }
-        if (c >= 'a' && c <= 'f') {
-            return c - 'a' + 10;
+        if (c >= (97 as u8) and c <= (102 as u8)) {
+            return c - (97 as u8) + 10;
         }
-        if (c >= 'A' && c <= 'F') {
-            return c - 'A' + 10;
+        if (c >= (65 as u8) and c <= (70 as u8)) {
+            return c - (65 as u8) + 10;
         }
         return 0xFF;
     }
@@ -44,7 +45,7 @@ pub struct PercentEncoding {
         let i: usize = 0;
         let pos: usize = 0;
         while (i < input.len) {
-            const c = input[i];
+            let c = input[i];
             if (PercentEncoding.isUnreserved(c)) {
                 if (pos + 1 > out.len) {
                     break;
@@ -55,8 +56,8 @@ pub struct PercentEncoding {
                 if (pos + 3 > out.len) {
                     break;
                 }
-                out[pos] = '%';
-                out[pos + 1] = url_hex_upper[(c >> 4) as usize];
+                out[pos] = 37 as u8; // '%'
+                out[pos + 1] = url_hex_upper[((c >> 4) & 0x0F) as usize];
                 out[pos + 2] = url_hex_upper[(c & 0x0F) as usize];
                 pos += 3;
             }
@@ -69,20 +70,20 @@ pub struct PercentEncoding {
     pub static fn decodeToBuf(input: []const u8, plus_as_space: bool, out: []u8): usize {
         let i: usize = 0;
         let pos: usize = 0;
-        while (i < input.len && pos < out.len) {
-            const c = input[i];
-            if (c == '%' && i + 2 < input.len) {
-                const hi = PercentEncoding.hexValue(input[i + 1]);
-                const lo = PercentEncoding.hexValue(input[i + 2]);
-                if (hi != 0xFF && lo != 0xFF) {
+        while (i < input.len and pos < out.len) {
+            let c = input[i];
+            if (c == (37 as u8) and i + 2 < input.len) {
+                let hi = PercentEncoding.hexValue(input[i + 1]);
+                let lo = PercentEncoding.hexValue(input[i + 2]);
+                if (hi != 0xFF and lo != 0xFF) {
                     out[pos] = (hi << 4) | lo;
                     pos += 1;
                     i += 3;
                     continue;
                 }
             }
-            if (plus_as_space && c == '+') {
-                out[pos] = ' ';
+            if (plus_as_space and c == (43 as u8)) {
+                out[pos] = 32 as u8; // ' '
                 pos += 1;
                 i += 1;
                 continue;
@@ -92,5 +93,24 @@ pub struct PercentEncoding {
             i += 1;
         }
         return pos;
+    }
+
+    /// Percent-encodes `input` into allocated string memory.
+    pub static fn encodeComponent(input: []const u8, allocator: std.mem.Allocator): !string {
+        let max_len = input.len * 3;
+        let buf = try allocator.alloc(u8, max_len);
+        errdefer allocator.free(buf);
+        let len = PercentEncoding.encodeComponentToBuf(input, buf);
+        let res = try allocator.realloc(buf, len);
+        return res;
+    }
+
+    /// Decodes percent-encoded string into allocated memory.
+    pub static fn decodeAlloc(input: []const u8, plus_as_space: bool, allocator: std.mem.Allocator): !string {
+        let buf = try allocator.alloc(u8, input.len);
+        errdefer allocator.free(buf);
+        let len = PercentEncoding.decodeToBuf(input, plus_as_space, buf);
+        let res = try allocator.realloc(buf, len);
+        return res;
     }
 }

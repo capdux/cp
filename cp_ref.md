@@ -5937,6 +5937,7 @@ export class SocketContext<Handler> {
 | `cap:which`       | 跨平台可执行二进制定位器（支持 `PATH` 环境变量遍历、相对/绝对路径解析与执行权限校验） | **已全面实装** |
 | `cap:ws`          | RFC 6455 现代 WebSocket 协议帧处理（Opcode、打包分片、4 字节极速异或掩码、控制帧） | **已全面实装** |
 | `cap:crypto`      | 工业级密码学体系：CSPRNG、UUID v4、散列哈希（SHA256/512/1/MD5/流式）、HMAC、PBKDF2、AEAD 对称加密（AES-256-GCM、ChaCha20-Poly1305）、BoringSSL X.509 校验 | **已全面实装** |
+| `cap:safety`      | 生产级并发安全与诊断套件：线程 ID 极速获取（`thread_id`）、单线程属主防御锁（`ThreadLock`）、可重入并发读写竞态检测（`CriticalSection`）、非托管容器防混用（`CheckedAllocator`）与原生 ASAN 内存毒化（`asan`） | **已全面实装** |
 | `cap:security`    | 安全防护与防跨站请求伪造子系统：CSPRNG 随机 Nonce、HMAC-SHA256 签名与篡改校验、恒定时间防时序攻击比对（`constantTimeEql`）、多格式编解码（Base64Url, Base64, Hex） | **已全面实装** |
 | `cap:mem`         | `Arena`, `SharedTensor`, `Cow`, `CowSlice`, `TaggedPointer`, `TaggedPtr`, `MaxHeapAllocator` | **已全面实装** |
 | `cap:string`      | `ZigString`, `WTF8`, `SimdUtf`, `Utf8Grapheme`, `CaseConverter`, `SmolStr` (15B 纯栈 SSO 字符串), `HashedString` (O(1) 预哈希字符串), `PathString`, `StringJoiner` | **已全面实装** |

@@ -1091,6 +1091,8 @@
   - 新增独立文档 `docs/stdlib/ptr.md` 与测试 `cap/test/test_ptr.cp` (8/8 PASS)。
 - [feat(encoding)]: 全面补全 `lib/encoding/base64.cp`，支持 `decodeInPlace` 零堆分配原地解码与 4 种 `Codecs` 预设工厂；新增 `docs/stdlib/encoding.md` 与测试 `cap/test/test_encoding_complete.cp` (4/4 PASS)。
 - [feat(sourcemap)]: 全量补齐 `lib/sourcemap/`（`vlq.cp`, `line_offset.cp`, `mapping.cp`, `internal_source_map.cp`, `chunk.cp`, `parsed_source_map.cp`, `sourcemap.cp`, `index.cp`），新增 `docs/stdlib/sourcemap.md` 与测试 `cap/test/test_sourcemap_complete.cp` (5/5 PASS)。
+- [feat(url)]: 全面补全 WHATWG URL 标准库 `lib/url/`（`percent.cp`, `search_params.cp`, `query.cp`, `url.cp`, `index.cp`），支持 IPv6 方括号主机、URLSearchParams 排序与百分号编解码，新增 `docs/stdlib/url.md` 与测试 `cap/test/test_url_complete.cp` (6/6 PASS)。
+- [feat(safety)]: 从 Bun 吸收构建生产级并发安全与诊断标准库 `lib/safety/`（`thread_id.cp`, `ThreadLock.cp`, `CriticalSection.cp`, `asan.cp`, `alloc.cp`, `safety.cp`, `index.cp`），新增 `docs/stdlib/safety.md` 与测试 `cap/test/test_safety_complete.cp` (5/5 PASS)。
 - [feat(clap)]: 从 Bun 吸收构建 `lib/clap/`（`args.cp`, `streaming.cp`, `comptime.cp`, `clap.cp`, `index.cp`），新增 `docs/stdlib/clap.md` 与测试 `cap/test/test_clap_complete.cp` (6/6 PASS)。
 - [feat(s3)]: 全量吸收 Bun S3 运行时构建 `lib/s3/`（`simple_request.cp`, `list_objects.cp`, `multipart.cp`, `download_stream.cp`, `client.cp`, `signing.cp`），新增 `docs/stdlib/s3.md` 与测试 `cap/test/test_s3_complete.cp` (6/6 PASS)。
 - [fix(cpc)]: 编译器底层缺陷修复：

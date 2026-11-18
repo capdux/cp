@@ -30,7 +30,10 @@ pub const PosixPath = struct {
             }
         }
 
-        let base = if (idx := last_slash) p[idx + 1 ..] else p;
+        let base = p;
+        if (idx := last_slash) {
+            base = p[idx + 1 ..];
+        }
         if (e := ext) {
             if (e.len > 0 and std.mem.endsWith(u8, base, e) and base.len > e.len) {
                 base = base[0 .. base.len - e.len];

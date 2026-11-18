@@ -1053,6 +1053,7 @@ switch (msg) {
 | `cap:which` | `which`, `isExecutable`, `WhichOptions` | 跨平台 `PATH` 可执行程序定位器 |
 | `cap:encoding` | `Base64`（Standard, URL-Safe, 无填充, `decodeInPlace`）, `Base64Encoder`, `Base64Decoder`, `Codecs`, `Hex`（`encodeLower`, `encodeUpper`, `decode`）, `Utf8`, `Utf16` | 高性能 Base64、原地极速解码、十六进制与 UTF 文本编码库 |
 | `cap:crypto` | `sha256`, `sha512`, `randomBytes`, `fillRandom`, `randomUUID`, `Aes256Gcm`, `ChaCha20Poly1305`, `Hmac`, `pbkdf2`, `TlsHostnameVerifier` | 密码学随机数、散列、AEAD 加密与 BoringSSL X.509 校验 |
+| `cap:safety` | `thread_id`, `getCurrent`, `isCurrent`, `isValid`, `ThreadLock`, `CriticalSection`, `CheckedAllocator`, `assertEq`, `assertAllocatorEq`, `assertEqFmt`, `poison`, `unpoison`, `isPoisoned`, `assertPoisoned`, `assertUnpoisoned`, `assert`, `safety_assert`, `safety_panic` | 生产级线程安全、可重入并发竞态检测、非托管容器防混用与原生 ASAN 内存毒化标准库 |
 | `cap:security` | `CSRF`, `TokenFormat`, `constantTimeEql` | 防 CSRF 签名与恒定时间安全比对 |
 | `cap:reflect` | `reflect.type<T>()`, `reflect.of()`, `reflect.has()`, `reflect.hasField()`, `reflect.hasMethod()` | 编译期与运行时统一反射内省库 |
 | `cap:test` | `test("desc", () => { expect_eq(a, b); })` | 原生单元测试与断言框架 |

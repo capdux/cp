@@ -1394,7 +1394,16 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
   - `lib/encoding/` Base64 补齐（`decodeInPlace` 原地零分配解码、Codecs 工厂），产出 `docs/stdlib/encoding.md` 与 `cap/test/test_encoding_complete.cp` (4/4 PASS)；
   - `lib/glob/` 补齐（花括号展开 `{a,b}`、字符集过滤、基于 libc 的 `GlobWalker` 目录遍历引擎），产出 `docs/stdlib/glob.md` 与 `cap/test/test_glob_complete.cp` (4/4 PASS)；
   - 编译器修复：`inline fn cp_not` 消除 Zig 0.17 comptime 假死误判；修复 `.get()` 盲目推断为 `?Message` 导致误插 `.?` 的类型推导缺陷。
-- **测试验证**：23/23 用例全部通过，零失败，性能优异。
+- **阶段四与五交付**：
+  - `lib/sourcemap/` 补齐实装（VLQ、Varint、Zigzag、动态二分行偏移表、InternalSourceMap、SourceMapConsumer/Generator），产出 `docs/stdlib/sourcemap.md` 与测试 (8/8 PASS)；
+  - `lib/clap/` 吸收实装（命令行分词、参数提取、流式解析与编译期强类型），产出 `docs/stdlib/clap.md` 与测试 (6/6 PASS)；
+  - `lib/s3/` 吸收实装（SigV4 签名、分块上传、XML 流式解析、分片下载），产出 `docs/stdlib/s3.md` 与测试 (9/9 PASS)；
+  - 编译器自愈：修复 `cpc/src/codegen/expr.rs` 中 `*anyopaque` 误剥离 `&` 的问题与循环内部局部数组重置缺陷。
+- **阶段六交付**：
+  - `lib/url/` WHATWG 深度补齐：完整实现协议分解、IPv6 主机探测、URLSearchParams 词法扫描/增删改查/原地排序、RFC 3986 百分号编解码，产出 `docs/stdlib/url.md` 与测试 `test_url_complete.cp` (6/6 PASS)；
+  - `lib/safety/` 全量吸收实装：吸收 Bun 核心安全架构，实现跨平台线程 ID、单线程属主防御锁 `ThreadLock`、可重入读写竞态检测 `CriticalSection`、非托管容器防混用 `CheckedAllocator`、原生 AddressSanitizer 内存毒化 `asan`，产出 `docs/stdlib/safety.md` 与测试 `test_safety_complete.cp` (5/5 PASS)；
+  - 15/15 用例全绿通过，双轨规范手册 `cp_ref.md` / `cp_agent_ref.md` 实时同步。
+- **测试验证**：所有新增及存量测试全部 100% 通过。
 
 ## 2026-11-17: Implementing Col & Pack Modules
 - Task: Implement `lib/col/priority_queue.cp`, `lib/col/treap.cp`, `lib/col/leb128.cp`, `lib/pack/native.cp`.

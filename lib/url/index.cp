@@ -1,5 +1,8 @@
-// Source: Custom (agy-generated export index)
-// lib/url/index.cp
-export { URLSearchParams, QueryParam } from "./query";
-export { URL } from "./url";
-export { PercentEncoding } from "./percent.cp";
+// Source: bun/src/url/
+// ============================================================================
+// lib/url/index.cp — WHATWG URL, URLSearchParams & PercentEncoding Module (cap:url)
+// ============================================================================
+
+export * from "./percent";
+export * from "./search_params";
+export * from "./url";

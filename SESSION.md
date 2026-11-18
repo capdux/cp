@@ -2209,3 +2209,19 @@
        - `cpc/src/codegen/expr.rs`：修复变量未显式声明类型且推断为 `*anyopaque` 时，`starts_with('*')` 误判变量已是指针而剥离取地址符 `&` 的重大编译器缺陷（增加 `clean_zig_ty != "*anyopaque"` 守卫）；
        - `cpc/src/codegen/stmt.rs`：修复 stack buffer 数组在 while 循环中被误判为未初始化的作用域重置缺陷；
        - 20/20 新增用例全部全绿通过，双轨规范 `cp_ref.md` / `cp_agent_ref.md` 实时同步。
+  7. **第六阶段完成交付 (`cap:url`, `cap:safety`)**：
+     - **`cap:url` WHATWG URL 规范深度补齐**：
+       - 补全 `lib/url/`（`percent.cp`, `search_params.cp`, `query.cp`, `url.cp`, `index.cp`），首行 100% 具备 `// Source: bun/src/url/...` 谱系标注；
+       - 完整支持 WHATWG 标准协议分解（protocol, username, password, host, hostname, port, pathname, search, hash）；
+       - 实现 IPv6 方括号主机、localhost 与各类标准协议（file, s3, blob, unix）解析；
+       - 补齐 `URLSearchParams` 词法扫描器、增删改查 CRUD、按键原地字典序排序（`sort`）与 RFC 3986 百分号编解码器；
+       - 编写独立技术文档 `docs/stdlib/url.md`；测试 `cap/test/test_url_complete.cp` (6/6 PASS) 与 `cap/test/test_path_url.cp` (4/4 PASS)；
+     - **`cap:safety` 生产级线程安全与诊断套件全量吸收实装**：
+       - 深度吸收 Bun 生产级安全防护体系（`/data/dev/bun/src/safety/`）构建 `lib/safety/`（`thread_id.cp`, `ThreadLock.cp`, `CriticalSection.cp`, `asan.cp`, `alloc.cp`, `safety.cp`, `index.cp`），首行 100% 具备 `// Source: bun/src/safety/...` 谱系标注；
+       - 实现跨平台线程 ID 极速获取与亲和性判定（`getCurrent()`, `isCurrent()`, `isValid()`）；
+       - 实现轻量级单线程容器属主防御锁（`ThreadLock`）；
+       - 实现原子状态机驱动的可重入独占写与多读者共享读竞态检测器（`CriticalSection`）；
+       - 实现非托管容器跨分配器防混用验证（`CheckedAllocator`）与分配器等价性断言；
+       - 实现零开销内联 AddressSanitizer / LSAN 原生集成（`poison`, `unpoison`, `isPoisoned`）与安全断言器；
+       - 编写独立技术文档 `docs/stdlib/safety.md`；测试 `cap/test/test_safety_complete.cp` (5/5 PASS)；
+     - 15/15 用例全部通过，双轨规范手册 `cp_ref.md` 与 `cp_agent_ref.md` 实时同步更新。

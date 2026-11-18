@@ -35,8 +35,8 @@ fn testPosixPath(): !void {
     expect_eq(std.mem.eql(u8, n2, "a/c/d"), true);
 
     // Join
-    const paths = ["/usr", "local", "bin/cp"];
-    const j1 = PosixPath.join(paths[..], &buf);
+    let paths: [3][]const u8 = [ "/usr", "local", "bin/cp" ];
+    const j1 = PosixPath.join(paths[0..3], &buf);
     expect_eq(std.mem.eql(u8, j1, "/usr/local/bin/cp"), true);
 }
 
