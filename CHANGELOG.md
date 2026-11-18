@@ -1140,3 +1140,9 @@
 - 完成 `lib/threading/` 资产迁移，已实现 FFI shim 隔离与 CP 原生 API 封装。
 - 确认 `lib/napi/napi.cp` 已完全符合 CP 模块化规范（struct 封装）。
 - 完成 blob 及 encoding 资产迁移
+## 2026-11-19
+- 完成 `lib/blob/` 和 `lib/encoding/` 资产迁移，已实现 FFI shim 隔离与 CP 原生 API 封装。
+- 确认资产符合 CP 架构设计准则，已通过初步审计。
+## 2026-11-19
+- `lib/blob/` 合规审计通过，确认实现零拷贝引用借用与 RAII 资源管理。
+- 完成 url 资产迁移
