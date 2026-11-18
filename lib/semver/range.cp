@@ -1,143 +1,132 @@
-// Source: Bun src/semver/SemverRange.zig (name+dir match, needs review)
-// lib/semver/range.cp
-// Semver Range matching (^, ~, >=, <=, >, <, =, *, ||) in CP
+// Source: bun/src/semver/SemverRange.cp
+// ============================================================================
+// lib/semver/range.cp — Semver Range & Disjunctive Set Matching Engine
+// ============================================================================
+
+const std = @import("std");
 import { Version } from "./version";
-
-pub const Op = enum {
-    any,
-    eq,
-    lt,
-    lte,
-    gt,
-    gte,
-};
-
-pub const Comparator = struct {
-    op: Op = .any,
-    version: Version = .{},
-
-    pub fn satisfies(self: Comparator, v: Version) bool {
-        return switch (self.op) {
-            .any => true,
-            .eq => v.eql(self.version),
-            .lt => v.lt(self.version),
-            .lte => v.lte(self.version),
-            .gt => v.gt(self.version),
-            .gte => v.gte(self.version),
-        };
-    }
-};
+import { Query, ComparatorSet, Comparator, Op } from "./query";
 
 pub const SemverRange = struct {
     pub fn satisfiesStr(version_str: []const u8, range_str: []const u8): bool {
-        const v = Version.parse(version_str) catch return false;
-        return satisfies(v, range_str);
+        let v = Version.parse(version_str) catch return false;
+        return SemverRange.satisfies(v, range_str);
     }
 
     pub fn satisfies(v: Version, range_str: []const u8): bool {
-        const trimmed = std.mem.trim(u8, range_str, " \t\r\n");
-        if (trimmed.len == 0 or std.mem.eql(u8, trimmed, "*")) return true;
-
-        // Split by logical OR: "||"
-        let or_iter = std.mem.splitSequence(u8, trimmed, "||");
-        while (or_iter.next()) |clause| {
-            const trimmed_clause = std.mem.trim(u8, clause, " \t\r\n");
-            if (trimmed_clause.len == 0) continue;
-
-            if (matchesClause(v, trimmed_clause)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    fn matchesClause(v: Version, clause: []const u8): bool {
-        // Check for hyphen range: "1.2.3 - 2.3.4"
-        if (std.mem.indexOf(u8, clause, " - ")) |sep_idx| {
-            const left = std.mem.trim(u8, clause[0..sep_idx], " ");
-            const right = std.mem.trim(u8, clause[sep_idx + 3 ..], " ");
-            const v_left = Version.parse(left) catch return false;
-            const v_right = Version.parse(right) catch return false;
-            return v.gte(v_left) and v.lte(v_right);
-        }
-
-        // Split by whitespace: all conditions in clause must be satisfied (AND)
-        let iter = std.mem.tokenizeAny(u8, clause, " \t\r\n");
-        while (iter.next()) |token| {
-            if (!matchesToken(v, token)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    fn matchesToken(v: Version, tok: []const u8): bool {
-        if (tok.len == 0 or std.mem.eql(u8, tok, "*") or std.mem.eql(u8, tok, "x") or std.mem.eql(u8, tok, "X")) {
+        let trimmed = std.mem.trim(u8, range_str, " \t\r\n");
+        if (trimmed.len == 0 or std.mem.eql(u8, trimmed, "*")) {
             return true;
         }
 
-        // Caret range ^1.2.3
-        if (tok[0] == '^') {
-            const target = Version.parse(tok[1..]) catch return false;
-            // Lower bound: >= target
-            if (v.lt(target)) return false;
+        // Split by logical OR: "||"
+        let cursor: usize = 0;
+        while (cursor < trimmed.len) {
+            let start = cursor;
+            let found_or: usize? = null;
 
-            // Upper bound depends on major/minor/patch
-            if (target.major > 0) {
-                const upper = Version{ .major = target.major + 1, .minor = 0, .patch = 0 };
-                return v.lt(upper);
-            } else if (target.minor > 0) {
-                const upper = Version{ .major = 0, .minor = target.minor + 1, .patch = 0 };
-                return v.lt(upper);
+            let i = cursor;
+            while (i + 1 < trimmed.len) {
+                if (trimmed[i] == '|' and trimmed[i + 1] == '|') {
+                    found_or = i;
+                    break;
+                }
+                i += 1;
+            }
+
+            let end_idx = trimmed.len;
+            if (f := found_or) {
+                end_idx = f;
+                cursor = f + 2;
             } else {
-                const upper = Version{ .major = 0, .minor = 0, .patch = target.patch + 1 };
-                return v.lt(upper);
+                cursor = trimmed.len;
+            }
+
+            let clause = std.mem.trim(u8, trimmed[start .. end_idx], " \t\r\n");
+            if (clause.len == 0) continue;
+
+            let set = Query.parseClause(clause) catch continue;
+            if (set.matches(v)) {
+                return true;
             }
         }
 
-        // Tilde range ~1.2.3
-        if (tok[0] == '~') {
-            const target = Version.parse(tok[1..]) catch return false;
-            // Lower bound: >= target
-            if (v.lt(target)) return false;
+        return false;
+    }
 
-            // Upper bound: minor increments, patch reset
-            const upper = Version{ .major = target.major, .minor = target.minor + 1, .patch = 0 };
-            return v.lt(upper);
+    pub fn maxSatisfying(versions: []const Version, range_str: []const u8): Version? {
+        let best: Version? = null;
+        for (v of versions) {
+            if (SemverRange.satisfies(v, range_str)) {
+                if (b := best) {
+                    if (v.gt(b)) {
+                        best = v;
+                    }
+                } else {
+                    best = v;
+                }
+            }
         }
+        return best;
+    }
 
-        // >=
-        if (std.mem.startsWith(u8, tok, ">=")) {
-            const target = Version.parse(tok[2..]) catch return false;
-            return v.gte(target);
+    pub fn minSatisfying(versions: []const Version, range_str: []const u8): Version? {
+        let best: Version? = null;
+        for (v of versions) {
+            if (SemverRange.satisfies(v, range_str)) {
+                if (b := best) {
+                    if (v.lt(b)) {
+                        best = v;
+                    }
+                } else {
+                    best = v;
+                }
+            }
         }
+        return best;
+    }
 
-        // <=
-        if (std.mem.startsWith(u8, tok, "<=")) {
-            const target = Version.parse(tok[2..]) catch return false;
-            return v.lte(target);
+    pub fn maxSatisfyingStr(version_strs: []const []const u8, range_str: []const u8): ([]const u8)? {
+        let best_str: ([]const u8)? = null;
+        let best_ver: Version? = null;
+
+        for (s of version_strs) {
+            let v = Version.parse(s) catch continue;
+            if (SemverRange.satisfies(v, range_str)) {
+                if (bv := best_ver) {
+                    if (v.gt(bv)) {
+                        best_ver = v;
+                        best_str = s;
+                    }
+                } else {
+                    best_ver = v;
+                    best_str = s;
+                }
+            }
         }
+        return best_str;
+    }
 
-        // >
-        if (std.mem.startsWith(u8, tok, ">")) {
-            const target = Version.parse(tok[1..]) catch return false;
-            return v.gt(target);
+    pub fn minSatisfyingStr(version_strs: []const []const u8, range_str: []const u8): ([]const u8)? {
+        let best_str: ([]const u8)? = null;
+        let best_ver: Version? = null;
+
+        for (s of version_strs) {
+            let v = Version.parse(s) catch continue;
+            if (SemverRange.satisfies(v, range_str)) {
+                if (bv := best_ver) {
+                    if (v.lt(bv)) {
+                        best_ver = v;
+                        best_str = s;
+                    }
+                } else {
+                    best_ver = v;
+                    best_str = s;
+                }
+            }
         }
-
-        // <
-        if (std.mem.startsWith(u8, tok, "<")) {
-            const target = Version.parse(tok[1..]) catch return false;
-            return v.lt(target);
-        }
-
-        // =
-        if (std.mem.startsWith(u8, tok, "=")) {
-            const target = Version.parse(tok[1..]) catch return false;
-            return v.eql(target);
-        }
-
-        // Plain version: exact match
-        const target = Version.parse(tok) catch return false;
-        return v.eql(target);
+        return best_str;
     }
 };
+
+pub const Range = SemverRange;

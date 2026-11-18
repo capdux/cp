@@ -1408,6 +1408,11 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
   - `lib/event_loop/` 统一事件循环吸收实装：实现侵入式二叉最小堆高精度定时器（`TimerHeap`）、16B 无锁跨线程任务（`ConcurrentTaskQueue`）、延迟微任务队列（`DeferredTaskQueue`）与精简事件循环（`MiniEventLoop`），产出 `docs/stdlib/event_loop.md` 与测试 `test_event_loop_complete.cp` (6/6 PASS)；
   - 编译器自愈：升级 `cpc/src/resolver.rs` 使 `cap:event_loop` 协议独立精确映射至 `lib/event_loop/`；
   - 15/15 用例全绿通过，双轨规范手册 `cp_ref.md` / `cp_agent_ref.md` 实时同步。
+- **阶段八交付**：
+  - `lib/semver/` 工业级补齐：严格对齐 Bun 核心算法与 Semver 2.0.0 规范第 11 条，实装点分预发布权重梯级比对、`SemverQuery` 高级范围语法糖（`^`, `~`, `*`, `1.x`, `-`, 不等式）、逻辑析取 `||`、`maxSatisfying` 与原子版本递增 `increment`，产出 `docs/stdlib/semver.md` 与测试 `test_semver_complete.cp` (5/5 PASS)；
+  - `lib/dotenv/` 全量吸收实装：吸收 Bun 核心配置引擎，实装引号/转义词法解析、`${VAR:-default}` 变量递归展开、`.env.<mode>.local` 级联覆盖状态机与环境变量注入，产出 `docs/stdlib/dotenv.md` 与测试 `test_dotenv_complete.cp` (6/6 PASS)；
+  - 编译器自愈：升级 `cpc/src/resolver.rs` 使 `cap:dotenv` 独立精确映射至 `lib/dotenv/`；
+  - 17/17 用例全绿通过，双轨规范手册 `cp_ref.md` / `cp_agent_ref.md` 实时同步。
 - **测试验证**：所有新增及存量测试全部 100% 通过。
 
 ## 2026-11-17: Implementing Col & Pack Modules

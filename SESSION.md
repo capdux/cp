@@ -2242,3 +2242,19 @@
        - **编译器自愈与增强**：更新 `cpc/src/resolver.rs` 使 `cap:event_loop` 协议独立精确映射至 `lib/event_loop/`，完成编译器原子同步与部署；
        - 编写独立技术文档 `docs/stdlib/event_loop.md`；测试 `cap/test/test_event_loop_complete.cp` (6/6 PASS)；
      - 15/15 用例全部通过，双轨规范手册 `cp_ref.md` 与 `cp_agent_ref.md` 实时同步更新。
+  9. **第八阶段完成交付 (`cap:semver`, `cap:dotenv`)**：
+     - **`cap:semver` 工业级 Semver 2.0 规范补齐实装**：
+       - 吸收对齐 Bun 核心包管理器算法（`/data/dev/bun/src/semver/`）重构 `lib/semver/`（`version.cp`, `query.cp`, `range.cp`, `index.cp`），首行 100% 具备 `// Source: bun/src/semver/...` 谱系标注；
+       - 严格落实 Semver 2.0.0 规范第 11 条点分预发布权重梯级（纯数字段数值比对、非数字段 ASCII 字典序、数字优先级低于标识符、发布版本高于预发布版本、忽略构建元数据）；
+       - 实现 `SemverQuery` 高阶范围表达式解析与匹配：脱字符范围 `^`、波浪号范围 `~`、通配符/x-range（`*`, `x`, `1.x`, `1.2.*`）、连字符闭区间（`1.2.3 - 2.3.4`）、不等式比较器；
+       - 实现逻辑析取 `||` 多子句范围与集合极值选择器 `maxSatisfying`、`minSatisfying`；
+       - 实现原子版本递增操作 `increment`（`major`, `minor`, `patch`, `pre*`）与格式化；
+       - 编写独立技术文档 `docs/stdlib/semver.md`；测试 `cap/test/test_semver_complete.cp` (5/5 PASS) 与 `cap/test/test_semver.cp` (4/4 PASS)；
+     - **`cap:dotenv` 生产级环境变量解析与级联加载器全量吸收实装**：
+       - 深度吸收 Bun 工业级配置解析器（`/data/dev/bun/src/dotenv/env_loader.cp`）构建 `lib/dotenv/`（`parser.cp`, `loader.cp`, `index.cp`），首行 100% 具备 `// Source: bun/src/dotenv/env_loader.cp` 谱系标注；
+       - 实现工业级词法解析：注释过滤、`export ` 前缀自动剥离、单引号原始字面量与双引号转义字符解码（`\n`, `\t`, `\"`, `\\`, `\$`）、同文件后定义键覆盖；
+       - 实现变量替换与展开引擎 `expandString`（支持 `${VAR}`, `$VAR`, `${VAR:-default}`, 转义 `\${VAR}`）；
+       - 实现多层级环境级联覆盖优先级状态机（Cascade Loading）：按照 `.env.<mode>.local` -> `.env.local` -> `.env.<mode>` -> `.env` 智能覆盖加载；
+       - 升级 `cpc/src/resolver.rs`，使 `cap:dotenv` 协议直接映射生效；
+       - 编写独立技术文档 `docs/stdlib/dotenv.md`；测试 `cap/test/test_dotenv_complete.cp` (6/6 PASS)；
+     - 17/17 用例全部通过，双轨规范手册 `cp_ref.md` 与 `cp_agent_ref.md` 实时同步更新。

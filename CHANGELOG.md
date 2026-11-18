@@ -1091,6 +1091,9 @@
   - 新增独立文档 `docs/stdlib/ptr.md` 与测试 `cap/test/test_ptr.cp` (8/8 PASS)。
 - [feat(encoding)]: 全面补全 `lib/encoding/base64.cp`，支持 `decodeInPlace` 零堆分配原地解码与 4 种 `Codecs` 预设工厂；新增 `docs/stdlib/encoding.md` 与测试 `cap/test/test_encoding_complete.cp` (4/4 PASS)。
 - [feat(sourcemap)]: 全量补齐 `lib/sourcemap/`（`vlq.cp`, `line_offset.cp`, `mapping.cp`, `internal_source_map.cp`, `chunk.cp`, `parsed_source_map.cp`, `sourcemap.cp`, `index.cp`），新增 `docs/stdlib/sourcemap.md` 与测试 `cap/test/test_sourcemap_complete.cp` (5/5 PASS)。
+- [feat(semver)]: 全量补齐 Semver 2.0.0 规范库 `lib/semver/`（`version.cp`, `query.cp`, `range.cp`, `index.cp`），实装点分预发布权重梯级、高级范围表达式（`^`, `~`, `*`, `1.x`, `-`, `||`）、`maxSatisfying` 与版本递增 `increment`，新增 `docs/stdlib/semver.md` 与测试 `cap/test/test_semver_complete.cp` (5/5 PASS)。
+- [feat(dotenv)]: 从 Bun 吸收构建生产级环境配置解析库 `lib/dotenv/`（`parser.cp`, `loader.cp`, `index.cp`），支持引号转义、`${VAR:-default}` 变量展开与级联覆盖加载状态机，新增 `docs/stdlib/dotenv.md` 与测试 `cap/test/test_dotenv_complete.cp` (6/6 PASS)。
+- [fix(cpc)]: 升级 `cpc/src/resolver.rs`，使 `cap:dotenv` 独立精确映射至 `lib/dotenv/`。
 - [feat(path)]: 全量吸收重构 `lib/path/`（`buffer_pool.cp`, `env_path.cp`, `index.cp`, `path.cp`, `posix.cp`, `resolve.cp`, `windows.cp`），完备 POSIX/Windows 规范化、零分配缓冲池与 EnvPath 迭代器，新增 `docs/stdlib/path.md` 与测试 `cap/test/test_path_complete.cp` (5/5 PASS)。
 - [feat(event_loop)]: 从 Bun 吸收构建统一事件循环标准库 `lib/event_loop/`（`auto_flusher.cp`, `concurrent_task.cp`, `deferred_task_queue.cp`, `index.cp`, `loop.cp`, `task.cp`, `timer.cp`），新增 `docs/stdlib/event_loop.md` 与测试 `cap/test/test_event_loop_complete.cp` (6/6 PASS)。
 - [fix(cpc)]: 升级 `cpc/src/resolver.rs`，使 `cap:event_loop` 独立精确映射至 `lib/event_loop/`。
