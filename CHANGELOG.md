@@ -2,6 +2,23 @@
 
 > 历史变更日志已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## [2026-11-18] - 核心里程碑：`cap:conf` 配置交换子系统（INI/TOML）工业级完整性补齐与首行 Bun 溯源覆盖
+
+### 标准库增强与完备性补齐 (Enhanced Stdlib)
+- **`cap:conf` 配置体系深度补齐与谱系溯源**:
+  - [`lib/conf/ini.cp`](file:///data/dev/cp/lib/conf/ini.cp)：首行标注 `// Source: bun/src/ini/ini.cp`，全面对齐 Bun 57KB 原生实现；补齐层级与嵌套节区（`[server.database]`）、全局属性、属性元信息内省（`getSections`, `getKeys`）、多形态类型安全提取器（`getInt`, `getFloat`, `getBool` 覆盖全量现代布尔值）、双引号完整转义、单引号字面量、环境变量插值（`${VAR}`）、注释剥离以及双向标准序列化输出；
+  - [`lib/conf/toml.cp`](file:///data/dev/cp/lib/conf/toml.cp)：首行标注 `// Source: bun/src/interchange/toml.cp`，全面升级为工业级 TOML 文档状态机；支持 10/16/8/2 进制整数与下划线、科学计数法与特殊浮点数、多行基础字符串 `"""` 与多行字面量 `'''`、点分嵌套表与表数组 `[[array]]`、复合数组安全切分提取以及双向标准序列化输出。
+
+### 文档沉淀与规范同步 (Documentation)
+- [`docs/stdlib/conf.md`](file:///data/dev/cp/docs/stdlib/conf.md)：新增全套 `cap:conf` 架构与 API 详细使用指南，提供 INI 与 TOML 完整代码用例；
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md) & [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)：在 `cap:conf` 标准库矩阵中更新完备特性说明。
+
+### 测试验证 (Tests)
+- [`cap/test/test_conf_complete.cp`](file:///data/dev/cp/cap/test/test_conf_complete.cp)：新增综合端到端测试用例，覆盖 INI 节区与类型转换、转义与环境变量、TOML 进制与多行字符串、表数组与双向序列化 Round-trip，2/2 100% 全部 PASS；
+- 回归测试：`test_config.cp`（2/2 PASS）、`test_json5.cp`（3/3 PASS）。
+
+---
+
 ## [2026-11-18] - 核心里程碑：`cap:col` 核心容器体系工业级完整性补齐与首行 Bun 溯源注释覆盖
 
 ### 标准库增强与完备性补齐 (Enhanced Stdlib)

@@ -187,6 +187,7 @@ pub struct Codegen {
     pub source_map_entries: Vec<crate::source_map::SourceMapEntry>,
     pub current_func_name: Option<String>,
     pub arena_allocator_stack: Vec<String>,
+    pub has_imported_ptr: bool,
 }
 
 impl Codegen {
@@ -275,6 +276,7 @@ impl Codegen {
             source_map_entries: Vec::new(),
             current_func_name: None,
             arena_allocator_stack: Vec::new(),
+            has_imported_ptr: false,
         }
     }
 
@@ -364,6 +366,7 @@ impl Codegen {
 
     pub fn generate_module(&mut self, module: &Module) -> String {
         let features = ModuleFeatures::scan(module, self.is_lib_mode);
+        self.has_imported_ptr = features.has_imported_ptr;
         let mut class_order = Vec::new();
         let mut impl_decls = Vec::new();
         let mut has_single_thread_meta = false;

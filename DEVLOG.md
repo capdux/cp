@@ -2,6 +2,29 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-18: `cap:conf` 配置交换子系统（INI/TOML）工业级完整性补齐与首行 Bun 溯源覆盖
+
+- **任务背景与工程决策**：
+  1. **缩水模块第二阶段攻坚**：
+     - 自动化比对确认：`lib/conf/ini.cp`（4.4KB vs Bun 58KB）与 `lib/conf/toml.cp`（3.5KB vs Bun 13.9KB+45KB）此前属于严重缩水的占位骨架，缺少层级嵌套节区、全进制解析、多行文本格式与双向序列化能力；
+     - 由子智能体 1 专攻 `lib/conf/`，全量对齐 Bun 工业级配置解析器。
+  2. **严格代码规范与来源溯源**：
+     - 遵循纯正 CP 规范：无 `var`（100% `let`）、无 `|e|`（使用 `catch e =>`）、只读方法隐式 `_`、变异方法显式 `*_`；
+     - 首行严格规范添加 `// Source: bun/src/ini/ini.cp` 与 `// Source: bun/src/interchange/toml.cp`。
+
+- **核心技术设计与实现原理**：
+  1. **层级 INI 状态机 (`lib/conf/ini.cp`)**：
+     - 引入全局属性与点分嵌套节区（`[server.database]`），支持 `hasSection`, `hasKey`, `getSections`, `getKeys` 元信息内省；
+     - 实装现代类型转换器（`getInt`, `getFloat`, `getBool` 全量覆盖 8 种布尔词）；
+     - 支持双引号转义序列、单引号原生字面量、`${VAR}` 环境变量哨兵安全插值及双向标准序列化。
+  2. **全要素 TOML 文档解析器 (`lib/conf/toml.cp`)**：
+     - 实装 10/16/8/2 进制数值、忽略下划线、科学计数法与非数/无穷大；
+     - 完整支持多行基础字符串 `"""`、多行字面量 `'''`、点分嵌套表与表数组 `[[array]]`，提供规范化输出。
+  3. **测试闭环**：
+     - 编写端到端验收测试 [cap/test/test_conf_complete.cp](file:///data/dev/cp/cap/test/test_conf_complete.cp)，2/2 全部通过；存量测试 100% 回归。
+
+---
+
 ## 2026-11-18: `cap:col` 核心容器体系工业级完整性补齐与首行 Bun 溯源注释覆盖
 
 - **任务背景与工程决策**：

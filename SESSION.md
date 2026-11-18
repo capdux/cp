@@ -2170,4 +2170,8 @@
      - 子智能体 1 (`2af95c07`，Role: "Stdlib Completeness Auditor")：全面补全 `lib/col/` 核心容器体系，补齐缺失的位运算、动态扩容、SIMD 扫描与方法，编写回归测试；
      - 子智能体 2 (`99e6c652`，Role: "Bun CP Asset Ingestion Engineer")：全量吸收 `/data/dev/bun/src/ptr/`（含 `shared.cp`, `weak_ptr.cp`, `Cow.cp`, `CowSlice.cp`, `tagged_pointer.cp`, `owned.cp` 等 11 个文件）构建全新一等公民标准库 `cap:ptr`（`lib/ptr/`），编写单测与 `docs/stdlib/ptr.md`；
   3. **贯彻来源谱系头部注释铁律**：
-     - 通过 `send_message` 立即向两名子智能体下达最新指示：所有吸收与补齐的文件，第一行必须严格备注吸收来源（如 `// Source: bun/src/ptr/shared.cp`），确保日后 Bun 更新后可无缝自动重新吸收对齐。
+     - 通过 `send_message` 立即向两名子智能体下达最新指示：所有吸收与补齐的文件，第一行必须严格备注吸收来源（如 `// Source: bun/src/ptr/shared.cp`），确保日后 Bun 更新后可无缝自动重新吸收对齐；
+  4. **第二阶段完成交付 (`lib/conf/`)**：
+     - 子智能体 1 完成 `lib/conf/ini.cp`（Bun 原版 57KB 对齐，支持层级/嵌套节区、类型提取器、转义、环境变量插值、双向序列化）与 `lib/conf/toml.cp`（支持全进制数值、多行基础/字面量字符串、点分表与表数组、双向序列化）；
+     - 新增独立技术文档 `docs/stdlib/conf.md`，测试 `cap/test/test_conf_complete.cp` 2/2 PASS；
+     - 编译器同步支持 `cpc --lib lib/conf/index.cp`，完成里程碑 Git 提交。

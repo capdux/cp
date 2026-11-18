@@ -794,7 +794,7 @@ impl Codegen {
                             }
                             return format!("{}.{}({})", id.sym, prop, args_code.join(", "));
                         }
-                        if id.sym == "Shared" && prop == "new" && !call.args.is_empty() {
+                        if !self.has_imported_ptr && id.sym == "Shared" && prop == "new" && !call.args.is_empty() {
                             let arg = self.generate_expr(&call.args[0]);
                             return format!(
                                 "(blk: {{ const _val = {}; const _T = @TypeOf(_val); if (comptime @typeInfo(_T) == .pointer) break :blk _val else {{ const _p = std.heap.page_allocator.create(_T) catch unreachable; _p.* = _val; break :blk _p; }} }})",
@@ -1968,7 +1968,7 @@ impl Codegen {
                     }
                     return format!("(blk: {{ _ = global_active_tasks.fetchAdd(1, .acquire); const arena_ptr = std.heap.page_allocator.create(std.heap.ArenaAllocator) catch unreachable; arena_ptr.* = std.heap.ArenaAllocator.init(std.heap.page_allocator); const task_ptr = arena_ptr.allocator().create(CpTask) catch unreachable; task_ptr.* = .{{ .arena = arena_ptr }}; const sub_ctx = arena_ptr.allocator().create({0}_Context) catch unreachable; sub_ctx.* = undefined; sub_ctx.pc = 0; sub_ctx.arena = arena_ptr; sub_ctx._parent = @ptrCast(task_ptr); sub_ctx._parent_fn = @ptrCast(&__cp_task_bridge); {1} const p = PID{{ .node_id = current_node_id, .local_id = next_local_id }}; next_local_id += 1; sub_ctx._self = p; schedule(@ptrCast(&{0}), @ptrCast(sub_ctx)); break :blk task_ptr; }})", task_fn, captures);
                 }
-                if callee == "Shared" && !call.args.is_empty() {
+                if !self.has_imported_ptr && callee == "Shared" && !call.args.is_empty() {
                     let arg = self.generate_expr(&call.args[0]);
                     return format!(
                         "(blk: {{ const _val = {}; const _T = @TypeOf(_val); if (comptime @typeInfo(_T) == .pointer) break :blk _val else {{ const _p = std.heap.page_allocator.create(_T) catch unreachable; _p.* = _val; break :blk _p; }} }})",

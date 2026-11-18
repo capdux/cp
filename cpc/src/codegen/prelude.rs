@@ -36,6 +36,7 @@ pub struct ModuleFeatures {
     pub needs_sync: bool,
     pub needs_json: bool,
     pub has_imported_json: bool,
+    pub has_imported_ptr: bool,
     pub is_lib_mode: bool,
 }
 
@@ -69,6 +70,19 @@ impl ModuleFeatures {
                     {
                         f.has_imported_json = true;
                     }
+                    if imp.source == "cap:ptr"
+                        || imp.source.contains("ptr")
+                        || imp.specifiers.iter().any(|s| {
+                            s.sym == "Shared"
+                                || s.sym == "AtomicShared"
+                                || s.sym == "Cow"
+                                || s.sym == "CowSlice"
+                                || s.sym == "Owned"
+                                || s.sym == "TaggedPointer"
+                        })
+                    {
+                        f.has_imported_ptr = true;
+                    }
                 }
                 ModuleItem::Export(exp) => {
                     if let Some(source) = &exp.source {
@@ -87,6 +101,19 @@ impl ModuleFeatures {
                                 .any(|s| s.sym == "JSON" || s.sym == "JsonValue")
                         {
                             f.has_imported_json = true;
+                        }
+                        if source == "cap:ptr"
+                            || source.contains("ptr")
+                            || exp.specifiers.iter().any(|s| {
+                                s.sym == "Shared"
+                                    || s.sym == "AtomicShared"
+                                    || s.sym == "Cow"
+                                    || s.sym == "CowSlice"
+                                    || s.sym == "Owned"
+                                    || s.sym == "TaggedPointer"
+                            })
+                        {
+                            f.has_imported_ptr = true;
                         }
                     }
                 }
