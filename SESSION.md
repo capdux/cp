@@ -2175,3 +2175,19 @@
      - 子智能体 1 完成 `lib/conf/ini.cp`（Bun 原版 57KB 对齐，支持层级/嵌套节区、类型提取器、转义、环境变量插值、双向序列化）与 `lib/conf/toml.cp`（支持全进制数值、多行基础/字面量字符串、点分表与表数组、双向序列化）；
      - 新增独立技术文档 `docs/stdlib/conf.md`，测试 `cap/test/test_conf_complete.cp` 2/2 PASS；
      - 编译器同步支持 `cpc --lib lib/conf/index.cp`，完成里程碑 Git 提交。
+  5. **第三阶段完成交付 (`cap:ptr` 与 `cap:encoding` / `cap:glob`)**：
+     - **`cap:ptr` 智能指针体系吸收实装**：
+       - 全量吸收 Bun 内存与指针体系：`lib/ptr/`（`shared.cp`, `weak_ptr.cp`, `cow.cp`, `cow_slice.cp`, `owned.cp`, `tagged_pointer.cp`, `raw_ref_count.cp`, `ref_count.cp`, `external_shared.cp`, `meta.cp`, `index.cp`）；
+       - 首行全部附带严格谱系标注 `// Source: bun/src/ptr/...`；
+       - 编写独立技术文档 `docs/stdlib/ptr.md` 与全面回归测试 `cap/test/test_ptr.cp`（8/8 用例全绿通过，754ms）；
+     - **`lib/encoding/` 与 `lib/glob/` 工业级补全实装**：
+       - `lib/encoding/base64.cp`：消除动态建表与 Zig 残留，实装 `decodeInPlace`（零分配原地解码）、`Codecs` 预设工厂（`standard`, `standard_no_pad`, `url_safe`, `url_safe_no_pad`）、容量预估与校验；
+       - `lib/glob/matcher.cp`：补全 `{a,b,c}` 花括号多级展开、转义字符、排除型字符集 `[!0-9]` 与 `hasMagic`；
+       - `lib/glob/walker.cp`：基于 libc `opendir`/`readdir` 原生极速遍历，吸收 Bun `GlobWalker` 目录扫描引擎；
+       - 编写独立技术文档 `docs/stdlib/encoding.md` 与 `docs/stdlib/glob.md`；
+       - 编写全面测试用例 `cap/test/test_encoding_complete.cp` (4/4 PASS) 与 `test_glob_complete.cp` (4/4 PASS)；
+     - **编译器底层自愈修复**：
+       - `cpc/src/codegen/mod.rs`：将 `cp_not` 升级为 `inline fn cp_not`，消除 Zig 0.17 在条件分支中执行 `@compileError` 的 comptime 误判；
+       - `cpc/src/codegen/types.rs`：修复 `.get()` 盲目 fallback 为 `?Message` 导致下游误插 `.?` 的类型推导缺陷；
+       - `cpc/src/codegen/prelude.rs`：在 `scan_decl` 中增加对 `Shared`、`AtomicShared` 等内联类型声明的探测，自动激活 `has_imported_ptr`；
+       - 23/23 跨模块测试全部 100% PASS。

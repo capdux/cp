@@ -151,6 +151,20 @@ impl ModuleFeatures {
     fn scan_decl(&mut self, d: &Decl) {
         match d {
             Decl::Func(func) => {
+                if func.ident.sym == "Shared"
+                    || func.ident.sym == "AtomicShared"
+                    || func.ident.sym == "Weak"
+                    || func.ident.sym == "AtomicWeak"
+                    || func.ident.sym == "Cow"
+                    || func.ident.sym == "CowSlice"
+                    || func.ident.sym == "Owned"
+                    || func.ident.sym == "TaggedPointer"
+                    || func.ident.sym == "RawRefCount"
+                    || func.ident.sym == "RefCount"
+                    || func.ident.sym == "RefPtr"
+                {
+                    self.has_imported_ptr = true;
+                }
                 if func.ident.sym == "main" || func.is_async {
                     self.needs_actors = true;
                 }
@@ -169,6 +183,15 @@ impl ModuleFeatures {
                     || c.ident.sym == "JsonField"
                 {
                     self.has_imported_json = true;
+                }
+                if c.ident.sym == "TaggedPointer"
+                    || c.ident.sym == "LowTagPointer"
+                    || c.ident.sym == "Shared"
+                    || c.ident.sym == "AtomicShared"
+                    || c.ident.sym == "RawRefCount"
+                    || c.ident.sym == "RefCount"
+                {
+                    self.has_imported_ptr = true;
                 }
                 if c.implements.iter().any(|i| i.sym == "Agent") {
                     self.needs_actors = true;

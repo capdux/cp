@@ -1371,6 +1371,22 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
 
 
 
+## 2026-11-18: Bun 资产吸收与标准库完整性补齐 (Col, Conf, Ptr, Encoding, Glob)
+- **背景与目标**：
+  1. 用户指示持续从 Bun 仓库 (`/data/dev/bun/src`) 吸收资产扩充 CP 标准库 (`lib/`)；
+  2. 修复过去吸收入库时严重缩水的文件（如 2.8KB 骨架对齐原版 63KB 工业级实现）；
+  3. 严格落实谱系标注：每个吸收或补齐的文件第 1 行必须标明 `// Source: bun/src/...`；
+  4. 双轨规范维护（`cp_ref.md` / `cp_agent_ref.md`）并在 `docs/stdlib/` 下提供单独详细使用说明。
+- **阶段一与二交付**：
+  - `lib/col/` 容器库全面补齐（BitSet 系列、BabyList、LinearFifo、BoundedArray），产出 `docs/stdlib/col.md`；
+  - `lib/conf/` 配置库全面补齐（INI 嵌套节区、类型提取器、插值与双向序列化；TOML 全进制与表数组），产出 `docs/stdlib/conf.md`。
+- **阶段三交付**：
+  - `lib/ptr/` 智能指针与内存抽象一等公民库创建（Shared、AtomicShared、Weak、Cow、CowSlice、Owned、TaggedPointer、RefCount、RefPtr），产出 `docs/stdlib/ptr.md` 与 `cap/test/test_ptr.cp` (8/8 PASS)；
+  - `lib/encoding/` Base64 补齐（`decodeInPlace` 原地零分配解码、Codecs 工厂），产出 `docs/stdlib/encoding.md` 与 `cap/test/test_encoding_complete.cp` (4/4 PASS)；
+  - `lib/glob/` 补齐（花括号展开 `{a,b}`、字符集过滤、基于 libc 的 `GlobWalker` 目录遍历引擎），产出 `docs/stdlib/glob.md` 与 `cap/test/test_glob_complete.cp` (4/4 PASS)；
+  - 编译器修复：`inline fn cp_not` 消除 Zig 0.17 comptime 假死误判；修复 `.get()` 盲目推断为 `?Message` 导致误插 `.?` 的类型推导缺陷。
+- **测试验证**：23/23 用例全部通过，零失败，性能优异。
+
 ## 2026-11-17: Implementing Col & Pack Modules
 - Task: Implement `lib/col/priority_queue.cp`, `lib/col/treap.cp`, `lib/col/leb128.cp`, `lib/pack/native.cp`.
 - Update `lib/col/index.cp` and `lib/pack/index.cp`.

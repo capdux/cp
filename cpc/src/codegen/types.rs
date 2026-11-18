@@ -1279,10 +1279,7 @@ impl Codegen {
                                     return Some(Type::Optional(val_ty));
                                 }
                             }
-                            return Some(Type::Optional(Box::new(Type::Ref(Ident {
-                                span: Span { start: 0, end: 0 },
-                                sym: "Message".to_string(),
-                            }))));
+                            return None;
                         }
                         if mem.prop.sym == "push"
                             || mem.prop.sym == "clear"
@@ -2163,8 +2160,17 @@ impl Codegen {
                         if mem.prop.sym == "accept" {
                             return "*Socket".to_string();
                         }
-                        if mem.prop.sym == "get"
-                            || mem.prop.sym == "peek"
+                        if mem.prop.sym == "get" {
+                            if let Some(mut oty) = self.infer_cp_type(&mem.obj) {
+                                while let Type::BorrowType { inner, .. } = oty {
+                                    oty = *inner;
+                                }
+                                if let Type::Map(_, val_ty) | Type::Dict(_, val_ty) = oty {
+                                    return format!("?{}", self.map_type(&val_ty));
+                                }
+                            }
+                        }
+                        if mem.prop.sym == "peek"
                             || mem.prop.sym == "peek_front"
                             || mem.prop.sym == "peek_back"
                             || mem.prop.sym == "pop"

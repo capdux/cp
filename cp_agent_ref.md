@@ -1046,10 +1046,11 @@ switch (msg) {
 | `cap:fs` | `readFile`, `writeFile`, `exists`, `stat`, `tmpDir`, `tmpPath`, `writeAtomic` | 同步/异步现代文件系统高阶抽象 |
 | `cap:path` | `path`, `Path`, `PosixPath`, `WindowsPath` | 跨平台路径计算引擎 |
 | `cap:url` | `URL`, `URLSearchParams`, `QueryParam`, `PercentEncoding` | WHATWG 标准 URL、查询参数与 RFC 3986 百分号编解码 |
-| `cap:glob` | `Glob`（`match`, `hasMagic`） | 极速 Unix Glob 通配符匹配 |
+| `cap:ptr` | `Shared<T>`, `AtomicShared<T>`, `Weak<T>`, `AtomicWeak<T>`, `Cow<T>`, `CowSlice<T>`, `CowString`, `Owned<T>`, `Dynamic<T>`, `TaggedPointer<T>`, `LowTagPointer<T>`, `RawRefCount`, `RefCount<T>`, `RefPtr<T>` | 工业级智能指针、写时复制包装器、侵入式引用计数与 64 位打标指针压缩套件 |
+| `cap:glob` | `Glob`（`match`, `hasMagic`, `Walker`, `scan`）, `Matcher`, `GlobMatcher`, `GlobWalker`, `GlobWalkerOptions` | 极速 Unix Glob 通配符匹配（递归 `**`、花括号展开 `{a,b}`、字符集与排除）与零分配目录遍历引擎 |
 | `cap:semver` | `Semver`, `Version`（`parse`, `satisfiesStr`） | Semver 2.0 语义化版本解析与范围匹配 |
 | `cap:which` | `which`, `isExecutable`, `WhichOptions` | 跨平台 `PATH` 可执行程序定位器 |
-| `cap:encoding` | `Base64`（Standard, URL-Safe, 无填充）, `Hex`（`encodeLower`, `encodeUpper`, `decode`） | 高性能 Base64 与十六进制数据编解码库 |
+| `cap:encoding` | `Base64`（Standard, URL-Safe, 无填充, `decodeInPlace`）, `Base64Encoder`, `Base64Decoder`, `Codecs`, `Hex`（`encodeLower`, `encodeUpper`, `decode`）, `Utf8`, `Utf16` | 高性能 Base64、原地极速解码、十六进制与 UTF 文本编码库 |
 | `cap:crypto` | `sha256`, `sha512`, `randomBytes`, `fillRandom`, `randomUUID`, `Aes256Gcm`, `ChaCha20Poly1305`, `Hmac`, `pbkdf2`, `TlsHostnameVerifier` | 密码学随机数、散列、AEAD 加密与 BoringSSL X.509 校验 |
 | `cap:security` | `CSRF`, `TokenFormat`, `constantTimeEql` | 防 CSRF 签名与恒定时间安全比对 |
 | `cap:reflect` | `reflect.type<T>()`, `reflect.of()`, `reflect.has()`, `reflect.hasField()`, `reflect.hasMethod()` | 编译期与运行时统一反射内省库 |

@@ -2099,7 +2099,7 @@ pub const JSON = struct {
         }
 
         if features.needs_not {
-            self.writeln("fn cp_not(v: anytype) bool { const __T = @TypeOf(v); if (comptime __T == bool) { return !v; } else if (comptime @typeInfo(__T) == .optional) { return v == null; } else if (comptime is_string_like(__T)) { return to_string_slice(v).len == 0; } else if (comptime (@typeInfo(__T) == .int or __T == comptime_int)) { return v == 0; } else { return false; } }");
+            self.writeln("inline fn cp_not(v: anytype) bool { const __T = @TypeOf(v); if (comptime __T == bool) { return !v; } else if (comptime @typeInfo(__T) == .optional) { return v == null; } else if (comptime is_string_like(__T)) { return to_string_slice(v).len == 0; } else if (comptime (@typeInfo(__T) == .int or __T == comptime_int)) { return v == 0; } else { return false; } }");
         }
 
         if features.needs_null_coalesce {
@@ -3182,6 +3182,7 @@ pub const JSON = struct {
             let mut sub = Codegen::new();
             sub.is_lib_mode = self.is_lib_mode;
             sub.is_beam_mode = self.is_beam_mode;
+            sub.has_imported_ptr = self.has_imported_ptr;
             sub.globals = self.globals.clone();
             for name in self.current_fn_params.iter().chain(self.locals.keys()) {
                 sub.globals.insert(name.clone());

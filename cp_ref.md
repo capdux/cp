@@ -5930,8 +5930,9 @@ export class SocketContext<Handler> {
 | `cap:http`        | `Method`, `Headers`, `ETag`, `MimeType`, `CookieMap`, `FormData`, `Request`, `Response`, `HttpServer`, `HTTPClient`, `H2ClientSession`, `HpackCodec`, `H3ClientSession`, `fetch`, `serve`, `json` | **已全面实装** |
 | `cap:path`        | 跨平台路径计算 `Path`, `PosixPath`, `WindowsPath`（`join`, `resolve`, `normalize`, `dirname`, `basename`, `extname`, `isAbsolute`） | **已全面实装** |
 | `cap:url`         | WHATWG 规范 `URL`, `URLSearchParams`, `QueryParam` 与 RFC 3986 百分号编解码器 `PercentEncoding` | **已全面实装** |
-| `cap:encoding`    | 极速 Base64 编解码器（Standard, URL-Safe, 无填充）与零堆查表十六进制编解码器 `Hex` | **已全面实装** |
-| `cap:glob`        | Unix Glob 模式匹配（递归 `**`、单级 `*`、`?`、字符集 `[a-z]`、`!`、`hasMagic`） | **已全面实装** |
+| `cap:encoding`    | 极速 Base64 编解码器（Standard, URL-Safe, 无填充, `decodeInPlace` 原地解码）、Codecs 预设工厂与零堆查表十六进制编解码器 `Hex` | **已全面实装** |
+| `cap:glob`        | 工业级 Unix Glob 模式匹配（递归 `**`、花括号展开 `{a,b}`、单级 `*`、`?`、字符集 `[a-z]`、`!`、`hasMagic`）与零堆分配目录扫描引擎 `GlobWalker` | **已全面实装** |
+| `cap:ptr`         | 工业级智能指针与底层内存抽象套件（`Shared<T>`, `AtomicShared<T>`, `Weak<T>`, `AtomicWeak<T>`, `Cow<T>`, `CowSlice<T>`, `Owned<T>`, `TaggedPointer<T>`, `LowTagPointer<T>`, `RefCount<T>`, `RefPtr<T>`） | **已全面实装** |
 | `cap:semver`      | Semver 2.0 版本解析、全语义比较排序与范围匹配（`^`, `~`, `>=`, `<=`, `-`, `||`, `*`） | **已全面实装** |
 | `cap:which`       | 跨平台可执行二进制定位器（支持 `PATH` 环境变量遍历、相对/绝对路径解析与执行权限校验） | **已全面实装** |
 | `cap:ws`          | RFC 6455 现代 WebSocket 协议帧处理（Opcode、打包分片、4 字节极速异或掩码、控制帧） | **已全面实装** |

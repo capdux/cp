@@ -1085,6 +1085,19 @@
 
 
 
+### 2026-11-18
+- [feat(ptr)]: 从 Bun 全量吸收并实装 `cap:ptr` 智能指针体系 (`lib/ptr/`)，首行附带 `// Source: bun/src/ptr/...` 谱系标注：
+  - 新增 `shared.cp`, `weak_ptr.cp`, `cow.cp`, `cow_slice.cp`, `owned.cp`, `tagged_pointer.cp`, `raw_ref_count.cp`, `ref_count.cp`, `external_shared.cp`, `meta.cp`, `index.cp`。
+  - 新增独立文档 `docs/stdlib/ptr.md` 与测试 `cap/test/test_ptr.cp` (8/8 PASS)。
+- [feat(encoding)]: 全面补全 `lib/encoding/base64.cp`，支持 `decodeInPlace` 零堆分配原地解码与 4 种 `Codecs` 预设工厂；新增 `docs/stdlib/encoding.md` 与测试 `cap/test/test_encoding_complete.cp` (4/4 PASS)。
+- [feat(glob)]: 补全 `lib/glob/matcher.cp`（支持花括号展开 `{a,b}` 与字符集），新增 `lib/glob/walker.cp` 原生目录遍历引擎；新增 `docs/stdlib/glob.md` 与测试 `cap/test/test_glob_complete.cp` (4/4 PASS)。
+- [fix(cpc)]: 编译器自愈修复：
+  - `cpc/src/codegen/mod.rs`：`cp_not` 升级为 `inline fn cp_not`，确保 Zig 0.17 comptime 分支求值正常。
+  - `cpc/src/codegen/types.rs`：修复 `.get()` fallback 为 `?Message` 导致误插 `.?` 的类型推导缺陷。
+  - `cpc/src/codegen/prelude.rs`：`scan_decl` 增加智能指针声明识别，自动激活 `has_imported_ptr`。
+- [feat(col)]: 全面补全 `lib/col/bit_set.cp`, `baby_list.cp`, `linear_fifo.cp`, `bounded_array.cp`，对齐 Bun 原生容器标准库，新增 `docs/stdlib/col.md`。
+- [feat(conf)]: 全量补齐 `lib/conf/ini.cp` 与 `toml.cp`，新增 `docs/stdlib/conf.md`。
+
 ### 2026-11-17
 - [Docs] Standardize all library files with `// Source: ...` lineage annotations.
 
