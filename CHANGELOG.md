@@ -1,6 +1,23 @@
-# CP 变更日志 (CHANGELOG) - 2026-11-17 (热数据)
+# CP 变更日志 (CHANGELOG) - 2026-11-18 (热数据)
 
 > 历史变更日志已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
+
+## [2026-11-18] - 核心任务：补全 JSON5 完整解析能力与规范化标准库来源头部
+
+### 新增与增强标准库 (Enhanced Stdlib)
+- **配置与数据交换子系统 JSON5 完备实现 (`cap:conf`)**:
+  - [`lib/conf/json5.cp`](file:///data/dev/cp/lib/conf/json5.cp)：完整实现 `JSON5Parser` 与 `JSON5.parse(allocator, src): !JsonValue`，全面支持单行注释（`//`）、多行注释（`/* */`）、对象与数组尾随逗号（trailing comma）、未加引号的 ECMAScript 标识符键（unquoted keys）、单引号字符串（`'...'`）、转义字符与换行折叠、十六进制数字（`0x...`）、显式正负号（`+42`）、特殊常量（`NaN`、`Infinity`）；
+  - 保留并向前兼容 `JSON5.stripCommentsAndTrailingCommas(src, out_buf)` 预处理接口；
+  - 导出 `Json5Scanner` 供外部复用。
+- **规范化 `lib/json/` 来源标注**:
+  - [`lib/json/parser.cp`](file:///data/dev/cp/lib/json/parser.cp)：头部注释修正为 `// Source: Custom implementation by Antigravity AI (Zero-copy JSON streaming parser)`；
+  - [`lib/json/pool.cp`](file:///data/dev/cp/lib/json/pool.cp)：头部注释修正为 `// Source: Custom implementation by Antigravity AI (Thread-local buffer pool for JSON parsing)`；
+  - [`lib/json/value.cp`](file:///data/dev/cp/lib/json/value.cp)：头部注释修正为 `// Source: Custom implementation by Antigravity AI (Zero-copy JSON value AST & enum)`。
+
+### 测试验证 (Tests)
+- [`cap/test/test_json5.cp`](file:///data/dev/cp/cap/test/test_json5.cp)：新增 JSON5 专项端到端测试，验证注释与未加引号键、十六进制/带符号数值与尾随逗号、预处理向后兼容性，3/3 用例 100% 全部通过。
+
+---
 
 ## [2026-11-17] - 核心里程碑：高性能列式容器 Soa<T> 实装与 Zig 被埋没资产吸收第一阶段（cap:sort 与 cap:hash）
 

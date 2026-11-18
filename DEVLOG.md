@@ -1,6 +1,30 @@
-# CP 研发日志 (DEVLOG) - 2026-11-17 (热数据)
+# CP 研发日志 (DEVLOG) - 2026-11-18 (热数据)
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
+
+## 2026-11-18: JSON5 完备解析器架构实现、标准库来源追溯与解耦设计
+
+- **任务背景与工程决策**：
+  1. **配置交换子系统与 JSON5 完备性需求**：
+     - 用户指出：从 Bun 的 `src/interchange/` 迁移至 `lib/conf/` 时，`json5.cp` 仅保留了 111 行简单的注释与尾随逗号剔除预处理，缺少真正的 JSON5 结构化解析支持（未加引号键、十六进制数字、单引号字符串、特殊浮点数等）。
+     - 用户提问：CP 如何实现极致高性能的 JSON 解析，以及 Bun 的 JSON 依赖 `js_ast`、`js_lexer`、`logger` 是否需要吸收进 CP。
+  2. **解耦设计决策（避免引入臃肿的 `js_ast`）**：
+     - 分析表明：Bun 中的 `src/interchange/json5.cp` 是为了给 JS/TS 打包器服务，其输出直接构造 `js_ast.Expr`（AST 节点）。若为了带注释 JSON 而将 Bun 庞大的 `js_ast`（数十个文件、数百个 AST 节点类型）整体引入，不仅会导致 `lib/` 严重膨胀，且对于通用 CP 程序而言，返回 `js_ast.Expr` 极难使用。
+     - 正交优雅解法：吸纳 Bun `json5.cp` 和 `identifier.cp` 的 Scanner / Tokenizer 词法与语法分析状态机，直接对接 CP 原生的 `JsonValue`（来自 `lib/json/value.cp`），产出统一的标准 DOM AST，实现零额外依赖的纯原生 JSON5 解析器。
+  3. **双模解析体系（预处理清洗模式 vs 结构化 DOM 模式）**：
+     - **预处理模式 (`stripCommentsAndTrailingCommas`)**：提供零内存分配的静态清洗函数，快速去除单行/多行注释、尾随逗号，并将单引号规范化为双引号，使得任意下游标准 JSON 反序列化工具可以直接复用。
+     - **完备 DOM 模式 (`JSON5.parse`)**：支持标准 ECMAScript 标识符作为键（如 `{ foo: 1, $id: 2, _count: 3 }`）、单引号字符串转义与多行折叠（escaped newline）、十六进制数字（`0x2A` / `+0x10` / `-0x10`）、显式正号、`NaN` 与 `Infinity`。
+
+- **核心技术设计与实现原理**：
+  1. **`JSON5Parser` (`lib/conf/json5.cp`)**：
+     - 词法扫描支持：`skipWhitespaceAndComments` 跳过空白符、`//` 行注释与 `/* */` 块注释；`parseIdentifier` 提取符合 `[a-zA-Z_$][a-zA-Z0-9_$]*` 的键名；
+     - 字符串与转义解析：识别引号边界，无转义时零拷贝直接切片（zero-copy slice），遇到转义符时动态解码至缓冲区；支持 `\n`、`\r`、`\t`、`\0`、`\v`、`\f` 以及行末换行折叠；
+     - 数值解析：支持正负号前缀与 `0x` 前缀，分别调用 `std.fmt.parseInt(..., 16)` 与 `std.fmt.parseFloat`；
+     - 对象与数组：动态追加至 `std.ArrayList(JsonField)` 与 `std.ArrayList(JsonValue)`，遇到尾随逗号自动合法规约并转出连续切片。
+  2. **`cap/test/test_json5.cp`**：
+     - 覆盖未加引号键、注释穿插、十六进制与正负号、数组尾随逗号、以及向后兼容预处理，3/3 用例 100% 全部通过。
+
+---
 
 ## 2026-11-17: 列式容器 Soa<T> 全量实装、“双擎合璧”标准库战略定位确立与 Zig 被埋没资产吸收第一阶段（cap:sort & cap:hash）
 

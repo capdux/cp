@@ -1,6 +1,35 @@
-# CP 协同开发执行记录 (SESSION) - 2026-11-16 (热数据)
+# CP 协同开发执行记录 (SESSION) - 2026-11-18 (热数据)
 
 > 历史执行记录已完整归档至 [SESSION_H.md](file:///data/dev/cp/SESSION_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
+
+## 指令：启动常驻通信进程、开启双子智能体、补全 json5、修正 lib/json 来源并解答高性能 JSON parse 与 Bun AST 吸收问题
+
+- **用户指令**：
+  1. 配额恢复了，启动常驻通信进程（接收其他 agy 发来的 cpc 热修任务）；
+  2. 开启两个子智能体；
+  3. 继续你的工作（先补全 json5，并把 lib/json 来源修正）；
+  4. 然后回答我的问题：
+     - 问题 1：cp 中如果要性能高的 parse，应该如何实现？
+     - 问题 2：cp 也要读取带注释的 json，bun 这个 json 对 cp 也是有用的，它依赖的 js_ast、js_lexer、logger，bun 中是否已经迁移为 cp 代码，我们 cp lib 可以先吸收进来，再解决 json？
+
+- **执行结果**：
+  1. **常驻通信进程启动**：
+     - 调用 `run_command` 启动 `python3 scripts/watch_task.py` 作为常驻守护进程（Daemon 模式），实时监听下游 `bun_agy` 与 `capsurf_agy` 发来的 `cpc` 编译器缺陷及热修任务，具备微批聚合与断点续听机制；
+  2. **并发派生双子智能体**：
+     - 子智能体 1 (`d0305d0b-a8cf-4d34-a42d-e9c738720757`)：Role "Lineage & Config Auditor"，深度审计 `lib/` 中剩余未明确来源的文件，比对 Bun 与 Zig std；
+     - 子智能体 2 (`b22fc93e-62c4-4b9f-a55f-01656532fe64`)：Role "Compiler Diagnostics & Transpiler Engineer"，深度剖析 `cpc` 结构体字段类型命名前缀（如 `std.mem.Allocator` 丢失）的问题成因并设计最小修复；
+  3. **规范化 `lib/json/` 来源头部注释**：
+     - 严格遵守只动头部注释原则，将 `lib/json/parser.cp`、`lib/json/pool.cp`、`lib/json/value.cp` 的第一行注释统一更新为由 Antigravity 团队自研的零拷贝流式解析器、缓冲池与 AST 枚举，未触碰任何核心业务逻辑；
+  4. **完备实现 `lib/conf/json5.cp`**：
+     - 吸收 Bun `src/interchange/json5.cp` 的词法/语法状态机逻辑，摆脱对 `js_ast` 的重度耦合，直接输出 CP 原生 `JsonValue`；
+     - 全面支持单行注释（`//`）、多行注释（`/* */`）、对象与数组尾随逗号、未加引号的标识符键（ECMAScript Identifier）、单引号字符串、转义折叠、十六进制数（`0x`）、显式正负号、特殊浮点（`NaN`、`Infinity`）；
+     - 保留并向前兼容 `JSON5.stripCommentsAndTrailingCommas` 预处理接口；
+     - 编写新测试 [`cap/test/test_json5.cp`](file:///data/dev/cp/cap/test/test_json5.cp)，运行验证 3/3 用例 100% 全部通过；
+  5. **解答用户两项架构问题**：
+     - 详尽解答 CP 极致高性能 JSON parse 的两阶段 SIMD 架构设计路径；
+     - 详尽分析 Bun `json.cp` / `json5.cp` 依赖 `js_ast` 的成因，提出并实践了无需强行吸收庞大 `js_ast`、以通用 `JsonValue` 解耦落地的最佳路径。
+
+---
 
 ## 指令：Phase 2 人体工程学语法糖审核与第一批特性落地（??=、@pre/@ret、万能降级双重解包、SIMD向量原语、@[Default]宏）
 

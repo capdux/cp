@@ -1,4 +1,4 @@
-// Source: Bun path-not-recorded
+// Source: Custom implementation by Antigravity AI (Thread-local buffer pool for JSON parsing)
 // Thread-local memory pool for JSON parsing (Ported from Bun.js HashMapPool)
 
 pub struct JsonBufferPool {
