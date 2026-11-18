@@ -2282,3 +2282,4 @@
   - Bun's `h2_client/` provides `ClientSession` with more state (e.g., `is_goaway`, `window_size` handling) and a more detailed `Stream` implementation.
   - Migration will involve enhancing `H2ClientSession` and `H2Stream` in `lib/http/h2/client.cp` with the missing functionality.
 2026-11-19: 迁移 Bun threading 资产至 CP runtime (lib/threading/)
+2026-11-19: 迁移 Blob 及 Encoding 资产至 CP runtime

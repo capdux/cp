@@ -1456,3 +1456,7 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
 - 解决 Swarm 碎片化问题：将 Worker 迁移至 `workspace:share` 模式。
 - 修复 `lib/napi/napi.cp` 的不合规设计，强制重构，完成审计闭环。
 ## 2026-11-19: 迁移 Bun threading 资产至 CP runtime
+## 2026-11-19
+- 完成 `threading` 模块迁移，资产吸收工作流稳定高效。
+- 处理 Swarm 异步状态同步，完成全量合规审计闭环。
+## 2026-11-19: 迁移 Blob 及 Encoding 资产至 CP runtime

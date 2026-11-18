@@ -1136,3 +1136,7 @@
 ## 2026-11-19
 - 完成 `lib/napi/napi.cp` 的架构重构，将 `class Napi` 重构为符合 CP 规范的 `struct` 模块化形式（符合数据/行为解耦）。
 - 完成 threading 资产迁移 (channel, condition, futex, mutex, pool, thread_pool, etc.)
+## 2026-11-19
+- 完成 `lib/threading/` 资产迁移，已实现 FFI shim 隔离与 CP 原生 API 封装。
+- 确认 `lib/napi/napi.cp` 已完全符合 CP 模块化规范（struct 封装）。
+- 完成 blob 及 encoding 资产迁移
