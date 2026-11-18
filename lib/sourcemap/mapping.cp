@@ -1,12 +1,18 @@
-// Source: Bun src/sourcemap/ParsedSourceMap.cp
+// Source: bun/src/sourcemap/Mapping.cp
 // ============================================================================
-// lib/sourcemap/mapping.cp — SourceMap v3 映射表解析与 O(log N) 源码位置反查
-// 吸收自 Bun src/sourcemap/ParsedSourceMap.cp & sourcemap.zig
+// lib/sourcemap/mapping.cp — SourceMap v3 映射表定义与位置反查
+// 吸收自 Bun src/sourcemap/Mapping.cp & ParsedSourceMap.cp
 // ============================================================================
 
 import { VLQ } from "./vlq.cp";
+const std = @import("std");
 
-/// 单条 SourceMap v3 位置映射项（全部字段 0-based）
+pub struct LineColumnOffset {
+    line: i32 = 0,
+    column: i32 = 0,
+}
+
+/// 单条 SourceMap v3 位置映射项（全部字段 0-based，-1 代表缺失）
 pub struct SourceMapping {
     generated_line: i32 = 0,
     generated_column: i32 = 0,
@@ -17,6 +23,27 @@ pub struct SourceMapping {
 
     pub fn hasOriginal(): bool {
         return _.source_index >= 0 && _.original_line >= 0 && _.original_column >= 0;
+    }
+
+    pub fn hasName(): bool {
+        return _.name_index >= 0;
+    }
+}
+
+pub struct MappingWithoutName {
+    generated: LineColumnOffset,
+    original: LineColumnOffset,
+    source_index: i32,
+
+    pub fn toNamed(): SourceMapping {
+        return SourceMapping{
+            generated_line: _.generated.line,
+            generated_column: _.generated.column,
+            source_index: _.source_index,
+            original_line: _.original.line,
+            original_column: _.original.column,
+            name_index: -1,
+        };
     }
 }
 
@@ -99,25 +126,34 @@ pub struct ParsedSourceMap<const CAP: usize> {
                 }
             }
         }
+
         return table;
     }
 
-    /// 根据生成代码的 0-based (line, column) 查找最匹配的原始映射项
-    pub fn findMapping(gen_line: i32, gen_col: i32): SourceMapping? {
-        let best_idx: usize = 0;
-        let found = false;
-        let i: usize = 0;
-        while (i < _.count) {
-            let item = _.items[i];
-            if (item.generated_line == gen_line && item.generated_column <= gen_col) {
-                best_idx = i;
-                found = true;
+    /// 二分查找给定 (line, column) 对应的最近左侧映射项
+    pub fn findMapping(line: i32, column: i32): SourceMapping? {
+        if (_.count == 0) { return null; }
+
+        let low: usize = 0;
+        let count: usize = _.count;
+
+        while (count > 0) {
+            let step = count / 2;
+            let mid = low + step;
+            let item = _.items[mid];
+
+            let is_less_or_equal = (item.generated_line < line) ||
+                (item.generated_line == line && item.generated_column <= column);
+
+            if (is_less_or_equal) {
+                low = mid + 1;
+                count = count - step - 1;
+            } else {
+                count = step;
             }
-            i += 1;
         }
-        if (found) {
-            return _.items[best_idx];
-        }
-        return null;
+
+        if (low == 0) { return null; }
+        return _.items[low - 1];
     }
 }

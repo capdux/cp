@@ -1,10 +1,12 @@
-// Source: Bun src/sourcemap/VLQ.cp
+// Source: bun/src/sourcemap/VLQ.cp
 // ============================================================================
 // lib/sourcemap/vlq.cp — Base64 VLQ (Variable-Length Quantity) 编解码器
 // 吸收自 Bun src/sourcemap/VLQ.cp
 // ============================================================================
 
-const BASE64_CHARS: []const u8 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const std = @import("std");
+
+pub const BASE64_CHARS: []const u8 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 /// Base64 VLQ 编码结果（最多 7 字节栈内联，零堆分配）
 pub struct VLQ {
@@ -14,6 +16,10 @@ pub struct VLQ {
     pub fn slice(*_): []const u8 {
         let n = _.len as usize;
         return _.bytes[0..n];
+    }
+
+    pub fn writeTo(writer: auto): !void {
+        try writer.writeAll(_.bytes[0 .. _.len as usize]);
     }
 
     pub static fn encode(value: i32): VLQ {
@@ -81,6 +87,22 @@ pub struct VLQ {
             valid: false,
         };
     }
+
+    pub static fn decodeAssumeValid(encoded: []const u8, start: usize): VLQResult {
+        return VLQ.decode(encoded, start);
+    }
+
+    pub static fn encodeValues(values: []const i32, out: []u8): usize {
+        let out_idx: usize = 0;
+        for (val in values) {
+            let encoded = VLQ.encode(val);
+            const s = encoded.slice();
+            if (out_idx + s.len > out.len) break;
+            @memcpy(out[out_idx .. out_idx + s.len], s);
+            out_idx += s.len;
+        }
+        return out_idx;
+    }
 }
 
 pub struct VLQResult {
@@ -89,7 +111,7 @@ pub struct VLQResult {
     valid: bool = false,
 }
 
-fn decodeBase64Sextet(b: u8): u8? {
+pub fn decodeBase64Sextet(b: u8): u8? {
     if (b >= 65 && b <= 90) { return b - 65; }         // 'A'..'Z' -> 0..25
     if (b >= 97 && b <= 122) { return b - 97 + 26; }   // 'a'..'z' -> 26..51
     if (b >= 48 && b <= 57) { return b - 48 + 52; }    // '0'..'9' -> 52..61

@@ -324,7 +324,7 @@ impl Codegen {
                         } else {
                             zig_ty.as_str()
                         };
-                        clean_zig_ty.starts_with('*')
+                        clean_zig_ty.starts_with('*') && clean_zig_ty != "*anyopaque"
                     } else if let Some(ty) = self.var_cp_types.get(&id.sym) {
                         let clean_ty = if self.narrowed_null_vars.contains(&id.sym) {
                             Self::unwrap_optional_type(ty)

@@ -5945,8 +5945,9 @@ export class SocketContext<Handler> {
 | `cap:fs`          | 异步/同步文件读取、写入、目录创建、流式 I/O                            | **已全面实装** |
 | `cap:net`         | `SocketAddress`, `UdpSocket`, `UdpPacket`, `TcpStream`, `TcpServer`, `SafeSocket`, `HttpConnectTunnel`, `Socks5Codec` | **已全面实装** |
 | `cap:dns`         | RFC 1035 DNS 报文头/域名压缩编解码与 `/etc/hosts` 解析器               | **已全面实装** |
-| `cap:s3`          | AWS S3 凭证格式化与 Signature Version 4 (`AWS4-HMAC-SHA256`) 签名引擎  | **已全面实装** |
-| `cap:sourcemap`   | Base64 VLQ 编解码、二分行偏移表与 SourceMap v3 状态机映射              | **已全面实装** |
+| `cap:s3`          | AWS S3 完备客户端、SigV4 签名、分块上传状态机、XML 流式解析与分片下载流 | **已全面实装** |
+| `cap:sourcemap`   | Base64 VLQ/Varint 编解码、二分/动态行偏移表、二进制 InternalSourceMap 与 SourceMap v3 生成/反查 | **已全面实装** |
+| `cap:clap`        | 工业级命令行参数解析：POSIX 引号 Shell 词法分词、声明式语法、流式解析与编译期强类型提取 | **已全面实装** |
 | `cap:reflect`     | 编译期与运行时 `type_of`, `fields_of`, 结构体自省                      | **已全面实装** |
 
 ---

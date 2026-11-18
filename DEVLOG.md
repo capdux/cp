@@ -1371,6 +1371,15 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
 
 
 
+- **阶段四与阶段五交付**：
+  - `lib/sourcemap/` SourceMap v3 映射反查全套吸收与补全（VLQ、二分/动态行偏移表、InternalSourceMap、Chunk、ParsedSourceMap、Generator、Consumer），产出 `docs/stdlib/sourcemap.md`，测试 `test_sourcemap_complete.cp` (5/5 PASS)；
+  - `lib/clap/` 命令行参数解析体系吸收与纯 CP 化重构（Shell/Slice/OS 迭代器、流式状态机、ComptimeClap 强类型提取、Usage 排版），剔除对 Zig 0.17 废弃的 `std.io` 依赖，产出 `docs/stdlib/clap.md`，测试 `cap/test/test_clap_complete.cp` (6/6 PASS)；
+  - `lib/s3/` 完备 AWS S3 客户端与 SigV4 签名实装（SigV4 四级密钥派生、分块上传状态机、纯 CP 流式 XML 解析、HTTP Range 下载流、高阶 S3Client），产出 `docs/stdlib/s3.md`，测试 `test_s3_complete.cp` (6/6 PASS) 与 `test_s3.cp` (3/3 PASS)；
+  - **编译器关键自愈突破**：
+    - 在处理 `&list` 时，发现 `cpc/src/codegen/types.rs` 将未知表达式推导为 `*anyopaque`，而 `cpc/src/codegen/expr.rs` 中 `clean_zig_ty.starts_with('*')` 误判该变量已是指针，导致取地址符 `&` 被意外丢弃；增加 `&& clean_zig_ty != "*anyopaque"` 约束后彻底修复；
+    - 在处理 `[p_len]ParamUsize` 栈缓冲区数组时，`stmt.rs` 将其从 `uninitialized_vars` 排除，消除 while 循环重置为未初始化的报错。
+- **测试验证**：20/20 新增用例全部通过，零失败，双轨规范 `cp_ref.md` / `cp_agent_ref.md` 全量同步。
+
 ## 2026-11-18: Bun 资产吸收与标准库完整性补齐 (Col, Conf, Ptr, Encoding, Glob)
 - **背景与目标**：
   1. 用户指示持续从 Bun 仓库 (`/data/dev/bun/src`) 吸收资产扩充 CP 标准库 (`lib/`)；

@@ -1090,6 +1090,12 @@
   - 新增 `shared.cp`, `weak_ptr.cp`, `cow.cp`, `cow_slice.cp`, `owned.cp`, `tagged_pointer.cp`, `raw_ref_count.cp`, `ref_count.cp`, `external_shared.cp`, `meta.cp`, `index.cp`。
   - 新增独立文档 `docs/stdlib/ptr.md` 与测试 `cap/test/test_ptr.cp` (8/8 PASS)。
 - [feat(encoding)]: 全面补全 `lib/encoding/base64.cp`，支持 `decodeInPlace` 零堆分配原地解码与 4 种 `Codecs` 预设工厂；新增 `docs/stdlib/encoding.md` 与测试 `cap/test/test_encoding_complete.cp` (4/4 PASS)。
+- [feat(sourcemap)]: 全量补齐 `lib/sourcemap/`（`vlq.cp`, `line_offset.cp`, `mapping.cp`, `internal_source_map.cp`, `chunk.cp`, `parsed_source_map.cp`, `sourcemap.cp`, `index.cp`），新增 `docs/stdlib/sourcemap.md` 与测试 `cap/test/test_sourcemap_complete.cp` (5/5 PASS)。
+- [feat(clap)]: 从 Bun 吸收构建 `lib/clap/`（`args.cp`, `streaming.cp`, `comptime.cp`, `clap.cp`, `index.cp`），新增 `docs/stdlib/clap.md` 与测试 `cap/test/test_clap_complete.cp` (6/6 PASS)。
+- [feat(s3)]: 全量吸收 Bun S3 运行时构建 `lib/s3/`（`simple_request.cp`, `list_objects.cp`, `multipart.cp`, `download_stream.cp`, `client.cp`, `signing.cp`），新增 `docs/stdlib/s3.md` 与测试 `cap/test/test_s3_complete.cp` (6/6 PASS)。
+- [fix(cpc)]: 编译器底层缺陷修复：
+  - `cpc/src/codegen/expr.rs`：修复变量类型回退至 `*anyopaque` 时，`starts_with('*')` 误判为已是指针而剥离取地址符 `&` 的问题（增加 `!= "*anyopaque"` 约束）。
+  - `cpc/src/codegen/stmt.rs`：修复栈缓冲区数组在 while 循环中被误判为未初始化变量的重置问题。
 - [feat(glob)]: 补全 `lib/glob/matcher.cp`（支持花括号展开 `{a,b}` 与字符集），新增 `lib/glob/walker.cp` 原生目录遍历引擎；新增 `docs/stdlib/glob.md` 与测试 `cap/test/test_glob_complete.cp` (4/4 PASS)。
 - [fix(cpc)]: 编译器自愈修复：
   - `cpc/src/codegen/mod.rs`：`cp_not` 升级为 `inline fn cp_not`，确保 Zig 0.17 comptime 分支求值正常。

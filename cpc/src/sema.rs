@@ -5742,7 +5742,13 @@ impl Analyzer {
                 }
             }
             (Type::FixedArray(t_elem, t_len), Type::FixedArray(s_elem, s_len)) => {
-                if t_len != s_len {
+                let same_len = match (t_len, s_len) {
+                    (ArraySize::Literal(a), ArraySize::Literal(b)) => a == b,
+                    (ArraySize::Ident(a), ArraySize::Ident(b)) => a.sym == b.sym,
+                    (ArraySize::Expr(a), ArraySize::Expr(b)) => a == b,
+                    _ => t_len == s_len,
+                };
+                if !same_len {
                     return false;
                 }
                 if let Some(Expr::Array(elements)) = init_expr {
@@ -5894,7 +5900,13 @@ impl Analyzer {
             }
             (Type::Array(t1), Type::Array(t2)) => self.types_eq(t1, t2),
             (Type::FixedArray(t1, s1), Type::FixedArray(t2, s2)) => {
-                s1 == s2 && self.types_eq(t1, t2)
+                let same_len = match (s1, s2) {
+                    (ArraySize::Literal(a), ArraySize::Literal(b)) => a == b,
+                    (ArraySize::Ident(a), ArraySize::Ident(b)) => a.sym == b.sym,
+                    (ArraySize::Expr(a), ArraySize::Expr(b)) => a == b,
+                    _ => s1 == s2,
+                };
+                same_len && self.types_eq(t1, t2)
             }
             (Type::FixedArray(elem, _), Type::Array(t2))
             | (Type::Array(t2), Type::FixedArray(elem, _)) => self.types_eq(elem, t2),

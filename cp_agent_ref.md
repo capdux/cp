@@ -1041,8 +1041,9 @@ switch (msg) {
 | `cap:router` | `Router<T>`, `RadixNode<T>`, `ParamMap`, `RouteMatch`, `Route`, `RouteFormatter` | 极速 Radix-Tree 路由匹配与反向路径格式化引擎 |
 | `cap:net` | `SocketAddress`, `UdpSocket`, `UdpPacket`, `TcpStream`, `TcpServer`, `SafeSocket`, `HttpConnectTunnel`, `Socks5Codec` | TCP/UDP/QUIC 套接字、HTTP CONNECT 与 SOCKS5 代理隧道 |
 | `cap:dns` | `DnsHeader`, `DnsRecordType`, `NameEncodeResult`, `HostsTable` | RFC 1035 DNS 报文编解码与 hosts 解析 |
-| `cap:s3` | `S3Acl`, `S3StorageClass`, `S3Credentials`, `SigV4Signer` | AWS S3 凭证与 SigV4 签名引擎 |
-| `cap:sourcemap` | `VLQ`, `LineOffsetTable`, `ParsedSourceMap` | Base64 VLQ 与 SourceMap v3 映射反查 |
+| `cap:s3` | `S3Acl`, `S3StorageClass`, `S3Credentials`, `SigV4Signer`, `S3Client`, `S3RequestBuilder`, `S3StatResult`, `S3DownloadResult`, `S3UploadResult`, `S3DeleteResult`, `S3PartResult`, `MultiPartUpload`, `S3ContentRange`, `formatRangeHeader`, `parseContentRange`, `formatListObjectsQuery`, `parseS3ListObjectsResult` | 完备 AWS S3 客户端、SigV4 签名引擎、分块上传状态机、XML 流式解析与分片下载流 |
+| `cap:sourcemap` | `VLQ`, `Zigzag`, `Varint`, `LineOffsetTable`, `DynamicLineOffsetTable`, `Mapping`, `InternalSourceMap`, `Chunk`, `ParsedSourceMap`, `ParsedSourceMapRecord`, `SourceMapGenerator`, `SourceMapConsumer` | Base64 VLQ/Varint 编解码、高精度映射压缩、二进制 SourceMap v3 解析与生成反查套件 |
+| `cap:clap` | `parseParam`, `parseEx`, `usage`, `help`, `usageEx`, `helpEx`, `SliceIterator`, `ShellIterator`, `OsIterator`, `StreamingClap`, `ComptimeClap`, `Names`, `Values`, `Param`, `Help`, `Diagnostic`, `ParseOptions` | 工业级命令行参数解析引擎，支持 POSIX 引号分词、声明式语法、流式状态机与编译期常数级强类型提取 |
 | `cap:fs` | `readFile`, `writeFile`, `exists`, `stat`, `tmpDir`, `tmpPath`, `writeAtomic` | 同步/异步现代文件系统高阶抽象 |
 | `cap:path` | `path`, `Path`, `PosixPath`, `WindowsPath` | 跨平台路径计算引擎 |
 | `cap:url` | `URL`, `URLSearchParams`, `QueryParam`, `PercentEncoding` | WHATWG 标准 URL、查询参数与 RFC 3986 百分号编解码 |

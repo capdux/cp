@@ -93,14 +93,14 @@ pub struct SigV4Signer {
         let needed = date_yyyymmdd.len + 1 + region.len + 1 + service.len + 13;
         if (out.len < needed) { return 0; }
         let pos: usize = 0;
-        pos = appendSlice(out, pos, date_yyyymmdd);
+        pos = sigAppendSlice(out, pos, date_yyyymmdd);
         out[pos] = 47; // '/'
         pos += 1;
-        pos = appendSlice(out, pos, region);
+        pos = sigAppendSlice(out, pos, region);
         out[pos] = 47; // '/'
         pos += 1;
-        pos = appendSlice(out, pos, service);
-        pos = appendSlice(out, pos, "/aws4_request");
+        pos = sigAppendSlice(out, pos, service);
+        pos = sigAppendSlice(out, pos, "/aws4_request");
         return pos;
     }
 
@@ -129,14 +129,14 @@ pub struct SigV4Signer {
         // StringToSign = "AWS4-HMAC-SHA256\n" + amz_date + "\n" + scope + "\n" + sha256(CanonicalRequest)
         let sts_buf: [512]u8 = undefined;
         let pos: usize = 0;
-        pos = appendSlice(sts_buf[0..512], pos, "AWS4-HMAC-SHA256\n");
-        pos = appendSlice(sts_buf[0..512], pos, amz_date_iso8601);
+        pos = sigAppendSlice(sts_buf[0..512], pos, "AWS4-HMAC-SHA256\n");
+        pos = sigAppendSlice(sts_buf[0..512], pos, amz_date_iso8601);
         sts_buf[pos] = 10; // '\n'
         pos += 1;
-        pos = appendSlice(sts_buf[0..512], pos, scope_buf[0..scope_len]);
+        pos = sigAppendSlice(sts_buf[0..512], pos, scope_buf[0..scope_len]);
         sts_buf[pos] = 10; // '\n'
         pos += 1;
-        pos = appendSlice(sts_buf[0..512], pos, cr_hash_hex[0..64]);
+        pos = sigAppendSlice(sts_buf[0..512], pos, cr_hash_hex[0..64]);
 
         let signing_key: [32]u8 = undefined;
         if (!SigV4Signer.deriveSigningKey(
@@ -163,7 +163,7 @@ fn bytesToHexLower(bytes: []const u8, out: []u8): usize {
     return bytes.len * 2;
 }
 
-fn appendSlice(dst: []u8, offset: usize, src: []const u8): usize {
+fn sigAppendSlice(dst: []u8, offset: usize, src: []const u8): usize {
     let i: usize = 0;
     while (i < src.len) {
         dst[offset + i] = src[i];

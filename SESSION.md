@@ -2191,3 +2191,21 @@
        - `cpc/src/codegen/types.rs`：修复 `.get()` 盲目 fallback 为 `?Message` 导致下游误插 `.?` 的类型推导缺陷；
        - `cpc/src/codegen/prelude.rs`：在 `scan_decl` 中增加对 `Shared`、`AtomicShared` 等内联类型声明的探测，自动激活 `has_imported_ptr`；
        - 23/23 跨模块测试全部 100% PASS。
+  6. **第四与第五阶段完成交付 (`cap:sourcemap`, `cap:clap`, `cap:s3`)**：
+     - **`cap:sourcemap` 全量补全实装**：
+       - 吸收对齐 Bun 原生 `lib/sourcemap/`（`vlq.cp`, `line_offset.cp`, `mapping.cp`, `internal_source_map.cp`, `chunk.cp`, `parsed_source_map.cp`, `sourcemap.cp`, `index.cp`），首行 100% 具备 `// Source: bun/src/sourcemap/...` 谱系标注；
+       - 实装 Base64 VLQ/Varint/Zigzag 编解码、O(log N) 动态二分行偏移表、二进制 `InternalSourceMap` 高效存储与 SourceMap v3 零拷贝双向查表；
+       - 编写独立技术文档 `docs/stdlib/sourcemap.md`；测试 `test_sourcemap.cp` (3/3 PASS) 与 `test_sourcemap_complete.cp` (5/5 PASS)；
+     - **`cap:clap` 命令行解析套件吸收实装**：
+       - 从 `/data/dev/bun/src/clap/` 吸收：`lib/clap/`（`args.cp`, `streaming.cp`, `comptime.cp`, `clap.cp`, `index.cp`），首行 100% 具备 `// Source: bun/src/clap/...` 谱系标注；
+       - 彻底摆脱对 Zig 0.17 已废除的 `std.io` counting stream 依赖，重构为纯 CP 流式 `writeAll` 架构；
+       - 实装 POSIX 引号 Shell 词法切分、声明式语法、流式状态机与编译期常数级强类型提取；
+       - 编写独立技术文档 `docs/stdlib/clap.md`；测试 `cap/test/test_clap_complete.cp` (6/6 PASS)；
+     - **`cap:s3` 完备工业级客户端与协议实装**：
+       - 深度吸收 Bun S3 运行时（`lib/s3/`：`simple_request.cp`, `list_objects.cp`, `multipart.cp`, `download_stream.cp`, `client.cp`, `signing.cp`, `credentials.cp`, `types.cp`, `index.cp`），首行 100% 具备 `// Source: bun/src/runtime/webcore/s3/...` 谱系标注；
+       - 实现 AWS SigV4 四级派生密钥一键签名、S3 分块上传全状态机、ListObjectsV2 零依赖纯 CP 流式 XML 解析与 HTTP Range 分片下载流；
+       - 编写独立技术文档 `docs/stdlib/s3.md`；测试 `test_s3.cp` (3/3 PASS) 与 `test_s3_complete.cp` (6/6 PASS)；
+     - **编译器底层重大自愈突破**：
+       - `cpc/src/codegen/expr.rs`：修复变量未显式声明类型且推断为 `*anyopaque` 时，`starts_with('*')` 误判变量已是指针而剥离取地址符 `&` 的重大编译器缺陷（增加 `clean_zig_ty != "*anyopaque"` 守卫）；
+       - `cpc/src/codegen/stmt.rs`：修复 stack buffer 数组在 while 循环中被误判为未初始化的作用域重置缺陷；
+       - 20/20 新增用例全部全绿通过，双轨规范 `cp_ref.md` / `cp_agent_ref.md` 实时同步。

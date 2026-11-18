@@ -224,7 +224,16 @@ impl Codegen {
                             }
 
                             if expr_code == "undefined" && !self.is_lib_mode {
-                                self.uninitialized_vars.insert(ident.sym.clone());
+                                let is_buffer_or_composite = matches!(
+                                    &var.ty,
+                                    Some(Type::FixedArray(..))
+                                        | Some(Type::Array(..))
+                                        | Some(Type::Ref(..))
+                                        | Some(Type::Tuple(..))
+                                );
+                                if !is_buffer_or_composite {
+                                    self.uninitialized_vars.insert(ident.sym.clone());
+                                }
                             }
                             let is_const = var.kind == crate::ast::VarDeclKind::Const
                                 || matches!(init, Expr::Builtin(b) if b.name == "@typeOf" || b.name == "@typeInfo" || b.name == "@TypeOf" || b.name == "@TypeInfo")

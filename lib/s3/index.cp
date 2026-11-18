@@ -1,8 +1,13 @@
-// Source: Custom (agy-generated export index)
+// Source: bun/src/runtime/webcore/s3/
 // ============================================================================
-// lib/s3/index.cp — CP 标准 S3 客户端凭证与 AWS SigV4 签名模块 (cap:s3)
+// lib/s3/index.cp — CP 工业级 S3 客户端引擎与 AWS SigV4 模块 (cap:s3)
 // ============================================================================
 
-export * from "./types.cp";
-export * from "./credentials.cp";
-export * from "./signing.cp";
+export * from "./types";
+export * from "./credentials";
+export * from "./signing";
+export * from "./simple_request";
+export * from "./list_objects";
+export * from "./multipart";
+export * from "./download_stream";
+export * from "./client";
