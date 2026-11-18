@@ -1,6 +1,13 @@
-# CP 变更日志 (CHANGELOG) - 2026-11-18 (热数据)
+## [2026-11-19] - 核心任务：吸收 Bun `napi` 模块初步架构与基础 FFI 绑定
 
-> 历史变更日志已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
+### 标准库增强 (Enhanced Stdlib)
+- **`cap:napi` Node-API 初步架构实现**:
+  - [`lib/napi/index.cp`](file:///data/dev/cp/lib/napi/index.cp)：定义 `napi` 模块统一对外出口；
+  - [`lib/napi/_napi.cp`](file:///data/dev/cp/lib/napi/_napi.cp)：建立 Node-API C-FFI Shim，初步绑定 `napi_get_undefined` 原型；
+  - [`lib/napi/napi.cp`](file:///data/dev/cp/lib/napi/napi.cp)：构建高层 CP API 包装器 `Napi.getUndefined`；
+  - 架构设计：遵循 CP 架构，FFI Shim 使用 `_` 前缀，高层封装遵循现代 CP 语言规范。
+
+---
 
 ## [2026-11-18] - 核心里程碑：`cap:conf` 配置交换子系统（INI/TOML）工业级完整性补齐与首行 Bun 溯源覆盖
 
@@ -1124,3 +1131,8 @@
 - 溯源三次校验：index.cp 29 个标为 Custom(agy 生成导出入口)；17 个按同名匹配 Bun（name-matched, needs review）；仍有 45 个 UNVERIFIED。仅改第 1 行。
 
 - 溯源四次校验：依据 CHANGELOG/SESSION 记录确认 16 个文件来源（Bun/Zig std/Custom），仅改第1行；剩余 29 个 UNVERIFIED 待用户判断。
+
+- 2026-11-19: Enhanced `H2Stream` in `lib/http/h2/client.cp` by adding state transition methods (`rst`, `sentEndStream`, `recvEndStream`, `localClosed`, `remoteClosed`) ported from Bun's `h2_client/Stream.cp`.
+## 2026-11-19
+- 完成 `lib/napi/napi.cp` 的架构重构，将 `class Napi` 重构为符合 CP 规范的 `struct` 模块化形式（符合数据/行为解耦）。
+- 完成 threading 资产迁移 (channel, condition, futex, mutex, pool, thread_pool, etc.)

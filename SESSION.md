@@ -2258,3 +2258,27 @@
        - 升级 `cpc/src/resolver.rs`，使 `cap:dotenv` 协议直接映射生效；
        - 编写独立技术文档 `docs/stdlib/dotenv.md`；测试 `cap/test/test_dotenv_complete.cp` (6/6 PASS)；
      - 17/17 用例全部通过，双轨规范手册 `cp_ref.md` 与 `cp_agent_ref.md` 实时同步更新。
+
+## 2026-11-19: HTTP/EventLoop Migration Assessment
+
+- **Goal**: Absorb Bun assets into CP, specifically HTTP/EventLoop.
+- **Status**:
+  - Found `lib/event_loop` and `lib/http` in `/data/dev/cp/lib/`.
+  - Initial comparison shows structural similarities (e.g., `AnyEventLoop.cp` in Bun vs `EventLoop` in `lib/event_loop/loop.cp`).
+  - Identified Bun's `src/http` has `h2_client/`, `h3_client/`, `AsyncHTTP`, etc. CP has some of these already.
+- **Next Steps**:
+  - Perform detailed comparison of key components.
+  - Identify missing or divergent functionality.
+  - Implement necessary migrations.
+
+- **HTTP/H2 Comparison**:
+  - Bun's `h2_client/` includes `ClientSession`, `Dispatch`, `PendingConnect`, `Stream`.
+  - CP's `lib/http/h2/` only has `client`, `frame`, `hpack`, `index`.
+  - Bun's implementation seems more comprehensive.
+- **Plan**: Migrate `ClientSession`, `Dispatch`, `PendingConnect`, `Stream` from Bun's `h2_client/` to CP's `lib/http/h2/`.
+
+- **Assessment of H2/Client**:
+  - `lib/http/h2/client.cp` exists but is a simplified version.
+  - Bun's `h2_client/` provides `ClientSession` with more state (e.g., `is_goaway`, `window_size` handling) and a more detailed `Stream` implementation.
+  - Migration will involve enhancing `H2ClientSession` and `H2Stream` in `lib/http/h2/client.cp` with the missing functionality.
+2026-11-19: 迁移 Bun threading 资产至 CP runtime (lib/threading/)

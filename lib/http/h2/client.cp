@@ -20,9 +20,40 @@ pub const H2Stream = struct {
     id: u32 = 0,
     state: H2StreamState = H2StreamState.Idle,
     window_size: i32 = DEFAULT_WINDOW_SIZE,
+    rst_done: bool = false,
 
     pub fn isOpen(*_): bool {
         return _.state == .Open or _.state == .HalfClosedRemote;
+    }
+
+    pub fn rst(*this, code: ErrorCode) {
+        if (_.rst_done or _.state == .Closed) return;
+        _.rst_done = true;
+        _.state = .Closed;
+    }
+
+    pub fn sentEndStream(*this) {
+        _.state = switch (_.state) {
+            .Open => .HalfClosedLocal,
+            .HalfClosedRemote => .Closed,
+            else => _.state,
+        };
+    }
+
+    pub fn recvEndStream(*this) {
+        _.state = switch (_.state) {
+            .Open => .HalfClosedRemote,
+            .HalfClosedLocal => .Closed,
+            else => _.state,
+        };
+    }
+
+    pub fn localClosed(*_): bool {
+        return _.state == .HalfClosedLocal or _.state == .Closed;
+    }
+
+    pub fn remoteClosed(*_): bool {
+        return _.state == .HalfClosedRemote or _.state == .Closed;
     }
 
     pub fn close(*_) {

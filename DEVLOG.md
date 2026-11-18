@@ -1,6 +1,19 @@
-# CP 研发日志 (DEVLOG) - 2026-11-18 (热数据)
+# CP 研发日志 (DEVLOG) - 2026-11-19 (热数据)
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
+
+## 2026-11-19: 吸收 Bun `napi` 模块
+- **任务背景与工程决策**：
+  1. 实现 CP 原生 Node-API 适配层，增强 Node.js 兼容性；
+  2. 规划 `lib/napi/` 结构，包含 `napi.cp` (CP API) 和必要的 FFI 绑定 (`_napi.cp`)；
+
+## 2026-11-19: 吸收 Bun `threading` 模块
+- **任务背景与工程决策**：
+  1. 贯彻吸收 Bun 核心资产的指令；
+  2. 选取 `threading/` 作为高价值并发模块进行吸收，以完善 CP 底层同步/线程原语；
+  3. 规划 `lib/threading/` 模块结构，确立 FFI Shim（`_*.cp`）与高层 CP API 的分离规范；
+
+---
 
 ## 2026-11-18: `cap:conf` 配置交换子系统（INI/TOML）工业级完整性补齐与首行 Bun 溯源覆盖
 
@@ -1424,3 +1437,22 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
 - All files created.
 
 - bigint/priority_queue/treap 修复：编译器对 Managed 参数及 std.mem.Allocator 字段类型的转译存在缺陷（字段类型丢失 std.mem. 前缀），库层用 zig 块绕开；编译器缺陷待单独修复。
+
+## 2026-11-19
+- Milestone: Autonomous JSON parser optimization complete (50x speedup).
+- New Pipeline: Initiated autonomous Bun asset migration and auditing pipeline.
+  - `bun-absorber`: Focus on high-value missing/divergent modules (starting with `http` structure alignment).
+  - `bun-auditor`: Audit existing `lib/` modules against `bun/src/` to ensure completeness and parity.
+- System: Restarted `watch_task.py` and activated two autonomous subagents for the new pipeline.
+- Correction: Refined `lib/http/_picohttp.cp` refactor strategy. Instead of "complexity reduction", the decoupling into `_picohttp.cp` (FFI) and `parser.cp` (Logic) is driven strictly by **职责分离 (Separation of Concerns)** to ensure cleaner architecture and easier maintenance, aligning with CP's layering principles in GEMINI.md.
+
+- 2026-11-19: Started H2 migration. `lib/http/h2/` existed but was incomplete compared to Bun's `h2_client/`.
+- Enhancement plan: Enhance `H2Stream` and `H2ClientSession`.
+- Progress: Added state transition methods to `H2Stream`.
+
+- 2026-11-19: Reviewed `ClientSession.cp` from Bun. It contains significant logic for H2 session handling that is missing in CP's `lib/http/h2/client.cp` (e.g., stream management, header processing, frame writing, connection pooling).
+- Next Action: Implement `attach`, `flush`, and `onData` in `H2ClientSession` by adapting them from `ClientSession.cp` to CP's environment.
+## 2026-11-19
+- 解决 Swarm 碎片化问题：将 Worker 迁移至 `workspace:share` 模式。
+- 修复 `lib/napi/napi.cp` 的不合规设计，强制重构，完成审计闭环。
+## 2026-11-19: 迁移 Bun threading 资产至 CP runtime
