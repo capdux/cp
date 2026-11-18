@@ -1475,3 +1475,4 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
 - 修复：更新 `type_to_display_string`，在 `ResultType` 分支中匹配 `err` 类型（特别是 `ErrorType::AnyErr` 和 `ErrorType::Named`），显式将其转换为字符串拼接。
 - 验证：运行 `bash scripts/sync_cpc.sh` 原子构建成功。
 ## 2026-11-19: 迁移 Crypto (BoringSSL) 资产至 CP runtime
+## 2026-11-19: Crypto 模块重构 (class -> struct)

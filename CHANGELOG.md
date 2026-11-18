@@ -1161,3 +1161,4 @@
 - 联动 `Optional` 类型，使得 `?anyerror!void` 能被正确生成。
 - 通过 `bash scripts/sync_cpc.sh` 完成原子构建校验，验证修复有效。
 - 完成 crypto 资产迁移
+- 重构 cipher.cp 和 hash.cp，统一为静态 struct 模块化设计

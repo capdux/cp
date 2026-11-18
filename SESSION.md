@@ -2296,3 +2296,4 @@
     - 运行 `bash scripts/sync_cpc.sh` 完成原子构建校验。
 - 结果：编译成功，问题修复。
 2026-11-19: 迁移 Crypto 资产至 CP runtime
+2026-11-19: Crypto 模块重构
