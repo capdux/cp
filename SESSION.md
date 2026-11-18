@@ -2284,3 +2284,4 @@
 2026-11-19: 迁移 Bun threading 资产至 CP runtime (lib/threading/)
 2026-11-19: 迁移 Blob 及 Encoding 资产至 CP runtime
 2026-11-19: 迁移 URL 资产至 CP runtime
+2026-11-19: 迁移 Valkey 资产至 CP runtime
