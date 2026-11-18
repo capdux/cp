@@ -2225,3 +2225,20 @@
        - 实现零开销内联 AddressSanitizer / LSAN 原生集成（`poison`, `unpoison`, `isPoisoned`）与安全断言器；
        - 编写独立技术文档 `docs/stdlib/safety.md`；测试 `cap/test/test_safety_complete.cp` (5/5 PASS)；
      - 15/15 用例全部通过，双轨规范手册 `cp_ref.md` 与 `cp_agent_ref.md` 实时同步更新。
+  8. **第七阶段完成交付 (`cap:path`, `cap:event_loop`)**：
+     - **`cap:path` 跨平台路径计算引擎工业级重构与补全**：
+       - 深度吸收 Bun 生产级路径体系（`/data/dev/bun/src/paths/`）全量重构 `lib/path/`（`buffer_pool.cp`, `env_path.cp`, `index.cp`, `path.cp`, `posix.cp`, `resolve.cp`, `windows.cp`），首行 100% 具备 `// Source: bun/src/paths/...` 谱系标注；
+       - 将原 2.3KB 骨架扩展至 35KB 工业级实现：完备 POSIX 与 Windows 规范化、跨盘符/UNC 解析、`relative`、`longestCommonPath`；
+       - 实装基于定长 4096 字节的 `PathBufferPool` 零堆分配路径缓冲池；
+       - 实装跨平台环境变量路径构建器 `EnvPath` 与自适应分隔符流式迭代器 `EnvPathIterator`；
+       - 编写独立技术文档 `docs/stdlib/path.md`；测试 `cap/test/test_path_complete.cp` (5/5 PASS) 与 `cap/test/test_path_url.cp` (4/4 PASS)；
+     - **`cap:event_loop` 官方一等公民统一事件循环标准库全量吸收实装**：
+       - 深度吸收 Bun 核心事件循环架构（`/data/dev/bun/src/event_loop/`）构建 `lib/event_loop/`（`auto_flusher.cp`, `concurrent_task.cp`, `deferred_task_queue.cp`, `index.cp`, `loop.cp`, `task.cp`, `timer.cp`），首行 100% 具备 `// Source: bun/src/event_loop/...` 谱系标注；
+       - 实现侵入式配对二叉最小堆高精度定时器（`Timer`, `TimerHeap`），均摊 O(1) 插入探测、均摊 O(log N) 到期删除与零堆内存分配；
+       - 实现 16 字节轻量跨线程任务描述符 `ConcurrentTask` 与原子自旋锁支持的侵入式任务队列 `ConcurrentTaskQueue`；
+       - 实现上下文指针驱动的延迟微任务队列 `DeferredTaskQueue`（支持天然去重与按需重入重复排队）；
+       - 实现通用类型擦除任务包装器（`AnyTask`, `AnyTaskWithExtraContext`, `ManagedTask`）与流式自动刷新句柄（`AutoFlusher`）；
+       - 实现统一事件循环驱动核 `EventLoop`，内建预置槽位，协调并发任务排空 -> 微任务执行 -> 定时器触发三阶段流水线；
+       - **编译器自愈与增强**：更新 `cpc/src/resolver.rs` 使 `cap:event_loop` 协议独立精确映射至 `lib/event_loop/`，完成编译器原子同步与部署；
+       - 编写独立技术文档 `docs/stdlib/event_loop.md`；测试 `cap/test/test_event_loop_complete.cp` (6/6 PASS)；
+     - 15/15 用例全部通过，双轨规范手册 `cp_ref.md` 与 `cp_agent_ref.md` 实时同步更新。

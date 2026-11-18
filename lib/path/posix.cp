@@ -1,6 +1,17 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
-// lib/path/posix.cp
-// POSIX path utilities in CP
+// Source: bun/src/paths/Path.cp
+// ============================================================================
+// lib/path/posix.cp — POSIX Path Implementation (cap:path)
+// ============================================================================
+
+const std = @import("std");
+import {
+    isAbsolutePosix,
+    normalizePosix,
+    joinPosix,
+    resolvePosix,
+    relativePosix,
+    longestCommonPathPosix,
+} from "./resolve";
 
 pub const PosixPath = struct {
     pub const sep: u8 = '/';
@@ -8,12 +19,11 @@ pub const PosixPath = struct {
     pub const delimiter: u8 = ':';
 
     pub fn isAbsolute(filepath: []const u8): bool {
-        return filepath.len > 0 and filepath[0] == '/';
+        return isAbsolutePosix(filepath);
     }
 
     pub fn basename(filepath: []const u8, ext: ([]const u8)?): []const u8 {
         let p = filepath;
-        // Trim trailing slashes
         while (p.len > 1 and p[p.len - 1] == '/') {
             p = p[0 .. p.len - 1];
         }
@@ -62,7 +72,11 @@ pub const PosixPath = struct {
 
         if (idx := last_slash) {
             if (idx == 0) return "/";
-            return p[0..idx];
+            let end_idx = idx;
+            while (end_idx > 1 and p[end_idx - 1] == '/') {
+                end_idx -= 1;
+            }
+            return p[0 .. end_idx];
         }
         return ".";
     }
@@ -75,78 +89,30 @@ pub const PosixPath = struct {
         while (i > 0) {
             i -= 1;
             if (base[i] == '.') {
-                if (i == 0) return ""; // dotfiles like .gitignore have no ext
-                return base[i..];
+                if (i == 0) return "";
+                return base[i ..];
             }
         }
         return "";
     }
 
-    pub fn normalize(filepath: []const u8, buf: *[1024]u8): []const u8 {
-        if (filepath.len == 0) return ".";
-
-        const is_abs = isAbsolute(filepath);
-        let segments: [64][]const u8 = undefined;
-        let seg_count: usize = 0;
-
-        let iter = std.mem.splitScalar(u8, filepath, '/');
-        while (iter.next()) |seg| {
-            if (seg.len == 0 or std.mem.eql(u8, seg, ".")) {
-                continue;
-            }
-            if (std.mem.eql(u8, seg, "..")) {
-                if (seg_count > 0 and !std.mem.eql(u8, segments[seg_count - 1], "..")) {
-                    seg_count -= 1;
-                } else if (!is_abs and seg_count < 64) {
-                    segments[seg_count] = "..";
-                    seg_count += 1;
-                }
-            } else if (seg_count < 64) {
-                segments[seg_count] = seg;
-                seg_count += 1;
-            }
-        }
-
-        if (seg_count == 0) {
-            return if (is_abs) "/" else ".";
-        }
-
-        let out_idx: usize = 0;
-        if (is_abs) {
-            buf[out_idx] = '/';
-            out_idx += 1;
-        }
-
-        let s_i: usize = 0;
-        while (s_i < seg_count) : (s_i += 1) {
-            if (s_i > 0 or is_abs) {
-                if (out_idx > 1 or (!is_abs and out_idx > 0)) {
-                    buf[out_idx] = '/';
-                    out_idx += 1;
-                }
-            }
-            const seg = segments[s_i];
-            @memcpy(buf[out_idx .. out_idx + seg.len], seg);
-            out_idx += seg.len;
-        }
-
-        return buf[0..out_idx];
+    pub fn normalize(filepath: []const u8, buf: []u8): []const u8 {
+        return normalizePosix(filepath, buf);
     }
 
-    pub fn join(paths: []const []const u8, buf: *[1024]u8): []const u8 {
-        let joined_buf: [1024]u8 = undefined;
-        let joined_len: usize = 0;
+    pub fn join(paths: []const []const u8, buf: []u8): []const u8 {
+        return joinPosix(paths, buf);
+    }
 
-        for (p of paths) {
-            if (p.len == 0) continue;
-            if (joined_len > 0 and joined_buf[joined_len - 1] != '/' and p[0] != '/') {
-                joined_buf[joined_len] = '/';
-                joined_len += 1;
-            }
-            @memcpy(joined_buf[joined_len .. joined_len + p.len], p);
-            joined_len += p.len;
-        }
+    pub fn resolve(paths: []const []const u8, buf: []u8): []const u8 {
+        return resolvePosix(paths, buf);
+    }
 
-        return normalize(joined_buf[0..joined_len], buf);
+    pub fn relative(from_path: []const u8, to_path: []const u8, buf: []u8): []const u8 {
+        return relativePosix(from_path, to_path, buf);
+    }
+
+    pub fn longestCommonPath(paths: []const []const u8): []const u8 {
+        return longestCommonPathPosix(paths);
     }
 };

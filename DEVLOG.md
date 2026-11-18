@@ -1403,6 +1403,11 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
   - `lib/url/` WHATWG 深度补齐：完整实现协议分解、IPv6 主机探测、URLSearchParams 词法扫描/增删改查/原地排序、RFC 3986 百分号编解码，产出 `docs/stdlib/url.md` 与测试 `test_url_complete.cp` (6/6 PASS)；
   - `lib/safety/` 全量吸收实装：吸收 Bun 核心安全架构，实现跨平台线程 ID、单线程属主防御锁 `ThreadLock`、可重入读写竞态检测 `CriticalSection`、非托管容器防混用 `CheckedAllocator`、原生 AddressSanitizer 内存毒化 `asan`，产出 `docs/stdlib/safety.md` 与测试 `test_safety_complete.cp` (5/5 PASS)；
   - 15/15 用例全绿通过，双轨规范手册 `cp_ref.md` / `cp_agent_ref.md` 实时同步。
+- **阶段七交付**：
+  - `lib/path/` 工业级重构：将 2.3KB 骨架扩展至 35KB，补齐 POSIX 与 Windows 规范化、跨驱动器解析、`relative`、`longestCommonPath`、`EnvPath` 环境变量迭代与定长 `PathBufferPool`，产出 `docs/stdlib/path.md` 与测试 `test_path_complete.cp` (5/5 PASS)；
+  - `lib/event_loop/` 统一事件循环吸收实装：实现侵入式二叉最小堆高精度定时器（`TimerHeap`）、16B 无锁跨线程任务（`ConcurrentTaskQueue`）、延迟微任务队列（`DeferredTaskQueue`）与精简事件循环（`MiniEventLoop`），产出 `docs/stdlib/event_loop.md` 与测试 `test_event_loop_complete.cp` (6/6 PASS)；
+  - 编译器自愈：升级 `cpc/src/resolver.rs` 使 `cap:event_loop` 协议独立精确映射至 `lib/event_loop/`；
+  - 15/15 用例全绿通过，双轨规范手册 `cp_ref.md` / `cp_agent_ref.md` 实时同步。
 - **测试验证**：所有新增及存量测试全部 100% 通过。
 
 ## 2026-11-17: Implementing Col & Pack Modules

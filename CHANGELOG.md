@@ -1091,6 +1091,9 @@
   - 新增独立文档 `docs/stdlib/ptr.md` 与测试 `cap/test/test_ptr.cp` (8/8 PASS)。
 - [feat(encoding)]: 全面补全 `lib/encoding/base64.cp`，支持 `decodeInPlace` 零堆分配原地解码与 4 种 `Codecs` 预设工厂；新增 `docs/stdlib/encoding.md` 与测试 `cap/test/test_encoding_complete.cp` (4/4 PASS)。
 - [feat(sourcemap)]: 全量补齐 `lib/sourcemap/`（`vlq.cp`, `line_offset.cp`, `mapping.cp`, `internal_source_map.cp`, `chunk.cp`, `parsed_source_map.cp`, `sourcemap.cp`, `index.cp`），新增 `docs/stdlib/sourcemap.md` 与测试 `cap/test/test_sourcemap_complete.cp` (5/5 PASS)。
+- [feat(path)]: 全量吸收重构 `lib/path/`（`buffer_pool.cp`, `env_path.cp`, `index.cp`, `path.cp`, `posix.cp`, `resolve.cp`, `windows.cp`），完备 POSIX/Windows 规范化、零分配缓冲池与 EnvPath 迭代器，新增 `docs/stdlib/path.md` 与测试 `cap/test/test_path_complete.cp` (5/5 PASS)。
+- [feat(event_loop)]: 从 Bun 吸收构建统一事件循环标准库 `lib/event_loop/`（`auto_flusher.cp`, `concurrent_task.cp`, `deferred_task_queue.cp`, `index.cp`, `loop.cp`, `task.cp`, `timer.cp`），新增 `docs/stdlib/event_loop.md` 与测试 `cap/test/test_event_loop_complete.cp` (6/6 PASS)。
+- [fix(cpc)]: 升级 `cpc/src/resolver.rs`，使 `cap:event_loop` 独立精确映射至 `lib/event_loop/`。
 - [feat(url)]: 全面补全 WHATWG URL 标准库 `lib/url/`（`percent.cp`, `search_params.cp`, `query.cp`, `url.cp`, `index.cp`），支持 IPv6 方括号主机、URLSearchParams 排序与百分号编解码，新增 `docs/stdlib/url.md` 与测试 `cap/test/test_url_complete.cp` (6/6 PASS)。
 - [feat(safety)]: 从 Bun 吸收构建生产级并发安全与诊断标准库 `lib/safety/`（`thread_id.cp`, `ThreadLock.cp`, `CriticalSection.cp`, `asan.cp`, `alloc.cp`, `safety.cp`, `index.cp`），新增 `docs/stdlib/safety.md` 与测试 `cap/test/test_safety_complete.cp` (5/5 PASS)。
 - [feat(clap)]: 从 Bun 吸收构建 `lib/clap/`（`args.cp`, `streaming.cp`, `comptime.cp`, `clap.cp`, `index.cp`），新增 `docs/stdlib/clap.md` 与测试 `cap/test/test_clap_complete.cp` (6/6 PASS)。

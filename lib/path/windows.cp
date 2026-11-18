@@ -1,6 +1,20 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
-// lib/path/windows.cp
-// Windows path utilities in CP
+// Source: bun/src/paths/Path.cp
+// ============================================================================
+// lib/path/windows.cp — Windows (Win32) Path Implementation (cap:path)
+// ============================================================================
+
+const std = @import("std");
+import {
+    isSeparatorWindows,
+    checkIsDriveLetter,
+    windowsVolumeName,
+    isAbsoluteWindows,
+    normalizeWindows,
+    joinWindows,
+    resolveWindows,
+    relativeWindows,
+    longestCommonPathWindows,
+} from "./resolve";
 
 pub const WindowsPath = struct {
     pub const sep: u8 = '\\';
@@ -8,17 +22,19 @@ pub const WindowsPath = struct {
     pub const delimiter: u8 = ';';
 
     pub fn isSeparator(c: u8): bool {
-        return c == '/' or c == '\\';
+        return isSeparatorWindows(c);
+    }
+
+    pub fn isDriveLetter(c: u8): bool {
+        return checkIsDriveLetter(c);
+    }
+
+    pub fn volumeName(filepath: []const u8): []const u8 {
+        return windowsVolumeName(filepath);
     }
 
     pub fn isAbsolute(filepath: []const u8): bool {
-        if (filepath.len >= 2 and isSeparator(filepath[0]) and isSeparator(filepath[1])) {
-            return true; // UNC path \\server\share
-        }
-        if (filepath.len >= 3 and std.ascii.isAlphabetic(filepath[0]) and filepath[1] == ':' and isSeparator(filepath[2])) {
-            return true; // Drive root C:\
-        }
-        return false;
+        return isAbsoluteWindows(filepath);
     }
 
     pub fn basename(filepath: []const u8, ext: ([]const u8)?): []const u8 {
@@ -57,9 +73,13 @@ pub const WindowsPath = struct {
         }
         if (p.len == 0) return ".";
 
+        let vol = volumeName(p);
+        if (p.len == vol.len) return p;
+        if (p.len == vol.len + 1 and isSeparator(p[vol.len])) return p;
+
         let last_slash: usize? = null;
         let i: usize = p.len;
-        while (i > 0) {
+        while (i > vol.len) {
             i -= 1;
             if (isSeparator(p[i])) {
                 last_slash = i;
@@ -68,10 +88,17 @@ pub const WindowsPath = struct {
         }
 
         if (idx := last_slash) {
-            if (idx == 0) return "\\";
-            if (idx == 2 and p[1] == ':') return p[0..3]; // C:\
-            return p[0..idx];
+            if (idx == vol.len) {
+                return p[0 .. vol.len + 1];
+            }
+            let end_idx = idx;
+            while (end_idx > vol.len + 1 and isSeparator(p[end_idx - 1])) {
+                end_idx -= 1;
+            }
+            return p[0 .. end_idx];
         }
+
+        if (vol.len > 0) return vol;
         return ".";
     }
 
@@ -84,9 +111,29 @@ pub const WindowsPath = struct {
             i -= 1;
             if (base[i] == '.') {
                 if (i == 0) return "";
-                return base[i..];
+                return base[i ..];
             }
         }
         return "";
+    }
+
+    pub fn normalize(filepath: []const u8, buf: []u8): []const u8 {
+        return normalizeWindows(filepath, buf);
+    }
+
+    pub fn join(paths: []const []const u8, buf: []u8): []const u8 {
+        return joinWindows(paths, buf);
+    }
+
+    pub fn resolve(paths: []const []const u8, buf: []u8): []const u8 {
+        return resolveWindows(paths, buf);
+    }
+
+    pub fn relative(from_path: []const u8, to_path: []const u8, buf: []u8): []const u8 {
+        return relativeWindows(from_path, to_path, buf);
+    }
+
+    pub fn longestCommonPath(paths: []const []const u8): []const u8 {
+        return longestCommonPathWindows(paths);
     }
 };
