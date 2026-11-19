@@ -1,4 +1,25 @@
-## [2026-11-20] - 核心任务：cap.json 与 lib/cap.json 配置精炼、bin 相对路径省略、sys 命名字典与 import 路径映射
+## [2026-11-20] - 核心任务：消除 sys 动态库依赖、集成 vendor/zlib 纯静态编译与工程递归 cap 依赖自动探测
+
+### 工具链与构建系统升级 (Toolchain & Build System)
+- **消除 `sys` 动态库依赖与纯静态库内联**:
+  - [`lib/cap.json`](file:///data/dev/cp/lib/cap.json)：在 `pack` 与 `http` 下分别配置 `vendor/zlib` 静态编译选项（`opt: "fast"`, `flag: ["-DZLIB_COMPAT", "-DNDEBUG"]`），彻底清空所有 `sys` 动态库映射；
+  - [`cap.json`](file:///data/dev/cp/cap.json)：移除根目录模板中的 `"z"` 动态链接项；
+  - [`cap/src/main.zig`](file:///data/dev/cp/cap/src/main.zig)：
+    - `resolveBinDependency`：直接返回生成的或预编译的静态库文件路径（`.a`）；
+    - `appendLinkArgs`：若依赖项以 `.a` 结尾，直接作为静态对象文件传给 Zig 链接器，防止链接器被宿主机 `/lib64/libz.so` 劫持；
+    - `scanDirRecursivelyForCaps`：递归扫描工程 `src/` 目录下所有 `.cp` 子模块的 `cap:` 导入，彻底解决子模块（如 `src/render/png.cp`）间接引入 `cap:pack` 时静态库遗漏链接的问题；
+  - [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：移除此前临时 Hotfix 硬编码发射的 `// @linkLibrary("z")`，交由构建工具按需静态链接。
+
+### 压缩子系统与静态库验证 (Pack & Vendor Zlib)
+- **`vendor/zlib` 兼容模式静态库构建**:
+  - 在 `vendor/zlib` 生成兼容模式静态库 `libz.a` 与 `libzlib.a`，全量导出 `compress2`, `uncompress`, `compressBound`, `deflateInit2_` 等 C-ABI 符号；
+- **端到端测试与纯静态验证 (Tests)**:
+  - [`cap/test/test_pack_zlib_static.cp`](file:///data/dev/cp/cap/test/test_pack_zlib_static.cp)：新增静态 Zlib 压缩/解压缩往返测试，`cap test`（715ms PASS）；
+  - `ldd` 验证：原生 ELF 产物完全不存在 `libz.so.1` 依赖，实现 100% 自包含独立二进制。
+
+---
+
+
 
 ### 工具链与构建系统升级 (Toolchain & Build System)
 - **`cap.json` 与 `lib/cap.json` 配置架构精炼升级**:

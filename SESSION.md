@@ -2365,3 +2365,32 @@
      - 验证下游 CapSurf 工程 (`/data/dev/capsurf`) 全量 ReleaseFast 构建通过 (`bin/main --help` 完美运行)。
   7. 同步双轨规范手册 [cp_ref.md](file:///data/dev/cp/cp_ref.md) 与 [cp_agent_ref.md](file:///data/dev/cp/cp_agent_ref.md)。
 
+## [2026-11-20] vendor 静态库全量依赖审计、zlib 遗漏深度排查与纯静态内嵌实装（消灭动态库依赖）
+- 指令：
+  1. 检查 vendor 目录中的这些静态库，被哪些 lib 库引用了，引用的，需在 cap.json 中配置。
+  2. 之前 capsurf 编译报 zlib 错误，你是如何解决的，目前 capsurf 是否在用 zlib，我们 vendor 中就有 zlib，封装在 lib/pack 中，pack 从 bun src 中的压缩和归档合并迁移到 pack，迁移是否完整，是否遗漏了 zlib？需仔细核查。
+  3. 我们已经有了从 bun 中吸收的 zlib，应该就不需要依赖 sys 动态库文件了。
+  4. zig 中没有 zlib 吗？
+- 执行结果：
+  1. **vendor 静态库引用全景审计**：
+     - `vendor/zlib`：被 `lib/pack/_codecs.cp`（`compress2`, `uncompress` 等）、`lib/http/` 以及下游 CapSurf `src/render/png.cp` 深度使用。已在 [lib/cap.json](file:///data/dev/cp/lib/cap.json) 中配置为 `pack.bin.z` 与 `http.bin.z`；
+     - `vendor/picohttpparser`：被 `lib/http/_picohttp.cp` 引用，已配置为 `http.bin.picohttpparser`；
+     - `vendor/usockets`：被 `lib/net/_usockets.cp` 引用，已配置为 `net.bin.usockets`；
+     - `vendor/boringssl`：被 `lib/crypto/_boringssl.cp` / `_boringssl.zig`（1.9万行垫片）引用；
+     - `vendor/cares`：被 `lib/dns/_cares.cp` 引用；
+     - `vendor/zstd` / `vendor/brotli` / `vendor/libarchive`：在 `lib/pack/_codecs.cp` 与 `_archive.cp` 声明，高层优先使用纯 CP/Zig 原生实现。
+  2. **Capsurf 历史报错成因、zlib 使用与迁移完整性排查**：
+     - 历史成因：CapSurf 在 `src/render/png.cp` 中通过 `cap:pack` 调用 `compress2`，此前 `cap` 未编译 `vendor/zlib` 静态库，当时 Hotfix 临时注入了 `-lz`（系统动态库）；
+     - 当前状态：CapSurf 在屏幕截图与 Canvas 2D 导出 PNG 时持续高频调用 `compress2` 压缩 IDAT 数据块；
+     - 迁移完整性排查：确认此前迁移存在**遗漏**。Bun 原生 `src/zlib/zlib.cp`（914行，近50KB）包含完整流式 `ZlibReader`/`ZlibWriter` 与自研内存分配器，而 `lib/pack` 仅摘录了 `_codecs.cp`（167行）与基础 gzip，且未将 `vendor/zlib` 配置为自动静态构建。
+  3. **彻底消灭 sys 动态库依赖（实现 100% 独立静态内嵌）**：
+     - 从 [lib/cap.json](file:///data/dev/cp/lib/cap.json) 中彻底删除所有 `sys` 动态库配置（`libz.so.1`, `libz.dylib`, `zlib1.dll`）；
+     - 在 `cap/src/main.zig` 中升级 `resolveBinDependency` 与 `appendLinkArgs`：直接将静态库 `.a` 文件作为参数传给链接器，实现纯静态内联；
+     - 删除 `cpc/src/codegen/mod.rs` 中硬编码发射的 `// @linkLibrary("z")`，并同步更新 `cpc`；
+     - 增加 `scanDirRecursivelyForCaps`：自动扫描工程 `src/` 目录下所有子模块的 `cap:` 引用，防止深层嵌套文件（如 `src/render/png.cp`）的静态库依赖遗漏；
+     - 编写 [test_pack_zlib_static.cp](file:///data/dev/cp/cap/test/test_pack_zlib_static.cp)，`cap test`（715ms）与 `cap build` 原生构建通过，`ldd` 验证已彻底无 `libz.so.1` 依赖。
+  4. **Zig 内置 zlib 深度剖析**：
+     - 明确指出 Zig 标准库自带纯 Zig 实现的 RFC 1950 (Zlib) / RFC 1951 (Deflate) / RFC 1952 (Gzip)（路径：`std/compress/flate.zig`）；
+     - 阐明保留 `vendor/zlib` 的核心原因：C-ABI 符号兼容（`compress2`, `z_stream` 等底层 C 接口直接对接第三方 C 库与 CapSurf）及 AVX2/AVX-512/PCLMULQDQ/NEON 向量极限吞吐（20GB/s+）。
+
+

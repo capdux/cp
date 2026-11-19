@@ -397,7 +397,6 @@ impl Codegen {
         for path in linker_paths {
             self.writeln(&format!("// @linkPath(\"{}\")", path));
         }
-        self.writeln("// @linkLibrary(\"z\")");
 
         let mut class_order = Vec::new();
         let mut impl_decls = Vec::new();

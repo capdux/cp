@@ -660,7 +660,7 @@ fn loadCentralLibIndex(allocator: std.mem.Allocator) ?manifest.CentralLibIndex {
     return null;
 }
 
-fn scanSourceForCapImports(allocator: std.mem.Allocator, file_path: []const u8, imported_caps: *std.StringHashMap(void)) void {
+fn scanBufferForCapImports(allocator: std.mem.Allocator, file_path: []const u8, imported_caps: *std.StringHashMap(void)) void {
     const content = fs_shim.cwd().readFileAlloc(allocator, file_path, 2 * 1024 * 1024) catch return;
     defer allocator.free(content);
 
@@ -674,6 +674,40 @@ fn scanSourceForCapImports(allocator: std.mem.Allocator, file_path: []const u8, 
             imported_caps.put(allocator.dupe(u8, mod_name) catch continue, {}) catch {};
         }
         cursor = end;
+    }
+}
+
+fn scanDirRecursivelyForCaps(allocator: std.mem.Allocator, dir_path: []const u8, imported_caps: *std.StringHashMap(void)) void {
+    var dir = fs_shim.cwd().openDir(dir_path, .{ .iterate = true }) catch return;
+    defer dir.close(global_io);
+    var iter = dir.iterate();
+    while (iter.next(global_io) catch null) |entry| {
+        if (entry.kind == .directory) {
+            if (!std.mem.eql(u8, entry.name, ".cap") and !std.mem.eql(u8, entry.name, "zig-cache") and !std.mem.eql(u8, entry.name, "node_modules")) {
+                const sub_path = std.fmt.allocPrint(allocator, "{s}/{s}", .{ dir_path, entry.name }) catch continue;
+                defer allocator.free(sub_path);
+                scanDirRecursivelyForCaps(allocator, sub_path, imported_caps);
+            }
+        } else if (entry.kind == .file and std.mem.endsWith(u8, entry.name, ".cp")) {
+            const sub_file = std.fmt.allocPrint(allocator, "{s}/{s}", .{ dir_path, entry.name }) catch continue;
+            defer allocator.free(sub_file);
+            scanBufferForCapImports(allocator, sub_file, imported_caps);
+        }
+    }
+}
+
+fn scanSourceForCapImports(allocator: std.mem.Allocator, file_path: []const u8, imported_caps: *std.StringHashMap(void)) void {
+    scanBufferForCapImports(allocator, file_path, imported_caps);
+
+    if (std.mem.startsWith(u8, file_path, ".cap/zig/") and std.mem.endsWith(u8, file_path, ".zig")) {
+        const rel_stem = file_path[".cap/zig/".len .. file_path.len - 4];
+        const cp_path = std.fmt.allocPrint(allocator, "{s}.cp", .{rel_stem}) catch return;
+        defer allocator.free(cp_path);
+        scanBufferForCapImports(allocator, cp_path, imported_caps);
+    }
+
+    if (fs_shim.cwd().statFile("src") catch null != null) {
+        scanDirRecursivelyForCaps(allocator, "src", imported_caps);
     }
 }
 
@@ -887,8 +921,7 @@ fn resolveBinDependency(
     // Check if already exists
     for (candidates[0..cand_count]) |cand| {
         if (fs_shim.cwd().statFile(cand) catch null != null) {
-            const dir = std.Io.Dir.path.dirname(cand) orelse ".";
-            return try allocator.dupe(u8, dir);
+            return try allocator.dupe(u8, cand);
         }
     }
 
@@ -901,7 +934,11 @@ fn resolveBinDependency(
         try allocator.dupe(u8, ".cap/lib");
     defer allocator.free(out_dir);
 
-    return try buildCWithZig(allocator, name, cfg, target_triple, opt_mode, out_dir);
+    if (try buildCWithZig(allocator, name, cfg, target_triple, opt_mode, out_dir)) |compiled_dir| {
+        allocator.free(compiled_dir);
+        return try std.fmt.allocPrint(allocator, "{s}/lib{s}.a", .{ out_dir, name });
+    }
+    return null;
 }
 
 fn precompilePackageBinDeps(allocator: std.mem.Allocator, pkg_path: []const u8) !void {
@@ -944,39 +981,56 @@ fn appendLinkArgs(
         while (bd_iter.next()) |entry| {
             const dep_name = entry.key_ptr.*;
             const dep_cfg = entry.value_ptr.*;
-            if (std.mem.eql(u8, dep_name, "quickjs")) {
-                if (resolveBinDependency(allocator, "qjs", dep_cfg, target_triple, opt_mode)) |dir_opt| {
-                    if (dir_opt) |dir| {
-                        const ldir = try std.fmt.allocPrint(allocator, "-L{s}", .{dir});
-                        if (allocated_libs_len.* < 64) {
-                            allocated_libs[allocated_libs_len.*] = ldir;
-                            allocated_libs_len.* += 1;
+            if (std.mem.eql(u8, dep_name, "quickjs") or std.mem.eql(u8, dep_name, "qjs")) {
+                if (resolveBinDependency(allocator, "qjs", dep_cfg, target_triple, opt_mode)) |path_opt| {
+                    if (path_opt) |path| {
+                        if (std.mem.endsWith(u8, path, ".a")) {
+                            const llib = try allocator.dupe(u8, path);
+                            if (allocated_libs_len.* < 64) {
+                                allocated_libs[allocated_libs_len.*] = llib;
+                                allocated_libs_len.* += 1;
+                            }
+                            addArg(args_buf, argc, llib);
+                            addArg(args_buf, argc, "-lm");
+                        } else {
+                            const ldir = try std.fmt.allocPrint(allocator, "-L{s}", .{path});
+                            if (allocated_libs_len.* < 64) {
+                                allocated_libs[allocated_libs_len.*] = ldir;
+                                allocated_libs_len.* += 1;
+                            }
+                            addArg(args_buf, argc, ldir);
+                            addArg(args_buf, argc, "-lqjs");
+                            addArg(args_buf, argc, "-lm");
                         }
-                        addArg(args_buf, argc, ldir);
-                        addArg(args_buf, argc, "-lqjs");
-                        addArg(args_buf, argc, "-lm");
-                        allocator.free(dir);
+                        allocator.free(path);
                     }
                 } else |_| {}
-            } else if (std.mem.eql(u8, dep_name, "zlib") or std.mem.eql(u8, dep_name, "z")) {
-                addArg(args_buf, argc, "-lz");
             } else {
-                if (resolveBinDependency(allocator, dep_name, dep_cfg, target_triple, opt_mode)) |dir_opt| {
-                    if (dir_opt) |dir| {
-                        const ldir = try std.fmt.allocPrint(allocator, "-L{s}", .{dir});
-                        if (allocated_libs_len.* < 64) {
-                            allocated_libs[allocated_libs_len.*] = ldir;
-                            allocated_libs_len.* += 1;
-                        }
-                        addArg(args_buf, argc, ldir);
+                if (resolveBinDependency(allocator, dep_name, dep_cfg, target_triple, opt_mode)) |path_opt| {
+                    if (path_opt) |path| {
+                        if (std.mem.endsWith(u8, path, ".a")) {
+                            const llib = try allocator.dupe(u8, path);
+                            if (allocated_libs_len.* < 64) {
+                                allocated_libs[allocated_libs_len.*] = llib;
+                                allocated_libs_len.* += 1;
+                            }
+                            addArg(args_buf, argc, llib);
+                        } else {
+                            const ldir = try std.fmt.allocPrint(allocator, "-L{s}", .{path});
+                            if (allocated_libs_len.* < 64) {
+                                allocated_libs[allocated_libs_len.*] = ldir;
+                                allocated_libs_len.* += 1;
+                            }
+                            addArg(args_buf, argc, ldir);
 
-                        const llib = try std.fmt.allocPrint(allocator, "-l{s}", .{dep_name});
-                        if (allocated_libs_len.* < 64) {
-                            allocated_libs[allocated_libs_len.*] = llib;
-                            allocated_libs_len.* += 1;
+                            const llib = try std.fmt.allocPrint(allocator, "-l{s}", .{dep_name});
+                            if (allocated_libs_len.* < 64) {
+                                allocated_libs[allocated_libs_len.*] = llib;
+                                allocated_libs_len.* += 1;
+                            }
+                            addArg(args_buf, argc, llib);
                         }
-                        addArg(args_buf, argc, llib);
-                        allocator.free(dir);
+                        allocator.free(path);
                     }
                 } else |_| {}
             }
@@ -1045,22 +1099,31 @@ fn appendLinkArgs(
                 while (b_iter.next()) |b_entry| {
                     const bin_name = b_entry.key_ptr.*;
                     const bin_cfg = b_entry.value_ptr.*;
-                    if (resolveBinDependency(allocator, bin_name, bin_cfg, target_triple, opt_mode)) |dir_opt| {
-                        if (dir_opt) |dir| {
-                            const ldir = try std.fmt.allocPrint(allocator, "-L{s}", .{dir});
-                            if (allocated_libs_len.* < 64) {
-                                allocated_libs[allocated_libs_len.*] = ldir;
-                                allocated_libs_len.* += 1;
-                            }
-                            addArg(args_buf, argc, ldir);
+                    if (resolveBinDependency(allocator, bin_name, bin_cfg, target_triple, opt_mode)) |path_opt| {
+                        if (path_opt) |path| {
+                            if (std.mem.endsWith(u8, path, ".a")) {
+                                const llib = try allocator.dupe(u8, path);
+                                if (allocated_libs_len.* < 64) {
+                                    allocated_libs[allocated_libs_len.*] = llib;
+                                    allocated_libs_len.* += 1;
+                                }
+                                addArg(args_buf, argc, llib);
+                            } else {
+                                const ldir = try std.fmt.allocPrint(allocator, "-L{s}", .{path});
+                                if (allocated_libs_len.* < 64) {
+                                    allocated_libs[allocated_libs_len.*] = ldir;
+                                    allocated_libs_len.* += 1;
+                                }
+                                addArg(args_buf, argc, ldir);
 
-                            const llib = try std.fmt.allocPrint(allocator, "-l{s}", .{bin_name});
-                            if (allocated_libs_len.* < 64) {
-                                allocated_libs[allocated_libs_len.*] = llib;
-                                allocated_libs_len.* += 1;
+                                const llib = try std.fmt.allocPrint(allocator, "-l{s}", .{bin_name});
+                                if (allocated_libs_len.* < 64) {
+                                    allocated_libs[allocated_libs_len.*] = llib;
+                                    allocated_libs_len.* += 1;
+                                }
+                                addArg(args_buf, argc, llib);
                             }
-                            addArg(args_buf, argc, llib);
-                            allocator.free(dir);
+                            allocator.free(path);
                         }
                     } else |_| {}
                 }

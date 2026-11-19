@@ -28,6 +28,9 @@ _ref/
 *.exe
 *.out
 *.app
+*.tmp
+*.log
+*.map
 
 # Backup
 **/*.bk

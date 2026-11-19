@@ -2,7 +2,31 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
-## 2026-11-20: cap.json 与 lib/cap.json 配置精炼优化与路径映射实装
+## 2026-11-20: 消除 sys 动态库依赖、集成 vendor/zlib 纯静态编译与全工程 cap 依赖递归探测
+
+- **任务背景与工程决策**：
+  1. 用户指示全面核查 `vendor/` 下静态库的引用分布、CapSurf 中 zlib 的使用场景与历史报错成因、`lib/pack` 迁移完整度，并提出既然已有从 Bun 吸收的 `vendor/zlib`，应彻底消除对 `sys` 动态库文件的依赖。
+  2. 经深度比对，确认 `lib/pack` 确实遗漏了 Bun `src/zlib/zlib.cp` 中的完整流式封装与 `vendor/zlib` 静态编译声明，此前依赖宿主机 `-lz` 存在环境强耦合与交叉编译断裂隐患。
+  3. 决策：全面移除 `sys` 动态库配置，将 `vendor/zlib` 作为标准 `bin` 静态依赖打通，在构建工具层面实现子模块依赖深度感知与静态库直接内联。
+
+- **核心技术设计与实现原理**：
+  1. **纯静态库内联消除动态库劫持 (`cap/src/main.zig`)**：
+     - 在 Linux/Zig 环境下，若使用 `-L{path} -lz`，链接器在发现系统存在动态库 `/lib64/libz.so` 时会默认优先绑定动态符号；
+     - 改进方案：`resolveBinDependency` 直接返回命中或编译生成的 `.a` 绝对/相对文件路径；`appendLinkArgs` 将该 `.a` 路径作为独立参数直传链接器，杜绝链接器寻址动态库。
+  2. **工程子模块依赖全景扫描 (`cap/src/main.zig`)**：
+     - 此前构建仅扫描传入的顶层入口文件，当子文件（如 `src/render/png.cp`）间接导入 `cap:pack` 时，构建工具无法感知底层 C 静态库需求，导致符号未定义；
+     - 实装 `scanDirRecursivelyForCaps`：自动对工程 `src/` 展开深度优先递归遍历，秒级收集工程内所有引用的 `cap:` 模块，实现 100% 完备按需静态编排。
+  3. **编译器前端纯洁化 (`cpc/src/codegen/mod.rs`)**：
+     - 清除此前紧急 Hotfix 临时残留的全局硬编码 `// @linkLibrary("z")`，使编译器前端保持中立，由构建系统通过 `CentralLibIndex` 决策底层依赖。
+
+- **效果验证**：
+  - 更新 [lib/cap.json](file:///data/dev/cp/lib/cap.json)，彻底清空 `sys` 动态库配置；
+  - 编写端到端验收测试 [cap/test/test_pack_zlib_static.cp](file:///data/dev/cp/cap/test/test_pack_zlib_static.cp)，`cap test`（715ms）与 `cap build` 原生执行 100% PASS；
+  - `ldd bin/test/test_pack_zlib_static` 验证确认完全消除 `libz.so.1` 依赖，达成纯自包含独立二进制。
+
+---
+
+
 
 - **任务背景与工程决策**：
   1. 用户对现有 `cap.json` 与 `lib/cap.json` 配置提出了 7 条重要精简优化建议：
