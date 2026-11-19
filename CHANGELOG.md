@@ -1281,6 +1281,11 @@ hotfix: resolve keyword conflict for "test" and prevent redundant re-export of i
 - **lib/pack/gzip.cp（第二阶段流式分块增强）**:
   - 新增 `GzipStream`、`GunzipStream`、`DeflateStream`、`InflateStream` 四大流式分块管道，文件由 344 行扩充至 808 行。
   - 采用堆安全分配机制保证底层 `ZStream` 指针稳定性，消除状态机指针悬空。
-- **cap/test/test_pack_gzip_complete.cp**:
-  - 新增 Test 7 验证双向分块流式压缩与解压闭环。
+- **lib/pack/gzip.cp（DRY 架构收敛）**:
+  - 抽离 `ZlibStreamCompressor` 与 `ZlibStreamDecompressor` 通用状态机，消除 160+ 行重复实现。
+  - 行数由 808 行精炼收敛至 647 行，保持 100% 接口与行为兼容。
+- **docs/pack/zlib.md & docs/pack/zlig.md**:
+  - 新建 `docs/pack/` 目录，编写全套 Zlib/Gzip 详细开发手册与使用指南。
+- **docs/stdlib/pack_native.md**:
+  - 更新索引指向 `docs/pack/zlib.md`。
 

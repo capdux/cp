@@ -1648,3 +1648,16 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
 - 验证：
   - `cap/test/test_pack_gzip_complete.cp` 新增 Test 7 验证双向分块流式压缩与解压闭环，测试 100% PASS（753ms）。
 
+### 第三阶段：DRY 架构收敛（由 808 行精炼至 647 行）与详细文档 docs/pack/zlib.md 落盘
+- 808 行代码冗余排查：
+  审计发现流式处理部分（`GzipStream`、`GunzipStream`、`DeflateStream`、`InflateStream`）重复编写了几乎相同的底层 `NativeZlib.deflate` 与 `NativeZlib.inflate` 循环逻辑。
+- DRY 重构策略：
+  1. 抽象通用参数化状态机：`ZlibStreamCompressor` 与 `ZlibStreamDecompressor`；
+  2. `GzipStream` / `DeflateStream` 以及 `GunzipStream` / `InflateStream` 提炼为优雅的工厂静态方法，直接调用通用状态机；
+  3. `lib/pack/gzip.cp` 成功消除 161 行重复代码，收敛至 **647 行**；
+  4. 阐明多出 Bun 的 ~100 行属于 CP 独有的高阶安全特性：`GzipHeader`（71行，RFC 1952 头尾解析生成与校验）、高级单发 API 与面向对象包装矩阵（50行）以及 `RleCodec`（54行）。
+- 文档中心化治理：
+  1. 恪守 `cp_ref.md` 与 `cp_agent_ref.md` 仅收录高密度语法契约与索引矩阵的设计铁律；
+  2. 建立 `docs/pack/` 目录并撰写全套官方使用说明 `docs/pack/zlib.md`（包含架构设计、快速入门、分块流式管道、RFC 1952 头尾校验、WindowBits 矩阵与 Node/Bun 兼容对照表）；
+  3. 建立 `docs/pack/zlig.md` 兼容指针，并在 `docs/stdlib/pack_native.md` 中打通跳转。
+

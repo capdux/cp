@@ -370,17 +370,18 @@ pub struct DeflateRawCodec {
 }
 
 // ============================================================================
-// 7. 流式分块压缩与解压引擎 (Streaming Chunked Pipeline)
+// 7. 流式分块压缩与解压通用引擎 (Streaming Chunked Pipeline)
 // 对标 Bun 中的 NewZlibReader 与 ZlibCompressorArrayList，支持分块读写与超大文件流
 // ============================================================================
 
-pub class GzipStream {
+/// 通用流式压缩状态机（支持 Gzip / Deflate / RawDeflate 多模式参数驱动）
+pub class ZlibStreamCompressor {
     strm: ZStream,
     is_active: bool = false,
 
-    pub static fn create(level: i32 = 6, window_bits: i32 = WINDOW_BITS_GZIP): (*GzipStream)? {
-        let raw: [*]u8 = @alloc(@sizeOf(GzipStream));
-        let comp: *GzipStream = @ptrCast(@alignCast(raw));
+    pub static fn create(window_bits: i32 = WINDOW_BITS_GZIP, level: i32 = 6): (*ZlibStreamCompressor)? {
+        let raw: [*]u8 = @alloc(@sizeOf(ZlibStreamCompressor));
+        let comp: *ZlibStreamCompressor = @ptrCast(@alignCast(raw));
         comp.strm = ZStream{
             next_in: null,
             avail_in: 0,
@@ -462,13 +463,14 @@ pub class GzipStream {
     }
 }
 
-pub class GunzipStream {
+/// 通用流式解压状态机（支持 Gzip / Deflate / RawDeflate / Auto 嗅探与动态扩容）
+pub class ZlibStreamDecompressor {
     strm: ZStream,
     is_active: bool = false,
 
-    pub static fn create(window_bits: i32 = WINDOW_BITS_AUTO): (*GunzipStream)? {
-        let raw: [*]u8 = @alloc(@sizeOf(GunzipStream));
-        let decomp: *GunzipStream = @ptrCast(@alignCast(raw));
+    pub static fn create(window_bits: i32 = WINDOW_BITS_AUTO): (*ZlibStreamDecompressor)? {
+        let raw: [*]u8 = @alloc(@sizeOf(ZlibStreamDecompressor));
+        let decomp: *ZlibStreamDecompressor = @ptrCast(@alignCast(raw));
         decomp.strm = ZStream{
             next_in: null,
             avail_in: 0,
@@ -517,7 +519,7 @@ pub class GunzipStream {
 
         let initial_total: usize = _.strm.total_out;
         while (_.strm.avail_in > 0) {
-            let ret = NativeZlib.inflate(&_.strm, 2); // Z_SYNC_FLUSH
+            let ret = NativeZlib.inflate(&_.strm, 2); // 2 = Z_SYNC_FLUSH
             if (ret == 1 || ret != 0) {
                 break;
             }
@@ -551,200 +553,37 @@ pub class GunzipStream {
         _.strm.avail_out = out_cap as u32;
 
         let initial_total: usize = _.strm.total_out;
-        * = NativeZlib.inflate(&_.strm, 4); // Z_FINISH
+        * = NativeZlib.inflate(&_.strm, 4); // 4 = Z_FINISH
         let produced: usize = _.strm.total_out - initial_total;
 
         * = NativeZlib.inflateEnd(&_.strm);
         _.is_active = false;
 
         return out_buf[0..produced];
+    }
+}
+
+pub class GzipStream {
+    pub static fn create(level: i32 = 6, window_bits: i32 = WINDOW_BITS_GZIP): (*ZlibStreamCompressor)? {
+        return ZlibStreamCompressor.create(window_bits, level);
+    }
+}
+
+pub class GunzipStream {
+    pub static fn create(window_bits: i32 = WINDOW_BITS_AUTO): (*ZlibStreamDecompressor)? {
+        return ZlibStreamDecompressor.create(window_bits);
     }
 }
 
 pub class DeflateStream {
-    strm: ZStream,
-    is_active: bool = false,
-
-    pub static fn create(level: i32 = 6): (*DeflateStream)? {
-        let raw: [*]u8 = @alloc(@sizeOf(DeflateStream));
-        let comp: *DeflateStream = @ptrCast(@alignCast(raw));
-        comp.strm = ZStream{
-            next_in: null,
-            avail_in: 0,
-            total_in: 0,
-            next_out: null,
-            avail_out: 0,
-            total_out: 0,
-            msg: null,
-            state: null,
-            zalloc: null,
-            zfree: null,
-            opaque_ctx: null,
-            data_type: 0,
-            adler: 0,
-            reserved: 0,
-        };
-        comp.is_active = false;
-
-        let rc = NativeZlib.deflateInit2_(
-            &comp.strm,
-            level,
-            GZIP_METHOD_DEFLATE as i32,
-            WINDOW_BITS_ZLIB,
-            8,
-            0,
-            zlibVersion(),
-            @sizeOf(ZStream) as i32,
-        );
-
-        if (rc != 0) {
-            return null;
-        }
-
-        comp.is_active = true;
-        return comp;
-    }
-
-    pub fn write(*_, chunk: []const u8): []u8 {
-        if (!_.is_active || chunk.len == 0) {
-            return "";
-        }
-
-        _.strm.next_in = chunk.ptr;
-        _.strm.avail_in = chunk.len as u32;
-
-        let out_cap: usize = chunk.len + 256;
-        let out_buf: [*]u8 = @alloc(out_cap);
-        _.strm.next_out = out_buf;
-        _.strm.avail_out = out_cap as u32;
-
-        let initial_total: usize = _.strm.total_out;
-        * = NativeZlib.deflate(&_.strm, 2);
-        let produced: usize = _.strm.total_out - initial_total;
-
-        return out_buf[0..produced];
-    }
-
-    pub fn finish(*_): []u8 {
-        if (!_.is_active) {
-            return "";
-        }
-
-        _.strm.next_in = null;
-        _.strm.avail_in = 0;
-
-        let out_cap: usize = 256;
-        let out_buf: [*]u8 = @alloc(out_cap);
-        _.strm.next_out = out_buf;
-        _.strm.avail_out = out_cap as u32;
-
-        let initial_total: usize = _.strm.total_out;
-        * = NativeZlib.deflate(&_.strm, 4);
-        let produced: usize = _.strm.total_out - initial_total;
-
-        * = NativeZlib.deflateEnd(&_.strm);
-        _.is_active = false;
-
-        return out_buf[0..produced];
+    pub static fn create(level: i32 = 6): (*ZlibStreamCompressor)? {
+        return ZlibStreamCompressor.create(WINDOW_BITS_ZLIB, level);
     }
 }
 
 pub class InflateStream {
-    strm: ZStream,
-    is_active: bool = false,
-
-    pub static fn create(): (*InflateStream)? {
-        let raw: [*]u8 = @alloc(@sizeOf(InflateStream));
-        let decomp: *InflateStream = @ptrCast(@alignCast(raw));
-        decomp.strm = ZStream{
-            next_in: null,
-            avail_in: 0,
-            total_in: 0,
-            next_out: null,
-            avail_out: 0,
-            total_out: 0,
-            msg: null,
-            state: null,
-            zalloc: null,
-            zfree: null,
-            opaque_ctx: null,
-            data_type: 0,
-            adler: 0,
-            reserved: 0,
-        };
-        decomp.is_active = false;
-
-        let rc = NativeZlib.inflateInit2_(
-            &decomp.strm,
-            WINDOW_BITS_ZLIB,
-            zlibVersion(),
-            @sizeOf(ZStream) as i32,
-        );
-
-        if (rc != 0) {
-            return null;
-        }
-
-        decomp.is_active = true;
-        return decomp;
-    }
-
-    pub fn write(*_, chunk: []const u8): []u8 {
-        if (!_.is_active || chunk.len == 0) {
-            return "";
-        }
-
-        _.strm.next_in = chunk.ptr;
-        _.strm.avail_in = chunk.len as u32;
-
-        let out_cap: usize = chunk.len * 4 + 1024;
-        let out_buf: [*]u8 = @alloc(out_cap);
-        _.strm.next_out = out_buf;
-        _.strm.avail_out = out_cap as u32;
-
-        let initial_total: usize = _.strm.total_out;
-        while (_.strm.avail_in > 0) {
-            let ret = NativeZlib.inflate(&_.strm, 2);
-            if (ret == 1 || ret != 0) {
-                break;
-            }
-            if (_.strm.avail_out == 0) {
-                let used: usize = _.strm.total_out - initial_total;
-                let next_cap: usize = out_cap * 2;
-                let new_buf: [*]u8 = @alloc(next_cap);
-                @memcpy(new_buf[0..used], out_buf[0..used]);
-                out_buf = new_buf;
-                out_cap = next_cap;
-                _.strm.next_out = &out_buf[used];
-                _.strm.avail_out = (next_cap - used) as u32;
-            }
-        }
-
-        let produced: usize = _.strm.total_out - initial_total;
-        return out_buf[0..produced];
-    }
-
-    pub fn finish(*_): []u8 {
-        if (!_.is_active) {
-            return "";
-        }
-
-        _.strm.next_in = null;
-        _.strm.avail_in = 0;
-
-        let out_cap: usize = 256;
-        let out_buf: [*]u8 = @alloc(out_cap);
-        _.strm.next_out = out_buf;
-        _.strm.avail_out = out_cap as u32;
-
-        let initial_total: usize = _.strm.total_out;
-        * = NativeZlib.inflate(&_.strm, 4);
-        let produced: usize = _.strm.total_out - initial_total;
-
-        * = NativeZlib.inflateEnd(&_.strm);
-        _.is_active = false;
-
-        return out_buf[0..produced];
+    pub static fn create(): (*ZlibStreamDecompressor)? {
+        return ZlibStreamDecompressor.create(WINDOW_BITS_ZLIB);
     }
 }
 

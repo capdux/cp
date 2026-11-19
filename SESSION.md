@@ -2432,4 +2432,19 @@
      - 在 [cap/test/test_pack_gzip_complete.cp](file:///data/dev/cp/cap/test/test_pack_gzip_complete.cp) 中增加 Test 7（双向流式分块压缩与分块解压闭环），`cap test` 100% PASS（753ms）；
      - 同步更新权威手册 [cp_ref.md](file:///data/dev/cp/cp_ref.md) 与智能体契约手册 [cp_agent_ref.md](file:///data/dev/cp/cp_agent_ref.md)。
 
+- 用户指令：
+  1. 你说bun除掉注释, 实际只有 500多行, 我们现在有800多行,为何又多长 300行?
+  2. cp_ref.md 和 cp_agent_ref.md 只能收录简要说明, 详细使用说明, 你写入了 docs/pack/zlig.md 吗?
+- 执行结果：
+  1. **代码冗余消除与 DRY 泛型化重构（消除膨胀的 160+ 行重复代码）**：
+     - 深度审查发现此前 808 行的膨胀原因在于：`GzipStream`、`GunzipStream`、`DeflateStream`、`InflateStream` 各自独立编写了底层循环，其中 `DeflateStream` 与 `GzipStream` 逻辑 100% 相同（仅 `windowBits` 差异），`InflateStream` 与 `GunzipStream` 逻辑 100% 相同；
+     - 抽离出统一的通用参数驱动类：`ZlibStreamCompressor` 与 `ZlibStreamDecompressor`，而 `GzipStream`、`GunzipStream`、`DeflateStream`、`InflateStream` 提炼为优雅的工厂方法；
+     - [lib/pack/gzip.cp](file:///data/dev/cp/lib/pack/gzip.cp) 从 808 行精炼收敛至 **647 行**，彻底消灭冗余，同时保留全量 API 与测试 100% 兼容；
+     - 阐明相比 Bun 纯代码 542 行，CP 额外的 ~100 行来自于 Bun 所没有的特性：完整 RFC 1952 帧头帧尾编解码与验证器 `GzipHeader`（71 行）、单发便捷函数与面向对象包装器 `Gzip`/`Gunzip`/`DeflateCodec`/`InflateCodec`（50 行），以及向后兼容的 `RleCodec`（54 行）；
+  2. **创建官方全景技术文档 [docs/pack/zlib.md](file:///data/dev/cp/docs/pack/zlib.md)**：
+     - 新建目录 `docs/pack/`，完整编撰 [docs/pack/zlib.md](file:///data/dev/cp/docs/pack/zlib.md)（涵盖架构设计、单发极速 API、分块流式管道、RFC 1952 帧头校验、WindowBits 矩阵、内存对齐与指针稳定性、以及与 Node.js `node:zlib` / Bun `bun` 的全景对照表）；
+     - 建立 [docs/pack/zlig.md](file:///data/dev/cp/docs/pack/zlig.md) 指针重定向，并更新 [docs/stdlib/pack_native.md](file:///data/dev/cp/docs/stdlib/pack_native.md) 索引；
+  3. **测试全量验证**：
+     - 执行 `cap test` 验证 `test_pack_gzip_complete.cp`（725ms）与 `test_pack_zlib_static.cp`（722ms），100% 全部 PASS。
+
 
