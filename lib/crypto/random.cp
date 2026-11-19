@@ -1,7 +1,6 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: /data/dev/bun/src/boringssl/boringssl.cp
 // lib/crypto/random.cp
 // Cryptographically secure pseudorandom number generator (CSPRNG) & RFC 4122 v4 UUID
-
 
 pub fn fillRandom(buf: []u8) {
     if (buf.len == 0) return;
@@ -14,14 +13,13 @@ pub fn randomBytes(size: usize): []u8 {
     return buf;
 }
 
-pub fn randomUUID(): string {
+pub fn randomUUIDInto(uuid_buf: *[36]u8) {
     let b: [16]u8 = undefined;
     * = std.os.linux.getrandom(&b, 16, 0);
     b[6] = (b[6] & 0x0f) | 0x40;
     b[8] = (b[8] & 0x3f) | 0x80;
 
     const hex = std.fmt.bytesToHex(b, .lower);
-    let uuid_buf = std.heap.page_allocator.alloc(u8, 36) catch unreachable;
     @memcpy(uuid_buf[0..8], hex[0..8]);
     uuid_buf[8] = 45; // '-'
     @memcpy(uuid_buf[9..13], hex[8..12]);
@@ -31,7 +29,13 @@ pub fn randomUUID(): string {
     @memcpy(uuid_buf[19..23], hex[16..20]);
     uuid_buf[23] = 45;
     @memcpy(uuid_buf[24..36], hex[20..32]);
+}
 
+pub fn randomUUID(): string {
+    let uuid_buf = std.heap.page_allocator.alloc(u8, 36) catch unreachable;
+    let stack_buf: [36]u8 = undefined;
+    randomUUIDInto(&stack_buf);
+    @memcpy(uuid_buf[0..36], stack_buf[0..36]);
     return uuid_buf;
 }
 

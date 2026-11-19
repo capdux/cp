@@ -1,7 +1,7 @@
-// Source: Bun bun/src/shell/exec.cp
+// Source: /data/dev/bun/src/shell/
 // ============================================================================
-// Absorbed from Bun: bun/src/shell/exec.cp
-// Upstream Sync: Refer to bun/src/shell/exec.zig for future upstream updates.
+// Absorbed from Bun: /data/dev/bun/src/shell/
+// Upstream Sync: Refer to /data/dev/bun/src/shell/ for future upstream updates.
 // ============================================================================
 // lib/shell/exec.cp
 // Pipeline execution and process management for CP Shell (cap:shell)
@@ -36,7 +36,7 @@ pub struct Executor {
         stdout_joiner: *StringJoiner,
         stderr_joiner: *StringJoiner,
     ): i32 {
-        const argv = cmd.argv();
+        const argv = cmd.args[0..cmd.args_len];
         if (argv.len == 0) {
             return 0;
         }
@@ -140,7 +140,7 @@ pub struct Executor {
     }
 
     pub static fn executePipeline(pipe: Pipeline, initial_stdin: []const u8): ShellResult {
-        const cmds = pipe.cmds();
+        const cmds = pipe.commands[0..pipe.commands_len];
         if (cmds.len == 0) {
             return ShellResult {
                 exit_code: 0,
@@ -149,6 +149,8 @@ pub struct Executor {
             };
         }
 
+        let pipe_buf: [16384]u8 = undefined;
+        let pipe_len: usize = 0;
         let cur_stdin = initial_stdin;
         let last_code: i32 = 0;
         let final_stdout = StringJoiner.init();
@@ -161,23 +163,34 @@ pub struct Executor {
                 last_code = Executor.executeCommand(cmds[i], cur_stdin, &step_stdout, &final_stderr);
             }
 
+            const step_slice = step_stdout.slice();
             if (i + 1 < cmds.len) {
-                cur_stdin = step_stdout.slice();
+                pipe_len = if (step_slice.len <= pipe_buf.len) step_slice.len else pipe_buf.len;
+                if (pipe_len > 0) {
+                    @memcpy(pipe_buf[0..pipe_len], step_slice[0..pipe_len]);
+                }
+                cur_stdin = pipe_buf[0..pipe_len];
             } else {
-                final_stdout.push(step_stdout.slice());
+                final_stdout.push(step_slice);
             }
             i += 1;
         }
 
+        const out_str = final_stdout.slice();
+        const err_str = final_stderr.slice();
+        // Transfer buffer ownership to ShellResult so RAII defer does not unmap returned slices
+        final_stdout.has_allocated = false;
+        final_stderr.has_allocated = false;
+
         return ShellResult {
             exit_code: last_code,
-            stdout_str: final_stdout.slice(),
-            stderr_str: final_stderr.slice(),
+            stdout_str: out_str,
+            stderr_str: err_str,
         };
     }
 
     pub static fn executeScript(script: Script): ShellResult {
-        const stmts = script.stmts();
+        const stmts = script.statements[0..script.statements_len];
         if (stmts.len == 0) {
             return ShellResult {
                 exit_code: 0,

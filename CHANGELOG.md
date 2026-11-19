@@ -1325,3 +1325,13 @@ hotfix: resolve keyword conflict for "test" and prevent redundant re-export of i
 
 
 
+- **lib/crypto/*, lib/sql/*, lib/dns/* (去 Zig 残留、零堆分配接口与全量溯源)**:
+  - 恢复/增强 `hash.cp`、`cipher.cp`，新增 `*Raw`/`pbkdf2Into`/`randomUUIDInto`、`TlsHostnameVerifier`、`PostgresWire.encodeStartupMessage`/`encodePasswordMessage`、`HostsTable`；清理 `boringssl.cp`；18 个文件首行 `// Source:`。
+  - 新增 `docs/crypto/crypto.md`、`docs/sql/sql.md`、`docs/dns/dns.md`、`cap/test/test_crypto_sql_dns.cp`。
+- **lib/sync/*, lib/threading/*, lib/mem/* (并发缺陷修复、MaxHeapAllocator 吸收与全量溯源)**:
+  - `UnboundedQueue` 可选指针语法升级，修复 `ConcurrentMap`/`Condition`/`BumpArena`/`MaybeOwnedBuf` 编译问题，`lib/mem/allocator.cp` 新增 `MaxHeapAllocator`；41 个文件首行 `// Source:`。
+  - 新增 `docs/sync/sync.md`、`docs/mem/mem.md`、`cap/test/test_sync_mem_full.cp`。
+- **lib/shell/*, lib/watch/*, lib/watcher/*, lib/elf/*, lib/ffi/* (管道缓冲所有权修复与全量溯源)**:
+  - `exec.cp` 管道中转缓冲与所有权移交，`builtin.cp` 新增 `cat`，`parser.cp` 指针接收者修正，watch/watcher 统一事件类型，`layout.cp` 新增 `fieldOffset`；20 个文件首行 `// Source:`。
+  - 新增 `docs/shell/shell.md`、`docs/watch/watch.md`、`docs/elf/elf.md`、`docs/ffi/ffi.md`、`cap/test/test_shell_watch_elf_ffi.cp`。
+- **cp_ref.md & cp_agent_ref.md**: 同步第三批 9 个标准库专著文档索引与协议矩阵详见链接。

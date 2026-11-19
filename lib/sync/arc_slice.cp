@@ -1,4 +1,4 @@
-// Source: Bun bun/src/threading/arc_slice.cp
+// Source: /data/dev/bun/src/threading/threading.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/arc_slice.cp
 // Upstream Sync: Refer to bun/src/threading/arc_slice.zig for future upstream updates.

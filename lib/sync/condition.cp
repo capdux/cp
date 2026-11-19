@@ -1,4 +1,4 @@
-// Source: Bun bun/src/threading/condition.cp
+// Source: /data/dev/bun/src/threading/Condition.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/condition.cp
 // Upstream Sync: Refer to bun/src/threading/condition.zig for future upstream updates.
@@ -76,44 +76,46 @@ pub struct Condition {
         const signal_mask: u32 = 0xffff << 16;
 
         fn wait(*_, mutex: *Mutex, timeout: u64?) !void {
-            let epoch = _.epoch.load(.acquire);
-            let state = _.state.fetchAdd(one_waiter, .monotonic);
-            std.debug.assert((state & waiter_mask) != waiter_mask);
-            state += one_waiter;
+            zig {
+                var epoch = self.epoch.load(.acquire);
+                var state = self.state.fetchAdd(one_waiter, .monotonic);
+                std.debug.assert((state & waiter_mask) != waiter_mask);
+                state += one_waiter;
 
-            mutex.unlock();
-            defer mutex.lock();
+                mutex.unlock();
+                defer mutex.lock();
 
-            let futex_deadline = Deadline.init(timeout);
+                var futex_deadline = Deadline.init(timeout);
 
-            while (true) {
-                futex_deadline.wait(&_.epoch, epoch) catch |err| switch (err) {
-                    error.Timeout => {
-                        while (true) {
-                            while ((state & signal_mask) != 0) {
-                                const new_state = state - one_waiter - one_signal;
-                                const res = _.state.cmpxchgWeak(state, new_state, .acquire, .monotonic);
-                                if (res == null) return;
+                while (true) {
+                    futex_deadline.wait(&self.epoch, epoch) catch |err| switch (err) {
+                        error.Timeout => {
+                            while (true) {
+                                while ((state & signal_mask) != 0) {
+                                    const new_state = state - one_waiter - one_signal;
+                                    const res = self.state.cmpxchgWeak(state, new_state, .acquire, .monotonic);
+                                    if (res == null) return;
+                                    state = res.?;
+                                }
+
+                                const new_state = state - one_waiter;
+                                const res = self.state.cmpxchgWeak(state, new_state, .monotonic, .monotonic);
+                                if (res == null) return err;
                                 state = res.?;
                             }
+                        },
+                        else => {},
+                    };
 
-                            const new_state = state - one_waiter;
-                            const res = _.state.cmpxchgWeak(state, new_state, .monotonic, .monotonic);
-                            if (res == null) return err;
-                            state = res.?;
-                        }
-                    },
-                    else => {},
-                };
+                    epoch = self.epoch.load(.acquire);
+                    state = self.state.load(.monotonic);
 
-                epoch = _.epoch.load(.acquire);
-                state = _.state.load(.monotonic);
-
-                while ((state & signal_mask) != 0) {
-                    const new_state = state - one_waiter - one_signal;
-                    const res = _.state.cmpxchgWeak(state, new_state, .acquire, .monotonic);
-                    if (res == null) return;
-                    state = res.?;
+                    while ((state & signal_mask) != 0) {
+                        const new_state = state - one_waiter - one_signal;
+                        const res = self.state.cmpxchgWeak(state, new_state, .acquire, .monotonic);
+                        if (res == null) return;
+                        state = res.?;
+                    }
                 }
             }
         }

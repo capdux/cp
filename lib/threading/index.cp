@@ -1,4 +1,4 @@
-// Source: Bun bun/src/threading/
+// Source: /data/dev/bun/src/threading/threading.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/
 // Upstream Sync: Refer to bun/src/threading/ for future upstream updates.
@@ -8,7 +8,8 @@ export { Mutex } from "./mutex";
 export { Condition } from "./condition";
 export { WaitGroup } from "./wait_group";
 export { Channel } from "./channel";
-export { MpmcQueue } from "./ring_buffer";
+export { MpmcQueue, RingBuffer } from "./ring_buffer";
+export { UnboundedQueue } from "./unbounded_queue";
 export { ConcurrentMap } from "./concurrent_map";
 export { ArcSlice } from "./arc_slice";
 export { Wyhash, WyhashStateless } from "./wyhash";

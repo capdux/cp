@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: /data/dev/bun/src/runtime/ffi/
 // lib/ffi/layout.cp
 // C-ABI Struct Memory Alignment & Offset Calculator for FFI
 
@@ -76,5 +76,13 @@ pub struct CStructLayout {
         _.total_size = CStructLayout.alignUp(_.current_offset, _.max_align);
         _.finalized = true;
         return _.total_size;
+    }
+
+    /// Returns the byte offset of the field at `index`, or `null` if out of bounds.
+    pub fn fieldOffset(*_, index: usize): usize? {
+        if (index >= _.field_count) {
+            return null;
+        }
+        return _.fields[index].offset;
     }
 }

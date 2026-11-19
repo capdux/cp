@@ -1,9 +1,11 @@
+// Source: /data/dev/bun/src/threading/guarded.cp
 /// A wrapper around a mutex, and a value protected by the mutex.
 /// This type uses `bun.threading.Mutex` internally.
 pub fn Guarded(comptime Value: type) type {
     return GuardedBy(Value, bun.threading.Mutex);
 }
 
+// Source: /data/dev/bun/src/threading/guarded.cp
 /// A wrapper around a mutex, and a value protected by the mutex.
 /// `Mutex` should have `lock` and `unlock` methods.
 pub fn GuardedBy(comptime Value: type, comptime Mutex: type) type {

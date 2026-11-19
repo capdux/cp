@@ -1,4 +1,4 @@
-// Source: bun/src/watcher/Watcher.cp
+// Source: /data/dev/bun/src/watcher/Watcher.cp
 import std from "std";
 import {
     WatchAction,
@@ -79,10 +79,10 @@ pub struct Watcher {
         return watcher;
     }
 
-    pub fn isWatched(path: []const u8): bool {
+    pub fn isWatched(*_, path: []const u8): bool {
         let i: usize = 0;
         while (i < MAX_WATCH_ITEMS) {
-            if (_.items[i].active && std.mem.eql(u8, _.items[i].path(), path)) {
+            if (_.items[i].active && std.mem.eql(u8, _.items[i].path_buf[0.._.items[i].path_len], path)) {
                 return true;
             }
             i += 1;

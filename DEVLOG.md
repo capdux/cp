@@ -1680,3 +1680,10 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
 
 
 
+
+### 第六阶段：第三里程碑批次（crypto/sql/dns、sync/threading/mem、shell/watch/elf/ffi）
+- 关键技术点：
+  1. 管道执行器中 `step_stdout` 被 RAII 自动释放导致下一步读取悬空：改为栈上中转缓冲 + 最终输出所有权显式移交；
+  2. `for (*s of &_.stripes)` 在 CP 中会产生双重取址，改用索引循环；`&[]` 空切片字面量同样改用 `""`/标准切片；
+  3. `cap:ptr`/`cap:safety`、`cap:watch`/`cap:watcher` 等多入口模块以重命名/统一类型消除符号碰撞；
+  4. 调度层面：Gemini 系子智能体触达个体配额，改用 Claude Sonnet 系继续并行；未提交的半成品修改由接任子智能体先 `git diff` 核对后续做，避免重做。

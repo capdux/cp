@@ -1,3 +1,4 @@
+// Source: /data/dev/bun/src/threading/channel.cp
 // Thread-safe buffered channel in CP
 const bun = @import("bun");
 const std = @import("std");

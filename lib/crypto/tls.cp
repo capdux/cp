@@ -1,4 +1,4 @@
-// Source: Bun src/boringssl/boringssl.cp (per CHANGELOG)
+// Source: /data/dev/bun/src/boringssl/boringssl.cp
 // lib/crypto/tls.cp
 // BoringSSL TLS & X.509 Server Identity Verification for CP (cap:crypto)
 
@@ -66,47 +66,61 @@ pub fn load() {
     }
 }
 
-pub fn isSafeAltName(name: string, allow_ip: bool): bool {
-    if (name.len == 0 || name.len > 253) {
-        return false;
-    }
-    for (ch of name) {
-        if (ch == 0 || ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n') {
+pub struct TlsHostnameVerifier {
+    pub static fn isSafeAltName(name: string, allow_ip: bool): bool {
+        if (name.len == 0 || name.len > 253) {
             return false;
         }
-        if (!allow_ip && ch == ':') {
+        for (ch of name) {
+            if (ch == 0 || ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n') {
+                return false;
+            }
+            if (!allow_ip && ch == ':') {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    pub static fn matchDnsName(pattern: string, hostname: string): bool {
+        if (pattern.len == 0) {
             return false;
         }
-    }
-    return true;
-}
+        if (!TlsHostnameVerifier.isSafeAltName(pattern, false)) {
+            return false;
+        }
 
-pub fn matchDnsName(pattern: string, hostname: string): bool {
-    if (pattern.len == 0) {
-        return false;
-    }
-    if (!isSafeAltName(pattern, false)) {
-        return false;
-    }
-
-    if (pattern[0] == '*') {
-        if (pattern.len >= 2 && pattern[1] == '.') {
-            const suffix = pattern[2..];
-            if (std.mem.indexOfScalar(u8, suffix, '.') != null) {
-                if (hostname.len > suffix.len + 1) {
-                    const dot_index = hostname.len - suffix.len - 1;
-                    if (hostname[dot_index] == '.' && std.mem.indexOfScalar(u8, hostname[0..dot_index], '.') == null) {
-                        const host_suffix = hostname[dot_index + 1..];
-                        if (std.ascii.eqlIgnoreCase(suffix, host_suffix)) {
-                            return true;
+        if (pattern[0] == '*') {
+            if (pattern.len >= 2 && pattern[1] == '.') {
+                const suffix = pattern[2..];
+                if (std.mem.indexOfScalar(u8, suffix, '.') != null) {
+                    if (hostname.len > suffix.len + 1) {
+                        const dot_index = hostname.len - suffix.len - 1;
+                        if (hostname[dot_index] == '.' && std.mem.indexOfScalar(u8, hostname[0..dot_index], '.') == null) {
+                            const host_suffix = hostname[dot_index + 1..];
+                            if (std.ascii.eqlIgnoreCase(suffix, host_suffix)) {
+                                return true;
+                            }
                         }
                     }
                 }
             }
+            return false;
         }
-        return false;
+        return std.ascii.eqlIgnoreCase(pattern, hostname);
     }
-    return std.ascii.eqlIgnoreCase(pattern, hostname);
+
+    pub static fn verify(pattern: string, hostname: string): bool {
+        return TlsHostnameVerifier.matchDnsName(pattern, hostname);
+    }
+}
+
+pub fn isSafeAltName(name: string, allow_ip: bool): bool {
+    return TlsHostnameVerifier.isSafeAltName(name, allow_ip);
+}
+
+pub fn matchDnsName(pattern: string, hostname: string): bool {
+    return TlsHostnameVerifier.matchDnsName(pattern, hostname);
 }
 
 pub fn checkX509ServerIdentity(x509: X509_Ptr, hostname: string): bool {

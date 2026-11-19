@@ -1,4 +1,4 @@
-// Source: Bun src/bun_alloc/BufferFallbackAllocator.zig, src/bun_alloc/MaxHeapAllocator.zig, src/bun_alloc/maybe_owned.zig (per CHANGELOG)
+// Source: /data/dev/bun/src/bun_alloc/MaxHeapAllocator.cp & /data/dev/bun/src/bun_alloc/BufferFallbackAllocator.cp
 // lib/mem/allocator.cp
 // High-performance Arena, StackFallbackAllocator, BumpArena, MaybeOwnedBuf, and SharedTensor
 // Absorbed from bun/src/bun_alloc/ (BufferFallbackAllocator, MaxHeapAllocator, maybe_owned, MimallocArena)
@@ -132,7 +132,7 @@ pub struct BumpArena {
         }
         const start = _.offset;
         _.offset += len;
-        let out: []u8 = &[];
+        let out: []u8 = [];
         zig {
             out = self.ptr[start .. start + len];
         }
@@ -146,7 +146,7 @@ pub struct BumpArena {
             return null;
         }
         _.offset = aligned_offset + len;
-        let out: []u8 = &[];
+        let out: []u8 = [];
         zig {
             out = self.ptr[aligned_offset .. aligned_offset + len];
         }
@@ -178,7 +178,7 @@ pub struct BumpArena {
 
 // Ownership-aware buffer wrapper (Absorbed from bun/src/bun_alloc/maybe_owned.cp)
 pub struct MaybeOwnedBuf {
-    data: []const u8 = &[];
+    data: []const u8 = "";
     owned: bool = false;
 
     pub static fn initBorrowed(buf: []const u8): MaybeOwnedBuf {
@@ -189,7 +189,7 @@ pub struct MaybeOwnedBuf {
     }
 
     pub static fn initOwnedCopy(buf: []const u8): MaybeOwnedBuf {
-        let duped: []const u8 = &[];
+        let duped: []const u8 = "";
         zig {
             duped = std.heap.page_allocator.dupe(u8, buf) catch unreachable;
         }
@@ -217,7 +217,82 @@ pub struct MaybeOwnedBuf {
                 std.heap.page_allocator.free(self.data);
             }
         }
-        _.data = &[];
+        _.data = "";
         _.owned = false;
+    }
+}
+
+// Single-allocation high-water-mark & quota-enforced reusable heap allocator
+// (Absorbed from /data/dev/bun/src/bun_alloc/MaxHeapAllocator.cp)
+pub struct MaxHeapAllocator {
+    ptr: [*]u8! = undefined;
+    capacity_bytes: usize = 0;
+    current_len: usize = 0;
+    max_limit: usize = 0;
+
+    pub static fn init(max_limit: usize = 0): MaxHeapAllocator {
+        return MaxHeapAllocator{
+            ptr: undefined,
+            capacity_bytes: 0,
+            current_len: 0,
+            max_limit: max_limit,
+        };
+    }
+
+    pub fn alloc(*_, len: usize): ([]u8)? {
+        if (_.max_limit > 0 && len > _.max_limit) {
+            return null;
+        }
+        if (len == 0) {
+            _.current_len = 0;
+            let empty_out: []u8 = [];
+            return empty_out;
+        }
+        if (len > _.capacity_bytes) {
+            zig {
+                if (self.capacity_bytes > 0) {
+                    std.heap.page_allocator.free(self.ptr[0..self.capacity_bytes]);
+                }
+                const new_buf = std.heap.page_allocator.alloc(u8, len) catch return null;
+                self.ptr = new_buf.ptr;
+                self.capacity_bytes = len;
+            }
+        }
+        _.current_len = len;
+        let out: []u8 = [];
+        zig {
+            out = self.ptr[0..len];
+        }
+        return out;
+    }
+
+    pub fn capacity(): usize {
+        return _.capacity_bytes;
+    }
+
+    pub fn used(): usize {
+        return _.current_len;
+    }
+
+    pub fn maxQuota(): usize {
+        return _.max_limit;
+    }
+
+    pub fn reset(*_) {
+        _.current_len = 0;
+    }
+
+    pub fn deinit(*_) {
+        zig {
+            if (self.capacity_bytes > 0) {
+                std.heap.page_allocator.free(self.ptr[0..self.capacity_bytes]);
+                self.capacity_bytes = 0;
+                self.current_len = 0;
+            }
+        }
+    }
+
+    pub fn release(*_) {
+        _.deinit();
     }
 }

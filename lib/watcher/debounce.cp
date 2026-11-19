@@ -1,4 +1,4 @@
-// Source: bun/src/watcher/Watcher.cp
+// Source: /data/dev/bun/src/watcher/Watcher.cp
 import std from "std";
 import { WatchAction, WatchEvent, WatchEventOp } from "./events.cp";
 

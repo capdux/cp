@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: /data/dev/bun/src/dns/
 // lib/dns/packet.cp
 // RFC 1035 DNS Wire Packet Header, Domain Label Codec & Pointer Decompression
 

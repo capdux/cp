@@ -1,4 +1,4 @@
-// Source: Bun src/wyhash/wyhash_.zig (auto-matched by identifier overlap 70%, needs review)
+// Source: /data/dev/bun/src/wyhash/wyhash.cp
 //
 // Wyhash port to CP language for Bun.js
 // Based on Wyhash from the zig standard library, version v0.11.0-dev.2609+5e19250a1

@@ -1,4 +1,4 @@
-// Source: Bun src/ptr/Cow.zig (name-matched, needs review)
+// Source: /data/dev/bun/src/bun_alloc/maybe_owned.cp & /data/dev/bun/src/ptr/CowSlice.cp
 // lib/mem/cow.cp
 // Copy-on-Write byte slice (absorbed from bun/src/ptr/CowSlice.cp & Cow.cp)
 
@@ -125,3 +125,5 @@ pub struct CowSlice {
         _.inner.release();
     }
 }
+
+pub type Cow = CowSlice;

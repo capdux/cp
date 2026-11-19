@@ -1,15 +1,28 @@
-// Source: bun/src/watcher/Watcher.cp
+// Source: /data/dev/bun/src/watcher/Watcher.cp
 // CP Standard Library: cap:watcher
 
 export {
     WatchAction,
     WatchEventOp,
+    WatchEventKind,
+    WatchMask,
     WatchEvent,
     WatchItemKind,
     WatchOptions,
     WatchCallback,
     getNowMs,
 } from "./events.cp";
+
+export {
+    WatchFilter,
+    TrackerEntry,
+    DebounceTracker,
+} from "../watch/filter.cp";
+
+export {
+    WatchEntry,
+    FileWatcher,
+} from "../watch/watcher.cp";
 
 export {
     MAX_DEBOUNCE_ENTRIES,

@@ -1,4 +1,4 @@
-// Source: Custom (agy-generated export index)
+// Source: /data/dev/bun/src/exe_format/
 // lib/elf/index.cp
 // Unified Public Exports for cap:elf
 

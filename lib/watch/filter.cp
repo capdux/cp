@@ -1,4 +1,4 @@
-// Source: Bun src/watcher/
+// Source: /data/dev/bun/src/watcher/Watcher.cp
 // lib/watch/filter.cp
 // Filesystem Watch Path Ignore Filter & Timestamp-Based Event Debouncer
 // Absorbed from Bun src/watcher/
@@ -39,7 +39,7 @@ pub struct WatchFilter {
     }
 }
 
-pub struct DebounceEntry {
+pub struct TrackerEntry {
     path: []const u8 = "";
     last_ns: u64 = 0;
     active: bool = false;
@@ -47,7 +47,7 @@ pub struct DebounceEntry {
 
 /// Fixed-capacity timestamp debouncer that suppresses duplicate file events within `window_ns`.
 pub struct DebounceTracker<const CAP: usize> {
-    entries: [CAP]DebounceEntry = undefined;
+    entries: [CAP]TrackerEntry = undefined;
     window_ns: u64 = 50000000; // default 50ms
     count: usize = 0;
     next_evict: usize = 0;
@@ -61,7 +61,7 @@ pub struct DebounceTracker<const CAP: usize> {
         };
         let i: usize = 0;
         while (i < CAP) {
-            tracker.entries[i] = DebounceEntry {
+            tracker.entries[i] = TrackerEntry {
                 path: "",
                 last_ns: 0,
                 active: false,
@@ -88,7 +88,7 @@ pub struct DebounceTracker<const CAP: usize> {
         }
 
         if (_.count < CAP) {
-            _.entries[_.count] = DebounceEntry {
+            _.entries[_.count] = TrackerEntry {
                 path: path,
                 last_ns: now_ns,
                 active: true,
@@ -100,7 +100,7 @@ pub struct DebounceTracker<const CAP: usize> {
         // Ring eviction when full
         const slot = _.next_evict;
         _.next_evict = (_.next_evict + 1) % CAP;
-        _.entries[slot] = DebounceEntry {
+        _.entries[slot] = TrackerEntry {
             path: path,
             last_ns: now_ns,
             active: true,

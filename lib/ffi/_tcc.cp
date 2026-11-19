@@ -1,4 +1,4 @@
-// Source: Bun src/tcc_sys/tcc.cp
+// Source: /data/dev/bun/src/runtime/ffi/
 // lib/ffi/_tcc.cp
 // TinyCC In-Memory C Compiler C-FFI Bindings
 // Absorbed from Bun src/tcc_sys/tcc.cp

@@ -1,4 +1,4 @@
-// Source: Custom (agy-generated export index)
+// Source: /data/dev/bun/src/runtime/ffi/
 // lib/ffi/index.cp
 // Unified Public Exports for cap:ffi
 

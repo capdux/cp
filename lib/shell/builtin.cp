@@ -1,7 +1,7 @@
-// Source: Bun bun/src/shell/builtin.cp
+// Source: /data/dev/bun/src/shell/
 // ============================================================================
-// Absorbed from Bun: bun/src/shell/builtin.cp
-// Upstream Sync: Refer to bun/src/shell/builtin.zig for future upstream updates.
+// Absorbed from Bun: /data/dev/bun/src/shell/
+// Upstream Sync: Refer to /data/dev/bun/src/shell/ for future upstream updates.
 // ============================================================================
 // lib/shell/builtin.cp
 // Built-in command implementations for CP Shell (cap:shell)
@@ -22,7 +22,8 @@ pub fn isBuiltin(name: []const u8): bool {
             std.mem.eql(u8, name, "false") or
             std.mem.eql(u8, name, "exit") or
             std.mem.eql(u8, name, "dirname") or
-            std.mem.eql(u8, name, "basename"))
+            std.mem.eql(u8, name, "basename") or
+            std.mem.eql(u8, name, "cat"))
         {
             is_match = true;
         }
@@ -189,6 +190,43 @@ pub fn runBuiltin(
         const p = PathString.init(argv[1]);
         stdout.push(p.basename());
         stdout.push("\n");
+        return 0;
+    }
+
+    // cat [files...] (or pass stdin to stdout when no files specified)
+    let is_cat: bool = false;
+    zig { is_cat = std.mem.eql(u8, name, "cat"); }
+    if (is_cat) {
+        if (argv.len < 2) {
+            stdout.push(stdin);
+            return 0;
+        }
+        let f_idx: usize = 1;
+        while (f_idx < argv.len) {
+            const fpath = argv[f_idx];
+            let read_ok: bool = true;
+            zig {
+                const fd = std.posix.openat(std.posix.AT.FDCWD, fpath, .{ .ACCMODE = .RDONLY }, 0) catch null;
+                if (fd) |valid_fd| {
+                    defer _ = std.c.close(valid_fd);
+                    var fbuf: [4096]u8 = undefined;
+                    while (true) {
+                        const n = std.posix.read(valid_fd, &fbuf) catch 0;
+                        if (n == 0) break;
+                        stdout.push(fbuf[0..n]);
+                    }
+                } else {
+                    read_ok = false;
+                }
+            }
+            if (!read_ok) {
+                stderr.push("cat: ");
+                stderr.push(fpath);
+                stderr.push(": No such file or directory\n");
+                return 1;
+            }
+            f_idx += 1;
+        }
         return 0;
     }
 

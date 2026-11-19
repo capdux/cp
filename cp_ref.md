@@ -10372,6 +10372,15 @@ flowchart TD
 - **字符串与 Unicode (`cap:string`)**：[`docs/string/string.md`](file:///data/dev/cp/docs/string/string.md)（15B 纯栈 `SmolStr`、UAX #29 `Utf8Grapheme`、`HashedString`）
 - **SIMD 硬件向量加速 (`cap:simd`)**：[`docs/simd/simd.md`](file:///data/dev/cp/docs/simd/simd.md)（16/32 字节 Highway 级字节扫描、无分支大小写转换与数值归约）
 - **工业级排序算法 (`cap:sort`)**：[`docs/sort/sort.md`](file:///data/dev/cp/docs/sort/sort.md)（PDQSort 自适应快排、稳定 BlockSort、堆排序与二分边界搜索）
+- **密码学与 TLS (`cap:crypto`)**：[`docs/crypto/crypto.md`](file:///data/dev/cp/docs/crypto/crypto.md)（SHA/HMAC/PBKDF2、AES-256-GCM/ChaCha20-Poly1305、`TlsHostnameVerifier` RFC 6125）
+- **数据库协议 (`cap:sql`)**：[`docs/sql/sql.md`](file:///data/dev/cp/docs/sql/sql.md)（PostgreSQL v3 / MySQL / SQLite3、参数绑定防注入）
+- **DNS 报文与 Hosts (`cap:dns`)**：[`docs/dns/dns.md`](file:///data/dev/cp/docs/dns/dns.md)（RFC 1035 帧头、`0xC0` 压缩指针、`HostsTable`、`DnsCache`）
+- **同步原语与线程池 (`cap:sync`)**：[`docs/sync/sync.md`](file:///data/dev/cp/docs/sync/sync.md)（Futex/Mutex/Condition/WaitGroup/Channel/UnboundedQueue/ConcurrentMap/ArcSlice）
+- **内存分配器 (`cap:mem`)**：[`docs/mem/mem.md`](file:///data/dev/cp/docs/mem/mem.md)（`MaxHeapAllocator`、`BumpArena`、`Cow`、`Rc`、`TaggedPtr`、mimalloc）
+- **嵌入式 Shell (`cap:shell`)**：[`docs/shell/shell.md`](file:///data/dev/cp/docs/shell/shell.md)（Lexer/Parser AST、管道与重定向、进程内内置命令）
+- **文件监控 (`cap:watch`)**：[`docs/watch/watch.md`](file:///data/dev/cp/docs/watch/watch.md)（inotify、`WatchFilter`、`DebounceTracker`）
+- **可执行格式嗅探 (`cap:elf`)**：[`docs/elf/elf.md`](file:///data/dev/cp/docs/elf/elf.md)（ELF64 / Mach-O / PE-COFF）
+- **动态 FFI (`cap:ffi`)**：[`docs/ffi/ffi.md`](file:///data/dev/cp/docs/ffi/ffi.md)（`DynLib`、`CStructLayout` C-ABI 对齐）
 
 ---
 

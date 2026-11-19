@@ -1,4 +1,4 @@
-// Source: Bun bun/src/threading/concurrent_map.cp
+// Source: /data/dev/bun/src/threading/threading.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/concurrent_map.cp
 // Upstream Sync: Refer to bun/src/threading/concurrent_map.zig for future upstream updates.
@@ -29,19 +29,23 @@ pub fn ConcurrentMap(comptime K: type, comptime V: type): type {
                 .stripes = undefined,
                 .allocator = allocator,
             };
-            for (*s of &map.stripes) {
-                s.mutex = .{};
-                s.map = MapType.init(allocator);
+            let i: usize = 0;
+            while (i < StripeCount) {
+                map.stripes[i].mutex = .{};
+                map.stripes[i].map = MapType.init(allocator);
+                i += 1;
             }
             return map;
         }
 
         pub fn deinit(*_) {
-            for (*s of &_.stripes) {
-                s.mutex.lock();
-                s.map.deinit();
-                s.mutex.unlock();
-                s.mutex.deinit();
+            let i: usize = 0;
+            while (i < StripeCount) {
+                _.stripes[i].mutex.lock();
+                _.stripes[i].map.deinit();
+                _.stripes[i].mutex.unlock();
+                _.stripes[i].mutex.deinit();
+                i += 1;
             }
         }
 
@@ -87,19 +91,23 @@ pub fn ConcurrentMap(comptime K: type, comptime V: type): type {
 
         pub fn count(*_): usize {
             let total: usize = 0;
-            for (*s of &_.stripes) {
-                s.mutex.lock();
-                total += s.map.count();
-                s.mutex.unlock();
+            let i: usize = 0;
+            while (i < StripeCount) {
+                _.stripes[i].mutex.lock();
+                total += _.stripes[i].map.count();
+                _.stripes[i].mutex.unlock();
+                i += 1;
             }
             return total;
         }
 
         pub fn clear(*_) {
-            for (*s of &_.stripes) {
-                s.mutex.lock();
-                s.map.clearRetainingCapacity();
-                s.mutex.unlock();
+            let i: usize = 0;
+            while (i < StripeCount) {
+                _.stripes[i].mutex.lock();
+                _.stripes[i].map.clearRetainingCapacity();
+                _.stripes[i].mutex.unlock();
+                i += 1;
             }
         }
     };

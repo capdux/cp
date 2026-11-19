@@ -1,4 +1,4 @@
-// Source: Custom (agy-generated export index)
+// Source: /data/dev/bun/src/watcher/Watcher.cp
 // lib/watch/index.cp
 // Unified Public Exports for cap:watch
 

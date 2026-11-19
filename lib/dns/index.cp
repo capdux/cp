@@ -1,6 +1,6 @@
-// Source: Custom (agy-generated export index)
+// Source: /data/dev/bun/src/dns/
 // lib/dns/index.cp
-// Unified Cap DNS Resolution, Wire Codec & c-ares Subsystem (cap:dns)
+// Unified Cap DNS Resolution, Wire Codec, HostsTable & c-ares Subsystem (cap:dns)
 
 export {
     ares_channeldata,
@@ -57,4 +57,6 @@ export {
     ResolveOptions,
     DnsCacheEntry,
     DnsCache,
+    HostsEntry,
+    HostsTable,
 } from "./cache.cp";

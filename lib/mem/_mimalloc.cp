@@ -1,4 +1,4 @@
-// Source: Bun src/mimalloc_sys/mimalloc.zig (auto-matched by identifier overlap 97%, needs review)
+// Source: /data/dev/bun/src/bun_alloc/MimallocArena.cp
 // lib/mem/_mimalloc.cp
 // Low-level Mimalloc C-FFI bindings and opaque heap handles (absorbed from bun/src/mimalloc_sys/mimalloc.cp)
 

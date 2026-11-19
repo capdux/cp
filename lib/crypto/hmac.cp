@@ -1,13 +1,12 @@
-// Source: Bun src/sha_hmac/hmac.zig (name-matched, needs review)
+// Source: /data/dev/bun/src/boringssl/boringssl.cp
 // lib/crypto/hmac.cp
 // HMAC message authentication code (SHA256, SHA512)
-
 
 pub enum HmacAlgorithm {
     Sha256,
     Sha512,
 
-    static fn fromString(str: []const u8): HmacAlgorithm? {
+    pub static fn fromString(str: []const u8): HmacAlgorithm? {
         if (std.mem.eql(u8, str, "sha256") or std.mem.eql(u8, str, "SHA256")) return HmacAlgorithm.Sha256;
         if (std.mem.eql(u8, str, "sha512") or std.mem.eql(u8, str, "SHA512")) return HmacAlgorithm.Sha512;
         return null;
@@ -25,6 +24,19 @@ pub fn hmacSha256(key: string, data: string): string {
 
 pub fn hmacSha256Raw(out: *[32]u8, key: string, data: string) {
     std.crypto.auth.hmac.sha2.HmacSha256.create(out, data, key);
+}
+
+pub fn hmacSha512(key: string, data: string): string {
+    let out: [64]u8 = undefined;
+    std.crypto.auth.hmac.sha2.HmacSha512.create(&out, data, key);
+    const hex = std.fmt.bytesToHex(out, .lower);
+    const res = std.heap.page_allocator.alloc(u8, 128) catch unreachable;
+    @memcpy(res, hex[0..128]);
+    return res;
+}
+
+pub fn hmacSha512Raw(out: *[64]u8, key: string, data: string) {
+    std.crypto.auth.hmac.sha2.HmacSha512.create(out, data, key);
 }
 
 pub class Hmac {

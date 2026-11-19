@@ -1,4 +1,4 @@
-// Source: Bun src/cares_sys/c_ares.zig (auto-matched by identifier overlap 87%, needs review)
+// Source: /data/dev/bun/src/dns/
 // lib/dns/_cares.cp
 // Low-level c-ares C-FFI bindings, NSClass/NSType & ARES status codes
 // Absorbed from bun/src/cares_sys/c_ares.cp

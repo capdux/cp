@@ -1,7 +1,6 @@
-// Source: Bun src/runtime/crypto/PBKDF2.zig (name-matched, needs review)
+// Source: /data/dev/bun/src/boringssl/boringssl.cp
 // lib/crypto/pbkdf2.cp
-// Password-Based Key Derivation Function 2 (PBKDF2)
-
+// Password-Based Key Derivation Function 2 (PBKDF2-HMAC-SHA256)
 
 pub fn bytesToHex(bytes: []const u8): string {
     const charset = "0123456789abcdef";
@@ -12,6 +11,11 @@ pub fn bytesToHex(bytes: []const u8): string {
         result[i * 2 + 1] = charset[b & 15];
     }
     return result;
+}
+
+pub fn pbkdf2Into(out: []u8, password: string, salt: string, iterations: u32): bool {
+    std.crypto.pwhash.pbkdf2(out, password, salt, iterations, std.crypto.auth.hmac.sha2.HmacSha256) catch return false;
+    return true;
 }
 
 pub fn pbkdf2Sync(password: string, salt: string, iterations: u32, keylen: usize): string {

@@ -1,4 +1,4 @@
-// Source: Bun src/ptr/raw_ref_count.zig, src/ptr/ref_count.zig, src/ptr/weak_ptr.zig (per CHANGELOG)
+// Source: /data/dev/bun/src/bun_alloc/ & /data/dev/bun/src/ptr/raw_ref_count.cp
 // lib/mem/rc.cp
 // Deterministic Reference Counting & Weak Control Block (absorbed from bun/src/ptr/raw_ref_count.cp, ref_count.cp, weak_ptr.cp)
 
@@ -134,3 +134,5 @@ pub struct WeakControlBlock {
         return _.weak_count;
     }
 }
+
+pub type Rc = RefCounter;

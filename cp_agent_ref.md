@@ -1035,25 +1035,25 @@ switch (msg) {
 | `cap:pack`（兼容 `cap:compress`） | RFC 1952/1950/1951/8478/7932 全量与流式压缩归档：`gzip`, `gunzip`, `deflate`, `inflate`, `deflateRaw`, `inflateRaw`, `GzipStream`, `GunzipStream`, `DeflateStream`, `InflateStream`, `Gzip`, `Gunzip`, `DeflateCodec`, `InflateCodec`, `NativeZlib`, `Zlib`, `Zstd`, `ZstdFrameHeader`, `Brotli`, `BrotliMode`, `BrotliHeader`, `CompressionFormat`, `Crc32`, `Adler32`, `GzipHeader`, `RleCodec`, `TarHeader`, `TarReader`, `ZipReader`, `ZipLocalHeader`, `ZipCentralHeader`, `ZipEocd` | 流式与全量压缩（Gzip/Zlib/Deflate/Zstd/Brotli）与 TAR/ZIP 归档（详见 `docs/pack/pack.md` & `docs/pack/zlib.md`） |
 | `cap:redis` | `RESPType`, `RESPFrame`, `RESPParser`, `RESPEncoder`, `ValkeyReader`, `VerbatimString`, `SubscriptionPushMessage`, `RedisCommand`, `RedisPipeline` | Redis / Valkey RESP2 & RESP3 协议编解码、零拷贝流式多帧解析器、命令与 Pipeline（详见 `docs/redis/redis.md`） |
 | `cap:cli` | `CliArgs`, `CliOption`, `SliceIterator`, `TtyMode`, `AnsiColor`, `ProgressBar`, `Progress`, `CliTable`, `CliTableAlign` | 命令行参数解析、ANSI 色彩、进度条与终端表格渲染 |
-| `cap:watch` | `FileWatcher`, `WatchEvent`, `WatchEventKind`, `WatchMask`, `WatchEntry`, `WatchFilter`, `DebounceTracker` | 跨平台文件系统变更监控、忽略过滤与防抖器 |
+| `cap:watch` | `FileWatcher`, `WatchEvent`, `WatchEventKind`, `WatchMask`, `WatchEntry`, `WatchFilter`, `DebounceTracker` | 跨平台文件系统变更监控、忽略过滤与防抖器（详见 `docs/watch/watch.md`） |
 | `cap:patch` | `UnifiedDiff`, `UnifiedHunkHeader`, `HunkRange`, `DiffOpKind`, `LineDiffStats`, `LineDiffer`（`diff`, `editDistance`）, `DiffOp` | Unified Diff 解析、Myers 行级差异生成与补丁应用（详见 `docs/patch/patch.md`） |
 | `cap:bench` | `HwTimer`, `Stopwatch`, `BenchStats`, `LatencyHistogram` | 纳秒级硬件计时器、分位数统计与对数桶延迟直方图 |
-| `cap:elf` | `ExeFormat`, `Elf64HeaderInfo`, `ElfInspector`, `MachHeader64`, `MachoInspector`, `PeCoffHeader`, `PeInspector` | ELF64 / Mach-O / PE 可执行文件头解析与节区嗅探 |
+| `cap:elf` | `ExeFormat`, `Elf64HeaderInfo`, `ElfInspector`, `MachHeader64`, `MachoInspector`, `PeCoffHeader`, `PeInspector` | ELF64 / Mach-O / PE 可执行文件头解析与节区嗅探（详见 `docs/elf/elf.md`） |
 | `cap:md` | `Markdown`（`renderHtml`, `renderAnsi`）, `MdTable`, `MdTableAlign` | CommonMark / GFM 解析器、HTML / ANSI 渲染与 GFM 表格 |
 | `cap:html` | `CssSelector`, `HtmlRewriter`, `HtmlEscape` | CSS 选择器解析、流式 HTML 标签重写与实体转义器 |
 | `cap:css` | `CssColor`, `CssUnit`, `CssLength`, `CssCalc`, `CssSpecificity`, `CssSelector`, `CssProperty`, `CssRuleKind`, `CssMediaQuery`, `CssKeyframeStep`, `CssKeyframes`, `CssRule`, `CssStylesheetParser`（及 `selectors/`、`rules/`、`values/`、`properties/` 99 模块引擎） | 工业级 CSS 解析、OKLCH/HSL/RGB 颜色空间、calc() 计算、选择器权重与样式表压缩引擎 |
 | `cap:image`（兼容 `cap:png` / `cap:img`） | `Png`, `PngImage`, `RgbaColor`, `PngColorType`, `PngFilterType`, `Codecs`, `ImageFormat`, `Bmp`, `BmpHeader`, `Quantizer`, `QuantizeResult`, `Gif`, `GifHeader`, `GifImage`, `ThumbHash`, `Exif`, `ExifOrientation`, `ExifTransform`, `Image`, `Jpeg`, `JpegHeader`, `Webp`, `WebpHeader` | 工业级全景图像套件：PNG 截图编码解码、BMP DIB 编解码、GIF LZW 解码、ThumbHash 模糊占位图算法、EXIF Orientation 解析、图像几何变换（Flop/Flip/Rotate/Crop/Resize）与 JPEG/WebP/8大格式嗅探 |
-| `cap:ffi` | `DynLib`, `FFIType`, `FFISignature`, `CStructLayout`, `CStructField`, `TccOutputFormat` | 跨平台动态库加载（dlopen）、C-ABI 布局计算与 TinyCC 声明 |
-| `cap:sql` | `SqlType`, `SqlDialect`, `SqlStatement`, `PostgresWire`, `PostgresAuthChallenge`, `PostgresDataRow`, `PostgresCommandComplete`, `MySqlPacketHeader`, `MySqlLenEnc`, `MySqlCapabilities`, `MySqlOkPacket`, `MySqlErrPacket`, `SqliteDatabase`, `SqliteRows` | PostgreSQL v3 / MySQL / SQLite3 数据库协议与零依赖驱动 |
-| `cap:shell`（兼容 `cap:sh`） | `Lexer`, `Parser`, `Shell`, `sh`, `ShellResult`, `Command`, `Pipeline`, `Statement`, `Redirection` | 原生嵌入式 Shell 执行引擎、AST 解析器、内置指令与管道重定向 |
+| `cap:ffi` | `DynLib`, `FFIType`, `FFISignature`, `CStructLayout`, `CStructField`, `TccOutputFormat` | 跨平台动态库加载（dlopen）、C-ABI 布局计算与 TinyCC 声明（详见 `docs/ffi/ffi.md`） |
+| `cap:sql` | `SqlType`, `SqlDialect`, `SqlStatement`, `PostgresWire`, `PostgresAuthChallenge`, `PostgresDataRow`, `PostgresCommandComplete`, `MySqlPacketHeader`, `MySqlLenEnc`, `MySqlCapabilities`, `MySqlOkPacket`, `MySqlErrPacket`, `SqliteDatabase`, `SqliteRows` | PostgreSQL v3 / MySQL / SQLite3 数据库协议与零依赖驱动（详见 `docs/sql/sql.md`） |
+| `cap:shell`（兼容 `cap:sh`） | `Lexer`, `Parser`, `Shell`, `sh`, `ShellResult`, `Command`, `Pipeline`, `Statement`, `Redirection` | 原生嵌入式 Shell 执行引擎、AST 解析器、内置指令与管道重定向（详见 `docs/shell/shell.md`） |
 | `cap:io` | `Reader`, `Writer`, `Closer`, `Seeker`, `BufferReader`, `BufferWriter`, `BufferedReader`, `BufferedWriter`, `copyStream`, `PipeReader`, `PipeWriter`, `MaxBuf`, `Pipe`, `print` | 统一流契约、零拷贝管道与标准 I/O |
 | `cap:stream` | `Pipe`, `PipeReader`, `PipeWriter`, `MaxBuf`, 统一零拷贝流接口重导出 | 工业级零拷贝流式 I/O 管道 |
-| `cap:sync` | `Mutex`, `RwLock`, `Atomic`, `Shared`, `Futex`, `Condition`, `WaitGroup`, `Channel`, `MpmcQueue`, `UnboundedQueue`, `ConcurrentMap`, `ArcSlice`, `Wyhash`, `Guarded<T>`, `WorkPool` | 锁、无锁队列、共享智能指针、并发池与底层同步原语 |
+| `cap:sync` | `Mutex`, `RwLock`, `Atomic`, `Shared`, `Futex`, `Condition`, `WaitGroup`, `Channel`, `MpmcQueue`, `UnboundedQueue`, `ConcurrentMap`, `ArcSlice`, `Wyhash`, `Guarded<T>`, `WorkPool` | 锁、无锁队列、共享智能指针、并发池与底层同步原语（详见 `docs/sync/sync.md`） |
 | `cap:parallel` | `spawn`, `join`, `Task` | 多核 Worker 线程池与异步任务汇聚 |
 | `cap:actor` | `yield`, `receive`, `sleep`, `join`, `self_pid`, `sender`, `send`, `reply`（内建 `@spawn`/`@receive`/`@reply`/`@send`/`@self`/`@sender`） | BEAM 级轻量级 Actor 消息并发模型 |
 | `cap:beam` | `PID`, `Message`, `Agent`, `SystemAction` | BEAM 节点信箱协议、系统调度动作码 |
 | `cap:worker` | `Worker` 与 `PID` 联动封装 | 独立隔离工作线程管理 |
-| `cap:mem` | `Arena`, `SharedTensor`, `Cow`, `CowSlice`, `TaggedPointer`, `TaggedPtr`, `MaxHeapAllocator` | 区域内存分配、写时复制切片、打标指针与共享大张量 |
+| `cap:mem` | `Arena`, `SharedTensor`, `Cow`, `CowSlice`, `TaggedPointer`, `TaggedPtr`, `MaxHeapAllocator` | 区域内存分配、写时复制切片、打标指针与共享大张量（详见 `docs/mem/mem.md`） |
 | `cap:string` | `ZigString`, `WTF8`, `SimdUtf`, `Utf8Grapheme`, `CaseConverter`, `SmolStr`, `HashedString`, `PathString`, `StringJoiner`, `StringBuilder` | SIMD UTF-8/16 校验转换、UAX #29 字素簇、15B 纯栈 SSO 字符串与零拷贝路径解析（详见 `docs/string/string.md`） |
 | `cap:simd` | `Simd`（`indexOfByte`, `indexOfChar`, `indexOfAny2`, `indexOfAny4`, `indexOfAnyChar`, `skipWhitespace`, `firstNonAscii`, `isAscii`, `indexOfNewlineOrNonAscii`, `countByte`, `toLowerAscii`, `toUpperAscii`, `reduceAddI32`, `dotProductF32`） | 16/32 字节 Highway 级 SIMD 硬件向量字节扫描、无分支大小写转换与数值归约（详见 `docs/simd/simd.md`） |
 | `cap:json` | `JsonParser`, `JsonValue`, `JsonBufferPool`, `parse`, `stringify`（另有免 import 内置 `JSON`） | 零拷贝流式 JSON 解析框架 |
@@ -1064,7 +1064,7 @@ switch (msg) {
 | `cap:ws` | `Opcode`, `CloseCode`, `FrameHeader`, `FrameBuilder`, `Mask` | RFC 6455 WebSocket 协议帧编解码 |
 | `cap:router` | `Router<T>`, `RadixNode<T>`, `ParamMap`, `RouteMatch`, `Route`, `RouteFormatter` | 极速 Radix-Tree 路由匹配与反向路径格式化引擎 |
 | `cap:net` | `SocketAddress`, `UdpSocket`, `UdpPacket`, `TcpStream`, `TcpServer`, `SafeSocket`, `HttpConnectTunnel`, `Socks5Codec` | TCP/UDP/QUIC 套接字、HTTP CONNECT 与 SOCKS5 代理隧道 |
-| `cap:dns` | `DnsHeader`, `DnsRecordType`, `NameEncodeResult`, `HostsTable` | RFC 1035 DNS 报文编解码与 hosts 解析 |
+| `cap:dns` | `DnsHeader`, `DnsRecordType`, `NameEncodeResult`, `HostsTable` | RFC 1035 DNS 报文编解码与 hosts 解析（详见 `docs/dns/dns.md`） |
 | `cap:s3` | `S3Acl`, `S3StorageClass`, `S3Credentials`, `SigV4Signer`, `S3Client`（含 `presignUrl`）, `S3RequestBuilder`（含 `buildPresignedUrl`）, `S3StatResult`, `S3DownloadResult`, `S3UploadResult`, `S3DeleteResult`, `S3PartResult`, `MultiPartUpload`, `S3ContentRange`, `formatRangeHeader`, `parseContentRange`, `formatListObjectsQuery`, `parseS3ListObjectsResult` | 完备 AWS S3 客户端、SigV4 签名与预签名 URL 引擎、分块上传状态机、XML 流式解析与分片下载流（详见 `docs/s3/s3.md`） |
 | `cap:sourcemap` | `VLQ`, `Zigzag`, `Varint`, `LineOffsetTable`, `DynamicLineOffsetTable`, `Mapping`, `InternalSourceMap`, `Chunk`, `ParsedSourceMap`, `ParsedSourceMapRecord`, `SourceMapGenerator`, `SourceMapConsumer` | Base64 VLQ/Varint 编解码、高精度映射压缩、二进制 SourceMap v3 解析与生成反查套件（详见 `docs/sourcemap/sourcemap.md`） |
 | `cap:clap` | `parseArgs`, `parseParam`, `parseEx`, `usage`, `help`, `usageEx`, `helpEx`, `SliceIterator`, `ShellIterator`, `OsIterator`, `StreamingClap`, `ComptimeClap`, `Names`, `Values`, `Param`, `Help`, `Diagnostic`, `ParseOptions` | 工业级命令行参数解析引擎，支持 POSIX 引号分词、声明式语法、流式状态机与编译期常数级强类型提取（详见 `docs/clap/clap.md`） |
@@ -1077,7 +1077,7 @@ switch (msg) {
 | `cap:dotenv` | `EnvParser`, `EnvMap`, `DotenvLoader`, `DotenvOptions`, `parse`, `load`, `config`, `expandString` | 工业级 `.env` 解析器，支持引号转义、`${VAR:-default}` 变量递归展开与多层级级联覆盖加载状态机（详见 `docs/dotenv/dotenv.md`） |
 | `cap:which` | `which`, `isExecutable`, `endsWithExtension`, `WhichOptions` | 跨平台 `PATH` 可执行程序定位器（详见 `docs/which/which.md`） |
 | `cap:encoding` | `Base64`（`encode`, `decode`, `encodeURLSafe`, `decodeInPlace`, `encodeAlloc`, `decodeAlloc`, `isValid`）, `Base64Encoder`, `Base64Decoder`, `Codecs`, `Hex`（`encode`, `encodeLower`, `encodeUpper`, `decode`, `decodeInPlace`）, `Utf8`, `Utf16` | 高性能 Base64、原地极速解码、十六进制与 UTF 文本编码库（详见 `docs/encoding/encoding.md`） |
-| `cap:crypto` | `sha256`, `sha512`, `randomBytes`, `fillRandom`, `randomUUID`, `Aes256Gcm`, `ChaCha20Poly1305`, `Hmac`, `pbkdf2`, `TlsHostnameVerifier` | 密码学随机数、散列、AEAD 加密与 BoringSSL X.509 校验 |
+| `cap:crypto` | `sha256`, `sha512`, `randomBytes`, `fillRandom`, `randomUUID`, `Aes256Gcm`, `ChaCha20Poly1305`, `Hmac`, `pbkdf2`, `TlsHostnameVerifier` | 密码学随机数、散列、AEAD 加密与 BoringSSL X.509 校验（详见 `docs/crypto/crypto.md`） |
 | `cap:safety` | `thread_id`, `getCurrent`, `isCurrent`, `isValid`, `ThreadLock`, `CriticalSection`, `CheckedAllocator`, `assertEq`, `assertAllocatorEq`, `assertEqFmt`, `poison`, `unpoison`, `isPoisoned`, `assertPoisoned`, `assertUnpoisoned`, `assert`, `safety_assert`, `safety_panic` | 生产级线程安全、可重入并发竞态检测、非托管容器防混用与原生 ASAN 内存毒化标准库（详见 `docs/safety/safety.md`） |
 | `cap:security` | `CSRF`（`generate`, `verify`, `generateRaw`, `verifyRaw`, `generateRawAt`, `verifyRawAt`）, `TokenFormat`, `constantTimeEql` | 防 CSRF 签名、时钟偏移与防溢出保护及恒定时间安全比对（详见 `docs/security/security.md`） |
 | `cap:reflect` | `reflect.type<T>()`, `reflect.of()`, `reflect.has()`, `reflect.hasField()`, `reflect.hasMethod()` | 编译期与运行时统一反射内省库 |

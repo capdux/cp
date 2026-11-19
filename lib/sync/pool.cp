@@ -1,4 +1,4 @@
-// Source: Bun bun/src/threading/pool.cp
+// Source: /data/dev/bun/src/threading/work_pool.cp & /data/dev/bun/src/threading/guarded.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/pool.cp
 // Upstream Sync: Refer to bun/src/threading/pool.zig for future upstream updates.

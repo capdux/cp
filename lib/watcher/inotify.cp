@@ -1,4 +1,4 @@
-// Source: bun/src/watcher/INotifyWatcher.cp
+// Source: /data/dev/bun/src/watcher/INotifyWatcher.cp
 import std from "std";
 
 pub const IN_ACCESS: u32 = 0x00000001;

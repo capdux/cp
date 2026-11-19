@@ -1,7 +1,7 @@
-// Source: Bun bun/src/shell/parser.cp
+// Source: /data/dev/bun/src/shell/
 // ============================================================================
-// Absorbed from Bun: bun/src/shell/parser.cp
-// Upstream Sync: Refer to bun/src/shell/parser.zig for future upstream updates.
+// Absorbed from Bun: /data/dev/bun/src/shell/
+// Upstream Sync: Refer to /data/dev/bun/src/shell/ for future upstream updates.
 // ============================================================================
 // lib/shell/parser.cp
 // AST nodes and parser for CP Shell (cap:shell)
@@ -50,7 +50,7 @@ pub struct Command {
         return true;
     }
 
-    pub fn argv(): []const []const u8 {
+    pub fn argv(*_): []const []const u8 {
         return _.args[0.._.args_len];
     }
 }
@@ -75,7 +75,7 @@ pub struct Pipeline {
         return true;
     }
 
-    pub fn cmds(): []const Command {
+    pub fn cmds(*_): []const Command {
         return _.commands[0.._.commands_len];
     }
 }
@@ -112,7 +112,7 @@ pub struct Script {
         return true;
     }
 
-    pub fn stmts(): []const Statement {
+    pub fn stmts(*_): []const Statement {
         return _.statements[0.._.statements_len];
     }
 }

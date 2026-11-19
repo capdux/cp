@@ -1,4 +1,4 @@
-// Source: Bun src/sql/postgres/protocol/
+// Source: /data/dev/bun/src/sql/
 // lib/sql/postgres.cp
 // PostgreSQL v3 Wire Authentication, DataRow Iterator & CommandComplete Tag Parser
 // Absorbed from Bun src/sql/postgres/protocol/ & src/sql/postgres/CommandTag.cp

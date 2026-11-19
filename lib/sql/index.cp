@@ -1,4 +1,4 @@
-// Source: Bun bun/src/sql/
+// Source: /data/dev/bun/src/sql/
 // ============================================================================
 // Absorbed from Bun: bun/src/sql/
 // Upstream Sync: Refer to bun/src/sql/ for future upstream updates.

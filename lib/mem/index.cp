@@ -1,4 +1,4 @@
-// Source: Custom (agy-generated export index)
+// Source: /data/dev/bun/src/bun_alloc/bun_alloc.cp
 // lib/mem/index.cp
 // Unified Cap Memory & Smart Pointer Subsystem (cap:mem)
 
@@ -48,6 +48,7 @@ export {
     StackFallbackAllocator,
     BumpArena,
     MaybeOwnedBuf,
+    MaxHeapAllocator,
 } from "./allocator.cp";
 
 export {
@@ -62,6 +63,7 @@ export {
 export {
     CowBytes,
     CowSlice,
+    Cow,
 } from "./cow.cp";
 
 export {
@@ -69,4 +71,5 @@ export {
     RefCounter,
     AtomicRefCounter,
     WeakControlBlock,
+    Rc,
 } from "./rc.cp";
