@@ -1614,3 +1614,25 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
   - 针对自编译 C 源码测试用例，首次构建成功触发 `[zig cc]` 编译出 `.a` 静态库并执行输出正确结果（`add_numbers(10, 20) = 30`）；二次构建命中缓存秒级跳过；
   - 针对 `cap:http` 导入测试，[test_bin_sys_on_demand.cp](file:///data/dev/cp/cap/test/test_bin_sys_on_demand.cp) 首次运行自动检测并使用 Zig 编译了 `picohttpparser` 生成静态库并通过测试，二次运行耗时从 1288ms 降至 799ms，测试 100% PASS。
 
+## [2026-11-20] 工业级 RFC 1952 Gzip & RFC 1950/1951 Deflate/Inflate 压缩体系构建日志
+- 背景与问题发现：
+  用户针对 `lib/pack/gzip.cp` 仅有 148 行提出疑问。经排查代码库与历史记录：
+  1. 此前 `gzip.cp` 为早期的协议帧空壳打桩（RFC 1952 Header/Trailer），缺少底层原生 zlib 深度绑定；
+  2. 当时未连接静态库，用 55 行玩具级 `RleCodec` 充当临时占位符，缺少真正原生算法与动态扩容流式状态机；
+  3. 对比下游 Bun 原生 `/data/dev/bun/src/zlib/zlib.cp`（914行），CP 的 pack 模块尚未完成对 Bun 资产的全面吸收。
+- 架构设计与实现策略：
+  1. **符号隔离与命名空间规范**：
+     由于底层 C 静态库中导出的符号为 `deflate` 与 `inflate`，若在顶级模块直接声明 `@c { fn deflate... }` 会与对外用户友好的高阶 API `pub fn deflate(src)` 产生 Zig 结构体字段冲突。
+     设计采用容器结构体 `pub struct NativeZlib` 进行封装，借助 `cpc` 对结构体内 `pub extern fn` 的原生支持，将底层 C-FFI 隔离为 `NativeZlib.deflate` / `NativeZlib.inflate`，既保留底层完整控制力，又向用户暴露最优雅的顶级函数接口。
+  2. **RFC 1952 / 1950 / 1951 多模式 WindowBits 状态机**：
+     - `window_bits = 31` (15 + 16)：RFC 1952 标准 Gzip 封装（自动写入/验证 10 字节头与 CRC32/ISIZE 尾）；
+     - `window_bits = 15`：RFC 1950 标准 Zlib Deflate 封装（2 字节头与 Adler32 校验尾）；
+     - `window_bits = -15`：RFC 1951 裸 Deflate 流（供 HTTP 流式传输或 ZIP entry 压缩）；
+     - `window_bits = 47` (15 + 32)：Inflate 自动探测，透明解析 Zlib 或 Gzip 输入。
+  3. **动态扩容内存自愈机制**：
+     在 `decompressWithWindowBits` 中，首选使用尾部 4 字节的 ISIZE 作为启发式容量初值；解压过程中若遇未预料的大数据或超限流，在 `avail_out == 0` 时自动倍增内存（`cur_cap * 2`），拷贝并重定位输出指针，实现任意大尺寸载荷的确定性安全解压。
+- 闭环验证：
+  - 新增全量测试套件 `cap/test/test_pack_gzip_complete.cp`，覆盖标准往返、魔数嗅探、4.5KB 载荷多次动态扩容、Zlib Deflate、裸 Deflate、面向对象包装器以及 RLE 兼容性；
+  - 执行 `cap test` 验证 100% PASS（耗时 748ms）；
+  - 执行 `ldd` 确认二进制产物中 100% 静态内嵌，彻底无系统 `libz.so` 动态绑定。
+

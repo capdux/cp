@@ -2393,4 +2393,26 @@
      - 明确指出 Zig 标准库自带纯 Zig 实现的 RFC 1950 (Zlib) / RFC 1951 (Deflate) / RFC 1952 (Gzip)（路径：`std/compress/flate.zig`）；
      - 阐明保留 `vendor/zlib` 的核心原因：C-ABI 符号兼容（`compress2`, `z_stream` 等底层 C 接口直接对接第三方 C 库与 CapSurf）及 AVX2/AVX-512/PCLMULQDQ/NEON 向量极限吞吐（20GB/s+）。
 
+## 2026-11-20
+- 用户指令：
+  gzip.cp 只有 148行呢?
+- 执行结果：
+  1. **深度成因剖析**：
+     - 阐明此前 `lib/pack/gzip.cp` 仅为 148 行的根本原因：早期该文件仅作为 RFC 1952 帧头与帧尾编解码的轻量测试打桩（`GzipHeader` 约 80 行 + 临时占位 RLE 游程编码器 `RleCodec` 约 55 行），当时尚未深度接入底层的纯静态 zlib，因此缺失了真正的原生 Gzip/Deflate 算法、缺失了流式与动态扩容状态机，更未暴露高级便捷 API；
+     - 对比 Bun 原生 `/data/dev/bun/src/zlib/zlib.cp`（914行），CP 之前仅实现了最外层空壳。
+  2. **全面吸收并重构工业级 Gzip/Zlib 引擎**：
+     - 在 [lib/pack/_codecs.cp](file:///data/dev/cp/lib/pack/_codecs.cp) 中，将底层 `deflateInit2_`、`deflate`、`deflateEnd`、`deflateBound`、`inflateInit2_`、`inflate`、`inflateEnd`、`crc32` 等 C-FFI 声明封装于结构体 `NativeZlib` 中，杜绝与顶层用户 API 同名冲突；
+     - 在 [lib/pack/gzip.cp](file:///data/dev/cp/lib/pack/gzip.cp) 中全面重构（由 148 行扩充至 344 行）：
+       - 完善 `GzipHeader` 帧头与帧尾解析/生成及校验（修正参数命名避免变量遮蔽）；
+       - 实现 `compressWithWindowBits`（驱动 `NativeZlib` 并输出标准 gzip 帧头尾）；
+       - 实现 `decompressWithWindowBits`（带缓冲区耗尽动态倍增扩容机制，支持大尺寸流式解压）；
+       - 提供标准顶级 API：`gzip(src, level)`、`gunzip(src)`、`deflate(src, level)`、`inflate(src)`、`deflateRaw(src, level)`、`inflateRaw(src)`；
+       - 提供面向对象便携包装类：`Gzip`、`Gunzip`、`DeflateCodec`、`InflateCodec`、`DeflateRawCodec`；
+       - 保留 `RleCodec` 实现 100% 向后兼容；
+     - 在 [lib/pack/index.cp](file:///data/dev/cp/lib/pack/index.cp) 中对模块导出进行清晰收敛，对外统一暴露高层 API 与安全常量。
+  3. **双轨规范手册与回归测试闭环**：
+     - 同步更新 [cp_ref.md](file:///data/dev/cp/cp_ref.md) 与 [cp_agent_ref.md](file:///data/dev/cp/cp_agent_ref.md) 中关于 `cap:pack`（`cap:compress`）的工业级特性矩阵；
+     - 编写全量测试用例 [cap/test/test_pack_gzip_complete.cp](file:///data/dev/cp/cap/test/test_pack_gzip_complete.cp)（覆盖基础 Gzip/Gunzip 往返、RFC 1952 帧头校验、大尺寸 4.5KB 载荷动态倍增扩容、Zlib Deflate/Inflate、Raw Deflate/Inflate、面向对象 API 以及 RLE 兼容性），`cap test` 运行全部 100% PASS（748ms）；
+     - `ldd` 验证编译生成二进制，确认 100% 静态内嵌，零动态 `libz.so` 依赖。
+
 

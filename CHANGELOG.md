@@ -1260,3 +1260,22 @@ hotfix: resolve keyword conflict for "test" and prevent redundant re-export of i
 - **cap/test/test_bin_sys_on_demand.cp**:
   - 新增正式回归测试用例，验证导入 `cap:http` 时自动触发 `libpicohttpparser.a` 按需编译与链接。
 
+## [2026-11-20] 工业级 Gzip / Zlib 压缩引擎重构与全景特性吸收
+- **lib/pack/_codecs.cp**:
+  - 增加 `pub type ZStream = z_stream_s;` 大写类型别名，符合 CP 结构体字面量语法规范。
+  - 新增 `pub struct NativeZlib` 容器，封装 `deflateInit2_`、`deflate`、`deflateEnd`、`deflateBound`、`inflateInit2_`、`inflate`、`inflateEnd`、`crc32` 等 C-FFI 声明，消除与顶层导出函数的命名冲突。
+- **lib/pack/gzip.cp**:
+  - 重构并扩充为 344 行工业级 Gzip & Deflate 编解码引擎。
+  - 修正 `writeTrailer` 参数遮蔽问题。
+  - 实现基于 `window_bits = 31` 的全量与流式 `compressWithWindowBits`。
+  - 实现带自动倍增扩容保障（`mut_cap * 2`）的 `decompressWithWindowBits`，自动支持任意大尺寸流式解压。
+  - 导出顶层标准 API：`gzip`、`gunzip`、`deflate`、`inflate`、`deflateRaw`、`inflateRaw`。
+  - 导出面向对象包装器：`Gzip`、`Gunzip`、`DeflateCodec`、`InflateCodec`、`DeflateRawCodec`。
+  - 完整保留 `RleCodec` 保证向后兼容性。
+- **lib/pack/index.cp**:
+  - 收敛对外暴露符号，显式导出 `NativeZlib` 与安全类型，防止内部底层声明污染。
+- **cap/test/test_pack_gzip_complete.cp**:
+  - 新增全量回归测试套件，全面覆盖 Gzip 往返、RFC 1952 帧头校验、动态倍增扩容、Zlib Deflate/Inflate、Raw Deflate/Inflate、面向对象 API 及 RLE 兼容性。
+- **cp_ref.md & cp_agent_ref.md**:
+  - 同步更新权威手册与智能体契约手册中 `cap:pack`（`cap:compress`）的功能矩阵说明。
+

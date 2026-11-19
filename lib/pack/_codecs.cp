@@ -21,6 +21,8 @@ pub @c struct z_stream_s {
     reserved: usize,
 }
 
+pub type ZStream = z_stream_s;
+
 pub @c struct BrotliDecoderStateStruct {
     _opaque: i32,
 }
@@ -30,7 +32,7 @@ pub @c struct BrotliEncoderStateStruct {
 }
 
 pub @c {
-    // Zlib C-FFI
+    // Zlib C-FFI (One-shot wrappers)
     fn zlibVersion(): [*c]const u8;
     fn compress(dest: [*c]u8, destLen: *usize, source: [*c]const u8, sourceLen: usize): i32;
     fn compress2(dest: [*c]u8, destLen: *usize, source: [*c]const u8, sourceLen: usize, level: i32): i32;
@@ -50,6 +52,20 @@ pub @c {
     fn BrotliDecoderCreateInstance(alloc_func: *!?, free_func: *!?, opaque_ctx: *!?): (*BrotliDecoderStateStruct)?;
     fn BrotliDecoderDestroyInstance(state: *BrotliDecoderStateStruct);
     fn BrotliEncoderMaxCompressedSize(input_size: usize): usize;
+}
+
+/// Zlib 原生流式压缩与解压 C-FFI 接口容器（避免与顶层高级 API 同名冲突）
+pub struct NativeZlib {
+    pub extern fn deflateInit2_(strm: *z_stream_s, level: i32, method: i32, windowBits: i32, memLevel: i32, strategy: i32, version: [*c]const u8, stream_size: i32): i32;
+    pub extern fn deflate(strm: *z_stream_s, flush: i32): i32;
+    pub extern fn deflateEnd(strm: *z_stream_s): i32;
+    pub extern fn deflateReset(strm: *z_stream_s): i32;
+    pub extern fn deflateBound(strm: *z_stream_s, sourceLen: usize): usize;
+    pub extern fn inflateInit2_(strm: *z_stream_s, windowBits: i32, version: [*c]const u8, stream_size: i32): i32;
+    pub extern fn inflate(strm: *z_stream_s, flush: i32): i32;
+    pub extern fn inflateEnd(strm: *z_stream_s): i32;
+    pub extern fn inflateReset(strm: *z_stream_s): i32;
+    pub extern fn crc32(crc: usize, buf: [*c]const u8, len: u32): usize;
 }
 
 pub const Z_MIN_WBITS: i32 = 8;
