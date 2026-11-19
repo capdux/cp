@@ -1,6 +1,6 @@
-// Source: Bun src/zlib/zlib.cp
+// Source: /data/dev/bun/src/zlib/zlib.cp, /data/dev/bun/src/brotli/brotli.cp, /data/dev/bun/src/zstd/zstd.cp
 // ============================================================================
-// lib/compress/_codecs.cp — Zlib / Brotli / Zstd 底层 C-FFI 声明与状态枚举
+// lib/pack/_codecs.cp — Zlib / Brotli / Zstd 底层 C-FFI 声明与状态枚举
 // 吸收自 Bun src/zlib/zlib.cp, src/brotli/brotli.cp, src/zstd/zstd.cp
 // ============================================================================
 
@@ -146,7 +146,7 @@ fn containsToken(haystack: []const u8, needle: []const u8): bool {
     return false;
 }
 
-/// 纯算术计算 Zlib / Zstd 压缩上界估计（无需链接底层 C 库即可预分配缓冲区）
+/// 纯算术计算 Zlib / Zstd / Brotli 压缩上界估计（无需链接底层 C 库即可预分配缓冲区）
 pub struct CompressBoundEstimator {
     pub static fn zlibBound(source_len: usize): usize {
         return source_len + (source_len >> 12) + (source_len >> 14) + (source_len >> 25) + 13;
@@ -155,6 +155,15 @@ pub struct CompressBoundEstimator {
     pub static fn zstdBound(source_len: usize): usize {
         let margin: usize = if (source_len < 131072) (((131072 as usize) - source_len) >> 11) else (0 as usize);
         return source_len + (source_len >> 8) + margin + 64;
+    }
+
+    pub static fn brotliBound(source_len: usize): usize {
+        if (source_len == 0) {
+            return 2;
+        }
+        const num_large_blocks = source_len >> 14;
+        const overhead = 2 + (4 * num_large_blocks) + 3 + 1;
+        return source_len + overhead + 58;
     }
 }
 
@@ -167,17 +176,5 @@ pub struct Zlib {
 pub struct Deflate {
     pub static fn bound(source_len: usize): usize {
         return CompressBoundEstimator.zlibBound(source_len);
-    }
-}
-
-pub struct Zstd {
-    pub static fn bound(source_len: usize): usize {
-        return CompressBoundEstimator.zstdBound(source_len);
-    }
-}
-
-pub struct Brotli {
-    pub static fn bound(source_len: usize): usize {
-        return source_len + (source_len >> 4) + 64;
     }
 }

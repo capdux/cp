@@ -1661,3 +1661,14 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
   2. 建立 `docs/pack/` 目录并撰写全套官方使用说明 `docs/pack/zlib.md`（包含架构设计、快速入门、分块流式管道、RFC 1952 头尾校验、WindowBits 矩阵与 Node/Bun 兼容对照表）；
   3. 建立 `docs/pack/zlig.md` 兼容指针，并在 `docs/stdlib/pack_native.md` 中打通跳转。
 
+### 第四阶段：三路子智能体并行审计与吸收 Bun 标准库生态（第一里程碑批次：14 大模块）
+- 并行调度架构：
+  1. 启动 3 个物理文件域严格正交隔离的子智能体（Subagent 1: `30b8634c`、Subagent 2: `8c3377a5`、Subagent 3: `1a34a94d`），避免任何并发写冲突；
+  2. 主智能体统一掌控双轨规范手册（`cp_ref.md`、`cp_agent_ref.md`）、四线热文档与 Git 原子提交。
+- 核心技术落地：
+  1. **Bun 资产吸收与去 Zig 胶水纯 CP 化**：吸收 Bun `src/brotli/brotli.cp` 与 `src/zstd/zstd.cp` 进 `lib/pack/`；将 `lib/col/treap.cp` 从占位升级为完整的 1-based 内联节点池平衡树堆；将 `lib/col/leb128.cp`、`lib/encoding/base64_.cp`、`lib/url/url_.cp`、`lib/which/which.cp` 中历史遗留的 Zig 语法彻底重构为 100% 纯正现代 CP 语法；
+  2. **全量首行溯源注释**：在 14 个模块的 76 个 `.cp` 源码文件第 1 行统一标注 `// Source: /data/dev/bun/src/...`，建立与上游 Bun 源码的一一对应追踪关系；
+  3. **模块化专著文档体系**：在 `docs/<库名>/<库名>.md` 下落盘 14 份深度技术手册（`pack`、`col`、`encoding`、`url`、`path`、`glob`、`semver`、`which`、`sourcemap`、`patch`、`hash`、`dotenv`、`conf`、`clap`）；
+  4. **全量端到端测试验证**：6 套新建全功能回归测试套件及全部既有相关测试套件 100% PASS。
+
+

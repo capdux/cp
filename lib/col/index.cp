@@ -1,4 +1,4 @@
-// Source: bun/src/collections/
+// Source: /data/dev/bun/src/collections/collections.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/collections/
 // Upstream Sync: Refer to bun/src/collections/ for future upstream updates.

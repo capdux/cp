@@ -1,4 +1,4 @@
-// Source: bun/src/url/percent-encoding.cp
+// Source: /data/dev/bun/src/url/url.cp
 // ============================================================================
 // lib/url/percent.cp — RFC 3986 URI Component Percent-Encoder & Decoder
 // ============================================================================
@@ -66,6 +66,11 @@ pub struct PercentEncoding {
         return pos;
     }
 
+    /// Convenience alias for `encodeComponentToBuf`.
+    pub static fn encode(input: []const u8, out: []u8): usize {
+        return PercentEncoding.encodeComponentToBuf(input, out);
+    }
+
     /// Decodes `%XX` sequences (and optionally `+` as space when `plus_as_space` is true) into `out`.
     pub static fn decodeToBuf(input: []const u8, plus_as_space: bool, out: []u8): usize {
         let i: usize = 0;
@@ -95,22 +100,34 @@ pub struct PercentEncoding {
         return pos;
     }
 
+    /// Decodes `%XX` sequences into `out` without converting `+` to space.
+    pub static fn decode(input: []const u8, out: []u8): usize {
+        return PercentEncoding.decodeToBuf(input, false, out);
+    }
+
+    /// Decodes `%XX` sequences and `+` as space (application/x-www-form-urlencoded) into `out`.
+    pub static fn decodeQuery(input: []const u8, out: []u8): usize {
+        return PercentEncoding.decodeToBuf(input, true, out);
+    }
+
     /// Percent-encodes `input` into allocated string memory.
     pub static fn encodeComponent(input: []const u8, allocator: std.mem.Allocator): !string {
         let max_len = input.len * 3;
-        let buf = try allocator.alloc(u8, max_len);
+        let buf = allocator.alloc(u8, max_len)?;
         errdefer allocator.free(buf);
         let len = PercentEncoding.encodeComponentToBuf(input, buf);
-        let res = try allocator.realloc(buf, len);
+        let res = allocator.realloc(buf, len)?;
         return res;
     }
 
     /// Decodes percent-encoded string into allocated memory.
     pub static fn decodeAlloc(input: []const u8, plus_as_space: bool, allocator: std.mem.Allocator): !string {
-        let buf = try allocator.alloc(u8, input.len);
+        let buf = allocator.alloc(u8, input.len)?;
         errdefer allocator.free(buf);
         let len = PercentEncoding.decodeToBuf(input, plus_as_space, buf);
-        let res = try allocator.realloc(buf, len);
+        let res = allocator.realloc(buf, len)?;
         return res;
     }
 }
+
+pub const Percent = PercentEncoding;

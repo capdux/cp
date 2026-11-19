@@ -1288,4 +1288,27 @@ hotfix: resolve keyword conflict for "test" and prevent redundant re-export of i
   - 新建 `docs/pack/` 目录，编写全套 Zlib/Gzip 详细开发手册与使用指南。
 - **docs/stdlib/pack_native.md**:
   - 更新索引指向 `docs/pack/zlib.md`。
+- **lib/pack/* (Brotli & Zstd 吸收与全量溯源)**:
+  - 新增 `lib/pack/brotli.cp`（吸收自 `/data/dev/bun/src/brotli/brotli.cp`，实现 `BrotliMode`、`BrotliHeader`、`Brotli`）。
+  - 新增 `lib/pack/zstd.cp`（吸收自 `/data/dev/bun/src/zstd/zstd.cp`，实现 `ZstdFrameHeader`、`Zstd`）。
+  - 更新 `lib/pack/*.cp` 共 10 个文件的首行 `// Source:` 备注，并在 `index.cp` 统一导出。
+  - 新增 `docs/pack/pack.md` 与 `cap/test/test_pack_full.cp`。
+- **lib/col/* (容器升级与全量溯源)**:
+  - 升级 `lib/col/treap.cp` 为完整 1-based 内联节点池平衡树堆 `Treap<K, V>`。
+  - 重构 `lib/col/leb128.cp` 为纯正现代 CP 静态编解码引擎。
+  - 增强 `lib/col/priority_queue.cp` 与 `lib/col/string_map.cp`，更新全部 13 个文件的首行 `// Source:` 备注。
+  - 新增 `docs/col/col.md` 与 `cap/test/test_col_full.cp`。
+- **lib/encoding/* & lib/url/* (纯正 CP 重构与全量溯源)**:
+  - 重构 `lib/encoding/base64_.cp`、`base64.cp`、`hex.cp` 及 `lib/url/url_.cp`、`url.cp`、`percent.cp`、`search_params.cp` 为 100% 纯正现代 CP 语法，更新全部 10 个文件的首行 `// Source:` 备注。
+  - 新增 `docs/encoding/encoding.md`、`docs/url/url.md` 与 `cap/test/test_encoding_url_full.cp`。
+- **lib/path/*, lib/glob/*, lib/semver/*, lib/which/* (完备性加固与全量溯源)**:
+  - 修复 `PosixPath/WindowsPath.extname("..")` 边界，优化 `GlobMatcher`，增强 `semver/query.cp` 独立算子空格兼容，将 `which.cp` 重写为纯正 CP 语法并增加 `opendir` 目录排除校验，更新全部 16 个文件的首行 `// Source:` 备注。
+  - 新增 `docs/path/path.md`、`docs/glob/glob.md`、`docs/semver/semver.md`、`docs/which/which.md` 与 `cap/test/test_path_glob_semver_which.cp`。
+- **lib/sourcemap/*, lib/patch/*, lib/hash/* (功能增强与全量溯源)**:
+  - 为 `LineDiffer` 新增 `editDistance`，为 `Hash` 新增 `wyhash`、`djb2`、`fnv1a32` 与 `WyhashStream`，更新全部 12 个文件的首行 `// Source:` 备注。
+  - 新增 `docs/sourcemap/sourcemap.md`、`docs/patch/patch.md`、`docs/hash/hash.md` 与 `cap/test/test_sourcemap_patch_hash.cp`。
+- **lib/dotenv/*, lib/conf/*, lib/clap/* (配置提取器增强与全量溯源)**:
+  - 增强 `EnvMap.parse`、`ConfGetter`、`YamlDoc` 并优化 `clap.cp` 符号隔离，更新全部 15 个文件的首行 `// Source:` 备注。
+  - 新增 `docs/dotenv/dotenv.md`、`docs/conf/conf.md`、`docs/clap/clap.md` 与 `cap/test/test_conf_dotenv_clap.cp`。
+
 

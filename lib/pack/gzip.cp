@@ -1,4 +1,4 @@
-// Source: Bun src/zlib/zlib.cp (RFC 1952 / RFC 1950 / RFC 1951 Native Engine)
+// Source: /data/dev/bun/src/zlib/zlib.cp
 // ============================================================================
 // lib/pack/gzip.cp — RFC 1952 Gzip & RFC 1950/1951 Deflate/Inflate 工业级压缩与解压引擎
 // 吸收自 Bun src/zlib/zlib.cp，由底层 vendor/zlib 纯静态库 (libz.a) 驱动

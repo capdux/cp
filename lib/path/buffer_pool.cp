@@ -1,4 +1,4 @@
-// Source: bun/src/paths/path_buffer_pool.cp
+// Source: /data/dev/bun/src/paths/path_buffer_pool.cp
 // ============================================================================
 // lib/path/buffer_pool.cp — Preallocated Buffer Pool for Zero-Allocation Path Ops
 // ============================================================================

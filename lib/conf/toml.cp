@@ -1,7 +1,7 @@
-// Source: bun/src/interchange/toml.cp
+// Source: /data/dev/bun/src/interchange/toml/
 // ============================================================================
-// Absorbed from Bun: bun/src/interchange/toml.cp & bun/src/interchange/toml/lexer.cp
-// Upstream Sync: Refer to bun/src/interchange/toml.zig for future upstream updates.
+// Absorbed from Bun: /data/dev/bun/src/interchange/toml.cp & /data/dev/bun/src/interchange/toml/lexer.cp
+// Upstream Sync: Refer to /data/dev/bun/src/interchange/toml.zig for future upstream updates.
 // ============================================================================
 // lib/conf/toml.cp
 // Industrial-grade TOML configuration parser, serializer, and document model

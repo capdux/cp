@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: /data/dev/bun/src/zlib/ & Zig std.compress
 // lib/pack/native.cp
 // Native decompression using Zig std.compress
 

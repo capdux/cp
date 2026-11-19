@@ -1,4 +1,4 @@
-// Source: bun/src/glob/GlobWalker.cp
+// Source: /data/dev/bun/src/glob/glob.cp
 // lib/glob/walker.cp
 // Industrial-grade directory traversal and file scanner in pure CP
 

@@ -1,6 +1,6 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: /data/dev/bun/src/interchange/interchange.cp
 // lib/conf/getter.cp
-// Type-Safe Configuration Value Parser (Booleans, Ports, Durations & Byte Sizes)
+// Type-Safe Configuration Value Parser & Unified ConfGetter (Booleans, Numbers, Ports, Durations & Byte Sizes)
 
 const std = @import("std");
 
@@ -42,6 +42,20 @@ pub struct ConfValueParser {
             i += 1;
         }
         return acc;
+    }
+
+    /// Parses a signed 64-bit integer from a decimal string.
+    pub static fn parseI64(raw: []const u8): i64? {
+        const s = std.mem.trim(u8, raw, " \t\r\n");
+        if (s.len == 0) return null;
+        return std.fmt.parseInt(i64, s, 10) catch null;
+    }
+
+    /// Parses a 64-bit floating-point number from a string.
+    pub static fn parseF64(raw: []const u8): f64? {
+        const s = std.mem.trim(u8, raw, " \t\r\n");
+        if (s.len == 0) return null;
+        return std.fmt.parseFloat(f64, s) catch null;
     }
 
     /// Parses a valid TCP/UDP port number (`1..65535`).
@@ -124,4 +138,61 @@ pub struct ConfValueParser {
         }
         return null;
     }
+
+    /// Unified fallback extractors accepting optional raw slices from INI/TOML/YAML/DotEnv
+    pub static fn getStringOr(raw: ([]const u8)?, default_val: []const u8): []const u8 {
+        if (v := raw) return v;
+        return default_val;
+    }
+
+    pub static fn getBoolOr(raw: ([]const u8)?, default_val: bool): bool {
+        if (v := raw) {
+            if (b := ConfValueParser.parseBool(v)) return b;
+        }
+        return default_val;
+    }
+
+    pub static fn getU64Or(raw: ([]const u8)?, default_val: u64): u64 {
+        if (v := raw) {
+            if (n := ConfValueParser.parseU64(v)) return n;
+        }
+        return default_val;
+    }
+
+    pub static fn getI64Or(raw: ([]const u8)?, default_val: i64): i64 {
+        if (v := raw) {
+            if (n := ConfValueParser.parseI64(v)) return n;
+        }
+        return default_val;
+    }
+
+    pub static fn getF64Or(raw: ([]const u8)?, default_val: f64): f64 {
+        if (v := raw) {
+            if (n := ConfValueParser.parseF64(v)) return n;
+        }
+        return default_val;
+    }
+
+    pub static fn getPortOr(raw: ([]const u8)?, default_val: u16): u16 {
+        if (v := raw) {
+            if (p := ConfValueParser.parsePort(v)) return p;
+        }
+        return default_val;
+    }
+
+    pub static fn getDurationMsOr(raw: ([]const u8)?, default_val: u64): u64 {
+        if (v := raw) {
+            if (d := ConfValueParser.parseDurationMs(v)) return d;
+        }
+        return default_val;
+    }
+
+    pub static fn getByteSizeOr(raw: ([]const u8)?, default_val: u64): u64 {
+        if (v := raw) {
+            if (sz := ConfValueParser.parseByteSize(v)) return sz;
+        }
+        return default_val;
+    }
 }
+
+pub const ConfGetter = ConfValueParser;

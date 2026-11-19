@@ -10345,7 +10345,24 @@ flowchart TD
 ##### 12. 结构体数组化列式容器（`Soa<T>`）
 - **协议与入口**：`import { Soa } from "cap:col";`
 - **定位与价值**：底层封装 Zig 原生 `std.MultiArrayList(T)`，将结构体各字段在物理内存中拆分为独立连续切片。消除 AoS 内存对齐填充内碎片，使单列遍历时的 CPU L1 缓存命中率逼近 100%，提供直通硬件 SIMD 向量规约的 `items(field)` 列切片投影能力。
-- **详尽规范**：详见内置库独立手册 [`docs/stdlib/soa.md`](file:///data/dev/cp/docs/stdlib/soa.md)。
+- **详尽规范**：详见内置库独立手册 [`docs/col/col.md`](file:///data/dev/cp/docs/col/col.md) 与 [`docs/stdlib/soa.md`](file:///data/dev/cp/docs/stdlib/soa.md)。
+
+##### 13. 标准库独立专著文档索引体系 (`docs/<lib>/<lib>.md`)
+为保持权威规范手册与智能体契约手册的高密度精简，各标准库模块的详细架构图、完整代码示例、参数矩阵与 Bun/Node.js 对照表统一归档于 `docs/<库名>/<库名>.md`：
+- **压缩与归档 (`cap:pack`)**：[`docs/pack/pack.md`](file:///data/dev/cp/docs/pack/pack.md)、[`docs/pack/zlib.md`](file:///data/dev/cp/docs/pack/zlib.md)（Gzip/Zlib/Deflate/Brotli/Zstd/Tar/Zip/CRC32/Adler32）
+- **高性能容器 (`cap:col`)**：[`docs/col/col.md`](file:///data/dev/cp/docs/col/col.md)（BabyList/HiveArray/ObjectPool/BoundedArray/LinearFifo/PriorityQueue/BitSet/Treap/HashMap/StringMap/Soa/Leb128）
+- **编码与解码 (`cap:encoding`)**：[`docs/encoding/encoding.md`](file:///data/dev/cp/docs/encoding/encoding.md)（Base64 标准与 URL-Safe、原地解码、Hex）
+- **URL 与查询参数 (`cap:url`)**：[`docs/url/url.md`](file:///data/dev/cp/docs/url/url.md)（WHATWG URL 零拷贝解析、URLSearchParams、RFC 3986 Percent 编解码）
+- **跨平台路径 (`cap:path`)**：[`docs/path/path.md`](file:///data/dev/cp/docs/path/path.md)（PosixPath/WindowsPath 双轨解析、EnvPath、PathBufferPool）
+- **通配符匹配 (`cap:glob`)**：[`docs/glob/glob.md`](file:///data/dev/cp/docs/glob/glob.md)（GlobMatcher 状态机、GlobWalker 目录遍历）
+- **语义化版本 (`cap:semver`)**：[`docs/semver/semver.md`](file:///data/dev/cp/docs/semver/semver.md)（Semver 2.0 解析、优先级比较与 Range 区间引擎）
+- **可执行文件定位 (`cap:which`)**：[`docs/which/which.md`](file:///data/dev/cp/docs/which/which.md)（跨平台 PATH 检索与执行权限校验）
+- **源码映射 (`cap:sourcemap`)**：[`docs/sourcemap/sourcemap.md`](file:///data/dev/cp/docs/sourcemap/sourcemap.md)（SourceMap v3、Base64 VLQ、LineOffsetTable $O(\log N)$ 反查）
+- **差分与补丁 (`cap:patch`)**：[`docs/patch/patch.md`](file:///data/dev/cp/docs/patch/patch.md)（Myers $O(ND)$ 差分算法、Unified Diff 解析与应用）
+- **极速非加密散列 (`cap:hash`)**：[`docs/hash/hash.md`](file:///data/dev/cp/docs/hash/hash.md)（Wyhash/WyhashStream/XxHash3/CityHash64/Murmur3/FNV-1a/djb2/SipHash）
+- **环境变量加载 (`cap:dotenv`)**：[`docs/dotenv/dotenv.md`](file:///data/dev/cp/docs/dotenv/dotenv.md)（`.env` 解析、引号转义、`${VAR:-default}` 插值展开）
+- **多格式配置中心 (`cap:conf`)**：[`docs/conf/conf.md`](file:///data/dev/cp/docs/conf/conf.md)（INI/TOML/YAML/JSON5 统一解析与 `ConfGetter` 类型安全提取）
+- **命令行参数解析 (`cap:clap`)**：[`docs/clap/clap.md`](file:///data/dev/cp/docs/clap/clap.md)（零分配流式 `StreamingClap` 与编译期 `ComptimeClap`）
 
 ---
 

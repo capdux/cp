@@ -1,263 +1,153 @@
-// src/base64/base64.cp
-// Bun Base64 module ported to CP (Concurrent Plus) language
+// Source: /data/dev/bun/src/base64/base64.cp
+// lib/encoding/base64.cp
+// High-performance Base64 encoder, decoder, in-place decoder & codecs in pure CP
 
-export struct Base64 {
-    pub static fn encode(destination: []u8, source: string): usize {
-        const res = standard.Encoder.encode(destination, source);
-        return res.len;
+const std = @import("std");
+
+export {
+    standard_alphabet,
+    url_safe_alphabet,
+    decodeByteStandard,
+    decodeByteURLSafe,
+    decodeByteUnified,
+    Base64Encoder,
+    Base64Decoder,
+    Base64DecoderWithIgnore,
+    Codecs,
+    standard,
+    standard_no_pad,
+    url_safe,
+    url_safe_no_pad,
+} from "./base64_.cp";
+
+import {
+    decodeByteStandard,
+    decodeByteURLSafe,
+    decodeByteUnified,
+    standard,
+    standard_no_pad,
+    url_safe,
+    url_safe_no_pad,
+} from "./base64_.cp";
+
+pub class Base64 {
+    /// Calculates the padded Base64 encoded length (`((len + 2) / 3) * 4`).
+    pub static fn encodeLen(len: usize): usize {
+        return ((len + 2) / 3) * 4;
     }
 
-    pub static fn encodeAlloc(allocator: std.mem.Allocator, source: string): ![]u8 {
-        const len = standard.Encoder.calcSize(source.len);
-        const destination = allocator.alloc(u8, len)?;
-        errdefer allocator.free(destination);
-        const res = standard.Encoder.encode(destination, source);
-        return destination[0..res.len];
+    /// Calculates the unpadded URL-Safe Base64 encoded length (RFC 4648 Section 5).
+    pub static fn encodeLenURLSafe(len: usize): usize {
+        let leftover = len % 3;
+        return (len / 3) * 4 + ((leftover * 4 + 2) / 3);
     }
 
-    pub static fn decode(destination: []u8, source: string): !usize {
-        try standard.Decoder.decode(destination, source);
-        return standard.Decoder.calcSizeForSlice(source);
+    /// Calculates a safe upper-bound buffer size for decoding `len` Base64 bytes.
+    pub static fn decodeLen(len: usize): usize {
+        return (len / 4) * 3 + 4;
     }
 
-    pub static fn decodeAlloc(allocator: std.mem.Allocator, input: string): ![]u8 {
-        const dest = allocator.alloc(u8, try standard.Decoder.calcSizeForSlice(input))?;
-        errdefer allocator.free(dest);
-        try standard.Decoder.decode(dest, input);
-        return dest;
+    /// Calculates the upper-bound decoded byte length without extra margin.
+    pub static fn decodeLenUpperBound(len: usize): usize {
+        let leftover = len % 4;
+        return (len / 4) * 3 + ((leftover * 3) / 4);
     }
 
-    pub static fn decodeLen(source_len: usize): usize {
-        return (source_len / 4) * 3;
-    }
-}
-
-export struct Base64Encoder {
-    alphabet_chars: [64]u8,
-    pad_char: u8?,
-
-    static fn init(alphabet_chars: [64]u8, pad_char: u8?): Base64Encoder {
-        return Base64Encoder {
-            alphabet_chars: alphabet_chars,
-            pad_char: pad_char,
-        };
-    }
-
-    fn calcSize(source_len: usize): usize {
-        if (_.pad_char != null) {
-            return ((source_len + 2) / 3) * 4;
-        } else {
-            let leftover = source_len % 3;
-            return (source_len / 3) * 4 + ((leftover * 4 + 2) / 3);
+    /// Computes the exact decoded byte length of a Base64 slice, accounting for `=` padding or unpadded remainder.
+    pub static fn exactDecodedLen(source: []const u8): usize {
+        let len = source.len;
+        if (len == 0) return 0;
+        let pad: usize = 0;
+        if (len > 0 && source[len - 1] == '=') pad += 1;
+        if (len > 1 && source[len - 2] == '=') pad += 1;
+        if (pad > 0) {
+            let raw = (len / 4) * 3;
+            if (raw >= pad) return raw - pad;
+            return 0;
         }
+        let leftover = len % 4;
+        return (len / 4) * 3 + ((leftover * 3) / 4);
     }
 
-    fn encodeWithoutSizeCheck(dest: []u8, source: string): usize {
-        let acc: u32 = 0;
-        let acc_len: u32 = 0;
-        let out_idx: usize = 0;
-        for (v in source) {
-            acc = (acc << 8) + (v as u32);
-            acc_len += 8;
-            while (acc_len >= 6) {
-                acc_len -= 6;
-                let idx: usize = ((acc >> acc_len) & 0x3F) as usize;
-                dest[out_idx] = _.alphabet_chars[idx];
-                out_idx += 1;
-            }
-        }
-        if (acc_len > 0) {
-            let shift: u32 = (6 as u32) - acc_len;
-            let idx: usize = ((acc << shift) & 0x3F) as usize;
-            dest[out_idx] = _.alphabet_chars[idx];
-            out_idx += 1;
-        }
-        return out_idx;
+    /// Encodes `source` into `dest` using standard Base64 with `=` padding (RFC 4648 Section 4).
+    pub static fn encode(dest: []u8, source: []const u8): usize {
+        return standard.encoder.encode(dest, source);
     }
 
-    fn encode(dest: []u8, source: string): string {
-        let out_len = _.calcSize(source.len);
-        let out_idx = _.encodeWithoutSizeCheck(dest, source);
-        if (pad := _.pad_char) {
-            let i = out_idx;
-            while (i < out_len) {
-                dest[i] = pad;
-                i += 1;
-            }
-        }
-        return dest[0..out_len];
-    }
-}
-
-export struct Base64Decoder {
-    char_to_index: [256]u8,
-    pad_char: u8?,
-
-    static fn init(alphabet_chars: [64]u8, pad_char: u8?): Base64Decoder {
-        let result = Base64Decoder {
-            char_to_index: [255 as u8; 256],
-            pad_char: pad_char,
-        };
-        let i = 0;
-        for (c in alphabet_chars) {
-            result.char_to_index[c as usize] = i as u8;
-            i += 1;
-        }
-        return result;
+    /// Encodes `source` into `dest` using unpadded Base64.
+    pub static fn encodeNoPad(dest: []u8, source: []const u8): usize {
+        return standard_no_pad.encoder.encode(dest, source);
     }
 
-    fn calcSizeUpperBound(source_len: usize): usize! {
-        let result = (source_len / 4) * 3;
-        let leftover = source_len % 4;
-        if (_.pad_char != null) {
-            if (leftover % 4 != 0) {
-                return err.InvalidPadding;
-            }
-        } else {
-            if (leftover % 4 == 1) {
-                return err.InvalidPadding;
-            }
-            result += (leftover * 3) / 4;
-        }
-        return result;
+    /// Encodes `source` into `dest` using URL-Safe Base64 without padding (`-` and `_`, no `=`).
+    pub static fn encodeURLSafe(dest: []u8, source: []const u8): usize {
+        return url_safe_no_pad.encoder.encode(dest, source);
     }
 
-    fn calcSizeForSlice(source: string): usize! {
-        let source_len = source.len;
-        let result = _.calcSizeUpperBound(source_len)?;
-        if (_.pad_char != null) {
-            let pad = _.pad_char.?;
-            if (source_len >= 1 && source[source_len - 1] == pad) {
-                result -= 1;
-            }
-            if (source_len >= 2 && source[source_len - 2] == pad) {
-                result -= 1;
-            }
-        }
-        return result;
+    /// Encodes `source` into `dest` using URL-Safe Base64 with `=` padding.
+    pub static fn encodeURLSafePadded(dest: []u8, source: []const u8): usize {
+        return url_safe.encoder.encode(dest, source);
     }
 
-    fn decode(dest: []u8, source: string)! {
-        if (_.pad_char != null && source.len % 4 != 0) {
-            return err.InvalidPadding;
-        }
+    /// Dynamically allocates and encodes `source` using standard padded Base64.
+    pub static fn encodeAlloc(allocator: std.mem.Allocator, source: []const u8): []u8! {
+        const out_len = encodeLen(source.len);
+        let dest = allocator.alloc(u8, out_len)?;
+        const actual_len = encode(dest, source);
+        return dest[0..actual_len];
+    }
+
+    /// Dynamically allocates and encodes `source` using URL-Safe unpadded Base64.
+    pub static fn encodeURLSafeAlloc(allocator: std.mem.Allocator, source: []const u8): []u8! {
+        const out_len = encodeLenURLSafe(source.len);
+        let dest = allocator.alloc(u8, out_len)?;
+        const actual_len = encodeURLSafe(dest, source);
+        return dest[0..actual_len];
+    }
+
+    /// Dynamically allocates and encodes `source` using URL-Safe padded Base64.
+    pub static fn encodeURLSafePaddedAlloc(allocator: std.mem.Allocator, source: []const u8): []u8! {
+        const out_len = encodeLen(source.len);
+        let dest = allocator.alloc(u8, out_len)?;
+        const actual_len = encodeURLSafePadded(dest, source);
+        return dest[0..actual_len];
+    }
+
+    /// Decodes standard or URL-Safe Base64 (forgiving whitespace & optional padding) into `dest`.
+    pub static fn decode(dest: []u8, source: []const u8): usize! {
+        return decodeUnified(dest, source);
+    }
+
+    /// Decodes URL-Safe Base64 (with or without padding) into `dest`.
+    pub static fn decodeURLSafe(dest: []u8, source: []const u8): usize! {
+        return decodeUnified(dest, source);
+    }
+
+    /// Decodes Base64 in-place within `buf`, overwriting it with decoded bytes and returning the decoded length.
+    pub static fn decodeInPlace(buf: []u8): usize! {
         let acc: u32 = 0;
         let acc_len: u32 = 0;
         let dest_idx: usize = 0;
-        let leftover_idx: usize? = null;
         let src_idx: usize = 0;
-        for (c in source) {
-            let d = _.char_to_index[c as usize];
-            if (d == 255) {
-                if (_.pad_char == null || c != (_.pad_char ?? 0)) {
-                    return err.InvalidCharacter;
-                }
-                leftover_idx = src_idx;
+
+        while (src_idx < buf.len) {
+            let c = buf[src_idx];
+            if (c == '=') {
                 break;
             }
-            acc = (acc << 6) + (d as u32);
-            acc_len += 6;
-            if (acc_len >= 8) {
-                acc_len -= 8;
-                let val: u8 = ((acc >> acc_len) & 0xFF) as u8;
-                dest[dest_idx] = val;
-                dest_idx += 1;
-            }
-            src_idx += 1;
-        }
-        if (acc_len > 4 || (acc & (((1 as u32) << acc_len) - 1)) != 0) {
-            return err.InvalidPadding;
-        }
-        if (leftover_idx == null) {
-            return;
-        }
-        let l_idx = leftover_idx.?;
-        let leftover = source[l_idx..source.len];
-        if (_.pad_char != null) {
-            let pad = _.pad_char.?;
-            let padding_len: u32 = acc_len / 2;
-            let padding_chars: u32 = 0;
-            for (c in leftover) {
-                if (c != pad) {
-                    if (c == 255) {
-                        return err.InvalidCharacter;
-                    } else {
-                        return err.InvalidPadding;
-                    }
-                }
-                padding_chars += 1;
-            }
-            if (padding_chars != padding_len) {
-                return err.InvalidPadding;
-            }
-        }
-    }
-}
-
-export struct Base64DecoderWithIgnore {
-    decoder: Base64Decoder,
-    char_is_ignored: [256]bool,
-
-    static fn init(alphabet_chars: [64]u8, pad_char: u8?, ignore_chars: string): Base64DecoderWithIgnore {
-        let result = Base64DecoderWithIgnore {
-            decoder: Base64Decoder.init(alphabet_chars, pad_char),
-            char_is_ignored: [false; 256],
-        };
-        for (c in ignore_chars) {
-            result.char_is_ignored[c as usize] = true;
-        }
-        return result;
-    }
-
-    fn calcSizeUpperBound(source_len: usize): usize {
-        let result = (source_len / 4) * 3;
-        if (_.decoder.pad_char == null) {
-            let leftover = source_len % 4;
-            result += (leftover * 3) / 4;
-        }
-        return result;
-    }
-
-    fn decode(dest: []u8, source: string, wrote: *usize)! {
-        let acc: u32 = 0;
-        let acc_len: u32 = 0;
-        let dest_idx: usize = 0;
-        let leftover_idx: usize? = null;
-        let src_idx: usize = 0;
-
-        defer {
-            wrote.* = dest_idx;
-        }
-
-        for (c in source) {
-            if (_.char_is_ignored[c as usize]) {
+            if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
                 src_idx += 1;
                 continue;
             }
-            let d = _.decoder.char_to_index[c as usize];
-            if (d == 255) {
-                if (_.decoder.pad_char != null) {
-                    let pad = _.decoder.pad_char ?? 0;
-                    if (c == pad) {
-                        leftover_idx = src_idx;
-                        break;
-                    }
-                }
-                if (_.char_is_ignored[255]) {
-                    src_idx += 1;
-                    continue;
-                }
+            let val = decodeByteUnified(c);
+            if (val == 0xFF) {
                 return err.InvalidCharacter;
             }
-            acc = (acc << 6) + (d as u32);
+            acc = (acc << 6) | (val as u32);
             acc_len += 6;
             if (acc_len >= 8) {
-                if (dest_idx == dest.len) {
-                    return err.NoSpaceLeft;
-                }
                 acc_len -= 8;
-                let val: u8 = ((acc >> acc_len) & 0xFF) as u8;
-                dest[dest_idx] = val;
+                buf[dest_idx] = ((acc >> acc_len) & 0xFF) as u8;
                 dest_idx += 1;
             }
             src_idx += 1;
@@ -267,189 +157,129 @@ export struct Base64DecoderWithIgnore {
             return err.InvalidPadding;
         }
 
-        if (_.decoder.pad_char != null) {
-            let pad = _.decoder.pad_char.?;
-            let padding_len: u32 = acc_len / 2;
-
-            if (leftover_idx != null) {
-                let l_idx = leftover_idx.?;
-                let leftover = source[l_idx..source.len];
-                let padding_chars: u32 = 0;
-                for (c in leftover) {
-                    if (_.char_is_ignored[c as usize]) {
-                        continue;
-                    }
-                    if (c != pad) {
-                        if (c == 255) {
-                            return err.InvalidCharacter;
-                        } else {
-                            return err.InvalidPadding;
-                        }
-                    }
-                    padding_chars += 1;
-                }
-                if (padding_chars != padding_len) {
+        let pad_count: usize = 0;
+        while (src_idx < buf.len) {
+            let c = buf[src_idx];
+            if (c == '=') {
+                pad_count += 1;
+                if (pad_count > 2) {
                     return err.InvalidPadding;
                 }
-            } else if (padding_len > 0) {
-                return err.InvalidPadding;
+            } else if (c != ' ' && c != '\t' && c != '\r' && c != '\n') {
+                return err.InvalidCharacter;
             }
+            src_idx += 1;
         }
-    }
-}
 
-import * as bun from "bun";
-import * as std from "std";
-
-const assert = bun.assert;
-const testing = std.testing;
-
-extern fn WTF__base64URLEncode(input: [*]const u8, input_len: usize, output: [*]u8, output_len: usize): usize;
-
-type decoderWithIgnoreProto = *const fn (ignore: string) Base64DecoderWithIgnore;
-
-pub struct Codecs {
-    alphabet_chars: [64]u8,
-    pad_char: u8?,
-    decoderWithIgnore: decoderWithIgnoreProto,
-    Encoder: Base64Encoder,
-    Decoder: Base64Decoder,
-}
-
-pub const standard_alphabet_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".*;
-
-fn standardBase64DecoderWithIgnore(ignore: string): Base64DecoderWithIgnore {
-    return Base64DecoderWithIgnore.init(standard_alphabet_chars, '=', ignore);
-}
-
-pub const standard = Codecs{
-    .alphabet_chars = standard_alphabet_chars,
-    .pad_char = '=',
-    .decoderWithIgnore = standardBase64DecoderWithIgnore,
-    .Encoder = Base64Encoder.init(standard_alphabet_chars, '='),
-    .Decoder = Base64Decoder.init(standard_alphabet_chars, '='),
-};
-
-pub const standard_no_pad = Codecs{
-    .alphabet_chars = standard_alphabet_chars,
-    .pad_char = null,
-    .decoderWithIgnore = standardBase64DecoderWithIgnore,
-    .Encoder = Base64Encoder.init(standard_alphabet_chars, null),
-    .Decoder = Base64Decoder.init(standard_alphabet_chars, null),
-};
-
-pub const url_safe_alphabet_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_".*;
-
-fn urlSafeBase64DecoderWithIgnore(ignore: string): Base64DecoderWithIgnore {
-    return Base64DecoderWithIgnore.init(url_safe_alphabet_chars, '=', ignore);
-}
-
-pub const url_safe = Codecs{
-    .alphabet_chars = url_safe_alphabet_chars,
-    .pad_char = '=',
-    .decoderWithIgnore = urlSafeBase64DecoderWithIgnore,
-    .Encoder = Base64Encoder.init(url_safe_alphabet_chars, '='),
-    .Decoder = Base64Decoder.init(url_safe_alphabet_chars, '='),
-};
-
-pub const url_safe_no_pad = Codecs{
-    .alphabet_chars = url_safe_alphabet_chars,
-    .pad_char = null,
-    .decoderWithIgnore = urlSafeBase64DecoderWithIgnore,
-    .Encoder = Base64Encoder.init(url_safe_alphabet_chars, null),
-    .Decoder = Base64Decoder.init(url_safe_alphabet_chars, null),
-};
-
-fn createMixedDecoder(): Base64DecoderWithIgnore {
-    let decoder = standard.decoderWithIgnore("\xff \t\r\n\x0b\x0c");
-
-    let i: u8 = 62;
-    for (c in url_safe_alphabet_chars[62..]) {
-        decoder.decoder.char_to_index[c] = i;
-        i += 1;
+        return dest_idx;
     }
 
-    return decoder;
-}
-
-const mixed_decoder = createMixedDecoder();
-
-pub fn decode(destination: []u8, source: string): bun.simdutf.SIMDUTFResult {
-    const result = bun.simdutf.base64.decode(source, destination, false);
-
-    if (!result.isSuccessful()) {
-        let wrote: usize = 0;
-        mixed_decoder.decode(destination, source, &wrote) catch {
-            return .{
-                .count = wrote,
-                .status = .invalid_base64_character,
-            };
-        };
-        return .{ .count = wrote, .status = .success };
+    /// Dynamically allocates and decodes standard or URL-Safe Base64.
+    pub static fn decodeAlloc(allocator: std.mem.Allocator, source: []const u8): []u8! {
+        const max_len = decodeLen(source.len);
+        let dest = allocator.alloc(u8, max_len)?;
+        errdefer allocator.free(dest);
+        const actual_len = decode(dest, source)?;
+        return dest[0..actual_len];
     }
 
-    return result;
-}
-
-pub fn decodeAlloc(allocator: std.mem.Allocator, input: string): ![]u8 {
-    let dest = allocator.alloc(u8, decodeLen(input))?;
-    errdefer allocator.free(dest);
-    const result = decode(dest, input);
-    if (!result.isSuccessful()) {
-        return error.DecodingFailed;
+    /// Dynamically allocates and decodes URL-Safe Base64.
+    pub static fn decodeURLSafeAlloc(allocator: std.mem.Allocator, source: []const u8): []u8! {
+        return decodeAlloc(allocator, source);
     }
-    return dest[0..result.count];
-}
 
-pub fn encode(destination: []u8, source: string): usize {
-    return bun.simdutf.base64.encode(source, destination, false);
-}
+    /// Validates whether `source` is valid standard Base64.
+    pub static fn isValid(source: []const u8): bool {
+        let pad_seen = false;
+        let pad_count: usize = 0;
+        let count: usize = 0;
+        for (c in source) {
+            if (c == ' ' || c == '\t' || c == '\r' || c == '\n') continue;
+            if (c == '=') {
+                pad_seen = true;
+                pad_count += 1;
+                if (pad_count > 2) return false;
+                count += 1;
+                continue;
+            }
+            if (pad_seen) return false;
+            if (decodeByteStandard(c) == 0xFF) return false;
+            count += 1;
+        }
+        return count % 4 != 1;
+    }
 
-pub fn encodeAlloc(allocator: std.mem.Allocator, source: string): !bun.ByteList {
-    const len = encodeLen(source);
-    const destination = allocator.alloc(u8, len)?;
-    errdefer allocator.free(destination);
-    const encoded_len = encode(destination, source);
-    return .{
-        .ptr = destination.ptr,
-        .len = @truncate(encoded_len),
-        .cap = @truncate(len),
-    };
-}
+    /// Validates whether `source` is valid URL-Safe Base64.
+    pub static fn isValidURLSafe(source: []const u8): bool {
+        let pad_seen = false;
+        let pad_count: usize = 0;
+        let count: usize = 0;
+        for (c in source) {
+            if (c == ' ' || c == '\t' || c == '\r' || c == '\n') continue;
+            if (c == '=') {
+                pad_seen = true;
+                pad_count += 1;
+                if (pad_count > 2) return false;
+                count += 1;
+                continue;
+            }
+            if (pad_seen) return false;
+            if (decodeByteURLSafe(c) == 0xFF) return false;
+            count += 1;
+        }
+        return count % 4 != 1;
+    }
 
-pub fn simdutfEncodeLenUrlSafe(source_len: usize): usize {
-    return bun.simdutf.base64.encode_len(source_len, true);
-}
+    static fn decodeUnified(dest: []u8, source: []const u8): usize! {
+        let acc: u32 = 0;
+        let acc_len: u32 = 0;
+        let dest_idx: usize = 0;
+        let src_idx: usize = 0;
 
-pub fn simdutfEncodeUrlSafe(destination: []u8, source: string): usize {
-    return bun.simdutf.base64.encode(source, destination, true);
-}
+        while (src_idx < source.len) {
+            let c = source[src_idx];
+            if (c == '=') {
+                break;
+            }
+            if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
+                src_idx += 1;
+                continue;
+            }
+            let val = decodeByteUnified(c);
+            if (val == 0xFF) {
+                return err.InvalidCharacter;
+            }
+            acc = (acc << 6) | (val as u32);
+            acc_len += 6;
+            if (acc_len >= 8) {
+                if (dest_idx >= dest.len) {
+                    return err.NoSpaceLeft;
+                }
+                acc_len -= 8;
+                dest[dest_idx] = ((acc >> acc_len) & 0xFF) as u8;
+                dest_idx += 1;
+            }
+            src_idx += 1;
+        }
 
-pub fn decodeLenUpperBound(len: usize): usize {
-    return standard.Decoder.calcSizeUpperBound(len) catch {
-        return len / 4 * 3;
-    };
-}
+        if (acc_len > 4 || (acc & (((1 as u32) << acc_len) - 1)) != 0) {
+            return err.InvalidPadding;
+        }
 
-pub fn decodeLen(source: anytype): usize {
-    return standard.Decoder.calcSizeForSlice(source) catch {
-        return source.len / 4 * 3 + 2;
-    };
-}
+        let pad_count: usize = 0;
+        while (src_idx < source.len) {
+            let c = source[src_idx];
+            if (c == '=') {
+                pad_count += 1;
+                if (pad_count > 2) {
+                    return err.InvalidPadding;
+                }
+            } else if (c != ' ' && c != '\t' && c != '\r' && c != '\n') {
+                return err.InvalidCharacter;
+            }
+            src_idx += 1;
+        }
 
-pub fn encodeLen(source: anytype): usize {
-    return encodeLenFromSize(source.len);
-}
-
-pub fn encodeLenFromSize(source: usize): usize {
-    return standard.Encoder.calcSize(source);
-}
-
-pub fn urlSafeEncodeLen(source: anytype): usize {
-    return ((source.len * 4) + 2) / 3;
-}
-
-pub fn encodeURLSafe(dest: []u8, source: string): usize {
-    bun.jsc.markBinding(@src());
-    return WTF__base64URLEncode(source.ptr, source.len, dest.ptr, dest.len);
+        return dest_idx;
+    }
 }

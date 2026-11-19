@@ -1,4 +1,4 @@
-// Source: Bun src/patch/
+// Source: /data/dev/bun/src/patch/patch.cp
 // lib/patch/myers.cp
 // Line-Level Text Differ (Common Prefix/Suffix Trimming, DiffOp Sequence & Unified Diff Formatter)
 // Absorbed from Bun src/patch/
@@ -158,5 +158,18 @@ pub struct LineDiffer {
             i += 1;
         }
         return out_buf[0..pos];
+    }
+
+    /// Computes the Myers edit distance D (number of inserted + deleted lines) from a `DiffOp` slice.
+    pub static fn editDistance(ops: []const DiffOp): usize {
+        let dist: usize = 0;
+        let i: usize = 0;
+        while (i < ops.len) {
+            if (ops[i].kind != DiffOpKind.Equal) {
+                dist += 1;
+            }
+            i += 1;
+        }
+        return dist;
     }
 }

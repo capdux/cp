@@ -1,4 +1,4 @@
-// Source: bun/src/sourcemap/Mapping.cp
+// Source: /data/dev/bun/src/sourcemap/Mapping.cp
 // ============================================================================
 // lib/sourcemap/mapping.cp — SourceMap v3 映射表定义与位置反查
 // 吸收自 Bun src/sourcemap/Mapping.cp & ParsedSourceMap.cp

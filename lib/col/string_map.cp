@@ -1,5 +1,5 @@
-// Source: Bun src/collections/comptime_string_map.cp
-// lib/collections/string_map.cp
+// Source: /data/dev/bun/src/collections/comptime_string_map.cp
+// lib/col/string_map.cp
 // Length-filtered fast string lookup map
 // Absorbed from Bun src/collections/comptime_string_map.cp & StaticHashMap.cp
 
@@ -57,8 +57,20 @@ pub struct FastStringMap<V, const CAP: usize> {
         return true;
     }
 
+    pub fn capacity(): usize {
+        return _.entries.len;
+    }
+
     pub fn count(): usize {
         return _.len;
+    }
+
+    pub fn isEmpty(): bool {
+        return _.len == 0;
+    }
+
+    pub fn isFull(): bool {
+        return _.len >= CAP;
     }
 
     pub fn put(*_, key: []const u8, value: V): bool {

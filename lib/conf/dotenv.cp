@@ -1,4 +1,4 @@
-// Source: Bun src/dotenv/env_loader.zig (per CHANGELOG, merged from lib/dotenv; needs review)
+// Source: /data/dev/bun/src/dotenv/env_loader.cp
 // lib/conf/dotenv.cp
 // High-performance, zero-allocation .env loader in CP
 

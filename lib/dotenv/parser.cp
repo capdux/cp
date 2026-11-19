@@ -1,4 +1,4 @@
-// Source: bun/src/dotenv/env_loader.cp
+// Source: /data/dev/bun/src/dotenv/
 import std from "std";
 
 pub const MAX_ENV_ENTRIES: usize = 256;
@@ -22,6 +22,10 @@ pub struct EnvMap {
             buffer: undefined,
             buf_len: 0,
         };
+    }
+
+    pub static fn parse(content: []const u8): EnvMap {
+        return parseWithOptions(content, true);
     }
 
     pub fn get(key: []const u8): ([]const u8)? {

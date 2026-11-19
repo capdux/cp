@@ -1,4 +1,4 @@
-// Source: bun/src/glob/matcher.cp
+// Source: /data/dev/bun/src/glob/glob.cp
 // lib/glob/matcher.cp
 // High-performance Unix Glob matcher in pure CP
 
@@ -234,7 +234,9 @@ pub const Matcher = struct {
                     } else return false;
                 }
             } else if (p < pat.len && pat[p] == '*') {
-                p += 1;
+                while (p < pat.len && pat[p] == '*') {
+                    p += 1;
+                }
                 star_p = p;
                 star_s = s;
             } else if (p < pat.len && pat[p] == str[s]) {

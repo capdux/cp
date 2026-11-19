@@ -1,4 +1,4 @@
-// Source: bun/src/semver/SemverQuery.cp
+// Source: /data/dev/bun/src/semver/
 // ============================================================================
 // lib/semver/query.cp — Semver Query & Range Comparator Engine
 // ============================================================================
@@ -157,10 +157,39 @@ pub const Query = struct {
                 cursor += 1;
             }
             let token = trimmed[start .. cursor];
-            try parseTokenIntoSet(token, &set);
+            if (isStandaloneOperator(token)) {
+                while (cursor < trimmed.len and (trimmed[cursor] == ' ' or trimmed[cursor] == '\t')) {
+                    cursor += 1;
+                }
+                let v_start = cursor;
+                while (cursor < trimmed.len and trimmed[cursor] != ' ' and trimmed[cursor] != '\t') {
+                    cursor += 1;
+                }
+                let v_tok = trimmed[v_start .. cursor];
+                let comb_buf: [128]u8 = undefined;
+                if (v_tok.len > 0 and token.len + v_tok.len <= 128) {
+                    @memcpy(comb_buf[0 .. token.len], token);
+                    @memcpy(comb_buf[token.len .. token.len + v_tok.len], v_tok);
+                    try parseTokenIntoSet(comb_buf[0 .. token.len + v_tok.len], &set);
+                } else {
+                    return error.InvalidRange;
+                }
+            } else {
+                try parseTokenIntoSet(token, &set);
+            }
         }
 
         return set;
+    }
+
+    fn isStandaloneOperator(token: []const u8): bool {
+        return std.mem.eql(u8, token, ">=") or
+               std.mem.eql(u8, token, "<=") or
+               std.mem.eql(u8, token, ">") or
+               std.mem.eql(u8, token, "<") or
+               std.mem.eql(u8, token, "=") or
+               std.mem.eql(u8, token, "^") or
+               std.mem.eql(u8, token, "~");
     }
 
     fn parseTokenIntoSet(token: []const u8, set: *ComparatorSet): !void {

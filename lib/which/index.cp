@@ -1,10 +1,11 @@
-// Source: Bun bun/src/which/
+// Source: /data/dev/bun/src/which/which.cp
 // ============================================================================
-// Absorbed from Bun: bun/src/which/
-// Upstream Sync: Refer to bun/src/which/ for future upstream updates.
+// Absorbed from Bun: /data/dev/bun/src/which/which.cp
+// Upstream Sync: Refer to /data/dev/bun/src/which/ for future upstream updates.
 // ============================================================================
 // lib/which/index.cp
 export { Which, WhichOptions } from "./which";
 
 pub const which = Which.which;
 pub const isExecutable = Which.isExecutable;
+pub const endsWithExtension = Which.endsWithExtension;

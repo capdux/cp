@@ -1,4 +1,4 @@
-// Source: bun/src/collections/linear_fifo.cp
+// Source: /data/dev/bun/src/collections/linear_fifo.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/collections/linear_fifo.cp
 // Upstream Sync: Refer to bun/src/collections/linear_fifo.zig for future upstream updates.

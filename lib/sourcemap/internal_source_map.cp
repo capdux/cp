@@ -1,4 +1,4 @@
-// Source: bun/src/sourcemap/InternalSourceMap.cp
+// Source: /data/dev/bun/src/sourcemap/InternalSourceMap.cp
 // ============================================================================
 // lib/sourcemap/internal_source_map.cp — 高性能紧凑二进制 SourceMap 存储格式
 // 吸收自 Bun src/sourcemap/InternalSourceMap.cp

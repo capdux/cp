@@ -1,4 +1,4 @@
-// Source: bun/src/paths/Path.cp
+// Source: /data/dev/bun/src/paths/Path.cp
 // ============================================================================
 // lib/path/windows.cp — Windows (Win32) Path Implementation (cap:path)
 // ============================================================================
@@ -105,6 +105,7 @@ pub const WindowsPath = struct {
     pub fn extname(filepath: []const u8): []const u8 {
         const base = basename(filepath, null);
         if (base.len <= 1) return "";
+        if (std.mem.eql(u8, base, "..")) return "";
 
         let i: usize = base.len;
         while (i > 0) {

@@ -1,7 +1,8 @@
-// Source: bun/src/url/url.cp
+// Source: /data/dev/bun/src/url/url.cp
 // ============================================================================
 // lib/url/search_params.cp — WHATWG URLSearchParams & Query Scanner
 // ============================================================================
+import { PercentEncoding } from "./percent";
 const std = @import("std");
 
 pub struct QueryParam {
@@ -111,7 +112,7 @@ pub struct URLSearchParams {
         _.len = 0;
     }
 
-    fn getEntry(idx: usize): QueryParam {
+    pub fn getEntry(idx: usize): QueryParam {
         if (_.dynamic_entries.len > 0) {
             return _.dynamic_entries[idx];
         }
@@ -134,6 +135,15 @@ pub struct URLSearchParams {
                 return entry.value;
             }
             i += 1;
+        }
+        return null;
+    }
+
+    /// Looks up `key` and percent-decodes its value (including `+` as space) into `out`.
+    pub fn getDecoded(key: string, out: []u8): string? {
+        if (raw_val := _.get(key)) {
+            let n = PercentEncoding.decodeToBuf(raw_val, true, out);
+            return out[0..n];
         }
         return null;
     }
@@ -292,7 +302,11 @@ pub struct URLSearchParams {
             total_len += entry.key.len + 1 + entry.value.len; // key + '=' + val
             i += 1;
         }
-        let buf = try allocator.alloc(u8, total_len);
+        let buf = allocator.alloc(u8, total_len)?;
         return _.toString(buf);
     }
 }
+
+pub const SearchParams = URLSearchParams;
+pub const Query = URLSearchParams;
+pub const QueryStringMap = URLSearchParams;

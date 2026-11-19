@@ -1,4 +1,4 @@
-// Source: Custom (agy-generated export index)
+// Source: /data/dev/bun/src/patch/patch.cp
 // lib/patch/index.cp
 // Unified Public Exports for cap:patch
 

@@ -1,4 +1,4 @@
-// Source: bun/src/dotenv/env_loader.cp
+// Source: /data/dev/bun/src/dotenv/
 // CP Standard Library: cap:dotenv
 
 export {

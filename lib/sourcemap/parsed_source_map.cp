@@ -1,4 +1,4 @@
-// Source: bun/src/sourcemap/ParsedSourceMap.cp
+// Source: /data/dev/bun/src/sourcemap/ParsedSourceMap.cp
 // ============================================================================
 // lib/sourcemap/parsed_source_map.cp — SourceMap v3 JSON 解析与完整映射反查
 // 吸收自 Bun src/sourcemap/ParsedSourceMap.cp

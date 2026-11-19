@@ -2447,4 +2447,22 @@
   3. **测试全量验证**：
      - 执行 `cap test` 验证 `test_pack_gzip_complete.cp`（725ms）与 `test_pack_zlib_static.cp`（722ms），100% 全部 PASS。
 
+- 用户指令：
+  1. 很好, 按上述标准, 分批 审核从 bun中吸收的其他 lib 模块, 进行补充/优化/完善, 每个文件都要在文件头备注来源, 方便跟随bun更新. 详细使用文档写入对应的docs/库名称/库.md, 并完成测试
+  阶段性成果, 更新所有文档后, 提交git 代码库, 固化成果
+  你分批 自主完成上述任务
+  如发现 bun 中有价值资产, 我们 lib 中没有, 你直接按上述标准, 吸收到 我们的 lib 库中, 壮大 cp 生态!
+  2. 开启三个子智能体并行工作, 加快进度
+- 执行结果（第一里程碑批次：14 大核心标准库模块审计、Bun 资产吸收、专著文档与回归测试）：
+  1. **开启三路并行子智能体（物理隔离文件域）高效推进**：
+     - 子智能体 1（`30b8634c`）、子智能体 2（`8c3377a5`）、子智能体 3（`1a34a94d`）并发完成了 **14 个标准库模块** 的深度审计、Bun 资产吸收、文件头 `// Source: /data/dev/bun/src/...` 100% 溯源覆盖、纯正现代 CP 语法重构与详尽文档落盘。
+  2. **第一批 14 大模块核心成果**：
+     - **`lib/pack` 全家桶**：新增吸收 Bun 的 [lib/pack/brotli.cp](file:///data/dev/cp/lib/pack/brotli.cp)（RFC 7932 Brotli 模式与帧头解码）与 [lib/pack/zstd.cp](file:///data/dev/cp/lib/pack/zstd.cp)（RFC 8478 Zstd 帧头、字典 ID 与单/多段解析），完善 `tar.cp`、`zip.cp`、`checksum.cp`、`native.cp`；撰写 [docs/pack/pack.md](file:///data/dev/cp/docs/pack/pack.md)；通过 [cap/test/test_pack_full.cp](file:///data/dev/cp/cap/test/test_pack_full.cp)（6/6 PASS）；
+     - **`lib/col` 容器全家桶**：将 `treap.cp` 升级为完整的 1-based 内联节点池平衡树堆 `Treap<K, V>`（XorShift64 随机旋转），将 `leb128.cp` 重构为 100% 纯 CP 静态编解码引擎，增强 `priority_queue.cp` 与 `string_map.cp`；撰写 [docs/col/col.md](file:///data/dev/cp/docs/col/col.md)；通过 [cap/test/test_col_full.cp](file:///data/dev/cp/cap/test/test_col_full.cp)（9/9 PASS）；
+     - **`lib/encoding` & `lib/url`**：将 `base64_.cp` 与 `url_.cp` 重构为 100% 纯正现代 CP 语法，完善 `Base64`（标准/URL-Safe/原地解码）、`Hex`、`URL`（WHATWG 零拷贝解析）、`URLSearchParams`（新增 `getDecoded`）与 `PercentEncoding`；撰写 [docs/encoding/encoding.md](file:///data/dev/cp/docs/encoding/encoding.md) 与 [docs/url/url.md](file:///data/dev/cp/docs/url/url.md)；通过 [cap/test/test_encoding_url_full.cp](file:///data/dev/cp/cap/test/test_encoding_url_full.cp)（5/5 PASS）；
+     - **`lib/path`、`lib/glob`、`lib/semver`、`lib/which`**：修复 `PosixPath/WindowsPath.extname("..")` 边界、优化 `GlobMatcher` 连续 `*` 合并、增强 `semver/query.cp` 独立算子空格兼容、将 `which.cp` 重写为 100% 纯正 CP 语法并增加 `opendir` 目录排除校验；撰写 [docs/path/path.md](file:///data/dev/cp/docs/path/path.md)、[docs/glob/glob.md](file:///data/dev/cp/docs/glob/glob.md)、[docs/semver/semver.md](file:///data/dev/cp/docs/semver/semver.md)、[docs/which/which.md](file:///data/dev/cp/docs/which/which.md)；通过 [cap/test/test_path_glob_semver_which.cp](file:///data/dev/cp/cap/test/test_path_glob_semver_which.cp)（4/4 PASS）；
+     - **`lib/sourcemap`、`lib/patch`、`lib/hash`**：为 `LineDiffer` 新增 `editDistance`，为 `Hash` 新增 `wyhash`、`djb2`、`fnv1a32` 与流式 `WyhashStream`；撰写 [docs/sourcemap/sourcemap.md](file:///data/dev/cp/docs/sourcemap/sourcemap.md)、[docs/patch/patch.md](file:///data/dev/cp/docs/patch/patch.md)、[docs/hash/hash.md](file:///data/dev/cp/docs/hash/hash.md)；通过 [cap/test/test_sourcemap_patch_hash.cp](file:///data/dev/cp/cap/test/test_sourcemap_patch_hash.cp)（4/4 PASS）；
+     - **`lib/dotenv`、`lib/conf`、`lib/clap`**：为 `EnvMap` 补齐 `parse` 静态入口，增强 `ConfGetter` 类型安全提取与 `YamlDoc` 查询 API，优化 `clap.cp` 符号隔离；撰写 [docs/dotenv/dotenv.md](file:///data/dev/cp/docs/dotenv/dotenv.md)、[docs/conf/conf.md](file:///data/dev/cp/docs/conf/conf.md)、[docs/clap/clap.md](file:///data/dev/cp/docs/clap/clap.md)；通过 [cap/test/test_conf_dotenv_clap.cp](file:///data/dev/cp/cap/test/test_conf_dotenv_clap.cp)（4/4 PASS）。
+
+
 

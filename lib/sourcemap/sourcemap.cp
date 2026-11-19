@@ -1,4 +1,4 @@
-// Source: bun/src/sourcemap/sourcemap.cp
+// Source: /data/dev/bun/src/sourcemap/sourcemap.cp
 // ============================================================================
 // lib/sourcemap/sourcemap.cp — SourceMap v3 综合门面、生成器与消费者
 // 吸收自 Bun src/sourcemap/sourcemap.cp

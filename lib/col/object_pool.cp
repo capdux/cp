@@ -1,4 +1,4 @@
-// Source: Bun bun/src/collections/object_pool.cp
+// Source: /data/dev/bun/src/collections/pool.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/collections/object_pool.cp
 // Upstream Sync: Refer to bun/src/collections/object_pool.zig for future upstream updates.

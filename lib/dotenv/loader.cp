@@ -1,4 +1,4 @@
-// Source: bun/src/dotenv/env_loader.cp
+// Source: /data/dev/bun/src/dotenv/
 import std from "std";
 import { EnvMap, EnvParser, expandString } from "./parser.cp";
 

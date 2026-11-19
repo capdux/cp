@@ -1,4 +1,4 @@
-// Source: bun/src/sourcemap/
+// Source: /data/dev/bun/src/sourcemap/sourcemap.cp
 // ============================================================================
 // lib/sourcemap/index.cp — CP 工业级标准 SourceMap v3 模块 (cap:sourcemap)
 // ============================================================================

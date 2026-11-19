@@ -1,4 +1,4 @@
-// Source: Bun bun/src/collections/hash_map.cp
+// Source: /data/dev/bun/src/collections/StaticHashMap.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/collections/hash_map.cp
 // Upstream Sync: Refer to bun/src/collections/hash_map.zig for future upstream updates.

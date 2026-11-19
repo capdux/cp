@@ -1,4 +1,4 @@
-// Source: bun/src/semver/semver.cp
+// Source: /data/dev/bun/src/semver/
 // ============================================================================
 // lib/semver/index.cp — Semver 2.0.0 Specification & Query Engine (cap:semver)
 // ============================================================================

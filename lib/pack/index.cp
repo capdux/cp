@@ -1,14 +1,22 @@
+// Source: /data/dev/bun/src/zlib/ & /data/dev/bun/src/libarchive/
 // ============================================================================
 // lib/pack/index.cp — CP 标准压缩、归档与校验和模块 (cap:pack / cap:compress) 对外统一出口
 // ============================================================================
 
 export {
+    Z_MIN_WBITS,
+    Z_MAX_WBITS,
+    Z_DEFAULT_COMPRESSION,
+    Z_NO_COMPRESSION,
+    Z_BEST_SPEED,
+    Z_BEST_COMPRESSION,
     CompressionFormat,
     ZlibFlush,
     ZlibStatus,
     BrotliOperation,
     CompressBoundEstimator,
     Zlib,
+    Deflate,
     ZStream,
     NativeZlib,
     z_stream_s,
@@ -25,6 +33,8 @@ export {
 
 export * from "./checksum.cp";
 export * from "./gzip.cp";
+export * from "./zstd.cp";
+export * from "./brotli.cp";
 export * from "./_archive.cp";
 export * from "./tar.cp";
 export * from "./zip.cp";

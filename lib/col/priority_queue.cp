@@ -1,6 +1,8 @@
-// Source: Zig Standard Library: std.PriorityQueue (wrapped by Antigravity AI)
-// lib/col/priority_queue.cp
-// Generic min-heap Priority Queue (smallest element popped first)
+// Source: /data/dev/bun/src/collections/ & Zig std.PriorityQueue
+// ============================================================================
+// lib/col/priority_queue.cp — 二叉最小堆优先队列 (Binary Min-Heap PriorityQueue<T>)
+// 支持 O(log N) 入队 (add / push)、O(log N) 弹出最小元 (pop) 与 O(1) 窥视堆顶 (peek)
+// ============================================================================
 
 const std = @import("std");
 
@@ -31,6 +33,27 @@ pub struct PriorityQueue<T> {
         }
     }
 
+    pub fn push(*_, item: T) {
+        zig {
+            self.items.append(std.heap.page_allocator, item) catch unreachable;
+            var i = self.items.items.len - 1;
+            while (i > 0) {
+                const p = (i - 1) / 2;
+                if (self.items.items[i] < self.items.items[p]) {
+                    std.mem.swap(T, &self.items.items[i], &self.items.items[p]);
+                    i = p;
+                } else break;
+            }
+        }
+    }
+
+    pub fn peek(*_): T? {
+        zig {
+            if (self.items.items.len == 0) return null;
+            return self.items.items[0];
+        }
+    }
+
     pub fn pop(*_): T? {
         zig {
             const n = self.items.items.len;
@@ -56,5 +79,17 @@ pub struct PriorityQueue<T> {
 
     pub fn len(*_): usize {
         zig { return self.items.items.len; }
+    }
+
+    pub fn count(*_): usize {
+        zig { return self.items.items.len; }
+    }
+
+    pub fn isEmpty(*_): bool {
+        zig { return self.items.items.len == 0; }
+    }
+
+    pub fn clear(*_) {
+        zig { self.items.clearRetainingCapacity(); }
     }
 }

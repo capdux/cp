@@ -1,4 +1,4 @@
-// Source: bun/src/sourcemap/Chunk.cp
+// Source: /data/dev/bun/src/sourcemap/Chunk.cp
 // ============================================================================
 // lib/sourcemap/chunk.cp — 构建产物分块（Chunk）与 SourceMap v3 拼接引擎
 // 吸收自 Bun src/sourcemap/Chunk.cp

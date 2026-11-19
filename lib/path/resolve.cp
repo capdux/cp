@@ -1,4 +1,4 @@
-// Source: bun/src/paths/resolve_path.cp
+// Source: /data/dev/bun/src/paths/resolve_path.cp
 // ============================================================================
 // lib/path/resolve.cp — Path Normalization, Resolution & Relative Path Engine
 // ============================================================================

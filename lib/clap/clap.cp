@@ -1,4 +1,4 @@
-// Source: bun/src/clap/clap.cp
+// Source: /data/dev/bun/src/clap/clap.cp
 import { OsIterator } from "./args.cp";
 import { ComptimeClap } from "./comptime.cp";
 // CP Standard Library: cap:clap
@@ -248,7 +248,7 @@ pub struct ParseOptions {
 }
 
 /// Same as `parseEx` but uses the `OsIterator` by default.
-pub fn parse(
+pub fn parseArgs(
     comptime Id: type,
     comptime params: []const Param(Id),
     opt: ParseOptions,

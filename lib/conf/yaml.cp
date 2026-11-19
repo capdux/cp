@@ -1,7 +1,7 @@
-// Source: Bun src/interchange/yaml.cp
+// Source: /data/dev/bun/src/interchange/yaml.cp
 // lib/conf/yaml.cp
 // Lightweight zero-allocation YAML key-value & block configuration parser
-// Absorbed from Bun src/interchange/yaml.cp
+// Absorbed from /data/dev/bun/src/interchange/yaml.cp
 
 const std = @import("std");
 
@@ -43,6 +43,57 @@ pub struct YamlDoc {
 
     pub fn getRoot(key: []const u8): ([]const u8)? {
         return _.get("", key);
+    }
+
+    pub fn getOr(section: []const u8, key: []const u8, default_val: []const u8): []const u8 {
+        if (v := _.get(section, key)) {
+            return v;
+        }
+        return default_val;
+    }
+
+    pub fn getInt(section: []const u8, key: []const u8, default_val: i64): i64 {
+        if (v := _.get(section, key)) {
+            const trimmed = std.mem.trim(u8, v, " \t\r");
+            if (trimmed.len > 0) {
+                if (val := std.fmt.parseInt(i64, trimmed, 10) catch null) {
+                    return val;
+                }
+            }
+        }
+        return default_val;
+    }
+
+    pub fn getBool(section: []const u8, key: []const u8, default_val: bool): bool {
+        if (v := _.get(section, key)) {
+            const trimmed = std.mem.trim(u8, v, " \t\r");
+            if (std.ascii.eqlIgnoreCase(trimmed, "true") || std.ascii.eqlIgnoreCase(trimmed, "yes") ||
+                std.ascii.eqlIgnoreCase(trimmed, "on") || std.mem.eql(u8, trimmed, "1"))
+            {
+                return true;
+            }
+            if (std.ascii.eqlIgnoreCase(trimmed, "false") || std.ascii.eqlIgnoreCase(trimmed, "no") ||
+                std.ascii.eqlIgnoreCase(trimmed, "off") || std.mem.eql(u8, trimmed, "0"))
+            {
+                return false;
+            }
+        }
+        return default_val;
+    }
+
+    pub fn hasSection(section: []const u8): bool {
+        let i: usize = 0;
+        while (i < _.count) {
+            if (std.mem.eql(u8, _.entries[i].section, section)) {
+                return true;
+            }
+            i += 1;
+        }
+        return false;
+    }
+
+    pub fn hasKey(section: []const u8, key: []const u8): bool {
+        return _.get(section, key) != null;
     }
 
     fn parseContent(*_, content: []const u8) {
@@ -106,3 +157,4 @@ fn cleanYamlValue(raw: []const u8): []const u8 {
 }
 
 pub const YAML = YamlDoc;
+pub const yaml = YamlDoc;

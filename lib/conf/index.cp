@@ -1,4 +1,4 @@
-// Source: Custom (agy-generated export index)
+// Source: /data/dev/bun/src/interchange/interchange.cp
 // lib/conf/index.cp
 // Unified Configuration & Interchange Subsystem (cap:conf / cap:dotenv / cap:ini)
 

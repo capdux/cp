@@ -1,4 +1,4 @@
-// Source: Bun src/libarchive_sys/bindings.cp
+// Source: /data/dev/bun/src/libarchive/
 // ============================================================================
 // lib/pack/_archive.cp — Libarchive C-FFI Bindings & Constants
 // Absorbed from Bun src/libarchive_sys/bindings.cp

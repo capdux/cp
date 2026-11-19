@@ -1,4 +1,4 @@
-// Source: bun/src/paths/Path.cp
+// Source: /data/dev/bun/src/paths/Path.cp
 // ============================================================================
 // lib/path/path.cp — Unified Cross-Platform Path Object (cap:path)
 // ============================================================================

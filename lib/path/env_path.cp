@@ -1,4 +1,4 @@
-// Source: bun/src/paths/EnvPath.cp
+// Source: /data/dev/bun/src/paths/EnvPath.cp
 // ============================================================================
 // lib/path/env_path.cp — Cross-platform PATH Environment Variable Engine
 // ============================================================================

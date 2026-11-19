@@ -1,4 +1,4 @@
-// Source: bun/src/glob/
+// Source: /data/dev/bun/src/glob/glob.cp
 // lib/glob/index.cp
 
 import { Matcher, GlobMatcher } from "./matcher.cp";

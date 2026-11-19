@@ -1,4 +1,4 @@
-// Source: Zig Standard Library: std.MultiArrayList (per CHANGELOG)
+// Source: /data/dev/bun/src/collections/multi_array_list.cp
 // ============================================================================
 // lib/col/soa.cp
 // High-performance SoA (Struct of Arrays) column-oriented container

@@ -1,10 +1,6 @@
-// Source: bun/src/clap/clap.cp
+// Source: /data/dev/bun/src/clap/clap.cp
 // CP Standard Library: cap:clap
 // Fast, robust command-line argument parsing with comptime validation
-import clap from "./clap.cp";
-import args from "./args.cp";
-import streaming from "./streaming.cp";
-import comptime_mod from "./comptime.cp";
 
 export {
     Names,
@@ -16,7 +12,7 @@ export {
     ParseOptions,
     Args,
     parseParam,
-    parse,
+    parseArgs,
     parseEx,
     help,
     helpEx,

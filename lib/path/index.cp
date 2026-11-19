@@ -1,4 +1,4 @@
-// Source: bun/src/paths/paths.cp
+// Source: /data/dev/bun/src/paths/paths.cp
 // ============================================================================
 // lib/path/index.cp — Industrial-grade Path Standard Library (cap:path)
 // ============================================================================

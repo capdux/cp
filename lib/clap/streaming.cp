@@ -1,4 +1,4 @@
-// Source: bun/src/clap/streaming.cp
+// Source: /data/dev/bun/src/clap/clap.cp
 // Streaming argument parser for incremental command-line processing
 import std from "std";
 import { Param, Names, Diagnostic } from "./clap.cp";
