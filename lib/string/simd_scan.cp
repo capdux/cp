@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: /data/dev/bun/src/string/immutable.cp
 // lib/string/simd_scan.cp
 // 16-byte SIMD (@Vector(16, u8)) high-speed string scanner
 // Absorbed from bun/src/string/immutable.zig & bun/src/string/immutable/unicode.zig

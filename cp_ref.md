@@ -10363,6 +10363,15 @@ flowchart TD
 - **环境变量加载 (`cap:dotenv`)**：[`docs/dotenv/dotenv.md`](file:///data/dev/cp/docs/dotenv/dotenv.md)（`.env` 解析、引号转义、`${VAR:-default}` 插值展开）
 - **多格式配置中心 (`cap:conf`)**：[`docs/conf/conf.md`](file:///data/dev/cp/docs/conf/conf.md)（INI/TOML/YAML/JSON5 统一解析与 `ConfGetter` 类型安全提取）
 - **命令行参数解析 (`cap:clap`)**：[`docs/clap/clap.md`](file:///data/dev/cp/docs/clap/clap.md)（零分配流式 `StreamingClap` 与编译期 `ComptimeClap`）
+- **智能指针与打标压缩 (`cap:ptr`)**：[`docs/ptr/ptr.md`](file:///data/dev/cp/docs/ptr/ptr.md)（64 位 `TaggedPointer`、`CowSlice`、`Shared`/`Weak`/`RefCount`）
+- **内存与线程安全守卫 (`cap:safety`)**：[`docs/safety/safety.md`](file:///data/dev/cp/docs/safety/safety.md)（`ThreadLock`、`CriticalSection`、`CheckedAllocator`、ASAN 内存毒化）
+- **高性能事件循环 (`cap:event_loop`)**：[`docs/event_loop/event_loop.md`](file:///data/dev/cp/docs/event_loop/event_loop.md)（`EventLoop`、侵入式最小堆 `TimerHeap`、`ConcurrentTaskQueue`）
+- **云存储签名与客户端 (`cap:s3`)**：[`docs/s3/s3.md`](file:///data/dev/cp/docs/s3/s3.md)（AWS SigV4 四级签名、`presignUrl` 预签名 URL、Multipart 分片上传）
+- **CSRF 安全防护 (`cap:security`)**：[`docs/security/security.md`](file:///data/dev/cp/docs/security/security.md)（64 字节二进制 CSRF Token、时钟偏移与防溢出校验、恒定时间比对）
+- **缓存通信协议 (`cap:redis`)**：[`docs/redis/redis.md`](file:///data/dev/cp/docs/redis/redis.md)（RESP2/RESP3 编解码、`ValkeyReader` 流式零拷贝解析、`RedisPipeline`）
+- **字符串与 Unicode (`cap:string`)**：[`docs/string/string.md`](file:///data/dev/cp/docs/string/string.md)（15B 纯栈 `SmolStr`、UAX #29 `Utf8Grapheme`、`HashedString`）
+- **SIMD 硬件向量加速 (`cap:simd`)**：[`docs/simd/simd.md`](file:///data/dev/cp/docs/simd/simd.md)（16/32 字节 Highway 级字节扫描、无分支大小写转换与数值归约）
+- **工业级排序算法 (`cap:sort`)**：[`docs/sort/sort.md`](file:///data/dev/cp/docs/sort/sort.md)（PDQSort 自适应快排、稳定 BlockSort、堆排序与二分边界搜索）
 
 ---
 

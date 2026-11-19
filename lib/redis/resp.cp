@@ -1,6 +1,6 @@
-// Source: Bun src/valkey/valkey_protocol.cp
+// Source: /data/dev/bun/src/valkey/valkey_protocol.cp
 // lib/redis/resp.cp
-// RESP2 / RESP3 (Redis / Valkey Serialization Protocol) Frame Parser & Encoder
+// RESP2 / RESP3 (Redis / Valkey Serialization Protocol) Frame Parser, Stream Reader & Encoder
 // Absorbed from Bun src/valkey/valkey_protocol.cp
 
 const std = @import("std");
@@ -46,13 +46,13 @@ pub enum RESPType: u8 {
 }
 
 pub struct RESPFrame {
-    kind: RESPType = RESPType.Null;
-    str_val: []const u8 = "";
-    int_val: i64 = 0;
-    bool_val: bool = false;
-    is_null: bool = false;
-    array_count: i64 = 0;
-    bytes_consumed: usize = 0;
+    pub kind: RESPType = RESPType.Null;
+    pub str_val: []const u8 = "";
+    pub int_val: i64 = 0;
+    pub bool_val: bool = false;
+    pub is_null: bool = false;
+    pub array_count: i64 = 0;
+    pub bytes_consumed: usize = 0;
 }
 
 pub struct RESPParser {
@@ -182,7 +182,7 @@ pub struct RESPParser {
             };
         }
 
-        if (kind == RESPType.Array || kind == RESPType.Set || kind == RESPType.Push || kind == RESPType.Map) {
+        if (kind == RESPType.Array || kind == RESPType.Set || kind == RESPType.Push || kind == RESPType.Map || kind == RESPType.Attribute) {
             if (cnt := RESPParser.parseSignedInt(line)) {
                 return RESPFrame {
                     kind: kind,
@@ -194,6 +194,41 @@ pub struct RESPParser {
             return null;
         }
 
+        return null;
+    }
+}
+
+/// Zero-copy streaming RESP2/RESP3 frame reader state machine
+pub struct ValkeyReader {
+    pub buffer: []const u8 = "";
+    pub pos: usize = 0;
+
+    pub static fn init(buffer: []const u8): ValkeyReader {
+        return ValkeyReader {
+            buffer: buffer,
+            pos: 0,
+        };
+    }
+
+    pub fn reset(*_) {
+        _.pos = 0;
+    }
+
+    pub fn hasMore(): bool {
+        return _.pos < _.buffer.len;
+    }
+
+    pub fn remaining(): []const u8 {
+        if (_.pos >= _.buffer.len) return "";
+        return _.buffer[_.pos.._.buffer.len];
+    }
+
+    pub fn nextFrame(*_): RESPFrame? {
+        if (_.pos >= _.buffer.len) return null;
+        if (frame := RESPParser.parseFrame(_.buffer[_.pos.._.buffer.len])) {
+            _.pos += frame.bytes_consumed;
+            return frame;
+        }
         return null;
     }
 }
@@ -239,6 +274,67 @@ pub struct RESPEncoder {
         return needed;
     }
 
+    pub static fn encodeError(out: []u8, err_msg: []const u8): usize {
+        const needed = 1 + err_msg.len + 2;
+        if (out.len < needed) { return 0; }
+        out[0] = '-';
+        let i: usize = 0;
+        while (i < err_msg.len) {
+            out[1 + i] = err_msg[i];
+            i += 1;
+        }
+        out[1 + err_msg.len] = '\r';
+        out[2 + err_msg.len] = '\n';
+        return needed;
+    }
+
+    pub static fn encodeInteger(out: []u8, val: i64): usize {
+        if (out.len < 4) { return 0; }
+        out[0] = ':';
+        let pos: usize = 1;
+        let abs_val: usize = 0;
+        if (val < 0) {
+            out[pos] = '-';
+            pos += 1;
+            abs_val = (-val) as usize;
+        } else {
+            abs_val = val as usize;
+        }
+        const dlen = RESPEncoder.writeUint(out[pos..], abs_val);
+        if (dlen == 0 || pos + dlen + 2 > out.len) { return 0; }
+        pos += dlen;
+        out[pos] = '\r';
+        out[pos + 1] = '\n';
+        return pos + 2;
+    }
+
+    pub static fn encodeBoolean(out: []u8, val: bool): usize {
+        if (out.len < 4) { return 0; }
+        out[0] = '#';
+        out[1] = if (val) 't' else 'f';
+        out[2] = '\r';
+        out[3] = '\n';
+        return 4;
+    }
+
+    pub static fn encodeNull(out: []u8): usize {
+        if (out.len < 3) { return 0; }
+        out[0] = '_';
+        out[1] = '\r';
+        out[2] = '\n';
+        return 3;
+    }
+
+    pub static fn encodeNullBulkString(out: []u8): usize {
+        if (out.len < 5) { return 0; }
+        out[0] = '$';
+        out[1] = '-';
+        out[2] = '1';
+        out[3] = '\r';
+        out[4] = '\n';
+        return 5;
+    }
+
     pub static fn encodeBulkString(out: []u8, s: []const u8): usize {
         if (out.len < 4) { return 0; }
         out[0] = '$';
@@ -262,6 +358,26 @@ pub struct RESPEncoder {
     pub static fn encodeArrayHeader(out: []u8, count: usize): usize {
         if (out.len < 4) { return 0; }
         out[0] = '*';
+        const dlen = RESPEncoder.writeUint(out[1..], count);
+        if (dlen == 0 || out.len < 1 + dlen + 2) { return 0; }
+        out[1 + dlen] = '\r';
+        out[2 + dlen] = '\n';
+        return 1 + dlen + 2;
+    }
+
+    pub static fn encodeMapHeader(out: []u8, count: usize): usize {
+        if (out.len < 4) { return 0; }
+        out[0] = '%';
+        const dlen = RESPEncoder.writeUint(out[1..], count);
+        if (dlen == 0 || out.len < 1 + dlen + 2) { return 0; }
+        out[1 + dlen] = '\r';
+        out[2 + dlen] = '\n';
+        return 1 + dlen + 2;
+    }
+
+    pub static fn encodeSetHeader(out: []u8, count: usize): usize {
+        if (out.len < 4) { return 0; }
+        out[0] = '~';
         const dlen = RESPEncoder.writeUint(out[1..], count);
         if (dlen == 0 || out.len < 1 + dlen + 2) { return 0; }
         out[1 + dlen] = '\r';

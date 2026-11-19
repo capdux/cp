@@ -1,4 +1,4 @@
-// Source: bun/src/safety/ThreadLock.cp
+// Source: /data/dev/bun/src/safety/ThreadLock.cp
 import std from "std";
 import { invalid } from "./thread_id.cp";
 

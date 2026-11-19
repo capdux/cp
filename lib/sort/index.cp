@@ -1,7 +1,7 @@
-// Source: Zig Standard Library: std.sort
+// Source: /data/dev/bun/src/collections/ & Zig std.sort
 // ============================================================================
 // lib/sort/index.cp — High-Performance Sorting & Slice Query Primitives (cap:sort)
-// Absorbed from Zig Standard Library: std.sort (PDQSort, BlockSort, HeapSort)
+// Absorbed from /data/dev/bun/src/collections/ & Zig Standard Library: std.sort (PDQSort, BlockSort, HeapSort)
 // ============================================================================
 
 const std = @import("std");

@@ -1,4 +1,4 @@
-// Source: bun/src/ptr/ptr.cp
+// Source: /data/dev/bun/src/ptr/ptr.cp
 // CP Standard Library: cap:ptr
 // High-performance smart pointer and memory management abstractions
 
@@ -11,7 +11,7 @@ export {
 export {
     ThreadSafety,
     DecrementResult,
-    ThreadLock,
+    PtrThreadLock,
     RawRefCount,
 } from "./raw_ref_count.cp";
 

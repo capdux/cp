@@ -1,7 +1,7 @@
-// Source: Bun bun/src/string/builder.cp
+// Source: /data/dev/bun/src/string/StringBuilder.cp
 // ============================================================================
-// Absorbed from Bun: bun/src/string/builder.cp
-// Upstream Sync: Refer to bun/src/string/builder.zig for future upstream updates.
+// Absorbed from Bun: /data/dev/bun/src/string/StringBuilder.cp
+// Upstream Sync: Refer to /data/dev/bun/src/string/StringBuilder.zig for future upstream updates.
 // ============================================================================
 // lib/string/builder.cp
 // Two-pass zero-reallocation StringBuilder
@@ -71,7 +71,7 @@ pub struct StringBuilder {
             @memcpy(self.ptr[start .. start + n], s);
         }
         _.len += n;
-        let out: []const u8 = &[];
+        let out: []const u8 = "";
         zig {
             out = self.ptr[start .. start + n];
         }
@@ -85,9 +85,9 @@ pub struct StringBuilder {
 
     pub fn slice(*_): []const u8 {
         if (!_.allocated || _.len == 0) {
-            return &[];
+            return "";
         }
-        let out: []const u8 = &[];
+        let out: []const u8 = "";
         zig {
             out = self.ptr[0..self.len];
         }

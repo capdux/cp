@@ -1,4 +1,4 @@
-// Source: bun/src/ptr/meta.cp
+// Source: /data/dev/bun/src/ptr/meta.cp
 // Pointer reflection, metadata extraction, and type transformation utilities
 import std from "std";
 

@@ -1,8 +1,8 @@
-// Source: bun/src/ptr/shared.cp
+// Source: /data/dev/bun/src/ptr/shared.cp
 // Thread-safe and single-threaded reference counted shared pointer体系 (Shared<T>, AtomicShared<T>, Weak<T>)
 import std from "std";
 import { PointerInfo, PointerKind } from "./meta.cp";
-import { ThreadLock } from "./raw_ref_count.cp";
+import { PtrThreadLock } from "./raw_ref_count.cp";
 
 fn parsePointer(comptime Pointer: type): PointerInfo {
     const parse_opts = PointerInfo.ParseOptions{
@@ -92,7 +92,7 @@ pub fn FullData(comptime Child: type, comptime options: SharedOptions): type {
     const Allocator = options.Allocator;
     const Count = if (options.atomic) AtomicCount else NonAtomicCount;
     const WeakCountField = if (options.allow_weak) Count else void;
-    const ThreadLockField = if (options.atomic) void else ThreadLock;
+    const ThreadLockField = if (options.atomic) void else PtrThreadLock;
 
     return struct {
         const Self = @This();
@@ -125,7 +125,7 @@ pub fn FullData(comptime Child: type, comptime options: SharedOptions): type {
                 strong_count: Count.init(1),
                 weak_count: if (options.allow_weak) Count.init(1) else {},
                 allocator: allocator,
-                thread_lock: if (comptime !options.atomic) ThreadLock.initLockedIfNonComptime() else {},
+                thread_lock: if (comptime !options.atomic) PtrThreadLock.initLockedIfNonComptime() else {},
             };
             return ptr;
         }

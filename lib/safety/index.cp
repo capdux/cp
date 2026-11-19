@@ -1,4 +1,4 @@
-// Source: bun/src/safety/safety.cp
+// Source: /data/dev/bun/src/safety/safety.cp
 // CP Standard Library: cap:safety
 // High-performance thread safety, race condition detection, and ASAN integration
 import std from "std";

@@ -1,4 +1,4 @@
-// Source: bun/src/safety/asan.cp
+// Source: /data/dev/bun/src/safety/asan.cp
 import std from "std";
 
 pub const asan_enabled: bool = @hasDecl(std.debug, "is_asan_enabled") and std.debug.is_asan_enabled;

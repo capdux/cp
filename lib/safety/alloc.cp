@@ -1,4 +1,4 @@
-// Source: bun/src/safety/alloc.cp
+// Source: /data/dev/bun/src/safety/alloc.cp
 import std from "std";
 
 const alloc_safety_enabled: bool = true;

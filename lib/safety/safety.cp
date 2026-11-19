@@ -1,4 +1,4 @@
-// Source: bun/src/safety/safety.cp
+// Source: /data/dev/bun/src/safety/safety.cp
 import std from "std";
 
 /// Assert condition is true; panic with message otherwise.

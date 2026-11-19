@@ -1,4 +1,4 @@
-// Source: bun/src/safety/CriticalSection.cp
+// Source: /data/dev/bun/src/safety/CriticalSection.cp
 import std from "std";
 import { invalid } from "./thread_id.cp";
 

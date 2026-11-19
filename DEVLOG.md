@@ -1671,4 +1671,12 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
   3. **模块化专著文档体系**：在 `docs/<库名>/<库名>.md` 下落盘 14 份深度技术手册（`pack`、`col`、`encoding`、`url`、`path`、`glob`、`semver`、`which`、`sourcemap`、`patch`、`hash`、`dotenv`、`conf`、`clap`）；
   4. **全量端到端测试验证**：6 套新建全功能回归测试套件及全部既有相关测试套件 100% PASS。
 
+### 第五阶段：第二里程碑批次（10 大核心标准库模块审计、缺陷修复与专著文档）
+- 核心技术落地：
+  1. **并发与指针安全加固 (`lib/ptr`, `lib/safety`, `lib/event_loop`)**：排查并修复 `ThreadSafeRefCount.deref` 误访问非原子字段的并发隐患，重命名 `PtrThreadLock` 解除 `cap:ptr` 与 `cap:safety` 联合导入时的命名碰撞；
+  2. **云存储与协议栈完善 (`lib/s3`, `lib/security`, `lib/redis`, `lib/valkey`)**：补齐 AWS SigV4 Query-based `buildPresignedUrl` 预签名 URL 生成、CSRF 时钟偏移与时间戳加法防溢出守卫；将 `valkey_protocol_.cp` 彻底去 Zig 化重构为纯正现代 CP 并实装 `ValkeyReader` 流式多帧解析器；
+  3. **Highway 级 SIMD 向量加速与字符串引擎 (`lib/string`, `lib/simd`, `lib/sort`)**：在 `lib/simd/index.cp` 完整落地 16/32 字节 `@Vector` 字节检索、多字符同时查找、空白跳过、ASCII 校验与无分支 `@select` 批量大小写转换；
+  4. **全量首行溯源与文档**：54 个 `.cp` 文件首行 100% 标注 `// Source: /data/dev/bun/src/...`，新增 9 份专著手册（`ptr`、`safety`、`event_loop`、`s3`、`security`、`redis`、`string`、`simd`、`sort`）及 3 套全功能回归测试套件，测试 100% PASS。
+
+
 

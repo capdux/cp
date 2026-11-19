@@ -1,7 +1,7 @@
-// Source: bun/src/ptr/ref_count.cp
+// Source: /data/dev/bun/src/ptr/ref_count.cp
 // Intrusive single-threaded and thread-safe reference counting mixin & RefPtr smart pointer
 import std from "std";
-import { ThreadLock } from "./raw_ref_count.cp";
+import { PtrThreadLock } from "./raw_ref_count.cp";
 
 pub struct RefCountOptions {
     debug_name: string? = null,
@@ -16,7 +16,7 @@ pub fn RefCount(comptime T: type, comptime field_name: string, comptime destruct
         const Self = @This();
 
         raw_count: u32 = 1,
-        thread: ThreadLock = ThreadLock.initLockedIfNonComptime(),
+        thread: PtrThreadLock = PtrThreadLock.initLockedIfNonComptime(),
 
         const typed_destructor: Destructor = destructor;
 
@@ -30,7 +30,7 @@ pub fn RefCount(comptime T: type, comptime field_name: string, comptime destruct
             }
             return Self{
                 raw_count: count,
-                thread: ThreadLock.initLockedIfNonComptime(),
+                thread: PtrThreadLock.initLockedIfNonComptime(),
             };
         }
 
@@ -130,13 +130,12 @@ pub fn ThreadSafeRefCount(comptime T: type, comptime field_name: string, comptim
         }
 
         pub static fn deref(target: *T) {
-            let count = getRefCount(target);
-            count.thread.lockOrAssert();
-            if (count.raw_count == 0) {
-                @panic("RefCount underflow");
+            const count = getRefCount(target);
+            const old = count.raw_count.fetchSub(1, .acq_rel);
+            if (old == 0) {
+                @panic("ThreadSafeRefCount underflow");
             }
-            count.raw_count -= 1;
-            if (count.raw_count == 0) {
+            if (old == 1) {
                 if (comptime options.destructor_ctx != null) {
                     @compileError("destructor requires context, use derefWithContext");
                 } else {

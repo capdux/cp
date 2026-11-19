@@ -1,4 +1,4 @@
-// Source: bun/src/runtime/webcore/s3/multipart.cp
+// Source: /data/dev/bun/src/s3_signing/
 import { S3Acl, S3StorageClass, S3Error } from "./types";
 const std = @import("std");
 
@@ -190,7 +190,7 @@ pub fn formatCompleteMultipartUploadXML(parts: []const UploadPartResult, out: []
 pub fn formatCompleteMultipartUploadString(parts: []const UploadPartResult, allocator: std.mem.Allocator): !string {
     let buf: [16384]u8 = undefined;
     let len = formatCompleteMultipartUploadXML(parts, buf[0..16384]);
-    let result = try allocator.alloc(u8, len);
+    let result = allocator.alloc(u8, len)?;
     std.mem.copyForwards(u8, result, buf[0..len]);
     return result;
 }

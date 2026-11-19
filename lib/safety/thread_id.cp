@@ -1,4 +1,4 @@
-// Source: bun/src/safety/thread_id.cp
+// Source: /data/dev/bun/src/safety/thread_id.cp
 import std from "std";
 
 /// A value that does not alias any other thread ID.

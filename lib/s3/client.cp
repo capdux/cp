@@ -1,4 +1,4 @@
-// Source: bun/src/runtime/webcore/s3/client.cp
+// Source: /data/dev/bun/src/s3_signing/
 import { S3Acl, S3StorageClass, S3SignErrorCode, S3Error } from "./types";
 import { S3Credentials } from "./credentials";
 import { SigV4Signer } from "./signing";
@@ -53,14 +53,34 @@ pub struct S3Client {
         url_buf: []u8,
         auth_buf: []u8
     ): !S3SignedRequest {
-        return try S3RequestBuilder.buildSignedRequest(
+        return S3RequestBuilder.buildSignedRequest(
             &_.credentials,
             options,
             date_yyyymmdd,
             amz_date,
             url_buf,
             auth_buf
-        );
+        )?;
+    }
+
+    /// Generates an AWS SigV4 Presigned URL for temporary access (e.g. GET or PUT).
+    pub fn presignUrl(
+        method: string,
+        path: string,
+        date_yyyymmdd: string,
+        amz_date: string,
+        expires_seconds: usize,
+        url_buf: []u8
+    ): !string {
+        return S3RequestBuilder.buildPresignedUrl(
+            &_.credentials,
+            method,
+            path,
+            date_yyyymmdd,
+            amz_date,
+            expires_seconds,
+            url_buf
+        )?;
     }
 
     /// Prepares options for a HEAD (stat) request.

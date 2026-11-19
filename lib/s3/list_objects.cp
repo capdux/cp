@@ -1,4 +1,4 @@
-// Source: bun/src/runtime/webcore/s3/list_objects.cp
+// Source: /data/dev/bun/src/s3_signing/
 // ============================================================================
 // lib/s3/list_objects.cp — S3 ListObjectsV2 参数构造与 XML 结果解析
 // 吸收自 Bun src/runtime/webcore/s3/list_objects.cp
@@ -249,7 +249,7 @@ pub fn parseS3ListObjectsResult(allocator: std.mem.Allocator, xml: string): !S3L
             };
         }
 
-        try contents_list.append(allocator, item);
+        contents_list.append(allocator, item)?;
         pos = c_end + end_tag.len;
     }
 
@@ -269,13 +269,13 @@ pub fn parseS3ListObjectsResult(allocator: std.mem.Allocator, xml: string): !S3L
 
         const cp_xml = xml[cp_start..cp_end];
         if (p_val := extractXmlTag(cp_xml, "Prefix")) {
-            try prefixes_list.append(allocator, p_val);
+            prefixes_list.append(allocator, p_val)?;
         }
         pos = cp_end + cp_end_tag.len;
     }
 
-    result.contents = try contents_list.toOwnedSlice(allocator);
-    result.common_prefixes = try prefixes_list.toOwnedSlice(allocator);
+    result.contents = contents_list.toOwnedSlice(allocator)?;
+    result.common_prefixes = prefixes_list.toOwnedSlice(allocator)?;
     if (result.key_count == 0) {
         result.key_count = result.contents.len;
     }

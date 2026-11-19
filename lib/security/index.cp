@@ -1,4 +1,4 @@
-// Source: Custom (agy-generated export index)
+// Source: /data/dev/bun/src/csrf/csrf.cp
 // lib/security/index.cp
 // Unified Entry Point for Security Subsystem (cap:security)
 

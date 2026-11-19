@@ -1,6 +1,6 @@
-// Source: bun/src/runtime/webcore/s3/simple_request.cp
+// Source: /data/dev/bun/src/s3_signing/
 // ============================================================================
-// lib/s3/simple_request.cp — S3 基础 HTTP 请求、签名构建与结果模型
+// lib/s3/simple_request.cp — S3 基础 HTTP 请求、签名构建、预签名 URL 与结果模型
 // 吸收自 Bun src/runtime/webcore/s3/simple_request.cp
 // ============================================================================
 
@@ -346,5 +346,140 @@ pub struct S3RequestBuilder {
             content_sha256: payload_hash,
             auth_header: auth_header,
         };
+    }
+
+    /// 构造 AWS SigV4 预签名 URL (Presigned URL, Query-based Authentication)
+    /// 采用 `UNSIGNED-PAYLOAD` 与 `X-Amz-SignedHeaders=host`，将完整 URL 写入 `url_buf` 并返回切片
+    pub static fn buildPresignedUrl(
+        creds: *const S3Credentials,
+        method: string,
+        path: string,
+        date_yyyymmdd: string,
+        amz_date: string,
+        expires_seconds: usize,
+        url_buf: []u8,
+    ): string! {
+        let host_buf: [128]u8 = undefined;
+        let host_len = creds.formatHost(&host_buf);
+        if (host_len == 0) return err.InvalidHost;
+        const host_str = host_buf[0..host_len];
+
+        let uri_buf: [256]u8 = undefined;
+        let uri_len = creds.formatCanonicalUri(path, &uri_buf);
+        if (uri_len == 0) return err.InvalidUri;
+        const uri_str = uri_buf[0..uri_len];
+
+        // Format expires_seconds to decimal ASCII
+        let exp_buf: [24]u8 = undefined;
+        let exp_len: usize = 0;
+        if (expires_seconds == 0) {
+            exp_buf[0] = '0';
+            exp_len = 1;
+        } else {
+            let tmp: [24]u8 = undefined;
+            let cnt: usize = 0;
+            let v = expires_seconds;
+            while (v > 0) {
+                tmp[cnt] = (48 as u8) + ((v % 10) as u8);
+                v /= 10;
+                cnt += 1;
+            }
+            while (cnt > 0) {
+                cnt -= 1;
+                exp_buf[exp_len] = tmp[cnt];
+                exp_len += 1;
+            }
+        }
+        const exp_str = exp_buf[0..exp_len];
+        const region = creds.effectiveRegion();
+
+        // Build Canonical Query String in alphabetical order:
+        // X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=<ak>%2F<date>%2F<region>%2Fs3%2Faws4_request&X-Amz-Date=<amz_date>&X-Amz-Expires=<expires>&X-Amz-SignedHeaders=host
+        let query_buf: [512]u8 = undefined;
+        let q_pos: usize = 0;
+        const p1 = "X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=";
+        @memcpy(query_buf[q_pos .. q_pos + p1.len], p1);
+        q_pos += p1.len;
+        @memcpy(query_buf[q_pos .. q_pos + creds.access_key_id.len], creds.access_key_id);
+        q_pos += creds.access_key_id.len;
+        @memcpy(query_buf[q_pos .. q_pos + 3], "%2F");
+        q_pos += 3;
+        @memcpy(query_buf[q_pos .. q_pos + date_yyyymmdd.len], date_yyyymmdd);
+        q_pos += date_yyyymmdd.len;
+        @memcpy(query_buf[q_pos .. q_pos + 3], "%2F");
+        q_pos += 3;
+        @memcpy(query_buf[q_pos .. q_pos + region.len], region);
+        q_pos += region.len;
+        const p2 = "%2Fs3%2Faws4_request&X-Amz-Date=";
+        @memcpy(query_buf[q_pos .. q_pos + p2.len], p2);
+        q_pos += p2.len;
+        @memcpy(query_buf[q_pos .. q_pos + amz_date.len], amz_date);
+        q_pos += amz_date.len;
+        const p3 = "&X-Amz-Expires=";
+        @memcpy(query_buf[q_pos .. q_pos + p3.len], p3);
+        q_pos += p3.len;
+        @memcpy(query_buf[q_pos .. q_pos + exp_len], exp_str);
+        q_pos += exp_len;
+        const p4 = "&X-Amz-SignedHeaders=host";
+        @memcpy(query_buf[q_pos .. q_pos + p4.len], p4);
+        q_pos += p4.len;
+        const canonical_query = query_buf[0..q_pos];
+
+        // Build Canonical Request:
+        // <Method>\n<CanonicalURI>\n<CanonicalQueryString>\nhost:<host>\n\nhost\nUNSIGNED-PAYLOAD
+        let canonical_buf: [1024]u8 = undefined;
+        let c_pos: usize = 0;
+        @memcpy(canonical_buf[c_pos .. c_pos + method.len], method);
+        c_pos += method.len;
+        canonical_buf[c_pos] = '\n';
+        c_pos += 1;
+        @memcpy(canonical_buf[c_pos .. c_pos + uri_len], uri_str);
+        c_pos += uri_len;
+        canonical_buf[c_pos] = '\n';
+        c_pos += 1;
+        @memcpy(canonical_buf[c_pos .. c_pos + q_pos], canonical_query);
+        c_pos += q_pos;
+        const h_part = "\nhost:";
+        @memcpy(canonical_buf[c_pos .. c_pos + h_part.len], h_part);
+        c_pos += h_part.len;
+        @memcpy(canonical_buf[c_pos .. c_pos + host_len], host_str);
+        c_pos += host_len;
+        const tail_part = "\n\nhost\nUNSIGNED-PAYLOAD";
+        @memcpy(canonical_buf[c_pos .. c_pos + tail_part.len], tail_part);
+        c_pos += tail_part.len;
+
+        let sig_buf: [64]u8 = undefined;
+        let sig_len = SigV4Signer.signS3CanonicalRequest(
+            creds,
+            date_yyyymmdd,
+            amz_date,
+            canonical_buf[0..c_pos],
+            &sig_buf,
+        );
+        if (sig_len != 64) return err.SignError;
+
+        // Assemble final presigned URL into url_buf
+        const proto = if (creds.insecure_http) "http://" else "https://";
+        const sig_param = "&X-Amz-Signature=";
+        const total_needed = proto.len + host_len + uri_len + 1 + q_pos + sig_param.len + 64;
+        if (url_buf.len < total_needed) return err.BufferTooSmall;
+
+        let u_pos: usize = 0;
+        @memcpy(url_buf[u_pos .. u_pos + proto.len], proto);
+        u_pos += proto.len;
+        @memcpy(url_buf[u_pos .. u_pos + host_len], host_str);
+        u_pos += host_len;
+        @memcpy(url_buf[u_pos .. u_pos + uri_len], uri_str);
+        u_pos += uri_len;
+        url_buf[u_pos] = '?';
+        u_pos += 1;
+        @memcpy(url_buf[u_pos .. u_pos + q_pos], canonical_query);
+        u_pos += q_pos;
+        @memcpy(url_buf[u_pos .. u_pos + sig_param.len], sig_param);
+        u_pos += sig_param.len;
+        @memcpy(url_buf[u_pos .. u_pos + 64], sig_buf[0..64]);
+        u_pos += 64;
+
+        return url_buf[0..u_pos];
     }
 }

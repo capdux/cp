@@ -1,7 +1,7 @@
-// Source: Bun bun/src/string/smol.cp
+// Source: /data/dev/bun/src/string/SmolStr.cp
 // ============================================================================
-// Absorbed from Bun: bun/src/string/smol.cp
-// Upstream Sync: Refer to bun/src/string/smol.zig for future upstream updates.
+// Absorbed from Bun: /data/dev/bun/src/string/SmolStr.cp
+// Upstream Sync: Refer to /data/dev/bun/src/string/SmolStr.zig for future upstream updates.
 // ============================================================================
 // lib/string/smol.cp
 // SmolStr: Small String Optimization (SSO) container
@@ -51,6 +51,10 @@ pub struct SmolStr {
     }
 
     pub fn isInline(): bool {
+        return _.inlined;
+    }
+
+    pub fn isInlined(): bool {
         return _.inlined;
     }
 

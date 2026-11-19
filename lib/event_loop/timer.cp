@@ -1,4 +1,4 @@
-// Source: bun/src/event_loop/EventLoopTimer.cp
+// Source: /data/dev/bun/src/event_loop/EventLoopTimer.cp
 import std from "std";
 
 pub fn getNowMs(): i64 {

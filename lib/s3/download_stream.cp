@@ -1,4 +1,4 @@
-// Source: bun/src/runtime/webcore/s3/download_stream.cp
+// Source: /data/dev/bun/src/s3_signing/
 const std = @import("std");
 
 pub struct S3ContentRange {
@@ -69,7 +69,7 @@ pub fn formatRangeHeader(offset: usize, size: usize?, out: []u8): usize {
 pub fn formatRangeString(offset: usize, size: usize?, allocator: std.mem.Allocator): !string {
     let buf: [64]u8 = undefined;
     let len = formatRangeHeader(offset, size, buf[0..64]);
-    let result = try allocator.alloc(u8, len);
+    let result = allocator.alloc(u8, len)?;
     std.mem.copyForwards(u8, result, buf[0..len]);
     return result;
 }

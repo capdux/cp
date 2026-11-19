@@ -1,10 +1,11 @@
-// Source: Bun src/csrf/csrf.zig (name-matched, needs review)
+// Source: /data/dev/bun/src/csrf/csrf.cp
 // lib/security/csrf.cp
 // CSRF Token Generation and Verification in pure CP
 // Uses CSPRNG nonces, HMAC-SHA256 signatures, and constant-time comparison
 
 import { randomBytes, fillRandom, hmacSha256Raw } from "../crypto/index.cp";
 import { Base64 } from "../encoding/index.cp";
+const std = @import("std");
 
 pub enum TokenFormat {
     Base64Url,
@@ -34,14 +35,14 @@ fn getWallTimeMs(): u64 {
 }
 
 pub class CSRF {
-    pub static fn generateRaw(secret: []const u8, expires_in_ms: u64, out: []u8): usize! {
-        if (out.len < 64) return error.BufferTooSmall;
-
-        const now = getWallTimeMs();
+    /// Generates a 64-byte raw CSRF token at an explicit timestamp `timestamp_ms`:
+    /// `[0..8] timestamp_ms (BE) | [8..24] CSPRNG nonce (16B) | [24..32] expires_in_ms (BE) | [32..64] HMAC-SHA256`
+    pub static fn generateRawAt(secret: []const u8, timestamp_ms: u64, expires_in_ms: u64, out: []u8): usize! {
+        if (out.len < 64) return err.BufferTooSmall;
 
         // 1. Write timestamp (8 bytes, Big-Endian)
         zig {
-            std.mem.writeInt(u64, out[0..8], now, .big);
+            std.mem.writeInt(u64, out[0..8], timestamp_ms, .big);
         }
 
         // 2. Generate CSPRNG nonce (16 bytes)
@@ -66,7 +67,13 @@ pub class CSRF {
         return 64;
     }
 
-    pub static fn verifyRaw(raw_token: []const u8, secret: []const u8, max_age_ms: u64): bool {
+    pub static fn generateRaw(secret: []const u8, expires_in_ms: u64, out: []u8): usize! {
+        const now = getWallTimeMs();
+        return generateRawAt(secret, now, expires_in_ms, out);
+    }
+
+    /// Verifies a 64-byte raw CSRF token against `secret`, `now_ms`, and `max_age_ms` in constant time.
+    pub static fn verifyRawAt(raw_token: []const u8, secret: []const u8, now_ms: u64, max_age_ms: u64): bool {
         if (raw_token.len != 64) return false;
 
         const payload = raw_token[0..32];
@@ -88,24 +95,37 @@ pub class CSRF {
             expires_in = std.mem.readInt(u64, raw_token[24..32], .big);
         }
 
-        const now = getWallTimeMs();
-
-        // Reject tokens from far in the future (> 60s clock skew)
-        if (timestamp > now + 60000) {
+        // Reject tokens from far in the future (> 60s clock skew, with overflow guard)
+        if (now_ms <= std.math.maxInt(u64) - 60000 && timestamp > now_ms + 60000) {
             return false;
         }
 
-        // Check token's embedded expiration
-        if (expires_in > 0 && now > timestamp + expires_in) {
-            return false;
+        // Check token's embedded expiration (with u64 overflow guard)
+        if (expires_in > 0) {
+            if (std.math.maxInt(u64) - timestamp < expires_in) {
+                return false;
+            }
+            if (now_ms > timestamp + expires_in) {
+                return false;
+            }
         }
 
-        // Check caller's max_age_ms
-        if (max_age_ms > 0 && now > timestamp + max_age_ms) {
-            return false;
+        // Check caller's max_age_ms (with u64 overflow guard)
+        if (max_age_ms > 0) {
+            if (std.math.maxInt(u64) - timestamp < max_age_ms) {
+                return false;
+            }
+            if (now_ms > timestamp + max_age_ms) {
+                return false;
+            }
         }
 
         return true;
+    }
+
+    pub static fn verifyRaw(raw_token: []const u8, secret: []const u8, max_age_ms: u64): bool {
+        const now = getWallTimeMs();
+        return verifyRawAt(raw_token, secret, now, max_age_ms);
     }
 
     pub static fn generate(secret: []const u8, expires_in_ms: u64, format: TokenFormat, allocator: std.mem.Allocator): []const u8! {
@@ -173,5 +193,5 @@ fn hexVal(c: u8): u8! {
     if (c >= '0' && c <= '9') return c - '0';
     if (c >= 'a' && c <= 'f') return c - 'a' + 10;
     if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-    return error.InvalidHex;
+    return err.InvalidHex;
 }

@@ -1,7 +1,7 @@
-// Source: Bun bun/src/string/
+// Source: /data/dev/bun/src/string/
 // ============================================================================
-// Absorbed from Bun: bun/src/string/
-// Upstream Sync: Refer to bun/src/string/ for future upstream updates.
+// Absorbed from Bun: /data/dev/bun/src/string/
+// Upstream Sync: Refer to /data/dev/bun/src/string/ for future upstream updates.
 // ============================================================================
 // lib/string/index.cp
 // Unified Cap String & Unicode SIMD Subsystem (cap:string)

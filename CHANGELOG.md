@@ -1310,5 +1310,18 @@ hotfix: resolve keyword conflict for "test" and prevent redundant re-export of i
 - **lib/dotenv/*, lib/conf/*, lib/clap/* (配置提取器增强与全量溯源)**:
   - 增强 `EnvMap.parse`、`ConfGetter`、`YamlDoc` 并优化 `clap.cp` 符号隔离，更新全部 15 个文件的首行 `// Source:` 备注。
   - 新增 `docs/dotenv/dotenv.md`、`docs/conf/conf.md`、`docs/clap/clap.md` 与 `cap/test/test_conf_dotenv_clap.cp`。
+- **lib/ptr/*, lib/safety/*, lib/event_loop/* (缺陷修复与全量溯源)**:
+  - 修复 `lib/ptr/ref_count.cp` 中 `ThreadSafeRefCount.deref` 原子递减缺陷，重命名 `PtrThreadLock` 消除跨库导入符号碰撞，更新全部 25 个文件的首行 `// Source:` 备注。
+  - 新增 `docs/ptr/ptr.md`、`docs/safety/safety.md`、`docs/event_loop/event_loop.md` 与 `cap/test/test_ptr_safety_event_loop.cp`。
+- **lib/s3/*, lib/security/*, lib/redis/* & lib/valkey/* (预签名 URL、流式多帧解析器与纯 CP 重构)**:
+  - 在 `lib/s3/simple_request.cp` 与 `client.cp` 中新增 `buildPresignedUrl` / `presignUrl`。
+  - 在 `lib/security/csrf.cp` 中补齐 `u64` 防溢出守卫与 60s 时钟偏移守卫。
+  - 重构 `lib/valkey/valkey_protocol_.cp` 与 `valkey_protocol.cp` 为纯正现代 CP 语法，在 `lib/redis/resp.cp` 新增 `ValkeyReader` 与 RESP3 编码器，更新全部 16 个文件的首行 `// Source:` 备注。
+  - 新增 `docs/s3/s3.md`、`docs/security/security.md`、`docs/redis/redis.md` 与 `cap/test/test_s3_security_redis.cp`。
+- **lib/string/*, lib/simd/*, lib/sort/* (Highway 级 SIMD 向量扩充与全量溯源)**:
+  - 修复 `lib/string/builder.cp` 空切片引用，为 `SmolStr` 补齐 `isInline`/`isInlined`。
+  - 在 `lib/simd/index.cp` 中完整实装 16/32 字节 SIMD 字节扫描与无分支大小写转换，更新全部 13 个文件的首行 `// Source:` 备注。
+  - 新增 `docs/string/string.md`、`docs/simd/simd.md`、`docs/sort/sort.md` 与 `cap/test/test_string_simd_sort.cp`。
+
 
 

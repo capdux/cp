@@ -1,7 +1,7 @@
-// Source: Bun bun/src/string/path.cp
+// Source: /data/dev/bun/src/string/PathString.cp
 // ============================================================================
-// Absorbed from Bun: bun/src/string/path.cp
-// Upstream Sync: Refer to bun/src/string/path.zig for future upstream updates.
+// Absorbed from Bun: /data/dev/bun/src/string/PathString.cp
+// Upstream Sync: Refer to /data/dev/bun/src/string/PathString.zig for future upstream updates.
 // ============================================================================
 // lib/string/path.cp
 // PathString: Lightweight zero-alloc path slice view

@@ -1,4 +1,4 @@
-// Source: bun/src/ptr/raw_ref_count.cp
+// Source: /data/dev/bun/src/ptr/raw_ref_count.cp
 // Low-level atomic and non-atomic reference count primitives
 import std from "std";
 
@@ -12,19 +12,19 @@ pub enum DecrementResult {
     should_destroy,
 }
 
-pub struct ThreadLock {
+pub struct PtrThreadLock {
     owning_thread: std.Thread.Id = 0,
 
-    pub static fn initUnlocked(): ThreadLock {
-        return ThreadLock{ owning_thread: 0 };
+    pub static fn initUnlocked(): PtrThreadLock {
+        return PtrThreadLock{ owning_thread: 0 };
     }
 
-    pub static fn initLocked(): ThreadLock {
-        return ThreadLock{ owning_thread: 0 };
+    pub static fn initLocked(): PtrThreadLock {
+        return PtrThreadLock{ owning_thread: 0 };
     }
 
-    pub static fn initLockedIfNonComptime(): ThreadLock {
-        return ThreadLock{ owning_thread: 0 };
+    pub static fn initLockedIfNonComptime(): PtrThreadLock {
+        return PtrThreadLock{ owning_thread: 0 };
     }
 
     pub fn lockOrAssert(*_) {
@@ -46,7 +46,7 @@ pub struct ThreadLock {
 
 pub fn RawRefCount(comptime Int: type, comptime thread_safety: ThreadSafety): type {
     const RawValueType = if (thread_safety == .thread_safe) std.atomic.Value(Int) else Int;
-    const ThreadLockType = if (thread_safety == .single_threaded) ThreadLock else void;
+    const ThreadLockType = if (thread_safety == .single_threaded) PtrThreadLock else void;
 
     return struct {
         const Self = @This();
@@ -61,7 +61,7 @@ pub fn RawRefCount(comptime Int: type, comptime thread_safety: ThreadSafety): ty
                     .thread_safe => std.atomic.Value(Int).init(initial_count),
                 },
                 thread_lock: switch (thread_safety) {
-                    .single_threaded => ThreadLock.initLockedIfNonComptime(),
+                    .single_threaded => PtrThreadLock.initLockedIfNonComptime(),
                     .thread_safe => {},
                 },
             };
