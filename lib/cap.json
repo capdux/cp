@@ -1,0 +1,59 @@
+{
+  "ver": "0.1.0",
+  "opt": "small",
+  "lib": {
+    "http": {
+      "path": "http",
+      "bin": {
+        "picohttpparser": {
+          "path": "vendor/picohttpparser",
+          "src": [
+            "picohttpparser.c"
+          ],
+          "include": [
+            "."
+          ],
+          "opt": "fast"
+        }
+      },
+      "sys": {
+        "z": {
+          "linux": "libz.so.1",
+          "mac": "libz.dylib",
+          "win": "zlib1.dll"
+        }
+      }
+    },
+    "net": {
+      "path": "net",
+      "bin": {
+        "usockets": {
+          "path": "vendor/usockets",
+          "src": [
+            "src/bsd.c",
+            "src/context.c",
+            "src/loop.c",
+            "src/socket.c",
+            "src/eventing/epoll_kqueue.c"
+          ],
+          "include": [
+            "src"
+          ],
+          "flag": [
+            "-DLIBUS_USE_OPENSSL=0"
+          ]
+        }
+      }
+    },
+    "zlib": {
+      "path": "zlib",
+      "sys": {
+        "z": {
+          "linux": "libz.so.1",
+          "mac": "libz.dylib",
+          "win": "zlib1.dll"
+        }
+      }
+    }
+  }
+}

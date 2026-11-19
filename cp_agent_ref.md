@@ -92,11 +92,34 @@ export * from "./sub_module.cp";
   "name": "nexus-agent",
   "version": "1.0.0",
   "main": "src/main.cp",
-  "mode": "parallel",
+  "opt": "fast",
   "dependencies": { "tensor-math": "^0.2.1" },
-  "build": { "opt": "fast", "out_dir": "bin", "c_flags": ["-O3"], "link_libs": ["c", "m"] }
+  "bin_dependencies": {
+    "my_c_lib": {
+      "path": "vendor/foo",
+      "src": ["a.c"],
+      "include": ["."],
+      "flag": ["-D_GNU_SOURCE"]
+    }
+  },
+  "build": {
+    "entry": "src/main.cp",
+    "opt": "fast",
+    "out_dir": "bin",
+    "sys": {
+      "z": { "linux": "libz.so.1", "mac": "libz.dylib", "win": "zlib1.dll" }
+    }
+  }
 }
 ```
+
+> **`cap.json` 精简规范速查**：
+> 1. **`opt`**：全级别优化配置，取值 `"debug"` / `"safe"` / `"fast"` / `"small"`（替代旧版 `default_opt: ReleaseSmall`）；
+> 2. **`bin` 库配置**：默认即为静态库（废除冗余的 `type: static_lib`）；支持精炼字段名 `src`、`include`、`flag`；
+> 3. **`path` 相对作用域**：当指定了 `path`，其下的 `src` 与 `include` 无需重复写 `path` 前缀；若省略 `include`，系统默认注入当前 `path` 作为头文件包含路径；
+> 4. **`flag` 编译选项**：供底层 C/C++ 编译器使用的宏定义（如 `-D_GNU_SOURCE`）及编译选项；
+> 5. **`sys` 命名字典**：采用命名字典支持多动态库依赖隔离，平台支持 `mac` / `win` / `linux` 精炼键名；
+> 6. **`lib` 路径精准映射**：`path` 支持指向目录（自动识别 `index.cp` / `main.cp` / 同名 `.cp`）或直接指向特定文件（如 `"http/server.cp"`），不存在时平滑回退。
 | 工具指令 | 核心用途与行为 |
 | :--- | :--- |
 | `cap <file>` / `cap run <file>` | Debug 模式百毫秒级直接构建并运行 |

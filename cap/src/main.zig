@@ -2,6 +2,8 @@ const std = @import("std");
 
 pub var global_io: std.Io = undefined;
 pub var global_env: *std.process.Environ.Map = undefined;
+pub var cap_root: []const u8 = undefined;
+pub var registry_path: []const u8 = undefined;
 
 pub const fs_shim = struct {
     pub fn cwd() CwdShim {
@@ -53,13 +55,30 @@ const process = std.process;
 const builtin = @import("builtin");
 const manifest = @import("project/manifest.zig");
 const semver = @import("project/semver.zig");
+const resolver = @import("project/resolver.zig");
+const lock = @import("project/lock.zig");
 
-const REGISTRY_PATH = "/data/dev/cp/mock_registry";
+fn getCapRoot(allocator: std.mem.Allocator) ![]const u8 {
+    if (global_env.get("CAP_ROOT")) |root| {
+        return try allocator.dupe(u8, root);
+    }
+    return try allocator.dupe(u8, "/data/dev/cp");
+}
+
+fn getRegistryPath(allocator: std.mem.Allocator, root: []const u8) ![]const u8 {
+    if (global_env.get("CAP_REGISTRY_PATH")) |path| {
+        return try allocator.dupe(u8, path);
+    }
+    return try std.Io.Dir.path.join(allocator, &[_][]const u8{ root, "mock_registry" });
+}
 
 pub fn main(init: std.process.Init) !void {
     global_io = init.io;
     global_env = init.environ_map;
     const allocator = init.arena.allocator();
+
+    cap_root = try getCapRoot(allocator);
+    registry_path = try getRegistryPath(allocator, cap_root);
 
     var args_iter = std.process.Args.iterate(init.minimal.args);
     var args_list: std.ArrayList([]const u8) = .empty;
@@ -411,10 +430,16 @@ fn handleInstall(allocator: std.mem.Allocator) !void {
         const best_ver = try resolveBestVersion(allocator, name, range);
         try fetchAndLink(allocator, name, best_ver);
     }
+
+    // Generate cap.lock
+    var lk = try lock.Lockfile.fromManifest(allocator, mf);
+    defer lk.deinit(allocator);
+    try lk.save(allocator, "cap.lock");
+    std.debug.print("Generated cap.lock\n", .{});
 }
 
 fn resolveBestVersion(_: std.mem.Allocator, name: []const u8, range: semver.VersionRange) !semver.Version {
-    var reg_dir = try std.Io.Dir.openDirAbsolute(global_io, REGISTRY_PATH, .{ .iterate = true });
+    var reg_dir = try std.Io.Dir.openDirAbsolute(global_io, registry_path, .{ .iterate = true });
     defer reg_dir.close(global_io);
     var pkg_dir = try reg_dir.openDir(global_io, name, .{ .iterate = true });
     defer pkg_dir.close(global_io);
@@ -452,7 +477,7 @@ fn fetchAndLinkGlobal(allocator: std.mem.Allocator, name: []const u8, version: s
     fs_shim.cwd().deleteFile(global_pkg_path) catch {};
     fs_shim.cwd().deleteTree(global_pkg_path) catch {};
 
-    const reg_pkg_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ REGISTRY_PATH, name, v_str });
+    const reg_pkg_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ registry_path, name, v_str });
     defer allocator.free(reg_pkg_path);
 
     try copyDir(reg_pkg_path, global_pkg_path);
@@ -489,7 +514,7 @@ fn fetchAndLink(allocator: std.mem.Allocator, name: []const u8, version: semver.
         d.close(global_io);
     } else {
         std.debug.print("Fetching {s}@{s} to cache...\n", .{ name, v_str });
-        const reg_pkg_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ REGISTRY_PATH, name, v_str });
+        const reg_pkg_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ registry_path, name, v_str });
         defer allocator.free(reg_pkg_path);
 
         try copyDir(reg_pkg_path, cache_pkg_path);
@@ -509,6 +534,7 @@ fn fetchAndLink(allocator: std.mem.Allocator, name: []const u8, version: semver.
     } else {
         try std.Io.Dir.symLinkAbsolute(global_io, cache_pkg_path, link_path, .{});
     }
+    precompilePackageBinDeps(allocator, link_path) catch {};
 }
 
 fn copyDir(src: []const u8, dest: []const u8) !void {
@@ -517,15 +543,559 @@ fn copyDir(src: []const u8, dest: []const u8) !void {
     _ = try child.wait(global_io);
 }
 
-fn getCpcBin() []const u8 {
+fn getCpcBin(allocator: std.mem.Allocator) ![]const u8 {
     if (global_env.get("CPC_BIN")) |custom_bin| {
-        if (custom_bin.len > 0) return custom_bin;
+        if (custom_bin.len > 0) return try allocator.dupe(u8, custom_bin);
     }
-    if (fs_shim.cwd().readFileAlloc(std.heap.page_allocator, ".cap/cpc_bin", 512)) |content| {
+    if (fs_shim.cwd().readFileAlloc(allocator, ".cap/cpc_bin", 512)) |content| {
         const trimmed = std.mem.trim(u8, content, " \t\r\n");
-        if (trimmed.len > 0) return trimmed;
+        if (trimmed.len > 0) return try allocator.dupe(u8, trimmed);
     } else |_| {}
-    return "/data/dev/cp/cpc/target/release/cpc";
+    return try std.Io.Dir.path.join(allocator, &[_][]const u8{ cap_root, "cpc", "target", "release", "cpc" });
+}
+
+fn addArg(args_buf: *[100][]const u8, argc: *usize, arg: []const u8) void {
+    for (args_buf[0..argc.*]) |existing| {
+        if (std.mem.eql(u8, existing, arg)) return;
+    }
+    if (argc.* < 100) {
+        args_buf[argc.*] = arg;
+        argc.* += 1;
+    }
+}
+
+fn scanZigFileForLinkPragmas(
+    allocator: std.mem.Allocator,
+    zig_path: []const u8,
+    args_buf: *[100][]const u8,
+    argc: *usize,
+    allocated_libs: *[64][]const u8,
+    allocated_libs_len: *usize,
+) void {
+    const content = fs_shim.cwd().readFileAlloc(allocator, zig_path, 4096) catch return;
+    defer allocator.free(content);
+
+    var line_it = std.mem.splitScalar(u8, content, '\n');
+    while (line_it.next()) |line| {
+        const trimmed = std.mem.trim(u8, line, " \r\t");
+        if (trimmed.len == 0) continue;
+        if (!std.mem.startsWith(u8, trimmed, "//")) {
+            // Stop scanning once comments header ends
+            break;
+        }
+        if (std.mem.startsWith(u8, trimmed, "// @linkPath(\"")) {
+            const rest = trimmed["// @linkPath(\"".len..];
+            if (std.mem.indexOfScalar(u8, rest, '"')) |end_idx| {
+                const path = rest[0..end_idx];
+                const arg = std.fmt.allocPrint(allocator, "-L{s}", .{path}) catch continue;
+                if (allocated_libs_len.* < 64) {
+                    allocated_libs[allocated_libs_len.*] = arg;
+                    allocated_libs_len.* += 1;
+                }
+                addArg(args_buf, argc, arg);
+            }
+        } else if (std.mem.startsWith(u8, trimmed, "// @linkLibrary(\"")) {
+            const rest = trimmed["// @linkLibrary(\"".len..];
+            if (std.mem.indexOfScalar(u8, rest, '"')) |end_idx| {
+                const lib = rest[0..end_idx];
+                const arg = std.fmt.allocPrint(allocator, "-l{s}", .{lib}) catch continue;
+                if (allocated_libs_len.* < 64) {
+                    allocated_libs[allocated_libs_len.*] = arg;
+                    allocated_libs_len.* += 1;
+                }
+                addArg(args_buf, argc, arg);
+            }
+        }
+    }
+}
+
+fn resolveSearchPath(allocator: std.mem.Allocator, rel_path: []const u8) ![]const u8 {
+    if (fs_shim.cwd().statFile(rel_path) catch null != null) {
+        return try allocator.dupe(u8, rel_path);
+    }
+    const global_bases = [_][]const u8{
+        "/data/dev/cp",
+        "/root/.cap",
+    };
+    for (global_bases) |base| {
+        const full = try std.fmt.allocPrint(allocator, "{s}/{s}", .{ base, rel_path });
+        if (fs_shim.cwd().statFile(full) catch null != null) {
+            return full;
+        }
+        allocator.free(full);
+    }
+    return try allocator.dupe(u8, rel_path);
+}
+
+fn resolveSubPath(allocator: std.mem.Allocator, base_path: ?[]const u8, sub: []const u8) ![]const u8 {
+    if (base_path) |base| {
+        if (std.mem.eql(u8, sub, ".") or sub.len == 0) {
+            return resolveSearchPath(allocator, base);
+        }
+        if (!std.mem.startsWith(u8, sub, base)) {
+            const combined = try std.fmt.allocPrint(allocator, "{s}/{s}", .{ base, sub });
+            defer allocator.free(combined);
+            const resolved = try resolveSearchPath(allocator, combined);
+            if (fs_shim.cwd().statFile(resolved) catch null != null) {
+                return resolved;
+            }
+            allocator.free(resolved);
+        }
+    }
+    return resolveSearchPath(allocator, sub);
+}
+
+fn loadCentralLibIndex(allocator: std.mem.Allocator) ?manifest.CentralLibIndex {
+    const search_paths = [_][]const u8{
+        "/root/.cap/lib/cap.json",
+        "/data/dev/cp/lib/cap.json",
+        "lib/cap.json",
+    };
+    for (search_paths) |sp| {
+        if (fs_shim.cwd().readFileAlloc(allocator, sp, 1024 * 1024)) |content| {
+            defer allocator.free(content);
+            return manifest.CentralLibIndex.parse(allocator, content) catch null;
+        } else |_| {}
+    }
+    return null;
+}
+
+fn scanSourceForCapImports(allocator: std.mem.Allocator, file_path: []const u8, imported_caps: *std.StringHashMap(void)) void {
+    const content = fs_shim.cwd().readFileAlloc(allocator, file_path, 2 * 1024 * 1024) catch return;
+    defer allocator.free(content);
+
+    var cursor: usize = 0;
+    while (std.mem.indexOfPos(u8, content, cursor, "cap:")) |idx| {
+        const start = idx + 4;
+        var end = start;
+        while (end < content.len and (std.ascii.isAlphanumeric(content[end]) or content[end] == '_' or content[end] == '-')) : (end += 1) {}
+        if (end > start) {
+            const mod_name = content[start..end];
+            imported_caps.put(allocator.dupe(u8, mod_name) catch continue, {}) catch {};
+        }
+        cursor = end;
+    }
+}
+
+fn buildCWithZig(
+    allocator: std.mem.Allocator,
+    name: []const u8,
+    cfg: manifest.BinDependencyConfig,
+    target_triple: []const u8,
+    opt_mode: []const u8,
+    out_dir: []const u8,
+) !?[]const u8 {
+    if (cfg.sources.len == 0 and cfg.build_cmd == null) return null;
+
+    fs_shim.cwd().createDirPath(global_io, out_dir) catch {};
+
+    const out_lib_path = try std.fmt.allocPrint(allocator, "{s}/lib{s}.a", .{ out_dir, name });
+    defer allocator.free(out_lib_path);
+
+    if (cfg.sources.len > 0) {
+        std.debug.print("  → [zig cc] Compiling {s} sources into {s}...\n", .{ name, out_lib_path });
+        var zig_cmd_buf: [128][]const u8 = undefined;
+        var argc: usize = 0;
+        zig_cmd_buf[argc] = "zig";
+        argc += 1;
+        zig_cmd_buf[argc] = "build-lib";
+        argc += 1;
+
+        var allocated_source_paths: [32][]const u8 = undefined;
+        var allocated_source_count: usize = 0;
+        defer for (allocated_source_paths[0..allocated_source_count]) |p| allocator.free(p);
+
+        for (cfg.sources) |src| {
+            if (argc < 120) {
+                const resolved_src = try resolveSubPath(allocator, cfg.path, src);
+                if (allocated_source_count < 32) {
+                    allocated_source_paths[allocated_source_count] = resolved_src;
+                    allocated_source_count += 1;
+                }
+                zig_cmd_buf[argc] = resolved_src;
+                argc += 1;
+            }
+        }
+
+        zig_cmd_buf[argc] = "-lc";
+        argc += 1;
+
+        const emit_arg = try std.fmt.allocPrint(allocator, "-femit-bin={s}", .{out_lib_path});
+        defer allocator.free(emit_arg);
+        zig_cmd_buf[argc] = emit_arg;
+        argc += 1;
+
+        zig_cmd_buf[argc] = "--cache-dir";
+        argc += 1;
+        zig_cmd_buf[argc] = ".cap/zig-cache";
+        argc += 1;
+
+        const resolved_opt = if (cfg.opt) |o| o.toZigFlag() else opt_mode;
+        zig_cmd_buf[argc] = "-O";
+        argc += 1;
+        zig_cmd_buf[argc] = resolved_opt;
+        argc += 1;
+
+        if (!std.mem.eql(u8, target_triple, "native")) {
+            zig_cmd_buf[argc] = "-target";
+            argc += 1;
+            zig_cmd_buf[argc] = target_triple;
+            argc += 1;
+        }
+
+        var allocated_inc_paths: [16][]const u8 = undefined;
+        var allocated_inc_count: usize = 0;
+        defer for (allocated_inc_paths[0..allocated_inc_count]) |p| allocator.free(p);
+
+        if (cfg.include_dirs.len == 0 and cfg.path != null) {
+            // Default include path to cfg.path if not specified
+            const resolved_base = try resolveSearchPath(allocator, cfg.path.?);
+            const i_arg = try std.fmt.allocPrint(allocator, "-I{s}", .{resolved_base});
+            allocator.free(resolved_base);
+            if (allocated_inc_count < 16) {
+                allocated_inc_paths[allocated_inc_count] = i_arg;
+                allocated_inc_count += 1;
+            }
+            zig_cmd_buf[argc] = i_arg;
+            argc += 1;
+        } else {
+            for (cfg.include_dirs) |inc| {
+                if (argc < 120) {
+                    const resolved_inc = try resolveSubPath(allocator, cfg.path, inc);
+                    const i_arg = try std.fmt.allocPrint(allocator, "-I{s}", .{resolved_inc});
+                    allocator.free(resolved_inc);
+                    if (allocated_inc_count < 16) {
+                        allocated_inc_paths[allocated_inc_count] = i_arg;
+                        allocated_inc_count += 1;
+                    }
+                    zig_cmd_buf[argc] = i_arg;
+                    argc += 1;
+                }
+            }
+        }
+
+        for (cfg.c_flags) |cf| {
+            if (std.mem.startsWith(u8, cf, "-O")) continue;
+            if (argc < 120) {
+                zig_cmd_buf[argc] = cf;
+                argc += 1;
+            }
+        }
+
+        var child = try std.process.spawn(global_io, .{ .argv = zig_cmd_buf[0..argc] });
+        const res = try child.wait(global_io);
+        if (res.exited == 0) {
+            std.debug.print("  ✓ Compiled {s} -> {s}\n", .{ name, out_lib_path });
+            return try allocator.dupe(u8, out_dir);
+        } else {
+            std.debug.print("  ✗ Failed to compile {s} with zig build-lib (exit code {d})\n", .{ name, res.exited });
+        }
+    } else if (cfg.build_cmd) |cmd| {
+        std.debug.print("  → Executing build_cmd for {s}: {s}\n", .{ name, cmd });
+        const argv = &[_][]const u8{ "sh", "-c", cmd };
+        var child = try std.process.spawn(global_io, .{ .argv = argv });
+        const res = try child.wait(global_io);
+        if (res.exited == 0) {
+            return try allocator.dupe(u8, out_dir);
+        }
+    }
+
+    return null;
+}
+
+fn resolveBinDependency(
+    allocator: std.mem.Allocator,
+    name: []const u8,
+    cfg: manifest.BinDependencyConfig,
+    target_triple: []const u8,
+    opt_mode: []const u8,
+) !?[]const u8 {
+    const base_path = cfg.path orelse "";
+
+    // 1. Candidate paths to look for existing static library
+    var candidates: [24][]const u8 = undefined;
+    var cand_count: usize = 0;
+    defer for (candidates[0..cand_count]) |c| allocator.free(c);
+
+    if (base_path.len > 0) {
+        if (!std.mem.eql(u8, target_triple, "native") and cand_count < 24) {
+            candidates[cand_count] = try std.fmt.allocPrint(allocator, "{s}/bin/{s}/lib{s}.a", .{ base_path, target_triple, name });
+            cand_count += 1;
+        }
+        if (cand_count < 24) {
+            candidates[cand_count] = try std.fmt.allocPrint(allocator, "{s}/bin/lib{s}.a", .{ base_path, name });
+            cand_count += 1;
+        }
+        if (cand_count < 24) {
+            candidates[cand_count] = try std.fmt.allocPrint(allocator, "{s}/build/lib{s}.a", .{ base_path, name });
+            cand_count += 1;
+        }
+        if (cand_count < 24) {
+            candidates[cand_count] = try std.fmt.allocPrint(allocator, "{s}/lib{s}.a", .{ base_path, name });
+            cand_count += 1;
+        }
+        if (std.mem.eql(u8, name, "quickjs") or std.mem.eql(u8, name, "qjs")) {
+            if (cand_count < 24) {
+                candidates[cand_count] = try std.fmt.allocPrint(allocator, "{s}/build/libqjs.a", .{base_path});
+                cand_count += 1;
+            }
+            if (cand_count < 24) {
+                candidates[cand_count] = try std.fmt.allocPrint(allocator, "{s}/libqjs.a", .{base_path});
+                cand_count += 1;
+            }
+        }
+    }
+    if (cand_count < 24) {
+        candidates[cand_count] = try std.fmt.allocPrint(allocator, "cap_modules/{s}/bin/lib{s}.a", .{ name, name });
+        cand_count += 1;
+    }
+    if (!std.mem.eql(u8, target_triple, "native")) {
+        if (cand_count < 24) {
+            candidates[cand_count] = try std.fmt.allocPrint(allocator, "bin/{s}/lib{s}.a", .{ target_triple, name });
+            cand_count += 1;
+        }
+        if (cand_count < 24) {
+            candidates[cand_count] = try std.fmt.allocPrint(allocator, ".cap/lib/{s}/lib{s}.a", .{ target_triple, name });
+            cand_count += 1;
+        }
+    }
+    if (cand_count < 24) {
+        candidates[cand_count] = try std.fmt.allocPrint(allocator, "bin/lib{s}.a", .{name});
+        cand_count += 1;
+    }
+    if (cand_count < 24) {
+        candidates[cand_count] = try std.fmt.allocPrint(allocator, ".cap/lib/lib{s}.a", .{name});
+        cand_count += 1;
+    }
+
+    // Special global locations (e.g. in /data/dev/cp/)
+    if (base_path.len > 0) {
+        if (cand_count < 24) {
+            candidates[cand_count] = try std.fmt.allocPrint(allocator, "/data/dev/cp/{s}/bin/lib{s}.a", .{ base_path, name });
+            cand_count += 1;
+        }
+        if (cand_count < 24) {
+            candidates[cand_count] = try std.fmt.allocPrint(allocator, "/data/dev/cp/{s}/build/lib{s}.a", .{ base_path, name });
+            cand_count += 1;
+        }
+        if (cand_count < 24) {
+            candidates[cand_count] = try std.fmt.allocPrint(allocator, "/data/dev/cp/{s}/lib{s}.a", .{ base_path, name });
+            cand_count += 1;
+        }
+    }
+
+    // Check if already exists
+    for (candidates[0..cand_count]) |cand| {
+        if (fs_shim.cwd().statFile(cand) catch null != null) {
+            const dir = std.Io.Dir.path.dirname(cand) orelse ".";
+            return try allocator.dupe(u8, dir);
+        }
+    }
+
+    // 2. If not found, use zig to compile sources!
+    const out_dir = if (base_path.len > 0)
+        try std.fmt.allocPrint(allocator, "{s}/bin", .{base_path})
+    else if (!std.mem.eql(u8, target_triple, "native"))
+        try std.fmt.allocPrint(allocator, ".cap/lib/{s}", .{target_triple})
+    else
+        try allocator.dupe(u8, ".cap/lib");
+    defer allocator.free(out_dir);
+
+    return try buildCWithZig(allocator, name, cfg, target_triple, opt_mode, out_dir);
+}
+
+fn precompilePackageBinDeps(allocator: std.mem.Allocator, pkg_path: []const u8) !void {
+    const manifest_path = try std.fmt.allocPrint(allocator, "{s}/cap.json", .{pkg_path});
+    defer allocator.free(manifest_path);
+
+    const content = fs_shim.cwd().readFileAlloc(allocator, manifest_path, 1024 * 1024) catch return;
+    defer allocator.free(content);
+
+    var mf = manifest.Manifest.parse(allocator, content) catch return;
+    defer mf.deinit(allocator);
+
+    var iter = mf.bin_dependencies.iterator();
+    while (iter.next()) |entry| {
+        const bin_name = entry.key_ptr.*;
+        const bin_cfg = entry.value_ptr.*;
+        if (bin_cfg.sources.len > 0) {
+            const bin_out_dir = try std.fmt.allocPrint(allocator, "{s}/bin", .{pkg_path});
+            defer allocator.free(bin_out_dir);
+            _ = try buildCWithZig(allocator, bin_name, bin_cfg, "native", "ReleaseFast", bin_out_dir);
+            std.debug.print("  ✓ Pre-compiled static lib {s}/bin/lib{s}.a\n", .{ pkg_path, bin_name });
+        }
+    }
+}
+
+fn appendLinkArgs(
+    allocator: std.mem.Allocator,
+    args_buf: *[100][]const u8,
+    argc: *usize,
+    allocated_libs: *[64][]const u8,
+    allocated_libs_len: *usize,
+    mf_opt: ?manifest.Manifest,
+    target_triple: []const u8,
+    opt_mode: []const u8,
+    scan_file: ?[]const u8,
+) !void {
+    // 1. Process bin_dependencies from project cap.json
+    if (mf_opt) |mf| {
+        var bd_iter = mf.bin_dependencies.iterator();
+        while (bd_iter.next()) |entry| {
+            const dep_name = entry.key_ptr.*;
+            const dep_cfg = entry.value_ptr.*;
+            if (std.mem.eql(u8, dep_name, "quickjs")) {
+                if (resolveBinDependency(allocator, "qjs", dep_cfg, target_triple, opt_mode)) |dir_opt| {
+                    if (dir_opt) |dir| {
+                        const ldir = try std.fmt.allocPrint(allocator, "-L{s}", .{dir});
+                        if (allocated_libs_len.* < 64) {
+                            allocated_libs[allocated_libs_len.*] = ldir;
+                            allocated_libs_len.* += 1;
+                        }
+                        addArg(args_buf, argc, ldir);
+                        addArg(args_buf, argc, "-lqjs");
+                        addArg(args_buf, argc, "-lm");
+                        allocator.free(dir);
+                    }
+                } else |_| {}
+            } else if (std.mem.eql(u8, dep_name, "zlib") or std.mem.eql(u8, dep_name, "z")) {
+                addArg(args_buf, argc, "-lz");
+            } else {
+                if (resolveBinDependency(allocator, dep_name, dep_cfg, target_triple, opt_mode)) |dir_opt| {
+                    if (dir_opt) |dir| {
+                        const ldir = try std.fmt.allocPrint(allocator, "-L{s}", .{dir});
+                        if (allocated_libs_len.* < 64) {
+                            allocated_libs[allocated_libs_len.*] = ldir;
+                            allocated_libs_len.* += 1;
+                        }
+                        addArg(args_buf, argc, ldir);
+
+                        const llib = try std.fmt.allocPrint(allocator, "-l{s}", .{dep_name});
+                        if (allocated_libs_len.* < 64) {
+                            allocated_libs[allocated_libs_len.*] = llib;
+                            allocated_libs_len.* += 1;
+                        }
+                        addArg(args_buf, argc, llib);
+                        allocator.free(dir);
+                    }
+                } else |_| {}
+            }
+        }
+
+        // 2. Process c_flags and link_libs from build_config
+        if (mf.build_config) |bc| {
+            for (bc.c_flags) |cf| {
+                addArg(args_buf, argc, cf);
+            }
+            for (bc.link_libs) |ll| {
+                if (std.mem.startsWith(u8, ll, "-l") or std.mem.startsWith(u8, ll, "-L")) {
+                    addArg(args_buf, argc, ll);
+                } else {
+                    const lib_arg = try std.fmt.allocPrint(allocator, "-l{s}", .{ll});
+                    if (allocated_libs_len.* < 64) {
+                        allocated_libs[allocated_libs_len.*] = lib_arg;
+                        allocated_libs_len.* += 1;
+                    }
+                    addArg(args_buf, argc, lib_arg);
+                }
+            }
+            if (bc.sys) |s| {
+                if (std.json.parseFromSlice(std.json.Value, allocator, s, .{})) |parsed| {
+                    defer parsed.deinit();
+                    if (manifest.SysDependencyConfig.parseValue(allocator, parsed.value)) |sys_cfg| {
+                        defer @constCast(&sys_cfg).deinit(allocator);
+                        if (sys_cfg.getAllLibFlagsForTarget(target_triple, allocator) catch null) |flags| {
+                            defer allocator.free(flags);
+                            for (flags) |flag| {
+                                if (allocated_libs_len.* < 64) {
+                                    allocated_libs[allocated_libs_len.*] = flag;
+                                    allocated_libs_len.* += 1;
+                                }
+                                addArg(args_buf, argc, flag);
+                            }
+                        }
+                    } else |_| {}
+                } else |_| {}
+            }
+        }
+    }
+
+    // 3. CentralLibIndex (lib/cap.json) on-demand resolution
+    var central_index_opt = loadCentralLibIndex(allocator);
+    defer if (central_index_opt) |*ci| ci.deinit(allocator);
+
+    if (central_index_opt) |*central_index| {
+        var imported_caps = std.StringHashMap(void).init(allocator);
+        defer {
+            var it = imported_caps.iterator();
+            while (it.next()) |entry| allocator.free(entry.key_ptr.*);
+            imported_caps.deinit();
+        }
+
+        if (scan_file) |sf| {
+            scanSourceForCapImports(allocator, sf, &imported_caps);
+        }
+
+        var it = imported_caps.iterator();
+        while (it.next()) |entry| {
+            const mod_name = entry.key_ptr.*;
+            if (central_index.libs.get(mod_name)) |cent_entry| {
+                // Bin dependencies for this module
+                var b_iter = cent_entry.bin.iterator();
+                while (b_iter.next()) |b_entry| {
+                    const bin_name = b_entry.key_ptr.*;
+                    const bin_cfg = b_entry.value_ptr.*;
+                    if (resolveBinDependency(allocator, bin_name, bin_cfg, target_triple, opt_mode)) |dir_opt| {
+                        if (dir_opt) |dir| {
+                            const ldir = try std.fmt.allocPrint(allocator, "-L{s}", .{dir});
+                            if (allocated_libs_len.* < 64) {
+                                allocated_libs[allocated_libs_len.*] = ldir;
+                                allocated_libs_len.* += 1;
+                            }
+                            addArg(args_buf, argc, ldir);
+
+                            const llib = try std.fmt.allocPrint(allocator, "-l{s}", .{bin_name});
+                            if (allocated_libs_len.* < 64) {
+                                allocated_libs[allocated_libs_len.*] = llib;
+                                allocated_libs_len.* += 1;
+                            }
+                            addArg(args_buf, argc, llib);
+                            allocator.free(dir);
+                        }
+                    } else |_| {}
+                }
+
+                // Sys dependencies for this module
+                if (cent_entry.sys) |sys_cfg| {
+                    if (sys_cfg.getAllLibFlagsForTarget(target_triple, allocator) catch null) |flags| {
+                        defer allocator.free(flags);
+                        for (flags) |flag| {
+                            if (allocated_libs_len.* < 64) {
+                                allocated_libs[allocated_libs_len.*] = flag;
+                                allocated_libs_len.* += 1;
+                            }
+                            addArg(args_buf, argc, flag);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 4. Fallback auto-detection for uSockets / QuickJS if not already linked
+    if (fs_shim.cwd().statFile("zig-out/lib/libusockets.a") catch null != null) {
+        addArg(args_buf, argc, "-Lzig-out/lib");
+        addArg(args_buf, argc, "-lusockets");
+    }
+    if (fs_shim.cwd().statFile("vendor/quickjs/build/libqjs.a") catch null != null) {
+        addArg(args_buf, argc, "-Lvendor/quickjs/build");
+        addArg(args_buf, argc, "-lqjs");
+        addArg(args_buf, argc, "-lm");
+    } else if (fs_shim.cwd().statFile("vendor/quickjs/libqjs.a") catch null != null) {
+        addArg(args_buf, argc, "-Lvendor/quickjs");
+        addArg(args_buf, argc, "-lqjs");
+        addArg(args_buf, argc, "-lm");
+    }
 }
 
 fn runFile(allocator: std.mem.Allocator, filename: []const u8) !void {
@@ -566,7 +1136,8 @@ fn runFileWithOpt(allocator: std.mem.Allocator, filename: []const u8, opt_mode: 
     if (zig_stat != null and src_stat != null and zig_stat.?.mtime.nanoseconds >= src_stat.?.mtime.nanoseconds) {
         std.debug.print("  → [cpc] Intermediate Zig source is up to date (skipped)\n", .{});
     } else {
-        const cpc_bin = getCpcBin();
+        const cpc_bin = try getCpcBin(allocator);
+        defer allocator.free(cpc_bin);
         const cpc_start = std.Io.Timestamp.now(global_io, .awake);
         var cpc_args_buf: [15][]const u8 = undefined;
         var cpc_argc: usize = 0;
@@ -601,7 +1172,8 @@ fn runFileWithOpt(allocator: std.mem.Allocator, filename: []const u8, opt_mode: 
 
     // Emit Type Definitions (.d.cp)
     {
-        const cpc_bin = getCpcBin();
+        const cpc_bin = try getCpcBin(allocator);
+        defer allocator.free(cpc_bin);
         const type_out_path = try std.fmt.allocPrint(allocator, "bin/{s}.d.cp", .{bin_subpath});
         defer allocator.free(type_out_path);
         if (std.Io.Dir.path.dirname(type_out_path)) |dirname| {
@@ -622,10 +1194,11 @@ fn runFileWithOpt(allocator: std.mem.Allocator, filename: []const u8, opt_mode: 
     defer allocator.free(emit_bin_arg);
     fs_shim.cwd().createDirPath(global_io, ".cap/zig-cache") catch {};
 
-    // 1. Try to load cap.json if present
     var mf_opt: ?manifest.Manifest = null;
+    var mf_content: ?[]const u8 = null;
+    defer if (mf_content) |c| allocator.free(c);
     if (fs_shim.cwd().readFileAlloc(allocator, "cap.json", 1024 * 1024)) |content| {
-        defer allocator.free(content);
+        mf_content = content;
         if (manifest.Manifest.parse(allocator, content)) |mf| {
             mf_opt = mf;
         } else |_| {}
@@ -653,37 +1226,12 @@ fn runFileWithOpt(allocator: std.mem.Allocator, filename: []const u8, opt_mode: 
     build_args_buf[build_argc] = "-lc";
     build_argc += 1;
 
-    // 自动检测并链接底层 C 静态库 (如 uSockets 与 picohttpparser)
-    if (fs_shim.cwd().statFile("zig-out/lib/libusockets.a") catch null != null) {
-        build_args_buf[build_argc] = "-Lzig-out/lib";
-        build_argc += 1;
-        build_args_buf[build_argc] = "-lusockets";
-        build_argc += 1;
-    }
-
     var allocated_libs: [64][]const u8 = undefined;
     var allocated_libs_len: usize = 0;
     defer for (allocated_libs[0..allocated_libs_len]) |al| allocator.free(al);
 
-    if (mf_opt) |mf| {
-        if (mf.build_config) |bc| {
-            for (bc.c_flags) |cf| {
-                if (build_argc < 100) {
-                    build_args_buf[build_argc] = cf;
-                    build_argc += 1;
-                }
-            }
-            for (bc.link_libs) |ll| {
-                if (build_argc < 100) {
-                    const lib_arg = try std.fmt.allocPrint(allocator, "-l{s}", .{ll});
-                    allocated_libs[allocated_libs_len] = lib_arg;
-                    allocated_libs_len += 1;
-                    build_args_buf[build_argc] = lib_arg;
-                    build_argc += 1;
-                }
-            }
-        }
-    }
+    try appendLinkArgs(allocator, &build_args_buf, &build_argc, &allocated_libs, &allocated_libs_len, mf_opt, "native", opt_mode, zig_file);
+    scanZigFileForLinkPragmas(allocator, zig_file, &build_args_buf, &build_argc, &allocated_libs, &allocated_libs_len);
 
     var build_child = try std.process.spawn(global_io, .{ .argv = build_args_buf[0..build_argc] });
     const build_res = try build_child.wait(global_io);
@@ -713,15 +1261,32 @@ fn sniffHardware() !void {
 }
 
 fn buildPackage(allocator: std.mem.Allocator, args: []const []const u8) !void {
-    // 1. Try to load cap.json if present
+    // 1. Verify lockfile
+    const lock_content = fs_shim.cwd().readFileAlloc(allocator, "cap.lock", 1024 * 1024) catch {
+        std.debug.print("Error: cap.lock missing. Run `cap install` first.\n", .{});
+        return error.LockfileMissing;
+    };
+    defer allocator.free(lock_content);
+    var lk = try lock.Lockfile.parse(allocator, lock_content);
+    defer lk.deinit(allocator);
+
     var mf_opt: ?manifest.Manifest = null;
+    var mf_content: ?[]const u8 = null;
+    defer if (mf_content) |c| allocator.free(c);
     if (fs_shim.cwd().readFileAlloc(allocator, "cap.json", 1024 * 1024)) |content| {
-        defer allocator.free(content);
+        mf_content = content;
         if (manifest.Manifest.parse(allocator, content)) |mf| {
             mf_opt = mf;
         } else |_| {}
     } else |_| {}
     defer if (mf_opt) |*m| m.deinit(allocator);
+
+    if (mf_opt) |*mf| {
+        mf.verifyLockfile(lk) catch |e| {
+            std.debug.print("Error: Lockfile mismatch with cap.json. Run `cap install` to update.\n", .{});
+            return e;
+        };
+    }
 
     var targets_to_build: [100][]const u8 = undefined;
     var targets_len: usize = 0;
@@ -751,6 +1316,14 @@ fn buildPackage(allocator: std.mem.Allocator, args: []const []const u8) !void {
             if (bc.targets.len > 0) {
                 configured_targets = bc.targets;
             }
+            if (bc.sys) |s| {
+                const parsed = std.json.parseFromSlice(std.json.Value, allocator, s, .{}) catch unreachable;
+                defer parsed.deinit();
+                const os_tag = @tagName(@import("builtin").os.tag);
+                if (parsed.value.object.get(os_tag)) |lib_path| {
+                    std.debug.print("Linking dynamic sys lib for {s}: {s}\n", .{ os_tag, lib_path.string });
+                }
+            }
         }
     }
 
@@ -758,24 +1331,12 @@ fn buildPackage(allocator: std.mem.Allocator, args: []const []const u8) !void {
     var zig_args: [100][]const u8 = undefined;
     var zig_args_len: usize = 0;
 
-    // Append c_flags and link_libs from cap.json
-    if (mf_opt) |mf| {
-        if (mf.build_config) |bc| {
-            for (bc.c_flags) |cf| {
-                if (zig_args_len < 100) {
-                    zig_args[zig_args_len] = cf;
-                    zig_args_len += 1;
-                }
-            }
-            for (bc.link_libs) |ll| {
-                if (zig_args_len < 100) {
-                    const lib_arg = try std.fmt.allocPrint(allocator, "-l{s}", .{ll});
-                    zig_args[zig_args_len] = lib_arg;
-                    zig_args_len += 1;
-                }
-            }
-        }
-    }
+    // Append c_flags, link_libs, bin_dependencies, and auto-detected libs
+    var allocated_libs: [64][]const u8 = undefined;
+    var allocated_libs_len: usize = 0;
+    defer for (allocated_libs[0..allocated_libs_len]) |al| allocator.free(al);
+
+    try appendLinkArgs(allocator, &zig_args, &zig_args_len, &allocated_libs, &allocated_libs_len, mf_opt, "native", optimize_mode, null);
 
     var has_target = false;
     var i: usize = 0;
@@ -836,18 +1397,17 @@ fn buildPackage(allocator: std.mem.Allocator, args: []const []const u8) !void {
     }
 
     if (!has_target) {
-        if (fs_shim.cwd().statFile("src")) |_| {
+        if (fs_shim.cwd().statFile("src") catch null != null) {
             if (targets_len < 100) {
                 targets_to_build[targets_len] = "src";
                 targets_len += 1;
             }
-        } else |_| {}
-        if (fs_shim.cwd().statFile("test")) |_| {
+        } else if (fs_shim.cwd().statFile("test") catch null != null) {
             if (targets_len < 100) {
                 targets_to_build[targets_len] = "test";
                 targets_len += 1;
             }
-        } else |_| {}
+        }
     }
 
     for (targets_to_build[0..targets_len]) |target_path| {
@@ -923,15 +1483,22 @@ fn compileSingleFile(
 
     if (explicit_target) |et| {
         const ext = if (std.mem.indexOf(u8, et, "windows") != null) ".exe" else "";
-        targets_to_run[0] = .{ .name = et, .triple = et, .ext = ext };
+        const name = if (std.mem.eql(u8, et, "native") or std.mem.eql(u8, et, "Native")) "Native" else et;
+        targets_to_run[0] = .{ .name = name, .triple = et, .ext = ext };
         target_count = 1;
     } else if (is_release) {
         if (configured_targets.len > 0) {
             for (configured_targets) |ct| {
                 if (target_count < 16) {
                     const ext = if (std.mem.indexOf(u8, ct, "windows") != null) ".exe" else "";
-                    const name = try std.fmt.allocPrint(allocator, "cap-{s}", .{ct});
-                    targets_to_run[target_count] = .{ .name = name, .triple = ct, .ext = ext };
+                    const name = if (std.mem.eql(u8, ct, "native") or std.mem.eql(u8, ct, "Native"))
+                        "Native"
+                    else if (std.mem.startsWith(u8, ct, "cap-"))
+                        ct
+                    else
+                        try std.fmt.allocPrint(allocator, "cap-{s}", .{ct});
+                    const triple = if (std.mem.startsWith(u8, ct, "cap-")) ct["cap-".len..] else ct;
+                    targets_to_run[target_count] = .{ .name = name, .triple = triple, .ext = ext };
                     target_count += 1;
                 }
             }
@@ -956,7 +1523,8 @@ fn compileSingleFile(
             var target_out_dir: []const u8 = out_dir_val;
             var dir_path: ?[]const u8 = null;
             defer if (dir_path) |d| allocator.free(d);
-            if (!std.mem.eql(u8, t.name, "Native") and explicit_target == null) {
+            const is_target_native = std.mem.eql(u8, t.name, "Native") or std.mem.eql(u8, t.triple, "native");
+            if (!is_target_native and explicit_target == null) {
                 dir_path = try std.fmt.allocPrint(allocator, "{s}/{s}", .{ out_dir_val, t.name });
                 target_out_dir = dir_path.?;
             }
@@ -993,7 +1561,8 @@ fn compileSingleFile(
     if (!force_rebuild and zig_stat != null and src_stat != null and zig_stat.?.mtime.nanoseconds >= src_stat.?.mtime.nanoseconds) {
         std.debug.print("  → [cpc] Intermediate Zig source is up to date (skipped)\n", .{});
     } else {
-        const cpc_bin = getCpcBin();
+        const cpc_bin = try getCpcBin(allocator);
+        defer allocator.free(cpc_bin);
         const cpc_start = std.Io.Timestamp.now(global_io, .awake);
         var cpc_args_buf: [15][]const u8 = undefined;
         var cpc_argc: usize = 0;
@@ -1032,7 +1601,8 @@ fn compileSingleFile(
 
     // Emit Type Definitions (.d.cp)
     {
-        const cpc_bin = getCpcBin();
+        const cpc_bin = try getCpcBin(allocator);
+        defer allocator.free(cpc_bin);
         const type_out_path = try std.fmt.allocPrint(allocator, "{s}/{s}.d.cp", .{ out_dir_val, bin_subpath });
         defer allocator.free(type_out_path);
         if (std.Io.Dir.path.dirname(type_out_path)) |dirname| {
@@ -1045,11 +1615,23 @@ fn compileSingleFile(
 
     fs_shim.cwd().createDirPath(global_io, ".cap/zig-cache") catch {};
 
+    var mf_opt: ?manifest.Manifest = null;
+    var mf_content: ?[]const u8 = null;
+    defer if (mf_content) |c| allocator.free(c);
+    if (fs_shim.cwd().readFileAlloc(allocator, "cap.json", 1024 * 1024)) |content| {
+        mf_content = content;
+        if (manifest.Manifest.parse(allocator, content)) |mf| {
+            mf_opt = mf;
+        } else |_| {}
+    } else |_| {}
+    defer if (mf_opt) |*m| m.deinit(allocator);
+
     for (targets_to_run[0..target_count]) |t| {
         var dir_path: ?[]const u8 = null;
         defer if (dir_path) |d| allocator.free(d);
         var target_out_dir: []const u8 = out_dir_val;
-        if (!std.mem.eql(u8, t.name, "Native") and explicit_target == null) {
+        const is_target_native = std.mem.eql(u8, t.name, "Native") or std.mem.eql(u8, t.triple, "native");
+        if (!is_target_native and explicit_target == null) {
             dir_path = try std.fmt.allocPrint(allocator, "{s}/{s}", .{ out_dir_val, t.name });
             target_out_dir = dir_path.?;
             fs_shim.cwd().createDirPath(global_io, target_out_dir) catch {};
@@ -1078,11 +1660,33 @@ fn compileSingleFile(
         std.debug.print("  → Compiling for {s} ({s})...\n", .{ t.name, optimize_mode });
         const zig_start = std.Io.Timestamp.now(global_io, .awake);
 
+        var build_type_resolved = build_type;
+        if (std.mem.eql(u8, build_type_resolved, "build-exe")) {
+            // Only use build-exe for the actual main entry point
+            if (mf_opt) |mf| {
+                const main_target = mf.main orelse (if (mf.build_config) |bc| bc.entry else null);
+                if (main_target) |main_file| {
+                    const full_main_path = if (std.mem.startsWith(u8, main_file, "src/"))
+                        try allocator.dupe(u8, main_file)
+                    else
+                        try std.fmt.allocPrint(allocator, "src/{s}", .{main_file});
+                    defer allocator.free(full_main_path);
+                    if (!std.mem.eql(u8, filename, full_main_path)) {
+                        build_type_resolved = "build-lib";
+                    }
+                } else {
+                    build_type_resolved = "build-lib";
+                }
+            } else {
+                build_type_resolved = "build-lib";
+            }
+        }
+
         var child_args: [100][]const u8 = undefined;
         var argc: usize = 0;
         child_args[argc] = "zig";
         argc += 1;
-        child_args[argc] = build_type;
+        child_args[argc] = build_type_resolved;
         argc += 1;
         if (is_beam) {
             child_args[argc] = "-dynamic";
@@ -1114,6 +1718,13 @@ fn compileSingleFile(
             child_args[argc] = za;
             argc += 1;
         }
+
+        var local_alloc_libs: [64][]const u8 = undefined;
+        var local_alloc_libs_len: usize = 0;
+        defer for (local_alloc_libs[0..local_alloc_libs_len]) |al| allocator.free(al);
+
+        try appendLinkArgs(allocator, &child_args, &argc, &local_alloc_libs, &local_alloc_libs_len, mf_opt, t.triple, optimize_mode, zig_file);
+        scanZigFileForLinkPragmas(allocator, zig_file, &child_args, &argc, &local_alloc_libs, &local_alloc_libs_len);
 
         var build_child = try std.process.spawn(global_io, .{ .argv = child_args[0..argc] });
         const build_res = try build_child.wait(global_io);
@@ -1455,7 +2066,8 @@ fn runTestSingleFile(allocator: std.mem.Allocator, filename: []const u8) !void {
         fs_shim.cwd().createDirPath(global_io, dirname) catch {};
     }
 
-    const cpc_bin = getCpcBin();
+    const cpc_bin = try getCpcBin(allocator);
+    defer allocator.free(cpc_bin);
     const cpc_args = &[_][]const u8{
         cpc_bin,
         "compile",
@@ -1481,10 +2093,11 @@ fn runTestSingleFile(allocator: std.mem.Allocator, filename: []const u8) !void {
     defer allocator.free(emit_arg);
     fs_shim.cwd().createDirPath(global_io, ".cap/zig-cache") catch {};
 
-    // 1. Try to load cap.json if present
     var mf_opt: ?manifest.Manifest = null;
+    var mf_content: ?[]const u8 = null;
+    defer if (mf_content) |c| allocator.free(c);
     if (fs_shim.cwd().readFileAlloc(allocator, "cap.json", 1024 * 1024)) |content| {
-        defer allocator.free(content);
+        mf_content = content;
         if (manifest.Manifest.parse(allocator, content)) |mf| {
             mf_opt = mf;
         } else |_| {}
@@ -1512,37 +2125,12 @@ fn runTestSingleFile(allocator: std.mem.Allocator, filename: []const u8) !void {
     build_args_buf[build_argc] = "-lc";
     build_argc += 1;
 
-    // 自动检测并链接底层 C 静态库 (如 uSockets 与 picohttpparser)
-    if (fs_shim.cwd().statFile("zig-out/lib/libusockets.a") catch null != null) {
-        build_args_buf[build_argc] = "-Lzig-out/lib";
-        build_argc += 1;
-        build_args_buf[build_argc] = "-lusockets";
-        build_argc += 1;
-    }
-
     var allocated_libs: [64][]const u8 = undefined;
     var allocated_libs_len: usize = 0;
     defer for (allocated_libs[0..allocated_libs_len]) |al| allocator.free(al);
 
-    if (mf_opt) |mf| {
-        if (mf.build_config) |bc| {
-            for (bc.c_flags) |cf| {
-                if (build_argc < 100) {
-                    build_args_buf[build_argc] = cf;
-                    build_argc += 1;
-                }
-            }
-            for (bc.link_libs) |ll| {
-                if (build_argc < 100) {
-                    const lib_arg = try std.fmt.allocPrint(allocator, "-l{s}", .{ll});
-                    allocated_libs[allocated_libs_len] = lib_arg;
-                    allocated_libs_len += 1;
-                    build_args_buf[build_argc] = lib_arg;
-                    build_argc += 1;
-                }
-            }
-        }
-    }
+    try appendLinkArgs(allocator, &build_args_buf, &build_argc, &allocated_libs, &allocated_libs_len, mf_opt, "native", "ReleaseSafe", zig_file);
+    scanZigFileForLinkPragmas(allocator, zig_file, &build_args_buf, &build_argc, &allocated_libs, &allocated_libs_len);
 
     var build_child = try std.process.spawn(global_io, .{ .argv = build_args_buf[0..build_argc] });
     const build_res = try build_child.wait(global_io);
@@ -1564,7 +2152,8 @@ fn runFuzzSingleFile(allocator: std.mem.Allocator, filename: []const u8, fuzz_op
     }
 
     // 1. Compile CP source with cpc --fuzz
-    const cpc_bin = getCpcBin();
+    const cpc_bin = try getCpcBin(allocator);
+    defer allocator.free(cpc_bin);
     const cpc_args = &[_][]const u8{
         cpc_bin,
         "compile",
@@ -1649,25 +2238,8 @@ fn runFuzzSingleFile(allocator: std.mem.Allocator, filename: []const u8, fuzz_op
     var allocated_libs_len: usize = 0;
     defer for (allocated_libs[0..allocated_libs_len]) |al| allocator.free(al);
 
-    if (mf_opt) |mf| {
-        if (mf.build_config) |bc| {
-            for (bc.c_flags) |cf| {
-                if (link_argc < 100) {
-                    link_args_buf[link_argc] = cf;
-                    link_argc += 1;
-                }
-            }
-            for (bc.link_libs) |ll| {
-                if (link_argc < 100) {
-                    const lib_arg = try std.fmt.allocPrint(allocator, "-l{s}", .{ll});
-                    allocated_libs[allocated_libs_len] = lib_arg;
-                    allocated_libs_len += 1;
-                    link_args_buf[link_argc] = lib_arg;
-                    link_argc += 1;
-                }
-            }
-        }
-    }
+    try appendLinkArgs(allocator, &link_args_buf, &link_argc, &allocated_libs, &allocated_libs_len, mf_opt, "native", "ReleaseSafe", zig_file);
+    scanZigFileForLinkPragmas(allocator, zig_file, &link_args_buf, &link_argc, &allocated_libs, &allocated_libs_len);
 
     var link_child = try std.process.spawn(global_io, .{ .argv = link_args_buf[0..link_argc] });
     const link_res = try link_child.wait(global_io);
@@ -1751,7 +2323,8 @@ fn handleBench(allocator: std.mem.Allocator, args: []const []const u8) !void {
 }
 
 fn handleDemangle(allocator: std.mem.Allocator, args: []const []const u8) !void {
-    const cpc_bin = getCpcBin();
+    const cpc_bin = try getCpcBin(allocator);
+    defer allocator.free(cpc_bin);
     var cmd_list: [16][]const u8 = undefined;
     var argc: usize = 0;
     cmd_list[argc] = cpc_bin;
@@ -1766,5 +2339,4 @@ fn handleDemangle(allocator: std.mem.Allocator, args: []const []const u8) !void 
     }
     var child = try std.process.spawn(global_io, .{ .argv = cmd_list[0..argc] });
     _ = try child.wait(global_io);
-    _ = allocator;
 }

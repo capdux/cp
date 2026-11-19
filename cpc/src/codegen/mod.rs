@@ -188,10 +188,18 @@ pub struct Codegen {
     pub current_func_name: Option<String>,
     pub arena_allocator_stack: Vec<String>,
     pub has_imported_ptr: bool,
+    pub linker_paths: Vec<String>,
 }
 
 impl Codegen {
     pub fn new() -> Self {
+        let mut linker_paths = Vec::new();
+        if std::path::Path::new("/lib64").exists() {
+            linker_paths.push("/lib64".to_string());
+        }
+        if std::path::Path::new("/usr/lib64").exists() {
+            linker_paths.push("/usr/lib64".to_string());
+        }
         Self {
             is_beam_mode: false,
             is_lib_mode: false,
@@ -277,6 +285,23 @@ impl Codegen {
             current_func_name: None,
             arena_allocator_stack: Vec::new(),
             has_imported_ptr: false,
+            linker_paths,
+        }
+    }
+
+    pub fn escape_zig_ident(ident: &str) -> String {
+        let keywords = [
+            "align", "and", "asm", "async", "await", "break", "catch", "comptime", "const", "continue",
+            "defer", "else", "enum", "errdefer", "error", "export", "extern", "false", "fn", "for",
+            "if", "inline", "noalias", "noinline", "nosuspend", "null", "opaque", "or", "orelse",
+            "pub", "resume", "return", "linksection", "struct", "suspend", "switch", "test",
+            "threadlocal", "true", "try", "union", "unreachable", "usingnamespace", "var", "volatile",
+            "while",
+        ];
+        if keywords.contains(&ident) {
+            format!("@\"{}\"", ident)
+        } else {
+            ident.to_string()
         }
     }
 
@@ -367,6 +392,13 @@ impl Codegen {
     pub fn generate_module(&mut self, module: &Module) -> String {
         let features = ModuleFeatures::scan(module, self.is_lib_mode);
         self.has_imported_ptr = features.has_imported_ptr;
+        
+        let linker_paths = self.linker_paths.clone();
+        for path in linker_paths {
+            self.writeln(&format!("// @linkPath(\"{}\")", path));
+        }
+        self.writeln("// @linkLibrary(\"z\")");
+
         let mut class_order = Vec::new();
         let mut impl_decls = Vec::new();
         let mut has_single_thread_meta = false;
@@ -2326,6 +2358,26 @@ pub const JSON = struct {
         }
 
         for item in &module.body {
+            if let ModuleItem::Export(exp) = item {
+                if let Some(src) = &exp.source {
+                    let zig_source = if src.ends_with(".cp") {
+                        format!("{}.zig", &src[..src.len() - 3])
+                    } else {
+                        src.clone()
+                    };
+                    for s in &exp.specifiers {
+                        self.globals.insert(s.sym.clone());
+                        self.value_classes.insert(s.sym.clone());
+                        self.writeln(&format!(
+                            "pub const {0} = @import(\"{1}\").{0};",
+                            Self::escape_zig_ident(&s.sym),
+                            zig_source
+                        ));
+                    }
+                }
+            }
+        }
+        for item in &module.body {
             if let ModuleItem::Import(imp) = item {
                 let zig_source = if imp.source.ends_with(".cp") {
                     format!("{}.zig", &imp.source[..imp.source.len() - 3])
@@ -2339,19 +2391,23 @@ pub const JSON = struct {
                         continue;
                     }
                     self.writeln(&format!(
-                        "pub const {} = @import(\"{}\");",
-                        def.sym, zig_source
+                        "pub const {0} = @import(\"{1}\");",
+                        Self::escape_zig_ident(&def.sym),
+                        zig_source
                     ));
                 }
                 for s in &imp.specifiers {
-                    self.globals.insert(s.sym.clone());
+                    if !self.globals.insert(s.sym.clone()) {
+                        continue;
+                    }
                     self.value_classes.insert(s.sym.clone());
                     if s.sym == "std" && zig_source == "std" {
                         continue;
                     }
                     self.writeln(&format!(
-                        "pub const {0} = @import(\"{1}\").{0};",
-                        s.sym, zig_source
+                        "const {0} = @import(\"{1}\").{0};",
+                        Self::escape_zig_ident(&s.sym),
+                        zig_source
                     ));
                 }
             }

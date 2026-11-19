@@ -1,6 +1,37 @@
 // src/base64/base64.cp
 // Bun Base64 module ported to CP (Concurrent Plus) language
 
+export struct Base64 {
+    pub static fn encode(destination: []u8, source: string): usize {
+        const res = standard.Encoder.encode(destination, source);
+        return res.len;
+    }
+
+    pub static fn encodeAlloc(allocator: std.mem.Allocator, source: string): ![]u8 {
+        const len = standard.Encoder.calcSize(source.len);
+        const destination = allocator.alloc(u8, len)?;
+        errdefer allocator.free(destination);
+        const res = standard.Encoder.encode(destination, source);
+        return destination[0..res.len];
+    }
+
+    pub static fn decode(destination: []u8, source: string): !usize {
+        try standard.Decoder.decode(destination, source);
+        return standard.Decoder.calcSizeForSlice(source);
+    }
+
+    pub static fn decodeAlloc(allocator: std.mem.Allocator, input: string): ![]u8 {
+        const dest = allocator.alloc(u8, try standard.Decoder.calcSizeForSlice(input))?;
+        errdefer allocator.free(dest);
+        try standard.Decoder.decode(dest, input);
+        return dest;
+    }
+
+    pub static fn decodeLen(source_len: usize): usize {
+        return (source_len / 4) * 3;
+    }
+}
+
 export struct Base64Encoder {
     alphabet_chars: [64]u8,
     pad_char: u8?,
@@ -24,7 +55,7 @@ export struct Base64Encoder {
     fn encodeWithoutSizeCheck(dest: []u8, source: string): usize {
         let acc: u32 = 0;
         let acc_len: u32 = 0;
-        let out_idx = 0;
+        let out_idx: usize = 0;
         for (v in source) {
             acc = (acc << 8) + (v as u32);
             acc_len += 8;

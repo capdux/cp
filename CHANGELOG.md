@@ -1,4 +1,34 @@
-## [2026-11-19] - 核心任务：吸收 Bun `napi` 模块初步架构与基础 FFI 绑定
+## [2026-11-20] - 核心任务：cap.json 与 lib/cap.json 配置精炼、bin 相对路径省略、sys 命名字典与 import 路径映射
+
+### 工具链与构建系统升级 (Toolchain & Build System)
+- **`cap.json` 与 `lib/cap.json` 配置架构精炼升级**:
+  - [`lib/cap.json`](file:///data/dev/cp/lib/cap.json)：移除 `global.default_opt`，升级为顶层 `"opt": "small"`；移除 `bin` 项中的冗余 `"type": "static_lib"`；采用精炼字段 `src`、`include`、`flag`；重构 `sys` 为命名字典 `{"z": {"linux": "libz.so.1", "mac": "libz.dylib", "win": "zlib1.dll"}}`；
+  - [`cap/src/project/manifest.zig`](file:///data/dev/cp/cap/src/project/manifest.zig)：
+    - `BinDependencyConfig`：支持 `src`（回退 `sources`）、`include`（回退 `include_dirs`）、`flag`（回退 `c_flags`）、默认 `static_lib`；
+    - `SysDependencyConfig`：全面支持命名字典（多动态库依赖隔离）与扁平对象双模解析，平台键兼容 `mac` 与 `win`（回退 `macos` 与 `windows`）；
+    - `CentralLibIndex`：支持顶级 `opt` 统一人体工程学配置；
+  - [`cap/src/main.zig`](file:///data/dev/cp/cap/src/main.zig)：
+    - `resolveSubPath`：在指定 `path` 作用域下，源文件与头文件路径自动省略 `path` 前缀；省略 `include` 时默认将 `path` 自身作为 include 路径；
+    - `buildCWithZig`：源文件与包含路径全量经 `resolveSubPath` 智能解析；
+    - `appendLinkArgs`：升级为 `getAllLibFlagsForTarget`，支持自动链接命名字典中定义的所有系统动态库（`-lz` 等）；
+    - 重新编译 `cap` 发布版（ReleaseFast）并更新部署到 `/root/.cap/bin/cap`。
+
+### 编译器模块解析强化 (Compiler Module Resolution)
+- **`cpc` 模块解析路径精准映射与同名候选**:
+  - [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs)：
+    - 实现 `resolve_cap_from_manifest`：读取中央索引 `lib/cap.json` 中的 `path` 字段；
+    - **文件精准映射**：当 `path` 指向具体文件（如 `"http/server.cp"`）时，`import ... from "cap:http"` 直接定位到该文件；
+    - **目录智能查找**：当 `path` 指向目录时，优先按 `index.cp` / `main.cp` / 与目录同名的 `.cp` 文件进行候选探测；
+    - **平滑回退机制**：若配置的路径不存在或不同名映射失效，自动平滑退回到基于 `include_paths` 及 `/data/dev/cp/lib/` 的默认解析；
+    - 直通同步到 `cpc_dev` 并运行 `bash scripts/sync_cpc.sh` 原子编译部署生效。
+
+### 测试验证与下游闭环 (Tests & Downstream Verification)
+- [`cap/test/test_cap_json_simplified.cp`](file:///data/dev/cp/cap/test/test_cap_json_simplified.cp)：新增端到端测试，验证基于精炼 `lib/cap.json` 触发的 `cap:http`（picohttpparser + libz）与 `cap:net`（usockets）按需编译与运行，`cap test`（867ms）与原生可执行文件直接运行 100% PASS；
+- 下游验证：在 `/data/dev/capsurf` 成功构建 `bin/main`（ReleaseFast，耗时 40s），验证 `./bin/main --help` 完美执行。
+
+---
+
+
 
 ### 标准库增强 (Enhanced Stdlib)
 - **`cap:napi` Node-API 初步架构实现**:
@@ -1162,3 +1192,50 @@
 - 通过 `bash scripts/sync_cpc.sh` 完成原子构建校验，验证修复有效。
 - 完成 crypto 资产迁移
 - 重构 cipher.cp 和 hash.cp，统一为静态 struct 模块化设计
+
+## [2026-11-19] Hotfix: Fix export { ... } from ... symbol export
+- 修复 `cpc/src/codegen/mod.rs`：在生成 Zig 代码时，添加了对 `export { ... } from ...` 语句的显式 `pub const` 别名生成，确保导出的符号在 `main.zig` 中可被正确引用，解决了缺失 import 引用的问题。
+- 通过 `bash scripts/sync_cpc.sh` 完成原子构建校验，验证修复有效。
+
+## [2026-11-19] Hotfix: Fix zlib linking failure in capsurf (automatic library path detection)
+- 修正 `cpc` 编译器前端：在 `Codegen::new()` 中新增自动探测 linux 环境下的 `/lib64` 和 `/usr/lib64` 标准库搜索路径的逻辑。
+- 在 `generate_module` 中新增逻辑，将探测到的库路径以及 `zlib` 的链接需求以 `// @linkPath` 和 `// @linkLibrary` 的形式 emit 到生成的 Zig 代码中，以便下游构建系统（capsurf）正确配置链接器。
+- 修复了 Rust 编译器的 borrow checker 错误（通过 clone `linker_paths`）。
+- 构建校验：`bash scripts/sync_cpc.sh` 构建通过。
+## 2026-11-19
+- 修改 `build.zig`，为 vendored 库编译添加 `-DAT_HWCAP=16` 预定义宏以修复 Zig 0.17.0 兼容性。
+hotfix: resolve keyword conflict for "test" and prevent redundant re-export of imports
+
+- 2026-11-19: Initialized `lib/bundler/bundle.cp` and began migrating `BundleV2` struct.
+
+## [2026-11-19] Hotfix: 完善 cap 工具链链接参数与下游 capsurf 编译自愈
+- **cap/src/project/manifest.zig**:
+  - `Manifest` 结构体新增 `bin_dependencies` 字段及其 JSON 解析、保存与释放逻辑。
+  - `BuildConfig` 结构体新增 `entry` 字段支持指定入口文件。
+- **cap/src/main.zig**:
+  - 新增 `addArg`（去重参数追加）、`scanZigFileForLinkPragmas`（扫描转译生成 Zig 代码头部的 `@linkPath` 与 `@linkLibrary` 指令）。
+  - 新增 `appendLinkArgs` 统一收集 uSockets、QuickJS vendor 路径、`bin_dependencies`、`build.c_flags` 和 `build.link_libs` 参数。
+  - 在 `handleRun`、`handleBuild`、`compileSingleFile`、`handleTest`、`runFuzzSingleFile` 中接入动态链接参数生成。
+  - 修正目标架构为 native 时的输出目录逻辑，使主程序产物精准写入 `bin/main`。
+- **/data/dev/cp/TASK_QUEUE.jsonl**:
+  - 标记 `task-capsurf-20261119-compiler-bug` 为 `resolved`。
+- **/root/.agy/comm/cp-bun-capsurf.jsonl**:
+  - 向下游韧性协作总线派发结单通知，解除 capsurf 阻塞状态。
+
+## [2026-11-19] cap bin & sys 依赖按需编译实装与中央索引集成
+- **lib/cap.json**:
+  - 提炼中央库索引，剔除纯 CP 模块，仅保留含底层 C/二进制与系统动态库依赖的 `http`, `net`, `zlib`。
+  - 为 `picohttpparser` 与 `usockets` 配置 Zig 编译所需的 `sources`, `include_dirs`, `c_flags`, `opt` 参数。
+- **cap/src/project/manifest.zig**:
+  - 增加 `BinDependencyConfig`、`SysDependencyConfig`、`CentralLibEntry`、`CentralLibIndex` 结构体。
+  - `Manifest` 的 `bin_dependencies` 升级为支持对象型配置（含 C 编译参数与构建命令）。
+  - 实现按 target triple 动态转换系统库为链接参数（如 `libz.so.1` -> `-lz`）。
+- **cap/src/main.zig**:
+  - 新增 `resolveSearchPath`、`loadCentralLibIndex`、`scanSourceForCapImports`。
+  - 新增 `buildCWithZig`：无外部编译器依赖，直接使用 `zig build-lib` 交叉编译 C/C++ 源码输出目标平台 `.a` 静态库。
+  - 新增 `resolveBinDependency`：优先检索已有预编译静态库，缺失时现场按需编译。
+  - 在 `appendLinkArgs` 中打通源码 `cap:*` 导入与中央索引关联 C/动态库的自动参数注入。
+  - 在 `fetchAndLink` 中实装 `precompilePackageBinDeps`，在 `cap install` 安装包时预先编译静态库。
+- **cap/test/test_bin_sys_on_demand.cp**:
+  - 新增正式回归测试用例，验证导入 `cap:http` 时自动触发 `libpicohttpparser.a` 按需编译与链接。
+

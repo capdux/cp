@@ -2297,3 +2297,71 @@
 - 结果：编译成功，问题修复。
 2026-11-19: 迁移 Crypto 资产至 CP runtime
 2026-11-19: Crypto 模块重构
+
+## [2026-11-19] Hotfix Task
+- 接收指令：修复 `export { ... } from ...` 符号导出 Bug。
+- 执行操作：
+    - 识别 `ExportStmt` 在 `codegen` 中的缺失处理。
+    - 在 `cpc/src/codegen/mod.rs` 的 `generate_module` 中实现符号别名生成。
+    - 运行 `bash scripts/sync_cpc.sh` 完成原子构建校验。
+- 结果：编译成功，问题修复，导出的符号正确映射到 Zig Alias。
+
+## [2026-11-19] Hotfix Task
+- 接收指令：修复 `capsurf` 构建链接 `zlib` 失败的问题（`task-capsurf-20261119-zlib-link-failure`）。
+- 执行操作：
+    - 后台调研 `zlib` 在项目中的位置（确认为 `capsurf` 本身负责链接，`cpc` 需提供指引）。
+    - 修改 `cpc/src/codegen/mod.rs`，添加库路径探测与 Zig 指令生成。
+    - 修复 Rust 编译错误（borrow checker 错误）。
+    - 运行原子构建脚本验证修复。
+- 结果：`cpc` 编译器成功更新，现在能够 emit 必要的链接信息。
+## 2026-11-19
+- 接收指令：Address compiler bugs related to Zig 0.17.0 (missing AT_HWCAP).
+- 执行操作：
+  - 检索代码库，确认 `AT_HWCAP` 主要在 `vendor/` 中被使用。
+  - 修改 `build.zig` 为 vendored 库添加 `-DAT_HWCAP=16` 宏定义。
+  - 修复 `cap test` 运行目录问题。
+  - 运行 `sync_cpc.sh` 并执行测试，确认构建流程已通过，尽管测试套件本身存在其他兼容性失败。
+- 任务分类：阶段性成果交付。
+
+## [2026-11-19] 下游 capsurf 编译器与构建工具链紧急热修（Hotfix）
+- 指令：执行针对下游 capsurf 的编译器与构建工具链紧急热修：
+  1. 检查 base64.cp 及其静态方法，验证 repro_cap_encoding_bug.cp 转译生成的 Zig 代码通过 zig ast-check。
+  2. 完善 cap 构建工具链接参数传递（-L/-l、vendor 路径与 bin_dependencies 自动探测），重新构建 cap 自身并执行 sync_cpc.sh。
+  3. 验证 capsurf bin/main 为 64-bit ELF 可执行文件且 ./bin/main --help 正常运行。
+  4. 协作闭环：TASK_QUEUE.jsonl 结单、通信总线通知、四线热日志更新。
+- 执行结果：
+  1. 验证 `/data/dev/cp/lib/encoding/base64.cp` 的 `Base64` 静态方法（`encode`, `encodeAlloc`, `decode`, `decodeAlloc`, `decodeLen`）契约完备，`/data/dev/capsurf/temp/repro_cap_encoding_bug.cp` 经 `cpc` 转译并通过 `zig ast-check`。
+  2. 完善 `cap/src/project/manifest.zig` 与 `cap/src/main.zig`，实装 `bin_dependencies`、vendor 库探测（QuickJS/zlib）、转译指令探测（`@linkPath`/`@linkLibrary`）及 native 输出归一化。
+  3. 重新以 ReleaseFast 编译 `cap`，部署至 `/root/.cap/bin/cap`；`bash scripts/sync_cpc.sh` 校验最新通过。
+  4. 在 `/data/dev/capsurf` 成功构建 `bin/main`，验证确为 64-bit ELF 可执行文件且 `./bin/main --help` 完美执行输出完整帮助信息。
+  5. 跨智能体协同结单：更新 `TASK_QUEUE.jsonl`，发送韧性总线通知至 `/root/.agy/comm/cp-bun-capsurf.jsonl`。
+
+## [2026-11-20] cap.json 与 lib/cap.json 配置精炼优化与路径映射实装
+- 指令：
+  评估以下 7 条关于 cap.json / lib/cap.json 的精简建议并完成落地：
+  1. "default_opt": "ReleaseSmall" 改为 opt。
+  2. bin 中的库定义已经定义了 path，后续配置如文件在该 path 下则省略 path；如不在，则以当前 cap.json 目录为 base。
+  3. lib 下的库（如 http）配置的 path 作为 import 库名称，编译时优先通过 path 查找该目录下的 index.cp/main.cp 或 path 同名文件.cp；找不到时退回基于 lib 目录的查找模式。
+  4. path 除了配置目录，还可以配置到带路径的文件（如 "http/xxx.cp"），此时 import 解析直接对应该文件名称；若不存在则退回缺省查找。
+  5. bin 中应该都是静态库，省略 "type": "static_lib"。
+  6. sys 下配置命名字典支持多动态库隔离定义（如 sys: { "z": { ... } }）。
+  7. 字段精简：sources -> src, include_dirs -> include, macos -> mac, windows -> win, c_flags -> flag，并解释 flag 参数作用。
+- 执行结果：
+  1. 架构评估：7 项建议全部合理、优雅，大幅降低配置冗余度，提升现代工程人体工程学体验。
+  2. 更新 [lib/cap.json](file:///data/dev/cp/lib/cap.json)：应用全新 opt ("small")、src、include、flag、删除 type 冗余，并将 sys 改造为命名字典 {"z": {"linux": "libz.so.1", "mac": "libz.dylib", "win": "zlib1.dll"}}。
+  3. 升级 [cap/src/project/manifest.zig](file:///data/dev/cp/cap/src/project/manifest.zig)：
+     - BinDependencyConfig 支持 src/sources、include/include_dirs、flag/c_flags、默认 static_lib；
+     - SysDependencyConfig 支持命名字典与扁平对象双模解析，键名支持 mac/macos 与 win/windows；
+     - CentralLibIndex 支持顶级 opt 解析。
+  4. 升级 [cap/src/main.zig](file:///data/dev/cp/cap/src/main.zig)：
+     - 实现 `resolveSubPath`：在 path 作用域下智能省略前缀，当省略 include 时自动包含 path 自身；
+     - 升级 `appendLinkArgs` 使用 `getAllLibFlagsForTarget` 批量注入所有关联动态库链接参数；
+     - 重新以 ReleaseFast 编译 `cap` 并同步更新至 `/root/.cap/bin/cap` 与 `bin/cap/cap`。
+  5. 升级 [cpc/src/resolver.rs](file:///data/dev/cp/cpc/src/resolver.rs)：
+     - 实现 `resolve_cap_from_manifest`：读取 lib/cap.json 中的 path，支持精准文件映射（如 "http/server.cp"）与目录候选（index.cp/main.cp/同名.cp），未命中时无缝退回默认 lib 路径解析；
+     - 同步至 `cpc_dev` 并调用 `bash scripts/sync_cpc.sh` 完成原子构建部署。
+  6. 测试与下游验证：
+     - 编写 [test_cap_json_simplified.cp](file:///data/dev/cp/cap/test/test_cap_json_simplified.cp)，`cap test`（867ms）与 `cap build` 原生构建 100% 验证通过；
+     - 验证下游 CapSurf 工程 (`/data/dev/capsurf`) 全量 ReleaseFast 构建通过 (`bin/main --help` 完美运行)。
+  7. 同步双轨规范手册 [cp_ref.md](file:///data/dev/cp/cp_ref.md) 与 [cp_agent_ref.md](file:///data/dev/cp/cp_agent_ref.md)。
+

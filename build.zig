@@ -32,6 +32,7 @@ pub fn build(b: *std.Build) void {
             "-DLIBUS_NO_SSL",
             "-O3",
             "-fno-exceptions",
+            "-DAT_HWCAP=16",
         },
     });
 

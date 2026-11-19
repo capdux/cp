@@ -407,7 +407,7 @@ flowchart TD
   "author": "Antigravity Team",
   "license": "Apache-2.0",
   "main": "src/main.cp",
-  "mode": "parallel", // 可选: "parallel" (多核工作窃取) | "single" (单线程事件循环)
+  "opt": "fast",
   "scripts": {
     "start": "cap src/main.cp",
     "build:prod": "cap build -r -f",
@@ -422,23 +422,65 @@ flowchart TD
   "dev_dependencies": {
     "test-kit": "^0.1.0"
   },
+  "bin_dependencies": {
+    "quickjs": {
+      "path": "vendor/quickjs",
+      "src": [
+        "quickjs.c",
+        "quickjs-libc.c",
+        "cutils.c",
+        "libbf.c"
+      ],
+      "include": ["."],
+      "flag": ["-D_GNU_SOURCE"],
+      "opt": "fast"
+    }
+  },
   "workspaces": ["packages/*"],
   "build": {
+    "entry": "src/main.cp",
     "opt": "fast",
     "out_dir": "bin",
-    "c_flags": ["-O3"],
-    "link_libs": ["c", "m"]
+    "link_libs": ["c", "m"],
+    "sys": {
+      "z": {
+        "linux": "libz.so.1",
+        "mac": "libz.dylib",
+        "win": "zlib1.dll"
+      }
+    }
   },
   "nest": {
     "mailbox_capacity": 65536,
     "reduction_slice": 2000
   },
   "runtime": {
-    "workers": "auto", // "auto" 自动检测核心数，或固定数字如 16
-    "max_blocking": 512 // 弹性阻塞计算线程池上限
+    "workers": "auto",
+    "max_blocking": 512
   }
 }
 ```
+
+> **`cap.json` 与中央索引 (`lib/cap.json`) 精炼设计规范**：
+> 1. **`opt` 统一人体工程学命名**：支持 `"debug"` / `"safe"` / `"fast"` / `"small"`，替代旧版冗长的 `"default_opt": "ReleaseSmall"`；
+> 2. **`path` 相对作用域推导**：`bin` 库指定 `path` 后，其下的 `src` 与 `include` 无需反复拼装前缀；若省略 `include`，构建工具默认以当前 `path` 作为头文件包含路径；
+> 3. **`src` / `include` / `flag` 简洁键名**：
+>    - `src`：源文件列表（替代 `sources`）；
+>    - `include`：头文件路径列表（替代 `include_dirs`）；
+>    - `flag`：透传给底层 C/C++ 编译器（如 Clang / Zig CC）的宏定义及编译选项（如 `-D_GNU_SOURCE`，替代 `c_flags`）；
+> 4. **静态库默认约定**：`bin` 依赖项默认为静态库，废除冗余的 `"type": "static_lib"`；
+> 5. **`sys` 命名字典与精炼平台键**：采用 `"sys": { "库名": { "linux": "...", "mac": "...", "win": "..." } }`，支持多动态库独立命名，平台键简化为 `mac` 与 `win`（兼容 `macos`/`windows`）；
+> 6. **`lib` 路径精准映射与平滑回退**：
+>    - 目录映射：配置 `path: "http"` 时，优先在该目录下查找 `index.cp` / `main.cp` 或同名 `.cp` 文件；
+>    - 单文件映射：配置 `path: "http/server.cp"` 时，import `cap:http` 直接解析为该文件；若文件不存在则平滑回退至默认 `lib/` 目录。
+
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
 #### 2. 关键字段说明：
 
@@ -999,6 +1041,14 @@ export enum FetchRequestMode: u2 {
 }
 ```
 
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
+
 #### 3.5.4 开放枚举 (Open Enums)
 
 针对系统错误码、硬件扩展位标志等需兼容未命名整型值的 C-ABI 场景，CP 支持在底层整型枚举末尾使用 `_` 定义**开放枚举（Open Enum）**，允许该枚举安全承载任意未显式命名的整型值：
@@ -1112,6 +1162,14 @@ pub fn checkTag(tag: Tag): i32 {
     }
 }
 ```
+
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
 ---
 
@@ -1236,6 +1294,14 @@ fn render(u: User?): void {
     }
 }
 ```
+
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
 #### 4.6.2 复合条件短路收窄（Short-Circuit Narrowing）
 
@@ -1543,6 +1609,14 @@ class User {
 }
 ```
 
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
+
 > 方法第一个参数约定：
 >
 > - `&_`：只读方法，只读借用实例, 可省略。
@@ -1705,6 +1779,14 @@ class Account {
     }
 }
 ```
+
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
 > **方法前缀与静态函数规则**：
 >
@@ -2512,6 +2594,14 @@ impl Measurable for Point {
 }
 ```
 
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
+
 ---
 
 ### 7.2 类单继承与完整生命周期钩子
@@ -2540,6 +2630,14 @@ class GpuDevice extends Device {
 }
 ```
 
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
+
 ---
 
 ### 7.3 Trait 契约体系
@@ -2556,6 +2654,14 @@ trait Logger {
     }
 }
 ```
+
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
 ---
 
@@ -2681,6 +2787,14 @@ for (handler of handlers) {
     }
 }
 ```
+
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
 ---
 
@@ -2932,6 +3046,14 @@ fn inspect_dynamic(res: string ! Err) {
 }
 ```
 
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
+
 ---
 
 #### 8.2.4 胖指针动态错误与 `downcast` 运行时类型还原（双轨解构语法）
@@ -3049,6 +3171,14 @@ fn handle_errors() {
 }
 ```
 
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
+
 ---
 
 #### 8.2.7 复杂枚举载荷错误（Enum Payload Errors）：定义、返回与多维解构匹配
@@ -3099,6 +3229,14 @@ fn process_err(res: i32 ! TaskErr) {
     }
 }
 ```
+
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
 ---
 
@@ -3360,6 +3498,14 @@ outer: for (i of 0..10) {
 }
 ```
 
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
+
 ---
 
 ### 8.11 行末分号可选（Optional Semicolons）与 ASI 换行断句规范
@@ -3505,6 +3651,14 @@ while (tag_str := iter.next()) {
     }
 }
 ```
+
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
 - **类型收窄（Type Narrowing）**：若 `iter.next()` 的返回类型为可选类型 `T?`，在循环体内部，`tag_str` 的类型自动收窄为不可空的 `T`；
 - **作用域隔离**：`binding` 变量的作用域严格限制在 `while` 块内部，杜绝作用域污染；
@@ -4365,6 +4519,14 @@ fn unroll_example() {
 }
 ```
 
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
+
 ---
 
 ### 11.3 宏系统（Macro Metaprogramming）
@@ -5024,6 +5186,14 @@ class AdminService {
 }
 ```
 
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
+
 ##### 11.4.5.2 装饰器与元数据运行时反射
 
 ```ts
@@ -5151,6 +5321,14 @@ class UserService {
     }
 }
 ```
+
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
 ##### 11.4.7.1 语法规则与设计哲学
 
@@ -5425,6 +5603,14 @@ export class NativeBuffer {
 }
 ```
 
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
+
 ---
 
 ### 11.8 零成本转译抽象：按需摇树注入与原生发射
@@ -5527,6 +5713,14 @@ export @value struct Compact {
 }
 ```
 
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
+
 - **值接收者发射**：编译器将成员方法的 `this` 接收者直接转译为值拷贝 `self: Compact`，而非指针借用 `self: *const Compact`；
 - **免除多余析构与移动守卫**：`@value` 结构体天然免疫析构守卫代码生成，零开销、零冗余胶水；
 - **支持右值链式调用**：在转译至 Zig 目标代码时，调用临时对象方法不会触发“taking pointer of rvalue”的 Zig 编译报错。
@@ -5597,6 +5791,14 @@ export @opaque class App {
 }
 ```
 
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
+
 - **语义与映射**：修饰类在转译为 Zig 时直接发射为 `pub const App = opaque { ... };`；
 - **引用语义自动适配**：`@opaque class` 本质上代表指针引用类型。编译器代码生成器自动豁免实例构造器 `_create` 堆分配逻辑，并在类型标注为 `App` 时生成 `*App`，返回可选类型 `App?` 时生成 `?*App`，彻底杜绝指针双重取址（`?**App`）；
 - **标准库格式化兼容**：原生适配 Zig 0.15 泛型 Writer 的 `{p}` 指针格式化，消除对不透明类型解引用的编译错误。
@@ -5658,6 +5860,14 @@ pub fn main(): void {
     }
 }
 ```
+
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
 ###### 场景 B：头文件与自定义 C 函数原型混合声明
 同一个 `@c { ... }` 块中支持头文件引入与自定义函数声明混写，满足各类复杂底层的精细控制需求：
@@ -5875,6 +6085,14 @@ export class SocketContext<Handler> {
     }
 }
 ```
+
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
 - **语义**：
   - `reflect.hasMethod(T, "method_name")`：在编译期静态检测类型 `T` 是否包含指定名称的成员/静态方法；
@@ -7701,6 +7919,14 @@ pub fn build(b: *std.Build) void {
 }
 ```
 
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
+
 ---
 
 ### 16.3 CP 原生 `@c` 导入规范（彻底废除 `zig {}` 声明外部 C 符号）
@@ -7930,6 +8156,14 @@ struct Trampoline {
     }
 }
 ```
+
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
 ##### 3. 为何业务层 100% 零 `unsafe`？
 
@@ -8347,6 +8581,14 @@ export class TCPSocket {
 }
 ```
 
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
+
 ##### 17.5.2 泛型与参数化类工厂模式
 
 通过编译期布尔或类型参数单态化生成不同协议层（如 TCP / TLS）的高性能网络抽象：
@@ -8420,6 +8662,14 @@ export class RequestContext {
 }
 ```
 
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
+
 ##### 17.6.2 表达式块安全驱动的路由决策与状态迁移
 
 通过带值块级表达式 `({ ... break val; })` 封装路由匹配（文件路由、静态预编译路由、通配路由）逻辑，保持上下文变量的不变性：
@@ -8449,6 +8699,14 @@ export class FileResponseStream {
     }
 }
 ```
+
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
 #### 17.7 高性能事件循环与多线程任务调度设计模式 (High-Performance Event Loop & Multi-Threaded Task Scheduling Patterns)
 
@@ -8483,6 +8741,14 @@ export class MiniEventLoop {
     }
 }
 ```
+
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
 ##### 17.7.2 紧凑指针打包（Pointer Packing）与硬件级原子并发队列
 
@@ -8529,6 +8795,14 @@ export class DeferredTaskQueue {
 }
 ```
 
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
+
 #### 17.8 高精度定时器与 URL 规范解析架构模式 (High-Precision Timers & URL Specification Parsing Patterns)
 
 在构建跨平台运行时的时间调度子系统（如 `src/runtime/timer/`）与 URL 解析处理内核（如 `src/url/`）时，CP 语言提供了以下经典架构范式：
@@ -8554,6 +8828,14 @@ export class DateHeaderTimer {
 }
 ```
 
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
+
 ##### 17.8.2 带值块级表达式驱动的 URL 状态机解析
 
 WHATWG URL 规范解析器（`URL.parse`）中存在大量复杂的条件分支与层级回退。CP 语言推荐使用表达式块 `({ ... break val; })` 替代标签跳转，确保局部不可变性与解析状态单向流动：
@@ -8573,6 +8855,14 @@ export class URL {
     }
 }
 ```
+
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
 ##### 17.8.3 零分配查询参数扫描器与哈希索引表 (Zero-Allocation QueryStringMap)
 
@@ -8735,6 +9025,14 @@ export class EventLoop {
 }
 ```
 
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
+
 ##### 17.10.2 标记指针联合体（TaggedPointerUnion）类型分发
 
 通过紧凑无额外内存分配的指针标记联合体封装 90+ 种系统、文件、网络、进程任务，在 `tickQueueWithCount` 中结合 `try` 错误传播与异常防护：
@@ -8754,6 +9052,14 @@ pub fn tickQueueWithCount(_: *EventLoop, virtual_machine: *VirtualMachine, count
     }
 }
 ```
+
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
 ##### 17.10.3 跨线程工作池任务（WorkTask / ConcurrentPromiseTask）与 RAII 自动回收
 
@@ -8866,6 +9172,14 @@ export class ThreadPool {
     }
 }
 ```
+
+### 2.5 cap.lock (Lockfile) 机制
+
+`cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+- **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
+- **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
+- **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
+- **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
 #### 17.12 CP 与 Zig 深度互操作、混合类型系统与跨界所有权安全规范 (CP-Zig Deep Interop, Hybrid Type System & Cross-Boundary Ownership Safety)
 

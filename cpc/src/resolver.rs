@@ -62,6 +62,79 @@ pub fn resolve_file_or_dir(base: &Path) -> Option<PathBuf> {
     None
 }
 
+fn resolve_cap_from_manifest(search_source: &str, include_paths: &[PathBuf]) -> Option<PathBuf> {
+    let mut check_dirs = Vec::new();
+    for inc in include_paths {
+        check_dirs.push(inc.clone());
+    }
+    check_dirs.push(PathBuf::from("/data/dev/cp/lib"));
+    check_dirs.push(PathBuf::from("lib"));
+    check_dirs.push(PathBuf::from("/root/.cap/lib"));
+
+    for dir in check_dirs {
+        let manifest_path = if dir.is_file() && dir.file_name().map_or(false, |n| n == "cap.json") {
+            dir.clone()
+        } else {
+            dir.join("cap.json")
+        };
+
+        if !manifest_path.exists() {
+            continue;
+        }
+
+        let base_dir = manifest_path.parent().unwrap_or(Path::new("."));
+
+        if let Ok(content) = fs::read_to_string(&manifest_path) {
+            if let Ok(json) = serde_json::from_str::<serde_json::Value>(&content) {
+                if let Some(lib_obj) = json.get("lib").and_then(|v| v.as_object()) {
+                    if let Some(entry) = lib_obj.get(search_source) {
+                        if let Some(path_val) = entry.get("path").and_then(|v| v.as_str()) {
+                            let p = PathBuf::from(path_val);
+                            let target = if p.is_absolute() {
+                                p
+                            } else {
+                                base_dir.join(p)
+                            };
+
+                            // Point 4: direct file resolution (e.g. "http/xxx.cp")
+                            if target.is_file() {
+                                return Some(target);
+                            }
+                            let cp_target = target.with_extension("cp");
+                            if cp_target.is_file() {
+                                return Some(cp_target);
+                            }
+
+                            // Point 3: directory resolution
+                            if target.is_dir() {
+                                // 1. index.d.cp / index.cp / main.d.cp / main.cp
+                                for f in &["index.d.cp", "index.cp", "main.d.cp", "main.cp"] {
+                                    let check = target.join(f);
+                                    if check.is_file() {
+                                        return Some(check);
+                                    }
+                                }
+                                // 2. same name as path dir (.cp / .d.cp)
+                                if let Some(dir_name) = target.file_name().and_then(|n| n.to_str()) {
+                                    let check_dcp = target.join(format!("{}.d.cp", dir_name));
+                                    if check_dcp.is_file() {
+                                        return Some(check_dcp);
+                                    }
+                                    let check_cp = target.join(format!("{}.cp", dir_name));
+                                    if check_cp.is_file() {
+                                        return Some(check_cp);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
 pub fn resolve_source_path(
     path: &Path,
     source: &str,
@@ -115,11 +188,17 @@ pub fn resolve_source_path(
     let mut resolved_path = None;
 
     if is_cap_builtin {
-        for inc in include_paths {
-            let p = inc.join(&search_source);
-            if let Some(res) = resolve_file_or_dir(&p) {
-                resolved_path = Some(res);
-                break;
+        if let Some(res) = resolve_cap_from_manifest(&search_source, include_paths) {
+            resolved_path = Some(res);
+        }
+
+        if resolved_path.is_none() {
+            for inc in include_paths {
+                let p = inc.join(&search_source);
+                if let Some(res) = resolve_file_or_dir(&p) {
+                    resolved_path = Some(res);
+                    break;
+                }
             }
         }
         if resolved_path.is_none() {
@@ -259,6 +338,7 @@ pub fn resolve_imports(
             ModuleItem::Import(imp) => {
                 if let Some(p) = resolve_source_path(path, &imp.source, include_paths) {
                     resolve_imports(&p, include_paths, all_items, processed, false)?;
+                    all_items.push(ModuleItem::Import(imp));
                 } else {
                     all_items.push(ModuleItem::Import(imp));
                 }
@@ -275,13 +355,6 @@ pub fn resolve_imports(
                 }
             }
             _ => {
-                if !is_root {
-                    if let ModuleItem::Decl(Decl::Func(f)) = &item {
-                        if f.ident.sym == "main" {
-                            continue;
-                        }
-                    }
-                }
                 all_items.push(item);
             }
         }
