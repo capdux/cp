@@ -1,4 +1,4 @@
-// Source: Bun src/css/properties/shape.zig (name-matched, needs review)
+// Source: /data/dev/bun/src/css/properties/shape.cp
 import css from "../css_parser.zig";
 
 /// A [`<fill-rule>`](https://www.w3.org/TR/css-shapes-1/#typedef-fill-rule) used to

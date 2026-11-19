@@ -1694,3 +1694,10 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
   2. `lib/blob` 清理：经全仓 `rg` 核实后安全移除 8 个零引用且存在大小写冲突风险的 `*_.cp` 与大写 `Store.cp` 历史草稿；
   3. `lib/json/pool.cp` 重构为纯 CP 侵入式 `JsonBufferNode` 池，修复双 `threadlocal` 变量无法复用及 `.release()` RAII 命名冲突；
   4. 累计已完成 **46 个标准库模块** 的 Bun 溯源、纯现代 CP 加固、专著文档与离线测试验证。
+
+### 第八阶段：第五里程碑批次（全仓 431 文件 100% 溯源收官 + 三大 Bun 新资产吸收）
+- 收官成果：
+  1. `lib/css` 100 个文件通过受控脚本批量校准真实 Bun 上游路径，对外核心导出模块清理 `orelse`；
+  2. `lib/napi` 移除外部 `#include "js_native_api.h"` 硬依赖阻断，纯 CP 实现 Node-API v9 结构体与错误集；`lib/bundler/bundle.cp` 清除悬空占位导入并升级为可运行 `BundleV2`；
+  3. 从 Bun 吸收三项高价值空白资产填补 CP 生态：`cap:errno`（65 个 POSIX/Linux 跨平台错误码）、`cap:logger`（零堆分配源码诊断日志引擎）、`lib/string/wcwidth.cp`（`Bun.stringWidth` 终端显示列宽计算）；
+  4. 全仓自动化校验：`lib/**/*.cp` 全部 **431 / 431** 文件首行 `// Source:` 100% 达标（0 遗漏、0 `UNVERIFIED`），累计落地 45+ 份 `docs/<库名>/<库名>.md` 专著文档与 15+ 套离线全功能回归测试套件。

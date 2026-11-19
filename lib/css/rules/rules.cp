@@ -1,4 +1,4 @@
-// Source: Bun src/css/rules/rules_.zig (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/rules/rules.cp
 import css from "../css_parser.zig";
 
 const CustomMedia = css.CustomMedia;

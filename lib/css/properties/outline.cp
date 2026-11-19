@@ -1,4 +1,4 @@
-// Source: Bun src/css/properties/outline.zig (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/properties/outline.cp
 import css from "../css_parser.zig";
 
 const GenericBorder = css.css_properties.border.GenericBorder;

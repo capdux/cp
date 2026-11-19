@@ -1,4 +1,4 @@
-// Source: Bun src/css/css_parser.zig (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/css_parser.d.cp
 import bun from "bun";
 pub const SrcIndex = bun.bundle_v2.Index;
 pub const SymbolList = bun.ast.Symbol.List;

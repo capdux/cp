@@ -1,4 +1,4 @@
-// Source: Bun src/css/rules/
+// Source: /data/dev/bun/src/css/rules/rules.cp
 // lib/css/stylesheet.cp
 // CSS Rules, Declarations, @media Queries, @keyframes, Stylesheet Parser & Minifier
 // Absorbed and unified from Bun src/css/rules/{rules,style,media,keyframes,supports,layer,container,font_face,import}.cp
@@ -29,7 +29,7 @@ pub struct CssProperty {
         if (s.len == 0) {
             return null;
         }
-        const colon_idx = std.mem.indexOfScalar(u8, s, ':') orelse return null;
+        const colon_idx = std.mem.indexOfScalar(u8, s, ':') ?? return null;
         const prop_name = std.mem.trim(u8, s[0..colon_idx], " \t\r\n");
         if (prop_name.len == 0) {
             return null;
@@ -172,8 +172,8 @@ pub struct CssKeyframes {
         if (!std.ascii.startsWithIgnoreCase(s, "@keyframes")) {
             return null;
         }
-        const open_brace = std.mem.indexOfScalar(u8, s, '{') orelse return null;
-        const close_brace = std.mem.lastIndexOfScalar(u8, s, '}') orelse return null;
+        const open_brace = std.mem.indexOfScalar(u8, s, '{') ?? return null;
+        const close_brace = std.mem.lastIndexOfScalar(u8, s, '}') ?? return null;
         if (close_brace <= open_brace) {
             return null;
         }
@@ -194,10 +194,16 @@ pub struct CssKeyframes {
             if (pos >= body.len) {
                 break;
             }
-            const step_open_rel = std.mem.indexOfScalar(u8, body[pos..], '{') orelse break;
-            const step_open = pos + step_open_rel;
-            const step_close_rel = std.mem.indexOfScalar(u8, body[step_open + 1 ..], '}') orelse break;
-            const step_close = step_open + 1 + step_close_rel;
+            const step_open_opt = std.mem.indexOfScalar(u8, body[pos..], '{');
+            if (step_open_opt == null) {
+                break;
+            }
+            const step_open = pos + step_open_opt.?;
+            const step_close_opt = std.mem.indexOfScalar(u8, body[step_open + 1 ..], '}');
+            if (step_close_opt == null) {
+                break;
+            }
+            const step_close = step_open + 1 + step_close_opt.?;
 
             const stop_label = std.mem.trim(u8, body[pos..step_open], " \t\r\n");
             let pct: f64 = 0.0;
@@ -313,8 +319,8 @@ pub struct CssStylesheetParser {
             };
         }
 
-        const open_brace = std.mem.indexOfScalar(u8, s, '{') orelse return null;
-        const close_brace = std.mem.lastIndexOfScalar(u8, s, '}') orelse return null;
+        const open_brace = std.mem.indexOfScalar(u8, s, '{') ?? return null;
+        const close_brace = std.mem.lastIndexOfScalar(u8, s, '}') ?? return null;
         if (close_brace <= open_brace) {
             return null;
         }

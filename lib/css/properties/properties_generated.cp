@@ -1,4 +1,4 @@
-// Source: Bun src/css/properties/properties_generated.cp (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/properties/properties_generated.cp
 import bun from "bun";
 const Allocator = std.mem.Allocator;
 

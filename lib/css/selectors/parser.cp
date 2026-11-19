@@ -1,4 +1,4 @@
-// Source: Bun src/css/selectors/parser.zig (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/selectors/parser.cp
 import css from "../css_parser.zig";
 const CSSStringFns = css.CSSStringFns;
 

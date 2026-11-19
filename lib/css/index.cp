@@ -1,4 +1,4 @@
-// Source: Bun src/css/
+// Source: /data/dev/bun/src/css/css_parser.cp
 // lib/css/index.cp
 // Unified Public Exports for cap:css
 // Absorbed from Bun src/css/ (rules/, selectors/, values/)

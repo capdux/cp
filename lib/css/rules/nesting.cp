@@ -1,4 +1,4 @@
-// Source: Bun src/css/rules/nesting.zig (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/rules/nesting.cp
 import css from "../css_parser.zig";
 const Printer = css.Printer;
 const PrintErr = css.PrintErr;

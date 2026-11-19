@@ -1,4 +1,4 @@
-// Source: Bun src/css/properties/effects.zig (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/properties/effects.cp
 import css from "../css_parser.zig";
 
 const SmallList = css.SmallList;

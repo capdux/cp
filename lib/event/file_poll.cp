@@ -1,26 +1,23 @@
-// Source: Bun bun/src/event_loop/file_poll.cp
-// ============================================================================
-// Absorbed from Bun: bun/src/event_loop/file_poll.cp
-// Upstream Sync: Refer to bun/src/event_loop/file_poll.zig for future upstream updates.
-// ============================================================================
-// lib/event_loop/file_poll.cp
+// Source: /data/dev/bun/src/event_loop/AnyEventLoop.cp
+// lib/event/file_poll.cp
 // Cross-platform I/O file descriptor poller based on std.posix.poll
 
+const std = @import("std");
 
-pub const PollEvents = struct {
+pub struct PollEvents {
     pub const Readable: u32 = 1;
     pub const Writable: u32 = 2;
     pub const Error: u32 = 4;
     pub const Hup: u32 = 8;
-};
+}
 
 pub type PollCallback = fn(fd: i32, events: u32, ctx: *!?);
 
 pub struct FilePollRegistration {
-    fd: i32 = -1;
-    events: u32 = 0;
-    callback: PollCallback = undefined;
-    ctx: *!? = null;
+    pub fd: i32 = -1;
+    pub events: u32 = 0;
+    pub callback: PollCallback = undefined;
+    pub ctx: *!? = null;
 }
 
 pub class PollEngine {
@@ -33,12 +30,12 @@ pub class PollEngine {
         let pe = std.heap.page_allocator.create(PollEngine) catch unreachable;
         pe.capacity = 32;
         pe.len = 0;
-        pe.regs = (std.heap.page_allocator.alloc(FilePollRegistration, 32) catch unreachable);
-        pe.poll_fds = (std.heap.page_allocator.alloc(std.posix.pollfd, 32) catch unreachable);
+        pe.regs = std.heap.page_allocator.alloc(FilePollRegistration, 32) catch unreachable;
+        pe.poll_fds = std.heap.page_allocator.alloc(std.posix.pollfd, 32) catch unreachable;
         return pe;
     }
 
-    pub fn count(*_): usize {
+    pub fn count(): usize {
         return _.len;
     }
 
@@ -112,7 +109,8 @@ pub class PollEngine {
             slice[i].revents = 0;
         }
 
-        const ready_count: usize = std.posix.poll(slice, timeout_ms) catch @as(usize, 0);
+        const zero: usize = 0;
+        const ready_count: usize = std.posix.poll(slice, timeout_ms) catch zero;
         if (ready_count == 0) return 0;
 
         let dispatched: usize = 0;

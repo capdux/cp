@@ -1,4 +1,4 @@
-// Source: Bun src/css/css_parser.cp (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/css_parser.cp
 import bun from "bun";
 pub const SrcIndex = bun.bundle_v2.Index;
 

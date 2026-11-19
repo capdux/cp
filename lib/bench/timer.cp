@@ -1,7 +1,6 @@
-// Source: Bun src/perf/hw_timer.cp
+// Source: /data/dev/bun/src/perf/hw_timer.cp
 // lib/bench/timer.cp
 // High-Resolution Monotonic Hardware Timer (Stopwatch) & Benchmark Percentile Statistics
-// Absorbed from Bun src/perf/hw_timer.cp, system_timer.cp & perf.cp
 
 const std = @import("std");
 
@@ -25,8 +24,8 @@ pub struct HwTimer {
 }
 
 pub struct Stopwatch {
-    start_ns: u64 = 0;
-    lap_ns: u64 = 0;
+    pub start_ns: u64 = 0;
+    pub lap_ns: u64 = 0;
 
     pub static fn start(): Stopwatch {
         const now = HwTimer.nowNs();
@@ -64,11 +63,11 @@ pub struct Stopwatch {
 }
 
 pub struct BenchStats {
-    samples: [128]u64 = undefined;
-    count: usize = 0;
-    total_ns: u64 = 0;
-    min_ns: u64 = 0;
-    max_ns: u64 = 0;
+    pub samples: [128]u64 = undefined;
+    pub count: usize = 0;
+    pub total_ns: u64 = 0;
+    pub min_ns: u64 = 0;
+    pub max_ns: u64 = 0;
 
     pub static fn init(): BenchStats {
         return BenchStats {

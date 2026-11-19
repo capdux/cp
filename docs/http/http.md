@@ -292,7 +292,7 @@ pub fn demoIndustrialClient(): !void {
     // 4. Keep-Alive 连接池借还管理
     let pool = HTTPContext.init();
     defer pool.deinit();
-    _ = pool.releaseSocket(42, "api.example.com", 8443, true);
+    * = pool.releaseSocket(42, "api.example.com", 8443, true);
     const reused_fd = pool.acquireSocket("api.example.com", 8443, true); // 42
 
     // 5. HTTP CONNECT 代理隧道请求格式化与响应校验

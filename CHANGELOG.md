@@ -1342,3 +1342,13 @@ hotfix: resolve keyword conflict for "test" and prevent redundant re-export of i
 - **lib/json/*, lib/md/*, lib/html/*, lib/image/*, lib/blob/* (清理死文件、缺陷修复与全量溯源)**:
   - 删除 `lib/blob/` 8 个零引用遗留文件，重构 `JsonBufferPool`，修复 `json/parser.cp` 与 `image/{gif,exif,jpeg,thumbhash,pipeline}.cp`，`lib/cap.json` 新增 `image` 静态 zlib 配置；新增 5 份文档与 `cap/test/test_json_md_html_image_blob.cp`。
 - **cp_ref.md & cp_agent_ref.md**: 同步第四批 11 个标准库专著文档索引与协议矩阵（补充 `cap:sys` 与 `cap:blob`）。
+- **lib/css/** (100 个文件溯源校准与核心清理)**:
+  - 100 个 `.cp` 首行标准化为 `// Source: /data/dev/bun/src/css/...`，清理 `length.cp`/`stylesheet.cp` 遗留 `orelse`；新增 `docs/css/css.md`、`cap/test/test_css_full.cp`。
+- **lib/bench/*, lib/cli/*, lib/napi/*, lib/bigint/*, lib/event/* (19 个文件现代化改造与全量溯源)**:
+  - 重构 `lib/napi/{_napi,napi,index}.cp`（纯 CP Node-API v9 布局），`lib/event/emitter.cp` 新增 64 槽零堆分配 `EventBus`，清理 `bigint`/`event` 旧语法；新增 5 份专著文档与 `cap/test/test_bench_cli_napi_bigint_event.cp`。
+- **lib/bundler/* & lib/{actor,beam,fs,parallel,reflect,serde,sqlite,stream,test,worker}.cp (收尾全覆盖)**:
+  - 升级 `lib/bundler/bundle.cp`（`BundleV2`/`ChunkOrder`）并新增 `lib/bundler/index.cp`，清理 `fs.cp`/`reflect.cp`/`serde.cp`/`stream.cp` 头部与旧语法；新增 4 份专著文档与 `cap/test/test_core_runtime_bundler.cp`。
+- **新吸收三大 Bun 高价值资产 (`lib/errno/`, `lib/logger/`, `lib/string/wcwidth.cp`)**:
+  - 新增 `lib/errno/{errno,index}.cp`、`lib/logger/{logger,index}.cp`、`lib/string/wcwidth.cp`（导出至 `lib/string/index.cp`）。
+  - 新增 `docs/errno/errno.md`、`docs/logger/logger.md`，更新 `docs/string/string.md`，新增 `cap/test/test_bun_new_assets.cp`。
+- **cp_ref.md & cp_agent_ref.md**: 同步第五批 12 份专著文档索引与协议矩阵（补充 `cap:errno`/`cap:logger`/`cap:napi`/`cap:bigint`/`cap:bundler` 及 `stringWidth`）。

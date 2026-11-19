@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Custom (CP native stdlib; dual-mode @is_nest & atomic fs)
 /**
  * CP File System SDK (cap:fs)
  * 使用 @is_nest 进行显式双模分支逻辑重构
@@ -123,9 +123,9 @@ let tmp_counter: std.atomic.Value(u64) = std.atomic.Value(u64).init(1);
 
 pub const FileSystem = struct {
     pub fn tmpDir(): []const u8 {
-        if (std.c.getenv("TMPDIR")) |p| return std.mem.span(p);
-        if (std.c.getenv("TEMP")) |p| return std.mem.span(p);
-        if (std.c.getenv("TMP")) |p| return std.mem.span(p);
+        if (p := std.c.getenv("TMPDIR")) return std.mem.span(p);
+        if (p := std.c.getenv("TEMP")) return std.mem.span(p);
+        if (p := std.c.getenv("TMP")) return std.mem.span(p);
         if (builtin.os.tag == .windows) return "C:\\Temp";
         return "/tmp";
     }

@@ -1,7 +1,6 @@
-// Source: Bun src/bun_core/tty.cp
+// Source: /data/dev/bun/src/bun_core/tty.cp
 // lib/cli/tty.cp
 // Terminal Mode, ANSI Escape Color Formatting & Progress Bar Renderer
-// Absorbed from Bun src/bun_core/tty.cp & Progress.cp
 
 pub enum TtyMode: i32 {
     Normal = 0,

@@ -1,4 +1,4 @@
-// Source: Bun src/css/properties/position.zig (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/properties/position.cp
 import css from "../css_parser.zig";
 
 const Printer = css.Printer;

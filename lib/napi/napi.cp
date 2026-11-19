@@ -1,14 +1,269 @@
-// Absorbed from Bun: /data/dev/bun/src/napi/
-// Upstream Sync: Refer to /data/dev/bun/src/napi/ for future upstream updates.
-import { NapiEnv, NapiValue, NapiStatus, napi_get_undefined } from "./_napi";
+// Source: /data/dev/bun/src/napi/napi.zig
+// lib/napi/napi.cp
+// Safe CP High-Level Wrapper & Addon Registry for Node-API (cap:napi)
 
-pub const Napi = struct {
-    pub fn getUndefined(env: NapiEnv): !NapiValue {
-        var value: NapiValue = undefined;
-        const status = napi_get_undefined(env, &value);
-        if (status != 0) { // 0 is napi_ok
-            return error.NapiError;
+const std = @import("std");
+import {
+    NAPI_VERSION,
+    NAPI_MODULE_VERSION,
+    NapiStatus,
+    NapiValueType,
+    NapiTypedArrayType,
+    NapiPropertyAttributes,
+    NapiEnv,
+    NapiValue,
+    NapiHandleScope,
+    NapiModule,
+    NapiPropertyDescriptor,
+    napi_get_undefined,
+    napi_get_null,
+    napi_get_boolean,
+    napi_typeof,
+    napi_create_int32,
+    napi_create_double,
+    napi_get_value_int32,
+    napi_get_value_double,
+    napi_create_object,
+    napi_open_handle_scope,
+    napi_close_handle_scope
+} from "./_napi";
+
+export error NapiError {
+    InvalidArg,
+    ObjectExpected,
+    StringExpected,
+    NameExpected,
+    FunctionExpected,
+    NumberExpected,
+    BooleanExpected,
+    ArrayExpected,
+    GenericFailure,
+    PendingException,
+    Cancelled,
+    HandleScopeMismatch,
+    BigIntExpected,
+    ArrayBufferExpected,
+    UnknownError,
+}
+
+pub struct NapiAddonInfo {
+    pub name: []const u8 = "";
+    pub filename: []const u8 = "";
+    pub napi_version: u32 = NAPI_VERSION;
+    pub flags: u32 = 0;
+}
+
+pub struct NapiAddonRegistry {
+    pub addons: [32]NapiAddonInfo = undefined;
+    pub count: usize = 0;
+
+    pub static fn init(): NapiAddonRegistry {
+        return NapiAddonRegistry{
+            addons: undefined,
+            count: 0,
+        };
+    }
+
+    pub fn register(*_, name: []const u8, filename: []const u8, flags: u32): bool {
+        let i: usize = 0;
+        while (i < _.count) {
+            if (std.mem.eql(u8, _.addons[i].name, name)) {
+                _.addons[i].filename = filename;
+                _.addons[i].flags = flags;
+                return true;
+            }
+            i += 1;
         }
+        if (_.count >= 32) {
+            return false;
+        }
+        _.addons[_.count] = NapiAddonInfo{
+            name: name,
+            filename: filename,
+            napi_version: NAPI_VERSION,
+            flags: flags,
+        };
+        _.count += 1;
+        return true;
+    }
+
+    pub fn find(name: []const u8): NapiAddonInfo? {
+        let i: usize = 0;
+        while (i < _.count) {
+            if (std.mem.eql(u8, _.addons[i].name, name)) {
+                return _.addons[i];
+            }
+            i += 1;
+        }
+        return null;
+    }
+}
+
+pub struct Napi {
+    pub static fn isOk(status: NapiStatus): bool {
+        return status == NapiStatus.Ok;
+    }
+
+    pub static fn checkStatus(status: NapiStatus): !void {
+        if (status == NapiStatus.Ok) return;
+        if (status == NapiStatus.InvalidArg) return error.InvalidArg;
+        if (status == NapiStatus.ObjectExpected) return error.ObjectExpected;
+        if (status == NapiStatus.StringExpected) return error.StringExpected;
+        if (status == NapiStatus.NameExpected) return error.NameExpected;
+        if (status == NapiStatus.FunctionExpected) return error.FunctionExpected;
+        if (status == NapiStatus.NumberExpected) return error.NumberExpected;
+        if (status == NapiStatus.BooleanExpected) return error.BooleanExpected;
+        if (status == NapiStatus.ArrayExpected) return error.ArrayExpected;
+        if (status == NapiStatus.GenericFailure) return error.GenericFailure;
+        if (status == NapiStatus.PendingException) return error.PendingException;
+        if (status == NapiStatus.Cancelled) return error.Cancelled;
+        if (status == NapiStatus.HandleScopeMismatch) return error.HandleScopeMismatch;
+        if (status == NapiStatus.BigIntExpected) return error.BigIntExpected;
+        if (status == NapiStatus.ArrayBufferExpected) return error.ArrayBufferExpected;
+        return error.UnknownError;
+    }
+
+    pub static fn statusName(status: NapiStatus): []const u8 {
+        return switch (status) {
+            .Ok => "napi_ok",
+            .InvalidArg => "napi_invalid_arg",
+            .ObjectExpected => "napi_object_expected",
+            .StringExpected => "napi_string_expected",
+            .NameExpected => "napi_name_expected",
+            .FunctionExpected => "napi_function_expected",
+            .NumberExpected => "napi_number_expected",
+            .BooleanExpected => "napi_boolean_expected",
+            .ArrayExpected => "napi_array_expected",
+            .GenericFailure => "napi_generic_failure",
+            .PendingException => "napi_pending_exception",
+            .Cancelled => "napi_cancelled",
+            .HandleScopeMismatch => "napi_handle_scope_mismatch",
+            .BigIntExpected => "napi_bigint_expected",
+            .ArrayBufferExpected => "napi_arraybuffer_expected",
+            else => "napi_unknown_error",
+        };
+    }
+
+    pub static fn valueTypeName(val_type: NapiValueType): []const u8 {
+        return switch (val_type) {
+            .Undefined => "undefined",
+            .Null => "null",
+            .Boolean => "boolean",
+            .Number => "number",
+            .String => "string",
+            .Symbol => "symbol",
+            .Object => "object",
+            .Function => "function",
+            .External => "external",
+            .BigInt => "bigint",
+        };
+    }
+
+    pub static fn typedArrayElementSize(arr_type: NapiTypedArrayType): usize {
+        return switch (arr_type) {
+            .Int8, .Uint8, .Uint8Clamped => 1,
+            .Int16, .Uint16 => 2,
+            .Int32, .Uint32, .Float32 => 4,
+            .Float64, .BigInt64, .BigUint64 => 8,
+        };
+    }
+
+    pub static fn createModuleDescriptor(
+        modname: [*]const u8,
+        filename: [*]const u8,
+        flags: u32,
+        register_fn: (*anyopaque)?
+    ): NapiModule {
+        let mod = NapiModule{
+            nm_version: NAPI_MODULE_VERSION,
+            nm_flags: flags,
+            nm_filename: filename,
+            nm_register_func: register_fn,
+            nm_modname: modname,
+            nm_priv: null,
+            reserved: undefined,
+        };
+        mod.reserved[0] = null;
+        mod.reserved[1] = null;
+        mod.reserved[2] = null;
+        mod.reserved[3] = null;
+        return mod;
+    }
+
+    pub static fn createPropertyDescriptor(utf8name: [*]const u8, attrs: u32): NapiPropertyDescriptor {
+        return NapiPropertyDescriptor{
+            utf8name: utf8name,
+            name: null,
+            method: null,
+            getter: null,
+            setter: null,
+            value: null,
+            attributes: attrs,
+            data: null,
+        };
+    }
+
+    pub static fn getUndefined(env: NapiEnv): !NapiValue {
+        let value: NapiValue = undefined;
+        Napi.checkStatus(napi_get_undefined(env, &value))?;
         return value;
     }
-};
+
+    pub static fn getNull(env: NapiEnv): !NapiValue {
+        let value: NapiValue = undefined;
+        Napi.checkStatus(napi_get_null(env, &value))?;
+        return value;
+    }
+
+    pub static fn getBoolean(env: NapiEnv, b: bool): !NapiValue {
+        let value: NapiValue = undefined;
+        Napi.checkStatus(napi_get_boolean(env, b, &value))?;
+        return value;
+    }
+
+    pub static fn createInt32(env: NapiEnv, val: i32): !NapiValue {
+        let out: NapiValue = undefined;
+        Napi.checkStatus(napi_create_int32(env, val, &out))?;
+        return out;
+    }
+
+    pub static fn createDouble(env: NapiEnv, val: f64): !NapiValue {
+        let out: NapiValue = undefined;
+        Napi.checkStatus(napi_create_double(env, val, &out))?;
+        return out;
+    }
+
+    pub static fn getValueInt32(env: NapiEnv, val: NapiValue): !i32 {
+        let out: i32 = 0;
+        Napi.checkStatus(napi_get_value_int32(env, val, &out))?;
+        return out;
+    }
+
+    pub static fn getValueDouble(env: NapiEnv, val: NapiValue): !f64 {
+        let out: f64 = 0.0;
+        Napi.checkStatus(napi_get_value_double(env, val, &out))?;
+        return out;
+    }
+
+    pub static fn typeofValue(env: NapiEnv, val: NapiValue): !NapiValueType {
+        let out: NapiValueType = NapiValueType.Undefined;
+        Napi.checkStatus(napi_typeof(env, val, &out))?;
+        return out;
+    }
+
+    pub static fn createObject(env: NapiEnv): !NapiValue {
+        let out: NapiValue = undefined;
+        Napi.checkStatus(napi_create_object(env, &out))?;
+        return out;
+    }
+
+    pub static fn openHandleScope(env: NapiEnv): !NapiHandleScope {
+        let scope: NapiHandleScope = undefined;
+        Napi.checkStatus(napi_open_handle_scope(env, &scope))?;
+        return scope;
+    }
+
+    pub static fn closeHandleScope(env: NapiEnv, scope: NapiHandleScope): !void {
+        Napi.checkStatus(napi_close_handle_scope(env, scope))?;
+    }
+}

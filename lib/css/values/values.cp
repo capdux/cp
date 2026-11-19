@@ -1,4 +1,4 @@
-// Source: Bun src/css/values/values.zig (name-matched, needs review)
+// Source: /data/dev/bun/src/css/values/values.cp
 import css from "../css_parser.zig";
 
 pub struct css_modules {

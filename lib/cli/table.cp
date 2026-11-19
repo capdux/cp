@@ -1,7 +1,6 @@
-// Source: Bun src/cli/
+// Source: /data/dev/bun/src/cli/
 // lib/cli/table.cp
 // Terminal ASCII Table Formatter with Auto Column Width, Alignment & Header Separator
-// Absorbed from Bun src/cli/
 
 pub enum CliTableAlign: u8 {
     Left = 0,

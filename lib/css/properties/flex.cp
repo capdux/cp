@@ -1,4 +1,4 @@
-// Source: Bun src/css/properties/flex.zig (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/properties/flex.cp
 import css from "../css_parser.zig";
 
 const Printer = css.Printer;

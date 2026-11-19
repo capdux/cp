@@ -1,4 +1,4 @@
-// Source: Bun src/css/properties/properties_impl.zig (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/properties/properties_impl.cp
 import css from "../css_parser.zig";
 
 const CustomPropertyName = css.css_properties.CustomPropertyName;

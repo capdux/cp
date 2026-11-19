@@ -1,7 +1,6 @@
-// Source: Bun src/perf/
+// Source: /data/dev/bun/src/perf/perf.cp
 // lib/bench/histogram.cp
 // Fixed-Bucket Nanosecond Latency Histogram with Min/Max/Mean & Percentile Estimation
-// Absorbed from Bun src/perf/
 
 /// 8-bucket logarithmic latency histogram:
 ///   Bucket 0: < 100 ns

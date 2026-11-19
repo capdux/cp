@@ -1,4 +1,4 @@
-// Source: Bun src/css/values/length.cp
+// Source: /data/dev/bun/src/css/values/length.cp
 // lib/css/length.cp
 // CSS Values & Units Level 4: CssUnit, CssLength, and CssCalc Evaluator
 // Absorbed and unified from Bun src/css/values/length.cp, angle.cp, time.cp, percentage.cp, calc.cp
@@ -116,7 +116,7 @@ pub struct CssLength {
             }
             return CssLength { value: val, unit: CssUnit.Unitless };
         }
-        const u = CssUnit.fromSuffix(unit_str) orelse return null;
+        const u = CssUnit.fromSuffix(unit_str) ?? return null;
         return CssLength { value: val, unit: u };
     }
 

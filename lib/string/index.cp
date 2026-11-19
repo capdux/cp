@@ -32,3 +32,4 @@ export * from "./smol.cp";
 export * from "./hashed.cp";
 export * from "./path.cp";
 export * from "./joiner.cp";
+export * from "./wcwidth.cp";

@@ -1,4 +1,4 @@
-// Source: Bun src/css/properties/margin_padding.zig (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/properties/margin_padding.cp
 import css from "../css_parser.zig";
 const Property = css.Property;
 const PropertyIdTag = css.PropertyIdTag;

@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: /data/dev/bun/src/io/pipes.cp
 /**
  * CP Standard Stream Library (cap:stream)
  * 工业级统一流式 Trait 契约与管道体系
@@ -18,6 +18,7 @@ export {
     copyStream,
     copyN,
     MaxBuf,
+    MaxBufKind,
     PipeReader,
     PipeWriter,
     Pipe

@@ -1,4 +1,4 @@
-// Source: Bun src/css/properties/box_shadow.zig (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/properties/box_shadow.cp
 import css from "../css_parser.zig";
 
 const SmallList = css.SmallList;

@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: Custom (CP native stdlib)
 /**
  * CP Reflection Standard Library (cap:reflect)
  * Zero-cost introspection & metadata reflection

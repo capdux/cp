@@ -1,4 +1,4 @@
-// Source: Bun src/css/selectors/builder.zig (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/selectors/builder.cp
 //! This is the selector builder module ported from the copypasted implementation from
 //! servo in lightningcss.
 //!

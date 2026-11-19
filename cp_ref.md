@@ -10392,6 +10392,17 @@ flowchart TD
 - **HTML 解析与转义 (`cap:html`)**：[`docs/html/html.md`](file:///data/dev/cp/docs/html/html.md)（`CssSelector`、`HtmlRewriter`、`HtmlEscape`）
 - **全景图像处理 (`cap:image`)**：[`docs/image/image.md`](file:///data/dev/cp/docs/image/image.md)（PNG/BMP/GIF/JPEG/WebP、EXIF、Quantizer、ThumbHash 与几何流水线）
 - **二进制对象 (`cap:blob`)**：[`docs/blob/blob.md`](file:///data/dev/cp/docs/blob/blob.md)（Web 标准 `Blob`/`File`/`BlobStore` 零拷贝切片）
+- **工业级 CSS 引擎 (`cap:css`)**：[`docs/css/css.md`](file:///data/dev/cp/docs/css/css.md)（100 模块分层：Color/OKLCH、18 种单位与 `calc()`、Selectors Level 4 与权重、At-Rules 与 Minifier）
+- **性能基准与直方图 (`cap:bench`)**：[`docs/bench/bench.md`](file:///data/dev/cp/docs/bench/bench.md)（`HwTimer`、`Stopwatch`、`BenchStats`、`LatencyHistogram`）
+- **终端与命令行表格 (`cap:cli`)**：[`docs/cli/cli.md`](file:///data/dev/cp/docs/cli/cli.md)（`CliArgs`、`TtyMode`、`AnsiColor`、`ProgressBar`、`CliTable`）
+- **Node-API v9 桥接 (`cap:napi`)**：[`docs/napi/napi.md`](file:///data/dev/cp/docs/napi/napi.md)（纯 CP Node-API C-ABI 布局、`NapiError` 与 `NapiAddonRegistry`）
+- **任意精度与 256 位大数 (`cap:bigint`)**：[`docs/bigint/bigint.md`](file:///data/dev/cp/docs/bigint/bigint.md)（`BigInt` 与 `BigInt256`）
+- **事件总线与循环 (`cap:event`)**：[`docs/event/event.md`](file:///data/dev/cp/docs/event/event.md)（零堆分配 `EventBus`、`EventEmitter` 与底层轮询原语）
+- **静态构建与打包 (`cap:bundler`)**：[`docs/bundler/bundler.md`](file:///data/dev/cp/docs/bundler/bundler.md)（`BundleConfig`、`ChunkOrder`、`BundleV2`）
+- **文件系统与流 (`cap:fs` / `cap:stream`)**：[`docs/fs/fs.md`](file:///data/dev/cp/docs/fs/fs.md)、[`docs/stream/stream.md`](file:///data/dev/cp/docs/stream/stream.md)（原子写入、双模式文件系统与零拷贝流管道）
+- **核心运行时与并发 (`cap:actor` / `beam` / `parallel` / `worker` / `reflect` / `serde` / `test` / `sqlite`)**：[`docs/runtime/runtime.md`](file:///data/dev/cp/docs/runtime/runtime.md)
+- **跨平台系统错误码 (`cap:errno`，新吸收)**：[`docs/errno/errno.md`](file:///data/dev/cp/docs/errno/errno.md)（65 个 POSIX/Linux 错误码、负 syscall 转换与语义判定）
+- **结构化诊断日志 (`cap:logger`，新吸收)**：[`docs/logger/logger.md`](file:///data/dev/cp/docs/logger/logger.md)（`Source`/`Loc`/`Range`/`DiagMsg`/`Log` 源码行摘录与 ANSI 标尺高亮）
 
 ---
 

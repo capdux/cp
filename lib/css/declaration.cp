@@ -1,4 +1,4 @@
-// Source: Bun src/css/declaration.cp (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/declaration.cp
 import css from "./css_parser.zig";
 pub const Error = css.Error;
 const Printer = css.Printer;

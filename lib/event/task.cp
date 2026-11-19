@@ -1,18 +1,15 @@
-// Source: Bun bun/src/event_loop/task.cp
-// ============================================================================
-// Absorbed from Bun: bun/src/event_loop/task.cp
-// Upstream Sync: Refer to bun/src/event_loop/task.zig for future upstream updates.
-// ============================================================================
+// Source: /data/dev/bun/src/event_loop/AnyTask.cp
 // lib/event/task.cp
 // AnyTask and ManagedTask dynamic task abstractions for event loop dispatch
-// Absorbed from Bun src/event_loop/AnyTask.cp and ManagedTask.cp with pure CP semantics
+
+const std = @import("std");
 
 pub struct AnyTask {
-    ctx: *!? = null,
-    callback: *const fn (*!?) void = undefined,
+    pub ctx: *!? = null;
+    pub callback: *const fn (*!?) void = undefined;
 
     pub static fn init(ctx: *!?, cb: *const fn (*!?) void): AnyTask {
-        return AnyTask {
+        return AnyTask{
             ctx: ctx,
             callback: cb,
         };
@@ -25,9 +22,9 @@ pub struct AnyTask {
 }
 
 pub struct ManagedTask {
-    ctx: *!? = null,
-    callback: *const fn (*!?) void = undefined,
-    cancelled: bool = false,
+    pub ctx: *!? = null;
+    pub callback: *const fn (*!?) void = undefined;
+    pub cancelled: bool = false;
 
     pub static fn create(ctx: *!?, cb: *const fn (*!?) void): *ManagedTask! {
         let ptr: *ManagedTask! = unsafe { @ptrFromInt(8) };

@@ -1,4 +1,4 @@
-// Source: Bun src/css/properties/properties_.zig (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/properties/properties.cp
 const Position = position.Position;
 
 pub const CustomPropertyName = @import("./custom.zig").CustomPropertyName;

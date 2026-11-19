@@ -1,12 +1,11 @@
-// Source: Bun src/clap/args.cp
+// Source: /data/dev/bun/src/clap/args.cp
 // lib/cli/args.cp
 // Zero-allocation Command-Line Flag, Option, and Positional Argument Parser
-// Absorbed from Bun src/clap/args.cp & clap.cp
 
 const std = @import("std");
 
 pub struct SliceIterator {
-    remain: []const []const u8;
+    pub remain: []const []const u8;
 
     pub static fn init(args: []const []const u8): SliceIterator {
         return SliceIterator {
@@ -36,17 +35,17 @@ pub struct SliceIterator {
 }
 
 pub struct CliOption {
-    name: []const u8 = "";
-    value: []const u8 = "";
-    has_value: bool = false;
-    is_short: bool = false;
+    pub name: []const u8 = "";
+    pub value: []const u8 = "";
+    pub has_value: bool = false;
+    pub is_short: bool = false;
 }
 
 pub struct CliArgs {
-    options: [64]CliOption = undefined;
-    option_count: usize = 0;
-    positionals: [64][]const u8 = undefined;
-    positional_count: usize = 0;
+    pub options: [64]CliOption = undefined;
+    pub option_count: usize = 0;
+    pub positionals: [64][]const u8 = undefined;
+    pub positional_count: usize = 0;
 
     /// Parses a slice of command-line arguments supporting `--key=value`, `--flag`, `-f`, and `--`.
     pub static fn parse(raw_args: []const []const u8): CliArgs {

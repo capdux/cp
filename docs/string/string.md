@@ -161,3 +161,41 @@ fn demoCaseAndBuilder(): void {
     // sb.slice() => "https://api.cap.dev/v1/agents"
 }
 ```
+
+---
+
+## 五、 终端列宽计算：`wcwidth` 与 `stringWidth` (`Bun.stringWidth` 对标)
+
+`lib/string/wcwidth.cp` 吸收自 Bun 的 Unicode 显示宽度规范（`/data/dev/bun/src/unicode/uucode_lib/src/x/config_x/wcwidth.cp`），为 CLI 表格对齐、进度条渲染与诊断下划线定位提供与 `Bun.stringWidth` 等价的零堆分配终端列宽测量能力：
+
+### 1. API 列表
+
+| API 签名 | 说明 |
+| :--- | :--- |
+| `wcwidth(cp: u32): u8` | 计算单个 Unicode 标量码点的等宽终端显示列宽（`0` / `1` / `2`）：C0/C1 控制符、组合变音符、ZWJ、异体字选择器与肤色修饰符返回 `0`；软连字符 `U+00AD` 与可打印 ASCII 返回 `1`；CJK 全角字符、Hangul、区域指示符与主流 Emoji 返回 `2` |
+| `stringWidth(s: []const u8, count_ansi: bool = false): usize` | 计算 UTF-8 字符串的终端显示总列宽；默认跳过 ANSI CSI (`\x1b[...m`) 与 OSC (`\x1b]...BEL/ST`) 转义序列，并自动合并 Emoji ZWJ (`U+200D`) 粘连序列 |
+| `StringWidth.codepoint(cp)` / `measure(s)` / `measureWithAnsi(s, count_ansi)` | `wcwidth` 与 `stringWidth` 的结构化命名空间封装 |
+
+### 2. 代码示例
+
+```typescript
+import { wcwidth, stringWidth, StringWidth } from "cap:string";
+
+fn demoStringWidth(): void {
+    // 1. 单码点终端宽度
+    const w_ascii = wcwidth('A' as u32);    // 1
+    const w_cjk = wcwidth(0x4E2D);          // 2 ('中')
+    const w_comb = wcwidth(0x0301);         // 0 (组合尖音符)
+    const w_emoji = wcwidth(0x1F680);       // 2 ('🚀')
+
+    // 2. 中英文混排、Emoji ZWJ 与 ANSI 转义序列列宽测量
+    const w1 = stringWidth("你好CP");                          // 6 (2*2 + 2)
+    const w2 = stringWidth("Hello 世界 🚀");                   // 13
+    const w3 = stringWidth("👨‍👩‍👧");                              // 2 (ZWJ 序列合并)
+    const w4 = stringWidth("\x1b[1;32m成功\x1b[0m: OK");       // 8 (自动忽略 ANSI 色彩码)
+    const w5 = stringWidth("\x1b[1;32m成功\x1b[0m: OK", true); // 计入 ANSI 转义可见字符
+    const w6 = StringWidth.measure("\x1b]8;;https://cp.dev\x07CP文档\x1b]8;;\x07"); // 6 (忽略 OSC 超链接)
+    _ = w_ascii; _ = w_cjk; _ = w_comb; _ = w_emoji;
+    _ = w1; _ = w2; _ = w3; _ = w4; _ = w5; _ = w6;
+}
+```

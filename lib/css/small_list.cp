@@ -1,4 +1,4 @@
-// Source: Bun src/css/small_list_.zig (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/small_list.cp
 /// This is a type whose items can either be heap-allocated (essentially the
 /// same as a BabyList(T)) or inlined in the struct itself.
 ///

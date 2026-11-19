@@ -1,4 +1,4 @@
-// Source: Bun src/css/media_query.cp (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/media_query.cp
 import css from "./css_parser.zig";
 pub const Error = css.Error;
 

@@ -1,11 +1,8 @@
-// Source: Bun bun/src/event_loop/timer.cp
-// ============================================================================
-// Absorbed from Bun: bun/src/event_loop/timer.cp
-// Upstream Sync: Refer to bun/src/event_loop/timer.zig for future upstream updates.
-// ============================================================================
-// lib/event_loop/timer.cp
+// Source: /data/dev/bun/src/event_loop/EventLoopTimer.cp
+// lib/event/timer.cp
 // High-performance intrusive binary min-heap timer system
 
+const std = @import("std");
 
 pub type TimerCallback = fn(ctx: *!?);
 
@@ -67,19 +64,19 @@ pub class TimerHeap {
         let heap = std.heap.page_allocator.create(TimerHeap) catch unreachable;
         heap.capacity = 64;
         heap.len = 0;
-        heap.items = (std.heap.page_allocator.alloc(*Timer, 64) catch unreachable);
+        heap.items = std.heap.page_allocator.alloc(*Timer, 64) catch unreachable;
         return heap;
     }
 
-    pub fn count(*_): usize {
+    pub fn count(): usize {
         return _.len;
     }
 
-    pub fn isEmpty(*_): bool {
+    pub fn isEmpty(): bool {
         return _.len == 0;
     }
 
-    pub fn peek(*_): (*Timer)? {
+    pub fn peek(): (*Timer)? {
         if (_.len == 0) return null;
         return _.items[0];
     }
@@ -118,9 +115,9 @@ pub class TimerHeap {
     }
 
     pub fn remove(*_, timer: *Timer): bool {
-        if (!timer.active or _.len == 0) return false;
+        if (!timer.active || _.len == 0) return false;
         const idx = timer.heap_idx;
-        if (idx >= _.len or _.items[idx] != timer) return false;
+        if (idx >= _.len || _.items[idx] != timer) return false;
 
         timer.active = false;
         _.len -= 1;
@@ -135,18 +132,18 @@ pub class TimerHeap {
         return true;
     }
 
-    pub fn getTimeoutMs(*_, now_ms: i64): i32? {
+    pub fn getTimeoutMs(now_ms: i64): i32? {
         if (_.len == 0) return null;
         const top = _.items[0];
         const diff = top.fire_at_ms - now_ms;
         if (diff <= 0) return 0;
         if (diff > 2147483647) return 2147483647;
-        return @as(i32, @intCast(diff));
+        return diff as i32;
     }
 
     pub fn drainExpired(*_, now_ms: i64, max_drain: usize): usize {
         let fired: usize = 0;
-        while (fired < max_drain and _.len > 0) {
+        while (fired < max_drain && _.len > 0) {
             const top = _.items[0];
             if (top.fire_at_ms > now_ms) break;
 
@@ -154,7 +151,7 @@ pub class TimerHeap {
             timer.callback(timer.ctx);
             fired += 1;
 
-            if (timer.repeat and timer.active) {
+            if (timer.repeat && timer.active) {
                 timer.fire_at_ms = now_ms + timer.interval_ms;
                 _.push(timer);
             }
@@ -186,10 +183,10 @@ pub class TimerHeap {
             const left = idx * 2 + 1;
             const right = idx * 2 + 2;
 
-            if (left < _.len and _.items[left].fire_at_ms < _.items[smallest].fire_at_ms) {
+            if (left < _.len && _.items[left].fire_at_ms < _.items[smallest].fire_at_ms) {
                 smallest = left;
             }
-            if (right < _.len and _.items[right].fire_at_ms < _.items[smallest].fire_at_ms) {
+            if (right < _.len && _.items[right].fire_at_ms < _.items[smallest].fire_at_ms) {
                 smallest = right;
             }
 

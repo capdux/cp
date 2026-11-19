@@ -1,11 +1,8 @@
-// Source: Bun bun/src/event_loop/loop.cp
-// ============================================================================
-// Absorbed from Bun: bun/src/event_loop/loop.cp
-// Upstream Sync: Refer to bun/src/event_loop/loop.zig for future upstream updates.
-// ============================================================================
-// lib/event_loop/loop.cp
+// Source: /data/dev/bun/src/event_loop/MiniEventLoop.cp
+// lib/event/loop.cp
 // Unified EventLoop integrating intrusive timers, deferred microtasks, cross-thread tasks, and I/O polling
 
+const std = @import("std");
 import { Timer, TimerHeap, TimerCallback } from "./timer";
 import { ConcurrentTask, ConcurrentQueue, TaskFn } from "./concurrent_task";
 import { DeferredTaskQueue, DeferredFn } from "./deferred_task";
@@ -74,7 +71,7 @@ pub class EventLoop {
     }
 
     pub fn hasActiveHandles(*_): bool {
-        return _.timers.count() > 0 or _.poll_engine.count() > 0 or _.concurrent.len() > 0 or _.deferred.count() > 0;
+        return _.timers.count() > 0 || _.poll_engine.count() > 0 || _.concurrent.len() > 0 || _.deferred.count() > 0;
     }
 
     pub fn tick(*_, timeout_override: i32?): usize {
@@ -107,7 +104,7 @@ pub class EventLoop {
             events_processed += _.poll_engine.poll(timeout_ms);
         } else if (timeout_ms > 0) {
             // Sleep for timeout if no I/O descriptors
-            TimerHeap.sleepMs(@as(u64, @intCast(timeout_ms)));
+            TimerHeap.sleepMs(timeout_ms as u64);
         }
 
         // 5. Drain expired timers
@@ -123,7 +120,7 @@ pub class EventLoop {
     pub fn run(*_) {
         _.running = true;
         _.stopped = false;
-        while (_.hasActiveHandles() and !_.stopped) {
+        while (_.hasActiveHandles() && !_.stopped) {
             * = _.tick(null);
         }
         _.running = false;

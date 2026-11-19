@@ -1,4 +1,4 @@
-// Source: Bun src/css/context.zig (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/context.cp
 import css from "./css_parser.zig";
 
 const MediaRule = css.css_rules.media.MediaRule;

@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: /data/dev/bun/src/interchange/interchange.cp
 /**
  * CP Standard Serialization & Deserialization (cap:serde)
  */

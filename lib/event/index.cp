@@ -1,11 +1,6 @@
-// Source: Bun bun/src/event_loop/
-// ============================================================================
-// Absorbed from Bun: bun/src/event_loop/
-// Upstream Sync: Refer to bun/src/event_loop/ for future upstream updates.
-// ============================================================================
+// Source: Custom (agy-generated export index)
 // lib/event/index.cp
-// Unified Event Loop & EventEmitter Subsystem (cap:event / cap:event_loop / cap:events)
-// High-performance monotonic timer heap, 16-byte lock-free tasks, deferred microtasks, I/O poller & EventEmitter
+// Unified Event Loop & EventEmitter Subsystem (cap:event / cap:events)
 
 export {
     Timer,

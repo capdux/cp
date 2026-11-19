@@ -1,4 +1,4 @@
-// Source: Bun src/css/values/color.cp (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/values/color.cp
 import css from "../css_parser.zig";
 pub const Result = css.Result;
 

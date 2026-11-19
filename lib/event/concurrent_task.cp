@@ -1,8 +1,4 @@
-// Source: Bun bun/src/event_loop/concurrent_task.cp
-// ============================================================================
-// Absorbed from Bun: bun/src/event_loop/concurrent_task.cp
-// Upstream Sync: Refer to bun/src/event_loop/concurrent_task.zig for future upstream updates.
-// ============================================================================
+// Source: /data/dev/bun/src/event_loop/ConcurrentTask.cp
 // lib/event/concurrent_task.cp
 // 16-byte lock-free cross-thread task representation and thread-safe queue
 
@@ -11,7 +7,7 @@ const std = @import("std");
 pub type TaskFn = fn(ctx: *!?);
 
 pub struct TaskSpinLock {
-    state: std.atomic.Value(u32) = std.atomic.Value(u32).init(0);
+    pub state: std.atomic.Value(u32) = std.atomic.Value(u32).init(0);
 
     pub fn lock(*_) {
         while (_.state.cmpxchgWeak(0, 1, .acquire, .monotonic) != null) {
@@ -53,14 +49,14 @@ pub class ConcurrentTask {
 pub class ConcurrentQueue {
     head: (*ConcurrentTask)? = null;
     tail: (*ConcurrentTask)? = null;
-    lock: TaskSpinLock = TaskSpinLock {};
+    lock: TaskSpinLock = TaskSpinLock{};
     count: usize = 0;
 
     pub static fn init(): *ConcurrentQueue {
         let q = std.heap.page_allocator.create(ConcurrentQueue) catch unreachable;
         q.head = null;
         q.tail = null;
-        q.lock = TaskSpinLock {};
+        q.lock = TaskSpinLock{};
         q.count = 0;
         return q;
     }

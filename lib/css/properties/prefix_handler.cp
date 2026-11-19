@@ -1,4 +1,4 @@
-// Source: Bun src/css/properties/prefix_handler.cp (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/properties/prefix_handler.cp
 import css from "../css_parser.zig";
 
 const VendorPrefix = css.VendorPrefix;

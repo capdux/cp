@@ -1,13 +1,14 @@
-// Source: Bun src/event_loop/DeferredTaskQueue.zig (identifier match, needs review)
-// lib/event_loop/deferred_task.cp
+// Source: /data/dev/bun/src/event_loop/DeferredTaskQueue.cp
+// lib/event/deferred_task.cp
 // Deferred microtask queue for batching I/O and non-reentrant event execution
 
+const std = @import("std");
 
 pub type DeferredFn = fn(ctx: *!?);
 
 pub struct DeferredEntry {
-    ctx: *!? = null;
-    task: DeferredFn = undefined;
+    pub ctx: *!? = null;
+    pub task: DeferredFn = undefined;
 }
 
 pub class DeferredTaskQueue {
@@ -19,11 +20,11 @@ pub class DeferredTaskQueue {
         let q = std.heap.page_allocator.create(DeferredTaskQueue) catch unreachable;
         q.capacity = 32;
         q.len = 0;
-        q.entries = (std.heap.page_allocator.alloc(DeferredEntry, 32) catch unreachable);
+        q.entries = std.heap.page_allocator.alloc(DeferredEntry, 32) catch unreachable;
         return q;
     }
 
-    pub fn count(*_): usize {
+    pub fn count(): usize {
         return _.len;
     }
 
@@ -57,7 +58,7 @@ pub class DeferredTaskQueue {
     }
 
     pub fn unregisterTask(*_, ctx: *!?): bool {
-        if (ctx == null or _.len == 0) return false;
+        if (ctx == null || _.len == 0) return false;
         for (i of 0.._.len) {
             if (_.entries[i].ctx == ctx) {
                 _.len -= 1;

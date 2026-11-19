@@ -1,4 +1,4 @@
-// Source: Bun src/css/rules/unknown.zig (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/css/rules/unknown.cp
 import css from "../css_parser.zig";
 import css_values from "../values/values.zig";
 pub const Error = css.Error;
