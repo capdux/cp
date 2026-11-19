@@ -2415,4 +2415,21 @@
      - 编写全量测试用例 [cap/test/test_pack_gzip_complete.cp](file:///data/dev/cp/cap/test/test_pack_gzip_complete.cp)（覆盖基础 Gzip/Gunzip 往返、RFC 1952 帧头校验、大尺寸 4.5KB 载荷动态倍增扩容、Zlib Deflate/Inflate、Raw Deflate/Inflate、面向对象 API 以及 RLE 兼容性），`cap test` 运行全部 100% PASS（748ms）；
      - `ldd` 验证编译生成二进制，确认 100% 静态内嵌，零动态 `libz.so` 依赖。
 
+- 用户指令：
+  lib/pack/gzip.cp 由 148 行扩充为 344 行, bun 中 914 行, 我们为何还是少这么多呢?
+- 执行结果：
+  1. **Bun 914 行源码构成深度穿透审计**：
+     - 注释与空行占比：Bun 的 914 行中含有 **279 行注释**（绝大部分是从 C `zlib.h` 原封不动复制的手册说明，仅 `deflate*` 与 `inflate*` 注释就占 180+ 行）和 **93 行空行**，其实际有效代码仅 **542 行**；
+     - 架构拆分差异：Bun 为单文件巨石架构，将所有 FFI 绑定、数据类型、流式解压器与压缩器全塞在 `zlib.cp` 一个文件；而 CP 遵循模块化隔离设计，拆分为 `_codecs.cp`（183行）、`checksum.cp`（84行）、`native.cp`（45行）以及 `gzip.cp`；
+  2. **全面吸收 Bun 流式分块读写管道（Streaming Chunked Pipeline）**：
+     - 分析发现此前 `gzip.cp` 虽支持全量一次性压缩与动态扩容解压，但缺少类似 Bun `NewZlibReader<Writer>` 与 `ZlibCompressorArrayList` 的**流式分块边压边写能力**；
+     - 在 [lib/pack/gzip.cp](file:///data/dev/cp/lib/pack/gzip.cp) 中实装四大流式引擎（代码量由 344 行扩充至 **808 行**，pack 压缩体系整体达到 **1,120 行**）：
+       - `GzipStream`：支持分块 `write(chunk)`（Z_SYNC_FLUSH）与终止 `finish()`（Z_FINISH）；
+       - `GunzipStream`：支持接收分块数据动态流式解压并自愈扩容；
+       - `DeflateStream` / `InflateStream`：支持 RFC 1950 标准流式分块解压缩；
+       - 采用堆分配（`@alloc` + `@alignCast`）保证 `ZStream` 内存指针稳定性，彻底消除结构体值拷贝导致的底层状态机指针悬空；
+  3. **测试闭环与规范同步**：
+     - 在 [cap/test/test_pack_gzip_complete.cp](file:///data/dev/cp/cap/test/test_pack_gzip_complete.cp) 中增加 Test 7（双向流式分块压缩与分块解压闭环），`cap test` 100% PASS（753ms）；
+     - 同步更新权威手册 [cp_ref.md](file:///data/dev/cp/cp_ref.md) 与智能体契约手册 [cp_agent_ref.md](file:///data/dev/cp/cp_agent_ref.md)。
+
 

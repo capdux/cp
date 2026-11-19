@@ -9,6 +9,10 @@ import {
     Gunzip,
     DeflateCodec,
     InflateCodec,
+    GzipStream,
+    GunzipStream,
+    DeflateStream,
+    InflateStream,
     GzipHeader,
     RleCodec,
     GZIP_MAGIC_ID1,
@@ -151,6 +155,54 @@ pub fn main()! {
         return;
     }
     @print("PASS 6: RleCodec backward compatibility verified.\n");
+
+    // -------------------------------------------------------------------------
+    // Test 7: Streaming Chunked Gzip & Gunzip Pipeline (GzipStream & GunzipStream)
+    // -------------------------------------------------------------------------
+    let gstream_comp = GzipStream.create(6);
+    if (gstream_comp == null) {
+        @print("FAIL: GzipStream.create returned null!\n");
+        return;
+    }
+    let sc = gstream_comp.?;
+
+    let s_chunk1 = "Industrial GzipStream pipeline: Slice 1. ";
+    let s_chunk2 = "Slice 2 of high throughput streaming. ";
+    let s_chunk3 = "Slice 3 concluding the stream.";
+
+    let sp1 = sc.write(s_chunk1);
+    let sp2 = sc.write(s_chunk2);
+    let sp3 = sc.write(s_chunk3);
+    let sp_end = sc.finish();
+
+    let gstream_decomp = GunzipStream.create(47);
+    if (gstream_decomp == null) {
+        @print("FAIL: GunzipStream.create returned null!\n");
+        return;
+    }
+    let sd = gstream_decomp.?;
+
+    let sd1 = sd.write(sp1);
+    let sd2 = sd.write(sp2);
+    let sd3 = sd.write(sp3);
+    let sd4 = sd.write(sp_end);
+    let sd_end = sd.finish();
+
+    let full_sd_len = sd1.len + sd2.len + sd3.len + sd4.len + sd_end.len;
+    let sd_text: [*]u8 = @alloc(full_sd_len);
+    let s_pos: usize = 0;
+    @memcpy(sd_text[s_pos .. s_pos + sd1.len], sd1); s_pos += sd1.len;
+    @memcpy(sd_text[s_pos .. s_pos + sd2.len], sd2); s_pos += sd2.len;
+    @memcpy(sd_text[s_pos .. s_pos + sd3.len], sd3); s_pos += sd3.len;
+    @memcpy(sd_text[s_pos .. s_pos + sd4.len], sd4); s_pos += sd4.len;
+    @memcpy(sd_text[s_pos .. s_pos + sd_end.len], sd_end); s_pos += sd_end.len;
+
+    let expected_stream = "Industrial GzipStream pipeline: Slice 1. Slice 2 of high throughput streaming. Slice 3 concluding the stream.";
+    if (sd_text[0..full_sd_len] != expected_stream) {
+        @print("FAIL: GzipStream & GunzipStream roundtrip mismatch!\n");
+        return;
+    }
+    @print("PASS 7: GzipStream & GunzipStream 2-way streaming pipeline verified.\n");
 
     @print("\n🎉 ALL GZIP & PACK COMPRESSION TESTS PASSED (100% SUCCESS)!\n");
 }

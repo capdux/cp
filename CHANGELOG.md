@@ -1278,4 +1278,9 @@ hotfix: resolve keyword conflict for "test" and prevent redundant re-export of i
   - 新增全量回归测试套件，全面覆盖 Gzip 往返、RFC 1952 帧头校验、动态倍增扩容、Zlib Deflate/Inflate、Raw Deflate/Inflate、面向对象 API 及 RLE 兼容性。
 - **cp_ref.md & cp_agent_ref.md**:
   - 同步更新权威手册与智能体契约手册中 `cap:pack`（`cap:compress`）的功能矩阵说明。
+- **lib/pack/gzip.cp（第二阶段流式分块增强）**:
+  - 新增 `GzipStream`、`GunzipStream`、`DeflateStream`、`InflateStream` 四大流式分块管道，文件由 344 行扩充至 808 行。
+  - 采用堆安全分配机制保证底层 `ZStream` 指针稳定性，消除状态机指针悬空。
+- **cap/test/test_pack_gzip_complete.cp**:
+  - 新增 Test 7 验证双向分块流式压缩与解压闭环。
 

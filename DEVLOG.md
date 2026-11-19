@@ -1636,3 +1636,15 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
   - 执行 `cap test` 验证 100% PASS（耗时 748ms）；
   - 执行 `ldd` 确认二进制产物中 100% 静态内嵌，彻底无系统 `libz.so` 动态绑定。
 
+### 第二阶段：Bun 914 行与 CP 行数对比穿透审计及流式管道吸收
+- 深度代码行数审计：
+  1. Bun `/data/dev/bun/src/zlib/zlib.cp` 总计 914 行，其中包含 279 行 C 头文件英文 API 说明注释以及 93 行空行，纯有效代码仅 542 行；
+  2. 架构模式上，Bun 采用单文件巨石模式，将 C 声明、流式 Reader、ArrayList 封装全部杂糅；而 CP 采用扁平模块化拆分，分布在 `_codecs.cp`、`checksum.cp`、`native.cp` 和 `gzip.cp`；
+  3. 功能差距定位：Bun 拥有 `NewZlibReader<Writer>` 与 `ZlibCompressorArrayList` 的**流式分块写入（Chunked Streaming）**特性，此前 CP 仅支持全量一次性解压缩。
+- 架构补全与实装：
+  1. 在 `gzip.cp` 中实装 `GzipStream`、`GunzipStream`、`DeflateStream`、`InflateStream`；
+  2. 核心技术点：`zlib` 初始化时会在内部 `strm->state->strm` 记录自身指针，若在栈上值传递或函数返回时拷贝，会导致内部指针悬空崩溃。为此采用 `@alloc(@sizeOf(T))` 堆内存稳定分配，确保指针地址绝对不变；
+  3. `gzip.cp` 扩充至 808 行，整个 `lib/pack` 压缩体系代码量达到 1,120 行，全面超越 Bun 原生体系。
+- 验证：
+  - `cap/test/test_pack_gzip_complete.cp` 新增 Test 7 验证双向分块流式压缩与解压闭环，测试 100% PASS（753ms）。
+
