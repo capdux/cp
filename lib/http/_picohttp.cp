@@ -1,4 +1,4 @@
-// Source: Bun src/picohttp/picohttp.zig (name-matched, needs review)
+// Source: /data/dev/bun/src/picohttp/picohttp.cp
 // lib/http/_picohttp.cp
 // PicoHTTPParser C-FFI declarations & zero-copy HTTP/1.x request/response wire parser
 // Absorbed from bun/src/picohttp_sys/picohttpparser.cp & bun/src/picohttp/picohttp.cp
@@ -84,28 +84,28 @@ pub @c {
 }
 
 pub struct PicoHeader {
-    name: []const u8 = "";
-    value: []const u8 = "";
+    pub name: []const u8 = "";
+    pub value: []const u8 = "";
 
-    pub fn isMultiline(*_): bool {
+    pub fn isMultiline(): bool {
         return _.name.len == 0;
     }
 }
 
 pub struct PicoRequest {
-    method: []const u8 = "";
-    path: []const u8 = "";
-    minor_version: i32 = 1;
-    header_count: usize = 0;
-    bytes_read: usize = 0;
+    pub method: []const u8 = "";
+    pub path: []const u8 = "";
+    pub minor_version: i32 = 1;
+    pub header_count: usize = 0;
+    pub bytes_read: usize = 0;
 }
 
 pub struct PicoResponse {
-    minor_version: i32 = 1;
-    status: i32 = 200;
-    message: []const u8 = "";
-    header_count: usize = 0;
-    bytes_read: usize = 0;
+    pub minor_version: i32 = 1;
+    pub status: i32 = 200;
+    pub message: []const u8 = "";
+    pub header_count: usize = 0;
+    pub bytes_read: usize = 0;
 }
 
 fn trimSpaces(s: []const u8): []const u8 {

@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: /data/dev/bun/src/io/PipeReader.cp & /data/dev/bun/src/io/PipeWriter.cp
 /**
  * CP Native OS Pipe (cap:io)
  * 原生管道读取器与写入器，满足 Reader / Writer / Closer Trait 契约

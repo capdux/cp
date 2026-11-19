@@ -1,8 +1,6 @@
-// Source: Bun path-not-recorded
-/**
- * CP HTTP Internal State & Protocols (cap:http)
- * Ported from Bun.js http/InternalState.cp & http/http.cp
- */
+// Source: /data/dev/bun/src/http/InternalState.cp
+// lib/http/internal_state.cp
+// CP HTTP Internal State & Protocols (cap:http)
 
 import { Encoding } from "./encoding";
 import { CertificateInfo } from "./cert";
@@ -50,53 +48,53 @@ pub enum Stage: u8 {
     Fail,
 }
 
-pub const Flags = struct {
-    disable_timeout: bool = false,
-    disable_keepalive: bool = false,
-    disable_decompression: bool = false,
-    did_have_handshaking_error: bool = false,
-    force_last_modified: bool = false,
-    redirected: bool = false,
-    proxy_tunneling: bool = false,
-    reject_unauthorized: bool = true,
-    is_preconnect_only: bool = false,
-    is_streaming_request_body: bool = false,
-    defer_fail_until_connecting_is_complete: bool = false,
-    upgrade_state: HTTPUpgradeState = HTTPUpgradeState.None,
-    protocol: Protocol = Protocol.Http1_1,
-    force_http2: bool = false,
-    force_http1: bool = false,
-    force_http3: bool = false,
-    h3_retried: bool = false,
-};
+pub struct Flags {
+    pub disable_timeout: bool = false;
+    pub disable_keepalive: bool = false;
+    pub disable_decompression: bool = false;
+    pub did_have_handshaking_error: bool = false;
+    pub force_last_modified: bool = false;
+    pub redirected: bool = false;
+    pub proxy_tunneling: bool = false;
+    pub reject_unauthorized: bool = true;
+    pub is_preconnect_only: bool = false;
+    pub is_streaming_request_body: bool = false;
+    pub defer_fail_until_connecting_is_complete: bool = false;
+    pub upgrade_state: HTTPUpgradeState = HTTPUpgradeState.None;
+    pub protocol: Protocol = Protocol.Http1_1;
+    pub force_http2: bool = false;
+    pub force_http1: bool = false;
+    pub force_http3: bool = false;
+    pub h3_retried: bool = false;
+}
 
-pub const InternalStateFlags = struct {
-    allow_keepalive: bool = true,
-    received_last_chunk: bool = false,
-    did_set_content_encoding: bool = false,
-    is_redirect_pending: bool = false,
-    is_libdeflate_fast_path_disabled: bool = false,
-    resend_request_body_on_redirect: bool = false,
-};
+pub struct InternalStateFlags {
+    pub allow_keepalive: bool = true;
+    pub received_last_chunk: bool = false;
+    pub did_set_content_encoding: bool = false;
+    pub is_redirect_pending: bool = false;
+    pub is_libdeflate_fast_path_disabled: bool = false;
+    pub resend_request_body_on_redirect: bool = false;
+}
 
-pub const InternalState = struct {
-    flags: InternalStateFlags = InternalStateFlags{},
-    transfer_encoding: Encoding = Encoding.Identity,
-    encoding: Encoding = Encoding.Identity,
-    stage: Stage = Stage.Pending,
-    request_stage: HTTPStage = HTTPStage.Pending,
-    response_stage: HTTPStage = HTTPStage.Pending,
-    content_length: usize? = null,
-    total_body_received: usize = 0,
-    request_body: []const u8 = "",
-    request_sent_len: usize = 0,
-    certificate_info: CertificateInfo? = null,
+pub struct InternalState {
+    pub flags: InternalStateFlags = InternalStateFlags{};
+    pub transfer_encoding: Encoding = Encoding.Identity;
+    pub encoding: Encoding = Encoding.Identity;
+    pub stage: Stage = Stage.Pending;
+    pub request_stage: HTTPStage = HTTPStage.Pending;
+    pub response_stage: HTTPStage = HTTPStage.Pending;
+    pub content_length: usize? = null;
+    pub total_body_received: usize = 0;
+    pub request_body: []const u8 = "";
+    pub request_sent_len: usize = 0;
+    pub certificate_info: CertificateInfo? = null;
 
-    pub fn isChunkedEncoding(*_): bool {
+    pub fn isChunkedEncoding(): bool {
         return _.transfer_encoding == Encoding.Chunked;
     }
 
-    pub fn isDone(*_): bool {
+    pub fn isDone(): bool {
         if (_.isChunkedEncoding()) {
             return _.flags.received_last_chunk;
         }
@@ -105,4 +103,4 @@ pub const InternalState = struct {
         }
         return _.flags.received_last_chunk;
     }
-};
+}

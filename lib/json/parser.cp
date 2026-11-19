@@ -1,4 +1,4 @@
-// Source: Custom implementation by Antigravity AI (Ultra-fast SIMD zero-copy JSON streaming & typed parser)
+// Source: /data/dev/bun/src/interchange/json.cp
 // Ultra-fast zero-copy streaming & typed JSON parser in CP with SIMD acceleration
 // String keys and values borrow directly from input slice without heap allocation
 
@@ -102,6 +102,7 @@ pub struct JsonParser {
             if (hit := FastJsonScanner.indexOfQuoteOrEscape(rem)) {
                 pos += hit;
                 if (src[pos] == '\\') {
+                    if (pos + 2 > src.len) return error.UnexpectedEof;
                     pos += 2; // skip escape
                 } else {
                     const slice = src[start..pos];
@@ -376,18 +377,18 @@ zig {
                     if (pos.* >= src.len or src[pos.*] != '[') return error.InvalidToken;
                     pos.* += 1; // skip '['
 
-                    var list = std.ArrayList(ptr.child).init(allocator);
-                    errdefer list.deinit();
+                    var list: std.ArrayList(ptr.child) = .empty;
+                    errdefer list.deinit(allocator);
 
                     while (pos.* < src.len and (src[pos.*] == ' ' or src[pos.*] == '\t' or src[pos.*] == '\r' or src[pos.*] == '\n')) pos.* += 1;
                     if (pos.* < src.len and src[pos.*] == ']') {
                         pos.* += 1;
-                        return list.toOwnedSlice();
+                        return list.toOwnedSlice(allocator);
                     }
 
                     while (true) {
                         const item = try fastParseType(ptr.child, allocator, src, pos);
-                        try list.append(item);
+                        try list.append(allocator, item);
 
                         while (pos.* < src.len and (src[pos.*] == ' ' or src[pos.*] == '\t' or src[pos.*] == '\r' or src[pos.*] == '\n')) pos.* += 1;
                         if (pos.* >= src.len) return error.UnexpectedEof;
@@ -401,7 +402,7 @@ zig {
                             return error.ExpectedComma;
                         }
                     }
-                    return list.toOwnedSlice();
+                    return list.toOwnedSlice(allocator);
                 }
                 @compileError("Unsupported pointer type in fast JSON deserializer: " ++ @typeName(T));
             },

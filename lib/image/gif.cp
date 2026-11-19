@@ -1,4 +1,4 @@
-// Source: Bun bun/src/runtime/image/codec_gif.cp
+// Source: /data/dev/bun/src/runtime/image/codec_gif.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/codec_gif.cp
 // Upstream Sync: Refer to bun/src/runtime/image/codec_gif.zig for future upstream updates.
@@ -90,7 +90,7 @@ struct BitReader {
 }
 
 pub class Gif {
-    inline fn getTableSize(idx: usize): usize {
+    static fn getTableSize(idx: usize): usize {
         return switch (idx) {
             0 => 2,
             1 => 4,
@@ -131,7 +131,9 @@ pub class Gif {
 
     /// 解码 GIF 首帧为完整 RGBA8 像素矩阵
     pub static fn decode(bytes: []const u8): GifImage? {
-        let header = Gif.probe(bytes) orelse return null;
+        if (Gif.probe(bytes) == null) {
+            return null;
+        }
         let lsd_packed = bytes[10];
         let has_gct = (lsd_packed & 0x80) != 0;
         let gct_size: usize = if (has_gct) Gif.getTableSize((lsd_packed & 7) as usize) else 0;

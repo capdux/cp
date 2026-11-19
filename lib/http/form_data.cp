@@ -1,20 +1,19 @@
-// Source: Bun src/http/FormData.cp
+// Source: /data/dev/bun/src/runtime/webcore/FormData.cp
 // lib/http/form_data.cp
 // RFC 7578 multipart/form-data & URL-Encoded FormData Parser
-// Absorbed from Bun src/http/FormData.cp & mime.cp
 
 const std = @import("std");
 
 pub struct FormField {
-    name: []const u8 = "";
-    value: []const u8 = "";
-    filename: []const u8 = "";
-    content_type: []const u8 = "text/plain";
+    pub name: []const u8 = "";
+    pub value: []const u8 = "";
+    pub filename: []const u8 = "";
+    pub content_type: []const u8 = "text/plain";
 }
 
 pub struct FormData {
-    fields: [64]FormField = undefined;
-    count: usize = 0;
+    pub fields: [64]FormField = undefined;
+    pub count: usize = 0;
 
     pub static fn init(): FormData {
         return FormData {

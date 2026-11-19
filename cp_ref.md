@@ -10381,6 +10381,17 @@ flowchart TD
 - **文件监控 (`cap:watch`)**：[`docs/watch/watch.md`](file:///data/dev/cp/docs/watch/watch.md)（inotify、`WatchFilter`、`DebounceTracker`）
 - **可执行格式嗅探 (`cap:elf`)**：[`docs/elf/elf.md`](file:///data/dev/cp/docs/elf/elf.md)（ELF64 / Mach-O / PE-COFF）
 - **动态 FFI (`cap:ffi`)**：[`docs/ffi/ffi.md`](file:///data/dev/cp/docs/ffi/ffi.md)（`DynLib`、`CStructLayout` C-ABI 对齐）
+- **HTTP/1.1 & H2 & H3 全协议栈 (`cap:http`)**：[`docs/http/http.md`](file:///data/dev/cp/docs/http/http.md)（PicoHttpParser、Headers/Cookie/FormData/ETag/Mime、H2/HPACK、H3/Alt-Svc、`serve`/`fetch`）
+- **网络套接字与代理 (`cap:net`)**：[`docs/net/net.md`](file:///data/dev/cp/docs/net/net.md)（IPv4/IPv6、TCP/UDP、uSockets SafeSocket、HTTP CONNECT & SOCKS5 代理隧道）
+- **WebSocket 协议 (`cap:ws`)**：[`docs/ws/ws.md`](file:///data/dev/cp/docs/ws/ws.md)（RFC 6455 帧头编解码、控制帧与 XOR 掩码）
+- **Radix-Tree 路由 (`cap:router`)**：[`docs/router/router.md`](file:///data/dev/cp/docs/router/router.md)（静态优先、`:param`/`*path` 动态捕获与 `RouteFormatter` 反向格式化）
+- **统一 I/O 流 (`cap:io`)**：[`docs/io/io.md`](file:///data/dev/cp/docs/io/io.md)（`Reader`/`Writer`、`BufferReader`/`BufferedWriter`、`copyStream`、`MaxBuf`、OS `Pipe`）
+- **系统调用与文件底层 (`cap:sys`)**：[`docs/sys/sys.md`](file:///data/dev/cp/docs/sys/sys.md)（Zig 0.17 `std.c` 文件句柄、`statx`、`copy_file_range`、临时文件与信号）
+- **零拷贝 JSON (`cap:json`)**：[`docs/json/json.md`](file:///data/dev/cp/docs/json/json.md)（`JsonParser`、`JsonValue`、纯 CP `JsonBufferPool`）
+- **Markdown 渲染 (`cap:md`)**：[`docs/md/md.md`](file:///data/dev/cp/docs/md/md.md)（CommonMark/GFM 解析、HTML/ANSI 渲染与 `MdTable`）
+- **HTML 解析与转义 (`cap:html`)**：[`docs/html/html.md`](file:///data/dev/cp/docs/html/html.md)（`CssSelector`、`HtmlRewriter`、`HtmlEscape`）
+- **全景图像处理 (`cap:image`)**：[`docs/image/image.md`](file:///data/dev/cp/docs/image/image.md)（PNG/BMP/GIF/JPEG/WebP、EXIF、Quantizer、ThumbHash 与几何流水线）
+- **二进制对象 (`cap:blob`)**：[`docs/blob/blob.md`](file:///data/dev/cp/docs/blob/blob.md)（Web 标准 `Blob`/`File`/`BlobStore` 零拷贝切片）
 
 ---
 

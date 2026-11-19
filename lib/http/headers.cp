@@ -1,6 +1,8 @@
-// Source: Bun src/http/Headers.zig (name-matched, needs review)
+// Source: /data/dev/bun/src/http/Headers.cp
 // lib/http/headers.cp
 // High-performance case-insensitive HTTP Headers collection
+
+const std = @import("std");
 
 pub struct HeaderEntry {
     pub name: []const u8 = "";
@@ -13,7 +15,7 @@ pub struct Headers {
     pub len: usize = 0;
     pub allocator: std.mem.Allocator = undefined;
 
-    pub fn init(allocator: std.mem.Allocator): Headers {
+    pub static fn init(allocator: std.mem.Allocator): Headers {
         return Headers{
             entries: undefined,
             dynamic_entries: null,
@@ -30,11 +32,11 @@ pub struct Headers {
         _.len = 0;
     }
 
-    pub fn count(*_): usize {
+    pub fn count(): usize {
         return _.len;
     }
 
-    pub fn get(*_, name: []const u8): ([]const u8)? {
+    pub fn get(name: []const u8): ([]const u8)? {
         let i: usize = 0;
         while (i < _.len) {
             if (dynamic_buf := _.dynamic_entries) {
@@ -51,7 +53,7 @@ pub struct Headers {
         return null;
     }
 
-    pub fn has(*_, name: []const u8): bool {
+    pub fn has(name: []const u8): bool {
         return _.get(name) != null;
     }
 
@@ -133,7 +135,7 @@ pub struct Headers {
         }
     }
 
-    pub fn at(*_, index: usize): HeaderEntry? {
+    pub fn at(index: usize): HeaderEntry? {
         if (index >= _.len) {
             return null;
         }

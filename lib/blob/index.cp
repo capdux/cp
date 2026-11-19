@@ -1,4 +1,4 @@
-// Source: Bun bun/src/runtime/webcore/
+// Source: /data/dev/bun/src/runtime/webcore/Blob.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/webcore/
 // Upstream Sync: Refer to bun/src/runtime/webcore/ for future upstream updates.

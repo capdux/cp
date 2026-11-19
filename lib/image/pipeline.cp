@@ -1,4 +1,4 @@
-// Source: Bun bun/src/runtime/image/Image.cp
+// Source: /data/dev/bun/src/runtime/image/Image.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/Image.cp
 // Upstream Sync: Refer to bun/src/runtime/image/Image.zig for future upstream updates.
@@ -199,11 +199,11 @@ pub struct Image {
 
     /// 导出为 PNG 二进制
     pub fn toPng(*_): []u8 {
-        return Png.encodeRgba(_.rgba, _.width, _.height);
+        return Png.encodeRgba(_.rgba, _.width as u32, _.height as u32);
     }
 
     /// 导出为 BMP 二进制
     pub fn toBmp(*_): []u8 {
-        return Bmp.encodeRgba(_.rgba, _.width, _.height);
+        return Bmp.encodeRgba(_.rgba, _.width as u32, _.height as u32);
     }
 }

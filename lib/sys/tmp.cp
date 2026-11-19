@@ -1,4 +1,4 @@
-// Source: bun/src/sys/tmp.cp
+// Source: /data/dev/bun/src/sys/tmp.cp
 // ============================================================================
 // lib/sys/tmp.cp — Cross-platform Temporary Files & Directory Utilities
 // ============================================================================
@@ -8,6 +8,12 @@ import { FD, O_RDWR, O_CREAT, O_EXCL, O_CLOEXEC } from "./fd";
 import { File } from "./file";
 
 let tmp_sequence: u64 = 1000;
+
+fn nowMillis(): i64 {
+    let ts: std.os.linux.timespec = .{ .sec = 0, .nsec = 0 };
+    * = std.os.linux.clock_gettime(.REALTIME, &ts);
+    return (@as(i64, @intCast(ts.sec)) * 1000) + @divTrunc(@as(i64, @intCast(ts.nsec)), 1000000);
+}
 
 pub fn getTempDir(): []const u8 {
     if (val := std.c.getenv("TMPDIR")) {
@@ -52,20 +58,19 @@ pub fn makeTempFile(prefix: []const u8, suffix: []const u8, path_buf: []u8): !Fi
     while (attempt < max_retries) {
         attempt += 1;
         tmp_sequence += 1;
-        let ts: i64 = std.time.milliTimestamp();
+        let ts: i64 = nowMillis();
 
         let formatted = std.fmt.bufPrint(
             path_buf,
             "{s}/{s}_{d}_{d}{s}",
-            .{ tmp_dir, prefix, ts, tmp_sequence },
+            .{ tmp_dir, prefix, ts, tmp_sequence, suffix },
         ) catch return error.BufferTooSmall;
 
         if (formatted.len + 1 > path_buf.len) return error.BufferTooSmall;
         path_buf[formatted.len] = 0;
 
-        let f = File.open(formatted, O_CREAT | O_EXCL | O_RDWR | O_CLOEXEC, 0o600) catch e => {
-            if (e == error.PathAlreadyExists) continue;
-            return e;
+        let f = File.open(formatted, O_CREAT | O_EXCL | O_RDWR | O_CLOEXEC, 0o600) catch {
+            continue;
         };
         return f;
     }
@@ -81,7 +86,7 @@ pub fn makeTempDir(prefix: []const u8, path_buf: []u8): ![]const u8 {
     while (attempt < max_retries) {
         attempt += 1;
         tmp_sequence += 1;
-        let ts: i64 = std.time.milliTimestamp();
+        let ts: i64 = nowMillis();
 
         let formatted = std.fmt.bufPrint(
             path_buf,

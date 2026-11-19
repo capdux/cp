@@ -1,4 +1,4 @@
-// Source: Bun bun/src/runtime/image/
+// Source: /data/dev/bun/src/runtime/image/Image.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/
 // Upstream Sync: Refer to bun/src/runtime/image/ for future upstream updates.

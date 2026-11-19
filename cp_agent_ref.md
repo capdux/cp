@@ -1039,14 +1039,14 @@ switch (msg) {
 | `cap:patch` | `UnifiedDiff`, `UnifiedHunkHeader`, `HunkRange`, `DiffOpKind`, `LineDiffStats`, `LineDiffer`（`diff`, `editDistance`）, `DiffOp` | Unified Diff 解析、Myers 行级差异生成与补丁应用（详见 `docs/patch/patch.md`） |
 | `cap:bench` | `HwTimer`, `Stopwatch`, `BenchStats`, `LatencyHistogram` | 纳秒级硬件计时器、分位数统计与对数桶延迟直方图 |
 | `cap:elf` | `ExeFormat`, `Elf64HeaderInfo`, `ElfInspector`, `MachHeader64`, `MachoInspector`, `PeCoffHeader`, `PeInspector` | ELF64 / Mach-O / PE 可执行文件头解析与节区嗅探（详见 `docs/elf/elf.md`） |
-| `cap:md` | `Markdown`（`renderHtml`, `renderAnsi`）, `MdTable`, `MdTableAlign` | CommonMark / GFM 解析器、HTML / ANSI 渲染与 GFM 表格 |
-| `cap:html` | `CssSelector`, `HtmlRewriter`, `HtmlEscape` | CSS 选择器解析、流式 HTML 标签重写与实体转义器 |
+| `cap:md` | `Markdown`（`renderHtml`, `renderAnsi`）, `MdTable`, `MdTableAlign` | CommonMark / GFM 解析器、HTML / ANSI 渲染与 GFM 表格（详见 `docs/md/md.md`） |
+| `cap:html` | `CssSelector`, `HtmlRewriter`, `HtmlEscape` | CSS 选择器解析、流式 HTML 标签重写与实体转义器（详见 `docs/html/html.md`） |
 | `cap:css` | `CssColor`, `CssUnit`, `CssLength`, `CssCalc`, `CssSpecificity`, `CssSelector`, `CssProperty`, `CssRuleKind`, `CssMediaQuery`, `CssKeyframeStep`, `CssKeyframes`, `CssRule`, `CssStylesheetParser`（及 `selectors/`、`rules/`、`values/`、`properties/` 99 模块引擎） | 工业级 CSS 解析、OKLCH/HSL/RGB 颜色空间、calc() 计算、选择器权重与样式表压缩引擎 |
-| `cap:image`（兼容 `cap:png` / `cap:img`） | `Png`, `PngImage`, `RgbaColor`, `PngColorType`, `PngFilterType`, `Codecs`, `ImageFormat`, `Bmp`, `BmpHeader`, `Quantizer`, `QuantizeResult`, `Gif`, `GifHeader`, `GifImage`, `ThumbHash`, `Exif`, `ExifOrientation`, `ExifTransform`, `Image`, `Jpeg`, `JpegHeader`, `Webp`, `WebpHeader` | 工业级全景图像套件：PNG 截图编码解码、BMP DIB 编解码、GIF LZW 解码、ThumbHash 模糊占位图算法、EXIF Orientation 解析、图像几何变换（Flop/Flip/Rotate/Crop/Resize）与 JPEG/WebP/8大格式嗅探 |
+| `cap:image`（兼容 `cap:png` / `cap:img`） | `Png`, `PngImage`, `RgbaColor`, `PngColorType`, `PngFilterType`, `Codecs`, `ImageFormat`, `Bmp`, `BmpHeader`, `Quantizer`, `QuantizeResult`, `Gif`, `GifHeader`, `GifImage`, `ThumbHash`, `Exif`, `ExifOrientation`, `ExifTransform`, `Image`, `Jpeg`, `JpegHeader`, `Webp`, `WebpHeader` | 工业级全景图像套件：PNG 截图编码解码、BMP DIB 编解码、GIF LZW 解码、ThumbHash 模糊占位图算法、EXIF Orientation 解析、图像几何变换（Flop/Flip/Rotate/Crop/Resize）与 JPEG/WebP/8大格式嗅探（详见 `docs/image/image.md`） |
 | `cap:ffi` | `DynLib`, `FFIType`, `FFISignature`, `CStructLayout`, `CStructField`, `TccOutputFormat` | 跨平台动态库加载（dlopen）、C-ABI 布局计算与 TinyCC 声明（详见 `docs/ffi/ffi.md`） |
 | `cap:sql` | `SqlType`, `SqlDialect`, `SqlStatement`, `PostgresWire`, `PostgresAuthChallenge`, `PostgresDataRow`, `PostgresCommandComplete`, `MySqlPacketHeader`, `MySqlLenEnc`, `MySqlCapabilities`, `MySqlOkPacket`, `MySqlErrPacket`, `SqliteDatabase`, `SqliteRows` | PostgreSQL v3 / MySQL / SQLite3 数据库协议与零依赖驱动（详见 `docs/sql/sql.md`） |
 | `cap:shell`（兼容 `cap:sh`） | `Lexer`, `Parser`, `Shell`, `sh`, `ShellResult`, `Command`, `Pipeline`, `Statement`, `Redirection` | 原生嵌入式 Shell 执行引擎、AST 解析器、内置指令与管道重定向（详见 `docs/shell/shell.md`） |
-| `cap:io` | `Reader`, `Writer`, `Closer`, `Seeker`, `BufferReader`, `BufferWriter`, `BufferedReader`, `BufferedWriter`, `copyStream`, `PipeReader`, `PipeWriter`, `MaxBuf`, `Pipe`, `print` | 统一流契约、零拷贝管道与标准 I/O |
+| `cap:io` | `Reader`, `Writer`, `Closer`, `Seeker`, `BufferReader`, `BufferWriter`, `BufferedReader`, `BufferedWriter`, `copyStream`, `PipeReader`, `PipeWriter`, `MaxBuf`, `Pipe`, `print` | 统一流契约、零拷贝管道与标准 I/O（详见 `docs/io/io.md`） |
 | `cap:stream` | `Pipe`, `PipeReader`, `PipeWriter`, `MaxBuf`, 统一零拷贝流接口重导出 | 工业级零拷贝流式 I/O 管道 |
 | `cap:sync` | `Mutex`, `RwLock`, `Atomic`, `Shared`, `Futex`, `Condition`, `WaitGroup`, `Channel`, `MpmcQueue`, `UnboundedQueue`, `ConcurrentMap`, `ArcSlice`, `Wyhash`, `Guarded<T>`, `WorkPool` | 锁、无锁队列、共享智能指针、并发池与底层同步原语（详见 `docs/sync/sync.md`） |
 | `cap:parallel` | `spawn`, `join`, `Task` | 多核 Worker 线程池与异步任务汇聚 |
@@ -1056,18 +1056,20 @@ switch (msg) {
 | `cap:mem` | `Arena`, `SharedTensor`, `Cow`, `CowSlice`, `TaggedPointer`, `TaggedPtr`, `MaxHeapAllocator` | 区域内存分配、写时复制切片、打标指针与共享大张量（详见 `docs/mem/mem.md`） |
 | `cap:string` | `ZigString`, `WTF8`, `SimdUtf`, `Utf8Grapheme`, `CaseConverter`, `SmolStr`, `HashedString`, `PathString`, `StringJoiner`, `StringBuilder` | SIMD UTF-8/16 校验转换、UAX #29 字素簇、15B 纯栈 SSO 字符串与零拷贝路径解析（详见 `docs/string/string.md`） |
 | `cap:simd` | `Simd`（`indexOfByte`, `indexOfChar`, `indexOfAny2`, `indexOfAny4`, `indexOfAnyChar`, `skipWhitespace`, `firstNonAscii`, `isAscii`, `indexOfNewlineOrNonAscii`, `countByte`, `toLowerAscii`, `toUpperAscii`, `reduceAddI32`, `dotProductF32`） | 16/32 字节 Highway 级 SIMD 硬件向量字节扫描、无分支大小写转换与数值归约（详见 `docs/simd/simd.md`） |
-| `cap:json` | `JsonParser`, `JsonValue`, `JsonBufferPool`, `parse`, `stringify`（另有免 import 内置 `JSON`） | 零拷贝流式 JSON 解析框架 |
+| `cap:json` | `JsonParser`, `JsonValue`, `JsonBufferPool`, `parse`, `stringify`（另有免 import 内置 `JSON`） | 零拷贝流式 JSON 解析框架（详见 `docs/json/json.md`） |
 | `cap:serde` | `@json_parse`, `@json_stringify`, 零拷贝序列化契约 | 高性能编解码与结构化映射 |
 | 内置 `RegExp` / `JSON`（无需 `import`） | **`RegExp`**（`/pattern/flags`）与 **`JSON`**（`JSON.stringify`、`JSON.parse<T>`） | 内联 16 字节 SIMD + `[2048]u8` 栈零分配正则与零拷贝 JSON |
 | `cap:sqlite` | `Database`（`init`, `exec`, `query_string`） | 原生轻量级 SQLite 嵌入式数据库驱动 |
-| `cap:http` | `Method`, `Headers`, `ETag`, `MimeType`, `CookieMap`, `FormData`, `Request`, `Response`, `HttpServer`, `HTTPClient`, `H2ClientSession`, `HpackCodec`, `H3ClientSession`, `fetch`, `serve` | 现代 HTTP/1.1、H2/HPACK、H3、Cookie、Multipart 全协议栈 |
-| `cap:ws` | `Opcode`, `CloseCode`, `FrameHeader`, `FrameBuilder`, `Mask` | RFC 6455 WebSocket 协议帧编解码 |
-| `cap:router` | `Router<T>`, `RadixNode<T>`, `ParamMap`, `RouteMatch`, `Route`, `RouteFormatter` | 极速 Radix-Tree 路由匹配与反向路径格式化引擎 |
-| `cap:net` | `SocketAddress`, `UdpSocket`, `UdpPacket`, `TcpStream`, `TcpServer`, `SafeSocket`, `HttpConnectTunnel`, `Socks5Codec` | TCP/UDP/QUIC 套接字、HTTP CONNECT 与 SOCKS5 代理隧道 |
+| `cap:http` | `Method`, `Headers`, `ETag`, `MimeType`, `CookieMap`, `FormData`, `Request`, `Response`, `HttpServer`, `HTTPClient`, `H2ClientSession`, `HpackCodec`, `H3ClientSession`, `fetch`, `serve` | 现代 HTTP/1.1、H2/HPACK、H3、Cookie、Multipart 全协议栈（详见 `docs/http/http.md`） |
+| `cap:ws` | `Opcode`, `CloseCode`, `FrameHeader`, `FrameBuilder`, `Mask` | RFC 6455 WebSocket 协议帧编解码（详见 `docs/ws/ws.md`） |
+| `cap:router` | `Router<T>`, `RadixNode<T>`, `ParamMap`, `RouteMatch`, `Route`, `RouteFormatter` | 极速 Radix-Tree 路由匹配与反向路径格式化引擎（详见 `docs/router/router.md`） |
+| `cap:net` | `SocketAddress`, `UdpSocket`, `UdpPacket`, `TcpStream`, `TcpServer`, `SafeSocket`, `HttpConnectTunnel`, `Socks5Codec` | TCP/UDP/QUIC 套接字、HTTP CONNECT 与 SOCKS5 代理隧道（详见 `docs/net/net.md`） |
 | `cap:dns` | `DnsHeader`, `DnsRecordType`, `NameEncodeResult`, `HostsTable` | RFC 1035 DNS 报文编解码与 hosts 解析（详见 `docs/dns/dns.md`） |
 | `cap:s3` | `S3Acl`, `S3StorageClass`, `S3Credentials`, `SigV4Signer`, `S3Client`（含 `presignUrl`）, `S3RequestBuilder`（含 `buildPresignedUrl`）, `S3StatResult`, `S3DownloadResult`, `S3UploadResult`, `S3DeleteResult`, `S3PartResult`, `MultiPartUpload`, `S3ContentRange`, `formatRangeHeader`, `parseContentRange`, `formatListObjectsQuery`, `parseS3ListObjectsResult` | 完备 AWS S3 客户端、SigV4 签名与预签名 URL 引擎、分块上传状态机、XML 流式解析与分片下载流（详见 `docs/s3/s3.md`） |
 | `cap:sourcemap` | `VLQ`, `Zigzag`, `Varint`, `LineOffsetTable`, `DynamicLineOffsetTable`, `Mapping`, `InternalSourceMap`, `Chunk`, `ParsedSourceMap`, `ParsedSourceMapRecord`, `SourceMapGenerator`, `SourceMapConsumer` | Base64 VLQ/Varint 编解码、高精度映射压缩、二进制 SourceMap v3 解析与生成反查套件（详见 `docs/sourcemap/sourcemap.md`） |
 | `cap:clap` | `parseArgs`, `parseParam`, `parseEx`, `usage`, `help`, `usageEx`, `helpEx`, `SliceIterator`, `ShellIterator`, `OsIterator`, `StreamingClap`, `ComptimeClap`, `Names`, `Values`, `Param`, `Help`, `Diagnostic`, `ParseOptions` | 工业级命令行参数解析引擎，支持 POSIX 引号分词、声明式语法、流式状态机与编译期常数级强类型提取（详见 `docs/clap/clap.md`） |
+| `cap:sys` | `Fd`, `File`, `Stat`, `copyFile`, `getTempDir`, `makeTempFile`, `makeTempDir`, `Signal` | 跨平台系统调用、文件描述符、零拷贝 `copy_file_range`、临时文件与信号封装（详见 `docs/sys/sys.md`） |
+| `cap:blob` | `Blob`, `File`, `BlobStore`, `StoreKind` | Web 标准 `Blob`/`File` 二进制对象抽象与切片视图（详见 `docs/blob/blob.md`） |
 | `cap:fs` | `readFile`, `writeFile`, `exists`, `stat`, `tmpDir`, `tmpPath`, `writeAtomic` | 同步/异步现代文件系统高阶抽象 |
 | `cap:path` | `path`, `Path`, `PosixPath`, `WindowsPath`, `ParsedPath`, `EnvPath`, `EnvPathIterator`, `PathBufferPool`, `normalizePosix`, `normalizeWindows`, `joinPosix`, `joinWindows`, `resolvePosix`, `resolveWindows`, `relativePosix`, `relativeWindows`, `longestCommonPathPosix`, `longestCommonPathWindows` | 跨平台路径计算、规范化、环境变量 PATH 迭代与零分配缓冲池引擎（详见 `docs/path/path.md`） |
 | `cap:url` | `URL`, `Url`, `URLSearchParams`, `SearchParams`, `Query`, `QueryParam`, `PercentEncoding`, `Percent` | WHATWG 标准 URL、查询参数与 RFC 3986 百分号编解码（详见 `docs/url/url.md`） |

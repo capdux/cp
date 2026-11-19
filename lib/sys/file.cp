@@ -1,4 +1,4 @@
-// Source: bun/src/sys/File.cp
+// Source: /data/dev/bun/src/sys/File.cp
 // ============================================================================
 // lib/sys/file.cp — RAII File Handle Wrapper & High-level File Operations
 // ============================================================================
@@ -15,7 +15,7 @@ pub const File = struct {
         if (path.len >= path_buf.len) return error.NameTooLong;
         @memcpy(path_buf[0 .. path.len], path);
         path_buf[path.len] = 0;
-        let path_z: [:0]const u8 = path_buf[0 .. path.len :0];
+        let path_z: [*:0]const u8 = path_buf[0 .. path.len :0].ptr;
 
         let acc: std.posix.ACCMODE = .RDONLY;
         if ((flags & O_RDWR) != 0) {
@@ -24,7 +24,7 @@ pub const File = struct {
             acc = .WRONLY;
         }
 
-        let z_flags = std.posix.O{
+        let z_flags = std.c.O{
             .ACCMODE = acc,
             .CREAT = (flags & O_CREAT) != 0,
             .EXCL = (flags & O_EXCL) != 0,
@@ -34,7 +34,8 @@ pub const File = struct {
             .CLOEXEC = (flags & O_CLOEXEC) != 0,
         };
 
-        let raw = try std.posix.open(path_z, z_flags, std.posix.mode_t(@intCast(mode)));
+        let raw = std.c.open(path_z, z_flags, @as(std.c.mode_t, @intCast(mode)));
+        if (raw < 0) return error.OpenFailed;
         return File{ fd: FD.fromNative(raw) };
     }
 

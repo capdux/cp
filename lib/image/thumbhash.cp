@@ -1,4 +1,4 @@
-// Source: Bun bun/src/runtime/image/thumbhash.cp
+// Source: /data/dev/bun/src/runtime/image/thumbhash.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/thumbhash.cp
 // Upstream Sync: Refer to bun/src/runtime/image/thumbhash.zig for future upstream updates.
@@ -139,8 +139,8 @@ pub class ThumbHash {
 
     /// 直接将 ThumbHash 渲染为 data:image/png;base64 URL
     pub static fn toDataUrl(hash: []const u8): string {
-        let img = ThumbHash.decode(hash) orelse return "";
-        let png_bytes = Png.encodeRgba(img.rgba, img.width, img.height);
+        let img = ThumbHash.decode(hash) ?? return "";
+        let png_bytes = Png.encodeRgba(img.rgba, img.width as u32, img.height as u32);
         if (png_bytes.len == 0) {
             return "";
         }

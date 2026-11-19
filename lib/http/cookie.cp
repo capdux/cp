@@ -1,7 +1,6 @@
-// Source: Bun src/http/CookieMap.cp
+// Source: /data/dev/bun/src/runtime/webcore/CookieMap.cp
 // lib/http/cookie.cp
 // RFC 6265 HTTP Cookie Header Parser, CookieMap & Set-Cookie Serializer
-// Absorbed from Bun src/http/CookieMap.cp
 
 const std = @import("std");
 
@@ -12,19 +11,19 @@ pub enum CookieSameSite: u8 {
 }
 
 pub struct CookieEntry {
-    name: []const u8 = "";
-    value: []const u8 = "";
-    path: []const u8 = "/";
-    domain: []const u8 = "";
-    max_age: i64 = -1;
-    http_only: bool = false;
-    secure: bool = false;
-    same_site: CookieSameSite = CookieSameSite.Lax;
+    pub name: []const u8 = "";
+    pub value: []const u8 = "";
+    pub path: []const u8 = "/";
+    pub domain: []const u8 = "";
+    pub max_age: i64 = -1;
+    pub http_only: bool = false;
+    pub secure: bool = false;
+    pub same_site: CookieSameSite = CookieSameSite.Lax;
 }
 
 pub struct CookieMap {
-    entries: [64]CookieEntry = undefined;
-    count: usize = 0;
+    pub entries: [64]CookieEntry = undefined;
+    pub count: usize = 0;
 
     /// Parses an HTTP `Cookie:` request header (`k1=v1; k2=v2`) into a `CookieMap`.
     pub static fn parse(cookie_header: []const u8): CookieMap {

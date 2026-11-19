@@ -1,4 +1,4 @@
-// Source: Bun bun/src/runtime/image/codec_jpeg.cp
+// Source: /data/dev/bun/src/runtime/image/codec_jpeg.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/codec_jpeg.cp
 // Upstream Sync: Refer to bun/src/runtime/image/codec_jpeg.zig for future upstream updates.
@@ -22,7 +22,7 @@ pub class Jpeg {
         }
 
         let orientation = Exif.readJpeg(bytes);
-        let offset = 2;
+        let offset: usize = 2;
 
         while (offset + 4 <= bytes.len) {
             if (bytes[offset] != 0xFF) {

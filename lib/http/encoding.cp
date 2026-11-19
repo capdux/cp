@@ -1,8 +1,6 @@
-// Source: Bun path-not-recorded
-/**
- * CP HTTP Content & Transfer Encoding (cap:http)
- * Ported from Bun.js http_types/Encoding.cp
- */
+// Source: /data/dev/bun/src/http_types/Encoding.cp
+// lib/http/encoding.cp
+// CP HTTP Content & Transfer Encoding (cap:http)
 
 pub enum Encoding {
     Identity,
@@ -12,14 +10,14 @@ pub enum Encoding {
     Zstd,
     Chunked,
 
-    fn canUseLibDeflate(): bool {
+    pub fn canUseLibDeflate(): bool {
         return switch (_) {
             .Gzip, .Deflate => true,
             else => false,
         };
     }
 
-    fn isCompressed(): bool {
+    pub fn isCompressed(): bool {
         return switch (_) {
             .Gzip, .Deflate, .Brotli, .Zstd => true,
             else => false,

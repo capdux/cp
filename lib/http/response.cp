@@ -1,4 +1,4 @@
-// Source: Bun src/runtime/webcore/Response.zig (name-matched, needs review)
+// Source: /data/dev/bun/src/http/http.cp
 /**
  * CP HTTP Response (cap:http)
  */

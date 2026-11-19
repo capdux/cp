@@ -1,20 +1,19 @@
-// Source: Bun path-not-recorded
-/**
- * CP HTTP TLS Certificate Info & Errors (cap:http)
- * Ported from Bun.js http/CertificateInfo.cp & HTTPCertError.cp
- */
+// Source: /data/dev/bun/src/http/CertificateInfo.cp
+// lib/http/cert.cp
+// CP HTTP TLS Certificate Info & Errors (cap:http)
 
+const std = @import("std");
 
-pub const HTTPCertError = struct {
-    error_no: i32 = 0,
-    code: []const u8 = "",
-    reason: []const u8 = "",
-};
+pub struct HTTPCertError {
+    pub error_no: i32 = 0;
+    pub code: []const u8 = "";
+    pub reason: []const u8 = "";
+}
 
-pub const CertificateInfo = struct {
-    cert: []const u8 = "",
-    cert_error: HTTPCertError = HTTPCertError{},
-    hostname: []const u8 = "",
+pub struct CertificateInfo {
+    pub cert: []const u8 = "";
+    pub cert_error: HTTPCertError = HTTPCertError{};
+    pub hostname: []const u8 = "";
 
     pub fn deinit(*_, allocator: std.mem.Allocator) {
         if (_.cert.len > 0) allocator.free(_.cert);
@@ -22,7 +21,7 @@ pub const CertificateInfo = struct {
         if (_.cert_error.reason.len > 0) allocator.free(_.cert_error.reason);
         if (_.hostname.len > 0) allocator.free(_.hostname);
     }
-};
+}
 
 export error InitError {
     FailedToOpenSocket,

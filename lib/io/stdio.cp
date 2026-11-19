@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: /data/dev/bun/src/io/source.cp
 /**
  * CP Standard Console and Stdio (cap:io)
  * 标准控制台与终端流输入输出

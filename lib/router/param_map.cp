@@ -1,4 +1,4 @@
-// Source: Bun src/router/ParamMap.zig (auto-matched by identifier overlap 100%, needs review)
+// Source: /data/dev/bun/src/router/ParamMap.cp
 // lib/router/param_map.cp
 // High-performance route parameter dictionary with inline stack storage
 
@@ -18,15 +18,15 @@ pub const ParamMap = struct {
         };
     }
 
-    pub fn count(*_): usize {
+    pub fn count(): usize {
         return _.len;
     }
 
-    pub fn isEmpty(*_): bool {
+    pub fn isEmpty(): bool {
         return _.len == 0;
     }
 
-    pub fn get(*_, name: []const u8): ([]const u8)? {
+    pub fn get(name: []const u8): ([]const u8)? {
         let i: usize = 0;
         while (i < _.len) : (i += 1) {
             if (std.mem.eql(u8, _.entries[i].name, name)) {
@@ -36,12 +36,12 @@ pub const ParamMap = struct {
         return null;
     }
 
-    pub fn at(*_, index: usize): Param? {
+    pub fn at(index: usize): Param? {
         if (index >= _.len) return null;
         return _.entries[index];
     }
 
-    pub fn has(*_, name: []const u8): bool {
+    pub fn has(name: []const u8): bool {
         return _.get(name) != null;
     }
 

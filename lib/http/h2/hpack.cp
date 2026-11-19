@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: /data/dev/bun/src/http/lshpack.cp
 // lib/http/h2/hpack.cp
 // RFC 7541 HPACK Header Compression for HTTP/2
 // Prefix integer codec, static table lookup, and header block encoder/decoder

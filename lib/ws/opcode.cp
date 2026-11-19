@@ -1,4 +1,4 @@
-// Source: Bun bun/src/ws/opcode.cp
+// Source: /data/dev/bun/src/http_jsc/websocket_client/
 // ============================================================================
 // Absorbed from Bun: bun/src/ws/opcode.cp
 // Upstream Sync: Refer to bun/src/ws/opcode.zig for future upstream updates.
@@ -6,7 +6,7 @@
 // lib/ws/opcode.cp
 // RFC 6455 WebSocket Opcodes & Close Status Codes in CP
 
-pub const Opcode = enum(u4) {
+pub enum Opcode: u4 {
     Continue = 0x0,
     Text = 0x1,
     Binary = 0x2,
@@ -21,9 +21,9 @@ pub const Opcode = enum(u4) {
     pub fn isData(): bool {
         return _ == .Text or _ == .Binary or _ == .Continue;
     }
-};
+}
 
-pub const CloseCode = enum(u16) {
+pub enum CloseCode: u16 {
     NormalClosure = 1000,
     GoingAway = 1001,
     ProtocolError = 1002,
@@ -35,4 +35,4 @@ pub const CloseCode = enum(u16) {
     MessageTooBig = 1009,
     MissingExtension = 1010,
     InternalError = 1011,
-};
+}

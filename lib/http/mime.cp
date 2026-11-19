@@ -1,19 +1,21 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: /data/dev/bun/src/http_types/MimeType.cp
 // lib/http/mime.cp
 // Fast MIME type mapping based on file extension
 
-pub const MimeType = struct {
-    pub fn fromExtension(ext: []const u8): []const u8 {
-        let e = ext;
-        if (e.len > 0 and e[0] == '.') e = e[1..];
+const std = @import("std");
 
-        if (std.ascii.eqlIgnoreCase(e, "html") or std.ascii.eqlIgnoreCase(e, "htm")) return "text/html; charset=utf-8";
+pub struct MimeType {
+    pub static fn fromExtension(ext: []const u8): []const u8 {
+        let e = ext;
+        if (e.len > 0 && e[0] == '.') e = e[1..];
+
+        if (std.ascii.eqlIgnoreCase(e, "html") || std.ascii.eqlIgnoreCase(e, "htm")) return "text/html; charset=utf-8";
         if (std.ascii.eqlIgnoreCase(e, "json")) return "application/json; charset=utf-8";
-        if (std.ascii.eqlIgnoreCase(e, "js") or std.ascii.eqlIgnoreCase(e, "mjs")) return "application/javascript; charset=utf-8";
+        if (std.ascii.eqlIgnoreCase(e, "js") || std.ascii.eqlIgnoreCase(e, "mjs")) return "application/javascript; charset=utf-8";
         if (std.ascii.eqlIgnoreCase(e, "css")) return "text/css; charset=utf-8";
-        if (std.ascii.eqlIgnoreCase(e, "txt") or std.ascii.eqlIgnoreCase(e, "text")) return "text/plain; charset=utf-8";
+        if (std.ascii.eqlIgnoreCase(e, "txt") || std.ascii.eqlIgnoreCase(e, "text")) return "text/plain; charset=utf-8";
         if (std.ascii.eqlIgnoreCase(e, "png")) return "image/png";
-        if (std.ascii.eqlIgnoreCase(e, "jpg") or std.ascii.eqlIgnoreCase(e, "jpeg")) return "image/jpeg";
+        if (std.ascii.eqlIgnoreCase(e, "jpg") || std.ascii.eqlIgnoreCase(e, "jpeg")) return "image/jpeg";
         if (std.ascii.eqlIgnoreCase(e, "gif")) return "image/gif";
         if (std.ascii.eqlIgnoreCase(e, "svg")) return "image/svg+xml";
         if (std.ascii.eqlIgnoreCase(e, "webp")) return "image/webp";
@@ -32,7 +34,7 @@ pub const MimeType = struct {
         return "application/octet-stream";
     }
 
-    pub fn fromPath(path: []const u8): []const u8 {
+    pub static fn fromPath(path: []const u8): []const u8 {
         let dot_idx: usize? = null;
         let i: usize = path.len;
         while (i > 0) {
@@ -41,13 +43,13 @@ pub const MimeType = struct {
                 dot_idx = i;
                 break;
             }
-            if (path[i] == '/' or path[i] == '\\') {
+            if (path[i] == '/' || path[i] == '\\') {
                 break;
             }
         }
         if (idx := dot_idx) {
-            return fromExtension(path[idx + 1 ..]);
+            return MimeType.fromExtension(path[idx + 1 ..]);
         }
         return "application/octet-stream";
     }
-};
+}

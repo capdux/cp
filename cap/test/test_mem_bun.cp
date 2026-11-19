@@ -19,11 +19,12 @@ fn main() {
         expect_eq(sfa.stackRemaining(), 64);
 
         if (b1 := sfa.allocStack(24)) {
-            expect_eq(b1.len, 24);
-            b1[0] = 0xAA;
-            b1[23] = 0xBB;
-            expect_eq(b1[0], 0xAA);
-            expect_eq(b1[23], 0xBB);
+            let mb1: []u8 = b1;
+            expect_eq(mb1.len, 24);
+            mb1[0] = 0xAA;
+            mb1[23] = 0xBB;
+            expect_eq(mb1[0], 0xAA);
+            expect_eq(mb1[23], 0xBB);
         } else {
             expect_eq(true, false);
         }
@@ -53,9 +54,10 @@ fn main() {
         expect_eq(ba.remaining(), 256);
 
         if (s1 := ba.allocBytes(13)) {
-            expect_eq(s1.len, 13);
-            s1[0] = 42;
-            expect_eq(s1[0], 42);
+            let ms1: []u8 = s1;
+            expect_eq(ms1.len, 13);
+            ms1[0] = 42;
+            expect_eq(ms1[0], 42);
         } else {
             expect_eq(true, false);
         }

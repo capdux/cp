@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: /data/dev/bun/src/io/pipes.cp
 /**
  * CP Buffer Streams (cap:io)
  * 内存切片与缓冲流

@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: /data/dev/bun/src/router/Router.cp
 // lib/router/radix.cp
 // High-performance Radix-Tree / Trie router for CP Web applications
 import { ParamMap } from "./param_map";
@@ -40,7 +40,7 @@ pub fn RadixNode(comptime T: type): type {
             return node;
         }
 
-        pub fn findStaticChild(*_, seg: []const u8): (*Self)? {
+        pub fn findStaticChild(seg: []const u8): (*Self)? {
             let i: usize = 0;
             while (i < _.children_len) : (i += 1) {
                 if (c := _.children[i]) {
@@ -154,7 +154,7 @@ pub fn Router(comptime T: type): type {
             }
 
             // Static segment
-            if (parent.findStaticChild(seg)) |existing| {
+            if (existing := parent.findStaticChild(seg)) {
                 return existing;
             }
             const child = Node.create(_.allocator, seg);
@@ -165,7 +165,7 @@ pub fn Router(comptime T: type): type {
         pub fn lookup(*_, method: []const u8, path: []const u8): Match? {
             const m_idx = methodIndex(method);
             if (root := _.trees[m_idx]) {
-                if (_.lookupInTree(root, path)) |res| {
+                if (res := _.lookupInTree(root, path)) {
                     return res;
                 }
             }
@@ -200,7 +200,7 @@ pub fn Router(comptime T: type): type {
                     if (i > start) {
                         const seg = p[start..i];
 
-                        if (curr.findStaticChild(seg)) |sc| {
+                        if (sc := curr.findStaticChild(seg)) {
                             curr = sc;
                         } else if (pc := curr.param_child) {
                             params.append(pc.param_name, seg);

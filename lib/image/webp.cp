@@ -1,4 +1,4 @@
-// Source: Bun bun/src/runtime/image/codec_webp.cp
+// Source: /data/dev/bun/src/runtime/image/codec_webp.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/codec_webp.cp
 // Upstream Sync: Refer to bun/src/runtime/image/codec_webp.zig for future upstream updates.

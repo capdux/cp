@@ -1,4 +1,4 @@
-// Source: Bun src/md/
+// Source: /data/dev/bun/src/md/blocks.cp
 // lib/md/table.cp
 // GFM Markdown Table Alignment Parser, Row Cell Splitter & HTML <table> Renderer
 // Absorbed from Bun src/md/

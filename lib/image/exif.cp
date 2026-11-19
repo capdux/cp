@@ -1,4 +1,4 @@
-// Source: Bun bun/src/runtime/image/exif.cp
+// Source: /data/dev/bun/src/runtime/image/exif.cp
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/exif.cp
 // Upstream Sync: Refer to bun/src/runtime/image/exif.zig for future upstream updates.
@@ -100,7 +100,7 @@ pub class Exif {
         return null;
     }
 
-    inline fn readU16(buf: []const u8, off: usize, is_big: bool): u16 {
+    static fn readU16(buf: []const u8, off: usize, is_big: bool): u16 {
         if (off + 2 > buf.len) {
             return 0;
         }
@@ -111,7 +111,7 @@ pub class Exif {
         }
     }
 
-    inline fn readU32(buf: []const u8, off: usize, is_big: bool): usize {
+    static fn readU32(buf: []const u8, off: usize, is_big: bool): usize {
         if (off + 4 > buf.len) {
             return 0;
         }

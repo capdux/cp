@@ -1,24 +1,23 @@
-// Source: Bun path-not-recorded
-/**
- * CP HTTP URL Path Parser (cap:http)
- * Ported from Bun.js http_types/URLPath.cp
- */
+// Source: /data/dev/bun/src/http_types/URLPath.cp
+// lib/http/url_path.cp
+// CP HTTP URL Path Parser (cap:http)
 
+const std = @import("std");
 
-pub const URLPath = struct {
-    extname: []const u8 = "",
-    path: []const u8 = "",
-    pathname: []const u8 = "",
-    first_segment: []const u8 = "",
-    query_string: []const u8 = "",
-    needs_redirect: bool = false,
-    is_source_map: bool = false,
+pub struct URLPath {
+    pub extname: []const u8 = "";
+    pub path: []const u8 = "";
+    pub pathname: []const u8 = "";
+    pub first_segment: []const u8 = "";
+    pub query_string: []const u8 = "";
+    pub needs_redirect: bool = false;
+    pub is_source_map: bool = false;
 
-    pub fn isRoot(*_): bool {
-        return _.path.len == 0 or (_.path.len == 1 and _.path[0] == '/') or std.mem.eql(u8, _.path, "index");
+    pub fn isRoot(): bool {
+        return _.path.len == 0 || (_.path.len == 1 && _.path[0] == '/') || std.mem.eql(u8, _.path, "index");
     }
 
-    pub fn parse(raw_pathname: []const u8) URLPath {
+    pub static fn parse(raw_pathname: []const u8): URLPath {
         if (raw_pathname.len == 0) {
             return URLPath{};
         }
@@ -32,40 +31,40 @@ pub const URLPath = struct {
         let i: usize = 0;
         while (i < len) : (i += 1) {
             const c = raw_pathname[i];
-            if (c == '?' and question_idx < 0) {
-                question_idx = @as(i32, @intCast(i));
-            } else if (c == '/' and question_idx < 0) {
-                if (first_slash < 0 and i > 0) {
-                    first_slash = @as(i32, @intCast(i));
+            if (c == '?' && question_idx < 0) {
+                question_idx = i as i32;
+            } else if (c == '/' && question_idx < 0) {
+                if (first_slash < 0 && i > 0) {
+                    first_slash = i as i32;
                 }
-                last_slash = @as(i32, @intCast(i));
-            } else if (c == '.' and question_idx < 0) {
-                period_idx = @as(i32, @intCast(i));
+                last_slash = i as i32;
+            } else if (c == '.' && question_idx < 0) {
+                period_idx = i as i32;
             }
         }
 
-        const pathname_end: usize = if (question_idx >= 0) @as(usize, @intCast(question_idx)) else len;
+        const pathname_end: usize = if (question_idx >= 0) (question_idx as usize) else len;
         const path_slice = raw_pathname[0..pathname_end];
-        const query_slice = if (question_idx >= 0) raw_pathname[@as(usize, @intCast(question_idx))..len] else "";
+        const query_slice = if (question_idx >= 0) raw_pathname[(question_idx as usize)..len] else "";
 
-        const ext_slice = if (period_idx > last_slash and period_idx >= 0)
-            raw_pathname[@as(usize, @intCast(period_idx + 1))..pathname_end]
+        const ext_slice = if (period_idx > last_slash && period_idx >= 0)
+            raw_pathname[((period_idx + 1) as usize)..pathname_end]
         else
             "";
 
-        const first_seg_end: usize = if (first_slash > 0) @as(usize, @intCast(first_slash)) else pathname_end;
+        const first_seg_end: usize = if (first_slash > 0) (first_slash as usize) else pathname_end;
         const first_seg = if (first_seg_end > 1) raw_pathname[1..first_seg_end] else "";
 
         const is_map = std.mem.eql(u8, ext_slice, "map");
 
-        let res = URLPath{};
-        res.extname = ext_slice;
-        res.path = path_slice;
-        res.pathname = raw_pathname;
-        res.first_segment = first_seg;
-        res.query_string = query_slice;
-        res.needs_redirect = false;
-        res.is_source_map = is_map;
-        return res;
+        return URLPath{
+            extname: ext_slice,
+            path: path_slice,
+            pathname: raw_pathname,
+            first_segment: first_seg,
+            query_string: query_slice,
+            needs_redirect: false,
+            is_source_map: is_map,
+        };
     }
-};
+}

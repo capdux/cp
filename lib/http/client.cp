@@ -1,10 +1,9 @@
-// Source: Bun src/http/http.cp
-/**
- * CP Industrial HTTP/1.1 Client Engine (cap:http)
- * RFC 7230, RFC 7231, RFC 2616 HTTP/1.1 Protocol Implementation
- * Ported and adapted from Bun.js src/http/http.cp (2,843 lines)
- */
+// Source: /data/dev/bun/src/http/http.cp
+// lib/http/client.cp
+// CP Industrial HTTP/1.1 Client Engine (cap:http)
+// RFC 7230, RFC 7231, RFC 2616 HTTP/1.1 Protocol Implementation
 
+const std = @import("std");
 import { Method } from "./method";
 import { Headers } from "./headers";
 import { Encoding } from "./encoding";
@@ -13,47 +12,48 @@ import { InternalState } from "./internal_state";
 import { Signals } from "./signals";
 import { URLPath } from "./url_path";
 
-pub const HTTPClientResult = struct {
-    status: u16 = 200,
-    headers: Headers? = null,
-    body: []const u8 = "",
-    is_chunked: bool = false,
-    content_length: usize? = null,
-    is_timeout: bool = false,
-    is_abort: bool = false,
-    err_msg: ([]const u8)? = null,
+pub struct HTTPClientResult {
+    pub status: u16 = 200;
+    pub headers: Headers? = null;
+    pub body: []const u8 = "";
+    pub is_chunked: bool = false;
+    pub content_length: usize? = null;
+    pub is_timeout: bool = false;
+    pub is_abort: bool = false;
+    pub err_msg: ([]const u8)? = null;
 
-    pub fn isSuccess(*_): bool {
-        return _.err_msg == null and _.status >= 200 and _.status < 400;
+    pub fn isSuccess(): bool {
+        return _.err_msg == null && _.status >= 200 && _.status < 400;
     }
 
-    pub fn isTimeout(*_): bool {
+    pub fn isTimeout(): bool {
         return _.is_timeout;
     }
 
-    pub fn isAbort(*_): bool {
+    pub fn isAbort(): bool {
         return _.is_abort;
     }
-};
+}
 
-pub const HTTPClient = struct {
-    method: Method = Method.GET,
-    url: []const u8 = "",
-    hostname: []const u8 = "",
-    port: u16 = 80,
-    path: []const u8 = "/",
-    is_ssl: bool = false,
-    headers: Headers? = null,
-    body: []const u8 = "",
-    timeout_ms: u32 = 30000,
-    keep_alive: bool = true,
-    state: InternalState = InternalState{},
-    signals: Signals = Signals{},
+pub struct HTTPClient {
+    pub method: Method = Method.GET;
+    pub url: []const u8 = "";
+    pub hostname: []const u8 = "";
+    pub port: u16 = 80;
+    pub path: []const u8 = "/";
+    pub is_ssl: bool = false;
+    pub headers: Headers? = null;
+    pub body: []const u8 = "";
+    pub timeout_ms: u32 = 30000;
+    pub keep_alive: bool = true;
+    pub state: InternalState = InternalState{};
+    pub signals: Signals = Signals{};
 
-    pub fn init(method: Method, url: []const u8) HTTPClient {
-        let client = HTTPClient{};
-        client.method = method;
-        client.url = url;
+    pub static fn init(method: Method, url: []const u8): HTTPClient {
+        let client = HTTPClient{
+            method: method,
+            url: url,
+        };
         client.parseURL(url);
         return client;
     }
@@ -80,40 +80,41 @@ pub const HTTPClient = struct {
             _.path = "/";
         }
 
-        if (std.mem.indexOfScalar(u8, host_part, ':')) |colon| {
+        if (colon := std.mem.indexOfScalar(u8, host_part, ':')) {
             _.hostname = host_part[0..colon];
-            _.port = std.fmt.parseInt(u16, host_part[colon + 1..], 10) catch (if (_.is_ssl) 443 else 80);
+            const fallback_port: u16 = if (_.is_ssl) 443 else 80;
+            _.port = std.fmt.parseInt(u16, host_part[colon + 1 ..], 10) catch fallback_port;
         } else {
             _.hostname = host_part;
         }
     }
 
-    pub fn formatRequest(*_, buf: []u8) ![]const u8 {
+    pub fn formatRequest(buf: []u8): ![]const u8 {
         let pos: usize = 0;
 
         // 1. Request Line: GET /path HTTP/1.1\r\n
-        const line = try std.fmt.bufPrint(buf[pos..], "{s} {s} HTTP/1.1\r\n", .{ _.method.toString(), _.path });
+        const line = std.fmt.bufPrint(buf[pos..], "{s} {s} HTTP/1.1\r\n", .{ _.method.toString(), _.path })?;
         pos += line.len;
 
         // 2. Host header
-        const host_line = if (_.port == 80 or _.port == 443)
-            try std.fmt.bufPrint(buf[pos..], "Host: {s}\r\n", .{ _.hostname })
+        const host_line = if (_.port == 80 || _.port == 443)
+            std.fmt.bufPrint(buf[pos..], "Host: {s}\r\n", .{ _.hostname })?
         else
-            try std.fmt.bufPrint(buf[pos..], "Host: {s}:{d}\r\n", .{ _.hostname, _.port });
+            std.fmt.bufPrint(buf[pos..], "Host: {s}:{d}\r\n", .{ _.hostname, _.port })?;
         pos += host_line.len;
 
         // 3. User-Agent & Accept headers
         const std_hdrs = "User-Agent: CP/1.0 (Linux; x86_64)\r\nAccept: */*\r\nAccept-Encoding: gzip, deflate\r\n";
-        @memcpy(buf[pos..pos + std_hdrs.len], std_hdrs);
+        @memcpy(buf[pos .. pos + std_hdrs.len], std_hdrs);
         pos += std_hdrs.len;
 
         if (_.keep_alive) {
             const conn_hdr = "Connection: keep-alive\r\n";
-            @memcpy(buf[pos..pos + conn_hdr.len], conn_hdr);
+            @memcpy(buf[pos .. pos + conn_hdr.len], conn_hdr);
             pos += conn_hdr.len;
         } else {
             const conn_hdr = "Connection: close\r\n";
-            @memcpy(buf[pos..pos + conn_hdr.len], conn_hdr);
+            @memcpy(buf[pos .. pos + conn_hdr.len], conn_hdr);
             pos += conn_hdr.len;
         }
 
@@ -121,8 +122,8 @@ pub const HTTPClient = struct {
         if (h := _.headers) {
             let i: usize = 0;
             while (i < h.count()) : (i += 1) {
-                if (h.at(i)) |entry| {
-                    const custom_hdr = try std.fmt.bufPrint(buf[pos..], "{s}: {s}\r\n", .{ entry.name, entry.value });
+                if (entry := h.at(i)) {
+                    const custom_hdr = std.fmt.bufPrint(buf[pos..], "{s}: {s}\r\n", .{ entry.name, entry.value })?;
                     pos += custom_hdr.len;
                 }
             }
@@ -130,44 +131,46 @@ pub const HTTPClient = struct {
 
         // 5. Content-Length & Body
         if (_.body.len > 0) {
-            const cl_hdr = try std.fmt.bufPrint(buf[pos..], "Content-Length: {d}\r\n\r\n", .{ _.body.len });
+            const cl_hdr = std.fmt.bufPrint(buf[pos..], "Content-Length: {d}\r\n\r\n", .{ _.body.len })?;
             pos += cl_hdr.len;
-            @memcpy(buf[pos..pos + _.body.len], _.body);
+            @memcpy(buf[pos .. pos + _.body.len], _.body);
             pos += _.body.len;
         } else {
             const end_hdr = "\r\n";
-            @memcpy(buf[pos..pos + end_hdr.len], end_hdr);
+            @memcpy(buf[pos .. pos + end_hdr.len], end_hdr);
             pos += end_hdr.len;
         }
 
         return buf[0..pos];
     }
 
-    pub fn parseResponseStatus(response: []const u8): u16? {
+    pub static fn parseResponseStatus(response: []const u8): u16? {
         if (response.len < 12) return null;
         if (!std.mem.startsWith(u8, response, "HTTP/")) return null;
 
         let parts = std.mem.splitScalar(u8, response, ' ');
         * = parts.next(); // Skip "HTTP/1.1"
-        if (parts.next()) |status_str| {
+        if (status_str := parts.next()) {
             return std.fmt.parseInt(u16, status_str, 10) catch null;
         }
         return null;
     }
 
-    pub fn parseResponseBody(response: []const u8) []const u8 {
-        if (std.mem.indexOf(u8, response, "\r\n\r\n")) |body_idx| {
-            return response[body_idx + 4..];
+    pub static fn parseResponseBody(response: []const u8): []const u8 {
+        if (body_idx := std.mem.indexOf(u8, response, "\r\n\r\n")) {
+            return response[body_idx + 4 ..];
         }
         return "";
     }
 
-    pub fn decodeChunkedBody(raw_chunked: []const u8, out_buf: []u8) !usize {
+    pub static fn decodeChunkedBody(raw_chunked: []const u8, out_buf: []u8): !usize {
         let in_pos: usize = 0;
         let out_pos: usize = 0;
 
         while (in_pos < raw_chunked.len) {
-            const crlf = std.mem.indexOfPos(u8, raw_chunked, in_pos, "\r\n") orelse break;
+            const crlf_opt = std.mem.indexOfPos(u8, raw_chunked, in_pos, "\r\n");
+            if (crlf_opt == null) break;
+            const crlf = crlf_opt.?;
             const size_str = std.mem.trim(u8, raw_chunked[in_pos..crlf], " \t");
             const chunk_size = std.fmt.parseInt(usize, size_str, 16) catch break;
 
@@ -182,7 +185,7 @@ pub const HTTPClient = struct {
             const chunk_data = raw_chunked[data_start..data_end];
             if (out_pos + chunk_data.len > out_buf.len) return error.BufferTooSmall;
 
-            @memcpy(out_buf[out_pos..out_pos + chunk_data.len], chunk_data);
+            @memcpy(out_buf[out_pos .. out_pos + chunk_data.len], chunk_data);
             out_pos += chunk_data.len;
 
             in_pos = data_end + 2; // Skip trailing CRLF
@@ -190,4 +193,4 @@ pub const HTTPClient = struct {
 
         return out_pos;
     }
-};
+}

@@ -1,4 +1,4 @@
-// Source: Custom (agy-generated export index)
+// Source: /data/dev/bun/src/uws/uws.cp & /data/dev/bun/src/runtime/socket/
 // lib/net/index.cp
 // Unified Public Exports for cap:net
 // Architecture:

@@ -1,8 +1,6 @@
-// Source: Bun path-not-recorded
-/**
- * CP HTTP Request Body (cap:http)
- * Ported from Bun.js http/HTTPRequestBody.cp
- */
+// Source: /data/dev/bun/src/http/HTTPRequestBody.cp
+// lib/http/request_body.cp
+// CP HTTP Request Body (cap:http)
 
 pub enum HTTPRequestBodyTag {
     Empty,
@@ -10,29 +8,29 @@ pub enum HTTPRequestBodyTag {
     Stream,
 }
 
-pub const HTTPRequestBody = struct {
-    tag: HTTPRequestBodyTag = HTTPRequestBodyTag.Empty,
-    bytes: []const u8 = "",
+pub struct HTTPRequestBody {
+    pub tag: HTTPRequestBodyTag = HTTPRequestBodyTag.Empty;
+    pub bytes: []const u8 = "";
 
-    pub fn fromBytes(data: []const u8) HTTPRequestBody {
-        let body = HTTPRequestBody{};
-        body.tag = HTTPRequestBodyTag.Bytes;
-        body.bytes = data;
-        return body;
+    pub static fn fromBytes(data: []const u8): HTTPRequestBody {
+        return HTTPRequestBody{
+            tag: HTTPRequestBodyTag.Bytes,
+            bytes: data,
+        };
     }
 
-    pub fn empty() HTTPRequestBody {
+    pub static fn empty(): HTTPRequestBody {
         return HTTPRequestBody{};
     }
 
-    pub fn len(*_) usize {
+    pub fn len(): usize {
         return switch (_.tag) {
             .Bytes => _.bytes.len,
             else => 0,
         };
     }
 
-    pub fn isStream(*_): bool {
+    pub fn isStream(): bool {
         return _.tag == .Stream;
     }
-};
+}

@@ -1,4 +1,4 @@
-// Source: Bun bun/src/ws/
+// Source: /data/dev/bun/src/http_jsc/websocket_client/
 // ============================================================================
 // Absorbed from Bun: bun/src/ws/
 // Upstream Sync: Refer to bun/src/ws/ for future upstream updates.

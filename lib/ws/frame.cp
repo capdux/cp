@@ -1,4 +1,4 @@
-// Source: Bun bun/src/ws/frame.cp
+// Source: /data/dev/bun/src/http_jsc/websocket_client/
 // ============================================================================
 // Absorbed from Bun: bun/src/ws/frame.cp
 // Upstream Sync: Refer to bun/src/ws/frame.zig for future upstream updates.
@@ -8,15 +8,15 @@
 import { Opcode, CloseCode } from "./opcode";
 import { Mask } from "./mask";
 
-pub const FrameHeader = struct {
+pub struct FrameHeader {
     fin: bool = true,
     opcode: Opcode = .Text,
     masked: bool = false,
     payload_len: usize = 0,
-    mask_key: [4]u8 = .{ 0, 0, 0, 0 },
+    mask_key: [4]u8 = [0, 0, 0, 0],
     header_len: usize = 2,
 
-    pub fn encode(out: []u8) !usize {
+    pub fn encode(out: []u8): !usize {
         let needed_len: usize = 2;
         if (_.payload_len >= 126 and _.payload_len <= 0xFFFF) {
             needed_len += 2;
@@ -63,7 +63,7 @@ pub const FrameHeader = struct {
         return offset;
     }
 
-    pub fn decode(buf: []const u8) !FrameHeader {
+    pub static fn decode(buf: []const u8): !FrameHeader {
         if (buf.len < 2) return error.IncompleteHeader;
 
         const b0 = buf[0];
@@ -90,7 +90,7 @@ pub const FrameHeader = struct {
             offset += 8;
         }
 
-        let mask_key: [4]u8 = .{ 0, 0, 0, 0 };
+        let mask_key: [4]u8 = [0, 0, 0, 0];
         if (masked) {
             if (buf.len < offset + 4) return error.IncompleteHeader;
             @memcpy(&mask_key, buf[offset .. offset + 4]);
@@ -106,16 +106,16 @@ pub const FrameHeader = struct {
             .header_len = offset,
         };
     }
-};
+}
 
-pub const FrameBuilder = struct {
-    pub fn build(out: []u8, opcode: Opcode, payload: []const u8, mask: ?[4]u8) !usize {
+pub struct FrameBuilder {
+    pub static fn build(out: []u8, opcode: Opcode, payload: []const u8, mask: ([4]u8)?): !usize {
         const header = FrameHeader{
             .fin = true,
             .opcode = opcode,
             .masked = mask != null,
             .payload_len = payload.len,
-            .mask_key = if (k := mask) k else .{ 0, 0, 0, 0 },
+            .mask_key = mask ?? [0, 0, 0, 0],
         };
 
         const header_len = try header.encode(out);
@@ -130,23 +130,23 @@ pub const FrameBuilder = struct {
         return header_len + payload.len;
     }
 
-    pub fn buildText(out: []u8, text: []const u8, mask: ?[4]u8) !usize {
+    pub static fn buildText(out: []u8, text: []const u8, mask: ([4]u8)?): !usize {
         return build(out, .Text, text, mask);
     }
 
-    pub fn buildBinary(out: []u8, data: []const u8, mask: ?[4]u8) !usize {
+    pub static fn buildBinary(out: []u8, data: []const u8, mask: ([4]u8)?): !usize {
         return build(out, .Binary, data, mask);
     }
 
-    pub fn buildPing(out: []u8, payload: []const u8, mask: ?[4]u8) !usize {
+    pub static fn buildPing(out: []u8, payload: []const u8, mask: ([4]u8)?): !usize {
         return build(out, .Ping, payload, mask);
     }
 
-    pub fn buildPong(out: []u8, payload: []const u8, mask: ?[4]u8) !usize {
+    pub static fn buildPong(out: []u8, payload: []const u8, mask: ([4]u8)?): !usize {
         return build(out, .Pong, payload, mask);
     }
 
-    pub fn buildClose(out: []u8, code: CloseCode, reason: []const u8, mask: ?[4]u8) !usize {
+    pub static fn buildClose(out: []u8, code: CloseCode, reason: []const u8, mask: ([4]u8)?): !usize {
         let payload_buf: [128]u8 = undefined;
         std.mem.writeInt(u16, payload_buf[0..2], @intFromEnum(code), .big);
         let total_len: usize = 2;
@@ -157,4 +157,4 @@ pub const FrameBuilder = struct {
         }
         return build(out, .Close, payload_buf[0..total_len], mask);
     }
-};
+}

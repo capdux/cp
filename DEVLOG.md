@@ -1687,3 +1687,10 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
   2. `for (*s of &_.stripes)` 在 CP 中会产生双重取址，改用索引循环；`&[]` 空切片字面量同样改用 `""`/标准切片；
   3. `cap:ptr`/`cap:safety`、`cap:watch`/`cap:watcher` 等多入口模块以重命名/统一类型消除符号碰撞；
   4. 调度层面：Gemini 系子智能体触达个体配额，改用 Claude Sonnet 系继续并行；未提交的半成品修改由接任子智能体先 `git diff` 核对后续做，避免重做。
+
+### 第七阶段：第四里程碑批次（http 含 h2/h3、net/ws/router/io/sys、json/md/html/image/blob）
+- 关键技术点：
+  1. `lib/sys` 全面适配 Zig 0.17：将已移除的 `std.posix.*` 与 `std.time.milliTimestamp()` 迁移至 `std.c.{open,read,write,pread,pwrite,lseek,close,fsync,statx,copy_file_range}` 与 `std.os.linux.clock_gettime`；
+  2. `lib/blob` 清理：经全仓 `rg` 核实后安全移除 8 个零引用且存在大小写冲突风险的 `*_.cp` 与大写 `Store.cp` 历史草稿；
+  3. `lib/json/pool.cp` 重构为纯 CP 侵入式 `JsonBufferNode` 池，修复双 `threadlocal` 变量无法复用及 `.release()` RAII 命名冲突；
+  4. 累计已完成 **46 个标准库模块** 的 Bun 溯源、纯现代 CP 加固、专著文档与离线测试验证。

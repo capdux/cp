@@ -1,4 +1,4 @@
-// Source: bun/src/sys/SignalCode.cp
+// Source: /data/dev/bun/src/sys/SignalCode.cp
 // ============================================================================
 // lib/sys/signal.cp — Cross-platform POSIX Signal Codes & Name Lookup
 // ============================================================================
@@ -45,6 +45,10 @@ pub enum Signal: u8 {
     }
 
     pub fn name(): []const u8 {
+        return @tagName(_);
+    }
+
+    pub fn label(): []const u8 {
         return @tagName(_);
     }
 

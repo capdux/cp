@@ -1,4 +1,4 @@
-// Source: Custom (agy-generated export index)
+// Source: /data/dev/bun/src/md/root.cp
 // lib/md/index.cp
 // Unified Public Exports for cap:md
 

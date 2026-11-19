@@ -1,16 +1,15 @@
-// Source: Bun path-not-recorded
+// Source: /data/dev/bun/src/http/Signals.cp
 // lib/http/signals.cp
 // CP HTTP Atomic Signals & Flags (cap:http)
-// Ported from Bun.js http/Signals.cp
 
 const std = @import("std");
 
 pub struct Signals {
-    header_progress: (*std.atomic.Value(bool))? = null;
-    response_body_streaming: (*std.atomic.Value(bool))? = null;
-    aborted: (*std.atomic.Value(bool))? = null;
-    cert_errors: (*std.atomic.Value(bool))? = null;
-    upgraded: (*std.atomic.Value(bool))? = null;
+    pub header_progress: (*std.atomic.Value(bool))? = null;
+    pub response_body_streaming: (*std.atomic.Value(bool))? = null;
+    pub aborted: (*std.atomic.Value(bool))? = null;
+    pub cert_errors: (*std.atomic.Value(bool))? = null;
+    pub upgraded: (*std.atomic.Value(bool))? = null;
 
     pub fn isAborted(): bool {
         if (ptr := _.aborted) {
@@ -33,7 +32,7 @@ pub struct Signals {
         return false;
     }
 
-    pub fn abort(*_) {
+    pub fn abort() {
         if (ptr := _.aborted) {
             ptr.store(true, .monotonic);
         }
@@ -41,14 +40,14 @@ pub struct Signals {
 }
 
 pub struct SignalStore {
-    header_progress: std.atomic.Value(bool) = std.atomic.Value(bool).init(false);
-    response_body_streaming: std.atomic.Value(bool) = std.atomic.Value(bool).init(false);
-    aborted: std.atomic.Value(bool) = std.atomic.Value(bool).init(false);
-    cert_errors: std.atomic.Value(bool) = std.atomic.Value(bool).init(false);
-    upgraded: std.atomic.Value(bool) = std.atomic.Value(bool).init(false);
+    pub header_progress: std.atomic.Value(bool) = std.atomic.Value(bool).init(false);
+    pub response_body_streaming: std.atomic.Value(bool) = std.atomic.Value(bool).init(false);
+    pub aborted: std.atomic.Value(bool) = std.atomic.Value(bool).init(false);
+    pub cert_errors: std.atomic.Value(bool) = std.atomic.Value(bool).init(false);
+    pub upgraded: std.atomic.Value(bool) = std.atomic.Value(bool).init(false);
 
     pub fn toSignals(*_): Signals {
-        return Signals {
+        return Signals{
             header_progress: &_.header_progress,
             response_body_streaming: &_.response_body_streaming,
             aborted: &_.aborted,

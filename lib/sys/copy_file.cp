@@ -1,4 +1,4 @@
-// Source: bun/src/sys/copy_file.cp
+// Source: /data/dev/bun/src/sys/copy_file.cp
 // ============================================================================
 // lib/sys/copy_file.cp — High-Performance File Copy Engine (Zero-copy & Fallback)
 // ============================================================================
@@ -23,13 +23,14 @@ pub fn copyFileByFd(src_fd: FD, dest_fd: FD): !void {
         let try_cfr = true;
         while (copied < total_size and try_cfr) {
             let to_copy = total_size - copied;
-            let chunk_size = if (to_copy > 1073741824) 1073741824 else to_copy;
-            let n = std.posix.copy_file_range(src_fd.raw, null, dest_fd.raw, null, chunk_size, 0) catch {
+            let chunk_size: usize = if (to_copy > 1073741824) 1073741824 else @intCast(to_copy);
+            let n = std.c.copy_file_range(src_fd.raw, null, dest_fd.raw, null, chunk_size, 0);
+            if (n < 0) {
                 try_cfr = false;
                 break;
-            };
+            }
             if (n == 0) break;
-            copied += n;
+            copied += @as(u64, @intCast(n));
         }
         if (copied >= total_size) {
             return;

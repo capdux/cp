@@ -1,4 +1,4 @@
-// Source: Bun path-not-recorded
+// Source: /data/dev/bun/src/io/MaxBuf.cp
 /**
  * CP Buffer Limit Guard (cap:io)
  * 缓冲区最大字节限制守卫 (Ported from Bun.js MaxBuf)

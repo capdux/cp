@@ -1335,3 +1335,10 @@ hotfix: resolve keyword conflict for "test" and prevent redundant re-export of i
   - `exec.cp` 管道中转缓冲与所有权移交，`builtin.cp` 新增 `cat`，`parser.cp` 指针接收者修正，watch/watcher 统一事件类型，`layout.cp` 新增 `fieldOffset`；20 个文件首行 `// Source:`。
   - 新增 `docs/shell/shell.md`、`docs/watch/watch.md`、`docs/elf/elf.md`、`docs/ffi/ffi.md`、`cap/test/test_shell_watch_elf_ffi.cp`。
 - **cp_ref.md & cp_agent_ref.md**: 同步第三批 9 个标准库专著文档索引与协议矩阵详见链接。
+- **lib/http/* (含 h2/h3, 31 个文件纯现代 CP 重构与全量溯源)**:
+  - 31 个 `.cp` 补齐 `// Source:`，清零遗留 Zig 语法与只读方法误用 `*_` 缺陷；新增 `docs/http/http.md` 与更新 `cap/test/test_http_full.cp`。
+- **lib/net/*, lib/ws/*, lib/router/*, lib/io/*, lib/sys/* (Zig 0.17 std.c 适配与全量溯源)**:
+  - 30 个 `.cp` 补齐 `// Source:`，修复 `ws/frame.cp`、`router/{index,param_map,radix}.cp`、`sys/{fd,stat,file,copy_file,tmp,signal}.cp`；新增 5 份文档与 `cap/test/test_net_io_full.cp`。
+- **lib/json/*, lib/md/*, lib/html/*, lib/image/*, lib/blob/* (清理死文件、缺陷修复与全量溯源)**:
+  - 删除 `lib/blob/` 8 个零引用遗留文件，重构 `JsonBufferPool`，修复 `json/parser.cp` 与 `image/{gif,exif,jpeg,thumbhash,pipeline}.cp`，`lib/cap.json` 新增 `image` 静态 zlib 配置；新增 5 份文档与 `cap/test/test_json_md_html_image_blob.cp`。
+- **cp_ref.md & cp_agent_ref.md**: 同步第四批 11 个标准库专著文档索引与协议矩阵（补充 `cap:sys` 与 `cap:blob`）。

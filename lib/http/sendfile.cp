@@ -1,44 +1,43 @@
-// Source: Bun path-not-recorded
-/**
- * CP HTTP SendFile Kernel Zero-Copy File Upload (cap:http)
- * Ported from Bun.js http/SendFile.cp
- */
+// Source: /data/dev/bun/src/http/SendFile.cp
+// lib/http/sendfile.cp
+// CP HTTP SendFile Kernel Zero-Copy File Upload (cap:http)
 
+const std = @import("std");
 
-pub const SendFileStatus = enum {
+pub enum SendFileStatus {
     Done,
     Again,
     Error,
-};
+}
 
-pub const SendFile = struct {
-    fd: i32 = -1,
-    remain: usize = 0,
-    offset: usize = 0,
-    content_size: usize = 0,
+pub struct SendFile {
+    pub fd: i32 = -1;
+    pub remain: usize = 0;
+    pub offset: usize = 0;
+    pub content_size: usize = 0;
 
-    pub fn init(fd: i32, size: usize) SendFile {
-        let sf = SendFile{};
-        sf.fd = fd;
-        sf.remain = size;
-        sf.offset = 0;
-        sf.content_size = size;
-        return sf;
+    pub static fn init(fd: i32, size: usize): SendFile {
+        return SendFile{
+            fd: fd,
+            remain: size,
+            offset: 0,
+            content_size: size,
+        };
     }
 
-    pub fn isDone(*_): bool {
+    pub fn isDone(): bool {
         return _.remain == 0;
     }
 
-    pub fn writeToSocket(*_, socket_fd: i32) SendFileStatus {
+    pub fn writeToSocket(*_, socket_fd: i32): SendFileStatus {
         if (_.remain == 0) return .Done;
 
-        let signed_offset: i64 = @as(i64, @intCast(_.offset));
+        let signed_offset: i64 = _.offset as i64;
         const val = std.os.linux.sendfile(socket_fd, _.fd, &signed_offset, _.remain);
-        _.offset = @as(usize, @intCast(signed_offset));
+        _.offset = signed_offset as usize;
 
         if (val > 0) {
-            const sent: usize = @as(usize, @intCast(val));
+            const sent: usize = val as usize;
             if (sent >= _.remain) {
                 _.remain = 0;
                 return .Done;
@@ -52,4 +51,4 @@ pub const SendFile = struct {
             return .Error;
         }
     }
-};
+}

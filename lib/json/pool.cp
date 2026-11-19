@@ -1,34 +1,39 @@
-// Source: Custom implementation by Antigravity AI (Thread-local buffer pool for JSON parsing)
+// Source: /data/dev/bun/src/interchange/json.cp
 // Thread-local memory pool for JSON parsing (Ported from Bun.js HashMapPool)
 
-pub struct JsonBufferPool {
-    const BufferList = std.SinglyLinkedList([4096]u8);
+const std = @import("std");
 
-    pub static fn acquire(allocator: std.mem.Allocator): *BufferList.Node {
+pub struct JsonBufferNode {
+    pub data: [4096]u8 = undefined,
+    pub next: *JsonBufferNode? = null,
+}
+
+pub struct JsonBufferPool {
+    zig {
+        threadlocal var pool_head: ?*JsonBufferNode = null;
+    }
+
+    pub static fn acquire(allocator: std.mem.Allocator): *JsonBufferNode {
         zig {
-            const S = struct {
-                threadlocal var pool_head: ?*BufferList.Node = null;
-                threadlocal var is_initialized: bool = false;
-            };
-            if (S.is_initialized) {
-                if (S.pool_head) |node| {
-                    S.pool_head = node.next;
-                    return node;
-                }
+            if (pool_head) |node| {
+                pool_head = node.next;
+                node.next = null;
+                return node;
             }
-            const node = allocator.create(BufferList.Node) catch unreachable;
-            S.is_initialized = true;
+            const node = allocator.create(JsonBufferNode) catch unreachable;
+            node.next = null;
             return node;
         }
     }
 
-    pub static fn release(node: *BufferList.Node) {
+    pub static fn recycle(node: *JsonBufferNode) {
         zig {
-            const S = struct {
-                threadlocal var pool_head: ?*BufferList.Node = null;
-            };
-            node.next = S.pool_head;
-            S.pool_head = node;
+            node.next = pool_head;
+            pool_head = node;
         }
+    }
+
+    pub static fn release(node: *JsonBufferNode) {
+        JsonBufferPool.recycle(node);
     }
 }

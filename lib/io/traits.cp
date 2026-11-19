@@ -1,4 +1,4 @@
-// Source: UNVERIFIED (origin to be confirmed: Bun / Zig std / custom)
+// Source: /data/dev/bun/src/io/pipes.cp
 /**
  * CP Standard I/O Traits (cap:io)
  * 统一流式 Trait 契约与错误集

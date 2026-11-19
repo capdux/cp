@@ -110,6 +110,45 @@
           "opt": "fast"
         }
       }
+    },
+    "image": {
+      "path": "image",
+      "bin": {
+        "z": {
+          "path": "vendor/zlib",
+          "src": [
+            "adler32.c",
+            "compress.c",
+            "crc32.c",
+            "crc32_braid_comb.c",
+            "deflate.c",
+            "deflate_fast.c",
+            "deflate_huff.c",
+            "deflate_medium.c",
+            "deflate_quick.c",
+            "deflate_rle.c",
+            "deflate_slow.c",
+            "deflate_stored.c",
+            "functable.c",
+            "infback.c",
+            "inflate.c",
+            "inftrees.c",
+            "insert_string.c",
+            "insert_string_roll.c",
+            "trees.c",
+            "uncompr.c",
+            "zutil.c"
+          ],
+          "include": [
+            "."
+          ],
+          "flag": [
+            "-DZLIB_COMPAT",
+            "-DNDEBUG"
+          ],
+          "opt": "fast"
+        }
+      }
     }
   }
 }

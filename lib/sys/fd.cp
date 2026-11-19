@@ -1,4 +1,4 @@
-// Source: bun/src/sys/fd.cp
+// Source: /data/dev/bun/src/sys/fd.cp
 // ============================================================================
 // lib/sys/fd.cp — Cross-platform File Descriptor Abstraction & Flags
 // ============================================================================
@@ -37,52 +37,70 @@ pub const FD = struct {
 
     pub fn read(self: FD, buf: []u8): !usize {
         if (!self.isValid()) return error.BadFileDescriptor;
-        return try std.posix.read(self.raw, buf);
+        if (buf.len == 0) return 0;
+        let rc = std.c.read(self.raw, buf.ptr, buf.len);
+        if (rc < 0) return error.ReadFailed;
+        return @intCast(rc);
     }
 
     pub fn write(self: FD, data: []const u8): !usize {
         if (!self.isValid()) return error.BadFileDescriptor;
-        return try std.posix.write(self.raw, data);
+        if (data.len == 0) return 0;
+        let rc = std.c.write(self.raw, data.ptr, data.len);
+        if (rc < 0) return error.WriteFailed;
+        return @intCast(rc);
     }
 
     pub fn writeAll(self: FD, data: []const u8): !void {
         if (!self.isValid()) return error.BadFileDescriptor;
         let remaining = data;
         while (remaining.len > 0) {
-            let written = try std.posix.write(self.raw, remaining);
-            if (written == 0) return error.WriteZero;
+            let rc = std.c.write(self.raw, remaining.ptr, remaining.len);
+            if (rc < 0) return error.WriteFailed;
+            if (rc == 0) return error.WriteZero;
+            let written: usize = @intCast(rc);
             remaining = remaining[written..];
         }
     }
 
     pub fn pread(self: FD, buf: []u8, offset: u64): !usize {
         if (!self.isValid()) return error.BadFileDescriptor;
-        return try std.posix.pread(self.raw, buf, offset);
+        if (buf.len == 0) return 0;
+        let rc = std.c.pread(self.raw, buf.ptr, buf.len, @intCast(offset));
+        if (rc < 0) return error.ReadFailed;
+        return @intCast(rc);
     }
 
     pub fn pwrite(self: FD, data: []const u8, offset: u64): !usize {
         if (!self.isValid()) return error.BadFileDescriptor;
-        return try std.posix.pwrite(self.raw, data, offset);
+        if (data.len == 0) return 0;
+        let rc = std.c.pwrite(self.raw, data.ptr, data.len, @intCast(offset));
+        if (rc < 0) return error.WriteFailed;
+        return @intCast(rc);
     }
 
     pub fn seekTo(self: FD, offset: i64): !u64 {
         if (!self.isValid()) return error.BadFileDescriptor;
-        return try std.posix.lseek_SET(self.raw, offset);
+        let rc = std.c.lseek(self.raw, @intCast(offset), std.c.SEEK.SET);
+        if (rc < 0) return error.SeekFailed;
+        return @intCast(rc);
     }
 
     pub fn seekFromEnd(self: FD, offset: i64): !u64 {
         if (!self.isValid()) return error.BadFileDescriptor;
-        return try std.posix.lseek_END(self.raw, offset);
+        let rc = std.c.lseek(self.raw, @intCast(offset), std.c.SEEK.END);
+        if (rc < 0) return error.SeekFailed;
+        return @intCast(rc);
     }
 
     pub fn close(self: FD): void {
         if (self.isValid() and !self.isStandardStream()) {
-            std.posix.close(self.raw);
+            * = std.c.close(self.raw);
         }
     }
 
     pub fn sync(self: FD): !void {
         if (!self.isValid()) return error.BadFileDescriptor;
-        try std.posix.fsync(self.raw);
+        if (std.c.fsync(self.raw) != 0) return error.SyncFailed;
     }
 };

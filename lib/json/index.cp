@@ -1,4 +1,4 @@
-// Source: Custom (agy-generated export index)
+// Source: /data/dev/bun/src/interchange/interchange.cp
 /**
  * CP Standard JSON & Serde (cap:json / cap:serde)
  * 工业级 SIMD 零拷贝流式与编译期强类型序列化与反序列化体系
@@ -6,7 +6,7 @@
 
 export { JsonTag, JsonField, JsonValue } from "./value";
 export { JsonParser, JsonError, FastJsonScanner } from "./parser";
-export { JsonBufferPool } from "./pool";
+export { JsonBufferPool, JsonBufferNode } from "./pool";
 
 const std = @import("std");
 import { JsonParser } from "./parser";
