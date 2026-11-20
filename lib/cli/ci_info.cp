@@ -100,7 +100,7 @@ pub struct CiInfo {
     pub terminal_height: u16 = 24;
     pub is_tty: bool = false;
 
-    /// Queries real terminal dimensions via Linux `ioctl(TIOCGWINSZ)` without `std.posix`.
+    /// Queries real terminal dimensions via Linux `ioctl(TIOCGWINSZ)` directly via Linux syscall.
     pub static fn probeTerminal(fd: i32 = 1): CiTerminalDim {
         if (fd < 0) {
             return CiTerminalDim{ width: 80, height: 24, is_tty: false };
