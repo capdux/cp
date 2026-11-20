@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:intern` 指针稳定字符串驻留池与 1:1 双向映射表引擎（5/5 PASS，自动动态挂载 `cap.intern`）
+
+- 新建 [`lib/intern/`](file:///data/dev/cp/lib/intern/index.cp)（`intern.cp`、`index.cp`）：`StringInterner`（4KB 指针稳定分块 Arena + `SymbolId` 去重驻留、`lookup`/`resolve`/`totalBytes`）与 `StringBiMap`（严格 1:1 双射 `insert`、`forcePut` 原子置换与双向查询删除，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/intern.md`](file:///data/dev/cp/doc/lib/intern.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_intern_production_deep.cp`](file:///data/dev/cp/cap/test/test_intern_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:ical` RFC 5545 iCalendar `.ics` 解析生成与 `RRULE` 重复规则展开引擎（5/5 PASS，自动动态挂载 `cap.ical`）
 
 - 新建 [`lib/ical/`](file:///data/dev/cp/lib/ical/index.cp)（`ical.cp`、`index.cp`）：`IcalDateTime`（$O(1)$ Gregorian 闰年与世纪非闰年日历算术、Sakamoto `dayOfWeek`）、`RRule`（`DAILY`/`WEEKLY`+`BYDAY`/`MONTHLY`+`BYMONTHDAY`/`YEARLY`、`INTERVAL`/`COUNT`/`UNTIL`/`EXDATE` 展开与 `max_instances` 防护）及 `IcalCalendar`（75 字节行折行展开与 `toIcs` 往返）；文档 [`doc/lib/ical.md`](file:///data/dev/cp/doc/lib/ical.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_ical_production_deep.cp`](file:///data/dev/cp/cap/test/test_ical_production_deep.cp) `-m` 5/5 PASS。

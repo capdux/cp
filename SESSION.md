@@ -218,3 +218,6 @@
 
 ### 2026-11-21（`cap:ical` 验收固化，顶替以 `inherit` 拉起 `cap:svg` 维持 2 路并行）
 - **执行成果**：`lib/ical/`（5/5 PASS，含 `cap.ical` 动态挂载与 `doc/lib/ical.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/svg/`（零 C 依赖矢量 SVG 画布与柱状/折线/饼图可视化引擎），与 `lib/intern/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:intern` 验收固化，顶替以 `inherit` 拉起 `cap:sketch` 维持 2 路并行）
+- **执行成果**：`lib/intern/`（5/5 PASS，含 `cap.intern` 动态挂载与 `doc/lib/intern.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/sketch/`（HyperLogLog 基数估算、流式分位数质心估算与蓄水池抽样引擎），与 `lib/svg/` 保持 2 路正交并行。
