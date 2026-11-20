@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:amqp` AMQP 0-9-1 二进制协议帧与 FieldTable 引擎（5/5 PASS，文档直写 `doc/lib/amqp.md`）
+- **核心设计**：大端序封装 AMQP 0-9-1 帧头并严格校验 `0xCE` 帧尾与 `Heartbeat` channel=0；`AmqpStreamDecoder` 支持任意小分块拆帧并拦截超限负载与超深嵌套 `FieldTable`。
+
 ## 2026-11-21: 新建 `cap:http3` RFC 9114 HTTP/3 帧与 RFC 9204 QPACK 静态表引擎（5/5 PASS，文档直写 `doc/lib/http3.md`）
 - **核心设计**：内置 RFC 9000 Varint 与 RFC 9204 Appendix A 全量 99 项静态表，严格拦截 HTTP/2 保留设置/帧及重复设置 ID；解码器采用零拷贝载荷切片并按 `max_frame_size` 防御超大帧。
 

@@ -1,0 +1,33 @@
+// Source: cp/lib/amqp/index.cp (Unified Exports for cap:amqp)
+// Pure CP AMQP 0-9-1 Binary Wire Framing, FieldTable & Incremental Stream Decoder.
+
+export {
+    PROTOCOL_HEADER,
+    FRAME_END,
+    AMQP_MAX_DEPTH,
+    DEFAULT_MAX_FRAME_SIZE,
+    PROP_FLAG_CONTENT_TYPE,
+    PROP_FLAG_HEADERS,
+    AmqpError,
+    AmqpFrameType,
+    frameTypeFromU8,
+    frameTypeToU8,
+    AmqpField,
+    AmqpValue,
+    AmqpFrame,
+    AmqpMethodPayload,
+    AmqpContentHeader,
+    AmqpStreamDecoder,
+    deinitFieldTable,
+    getField,
+    eqlFieldTable,
+    encodeFieldTable,
+    decodeFieldTable,
+    decodeFieldTableWithMaxDepth,
+    encodeFrame,
+    encodeMethodFrame,
+    decodeMethodPayload,
+    encodeContentHeader,
+    decodeContentHeader,
+    encodeHeartbeat,
+} from "./amqp.cp";

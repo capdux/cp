@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:amqp` AMQP 0-9-1 二进制协议帧与 FieldTable 引擎（5/5 PASS，自动动态挂载 `cap.amqp`）
+- **新增标准库**：`lib/amqp/{amqp,index}.cp`，实现 AMQP 0-9-1 协议头与 `Method`/`Header`/`Body`/`Heartbeat` 帧编解码、嵌套 `FieldTable`（32 层 `MaxDepthExceeded` 防护）及半包/黏包增量拆帧器 `AmqpStreamDecoder`。
+- **新增文档与测试**：`doc/lib/amqp.md` 扁平文档与 `cap/test/test_amqp_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:http3` RFC 9114 HTTP/3 帧与 RFC 9204 QPACK 静态表引擎（5/5 PASS，自动动态挂载 `cap.http3`）
 - **新增标准库**：`lib/http3/{http3,index}.cp`，实现 HTTP/3 全帧类型编解码（含 GREASE 未知帧透传、`FrameTooLarge` 上限与 HTTP/2 保留帧/保留设置拦截）及完整 99 项 RFC 9204 QPACK 静态表头部编解码。
 - **新增文档与测试**：`doc/lib/http3.md` 扁平文档与 `cap/test/test_http3_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

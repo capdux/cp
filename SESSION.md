@@ -542,3 +542,6 @@
 
 ### 2026-11-21（`cap:http3` 验收提交，顶替拉起 `cap:amqp` 维持 2 路常规并行）
 - **执行成果**：`lib/http3/`（5/5 PASS，`doc/lib/http3.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/amqp/`（AMQP 0-9-1 二进制协议帧、FieldTable 与增量拆帧引擎），与 `lib/ldap/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:amqp` 验收提交，顶替拉起 `cap:nats` 维持 2 路常规并行）
+- **执行成果**：`lib/amqp/`（5/5 PASS，`doc/lib/amqp.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/nats/`（NATS Wire 协议与 JetStream HPUB/HMSG 增量流式解析编码引擎），与 `lib/ldap/` 维持 2 路常规并行。
