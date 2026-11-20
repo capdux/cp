@@ -1,10 +1,13 @@
 use crate::ast::*;
 use crate::codegen::Codegen;
 use crate::parser::Parser as CPParser;
-use crate::resolver::resolve_source_path;
+use crate::resolver::{
+    extract_cap_hub_aliases, extract_top_level_zig_pub_names, find_cap_core_file, find_lib_file,
+    is_cap_hub_source, resolve_cap_hub_target, resolve_source_path, scan_cap_hub_members,
+};
 use crate::sema::Analyzer;
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeSet, HashMap, HashSet, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque};
 use std::fs;
 use std::io::{BufRead, BufReader};
 use std::path::{Component, Path, PathBuf};
@@ -31,6 +34,10 @@ struct CachedFileScan {
     exported_symbols: Vec<String>,
     reexport_stars: Vec<String>,
     reexport_named: Vec<(String, Vec<String>)>,
+    #[serde(default)]
+    uses_cap_hub: bool,
+    #[serde(default)]
+    cap_hub_members: Vec<String>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -42,6 +49,7 @@ struct IncCacheFile {
 #[derive(Debug, Clone)]
 enum ResolvedTarget {
     Std,
+    CapHub,
     CpFile(PathBuf),
     ZigFile(PathBuf),
     External(String),
@@ -221,6 +229,9 @@ fn resolve_modular_import(
     if source == "std" {
         return ResolvedTarget::Std;
     }
+    if is_cap_hub_source(source) {
+        return ResolvedTarget::CapHub;
+    }
     if source.ends_with(".zig")
         && (source.starts_with("./") || source.starts_with("../") || source.starts_with('/'))
     {
@@ -383,6 +394,18 @@ fn scan_cp_module(path: &Path, raw_bytes: &[u8]) -> anyhow::Result<(CachedFileSc
         }
     }
 
+    let (uses_cap_hub, cap_aliases, cap_named_specs) = extract_cap_hub_aliases(&module);
+    let mut cap_hub_members: Vec<String> = Vec::new();
+    if uses_cap_hub {
+        let mut mem_set = scan_cap_hub_members(&code, &cap_aliases);
+        for sp in cap_named_specs {
+            if resolve_cap_hub_target(&sp).is_some() {
+                mem_set.insert(sp);
+            }
+        }
+        cap_hub_members = mem_set.into_iter().collect();
+    }
+
     let scan = CachedFileScan {
         content_hash,
         raw_imports,
@@ -392,6 +415,8 @@ fn scan_cp_module(path: &Path, raw_bytes: &[u8]) -> anyhow::Result<(CachedFileSc
         exported_symbols,
         reexport_stars,
         reexport_named,
+        uses_cap_hub,
+        cap_hub_members,
     };
     Ok((scan, module))
 }
@@ -442,6 +467,7 @@ fn compute_module_inc_hash(
         fnv1a_update(&mut h, b"->");
         match target {
             ResolvedTarget::Std => fnv1a_update(&mut h, b"std"),
+            ResolvedTarget::CapHub => fnv1a_update(&mut h, b"cap_hub"),
             ResolvedTarget::CpFile(p) => fnv1a_update(&mut h, p.to_string_lossy().as_bytes()),
             ResolvedTarget::ZigFile(p) => fnv1a_update(&mut h, p.to_string_lossy().as_bytes()),
             ResolvedTarget::External(s) => fnv1a_update(&mut h, s.as_bytes()),
@@ -694,9 +720,9 @@ pub fn compile_modular(opts: &ModularOptions) -> anyhow::Result<()> {
     let mut cache: IncCacheFile = fs::read_to_string(&cache_path)
         .ok()
         .and_then(|s| serde_json::from_str(&s).ok())
-        .filter(|c: &IncCacheFile| c.version == 1)
+        .filter(|c: &IncCacheFile| c.version == 2)
         .unwrap_or_else(|| IncCacheFile {
-            version: 1,
+            version: 2,
             files: HashMap::new(),
         });
     let mut cache_modified = false;
@@ -707,6 +733,9 @@ pub fn compile_modular(opts: &ModularOptions) -> anyhow::Result<()> {
     let mut zig_files_to_sync: HashMap<PathBuf, PathBuf> = HashMap::new();
     let mut queue: VecDeque<PathBuf> = VecDeque::new();
     let mut visited: HashSet<PathBuf> = HashSet::new();
+    let mut uses_cap_hub = false;
+    let mut cap_core_abs: Option<PathBuf> = None;
+    let mut mounted_cap_ns: BTreeMap<String, PathBuf> = BTreeMap::new();
 
     visited.insert(entry_abs.clone());
     queue.push_back(entry_abs.clone());
@@ -734,6 +763,30 @@ pub fn compile_modular(opts: &ModularOptions) -> anyhow::Result<()> {
             cache_modified = true;
             s
         };
+
+        if scan.uses_cap_hub {
+            uses_cap_hub = true;
+            if cap_core_abs.is_none() {
+                if let Some(core_p) = find_cap_core_file(opts.include_paths) {
+                    cap_core_abs = Some(core_p.clone());
+                    if visited.insert(core_p.clone()) {
+                        queue.push_back(core_p);
+                    }
+                }
+            }
+            for ns in &scan.cap_hub_members {
+                if let Some(rel_cp) = resolve_cap_hub_target(ns) {
+                    if let Some(sub_abs) = find_lib_file(rel_cp, opts.include_paths) {
+                        mounted_cap_ns
+                            .entry(ns.clone())
+                            .or_insert_with(|| sub_abs.clone());
+                        if visited.insert(sub_abs.clone()) {
+                            queue.push_back(sub_abs);
+                        }
+                    }
+                }
+            }
+        }
 
         let mut resolved_edges = Vec::with_capacity(scan.raw_imports.len());
         for src in &scan.raw_imports {
@@ -853,6 +906,10 @@ pub fn compile_modular(opts: &ModularOptions) -> anyhow::Result<()> {
                         }
                     } else if imp.source == "std" {
                         import_map.insert(imp.source.clone(), "std".to_string());
+                    } else if is_cap_hub_source(&imp.source) {
+                        let cap_index_rel = PathBuf::from("_lib/_cap/index.zig");
+                        let rel_str = compute_zig_import_rel(&node.rel_zig_path, &cap_index_rel);
+                        import_map.insert(imp.source.clone(), rel_str);
                     }
                 }
                 ModuleItem::Export(exp) => {
@@ -900,6 +957,15 @@ pub fn compile_modular(opts: &ModularOptions) -> anyhow::Result<()> {
                 }
                 _ => {}
             }
+        }
+
+        if node.scan.uses_cap_hub {
+            let cap_index_rel = PathBuf::from("_lib/_cap/index.zig");
+            let rel_str = compute_zig_import_rel(&node.rel_zig_path, &cap_index_rel);
+            import_map
+                .entry("cap".to_string())
+                .or_insert_with(|| rel_str.clone());
+            import_map.entry("cap:core".to_string()).or_insert(rel_str);
         }
 
         for (target_abs, wanted_opt) in &per_target_wanted {
@@ -1008,6 +1074,57 @@ pub fn compile_modular(opts: &ModularOptions) -> anyhow::Result<()> {
         sm.mappings = map_entries;
         let map_path = out_zig_path.with_extension("zig.map");
         let _ = fs::write(map_path, sm.to_json());
+    }
+
+    if uses_cap_hub {
+        let cap_index_rel = PathBuf::from("_lib/_cap/index.zig");
+        let cap_index_out = opts.emit_dir.join(&cap_index_rel);
+        let mut hub_zig = String::from(
+            "// Generated by CP Compiler — Lazy Cap Hub Index (compile-time mounted)\n",
+        );
+        let mut emitted_names: HashSet<String> = HashSet::new();
+
+        if let Some(ref core_abs) = cap_core_abs {
+            if let Some(core_node) = nodes.get(core_abs) {
+                let core_rel_str = compute_zig_import_rel(&cap_index_rel, &core_node.rel_zig_path);
+                hub_zig.push_str(&format!(
+                    "const __core = @import(\"{}\");\n\n",
+                    core_rel_str
+                ));
+
+                let core_zig_path = opts.emit_dir.join(&core_node.rel_zig_path);
+                if let Ok(core_zig_src) = fs::read_to_string(&core_zig_path) {
+                    for sym in extract_top_level_zig_pub_names(&core_zig_src) {
+                        if mounted_cap_ns.contains_key(&sym) {
+                            continue;
+                        }
+                        if emitted_names.insert(sym.clone()) {
+                            let esc = Codegen::escape_zig_ident(&sym);
+                            hub_zig.push_str(&format!("pub const {0} = __core.{0};\n", esc));
+                        }
+                    }
+                }
+            }
+        }
+
+        if !mounted_cap_ns.is_empty() {
+            hub_zig.push_str("\n// Lazily mounted sub-namespaces:\n");
+            for (ns, sub_abs) in &mounted_cap_ns {
+                if let Some(sub_node) = nodes.get(sub_abs) {
+                    if emitted_names.insert(ns.clone()) {
+                        let sub_rel_str =
+                            compute_zig_import_rel(&cap_index_rel, &sub_node.rel_zig_path);
+                        let esc = Codegen::escape_zig_ident(ns);
+                        hub_zig.push_str(&format!(
+                            "pub const {} = @import(\"{}\");\n",
+                            esc, sub_rel_str
+                        ));
+                    }
+                }
+            }
+        }
+
+        let _ = write_if_changed(&cap_index_out, hub_zig.as_bytes(), opts.force)?;
     }
 
     if cache_modified {

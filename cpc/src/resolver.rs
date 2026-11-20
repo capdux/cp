@@ -1,8 +1,344 @@
-use crate::ast::{Decl, ModuleItem};
+use crate::ast::{Decl, Expr, Lit, Module, ModuleItem, Pattern, Stmt};
 use crate::parser::Parser as CPParser;
-use std::collections::HashSet;
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
+
+pub fn is_cap_hub_source(source: &str) -> bool {
+    source == "cap" || source == "cap:core"
+}
+
+pub fn resolve_cap_hub_target(ns: &str) -> Option<&'static str> {
+    match ns {
+        "strings" | "string" => Some("string/index.cp"),
+        "sys" => Some("sys/index.cp"),
+        "io" => Some("io/index.cp"),
+        "path" | "paths" => Some("path/index.cp"),
+        "bits" => Some("meta/bits.cp"),
+        "meta" => Some("meta/index.cp"),
+        "logger" => Some("logger/index.cp"),
+        "http" => Some("http/index.cp"),
+        "shell" => Some("shell/index.cp"),
+        "pkg" | "install" => Some("pkg/index.cp"),
+        "css" => Some("css/index.cp"),
+        "md" => Some("md/index.cp"),
+        "sql" => Some("sql/index.cp"),
+        "semver" | "Semver" => Some("semver/index.cp"),
+        "col" | "collections" | "bit_set" => Some("col/index.cp"),
+        "glob" => Some("glob/index.cp"),
+        "url" => Some("url/index.cp"),
+        "encoding" | "base64" => Some("encoding/index.cp"),
+        "crypto" => Some("crypto/index.cp"),
+        "hash" | "wyhash" => Some("hash/index.cp"),
+        "dns" => Some("dns/index.cp"),
+        "net" => Some("net/index.cp"),
+        "s3" => Some("s3/index.cp"),
+        "redis" => Some("redis/index.cp"),
+        "pack" => Some("pack/index.cp"),
+        "patch" => Some("patch/index.cp"),
+        "dotenv" => Some("dotenv/index.cp"),
+        "conf" => Some("conf/index.cp"),
+        "watcher" => Some("watcher/index.cp"),
+        "which" => Some("which/index.cp"),
+        "elf" => Some("elf/index.cp"),
+        "ffi" => Some("ffi/index.cp"),
+        "napi" => Some("napi/index.cp"),
+        "sourcemap" => Some("sourcemap/index.cp"),
+        "resolver" => Some("resolver/index.cp"),
+        "bundler" => Some("bundler/index.cp"),
+        "aio" => Some("aio/index.cp"),
+        "platform" => Some("platform/index.cp"),
+        "safety" => Some("safety/index.cp"),
+        "security" => Some("security/index.cp"),
+        "sync" => Some("sync/index.cp"),
+        "ptr" => Some("ptr/index.cp"),
+        "event" => Some("event/index.cp"),
+        "cli" => Some("cli/index.cp"),
+        "clap" => Some("clap/index.cp"),
+        "bench" => Some("bench/index.cp"),
+        "errno" => Some("errno/index.cp"),
+        "fs" => Some("fs.cp"),
+        "json" => Some("json/index.cp"),
+        "html" => Some("html/index.cp"),
+        "image" => Some("image/index.cp"),
+        "blob" => Some("blob/index.cp"),
+        "mem" => Some("mem/index.cp"),
+        "ws" => Some("ws/index.cp"),
+        "router" => Some("router/index.cp"),
+        "simd" => Some("simd/index.cp"),
+        "sort" => Some("sort/index.cp"),
+        "bigint" => Some("bigint/index.cp"),
+        "test" => Some("test.cp"),
+        _ => None,
+    }
+}
+
+pub fn find_lib_file(rel_path: &str, include_paths: &[PathBuf]) -> Option<PathBuf> {
+    let mut dirs: Vec<PathBuf> = include_paths.to_vec();
+    dirs.push(PathBuf::from("/data/dev/cp/lib"));
+    dirs.push(PathBuf::from("lib"));
+    dirs.push(PathBuf::from("/root/.cap/lib"));
+
+    for dir in dirs {
+        let base = if dir.is_file() && dir.file_name().map_or(false, |n| n == "cap.json") {
+            dir.parent().unwrap_or(Path::new(".")).to_path_buf()
+        } else {
+            dir
+        };
+        let candidate = base.join(rel_path);
+        if candidate.is_file() {
+            return Some(fs::canonicalize(&candidate).unwrap_or(candidate));
+        }
+    }
+    None
+}
+
+pub fn find_cap_core_file(include_paths: &[PathBuf]) -> Option<PathBuf> {
+    find_lib_file("_cap/core.cp", include_paths)
+}
+
+pub fn is_at_import_cap_hub(expr: &Expr) -> bool {
+    if let Expr::Builtin(b) = expr {
+        if b.name == "@import" && b.args.len() == 1 {
+            if let Expr::Lit(Lit::Str(s)) = &b.args[0] {
+                return is_cap_hub_source(s);
+            }
+        }
+    }
+    false
+}
+
+pub fn extract_cap_hub_aliases(module: &Module) -> (bool, Vec<String>, Vec<String>) {
+    let mut uses_cap_hub = false;
+    let mut aliases = Vec::new();
+    let mut named_specs = Vec::new();
+
+    for item in &module.body {
+        match item {
+            ModuleItem::Import(imp) if is_cap_hub_source(&imp.source) => {
+                uses_cap_hub = true;
+                if let Some(def) = &imp.default_specifier {
+                    if !aliases.contains(&def.sym) {
+                        aliases.push(def.sym.clone());
+                    }
+                }
+                for sp in &imp.specifiers {
+                    if !named_specs.contains(&sp.sym) {
+                        named_specs.push(sp.sym.clone());
+                    }
+                }
+            }
+            ModuleItem::Stmt(Stmt::Var(v)) => {
+                if let Some(init) = &v.init {
+                    if is_at_import_cap_hub(init) {
+                        uses_cap_hub = true;
+                        if let Pattern::Ident(id) = &v.pat {
+                            if !aliases.contains(&id.sym) {
+                                aliases.push(id.sym.clone());
+                            }
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    (uses_cap_hub, aliases, named_specs)
+}
+
+pub fn scan_cap_hub_members(source: &str, aliases: &[String]) -> BTreeSet<String> {
+    let mut members = BTreeSet::new();
+    if aliases.is_empty() {
+        return members;
+    }
+    let bytes = source.as_bytes();
+    let len = bytes.len();
+    let mut i = 0usize;
+
+    let is_ident_start = |b: u8| b.is_ascii_alphabetic() || b == b'_';
+    let is_ident_char = |b: u8| b.is_ascii_alphanumeric() || b == b'_';
+
+    while i < len {
+        let b = bytes[i];
+        // Skip line comment //
+        if b == b'/' && i + 1 < len && bytes[i + 1] == b'/' {
+            i += 2;
+            while i < len && bytes[i] != b'\n' {
+                i += 1;
+            }
+            continue;
+        }
+        // Skip block comment /* ... */
+        if b == b'/' && i + 1 < len && bytes[i + 1] == b'*' {
+            i += 2;
+            while i + 1 < len && !(bytes[i] == b'*' && bytes[i + 1] == b'/') {
+                i += 1;
+            }
+            i = (i + 2).min(len);
+            continue;
+        }
+        // Skip double-quoted string literal
+        if b == b'"' {
+            i += 1;
+            while i < len {
+                if bytes[i] == b'\\' {
+                    i += 2;
+                    continue;
+                }
+                if bytes[i] == b'"' {
+                    i += 1;
+                    break;
+                }
+                i += 1;
+            }
+            continue;
+        }
+        // Skip backtick template literal
+        if b == b'`' {
+            i += 1;
+            while i < len {
+                if bytes[i] == b'\\' {
+                    i += 2;
+                    continue;
+                }
+                if bytes[i] == b'`' {
+                    i += 1;
+                    break;
+                }
+                i += 1;
+            }
+            continue;
+        }
+        // Skip char literal '...'
+        if b == b'\'' {
+            i += 1;
+            while i < len {
+                if bytes[i] == b'\\' {
+                    i += 2;
+                    continue;
+                }
+                if bytes[i] == b'\'' {
+                    i += 1;
+                    break;
+                }
+                i += 1;
+            }
+            continue;
+        }
+
+        if is_ident_start(b) {
+            let prev_is_ident_or_dot =
+                i > 0 && (is_ident_char(bytes[i - 1]) || bytes[i - 1] == b'.');
+            let start = i;
+            i += 1;
+            while i < len && is_ident_char(bytes[i]) {
+                i += 1;
+            }
+            if !prev_is_ident_or_dot {
+                let ident = &source[start..i];
+                if aliases.iter().any(|a| a == ident) {
+                    let mut j = i;
+                    while j < len && bytes[j].is_ascii_whitespace() {
+                        j += 1;
+                    }
+                    if j < len && bytes[j] == b'.' {
+                        j += 1;
+                        while j < len && bytes[j].is_ascii_whitespace() {
+                            j += 1;
+                        }
+                        if j < len && is_ident_start(bytes[j]) {
+                            let m_start = j;
+                            j += 1;
+                            while j < len && is_ident_char(bytes[j]) {
+                                j += 1;
+                            }
+                            let member = &source[m_start..j];
+                            if resolve_cap_hub_target(member).is_some() {
+                                members.insert(member.to_string());
+                            }
+                        }
+                    }
+                }
+            }
+            continue;
+        }
+
+        i += 1;
+    }
+
+    members
+}
+
+#[derive(Debug, Default)]
+pub struct CapHubResolution {
+    pub uses_cap_hub: bool,
+    pub aliases: BTreeSet<String>,
+    pub mounted_ns: BTreeMap<String, PathBuf>,
+}
+
+pub fn extract_top_level_zig_pub_names(zig_code: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut brace_depth: usize = 0;
+
+    for line in zig_code.lines() {
+        let trimmed = line.trim_start();
+        if brace_depth == 0 {
+            if let Some(stripped) = trimmed.strip_prefix("pub ") {
+                let stripped = stripped.trim_start();
+                let rest_opt = stripped
+                    .strip_prefix("const ")
+                    .or_else(|| stripped.strip_prefix("var "))
+                    .or_else(|| stripped.strip_prefix("inline fn "))
+                    .or_else(|| stripped.strip_prefix("noinline fn "))
+                    .or_else(|| stripped.strip_prefix("fn "))
+                    .or_else(|| stripped.strip_prefix("extern fn "))
+                    .or_else(|| stripped.strip_prefix("extern \"c\" fn "));
+                if let Some(rest) = rest_opt {
+                    if let Some(name) = rest.split(&[' ', ':', '=', '(', '<'][..]).next() {
+                        let name = name.trim();
+                        if !name.is_empty() && !out.contains(&name.to_string()) {
+                            out.push(name.to_string());
+                        }
+                    }
+                }
+            }
+        }
+
+        // Update brace_depth across the line while skipping // comments and "..." / '...' literals
+        let bytes = line.as_bytes();
+        let mut i = 0usize;
+        while i < bytes.len() {
+            let b = bytes[i];
+            if b == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'/' {
+                break;
+            }
+            if b == b'"' || b == b'\'' {
+                let q = b;
+                i += 1;
+                while i < bytes.len() {
+                    if bytes[i] == b'\\' {
+                        i += 2;
+                        continue;
+                    }
+                    if bytes[i] == q {
+                        i += 1;
+                        break;
+                    }
+                    i += 1;
+                }
+                continue;
+            }
+            if b == b'{' {
+                brace_depth += 1;
+            } else if b == b'}' {
+                brace_depth = brace_depth.saturating_sub(1);
+            }
+            i += 1;
+        }
+    }
+    out
+}
 
 pub fn resolve_file_or_dir(base: &Path) -> Option<PathBuf> {
     if base.is_dir() {
@@ -312,6 +648,25 @@ pub fn resolve_imports(
     processed: &mut HashSet<PathBuf>,
     is_root: bool,
 ) -> anyhow::Result<()> {
+    let mut cap_hub = CapHubResolution::default();
+    resolve_imports_with_cap_hub(
+        path,
+        include_paths,
+        all_items,
+        processed,
+        is_root,
+        &mut cap_hub,
+    )
+}
+
+pub fn resolve_imports_with_cap_hub(
+    path: &Path,
+    include_paths: &[PathBuf],
+    all_items: &mut Vec<ModuleItem>,
+    processed: &mut HashSet<PathBuf>,
+    _is_root: bool,
+    cap_hub: &mut CapHubResolution,
+) -> anyhow::Result<()> {
     let abs_path = fs::canonicalize(path)?;
     if processed.contains(&abs_path) {
         return Ok(());
@@ -330,11 +685,41 @@ pub fn resolve_imports(
         return Err(anyhow::anyhow!("{}", rendered));
     }
 
+    let (uses_hub, aliases, named_specs) = extract_cap_hub_aliases(&module);
+    if uses_hub {
+        cap_hub.uses_cap_hub = true;
+        for a in &aliases {
+            cap_hub.aliases.insert(a.clone());
+        }
+        let mut members = scan_cap_hub_members(&code, &aliases);
+        for sp in named_specs {
+            if resolve_cap_hub_target(&sp).is_some() {
+                members.insert(sp);
+            }
+        }
+        for ns in members {
+            if let Some(rel_cp) = resolve_cap_hub_target(&ns) {
+                if let Some(sub_abs) = find_lib_file(rel_cp, include_paths) {
+                    cap_hub.mounted_ns.entry(ns).or_insert(sub_abs);
+                }
+            }
+        }
+    }
+
     for item in module.body {
         match item {
             ModuleItem::Import(imp) => {
-                if let Some(p) = resolve_source_path(path, &imp.source, include_paths) {
-                    resolve_imports(&p, include_paths, all_items, processed, false)?;
+                if is_cap_hub_source(&imp.source) {
+                    all_items.push(ModuleItem::Import(imp));
+                } else if let Some(p) = resolve_source_path(path, &imp.source, include_paths) {
+                    resolve_imports_with_cap_hub(
+                        &p,
+                        include_paths,
+                        all_items,
+                        processed,
+                        false,
+                        cap_hub,
+                    )?;
                     all_items.push(ModuleItem::Import(imp));
                 } else {
                     all_items.push(ModuleItem::Import(imp));
@@ -343,7 +728,14 @@ pub fn resolve_imports(
             ModuleItem::Export(exp) => {
                 if let Some(source) = &exp.source {
                     if let Some(p) = resolve_source_path(path, source, include_paths) {
-                        resolve_imports(&p, include_paths, all_items, processed, false)?;
+                        resolve_imports_with_cap_hub(
+                            &p,
+                            include_paths,
+                            all_items,
+                            processed,
+                            false,
+                            cap_hub,
+                        )?;
                     } else {
                         all_items.push(ModuleItem::Export(exp));
                     }

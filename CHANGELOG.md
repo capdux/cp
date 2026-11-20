@@ -1,3 +1,20 @@
+## [2026-11-20] - 核心架构里程碑：`import cap from "cap"` 编译期按需惰性挂载容器与 `lib/_cap/core.cp` 微核心落地
+
+### 编译器按需惰性挂载引擎 (`cpc`)
+- **精准词法扫描与传递不动点按需挂载**：
+  - [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs)：新增 59 个标准库权威路由表 `resolve_cap_hub_target`、词法级 `scan_cap_hub_members`（精确跳过注释/字符串/模板字面量，支持任意别名 `import c from "cap"`）、顶层 `pub` 符号提取器与 `resolve_imports_with_cap_hub`；
+  - [`cpc/src/modular.rs`](file:///data/dev/cp/cpc/src/modular.rs)：增量缓存升至 `v2`（追踪 `uses_cap_hub` / `cap_hub_members`），BFS 阶段执行不动点按需发现，动态合成 `<emit_dir>/_lib/_cap/index.zig`（仅挂载本次编译实际被引用的 `cap.<ns>` 子库与 `core` 显式重导出，不用 Zig 0.17 已废弃的 `usingnamespace`，以 `write_if_changed` 护航增量 `mtime`）；
+  - [`cpc/src/main.rs`](file:///data/dev/cp/cpc/src/main.rs)、[`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)、[`cpc/src/codegen/expr/builtin.rs`](file:///data/dev/cp/cpc/src/codegen/expr/builtin.rs)：单文件模式同步支持按需挂载独立命名空间与 `@import("cap")` 映射，并修复 `@expect_eq` 在 `--emit-dir` 模式下通过 `rt_sym("cp_eq")` 引用共享运行时。
+
+### `cap` 极薄微核心底座 (`lib/_cap/`)
+- [`lib/_cap/core.cp`](file:///data/dev/cp/lib/_cap/core.cp) & [`lib/_cap/index.cp`](file:///data/dev/cp/lib/_cap/index.cp)：提供零重依赖微核心原语（`OOM`/`default_allocator`/`handleOom`/`Environment`/`assert`/`Global`/`take`/`create`/`destroy`/`copy`/`clamp`/`cast`/`FD`/`invalid_fd`/`Mode`/`PathBuffer`/`O`/`S`/`Output`/`ComptimeStringMap`/`fmtIntSize`）；
+- [`docs/core/cap_hub.md`](file:///data/dev/cp/docs/core/cap_hub.md)：完整架构与使用手册；同步更新 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md) 与 [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)。
+
+### 铁证验收
+- [`cap/test/test_cap_lazy_hub.cp`](file:///data/dev/cp/cap/test/test_cap_lazy_hub.cp)：单文件 `cap test`（2/2 PASS）与 `-m` 模块模式（`total=7`，manifest 与 `_lib/_cap/index.zig` 仅挂载 `bits`/`errno`/`hash` + `core`，其余 50+ 未引用库 0 加载）全部通过。
+
+---
+
 ## [2026-11-20] - 热修与实测闭环：修复 `-m` 模块模式 `struct.name()` 方法调用误改写与嵌套定长数组重复字面量降级，真实 CapSurf 81 模块 `-m -d` 全量原生链接 100% 通过
 
 ### 编译器修复 (`cpc`)

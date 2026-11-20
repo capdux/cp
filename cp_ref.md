@@ -6174,6 +6174,7 @@ export class SocketContext<Handler> {
 | `cap:bundler`     | 静态打包与单文件分发引擎：`BundleConfig`、`ChunkOrder`、`BundleV2`、`CompileTarget`（跨平台目标三元组）、`StandaloneModuleGraph`（单文件虚拟 FS 二进制编解码）与 `ModuleGraph`（三色 DFS 环检测、拓扑排序与 Tree-Shaking） | **已全面实装** |
 | `cap:meta`        | 编译期反射特征与无分支位操作套件：`bits`（2 的幂对齐、位计数/旋转、字节序打包、packed 位域运算）与 `traits`（Zig 0.17 `@typeInfo` 全类型特征探测、`ChildType`/`ItemType`） | **已全面实装** |
 | `cap:platform`    | 跨平台宿主环境与内核特性探测：`OsKind`/`ArchKind`/`Endianness`、`KernelVersion` 与 `PlatformInfo`（Linux `uname` 真实内核版本、`io_uring`/`copy_file_range`/`statx`/`pidfd` 特性开关、`/proc/self/exe`、`pageSize`、`cpuCount`） | **已全面实装** |
+| **`cap`（根按需挂载容器）** | `import cap from "cap";`（支持任意别名与 `@import("cap")`）：极薄零重依赖微核心（`lib/_cap/core.cp`：`OOM`/`handleOom`/`Environment`/`assert`/`clamp`/`FD`/`O`/`S`/`Output`/`ComptimeStringMap`）+ **`cpc` 编译期不动点扫描按需惰性挂载 59 个标准库**（未引用库 0 读取、0 转译、0 编译） | **已全面实装** |
 
 ---
 
@@ -10412,6 +10413,7 @@ flowchart TD
 - **异步 I/O 队列与父进程看门狗 (`cap:aio`，新吸收)**：[`docs/aio/aio.md`](file:///data/dev/cp/docs/aio/aio.md)（`ParentDeathWatchdog` `PR_SET_PDEATHSIG` 与零堆 `AioQueue<CAP>` 环形 I/O 队列）
 - **编译期元编程与位操作 (`cap:meta`，新吸收)**：[`docs/meta/meta.md`](file:///data/dev/cp/docs/meta/meta.md)（无分支位运算/对齐/位域与 Zig 0.17 `@typeInfo` 编译期类型特征 `traits`）
 - **宿主平台与内核探测 (`cap:platform`，新吸收)**：[`docs/platform/platform.md`](file:///data/dev/cp/docs/platform/platform.md)（`KernelVersion`、Linux `uname` 真实内核特性探测与 `/proc/self/exe`）
+- **根按需惰性挂载容器 (`import cap from "cap"`)**：[`docs/core/cap_hub.md`](file:///data/dev/cp/docs/core/cap_hub.md)（零重依赖微核心 `lib/_cap/core.cp` + `cpc` 编译期不动点扫描按需挂载 59 个标准库，未用库 0 负载）
 
 ---
 

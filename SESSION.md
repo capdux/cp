@@ -2593,3 +2593,12 @@
 - **执行成果**：
   - 确认并修复两处真实 `cpc` 代码生成 Bug：① `cpc/src/codegen/expr/{call,control}.rs` + `mod.rs` 引入 `in_call_callee` 防止方法调用 `.name()` / `.value()` 误走枚举属性 `@tagName` / `@intFromEnum` 改写；② `cpc/src/codegen/expr/mod.rs` 逐层剥离嵌套 `ArrayRepeat`（`[[0; 128]; 16]`）外层元素期望类型；
   - 发布 `cpc` Release 正式版（`bash scripts/sync_cpc.sh release`），新增回归测试 [`cap/test/test_struct_name_and_nested_repeat.cp`](file:///data/dev/cp/cap/test/test_struct_name_and_nested_repeat.cp)（1/1 PASS），并在真实 CapSurf（81 模块）上实测 `-m` 冷发射 `2.67s`、热发射 `12ms`、`-O Debug -fno-llvm` 全量原生链接 `1.86s` 并运行 `--help` 100% 通过；已完成提交并广播通知 `capsurf_agy`。
+
+### 2026-11-20（实测 Bun 64 万行与 CP 7.58 万行差距，确立 `import cap from "cap"` 编译期按需惰性挂载容器与 Bun 原版直迁战略）
+- **用户指令**：
+  1. 统计 CP 已吸收 `lib/` 代码行数及与 Bun 53 万+行代码的真实差距，要求除 JSC/JS 外凡 CP 用得上的资产（`install`/`shell` 等）全部直接迁移而非重复造轮子；
+  2. 确立将兼容层命名为 `cap`（`import cap from "cap"` 挂载容器），要求 `cpc` 编译期扫描 `cap.xx` 实现真正的按需挂载与最小产出，并要求对齐底座边界后开启双子智能体并行推进（遇下游热修单开第 3 子智能体）。
+- **执行成果**：
+  - 完成逐目录行数与 JSC 耦合度实测报告并和用户 100% 对齐 `cap` 惰性挂载容器 + 分阶段原版直迁方案；
+  - 子智能体 1 完工回收：落地 [`lib/_cap/core.cp`](file:///data/dev/cp/lib/_cap/core.cp)、[`docs/core/cap_hub.md`](file:///data/dev/cp/docs/core/cap_hub.md) 与 `cpc` 单文件/`-m` 双模式编译期不动点按需挂载引擎，[`cap/test/test_cap_lazy_hub.cp`](file:///data/dev/cp/cap/test/test_cap_lazy_hub.cp) 单文件与 `-m` 均 100% PASS（manifest 实证仅加载 7 模块、未用库 0 负载），已发布 `cpc` Release 版并固化提交；
+  - 随即无缝拉起子智能体 3（Phase C-1：`md/` 10.6K + `sql/` 4.5K 原版直迁）与正在收尾的子智能体 2（Phase A：`sys/` + `io/` + `string/unicode/` 原版直迁）保持双路并行。

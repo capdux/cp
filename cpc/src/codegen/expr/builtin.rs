@@ -419,7 +419,8 @@ impl Codegen {
                     let a = self.generate_expr(&call.args[0]);
                     let b = self.generate_expr(&call.args[1]);
                     let rt_fail = self.rt_sym("__cap_test_failed");
-                    format!("(blk: {{ const _a = {}; const _b = {}; const is_eq = cp_eq(_a, _b); if (!is_eq) {{ @import(\"std\").debug.print(\"\\n    ❌ Assertion Failed!\\n    Expected: {{any}}\\n    Got:      {{any}}\\n\", .{{ _b, _a }}); {} += 1; return error.TestFailed; }} break :blk {{}}; }})", a, b, rt_fail)
+                    let rt_cp_eq = self.rt_sym("cp_eq");
+                    format!("(blk: {{ const _a = {}; const _b = {}; const is_eq = {}(_a, _b); if (!is_eq) {{ @import(\"std\").debug.print(\"\\n    ❌ Assertion Failed!\\n    Expected: {{any}}\\n    Got:      {{any}}\\n\", .{{ _b, _a }}); {} += 1; return error.TestFailed; }} break :blk {{}}; }})", a, b, rt_cp_eq, rt_fail)
                 }
                 "@test" if call.args.len() == 2 => {
                     let name = self.generate_expr(&call.args[0]);
@@ -498,6 +499,34 @@ impl Codegen {
                 "@alignOf" => {
                     let t = self.generate_expr(&call.args[0]);
                     format!("@alignOf({})", t)
+                }
+                "@import" if call.args.len() == 1 => {
+                    if let Expr::Lit(Lit::Str(src)) = &call.args[0] {
+                        if src == "cap" || src == "cap:core" {
+                            if self.modular_mode {
+                                if self.modular_runtime_import.as_deref() == Some("__cap_hub_rt") {
+                                    return "__cap_hub".to_string();
+                                }
+                                if self.single_file_cap_submod {
+                                    return "@import(\"./index.zig\")".to_string();
+                                }
+                                if let Some(mapped) = self.modular_import_map.get(src) {
+                                    return format!("@import(\"{}\")", mapped);
+                                }
+                            } else {
+                                return "__cap_hub".to_string();
+                            }
+                        } else if self.modular_mode {
+                            if let Some(mapped) = self.modular_import_map.get(src) {
+                                return format!("@import(\"{}\")", mapped);
+                            }
+                        }
+                    }
+                    let mut args_code = Vec::new();
+                    for a in &call.args {
+                        args_code.push(self.generate_expr(a));
+                    }
+                    format!("{}({})", call.name, args_code.join(", "))
                 }
                 _ => {
                     let mut args_code = Vec::new();

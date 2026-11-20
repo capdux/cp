@@ -203,6 +203,8 @@ pub struct Codegen {
     pub modular_module_exports: HashMap<String, Vec<String>>,
     pub modular_local_exports: HashSet<String>,
     pub modular_imported_symbols: HashSet<String>,
+    pub cap_hub_prelude: Option<String>,
+    pub single_file_cap_submod: bool,
 }
 
 impl Codegen {
@@ -309,6 +311,8 @@ impl Codegen {
             modular_module_exports: HashMap::new(),
             modular_local_exports: HashSet::new(),
             modular_imported_symbols: HashSet::new(),
+            cap_hub_prelude: None,
+            single_file_cap_submod: false,
         }
     }
 
@@ -479,9 +483,11 @@ impl Codegen {
             }
         }
 
-        let linker_paths = self.linker_paths.clone();
-        for path in linker_paths {
-            self.writeln(&format!("// @linkPath(\"{}\")", path));
+        if !self.single_file_cap_submod {
+            let linker_paths = self.linker_paths.clone();
+            for path in linker_paths {
+                self.writeln(&format!("// @linkPath(\"{}\")", path));
+            }
         }
 
         let mut class_order = Vec::new();
@@ -639,11 +645,14 @@ impl Codegen {
                     }
                     if !v.is_extern
                         && v.kind == VarDeclKind::Const
-                        && id
+                        && (id
                             .sym
                             .chars()
                             .next()
                             .map_or(false, |c| c.is_ascii_uppercase())
+                            || v.init
+                                .as_ref()
+                                .map_or(false, crate::resolver::is_at_import_cap_hub))
                     {
                         self.value_classes.insert(id.sym.clone());
                     }
@@ -969,7 +978,11 @@ impl Codegen {
             self.writeln("const string = []const u8;");
         }
         if let Some(ref rt_path) = self.modular_runtime_import.clone() {
-            self.writeln(&format!("const __cp_rt = @import(\"{}\");", rt_path));
+            if rt_path == "__cap_hub_rt" {
+                self.writeln("const __cp_rt = __cap_hub_rt;");
+            } else {
+                self.writeln(&format!("const __cp_rt = @import(\"{}\");", rt_path));
+            }
         }
         if self.is_beam_mode {
             self.writeln("const beam = @import(\"beam.zig\");");
@@ -1094,8 +1107,14 @@ impl Codegen {
 
         if !self.modular_mode {
             self.emit_runtime_preludes(&features);
+            if let Some(ref hub_code) = self.cap_hub_prelude {
+                self.output.push_str(hub_code);
+                self.output.push('\n');
+            }
         }
         if self.modular_mode {
+            let is_embedded_cap_submod = self.single_file_cap_submod;
+            let use_inline_hub = self.modular_runtime_import.as_deref() == Some("__cap_hub_rt");
             let mut emitted_mod_aliases: HashMap<String, String> = HashMap::new();
             let mut mod_alias_counter = 0usize;
             let mut get_or_emit_mod = |cg: &mut Codegen, zig_src: &str| -> String {
@@ -1112,6 +1131,9 @@ impl Codegen {
             for item in &module.body {
                 if let ModuleItem::Export(exp) = item {
                     if let Some(src) = &exp.source {
+                        if is_embedded_cap_submod && !src.ends_with(".zig") {
+                            continue;
+                        }
                         let zig_source =
                             self.modular_import_map
                                 .get(src)
@@ -1161,6 +1183,34 @@ impl Codegen {
             }
             for item in &module.body {
                 if let ModuleItem::Import(imp) = item {
+                    if is_embedded_cap_submod {
+                        if crate::resolver::is_cap_hub_source(&imp.source) {
+                            let hub_expr = if use_inline_hub {
+                                "__cap_hub".to_string()
+                            } else {
+                                "@import(\"./index.zig\")".to_string()
+                            };
+                            if let Some(def) = &imp.default_specifier {
+                                if self.globals.insert(def.sym.clone()) {
+                                    self.value_classes.insert(def.sym.clone());
+                                    let esc = Self::escape_zig_ident(&def.sym);
+                                    self.writeln(&format!("pub const {} = {};", esc, hub_expr));
+                                }
+                            }
+                            for s in &imp.specifiers {
+                                if !self.globals.insert(s.sym.clone()) {
+                                    continue;
+                                }
+                                self.value_classes.insert(s.sym.clone());
+                                let esc = Self::escape_zig_ident(&s.sym);
+                                self.writeln(&format!("pub const {0} = {1}.{0};", esc, hub_expr));
+                            }
+                            continue;
+                        }
+                        if imp.source == "std" || !imp.source.ends_with(".zig") {
+                            continue;
+                        }
+                    }
                     let zig_source = self
                         .modular_import_map
                         .get(&imp.source)
@@ -1764,6 +1814,27 @@ impl Codegen {
         }
         for item in &module.body {
             if let ModuleItem::Import(imp) = item {
+                if crate::resolver::is_cap_hub_source(&imp.source) {
+                    if let Some(def) = &imp.default_specifier {
+                        self.globals.insert(def.sym.clone());
+                        self.value_classes.insert(def.sym.clone());
+                        self.writeln(&format!(
+                            "pub const {} = __cap_hub;",
+                            Self::escape_zig_ident(&def.sym)
+                        ));
+                    }
+                    for s in &imp.specifiers {
+                        if !self.globals.insert(s.sym.clone()) {
+                            continue;
+                        }
+                        self.value_classes.insert(s.sym.clone());
+                        self.writeln(&format!(
+                            "const {0} = __cap_hub.{0};",
+                            Self::escape_zig_ident(&s.sym)
+                        ));
+                    }
+                    continue;
+                }
                 let zig_source = if imp.source.ends_with(".cp") {
                     format!("{}.zig", &imp.source[..imp.source.len() - 3])
                 } else {

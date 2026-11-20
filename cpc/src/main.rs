@@ -3,11 +3,14 @@ use cpc::ast::Module;
 use cpc::codegen::Codegen;
 use cpc::parser::Parser as CPParser;
 use cpc::sema::Analyzer;
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
-use cpc::resolver::resolve_imports;
+use cpc::resolver::{
+    extract_top_level_zig_pub_names, find_cap_core_file, resolve_imports_with_cap_hub,
+    CapHubResolution,
+};
 
 #[derive(Parser)]
 #[command(name = "cpc", about = "CP Language Compiler", version)]
@@ -121,6 +124,239 @@ enum Commands {
     Lsp,
 }
 
+fn compile_embedded_cap_module(
+    sub_path: &Path,
+    include: &[PathBuf],
+    beam: bool,
+    rt_import: &str,
+    cap_hub: &mut CapHubResolution,
+) -> anyhow::Result<String> {
+    let mut sub_items = Vec::new();
+    let mut sub_proc = HashSet::new();
+    resolve_imports_with_cap_hub(
+        sub_path,
+        include,
+        &mut sub_items,
+        &mut sub_proc,
+        false,
+        cap_hub,
+    )?;
+
+    let mut sub_module = Module {
+        span: cpc::Span { start: 0, end: 0 },
+        body: sub_items,
+    };
+
+    let mut analyzer = Analyzer::new();
+    let _ = analyzer.analyze_module(&mut sub_module);
+    let mut diags = analyzer.get_diagnostics();
+    if !diags.is_empty() {
+        let code = fs::read_to_string(sub_path).ok();
+        cpc::diagnostic::mark_cascades(&mut diags, code.as_deref());
+        let mut seen_codes = HashSet::new();
+        let rendered = diags
+            .iter()
+            .filter(|d| d.cascade_of.is_none())
+            .map(|d| {
+                let seen = !seen_codes.insert(d.code.clone());
+                d.render_dedup(code.as_deref(), Some(sub_path), seen)
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        return Err(anyhow::anyhow!("{}", rendered));
+    }
+
+    let code_str = fs::read_to_string(sub_path).ok();
+    let sub_path_owned = sub_path.to_path_buf();
+    let rt_import_owned = rt_import.to_string();
+    let res = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let mut cg = Codegen::new();
+        cg.is_beam_mode = beam;
+        cg.is_lib_mode = false;
+        cg.modular_mode = true;
+        cg.modular_is_entry = false;
+        cg.single_file_cap_submod = true;
+        cg.modular_runtime_import = Some(rt_import_owned);
+        cg.source_dir = sub_path_owned.parent().map(|p| p.to_path_buf());
+        if let Some(ref c) = code_str {
+            cg.init_source(Some(&sub_path_owned.display().to_string()), Some(c));
+        }
+        cg.generate_module(&sub_module)
+    }));
+
+    match res {
+        Ok(zig) => Ok(zig),
+        Err(err) => {
+            let msg = if let Some(s) = err.downcast_ref::<&str>() {
+                s.to_string()
+            } else if let Some(s) = err.downcast_ref::<String>() {
+                s.clone()
+            } else {
+                "Internal compiler error".to_string()
+            };
+            let code = fs::read_to_string(sub_path).ok();
+            let diag = cpc::diagnostic::from_compiler_error_msg(&msg, code.as_deref());
+            Err(anyhow::anyhow!(
+                "{}",
+                diag.render(code.as_deref(), Some(sub_path))
+            ))
+        }
+    }
+}
+
+fn write_if_changed_file(path: &Path, content: &[u8]) -> anyhow::Result<()> {
+    if let Ok(existing) = fs::read(path) {
+        if existing == content {
+            return Ok(());
+        }
+    }
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    fs::write(path, content)?;
+    Ok(())
+}
+
+fn indent_zig_struct_body(code: &str) -> String {
+    let mut out = String::with_capacity(code.len() + 256);
+    for line in code.lines() {
+        if line.is_empty() {
+            out.push('\n');
+        } else {
+            out.push_str("    ");
+            out.push_str(line);
+            out.push('\n');
+        }
+    }
+    out
+}
+
+fn build_single_file_cap_hub_prelude(
+    output: Option<&PathBuf>,
+    include: &[PathBuf],
+    cap_hub: &mut CapHubResolution,
+    beam: bool,
+) -> anyhow::Result<String> {
+    let rt_import = if output.is_some() {
+        "./__cp_runtime.zig"
+    } else {
+        "__cap_hub_rt"
+    };
+
+    let mut core_zig = String::new();
+    if let Some(core_abs) = find_cap_core_file(include) {
+        core_zig = compile_embedded_cap_module(&core_abs, include, beam, rt_import, cap_hub)?;
+    }
+
+    let mut compiled_ns: BTreeMap<String, String> = BTreeMap::new();
+    loop {
+        let pending: Vec<(String, PathBuf)> = cap_hub
+            .mounted_ns
+            .iter()
+            .filter(|(ns, _)| !compiled_ns.contains_key(*ns))
+            .map(|(ns, p)| (ns.clone(), p.clone()))
+            .collect();
+        if pending.is_empty() {
+            break;
+        }
+        for (ns, sub_abs) in pending {
+            let sub_zig = compile_embedded_cap_module(&sub_abs, include, beam, rt_import, cap_hub)?;
+            compiled_ns.insert(ns, sub_zig);
+        }
+    }
+
+    if let Some(out_path) = output {
+        let out_parent = out_path.parent().unwrap_or(Path::new("."));
+        let stem = out_path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("module");
+        let hub_dir_name = format!("__cap_hub_{}", stem);
+        let hub_dir = out_parent.join(&hub_dir_name);
+        fs::create_dir_all(&hub_dir)?;
+
+        write_if_changed_file(
+            &hub_dir.join("__cp_runtime.zig"),
+            Codegen::generate_shared_runtime().as_bytes(),
+        )?;
+        write_if_changed_file(&hub_dir.join("core.zig"), core_zig.as_bytes())?;
+
+        for (ns, sub_zig) in &compiled_ns {
+            write_if_changed_file(&hub_dir.join(format!("ns_{}.zig", ns)), sub_zig.as_bytes())?;
+        }
+
+        let mut index_zig = String::from(
+            "// Generated by CP Compiler — Lazy Cap Hub Index (Single-File Isolated)\n",
+        );
+        index_zig.push_str("const __core = @import(\"./core.zig\");\n\n");
+        let mut emitted: HashSet<String> = HashSet::new();
+        for sym in extract_top_level_zig_pub_names(&core_zig) {
+            if compiled_ns.contains_key(&sym) {
+                continue;
+            }
+            if emitted.insert(sym.clone()) {
+                let esc = Codegen::escape_zig_ident(&sym);
+                index_zig.push_str(&format!("pub const {0} = __core.{0};\n", esc));
+            }
+        }
+        if !compiled_ns.is_empty() {
+            index_zig.push_str("\n// Lazily mounted sub-namespaces:\n");
+            for ns in compiled_ns.keys() {
+                if emitted.insert(ns.clone()) {
+                    let esc = Codegen::escape_zig_ident(ns);
+                    index_zig.push_str(&format!(
+                        "pub const {} = @import(\"./ns_{}.zig\");\n",
+                        esc, ns
+                    ));
+                }
+            }
+        }
+        write_if_changed_file(&hub_dir.join("index.zig"), index_zig.as_bytes())?;
+
+        return Ok(format!(
+            "const __cap_hub = @import(\"./{}/index.zig\");\n",
+            hub_dir_name
+        ));
+    }
+
+    // Fallback when emitting to stdout without --output
+    let mut out = String::new();
+    out.push_str("// --- Lazy Cap Hub (Inline Preview) ---\n");
+    out.push_str("const __cap_hub_rt = struct {\n");
+    out.push_str(&indent_zig_struct_body(&Codegen::generate_shared_runtime()));
+    out.push_str("};\n\n");
+
+    out.push_str("const __cap_hub_core = struct {\n");
+    out.push_str(&indent_zig_struct_body(&core_zig));
+    out.push_str("};\n\n");
+
+    for (ns, sub_zig) in &compiled_ns {
+        out.push_str(&format!("const __cap_hub_ns_{} = struct {{\n", ns));
+        out.push_str(&indent_zig_struct_body(sub_zig));
+        out.push_str("};\n\n");
+    }
+
+    out.push_str("const __cap_hub = struct {\n");
+    let mut emitted: HashSet<String> = HashSet::new();
+    for sym in extract_top_level_zig_pub_names(&core_zig) {
+        if compiled_ns.contains_key(&sym) {
+            continue;
+        }
+        if emitted.insert(sym.clone()) {
+            let esc = Codegen::escape_zig_ident(&sym);
+            out.push_str(&format!("    pub const {0} = __cap_hub_core.{0};\n", esc));
+        }
+    }
+    for ns in compiled_ns.keys() {
+        if emitted.insert(ns.clone()) {
+            let esc = Codegen::escape_zig_ident(ns);
+            out.push_str(&format!("    pub const {} = __cap_hub_ns_{};\n", esc, ns));
+        }
+    }
+    out.push_str("};\n");
+    Ok(out)
+}
+
 fn compile_file(
     input: &PathBuf,
     output: Option<&PathBuf>,
@@ -133,6 +369,7 @@ fn compile_file(
     let mut all_items = Vec::new();
     let mut processed_sources = HashSet::new();
     let mut all_diags = Vec::new();
+    let mut cap_hub = CapHubResolution::default();
 
     if lib {
         let code = fs::read_to_string(input)?;
@@ -141,8 +378,26 @@ fn compile_file(
         all_diags.extend(p_diags);
         all_items = parsed_module.body;
     } else {
-        resolve_imports(input, include, &mut all_items, &mut processed_sources, true)?;
+        resolve_imports_with_cap_hub(
+            input,
+            include,
+            &mut all_items,
+            &mut processed_sources,
+            true,
+            &mut cap_hub,
+        )?;
     }
+
+    let cap_hub_prelude = if !lib && cap_hub.uses_cap_hub {
+        Some(build_single_file_cap_hub_prelude(
+            output,
+            include,
+            &mut cap_hub,
+            beam,
+        )?)
+    } else {
+        None
+    };
 
     let mut module = Module {
         span: cpc::Span { start: 0, end: 0 },
@@ -179,6 +434,7 @@ fn compile_file(
         codegen.is_lib_mode = lib;
         codegen.is_fuzz_mode = is_fuzz;
         codegen.fuzz_target_filter = fuzz_tgt;
+        codegen.cap_hub_prelude = cap_hub_prelude;
         codegen.source_dir = input.parent().map(|p| p.to_path_buf());
         if let Some(ref c) = code_str {
             codegen.init_source(Some(&input.display().to_string()), Some(c));

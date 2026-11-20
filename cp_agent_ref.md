@@ -1092,6 +1092,7 @@ switch (msg) {
 | `cap:aio` | `ParentDeathWatchdog`, `AioOpKind`, `AioState`, `AioOp`, `AioCompletion`, `AioQueue<CAP>`, `AIO_O_*` | Linux `PR_SET_PDEATHSIG` 父进程看门狗与零堆固定容量 SQ/CQ 异步文件 I/O 环形队列（详见 `docs/aio/aio.md`） |
 | `cap:meta` | `isPowerOfTwo`, `nextPowerOfTwo`, `alignUp`, `alignDown`, `bitCount`, `packU16`/`packU32`/`packU64`, `bitfield*`, `isInt`, `isFloat`, `isSlice`, `isPointer`, `isOptional`, `isStruct`, `isEnum`, `hasField`, `hasDecl`, `ChildType`, `ItemType` | 编译期反射特征探测（适配 Zig 0.17 `@typeInfo`）与无分支位运算/位域工具集（详见 `docs/meta/meta.md`） |
 | `cap:platform` | `OsKind`, `ArchKind`, `Endianness`, `KernelVersion`, `PlatformInfo`（`currentOs`, `currentArch`, `pageSize`, `cpuCount`, `kernelVersion`, `supportsIoUring`, `supportsCopyFileRange`, `supportsStatx`, `supportsPidfd`, `executablePath`, `hostname`） | 宿主操作系统、Linux `uname` 真实内核版本/特性探测与 `/proc/self/exe`（详见 `docs/platform/platform.md`） |
+| **`cap`（根挂载容器）** | `import cap from "cap";`：`OOM`, `default_allocator`, `handleOom`, `Environment`, `assert`, `debugAssert`, `Global`, `take`, `create`, `destroy`, `copy`, `clamp`, `cast`, `FD`, `invalid_fd`, `Mode`, `PathBuffer`, `O`, `S`, `Output`, `ComptimeStringMap`, `fmtIntSize` + **按需挂载 `cap.<stdlib>`（59 库）** | CP 统一按需惰性挂载容器：`cpc` 静态扫描 `cap.<ns>` 仅解析/转译/编译实际引用的库，未引用库 0 开销（详见 `docs/core/cap_hub.md`） |
 | `cap:test` | `test("desc", () => { expect_eq(a, b); })` | 原生单元测试与断言框架（详见 `docs/runtime/runtime.md`） |
 
 ---
