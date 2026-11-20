@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:safetensors` 纯 CP HuggingFace Safetensors 模型权重二进制解析（含溢出/越界/重叠拦截）、Builder 与 IEEE-754 BF16/FP16 位级转换引擎（支持 `cap.safetensors` 自动动态挂载，详见 `doc/lib/safetensors.md`）（5/5 PASS，文档直写 `doc/lib/safetensors.md`）
+- **核心设计**：`parseSafetensors` 通过 `@mulWithOverflow` 与非空张量区间重叠检查阻断恶意模型头越界；`BF16`/`FP16` 位级转换完整覆盖次正规数、Inf/NaN 与舍入，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:bpe` 纯 CP Byte-Pair Encoding (Tiktoken 风格) LLM Tokenizer 编解码、语料训练与 UTF-8 安全截断引擎（支持 `cap.bpe` 自动动态挂载，详见 `doc/lib/bpe.md`）（5/5 PASS，文档直写 `doc/lib/bpe.md`）
 - **核心设计**：采用最小 rank 优先相邻对迭代合并与 `validUtf8PrefixLen` 截断守卫确保永不切碎多字节 UTF-8 字符，全路径 `std.testing.allocator` 零泄漏。
 

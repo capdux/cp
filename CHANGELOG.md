@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:safetensors` 纯 CP HuggingFace Safetensors 模型权重二进制解析（含溢出/越界/重叠拦截）、Builder 与 IEEE-754 BF16/FP16 位级转换引擎（支持 `cap.safetensors` 自动动态挂载，详见 `doc/lib/safetensors.md`）（5/5 PASS，自动动态挂载 `cap.safetensors`）
+- **新增标准库**：`lib/safetensors/{dtype,float16,parser,builder,index}.cp`，实现全 13 种 Dtype、round-to-nearest-even `BF16`/`FP16` 位级转换、`SafetensorsBuilder` 及严格执行 `data_offsets` 越界与 Overlap 重叠校验的 `parseSafetensors`/`tensorAsF32`。
+- **新增文档与测试**：`doc/lib/safetensors.md` 扁平文档与 `cap/test/test_safetensors_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:bpe` 纯 CP Byte-Pair Encoding (Tiktoken 风格) LLM Tokenizer 编解码、语料训练与 UTF-8 安全截断引擎（支持 `cap.bpe` 自动动态挂载，详见 `doc/lib/bpe.md`）（5/5 PASS，自动动态挂载 `cap.bpe`）
 - **新增标准库**：`lib/bpe/{types,vocab,tokenizer,index}.cp`，实现 Byte-Level 0..255 兜底词表、`special_tokens` 切分与 `encodeOrdinary` 防注入、`loadTiktokenText` 解析、`trainFromCorpus` 语料训练及 `truncateToMaxTokens` UTF-8 边界安全截断。
 - **新增文档与测试**：`doc/lib/bpe.md` 扁平文档与 `cap/test/test_bpe_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
