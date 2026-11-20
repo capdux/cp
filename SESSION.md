@@ -545,3 +545,9 @@
 
 ### 2026-11-21（`cap:amqp` 验收提交，顶替拉起 `cap:nats` 维持 2 路常规并行）
 - **执行成果**：`lib/amqp/`（5/5 PASS，`doc/lib/amqp.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/nats/`（NATS Wire 协议与 JetStream HPUB/HMSG 增量流式解析编码引擎），与 `lib/ldap/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:ldap` 验收提交，顶替拉起 `cap:imap` 维持 2 路常规并行）
+- **执行成果**：`lib/ldap/`（5/5 PASS，`doc/lib/ldap.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/imap/`（RFC 3501/9051 IMAP4 协议命令编码、Literal 响应与 FLAGS/SEARCH 解析引擎），与 `lib/nats/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:nats` 验收合并提交，顶替拉起 `cap:stomp` 维持 2 路常规并行）
+- **执行成果**：`lib/nats/`（5/5 PASS，`doc/lib/nats.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/ldap/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/stomp/`（STOMP 1.2 文本帧消息代理协议编解码与增量解析引擎），与 `lib/imap/` 维持 2 路常规并行。

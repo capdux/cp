@@ -2,6 +2,14 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:nats` NATS Wire 协议与 HPUB/HMSG 增量流式解析编码引擎（5/5 PASS，自动动态挂载 `cap.nats`）
+- **新增标准库**：`lib/nats/{nats,index}.cp`，实现 `NatsEncoder`（`CONNECT`/`PUB`/`HPUB`/`SUB`/`UNSUB`/`PING`/`PONG`，拦截空白主题与 CRLF 注入）及跨 Chunk 半包黏包 `NatsParser`（支持 `INFO`/`MSG`/`HMSG` `NATS/1.0` 多值头与 `PayloadTooLarge` 防护）。
+- **新增文档与测试**：`doc/lib/nats.md` 扁平文档与 `cap/test/test_nats_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
+## [2026-11-21] - 新建 `cap:ldap` RFC 4515 LDAP 搜索过滤器与 RFC 4514 DN 引擎（5/5 PASS，自动动态挂载 `cap.ldap`）
+- **新增标准库**：`lib/ldap/{ldap,index}.cp`，实现 RFC 4515 过滤器 AST 解析（含十六进制 `\xx` 转义、`*` 通配符、`MaxDepthExceeded` 64 层深度防护）、防注入 `escapeFilterValue`、内存属性求值 `matchesEntry` 及 RFC 4514 `parseDn`。
+- **新增文档与测试**：`doc/lib/ldap.md` 扁平文档与 `cap/test/test_ldap_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:amqp` AMQP 0-9-1 二进制协议帧与 FieldTable 引擎（5/5 PASS，自动动态挂载 `cap.amqp`）
 - **新增标准库**：`lib/amqp/{amqp,index}.cp`，实现 AMQP 0-9-1 协议头与 `Method`/`Header`/`Body`/`Heartbeat` 帧编解码、嵌套 `FieldTable`（32 层 `MaxDepthExceeded` 防护）及半包/黏包增量拆帧器 `AmqpStreamDecoder`。
 - **新增文档与测试**：`doc/lib/amqp.md` 扁平文档与 `cap/test/test_amqp_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

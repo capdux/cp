@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:nats` NATS Wire 协议与 HPUB/HMSG 增量流式解析编码引擎（5/5 PASS，文档直写 `doc/lib/nats.md`）
+- **核心设计**：`NatsParser` 支持 `1..7` 字节任意切分流式解析及二进制 `\r\n\x00` 载荷零损耗提取，严格校验 `hdr_len <= total_len` 与 `max_payload_bytes` 上限；`NatsEncoder` 全面拦截主题空白与 CR/LF 命令注入。
+
+## 2026-11-21: 新建 `cap:ldap` RFC 4515 LDAP 搜索过滤器与 RFC 4514 DN 引擎（5/5 PASS，文档直写 `doc/lib/ldap.md`）
+- **核心设计**：过滤器解析器在编译期校验括号配对、十六进制转义及 64 层嵌套上限，`matchesEntry` 大小写不敏感支持多值属性、`ge`/`le` 及 `substring` 首中尾匹配，全程零泄漏。
+
 ## 2026-11-21: 新建 `cap:amqp` AMQP 0-9-1 二进制协议帧与 FieldTable 引擎（5/5 PASS，文档直写 `doc/lib/amqp.md`）
 - **核心设计**：大端序封装 AMQP 0-9-1 帧头并严格校验 `0xCE` 帧尾与 `Heartbeat` channel=0；`AmqpStreamDecoder` 支持任意小分块拆帧并拦截超限负载与超深嵌套 `FieldTable`。
 
