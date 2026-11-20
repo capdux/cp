@@ -512,3 +512,9 @@
 
 ### 2026-11-21（`cap:sdp` 验收合并提交，顶替拉起 `cap:rtree` 维持 2 路常规并行）
 - **执行成果**：`lib/sdp/`（5/5 PASS，`doc/lib/sdp.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/smtp/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/rtree/`（2D 轴对齐边界框 AABB R-Tree 空间索引与碰撞检索引擎），与 `lib/rtp/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:rtp` 验收提交，顶替拉起 `cap:http2` 维持 2 路常规并行）
+- **执行成果**：`lib/rtp/`（5/5 PASS，`doc/lib/rtp.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/http2/`（RFC 9113 HTTP/2 二进制帧编解码、流式拆帧与流控引擎），与 `lib/rtree/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:rtree` 验收合并提交，顶替拉起 `cap:png` 维持 2 路常规并行）
+- **执行成果**：`lib/rtree/`（5/5 PASS，`doc/lib/rtree.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/rtp/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/png/`（纯 CP PNG 图像解码/编码与 Paeth 滤波引擎），与 `lib/http2/` 维持 2 路常规并行。

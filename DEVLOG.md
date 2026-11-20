@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:rtree` 2D 轴对齐边界框（AABB）R-Tree 空间索引引擎（5/5 PASS，文档直写 `doc/lib/rtree.md`）
+- **核心设计**：采用最小面积增量 `ChooseLeaf` 与 Guttman `Quadratic Split` 维持树平衡，`removeById` 清理空节点后向上收紧祖先 MBR；560 个重叠矩形与暴力全量对拍 100% 一致且零泄漏。
+
+## 2026-11-21: 新建 `cap:rtp` RFC 3550 RTP/RTCP 实时传输包编解码与 Jitter Buffer 引擎（5/5 PASS，文档直写 `doc/lib/rtp.md`）
+- **核心设计**：解码器严格校验 `V=2`、CSRC/Extension 截断与 Padding `1..remaining` 范围；`JitterBuffer` 采用模 `65536` 符号半空间序列号差值实现无歧义乱序重排、重复包去重与丢包统计。
+
 ## 2026-11-21: 新建 `cap:sdp` RFC 8866 WebRTC SDP 会话描述解析与构建引擎（5/5 PASS，文档直写 `doc/lib/sdp.md`）
 - **核心设计**：按会话级与媒体流区块两层解析，零拷贝引用原始字段切片并通过 `errdefer` 完整回滚异常路径内存；严格校验 `v=0`、`o=`、`s=` 及 `m=` 端口与格式列表。
 

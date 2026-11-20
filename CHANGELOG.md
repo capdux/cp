@@ -2,6 +2,14 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:rtree` 2D 轴对齐边界框（AABB）R-Tree 空间索引引擎（5/5 PASS，自动动态挂载 `cap.rtree`）
+- **新增标准库**：`lib/rtree/{rtree,index}.cp`，实现动态平衡 `RTree<V>`（Guttman `Quadratic Split`、MBR 维护与收紧）、`searchOverlap`、`searchPoint` 与 Best-First 分支界定 `kNearestPoint`。
+- **新增文档与测试**：`doc/lib/rtree.md` 扁平文档与 `cap/test/test_rtree_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
+## [2026-11-21] - 新建 `cap:rtp` RFC 3550 RTP/RTCP 实时传输包编解码与 Jitter Buffer 引擎（5/5 PASS，自动动态挂载 `cap.rtp`）
+- **新增标准库**：`lib/rtp/{rtp,index}.cp`，实现 RFC 3550 `RtpPacket`（支持 CSRC、Extension Header 与 Padding 对齐剥离）、`RtcpSenderReport`/`RtcpBye` 编解码，以及基于 `u16` 回绕差值 `seqDiff` 的乱序重排 `JitterBuffer`。
+- **新增文档与测试**：`doc/lib/rtp.md` 扁平文档与 `cap/test/test_rtp_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:sdp` RFC 8866 WebRTC SDP 会话描述解析与构建引擎（5/5 PASS，自动动态挂载 `cap.sdp`）
 - **新增标准库**：`lib/sdp/{sdp,index}.cp`，实现 `SdpSession` 零拷贝解析与格式化、多 `MediaSection`、`rtpmaps()`、`candidates()`（ICE `host`/`srflx`/`relay`）及 `direction()` 提取。
 - **新增文档与测试**：`doc/lib/sdp.md` 扁平文档与 `cap/test/test_sdp_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
