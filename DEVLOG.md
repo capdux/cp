@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:jsonpath` 纯 CP RFC 9535 JSONPath 标准化查询、过滤器、递归下降与 Normalized Path 引擎（支持 `cap.jsonpath` 自动动态挂载，详见 `doc/lib/jsonpath.md`）（5/5 PASS，文档直写 `doc/lib/jsonpath.md`）
+- **核心设计**：内置独立 JSON DOM 与 `QueryLimits`（默认深度 64 / 最大输出 4096）防指数展开 DoS，严格校验零步长 `[0:5:0]` 与语法错误，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:otlp` 纯 CP OpenTelemetry OTLP (Traces/Metrics/Logs) JSON 导出与 W3C TraceContext/Baggage 传播引擎（支持 `cap.otlp` 自动动态挂载，详见 `doc/lib/otlp.md`）（5/5 PASS，文档直写 `doc/lib/otlp.md`）
 - **核心设计**：`parseTraceParent` 拒绝全零 ID 与 `ff` 版本，`parseBaggage` 强制执行 `8192B`/`180` 项上限防护；OTLP JSON 导出器将 64 位整数序列化为十进制字符串以兼容 Protobuf-JSON 规范，全路径零泄漏。
 

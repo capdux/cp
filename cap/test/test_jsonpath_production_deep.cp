@@ -1,236 +1,192 @@
-// Source: cp/cap/test/test_jsonpath_production_deep.cp
-// Deep Production Test Suite for cap:jsonpath & cap.jsonpath
-// Covers:
-//   1. RFC 9535 classic store.book queries ($.store.book[*].author, $..author, $..book[-1], $..book[0,2], Normalized Paths)
-//   2. Array slicing ([1:4], [::2], [::-1] negative step) & wildcard .*
-//   3. Compound filter expressions ([?(@.price < 10 && @.category == "fiction")], [?(@.isbn)], !, ||, root $ comparison)
-//   4. Malformed JSONPath syntax rejection (non-$, unclosed [, InvalidSliceStep, InvalidFilter, MaxDepthExceeded) & evalJson
-//   5. Dynamic lazy namespace mounting via `import cap from "cap"; cap.jsonpath`
+// Source: cp/cap/test/test_jsonpath_production_deep.cp (RFC 9535 JSONPath Deep Production Tests)
 
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import { JSON, JsonValue } from "cap:json";
-import { JsonPath, JsonPathError, PathMatch } from "cap:jsonpath";
 import cap from "cap";
+import {
+    JsonKind,
+    JsonVal,
+    JsonPathQuery,
+    JsonPathError,
+    QueryError,
+    QueryLimits,
+    parseJson,
+    deinitJsonVal,
+    compileJsonPath,
+    deinitJsonPathQuery,
+    queryJsonPath,
+    queryJsonPathWithLimits,
+    queryJsonPathValues,
+    queryJsonPathStrings,
+    deinitMatches,
+    deinitStrings,
+} from "cap:jsonpath";
 
-const BOOKSTORE_JSON = "{\"store\":{\"max_price\":15.0,\"book\":[{\"category\":\"reference\",\"author\":\"Nigel Rees\",\"title\":\"Sayings of the Century\",\"price\":8.95},{\"category\":\"fiction\",\"author\":\"Evelyn Waugh\",\"title\":\"Sword of Honour\",\"price\":12.99},{\"category\":\"fiction\",\"author\":\"Herman Melville\",\"title\":\"Moby Dick\",\"isbn\":\"0-553-21311-3\",\"price\":8.99},{\"category\":\"fiction\",\"author\":\"J. R. R. Tolkien\",\"title\":\"The Lord of the Rings\",\"isbn\":\"0-395-19395-8\",\"price\":22.99}],\"bicycle\":{\"color\":\"red\",\"price\":399}}}";
+const STORE_JSON =
+    "{\"store\":{\"book\":[" ++
+    "{\"category\":\"reference\",\"author\":\"Nigel Rees\",\"title\":\"Sayings of the Century\",\"price\":8.95,\"tags\":[\"classic\"]}," ++
+    "{\"category\":\"fiction\",\"author\":\"Evelyn Waugh\",\"title\":\"Sword of Honour\",\"price\":12.99,\"tags\":[\"war\",\"drama\"]}," ++
+    "{\"category\":\"fiction\",\"author\":\"Herman Melville\",\"title\":\"Moby Dick\",\"isbn\":\"0-553-21311-3\",\"price\":8.99,\"tags\":[\"sea\",\"whale\",\"classic\"]}," ++
+    "{\"category\":\"fiction\",\"author\":\"J. R. R. Tolkien\",\"title\":\"The Lord of the Rings\",\"isbn\":\"0-395-19395-8\",\"price\":22.99,\"tags\":[\"fantasy\"]}" ++
+    "],\"bicycle\":{\"color\":\"red\",\"price\":399}},\"expensive\":10}";
 
-fn strEq(a: string, b: string): bool {
-    return std.mem.eql(u8, a, b);
-}
+test("jsonpath: member, negative index, forward/reverse slice & union") {
+    const alloc = std.testing.allocator;
+    let doc = try parseJson(alloc, STORE_JSON);
+    defer deinitJsonVal(&doc, alloc);
 
-fn testRfc9535BookstoreQueries(): ! {
-    const alloc = std.heap.page_allocator;
-    const root = JSON.parse(alloc, BOOKSTORE_JSON)?;
-
-    // 1. $.store.book[*].author + Normalized Path check
-    let jp1 = JsonPath.compile(alloc, "$.store.book[*].author")?;
-    defer jp1.deinit();
-    const m1 = jp1.query(alloc, root)?;
-    defer JsonPath.freeMatches(alloc, m1);
-
-    expect_eq(m1.len, 4);
-    expect_eq(strEq(m1[0].path, "$['store']['book'][0]['author']"), true);
-    expect_eq(strEq(m1[0].value.asString() ?? "", "Nigel Rees"), true);
-    expect_eq(strEq(m1[1].path, "$['store']['book'][1]['author']"), true);
-    expect_eq(strEq(m1[1].value.asString() ?? "", "Evelyn Waugh"), true);
-    expect_eq(strEq(m1[2].path, "$['store']['book'][2]['author']"), true);
-    expect_eq(strEq(m1[2].value.asString() ?? "", "Herman Melville"), true);
-    expect_eq(strEq(m1[3].path, "$['store']['book'][3]['author']"), true);
-    expect_eq(strEq(m1[3].value.asString() ?? "", "J. R. R. Tolkien"), true);
-
-    // 2. $..author (recursive descent)
-    let jp2 = JsonPath.compile(alloc, "$..author")?;
-    defer jp2.deinit();
-    const vals2 = jp2.queryValues(alloc, root)?;
-    defer alloc.free(vals2);
-    expect_eq(vals2.len, 4);
-    expect_eq(strEq(vals2[2].asString() ?? "", "Herman Melville"), true);
-
-    // 3. $..book[-1] (negative index)
-    let jp3 = JsonPath.compile(alloc, "$..book[-1]")?;
-    defer jp3.deinit();
-    const m3 = jp3.query(alloc, root)?;
-    defer JsonPath.freeMatches(alloc, m3);
-    expect_eq(m3.len, 1);
-    expect_eq(strEq(m3[0].path, "$['store']['book'][3]"), true);
-    expect_eq(strEq(m3[0].value.get("title")?.asString() ?? "", "The Lord of the Rings"), true);
-
-    // 4. $..book[0,2] (union of indices)
-    let jp4 = JsonPath.compile(alloc, "$..book[0,2]")?;
-    defer jp4.deinit();
-    const m4 = jp4.query(alloc, root)?;
-    defer JsonPath.freeMatches(alloc, m4);
-    expect_eq(m4.len, 2);
-    expect_eq(strEq(m4[0].path, "$['store']['book'][0]"), true);
-    expect_eq(strEq(m4[1].path, "$['store']['book'][2]"), true);
-    expect_eq(strEq(m4[1].value.get("author")?.asString() ?? "", "Herman Melville"), true);
-}
-
-fn testArraySlicingAndWildcards(): ! {
-    const alloc = std.heap.page_allocator;
-    const arr_json = "{\"nums\":[10, 20, 30, 40, 50, 60], \"meta\":{\"a\":1,\"b\":2}}";
-    const root = JSON.parse(alloc, arr_json)?;
-
-    // [1:4] -> 20, 30, 40
-    let jp1 = JsonPath.compile(alloc, "$.nums[1:4]")?;
-    defer jp1.deinit();
-    const v1 = jp1.queryValues(alloc, root)?;
-    defer alloc.free(v1);
-    expect_eq(v1.len, 3);
-    expect_eq(v1[0].asNumber() ?? 0.0, 20.0);
-    expect_eq(v1[1].asNumber() ?? 0.0, 30.0);
-    expect_eq(v1[2].asNumber() ?? 0.0, 40.0);
-
-    // [::2] -> 10, 30, 50
-    let jp2 = JsonPath.compile(alloc, "$.nums[::2]")?;
-    defer jp2.deinit();
-    const v2 = jp2.queryValues(alloc, root)?;
-    defer alloc.free(v2);
-    expect_eq(v2.len, 3);
-    expect_eq(v2[0].asNumber() ?? 0.0, 10.0);
-    expect_eq(v2[1].asNumber() ?? 0.0, 30.0);
-    expect_eq(v2[2].asNumber() ?? 0.0, 50.0);
-
-    // [::-1] -> 60, 50, 40, 30, 20, 10 (negative step reverse)
-    let jp3 = JsonPath.compile(alloc, "$.nums[::-1]")?;
-    defer jp3.deinit();
-    const m3 = jp3.query(alloc, root)?;
-    defer JsonPath.freeMatches(alloc, m3);
-    expect_eq(m3.len, 6);
-    expect_eq(m3[0].value.asNumber() ?? 0.0, 60.0);
-    expect_eq(strEq(m3[0].path, "$['nums'][5]"), true);
-    expect_eq(m3[5].value.asNumber() ?? 0.0, 10.0);
-    expect_eq(strEq(m3[5].path, "$['nums'][0]"), true);
-
-    // .* wildcard on object
-    let jp4 = JsonPath.compile(alloc, "$.meta.*")?;
-    defer jp4.deinit();
-    const v4 = jp4.queryValues(alloc, root)?;
-    defer alloc.free(v4);
-    expect_eq(v4.len, 2);
-    expect_eq(v4[0].asNumber() ?? 0.0, 1.0);
-    expect_eq(v4[1].asNumber() ?? 0.0, 2.0);
-}
-
-fn testFilterExpressions(): ! {
-    const alloc = std.heap.page_allocator;
-    const root = JSON.parse(alloc, BOOKSTORE_JSON)?;
-
-    // 1. Compound && filter: price < 10 && category == "fiction" -> Moby Dick
-    let jp1 = JsonPath.compile(alloc, "$.store.book[?(@.price < 10 && @.category == \"fiction\")]")?;
-    defer jp1.deinit();
-    const m1 = jp1.query(alloc, root)?;
-    defer JsonPath.freeMatches(alloc, m1);
+    // Dot & quoted member + negative index
+    let q1 = try compileJsonPath(alloc, "$.store['book'][-1].\"title\"");
+    defer deinitJsonPathQuery(&q1, alloc);
+    let m1 = try queryJsonPath(alloc, &doc, &q1);
+    defer deinitMatches(m1, alloc);
     expect_eq(m1.len, 1);
-    expect_eq(strEq(m1[0].value.get("title")?.asString() ?? "", "Moby Dick"), true);
+    expect_eq(std.mem.eql(u8, m1[0].value.str_val, "The Lord of the Rings"), true);
+    expect_eq(std.mem.eql(u8, m1[0].path, "$['store']['book'][3]['title']"), true);
 
-    // 2. Existence test: [?(@.isbn)] -> Moby Dick & LOTR
-    let jp2 = JsonPath.compile(alloc, "$.store.book[?(@.isbn)]")?;
-    defer jp2.deinit();
-    const v2 = jp2.queryValues(alloc, root)?;
+    // Step slice [1:4:2] -> indices 1, 3
+    let q2 = try compileJsonPath(alloc, "$.store.book[1:4:2].author");
+    defer deinitJsonPathQuery(&q2, alloc);
+    let v2 = try queryJsonPathValues(alloc, &doc, &q2);
     defer alloc.free(v2);
     expect_eq(v2.len, 2);
-    expect_eq(strEq(v2[0].get("title")?.asString() ?? "", "Moby Dick"), true);
-    expect_eq(strEq(v2[1].get("title")?.asString() ?? "", "The Lord of the Rings"), true);
+    expect_eq(std.mem.eql(u8, v2[0].str_val, "Evelyn Waugh"), true);
+    expect_eq(std.mem.eql(u8, v2[1].str_val, "J. R. R. Tolkien"), true);
 
-    // 3. Logical negation ! and || with parentheses + root path comparison $.store.max_price
-    let jp3 = JsonPath.compile(alloc, "$.store.book[?(!@.isbn || @.price > $.store.max_price)]")?;
-    defer jp3.deinit();
-    const v3 = jp3.queryValues(alloc, root)?;
+    // Reverse slice [::-1]
+    let arr_doc = try parseJson(alloc, "[10, 20, 30, 40]");
+    defer deinitJsonVal(&arr_doc, alloc);
+    let q3 = try compileJsonPath(alloc, "$[::-1]");
+    defer deinitJsonPathQuery(&q3, alloc);
+    let v3 = try queryJsonPathValues(alloc, &arr_doc, &q3);
     defer alloc.free(v3);
-    expect_eq(v3.len, 3);
-    expect_eq(strEq(v3[0].get("author")?.asString() ?? "", "Nigel Rees"), true);
-    expect_eq(strEq(v3[1].get("author")?.asString() ?? "", "Evelyn Waugh"), true);
-    expect_eq(strEq(v3[2].get("author")?.asString() ?? "", "J. R. R. Tolkien"), true);
+    expect_eq(v3.len, 4);
+    expect_eq(v3[0].num_val == 40.0, true);
+    expect_eq(v3[3].num_val == 10.0, true);
 
-    // 4. queryOne & exists helpers
-    expect_eq(jp1.exists(root), true);
-    const first = jp1.queryOne(root);
-    expect_eq(first != null, true);
-    expect_eq(strEq(first?.get("author")?.asString() ?? "", "Herman Melville"), true);
-
-    let jp_none = JsonPath.compile(alloc, "$.store.book[?(@.price > 1000)]")?;
-    defer jp_none.deinit();
-    expect_eq(jp_none.exists(root), false);
-    expect_eq(jp_none.queryOne(root) == null, true);
+    // Union [0, 2, 'extra']
+    let q4 = try compileJsonPath(alloc, "$[0, 2]");
+    defer deinitJsonPathQuery(&q4, alloc);
+    let v4 = try queryJsonPathValues(alloc, &arr_doc, &q4);
+    defer alloc.free(v4);
+    expect_eq(v4.len, 2);
+    expect_eq(v4[0].num_val == 10.0, true);
+    expect_eq(v4[1].num_val == 30.0, true);
 }
 
-fn expectCompileError(alloc: std.mem.Allocator, expr: string, expected: JsonPathError): ! {
-    let matched = false;
-    let jp = JsonPath.compile(alloc, expr) catch e => {
-        if (e == expected) {
-            matched = true;
-        }
-        expect_eq(matched, true);
-        return;
+test("jsonpath: recursive descent & RFC 9535 NormalizedPath") {
+    const alloc = std.testing.allocator;
+    let doc = try parseJson(alloc, STORE_JSON);
+    defer deinitJsonVal(&doc, alloc);
+
+    let q1 = try compileJsonPath(alloc, "$..author");
+    defer deinitJsonPathQuery(&q1, alloc);
+    let m1 = try queryJsonPath(alloc, &doc, &q1);
+    defer deinitMatches(m1, alloc);
+    expect_eq(m1.len, 4);
+    expect_eq(std.mem.eql(u8, m1[0].path, "$['store']['book'][0]['author']"), true);
+    expect_eq(std.mem.eql(u8, m1[2].path, "$['store']['book'][2]['author']"), true);
+    expect_eq(std.mem.eql(u8, m1[2].value.str_val, "Herman Melville"), true);
+
+    // Descendant wildcard $..[*] on small nested object
+    let small = try parseJson(alloc, "{\"a\":{\"b\":[1,2]}}");
+    defer deinitJsonVal(&small, alloc);
+    let q2 = try compileJsonPath(alloc, "$..[*]");
+    defer deinitJsonPathQuery(&q2, alloc);
+    let m2 = try queryJsonPath(alloc, &small, &q2);
+    defer deinitMatches(m2, alloc);
+    // a, b, 1, 2 => 4 nodes
+    expect_eq(m2.len, 4);
+    expect_eq(std.mem.eql(u8, m2[0].path, "$['a']"), true);
+    expect_eq(std.mem.eql(u8, m2[1].path, "$['a']['b']"), true);
+    expect_eq(std.mem.eql(u8, m2[2].path, "$['a']['b'][0]"), true);
+    expect_eq(std.mem.eql(u8, m2[3].path, "$['a']['b'][1]"), true);
+}
+
+test("jsonpath: filters, logical ops, existence, length/count & root comparison") {
+    const alloc = std.testing.allocator;
+    let doc = try parseJson(alloc, STORE_JSON);
+    defer deinitJsonVal(&doc, alloc);
+
+    // Filter with && and existence test
+    let q1 = try compileJsonPath(alloc, "$.store.book[?@.price < 10 && @.isbn].title");
+    defer deinitJsonPathQuery(&q1, alloc);
+    let v1 = try queryJsonPathValues(alloc, &doc, &q1);
+    defer alloc.free(v1);
+    expect_eq(v1.len, 1);
+    expect_eq(std.mem.eql(u8, v1[0].str_val, "Moby Dick"), true);
+
+    // Filter with ||, !, length() and root $ comparison
+    let q2 = try compileJsonPath(alloc, "$.store.book[?(@.price < $.expensive && !@.isbn) || length(@.tags) >= 3].author");
+    defer deinitJsonPathQuery(&q2, alloc);
+    let v2 = try queryJsonPathValues(alloc, &doc, &q2);
+    defer alloc.free(v2);
+    expect_eq(v2.len, 2);
+    expect_eq(std.mem.eql(u8, v2[0].str_val, "Nigel Rees"), true);
+    expect_eq(std.mem.eql(u8, v2[1].str_val, "Herman Melville"), true);
+
+    // count() & queryJsonPathStrings
+    let q3 = try compileJsonPath(alloc, "$.store.book[?count(@.tags[*]) == 2].title");
+    defer deinitJsonPathQuery(&q3, alloc);
+    let s3 = try queryJsonPathStrings(alloc, &doc, &q3);
+    defer deinitStrings(s3, alloc);
+    expect_eq(s3.len, 1);
+    expect_eq(std.mem.eql(u8, s3[0], "\"Sword of Honour\""), true);
+}
+
+fn expectCompileErr(alloc: std.mem.Allocator, expr: []const u8, expected: JsonPathError): bool {
+    let q = compileJsonPath(alloc, expr) catch |e| {
+        return e == expected;
     };
-    jp.deinit();
-    expect_eq(false, true);
+    deinitJsonPathQuery(&q, alloc);
+    return false;
 }
 
-fn testMalformedSyntaxAndEvalJson(): ! {
-    const alloc = std.heap.page_allocator;
-
-    // 1. Non-$ prefix
-    expectCompileError(alloc, "store.book[0]", JsonPathError.InvalidExpression)?;
-    expectCompileError(alloc, "", JsonPathError.InvalidExpression)?;
-
-    // 2. Unclosed bracket
-    expectCompileError(alloc, "$.store.book[0", JsonPathError.UnclosedBracket)?;
-    expectCompileError(alloc, "$.store['book'", JsonPathError.UnclosedBracket)?;
-
-    // 3. Zero slice step -> InvalidSliceStep
-    expectCompileError(alloc, "$.store.book[0:2:0]", JsonPathError.InvalidSliceStep)?;
-
-    // 4. Invalid filter expression
-    expectCompileError(alloc, "$.store.book[?(@.price < )]", JsonPathError.InvalidFilter)?;
-    expectCompileError(alloc, "$.store.book[?()]", JsonPathError.InvalidFilter)?;
-
-    // 5. MaxDepthExceeded (> 32 segments)
-    const deep_expr = "$.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a";
-    expectCompileError(alloc, deep_expr, JsonPathError.MaxDepthExceeded)?;
-
-    // 6. Static convenience entry: JsonPath.evalJson
-    const matches = JsonPath.evalJson(alloc, BOOKSTORE_JSON, "$.store.bicycle['color','price']")?;
-    defer JsonPath.freeMatches(alloc, matches);
-    expect_eq(matches.len, 2);
-    expect_eq(strEq(matches[0].path, "$['store']['bicycle']['color']"), true);
-    expect_eq(strEq(matches[0].value.asString() ?? "", "red"), true);
-    expect_eq(strEq(matches[1].path, "$['store']['bicycle']['price']"), true);
-    expect_eq(matches[1].value.asNumber() ?? 0.0, 399.0);
+fn expectQueryErr(alloc: std.mem.Allocator, root: *const JsonVal, q: *const JsonPathQuery, limits: QueryLimits, expected: QueryError): bool {
+    let m = queryJsonPathWithLimits(alloc, root, q, limits) catch |e| {
+        return e == expected;
+    };
+    deinitMatches(m, alloc);
+    return false;
 }
 
-fn testCapJsonpathDynamicMount(): ! {
-    const alloc = std.heap.page_allocator;
-    const payload = "{\"tools\":[{\"name\":\"search\",\"enabled\":true},{\"name\":\"shell\",\"enabled\":false}]}";
+test("jsonpath: syntax errors, zero slice step & DoS limits") {
+    const alloc = std.testing.allocator;
 
-    const matches = cap.jsonpath.JsonPath.evalJson(alloc, payload, "$.tools[?(@.enabled == true)].name")?;
-    defer cap.jsonpath.JsonPath.freeMatches(alloc, matches);
+    // Missing '$' root identifier
+    expect_eq(expectCompileErr(alloc, "store.book[0]", JsonPathError.MissingRootIdentifier), true);
 
+    // Unterminated bracket
+    expect_eq(expectCompileErr(alloc, "$.store['book'", JsonPathError.UnterminatedBracket), true);
+
+    // Zero slice step [0:5:0]
+    expect_eq(expectCompileErr(alloc, "$[0:5:0]", JsonPathError.ZeroSliceStep), true);
+
+    // Depth & max nodes DoS protection
+    let nested = try parseJson(alloc, "{\"a\":{\"b\":{\"c\":{\"d\":1}}}}");
+    defer deinitJsonVal(&nested, alloc);
+    let q_desc = try compileJsonPath(alloc, "$..*");
+    defer deinitJsonPathQuery(&q_desc, alloc);
+
+    let tight_depth = QueryLimits{ .max_depth = 2, .max_nodes = 100 };
+    expect_eq(expectQueryErr(alloc, &nested, &q_desc, tight_depth, QueryError.MaxDepthExceeded), true);
+
+    let tight_nodes = QueryLimits{ .max_depth = 64, .max_nodes = 2 };
+    expect_eq(expectQueryErr(alloc, &nested, &q_desc, tight_nodes, QueryError.MaxNodesExceeded), true);
+}
+
+test("jsonpath: cap.jsonpath dynamic mount & zero leak") {
+    const alloc = std.testing.allocator;
+    let doc = try cap.jsonpath.parseJson(alloc, "{\"items\":[{\"id\":1,\"name\":\"alpha\"},{\"id\":2,\"name\":\"beta\"}]}");
+    defer cap.jsonpath.deinitJsonVal(&doc, alloc);
+
+    let q = try cap.jsonpath.compileJsonPath(alloc, "$.items[?@.id == 2].name");
+    defer cap.jsonpath.deinitJsonPathQuery(&q, alloc);
+
+    let matches = try cap.jsonpath.queryJsonPath(alloc, &doc, &q);
+    defer cap.jsonpath.deinitMatches(matches, alloc);
     expect_eq(matches.len, 1);
-    expect_eq(strEq(matches[0].path, "$['tools'][0]['name']"), true);
-    expect_eq(strEq(matches[0].value.asString() ?? "", "search"), true);
-}
-
-fn main() {
-    test("1. RFC 9535 Bookstore Queries, Recursive Descent, Negative Index, Union & Normalized Paths", () => {
-        testRfc9535BookstoreQueries()?;
-    });
-
-    test("2. Array Slicing ([1:4], [::2], [::-1] Reverse) & Object Wildcard .*", () => {
-        testArraySlicingAndWildcards()?;
-    });
-
-    test("3. Compound Filter Expressions (&&, ||, !, Existence, Root Comparison) & queryOne/exists", () => {
-        testFilterExpressions()?;
-    });
-
-    test("4. Malformed JSONPath Syntax Rejection & JsonPath.evalJson Convenience Entry", () => {
-        testMalformedSyntaxAndEvalJson()?;
-    });
-
-    test("5. Dynamic Lazy Namespace Mounting via `import cap from \"cap\"; cap.jsonpath`", () => {
-        testCapJsonpathDynamicMount()?;
-    });
+    expect_eq(matches[0].value.kind == JsonKind.String, true);
+    expect_eq(std.mem.eql(u8, matches[0].value.str_val, "beta"), true);
+    expect_eq(std.mem.eql(u8, matches[0].path, "$['items'][1]['name']"), true);
 }

@@ -1,11 +1,48 @@
-// Source: cp/lib/jsonpath/index.cp (Unified Exports for cap:jsonpath)
-// Pure CP RFC 9535 JSONPath query engine built on top of cap:json.
+// Source: cp/lib/jsonpath/index.cp (Unified Exports for cap:jsonpath & cap.jsonpath)
+
+export {
+    JsonKind,
+    JsonMember,
+    JsonVal,
+    JsonParseError,
+    makeNull,
+    makeBool,
+    makeNumber,
+    makeString,
+    deinitJsonVal,
+    jsonEqual,
+    parseJson,
+    stringifyJson,
+} from "./json_val.cp";
 
 export {
     JsonPathError,
-} from "./parser.cp";
+    SegmentKind,
+    SelectorKind,
+    SliceSpec,
+    FilterExprKind,
+    CmpOp,
+    FilterValKind,
+    FilterQuery,
+    FilterVal,
+    FilterExpr,
+    Selector,
+    Segment,
+    JsonPathQuery,
+    deinitJsonPathQuery,
+    compileJsonPath,
+} from "./ast.cp";
 
 export {
-    PathMatch,
-    JsonPath,
-} from "./query.cp";
+    QueryError,
+    QueryLimits,
+    defaultQueryLimits,
+    NodeMatch,
+    deinitMatches,
+    formatNormalizedPath,
+    queryJsonPathWithLimits,
+    queryJsonPath,
+    queryJsonPathValues,
+    queryJsonPathStrings,
+    deinitStrings,
+} from "./eval.cp";

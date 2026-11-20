@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:jsonpath` 纯 CP RFC 9535 JSONPath 标准化查询、过滤器、递归下降与 Normalized Path 引擎（支持 `cap.jsonpath` 自动动态挂载，详见 `doc/lib/jsonpath.md`）（5/5 PASS，自动动态挂载 `cap.jsonpath`）
+- **新增标准库**：`lib/jsonpath/{json_val,ast,eval,index}.cp`，实现 RFC 9535 成员/负索引/正负步长切片/并集/递归下降 `..`、复合过滤器与 `length`/`count`/`value` 内置函数、`NormalizedPath` 输出及防指数展开 DoS 上限。
+- **新增文档与测试**：`doc/lib/jsonpath.md` 扁平文档与 `cap/test/test_jsonpath_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:otlp` 纯 CP OpenTelemetry OTLP (Traces/Metrics/Logs) JSON 导出与 W3C TraceContext/Baggage 传播引擎（支持 `cap.otlp` 自动动态挂载，详见 `doc/lib/otlp.md`）（5/5 PASS，自动动态挂载 `cap.otlp`）
 - **新增标准库**：`lib/otlp/{context,model,json,index}.cp`，实现 W3C `TraceParent`/`Baggage` 严格校验与派生、Traces/Metrics/Logs 统一遥测模型及符合 OTLP/HTTP 规范的 RFC 8259 转义 JSON 导出器。
 - **新增文档与测试**：`doc/lib/otlp.md` 扁平文档与 `cap/test/test_otlp_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
