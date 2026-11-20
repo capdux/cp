@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:highway` 纯 CP SIMD 字节扫描与 ASCII 原语引擎（5/5 PASS，自动动态挂载 `cap.highway`）
+- **新增标准库**：`lib/highway/{highway,index}.cp`（吸收对标 Bun `src/highway/`），基于 `@Vector(32, u8)` / `@Vector(16, u8)` 与标量尾部实现 `indexOfByte`、`lastIndexOfByte`、`indexOfAnyByte`、`countByte`、`indexOfNeq`、`commonPrefixLen`、`indexOfSlice`、`isAscii`、`isUtf8ValidFast`、`containsControlChars`、`toLowerAscii`、`toUpperAscii`、`replaceByte`。
+- **新增文档与测试**：`doc/lib/highway.md` 扁平文档与 `cap/test/test_highway_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:zstd` 纯 CP RFC 8878 Zstandard 帧格式与块编解码引擎（5/5 PASS，自动动态挂载 `cap.zstd`）
 - **新增标准库**：`lib/zstd/{zstd,index}.cp`，实现纯 CP `xxhash64`、`inspectFrameHeader`（支持 Skippable Frame 跳过）、RLE/Raw 压缩及 Raw/RLE/Compressed Block 解压与 `WindowTooLarge`/`OutputTooLarge`/`ChecksumMismatch` 防护。
 - **新增文档与测试**：`doc/lib/zstd.md` 扁平文档与 `cap/test/test_zstd_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

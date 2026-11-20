@@ -584,3 +584,6 @@
 
 ### 2026-11-21（`cap:zstd` 验收合并提交，顶替拉起 `cap:s3_signing` 维持 2 路常规并行）
 - **执行成果**：`lib/zstd/`（5/5 PASS，`doc/lib/zstd.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/brotli/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/s3_signing/`（吸收对标 Bun `src/s3_signing/` 的 AWS SigV4 请求签名与 S3 Presigned URL 引擎），与 `lib/highway/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:highway` 验收提交，顶替拉起 `cap:valkey` 维持 2 路常规并行）
+- **执行成果**：`lib/highway/`（5/5 PASS，`doc/lib/highway.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/valkey/`（吸收对标 Bun `src/valkey/` 的 RESP2/RESP3 Redis/Valkey 协议编解码与增量流式解析引擎），与 `lib/s3_signing/` 维持 2 路常规并行。

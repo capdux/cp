@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:highway` 纯 CP SIMD 字节扫描与 ASCII 原语引擎（5/5 PASS，文档直写 `doc/lib/highway.md`）
+- **核心设计**：采用 32B -> 16B -> 标量三段式 `@Vector` 流水线实现零外链高频扫描原语，`indexOfSlice` 利用首尾双字符 SIMD 掩码过滤，`isUtf8ValidFast` 利用 SIMD ASCII 快跳过结合标准库回退，0..129 字节全长度梯度对拍 `std.mem` 零偏差。
+
 ## 2026-11-21: 新建 `cap:zstd` 纯 CP RFC 8878 Zstandard 帧格式与块编解码引擎（5/5 PASS，文档直写 `doc/lib/zstd.md`）
 - **核心设计**：零 `libzstd` 依赖完整实现 XXH64 内容校验与多帧/Skippable Frame 解析，解码端覆盖 Predefined/RLE/FSE/Repeat 序列并严格执行窗口与输出上限防炸弹守卫。
 
