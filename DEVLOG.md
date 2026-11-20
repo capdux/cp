@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:csrf` 纯 CP HMAC-SHA256 CSRF 令牌、抗 BREACH 随机 XOR 掩码与 Origin/Referer/Sec-Fetch-Site 防护引擎（吸收对标 Bun `src/csrf/`，详见 `doc/lib/csrf.md`）（5/5 PASS，文档直写 `doc/lib/csrf.md`）
+- **核心设计**：`maskToken` 每次生成随机 32 字节一次性 pad 与原始令牌异或，彻底消除 BREACH 压缩侧信道；`verifyOrigin` 拒绝 `Sec-Fetch-Site: cross-site`、前缀域名伪造与 `@` userinfo 欺骗，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:collections` 纯 CP 高性能 BitSet、无堆 BoundedDeque、RingDeque、内联溢出 SmallVec 与泛型 BinaryHeap 集合库（吸收对标 Bun `src/collections/`，详见 `doc/lib/collections.md`）（5/5 PASS，文档直写 `doc/lib/collections.md`）
 - **核心设计**：`BoundedDeque` 与小容量 `SmallVec` 在常见热路径上实现零堆分配；`SmallVec` 超过内联阈值自动迁移至 `Allocator` 并在 `deinit` 时统一安全回收，全路径 `std.testing.allocator` 零泄漏。
 

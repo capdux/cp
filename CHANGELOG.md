@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:csrf` 纯 CP HMAC-SHA256 CSRF 令牌、抗 BREACH 随机 XOR 掩码与 Origin/Referer/Sec-Fetch-Site 防护引擎（吸收对标 Bun `src/csrf/`，详见 `doc/lib/csrf.md`）（5/5 PASS，自动动态挂载 `cap.csrf`）
+- **新增标准库**：`lib/csrf/{types,token,origin,index}.cp`（吸收对标 Bun `src/csrf/`），提供 HMAC-SHA256 常量时间签名验签与 TTL 过期校验、抗 BREACH 32B 随机 XOR 掩码令牌，以及严格 `scheme:host:port`（含 IPv6 与 `userinfo` 欺骗拦截）Origin 校验。
+- **新增文档与测试**：`doc/lib/csrf.md` 扁平文档与 `cap/test/test_csrf_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:collections` 纯 CP 高性能 BitSet、无堆 BoundedDeque、RingDeque、内联溢出 SmallVec 与泛型 BinaryHeap 集合库（吸收对标 Bun `src/collections/`，详见 `doc/lib/collections.md`）（5/5 PASS，自动动态挂载 `cap.collections`）
 - **新增标准库**：`lib/collections/{errors,bitset,deque,small_vec,binary_heap,index}.cp`（吸收对标 Bun `src/collections/`），提供 `BitSet` 集合代数与 `nextSetBit`、零堆 `BoundedDeque(T,N)`、`RingDeque(T)`、内联零堆自动溢出 `SmallVec(T,INLINE_CAP)` 与 `BinaryHeap(T,cmp)`。
 - **新增文档与测试**：`doc/lib/collections.md` 扁平文档与 `cap/test/test_collections_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
