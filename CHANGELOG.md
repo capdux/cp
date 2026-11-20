@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:queue` 三堆 O(log N) 优先级/延迟/租约超时/死信任务队列引擎（5/5 PASS，自动动态挂载 `cap.queue`）
+
+- 新建 [`lib/queue/`](file:///data/dev/cp/lib/queue/index.cp)（`job.cp`、`scheduler.cp`、`index.cp`）：`JobPriority`/`RetryPolicy`/`Job` 与 `JobQueue`（ReadyHeap/DelayedHeap/LeaseHeap 三堆 O(log N) 调度、延迟到期回迁、僵尸租约回收、指数退避重试、DLQ 死信与 `requeueDeadLetter`）；同步 [`docs/queue/queue.md`](file:///data/dev/cp/docs/queue/queue.md) 与 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_queue_production_deep.cp`](file:///data/dev/cp/cap/test/test_queue_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-20] - 新建 `cap:kv` 零 C 依赖 CRC32 WAL + Bitcask 崩溃安全持久化嵌入式存储（5/5 PASS，自动动态挂载 `cap.kv`）
 
 - 新建 [`lib/kv/`](file:///data/dev/cp/lib/kv/index.cp)（`wal.cp`、`store.cp`、`index.cp`）：`WalCodec`（`"CPKV"` + IEEE CRC32 校验 + `TornTail`/`CorruptRecord` 区分）与 `KvStore`（`open`/`put`/`get`/`delete`/`prefixScan`/`sync`、模拟崩溃尾部 `ftruncate` 自动恢复、`renameat2` 原子 `compact()` 回收死记录）；同步 [`docs/kv/kv.md`](file:///data/dev/cp/docs/kv/kv.md) 与 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_kv_production_deep.cp`](file:///data/dev/cp/cap/test/test_kv_production_deep.cp) `-m` 5/5 PASS。

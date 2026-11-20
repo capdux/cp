@@ -55,3 +55,6 @@
 
 ### 2026-11-21（`cap:kv` 验收固化，顶替拉起 `cap:cluster` 分布式集群协调原语维持 3 路并行）
 - **执行成果**：子智能体 31（`lib/kv/`，5/5 PASS，含 `cap.kv` 动态挂载）经 `verify_module.sh` 一键验收回收并提交 Git；立即顶替派发子智能体 34（新建 `lib/cluster/` 虚拟节点一致性哈希环、SWIM 成员状态机与单调 Fencing Token 选主租约），与 `lib/queue/`、`lib/graph/` 保持 3 路正交并行。
+
+### 2026-11-21（`cap:queue` 验收固化，顶替拉起 `cap:geo` 地理空间与 Geohash 检索引擎维持 3 路并行）
+- **执行成果**：子智能体 32（`lib/queue/`，5/5 PASS，含 `cap.queue` 动态挂载）经 `verify_module.sh` 一键验收回收并提交 Git；立即顶替派发子智能体 35（新建 `lib/geo/` Haversine/方位角/点在多边形内/Geohash 8 邻域与半径空间索引），与 `lib/graph/`、`lib/cluster/` 保持 3 路正交并行。

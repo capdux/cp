@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:queue` 优先级/延迟/租约超时/死信任务队列引擎（5/5 PASS，自动动态挂载 `cap.queue`）
+
+- **落地成果**：`lib/queue/`（`job.cp`/`scheduler.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过，单轮完成回收、`cp_lib_ref.md` 更新与提交，并顶替派发 `cap:geo`（Haversine 测地线/Geohash 8 邻域/多边形判定与空间半径检索）。
+
+---
+
 ## 2026-11-20: 新建 `cap:kv` CRC32 WAL + Bitcask 崩溃安全嵌入式键值存储（5/5 PASS，自动动态挂载 `cap.kv`）
 
 - **落地成果**：`lib/kv/`（`wal.cp`/`store.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过，实测磁盘持久化、尾部半写截断恢复与 500+ 死记录原子压缩回收，单轮完成回收、`cp_lib_ref.md` 更新与提交，并顶替派发 `cap:cluster`（一致性哈希环/SWIM 成员表/Fencing Token 选主租约）。
