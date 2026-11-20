@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-20: 新建 `cap:text` AI RAG 分块/模糊搜索/Token 预算引擎（5/5 PASS，自动动态挂载 `cap.text`）
+
+- **落地成果**：`lib/text/`（`chunker.cp`/`fuzzy.cp`/`tokens.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过，单轮完成回收、`cp_lib_ref.md` 更新与提交，并顶替派发 `cap:cbor`（RFC 8949 CBOR + MessagePack 紧凑二进制编解码）。
+
+---
+
 ## 2026-11-20: 新建 `cap:vector` 本地 SIMD 向量检索 + BM25 + RRF 混合 RAG 引擎（5/5 PASS）
 
 - **落地成果**：`lib/vector/`（`flat_index.cp`/`bm25.cp`/`hybrid.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过，单轮完成回收、`cp_lib_ref.md` 更新与提交，并顶替派发 `cap:xml`（XML 1.0 解析/DOM/Writer/路径查询）。

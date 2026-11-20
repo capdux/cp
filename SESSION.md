@@ -40,3 +40,6 @@
 ### 2026-11-20（排查收口旧 Swarm 面板提示 + `cap:vector` 验收提交，顶替拉起 `cap:xml` 维持 3 路并行）
 - **用户指令**：要求处理底部旧 Swarm 提示（`task-capsurf-20261119-compiler-regression`），不再发送或提示。已确认 `queue.db` 双端 `unacked` 均为 `[]`、旧 Swarm 成员均已 `killed`，在面板追加无 `@` 的 `[归档闭环]` 收口记录（`seq: 9`）顶掉旧预览。
 - **执行成果**：子智能体 24（`lib/vector/`，5/5 PASS，含 `cap.vector` 动态挂载）经 `verify_module.sh` 一键验收回收并提交 Git；顶替派发子智能体 27（新建 `lib/xml/` XML 1.0 解析/DOM/安全 Writer/路径查询），与 `lib/metrics/`、`lib/text/` 保持 3 路正交并行。
+
+### 2026-11-20（`cap:text` 验收固化，顶替拉起 `cap:cbor` RFC 8949 CBOR & MessagePack 引擎维持 3 路并行）
+- **执行成果**：子智能体 26（`lib/text/`，5/5 PASS，含 `cap.text` 动态挂载）经 `verify_module.sh` 一键验收回收并提交 Git；立即顶替派发子智能体 28（新建 `lib/cbor/` RFC 8949 CBOR + MessagePack 二进制编解码），与 `lib/metrics/`、`lib/xml/` 保持 3 路正交并行。
