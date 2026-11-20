@@ -57,8 +57,10 @@
 | `lib/http/status.cp` | `HTTP_STATUS_TABLE`（64 项）与 `HTTPStatus` 状态码短语/语义判定工具 | `src/http/http.cp` |
 | `lib/http/etag.cp` | Wyhash ETag 生成与强/弱 `If-None-Match` 校验 | `src/http_types/ETag.cp` |
 | `lib/http/mime.cp` | 201 项完整 `MIME_DATABASE` 映射、压缩/文本/字符集判定与二进制 `sniffMagic` 嗅探 | `src/http_types/MimeType.cp` |
-| `lib/http/cookie.cp` | RFC 6265 `Cookie` 请求头解析、`CookieMap` 与 `Set-Cookie` 序列化 | `src/runtime/webcore/CookieMap.cp` |
+| `lib/http/cookie.cp` | RFC 6265 `CookieMap`、`CookieCodec`（`parseSetCookie`/`formatSetCookie`/`parseCookieHeader`）与 `HttpCookieJar`（域名/路径/Secure/过期/公共后缀防护） | `src/runtime/webcore/CookieMap.cp` |
 | `lib/http/form_data.cp` | `x-www-form-urlencoded` 解析与 `multipart/form-data` 边界提取 | `src/runtime/webcore/FormData.cp` |
+| `lib/http/sse.cp` | WHATWG Server-Sent Events 增量流式状态机 (`SseParser`) 与编码器 (`SseEncoder`)，适配 AI/LLM 流式输出 | `cp/lib/http/sse.cp` |
+| `lib/http/multipart.cp` | RFC 7578 二进制安全 `MultipartBuilder`、`MultipartParser` 与 `MultipartBoundary` | `cp/lib/http/multipart.cp` |
 | `lib/http/request.cp` / `response.cp` / `server.cp` | 高层 `Request` / `Response` / `HttpServer`、`serve` / `fetch` / `json` | `src/http/http.cp` |
 | `lib/http/client.cp` | 工业级 HTTP/1.1 `HTTPClient`（URL 解析、请求格式化、Chunked 解码） | `src/http/http.cp` |
 | `lib/http/wire_http.cp` | 工业级 `HttpRequestBuilder` 与 `HttpResponseParser`（`100-continue`、`obs-fold`、Chunked+解压） | `src/http/http.cp` |
@@ -524,6 +526,59 @@ pub fn demoDeepHttpEngines(): !void {
     const chosen = ContentEncodingNegotiator.negotiate("deflate;q=0.5, gzip;q=0.9", supported[0..3]); // Encoding.Gzip
 }
 ```
+
+---
+
+### 11. 现代 Web & AI Streaming 协议原语：SSE、`Multipart` 与 `HttpCookieJar`
+
+针对 AI Agent 流式推理（OpenAI / Anthropic SSE）、文件上传（RFC 7578）与有状态客户端会话（RFC 6265），`cap:http` 提供三大生产级原语：
+
+1. **WHATWG Server-Sent Events (`SseEvent` / `SseParser` / `SseEncoder` in `sse.cp`)**：
+   - `SseParser.init(alloc)` / `initWithMaxSize(alloc, max_bytes)`：增量流式状态机，`feed(chunk)` 支持跨 chunk 切分、`\r\n` / `\n` / `\r` 行尾、多行 `data:` 自动以 `\n` 拼接、`: comment` 注释跳过、流首 UTF-8 BOM 剥离、`lastEventId()` 追踪与单事件最大字节数防 DoS 限制；`SseEvent.isDone()` 直接识别 `[DONE]` 结束哨兵。
+   - `SseEncoder.formatEvent(alloc, ev)` 与 `SseEncoder.formatComment(alloc, text)`：自动按行拆解多行 `data` 并校验 `event_type`/`id` 不含非法换行注入。
+2. **RFC 7578 二进制安全 Multipart FormData (`MultipartPart` / `MultipartBoundary` / `MultipartBuilder` / `MultipartParser` in `multipart.cp`)**：
+   - `MultipartBoundary.extractFromContentType(ct)`：支持带引号/不带引号 `boundary=...` 提取与非 `multipart/*` 校验。
+   - `MultipartBuilder`：`addField(name, value)`、`addFile(name, filename, content_type, data)`、`contentTypeHeader()` 与 `build()`。
+   - `MultipartParser.parse(alloc, boundary, body)`：跳过 preamble 与 epilogue，二进制安全边界扫描（不受载荷内 `\0`、`\r\n` 或伪边界前缀干扰），提取 `name`、`filename`、`content_type` 与零拷贝 `body` 切片。
+3. **RFC 6265 Cookie 编解码与状态容器 (`SameSite` / `HttpCookie` / `CookieCodec` / `HttpCookieJar` in `cookie.cp`)**：
+   - `CookieCodec.parseSetCookie(header)`、`formatSetCookie(alloc, cookie)`（含 `Expires` IMF-fixdate / `Max-Age` / `Domain` / `Path` / `Secure` / `HttpOnly` / `SameSite`）与 `parseCookieHeader(alloc, header)`。
+   - `HttpCookieJar`：支持存储/覆盖/删除（`Max-Age <= 0` 或过期）、RFC 6265 域名后缀匹配（含基础公共后缀边界防越界校验）、路径前缀匹配与长度降序排列、`Secure` 协议校验以及 `cookieHeaderFor(alloc, host, path, is_https, now_epoch_s)`。
+
+```typescript
+import {
+    SseEvent, SseParser, SseEncoder,
+    MultipartBoundary, MultipartBuilder, MultipartParser,
+    HttpCookie, CookieCodec, HttpCookieJar
+} from "cap:http";
+const std = @import("std");
+
+pub fn demoWebPrimitives(): !void {
+    const alloc = std.heap.page_allocator;
+
+    // 1. SSE 增量流式解析（适配 AI LLM 流式响应）
+    let sse = SseParser.init(alloc);
+    defer sse.deinit();
+    const events = try sse.feed("id: 1\nevent: delta\ndata: Hello\ndata: CP\n\ndata: [DONE]\n\n");
+    defer sse.freeEvents(events); // events[0].data == "Hello\nCP", events[1].isDone() == true
+
+    // 2. Multipart 文件上传打包与解析
+    let mb = MultipartBuilder.init(alloc);
+    defer mb.deinit();
+    try mb.addField("model", "cp-agent");
+    try mb.addFile("file", "weights.bin", "application/octet-stream", "\x00\x01\x02");
+    const mp_body = try mb.build();
+    defer alloc.free(mp_body);
+    const bnd = MultipartBoundary.extractFromContentType(mb.contentTypeHeader()).?;
+    const parts = try MultipartParser.parse(alloc, bnd, mp_body);
+    defer MultipartParser.freeParts(alloc, parts);
+
+    // 3. RFC 6265 CookieJar
+    let jar = HttpCookieJar.init(alloc);
+    defer jar.deinit();
+    try jar.setFromHeader("api.example.com", "sid=xyz; Domain=example.com; Path=/api; Secure; Max-Age=3600", 1700000000);
+    const cookie_hdr = try jar.cookieHeaderFor(alloc, "api.example.com", "/api/chat", true, 1700000010);
+    defer if (cookie_hdr.len > 0) alloc.free(cookie_hdr); // "sid=xyz"
+}
 ```
 
 ---

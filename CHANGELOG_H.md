@@ -1,12 +1,15 @@
 ## 2026-10-06
+
 - **Doc**: Refactored `cp_ref.md` to incorporate recently developed CP features, including Move semantics, Context Lifting (CPS Await), OOP destructors (`init`/`release`), automatic `defer`, cross-thread workers, and ES6 template strings.
 - **Doc**: Added future architecture proposals (Typed Mailboxes, Pattern Matching Guards, Pipeline Operator, Comptime Macros) to `cp_ref.md`.
 
 ## 2026-10-06 (Re-Execution)
+
 - **Doc**: Safely appended recent CP language implementations (Move semantics, CPS Context Lifting, RAII with auto-defer, OOP init/release) to `cp_ref.md` using compliant file editing tools.
 - **Doc**: Appended architectural evolution proposals (Typed Mailboxes, Guard Clauses, Pipeline Operator, Comptime Macros) to `cp_ref.md` without destructive file operations.
 
 ## 2026-10-06 晚间 - 清理根目录残留实验代码
+
 - **删除**: 删除了根目录下约 54 个 `test_*.zig` 实验性草稿文件（如 `test_linux_accept.zig`, `test_channel.zig` 等）。
 - **删除**: 删除了上述 `.zig` 文件对应的同名无后缀 ELF 编译二进制可执行文件。
 - **删除**: 删除了残留的测试日志与输出文件 `test_data.txt` 和 `test_io.txt`。
@@ -15,7 +18,7 @@
 - 2026-10-06: Fully encapsulated and implemented the global `Math` object, mapping it to Zig's `std.math` functions. Fixed CP Parser to correctly handle `FloatLiteral` inside expressions. Fixed `cp_eq` operator to properly evaluate float equality. Added `cap/test/test_math.cp`.
 - 2026-10-06: Implemented `Map` and `Set` advanced data structures. Extended the `Message` union to include `boolean`. Integrated custom hash contexts in Zig to dynamically hash and equate `Message` types allowing mapping of strings, floats, ints, and bools seamlessly. Fixed a critical pointer stability panic in `Expr::New` object allocation where memory was erroneously reset to `undefined` after proper initialization.
 
-- 2026-10-11: 
+- 2026-10-11:
   - **cpc/src/lexer.rs, ast.rs, parser.rs, sema.rs**: Added `mut` and `move` keywords and tokens, removed `let mut`. Added Semantic errors for borrowing and moving conflicts.
   - **cpc/src/codegen.rs**: Enhanced State Machine generation to track variable ownership (Move semantics). Injected `__var_moved` flags and `defer release()` for Automatic Resource Management (Auto-Drop).
   - **cap/test/test_ownership_pass.cp**: Added positive test case for RAII / Auto-Drop execution.
@@ -23,6 +26,7 @@
   - **cp_ref.md**: Updated memory safety specification guidelines.
 
 ## 2026-10-16 - 零摩擦生命周期与栈绑定借用视图 (`ref struct`)
+
 - **修改**: `cp_ref.md` — 完善第十章内存安全模型，新增零摩擦生命周期（NLL、三级函数返回生命周期推导、`&param` 绑定）、`Shared<T>` 与 C# 风格 `ref struct`（栈绑定借用视图）规范。
 - **修改**: `cpc/src/lexer.rs` — 新增 `Token::Ref` (`ref`) 与 `Token::Struct` (`struct`) 词法标记。
 - **修改**: `cpc/src/ast.rs` — `Class` 新增 `is_ref: bool` 标记；`Expr` 新增 `Borrow(Box<Expr>, bool)`；`Type` 新增 `BorrowType { inner, is_mut, lifetimes }` 与 `Shared(Box<Type>)`。
@@ -39,6 +43,7 @@
 ## 2026-10-18 (Trait、单继承 Class 与 `_`/`this` 实例所有权、借用及生命周期)
 
 ### 修改文件 (Modified)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - 更新第 1 节 `match` 模式匹配通配符为 `*`，避免与自身实例别名 `_` 冲突；
   - 更新第 2 节 `trait` 与 `class` 规范，明确支持单继承 `extends` 与 `trait` 默认方法实现；
@@ -65,6 +70,7 @@
   - 实现成员方法返回 `&T` 或 `ref struct` 时自动绑定接收者生命周期（Tier 1 零标注穿透）并在调用点接入 NLL 借用冲突检查。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_trait_class_pass.cp`](file:///data/dev/cp/cap/test/test_trait_class_pass.cp): `trait`、单继承 `class extends`、`_` 接收者、省略 `_.` 互调、`*` 通配符、`mut _` / `move _` 接收者与方法返回借用 NLL 正向综合测试。
 - [`cap/test/test_trait_class_fail_readonly_mutate.cp`](file:///data/dev/cp/cap/test/test_trait_class_fail_readonly_mutate.cp): 缺省只读方法内修改 `_.val` 编译期拦截反向测试。
 - [`cap/test/test_trait_class_fail_nll_conflict.cp`](file:///data/dev/cp/cap/test/test_trait_class_fail_nll_conflict.cp): 方法返回 `&Tensor` 借用存活期间对宿主对象调用 `mut _` 方法的 NLL 借用冲突拦截反向测试。
@@ -76,6 +82,7 @@
 ## 2026-10-18 (Part 2: 函数三态返回类型 `?T ! E`、错误冒泡、`? default`、`try/catch`、可选链、`Box<dyn Trait>` 胖指针与 `switch` 模式匹配)
 
 ### 修改文件 (Modified)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - 更新第 1 节模式匹配关键字为 `switch`，通配符为 `*`；
   - 新增第 11 节《函数返回类型（三态模型）、错误冒泡与捕获、可选链、`Box<dyn Trait>` 胖指针与 `switch` 模式匹配》，完整记录三态返回类型、`?` / `? default` / `? return default` / `??` 运算符分工、`try { ... } catch` 自动冒泡块、声明式 `from` 错误转换、内置 `Error` 结构体、`Box<dyn Trait>` 胖指针与 `downcast<T>()` 规范及安全边界。
@@ -105,6 +112,7 @@
   - 实现 `infer_cp_type` 完整类型推导、`check_switch_exhaustiveness` 编译期穷尽检查、`generate_switch` 模式匹配生成、`try { ... } catch` 区域自动冒泡包裹，以及 `?` / `? default` / `? return default` / `??` / `catch` / `?.` 代码生成。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_error_box_switch_pass.cp`](file:///data/dev/cp/cap/test/test_error_box_switch_pass.cp): 三态返回类型、`?` 冒泡、`? default`、`? return default`、`??`、`catch`、`try/catch` 自动冒泡块、匿名错误集、声明式 `from`、统一 `Error`、`?.` 可选链、`Box<dyn Trait>` 胖指针与 `downcast<T>()`、`switch` 模式匹配全特性正向测试。
 - [`cap/test/test_error_fail_null_coalesce_on_err.cp`](file:///data/dev/cp/cap/test/test_error_fail_null_coalesce_on_err.cp): 对未处理错误的 `T ! E` 直接使用 `??` 的编译期报错反向测试。
 - [`cap/test/test_error_fail_non_exhaustive_switch.cp`](file:///data/dev/cp/cap/test/test_error_fail_non_exhaustive_switch.cp): `switch` 非穷尽匹配（缺失 `null` 与错误变体分支）的编译期报错反向测试。
@@ -115,11 +123,14 @@
 ## [2026-10-18] 错误兜底语法精炼 (Error Fallback Refinement)
 
 ### 修改文件 (Modified)
+
 - [`cap/test/example_showcase.cp`](file:///data/dev/cp/cap/test/example_showcase.cp):
   - 简化 `safeGetConfig` 中的错误兜底为纯粹的 `let cfg = readConfigFile(filename) ? "DEFAULT_CONFIG";`，省略冗余的 `return` 关键字，确保变量初始化与表达式级降级语义保持严格一致。
+
 ## [2026-10-19] 静态匿名对象与动态字典 (Static Anonymous Objects & Dynamic Dict)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs):
   - 新增 `Token::DotDotDot` (`...`) 与 `Token::HashLBrace` (`#{`)。
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs):
@@ -150,6 +161,7 @@
   - 优化 `@print` 单参数安全打印，防止格式化注入错误。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_static_object.cp`](file:///data/dev/cp/cap/test/test_static_object.cp): 静态匿名对象字面量、`.` 属性访问、解构赋值与 `...` 展开覆盖测试。
 - [`cap/test/test_map_set_dict.cp`](file:///data/dev/cp/cap/test/test_map_set_dict.cp): `Map` 与 `Set` 完整 ES6 接口、`#{ ... }` 动态字典、下标索引读写、字典展开及 `??` 空值合并测试。
 
@@ -158,6 +170,7 @@
 ## [2026-10-21] 阶段一：MetaAnnotation 极简元注解系统 (Phase 1: MetaAnnotation Core System)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs):
   - 新增 `Token::Meta` (`meta` 关键字)。
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs):
@@ -187,6 +200,7 @@
   - 新增第十二章《MetaAnnotation 极简元注解系统规范》，完整记录 `meta` 关键字、`@target`、`@once`、`@reflect`、三免法则与多值聚合规范。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_meta_pass.cp`](file:///data/dev/cp/cap/test/test_meta_pass.cp): 元注解 `meta` 声明、`@target` 目标约束、`@reflect`、`@once`、无参免 `()`、单参免键名、同名注解天然多重收集为数组及 Ad-hoc 免声明即用正向综合测试。
 - [`cap/test/test_meta_fail_target.cp`](file:///data/dev/cp/cap/test/test_meta_fail_target.cp): 将 `@target(method)` 元注解非法附着在类上触发编译期语义拦截反向测试。
 - [`cap/test/test_meta_fail_once.cp`](file:///data/dev/cp/cap/test/test_meta_fail_once.cp): 将 `@once` 元注解重复多次标注触发编译期语义拦截反向测试。
@@ -196,6 +210,7 @@
 ### 阶段二：Dual-State Reflection 双态反射模型规范与实现
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs):
   - 在 `Expr` 枚举中新增 `ReflectType { span: Span, target_ty: Type }` 与 `ReflectOf { span: Span, expr: Box<Expr> }` 表达式节点。
 - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs):
@@ -219,6 +234,7 @@
   - 代码格式化适配。
 
 ### 新增文件 (Added)
+
 - [`lib/cap/reflect.cp`](file:///data/dev/cp/lib/cap/reflect.cp): CP 标准库反射声明模块（`cap:reflect`）。
 - [`cap/test/test_reflect_pass.cp`](file:///data/dev/cp/cap/test/test_reflect_pass.cp): 双态反射正向综合测试，验证 `reflect.type<T>()`、`reflect.of(val)`、`info.name`、`info.isRef`、`info.meta` 字典读取与存在性判断、`info.fields`、`info.methods`、同名注解数组收集、`getField` 与 `getMethod` 以及 `ref class` 反射。
 - [`cap/test/test_reflect_fail_unmarked.cp`](file:///data/dev/cp/cap/test/test_reflect_fail_unmarked.cp): 未标记 `@reflect` 的类调用 `reflect.type<T>()` 触发编译期精准拦截反向测试。
@@ -229,6 +245,7 @@
 ### 阶段三：极简装饰器系统与 AOP 静态合成规范与实现
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs):
   - 注册 `Token::Dec` (`dec` 3 字母关键字)。
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs):
@@ -256,6 +273,7 @@
   - 新增第十四章《Decorators 极简装饰器与 AOP 静态合成规范》，详细记录 `dec` 关键字、三免法则、洋葱模型、双轨参数风格与静态合成机制。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_dec_pass.cp`](file:///data/dev/cp/cap/test/test_dec_pass.cp): 极简装饰器正向综合测试，验证无参直接装饰器 `@doubleResult`、直接带参装饰器 `@tag("SERVICE")`、高阶工厂装饰器 `@prefixFactory("GLOBAL")`、洋葱模型多装饰器堆叠 `@outerWrap` + `@innerWrap`、类方法修饰、顶层独立函数修饰及与 `@reflect` / `@Route` 元注解共存。
 - [`cap/test/test_dec_fail_target.cp`](file:///data/dev/cp/cap/test/test_dec_fail_target.cp): 将方法装饰器非法附着在类字段上触发编译期语义拦截反向测试。
 
@@ -264,6 +282,7 @@
 ### 阶段四：类型感知宏与循环安全系统 (Type-Directed Macro & Anti-Cycle System)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs):
   - 注册 `Token::Macro` (`macro` 关键字)。
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs):
@@ -295,6 +314,7 @@
   - 新增第十五章《类型感知宏与循环安全系统》，详细规范宏语法、内建派生宏、四大防死锁循环安全铁律。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_macro_pass.cp`](file:///data/dev/cp/cap/test/test_macro_pass.cp): 类型感知宏与循环安全正向综合测试，验证 `@Json` 序列化派生、`@Table("t_users")` 表名映射、无参 `@Table` 默认类名映射、`@ToString` 结构打印、用户自定义 `macro Tag` 与 `macro Environment` 派生方法、以及互引类型（Tier 1 TypeDeclInfo）安全内省实测。
 - [`cap/test/test_macro_fail_target.cp`](file:///data/dev/cp/cap/test/test_macro_fail_target.cp): 将类宏 `@Json` 非法附着在类方法上触发编译期语义拦截反向测试。
 
@@ -303,6 +323,7 @@
 ### 管道操作符与主题占位符系统 (Pipeline Operator `|>` & Topic Placeholder `.`)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs):
   - 注册 `Token::Pipeline` (`|>` 操作符)，排在 `Token::Pipe` (`|`) 之前以优先匹配长符号。
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs):
@@ -328,6 +349,7 @@
   - 新增第十六章《管道操作符与主题占位符》，规范操作符优先级、3-Tier 降糖规则、单次求值保证与 AI Agent 数据流工程范式。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_pipe_pass.cp`](file:///data/dev/cp/cap/test/test_pipe_pass.cp): 管道与占位符完整正向综合功能测试，覆盖裸函数、默认首参、显式占位符槽位、对象成员方法流、字段访问算术、多行链式流水线、副作用单次求值（`get_seed() |> combine(., .)` 执行次数严格为 1）以及 AI Agent RAG 认知流水线实测。
 - [`cap/test/test_pipe_fail_placeholder.cp`](file:///data/dev/cp/cap/test/test_pipe_fail_placeholder.cp): 在管道操作符外部非法使用主题占位符 `.` 的编译期语义拦截反向测试。
 
@@ -336,6 +358,7 @@
 ### Unsafe 与裸指针系统规范与实现 (Unsafe & Raw Pointer System: *T!, **T!, unsafe fn, unsafe {}, Deref & Cast)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs):
   - 注册 `Token::Unsafe` (`unsafe` 关键字)。
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs):
@@ -371,13 +394,14 @@
   - 新增第十八章《Unsafe 与裸指针系统规范》，完整记录指针语法、解引用规则、与错误联合解耦、显式强转、安全拦截与生产级代码示例。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_unsafe_pass.cp`](file:///data/dev/cp/cap/test/test_unsafe_pass.cp): 涵盖一级裸指针参数修改、二级裸指针解引用修改、标量裸指针修改、三态错误联合共存以及 switch 模式匹配的全量正向功能测试。
 - [`cap/test/test_unsafe_fail_call.cp`](file:///data/dev/cp/cap/test/test_unsafe_fail_call.cp): 验证在 unsafe 块外部调用 `unsafe fn` 被编译期硬性拦截并报错的反向测试。
 - [`cap/test/test_unsafe_fail_cast.cp`](file:///data/dev/cp/cap/test/test_unsafe_fail_cast.cp): 验证在 unsafe 块外部执行 `&x as *T!` 强转被编译期硬性拦截并报错的反向测试。
 - [`cap/test/test_unsafe_fail_deref.cp`](file:///data/dev/cp/cap/test/test_unsafe_fail_deref.cp): 验证在 unsafe 块外部执行裸指针解引用 `p.*` 被编译期硬性拦截并报错的反向测试。
 
-
 ### 修改文件 (Modified)
+
 - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs):
   - 注册 `Token::Of` (`of`) 与 `Token::In` (`in`) 关键字。
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs):
@@ -405,6 +429,7 @@
   - 新增第十七章《迭代系统》，详尽记录三维借用语义表、语法包容性、区间范围、模式解构与编译期安全铁律。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_for_pass.cp`](file:///data/dev/cp/cap/test/test_for_pass.cp): 涵盖只读借用 `for x of list`、原地可变借用 `for &x of list`、所有权转移 `for move x of list`、半开区间 `0..5`、闭区间 `1..=5`、动态变量区间、对象模式解构以及可选小括号与 `let` 语法糖的正向综合功能测试。
 - [`cap/test/test_for_fail_mutate.cp`](file:///data/dev/cp/cap/test/test_for_fail_mutate.cp): 在 `for x of list` 只读借用循环体内试图调用 `list.push(...)` 触发 `MutateWhileBorrowedInFor` 语义拦截反向测试。
 - [`cap/test/test_for_fail_use_after_move.cp`](file:///data/dev/cp/cap/test/test_for_fail_use_after_move.cp): 在 `for move x of list` 所有权转移后试图再次读取 `list` 触发 `UseOfMovedVar` 语义拦截反向测试。
@@ -414,6 +439,7 @@
 ## 2026-10-25 (语言设计规范 `cp_ref.md` 全量同步与补全)
 
 ### 修改文件 (Modified)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - **修正第 3 节对象模型描述**：消除旧文档“不支持动态增删属性”的表述矛盾，重构为显式的“静态匿名对象 `{ ... }`（编译期零成本）与动态字典 `#{ ... }`（运行时动态哈希）”双轨分立机制。
   - **新增第十九章《静态匿名对象与动态字典系统》**：完整定义静态匿名对象 `{ ... }` 的编译期强类型推导、模式解构、展开与覆盖语法；完整定义动态字典 `#{ ... }` / `Dict`、运行时下标索引读写 `d[k] = v`、字典展开与空值合并运算符 `??`。
@@ -427,6 +453,7 @@
 ## 2026-10-25 (模板字符串系统端到端打通、转义加固与编译期常量折叠)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs):
   - 增强 `Token::TemplateStringRaw` 解析逻辑，支持 `\$`（字面量美元符号）、`` \` ``（字面量反引号）与 `\\`（字面量反斜杠）的转义，杜绝价格符号与格式化冲突；
   - 引入引号状态机（`in_single_quote`, `in_double_quote`, `escape`），在 `${...}` 提取内部表达式时，智能忽略字符串字面量内部的花括号，彻底修复包含 `{` / `}` 的嵌套字符串提前闭合 Bug。
@@ -449,6 +476,7 @@
 ## 2026-10-25 (`_` / `this` 首参三态借用与所有权设计全景验证与 `&_` 增强)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs):
   - 扩展 `parse_params` 参数解析，新增对 `Token::Ampersand`（`&_`、`&this`、`&mut _`、`&mut this` 及 `&param`）的首参修饰支持，使成员方法可变借用语法与 `for &x of list` 原地借用和 `&param` 借用参数保持绝对正交统一。
 - [`cpc/src/codegen.rs`](file:///data/dev/cp/cpc/src/codegen.rs):
@@ -457,6 +485,7 @@
   - 更新第 2 节与第 10.5 节规范，完整收录首参三态体系：缺省省略只读借用、`&_`（及兼容 `mut _`）可变借用、`move _`（及兼容 `move this`）所有权消费，详尽定义其语义规则、生命周期联动与编译期安全保障。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_this_underscore_interchange.cp`](file:///data/dev/cp/cap/test/test_this_underscore_interchange.cp):
   - 涵盖缺省只读借用省略、`_` 与 `this` 属性互访、`&_` / `mut _` / `&this` / `mut this` 可变借用变异、`move _` / `move this` 所有权消费、单继承派生调用及异步状态机 `async fn` 上下文穿透综合测试用例，100% 编译运行通过。
 
@@ -465,6 +494,7 @@
 ## 2026-10-28 (异步任务编排 cap:parallel、事件驱动 cap:events 与跨任务借用安全检查)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs):
   - 为 `ArrowExpr` 新增 `is_async: bool` 字段，精确区分普通同步闭包与 `async () => { ... }` 异步任务闭包。
 - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs):
@@ -493,6 +523,7 @@
   - 更新第二十三章系统标准库总表，收录 `cap:parallel` 与 `cap:events`。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_parallel_join.cp`](file:///data/dev/cp/cap/test/test_parallel_join.cp): 跨任务并发 `spawn`、`join` 屏障汇聚与 `let [msg1, msg2] = await join(...)` 元组解包测试，原生全绿通过。
 - [`cap/test/test_parallel_fail_borrow.cp`](file:///data/dev/cp/cap/test/test_parallel_fail_borrow.cp): 验证跨 `spawn` 边界非法捕获局部临时借用触发编译期严密拦截。
 - [`cap/test/test_events_pass.cp`](file:///data/dev/cp/cap/test/test_events_pass.cp): `EventEmitter` 事件监听分发与 `Event` 协程同步信号标志测试，原生全绿通过。
@@ -502,6 +533,7 @@
 ## 2026-10-28 (`@parallel` 多核 Worker 线程池、`spawn.cpu` 专用计算线程与跨任务只读/可变借用及所有权检查)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs):
   - 注册 `@task_spawn_cpu` 内建函数并返回 `Type::Ref("Task")`；
   - 在 `infer_type` 的 `Expr::Call` 分支识别 `spawn.cpu(...)` 属性调用语法，推导返回 `Task` 类型。
@@ -519,6 +551,7 @@
   - 更新第 22.5 节，完整收录 `@parallel` / `@single_thread` / `cap.json` 多核运行时配置、`spawn.cpu` 专用计算线程原语及跨任务只读借用、禁止可变修改与 `move` 所有权检查规范。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_parallel_fail_mutate_capture.cp`](file:///data/dev/cp/cap/test/test_parallel_fail_mutate_capture.cp): 验证在 `spawn` 并发任务中直接修改捕获的外部变量时触发编译期拦截。
 - [`cap/test/test_parallel_fail_use_after_move.cp`](file:///data/dev/cp/cap/test/test_parallel_fail_use_after_move.cp): 验证在 `spawn` 并发任务中 `move` 转移外部变量所有权后，外层再次访问触发 `Use of moved value` 编译期拦截。
 
@@ -527,6 +560,7 @@
 ## 2026-10-28 (全局统一只读借用 `&`、可变借用 `*`、Unsafe 裸指针 `*... !` 与所有权转移 `move` 符号标准)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs):
   - `parse_params`：将前置 `*`（如 `*x: T`、`*_`、`*this`）及 `: *T` 类型参数统一解析为可变借用（`is_mut = true`）；将前置 `&`（如 `&x: T`、`&_`、`&this`）统一解析为显式只读借用（`is_mut = false`）；
   - `parse_for_stmt`：将 `for *x of list` 统一解析为原地可变借用（`IterMode::MutBorrow`），将 `for x of list` 与 `for &x of list` 统一解析为只读借用（`IterMode::Borrow`）；
@@ -547,21 +581,12 @@
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - 在第十章新增《0. 全局借用、所有权与指针符号统一标准 (Global Symbol Matrix)》，并全面同步更新第 2.5 节、第十章、第十七章与第十八章示例与规范表。
 
-
-
-
-
-
-
-
-
-
-
 ## [Unreleased] - 2026-10-28 (Part 3)
 
 ### 可变借用变量操作 (`*v`, `p.* = 20`, `p.a = 10`, `p.push(30)`) 与容器改变操作全面纳入可变借用检查 (`Array`/`Vec`, `Map`, `Set`, `Dict`)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs):
   - `parse_params` 将非接收者参数的前置 `*x: T` 与 `&x: T` 统一包装为 `Type::BorrowType { inner, is_mut, lifetimes }`，与 `x: *T` / `x: &T` 保持完全等价的 AST 表示；
   - `parse_base_type` 支持 `Array<T>` 与 `Vec<T>` 泛型容器类型语法并映射为 `Type::Array(Box::new(elem))`；
@@ -582,6 +607,7 @@
   - 在第十章第 3 节补充可变借用变量的三类核心操作（`p.* = 20`、`p.a = 10`、`p.push(30)`）及 `Array`/`Vec`、`Map`、`Set`、`Dict` 容器改变操作的四重编译期可变借用检查规范与代码示例。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_mut_borrow_ops.cp`](file:///data/dev/cp/cap/test/test_mut_borrow_ops.cp): 覆盖基础类型 `*v` (`p.* = 20`)、对象字面量 `*v` (`p.a = 100`)、数组 `*v` (`p.push(30)`、`p.pop()`、`p[1] = 25`、`for *item of v`) 以及 `Map`/`Set`/`Dict` 全套可变借用操作的正向综合测试。
 - [`cap/test/test_mut_borrow_fail_readonly.cp`](file:///data/dev/cp/cap/test/test_mut_borrow_fail_readonly.cp): 验证通过只读借用 `let r = &v` 调用 `r.push(30)` 被编译器静态拦截的反向测试。
 - [`cap/test/test_mut_borrow_fail_conflict.cp`](file:///data/dev/cp/cap/test/test_mut_borrow_fail_conflict.cp): 验证当 `Map` 存在活跃只读借用 `let r = &m` 时调用 `m.set("k", 1)` 被编译器静态拦截的反向测试。
@@ -591,6 +617,7 @@
 ### 严禁同作用域重复声明变量 (Disallow Same-Scope Variable Redeclaration)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs):
   - 新增 `SemaError::DuplicateVarDecl(String, Span)`（`Compile Error: Cannot redeclare block-scoped variable '{0}' at {1:?}`）；
   - 在 `analyze_pattern` 中严格检查当前块作用域（`self.scopes.last()`）是否已存在同名变量绑定（`SymbolKind::Var`，排除通配符 `_`），若在同一 `{}` 作用域重复声明则立即报错拦截；
@@ -603,6 +630,7 @@
   - 在第十章第 1 节新增“严禁同作用域重复声明变量（No Same-Scope Redeclaration）”规范，并同步更新第 3 节示例。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_var_fail_redeclare.cp`](file:///data/dev/cp/cap/test/test_var_fail_redeclare.cp): 验证在同一 `{}` 块作用域内重复声明 `let v = 10; let v = [10, 20];` 时触发编译期报错拦截。
 
 ## [Unreleased] - 2026-10-28 (Part 5)
@@ -610,6 +638,7 @@
 ### 彻底移除 `codegen.rs` 同名遮蔽重命名代码 (`rename_shadowed_vars_*`) 并统一 `*` 模式匹配通配符同名检查
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/codegen.rs`](file:///data/dev/cp/cpc/src/codegen.rs):
   - 彻底删除此前误判同名重复 `let` 定义时引入的 `check_and_record_scope_pat`、`rename_shadowed_vars_in_pat`、`rename_shadowed_vars_in_expr`、`rename_shadowed_vars_in_stmt`、`rename_shadowed_vars_in_block`（共 420+ 行冗余代码）；
   - 在 `Stmt::Var`、`extract_locals_simple` 与 `extract_local_vars_to_str` 中完善 `Pattern::Wildcard`（`*`）支持（涵盖 `let * = expr;`、`let [*, x] = arr;`、`let {a: *, b} = obj;`）。
@@ -622,6 +651,7 @@
   - 明确说明模式匹配与解构通配符为 `*`（而非 `_`），重复绑定 `_` 或任意同名变量均触发编译期错误。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_pat_fail_duplicate.cp`](file:///data/dev/cp/cap/test/test_pat_fail_duplicate.cp): 验证在模式解构中重复使用 `_`（`let [_, _] = [10, 20];`）时触发 `DuplicateVarDecl` 编译期报错拦截。
 
 ## [Unreleased] - 2026-10-28 (Part 6)
@@ -629,6 +659,7 @@
 ### 解构与模式匹配全面支持 `*`（单元素通配符）与 `...`（首/中/尾多元素忽略与零拷贝切片收集）
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs):
   - 在 `parse_single_pattern` 中新增 `Token::DotDotDot` (`...`) 解析：当后接标识符时解析为具名剩余切片模式 `Pattern::Rest(Box::new(Pattern::Ident(id)))`（如 `...rest`、`...middle`），当为裸 `...` 时解析为多元素忽略模式 `Pattern::Rest(Box::new(Pattern::Wildcard))`（如 `let [first, ..., last] = arr;`），并在对象模式 `{ a, ... }` 中支持尾部 `...` 忽略。
 - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs):
@@ -647,6 +678,7 @@
 ### 全面重构《CP 语言官方设计规范与架构白皮书》（cp_ref.md）并升级编译器管道通配占位符与 Match 推导
 
 ### 修改文件 (Modified)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - 彻底清洗重构历史遗留对话草稿（清除旧的 `Result/Option`、`let mut`、`loop` 及冲突通配符），升级为 11 篇体系完备的工业级金牌参考规范；
   - 全面收录 18 项核心要求：Nest 智能体容器（更名与定义）、双轨派生模型（`spawn` 协程池 vs `spawn.cpu` Worker 物理线程池）、`cap.json` 与 `@parallel` / `@single_thread` 并发配置、3-State 原生错误体系、容器写保护铁律（只读借用期间禁扩容与禁元素原地修改）、双轨对象模型（静态匿名结构体 vs 动态 `#{}` 字典）、`Box<dyn Trait>` 胖指针与 `downcast<T>()`、解构 `*` 与 `...`、管道占位符 `*` 与接收者 `_` 彻底解耦、`unsafe` 与裸指针、`macro` 宏系统、类继承 `init`/`release` 钩子等。
@@ -656,6 +688,7 @@
   - 在 `infer_type` 中增加对 `Expr::Match`（`switch` 表达式）分支返回值的静态类型推导，避免类型退化为 `Type::Any`。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_pipe_star.cp`](file:///data/dev/cp/cap/test/test_pipe_star.cp): 验证管道操作符配合 `*` 通配占位符与 `.` 占位符的正向编译与执行测试。
 
 ## [Unreleased] - 2026-10-29 (Part 8)
@@ -663,6 +696,7 @@
 ### 对象解构全链路支持 `...rest` 剩余属性变量绑定与 `...` / `...*` 忽略通配
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs):
   - `ObjectPatProp` 新增 `is_rest: bool` 标识符，精准表示具名剩余属性（`...rest`）或匿名忽略剩余属性（`...` / `...*`）。
 - [`cpc/src/ast_visitor.rs`](file:///data/dev/cp/cpc/src/ast_visitor.rs):
@@ -681,6 +715,7 @@
   - 更新第 3.2 节与生态路线图，正式标记对象解构 `...rest` 剩余绑定已全面实装。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_obj_destructure_rest.cp`](file:///data/dev/cp/cap/test/test_obj_destructure_rest.cp): 验证对象解构具名 `...rest`、裸 `...`、`...*`、`switch` 分支与 `for` 循环解构的全链路正向测试。
 - [`cap/test/test_obj_rest_fail_multiple.cp`](file:///data/dev/cp/cap/test/test_obj_rest_fail_multiple.cp): 验证对象解构中包含多个 `...` 时的编译期错误拦截反向测试。
 
@@ -689,6 +724,7 @@
 ### 扩充《CP 语言官方设计规范与架构白皮书》（cp_ref.md）：新增附录《CP 在 AI 与 AI 智能体领域的独到优势与设计哲学》
 
 ### 修改文件 (Modified)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - 目录（TOC）更新：新增《附录：CP 在 AI 与 AI 智能体领域的独到优势与设计哲学》三级索引（A.1、A.2、A.3）；
   - 全文末尾系统性增补附录 A，涵盖：
@@ -709,6 +745,7 @@
 ### 配合用户对 `cp_ref.md` 的内容更新，重新整理并同步文档目录索引 (TOC)
 
 ### 修改文件 (Modified)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - 仅重新整理文档开头的 `## 目录索引 (Table of Contents)`，未改动任何正文内容；
   - 第一篇目录全量同步用户新增的各大章节：
@@ -731,6 +768,7 @@
 ### 重构《CP 语言官方设计规范与架构白皮书》（cp_ref.md）：独立升格第二篇《`cap` 统一工具链与模块生态体系》并全面对标 Bun.js
 
 ### 修改文件 (Modified)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - 全局章节升格：将规范手册由原 11 篇系统性扩充重组为 **12 篇完整宏伟架构**，原第二篇至第十一篇依次顺延为第三篇至第十二篇，对应子章节编号（`3.1`~`12.2`）全链路对齐；
   - 第一篇定名为《第一篇：CP 语言哲学、核心愿景与全景场景矩阵》，纯粹聚焦于核心定位、竞品对比、AI/智能体独到优势与 9 大落地场景；
@@ -752,6 +790,7 @@
 ### CAP ($C^P$) 统一工具链工业级重构：配置驱动构建、多模式优化矩阵、测试套件与脚手架全面落地
 
 ### 修改文件 (Modified)
+
 - [`cap/src/project/manifest.zig`](file:///data/dev/cp/cap/src/project/manifest.zig):
   - 深度扩充 `cap.json` 清单数据模型：新增 `description`、`mode`、`dev_dependencies`、`build_config`（`opt`, `out_dir`, `target`, `targets`, `c_flags`, `link_libs`）与 `nest_config`（`mailbox_capacity`, `reduction_slice`）；
   - 引入 `OptimizeMode` 枚举（`Debug`, `ReleaseSafe`, `ReleaseFast`, `ReleaseSmall`）及字符串双向映射方法；
@@ -779,6 +818,7 @@
 ### 品牌标识与徽标体系重塑：确立 CP 语言专属双字母徽标与 CAP 工具链方案 A 向上跃升箭头徽标（C ^ P => CAP）
 
 ### 修改文件 (Modified)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - 开篇正文引入 **CP 语言原生专属徽标**（`C` + `P` 经典双字母对称架构），代表 CP 语言本体（并发算力与精密掌控）；
   - 第二篇 2.1 正式装配 **CAP 工具链方案 A 专属徽标**（`C` + `^` + `P`）；
@@ -793,6 +833,7 @@
 ### 官方命名体系全景统一：确立 CP (Concurrent Plus) 与 CAP (Concurrent Application Plus) 宏大格局
 
 ### 修改文件 (Modified)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - 规范开篇与核心愿景全量统一为 **CP (Concurrent Plus)**；
   - 第二篇 2.1 节正式定名为 **CAP (Concurrent Application Plus)**；
@@ -808,6 +849,7 @@
 ### 增量编译流水线 (Incremental Build)、编译耗时度量 (Build Profiling) 与缓存清理 (cap clean) 实装
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/codegen.rs`](file:///data/dev/cp/cpc/src/codegen.rs):
   - 移除 8 处调试遗留的 `[TRACE]` 标准输出，净化前端转译终端输出。
 - [`cpc/src/main.rs`](file:///data/dev/cp/cpc/src/main.rs):
@@ -828,6 +870,7 @@
 ### 官方用户门户与主自述文件 (README.md) 工业级重构与全景技术展示
 
 ### 修改文件 (Modified)
+
 - [`README.md`](file:///data/dev/cp/README.md):
   - 引入完整的 **CP 语言双字母徽标** 与 **CAP 工具链方案 A 向上大箭头徽标**（`C • ^ • P`）；
   - 全面系统地剖析 Python、Node.js、Go、Rust、Erlang 在百万级 AI Agent 并发下的痛点与 CP 终极破局之道；
@@ -843,6 +886,7 @@
 ### 批量标签收拢语法 (`@[...]`) 与弱类型即席元标注 (`@meta(...)`) 零成本正交设计实装
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_batch_meta_pass.cp`](file:///data/dev/cp/cap/test/test_batch_meta_pass.cp):
   - 覆盖类、方法、字段级批量收拢容器 `@[...]`，切面装饰器与元注解混排；
   - 验证弱类型即席元标注 `@meta(...)` 搭配 `@[reflect, ...]` 时属性扁平直读与命名空间嵌套读取；
@@ -851,6 +895,7 @@
   - 反向测试：未标注 `@reflect` 的类在调用 `reflect.type<T>()` 时，编译器精准拦截并输出诊断引导。
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs):
   - `parse_meta_ident` 与 `parse_meta_arg`：扩展支持 `Token::Meta`, `Token::Dec`, `Token::Macro` 等关键字作为元标注标识符，解决关键字作为标注名的语法解析问题；
   - `parse_single_meta_inner`：严格遵循函数式括号传参规范 `(...)`，纠正方括号参数误区（`[]` 专属于批量集合容器 `@[...]`）；
@@ -874,6 +919,7 @@
 ### 标载荷代数数据类型 (Tagged Union Enum) 与 Switch 全模式解构变量捕获体系实装
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_switch_binding_pass.cp`](file:///data/dev/cp/cap/test/test_switch_binding_pass.cp):
   - 覆盖带载荷枚举（无载荷 `Idle`、单载荷 `Text: string`、元组载荷 `Move: [i32, i32]`、结构体载荷 `Compute: { batch: usize, priority: i32 }`）；
   - 覆盖上下文推导前缀省略构造（`.Idle`, `.Text("hello")`, `.Move [15, 25]`, `.Compute { ... }`）；
@@ -884,6 +930,7 @@
   - 验证运行结果 100% 符合预期。
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs):
   - 新增 `#[token(":=")] ColonAssign` 词法标记，支持 Walrus（海象操作符）变量绑定语法。
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs):
@@ -917,6 +964,7 @@
 ## 2026-11-01 (全量编译期元编程系统 Comptime、自动单态化与静态内省原语)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs):
   - 为 `IfStmt` 与 `ForStmt` 增加 `is_comptime: bool` 字段，支持静态分支修剪与循环展开；
   - 新增 `Expr::Comptime(BlockStmt)` 表达式变体，支持 `@{ ... }` 编译期求值代码块；
@@ -949,6 +997,7 @@
   - 更新第 11.1 节《编译期元编程系统（Comptime Metaprogramming）》，详细记录 `@{ }` 编译期代码块、`@fn()` 编译期函数调用、`@comptime` 参数约束、`val: auto` 单态化、`@if` 静态分支修剪、`@for` 静态循环展开及 9 种内建编译期内省指令。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_comptime.cp`](file:///data/dev/cp/cap/test/test_comptime.cp):
   - 涵盖 `@{ }` 编译期求值、`@add()` 编译期函数调用、`@comptime` 参数约束、`val: auto` 编译期推导参数、`@if / @else` 分支修剪与 `@for` 循环展开的完整自动化回归测试用例，100% 测试通过。
 
@@ -957,6 +1006,7 @@
 ## 2026-11-01 (工业级宏元编程系统：内置派生宏、聚合派生 @derive 与第三方 AST 模板宏完整实装)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs):
   - 为 `MacroDef` 结构体新增 `methods: Vec<Function>`，支持宏体内定义可注入目标类型的模板方法。
 - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs):
@@ -982,21 +1032,25 @@
   - `Expr::Builtin`：为 `@hash` 原语生成零开销 FNV-1a 编译期级联哈希内联块 `(blk: { var _h: usize = ...; break :blk _h; })`。
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - 全面更新第 11.2 节《宏元编程（Macro Metaprogramming）》，详尽记录内置派生宏清单（`@Clone`、`@Comparable`、`@Hash`、`@ToString`、`@Json`、`@Table`）、`@derive(...)` 聚合宏、`@[...]` 批量注解语法、第三方 AST 模板宏（`${param}` 插值）与 Comptime 过程宏的最佳实践与代码范式。
+
 ---
 
 ## 2026-11-01 (语法纯净化：切除遗留 @derive，全面归一为原生批量注解 @[...])
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs):
   - 彻底切除并移除 Rust 遗留的 `@derive` 冗余宏名称与 `expand_derive_macro` 展开逻辑；
   - 消除语法冗余与表达割裂，唯一标准统一为 CP 原生一等公民的批量元注解体系 `@[Clone, Comparable, Hash, ToString, Json]`。
 - [`cap/test/test_macro_pass.cp`](file:///data/dev/cp/cap/test/test_macro_pass.cp):
   - 将 `OrderItem` 上的 `@derive(...)` 替换为规范的 `@[Clone, Comparable, Hash, ToString, Json]`，全量测试 100% 绿灯。
+
 ---
 
 ## 2026-11-01 (Debug 派生宏与双轨 for...of 流式迭代器架构完整落地)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs):
   - 注册并实装内置派生宏 `Debug`，自动合成 `fmt_debug(&_): string` 与 `toString(_): string` 双重调试打印方法；
   - 完美打通 `@[Debug]` 与 `trait Debug` 的契约装配，支持标准 Trait 格式化约束。
@@ -1016,6 +1070,7 @@
 ## 2026-11-01 (语法纯净化：全面清理 Rust 风格 &mut，统一为 CP 正统 *_ / *this 可变借用)
 
 ### 修改文件 (Modified)
+
 - [`cap/test/test_macro_pass.cp`](file:///data/dev/cp/cap/test/test_macro_pass.cp):
   - 将流式迭代器 `NumberStream` 中的 `fn next(&mut _): ?i32` 彻底纠正为 CP 正规正统的 `fn next(*_): ?i32`；
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
@@ -1028,12 +1083,14 @@
 ## 2026-11-02 (完备标准容器矩阵构建：实装 VecDeque、BinaryHeap、BTreeMap、BTreeSet 及完整借用检查)
 
 ### 新增文件 (Added)
+
 - [`lib/cap/collections.cp`](file:///data/dev/cp/lib/cap/collections.cp):
   - 正式发布 CP 官方标准容器库 `cap:collections`，统一导出 `VecDeque`、`BinaryHeap`、`BTreeMap`、`BTreeSet`、`HashMap`、`HashSet`、`Map`、`Set`、`Dict`；
 - [`cap/test/test_collections_matrix.cp`](file:///data/dev/cp/cap/test/test_collections_matrix.cp):
   - 覆盖双端环形队列、优先队列大顶堆、B 树有序键值映射、B 树有序集合、Rust 对齐别名以及可变/只读借用参数传递的全套 7 项综合测试，100% 绿灯全通。
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs):
   - `parse_base_type` 支持 `HashMap<K, V>`、`BTreeMap<K, V>` 映射为 `Type::Map`，`HashSet<T>`、`BTreeSet<T>` 映射为 `Type::Set`，并支持任意通用泛型类型参数消费与类型推断；
 - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs):
@@ -1054,6 +1111,7 @@
 ## 2026-11-02 (编译器工具链进化：默认编译指令、--lib 模块模式与 zig {} 原生逃逸舱)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs):
   - 词法解析器新增 `Token::ZigEscape` 对 `zig` 关键字的支持，与 `__zig__` 双轨并存；
 - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs):
@@ -1072,6 +1130,7 @@
 ## 2026-11-02 (Bun 迁移工作流指南规范发布：创建 BUN-GEMINI.md 与编译器直通授权)
 
 ### 新增文件 (Added)
+
 - [`BUN-GEMINI.md`](file:///data/dev/cp/BUN-GEMINI.md):
   - 针对负责 Bun.js 1.3.14 迁移任务的 AGY 定制的全局指令规范与架构白皮书；
   - 开放 `/data/dev/cp` 编译器上游源码的读取与修改权限，制定遇编译问题直接修改 `cpc` 源码并热更新的自愈工作流；
@@ -1084,6 +1143,7 @@
 ## 2026-11-03 (四层类型转换系统实现：无损隐式流转、显式 as 截断、裸指针 unsafe 隔离与高阶方法解析)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs):
   - 在 `SemaError` 中新增 `InvalidCast(String, Span)` 错误变体；
   - 新增 `can_coerce`、`int_fits_in_type`、`is_safe_widening`、`is_subclass`、`type_repr`、`is_numeric_type` 等静态类型流转与判定方法；
@@ -1110,6 +1170,7 @@
   - 运行 `cargo fmt` 保持代码风格完全一致。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_type_conversion.cp`](file:///data/dev/cp/cap/test/test_type_conversion.cp):
   - 四层类型转换系统长期回归测试套件，全面覆盖字面量适配、无损拓宽、可选包装、有损截断、符号位反转、浮点整型互转、枚举互转与裸指针在 unsafe 内外的行为验证。
 
@@ -1118,6 +1179,7 @@
 ## 2026-11-03 (Bun 迁移赋能：循环控制 break/continue、定长数组重复初始化与类型流转增强)
 
 ### 修改文件 (Modified)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - 新增 9.3.1 节《循环控制与跳转语句 (`while`, `break`, `continue`)》；
   - 在第 8 章与第 9 章规范中新增定长数组类型 `[T; N]` / `[N]T` 与重复初始化语法 `[val; count]`（如 `let zero_buf: [u8; 256] = [0; 256];`）。
@@ -1143,6 +1205,7 @@
   - 新增 `expected_array_elem_type` 上下文推导，在 `Expr::ArrayRepeat` 中生成与 Zig 0.17 完美兼容的高性能定长广播 `@as([{count}]{elem_ty}, @splat(@as({elem_ty}, {val})))`。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_bun_features.cp`](file:///data/dev/cp/cap/test/test_bun_features.cp):
   - 验证 `while` 循环中的 `break` / `continue` 跳转控制，以及定长数组 `[val; count]` 重复初始化的编译与运行。
 
@@ -1151,6 +1214,7 @@
 ## 2026-11-03 (编译器字段推导、空值合并字面量收敛与错误联合 Catch 增强)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs):
   - 增强 `can_coerce` 字面量按需收敛（Layer 1.1）：支持在 `Expr::NullCoalesce`（`??`）与 `Expr::QuestionFallback` 表达式中递归对 fallback 分支进行字面量收敛推导；
   - 修正 `infer_type` 对 `Expr::Ident` 中接收者标识符 `_` 与 `this` 的处理，使其优先通过符号表作用域解析出具体类类型 `Type::Ref`；
@@ -1163,6 +1227,7 @@
   - 完善第 5.3 节与 5.4 节：明确类方法中只读接收者 `_` 的缺省规则、方法体内直接访问属性/兄弟方法的无前缀语法规则（命名遮蔽时使用 `_.` 消除歧义）、以及 `!T`（极简推导错误联合，缺省 `Error`）与 `T ! ErrorSet`（强类型显式错误联合）的双轨制规范。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_slice_calc.cp`](file:///data/dev/cp/cap/test/test_slice_calc.cp):
   - 针对 `calcSizeForSlice` 场景的长期测试用例，覆盖实例接收者省略（默认只读借用）、类方法内成员直接无前缀访问、极简 `!usize` 错误联合签名、字面量按需收敛 `pad_char ?? 0`、默认可变 `let result`（无需 mut）、可选类型安全判空 `!= null` 以及错误捕获 `catch 0`。
 
@@ -1171,6 +1236,7 @@
 ## 2026-11-03 (Bun AGY 极简 `err` 关键字、128 位整型支持与代码生成零成本抽象树摇优化)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs):
   - 词法解析器注册 `err` 关键字（作为 `Token::ErrorKw` 别名），实现 3 字母极简大小写镜像对称哲学（`err` vs `Err` vs `errdefer`）；
   - 注册 `i128` 与 `u128` 词法标记；
@@ -1197,6 +1263,7 @@
   - 新增 11.7 节《零成本转译抽象：按需摇树注入与原生发射》，详解摇树机制、Drop Guard 豁免与紧凑 Switch 生成。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_err_features.cp`](file:///data/dev/cp/cap/test/test_err_features.cp):
   - 长期回归测试用例，覆盖 `err` 关键字声明与返回、`!T` 推导错误联合、`128` 位整型运算、以及 `switch ... else =>` 语法，经 `./cap/bin/cap` 编译执行 100% 成功。
 
@@ -1205,6 +1272,7 @@
 ## 2026-11-04 (Bun 迁移深水区支持：转义标识符、纯枚举定长整型标签、方法/嵌入逃逸舱与多模式 Switch 匹配)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs):
   - 注册 `Token::Ident` 转义标识符正则 `@"..."`，无缝支持网络协议、HTTP 标头与 Web 标准等带连字符名称（如 `@"same-origin"`、`@"no-cors"`）。
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs):
@@ -1231,32 +1299,18 @@
   - 完善第 4.3 节关于联合多模式匹配（支持 `|` 与 `,` 逗号合并）说明。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_bun_enums.cp`](file:///data/dev/cp/cap/test/test_bun_enums.cp):
   - 涵盖转义标识符 `@"same-origin"`、定长整型底层标签 `: u2`、枚举内实例方法调用、枚举内嵌 `zig { ... }` 逃逸舱函数、逗号多模式合并匹配以及穷尽 Switch 校验的长期回归测试用例，经 `./cap/bin/cap` 编译执行 100% 成功。
 - [`cap/test/test_root_inline.cp`](file:///data/dev/cp/cap/test/test_root_inline.cp):
   - 验证 `@inline` 实例方法调用与数组字面量格式化输出的长期回归测试用例，经 `./cap/bin/cap` 编译执行 100% 成功。
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ---
 
 ## 2026-11-04 (原生逃逸舱类型值传递与函数未使用参数精准抑制)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/codegen.rs`](file:///data/dev/cp/cpc/src/codegen.rs):
   - 顶层 `zig { ... }` 块符号扫描时，将所有声明的类型与别名自动加入 `ref_classes` 与 `value_classes` 白名单，确保跨模块引用时按原生值类型传递而非强加堆指针 `*T`；
   - 新增 `block_contains_ident` 辅助函数，递归扫描函数体内所有内嵌 `zig { ... }` 块是否包含指定形参标识符；
@@ -1265,15 +1319,16 @@
   - 新增第 13.2 节《原生逃逸舱类型映射与参数引用优化》，详细阐明外部原生类型直接发射与参数引用优化的工程规范。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_escape_param_opt.cp`](file:///data/dev/cp/cap/test/test_escape_param_opt.cp):
   - 长期回归测试用例，验证逃逸舱原生结构体纯值传递、内嵌原生块中形参引用感知以及未使用参数抑制，经 `./cap/bin/cap` 编译执行 100% 成功。
-
 
 ---
 
 ## 2026-11-04 (结构体内嵌逃逸舱、多级命名空间类型、后缀推导错误联合与错误成员访问)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs):
   - `Class` 结构体新增 `extra_zig: Vec<String>`，用于存储类或结构体内部内嵌的 `zig { ... }` 原生逃逸舱源码片段。
 - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs):
@@ -1293,15 +1348,16 @@
   - 新增第 13.3 节《结构体扩展逃逸舱、多级命名空间类型与标准 TS 静态结构体字面量》，详尽规范内嵌 `zig` 块、`{}` 结构体字面量、多级点路径类型与后缀 `T!` 体系。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_class_extra_zig.cp`](file:///data/dev/cp/cap/test/test_class_extra_zig.cp):
   - 长期回归测试用例，覆盖结构体内嵌原生 `zig` 块、后缀 `T!` 推导错误联合、`err.Variant` 错误成员访问以及静态空结构体 `{}` 与匿名结构体 `{ count: 123 }`，经 `./cap/bin/cap` 编译执行 100% 成功。
-
 
 ---
 
 ## 2026-11-04 (海象操作符条件解包、函数缺省返回类型简写与前缀可选兼容优化)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs):
   - `IfStmt` 结构体新增 `capture: Option<Ident>` 字段，用于支持 `if (binding := expr)` 的条件绑定标识符。
 - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs):
@@ -1318,15 +1374,16 @@
   - 新增第 9.3.2 节与第 9.3.3 节，详尽规范 `while (binding := expr)` 与 `if (binding := expr)` 的类型收窄、作用域隔离与零成本转译机制。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_walrus_binding.cp`](file:///data/dev/cp/cap/test/test_walrus_binding.cp):
   - 长期回归测试用例，全量验证 `if (val := find())` 成功与 else 分支、`while (item := iter.next())` 循环解包、以及 `fn foo() !` 错误联合简写，经 `./cap/bin/cap` 编译执行 100% 成功。
-
 
 ---
 
 ## 2026-11-04 (全面废弃前缀 ?T 统一收敛为后缀 T?、匿名错误集前瞻消歧与测试库代码全量升级)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs):
   - 在 `parse_base_type` 中对前缀 `?` 实施编译期硬报错，强行拦截 `?T` 并给出迁移至 `T?` 或 `T?!` 的指导；
   - 新增 `is_error_type_rhs_start` 前瞻探测方法，精准判定匿名错误集 `!{ ... }`，消除函数体/代码块 `{` 与匿名错误集之间的语法冲突；
@@ -1350,6 +1407,7 @@
 ## 2026-11-05 (评估并整合 Bun AGY 编译器升级、修复未变动变量判定 Bug、支持 CPC_BIN 环境变量路由与 err/move 语法双轨完善)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/codegen.rs`](file:///data/dev/cp/cpc/src/codegen.rs):
   - **关键修复**：回滚了导致不可变 `let` 变量在 Zig 中触发 `error: local variable is never mutated` 的误判逻辑，恢复对非状态机变量始终发射 `_ = &ident;` 取地址标记，彻底修复 `example_showcase.cp` 等测试用例编译失败问题；
   - 接入 `is_lib_mode`，优化库编译模式下 Zig 代码生成精简度；
@@ -1379,6 +1437,7 @@
   - 用户更新：明确 rm 指令针对 temp/test 目录及其文件的免申请操作权限。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_err_and_move.cp`](file:///data/dev/cp/cap/test/test_err_and_move.cp):
   - 包含 `fn f(move u: User)`、`fn f(u: move User)`、`err(...)` 错误构造与模式匹配、大写 `Err(...)` 兼容性的全景回归测试，经 `./cap/bin/cap` 执行 100% 成功。
 
@@ -1387,6 +1446,7 @@
 ## 2026-11-05 (成员可见性 pub/priv 默认私有封装与统一错误体系 Err/AnyErr/T! 全景落地)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs):
   - 注册 `priv` 与 `private` 关键字，解析为 `Token::Private`；
   - 识别 `Err` 与 `Error` 关键字，统一归入 `Token::ErrorKw`。
@@ -1429,6 +1489,7 @@
   - 第 8.2 节全景重构为统一错误体系规范（`Err` 与 `Error` 别名、`T!` 作为 `T ! AnyErr` 省略、具名错误集 vs 普通枚举、自动转换与 `from` 桥接、全景 `switch` 模式匹配与 `downcast` 胖指针还原）。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_pub_priv.cp`](file:///data/dev/cp/cap/test/test_pub_priv.cp):
   - 长期回归测试用例，覆盖属性/方法 `pub` 导出、默认私有封装、内部方法/属性自由访问、生命周期构造器豁免、以及外部私有访问编译期精准拦截。
 - [`cap/test/test_unified_errors.cp`](file:///data/dev/cp/cap/test/test_unified_errors.cp):
@@ -1437,6 +1498,7 @@
   - 长期回归测试用例，覆盖具名与匿名即席联合声明（`FileErr || err{Timeout, Canceled}`）、具名与动态 Err 联合声明（`FileErr || Err`）、以及 `switch` 下对 `err(e: ConcreteError)` 与 `err(e := ConcreteError)` 动态胖指针双轨解构。
 
 ### 修改文件 (Modified - cpc 正式合并与 Release 发布)
+
 - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs):
   - 新增 `in_paren_pattern: usize` 状态计数，精确区分 Switch 分支顶层逗号（多模式 `case A, B =>`）与括号内部模式（`err(code, msg)` 元组模式）逗号，杜绝多元错误模式被误判为 `Pattern::Or`；
   - 扩展 `parse_error_type_rhs`：支持 `||` 运算符并允许在错误类型联合中直接使用 `error{A, B}` 或 `err{A, B}` 匿名集合；
@@ -1458,6 +1520,7 @@
 ## 2026-11-05 (结构体错误、类错误与复杂枚举载荷错误架构实装)
 
 ### 修改文件 (Modified - cpc 正式合并与 Release 发布)
+
 - [`cpc/src/codegen.rs`](file:///data/dev/cp/cpc/src/codegen.rs):
   - 全量合入 `cpc_dev` 的结构体错误映射、类错误指针与 `cause` 挂载、枚举载荷解构匹配（元组/结构体/整包）、点推断返回优化与 Zig 0.17 运行时指针 `@hasField` 限制突破；
   - 完整保留 Bun agy 对库模式 `needs_actors = false`、可选数组/字符串指针映射 `?[]T` 与 `prop_map` 修复。
@@ -1474,6 +1537,7 @@
   - 新增第 8.2.7 节《复杂枚举载荷错误（Enum Payload Errors）：定义、返回与多维解构匹配》。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_struct_and_enum_payload_errors.cp`](file:///data/dev/cp/cap/test/test_struct_and_enum_payload_errors.cp):
   - 系统长期回归测试用例，涵盖 9 大测试场景：结构体错误直接解构匹配、结构体自动提升为统一 `Err`、类错误直接匹配、类错误通过 `: MyClassError` downcast 还原、类错误通过 `:= MyClassError` Walrus 绑定 downcast 还原、枚举标量载荷匹配 `.Text`、枚举元组载荷匹配 `.Move [x, y]`、枚举结构体属性精确解构 `.Compute { batch, priority }`、枚举结构体属性整包捕获 `.Compute { ...fields }`、以及枚举点推断返回错误与模式匹配。
 
@@ -1482,6 +1546,7 @@
 ## 2026-11-06 (多线程并发原语体系：`Mutex<T>`、`RwLock<T>` 与 `Atomic<T>` 实装)
 
 ### 修改文件 (Modified)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - 更新第 6.8.2(3) 节：精简 `Shared(value)` 构造语法，确立 `Shared(Mutex(data))` 与 `Shared(RwLock(data))` 内部可变性（Interior Mutability）标准范式；
   - 更新第 10.5 节：新增《并发线程同步原语：`Mutex<T>`、`RwLock<T>` 与 `Atomic<T>`》官方设计规范，对齐 TS 驼峰风格命名（`withLock`、`lock`、`tryLock`、`isLocked`、`withRead`、`withWrite`、`read`、`write`、`tryRead`、`tryWrite`、`isReadLocked`、`isWriteLocked`、`compareAndSwap`、`cas`、`load`、`store`、`swap`、`add`、`sub`、`inc`、`dec`、`and`、`or`、`xor`、`testAndSet`、`clear`）。
@@ -1503,6 +1568,7 @@
   - 同步合入主干 `Expr::Unwrap(Box<Expr>)` 语法节点及其遍历逻辑。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_mutex_atomic.cp`](file:///data/dev/cp/cap/test/test_mutex_atomic.cp):
   - 长期回归测试用例，覆盖 7 大测试场景：
     1. `Mutex<T>`：`withLock` 闭包安全修改、`lock()` RAII 守卫访问、`tryLock()` 抢锁与 `isLocked()` 探测；
@@ -1514,6 +1580,7 @@
     7. `Shared(Mutex(T))`：内部可变性标准范式（只读句柄包装内部受锁保护的局部可变数据）。
 
 ### 文档更新 (Docs)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - 新增第 10.5.6 节《内存边界对比：为什么跨线程/跨协程必须用 `Shared<T>` 而不能用 `&T`？》；
   - 新增第 10.5.7 节《多线程数据保护机制全景对比（CP vs Rust vs Go vs Zig）》；
@@ -1524,6 +1591,7 @@
 ## 2026-11-06 (静态类与静态结构体 `static class` / `static struct` 实装与并发内存模型规范)
 
 ### 修改文件 (Modified)
+
 - [`cpc_dev/src/ast.rs`](file:///data/dev/cp/cpc_dev/src/ast.rs):
   - 为 `ast::Class` 与 `ast::Field` 结构体新增 `#[serde(default)] pub is_static: bool` 标识。
 - [`cpc_dev/src/parser.rs`](file:///data/dev/cp/cpc_dev/src/parser.rs):
@@ -1548,6 +1616,7 @@
   - 新增第 10.5.9 节《并发与多线程内存模型权威问答（Concurrency & Memory Model FAQ）》：涵盖 `Shared<T>` clone 时机、原子引用计数增减与为 0 即刻释放、引用克隆 vs 深拷贝 `mut()` 代价、裸互斥锁 `Mutex()` 生命周期与死锁防范、编译期借用逃逸分析、`move` 物理零竞态保证、以及 Rust `Send`/`Sync` 极简结构化对比。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_static_class.cp`](file:///data/dev/cp/cap/test/test_static_class.cp):
   - 长期回归测试用例，涵盖：
     1. `static class MathUtils` 纯静态工具类方法调用（`add`、`max`）与静态状态读写（`PI`、`call_count`）；
@@ -1558,6 +1627,7 @@
 ## 2026-11-06 (正式主干合并与 Release 发布：并发原语 Mutex/RwLock/Atomic 与 static class/struct 合入 cpc 生产版)
 
 ### 修改文件 (Modified - cpc 正式合并与 Release 发布)
+
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs):
   - 全量合入 `is_static: bool` 字段至 `ast::Class` 与 `ast::Field`；
   - 完整保留主干 `Expr::Unwrap` 与 `ImportStmt.default_specifier`。
@@ -1591,6 +1661,7 @@
 ## 2026-11-06 (C-FFI 原生声明、C 指针体系映射、常量泛型单态化、编译期反射与枚举内省实装)
 
 ### 修改文件 (Modified - cpc_dev 沙盒实现)
+
 - [`cpc_dev/src/ast.rs`](file:///data/dev/cp/cpc_dev/src/ast.rs):
   - 新增 `Decl::TypeAlias(TypeAliasDecl)`，支持 `type Name = Target;` 别名声明；
   - 新增 `GenericParam` (`Type(Ident)` 与 `Const { ident, ty }`)；
@@ -1627,6 +1698,7 @@
   - `infer_cp_type_with_mock` 对 `Expr::Slice` 准确推导为 `Type::Array(elem)` 切片类型。
 
 ### 新增测试 (Added)
+
 - [`cap/test/test_c_ffi_pointers.cp`](file:///data/dev/cp/cap/test/test_c_ffi_pointers.cp):
   - 覆盖全部 11 项新特性的端到端集成测试，100% 通过：
     1. `@align(16)` 结构体与字段内存物理对齐；
@@ -1641,17 +1713,12 @@
     10. `string.from(...)` 多态字符串转换；
     11. 枚举 `TaskState(2)` 构造器、`1 as TaskState` 转换及 `fromName("Idle")`。
 
-
-
-
-
-
-
 ---
 
 ## 2026-11-06 (生产目录 cpc/src 正式合并、LLVM Release 优化构建与全量端到端验证)
 
 ### 合并与修改文件 (Merged & Modified - 正式生产目录)
+
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs):
   - 正式合入 `TypeAliasDecl`、`GenericParam`、`Class.generic_params`、`Expr::If` 以及 `Type::CStr`、`Type::CFn`、`Type::ManyRawPtr`。
 - [`cpc/src/ast_visitor.rs`](file:///data/dev/cp/cpc/src/ast_visitor.rs):
@@ -1670,6 +1737,7 @@
   - 基于正式生产目录源码通过 `cargo build --release --manifest-path cpc/Cargo.toml` 完成 LLVM 优化构建（历时 35.36s）并发布至 `cap/bin/cpc`。
 
 ### 测试验证 (Verified)
+
 - [`cap/test/test_c_ffi_pointers.cp`](file:///data/dev/cp/cap/test/test_c_ffi_pointers.cp): 端到端转译耗时 8ms，11/11 项测试 100% 通过；
 - [`cap/test/test_static_class.cp`](file:///data/dev/cp/cap/test/test_static_class.cp): 端到端转译耗时 5ms，2/2 项测试 100% 通过；
 - [`cap/test/test_bun_enums.cp`](file:///data/dev/cp/cap/test/test_bun_enums.cp): 端到端转译耗时 5ms，全绿通过。
@@ -1679,6 +1747,7 @@
 ## 2026-11-06 (控制流敏感类型智能收窄 Flow-Sensitive Type Narrowing 实装)
 
 ### 修改文件 (Modified - cpc_dev 调试沙盒)
+
 - [`cpc_dev/src/sema.rs`](file:///data/dev/cp/cpc_dev/src/sema.rs):
   - 新增 `unwrap_optional_type`、`extract_not_null_vars` 与 `extract_is_null_vars` 提取辅助函数；
   - 增强 `analyze_stmt`（`Stmt::If` 与 `Stmt::While`）与 `analyze_expr`（`Expr::If` 与 `BinaryOp::LogicalAnd`）：在 `if (v != null)`、`if (null != v)`、`if (v != null && ...)` 分支作用域内，将可选类型 `T?` 自动收窄为不可空类型 `T`；在 `if (v == null) ... else { ... }` 分支作用域内自动在 else 块中收窄为 `T`；
@@ -1695,6 +1764,7 @@
   - 增补第 9.3.3.1 节《控制流类型智能收窄 (Flow-Sensitive Type Narrowing: `if (v != null)`)》，详细规范正向非空收窄、反向 else 收窄、短路与收窄及赋值安全性。
 
 ### 测试强化与新增测试 (Test Enhanced & Added)
+
 - [`cap/test/test_unsafe_pass.cp`](file:///data/dev/cp/cap/test/test_unsafe_pass.cp):
   - 扩展验证标量裸指针三大获取形式：`*num!`、`&num as *i32!`、`*num as *i32!`，全部 100% 验证通过。
 - [`cap/test/test_if_null_narrowing.cp`](file:///data/dev/cp/cap/test/test_if_null_narrowing.cp):
@@ -1705,17 +1775,18 @@
 ## 2026-11-06 (长上下文交接资产沉淀与 PROGRESS.md 编制)
 
 ### 新增与重构文档 (Added & Refactored Documentation)
+
 - [`PROGRESS.md`](file:///data/dev/cp/PROGRESS.md):
   - 针对单会话超过 45,000 行交互的场景，编写高度浓缩的核心技术资产交接文档；
   - 完整梳理 CP 项目定位、GEMINI.md 双缓冲隔离机制（`cpc_dev` vs `cpc`）、流式智能收窄、解包原语体系、裸指针转换矩阵及当前待合并状态；
   - 提供详尽的接手 Agent 操作指引（Runbook）与快速验证指令。
-
 
 ---
 
 ## 2026-11-07 (uSockets 与 picohttpparser 底层 build.zig 架构落地与 CP 原生测试)
 
 ### 新增文件 (Added)
+
 - [`build.zig`](file:///data/dev/cp/build.zig):
   - 基于 Zig 0.17 现代 Module 架构实现底层构建脚本；
   - 自动编译 `vendor/usockets` 与 `vendor/picohttpparser` 为静态库 `libusockets.a` 并发布 C 头文件至 `zig-out/include/`；
@@ -1726,6 +1797,7 @@
   - 端到端长期回归测试用例，覆盖 `picohttpparser` 纳秒级 HTTP 报文解析与 `uSockets` 原生事件循环创建与释放。
 
 ### 测试验证 (Verified)
+
 - 执行 `zig build` 成功输出 `zig-out/lib/libusockets.a` 与对应头文件；
 - 执行 `zig build -Dcp-entry=.cap/zig/cap/test/test_usockets_picohttp.zig run`：HTTP 解析与 uSockets 事件循环 100% 绿色通过。
 
@@ -1734,10 +1806,12 @@
 ## 2026-11-07 (深度重构 C 外部函数声明体系：全面实装 @c/@c("alias")、unsafe 裸指针体系与独立第 16 章规范)
 
 ### 修改文件 (Modified - cpc_dev 调试沙盒)
+
 - [`cpc_dev/src/parser.rs`](file:///data/dev/cp/cpc_dev/src/parser.rs):
   - 增强 `parse_base_type` 中 `is_raw_ptr_bang` 匹配分支，加入 `Some(Token::Question)`，使 `*T!?`、`*any!?` 完美被识别为纯后缀可选裸指针，并经 `parse_postfix_type_modifiers` 映射为 `Type::Optional(RawPtr)`（底层对应 Zig `?*T` 与 `?*anyopaque`）。
 
 ### 修改与重构测试 (Refactored Test)
+
 - [`cap/test/test_usockets_picohttp.cp`](file:///data/dev/cp/cap/test/test_usockets_picohttp.cp):
   - 彻底废除在顶层使用 `zig {}` 或旧式 `__zig__ {}` 声明外部 C 符号的原生反模式；
   - 采用 CP 原生 `@extern struct phr_header`（保证物理内存对齐）与 `@opaque struct us_loop_t`（C 不透明句柄）；
@@ -1747,6 +1821,7 @@
   - 运行 `cpc compile` 转译后经 `zig build -Dcp-entry=... run` 实测 100% 绿色全通。
 
 ### 规范手册升级 (Updated Specification)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - 升级第 14.8 节：全面规范 C-FFI 原生声明铁律，明确 CP 统一使用 `zig {}` 且严禁 `__zig__`；确立“CP 中不应该使用 `zig {}` 声明 C 外部符号，而应该统一使用原生的 `@c`、`@c("alias")` 与 `@c { ... }` 原语”；
   - 移除原 14.14 节，消除在外部 C 符号声明中错误使用 `__zig__` 的历史示例；
@@ -1757,6 +1832,7 @@
 ## 2026-11-07 (纯正 CP 语法彻底废除测试函数体内联 zig {}，实现 100% 纯正 CP 外部 C-ABI 调用)
 
 ### 修改文件 (Modified - cpc_dev 调试沙盒)
+
 - [`cpc_dev/src/sema.rs`](file:///data/dev/cp/cpc_dev/src/sema.rs):
   - 增强 `can_coerce` 类型检查：
     - 在字面量匹配分支中支持 `Lit::Str` 直接兼容赋值给 `Type::CStr`，使 `let req: cstr = "..."` 与 `let mut method: cstr = ""` 获得编译期原生支持；
@@ -1767,6 +1843,7 @@
     - 增加 `matches!(src_ty, Some(Type::String))` 强转至 `is_target_ptr` 的代码生成分支，发射 `@as(target, @ptrCast(str.ptr))`。
 
 ### 重构正式回归测试用例 (Refactored Test)
+
 - [`cap/test/test_usockets_picohttp.cp`](file:///data/dev/cp/cap/test/test_usockets_picohttp.cp):
   - 全面重构测试用例，彻底删除 `test_pico_http()` 与 `test_usockets_event_loop()` 中全部残留的内联 `zig {}` 块；
   - 100% 采用纯正 CP 语法：
@@ -1777,6 +1854,7 @@
     - 原生事件循环安全收窄解包：`let loop = us_create_loop(null, null, null, null, 0); if (loop != null) { us_loop_free(loop); }`。
 
 ### 测试验证 (Verified)
+
 - 运行 `/data/dev/cp/cpc_dev/target/debug/cpc compile cap/test/test_usockets_picohttp.cp --output .cap/zig/cap/test/test_usockets_picohttp.zig` 编译成功；
 - 运行 `zig build -Dcp-entry=.cap/zig/cap/test/test_usockets_picohttp.zig run`：
   - 成功纳秒级解析 HTTP 请求并精准打印 Method (`POST`)、Path (`/api/v1/agent/chat`)、HTTP/1.1 以及全部 3 个 Header 键值对；
@@ -1788,6 +1866,7 @@
 ## 2026-11-07 (cpc_dev 正式合并至正式版 cpc，Bun 迁移改动深度审核与 Release 发布)
 
 ### 审核与合并 (Audited & Merged - Bun Agent Modifications)
+
 - 经与并行执行 Bun.js 迁移任务的智能体代码比对，全面审核其在 `cpc/src` 中的提交：
   1. [`cpc/src/main.rs`](file:///data/dev/cp/cpc/src/main.rs): `Check` 命令解析报错增加行列号与源码切片上下文定位预览，显著提升开发者诊断体验（审核结果：极其合理且完善）；
   2. [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs): `parse_ident_name` 支持 `Token::TypeKw => "type"` 作为常规字段或属性标识符解析（审核结果：兼容 JS/TS 常见对象模型，极其合理）；
@@ -1799,18 +1878,21 @@
      - `Stmt::If` 解包捕获变量 `cap.sym` 引入 `saved_cap_local`，在退出 if 作用域时精准恢复或移除局部变量，杜绝局部变量作用域泄漏（审核结果：极其合理）。
 
 ### 正式编译器合并与构建发布 (Release Build & Deployment)
+
 - 同步合并 `cpc_dev/src/` 与 `cpc/src/` 的双向功能增量，消除两个沙盒的全部差异；
 - 成功编译正式 Release 优化版本 `cpc`：`cargo build --release --manifest-path /data/dev/cp/cpc/Cargo.toml`（单文件转译速度提升至 2~3ms）；
 - 发布并更新可执行文件至 [`cap/bin/cpc`](file:///data/dev/cp/cap/bin/cpc)；
 - 更新 [`.cap/cpc_bin`](file:///data/dev/cp/.cap/cpc_bin) 环境变量指回正式版，所有基于 `cap` 的编译命令无缝切换至最新发布版。
 
 ### 语言设计规范文档补全 (Updated Specification)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - **新增第 4.6 节《流式类型智能收窄与 Fail-Fast 解包体系 (Flow-Sensitive Type Narrowing)》**：详尽定义正向条件收窄（`if (u != null)`）、复合条件短路收窄（`u != null && ...`）、负向早期卫语句收窄（`if (u == null) return;`）以及可选裸指针收窄（`*T!?` -> `*T!`）；
   - **新增第 16.5 节《纯 CP 零 Unsafe 架构：面向对象分层封装 (Zero-Unsafe Architecture)》**：总结 Bun 项目 `uws_sys` 的最佳实践，确立 C-ABI 映射层、局部蹦床适配层、面向对象 Safe 封装层与业务纯安全层的四层无 unsafe 架构体系；
   - **新增第 16.6 节《C 类型透明兼容与底层栈缓冲区安全规范》**：完整收录 `cstr` 与 `string` 零拷贝转换、未初始化定长栈输出缓冲区安全强转放行，以及后缀裸指针规范表。
 
 ### 自动化验证与测试全通 (Verified)
+
 - [`cap/test/test_if_null_narrowing.cp`](file:///data/dev/cp/cap/test/test_if_null_narrowing.cp): 5/5 测试用例在正式版 `cpc` 下 100% 绿灯全通；
 - [`cap/test/test_unsafe_pass.cp`](file:///data/dev/cp/cap/test/test_unsafe_pass.cp): 裸指针赋值与解引用测试 100% 绿灯全通；
 - [`cap/test/test_usockets_picohttp.cp`](file:///data/dev/cp/cap/test/test_usockets_picohttp.cp): 纯 CP 原生 C 库调用端到端集成测试，转译耗时 2ms，HTTP 解析与 uSockets 事件循环 100% 绿色全通。
@@ -1820,6 +1902,7 @@
 ## 2026-11-07 (纯正 CP 语法净化、cap 一键直通链接 C 库升级与 Bun uws_sys 零 unsafe 架构解密)
 
 ### 语法净化与规范对齐 (Syntax Refinements)
+
 - [`cap/test/test_usockets_picohttp.cp`](file:///data/dev/cp/cap/test/test_usockets_picohttp.cp):
   - 彻底移除全部非 CP 规范的 `let mut` 声明（Rust 残留习惯），回归标准纯正 CP 的 `let` 语法声明可变局部变量；
   - 确认 `undefined` 关键字（`[16]phr_header = undefined`）作为栈分配未初始化底层缓冲的原生合法性。
@@ -1827,38 +1910,40 @@
   - 第 16 章中的全部示例代码同步净化，彻底剔除 `mut` 关键字。
 
 ### 构建与运行系统增强 (Build Pipeline Enhancement)
+
 - [`cap/src/main.zig`](file:///data/dev/cp/cap/src/main.zig):
   - 在 `runFileWithOpt`（即 `cap <file.cp>`）执行链路上，自动检测当前项目下是否存在 C 静态库 `zig-out/lib/libusockets.a`；
   - 若存在，自动附加 `-Lzig-out/lib -lusockets` 链接器标志，彻底终结此前“先 cpc 转译、再 zig run”的两步流程；
   - 达成统一：直接执行 `/data/dev/cp/cap/bin/cap cap/test/test_usockets_picohttp.cp` 一键秒级转译、链接、运行全部搞定。
 
 ### 架构调研与资产复用 (Architecture Research & Bun uws_sys Asset Reuse)
+
 - 深度拆解 `/data/dev/bun/src/uws_sys` 24 个 `.cp` 源码，全面解密其 100% 零 `unsafe` 架构：
   - 调用 `@c` 导入函数属于 CP 安全规范调用；
   - 裸指针作为不透明句柄在方法间以参数流转，避免非法解引用（Deref）；
   - 蹦床适配器（Trampoline）与面向对象 Class 守门人，向外暴露纯安全 API；
 - 确立标准库引入路线：不全盘生搬硬套（避免 `bun` 内部私有命名空间耦合），而是基于其纯 CP 抽象，打造 CP 原生自主可控的 `cap:http` 与 `cap:ws` 引擎。
 
-
-
-
 ---
 
 ## 2026-11-07 深度完善与发布 (@c/@fix struct 内存排布、undefined 规范、零拷贝原理与标准库拓扑规划)
 
 ### 编译器增强与正式构建发布 (Compiler Enhancements & Release Deployment)
+
 - [`cpc_dev/src/codegen.rs`](file:///data/dev/cp/cpc_dev/src/codegen.rs) & [`cpc/src/codegen.rs`](file:///data/dev/cp/cpc/src/codegen.rs):
   - 扩展结构体内存布局修饰宏，不仅支持 `@extern struct`，同时全面支持更直观的 `@c struct` 与 `@fix struct`；
   - 只要包含 `@c`、`@fix` 或 `@extern` 任意一个元属性，均精准转译为 Zig 的 `extern struct`，保持 C-ABI 内存排布对齐；
   - 编译构建正式 Release 版本并覆盖到 [`cap/bin/cpc`](file:///data/dev/cp/cap/bin/cpc)。
 
 ### 规范文档补全与架构拓扑规划 (Specification & Architecture Roadmap)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - **新增第 3.3.3 节《`undefined` 关键字与未初始化内存语义》**：正式界定系统级 `undefined` 与 TypeScript `undefined` 的本质区别，明确其对齐 Zig `undefined` 并用于栈分配 C-FFI 输出缓冲区的规范与安全边界；
   - **更新第 16.3/16.4 节**：将结构体布局修饰符更新推荐为 `@c struct` / `@fix struct`；
   - **新增第 16.7 节《CP 标准库网络与密码学生态拓扑规划》**：彻底脱离 Bun 私有命名空间，规划自主可控的 `cap:crypto`、`cap:net`、`cap:http`、`cap:ws` 四大模块及其分层实现架构。
 
 ### 测试用例升级与全流程验证 (Tests Verified)
+
 - [`cap/test/test_usockets_picohttp.cp`](file:///data/dev/cp/cap/test/test_usockets_picohttp.cp):
   - 升级为 `@c struct phr_header` 与 `@fix struct phr_fix_sample`；
   - 运行 `/data/dev/cp/cap/bin/cap cap/test/test_usockets_picohttp.cp` 一键运行秒级通过验证（转译 6ms，链接 646ms，测试 100% PASS）。
@@ -1868,21 +1953,25 @@
 ## 2026-11-07 标准库目录拓扑重构与解析器升级 (Lib Directory Flattening & Compiler Resolver)
 
 ### 标准库拓扑重构 (Standard Library Layout Flattened)
+
 - 彻底清理移除了历史冗余目录 `lib/cap/`；
 - 将原 `lib/cap/*` 的全部标准库文件（`actor.cp`, `events.cp`, `fs.cp`, `io.cp`, `json.cp`, `mem.cp`, `net.cp`, `parallel.cp`, `reflect.cp`, `regex.cp`, `sqlite.cp`, `test.cp`, `worker.cp` 等）直接平铺移入唯一官方标准库根目录 [`lib/`](file:///data/dev/cp/lib/)；
 - 保留并完善子系统模块目录（如 `lib/crypto/`、`lib/http/`、`lib/net/`）。
 
 ### 编译器模块解析引擎升级 (Resolver Overhaul)
+
 - [`cpc_dev/src/resolver.rs`](file:///data/dev/cp/cpc_dev/src/resolver.rs) & [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs):
   - `resolve_dependencies` 与 `resolve_imports` 中，直接剥离 `cap:` 前缀，优先通过 `include_paths` 在官方标准库根目录 `lib/` 下检索目标模块；
   - 增强 `resolve_file_or_dir`：若目标路径为目录，优先匹配检索目录入口（`index.d.cp`, `index.cp`, `main.d.cp`, `main.cp`），确保复合目录标准模块（如 `cap:http` 对应 `lib/http/index.cp`）秒级命中；若非目录则按单文件匹配 `lib/<name>.cp`；
   - 成功完成 Release 优化构建（耗时 36.44s），更新部署至 [`cap/bin/cpc`](file:///data/dev/cp/cap/bin/cpc)。
 
 ### 设计规范更新 (Specification Updated)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - 第 2.5 节新增 1.1 小节《内置标准库 `cap:*` 协议映射规则》，正式规范 `cap:*` 直通 `lib/` 根目录单文件与复合目录入口的设计标准。
 
 ### 回归验证通过 (Verified)
+
 - 新增 [`cap/test/test_lib_reorg.cp`](file:///data/dev/cp/cap/test/test_lib_reorg.cp)，验证 `import { print } from "cap:io"` 与 `import { json } from "cap:json"` 秒级命中并正常执行通过；
 - 既有测试用例全量兼容通过。
 
@@ -1891,6 +1980,7 @@
 ## 2026-11-07 控制流守卫三剑客（||、??、? 发散控制流）、if/while强制括号规范与可选分号ASI体系
 
 ### 编译器增强 (cpc_dev 沙盒并行研发调试)
+
 - [`cpc_dev/src/ast.rs`](file:///data/dev/cp/cpc_dev/src/ast.rs):
   - 为 `Expr` 引入 `Continue(Span)`、`Break(Span, Option<Box<Expr>>)`、`Return(Span, Option<Box<Expr>>)` 三种控制流发散表达式节点，将语句原语升格为表达式一等公民。
 - [`cpc_dev/src/ast_visitor.rs`](file:///data/dev/cp/cpc_dev/src/ast_visitor.rs):
@@ -1908,12 +1998,14 @@
   - 在 `generate_expr` 结尾为 `Expr::Continue`、`Expr::Break`、`Expr::Return` 兜底生成代码。
 
 ### 语言设计规范手册更新 (Updated Specification)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - **新增第 8.7 节《守卫控制流三剑客（The Guard Trinity）：`||`、`??` 与 `?` 的发散控制与解包》**：详尽定义三大维度的条件触发、解包行为与零开销映射表；
   - **新增第 8.8 节《控制流条件圆括号强制规范与 AI-First 智能自愈提示》**：明确 `if (cond)`、`while (cond)` 规范，解析二义性根除原理及智能体 0 秒自愈报错规则；
   - **新增第 8.9 节《行末分号可选（Optional Semicolons）与 ASI 换行断句规范》**：确认 100% 可选分号与基于换行的物理断句防御机制。
 
 ### 自动化测试全绿通过 (Tests Verified)
+
 - [`cap/test/test_control_flow_coalesce.cp`](file:///data/dev/cp/cap/test/test_control_flow_coalesce.cp):
   - 覆盖验证 `?? continue`、`?? break`、`?? return`；
   - 覆盖验证 `? continue`、`? break`、`? return`；
@@ -1927,6 +2019,7 @@
 ## 2026-11-07 AI-First 智能可自愈诊断系统全景实装 (AI-Friendly Self-Healing Diagnostics & E-Code Architecture)
 
 ### 编译器增强 (cpc_dev 沙盒并行研发调试)
+
 - [`cpc_dev/src/diagnostic.rs`](file:///data/dev/cp/cpc_dev/src/diagnostic.rs):
   - **结构化诊断引擎**：新增 `Diagnostic` 核心结构体，规范错误码（`code`）、主信息（`message`）、物理位置（`span`）、根因分析（`cause`）、规则释义（`help`）与修改建议（`suggestion`）；
   - **Rustc/TypeScript 级渲染器**：实现 `Diagnostic::render`，输出精确包含行号、列号、源码代码切片高亮（`^^^^`）、行前缀对齐及三段式自愈诊断的纯净文本；
@@ -1963,10 +2056,12 @@
   - 统一接管 `ParseError`、`SemaError` 与 Codegen 错误，终端仅输出美观工整的 E-Code 三段式自愈诊断。
 
 ### 语言设计规范手册更新 (Updated Specification)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - **新增第十七章《AI-First 智能可自愈诊断系统与 E-Code 规范体系》**：正式确立 CP 语言三段式自愈诊断标准（Error Title、Code Slice、`= cause:`、`= help:`、`= suggestion:`）与 E01xx / E02xx / E03xx 标准错误码全景速查矩阵。
 
 ### 自动化测试全绿通过 (Tests Verified)
+
 - [`cap/test/test_ai_diagnostics.cp`](file:///data/dev/cp/cap/test/test_ai_diagnostics.cp):
   - 新增正式回归测试，覆盖条件括号校验与独占可变借用（`*buf`）传参调用；
   - 运行 `CPC_BIN=/data/dev/cp/cpc_dev/target/debug/cpc /data/dev/cp/cap/bin/cap cap/test/test_ai_diagnostics.cp`，转译耗时 6ms，链接并运行成功（输出 `ALL_AI_DIAGNOSTICS_COMPATIBILITY_TESTS_PASSED`）；
@@ -1977,16 +2072,19 @@
 ## 2026-11-07 (Bun agy 修改审核与双向合并、C-ABI 兼容指针系统、发散控制流空合并与正式 Release 发布)
 
 ### 审核与合并总结 (Audit & Merge Summary)
+
 - 经逐行审核，Bun agy 在 `cpc/src` 中对 C 指针 `[*c]T` / 哨兵指针 `[*:<sentinel>]T`、`const_vars` 常量保护、`c_*` 兼容类型与有符号位移安全检查的修改 100% 合理且完整；
 - 双向合并完成：将沙盒 `cpc_dev` 的 AI 三段式自愈诊断、发散控制流（`??/||/? return/break/continue`）、可选分号 ASI 断句与条件强制括号规范，与 Bun agy 的指针系统完美融合。
 - `cpc/src` 与 `cpc_dev/src` 达成 100% 毫无差异代码对齐。
 
 ### 新增文件 (Added)
+
 - [`cpc/src/diagnostic.rs`](file:///data/dev/cp/cpc/src/diagnostic.rs): AI-First 三段式自愈诊断核心引擎，包含 Levenshtein 编辑距离拼写建议与标准库映射。
 - [`cap/test/test_cptr_and_ai.cp`](file:///data/dev/cp/cap/test/test_cptr_and_ai.cp): 综合测试用例，覆盖 C-ABI 指针、可选提升、借用隐式转换与发散空合并。
 - [`cap/test/test_control_flow_coalesce.cp`](file:///data/dev/cp/cap/test/test_control_flow_coalesce.cp): 守卫三剑客完整控制流测试。
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/lib.rs`](file:///data/dev/cp/cpc/src/lib.rs): 导出 `pub mod diagnostic;`。
 - [`cpc/src/main.rs`](file:///data/dev/cp/cpc/src/main.rs): 集成静默 panic hook 与 catch_unwind 诊断渲染。
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs): 新增 `Type::CPtr` 与 `Type::SentinelPtr`。
@@ -1999,6 +2097,7 @@
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md): 更新 17.3 节系统类型字典与发散控制流规范。
 
 ### 正式 Release 交付 (Release Artifacts)
+
 - 构建完成 `cpc` 正式 release 二进制，耗时 35.73s，覆盖至 `/data/dev/cp/cap/bin/cpc`；
 - 所有回归测试 100% 绿灯全通。
 
@@ -2007,9 +2106,11 @@
 ## 2026-11-07 (cpc_dev 沙盒实现 C-ABI 联合体 `@c union`、`switch` 范围放宽、`@if` 条件类型别名与带值块级表达式)
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_c_union_and_comptime.cp`](file:///data/dev/cp/cap/test/test_c_union_and_comptime.cp): 4 大底层系统特性全覆盖测试套件（`@c union`、标识符范围匹配模式、`@if` 平台条件别名、标签块带值跳出与匿名块表达式）。
 
 ### 修改文件 (Modified)
+
 - [`cpc_dev/src/lexer.rs`](file:///data/dev/cp/cpc_dev/src/lexer.rs):
   - 新增 `Token::Union` (`union`) 词法关键字。
 - [`cpc_dev/src/ast.rs`](file:///data/dev/cp/cpc_dev/src/ast.rs):
@@ -2044,10 +2145,12 @@
   - 新增 17.4 节《底层系统级互操作与高级表达式扩展规范》，完整详述四项扩展的语法规则与设计理念。
 
 ### 自动化测试验证 (Tests Verified)
+
 - 运行 `CPC_BIN=/data/dev/cp/cpc_dev/target/debug/cpc /data/dev/cp/cap/bin/cap test cap/test/test_c_union_and_comptime.cp`，607ms 通过全部断言。
 - 核心回归测试 `test_all_libs.cp`、`test_cptr_and_ai.cp`、`test_bun_features.cp` 100% 绿灯全通。
 
 ### 正式主干合并与 Release 交付 (Mainline Merge & Official Release Delivery)
+
 - **代码同步**：将沙盒 `cpc_dev/src/` 中的底层系统特性（`@c union`、`switch` 范围放宽、`@if` 平台条件别名、带值块表达式、深层命名空间类型注解）全量同步至正式主干 `cpc/src/`，代码对齐率 100%；
 - **代码规范**：运行 `cargo fmt --manifest-path cpc/Cargo.toml` 与 `cargo check --manifest-path cpc/Cargo.toml` 格式化并验证零错误；
 - **构建交付**：执行 `cargo build --release --manifest-path cpc/Cargo.toml` 完成 LLVM 深度优化，二进制覆盖安装至 `/data/dev/cp/cap/bin/cpc`；
@@ -2058,9 +2161,11 @@
 ## 2026-11-07 (cpc_dev 沙盒实现 C 回调跳板工厂与局部函数单态化 C-Trampoline)
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_c_trampoline.cp`](file:///data/dev/cp/cap/test/test_c_trampoline.cp): C 回调跳板（C-Trampoline）、泛型包装工厂、单态化 `callconv(.c)` 局部函数与弱类型上下文转换综合验证测试。
 
 ### 修改文件 (Modified)
+
 - [`cpc_dev/src/ast.rs`](file:///data/dev/cp/cpc_dev/src/ast.rs):
   - `Stmt` 枚举新增 `Func(Box<Function>)` 变体以支持局部作用域内声明静态函数与跳板函数。
 - [`cpc_dev/src/ast_visitor.rs`](file:///data/dev/cp/cpc_dev/src/ast_visitor.rs):
@@ -2086,6 +2191,7 @@
   - 新增第 17.9 节《C-ABI 回调跳板工厂与局部函数单态化架构规范》，详细记录 C-Trampoline 原理、局部 `@c fn` 提升、`@comptime` 参数、极简指针 `*!?`、无参名函数签名及规范 `as` 运算符。
 
 ### 自动化测试验证 (Tests Verified)
+
 - 运行 `env CPC_BIN=/data/dev/cp/cpc_dev/target/debug/cpc cap cap/test/test_c_trampoline.cp`，6ms 转译、596ms 链接运行，断言 100% 通过（Status: 200, Timeouts: 15, C-Trampoline test passed!）；
 - 正向验证：`let` 声明默认可变无需 `mut`、`let cb = ...` 自动推断、`as *Type` 自动生成对齐指针转换、`*!?` 极简指针、`&handle` 静态 C 函数指针只读借用、`@c fn (*!?, i32, i32, *!?)` 省略参数名与 `: void`、`@comptime` 参数修饰全部验证通过；
 - 反向自愈验证：故意书写 `let mut x = ...` 精准触发 `error[E0104]: 'mut' keyword is not used for local variable declarations` 三段式自愈诊断拦截；
@@ -2096,6 +2202,7 @@
 ## 2026-11-07 (阶段续：取裸指针语法架构裁定与 C 跳板编译期全链路剖析)
 
 ### 文档与设计规范 (Documentation & Specs)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - 第 17.9 节详述 C-ABI 回调跳板工厂与局部函数单态化规范，明晰 `pub type ares_host_callback = @c fn (*!?, i32, i32, *!?);`、`@comptime` 参数修饰、`let raw_ctx = &my_ctx as *!?;` 及 `this_ptr = ctx.? as *Type;` 现代标准范式；
 - [`DEVLOG.md`](file:///data/dev/cp/DEVLOG.md):
@@ -2107,6 +2214,7 @@
 ## 2026-11-07 (阶段续：CP 裸指针语法镜像同构全套实现与双轨支持)
 
 ### 修改文件 (Modified)
+
 - [`cpc_dev/src/parser.rs`](file:///data/dev/cp/cpc_dev/src/parser.rs):
   - 在 `Token::Star`（可变借用）与 `Token::Ampersand`（只读借用）表达式解析中，全面支持 `!`、`!?` 与 `?!` 后缀提取裸指针语法糖；
   - `*expr!` 自动构造可变 C 裸指针（`*!`，即 `*anyopaque`）；
@@ -2124,6 +2232,7 @@
 ## 2026-11-08 (顶层原生声明放宽、透明 Zig 模块默认导入、上下文软关键字与 Release 编译验证)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs) & [`cpc_dev/src/lexer.rs`](file:///data/dev/cp/cpc_dev/src/lexer.rs):
   - 移除了词法层对 `and`、`or`、`orelse` 的硬编码 Token 替换，彻底规避破坏 `obj.and()`、`obj.or()` 等正常属性与方法调用的问题；
   - 保持 `Token::Let`, `Token::Var`, `Token::Const`, `Token::ThreadLocal` 等顶层声明关键字。
@@ -2147,6 +2256,7 @@
   - 使用 `cargo build --release` 编译并同步更新了正式 Release 版编译器二进制。
 
 ### 自动化测试验证 (Tests Verified)
+
 - 新增回归测试用例 [`cap/test/test_bun_top_level_import.cp`](file:///data/dev/cp/cap/test/test_bun_top_level_import.cp) 与辅助模块 [`cap/test/mock_sub_module.zig`](file:///data/dev/cp/cap/test/mock_sub_module.zig)；
 - 覆盖验证：
   1. 透明引入外部 `.zig` 模块；
@@ -2164,6 +2274,7 @@
 ## 2026-11-08 (标记块穿透多层循环赋值、cstr/cstring 一等公民与越界防护规范沉淀、文档示例全面纠偏)
 
 ### 修改文件 (Modified)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - **第 17.4.4 节《带值块级作用域表达式与标记块 (Labeled Block Expressions)》大幅扩充**：
     - 补充使用具名标记块（`search: { ... break :search col; }`）一击穿透多层嵌套循环并直接赋值给外部 `const` 常量的标准范例；
@@ -2186,6 +2297,7 @@
 ## 2026-11-08 (控制流强制圆括号铁律加固 E0101 AI 自愈诊断、cstr 三重安全防御网与 Fail-Fast Panic 架构释疑)
 
 ### 修改文件 (Modified)
+
 - [`cpc_dev/src/parser.rs`](file:///data/dev/cp/cpc_dev/src/parser.rs):
   - 重构 `parse_for_stmt_with_comptime`，强制要求 `for` 关键字后必须紧跟圆括号 `(`，未带圆括号时立即触发 `ParseError::MissingParenthesesForControlFlow("for")` 并映射为标准的 AI 自愈提示 `error[E0101]`；
   - 迭代表达式末尾强制匹配闭合 `)`，实现 `if`、`while`、`for` 语法与 AST 结构的彻底无二义性统一。
@@ -2201,6 +2313,7 @@
     - 修复全篇 19 处无括号 `if` / `@if` 条件示例（如 `if (a > b)`、`if (n <= 1)`、`if (flag == 1)`、`if (path == "missing.txt")`、`if (id < 0)`、`if (emailRegex.test(...))`、`@if (true)` 等）。
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_for_paren_fail.cp`](file:///data/dev/cp/cap/test/test_for_paren_fail.cp): 反向测试用例，验证无括号 `for item of list` 被编译器精准拦截并输出 `error[E0101]` 三段式 AI 建议。
 - [`cap/test/test_for_paren_success.cp`](file:///data/dev/cp/cap/test/test_for_paren_success.cp): 正向测试用例，验证标准 `for (i of 0..10)` 语法在 5ms 内完成转译、编译链接并正确执行输出 45。
 
@@ -2209,6 +2322,7 @@
 ## 2026-11-08 (cstr / cstring 编译期边界防御、Safe 域裸指针修改拦截与 AI-First 自愈诊断实装)
 
 ### 修改文件 (Modified - cpc_dev 沙盒实现)
+
 - [`cpc_dev/src/sema.rs`](file:///data/dev/cp/cpc_dev/src/sema.rs):
   - **静态边界与常量求值跟踪**：在 `Analyzer` 中实装作用域感知的 `known_lengths_stack`（定长缓冲区物理长度）与 `const_int_vars_stack`（常量整数求值）；
   - **第一重防御（编译期静态越界拦截）**：对已知定长缓冲区的常量下标索引，在语义分析期进行边界检查，越界时精准阻断并抛出 `error[E0217]`（带 `cause`、`help` 和 `suggestion`）；对负索引触发 `error[E0218]`；
@@ -2223,6 +2337,7 @@
   - 同步合并主干关于块级展开闭合括号计数判定。
 
 ### 新增测试 (Added)
+
 - [`cap/test/test_bounds_fail.cp`](file:///data/dev/cp/cap/test/test_bounds_fail.cp): 反向拦截测试 1，验证已知长度定长缓冲区越界写入（`s[10] = 99`）被静态拦截并输出三段式 `error[E0217]`。
 - [`cap/test/test_raw_ptr_fail.cp`](file:///data/dev/cp/cap/test/test_raw_ptr_fail.cp): 反向拦截测试 2，验证 Safe 域下无界裸指针写入（`ptr[10] = 99`）被严格拦截并输出三段式 `error[E0209]`。
 - [`cap/test/test_cstr_bounds_safe.cp`](file:///data/dev/cp/cap/test/test_cstr_bounds_safe.cp): 正向测试，验证合法切片修改、Safe 作用域只读访问与显式 `unsafe {}` 写入全部正常编译并运行通过。
@@ -2232,6 +2347,7 @@
 ## 2026-11-08 (Bun AGY 指针捕获解包合并、状态机块级局部变量解引用修复与端到端测试)
 
 ### 修改文件 (Modified - cpc_dev 沙盒实现)
+
 - [`cpc_dev/src/ast.rs`](file:///data/dev/cp/cpc_dev/src/ast.rs):
   - `IfStmt` 与 `WhileStmt` 引入 `is_ptr_capture: bool`，建立指针借用解包的语法树标识。
 - [`cpc_dev/src/parser.rs`](file:///data/dev/cp/cpc_dev/src/parser.rs):
@@ -2248,6 +2364,7 @@
   - 函数返回类型不匹配导致无法返回 null 的 panic 信息增强，输出当前函数名与返回类型。
 
 ### 新增测试 (Added)
+
 - [`cap/test/test_ptr_capture.cp`](file:///data/dev/cp/cap/test/test_ptr_capture.cp): 端到端验证海象语法指针解包就地修改、管道语法指针解包就地修改，以及 `_ = ...` 丢弃赋值，测试 100% 成功。
 
 ---
@@ -2255,6 +2372,7 @@
 ## 2026-11-08 (C-FFI 头文件极简内联吸纳、AI-First 结构化 JSON 诊断自愈与极简 own 关键字实装)
 
 ### 修改文件 (Modified - cpc_dev)
+
 - [`cpc_dev/src/ast.rs`](file:///data/dev/cp/cpc_dev/src/ast.rs):
   - 在 `Decl` 枚举中新增 `CInclude(CIncludeDecl)` 变体与 `CIncludeDecl` 结构体，支持记录外部 C 头文件内联声明。
 - [`cpc_dev/src/lexer.rs`](file:///data/dev/cp/cpc_dev/src/lexer.rs):
@@ -2281,12 +2399,14 @@
   - 增加第十八章：AI-First 机器自愈生态（`cpc check --json`）与无别名单写者保障（`own` 关键字）。
 
 ### 新增测试用例 (Added)
+
 - [`cap/test/test_c_inline_header.cp`](file:///data/dev/cp/cap/test/test_c_inline_header.cp): 验证 `@c { "stdio.h" }` 头文件直接内联吸纳并在 5ms 内完成转译与调用 `c.puts` 执行。
 - [`cap/test/test_own_keyword.cp`](file:///data/dev/cp/cap/test/test_own_keyword.cp): 验证函数参数 `fn consume(own res: Resource)` 与表达式 `let b = own a` 的所有权转移及自动析构联动。
 - [`cap/test/test_own_use_after_move_fail.cp`](file:///data/dev/cp/cap/test/test_own_use_after_move_fail.cp): 反向拦截测试，验证变量被 `own` 移出后再次读取被静态拦截并输出带自愈建议的 `error[E0203]`。
 - [`cap/test/test_json_diag_fail.cp`](file:///data/dev/cp/cap/test/test_json_diag_fail.cp): 验证 `cpc check --json` 输出包含精确 `edits` 数组的标准 JSON 诊断。
 
 ### 新增文档 (Added)
+
 - [`BUN_AGY_MIGRATION_GUIDE.md`](file:///data/dev/cp/BUN_AGY_MIGRATION_GUIDE.md): 面向 Bun AGY 的 Zig 迁移至 CP 杀手级新语法与高效自愈指南。
 
 ---
@@ -2294,6 +2414,7 @@
 ## 2026-11-09 (原生系统级能力扩展：内联汇编、TLS、辨识联合、ComptimeMap 与枚举智能转换)
 
 ### 修改文件 (Modified)
+
 - [`cpc_dev/src/ast.rs`](file:///data/dev/cp/cpc_dev/src/ast.rs):
   - 在 `VarDecl` 中新增 `is_threadlocal: bool` 标识；
   - 在 `Expr` 中新增 `InlineAsm` 与 `ComptimeMap` 表达式变体。
@@ -2320,6 +2441,7 @@
   - 新增第十九章《原生系统级底层能力扩展与编译期元编程规范》，全面详细说明 5 项新语法的设计理念、规范与代码示例。
 
 ### 新增测试用例 (Added)
+
 - [`cap/test/test_tls_global.cp`](file:///data/dev/cp/cap/test/test_tls_global.cp): 验证 `@tls let` 与 `threadlocal let` 全局线程局部变量读写与隔离。
 - [`cap/test/test_enum_cast_smart.cp`](file:///data/dev/cp/cap/test/test_enum_cast_smart.cp): 验证整型与枚举类型的显式双向智能转换（`kind as i32` 与 `val as SocketKind`）。
 - [`cap/test/test_inline_asm.cp`](file:///data/dev/cp/cap/test/test_inline_asm.cp): 验证 `@asm` 与带操作数绑定的 `asm volatile (...)` 原生内联汇编执行。
@@ -2331,6 +2453,7 @@
 ## 2026-11-08 (彻底废除 Zig 管道解包语法、确立海象指针解包唯一标准与多智能体 CAS 双向合并)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs):
   - 彻底移除 `if (...) |...|`、`while (...) |...|` 与 `switch` arm `|...|` 管道解包解析分支；
   - 遇到管道捕获语法时触发 `E0101` 智能诊断，输出标准三段式错误与单步重写为海象解包的 `edits` 建议；
@@ -2353,6 +2476,7 @@
   - 纯化测试用例，全量采用海象语法验证指针就地覆写更新。
 
 ### 新增测试用例 (Added)
+
 - [`cap/test/test_pipe_capture_fail.cp`](file:///data/dev/cp/cap/test/test_pipe_capture_fail.cp): 反向拦截测试，验证误用管道语法 `if (opt) |*val|` 被前端精确识别为 `E0101` 并输出包含海象解包修正建议的标准 JSON 诊断。
 
 ---
@@ -2360,6 +2484,7 @@
 ## 2026-11-09 (函数风格类型构造 Type(val)、通用 .toString() 与弱类型拦截)
 
 ### 修改文件 (Modified - cpc_dev)
+
 - [`cpc_dev/src/sema.rs`](file:///data/dev/cp/cpc_dev/src/sema.rs):
   - 在 `analyze_expr` 中添加对 `num(...)` 与 `Number(...)` 的语义硬性拦截，触发带精确修正建议的 `SemaError::InvalidCast`；
   - 在 `infer_type` 中，将标量数值类型标识符（`i8`..`i128`, `u8`..`u128`, `isize`, `usize`, `f32`, `f64`, `bool`）调用推导为对应标量类型；
@@ -2376,6 +2501,7 @@
   - 新增第 19.6 节《函数风格类型构造转换 (`Type(val)`) 与通用 `.toString()`》，明确函数风格构造规范、禁止模糊 `num` 的强类型安全设计，以及零开销 `.toString()` 规范。
 
 ### 新增测试用例 (Added)
+
 - [`cap/test/test_type_conv_functional.cp`](file:///data/dev/cp/cap/test/test_type_conv_functional.cp): 全面覆盖枚举与整型函数风格双向构造、标量数值类型转换、布尔转换、`string(val)` / `String(val)` 以及枚举与标量的 `.toString()` 方法调用（4/4 测试项全绿灯通过）。
 
 ---
@@ -2383,6 +2509,7 @@
 ## 2026-11-09 (代码生成辅助模板按需 Tree-Shaking 优化与无用代码消除)
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/codegen.rs`](file:///data/dev/cp/cpc/src/codegen.rs) / [`cpc_dev/src/codegen.rs`](file:///data/dev/cp/cpc_dev/src/codegen.rs):
   - **消除无条件注入的 Option 解包垫片**：将 `CpOptType`、`CpUnwrapOpt`、`cp_opt_is_null`、`cp_opt_unwrap` 的生成条件由 `if true` 改为受控于 `if features.needs_opt_chaining`，仅在使用可选链操作符 `?.` 时才输出；
   - **消除无条件注入的字符串格式化垫片**：将 `cp_string_from` 改为受控于 `if features.needs_string_helpers || features.needs_fmt`，消除基础结构体与枚举转译为 Zig 时产生的死代码；
@@ -2397,6 +2524,7 @@
 ## 2026-11-09 (CP 语言与 cpc 编译器工业级生产化演进路线图全面落地)
 
 ### 修改文件 (Modified)
+
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - 新增第二十章《CP 语言与 `cpc` 编译器工业级生产化演进路线图 (Production-Grade Roadmap)》，系统阐述调试/DWARF/Source Map 映射、可插拔 Allocator 与 Scoped Arena 作用域内存池、Auto-Reduction 抢占式调度器自动织入与跨 await 安全、模块级增量编译缓存与循环解耦、泛型 Trait 前端拦截与多字段独立借用、零拷贝标准库基石、开发者全家桶工具链（完备 LSP、`cpc fmt`、原生测试与性能评测）以及 AI-First 机器自愈闭环。
 - [`DEVLOG.md`](file:///data/dev/cp/DEVLOG.md):
@@ -2407,6 +2535,7 @@
 ## 2026-11-09 (P0 第一项完成：源码行号指示、Source Map 伴随生成与堆栈反解工具 cpc/cap demangle)
 
 ### 新增文件 (Added)
+
 - [`cpc/src/source_map.rs`](file:///data/dev/cp/cpc/src/source_map.rs) / [`cpc_dev/src/source_map.rs`](file:///data/dev/cp/cpc_dev/src/source_map.rs):
   - 实现标准 `SourceMap` 与 `SourceMapEntry` 数据结构及其 JSON 序列化/反序列化；
   - 实现二分查找/最近邻区间定位算法 `lookup(zig_line)`；
@@ -2415,6 +2544,7 @@
   - 新增 Source Map 行号映射与堆栈精准反解端到端回归验证测试用例。
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/lib.rs`](file:///data/dev/cp/cpc/src/lib.rs) / [`cpc_dev/src/lib.rs`](file:///data/dev/cp/cpc_dev/src/lib.rs):
   - 导出 `pub mod source_map;`。
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs) / [`cpc_dev/src/ast.rs`](file:///data/dev/cp/cpc_dev/src/ast.rs):
@@ -2437,10 +2567,12 @@
 ## 2026-11-09 (P0 第二项完成：泛型 Trait 前端契约校验与 Generic Bounds)
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_generic_trait_bounds.cp`](file:///data/dev/cp/cap/test/test_generic_trait_bounds.cp):
   - 泛型 Trait 约束端到端全链路测试用例（含自定义 Trait 契约约束 `<T: Printable>`、内置标量约束 `<T: Comparable>`、多态类实例化与泛型单态化执行验证）。
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs) / [`cpc_dev/src/ast.rs`](file:///data/dev/cp/cpc_dev/src/ast.rs):
   - 升级 `GenericParam::Type` 变体为 `{ ident: Ident, bounds: Vec<Ident> }`，原生支持类型约束列表；
   - 为 `Function` 与 `MethodSig` 增加 `generic_params: Vec<GenericParam>` 字段，支持函数级与方法级泛型定义。
@@ -2466,10 +2598,12 @@
 ## 2026-11-10 (P0 第三项完成：Scoped Arena 区域内存池语法与运行时实现)
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_scoped_arena.cp`](file:///data/dev/cp/cap/test/test_scoped_arena.cp):
   - 涵盖语句级块作用域 `arena { ... }`、表达式作用域 `let val: i32 = arena { ... }`、多层嵌套 arena、`@alloc` 底层动态申请与 Dict/Map 容器作用域分配的 5 组端到端全量回归测试用例。
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs) / [`cpc_dev/src/lexer.rs`](file:///data/dev/cp/cpc_dev/src/lexer.rs):
   - 注册 `arena` 核心关键字，新增 `Token::Arena`。
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs) / [`cpc_dev/src/ast.rs`](file:///data/dev/cp/cpc_dev/src/ast.rs):
@@ -2494,17 +2628,20 @@
   - 为 `Expr::Arena` 生成带标签的代码块 `(blk_arena: { ... break :blk_arena res; })`；
   - 全面穿透 CPS 状态机变量收集：在 `extract_locals_simple` 与 `extract_local_vars_to_str` 中递归遍历 `Stmt::ArenaBlock` 以及表达式内部的 `Expr::Arena`，保证异步函数/`main` 状态机 `_Context` 字段和符号表 100% 完整提取；
   - 修复 `@alloc` 局部常量名导致遮蔽外层 `cp_main` 参数 `ptr` 的问题（重命名为 `__alloc_res`）。
+
 ---
 
 ## 2026-11-10 (跨模块循环引用解耦 Two-Pass Resolution 验证 & 多字段分离借用 Disjoint Field Borrowing 实现)
 
 ### 新增文件 (Added)
+
 - [`cap/test/fixtures/circ_a.cp`](file:///data/dev/cp/cap/test/fixtures/circ_a.cp): 互相循环引用的模块 A 测试夹具 (`NodeA` 包含 `?NodeB`)。
 - [`cap/test/fixtures/circ_b.cp`](file:///data/dev/cp/cap/test/fixtures/circ_b.cp): 互相循环引用的模块 B 测试夹具 (`NodeB` 包含 `?NodeA`)。
 - [`cap/test/test_circular_modules.cp`](file:///data/dev/cp/cap/test/test_circular_modules.cp): 跨模块循环引用（Two-Pass Resolution）端到端集成测试，验证类型推导与交叉引用无死锁。
 - [`cap/test/test_disjoint_field_borrow.cp`](file:///data/dev/cp/cap/test/test_disjoint_field_borrow.cp): 多字段分离借用（Disjoint Field Borrowing）测试用例，覆盖结构体多字段并行可变借用、多级嵌套字段借用、方法内 `this` 正交字段借用及字段级读写冲突防护。
 
 ### 修改文件 (Modified)
+
 - [`cpc_dev/src/codegen.rs`](file:///data/dev/cp/cpc_dev/src/codegen.rs):
   - 将 `var_borrow_sources` 从 `HashMap<String, (Vec<String>, bool)>` 升级为 `HashMap<String, (Vec<(String, Option<String>)>, bool)>`，实现细粒度字段级借用源与借用路径跟踪；
   - 新增 `targets_conflict(target_a, field_a, is_mut_a, target_b, field_b, is_mut_b) -> bool`：精准判定正交字段（Disjoint Fields），同一根对象的不同字段互不冲突，允许同时持有多个可变借用；若涉及全对象或同一字段则严格互斥；
@@ -2526,9 +2663,11 @@
 ## 2026-11-10 (支持裸函数类型声明与 While 步进表达式，解决 task-zig-syntax-compat)
 
 ### 新增文件 (Added)
+
 - [`cap/test/test_zig_syntax_compat.cp`](file:///data/dev/cp/cap/test/test_zig_syntax_compat.cp): 函数类型声明赋值调用与 `while (cond) : (step)` 步进循环综合回归测试用例。
 
 ### 修改文件 (Modified)
+
 - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs) / [`cpc_dev/src/ast.rs`](file:///data/dev/cp/cpc_dev/src/ast.rs):
   - `WhileStmt` 新增 `continue_expr: Option<Expr>` 字段。
 - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs) / [`cpc_dev/src/parser.rs`](file:///data/dev/cp/cpc_dev/src/parser.rs):
@@ -2601,27 +2740,6 @@
 - [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
   - 完善第 11.9.5 节《常量泛型类（Const Generic Classes）与定长张量/定长缓冲区》规范手册与代码示例。
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # CP 变更日志 (CHANGELOG) - 2026-11-11 (热数据)
 
 > 历史变更日志已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
@@ -2629,6 +2747,7 @@
 ## [2026-11-11] - 并发 Guard 代理访问、定长数组字面量与 C-FFI 负数生成修复
 
 ### 优化与修复 (Fixed)
+
 - [`cpc/src/codegen.rs`](file:///data/dev/cp/cpc/src/codegen.rs) / [`cpc_dev/src/codegen.rs`](file:///data/dev/cp/cpc_dev/src/codegen.rs):
   - **同步 Guard 代理字段**：将 `ReadGuard`、`WriteGuard`、`LockGuard` 的 `.data` 代理访问判定优先级提升至 enum 字段属性匹配之前，使 `rg.value` 正确解引用至 `rg.data.value`，并允许对其直接赋值；
   - **结构体 `value` / `name` 属性冲突消除**：针对明确为 struct/class 的实例，禁用 `(if (@typeInfo(...) == .@"enum") ...)` 伪属性分支，消除赋值语句 LHS 非法表达式错误；
@@ -2639,6 +2758,7 @@
 ## [2026-11-11] - 编译器语句级与顶层项 Panic-Mode 语法容错与多错误批量诊断
 
 ### 新特性 (Added)
+
 - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs) / [`cpc_dev/src/parser.rs`](file:///data/dev/cp/cpc_dev/src/parser.rs):
   - 新增 `ParseError::Multiple(Vec<Diagnostic>)` 复合诊断类型；
   - 实现语句级容错同步器 `recover_stmt`：感知大括号嵌套深度，在遇到语句语法错误时跳过无效 Token 至 `;`、`}` 或控制流关键词（`let`/`if`/`while`/`for`/`return`/`switch`/`break`/`continue`/`defer`/`errdefer`），继续解析后续语句；
@@ -2655,12 +2775,14 @@
 ## [2026-11-11] - 编译器 Prelude 作用域防遮蔽 (Anti-Shadowing) 与 GEMINI 规范升级
 
 ### 优化与修复 (Fixed)
+
 - [`cpc/src/codegen.rs`](file:///data/dev/cp/cpc/src/codegen.rs) / [`cpc_dev/src/codegen.rs`](file:///data/dev/cp/cpc_dev/src/codegen.rs):
   - 解决 `task-prelude-t-shadowing`：将 CodeGen Prelude 中所有泛型辅助函数（`cp_iter_slice`、`is_string_like`、`CpValType`、`cp_string_from`、`cp_opt_is_null`、`cp_opt_unwrap`、`LockGuard`、`ReadGuard`、`WriteGuard`、`CpMutex`、`CpRwLock`、`CpAtomic`、`cp_unpack_elem` 等）中的 `const T` / `comptime T` 全面重命名为私有前缀 `__T`；
   - 将所有自动析构注入（`defer if (!__x_moved) { const __T = @TypeOf(x); ... }`）中的类型标识符重命名为 `__T`；
   - 彻底杜绝底层 Zig 0.17 在用户业务代码声明顶层或局部 `T` 时的作用域遮蔽（`local constant shadows declaration of 'T'`）报错。
 
 ### 规则与架构升级 (Changed)
+
 - [`GEMINI.md`](file:///data/dev/cp/GEMINI.md):
   - 全面放开 Bash 终端输出重定向（`>`、`>>`、管道 `|`），允许毫秒级链式自愈验证；
   - 建立四线文档冷热分离机制（当日活跃数据存储于 `SESSION.md`、`CHANGELOG.md`、`DEVLOG.md`，历史冷归档存储于 `*_H.md`）；
@@ -2670,5 +2792,1860 @@
   - 新增第 11.9.5.2 节《运行时 Prelude 辅助函数命名空间隔离与防遮蔽机制（Anti-Shadowing）》，明确规范设计理念与代码示例。
 
 ### 新增测试用例 (Added)
+
 - [`cap/test/test_prelude_t_shadowing.cp`](file:///data/dev/cp/cap/test/test_prelude_t_shadowing.cp):
   - 验证用户在模块顶层定义 `pub const T = enum { Alpha, Beta }` 时，切片迭代与辅助函数共存且 100% 编译运行通过。
+
+## [2026-11-20] - `cap:ws` RFC 6455 / RFC 7692 工业级 WebSocket 协议栈升级（3 新模块，5/5 PASS）
+
+### 标准库深度升级 (`lib/ws/`，0 `std.posix`，0 `@import("bun")`，100% 向后兼容)
+
+- 新增 [`lib/ws/subprotocol.cp`](file:///data/dev/cp/lib/ws/subprotocol.cp)：`SubprotocolNegotiator`（RFC 6455 §11.3.4 精确子协议协商）、`WsExtensionHeader`（扩展头解析与序列化）与 `CloseCodeValidator`（RFC 6455 §7.4.1 线缆关闭码与 UTF-8 关闭原因校验）；
+- 新增 [`lib/ws/permessage_deflate.cp`](file:///data/dev/cp/lib/ws/permessage_deflate.cp)：RFC 7692 `PerMessageDeflate`（协商响应头、`compressPayload`/`decompressPayload` 自动剥离/补回尾部 `0x00 0x00 0xFF 0xFF`、`MessageTooBig` 资源耗尽防护）；
+- 新增 [`lib/ws/session.cp`](file:///data/dev/cp/lib/ws/session.cp)：`WsSession` 完整状态机（`Connecting`/`Open`/`Closing`/`Closed`、掩码强制校验、超限帧/消息预检、压缩分片重组、控制帧穿插与自动 Pong、主动/被动 Close 握手与心跳追踪）；
+- 增量导出至 [`lib/ws/index.cp`](file:///data/dev/cp/lib/ws/index.cp)，同步 [`docs/ws/ws.md`](file:///data/dev/cp/docs/ws/ws.md)；新增 [`cap/test/test_ws_production_deep.cp`](file:///data/dev/cp/cap/test/test_ws_production_deep.cp)（单文件与 `-m` 模式均 5/5 PASS，既有 `test_ws.cp` 4/4 与 `test_md_html_json_ws_deep.cp` 4/4 零回归）。
+
+---
+
+## [2026-11-20] - `cap:time` 工业级时间、Cron 调度与限流退避套件落地（5 模块，6/6 PASS）
+
+### 新增标准库 (`lib/time/`，`cap:time`，0 `std.posix`，0 `@import("bun")`)
+
+- 新增 [`lib/time/clock.cp`](file:///data/dev/cp/lib/time/clock.cp)：`TimeUnit`、`Duration` 与基于 `std.os.linux.clock_gettime` 的 `WallClock`（墙钟与单调纳秒/毫秒时钟）；
+- 新增 [`lib/time/iso8601.cp`](file:///data/dev/cp/lib/time/iso8601.cp)：`CivilDateTime`（Howard Hinnant 纯算法 Civil<->Epoch 转换，支持 1970 前后与 400 年闰年周期）、`Iso8601`（RFC 3339 严格解析与格式化）及 `IsoDuration`（`P1DT2H30M15S` 双向解析与格式化）；
+- 新增 [`lib/time/cron.cp`](file:///data/dev/cp/lib/time/cron.cp)：POSIX 5 字段 `CronExpr`（`*`/`*/n`/`a-b`/`JAN-DEC`/`SUN-SAT`/`@daily` 等别名）、`matches` 与字段跳跃式 `nextAfter`（精准跨闰年与非闰世纪年）；
+- 新增 [`lib/time/ratelimit.cp`](file:///data/dev/cp/lib/time/ratelimit.cp)：`TokenBucket`（令牌桶）、`SlidingWindowLimiter`（O(1) 双窗口加权滑动限流）与 `ExponentialBackoff`（SplitMix64 确定性全抖动/等抖动指数退避）；
+- 统一导出至 [`lib/time/index.cp`](file:///data/dev/cp/lib/time/index.cp)，同步 [`docs/time/time.md`](file:///data/dev/cp/docs/time/time.md) 与双轨规范；新增 [`cap/test/test_time_production_deep.cp`](file:///data/dev/cp/cap/test/test_time_production_deep.cp)（单文件与 `-m` 模式均 6/6 PASS）。
+
+---
+
+## [2026-11-20] - `cap:net` 工业网络底座升级（+1,891 行）与 `cap:pack` ZIP/PAX-TAR/魔数引擎升级（+1,048 行）双路落地
+
+### `cap:net` 工业网络基础设施升级 (`lib/net/`，0 `std.posix`，0 `@import("bun")`)
+
+- 新增 [`lib/net/cidr.cp`](file:///data/dev/cp/lib/net/cidr.cp)（822 行）：IPv4/IPv6 `Ipv4Cidr`/`Ipv6Cidr`（解析/包含/重叠/网络与广播地址）、`IpAddrCodec`（RFC 5952）与 `IpClass`/`CidrAllowlist`（私网/环回/链路本地/CGNAT 分类与出站边界防护）；
+- 新增 [`lib/net/sockopts.cp`](file:///data/dev/cp/lib/net/sockopts.cp)（371 行）：纯 Zig 0.17 `std.os.linux` `SocketOptions`（`TCP_NODELAY`/`SO_KEEPALIVE`/`SO_REUSEADDR`/`SO_REUSEPORT`/`SO_RCVBUF`/`SO_SNDBUF`/收发超时/非阻塞/`SO_ERROR`）与 `pollSingleFd`/`pollManyFds`；
+- 新增 [`lib/net/socks5.cp`](file:///data/dev/cp/lib/net/socks5.cp)（417 行）：RFC 1928/1929 `Socks5Codec`（Greeting、UserPass 鉴权、IPv4/Domain/IPv6 CONNECT 编解码）与 `HttpConnectCodec`；
+- 新增 [`lib/net/pool.cp`](file:///data/dev/cp/lib/net/pool.cp)（281 行）：`ConnectionPool`（按 `host:port` 分桶复用、TTL 过期与容量上限淘汰、`PoolStats`）；同步更新 [`lib/net/proxy.cp`](file:///data/dev/cp/lib/net/proxy.cp)、[`lib/net/index.cp`](file:///data/dev/cp/lib/net/index.cp)、[`docs/net/net.md`](file:///data/dev/cp/docs/net/net.md) 与 [`cap/test/test_net_production_deep.cp`](file:///data/dev/cp/cap/test/test_net_production_deep.cp)（5/5 PASS，`-m` 5/5 PASS，既有回归 11/11 PASS）。
+
+### `cap:pack` 压缩与归档引擎升级 (`lib/pack/`，0 `std.posix`，0 `@import("bun")`)
+
+- 新增 [`lib/pack/zip_writer.cp`](file:///data/dev/cp/lib/pack/zip_writer.cp)（325 行）：PKWARE APPNOTE 6.3.10 `ZipWriter`（Stored/Deflate 写入、UTF-8 标志位、CRC-32、Local/Central Directory/EOCD 与 `decompressAndVerify` 读回校验）；
+- 新增 [`lib/pack/tar_pax.cp`](file:///data/dev/cp/lib/pack/tar_pax.cp)（568 行）：POSIX.1-2001 `PaxTarWriter`/`PaxTarReader`（USTAR + PAX `'x'` 扩展头突破 100B 路径/软链限制）与 `validateArchivePath`（严格拦截绝对路径与 `..` 穿越）；
+- 新增 [`lib/pack/magic.cp`](file:///data/dev/cp/lib/pack/magic.cp)（155 行）：`ArchiveSniffer`（Gzip/Zlib/Zstd/ZIP/TAR/XZ/BZ2/LZ4/BrotliHint 魔数探测与 MIME/扩展名映射）；同步更新 [`lib/pack/index.cp`](file:///data/dev/cp/lib/pack/index.cp)、[`docs/pack/pack.md`](file:///data/dev/cp/docs/pack/pack.md) 与 [`cap/test/test_pack_production_deep.cp`](file:///data/dev/cp/cap/test/test_pack_production_deep.cp)（5/5 PASS，`-m` 5/5 PASS，既有回归全部 PASS）。
+
+---
+
+## [2026-11-20] - `cap:crypto` 现代零 C 依赖密码学全栈生产升级（Ed25519/X25519/P-256/HKDF/Scrypt/Argon2id/BLAKE3/SHA3/XChaCha20/JWT/PEM）
+
+### 标准库深度升级 (`lib/crypto/`，+1,167 行纯 CP，保留 `_boringssl.zig` 与既有 API 100% 兼容)
+
+- 新增 [`lib/crypto/asymmetric.cp`](file:///data/dev/cp/lib/crypto/asymmetric.cp)（220 行）：基于 Zig 0.17 `std.crypto` 的 `Ed25519KeyPair`、`X25519KeyPair`（ECDH + 零公钥拒绝）与 `EcdsaP256KeyPair`（支持 33B/65B SEC-1 与 DER 签名）；
+- 新增 [`lib/crypto/kdf.cp`](file:///data/dev/cp/lib/crypto/kdf.cp)（533 行）：`hkdfExtract`/`hkdfExpand`/`hkdfDerive`（SHA-256/SHA-512）、`scryptDerive`、`argon2idDerive`/`argon2idHash`/`argon2idVerify`、`Blake3`/`Blake3Stream`、`Sha384`/`Sha3_256`/`Sha3_512`、`HmacSha384`/`HmacSha512`、`XChaCha20Poly1305` 与 `Aes128Gcm`；
+- 新增 [`lib/crypto/jwt.cp`](file:///data/dev/cp/lib/crypto/jwt.cp)（364 行）：RFC 7519 `Jwt`（HS256/HS384/HS512/EdDSA，恒定时间验签，拒绝 `alg: none` 与跨算法混淆）、RFC 7468 `Pem`（64 列折行编解码与标签校验）、`constantTimeEql`、`base64UrlEncode`/`Decode`；
+- 增量导出至 [`lib/crypto/index.cp`](file:///data/dev/cp/lib/crypto/index.cp)，更新 [`docs/crypto/crypto.md`](file:///data/dev/cp/docs/crypto/crypto.md) 与双轨规范手册；新增 [`cap/test/test_crypto_production_deep.cp`](file:///data/dev/cp/cap/test/test_crypto_production_deep.cp)（8/8 PASS），回归 `test_crypto_features.cp`（4/4）与 `test_crypto_sql_dns.cp`（5/5）全部 100% PASS。
+
+---
+
+## [2026-11-20] - `cap` CLI 构建工具链可靠性与模块化测试升级：`cap test -m`、`cap clean [--all]`、`cap build --timings` 与失败退出码修复
+
+### 构建工具链升级 (`cap/src/main.zig`，ReleaseFast 已双路径同步部署)
+
+- **修复 `cap build` 失败时退出码为 `0` 的隐患**：`compileSingleFile` 追踪 `any_failed`，任一目标构建失败时跳过 `Build completed!` 并返回 `error.BuildFailed`（退出码 `1`）；
+- **完善 `cap clean` / `cap clean --all`（兼容 `-a`）**：`cap clean` 安全清理 `.cap/`（含 `.cap/ws/`、`.cap/test-mod/`）保留源码与 `bin/`；`cap clean --all` 同时清理 `bin/` 与安全 `out_dir`（防护误删 `.`/`src`/`test`）；
+- **新增 `cap test -m` / `--modular` 模块化增量测试**：对接 `cpc compile --emit-dir .cap/test-mod` 复用共享 `_lib/` 与 `__cp_runtime.zig`，实测多测试文件 15/16 模块缓存命中（3ms 增量转译）；
+- **新增 `cap build --timings` 分阶段耗时诊断**：精准输出 `Source mtime scan`、`cpc Transpile`、`Zig Native Compile`、`Atomic Install` 与 `Total` 的毫秒和占比；
+- **二进制双路径同步**：原子安装至 `/data/dev/cp/cap/bin/cap` 与 `/root/.cap/bin/cap`（SHA-256 一致），`cap test -m cap/test/test_cap_lazy_hub.cp` 验证通过（`total=7`，868ms）。
+
+---
+
+## [2026-11-20] - 全仓回归大扫荡与跨模块符号卫生治理：清零全仓 `lib/` `std.posix`、58/58 标准库全入 `cap` 惰性路由、185 个正向测试全绿
+
+### 跨模块符号卫生与 `std.posix` 全仓清零
+
+- **解耦 `cap:fs` 与 `cap:sys`/`cap:io`/`cap:stream` 单文件符号冲突**：
+  - 拆出 [`lib/sys/io_ops.cp`](file:///data/dev/cp/lib/sys/io_ops.cp) 与 [`lib/sys/fstat.cp`](file:///data/dev/cp/lib/sys/fstat.cp)，让 `lib/io/{file_stream,source,pipe}.cp` 精确导入最小子集，彻底消除与 `lib/fs.cp` 的顶层重名冲突，`test_core_runtime_bundler.cp` 恢复 100% PASS；
+  - 消除 [`lib/fs.cp`](file:///data/dev/cp/lib/fs.cp)、[`lib/sys/copy_file.cp`](file:///data/dev/cp/lib/sys/copy_file.cp)、[`lib/which/which.cp`](file:///data/dev/cp/lib/which/which.cp) 顶层 `const builtin` 重复声明。
+- **全仓 `lib/` 代码层 `std.posix` 彻底归零（Zig 0.17 兼容）**：
+  - 清理最后 4 处残留：[`lib/cli/tty.cp`](file:///data/dev/cp/lib/cli/tty.cp)（`std.c.winsize`）、[`lib/sync/futex.cp`](file:///data/dev/cp/lib/sync/futex.cp)（`std.os.linux.errno`）、[`lib/dotenv/loader.cp`](file:///data/dev/cp/lib/dotenv/loader.cp)（`std.c.open/read`）、[`lib/event/file_poll.cp`](file:///data/dev/cp/lib/event/file_poll.cp)（`std.os.linux.poll*`）。
+- **跨模块重名与局部变量遮蔽清理**：修正 `lib/url/`（`urlIndexOfChar`）、`lib/md/`（`MdFlags`）、`lib/event/deferred_task.cp`（`should_repeat`）、`lib/sql/`（`shift`）、`lib/redis/resp.cp`、`lib/shell/exec.cp`，以及 `test_io_streams.cp`/`test_image_all.cp`/`test_hex_url_case_router.cp`/`test_sys_complete.cp`。
+
+### 编译器加固 (`cpc` Release 已部署)
+
+- [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs)：补齐 `"test_runner" => Some("test_runner/index.cp")`，全仓 **58/58（100%）** 标准库目录均已接入 `import cap from "cap"` 编译期按需惰性挂载路由；
+- [`cpc/src/codegen/expr/ops.rs`](file:///data/dev/cp/cpc/src/codegen/expr/ops.rs)：在 `BinaryOp::LogicalOr` 的错误集合并判定中排除含比较符/空格的布尔表达式（防止 `kind == RESPType.Error || ...` 被误判为 Zig `||`）。
+
+---
+
+## [2026-11-20] - Phase B-3 `cap:pkg` 工业级包管理四大生产子系统直迁落地（13 模块 7,948 行）
+
+### 标准库深度升级 (`cap:pkg` / `lib/pkg/`)
+
+- 新增 4 个源自 Bun `src/install/` 的核心生产模块（累计 `lib/pkg/` 达 13 模块 **7,948 行**，0 `@import("bun")`，0 `std.posix`）：
+  - [`lib/pkg/workspace.cp`](file:///data/dev/cp/lib/pkg/workspace.cp)（723 行）：Monorepo `WorkspaceGraph`/`CatalogMap`，基于 `cap:glob`+`cap:sys` 扫描 `workspaces`（数组/对象/取反排除）、解析 `workspace:*^~` 与 `catalog:`、成员依赖环检测与 DAG 拓扑排序；
+  - [`lib/pkg/registry_client.cp`](file:///data/dev/cp/lib/pkg/registry_client.cp)（894 行）：`RegistryHttpClient`/`RetryPolicy`，支持作用域 Bearer/Basic 鉴权、ETag/304 磁盘元数据缓存复用与 429/5xx 指数退避重试；
+  - [`lib/pkg/lifecycle.cp`](file:///data/dev/cp/lib/pkg/lifecycle.cp)（567 行）：默认零信任 `TrustedPolicy`（仅 `trustedDependencies` 白名单允许执行，统计拦截数）+ 基于 `PosixSpawn`+`Pipe` 的真实 `LifecycleRunner`；
+  - [`lib/pkg/migration.cp`](file:///data/dev/cp/lib/pkg/migration.cp)（1,248 行）：`LockfileMigrator`（一键迁移 `package-lock.json` v2/v3、`yarn.lock` v1、`pnpm-lock.yaml` v6-v9 至原生 `Lockfile`）与 `DependencyAnalyzer`（`why`/`findDuplicates`/`auditIntegrity`）；
+- 增量导出至 [`lib/pkg/index.cp`](file:///data/dev/cp/lib/pkg/index.cp)，更新 [`docs/pkg/pkg.md`](file:///data/dev/cp/docs/pkg/pkg.md) 与双轨规范手册；新增 [`cap/test/test_phase_b3_pkg_production.cp`](file:///data/dev/cp/cap/test/test_phase_b3_pkg_production.cp)（4/4 PASS），回归 `test_pkg_install_deep.cp`（6/6 PASS）。
+
+---
+
+## [2026-11-20] - Phase C-3 收官批次落地：`lib/resolver/` 生产缓存与高级特性 + 新建 `lib/test_runner/` 纯 CP 测试框架（+4,195 行）
+
+### 标准库升级与新增 (Phase C-3 Direct Port)
+
+- **`lib/resolver/` 深度升级（源自 Bun `src/resolver/`）**：
+  - 新增 [`dir_cache.cp`](file:///data/dev/cp/lib/resolver/dir_cache.cp)（600 行：`DirEntryCache` 基于 `getdents64`+`StatHash` 目录缓存与 `RealpathResolver` 40 级软链环 `ELOOP` 防护）与 [`advanced.cp`](file:///data/dev/cp/lib/resolver/advanced.cp)（791 行：`TsConfigChainLoader` 多级 `extends` 继承合并、`BrowserFieldMap`、`SideEffectsMatcher`、`SelfReferenceResolver`）；更新 [`docs/resolver/resolver.md`](file:///data/dev/cp/docs/resolver/resolver.md)。
+- **新建 `lib/test_runner/`（`cap:test_runner`，源自 Bun `src/test_runner/`，零 JSC 耦合）**：
+  - [`order.cp`](file:///data/dev/cp/lib/test_runner/order.cp)（155 行：SplitMix64/Xoshiro256++ 确定性种子洗牌 `TestOrder`）、[`suite.cp`](file:///data/dev/cp/lib/test_runner/suite.cp)（631 行：树形嵌套 `describe`、`beforeAll`/`beforeEach`/`afterEach`/`afterAll`、`.only`/`.skip`/`.todo` 过滤与纳秒计时 `TestRunner`）、[`snapshot.cp`](file:///data/dev/cp/lib/test_runner/snapshot.cp)（333 行：Bun 风格 `.snap` 快照引擎 `SnapshotStore` + `DiffFormatter` 彩色差分）、[`reporter.cp`](file:///data/dev/cp/lib/test_runner/reporter.cp)（541 行：`PrettyFormat` 与 TAP v13 / JUnit XML / JSON `TestReporter`）及 [`docs/test_runner/test_runner.md`](file:///data/dev/cp/docs/test_runner/test_runner.md)。
+- **测试与规范**：新增 [`cap/test/test_phase_c3_resolver_testrunner_port.cp`](file:///data/dev/cp/cap/test/test_phase_c3_resolver_testrunner_port.cp)（5/5 PASS），回归 `test_meta_platform_sri_deep.cp`（5/5）与 `test_resolver_bundler_deep.cp`（7/7）全部 PASS；同步更新双轨规范手册。
+
+---
+
+## [2026-11-20] - Phase E-1 原版直迁落地：`lib/mem/`、`lib/cli/`、`lib/bundler/` 生产级分配器/终端框架/代码分割增强（+4,043 行）
+
+### 标准库增强 (Phase E-1 Direct Port)
+
+- **`lib/mem/`**（源自 Bun `bun_alloc/`）：新增 [`allocation_scope.cp`](file:///data/dev/cp/lib/mem/allocation_scope.cp)（438 行：`AllocationScope` 泄漏/峰值/重复与悬空释放追踪分配器）与 [`fallback_allocator.cp`](file:///data/dev/cp/lib/mem/fallback_allocator.cp)（566 行：`BufferFallbackAllocator<N>` 栈优先热路径+堆回退、`MaybeOwned<T>`、Linux `memfd_create`+`mmap` `MemFdBuffer`），同步更新 [`docs/mem/mem.md`](file:///data/dev/cp/docs/mem/mem.md)；
+- **`lib/cli/`**（源自 Bun `cli/ci_info.cp` & `bun_core/Progress.cp`）：新增 [`ci_info.cp`](file:///data/dev/cp/lib/cli/ci_info.cp)（366 行：15+ CI 厂商/PR/ANSI/OSC-8/`TIOCGWINSZ` 探测）与 [`subcommand.cp`](file:///data/dev/cp/lib/cli/subcommand.cp)（688 行：多级 `SubcommandRouter` + Levenshtein 拼写纠错 + 彩色 `--help` + 原子锁 `MultiProgress`/`Spinner`），同步更新 [`docs/cli/cli.md`](file:///data/dev/cp/docs/cli/cli.md)；
+- **`lib/bundler/`**（源自 Bun `bundler/`）：新增 [`metafile.cp`](file:///data/dev/cp/lib/bundler/metafile.cp)（418 行：esbuild/Bun 兼容 `Metafile` JSON 与彩色体积占比树状表）与 [`splitting.cp`](file:///data/dev/cp/lib/bundler/splitting.cp)（403 行：多入口 `u64` 位掩码共享 Chunk 抽取 `CodeSplitter` 与 `AssetManifest`），同步更新 [`docs/bundler/bundler.md`](file:///data/dev/cp/docs/bundler/bundler.md)；
+- 新增 [`cap/test/test_phase_e1_mem_cli_bundler_port.cp`](file:///data/dev/cp/cap/test/test_phase_e1_mem_cli_bundler_port.cp)（5/5 PASS），回归 `test_string_blob_image_mem_deep.cp`（5/5）与 `test_ffi_bigint_bench_cli_deep.cp`（4/4）全部 PASS，同步更新双轨规范手册。
+
+---
+
+## [2026-11-20] - Phase D-1 LightningCSS 工业引擎直迁（`lib/css/engine/` 4.8K）与 `bun_agy` 双工单热修结单
+
+### 标准库：`lib/css/engine/` LightningCSS 核心引擎（7 模块 4,803 行，源自 Bun `src/css/`）
+
+- 在零触碰既有 8 个 `lib/css/*.cp` 文件（保障下游 `capsurf_agy` 0 抖动）前提下，新建 [`lib/css/engine/`](file:///data/dev/cp/lib/css/engine/index.cp)：
+  - [`targets.cp`](file:///data/dev/cp/lib/css/engine/targets.cp)（853 行）：9 大浏览器 24 位版本矩阵、`Feature` 27 项现代特性兼容判定与精准前缀计算；
+  - [`values.cp`](file:///data/dev/cp/lib/css/engine/values.cp)（1,038 行）：`Angle`/`Time`/`Resolution`/`Ratio`/`Position`、`EasingFunction`（`cubic-bezier` 牛顿-二分求值/`steps()`）与 `Gradient`（Linear/Radial/Conic）；
+  - [`properties.cp`](file:///data/dev/cp/lib/css/engine/properties.cp)（1,169 行）：`RectShorthand`/`BorderShorthand`/`BorderRadius`/`BoxShadowList`/`TransformList`+`Matrix2D`/`FlexShorthand`/`TransitionItem`/`AnimationItem`/`DisplayValue`/`FilterList` 简写展开与压缩；
+  - [`rules.cp`](file:///data/dev/cp/lib/css/engine/rules.cp)（900 行）：`SupportsAst`、`MediaRangeQuery`（L4 范围语法降级）、`ContainerQuery`、`LayerManager`、`FontFaceRule`、`PropertyRule`、`ScopeRule`；
+  - [`compiler.cp`](file:///data/dev/cp/lib/css/engine/compiler.cp)（674 行）：`CssModulesHasher` 与 `CssCompiler.compile()` 全管线；增量导出至 [`lib/css/index.cp`](file:///data/dev/cp/lib/css/index.cp)，更新 [`docs/css/css.md`](file:///data/dev/cp/docs/css/css.md)；
+  - 新增 [`cap/test/test_phase_d_css_lightning_port.cp`](file:///data/dev/cp/cap/test/test_phase_d_css_lightning_port.cp)（6/6 PASS），全部 4 套 CSS 套件 22/22 PASS。
+
+### 编译器极速热修 (`cpc` Release 已部署，结单 `bun_agy` 2 条工单)
+
+- **`task-bun-20261120-fnptr-ret-union`**：[`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)、[`cpc/src/modular.rs`](file:///data/dev/cp/cpc/src/modular.rs)、[`cpc/src/codegen/types/map_type.rs`](file:///data/dev/cp/cpc/src/codegen/types/map_type.rs) 将 `union`/`union(enum)` 统一登记为值语义类型，不再错误加 `*`（`*const fn (*R) Action` 正确输出）；
+- **`task-bun-20261120-fn-callconv-ptr`**：[`cpc/src/parser/types.rs`](file:///data/dev/cp/cpc/src/parser/types.rs) 在 `parse_fn_type_sig_body` 中吸收 `)` 后的 `callconv(.c)` 再解析返回类型；[`cpc/src/codegen/zig_escape.rs`](file:///data/dev/cp/cpc/src/codegen/zig_escape.rs) 在已有 `*const` 前缀时不再重复插入 `*const` 消除双层 `*const *const fn`。
+
+---
+
+## [2026-11-20] - Phase B-2 & Phase C-2 双路大里程碑落地：`lib/shell/`（7.1K）、`lib/http/`（7.5K）与 `lib/conf/`（4.5K）工业级原版直迁
+
+### `lib/shell/` 工业级跨平台 Shell 引擎（10 文件 7,102 行，直迁 Bun `shell/` + `shell_parser/`）
+
+- 新增 [`arith.cp`](file:///data/dev/cp/lib/shell/arith.cp)（442 行，`$((...))` 算术展开）、[`braces.cp`](file:///data/dev/cp/lib/shell/braces.cp)（419 行，大括号/序列展开）、[`builtin_fs.cp`](file:///data/dev/cp/lib/shell/builtin_fs.cp)（781 行）与 [`builtin_text.cp`](file:///data/dev/cp/lib/shell/builtin_text.cp)（773 行），升级 `lexer`/`parser`/`env`/`exec`/`builtin`：
+  - 完整 POSIX 展开（`${VAR:-/=/+/ #}`、`$(cmd)`、`$((arith))`、`{a..z}`、Glob）、控制流（`if`/`for`/`while`/`until`/`&&`/`||`/`!`）、子 Shell 环境与 `cwd` 隔离、多级 Builtin+`PosixSpawn` 混合管道、全套重定向（`>`/`>>`/`<`/`2>`/`2>&1`/`<<<`）与 30+ 生产内置命令；
+  - 根治孤立 `[` 命令误触 Glob 递归遍历与 `set --`/`shift` 位置参数悬空指针两处深层缺陷；
+  - 新增 [`cap/test/test_phase_b2_shell_port.cp`](file:///data/dev/cp/cap/test/test_phase_b2_shell_port.cp)（4/4 PASS），3 套测试共 12/12 PASS，同步更新 [`docs/shell/shell.md`](file:///data/dev/cp/docs/shell/shell.md)。
+
+### `lib/http/`（37 文件 7,492 行）与 `lib/conf/`（9 文件 4,515 行）工业级直迁（源自 Bun `http/`、`http_types/`、`interchange/`）
+
+- **`lib/http/`**：新增 [`status.cp`](file:///data/dev/cp/lib/http/status.cp)（64 项 RFC 9110 状态码表）、[`header_builder.cp`](file:///data/dev/cp/lib/http/header_builder.cp)、[`header_parsers.cp`](file:///data/dev/cp/lib/http/header_parsers.cp)（`CacheControl`/`ContentDisposition`/`Accept`/`Range`/`ContentRange`）、[`wire_http.cp`](file:///data/dev/cp/lib/http/wire_http.cp)（`HttpRequestBuilder`/`HttpResponseParser`）；升级 [`mime.cp`](file:///data/dev/cp/lib/http/mime.cp)（201 项 `MIME_DATABASE` + `sniffMagic`）与 `lib/http/h2/`（RFC 7541 61 静态表 + 257 项 Huffman 编解码 + 动态表驱逐 + H2 `SETTINGS`/`WINDOW_UPDATE`/`GOAWAY`/`PING`/`RST_STREAM` 流控）；
+- **`lib/conf/`**：新增 [`value.cp`](file:///data/dev/cp/lib/conf/value.cp)（统一 `ConfValue`/`ConfDateTime` RFC 3339）与 [`yaml_parser.cp`](file:///data/dev/cp/lib/conf/yaml_parser.cp)（完整 YAML 1.2：多文档流、锚点 `&`/别名 `*`/合并键 `<<`、`|`/`>`/`|-`/`>+` 块标量、流式集合、类型标签与双向序列化）；升级 [`toml.cp`](file:///data/dev/cp/lib/conf/toml.cp)（TOML 1.0 内联表、点分/引号键、RFC 3339 日期时间与 `[[array]]`）；
+- 新增 [`cap/test/test_phase_c2_http_interchange_port.cp`](file:///data/dev/cp/cap/test/test_phase_c2_http_interchange_port.cp)（4/4 PASS），7 套测试共 31/31 PASS；同步更新 [`docs/http/http.md`](file:///data/dev/cp/docs/http/http.md)、[`docs/conf/conf.md`](file:///data/dev/cp/docs/conf/conf.md) 及双轨规范手册。
+
+---
+
+## [2026-11-20] - Phase C-1 工业级原版直迁落地：`lib/md/`（21 文件 11,735 行完整 MD4C 引擎）与 `lib/sql/`（10 文件 4,718 行多数据库协议栈）
+
+### 标准库原版直迁 (Phase C-1 Direct Port)
+
+- **`lib/md/`（21 文件 11,735 行，完整直迁 Bun `src/md/` 全部 16 模块，0 `@import("bun")`）**：
+  - 新增 [`entity.cp`](file:///data/dev/cp/lib/md/entity.cp)（2,167 行，2,125 条 W3C HTML5 命名实体）、[`unicode.cp`](file:///data/dev/cp/lib/md/unicode.cp)（1/2/3 码点 case-folding）、[`helpers.cp`](file:///data/dev/cp/lib/md/helpers.cp)（335 组 Unicode 标点与 `HeadingIdTracker`）、[`blocks.cp`](file:///data/dev/cp/lib/md/blocks.cp)（双遍块解析）、[`inlines.cp`](file:///data/dev/cp/lib/md/inlines.cp)（O(N) 强调栈）、[`links.cp`](file:///data/dev/cp/lib/md/links.cp)、[`autolinks.cp`](file:///data/dev/cp/lib/md/autolinks.cp)、[`ref_defs.cp`](file:///data/dev/cp/lib/md/ref_defs.cp)、[`html_renderer.cp`](file:///data/dev/cp/lib/md/html_renderer.cp)（`heading_ids`/`tag_filter`/`sanitize_html`）、[`ansi_renderer.cp`](file:///data/dev/cp/lib/md/ansi_renderer.cp)（1,829 行：折行/CJK 宽度/Unicode 方框表/OSC 8/Kitty 图片）、[`engine.cp`](file:///data/dev/cp/lib/md/engine.cp) 等 16 个完整模块，保留原有 `Markdown`/`MdTable` 100% 兼容。
+- **`lib/sql/`（10 文件 4,718 行，直迁 Bun `src/sql/` 协议状态机，0 `@import("bun")`）**：
+  - 新增 [`shared.cp`](file:///data/dev/cp/lib/sql/shared.cp)（15B SSO `SqlData`）、[`pg_types.cp`](file:///data/dev/cp/lib/sql/pg_types.cp)（90+ `PgTypeTag` OID、`PgBinaryCodec` 覆盖 numeric/uuid/jsonb/int4_array）、[`pg_protocol.cp`](file:///data/dev/cp/lib/sql/pg_protocol.cp)（SSL/Cancel/StartupUTF8/Copy/Notify/Notice）、[`mysql_types.cp`](file:///data/dev/cp/lib/sql/mysql_types.cp)、[`mysql_protocol.cp`](file:///data/dev/cp/lib/sql/mysql_protocol.cp)（Native SHA-1、`CachingSha2` FastAuth、ColumnDef41、`COM_STMT_*`、`BinaryRowDecoder`）；增强 [`sqlite.cp`](file:///data/dev/cp/lib/sql/sqlite.cp) 事务与参数绑定。
+- **文档、规范与验收**：更新 [`docs/md/md.md`](file:///data/dev/cp/docs/md/md.md)、[`docs/sql/sql.md`](file:///data/dev/cp/docs/sql/sql.md) 及双轨规范手册；新增 [`cap/test/test_phase_c1_md_sql_port.cp`](file:///data/dev/cp/cap/test/test_phase_c1_md_sql_port.cp)（8/8 PASS），5 套新建及存量回归测试共 29/29 用例 100% PASS，31/31 文件 `// Source:` 合规。
+
+---
+
+## [2026-11-20] - Phase B-1 工业级包管理引擎直迁落地：新建 `lib/pkg/`（`cap:pkg`，9 模块 4,512 行，源自 Bun `install/`）
+
+### 新增标准库 (`cap:pkg` / `cap.pkg` / `cap.install`)
+
+- **工业级包管理子系统（9 模块 4,512 行，0 `@import("bun")`，0 `std.posix`）**：
+  - [`lib/pkg/types.cp`](file:///data/dev/cp/lib/pkg/types.cp)（496 行）：`SemverString`（8B 内联/外部双态字符串）、`StringBuf`（Wyhash 去重池）、`ExternalString`/`SlicedString`/`ExternalSlice<T>`、`NodeLinker`、`Behavior` 位域；
+  - [`lib/pkg/dependency.cp`](file:///data/dev/cp/lib/pkg/dependency.cp)（603 行）：`DependencyVersion.parse` 全 10 种协议（semver、`npm:alias`、`workspace:`、`file:`、`link:`、tarball URL、`github:`、`git+ssh:`、dist-tag、`catalog:`）与 `DependencyList`；
+  - [`lib/pkg/resolution.cp`](file:///data/dev/cp/lib/pkg/resolution.cp)（562 行）：`Resolution`、`OperatingSystem`/`Architecture`/`Libc` 平台位掩码（支持 `!` 取反）、`PackageMeta`、`BinLink`；
+  - [`lib/pkg/npm.cp`](file:///data/dev/cp/lib/pkg/npm.cp)（540 行）：`.npmrc` 作用域 Registry 与 Bearer/Basic Auth 路由、`NpmPackageManifest.parsePackument` 与结合 `cap:semver` 的 `resolveVersion`；
+  - [`lib/pkg/lockfile.cp`](file:///data/dev/cp/lib/pkg/lockfile.cp)（1,057 行）：DAG 依赖图、环检测、拓扑排序与双格式持久化（确定性 JSON `cap.lock` + 紧凑二进制 `CPLK0001` 含 CRC32 完整性校验）；
+  - [`lib/pkg/tarball.cp`](file:///data/dev/cp/lib/pkg/tarball.cp)（294 行）：`TarballBuilder`/`TarballExtractor`（gzip + tar + W3C SRI 校验 + 严格 `..`/绝对路径/软链逃逸防护）；
+  - [`lib/pkg/linker.cp`](file:///data/dev/cp/lib/pkg/linker.cp)（331 行）：`Hoisted` 与 pnpm 风格 `Isolated` 链接策略、硬链优先+拷贝回退、`BinLinker`（`.bin` `0o755`）与 `patch_install`（先解除硬链防污染共享缓存 + 幂等标记）；
+  - [`lib/pkg/manager.cp`](file:///data/dev/cp/lib/pkg/manager.cp)（615 行）与 [`lib/pkg/index.cp`](file:///data/dev/cp/lib/pkg/index.cp)：`PackageManager` 端到端安装闭环。
+- **文档、规范与端到端测试**：新增 [`docs/pkg/pkg.md`](file:///data/dev/cp/docs/pkg/pkg.md) 与 [`cap/test/test_pkg_install_deep.cp`](file:///data/dev/cp/cap/test/test_pkg_install_deep.cp)（6/6 PASS，含真实磁盘 Tarball 打包解包、SRI 篡改拦截、路径穿越防护、Hoisted/Isolated 落盘与补丁应用），同步更新 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md) 与 [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)。
+
+---
+
+## [2026-11-20] - Phase A 底层三件套 Bun 原版直迁落地：`lib/sys/`、`lib/io/`、`lib/string/` 全面对齐生产契约（34 文件 9,273 行）
+
+### 底层基石原版升级 (Phase A Foundation Direct Port)
+
+- **`lib/sys/`（11 文件，3,118 行，0 `@import("bun")`，0 `std.posix`）**：
+  - 新增 [`lib/sys/error.cp`](file:///data/dev/cp/lib/sys/error.cp)（`SyscallTag`、`SysError`、`Maybe<T>`）与 [`lib/sys/dir.cp`](file:///data/dev/cp/lib/sys/dir.cp)（Linux `getdents64` 8KB 栈内联零堆 `DirIterator`）；
+  - 升级 [`fd.cp`](file:///data/dev/cp/lib/sys/fd.cp)、[`stat.cp`](file:///data/dev/cp/lib/sys/stat.cp)、[`file.cp`](file:///data/dev/cp/lib/sys/file.cp)、[`copy_file.cp`](file:///data/dev/cp/lib/sys/copy_file.cp)、[`fs_ops.cp`](file:///data/dev/cp/lib/sys/fs_ops.cp)、[`process.cp`](file:///data/dev/cp/lib/sys/process.cp)：全量 `*at` 原子系统调用、`EINTR` 自动重试、`mkdirAll`/`rmdirRecursive`、`CopyFileState`/`sendfile`、`poll`/`epoll`/`pipe2` 及 `PosixSpawn`（支持 `cwd`/`envp`/FD 重定向/`PATH` 搜索/子进程 errno 管道回传）。
+- **`lib/io/`（8 文件，2,067 行）**：
+  - 新增 [`lib/io/source.cp`](file:///data/dev/cp/lib/io/source.cp)（`IoStatus`/`ReadState`/`WriteStatus`/`PollState`/`IoSource`）与 [`lib/io/file_stream.cp`](file:///data/dev/cp/lib/io/file_stream.cp)（`FileReader`/`FileWriter` 含 `pread`/`pwrite`/`copy_file_range`/`sendfile`）；
+  - 升级 [`pipe.cp`](file:///data/dev/cp/lib/io/pipe.cp)（`pipe2(O_CLOEXEC|O_NONBLOCK)` 非阻塞 `EAGAIN`/`BrokenPipe` 状态机）、[`max_buf.cp`](file:///data/dev/cp/lib/io/max_buf.cp)、[`buffer_stream.cp`](file:///data/dev/cp/lib/io/buffer_stream.cp)（`readUntilDelimiter`/`shift`/`peek`）。
+- **`lib/string/`（15 文件，4,088 行）**：
+  - 新增 [`lib/string/unicode.cp`](file:///data/dev/cp/lib/string/unicode.cp)（`Unicode` 分类/大小写折叠与零堆 `CodepointIterator`）与 [`lib/string/mutable_string.cp`](file:///data/dev/cp/lib/string/mutable_string.cp)（`MutableString`）；
+  - 升级 [`utils.cp`](file:///data/dev/cp/lib/string/utils.cp)（全套 Bun `strings.*` 匹配/切分/拼接/修剪）、[`utf.cp`](file:///data/dev/cp/lib/string/utf.cp)（`Wtf8`、Latin-1/UTF-16/UTF-8 互转）、[`builder.cp`](file:///data/dev/cp/lib/string/builder.cp)（`StringBuilder` 预估容量零重分配）、[`escape.cp`](file:///data/dev/cp/lib/string/escape.cp)（`escapeHtml`/`escapeRegExp`/`escapeJsAlloc`）。
+- **文档、规范与验证**：同步更新 [`docs/sys/sys.md`](file:///data/dev/cp/docs/sys/sys.md)、[`docs/io/io.md`](file:///data/dev/cp/docs/io/io.md)、[`docs/string/string.md`](file:///data/dev/cp/docs/string/string.md) 与双轨规范手册；新增 [`cap/test/test_phase_a_foundation_port.cp`](file:///data/dev/cp/cap/test/test_phase_a_foundation_port.cp)（3/3 PASS），5 套新建与既有回归共 23/23 用例 100% PASS，34/34 文件 `// Source:` 100% 合规。
+
+---
+
+## [2026-11-20] - 核心架构里程碑：`import cap from "cap"` 编译期按需惰性挂载容器与 `lib/_cap/core.cp` 微核心落地
+
+### 编译器按需惰性挂载引擎 (`cpc`)
+
+- **精准词法扫描与传递不动点按需挂载**：
+  - [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs)：新增 59 个标准库权威路由表 `resolve_cap_hub_target`、词法级 `scan_cap_hub_members`（精确跳过注释/字符串/模板字面量，支持任意别名 `import c from "cap"`）、顶层 `pub` 符号提取器与 `resolve_imports_with_cap_hub`；
+  - [`cpc/src/modular.rs`](file:///data/dev/cp/cpc/src/modular.rs)：增量缓存升至 `v2`（追踪 `uses_cap_hub` / `cap_hub_members`），BFS 阶段执行不动点按需发现，动态合成 `<emit_dir>/_lib/_cap/index.zig`（仅挂载本次编译实际被引用的 `cap.<ns>` 子库与 `core` 显式重导出，不用 Zig 0.17 已废弃的 `usingnamespace`，以 `write_if_changed` 护航增量 `mtime`）；
+  - [`cpc/src/main.rs`](file:///data/dev/cp/cpc/src/main.rs)、[`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)、[`cpc/src/codegen/expr/builtin.rs`](file:///data/dev/cp/cpc/src/codegen/expr/builtin.rs)：单文件模式同步支持按需挂载独立命名空间与 `@import("cap")` 映射，并修复 `@expect_eq` 在 `--emit-dir` 模式下通过 `rt_sym("cp_eq")` 引用共享运行时。
+
+### `cap` 极薄微核心底座 (`lib/_cap/`)
+
+- [`lib/_cap/core.cp`](file:///data/dev/cp/lib/_cap/core.cp) & [`lib/_cap/index.cp`](file:///data/dev/cp/lib/_cap/index.cp)：提供零重依赖微核心原语（`OOM`/`default_allocator`/`handleOom`/`Environment`/`assert`/`Global`/`take`/`create`/`destroy`/`copy`/`clamp`/`cast`/`FD`/`invalid_fd`/`Mode`/`PathBuffer`/`O`/`S`/`Output`/`ComptimeStringMap`/`fmtIntSize`）；
+- [`docs/core/cap_hub.md`](file:///data/dev/cp/docs/core/cap_hub.md)：完整架构与使用手册；同步更新 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md) 与 [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)。
+
+### 铁证验收
+
+- [`cap/test/test_cap_lazy_hub.cp`](file:///data/dev/cp/cap/test/test_cap_lazy_hub.cp)：单文件 `cap test`（2/2 PASS）与 `-m` 模块模式（`total=7`，manifest 与 `_lib/_cap/index.zig` 仅挂载 `bits`/`errno`/`hash` + `core`，其余 50+ 未引用库 0 加载）全部通过。
+
+---
+
+## [2026-11-20] - 热修与实测闭环：修复 `-m` 模块模式 `struct.name()` 方法调用误改写与嵌套定长数组重复字面量降级，真实 CapSurf 81 模块 `-m -d` 全量原生链接 100% 通过
+
+### 编译器修复 (`cpc`)
+
+- **修复结构体 `.name()` / `.value()` 方法调用误触发枚举属性改写**：
+  - [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)、[`cpc/src/codegen/expr/call.rs`](file:///data/dev/cp/cpc/src/codegen/expr/call.rs)、[`cpc/src/codegen/expr/control.rs`](file:///data/dev/cp/cpc/src/codegen/expr/control.rs)：引入 `in_call_callee` 标记（进入 `Expr::Member` 评估 `member.obj` 前即刻清零），确保方法调用 `obj.name()` / `obj.value()` 永远发射为合法 Zig 方法调用，不再误落入枚举属性改写 `(if (@typeInfo(...) == .@"enum") @tagName(...) else obj.name)()`（解决 CapSurf `-m` 模式 `IsolatedWorldEntry.name()` 报错），同时 100% 保持枚举属性 `.name` / `.value` 兼容。
+- **修复嵌套固定数组重复字面量（如 `[[0; 128]; 16]`）类型泄露**：
+  - [`cpc/src/codegen/expr/mod.rs`](file:///data/dev/cp/cpc/src/codegen/expr/mod.rs)：在 `Expr::ArrayRepeat` 递归降级元素值前逐层剥离外层 `Type::FixedArray`/`Type::Array` 期望类型，解决 CapSurf `session.cp` 中 `binding_names: [16][128]u8 = [[0; 128]; 16]` 内层误套 `[128]u8` 的问题。
+- **发布与实测验证**：
+  - 已通过 `bash scripts/sync_cpc.sh release` 原子部署 Release 正式版；
+  - 新增回归测试 [`cap/test/test_struct_name_and_nested_repeat.cp`](file:///data/dev/cp/cap/test/test_struct_name_and_nested_repeat.cp)（1/1 PASS，978ms）；
+  - 真实 CapSurf（81 模块）`-m` 全量验证：冷发射 `2.67s`、热发射 `12ms`、`-O Debug -fno-llvm` 原生链接 `1.86s`（热缓存命中 `0.02s`）并成功运行 `--help`。
+
+---
+
+## [2026-11-20] - Batch 6A（收官批次）：新增 `cap:meta`、`cap:platform` 与 `cap:resolver` SRI/HostedGit，全仓 Bun 资产吸收与对标审核圆满收官
+
+### 新增与补强标准库 (Final Bun Assets Absorption)
+
+- **编译期元编程与位操作套件 (`cap:meta`)**：
+  - [`lib/meta/bits.cp`](file:///data/dev/cp/lib/meta/bits.cp)：2 的幂对齐、位计数/前导尾随零、位翻转/旋转、端序打包解包与 `@packed` 位域辅助运算；
+  - [`lib/meta/traits.cp`](file:///data/dev/cp/lib/meta/traits.cp)：适配 Zig 0.17 `@typeInfo` 的完整编译期类型特征探测（`isInt`/`isSlice`/`isPointer`/`hasField`/`hasDecl`/`ChildType`/`ItemType` 等）；
+  - [`lib/meta/index.cp`](file:///data/dev/cp/lib/meta/index.cp) & [`docs/meta/meta.md`](file:///data/dev/cp/docs/meta/meta.md)。
+- **宿主平台与内核特性探测 (`cap:platform`)**：
+  - [`lib/platform/os_info.cp`](file:///data/dev/cp/lib/platform/os_info.cp)：`OsKind`/`ArchKind`/`Endianness`、`KernelVersion` 与 `PlatformInfo`（Linux 下直调 `std.os.linux.uname` 解析真实内核版本、`io_uring`/`copy_file_range`/`statx`/`pidfd` 能力开关、`readlink("/proc/self/exe")` 与 `hostname`）；
+  - [`lib/platform/index.cp`](file:///data/dev/cp/lib/platform/index.cp) & [`docs/platform/platform.md`](file:///data/dev/cp/docs/platform/platform.md)。
+- **`cap:resolver` 增量补强**：
+  - [`lib/resolver/integrity.cp`](file:///data/dev/cp/lib/resolver/integrity.cp)：W3C SRI `Integrity`（SHA-1/256/384/512 计算、多值择优解析与恒定时间 XOR 校验）；
+  - [`lib/resolver/hosted_git.cp`](file:///data/dev/cp/lib/resolver/hosted_git.cp)：`HostedGitInfo`（GitHub/GitLab/Bitbucket/Gist/SourceHut 短写/HTTPS/SSH 解析与 Tarball URL 生成）；
+  - 增量导出至 [`lib/resolver/index.cp`](file:///data/dev/cp/lib/resolver/index.cp) 并更新 [`docs/resolver/resolver.md`](file:///data/dev/cp/docs/resolver/resolver.md)。
+
+### 全仓收官终检与双轨规范定稿
+
+- 新增 [`cap/test/test_meta_platform_sri_deep.cp`](file:///data/dev/cp/cap/test/test_meta_platform_sri_deep.cp)（5/5 PASS）及回归 `test_resolver_bundler_deep.cp`（7/7 PASS）；
+- 全仓 `lib/**/*.cp` 100% 首行 `// Source:` 溯源合规、0 处 `@import("bun")`；同步定稿 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md) 与 [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)。
+
+---
+
+## [2026-11-20] - Batch 5B：Tier-1 18 大核心标准库终审体检与 7 模块缺口补齐
+
+### 标准库终审与精准补缺 (Tier-1 Parity Audit & Gap Fill)
+
+- **终审确认完备（11 个）**：`cap:pack`、`cap:crypto`、`cap:net`、`cap:conf`、`cap:event`、`cap:security`、`cap:clap`、`cap:hash`、`cap:ptr`、`cap:sync`、`cap:col`；
+- **精准补齐缺口（7 个，100% 向后兼容）**：
+  - [`lib/s3/`](file:///data/dev/cp/lib/s3/client.cp)：`S3RequestBuilder.buildSignedRequest` 补齐全部 8 项可选头字母序 SigV4 签名，`buildPresignedUrl` 支持 STS `session_token` 与自定义查询串，`S3Client.presignPartUrl` 分片预签名；
+  - [`lib/dns/`](file:///data/dev/cp/lib/dns/packet.cp)：`DnsWireCodec` 新增 `decodeQuestion`/`decodeResourceRecord`/A/AAAA/CNAME/MX/SRV/TXT 记录解析与 IPv4/IPv6 格式化，`DnsCache` 新增 IPv6 `putAAAA`/`lookupAAAA`，`HostsTable` 新增 `lookupIPv6`；
+  - [`lib/encoding/`](file:///data/dev/cp/lib/encoding/utf16be.cp)：新增 `utf16be.cp`（`Utf16BE` 大端编解码与 `Ascii` 工具）并在 `index.cp` 聚合导出 `PercentEncoding`；
+  - [`lib/redis/`](file:///data/dev/cp/lib/redis/resp.cp)：补齐 RESP3 `Double`/`BigNumber`/`BlobError`/`VerbatimString`/`Push`/`Attribute` 编解码、`ValkeyReader.skipFrame`、`PMessage`/`PSubscribe` 与 `HELLO`/PubSub/`INCR`/`TTL`/`SELECT`/`QUIT` 命令；
+  - [`lib/url/`](file:///data/dev/cp/lib/url/url.cp)：`URL` 新增 RFC 3986 `normalizePath`/`resolve`/`parseWithBase`/`formatOrigin`/`format`，`URLSearchParams` 新增 `setUnique`/`hasValue`/`deleteValue`/`clear`/`toEncodedString`；
+  - [`lib/which/`](file:///data/dev/cp/lib/which/which.cp)：`WhichOptions.pathext`、`endsWithPathext` 与多路径全量检索 `whichAll`；
+  - [`lib/watcher/`](file:///data/dev/cp/lib/watcher/watcher.cp)：`WatchOptions` 忽略配置、`WatchFilter` 隐藏文件/通配过滤，并正式接入 `Watcher` 事件分发与 `poll` 流水线。
+- **文档、规范与测试**：同步更新 7 份 `docs/<mod>/<mod>.md` 及双轨规范手册 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)、[`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)；新增 [`cap/test/test_tier1_parity_deep.cp`](file:///data/dev/cp/cap/test/test_tier1_parity_deep.cp)（6/6 PASS），联合 12 套存量回归测试全部 100% PASS。
+
+---
+
+## [2026-11-20] - Batch 5A：`cap:css` 全面去 `@import("bun")` 化重构（清理 94 个死文件，重建 8 模块纯 CP CSS 全栈引擎）
+
+### 标准库重构与清理 (`cap:css`)
+
+- **彻底清除 Bun 耦合死文件**：
+  - 清理 `lib/css/` 下 94 个无法独立编译的 Bun/Bundler/JSC 耦合残留文件（`properties/`、`rules/`、`selectors/`、`values/` 及根目录 15 个遗留文件）；全仓 `lib/**/*.cp` 实现 **`@import("bun")` 100% 清零**。
+- **8 模块纯 CP 零耦合 CSS 全栈引擎（共 4,157 行，100% 向后兼容）**：
+  - [`lib/css/tokenizer.cp`](file:///data/dev/cp/lib/css/tokenizer.cp)（新增，541 行）：CSS Syntax Level 3 零分配流式词法器（25 种 `CssTokenKind`、`url()`、转义、注释与行列追踪）；
+  - [`lib/css/variables.cp`](file:///data/dev/cp/lib/css/variables.cp)（新增，211 行）：`CssVariableMap` 与 `CssVarResolver.resolve()`（递归 `var(--name, fallback)` 与 16 层循环防护）；
+  - [`lib/css/prefixes.cp`](file:///data/dev/cp/lib/css/prefixes.cp)（重构，321 行）：`CssVendorPrefix`、`CssPrefixer` 与 `CssLogical` 逻辑属性展开；
+  - [`lib/css/color.cp`](file:///data/dev/cp/lib/css/color.cp)（589 行）：149 个 W3C 命名色（显式 `[149]` 定长数组二分查找，同步解决 `capsurf_agy` 工单 `task-capsurf-20261120-lib-css-color-tuple`）、`hwb()`/`oklab()`/`oklch()`、角度单位与 `lighten`/`darken`/`toHsl`；
+  - [`lib/css/length.cp`](file:///data/dev/cp/lib/css/length.cp)（389 行）：23 种 `CssUnit` 与递归下降 `CssCalc.evalPx`（括号、`min()`/`max()`/`clamp()`、一元符号）；
+  - [`lib/css/selector.cp`](file:///data/dev/cp/lib/css/selector.cp)（512 行）：6 种属性选择器运算符、`:is()/:not()/:has()/:where()` 权重计算与 `CssSelectorList`；
+  - [`lib/css/stylesheet.cp`](file:///data/dev/cp/lib/css/stylesheet.cp)（1,085 行）：15 种 `CssRuleKind`、`CssMediaQuery.matchesFull`、`CssNesting.flatten` 嵌套展平、`CssStylesheet` AST、`minify` 与 `formatPretty`；
+  - [`lib/css/index.cp`](file:///data/dev/cp/lib/css/index.cp)（12 行）与 [`docs/css/css.md`](file:///data/dev/cp/docs/css/css.md)（160 行）。
+- **测试与双轨规范**：新增 [`cap/test/test_css_deep.cp`](file:///data/dev/cp/cap/test/test_css_deep.cp)（7/7 PASS），回归 `test_css.cp`（5/5）与 `test_css_full.cp`（4/4）100% PASS；同步更新 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md) 与 [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)。
+
+---
+
+## [2026-11-20] - Batch 4 增量高价值 Bun 资产吸收：`cap:resolver`、`cap:aio` 新建与 `cap:bundler`/`cap:safety`/`cap:patch` 深度补强
+
+### 新增标准库 (New Stdlib Modules)
+
+- **模块解析器与包配置子系统 (`cap:resolver`)**：
+  - [`lib/resolver/data_url.cp`](file:///data/dev/cp/lib/resolver/data_url.cp)：RFC 2397 `DataURL`（MIME/Charset/Base64/Percent 解码与 Base64 编码）；
+  - [`lib/resolver/package_json.cp`](file:///data/dev/cp/lib/resolver/package_json.cp)：`PackageJson` 完整解析与条件 `exports`/`imports`（含数组回退、`null` 禁用与最长前缀通配符）路由；
+  - [`lib/resolver/tsconfig.cp`](file:///data/dev/cp/lib/resolver/tsconfig.cp)：JSONC 注释/尾逗号剥离与 `TsConfigJson` `paths` 通配符别名重写；
+  - [`lib/resolver/resolver.cp`](file:///data/dev/cp/lib/resolver/resolver.cp) & [`lib/resolver/index.cp`](file:///data/dev/cp/lib/resolver/index.cp)：`StatHash`（基于 `statx` + XxHash64）与统一 `ModuleResolver`（`cap:*`/`node:*`/`bun:*`、`data:`、`#imports`、`tsconfig` 别名与 `cap_modules`/`node_modules` 递归解析）；
+  - [`docs/resolver/resolver.md`](file:///data/dev/cp/docs/resolver/resolver.md)：完整 API 手册。
+- **异步 I/O 队列与父进程看门狗 (`cap:aio`)**：
+  - [`lib/aio/watchdog.cp`](file:///data/dev/cp/lib/aio/watchdog.cp)：`ParentDeathWatchdog`（Linux `PR_SET_PDEATHSIG` + 窗口竞态防护 + `/proc/<pid>/stat` 父进程探活）；
+  - [`lib/aio/queue.cp`](file:///data/dev/cp/lib/aio/queue.cp) & [`lib/aio/index.cp`](file:///data/dev/cp/lib/aio/index.cp)：零堆固定容量 `AioQueue<const CAP: usize>` SQ/CQ 环形提交/完成队列，支持 Open/Read/Write/Pread/Pwrite/Stat/Fsync/Close/Unlink/Mkdir；
+  - [`docs/aio/aio.md`](file:///data/dev/cp/docs/aio/aio.md)：完整 API 手册。
+
+### 深度补强标准库 (Enhanced Stdlib Modules)
+
+- **`cap:bundler`**：新增 [`lib/bundler/target.cp`](file:///data/dev/cp/lib/bundler/target.cp)（`CompileTarget` 跨平台三元组解析/格式化）、[`lib/bundler/standalone.cp`](file:///data/dev/cp/lib/bundler/standalone.cp)（`StandaloneModuleGraph` 单文件虚拟 FS 二进制序列化与越界防护零拷贝反序列化）、扩展 [`lib/bundler/bundle.cp`](file:///data/dev/cp/lib/bundler/bundle.cp)（`ModuleGraph` 三色 DFS 环检测、拓扑排序与 Tree-Shaking 可达性标记），同步更新 [`docs/bundler/bundler.md`](file:///data/dev/cp/docs/bundler/bundler.md)；
+- **`cap:safety`**：新增 [`lib/safety/cpu_features.cp`](file:///data/dev/cp/lib/safety/cpu_features.cp)（x86_64 CPUID+XGETBV / aarch64 硬件特性探测 `CpuFeatures`）与 [`lib/safety/crash.cp`](file:///data/dev/cp/lib/safety/crash.cp)（`OomGuard` 与零堆 `CrashReport` 诊断报告），同步更新 [`docs/safety/safety.md`](file:///data/dev/cp/docs/safety/safety.md)；
+- **`cap:patch`**：新增 [`lib/patch/diff_format.cp`](file:///data/dev/cp/lib/patch/diff_format.cp)（`DiffFormatter` / `DiffFormatOptions` 类似 `bun test` 的彩色/字符级高亮与上下文折叠差分渲染器），同步更新 [`docs/patch/patch.md`](file:///data/dev/cp/docs/patch/patch.md)。
+
+### 规范同步与端到端验收
+
+- 同步双轨规范手册 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md) 与 [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)；
+- 新增深度测试 [`cap/test/test_resolver_bundler_deep.cp`](file:///data/dev/cp/cap/test/test_resolver_bundler_deep.cp)（7/7 PASS）与 [`cap/test/test_aio_safety_diff_format_deep.cp`](file:///data/dev/cp/cap/test/test_aio_safety_diff_format_deep.cp)（3/3 PASS），5 套联合回归全部 100% PASS；Batch 4 涉及 25 个 `.cp` 文件 `// Source:` 100% 合规。
+
+---
+
+## [2026-11-20] - 核心里程碑：`cap` + `cpc` 模块级增量编译、Zig `-fno-llvm` 极速原生后端与多智能体无锁并发构建升级
+
+### 编译器前端模块级增量转译 (`cpc`)
+
+- **按文件发射与 FNV-1a 内容哈希增量缓存 (`--emit-dir` / `--force`)**:
+  - [`cpc/src/modular.rs`](file:///data/dev/cp/cpc/src/modular.rs)（新增，1,101 行）与 [`cpc/src/lib.rs`](file:///data/dev/cp/cpc/src/lib.rs)、[`cpc/src/main.rs`](file:///data/dev/cp/cpc/src/main.rs)：
+    - 新增 `cpc compile --emit-dir <DIR> [--force]` 模式，告别全量内联单一巨型 `.zig`，按依赖图拓扑将每个 `.cp` 模块独立发射为对应 `.zig` 文件（同步复制 `.zig` 垫片，共享 `__cp_runtime.zig`，根目录生成入口包装 `__cp_entry.zig` 与依赖清单 `.cp_modular_manifest.txt`）；
+    - 基于文件内容 + 直接导入签名计算 64 位 FNV-1a 增量哈希（`// @cp_inc_hash:<hex>`）并持久化 `.cp_inc_cache.json`，未修改的 `.cp` 文件直接跳过重转译并原样保留 `.zig` 的 `mtime`，彻底激活 Zig 增量编译缓存；
+    - 跨模块精确报错定位：Sema 诊断直接指向真实子模块文件与行号，消除巨型单文件行号漂移。
+  - [`cpc/src/sema/mod.rs`](file:///data/dev/cp/cpc/src/sema/mod.rs)、[`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)、[`cpc/src/codegen/runtime_emit.rs`](file:///data/dev/cp/cpc/src/codegen/runtime_emit.rs)、[`cpc/src/codegen/expr/`](file:///data/dev/cp/cpc/src/codegen/expr/)：
+    - 支持 `ImportedEnv` 跨模块符号预注册、共享 `__cp_runtime.zig` 统一引用（`rt_sym`）及模块间 `@import` 路径重写。
+  - 已通过 `bash scripts/sync_cpc.sh release` 编译并原子部署 Release 正式版至 `/data/dev/cp/cap/bin/cpc`。
+
+### 构建工具极速 Debug 后端与并发隔离升级 (`cap`)
+
+- **五大构建提速与防冲突升级 (`cap/src/main.zig`)**:
+  - [`cap/src/main.zig`](file:///data/dev/cp/cap/src/main.zig)：
+    1. **全工程递归 `mtime` 感知**：`computeMaxSourceMtimeNs` 递归扫描 `src/**/*.cp` 与 `cap.json` 最新修改时间，支持 0 改动毫秒级 `[Up-to-date]` 跳过，彻底告别被迫 `-B` 全量强制重编；
+    2. **`-d` / `--debug` 自动启用 Zig `-fno-llvm` 原生 x86_64 后端**：跳过 LLVM 优化/指令选择管线，实测 5.4 万行 CapSurf 后端编译从 47.99s 骤降至 1.34s（14.3× 总提速），同时内置原生后端失败自动回退 LLVM 与 `--llvm` 显式开关兜底；
+    3. **原子产物替换消除 `FileBusy (ETXTBSY)`**：编译输出先落盘 `<out>.tmp.<pid>` 再原子 `rename` 覆盖目标二进制，运行期间重编零冲突；
+    4. **多智能体工作区与缓存自动隔离**：指定 `-o`/`--out-dir` 或 `--cache-dir` 时自动隔离至 `.cap/ws/<sanitized>/{zig,zig-cache}`，多路并发构建彻底告别 `flock` 串行排队；
+    5. **`-m` / `--modular` 模块级增量模式接线**：自动调用 `cpc compile --emit-dir`（配合 `-B` 透传 `--force`），识别 `__cp_entry.zig` 并从 `.cp_modular_manifest.txt` 提取聚合链接参数（`-L`/`-l`）；且对 `build-exe` 跳过冗余 `cpc emit-types`。
+  - 已通过 `zig build -Doptimize=ReleaseFast` 编译并原子部署至 `/data/dev/cp/cap/bin/cap` 与 `/root/.cap/bin/cap`。
+
+### 端到端实测验证
+
+- 多文件增量构建测试（`temp/test_modular_e2e/`）：冷编译 `618ms`（`-fno-llvm`）、0 改动快速跳过 `0ms`、改 1 文件增量重编 `transpiled=1 cached=8 (7ms)` 且未改动 `.zig` `mtime` 零变动、双路 `-o bin_p1`/`-o bin_p2` 无锁并发构建均 `~696ms`、原子替换零 `ETXTBSY`；
+- 标准库回归：`test_event_loop.cp`（5/5 PASS，703ms）、`test_http_router_sql_deep.cp`（8/8 PASS，1213ms）；`scripts/check_cpc_size.sh` 0 超限。
+
+---
+
+## [2026-11-20] - 核心任务：消除 sys 动态库依赖、集成 vendor/zlib 纯静态编译与工程递归 cap 依赖自动探测
+
+### 工具链与构建系统升级 (Toolchain & Build System)
+
+- **消除 `sys` 动态库依赖与纯静态库内联**:
+  - [`lib/cap.json`](file:///data/dev/cp/lib/cap.json)：在 `pack` 与 `http` 下分别配置 `vendor/zlib` 静态编译选项（`opt: "fast"`, `flag: ["-DZLIB_COMPAT", "-DNDEBUG"]`），彻底清空所有 `sys` 动态库映射；
+  - [`cap.json`](file:///data/dev/cp/cap.json)：移除根目录模板中的 `"z"` 动态链接项；
+  - [`cap/src/main.zig`](file:///data/dev/cp/cap/src/main.zig)：
+    - `resolveBinDependency`：直接返回生成的或预编译的静态库文件路径（`.a`）；
+    - `appendLinkArgs`：若依赖项以 `.a` 结尾，直接作为静态对象文件传给 Zig 链接器，防止链接器被宿主机 `/lib64/libz.so` 劫持；
+    - `scanDirRecursivelyForCaps`：递归扫描工程 `src/` 目录下所有 `.cp` 子模块的 `cap:` 导入，彻底解决子模块（如 `src/render/png.cp`）间接引入 `cap:pack` 时静态库遗漏链接的问题；
+  - [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：移除此前临时 Hotfix 硬编码发射的 `// @linkLibrary("z")`，交由构建工具按需静态链接。
+
+### 压缩子系统与静态库验证 (Pack & Vendor Zlib)
+
+- **`vendor/zlib` 兼容模式静态库构建**:
+  - 在 `vendor/zlib` 生成兼容模式静态库 `libz.a` 与 `libzlib.a`，全量导出 `compress2`, `uncompress`, `compressBound`, `deflateInit2_` 等 C-ABI 符号；
+- **端到端测试与纯静态验证 (Tests)**:
+  - [`cap/test/test_pack_zlib_static.cp`](file:///data/dev/cp/cap/test/test_pack_zlib_static.cp)：新增静态 Zlib 压缩/解压缩往返测试，`cap test`（715ms PASS）；
+  - `ldd` 验证：原生 ELF 产物完全不存在 `libz.so.1` 依赖，实现 100% 自包含独立二进制。
+
+---
+
+### 工具链与构建系统升级 (Toolchain & Build System)
+
+- **`cap.json` 与 `lib/cap.json` 配置架构精炼升级**:
+  - [`lib/cap.json`](file:///data/dev/cp/lib/cap.json)：移除 `global.default_opt`，升级为顶层 `"opt": "small"`；移除 `bin` 项中的冗余 `"type": "static_lib"`；采用精炼字段 `src`、`include`、`flag`；重构 `sys` 为命名字典 `{"z": {"linux": "libz.so.1", "mac": "libz.dylib", "win": "zlib1.dll"}}`；
+  - [`cap/src/project/manifest.zig`](file:///data/dev/cp/cap/src/project/manifest.zig)：
+    - `BinDependencyConfig`：支持 `src`（回退 `sources`）、`include`（回退 `include_dirs`）、`flag`（回退 `c_flags`）、默认 `static_lib`；
+    - `SysDependencyConfig`：全面支持命名字典（多动态库依赖隔离）与扁平对象双模解析，平台键兼容 `mac` 与 `win`（回退 `macos` 与 `windows`）；
+    - `CentralLibIndex`：支持顶级 `opt` 统一人体工程学配置；
+  - [`cap/src/main.zig`](file:///data/dev/cp/cap/src/main.zig)：
+    - `resolveSubPath`：在指定 `path` 作用域下，源文件与头文件路径自动省略 `path` 前缀；省略 `include` 时默认将 `path` 自身作为 include 路径；
+    - `buildCWithZig`：源文件与包含路径全量经 `resolveSubPath` 智能解析；
+    - `appendLinkArgs`：升级为 `getAllLibFlagsForTarget`，支持自动链接命名字典中定义的所有系统动态库（`-lz` 等）；
+    - 重新编译 `cap` 发布版（ReleaseFast）并更新部署到 `/root/.cap/bin/cap`。
+
+### 编译器模块解析强化 (Compiler Module Resolution)
+
+- **`cpc` 模块解析路径精准映射与同名候选**:
+  - [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs)：
+    - 实现 `resolve_cap_from_manifest`：读取中央索引 `lib/cap.json` 中的 `path` 字段；
+    - **文件精准映射**：当 `path` 指向具体文件（如 `"http/server.cp"`）时，`import ... from "cap:http"` 直接定位到该文件；
+    - **目录智能查找**：当 `path` 指向目录时，优先按 `index.cp` / `main.cp` / 与目录同名的 `.cp` 文件进行候选探测；
+    - **平滑回退机制**：若配置的路径不存在或不同名映射失效，自动平滑退回到基于 `include_paths` 及 `/data/dev/cp/lib/` 的默认解析；
+    - 直通同步到 `cpc_dev` 并运行 `bash scripts/sync_cpc.sh` 原子编译部署生效。
+
+### 测试验证与下游闭环 (Tests & Downstream Verification)
+
+- [`cap/test/test_cap_json_simplified.cp`](file:///data/dev/cp/cap/test/test_cap_json_simplified.cp)：新增端到端测试，验证基于精炼 `lib/cap.json` 触发的 `cap:http`（picohttpparser + libz）与 `cap:net`（usockets）按需编译与运行，`cap test`（867ms）与原生可执行文件直接运行 100% PASS；
+- 下游验证：在 `/data/dev/capsurf` 成功构建 `bin/main`（ReleaseFast，耗时 40s），验证 `./bin/main --help` 完美执行。
+
+---
+
+### 标准库增强 (Enhanced Stdlib)
+
+- **`cap:napi` Node-API 初步架构实现**:
+  - [`lib/napi/index.cp`](file:///data/dev/cp/lib/napi/index.cp)：定义 `napi` 模块统一对外出口；
+  - [`lib/napi/_napi.cp`](file:///data/dev/cp/lib/napi/_napi.cp)：建立 Node-API C-FFI Shim，初步绑定 `napi_get_undefined` 原型；
+  - [`lib/napi/napi.cp`](file:///data/dev/cp/lib/napi/napi.cp)：构建高层 CP API 包装器 `Napi.getUndefined`；
+  - 架构设计：遵循 CP 架构，FFI Shim 使用 `_` 前缀，高层封装遵循现代 CP 语言规范。
+
+---
+
+## [2026-11-18] - 核心里程碑：`cap:conf` 配置交换子系统（INI/TOML）工业级完整性补齐与首行 Bun 溯源覆盖
+
+### 标准库增强与完备性补齐 (Enhanced Stdlib)
+
+- **`cap:conf` 配置体系深度补齐与谱系溯源**:
+  - [`lib/conf/ini.cp`](file:///data/dev/cp/lib/conf/ini.cp)：首行标注 `// Source: bun/src/ini/ini.cp`，全面对齐 Bun 57KB 原生实现；补齐层级与嵌套节区（`[server.database]`）、全局属性、属性元信息内省（`getSections`, `getKeys`）、多形态类型安全提取器（`getInt`, `getFloat`, `getBool` 覆盖全量现代布尔值）、双引号完整转义、单引号字面量、环境变量插值（`${VAR}`）、注释剥离以及双向标准序列化输出；
+  - [`lib/conf/toml.cp`](file:///data/dev/cp/lib/conf/toml.cp)：首行标注 `// Source: bun/src/interchange/toml.cp`，全面升级为工业级 TOML 文档状态机；支持 10/16/8/2 进制整数与下划线、科学计数法与特殊浮点数、多行基础字符串 `"""` 与多行字面量 `'''`、点分嵌套表与表数组 `[[array]]`、复合数组安全切分提取以及双向标准序列化输出。
+
+### 文档沉淀与规范同步 (Documentation)
+
+- [`docs/stdlib/conf.md`](file:///data/dev/cp/docs/stdlib/conf.md)：新增全套 `cap:conf` 架构与 API 详细使用指南，提供 INI 与 TOML 完整代码用例；
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md) & [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)：在 `cap:conf` 标准库矩阵中更新完备特性说明。
+
+### 测试验证 (Tests)
+
+- [`cap/test/test_conf_complete.cp`](file:///data/dev/cp/cap/test/test_conf_complete.cp)：新增综合端到端测试用例，覆盖 INI 节区与类型转换、转义与环境变量、TOML 进制与多行字符串、表数组与双向序列化 Round-trip，2/2 100% 全部 PASS；
+- 回归测试：`test_config.cp`（2/2 PASS）、`test_json5.cp`（3/3 PASS）。
+
+---
+
+## [2026-11-18] - 核心里程碑：`cap:col` 核心容器体系工业级完整性补齐与首行 Bun 溯源注释覆盖
+
+### 标准库增强与完备性补齐 (Enhanced Stdlib)
+
+- **`cap:col` 容器家族全量补全与谱系溯源**:
+  - [`lib/col/bit_set.cp`](file:///data/dev/cp/lib/col/bit_set.cp)：首行标注 `// Source: bun/src/collections/bit_set.cp`，全面扩充至包含 `BitSet64`, `BitSet128`, `BitSet256`, `BitSet512`, `BitSet1024`, `DynamicBitSet`, `Range`，实装硬件 `@popCount` 与 `@ctz` 极速位扫描、动态重分配 `resize(len, fill)`、全套布尔集合代数与掩码迭代器；
+  - [`lib/col/bounded_array.cp`](file:///data/dev/cp/lib/col/bounded_array.cp)：首行标注 `// Source: bun/src/collections/bounded_array.cp`，补齐 `fromSlice`, `slice`, `constSlice`, `unusedCapacitySlice`, `insert`, `insertSlice`, `replaceRange`, `contains`, `findIndex`, `at` 等 10+ 项高阶栈数组操作；
+  - [`lib/col/linear_fifo.cp`](file:///data/dev/cp/lib/col/linear_fifo.cp)：首行标注 `// Source: bun/src/collections/linear_fifo.cp`，补齐 `realign`（原地消除环形缓冲回绕展开连续物理切片）、`shrink`、`unget`（逆向反弹未消费数据）、`readableSlice` / `writableSlice` 零拷贝 I/O 契约及 `orderedRemoveItem`；
+  - [`lib/col/baby_list.cp`](file:///data/dev/cp/lib/col/baby_list.cp)：首行标注 `// Source: bun/src/collections/baby_list.cp`，补齐 `fromSlice`, `clone`, `memoryCost`, `ensureTotalCapacityPrecise`, `expandToCapacity`, `shrinkAndFree`, `insert`, `insertSlice`, `orderedRemove`, `swapRemove` 及 `OffsetByteList` 结构体；
+  - [`lib/col/hive_array.cp`](file:///data/dev/cp/lib/col/hive_array.cp) & [`lib/col/index.cp`](file:///data/dev/cp/lib/col/index.cp)：统一从 `bit_set.cp` 导出 `BitSet64`，首行标注来源注释，对外暴露统一聚合入口。
+
+### 文档沉淀与规范同步 (Documentation)
+
+- [`docs/stdlib/col.md`](file:///data/dev/cp/docs/stdlib/col.md)：新增全套 `cap:col` 架构与 API 详细使用手册，提供 BitSet、BoundedArray、LinearFifo、BabyList、Soa 代码用例；
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md) & [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)：在 `cap:col` 标准库矩阵中增补全套位图矩阵、范围与紧凑数组符号。
+
+### 测试验证 (Tests)
+
+- [`cap/test/test_col_complete.cp`](file:///data/dev/cp/cap/test/test_col_complete.cp)：新增 5 大综合测试用例，覆盖 BoundedArray、LinearFifo、BabyList、静态位图矩阵与 DynamicBitSet，5/5 100% 全部 PASS；
+- 回归测试：`test_collections_bun.cp`（6/6 PASS）、`test_collections_matrix.cp`（7/7 PASS）、`test_col_pack_md_html.cp`（4/4 PASS）。
+
+---
+
+## [2026-11-18] - 核心里程碑：内置全局 JSON.parse 统一（消灭 import 割裂，零导入支持动态 SIMD JsonValue 与强类型反射解析）与下游热修全结单
+
+### 编译器新特性与架构统一 (Compiler Features & Architecture)
+
+- **内置全局 `JSON.parse` 零导入双轨统一**:
+  - [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：在 `needs_json && !has_imported_json && !self.is_lib_mode` 时，自动发射自包含 `JsonTag`、`JsonField`、`JsonValue`、`FastJsonScanner`（16 字节 SIMD 引号/转义探测）、`JsonParser` 与全局 `JSON` 结构体；为 `JsonValue` 补齐 `isObject()`, `isArray()`, `isBool()`, `isNumber()`, `isString()` 等人体工程学方法；
+  - [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs)：彻底消除原先依赖 `import { JSON } from "cap:json"` 的分支判断；所有动态 `JSON.parse(str)` / `JSON.parse(alloc, str)` 无条件直通自研 `JSON.parse` 零拷贝引擎；强类型 `JSON.parse(T, str)` / `JSON.parse<T>(str)` 直通 Zig 编译期反射；
+  - [`cpc/src/codegen/prelude.rs`](file:///data/dev/cp/cpc/src/codegen/prelude.rs)：增强 AST 扫描，当检测到模块内显式导入或声明了 `JsonTag` / `JsonValue` / `JsonParser` / `JSON` 时，自动将 `has_imported_json` 设为 `true`，防止双重定义冲突；
+  - [`cpc/src/codegen/types.rs`](file:///data/dev/cp/cpc/src/codegen/types.rs)：动态 `JSON.parse` 语义推导统一返回 `!JsonValue`；强类型调用返回 `!T`。
+
+### 标准库强化与下游热修交付 (Stdlib & Hotfixes)
+
+- **标准库 JSON 契约统一 (`cap:json`)**:
+  - [`lib/json/value.cp`](file:///data/dev/cp/lib/json/value.cp)：实例方法补齐 `isObject`, `isArray`, `isBool`, `isNumber`, `isString`，保证与内置 `JsonValue` 100% 契约一致；
+  - [`lib/json/parser.cp`](file:///data/dev/cp/lib/json/parser.cp)：结合 16 字节 SIMD `FastJsonScanner` 与动态 AST 构造。
+- **下游热修工单全量交付与结单 (Downstream Hotfixes)**:
+  - `task-capsurf-20261117-pack-native-allocator`：修复 `lib/pack/native.cp` 的 `std.mem.Allocator` 导入与导出，验证 `test_col_pack_md_html.cp` 4/4 全部 PASS，结单交付；
+  - `task-capsurf-20261117-compiler-borrow-conflict`：修复验证 CapSurf `src/js/dom_binding.cp` 裸指针借用冲突，结单交付；
+  - 下游任务队列清零（0 pending）。
+
+### 测试验证 (Tests)
+
+- [`cap/test/test_builtin_json_unify.cp`](file:///data/dev/cp/cap/test/test_builtin_json_unify.cp)：新增端到端测试，验证零导入下动态 SIMD 零拷贝与强类型反射解析，2/2 全部 PASS；
+- [`cap/test/test_fast_json.cp`](file:///data/dev/cp/cap/test/test_fast_json.cp)：3/3 全部 PASS；
+- [`cap/test/test_zero_copy_json.cp`](file:///data/dev/cp/cap/test/test_zero_copy_json.cp)：3/3 全部 PASS；
+- [`cap/test/test_json5.cp`](file:///data/dev/cp/cap/test/test_json5.cp)：3/3 全部 PASS；
+- [`cap/test/test_json.cp`](file:///data/dev/cp/cap/test/test_json.cp)：1/1 全部 PASS；
+- [`cap/test/test_col_pack_md_html.cp`](file:///data/dev/cp/cap/test/test_col_pack_md_html.cp)：4/4 全部 PASS。
+
+---
+
+## [2026-11-18] - 核心任务：补全 JSON5 完整解析能力与规范化标准库来源头部
+
+### 新增与增强标准库 (Enhanced Stdlib)
+
+- **配置与数据交换子系统 JSON5 完备实现 (`cap:conf`)**:
+  - [`lib/conf/json5.cp`](file:///data/dev/cp/lib/conf/json5.cp)：完整实现 `JSON5Parser` 与 `JSON5.parse(allocator, src): !JsonValue`，全面支持单行注释（`//`）、多行注释（`/* */`）、对象与数组尾随逗号（trailing comma）、未加引号的 ECMAScript 标识符键（unquoted keys）、单引号字符串（`'...'`）、转义字符与换行折叠、十六进制数字（`0x...`）、显式正负号（`+42`）、特殊常量（`NaN`、`Infinity`）；
+  - 保留并向前兼容 `JSON5.stripCommentsAndTrailingCommas(src, out_buf)` 预处理接口；
+  - 导出 `Json5Scanner` 供外部复用。
+- **规范化 `lib/json/` 来源标注**:
+  - [`lib/json/parser.cp`](file:///data/dev/cp/lib/json/parser.cp)：头部注释修正为 `// Source: Custom implementation by Antigravity AI (Zero-copy JSON streaming parser)`；
+  - [`lib/json/pool.cp`](file:///data/dev/cp/lib/json/pool.cp)：头部注释修正为 `// Source: Custom implementation by Antigravity AI (Thread-local buffer pool for JSON parsing)`；
+  - [`lib/json/value.cp`](file:///data/dev/cp/lib/json/value.cp)：头部注释修正为 `// Source: Custom implementation by Antigravity AI (Zero-copy JSON value AST & enum)`。
+
+### 测试验证 (Tests)
+
+- [`cap/test/test_json5.cp`](file:///data/dev/cp/cap/test/test_json5.cp)：新增 JSON5 专项端到端测试，验证注释与未加引号键、十六进制/带符号数值与尾随逗号、预处理向后兼容性，3/3 用例 100% 全部通过。
+
+---
+
+## [2026-11-17] - 核心里程碑：高性能列式容器 Soa<T> 实装与 Zig 被埋没资产吸收第一阶段（cap:sort 与 cap:hash）
+
+### 新增标准库与容器 (Added Stdlib & Containers)
+
+- **高性能列式结构体数组容器 `Soa<T>` (`cap:col`)**:
+  - [`lib/col/soa.cp`](file:///data/dev/cp/lib/col/soa.cp)：基于 Zig `std.MultiArrayList(T)` 实现连续内存列式分列存储（Struct of Arrays），支持 `init`, `initCapacity`, `deinit`, `append`, `get`, `set`, `len`, `capacity`, `popOrNull`, `swapRemove`, `orderedRemove`, `clearRetainingCapacity`；
+  - 核心原语 `items(field)` 暴露各字段物理连续切片，彻底消除 AoS 字段跨度缓存污染，直通 SIMD 向量化并行计算；
+  - [`lib/col/index.cp`](file:///data/dev/cp/lib/col/index.cp)：对外统一导出 `Soa<T>`；
+  - [`docs/stdlib/soa.md`](file:///data/dev/cp/docs/stdlib/soa.md)：编写详尽 API 指南与多类型结构体列式计算示例。
+- **工业级排序与对数检索标准库 (`cap:sort`)**:
+  - [`lib/sort/index.cp`](file:///data/dev/cp/lib/sort/index.cp)：基于 Orson Peters 的 PDQSort 实现零堆分配原地快排（`Sort.asc`, `Sort.desc`, `Sort.sort`）；基于 BlockSort 实现原地稳定块排序（`Sort.stable`, `Sort.stableAsc`）；基于 HeapSort 实现严格 O(1) 辅助空间堆排序（`Sort.heap`, `Sort.heapAsc`）；
+  - 提供有序切片检索：`Sort.isSorted`, `Sort.isSortedAsc`, 二分搜索 `Sort.binarySearch`, 插入上/下界 `Sort.lowerBound` / `Sort.upperBound`, 极值检索 `Sort.minI32` / `maxI32` / `argMin` / `argMax` 以及泛型求值器 `SortOf<T>`；
+  - [`docs/stdlib/sort.md`](file:///data/dev/cp/docs/stdlib/sort.md)：独立技术手册与复杂度分析。
+- **非密码学极速散列与校验和标准库 (`cap:hash`)**:
+  - [`lib/hash/index.cp`](file:///data/dev/cp/lib/hash/index.cp)：集成 30~50 GB/s SIMD 硬件加速 XxHash3 与 128 位超低碰撞散列；工业标准 Murmur3 与 CityHash64；硬件线速 CRC32 与 Adler32 校验和；防 Hash-DoS 攻击伪随机散列 SipHash-2-4 与 SipHash-128；Fnv1a 与 64 位整数雪崩置换 `hashInt`；
+  - 导出增量流式散列计算句柄 `XxHash3Stream`；
+  - [`docs/stdlib/hash.md`](file:///data/dev/cp/docs/stdlib/hash.md)：独立技术手册与工业标准测试向量。
+
+### 编译器增强 (Compiler Enhancements)
+
+- [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs)：
+  - 增强方法调用与普通自由函数调用的缺省参数处理：当调用方传入的实参数量少于形参数量时，自动查找并回填带默认值的参数表达式，消除调用方显式填入冗余默认参数的开销。
+
+### 规范手册与测试验证 (Docs & Tests)
+
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)：在 12.1 节标准库表格与 20.11 节登记 `Soa<T>`、`cap:sort` 与 `cap:hash`。
+- [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)：官方标准库数量升级为 34 个，在标准库矩阵中登记 `cap:sort` 与 `cap:hash`。
+- [`cap/test/test_soa.cp`](file:///data/dev/cp/cap/test/test_soa.cp)：4/4 用例全部 PASS。
+- [`cap/test/test_sort.cp`](file:///data/dev/cp/cap/test/test_sort.cp)：6/6 用例全部 PASS。
+- [`cap/test/test_hash.cp`](file:///data/dev/cp/cap/test/test_hash.cp)：5/5 用例全部 PASS。
+
+---
+
+## [2026-11-16] - 核心里程碑：Spec 5 零堆分配流式直写与 Spec 8 跨协程静态隔离检查 E0305 实装
+
+### 编译器新特性与优化 (Compiler Features & Optimizations)
+
+- **零分配模板字符串流式直写 (Spec 5)**:
+  - [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs)：实现 `lower_template_stream`，为 `print`、`println`、`@print`、`writer.write`、`writer.print` 等提供流式直写 Lowering，彻底跳过 `allocPrint` 堆分配，常量内插编译期静态折叠，动态参数包覆 `cp_fmt` 直写底层流。
+- **跨协程/异步边界静态隔离检查 E0305 (Spec 8)**:
+  - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs)：引入 `local_borrow_vars` 追踪与 `check_async_boundary_arg` 检查；拦截 `spawn`、`@spawn`、`spawn.cpu`、`send` 边界传递局部借用指针 `*T`、`&T` 或裸切片，报出三段式 AI-First 智能诊断 `error[E0305]`。
+
+### 双轨规范与文档 (Documentation & Specs)
+
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)：在第 20.11 节增加第 10 小节（流式直写优化）与第 11 小节（跨协程隔离检查 E0305）。
+- [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)：升级为 Top 29 绝对禁手清单，登记 #29 条（跨协程传递局部借用拦截）。
+
+### 测试验证 (Tests)
+
+- [`cap/test/test_stream_template_and_isolation.cp`](file:///data/dev/cp/cap/test/test_stream_template_and_isolation.cp)：Spec 5 流式直写与 Spec 8 安全并发 100% PASS。
+- [`cap/test/test_parallel_fail_borrow.cp`](file:///data/dev/cp/cap/test/test_parallel_fail_borrow.cp)：精准触发 E0305 拦截。
+- `test_all.cp` 回归验证：100% PASS。
+
+---
+
+## [2026-11-16] - 核心里程碑：LLVM libFuzzer 驱动接入、AddressSanitizer 内存检查与 cap 模糊测试指令矩阵 (Spec 12 第二部分)
+
+### 编译器与构建工具链 (Compiler & Toolchain)
+
+- **libFuzzer C-ABI 标准符号导出与构建模式**:
+  - [`cpc/src/main.rs`](file:///data/dev/cp/cpc/src/main.rs)：新增 `--fuzz` 与 `--fuzz-target <name>` 编译命令行选项，支持环境标识 `CP_FUZZ`；
+  - [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：在 `--fuzz` 模式下抑制普通 `pub fn main` 生成，提取所有 `fuzz` 目标块，导出标准 C-ABI 入口函数 `export fn LLVMFuzzerTestOneInput(data: [*c]const u8, size: usize) callconv(.c) c_int`；
+  - [`cpc/src/codegen/actor.rs`](file:///data/dev/cp/cpc/src/codegen/actor.rs)：登记所有 `fuzz` 目标块上下文，支持单独隔离为函数并安全分发。
+- **构建工具端 `cap` 命令行指令矩阵与两阶段插桩链接**:
+  - [`cap/src/main.zig`](file:///data/dev/cp/cap/src/main.zig)：
+    - 扩展 `cap test` 支持 `--fuzz`（及一等子命令 `cap fuzz [target]`）；
+    - 采用 `zig build-obj` + `clang -fsanitize=fuzzer,address` 两阶段构建，无缝引入 Coverage-guided 变异与 ASan 内存安全检查；
+    - 支持可选参数 `--timeout <sec>` 与 `--jobs <n>` 控制执行时长与并发 Worker；
+    - 支持崩溃复现指令 `cap test --repro <crash_file.bin>`，单次喂入输入文件，秒级触发崩溃并回溯堆栈现场；
+    - `usage()` 帮助文档同步增补 Fuzz Options 指引。
+
+### 双轨规范与文档 (Documentation & Specs)
+
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)：在第 20.11 节补充 libFuzzer C-ABI 导出与 `cap test --fuzz`、`--repro` 官方规范。
+- [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)：更新原生代码块矩阵中的 `fuzz` 块契约描述。
+
+### 测试验证 (Tests)
+
+- [`cap/test/test_fuzz_driver.cp`](file:///data/dev/cp/cap/test/test_fuzz_driver.cp)：新增专用模糊测试与崩溃复现器验证用例；
+- 实测验证：
+  - 常规测试模式 `cap test`: 100% PASS；
+  - libFuzzer 模式 `cap test --fuzz`: 100% PASS (1000 轮动态变异)；
+  - 超高吞吐测试 `cap fuzz --timeout 1`: 100% PASS (1 秒 220 万次执行，110 万 exec/s)；
+  - 崩溃复现 `cap test --repro temp/crash_sample.bin`: 精准复现 panic 与堆栈定位。
+
+---
+
+## [2026-11-16] - 核心里程碑：Fuzz 模糊测试块、函数级 @arena 内存区域修饰器与字段级 @json 注解定制
+
+### 编译器新特性与语法扩展 (Compiler Features)
+
+- **一级 `fuzz` 模糊测试块 (Spec 12.2)**:
+  - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs)：新增保留字 `Token::Fuzz`；
+  - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs) & [`cpc/src/ast_visitor.rs`](file:///data/dev/cp/cpc/src/ast_visitor.rs)：新增 `FuzzDecl` 声明与 AST 节点；
+  - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs)：支持顶层与模块项 `fuzz <name> (<param>) { ... }` 语法解析；
+  - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs)：语义分析自动将变异样本形参绑定为 `[]const u8`；
+  - [`cpc/src/codegen/actor.rs`](file:///data/dev/cp/cpc/src/codegen/actor.rs)、[`cpc/src/codegen/stmt.rs`](file:///data/dev/cp/cpc/src/codegen/stmt.rs)、[`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：发射集成 16+ 高危边界样本语料库（Corpus）与 100 轮动态切片变异驱动循环的 `test "fuzz: <name>"`。
+- **函数级 `@arena` 作用域内存区域修饰器 (Spec 7)**:
+  - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs)：在 `parse_meta_ident` 映射 `Token::Arena` 为 `"arena"` 注解；
+  - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs)：元注解校验增加 `@arena` 函数修饰器豁免；
+  - [`cpc/src/codegen/actor.rs`](file:///data/dev/cp/cpc/src/codegen/actor.rs)：在函数序言处初始化栈 Arena 并压入活跃 Arena 作用域栈，退出时自动注入 `defer __fn_arena.deinit()`，使函数内局部临时分配离开时 $O(1)$ 瞬时整块释放，实现零堆碎片与强异常安全。
+- **字段级 `@json("alias")` 与 `@json_ignore` 序列化定制 (Spec 6)**:
+  - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs)：重构 `derive_json_method`，跳过标注 `@json_ignore` 的字段，提取 `@json("alias")` 别名作为 JSON 键，无有效字段时输出 `"{}"`。
+
+### 双轨规范与文档同步 (Documentation & Specs)
+
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)：在第 20.2 节补充函数级 `@arena`，并在第 20.11 节增补字段级 JSON 定制、函数级 `@arena` 与 `fuzz` 模糊测试块权威规范。
+- [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)：扩充原生代码块矩阵至五大代码块（引入 `fuzz` 块），并同步更新字段级 `@json`、函数级 `@arena` 的精炼可运行契约示例。
+
+### 测试验证 (Tests)
+
+- [`cap/test/test_fuzz_arena_json.cp`](file:///data/dev/cp/cap/test/test_fuzz_arena_json.cp)：字段别名重命名、字段忽略过滤、函数级 `@arena` 作用域计算与 `fuzz` 驱动验证 100% PASS。
+- `test_all.cp` 回归验证：100% PASS。
+
+---
+
+## [2026-11-16] - 核心里程碑：Phase 2 人体工程学语法糖实装、契约式设计、SIMD原语与双轨规范同步
+
+### 编译器人体工程学与黑科技语法 (Compiler Ergonomics & Contracts)
+
+- **空值合并赋值 (`??=`)**:
+  - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs) & [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs)：支持 `Token::QuestionQuestionAssign` 复合赋值解析；
+  - [`cpc/src/codegen/stmt.rs`](file:///data/dev/cp/cpc/src/codegen/stmt.rs)：Lowering 为 `if (lhs == null) { lhs = rhs; }`，实现零堆开销天然短路求值。
+- **契约式设计注解 (`@pre` 与 `@ret`)**:
+  - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs)：`parse_meta_arg` 扩展二元断言表达式解析；支持在函数签名后尾随注解 `@pre(cond)` 和 `@ret(cond)`；
+  - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs)：元注解校验对 `@pre` 和 `@ret` 豁免静态常量检查；
+  - [`cpc/src/codegen/actor.rs`](file:///data/dev/cp/cpc/src/codegen/actor.rs)：在函数入口自动发射前置条件断言 `std.debug.assert(cond)`；
+  - [`cpc/src/codegen/stmt.rs`](file:///data/dev/cp/cpc/src/codegen/stmt.rs)：在函数体各 `return` 返回处捕获返回值 `ret` 并发射后置条件断言 `std.debug.assert(cond)`。
+- **万能降级解包 `?` 多行块与复合类型 `(?T)!` 双重解包**:
+  - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs)：`?` 降级操作符全面支持后接代码块 `{ ... }`（`Expr::LabeledBlock`）；
+  - [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs) & [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：对可空且可能报错的复合类型 `(?T)!` 自动发射双重链式解包（先 `catch` 再 `orelse`），若成功直接解包出底层基型 `T`。
+- **内建定长 SIMD 向量类型别名**:
+  - [`cpc/src/codegen/types.rs`](file:///data/dev/cp/cpc/src/codegen/types.rs) & [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs)：内置 `u8x16`、`u8x32`、`u8x64`、`i16x8`、`i16x16`、`i32x4`、`i32x8`、`u32x4`、`u32x8`、`f32x4`、`f32x8`、`f32x16`、`f64x2`、`f64x4` 映射至底层 `@Vector(N, T)`，原生支持标量广播 `@splat` 与向量算术运算（`+`, `-`, `*`, `/`）。
+- **派生宏全家桶扩展 (`@[Default]`)**:
+  - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs)：登记并实装 `derive_default_method`，为结构体/类自动派生全零值初始化静态工厂 `pub static fn default(): Self`。
+- **切片属性语法糖消歧保护 (`.slice`)**:
+  - [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs)：将 `.slice` 改为白名单判定（仅对字符串/数组/切片生效），保留用户自定义类型的同名 `.slice()` 成员方法。
+
+### 双轨规范与文档同步 (Documentation & Specs)
+
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)：新增第 20.11 小节，全面收录 Phase 2 人体工程学语法糖、契约式设计、SIMD 原语与派生宏规范。
+- [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)：同步精简更新标量向量类型、`??=` 复合赋值、`@pre`/`@ret` 契约注解、`? { ... }` 万能降级与双重解包、`@[Default]` 派生宏。
+
+### 测试验证 (Tests)
+
+- [`cap/test/test_phase2_ergonomics.cp`](file:///data/dev/cp/cap/test/test_phase2_ergonomics.cp)：6 大特性全量端到端验证通过（100% PASS）。
+- 回归测试：`test_all.cp` 验证 100% 通过。
+
+---
+
+## [2026-11-16] - 核心里程碑：Bun 高价值资产全面吸收、图像子系统（PNG截图/BMP/量化）实装与标准库全景扩展
+
+### 图像子系统实装与截图引擎 (Added `cap:image` & `cap:png`)
+
+- **纯 CP PNG 编解码器 (`png.cp`)**:
+  - [`lib/image/png.cp`](file:///data/dev/cp/lib/image/png.cp)：为 `capsurf_agy` 网页截图提供专属引擎；
+  - `Png.encodeRgba(rgba, width, height)`：支持标准 8 字节魔数签名、IHDR Chunk、扫描线 None 滤波（0x00 前缀）、Zlib 原生 Deflate 流式压缩生成 IDAT、IEND 闭合与 CRC-32 校验和；
+  - `Png.decode(bytes)`：支持 IHDR 元数据解析、IDAT 聚合解压、5 种滤波逆运算（None, Sub, Up, Average, Paeth）像素还原；
+  - `PngImage` 与 `RgbaColor` 强类型封装，支持坐标级读取与变异；
+  - `Png.save(path, rgba, w, h)` 与 `Png.load(path)` 同步文件 I/O 管道。
+- **图像格式嗅探与 MIME 推导 (`codecs.cp`)**:
+  - [`lib/image/codecs.cp`](file:///data/dev/cp/lib/image/codecs.cp)：8 大图片格式（PNG/JPEG/WebP/BMP/GIF/TIFF/AVIF/HEIC）二进制魔数探测、MIME 字符串映射与文件名后缀推导。
+- **Windows BMP DIB 编解码 (`bmp.cp`)**:
+  - [`lib/image/bmp.cp`](file:///data/dev/cp/lib/image/bmp.cp)：支持 24/32 位 BMP 文件解码与 32 位 BMP 文件编码，包含 4 字节跨距行对齐转换。
+- **纯 CP GIF89a/87a LZW 解码器 (`gif.cp`)**:
+  - [`lib/image/gif.cp`](file:///data/dev/cp/lib/image/gif.cp)：4096 节点 LZW 字典流式解压、Logical Screen Descriptor 探测、全局/局部调色板映射、4-pass 交织扫描还原与透明色索引解析。
+- **Evan Wallace ThumbHash 模糊占位图算法 (`thumbhash.cp`)**:
+  - [`lib/image/thumbhash.cp`](file:///data/dev/cp/lib/image/thumbhash.cp)：将 RGBA8 像素压缩为 ≤25 字节紧凑哈希，并支持逆向解码为 32x32 模糊平滑占位图。
+- **EXIF 方向解析与变换矩阵 (`exif.cp`)**:
+  - [`lib/image/exif.cp`](file:///data/dev/cp/lib/image/exif.cp)：快速解析 JPEG APP1 / TIFF IFD0 0x0112 旋转标签，映射生成 `ExifTransform` 旋转与镜像动作。
+- **高阶图像处理管线 (`pipeline.cp`)**:
+  - [`lib/image/pipeline.cp`](file:///data/dev/cp/lib/image/pipeline.cp)：轻量结构体 `Image`，支持 `.flop()`、`.flip()`、`.rotate(90/180/270)`、`.crop(x, y, w, h)`、`.resize(w, h)` 双线性缩放及 `.thumbhash()`。
+- **JPEG 与 WebP 容器探测 (`jpeg.cp`, `webp.cp`)**:
+  - [`lib/image/jpeg.cp`](file:///data/dev/cp/lib/image/jpeg.cp)：SOF0/SOF2 帧头基准尺寸、分量与渐进式检测；
+  - [`lib/image/webp.cp`](file:///data/dev/cp/lib/image/webp.cp)：RIFF WEBP VP8/VP8L/VP8X 容器头嗅探、透明度与动画标志提取。
+- **全量标准库 Bun 溯源注释注入 (Provenance Headers)**:
+  - 在 `lib/` 下 52 个从 Bun 吸收的文件头部，统一规范注入 `// Absorbed from Bun: /data/dev/bun/src/...` 与 `// Upstream Sync:` 溯源注释。
+- **调色板颜色量化器 (`quantize.cp`)**:
+  - [`lib/image/quantize.cp`](file:///data/dev/cp/lib/image/quantize.cp)：基于 Median-Cut 算法实现 RGBA 像素向 256 色紧凑调色板与索引图转换。
+- **统一聚合出口 (`index.cp`)**:
+  - [`lib/image/index.cp`](file:///data/dev/cp/lib/image/index.cp)：门面统一导出 `cap:image`、`cap:png`、`cap:img` 协议全部 10 大子模块。
+
+### Bun 高价值资产吸收与标准库扩展 (Added Stdlib)
+
+- **容器集合库 (`cap:col`)**:
+  - [`lib/col/hash_map.cp`](file:///data/dev/cp/lib/col/hash_map.cp)：开放寻址双重散列 Robin Hood 哈希表，配合 `bit_set.cp`, `bounded_array.cp`, `hive_array.cp`, `object_pool.cp` 形成完整工业级集合体系。
+- **高性能字符串库 (`cap:string`)**:
+  - [`lib/string/smol.cp`](file:///data/dev/cp/lib/string/smol.cp)：24 字节 SSO 小字符串（小于 23 字节纯栈上分配，超长自动堆回退）；
+  - [`lib/string/hashed.cp`](file:///data/dev/cp/lib/string/hashed.cp)：内联 Wyhash 预计算的快速比较字符串对象；
+  - [`lib/string/joiner.cp`](file:///data/dev/cp/lib/string/joiner.cp) 与 [`lib/string/path.cp`](file:///data/dev/cp/lib/string/path.cp)。
+- **线程并发同步库 (`cap:sync`)**:
+  - [`lib/sync/pool.cp`](file:///data/dev/cp/lib/sync/pool.cp)：`Guarded<T>` 互斥锁作用域保护包装类与 `WorkPool` 多线程工作者队列；
+  - 深度重构 `arc_slice.cp`, `concurrent_map.cp`, `condition.cp`, `futex.cp`, `mutex.cp`, `ring_buffer.cp`, `unbounded_queue.cp`, `wait_group.cp`。
+- **动态事件与异步任务库 (`cap:event`)**:
+  - [`lib/event/task.cp`](file:///data/dev/cp/lib/event/task.cp)：`AnyTask` 与 `ManagedTask` 动态多态任务调度与状态机切分。
+- **轻量嵌入式 SQL 数据库 (`cap:sql`)**:
+  - [`lib/sql/sqlite.cp`](file:///data/dev/cp/lib/sql/sqlite.cp)：内存数据库与持久化 SQLite 引擎封装。
+- **内嵌微型脚本引擎 (`cap:shell`)**:
+  - [`lib/shell/lexer.cp`](file:///data/dev/cp/lib/shell/lexer.cp), [`lib/shell/parser.cp`](file:///data/dev/cp/lib/shell/parser.cp), [`lib/shell/eval.cp`](file:///data/dev/cp/lib/shell/eval.cp), [`lib/shell/index.cp`](file:///data/dev/cp/lib/shell/index.cp)。
+
+### 编译器与构建增强 (Compiler & Build)
+
+- [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs)：注册 `"image" | "img" | "png" => "image"`、`"sync" | "threading" => "sync"`、`"shell" | "sh" => "shell"` 模块路径协议映射。
+- [`cpc/src/codegen/prelude.rs`](file:///data/dev/cp/cpc/src/codegen/prelude.rs)：结构体字段默认值表达式扫描、位移检测、异步内建指令预加载标志修复。
+- [`cap.json`](file:///data/dev/cp/cap.json)：声明链接动态库 `"sqlite3"` 与 `"z"`。
+
+### 测试套件验证 (Tests)
+
+- [`cap/test/test_image_png.cp`](file:///data/dev/cp/cap/test/test_image_png.cp)：6/6 PASS (100%)。
+- [`cap/test/test_bun_absorbed_assets.cp`](file:///data/dev/cp/cap/test/test_bun_absorbed_assets.cp)：6/6 PASS (100%)。
+- [`cap/test/test_collections_bun.cp`](file:///data/dev/cp/cap/test/test_collections_bun.cp)：6/6 PASS (100%)。
+- [`cap/test/test_sqlite.cp`](file:///data/dev/cp/cap/test/test_sqlite.cp)：PASS (100%)。
+
+---
+
+## [2026-11-13] - 核心里程碑：安全防护与 CSRF Token 体系（cap:security）实装及基于 5 步法的 cp_agent_ref.md 全量重构
+
+### 安全防护体系实装 (Added)
+
+- **CSRF 防护核心库 (`csrf.cp`)**:
+  - [`lib/security/csrf.cp`](file:///data/dev/cp/lib/security/csrf.cp)：基于 CSPRNG 随机 Nonce、HMAC-SHA256 签名校验、时钟漂移防重放，以及 `constantTimeEql` 恒定时间缓冲区对比的 CSRF Token 生成与验证；
+  - 支持 `Base64Url`、`Base64` 与 `Hex` 三种工业编码格式。
+- **模块重导出与单一出口 (`index.cp`)**:
+  - [`lib/security/index.cp`](file:///data/dev/cp/lib/security/index.cp)：对外统一导出 `CSRF`、`TokenFormat`、`DEFAULT_EXPIRATION_MS`、`constantTimeEql`。
+
+### 智能体高密度语法契约重构 (Agent Specification)
+
+- [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)：
+  - 严格采纳用户 5 步法建议，从权威 `cp_ref.md` 提取单一真理来源，剔除全部历史原理、哲学论据与多语言评测（减重 80%）；
+  - 保留纯正 CP 语法与精炼可运行示例（Canonical Examples）；
+  - 彻底清除 Zig 语法渗漏（`try`、`for()|i|`、`and/or`、`!T`/`?T`、`Point{ .x = 1 }`、`&.{}` 等）；
+  - 与编译器 AST/Parser/Sema 源码核对并经微型综合测试脚本编译验证通过（100% PASS）；
+  - 结尾增设《Top 15 绝对禁手清单》。
+
+### 编译器增强与热修自愈 (Compiler & Hotfix)
+
+- [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs) / [`cpc_dev/src/sema.rs`](file:///data/dev/cp/cpc_dev/src/sema.rs):
+  - 增强 `Type::Ref` 具名结构体解构赋值支持，自动解析结构体定义字段。
+- [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs) & [`cpc/src/codegen/stmt.rs`](file:///data/dev/cp/cpc/src/codegen/stmt.rs):
+  - 修复未初始化栈缓冲区（`undefined`）切片（`raw[0..]`）与索引赋值（`raw[i] = ...`）误触 `uninitialized_vars` 读取拦截的缺陷。
+- [`cpc/src/codegen/pattern.rs`](file:///data/dev/cp/cpc/src/codegen/pattern.rs) & [`cpc/src/codegen/actor.rs`](file:///data/dev/cp/cpc/src/codegen/actor.rs):
+  - 修复常量模式解构 Rest 剩余绑定（`const [head, ...tail] = ...`）中不可变切片类型推断与闭包状态机上下文中的类型对齐（`[]const T`）。
+
+### 标准库强化 (Library Updates)
+
+- [`lib/crypto/hmac.cp`](file:///data/dev/cp/lib/crypto/hmac.cp)：新增零堆分配的高性能原生切片签名函数 `hmacSha256Raw(out, key, data)`。
+- [`lib/crypto/random.cp`](file:///data/dev/cp/lib/crypto/random.cp)：新增原生直接就地填充随机字节函数 `fillRandom(buf)`。
+- [`lib/encoding/base64.cp`](file:///data/dev/cp/lib/encoding/base64.cp)：全面升级为纯正面向对象 `export class Base64`，规范纯正 CP 返回类型与切片位移运算。
+
+### 测试验证 (Tests)
+
+- [`cap/test/test_security_csrf.cp`](file:///data/dev/cp/cap/test/test_security_csrf.cp)：4/4 端到端安全测试 100% PASS。
+- 全量回归测试：`test_event_loop.cp`, `test_crypto_features.cp`, `test_encoding.cp`, `test_sync_primitives.cp` 全部 100% PASS。
+
+## [2026-11-13] - 核心里程碑：工业级现代密码学体系（cap:crypto）建设、编译器枚举方法与解构自愈
+
+### 工业级密码学体系实装 (Added)
+
+- **真随机数与 CSPRNG (`random.cp`)**:
+  - [`lib/crypto/random.cp`](file:///data/dev/cp/lib/crypto/random.cp)：直通 Linux 内核 `getrandom` 熵池的 CSPRNG，实现 RFC 4122 v4 `randomUUID()` 与无偏高精度 `randomInt(min, max)`。
+- **散列哈希与流式增量散列 (`hash.cp`)**:
+  - [`lib/crypto/hash.cp`](file:///data/dev/cp/lib/crypto/hash.cp)：`sha256`, `sha512`, `sha1`, `md5` 单次快速哈希计算；面向对象的流式 `Hash` 类，支持 `.update(data)` 增量注入与 `.digest()` 最终十六进制输出。
+- **HMAC 消息认证码 (`hmac.cp`)**:
+  - [`lib/crypto/hmac.cp`](file:///data/dev/cp/lib/crypto/hmac.cp)：RFC 2104 `hmacSha256(key, data)` 与流式 `Hmac` 类。
+- **PBKDF2 口令派生密钥 (`pbkdf2.cp`)**:
+  - [`lib/crypto/pbkdf2.cp`](file:///data/dev/cp/lib/crypto/pbkdf2.cp)：`pbkdf2Sync`（返回十六进制字符串）与 `pbkdf2Raw`（直接安全填充目标字节数组）。
+- **现代 AEAD 认证对称加密 (`cipher.cp`)**:
+  - [`lib/crypto/cipher.cp`](file:///data/dev/cp/lib/crypto/cipher.cp)：现代工业标准 `Aes256Gcm`（NIST SP 800-38D）与 `ChaCha20Poly1305`（RFC 8439），兼具保密性加密与带 16 字节认证标签的防篡改解密校验。
+- **模块重导出与单一出口 (`index.cp`)**:
+  - [`lib/crypto/index.cp`](file:///data/dev/cp/lib/crypto/index.cp)：对外统一规范重导出全部密码学符号。
+- **废弃平铺单文件清理 (Removed)**:
+  - 彻底删除旧版平铺单文件 `lib/crypto.cp`，消除同名文件与复合目录歧义。
+
+### 编译器增强与热修自愈 (Compiler & Hotfix)
+
+- [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs) / [`cpc_dev/src/codegen/expr.rs`](file:///data/dev/cp/cpc_dev/src/codegen/expr.rs):
+  - 修复枚举静态方法调用被误降级为结构体/联合体初始化的关键缺陷：在 `Expr::Call` 访问枚举成员时，严格校验 `is_method || !is_variant`，若为方法或非变体则生成标准函数调用 `Enum.method(...)`，杜绝非法 Zig 语法 `Enum{ .method = arg }`。
+- [`cpc/src/codegen/actor.rs`](file:///data/dev/cp/cpc/src/codegen/actor.rs):
+  - 修复类方法接收者 `self: *T` 在生成参数列表时过滤掉 `first.ident.sym == "self"` 并保留其可变指针类型（`*T` 而非 `*const T`）。
+- [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs):
+  - 适配 Zig 0.17 结构体解包，将 `.@"struct".fields` 升级为 `.field_names` 和 `.field_types`。
+- [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs) / `task-sema-object-tuple-destructure`:
+  - 修复匿名结构体位置字段在推断为 `Type::Object` 时被丢弃的缺陷，打通 `const [a, b] = pair` 对匿名对象的解构模式分析，结单归档下游任务。
+
+### 测试验证 (Tests)
+
+- [`cap/test/test_crypto_features.cp`](file:///data/dev/cp/cap/test/test_crypto_features.cp)：涵盖 CSPRNG/UUID、SHA256/512/1/MD5/Streaming、HMAC/PBKDF2、AES-GCM/ChaCha20-Poly1305 4 大端到端套件，100% PASS。
+- [`cap/test/test_object_destructure.cp`](file:///data/dev/cp/cap/test/test_object_destructure.cp)：匿名结构体元组解构测试，100% PASS。
+- 全量回归测试：`test_http_full.cp`, `test_sync_primitives.cp`, `test_zero_copy_json.cp`, `test_io_streams.cp`, `test_path_url.cp` 等全部 100% PASS。
+
+---
+
+## [2026-11-13] - 核心里程碑：全面收编 Bun 工业级 HTTP 全协议栈引擎（Step 1/2/3 闭环）与底层编译器自愈
+
+### 工业级 HTTP 核心体系完整迁入 (Added)
+
+- **Step 1: 协议类型与基础设施助手 (Types & Infrastructure)**:
+  - [`lib/http/encoding.cp`](file:///data/dev/cp/lib/http/encoding.cp)：`Encoding` 枚举（`Identity`, `Gzip`, `Deflate`, `Brotli`, `Zstd`, `Chunked`）与 `canUseLibDeflate()`、`isCompressed()`；
+  - [`lib/http/fetch_modes.cp`](file:///data/dev/cp/lib/http/fetch_modes.cp)：`FetchCacheMode`, `FetchRedirect`, `FetchRequestMode` 及其字符串双向映射；
+  - [`lib/http/cert.cp`](file:///data/dev/cp/lib/http/cert.cp)：`HTTPCertError`, `CertificateInfo`, `InitError`；
+  - [`lib/http/url_path.cp`](file:///data/dev/cp/lib/http/url_path.cp)：`URLPath` 极速路径与参数切片分析器（`extname`, `path`, `pathname`, `first_segment`, `query_string`, `isRoot()`）；
+  - [`lib/http/signals.cp`](file:///data/dev/cp/lib/http/signals.cp)：`Signals` 与 `SignalStore` 原子生命周期状态存储器；
+  - [`lib/http/header_iterator.cp`](file:///data/dev/cp/lib/http/header_iterator.cp)：`HeaderValueIterator` 逗号分隔报头零拷贝切片迭代器；
+  - [`lib/http/request_body.cp`](file:///data/dev/cp/lib/http/request_body.cp)：`HTTPRequestBody` 与 `HTTPRequestBodyTag` 请求体封装；
+  - [`lib/http/internal_state.cp`](file:///data/dev/cp/lib/http/internal_state.cp)：`HTTPVerboseLevel`, `HTTPUpgradeState`, `Protocol`, `ShouldContinue`, `Stage`, `InternalStateFlags`, `InternalState` 客户端状态机。
+- **Step 2: HTTP/2 二进制帧与 HTTP/3 客户端子系统 (H2 & H3 Subsystems)**:
+  - [`lib/http/h2/frame.cp`](file:///data/dev/cp/lib/http/h2/frame.cp)：RFC 7540 HTTP/2 二进制帧协议（`CLIENT_PREFACE`, `FrameType`, `ErrorCode`, `SettingsType`, `FrameHeader` 9 字节帧头编解码, `SettingsPayloadUnit`）；
+  - [`lib/http/h2/client.cp`](file:///data/dev/cp/lib/http/h2/client.cp)：`H2Stream`, `H2StreamState`, `H2ClientSession` 多路复用流会话与窗口控制器；
+  - [`lib/http/h2/index.cp`](file:///data/dev/cp/lib/http/h2/index.cp)：HTTP/2 子系统统一聚合导出；
+  - [`lib/http/h3/alt_svc.cp`](file:///data/dev/cp/lib/http/h3/alt_svc.cp)：RFC 7838 Alt-Svc 协商报头解析器（`AltSvc`, `AltSvcEntry`）；
+  - [`lib/http/h3/client.cp`](file:///data/dev/cp/lib/http/h3/client.cp)：`H3Stream`, `H3StreamType`, `H3ClientSession` QUIC 双向请求流会话；
+  - [`lib/http/h3/index.cp`](file:///data/dev/cp/lib/http/h3/index.cp)：HTTP/3 子系统统一聚合导出。
+- **Step 3: 工业级核心客户端引擎与生命周期 (Client Engine & Lifecycle)**:
+  - [`lib/http/decompressor.cp`](file:///data/dev/cp/lib/http/decompressor.cp)：`DecompressorType`, `Decompressor` 流式解压缩适配器；
+  - [`lib/http/proxy.cp`](file:///data/dev/cp/lib/http/proxy.cp)：RFC 7231 `ProxyTunnel` HTTP CONNECT 代理隧道握手与校验器；
+  - [`lib/http/sendfile.cp`](file:///data/dev/cp/lib/http/sendfile.cp)：基于 Linux 内核 `sendfile` 的零用户态拷贝文件上传器；
+  - [`lib/http/context.cp`](file:///data/dev/cp/lib/http/context.cp)：`HTTPContext`, `PooledSocket` Keep-Alive 跨域套接字连接池与死链接驱逐；
+  - [`lib/http/client.cp`](file:///data/dev/cp/lib/http/client.cp)：吸收自 Bun 2843 行工业核心的 `HTTPClient`, `HTTPClientResult`，完整实现 RFC 7230 请求格式化、分块传输解码（`decodeChunkedBody`）与状态解析；
+  - [`lib/http/index.cp`](file:///data/dev/cp/lib/http/index.cp)：更新聚合导出全套 HTTP 工业能力。
+
+### 编译器增强与热修自愈 (Compiler & Hotfix)
+
+- [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs) / [`cpc_dev/src/sema.rs`](file:///data/dev/cp/cpc_dev/src/sema.rs):
+  - 增强类型系统，打通 `Type::String` 与 `Type::Array(Box::new(Type::U8))` / `Type::SentinelSlice`（`[]const u8`）的自动安全双向转换，解决字符串字面量赋值给字节切片字段的类型不匹配阻断。
+- [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs) / [`cpc_dev/src/codegen/mod.rs`](file:///data/dev/cp/cpc_dev/src/codegen/mod.rs):
+  - 增强 `lower_struct_body`：原生支持将 CP 原始指针类型 `*!?` 转换为 `?*anyopaque`、`*!` 转换为 `*anyopaque`，将函数类型 `?fn(...)` 转换为 `?*const fn(...)`、`fn(...)` 转换为 `*const fn(...)`。
+- [`scripts/sync_cpc.sh`](file:///data/dev/cp/scripts/sync_cpc.sh):
+  - 同步部署更新 `/data/dev/cp/cap/bin/cpc` 与 `/data/dev/cp/cpc/target/release/cpc`，保证 `cap` 工具链始终调用最新构建的编译器。
+- 下游 Bun AGY 阻断结单：
+  - 极速排查并解决任务 `task-struct-body-lower-rawptr-fn`，测试验证通过，结单归档。
+
+### 测试验证 (Tests)
+
+- [`cap/test/test_http_full.cp`](file:///data/dev/cp/cap/test/test_http_full.cp)：全新端到端全量综合测试套件，覆盖 Step 1, Step 2, Step 3 所有原语与流程，100% PASS。
+- [`cap/test/test_http_features.cp`](file:///data/dev/cp/cap/test/test_http_features.cp)：现有基础套件 100% PASS。
+- [`cap/test/test_sync_primitives.cp`](file:///data/dev/cp/cap/test/test_sync_primitives.cp)：现代化去除废弃 `try` 语法，8 大并发套件 100% PASS。
+- 全量标准库回归：14 个标准库核心测试套件 100% PASS。
+
+---
+
+## [2026-11-12] - 架构清理：全面删除根目录冗余门面文件、规范单一真理来源
+
+### 标准库清理与重构 (Refactored & Removed)
+
+- **彻底删除 14 个根目录同名空壳门面文件**：
+  - 删除 `lib/io.cp`, `lib/sync.cp`, `lib/router.cp`, `lib/http.cp`, `lib/path.cp`, `lib/url.cp`, `lib/encoding.cp`, `lib/glob.cp`, `lib/semver.cp`, `lib/dotenv.cp`, `lib/ini.cp`, `lib/which.cp`, `lib/ws.cp`, `lib/json.cp`；
+  - 杜绝“既有目录又有同名门面”的双重文件形态，所有多文件复合库一律以 `lib/<module>/index.cp` 作为唯一入口，根目录保持纯正扁平清爽。
+- [`lib/http/`](file:///data/dev/cp/lib/http/):
+  - 新增 `request.cp`：`Request` 类定义；
+  - 新增 `response.cp`：`Response` 类定义；
+  - 新增 `server.cp`：`Server`、`fetch`、`json`、`serve` 服务与客户端函数；
+  - 更新 `index.cp` 统一对外公开导出全部 HTTP 契约与能力。
+- 清理空目录：移除 `lib/io_ext` 与 `lib/json_ext`。
+
+### 编译器修复 (Fixed)
+
+- [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs) / [`cpc_dev/src/codegen/expr.rs`](file:///data/dev/cp/cpc_dev/src/codegen/expr.rs):
+  - 修复 `r#"..."#` 原生字符串中误将 `@import("std")` 写为 `\"std\"` 导致生成的 Zig 语法中带有非法反斜杠的问题。
+
+### 规范手册更新 (Docs)
+
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)：
+  - 第 1.1 与 1.2 节全面更新标准库组织规范：明确复合模块由 `lib/<name>/index.cp` 独立负责，杜绝根目录堆积多余门面。
+
+## [2026-11-12] - 阶段审查：原生 Re-export 落地、lib/io 目录化重构与全标准库规范化审计
+
+### 新特性与编译器增强 (Added & Compiler)
+
+- [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs) / [`cpc_dev/src/ast.rs`](file:///data/dev/cp/cpc_dev/src/ast.rs):
+  - 在 `ModuleItem` 枚举中新增 `Export(ExportStmt)`，支持记录导出符号列表与可选来源路径 `source`。
+- [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs) / [`cpc_dev/src/parser.rs`](file:///data/dev/cp/cpc_dev/src/parser.rs):
+  - 增加 `parse_export_stmt` 与 `parse_export_star_stmt`，完整支持 `export { foo, bar } from "./path";`、`export { foo, bar };` 与 `export * from "./path";`。
+- [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs) / [`cpc_dev/src/resolver.rs`](file:///data/dev/cp/cpc_dev/src/resolver.rs):
+  - 提取公共 `resolve_source_path` 模块路径解析函数；在 `resolve_dependencies` 与 `resolve_imports` 中对 `ModuleItem::Export` 的来源文件递归展开解析与依赖收集。
+- [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs) / [`cpc_dev/src/sema.rs`](file:///data/dev/cp/cpc_dev/src/sema.rs):
+  - 语义分析符号表中对 `ModuleItem::Export` 导出标识符进行符号声明登记与合法性校验。
+- [`cpc/src/codegen/prelude.rs`](file:///data/dev/cp/cpc/src/codegen/prelude.rs):
+  - 在生成运行时预加载时扫描 `ModuleItem::Export`，确保重导出的内部能力得到正确支持。
+
+### 标准库重构与规范化 (Refactored)
+
+- [`lib/io/`](file:///data/dev/cp/lib/io/) & [`lib/io.cp`](file:///data/dev/cp/lib/io.cp):
+  - 严格遵循 `xxx_0.cp` 演进规则，将原单文件暂存为 `lib/io_0.cp`，创建模块化目录 `lib/io/`；
+  - 拆分为 `traits.cp`、`buffer_stream.cp`、`stdio.cp`、`max_buf.cp`、`pipe.cp` 以及高内聚出口 `index.cp`；
+  - 100% 覆盖原功能后安全移除 `lib/io_0.cp`，重写根目录 `lib/io.cp` 门面为规范的 `export * from "./io/index";`。
+- 全量标准库重导出语法统一改造：
+  - 更新 `lib/sync/index.cp` & `lib/sync.cp`
+  - 更新 `lib/router/index.cp` & `lib/router.cp`
+  - 更新 `lib/http/index.cp` & `lib/http.cp`
+  - 更新 `lib/path/index.cp` & `lib/path.cp`
+  - 更新 `lib/url/index.cp` & `lib/url.cp`
+  - 更新 `lib/encoding/index.cp` & `lib/encoding.cp`
+  - 更新 `lib/glob/index.cp` & `lib/glob.cp`
+  - 更新 `lib/semver/index.cp` & `lib/semver.cp`
+  - 更新 `lib/dotenv/index.cp` & `lib/dotenv.cp`
+  - 更新 `lib/ini/index.cp` & `lib/ini.cp`
+  - 更新 `lib/which/index.cp` & `lib/which.cp`
+  - 更新 `lib/ws/index.cp` & `lib/ws.cp`
+  - 更新 `lib/json/index.cp` & `lib/json.cp` & `lib/serde.cp`
+  - 更新 `lib/stream.cp`
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)：
+  - 增加第 1.1 节重导出规范与门面模式使用指南。
+
+## [2026-11-12] - 标准库第五阶段：可执行程序定位器、WebSocket 帧协议与文件系统原子增强
+
+### 新特性 (Added)
+
+- [`lib/which/`](file:///data/dev/cp/lib/which/) & [`lib/which.cp`](file:///data/dev/cp/lib/which.cp):
+  - `which.cp`：吸收自 Bun 的跨平台可执行程序快速定位器，支持绝对路径、相对路径以及 `PATH` 环境变量遍历；在 Windows 下自动推导 `.exe`、`.cmd`、`.bat`；基于 `std.c.access(path, 1)`（`X_OK`）检测执行权限；
+  - `index.cp` & `lib/which.cp`：官方标准库导出通道 `cap:which`。
+- [`lib/ws/`](file:///data/dev/cp/lib/ws/) & [`lib/ws.cp`](file:///data/dev/cp/lib/ws.cp):
+  - `opcode.cp`：标准 RFC 6455 `Opcode`（`Text`, `Binary`, `Close`, `Ping`, `Pong`, `Continue`）与 `CloseCode` 状态码；
+  - `mask.cp`：RFC 6455 规范 4 字节 XOR 掩码编解码；
+  - `frame.cp`：`FrameHeader` 支持 7 位基础、16 位中型与 64 位超大型载荷扩展与掩码解析，`FrameBuilder` 提供便捷帧构造方法；
+  - `index.cp` & `lib/ws.cp`：官方标准库导出通道 `cap:ws`。
+- [`lib/fs.cp`](file:///data/dev/cp/lib/fs.cp):
+  - 扩充 `tmpDir()` 跨平台系统临时目录探测；
+  - 扩充 `tmpPath()` 原子序列号与单调时钟纳秒时间戳保证唯一临时文件路径；
+  - 扩充 `writeAtomic()` 崩溃安全的原子覆盖写入。
+- 测试用例套件：
+  - [`cap/test/test_which.cp`](file:///data/dev/cp/cap/test/test_which.cp)：可执行二进制定位与 PATH 解析全部 100% PASS；
+  - [`cap/test/test_ws.cp`](file:///data/dev/cp/cap/test/test_ws.cp)：4 大 WebSocket 帧协议与掩码往返套件全部 100% PASS；
+  - [`cap/test/test_fs_extensions.cp`](file:///data/dev/cp/cap/test/test_fs_extensions.cp)：临时文件与原子写入套件全部 100% PASS。
+
+### 文档更新 (Docs)
+
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)：
+  - 第 12.1 节总表中更新 `cap:which` 与 `cap:ws` 状态为已全面实装；
+  - 新增第 12.15 节 `cap:which`、第 12.16 节 `cap:ws` 与第 12.17 节 `cap:fs` 增强能力的详细技术契约与完整代码示例。
+
+## [2026-11-12] - 标准库第四阶段：Unix Glob 模式匹配、Semver 2.0 版本解析与范围匹配、DotEnv 与 INI 配置解析
+
+### 新特性 (Added)
+
+- [`lib/glob/`](file:///data/dev/cp/lib/glob/) & [`lib/glob.cp`](file:///data/dev/cp/lib/glob.cp):
+  - `matcher.cp`：基于路径分段（Segment-based）递归回溯匹配算法的工业级 Glob 引擎，支持 `*` 单段任意字符匹配、`**` 多级目录递归匹配、`?` 单字符通配、`[a-z]` / `[0-9]` 字符范围集合匹配、`!` 取反以及 `hasMagic()` 极速通配符探测；
+  - `index.cp` & `lib/glob.cp`：官方标准库导出通道 `cap:glob`。
+- [`lib/semver/`](file:///data/dev/cp/lib/semver/) & [`lib/semver.cp`](file:///data/dev/cp/lib/semver.cp):
+  - `version.cp`：Semver 2.0 规范语义版本解析器与格式化器（支持 `v1.2.3`, `=2.10.5-beta.1+sha.abcdef` 等格式），严格遵循 Semver 2.0 优先级铁律（正式发布版 > 预发布版，点分数字按数值比较，字符按 ASCII 比较）；
+  - `range.cp`：支持 Caret 锁版本（`^`）、Tilde 补丁更新（`~`）、不等式（`>=`, `<=`, `>`, `<`）、连字符范围（`1.0.0 - 2.0.0`）、逻辑或（`||`）与通配符（`*` / `x` / `X`）；
+  - `index.cp` & `lib/semver.cp`：官方标准库导出通道 `cap:semver`。
+- [`lib/dotenv/`](file:///data/dev/cp/lib/dotenv/) & [`lib/dotenv.cp`](file:///data/dev/cp/lib/dotenv.cp):
+  - `loader.cp`：100% 栈分配零堆垃圾 `.env` 解析器，支持 `KEY=VALUE`、`KEY: VALUE` 与 `export KEY=VALUE`；支持单引号原样保护、双引号转义解析（`\n`, `\r`, `\t` 等）与内联注释安全截断；提供 `get()`, `getOr()`, `has()`；
+  - `index.cp` & `lib/dotenv.cp`：官方标准库导出通道 `cap:dotenv`。
+- [`lib/ini/`](file:///data/dev/cp/lib/ini/) & [`lib/ini.cp`](file:///data/dev/cp/lib/ini.cp):
+  - `parser.cp`：工业级 INI 解析器，支持全局配置区与 `[section_name]` 独立段空间；支持 `;` 与 `#` 双注释符及行尾注释；提供 `get(section, key)`, `getGlobal(key)`, `hasSection(section)`, `getOr()`；
+  - `index.cp` & `lib/ini.cp`：官方标准库导出通道 `cap:ini`。
+- 测试用例套件：
+  - [`cap/test/test_glob.cp`](file:///data/dev/cp/cap/test/test_glob.cp)：4 大 Glob 通配与模式匹配套件全部 100% PASS；
+  - [`cap/test/test_semver.cp`](file:///data/dev/cp/cap/test/test_semver.cp)：4 大 Semver 解析、比较、格式化与范围匹配套件全部 100% PASS；
+  - [`cap/test/test_config.cp`](file:///data/dev/cp/cap/test/test_config.cp)：2 大 DotEnv 与 INI 配置解析套件全部 100% PASS。
+
+### 文档更新 (Docs)
+
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)：
+  - 第 12.1 节已实装标准库总览表中新增 `cap:glob`, `cap:semver`, `cap:dotenv`, `cap:ini`；
+  - 第 12.4 ~ 12.14 节全量深度扩充详细技术契约与全套完整可运行代码示例（涵盖 `cap:sync`, `cap:stream`, `cap:json`/`cap:serde`, `cap:router`, `cap:http`, `cap:path`, `cap:url`, `cap:encoding`, `cap:glob`, `cap:semver`, `cap:dotenv`, `cap:ini`）。
+
+## [2026-11-12] - 标准库第三阶段：Radix-Tree 路由引擎、HTTP 协议栈、跨平台路径与 WHATWG URL、Base64 编码
+
+### 新特性 (Added)
+
+- [`lib/router/`](file:///data/dev/cp/lib/router/) & [`lib/router.cp`](file:///data/dev/cp/lib/router.cp):
+  - `param_map.cp`：纯栈 16 项定长零堆分配参数映射字典 `ParamMap`，提供 `get()`, `at()`, `has()`, `append()`, `count()`, `isEmpty()`；
+  - `route.cp`：`RouteMatch<T>` 泛型路由匹配结构体；
+  - `radix.cp`：8 树 HTTP 动词前缀树 `Router<T>` 与 `RadixNode<T>`，支持静态路径、动态参数（`:param` 与 `[param]`）、通配符（`*path` 与 `[...path]`）与 `ALL` 方法回退；
+  - 新增 `lib/router.cp` 作为 `cap:router` 官方通道出口。
+- [`lib/http/`](file:///data/dev/cp/lib/http/) & [`lib/http.cp`](file:///data/dev/cp/lib/http.cp):
+  - `method.cp`：标准 HTTP `Method` 枚举与 `isIdempotent()`, `hasRequestBody()`, `toString()`, `fromString()`；
+  - `headers.cp`：大小写不敏感的高性能 HTTP `Headers` 集合，支持 `get()`, `set()`, `append()`, `delete()`, `count()`, `at()`；
+  - `etag.cp`：`ETag` 生成与强弱 `ifNoneMatch()` 条件匹配；
+  - `mime.cp`：`MimeType` 常见文件后缀与文件路径极速映射；
+  - `lib/http.cp`：导出 `Method`, `Headers`, `HeaderEntry`, `ETag`, `ParsedETag`, `MimeType`。
+- [`lib/path/`](file:///data/dev/cp/lib/path/) & [`lib/path.cp`](file:///data/dev/cp/lib/path.cp):
+  - `posix.cp`：POSIX 标准路径计算（`basename`, `dirname`, `extname`, `isAbsolute`, `normalize`, `join`）；
+  - `windows.cp`：Windows 驱动器盘符、UNC 路径与反斜杠处理；
+  - `index.cp`：跨平台统一 `Path`（以及 `path.posix`、`path.win32`）；
+  - 新增 `lib/path.cp` 作为 `cap:path` 官方通道出口。
+- [`lib/url/`](file:///data/dev/cp/lib/url/) & [`lib/url.cp`](file:///data/dev/cp/lib/url.cp):
+  - `query.cp`：`URLSearchParams` 查询字符串解析、修改与序列化；
+  - `url.cp`：WHATWG 规范 `URL` 对象（解析 `protocol`, `username`, `password`, `host`, `hostname`, `port`, `pathname`, `search`, `hash`, `origin`, `searchParams`）；
+  - 新增 `lib/url.cp` 作为 `cap:url` 官方通道出口。
+- [`lib/encoding/`](file:///data/dev/cp/lib/encoding/) & [`lib/encoding.cp`](file:///data/dev/cp/lib/encoding.cp):
+  - `base64.cp`：纯 CP 编写的高性能 Base64 编解码器（标准 Standard 模式、URL-Safe 模式、无填充模式、自适应统一解码 `+`/`-` 与 `/`/`_`、无堆分配与内存分配两种模式）；
+  - 新增 `lib/encoding.cp` 作为 `cap:encoding` 官方通道出口。
+- 测试用例套件：
+  - [`cap/test/test_router.cp`](file:///data/dev/cp/cap/test/test_router.cp)：3 大路由套件（静态、动态、通配符与 ALL 回退全部 100% PASS）；
+  - [`cap/test/test_http_features.cp`](file:///data/dev/cp/cap/test/test_http_features.cp)：4 大 HTTP 协议特性全部 100% PASS；
+  - [`cap/test/test_path_url.cp`](file:///data/dev/cp/cap/test/test_path_url.cp)：4 大 POSIX/Windows 路径与 WHATWG URL 套件全部 100% PASS；
+  - [`cap/test/test_encoding.cp`](file:///data/dev/cp/cap/test/test_encoding.cp)：3 大 Base64 编解码套件全部 100% PASS。
+
+## [2026-11-12] - 标准库第二阶段：并发同步基础设施、无锁原语、管道流与零拷贝 JSON
+
+### 新特性 (Added)
+
+- [`lib/sync/`](file:///data/dev/cp/lib/sync/):
+  - `futex.cp`：跨平台系统级用户态同步原语，封装 Linux `SYS_futex`、macOS `__ulock`、Windows `WaitOnAddress`，提供纳秒单调时钟 `Deadline` 与超时等待；
+  - `mutex.cp`：吸收 Bun 成熟的自旋与 Futex 混合互斥锁（`tryLock`、`lock`、`unlock`、`withLock`）；
+  - `condition.cp`：跨平台条件变量（`wait`、`timedWait`、`signal`、`broadcast`）；
+  - `wait_group.cp`：并发信号量计数器（`add`、`done`、`wait`、`finish`）；
+  - `channel.cp`：线程安全有界 MPMC 数据通道，支持非阻塞与超时阻塞收发；
+  - `ring_buffer.cp`：基于 Dmitry Vyukov 经典算法的定长多生产者多消费者（MPMC）无锁环形队列 `MpmcQueue<T>`；
+  - `unbounded_queue.cp`：侵入式无界并发无锁链表队列 `UnboundedQueue<T>`；
+  - `wyhash.cp`：从 Bun 移植的 64 位极速无状态非加密哈希算法 `Wyhash`；
+  - `concurrent_map.cp`：基于 Wyhash 16 桶分片的高并发分段哈希映射表 `ConcurrentMap<V>`；
+  - `arc_slice.cp`：原子引用计数切片 `ArcSlice<T>`，支持跨线程零拷贝共享与自动析构；
+  - `index.cp` & `lib/sync.cp`：模块导出与对外统一标准库入口。
+- [`lib/io.cp`](file:///data/dev/cp/lib/io.cp) & [`lib/stream.cp`](file:///data/dev/cp/lib/stream.cp):
+  - 扩充 `MaxBuf`（动态零拷贝切片缓冲守卫）；
+  - 扩充 `PipeReader`（实现 `Reader, Closer`）与 `PipeWriter`（实现 `Writer, Closer`）；
+  - 扩充 `Pipe.create()` 工厂函数，支持快速创建双端数据管道；
+  - 新增 `lib/stream.cp` 作为 `cap:stream` 官方通道出口。
+- [`lib/json/`](file:///data/dev/cp/lib/json/), [`lib/json.cp`](file:///data/dev/cp/lib/json.cp), [`lib/serde.cp`](file:///data/dev/cp/lib/serde.cp):
+  - `pool.cp`：移植 Bun 内存池机制 `JsonBufferPool`，实现多轮解析内存复用；
+  - `value.cp`：零拷贝 AST `JsonValue`，直接借用源输入切片；
+  - `parser.cp`：极速流式递归下降 JSON 解析器 `JsonParser`；
+  - 新增 `lib/serde.cp` 作为 `cap:serde` 序列化统一出口通道。
+- [`cap/test/test_sync_primitives.cp`](file:///data/dev/cp/cap/test/test_sync_primitives.cp):
+  - 覆盖 Wyhash、Futex、Mutex、Condition、WaitGroup、MpmcQueue、Channel、ConcurrentMap、ArcSlice 8 大用例套件。
+- [`cap/test/test_zero_copy_json.cp`](file:///data/dev/cp/cap/test/test_zero_copy_json.cp):
+  - 验证基础标量、源缓冲区指针直通零拷贝借用及嵌套对象/数组检索。
+
+### 优化与修复 (Fixed)
+
+- [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs) / [`cpc_dev/src/codegen/mod.rs`](file:///data/dev/cp/cpc_dev/src/codegen/mod.rs):
+  - 在生成 Trait 虚表结构体时，若方法返回类型以 `!` 开头（错误联合类型），将其转译为 `anyerror{ret}`，彻底消除 Zig 函数指针类型无法使用裸 `!T` 的语法错误。
+- [`cpc/src/codegen/stmt.rs`](file:///data/dev/cp/cpc/src/codegen/stmt.rs) / [`cpc_dev/src/codegen/stmt.rs`](file:///data/dev/cp/cpc_dev/src/codegen/stmt.rs):
+  - 在生成 `__{var}_moved = true;` 标志位赋值时，增加 `self.drop_flag_vars.contains(&id.sym)` 守卫，避免对未注册 drop 标志的变量生成非法标识符引用。
+- [`cap/test/test_json.cp`](file:///data/dev/cp/cap/test/test_json.cp):
+  - 修复测试用例中将 `const conf` 进行成员字段修改的语义错误，改为 `let conf`。
+
+## [2026-11-12] - 编译器核心 Codegen 模块化分拆与 Trait 作用域强化
+
+### 架构演进 (Changed)
+
+- [`cpc/src/codegen/`](file:///data/dev/cp/cpc/src/codegen/):
+  - 彻底废除 1.7 万行巨石单体文件 `codegen.rs`，重构分拆为 8 个高内聚子模块：
+    - `mod.rs`（3,398 行）：上下文派发中心、`Codegen` 结构体、代码缩进派发与模块级顶层项（Class/Trait/Enum/Impl/Interface/Reflection）；
+    - `prelude.rs`（614 行）：`ModuleFeatures` AST 特性扫描与运行时环境感知；
+    - `types.rs`（2,601 行）：类型推导、Zig 原生类型映射与常量泛型单态化；
+    - `borrow.rs`（960 行）：NLL 借用检查与跨作用域冲突拦截；
+    - `pattern.rs`（1,587 行）：模式匹配、穷尽性分析与 `switch` 展开；
+    - `actor.rs`（1,577 行）：CPS 状态机切分、异步闭包变量捕获与 Actor 协程逻辑；
+    - `stmt.rs`（2,114 行）：控制流语句生成（`let`、`if`、`while`、`for`、`return`、`defer`、`errdefer`）；
+    - `expr.rs`（4,332 行）：表达式求值、运算符重载、方法调用与内联闭包。
+  - 单文件规模降至 1,000 ~ 4,000 行，消除跨 800 行分段读取开销，全面赋能多子智能体并行开发。
+
+### 优化与修复 (Fixed)
+
+- [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs):
+  - **Trait 虚表局部作用域强化**：在 Trait 与 Interface 声明生成中，将虚表指针类型升级为 `vtable: *const @This().VTable`，彻底杜绝与业务代码中的顶层 `class VTable` 发生 Zig 符号歧义。
+
+## [2026-11-12] - 方案 A 工业级统一 I/O 流体系与 C 变量外部绑定支持
+
+### 新特性 (Added)
+
+- [`lib/io.cp`](file:///data/dev/cp/lib/io.cp):
+  - 新增统一流错误类型 `IOError`（`EndOfStream`, `UnexpectedEof`, `Closed`, `BufferFull`, `ShortWrite`, `InvalidSeek`）；
+  - 新增寻址基准枚举 `SeekOrigin`（`Start`, `Current`, `End`）；
+  - 新增统一流 Trait 契约：`Reader`、`Writer`、`Closer`、`Seeker`；
+  - 新增零拷贝内存切片只读流 `BufferReader`，支持无堆分配读取与 Seek；
+  - 新增内存定长安全写入器 `BufferWriter`（4096 字节），支持字节提取与重置；
+  - 新增高性能泛型缓冲读取器 `BufferedReader<R: Reader>`（256 字节内部缓存，支持 `readByte()` 单字节速读）；
+  - 新增高性能泛型缓冲写入器 `BufferedWriter<W: Writer>`（256 字节内部缓存，支持自动/手动 `flush()`）；
+  - 新增流式全量传输管道 `copyStream<R: Reader, W: Writer>` 与定额流搬运 `copyN`；
+  - 100% 保持已有 `Console`、`console`、`Stdio`、`stdio`、`print` 向后兼容。
+- [`cap/test/test_io_streams.cp`](file:///data/dev/cp/cap/test/test_io_streams.cp):
+  - 包含 6 大端到端用例套件：`BufferReader` 切片读取与 Seek 验证、`BufferWriter` 写入与字节校验、`BufferedReader` 缓冲与单字节速读、`BufferedWriter` 批量写入与 flush、`copyStream` 管道全量传输、`copyN` 定额截断传输。
+- [`cap/test/test_extern_var.cp`](file:///data/dev/cp/cap/test/test_extern_var.cp):
+  - 验证 `@c extern const` 与顶层 `extern var` 的 C 外部符号绑定。
+
+### 优化与修复 (Fixed)
+
+- [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs) / [`cpc_dev/src/parser.rs`](file:///data/dev/cp/cpc_dev/src/parser.rs):
+  - 扩展 `parse_decl` 支持在 `extern` 之后解析 `const`/`var`/`let`，正确标记 `is_extern` 与 `is_c`。
+- [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs) / [`cpc_dev/src/sema.rs`](file:///data/dev/cp/cpc_dev/src/sema.rs):
+  - 增加对定长数组切片引用的元素类型匹配检查；
+  - 在 `Expr::New` 类型检查时剔除泛型参数 `<...>`，精准定位基类定义与方法签名。
+- [`cpc/src/codegen.rs`](file:///data/dev/cp/cpc/src/codegen.rs) / [`cpc_dev/src/codegen.rs`](file:///data/dev/cp/cpc_dev/src/codegen.rs):
+  - 对 `Pattern::Ident("_")` 及通配符模式生成 `_ = expr;` 丢弃语句，消除 Zig 下非法 `var _` 错误；
+  - 在异步状态机闭包上下文提取中跳过 `_` 变量，防止生成非法字段名；
+  - 泛型类的 `_create` 构造函数统一采用 `@This()` 申请内存，解决单态化类型缺失 `_create` 的问题；
+  - `lookup_method` 剥离类型中的泛型参数后缀，正确解析泛型实例的方法返回值类型。
+
+## [未发布] - 2026-11-13
+
+### 新增 (Added)
+
+- [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md):
+  - 建立专为 AI Agent 设计的高密度（~220行）语法契约手册，涵盖模块导入导出、变量绑定与可变性、类型系统与裸指针、结构体与类、枚举与模式匹配、解构赋值、现代错误处理及 Top 10 禁手清单。
+- [`GEMINI.md`](file:///data/dev/cp/GEMINI.md):
+  - 增补第 2.4 节双轨语言规范维护机制；
+  - 增补第 4 节自主推导持续工作流闭环规范；
+  - 增补第 6.5 节配额耗尽倒计时与 `schedule` 挂起协议；
+  - 增补第 7.1.3 节双智能体通信透明化与后台守护进程自动启动检查。
+- [`lib/event_loop/`](file:///data/dev/cp/lib/event_loop/):
+  - 建立工业级统一事件循环标准库（`cap:event_loop`）：
+    - `timer.cp`：基于侵入式二叉最小堆的定时器系统（`Timer`, `TimerHeap`），支持精确到毫秒的超时管理与 $O(\log N)$ 节点注销；
+    - `concurrent_task.cp`：16 字节跨线程无锁并发任务（`ConcurrentTask`, `ConcurrentQueue`），由 `Mutex` 保护；
+    - `deferred_task.cp`：微任务队列（`DeferredTaskQueue`），实现上下文指针自动去重；
+    - `file_poll.cp`：基于 `std.posix.poll` 的系统描述符监听引擎（`PollEngine`, `PollEvents`）；
+    - `loop.cp`：统一 `EventLoop` 生命周期驱动（`tick` 单步步进与 `run` 常驻循环）；
+    - `index.cp`：模块统一出口。
+- [`cap/test/test_event_loop.cp`](file:///data/dev/cp/cap/test/test_event_loop.cp):
+  - 5 大端到端回归测试套件：二叉最小堆定时器调度、16 字节并发任务队列、微任务队列与去重、I/O 描述符轮询引擎、统一 EventLoop 综合生命周期。
+
+### 优化与修复 (Fixed)
+
+- [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs) / [`cpc_dev/src/parser.rs`](file:///data/dev/cp/cpc_dev/src/parser.rs):
+  - 解析 `[]const T` 时，保留 `has_const` 标志并将其构建为不可变借用切片 `Type::BorrowType { inner: Box::new(Type::Array(...)), is_mut: false }`；未带 `const` 的 `[]T` 保持为可变数组切片 `Type::Array(...)`。
+- [`cpc/src/codegen/types.rs`](file:///data/dev/cp/cpc/src/codegen/types.rs) / [`cpc_dev/src/codegen/types.rs`](file:///data/dev/cp/cpc_dev/src/codegen/types.rs):
+  - `Type::Array(inner)` 映射生成 Zig 可变切片 `[]T`，解除动态分配切片元素只读限制；
+  - `Type::BorrowType { is_mut: false, inner: Array(elem) }` 映射生成 Zig 只读切片 `[]const T`，保障字符串切片等参数调用的常量性契约。
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
+  - 增补第 12.19 节工业级统一事件循环体系（`cap:event_loop`）设计规范与完整使用代码示例；调整路线图章节序号为 12.20。
+
+- [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md):
+  - 全面按照用户 5 步法重构重写，提炼出 605 行完备且纯正的 CP 语法契约速查手册；
+  - 彻底清除 `var`、`let mut` 与 `threadlocal`，确立 `let` / `const` 纯净绑定与 `move` / `own` 所有权转移；
+  - 完善参数借用与裸指针分类（`&T` 只读借用、`*T` 可变借用、`*T!` 裸指针、`move T`/`own T` 所有权转移）；
+  - 规范四大代码块为 `zig { ... }`、`unsafe { ... }`、`arena { ... }` 与 `@c { ... }`；
+  - 增补泛型与约束、常量泛型、类型别名及原生运算符矩阵；
+  - 升级 Top 15 绝对禁手清单。
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
+  - 全面审核并清洗第 12 章中遗留的历史代码示例，将旧版 `var` 统一修正为 `let`，将 Zig 前缀 `try` 替换为 CP 后缀 `?`，将 `for()|i|` 修正为 `for (i of ...)`，消除与 `cp_agent_ref.md` 的任何潜在不一致。
+- [`lib/security/csrf.cp`](file:///data/dev/cp/lib/security/csrf.cp):
+  - 将所有 `__zig__` 替换为标准 `zig` 逃逸块，将所有 `var` 替换为现代 `let` 变量声明。
+
+- [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md):
+  - 全面扩充 17 大核心系统特性与 Bun Zig 迁移必备语法（657 行）：
+    - 引入直接透明导入 `.zig` 源码文件语法及前柔后刚两级类型模型；
+    - 补充 `@c struct`、`@root struct`、`@value struct`、`@align(N)`、`@refCount(cleanup)` 系统级装饰器；
+    - 详述多字段分离借用（Disjoint Field Borrowing）、`ref struct` 栈绑定视图与显式生命周期；
+    - 丰富 C 指针矩阵：`[*c]T`、`[*:0]T!`、`[*]([*:0]u8!)?!`、`*!`、`*!?`、`cstr` vs `cstring`；
+    - 补全编译期函数与 Comptime 内省原语、AST 模板插值宏与元编程体系；
+    - 全景覆盖 `switch` 12 种模式解构（含结构体整包捕获、元组解构、Walrus 绑定、动态类型匹配、三态错误 downcast）；
+    - 补充多线程并发容器 `Shared<T>` 与内部可变性容器 `Shared(Mutex(T))` / `Shared(RwLock(T))`；
+    - 扩充 Top 18 绝对禁手清单。
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
+  - 更新第 7 章系统级内存布局列表，将 `@extern struct` 统一更正为现代规范 `@c struct`，并补充 `@root struct` 与 `@align(N)`。
+
+- [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md):
+  - 逐章逐节对照 `cp_ref.md` 展开穷尽式查漏补缺，手册全面扩充至 820 行：
+    - 补入命名空间全量导入 `import * as math` 与 Zig 风格原生物理导入 `const bun = @import("bun")`；
+    - 新增第四章专门阐述 6.7.2 变量常量性与指针只读性的正交解耦（`const p: *T!`、`let p: *const T!`、`const p: *const T!`）；
+    - 补全 6.7.3 获取变量裸指针的标准方式（字面量语法 `*v!` / `**v!` 与安全借用转换 `&v as *T!` / `*v as *T!`）；
+    - 补全 6.7.4 完整裸指针类型转换矩阵 in `unsafe`（指针互转、物理内存整型地址、通用裸指针与未定长多项指针）；
+    - 明确 `zig {}` 内嵌逃逸舱完全脱离 CP 借用检查的系统级定义；
+    - 系统重构第九章错误体系：严密区分 `T!`（全局 `AnyErr`，禁止动态装箱）与 `T ! Err`（业务动态结构体，显式签名），补齐具名错误集、多错误联合声明 `T ! E1 || E2` 与 `from` 桥接机制。
+
+- [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md):
+  - 彻底解除行数限制，全面对齐 `cp_ref.md` 语法体系，扩充至 930+ 行权威智能体契约手册：
+    - 补全第五章 `static class` 与 `static struct` 纯静态命名空间容器规则（全员自动静态、严禁实例化、无 `init`/`release`、禁止 `extends`）；
+    - 补全第六章成员默认可见性差异：`struct` 成员默认 `pub`（公开透明 POD），`class` 成员默认 `priv`（强封装私有）；
+    - 补全第一章模块级 `pub` 等价于 `export` 并作为官方首选推荐的规范；
+    - 补全第六章 `class` 单继承生命周期体系：`class Child extends Parent`，`super.init(...)` 构造器调用，`pub fn release(*_)` 确定性析构钩子，`super.method(...)` 父类方法调用；
+    - 确立 `@c` 全面替代 `@callconv(.c)`（同步更新第 VI.4 节与禁手清单 #9）；
+    - 补全第七章字符串模板插值 `${expr}`、原生正则表达式字面量 `/pattern/`、管道操作符 `|>` 与通配占位符 `*`；
+    - 补全第八章海象迭代解包循环 `while (binding := expr)` 与自动分号推导（ASI）规范；
+    - 补全第九章胖指针动态错误与 `downcast` 双轨解构模式匹配语法（`err(e: T)` 与 `err(e := T)`）；
+    - 补全第十章编译期计算函数 `comptime fn` 与 `@func(...)`。
+- [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md):
+  - 彻底清除 Zig 繁琐底层强转 Builtins（`@ptrCast`, `@alignCast`, `@intCast`, `@truncate`），确立 CP 现代统一的 `as` 运算符与 `Type(val)` 构造：
+    - 明确 `ptr as *TargetType!` 在代码生成时由编译器底层自动发射 `@ptrCast(@alignCast(...))`，无需开发者手工管理对齐断言；
+    - 纠正结构体指针/借用字段访问为自动解引用（`alloc.is_active = true;`），彻底杜绝 Zig 风格冗余的 `alloc.*.field`；
+    - 清洗内建指令表，仅保留属于 CP 编译期的内省指令（`@sizeOf`, `@alignOf`, `@typeOf`, `@typeName`, `@fieldsOf`, `@field`, `@compileError`, `@as`）；
+    - 禁手清单升级为 Top 23：追加 #22 严禁 `ptr.*.field` 冗余解引用、#23 严禁手动书写 `@ptrCast(@alignCast(ptr))`。
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
+  - 清洗第 12 章遗留示例中的 `@ptrCast(@alignCast)` 与 `__zig__`，同步更新为规范 CP `as` 与 `zig {}`。
+
+- [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs) & [`cpc_dev/src/parser.rs`](file:///data/dev/cp/cpc_dev/src/parser.rs):
+  - `parse_params` 与 `parse_arrow_params` 支持 `Token::Let`（`fn foo(let p: T)`）作为可变局部值拷贝形参官方规范，`E0104` 错误提示同步引导使用 `let param: Type` / `*param: Type`。
+- [`cpc/src/codegen/actor.rs`](file:///data/dev/cp/cpc/src/codegen/actor.rs) & [`cpc_dev/src/codegen/actor.rs`](file:///data/dev/cp/cpc_dev/src/codegen/actor.rs):
+  - 为 `mutable_copy_params`（`let p: T` / `mut p: T`）生成 `_cp_<name>` 底层形参并在函数入口注入 `var <name> = _cp_<name>; _ = &<name>;`，消除 Zig 常量形参不可修改与同名前置遮蔽错误。
+- [`cap/test/test_let_param.cp`](file:///data/dev/cp/cap/test/test_let_param.cp):
+  - 新增 `fn foo(let p: T)` 标量、结构体值拷贝与循环计数器回归测试。
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
+  - 修复第 5.2、9.4、11.9.4、14.12 节内部表述冲突，修正第 485/503-504、2660、5894 行的默认导出、`handler.downcast<NetworkHandler>()`、`cap:parallel` 与 `cap:actor` 导入示例错误。
+- [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md):
+  - 全面重构全 13 章并经独立审计核对修正，消除全部 Zig 管道残留（`inline for`、`receive {}`）、错误语法（`downcast(T)`、`/regex/`、`pub default class`、`import { @spawn }`）及命名冲突（`toString()`），对齐 **32 大官方 `cap:*` 模块矩阵**，补齐 `cstr?`、`->`、`?.`、`.?`、`orelse`、匿名块 `({ ... break val; })`、开放枚举 `_`、Zig 常量区间、`extern const`/`let`、`inline while`、`@getPageSize(4)`、块级 `@if/@else`、`@This()`/`@is_beam`/`@panic`、`_ = expr;` 忽略返回值、原生类型实参（`std.mem.trim(u8, ...)`）、`macro AutoReset(target)` 完整模板宏示例、表达式级 `arena { @alloc(...) }` 与完整 `cap`/`cpc` CLI（定稿 990 行）。
+
+- [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs), [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs), [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs), [`cpc/src/ast_visitor.rs`](file:///data/dev/cp/cpc/src/ast_visitor.rs), [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs), [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs), [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs), [`cpc/src/codegen/stmt.rs`](file:///data/dev/cp/cpc/src/codegen/stmt.rs), [`cpc/src/codegen/types.rs`](file:///data/dev/cp/cpc/src/codegen/types.rs), [`cpc/src/codegen/borrow.rs`](file:///data/dev/cp/cpc/src/codegen/borrow.rs), [`cpc/src/codegen/prelude.rs`](file:///data/dev/cp/cpc/src/codegen/prelude.rs), [`cpc/src/dcp.rs`](file:///data/dev/cp/cpc/src/dcp.rs)（及 `cpc_dev/src/*` 镜像同步）:
+  - 实现 TypeScript 风格 `/pattern/flags` 正则表达式字面量，降级为内置 `RegExp` 类构造（支持 `i`/`m` 标志位，无需 `import`）；
+  - 新增 `Expr::TypeVal` 支持 `@c fn` 函数指针类型实参、`[N]T` 定长数组类型实参（如 `std.mem.zeroes([16]u8)`）及 `*i32` / `*Struct` 指针类型实参；
+  - 修复 `[*]const T?!` 多项裸指针可空修饰符剥离顺序，生成 `?[*]const T`；
+  - 支持 `@Vector(N, T)` 及 `const V = @Vector(N, T);` 类型别名、定长数组/字面量到向量的类型兼容与原生逐元素向量比较；
+  - 支持 `*T!` -> `*const T!` 裸指针常量协变与 `Type::ErrorUnion` 在 `?` / `? fallback` 下的解包类型推导；
+  - 完结 Bun AGY 7 项编译热修任务。
+- [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md) & [`cp_ref.md`](file:///data/dev/cp/cp_ref.md):
+  - 完成两轮 Gemini 4 审计项及 Bun AGY Wave 1/2 建议的双向同步：补齐 `.Variant` 载荷简写构造、`move u |> fn(*)` 与管道尾部 `?`/`??`、`*(*T?!)` 二级可空出参裸指针、`(&T)?`/`&(T!E)` 与 `: *x T`/`: *(x | y) T`/`: *_ T` 可变借用返回、`@inline` 与 `unsafe fn`、`let * = expr;`、`Err.init(...).with_cause(move b)`、内置 `/pattern/flags` 与 `RegExp`、`@bitCast` vs `as`、SIMD 与位计数原语（`@Vector`, `@splat`, `@clz`, `@ctz`, `@popCount`, `@reduce`, `@select`, `@byteSwap`, `@bitSizeOf`）、`@typeInfo(T)` 反射、多级点路径值类型直通（`Dotted Path Types`）、`T ! FileErr || err{...}` 匿名即席错误联合、单行 `@c fn`、枚举 `.get`/`.has`、前缀 `try` 迁移兼容说明，并修正 `cp_ref.md` 中 `export` 与 `Trait` 拼写笔误。
+- [`lib/net/`](file:///data/dev/cp/lib/net/)（移除单文件 `lib/net.cp`，新建扁平化网络标准库目录）：
+  - 新增 [`lib/net/_usockets.cp`](file:///data/dev/cp/lib/net/_usockets.cp)：底层 `@c { ... }` uSockets C-FFI 声明、不透明结构体句柄与监听常量/状态枚举；
+  - 新增 [`lib/net/address.cp`](file:///data/dev/cp/lib/net/address.cp)：`AddressFamily`、`Ipv4Addr`、`Ipv6Addr` 与 `SocketAddress` 解析及检测；
+  - 新增 [`lib/net/socket.cp`](file:///data/dev/cp/lib/net/socket.cp)：`SocketState`、`SocketStats`、`SafeSocket`（含 `> 240s` 自动拆分 `long_timeout_min` 及 RAII 释放）与兼容层 `Socket`；
+  - 新增 [`lib/net/tcp_stream.cp`](file:///data/dev/cp/lib/net/tcp_stream.cp)：16KB `StreamBuffer` 软塞缓冲与 `TcpStream`；
+  - 新增 [`lib/net/tcp_server.cp`](file:///data/dev/cp/lib/net/tcp_server.cp)：`ListenConfig`、`TcpServer` 与兼容层 `Server` / `listen()` / `connect()`；
+  - 新增 [`lib/net/udp.cp`](file:///data/dev/cp/lib/net/udp.cp)：`UdpPacket` 与 `UdpSocket` 数据报套接字抽象；
+  - 新增 [`lib/net/index.cp`](file:///data/dev/cp/lib/net/index.cp)：`cap:net` 统一导出入口。
+- [`cap/test/test_net.cp`](file:///data/dev/cp/cap/test/test_net.cp):
+  - 扩充为覆盖 `lib/net/` 全组件及兼容 API 的 6 大端到端测试套件（6/6 PASS）。
+- [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs), [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs), [`cpc/src/codegen/borrow.rs`](file:///data/dev/cp/cpc/src/codegen/borrow.rs), [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs), [`cpc/src/codegen/prelude.rs`](file:///data/dev/cp/cpc/src/codegen/prelude.rs)（及 `cpc_dev/src/*` 镜像同步）:
+  - 修正 `@net_listen`、`@net_accept_async`、`@net_write_async` 的 `I32` 返回类型推导及类方法状态机回调符号生成，统一 `self`/`this`/`_` 接收者参数过滤。
+- [`lib/collections/`](file:///data/dev/cp/lib/collections/)（移除单文件 `lib/collections.cp`，新建扁平化高性能容器标准库目录）：
+  - 新增 [`lib/collections/bounded_array.cp`](file:///data/dev/cp/lib/collections/bounded_array.cp)：`BoundedArray<T, const CAP: usize>` 零堆分配栈上定长缓冲容器；
+  - 新增 [`lib/collections/baby_list.cp`](file:///data/dev/cp/lib/collections/baby_list.cp)：16 字节紧凑动态数组 `BabyList<T>` 与 `u32` 偏移字节列表 `OffsetByteList`；
+  - 新增 [`lib/collections/linear_fifo.cp`](file:///data/dev/cp/lib/collections/linear_fifo.cp)：2 的幂次位掩码环形队列 `LinearFifo<T>`；
+  - 新增 [`lib/collections/hive_array.cp`](file:///data/dev/cp/lib/collections/hive_array.cp)：基于硬件 `@ctz`/`@popCount` 的 `BitSet64` 与 $O(1)$ 槽位复用池 `HiveArray<T, const CAP: usize>`；
+  - 新增 [`lib/collections/string_map.cp`](file:///data/dev/cp/lib/collections/string_map.cp)：按长度过滤的快速字符串映射表 `StringEntry<V>` 与 `FastStringMap<V, const CAP: usize>`；
+  - 新增 [`lib/collections/index.cp`](file:///data/dev/cp/lib/collections/index.cp)：`cap:collections` 统一导出入口。
+- [`cap/test/test_collections_bun.cp`](file:///data/dev/cp/cap/test/test_collections_bun.cp) & [`cap/test/test_collections_matrix.cp`](file:///data/dev/cp/cap/test/test_collections_matrix.cp):
+  - 新增 `test_collections_bun.cp`（5 大套件 100% PASS），更新 `test_collections_matrix.cp` 为现代无 `mut` / `for (...)` 语法（7 大套件 100% PASS）。
+- [`cpc/src/codegen/types.rs`](file:///data/dev/cp/cpc/src/codegen/types.rs) & [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)（及 `cpc_dev/src/*` 镜像同步）:
+  - 新增 `substitute_generic_type` 实现泛型结构体/类方法返回类型参数替换（支持 `Type::Ref("T")` 与参数化 `Type::Ref("BabyList<T>")`），修复静态泛型工厂方法（`BabyList<i64>.initCapacity`）返回指针类型推导；
+  - 升级内置 `VecDeque` 与 `BinaryHeap` 只读方法接收者为 `*const`。
+- [`lib/mem/`](file:///data/dev/cp/lib/mem/)（移除单文件 `lib/mem.cp`，新建扁平化内存分配器与智能指针标准库目录）：
+  - 新增 [`lib/mem/_mimalloc.cp`](file:///data/dev/cp/lib/mem/_mimalloc.cp)：底层 `@c { ... }` Mimalloc C-FFI 声明与 `MiHeap` 不透明句柄；
+  - 新增 [`lib/mem/allocator.cp`](file:///data/dev/cp/lib/mem/allocator.cp)：`StackFallbackAllocator<const CAP: usize>`、`BumpArena`、`MaybeOwnedBuf` 及向下兼容的 `Arena`、`get_arena()`、`SharedTensor`；
+  - 新增 [`lib/mem/tagged_ptr.cp`](file:///data/dev/cp/lib/mem/tagged_ptr.cp)：64 位高 16 位标签指针 `TaggedPointer` 与低 3 位标签指针 `LowTagPointer`；
+  - 新增 [`lib/mem/cow.cp`](file:///data/dev/cp/lib/mem/cow.cp)：写时复制字节切片 `CowBytes`；
+  - 新增 [`lib/mem/rc.cp`](file:///data/dev/cp/lib/mem/rc.cp)：`DecrementResult`、`RefCounter`、`AtomicRefCounter` 与 `WeakControlBlock`；
+  - 新增 [`lib/mem/index.cp`](file:///data/dev/cp/lib/mem/index.cp)：`cap:mem` 统一导出入口。
+- [`cap/test/test_mem_bun.cp`](file:///data/dev/cp/cap/test/test_mem_bun.cp):
+  - 新增覆盖 `lib/mem/` 全组件的 5 大端到端测试套件（5/5 PASS）。
+- [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs)（及 `cpc_dev/src/codegen/expr.rs` 镜像同步）:
+  - 为 `cap:test` 的 `test("...", () => { ... })` 用例自动绑定栈上 `_test_arena` 并注入 `defer _test_arena.deinit()`，支持在测试闭包内直接使用 `new` 实例化类对象。
+- [`lib/http/_picohttp.cp`](file:///data/dev/cp/lib/http/_picohttp.cp) & [`lib/http/index.cp`](file:///data/dev/cp/lib/http/index.cp):
+  - 新增 `lib/http/_picohttp.cp`：吸收 Bun `picohttp_sys/picohttpparser.cp` 与 `picohttp/picohttp.cp`，提供 `@c { ... }` `phr_*` C-FFI 声明、C-ABI 结构体 `phr_header` / `phr_chunked_decoder` 及零拷贝 HTTP/1.x 报文头解析器 `PicoHttpParser`（`parseRequest`, `parseResponse`, `findHeader`），并在 `lib/http/index.cp` 统一导出。
+- [`cap/test/test_picohttp.cp`](file:///data/dev/cp/cap/test/test_picohttp.cp):
+  - 新增 `PicoHttpParser` 与 C-ABI 布局验证测试套件（3/3 PASS）。
+- [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs) & [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs)（及 `cpc_dev/src/*` 镜像同步）:
+  - 完善 `Type::String` 与不可变借用切片 `[]const u8`（`Type::BorrowType { inner: Array(U8), is_mut: false }`）及可变切片 `[]T` -> `[]const T` 的类型协变；
+  - 修复 `catch <Lit>` 表达式代码生成，保留字面量原生无类型常量语义以兼容 `u16`/`u32` 无符号目标。
+- [`lib/string/`](file:///data/dev/cp/lib/string/) & [`lib/encoding/index.cp`](file:///data/dev/cp/lib/encoding/index.cp):
+  - 新增 [`lib/string/simd_scan.cp`](file:///data/dev/cp/lib/string/simd_scan.cp)：16 字节 `@Vector(16, u8)` 高速扫描器 `SimdScanner`；
+  - 新增 [`lib/string/utf.cp`](file:///data/dev/cp/lib/string/utf.cp)：`Utf8`、`Utf16`、`DecodeResult` 与 `UnicodeWidth`；
+  - 新增 [`lib/string/builder.cp`](file:///data/dev/cp/lib/string/builder.cp)：`HashedString`、15 字节栈内联 `SmolStr` 与两阶段零重分配 `StringBuilder`；
+  - 新增 [`lib/string/escape.cp`](file:///data/dev/cp/lib/string/escape.cp)：`StringEscape`（HTML 实体与 RegExp 元字符转义）；
+  - 新增 [`lib/string/index.cp`](file:///data/dev/cp/lib/string/index.cp) 并扩展 `lib/encoding/index.cp`。
+- [`cap/test/test_string_unicode.cp`](file:///data/dev/cp/cap/test/test_string_unicode.cp):
+  - 新增覆盖 SIMD 扫描、UTF-8/16 编解码、Unicode/ANSI 宽度、`SmolStr`/`StringBuilder` 与转义的 5 大测试套件（5/5 PASS）。
+- [`cpc/src/codegen/types.rs`](file:///data/dev/cp/cpc/src/codegen/types.rs)（及 `cpc_dev/src/codegen/types.rs` 镜像同步）:
+  - 修复 `is_class_field` 在局部变量或参数与字段同名时的遮蔽判定（结单 `task-20261114-field-shadow-readonly-e0201`）。
+- [`lib/dns/`](file:///data/dev/cp/lib/dns/):
+  - 新增 [`lib/dns/_cares.cp`](file:///data/dev/cp/lib/dns/_cares.cp)：c-ares C-FFI 绑定、`NSClass`、`NSType` 与 `CaresStatus`；
+  - 新增 [`lib/dns/packet.cp`](file:///data/dev/cp/lib/dns/packet.cp)：RFC 1035 12 字节 `DnsHeader`、`DnsRCode`、`DecodedDomain` 与支持 `0xC0` 指针压缩的 `DnsWireCodec`；
+  - 新增 [`lib/dns/cache.cp`](file:///data/dev/cp/lib/dns/cache.cp)：`DnsFamily`、`DnsBackend`、`ResolveOptions`、`DnsCacheEntry` 与定容 TTL 缓存 `DnsCache<const CAP: usize>`；
+  - 新增 [`lib/dns/index.cp`](file:///data/dev/cp/lib/dns/index.cp)：`cap:dns` 对外统一出口。
+- [`cap/test/test_dns.cp`](file:///data/dev/cp/cap/test/test_dns.cp):
+  - 新增覆盖 c-ares 类型、RFC 1035 报文头、Wire 域名编解码与指针压缩、TTL 缓存的 4 大测试套件（4/4 PASS）。
+- [`lib/compress/`](file:///data/dev/cp/lib/compress/):
+  - 新增 [`lib/compress/_codecs.cp`](file:///data/dev/cp/lib/compress/_codecs.cp)：Zlib / Brotli / Zstd C-FFI 声明、`ZlibFlush`、`ZlibStatus`、`CompressionFormat` 与 `CompressBoundEstimator`；
+  - 新增 [`lib/compress/checksum.cp`](file:///data/dev/cp/lib/compress/checksum.cp)：IEEE 802.3 `Crc32` 与 RFC 1950 `Adler32` 校验器；
+  - 新增 [`lib/compress/gzip.cp`](file:///data/dev/cp/lib/compress/gzip.cp)：RFC 1952 `GzipHeader` 帧头/帧尾编解码与 `RleCodec` 字节压缩器；
+  - 新增 [`lib/compress/index.cp`](file:///data/dev/cp/lib/compress/index.cp)：`cap:compress` 对外统一出口。
+- [`cap/test/test_compress.cp`](file:///data/dev/cp/cap/test/test_compress.cp):
+  - 新增覆盖压缩协商、CRC32/Adler32 标准向量、Gzip 帧头/帧尾与 RleCodec 的 4 大测试套件（4/4 PASS）。
+- [`lib/sourcemap/`](file:///data/dev/cp/lib/sourcemap/):
+  - 新增 [`lib/sourcemap/vlq.cp`](file:///data/dev/cp/lib/sourcemap/vlq.cp)：7 字节栈内联 Base64 `VLQ` 与 `VLQResult` 编解码器；
+  - 新增 [`lib/sourcemap/line_offset.cp`](file:///data/dev/cp/lib/sourcemap/line_offset.cp)：`SourceLocation` 与二分行偏移查找表 `LineOffsetTable<const MAX_LINES: usize>`；
+  - 新增 [`lib/sourcemap/mapping.cp`](file:///data/dev/cp/lib/sourcemap/mapping.cp)：`SourceMapping` 与 SourceMap v3 映射表解析器 `ParsedSourceMap<const CAP: usize>`；
+  - 新增 [`lib/sourcemap/index.cp`](file:///data/dev/cp/lib/sourcemap/index.cp)：`cap:sourcemap` 对外统一出口。
+- [`cap/test/test_sourcemap.cp`](file:///data/dev/cp/cap/test/test_sourcemap.cp):
+  - 新增覆盖 Base64 VLQ、二分行偏移表与 SourceMap v3 映射反查的 3 大测试套件（3/3 PASS）。
+- [`lib/s3/`](file:///data/dev/cp/lib/s3/):
+  - 新增 [`lib/s3/types.cp`](file:///data/dev/cp/lib/s3/types.cp)：`S3Acl`、`S3StorageClass`、`S3SignErrorCode` 与 `S3Error`；
+  - 新增 [`lib/s3/credentials.cp`](file:///data/dev/cp/lib/s3/credentials.cp)：`S3Credentials` 凭证校验与 Virtual-Hosted / Path-Style 端点构造；
+  - 新增 [`lib/s3/signing.cp`](file:///data/dev/cp/lib/s3/signing.cp)：AWS Signature Version 4 (`AWS4-HMAC-SHA256`) 四级密钥派生与请求签名器 `SigV4Signer`；
+  - 新增 [`lib/s3/index.cp`](file:///data/dev/cp/lib/s3/index.cp)：`cap:s3` 对外统一出口。
+- [`cap/test/test_s3.cp`](file:///data/dev/cp/cap/test/test_s3.cp):
+  - 新增覆盖 S3 ACL/StorageClass、凭证 URL 格式化与 AWS SigV4 官方测试向量的 3 大测试套件（3/3 PASS）。
+
+- [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs), [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs), [`cpc/src/diagnostic.rs`](file:///data/dev/cp/cpc/src/diagnostic.rs), [`cpc/src/main.rs`](file:///data/dev/cp/cpc/src/main.rs), [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs), [`cpc/src/codegen/`](file:///data/dev/cp/cpc/src/codegen/)（及 `cpc_dev/src/*` 镜像同步）:
+  - 结单 `task-20261114-enum-variant-name-and-top-string-const`（枚举显式 `name` 变体防冲突与顶层无类型字符串常量输出）；
+  - 实装正交参数体系（接收者省略 `_` / `*_` / `move _`，具名参数 `v: T` / `v: *T` 编译期自动推导值拷贝或可变借用 / 前置 `move v: T`、`own v: *T`）；
+  - 实装 `cpc compile`、`cpc check`、`cpc check --json` 单次全文件多错误聚合诊断输出；
+  - 实装免 `import` 一等公民内置 `JSON`（`JSON.stringify`、`JSON.parse<T>`、`JSON.parse`）及 `sema.rs` 全局预注册 `std`/`builtin`；
+  - 新增 `--nest`（`-n`）命令行标志与 `@is_nest` 编译期常量（兼容 `--beam` / `@is_beam`）；
+  - 支持 `@c { ... }` / `pub @c { ... }` 内部免 `pub extern` 极简声明、`enum` 方法默认 `pub`、`= []` 空切片字面量与类 `_create` 默认字段值初始化、`* = expr;` 返回值丢弃及全场景省略 `: void`；
+  - 新增 `E0103`/`E0104`/`E0115`/`E0116`/`E0118`/`E0119`/`E0120`/`E0121`/`E0122`/`E0123`/`E0125` 智能拦截与修复建议（保留 `while (cond) : (step)` 与 `@xxx` 宏）。
+- [`lib/crypto/_boringssl.cp`](file:///data/dev/cp/lib/crypto/_boringssl.cp), [`lib/crypto/tls.cp`](file:///data/dev/cp/lib/crypto/tls.cp) & [`lib/crypto/index.cp`](file:///data/dev/cp/lib/crypto/index.cp):
+  - 新增 BoringSSL 底垫片引用与 X.509 SAN / DNS 通配符主机名校验库 `tls.cp`，并在 `lib/crypto/index.cp` 统一导出；
+  - 完成 `lib/` 下全部 144 个 `.cp` 标准库文件的正交语法净化（144/144 零错误通过 `cpc check`）。
+- [`cp_ref.md`](file:///data/dev/cp/cp_ref.md) & [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md):
+  - 同步更新双轨语法规范手册，写入正交参数修饰符、内置 `JSON`、`@c` 块、`@is_nest` 及 Top 16 绝对禁手清单。
+- [`cap/test/test_syntax_orthogonality.cp`](file:///data/dev/cp/cap/test/test_syntax_orthogonality.cp):
+  - 新增覆盖正交语法、`v: *T` 自动推导、内置 `JSON`、预注册 `std` 与 BoringSSL TLS 证书校验的 4 大端到端测试套件（4/4 PASS）。
+
+- [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs), [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs), [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs), [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs), [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs), [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)（及 `cpc_dev/src/*` 镜像同步）:
+  - 新增 `Token::PlusPlus` (`++`) 与 `BinaryOp::Concat` 支持（结单 `task-20261114-concat-plusplus-operator`）；
+  - 为 prelude 辅助函数形参与局部变量统一添加 `__cp_` 前缀防止同名遮蔽（结单 `task-20261114-prelude-ptr-shadow`）；
+  - 升级内置 `JSON.stringify`、`JSON.parse<T>`、`JSON.parse` 采用 `std.heap.smp_allocator` 与 `.allocate = .alloc_if_needed` 零拷贝借用；
+  - 升级内置 `RegExp`（`emit_regex_prelude`）：内联 16 字节 `@Vector(16, u8)` SIMD 字面量前缀快跳与 `[2048]u8` 栈缓冲区零堆分配快速路径，修复正则字面量反斜杠转义；
+  - 删除冗余空壳文件 `lib/regex.cp`；
+  - 扩充 [`cap/test/test_syntax_orthogonality.cp`](file:///data/dev/cp/cap/test/test_syntax_orthogonality.cp) 第 5 项 `RegExp` 测试套件（5/5 PASS）。
+- [`cpc/src/diagnostic.rs`](file:///data/dev/cp/cpc/src/diagnostic.rs), [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs), [`cpc/src/main.rs`](file:///data/dev/cp/cpc/src/main.rs), [`scripts/sync_cpc.sh`](file:///data/dev/cp/scripts/sync_cpc.sh)（及 `cpc_dev/src/*` 镜像同步）:
+  - 新增 `cpc check --brief` (`-b`)、`cpc check --json --brief`、`cpc check --max <N>`、`cpc check --fix` 与 `cpc fix` 子命令；
+  - 新增 `mark_cascades` 连锁错误识别与 `cascade_of` 标注/折叠，以及 `errors`、`root_errors`、`cascades_hidden`、`fixable` 汇总计数；
+  - 为 `E0101`..`E0104`, `E0115`, `E0116`, `E0118`, `E0119`..`E0123`, `E0126` 填充 `{span_start, span_end, replacement}` 机械修复 `edits` 并实装 `apply_fixes` 多轮自动修复；
+  - 新增 `if (let v = opt)` / `while (let v = opt)` 解析恢复与 `E0126` 自动转 `:=` 诊断；
+  - 修复 `.{ key: val }`、`ErrorSet!void` 与 `error{ ... }` 解析，消除假性连锁报错。
+
+## [2026-11-15] - 核心里程碑：`bun_agy` 4 项编译器急修结单、标准库 4 大目录瘦身合并与 10 大新模块 + 4 大模块增强全面落地
+
+### 编译器协同热修 (Compiler Hotfixes & Resolver)
+
+- [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs) & [`cpc_dev/src/parser.rs`](file:///data/dev/cp/cpc_dev/src/parser.rs):
+  - 拦截 `let/const x: auto = undefined;` 组合并输出三段式诊断 `E0212: cannot infer type 'auto' from 'undefined'; explicit concrete type is required`（结单 `task-20261115-ban-auto-undefined-semantic`）。
+- [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs) & [`cpc_dev/src/codegen/mod.rs`](file:///data/dev/cp/cpc_dev/src/codegen/mod.rs):
+  - 新增 `lower_extra_zig_member()`：对 `struct`/`enum` 内部 `extra_zig` 常量/变量声明穿透执行完整表达式 lowering（如 `.{ had_flag: false }` -> `.{ .had_flag = false }`），结单 `task-20261115-nested-const-codegen-lowering`。
+- [`cpc/src/codegen/actor.rs`](file:///data/dev/cp/cpc/src/codegen/actor.rs) & [`cpc/src/codegen/stmt.rs`](file:///data/dev/cp/cpc/src/codegen/stmt.rs):
+  - 将 `Expr::Zig` 参数引用检测升级为精确词边界匹配 `code_contains_word`，补全非实例方法 `self` 形参、`comptime` 形参的 `_ = param;` 注入以及未引用局部 `const` 的 `_ = &var;` 注入（结单 `task-20261115-unused-param-codegen-silence` 与 `task-20261115-cpc-fix-e0120-e0122`）。
+- [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs) & [`cpc_dev/src/resolver.rs`](file:///data/dev/cp/cpc_dev/src/resolver.rs):
+  - 实现 `cap:col`/`cap:collections`、`cap:event`/`cap:event_loop`/`cap:events`、`cap:conf`/`cap:dotenv`/`cap:ini`、`cap:pack`/`cap:compress` 双向兼容模块路径映射。
+
+### 标准库目录瘦身合并 (Phase A: Consolidated Modules)
+
+- [`lib/col/`](file:///data/dev/cp/lib/col/) (`cap:col`)：由 `lib/collections/` 重命名瘦身，新增吸收自 Bun 的 256 位静态位集 [`lib/col/bit_set.cp`](file:///data/dev/cp/lib/col/bit_set.cp) (`BitSet256`)。
+- [`lib/event/`](file:///data/dev/cp/lib/event/) (`cap:event`)：合并原 `lib/event_loop/` 与 `lib/events.cp`（迁入 [`lib/event/emitter.cp`](file:///data/dev/cp/lib/event/emitter.cp)）。
+- [`lib/conf/`](file:///data/dev/cp/lib/conf/) (`cap:conf`)：合并原 `lib/dotenv/` 与 `lib/ini/`，并吸收 Bun 的 [`lib/conf/toml.cp`](file:///data/dev/cp/lib/conf/toml.cp)、[`lib/conf/yaml.cp`](file:///data/dev/cp/lib/conf/yaml.cp)、[`lib/conf/json5.cp`](file:///data/dev/cp/lib/conf/json5.cp)。
+- [`lib/pack/`](file:///data/dev/cp/lib/pack/) (`cap:pack`)：由 `lib/compress/` 升级，保留流式压缩并吸收 Bun 的 [`lib/pack/_archive.cp`](file:///data/dev/cp/lib/pack/_archive.cp) 与 [`lib/pack/tar.cp`](file:///data/dev/cp/lib/pack/tar.cp)（POSIX USTAR 归档打包与零拷贝 `TarReader`）。
+
+### 新建 10 大简洁标准库模块 (Phase B: New Concise Modules)
+
+- [`lib/redis/`](file:///data/dev/cp/lib/redis/) (`cap:redis`)：`resp.cp`、`index.cp`（RESP2/RESP3 零拷贝协议帧解析与编码器）。
+- [`lib/cli/`](file:///data/dev/cp/lib/cli/) (`cap:cli`)：`args.cp`、`tty.cp`、`index.cp`（命令行标志解析、ANSI 转义剥离与终端进度条 `ProgressBar`）。
+- [`lib/watch/`](file:///data/dev/cp/lib/watch/) (`cap:watch`)：`watcher.cp`、`index.cp`（跨平台文件变更监控掩码与路径表 `FileWatcher`）。
+- [`lib/patch/`](file:///data/dev/cp/lib/patch/) (`cap:patch`)：`diff.cp`、`index.cp`（Unified Diff 解析与 Hunk 渲染应用）。
+- [`lib/bench/`](file:///data/dev/cp/lib/bench/) (`cap:bench`)：`timer.cp`、`index.cp`（纳秒级硬件单调计时器 `Stopwatch` 与分位数统计 `BenchStats`）。
+- [`lib/elf/`](file:///data/dev/cp/lib/elf/) (`cap:elf`)：`format.cp`、`index.cp`（ELF64 / Mach-O / PE 二进制格式嗅探与头部解析）。
+- [`lib/md/`](file:///data/dev/cp/lib/md/) (`cap:md`)：`markdown.cp`、`index.cp`（CommonMark/GFM 解析与 HTML/ANSI 渲染）。
+- [`lib/html/`](file:///data/dev/cp/lib/html/) (`cap:html`)：`selector.cp`、`index.cp`（CSS 选择器解析与流式 `HtmlRewriter`）。
+- [`lib/ffi/`](file:///data/dev/cp/lib/ffi/) (`cap:ffi`)：`_tcc.cp`、`dlopen.cp`、`index.cp`（动态库加载 `DynLib`、FFI 签名布局与 TinyCC 声明）。
+- [`lib/sql/`](file:///data/dev/cp/lib/sql/) (`cap:sql`)：`protocol.cp`、`index.cp`（PostgreSQL v3 Wire 帧、MySQL 包头编解码与预编译语句绑定）。
+
+### 现有 4 大模块能力扩充 (Phase C: Module Extensions)
+
+- [`lib/http/`](file:///data/dev/cp/lib/http/)：新增 [`cookie.cp`](file:///data/dev/cp/lib/http/cookie.cp) (`CookieMap`) 与 [`form_data.cp`](file:///data/dev/cp/lib/http/form_data.cp) (`FormData`)。
+- [`lib/net/`](file:///data/dev/cp/lib/net/)：新增 [`udp.cp`](file:///data/dev/cp/lib/net/udp.cp) (`UdpSocket`, `UdpPacket`) 与 `SocketAddress.parseIpv4`。
+- [`lib/mem/`](file:///data/dev/cp/lib/mem/)：扩充 [`cow.cp`](file:///data/dev/cp/lib/mem/cow.cp) (`CowSlice`) 与 [`tagged_ptr.cp`](file:///data/dev/cp/lib/mem/tagged_ptr.cp) (`TaggedPtr`)。
+- [`lib/string/`](file:///data/dev/cp/lib/string/)：新增 [`grapheme.cp`](file:///data/dev/cp/lib/string/grapheme.cp) (`Utf8Grapheme` UTF-8 校验与 UAX #29 字素簇计数)。
+- 测试套件：新增 [`cap/test/test_stdlib_phase_b1.cp`](file:///data/dev/cp/cap/test/test_stdlib_phase_b1.cp)（8/8 PASS）与 [`cap/test/test_stdlib_phase_b2_c.cp`](file:///data/dev/cp/cap/test/test_stdlib_phase_b2_c.cp)（9/9 PASS）。
+
+### 2026-11-15（续） 双子智能体并行深化 12 个标准库子模块与第 6 项 `bun_agy` 急修结单
+
+- **编译器热修 (`cpc/src/` & `cpc_dev/src/`)**：
+  - [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：修复 `generate_zig_or_struct` 中泛型函数返回匿名 `struct`（`return struct { ... }`）内省略 `_` 的只读实例方法被误判为 `static` 的问题（结单 `task-20261115-generic-return-struct-readonly-receiver`）。
+- **双子智能体并行深化标准库模块 (`lib/`)**：
+  - [`lib/sql/postgres.cp`](file:///data/dev/cp/lib/sql/postgres.cp) & [`lib/sql/mysql.cp`](file:///data/dev/cp/lib/sql/mysql.cp)：PostgreSQL v3 认证挑战/数据行/命令完成帧与 MySQL `lenenc_int`/能力位图/OK/ERR 包解析；
+  - [`lib/redis/command.cp`](file:///data/dev/cp/lib/redis/command.cp)：RESP2 命令编码器 `RedisCommand` 与批量管道 `RedisPipeline`；
+  - [`lib/http/h2/hpack.cp`](file:///data/dev/cp/lib/http/h2/hpack.cp)：RFC 7541 HTTP/2 HPACK 整数前缀、静态表与首部字段编解码器 `HpackCodec`；
+  - [`lib/col/object_pool.cp`](file:///data/dev/cp/lib/col/object_pool.cp)：零堆碎片侵入式空闲链表对象池 `ObjectPool<T, CAP>`；
+  - [`lib/pack/zip.cp`](file:///data/dev/cp/lib/pack/zip.cp)：PKZIP Local/Central/EOCD 解析与零拷贝 `ZipReader`；
+  - [`lib/md/table.cp`](file:///data/dev/cp/lib/md/table.cp)：GFM 表格对齐与 HTML `<table>` 渲染器 `MdTable`；
+  - [`lib/html/escape.cp`](file:///data/dev/cp/lib/html/escape.cp)：零拷贝快跳 HTML 实体转义与反转义器 `HtmlEscape`；
+  - [`lib/cli/table.cp`](file:///data/dev/cp/lib/cli/table.cp)：终端 ASCII 表格格式化渲染器 `CliTable`；
+  - [`lib/watch/filter.cp`](file:///data/dev/cp/lib/watch/filter.cp)：文件监控忽略过滤 `WatchFilter` 与防抖器 `DebounceTracker`；
+  - [`lib/patch/myers.cp`](file:///data/dev/cp/lib/patch/myers.cp)：行级差异比对与 Unified Diff 生成器 `LineDiffer`；
+  - [`lib/bench/histogram.cp`](file:///data/dev/cp/lib/bench/histogram.cp)：8 桶对数纳秒延迟直方图 `LatencyHistogram`。
+- **新增端到端测试套件**：
+  - [`cap/test/test_sql_redis_hpack.cp`](file:///data/dev/cp/cap/test/test_sql_redis_hpack.cp)（4/4 PASS）；
+  - [`cap/test/test_col_pack_md_html.cp`](file:///data/dev/cp/cap/test/test_col_pack_md_html.cp)（4/4 PASS）；
+  - [`cap/test/test_cli_watch_patch_bench.cp`](file:///data/dev/cp/cap/test/test_cli_watch_patch_bench.cp)（4/4 PASS）。
+
+### 2026-11-15（续 2） 第二波双子智能体并行深化 8 个标准库子模块
+
+- **新增与更新标准库文件 (`lib/`)**：
+  - [`lib/elf/macho_pe.cp`](file:///data/dev/cp/lib/elf/macho_pe.cp) & [`lib/elf/index.cp`](file:///data/dev/cp/lib/elf/index.cp)：Mach-O 64 位头部与 PE/COFF 头部解析器（`MachHeader64`, `MachoInspector`, `PeCoffHeader`, `PeInspector`）；
+  - [`lib/ffi/layout.cp`](file:///data/dev/cp/lib/ffi/layout.cp) & [`lib/ffi/index.cp`](file:///data/dev/cp/lib/ffi/index.cp)：C-ABI 结构体字段偏移与自然对齐计算器（`CStructLayout`, `CStructField`）；
+  - [`lib/net/proxy.cp`](file:///data/dev/cp/lib/net/proxy.cp) & [`lib/net/index.cp`](file:///data/dev/cp/lib/net/index.cp)：HTTP `CONNECT` 代理隧道与 SOCKS5 握手/连接帧编解码器（`HttpConnectTunnel`, `Socks5Codec`）；
+  - [`lib/conf/getter.cp`](file:///data/dev/cp/lib/conf/getter.cp) & [`lib/conf/index.cp`](file:///data/dev/cp/lib/conf/index.cp)：配置值强类型解析器 `ConfValueParser`（布尔、端口、时长 `ms/s/m/h`、容量 `b/kb/mb/gb`）；
+  - [`lib/encoding/hex.cp`](file:///data/dev/cp/lib/encoding/hex.cp) & [`lib/encoding/index.cp`](file:///data/dev/cp/lib/encoding/index.cp)：零堆分配查表十六进制编解码器 `Hex`；
+  - [`lib/url/percent.cp`](file:///data/dev/cp/lib/url/percent.cp)、[`lib/url/query.cp`](file:///data/dev/cp/lib/url/query.cp) & [`lib/url/index.cp`](file:///data/dev/cp/lib/url/index.cp)：RFC 3986 URI 百分号编解码器 `PercentEncoding`；
+  - [`lib/string/case.cp`](file:///data/dev/cp/lib/string/case.cp) & [`lib/string/index.cp`](file:///data/dev/cp/lib/string/index.cp)：标识符命名风格转换器 `CaseConverter`（`toSnakeCase`, `toKebabCase`, `toCamelCase`, `toPascalCase`, `toScreamingSnakeCase`）；
+  - [`lib/router/pattern.cp`](file:///data/dev/cp/lib/router/pattern.cp)、[`lib/router/radix.cp`](file:///data/dev/cp/lib/router/radix.cp) & [`lib/router/index.cp`](file:///data/dev/cp/lib/router/index.cp)：路由模板参数提取与反向 URL 格式化器 `RouteFormatter`。
+- **新增端到端测试套件**：
+  - [`cap/test/test_elf_ffi_net_conf.cp`](file:///data/dev/cp/cap/test/test_elf_ffi_net_conf.cp)（4/4 PASS）；
+  - [`cap/test/test_hex_url_case_router.cp`](file:///data/dev/cp/cap/test/test_hex_url_case_router.cp)（4/4 PASS）。
+
+### 2026-11-15（续 5） 顶层原生类型遮蔽修复、双子智能体拓扑落地与任务全面汇报
+
+- **编译器前端与 Codegen 修复 (`cpc/src/codegen/mod.rs`)**：
+  - 在顶层变量遍历输出时增加 Zig 原生基本类型过滤（跳过 `u8`, `i8`, `u16`, `i16`, `u32`, `i32`, `u64`, `i64`, `usize`, `isize`, `f32`, `f64`, `bool`, `void`, `anyopaque`），彻底消除 `const u8 = undefined;` 导致的 `name shadows primitive 'u8'` 编译阻断；
+  - 调用 `scripts/sync_cpc.sh` 原子构建并秒级部署至全局 `cap/bin/cpc` 与 `target/release/cpc`。
+- **架构拓扑规范确立**：
+  - 明确划分 `Hotfix Engineer`（基于 `cpc/` 直修发布，优先释放下游工单）与 `Core Compiler Researcher`（基于安全沙盒与 `cpc_dev` 专心自研攻坚）；
+  - 常驻守护进程 `task-32193` 全天候监控下游工单信箱，确保通信零遗漏。
+
+- **下游 CapSurf 紧急热修（3 项 100% 验证结单）**：
+  - `task-capsurf-20261115-struct-associated-fn-lowering`：修复 `cpc/src/codegen/actor.rs` 关联方法降级逻辑，使结构体关联方法正确生成为静态函数；
+  - `task-capsurf-20261115-enum-method-receiver`：修复 `cpc/src/codegen/mod.rs` 与 `types.rs` 中 enum 声明注册与方法接收者类型推断，避免类型退化为 `*anyopaque`；
+  - `task-capsurf-20261115-instance-method-with-params`：修复带参数实例方法 receiver 判定顺序，使 `Point.add(x)` 正确保留 `self: Point`。
+- **CSS Parser（7,333 行）核心自研攻坚突破**：
+  - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs)：
+    - 修复类型参数解析中跨 Token 空格保留机制（消灭 `[]constu8` 词法粘连）；
+    - 修复 `parse_return_stmt` 支持 `else => return,` 无参带逗号 return；
+  - [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：
+    - 在 `lower_struct_body` 中新增 `get_receiver_param_info`，全面支持 `*_` / `*this` / `*self` 以及带参数实例方法自动注入 `self: @This(), `；
+    - 排除 `static fn` 的 receiver 注入；
+    - 将 7,333 行 `css_parser.cp` 的 Zig AST 检查报错从 632+ 彻底消灭至仅剩 1 个借用冲突。
+- **架构拓扑与多智能体分工**：
+  - 启动后台常驻通信守护进程 `IPC_DAEMON`；
+  - 启动热修专属子智能体（基于 `cpc` 目录极速结单下游工单）；
+  - 启动自研攻关专属子智能体（基于 `cpc_dev` 目录彻底突破 CSS Parser 终局借用冲突并收敛标准库）。
+
+- **多 AGY 隔离通信协议固化 (`GEMINI.md`)**：
+  - [`GEMINI.md`](file:///data/dev/cp/GEMINI.md)：更新多工作区拓扑（新增 `capsurf_agy` `/data/dev/capsurf`）与第 七 章 4 条多 AGY 通信规则（双下游识别 `task-capsurf-*`、多 ID 批量 `resolve` 精准路由、`broadcast` 语法更新双端广播、`watch_task.py --status pending --creator all --timeout 0` 常驻监听）。
+- **编译器热修与 CSS 语法自愈 (`cpc/src/` & `cpc_dev/src/`)**：
+  - [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：`has_top_string_decl` 检测 `ModuleItem::Import` 中的 `"string"` / `@"string"`，抑制顶部 `const string = []const u8;` 冲突（结单 `task-20261115-string-import-collision`）；
+  - [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs)：新增字符字面量 `\xNN` / `\u{NNNN}` 转义与 `\\` 多行字符串词法支持；
+  - [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs)、[`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs)、[`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs)、[`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs)：支持匿名嵌套 `struct { ... }` / `struct? { ... }`、内联可选泛型 `SmallList?(T, N)`、无载荷联合体变体、`ArrayList(T){}` / `@This(){}` 构造、`[]const u8` 类型实参、`Expr::If` 条件表达式 Walrus 解包捕获 `if (p := expr)`、`Decl::Class` 内 `extra_zig` 与 `nested_classes` 符号注册；
+  - [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs)：注册 `"css" => "css".to_string()` 标准库通道映射。
+- **新增 `cap:css` 标准库 (`lib/css/` 共 99 个 `.cp` 文件)**：
+  - 顶层门面 API（5 个）：[`lib/css/index.cp`](file:///data/dev/cp/lib/css/index.cp)、[`lib/css/color.cp`](file:///data/dev/cp/lib/css/color.cp)、[`lib/css/length.cp`](file:///data/dev/cp/lib/css/length.cp)、[`lib/css/selector.cp`](file:///data/dev/cp/lib/css/selector.cp)、[`lib/css/stylesheet.cp`](file:///data/dev/cp/lib/css/stylesheet.cp)；
+  - 完整吸收 `/data/dev/bun/src/css/` 全部 94 个 `.cp` 模块文件（根目录 15 个引擎文件 + `selectors/*.cp` 3 个 + `rules/*.cp` 22 个 + `values/*.cp` 22 个 + `properties/*.cp` 32 个），99/99 文件 100% 通过 `cpc check --brief`。
+- **新增端到端测试套件**：
+  - [`cap/test/test_css.cp`](file:///data/dev/cp/cap/test/test_css.cp)（5/5 100% PASS）。
+
+- **Bun CSS 模块 95 源码文件端到端转译突破（通过率提升至 80.0% / 76 个文件 PASS）**：
+  - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs)：
+    - 在对象字面量解析（`parse_object_fields`）中支持前导 `Token::Dot`，全面兼容 `{ prop: "...", .ty = Value }`；
+    - 在类体（`parse_class`）成员识别中放行 `comptime { ... }` 作为 `extra_zig` 原生直通 Zig 结构体；
+    - 针对 `struct? { ... }` / `union? { ... }` 自动包装为 `Type::Optional`，解决可选类型匹配；
+    - 宽容支持 `?T` 前缀可选类型语法（解除 E0115 硬阻断）；
+    - 支持 `@This(){ ... }` 实例化表达式。
+  - [`cpc/src/sema.rs`](file:///data/dev/cp/cpc/src/sema.rs)：
+    - 在 `can_coerce` 中新增 `BorrowType` 到 `BorrowType` 双向兼容分支，支持解引用多级指针赋值。
+  - [`cpc/src/codegen/actor.rs`](file:///data/dev/cp/cpc/src/codegen/actor.rs)：
+    - 修正 `get_func_receiver_mode`：优先判定 `func.is_static`，且过滤 `_: void` 等占位参数作为伪 receiver，杜绝 `self` 变量作用域遮蔽（`angle.cp`, `time.cp` 完全通过）。
+  - [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：
+    - `has_top_string_decl` 检查 `Import` 声明避免 `duplicate struct member name 'string'`（`values.cp` 通过）；
+    - 废除危险的 `: {` 匹配规则，杜绝 `blk: {`、`brk: {` 标签块被误替换为 `.{`；
+    - 在 `lower_struct_body` 中将 `static fn` 去关键字化为 `pub fn`（`calc.cp` 通过）；
+    - 为省略返回类型的函数精准补充 `void`（`image.cp` 等通过）；
+    - 新增 `lower_inline_struct_lit` 自动将单行 `.{ key: val }` 转为 `.{ .key = val }`。
+
+### 2026-11-16
+
+- **CSS 全量 95 源码模块纯正语法清洗与 100% 满贯达成 (95/95 PASS)**：
+  - 严格捍卫 CP 纯正语法规范，在 `.cp` 源码端对标原始 `xxx_.zig` 消除全部非法语法；
+  - **Values 模块群全面规范化**（9/9 PASS）：
+    - [`values/color.cp`](file:///data/dev/bun/src/css/values/color.cp)、[`values/length.cp`](file:///data/dev/bun/src/css/values/length.cp)、[`values/syntax.cp`](file:///data/dev/bun/src/css/values/syntax.cp)：将所有 `pub union(enum)` 全量改造为纯正 CP Tagged Union `pub enum Name { ... }`；
+    - [`values/length.cp`](file:///data/dev/bun/src/css/values/length.cp)：消除 Zig 风格 `const value, const unit = ...`，重构为标准元组解构 `let [value, unit] = ...`；具名结构体构造规范为 `TypeName{ field: val }`；
+    - [`values/ident.cp`](file:///data/dev/bun/src/css/values/ident.cp)：重命名保留字 `ref` 为 `ref_val`，消除表达式层 `[]const u8` 为 `string`；
+    - [`values/syntax.cp`](file:///data/dev/bun/src/css/values/syntax.cp)：拆分内联匿名结构体为 `pub struct RepeatedComponent`，规范状态机单点出口。
+  - **Properties 模块群与 SmallList 全面规范化**（33/33 PASS）：
+    - [`properties/align.cp`](file:///data/dev/bun/src/css/properties/align.cp) 等：匿名结构体字面量规范为 `.{ .result = ... }`，消除 switch 分支歧义；
+    - [`small_list.cp`](file:///data/dev/bun/src/css/small_list.cp)：恢复 `pfi.slice()` 契约；
+    - [`properties/animation.cp`](file:///data/dev/bun/src/css/properties/animation.cp)：4 处联合枚举重构为 `pub enum`。
+  - **CSS Parser 核心巨构与媒体查询**（3/3 PASS）：
+    - [`css_parser.cp`](file:///data/dev/bun/src/css/css_parser.cp)：7,400 行超级解析器核心消灭第 4467 行残留 Zig `if (...) |...|` 解包语法，修复 Tokenizer 闭合断点；
+    - [`css_parser.d.cp`](file:///data/dev/bun/src/css/css_parser.d.cp)：废除 TS 箭头语法，重构为标准函数指针类型 `*const fn (*Parser) Result(T)`。
+- **`lib/css/` 标准库全量同步**：
+  - 完整同步 Bun CSS 成果至 [`lib/css/`](file:///data/dev/cp/lib/css/)，共计 100 个 `.cp` 文件（包含顶层门面 API），100/100 100% 通过 `cpc --lib` 与 `zig ast-check`。
+- **两大重点资产群全量吸收与极简标准库落地 (100% PASS)**：
+  - **资产群一（基础高并发与容器库）**：
+    - [`lib/col/hash_map.cp`](file:///data/dev/cp/lib/col/hash_map.cp)：新增零堆分配 Robin-Hood 线性探查紧凑哈希表 `StaticHashMap<K, V, CAP>`；
+    - [`lib/col/bounded_array.cp`](file:///data/dev/cp/lib/col/bounded_array.cp)、[`lib/col/bit_set.cp`](file:///data/dev/cp/lib/col/bit_set.cp)、[`lib/col/hive_array.cp`](file:///data/dev/cp/lib/col/hive_array.cp)、[`lib/col/object_pool.cp`](file:///data/dev/cp/lib/col/object_pool.cp)：规范方法 receiver，消除未使用参数警告与伪 receiver；
+    - [`lib/string/smol.cp`](file:///data/dev/cp/lib/string/smol.cp)：新增 15 字节纯栈 SSO 小字符串 `SmolStr` 与堆回退；
+    - [`lib/string/hashed.cp`](file:///data/dev/cp/lib/string/hashed.cp)：新增 O(1) 预哈希字符串 `HashedString`；
+    - [`lib/string/path.cp`](file:///data/dev/cp/lib/string/path.cp)：新增零分配路径视图 `PathString`；
+    - [`lib/string/joiner.cp`](file:///data/dev/cp/lib/string/joiner.cp)：新增高效字符串拼接器 `StringJoiner`；
+    - [`lib/sync/pool.cp`](file:///data/dev/cp/lib/sync/pool.cp)：新增线程安全对象包裹器 `Guarded<T>` 与工作线程池队列 `WorkPool`；
+    - [`lib/sync/futex.cp`](file:///data/dev/cp/lib/sync/futex.cp)、[`lib/sync/condition.cp`](file:///data/dev/cp/lib/sync/condition.cp)、[`lib/sync/wait_group.cp`](file:///data/dev/cp/lib/sync/wait_group.cp)、[`lib/sync/unbounded_queue.cp`](file:///data/dev/cp/lib/sync/unbounded_queue.cp)：消灭嵌套结构体 Zig 风格分号语法，规范为 CP 纯正语法与借用契约；
+    - [`lib/event/task.cp`](file:///data/dev/cp/lib/event/task.cp)：新增动态任务执行器 `AnyTask` 与堆管理任务 `ManagedTask`；
+    - 门面 API 同步导出：[`lib/col/index.cp`](file:///data/dev/cp/lib/col/index.cp)、[`lib/string/index.cp`](file:///data/dev/cp/lib/string/index.cp)、[`lib/sync/index.cp`](file:///data/dev/cp/lib/sync/index.cp)、[`lib/event/index.cp`](file:///data/dev/cp/lib/event/index.cp)。
+  - **资产群二（应用与网络协议核心库）**：
+    - [`lib/sql/sqlite.cp`](file:///data/dev/cp/lib/sql/sqlite.cp)：实现原生 SQLite3 数据库引擎抽象 `SqliteDatabase` 与查询游标 `SqliteRows`；
+    - [`lib/sql/index.cp`](file:///data/dev/cp/lib/sql/index.cp)：对外统一聚合导出 MySQL, PostgreSQL, SQLite3 数据库协议与驱动；
+    - [`lib/http/server.cp`](file:///data/dev/cp/lib/http/server.cp)：修复 `Request` 符号导入；
+    - [`lib/shell/`](file:///data/dev/cp/lib/shell/)（全新吸收）：实现原生轻量嵌入式 Shell 执行引擎与解释器：
+      - [`lib/shell/lexer.cp`](file:///data/dev/cp/lib/shell/lexer.cp)：Shell 词法分析器，识别指令、管道、重定向、引号与环境变量；
+      - [`lib/shell/parser.cp`](file:///data/dev/cp/lib/shell/parser.cp)：Shell 语法解析器与 AST 语句结构树构建；
+      - [`lib/shell/exec.cp`](file:///data/dev/cp/lib/shell/exec.cp)：执行调度引擎，实现多级管道进程间通信与 I/O 重定向；
+      - [`lib/shell/builtin.cp`](file:///data/dev/cp/lib/shell/builtin.cp)：内置指令实现（`echo`, `cd`, `pwd`, `which`, `export`, `exit`）；
+      - [`lib/shell/index.cp`](file:///data/dev/cp/lib/shell/index.cp)：门面导出极简 `sh(cmd)` 与 `Shell.run(cmd)`。
+- **编译器与工程配置增强**：
+  - [`cpc/src/codegen/prelude.rs`](file:///data/dev/cp/cpc/src/codegen/prelude.rs)：扫描 `f.default` 字段默认表达式与 `extra_zig` 内位移操作符；对 `@create_pending_task`、`@complete_task`、`@task_spawn`、`@task_join` 标记 `needs_actors = true`；
+  - [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs)：增加 `cap:sync` / `cap:threading` 及 `cap:shell` / `cap:sh` 标准库别名与重映射路径；
+  - [`cap.json`](file:///data/dev/cp/cap.json)：根工程加入 `build.link_libs: ["sqlite3"]`；
+  - 编译器代码直通同步至 `cpc_dev`。
+- **新增综合测试套件**：
+  - [`cap/test/test_bun_absorbed_assets.cp`](file:///data/dev/cp/cap/test/test_bun_absorbed_assets.cp)：涵盖 `cap:string`, `cap:sync`, `cap:event`, `cap:sql`, `cap:shell` 综合端到端测试（6/6 100% PASS）；
+  - [`cap/test/test_collections_bun.cp`](file:///data/dev/cp/cap/test/test_collections_bun.cp)：6/6 100% PASS。
+- **新增原生图像处理标准库 `cap:image` (兼容 `cap:png` / `cap:img`)**：
+  - [`lib/image/png.cp`](file:///data/dev/cp/lib/image/png.cp)：
+    - 实现工业级纯 CP 原生 PNG 截图编码器 `Png.encodeRgba`（W3C 标准 8 字节魔数签名、IHDR 块构造、扫描线 None 滤波、Zlib 原生 Deflate 压缩生成 IDAT、IEND 闭合与 IEEE 802.3 CRC32 校验和）；
+    - 实现 PNG 全滤镜逆运算解码器 `Png.decode`（IHDR 尺寸与颜色类型提取、IDAT 聚合流式解压、支持 None, Sub, Up, Average, Paeth 5 种滤波逆还原为 RGBA8 像素切片）；
+    - 实现面向对象 `PngImage` 与像素结构体 `RgbaColor`（支持 `.getPixel(x, y)`、`.setPixel(x, y, r, g, b, a)`、`.encode()`、`.save(path)`）；
+    - 实现同步文件系统保存 `Png.save(path, rgba, w, h)` 与加载 `Png.load(path)`；
+  - [`lib/image/codecs.cp`](file:///data/dev/cp/lib/image/codecs.cp)：
+    - 实现二进制魔数快速探测 `Codecs.sniff`（支持 PNG, JPEG, WebP, BMP, GIF, TIFF, AVIF, HEIC）；
+    - 实现标准 MIME 映射 `Codecs.mime` 与文件后缀提取 `Codecs.fromExtension`；
+    - 实现 EXIF Orientation 方向解析 `Codecs.getOrientationTransform`；
+  - [`lib/image/bmp.cp`](file:///data/dev/cp/lib/image/bmp.cp)：
+    - 实现 Windows DIB / BMP 格式解码器 `Bmp.decode` 与 32-bit 编码器 `Bmp.encodeRgba`（支持 4 字节跨距行对齐与倒序 Bottom-Up 扫描转换）；
+  - [`lib/image/quantize.cp`](file:///data/dev/cp/lib/image/quantize.cp)：
+    - 实现 Median-Cut 颜色量化器 `Quantizer.quantize`（RGBA8 转 256 色紧凑调色板与像素索引矩阵）；
+  - [`lib/image/index.cp`](file:///data/dev/cp/lib/image/index.cp)：
+    - 对外统一导出 `cap:image`、`cap:png`、`cap:img` 协议；
+- **编译器与工程构建增强**：
+  - [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs)：注册 `"image" | "img" | "png" => "image".to_string()`；
+  - [`cap.json`](file:///data/dev/cp/cap.json)：引入 `"z"` 动态链接库支持原生硬件极速压缩；
+  - 同步部署至 `cpc_dev`。
+- **新增综合测试套件**：
+  - [`cap/test/test_image_png.cp`](file:///data/dev/cp/cap/test/test_image_png.cp)：包含格式嗅探、RGBA8 截图编码、IHDR 签名校验、像素往返解码比对、文件保存与加载、BMP 编解码、颜色量化 6 大测试用例（**6/6 100% PASS**）。
+
+---
+
+### [2026-11-16] 编译器语义自愈升级、Zig 0.17 全套适配与 BEAM/集合类型深度解耦
+
+- **编译器核心修改**：
+  - [`cpc/src/codegen/actor.rs`](file:///data/dev/cp/cpc/src/codegen/actor.rs)：
+    - 解耦非 async 普通函数返回类型与 BEAM 模式，恢复强类型 `ret_ty` 返回签名；
+    - 移除普通结构体函数在 BEAM 模式下无 return 时的错误原子发射；
+    - 在状态机代码生成结束点（`emit_current_case` 闭合处）重置 `self.is_state_machine = false`，防止后续全局声明误用 `ctx.arena`；
+    - 区分引用类（`ref_classes`）与值结构体（`value_classes`）的默认接收者推断；
+    - 消除 Zig 0.17 `pointless discard of function parameter`；
+  - [`cpc/src/codegen/stmt.rs`](file:///data/dev/cp/cpc/src/codegen/stmt.rs)：
+    - 修复 `Stmt::Return(None)`：仅在 `self.is_beam_mode && self.is_state_machine` 时发射 `beam.Beam.makeAtom(ctx.self.env.?, "ok")`，普通函数及非 actor 结构体方法恢复标准 `return;`；
+  - [`cpc/src/codegen/pattern.rs`](file:///data/dev/cp/cpc/src/codegen/pattern.rs)：
+    - 在 `generate_switch` 顶层增加 `is_result_disc` 拦截，判别式为错误联合类型时禁止进入 Zig 原生 switch，转入安全解包流；
+    - 消除 Zig 0.17 `unused capture`，未引用的 arm 绑定自动生成 `else =>`；
+    - 降解 `err.Variant` 为 Zig 原生 `error.Variant`；
+    - 修复 `generate_err_value` 中 `Type::BoxDyn` 移动语义与变量识别；
+  - [`cpc/src/codegen/borrow.rs`](file:///data/dev/cp/cpc/src/codegen/borrow.rs)：
+    - 在 `is_zig_heap_ptr_type` 中补齐 `VecDeque`、`BinaryHeap`、`BTreeMap`、`BTreeSet`、`HashMap`、`HashSet` 及 `ref_classes` 堆指针识别，防止集合类型借用传递时发生双重取地址；
+  - [`cpc/src/codegen/expr.rs`](file:///data/dev/cp/cpc/src/codegen/expr.rs)：
+    - 无参 `new Class()` 在 comptime 校验 init 参数个数；
+    - 修正类型投射与成员借用的指针判定；
+  - [`cpc/src/parser.rs`](file:///data/dev/cp/cpc/src/parser.rs)：
+    - 解除双指针及多级原始指针（如 `pp.*.age`）字段访问的硬编码拦截；
+  - [`cpc/src/diagnostic.rs`](file:///data/dev/cp/cpc/src/diagnostic.rs)：
+    - 落地 `E0130`（只读接收者自动插入 `*_`）、`E0133`（只读形参赋值双分支诊断建议）、`E0134`（关键字与保留字重命名及转义）；
+- **任务协同与热修闭环**：
+  - 结单 [`task-capsurf-20261116-beam-non-actor-return`](file:///data/dev/cp/.tasks/resolved/capsurf_agy/task-capsurf-20261116-beam-non-actor-return.json)；
+  - 后台任务常驻监听守卫重新启动并保持活跃状态；
+- **测试套件回归验证**：
+  - `test_unified_errors.cp`、`test_trait_class_pass.cp`、`test_semver.cp`、`test_dec_pass.cp`、`test_unsafe_pass.cp`、`test_blob.cp`、`test_collections_matrix.cp`、`test_all.cp`、`test_stdlib_phase_b2_c.cp`、`test_basic.cp`、`test_string.cp`、`test_json.cp`、`test_crypto.cp` **100% PASS**。
+
+- **热修性能优化 (`task-capsurf-20261116-codegen-quadratic-line-count`)**：
+  - [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)：
+    - 新增 `OutputBuffer` 结构体，封装 `content` 与 `newline_count`，实现 `std::ops::Deref`、`std::fmt::Write`、`std::fmt::Display` 与 `push_buffer`；
+    - 将 `current_generated_line()` 从 O(N) 全量字节扫描重构为 O(1) 增量整型加法，消除语句数膨胀时的 O(N^2) 性能二次爆炸（10,000 条语句转译从 18.58s 缩短至 0.21s，提速 88 倍）；
+  - [`cpc/src/codegen/actor.rs`](file:///data/dev/cp/cpc/src/codegen/actor.rs)：
+    - 使用 `self.output.push_buffer(&body_str)` 零扫描高效拼接函数体；
+  - 结单 `task-capsurf-20261116-codegen-quadratic-line-count` 并同步回写 `cpc_dev`。
+
+### 2026-11-18
+
+- [feat(ptr)]: 从 Bun 全量吸收并实装 `cap:ptr` 智能指针体系 (`lib/ptr/`)，首行附带 `// Source: bun/src/ptr/...` 谱系标注：
+  - 新增 `shared.cp`, `weak_ptr.cp`, `cow.cp`, `cow_slice.cp`, `owned.cp`, `tagged_pointer.cp`, `raw_ref_count.cp`, `ref_count.cp`, `external_shared.cp`, `meta.cp`, `index.cp`。
+  - 新增独立文档 `docs/stdlib/ptr.md` 与测试 `cap/test/test_ptr.cp` (8/8 PASS)。
+- [feat(encoding)]: 全面补全 `lib/encoding/base64.cp`，支持 `decodeInPlace` 零堆分配原地解码与 4 种 `Codecs` 预设工厂；新增 `docs/stdlib/encoding.md` 与测试 `cap/test/test_encoding_complete.cp` (4/4 PASS)。
+- [feat(sourcemap)]: 全量补齐 `lib/sourcemap/`（`vlq.cp`, `line_offset.cp`, `mapping.cp`, `internal_source_map.cp`, `chunk.cp`, `parsed_source_map.cp`, `sourcemap.cp`, `index.cp`），新增 `docs/stdlib/sourcemap.md` 与测试 `cap/test/test_sourcemap_complete.cp` (5/5 PASS)。
+- [feat(semver)]: 全量补齐 Semver 2.0.0 规范库 `lib/semver/`（`version.cp`, `query.cp`, `range.cp`, `index.cp`），实装点分预发布权重梯级、高级范围表达式（`^`, `~`, `*`, `1.x`, `-`, `||`）、`maxSatisfying` 与版本递增 `increment`，新增 `docs/stdlib/semver.md` 与测试 `cap/test/test_semver_complete.cp` (5/5 PASS)。
+- [feat(dotenv)]: 从 Bun 吸收构建生产级环境配置解析库 `lib/dotenv/`（`parser.cp`, `loader.cp`, `index.cp`），支持引号转义、`${VAR:-default}` 变量展开与级联覆盖加载状态机，新增 `docs/stdlib/dotenv.md` 与测试 `cap/test/test_dotenv_complete.cp` (6/6 PASS)。
+- [fix(cpc)]: 升级 `cpc/src/resolver.rs`，使 `cap:dotenv` 独立精确映射至 `lib/dotenv/`。
+- [feat(path)]: 全量吸收重构 `lib/path/`（`buffer_pool.cp`, `env_path.cp`, `index.cp`, `path.cp`, `posix.cp`, `resolve.cp`, `windows.cp`），完备 POSIX/Windows 规范化、零分配缓冲池与 EnvPath 迭代器，新增 `docs/stdlib/path.md` 与测试 `cap/test/test_path_complete.cp` (5/5 PASS)。
+- [feat(event_loop)]: 从 Bun 吸收构建统一事件循环标准库 `lib/event_loop/`（`auto_flusher.cp`, `concurrent_task.cp`, `deferred_task_queue.cp`, `index.cp`, `loop.cp`, `task.cp`, `timer.cp`），新增 `docs/stdlib/event_loop.md` 与测试 `cap/test/test_event_loop_complete.cp` (6/6 PASS)。
+- [fix(cpc)]: 升级 `cpc/src/resolver.rs`，使 `cap:event_loop` 独立精确映射至 `lib/event_loop/`。
+- [feat(url)]: 全面补全 WHATWG URL 标准库 `lib/url/`（`percent.cp`, `search_params.cp`, `query.cp`, `url.cp`, `index.cp`），支持 IPv6 方括号主机、URLSearchParams 排序与百分号编解码，新增 `docs/stdlib/url.md` 与测试 `cap/test/test_url_complete.cp` (6/6 PASS)。
+- [feat(safety)]: 从 Bun 吸收构建生产级并发安全与诊断标准库 `lib/safety/`（`thread_id.cp`, `ThreadLock.cp`, `CriticalSection.cp`, `asan.cp`, `alloc.cp`, `safety.cp`, `index.cp`），新增 `docs/stdlib/safety.md` 与测试 `cap/test/test_safety_complete.cp` (5/5 PASS)。
+- [feat(clap)]: 从 Bun 吸收构建 `lib/clap/`（`args.cp`, `streaming.cp`, `comptime.cp`, `clap.cp`, `index.cp`），新增 `docs/stdlib/clap.md` 与测试 `cap/test/test_clap_complete.cp` (6/6 PASS)。
+- [feat(s3)]: 全量吸收 Bun S3 运行时构建 `lib/s3/`（`simple_request.cp`, `list_objects.cp`, `multipart.cp`, `download_stream.cp`, `client.cp`, `signing.cp`），新增 `docs/stdlib/s3.md` 与测试 `cap/test/test_s3_complete.cp` (6/6 PASS)。
+- [fix(cpc)]: 编译器底层缺陷修复：
+  - `cpc/src/codegen/expr.rs`：修复变量类型回退至 `*anyopaque` 时，`starts_with('*')` 误判为已是指针而剥离取地址符 `&` 的问题（增加 `!= "*anyopaque"` 约束）。
+  - `cpc/src/codegen/stmt.rs`：修复栈缓冲区数组在 while 循环中被误判为未初始化变量的重置问题。
+- [feat(glob)]: 补全 `lib/glob/matcher.cp`（支持花括号展开 `{a,b}` 与字符集），新增 `lib/glob/walker.cp` 原生目录遍历引擎；新增 `docs/stdlib/glob.md` 与测试 `cap/test/test_glob_complete.cp` (4/4 PASS)。
+- [fix(cpc)]: 编译器自愈修复：
+  - `cpc/src/codegen/mod.rs`：`cp_not` 升级为 `inline fn cp_not`，确保 Zig 0.17 comptime 分支求值正常。
+  - `cpc/src/codegen/types.rs`：修复 `.get()` fallback 为 `?Message` 导致误插 `.?` 的类型推导缺陷。
+  - `cpc/src/codegen/prelude.rs`：`scan_decl` 增加智能指针声明识别，自动激活 `has_imported_ptr`。
+- [feat(col)]: 全面补全 `lib/col/bit_set.cp`, `baby_list.cp`, `linear_fifo.cp`, `bounded_array.cp`，对齐 Bun 原生容器标准库，新增 `docs/stdlib/col.md`。
+- [feat(conf)]: 全量补齐 `lib/conf/ini.cp` 与 `toml.cp`，新增 `docs/stdlib/conf.md`。
+
+### 2026-11-17
+
+- [Docs] Standardize all library files with `// Source: ...` lineage annotations.
+
+- 修复 cap:bigint（算术改用 zig 块，避开 Managed 指针传递转译问题），重写 PriorityQueue（最小堆，无需 allocator 参数），Treap 改为可编译占位。相关测试全部通过。
+
+- 修正溯源标注：此前脚本把未识别文件一律标 Custom（误标 323 个）。现改为：有 Bun 来源线索 131 个标 Bun+路径；192 个标 UNVERIFIED 待确认。新增 scripts/fix_lineage.py。test_http_full 为既有失败（*T/*const T），与本次无关。
+
+- 溯源二次校验：按标识符重合度对照 /data/dev/bun/src 自动匹配 101 个文件（标注 needs review）；仅修改各文件第 1 行头部注释（git numstat 验证每文件 +1/-1）。剩余 91 个 UNVERIFIED。
+
+- 溯源三次校验：index.cp 29 个标为 Custom(agy 生成导出入口)；17 个按同名匹配 Bun（name-matched, needs review）；仍有 45 个 UNVERIFIED。仅改第 1 行。
+
+- 溯源四次校验：依据 CHANGELOG/SESSION 记录确认 16 个文件来源（Bun/Zig std/Custom），仅改第1行；剩余 29 个 UNVERIFIED 待用户判断。
+
+- 2026-11-19: Enhanced `H2Stream` in `lib/http/h2/client.cp` by adding state transition methods (`rst`, `sentEndStream`, `recvEndStream`, `localClosed`, `remoteClosed`) ported from Bun's `h2_client/Stream.cp`.
+
+## 2026-11-19
+
+- 完成 `lib/napi/napi.cp` 的架构重构，将 `class Napi` 重构为符合 CP 规范的 `struct` 模块化形式（符合数据/行为解耦）。
+- 完成 threading 资产迁移 (channel, condition, futex, mutex, pool, thread_pool, etc.)
+
+## 2026-11-19
+
+- 完成 `lib/threading/` 资产迁移，已实现 FFI shim 隔离与 CP 原生 API 封装。
+- 确认 `lib/napi/napi.cp` 已完全符合 CP 模块化规范（struct 封装）。
+- 完成 blob 及 encoding 资产迁移
+
+## 2026-11-19
+
+- 完成 `lib/blob/` 和 `lib/encoding/` 资产迁移，已实现 FFI shim 隔离与 CP 原生 API 封装。
+- 确认资产符合 CP 架构设计准则，已通过初步审计。
+
+## 2026-11-19
+
+- `lib/blob/` 合规审计通过，确认实现零拷贝引用借用与 RAII 资源管理。
+- 完成 url 资产迁移
+
+## 2026-11-19
+
+- 完成 `lib/url/` 资产迁移，已完成 FFI shim 隔离封装，并通过初步自动化构建测试。
+
+## 2026-11-19
+
+- `lib/url/` 合规审计通过，确认实现 RAII 确定性内存释放与协议解析逻辑。
+- 完成 valkey 资产迁移
+
+## 2026-11-19
+
+- 完成 `lib/valkey/` 资产迁移，实现高性能 Valkey 协议解析。
+- **项目阶段验收完成**：核心资产组全部迁移并审计合规。
+- 优化 Valkey 协议解析，减少内存拷贝，适配 RAII
+
+## [2026-11-19] Hotfix: Fix anyerror!void optionality mapping
+
+- 修复 `cpc/src/codegen/types.rs` 中 `type_to_display_string` 对 `ResultType` 的转译 Bug，确保 `anyerror!void` 正确映射为 `anyerror!void`。
+- 联动 `Optional` 类型，使得 `?anyerror!void` 能被正确生成。
+- 通过 `bash scripts/sync_cpc.sh` 完成原子构建校验，验证修复有效。
+- 完成 crypto 资产迁移
+- 重构 cipher.cp 和 hash.cp，统一为静态 struct 模块化设计
+
+## [2026-11-19] Hotfix: Fix export { ... } from ... symbol export
+
+- 修复 `cpc/src/codegen/mod.rs`：在生成 Zig 代码时，添加了对 `export { ... } from ...` 语句的显式 `pub const` 别名生成，确保导出的符号在 `main.zig` 中可被正确引用，解决了缺失 import 引用的问题。
+- 通过 `bash scripts/sync_cpc.sh` 完成原子构建校验，验证修复有效。
+
+## [2026-11-19] Hotfix: Fix zlib linking failure in capsurf (automatic library path detection)
+
+- 修正 `cpc` 编译器前端：在 `Codegen::new()` 中新增自动探测 linux 环境下的 `/lib64` 和 `/usr/lib64` 标准库搜索路径的逻辑。
+- 在 `generate_module` 中新增逻辑，将探测到的库路径以及 `zlib` 的链接需求以 `// @linkPath` 和 `// @linkLibrary` 的形式 emit 到生成的 Zig 代码中，以便下游构建系统（capsurf）正确配置链接器。
+- 修复了 Rust 编译器的 borrow checker 错误（通过 clone `linker_paths`）。
+- 构建校验：`bash scripts/sync_cpc.sh` 构建通过。
+
+## 2026-11-19
+
+- 修改 `build.zig`，为 vendored 库编译添加 `-DAT_HWCAP=16` 预定义宏以修复 Zig 0.17.0 兼容性。
+  hotfix: resolve keyword conflict for "test" and prevent redundant re-export of imports
+
+- 2026-11-19: Initialized `lib/bundler/bundle.cp` and began migrating `BundleV2` struct.
+
+## [2026-11-19] Hotfix: 完善 cap 工具链链接参数与下游 capsurf 编译自愈
+
+- **cap/src/project/manifest.zig**:
+  - `Manifest` 结构体新增 `bin_dependencies` 字段及其 JSON 解析、保存与释放逻辑。
+  - `BuildConfig` 结构体新增 `entry` 字段支持指定入口文件。
+- **cap/src/main.zig**:
+  - 新增 `addArg`（去重参数追加）、`scanZigFileForLinkPragmas`（扫描转译生成 Zig 代码头部的 `@linkPath` 与 `@linkLibrary` 指令）。
+  - 新增 `appendLinkArgs` 统一收集 uSockets、QuickJS vendor 路径、`bin_dependencies`、`build.c_flags` 和 `build.link_libs` 参数。
+  - 在 `handleRun`、`handleBuild`、`compileSingleFile`、`handleTest`、`runFuzzSingleFile` 中接入动态链接参数生成。
+  - 修正目标架构为 native 时的输出目录逻辑，使主程序产物精准写入 `bin/main`。
+- **/data/dev/cp/TASK_QUEUE.jsonl**:
+  - 标记 `task-capsurf-20261119-compiler-bug` 为 `resolved`。
+- **/root/.agy/comm/cp-bun-capsurf.jsonl**:
+  - 向下游韧性协作总线派发结单通知，解除 capsurf 阻塞状态。
+
+## [2026-11-19] cap bin & sys 依赖按需编译实装与中央索引集成
+
+- **lib/cap.json**:
+  - 提炼中央库索引，剔除纯 CP 模块，仅保留含底层 C/二进制与系统动态库依赖的 `http`, `net`, `zlib`。
+  - 为 `picohttpparser` 与 `usockets` 配置 Zig 编译所需的 `sources`, `include_dirs`, `c_flags`, `opt` 参数。
+- **cap/src/project/manifest.zig**:
+  - 增加 `BinDependencyConfig`、`SysDependencyConfig`、`CentralLibEntry`、`CentralLibIndex` 结构体。
+  - `Manifest` 的 `bin_dependencies` 升级为支持对象型配置（含 C 编译参数与构建命令）。
+  - 实现按 target triple 动态转换系统库为链接参数（如 `libz.so.1` -> `-lz`）。
+- **cap/src/main.zig**:
+  - 新增 `resolveSearchPath`、`loadCentralLibIndex`、`scanSourceForCapImports`。
+  - 新增 `buildCWithZig`：无外部编译器依赖，直接使用 `zig build-lib` 交叉编译 C/C++ 源码输出目标平台 `.a` 静态库。
+  - 新增 `resolveBinDependency`：优先检索已有预编译静态库，缺失时现场按需编译。
+  - 在 `appendLinkArgs` 中打通源码 `cap:*` 导入与中央索引关联 C/动态库的自动参数注入。
+  - 在 `fetchAndLink` 中实装 `precompilePackageBinDeps`，在 `cap install` 安装包时预先编译静态库。
+- **cap/test/test_bin_sys_on_demand.cp**:
+  - 新增正式回归测试用例，验证导入 `cap:http` 时自动触发 `libpicohttpparser.a` 按需编译与链接。
+
+## [2026-11-20] 工业级 Gzip / Zlib 压缩引擎重构与全景特性吸收
+
+- **lib/pack/\_codecs.cp**:
+  - 增加 `pub type ZStream = z_stream_s;` 大写类型别名，符合 CP 结构体字面量语法规范。
+  - 新增 `pub struct NativeZlib` 容器，封装 `deflateInit2_`、`deflate`、`deflateEnd`、`deflateBound`、`inflateInit2_`、`inflate`、`inflateEnd`、`crc32` 等 C-FFI 声明，消除与顶层导出函数的命名冲突。
+- **lib/pack/gzip.cp**:
+  - 重构并扩充为 344 行工业级 Gzip & Deflate 编解码引擎。
+  - 修正 `writeTrailer` 参数遮蔽问题。
+  - 实现基于 `window_bits = 31` 的全量与流式 `compressWithWindowBits`。
+  - 实现带自动倍增扩容保障（`mut_cap * 2`）的 `decompressWithWindowBits`，自动支持任意大尺寸流式解压。
+  - 导出顶层标准 API：`gzip`、`gunzip`、`deflate`、`inflate`、`deflateRaw`、`inflateRaw`。
+  - 导出面向对象包装器：`Gzip`、`Gunzip`、`DeflateCodec`、`InflateCodec`、`DeflateRawCodec`。
+  - 完整保留 `RleCodec` 保证向后兼容性。
+- **lib/pack/index.cp**:
+  - 收敛对外暴露符号，显式导出 `NativeZlib` 与安全类型，防止内部底层声明污染。
+- **cap/test/test_pack_gzip_complete.cp**:
+  - 新增全量回归测试套件，全面覆盖 Gzip 往返、RFC 1952 帧头校验、动态倍增扩容、Zlib Deflate/Inflate、Raw Deflate/Inflate、面向对象 API 及 RLE 兼容性。
+- **cp_ref.md & cp_agent_ref.md**:
+  - 同步更新权威手册与智能体契约手册中 `cap:pack`（`cap:compress`）的功能矩阵说明。
+- **lib/pack/gzip.cp（第二阶段流式分块增强）**:
+  - 新增 `GzipStream`、`GunzipStream`、`DeflateStream`、`InflateStream` 四大流式分块管道，文件由 344 行扩充至 808 行。
+  - 采用堆安全分配机制保证底层 `ZStream` 指针稳定性，消除状态机指针悬空。
+- **lib/pack/gzip.cp（DRY 架构收敛）**:
+  - 抽离 `ZlibStreamCompressor` 与 `ZlibStreamDecompressor` 通用状态机，消除 160+ 行重复实现。
+  - 行数由 808 行精炼收敛至 647 行，保持 100% 接口与行为兼容。
+- **docs/pack/zlib.md & docs/pack/zlig.md**:
+  - 新建 `docs/pack/` 目录，编写全套 Zlib/Gzip 详细开发手册与使用指南。
+- **docs/stdlib/pack_native.md**:
+  - 更新索引指向 `docs/pack/zlib.md`。
+- *_lib/pack/_ (Brotli & Zstd 吸收与全量溯源)**:
+  - 新增 `lib/pack/brotli.cp`（吸收自 `/data/dev/bun/src/brotli/brotli.cp`，实现 `BrotliMode`、`BrotliHeader`、`Brotli`）。
+  - 新增 `lib/pack/zstd.cp`（吸收自 `/data/dev/bun/src/zstd/zstd.cp`，实现 `ZstdFrameHeader`、`Zstd`）。
+  - 更新 `lib/pack/*.cp` 共 10 个文件的首行 `// Source:` 备注，并在 `index.cp` 统一导出。
+  - 新增 `docs/pack/pack.md` 与 `cap/test/test_pack_full.cp`。
+- *_lib/col/_ (容器升级与全量溯源)**:
+  - 升级 `lib/col/treap.cp` 为完整 1-based 内联节点池平衡树堆 `Treap<K, V>`。
+  - 重构 `lib/col/leb128.cp` 为纯正现代 CP 静态编解码引擎。
+  - 增强 `lib/col/priority_queue.cp` 与 `lib/col/string_map.cp`，更新全部 13 个文件的首行 `// Source:` 备注。
+  - 新增 `docs/col/col.md` 与 `cap/test/test_col_full.cp`。
+- _*lib/encoding/* & lib/url/_ (纯正 CP 重构与全量溯源)**:
+  - 重构 `lib/encoding/base64_.cp`、`base64.cp`、`hex.cp` 及 `lib/url/url_.cp`、`url.cp`、`percent.cp`、`search_params.cp` 为 100% 纯正现代 CP 语法，更新全部 10 个文件的首行 `// Source:` 备注。
+  - 新增 `docs/encoding/encoding.md`、`docs/url/url.md` 与 `cap/test/test_encoding_url_full.cp`。
+- **lib/path/_, lib/glob/_, lib/semver/_, lib/which/_ (完备性加固与全量溯源)**:
+  - 修复 `PosixPath/WindowsPath.extname("..")` 边界，优化 `GlobMatcher`，增强 `semver/query.cp` 独立算子空格兼容，将 `which.cp` 重写为纯正 CP 语法并增加 `opendir` 目录排除校验，更新全部 16 个文件的首行 `// Source:` 备注。
+  - 新增 `docs/path/path.md`、`docs/glob/glob.md`、`docs/semver/semver.md`、`docs/which/which.md` 与 `cap/test/test_path_glob_semver_which.cp`。
+- *_lib/sourcemap/*, lib/patch/*, lib/hash/_ (功能增强与全量溯源)**:
+  - 为 `LineDiffer` 新增 `editDistance`，为 `Hash` 新增 `wyhash`、`djb2`、`fnv1a32` 与 `WyhashStream`，更新全部 12 个文件的首行 `// Source:` 备注。
+  - 新增 `docs/sourcemap/sourcemap.md`、`docs/patch/patch.md`、`docs/hash/hash.md` 与 `cap/test/test_sourcemap_patch_hash.cp`。
+- *_lib/dotenv/*, lib/conf/*, lib/clap/_ (配置提取器增强与全量溯源)**:
+  - 增强 `EnvMap.parse`、`ConfGetter`、`YamlDoc` 并优化 `clap.cp` 符号隔离，更新全部 15 个文件的首行 `// Source:` 备注。
+  - 新增 `docs/dotenv/dotenv.md`、`docs/conf/conf.md`、`docs/clap/clap.md` 与 `cap/test/test_conf_dotenv_clap.cp`。
+- *_lib/ptr/*, lib/safety/*, lib/event_loop/_ (缺陷修复与全量溯源)**:
+  - 修复 `lib/ptr/ref_count.cp` 中 `ThreadSafeRefCount.deref` 原子递减缺陷，重命名 `PtrThreadLock` 消除跨库导入符号碰撞，更新全部 25 个文件的首行 `// Source:` 备注。
+  - 新增 `docs/ptr/ptr.md`、`docs/safety/safety.md`、`docs/event_loop/event_loop.md` 与 `cap/test/test_ptr_safety_event_loop.cp`。
+- _*lib/s3/*, lib/security/*, lib/redis/* & lib/valkey/_ (预签名 URL、流式多帧解析器与纯 CP 重构)**:
+  - 在 `lib/s3/simple_request.cp` 与 `client.cp` 中新增 `buildPresignedUrl` / `presignUrl`。
+  - 在 `lib/security/csrf.cp` 中补齐 `u64` 防溢出守卫与 60s 时钟偏移守卫。
+  - 重构 `lib/valkey/valkey_protocol_.cp` 与 `valkey_protocol.cp` 为纯正现代 CP 语法，在 `lib/redis/resp.cp` 新增 `ValkeyReader` 与 RESP3 编码器，更新全部 16 个文件的首行 `// Source:` 备注。
+  - 新增 `docs/s3/s3.md`、`docs/security/security.md`、`docs/redis/redis.md` 与 `cap/test/test_s3_security_redis.cp`。
+- *_lib/string/*, lib/simd/*, lib/sort/_ (Highway 级 SIMD 向量扩充与全量溯源)**:
+  - 修复 `lib/string/builder.cp` 空切片引用，为 `SmolStr` 补齐 `isInline`/`isInlined`。
+  - 在 `lib/simd/index.cp` 中完整实装 16/32 字节 SIMD 字节扫描与无分支大小写转换，更新全部 13 个文件的首行 `// Source:` 备注。
+  - 新增 `docs/string/string.md`、`docs/simd/simd.md`、`docs/sort/sort.md` 与 `cap/test/test_string_simd_sort.cp`。
+
+- *_lib/crypto/*, lib/sql/*, lib/dns/_ (去 Zig 残留、零堆分配接口与全量溯源)**:
+  - 恢复/增强 `hash.cp`、`cipher.cp`，新增 `*Raw`/`pbkdf2Into`/`randomUUIDInto`、`TlsHostnameVerifier`、`PostgresWire.encodeStartupMessage`/`encodePasswordMessage`、`HostsTable`；清理 `boringssl.cp`；18 个文件首行 `// Source:`。
+  - 新增 `docs/crypto/crypto.md`、`docs/sql/sql.md`、`docs/dns/dns.md`、`cap/test/test_crypto_sql_dns.cp`。
+- *_lib/sync/*, lib/threading/*, lib/mem/_ (并发缺陷修复、MaxHeapAllocator 吸收与全量溯源)**:
+  - `UnboundedQueue` 可选指针语法升级，修复 `ConcurrentMap`/`Condition`/`BumpArena`/`MaybeOwnedBuf` 编译问题，`lib/mem/allocator.cp` 新增 `MaxHeapAllocator`；41 个文件首行 `// Source:`。
+  - 新增 `docs/sync/sync.md`、`docs/mem/mem.md`、`cap/test/test_sync_mem_full.cp`。
+- *_lib/shell/*, lib/watch/*, lib/watcher/*, lib/elf/*, lib/ffi/_ (管道缓冲所有权修复与全量溯源)**:
+  - `exec.cp` 管道中转缓冲与所有权移交，`builtin.cp` 新增 `cat`，`parser.cp` 指针接收者修正，watch/watcher 统一事件类型，`layout.cp` 新增 `fieldOffset`；20 个文件首行 `// Source:`。
+  - 新增 `docs/shell/shell.md`、`docs/watch/watch.md`、`docs/elf/elf.md`、`docs/ffi/ffi.md`、`cap/test/test_shell_watch_elf_ffi.cp`。
+- **cp_ref.md & cp_agent_ref.md**: 同步第三批 9 个标准库专著文档索引与协议矩阵详见链接。
+- *_lib/http/_ (含 h2/h3, 31 个文件纯现代 CP 重构与全量溯源)**:
+  - 31 个 `.cp` 补齐 `// Source:`，清零遗留 Zig 语法与只读方法误用 `*_` 缺陷；新增 `docs/http/http.md` 与更新 `cap/test/test_http_full.cp`。
+- *_lib/net/*, lib/ws/*, lib/router/*, lib/io/*, lib/sys/_ (Zig 0.17 std.c 适配与全量溯源)**:
+  - 30 个 `.cp` 补齐 `// Source:`，修复 `ws/frame.cp`、`router/{index,param_map,radix}.cp`、`sys/{fd,stat,file,copy_file,tmp,signal}.cp`；新增 5 份文档与 `cap/test/test_net_io_full.cp`。
+- *_lib/json/*, lib/md/*, lib/html/*, lib/image/*, lib/blob/_ (清理死文件、缺陷修复与全量溯源)**:
+  - 删除 `lib/blob/` 8 个零引用遗留文件，重构 `JsonBufferPool`，修复 `json/parser.cp` 与 `image/{gif,exif,jpeg,thumbhash,pipeline}.cp`，`lib/cap.json` 新增 `image` 静态 zlib 配置；新增 5 份文档与 `cap/test/test_json_md_html_image_blob.cp`。
+- **cp_ref.md & cp_agent_ref.md**: 同步第四批 11 个标准库专著文档索引与协议矩阵（补充 `cap:sys` 与 `cap:blob`）。
+- **lib/css/** (100 个文件溯源校准与核心清理)**:
+  - 100 个 `.cp` 首行标准化为 `// Source: /data/dev/bun/src/css/...`，清理 `length.cp`/`stylesheet.cp` 遗留 `orelse`；新增 `docs/css/css.md`、`cap/test/test_css_full.cp`。
+- *_lib/bench/*, lib/cli/*, lib/napi/*, lib/bigint/*, lib/event/_ (19 个文件现代化改造与全量溯源)**:
+  - 重构 `lib/napi/{_napi,napi,index}.cp`（纯 CP Node-API v9 布局），`lib/event/emitter.cp` 新增 64 槽零堆分配 `EventBus`，清理 `bigint`/`event` 旧语法；新增 5 份专著文档与 `cap/test/test_bench_cli_napi_bigint_event.cp`。
+- *_lib/bundler/_ & lib/{actor,beam,fs,parallel,reflect,serde,sqlite,stream,test,worker}.cp (收尾全覆盖)**:
+  - 升级 `lib/bundler/bundle.cp`（`BundleV2`/`ChunkOrder`）并新增 `lib/bundler/index.cp`，清理 `fs.cp`/`reflect.cp`/`serde.cp`/`stream.cp` 头部与旧语法；新增 4 份专著文档与 `cap/test/test_core_runtime_bundler.cp`。
+- **新吸收三大 Bun 高价值资产 (`lib/errno/`, `lib/logger/`, `lib/string/wcwidth.cp`)**:
+  - 新增 `lib/errno/{errno,index}.cp`、`lib/logger/{logger,index}.cp`、`lib/string/wcwidth.cp`（导出至 `lib/string/index.cp`）。
+  - 新增 `docs/errno/errno.md`、`docs/logger/logger.md`，更新 `docs/string/string.md`，新增 `cap/test/test_bun_new_assets.cp`。
+- **cp_ref.md & cp_agent_ref.md**: 同步第五批 12 份专著文档索引与协议矩阵（补充 `cap:errno`/`cap:logger`/`cap:napi`/`cap:bigint`/`cap:bundler` 及 `stringWidth`）。
+
+### 2026-11-20（`cpc` 6 项 `bun_agy` 热修 + `event_loop` 合并回 `event` + 4 组重复目录清理）
+
+- **cpc 编译器加固 (`cpc/src/codegen/{mod,actor,stmt}.rs`, `cpc/src/resolver.rs`)**:
+  - 修复 6 条 `bun_agy` 阻断工单：内部运行时错误类型更名为 `const __CpErr` 并按需导出 `Err`/`Error`；prelude、trait `downcast`、RAII `defer` 块及 enum 辅助方法内部形参/局部变量全面加 `__cp_` 前缀根治遮蔽；enum `get`/`fromName` 限定 `@This().fromString` 或直调 `std.meta.stringToEnum(@This(), __cp_s)`。
+  - 修复 `async fn` 中 `import { print } from "cap:io"` 丢失 `print` 定义问题；`resolver.rs` 统一映射 `event_loop -> event`、`valkey -> redis`。
+- **标准库去重与合并**:
+  - **合并 `lib/event_loop/` -> `lib/event/`**：融合配对最小堆 `TimerHeap`、`AutoFlusher`、`ConcurrentTaskQueue`/`ConcurrentQueue`、`DeferredTaskQueue`、`AnyTaskWithExtraContext`、栈/堆双模安全 `ManagedTask` 与懒初始化 `PollEngine` 的 `EventLoop`；合并文档至 `docs/event/event.md` 并删除 `lib/event_loop/`、`docs/event_loop/`。
+  - **清理 3 组冗余目录**：合并 `lib/valkey/` -> `lib/redis/protocol.cp`、合并 `lib/watch/` -> `lib/watcher/{filter,file_watcher}.cp`（文档迁至 `docs/watcher/watcher.md`）、清理零引用的历史旧目录 `lib/threading/`。
+  - 更新适配 `cap/test/test_event_loop.cp`、`cap/test/test_bench_cli_napi_bigint_event.cp`、`cap/test/test_shell_watch_elf_ffi.cp`，9/9 回归套件 100% PASS。
+- **GEMINI.md**: 更新多 AGY SQLite 通信命令为绝对路径 `/root/.agy/comm/task_queue.py`。
+
+### 2026-11-20（12 大核心标准库对标 Bun 深度补全里程碑：glob/semver/dotenv/patch + http/router/sql + path/sourcemap/io/sys/errno）
+
+- **第一路 (`lib/glob`, `lib/semver`, `lib/dotenv`, `lib/patch`)**：
+  - `lib/glob/`: 完整递归 `**`、多层嵌套花括号展开 `{a,b}`、UTF-8 码点字符类 `[a-z]`/`[!a-z]`、`GlobMatchOptions`（大小写/路径规范化/dot）与 `Glob.scanSync` 真实目录遍历。
+  - `lib/semver/`: 完整 Semver 2.0 `parseStrict`/`parseLoose`、Section 11 大整数安全 prerelease 排序、完整 Range（`~>`/`==`/`1.0.0 - *`/`include_prerelease`）、`sort`/`rsort`/`validRange`。
+  - `lib/dotenv/`: BOM/CRLF/UTF-8 空白兼容、`export`、多行引号转义、`${VAR:-default}` vs `${VAR-default}` 与嵌套展开、偏移索引值语义重定位安全。
+  - `lib/patch/`: 多文件/多 Hunk Unified Diff 解析（含 `\ No newline at end of file`、新增/删除/重命名/权限）、精确/偏移/模糊三阶容错 `apply`、零堆 Myers $O(ND)$ 差分与 `diffLines` 标准 Unified Diff 生成。
+- **第二路 (`lib/http`, `lib/router`, `lib/sql`)**：
+  - `lib/http/`: 新增 `chunked.cp`（RFC 9112 流式 1 字节边界解码与 Trailers）、`redirect.cp`（301/302/303/307/308 方法重写、URL 合并、环路检测与跨域脱敏）；补全 `HttpConnectionPool`、`HttpProxyTunnel` + `NoProxyMatcher`（Basic Auth / CIDR）、`ContentEncodingNegotiator` 与对接 `cap:pack` 的 `StreamingDecompressor`。
+  - `lib/router/`: 升级 5 级严格优先级回溯 Radix 引擎与 `TrailingSlashMode`；新增 `fs_router.cp`（`FileSystemRouter` 支持 `[slug]`/`[...all]`/`[[...opt]]`/`(group)` 与磁盘扫描）。
+  - `lib/sql/`: 补全 Postgres v3 扩展查询（`Parse`/`Bind`/`Describe`/`Execute`/`Sync`）、RFC 5802/7677 `ScramSha256Client` 与全后端帧解码；补全 MySQL v10 握手/lenenc/命令帧编码；新增 SQLite 扩展 C-ABI、`SqlValue`、`SqlConnectionPool` 与多方言 `SqlTransactionStateMachine`。
+- **第三路 (`lib/path`, `lib/sourcemap`, `lib/io`, `lib/sys`, `lib/errno`)**：
+  - `lib/path/`: 补齐 POSIX/Windows 双模式 `parse`/`format`/`resolve`/`relative`/`normalize`/`toNamespacedPath`、UNC `\\?\UNC\server\share` 与多盘符边界处理。
+  - `lib/sourcemap/`: 升级 `u64`/`VLQ64` 全边界编解码、新增 `MappingList`（排序 + 二分查找）、UTF-8 ↔ UTF-16 行列转换、`ParsedSourceMapRecord.toJSON()` 与 `SourceMapChunk` 多段合并。
+  - `lib/io/`: 补全 `BufferedReader`（`readLine`/`readUntil`/`peek`/`discard`/`readFull`）、`BufferedWriter`（阈控刷盘与大块直通）、`LimitedReader`/`MultiReader`/`TeeReader`/`DiscardWriter`/`CountingWriter`/`ChunkedBuffer`。
+  - `lib/sys/` & `lib/errno/`: 零 `std.posix` 残留全面适配 Zig 0.17 `std.c`/`std.os.linux`，新增 `fs_ops.cp` 与 `process.cp`；`lib/errno/` 扩充至 135 项完整 POSIX/Linux 错误码、全量英文 `description()` 与语义判定。
+- **文档与测试**：同步更新 12 份 `docs/<lib>/<lib>.md` 专著文档，新增 3 套综合深度测试（`test_glob_semver_dotenv_patch_deep.cp`、`test_http_router_sql_deep.cp`、`test_path_sourcemap_io_sys_errno_deep.cp`），10/10 联合回归测试套件 100% PASS，全库 405/405 `.cp` 文件 `// Source:` 100% 合规。
+
+### 2026-11-20（`cpc` 编译器五阶段零回归模块化重构收官）
+
+- **Stage 1 (`cpc/src/codegen/mod.rs`: 4,330 -> 1,499 行)**：拆分为 `runtime_emit.rs`、`decl_enum.rs`、`decl_class.rs`、`zig_escape.rs` 并抽离独立 Zig 模板 `cpc/src/codegen/runtime/json.zig`（`include_str!`）。
+- **Stage 2 (`cpc/src/codegen/expr.rs`: 4,957 行 -> 6 文件)**：打碎 4,631 行巨型 `generate_expr`，拆为 `expr/{mod,call,builtin,error_flow,ops,control}.rs`。
+- **Stage 3 (`cpc/src/parser.rs`: 9,568 行 -> 8 文件)**：拆为 `parser/{mod,decl,container,types,stmt,pattern,expr,primary}.rs`（全员 < 2,000 行）。
+- **Stage 4 (`cpc/src/sema.rs`: 7,310 行 -> 7 文件)**：拆为 `sema/{mod,macros,decl,stmt_expr,safety,coerce,type_infer}.rs`（全员 <= 1,407 行）。
+- **Stage 5 (`cpc/src/codegen/types.rs`: 2,927 行 -> 4 文件)**：拆为 `codegen/types/{mod,infer_cp,infer_zig,map_type}.rs`（全员 <= 1,305 行）。
+- **门禁脚本**：新增 `scripts/check_cpc_size.sh` 文件体积检查脚本；全部 5 个阶段均通过 10 套核心测试 **10/10 确定性 SHA256 逐字节零差异验证** + 端到端 `cap test` 全绿回归。
+
+### 2026-11-20（第二批 8 大核心标准库对标 Bun 深度补全里程碑：md/html/json/ws + shell/napi/elf/logger）
+
+- **第一路 (`lib/md`, `lib/html`, `lib/json`, `lib/ws`)**：
+  - `lib/md/`: 新增 `ast.cp` 与 `parser.cp`（1,629 行），实现完整 CommonMark + GFM 引擎（ATX/Setext 标题 + 去重 `headingIds`、围栏/缩进代码、嵌套引用/有序无序列表、GFM 表格含 `\|` 转义、任务列表、删除线、多反引号行内代码、链接/图片/引用定义、自动链接与 XSS 安全转义）。
+  - `lib/html/`: 新增 `tokenizer.cp`（HTML5 全量词法器 + `<script>`/`<style>` RawText 模式），升级 `escape.cp`（86 个命名实体 + 十/十六进制 Emoji 实体），升级 `selector.cp`（复合选择器与栈追踪 `HtmlRewriter` 全量元素操作）。
+  - `lib/json/`: 升级 `parser.cp`（SIMD 零拷贝快路径 + RFC 8259 完整转义与 UTF-16 代理对 4 字节 UTF-8 Emoji 解码 + 严格拒绝前导零/尾随逗号/非法控制字符 + 嵌套深度保护）；新增 `serializer.cp`（`stringify`/`stringifyPretty`）；`value.cp` 新增 RFC 6901 `pointer` 与键序无关 `equals`。
+  - `lib/ws/`: 升级 `opcode.cp`/`mask.cp`（16B SIMD 异或掩码）/`frame.cp`（RSV/64-bit/控制帧校验与 ClosePayload）；新增 `handshake.cp`（基于 `cap:crypto` SHA-1 + Base64 真实计算 `Sec-WebSocket-Accept`）与 `assembler.cp`（多帧分片重组、交错控制帧与 Auto-Pong 状态机）。
+- **第二路 (`lib/shell`, `lib/napi`, `lib/elf`, `lib/logger`)**：
+  - `lib/shell/`: 新增 `env.cp`（`ShellEnv`、`DirStack`、单/双引号区分与 `${VAR:-/:=/:+/#}` 展开）；升级 `lexer.cp`/`parser.cp`/`builtin.cp`/`exec.cp` 支持 23 条进程内 Builtin（`echo`/`printf`/`cat`/`test`/`[`/`cd`/`pushd`/`popd`/`env`/`export`/`unset`/`head`/`wc`/`mkdir`/`rm` 等）、左结合 `&&`/`||`/`;` 短路及 `<`/`>`/`>>`/`2>`/`2>&1`/`&>` 真实文件与内存重定向。
+  - `lib/napi/`: 补齐全部 24 项 `NapiStatus`、`Float16`、完整 N-API v9 结构体；新增 `runtime.cp`（819 行：`HandleScope`、`Reference`、`AsyncWork`、`ThreadsafeFunction` 环形队列与离线 `NapiEnvMock`）。
+  - `lib/elf/`: 新增 `elf64.cp`（653 行：`Elf64File` 完整解析 Phdr/Shdr/Symtab/Strtab/Dynamic `DT_NEEDED`/`soname`/`rpath`）与 `ExeFormat.detect`（ELF32/64、Mach-O 32/64/Fat、PE、WASM、Shebang），实测解析当前 `/data/dev/cp/cap/bin/cpc`。
+  - `lib/logger/`: 升级 `logger.cp` 支持 `LineIndex` $O(\log N)$ 行缓存、跨文件 `DiagNote` 副定位标尺、`max_errors` 熔断器、`merge` 与 `formatJson` 机器可读输出。
+- **文档与测试**：同步更新 8 份 `docs/<lib>/<lib>.md`，新增 `cap/test/test_md_html_json_ws_deep.cp` 与 `cap/test/test_shell_napi_elf_logger_deep.cp`；6/6 联合回归套件 100% PASS，全库 414/414 文件 `// Source:` 100% 合规。
+
+### 2026-11-20（Batch 3 八大标准库深度审核补全里程碑：string/blob/image/mem + ffi/bigint/bench/cli）
+
+- **第一路 (`lib/string`, `lib/blob`, `lib/image`, `lib/mem`)**：
+  - `lib/string/`: 补齐 UTF-8 ↔ UTF-16LE 代理对严格编解码、`GraphemeIterator`（UAX #29：CRLF/ZWJ/国旗 Regional Indicator/Hangul Jamo）、`escapeJs` 与新增 `utils.cp`（441 行 SIMD `isAllAscii`/`eqlIgnoreCaseAscii`/`indexOf`/`split`/`replaceAll`/`trim`）。
+  - `lib/blob/`: 补齐负索引 `sliceSigned`、`Blob.concat`/`equals`/`stream`（`BlobChunkReader`）；修复 `Blob.fromFile` 安全返回 `null`；补齐 `File` `exists`/`write`/`delete` 与真实 `statx` `lastModified`。
+  - `lib/image/`: 全面审核 11 文件并清零隐患：修复 `thumbhash.cp` `toDataUrl` 占位符为真实 Base64 编码、修复 `gif.cp` `Gif.decode` 编译与对齐缺陷、补全 `ImageFormat.detect`/`probeDimensions`（PNG/JPEG/GIF/WebP/BMP/ICO/SVG）、Indexed PNG `PLTE`/`tRNS` 及双线性缩放/滤镜管线。
+  - `lib/mem/`: 新增 `primitives.cp`（`volatile` `secureZero` + 对齐原语）、`fixed_buffer.cp`（`FixedBufferAllocator`）、`pool.cp`（防 double-free `SlabPool`）并加固 `BumpArena`/`RefCounter` 边界校验。
+- **第二路 (`lib/ffi`, `lib/bigint`, `lib/bench`, `lib/cli`)**：
+  - `lib/ffi/`: 补齐 16 种 C-ABI 类型矩阵、真实 POSIX `dlopen`/`dlsym`/`dlclose`/`dlerror`（实测加载调用 `strlen`/`abs`）、嵌套/`#packed` `CStructLayout`、零拷贝 `CString` 与 `FfiCallbackDesc`。
+  - `lib/bigint/`: 补全任意精度 `BigInt` 全套四则/`divMod`/`mod`/位运算/`pow`/`modPow`/`gcd`/多进制双向转换，及 `BigInt256` 除模/移位/位运算/溢出检测。
+  - `lib/bench/`: 吸收 Bun `src/perf/` 资产，新增 `trace.cp`（零堆 `TraceRingBuffer`/`PerfTrace` Chrome Trace JSON）与 `suite.cp`（`BenchSuite` 预热与 Markdown/JSON 报告），升级 `BenchStats` 至 512 槽 Welford 方差与 P50/P75/P90/P95/P99/P999 分位数。
+  - `lib/cli/`: 补齐 16/256/TrueColor RGB 与 `stripAnsi`、`Terminal.getSize`（Linux `ioctl TIOCGWINSZ`）、`Spinner`、`ProgressBar` ETA/吞吐、以及集成 `cap:string` `stringWidth` 精准宽字符对齐的 `CliTable`（Ascii/Box/Markdown 边框）。
+- **文档、测试与编译器正式版**：同步更新 8 份 `docs/<lib>/<lib>.md`，新增 `test_string_blob_image_mem_deep.cp` 与 `test_ffi_bigint_bench_cli_deep.cp`；发布 `cpc` Release 优化正式版（`bash scripts/sync_cpc.sh release`）并更新 `GEMINI.md`。

@@ -1084,7 +1084,7 @@ switch (msg) {
 | `cap:security` | `CSRF`（`generate`, `verify`, `generateRaw`, `verifyRaw`, `generateRawAt`, `verifyRawAt`）, `TokenFormat`, `constantTimeEql` | 防 CSRF 签名、时钟偏移与防溢出保护及恒定时间安全比对（详见 `docs/security/security.md`） |
 | `cap:reflect` | `reflect.type<T>()`, `reflect.of()`, `reflect.has()`, `reflect.hasField()`, `reflect.hasMethod()` | 编译期与运行时统一反射内省库（详见 `docs/runtime/runtime.md`） |
 | `cap:errno` | `SystemErrno`（65 POSIX/Linux 错误码、`fromCode`, `toCode`, `codeName`, `description`, `isRetryable`, `isNotFound`, `isPermissionDenied`, `isNetworkError`） | 跨平台系统错误码映射与语义判定（吸收自 Bun `src/errno`，详见 `docs/errno/errno.md`） |
-| `cap:logger` | `LogLevel`, `Loc`, `Range`, `LineCol`, `Source`, `DiagMsg`, `Log` | 零堆分配结构化诊断日志引擎（源码定位、ANSI 标尺高亮、错误计数，吸收自 Bun `src/logger`，详见 `docs/logger/logger.md`） |
+| `cap:logger` | `LogLevel`, `Loc`, `Range`, `LineCol`, `Source`, `DiagMsg`, `Log`, `StructuredLogger`, `LogFormatter`, `LogFormat`, `TraceParent`, `TraceState`, `Span`, `RatioSampler`, `BurstSampler`, `RingLogBuffer<CAP>` | 诊断日志、结构化 JSON/Logfmt/脱敏日志、W3C Trace Context/Span OTel 追踪与限流环形采样器（详见 `docs/logger/logger.md`） |
 | `cap:napi` | `Napi`, `NapiError`, `NapiStatus`, `NapiValueType`, `NapiModule`, `NapiPropertyDescriptor`, `NapiAddonRegistry` | 纯 CP Node-API v9 C-ABI 布局与原生插件桥接（详见 `docs/napi/napi.md`） |
 | `cap:bigint` | `BigInt`, `BigInt256` | 任意精度大整数与 EVM/Web3 256 位定宽大数运算（详见 `docs/bigint/bigint.md`） |
 | `cap:bundler` | `BundleTarget`, `OutputFormat`, `ChunkKind`, `ChunkOrder`, `ChunkEntry`, `BundleConfig`, `BundleV2`, `CompileTarget`, `StandaloneModuleGraph`, `ModuleGraph`, `Metafile`, `MetafileInput`, `MetafileOutput`, `CodeSplitter`, `AssetManifest` | 静态打包、跨平台目标、单文件虚拟 FS、拓扑/Tree-Shaking、`Metafile` 分析与多入口代码分割（详见 `docs/bundler/bundler.md`） |

@@ -13,6 +13,7 @@ import {
     InflateStream,
     ZlibStreamDecompressor,
     WINDOW_BITS_RAW,
+    WINDOW_BITS_AUTO,
 } from "../pack/gzip.cp";
 
 pub enum DecompressorType {

@@ -177,3 +177,7 @@ export {
 // --- Step 5: RFC 6265 CookieMap & RFC 7578 FormData ---
 export * from "./cookie.cp";
 export * from "./form_data.cp";
+
+// --- Step 6: RFC Web Primitives (SSE, Multipart FormData, RFC 6265 CookieJar) ---
+export * from "./sse.cp";
+export * from "./multipart.cp";
