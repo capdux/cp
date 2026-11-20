@@ -140,3 +140,6 @@
 
 ### 2026-11-21（`cap:yaml` 验收固化，顶替以 `inherit` 拉起 `cap:eval` 维持 2 路并行）
 - **执行成果**：`lib/yaml/`（5/5 PASS，含 `cap.yaml` 动态挂载与 `doc/lib/yaml.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/eval/`（AI Agent 基准评测指标/Pass@k/基线退化门禁与报告引擎），与 `lib/toml/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:toml` 验收固化，顶替以 `inherit` 拉起 `cap:diff` 维持 2 路并行）
+- **执行成果**：`lib/toml/`（5/5 PASS，含 `cap.toml` 动态挂载与 `doc/lib/toml.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/diff/`（Myers 行/词级最短编辑脚本、Unified Diff 生成、`applyPatch` 精确校验打补丁与 `merge3` 三方合并冲突检测），与 `lib/eval/` 保持 2 路正交并行。
