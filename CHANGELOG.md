@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:bun_alloc` 纯 CP 零堆 BumpAllocator、O(1) 对象池 PoolAllocator、泄漏审计 TrackingAllocator 与可回滚 ScratchArena 内存分配器套件（吸收对标 Bun `src/bun_alloc/`，详见 `doc/lib/bun_alloc.md`）（5/5 PASS，自动动态挂载 `cap.bun_alloc`）
+- **新增标准库**：`lib/bun_alloc/{bump,pool,tracking,scratch,index}.cp`（吸收对标 Bun `src/bun_alloc/`），提供 `BumpAllocator` 栈上对齐分配、`PoolAllocator(T)` O(1) 空闲链表对象池、`TrackingAllocator` 峰值/泄漏审计及支持 `mark`/`rewind` 局部回滚的 `ScratchArena`。
+- **新增文档与测试**：`doc/lib/bun_alloc.md` 扁平文档与 `cap/test/test_bun_alloc_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:base64` 纯 CP RFC 4648 Base64/Base64URL 查表编解码、MIME 空白忽略与流式分块引擎（吸收对标 Bun `src/base64/`，详见 `doc/lib/base64.md`）（5/5 PASS，自动动态挂载 `cap.base64`）
 - **新增标准库**：`lib/base64/{types,codec,streaming,index}.cp`（吸收对标 Bun `src/base64/`），实现 Standard/StandardNoPad/UrlSafe/UrlSafeNoPad 四变体编解码、RFC 4648 §3.5 非零填充残余比特拦截、MIME 换行忽略解码及任意切片流式 `StreamingBase64Encoder`/`StreamingBase64Decoder`。
 - **新增文档与测试**：`doc/lib/base64.md` 扁平文档与 `cap/test/test_base64_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

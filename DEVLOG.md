@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:bun_alloc` 纯 CP 零堆 BumpAllocator、O(1) 对象池 PoolAllocator、泄漏审计 TrackingAllocator 与可回滚 ScratchArena 内存分配器套件（吸收对标 Bun `src/bun_alloc/`，详见 `doc/lib/bun_alloc.md`）（5/5 PASS，文档直写 `doc/lib/bun_alloc.md`）
+- **核心设计**：全部自定义分配器实现标准 `std.mem.Allocator` VTable 接口，无缝接入任意 CP 标准库数据结构；`ScratchArena` 支持解析器临时区段局部 `rewind`，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:base64` 纯 CP RFC 4648 Base64/Base64URL 查表编解码、MIME 空白忽略与流式分块引擎（吸收对标 Bun `src/base64/`，详见 `doc/lib/base64.md`）（5/5 PASS，文档直写 `doc/lib/base64.md`）
 - **核心设计**：使用 256 字节 O(1) 解码查表并与 `resolver.rs` 优先真实目录路由协同自动挂载 `cap.base64`；严格执行 RFC 4648 §3.5 规范填充校验，全路径零泄漏。
 
