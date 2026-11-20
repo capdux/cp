@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:avro` Apache Avro Schema 驱动二进制编解码与 OCF 容器引擎（5/5 PASS，文档直写 `doc/lib/avro.md`）
+- **核心设计**：在 `AvroSchema` 内部使用 `ArenaAllocator` 管理复杂嵌套与命名类型引用，编解码器严格校验 `SchemaMismatch`、`InvalidUnionIndex`、Varint 溢出与 OCF 块 `sync_marker` 一致性，零泄漏。
+
 ## 2026-11-21: 新建 `cap:tiff` Baseline TIFF 多页双端序与多压缩算法编解码引擎（5/5 PASS，文档直写 `doc/lib/tiff.md`）
 - **核心设计**：统一抽象 `"II"` 小端与 `"MM"` 大端 IFD 读写器并检测循环 IFD 链表，复用 `cap:lzw` 与 `cap:deflate` 结合内联 PackBits 与 `Predictor = 2` 水平差分还原，全量测试零泄漏。
 

@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:avro` Apache Avro Schema 驱动二进制编解码与 OCF 容器引擎（5/5 PASS，自动动态挂载 `cap.avro`）
+- **新增标准库**：`lib/avro/{avro,index}.cp`，实现全类型 `AvroSchema`（含 `record`/`union`/`enum`/`fixed`/`array`/`map`）、ZigZag + Varint `encodeDatum`/`decodeDatum` 以及 OCF `"Obj\x01"` 容器 `writeContainer`/`readContainer`（含 16 字节 `sync_marker` 校验）。
+- **新增文档与测试**：`doc/lib/avro.md` 扁平文档与 `cap/test/test_avro_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:tiff` Baseline TIFF 多页双端序与多压缩算法编解码引擎（5/5 PASS，自动动态挂载 `cap.tiff`）
 - **新增标准库**：`lib/tiff/{tiff,index}.cp`，复用 `cap:lzw`（`MsbFirst`）与 `cap:deflate` 实现 `"II"`/`"MM"` 双端序多页 TIFF 编解码，支持 `None`/`PackBits`/`Lzw`/`Deflate` 压缩、`Predictor = 2` 水平差分还原、多 Strip 拼接及循环 IFD/`ImageTooLarge`/`TooManyPages` 防护。
 - **新增文档与测试**：`doc/lib/tiff.md` 扁平文档与 `cap/test/test_tiff_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

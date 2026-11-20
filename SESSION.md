@@ -569,3 +569,6 @@
 
 ### 2026-11-21（`cap:tiff` 验收提交，顶替拉起 `cap:rtsp` 维持 2 路常规并行）
 - **执行成果**：`lib/tiff/`（5/5 PASS，`doc/lib/tiff.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/rtsp/`（RFC 2326 RTSP 协议解析、Transport 头与 `$` TCP 交织帧拆包引擎），与 `lib/avro/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:avro` 验收提交，顶替拉起 `cap:pcap` 维持 2 路常规并行）
+- **执行成果**：`lib/avro/`（5/5 PASS，`doc/lib/avro.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/pcap/`（经典 libpcap `.pcap` 容器与 L2/L3/L4 网络报文解包引擎），与 `lib/rtsp/` 维持 2 路常规并行。
