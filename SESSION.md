@@ -209,3 +209,6 @@
 
 ### 2026-11-21（`cap:agentmem` 验收固化，顶替以 `inherit` 拉起 `cap:zset` 维持 2 路并行）
 - **执行成果**：`lib/agentmem/`（5/5 PASS，含 `cap.agentmem` 动态挂载与 `doc/lib/agentmem.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/zset/`（跳表 SkipList + 哈希双索引有序集合与排行榜引擎），与 `lib/raft/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:raft` 验收固化 & 热日志归档，顶替以 `inherit` 拉起 `cap:ical` 维持 2 路并行）
+- **执行成果**：`lib/raft/`（5/5 PASS，含 `cap.raft` 动态挂载与 `doc/lib/raft.md`）经 `verify_module.sh` 一键验收回收并连同 `CHANGELOG.md`/`DEVLOG.md` 滚动归档至 `*_H.md` 一并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/ical/`（RFC 5545 `.ics` 解析生成与 `RRULE` 重复规则展开引擎），与 `lib/zset/` 保持 2 路正交并行。
