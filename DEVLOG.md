@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:rope` 纯 CP Piece Table 大文本编辑、碎片合并、行号/列号互转与 Undo/Redo 事务栈引擎（支持 `cap.rope` 自动动态挂载，详见 `doc/lib/rope.md`）（5/5 PASS，文档直写 `doc/lib/rope.md`）
+- **核心设计**：250 步随机编辑与朴素 `ArrayList(u8)` 参考模型 100% 等价，连续尾部插入自动合并为单个 Piece 抑制碎片膨胀，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:reed_solomon` 纯 CP GF(2^8) 系统性 Cauchy Reed-Solomon 纠删码与高斯-约旦无损恢复引擎（支持 `cap.reed_solomon` 自动动态挂载，详见 `doc/lib/reed_solomon.md`）（5/5 PASS，文档直写 `doc/lib/reed_solomon.md`）
 - **核心设计**：采用系统性 Cauchy 矩阵保证任意 `K` 行子矩阵满秩可逆，全路径 `std.testing.allocator` 零泄漏。
 

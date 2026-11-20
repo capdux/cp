@@ -34,3 +34,6 @@
 
 ### 2026-11-21（`cap:reed_solomon` 验收，主控亲自完成第 6 路 `cap:reed_solomon` 验收提交，维持 `cap:rope` 与 `cap:lockfree_queue` 并发）
 - **执行成果**：`lib/reed_solomon/`（5/5 PASS，`doc/lib/reed_solomon.md`）经 `verify_module.sh` 一次性验收回收；主控亲自完成第 6 路 `cap:reed_solomon` 验收提交，维持 `cap:rope` 与 `cap:lockfree_queue` 并发
+
+### 2026-11-21（`cap:rope` 验收，验收提交 `cap:rope`，顶替拉起 `cap:blake3` 维持 2 路常规并行）
+- **执行成果**：`lib/rope/`（5/5 PASS，`doc/lib/rope.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:rope`，顶替拉起 `cap:blake3` 维持 2 路常规并行

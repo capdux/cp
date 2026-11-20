@@ -352,3 +352,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:xxhash` | `XXH3_DEFAULT_SECRET`, `Xxh128`, `xxh32`/`xxh64`, `Xxh32Stream`/`Xxh64Stream`, `xxh3_64`/`xxh3_64WithSeed`, `xxh3_128`/`xxh3_128WithSeed` | 纯 CP 零堆 xxHash (XXH32/XXH64/XXH3_64/XXH3_128) 与流式分块增量哈希引擎（支持 `cap.xxhash` 自动动态挂载，详见 `doc/lib/xxhash.md`） |
 | `cap:http_router` | `MAX_PARAMS`, `RouterError`, `HttpMethod`, `PathParam`, `RouteMatch`, `AllowInfo`, `RouteResult`, `HttpRouter`, `RouteGroup` | 纯 CP Radix Trie 高性能 HTTP 路由器、零堆参数提取、405 Allow 头生成与 RouteGroup 引擎（支持 `cap.http_router` 自动动态挂载，详见 `doc/lib/http_router.md`） |
 | `cap:reed_solomon` | `RsError`, `gfAdd`, `gfMul`, `gfPow`, `gfInv`, `gfDiv`, `ReedSolomon` | 纯 CP GF(2^8) 系统性 Cauchy Reed-Solomon 纠删码与高斯-约旦无损恢复引擎（支持 `cap.reed_solomon` 自动动态挂载，详见 `doc/lib/reed_solomon.md`） |
+| `cap:rope` | `RopeError`, `LineCol`, `BufferKind`, `Piece`, `RopeText` | 纯 CP Piece Table 大文本编辑、碎片合并、行号/列号互转与 Undo/Redo 事务栈引擎（支持 `cap.rope` 自动动态挂载，详见 `doc/lib/rope.md`） |

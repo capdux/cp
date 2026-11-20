@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:rope` 纯 CP Piece Table 大文本编辑、碎片合并、行号/列号互转与 Undo/Redo 事务栈引擎（支持 `cap.rope` 自动动态挂载，详见 `doc/lib/rope.md`）（5/5 PASS，自动动态挂载 `cap.rope`）
+- **新增标准库**：`lib/rope/{piece_table,index}.cp`，实现连续尾部追加碎片合并 `RopeText`、`offsetToLineCol`/`lineColToOffset`/`getLine`（兼容 `\r\n`）及分叉自动清空 Redo 栈的 `undo`/`redo`。
+- **新增文档与测试**：`doc/lib/rope.md` 扁平文档与 `cap/test/test_rope_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:reed_solomon` 纯 CP GF(2^8) 系统性 Cauchy Reed-Solomon 纠删码与高斯-约旦无损恢复引擎（支持 `cap.reed_solomon` 自动动态挂载，详见 `doc/lib/reed_solomon.md`）（5/5 PASS，自动动态挂载 `cap.reed_solomon`）
 - **新增标准库**：`lib/reed_solomon/{rs,index}.cp`，实现 GF(2^8) 有限域运算、系统性 Cauchy 编码矩阵（支持 `K + M <= 256`）及任意 `<= M` 丢失数据/校验分片的高斯-约旦无损恢复。
 - **新增文档与测试**：`doc/lib/reed_solomon.md` 扁平文档与 `cap/test/test_reed_solomon_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
