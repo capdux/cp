@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:prompt` AI Agent 上下文窗口预算管理与 LLM 输出安全提取引擎（5/5 PASS，自动动态挂载 `cap.prompt`）
+
+- 新建 [`lib/prompt/`](file:///data/dev/cp/lib/prompt/index.cp)（`messages.cp`、`extractor.cp`、`index.cp`）：`ContextWindow`（集成 `cap:text` `TokenEstimator` 的多角色 Token 预算裁剪、置顶保护、孤立 `Tool` 结果自动清理、OpenAI & Anthropic 标准 JSON 导出）及 `PromptExtractor`（Markdown 围栏代码块、字符串字面量感知平衡 JSON 块、XML 标签多段提取与 `wrapDelimited` 防提示词边界逃逸）；文档 [`doc/lib/prompt.md`](file:///data/dev/cp/doc/lib/prompt.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_prompt_production_deep.cp`](file:///data/dev/cp/cap/test/test_prompt_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:supervisor` BEAM OTP 监督树状态机与分布式弹性原语（5/5 PASS，自动动态挂载 `cap.supervisor`）
 
 - 新建 [`lib/supervisor/`](file:///data/dev/cp/lib/supervisor/index.cp)（`strategy.cp`、`resilience.cp`、`index.cp`）：`SupervisorTree`（`OneForOne`/`OneForAll`/`RestForOne` OTP 拓扑逆序停止与顺序重启、`Permanent`/`Transient`/`Temporary` 策略与滑动时间窗重启风暴熔断 `EscalateShutdown`）、`BackoffPolicy`（Fixed/Linear/Exponential/FullJitter/DecorrelatedJitter + SplitMix64）、`Bulkhead` 并发舱壁与 `RetryBudget` 滑动窗口重试预算；文档 [`doc/lib/supervisor.md`](file:///data/dev/cp/doc/lib/supervisor.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_supervisor_production_deep.cp`](file:///data/dev/cp/cap/test/test_supervisor_production_deep.cp) `-m` 5/5 PASS。

@@ -127,3 +127,10 @@
 
 ### 2026-11-21（`cap:supervisor` 验收固化，顶替拉起 `cap:prompt` AI Agent 上下文窗口与 LLM 输出提取引擎维持 2 路并行）
 - **执行成果**：`lib/supervisor/`（5/5 PASS，含 `cap.supervisor` 动态挂载与 `doc/lib/supervisor.md`）经 `verify_module.sh` 一键验收回收并提交 Git；顶替派发 `lib/prompt/`（多角色对话窗口 Token 预算裁剪、OpenAI/Anthropic 导出与 LLM Fenced/JSON/XML 输出提取），与 `lib/codec/` 严格保持 2 路正交并行。
+
+### 2026-11-21（固化后续子智能体统一使用 `Model: "inherit"` 跟随主智能体模型）
+- **用户指令**：后续子智能体使用 `inherit` 启动，跟随主智能体的模型。
+- **执行成果**：已确认并严格执行后续所有新派发子智能体统一传入 `Model: "inherit"`（跟随主智能体模型），当前在跑的 `lib/codec/` 与 `lib/prompt/` 完工回收后即全面切换为 `inherit` 派生。
+
+### 2026-11-21（`cap:prompt` 验收固化，顶替以 `inherit` 拉起 `cap:toml` 维持 2 路并行）
+- **执行成果**：`lib/prompt/`（5/5 PASS，含 `cap.prompt` 动态挂载与 `doc/lib/prompt.md`）经 `verify_module.sh` 一键验收回收并提交 Git；严格按新规使用 `Model: "inherit"` 顶替派发 `lib/toml/`（TOML v1.0.0 完整解析/校验/序列化与 JSON 转换），与 `lib/codec/` 保持 2 路正交并行。

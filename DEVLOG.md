@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:prompt` AI Agent 上下文窗口与 LLM 输出提取引擎（5/5 PASS，文档直写 `doc/lib/prompt.md`）
+
+- **落地成果**：`lib/prompt/`（`messages.cp`/`extractor.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并按新规使用 `Model: "inherit"` 顶替派发 `cap:toml`（TOML v1.0.0 完整解析与序列化引擎），与 `lib/codec/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:supervisor` BEAM OTP 监督树与弹性原语（5/5 PASS，文档直写 `doc/lib/supervisor.md`）
 
 - **落地成果**：`lib/supervisor/`（`strategy.cp`/`resilience.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并顶替派发 `cap:prompt`（AI Agent 上下文窗口 Token 预算裁剪器、OpenAI/Anthropic 消息导出与 LLM 结构化代码块/JSON/XML 标签提取引擎），与 `lib/codec/` 保持 2 路正交并行。
