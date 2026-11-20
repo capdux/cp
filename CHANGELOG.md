@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:codec` 多进制与强校验编码套件（5/5 PASS，自动动态挂载 `cap.codec`）
+
+- 新建 [`lib/codec/`](file:///data/dev/cp/lib/codec/index.cp)（`base58_85.cp`、`bech32_crockford.cp`、`index.cp`）：`Base58`（含前导零保留与 Double-SHA256 `Base58Check`）、`Base85`（Adobe ASCII85 含 `<~...~>`/`'z'` 压缩/余数填充/溢出拦截 + RFC 1924）、`Bech32`（BIP-173 & BIP-350 `Bech32m` 大小写混用与校验和拦截）及 `Crockford32`（`I/L/O` 纠错 + 模 37 校验符）；文档 [`doc/lib/codec.md`](file:///data/dev/cp/doc/lib/codec.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_codec_production_deep.cp`](file:///data/dev/cp/cap/test/test_codec_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:prompt` AI Agent 上下文窗口预算管理与 LLM 输出安全提取引擎（5/5 PASS，自动动态挂载 `cap.prompt`）
 
 - 新建 [`lib/prompt/`](file:///data/dev/cp/lib/prompt/index.cp)（`messages.cp`、`extractor.cp`、`index.cp`）：`ContextWindow`（集成 `cap:text` `TokenEstimator` 的多角色 Token 预算裁剪、置顶保护、孤立 `Tool` 结果自动清理、OpenAI & Anthropic 标准 JSON 导出）及 `PromptExtractor`（Markdown 围栏代码块、字符串字面量感知平衡 JSON 块、XML 标签多段提取与 `wrapDelimited` 防提示词边界逃逸）；文档 [`doc/lib/prompt.md`](file:///data/dev/cp/doc/lib/prompt.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_prompt_production_deep.cp`](file:///data/dev/cp/cap/test/test_prompt_production_deep.cp) `-m` 5/5 PASS。

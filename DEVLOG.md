@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:codec` 多进制编解码套件（5/5 PASS，文档直写 `doc/lib/codec.md`）
+
+- **落地成果**：`lib/codec/`（`base58_85.cp`/`bech32_crockford.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并全部切换为 `Model: "inherit"` 顶替派发 `cap:yaml`（YAML 1.2 核心子集解析、块标量、流式集合与序列化/JSON 互转引擎），与 `lib/toml/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:prompt` AI Agent 上下文窗口与 LLM 输出提取引擎（5/5 PASS，文档直写 `doc/lib/prompt.md`）
 
 - **落地成果**：`lib/prompt/`（`messages.cp`/`extractor.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并按新规使用 `Model: "inherit"` 顶替派发 `cap:toml`（TOML v1.0.0 完整解析与序列化引擎），与 `lib/codec/` 保持 2 路正交并行。

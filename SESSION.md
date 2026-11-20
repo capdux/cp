@@ -134,3 +134,6 @@
 
 ### 2026-11-21（`cap:prompt` 验收固化，顶替以 `inherit` 拉起 `cap:toml` 维持 2 路并行）
 - **执行成果**：`lib/prompt/`（5/5 PASS，含 `cap.prompt` 动态挂载与 `doc/lib/prompt.md`）经 `verify_module.sh` 一键验收回收并提交 Git；严格按新规使用 `Model: "inherit"` 顶替派发 `lib/toml/`（TOML v1.0.0 完整解析/校验/序列化与 JSON 转换），与 `lib/codec/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:codec` 验收固化，顶替以 `inherit` 拉起 `cap:yaml` 维持 2 路并行）
+- **执行成果**：`lib/codec/`（5/5 PASS，含 `cap.codec` 动态挂载与 `doc/lib/codec.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/yaml/`（YAML 1.2 核心子集解析与序列化/JSON 转换），目前两路常规子智能体均已全面运行在 `inherit` 模式下。
