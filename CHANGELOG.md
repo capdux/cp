@@ -1,3 +1,19 @@
+## [2026-11-20] - Phase B-1 工业级包管理引擎直迁落地：新建 `lib/pkg/`（`cap:pkg`，9 模块 4,512 行，源自 Bun `install/`）
+
+### 新增标准库 (`cap:pkg` / `cap.pkg` / `cap.install`)
+- **工业级包管理子系统（9 模块 4,512 行，0 `@import("bun")`，0 `std.posix`）**：
+  - [`lib/pkg/types.cp`](file:///data/dev/cp/lib/pkg/types.cp)（496 行）：`SemverString`（8B 内联/外部双态字符串）、`StringBuf`（Wyhash 去重池）、`ExternalString`/`SlicedString`/`ExternalSlice<T>`、`NodeLinker`、`Behavior` 位域；
+  - [`lib/pkg/dependency.cp`](file:///data/dev/cp/lib/pkg/dependency.cp)（603 行）：`DependencyVersion.parse` 全 10 种协议（semver、`npm:alias`、`workspace:`、`file:`、`link:`、tarball URL、`github:`、`git+ssh:`、dist-tag、`catalog:`）与 `DependencyList`；
+  - [`lib/pkg/resolution.cp`](file:///data/dev/cp/lib/pkg/resolution.cp)（562 行）：`Resolution`、`OperatingSystem`/`Architecture`/`Libc` 平台位掩码（支持 `!` 取反）、`PackageMeta`、`BinLink`；
+  - [`lib/pkg/npm.cp`](file:///data/dev/cp/lib/pkg/npm.cp)（540 行）：`.npmrc` 作用域 Registry 与 Bearer/Basic Auth 路由、`NpmPackageManifest.parsePackument` 与结合 `cap:semver` 的 `resolveVersion`；
+  - [`lib/pkg/lockfile.cp`](file:///data/dev/cp/lib/pkg/lockfile.cp)（1,057 行）：DAG 依赖图、环检测、拓扑排序与双格式持久化（确定性 JSON `cap.lock` + 紧凑二进制 `CPLK0001` 含 CRC32 完整性校验）；
+  - [`lib/pkg/tarball.cp`](file:///data/dev/cp/lib/pkg/tarball.cp)（294 行）：`TarballBuilder`/`TarballExtractor`（gzip + tar + W3C SRI 校验 + 严格 `..`/绝对路径/软链逃逸防护）；
+  - [`lib/pkg/linker.cp`](file:///data/dev/cp/lib/pkg/linker.cp)（331 行）：`Hoisted` 与 pnpm 风格 `Isolated` 链接策略、硬链优先+拷贝回退、`BinLinker`（`.bin` `0o755`）与 `patch_install`（先解除硬链防污染共享缓存 + 幂等标记）；
+  - [`lib/pkg/manager.cp`](file:///data/dev/cp/lib/pkg/manager.cp)（615 行）与 [`lib/pkg/index.cp`](file:///data/dev/cp/lib/pkg/index.cp)：`PackageManager` 端到端安装闭环。
+- **文档、规范与端到端测试**：新增 [`docs/pkg/pkg.md`](file:///data/dev/cp/docs/pkg/pkg.md) 与 [`cap/test/test_pkg_install_deep.cp`](file:///data/dev/cp/cap/test/test_pkg_install_deep.cp)（6/6 PASS，含真实磁盘 Tarball 打包解包、SRI 篡改拦截、路径穿越防护、Hoisted/Isolated 落盘与补丁应用），同步更新 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md) 与 [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)。
+
+---
+
 ## [2026-11-20] - Phase A 底层三件套 Bun 原版直迁落地：`lib/sys/`、`lib/io/`、`lib/string/` 全面对齐生产契约（34 文件 9,273 行）
 
 ### 底层基石原版升级 (Phase A Foundation Direct Port)

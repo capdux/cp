@@ -2608,3 +2608,9 @@
   - 子智能体 2 完工回收：`lib/sys/`（11 文件 3,118 行）、`lib/io/`（8 文件 2,067 行）、`lib/string/`（15 文件 4,088 行）合计 34 文件 9,273 行 100% 对齐 Bun 生产契约（`Maybe<T>`/`SysError`/`DirIterator`/`PosixSpawn`、非阻塞 `PipeReader`/`FileReader`、全套 `strings.*`/`Wtf8`/`StringBuilder`/`MutableString`/`Unicode`），0 `@import("bun")`，0 `std.posix`，34/34 文件 `// Source:` 合规；
   - 5 套测试共 23/23 用例 100% PASS（`test_phase_a_foundation_port.cp`、`test_path_sourcemap_io_sys_errno_deep.cp`、`test_net_io_full.cp`、`test_string_blob_image_mem_deep.cp`、`test_bun_new_assets.cp`），已更新双轨规范与热日志并执行 Git 提交固化；
   - 无缝顶替拉起子智能体 4（`a9544a47`，Phase B-1：Bun `install/` + `install_types/` 工业级包管理核心直迁 → `lib/pkg/`），与子智能体 3（`eb009530`，Phase C-1：`md/` + `sql/`）保持双路并行推进。
+
+### 2026-11-20（Phase B-1 `lib/pkg/` 工业级包管理核心验收入库，无缝拉起 Phase B-2 `lib/shell/` 直迁）
+- **执行成果**：
+  - 子智能体 4 完工回收：新建 [`lib/pkg/`](file:///data/dev/cp/lib/pkg/index.cp)（9 模块 4,512 行，0 `@import("bun")`，0 `std.posix`，9/9 `// Source:` 合规）及 [`docs/pkg/pkg.md`](file:///data/dev/cp/docs/pkg/pkg.md)，实现 10 协议依赖解析、`.npmrc`/Packument、JSON + 二进制 `CPLK0001`（CRC32）Lockfile DAG、安全 Tarball+SRI 解包、Hoisted/Isolated 链接、`.bin`、`patch_install` 与 `PackageManager` 端到端闭环；
+  - [`cap/test/test_pkg_install_deep.cp`](file:///data/dev/cp/cap/test/test_pkg_install_deep.cp) 6/6 PASS（2274ms），同步双轨规范手册与热日志并执行 Git 提交固化；
+  - 无缝拉起子智能体 5（`01699e2b`，Phase B-2：Bun 原版 `shell/` + `shell_parser/` + 22+ 生产内置命令直迁 → `lib/shell/`），与子智能体 3（`eb009530`，Phase C-1：`md/` + `sql/`）继续保持双路并行。

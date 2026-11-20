@@ -2,6 +2,13 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-20: Phase B-1 工业级包管理核心 `lib/pkg/`（源自 Bun `install/`）落地入库
+
+- **架构价值**：填补 CP 此前完全缺失的工业级包管理引擎（54K Bun `install/` 核心无 JSC 子系统），依托刚落地的 `import cap from "cap"` 按需惰性挂载与 Phase A 底座，一次性完成 10 协议依赖解析、`.npmrc`/Packument、JSON + 二进制 `CPLK0001`（CRC32）双格式 Lockfile DAG、安全 Tarball+SRI 解包、Hoisted/Isolated 安装链接、`.bin` 与 `patch_install` 全链路闭环（9 模块 4,512 行）。
+- **验收与接力**：`test_pkg_install_deep.cp` 6/6 PASS（2274ms），9/9 文件 `// Source:` 100% 合规且 0 `@import("bun")` / 0 `std.posix`；立即启动 Phase B-2（Bun 原版 `shell/` + 22+ 生产内置命令直迁）与 Phase C-1（`md/` + `sql/`）双路并行。
+
+---
+
 ## 2026-11-20: Phase A 底座三件套（`lib/sys/`、`lib/io/`、`lib/string/`）Bun 原版直迁完工
 
 - **落地成果**：基于 Bun 0-JSC-耦合底层实现，将 `lib/sys/`（3,118 行）、`lib/io/`（2,067 行）、`lib/string/`（4,088 行）全面升级为 9,273 行生产级纯 CP 底座（完整补齐上层 `install`/`shell`/`http`/`css` 最高频依赖的 `Maybe<T>`/`SysError`/`*at`/`DirIterator`/`PosixSpawn`、非阻塞 `PipeReader`/`FileReader` 与全套 `strings.*`/`Wtf8`/`StringBuilder`/`MutableString`/`Unicode`），100% 保持现有对外 API 零破坏。
