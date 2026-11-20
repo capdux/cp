@@ -371,3 +371,6 @@
 
 ### 2026-11-21（`cap:crdt` 验收合并提交，顶替拉起 `cap:globset` 维持 2 路常规并行）
 - **执行成果**：`lib/crdt/`（5/5 PASS，`doc/lib/crdt.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/circuit/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/globset/`（高性能多模式 Glob 路径匹配集合与忽略规则引擎），与 `lib/cron/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:cron` 验收提交，顶替拉起 `cap:tar` 维持 2 路常规并行）
+- **执行成果**：`lib/cron/`（5/5 PASS，`doc/lib/cron.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/tar/`（纯 CP POSIX ustar 内存/流式归档打包与安全解包引擎），与 `lib/globset/` 维持 2 路常规并行。

@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:cron` 5/6 字段 Cron 表达式解析与调度计算引擎（5/5 PASS，文档直写 `doc/lib/cron.md`）
+- **核心设计**：采用紧凑位掩码存储与 Howard Hinnant O(1) 纯 UTC 日历分解算法，零系统调用即可完成闰年 `02-29`、跨月跨年跳跃搜索，并对不可达日期（如 `0 0 31 2 *`）在 28 年周期窗口内准确返回 `NoMatchingTime`。
+
 ## 2026-11-21: 新建 `cap:crdt` 分布式无冲突复制数据类型（CvRDT）引擎（5/5 PASS，文档直写 `doc/lib/crdt.md`）
 - **核心设计**：按 `vclock`/`counters`/`register` 三模块解耦，`LwwRegister` 基于 `(timestamp_ms, node_id)` 全序破平局，`OrSet` 维护活跃与已移除 `(node_id, seq)` tag 集合确保多节点乱序广播强最终一致性（SEC）。
 

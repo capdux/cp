@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:cron` 5/6 字段 Cron 表达式解析与调度计算引擎（5/5 PASS，自动动态挂载 `cap.cron`）
+- **新增标准库**：`lib/cron/{cron,index}.cp`，实现位掩码 `CronSchedule`、Howard Hinnant O(1) 纯 UTC 日历换算、5/6 字段与 `@hourly`/`@daily` 等宏别名解析、Vixie `dom`/`dow` OR/AND 语义及跳跃加速 `nextAfter`/`prevBefore`/`nextN`。
+- **新增文档与测试**：`doc/lib/cron.md` 扁平文档与 `cap/test/test_cron_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:crdt` 分布式无冲突复制数据类型（CvRDT）引擎（5/5 PASS，自动动态挂载 `cap.crdt`）
 - **新增标准库**：`lib/crdt/{vclock,counters,register,index}.cp`，实现 `VectorClock`、`GCounter`、`PnCounter`、`LwwRegister` 与 `OrSet`（并发 add-wins 与 remove 后重新 add），严格满足半格合并交换律、结合律与幂等律。
 - **新增文档与测试**：`doc/lib/crdt.md` 扁平文档与 `cap/test/test_crdt_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
