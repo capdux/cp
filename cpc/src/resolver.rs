@@ -446,7 +446,7 @@ pub fn resolve_source_path(
         search_source = match stripped {
             "col" | "collections" => "col".to_string(),
             "event" | "events" | "event_loop" => "event".to_string(),
-            "sync" | "threading" => "sync".to_string(),
+            "sync" => "sync".to_string(),
             "shell" | "sh" => "shell".to_string(),
             "image" | "img" | "png" => "image".to_string(),
             "blob" | "file" => "blob".to_string(),
@@ -466,7 +466,7 @@ pub fn resolve_source_path(
         search_source = match stripped {
             "col" | "collections" => "col".to_string(),
             "event" | "events" | "event_loop" => "event".to_string(),
-            "sync" | "threading" => "sync".to_string(),
+            "sync" => "sync".to_string(),
             "shell" | "sh" => "shell".to_string(),
             "image" | "img" | "png" => "image".to_string(),
             "blob" | "file" => "blob".to_string(),
@@ -519,7 +519,6 @@ pub fn resolve_source_path(
             let remapped = search_source
                 .replace("lib/event_loop", "lib/event")
                 .replace("lib/collections", "lib/col")
-                .replace("lib/threading", "lib/sync")
                 .replace("lib/compress", "lib/pack")
                 .replace("lib/events.cp", "lib/event/emitter.cp");
             if remapped != search_source {

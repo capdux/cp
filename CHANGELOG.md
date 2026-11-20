@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:threading` 纯 CP Futex 驱动零堆并发同步原语集（ResetEvent/WaitGroup/CountDownLatch/Semaphore/SpinLock/OnceFlag/Barrier，吸收对标 Bun `src/threading/`，详见 `doc/lib/threading.md`）（5/5 PASS，自动动态挂载 `cap.threading`）
+- **新增标准库**：`lib/threading/{reset_event,wait_group,countdown_latch,semaphore,spin_lock,once_flag,barrier,index}.cp`（吸收对标 Bun `src/threading/`），实现零堆分配 Futex 同步原语并移除 `cpc/src/resolver.rs` 中旧 `"threading"` 别名阻塞。
+- **新增文档与测试**：`doc/lib/threading.md` 扁平文档与 `cap/test/test_threading_production_deep.cp`（5/5 PASS，真实 `std.Thread.spawn` 多线程压测通过）。
+
 ## [2026-11-21] - 新建 `cap:crash_handler` 纯 CP 结构化崩溃诊断、零堆固定缓冲格式化、环形面包屑与 RFC 8259 JSON 报告导出引擎（吸收对标 Bun `src/crash_handler/`，详见 `doc/lib/crash_handler.md`）（5/5 PASS，自动动态挂载 `cap.crash_handler`）
 - **新增标准库**：`lib/crash_handler/{types,ring,format,index}.cp`（吸收对标 Bun `src/crash_handler/`），提供纯表驱动信号解码、零堆 `FixedCrashWriter(N)` 截断安全格式化、`BreadcrumbRing(CAP)` 环形回放、敏感键脱敏及 `formatCrashText`/`formatCrashJson`。
 - **新增文档与测试**：`doc/lib/crash_handler.md` 扁平文档与 `cap/test/test_crash_handler_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:threading` 纯 CP Futex 驱动零堆并发同步原语集（ResetEvent/WaitGroup/CountDownLatch/Semaphore/SpinLock/OnceFlag/Barrier，吸收对标 Bun `src/threading/`，详见 `doc/lib/threading.md`）（5/5 PASS，文档直写 `doc/lib/threading.md`）
+- **核心设计**：全部 7 种同步原语基于 `std.atomic.Value` 与 `std.Thread.Futex` 实现零堆分配并发协同，CAS 防计数下溢，`Barrier` 通过 generation 计数支持多轮复用。
+
 ## 2026-11-21: 新建 `cap:crash_handler` 纯 CP 结构化崩溃诊断、零堆固定缓冲格式化、环形面包屑与 RFC 8259 JSON 报告导出引擎（吸收对标 Bun `src/crash_handler/`，详见 `doc/lib/crash_handler.md`）（5/5 PASS，文档直写 `doc/lib/crash_handler.md`）
 - **核心设计**：针对崩溃现场不可分配堆内存的场景设计 `FixedCrashWriter(N)` 与 `BreadcrumbRing(CAP)`，超容自动设置 `truncated` 标志而非 panic，并全路径通过 `std.testing.allocator` 零泄漏验证。
 
