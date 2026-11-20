@@ -69,3 +69,6 @@
 ### 2026-11-21（`cap:crdt` 验收固化，顶替拉起 `cap:query` 参数化防注入 SQL 查询构建器维持 3 路并行）
 - **用户指令**：确认后续 `lib/` 文档统一按 `doc/lib/<mod>.md` 写入，且 `docs/` 迁移完毕已删除。
 - **执行成果**：子智能体 36（`lib/crdt/`，5/5 PASS，含 `cap.crdt` 动态挂载与 `doc/lib/crdt.md`）经 `verify_module.sh` 一键验收回收并提交 Git；立即顶替派发子智能体 39（新建 `lib/query/` 多方言防注入 SQL 查询构建器），与 `lib/color/`、`lib/decimal/` 保持 3 路正交并行。
+
+### 2026-11-21（`cap:color` 验收固化，顶替拉起 `cap:email` RFC 5322/MIME/SMTP 引擎维持 3 路并行）
+- **执行成果**：子智能体 37（`lib/color/`，5/5 PASS，含 `cap.color` 动态挂载与 `doc/lib/color.md`）经 `verify_module.sh` 一键验收回收并提交 Git；立即顶替派发子智能体 40（新建 `lib/email/` RFC 5322 地址校验/MIME 邮件构建解析/SMTP 线缆编解码），与 `lib/decimal/`、`lib/query/` 保持 3 路正交并行。

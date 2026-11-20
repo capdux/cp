@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:color` 色彩科学、WCAG 2.1 无障碍与终端 ANSI 配色引擎（5/5 PASS，自动动态挂载 `cap.color`）
+
+- 新建 [`lib/color/`](file:///data/dev/cp/lib/color/index.cp)（`spaces.cp`、`wcag.cp`、`ansi.cp`、`index.cp`）：`Rgba`/`Hsl`/`Hsv`/`Oklab`/`Oklch` 双向转换与感知插值 `mixOklab`、WCAG 2.1 对比度/AA/AAA/`bestTextColor` 与 `Palette`、ANSI TrueColor/xterm-256 量化与 `stripAnsi`；文档 [`doc/lib/color.md`](file:///data/dev/cp/doc/lib/color.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_color_production_deep.cp`](file:///data/dev/cp/cap/test/test_color_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:crdt` 分布式无冲突复制数据类型套件（5/5 PASS，自动动态挂载 `cap.crdt`）
 
 - 新建 [`lib/crdt/`](file:///data/dev/cp/lib/crdt/index.cp)（`vclock.cp`、`counters.cp`、`register.cp`、`index.cp`）：`VectorClock`（因果偏序 `Before`/`After`/`Equal`/`Concurrent`）、`GCounter`/`PnCounter`（交换/结合/幂等合并）、`LwwRegister`（`(timestamp, node_id)` 决胜）与 `OrSet`（Observed-Remove 并发 add-wins）；文档 [`doc/lib/crdt.md`](file:///data/dev/cp/doc/lib/crdt.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_crdt_production_deep.cp`](file:///data/dev/cp/cap/test/test_crdt_production_deep.cp) `-m` 5/5 PASS。
