@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:png` 纯 CP PNG 图像无损编解码与 Paeth 滤波引擎（5/5 PASS，文档直写 `doc/lib/png.md`）
+- **核心设计**：零 `libpng` 依赖，复用 `cap:deflate` 的 `compressZlib`/`decompressZlib`/`crc32` 完成完整 PNG 流式编解码，编码端自动按最小 SAD 选择最优扫描行滤波器，解码端严格拦截签名/CRC/滤波/缺失 `IEND` 及超限尺寸。
+
+## 2026-11-21: 新建 `cap:http2` RFC 9113 HTTP/2 二进制帧编解码与流控引擎（5/5 PASS，文档直写 `doc/lib/http2.md`）
+- **核心设计**：采用 9 字节大端序帧头编码并清除保留位 `R`；`FrameStreamDecoder` 支持 1..7 字节任意切分增量拆帧并在 `SETTINGS` 非 0 `stream_id` / 非 6 倍数及 `WINDOW_UPDATE` 增量溢出时严格拦截。
+
 ## 2026-11-21: 新建 `cap:rtree` 2D 轴对齐边界框（AABB）R-Tree 空间索引引擎（5/5 PASS，文档直写 `doc/lib/rtree.md`）
 - **核心设计**：采用最小面积增量 `ChooseLeaf` 与 Guttman `Quadratic Split` 维持树平衡，`removeById` 清理空节点后向上收紧祖先 MBR；560 个重叠矩形与暴力全量对拍 100% 一致且零泄漏。
 

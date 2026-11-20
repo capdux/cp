@@ -518,3 +518,9 @@
 
 ### 2026-11-21（`cap:rtree` 验收合并提交，顶替拉起 `cap:png` 维持 2 路常规并行）
 - **执行成果**：`lib/rtree/`（5/5 PASS，`doc/lib/rtree.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/rtp/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/png/`（纯 CP PNG 图像解码/编码与 Paeth 滤波引擎），与 `lib/http2/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:http2` 验收提交，顶替拉起 `cap:sip` 维持 2 路常规并行）
+- **执行成果**：`lib/http2/`（5/5 PASS，`doc/lib/http2.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/sip/`（RFC 3261 SIP 会话初始协议报文解析、紧凑头映射与构建引擎），与 `lib/png/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:png` 验收合并提交，顶替拉起 `cap:wav` 维持 2 路常规并行）
+- **执行成果**：`lib/png/`（5/5 PASS，`doc/lib/png.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/http2/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/wav/`（纯 CP RIFF/WAVE PCM 音频容器编解码与重采样/混音引擎），与 `lib/sip/` 维持 2 路常规并行。

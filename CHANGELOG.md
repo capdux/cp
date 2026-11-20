@@ -2,6 +2,14 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:png` 纯 CP PNG 图像无损编解码与 Paeth 滤波引擎（5/5 PASS，自动动态挂载 `cap.png`）
+- **新增标准库**：`lib/png/{png,index}.cp`，复用 `cap:deflate` 实现 PNG 签名、逐块 CRC-32、5 种扫描行滤波编解码（含最小 SAD 自适应滤波选择）、多 `IDAT` 拼接与 `PLTE`+`tRNS` 调色板展开及 `ImageTooLarge` 尺寸上限防护。
+- **新增文档与测试**：`doc/lib/png.md` 扁平文档与 `cap/test/test_png_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
+## [2026-11-21] - 新建 `cap:http2` RFC 9113 HTTP/2 二进制帧编解码与流控引擎（5/5 PASS，自动动态挂载 `cap.http2`）
+- **新增标准库**：`lib/http2/{http2,index}.cp`，实现全帧类型编解码（`DATA`/`HEADERS`/`SETTINGS`/`PING`/`GOAWAY`/`RST_STREAM`/`WINDOW_UPDATE` 等）、跨分块半包/黏包 `FrameStreamDecoder`、`Http2Stream` 状态机与 `FlowWindow` 双向流控窗口。
+- **新增文档与测试**：`doc/lib/http2.md` 扁平文档与 `cap/test/test_http2_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:rtree` 2D 轴对齐边界框（AABB）R-Tree 空间索引引擎（5/5 PASS，自动动态挂载 `cap.rtree`）
 - **新增标准库**：`lib/rtree/{rtree,index}.cp`，实现动态平衡 `RTree<V>`（Guttman `Quadratic Split`、MBR 维护与收紧）、`searchOverlap`、`searchPoint` 与 Best-First 分支界定 `kNearestPoint`。
 - **新增文档与测试**：`doc/lib/rtree.md` 扁平文档与 `cap/test/test_rtree_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
