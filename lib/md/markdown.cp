@@ -4,8 +4,16 @@
 // Absorbed from Bun src/md/root.cp, html_renderer.cp & ansi_renderer.cp
 
 const std = @import("std");
-import { MarkdownOptions, MdBlock, MdRenderer } from "./ast";
-import { MdDocument, MdParser } from "./parser";
+import { MarkdownOptions, MdBlock, MdRenderer } from "./ast.cp";
+import { MdDocument, MdParser } from "./parser.cp";
+import { AnsiTheme } from "./ansi_renderer.cp";
+import { lookup } from "./entity.cp";
+import { FoldInfo, foldCodepoint } from "./unicode.cp";
+import {
+    MdEngineOptions,
+    renderToAnsi,
+    renderToHtmlWithOptions,
+} from "./engine.cp";
 
 pub struct MdOptions {
     tables: bool = true;
@@ -205,5 +213,30 @@ pub struct Markdown {
         }
 
         return out_buf[0..pos];
+    }
+
+    /// Parses and renders `md_text` using the full Bun MD4C streaming engine.
+    pub static fn toHtmlEngine(allocator: std.mem.Allocator, md_text: []const u8, opts: MdEngineOptions): ([]u8)! {
+        return renderToHtmlWithOptions(md_text, allocator, opts);
+    }
+
+    /// Parses and renders `md_text` to full ANSI terminal output with tables, syntax highlighting & wrapping.
+    pub static fn toAnsi(
+        allocator: std.mem.Allocator,
+        md_text: []const u8,
+        opts: MdEngineOptions,
+        theme: AnsiTheme,
+    ): ([]u8)! {
+        return renderToAnsi(md_text, allocator, opts, theme);
+    }
+
+    /// Looks up a W3C HTML5 named entity (`&amp;`, `&copy;`, `&mdash;`, etc.) returning its UTF-32 codepoints.
+    pub static fn lookupEntity(entity_name: []const u8): ([2]u21)? {
+        return lookup(entity_name);
+    }
+
+    /// Performs CommonMark/Unicode case-folding on a codepoint.
+    pub static fn caseFold(codepoint: u21): FoldInfo {
+        return foldCodepoint(codepoint);
     }
 }

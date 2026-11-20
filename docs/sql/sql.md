@@ -2,136 +2,106 @@
 
 ## 一、 架构总览与设计准则
 
-`cap:sql` 是 CP 语言官方内置的多方言关系型数据库协议与嵌入式存储标准库，全面吸收自 Bun 原生 SQL 驱动与 `bun:sqlite` 引擎（`/data/dev/bun/src/sql/`）。
+`cap:sql` 是 CP 语言官方内置的多方言关系型数据库协议与嵌入式存储标准库，直接原版移植自 Bun 原生 SQL 驱动与 `bun:sqlite` 引擎（`/data/dev/bun/src/sql/`，10 个文件 4,718 行）。
 
 ```text
-┌────────────────────────────────────────────────────────────────────────────┐
-│                        CP 用户层应用 (Application)                          │
-├──────────────────────────┬─────────────────────────┬───────────────────────┤
-│ 统一参数/连接池/事务状态机 │  PostgreSQL v3 协议引擎 │   MySQL 4.1+ 协议引擎 │
-│ SqlValue / SqlStatement  │  Startup/MD5/SCRAM-256  │   MySqlPacketHeader   │
-│ SqlConnectionPool        │  Extended Query (P/B/D/E)│  LenEnc / LenEncStr   │
-│ SqlTransactionStateMachine│ S/K/T/D/C/Z/E 后端帧解 │  HandshakeV10 / COM_* │
-├──────────────────────────┴─────────────────────────┴───────────────────────┤
-│              嵌入式原生数据库引擎: SqliteDatabase / SqliteRows              │
-│              (支持 :memory: 内存库与持久化文件库、零拷贝游标迭代)            │
-└────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                          CP 用户层应用 (Application)                           │
+├─────────────────────────────┬──────────────────────────┬─────────────────────┤
+│  共享数据与 PostgreSQL v3    │   MySQL 4.1+ / 8.0 协议   │   嵌入式 SQLite3     │
+│  SqlData (15B SSO) / flags  │  Caching-SHA2 / Native   │  SqliteDatabase     │
+│  PgTypeTag (90+ OIDs)       │  AuthSwitch / SSLRequest │  SqliteRows 游标     │
+│  PgBinaryCodec (numeric/arr)│  COM_STMT_PREPARE/EXECUTE│  参数绑定 & 事务控制 │
+│  PgProtocol (Startup/Copy)  │  MySqlBinaryRowDecoder   │  begin/commit/rollb │
+└─────────────────────────────┴──────────────────────────┴─────────────────────┘
 ```
 
-### 1. 模块文件拓扑与谱系来源
-
-`lib/sql/` 下所有源文件第 1 行均严格标记上游 Bun 源码来源：
+### 1. 模块文件拓扑与谱系来源（共 10 文件，4,718 行）
 
 | 文件路径 | 上游谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
-| `lib/sql/protocol.cp` | `// Source: /data/dev/bun/src/sql/` | `SqlDialect`、`SqlType`、`SqlValue`、`SqlParam`、`SqlStatement`、`PostgresWire`（Startup/SimpleQuery/Extended Query/SASL/MD5）、`MySqlPacketHeader`、`SqlConnectionPool`、`SqlTransactionStateMachine` |
-| `lib/sql/postgres.cp` | `// Source: /data/dev/bun/src/sql/` | `PostgresBackendTag`、`PostgresBackendFrame`、`PostgresAuthChallenge`、`ScramSha256Client`、`PostgresParameterStatus`、`PostgresBackendKeyData`、`PostgresRowDescription`、`PostgresDataRow`、`PostgresCommandComplete`、`PostgresReadyForQuery`、`PostgresErrorResponse` |
-| `lib/sql/mysql.cp` | `// Source: /data/dev/bun/src/sql/` | `MySqlLenEnc`、`MySqlLenEncStr`、`MySqlCapabilities`、`MySqlHandshakeV10`、`MySqlCommandType`、`MySqlCommandEncoder`、`MySqlOkPacket`、`MySqlErrPacket`、`MySqlEofPacket` |
-| `lib/sql/sqlite.cp` | `// Source: /data/dev/bun/src/sql/` | `SqliteDatabase` 与 `SqliteRows` 原生 SQLite3 C-ABI 封装（支持 `:memory:` 与磁盘事务、`columnDouble`/`columnCount`/`changes`/`lastInsertRowId`） |
-| `lib/sql/index.cp` | `// Source: /data/dev/bun/src/sql/` | `cap:sql` 标准库对外统一导出入口 |
+| `lib/sql/index.cp` | `// Source: /data/dev/bun/src/sql/` | `cap:sql` 统一公开导出入口 |
+| `lib/sql/shared.cp` | `// Source: /data/dev/bun/src/sql/shared/Data.cp` | `SQLQueryResultMode`、`ConnectionFlags`、15B 小对象优化 `SqlData`、`ColumnIdentifier` |
+| `lib/sql/pg_types.cp` | `// Source: /data/dev/bun/src/sql/postgres/types/Tag.cp` | `AnyPostgresError`、90+ `PgTypeTag` OID 映射、`PgCommandTag`、`PgErrorClassifier`、`PgBinaryCodec`（int2/int4/int8/float4/float8/bool/bytea/uuid/jsonb/date/timestamp/numeric/int4_array） |
+| `lib/sql/pg_protocol.cp` | `// Source: /data/dev/bun/src/sql/postgres/PostgresProtocol.cp` | `PgBufferReader`/`PgBufferWriter`、`PgParameterDescription`、`PgNotificationResponse`、`PgNoticeResponse`、`PgNegotiateProtocolVersion`、`PgCopyResponse`、`PgProtocol`（SSL/Cancel/StartupUTF8/Copy） |
+| `lib/sql/mysql_types.cp` | `// Source: /data/dev/bun/src/sql/mysql/MySQLTypes.cp` | `AnyMySQLError`、`MySqlAuthMethod`、`MySqlCapabilityFlags`、`MySqlStatusFlags`、`MySqlCharacterSet`、`MySqlFieldType`、`MySqlErrorClassifier`、`MySqlValueDateTime`、`MySqlValueTime` |
+| `lib/sql/mysql_protocol.cp` | `// Source: /data/dev/bun/src/sql/mysql/protocol/Auth.cp` | `MySqlBufferReader`、`MySqlAuthNative` (SHA-1)、`MySqlAuthCachingSha2` (SHA-256)、`MySqlAuthSwitchRequest`、`MySqlSSLRequest`、`MySqlColumnDefinition41`、`MySqlResultSetHeader`、`MySqlPrepareOK`、`MySqlPreparedProtocol`、`MySqlBinaryRowDecoder` |
+| `lib/sql/protocol.cp` | `// Source: /data/dev/bun/src/sql/` | 向后兼容：`SqlDialect`、`SqlType`、`SqlValue`、`SqlParam`、`SqlStatement`、`PostgresWire`、`MySqlPacketHeader`、`SqlConnectionPool`、`SqlTransactionStateMachine` |
+| `lib/sql/postgres.cp` | `// Source: /data/dev/bun/src/sql/` | 向后兼容：`PostgresBackendTag`、`PostgresBackendFrame`、`PostgresAuthChallenge`、`ScramSha256Client`、`PostgresRowDescription`、`PostgresDataRow`、`PostgresErrorResponse` 等 |
+| `lib/sql/mysql.cp` | `// Source: /data/dev/bun/src/sql/` | 向后兼容：`MySqlLenEnc`、`MySqlLenEncStr`、`MySqlCapabilities`、`MySqlHandshakeV10`、`MySqlCommandEncoder`、`MySqlOkPacket`、`MySqlErrPacket`、`MySqlEofPacket` |
+| `lib/sql/sqlite.cp` | `// Source: /data/dev/bun/src/sql/` | `SqliteDatabase` 与 `SqliteRows`（含 `bindNull`/`bindInt`/`bindDouble`/`bindText`/`bindBlob`/`columnName`/`columnBlob`/`reset`/`clearBindings`/`errMsg`/`begin`/`commit`/`rollback`） |
 
 ---
 
-## 二、 PostgreSQL v3 与 MySQL 4.1+ 完整二进制协议引擎
+## 二、 核心新增工业协议能力详解
 
-### 1. PostgreSQL Frontend/Backend v3 协议帧结构
+### 1. PostgreSQL 类型映射与二进制编解码 (`PgTypeTag` / `PgBinaryCodec`)
 
-1. **启动与认证（`StartupMessage` / `MD5` / `SCRAM-SHA-256`）**：
-   - `PostgresWire.encodeStartupMessage(out, user, database)`：构造 `0x00030000` 握手启动帧；
-   - `PostgresWire.encodeMD5Password(out, user, password, salt)`：基于 `cap:crypto` 计算 `"md5" + md5(md5(pw + user) + salt)`；
-   - `ScramSha256Client` + `PostgresWire.encodeSASLInitialResponse` / `encodeSASLResponse`：完整实现 RFC 5802 / RFC 7677 SCRAM-SHA-256 握手（PBKDF2-HMAC-SHA-256、`ClientProof` 与 `ServerSignature` 双向校验）。
-2. **扩展查询协议（Extended Query Protocol）**：
-   - `PostgresWire.encodeParse` (`'P'`)：发送预编译语句名、SQL 文本与参数 OID 数组；
-   - `PostgresWire.encodeBind` (`'B'`)：绑定 `SqlParam`（支持 `Null` `-1`、整型、浮点、布尔、文本、二进制）；
-   - `PostgresWire.encodeDescribe` (`'D'`)、`encodeExecute` (`'E'`)、`encodeClose` (`'C'`)、`encodeSync` (`'S'`)、`encodeFlush` (`'H'`)、`encodeTerminate` (`'X'`)。
-3. **后端响应帧解码（`PostgresBackendFrame.decode`）**：
-   - `'R'` (`Authentication`)：`PostgresAuthChallenge.parse`；
-   - `'S'` (`ParameterStatus`)：`PostgresParameterStatus.parse`；
-   - `'K'` (`BackendKeyData`)：`PostgresBackendKeyData.parse`；
-   - `'T'` (`RowDescription`)：`PostgresRowDescription.parse`（解析列元数据、OID、格式码，支持 `findField(name)`）；
-   - `'D'` (`DataRow`)：`PostgresDataRow.init` + `.nextColumn()` 零拷贝字段切片解码；
-   - `'C'` (`CommandComplete`)：`PostgresCommandComplete.parse`；
-   - `'Z'` (`ReadyForQuery`)：`PostgresReadyForQuery.parse` 提取 `'I'`/`'T'`/`'E'` 事务状态；
-   - `'E'` (`ErrorResponse`)：`PostgresErrorResponse.parse` 提取 `severity`、`sql_state`、`message`、`detail`、`hint`、`constraint`。
+- **`PgTypeTag`**：覆盖 90+ 核心 OID（`pg_bool = 16`, `bytea = 17`, `int8 = 20`, `int2 = 21`, `int4 = 23`, `text = 25`, `json = 114`, `float4 = 700`, `float8 = 701`, `date = 1082`, `timestamp = 1114`, `timestamptz = 1184`, `numeric = 1700`, `uuid = 2950`, `jsonb = 3802` 及各类 `*_array`），提供 `fromOid()`、`isBinaryFormatSupported()`、`formatCode()`、`isArray()`。
+- **`PgBinaryCodec`**：
+  - 标量大端编解码：`encodeInt2`/`decodeInt2`、`encodeInt4`/`decodeInt4`、`encodeInt8`/`decodeInt8`、`encodeFloat4`/`decodeFloat4`、`encodeFloat8`/`decodeFloat8`、`encodeBool`/`decodeBool`；
+  - `bytea` `\x` 十六进制编解码：`encodeByteaHex` / `decodeByteaText`；
+  - `UUID` 16B 二进制与 36B 连字符文本互转：`parseUuid` / `formatUuid`；
+  - `JSONB` 版本头（`0x01`）编解码：`encodeJsonb` / `decodeJsonb`；
+  - `Date` 与 `Timestamp`（2000-01-01 Postgres 纪元 <-> Unix 毫秒/天）；
+  - `NUMERIC` base-10000 二进制全精度文本解码：`decodeNumericText`（支持负数、`NaN`、`Infinity`、小数缩放 `dscale`）；
+  - 单维二进制数组头及元素解码：`decodeArrayHeader` / `decodeInt4Array`。
+- **`PgErrorClassifier` & `PgCommandTag`**：SQLSTATE 类别分类（`IntegrityConstraintViolation`、`TransactionRollback` 等）与可重试判断；`INSERT 0 N` / `UPDATE N` 等行数解析。
 
-### 2. MySQL 4.1+ 线协议核心编解码
+### 2. MySQL 8.0 认证、预编译与二进制行解码 (`MySqlAuthCachingSha2` / `MySqlPreparedProtocol` / `MySqlBinaryRowDecoder`)
 
-1. **4 字节报文头与变长编解码**：
-   - `MySqlPacketHeader.encode/decode`（3 字节小端序长度 + 1 字节 `sequence_id`）；
-   - `MySqlLenEnc` 与 `MySqlLenEncStr`（支持 `0xFB` NULL 字符串与 1/3/4/9 字节变长编码）。
-2. **握手与命令帧**：
-   - `MySqlHandshakeV10.parse`：解析 `server_version`、`connection_id`、能力掩码、插件名及 20 字节 scramble；
-   - `MySqlCommandEncoder`：`encodeQuery` (`COM_QUERY`)、`encodePing` (`COM_PING`)、`encodeQuit` (`COM_QUIT`)、`encodeInitDb` (`COM_INIT_DB`)、`encodeHandshakeResponse41`；
-   - `MySqlOkPacket.parse` / `MySqlErrPacket.parse` / `MySqlEofPacket.parse`。
+- **`MySqlAuthNative` & `MySqlAuthCachingSha2`**：完整 SHA-1 scramble（`mysql_native_password`）与 SHA-256 scramble（`caching_sha2_password`）、FastAuth 响应解析（`0x03` 成功 / `0x04` 继续）、`MySqlAuthSwitchRequest` 解析/响应与 `MySqlSSLRequest` 编码；
+- **`MySqlPreparedProtocol`**：`encodePrepare` (`COM_STMT_PREPARE`)、`encodeExecute` (`COM_STMT_EXECUTE` 含 NULL 位图与二进制参数载荷)、`encodeClose` (`COM_STMT_CLOSE`)；
+- **`MySqlBinaryRowDecoder.decodeRow`**：依据 `MySqlColumnDefinition41` 列表解析 MySQL 二进制结果行（NULL 位图 `(N+9)/8` 偏移、有符号/无符号整型、IEEE 754 浮点、`MySqlValueDateTime`、`MySqlValueTime`、BIT 与字符串/BLOB）。
 
-### 3. 通用连接池 (`SqlConnectionPool`) 与事务状态机 (`SqlTransactionStateMachine`)
+### 3. SQLite 事务与参数化绑定 (`SqliteDatabase` / `SqliteRows`)
 
-- **`SqlConnectionPool`**：管理多方言连接槽位（`Empty`/`Idle`/`InUse`/`Closed`），提供 `registerConnection`、`acquire`、`releaseConnection`、`evictIdle`、`closeConnection` 与 `SqlPoolStats`。
-- **`SqlTransactionStateMachine`**：强制维护 `Idle` -> `InTransaction` -> `Failed` 状态迁移；生成方言敏感的 `BEGIN [ISOLATION LEVEL ...] [READ ONLY]` / `START TRANSACTION` / `BEGIN IMMEDIATE` / `COMMIT` / `ROLLBACK` / `SAVEPOINT` / `ROLLBACK TO SAVEPOINT` / `RELEASE SAVEPOINT`，支持从 PostgreSQL `ReadyForQuery` 自动同步状态。
+- `SqliteRows` 支持 `bindInt` / `bindDouble` / `bindText` / `bindBlob` / `bindNull` / `reset` / `clearBindings` 与 `columnName` / `columnBlob`；
+- `SqliteDatabase` 支持 `begin()` / `commit()` / `rollback()` 与 `errMsg()`。
 
 ---
 
 ## 三、 代码示例
 
 ```typescript
+const std = @import("std");
 import {
-    SqlDialect,
-    SqlStatement,
-    PostgresWire,
-    PostgresBackendFrame,
-    PostgresRowDescription,
-    PostgresDataRow,
-    PostgresReadyForQuery,
-    PostgresErrorResponse,
-    ScramSha256Client,
-    MySqlHandshakeV10,
-    MySqlCommandEncoder,
-    SqlConnectionPool,
-    SqlTransactionStateMachine,
-    SqlIsolationLevel,
+    PgTypeTag,
+    PgBinaryCodec,
+    MySqlAuthCachingSha2,
+    MySqlPreparedProtocol,
+    MySqlBinaryRowDecoder,
+    MySqlColumnDefinition41,
+    MySqlDecodedCell,
+    SqlParam,
     SqliteDatabase,
 } from "cap:sql";
 
-pub fn demoSqlEngines(): !void {
-    // 1. PostgreSQL Extended Query + SCRAM-SHA-256
-    let wire: [512]u8 = undefined;
-    const oids = [23 as u32];
-    const p_len = PostgresWire.encodeParse(&wire, "s1", "SELECT $1::int4", &oids);
-    * = p_len;
+pub fn demoSqlCodecs(): ! {
+    // 1. PostgreSQL NUMERIC 二进制解码与 UUID 编解码
+    let buf: [64]u8 = [0; 64];
+    const num_raw: [12]u8 = [0, 2, 0, 0, 0x40, 0x00, 0, 4, 0, 123, 0x11, 0x94];
+    const dec = PgBinaryCodec.decodeNumericText(num_raw[0..12], buf[0..64])?;
+    * = dec;
+    * = PgTypeTag.fromOid(3802).isBinaryFormatSupported();
 
-    let scram = ScramSha256Client.init();
-    let cf_buf: [128]u8 = undefined;
-    const cf = try scram.buildClientFirst("postgres", "nonce123", &cf_buf);
-    * = PostgresWire.encodeSASLInitialResponse(&wire, "SCRAM-SHA-256", cf);
+    // 2. MySQL caching_sha2_password & COM_STMT_EXECUTE
+    const scramble = MySqlAuthCachingSha2.scramble("secret", "12345678901234567890")?;
+    * = scramble;
+    let pkt: [128]u8 = [0; 128];
+    const params: [1]SqlParam = [SqlParam{ kind: .Int64, int_val: 42 }];
+    * = MySqlPreparedProtocol.encodeExecute(pkt[0..128], 1, 0, params[0..1], 0);
 
-    // 2. 通用连接池与事务状态机
-    let pool = SqlConnectionPool.init(SqlDialect.Postgres, 16, 60000);
-    * = pool.registerConnection(1, 1000, false);
-    if (cid := pool.acquire(2000)) {
-        defer * = pool.releaseConnection(cid, 2500, true);
-    }
-
-    let tx = SqlTransactionStateMachine.init(SqlDialect.Postgres);
-    let sql_buf: [128]u8 = undefined;
-    const begin_sql = try tx.begin(SqlIsolationLevel.Serializable, false, &sql_buf);
-    const sp_sql = try tx.savepoint("sp1", &sql_buf);
-    const commit_sql = try tx.commit(&sql_buf);
-    * = begin_sql;
-    * = sp_sql;
-    * = commit_sql;
+    // 3. SQLite 参数化绑定与事务
+    let db = SqliteDatabase.open(":memory:")?;
+    defer db.close();
+    db.exec("CREATE TABLE kv (k INTEGER PRIMARY KEY, v TEXT);")?;
+    db.begin()?;
+    let st = db.query("INSERT INTO kv (k, v) VALUES (?, ?);")?;
+    defer st.close();
+    st.bindInt(1, 1)?;
+    st.bindText(2, "ok")?;
+    * = st.next();
+    db.commit()?;
 }
 ```
-
----
-
-## 四、 与 `Bun.sql` / `bun:sqlite` API 对照表
-
-| 功能特性 | Bun (`Bun.sql` / `bun:sqlite`) | CP 标准库 (`cap:sql`) |
-| :--- | :--- | :--- |
-| **参数化语句防注入** | `` sql`SELECT * FROM t WHERE id = ${id}` `` | `SqlStatement.prepare` -> `.bindInt` / `.bindFloat` / `.bindText` / `.bindBlob` / `.bindBool` |
-| **Postgres 启动与认证** | `StartupMessage` / `SCRAM-SHA-256` | `PostgresWire.encodeStartupMessage` / `encodeMD5Password` / `ScramSha256Client` |
-| **Postgres 扩展查询** | `Parse` / `Bind` / `Describe` / `Execute` / `Sync` | `PostgresWire.encodeParse` / `encodeBind` / `encodeDescribe` / `encodeExecute` / `encodeSync` |
-| **Postgres 后端帧解码** | `RowDescription` / `DataRow` / `ErrorResponse` / `ReadyForQuery` | `PostgresBackendFrame.decode` + 全套强类型结构体解析器 |
-| **MySQL 握手与命令** | `HandshakeV10` / `COM_QUERY` / `OK` / `ERR` / `EOF` | `MySqlHandshakeV10.parse` / `MySqlCommandEncoder` / `MySqlOkPacket` / `MySqlErrPacket` / `MySqlEofPacket` |
-| **连接池与事务状态机** | 内置连接池 & `sql.begin` / `savepoint` | `SqlConnectionPool` & `SqlTransactionStateMachine` |
-| **SQLite 嵌入式引擎** | `new Database(":memory:")` | `SqliteDatabase.open(":memory:")` -> `exec` / `query` / `changes` / `lastInsertRowId` |

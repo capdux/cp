@@ -22,6 +22,16 @@ zig {
     pub extern "c" fn sqlite3_changes(db: ?*anyopaque) c_int;
     pub extern "c" fn sqlite3_last_insert_rowid(db: ?*anyopaque) i64;
     pub extern "c" fn sqlite3_finalize(stmt: ?*anyopaque) c_int;
+    pub extern "c" fn sqlite3_reset(stmt: ?*anyopaque) c_int;
+    pub extern "c" fn sqlite3_clear_bindings(stmt: ?*anyopaque) c_int;
+    pub extern "c" fn sqlite3_bind_null(stmt: ?*anyopaque, idx: c_int) c_int;
+    pub extern "c" fn sqlite3_bind_int64(stmt: ?*anyopaque, idx: c_int, val: i64) c_int;
+    pub extern "c" fn sqlite3_bind_double(stmt: ?*anyopaque, idx: c_int, val: f64) c_int;
+    pub extern "c" fn sqlite3_bind_text(stmt: ?*anyopaque, idx: c_int, val: [*c]const u8, n: c_int, destructor: isize) c_int;
+    pub extern "c" fn sqlite3_bind_blob(stmt: ?*anyopaque, idx: c_int, val: ?*const anyopaque, n: c_int, destructor: isize) c_int;
+    pub extern "c" fn sqlite3_column_blob(stmt: ?*anyopaque, iCol: c_int) ?*const anyopaque;
+    pub extern "c" fn sqlite3_column_bytes(stmt: ?*anyopaque, iCol: c_int) c_int;
+    pub extern "c" fn sqlite3_column_name(stmt: ?*anyopaque, iCol: c_int) [*c]const u8;
 }
 
 pub struct SqliteRows {
@@ -123,6 +133,91 @@ pub struct SqliteRows {
     pub fn release(*_) {
         _.close();
     }
+
+    pub fn columnName(col: i32): []const u8 {
+        let s: []const u8 = "";
+        zig {
+            if (self.stmt_ptr) |st| {
+                const c_name = sqlite3_column_name(st, col);
+                if (c_name != null) s = std.mem.span(c_name);
+            }
+        }
+        return s;
+    }
+
+    pub fn columnBlob(col: i32): []const u8 {
+        let s: []const u8 = "";
+        zig {
+            if (self.stmt_ptr) |st| {
+                const ptr_opt = sqlite3_column_blob(st, col);
+                const len_i = sqlite3_column_bytes(st, col);
+                if (ptr_opt != null and len_i > 0) {
+                    const byte_ptr: [*]const u8 = @ptrCast(ptr_opt.?);
+                    s = byte_ptr[0..@intCast(len_i)];
+                }
+            }
+        }
+        return s;
+    }
+
+    pub fn bindNull(*_, idx: i32): ! {
+        zig {
+            if (self.stmt_ptr) |st| {
+                if (sqlite3_bind_null(st, idx) != 0) return error.SQLiteBindFailed;
+            } else return error.StatementClosed;
+        }
+    }
+
+    pub fn bindInt(*_, idx: i32, val: i64): ! {
+        zig {
+            if (self.stmt_ptr) |st| {
+                if (sqlite3_bind_int64(st, idx, val) != 0) return error.SQLiteBindFailed;
+            } else return error.StatementClosed;
+        }
+    }
+
+    pub fn bindDouble(*_, idx: i32, val: f64): ! {
+        zig {
+            if (self.stmt_ptr) |st| {
+                if (sqlite3_bind_double(st, idx, val) != 0) return error.SQLiteBindFailed;
+            } else return error.StatementClosed;
+        }
+    }
+
+    pub fn bindText(*_, idx: i32, val: []const u8): ! {
+        zig {
+            if (self.stmt_ptr) |st| {
+                const empty_c: [1]u8 = .{0};
+                const p = if (val.len > 0) val.ptr else &empty_c;
+                if (sqlite3_bind_text(st, idx, p, @intCast(val.len), -1) != 0) return error.SQLiteBindFailed;
+            } else return error.StatementClosed;
+        }
+    }
+
+    pub fn bindBlob(*_, idx: i32, val: []const u8): ! {
+        zig {
+            if (self.stmt_ptr) |st| {
+                const p: ?*const anyopaque = if (val.len > 0) @ptrCast(val.ptr) else null;
+                if (sqlite3_bind_blob(st, idx, p, @intCast(val.len), -1) != 0) return error.SQLiteBindFailed;
+            } else return error.StatementClosed;
+        }
+    }
+
+    pub fn reset(*_): ! {
+        zig {
+            if (self.stmt_ptr) |st| {
+                if (sqlite3_reset(st) != 0) return error.SQLiteResetFailed;
+            } else return error.StatementClosed;
+        }
+    }
+
+    pub fn clearBindings(*_): ! {
+        zig {
+            if (self.stmt_ptr) |st| {
+                if (sqlite3_clear_bindings(st) != 0) return error.SQLiteBindFailed;
+            } else return error.StatementClosed;
+        }
+    }
 }
 
 pub struct SqliteDatabase {
@@ -221,5 +316,28 @@ pub struct SqliteDatabase {
 
     pub fn release(*_) {
         _.close();
+    }
+
+    pub fn errMsg(): []const u8 {
+        let msg: []const u8 = "";
+        zig {
+            if (self.db_ptr) |d| {
+                const c_err = sqlite3_errmsg(d);
+                if (c_err != null) msg = std.mem.span(c_err);
+            }
+        }
+        return msg;
+    }
+
+    pub fn begin(): ! {
+        _.exec("BEGIN")?;
+    }
+
+    pub fn commit(): ! {
+        _.exec("COMMIT")?;
+    }
+
+    pub fn rollback(): ! {
+        _.exec("ROLLBACK")?;
     }
 }

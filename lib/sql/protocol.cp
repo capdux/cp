@@ -618,10 +618,10 @@ pub struct SqlConnectionPool {
     pub evictions: u64 = 0,
 
     pub static fn init(dialect: SqlDialect, capacity: usize = 16, idle_timeout_ms: i64 = 60000): SqlConnectionPool {
-        const cap = if (capacity == 0 || capacity > MAX_SQL_POOL_SIZE) MAX_SQL_POOL_SIZE else capacity;
+        const pool_cap = if (capacity == 0 || capacity > MAX_SQL_POOL_SIZE) MAX_SQL_POOL_SIZE else capacity;
         let pool = SqlConnectionPool{
             dialect: dialect,
-            capacity: cap,
+            capacity: pool_cap,
             idle_timeout_ms: idle_timeout_ms,
             slots: undefined,
             acquires: 0,

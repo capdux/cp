@@ -2614,3 +2614,9 @@
   - 子智能体 4 完工回收：新建 [`lib/pkg/`](file:///data/dev/cp/lib/pkg/index.cp)（9 模块 4,512 行，0 `@import("bun")`，0 `std.posix`，9/9 `// Source:` 合规）及 [`docs/pkg/pkg.md`](file:///data/dev/cp/docs/pkg/pkg.md)，实现 10 协议依赖解析、`.npmrc`/Packument、JSON + 二进制 `CPLK0001`（CRC32）Lockfile DAG、安全 Tarball+SRI 解包、Hoisted/Isolated 链接、`.bin`、`patch_install` 与 `PackageManager` 端到端闭环；
   - [`cap/test/test_pkg_install_deep.cp`](file:///data/dev/cp/cap/test/test_pkg_install_deep.cp) 6/6 PASS（2274ms），同步双轨规范手册与热日志并执行 Git 提交固化；
   - 无缝拉起子智能体 5（`01699e2b`，Phase B-2：Bun 原版 `shell/` + `shell_parser/` + 22+ 生产内置命令直迁 → `lib/shell/`），与子智能体 3（`eb009530`，Phase C-1：`md/` + `sql/`）继续保持双路并行。
+
+### 2026-11-20（Phase C-1 `lib/md/` 11.7K 与 `lib/sql/` 4.7K 原版直迁验收入库，无缝拉起 Phase C-2 `http` + `interchange`）
+- **执行成果**：
+  - 子智能体 3 完工回收：`lib/md/`（21 文件 11,735 行，完整直迁 Bun 全部 16 个 MD4C 引擎模块与 2,125 条 W3C 实体）+ `lib/sql/`（10 文件 4,718 行，完整 PG/MySQL/SQLite 二进制编解码与认证协议），合计 31 文件 16,453 行，31/31 `// Source:` 合规，0 `@import("bun")`，0 `std.posix`；
+  - [`cap/test/test_phase_c1_md_sql_port.cp`](file:///data/dev/cp/cap/test/test_phase_c1_md_sql_port.cp)（8/8）及 4 套存量回归共 29/29 用例 100% PASS，已同步双轨规范与热日志并执行 Git 提交固化；
+  - 无缝拉起子智能体 6（`16b20207`，Phase C-2：Bun 原版 `http/` + `http_types/` 15.8K 与 `interchange/` YAML 1.2/TOML 1.0 6.7K 直迁），与子智能体 5（`01699e2b`，Phase B-2 `lib/shell/`）继续双路并行。

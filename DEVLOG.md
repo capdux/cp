@@ -2,6 +2,13 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-20: Phase C-1 工业级 `lib/md/`（11.7K MD4C 全模块）与 `lib/sql/`（4.7K PG/MySQL/SQLite）原版直迁完工
+
+- **落地成果**：完整原版移植 Bun `src/md/` 全部 16 个 MD4C 引擎模块（含 2,125 条 W3C HTML5 实体与 1,829 行高级 ANSI 渲染器）及 `src/sql/` Postgres/MySQL/SQLite 完整二进制编解码与认证协议状态机，合计 31 文件 16,453 行，0 `@import("bun")`，0 `std.posix`，100% 保持既有 API 零回归。
+- **验收与接力**：5 套测试共 29/29 用例全部 PASS；立即拉起 Phase C-2（Bun 原版 `http/` + `http_types/` 15.8K + `interchange/` YAML 1.2/TOML 1.0 6.7K 直迁），与 Phase B-2（`lib/shell/`）保持双路并行。
+
+---
+
 ## 2026-11-20: Phase B-1 工业级包管理核心 `lib/pkg/`（源自 Bun `install/`）落地入库
 
 - **架构价值**：填补 CP 此前完全缺失的工业级包管理引擎（54K Bun `install/` 核心无 JSC 子系统），依托刚落地的 `import cap from "cap"` 按需惰性挂载与 Phase A 底座，一次性完成 10 协议依赖解析、`.npmrc`/Packument、JSON + 二进制 `CPLK0001`（CRC32）双格式 Lockfile DAG、安全 Tarball+SRI 解包、Hoisted/Isolated 安装链接、`.bin` 与 `patch_install` 全链路闭环（9 模块 4,512 行）。

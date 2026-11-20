@@ -1,81 +1,65 @@
-# CP 标准库：CommonMark / GFM Markdown 解析与渲染手册 (`cap:md`)
+# CP 标准库：MD4C 级工业 Markdown 解析与渲染手册 (`cap:md`)
 
 ## 一、 架构总览与设计准则
 
-`cap:md` 是 CP 语言官方内置的 CommonMark + GitHub Flavored Markdown (GFM) 完整解析与多目标渲染标准库，对标并吸收自 Bun 生产级 Markdown 引擎（`/data/dev/bun/src/md/`），提供结构化块级 AST、可定制渲染遍历接口、XSS 安全转义及零堆分配快路径接口。
+`cap:md` 是 CP 语言官方内置的高完整度 CommonMark + GitHub Flavored Markdown (GFM) 解析与多目标渲染标准库，直接原版移植自 Bun 生产级 MD4C 架构引擎（`/data/dev/bun/src/md/`，21 个文件 11,735 行），同时 100% 保留原有 `Markdown.parse` / `Markdown.toHtml` / `MdTable` 结构化 AST 与表格 API 的向后兼容性。
 
 ```text
-┌───────────────────────────────────────────────────────────────────────────┐
-│                         CP 用户层应用 (Application)                        │
-├─────────────────────────────┬──────────────────────┬──────────────────────┤
-│   完整 CommonMark + GFM AST  │  GFM 表格引擎         │  零堆快路径与 ANSI    │
-│  Markdown.parse()           │  MdTableAlign        │  Markdown.renderHtml │
-│  Markdown.toHtml()          │  MdTable.splitRow()  │  Markdown.renderAnsi │
-│  Markdown.render()          │  MdTable.renderHtml  │  renderInlineHtml()  │
-│  Markdown.renderWithRenderer│  (支持 \| 与 code)    │                      │
-├─────────────────────────────┴──────────────────────┴──────────────────────┤
-│   MarkdownOptions (gfm/tables/strikethrough/tasklists/autolinks/sanitize) │
-└───────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                          CP 用户层应用 (Application)                           │
+├──────────────────────────────┬────────────────────────┬──────────────────────┤
+│   MD4C 双遍流式引擎 (原版直迁) │   兼容 AST 与表格引擎   │   HTML5 实体与 Unicode │
+│  Markdown.toHtmlEngine()     │  Markdown.parse()      │  2,125 W3C 命名实体   │
+│  Markdown.toAnsi()           │  Markdown.toHtml()     │  lookupEntity()      │
+│  renderWithRenderer()        │  MdTable / MdDocument  │  caseFold() (1/2/3码点)│
+│  HtmlRenderer / AnsiRenderer │  MdRenderer 遍历接口    │  HeadingIdTracker    │
+└──────────────────────────────┴────────────────────────┴──────────────────────┘
 ```
 
-### 1. 模块文件拓扑与谱系来源
+### 1. 模块文件拓扑与谱系来源（共 21 文件，11,735 行）
 
 | 文件路径 | 上游谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
 | `lib/md/index.cp` | `// Source: /data/dev/bun/src/md/root.cp` | `cap:md` 统一公开导出入口 |
-| `lib/md/ast.cp` | `// Source: /data/dev/bun/src/md/types.cp` | `MarkdownOptions`、`MdBlockKind`、`MdBlock`、`MdLinkDef`、`MdRenderer` |
-| `lib/md/parser.cp` | `// Source: /data/dev/bun/src/md/parser.cp` | `MdDocument` 与 `MdParser`（完整块级/行内 CommonMark + GFM 解析与 HTML 渲染） |
-| `lib/md/markdown.cp` | `// Source: /data/dev/bun/src/md/root.cp` | `MdOptions` 兼容预设、`Markdown.parse` / `toHtml` / `render` / `renderHtml` / `renderAnsi` |
-| `lib/md/table.cp` | `// Source: /data/dev/bun/src/md/blocks.cp` | `MdTableAlign` 对齐枚举与 `MdTable` GFM 表格解析与 `<table>` 渲染器 |
-
-### 2. 支持的 CommonMark & GFM 完整语法矩阵
-
-- **块级元素**：
-  - ATX 标题（`#` ~ `######`，支持尾部闭合 `#` 序列裁剪）与 Setext 标题（`===` / `---`）；
-  - 围栏代码块（`` ``` `` 与 `~~~`，支持语言 info string 提取及多反引号长度匹配）与缩进代码块（4 空格 / Tab）；
-  - 水平分割线（`---`、`***`、`___`）；
-  - 嵌套引用块（`>` / `> >`，支持惰性续行与内嵌块）；
-  - 有序列表（保留 `start="N"` 起始编号，支持 `.` / `)`）与无序列表（`-` / `*` / `+`，支持多级缩进嵌套与紧缩/松散判定）；
-  - GFM 表格（表头、`left`/`center`/`right` 对齐、短行补齐、单元格内行内样式与 `\|` 转义）；
-  - GFM 任务列表（`- [x]` / `- [ ]` 输出 `task-list-item` 与禁用复选框）；
-  - 链接引用定义（`[ref]: url "title"`）与 HTML 块。
-- **行内元素与安全防护**：
-  - 粗体 `**`/`__`、斜体 `*`/`_`（遵循 CommonMark 词内 `_` 不触发规则如 `foo_bar_baz`）、删除线 `~~`、硬/软换行；
-  - 单/多反引号行内代码（`` `code` ``、```` ``a ` b`` ````）；
-  - 行内链接 `[text](url "title")`、引用链接 `[text][ref]`、图片 `![alt](src "title")`；
-  - 尖括号自动链接 `<https://...>` / `<user@example.com>` 与 GFM 宽松 URL 自动链接 `https://...` / `www....`；
-  - 反斜杠转义（`\*`、`\\` 等）与 HTML 安全转义（防 XSS：转义 `&<>""`，`sanitizeHtml` 启用时转义原始 HTML 标签并拦截 `javascript:`/`vbscript:`/`data:text/html` 协议）。
+| `lib/md/types.cp` | `// Source: /data/dev/bun/src/md/types.cp` | MD4C `Flags`、`BlockType`、`SpanType`、`RendererVTable`、`Md4cParserState`、`BitSet256` 标记映射 |
+| `lib/md/entity.cp` | `// Source: /data/dev/bun/src/md/entity.cp` | 完整 2,125 条 W3C HTML5 命名字符实体表与二分查找 `lookup()` |
+| `lib/md/unicode.cp` | `// Source: /data/dev/bun/src/md/unicode.cp` | 完整 MD4C Unicode Case-Folding 映射表（1/2/3 码点 `fold_map_1/2/3`）与 `caseFold()` |
+| `lib/md/helpers.cp` | `// Source: /data/dev/bun/src/md/helpers.cp` | 335 组 Unicode 标点范围、UTF-8 编解码、数字/命名实体转 UTF-8、`HeadingIdTracker` |
+| `lib/md/autolinks.cp` | `// Source: /data/dev/bun/src/md/autolinks.cp` | GFM 宽松 URL/Email/www 自动链接扫描与括号/尾部标点配平裁剪 |
+| `lib/md/line_analysis.cp` | `// Source: /data/dev/bun/src/md/line_analysis.cp` | ATX/Setext 标题、围栏/缩进代码块、HR、HTML 块（1-7 类）、GFM 表格下划线与容器行分析 |
+| `lib/md/ref_defs.cp` | `// Source: /data/dev/bun/src/md/ref_defs.cp` | CommonMark 链接引用定义解析、Unicode 归一化与哈希查找 `lookupRefDef()` |
+| `lib/md/inline_core.cp` | `// Source: /data/dev/bun/src/md/inlines.cp` | 内联 Span 调度、反引号代码跨度、左右侧翼规则、HTML 标签扫描 |
+| `lib/md/links.cp` | `// Source: /data/dev/bun/src/md/links.cp` | 行内链接、引用/简写链接、图片、Wiki 链接与尖括号自动链接解析 |
+| `lib/md/inlines.cp` | `// Source: /data/dev/bun/src/md/inlines.cp` | CommonMark $O(N)$ 强调分隔符栈匹配算法、删除线与全行内元素分发 |
+| `lib/md/render_blocks.cp` | `// Source: /data/dev/bun/src/md/render_blocks.cp` | 代码块、HTML 块、GFM 表格行/单元格渲染分发 |
+| `lib/md/containers.cp` | `// Source: /data/dev/bun/src/md/containers.cp` | 嵌套容器栈、紧缩/松散列表回溯修补与块字节流遍历循环 |
+| `lib/md/blocks.cp` | `// Source: /data/dev/bun/src/md/blocks.cp` | MD4C 双遍块级解析状态机（`processDoc` / `analyzeLine` / `processLine`） |
+| `lib/md/html_renderer.cp` | `// Source: /data/dev/bun/src/md/html_renderer.cp` | MD4C `HtmlRenderer`（标题锚点、自链接标题、GFM 标签过滤、`sanitize_html` XSS 防护） |
+| `lib/md/ansi_renderer.cp` | `// Source: /data/dev/bun/src/md/ansi_renderer.cp` | 终端 `AnsiRenderer`（自动折行、东亚宽字符、Unicode 方框表格、OSC 8 超链接、Kitty 图片、`ImageUrlCollector`） |
+| `lib/md/engine.cp` | `// Source: /data/dev/bun/src/md/root.cp` | `MdEngineOptions`、`renderToHtml`、`renderToHtmlWithOptions`、`renderWithRenderer`、`renderToAnsi` |
+| `lib/md/markdown.cp` | `// Source: /data/dev/bun/src/md/root.cp` | `Markdown` 统一门面（含 `toHtmlEngine` / `toAnsi` / `lookupEntity` / `caseFold` 与兼容 API） |
+| `lib/md/ast.cp` | `// Source: /data/dev/bun/src/md/types.cp` | 向后兼容：`MarkdownOptions`、`MdBlockKind`、`MdBlock`、`MdLinkDef`、`MdRenderer` |
+| `lib/md/parser.cp` | `// Source: /data/dev/bun/src/md/parser.cp` | 向后兼容：`MdDocument` 与 `MdParser` |
+| `lib/md/table.cp` | `// Source: /data/dev/bun/src/md/blocks.cp` | 向后兼容：`MdTableAlign` 与 `MdTable` |
 
 ---
 
 ## 二、 核心 API 详解
 
-### 1. `MarkdownOptions` 与 `MdOptions`
+### 1. MD4C 工业流式引擎 (`MdEngineOptions` / `Markdown.toHtmlEngine` / `Markdown.toAnsi`)
 
-| 字段 / 预设 | 类型 / 返回值 | 默认值 / 说明 |
-| :--- | :--- | :--- |
-| `gfm` | `bool` | `true`，是否启用 GFM 模式 |
-| `tables` | `bool` | `true`，启用 GFM 表格 |
-| `strikethrough` | `bool` | `true`，启用 `~~删除线~~` |
-| `tasklists` | `bool` | `true`，启用 `- [x]` / `- [ ]` 任务列表 |
-| `autolinks` | `bool` | `true`，启用 `https://` / `www.` 自动链接 |
-| `sanitizeHtml` | `bool` | `false`（`github()` 为 `true`），转义原始 HTML 标签并拦截危险 URL 协议 |
-| `headingIds` | `bool` | `false`（`github()` 为 `true`），自动生成去重标题锚点 `id="..."` |
-| `MarkdownOptions.commonmark()` | `MarkdownOptions` | 严格 CommonMark 预设（全部 GFM 扩展关闭） |
-| `MarkdownOptions.github()` | `MarkdownOptions` | 完整 GitHub Flavored Markdown 预设 |
-
-### 2. `Markdown`、`MdDocument` 与 `MdRenderer`
-
-| API 签名 | 说明 |
+| API / 选项 | 说明 |
 | :--- | :--- |
-| `Markdown.parse(allocator, md_text, opts): MdDocument!` | 解析 Markdown 为结构化 `MdDocument` AST（需调用 `doc.deinit()` 释放） |
-| `Markdown.toHtml(allocator, md_text, opts): ([]u8)!` | 一键解析并渲染完整 CommonMark / GFM HTML |
-| `Markdown.render(allocator, md_text, opts): ([]u8)!` | `toHtml` 的便捷别名 |
-| `Markdown.renderWithRenderer(allocator, md_text, opts, renderer): !` | 使用自定义 `MdRenderer`（`enterBlock` / `leaveBlock` / `onText`）遍历 AST |
-| `doc.blocks(): []MdBlock` | 获取顶层块节点切片进行只读 AST 检查 |
-| `doc.walk(renderer)` | 深度优先遍历整棵文档 AST |
-| `Markdown.renderHtml(md_text, out_buf): []const u8` | 零堆快路径渲染简单标题/列表/段落到预分配缓冲区 |
-| `Markdown.renderAnsi(md_text, out_buf): []const u8` | 渲染终端 ANSI 彩色输出 |
+| `MdEngineOptions` | 支持 `tables`、`strikethrough`、`tasklists`、`permissive_url_autolinks`、`permissive_email_autolinks`、`permissive_www_autolinks`、`heading_ids`、`autolink_headings`、`tag_filter`、`sanitize_html`、`wiki_links`、`latex_math`、`no_indented_code_blocks`、`hard_soft_breaks`、`underline` 等全套选项 |
+| `Markdown.toHtmlEngine(allocator, md, opts): ([]u8)!` | 使用 MD4C 双遍引擎解析并渲染高质量 CommonMark + GFM HTML |
+| `Markdown.toAnsi(allocator, md, opts, theme): ([]u8)!` | 使用 `AnsiTheme` 渲染终端 ANSI 彩色输出（支持自动折行、Unicode 表格边框、代码高亮、OSC 8 超链接） |
+| `renderWithRenderer(md, allocator, opts, rend): !` | 使用自定义 `Renderer`（`RendererVTable`）流式接收块与行内事件（如 `ImageUrlCollector` 提取图片地址） |
+| `Markdown.lookupEntity(name): ([2]u21)?` | 查找 2,125 个 W3C HTML5 命名实体（如 `&copy;`、`&mdash;`、`&AElig;`） |
+| `Markdown.caseFold(codepoint): FoldInfo` | CommonMark 标准 Unicode 大小写折叠（如 `0x00DF` -> `"ss"`） |
+
+### 2. 向后兼容 AST 与表格 API (`Markdown.parse` / `Markdown.toHtml` / `MdTable`)
+
+保留全部既有兼容接口：`MarkdownOptions.commonmark()` / `.github()`、`Markdown.parse`、`Markdown.toHtml`、`Markdown.render`、`Markdown.renderWithRenderer`、`Markdown.renderHtml`、`Markdown.renderAnsi`、`MdTable.parseAlignSpec` / `splitRow` / `renderHtml`。
 
 ---
 
@@ -83,26 +67,35 @@
 
 ```typescript
 const std = @import("std");
-import { MarkdownOptions, MdBlock, MdRenderer, Markdown } from "cap:md";
+import {
+    Markdown,
+    MdEngineOptions,
+    AnsiTheme,
+    ImageUrlCollector,
+    renderWithRenderer,
+} from "cap:md";
 
-pub fn demoMarkdown(): !void {
+pub fn demoMd4c(): ! {
     const allocator = std.heap.page_allocator;
-    const opts = MarkdownOptions.github();
+    const src = "# Guide &copy;\n\n- [x] **Fast** ~~old~~ [Ref][r]\n\n[r]: https://example.com\n";
 
-    const doc_src =
-        "# CP Guide\n\n" ++
-        "> Nested\n> > Blockquote\n\n" ++
-        "- [x] Complete `CommonMark`\n- [ ] Check ~~old~~ **new**\n\n" ++
-        "| Feature | Status |\n| :--- | ---: |\n| Tables | **OK** |\n";
-
-    // 1. 完整 CommonMark + GFM HTML 渲染（含 headingIds 与 XSS 过滤）
-    const html = try Markdown.toHtml(allocator, doc_src, opts);
+    // 1. MD4C HTML 渲染
+    const opts = MdEngineOptions{
+        heading_ids: true,
+        autolink_headings: true,
+        tag_filter: true,
+        sanitize_html: true,
+    };
+    const html = Markdown.toHtmlEngine(allocator, src, opts)?;
     defer allocator.free(html);
 
-    // 2. 结构化 AST 检查
-    let doc = try Markdown.parse(allocator, doc_src, opts);
-    defer doc.deinit();
-    const top_blocks = doc.blocks();
-    * = top_blocks;
+    // 2. MD4C ANSI 终端渲染
+    const ansi = Markdown.toAnsi(allocator, src, opts, AnsiTheme{ columns: 80, colors: true })?;
+    defer allocator.free(ansi);
+
+    // 3. 流式事件访问者收集图片 URL
+    let collector = ImageUrlCollector.init(allocator);
+    defer collector.deinit();
+    renderWithRenderer("![logo](https://example.com/a.png)", allocator, opts, collector.renderer())?;
 }
 ```

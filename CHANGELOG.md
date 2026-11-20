@@ -1,3 +1,14 @@
+## [2026-11-20] - Phase C-1 工业级原版直迁落地：`lib/md/`（21 文件 11,735 行完整 MD4C 引擎）与 `lib/sql/`（10 文件 4,718 行多数据库协议栈）
+
+### 标准库原版直迁 (Phase C-1 Direct Port)
+- **`lib/md/`（21 文件 11,735 行，完整直迁 Bun `src/md/` 全部 16 模块，0 `@import("bun")`）**：
+  - 新增 [`entity.cp`](file:///data/dev/cp/lib/md/entity.cp)（2,167 行，2,125 条 W3C HTML5 命名实体）、[`unicode.cp`](file:///data/dev/cp/lib/md/unicode.cp)（1/2/3 码点 case-folding）、[`helpers.cp`](file:///data/dev/cp/lib/md/helpers.cp)（335 组 Unicode 标点与 `HeadingIdTracker`）、[`blocks.cp`](file:///data/dev/cp/lib/md/blocks.cp)（双遍块解析）、[`inlines.cp`](file:///data/dev/cp/lib/md/inlines.cp)（O(N) 强调栈）、[`links.cp`](file:///data/dev/cp/lib/md/links.cp)、[`autolinks.cp`](file:///data/dev/cp/lib/md/autolinks.cp)、[`ref_defs.cp`](file:///data/dev/cp/lib/md/ref_defs.cp)、[`html_renderer.cp`](file:///data/dev/cp/lib/md/html_renderer.cp)（`heading_ids`/`tag_filter`/`sanitize_html`）、[`ansi_renderer.cp`](file:///data/dev/cp/lib/md/ansi_renderer.cp)（1,829 行：折行/CJK 宽度/Unicode 方框表/OSC 8/Kitty 图片）、[`engine.cp`](file:///data/dev/cp/lib/md/engine.cp) 等 16 个完整模块，保留原有 `Markdown`/`MdTable` 100% 兼容。
+- **`lib/sql/`（10 文件 4,718 行，直迁 Bun `src/sql/` 协议状态机，0 `@import("bun")`）**：
+  - 新增 [`shared.cp`](file:///data/dev/cp/lib/sql/shared.cp)（15B SSO `SqlData`）、[`pg_types.cp`](file:///data/dev/cp/lib/sql/pg_types.cp)（90+ `PgTypeTag` OID、`PgBinaryCodec` 覆盖 numeric/uuid/jsonb/int4_array）、[`pg_protocol.cp`](file:///data/dev/cp/lib/sql/pg_protocol.cp)（SSL/Cancel/StartupUTF8/Copy/Notify/Notice）、[`mysql_types.cp`](file:///data/dev/cp/lib/sql/mysql_types.cp)、[`mysql_protocol.cp`](file:///data/dev/cp/lib/sql/mysql_protocol.cp)（Native SHA-1、`CachingSha2` FastAuth、ColumnDef41、`COM_STMT_*`、`BinaryRowDecoder`）；增强 [`sqlite.cp`](file:///data/dev/cp/lib/sql/sqlite.cp) 事务与参数绑定。
+- **文档、规范与验收**：更新 [`docs/md/md.md`](file:///data/dev/cp/docs/md/md.md)、[`docs/sql/sql.md`](file:///data/dev/cp/docs/sql/sql.md) 及双轨规范手册；新增 [`cap/test/test_phase_c1_md_sql_port.cp`](file:///data/dev/cp/cap/test/test_phase_c1_md_sql_port.cp)（8/8 PASS），5 套新建及存量回归测试共 29/29 用例 100% PASS，31/31 文件 `// Source:` 合规。
+
+---
+
 ## [2026-11-20] - Phase B-1 工业级包管理引擎直迁落地：新建 `lib/pkg/`（`cap:pkg`，9 模块 4,512 行，源自 Bun `install/`）
 
 ### 新增标准库 (`cap:pkg` / `cap.pkg` / `cap.install`)
