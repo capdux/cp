@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:tween` 31 种缓动曲线、关键帧轨道与弹簧阻尼动画引擎（5/5 PASS，自动动态挂载 `cap.tween`）
+
+- 新建 [`lib/tween/`](file:///data/dev/cp/lib/tween/index.cp)（`tween.cp`、`index.cp`）：`Easing`（全 31 种 Robert Penner 缓动曲线）、`Tween`（往返 `yoyo` 与重复计数）、`KeyframeTrack`（严格单调检验与二分分段插值）及 `SpringDamper`（稳定性受控自适应子步长半隐式欧拉物理系统）；文档 [`doc/lib/tween.md`](file:///data/dev/cp/doc/lib/tween.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_tween_production_deep.cp`](file:///data/dev/cp/cap/test/test_tween_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:noise` 确定性 Perlin/Worley/fBm 分形噪声与高度图引擎（5/5 PASS，自动动态挂载 `cap.noise`）
 
 - 新建 [`lib/noise/`](file:///data/dev/cp/lib/noise/index.cp)（`noise.cp`、`index.cp`）：`NoiseGen`（SplitMix64 + Fisher-Yates 零堆 512 排列置换表、Quintic Perlin 2D/3D、`worley2` Voronoi 细胞噪声、归一化 `fbm2`/`ridged2` 分形及 `generateGrid2D` 批量 `[0.0, 1.0]` 高度图）；文档 [`doc/lib/noise.md`](file:///data/dev/cp/doc/lib/noise.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_noise_production_deep.cp`](file:///data/dev/cp/cap/test/test_noise_production_deep.cp) `-m` 5/5 PASS。

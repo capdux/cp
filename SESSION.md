@@ -293,3 +293,6 @@
 
 ### 2026-11-21（`cap:noise` 验收固化，顶替以 `inherit` 拉起 `cap:sat` 维持 2 路并行）
 - **执行成果**：`lib/noise/`（5/5 PASS，含 `cap.noise` 动态挂载与 `doc/lib/noise.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/sat/`（DPLL 单位传播布尔 SAT 求解器、DIMACS CNF 解析与依赖/排班约束建模引擎），与 `lib/tween/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:tween` 验收固化，顶替以 `inherit` 拉起 `cap:vcard` 维持 2 路并行）
+- **执行成果**：`lib/tween/`（5/5 PASS，含 `cap.tween` 动态挂载与 `doc/lib/tween.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/vcard/`（RFC 6350 vCard 3.0/4.0 通讯录 `.vcf` 解析生成与行折行展开引擎），与 `lib/sat/` 保持 2 路正交并行。
