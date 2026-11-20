@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:jq` 纯 CP `jq` JSON 结构化查询、多结果流展开、管道组合与有界防 DoS 转换引擎（支持 `cap.jq` 自动动态挂载，详见 `doc/lib/jq.md`）（5/5 PASS，文档直写 `doc/lib/jq.md`）
+- **核心设计**：采用扁平节点池存储 Filter AST 消除深递归释放复杂度，求值器内置 `MAX_JQ_EVAL_DEPTH = 128` 与 `MAX_JQ_OUTPUTS = 65536` 展开上限防资源耗尽，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:cel` 纯 CP Common Expression Language (CEL) 安全策略表达式编译、宏推导与有界沙盒求值引擎（支持 `cap.cel` 自动动态挂载，详见 `doc/lib/cel.md`）（5/5 PASS，文档直写 `doc/lib/cel.md`）
 - **核心设计**：采用非图灵完备有界 `max_steps` 沙盒求值器与严格类型规则（禁止隐式 Int+String），全路径通过 `std.testing.allocator` 零泄漏验证。
 

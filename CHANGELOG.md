@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:jq` 纯 CP `jq` JSON 结构化查询、多结果流展开、管道组合与有界防 DoS 转换引擎（支持 `cap.jq` 自动动态挂载，详见 `doc/lib/jq.md`）（5/5 PASS，自动动态挂载 `cap.jq`）
+- **新增标准库**：`lib/jq/{value,ast,eval,index}.cp`，实现 RFC 8259 `JqValue`、扁平节点池 `compileJq` AST 编译器，以及支持 `.[]`/`|`/`[...]`/`{...}`/`//`/`select`/`map`/`unique`/`sort` 等全谱系 `runJq`/`runJqJson` 管道引擎。
+- **新增文档与测试**：`doc/lib/jq.md` 扁平文档与 `cap/test/test_jq_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:cel` 纯 CP Common Expression Language (CEL) 安全策略表达式编译、宏推导与有界沙盒求值引擎（支持 `cap.cel` 自动动态挂载，详见 `doc/lib/cel.md`）（5/5 PASS，自动动态挂载 `cap.cel`）
 - **新增标准库**：`lib/cel/{types,parser,eval,index}.cp`，实现强类型 `CelValue`、`CelEnv` 嵌套属性绑定、三元/短路/集合宏（`all`/`exists`/`exists_one`/`filter`/`map`）AST 编译与带 `max_steps`/除零/溢出/越界防护的沙盒求值器。
 - **新增文档与测试**：`doc/lib/cel.md` 扁平文档与 `cap/test/test_cel_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
