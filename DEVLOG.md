@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:cose` 纯 CP RFC 9052/9053 COSE_Sign1 (EdDSA/ES256)、COSE_Mac0 (HS256) 与 COSE_Key CBOR 编解码引擎（支持 `cap.cose` 自动动态挂载，详见 `doc/lib/cose.md`）（5/5 PASS，文档直写 `doc/lib/cose.md`）
+- **核心设计**：内置确定性 RFC 8949 CBOR 读写器以消除外部模块耦合，严格按 RFC 9052 构造 `Sig_structure`/`MAC_structure` 并在全路径通过 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:paseto` 纯 CP PASETO v4.local (XChaCha20+BLAKE2b) 与 v4.public (Ed25519) 安全无算法混淆令牌引擎（支持 `cap.paseto` 自动动态挂载，详见 `doc/lib/paseto.md`）（5/5 PASS，文档直写 `doc/lib/paseto.md`）
 - **核心设计**：严格执行 PASETO v4 密钥拆分（`Blake2b(448)` 派生 `Ek`/`n2` 与 `Blake2b256` 派生 `Ak`）及 `PAE([header, payload, footer, implicit_assertion])`，以 `timing_safe.eql` 杜绝认证标签侧信道，全路径零泄漏。
 

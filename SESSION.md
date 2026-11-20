@@ -88,3 +88,6 @@
 
 ### 2026-11-21（`cap:paseto` 验收，顶替拉起 `cap:parquet` 维持 2 路常规并行）
 - **执行成果**：`lib/paseto/`（5/5 PASS，`doc/lib/paseto.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:parquet` 维持 2 路常规并行
+
+### 2026-11-21（`cap:cose` 验收，顶替拉起 `cap:webauthn` 维持 2 路常规并行）
+- **执行成果**：`lib/cose/`（5/5 PASS，`doc/lib/cose.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:webauthn` 维持 2 路常规并行
