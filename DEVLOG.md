@@ -2,6 +2,10 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:stomp` 与 `cap:geojson`（均 5/5 PASS，扁平文档直写 `doc/lib/`）
+- **`cap:stomp`**：`StompStreamParser` 支持 1..5 字节任意切分半包拆帧并正确处理 STOMP 1.2 `\r`/`\n`/`\c`/`\\` 头部转义及重复头取首个规范；拦截非转义命令、缺 `\x00` 终止符与超限载荷。
+- **`cap:geojson`**：遵循 RFC 7946 校验 Polygon 环至少 4 点首尾闭合；Ray-Casting 射线法结合边界判定支持多内环孔洞排除，Douglas-Peucker 采用显式栈迭代防止深递归溢出。
+
 ## 2026-11-21: 新建 `cap:imap` RFC 3501/9051 IMAP4 协议命令与 Literal 解析引擎（5/5 PASS，文档直写 `doc/lib/imap.md`）
 - **核心设计**：`ImapStreamParser` 支持任意分块边界解析同步/非同步 `{N}`/`{N+}` 二进制 Literal 块并通过 `markEof`/`finish` 精确检测截断；命令编码器自动转义引号与反斜杠并阻断 CR/LF 注入。
 

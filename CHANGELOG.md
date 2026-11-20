@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:stomp` 与 `cap:geojson` 纯 CP 标准库（均 5/5 PASS，自动动态挂载）
+- **新增 `cap:stomp`**：`lib/stomp/{stomp,index}.cp`、`doc/lib/stomp.md`、`cap/test/test_stomp_production_deep.cp`（5/5 PASS），实现 STOMP 1.2 帧编解码、头部转义反转义、心跳 EOL 跳过、`content-length` 内嵌 `\x00` 载荷及 `BodyTooLarge` 防护。
+- **新增 `cap:geojson`**：`lib/geojson/{geojson,index}.cp`、`doc/lib/geojson.md`、`cap/test/test_geojson_production_deep.cp`（5/5 PASS），实现 RFC 7946 GeoJSON 校验编解码、`computeBBox`、支持内环孔洞排除的 `pointInPolygon` 及迭代式 `simplifyDouglasPeucker` 抽稀。
+
 ## [2026-11-21] - 新建 `cap:imap` RFC 3501/9051 IMAP4 协议命令与 Literal 解析引擎（5/5 PASS，自动动态挂载 `cap.imap`）
 - **新增标准库**：`lib/imap/{imap,index}.cp`，实现递增标签 `ImapCommandCodec`（防 `\r`/`\n`/`\0` 注入）、跨 Chunk `{N}`/`{N+}` Literal 增量解析器 `ImapStreamParser` 及 `parseCapability`/`parseSearchUids`/`parseExistsCount`/`parseFetchFlags` 语义辅助。
 - **新增文档与测试**：`doc/lib/imap.md` 扁平文档与 `cap/test/test_imap_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

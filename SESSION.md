@@ -554,3 +554,6 @@
 
 ### 2026-11-21（`cap:imap` 验收提交，顶替拉起 `cap:geojson` 维持 2 路常规并行）
 - **执行成果**：`lib/imap/`（5/5 PASS，`doc/lib/imap.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/geojson/`（RFC 7946 GeoJSON 编解码、地理围栏多边形孔洞判定与 Douglas-Peucker 抽稀引擎），与 `lib/stomp/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:stomp` & `cap:geojson` 双路合并验收提交，拉起 `cap:wkt` 与 `cap:lzw` 维持 2 路并行）
+- **执行成果**：`lib/stomp/`（5/5 PASS，`doc/lib/stomp.md`）与 `lib/geojson/`（5/5 PASS，`doc/lib/geojson.md`）双双经 `verify_module.sh` 一次性验收回收并合并提交 Git；使用 `Model: "inherit"` 同步拉起 `lib/wkt/`（OGC WKT/WKB 空间几何双向编解码引擎）与 `lib/lzw/`（GIF/TIFF/PDF LZW 可变位宽字典无损压缩解压引擎），继续维持 2 路常规并行。
