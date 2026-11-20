@@ -149,3 +149,6 @@
 
 ### 2026-11-21（`cap:diff` 验收固化，顶替以 `inherit` 拉起 `cap:table` 维持 2 路并行）
 - **执行成果**：`lib/diff/`（5/5 PASS，含 `cap.diff` 动态挂载与 `doc/lib/diff.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/table/`（ANSI/UTF-8 宽度感知终端 ASCII/Unicode/Rounded/Markdown 表格渲染与对齐引擎），与 `lib/ini/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:ini` 验收固化 & `cpc` `"ini"` 路由切直，顶替以 `inherit` 拉起 `cap:di` 维持 2 路并行）
+- **执行成果**：解除 `cpc/src/resolver.rs` `"ini" => "conf"` 旧映射并原子部署 Release 版 `cpc`（保留 `Ini`/`ini` 兼容导出），`lib/ini/`（5/5 PASS，含 `cap.ini` 动态挂载与 `doc/lib/ini.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/di/`（生命周期管理服务容器与循环依赖检测），与 `lib/table/` 保持 2 路正交并行。

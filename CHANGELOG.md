@@ -2,6 +2,13 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:ini` 无损 INI/Systemd/Gitconfig 解析编辑引擎 & 解除 `cpc` `"ini"` 旧路由别名（5/5 PASS）
+
+- 解除 [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs) `"ini" => "conf"` 旧别名并原子部署新版 `cpc`（Release），同时在 `lib/ini/index.cp` 保留 `Ini`/`ini` 向后兼容重导出（既有 `test_conf_complete.cp` 2/2 零回归）；
+- 新建 [`lib/ini/`](file:///data/dev/cp/lib/ini/index.cp)（`ini.cp`、`index.cp`）：`IniDoc`（支持 Systemd 多值键 `getAll`、`\` 续行、Gitconfig `[sec "sub"]`、引号内 `#`/`;` 保护、类型安全 `getInt`/`getFloat`/`getBool`、保留原始注释与顺序的无损 `set`/`removeKey`/`removeSection` 及 `toJson`）；文档 [`doc/lib/ini.md`](file:///data/dev/cp/doc/lib/ini.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_ini_production_deep.cp`](file:///data/dev/cp/cap/test/test_ini_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:diff` Myers 行/词级差异、Unified Diff 补丁与三方合并引擎（5/5 PASS，自动动态挂载 `cap.diff`）
 
 - 新建 [`lib/diff/`](file:///data/dev/cp/lib/diff/index.cp)（`myers.cp`、`patch.cp`、`index.cp`）：`DiffEngine`（前缀/后缀修剪 + 64-bit FNV-1a Myers O(ND) 行级与词级最短编辑脚本）及 `UnifiedDiff`（多 Hunk 拆分与 `\ No newline at end of file` 处理、`applyPatch` 严格上下文校验防篡改、`merge3` 三方合并自动合入与 `<<<<<<< ours` 冲突标记）；文档 [`doc/lib/diff.md`](file:///data/dev/cp/doc/lib/diff.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_diff_production_deep.cp`](file:///data/dev/cp/cap/test/test_diff_production_deep.cp) `-m` 5/5 PASS。
