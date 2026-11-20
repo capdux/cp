@@ -43,3 +43,6 @@
 
 ### 2026-11-20（`cap:text` 验收固化，顶替拉起 `cap:cbor` RFC 8949 CBOR & MessagePack 引擎维持 3 路并行）
 - **执行成果**：子智能体 26（`lib/text/`，5/5 PASS，含 `cap.text` 动态挂载）经 `verify_module.sh` 一键验收回收并提交 Git；立即顶替派发子智能体 28（新建 `lib/cbor/` RFC 8949 CBOR + MessagePack 二进制编解码），与 `lib/metrics/`、`lib/xml/` 保持 3 路正交并行。
+
+### 2026-11-20（`cap:xml` & `cap:metrics` 双路合并验收提交，顶替拉起 `cap:protobuf` 与 `cap:expr` 维持 3 路并行）
+- **执行成果**：子智能体 27（`lib/xml/` 5/5）与子智能体 25（`lib/metrics/` 5/5）双双经 `verify_module.sh` 一键验收回收（含动态 `cap.xml`/`cap.metrics` 挂载验证），合并单次提交 Git；立即顶替派发子智能体 29（`lib/protobuf/` Proto3 Wire & gRPC 分帧）与子智能体 30（`lib/expr/` 沙盒安全表达式与策略规则求值引擎），与 `lib/cbor/` 保持 3 路正交并行。

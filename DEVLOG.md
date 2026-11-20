@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-20: 新建 `cap:xml`（5/5）与 `cap:metrics`（5/5），双双实证动态 `cap.<ns>` 自动挂载并合并提交
+
+- **落地成果**：`lib/xml/`（XML 1.0 DOM/查询/Writer）与 `lib/metrics/`（原子 Counter/Gauge/Histogram/Prometheus 0.0.4）均经 `verify_module.sh` 一键全绿通过，单轮合并完成回收、`cp_lib_ref.md` 更新与提交，并顶替派发 `cap:protobuf` 与 `cap:expr`。
+
+---
+
 ## 2026-11-20: 新建 `cap:text` AI RAG 分块/模糊搜索/Token 预算引擎（5/5 PASS，自动动态挂载 `cap.text`）
 
 - **落地成果**：`lib/text/`（`chunker.cp`/`fuzzy.cp`/`tokens.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过，单轮完成回收、`cp_lib_ref.md` 更新与提交，并顶替派发 `cap:cbor`（RFC 8949 CBOR + MessagePack 紧凑二进制编解码）。

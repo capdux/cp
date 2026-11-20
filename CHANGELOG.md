@@ -2,6 +2,13 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-20] - 新建 `cap:xml`（5/5）与 `cap:metrics`（5/5）双标准库落地（自动动态挂载 `cap.xml` / `cap.metrics`）
+
+- **`cap:xml`**（[`lib/xml/`](file:///data/dev/cp/lib/xml/index.cp)）：XML 1.0 DOM 解析（声明/注释/CDATA/自闭合/命名空间/实体解码与 128 层防护）、`findByPath`/`findAllChildren`/`innerText` 查询及紧凑/美化 `XmlWriter` 与 `XmlSerializer`，[`test_xml_production_deep.cp`](file:///data/dev/cp/cap/test/test_xml_production_deep.cp) `-m` 5/5 PASS；
+- **`cap:metrics`**（[`lib/metrics/`](file:///data/dev/cp/lib/metrics/index.cp)）：无锁原子 `Counter`、CAS `f64` `Gauge`、累计桶 `MetricsHistogram`（含 `estimateQuantile`）及 `MetricsRegistry`（Prometheus 0.0.4 族聚合/转义导出与 JSON 快照），[`test_metrics_production_deep.cp`](file:///data/dev/cp/cap/test/test_metrics_production_deep.cp) `-m` 5/5 PASS；同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)。
+
+---
+
 ## [2026-11-20] - 新建 `cap:text` AI RAG 分块、模糊匹配与 LLM Token 预算引擎（5/5 PASS，自动动态挂载 `cap.text`）
 
 - 新建 [`lib/text/`](file:///data/dev/cp/lib/text/index.cp)（`chunker.cp`、`fuzzy.cp`、`tokens.cp`、`index.cp`）：UTF-8 零截断递归/Markdown 章节分块（自动跳过围栏代码块）、Unicode 码点级 Levenshtein/Damerau-Levenshtein/Jaro-Winkler 与 `fuzzyTopK`、快速 LLM `TokenEstimator` 与 UTF-8 安全截断；同步 [`docs/text/text.md`](file:///data/dev/cp/docs/text/text.md) 与 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_text_production_deep.cp`](file:///data/dev/cp/cap/test/test_text_production_deep.cp) `-m` 5/5 PASS。
