@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:eval` AI Agent 自动化评测与 CI 回归门禁引擎（5/5 PASS，自动动态挂载 `cap.eval`）
+
+- 新建 [`lib/eval/`](file:///data/dev/cp/lib/eval/index.cp)（`metrics.cp`、`suite.cp`、`index.cp`）：`EvalScorer`（`exactMatch`/`containsAll`/`forbiddenNone`/SQuAD `tokenF1`/联动 `cap:json` 的 `jsonFieldMatch` 与数值稳定 `passAtK`）及 `EvalReport`（加权评分、精确排序 P95 延迟、Token/成本合计、`compareBaseline` CI 防退化门禁与 Markdown/JSON 报告导出）；文档 [`doc/lib/eval.md`](file:///data/dev/cp/doc/lib/eval.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_eval_production_deep.cp`](file:///data/dev/cp/cap/test/test_eval_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:toml` TOML v1.0.0 完整配置解析与序列化/JSON 转换引擎（5/5 PASS，自动动态挂载 `cap.toml`）
 
 - 新建 [`lib/toml/`](file:///data/dev/cp/lib/toml/index.cp)（`value.cp`、`codec.cp`、`index.cp`）：`TomlParser`（基本/多行基本/字面/多行字面 4 种字符串、`\uXXXX`/`\UXXXXXXXX`、`[table]`/`[[array.of.tables]]`/内联表/多行尾逗号数组、`0x`/`0o`/`0b` 整数、`inf`/`nan` 浮点、RFC 3339 日期时间及 `DuplicateKey`/`TypeConflict`/64 层深度防护）、`TomlDoc`（`getPath` 与递归释放）及 `TomlSerializer`（`stringify` 往返与 RFC 8259 `toJson`）；文档 [`doc/lib/toml.md`](file:///data/dev/cp/doc/lib/toml.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_toml_production_deep.cp`](file:///data/dev/cp/cap/test/test_toml_production_deep.cp) `-m` 5/5 PASS。

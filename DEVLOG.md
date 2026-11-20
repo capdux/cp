@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:eval` AI Agent 评测与 CI 回归门禁引擎（5/5 PASS，文档直写 `doc/lib/eval.md`）
+
+- **落地成果**：`lib/eval/`（`metrics.cp`/`suite.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:ini`（保留注释与顺序的 INI / Systemd / Gitconfig 解析与编辑引擎），与 `lib/diff/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:toml` TOML v1.0.0 配置解析与序列化引擎（5/5 PASS，文档直写 `doc/lib/toml.md`）
 
 - **落地成果**：`lib/toml/`（`value.cp`/`codec.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:diff`（Myers 最短编辑脚本、Unified Diff 生成、精确打补丁与三方合并冲突检测引擎），与 `lib/eval/` 保持 2 路正交并行。
