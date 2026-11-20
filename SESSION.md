@@ -590,3 +590,6 @@
 
 ### 2026-11-21（`cap:s3_signing` 验收提交，顶替拉起 `cap:interchange` 维持 2 路常规并行）
 - **执行成果**：`lib/s3_signing/`（5/5 PASS，`doc/lib/s3_signing.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/interchange/`（吸收对标 Bun `src/interchange/` 的 JSON5/JSONC/YAML/TOML 统一配置交换与编解码引擎），与 `lib/valkey/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:valkey` 验收提交，顶替拉起 `cap:picohttp` 维持 2 路常规并行）
+- **执行成果**：`lib/valkey/`（5/5 PASS，`doc/lib/valkey.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/picohttp/`（吸收对标 Bun `src/http/picohttp.cp` 等的高性能零分配 HTTP/1.1 请求/响应与 Chunked 解析引擎），与 `lib/interchange/` 维持 2 路常规并行。

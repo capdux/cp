@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:valkey` 纯 CP RESP2/RESP3 Valkey/Redis 协议编解码与增量流式解析引擎（5/5 PASS，自动动态挂载 `cap.valkey`）
+- **新增标准库**：`lib/valkey/{valkey,index}.cp`（吸收对标 Bun `src/valkey/`），完整建模 RESP2/RESP3 14 种核心类型（含 `Map`/`Set`/`Push`/`VerbatimString`/`BigNumber`/`Double` 与 `Attribute` 跳过），提供 `RespStreamParser` 增量半包黏包解析、`encodeCommand`/`encodeValue` 及 `max_depth`/`max_bulk_len` 防资源耗尽守卫。
+- **新增文档与测试**：`doc/lib/valkey.md` 扁平文档与 `cap/test/test_valkey_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:s3_signing` 纯 CP AWS SigV4 请求签名与 S3 预签名 URL 引擎（5/5 PASS，自动动态挂载 `cap.s3_signing`）
 - **新增标准库**：`lib/s3_signing/{s3_signing,index}.cp`（吸收对标 Bun `src/s3_signing/`），实现严格 RFC 3986 `awsUriEncode`、4 级链式 HMAC-SHA256 `deriveSigningKey`、多 Header 规范化合并签名 `signRequest` 及 1..604800 秒防越界 `presignUrl`。
 - **新增文档与测试**：`doc/lib/s3_signing.md` 扁平文档与 `cap/test/test_s3_signing_production_deep.cp`（5/5 PASS，覆盖 AWS 官方测试向量比对，经 `verify_module.sh` 校验通过）。

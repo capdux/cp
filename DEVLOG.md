@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:valkey` 纯 CP RESP2/RESP3 Valkey/Redis 协议编解码与增量流式解析引擎（5/5 PASS，文档直写 `doc/lib/valkey.md`）
+- **核心设计**：剔除所有 Bun/JSValue 耦合，基于 `std.mem.Allocator` 实现可自释放 `RespValue` 树；`RespStreamParser` 在预分配前先校验长度与嵌套深度上限，支持 `1..7` 字节切片连续投喂并精准区分 `Incomplete` 与协议异常。
+
 ## 2026-11-21: 新建 `cap:s3_signing` 纯 CP AWS SigV4 请求签名与 S3 预签名 URL 引擎（5/5 PASS，文档直写 `doc/lib/s3_signing.md`）
 - **核心设计**：纯 CP 实现 AWS Signature Version 4 全流程规范化与链式 HMAC-SHA256 派生，精准匹配 AWS 官方标准测试向量；`presignUrl` 内置路径/时间戳/有效期防畸形拦截并通过 `std.testing.allocator` 验证零泄漏。
 
