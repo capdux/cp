@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:crdt` 分布式无冲突复制数据类型套件（5/5 PASS，自动动态挂载 `cap.crdt`）
+
+- 新建 [`lib/crdt/`](file:///data/dev/cp/lib/crdt/index.cp)（`vclock.cp`、`counters.cp`、`register.cp`、`index.cp`）：`VectorClock`（因果偏序 `Before`/`After`/`Equal`/`Concurrent`）、`GCounter`/`PnCounter`（交换/结合/幂等合并）、`LwwRegister`（`(timestamp, node_id)` 决胜）与 `OrSet`（Observed-Remove 并发 add-wins）；文档 [`doc/lib/crdt.md`](file:///data/dev/cp/doc/lib/crdt.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_crdt_production_deep.cp`](file:///data/dev/cp/cap/test/test_crdt_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 3 路新标准库 `cap:cluster`/`cap:geo`/`cap:graph` 全绿落地（15/15 PASS，全部归口 `doc/lib/*.md` 并清零旧 `docs/` 目录）
 
 - **`cap:cluster`**（[`lib/cluster/`](file:///data/dev/cp/lib/cluster/index.cp)）：虚拟节点二分查找 `ConsistentHashRing`（含物理节点去重 `getReplicaNodes`）、SWIM `incarnation` CRDT `MembershipTable` 及单调 `fencing_token` 防脑裂 `LeaderLease`，文档 [`doc/lib/cluster.md`](file:///data/dev/cp/doc/lib/cluster.md)，`-m` 5/5 PASS；

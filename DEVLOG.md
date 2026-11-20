@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:crdt` 分布式 CRDT 状态同步引擎（5/5 PASS，文档直写 `doc/lib/crdt.md`）
+
+- **落地成果**：`lib/crdt/`（`vclock.cp`/`counters.cp`/`register.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过，单轮完成回收与提交，并顶替派发 `cap:query`（防注入参数化 SQL 查询构建器与多方言占位符引擎）。
+
+---
+
 ## 2026-11-21: 3 路新标准库 `cap:cluster`/`cap:geo`/`cap:graph`（15/15 PASS）全绿合并提交，旧 `docs/` 彻底清零
 
 - **落地成果**：`lib/cluster/`、`lib/geo/`、`lib/graph/` 全部经 `verify_module.sh` 一键全绿通过，3 份手册归口至 `doc/lib/{cluster,geo,graph}.md` 并彻底移除旧 `docs/` 空目录，合并单次提交并维持 `lib/crdt/`、`lib/color/`、`lib/decimal/` 3 路并行。
