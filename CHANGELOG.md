@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:xxhash` 纯 CP 零堆 xxHash (XXH32/XXH64/XXH3_64/XXH3_128) 与流式分块增量哈希引擎（支持 `cap.xxhash` 自动动态挂载，详见 `doc/lib/xxhash.md`）（5/5 PASS，自动动态挂载 `cap.xxhash`）
+- **新增标准库**：`lib/xxhash/{xxh32,xxh64,xxh3,index}.cp`，实现 XXH32/XXH64 流式与一次性哈希及 XXH3_64/XXH3_128 全 7 个长度分段，通过官方向量与 `1..7` 字节流式一致性验证。
+- **新增文档与测试**：`doc/lib/xxhash.md` 扁平文档与 `cap/test/test_xxhash_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:murmur3` 纯 CP 零堆 MurmurHash3 x86_32 & x64_128 非加密哈希与流式增量计算引擎（支持 `cap.murmur3` 自动动态挂载，详见 `doc/lib/murmur3.md`）（5/5 PASS，自动动态挂载 `cap.murmur3`）
 - **新增标准库**：`lib/murmur3/{murmur3,index}.cp`，实现 SMHasher 官方向量全匹配的 MurmurHash3_x86_32 与 MurmurHash3_x64_128，以及零堆流式 `Murmur3_32Stream`/`Murmur3_128Stream`。
 - **新增文档与测试**：`doc/lib/murmur3.md` 扁平文档与 `cap/test/test_murmur3_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

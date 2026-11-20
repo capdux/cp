@@ -25,3 +25,6 @@
 
 ### 2026-11-21（`cap:murmur3` 验收，主控亲自完成第 5 路 `cap:murmur3` 一次过验收提交，维持 `cap:xxhash` 与 `cap:http_router` 并发）
 - **执行成果**：`lib/murmur3/`（5/5 PASS，`doc/lib/murmur3.md`）经 `verify_module.sh` 一次性验收回收；主控亲自完成第 5 路 `cap:murmur3` 一次过验收提交，维持 `cap:xxhash` 与 `cap:http_router` 并发
+
+### 2026-11-21（`cap:xxhash` 验收，验收提交 `cap:xxhash` 与 `cap:http_router`，顶替拉起 `cap:rope` 与 `cap:lockfree_queue`）
+- **执行成果**：`lib/xxhash/`（5/5 PASS，`doc/lib/xxhash.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:xxhash` 与 `cap:http_router`，顶替拉起 `cap:rope` 与 `cap:lockfree_queue`
