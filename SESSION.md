@@ -87,3 +87,10 @@
 
 ### 2026-11-21（`cap:oauth` 验收固化，顶替拉起 `cap:audio` 语音 AI Agent WAV/DSP/VAD 引擎维持 3 路并行）
 - **执行成果**：子智能体 43（`lib/oauth/`，5/5 PASS，含 `cap.oauth` 动态挂载与 `doc/lib/oauth.md`）经 `verify_module.sh` 一键验收回收并提交 Git；立即顶替派发子智能体 47（新建 `lib/audio/` WAV PCM16 编解码、重采样、RMS/dB 与 Energy VAD），与 `lib/git/`、`lib/pdf/` 保持 3 路正交并行。
+
+### 2026-11-21（`cap:git` & `cap:pdf` 双路合并验收提交 + 并发下调为 2 路常规节约配额）
+- **用户指令**：后续开启 2 个子智能体节约配额，热修单独开个子智能体、完成后回收。
+- **执行成果**：
+  - 已更新 [`GEMINI.md`](file:///data/dev/cp/GEMINI.md) 固化“常规 2 路 `flash` 正交并行 + 热修单独开 `inherit` 子智能体、修完即收”；
+  - 回收并验收子智能体 45（`lib/git/` 5/5）与子智能体 46（`lib/pdf/` 5/5），文档直写 `doc/lib/{git,pdf}.md`，合并单次提交 Git；
+  - 当前已在跑的 3 个子智能体（`lib/audio/`、`lib/tui/`、`lib/wasm/`）待首个完工回收后不再补位，自然平滑回落至长期 2 路并行。

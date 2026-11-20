@@ -2,6 +2,13 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:git`（5/5）与 `cap:pdf`（5/5）双标准库落地（自动动态挂载 `cap.git` / `cap.pdf`）
+
+- **`cap:git`**（[`lib/git/`](file:///data/dev/cp/lib/git/index.cp)）：`GitOid`/`GitObject`（与 `git hash-object` 逐字节一致的 SHA-1）、`GitTreeCodec`/`GitCommitCodec`、完整 `.gitignore` 规则引擎及 `GitRepo.readHead`（松散/`packed-refs`/worktree），文档 [`doc/lib/git.md`](file:///data/dev/cp/doc/lib/git.md)，`-m` 5/5 PASS；
+- **`cap:pdf`**（[`lib/pdf/`](file:///data/dev/cp/lib/pdf/index.cp)）：零依赖 PDF 1.4 多页文档生成 `PdfDocument`/`PdfPage`（Base14 字体、矢量绘图、10 位精确 `xref` 偏移）与 `PdfInspector`（版本/页数/Info 元数据提取），文档 [`doc/lib/pdf.md`](file:///data/dev/cp/doc/lib/pdf.md)，`-m` 5/5 PASS；同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)。
+
+---
+
 ## [2026-11-21] - 新建 `cap:oauth` OAuth 2.0 & RFC 7636 PKCE S256 认证客户端原语（5/5 PASS，自动动态挂载 `cap.oauth`）
 
 - 新建 [`lib/oauth/`](file:///data/dev/cp/lib/oauth/index.cp)（`pkce.cp`、`flow.cp`、`index.cp`）：RFC 7636 `Pkce`（CSPRNG 43B Verifier + SHA-256 Base64URL S256 恒定时间校验 + `generateState`）、RFC 6749 `OAuthFlow`（授权 URL / Token 交换 / 刷新 / Client Credentials）、`OAuthTokenResponse` 与 `AuthHeader`（Bearer/Basic）；文档 [`doc/lib/oauth.md`](file:///data/dev/cp/doc/lib/oauth.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_oauth_production_deep.cp`](file:///data/dev/cp/cap/test/test_oauth_production_deep.cp) `-m` 5/5 PASS。
