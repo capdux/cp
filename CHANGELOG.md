@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:sha_hmac` 纯 CP 统一密码学摘要、流式 HMAC 常量时间验签与 RFC 5869 HKDF / RFC 2898 PBKDF2 密钥派生引擎（吸收对标 Bun `src/sha_hmac/`，详见 `doc/lib/sha_hmac.md`）（5/5 PASS，自动动态挂载 `cap.sha_hmac`）
+- **新增标准库**：`lib/sha_hmac/{hash,hmac,kdf,index}.cp`（吸收对标 Bun `src/sha_hmac/`），统一封装 SHA-1/SHA-2/BLAKE2b/BLAKE2s 流式摘要与 HMAC 常量时间验签，以及 RFC 5869 HKDF 与 RFC 2898 PBKDF2-HMAC。
+- **新增文档与测试**：`doc/lib/sha_hmac.md` 扁平文档与 `cap/test/test_sha_hmac_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:wyhash` 纯 CP Wyhash v4 高速 64-bit 非加密哈希、流式分块摘要与 Lemire 无偏差 WyRand 伪随机引擎（吸收对标 Bun `src/wyhash/`，详见 `doc/lib/wyhash.md`）（5/5 PASS，自动动态挂载 `cap.wyhash`）
 - **新增标准库**：`lib/wyhash/{core,wyrand,helpers,index}.cp`（吸收对标 Bun `src/wyhash/`），实现与 `std.hash.Wyhash` 比特级一致的 `wyhash`/`WyhashStream` 及 `WyRand` 无偏差伪随机生成器，并同步拆分 `cpc/src/resolver.rs` 中的 `wyhash` 路由别名以支持 `cap.wyhash` 独立挂载。
 - **新增文档与测试**：`doc/lib/wyhash.md` 扁平文档与 `cap/test/test_wyhash_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

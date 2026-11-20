@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:sha_hmac` 纯 CP 统一密码学摘要、流式 HMAC 常量时间验签与 RFC 5869 HKDF / RFC 2898 PBKDF2 密钥派生引擎（吸收对标 Bun `src/sha_hmac/`，详见 `doc/lib/sha_hmac.md`）（5/5 PASS，文档直写 `doc/lib/sha_hmac.md`）
+- **核心设计**：流式 `StreamingHasher`/`StreamingHmac` 与一次性 API 比特级等价；HKDF 严格校验 `out_len <= 255 * HashLen`、PBKDF2 拦截 `iterations == 0`，并通过 RFC 4231/5869/6070 官方向量全量验证。
+
 ## 2026-11-21: 新建 `cap:wyhash` 纯 CP Wyhash v4 高速 64-bit 非加密哈希、流式分块摘要与 Lemire 无偏差 WyRand 伪随机引擎（吸收对标 Bun `src/wyhash/`，详见 `doc/lib/wyhash.md`）（5/5 PASS，文档直写 `doc/lib/wyhash.md`）
 - **核心设计**：`WyhashStream` 通过小缓冲合并保证 `1..7` 字节任意切片投喂与单次 `wyhash` 100% 比特一致；`WyRand.nextRange` 采用 Lemire 乘法无模偏差缩放，全路径零堆分配。
 
