@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:qrcode` ISO/IEC 18004 二维码编码与终端半块/SVG 渲染引擎（5/5 PASS，自动动态挂载 `cap.qrcode`）
+
+- 新建 [`lib/qrcode/`](file:///data/dev/cp/lib/qrcode/index.cp)（`ecc.cp`、`encoder.cp`、`render.cp`、`index.cp`）：编译期 GF(256) 查表 `ReedSolomon`、ISO/IEC 18004 V1..10 Byte 模式 4 级纠错与 8 掩码评分择优 `QrCode`，以及 UTF-8 半块终端/ASCII/游程合并 SVG `QrRenderer`；文档 [`doc/lib/qrcode.md`](file:///data/dev/cp/doc/lib/qrcode.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_qrcode_production_deep.cp`](file:///data/dev/cp/cap/test/test_qrcode_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:decimal` 128 位十进制金融算术与零分钱丢失货币分账引擎（5/5 PASS，自动动态挂载 `cap.decimal`）
 
 - 新建 [`lib/decimal/`](file:///data/dev/cp/lib/decimal/index.cp)（`decimal.cp`、`money.cp`、`index.cp`）：内置栈上 `U384` 无堆中间算术的 `Decimal`（`0.1 + 0.2 == 0.3`、科学计数法、5 种舍入含银行家舍入 `HalfEven`）与 ISO 4217 `Money`（异币种拦截、Hamilton 最大余数法 `allocateEven`/`allocateRatios`）；文档 [`doc/lib/decimal.md`](file:///data/dev/cp/doc/lib/decimal.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_decimal_production_deep.cp`](file:///data/dev/cp/cap/test/test_decimal_production_deep.cp) `-m` 5/5 PASS。

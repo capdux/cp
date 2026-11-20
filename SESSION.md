@@ -75,3 +75,6 @@
 
 ### 2026-11-21（`cap:decimal` 验收固化，顶替拉起 `cap:qrcode` QR 码编码与渲染引擎维持 3 路并行）
 - **执行成果**：子智能体 38（`lib/decimal/`，5/5 PASS，含 `cap.decimal` 动态挂载与 `doc/lib/decimal.md`）经 `verify_module.sh` 一键验收回收并提交 Git；立即顶替派发子智能体 41（新建 `lib/qrcode/` ISO/IEC 18004 QR 码编码器、Reed-Solomon GF(256) 与终端半块/SVG 渲染），与 `lib/query/`、`lib/email/` 保持 3 路正交并行。
+
+### 2026-11-21（`cap:qrcode` 验收固化，顶替拉起 `cap:intl` 人性化数值/字节/时长格式化引擎维持 3 路并行）
+- **执行成果**：子智能体 41（`lib/qrcode/`，5/5 PASS，含 `cap.qrcode` 动态挂载与 `doc/lib/qrcode.md`）经 `verify_module.sh` 一键验收回收并提交 Git；立即顶替派发子智能体 42（新建 `lib/intl/` 千分位/紧凑数值/SI&IEC 字节大小与时长双向解析格式化/相对时间），与 `lib/query/`、`lib/email/` 保持 3 路正交并行。
