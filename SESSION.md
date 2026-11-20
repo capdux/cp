@@ -33,3 +33,6 @@
 - **用户询问**：追问 `Gemini 4 Hydrogen` 档位及与 `Neon · Medium` 编程能力/配额综合选型；已基于今晚 15 个标准库全绿实测给出分级建议（主控与疑难 `cpc` 热修用 `Neon · Medium`，常规 3 路标准库并发用 `Hydrogen`）。
 - **用户指令**：认同并要求将“标准库用 Hydrogen (`flash`)、疑难热修用 `inherit` 启动子智能体”的分级选型方案固化写入 `GEMINI.md`。
 - **执行成果**：已将分级模型选型写入 [`GEMINI.md`](file:///data/dev/cp/GEMINI.md)；同时 3 路子智能体 19（`lib/math/` 5/5）、20（`lib/schema/` 5/5）、21（`lib/rpc/` 5/5）全部经 `verify_module.sh` 一键验收回收（均实证动态 `cap.<ns>` 自动挂载），合并单次提交 Git；当前无缝维持 `lib/cache/`（`12d3e976`）、`lib/fsm/`（`872f1782`）与 `lib/vector/`（纯 CP 向量检索 + BM25 + RRF 混合搜索）3 路正交并行。
+
+### 2026-11-20（`cap:fsm` & `cap:cache` 双路合并验收提交，顶替拉起 `cap:metrics` 与 `cap:text` 维持 3 路并行）
+- **执行成果**：子智能体 23（`lib/fsm/` 5/5）与子智能体 22（`lib/cache/` 5/5）双双经 `verify_module.sh` 一键验收回收（含动态 `cap.fsm`/`cap.cache` 挂载验证），合并单次提交 Git；立即顶替派发子智能体 25（`lib/metrics/` Prometheus/OpenMetrics）与子智能体 26（`lib/text/` AI RAG 文本分块、模糊搜索与 Token 预算估算），与 `lib/vector/` 保持 3 路正交并行。

@@ -2,6 +2,13 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-20] - 新建 `cap:fsm`（5/5）与 `cap:cache`（5/5）双标准库落地（自动动态挂载 `cap.fsm` / `cap.cache`）
+
+- **`cap:fsm`**（[`lib/fsm/`](file:///data/dev/cp/lib/fsm/index.cp)）：确定性 `StateMachine`（审计历史 + `toMermaid`）、三态 `CircuitBreaker`（`Closed`/`Open`/`HalfOpen` + 探针限流与统计）及 `WorkflowDag`（Kahn 分层并行 `executionWaves`、环路拦截、`readyNodes` 与上游失败 BFS 级联 `Skipped`），[`test_fsm_production_deep.cp`](file:///data/dev/cp/cap/test/test_fsm_production_deep.cp) `-m` 5/5 PASS；
+- **`cap:cache`**（[`lib/cache/`](file:///data/dev/cp/lib/cache/index.cp)）：O(1) 槽位池 `LruCache<V>`（TTL + `evictExpired` + `CacheStats`）、最优 `m`/`k` 双哈希 `BloomFilter`（含 `unionWith`）及无低估 `CountMinSketch`（含 `merge`），[`test_cache_production_deep.cp`](file:///data/dev/cp/cap/test/test_cache_production_deep.cp) `-m` 5/5 PASS；同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)。
+
+---
+
 ## [2026-11-20] - 3 路新标准库 `cap:math`/`cap:schema`/`cap:rpc` 全绿落地与子智能体分级模型选型固化
 
 - **分级模型选型固化**（[`GEMINI.md`](file:///data/dev/cp/GEMINI.md)）：明确常规 3 路标准库并行子智能体使用 `Model: "flash"`（Gemini 4 Hydrogen），疑难 `cpc` 编译器热修子智能体使用 `Model: "inherit"`（继承主控模型），修完即收；
