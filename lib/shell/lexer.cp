@@ -1,12 +1,14 @@
-// Source: /data/dev/bun/src/shell/
+// Source: /data/dev/bun/src/shell/shell.cp
 // ============================================================================
 // Absorbed from Bun: /data/dev/bun/src/shell/
 // Upstream Sync: Refer to /data/dev/bun/src/shell/ for future upstream updates.
 // ============================================================================
 // lib/shell/lexer.cp
-// Fast lexical analyzer for CP Shell (cap:shell)
-// Supports single/double quotes, escapes, ${VAR:-default} braces, comments (#),
-// pipelines (|), logical chains (&& / ||), sequence (;/\n), and full redirections.
+// Full POSIX lexical analyzer for CP Shell (cap:shell)
+// Supports single/double/ANSI-C quotes, escapes, ${VAR:-default}, $(cmd), $((arith)),
+// `backticks`, comments (#), pipelines (|), negation (!), background (&),
+// subshells (( / )), groups ({ / }), logical chains (&& / ||), sequence (;/\n),
+// and full redirections (>, >>, <, <<<, <<, 2>, 2>>, 2>&1, 1>&2, &>, &>>).
 
 pub enum QuoteKind: u8 {
     None = 0,
@@ -23,13 +25,19 @@ pub enum TokenKind {
     Or,                // ||
     Semicolon,         // ;
     Newline,           // \n
+    Ampersand,         // &
+    Bang,              // !
+    OpenParen,         // (
+    CloseParen,        // )
     RedirectOut,       // > or 1>
     RedirectAppend,    // >> or 1>>
     RedirectIn,        // < or 0<
+    HereString,        // <<<
+    HereDoc,           // <<
     RedirectErr,       // 2>
     RedirectErrAppend, // 2>>
     RedirectErrToOut,  // 2>&1
-    RedirectOutToErr,  // 1>&2
+    RedirectOutToErr,  // 1>&2 or >&2
     RedirectAll,       // &>
     RedirectAllAppend, // &>>
 }
@@ -78,7 +86,8 @@ pub struct Lexer {
 
     fn isWordDelimiter(ch: u8): bool {
         return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' ||
-               ch == '|' || ch == '&' || ch == ';' || ch == '>' || ch == '<';
+               ch == '|' || ch == '&' || ch == ';' || ch == '>' || ch == '<' ||
+               ch == '(' || ch == ')';
     }
 
     fn skipDoubleQuoted(*_): usize {
@@ -86,8 +95,15 @@ pub struct Lexer {
         _.cursor += 1;
         const inner_start = _.cursor;
         while (_.cursor < _.src.len && _.src[_.cursor] != '"') {
-            if (_.src[_.cursor] == '\\' && _.cursor + 1 < _.src.len) {
+            const ch = _.src[_.cursor];
+            if (ch == '\\' && _.cursor + 1 < _.src.len) {
                 _.cursor += 2;
+            } else if (ch == '$' && _.cursor + 1 < _.src.len && _.src[_.cursor + 1] == '(') {
+                _.skipDollarParen();
+            } else if (ch == '$' && _.cursor + 1 < _.src.len && _.src[_.cursor + 1] == '{') {
+                _.skipBraceExpansion();
+            } else if (ch == '`') {
+                _.skipBackticks();
             } else {
                 _.cursor += 1;
             }
@@ -113,6 +129,36 @@ pub struct Lexer {
         return inner_end - inner_start;
     }
 
+    fn skipAnsiCQuoted(*_) {
+        // cursor points at '$' in "$'...'"
+        _.cursor += 2;
+        while (_.cursor < _.src.len && _.src[_.cursor] != '\'') {
+            if (_.src[_.cursor] == '\\' && _.cursor + 1 < _.src.len) {
+                _.cursor += 2;
+            } else {
+                _.cursor += 1;
+            }
+        }
+        if (_.cursor < _.src.len && _.src[_.cursor] == '\'') {
+            _.cursor += 1;
+        }
+    }
+
+    fn skipBackticks(*_) {
+        // cursor points at opening '`'
+        _.cursor += 1;
+        while (_.cursor < _.src.len && _.src[_.cursor] != '`') {
+            if (_.src[_.cursor] == '\\' && _.cursor + 1 < _.src.len) {
+                _.cursor += 2;
+            } else {
+                _.cursor += 1;
+            }
+        }
+        if (_.cursor < _.src.len && _.src[_.cursor] == '`') {
+            _.cursor += 1;
+        }
+    }
+
     fn skipBraceExpansion(*_) {
         // cursor points at '$' in "${...}"
         _.cursor += 2; // skip "${"
@@ -125,10 +171,72 @@ pub struct Lexer {
                 * = _.skipDoubleQuoted();
             } else if (ch == '\'') {
                 * = _.skipSingleQuoted();
+            } else if (ch == '$' && _.cursor + 1 < _.src.len && _.src[_.cursor + 1] == '(') {
+                _.skipDollarParen();
             } else if (ch == '{') {
                 depth += 1;
                 _.cursor += 1;
             } else if (ch == '}') {
+                depth -= 1;
+                _.cursor += 1;
+            } else {
+                _.cursor += 1;
+            }
+        }
+    }
+
+    fn skipDollarParen(*_) {
+        // cursor points at '$' in "$(...)" or "$((...))"
+        if (_.cursor + 2 < _.src.len && _.src[_.cursor + 1] == '(' && _.src[_.cursor + 2] == '(') {
+            // Arithmetic expansion $(( ... ))
+            _.cursor += 3;
+            let depth: usize = 2;
+            while (_.cursor < _.src.len && depth > 0) {
+                const ch = _.src[_.cursor];
+                if (ch == '\\' && _.cursor + 1 < _.src.len) {
+                    _.cursor += 2;
+                } else if (ch == '"') {
+                    * = _.skipDoubleQuoted();
+                } else if (ch == '\'') {
+                    * = _.skipSingleQuoted();
+                } else if (ch == '(') {
+                    depth += 1;
+                    _.cursor += 1;
+                } else if (ch == ')') {
+                    depth -= 1;
+                    _.cursor += 1;
+                } else {
+                    _.cursor += 1;
+                }
+            }
+            return;
+        }
+
+        // Command substitution $( ... )
+        _.cursor += 2; // skip "$("
+        let depth: usize = 1;
+        while (_.cursor < _.src.len && depth > 0) {
+            const ch = _.src[_.cursor];
+            if (ch == '\\' && _.cursor + 1 < _.src.len) {
+                _.cursor += 2;
+            } else if (ch == '"') {
+                * = _.skipDoubleQuoted();
+            } else if (ch == '\'') {
+                * = _.skipSingleQuoted();
+            } else if (ch == '`') {
+                _.skipBackticks();
+            } else if (ch == '$' && _.cursor + 1 < _.src.len && _.src[_.cursor + 1] == '(') {
+                _.skipDollarParen();
+            } else if (ch == '$' && _.cursor + 1 < _.src.len && _.src[_.cursor + 1] == '{') {
+                _.skipBraceExpansion();
+            } else if (ch == '#' && (_.cursor == 0 || _.src[_.cursor - 1] == ' ' || _.src[_.cursor - 1] == '\t' || _.src[_.cursor - 1] == '\n' || _.src[_.cursor - 1] == ';' || _.src[_.cursor - 1] == '(')) {
+                while (_.cursor < _.src.len && _.src[_.cursor] != '\n') {
+                    _.cursor += 1;
+                }
+            } else if (ch == '(') {
+                depth += 1;
+                _.cursor += 1;
+            } else if (ch == ')') {
                 depth -= 1;
                 _.cursor += 1;
             } else {
@@ -171,7 +279,7 @@ pub struct Lexer {
             return Token { kind: .Pipe, slice: s, raw_slice: s, quote: .None, pos: start };
         }
 
-        // And / &> / &>>
+        // And / &> / &>> / &
         if (c == '&') {
             _.cursor += 1;
             if (_.cursor < _.src.len && _.src[_.cursor] == '&') {
@@ -190,7 +298,7 @@ pub struct Lexer {
                 return Token { kind: .RedirectAll, slice: s, raw_slice: s, quote: .None, pos: start };
             }
             const s = _.src[start.._.cursor];
-            return Token { kind: .Word, slice: s, raw_slice: s, quote: .None, pos: start };
+            return Token { kind: .Ampersand, slice: s, raw_slice: s, quote: .None, pos: start };
         }
 
         // Semicolon
@@ -198,6 +306,25 @@ pub struct Lexer {
             _.cursor += 1;
             const s = _.src[start.._.cursor];
             return Token { kind: .Semicolon, slice: s, raw_slice: s, quote: .None, pos: start };
+        }
+
+        // Subshell parens
+        if (c == '(') {
+            _.cursor += 1;
+            const s = _.src[start.._.cursor];
+            return Token { kind: .OpenParen, slice: s, raw_slice: s, quote: .None, pos: start };
+        }
+        if (c == ')') {
+            _.cursor += 1;
+            const s = _.src[start.._.cursor];
+            return Token { kind: .CloseParen, slice: s, raw_slice: s, quote: .None, pos: start };
+        }
+
+        // Standalone '!' (pipeline negation) when followed by delimiter
+        if (c == '!' && (_.cursor + 1 >= _.src.len || Lexer.isWordDelimiter(_.src[_.cursor + 1]))) {
+            _.cursor += 1;
+            const s = _.src[start.._.cursor];
+            return Token { kind: .Bang, slice: s, raw_slice: s, quote: .None, pos: start };
         }
 
         // File-descriptor prefixed redirections: 2>, 2>>, 2>&1, 1>, 1>>, 1>&2, 0<
@@ -235,6 +362,16 @@ pub struct Lexer {
             }
             if (c == '0' && next_ch == '<') {
                 _.cursor += 2;
+                if (_.cursor + 1 < _.src.len && _.src[_.cursor] == '<' && _.src[_.cursor + 1] == '<') {
+                    _.cursor += 2;
+                    const s = _.src[start.._.cursor];
+                    return Token { kind: .HereString, slice: s, raw_slice: s, quote: .None, pos: start };
+                }
+                if (_.cursor < _.src.len && _.src[_.cursor] == '<') {
+                    _.cursor += 1;
+                    const s = _.src[start.._.cursor];
+                    return Token { kind: .HereDoc, slice: s, raw_slice: s, quote: .None, pos: start };
+                }
                 const s = _.src[start.._.cursor];
                 return Token { kind: .RedirectIn, slice: s, raw_slice: s, quote: .None, pos: start };
             }
@@ -257,9 +394,19 @@ pub struct Lexer {
             return Token { kind: .RedirectOut, slice: s, raw_slice: s, quote: .None, pos: start };
         }
 
-        // Standard <
+        // Standard < / << / <<<
         if (c == '<') {
             _.cursor += 1;
+            if (_.cursor < _.src.len && _.src[_.cursor] == '<') {
+                _.cursor += 1;
+                if (_.cursor < _.src.len && _.src[_.cursor] == '<') {
+                    _.cursor += 1;
+                    const s = _.src[start.._.cursor];
+                    return Token { kind: .HereString, slice: s, raw_slice: s, quote: .None, pos: start };
+                }
+                const s = _.src[start.._.cursor];
+                return Token { kind: .HereDoc, slice: s, raw_slice: s, quote: .None, pos: start };
+            }
             const s = _.src[start.._.cursor];
             return Token { kind: .RedirectIn, slice: s, raw_slice: s, quote: .None, pos: start };
         }
@@ -285,7 +432,7 @@ pub struct Lexer {
             // Otherwise continue scanning compound word (e.g. "foo"bar)
         }
 
-        // Standard unquoted or compound words (handles FOO="bar", ${VAR:-def}, \escapes)
+        // Standard unquoted or compound words (handles FOO="bar", ${VAR:-def}, $(cmd), $((arith)), `cmd`, $'...', \escapes)
         let saw_quote = (c == '"' || c == '\'');
         while (_.cursor < _.src.len) {
             const ch = _.src[_.cursor];
@@ -300,8 +447,15 @@ pub struct Lexer {
             } else if (ch == '\'') {
                 saw_quote = true;
                 * = _.skipSingleQuoted();
+            } else if (ch == '$' && _.cursor + 1 < _.src.len && _.src[_.cursor + 1] == '\'') {
+                saw_quote = true;
+                _.skipAnsiCQuoted();
+            } else if (ch == '$' && _.cursor + 1 < _.src.len && _.src[_.cursor + 1] == '(') {
+                _.skipDollarParen();
             } else if (ch == '$' && _.cursor + 1 < _.src.len && _.src[_.cursor + 1] == '{') {
                 _.skipBraceExpansion();
+            } else if (ch == '`') {
+                _.skipBackticks();
             } else {
                 _.cursor += 1;
             }

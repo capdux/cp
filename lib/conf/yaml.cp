@@ -1,9 +1,10 @@
 // Source: /data/dev/bun/src/interchange/yaml.cp
 // lib/conf/yaml.cp
-// Lightweight zero-allocation YAML key-value & block configuration parser
-// Absorbed from /data/dev/bun/src/interchange/yaml.cp
+// Lightweight zero-allocation YAML key-value & block configuration parser + bridge to full YAML 1.2 AST
 
 const std = @import("std");
+import { ConfTag, ConfField, ConfValue } from "./value";
+import { YamlParser, YamlStream } from "./yaml_parser";
 
 pub enum YamlChomp: u8 {
     Clip = 0,
@@ -18,7 +19,7 @@ pub struct YamlEntry {
 }
 
 pub struct YamlDoc {
-    entries: [128]YamlEntry = undefined;
+    entries: [256]YamlEntry = undefined;
     count: usize = 0;
 
     pub static fn parse(content: []const u8): YamlDoc {
@@ -28,6 +29,18 @@ pub struct YamlDoc {
         };
         doc.parseContent(content);
         return doc;
+    }
+
+    pub static fn parseTree(allocator: std.mem.Allocator, content: []const u8): ConfValue! {
+        return try YamlParser.parse(allocator, content);
+    }
+
+    pub static fn parseStream(allocator: std.mem.Allocator, content: []const u8): YamlStream! {
+        return try YamlParser.parseStream(allocator, content);
+    }
+
+    pub static fn stringify(allocator: std.mem.Allocator, val: ConfValue): ([]const u8)! {
+        return try YamlParser.stringify(allocator, val);
     }
 
     pub fn get(section: []const u8, key: []const u8): ([]const u8)? {
@@ -97,6 +110,47 @@ pub struct YamlDoc {
     }
 
     fn parseContent(*_, content: []const u8) {
+        const tree = YamlParser.parse(std.heap.page_allocator, content) catch {
+            _.parseFallback(content);
+            return;
+        };
+        if (tree.tag == ConfTag.Object) {
+            _.flattenObject("", tree);
+            return;
+        }
+        _.parseFallback(content);
+    }
+
+    fn flattenObject(*_, prefix: []const u8, obj: ConfValue) {
+        if (obj.tag != ConfTag.Object) return;
+        for (f of obj.obj_val) {
+            if (f.value.tag == ConfTag.Object) {
+                let next_sec = f.key;
+                if (prefix.len > 0) {
+                    let comb = std.heap.page_allocator.alloc(u8, prefix.len + 1 + f.key.len) catch continue;
+                    @memcpy(comb[0..prefix.len], prefix);
+                    comb[prefix.len] = '.';
+                    @memcpy(comb[prefix.len + 1 ..], f.key);
+                    next_sec = comb;
+                }
+                _.flattenObject(next_sec, f.value);
+            } else {
+                let val_str: []const u8 = "";
+                switch (f.value.tag) {
+                    .Null => val_str = "null",
+                    .Bool => val_str = if (f.value.bool_val) "true" else "false",
+                    .Int => val_str = std.fmt.allocPrint(std.heap.page_allocator, "{d}", .{f.value.int_val}) catch "",
+                    .Float => val_str = std.fmt.allocPrint(std.heap.page_allocator, "{d}", .{f.value.float_val}) catch "",
+                    .String => val_str = f.value.str_val,
+                    .DateTime => val_str = f.value.dt_val.raw,
+                    else => val_str = "",
+                }
+                _.put(prefix, f.key, val_str);
+            }
+        }
+    }
+
+    fn parseFallback(*_, content: []const u8) {
         let current_section: []const u8 = "";
         let line_iter = std.mem.splitScalar(u8, content, '\n');
 
@@ -126,7 +180,7 @@ pub struct YamlDoc {
     }
 
     fn put(*_, section: []const u8, key: []const u8, value: []const u8) {
-        if (_.count < 128) {
+        if (_.count < _.entries.len) {
             _.entries[_.count] = YamlEntry {
                 section: section,
                 key: key,
@@ -156,5 +210,5 @@ fn cleanYamlValue(raw: []const u8): []const u8 {
     return std.mem.trim(u8, raw[0..end], " \t\r");
 }
 
-pub const YAML = YamlDoc;
-pub const yaml = YamlDoc;
+pub type YAML = YamlDoc;
+pub type yaml = YamlDoc;

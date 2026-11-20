@@ -1,76 +1,87 @@
-# `cap:shell` — 嵌入式跨平台 Shell 词法/AST 引擎与进程内管道执行器
+# `cap:shell` — 嵌入式跨平台 Shell 词法/AST 引擎与进程内/外混合管道执行器
 
-> **上游溯源**: `/data/dev/bun/src/shell/` (`shell.cp`, `interpreter.cp`, `ParsedShellScript.cp`, `EnvMap.cp`, `Builtin.cp`, `builtin/*.cp`) & `/data/dev/bun/src/shell_parser/`  
+> **上游溯源**: `/data/dev/bun/src/shell/` (`shell.cp`, `interpreter.cp`, `ParsedShellScript.cp`, `EnvMap.cp`, `Builtin.cp`, `builtin/*.cp`) & `/data/dev/bun/src/shell_parser/braces.cp`  
 > **模块路径**: `lib/shell/`  
-> **导入协议**: `import { Shell, sh, ShellSession, ShellEnv, DirStack, expandWord, Lexer, Token, TokenKind, QuoteKind, Parser, Script, Statement, Pipeline, Command, ControlOp, Executor, ShellResult, isBuiltin, runBuiltin, runBuiltinWithState } from "cap:shell";`
+> **导入协议**: `import { Shell, sh, exec, ShellSession, ShellEnv, DirStack, ShellOptions, AliasMap, BraceExpander, ArithEval, expandWord, expandWordWithSession, Lexer, Token, TokenKind, QuoteKind, Parser, Script, Statement, Pipeline, Command, CommandKind, ControlOp, Executor, ShellResult, isBuiltin, runBuiltin, runBuiltinWithState } from "cap:shell";`
 
 ---
 
-## 一、 架构概述与设计亮点
+## 一、 架构概述与模块拓扑
 
-`cap:shell` 吸收自 Bun 内置的跨平台 Shell 引擎（`Bun.$` / `bun/src/shell`），将词法分词、递归下降 AST 解析、环境变量与引号插值展开、工作目录栈、全套进程内 POSIX Builtins 与多级管道重定向融为一体：
+`cap:shell` 基于 Bun 内置跨平台 Shell 引擎（`Bun.$` / `bun/src/shell`）直迁构建，将全功能 POSIX 词法分析、递归下降复合语句 AST、大括号/算术/命令替换/Glob 展开、子 Shell 状态隔离、`PosixSpawn` 外部进程与内置命令混合管道以及 30+ 生产级 Builtins 融为一体：
 
 ```text
 lib/shell/
-├── index.cp         # 模块导出门面与快捷同步执行入口 sh(...) / Shell.run(...) / Shell.session()
-├── lexer.cp         # Shell 词法分词器 (单/双引号、注释 #、行续接、2>/2>&1/&>/>>/</| /&&/||/; /\n)
-├── env.cp           # 进程内环境变量表 (ShellEnv)、工作目录栈 (DirStack) 与词展开引擎 (expandWord)
-├── parser.cp        # AST 解析器 (Script -> Statement -> Pipeline -> Command + EnvAssign + Redirections)
-├── builtin.cp       # 进程内零 fork 内置命令集 (23 条 POSIX/Bun Builtins)
-└── exec.cp          # 会话与管道执行引擎 (ShellSession, Executor, ShellResult)
+├── index.cp         # 模块导出门面与快捷同步执行入口 sh(...) / exec(...) / Shell.run(...) / Shell.session()
+├── lexer.cp         # POSIX 词法分词器 (单/双/ANSI-C $'...' 引号、转义、${...}/$(...)/$((...))/`...`、# 注释、全套重定向符)
+├── braces.cp        # 大括号展开引擎 ({a,b,c}、嵌套 {a,{b,c}}、笛卡尔积、数字/字母/步长区间 {1..5}/{01..05}/{1..10..2}/{a..e})
+├── env.cp           # 进程内环境变量表 (ShellEnv)、目录栈 (DirStack)、ShellOptions、AliasMap 与词展开引擎
+├── arith.cp         # POSIX 整数算术求值器 $(( ... )) (四则/幂/位运算/比较/逻辑/三目/赋值/自增自减与环境读写)
+├── parser.cp        # 复合 AST 解析器 (AstPool, Script, Pipeline, Command, if/elif/else/fi, for, while/until, (...), {...;})
+├── builtin_fs.cp    # 文件系统 Builtins (ls, cat, mkdir, rmdir, rm, cp, mv, touch, basename, dirname, mktemp)
+├── builtin_text.cp  # 文本与流处理 Builtins (seq, head, tail, wc, grep, yes, sort, uniq)
+├── builtin.cp       # 控制/环境 Builtins (echo, printf, pwd, cd, pushd, popd, dirs, env, export, unset, which, true, :, false, test/[, exit) 与统一调度器
+└── exec.cp          # 会话执行与混合管道引擎 (ShellSession, Executor, GlobWalker 集成, Subshell 隔离, PosixSpawn 外部进程管道)
 ```
 
-1. **完整词法 & 变量展开**：
-   - 区分单引号字面量 `'...'`（不展开变量）、双引号 `"..."`（展开 `$VAR`、`${VAR}`、`${VAR:-default}`、`${VAR:=default}`、`${VAR:+alt}`、`${#VAR}`、`$?`、`$$` 及 `\"`/`\\`/`\$` 转义）、混合拼接词（如 `FOO="hello world"`）以及 `#` 行注释。
-   - 支持赋值前缀 `FOO=bar cmd`（仅作用于单条命令，执行完自动恢复原环境）与独立赋值 `FOO=bar`（持久化到 `ShellSession`）。
-2. **完整控制流与重定向**：
-   - 左结合 `&&`、`||`、`;`、`\n` 链式执行与退出码短路；支持 `exit [code]` 提前终止脚本并返回退出码。
-   - 支持 `<` 输入重定向、`>` / `>>` 标准输出重定向、`2>` / `2>>` 标准错误重定向、`2>&1` / `1>&2` 流合并、`&>` / `&>>` 全流重定向（基于 Zig 0.17 兼容的 `std.c.open`/`read`/`write`/`close`），以及 `ShellSession.runWithMemoryTarget` 直接重定向到内存缓冲区。
-3. **23 条进程内 Builtins**：
-   - `echo`（`-n`/`-e`/`-E` 及组合标志）、`printf`（`%s`/`%d`/`%i`/`%u`/`%x`/`%X`/`%c`/`%%` 与宽度对齐）、`cat`（`-n` 与 stdin/文件）、`true`、`false`、`test` / `[`（`-e`/`-f`/`-d`/`-r`/`-w`/`-x`/`-s`/`-L`/`-h`/`-z`/`-n`/`=`/`!=`/`-eq`/`-ne`/`-lt`/`-le`/`-gt`/`-ge`/`!`/`-a`/`-o`）、`pwd`、`cd`（含 `cd -`）、`pushd`、`popd`、`dirs`、`env`、`export`、`unset`、`which`（内置命令 + `$PATH` 可执行搜索）、`basename`（含可选后缀剥离）、`dirname`、`head`（`-n N` / `-N`）、`wc`（`-l`/`-w`/`-c`）、`mkdir`（`-p` 递归创建）、`rm`（`-f` / `-r` / `-R` 递归删除）、`exit`。
+1. **完整 POSIX 词法 & 展开链**：
+   - 展开管线按 POSIX 标准顺序执行：**大括号展开 `{...}` → 波浪号 `~` → 参数/算术/命令替换 (`$VAR`/`${VAR:-def}`/`${VAR:=val}`/`${VAR:+alt}`/`${#VAR}`/`$?`/`$$`/`$#`/`$0..$9`/`$@`/`$((...))`/`$(...)`/`` `...` ``) → 无引号分词 → Glob 路径展开 (`*`, `?`, `[...]`) → 去引号**。
+   - 单引号 `'...'` 屏蔽所有展开；双引号 `"..."` 支持插值与 `\"`/`\\`/`\$`/`\`` 转义；`$ '...'`（ANSI-C `$'...'`）支持 `\n`/`\t`/`\r`/`\\`/`\'` 转义。
+2. **完整控制流与子 Shell 隔离**：
+   - 支持 `if ... then ... elif ... else ... fi`、`for x in ...; do ...; done`、`while ...; do ...; done`、`until ...; do ...; done`、`break`/`continue`、`&&`/`||`/`;`/`\n` 以及管道取反 `!`。
+   - 支持 `( ... )` 子 Shell 环境隔离（`ShellSession.cloneForSubshell()` 隔离环境变量、目录栈、`cd` 工作目录、`export`、`alias` 与 `exit`）与 `{ ...; }` 当前会话命令组。
+   - 支持 `set`（`-e`/`-u`/`-x`/`-o pipefail`/`--`）、`shift`、`alias`/`unalias`。
+3. **多级混合真实管道 & 全套重定向**：
+   - 内置命令（零 fork）与外部可执行文件（`cap:sys` `PosixSpawn` + `cap:io` `Pipe` + `poll` 非阻塞读写）可在同一条多级管道中自由混排（如 `printf ... | tr a-z A-Z | sort | head -n 2`），并自动继承 `ShellEnv` 导出变量。
+   - 支持 `<`、`<<<`（Here-String）、`>`、`>>`、`2>`、`2>>`、`2>&1`、`1>&2`、`&>`、`&>>` 以及 `ShellSession.runWithMemoryTarget` 内存缓冲区直出。
 
 ---
 
 ## 二、 语法特性与 Builtins 对照表
 
-| 特性 / 命令 | 语义与支持能力 | 示例 |
-| :--- | :--- | :--- |
-| **引号与插值** | `'...'` 禁用插值；`"..."` 支持 `$VAR`、`${VAR:-def}`、`${VAR:=val}`、`${#VAR}`、`$?`、`$$` | `echo "hi ${USER:-guest}"` |
-| **赋值前缀** | `FOO=bar cmd` 仅临时注入子命令；独立 `FOO=bar` 写入会话 | `DEBUG=1 env \| cat` |
-| **逻辑短路** | `&&` / `||` / `;` / `\n` 左结合短路求值，`exit N` 中断脚本 | `false && echo no ; echo yes` |
-| **重定向** | `>` / `>>` / `<` / `2>` / `2>>` / `2>&1` / `1>&2` / `&>` / `&>>` | `cat missing 2>&1 \| head -n 1` |
-| **环境与目录栈** | `env` / `export` / `unset` / `pwd` / `cd` / `pushd` / `popd` / `dirs` | `pushd /tmp && pwd && popd` |
-| **条件测试 `test`/`[`** | 文件属性、字符串比对、整数比较与 `!` / `-a` / `-o` 逻辑组合 | `[ -f a.txt -a 10 -gt 2 ]` |
-| **文本与文件工具** | `echo -ne`, `printf`, `cat`, `head`, `wc`, `basename`, `dirname`, `mkdir -p`, `rm -rf` | `printf '%03d\n' 7 \| wc -c` |
+| 类别 | 特性 / 命令 | 语义与支持能力 | 示例 |
+| :--- | :--- | :--- | :--- |
+| **参数与算术展开** | `${VAR:-/=/+/ #}`, `$((...))`, `$(...)`, `` `...` `` | 默认值/赋值/替代/长度、全套整数算术与环境变量写回、隔离命令替换 | `echo $((a += 2)) $(pwd)` |
+| **大括号与路径展开** | `{a,b}`, `{1..5}`, `*`, `?`, `[...]` | 嵌套大括号与区间展开、基于 `cap:glob` 的单层/递归 Glob 匹配 | `echo src/{a,b}_*.cp` |
+| **控制流与隔离** | `if/elif/else/fi`, `for`, `while/until`, `(...)`, `{...;}` | 完整分支与循环、`break`/`continue`、子 Shell 环境变量与 `cwd` 隔离 | `(cd /tmp && pwd); pwd` |
+| **管道与重定向** | `\|`, `!`, `&&`, `\|\|`, `>`, `>>`, `<`, `2>`, `2>&1`, `&>`, `<<<` | Builtin 与 `PosixSpawn` 外部进程混排管道、`pipefail`、Here-String | `grep -i hi <<< 'Hi!' \| tr a-z A-Z` |
+| **环境与会话** | `pwd`, `cd`, `pushd`, `popd`, `dirs`, `env`, `export`, `unset`, `which`, `set`, `shift`, `alias`, `unalias`, `true`, `:`, `false`, `exit` | 目录栈、OS `environ` 合并与导出隔离、`cap:which` 可执行查找 | `export K=v && env \| grep K` |
+| **条件测试** | `test` / `[` | `-e/-f/-d/-s/-L/-h/-r/-w/-x`、`-z/-n/=/!=/==`、`-eq/-ne/-lt/-le/-gt/-ge`、`!/-a/-o` | `[ -f a.txt -a 10 -gt 2 ]` |
+| **文件与目录** | `ls`, `cat`, `mkdir`, `rmdir`, `rm`, `cp`, `mv`, `touch`, `basename`, `dirname`, `mktemp` | `ls -la1dr`, `cat -n`, `mkdir -p`, `rm -rf`, `cp -r`, `mv -n`, `mktemp -d` | `mkdir -p d && touch d/a && rm -rf d` |
+| **文本与序列** | `echo`, `printf`, `seq`, `head`, `tail`, `wc`, `grep`, `yes`, `sort`, `uniq` | `seq -s -w`, `head/tail -n/-c`, `wc -lwc`, `grep -ivcnlqFE`, `yes -n`, `sort -rnu`, `uniq -c` | `seq 1 5 \| sort -r \| head -n 2` |
 
 ---
 
 ## 三、 代码示例
 
-### 1. 有状态会话 (`ShellSession`)、变量展开与目录栈
+### 1. 有状态会话 (`ShellSession`)、展开、控制流与子 Shell 隔离
 
 ```typescript
 import { Shell } from "cap:shell";
 
-fn demoSession(): void {
+fn demoControlAndSubshell(): void {
     let sess = Shell.session();
     defer sess.release();
 
-    const r1 = sess.run("export MODE=prod; echo \"mode=${MODE:-dev} len=${#MODE}\"");
-    // r1.text() => "mode=prod len=4\n"
-
-    const r2 = sess.run("mkdir -p /tmp/demo && pushd /tmp/demo > /dev/null && echo ok > out.txt && popd > /dev/null && rm -rf /tmp/demo");
-    // r2.ok() => true
+    const r = sess.run(
+        "MODE=prod; " +
+        "(MODE=dev; cd /tmp && echo sub=$MODE:$(pwd)); " +
+        "if [ \"$MODE\" = \"prod\" ]; then " +
+        "  for i in {1..3}; do echo -n $((i * 10)),; done; " +
+        "fi"
+    );
+    // r.ok() == true
+    // r.text() => "sub=dev:/tmp\n10,20,30,"
 }
 ```
 
-### 2. 内存缓冲区重定向与管道组合
+### 2. Builtin + `PosixSpawn` 外部进程混合管道与内存重定向
 
 ```typescript
 import { Shell } from "cap:shell";
 import { StringJoiner } from "cap:string";
 
-fn demoMemoryTarget(): void {
+fn demoMixedPipeline(): void {
     let sess = Shell.session();
     defer sess.release();
 
@@ -79,7 +90,11 @@ fn demoMemoryTarget(): void {
     let err = StringJoiner.init();
     defer err.release();
 
-    const code = sess.runWithMemoryTarget("printf 'a\\nb\\nc\\n' | head -n 2 | wc -l", &out, &err);
-    // code == 0, out.slice() => "2\n"
+    const code = sess.runWithMemoryTarget(
+        "printf 'banana\\napple\\n' | tr a-z A-Z | sort | head -n 1",
+        &out,
+        &err,
+    );
+    // code == 0, out.slice() => "APPLE\n"
 }
 ```

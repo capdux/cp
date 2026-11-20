@@ -2,6 +2,15 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-20: Phase B-2（`lib/shell/` 7.1K）与 Phase C-2（`lib/http/` 7.5K + `lib/conf/` 4.5K）双路原版直迁完工
+
+- **落地成果**：
+  - `lib/shell/`（10 文件 7,102 行）完成 Bun POSIX 展开/控制流/子 Shell 隔离/多级 `PosixSpawn` 混合管道与 30+ 内置命令直迁，并根治 `[` 触发 Glob 全仓扫描与 `set --`/`shift` 悬空指针问题，3 套 12/12 PASS；
+  - `lib/http/`（37 文件 7,492 行）与 `lib/conf/`（9 文件 4,515 行）完成 201 MIME、Header 解析器、RFC 7541 全量 HPACK（61 静态+257 Huffman+动态表）、H2 流控帧、完整 YAML 1.2（多文档/锚点/合并键/块标量）与 TOML 1.0（内联表/RFC 3339）直迁，7 套 31/31 PASS；
+- **持续推进**：全部 56 个涉及 `.cp` 文件 `// Source:` 100% 合规、0 `@import("bun")`、0 `std.posix`；立即保持 3 路并发子智能体推进 Phase D-1（`lib/css/engine/` LightningCSS）、Phase C-3（`lib/resolver/` + `lib/test_runner/`）与 Phase E-1（`lib/mem/` + `lib/cli/` + `lib/bundler/`）。
+
+---
+
 ## 2026-11-20: Phase C-1 工业级 `lib/md/`（11.7K MD4C 全模块）与 `lib/sql/`（4.7K PG/MySQL/SQLite）原版直迁完工
 
 - **落地成果**：完整原版移植 Bun `src/md/` 全部 16 个 MD4C 引擎模块（含 2,125 条 W3C HTML5 实体与 1,829 行高级 ANSI 渲染器）及 `src/sql/` Postgres/MySQL/SQLite 完整二进制编解码与认证协议状态机，合计 31 文件 16,453 行，0 `@import("bun")`，0 `std.posix`，100% 保持既有 API 零回归。

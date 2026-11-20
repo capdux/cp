@@ -2620,3 +2620,11 @@
   - 子智能体 3 完工回收：`lib/md/`（21 文件 11,735 行，完整直迁 Bun 全部 16 个 MD4C 引擎模块与 2,125 条 W3C 实体）+ `lib/sql/`（10 文件 4,718 行，完整 PG/MySQL/SQLite 二进制编解码与认证协议），合计 31 文件 16,453 行，31/31 `// Source:` 合规，0 `@import("bun")`，0 `std.posix`；
   - [`cap/test/test_phase_c1_md_sql_port.cp`](file:///data/dev/cp/cap/test/test_phase_c1_md_sql_port.cp)（8/8）及 4 套存量回归共 29/29 用例 100% PASS，已同步双轨规范与热日志并执行 Git 提交固化；
   - 无缝拉起子智能体 6（`16b20207`，Phase C-2：Bun 原版 `http/` + `http_types/` 15.8K 与 `interchange/` YAML 1.2/TOML 1.0 6.7K 直迁），与子智能体 5（`01699e2b`，Phase B-2 `lib/shell/`）继续双路并行。
+
+### 2026-11-20（重启切换配额后恢复会话、自检通信并 3 路并行收官 Phase B-2 `shell` 与 Phase C-2 `http+conf`）
+- **用户指令**：切换配额账号重启恢复会话，要求重开 2-3 个并发子智能体接手未完任务、读取 `/root/.agy/comm/COMM.md` 保持多 AGY 通信畅通，每阶段完成自动更新文档、Git 提交并自主推导推进下一阶段。
+- **执行成果**：
+  - 验证 `agy-comm.service`（`active`，PID `3787493`）与队列清零；新开 3 路子智能体无缝接力；
+  - **Phase B-2 完工入库**：`lib/shell/`（10 文件 7,102 行，30+ 内置命令、POSIX 展开/控制流/子 Shell 隔离/多级 `PosixSpawn` 管道，根治 Glob 与 `set --` 两处隐患），3 套测试 12/12 PASS；
+  - **Phase C-2 完工入库**：`lib/http/`（37 文件 7,492 行：201 MIME、Header 解析、RFC 7541 全量 HPACK+257 Huffman+H2 流控）+ `lib/conf/`（9 文件 4,515 行：完整 YAML 1.2 与 TOML 1.0），7 套测试 31/31 PASS；
+  - 已同步双轨规范与热日志并提交 Git；当前维持 3 路全新子智能体持续并行：Phase D-1（`7694986f`，`lib/css/engine/` LightningCSS）、Phase C-3（`6cb906e6`，`lib/resolver/` + `lib/test_runner/`）与 Phase E-1（`lib/mem/` + `lib/cli/` + `lib/bundler/`）。

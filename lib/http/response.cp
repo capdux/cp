@@ -2,6 +2,8 @@
 /**
  * CP HTTP Response (cap:http)
  */
+const std = @import("std");
+
 pub class Response {
     pub status: i32;
     pub body: string;
@@ -18,7 +20,7 @@ pub class Response {
     }
 
     pub fn json(): std.json.Value! {
-        return JSON.parse(_.body);
+        return std.json.parseFromSliceLeaky(std.json.Value, std.heap.page_allocator, _.body, .{});
     }
 
     pub fn ok(): bool {

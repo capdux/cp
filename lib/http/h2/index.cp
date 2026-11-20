@@ -1,4 +1,4 @@
-// Source: Custom (agy-generated export index)
+// Source: /data/dev/bun/src/http/h2_client/
 // lib/http/h2/index.cp
 // HTTP/2 protocol client subsystem
 
@@ -17,13 +17,22 @@ export {
     SettingsFlags,
     ErrorCode,
     SettingsType,
+    UInt31WithReserved,
+    StreamPriority,
     FrameHeader,
-    SettingsPayloadUnit
+    SettingsPayloadUnit,
+    RstStreamFrame,
+    WindowUpdateFrame,
+    PingFrame,
+    GoawayFrame
 } from "./frame";
 
 export {
     H2StreamState,
     H2Stream,
+    H2FlowControl,
+    H2FrameActionKind,
+    H2FrameAction,
     H2ClientSession
 } from "./client";
 
@@ -31,5 +40,15 @@ export {
     HpackIntResult,
     HpackStaticEntry,
     HpackDecodedHeader,
-    HpackCodec
+    HpackHuffCode,
+    HpackHuffBucket,
+    HPACK_STATIC_TABLE,
+    HPACK_HUFFMAN_TABLE,
+    HPACK_HUFF_BUCKETS,
+    HPACK_HUFF_SORTED_SYMS,
+    HpackCodec,
+    HpackIndexMode,
+    HpackDynamicEntry,
+    HpackDynamicTable,
+    HpackSessionCodec
 } from "./hpack";

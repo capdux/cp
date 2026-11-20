@@ -1,3 +1,18 @@
+## [2026-11-20] - Phase B-2 & Phase C-2 双路大里程碑落地：`lib/shell/`（7.1K）、`lib/http/`（7.5K）与 `lib/conf/`（4.5K）工业级原版直迁
+
+### `lib/shell/` 工业级跨平台 Shell 引擎（10 文件 7,102 行，直迁 Bun `shell/` + `shell_parser/`）
+- 新增 [`arith.cp`](file:///data/dev/cp/lib/shell/arith.cp)（442 行，`$((...))` 算术展开）、[`braces.cp`](file:///data/dev/cp/lib/shell/braces.cp)（419 行，大括号/序列展开）、[`builtin_fs.cp`](file:///data/dev/cp/lib/shell/builtin_fs.cp)（781 行）与 [`builtin_text.cp`](file:///data/dev/cp/lib/shell/builtin_text.cp)（773 行），升级 `lexer`/`parser`/`env`/`exec`/`builtin`：
+  - 完整 POSIX 展开（`${VAR:-/=/+/ #}`、`$(cmd)`、`$((arith))`、`{a..z}`、Glob）、控制流（`if`/`for`/`while`/`until`/`&&`/`||`/`!`）、子 Shell 环境与 `cwd` 隔离、多级 Builtin+`PosixSpawn` 混合管道、全套重定向（`>`/`>>`/`<`/`2>`/`2>&1`/`<<<`）与 30+ 生产内置命令；
+  - 根治孤立 `[` 命令误触 Glob 递归遍历与 `set --`/`shift` 位置参数悬空指针两处深层缺陷；
+  - 新增 [`cap/test/test_phase_b2_shell_port.cp`](file:///data/dev/cp/cap/test/test_phase_b2_shell_port.cp)（4/4 PASS），3 套测试共 12/12 PASS，同步更新 [`docs/shell/shell.md`](file:///data/dev/cp/docs/shell/shell.md)。
+
+### `lib/http/`（37 文件 7,492 行）与 `lib/conf/`（9 文件 4,515 行）工业级直迁（源自 Bun `http/`、`http_types/`、`interchange/`）
+- **`lib/http/`**：新增 [`status.cp`](file:///data/dev/cp/lib/http/status.cp)（64 项 RFC 9110 状态码表）、[`header_builder.cp`](file:///data/dev/cp/lib/http/header_builder.cp)、[`header_parsers.cp`](file:///data/dev/cp/lib/http/header_parsers.cp)（`CacheControl`/`ContentDisposition`/`Accept`/`Range`/`ContentRange`）、[`wire_http.cp`](file:///data/dev/cp/lib/http/wire_http.cp)（`HttpRequestBuilder`/`HttpResponseParser`）；升级 [`mime.cp`](file:///data/dev/cp/lib/http/mime.cp)（201 项 `MIME_DATABASE` + `sniffMagic`）与 `lib/http/h2/`（RFC 7541 61 静态表 + 257 项 Huffman 编解码 + 动态表驱逐 + H2 `SETTINGS`/`WINDOW_UPDATE`/`GOAWAY`/`PING`/`RST_STREAM` 流控）；
+- **`lib/conf/`**：新增 [`value.cp`](file:///data/dev/cp/lib/conf/value.cp)（统一 `ConfValue`/`ConfDateTime` RFC 3339）与 [`yaml_parser.cp`](file:///data/dev/cp/lib/conf/yaml_parser.cp)（完整 YAML 1.2：多文档流、锚点 `&`/别名 `*`/合并键 `<<`、`|`/`>`/`|-`/`>+` 块标量、流式集合、类型标签与双向序列化）；升级 [`toml.cp`](file:///data/dev/cp/lib/conf/toml.cp)（TOML 1.0 内联表、点分/引号键、RFC 3339 日期时间与 `[[array]]`）；
+- 新增 [`cap/test/test_phase_c2_http_interchange_port.cp`](file:///data/dev/cp/cap/test/test_phase_c2_http_interchange_port.cp)（4/4 PASS），7 套测试共 31/31 PASS；同步更新 [`docs/http/http.md`](file:///data/dev/cp/docs/http/http.md)、[`docs/conf/conf.md`](file:///data/dev/cp/docs/conf/conf.md) 及双轨规范手册。
+
+---
+
 ## [2026-11-20] - Phase C-1 工业级原版直迁落地：`lib/md/`（21 文件 11,735 行完整 MD4C 引擎）与 `lib/sql/`（10 文件 4,718 行多数据库协议栈）
 
 ### 标准库原版直迁 (Phase C-1 Direct Port)

@@ -144,4 +144,46 @@ pub struct Headers {
         }
         return _.entries[index];
     }
+
+    /// Collects all values for a multi-value header (e.g. `Set-Cookie`, `Accept`) into `out`, returning count.
+    pub fn getAll(name: []const u8, out: [][]const u8): usize {
+        let matched: usize = 0;
+        let i: usize = 0;
+        while (i < _.len && matched < out.len) : (i += 1) {
+            if (entry := _.at(i)) {
+                if (std.ascii.eqlIgnoreCase(entry.name, name)) {
+                    out[matched] = entry.value;
+                    matched += 1;
+                }
+            }
+        }
+        return matched;
+    }
+
+    /// Joins all values for `name` with `", "` into `buf` per RFC 9110 §5.3.
+    pub fn getJoined(name: []const u8, buf: []u8): ([]const u8)? {
+        let pos: usize = 0;
+        let found = false;
+        let i: usize = 0;
+        while (i < _.len) : (i += 1) {
+            if (entry := _.at(i)) {
+                if (std.ascii.eqlIgnoreCase(entry.name, name)) {
+                    if (found) {
+                        if (pos + 2 > buf.len) return null;
+                        buf[pos] = ',';
+                        buf[pos + 1] = ' ';
+                        pos += 2;
+                    }
+                    if (pos + entry.value.len > buf.len) return null;
+                    if (entry.value.len > 0) {
+                        @memcpy(buf[pos .. pos + entry.value.len], entry.value);
+                        pos += entry.value.len;
+                    }
+                    found = true;
+                }
+            }
+        }
+        if (!found) return null;
+        return buf[0..pos];
+    }
 }

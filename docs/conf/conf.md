@@ -1,32 +1,35 @@
-# `cap:conf` — 统一配置交换引擎（TOML / INI / YAML / JSON5 & `ConfGetter`）
+# `cap:conf` — 统一配置交换引擎（YAML 1.2 / TOML 1.0 / INI / JSON5 & `ConfGetter`）
 
-> **上游溯源**: `/data/dev/bun/src/ini/ini.cp` & `/data/dev/bun/src/interchange/` (`toml.cp`, `yaml.cp`, `json5.cp`)  
+> **上游溯源**: `/data/dev/bun/src/ini/ini.cp` & `/data/dev/bun/src/interchange/` (`toml/`, `yaml.cp`, `json5.cp`, `interchange.cp`)  
 > **模块路径**: `lib/conf/`  
-> **导入协议**: `import { Ini, TomlDoc, TOML, YamlDoc, YAML, JSON5, DotEnv, ConfGetter, ConfValueParser } from "cap:conf";`
+> **导入协议**: `import { ConfTag, ConfDateTime, ConfDateTimeKind, ConfValue, YamlParser, YamlStream, YamlDoc, YAML, TomlParser, TomlDoc, TOML, Ini, JSON5, DotEnv, ConfGetter, ConfValueParser } from "cap:conf";`
 
 ---
 
 ## 一、 架构概述与设计亮点
 
-`cap:conf` 是 CP 标准库的统一配置与数据交换子系统，将 Bun 内部的四大核心配置解析器（**TOML**、**INI**、**YAML**、**JSON5**）与强类型配置提取器（**`ConfGetter`**）整合为一套零冗余、类型安全的原生模块：
+`cap:conf` 是 CP 标准库的统一配置与数据交换子系统，将 Bun 内部的四大核心配置解析器（**TOML 1.0**、**YAML 1.2**、**INI**、**JSON5**）与统一 AST (`ConfValue`)、强类型配置提取器（**`ConfGetter`**）整合为一套零冗余、类型安全的原生模块：
 
-1. **TOML 工业级文档模型 (`TomlDoc` / `TOML`)**：支持 `[table]` 标准表、`[[array_of_tables]]` 表数组、`a.b.c = "val"` 点分嵌套键、十进制下划线分隔符 `1_000`、十六进制 `0xDEAD`、八进制 `0o755`、二进制 `0b1010`、特殊浮点数（`inf`, `nan`）、多行字符串 `"""..."""`、内联数组 `[ "a", "b" ]` 以及双向序列化 `toString()`。
-2. **INI 配置与环境变量展开引擎 (`Ini` / `ini`)**：支持全局属性、`[section]` 与 `[section.nested]` 节管理、`;` 与 `#` 注释、双引号转义与 `${ENV_VAR}` 系统环境变量自动展开，以及动态增删改与 `toString()` 序列化。
-3. **轻量级零分配 YAML 解析器 (`YamlDoc` / `YAML`)**：支持 `---` / `...` 文档边界、缩进块级 Section 自动识别、键值提取与类型转换（`getInt`, `getBool`, `getOr`）。
-4. **JSON5 全功能 AST 解析与注释剥离器 (`JSON5`)**：支持 `//` 单行注释、`/* */` 多行块注释、对象与数组尾随逗号（Trailing Commas）、无引号标识符键名、单引号字符串、十六进制数值 `0x1F90`、前导正号 `+100`、`Infinity` / `NaN`，以及将 JSON5 降级净化为标准 JSON 的零分配预处理器 `stripCommentsAndTrailingCommas`。
-5. **统一类型安全配置提取器 (`ConfGetter` / `ConfValueParser`)**：跨越不同配置格式，将原始字符串或可选切片 `([]const u8)?` 安全解析为布尔值（`true`/`yes`/`on`/`1`）、端口号（`1..65535`）、时间跨度（`150ms`, `30s`, `5m`, `2h` -> 毫秒）与字节容量（`512b`, `64kb`, `16mb`, `2gb` -> 字节数）。
+1. **统一配置 AST 与 RFC 3339 时间模型 (`ConfValue` / `ConfDateTime`)**：提供 `Null`/`Bool`/`Int`/`Float`/`String`/`DateTime`/`Array`/`Object` 八态递归值树、`getPath("a.b.0.c")` 点分/索引路径查询、`clone` 深拷贝与 `toJsonValue` 跨模块桥接；`ConfDateTime` 完整校验 RFC 3339 四种格式（`OffsetDateTime`、`LocalDateTime`、`LocalDate`、`LocalTime`）及闰年日历合法性。
+2. **工业级 TOML 1.0 解析器与序列化器 (`TomlParser` / `TomlDoc` / `TOML`)**：支持内联表 `point = { x = 10, y = 20 }`、深层点分键 `a.b.c = "val"`、引号键 `"127.0.0.1" = "loopback"`、RFC 3339 日期时间字面量、多维嵌套数组、多行字符串 `"""..."""` / `'''...'''`、`[table]` 与 `[[array_of_tables]]` 表数组、十进制/十六进制/八进制/二进制及 `inf`/`nan`，并支持 `TomlParser.stringify` 双向序列化与 100% 向后兼容 `TomlDoc`（`TOML` / `toml`）。
+3. **工业级 YAML 1.2 解析器与序列化器 (`YamlParser` / `YamlStream` / `YamlDoc` / `YAML`)**：支持多文档流（`---` / `...`、`%YAML` / `%TAG`）、锚点与别名（`&anchor` / `*alias`）、合并键（`<<: *base` 与 `<<: [*a, *b]`）、块标量（`|`/`|-`/`|+`/`>`/`>-`/`>+` 及显式缩进指示）、流式集合（`[...]` / `{...}`）、显式标签（`!!str`/`!!int`/`!!float`/`!!bool`/`!!null`/`!!seq`/`!!map`）、单双引号转义（`\x` / `\u` / `\U`）以及 `YamlParser.stringify` / `stringifyStream` 双向序列化，同时保留向后兼容的 `YamlDoc`（`YAML` / `yaml`）。
+4. **INI 配置与环境变量展开引擎 (`Ini` / `ini`)**：支持全局属性、`[section]` 与 `[section.nested]` 节管理、`;` 与 `#` 注释、双引号转义与 `${ENV_VAR}` 系统环境变量自动展开，以及动态增删改与 `toString()` 序列化。
+5. **JSON5 全功能 AST 解析与注释剥离器 (`JSON5`)**：支持 `//` 单行注释、`/* */` 多行块注释、对象与数组尾随逗号（Trailing Commas）、无引号标识符键名、单引号字符串、十六进制数值 `0x1F90`、前导正号 `+100`、`Infinity` / `NaN`，以及将 JSON5 降级净化为标准 JSON 的零分配预处理器 `stripCommentsAndTrailingCommas`。
+6. **统一类型安全配置提取器 (`ConfGetter` / `ConfValueParser`)**：跨越不同配置格式，将原始字符串或可选切片 `([]const u8)?` 安全解析为布尔值（`true`/`yes`/`on`/`1`）、端口号（`1..65535`）、时间跨度（`150ms`, `30s`, `5m`, `2h` -> 毫秒）与字节容量（`512b`, `64kb`, `16mb`, `2gb` -> 字节数）。
 
 ---
 
-## 二、 四大配置格式与 `ConfGetter` 核心 API 矩阵
+## 二、 五大配置格式与 `ConfGetter` 核心 API 矩阵
 
 ### 1. 配置解析器 API 对照表
 
-| 配置格式 | 核心结构体 | 解析入口 | 读取字符串 | 类型化读取 & 序列化 |
+| 配置格式 | 核心结构体 | 解析入口 | 读取与路径查询 | 类型化读取 & 序列化 |
 | :--- | :--- | :--- | :--- | :--- |
-| **TOML** | `TomlDoc` (`TOML`) | `TomlDoc.parse(src)` | `doc.get(table, key)` / `getRoot(key)` | `getInt`, `getFloat`, `getBool`, `getArray`, `toString` |
+| **YAML 1.2 (AST)** | `YamlParser` / `YamlStream` | `YamlParser.parse(alloc, src)` / `parseStream(alloc, src)` | `doc.getPath("service.tls")` / `stream.getDoc(i)` | `asInt`, `asBool`, `asString`, `stringify`, `stringifyStream` |
+| **YAML (兼容)** | `YamlDoc` (`YAML`) | `YamlDoc.parse(src)` / `parseTree(alloc, src)` | `doc.get(sec, key)` / `getRoot(key)` | `getInt`, `getBool`, `getOr`, `hasSection`, `hasKey` |
+| **TOML 1.0 (AST)** | `TomlParser` | `TomlParser.parse(alloc, src)` | `root.getPath("products.1.name")` / `root.get(k)` | `asInt`, `asFloat`, `asDateTime`, `asArray`, `TomlParser.stringify` |
+| **TOML (兼容)** | `TomlDoc` (`TOML`) | `TomlDoc.parse(src)` / `parseTree(alloc, src)` | `doc.get(table, key)` / `getRoot(key)` | `getInt`, `getFloat`, `getBool`, `getDateTime`, `getArray`, `toString` |
 | **INI** | `Ini` (`ini`) | `Ini.parse(src)` | `conf.get(sec, key)` / `getGlobal(key)` | `getInt`, `getFloat`, `getBool`, `set`, `remove`, `toString` |
-| **YAML** | `YamlDoc` (`YAML`) | `YamlDoc.parse(src)` | `doc.get(sec, key)` / `getRoot(key)` | `getInt`, `getBool`, `getOr`, `hasSection`, `hasKey` |
 | **JSON5** | `JSON5` | `JSON5.parse(alloc, src)` | `val.get(key)` -> `asString()` | `asNumber()`, `asBool()`, `getIndex(i)`, `stripCommentsAndTrailingCommas` |
 | **DotEnv** | `DotEnv` (`dotenv`) | `DotEnv.parse(src)` | `env.get(key)` / `getOr(key, def)` | `env.has(key)` |
 
@@ -46,42 +49,91 @@
 
 ## 三、 代码示例
 
-### 1. TOML 解析、数组提取与双向序列化
+### 1. 完整 TOML 1.0 AST 解析、RFC 3339 时间与双向序列化 (`TomlParser` & `TomlDoc`)
 
 ```typescript
 const std = @import("std");
-import { TomlDoc } from "cap:conf";
+import { TomlParser, TomlDoc, ConfDateTime, ConfDateTimeKind } from "cap:conf";
 
-fn demoToml(): void {
+fn demoToml(): !void {
+    const alloc = std.heap.page_allocator;
     const toml_src =
-        "title = \"CP Engine\"\n" +
+        "point = { x = 10, y = 20 }\n" +
+        "nested.dotted.val = \"deep\"\n" +
+        "\"127.0.0.1\" = \"loopback\"\n" +
+        "created_utc = 1979-05-27T07:32:00Z\n" +
+        "local_d = 2024-02-29\n" +
         "\n" +
-        "[network]\n" +
-        "port = 9000\n" +
-        "max_clients = 10_000\n" +
-        "flags = 0b1010\n" +
-        "hosts = [ \"10.0.0.1\", \"10.0.0.2\" ]\n" +
+        "[[products]]\n" +
+        "name = \"Hammer\"\n" +
+        "sku = 738594937\n" +
         "\n" +
-        "[network.tls]\n" +
-        "enabled = true\n";
+        "[[products]]\n" +
+        "name = \"Nail\"\n" +
+        "meta = { color = \"gray\", weight = 0.05 }\n";
 
+    // 1. 完整 AST 解析与点分/索引路径查询
+    const root = try TomlParser.parse(alloc, toml_src);
+    const px = root.getPath("point.x").?.asInt().?;                      // 10
+    const p1_color = root.getPath("products.1.meta.color").?.asString().?; // "gray"
+    const dt = root.get("created_utc").?.asDateTime().?;                 // OffsetDateTime, is_utc=true
+
+    // 日历合法性校验（2025 非闰年返回 null）
+    const invalid = ConfDateTime.parse("2025-02-29");                    // null
+
+    // 双向序列化回标准 TOML 文本
+    const encoded = try TomlParser.stringify(alloc, root);
+
+    // 2. 向后兼容零分配扁平查询 API (TomlDoc)
     let doc = TomlDoc.parse(toml_src);
-
-    let title = doc.getRoot("title").?;                    // "CP Engine"
-    let max_c = doc.getInt("network", "max_clients", 0);   // 10000
-    let flags = doc.getInt("network", "flags", 0);         // 10
-    let tls_on = doc.getBool("network.tls", "enabled", false); // true
-
-    let hosts = doc.getArray("network", "hosts");
-    // hosts.len => 2, hosts[0] => "10.0.0.1"
-
-    // 动态修改并序列化回 TOML 文本
-    doc.set("network", "port", "9001");
-    let encoded = doc.toString();
+    let x_val = doc.getInt("point", "x", 0);                             // 10
+    let utc = doc.getDateTime("", "created_utc").?;
 }
 ```
 
-### 2. INI 与 YAML 解析结合 `ConfGetter` 统一类型安全提取
+### 2. 完整 YAML 1.2 多文档流、锚点/别名、合并键与双向序列化 (`YamlParser` & `YamlDoc`)
+
+```typescript
+const std = @import("std");
+import { YamlParser, YamlDoc } from "cap:conf";
+
+fn demoYaml12(): !void {
+    const alloc = std.heap.page_allocator;
+    const yaml_src =
+        "%YAML 1.2\n" +
+        "---\n" +
+        "defaults: &base\n" +
+        "  timeout: 30\n" +
+        "  retries: 3\n" +
+        "service:\n" +
+        "  <<: *base\n" +
+        "  timeout: 60\n" +
+        "  notes: |-\n" +
+        "    line1\n" +
+        "    line2\n" +
+        "  tags: [\"api\", !!str 42]\n" +
+        "...\n" +
+        "---\n" +
+        "- item: second\n";
+
+    // 多文档流解析
+    const stream = try YamlParser.parseStream(alloc, yaml_src);
+    const doc0 = stream.getDoc(0).?;
+    const timeout = doc0.getPath("service.timeout").?.asInt().?; // 60（显式键覆盖合并键）
+    const retries = doc0.getPath("service.retries").?.asInt().?; // 3（继承自 *base）
+    const tag1 = doc0.getPath("service.tags.1").?.asString().?;  // "42"
+
+    // 双向序列化与重解析
+    const dumped = try YamlParser.stringify(alloc, doc0);
+    const reparsed = try YamlParser.parse(alloc, dumped);
+
+    // 向后兼容零分配 API
+    const legacy = YamlDoc.parse("server:\n  host: 127.0.0.1\n  port: 8080\n");
+    const port = legacy.getInt("server", "port", 0); // 8080
+}
+```
+
+### 3. INI 解析结合 `ConfGetter` 统一类型安全提取
 
 ```typescript
 import { Ini, YamlDoc, ConfGetter } from "cap:conf";
@@ -116,7 +168,7 @@ fn demoIniYamlAndGetter(): void {
 }
 ```
 
-### 3. JSON5 解析与注释/尾随逗号净化
+### 4. JSON5 解析与注释/尾随逗号净化
 
 ```typescript
 const std = @import("std");

@@ -1,11 +1,25 @@
-// Source: Custom (agy-generated export index)
+// Source: /data/dev/bun/src/http/
 // lib/http/index.cp
 // CP Standard HTTP Library (cap:http) - Industrial-grade unified HTTP subsystem
 
 export { Method } from "./method";
 export { Headers, HeaderEntry } from "./headers";
 export { ETag, ParsedETag } from "./etag";
-export { MimeType } from "./mime";
+export { MimeCategory, MimeEntry, MIME_DATABASE_COUNT, MIME_DATABASE, MimeType } from "./mime";
+export { HttpStatusEntry, HTTP_STATUS_TABLE, HTTPStatus } from "./status";
+export { MAX_BUILDER_HEADERS, HeaderSpan, HeaderBuilder } from "./header_builder";
+export {
+    CacheControl,
+    DispositionType,
+    ContentDisposition,
+    AcceptItem,
+    AcceptParser,
+    ResolvedByteRange,
+    ByteRangeSpec,
+    MAX_RANGE_SPECS,
+    RangeHeader,
+    ContentRange
+} from "./header_parsers";
 export { Request } from "./request";
 export { Response } from "./response";
 export { HttpServer, fetch, json, serve } from "./server";
@@ -63,15 +77,34 @@ export {
     SettingsFlags,
     ErrorCode,
     SettingsType,
+    UInt31WithReserved,
+    StreamPriority,
     FrameHeader,
     SettingsPayloadUnit,
+    RstStreamFrame,
+    WindowUpdateFrame,
+    PingFrame,
+    GoawayFrame,
     H2StreamState,
     H2Stream,
+    H2FlowControl,
+    H2FrameActionKind,
+    H2FrameAction,
     H2ClientSession,
     HpackIntResult,
     HpackStaticEntry,
     HpackDecodedHeader,
-    HpackCodec
+    HpackHuffCode,
+    HpackHuffBucket,
+    HPACK_STATIC_TABLE,
+    HPACK_HUFFMAN_TABLE,
+    HPACK_HUFF_BUCKETS,
+    HPACK_HUFF_SORTED_SYMS,
+    HpackCodec,
+    HpackIndexMode,
+    HpackDynamicEntry,
+    HpackDynamicTable,
+    HpackSessionCodec
 } from "./h2/index";
 
 export {
@@ -116,6 +149,14 @@ export {
     HTTPClientResult,
     HTTPClient
 } from "./client";
+
+export {
+    MAX_WIRE_HEADERS,
+    HttpRequestBuilder,
+    HttpResponseStage,
+    ParsedHttpResponse,
+    HttpResponseParser
+} from "./wire_http";
 
 // --- Step 4: Low-level PicoHTTPParser C-FFI & Zero-Copy Wire Parser ---
 export {

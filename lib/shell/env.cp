@@ -3,13 +3,16 @@
 // Absorbed from Bun: /data/dev/bun/src/shell/EnvMap.cp & interpreter.cp
 // ============================================================================
 // lib/shell/env.cp
-// In-process Environment Table, Directory Stack & Word Expansion Engine (cap:shell)
+// In-process Environment Table, Directory Stack, Shell Options, Aliases & Word Expansion Engine (cap:shell)
 
 const std = @import("std");
-import { StringJoiner } from "../string/joiner.cp";
+import { StringJoiner } from "cap:string";
+import { getpid, getcwd, chdir } from "cap:sys";
 
-pub const MAX_ENV_VARS: usize = 128;
-pub const MAX_DIR_STACK: usize = 16;
+pub const MAX_ENV_VARS: usize = 256;
+pub const MAX_DIR_STACK: usize = 32;
+pub const MAX_POS_ARGS: usize = 32;
+pub const MAX_ALIASES: usize = 32;
 
 pub enum EnvSlotState: u8 {
     Empty = 0,
@@ -22,6 +25,19 @@ pub struct EnvSlot {
     pub val: []const u8 = "",
     pub exported: bool = true,
     pub state: EnvSlotState = .Empty,
+}
+
+pub struct AliasSlot {
+    pub name: []const u8 = "",
+    pub value: []const u8 = "",
+    pub active: bool = false,
+}
+
+pub struct ShellOptions {
+    pub errexit: bool = false,  // set -e
+    pub pipefail: bool = false, // set -o pipefail
+    pub nounset: bool = false,  // set -u
+    pub xtrace: bool = false,   // set -x
 }
 
 fn allocCopyBytes(s: []const u8): []const u8 {
@@ -75,6 +91,21 @@ pub struct ShellEnv {
             i += 1;
         }
         return env;
+    }
+
+    pub fn clone(): ShellEnv {
+        let copy = ShellEnv.init();
+        let i: usize = 0;
+        while (i < _.len) {
+            const slot = _.entries[i];
+            if (slot.state == .Set) {
+                * = copy.set(slot.key, slot.val, slot.exported);
+            } else if (slot.state == .Unset) {
+                * = copy.unset(slot.key);
+            }
+            i += 1;
+        }
+        return copy;
     }
 
     fn findSlot(key: []const u8): usize? {
@@ -166,6 +197,13 @@ pub struct ShellEnv {
         return null;
     }
 
+    pub fn isExplicitlyUnset(key: []const u8): bool {
+        if (idx := _.findSlot(key)) {
+            return _.entries[idx].state == .Unset;
+        }
+        return false;
+    }
+
     pub fn contains(key: []const u8): bool {
         return _.get(key) != null;
     }
@@ -182,12 +220,142 @@ pub struct ShellEnv {
         return c;
     }
 
+    /// Build a null-terminated-entry envp slice (`KEY=VAL`) merging OS environ and ShellEnv overrides.
+    pub fn buildEnvp(allocator: std.mem.Allocator): [][]const u8 {
+        let list: std.ArrayListUnmanaged(string) = .empty;
+        // 1. Copy OS environ entries unless overridden or unset in ShellEnv
+        let env_idx: usize = 0;
+        while (true) {
+            let entry_opt: ([]const u8)? = null;
+            zig {
+                if (std.c.environ[env_idx]) |c_entry| {
+                    entry_opt = std.mem.span(c_entry);
+                }
+            }
+            const entry_slice = entry_opt orelse break;
+            if (eq_idx := std.mem.indexOfScalar(u8, entry_slice, '=')) {
+                const k = entry_slice[0..eq_idx];
+                if (_.findSlot(k) == null) {
+                    const duped = allocator.dupe(u8, entry_slice) catch {
+                        env_idx += 1;
+                        continue;
+                    };
+                    list.append(allocator, duped) catch {};
+                }
+            }
+            env_idx += 1;
+        }
+        // 2. Append all Set & exported ShellEnv entries
+        let i: usize = 0;
+        while (i < _.len) {
+            const slot = _.entries[i];
+            if (slot.state == .Set && slot.exported) {
+                const kv = std.fmt.allocPrint(allocator, "{s}={s}", .{ slot.key, slot.val }) catch "";
+                if (kv.len > 0) {
+                    list.append(allocator, kv) catch {};
+                }
+            }
+            i += 1;
+        }
+        return list.toOwnedSlice(allocator) catch &.{};
+    }
+
+    pub static fn freeEnvp(allocator: std.mem.Allocator, envp: [][]const u8) {
+        for (item of envp) {
+            allocator.free(item);
+        }
+        allocator.free(envp);
+    }
+
     pub fn release(*_) {
         let i: usize = 0;
         while (i < _.len) {
             freeCopyBytes(_.entries[i].key);
             freeCopyBytes(_.entries[i].val);
             _.entries[i] = EnvSlot{};
+            i += 1;
+        }
+        _.len = 0;
+    }
+}
+
+pub struct AliasMap {
+    pub slots: [MAX_ALIASES]AliasSlot = undefined,
+    pub len: usize = 0,
+
+    pub static fn init(): AliasMap {
+        let m = AliasMap{ slots: undefined, len: 0 };
+        let i: usize = 0;
+        while (i < MAX_ALIASES) {
+            m.slots[i] = AliasSlot{};
+            i += 1;
+        }
+        return m;
+    }
+
+    pub fn clone(): AliasMap {
+        let m = AliasMap.init();
+        let i: usize = 0;
+        while (i < _.len) {
+            if (_.slots[i].active) {
+                * = m.set(_.slots[i].name, _.slots[i].value);
+            }
+            i += 1;
+        }
+        return m;
+    }
+
+    pub fn set(*_, name: []const u8, val: []const u8): bool {
+        if (name.len == 0) return false;
+        let i: usize = 0;
+        while (i < _.len) {
+            if (std.mem.eql(u8, _.slots[i].name, name)) {
+                freeCopyBytes(_.slots[i].value);
+                _.slots[i].value = allocCopyBytes(val);
+                _.slots[i].active = true;
+                return true;
+            }
+            i += 1;
+        }
+        if (_.len >= MAX_ALIASES) return false;
+        _.slots[_.len] = AliasSlot{
+            name: allocCopyBytes(name),
+            value: allocCopyBytes(val),
+            active: true,
+        };
+        _.len += 1;
+        return true;
+    }
+
+    pub fn unset(*_, name: []const u8): bool {
+        let i: usize = 0;
+        while (i < _.len) {
+            if (_.slots[i].active && std.mem.eql(u8, _.slots[i].name, name)) {
+                _.slots[i].active = false;
+                return true;
+            }
+            i += 1;
+        }
+        return false;
+    }
+
+    pub fn get(name: []const u8): ([]const u8)? {
+        let i: usize = 0;
+        while (i < _.len) {
+            if (_.slots[i].active && std.mem.eql(u8, _.slots[i].name, name)) {
+                return _.slots[i].value;
+            }
+            i += 1;
+        }
+        return null;
+    }
+
+    pub fn release(*_) {
+        let i: usize = 0;
+        while (i < _.len) {
+            freeCopyBytes(_.slots[i].name);
+            freeCopyBytes(_.slots[i].value);
+            _.slots[i] = AliasSlot{};
             i += 1;
         }
         _.len = 0;
@@ -213,19 +381,24 @@ pub struct DirStack {
         return ds;
     }
 
+    pub fn clone(): DirStack {
+        let ds = DirStack{
+            cwd_buf: _.cwd_buf,
+            cwd_len: _.cwd_len,
+            stack: _.stack,
+            stack_lens: _.stack_lens,
+            stack_len: _.stack_len,
+        };
+        return ds;
+    }
+
     pub fn refreshCwd(*_) {
-        let len: usize = 0;
-        zig {
-            if (std.c.getcwd(&self.cwd_buf, self.cwd_buf.len)) |ptr| {
-                const slice = std.mem.sliceTo(@as([*:0]u8, @ptrCast(ptr)), 0);
-                len = slice.len;
-            }
-        }
-        if (len == 0) {
+        const cur = getcwd(&_.cwd_buf) catch "";
+        if (cur.len > 0) {
+            _.cwd_len = cur.len;
+        } else {
             _.cwd_buf[0] = '/';
             _.cwd_len = 1;
-        } else {
-            _.cwd_len = len;
         }
     }
 
@@ -262,19 +435,7 @@ pub struct DirStack {
             @memcpy(prev_buf[0..prev_len], _.cwd_buf[0..prev_len]);
         }
 
-        let ok = false;
-        let target_buf: [1024]u8 = [0; 1024];
-        @memcpy(target_buf[0..resolved_target.len], resolved_target);
-        target_buf[resolved_target.len] = 0;
-        zig {
-            const c_path: [*:0]const u8 = target_buf[0..resolved_target.len :0].ptr;
-            if (std.c.chdir(c_path) == 0) {
-                ok = true;
-            }
-        }
-        if (!ok) {
-            return false;
-        }
+        chdir(resolved_target) catch { return false; };
 
         * = env.set("OLDPWD", prev_buf[0..prev_len], true);
         _.refreshCwd();
@@ -319,24 +480,45 @@ pub struct DirStack {
     }
 }
 
-fn isIdentStart(c: u8): bool {
+pub fn isShellIdentStart(c: u8): bool {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
 }
 
+pub fn isShellIdentCont(c: u8): bool {
+    return isShellIdentStart(c) || (c >= '0' && c <= '9');
+}
+
+pub fn parseShellInt64(s: []const u8): i64? {
+    if (s.len == 0) return null;
+    return std.fmt.parseInt(i64, s, 10) catch null;
+}
+
+pub fn pushShellI64(out: *StringJoiner, val: i64) {
+    let tmp: [32]u8 = [0; 32];
+    const s = std.fmt.bufPrint(tmp[0..32], "{d}", .{val}) catch "0";
+    out.push(s);
+}
+
+pub fn pushShellUsize(out: *StringJoiner, val: usize) {
+    let tmp: [32]u8 = [0; 32];
+    const s = std.fmt.bufPrint(tmp[0..32], "{d}", .{val}) catch "0";
+    out.push(s);
+}
+
+fn isIdentStart(c: u8): bool {
+    return isShellIdentStart(c);
+}
+
 fn isIdentCont(c: u8): bool {
-    return isIdentStart(c) || (c >= '0' && c <= '9');
+    return isShellIdentCont(c);
 }
 
 fn pushI32(out: *StringJoiner, val: i32) {
-    let tmp: [32]u8 = [0; 32];
-    const s = std.fmt.bufPrint(tmp[0..32], "{d}", .{val}) catch "0";
-    out.push(s);
+    pushShellI64(out, val as i64);
 }
 
 fn pushUsize(out: *StringJoiner, val: usize) {
-    let tmp: [32]u8 = [0; 32];
-    const s = std.fmt.bufPrint(tmp[0..32], "{d}", .{val}) catch "0";
-    out.push(s);
+    pushShellUsize(out, val);
 }
 
 fn expandDollar(
@@ -359,9 +541,7 @@ fn expandDollar(
         return i + 1;
     }
     if (next == '$') {
-        let pid: i32 = 0;
-        zig { pid = std.c.getpid(); }
-        pushI32(out, pid);
+        pushI32(out, getpid());
         return i + 1;
     }
 
@@ -410,7 +590,7 @@ fn expandDollar(
     return start_idx + 1;
 }
 
-fn expandBraceBody(
+pub fn expandBraceBody(
     inner: []const u8,
     env: *ShellEnv,
     last_exit: i32,
@@ -446,7 +626,7 @@ fn expandBraceBody(
         return;
     }
 
-    // Handle :-, :=, :+, -, =, +
+    // Handle :-, :=, :+, :?, -, =, +, ?
     let colon = false;
     let op_pos: usize = 0;
     if (rest[0] == ':' && rest.len >= 2) {
@@ -563,6 +743,24 @@ pub fn expandWord(
             } else if (ch == '"') {
                 in_double = true;
                 i += 1;
+            } else if (ch == '$' && i + 1 < raw.len && raw[i + 1] == '\'') {
+                // ANSI-C $'...' quoting
+                i += 2;
+                while (i < raw.len && raw[i] != '\'') {
+                    if (raw[i] == '\\' && i + 1 < raw.len) {
+                        const esc = raw[i + 1];
+                        if (esc == 'n') { out.push("\n"); i += 2; }
+                        else if (esc == 't') { out.push("\t"); i += 2; }
+                        else if (esc == 'r') { out.push("\r"); i += 2; }
+                        else if (esc == '\\') { out.push("\\"); i += 2; }
+                        else if (esc == '\'') { out.push("'"); i += 2; }
+                        else { out.push(raw[i + 1 .. i + 2]); i += 2; }
+                    } else {
+                        out.push(raw[i .. i + 1]);
+                        i += 1;
+                    }
+                }
+                if (i < raw.len && raw[i] == '\'') i += 1;
             } else if (ch == '\\' && i + 1 < raw.len) {
                 if (raw[i + 1] != '\n') {
                     out.push(raw[i + 1 .. i + 2]);

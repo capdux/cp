@@ -1,4 +1,4 @@
-// Source: Custom (agy-generated export index)
+// Source: /data/dev/bun/src/http/h3_client/
 // lib/http/h3/index.cp
 // HTTP/3 protocol client subsystem (QUIC)
 

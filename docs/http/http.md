@@ -50,20 +50,24 @@
 |---|---|---|
 | `lib/http/_picohttp.cp` | PicoHTTPParser C-FFI 绑定与纯 CP 零拷贝 HTTP/1.x 报文解析 | `src/picohttp/picohttp.cp` |
 | `lib/http/method.cp` | HTTP 方法枚举（34 种）、幂等性与请求体属性 | `src/http_types/Method.cp` |
-| `lib/http/headers.cp` | 大小写不敏感 `Headers` 集合（32 槽栈内联 + 堆动态扩容） | `src/http/Headers.cp` |
+| `lib/http/headers.cp` | 大小写不敏感 `Headers` 集合（32 槽栈内联 + 堆动态扩容，支持 `getAll` 多值提取） | `src/http/Headers.cp` |
+| `lib/http/header_builder.cp` | 零拷贝连续线协议 `HeaderBuilder`（栈缓冲/堆扩容、span 索引、请求行/状态行生成） | `src/http/HeaderBuilder.cp` |
+| `lib/http/header_parsers.cp` | 标准头解析器：`CacheControl`、`ContentDisposition`、`AcceptParser`、`RangeHeader`、`ContentRange` | `src/http/Headers.cp` |
 | `lib/http/header_iterator.cp` | 逗号分隔 HTTP Header 值零拷贝迭代器 | `src/http/HeaderValueIterator.cp` |
+| `lib/http/status.cp` | `HTTP_STATUS_TABLE`（64 项）与 `HTTPStatus` 状态码短语/语义判定工具 | `src/http/http.cp` |
 | `lib/http/etag.cp` | Wyhash ETag 生成与强/弱 `If-None-Match` 校验 | `src/http_types/ETag.cp` |
-| `lib/http/mime.cp` | 扩展名与文件路径 MIME Type 极速查询 | `src/http_types/MimeType.cp` |
+| `lib/http/mime.cp` | 201 项完整 `MIME_DATABASE` 映射、压缩/文本/字符集判定与二进制 `sniffMagic` 嗅探 | `src/http_types/MimeType.cp` |
 | `lib/http/cookie.cp` | RFC 6265 `Cookie` 请求头解析、`CookieMap` 与 `Set-Cookie` 序列化 | `src/runtime/webcore/CookieMap.cp` |
 | `lib/http/form_data.cp` | `x-www-form-urlencoded` 解析与 `multipart/form-data` 边界提取 | `src/runtime/webcore/FormData.cp` |
 | `lib/http/request.cp` / `response.cp` / `server.cp` | 高层 `Request` / `Response` / `HttpServer`、`serve` / `fetch` / `json` | `src/http/http.cp` |
 | `lib/http/client.cp` | 工业级 HTTP/1.1 `HTTPClient`（URL 解析、请求格式化、Chunked 解码） | `src/http/http.cp` |
+| `lib/http/wire_http.cp` | 工业级 `HttpRequestBuilder` 与 `HttpResponseParser`（`100-continue`、`obs-fold`、Chunked+解压） | `src/http/http.cp` |
 | `lib/http/chunked.cp` | RFC 9112 §7.1 流式 `ChunkedDecoder`（hex size/extensions/trailers/`0\r\n\r\n`）与 `ChunkedEncoder` | `src/http/http.cp` |
 | `lib/http/redirect.cp` | `RedirectPolicy` 自动重定向策略引擎（301/302/303/307/308 方法重写、URL 合并、循环检测、跨域敏感头剥离） | `src/http/http.cp` |
 | `lib/http/context.cp` | `HTTPContext` 与 `HttpConnectionPool`（按 host:port 复用、空闲超时驱逐、最大连接数与健康检查） | `src/http/HTTPContext.cp` |
 | `lib/http/proxy.cp` / `sendfile.cp` / `decompressor.cp` | `ProxyTunnel` / `HttpProxyTunnel`（Basic 认证与 `NoProxyMatcher`）、`SendFile`、与 `cap:pack` 协同的 `Decompressor` / `StreamingDecompressor` | `ProxyTunnel.cp` / `SendFile.cp` / `Decompressor.cp` |
 | `lib/http/url_path.cp` / `encoding.cp` / `fetch_modes.cp` / `signals.cp` / `internal_state.cp` / `request_body.cp` / `cert.cp` | 路径解析、`ContentEncodingNegotiator` (`Accept-Encoding` q-value 协商)、Fetch 模式枚举、原子中止信号、状态机与证书信息 | `src/http/` & `src/http_types/` |
-| `lib/http/h2/frame.cp` / `client.cp` / `hpack.cp` | RFC 7540 二进制帧、多路复用流状态机、RFC 7541 HPACK 头部压缩 | `H2FrameParser.cp` / `h2_client/ClientSession.cp` / `lshpack.cp` |
+| `lib/http/h2/frame.cp` / `client.cp` / `hpack.cp` | RFC 7540 二进制帧与流控（`WINDOW_UPDATE`/`RST_STREAM`/`PING`/`GOAWAY`）、多路复用流状态机、RFC 7541 完整 HPACK（61 项静态表 + 257 项 Huffman + 动态表） | `H2FrameParser.cp` / `h2_client/ClientSession.cp` / `lshpack.cp` |
 | `lib/http/h3/alt_svc.cp` / `client.cp` | RFC 7838 `Alt-Svc` 升级头解析、HTTP/3 QUIC 会话与双向流 | `h3_client/AltSvc.cp` / `h3_client/ClientSession.cp` |
 
 ---
@@ -128,28 +132,77 @@ pub fn demoHeaders() {
 
 ---
 
-### 3. 缓存校验与静态资源识别 (`ETag` & `MimeType`)
+### 3. 缓存校验、静态资源识别与状态码工具 (`ETag` / `MimeType` / `HTTPStatus`)
 
 - **`ETag`**：基于 `Wyhash` 快速生成带引号实体标签；`ETag.parse` 识别弱标签（`W/"..."`）与强标签；`ETag.ifNoneMatch` 支持 `*` 通配符、逗号分隔多值列表以及 RFC 9110 弱比较语义。
-- **`MimeType`**：支持从扩展名（带或不带 `.`）或完整文件路径提取标准 `Content-Type`，未知类型自动回退至 `application/octet-stream`。
+- **`MimeType`**：内置 201 项完整 `MIME_DATABASE`（覆盖文本/Web/图片/音视频/字体/归档/文档/3D 模型/消息），支持 `lookupExtension`/`lookupPath`/`lookupMime`/`extensionForMime` 双向映射、`isCompressible`/`isText`/`isUtf8Charset`/`categoryOf` 属性判定，以及基于魔数的 `sniffMagic` 二进制嗅探（PNG/JPEG/GIF/WebP/BMP/TIFF/ICO/WASM/PDF/GZIP/ZIP/OGG/MP3/HTML/SVG）。
+- **`HTTPStatus`**：内置 64 项 `HTTP_STATUS_TABLE` 标准/WebDAV/非标准状态码映射，提供 `reasonPhrase` / `reasonPhraseOpt`、状态区间判定（`isInformational` / `isSuccess` / `isRedirection` / `isClientError` / `isServerError` / `isError`），以及 RFC 9110 语义判定 `allowsBody` 与 `isCacheableByDefault`。
 
 ```typescript
-import { ETag, MimeType } from "cap:http";
+import { ETag, MimeType, MimeCategory, HTTPStatus } from "cap:http";
 
-pub fn demoETagAndMime() {
+pub fn demoETagMimeAndStatus() {
     let tag_buf: [32]u8 = undefined;
     const etag = ETag.generate("{\"hello\":\"cp\"}", &tag_buf);
 
     // 校验客户端 If-None-Match 请求头
     const not_modified = ETag.ifNoneMatch(etag, etag);                    // true
     const weak_match = ETag.ifNoneMatch("\"v42\"", "W/\"v42\", \"v43\""); // true
-    const parsed = ETag.parse("W/\"abc123\"");
-    // parsed.is_weak == true, parsed.tag == "abc123"
 
-    // 极速 MIME 映射
+    // 201 项 MIME 数据库与二进制魔数嗅探
     const m1 = MimeType.fromExtension(".json");        // "application/json; charset=utf-8"
     const m2 = MimeType.fromPath("/static/app.wasm");  // "application/wasm"
-    const m3 = MimeType.fromPath("/files/README");     // "application/octet-stream"
+    const ext = MimeType.extensionForMime("image/webp; charset=binary"); // "webp"
+    const comp = MimeType.isCompressible("svg");       // true
+    const cat = MimeType.categoryOf("woff2");          // MimeCategory.Font
+    const magic = MimeType.sniffMagic("\x00asm\x01\x00\x00\x00"); // wasm
+
+    // HTTPStatus 状态码语义
+    const phrase = HTTPStatus.reasonPhrase(418);       // "I'm a Teapot"
+    const no_body = HTTPStatus.allowsBody(204);        // false
+    const cacheable = HTTPStatus.isCacheableByDefault(301); // true
+}
+```
+
+### 3.1 `HeaderBuilder` 与标准 HTTP 头部解析器家族
+
+- **`HeaderBuilder`**：零拷贝连续线协议缓冲写入器（栈缓冲 `HeaderBuilder.init(&buf)` 或堆扩容 `HeaderBuilder.initAlloc(alloc, 1024)`），内置最多 `MAX_BUILDER_HEADERS`（64）个 `HeaderSpan` 索引，支持 `writeRequestLine`、`writeStatusLine`、`append`、`appendInt`、`appendHeaders`、`get`、`at` 与 `finish()`。
+- **标准头部解析器 (`header_parsers.cp`)**：
+  - `CacheControl`：RFC 9111 解析与格式化（`max-age`、`s-maxage`、`no-cache`、`no-store`、`must-revalidate`、`stale-while-revalidate`、`immutable` 等）；
+  - `ContentDisposition`：RFC 6266 + RFC 5987 `filename*` 扩展名提取与 `effectiveFilename()`；
+  - `AcceptParser`：RFC 9110 §12.5.1 `q` 权重与特异度降序稳定排序及 `negotiate(accept_header, supported)` 内容协商；
+  - `RangeHeader` & `ContentRange`：RFC 9110 §14.1.2 / §14.4 字节范围解析、`resolve(total_len)` 边界归一化与后缀范围支持。
+
+```typescript
+import {
+    HeaderBuilder, CacheControl, ContentDisposition, DispositionType,
+    AcceptParser, RangeHeader, ContentRange
+} from "cap:http";
+
+pub fn demoHeaderBuilderAndParsers(): !void {
+    let wire_buf: [512]u8 = undefined;
+    let hb = HeaderBuilder.init(&wire_buf);
+    * = hb.writeStatusLine(206, "Partial Content");
+    * = hb.append("Content-Type", "application/octet-stream");
+    * = hb.appendInt("Content-Length", 512);
+    const wire = try hb.finish();
+    const cl = hb.get("content-length").?; // "512"
+
+    // Cache-Control 解析与回写
+    const cc = CacheControl.parse("public, max-age=3600, stale-while-revalidate=60");
+    let cc_buf: [128]u8 = undefined;
+    const cc_str = try cc.format(&cc_buf);
+
+    // Content-Disposition + Accept + Range
+    const cd = ContentDisposition.parse("attachment; filename=\"fallback.txt\"; filename*=UTF-8''report.pdf");
+    const fname = cd.effectiveFilename().?; // "report.pdf"
+
+    const supported: [2][]const u8 = [ "text/html", "application/json" ];
+    const best = AcceptParser.negotiate("text/html;q=0.8, application/json;q=0.95", &supported); // "application/json"
+
+    const rh = RangeHeader.parse("bytes=0-499, -200");
+    const r0 = rh.ranges[0].resolve(1000).?; // start=0, end=499, length=500
+    const cr = ContentRange.parse("bytes 0-499/1000"); // total_length=1000
 }
 ```
 
@@ -313,9 +366,14 @@ pub fn demoIndustrialClient(): !void {
 
 ---
 
-### 8. HTTP/2 会话、二进制帧与 HPACK 编解码（`H2ClientSession` / `FrameHeader` / `HpackCodec`）
+### 8. HTTP/2 会话、二进制帧流控与完整 HPACK 编解码（`H2ClientSession` / `H2FlowControl` / `HpackSessionCodec`）
 
-遵循 RFC 7540（HTTP/2 帧协议）与 RFC 7541（HPACK 头部压缩），全程零堆分配：
+遵循 RFC 7540（HTTP/2 帧协议与流量控制）与 RFC 7541（完整 HPACK：61 项静态表 + 257 项 Huffman 编解码 + 动态表与大小协商）：
+
+- **RFC 7540 完整帧与状态机**：支持 `FrameHeader`（9B 帧头）、`SettingsPayloadUnit`、`RstStreamFrame`、`WindowUpdateFrame`、`PingFrame`、`GoawayFrame`、`H2FlowControl`（连接级与流级双向发送/接收窗口追踪、半窗口自动触发 `WINDOW_UPDATE` 补充）以及 `H2ClientSession.processFrame`（帧校验与控制帧自动回包 `SETTINGS ACK` / `PING ACK` / `GOAWAY`）和 `buildHeaderFrames`（超限自动分片为 `HEADERS` + `CONTINUATION`）。
+- **RFC 7541 完整 HPACK**：
+  - `HpackCodec`：无状态前缀整数编解码、`HPACK_STATIC_TABLE`（全部 61 项）、`HPACK_HUFFMAN_TABLE`（257 符号，含 EOS）+ `HPACK_HUFF_BUCKETS` 快速前缀查表解码（自动校验 EOS 填充位）；
+  - `HpackSessionCodec` + `HpackDynamicTable`：带状态的会话级编码器/解码器，支持 `HpackIndexMode.Incremental` / `WithoutIndexing` / `NeverIndexed`、Huffman 可选压缩、动态表 FIFO 插入与大小超限自动驱逐，以及动态表容量更新指令（`encodeTableSizeUpdate`）。
 
 ```typescript
 import {
@@ -326,11 +384,14 @@ import {
     SettingsPayloadUnit,
     ErrorCode,
     H2ClientSession,
-    HpackCodec
+    HpackCodec,
+    HpackSessionCodec,
+    HpackIndexMode
 } from "cap:http";
+const std = @import("std");
 
 pub fn demoHttp2AndHpack() {
-    // 1. 9 字节 HTTP/2 帧头大端序编解码
+    // 1. 9 字节 HTTP/2 帧头与控制帧编解码
     const fh = FrameHeader{
         length: 512,
         type: FrameType.Headers,
@@ -341,34 +402,30 @@ pub fn demoHttp2AndHpack() {
     fh.encode(&frame_wire);
     const decoded_fh = FrameHeader.decode(&frame_wire); // length=512, stream_id=1
 
-    // 2. 6 字节 SETTINGS 参数编码
-    const setting = SettingsPayloadUnit{
-        type: SettingsType.MaxConcurrentStreams,
-        value: 128,
-    };
-    let setting_wire: [6]u8 = undefined;
-    setting.encode(&setting_wire);
-
-    // 3. 客户端会话与奇数流 ID 分配 + 半关闭/重置状态机
+    // 2. 客户端会话、流量控制与帧处理
     let session = H2ClientSession{};
     let s1 = session.newStream(); // id == 1, state == Open
-    let s2 = session.newStream(); // id == 3
-    s1.sentEndStream();           // state == HalfClosedLocal
-    s1.recvEndStream();           // state == Closed
-    s2.rst(ErrorCode.Cancel);     // rst_done == true, last_error == Cancel
-    session.onGoaway();           // canCreateStream() == false
+    let reply: [64]u8 = undefined;
+    const wu_hdr = FrameHeader{ length: 4, type: FrameType.WindowUpdate, flags: 0, stream_id: 1 };
+    let wu_buf: [4]u8 = undefined;
+    std.mem.writeInt(u32, &wu_buf, 32768, .big);
+    const act = session.processFrame(wu_hdr, &wu_buf, &reply, &s1); // WindowUpdated
 
-    // 4. HPACK 头部块压缩与解码（自动命中静态表或使用 Literal / Never-Index）
-    let hpack_buf: [256]u8 = undefined;
+    // 3. 完整 HPACK 会话编码/解码（静态表 + Huffman + 动态表）
+    let hpack = HpackSessionCodec.init(std.heap.page_allocator, 4096);
+    defer hpack.deinit();
+
+    let wire_blk: [256]u8 = undefined;
     let pos: usize = 0;
-    pos += HpackCodec.encodeHeader(hpack_buf[pos..], ":method", "GET", false);           // 静态表索引 #2 (1B: 0x82)
-    pos += HpackCodec.encodeHeader(hpack_buf[pos..], ":scheme", "https", false);         // 静态表索引 #7 (1B: 0x87)
-    pos += HpackCodec.encodeHeader(hpack_buf[pos..], "authorization", "Bearer xxx", true); // Never-Index (0x10)
+    pos += hpack.encodeHeader(wire_blk[pos..], ":method", "GET", HpackIndexMode.Incremental, true);
+    pos += hpack.encodeHeader(wire_blk[pos..], "x-custom-token", "secret-val", HpackIndexMode.Incremental, true);
+    pos += hpack.encodeHeader(wire_blk[pos..], "authorization", "Bearer xxx", HpackIndexMode.NeverIndexed, false);
 
+    let name_buf: [128]u8 = undefined;
+    let val_buf: [256]u8 = undefined;
     let cursor: usize = 0;
     while (cursor < pos) {
-        if (hdr := HpackCodec.decodeHeader(hpack_buf[cursor..pos])) {
-            // hdr.name, hdr.value, hdr.never_index
+        if (hdr := hpack.decodeHeader(wire_blk[cursor..pos], &name_buf, &val_buf)) {
             cursor += hdr.bytes_read;
         } else {
             break;
@@ -421,6 +478,9 @@ pub fn demoHttp3() {
 5. **Content-Encoding 协商与 `cap:pack` 流式解压 (`ContentEncodingNegotiator` / `Decompressor` / `StreamingDecompressor`)**：
    - `ContentEncodingNegotiator.parseAcceptEncoding` 与 `negotiate` 解析 `;q=0.x` 权重并按降序匹配服务器支持编码（支持显式 `q=0` 拒绝与 `*` 通配符）。
    - `Decompressor.decompressStrict` 与 `StreamingDecompressor`（`feed` / `finish`）直接桥接 `cap:pack`（`gunzip`/`inflate`/`inflateRaw` 与 `GunzipStream`/`InflateStream`）完成真实 Gzip/Deflate 解压。
+6. **高阶线协议请求构建与响应解析 (`HttpRequestBuilder` / `HttpResponseParser` in `wire_http.cp`)**：
+   - `HttpRequestBuilder` 集成 URL 拆解、自动填充 `Host` / `Content-Length` / `Connection` / `Accept-Encoding`、`Expect: 100-continue` 握手与 `applyRedirect` 重定向应用。
+   - `HttpResponseParser.parse` 自动跳过 `100 Continue` 中间响应、展开多行 `obs-fold` 折叠头、解码 `Transfer-Encoding: chunked`（保留 Trailers）并按 `Content-Encoding` 自动解压响应体。
 
 ```typescript
 import {

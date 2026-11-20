@@ -2,6 +2,8 @@
 /**
  * CP HTTP Request (cap:http)
  */
+const std = @import("std");
+
 pub class Request {
     pub method: string;
     pub url: string;
@@ -18,6 +20,6 @@ pub class Request {
     }
 
     pub fn json(): std.json.Value! {
-        return JSON.parse(_.body);
+        return std.json.parseFromSliceLeaky(std.json.Value, std.heap.page_allocator, _.body, .{});
     }
 }
