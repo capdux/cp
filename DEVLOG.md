@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:gguf` 纯 CP GGUF v2/v3 llama.cpp 本地大模型二进制格式解析、对齐写入与 Q8_0/Q4_0 块量化反量化引擎（支持 `cap.gguf` 自动动态挂载，详见 `doc/lib/gguf.md`）（5/5 PASS，文档直写 `doc/lib/gguf.md`）
+- **核心设计**：`parseGguf` 严格校验数组嵌套深度/长度炸弹上限与张量数据区间不越界总长度，`Q8_0`/`Q4_0` 实现 32 权重/块精确反量化，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:safetensors` 纯 CP HuggingFace Safetensors 模型权重二进制解析（含溢出/越界/重叠拦截）、Builder 与 IEEE-754 BF16/FP16 位级转换引擎（支持 `cap.safetensors` 自动动态挂载，详见 `doc/lib/safetensors.md`）（5/5 PASS，文档直写 `doc/lib/safetensors.md`）
 - **核心设计**：`parseSafetensors` 通过 `@mulWithOverflow` 与非空张量区间重叠检查阻断恶意模型头越界；`BF16`/`FP16` 位级转换完整覆盖次正规数、Inf/NaN 与舍入，全路径零泄漏。
 

@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:gguf` 纯 CP GGUF v2/v3 llama.cpp 本地大模型二进制格式解析、对齐写入与 Q8_0/Q4_0 块量化反量化引擎（支持 `cap.gguf` 自动动态挂载，详见 `doc/lib/gguf.md`）（5/5 PASS，自动动态挂载 `cap.gguf`）
+- **新增标准库**：`lib/gguf/{types,quant,parser,builder,index}.cp`，实现全 13 种 KV 元数据类型、`general.alignment` 2 的幂次对齐、张量区间防越界校验、`GgufBuilder` 以及标准 GGML `Q8_0`/`Q4_0` 块量化反量化。
+- **新增文档与测试**：`doc/lib/gguf.md` 扁平文档与 `cap/test/test_gguf_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:safetensors` 纯 CP HuggingFace Safetensors 模型权重二进制解析（含溢出/越界/重叠拦截）、Builder 与 IEEE-754 BF16/FP16 位级转换引擎（支持 `cap.safetensors` 自动动态挂载，详见 `doc/lib/safetensors.md`）（5/5 PASS，自动动态挂载 `cap.safetensors`）
 - **新增标准库**：`lib/safetensors/{dtype,float16,parser,builder,index}.cp`，实现全 13 种 Dtype、round-to-nearest-even `BF16`/`FP16` 位级转换、`SafetensorsBuilder` 及严格执行 `data_offsets` 越界与 Overlap 重叠校验的 `parseSafetensors`/`tensorAsF32`。
 - **新增文档与测试**：`doc/lib/safetensors.md` 扁平文档与 `cap/test/test_safetensors_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
