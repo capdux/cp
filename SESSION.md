@@ -315,6 +315,9 @@
 ### 2026-11-21（`cap:rule` 验收固化，顶替以 `inherit` 拉起 `cap:sheet` 维持 2 路并行）
 - **执行成果**：`lib/rule/`（5/5 PASS，含 `cap.rule` 动态挂载与 `doc/lib/rule.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/sheet/`（电子表格 `A1` 坐标、DAG 依赖拓扑重算、`#CYCLE!` 防护与公式求值引擎），与 `lib/ssh/` 保持 2 路常规并行。
 
+### 2026-11-21（`cap:ssh` 验收固化，顶替以 `inherit` 拉起 `cap:tz` 维持 2 路并行）
+- **执行成果**：`lib/ssh/`（5/5 PASS，含 `cap.ssh` 动态挂载与 `doc/lib/ssh.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/tz/`（IANA 常见时区、POSIX TZ 夏令时 DST 规则与 UTC/本地时间互转引擎），与 `lib/sheet/` 保持 2 路常规并行。
+
 ### 2026-11-21（`cap:dedup` 验收固化，顶替以 `inherit` 拉起 `cap:rule` 维持 2 路并行）
 - **执行成果**：`lib/dedup/`（5/5 PASS，含 `cap.dedup` 动态挂载与 `doc/lib/dedup.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/rule/`（声明式风控与业务决策规则引擎：复合条件树、`Salience` 优先级、互斥组与决策审计），与 `lib/http_cache/` 保持 2 路常规并行。
 

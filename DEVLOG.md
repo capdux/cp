@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:ssh` OpenSSH 公钥指纹与 `authorized_keys` 策略引擎（5/5 PASS，文档直写 `doc/lib/ssh.md`）
+
+- **落地成果**：`lib/ssh/`（`keys.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:tz`（IANA 常见时区、POSIX TZ DST 夏令时规则与 UTC <-> 本地时间互转引擎），与 `lib/sheet/` 保持 2 路常规并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:rule` 声明式生产规则与决策引擎（5/5 PASS，文档直写 `doc/lib/rule.md`）
 
 - **落地成果**：`lib/rule/`（`rule.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:sheet`（电子表格 `A1` 坐标解析、DAG 公式拓扑自动重算、`#CYCLE!` 环路拦截与 CSV/JSON 导出引擎），与 `lib/ssh/` 保持 2 路常规并行。
