@@ -1,16 +1,28 @@
-// Source: cp/lib/paseto/index.cp (PASETO v4 Standard Library Entrypoint)
-// Unified public exports for `cap:paseto` and `cap.paseto`
+// Source: cp/lib/paseto/index.cp (PASETO v4 Standard Library Entry)
 
 export {
-    V4_LOCAL_HEADER,
-    V4_PUBLIC_HEADER,
-    LOCAL_NONCE_LEN,
-    LOCAL_TAG_LEN,
-    PUBLIC_SIG_LEN,
     PasetoError,
     PasetoPurpose,
-    PasetoParsed,
-    VerifyClaimsOptions,
+    PasetoToken,
     paeEncode,
-    PasetoV4,
-} from "./paseto.cp";
+    encodeBase64Url,
+    decodeBase64Url,
+    parseToken,
+    extractFooter,
+    validateClaims,
+} from "./types.cp";
+
+export {
+    HEADER_PUBLIC,
+    V4PublicKeyPair,
+    generateV4PublicKeyPair,
+    signV4Public,
+    verifyV4Public,
+} from "./v4_public.cp";
+
+export {
+    HEADER_LOCAL,
+    generateV4LocalKey,
+    encryptV4Local,
+    decryptV4Local,
+} from "./v4_local.cp";

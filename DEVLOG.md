@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:paseto` 纯 CP PASETO v4.local (XChaCha20+BLAKE2b) 与 v4.public (Ed25519) 安全无算法混淆令牌引擎（支持 `cap.paseto` 自动动态挂载，详见 `doc/lib/paseto.md`）（5/5 PASS，文档直写 `doc/lib/paseto.md`）
+- **核心设计**：严格执行 PASETO v4 密钥拆分（`Blake2b(448)` 派生 `Ek`/`n2` 与 `Blake2b256` 派生 `Ak`）及 `PAE([header, payload, footer, implicit_assertion])`，以 `timing_safe.eql` 杜绝认证标签侧信道，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:zlib` 纯 CP RFC 1950 Zlib、RFC 1952 多成员 Gzip 与 Raw Deflate 统一压缩解压引擎（吸收对标 Bun `src/zlib/`，复用 `cap:deflate`，详见 `doc/lib/zlib.md`）（5/5 PASS，文档直写 `doc/lib/zlib.md`）
 - **核心设计**：自研 `decompressDeflatePrefix` 精确切分多成员 Gzip 拼接流边界并在解码过程实时拦截 `max_output_bytes` 膨胀炸弹，全路径通过 `std.testing.allocator` 零泄漏验证。
 

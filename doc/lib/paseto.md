@@ -1,73 +1,68 @@
-# `cap:paseto` — PASETO v4 安全令牌标准库
+# `cap:paseto` (`cap.paseto`) — PASETO v4 安全认证令牌标准库
 
-> **模块路径**：`lib/paseto/`（`cap:paseto` & `cap.paseto` 动态挂载）  
-> **定位**：纯 CP、零 C 依赖的 **PASETO (Platform-Agnostic Security Tokens) v4** 安全令牌引擎，为 CP 零信任 API 鉴权与 Agent 间安全凭证提供抗降级、防算法混淆的现代替代方案。
+## 1. 概述
 
----
+`lib/paseto/` 是纯 CP 实现的工业级 PASETO v4（Platform-Agnostic Security Tokens）标准库，提供 `v4.public`（Ed25519 非对称签名）与 `v4.local`（XChaCha20 + BLAKE2b 密钥拆分与常量时间认证加密）完整协议栈，支持 Pre-Authentication Encoding (PAE)、可选 Footer、Implicit Assertion 与标准声明（`exp`、`nbf`、`iss`、`aud`）校验。
 
-## 核心特性
-
-1. **彻底免疫 JWT 经典漏洞**：
-   - 协议头强绑定版本与用途（`v4.public.` / `v4.local.`），不支持 `alg:none`，杜绝密钥算法混淆（Key Confusion）攻击。
-2. **Pre-Authentication Encoding (`paeEncode`)**：
-   - 严格实现 `LE64(count) || LE64(len(p_i)) || p_i ...` 编码，将 Header、载荷/密文、Footer 与 Implicit Assertion 显式长度绑定认证，杜绝长度扩展与尾部替换攻击。
-3. **`v4.public` 非对称签名**：
-   - 基于 Ed25519（64 字节私钥签名 / 32 字节公钥验签），输出 `v4.public.<b64url>[.<b64url_footer>]`。
-4. **`v4.local` 对称认证加密**：
-   - 32 字节 CSPRNG 随机 Nonce + BLAKE3 密钥派生（派生 32B 加密密钥 `Ek` 与 24B 扩展 Nonce `n2`）+ `XChaCha20-Poly1305` AEAD 认证加密，输出 `v4.local.<b64url>[.<b64url_footer>]`。
-5. **标准声明时间窗校验 (`verifyClaims`)**：
-   - 结合 `cap:json` 校验 `exp`（过期时间）、`nbf`（生效时间）、`iat`、`jti`、`iss`、`aud`、`sub`，支持 `clock_skew_sec` 时钟漂移容忍，内部使用 `ArenaAllocator` 保证零泄漏。
+- 导入方式：`import { ... } from "cap:paseto";` 或 `import cap from "cap";`（通过 `cap.paseto` 访问）。
 
 ---
 
-## 快速上手
+## 2. 核心类型
 
-```typescript
-import { PasetoV4, PasetoError, VerifyClaimsOptions } from "cap:paseto";
-import { Ed25519KeyPair } from "cap:crypto";
-import cap from "cap";
+| 类型 | 说明 |
+| :--- | :--- |
+| `PasetoError` | 错误集合：`InvalidPrefix`、`InvalidPurpose`、`InvalidFormat`、`InvalidBase64`、`AuthenticationFailed`、`InvalidSignature`、`InvalidKey`、`ExpiredToken`、`NotYetValid`、`ClaimMismatch`、`OutOfMemory` |
+| `PasetoPurpose` | 令牌用途枚举：`Local` / `Public` |
+| `PasetoToken` | 解析后的令牌结构：`version`、`purpose`、`payload_b64`、`footer_b64` |
+| `V4PublicKeyPair` | Ed25519 密钥对：`secret_key: [64]u8`、`public_key: [32]u8` |
 
-// 1. v4.public (Ed25519 非对称签名与验签)
-const kp = Ed25519KeyPair.generate();
-const token = PasetoV4.signPublic(
-    alloc,
-    kp.secret_key,
-    "{\"sub\":\"agent-01\",\"iss\":\"cp-auth\",\"exp\":1900000000}",
-    "{\"kid\":\"k1\"}",
-    "tenant-prod",
-)?;
-defer alloc.free(token);
+---
 
-let parsed = PasetoV4.verifyPublic(alloc, kp.public_key, token, "tenant-prod")?;
-defer parsed.deinit();
+## 3. API 速查
 
-// 2. 标准声明校验
-PasetoV4.verifyClaims(alloc, parsed.payload_json, VerifyClaimsOptions{
-    now_unix: 1800000000,
-    expected_iss: "cp-auth",
-    expected_sub: "agent-01",
-    clock_skew_sec: 30,
-})?;
+| 函数 | 签名摘要 | 说明 |
+| :--- | :--- | :--- |
+| `paeEncode` | `(alloc, pieces: []const []const u8) -> ([]u8) ! PasetoError` | 按 PASETO 规范执行 PAE 编码 |
+| `generateV4PublicKeyPair` | `() -> V4PublicKeyPair` | 生成 Ed25519 公私钥对 |
+| `signV4Public` | `(alloc, secret_key_64, payload, footer, implicit_assertion) -> ([]u8) ! PasetoError` | 签发 `v4.public.` 令牌 |
+| `verifyV4Public` | `(alloc, public_key_32, token, implicit_assertion) -> ([]u8) ! PasetoError` | 验签并提取载荷 |
+| `generateV4LocalKey` | `() -> [32]u8` | 生成 32 字节对称密钥 |
+| `encryptV4Local` | `(alloc, key_32, payload, footer, implicit_assertion) -> ([]u8) ! PasetoError` | 加密签发 `v4.local.` 令牌 |
+| `decryptV4Local` | `(alloc, key_32, token, implicit_assertion) -> ([]u8) ! PasetoError` | 认证并解密 `v4.local.` 令牌 |
+| `extractFooter` | `(alloc, token) -> ([]u8) ! PasetoError` | 提取并解码可选 Footer |
+| `validateClaims` | `(json_payload, now_iso_or_unix, issuer_opt, audience_opt) -> void ! PasetoError` | 校验 `exp`/`nbf`/`iss`/`aud` 声明 |
 
-// 3. 动态挂载调用 (import cap from "cap")
-const local_tok = cap.paseto.PasetoV4.encryptLocal(alloc, key32, "{\"role\":\"admin\"}", "", "ctx")?;
-defer alloc.free(local_tok);
+---
+
+## 4. 示例
+
+```cp
+const std = @import("std");
+import {
+    generateV4PublicKeyPair,
+    signV4Public,
+    verifyV4Public,
+    generateV4LocalKey,
+    encryptV4Local,
+    decryptV4Local,
+    validateClaims,
+} from "cap:paseto";
+
+pub fn example(alloc: std.mem.Allocator): void ! anyerror {
+    const kp = generateV4PublicKeyPair();
+    const pub_tok = signV4Public(alloc, kp.secret_key, "{\"sub\":\"u1\",\"exp\":\"2099-01-01T00:00:00Z\"}", "kid:1", "ctx") ?;
+    defer alloc.free(pub_tok);
+
+    const payload = verifyV4Public(alloc, kp.public_key, pub_tok, "ctx") ?;
+    defer alloc.free(payload);
+    validateClaims(payload, "2026-01-01T00:00:00Z", null, null) ?;
+
+    const key = generateV4LocalKey();
+    const loc_tok = encryptV4Local(alloc, key, "secret-msg", "", "ctx") ?;
+    defer alloc.free(loc_tok);
+
+    const plain = decryptV4Local(alloc, key, loc_tok, "ctx") ?;
+    defer alloc.free(plain);
+}
 ```
-
----
-
-## API 契约
-
-### 错误集与类型
-- `PasetoError`：`InvalidTokenFormat` | `InvalidHeader` | `InvalidSignature` | `DecryptionFailed` | `TokenExpired` | `TokenNotYetValid` | `ClaimMismatch` | `InvalidKey` | `OutOfMemory`
-- `PasetoPurpose`：`Local` | `Public`
-- `PasetoParsed`：`{ header: string, payload_json: []u8, footer: []u8, purpose: PasetoPurpose, allocator: std.mem.Allocator }`，提供 `deinit(*_)` 释放内部分配的切片。
-- `VerifyClaimsOptions`：`{ now_unix: i64 = 0, expected_iss: string? = null, expected_aud: string? = null, expected_sub: string? = null, clock_skew_sec: u64 = 0 }`
-
-### 公开函数与方法
-- `paeEncode(alloc: std.mem.Allocator, pieces: []const []const u8): PasetoError![]u8`
-- `PasetoV4.encryptLocal(alloc, key32: [32]u8, payload_json: string, footer: string, implicit: string): PasetoError![]u8`
-- `PasetoV4.decryptLocal(alloc, key32: [32]u8, token: string, implicit: string): PasetoError!PasetoParsed`
-- `PasetoV4.signPublic(alloc, ed25519_secret64: [64]u8, payload_json: string, footer: string, implicit: string): PasetoError![]u8`
-- `PasetoV4.verifyPublic(alloc, ed25519_pub32: [32]u8, token: string, implicit: string): PasetoError!PasetoParsed`
-- `PasetoV4.verifyClaims(alloc, payload_json: string, opts: VerifyClaimsOptions): PasetoError!void`

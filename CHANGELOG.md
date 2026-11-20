@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:paseto` 纯 CP PASETO v4.local (XChaCha20+BLAKE2b) 与 v4.public (Ed25519) 安全无算法混淆令牌引擎（支持 `cap.paseto` 自动动态挂载，详见 `doc/lib/paseto.md`）（5/5 PASS，自动动态挂载 `cap.paseto`）
+- **新增标准库**：`lib/paseto/{types,v4_public,v4_local,index}.cp`，实现 PAE 前置认证编码、`v4.public` Ed25519 签名验签、`v4.local` XChaCha20+BLAKE2b 密钥拆分加密与常量时间标签校验，以及 `exp`/`nbf`/`iss`/`aud` Claims 验证。
+- **新增文档与测试**：`doc/lib/paseto.md` 扁平文档与 `cap/test/test_paseto_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:zlib` 纯 CP RFC 1950 Zlib、RFC 1952 多成员 Gzip 与 Raw Deflate 统一压缩解压引擎（吸收对标 Bun `src/zlib/`，复用 `cap:deflate`，详见 `doc/lib/zlib.md`）（5/5 PASS，自动动态挂载 `cap.zlib`）
 - **新增标准库**：`lib/zlib/{types,deflate_stream,codec,index}.cp`（吸收对标 Bun `src/zlib/`，复用 `cap:deflate`），实现 `RawDeflate`/`Zlib`/`Gzip`/`AutoDetect` 统一编解码、RFC 1952 `FEXTRA`/`FNAME`/`FCOMMENT`/`FHCRC` 解析、多成员 Gzip 拼接流解压及 `max_output_bytes` 防膨胀炸弹守卫。
 - **新增文档与测试**：`doc/lib/zlib.md` 扁平文档与 `cap/test/test_zlib_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
