@@ -36,7 +36,7 @@ fn main() {
         const w: usize = 4;
         const h: usize = 4;
         const ptr: [*]u8 = @alloc(w * h * 4);
-        const rgba = ptr[0..(w * h * 4)];
+        let rgba = ptr[0..(w * h * 4)];
 
         for (let i in 0..(w * h)) {
             let p = (i as usize) * 4;
@@ -75,7 +75,7 @@ fn main() {
         const w: usize = 2;
         const h: usize = 2;
         const ptr: [*]u8 = @alloc(w * h * 4);
-        const rgba = ptr[0..(w * h * 4)];
+        let rgba = ptr[0..(w * h * 4)];
 
         rgba[0] = 1; rgba[1] = 0; rgba[2] = 0; rgba[3] = 255;
         rgba[4] = 2; rgba[5] = 0; rgba[6] = 0; rgba[7] = 255;

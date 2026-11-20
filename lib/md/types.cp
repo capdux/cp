@@ -257,7 +257,7 @@ pub struct Mark {
     flags: u16 = 0,
 }
 
-pub struct Flags {
+pub struct MdFlags {
     collapse_whitespace: bool = false,
     permissive_atx_headers: bool = false,
     permissive_url_autolinks: bool = false,
@@ -274,16 +274,16 @@ pub struct Flags {
     underline: bool = false,
     hard_soft_breaks: bool = false,
 
-    pub static fn commonmark(): Flags {
-        return Flags{
+    pub static fn commonmark(): MdFlags {
+        return MdFlags{
             tables: false,
             strikethrough: false,
             tasklists: false,
         };
     }
 
-    pub static fn github(): Flags {
-        return Flags{
+    pub static fn github(): MdFlags {
+        return MdFlags{
             tables: true,
             strikethrough: true,
             tasklists: true,
@@ -382,7 +382,7 @@ pub struct Md4cParserState {
     allocator: std.mem.Allocator = std.heap.page_allocator,
     text: []const u8 = "",
     size: OFF = 0,
-    flags: Flags = Flags{},
+    flags: MdFlags = MdFlags{},
     renderer: Renderer = undefined,
     image_nesting_level: u32 = 0,
     link_nesting_level: u32 = 0,
@@ -414,7 +414,7 @@ pub struct Md4cParserState {
     max_recursion_depth: u32 = 256,
     process_inline_ptr: usize = 0,
 
-    pub static fn init(allocator: std.mem.Allocator, text: []const u8, flags: Flags, rend: Renderer): Md4cParserState {
+    pub static fn init(allocator: std.mem.Allocator, text: []const u8, flags: MdFlags, rend: Renderer): Md4cParserState {
         const size: OFF = @intCast(text.len);
         const ends_nl = if (size > 0) (text[size - 1] == '\n' || text[size - 1] == '\r') else false;
         const max_ref = @min(@min(16 * (size as u64), 1024 * 1024), 0xFFFFFFFF as u64);

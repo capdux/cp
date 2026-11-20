@@ -3,7 +3,6 @@
  * CP File System SDK (cap:fs)
  * 使用 @is_nest 进行显式双模分支逻辑重构
  */
-const builtin = @import("builtin");
 
 import { SystemAction } from "cap:beam";
 
@@ -126,7 +125,7 @@ pub const FileSystem = struct {
         if (p := std.c.getenv("TMPDIR")) return std.mem.span(p);
         if (p := std.c.getenv("TEMP")) return std.mem.span(p);
         if (p := std.c.getenv("TMP")) return std.mem.span(p);
-        if (builtin.os.tag == .windows) return "C:\\Temp";
+        if (@import("builtin").os.tag == .windows) return "C:\\Temp";
         return "/tmp";
     }
 
@@ -134,7 +133,7 @@ pub const FileSystem = struct {
         const dir = FileSystem.tmpDir();
         const id = tmp_counter.fetchAdd(1, .monotonic);
         let seed: u64 = id;
-        if (builtin.os.tag == .linux) {
+        if (@import("builtin").os.tag == .linux) {
             let ts: std.os.linux.timespec = undefined;
             * = std.os.linux.clock_gettime(.MONOTONIC, &ts);
             seed ^= @as(u64, @intCast(ts.sec)) * std.time.ns_per_s + @as(u64, @intCast(ts.nsec));

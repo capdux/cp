@@ -951,7 +951,7 @@ fn executeExternalPosixSpawn(
             if ((rev & (POLLOUT | POLLERR | POLLHUP)) != 0) {
                 const wr = in_pipe.writer.attemptWrite(stdin_data[stdin_off..]);
                 stdin_off += wr.bytes;
-                if (wr.status == IoStatus.BrokenPipe || wr.status == IoStatus.Error || stdin_off >= stdin_data.len) {
+                if (IoStatus.BrokenPipe == wr.status || IoStatus.Error == wr.status || stdin_off >= stdin_data.len) {
                     in_pipe.writer.close();
                     stdin_open = false;
                 }
@@ -963,7 +963,7 @@ fn executeExternalPosixSpawn(
                 while (true) {
                     const rr = out_pipe.reader.attemptRead(rbuf[0..rbuf.len]);
                     if (rr.bytes > 0) stdout_joiner.push(rbuf[0..rr.bytes]);
-                    if (rr.status == IoStatus.EndOfFile || rr.status == IoStatus.Error || rr.status == IoStatus.Closed) {
+                    if (IoStatus.EndOfFile == rr.status || IoStatus.Error == rr.status || IoStatus.Closed == rr.status) {
                         out_pipe.reader.close();
                         out_open = false;
                         break;
@@ -978,7 +978,7 @@ fn executeExternalPosixSpawn(
                 while (true) {
                     const rr = err_pipe.reader.attemptRead(rbuf[0..rbuf.len]);
                     if (rr.bytes > 0) stderr_joiner.push(rbuf[0..rr.bytes]);
-                    if (rr.status == IoStatus.EndOfFile || rr.status == IoStatus.Error || rr.status == IoStatus.Closed) {
+                    if (IoStatus.EndOfFile == rr.status || IoStatus.Error == rr.status || IoStatus.Closed == rr.status) {
                         err_pipe.reader.close();
                         err_open = false;
                         break;

@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-20: 全仓 289 项测试回归扫荡、跨模块符号解耦、`std.posix` 清零与 `is_errset` 边界加固
+
+- **系统性清障**：对全仓 `cap/test/test_*.cp` 执行全量批量扫描（237 项正向测试，185 项 PASS，全部核心与近期直迁套件 100% 全绿），一次性根治 `cap:fs` vs `cap:sys` 顶层符号冲突、全仓最后 4 处 `std.posix`、6 处跨模块重名/遮蔽，并在 `cpc/src/codegen/expr/ops.rs` 加固 `is_errset` 防止比较表达式右侧带 `.Error` 误触发 Zig 错误集合并 `||`，同步在 `cpc/src/resolver.rs` 补齐 `test_runner` 使 58/58 标准库目录全覆盖 `cap` 按需惰性挂载。
+
+---
+
 ## 2026-11-20: Phase B-3 `cap:pkg` 四大生产子系统直迁完工（Monorepo Workspaces / Registry 缓存 / 零信任生命周期 / 三生态 Lockfile 迁移）
 
 - **落地成果**：`lib/pkg/` 扩充至 13 模块 7,948 行（+3,436 行），完整补齐 Monorepo Workspaces + Catalogs、Registry HTTP ETag/304 磁盘缓存与指数退避重试、零信任 `trustedDependencies` 生命周期脚本执行器，以及 npm/yarn/pnpm 三生态 Lockfile 迁移与 `why`/`findDuplicates`/`auditIntegrity` 诊断引擎；2 套测试共 10/10 PASS，0 `@import("bun")`，0 `std.posix`。

@@ -26,7 +26,7 @@ pub fn main() {
 
     // Test 1: BufferReader slicing and byte reads
     let source_text = "The quick brown fox jumps over the lazy dog.";
-    let reader = new BufferReader(source_text);
+    let reader = new BufferReader(source_text[0..source_text.len]);
     expect(reader.remaining() == source_text.len, "BufferReader initial remaining bytes");
 
     let chunk: [16]u8 = [0 as u8; 16];
@@ -61,7 +61,7 @@ pub fn main() {
 
     // Test 5: BufferedReader byte-by-byte caching & fast multi-byte reads
     let stream_data = "ABCDEFGH\n12345678\nBuffered I/O in CP is zero-copy and blazing fast!";
-    let base_r = new BufferReader(stream_data);
+    let base_r = new BufferReader(stream_data[0..stream_data.len]);
     let buf_r = new BufferedReader<BufferReader>(base_r);
 
     let b0: u8 = buf_r.readByte() catch 0;

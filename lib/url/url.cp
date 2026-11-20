@@ -6,8 +6,8 @@ import { URLSearchParams, QueryParam } from "./search_params";
 import { PercentEncoding } from "./percent";
 import {
     findSubstr,
-    indexOfChar,
-    lastIndexOfChar,
+    urlIndexOfChar,
+    urlLastIndexOfChar,
     isIPHostname,
     isLocalhostName,
     parsePortNumber,
@@ -228,7 +228,7 @@ pub struct URL {
         let rem = input;
 
         // 1. Protocol scheme (e.g. "https://", "http://", "file://", "s3://", "blob:", "mailto:")
-        let c_opt = indexOfChar(rem, 58 as u8); // ':'
+        let c_opt = urlIndexOfChar(rem, 58 as u8); // ':'
         if (c_idx := c_opt) {
             let is_scheme = true;
             let k: usize = 0;
@@ -253,20 +253,20 @@ pub struct URL {
         }
 
         // 2. Hash fragment ("#...")
-        if (h_idx := indexOfChar(rem, 35 as u8)) { // '#'
+        if (h_idx := urlIndexOfChar(rem, 35 as u8)) { // '#'
             url.hash = rem[h_idx..];
             rem = rem[0..h_idx];
         }
 
         // 3. Search query string ("?...")
-        if (q_idx := indexOfChar(rem, 63 as u8)) { // '?'
+        if (q_idx := urlIndexOfChar(rem, 63 as u8)) { // '?'
             url.search = rem[q_idx..];
             url.searchParams = URLSearchParams.parse(url.search, alloc);
             rem = rem[0..q_idx];
         }
 
         // 4. Pathname separation ("/")
-        let path_start = indexOfChar(rem, 47 as u8); // '/'
+        let path_start = urlIndexOfChar(rem, 47 as u8); // '/'
         let authority = rem;
         if (p_start := path_start) {
             url.pathname = rem[p_start..];
@@ -278,11 +278,11 @@ pub struct URL {
         url.path = url.pathname;
 
         // 5. Userinfo ("user:pass@host")
-        if (at_idx := indexOfChar(authority, 64 as u8)) { // '@'
+        if (at_idx := urlIndexOfChar(authority, 64 as u8)) { // '@'
             let userinfo = authority[0..at_idx];
             authority = authority[at_idx + 1 ..];
 
-            if (colon_idx := indexOfChar(userinfo, 58 as u8)) { // ':'
+            if (colon_idx := urlIndexOfChar(userinfo, 58 as u8)) { // ':'
                 url.username = userinfo[0..colon_idx];
                 url.password = userinfo[colon_idx + 1 ..];
             } else {
@@ -294,7 +294,7 @@ pub struct URL {
         // 6. Host & Port (handles IPv6 "[::1]:8080" and IPv4/domain "host:port")
         url.host = authority;
         if (authority.len > 0 and authority[0] == (91 as u8)) { // '[' for IPv6
-            if (close_idx := indexOfChar(authority, 93 as u8)) { // ']'
+            if (close_idx := urlIndexOfChar(authority, 93 as u8)) { // ']'
                 url.hostname = authority[0 .. close_idx + 1];
                 let after_bracket = authority[close_idx + 1 ..];
                 if (after_bracket.len > 1 and after_bracket[0] == (58 as u8)) { // ':'
@@ -307,7 +307,7 @@ pub struct URL {
                 url.port = "";
             }
         } else {
-            if (port_idx := lastIndexOfChar(authority, 58 as u8)) { // ':'
+            if (port_idx := urlLastIndexOfChar(authority, 58 as u8)) { // ':'
                 url.hostname = authority[0..port_idx];
                 url.port = authority[port_idx + 1 ..];
             } else {
@@ -490,7 +490,7 @@ pub struct URL {
         }
 
         // Check if relative_str already has a scheme (e.g. "https://...")
-        if (c_idx := indexOfChar(relative_str, 58 as u8)) {
+        if (c_idx := urlIndexOfChar(relative_str, 58 as u8)) {
             let is_scheme = c_idx > 0;
             let k: usize = 0;
             while (k < c_idx) {
@@ -523,12 +523,12 @@ pub struct URL {
         // Split relative_str into path, ?search, #hash
         let rel = relative_str;
         let rel_hash: string = "";
-        if (h_idx := indexOfChar(rel, 35 as u8)) {
+        if (h_idx := urlIndexOfChar(rel, 35 as u8)) {
             rel_hash = rel[h_idx..];
             rel = rel[0..h_idx];
         }
         let rel_search: string = "";
-        if (q_idx := indexOfChar(rel, 63 as u8)) {
+        if (q_idx := urlIndexOfChar(rel, 63 as u8)) {
             rel_search = rel[q_idx..];
             rel = rel[0..q_idx];
         }
@@ -547,7 +547,7 @@ pub struct URL {
             // Merge relative path with base directory
             let merged_buf: [1024]u8 = undefined;
             let m_pos: usize = 0;
-            if (last_sl := lastIndexOfChar(base.pathname, 47 as u8)) {
+            if (last_sl := urlLastIndexOfChar(base.pathname, 47 as u8)) {
                 const dir_len = last_sl + 1;
                 if (dir_len <= merged_buf.len) {
                     @memcpy(merged_buf[0..dir_len], base.pathname[0..dir_len]);

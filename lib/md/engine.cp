@@ -8,7 +8,7 @@ import { processDoc } from "./blocks.cp";
 import { skipUtf8Bom } from "./helpers.cp";
 import { HtmlRenderer } from "./html_renderer.cp";
 import { processInlineContent } from "./inlines.cp";
-import { Flags, Md4cParserState, RenderOptions, Renderer } from "./types.cp";
+import { MdFlags, Md4cParserState, RenderOptions, Renderer } from "./types.cp";
 
 pub struct MdEngineOptions {
     tables: bool = true,
@@ -67,8 +67,8 @@ pub struct MdEngineOptions {
         };
     }
 
-    pub fn toFlags(): Flags {
-        return Flags{
+    pub fn toFlags(): MdFlags {
+        return MdFlags{
             tables: _.tables,
             strikethrough: _.strikethrough,
             tasklists: _.tasklists,

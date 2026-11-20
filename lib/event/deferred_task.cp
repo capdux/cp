@@ -65,10 +65,10 @@ pub struct DeferredTaskQueue {
         let i: usize = 0;
         while (i < _.item_count) {
             let entry = _.entries[i];
-            let repeat = entry.task(entry.ctx);
+            let should_repeat = entry.task(entry.ctx);
             executed += 1;
 
-            if (!repeat) {
+            if (!should_repeat) {
                 _.entries[i] = _.entries[_.item_count - 1];
                 _.item_count -= 1;
             } else {

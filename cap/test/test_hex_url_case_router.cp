@@ -79,7 +79,7 @@ fn main() {
         expect_eq(std.mem.eql(u8, names[0], "id"), true);
         expect_eq(std.mem.eql(u8, names[1], "postId"), true);
 
-        let params = ParamMap.init();
+        let params: ParamMap = ParamMap.init();
         params.append("id", "42");
         params.append("postId", "9001");
 

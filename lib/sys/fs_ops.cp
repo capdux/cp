@@ -25,18 +25,11 @@ import {
 import { File } from "./file";
 import { DirIterator } from "./dir";
 import { SysError, SyscallTag, Maybe, linuxSyscallErrno, cErrno, EINTR, EEXIST, ENOTDIR, ENAMETOOLONG } from "./error";
+import { openatMaybe, openat } from "./io_ops";
 
 pub const RENAME_NOREPLACE: u32 = 1;
 pub const RENAME_EXCHANGE: u32 = 2;
 
-pub const POLLIN: i16 = 0x001;
-pub const POLLPRI: i16 = 0x002;
-pub const POLLOUT: i16 = 0x004;
-pub const POLLERR: i16 = 0x008;
-pub const POLLHUP: i16 = 0x010;
-pub const POLLNVAL: i16 = 0x020;
-
-pub type PollFd = std.os.linux.pollfd;
 pub type EpollEvent = std.os.linux.epoll_event;
 
 pub const EPOLL_CTL_ADD: u32 = 1;
@@ -54,32 +47,6 @@ fn toCStr(path: []const u8, buf: []u8): ![*:0]const u8 {
     @memcpy(buf[0 .. path.len], path);
     buf[path.len] = 0;
     return buf[0 .. path.len :0].ptr;
-}
-
-pub fn openatMaybe(dir_fd: FD, path: []const u8, flags: i32, mode: u32): Maybe<FD> {
-    let path_buf: [4096]u8 = undefined;
-    if (path.len >= path_buf.len) {
-        return Maybe<FD>.initErr(SysError.fromCode(ENAMETOOLONG, .openat).withPath(path));
-    }
-    @memcpy(path_buf[0 .. path.len], path);
-    path_buf[path.len] = 0;
-    const path_z: [*:0]const u8 = path_buf[0 .. path.len :0].ptr;
-    const z_flags = flagsToLinuxO(flags);
-    const base_raw = if (dir_fd.isValid()) dir_fd.raw else AT_FDCWD;
-
-    while (true) {
-        const rc = std.os.linux.openat(base_raw, path_z, z_flags, @as(std.os.linux.mode_t, @intCast(mode)));
-        const err_code = linuxSyscallErrno(rc);
-        if (err_code == 0) {
-            return Maybe<FD>.initResult(FD.fromNative(@intCast(rc)));
-        }
-        if (err_code == EINTR) continue;
-        return Maybe<FD>.initErr(SysError.fromCode(err_code, .openat).withPath(path));
-    }
-}
-
-pub fn openat(dir_fd: FD, path: []const u8, flags: i32, mode: u32): !FD {
-    return openatMaybe(dir_fd, path, flags, mode).unwrap();
 }
 
 pub fn openMaybe(path: []const u8, flags: i32, mode: u32): Maybe<FD> {
@@ -408,17 +375,6 @@ pub fn pipe2(flags: i32): ![2]FD {
 
 pub fn createPipe(): ![2]FD {
     return pipe2(O_CLOEXEC);
-}
-
-pub fn poll(fds: []PollFd, timeout_ms: i32): !usize {
-    if (fds.len == 0) return 0;
-    while (true) {
-        const rc = std.os.linux.poll(fds.ptr, fds.len, timeout_ms);
-        const err_code = linuxSyscallErrno(rc);
-        if (err_code == 0) return rc;
-        if (err_code == EINTR) continue;
-        return SysError.fromCode(err_code, .poll).toError();
-    }
 }
 
 pub fn epollCreate(flags: i32): !FD {

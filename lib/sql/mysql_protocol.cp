@@ -418,8 +418,8 @@ pub struct MySqlPreparedProtocol {
                     const u: u64 = @bitCast(p.int_val);
                     let k: usize = 0;
                     while (k < 8) : (k += 1) {
-                        const sh: u6 = @intCast(k * 8);
-                        out[pos + k] = ((u >> sh) & 0xFF) as u8;
+                        const shift: u6 = @intCast(k * 8);
+                        out[pos + k] = ((u >> shift) & 0xFF) as u8;
                     }
                     pos += 8;
                 } else if (p.kind == .Float64) {
@@ -427,8 +427,8 @@ pub struct MySqlPreparedProtocol {
                     const u: u64 = @bitCast(p.float_val);
                     let k: usize = 0;
                     while (k < 8) : (k += 1) {
-                        const sh: u6 = @intCast(k * 8);
-                        out[pos + k] = ((u >> sh) & 0xFF) as u8;
+                        const shift: u6 = @intCast(k * 8);
+                        out[pos + k] = ((u >> shift) & 0xFF) as u8;
                     }
                     pos += 8;
                 } else if (p.kind == .Text) {

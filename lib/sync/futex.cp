@@ -28,7 +28,7 @@ pub struct FutexLinux {
                 timeout_ptr,
             );
 
-            switch (std.posix.errno(rc)) {
+            switch (std.os.linux.errno(rc)) {
                 .SUCCESS => {},
                 .INVAL => {},
                 .TIMEDOUT => {
@@ -50,7 +50,7 @@ pub struct FutexLinux {
                 @bitCast(std.math.cast(i32, max_waiters) orelse std.math.maxInt(i32)),
             );
 
-            switch (std.posix.errno(rc)) {
+            switch (std.os.linux.errno(rc)) {
                 .SUCCESS => {},
                 .INVAL => {},
                 .FAULT => @panic("futex_wake() returned EFAULT unexpectedly"),

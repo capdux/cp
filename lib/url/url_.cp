@@ -25,7 +25,7 @@ pub fn findSubstr(haystack: string, needle: []const u8): usize? {
     return null;
 }
 
-pub fn indexOfChar(s: string, c: u8): usize? {
+pub fn urlIndexOfChar(s: string, c: u8): usize? {
     let i: usize = 0;
     while (i < s.len) {
         if (s[i] == c) return i;
@@ -34,7 +34,7 @@ pub fn indexOfChar(s: string, c: u8): usize? {
     return null;
 }
 
-pub fn lastIndexOfChar(s: string, c: u8): usize? {
+pub fn urlLastIndexOfChar(s: string, c: u8): usize? {
     let i = s.len;
     while (i > 0) {
         i -= 1;

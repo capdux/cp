@@ -141,7 +141,7 @@ pub struct RESPParser {
         const line = buf[1..crlf];
         const after_line = crlf + 2;
 
-        if (kind == RESPType.SimpleString || kind == RESPType.Error || kind == RESPType.BigNumber || kind == RESPType.Double) {
+        if (RESPType.SimpleString == kind || RESPType.Error == kind || RESPType.BigNumber == kind || RESPType.Double == kind) {
             return RESPFrame {
                 kind: kind,
                 str_val: line,
@@ -179,7 +179,7 @@ pub struct RESPParser {
             };
         }
 
-        if (kind == RESPType.BulkString || kind == RESPType.BlobError || kind == RESPType.VerbatimString) {
+        if (RESPType.BulkString == kind || RESPType.BlobError == kind || RESPType.VerbatimString == kind) {
             const len_opt = RESPParser.parseSignedInt(line);
             if (len_opt == null) {
                 return null;

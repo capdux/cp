@@ -457,8 +457,8 @@ pub struct PgBinaryCodec {
         const u: u64 = @bitCast(val);
         let i: usize = 0;
         while (i < 8) : (i += 1) {
-            const sh: u6 = @intCast(56 - (i * 8));
-            out[i] = ((u >> sh) & 0xFF) as u8;
+            const shift: u6 = @intCast(56 - (i * 8));
+            out[i] = ((u >> shift) & 0xFF) as u8;
         }
         return 8;
     }

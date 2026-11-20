@@ -52,15 +52,21 @@ pub struct DotenvLoader {
     }
 
     pub fn loadFile(*_, file_path: []const u8, overwrite: bool, expand: bool): bool {
-        let fd = std.posix.openat(std.posix.AT.FDCWD, file_path, .{ .ACCMODE = .RDONLY }, 0) catch return false;
+        if (file_path.len == 0 or file_path.len >= 4096) return false;
+        let path_z: [4096]u8 = undefined;
+        @memcpy(path_z[0..file_path.len], file_path);
+        path_z[file_path.len] = 0;
+        const c_path: [*:0]const u8 = @ptrCast(&path_z[0]);
+        const fd = std.c.open(c_path, .{ .ACCMODE = .RDONLY }, @as(std.c.mode_t, 0));
+        if (fd < 0) return false;
         defer * = std.c.close(fd);
 
         let file_buf: [32768]u8 = undefined;
         let total_read: usize = 0;
         while (total_read < file_buf.len) {
-            const n = std.posix.read(fd, file_buf[total_read..]) catch return false;
-            if (n == 0) break;
-            total_read += n;
+            const n = std.c.read(fd, @ptrCast(&file_buf[total_read]), file_buf.len - total_read);
+            if (n <= 0) break;
+            total_read += @as(usize, @intCast(n));
         }
         let content = file_buf[0..total_read];
 

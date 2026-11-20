@@ -5,18 +5,9 @@
  */
 
 const std = @import("std");
-import {
-    FD,
-    PollFd,
-    POLLIN,
-    POLLOUT,
-    POLLERR,
-    POLLHUP,
-    O_NONBLOCK,
-    fstatMaybe,
-    poll,
-    FileKind,
-} from "../sys/index.cp";
+import { FD, O_NONBLOCK } from "../sys/fd";
+import { fstatMaybe, FileKind } from "../sys/fstat";
+import { PollFd, POLLIN, POLLOUT, POLLERR, POLLHUP, poll } from "../sys/io_ops";
 
 pub enum IoStatus: u8 {
     Ok,

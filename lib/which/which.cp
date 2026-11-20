@@ -7,7 +7,6 @@
 // Cross-platform executable binary locator in CP
 
 const std = @import("std");
-const builtin = @import("builtin");
 
 pub const WhichOptions = struct {
     path: ([]const u8)? = null,
@@ -39,7 +38,7 @@ pub const Which = struct {
         @memcpy(path_z[0..filepath.len], filepath);
         path_z[filepath.len] = 0;
 
-        if (builtin.os.tag == .windows) {
+        if (@import("builtin").os.tag == .windows) {
             if (Which.endsWithExtension(filepath)) {
                 std.fs.accessAbsolute(filepath) catch return false;
                 return true;
@@ -102,7 +101,7 @@ pub const Which = struct {
             path_val = std.mem.span(raw_env.?);
         }
 
-        const sep: u8 = if (builtin.os.tag == .windows) ';' else ':';
+        const sep: u8 = if (@import("builtin").os.tag == .windows) ';' else ':';
 
         let iter = std.mem.tokenizeScalar(u8, path_val, sep);
         while (segment := iter.next()) {
@@ -116,7 +115,7 @@ pub const Which = struct {
 
             // Probe PATHEXT extensions when provided explicitly or on Windows
             let effective_pathext: ([]const u8)? = options.pathext;
-            if (effective_pathext == null and builtin.os.tag == .windows) {
+            if (effective_pathext == null and @import("builtin").os.tag == .windows) {
                 const raw_pe = std.c.getenv("PATHEXT");
                 if (raw_pe != null) {
                     effective_pathext = std.mem.span(raw_pe.?);
@@ -163,7 +162,7 @@ pub const Which = struct {
             path_val = std.mem.span(raw_env.?);
         }
 
-        const sep: u8 = if (builtin.os.tag == .windows) ';' else ':';
+        const sep: u8 = if (@import("builtin").os.tag == .windows) ';' else ':';
         let iter = std.mem.tokenizeScalar(u8, path_val, sep);
         let count: usize = 0;
         let used: usize = 0;

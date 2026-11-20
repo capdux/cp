@@ -31,7 +31,7 @@ pub struct Terminal {
             return TerminalSize{ cols: 80, rows: 24 };
         }
         zig {
-            var wsz: std.posix.winsize = .{
+            var wsz: std.c.winsize = .{
                 .row = 0,
                 .col = 0,
                 .xpixel = 0,

@@ -532,7 +532,18 @@ impl Codegen {
                                 if t.starts_with("error{")
                                     || t.starts_with("error {")
                                     || t.contains(" || ")
-                                    || t == "OOM"
+                                {
+                                    return true;
+                                }
+                                if t.contains(' ')
+                                    || t.contains("==")
+                                    || t.contains("!=")
+                                    || t.contains('<')
+                                    || t.contains('>')
+                                {
+                                    return false;
+                                }
+                                if t == "OOM"
                                     || t == "anyerror"
                                     || t == "Error"
                                     || self.error_sets.contains_key(t)

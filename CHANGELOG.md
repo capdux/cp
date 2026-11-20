@@ -1,3 +1,19 @@
+## [2026-11-20] - 全仓回归大扫荡与跨模块符号卫生治理：清零全仓 `lib/` `std.posix`、58/58 标准库全入 `cap` 惰性路由、185 个正向测试全绿
+
+### 跨模块符号卫生与 `std.posix` 全仓清零
+- **解耦 `cap:fs` 与 `cap:sys`/`cap:io`/`cap:stream` 单文件符号冲突**：
+  - 拆出 [`lib/sys/io_ops.cp`](file:///data/dev/cp/lib/sys/io_ops.cp) 与 [`lib/sys/fstat.cp`](file:///data/dev/cp/lib/sys/fstat.cp)，让 `lib/io/{file_stream,source,pipe}.cp` 精确导入最小子集，彻底消除与 `lib/fs.cp` 的顶层重名冲突，`test_core_runtime_bundler.cp` 恢复 100% PASS；
+  - 消除 [`lib/fs.cp`](file:///data/dev/cp/lib/fs.cp)、[`lib/sys/copy_file.cp`](file:///data/dev/cp/lib/sys/copy_file.cp)、[`lib/which/which.cp`](file:///data/dev/cp/lib/which/which.cp) 顶层 `const builtin` 重复声明。
+- **全仓 `lib/` 代码层 `std.posix` 彻底归零（Zig 0.17 兼容）**：
+  - 清理最后 4 处残留：[`lib/cli/tty.cp`](file:///data/dev/cp/lib/cli/tty.cp)（`std.c.winsize`）、[`lib/sync/futex.cp`](file:///data/dev/cp/lib/sync/futex.cp)（`std.os.linux.errno`）、[`lib/dotenv/loader.cp`](file:///data/dev/cp/lib/dotenv/loader.cp)（`std.c.open/read`）、[`lib/event/file_poll.cp`](file:///data/dev/cp/lib/event/file_poll.cp)（`std.os.linux.poll*`）。
+- **跨模块重名与局部变量遮蔽清理**：修正 `lib/url/`（`urlIndexOfChar`）、`lib/md/`（`MdFlags`）、`lib/event/deferred_task.cp`（`should_repeat`）、`lib/sql/`（`shift`）、`lib/redis/resp.cp`、`lib/shell/exec.cp`，以及 `test_io_streams.cp`/`test_image_all.cp`/`test_hex_url_case_router.cp`/`test_sys_complete.cp`。
+
+### 编译器加固 (`cpc` Release 已部署)
+- [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs)：补齐 `"test_runner" => Some("test_runner/index.cp")`，全仓 **58/58（100%）** 标准库目录均已接入 `import cap from "cap"` 编译期按需惰性挂载路由；
+- [`cpc/src/codegen/expr/ops.rs`](file:///data/dev/cp/cpc/src/codegen/expr/ops.rs)：在 `BinaryOp::LogicalOr` 的错误集合并判定中排除含比较符/空格的布尔表达式（防止 `kind == RESPType.Error || ...` 被误判为 Zig `||`）。
+
+---
+
 ## [2026-11-20] - Phase B-3 `cap:pkg` 工业级包管理四大生产子系统直迁落地（13 模块 7,948 行）
 
 ### 标准库深度升级 (`cap:pkg` / `lib/pkg/`)

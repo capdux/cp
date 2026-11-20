@@ -2654,3 +2654,9 @@
 - **执行成果**：
   - 子智能体 2（Phase B-3）完工回收：[`lib/pkg/`](file:///data/dev/cp/lib/pkg/index.cp) 扩充至 13 模块 7,948 行（新增 `workspace.cp`、`registry_client.cp`、`lifecycle.cp`、`migration.cp`），[`test_phase_b3_pkg_production.cp`](file:///data/dev/cp/cap/test/test_phase_b3_pkg_production.cp)（4/4）与 `test_pkg_install_deep.cp`（6/6）共 10/10 PASS，13/13 `// Source:` 合规，0 `@import("bun")`，0 `std.posix`，已同步双轨规范与热日志并执行 Git 提交固化；
   - 无缝顶替拉起子智能体 3（`7da54810`，`cap/src/` CLI 可靠性与模块化测试增强：修复 `cap build` 假退出码 0、新增 `cap clean [--all]`、`cap test -m` 与 `cap build --timings`），与子智能体 1（`5c0912b3`，全仓回归测试大扫荡与跨模块符号卫生）保持双路并行。
+
+### 2026-11-20（全仓回归扫荡与符号卫生治理验收固化，无缝拉起 `cap:crypto` 现代密码学升级子智能体）
+- **执行成果**：
+  - 子智能体 1 完工回收：完成全仓 289 项测试系统扫荡（正向 185/237 PASS，全部核心及 Bun 直迁回归套件 100% 全绿）；解耦 `cap:fs` vs `cap:sys`/`cap:io` 符号冲突（新增 `lib/sys/{io_ops,fstat}.cp`），彻底清零全仓 `lib/` 最后 4 处 `std.posix` 残留，修复 6 处跨模块符号重名与 4 处测试缺陷，并在 `cpc/src/resolver.rs` 补齐 `test_runner` 实现 58/58 标准库目录全覆盖 `cap` 惰性路由；
+  - 顺手加固 `cpc/src/codegen/expr/ops.rs` 中 `is_errset` 判定（避免 `kind == RESPType.Error || ...` 误走 Zig `||`），正在构建 `cpc` Release 正式版；
+  - 无缝顶替拉起子智能体 4（`cap:crypto` 现代密码学全栈升级：Ed25519/X25519/ECDSA P-256/HKDF/Scrypt/Argon2id/BLAKE3/SHA3/XChaCha20-Poly1305/JWT/PEM），与子智能体 3（`7da54810`，`cap` CLI 强化）保持双路并行。

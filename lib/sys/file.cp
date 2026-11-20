@@ -5,7 +5,7 @@
 
 const std = @import("std");
 import { FD, AT_FDCWD, O_RDONLY, O_WRONLY, O_RDWR, O_CREAT, O_EXCL, O_TRUNC, O_APPEND, O_NONBLOCK, O_CLOEXEC, flagsToLinuxO } from "./fd";
-import { Stat, fstat } from "./stat";
+import { Stat, fstat } from "./fstat";
 import { SysError, Maybe, linuxSyscallErrno, EINTR, ENAMETOOLONG } from "./error";
 
 fn ensureParentDirsAt(dir_fd: FD, path: []const u8) {

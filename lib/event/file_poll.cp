@@ -1,6 +1,6 @@
 // Source: /data/dev/bun/src/event_loop/AnyEventLoop.cp
 // lib/event/file_poll.cp
-// Cross-platform I/O file descriptor poller based on std.posix.poll
+// Cross-platform I/O file descriptor poller based on std.os.linux.poll
 
 const std = @import("std");
 
@@ -22,7 +22,7 @@ pub struct FilePollRegistration {
 
 pub class PollEngine {
     regs: []FilePollRegistration = [];
-    poll_fds: []std.posix.pollfd = [];
+    poll_fds: []std.os.linux.pollfd = [];
     capacity: usize = 0;
     len: usize = 0;
 
@@ -31,7 +31,7 @@ pub class PollEngine {
         pe.capacity = 32;
         pe.len = 0;
         pe.regs = std.heap.page_allocator.alloc(FilePollRegistration, 32) catch unreachable;
-        pe.poll_fds = std.heap.page_allocator.alloc(std.posix.pollfd, 32) catch unreachable;
+        pe.poll_fds = std.heap.page_allocator.alloc(std.os.linux.pollfd, 32) catch unreachable;
         return pe;
     }
 
@@ -47,8 +47,8 @@ pub class PollEngine {
                 _.regs[i].callback = cb;
                 _.regs[i].ctx = ctx;
                 let z_events: i16 = 0;
-                if ((events & PollEvents.Readable) != 0) z_events |= std.posix.POLL.IN;
-                if ((events & PollEvents.Writable) != 0) z_events |= std.posix.POLL.OUT;
+                if ((events & PollEvents.Readable) != 0) z_events |= std.os.linux.POLL.IN;
+                if ((events & PollEvents.Writable) != 0) z_events |= std.os.linux.POLL.OUT;
                 _.poll_fds[i].events = z_events;
                 return true;
             }
@@ -57,7 +57,7 @@ pub class PollEngine {
         if (_.len >= _.capacity) {
             const new_cap = _.capacity * 2;
             let new_regs = std.heap.page_allocator.alloc(FilePollRegistration, new_cap) catch unreachable;
-            let new_fds = std.heap.page_allocator.alloc(std.posix.pollfd, new_cap) catch unreachable;
+            let new_fds = std.heap.page_allocator.alloc(std.os.linux.pollfd, new_cap) catch unreachable;
             for (i of 0.._.len) {
                 new_regs[i] = _.regs[i];
                 new_fds[i] = _.poll_fds[i];
@@ -77,8 +77,8 @@ pub class PollEngine {
         _.regs[idx].ctx = ctx;
 
         let z_events: i16 = 0;
-        if ((events & PollEvents.Readable) != 0) z_events |= std.posix.POLL.IN;
-        if ((events & PollEvents.Writable) != 0) z_events |= std.posix.POLL.OUT;
+        if ((events & PollEvents.Readable) != 0) z_events |= std.os.linux.POLL.IN;
+        if ((events & PollEvents.Writable) != 0) z_events |= std.os.linux.POLL.OUT;
 
         _.poll_fds[idx].fd = fd;
         _.poll_fds[idx].events = z_events;
@@ -109,8 +109,8 @@ pub class PollEngine {
             slice[i].revents = 0;
         }
 
-        const zero: usize = 0;
-        const ready_count: usize = std.posix.poll(slice, timeout_ms) catch zero;
+        const rc = std.os.linux.poll(slice.ptr, slice.len, timeout_ms);
+        const ready_count: usize = if (@as(isize, @bitCast(rc)) < 0) 0 else rc;
         if (ready_count == 0) return 0;
 
         let dispatched: usize = 0;
@@ -119,10 +119,10 @@ pub class PollEngine {
             const revents = _.poll_fds[i].revents;
             if (revents != 0) {
                 let flags: u32 = 0;
-                if ((revents & std.posix.POLL.IN) != 0) flags |= PollEvents.Readable;
-                if ((revents & std.posix.POLL.OUT) != 0) flags |= PollEvents.Writable;
-                if ((revents & std.posix.POLL.ERR) != 0) flags |= PollEvents.Error;
-                if ((revents & std.posix.POLL.HUP) != 0) flags |= PollEvents.Hup;
+                if ((revents & std.os.linux.POLL.IN) != 0) flags |= PollEvents.Readable;
+                if ((revents & std.os.linux.POLL.OUT) != 0) flags |= PollEvents.Writable;
+                if ((revents & std.os.linux.POLL.ERR) != 0) flags |= PollEvents.Error;
+                if ((revents & std.os.linux.POLL.HUP) != 0) flags |= PollEvents.Hup;
 
                 const reg = _.regs[i];
                 reg.callback(reg.fd, flags, reg.ctx);

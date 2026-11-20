@@ -20,6 +20,7 @@ import {
     makeTempDir,
     removeFile,
     removeDir,
+    realtimeMs,
 } from "cap:sys";
 
 const std = @import("std");
@@ -70,7 +71,7 @@ fn testPositionalIOAndSeek(): !void {
     expect_eq(pos, 10);
     let r2 = try file.read(read_buf[0..2]);
     expect_eq(r2, 2);
-    expect_eq(std.mem.eql(u8, read_buf[0..2], "9A"), true);
+    expect_eq(std.mem.eql(u8, read_buf[0..2], "AB"), true);
 
     // seekFromEnd
     let end_pos = try file.seekFromEnd(0);
@@ -126,7 +127,7 @@ fn testCopyFile(): !void {
 
     // Destination path
     let tmp_dir = getTempDir();
-    let dst_formatted = try std.fmt.bufPrint(&dst_buf, "{s}/test_copy_dst_{d}.dat", .{ tmp_dir, std.time.milliTimestamp() });
+    let dst_formatted = try std.fmt.bufPrint(&dst_buf, "{s}/test_copy_dst_{d}.dat", .{ tmp_dir, realtimeMs() });
 
     try copyFile(src_path, dst_formatted);
 

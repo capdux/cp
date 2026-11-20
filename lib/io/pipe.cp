@@ -8,24 +8,9 @@ const std = @import("std");
 import { Reader, Writer, Closer } from "./traits";
 import { IoStatus, PollResult } from "./source";
 import { MaxBuf } from "./max_buf";
-import {
-    FD,
-    PollFd,
-    POLLIN,
-    POLLOUT,
-    POLLERR,
-    POLLHUP,
-    O_CLOEXEC,
-    O_NONBLOCK,
-    EINTR,
-    EAGAIN,
-    EWOULDBLOCK,
-    EPIPE,
-    cErrno,
-    linuxSyscallErrno,
-    poll,
-    flagsToLinuxO,
-} from "../sys/index.cp";
+import { FD, O_CLOEXEC, O_NONBLOCK, flagsToLinuxO } from "../sys/fd";
+import { EINTR, EAGAIN, EWOULDBLOCK, EPIPE, cErrno, linuxSyscallErrno } from "../sys/error";
+import { PollFd, POLLIN, POLLOUT, POLLERR, POLLHUP, poll } from "../sys/io_ops";
 
 pub struct PipeReadResult {
     status: IoStatus = IoStatus.Ok,

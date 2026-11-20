@@ -19,11 +19,9 @@ import {
     SEEK_SET,
     SEEK_CUR,
     SEEK_END,
-    openat,
-    fstat,
-    copyFileRange,
-    sendfile,
-} from "../sys/index.cp";
+} from "../sys/fd";
+import { fstat } from "../sys/fstat";
+import { openat, copyFileRange, sendfile } from "../sys/io_ops";
 
 pub class FileReader implements Reader, Seeker, Closer {
     fd: FD;

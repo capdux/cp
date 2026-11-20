@@ -106,14 +106,17 @@ export {
     kindFromMode,
     Stat,
     PosixStat,
+    fstat,
+    fstatMaybe,
+} from "./fstat";
+
+export {
     stat,
     lstat,
-    fstat,
     fstatat,
     lstatat,
     statMaybe,
     lstatMaybe,
-    fstatMaybe,
     fstatatMaybe,
     lstatatMaybe,
     statx,
@@ -135,10 +138,23 @@ export {
     CopyFileState,
     copyFile,
     copyFileByFd,
-    copyFileRange,
-    sendfile,
     copyFileWithState,
 } from "./copy_file";
+
+export {
+    POLLIN,
+    POLLPRI,
+    POLLOUT,
+    POLLERR,
+    POLLHUP,
+    POLLNVAL,
+    PollFd,
+    openat,
+    openatMaybe,
+    poll,
+    copyFileRange,
+    sendfile,
+} from "./io_ops";
 
 export {
     Signal,
@@ -157,13 +173,6 @@ export {
 export {
     RENAME_NOREPLACE,
     RENAME_EXCHANGE,
-    POLLIN,
-    POLLPRI,
-    POLLOUT,
-    POLLERR,
-    POLLHUP,
-    POLLNVAL,
-    PollFd,
     EpollEvent,
     EPOLL_CTL_ADD,
     EPOLL_CTL_DEL,
@@ -175,9 +184,7 @@ export {
     EPOLLRDHUP,
     EPOLLET,
     open,
-    openat,
     openMaybe,
-    openatMaybe,
     close,
     read,
     write,
@@ -220,7 +227,6 @@ export {
     ioctl,
     createPipe,
     pipe2,
-    poll,
     epollCreate,
     epollCtl,
     epollWait,
