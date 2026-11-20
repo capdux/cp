@@ -503,3 +503,6 @@
 
 ### 2026-11-21（`cap:bson` 验收提交，顶替拉起 `cap:smtp` 维持 2 路常规并行）
 - **执行成果**：`lib/bson/`（5/5 PASS，`doc/lib/bson.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/smtp/`（RFC 5321/5322 SMTP 协议编解码、点号透明转义与 MIME 邮件构建引擎），与 `lib/stun/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:stun` 验收提交，顶替拉起 `cap:sdp` 维持 2 路常规并行）
+- **执行成果**：`lib/stun/`（5/5 PASS，`doc/lib/stun.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/sdp/`（RFC 8866 WebRTC SDP 会话描述解析与构建引擎），与 `lib/smtp/` 维持 2 路常规并行。

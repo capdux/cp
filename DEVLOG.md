@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:stun` RFC 5389/8489 STUN NAT 穿透消息与完整性校验引擎（5/5 PASS，文档直写 `doc/lib/stun.md`）
+- **核心设计**：`StunBuilder` 按 RFC 5389 规范自动对变长属性做 4 字节补零对齐并依次计算 `MESSAGE-INTEGRITY` 与 `FINGERPRINT`；`verifyMessageIntegrity` 采用恒定时间比较并严格校验 `MAGIC_COOKIE` 与头前 2 位 `00`。
+
 ## 2026-11-21: 新建 `cap:bson` MongoDB BSON 1.1 二进制文档与 ObjectId 编解码引擎（5/5 PASS，文档直写 `doc/lib/bson.md`）
 - **核心设计**：严格遵循 BSON 1.1 规范校验 4 字节总长、EOO `0x00` 终止符、CString 无内嵌零字节、UTF-8 合法性及默认 64 层深度上限；`ObjectId` 按大端序时间戳+随机数+计数器封装并支持 24 位 Hex 互转。
 

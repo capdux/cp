@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:stun` RFC 5389/8489 STUN NAT 穿透消息与完整性校验引擎（5/5 PASS，自动动态挂载 `cap.stun`）
+- **新增标准库**：`lib/stun/{stun,index}.cp`，复用 `cap:deflate` `crc32` 实现 STUN 20 字节头与 4 字节对齐属性编解码、`XOR-MAPPED-ADDRESS`（IPv4/IPv6）、`ERROR-CODE`、`MESSAGE-INTEGRITY`（HMAC-SHA1）及 `FINGERPRINT`（CRC32 `^ 0x5354554e`）。
+- **新增文档与测试**：`doc/lib/stun.md` 扁平文档与 `cap/test/test_stun_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:bson` MongoDB BSON 1.1 二进制文档与 ObjectId 编解码引擎（5/5 PASS，自动动态挂载 `cap.bson`）
 - **新增标准库**：`lib/bson/{bson,index}.cp`，实现完整小端序 BSON 1.1 标量/嵌套文档/数组编码解码、12 字节 `ObjectId`（`fromBytes`/`fromHex`/`toHex`/`generate`）、UTF-8 与 CString 校验及 64 层 `MaxDepthExceeded` 防护。
 - **新增文档与测试**：`doc/lib/bson.md` 扁平文档与 `cap/test/test_bson_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
