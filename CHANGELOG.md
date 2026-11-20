@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:barcode` Code 128 Auto / EAN-13 / UPC-A 条码编码与 SVG 渲染引擎（5/5 PASS，自动动态挂载 `cap.barcode`）
+
+- 新建 [`lib/barcode/`](file:///data/dev/cp/lib/barcode/index.cp)（`barcode.cp`、`index.cp`）：`BarcodeEncoder`（EAN-13/UPC-A Mod 10 校验与 95 模块编码、Code 128 Auto A/B/C 双数字压缩与 Mod 103 校验和）及 `BarcodeRenderer`（黑条合并 `<rect>` SVG 输出与 `cap:xml` 校验、4 行 UTF-8 ASCII 渲染）；文档 [`doc/lib/barcode.md`](file:///data/dev/cp/doc/lib/barcode.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_barcode_production_deep.cp`](file:///data/dev/cp/cap/test/test_barcode_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:pathfinding` 2D 加权网格 A* 防穿角寻路与视线平滑引擎（5/5 PASS，自动动态挂载 `cap.pathfinding`）
 
 - 新建 [`lib/pathfinding/`](file:///data/dev/cp/lib/pathfinding/index.cp)（`grid.cp`、`index.cp`）：`GridMap`（可配地形代价权重、二叉最小堆 A* 支持 4/8 方向严格防穿墙角 Corner-Cutting Prevention、超覆盖 Bresenham `hasLineOfSight` 与 `smoothPath` 路径拉直、Dijkstra `computeDistanceField` 全图距离场，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/pathfinding.md`](file:///data/dev/cp/doc/lib/pathfinding.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_pathfinding_production_deep.cp`](file:///data/dev/cp/cap/test/test_pathfinding_production_deep.cp) `-m` 5/5 PASS。
