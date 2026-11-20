@@ -2,6 +2,14 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:zstd` 纯 CP RFC 8878 Zstandard 帧格式与块编解码引擎（5/5 PASS，自动动态挂载 `cap.zstd`）
+- **新增标准库**：`lib/zstd/{zstd,index}.cp`，实现纯 CP `xxhash64`、`inspectFrameHeader`（支持 Skippable Frame 跳过）、RLE/Raw 压缩及 Raw/RLE/Compressed Block 解压与 `WindowTooLarge`/`OutputTooLarge`/`ChecksumMismatch` 防护。
+- **新增文档与测试**：`doc/lib/zstd.md` 扁平文档与 `cap/test/test_zstd_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
+## [2026-11-21] - 新建 `cap:brotli` 纯 CP RFC 7932 Brotli 元块编解码引擎（5/5 PASS，自动动态挂载 `cap.brotli`）
+- **新增标准库**：`lib/brotli/{brotli,index}.cp`，实现 `WBITS` 10..24 流头编解码、`ISLASTEMPTY`/`MNIBBLES=3` Metadata 跳过块、`ISUNCOMPRESSED=1` 原始块编码以及完整 Compressed Meta-Block（Huffman/Context Map/704 符号表/Distance Ring Buffer）解码与 `WindowTooLarge`/`OutputTooLarge` 防护。
+- **新增文档与测试**：`doc/lib/brotli.md` 扁平文档与 `cap/test/test_brotli_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:pcap` libpcap 容器与 L2–L4 网络报文解包引擎（5/5 PASS，自动动态挂载 `cap.pcap`）
 - **新增标准库**：`lib/pcap/{pcap,index}.cp`，实现 Microsecond/Nanosecond 大小端 `.pcap` 容器读写与 `snaplen`/`PacketTooLarge` 防护，以及 Ethernet II（含 802.1Q/QinQ VLAN）、IPv4、TCP、UDP 无拷贝分层解包器。
 - **新增文档与测试**：`doc/lib/pcap.md` 扁平文档与 `cap/test/test_pcap_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

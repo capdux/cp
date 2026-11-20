@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:zstd` 纯 CP RFC 8878 Zstandard 帧格式与块编解码引擎（5/5 PASS，文档直写 `doc/lib/zstd.md`）
+- **核心设计**：零 `libzstd` 依赖完整实现 XXH64 内容校验与多帧/Skippable Frame 解析，解码端覆盖 Predefined/RLE/FSE/Repeat 序列并严格执行窗口与输出上限防炸弹守卫。
+
+## 2026-11-21: 新建 `cap:brotli` 纯 CP RFC 7932 Brotli 元块编解码引擎（5/5 PASS，文档直写 `doc/lib/brotli.md`）
+- **核心设计**：零 C `libbrotli` 依赖完成 RFC 7932 全谱系元块解析（含 Simple/Complex Huffman、Context Map 与 Distance Ring Buffer），并内置窗口大小与输出上限防炸弹守卫。
+
 ## 2026-11-21: 新建 `cap:pcap` libpcap 容器与 L2–L4 网络报文解包引擎（5/5 PASS，文档直写 `doc/lib/pcap.md`）
 - **核心设计**：完整支持 `0xa1b2c3d4`/`0xd4c3b2a1`/`0xa1b23c4d`/`0x4d3cb2a1` 四种魔数与 2.4 版本头，`incl_len <= snaplen` 严格校验；L2–L4 解包器零堆分配切片借用并通过 `std.testing.allocator` 验证零泄漏。
 
