@@ -355,9 +355,7 @@ fn testOrSetAddWinsAndThreeReplicaConvergence(): !void {
     expect_eq(conv_abc.contains("doc-2"), false);
 }
 
-fn testCapCrdtDynamicMount(): !void {
-    const alloc = std.heap.page_allocator;
-
+fn runDynamicMountWithAlloc(alloc: std.mem.Allocator): !void {
     // Verify `import cap from "cap"; cap.crdt.*` automatic dynamic mounting
     let vc = cap.crdt.VectorClock.init(alloc);
     defer vc.deinit();
@@ -385,6 +383,13 @@ fn testCapCrdtDynamicMount(): !void {
     set.add("capability-crdt", "hub-1")?;
     expect_eq(set.contains("capability-crdt"), true);
     expect_eq(set.len(), 1);
+}
+
+fn testCapCrdtDynamicMount(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+    runDynamicMountWithAlloc(alloc)?;
+    expect_eq(gpa.deinit() == .ok, true);
 }
 
 fn main() {

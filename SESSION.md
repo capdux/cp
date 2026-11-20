@@ -365,3 +365,9 @@
 
 ### 2026-11-21（`cap:fx` 验收提交，顶替拉起 `cap:crdt` 维持 2 路常规并行）
 - **执行成果**：`lib/fx/`（5/5 PASS，`doc/lib/fx.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/crdt/`（分布式无冲突复制数据类型 CRDT 引擎：`GCounter`/`PNCounter`/`LWWRegister`/`ORSet`），与 `lib/circuit/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:circuit` 验收提交，顶替拉起 `cap:cron` 维持 2 路常规并行）
+- **执行成果**：`lib/circuit/`（5/5 PASS，`doc/lib/circuit.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/cron/`（5/6 字段 Cron 表达式解析与下次触发时间调度计算引擎），与 `lib/crdt/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:crdt` 验收合并提交，顶替拉起 `cap:globset` 维持 2 路常规并行）
+- **执行成果**：`lib/crdt/`（5/5 PASS，`doc/lib/crdt.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/circuit/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/globset/`（高性能多模式 Glob 路径匹配集合与忽略规则引擎），与 `lib/cron/` 维持 2 路常规并行。

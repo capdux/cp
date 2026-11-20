@@ -2,6 +2,14 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:crdt` 分布式无冲突复制数据类型（CvRDT）引擎（5/5 PASS，自动动态挂载 `cap.crdt`）
+- **新增标准库**：`lib/crdt/{vclock,counters,register,index}.cp`，实现 `VectorClock`、`GCounter`、`PnCounter`、`LwwRegister` 与 `OrSet`（并发 add-wins 与 remove 后重新 add），严格满足半格合并交换律、结合律与幂等律。
+- **新增文档与测试**：`doc/lib/crdt.md` 扁平文档与 `cap/test/test_crdt_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
+## [2026-11-21] - 新建 `cap:circuit` 分布式弹性断路器、退避抖动与舱壁限流引擎（5/5 PASS，自动动态挂载 `cap.circuit`）
+- **新增标准库**：`lib/circuit/{breaker,policy,index}.cp`，实现环形滑动失败率窗口 `CircuitBreaker`、`BackoffPolicy`（`None`/`Full`/`Equal`/`Decorrelated` 确定性抖动）及 `Bulkhead` 并发舱壁限流器。
+- **新增文档与测试**：`doc/lib/circuit.md` 扁平文档与 `cap/test/test_circuit_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:fx` 定点多币种金融货币运算与外汇三角换算引擎（5/5 PASS，自动动态挂载 `cap.fx`）
 - **新增标准库**：`lib/fx/{money,rates,index}.cp`，实现 ISO-4217 货币小数位注册、256 位中间精度 `Money.mulScale`、Hamilton 最大余数零分币丢失 `allocate`、5 种舍入模式（含 `HalfEven`）以及 `FxBook` 直连/逆向/1 跳三角汇率路由兑换。
 - **新增文档与测试**：`doc/lib/fx.md` 扁平文档与 `cap/test/test_fx_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
