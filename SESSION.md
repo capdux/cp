@@ -97,3 +97,6 @@
 
 ### 2026-11-21（`cap:audio` 验收固化，不补位平滑回落至 2 路常规并行）
 - **执行成果**：子智能体 47（`lib/audio/`，5/5 PASS，含 `cap.audio` 动态挂载与 `doc/lib/audio.md`）经 `verify_module.sh` 一键验收回收并提交 Git；按节约配额规范不再补位，当前稳定保持 **2 路**常规 `flash` 子智能体并行（`lib/tui/` 与 `lib/wasm/`）。
+
+### 2026-11-21（`cap:tui` 验收固化，顶替拉起 `cap:asn1` ASN.1 DER & X.509 证书引擎维持 2 路并行）
+- **执行成果**：子智能体 48（`lib/tui/`，5/5 PASS，含 `cap.tui` 动态挂载与 `doc/lib/tui.md`）经 `verify_module.sh` 一键验收回收并提交 Git；顶替派发子智能体 50（新建 `lib/asn1/` ITU-T X.690 DER 编解码与 X.509 v3 证书内省），与 `lib/wasm/` 严格保持 2 路常规并行。

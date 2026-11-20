@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:tui` 终端 UI 布局与零闪烁差分渲染引擎（5/5 PASS，文档直写 `doc/lib/tui.md`）
+
+- **落地成果**：`lib/tui/`（`input.cp`/`layout.cp`/`canvas.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（997ms），单轮完成回收与提交，并顶替派发 `cap:asn1`（ASN.1 DER 编解码与 X.509 v3 证书内省引擎），保持 2 路常规并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:audio` WAV/DSP/Energy VAD 语音 AI 引擎（5/5 PASS），并发平滑回落至 2 路常规并行
 
 - **落地成果**：`lib/audio/`（`wav.cp`/`dsp.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过，回收后不补位，当前按新规稳定维持 `lib/tui/` 与 `lib/wasm/` **2 路**正交并行。
