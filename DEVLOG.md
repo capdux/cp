@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:query`（5/5）与 `cap:email`（5/5），双双直写 `doc/lib/*.md` 并合并提交
+
+- **落地成果**：`lib/query/`（多方言防注入 SQL 查询构建器）与 `lib/email/`（RFC 5322/MIME/SMTP 编解码）均经 `verify_module.sh` 一键全绿通过，单轮合并回收提交并顶替派发 `cap:oauth` 与 `cap:webhook`。
+
+---
+
 ## 2026-11-21: 新建 `cap:qrcode` 二维码编码与终端/SVG 渲染引擎（5/5 PASS，文档直写 `doc/lib/qrcode.md`）
 
 - **落地成果**：`lib/qrcode/`（`ecc.cp`/`encoder.cp`/`render.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（933ms，联动 `cap:security` TOTP `otpauth://` 验证通过），单轮完成回收与提交，并顶替派发 `cap:intl`（数值/字节大小/时长/相对时间双向格式化与解析）。

@@ -2,6 +2,13 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:query`（5/5）与 `cap:email`（5/5）双标准库落地（自动动态挂载 `cap.query` / `cap.email`）
+
+- **`cap:query`**（[`lib/query/`](file:///data/dev/cp/lib/query/index.cp)）：PostgreSQL/MySQL/SQLite 三方言 `IdentCodec` 防注入标识符转义及 `SelectBuilder`/`InsertBuilder`（批量多行 + `RETURNING`）/`UpdateBuilder`/`DeleteBuilder`，文档 [`doc/lib/query.md`](file:///data/dev/cp/doc/lib/query.md)，`-m` 5/5 PASS；
+- **`cap:email`**（[`lib/email/`](file:///data/dev/cp/lib/email/index.cp)）：RFC 5322 `EmailAddress` 防 CRLF 注入、`QuotedPrintable`、`EmailBuilder`/`MimeParser`（`multipart/alternative`/`mixed` + 76 列 Base64 + RFC 2047 UTF-8）及 `SmtpCodec`（`AUTH PLAIN`/多行响应/Dot-Stuffing），文档 [`doc/lib/email.md`](file:///data/dev/cp/doc/lib/email.md)，`-m` 5/5 PASS；同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)。
+
+---
+
 ## [2026-11-21] - 新建 `cap:qrcode` ISO/IEC 18004 二维码编码与终端半块/SVG 渲染引擎（5/5 PASS，自动动态挂载 `cap.qrcode`）
 
 - 新建 [`lib/qrcode/`](file:///data/dev/cp/lib/qrcode/index.cp)（`ecc.cp`、`encoder.cp`、`render.cp`、`index.cp`）：编译期 GF(256) 查表 `ReedSolomon`、ISO/IEC 18004 V1..10 Byte 模式 4 级纠错与 8 掩码评分择优 `QrCode`，以及 UTF-8 半块终端/ASCII/游程合并 SVG `QrRenderer`；文档 [`doc/lib/qrcode.md`](file:///data/dev/cp/doc/lib/qrcode.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_qrcode_production_deep.cp`](file:///data/dev/cp/cap/test/test_qrcode_production_deep.cp) `-m` 5/5 PASS。

@@ -78,3 +78,6 @@
 
 ### 2026-11-21（`cap:qrcode` 验收固化，顶替拉起 `cap:intl` 人性化数值/字节/时长格式化引擎维持 3 路并行）
 - **执行成果**：子智能体 41（`lib/qrcode/`，5/5 PASS，含 `cap.qrcode` 动态挂载与 `doc/lib/qrcode.md`）经 `verify_module.sh` 一键验收回收并提交 Git；立即顶替派发子智能体 42（新建 `lib/intl/` 千分位/紧凑数值/SI&IEC 字节大小与时长双向解析格式化/相对时间），与 `lib/query/`、`lib/email/` 保持 3 路正交并行。
+
+### 2026-11-21（`cap:query` & `cap:email` 双路合并验收提交，顶替拉起 `cap:oauth` 与 `cap:webhook` 维持 3 路并行）
+- **执行成果**：子智能体 39（`lib/query/` 5/5）与子智能体 40（`lib/email/` 5/5）双双经 `verify_module.sh` 一键验收回收，文档直写 `doc/lib/{query,email}.md` 并合并提交 Git；立即顶替派发子智能体 43（`lib/oauth/` OAuth 2.0/PKCE S256）与子智能体 44（`lib/webhook/` Standard Webhooks/GitHub/Stripe 签名验签 + 防重放 + 幂等去重表），与 `lib/intl/` 保持 3 路正交并行。
