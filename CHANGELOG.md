@@ -2,6 +2,13 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:sheet`（5/5）与 `cap:tz`（5/5）双标准库落地（自动动态挂载 `cap.sheet` / `cap.tz`）
+
+- **`cap:sheet`**（[`lib/sheet/`](file:///data/dev/cp/lib/sheet/index.cp)）：`CellCoord`（`A1`..`ZZ9999` 双向转换）与 `Spreadsheet`（四则/比较、`SUM`/`AVG`/`MIN`/`MAX`/`COUNT`/`IF`/`ROUND` 公式、Kahn 拓扑排序级联重算、`CycleDetected` 环路拦截与 RFC-4180 `toCsv`，零泄漏），文档 [`doc/lib/sheet.md`](file:///data/dev/cp/doc/lib/sheet.md)，`-m` 5/5 PASS；
+- **`cap:tz`**（[`lib/tz/`](file:///data/dev/cp/lib/tz/index.cp)）：`Timezone`（Howard Hinnant $O(1)$ 历法算法、20+ 内置 IANA 时区、POSIX TZ 南北半球跨年 DST 规则解析、`toLocal`/`toUnix`/`formatRfc3339`），文档 [`doc/lib/tz.md`](file:///data/dev/cp/doc/lib/tz.md)，`-m` 5/5 PASS；同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)。
+
+---
+
 ## [2026-11-21] - 新建 `cap:ssh` OpenSSH 公钥 Wire 指纹与 `authorized_keys` 策略引擎（5/5 PASS，自动动态挂载 `cap.ssh`）
 
 - 新建 [`lib/ssh/`](file:///data/dev/cp/lib/ssh/index.cp)（`keys.cp`、`index.cp`）：`SshPublicKey`（复用 `cap:crypto` & `cap:encoding`，支持 Ed25519/RSA/ECDSA-P256/SK-Ed25519、RFC 4251 长度前缀 Wire 校验、内外算法一致性校验与标准 `SHA256:<base64>` 指纹）及 `AuthorizedKeys`（多行选项解析含引号内逗号/转义引号与 `matchKey`，零泄漏）；文档 [`doc/lib/ssh.md`](file:///data/dev/cp/doc/lib/ssh.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_ssh_production_deep.cp`](file:///data/dev/cp/cap/test/test_ssh_production_deep.cp) `-m` 5/5 PASS。

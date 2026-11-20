@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:sheet`（5/5）与 `cap:tz`（5/5）双标准库全绿合并提交
+
+- **落地成果**：`lib/sheet/`（公式 DAG 拓扑重算与 `#CYCLE!` 防护）与 `lib/tz/`（IANA/POSIX DST 时区互转）双双经 `verify_module.sh` 一键全绿通过（零内存泄漏），单轮合并回收提交，并以 `Model: "inherit"` 顶替派发 `cap:tlv`（二进制 TLV 编解码、黏包分帧与 Castagnoli CRC32C 校验引擎）与 `cap:lsm`（LSM-Tree MemTable + SSTable 分块索引 + Tombstone 多路归并压缩引擎），维持 2 路常规正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:ssh` OpenSSH 公钥指纹与 `authorized_keys` 策略引擎（5/5 PASS，文档直写 `doc/lib/ssh.md`）
 
 - **落地成果**：`lib/ssh/`（`keys.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:tz`（IANA 常见时区、POSIX TZ DST 夏令时规则与 UTC <-> 本地时间互转引擎），与 `lib/sheet/` 保持 2 路常规并行。
