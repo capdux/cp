@@ -266,3 +266,6 @@
 
 ### 2026-11-21（`cap:mermaid` 验收固化，顶替以 `inherit` 拉起 `cap:sitemap` 维持 2 路并行）
 - **执行成果**：`lib/mermaid/`（5/5 PASS，含 `cap.mermaid` 动态挂载与 `doc/lib/mermaid.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/sitemap/`（RFC 9309 `robots.txt` 爬虫规则匹配与 XML Sitemap 0.9 / Index 解析生成引擎），与 `lib/lz4/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:lz4` 验收固化，顶替以 `inherit` 拉起 `cap:ledger` 维持 2 路并行）
+- **执行成果**：`lib/lz4/`（5/5 PASS，含 `cap.lz4` 动态挂载与 `doc/lib/lz4.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/ledger/`（复式记账双分录会计总账、幂等记账、不可变冲正与试算平衡引擎），与 `lib/sitemap/` 保持 2 路正交并行。

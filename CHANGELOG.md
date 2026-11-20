@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:lz4` 纯 CP LZ4 Block & Frame 压缩解压与 XXH32 校验引擎（5/5 PASS，自动动态挂载 `cap.lz4`）
+
+- 新建 [`lib/lz4/`](file:///data/dev/cp/lib/lz4/index.cp)（`lz4.cp`、`index.cp`）：`xxhash32`、`Lz4Block`（4096 槽位哈希压缩、重叠 RLE 匹配复制、`InvalidOffset`/`OutputTooLarge` 防膨胀）及 `Lz4Frame`（`0x184D2204` 魔数、64KB 分块回退、XXH32 头部与内容双重校验，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/lz4.md`](file:///data/dev/cp/doc/lib/lz4.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_lz4_production_deep.cp`](file:///data/dev/cp/cap/test/test_lz4_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:mermaid` 声明式 Mermaid 图表构建与安全转义引擎（5/5 PASS，自动动态挂载 `cap.mermaid`）
 
 - 新建 [`lib/mermaid/`](file:///data/dev/cp/lib/mermaid/index.cp)（`diagram.cp`、`index.cp`）：`FlowchartBuilder`（多形状/子图 `subgraph`/特殊字符自动安全引号转义与 ````mermaid```` 围栏输出）、`SequenceBuilder`（`participant`/`actor`/消息箭头/激活条/`loop`/`alt`/`else`）、`ErBuilder`（`PK`/`FK`/`UK` 与基数关系）及 `StateBuilder`；文档 [`doc/lib/mermaid.md`](file:///data/dev/cp/doc/lib/mermaid.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_mermaid_production_deep.cp`](file:///data/dev/cp/cap/test/test_mermaid_production_deep.cp) `-m` 5/5 PASS。
