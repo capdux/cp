@@ -16,3 +16,6 @@
 
 ### 2026-11-21（`cap:redis_cluster` 验收，顶替拉起 `cap:http_router` 维持 2 路常规并行）
 - **执行成果**：`lib/redis_cluster/`（5/5 PASS，`doc/lib/redis_cluster.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:http_router` 维持 2 路常规并行
+
+### 2026-11-21（`cap:nfa_regex` 验收，主控亲自完成第 3 路 `cap:nfa_regex` 验收提交，维持 `cap:xxhash` 与 `cap:http_router` 并发）
+- **执行成果**：`lib/nfa_regex/`（5/5 PASS，`doc/lib/nfa_regex.md`）经 `verify_module.sh` 一次性验收回收；主控亲自完成第 3 路 `cap:nfa_regex` 验收提交，维持 `cap:xxhash` 与 `cap:http_router` 并发

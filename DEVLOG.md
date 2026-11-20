@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:nfa_regex` 纯 CP Thompson NFA 线性时间 O(N*M) 无回溯正则表达式引擎（免疫 ReDoS，支持锚点/字符类/分组/多分支，详见 `doc/lib/nfa_regex.md`）（5/5 PASS，文档直写 `doc/lib/nfa_regex.md`）
+- **核心设计**：基于状态代际时间戳 `gen_buf` 的零回溯 NFA 模拟，彻底消除指数级回溯风险并限制 `MAX_NFA_STATES = 4096`，全路径 `std.testing.allocator` 零泄漏。
+
 ## 2026-11-21: 新建 `cap:redis_cluster` 纯 CP Redis/Valkey Cluster CRC16-CCITT 16384 槽位路由、Hash Tag 提取与 MOVED/ASK 拓扑热更新引擎（支持 `cap.redis_cluster` 自动动态挂载，详见 `doc/lib/redis_cluster.md`）（5/5 PASS，文档直写 `doc/lib/redis_cluster.md`）
 - **核心设计**：`ClusterTopology` 通过 `[16384]i32` 槽位索引表实现 O(1) 路由与 `MOVED` 原地热更新，全路径 `std.testing.allocator` 零泄漏。
 
