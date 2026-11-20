@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:asn1` ITU-T X.690 DER 编解码与零 C 依赖 X.509 v3 证书内省引擎（5/5 PASS，自动动态挂载 `cap.asn1`）
+
+- 新建 [`lib/asn1/`](file:///data/dev/cp/lib/asn1/index.cp)（`der.cp`、`x509.cp`、`index.cp`）：严格最短定长 `DerReader`/`DerWriter`（64 层深度防护）、`OidCodec` 与 `X509Inspector`（解析版本/序列号/签发者与主体 CN+O/UTCTime & GeneralizedTime 有效期/SAN DNS/BasicConstraints CA/SHA-256 指纹）；文档 [`doc/lib/asn1.md`](file:///data/dev/cp/doc/lib/asn1.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_asn1_production_deep.cp`](file:///data/dev/cp/cap/test/test_asn1_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:pubsub` NATS/MQTT 通配符主题消息代理与背压/保留消息引擎（5/5 PASS，自动动态挂载 `cap.pubsub`）
 
 - 新建 [`lib/pubsub/`](file:///data/dev/cp/lib/pubsub/index.cp)（`topic.cp`、`broker.cp`、`index.cp`）：零分配 `TopicMatcher`（支持 NATS `.`/`*`/`>` 与 MQTT `/`/`+`/`#` 及畸形模式拦截）与 `PubSubBroker`（多订阅扇出、`DropOldest`/`DropNewest` 有界背压与 `publishRetained` 保留消息回放/清除）；文档 [`doc/lib/pubsub.md`](file:///data/dev/cp/doc/lib/pubsub.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_pubsub_production_deep.cp`](file:///data/dev/cp/cap/test/test_pubsub_production_deep.cp) `-m` 5/5 PASS。

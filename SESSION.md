@@ -106,3 +106,6 @@
 
 ### 2026-11-21（`cap:pubsub` 验收固化，顶替拉起 `cap:graphql` 查询解析与格式化引擎维持 2 路并行）
 - **执行成果**：子智能体 51（`lib/pubsub/`，5/5 PASS，含 `cap.pubsub` 动态挂载与 `doc/lib/pubsub.md`）经 `verify_module.sh` 一键验收回收并提交 Git；顶替派发子智能体 52（新建 `lib/graphql/` GraphQL 词法/AST/查询深度防护与格式化器），与 `lib/asn1/` 严格保持 2 路常规并行。
+
+### 2026-11-21（`cap:asn1` 验收固化，顶替拉起 `cap:rbac` 企业级权限与 AI 工具鉴权引擎维持 2 路并行）
+- **执行成果**：子智能体 50（`lib/asn1/`，5/5 PASS，含 `cap.asn1` 动态挂载与 `doc/lib/asn1.md`）经 `verify_module.sh` 一键验收回收并提交 Git；顶替派发子智能体 53（新建 `lib/rbac/` 分层角色继承、通配符权限、显式拒绝优先与审计决策追踪），与 `lib/graphql/` 严格保持 2 路常规并行。
