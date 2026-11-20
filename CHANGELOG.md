@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:wyhash` 纯 CP Wyhash v4 高速 64-bit 非加密哈希、流式分块摘要与 Lemire 无偏差 WyRand 伪随机引擎（吸收对标 Bun `src/wyhash/`，详见 `doc/lib/wyhash.md`）（5/5 PASS，自动动态挂载 `cap.wyhash`）
+- **新增标准库**：`lib/wyhash/{core,wyrand,helpers,index}.cp`（吸收对标 Bun `src/wyhash/`），实现与 `std.hash.Wyhash` 比特级一致的 `wyhash`/`WyhashStream` 及 `WyRand` 无偏差伪随机生成器，并同步拆分 `cpc/src/resolver.rs` 中的 `wyhash` 路由别名以支持 `cap.wyhash` 独立挂载。
+- **新增文档与测试**：`doc/lib/wyhash.md` 扁平文档与 `cap/test/test_wyhash_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:csrf` 纯 CP HMAC-SHA256 CSRF 令牌、抗 BREACH 随机 XOR 掩码与 Origin/Referer/Sec-Fetch-Site 防护引擎（吸收对标 Bun `src/csrf/`，详见 `doc/lib/csrf.md`）（5/5 PASS，自动动态挂载 `cap.csrf`）
 - **新增标准库**：`lib/csrf/{types,token,origin,index}.cp`（吸收对标 Bun `src/csrf/`），提供 HMAC-SHA256 常量时间签名验签与 TTL 过期校验、抗 BREACH 32B 随机 XOR 掩码令牌，以及严格 `scheme:host:port`（含 IPv6 与 `userinfo` 欺骗拦截）Origin 校验。
 - **新增文档与测试**：`doc/lib/csrf.md` 扁平文档与 `cap/test/test_csrf_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

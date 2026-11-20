@@ -17,7 +17,7 @@ pub fn resolve_cap_hub_target(ns: &str) -> Option<String> {
         "Semver" => Some("semver/index.cp"),
         "col" | "collections" | "bit_set" => Some("col/index.cp"),
         "encoding" | "base64" => Some("encoding/index.cp"),
-        "hash" | "wyhash" => Some("hash/index.cp"),
+        "hash" => Some("hash/index.cp"),
         "fs" => Some("fs.cp"),
         "test" => Some("test.cp"),
         _ => None,

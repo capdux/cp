@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:wyhash` 纯 CP Wyhash v4 高速 64-bit 非加密哈希、流式分块摘要与 Lemire 无偏差 WyRand 伪随机引擎（吸收对标 Bun `src/wyhash/`，详见 `doc/lib/wyhash.md`）（5/5 PASS，文档直写 `doc/lib/wyhash.md`）
+- **核心设计**：`WyhashStream` 通过小缓冲合并保证 `1..7` 字节任意切片投喂与单次 `wyhash` 100% 比特一致；`WyRand.nextRange` 采用 Lemire 乘法无模偏差缩放，全路径零堆分配。
+
 ## 2026-11-21: 新建 `cap:csrf` 纯 CP HMAC-SHA256 CSRF 令牌、抗 BREACH 随机 XOR 掩码与 Origin/Referer/Sec-Fetch-Site 防护引擎（吸收对标 Bun `src/csrf/`，详见 `doc/lib/csrf.md`）（5/5 PASS，文档直写 `doc/lib/csrf.md`）
 - **核心设计**：`maskToken` 每次生成随机 32 字节一次性 pad 与原始令牌异或，彻底消除 BREACH 压缩侧信道；`verifyOrigin` 拒绝 `Sec-Fetch-Site: cross-site`、前缀域名伪造与 `@` userinfo 欺骗，全路径零泄漏。
 

@@ -33,7 +33,8 @@
 //   url              -> url/index.cp
 //   encoding / base64 -> encoding/index.cp
 //   crypto           -> crypto/index.cp
-//   hash / wyhash    -> hash/index.cp
+//   hash             -> hash/index.cp
+//   wyhash           -> wyhash/index.cp
 //   dns              -> dns/index.cp
 //   net              -> net/index.cp
 //   s3               -> s3/index.cp
