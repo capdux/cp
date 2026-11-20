@@ -1723,3 +1723,9 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
   4. `sema.rs` (7,310 行)：拆为 7 个高内聚子模块（全部 <= 1,407 行）；
   5. `codegen/types.rs` (2,927 行)：拆为 4 个子模块（`mod`/`infer_cp`/`infer_zig`/`map_type`）。
 - 零回归保障：每个 Stage 均对 10 套代表性测试执行确定性排序行 SHA256 校验（**10/10 0 字节差异**），并落地 `scripts/check_cpc_size.sh` 防反弹门禁。
+
+### 第十二阶段：第二批 8 大核心标准库对标 Bun 深度审核与补全（两路并行）
+- 承接上一批 12 个标准库的深度补全，本阶段针对剩余高价值薄弱模块分两路并发攻克：
+  1. Web 内容与协议栈（`md`/`html`/`json`/`ws`）：将 4 个轻量实现全面拉齐至生产级 RFC / Bun 完备度（CommonMark+GFM AST、HTML5 RawText Tokenizer + `HtmlRewriter`、RFC 8259 UTF-16 代理对 + RFC 6901 Pointer、RFC 6455 SHA-1 握手 + SIMD Mask + 分片重组状态机）；
+  2. 系统与运行时工具（`shell`/`napi`/`elf`/`logger`）：补全 23 条进程内 Shell Builtin 与完整变量展开/重定向、N-API v9 24 项状态与离线 `NapiEnvMock`、完整 ELF64（Phdr/Shdr/Sym/Dyn 实测解析 `cpc` 本体）及 Logger 二分行索引/跨文件 `DiagNote`/JSON 诊断。
+- 全库 414/414 `.cp` 文件 `// Source:` 合规，6 套联合回归测试全部 100% PASS。

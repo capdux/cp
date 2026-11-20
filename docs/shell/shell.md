@@ -1,99 +1,85 @@
 # `cap:shell` — 嵌入式跨平台 Shell 词法/AST 引擎与进程内管道执行器
 
-> **上游溯源**: `/data/dev/bun/src/shell/` (`shell.cp`, `interpreter.cp`, `ParsedShellScript.cp`, `Builtin.cp`, `builtin/*.cp`)  
+> **上游溯源**: `/data/dev/bun/src/shell/` (`shell.cp`, `interpreter.cp`, `ParsedShellScript.cp`, `EnvMap.cp`, `Builtin.cp`, `builtin/*.cp`) & `/data/dev/bun/src/shell_parser/`  
 > **模块路径**: `lib/shell/`  
-> **导入协议**: `import { Shell, sh, Lexer, Token, TokenKind, Parser, Script, Statement, Pipeline, Command, ControlOp, Executor, ShellResult, isBuiltin, runBuiltin } from "cap:shell";`
+> **导入协议**: `import { Shell, sh, ShellSession, ShellEnv, DirStack, expandWord, Lexer, Token, TokenKind, QuoteKind, Parser, Script, Statement, Pipeline, Command, ControlOp, Executor, ShellResult, isBuiltin, runBuiltin, runBuiltinWithState } from "cap:shell";`
 
 ---
 
 ## 一、 架构概述与设计亮点
 
-`cap:shell` 吸收自 Bun 内置的跨平台 Shell 引擎（`Bun.$` / `bun/src/shell`），将词法分词、递归下降语法树（AST）构建、进程内跨平台 Builtin 命令直通调度与多级内存管道（In-Memory Pipeline）融为一体：
+`cap:shell` 吸收自 Bun 内置的跨平台 Shell 引擎（`Bun.$` / `bun/src/shell`），将词法分词、递归下降 AST 解析、环境变量与引号插值展开、工作目录栈、全套进程内 POSIX Builtins 与多级管道重定向融为一体：
 
 ```text
 lib/shell/
-├── index.cp         # 模块导出门面与快捷同步执行入口 sh(...) / Shell.run(...)
-├── lexer.cp         # 零堆分配 Shell 词法分词器 (Lexer, Token, TokenKind)
-├── parser.cp        # 固定栈容量 AST 解析器 (Script -> Statement -> Pipeline -> Command)
-├── builtin.cp       # 进程内零 fork 内置命令集 (echo, cat, pwd, cd, which, export, true, false, exit, dirname, basename)
-└── exec.cp          # 管道内存流转、短路控制流 (&& / || / ;) 与文件重定向执行引擎 (Executor, ShellResult)
+├── index.cp         # 模块导出门面与快捷同步执行入口 sh(...) / Shell.run(...) / Shell.session()
+├── lexer.cp         # Shell 词法分词器 (单/双引号、注释 #、行续接、2>/2>&1/&>/>>/</| /&&/||/; /\n)
+├── env.cp           # 进程内环境变量表 (ShellEnv)、工作目录栈 (DirStack) 与词展开引擎 (expandWord)
+├── parser.cp        # AST 解析器 (Script -> Statement -> Pipeline -> Command + EnvAssign + Redirections)
+├── builtin.cp       # 进程内零 fork 内置命令集 (23 条 POSIX/Bun Builtins)
+└── exec.cp          # 会话与管道执行引擎 (ShellSession, Executor, ShellResult)
 ```
 
-1. **零堆分配 AST 模型 (`Script` / `Statement` / `Pipeline` / `Command`)**：
-   - `Script` 包含最多 `16` 条由 `;`、`&&`、`||` 连接的 `Statement`（`MAX_STATEMENTS`）。
-   - 每条 `Statement` 包含一条最多 `16` 级管道命令的 `Pipeline`（`MAX_PIPELINE_CMDS`）及后继控制算子 `ControlOp` (`.None`, `.And`, `.Or`, `.Sequence`)。
-   - 每个 `Command` 包含最多 `32` 个参数切片（`MAX_COMMAND_ARGS`）以及输入/输出重定向描述符（`redirect_in`, `redirect_out`, `redirect_append`）。
-2. **进程内 Builtin 零子进程开销**：对于高频命令（`echo`, `cat`, `pwd`, `cd`, `which`, `dirname`, `basename`, `true`, `false`, `export`, `exit`），`Executor` 直接在当前进程内存缓冲区（`StringJoiner` & `pipe_buf`）内执行并传递管道标准输入/输出，无需调用 `fork`/`exec` 创建操作系统子进程。
+1. **完整词法 & 变量展开**：
+   - 区分单引号字面量 `'...'`（不展开变量）、双引号 `"..."`（展开 `$VAR`、`${VAR}`、`${VAR:-default}`、`${VAR:=default}`、`${VAR:+alt}`、`${#VAR}`、`$?`、`$$` 及 `\"`/`\\`/`\$` 转义）、混合拼接词（如 `FOO="hello world"`）以及 `#` 行注释。
+   - 支持赋值前缀 `FOO=bar cmd`（仅作用于单条命令，执行完自动恢复原环境）与独立赋值 `FOO=bar`（持久化到 `ShellSession`）。
+2. **完整控制流与重定向**：
+   - 左结合 `&&`、`||`、`;`、`\n` 链式执行与退出码短路；支持 `exit [code]` 提前终止脚本并返回退出码。
+   - 支持 `<` 输入重定向、`>` / `>>` 标准输出重定向、`2>` / `2>>` 标准错误重定向、`2>&1` / `1>&2` 流合并、`&>` / `&>>` 全流重定向（基于 Zig 0.17 兼容的 `std.c.open`/`read`/`write`/`close`），以及 `ShellSession.runWithMemoryTarget` 直接重定向到内存缓冲区。
+3. **23 条进程内 Builtins**：
+   - `echo`（`-n`/`-e`/`-E` 及组合标志）、`printf`（`%s`/`%d`/`%i`/`%u`/`%x`/`%X`/`%c`/`%%` 与宽度对齐）、`cat`（`-n` 与 stdin/文件）、`true`、`false`、`test` / `[`（`-e`/`-f`/`-d`/`-r`/`-w`/`-x`/`-s`/`-L`/`-h`/`-z`/`-n`/`=`/`!=`/`-eq`/`-ne`/`-lt`/`-le`/`-gt`/`-ge`/`!`/`-a`/`-o`）、`pwd`、`cd`（含 `cd -`）、`pushd`、`popd`、`dirs`、`env`、`export`、`unset`、`which`（内置命令 + `$PATH` 可执行搜索）、`basename`（含可选后缀剥离）、`dirname`、`head`（`-n N` / `-N`）、`wc`（`-l`/`-w`/`-c`）、`mkdir`（`-p` 递归创建）、`rm`（`-f` / `-r` / `-R` 递归删除）、`exit`。
 
 ---
 
-## 二、 词法/语法支持矩阵与 `Bun.$` 对照表
+## 二、 语法特性与 Builtins 对照表
 
-### 1. 语法操作符与内蔵命令矩阵
-
-| 语法分类 | 符号 / 命令 | AST 节点 / 语义说明 | 示例 |
-| :--- | :--- | :--- | :--- |
-| **管道流转** | `cmd1 \| cmd2` | `TokenKind.Pipe`：将 `cmd1` 的 `stdout` 内存缓冲直接作为 `cmd2` 的 `stdin` | `echo -n "hello" \| cat` |
-| **逻辑与短路** | `cmd1 && cmd2` | `ControlOp.And`：仅当 `cmd1.exit_code == 0` 时继续执行 `cmd2` | `true && echo "ok"` |
-| **逻辑或短路** | `cmd1 \|\| cmd2` | `ControlOp.Or`：仅当 `cmd1.exit_code != 0` 时回退执行 `cmd2` | `false \|\| echo "fallback"` |
-| **顺序语句** | `cmd1 ; cmd2` | `ControlOp.Sequence`：无条件顺序执行多条语句 | `echo "a" ; echo "b"` |
-| **覆盖/追加重定向** | `> file` / `>> file` | `RedirectOp.Out` / `Append`：将命令输出写入或追加至目标文件 | `echo "log" >> app.log` |
-| **输入重定向** | `< file` | `RedirectOp.In`：指定命令输入源文件路径 | `cat < config.ini` |
-| **进程内 Builtins** | `echo`, `cat`, `pwd`, `cd`, `which`, `dirname`, `basename`, `true`, `false` | 100% 纯 CP 内存态执行，跨平台行为一致 | `dirname /a/b/c.cp` |
-
-### 2. `cap:shell` 与 `Bun.$` API 对照表
-
-| 功能描述 | `cap:shell` API | `Bun.$` (JS/TS) 对照 | 返回值说明 |
-| :--- | :--- | :--- | :--- |
-| **一键执行脚本** | `sh("echo hello \| cat")` / `Shell.run(...)` | ``await $`echo hello \| cat` `` | 返回 `ShellResult` |
-| **获取标准输出文本** | `res.text()` (`res.stdout_str`) | `res.text()` | `[]const u8` |
-| **获取标准错误文本** | `res.err()` (`res.stderr_str`) | `res.stderr.toString()` | `[]const u8` |
-| **检查退出状态** | `res.ok()` / `res.exit_code` | `res.exitCode === 0` | `bool` / `i32` |
-| **独立 AST 解析** | `Parser.init(src).parseScript()` | `bun.shell.ParsedShellScript` | `Script` AST 结构 |
+| 特性 / 命令 | 语义与支持能力 | 示例 |
+| :--- | :--- | :--- |
+| **引号与插值** | `'...'` 禁用插值；`"..."` 支持 `$VAR`、`${VAR:-def}`、`${VAR:=val}`、`${#VAR}`、`$?`、`$$` | `echo "hi ${USER:-guest}"` |
+| **赋值前缀** | `FOO=bar cmd` 仅临时注入子命令；独立 `FOO=bar` 写入会话 | `DEBUG=1 env \| cat` |
+| **逻辑短路** | `&&` / `||` / `;` / `\n` 左结合短路求值，`exit N` 中断脚本 | `false && echo no ; echo yes` |
+| **重定向** | `>` / `>>` / `<` / `2>` / `2>>` / `2>&1` / `1>&2` / `&>` / `&>>` | `cat missing 2>&1 \| head -n 1` |
+| **环境与目录栈** | `env` / `export` / `unset` / `pwd` / `cd` / `pushd` / `popd` / `dirs` | `pushd /tmp && pwd && popd` |
+| **条件测试 `test`/`[`** | 文件属性、字符串比对、整数比较与 `!` / `-a` / `-o` 逻辑组合 | `[ -f a.txt -a 10 -gt 2 ]` |
+| **文本与文件工具** | `echo -ne`, `printf`, `cat`, `head`, `wc`, `basename`, `dirname`, `mkdir -p`, `rm -rf` | `printf '%03d\n' 7 \| wc -c` |
 
 ---
 
 ## 三、 代码示例
 
-### 1. 快捷管道、逻辑短路与内置命令执行 (`sh` & `Shell.run`)
+### 1. 有状态会话 (`ShellSession`)、变量展开与目录栈
 
 ```typescript
-const std = @import("std");
-import { sh, Shell } from "cap:shell";
+import { Shell } from "cap:shell";
 
-fn demoShellExecution(): void {
-    // 1. 进程内管道流转 (echo -> cat，零子进程 fork)
-    const r1 = sh("echo -n \"hello cp shell\" | cat");
-    // r1.ok() => true
-    // r1.text() => "hello cp shell"
+fn demoSession(): void {
+    let sess = Shell.session();
+    defer sess.release();
 
-    // 2. 逻辑与 (&&) / 逻辑或 (||) 短路求值
-    const r2 = Shell.run("true && echo \"step_ok\"");
-    // r2.text() => "step_ok\n"
+    const r1 = sess.run("export MODE=prod; echo \"mode=${MODE:-dev} len=${#MODE}\"");
+    // r1.text() => "mode=prod len=4\n"
 
-    const r3 = Shell.run("false || echo \"recovered\"");
-    // r3.text() => "recovered\n"
-
-    // 3. 跨平台路径内置命令
-    const r4 = sh("basename /data/dev/cp/lib/shell/index.cp");
-    // r4.text() => "index.cp\n"
+    const r2 = sess.run("mkdir -p /tmp/demo && pushd /tmp/demo > /dev/null && echo ok > out.txt && popd > /dev/null && rm -rf /tmp/demo");
+    // r2.ok() => true
 }
 ```
 
-### 2. 词法分词器 (`Lexer`) 与语法树 (`Parser`) 检查
+### 2. 内存缓冲区重定向与管道组合
 
 ```typescript
-import { Lexer, TokenKind, Parser, ControlOp } from "cap:shell";
+import { Shell } from "cap:shell";
+import { StringJoiner } from "cap:string";
 
-fn demoAstInspection(): void {
-    let parser = Parser.init("echo \"build start\" | cat > build.log && pwd");
-    const script = parser.parseScript();
+fn demoMemoryTarget(): void {
+    let sess = Shell.session();
+    defer sess.release();
 
-    // script.statements_len => 2
-    // 第一条语句包含 2 个管道命令 (echo 与 cat)，且后继操作符为 ControlOp.And
-    const stmt0 = script.statements[0];
-    // stmt0.op == ControlOp.And
-    // stmt0.pipeline.commands_len == 2
-    // stmt0.pipeline.commands[1].redirect_out => "build.log"
+    let out = StringJoiner.init();
+    defer out.release();
+    let err = StringJoiner.init();
+    defer err.release();
+
+    const code = sess.runWithMemoryTarget("printf 'a\\nb\\nc\\n' | head -n 2 | wc -l", &out, &err);
+    // code == 0, out.slice() => "2\n"
 }
 ```

@@ -8,9 +8,10 @@
 // Absorbed from Bun Shell architecture with pure CP semantics
 
 import { Parser } from "./parser.cp";
-import { Executor, ShellResult } from "./exec.cp";
+import { Executor, ShellResult, ShellSession } from "./exec.cp";
 
 export * from "./lexer.cp";
+export * from "./env.cp";
 export * from "./parser.cp";
 export * from "./builtin.cp";
 export * from "./exec.cp";
@@ -25,5 +26,9 @@ pub fn sh(command_str: []const u8): ShellResult {
 pub struct Shell {
     pub static fn run(command_str: []const u8): ShellResult {
         return sh(command_str);
+    }
+
+    pub static fn session(): ShellSession {
+        return ShellSession.init();
     }
 }

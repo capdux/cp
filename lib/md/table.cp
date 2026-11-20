@@ -61,6 +61,7 @@ pub struct MdTable {
     }
 
     /// Splits a pipe-delimited Markdown table row (`| a | b | c |`) into trimmed cells inside `out_cells`.
+    /// Respects backslash-escaped pipes `\|` and inline code spans `` `a|b` ``.
     /// Returns the number of cells extracted.
     pub static fn splitRow(line: []const u8, out_cells: [][]const u8): usize {
         let trimmed = std.mem.trim(u8, line, " \t\r");
@@ -71,16 +72,54 @@ pub struct MdTable {
             trimmed = trimmed[1..];
         }
         if (trimmed.len > 0 && trimmed[trimmed.len - 1] == '|') {
-            trimmed = trimmed[0 .. trimmed.len - 1];
+            // Only strip trailing pipe if it is not escaped by an odd number of backslashes
+            let bs_count: usize = 0;
+            let k = trimmed.len - 1;
+            while (k > 0 && trimmed[k - 1] == '\\') {
+                bs_count += 1;
+                k -= 1;
+            }
+            if ((bs_count % 2) == 0) {
+                trimmed = trimmed[0 .. trimmed.len - 1];
+            }
         }
 
         let count: usize = 0;
-        let iter = std.mem.splitScalar(u8, trimmed, '|');
-        while (raw_cell := iter.next()) {
-            if (count >= out_cells.len) {
-                break;
+        let cell_start: usize = 0;
+        let i: usize = 0;
+        let in_code_ticks: usize = 0;
+
+        while (i < trimmed.len) {
+            const c = trimmed[i];
+            if (c == '\\' && i + 1 < trimmed.len && in_code_ticks == 0) {
+                i += 2;
+                continue;
             }
-            out_cells[count] = std.mem.trim(u8, raw_cell, " \t");
+            if (c == '`') {
+                let run: usize = 0;
+                while (i + run < trimmed.len && trimmed[i + run] == '`') {
+                    run += 1;
+                }
+                if (in_code_ticks == 0) {
+                    in_code_ticks = run;
+                } else if (in_code_ticks == run) {
+                    in_code_ticks = 0;
+                }
+                i += run;
+                continue;
+            }
+            if (c == '|' && in_code_ticks == 0) {
+                if (count < out_cells.len) {
+                    out_cells[count] = std.mem.trim(u8, trimmed[cell_start..i], " \t");
+                    count += 1;
+                }
+                cell_start = i + 1;
+            }
+            i += 1;
+        }
+
+        if (count < out_cells.len) {
+            out_cells[count] = std.mem.trim(u8, trimmed[cell_start..trimmed.len], " \t");
             count += 1;
         }
         return count;

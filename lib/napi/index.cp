@@ -1,4 +1,4 @@
-// Source: Custom (agy-generated export index)
+// Source: /data/dev/bun/src/napi/napi.cp
 // lib/napi/index.cp
 // Unified Public Exports for Node-API C-ABI & Safe Wrapper (cap:napi)
 
@@ -9,6 +9,11 @@ export {
     NapiStatus,
     NapiValueType,
     NapiTypedArrayType,
+    NapiKeyCollectionMode,
+    NapiKeyFilter,
+    NapiKeyConversion,
+    NapiTsfnReleaseMode,
+    NapiTsfnCallMode,
     NapiPropertyAttributes,
     NapiEnv,
     NapiValue,
@@ -18,9 +23,36 @@ export {
     NapiCallbackInfo,
     NapiDeferred,
     NapiAsyncWork,
+    NapiAsyncContext,
+    NapiCallbackScope,
+    NapiThreadsafeFunction,
+    NapiAsyncCleanupHookHandle,
+    napi_status,
+    napi_valuetype,
+    napi_typedarray_type,
+    napi_env,
+    napi_value,
+    napi_ref,
+    napi_handle_scope,
+    napi_escapable_handle_scope,
+    napi_callback_info,
+    napi_deferred,
+    napi_async_work,
+    napi_threadsafe_function,
+    napi_threadsafe_function_release_mode,
+    napi_threadsafe_function_call_mode,
     NapiExtendedErrorInfo,
+    NapiNodeVersion,
+    NapiTypeTag,
     NapiPropertyDescriptor,
     NapiModule,
+    napi_extended_error_info,
+    napi_node_version,
+    napi_type_tag,
+    napi_property_descriptor,
+    napi_module,
+    napi_get_last_error_info,
+    napi_get_node_version,
     napi_get_undefined,
     napi_get_null,
     napi_get_boolean,
@@ -34,6 +66,14 @@ export {
     napi_set_named_property,
     napi_open_handle_scope,
     napi_close_handle_scope,
+    napi_open_escapable_handle_scope,
+    napi_close_escapable_handle_scope,
+    napi_escape_handle,
+    napi_create_reference,
+    napi_delete_reference,
+    napi_reference_ref,
+    napi_reference_unref,
+    napi_get_reference_value,
     napi_throw_error,
     napi_module_register
 } from "./_napi";
@@ -44,3 +84,22 @@ export {
     NapiAddonRegistry,
     Napi
 } from "./napi";
+
+export {
+    NAPI_MAX_MOCK_VALUES,
+    NAPI_MAX_MOCK_PROPS,
+    NAPI_MAX_SCOPES,
+    NAPI_MAX_REFS,
+    NAPI_MAX_ASYNC_WORKS,
+    NAPI_MAX_TSFN_QUEUE,
+    NapiCallbackInfoData,
+    NapiAsyncWorkStatus,
+    NapiAsyncWorkEntry,
+    NapiThreadsafeFunctionState,
+    NapiRefEntry,
+    NapiHandleScopeEntry,
+    NapiMockProperty,
+    NapiMockValue,
+    NapiRuntimeContext,
+    NapiEnvMock
+} from "./runtime";

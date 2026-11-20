@@ -1,102 +1,89 @@
-# CP 标准库：Node-API (N-API v9) C-ABI 绑定与原生插件桥接手册 (`cap:napi`)
+# CP 标准库：Node-API (N-API v9) C-ABI 绑定与离线运行时模拟手册 (`cap:napi`)
 
-## 一、 架构总览与设计哲学
-
-`cap:napi` 是 CP 语言面向 Node.js 与 Bun 原生插件生态的 **Node-API (N-API v9) 标准 C-ABI 互操作层**，吸收自 Bun 的 `/data/dev/bun/src/napi/`（`js_native_api_types.h`、`node_api_types.h` 与 `napi.zig`）。
-
-设计采用经典的双层隔离架构：
-- **底层协议层（`_napi.cp`）**：纯 CP `@c` 结构体与枚举定义，与 C 标准 `node_api.h` / `js_native_api.h` 保持字节级 ABI 等价，**无需依赖外部 C 头文件即可独立编译**；
-- **安全封装层（`napi.cp`）**：将 `NapiStatus` 自动映射为 CP 强类型错误集 `NapiError`，支持 `?` 链式错误传播，并提供描述符构造器与本地插件注册表 `NapiAddonRegistry`。
-
-```text
-┌────────────────────────────────────────────────────────────────────────────┐
-│                       cap:napi 跨运行时原生插件桥接                          │
-│                                                                            │
-│   CP 业务 / 原生扩展代码                                                    │
-│     │  Napi.createInt32 / getUndefined / openHandleScope / checkStatus(?)  │
-│     ▼                                                                      │
-│   安全封装层 (lib/napi/napi.cp)                                             │
-│     • NapiError 错误映射   • NapiAddonRegistry 本地插件元数据管理           │
-│     • Napi.createModuleDescriptor / createPropertyDescriptor               │
-│     ▼                                                                      │
-│   C-ABI 契约层 (lib/napi/_napi.cp)                                          │
-│     • NapiStatus (0..23) / NapiValueType (0..9) / NapiTypedArrayType       │
-│     • @c struct NapiModule / NapiPropertyDescriptor / NapiExtendedErrorInfo│
-│     • extern napi_* 函数声明 ──▶ 宿主运行时 (Bun / Node.js / CP Runtime)    │
-└────────────────────────────────────────────────────────────────────────────┘
-```
+> **上游溯源**: `/data/dev/bun/src/napi/` (`js_native_api_types.h`, `node_api_types.h`, `js_native_api.h`, `node_api.h`, `napi.cp`)  
+> **模块路径**: `lib/napi/`  
+> **导入协议**: `import { NAPI_VERSION, NapiStatus, NapiValueType, NapiTypedArrayType, NapiPropertyAttributes, NapiModule, NapiPropertyDescriptor, NapiExtendedErrorInfo, NapiNodeVersion, NapiThreadsafeFunctionState, NapiRuntimeContext, NapiEnvMock, Napi } from "cap:napi";`
 
 ---
 
-## 二、 核心 API 详解与代码示例
+## 一、 架构总览与模块布局
 
-### 1. 状态码校验与类型元信息 (`Napi` / `NapiStatus` / `NapiValueType`)
+`cap:napi` 提供与 Node.js / Bun 完全一致的 **Node-API v9 C-ABI 类型布局**、**完整 24 项状态码与错误消息映射**，以及**纯 CP 可离线测试的运行时上下文 `NapiRuntimeContext`（别名 `NapiEnvMock`）**：
+
+```text
+lib/napi/
+├── index.cp    # 统一公开导出入口
+├── _napi.cp    # N-API v9 C-ABI 枚举、@c struct 布局与 extern 声明（含 C 小写别名 napi_*）
+├── napi.cp     # 安全封装 NapiError、checkStatus、statusName/statusMessage、TypedArray 大小与描述符构造
+└── runtime.cp  # 纯 CP 离线运行时状态机：HandleScope 栈、Ref 引用槽表、AsyncWork、TSFN 队列与 NapiEnvMock
+```
+
+### 核心补全能力矩阵
+
+1. **完备 N-API v9 枚举与错误映射**：
+   - `NapiStatus` 全部 24 项（`Ok = 0` .. `CannotRunJs = 23`），`Napi.checkStatus`、`Napi.statusName` 与 `Napi.statusMessage` 覆盖全部分支。
+   - `NapiTypedArrayType` 覆盖 12 种类型（含 `Float16 = 11`、`BigInt64`、`BigUint64`），`Napi.typedArrayElementSize` 精准返回元素字节数（`Float16 => 2`）。
+   - 包含 `NapiKeyCollectionMode`、`NapiKeyFilter`、`NapiKeyConversion`、`NapiTsfnReleaseMode`、`NapiTsfnCallMode`。
+2. **完整 C-ABI 结构体与运行时状态机**：
+   - `@c struct`: `NapiExtendedErrorInfo` (`napi_extended_error_info`)、`NapiNodeVersion` (`napi_node_version`)、`NapiTypeTag` (`napi_type_tag`)、`NapiPropertyDescriptor` (`napi_property_descriptor`)、`NapiModule` (`napi_module`)。
+   - 运行时结构体：`NapiCallbackInfoData`、`NapiAsyncWorkEntry` (`Pending`/`Queued`/`Running`/`Completed`/`Cancelled`/`Deleted`)、`NapiThreadsafeFunctionState`（环形调度队列、`acquire`/`release`/`call`/`drainAll`/`ref`/`unref`、`QueueFull`/`Closing` 状态）、`NapiRefEntry` 引用计数槽表、`NapiHandleScopeEntry`（LIFO 作用域校验与 `EscapableHandleScope` 防二次逃逸）。
+3. **纯 CP 离线测试环境 (`NapiEnvMock` / `NapiRuntimeContext`)**：
+   - 无需挂载 Node.js 或 JSC 引擎即可在纯 CP 单元测试中验证 HandleScope、EscapableHandleScope、Reference ref/unref、PropertyDescriptor 注册、Module 注册、AsyncWork、TSFN 与异常捕获。
+
+---
+
+## 二、 核心 API 与代码示例
+
+### 1. 状态码、TypedArray 大小与 C-ABI 描述符
+
+```typescript
+import { NAPI_VERSION, NapiStatus, NapiTypedArrayType, Napi } from "cap:napi";
+
+pub fn demoNapiStatus(): !void {
+    Napi.checkStatus(NapiStatus.Ok)?;
+    const name = Napi.statusName(NapiStatus.QueueFull);       // "napi_queue_full"
+    const msg = Napi.statusMessage(NapiStatus.CannotRunJs);   // "Cannot run JavaScript"
+    const f16_sz = Napi.typedArrayElementSize(NapiTypedArrayType.Float16); // 2
+}
+```
+
+### 2. 使用 `NapiEnvMock` 进行离线 HandleScope、Ref、Property 与 TSFN 测试
 
 ```typescript
 import {
-    NAPI_VERSION,
     NapiStatus,
-    NapiValueType,
-    NapiTypedArrayType,
+    NapiPropertyAttributes,
+    NapiTsfnCallMode,
+    NapiTsfnReleaseMode,
+    NapiThreadsafeFunctionState,
+    NapiEnvMock,
     Napi
 } from "cap:napi";
 
-pub fn demoNapiTypes(): !void {
-    // 校验 C-ABI 返回码并自动转换为 CP 错误联合
-    Napi.checkStatus(NapiStatus.Ok)?;
+pub fn demoMockRuntime() {
+    let env = NapiEnvMock.init();
 
-    const status_str = Napi.statusName(NapiStatus.PendingException); // "napi_pending_exception"
-    const type_str = Napi.valueTypeName(NapiValueType.BigInt);       // "bigint"
-    const elem_bytes = Napi.typedArrayElementSize(NapiTypedArrayType.Float64); // 8
+    // 1. HandleScope & EscapableHandleScope
+    const outer = env.openHandleScope().?;
+    const esc = env.openEscapableHandleScope().?;
+    const s = env.createStringUtf8("hello_napi").?;
+    const escaped = env.escapeHandle(esc, s).?;
+    * = env.closeEscapableHandleScope(esc);
+
+    // 2. Object 属性与 Reference 引用计数
+    const obj = env.createObject().?;
+    * = env.setNamedProperty(obj, "msg", escaped);
+    const ref_id = env.createReference(obj, 1).?;
+    * = env.referenceRef(ref_id);   // count -> 2
+    * = env.referenceUnref(ref_id); // count -> 1
+    * = env.deleteReference(ref_id);
+
+    // 3. ThreadsafeFunction 队列调度
+    let tsfn = NapiThreadsafeFunctionState.init("bg_worker", 4, 1);
+    * = tsfn.call(42, NapiTsfnCallMode.NonBlocking);
+    * = tsfn.drainAll();
+    * = tsfn.releaseThread(NapiTsfnReleaseMode.Release);
+
+    * = env.closeHandleScope(outer);
 }
 ```
-
-### 2. 构造 C-ABI 模块描述符与属性描述符 (`NapiModule` / `NapiPropertyDescriptor`)
-
-```typescript
-import { Napi, NapiPropertyAttributes, NapiAddonRegistry } from "cap:napi";
-
-pub fn demoDescriptors() {
-    const mod_name = "fast_hash_addon";
-    const file_name = "fast_hash.cp";
-    const mod_desc = Napi.createModuleDescriptor(mod_name.ptr, file_name.ptr, 0, null);
-
-    const fn_name = "sha256Hex";
-    const prop = Napi.createPropertyDescriptor(fn_name.ptr, NapiPropertyAttributes.DefaultMethod);
-
-    // 离线插件元数据注册表
-    let registry = NapiAddonRegistry.init();
-    * = registry.register("fast_hash_addon", "fast_hash.node", 0);
-    if (info := registry.find("fast_hash_addon")) {
-        // info.napi_version == 9
-    }
-}
-```
-
-### 3. 在宿主 Node-API 环境中桥接 JS 值
-
-当 CP 编译为动态共享库（`.node` / `.so`）并加载到 Bun 或 Node.js 进程时，可直接使用 `Napi` 安全封装（自动传播 `NapiError` 与 `defer` 关闭句柄作用域）：
-
-```typescript
-import { Napi, NapiEnv, NapiValue } from "cap:napi";
-
-pub fn createJsResult(env: NapiEnv, sum: i32): !NapiValue {
-    const scope = Napi.openHandleScope(env)?;
-    defer Napi.closeHandleScope(env, scope) catch {};
-
-    const num = Napi.createInt32(env, sum)?;
-    const t = Napi.typeofValue(env, num)?; // NapiValueType.Number
-    return num;
-}
-```
-
----
-
-## 三、 与 Node.js C/C++ N-API & Bun N-API 对照表
-
-| 特性 | C/C++ `node-addon-api` | Bun `src/napi/napi.zig` | CP (`cap:napi`) |
-|---|---|---|---|
-| 头文件依赖 | 需安装 `node_api.h` / `node-gyp` | 内嵌 C 头文件 + Zig extern | 纯 CP `@c struct` 内建定义，零外部头文件依赖 |
-| 错误处理 | 手动 `if (status != napi_ok)` 或 C++ 异常 | 返回 `napi_status` 枚举 | `Napi.checkStatus(st)?` 强类型错误联合传播 |
-| 句柄作用域安全 | `Napi::HandleScope` RAII | 手动 `close` | `defer Napi.closeHandleScope(env, scope)` 确定性释放 |
-| ABI 兼容性 | Node-API v9 | Node-API v9 | 与 Node.js / Bun 共享同一套二进制 C-ABI 布局 |

@@ -1387,3 +1387,16 @@ hotfix: resolve keyword conflict for "test" and prevent redundant re-export of i
 - **Stage 4 (`cpc/src/sema.rs`: 7,310 行 -> 7 文件)**：拆为 `sema/{mod,macros,decl,stmt_expr,safety,coerce,type_infer}.rs`（全员 <= 1,407 行）。
 - **Stage 5 (`cpc/src/codegen/types.rs`: 2,927 行 -> 4 文件)**：拆为 `codegen/types/{mod,infer_cp,infer_zig,map_type}.rs`（全员 <= 1,305 行）。
 - **门禁脚本**：新增 `scripts/check_cpc_size.sh` 文件体积检查脚本；全部 5 个阶段均通过 10 套核心测试 **10/10 确定性 SHA256 逐字节零差异验证** + 端到端 `cap test` 全绿回归。
+
+### 2026-11-20（第二批 8 大核心标准库对标 Bun 深度补全里程碑：md/html/json/ws + shell/napi/elf/logger）
+- **第一路 (`lib/md`, `lib/html`, `lib/json`, `lib/ws`)**：
+  - `lib/md/`: 新增 `ast.cp` 与 `parser.cp`（1,629 行），实现完整 CommonMark + GFM 引擎（ATX/Setext 标题 + 去重 `headingIds`、围栏/缩进代码、嵌套引用/有序无序列表、GFM 表格含 `\|` 转义、任务列表、删除线、多反引号行内代码、链接/图片/引用定义、自动链接与 XSS 安全转义）。
+  - `lib/html/`: 新增 `tokenizer.cp`（HTML5 全量词法器 + `<script>`/`<style>` RawText 模式），升级 `escape.cp`（86 个命名实体 + 十/十六进制 Emoji 实体），升级 `selector.cp`（复合选择器与栈追踪 `HtmlRewriter` 全量元素操作）。
+  - `lib/json/`: 升级 `parser.cp`（SIMD 零拷贝快路径 + RFC 8259 完整转义与 UTF-16 代理对 4 字节 UTF-8 Emoji 解码 + 严格拒绝前导零/尾随逗号/非法控制字符 + 嵌套深度保护）；新增 `serializer.cp`（`stringify`/`stringifyPretty`）；`value.cp` 新增 RFC 6901 `pointer` 与键序无关 `equals`。
+  - `lib/ws/`: 升级 `opcode.cp`/`mask.cp`（16B SIMD 异或掩码）/`frame.cp`（RSV/64-bit/控制帧校验与 ClosePayload）；新增 `handshake.cp`（基于 `cap:crypto` SHA-1 + Base64 真实计算 `Sec-WebSocket-Accept`）与 `assembler.cp`（多帧分片重组、交错控制帧与 Auto-Pong 状态机）。
+- **第二路 (`lib/shell`, `lib/napi`, `lib/elf`, `lib/logger`)**：
+  - `lib/shell/`: 新增 `env.cp`（`ShellEnv`、`DirStack`、单/双引号区分与 `${VAR:-/:=/:+/#}` 展开）；升级 `lexer.cp`/`parser.cp`/`builtin.cp`/`exec.cp` 支持 23 条进程内 Builtin（`echo`/`printf`/`cat`/`test`/`[`/`cd`/`pushd`/`popd`/`env`/`export`/`unset`/`head`/`wc`/`mkdir`/`rm` 等）、左结合 `&&`/`||`/`;` 短路及 `<`/`>`/`>>`/`2>`/`2>&1`/`&>` 真实文件与内存重定向。
+  - `lib/napi/`: 补齐全部 24 项 `NapiStatus`、`Float16`、完整 N-API v9 结构体；新增 `runtime.cp`（819 行：`HandleScope`、`Reference`、`AsyncWork`、`ThreadsafeFunction` 环形队列与离线 `NapiEnvMock`）。
+  - `lib/elf/`: 新增 `elf64.cp`（653 行：`Elf64File` 完整解析 Phdr/Shdr/Symtab/Strtab/Dynamic `DT_NEEDED`/`soname`/`rpath`）与 `ExeFormat.detect`（ELF32/64、Mach-O 32/64/Fat、PE、WASM、Shebang），实测解析当前 `/data/dev/cp/cap/bin/cpc`。
+  - `lib/logger/`: 升级 `logger.cp` 支持 `LineIndex` $O(\log N)$ 行缓存、跨文件 `DiagNote` 副定位标尺、`max_errors` 熔断器、`merge` 与 `formatJson` 机器可读输出。
+- **文档与测试**：同步更新 8 份 `docs/<lib>/<lib>.md`，新增 `cap/test/test_md_html_json_ws_deep.cp` 与 `cap/test/test_shell_napi_elf_logger_deep.cp`；6/6 联合回归套件 100% PASS，全库 414/414 文件 `// Source:` 100% 合规。

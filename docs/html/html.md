@@ -1,21 +1,22 @@
-# CP 标准库：HTML 实体编解码、CSS 选择器与流式重写器手册 (`cap:html`)
+# CP 标准库：HTML5 Tokenizer、实体编解码、选择器与 HTMLRewriter 手册 (`cap:html`)
 
 ## 一、 架构总览与设计准则
 
-`cap:html` 是 CP 语言官方内置的 HTML 文本处理与流式重写标准库，吸收自 Bun 的 HTMLRewriter 绑定（`/data/dev/bun/src/lolhtml_sys/lol_html.cp`）与实体转义子系统（`/data/dev/bun/src/md/entity.cp`），为 Web 服务端渲染（SSR）、模板内容防注入过滤、网页爬虫文本抽取与边缘节点 HTML 改写提供零堆分配原语。
+`cap:html` 是 CP 语言官方内置的 HTML5 解析与流式重写标准库，对标 Bun 的 `HTMLRewriter`（`/data/dev/bun/src/lolhtml_sys/lol_html.cp`）与实体转义子系统（`/data/dev/bun/src/md/entity.cp`），包含完整的 HTML5 Tokenizer、70+ 命名及十进制/十六进制数值实体编解码器、复合 CSS 选择器引擎以及支持元素增删改的流式 `HtmlRewriter`。
 
 ```text
-┌────────────────────────────────────────────────────────────────────────┐
-│                        CP 用户层应用 (Application)                      │
-├───────────────────────────────────┬────────────────────────────────────┤
-│     HTML 实体转义与还原            │   CSS 选择器解析与流式标签重写      │
-│  HtmlEscape.needsEscape()         │  CssSelector.parse()               │
-│  HtmlEscape.escapeToBuf()         │  CssSelector.matchesTag()          │
-│  HtmlEscape.unescapeToBuf()       │  HtmlRewriter.stripTags()          │
-│                                   │  HtmlRewriter.renameTag()          │
-├───────────────────────────────────┴────────────────────────────────────┤
-│      零拷贝快路径扫描 (Zero-Copy Fast Path) + 栈缓冲输出 ([]u8)         │
-└────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────┐
+│                         CP 用户层应用 (Application)                        │
+├──────────────────────────┬─────────────────────────┬──────────────────────┤
+│   HTML5 词法分词器        │   复合 CSS 选择器引擎     │   HTMLRewriter       │
+│  HtmlTokenizer           │  CssSelector.parse()    │  on(sel, handler)    │
+│  StartTag / EndTag       │  tag#id.c1.c2[a=v]      │  HtmlElement API:    │
+│  SelfClosing / Comment   │  [a^=v] [a$=v] [a*=v]   │  setTagName / attr   │
+│  Doctype / CDATA         │  matchesToken()         │  before/after/prepend│
+│  RawText (<script/style>)│  matchesAttributes()    │  append/replaceWith  │
+├──────────────────────────┴─────────────────────────┴──────────────────────┤
+│        HtmlEscape (快路径转义 + 86 个 HTML5 命名实体 + &#NNN; / &#xHHH;)     │
+└───────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### 1. 模块文件拓扑与谱系来源
@@ -23,45 +24,46 @@
 | 文件路径 | 上游谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
 | `lib/html/index.cp` | `// Source: /data/dev/bun/src/lolhtml_sys/lol_html.cp` | `cap:html` 统一公开导出入口 |
-| `lib/html/selector.cp` | `// Source: /data/dev/bun/src/lolhtml_sys/lol_html.cp` | `CssSelector` 复合选择器解析器与 `HtmlRewriter` 流式标签剥离/重命名器 |
-| `lib/html/escape.cp` | `// Source: /data/dev/bun/src/md/entity.cp` | `HtmlEscape` 零拷贝快路径 HTML 实体转义与反转义器 |
-
-### 2. 核心设计特性
-
-1. **零拷贝快路径转义（Fast-Path Escape）**：
-   - `HtmlEscape.escapeToBuf` 先执行极速单遍扫描 `needsEscape`；当输入不含 `&`、`<`、`>`、`"`、`'` 时跳过逐字符实体替换分支，直接拷贝或返回原切片。
-2. **标准 HTML5 核心实体全覆盖**：
-   - 支持 `&amp;`、`&lt;`、`&gt;`、`&quot;`、`&#39;` 以及 XML 兼容实体 `&apos;` 的双向转义与还原，有效防护模板注入与畸形标签闭合问题。
-3. **复合 CSS 选择器解析与流式 HTML 改写**：
-   - `CssSelector.parse` 支持标签（`div`）、通配符（`*`）、ID（`a#main`）、类（`span.highlight`）与属性表达式（`input.field[type="email"]`）的组合拆解；`HtmlRewriter` 提供单遍流式 `stripTags` 与 `renameTag`，无需构建整棵 DOM 树。
+| `lib/html/tokenizer.cp` | `// Source: /data/dev/bun/src/lolhtml_sys/lol_html.cp` | `HtmlTokenizer`、`HtmlToken`、`HtmlTokenKind`、`HtmlAttribute` HTML5 词法引擎 |
+| `lib/html/selector.cp` | `// Source: /data/dev/bun/src/lolhtml_sys/lol_html.cp` | `CssSelector` 复合选择器、`HtmlElement` 变更句柄与 `HtmlRewriter` 流式重写器 |
+| `lib/html/escape.cp` | `// Source: /data/dev/bun/src/md/entity.cp` | `HtmlEscape` 快路径转义与 HTML5 命名/数值实体编解码 |
 
 ---
 
 ## 二、 核心 API 详解
 
-### 1. `HtmlEscape` 实体编解码器
+### 1. `HtmlTokenizer` 与 `HtmlToken` (HTML5 Tokenizer)
+
+- `HtmlTokenKind`：`StartTag`、`EndTag`、`SelfClosingTag`、`Text`、`Comment`、`Doctype`、`Cdata`。
+- 正确解析双引号 `attr="v"`、单引号 `attr='v'`、无引号 `attr=v` 及布尔属性 `disabled`；
+- 对 `<script>`、`<style>`、`<textarea>`、`<title>` 进入 `RawText` 模式，确保内部 JS/CSS 代码中的 `<` / `>`（如 `if (a < b)`）不会被误拆分为 HTML 标签；
+- 自动识别 HTML5 Void 元素（`br`、`img`、`input`、`meta`、`link`、`hr` 等）。
 
 | API 签名 | 说明 |
 | :--- | :--- |
-| `HtmlEscape.needsEscape(input): bool` | 检测输入切片是否包含任意需转义字符（`&`、`<`、`>`、`"`、`'`） |
-| `HtmlEscape.escapeToBuf(input, out_buf): []const u8` | 将特殊字符转义为标准 HTML 实体写入 `out_buf` 并返回有效切片 |
-| `HtmlEscape.unescapeToBuf(input, out_buf): []const u8` | 将 `&amp;`、`&lt;`、`&gt;`、`&quot;`、`&#39;`、`&apos;` 还原为原始字符 |
+| `HtmlTokenizer.init(html): HtmlTokenizer` | 创建流式 HTML5 分词器 |
+| `tok.next(allocator): (HtmlToken?)!` | 读取下一个 `HtmlToken`（结束返回 `null`） |
+| `HtmlTokenizer.tokenizeAll(allocator, html): ([]HtmlToken)!` | 一次性分词为完整 Token 切片 |
+| `token.getAttribute(name)` / `hasAttribute(name)` | 大小写不敏感查询标签属性 |
 
-### 2. `CssSelector` 选择器结构
+### 2. `HtmlEscape` 实体编解码器
 
-字段：`tag_name: []const u8`、`id_name: []const u8`、`class_name: []const u8`、`attr_name: []const u8`、`attr_val: []const u8`。
-
-| API 签名 | 说明 |
-| :--- | :--- |
-| `CssSelector.parse(sel): CssSelector` | 解析简单或复合 CSS 选择器（支持 `#id`、`.class`、`[attr]`、`[attr="val"]`） |
-| `selector.matchesTag(tag): bool` | 判断给定标签名是否与当前选择器匹配（空标签或 `*` 匹配任意标签） |
-
-### 3. `HtmlRewriter` 流式重写器
+- 支持 `&amp;`、`&lt;`、`&gt;`、`&quot;`、`&apos;`、`&nbsp;`、`&copy;`、`&reg;`、`&trade;`、`&mdash;`、`&ndash;`、`&hellip;`、`&euro;`、希腊字母、箭头、数学符号等 **86 个高频 HTML5 命名实体**（二分查找）；
+- 支持十进制（`&#65;`）与十六进制（`&#x1F600;` -> 4 字节 UTF-8 Emoji）数值实体解码，并按 HTML5 规范将非法代理项/越界码点替换为 `U+FFFD`。
 
 | API 签名 | 说明 |
 | :--- | :--- |
-| `HtmlRewriter.stripTags(html, out_buf): []const u8` | 流式剥离所有 `<...>` HTML 标签，提取纯文本内容到 `out_buf` |
-| `HtmlRewriter.renameTag(html, old_tag, new_tag, out_buf): []const u8` | 流式将匹配的 `<old_tag ...>` 与 `</old_tag>` 重命名为 `<new_tag ...>` 与 `</new_tag>`（保留原属性） |
+| `HtmlEscape.needsEscape(input): bool` | 快速检测是否包含需转义字符 |
+| `HtmlEscape.escapeToBuf(input, out_buf)` / `escapeAlloc(alloc, input)` | HTML 特殊字符转义 |
+| `HtmlEscape.unescapeToBuf(input, out_buf)` / `unescapeAlloc(alloc, input)` | 命名 + 十进制 + 十六进制实体解码 |
+
+### 3. `CssSelector`、`HtmlElement` 与 `HtmlRewriter`
+
+- `CssSelector.parse(sel)` 支持标签（`a`）、通配符（`*`）、ID（`#main`）、多 Class（`.btn.primary`）、复合组合（`div.card#hero`）与多属性匹配（`[href]`、`[type="text"]`、`[href^="https"]`、`[href$=".pdf"]`、`[href*="cp"]`）。
+- `HtmlElement` 回调方法（在 `rw.on(selector, handler)` 中使用）：
+  - 属性与标签：`tagName()`、`setTagName(name)`、`getAttribute(name)`、`hasAttribute(name)`、`setAttribute(name, val)`、`removeAttribute(name)`；
+  - 内容与节点改写：`before(content, is_html)`、`after(content, is_html)`、`prepend(content, is_html)`、`append(content, is_html)`、`setInnerContent(content, is_html)`、`replaceWith(content, is_html)`（另有单参 `replaceHtml` / `replaceText`）、`remove()`、`removeAndKeepContent()`。
+- 静态零堆便捷工具保留：`HtmlRewriter.stripTags(html, out_buf)` 与 `HtmlRewriter.renameTag(html, old_tag, new_tag, out_buf)`。
 
 ---
 
@@ -69,51 +71,27 @@
 
 ```typescript
 const std = @import("std");
-import { HtmlEscape, CssSelector, HtmlRewriter } from "cap:html";
+import { HtmlEscape, HtmlElement, HtmlRewriter } from "cap:html";
 
-pub fn demoHtml() {
-    // 1. HTML 实体转义与还原
-    const unsafe_html = "<div class=\"card\">Tom & 'Jerry'</div>";
-    let esc_buf: [256]u8 = [0; 256];
-    const escaped = HtmlEscape.escapeToBuf(unsafe_html, esc_buf[0..256]);
-    // => "&lt;div class=&quot;card&quot;&gt;Tom &amp; &#39;Jerry&#39;&lt;/div&gt;"
+fn enhanceLink(el: *HtmlElement) {
+    el.setAttribute("rel", "noopener noreferrer");
+    el.setTagName("a");
+    el.prepend("[Link] ", false);
+}
 
-    let unesc_buf: [256]u8 = [0; 256];
-    const restored = HtmlRewriter.stripTags(
-        HtmlEscape.unescapeToBuf(escaped, unesc_buf[0..256]),
-        esc_buf[0..256],
-    );
-    // => "Tom & 'Jerry'"
-    _ = restored;
+pub fn demoHtmlRewriter(): !void {
+    const allocator = std.heap.page_allocator;
 
-    // 2. 复合 CSS 选择器解析与标签匹配
-    const sel = CssSelector.parse("input.search[type=\"text\"]");
-    const is_input = sel.matchesTag("input"); // true
-    // sel.class_name == "search", sel.attr_name == "type", sel.attr_val == "text"
-    _ = is_input;
+    let rw = HtmlRewriter.init(allocator);
+    defer rw.deinit();
+    try rw.on("a.external[href^=\"https://\"]", enhanceLink);
 
-    // 3. 流式标签重命名（保留属性）
-    let out_buf: [256]u8 = [0; 256];
-    const rewritten = HtmlRewriter.renameTag(
-        "<div id=\"app\">Hello CP</div>",
-        "div",
-        "section",
-        out_buf[0..256],
-    );
-    // => "<section id=\"app\">Hello CP</section>"
-    _ = rewritten;
+    const out = try rw.transform("<p><a class=\"external\" href=\"https://cp-lang.org\">CP</a></p>");
+    defer allocator.free(out);
+    // => <p><a class="external" href="https://cp-lang.org" rel="noopener noreferrer">[Link] CP</a></p>
+
+    let buf: [64]u8 = [0; 64];
+    const emoji = HtmlEscape.unescapeToBuf("Hi &#x1F600; &amp; &copy;", &buf);
+    * = emoji;
 }
 ```
-
----
-
-## 四、 与 Bun `src/lolhtml_sys/` & `Bun.escapeHTML` 对照表
-
-| 功能分类 | Bun (`src/lolhtml_sys/` & `src/md/entity.cp`) | CP 标准库 (`cap:html`) |
-| :--- | :--- | :--- |
-| **HTML 实体转义** | `Bun.escapeHTML(str)` / `src/md/entity.cp` | `HtmlEscape.escapeToBuf(input, out_buf)` |
-| **转义快路径检测** | 内部 SIMD 特殊字符探测 | `HtmlEscape.needsEscape(input)` |
-| **HTML 实体还原** | `src/md/entity.cp` | `HtmlEscape.unescapeToBuf(input, out_buf)` |
-| **CSS 选择器解析** | `lol_html_selector_parse` (`src/lolhtml_sys/lol_html.cp`) | `CssSelector.parse(sel)` / `matchesTag(tag)` |
-| **HTML 标签重命名** | `new HTMLRewriter().on(sel, { element(e) { e.tagName = ... } })` | `HtmlRewriter.renameTag(html, old_tag, new_tag, out_buf)` |
-| **HTML 纯文本抽取** | `HTMLRewriter` 文本节点收集 | `HtmlRewriter.stripTags(html, out_buf)` |

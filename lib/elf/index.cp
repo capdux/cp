@@ -3,4 +3,5 @@
 // Unified Public Exports for cap:elf
 
 export * from "./format.cp";
+export * from "./elf64.cp";
 export * from "./macho_pe.cp";

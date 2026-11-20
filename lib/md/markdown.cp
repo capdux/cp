@@ -4,6 +4,8 @@
 // Absorbed from Bun src/md/root.cp, html_renderer.cp & ansi_renderer.cp
 
 const std = @import("std");
+import { MarkdownOptions, MdBlock, MdRenderer } from "./ast";
+import { MdDocument, MdParser } from "./parser";
 
 pub struct MdOptions {
     tables: bool = true;
@@ -12,26 +14,45 @@ pub struct MdOptions {
     autolinks: bool = true;
     tag_filter: bool = false;
     heading_ids: bool = false;
+    gfm: bool = true;
+    sanitize_html: bool = false;
 
     pub static fn commonmark(): MdOptions {
-        return MdOptions {
+        return MdOptions{
             tables: false,
             strikethrough: false,
             tasklists: false,
             autolinks: false,
             tag_filter: false,
             heading_ids: false,
+            gfm: false,
+            sanitize_html: false,
         };
     }
 
     pub static fn github(): MdOptions {
-        return MdOptions {
+        return MdOptions{
             tables: true,
             strikethrough: true,
             tasklists: true,
             autolinks: true,
             tag_filter: true,
             heading_ids: true,
+            gfm: true,
+            sanitize_html: true,
+        };
+    }
+
+    pub fn toMarkdownOptions(): MarkdownOptions {
+        return MarkdownOptions{
+            gfm: _.gfm,
+            tables: _.tables,
+            strikethrough: _.strikethrough,
+            tasklists: _.tasklists,
+            autolinks: _.autolinks,
+            sanitizeHtml: _.sanitize_html,
+            headingIds: _.heading_ids,
+            tag_filter: _.tag_filter,
         };
     }
 }
@@ -47,6 +68,35 @@ pub struct Markdown {
             i += 1;
         }
         return pos + s.len;
+    }
+
+    /// Parses `md_text` into a structured CommonMark / GFM AST (`MdDocument`).
+    pub static fn parse(allocator: std.mem.Allocator, md_text: []const u8, opts: MarkdownOptions): MdDocument! {
+        return MdParser.parse(allocator, md_text, opts);
+    }
+
+    /// Parses and renders `md_text` to full CommonMark / GFM HTML using `MarkdownOptions`.
+    pub static fn toHtml(allocator: std.mem.Allocator, md_text: []const u8, opts: MarkdownOptions): ([]u8)! {
+        let doc = MdParser.parse(allocator, md_text, opts)?;
+        defer doc.deinit();
+        return doc.toHtml();
+    }
+
+    /// Parses and renders `md_text` to full GFM HTML using default options.
+    pub static fn render(allocator: std.mem.Allocator, md_text: []const u8, opts: MarkdownOptions): ([]u8)! {
+        return Markdown.toHtml(allocator, md_text, opts);
+    }
+
+    /// Parses `md_text` and traverses its AST using a custom `MdRenderer`.
+    pub static fn renderWithRenderer(
+        allocator: std.mem.Allocator,
+        md_text: []const u8,
+        opts: MarkdownOptions,
+        custom_renderer: MdRenderer,
+    ): ! {
+        let doc = MdParser.parse(allocator, md_text, opts)?;
+        defer doc.deinit();
+        doc.walk(custom_renderer);
     }
 
     /// Renders inline Markdown (`**bold**`, `*em*`, `` `code` ``) into HTML inside `out`.
@@ -88,7 +138,8 @@ pub struct Markdown {
         return pos;
     }
 
-    /// Renders Markdown headings (`#`..`######`), unordered lists (`- `), and paragraphs to HTML in `out_buf`.
+    /// Zero-heap fast-path HTML renderer for simple ATX headings, flat list items, and paragraphs.
+    /// Preserved for zero-heap compatibility; use `Markdown.toHtml` / `Markdown.render` for full CommonMark + GFM AST rendering.
     pub static fn renderHtml(md_text: []const u8, out_buf: []u8): []const u8 {
         let pos: usize = 0;
         let line_iter = std.mem.splitScalar(u8, md_text, '\n');

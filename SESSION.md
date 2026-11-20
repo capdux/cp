@@ -2533,3 +2533,8 @@
 ### 2026-11-20（极速热修 `bun_agy` 工单 `task-bun-20261120-return-struct-rawzig-fallback` 并结单交付）
 - **协同事件**：收到 `bun_agy` 投递的 `task-bun-20261120-return-struct-rawzig-fallback`（泛型函数 `return struct { ... }` 内 `callconv(.c)` 省略 `void` 与嵌套 `struct` 触发 `rawzig` 静默透传）。
 - **修复与交付**：借助刚拆完的 `cpc` 模块化架构秒级定位并修复 4 处根因：`parser/decl.rs` 吸收 `callconv/align/linksection/addrspace` 函数修饰符、`parser/primary.rs` 支持无点号位置元组、`parser/expr.rs` + `codegen/expr/error_flow.rs` 支持 `?? { <stmt>... }`、`codegen/decl_class.rs` 让 `lower_extra_zig_member` 正常 lower 嵌套 `Class`/`Enum`/`TypeAlias`。`repro_return_struct_rawzig_fallback.cp` 100% 通过 `zig ast-check`，真实 `node_fs.cp` 残留透传 `static fn` 由 64 降至 3，已 `resolve` + `ack` 结单并提交 Git。
+
+### 2026-11-20（双子智能体并行完成第二批 8 大标准库对标 Bun 深度审核补全并固化提交）
+- **用户指令**：切回下一批标准库，对比 Bun 仔细审核功能是否完备，启动 2 个子智能体加快速度。
+- **执行成果**：
+  - Subagent A（`md`/`html`/`json`/`ws`）与 Subagent B（`shell`/`napi`/`elf`/`logger`）均已高质量完工并回收，累计净增超 11,000 行纯 CP 代码、8 份专著文档同步更新、新增 2 套综合深度测试；6/6 联合测试套件 100% PASS，全仓 414/414 `.cp` 溯源头 100% 合规，执行一次性 Git Commit 固化。

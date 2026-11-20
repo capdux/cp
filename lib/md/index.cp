@@ -2,5 +2,7 @@
 // lib/md/index.cp
 // Unified Public Exports for cap:md
 
-export * from "./markdown.cp";
 export * from "./table.cp";
+export * from "./ast.cp";
+export * from "./parser.cp";
+export * from "./markdown.cp";
