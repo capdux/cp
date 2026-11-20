@@ -1379,3 +1379,11 @@ hotfix: resolve keyword conflict for "test" and prevent redundant re-export of i
   - `lib/io/`: 补全 `BufferedReader`（`readLine`/`readUntil`/`peek`/`discard`/`readFull`）、`BufferedWriter`（阈控刷盘与大块直通）、`LimitedReader`/`MultiReader`/`TeeReader`/`DiscardWriter`/`CountingWriter`/`ChunkedBuffer`。
   - `lib/sys/` & `lib/errno/`: 零 `std.posix` 残留全面适配 Zig 0.17 `std.c`/`std.os.linux`，新增 `fs_ops.cp` 与 `process.cp`；`lib/errno/` 扩充至 135 项完整 POSIX/Linux 错误码、全量英文 `description()` 与语义判定。
 - **文档与测试**：同步更新 12 份 `docs/<lib>/<lib>.md` 专著文档，新增 3 套综合深度测试（`test_glob_semver_dotenv_patch_deep.cp`、`test_http_router_sql_deep.cp`、`test_path_sourcemap_io_sys_errno_deep.cp`），10/10 联合回归测试套件 100% PASS，全库 405/405 `.cp` 文件 `// Source:` 100% 合规。
+
+### 2026-11-20（`cpc` 编译器五阶段零回归模块化重构收官）
+- **Stage 1 (`cpc/src/codegen/mod.rs`: 4,330 -> 1,499 行)**：拆分为 `runtime_emit.rs`、`decl_enum.rs`、`decl_class.rs`、`zig_escape.rs` 并抽离独立 Zig 模板 `cpc/src/codegen/runtime/json.zig`（`include_str!`）。
+- **Stage 2 (`cpc/src/codegen/expr.rs`: 4,957 行 -> 6 文件)**：打碎 4,631 行巨型 `generate_expr`，拆为 `expr/{mod,call,builtin,error_flow,ops,control}.rs`。
+- **Stage 3 (`cpc/src/parser.rs`: 9,568 行 -> 8 文件)**：拆为 `parser/{mod,decl,container,types,stmt,pattern,expr,primary}.rs`（全员 < 2,000 行）。
+- **Stage 4 (`cpc/src/sema.rs`: 7,310 行 -> 7 文件)**：拆为 `sema/{mod,macros,decl,stmt_expr,safety,coerce,type_infer}.rs`（全员 <= 1,407 行）。
+- **Stage 5 (`cpc/src/codegen/types.rs`: 2,927 行 -> 4 文件)**：拆为 `codegen/types/{mod,infer_cp,infer_zig,map_type}.rs`（全员 <= 1,305 行）。
+- **门禁脚本**：新增 `scripts/check_cpc_size.sh` 文件体积检查脚本；全部 5 个阶段均通过 10 套核心测试 **10/10 确定性 SHA256 逐字节零差异验证** + 端到端 `cap test` 全绿回归。

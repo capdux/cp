@@ -1714,3 +1714,12 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
   3. 系统与底层基础库（`path`/`sourcemap`/`io`/`sys`/`errno`）：补全 Windows UNC/`toNamespacedPath`、VLQ64/UTF-16/SourceMap 拼接、6 大流组合器与动态 `ChunkedBuffer`、全 Zig 0.17 系统调用及 135 项完整 POSIX `errno`。
 - 跨模块合流验证：通过将 `lib/sys` 顶层导出定名为 `dupFd`（容器方法保留 `.dup`）消除与 `lib/glob/walker.cp` 局部变量的命名碰撞，最终 10 套深度与既有联合测试全部 100% PASS，405/405 溯源合规。
 - 下一步规划（已获用户认可）：进入 `cpc` 编译器 5 阶段零回归模块化大拆分（Stage 1 `codegen/mod.rs` + `runtime/*.zig` -> Stage 2 `codegen/expr/` -> Stage 3 `parser/` -> Stage 4 `sema/` -> Stage 5 `codegen/types/`），每次拆分前做 `.zig` 输出 SHA256 快照比对确保 0 字节差异。
+
+### 第十一阶段：`cpc` 编译器五阶段零回归模块化大拆分（消除 5 座超级巨石文件）
+- 彻底拆分 `cpc/src/` 中最痛的 5 个超大文件（占全编译器 70%+ 代码量）：
+  1. `codegen/mod.rs` (4,330 -> 1,499 行)：拆出 `runtime_emit.rs`、`decl_enum.rs`、`decl_class.rs`、`zig_escape.rs` 及首个外部 `.zig` 运行时模板 `codegen/runtime/json.zig`；
+  2. `codegen/expr.rs` (4,957 行)：通过保持原模式绑定语义的 `match expr` 委派策略，将 4,631 行 `generate_expr` 无痛拆为 `expr/{mod,call,builtin,error_flow,ops,control}.rs`；
+  3. `parser.rs` (9,568 行)：利用 Rust 子模块可访问父模块私有成员特性 + `pub(super)` 升级，机械拆为 8 个职责单一文件；
+  4. `sema.rs` (7,310 行)：拆为 7 个高内聚子模块（全部 <= 1,407 行）；
+  5. `codegen/types.rs` (2,927 行)：拆为 4 个子模块（`mod`/`infer_cp`/`infer_zig`/`map_type`）。
+- 零回归保障：每个 Stage 均对 10 套代表性测试执行确定性排序行 SHA256 校验（**10/10 0 字节差异**），并落地 `scripts/check_cpc_size.sh` 防反弹门禁。

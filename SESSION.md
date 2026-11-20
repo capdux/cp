@@ -2526,3 +2526,6 @@
 - **执行成果**：
   - 3 个并行子智能体全部高质量交付并已回收：累计补全 `glob`/`semver`/`dotenv`/`patch`、`http`/`router`/`sql`、`path`/`sourcemap`/`io`/`sys`/`errno` 12 大标准库与 12 份专著文档，新增 3 套深度综合测试；10/10 联合回归测试套件 100% PASS，405/405 `.cp` 文件 `// Source:` 100% 合规，执行干净 Git Commit 固化。
   - 立即启动 `cpc` 编译器五阶段零回归模块化拆分（Stage 1 起步）。
+
+### 2026-11-20（完成 `cpc` 编译器 Stage 1 ~ Stage 5 全量零回归模块化拆分）
+- **执行成果**：按用户认可的五阶段方案，连续完成 `codegen/mod.rs`（4,330 -> 1,499 行 + `runtime/json.zig`）、`codegen/expr.rs`（4,957 行 -> 6 文件）、`parser.rs`（9,568 行 -> 8 文件）、`sema.rs`（7,310 行 -> 7 文件）与 `codegen/types.rs`（2,927 行 -> 4 文件）全部拆分；每个阶段均通过 10/10 确定性 SHA256 0 字节差异校验与端到端 `cap test` 验证，并新增防反弹脚本 `scripts/check_cpc_size.sh` 固化提交。
