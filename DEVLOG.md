@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:perf` 纯 CP 高分辨率作用域计时、P95/P99 热点聚合与 Chrome Trace Event JSON 导出引擎（吸收对标 Bun `src/perf/`，详见 `doc/lib/perf.md`）（5/5 PASS，文档直写 `doc/lib/perf.md`）
+- **核心设计**：支持确定性虚拟时钟注入实现无抖动测试；`PerfRecorder` 严格校验空名称、未配对 `end` 与最大容量限制，并在 `std.testing.allocator` 下全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:paths` 纯 CP POSIX/Windows 双风格路径解析、规范化与防目录穿越安全边界引擎（吸收对标 Bun `src/paths/`，详见 `doc/lib/paths.md`）（5/5 PASS，文档直写 `doc/lib/paths.md`）
 - **核心设计**：`parse`/`dirname`/`basename`/`extname` 保持零堆切片视图；`isSubpath`/`safeJoin` 在规范化后按分段对比，免疫 `/var/www` vs `/var/www2` 前缀陷阱并拦截空字节与绝对路径/盘符注入。
 
