@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:http2_frame` 纯 CP RFC 9113 HTTP/2 9 字节帧头、10 种帧编解码、半包黏包流式拆包与流控状态机引擎（支持 `cap.http2_frame` 自动动态挂载，详见 `doc/lib/http2_frame.md`）（5/5 PASS，文档直写 `doc/lib/http2_frame.md`）
+- **核心设计**：`H2StreamDecoder` 对 `PING`/`RST_STREAM`/`WINDOW_UPDATE` 执行定长约束与 `2^31-1` 窗口溢出检测，`H2ConnectionWindow` 精确跟踪多路复用流状态转移，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:grpc_wire` 纯 CP gRPC over HTTP/2 5 字节 Length-Prefixed 增量分帧、grpc-timeout 六单位与状态头编解码引擎（支持 `cap.grpc_wire` 自动动态挂载，详见 `doc/lib/grpc_wire.md`）（5/5 PASS，文档直写 `doc/lib/grpc_wire.md`）
 - **核心设计**：`GrpcStreamFramer` 严格校验 `compressed_flag <= 1` 与 `max_message_bytes` 防炸弹上限，全路径通过 `std.testing.allocator` 零泄漏验证。
 

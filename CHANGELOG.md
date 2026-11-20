@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:http2_frame` 纯 CP RFC 9113 HTTP/2 9 字节帧头、10 种帧编解码、半包黏包流式拆包与流控状态机引擎（支持 `cap.http2_frame` 自动动态挂载，详见 `doc/lib/http2_frame.md`）（5/5 PASS，自动动态挂载 `cap.http2_frame`）
+- **新增标准库**：`lib/http2_frame/{types,codec,decoder,window,index}.cp`，实现 RFC 9113 全 10 种帧类型编解码、`H2StreamDecoder` `1..7` 字节切片拆包、`FRAME_SIZE_ERROR` 校验及 `H2ConnectionWindow` 连接/流级流控窗口与状态机。
+- **新增文档与测试**：`doc/lib/http2_frame.md` 扁平文档与 `cap/test/test_http2_frame_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:grpc_wire` 纯 CP gRPC over HTTP/2 5 字节 Length-Prefixed 增量分帧、grpc-timeout 六单位与状态头编解码引擎（支持 `cap.grpc_wire` 自动动态挂载，详见 `doc/lib/grpc_wire.md`）（5/5 PASS，自动动态挂载 `cap.grpc_wire`）
 - **新增标准库**：`lib/grpc_wire/{status,headers,frame,index}.cp`，实现 17 种 `GrpcStatus`、`parseServiceMethodPath`、`grpc-timeout` 六单位防溢出编解码、`grpc-message` 百分号转义、`-bin` Base64 头及支持 `1..7` 字节切片拆包的 `GrpcStreamFramer`。
 - **新增文档与测试**：`doc/lib/grpc_wire.md` 扁平文档与 `cap/test/test_grpc_wire_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
