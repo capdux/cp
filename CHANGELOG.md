@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 升级加固 `cap:expr` 安全业务规则与公式表达式求值引擎（5/5 PASS，自动动态挂载 `cap.expr`）
+- **新增与重构**：`lib/expr/expr.cp` 替代旧 `value.cp`/`eval.cp`，实现完整词法与递归下降 AST 解析器、短路 `&&`/`||`、惰性三元条件、`ExprContext` 变量绑定、10 个纯内置函数及默认 64 层递归深度防护（`MaxDepthExceeded`）。
+- **更新文档与测试**：`doc/lib/expr.md` 扁平文档与 `cap/test/test_expr_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 升级加固 `cap:fsm` 确定性有限状态机 DFA、守卫回调与 GraphViz DOT 引擎（5/5 PASS，自动动态挂载 `cap.fsm`）
 - **新增与重构**：`lib/fsm/fsm.cp` 替代旧 `state_machine.cp`，实现 `StateMachine`（`GuardFn` 守卫、`onEnter`/`onExit`/`onTransition` 生命周期钩子、`history` 轨迹、BFS `reachableStates`/`findDeadEndStates` 死胡同检测与 `toDot` GraphViz 导出），并与 `circuit_breaker.cp`/`dag.cp` 经 `index.cp` 统一导出。
 - **更新文档与测试**：`doc/lib/fsm.md` 扁平文档与 `cap/test/test_fsm_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

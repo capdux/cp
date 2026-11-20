@@ -398,3 +398,6 @@
 
 ### 2026-11-21（`cap:fsm` 加固验收提交，顶替拉起 `cap:base58` 维持 2 路常规并行）
 - **执行成果**：`lib/fsm/`（5/5 PASS，`doc/lib/fsm.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/base58/`（Base58 / Base58Check / BIP-173 Bech32 & BIP-350 Bech32m 编码校验引擎），与 `lib/expr/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:expr` 加固验收提交，顶替拉起 `cap:ringhash` 维持 2 路常规并行）
+- **执行成果**：`lib/expr/`（5/5 PASS，`doc/lib/expr.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/ringhash/`（一致性哈希环、Jump Consistent Hash 与 Rendezvous 加权负载均衡引擎），与 `lib/base58/` 维持 2 路常规并行。

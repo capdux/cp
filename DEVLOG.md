@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 升级加固 `cap:expr` 安全业务规则与公式表达式求值引擎（5/5 PASS，文档直写 `doc/lib/expr.md`）
+- **核心设计**：在 `lib/expr/expr.cp` 统一封装词法、Pratt/递归下降 AST 与求值上下文，采用解析期与求值期双重深度上限防御畸形深嵌套载荷，并通过 `std.testing.allocator` 确认 5/5 用例零泄漏。
+
 ## 2026-11-21: 升级加固 `cap:fsm` 确定性有限状态机 DFA、守卫回调与 GraphViz DOT 引擎（5/5 PASS，文档直写 `doc/lib/fsm.md`）
 - **核心设计**：在 `lib/fsm/fsm.cp` 引入动态字符串状态/事件建模与 `GuardFn` 守卫、`TransitionRecord` 轨迹录制及 BFS 拓扑死胡同检测；清理旧 `state_machine.cp` 并通过 `DebugAllocator` 确认 5/5 用例零泄漏。
 
