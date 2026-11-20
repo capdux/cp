@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:segtree` Fenwick 树状数组与惰性传播线段树范围聚合引擎（5/5 PASS，文档直写 `doc/lib/segtree.md`）
+- **核心设计**：`LazySegmentTree` 严格区分 `has_assign` 与 `add_lazy` 标记优先级（`assign` 覆写旧 `add`，后续 `add` 直接叠加至 `assign_val`），经 120 轮交叉随机操作与暴力数组对拍 100% 一致。
+
 ## 2026-11-21: 新建 `cap:dsu` 路径压缩、带权差分约束与可回溯撤销并查集引擎（5/5 PASS，文档直写 `doc/lib/dsu.md`）
 - **核心设计**：在同一包内分场景提供迭代两遍路径压缩 `DisjointSet`、带权偏置关系 `WeightedDsu` 与无路径压缩历史栈 `RollbackDsu`（$O(\log N)$ 查找与 $O(1)$ 精确回滚），全程零泄漏。
 

@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:segtree` Fenwick 树状数组与惰性传播线段树范围聚合引擎（5/5 PASS，自动动态挂载 `cap.segtree`）
+- **新增标准库**：`lib/segtree/{segtree,index}.cp`，实现 $O(N)$ 建树 `FenwickTree`（含树上倍增 `lowerBoundPrefix`）与支持 `rangeAdd`/`rangeAssign` 惰性标记合成及 `sum`/`min`/`max` 查询的 `LazySegmentTree`。
+- **新增文档与测试**：`doc/lib/segtree.md` 扁平文档与 `cap/test/test_segtree_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:dsu` 路径压缩、带权差分约束与可回溯撤销并查集引擎（5/5 PASS，自动动态挂载 `cap.dsu`）
 - **新增标准库**：`lib/dsu/{dsu,index}.cp`，实现迭代两遍路径压缩 `DisjointSet`、差分约束 `WeightedDsu`（支持传递推导与 `ConflictConstraint` 拦截）以及支持 `snapshot`/`rollbackTo`/`undo` 的 `RollbackDsu`。
 - **新增文档与测试**：`doc/lib/dsu.md` 扁平文档与 `cap/test/test_dsu_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

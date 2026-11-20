@@ -449,3 +449,6 @@
 
 ### 2026-11-21（`cap:dsu` 验收合并提交，顶替拉起 `cap:diff3` 维持 2 路常规并行）
 - **执行成果**：`lib/dsu/`（5/5 PASS，`doc/lib/dsu.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/fuzzy/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/diff3/`（三方合并 diff3 冲突检测与自动融合引擎），与 `lib/segtree/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:segtree` 验收提交，顶替拉起 `cap:base85` 维持 2 路常规并行）
+- **执行成果**：`lib/segtree/`（5/5 PASS，`doc/lib/segtree.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/base85/`（ZeroMQ Z85 / Adobe Ascii85 / RFC 1924 紧凑二进制-ASCII 编码引擎），与 `lib/diff3/` 维持 2 路常规并行。
