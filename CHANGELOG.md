@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:selector` CSS3 选择器编译器与 DOM 树查询引擎（5/5 PASS，自动动态挂载 `cap.selector`）
+
+- 新建 [`lib/selector/`](file:///data/dev/cp/lib/selector/index.cp)（`selector.cp`、`index.cp`）：`CssSelector`（支持标签/`#id`/`.class`/`*`、6 种属性操作符、` ` / `>` / `+` / `~` 组合器、`:first-child`/`:last-child`/`:only-child`/`:empty`/`:nth-child(an+b)`/`:not(...)` 伪类、多选择器 `,` 文档序去重及 `selectXml` 一步抽取）；文档 [`doc/lib/selector.md`](file:///data/dev/cp/doc/lib/selector.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_selector_production_deep.cp`](file:///data/dev/cp/cap/test/test_selector_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:optimize` 数值求根、Nelder-Mead 与 Adam 多维优化引擎（5/5 PASS，自动动态挂载 `cap.optimize`）
 
 - 新建 [`lib/optimize/`](file:///data/dev/cp/lib/optimize/index.cp)（`opt.cp`、`index.cp`）：`Optimizer`（`bisect`、超线性收敛 `brentRoot`、`goldenSectionMin` 区间极小化、中心差分 `numericalGradient`、无导数多维 `nelderMead` 单纯形法及解析/数值双模式 `adamMinimize`，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/optimize.md`](file:///data/dev/cp/doc/lib/optimize.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_optimize_production_deep.cp`](file:///data/dev/cp/cap/test/test_optimize_production_deep.cp) `-m` 5/5 PASS。
