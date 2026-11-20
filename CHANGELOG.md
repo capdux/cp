@@ -2,6 +2,14 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:pem` RFC 7468 PEM 证书链与密钥块编解码引擎（5/5 PASS，自动动态挂载 `cap.pem`）
+- **新增标准库**：`lib/pem/{pem,index}.cp`，实现单块/多块证书链解析（支持块间注释、RFC 1421 `Key: Value` 头字段、标签一致性与 `TooManyBlocks` 防护）以及 64 列规范 Base64 折行编码。
+- **新增文档与测试**：`doc/lib/pem.md` 扁平文档与 `cap/test/test_pem_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
+## [2026-11-21] - 新建 `cap:deflate` 纯 CP RFC 1951/1952/1950 DEFLATE/GZIP/ZLIB 无损压缩解压引擎（5/5 PASS，自动动态挂载 `cap.deflate`）
+- **新增标准库**：`lib/deflate/{deflate,index}.cp`，纯 CP 实现 32KB 窗口 LZ77 + Fixed/Dynamic Huffman 解码、`crc32` / `adler32` 校验、Raw DEFLATE / GZIP（含 `FEXTRA`/`FNAME`/`FCOMMENT`/`FHCRC`）与 ZLIB 编解码及 `OutputTooLarge` 防炸弹上限。
+- **新增文档与测试**：`doc/lib/deflate.md` 扁平文档与 `cap/test/test_deflate_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:multipart` RFC 7578 `multipart/form-data` 解析与安全构建引擎（5/5 PASS，自动动态挂载 `cap.multipart`）
 - **新增标准库**：`lib/multipart/{multipart,index}.cp`，实现 `extractBoundary`、`parse`/`parseWithLimits`（支持二进制载荷、`Content-Disposition` 引号转义还原、缺失结束边界与 `TooManyParts`/`PartTooLarge` 防护）及防 CR/LF 头注入的 `MultipartBuilder`。
 - **新增文档与测试**：`doc/lib/multipart.md` 扁平文档与 `cap/test/test_multipart_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

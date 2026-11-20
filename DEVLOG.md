@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:pem` RFC 7468 PEM 证书链与密钥块编解码引擎（5/5 PASS，文档直写 `doc/lib/pem.md`）
+- **核心设计**：严格校验 `-----BEGIN <LABEL>-----` 与 `-----END <LABEL>-----` 匹配与 Base64 字符集完整性，支持 RFC 1421 `Proc-Type`/`DEK-Info` 头字段保留与 `TooManyBlocks` 资源上限防护，零泄漏。
+
+## 2026-11-21: 新建 `cap:deflate` 纯 CP RFC 1951/1952/1950 DEFLATE/GZIP/ZLIB 无损压缩解压引擎（5/5 PASS，文档直写 `doc/lib/deflate.md`）
+- **核心设计**：零外部 C/系统依赖完成 Stored / Fixed Huffman / Dynamic Huffman 全块型解码与 LZ77 压缩，严格校验非法块类型 `BTYPE=11`、越界距离、CRC32/Adler-32 与最大输出上限。
+
 ## 2026-11-21: 新建 `cap:multipart` RFC 7578 `multipart/form-data` 解析与安全构建引擎（5/5 PASS，文档直写 `doc/lib/multipart.md`）
 - **核心设计**：兼容 `\r\n`/`\n` 与 preamble/epilogue 边界扫描，内嵌 `\x00` 二进制载荷零损耗提取；在构建与解析阶段同时拦截 CR/LF/NUL 注入、缺失 `--boundary--` 及分片数量/体积超限。
 

@@ -482,3 +482,9 @@
 
 ### 2026-11-21（`cap:multipart` 验收提交，顶替拉起 `cap:pem` 维持 2 路常规并行）
 - **执行成果**：`lib/multipart/`（5/5 PASS，`doc/lib/multipart.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/pem/`（RFC 7468 PEM 证书链/密钥块解析与编码引擎），与 `lib/deflate/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:deflate` 验收提交，顶替拉起 `cap:zip` 维持 2 路常规并行）
+- **执行成果**：`lib/deflate/`（5/5 PASS，`doc/lib/deflate.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/zip/`（复用 `cap:deflate` 的纯 CP PKZIP 归档打包与安全解包引擎），与 `lib/pem/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:pem` 验收合并提交，顶替拉起 `cap:x509` 维持 2 路常规并行）
+- **执行成果**：`lib/pem/`（5/5 PASS，`doc/lib/pem.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/deflate/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/x509/`（纯 CP X.509 v3 DER/PEM 证书解析、SAN 主机名匹配与有效期校验引擎），与 `lib/zip/` 维持 2 路常规并行。
