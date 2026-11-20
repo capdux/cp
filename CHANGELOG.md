@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:otp` RFC 4226 HOTP / RFC 6238 TOTP 与 `otpauth://` URI 认证引擎（5/5 PASS，自动动态挂载 `cap.otp`）
+- **新增标准库**：`lib/otp/{otp,index}.cp`，实现 RFC 4648 Base32 编解码、HOTP/TOTP（支持 `SHA1`/`SHA256`/`SHA512` 与 `6..8` 位前导零格式化）、恒定时间 `verifyTotp` 窗口漂移校验与防重放 `matched_step`，以及 `otpauth://` URI 格式化/解析。
+- **新增文档与测试**：`doc/lib/otp.md` 扁平文档与 `cap/test/test_otp_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:lru` O(1) LRU 缓存淘汰、TTL 过期与字节权重配额引擎（5/5 PASS，自动动态挂载 `cap.lru`）
 - **新增标准库**：`lib/lru/{lru,index}.cp`，基于哈希表与连续槽位侵入式双向链表实现严格 $O(1)$ `LruCache<V>`，支持条目数与 `max_weight` 双上限淘汰、确定性 `now_ms` TTL 过期、`purgeExpired`、`resize` 与 `hitRate` 统计。
 - **新增文档与测试**：`doc/lib/lru.md` 扁平文档与 `cap/test/test_lru_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

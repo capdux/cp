@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:otp` RFC 4226 HOTP / RFC 6238 TOTP 与 `otpauth://` URI 认证引擎（5/5 PASS，文档直写 `doc/lib/otp.md`）
+- **核心设计**：采用显式 `unix_sec: u64` 注入规避系统时钟依赖，并通过 RFC 4226 Appendix D 与 RFC 6238 Appendix B 全量标准向量逐项比对验证；`verifyTotp` 使用恒定时间比较并返回 `matched_step` 便于上层防重放。
+
 ## 2026-11-21: 新建 `cap:lru` O(1) LRU 缓存淘汰、TTL 过期与字节权重配额引擎（5/5 PASS，文档直写 `doc/lib/lru.md`）
 - **核心设计**：采用连续槽位池上的侵入式双向链表配合 `StringHashMapUnmanaged` 实现零指针悬垂与严格 $O(1)$ 晋升淘汰，全量 TTL 逻辑由 `now_ms: i64` 确定性注入，无需系统时钟。
 

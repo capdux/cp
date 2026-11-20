@@ -416,3 +416,6 @@
 
 ### 2026-11-21（`cap:lru` 验收提交，顶替拉起 `cap:otp` 维持 2 路常规并行）
 - **执行成果**：`lib/lru/`（5/5 PASS，`doc/lib/lru.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/otp/`（RFC 4226 HOTP & RFC 6238 TOTP 动态口令、Base32 与 `otpauth://` URI 引擎），与 `lib/cbor/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:otp` 验收提交，顶替拉起 `cap:xml` 维持 2 路常规并行）
+- **执行成果**：`lib/otp/`（5/5 PASS，`doc/lib/otp.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/xml/`（纯 CP XML 1.0 解析、命名空间/CDATA/实体转义与深度防护序列化引擎），与 `lib/cbor/` 维持 2 路常规并行。
