@@ -11068,3 +11068,108 @@ bun agy 按你的建议,优化了方案, 更新了 GEMINI.md 和 脚本文件
 
 ### 2026-11-21（`cap:cose` 验收，顶替拉起 `cap:webauthn` 维持 2 路常规并行）
 - **执行成果**：`lib/cose/`（5/5 PASS，`doc/lib/cose.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:webauthn` 维持 2 路常规并行
+
+### 2026-11-21（`cap:webauthn` 验收，顶替拉起 `cap:ssh_wire` 维持 2 路常规并行）
+- **执行成果**：`lib/webauthn/`（5/5 PASS，`doc/lib/webauthn.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:ssh_wire` 维持 2 路常规并行
+
+### 2026-11-21（`cap:parquet` 验收，顶替拉起 `cap:arrow_ipc` 维持 2 路常规并行）
+- **执行成果**：`lib/parquet/`（5/5 PASS，`doc/lib/parquet.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:arrow_ipc` 维持 2 路常规并行
+
+### 2026-11-21（`cap:ssh_wire` 验收，顶替拉起 `cap:wireguard` 维持 2 路常规并行）
+- **执行成果**：`lib/ssh_wire/`（5/5 PASS，`doc/lib/ssh_wire.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:wireguard` 维持 2 路常规并行
+
+### 2026-11-21（`cap:arrow_ipc` 验收，顶替拉起 `cap:mcp` 维持 2 路常规并行）
+- **执行成果**：`lib/arrow_ipc/`（5/5 PASS，`doc/lib/arrow_ipc.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:mcp` 维持 2 路常规并行
+
+### 2026-11-21（`cap:wireguard` 验收，顶替拉起 `cap:raft` 维持 2 路常规并行）
+- **执行成果**：`lib/wireguard/`（5/5 PASS，`doc/lib/wireguard.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:raft` 维持 2 路常规并行
+
+### 2026-11-21（`cap:mcp` 验收，顶替拉起 `cap:a2a` 维持 2 路常规并行）
+- **执行成果**：`lib/mcp/`（5/5 PASS，`doc/lib/mcp.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:a2a` 维持 2 路常规并行
+
+### 2026-11-21（`cap:raft` 验收，顶替拉起 `cap:gossip` 维持 2 路常规并行）
+- **执行成果**：`lib/raft/`（5/5 PASS，`doc/lib/raft.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:gossip` 维持 2 路常规并行
+
+### 2026-11-21（`cap:a2a` 验收，顶替拉起 `cap:pgwire` 维持 2 路常规并行）
+- **执行成果**：`lib/a2a/`（5/5 PASS，`doc/lib/a2a.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:pgwire` 维持 2 路常规并行
+
+### 2026-11-21（`cap:gossip` 验收，顶替拉起 `cap:kafka_wire` 维持 2 路常规并行）
+- **执行成果**：`lib/gossip/`（5/5 PASS，`doc/lib/gossip.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:kafka_wire` 维持 2 路常规并行
+
+### 2026-11-21（`cap:pgwire` 验收，顶替拉起 `cap:mysql_wire` 维持 2 路常规并行）
+- **执行成果**：`lib/pgwire/`（5/5 PASS，`doc/lib/pgwire.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:mysql_wire` 维持 2 路常规并行
+
+### 2026-11-21（`cap:mysql_wire` 验收，顶替拉起 `cap:http2_frame` 维持 2 路常规并行）
+- **执行成果**：`lib/mysql_wire/`（5/5 PASS，`doc/lib/mysql_wire.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:http2_frame` 维持 2 路常规并行
+
+### 2026-11-21（`cap:kafka_wire` 验收，顶替拉起 `cap:grpc_wire` 维持 2 路常规并行）
+- **执行成果**：`lib/kafka_wire/`（5/5 PASS，`doc/lib/kafka_wire.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:grpc_wire` 维持 2 路常规并行
+
+### 2026-11-21（`cap:grpc_wire` 验收，顶替拉起 `cap:lsm_sst` 维持 2 路常规并行）
+- **执行成果**：`lib/grpc_wire/`（5/5 PASS，`doc/lib/grpc_wire.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:lsm_sst` 维持 2 路常规并行
+
+### 2026-11-21（`cap:http2_frame` 验收，顶替拉起 `cap:bplus_tree` 维持 2 路常规并行）
+- **执行成果**：`lib/http2_frame/`（5/5 PASS，`doc/lib/http2_frame.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:bplus_tree` 维持 2 路常规并行
+
+### 2026-11-21（`cap:lsm_sst` 验收，顶替拉起 `cap:mvcc` 维持 2 路常规并行）
+- **执行成果**：`lib/lsm_sst/`（5/5 PASS，`doc/lib/lsm_sst.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:mvcc` 维持 2 路常规并行
+
+### 2026-11-21（`cap:bplus_tree` 验收，顶替拉起 `cap:hnsw` 维持 2 路常规并行）
+- **执行成果**：`lib/bplus_tree/`（5/5 PASS，`doc/lib/bplus_tree.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:hnsw` 维持 2 路常规并行
+
+### 2026-11-21（`cap:mvcc` 验收，顶替拉起 `cap:bm25` 维持 2 路常规并行）
+- **执行成果**：`lib/mvcc/`（5/5 PASS，`doc/lib/mvcc.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:bm25` 维持 2 路常规并行
+
+### 2026-11-21（`cap:hnsw` 验收，顶替拉起 `cap:bpe` 维持 2 路常规并行）
+- **执行成果**：`lib/hnsw/`（5/5 PASS，`doc/lib/hnsw.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:bpe` 维持 2 路常规并行
+
+### 2026-11-21（`cap:bm25` 验收，顶替拉起 `cap:quant` 维持 2 路常规并行）
+- **执行成果**：`lib/bm25/`（5/5 PASS，`doc/lib/bm25.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:quant` 维持 2 路常规并行
+
+### 2026-11-21（`cap:quant` 验收，顶替拉起 `cap:safetensors` 维持 2 路常规并行）
+- **执行成果**：`lib/quant/`（5/5 PASS，`doc/lib/quant.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:safetensors` 维持 2 路常规并行
+
+### 2026-11-21（`cap:bpe` 验收，顶替拉起 `cap:gguf` 维持 2 路常规并行）
+- **执行成果**：`lib/bpe/`（5/5 PASS，`doc/lib/bpe.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:gguf` 维持 2 路常规并行
+
+### 2026-11-21（`cap:safetensors` 验收，顶替拉起 `cap:tensor` 维持 2 路常规并行）
+- **执行成果**：`lib/safetensors/`（5/5 PASS，`doc/lib/safetensors.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:tensor` 维持 2 路常规并行
+
+### 2026-11-21（`cap:gguf` 验收，顶替拉起 `cap:onnx` 维持 2 路常规并行）
+- **执行成果**：`lib/gguf/`（5/5 PASS，`doc/lib/gguf.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:onnx` 维持 2 路常规并行
+
+### 2026-11-21（`cap:tensor` 验收，顶替拉起 `cap:attention` 维持 2 路常规并行）
+- **执行成果**：`lib/tensor/`（5/5 PASS，`doc/lib/tensor.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:attention` 维持 2 路常规并行
+
+### 2026-11-21（`cap:attention` 验收，顶替拉起 `cap:wasm_fmt` 维持 2 路常规并行）
+- **执行成果**：`lib/attention/`（5/5 PASS，`doc/lib/attention.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:wasm_fmt` 维持 2 路常规并行
+
+### 2026-11-21（`cap:onnx` 验收，顶替拉起 `cap:dwarf` 维持 2 路常规并行）
+- **执行成果**：`lib/onnx/`（5/5 PASS，`doc/lib/onnx.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:dwarf` 维持 2 路常规并行
+
+### 2026-11-21（`cap:wasm_fmt` 验收，顶替拉起 `cap:sql_ast` 维持 2 路常规并行）
+- **执行成果**：`lib/wasm_fmt/`（5/5 PASS，`doc/lib/wasm_fmt.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:sql_ast` 维持 2 路常规并行
+
+### 2026-11-21（`cap:dwarf` 验收，顶替拉起 `cap:graphql` 维持 2 路常规并行）
+- **执行成果**：`lib/dwarf/`（5/5 PASS，`doc/lib/dwarf.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:graphql` 维持 2 路常规并行
+
+### 2026-11-21（`cap:sql_ast` 验收，顶替拉起 `cap:cel` 维持 2 路常规并行）
+- **执行成果**：`lib/sql_ast/`（5/5 PASS，`doc/lib/sql_ast.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:cel` 维持 2 路常规并行
+
+### 2026-11-21（`cap:graphql` 验收，顶替拉起 `cap:jq` 维持 2 路常规并行）
+- **执行成果**：`lib/graphql/`（5/5 PASS，`doc/lib/graphql.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:jq` 维持 2 路常规并行
+
+### 2026-11-21（`cap:cel` 验收，顶替拉起 `cap:mqtt` 维持 2 路常规并行）
+- **执行成果**：`lib/cel/`（5/5 PASS，`doc/lib/cel.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:mqtt` 维持 2 路常规并行
+
+### 2026-11-21（`cap:jq` 验收，顶替拉起 `cap:jsonpath` 维持 2 路常规并行）
+- **执行成果**：`lib/jq/`（5/5 PASS，`doc/lib/jq.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:jsonpath` 维持 2 路常规并行
+
+### 2026-11-21（`cap:mqtt` 验收，顶替拉起 `cap:otlp` 维持 2 路常规并行）
+- **执行成果**：`lib/mqtt/`（5/5 PASS，`doc/lib/mqtt.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:otlp` 维持 2 路常规并行
+
+### 2026-11-21（`cap:otlp` 验收，顶替拉起 `cap:jmespath` 维持 2 路常规并行）
+- **执行成果**：`lib/otlp/`（5/5 PASS，`doc/lib/otlp.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:jmespath` 维持 2 路常规并行
+
+### 2026-11-21（`cap:jsonpath` 验收，顶替拉起 `cap:capnp` 维持 2 路常规并行）
+- **执行成果**：`lib/jsonpath/`（5/5 PASS，`doc/lib/jsonpath.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:capnp` 维持 2 路常规并行
