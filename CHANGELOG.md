@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:yaml` YAML 1.2 核心子集解析与序列化/JSON 转换引擎（5/5 PASS，自动动态挂载 `cap.yaml`）
+
+- 新建 [`lib/yaml/`](file:///data/dev/cp/lib/yaml/index.cp)（`value.cp`、`codec.cp`、`index.cp`）：`YamlParser`（`---`/`...`、块映射与嵌套序列 `- key: val`、嵌套流式 `[...]`/`{...}`、单双引号转义、`|`/`|-`/`>`/`>-` 块标量、`&anchor`/`*alias` 防环展开、Tab 缩进/重复键/64 层深度拦截）、`YamlDoc`（`getPath` 与递归释放）及 `YamlSerializer`（2 空格 `stringify` 与 RFC 8259 `toJson`）；文档 [`doc/lib/yaml.md`](file:///data/dev/cp/doc/lib/yaml.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_yaml_production_deep.cp`](file:///data/dev/cp/cap/test/test_yaml_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:codec` 多进制与强校验编码套件（5/5 PASS，自动动态挂载 `cap.codec`）
 
 - 新建 [`lib/codec/`](file:///data/dev/cp/lib/codec/index.cp)（`base58_85.cp`、`bech32_crockford.cp`、`index.cp`）：`Base58`（含前导零保留与 Double-SHA256 `Base58Check`）、`Base85`（Adobe ASCII85 含 `<~...~>`/`'z'` 压缩/余数填充/溢出拦截 + RFC 1924）、`Bech32`（BIP-173 & BIP-350 `Bech32m` 大小写混用与校验和拦截）及 `Crockford32`（`I/L/O` 纠错 + 模 37 校验符）；文档 [`doc/lib/codec.md`](file:///data/dev/cp/doc/lib/codec.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_codec_production_deep.cp`](file:///data/dev/cp/cap/test/test_codec_production_deep.cp) `-m` 5/5 PASS。

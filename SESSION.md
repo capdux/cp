@@ -137,3 +137,6 @@
 
 ### 2026-11-21（`cap:codec` 验收固化，顶替以 `inherit` 拉起 `cap:yaml` 维持 2 路并行）
 - **执行成果**：`lib/codec/`（5/5 PASS，含 `cap.codec` 动态挂载与 `doc/lib/codec.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/yaml/`（YAML 1.2 核心子集解析与序列化/JSON 转换），目前两路常规子智能体均已全面运行在 `inherit` 模式下。
+
+### 2026-11-21（`cap:yaml` 验收固化，顶替以 `inherit` 拉起 `cap:eval` 维持 2 路并行）
+- **执行成果**：`lib/yaml/`（5/5 PASS，含 `cap.yaml` 动态挂载与 `doc/lib/yaml.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/eval/`（AI Agent 基准评测指标/Pass@k/基线退化门禁与报告引擎），与 `lib/toml/` 保持 2 路正交并行。
