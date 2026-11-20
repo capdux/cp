@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:nanoid` NanoID / 单调 ULID / RFC 9562 UUID v7 分布式短 ID 引擎（5/5 PASS，文档直写 `doc/lib/nanoid.md`）
+- **核心设计**：采用位掩码拒绝采样消除非 2 次幂字母表的模数偏差；`MonotonicUlidGenerator` 在同毫秒内严格递增 80-bit 随机数并在全 `0xFF` 时返回 `MonotonicOverflow`；`UuidV7` 严格校验 RFC 9562 `version == 7` 与 `variant == 2`。
+
 ## 2026-11-21: 新建 `cap:tar` POSIX ustar 内存归档打包与安全解包引擎（5/5 PASS，文档直写 `doc/lib/tar.md`）
 - **核心设计**：纯内存零系统调用实现 ustar 512 字节块打包与解包，自动将 100..256 字节路径拆分到 `prefix` 与 `name` 字段；解包器在 `errdefer` 路径完整清理已解析切片，并默认阻断 `..` 与前导 `/` 路径穿越。
 
