@@ -377,3 +377,6 @@
 
 ### 2026-11-21（`cap:globset` 验收提交，顶替拉起 `cap:nanoid` 维持 2 路常规并行）
 - **执行成果**：`lib/globset/`（5/5 PASS，`doc/lib/globset.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/nanoid/`（NanoID / ULID / RFC 9562 UUID v7 分布式时间有序与无偏差短 ID 引擎），与 `lib/tar/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:tar` 验收提交，顶替拉起 `cap:msgpack` 维持 2 路常规并行）
+- **执行成果**：`lib/tar/`（5/5 PASS，`doc/lib/tar.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/msgpack/`（MessagePack 二进制紧凑编解码与深度安全防护引擎），与 `lib/nanoid/` 维持 2 路常规并行。

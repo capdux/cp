@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:tar` POSIX ustar 内存归档打包与安全解包引擎（5/5 PASS，文档直写 `doc/lib/tar.md`）
+- **核心设计**：纯内存零系统调用实现 ustar 512 字节块打包与解包，自动将 100..256 字节路径拆分到 `prefix` 与 `name` 字段；解包器在 `errdefer` 路径完整清理已解析切片，并默认阻断 `..` 与前导 `/` 路径穿越。
+
 ## 2026-11-21: 新建 `cap:globset` 高性能多模式 Glob 路径匹配集合与 `.gitignore` 规则引擎（5/5 PASS，文档直写 `doc/lib/globset.md`）
 - **核心设计**：`GlobMatcher` 采用线性 NFA 状态集模拟避免回溯指数爆炸；`GlobSetBuilder` 支持递归嵌套 `{a,{b,c}}` 展开；`IgnoreMatcher` 按规则序求值确保后置 `!` 否定规则可精准恢复被排除路径。
 

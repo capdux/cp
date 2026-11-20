@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:tar` POSIX ustar 内存归档打包与安全解包引擎（5/5 PASS，自动动态挂载 `cap.tar`）
+- **新增标准库**：`lib/tar/{tar,index}.cp`，实现 POSIX.1-1988 ustar 512 字节头部、自动 155+100 长路径 `prefix` 拆分、八进制校验和与双零 EOF 块，`TarReader` 默认拦截 `..` 与绝对路径穿越。
+- **新增文档与测试**：`doc/lib/tar.md` 扁平文档与 `cap/test/test_tar_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:globset` 高性能多模式 Glob 路径匹配集合与 `.gitignore` 规则引擎（5/5 PASS，自动动态挂载 `cap.globset`）
 - **新增标准库**：`lib/globset/{glob,globset,index}.cp`，实现线性 NFA `GlobMatcher`（支持 `*`/`**`/`a/**/b`/`?`/`[...]`/`[!...]`）、支持嵌套大括号展开的 `GlobSetBuilder`/`GlobSet` 与 `.gitignore` 语义 `IgnoreMatcher`。
 - **新增文档与测试**：`doc/lib/globset.md` 扁平文档与 `cap/test/test_globset_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
