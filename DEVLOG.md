@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:globset` 高性能多模式 Glob 路径匹配集合与 `.gitignore` 规则引擎（5/5 PASS，文档直写 `doc/lib/globset.md`）
+- **核心设计**：`GlobMatcher` 采用线性 NFA 状态集模拟避免回溯指数爆炸；`GlobSetBuilder` 支持递归嵌套 `{a,{b,c}}` 展开；`IgnoreMatcher` 按规则序求值确保后置 `!` 否定规则可精准恢复被排除路径。
+
 ## 2026-11-21: 新建 `cap:cron` 5/6 字段 Cron 表达式解析与调度计算引擎（5/5 PASS，文档直写 `doc/lib/cron.md`）
 - **核心设计**：采用紧凑位掩码存储与 Howard Hinnant O(1) 纯 UTC 日历分解算法，零系统调用即可完成闰年 `02-29`、跨月跨年跳跃搜索，并对不可达日期（如 `0 0 31 2 *`）在 28 年周期窗口内准确返回 `NoMatchingTime`。
 
