@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:sat` DPLL 布尔 SAT 求解器与声明式约束建模引擎（5/5 PASS，自动动态挂载 `cap.sat`）
+
+- 新建 [`lib/sat/`](file:///data/dev/cp/lib/sat/index.cp)（`solver.cp`、`index.cp`）：`SatSolver`（1-based 编号、DPLL 单位传播 + 纯文字消除 + MOM 启发式分支、标准 `parseDimacs` 与 100% 子句校验）及 `ConstraintModel`（`implies`/`conflicts`/`atMostOne`/`exactlyOne`/`solveNamed`，实测鸽巢 `PHP(4,3)` UNSAT、包依赖冲突与 4 皇后求解，零泄漏）；文档 [`doc/lib/sat.md`](file:///data/dev/cp/doc/lib/sat.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_sat_production_deep.cp`](file:///data/dev/cp/cap/test/test_sat_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:tween` 31 种缓动曲线、关键帧轨道与弹簧阻尼动画引擎（5/5 PASS，自动动态挂载 `cap.tween`）
 
 - 新建 [`lib/tween/`](file:///data/dev/cp/lib/tween/index.cp)（`tween.cp`、`index.cp`）：`Easing`（全 31 种 Robert Penner 缓动曲线）、`Tween`（往返 `yoyo` 与重复计数）、`KeyframeTrack`（严格单调检验与二分分段插值）及 `SpringDamper`（稳定性受控自适应子步长半隐式欧拉物理系统）；文档 [`doc/lib/tween.md`](file:///data/dev/cp/doc/lib/tween.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_tween_production_deep.cp`](file:///data/dev/cp/cap/test/test_tween_production_deep.cp) `-m` 5/5 PASS。

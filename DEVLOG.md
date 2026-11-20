@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:sat` DPLL 布尔 SAT 求解器与约束建模引擎（5/5 PASS，文档直写 `doc/lib/sat.md`）
+
+- **落地成果**：`lib/sat/`（`solver.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:highlight`（多语言代码词法高亮引擎：CP/Zig/Rust/TS/Python/JSON/SQL/Bash 词法切分与 ANSI/HTML 渲染），与 `lib/vcard/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:tween` 缓动插值、关键帧与弹簧物理动画引擎（5/5 PASS，文档直写 `doc/lib/tween.md`）
 
 - **落地成果**：`lib/tween/`（`tween.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:vcard`（RFC 6350/2426 vCard 3.0/4.0 电子名片通讯录 `.vcf` 解析与生成引擎），与 `lib/sat/` 保持 2 路正交并行。

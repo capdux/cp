@@ -296,3 +296,6 @@
 
 ### 2026-11-21（`cap:tween` 验收固化，顶替以 `inherit` 拉起 `cap:vcard` 维持 2 路并行）
 - **执行成果**：`lib/tween/`（5/5 PASS，含 `cap.tween` 动态挂载与 `doc/lib/tween.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/vcard/`（RFC 6350 vCard 3.0/4.0 通讯录 `.vcf` 解析生成与行折行展开引擎），与 `lib/sat/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:sat` 验收固化，顶替以 `inherit` 拉起 `cap:highlight` 维持 2 路并行）
+- **执行成果**：`lib/sat/`（5/5 PASS，含 `cap.sat` 动态挂载与 `doc/lib/sat.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/highlight/`（多语言代码词法高亮与 ANSI/HTML 渲染引擎），与 `lib/vcard/` 保持 2 路正交并行。
