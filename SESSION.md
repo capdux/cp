@@ -158,3 +158,6 @@
 
 ### 2026-11-21（`cap:search` 验收固化，顶替以 `inherit` 拉起 `cap:feature` 维持 2 路并行）
 - **执行成果**：`lib/search/`（5/5 PASS，含 `cap.search` 动态挂载与 `doc/lib/search.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/feature/`（Feature Flags、确定性灰度分桶、属性靶向规则与 A/B 实验分流引擎），与 `lib/di/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:di` 验收固化，顶替以 `inherit` 拉起 `cap:audit` 维持 2 路并行）
+- **执行成果**：`lib/di/`（5/5 PASS，含 `cap.di` 动态挂载与 `doc/lib/di.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/audit/`（SHA-256 防篡改哈希链审计日志、断链/篡改精确定位与结构化合规导出引擎），与 `lib/feature/` 保持 2 路正交并行。

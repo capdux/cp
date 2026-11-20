@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:di` IoC 依赖注入与生命周期管理服务容器（5/5 PASS，自动动态挂载 `cap.di`）
+
+- 新建 [`lib/di/`](file:///data/dev/cp/lib/di/index.cp)（`container.cp`、`index.cp`）：`ServiceContainer` & `ServiceScope`（`Singleton`/`Scoped`/`Transient` 三态生命周期、严格按实例化逆序 `deinit`、调用栈循环依赖 `CircularDependency` 环路路径追踪、`Singleton` 捕获 `Scoped` 的 `ScopeViolation` 防护、`registerMany` 多实现扩展点与 `build()` 冻结）；文档 [`doc/lib/di.md`](file:///data/dev/cp/doc/lib/di.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_di_production_deep.cp`](file:///data/dev/cp/cap/test/test_di_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:search` 本地全文倒排索引、前缀自动补全与高亮摘要引擎（5/5 PASS，自动动态挂载 `cap.search`）
 
 - 新建 [`lib/search/`](file:///data/dev/cp/lib/search/index.cp)（`trie.cp`、`engine.cp`、`index.cp`）：`PrefixTrie`（频次降序 Top-K 自动补全）及 `SearchIndex`（`title`/`body` 多字段 BM25F 加权、`+must`/`-exclude`/`AND`/`OR`/`NOT` 布尔检索、`"exact phrase"` 连续词序匹配、`upsertDocument`/`removeDocument` 与 `highlightSnippet` 稠密窗口 `<mark>` 高亮摘要）；文档 [`doc/lib/search.md`](file:///data/dev/cp/doc/lib/search.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_search_production_deep.cp`](file:///data/dev/cp/cap/test/test_search_production_deep.cp) `-m` 5/5 PASS。
