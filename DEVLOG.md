@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:health` 健康探针与优雅停机协调器（5/5 PASS，文档直写 `doc/lib/health.md`）
+
+- **落地成果**：`lib/health/`（`probe.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:jsonpath`（RFC 9535 JSONPath 递归下降、数组切片与过滤表达式查询引擎），与 `lib/lock/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:pool` 通用有界资源与连接池引擎（5/5 PASS，文档直写 `doc/lib/pool.md`）
 
 - **落地成果**：`lib/pool/`（`pool.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:lock`（进程内按名逻辑读写锁、等待图死锁检测与 TTL/Fencing Token 租约锁引擎），与 `lib/health/` 保持 2 路正交并行。

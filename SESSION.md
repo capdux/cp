@@ -194,3 +194,6 @@
 
 ### 2026-11-21（`cap:pool` 验收固化，顶替以 `inherit` 拉起 `cap:lock` 维持 2 路并行）
 - **执行成果**：`lib/pool/`（5/5 PASS，含 `cap.pool` 动态挂载与 `doc/lib/pool.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/lock/`（按名逻辑读写锁、等待图死锁环路检测与 TTL/Fencing Token 租约锁引擎），与 `lib/health/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:health` 验收固化，顶替以 `inherit` 拉起 `cap:jsonpath` 维持 2 路并行）
+- **执行成果**：`lib/health/`（5/5 PASS，含 `cap.health` 动态挂载与 `doc/lib/health.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/jsonpath/`（RFC 9535 JSONPath 解析、递归下降 `..`、切片 `[s:e:step]` 与过滤表达式 `[?(@.x < 10)]` 引擎），与 `lib/lock/` 保持 2 路正交并行。
