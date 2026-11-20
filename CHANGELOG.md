@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:kafka_wire` 纯 CP Apache Kafka Wire Protocol、ApiVersions/Metadata、流式分帧与 CRC32C RecordBatch v2 引擎（支持 `cap.kafka_wire` 自动动态挂载，详见 `doc/lib/kafka_wire.md`）（5/5 PASS，自动动态挂载 `cap.kafka_wire`）
+- **新增标准库**：`lib/kafka_wire/{wire,protocol,record_batch,index}.cp`，实现 ZigZag Varint/Compact String/Tagged Fields 原语、`ApiVersions`/`Metadata` 请求响应编解码、`KafkaStreamFramer` `1..7` 字节半包黏包拆包及 Castagnoli CRC32C 校验的 `RecordBatch v2`。
+- **新增文档与测试**：`doc/lib/kafka_wire.md` 扁平文档与 `cap/test/test_kafka_wire_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:mysql_wire` 纯 CP MySQL Client/Server Wire Protocol 报文编解码、增量分帧与双 SHA-1 认证引擎（支持 `cap.mysql_wire` 自动动态挂载，详见 `doc/lib/mysql_wire.md`）（5/5 PASS，自动动态挂载 `cap.mysql_wire`）
 - **新增标准库**：`lib/mysql_wire/{packet,auth,protocol,index}.cp`，实现 Length-Encoded 原语、`MysqlStreamFramer` `1..7` 字节半包黏包拆包、`HandshakeV10`/`HandshakeResponse41` 与 `mysql_native_password` 双 SHA-1 认证，以及 `OK`/`ERR`/`EOF`/`COM`/`ColumnDef41`/`TextResultRow` 编解码。
 - **新增文档与测试**：`doc/lib/mysql_wire.md` 扁平文档与 `cap/test/test_mysql_wire_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

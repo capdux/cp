@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:kafka_wire` 纯 CP Apache Kafka Wire Protocol、ApiVersions/Metadata、流式分帧与 CRC32C RecordBatch v2 引擎（支持 `cap.kafka_wire` 自动动态挂载，详见 `doc/lib/kafka_wire.md`）（5/5 PASS，文档直写 `doc/lib/kafka_wire.md`）
+- **核心设计**：`encodeRecordBatch` 自动计算并回填覆盖 `attributes` 至批尾的 `Crc32Iscsi` 校验和，`KafkaStreamFramer` 严格拦截超限 `max_frame_bytes`，全路径 `std.testing.allocator` 零泄漏。
+
 ## 2026-11-21: 新建 `cap:mysql_wire` 纯 CP MySQL Client/Server Wire Protocol 报文编解码、增量分帧与双 SHA-1 认证引擎（支持 `cap.mysql_wire` 自动动态挂载，详见 `doc/lib/mysql_wire.md`）（5/5 PASS，文档直写 `doc/lib/mysql_wire.md`）
 - **核心设计**：4 字节小端帧头支持 `max_packet_bytes` 上限拦截；`TextResultRow` 正确区分 `0xFB` NULL 列与空字符串，全路径通过 `std.testing.allocator` 零泄漏验证。
 
