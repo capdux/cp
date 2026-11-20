@@ -443,3 +443,9 @@
 
 ### 2026-11-21（`cap:pqueue` 验收提交，顶替拉起 `cap:dsu` 维持 2 路常规并行）
 - **执行成果**：`lib/pqueue/`（5/5 PASS，`doc/lib/pqueue.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/dsu/`（路径压缩/按秩合并/可回溯撤销与带权差分约束并查集引擎），与 `lib/fuzzy/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:fuzzy` 验收提交，顶替拉起 `cap:segtree` 维持 2 路常规并行）
+- **执行成果**：`lib/fuzzy/`（5/5 PASS，`doc/lib/fuzzy.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/segtree/`（Fenwick 树状数组与惰性传播线段树范围聚合引擎），与 `lib/dsu/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:dsu` 验收合并提交，顶替拉起 `cap:diff3` 维持 2 路常规并行）
+- **执行成果**：`lib/dsu/`（5/5 PASS，`doc/lib/dsu.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/fuzzy/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/diff3/`（三方合并 diff3 冲突检测与自动融合引擎），与 `lib/segtree/` 维持 2 路常规并行。

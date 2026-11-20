@@ -2,6 +2,14 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:dsu` 路径压缩、带权差分约束与可回溯撤销并查集引擎（5/5 PASS，自动动态挂载 `cap.dsu`）
+- **新增标准库**：`lib/dsu/{dsu,index}.cp`，实现迭代两遍路径压缩 `DisjointSet`、差分约束 `WeightedDsu`（支持传递推导与 `ConflictConstraint` 拦截）以及支持 `snapshot`/`rollbackTo`/`undo` 的 `RollbackDsu`。
+- **新增文档与测试**：`doc/lib/dsu.md` 扁平文档与 `cap/test/test_dsu_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
+## [2026-11-21] - 新建 `cap:fuzzy` 编辑距离、Jaro-Winkler 与 fzf 风格模糊评分高亮引擎（5/5 PASS，自动动态挂载 `cap.fuzzy`）
+- **新增标准库**：`lib/fuzzy/{fuzzy,index}.cp`，实现 Unicode 码点 `levenshtein` / `damerauLevenshtein`、`jaro` / `jaroWinkler`（`prefix_scale` 校验）、以及基于 DP 回溯的 `fuzzyScore` / `rankCandidates` 模糊打分与精确命中下标提取。
+- **新增文档与测试**：`doc/lib/fuzzy.md` 扁平文档与 `cap/test/test_fuzzy_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:pqueue` 索引优先队列、流式 Top-K 与双堆实时中位数引擎（5/5 PASS，自动动态挂载 `cap.pqueue`）
 - **新增标准库**：`lib/pqueue/{pqueue,index}.cp`，实现代际防 ABA `u32` 句柄 `IndexedMinHeap<V>`（支持 $O(\log N)$ 原地 `updatePriority` 与 `removeByHandle`）、$O(K)$ 内存 `BoundedTopK<V>` 与双堆 `StreamingMedian`。
 - **新增文档与测试**：`doc/lib/pqueue.md` 扁平文档与 `cap/test/test_pqueue_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

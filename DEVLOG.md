@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:dsu` 路径压缩、带权差分约束与可回溯撤销并查集引擎（5/5 PASS，文档直写 `doc/lib/dsu.md`）
+- **核心设计**：在同一包内分场景提供迭代两遍路径压缩 `DisjointSet`、带权偏置关系 `WeightedDsu` 与无路径压缩历史栈 `RollbackDsu`（$O(\log N)$ 查找与 $O(1)$ 精确回滚），全程零泄漏。
+
+## 2026-11-21: 新建 `cap:fuzzy` 编辑距离、Jaro-Winkler 与 fzf 风格模糊评分高亮引擎（5/5 PASS，文档直写 `doc/lib/fuzzy.md`）
+- **核心设计**：`levenshtein` 采用 $O(\min(M, N))$ 空间优化，`damerauLevenshtein` 采用 Lowrance-Wagner 无限制算法，`fuzzyScore` 采用 DP 连续/词边界/驼峰加分回溯（大矩阵退化贪心）输出精确命中 `positions`，零泄漏。
+
 ## 2026-11-21: 新建 `cap:pqueue` 索引优先队列、流式 Top-K 与双堆实时中位数引擎（5/5 PASS，文档直写 `doc/lib/pqueue.md`）
 - **核心设计**：`IndexedMinHeap<V>` 采用 20-bit 槽位索引 + 12-bit 代际号的 `u32` 句柄消除槽位复用 ABA 问题；`BoundedTopK<V>` 与 `StreamingMedian` 分别以 $O(K)$ 堆与高低双堆实现流式 Top-K 与精确实时中位数计算。
 
