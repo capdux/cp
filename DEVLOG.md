@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:bencode` BEP-3 Bencode 编解码与 Torrent InfoHash 引擎（5/5 PASS，文档直写 `doc/lib/bencode.md`）
+
+- **落地成果**：`lib/bencode/`（`bencode.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:mermaid`（声明式 Flowchart / Sequence / ER / State Mermaid 图表构建与安全转义引擎），与 `lib/bplus/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:feed` RSS 2.0 / Atom 1.0 / JSON Feed 1.1 统一引擎（5/5 PASS，文档直写 `doc/lib/feed.md`）
 
 - **落地成果**：`lib/feed/`（`feed.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:bplus`（B+ 树有序键值索引、节点分裂合并与叶子链表高效 `rangeScan`/`prefixScan` 引擎），与 `lib/bencode/` 保持 2 路正交并行。
