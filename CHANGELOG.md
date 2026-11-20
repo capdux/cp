@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:ledger` 复式记账双分录会计总账与试算平衡引擎（5/5 PASS，自动动态挂载 `cap.ledger`）
+
+- 新建 [`lib/ledger/`](file:///data/dev/cp/lib/ledger/index.cp)（`ledger.cp`、`index.cp`）：`Ledger`（精确 `i128` 最小货币单位、借贷必相等原子过账与失败零污染回滚、同币种校验、透支拦截、`idempotency_key` 幂等防重入、`reverseTransaction` 红字冲正防二冲、`statementForAccount` 流水及 `verifyTrialBalance` 会计恒等式校验）；文档 [`doc/lib/ledger.md`](file:///data/dev/cp/doc/lib/ledger.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_ledger_production_deep.cp`](file:///data/dev/cp/cap/test/test_ledger_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:sitemap` RFC 9309 `robots.txt` 与 XML Sitemap 0.9 / Index 引擎（5/5 PASS，自动动态挂载 `cap.sitemap`）
 
 - 新建 [`lib/sitemap/`](file:///data/dev/cp/lib/sitemap/index.cp)（`sitemap.cp`、`index.cp`）：`RobotsRules`（RFC 9309 多 `User-agent`、`*` 回退、最长模式匹配与等长 `Allow` 优先、`*` & `$` 通配符、`Crawl-delay` 与 `Sitemap:` 列表）及 `SitemapCodec`（`detectKind`/`parseUrlSet`/`parseIndex`/`buildUrlSet`/`buildIndex` 含 50,000 上限与 `&` 转义）；文档 [`doc/lib/sitemap.md`](file:///data/dev/cp/doc/lib/sitemap.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_sitemap_production_deep.cp`](file:///data/dev/cp/cap/test/test_sitemap_production_deep.cp) `-m` 5/5 PASS。

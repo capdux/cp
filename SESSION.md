@@ -272,3 +272,6 @@
 
 ### 2026-11-21（`cap:sitemap` 验收固化，顶替以 `inherit` 拉起 `cap:billing` 维持 2 路并行）
 - **执行成果**：`lib/sitemap/`（5/5 PASS，含 `cap.sitemap` 动态挂载与 `doc/lib/sitemap.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/billing/`（SaaS & AI Token 阶梯用量计费、周期折算 Proration、折扣券与发票生成引擎），与 `lib/ledger/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:ledger` 验收固化，顶替以 `inherit` 拉起 `cap:barcode` 维持 2 路并行）
+- **执行成果**：`lib/ledger/`（5/5 PASS，含 `cap.ledger` 动态挂载与 `doc/lib/ledger.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/barcode/`（Code 128 Auto & EAN-13/UPC-A 条码编码、校验位及 SVG/ASCII 渲染引擎），与 `lib/billing/` 保持 2 路正交并行。
