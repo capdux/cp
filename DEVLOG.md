@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:oauth2` 纯 CP RFC 6749/7636 OAuth 2.0、PKCE S256 与 OIDC 协议引擎（支持 `cap.oauth2` 自动动态挂载，详见 `doc/lib/oauth2.md`）（5/5 PASS，文档直写 `doc/lib/oauth2.md`）
+- **核心设计**：使用 `getrandom` 拒绝采样消除 PKCE 生成模偏差，以常量时间比对防范 `state`/Verifier 时序侧信道；`TokenResponse` 兼容标准令牌与 OAuth2 错误 JSON 解析并在全路径通过 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:histogram` 纯 CP HDR 延迟直方图与分位统计引擎（5/5 PASS，文档直写 `doc/lib/histogram.md`）
 - **核心设计**：采用对数-线性子分桶在微秒至小时跨度内保持 O(log N) 空间复杂度，并支持 Coordinated Omission 补偿与跨线程直方图无损 `merge`；`SlidingWindowCounter` 仅在初始化时单次分配环形槽位，热路径零堆分配。
 

@@ -16,3 +16,6 @@
 
 ### 2026-11-21（`cap:histogram` 验收通过，顶替拉起 `cap:websocket_frame` 维持 2 路常规并行）
 - **执行成果**：`lib/histogram/`（5/5 PASS，`doc/lib/histogram.md`）经 `verify_module.sh` 一次性验收回收；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/websocket_frame/`（RFC 6455 WebSocket 二进制帧解析、Masking XOR 掩码、分片重组与 Ping/Pong/Close 控制帧引擎），与 `lib/oauth2/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:oauth2` 验收，顶替拉起 `cap:bencode` 维持 2 路常规并行）
+- **执行成果**：`lib/oauth2/`（5/5 PASS，`doc/lib/oauth2.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:bencode` 维持 2 路常规并行
