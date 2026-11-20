@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:openapi` OpenAPI 3.1.0 规范与契约校验引擎（5/5 PASS，文档直写 `doc/lib/openapi.md`）
+
+- **落地成果**：`lib/openapi/`（`spec.cp`/`router.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并顶替派发 `cap:codec`（Base58/Base58Check、ASCII85/RFC1924 Base85、Bech32/Bech32m 与 Crockford Base32 工业级多进制编解码套件），与 `lib/supervisor/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 恢复 2 路并行 + 新建 `cap:graphql` 查询解析/守卫/打印引擎（5/5 PASS，文档直写 `doc/lib/graphql.md`）
 
 - **落地成果**：切号恢复后巡检 `agy-comm.service`（`active`）与 `unacked`（`[]`），重启 2 路 `flash` 并行流水线；`lib/graphql/`（`lexer.cp`/`parser.cp`/`printer.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并顶替派发 `cap:supervisor`（BEAM OTP 监督树策略、抖动退避、舱壁限流与重试预算引擎），与 `lib/openapi/` 保持 2 路正交并行。

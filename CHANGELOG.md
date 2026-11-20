@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:openapi` OpenAPI 3.1.0 规范构造与请求契约校验引擎（5/5 PASS，自动动态挂载 `cap.openapi`）
+
+- 新建 [`lib/openapi/`](file:///data/dev/cp/lib/openapi/index.cp)（`spec.cp`、`router.cp`、`index.cp`）：`OpenApiDoc`（OpenAPI 3.1.0 Info/Server/Tag/SecurityScheme/ComponentSchema/Operation 构造、路径模板与 `operationId` 唯一性校验、RFC 8259 JSON 导出）及 `OpenApiValidator`（静态段优先路径匹配、404 `RouteNotFound` vs 405 `MethodNotAllowed` 判别、path/query/header/cookie 必填与基础类型及请求体契约校验）；文档 [`doc/lib/openapi.md`](file:///data/dev/cp/doc/lib/openapi.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_openapi_production_deep.cp`](file:///data/dev/cp/cap/test/test_openapi_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:graphql` GraphQL Oct 2021 词法/AST/复杂度守卫与无损打印引擎（5/5 PASS，自动动态挂载 `cap.graphql`）
 
 - 新建 [`lib/graphql/`](file:///data/dev/cp/lib/graphql/index.cp)（`lexer.cp`、`parser.cp`、`printer.cp`、`index.cp`）：`GqlLexer`（全 14 标点 + `"""` 块字符串 + 行列追踪）、`GqlParser`/`GqlParseOptions`/`GqlDocument`（query/mutation/subscription/变量/指令/别名/片段 + 可配置深度/节点/字段/别名安全守卫与复杂度统计）及 `GqlPrinter`（Pretty/Minify 无损往返等价）；文档 [`doc/lib/graphql.md`](file:///data/dev/cp/doc/lib/graphql.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_graphql_production_deep.cp`](file:///data/dev/cp/cap/test/test_graphql_production_deep.cp) `-m` 5/5 PASS。
