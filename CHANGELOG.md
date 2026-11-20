@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:multipart` RFC 7578 `multipart/form-data` 解析与安全构建引擎（5/5 PASS，自动动态挂载 `cap.multipart`）
+- **新增标准库**：`lib/multipart/{multipart,index}.cp`，实现 `extractBoundary`、`parse`/`parseWithLimits`（支持二进制载荷、`Content-Disposition` 引号转义还原、缺失结束边界与 `TooManyParts`/`PartTooLarge` 防护）及防 CR/LF 头注入的 `MultipartBuilder`。
+- **新增文档与测试**：`doc/lib/multipart.md` 扁平文档与 `cap/test/test_multipart_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:sse` W3C Server-Sent Events 增量流式解析与编码引擎（5/5 PASS，自动动态挂载 `cap.sse`）
 - **新增标准库**：`lib/sse/{sse,index}.cp`，严格遵循 WHATWG/W3C `text/event-stream` 规范实现跨 Chunk 任意字节 `SseParser`（含 BOM 剥离、`\r`/`\n`/`\r\n` 识别、多行 `data:` 拼接、`Last-Event-ID` 追踪与 `EventBufferOverflow` 防护）及 `SseEncoder`。
 - **新增文档与测试**：`doc/lib/sse.md` 扁平文档与 `cap/test/test_sse_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

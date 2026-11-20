@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:multipart` RFC 7578 `multipart/form-data` 解析与安全构建引擎（5/5 PASS，文档直写 `doc/lib/multipart.md`）
+- **核心设计**：兼容 `\r\n`/`\n` 与 preamble/epilogue 边界扫描，内嵌 `\x00` 二进制载荷零损耗提取；在构建与解析阶段同时拦截 CR/LF/NUL 注入、缺失 `--boundary--` 及分片数量/体积超限。
+
 ## 2026-11-21: 新建 `cap:sse` W3C Server-Sent Events 增量流式解析与编码引擎（5/5 PASS，文档直写 `doc/lib/sse.md`）
 - **核心设计**：`SseParser` 逐字节状态机正确处理 `\r\n` 跨 Chunk 边界及流首 UTF-8 BOM，严格遵循冒号单前导空格剥离、空 `data` 不触发事件、`id:` 含 `\x00` 忽略以及 `max_event_bytes` 上限拦截。
 

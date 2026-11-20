@@ -479,3 +479,6 @@
 
 ### 2026-11-21（`cap:sse` 验收提交，顶替拉起 `cap:deflate` 维持 2 路常规并行）
 - **执行成果**：`lib/sse/`（5/5 PASS，`doc/lib/sse.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/deflate/`（纯 CP RFC 1951/1952/1950 DEFLATE/GZIP/ZLIB 无损压缩解压引擎），与 `lib/multipart/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:multipart` 验收提交，顶替拉起 `cap:pem` 维持 2 路常规并行）
+- **执行成果**：`lib/multipart/`（5/5 PASS，`doc/lib/multipart.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/pem/`（RFC 7468 PEM 证书链/密钥块解析与编码引擎），与 `lib/deflate/` 维持 2 路常规并行。
