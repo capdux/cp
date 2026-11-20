@@ -142,7 +142,7 @@ pub fn RingDeque(comptime T: type): type {
             }
             const old_cap = this.buf.len;
             const new_cap = if (old_cap == 0) 8 else old_cap * 2;
-            const new_buf = try this.alloc.alloc(T, new_cap);
+            let new_buf = try this.alloc.alloc(T, new_cap);
             if (this.count > 0) {
                 for (i of 0..this.count) {
                     const src_idx = (this.head + i) % old_cap;

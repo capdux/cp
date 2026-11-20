@@ -9,6 +9,22 @@ pub fn is_cap_hub_source(source: &str) -> bool {
 }
 
 pub fn resolve_cap_hub_target(ns: &str) -> Option<String> {
+    if ns.is_empty()
+        || ns.starts_with('_')
+        || !ns.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
+    {
+        return None;
+    }
+    // 优先命中真实独立标准库目录或单文件（如 lib/paths/index.cp、lib/collections/index.cp）
+    let dir_index = format!("{}/index.cp", ns);
+    if find_lib_file(&dir_index, &[]).is_some() {
+        return Some(dir_index);
+    }
+    let flat_file = format!("{}.cp", ns);
+    if find_lib_file(&flat_file, &[]).is_some() {
+        return Some(flat_file);
+    }
+    // 真实目录不存在时回退兼容历史别名
     let aliased = match ns {
         "strings" | "string" => Some("string/index.cp"),
         "paths" => Some("path/index.cp"),
@@ -22,24 +38,7 @@ pub fn resolve_cap_hub_target(ns: &str) -> Option<String> {
         "test" => Some("test.cp"),
         _ => None,
     };
-    if let Some(target) = aliased {
-        return Some(target.to_string());
-    }
-    if ns.is_empty()
-        || ns.starts_with('_')
-        || !ns.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
-    {
-        return None;
-    }
-    let dir_index = format!("{}/index.cp", ns);
-    if find_lib_file(&dir_index, &[]).is_some() {
-        return Some(dir_index);
-    }
-    let flat_file = format!("{}.cp", ns);
-    if find_lib_file(&flat_file, &[]).is_some() {
-        return Some(flat_file);
-    }
-    None
+    aliased.map(|target| target.to_string())
 }
 
 pub fn find_lib_file(rel_path: &str, include_paths: &[PathBuf]) -> Option<PathBuf> {
