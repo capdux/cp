@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:zset` 跳表 + 哈希双索引有序集合引擎（5/5 PASS，文档直写 `doc/lib/zset.md`）
+
+- **落地成果**：`lib/zset/`（`zset.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:intern`（高性能字符串驻留池 `StringInterner` + 双向唯一映射表 `BiMap` 引擎），与 `lib/ical/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:raft` 确定性 Raft 共识核心状态机（5/5 PASS，文档直写 `doc/lib/raft.md`）+ 热日志冷归档
 
 - **落地成果**：`lib/raft/`（`raft.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，同时将 `CHANGELOG.md`/`DEVLOG.md` 早期记录安全滚动归档至 `*_H.md`；以 `Model: "inherit"` 顶替派发 `cap:ical`（RFC 5545 iCalendar `.ics` 解析生成与 `RRULE` 重复规则展开引擎），与 `lib/zset/` 保持 2 路正交并行。

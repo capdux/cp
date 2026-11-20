@@ -212,3 +212,6 @@
 
 ### 2026-11-21（`cap:raft` 验收固化 & 热日志归档，顶替以 `inherit` 拉起 `cap:ical` 维持 2 路并行）
 - **执行成果**：`lib/raft/`（5/5 PASS，含 `cap.raft` 动态挂载与 `doc/lib/raft.md`）经 `verify_module.sh` 一键验收回收并连同 `CHANGELOG.md`/`DEVLOG.md` 滚动归档至 `*_H.md` 一并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/ical/`（RFC 5545 `.ics` 解析生成与 `RRULE` 重复规则展开引擎），与 `lib/zset/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:zset` 验收固化，顶替以 `inherit` 拉起 `cap:intern` 维持 2 路并行）
+- **执行成果**：`lib/zset/`（5/5 PASS，含 `cap.zset` 动态挂载与 `doc/lib/zset.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/intern/`（字符串驻留池 `StringInterner` + 双向唯一映射表 `BiMap` 引擎），与 `lib/ical/` 保持 2 路正交并行。

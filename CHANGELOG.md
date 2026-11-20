@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:zset` SkipList 跳表 + 哈希双索引有序集合引擎（5/5 PASS，自动动态挂载 `cap.zset`）
+
+- 新建 [`lib/zset/`](file:///data/dev/cp/lib/zset/index.cp)（`zset.cp`、`index.cp`）：`SortedSet`（32 层 `span` 跨度 SkipList + `StringHashMapUnmanaged` 双索引、`(score, member)` 同分字典序决胜、`NaN` 拦截、$O(\log N)$ `zrank`/`zrevrank`、负数切片 `zrange`/`zrevrange`、`zrangeByScore`/`zremRangeByScore`、`zpopMin`/`zpopMax` 与 `Sum`/`Min`/`Max` `unionInto` 聚合，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/zset.md`](file:///data/dev/cp/doc/lib/zset.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_zset_production_deep.cp`](file:///data/dev/cp/cap/test/test_zset_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:raft` 确定性 Raft 共识核心状态机（5/5 PASS，自动动态挂载 `cap.raft`）
 
 - 新建 [`lib/raft/`](file:///data/dev/cp/lib/raft/index.cp)（`raft.cp`、`index.cp`）：`RaftNode`（Follower/Candidate/Leader 三态转换、`RequestVote` 日志新旧安全性校验、`AppendEntries` 前驱检查与冲突后缀截断、Figure 8 仅提交当前任期多数派推进 `commit_index`、`drainApplied` 与 `drainOutbound`），并同步将前期热日志滚动归档至 `CHANGELOG_H.md`/`DEVLOG_H.md`；文档 [`doc/lib/raft.md`](file:///data/dev/cp/doc/lib/raft.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_raft_production_deep.cp`](file:///data/dev/cp/cap/test/test_raft_production_deep.cp) `-m` 5/5 PASS。
