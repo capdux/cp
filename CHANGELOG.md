@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:dns_wire` 纯 CP RFC 1035/6891 二进制 DNS 报文编解码、0xC0xx 后缀压缩与防循环指针炸弹引擎（支持 `cap.dns_wire` 自动动态挂载，详见 `doc/lib/dns_wire.md`）（5/5 PASS，自动动态挂载 `cap.dns_wire`）
+- **新增标准库**：`lib/dns_wire/{types,codec,index}.cp`，实现 12 字节 `DnsHeader`、全记录类型（A/AAAA/CNAME/NS/PTR/MX/TXT/SRV/SOA/OPT）编解码、`0xC0xx` 后缀压缩与 32 跳 `CompressionLoop` 防循环指针拦截。
+- **新增文档与测试**：`doc/lib/dns_wire.md` 扁平文档与 `cap/test/test_dns_wire_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:jsonpath` 纯 CP RFC 9535 JSONPath 标准化查询、过滤器、递归下降与 Normalized Path 引擎（支持 `cap.jsonpath` 自动动态挂载，详见 `doc/lib/jsonpath.md`）（5/5 PASS，自动动态挂载 `cap.jsonpath`）
 - **新增标准库**：`lib/jsonpath/{json_val,ast,eval,index}.cp`，实现 RFC 9535 成员/负索引/正负步长切片/并集/递归下降 `..`、复合过滤器与 `length`/`count`/`value` 内置函数、`NormalizedPath` 输出及防指数展开 DoS 上限。
 - **新增文档与测试**：`doc/lib/jsonpath.md` 扁平文档与 `cap/test/test_jsonpath_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
