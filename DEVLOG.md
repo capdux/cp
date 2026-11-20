@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:sql_ast` 纯 CP SQL 词法分词、递归下降 DML/DDL/SELECT AST 解析、指纹脱敏与堆叠注入拦截引擎（支持 `cap.sql_ast` 自动动态挂载，详见 `doc/lib/sql_ast.md`）（5/5 PASS，文档直写 `doc/lib/sql_ast.md`）
+- **核心设计**：词法与语法层完整拦截未闭合字符串/块注释、深度超限与多语句 `; DROP` 堆叠注入，`normalizeSqlFingerprint` 自动脱敏字面量为 `?`，全路径 `std.testing.allocator` 零泄漏。
+
 ## 2026-11-21: 新建 `cap:dwarf` 纯 CP DWARF v4/v5 `.debug_line` 行号表状态机与 `.debug_abbrev`/`.debug_info`/`.debug_str` DIE 调试信息解析引擎（支持 `cap.dwarf` 自动动态挂载，详见 `doc/lib/dwarf.md`）（5/5 PASS，文档直写 `doc/lib/dwarf.md`）
 - **核心设计**：`.debug_line` 状态机内置循环步数上限与 `file_index` 越界防护，`lookupAddress` 支持区间二分定位 `file:line:column`，全路径 `std.testing.allocator` 零泄漏。
 

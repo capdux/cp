@@ -85,3 +85,6 @@
 
 ### 2026-11-21（`cap:dwarf` 验收，顶替拉起 `cap:graphql` 维持 2 路常规并行）
 - **执行成果**：`lib/dwarf/`（5/5 PASS，`doc/lib/dwarf.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:graphql` 维持 2 路常规并行
+
+### 2026-11-21（`cap:sql_ast` 验收，顶替拉起 `cap:cel` 维持 2 路常规并行）
+- **执行成果**：`lib/sql_ast/`（5/5 PASS，`doc/lib/sql_ast.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:cel` 维持 2 路常规并行

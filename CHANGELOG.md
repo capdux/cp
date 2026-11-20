@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:sql_ast` 纯 CP SQL 词法分词、递归下降 DML/DDL/SELECT AST 解析、指纹脱敏与堆叠注入拦截引擎（支持 `cap.sql_ast` 自动动态挂载，详见 `doc/lib/sql_ast.md`）（5/5 PASS，自动动态挂载 `cap.sql_ast`）
+- **新增标准库**：`lib/sql_ast/{lexer,ast,parser,analyzer,index}.cp`，实现全 SQL 词法分词（注释/转义/`?`/`$1`）、32 层深度防护递归下降 `SELECT`/`INSERT`/`UPDATE`/`DELETE`/`CREATE TABLE` 解析器，以及 `normalizeSqlFingerprint`、`extractTableNames`、`isReadOnlyQuery` 多语句堆叠注入拦截。
+- **新增文档与测试**：`doc/lib/sql_ast.md` 扁平文档与 `cap/test/test_sql_ast_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:dwarf` 纯 CP DWARF v4/v5 `.debug_line` 行号表状态机与 `.debug_abbrev`/`.debug_info`/`.debug_str` DIE 调试信息解析引擎（支持 `cap.dwarf` 自动动态挂载，详见 `doc/lib/dwarf.md`）（5/5 PASS，自动动态挂载 `cap.dwarf`）
 - **新增标准库**：`lib/dwarf/{types,line,info,index}.cp`，实现 DWARF v4/v5 `.debug_line` 状态机（Standard/Extended/Special Opcodes）与 `lookupAddress` 二分映射，以及 `.debug_abbrev`/`.debug_info`/`.debug_str` DIE 树与常见 `DW_FORM_*` 解析。
 - **新增文档与测试**：`doc/lib/dwarf.md` 扁平文档与 `cap/test/test_dwarf_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
