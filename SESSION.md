@@ -46,3 +46,6 @@
 
 ### 2026-11-21（`cap:perf` 验收，顶替拉起 `cap:csrf` 维持 2 路常规并行）
 - **执行成果**：`lib/perf/`（5/5 PASS，`doc/lib/perf.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:csrf` 维持 2 路常规并行
+
+### 2026-11-21（`cap:collections` 验收，顶替拉起 `cap:wyhash` 维持 2 路常规并行）
+- **执行成果**：`lib/collections/`（5/5 PASS，`doc/lib/collections.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:wyhash` 维持 2 路常规并行

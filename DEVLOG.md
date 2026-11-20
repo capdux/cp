@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:collections` 纯 CP 高性能 BitSet、无堆 BoundedDeque、RingDeque、内联溢出 SmallVec 与泛型 BinaryHeap 集合库（吸收对标 Bun `src/collections/`，详见 `doc/lib/collections.md`）（5/5 PASS，文档直写 `doc/lib/collections.md`）
+- **核心设计**：`BoundedDeque` 与小容量 `SmallVec` 在常见热路径上实现零堆分配；`SmallVec` 超过内联阈值自动迁移至 `Allocator` 并在 `deinit` 时统一安全回收，全路径 `std.testing.allocator` 零泄漏。
+
 ## 2026-11-21: 新建 `cap:perf` 纯 CP 高分辨率作用域计时、P95/P99 热点聚合与 Chrome Trace Event JSON 导出引擎（吸收对标 Bun `src/perf/`，详见 `doc/lib/perf.md`）（5/5 PASS，文档直写 `doc/lib/perf.md`）
 - **核心设计**：支持确定性虚拟时钟注入实现无抖动测试；`PerfRecorder` 严格校验空名称、未配对 `end` 与最大容量限制，并在 `std.testing.allocator` 下全路径零泄漏。
 

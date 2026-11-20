@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:collections` 纯 CP 高性能 BitSet、无堆 BoundedDeque、RingDeque、内联溢出 SmallVec 与泛型 BinaryHeap 集合库（吸收对标 Bun `src/collections/`，详见 `doc/lib/collections.md`）（5/5 PASS，自动动态挂载 `cap.collections`）
+- **新增标准库**：`lib/collections/{errors,bitset,deque,small_vec,binary_heap,index}.cp`（吸收对标 Bun `src/collections/`），提供 `BitSet` 集合代数与 `nextSetBit`、零堆 `BoundedDeque(T,N)`、`RingDeque(T)`、内联零堆自动溢出 `SmallVec(T,INLINE_CAP)` 与 `BinaryHeap(T,cmp)`。
+- **新增文档与测试**：`doc/lib/collections.md` 扁平文档与 `cap/test/test_collections_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:perf` 纯 CP 高分辨率作用域计时、P95/P99 热点聚合与 Chrome Trace Event JSON 导出引擎（吸收对标 Bun `src/perf/`，详见 `doc/lib/perf.md`）（5/5 PASS，自动动态挂载 `cap.perf`）
 - **新增标准库**：`lib/perf/{clock,types,recorder,stats,trace,index}.cp`（吸收对标 Bun `src/perf/`），提供单调/虚拟可注入时钟、`PerfRecorder` 嵌套 Span 采样、`summarizeByName` P95/P99 聚合及 `exportChromeTraceJson`（RFC 8259 转义）。
 - **新增文档与测试**：`doc/lib/perf.md` 扁平文档与 `cap/test/test_perf_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
