@@ -379,5 +379,4 @@ impl Codegen {
 
         "*anyopaque".to_string() // Fallback
     }
-
 }

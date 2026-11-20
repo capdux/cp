@@ -809,7 +809,10 @@ impl<'a> Parser<'a> {
         self.parse_for_stmt_with_comptime(false)
     }
 
-    pub(super) fn parse_for_stmt_with_comptime(&mut self, is_comptime: bool) -> ParseResult<ForStmt> {
+    pub(super) fn parse_for_stmt_with_comptime(
+        &mut self,
+        is_comptime: bool,
+    ) -> ParseResult<ForStmt> {
         let start = if self.peek() == Some(&Token::For) {
             self.bump()?.1.start
         } else if matches!(self.peek(), Some(Token::Ident(id)) if id == "for") {
@@ -992,7 +995,10 @@ impl<'a> Parser<'a> {
         self.parse_if_stmt_with_comptime(false)
     }
 
-    pub(super) fn parse_if_stmt_with_comptime(&mut self, mut is_comptime: bool) -> ParseResult<IfStmt> {
+    pub(super) fn parse_if_stmt_with_comptime(
+        &mut self,
+        mut is_comptime: bool,
+    ) -> ParseResult<IfStmt> {
         let start = if self.peek() == Some(&Token::If) {
             self.bump()?.1.start
         } else if matches!(self.peek(), Some(Token::Ident(id)) if id == "if") {
@@ -1146,5 +1152,4 @@ impl<'a> Parser<'a> {
             is_ptr_capture,
         })
     }
-
 }

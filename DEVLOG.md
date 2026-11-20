@@ -2,6 +2,35 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-20: `cap` + `cpc` 模块级增量编译、Zig `-fno-llvm` 原生后端与多智能体无锁并发提速攻坚
+
+- **任务背景与问题诊断**：
+  1. 下游 `capsurf_agy` 反馈每次执行 `cap build -B -r -f src/main.cp`（53,916 行 / 75 模块）需耗时 48~50 秒，且多路子智能体需依赖 `flock` 串行排队及规避运行中覆写导致的 Linux `FileBusy (ETXTBSY)` 冲突。
+  2. 根因拆解：
+     - **耗时主因（95%）**：`-r -f` 触发 LLVM `-O3` 全量优化管线处理单一 3.4MB 内联 `main.zig`（仅后端就占 47.99s）；切至 `--debug` 后配合 Zig 0.17 原生 x86_64 后端直接将后端耗时压至 1.34s（总提速 14.3×）；
+     - **被迫 `-B` 根因**：旧版 `cap` 仅比对入口单文件 `mtime`，修改子模块不会触发重编；
+     - **串行与覆盖冲突根因**：多路共享 `.cap/zig` 与 `.cap/zig-cache`，且直接覆写运行中的可执行文件；
+     - **转译全量重做根因**：旧版 `cpc` 将全部 75 个模块内联为单一 `main.zig`，改一行触发全量 2.2s 重转译并令 Zig 增量缓存完全失效。
+
+- **双线协同架构实现**：
+  1. **前端模块级增量转译（`cpc/src/modular.rs` + `codegen/` + `sema/`）**：
+     - 设计按文件发射架构：`cpc compile --emit-dir <DIR>` 维护模块依赖图，对每个 `.cp` 计算 `fnv1a64(content + imported_signatures)` 并写入文件头 `// @cp_inc_hash:<hex>` 与 `.cp_inc_cache.json`；
+     - 公共运行时抽离至唯一共享的 `__cp_runtime.zig`，入口统一生成 `__cp_entry.zig` 与 `.cp_modular_manifest.txt`（聚合 `linkPath`/`linkLib`/`cInclude`/模块映射）；
+     - 实测在真实 CapSurf（75 模块 / 53,916 行）上冷发射 2.64s、热态 0 改动仅 **13ms**（提速 166×），且 Sema 报错精准指向子模块真实文件路径与行号。
+  2. **构建工具链全面提速与隔离（`cap/src/main.zig`）**：
+     - 实装 `computeMaxSourceMtimeNs` 递归扫描 `src/**/*.cp` 与 `cap.json`，0 改动毫秒级跳过；
+     - `-d`/`--debug` 在 native `x86_64-linux` 自动启用 `-fno-llvm`（失败自动平滑回退 LLVM，支持 `--llvm` 显式覆盖）；
+     - 编译产物统一采用 `<out>.tmp.<pid>` + 原子 `rename` 彻底消除 `ETXTBSY`；
+     - `-o`/`--out-dir` 与 `--cache-dir` 自动派生独立工作区 `.cap/ws/<sanitized>/{zig,zig-cache}`，多路并发零锁竞争；
+     - `-m`/`--modular` 完整对接 `cpc --emit-dir`、`--force`、`__cp_entry.zig` 与 `.cp_modular_manifest.txt` 链接参数扫描。
+
+- **发布与验证**：
+  - `cap` ReleaseFast 原子部署至 `/data/dev/cp/cap/bin/cap` 与 `/root/.cap/bin/cap`；
+  - `cpc` Release 通过 `bash scripts/sync_cpc.sh release` 原子部署至 `/data/dev/cp/cap/bin/cpc`；
+  - E2E 多文件实测：冷构建 618ms、0 改动跳过 0ms、单文件增量 `transpiled=1 cached=8 (7ms)` 且其余 `.zig` `mtime` 零变动、双路 `-o` 无锁并发 ~696ms；核心回归套件全部 100% PASS。
+
+---
+
 ## 2026-11-20: 消除 sys 动态库依赖、集成 vendor/zlib 纯静态编译与全工程 cap 依赖递归探测
 
 - **任务背景与工程决策**：

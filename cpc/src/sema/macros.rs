@@ -1024,5 +1024,4 @@ impl Analyzer {
             _ => false,
         }
     }
-
 }

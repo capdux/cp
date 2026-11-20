@@ -31,7 +31,10 @@ impl Codegen {
                     return if self.is_state_machine {
                         "ctx._self".to_string()
                     } else {
-                        "PID{ .node_id = current_node_id, .local_id = 1 }".to_string()
+                        format!(
+                            "PID{{ .node_id = {}, .local_id = 1 }}",
+                            self.rt_sym("current_node_id")
+                        )
                     };
                 }
                 if i.sym == "@sender" {
@@ -157,11 +160,18 @@ impl Codegen {
                                 || self.value_classes.contains(&id.sym)
                                 || self.type_aliases.contains_key(&id.sym)
                                 || self.trait_defs.contains_key(&id.sym)
-                                || id.sym.chars().next().map_or(false, |c| c.is_ascii_uppercase()))
+                                || id
+                                    .sym
+                                    .chars()
+                                    .next()
+                                    .map_or(false, |c| c.is_ascii_uppercase()))
                     }
-                    Expr::Member(mem) => {
-                        mem.prop.sym.chars().next().map_or(false, |c| c.is_ascii_uppercase())
-                    }
+                    Expr::Member(mem) => mem
+                        .prop
+                        .sym
+                        .chars()
+                        .next()
+                        .map_or(false, |c| c.is_ascii_uppercase()),
                     _ => false,
                 };
                 if is_type_name {
@@ -283,7 +293,9 @@ impl Codegen {
                     } else {
                         None
                     };
-                    let was_l = l_id.as_ref().map_or(false, |s| self.narrowed_null_vars.remove(s));
+                    let was_l = l_id
+                        .as_ref()
+                        .map_or(false, |s| self.narrowed_null_vars.remove(s));
                     let code = self.generate_expr(&bin.left);
                     if was_l {
                         self.narrowed_null_vars.insert(l_id.unwrap());
@@ -298,7 +310,9 @@ impl Codegen {
                     } else {
                         None
                     };
-                    let was_r = r_id.as_ref().map_or(false, |s| self.narrowed_null_vars.remove(s));
+                    let was_r = r_id
+                        .as_ref()
+                        .map_or(false, |s| self.narrowed_null_vars.remove(s));
                     let code = self.generate_expr(&bin.right);
                     if was_r {
                         self.narrowed_null_vars.insert(r_id.unwrap());
@@ -322,24 +336,29 @@ impl Codegen {
                         Self::is_numeric_type(t1)
                             && matches!(
                                 &*bin.right,
-                                Expr::Lit(Lit::Int(_)) | Expr::Lit(Lit::Float(_)) | Expr::Index { .. }
+                                Expr::Lit(Lit::Int(_))
+                                    | Expr::Lit(Lit::Float(_))
+                                    | Expr::Index { .. }
                             )
                     }
                     (None, Some(t2)) => {
                         Self::is_numeric_type(t2)
                             && matches!(
                                 &*bin.left,
-                                Expr::Lit(Lit::Int(_)) | Expr::Lit(Lit::Float(_)) | Expr::Index { .. }
+                                Expr::Lit(Lit::Int(_))
+                                    | Expr::Lit(Lit::Float(_))
+                                    | Expr::Index { .. }
                             )
                     }
                     _ => {
-                        matches!(&*bin.left, Expr::Lit(Lit::Int(_)) | Expr::Lit(Lit::Float(_)))
-                            || matches!(
-                                &*bin.right,
-                                Expr::Lit(Lit::Int(_)) | Expr::Lit(Lit::Float(_))
-                            )
-                            || (matches!(&*bin.left, Expr::Index { .. })
-                                && matches!(&*bin.right, Expr::Index { .. }))
+                        matches!(
+                            &*bin.left,
+                            Expr::Lit(Lit::Int(_)) | Expr::Lit(Lit::Float(_))
+                        ) || matches!(
+                            &*bin.right,
+                            Expr::Lit(Lit::Int(_)) | Expr::Lit(Lit::Float(_))
+                        ) || (matches!(&*bin.left, Expr::Index { .. })
+                            && matches!(&*bin.right, Expr::Index { .. }))
                     }
                 };
                 let is_null_cmp = matches!(&*bin.left, Expr::Lit(Lit::Null))
@@ -377,8 +396,14 @@ impl Codegen {
                 match bin.op {
                     BinaryOp::Eq => {
                         let has_num = are_both_numeric
-                            || matches!(&*bin.left, Expr::Lit(Lit::Int(_)) | Expr::Lit(Lit::Float(_)))
-                            || matches!(&*bin.right, Expr::Lit(Lit::Int(_)) | Expr::Lit(Lit::Float(_)));
+                            || matches!(
+                                &*bin.left,
+                                Expr::Lit(Lit::Int(_)) | Expr::Lit(Lit::Float(_))
+                            )
+                            || matches!(
+                                &*bin.right,
+                                Expr::Lit(Lit::Int(_)) | Expr::Lit(Lit::Float(_))
+                            );
                         if self.is_lib_mode
                             || has_num
                             || is_null_cmp
@@ -393,8 +418,14 @@ impl Codegen {
                     }
                     BinaryOp::NotEq => {
                         let has_num = are_both_numeric
-                            || matches!(&*bin.left, Expr::Lit(Lit::Int(_)) | Expr::Lit(Lit::Float(_)))
-                            || matches!(&*bin.right, Expr::Lit(Lit::Int(_)) | Expr::Lit(Lit::Float(_)));
+                            || matches!(
+                                &*bin.left,
+                                Expr::Lit(Lit::Int(_)) | Expr::Lit(Lit::Float(_))
+                            )
+                            || matches!(
+                                &*bin.right,
+                                Expr::Lit(Lit::Int(_)) | Expr::Lit(Lit::Float(_))
+                            );
                         if self.is_lib_mode
                             || has_num
                             || is_null_cmp
@@ -465,7 +496,10 @@ impl Codegen {
                         Expr::Continue(_) => {
                             let id = self.lambda_counter;
                             self.lambda_counter += 1;
-                            format!("(blk_{id}: {{ if (!({})) continue; break :blk_{id} true; }})", l)
+                            format!(
+                                "(blk_{id}: {{ if (!({})) continue; break :blk_{id} true; }})",
+                                l
+                            )
                         }
                         Expr::Break(_, val) => {
                             let id = self.lambda_counter;
@@ -477,14 +511,20 @@ impl Codegen {
                                     l, v_code
                                 )
                             } else {
-                                format!("(blk_{id}: {{ if (!({})) break; break :blk_{id} true; }})", l)
+                                format!(
+                                    "(blk_{id}: {{ if (!({})) break; break :blk_{id} true; }})",
+                                    l
+                                )
                             }
                         }
                         Expr::Return(_, ret_expr) => {
                             let id = self.lambda_counter;
                             self.lambda_counter += 1;
                             let ret_stmt = self.build_ret_stmt_for_fallback(ret_expr.as_deref());
-                            format!("(blk_{id}: {{ if (!({})) {{ {} }}; break :blk_{id} true; }})", l, ret_stmt)
+                            format!(
+                                "(blk_{id}: {{ if (!({})) {{ {} }}; break :blk_{id} true; }})",
+                                l, ret_stmt
+                            )
                         }
                         _ => format!("({} or {})", l, r),
                     },
@@ -586,7 +626,12 @@ impl Codegen {
                         );
                         let is_src_ptr = matches!(
                             src_ty,
-                            Some(Type::RawPtr { .. } | Type::ManyRawPtr(_) | Type::CStr | Type::BorrowType { .. })
+                            Some(
+                                Type::RawPtr { .. }
+                                    | Type::ManyRawPtr(_)
+                                    | Type::CStr
+                                    | Type::BorrowType { .. }
+                            )
                         );
                         let is_target_int = matches!(
                             resolved_ty,
@@ -606,7 +651,10 @@ impl Codegen {
                         let is_target_float = matches!(resolved_ty, Type::F32 | Type::F64);
                         let is_target_ptr = matches!(
                             resolved_ty,
-                            Type::RawPtr { .. } | Type::ManyRawPtr(_) | Type::CStr | Type::BorrowType { .. }
+                            Type::RawPtr { .. }
+                                | Type::ManyRawPtr(_)
+                                | Type::CStr
+                                | Type::BorrowType { .. }
                         );
                         let is_src_enum = if let Some(Type::Ref(id)) = &src_ty {
                             self.enum_defs.contains_key(&id.sym)
@@ -659,7 +707,9 @@ impl Codegen {
                                 )
                             }
                         } else if is_target_float {
-                            if inner_code.starts_with("@bitCast(") || inner_code.starts_with("@floatFromInt(") {
+                            if inner_code.starts_with("@bitCast(")
+                                || inner_code.starts_with("@floatFromInt(")
+                            {
                                 format!("@as({}, {})", target_zig_ty, inner_code)
                             } else if is_src_int {
                                 format!("@as({}, @floatFromInt({}))", target_zig_ty, inner_code)
@@ -672,10 +722,15 @@ impl Codegen {
                                     "@as({}, @ptrFromInt(@as(usize, @truncate({}))))",
                                     target_zig_ty, inner_code
                                 )
-                            } else if matches!(src_ty, Some(Type::Array(_)) | Some(Type::FixedArray(_, _)))
-                                || matches!(src_ty, Some(Type::Ref(ref id)) if id.sym.starts_with('['))
+                            } else if matches!(
+                                src_ty,
+                                Some(Type::Array(_)) | Some(Type::FixedArray(_, _))
+                            ) || matches!(src_ty, Some(Type::Ref(ref id)) if id.sym.starts_with('['))
                                 || self.infer_zig_type(None, Some(expr)).starts_with('[')
-                                || self.locals.get(&inner_code).map_or(false, |l| l.starts_with('['))
+                                || self
+                                    .locals
+                                    .get(&inner_code)
+                                    .map_or(false, |l| l.starts_with('['))
                             {
                                 format!("@as({}, @ptrCast(&({})))", target_zig_ty, inner_code)
                             } else if matches!(src_ty, Some(Type::String)) {
@@ -699,7 +754,9 @@ impl Codegen {
                                 "@as({}, @ptrCast(@alignCast({})))",
                                 target_zig_ty, inner_code
                             )
-                        } else if matches!(resolved_ty, Type::Ref(_)) && !matches!(resolved_ty, Type::Ref(ref id) if self.class_defs.contains_key(&id.sym) || self.trait_defs.contains_key(&id.sym)) {
+                        } else if matches!(resolved_ty, Type::Ref(_))
+                            && !matches!(resolved_ty, Type::Ref(ref id) if self.class_defs.contains_key(&id.sym) || self.trait_defs.contains_key(&id.sym))
+                        {
                             if inner_code.starts_with("@enumFromInt(")
                                 || inner_code.starts_with("@truncate(")
                                 || inner_code.starts_with("@intCast(")
@@ -721,7 +778,10 @@ impl Codegen {
                             }
                         } else if resolved_ty == Type::Bool {
                             if self.is_comptime {
-                                format!("(if (@typeInfo(@TypeOf({0})) == .bool) {0} else ({0} != 0))", inner_code)
+                                format!(
+                                    "(if (@typeInfo(@TypeOf({0})) == .bool) {0} else ({0} != 0))",
+                                    inner_code
+                                )
                             } else {
                                 format!("(if (comptime @typeInfo(@TypeOf({0})) == .bool) {0} else ({0} != 0))", inner_code)
                             }
@@ -751,7 +811,10 @@ impl Codegen {
                         if was {
                             self.narrowed_null_vars.insert(id.sym.clone());
                         }
-                        return if matches!(&**inner, Expr::Ident(_) | Expr::Member(_) | Expr::Deref(_)) {
+                        return if matches!(
+                            &**inner,
+                            Expr::Ident(_) | Expr::Member(_) | Expr::Deref(_)
+                        ) {
                             format!("{}.?", inner_code)
                         } else {
                             format!("({}).?", inner_code)

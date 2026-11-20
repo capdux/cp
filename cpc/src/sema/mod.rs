@@ -1118,36 +1118,42 @@ impl Analyzer {
                 }
                 ModuleItem::Import(imp) => {
                     if let Some(def_spec) = &imp.default_specifier {
-                        let _ = self.define(
-                            def_spec.sym.clone(),
-                            SymbolKind::Var {
-                                ty: Type::Any,
-                                kind: VarDeclKind::Const,
-                            },
-                            def_spec.span,
-                        );
+                        if !self.scopes[0].contains_key(&def_spec.sym) {
+                            let _ = self.define(
+                                def_spec.sym.clone(),
+                                SymbolKind::Var {
+                                    ty: Type::Any,
+                                    kind: VarDeclKind::Const,
+                                },
+                                def_spec.span,
+                            );
+                        }
                     }
                     for spec in &imp.specifiers {
-                        let _ = self.define(
-                            spec.sym.clone(),
-                            SymbolKind::Var {
-                                ty: Type::Any,
-                                kind: VarDeclKind::Const,
-                            },
-                            spec.span,
-                        );
+                        if !self.scopes[0].contains_key(&spec.sym) {
+                            let _ = self.define(
+                                spec.sym.clone(),
+                                SymbolKind::Var {
+                                    ty: Type::Any,
+                                    kind: VarDeclKind::Const,
+                                },
+                                spec.span,
+                            );
+                        }
                     }
                 }
                 ModuleItem::Export(exp) => {
                     for spec in &exp.specifiers {
-                        let _ = self.define(
-                            spec.sym.clone(),
-                            SymbolKind::Var {
-                                ty: Type::Any,
-                                kind: VarDeclKind::Const,
-                            },
-                            spec.span,
-                        );
+                        if !self.scopes[0].contains_key(&spec.sym) {
+                            let _ = self.define(
+                                spec.sym.clone(),
+                                SymbolKind::Var {
+                                    ty: Type::Any,
+                                    kind: VarDeclKind::Const,
+                                },
+                                spec.span,
+                            );
+                        }
                     }
                 }
                 ModuleItem::Stmt(Stmt::Var(v)) => {
@@ -1211,6 +1217,75 @@ impl Analyzer {
         Ok(())
     }
 
+    pub fn register_imported_decl(&mut self, decl: &Decl) {
+        match decl {
+            Decl::Class(c) => {
+                self.classes.insert(c.ident.sym.clone(), c.clone());
+                self.scopes[0].insert(c.ident.sym.clone(), SymbolKind::Class(c.clone()));
+            }
+            Decl::Trait(t) => {
+                self.traits.insert(t.ident.sym.clone(), t.clone());
+                self.scopes[0].insert(t.ident.sym.clone(), SymbolKind::Trait(t.clone()));
+            }
+            Decl::Enum(e) => {
+                self.scopes[0].insert(e.ident.sym.clone(), SymbolKind::Enum(e.clone()));
+            }
+            Decl::Func(f) => {
+                self.functions.insert(f.ident.sym.clone(), f.clone());
+                let params = f.params.iter().map(|p| p.ty.clone()).collect();
+                self.scopes[0].insert(
+                    f.ident.sym.clone(),
+                    SymbolKind::Func {
+                        params,
+                        ret: f.return_type.clone(),
+                        is_async: f.is_async,
+                        is_unsafe: f.is_unsafe,
+                    },
+                );
+            }
+            Decl::TypeAlias(ta) => {
+                self.type_aliases
+                    .insert(ta.ident.sym.clone(), ta.target_ty.clone());
+                self.scopes[0]
+                    .entry(ta.ident.sym.clone())
+                    .or_insert(SymbolKind::Var {
+                        ty: Type::Any,
+                        kind: VarDeclKind::Const,
+                    });
+            }
+            Decl::Dec(d) => {
+                self.dec_defs.insert(d.ident.sym.clone(), d.clone());
+                self.scopes[0].insert(
+                    d.ident.sym.clone(),
+                    SymbolKind::Func {
+                        params: d.params.iter().map(|p| p.ty.clone()).collect(),
+                        ret: d.return_type.clone(),
+                        is_async: false,
+                        is_unsafe: false,
+                    },
+                );
+            }
+            Decl::Macro(m) => {
+                self.macro_defs.insert(m.ident.sym.clone(), m.clone());
+            }
+            Decl::Meta(m) => {
+                let _ = self.register_meta_def(m);
+            }
+            _ => {}
+        }
+    }
+
+    pub fn register_imported_var(&mut self, v: &VarDecl) {
+        if let Pattern::Ident(id) = &v.pat {
+            self.scopes[0].insert(
+                id.sym.clone(),
+                SymbolKind::Var {
+                    ty: v.ty.clone().unwrap_or(Type::Any),
+                    kind: v.kind.clone(),
+                },
+            );
+        }
+    }
 }
 
 pub(super) fn inner_span(expr: &Expr) -> Span {

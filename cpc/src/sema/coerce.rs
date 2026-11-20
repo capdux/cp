@@ -1108,7 +1108,12 @@ impl Analyzer {
         }
     }
 
-    pub(super) fn analyze_pattern(&mut self, pat: &Pattern, ty: Type, kind: &VarDeclKind) -> SemaResult<()> {
+    pub(super) fn analyze_pattern(
+        &mut self,
+        pat: &Pattern,
+        ty: Type,
+        kind: &VarDeclKind,
+    ) -> SemaResult<()> {
         match pat {
             Pattern::Ident(ident) => {
                 if !ident.sym.starts_with("@\"") && RESERVED_WORDS.contains(&ident.sym.as_str()) {
@@ -1403,5 +1408,4 @@ impl Analyzer {
         self.exit_scope();
         Ok(())
     }
-
 }

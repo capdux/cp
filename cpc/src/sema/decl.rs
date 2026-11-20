@@ -864,5 +864,4 @@ impl Analyzer {
         }
         Ok(())
     }
-
 }

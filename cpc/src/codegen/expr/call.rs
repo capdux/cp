@@ -11,7 +11,9 @@ impl Codegen {
                 if let Expr::Member(mem) = &*call.callee {
                     let prop = mem.prop.sym.as_str();
 
-                    if (prop == "write" || prop == "print" || prop == "writeAll") && call.args.len() == 1 {
+                    if (prop == "write" || prop == "print" || prop == "writeAll")
+                        && call.args.len() == 1
+                    {
                         if let Expr::Template(t) = &call.args[0] {
                             let (pattern, args) = self.lower_template_stream(t);
                             let args_joined = if args.is_empty() {
@@ -39,10 +41,16 @@ impl Codegen {
                             if prop == "has" && call.args.len() == 2 {
                                 let target = self.generate_expr(&call.args[0]);
                                 let name = self.generate_expr(&call.args[1]);
-                                return format!("(@hasDecl({0}, {1}) or @hasField({0}, {1}))", target, name);
+                                return format!(
+                                    "(@hasDecl({0}, {1}) or @hasField({0}, {1}))",
+                                    target, name
+                                );
                             }
                         }
-                        if (id.sym == "string" || id.sym == "String") && prop == "from" && call.args.len() == 1 {
+                        if (id.sym == "string" || id.sym == "String")
+                            && prop == "from"
+                            && call.args.len() == 1
+                        {
                             let arg = self.generate_expr(&call.args[0]);
                             return format!("cp_string_from({})", arg);
                         }
@@ -60,14 +68,31 @@ impl Codegen {
                                     Some(Expr::Ident(ident)) => {
                                         let is_type = matches!(
                                             ident.sym.as_str(),
-                                            "i8" | "u8" | "i16" | "u16" | "i32" | "u32" | "i64" | "u64"
-                                            | "i128" | "u128" | "isize" | "usize" | "f32" | "f64" | "bool" | "string"
+                                            "i8" | "u8"
+                                                | "i16"
+                                                | "u16"
+                                                | "i32"
+                                                | "u32"
+                                                | "i64"
+                                                | "u64"
+                                                | "i128"
+                                                | "u128"
+                                                | "isize"
+                                                | "usize"
+                                                | "f32"
+                                                | "f64"
+                                                | "bool"
+                                                | "string"
                                         ) || self.class_defs.contains_key(&ident.sym)
-                                          || self.enum_defs.contains_key(&ident.sym)
-                                          || self.trait_defs.contains_key(&ident.sym)
-                                          || (!self.locals.contains_key(&ident.sym)
-                                              && !self.globals.contains(&ident.sym)
-                                              && ident.sym.chars().next().map_or(false, |c| c.is_ascii_uppercase()));
+                                            || self.enum_defs.contains_key(&ident.sym)
+                                            || self.trait_defs.contains_key(&ident.sym)
+                                            || (!self.locals.contains_key(&ident.sym)
+                                                && !self.globals.contains(&ident.sym)
+                                                && ident
+                                                    .sym
+                                                    .chars()
+                                                    .next()
+                                                    .map_or(false, |c| c.is_ascii_uppercase()));
                                         if is_type {
                                             (true, self.map_type_name(&ident.sym))
                                         } else {
@@ -104,7 +129,10 @@ impl Codegen {
                                         return format!("JSON.parse({}, {})", alloc_arg, str_arg);
                                     } else {
                                         let str_arg = self.generate_expr(&call.args[0]);
-                                        return format!("JSON.parse(std.heap.smp_allocator, {})", str_arg);
+                                        return format!(
+                                            "JSON.parse(std.heap.smp_allocator, {})",
+                                            str_arg
+                                        );
                                     }
                                 }
                             }
@@ -112,12 +140,21 @@ impl Codegen {
                         let is_enum = self.enum_defs.contains_key(&id.sym)
                             || (!self.locals.contains_key(&id.sym)
                                 && !self.global_var_types.contains_key(&id.sym)
-                                && id.sym.chars().next().map_or(false, |c| c.is_ascii_uppercase())
+                                && id
+                                    .sym
+                                    .chars()
+                                    .next()
+                                    .map_or(false, |c| c.is_ascii_uppercase())
                                 && !self.class_defs.contains_key(&id.sym));
-                        let is_custom_method = self.enum_defs.get(&id.sym).map_or(false, |ed| {
-                            ed.methods.iter().any(|m| m.ident.sym == prop)
-                        });
-                        if is_enum && !is_custom_method && (prop == "get" || prop == "fromName" || prop == "fromString") && call.args.len() == 1 {
+                        let is_custom_method = self
+                            .enum_defs
+                            .get(&id.sym)
+                            .map_or(false, |ed| ed.methods.iter().any(|m| m.ident.sym == prop));
+                        if is_enum
+                            && !is_custom_method
+                            && (prop == "get" || prop == "fromName" || prop == "fromString")
+                            && call.args.len() == 1
+                        {
                             let arg = self.generate_expr(&call.args[0]);
                             return format!("{}.get({})", id.sym, arg);
                         }
@@ -135,7 +172,10 @@ impl Codegen {
                                     ty = Some(*inner);
                                 }
                                 if let Some(Type::Ref(id)) = ty {
-                                if id.sym == "Managed" && !gen_arg.starts_with('&') && !gen_arg.starts_with('*') {
+                                    if id.sym == "Managed"
+                                        && !gen_arg.starts_with('&')
+                                        && !gen_arg.starts_with('*')
+                                    {
                                         gen_arg = format!("&{}", gen_arg);
                                     }
                                 }
@@ -143,7 +183,11 @@ impl Codegen {
                             }
                             return format!("{}.{}({})", id.sym, prop, args_code.join(", "));
                         }
-                        if !self.has_imported_ptr && id.sym == "Shared" && prop == "new" && !call.args.is_empty() {
+                        if !self.has_imported_ptr
+                            && id.sym == "Shared"
+                            && prop == "new"
+                            && !call.args.is_empty()
+                        {
                             let arg = self.generate_expr(&call.args[0]);
                             return format!(
                                 "(blk: {{ const _val = {}; const _T = @TypeOf(_val); if (comptime @typeInfo(_T) == .pointer) break :blk _val else {{ const _p = std.heap.page_allocator.create(_T) catch unreachable; _p.* = _val; break :blk _p; }} }})",
@@ -189,7 +233,9 @@ impl Codegen {
                         }
                     }
 
-                    if (prop == "withLock" || prop == "withRead" || prop == "withWrite") && !call.args.is_empty() {
+                    if (prop == "withLock" || prop == "withRead" || prop == "withWrite")
+                        && !call.args.is_empty()
+                    {
                         let obj_code = self.generate_expr(&mem.obj);
                         let blk_id = self.lambda_counter;
                         self.lambda_counter += 1;
@@ -209,7 +255,10 @@ impl Codegen {
                                     let pname = pid.sym.clone();
                                     param_ident = Some(pname.clone());
                                     self.inline_closure_params.insert(pname.clone());
-                                    param_bind = format!("    const {0} = &(_target.data); _ = &{0};\n", pname);
+                                    param_bind = format!(
+                                        "    const {0} = &(_target.data); _ = &{0};\n",
+                                        pname
+                                    );
                                     saved_local = self.locals.get(&pname).cloned();
                                     saved_cp_ty = self.var_cp_types.get(&pname).cloned();
                                     if let Some(Type::Ref(id)) = &raw_obj_ty {
@@ -221,11 +270,14 @@ impl Codegen {
                                             ""
                                         };
                                         if !inner_sym.is_empty() {
-                                            self.locals.insert(pname.clone(), format!("*{}", inner_sym));
+                                            self.locals
+                                                .insert(pname.clone(), format!("*{}", inner_sym));
                                             self.var_cp_types.insert(
                                                 pname.clone(),
                                                 Type::BorrowType {
-                                                    inner: Box::new(Self::type_from_name_static(inner_sym)),
+                                                    inner: Box::new(Self::type_from_name_static(
+                                                        inner_sym,
+                                                    )),
                                                     is_mut: prop != "withRead",
                                                     lifetimes: vec![],
                                                 },
@@ -253,7 +305,10 @@ impl Codegen {
                                         self.generate_stmt(s);
                                     }
                                     if !Self::block_returns_value(&b.body) {
-                                        self.write_to_case(&format!("break :blk_sync_{} {{}};", blk_id));
+                                        self.write_to_case(&format!(
+                                            "break :blk_sync_{} {{}};",
+                                            blk_id
+                                        ));
                                     }
 
                                     let body_stmts = self.current_case_content.clone();
@@ -285,7 +340,21 @@ impl Codegen {
                     }
 
                     let is_sync_type = matches!(&raw_obj_ty, Some(Type::Ref(id)) if id.sym == "Mutex" || id.sym.starts_with("Mutex<") || id.sym == "RwLock" || id.sym.starts_with("RwLock<") || id.sym == "Atomic" || id.sym.starts_with("Atomic<") || id.sym.starts_with("LockGuard<") || id.sym.starts_with("ReadGuard<") || id.sym.starts_with("WriteGuard<"));
-                    if is_sync_type || matches!(prop, "cas" | "compareAndSwap" | "testAndSet" | "tryLock" | "isLocked" | "tryRead" | "tryWrite" | "isReadLocked" | "isWriteLocked" | "release") {
+                    if is_sync_type
+                        || matches!(
+                            prop,
+                            "cas"
+                                | "compareAndSwap"
+                                | "testAndSet"
+                                | "tryLock"
+                                | "isLocked"
+                                | "tryRead"
+                                | "tryWrite"
+                                | "isReadLocked"
+                                | "isWriteLocked"
+                                | "release"
+                        )
+                    {
                         let obj_raw = self.generate_expr(&mem.obj);
                         let obj_ty = self.infer_zig_type(None, Some(&mem.obj));
                         let obj = if obj_ty.starts_with('?') {
@@ -302,14 +371,38 @@ impl Codegen {
                             let arg1 = self.generate_expr(&call.args[1]);
                             return format!("(if (comptime @typeInfo(@TypeOf({0})) == .pointer) ({0}) else &({0})).cas({1}, {2})", obj, arg0, arg1);
                         }
-                        if matches!(prop, "load" | "store" | "swap" | "add" | "sub" | "inc" | "dec" | "testAndSet" | "clear") {
+                        if matches!(
+                            prop,
+                            "load"
+                                | "store"
+                                | "swap"
+                                | "add"
+                                | "sub"
+                                | "inc"
+                                | "dec"
+                                | "testAndSet"
+                                | "clear"
+                        ) {
                             let mut args_code = Vec::new();
                             for a in &call.args {
                                 args_code.push(self.generate_expr(a));
                             }
                             return format!("(if (comptime @typeInfo(@TypeOf({0})) == .pointer) ({0}) else &({0})).{1}({2})", obj, prop, args_code.join(", "));
                         }
-                        if matches!(prop, "lock" | "unlock" | "tryLock" | "isLocked" | "read" | "write" | "tryRead" | "tryWrite" | "isReadLocked" | "isWriteLocked" | "release") {
+                        if matches!(
+                            prop,
+                            "lock"
+                                | "unlock"
+                                | "tryLock"
+                                | "isLocked"
+                                | "read"
+                                | "write"
+                                | "tryRead"
+                                | "tryWrite"
+                                | "isReadLocked"
+                                | "isWriteLocked"
+                                | "release"
+                        ) {
                             return format!("(if (comptime @typeInfo(@TypeOf({0})) == .pointer) ({0}) else &({0})).{1}()", obj, prop);
                         }
                     }
@@ -492,7 +585,10 @@ impl Codegen {
                         let start = self.generate_expr(&call.args[0]);
                         if call.args.len() > 1 {
                             let end = self.generate_expr(&call.args[1]);
-                            return format!("cp_iter_slice({})[@intCast({})..@intCast({})]", obj, start, end);
+                            return format!(
+                                "cp_iter_slice({})[@intCast({})..@intCast({})]",
+                                obj, start, end
+                            );
                         } else {
                             return format!("cp_iter_slice({})[@intCast({})..]", obj, start);
                         }
@@ -513,7 +609,11 @@ impl Codegen {
                         return format!("@as(i32, @intCast({}[@intCast({})]))", obj, arg);
                     } else if prop == "match" && call.args.len() == 1 {
                         let is_class_or_enum = match &*mem.obj {
-                            Expr::Ident(id) => self.class_defs.contains_key(&id.sym) || self.enum_defs.contains_key(&id.sym) || id.sym.chars().next().map_or(false, |c| c.is_uppercase()),
+                            Expr::Ident(id) => {
+                                self.class_defs.contains_key(&id.sym)
+                                    || self.enum_defs.contains_key(&id.sym)
+                                    || id.sym.chars().next().map_or(false, |c| c.is_uppercase())
+                            }
                             _ => false,
                         };
                         if !is_class_or_enum {
@@ -542,20 +642,32 @@ impl Codegen {
 
                 if let Expr::Member(mem) = &*call.callee {
                     if let Expr::Ident(id) = &*mem.obj {
-                        if (id.sym == "string" || id.sym == "String") && mem.prop.sym == "from" && call.args.len() == 1 {
+                        if (id.sym == "string" || id.sym == "String")
+                            && mem.prop.sym == "from"
+                            && call.args.len() == 1
+                        {
                             let arg_code = self.generate_expr(&call.args[0]);
                             return format!("cp_string_from({})", arg_code);
                         }
                         if let Some(ed) = self.enum_defs.get(&id.sym) {
                             let is_method = ed.methods.iter().any(|m| m.ident.sym == mem.prop.sym)
-                                || ed.extra_zig.iter().any(|z| z.contains(&format!("fn {}(", mem.prop.sym)));
-                            let is_variant = ed.variants.iter().any(|v| v.ident.sym == mem.prop.sym);
+                                || ed
+                                    .extra_zig
+                                    .iter()
+                                    .any(|z| z.contains(&format!("fn {}(", mem.prop.sym)));
+                            let is_variant =
+                                ed.variants.iter().any(|v| v.ident.sym == mem.prop.sym);
                             if is_method || !is_variant {
                                 let mut args_code = Vec::new();
                                 for a in &call.args {
                                     args_code.push(self.generate_expr(a));
                                 }
-                                return format!("{}.{}({})", id.sym, mem.prop.sym, args_code.join(", "));
+                                return format!(
+                                    "{}.{}({})",
+                                    id.sym,
+                                    mem.prop.sym,
+                                    args_code.join(", ")
+                                );
                             }
                             let arg_code = if !call.args.is_empty() {
                                 self.generate_expr(&call.args[0])
@@ -677,8 +789,8 @@ impl Codegen {
                                                 mem.prop.sym
                                             );
                                         }
-                                        if let Some(mutated_fields) =
-                                            self.find_method_mutated_fields(&c_name, &super_method_name)
+                                        if let Some(mutated_fields) = self
+                                            .find_method_mutated_fields(&c_name, &super_method_name)
                                         {
                                             if mutated_fields.is_empty() {
                                                 self.check_borrow_conflict("this", false);
@@ -763,10 +875,7 @@ impl Codegen {
                                     if self.moved_vars.contains("this")
                                         || self.moved_vars.contains("_")
                                     {
-                                        panic!(
-                                            "CP Compile Error: Use of moved value '{}'",
-                                            id.sym
-                                        );
+                                        panic!("CP Compile Error: Use of moved value '{}'", id.sym);
                                     }
                                     match target_recv_mode {
                                         ReceiverMode::Mut => {
@@ -777,8 +886,11 @@ impl Codegen {
                                                     id.sym, mem.prop.sym
                                                 );
                                             }
-                                            if let Some(mutated_fields) =
-                                                self.find_method_mutated_fields(&type_name, &mem.prop.sym)
+                                            if let Some(mutated_fields) = self
+                                                .find_method_mutated_fields(
+                                                    &type_name,
+                                                    &mem.prop.sym,
+                                                )
                                             {
                                                 if mutated_fields.is_empty() {
                                                     self.check_borrow_conflict("this", false);
@@ -820,10 +932,7 @@ impl Codegen {
                                     }
                                 } else {
                                     if self.moved_vars.contains(&id.sym) {
-                                        panic!(
-                                            "CP Compile Error: Use of moved value '{}'",
-                                            id.sym
-                                        );
+                                        panic!("CP Compile Error: Use of moved value '{}'", id.sym);
                                     }
                                     match target_recv_mode {
                                         ReceiverMode::Mut => {
@@ -844,8 +953,11 @@ impl Codegen {
                                                     mem.prop.sym, id.sym, id.sym
                                                 );
                                             }
-                                            if let Some(mutated_fields) =
-                                                self.find_method_mutated_fields(&type_name, &mem.prop.sym)
+                                            if let Some(mutated_fields) = self
+                                                .find_method_mutated_fields(
+                                                    &type_name,
+                                                    &mem.prop.sym,
+                                                )
                                             {
                                                 if mutated_fields.is_empty() {
                                                     self.check_borrow_conflict(&id.sym, false);
@@ -939,7 +1051,9 @@ impl Codegen {
                                                             arg_id.sym, param.ident.sym
                                                         );
                                                     }
-                                                } else if self.current_fn_params.contains(&arg_id.sym)
+                                                } else if self
+                                                    .current_fn_params
+                                                    .contains(&arg_id.sym)
                                                     && !self.mutable_fn_params.contains(&arg_id.sym)
                                                 {
                                                     panic!(
@@ -950,7 +1064,9 @@ impl Codegen {
                                                 self.check_borrow_conflict(&arg_id.sym, true);
                                             } else if param.is_move {
                                                 if self.var_borrow_sources.contains_key(&arg_id.sym)
-                                                    || (self.current_fn_params.contains(&arg_id.sym)
+                                                    || (self
+                                                        .current_fn_params
+                                                        .contains(&arg_id.sym)
                                                         && !self
                                                             .move_fn_params
                                                             .contains(&arg_id.sym))
@@ -994,11 +1110,12 @@ impl Codegen {
                                     }
                                 }
 
-                                let prop_name = if matches!(mem.prop.sym.as_str(), "and" | "or" | "orelse") {
-                                    format!("@\"{}\"", mem.prop.sym)
-                                } else {
-                                    mem.prop.sym.clone()
-                                };
+                                let prop_name =
+                                    if matches!(mem.prop.sym.as_str(), "and" | "or" | "orelse") {
+                                        format!("@\"{}\"", mem.prop.sym)
+                                    } else {
+                                        mem.prop.sym.clone()
+                                    };
                                 let call_res = if target_recv_mode == ReceiverMode::Move {
                                     if is_self_recv {
                                         self.moved_vars.insert("this".to_string());
@@ -1058,8 +1175,20 @@ impl Codegen {
                     }
                     let is_primitive = matches!(
                         ident.sym.as_str(),
-                        "i8" | "u8" | "i16" | "u16" | "i32" | "u32" | "i64" | "u64" | "i128" | "u128"
-                            | "isize" | "usize" | "f32" | "f64" | "bool"
+                        "i8" | "u8"
+                            | "i16"
+                            | "u16"
+                            | "i32"
+                            | "u32"
+                            | "i64"
+                            | "u64"
+                            | "i128"
+                            | "u128"
+                            | "isize"
+                            | "usize"
+                            | "f32"
+                            | "f64"
+                            | "bool"
                     );
                     if is_primitive && call.args.len() == 1 {
                         let target_ty = match ident.sym.as_str() {
@@ -1249,7 +1378,10 @@ impl Codegen {
                             } else {
                                 format!(" {}", args.join(", "))
                             };
-                            return format!("std.debug.print(\"{}\\n\", .{{{}}})", pattern, args_joined);
+                            return format!(
+                                "std.debug.print(\"{}\\n\", .{{{}}})",
+                                pattern, args_joined
+                            );
                         }
                     }
                     if (ident.sym == "eprint" || ident.sym == "eprintln") && call.args.len() == 1 {
@@ -1261,7 +1393,10 @@ impl Codegen {
                                 format!(" {}", args.join(", "))
                             };
                             let nl = if ident.sym == "eprintln" { "\\n" } else { "" };
-                            return format!("std.debug.print(\"{}{}\", .{{{}}})", pattern, nl, args_joined);
+                            return format!(
+                                "std.debug.print(\"{}{}\", .{{{}}})",
+                                pattern, nl, args_joined
+                            );
                         }
                     }
                 }
@@ -1271,7 +1406,10 @@ impl Codegen {
                 } else {
                     match &*call.callee {
                         Expr::Ident(ident) => {
-                            if self.is_state_machine && self.locals.contains_key(&ident.sym) && !self.inline_closure_params.contains(&ident.sym) {
+                            if self.is_state_machine
+                                && self.locals.contains_key(&ident.sym)
+                                && !self.inline_closure_params.contains(&ident.sym)
+                            {
                                 format!("ctx.{}", ident.sym)
                             } else {
                                 ident.sym.clone()
@@ -1289,7 +1427,11 @@ impl Codegen {
                         _ => "Unknown".to_string(),
                     };
                     let mut captures = String::new();
-                    let moved_in_closure = self.lambda_moved_vars.get(&task_fn).cloned().unwrap_or_default();
+                    let moved_in_closure = self
+                        .lambda_moved_vars
+                        .get(&task_fn)
+                        .cloned()
+                        .unwrap_or_default();
                     if let Some(cv) = self.captured_vars.get(&task_fn).cloned() {
                         for (r, _) in &cv {
                             if self.var_is_ref_struct.contains(r) {
@@ -1312,10 +1454,13 @@ impl Codegen {
                             captures.push_str(&format!("sub_ctx.{} = {}; ", r, src));
                         }
                     }
+                    let rt_act = self.rt_sym("global_active_tasks");
+                    let rt_nid = self.rt_sym("current_node_id");
+                    let rt_lid = self.rt_sym("next_local_id");
                     if callee == "@task_spawn_cpu" {
-                        return format!("(blk: {{ _ = global_active_tasks.fetchAdd(1, .acquire); const arena_ptr = std.heap.page_allocator.create(std.heap.ArenaAllocator) catch unreachable; arena_ptr.* = std.heap.ArenaAllocator.init(std.heap.page_allocator); const task_ptr = arena_ptr.allocator().create(CpTask) catch unreachable; task_ptr.* = .{{ .arena = arena_ptr }}; const sub_ctx = arena_ptr.allocator().create({0}_Context) catch unreachable; sub_ctx.* = undefined; sub_ctx.pc = 0; sub_ctx.arena = arena_ptr; sub_ctx._parent = @ptrCast(task_ptr); sub_ctx._parent_fn = @ptrCast(&__cp_task_bridge); {1} const p = PID{{ .node_id = current_node_id, .local_id = next_local_id }}; next_local_id += 1; sub_ctx._self = p; const _CpuRunner = struct {{ pub fn run(c: *anyopaque) void {{ {0}(c) catch {{}}; }} }}; const _th = std.Thread.spawn(.{{}}, _CpuRunner.run, .{{@as(*anyopaque, @ptrCast(sub_ctx))}}) catch unreachable; _th.detach(); break :blk task_ptr; }})", task_fn, captures);
+                        return format!("(blk: {{ _ = {2}.fetchAdd(1, .acquire); const arena_ptr = std.heap.page_allocator.create(std.heap.ArenaAllocator) catch unreachable; arena_ptr.* = std.heap.ArenaAllocator.init(std.heap.page_allocator); const task_ptr = arena_ptr.allocator().create(CpTask) catch unreachable; task_ptr.* = .{{ .arena = arena_ptr }}; const sub_ctx = arena_ptr.allocator().create({0}_Context) catch unreachable; sub_ctx.* = undefined; sub_ctx.pc = 0; sub_ctx.arena = arena_ptr; sub_ctx._parent = @ptrCast(task_ptr); sub_ctx._parent_fn = @ptrCast(&__cp_task_bridge); {1} const p = PID{{ .node_id = {3}, .local_id = {4} }}; {4} += 1; sub_ctx._self = p; const _CpuRunner = struct {{ pub fn run(c: *anyopaque) void {{ {0}(c) catch {{}}; }} }}; const _th = std.Thread.spawn(.{{}}, _CpuRunner.run, .{{@as(*anyopaque, @ptrCast(sub_ctx))}}) catch unreachable; _th.detach(); break :blk task_ptr; }})", task_fn, captures, rt_act, rt_nid, rt_lid);
                     }
-                    return format!("(blk: {{ _ = global_active_tasks.fetchAdd(1, .acquire); const arena_ptr = std.heap.page_allocator.create(std.heap.ArenaAllocator) catch unreachable; arena_ptr.* = std.heap.ArenaAllocator.init(std.heap.page_allocator); const task_ptr = arena_ptr.allocator().create(CpTask) catch unreachable; task_ptr.* = .{{ .arena = arena_ptr }}; const sub_ctx = arena_ptr.allocator().create({0}_Context) catch unreachable; sub_ctx.* = undefined; sub_ctx.pc = 0; sub_ctx.arena = arena_ptr; sub_ctx._parent = @ptrCast(task_ptr); sub_ctx._parent_fn = @ptrCast(&__cp_task_bridge); {1} const p = PID{{ .node_id = current_node_id, .local_id = next_local_id }}; next_local_id += 1; sub_ctx._self = p; schedule(@ptrCast(&{0}), @ptrCast(sub_ctx)); break :blk task_ptr; }})", task_fn, captures);
+                    return format!("(blk: {{ _ = {2}.fetchAdd(1, .acquire); const arena_ptr = std.heap.page_allocator.create(std.heap.ArenaAllocator) catch unreachable; arena_ptr.* = std.heap.ArenaAllocator.init(std.heap.page_allocator); const task_ptr = arena_ptr.allocator().create(CpTask) catch unreachable; task_ptr.* = .{{ .arena = arena_ptr }}; const sub_ctx = arena_ptr.allocator().create({0}_Context) catch unreachable; sub_ctx.* = undefined; sub_ctx.pc = 0; sub_ctx.arena = arena_ptr; sub_ctx._parent = @ptrCast(task_ptr); sub_ctx._parent_fn = @ptrCast(&__cp_task_bridge); {1} const p = PID{{ .node_id = {3}, .local_id = {4} }}; {4} += 1; sub_ctx._self = p; schedule(@ptrCast(&{0}), @ptrCast(sub_ctx)); break :blk task_ptr; }})", task_fn, captures, rt_act, rt_nid, rt_lid);
                 }
                 if !self.has_imported_ptr && callee == "Shared" && !call.args.is_empty() {
                     let arg = self.generate_expr(&call.args[0]);
@@ -1364,12 +1509,18 @@ impl Codegen {
                 if callee == "test" && call.args.len() == 2 {
                     let name = self.generate_expr(&call.args[0]);
                     let lambda = self.generate_expr(&call.args[1]);
-                    return format!("(blk: {{ __cap_test_total += 1; const __start_fails = __cap_test_failed; @import(\"std\").debug.print(\"\\n▶ RUN   {{s}}\\n\", .{{{}}}); var _test_arena = std.heap.ArenaAllocator.init(std.heap.page_allocator); defer _test_arena.deinit(); var test_ctx: {}_Context = undefined; test_ctx.pc = 0; test_ctx._self = PID{{ .node_id = current_node_id, .local_id = next_local_id }}; next_local_id += 1; test_ctx._parent = null; test_ctx._parent_fn = null; test_ctx.arena = &_test_arena; test_ctx.received_msg = null; test_ctx.received_sender = null; test_ctx.await_result = null; {}(&test_ctx) catch |e| {{ if (e != error.TestFailed) {{ @import(\"std\").debug.print(\"❌ Panic: {{any}}\\n\", .{{e}}); __cap_test_failed += 1; }} }}; if (__cap_test_failed == __start_fails) {{ @import(\"std\").debug.print(\"✔ PASS  {{s}}\\n\", .{{{}}}); __cap_test_passed += 1; }} else {{ @import(\"std\").debug.print(\"❌ FAIL  {{s}}\\n\", .{{{}}}); }} break :blk {{}}; }})", name, lambda, lambda, name, name);
+                    let rt_tot = self.rt_sym("__cap_test_total");
+                    let rt_pas = self.rt_sym("__cap_test_passed");
+                    let rt_fai = self.rt_sym("__cap_test_failed");
+                    let rt_nid = self.rt_sym("current_node_id");
+                    let rt_lid = self.rt_sym("next_local_id");
+                    return format!("(blk: {{ {3} += 1; const __start_fails = {5}; @import(\"std\").debug.print(\"\\n▶ RUN   {{s}}\\n\", .{{{0}}}); var _test_arena = std.heap.ArenaAllocator.init(std.heap.page_allocator); defer _test_arena.deinit(); var test_ctx: {1}_Context = undefined; test_ctx.pc = 0; test_ctx._self = PID{{ .node_id = {6}, .local_id = {7} }}; {7} += 1; test_ctx._parent = null; test_ctx._parent_fn = null; test_ctx.arena = &_test_arena; test_ctx.received_msg = null; test_ctx.received_sender = null; test_ctx.await_result = null; {2}(&test_ctx) catch |e| {{ if (e != error.TestFailed) {{ @import(\"std\").debug.print(\"❌ Panic: {{any}}\\n\", .{{e}}); {5} += 1; }} }}; if ({5} == __start_fails) {{ @import(\"std\").debug.print(\"✔ PASS  {{s}}\\n\", .{{{0}}}); {4} += 1; }} else {{ @import(\"std\").debug.print(\"❌ FAIL  {{s}}\\n\", .{{{0}}}); }} break :blk {{}}; }})", name, lambda, lambda, rt_tot, rt_pas, rt_fai, rt_nid, rt_lid);
                 }
                 if callee == "expect_eq" && call.args.len() == 2 {
                     let a = self.generate_expr(&call.args[0]);
                     let b = self.generate_expr(&call.args[1]);
-                    return format!("(blk: {{ const _a = {}; const _b = {}; const is_eq = cp_eq(_a, _b); if (!is_eq) {{ @import(\"std\").debug.print(\"\\n    ❌ Assertion Failed!\\n    Expected: {{any}}\\n    Got:      {{any}}\\n\", .{{ _b, _a }}); __cap_test_failed += 1; return error.TestFailed; }} break :blk {{}}; }})", a, b);
+                    let rt_fai = self.rt_sym("__cap_test_failed");
+                    return format!("(blk: {{ const _a = {}; const _b = {}; const is_eq = cp_eq(_a, _b); if (!is_eq) {{ @import(\"std\").debug.print(\"\\n    ❌ Assertion Failed!\\n    Expected: {{any}}\\n    Got:      {{any}}\\n\", .{{ _b, _a }}); {} += 1; return error.TestFailed; }} break :blk {{}}; }})", a, b, rt_fai);
                 }
                 if callee == "serve" && !call.args.is_empty() {
                     return self.generate_http_serve(&call.args[0]);
@@ -1426,7 +1577,9 @@ impl Codegen {
                     if let Some((params, _, _)) = self.lookup_method(&type_target, &mem.prop.sym) {
                         let non_recv: Vec<Param> = params
                             .into_iter()
-                            .filter(|p| p.ident.sym != "this" && p.ident.sym != "_" && p.ident.sym != "self")
+                            .filter(|p| {
+                                p.ident.sym != "this" && p.ident.sym != "_" && p.ident.sym != "self"
+                            })
                             .collect();
                         method_params_opt = Some(non_recv);
                     }
@@ -1455,15 +1608,18 @@ impl Codegen {
                                         if let Some(arg_cls) =
                                             self.resolve_var_type_name(&arg_id.sym)
                                         {
-                                            let implements = self
-                                                .class_defs
-                                                .get(&arg_cls)
-                                                .map_or(false, |c| {
-                                                    c.implements
-                                                        .iter()
-                                                        .any(|i| i.sym == t_id.sym)
-                                                        || if let Some(tr) = self.trait_defs.get(&t_id.sym) {
-                                                            tr.methods.iter().all(|tm| tm.default_body.is_some() || c.methods.iter().any(|m| m.ident.sym == tm.ident.sym))
+                                            let implements =
+                                                self.class_defs.get(&arg_cls).map_or(false, |c| {
+                                                    c.implements.iter().any(|i| i.sym == t_id.sym)
+                                                        || if let Some(tr) =
+                                                            self.trait_defs.get(&t_id.sym)
+                                                        {
+                                                            tr.methods.iter().all(|tm| {
+                                                                tm.default_body.is_some()
+                                                                    || c.methods.iter().any(|m| {
+                                                                        m.ident.sym == tm.ident.sym
+                                                                    })
+                                                            })
                                                         } else {
                                                             false
                                                         }
@@ -1480,7 +1636,8 @@ impl Codegen {
                             }
                             if let Expr::Ident(arg_id) = arg {
                                 if param.is_mut {
-                                    if let Some((_, is_m)) = self.var_borrow_sources.get(&arg_id.sym)
+                                    if let Some((_, is_m)) =
+                                        self.var_borrow_sources.get(&arg_id.sym)
                                     {
                                         if !*is_m {
                                             panic!(

@@ -661,5 +661,4 @@ impl<'a> Parser<'a> {
             unions,
         })
     }
-
 }

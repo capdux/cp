@@ -1589,5 +1589,4 @@ impl<'a> Parser<'a> {
             _ => "any".to_string(),
         }
     }
-
 }

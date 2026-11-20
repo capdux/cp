@@ -1823,7 +1823,10 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub(super) fn parse_object_fields(&mut self, is_dot_brace: bool) -> ParseResult<Vec<ObjectField>> {
+    pub(super) fn parse_object_fields(
+        &mut self,
+        is_dot_brace: bool,
+    ) -> ParseResult<Vec<ObjectField>> {
         let mut fields = Vec::new();
         let mut shorthand_indices: Vec<usize> = Vec::new();
         let mut has_positional = false;
@@ -1920,7 +1923,9 @@ impl<'a> Parser<'a> {
                             val,
                             is_spread: false,
                         });
-                    } else if matches!(self.peek(), Some(Token::Comma) | Some(Token::RBrace)) && !is_str {
+                    } else if matches!(self.peek(), Some(Token::Comma) | Some(Token::RBrace))
+                        && !is_str
+                    {
                         // Shorthand `{ key }` -> `{ key: key }` (or positional if mixed with tuple exprs)
                         shorthand_indices.push(fields.len());
                         fields.push(ObjectField {
@@ -1991,5 +1996,4 @@ impl<'a> Parser<'a> {
         self.expect(Token::RParen)?;
         Ok(params)
     }
-
 }

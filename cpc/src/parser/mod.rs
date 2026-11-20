@@ -460,7 +460,6 @@ impl<'a> Parser<'a> {
                 | Token::TypeKw
         ) || matches!(t, Token::Ident(id) if id == "extern" || id == "inline" || id == "noinline")
     }
-
 }
 
 pub(super) fn left_span(expr: &Expr) -> Span {

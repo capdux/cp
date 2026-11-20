@@ -1301,5 +1301,4 @@ impl Codegen {
             _ => None,
         }
     }
-
 }

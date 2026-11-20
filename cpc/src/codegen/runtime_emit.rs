@@ -56,7 +56,6 @@ impl Codegen {
         if features.needs_cast_int {
             self.writeln("fn cp_cast_int(comptime Dest: type, val: anytype) Dest { const Src = @TypeOf(val); if (comptime Src == Dest) return val; if (comptime Src == comptime_int) { if (comptime @typeInfo(Dest).int.signedness == .unsigned and val < 0) return @as(Dest, @truncate(@as(u128, @bitCast(@as(i128, val))))) else return @as(Dest, @truncate(val)); } const src_bits = @typeInfo(Src).int.bits; const dest_bits = @typeInfo(Dest).int.bits; if (comptime @typeInfo(Src).int.signedness == @typeInfo(Dest).int.signedness) { if (comptime dest_bits >= src_bits) return @as(Dest, val) else return @truncate(val); } if (comptime @typeInfo(Src).int.signedness == .signed) { const s: i128 = if (comptime 128 >= src_bits) @as(i128, val) else @truncate(val); const u: u128 = @bitCast(s); if (comptime dest_bits >= 128) return @as(Dest, u) else return @truncate(u); } else { const u: u128 = if (comptime 128 >= src_bits) @as(u128, val) else @truncate(val); const s: i128 = @bitCast(u); if (comptime dest_bits >= 128) return @as(Dest, s) else return @truncate(s); } }");
         }
-
     }
 
     pub(crate) fn emit_runtime_preludes(&mut self, features: &ModuleFeatures) {
@@ -1145,10 +1144,10 @@ impl Codegen {
                 "var global_active_tasks: std.atomic.Value(usize) = std.atomic.Value(usize).init(0);",
             );
             self.writeln("var global_running_workers: std.atomic.Value(usize) = std.atomic.Value(usize).init(0);");
-            self.writeln("threadlocal var task_queue: [1000]_Task = undefined; threadlocal var queue_len: usize = 0;");
-            self.writeln(
-                "threadlocal var current_node_id: u32 = 0; threadlocal var next_local_id: u32 = 1;",
-            );
+            self.writeln("threadlocal var task_queue: [1000]_Task = undefined;");
+            self.writeln("threadlocal var queue_len: usize = 0;");
+            self.writeln("threadlocal var current_node_id: u32 = 0;");
+            self.writeln("threadlocal var next_local_id: u32 = 1;");
             self.writeln("fn schedule(run: *const fn(*anyopaque) anyerror!void, ctx: *anyopaque) void { if (current_node_id == 0) { global_task_queue.push(.{ .run = run, .ctx = ctx }); } else { if (queue_len < 1000) { task_queue[queue_len] = .{ .run = run, .ctx = ctx }; queue_len += 1; } } }");
             self.writeln("const _WorkerPoolRunner = struct { pub fn run() void { while (!global_runtime_shutdown.load(.acquire)) { if (global_task_queue.pop()) |task| { _ = global_running_workers.fetchAdd(1, .acquire); task.run(task.ctx) catch {}; _ = global_running_workers.fetchSub(1, .release); } else { const ts = std.os.linux.timespec{ .sec = 0, .nsec = 100_000 }; _ = std.os.linux.nanosleep(&ts, null); } } } };");
             self.writeln("");
@@ -1196,7 +1195,344 @@ impl Codegen {
             self.writeln("pub fn cp_string_from(val: anytype) []const u8 { const __T = @TypeOf(val); if (comptime __T == []const u8) { return val; } else if (comptime (__T == [*:0]const u8 or __T == [*:0]u8)) { return std.mem.span(val); } else if (comptime (@typeInfo(__T) == .pointer and @typeInfo(__T).pointer.size == .slice and @typeInfo(__T).pointer.child == u8)) { return val; } else if (comptime (@typeInfo(__T) == .@\"enum\")) { return @tagName(val); } else if (comptime __T == bool) { return if (val) \"true\" else \"false\"; } else if (comptime (@typeInfo(__T) == .int or __T == comptime_int)) { return std.fmt.allocPrint(std.heap.page_allocator, \"{}\", .{val}) catch \"0\"; } else if (comptime (@typeInfo(__T) == .float or __T == comptime_float)) { return std.fmt.allocPrint(std.heap.page_allocator, \"{d}\", .{val}) catch \"0.0\"; } else if (comptime (@typeInfo(__T) == .@\"struct\" and @hasDecl(__T, \"toString\"))) { return val.toString(); } else if (comptime (@typeInfo(__T) == .pointer and @typeInfo(@typeInfo(__T).pointer.child) == .@\"struct\" and @hasDecl(@typeInfo(__T).pointer.child, \"toString\"))) { return val.toString(); } else { return @typeName(__T); } }");
             self.writeln("");
         }
+    }
 
+    pub fn generate_shared_runtime() -> String {
+        let features = ModuleFeatures {
+            needs_regex: true,
+            needs_collections: true,
+            needs_actors: true,
+            needs_reflection: true,
+            needs_unpack: true,
+            needs_result_error: true,
+            needs_opt_chaining: true,
+            needs_null_coalesce: true,
+            needs_fmt: true,
+            needs_math_random: true,
+            needs_equality: true,
+            needs_comparison: true,
+            needs_hash: true,
+            needs_array_helpers: true,
+            needs_iter_helpers: true,
+            needs_string_helpers: true,
+            needs_add: true,
+            needs_not: true,
+            needs_index_helpers: true,
+            needs_shift: true,
+            needs_cast_int: true,
+            needs_sync: true,
+            needs_json: true,
+            has_imported_json: false,
+            has_imported_ptr: false,
+            is_lib_mode: false,
+        };
+        let mut cg = Codegen::new();
+        cg.emit_early_preludes(&features, false, false);
+        cg.emit_runtime_preludes(&features);
+
+        let mut out = String::from("// Generated by CP Compiler (Shared Modular Runtime)\nconst std = @import(\"std\");\npub const string = []const u8;\n\npub var global_io: std.Io = undefined;\npub var __cap_test_total: usize = 0;\npub var __cap_test_passed: usize = 0;\npub var __cap_test_failed: usize = 0;\n\n");
+        for line in cg.output.content.lines() {
+            let needs_pub = line.starts_with("const ")
+                || line.starts_with("var ")
+                || line.starts_with("threadlocal var ")
+                || line.starts_with("fn ")
+                || line.starts_with("inline fn ")
+                || line.starts_with("extern \"c\" fn ");
+            if needs_pub {
+                out.push_str("pub ");
+            }
+            out.push_str(line);
+            out.push('\n');
+        }
+        out
+    }
+
+    pub(crate) fn emit_modular_runtime_aliases(
+        &mut self,
+        features: &ModuleFeatures,
+        has_top_decl: &dyn Fn(&str) -> bool,
+        has_top_err_decl: bool,
+        has_top_error_decl: bool,
+        declares_print: bool,
+        declares_spawn: bool,
+        declares_join: bool,
+        declares_pid: bool,
+        declares_message: bool,
+    ) {
+        let mut emitted: std::collections::HashSet<&'static str> = std::collections::HashSet::new();
+        let mut emit_alias = |cg: &mut Codegen, name: &'static str, is_pub: bool| {
+            if !emitted.insert(name) {
+                return;
+            }
+            let kw = if is_pub { "pub const" } else { "const" };
+            cg.writeln(&format!("{} {} = __cp_rt.{};", kw, name, name));
+        };
+
+        if declares_print {
+            emit_alias(self, "print", true);
+        } else if !has_top_decl("print") {
+            emit_alias(self, "print", false);
+        }
+        if declares_spawn {
+            emit_alias(self, "spawn", true);
+        }
+        if declares_join {
+            emit_alias(self, "join", true);
+        }
+        if declares_pid {
+            emit_alias(self, "PID", true);
+        }
+        if declares_message {
+            emit_alias(self, "Message", true);
+        }
+
+        if features.needs_result_error {
+            for s in &[
+                "CpResult",
+                "__CpErr",
+                "is_cp_result",
+                "CpUnwrapOkType",
+                "CpUnwrapErrType",
+                "cp_has_ok_val",
+                "cp_unwrap_ok_val",
+                "cp_unwrap_err_val",
+                "cp_is_null_val",
+                "cp_convert_err",
+                "cp_match_tag",
+            ] {
+                if !has_top_decl(s) {
+                    emit_alias(self, s, false);
+                }
+            }
+            if !has_top_err_decl {
+                emit_alias(self, "Err", false);
+            }
+            if !has_top_error_decl {
+                emit_alias(self, "Error", false);
+            }
+        }
+        if features.needs_opt_chaining {
+            for s in &[
+                "CpOptType",
+                "CpUnwrapOpt",
+                "cp_opt_is_null",
+                "cp_opt_unwrap",
+            ] {
+                if !has_top_decl(s) {
+                    emit_alias(self, s, false);
+                }
+            }
+        }
+        if features.needs_cast_int && !has_top_decl("cp_cast_int") {
+            emit_alias(self, "cp_cast_int", false);
+        }
+        if features.needs_regex {
+            for s in &["regex_t", "regmatch_t", "RegExp"] {
+                if !has_top_decl(s) {
+                    emit_alias(self, s, false);
+                }
+            }
+        }
+        if features.needs_collections || features.needs_actors {
+            for s in &[
+                "MessageContext",
+                "Message",
+                "MessageEntry",
+                "Map",
+                "Dict",
+                "Set",
+                "HashMap",
+                "HashSet",
+                "cp_msg_cmp",
+                "VecDeque",
+                "BinaryHeap",
+                "BTreeMap",
+                "BTreeSet",
+                "CpIndexReturnType",
+                "cp_index_get",
+                "cp_index_assign",
+                "cp_message_from",
+            ] {
+                if !has_top_decl(s) {
+                    emit_alias(self, s, false);
+                }
+            }
+        }
+        if features.needs_reflection {
+            for s in &["FieldInfo", "MethodInfo", "TypeInfo"] {
+                if !has_top_decl(s) {
+                    emit_alias(self, s, false);
+                }
+            }
+        }
+        if features.needs_actors {
+            for s in &[
+                "PID",
+                "BaseContext",
+                "ZigSharedTensor",
+                "register_fd",
+                "_Task",
+                "Spinlock",
+                "GlobalTaskQueue",
+                "schedule",
+                "_WorkerPoolRunner",
+                "CrossThreadMessage",
+                "MailboxItem",
+                "MailboxRingBuffer",
+                "LocalMailbox",
+                "deliver_local",
+                "drain_cross_thread_mailbox",
+                "cp_send",
+                "CpTask",
+                "JoinBarrier",
+                "__cp_task_bridge",
+                "cp_msg_to_val",
+            ] {
+                if !has_top_decl(s) {
+                    emit_alias(self, s, false);
+                }
+            }
+            if !self.enum_defs.contains_key("Task") && !has_top_decl("Task") {
+                emit_alias(self, "Task", false);
+            }
+        }
+        if features.needs_json && !features.has_imported_json && !self.is_lib_mode {
+            for s in &[
+                "JsonTag",
+                "JsonField",
+                "JsonValue",
+                "FastJsonScanner",
+                "JsonParser",
+                "JSON",
+            ] {
+                if !has_top_decl(s) {
+                    emit_alias(self, s, false);
+                }
+            }
+        }
+        if features.needs_sync {
+            for s in &[
+                "NativeMutex",
+                "NativeRwLock",
+                "CpBareMutex",
+                "CpBareRwLock",
+                "LockGuard",
+                "ReadGuard",
+                "WriteGuard",
+                "CpMutex",
+                "CpRwLock",
+                "CpAtomic",
+                "cp_make_mutex",
+                "cp_make_rwlock",
+                "CpAtomicConcreteType",
+                "cp_make_atomic",
+            ] {
+                if !has_top_decl(s) {
+                    emit_alias(self, s, false);
+                }
+            }
+        }
+        if features.needs_string_helpers || features.needs_unpack {
+            for s in &["is_string_like", "to_string_slice", "CpValType", "cp_val"] {
+                if !has_top_decl(s) {
+                    emit_alias(self, s, false);
+                }
+            }
+        }
+        if (features.needs_string_helpers || features.needs_fmt) && !has_top_decl("cp_string_from")
+        {
+            emit_alias(self, "cp_string_from", false);
+        }
+        if features.needs_add {
+            for s in &["CpAddReturn", "cp_add"] {
+                if !has_top_decl(s) {
+                    emit_alias(self, s, false);
+                }
+            }
+        }
+        if features.needs_not && !has_top_decl("cp_not") {
+            emit_alias(self, "cp_not", false);
+        }
+        if features.needs_null_coalesce {
+            for s in &["CpNullCoalesceReturn", "cp_null_coalesce"] {
+                if !has_top_decl(s) {
+                    emit_alias(self, s, false);
+                }
+            }
+        }
+        if features.needs_fmt && !has_top_decl("cp_fmt") {
+            emit_alias(self, "cp_fmt", false);
+        }
+        if features.needs_math_random && !has_top_decl("cp_math_random") {
+            emit_alias(self, "cp_math_random", false);
+        }
+        if features.needs_equality {
+            for s in &["cp_eq", "cp_neq"] {
+                if !has_top_decl(s) {
+                    emit_alias(self, s, false);
+                }
+            }
+        }
+        if features.needs_comparison {
+            for s in &["cp_lt", "cp_gt", "cp_lte", "cp_gte"] {
+                if !has_top_decl(s) {
+                    emit_alias(self, s, false);
+                }
+            }
+        }
+        if features.needs_hash && !has_top_decl("cp_hash_val") {
+            emit_alias(self, "cp_hash_val", false);
+        }
+        if features.needs_array_helpers {
+            for s in &[
+                "cp_array_lit",
+                "CpArrayElemType",
+                "cp_array_push",
+                "cp_array_pop",
+                "cp_container_clear",
+            ] {
+                if !has_top_decl(s) {
+                    emit_alias(self, s, false);
+                }
+            }
+        }
+        if features.needs_iter_helpers {
+            for s in &["cp_iter_slice", "cp_mut_slice"] {
+                if !has_top_decl(s) {
+                    emit_alias(self, s, false);
+                }
+            }
+        }
+        if features.needs_index_helpers {
+            for s in &["cp_index_of", "cp_last_index_of", "cp_includes"] {
+                if !has_top_decl(s) {
+                    emit_alias(self, s, false);
+                }
+            }
+        }
+        if features.needs_shift {
+            for s in &["cp_shl", "cp_shr"] {
+                if !has_top_decl(s) {
+                    emit_alias(self, s, false);
+                }
+            }
+        }
+        if features.needs_unpack {
+            for s in &[
+                "CpUnpackElemType",
+                "cp_unpack_elem",
+                "CpUnpackTailType",
+                "cp_unpack_tail",
+                "CpUnpackSliceType",
+                "cp_unpack_slice",
+                "Message",
+                "cp_msg_to_val",
+            ] {
+                if !has_top_decl(s) {
+                    emit_alias(self, s, false);
+                }
+            }
+        }
     }
 
     pub(crate) fn emit_regex_prelude(&mut self) {

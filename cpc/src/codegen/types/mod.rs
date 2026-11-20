@@ -678,7 +678,6 @@ impl Codegen {
         }
         None
     }
-
 }
 
 pub(crate) fn type_to_display_string(ty: &Type) -> String {

@@ -356,7 +356,10 @@ impl Analyzer {
         }
     }
 
-    pub(super) fn find_moved_vars_in_arrow(arrow: &ArrowExpr, moved: &mut std::collections::HashSet<String>) {
+    pub(super) fn find_moved_vars_in_arrow(
+        arrow: &ArrowExpr,
+        moved: &mut std::collections::HashSet<String>,
+    ) {
         fn find_in_expr(expr: &Expr, moved: &mut std::collections::HashSet<String>) {
             match expr {
                 Expr::Move(inner) => {
@@ -684,5 +687,4 @@ impl Analyzer {
         }
         vars
     }
-
 }

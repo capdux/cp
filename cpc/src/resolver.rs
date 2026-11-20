@@ -1,4 +1,4 @@
-use crate::ast::{ModuleItem, Decl};
+use crate::ast::{Decl, ModuleItem};
 use crate::parser::Parser as CPParser;
 use std::collections::HashSet;
 use std::fs;
@@ -90,11 +90,7 @@ fn resolve_cap_from_manifest(search_source: &str, include_paths: &[PathBuf]) -> 
                     if let Some(entry) = lib_obj.get(search_source) {
                         if let Some(path_val) = entry.get("path").and_then(|v| v.as_str()) {
                             let p = PathBuf::from(path_val);
-                            let target = if p.is_absolute() {
-                                p
-                            } else {
-                                base_dir.join(p)
-                            };
+                            let target = if p.is_absolute() { p } else { base_dir.join(p) };
 
                             // Point 4: direct file resolution (e.g. "http/xxx.cp")
                             if target.is_file() {
@@ -115,7 +111,8 @@ fn resolve_cap_from_manifest(search_source: &str, include_paths: &[PathBuf]) -> 
                                     }
                                 }
                                 // 2. same name as path dir (.cp / .d.cp)
-                                if let Some(dir_name) = target.file_name().and_then(|n| n.to_str()) {
+                                if let Some(dir_name) = target.file_name().and_then(|n| n.to_str())
+                                {
                                     let check_dcp = target.join(format!("{}.d.cp", dir_name));
                                     if check_dcp.is_file() {
                                         return Some(check_dcp);

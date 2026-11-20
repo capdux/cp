@@ -222,9 +222,13 @@ impl Backend {
                         PathBuf::from("/data/dev/cp/lib"),
                     ];
 
-                    if let Err(e) =
-                        resolve_dependencies(&path, &include_paths, &mut items, &mut processed, true)
-                    {
+                    if let Err(e) = resolve_dependencies(
+                        &path,
+                        &include_paths,
+                        &mut items,
+                        &mut processed,
+                        true,
+                    ) {
                         self.client
                             .log_message(
                                 MessageType::LOG,

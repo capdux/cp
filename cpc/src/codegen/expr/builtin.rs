@@ -161,7 +161,8 @@ impl Codegen {
                 }
                 "@net_listen" => {
                     let port = self.generate_expr(&call.args[0]);
-                    format!("(blk: {{ const addr = @import(\"std\").Io.net.IpAddress.parse(\"127.0.0.1\", @intCast({})) catch unreachable; const _server = addr.listen(global_io, .{{}}) catch unreachable; break :blk @as(i32, @intCast(_server.socket.handle)); }})", port)
+                    let rt_io = self.rt_sym("global_io");
+                    format!("(blk: {{ const addr = @import(\"std\").Io.net.IpAddress.parse(\"127.0.0.1\", @intCast({})) catch unreachable; const _server = addr.listen({}, .{{}}) catch unreachable; break :blk @as(i32, @intCast(_server.socket.handle)); }})", port, rt_io)
                 }
                 "@net_close" => {
                     let handle = self.generate_expr(&call.args[0]);
@@ -273,41 +274,50 @@ impl Codegen {
                 "@fs_write_file" => {
                     let p = self.generate_expr(&call.args[0]);
                     let d = self.generate_expr(&call.args[1]);
-                    format!("(blk: {{ const file_out = @import(\"std\").Io.Dir.createFile(.cwd(), global_io, {}, .{{}}) catch unreachable; defer @import(\"std\").Io.File.close(file_out, global_io); @import(\"std\").Io.File.writeStreamingAll(file_out, global_io, {}) catch unreachable; break :blk {{}}; }})", p, d)
+                    let rt_io = self.rt_sym("global_io");
+                    format!("(blk: {{ const file_out = @import(\"std\").Io.Dir.createFile(.cwd(), {0}, {1}, .{{}}) catch unreachable; defer @import(\"std\").Io.File.close(file_out, {0}); @import(\"std\").Io.File.writeStreamingAll(file_out, {0}, {2}) catch unreachable; break :blk {{}}; }})", rt_io, p, d)
                 }
                 "@fs_mkdir" => {
                     let p = self.generate_expr(&call.args[0]);
-                    format!("(blk: {{ @import(\"std\").Io.Dir.createDirPath(.cwd(), global_io, {}) catch unreachable; break :blk {{}}; }})", p)
+                    let rt_io = self.rt_sym("global_io");
+                    format!("(blk: {{ @import(\"std\").Io.Dir.createDirPath(.cwd(), {}, {}) catch unreachable; break :blk {{}}; }})", rt_io, p)
                 }
                 "@fs_stat_size" => {
                     let p = self.generate_expr(&call.args[0]);
-                    format!("(blk: {{ const stat = @import(\"std\").Io.Dir.statFile(.cwd(), global_io, {}, .{{}}) catch unreachable; break :blk @as(i32, @intCast(stat.size)); }})", p)
+                    let rt_io = self.rt_sym("global_io");
+                    format!("(blk: {{ const stat = @import(\"std\").Io.Dir.statFile(.cwd(), {}, {}, .{{}}) catch unreachable; break :blk @as(i32, @intCast(stat.size)); }})", rt_io, p)
                 }
                 "@fs_is_dir" => {
                     let p = self.generate_expr(&call.args[0]);
-                    format!("(blk: {{ const stat = @import(\"std\").Io.Dir.statFile(.cwd(), global_io, {}, .{{}}) catch unreachable; break :blk stat.kind == .directory; }})", p)
+                    let rt_io = self.rt_sym("global_io");
+                    format!("(blk: {{ const stat = @import(\"std\").Io.Dir.statFile(.cwd(), {}, {}, .{{}}) catch unreachable; break :blk stat.kind == .directory; }})", rt_io, p)
                 }
                 "@fs_remove" => {
                     let p = self.generate_expr(&call.args[0]);
-                    format!("(blk: {{ @import(\"std\").Io.Dir.deleteFile(.cwd(), global_io, {}) catch unreachable; break :blk {{}}; }})", p)
+                    let rt_io = self.rt_sym("global_io");
+                    format!("(blk: {{ @import(\"std\").Io.Dir.deleteFile(.cwd(), {}, {}) catch unreachable; break :blk {{}}; }})", rt_io, p)
                 }
                 "@fs_rmdir" => {
                     let p = self.generate_expr(&call.args[0]);
-                    format!("(blk: {{ @import(\"std\").Io.Dir.deleteDir(.cwd(), global_io, {}) catch unreachable; break :blk {{}}; }})", p)
+                    let rt_io = self.rt_sym("global_io");
+                    format!("(blk: {{ @import(\"std\").Io.Dir.deleteDir(.cwd(), {}, {}) catch unreachable; break :blk {{}}; }})", rt_io, p)
                 }
                 "@fs_rename" => {
                     let old_p = self.generate_expr(&call.args[0]);
                     let new_p = self.generate_expr(&call.args[1]);
-                    format!("(blk: {{ @import(\"std\").Io.Dir.rename(.cwd(), {}, .cwd(), {}, global_io) catch unreachable; break :blk {{}}; }})", old_p, new_p)
+                    let rt_io = self.rt_sym("global_io");
+                    format!("(blk: {{ @import(\"std\").Io.Dir.rename(.cwd(), {}, .cwd(), {}, {}) catch unreachable; break :blk {{}}; }})", old_p, new_p, rt_io)
                 }
                 "@fs_copy_file" => {
                     let src = self.generate_expr(&call.args[0]);
                     let dest = self.generate_expr(&call.args[1]);
-                    format!("(blk: {{ @import(\"std\").Io.Dir.copyFile(.cwd(), {}, .cwd(), {}, global_io, .{{}}) catch unreachable; break :blk {{}}; }})", src, dest)
+                    let rt_io = self.rt_sym("global_io");
+                    format!("(blk: {{ @import(\"std\").Io.Dir.copyFile(.cwd(), {}, .cwd(), {}, {}, .{{}}) catch unreachable; break :blk {{}}; }})", src, dest, rt_io)
                 }
                 "@fs_exists" => {
                     let p = self.generate_expr(&call.args[0]);
-                    format!("(blk: {{ const is_exists = if (@import(\"std\").Io.Dir.statFile(.cwd(), global_io, {}, .{{}})) |_| true else |err| if (err == error.FileNotFound) false else unreachable; break :blk is_exists; }})", p)
+                    let rt_io = self.rt_sym("global_io");
+                    format!("(blk: {{ const is_exists = if (@import(\"std\").Io.Dir.statFile(.cwd(), {}, {}, .{{}})) |_| true else |err| if (err == error.FileNotFound) false else unreachable; break :blk is_exists; }})", rt_io, p)
                 }
                 "@crypto_uuid" => {
                     let allocator = if self.is_state_machine {
@@ -328,13 +338,24 @@ impl Codegen {
                 }
                 "@fs_read_file" => {
                     let p = self.generate_expr(&call.args[0]);
-                    format!("(blk: {{ const file_in = @import(\"std\").Io.Dir.openFile(.cwd(), global_io, {}, .{{}}) catch unreachable; defer @import(\"std\").Io.File.close(file_in, global_io); const stat = @import(\"std\").Io.File.stat(file_in, global_io) catch unreachable; const data = std.heap.page_allocator.alloc(u8, @intCast(stat.size)) catch unreachable; _ = @import(\"std\").Io.File.readPositionalAll(file_in, global_io, data, 0) catch unreachable; break :blk data; }})", p)
+                    let rt_io = self.rt_sym("global_io");
+                    format!("(blk: {{ const file_in = @import(\"std\").Io.Dir.openFile(.cwd(), {0}, {1}, .{{}}) catch unreachable; defer @import(\"std\").Io.File.close(file_in, {0}); const stat = @import(\"std\").Io.File.stat(file_in, {0}) catch unreachable; const data = std.heap.page_allocator.alloc(u8, @intCast(stat.size)) catch unreachable; _ = @import(\"std\").Io.File.readPositionalAll(file_in, {0}, data, 0) catch unreachable; break :blk data; }})", rt_io, p)
                 }
                 "@net_connect" => "(blk: { break :blk 1; })".to_string(),
                 "@net_send" => "(blk: { break :blk {}; })".to_string(),
                 "@worker_spawn" => {
                     let entry = self.generate_expr(&call.args[0]);
-                    format!("(blk: {{ const wid = global_next_worker_id.fetchAdd(1, .monotonic); const _Runner = struct {{ pub fn run(w_id: u32) void {{ current_node_id = w_id; next_local_id = 2; const worker_ctx = std.heap.page_allocator.create({0}_Context) catch unreachable; worker_ctx.* = undefined; worker_ctx.pc = 0; worker_ctx._self = PID{{ .node_id = w_id, .local_id = 1 }}; worker_ctx.arena = null; worker_ctx._parent = null; worker_ctx._parent_fn = null; worker_ctx.received_msg = null; worker_ctx.received_sender = null; schedule(@ptrCast(&{0}), @ptrCast(worker_ctx)); while (true) {{ drain_cross_thread_mailbox(); while (queue_len > 0) {{ const task = task_queue[0]; for (task_queue[1..queue_len], 0..) |t, j| {{ task_queue[j] = t; }} queue_len -= 1; task.run(task.ctx) catch unreachable; }} drain_cross_thread_mailbox(); if (active_fds == 0 and queue_len == 0 and waiting_count == 0) break; if (queue_len == 0 and waiting_count > 0 and active_fds == 0) {{ const ts = std.os.linux.timespec{{ .sec = 0, .nsec = 500_000 }}; _ = std.os.linux.nanosleep(&ts, null); }} if (active_fds > 0) {{ const ready_count = std.posix.poll(poll_fds[0..active_fds], 10) catch 0; if (ready_count > 0) {{ var i: usize = 0; while (i < active_fds) {{ if (poll_fds[i].revents != 0) {{ schedule(fd_to_run[i], fd_to_ctx[i]); poll_fds[i] = poll_fds[active_fds - 1]; fd_to_ctx[i] = fd_to_ctx[active_fds - 1]; fd_to_run[i] = fd_to_run[active_fds - 1]; active_fds -= 1; }} else {{ i += 1; }} }} }} }} }} }} }}; const _t = @import(\"std\").Thread.spawn(.{{}}, _Runner.run, .{{wid}}) catch unreachable; _t.detach(); break :blk PID{{ .node_id = wid, .local_id = 1 }}; }})", entry)
+                    let rt_next_wid = self.rt_sym("global_next_worker_id");
+                    let rt_cur_nid = self.rt_sym("current_node_id");
+                    let rt_next_lid = self.rt_sym("next_local_id");
+                    let rt_q_len = self.rt_sym("queue_len");
+                    let rt_tq = self.rt_sym("task_queue");
+                    let rt_active_fds = self.rt_sym("active_fds");
+                    let rt_wait_cnt = self.rt_sym("waiting_count");
+                    let rt_poll_fds = self.rt_sym("poll_fds");
+                    let rt_fd_run = self.rt_sym("fd_to_run");
+                    let rt_fd_ctx = self.rt_sym("fd_to_ctx");
+                    format!("(blk: {{ const wid = {1}.fetchAdd(1, .monotonic); const _Runner = struct {{ pub fn run(w_id: u32) void {{ {2} = w_id; {3} = 2; const worker_ctx = std.heap.page_allocator.create({0}_Context) catch unreachable; worker_ctx.* = undefined; worker_ctx.pc = 0; worker_ctx._self = PID{{ .node_id = w_id, .local_id = 1 }}; worker_ctx.arena = null; worker_ctx._parent = null; worker_ctx._parent_fn = null; worker_ctx.received_msg = null; worker_ctx.received_sender = null; schedule(@ptrCast(&{0}), @ptrCast(worker_ctx)); while (true) {{ drain_cross_thread_mailbox(); while ({4} > 0) {{ const task = {5}[0]; for ({5}[1..{4}], 0..) |t, j| {{ {5}[j] = t; }} {4} -= 1; task.run(task.ctx) catch unreachable; }} drain_cross_thread_mailbox(); if ({6} == 0 and {4} == 0 and {7} == 0) break; if ({4} == 0 and {7} > 0 and {6} == 0) {{ const ts = std.os.linux.timespec{{ .sec = 0, .nsec = 500_000 }}; _ = std.os.linux.nanosleep(&ts, null); }} if ({6} > 0) {{ const ready_count = std.posix.poll({8}[0..{6}], 10) catch 0; if (ready_count > 0) {{ var i: usize = 0; while (i < {6}) {{ if ({8}[i].revents != 0) {{ schedule({9}[i], {10}[i]); {8}[i] = {8}[{6} - 1]; {10}[i] = {10}[{6} - 1]; {9}[i] = {9}[{6} - 1]; {6} -= 1; }} else {{ i += 1; }} }} }} }} }} }} }}; const _t = @import(\"std\").Thread.spawn(.{{}}, _Runner.run, .{{wid}}) catch unreachable; _t.detach(); break :blk PID{{ .node_id = wid, .local_id = 1 }}; }})", entry, rt_next_wid, rt_cur_nid, rt_next_lid, rt_q_len, rt_tq, rt_active_fds, rt_wait_cnt, rt_poll_fds, rt_fd_run, rt_fd_ctx)
                 }
                 "@create_pending_task" => {
                     format!("(blk: {{ const task_ptr = std.heap.page_allocator.create(CpTask) catch unreachable; task_ptr.* = .{{}}; break :blk task_ptr; }})")
@@ -348,9 +369,9 @@ impl Codegen {
                     let target = self.generate_expr(&call.args[0]);
                     let msg = self.generate_expr(&call.args[1]);
                     let sender = if self.is_state_machine {
-                        "ctx._self"
+                        "ctx._self".to_string()
                     } else {
-                        "PID{ .node_id = current_node_id, .local_id = 1 }"
+                        format!("PID{{ .node_id = {}, .local_id = 1 }}", self.rt_sym("current_node_id"))
                     };
                     format!("cp_send({}, {}, cp_message_from({}))", sender, target, msg)
                 }
@@ -358,7 +379,7 @@ impl Codegen {
                     if self.is_state_machine {
                         "ctx._self".to_string()
                     } else {
-                        "PID{ .node_id = current_node_id, .local_id = 1 }".to_string()
+                        format!("PID{{ .node_id = {}, .local_id = 1 }}", self.rt_sym("current_node_id"))
                     }
                 }
                 "@sender" => {
@@ -381,8 +402,8 @@ impl Codegen {
                         format!("ctx.pc = {}; const ctx_bin = try beam.Beam.makeBinary(ctx.self.env.?, std.mem.asBytes(ctx)); return beam.Beam.makeTuple(ctx.self.env.?, &[_]beam.Term{{ beam.Beam.makeAtom(ctx.self.env.?, \"yield\"), beam.Beam.makeAtom(ctx.self.env.?, \"receive\"), ctx_bin }});", resume_pc)
                     } else {
                         format!(
-                            "if (local_mailboxes[ctx._self.local_id % 1024].pop()) |item| {{ ctx.received_msg = item.msg; ctx.received_sender = item.sender; ctx.pc = {}; continue; }} else {{ ctx.received_msg = null; ctx.received_sender = null; waiting_actors[ctx._self.local_id % 1024] = ctx; waiting_actor_fns[ctx._self.local_id % 1024] = @ptrCast(&{}); waiting_count += 1; ctx.pc = {}; return; }}",
-                            resume_pc, self.current_zig_fn_name, check_pc
+                            "if ({3}[ctx._self.local_id % 1024].pop()) |item| {{ ctx.received_msg = item.msg; ctx.received_sender = item.sender; ctx.pc = {0}; continue; }} else {{ ctx.received_msg = null; ctx.received_sender = null; {4}[ctx._self.local_id % 1024] = ctx; {5}[ctx._self.local_id % 1024] = @ptrCast(&{1}); {6} += 1; ctx.pc = {2}; return; }}",
+                            resume_pc, self.current_zig_fn_name, check_pc, self.rt_sym("local_mailboxes"), self.rt_sym("waiting_actors"), self.rt_sym("waiting_actor_fns"), self.rt_sym("waiting_count")
                         )
                     };
                     self.write_to_case(&logic);
@@ -397,7 +418,8 @@ impl Codegen {
                 "@expect_eq" if call.args.len() == 2 => {
                     let a = self.generate_expr(&call.args[0]);
                     let b = self.generate_expr(&call.args[1]);
-                    format!("(blk: {{ const _a = {}; const _b = {}; const is_eq = cp_eq(_a, _b); if (!is_eq) {{ @import(\"std\").debug.print(\"\\n    ❌ Assertion Failed!\\n    Expected: {{any}}\\n    Got:      {{any}}\\n\", .{{ _b, _a }}); __cap_test_failed += 1; return error.TestFailed; }} break :blk {{}}; }})", a, b)
+                    let rt_fail = self.rt_sym("__cap_test_failed");
+                    format!("(blk: {{ const _a = {}; const _b = {}; const is_eq = cp_eq(_a, _b); if (!is_eq) {{ @import(\"std\").debug.print(\"\\n    ❌ Assertion Failed!\\n    Expected: {{any}}\\n    Got:      {{any}}\\n\", .{{ _b, _a }}); {} += 1; return error.TestFailed; }} break :blk {{}}; }})", a, b, rt_fail)
                 }
                 "@test" if call.args.len() == 2 => {
                     let name = self.generate_expr(&call.args[0]);
@@ -510,6 +532,9 @@ impl Codegen {
                                     self.lambda_counter += 1;
                                     let mut handler_output = String::new();
                                     let mut h_gen = Codegen::new();
+                                    h_gen.modular_mode = self.modular_mode;
+                                    h_gen.is_lib_mode = self.is_lib_mode;
+                                    h_gen.is_beam_mode = self.is_beam_mode;
                                     h_gen.globals = self.globals.clone();
                                     h_gen.class_defs = self.class_defs.clone();
                                     h_gen.ref_classes = self.ref_classes.clone();
@@ -574,11 +599,12 @@ impl Codegen {
             },
         }
 
+        let rt_io = self.rt_sym("global_io");
         format!(
             r#"(blk: {{
     const _port: u16 = @intCast({});
     const _addr = @import("std").Io.net.IpAddress.parse("0.0.0.0", _port) catch unreachable;
-    const _listener = _addr.listen(global_io, .{{ .reuse_address = true }}) catch unreachable;
+    const _listener = _addr.listen({}, .{{ .reuse_address = true }}) catch unreachable;
     const _s_fd: i32 = @intCast(_listener.socket.handle);
     const _HttpState = struct {{
         server_fd: i32,
@@ -640,8 +666,7 @@ impl Codegen {
     s_obj.fd = _s_fd;
     break :blk s_obj;
 }})"#,
-            port_expr, fetch_fn_name
+            port_expr, rt_io, fetch_fn_name
         )
     }
-
 }

@@ -428,7 +428,9 @@ impl Codegen {
         };
         self.is_class_method =
             class_name.is_some() && self.current_receiver_mode != ReceiverMode::Static;
-        self.is_main = func.ident.sym == "main";
+        self.is_main = class_name.is_none()
+            && func.ident.sym == "main"
+            && (!self.modular_mode || self.modular_is_entry);
         let ret_ty = func
             .return_type
             .as_ref()
@@ -972,7 +974,7 @@ impl Codegen {
                 ctx_name
             )
             .unwrap();
-            writeln!(self.output, "    ctx.* = undefined; ctx.pc = 0; ctx._self = PID{{ .node_id = current_node_id, .local_id = next_local_id }}; next_local_id += 1; ctx.received_msg = null; ctx.received_sender = null; ctx.arena = arena; ctx._parent = parent; ctx._parent_fn = parent_fn;").unwrap();
+            writeln!(self.output, "    ctx.* = undefined; ctx.pc = 0; ctx._self = PID{{ .node_id = {0}, .local_id = {1} }}; {1} += 1; ctx.received_msg = null; ctx.received_sender = null; ctx.arena = arena; ctx._parent = parent; ctx._parent_fn = parent_fn;", self.rt_sym("current_node_id"), self.rt_sym("next_local_id")).unwrap();
             if self.is_class_method {
                 writeln!(self.output, "    ctx.self = self_arg;").unwrap();
             }

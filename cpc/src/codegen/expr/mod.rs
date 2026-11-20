@@ -44,7 +44,6 @@ impl Codegen {
         call_code
     }
 
-
     pub(crate) fn lower_template_stream(&mut self, t: &TemplateLit) -> (String, Vec<String>) {
         if t.expressions.is_empty() {
             let quasi_str = if t.quasis.is_empty() {
@@ -176,7 +175,8 @@ impl Codegen {
                                 for fl in cls.fields {
                                     let key = fl.ident.sym.clone();
                                     let val_code = format!("{}.{}", base_code, key);
-                                    if let Some(pos) = prop_map.iter().position(|(k, _)| k == &key) {
+                                    if let Some(pos) = prop_map.iter().position(|(k, _)| k == &key)
+                                    {
                                         prop_map[pos] = (key, val_code);
                                     } else {
                                         prop_map.push((key, val_code));
@@ -198,7 +198,11 @@ impl Codegen {
                 }
                 let mut s = String::from(".{ ");
                 for (idx, (k, v)) in prop_map.iter().enumerate() {
-                    let val_out = if v == ".{}" && k == "none" { "{}" } else { v.as_str() };
+                    let val_out = if v == ".{}" && k == "none" {
+                        "{}"
+                    } else {
+                        v.as_str()
+                    };
                     s.push_str(&format!(".{} = {}", k, val_out));
                     if idx + 1 < prop_map.len() {
                         s.push_str(", ");
@@ -266,7 +270,7 @@ impl Codegen {
                 } else {
                     s
                 }
-            },
+            }
             Expr::ArrayRepeat(val, count) => {
                 let val_code = self.generate_expr(val);
                 let count_code = self.generate_expr(count);
@@ -276,8 +280,11 @@ impl Codegen {
                     .or_else(|| self.infer_cp_type(val))
                     .map(|t| self.map_type(&t))
                     .unwrap_or_else(|| "u8".to_string());
-                format!("@as([{}]{}, @splat(@as({}, {})))", count_code, elem_zig_ty, elem_zig_ty, val_code)
-            },
+                format!(
+                    "@as([{}]{}, @splat(@as({}, {})))",
+                    count_code, elem_zig_ty, elem_zig_ty, val_code
+                )
+            }
             Expr::Slice(s) => {
                 if let Expr::Ident(id) = &*s.obj {
                     self.uninitialized_vars.remove(&id.sym);
@@ -295,11 +302,14 @@ impl Codegen {
                     .unwrap_or_default();
                 if let Some(end_expr) = &s.end {
                     let end_code = self.generate_expr(end_expr);
-                    format!("{}[{}..{}{}]", obj_code, start_code, end_code, sentinel_code)
+                    format!(
+                        "{}[{}..{}{}]",
+                        obj_code, start_code, end_code, sentinel_code
+                    )
                 } else {
                     format!("{}[{}..{}]", obj_code, start_code, sentinel_code)
                 }
-            },
+            }
             Expr::ReflectType { target_ty, .. } => {
                 if let Type::Ref(id) = target_ty {
                     format!("_get_typeinfo_{}()", id.sym)
@@ -321,7 +331,10 @@ impl Codegen {
                         format!("_get_typeinfo_{}()", cname)
                     } else {
                         let e_code = self.generate_expr(expr);
-                        format!("(blk: {{ _ = {}; break :blk _get_typeinfo_{}(); }})", e_code, cname)
+                        format!(
+                            "(blk: {{ _ = {}; break :blk _get_typeinfo_{}(); }})",
+                            e_code, cname
+                        )
                     }
                 } else {
                     "@panic(\"Cannot determine type for reflect.of\")".to_string()
@@ -464,11 +477,17 @@ impl Codegen {
                     "return".to_string()
                 }
             }
-            Expr::InlineAsm { is_volatile, content, .. } => {
+            Expr::InlineAsm {
+                is_volatile,
+                content,
+                ..
+            } => {
                 let vol = if *is_volatile { " volatile" } else { "" };
                 format!("asm{} ({})", vol, content)
             }
-            Expr::ComptimeMap { target_ty, entries, .. } => {
+            Expr::ComptimeMap {
+                target_ty, entries, ..
+            } => {
                 let val_zig_ty = if let Some(ty) = target_ty {
                     self.map_type(ty)
                 } else if let Some(first) = entries.first() {
@@ -494,15 +513,15 @@ impl Codegen {
                 };
                 let mut entries_str = Vec::new();
                 for f in entries {
-                    let key_str = if let Some(k) = &f.key {
-                        &k.sym
-                    } else {
-                        ""
-                    };
+                    let key_str = if let Some(k) = &f.key { &k.sym } else { "" };
                     let val_code = self.generate_expr(&f.val);
                     entries_str.push(format!(".{{ \"{}\", {} }}", key_str, val_code));
                 }
-                format!("std.StaticStringMap({}).initComptime(.{{ {} }})", val_zig_ty, entries_str.join(", "))
+                format!(
+                    "std.StaticStringMap({}).initComptime(.{{ {} }})",
+                    val_zig_ty,
+                    entries_str.join(", ")
+                )
             }
             Expr::Zig(z) => {
                 if z.code.trim() == "*const !" {
@@ -514,5 +533,4 @@ impl Codegen {
             _ => "0".to_string(),
         }
     }
-
 }

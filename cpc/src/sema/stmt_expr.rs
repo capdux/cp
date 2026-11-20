@@ -1120,5 +1120,4 @@ impl Analyzer {
         }
         Ok(())
     }
-
 }

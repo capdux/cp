@@ -50,6 +50,10 @@ pub const CwdShim = struct {
         _ = self;
         return std.Io.Dir.createFile(.cwd(), global_io, sub_path, options);
     }
+    pub fn rename(self: CwdShim, old_sub_path: []const u8, new_sub_path: []const u8) !void {
+        _ = self;
+        return std.Io.Dir.rename(.cwd(), old_sub_path, .cwd(), new_sub_path, global_io);
+    }
 };
 const process = std.process;
 const builtin = @import("builtin");
@@ -209,9 +213,13 @@ fn usage() void {
         \\  -f, --fast                    Optimize for maximum execution speed (ReleaseFast)
         \\  -s, --small                   Optimize for smallest binary size (ReleaseSmall)
         \\  --safe                        Optimize with safety checks enabled (ReleaseSafe, default)
-        \\  --debug                       Build with full debug info and checks (Debug)
+        \\  -d, --debug                   Build with full debug info and checks (Debug, -fno-llvm on x86_64-linux)
+        \\  --llvm                        Force LLVM backend even in Debug mode
         \\  --opt=<debug|safe|fast|small> Specify optimization mode explicitly
         \\  -o, --out-dir=<dir>           Override output directory (default: bin or cap.json)
+        \\  --cache-dir=<path>            Override Zig compiler cache directory (isolates concurrent builds)
+        \\  -m, --modular                 Enable modular multi-file Zig codegen (cpc compile --emit-dir)
+        \\  --emit-types                  Emit .d.cp type definitions even when building executables
         \\  -t, --target=<triple>         Cross-compile for specific target triple
         \\  -b, --beam                    Build dynamic library (.so) for BEAM/Nest runtime
         \\  --exe                         Produce standalone executable (default)
@@ -266,6 +274,9 @@ fn handleClean(allocator: std.mem.Allocator, args: []const []const u8) !void {
 
     fs_shim.cwd().deleteTree(".cap/zig-cache") catch {};
     std.debug.print("  ✓ Removed Zig compiler cache (.cap/zig-cache/)\n", .{});
+
+    fs_shim.cwd().deleteTree(".cap/ws") catch {};
+    std.debug.print("  ✓ Removed isolated build workspaces (.cap/ws/)\n", .{});
 
     fs_shim.cwd().deleteTree(".cap/obj") catch {};
     std.debug.print("  ✓ Removed object files (.cap/obj/)\n", .{});
@@ -554,20 +565,43 @@ fn getCpcBin(allocator: std.mem.Allocator) ![]const u8 {
     return try std.Io.Dir.path.join(allocator, &[_][]const u8{ cap_root, "cpc", "target", "release", "cpc" });
 }
 
-fn addArg(args_buf: *[100][]const u8, argc: *usize, arg: []const u8) void {
+fn addArg(args_buf: [][]const u8, argc: *usize, arg: []const u8) void {
     for (args_buf[0..argc.*]) |existing| {
         if (std.mem.eql(u8, existing, arg)) return;
     }
-    if (argc.* < 100) {
+    if (argc.* < args_buf.len) {
         args_buf[argc.*] = arg;
         argc.* += 1;
     }
 }
 
+fn hasArg(args: []const []const u8, target: []const u8) bool {
+    for (args) |a| {
+        if (std.mem.eql(u8, a, target)) return true;
+    }
+    return false;
+}
+
+fn spawnAndWaitSuccess(argv: []const []const u8) !bool {
+    var child = try std.process.spawn(global_io, .{ .argv = argv });
+    const res = try child.wait(global_io);
+    return switch (res) {
+        .exited => |code| code == 0,
+        else => false,
+    };
+}
+
+fn getCurrentPid() i64 {
+    if (builtin.os.tag == .linux) {
+        return @intCast(std.os.linux.getpid());
+    }
+    return std.Io.Timestamp.now(global_io, .awake).nanoseconds;
+}
+
 fn scanZigFileForLinkPragmas(
     allocator: std.mem.Allocator,
     zig_path: []const u8,
-    args_buf: *[100][]const u8,
+    args_buf: [][]const u8,
     argc: *usize,
     allocated_libs: *[64][]const u8,
     allocated_libs_len: *usize,
@@ -605,6 +639,45 @@ fn scanZigFileForLinkPragmas(
                 }
                 addArg(args_buf, argc, arg);
             }
+        }
+    }
+}
+
+fn scanModularManifestForLinkPragmas(
+    allocator: std.mem.Allocator,
+    zig_dir: []const u8,
+    args_buf: [][]const u8,
+    argc: *usize,
+    allocated_libs: *[64][]const u8,
+    allocated_libs_len: *usize,
+) void {
+    const manifest_path = std.fmt.allocPrint(allocator, "{s}/.cp_modular_manifest.txt", .{zig_dir}) catch return;
+    defer allocator.free(manifest_path);
+
+    const content = fs_shim.cwd().readFileAlloc(allocator, manifest_path, 512 * 1024) catch return;
+    defer allocator.free(content);
+
+    var line_it = std.mem.splitScalar(u8, content, '\n');
+    while (line_it.next()) |line| {
+        const trimmed = std.mem.trim(u8, line, " \r\t");
+        if (std.mem.startsWith(u8, trimmed, "linkPath=")) {
+            const path = trimmed["linkPath=".len..];
+            if (path.len == 0) continue;
+            const arg = std.fmt.allocPrint(allocator, "-L{s}", .{path}) catch continue;
+            if (allocated_libs_len.* < 64) {
+                allocated_libs[allocated_libs_len.*] = arg;
+                allocated_libs_len.* += 1;
+            }
+            addArg(args_buf, argc, arg);
+        } else if (std.mem.startsWith(u8, trimmed, "linkLib=")) {
+            const lib = trimmed["linkLib=".len..];
+            if (lib.len == 0) continue;
+            const arg = std.fmt.allocPrint(allocator, "-l{s}", .{lib}) catch continue;
+            if (allocated_libs_len.* < 64) {
+                allocated_libs[allocated_libs_len.*] = arg;
+                allocated_libs_len.* += 1;
+            }
+            addArg(args_buf, argc, arg);
         }
     }
 }
@@ -704,6 +777,13 @@ fn scanSourceForCapImports(allocator: std.mem.Allocator, file_path: []const u8, 
         const cp_path = std.fmt.allocPrint(allocator, "{s}.cp", .{rel_stem}) catch return;
         defer allocator.free(cp_path);
         scanBufferForCapImports(allocator, cp_path, imported_caps);
+    } else if (std.mem.startsWith(u8, file_path, ".cap/ws/") and std.mem.endsWith(u8, file_path, ".zig")) {
+        if (std.mem.indexOf(u8, file_path, "/zig/")) |zig_idx| {
+            const rel_stem = file_path[zig_idx + "/zig/".len .. file_path.len - 4];
+            const cp_path = std.fmt.allocPrint(allocator, "{s}.cp", .{rel_stem}) catch return;
+            defer allocator.free(cp_path);
+            scanBufferForCapImports(allocator, cp_path, imported_caps);
+        }
     }
 
     if (fs_shim.cwd().statFile("src") catch null != null) {
@@ -718,6 +798,7 @@ fn buildCWithZig(
     target_triple: []const u8,
     opt_mode: []const u8,
     out_dir: []const u8,
+    cache_dir: []const u8,
 ) !?[]const u8 {
     if (cfg.sources.len == 0 and cfg.build_cmd == null) return null;
 
@@ -761,7 +842,7 @@ fn buildCWithZig(
 
         zig_cmd_buf[argc] = "--cache-dir";
         argc += 1;
-        zig_cmd_buf[argc] = ".cap/zig-cache";
+        zig_cmd_buf[argc] = cache_dir;
         argc += 1;
 
         const resolved_opt = if (cfg.opt) |o| o.toZigFlag() else opt_mode;
@@ -843,6 +924,7 @@ fn resolveBinDependency(
     cfg: manifest.BinDependencyConfig,
     target_triple: []const u8,
     opt_mode: []const u8,
+    cache_dir: []const u8,
 ) !?[]const u8 {
     const base_path = cfg.path orelse "";
 
@@ -934,7 +1016,7 @@ fn resolveBinDependency(
         try allocator.dupe(u8, ".cap/lib");
     defer allocator.free(out_dir);
 
-    if (try buildCWithZig(allocator, name, cfg, target_triple, opt_mode, out_dir)) |compiled_dir| {
+    if (try buildCWithZig(allocator, name, cfg, target_triple, opt_mode, out_dir, cache_dir)) |compiled_dir| {
         allocator.free(compiled_dir);
         return try std.fmt.allocPrint(allocator, "{s}/lib{s}.a", .{ out_dir, name });
     }
@@ -958,7 +1040,7 @@ fn precompilePackageBinDeps(allocator: std.mem.Allocator, pkg_path: []const u8) 
         if (bin_cfg.sources.len > 0) {
             const bin_out_dir = try std.fmt.allocPrint(allocator, "{s}/bin", .{pkg_path});
             defer allocator.free(bin_out_dir);
-            _ = try buildCWithZig(allocator, bin_name, bin_cfg, "native", "ReleaseFast", bin_out_dir);
+            _ = try buildCWithZig(allocator, bin_name, bin_cfg, "native", "ReleaseFast", bin_out_dir, ".cap/zig-cache");
             std.debug.print("  ✓ Pre-compiled static lib {s}/bin/lib{s}.a\n", .{ pkg_path, bin_name });
         }
     }
@@ -966,7 +1048,7 @@ fn precompilePackageBinDeps(allocator: std.mem.Allocator, pkg_path: []const u8) 
 
 fn appendLinkArgs(
     allocator: std.mem.Allocator,
-    args_buf: *[100][]const u8,
+    args_buf: [][]const u8,
     argc: *usize,
     allocated_libs: *[64][]const u8,
     allocated_libs_len: *usize,
@@ -974,6 +1056,7 @@ fn appendLinkArgs(
     target_triple: []const u8,
     opt_mode: []const u8,
     scan_file: ?[]const u8,
+    cache_dir: []const u8,
 ) !void {
     // 1. Process bin_dependencies from project cap.json
     if (mf_opt) |mf| {
@@ -982,7 +1065,7 @@ fn appendLinkArgs(
             const dep_name = entry.key_ptr.*;
             const dep_cfg = entry.value_ptr.*;
             if (std.mem.eql(u8, dep_name, "quickjs") or std.mem.eql(u8, dep_name, "qjs")) {
-                if (resolveBinDependency(allocator, "qjs", dep_cfg, target_triple, opt_mode)) |path_opt| {
+                if (resolveBinDependency(allocator, "qjs", dep_cfg, target_triple, opt_mode, cache_dir)) |path_opt| {
                     if (path_opt) |path| {
                         if (std.mem.endsWith(u8, path, ".a")) {
                             const llib = try allocator.dupe(u8, path);
@@ -1006,7 +1089,7 @@ fn appendLinkArgs(
                     }
                 } else |_| {}
             } else {
-                if (resolveBinDependency(allocator, dep_name, dep_cfg, target_triple, opt_mode)) |path_opt| {
+                if (resolveBinDependency(allocator, dep_name, dep_cfg, target_triple, opt_mode, cache_dir)) |path_opt| {
                     if (path_opt) |path| {
                         if (std.mem.endsWith(u8, path, ".a")) {
                             const llib = try allocator.dupe(u8, path);
@@ -1099,7 +1182,7 @@ fn appendLinkArgs(
                 while (b_iter.next()) |b_entry| {
                     const bin_name = b_entry.key_ptr.*;
                     const bin_cfg = b_entry.value_ptr.*;
-                    if (resolveBinDependency(allocator, bin_name, bin_cfg, target_triple, opt_mode)) |path_opt| {
+                    if (resolveBinDependency(allocator, bin_name, bin_cfg, target_triple, opt_mode, cache_dir)) |path_opt| {
                         if (path_opt) |path| {
                             if (std.mem.endsWith(u8, path, ".a")) {
                                 const llib = try allocator.dupe(u8, path);
@@ -1253,7 +1336,9 @@ fn runFileWithOpt(allocator: std.mem.Allocator, filename: []const u8, opt_mode: 
         fs_shim.cwd().createDirPath(global_io, dirname) catch {};
     }
 
-    const emit_bin_arg = try std.fmt.allocPrint(allocator, "-femit-bin={s}", .{run_path});
+    const tmp_run_path = try std.fmt.allocPrint(allocator, "{s}.tmp.{d}", .{ run_path, getCurrentPid() });
+    defer allocator.free(tmp_run_path);
+    const emit_bin_arg = try std.fmt.allocPrint(allocator, "-femit-bin={s}", .{tmp_run_path});
     defer allocator.free(emit_bin_arg);
     fs_shim.cwd().createDirPath(global_io, ".cap/zig-cache") catch {};
 
@@ -1268,7 +1353,7 @@ fn runFileWithOpt(allocator: std.mem.Allocator, filename: []const u8, opt_mode: 
     } else |_| {}
     defer if (mf_opt) |*m| m.deinit(allocator);
 
-    var build_args_buf: [100][]const u8 = undefined;
+    var build_args_buf: [128][]const u8 = undefined;
     var build_argc: usize = 0;
     build_args_buf[build_argc] = "zig";
     build_argc += 1;
@@ -1293,12 +1378,18 @@ fn runFileWithOpt(allocator: std.mem.Allocator, filename: []const u8, opt_mode: 
     var allocated_libs_len: usize = 0;
     defer for (allocated_libs[0..allocated_libs_len]) |al| allocator.free(al);
 
-    try appendLinkArgs(allocator, &build_args_buf, &build_argc, &allocated_libs, &allocated_libs_len, mf_opt, "native", opt_mode, zig_file);
+    try appendLinkArgs(allocator, &build_args_buf, &build_argc, &allocated_libs, &allocated_libs_len, mf_opt, "native", opt_mode, zig_file, ".cap/zig-cache");
     scanZigFileForLinkPragmas(allocator, zig_file, &build_args_buf, &build_argc, &allocated_libs, &allocated_libs_len);
 
-    var build_child = try std.process.spawn(global_io, .{ .argv = build_args_buf[0..build_argc] });
-    const build_res = try build_child.wait(global_io);
-    if (build_res.exited != 0) return error.BuildFailed;
+    const build_ok = try spawnAndWaitSuccess(build_args_buf[0..build_argc]);
+    if (!build_ok) {
+        fs_shim.cwd().deleteFile(tmp_run_path) catch {};
+        return error.BuildFailed;
+    }
+    fs_shim.cwd().rename(tmp_run_path, run_path) catch |err| {
+        fs_shim.cwd().deleteFile(tmp_run_path) catch {};
+        return err;
+    };
 
     const comp_ms = comp_start.durationTo(std.Io.Timestamp.now(global_io, .awake)).toMilliseconds();
     if (comp_ms >= 1000) {
@@ -1321,6 +1412,198 @@ fn sniffHardware() !void {
         std.debug.print("AVX2 Support: {}\n", .{avx2});
     }
     std.debug.print("OS: {s}\n", .{@tagName(builtin.os.tag)});
+}
+
+const BuildOptions = struct {
+    is_release: bool = false,
+    is_beam: bool = false,
+    optimize_mode: []const u8 = "ReleaseSafe",
+    build_type: []const u8 = "build-exe",
+    out_dir_val: []const u8 = "bin",
+    explicit_target: ?[]const u8 = null,
+    configured_targets: [][]const u8 = &.{},
+    zig_args: []const []const u8 = &.{},
+    force_rebuild: bool = false,
+    force_llvm: bool = false,
+    emit_types: bool = false,
+    is_modular: bool = false,
+    explicit_cache_dir: ?[]const u8 = null,
+};
+
+const WorkspacePaths = struct {
+    zig_root_dir: []const u8,
+    zig_cache_dir: []const u8,
+
+    fn deinit(self: WorkspacePaths, allocator: std.mem.Allocator) void {
+        allocator.free(self.zig_root_dir);
+        allocator.free(self.zig_cache_dir);
+    }
+};
+
+fn trimTrailingSlashes(path: []const u8) []const u8 {
+    var s = path;
+    while (s.len > 1 and s[s.len - 1] == '/') {
+        s = s[0 .. s.len - 1];
+    }
+    return s;
+}
+
+fn sanitizePathForWs(allocator: std.mem.Allocator, raw_path: []const u8) ![]const u8 {
+    var s = raw_path;
+    while (std.mem.startsWith(u8, s, "./")) {
+        s = s[2..];
+    }
+    while (s.len > 0 and s[0] == '/') {
+        s = s[1..];
+    }
+    s = trimTrailingSlashes(s);
+    if (s.len == 0) return try allocator.dupe(u8, "default");
+
+    const buf = try allocator.alloc(u8, s.len);
+    for (s, 0..) |c, idx| {
+        if (std.ascii.isAlphanumeric(c) or c == '-' or c == '_') {
+            buf[idx] = c;
+        } else {
+            buf[idx] = '_';
+        }
+    }
+    return buf;
+}
+
+fn resolveWorkspacePaths(allocator: std.mem.Allocator, out_dir_val: []const u8, explicit_cache_dir: ?[]const u8) !WorkspacePaths {
+    const norm_out = trimTrailingSlashes(out_dir_val);
+    const is_default_out = std.mem.eql(u8, norm_out, "bin") or std.mem.eql(u8, norm_out, "./bin");
+
+    if (explicit_cache_dir) |cd| {
+        if (cd.len > 0) {
+            const ws_key = if (!is_default_out) norm_out else cd;
+            const sanitized = try sanitizePathForWs(allocator, ws_key);
+            defer allocator.free(sanitized);
+            return .{
+                .zig_root_dir = try std.fmt.allocPrint(allocator, ".cap/ws/{s}/zig", .{sanitized}),
+                .zig_cache_dir = try allocator.dupe(u8, cd),
+            };
+        }
+    }
+
+    if (!is_default_out) {
+        const sanitized = try sanitizePathForWs(allocator, norm_out);
+        defer allocator.free(sanitized);
+        return .{
+            .zig_root_dir = try std.fmt.allocPrint(allocator, ".cap/ws/{s}/zig", .{sanitized}),
+            .zig_cache_dir = try std.fmt.allocPrint(allocator, ".cap/ws/{s}/zig-cache", .{sanitized}),
+        };
+    }
+
+    return .{
+        .zig_root_dir = try allocator.dupe(u8, ".cap/zig"),
+        .zig_cache_dir = try allocator.dupe(u8, ".cap/zig-cache"),
+    };
+}
+
+fn computeMaxMtimeInDir(dir: std.Io.Dir, ext: []const u8, exclude_d_cp: bool) ?i96 {
+    var max_mtime: ?i96 = null;
+    var iter = dir.iterate();
+    while (iter.next(global_io) catch null) |entry| {
+        if (entry.kind == .directory) {
+            if (std.mem.eql(u8, entry.name, ".cap") or
+                std.mem.eql(u8, entry.name, "zig-cache") or
+                std.mem.eql(u8, entry.name, ".zig-cache") or
+                std.mem.eql(u8, entry.name, "node_modules") or
+                std.mem.eql(u8, entry.name, "bin") or
+                std.mem.eql(u8, entry.name, ".git"))
+            {
+                continue;
+            }
+            var sub_dir = dir.openDir(global_io, entry.name, .{ .iterate = true }) catch continue;
+            defer sub_dir.close(global_io);
+            if (computeMaxMtimeInDir(sub_dir, ext, exclude_d_cp)) |sub_max| {
+                max_mtime = if (max_mtime) |m| @max(m, sub_max) else sub_max;
+            }
+        } else if (entry.kind == .file or entry.kind == .sym_link) {
+            if (dir.statFile(global_io, entry.name, .{})) |st| {
+                if (st.kind == .directory) {
+                    var sub_dir = dir.openDir(global_io, entry.name, .{ .iterate = true }) catch continue;
+                    defer sub_dir.close(global_io);
+                    if (computeMaxMtimeInDir(sub_dir, ext, exclude_d_cp)) |sub_max| {
+                        max_mtime = if (max_mtime) |m| @max(m, sub_max) else sub_max;
+                    }
+                } else {
+                    if (!std.mem.endsWith(u8, entry.name, ext)) continue;
+                    if (exclude_d_cp and std.mem.endsWith(u8, entry.name, ".d.cp")) continue;
+                    const ns = st.mtime.nanoseconds;
+                    max_mtime = if (max_mtime) |m| @max(m, ns) else ns;
+                }
+            } else |_| {}
+        }
+    }
+    return max_mtime;
+}
+
+fn computeMaxSourceMtimeNs(filename: []const u8) ?i96 {
+    const src_stat = fs_shim.cwd().statFile(filename) catch return null;
+    var max_mtime: i96 = src_stat.mtime.nanoseconds;
+
+    if (fs_shim.cwd().statFile("cap.json")) |cj_stat| {
+        max_mtime = @max(max_mtime, cj_stat.mtime.nanoseconds);
+    } else |_| {}
+
+    if (fs_shim.cwd().openDir("src", .{ .iterate = true })) |src_dir_val| {
+        var src_dir = src_dir_val;
+        defer src_dir.close(global_io);
+        if (computeMaxMtimeInDir(src_dir, ".cp", true)) |dir_max| {
+            max_mtime = @max(max_mtime, dir_max);
+        }
+    } else |_| {}
+
+    return max_mtime;
+}
+
+fn resolveModularEntryFile(allocator: std.mem.Allocator, zig_dir: []const u8, entry_stem: []const u8) !?[]const u8 {
+    const cp_entry_cand = try std.fmt.allocPrint(allocator, "{s}/__cp_entry.zig", .{zig_dir});
+    if (fs_shim.cwd().statFile(cp_entry_cand) catch null != null) {
+        return cp_entry_cand;
+    }
+    allocator.free(cp_entry_cand);
+
+    const entry_cand = try std.fmt.allocPrint(allocator, "{s}/__entry.zig", .{zig_dir});
+    if (fs_shim.cwd().statFile(entry_cand) catch null != null) {
+        return entry_cand;
+    }
+    allocator.free(entry_cand);
+
+    const stem_cand = try std.fmt.allocPrint(allocator, "{s}/{s}.zig", .{ zig_dir, entry_stem });
+    if (fs_shim.cwd().statFile(stem_cand) catch null != null) {
+        return stem_cand;
+    }
+    allocator.free(stem_cand);
+
+    const src_stem_cand = try std.fmt.allocPrint(allocator, "{s}/src/{s}.zig", .{ zig_dir, entry_stem });
+    if (fs_shim.cwd().statFile(src_stem_cand) catch null != null) {
+        return src_stem_cand;
+    }
+    allocator.free(src_stem_cand);
+    return null;
+}
+
+fn resolveBuildType(allocator: std.mem.Allocator, build_type: []const u8, mf_opt: ?manifest.Manifest, filename: []const u8) ![]const u8 {
+    if (!std.mem.eql(u8, build_type, "build-exe")) {
+        return build_type;
+    }
+    if (mf_opt) |mf| {
+        const main_target = mf.main orelse (if (mf.build_config) |bc| bc.entry else null);
+        if (main_target) |main_file| {
+            const full_main_path = if (std.mem.startsWith(u8, main_file, "src/"))
+                try allocator.dupe(u8, main_file)
+            else
+                try std.fmt.allocPrint(allocator, "src/{s}", .{main_file});
+            defer allocator.free(full_main_path);
+            if (std.mem.eql(u8, filename, full_main_path)) {
+                return "build-exe";
+            }
+        }
+    }
+    return "build-lib";
 }
 
 fn buildPackage(allocator: std.mem.Allocator, args: []const []const u8) !void {
@@ -1354,30 +1637,22 @@ fn buildPackage(allocator: std.mem.Allocator, args: []const []const u8) !void {
     var targets_to_build: [100][]const u8 = undefined;
     var targets_len: usize = 0;
 
-    var is_release = false;
-    var is_beam = false;
-    var force_rebuild = false;
+    var opts = BuildOptions{};
     const build_start = std.Io.Timestamp.now(global_io, .awake);
-
-    // Default optimize mode and out_dir from cap.json (if present), else defaults
-    var optimize_mode: []const u8 = "ReleaseSafe";
-    var out_dir_val: []const u8 = "bin";
-    var explicit_target: ?[]const u8 = null;
-    var configured_targets: [][]const u8 = &.{};
 
     if (mf_opt) |mf| {
         if (mf.build_config) |bc| {
             if (bc.opt) |o| {
-                optimize_mode = o.toZigFlag();
+                opts.optimize_mode = o.toZigFlag();
             }
             if (bc.out_dir) |od| {
-                out_dir_val = od;
+                opts.out_dir_val = od;
             }
             if (bc.target) |t| {
-                explicit_target = t;
+                opts.explicit_target = t;
             }
             if (bc.targets.len > 0) {
-                configured_targets = bc.targets;
+                opts.configured_targets = bc.targets;
             }
             if (bc.sys) |s| {
                 const parsed = std.json.parseFromSlice(std.json.Value, allocator, s, .{}) catch unreachable;
@@ -1390,63 +1665,73 @@ fn buildPackage(allocator: std.mem.Allocator, args: []const []const u8) !void {
         }
     }
 
-    var build_type: []const u8 = "build-exe";
-    var zig_args: [100][]const u8 = undefined;
+    var zig_args: [128][]const u8 = undefined;
     var zig_args_len: usize = 0;
 
-    // Append c_flags, link_libs, bin_dependencies, and auto-detected libs
+    // Append c_flags, link_libs, bin_dependencies, and auto-detected libs after CLI flags
     var allocated_libs: [64][]const u8 = undefined;
     var allocated_libs_len: usize = 0;
     defer for (allocated_libs[0..allocated_libs_len]) |al| allocator.free(al);
-
-    try appendLinkArgs(allocator, &zig_args, &zig_args_len, &allocated_libs, &allocated_libs_len, mf_opt, "native", optimize_mode, null);
 
     var has_target = false;
     var i: usize = 0;
     while (i < args.len) : (i += 1) {
         const arg = args[i];
         if (std.mem.eql(u8, arg, "-B") or std.mem.eql(u8, arg, "--force")) {
-            force_rebuild = true;
+            opts.force_rebuild = true;
         } else if (std.mem.eql(u8, arg, "-r") or std.mem.eql(u8, arg, "--release") or std.mem.eql(u8, arg, "release")) {
-            is_release = true;
+            opts.is_release = true;
         } else if (std.mem.eql(u8, arg, "-b") or std.mem.eql(u8, arg, "--beam")) {
-            is_beam = true;
-            build_type = "build-lib";
+            opts.is_beam = true;
+            opts.build_type = "build-lib";
         } else if (std.mem.eql(u8, arg, "-f") or std.mem.eql(u8, arg, "--fast")) {
-            optimize_mode = "ReleaseFast";
+            opts.optimize_mode = "ReleaseFast";
         } else if (std.mem.eql(u8, arg, "-s") or std.mem.eql(u8, arg, "--small")) {
-            optimize_mode = "ReleaseSmall";
-        } else if (std.mem.eql(u8, arg, "--debug")) {
-            optimize_mode = "Debug";
+            opts.optimize_mode = "ReleaseSmall";
+        } else if (std.mem.eql(u8, arg, "-d") or std.mem.eql(u8, arg, "--debug")) {
+            opts.optimize_mode = "Debug";
+        } else if (std.mem.eql(u8, arg, "--llvm")) {
+            opts.force_llvm = true;
+        } else if (std.mem.eql(u8, arg, "--emit-types")) {
+            opts.emit_types = true;
+        } else if (std.mem.eql(u8, arg, "-m") or std.mem.eql(u8, arg, "--modular")) {
+            opts.is_modular = true;
         } else if (std.mem.eql(u8, arg, "--safe")) {
-            optimize_mode = "ReleaseSafe";
+            opts.optimize_mode = "ReleaseSafe";
         } else if (std.mem.startsWith(u8, arg, "--opt=")) {
             const opt_val = arg[6..];
             if (manifest.OptimizeMode.fromString(opt_val)) |m| {
-                optimize_mode = m.toZigFlag();
+                opts.optimize_mode = m.toZigFlag();
             }
         } else if (std.mem.startsWith(u8, arg, "--out-dir=")) {
-            out_dir_val = arg[10..];
+            opts.out_dir_val = arg[10..];
         } else if (std.mem.eql(u8, arg, "-o")) {
             if (i + 1 < args.len) {
                 i += 1;
-                out_dir_val = args[i];
+                opts.out_dir_val = args[i];
+            }
+        } else if (std.mem.startsWith(u8, arg, "--cache-dir=")) {
+            opts.explicit_cache_dir = arg["--cache-dir=".len..];
+        } else if (std.mem.eql(u8, arg, "--cache-dir")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                opts.explicit_cache_dir = args[i];
             }
         } else if (std.mem.startsWith(u8, arg, "--target=")) {
-            explicit_target = arg[9..];
+            opts.explicit_target = arg[9..];
         } else if (std.mem.eql(u8, arg, "-t")) {
             if (i + 1 < args.len) {
                 i += 1;
-                explicit_target = args[i];
+                opts.explicit_target = args[i];
             }
         } else if (std.mem.eql(u8, arg, "--exe")) {
-            build_type = "build-exe";
+            opts.build_type = "build-exe";
         } else if (std.mem.eql(u8, arg, "--obj")) {
-            build_type = "build-obj";
+            opts.build_type = "build-obj";
         } else if (std.mem.eql(u8, arg, "--lib")) {
-            build_type = "build-lib";
+            opts.build_type = "build-lib";
         } else if (std.mem.startsWith(u8, arg, "-")) {
-            if (zig_args_len < 100) {
+            if (zig_args_len < zig_args.len) {
                 zig_args[zig_args_len] = arg;
                 zig_args_len += 1;
             }
@@ -1458,6 +1743,12 @@ fn buildPackage(allocator: std.mem.Allocator, args: []const []const u8) !void {
             }
         }
     }
+
+    const ws_paths = try resolveWorkspacePaths(allocator, opts.out_dir_val, opts.explicit_cache_dir);
+    defer ws_paths.deinit(allocator);
+
+    try appendLinkArgs(allocator, &zig_args, &zig_args_len, &allocated_libs, &allocated_libs_len, mf_opt, "native", opts.optimize_mode, null, ws_paths.zig_cache_dir);
+    opts.zig_args = zig_args[0..zig_args_len];
 
     if (!has_target) {
         if (fs_shim.cwd().statFile("src") catch null != null) {
@@ -1474,29 +1765,22 @@ fn buildPackage(allocator: std.mem.Allocator, args: []const []const u8) !void {
     }
 
     for (targets_to_build[0..targets_len]) |target_path| {
-        try buildTarget(allocator, target_path, is_release, is_beam, optimize_mode, build_type, out_dir_val, explicit_target, configured_targets, zig_args[0..zig_args_len], force_rebuild);
+        try buildTarget(allocator, target_path, opts, ws_paths);
     }
     const total_ms = build_start.durationTo(std.Io.Timestamp.now(global_io, .awake)).toMilliseconds();
     if (total_ms >= 1000) {
         const total_sec = @as(f64, @floatFromInt(total_ms)) / 1000.0;
-        std.debug.print("Build completed in {d:.2}s! Artifacts in {s}/\n", .{ total_sec, out_dir_val });
+        std.debug.print("Build completed in {d:.2}s! Artifacts in {s}/\n", .{ total_sec, opts.out_dir_val });
     } else {
-        std.debug.print("Build completed in {d}ms! Artifacts in {s}/\n", .{ total_ms, out_dir_val });
+        std.debug.print("Build completed in {d}ms! Artifacts in {s}/\n", .{ total_ms, opts.out_dir_val });
     }
 }
 
 fn buildTarget(
     allocator: std.mem.Allocator,
     target_path: []const u8,
-    is_release: bool,
-    is_beam: bool,
-    optimize_mode: []const u8,
-    build_type: []const u8,
-    out_dir_val: []const u8,
-    explicit_target: ?[]const u8,
-    configured_targets: [][]const u8,
-    zig_args: []const []const u8,
-    force_rebuild: bool,
+    opts: BuildOptions,
+    ws_paths: WorkspacePaths,
 ) !void {
     const stat = fs_shim.cwd().statFile(target_path) catch return;
     if (stat.kind == .directory) {
@@ -1506,25 +1790,18 @@ fn buildTarget(
         while (try it.next(global_io)) |entry| {
             const child_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ target_path, entry.name });
             defer allocator.free(child_path);
-            try buildTarget(allocator, child_path, is_release, is_beam, optimize_mode, build_type, out_dir_val, explicit_target, configured_targets, zig_args, force_rebuild);
+            try buildTarget(allocator, child_path, opts, ws_paths);
         }
     } else if (std.mem.endsWith(u8, target_path, ".cp")) {
-        try compileSingleFile(allocator, target_path, is_release, is_beam, optimize_mode, build_type, out_dir_val, explicit_target, configured_targets, zig_args, force_rebuild);
+        try compileSingleFile(allocator, target_path, opts, ws_paths);
     }
 }
 
 fn compileSingleFile(
     allocator: std.mem.Allocator,
     filename: []const u8,
-    is_release: bool,
-    is_beam: bool,
-    optimize_mode: []const u8,
-    build_type: []const u8,
-    out_dir_val: []const u8,
-    explicit_target: ?[]const u8,
-    configured_targets: [][]const u8,
-    zig_args: []const []const u8,
-    force_rebuild: bool,
+    opts: BuildOptions,
+    ws_paths: WorkspacePaths,
 ) !void {
     const base_name = filename[0 .. filename.len - 3];
     var bin_subpath: []const u8 = base_name;
@@ -1544,14 +1821,14 @@ fn compileSingleFile(
     var targets_to_run: [16]Target = undefined;
     var target_count: usize = 0;
 
-    if (explicit_target) |et| {
+    if (opts.explicit_target) |et| {
         const ext = if (std.mem.indexOf(u8, et, "windows") != null) ".exe" else "";
         const name = if (std.mem.eql(u8, et, "native") or std.mem.eql(u8, et, "Native")) "Native" else et;
         targets_to_run[0] = .{ .name = name, .triple = et, .ext = ext };
         target_count = 1;
-    } else if (is_release) {
-        if (configured_targets.len > 0) {
-            for (configured_targets) |ct| {
+    } else if (opts.is_release) {
+        if (opts.configured_targets.len > 0) {
+            for (opts.configured_targets) |ct| {
                 if (target_count < 16) {
                     const ext = if (std.mem.indexOf(u8, ct, "windows") != null) ".exe" else "";
                     const name = if (std.mem.eql(u8, ct, "native") or std.mem.eql(u8, ct, "Native"))
@@ -1576,25 +1853,57 @@ fn compileSingleFile(
         target_count = 1;
     }
 
-    const base_ext = if (std.mem.eql(u8, build_type, "build-obj")) ".o" else if (is_beam) ".so" else if (std.mem.eql(u8, build_type, "build-lib")) ".a" else "";
+    const base_ext = if (std.mem.eql(u8, opts.build_type, "build-obj")) ".o" else if (opts.is_beam) ".so" else if (std.mem.eql(u8, opts.build_type, "build-lib")) ".a" else "";
+    const entry_stem = std.Io.Dir.path.stem(filename);
 
-    // 1. Fast path: check if all target binaries are already up to date
-    const src_stat = fs_shim.cwd().statFile(filename) catch null;
-    var all_up_to_date = !force_rebuild and src_stat != null;
+    // 1. Recursive source mtime (all .cp under src/ + filename + cap.json)
+    const max_src_mtime_ns = computeMaxSourceMtimeNs(filename);
+
+    var zig_file_buf: ?[]const u8 = null;
+    defer if (zig_file_buf) |zf| allocator.free(zf);
+    var existing_zig_mtime_ns: ?i96 = null;
+
+    if (opts.is_modular) {
+        if (try resolveModularEntryFile(allocator, ws_paths.zig_root_dir, entry_stem)) |resolved| {
+            zig_file_buf = resolved;
+            if (fs_shim.cwd().openDir(ws_paths.zig_root_dir, .{ .iterate = true })) |mod_dir_val| {
+                var mod_dir = mod_dir_val;
+                defer mod_dir.close(global_io);
+                existing_zig_mtime_ns = computeMaxMtimeInDir(mod_dir, ".zig", false);
+            } else |_| {}
+            if (existing_zig_mtime_ns == null) {
+                if (fs_shim.cwd().statFile(resolved)) |st| {
+                    existing_zig_mtime_ns = st.mtime.nanoseconds;
+                } else |_| {}
+            }
+        }
+    } else {
+        const single_zig = try std.fmt.allocPrint(allocator, "{s}/{s}.zig", .{ ws_paths.zig_root_dir, base_name });
+        zig_file_buf = single_zig;
+        if (fs_shim.cwd().statFile(single_zig)) |st| {
+            existing_zig_mtime_ns = st.mtime.nanoseconds;
+        } else |_| {}
+    }
+
+    // 2. Fast path: check if all target binaries are already up to date
+    var all_up_to_date = !opts.force_rebuild and max_src_mtime_ns != null;
     if (all_up_to_date) {
         for (targets_to_run[0..target_count]) |t| {
-            var target_out_dir: []const u8 = out_dir_val;
+            var target_out_dir: []const u8 = opts.out_dir_val;
             var dir_path: ?[]const u8 = null;
             defer if (dir_path) |d| allocator.free(d);
             const is_target_native = std.mem.eql(u8, t.name, "Native") or std.mem.eql(u8, t.triple, "native");
-            if (!is_target_native and explicit_target == null) {
-                dir_path = try std.fmt.allocPrint(allocator, "{s}/{s}", .{ out_dir_val, t.name });
+            if (!is_target_native and opts.explicit_target == null) {
+                dir_path = try std.fmt.allocPrint(allocator, "{s}/{s}", .{ opts.out_dir_val, t.name });
                 target_out_dir = dir_path.?;
             }
             const out_file_path = try std.fmt.allocPrint(allocator, "{s}/{s}{s}{s}", .{ target_out_dir, bin_subpath, base_ext, t.ext });
             defer allocator.free(out_file_path);
             const out_stat = fs_shim.cwd().statFile(out_file_path) catch null;
-            if (out_stat == null or out_stat.?.mtime.nanoseconds < src_stat.?.mtime.nanoseconds) {
+            if (out_stat == null or
+                out_stat.?.mtime.nanoseconds < max_src_mtime_ns.? or
+                (existing_zig_mtime_ns != null and out_stat.?.mtime.nanoseconds < existing_zig_mtime_ns.?))
+            {
                 all_up_to_date = false;
                 break;
             }
@@ -1602,43 +1911,59 @@ fn compileSingleFile(
     }
 
     if (all_up_to_date) {
-        std.debug.print("Building: {s} (Mode: {s})...\n", .{ filename, optimize_mode });
+        std.debug.print("Building: {s} (Mode: {s})...\n", .{ filename, opts.optimize_mode });
         std.debug.print("  → [Up-to-date] Output binaries are up to date (skipped)\n", .{});
         return;
     }
 
-    std.debug.print("Building: {s} (Mode: {s})...\n", .{ filename, optimize_mode });
+    std.debug.print("Building: {s} (Mode: {s})...\n", .{ filename, opts.optimize_mode });
 
-    const zig_file = try std.fmt.allocPrint(allocator, ".cap/zig/{s}.zig", .{base_name});
-    defer allocator.free(zig_file);
-
-    if (std.Io.Dir.path.dirname(zig_file)) |dirname| {
+    if (opts.is_modular) {
+        fs_shim.cwd().createDirPath(global_io, ws_paths.zig_root_dir) catch {};
+        if (opts.is_beam) {
+            copyDir("/data/dev/cp/sdk/beam.zig", ws_paths.zig_root_dir) catch {};
+            copyDir("/data/dev/cp/sdk/erl_nif.zig", ws_paths.zig_root_dir) catch {};
+        }
+    } else if (std.Io.Dir.path.dirname(zig_file_buf.?)) |dirname| {
         fs_shim.cwd().createDirPath(global_io, dirname) catch {};
-        if (is_beam) {
+        if (opts.is_beam) {
             copyDir("/data/dev/cp/sdk/beam.zig", dirname) catch {};
             copyDir("/data/dev/cp/sdk/erl_nif.zig", dirname) catch {};
         }
     }
 
-    const zig_stat = fs_shim.cwd().statFile(zig_file) catch null;
-    if (!force_rebuild and zig_stat != null and src_stat != null and zig_stat.?.mtime.nanoseconds >= src_stat.?.mtime.nanoseconds) {
+    var cur_zig_mtime_ns: ?i96 = existing_zig_mtime_ns;
+    if (!opts.force_rebuild and existing_zig_mtime_ns != null and max_src_mtime_ns != null and existing_zig_mtime_ns.? >= max_src_mtime_ns.?) {
         std.debug.print("  → [cpc] Intermediate Zig source is up to date (skipped)\n", .{});
     } else {
         const cpc_bin = try getCpcBin(allocator);
         defer allocator.free(cpc_bin);
         const cpc_start = std.Io.Timestamp.now(global_io, .awake);
-        var cpc_args_buf: [15][]const u8 = undefined;
+        var cpc_args_buf: [16][]const u8 = undefined;
         var cpc_argc: usize = 0;
         cpc_args_buf[cpc_argc] = cpc_bin;
         cpc_argc += 1;
         cpc_args_buf[cpc_argc] = "compile";
         cpc_argc += 1;
-        cpc_args_buf[cpc_argc] = filename;
-        cpc_argc += 1;
-        cpc_args_buf[cpc_argc] = "--output";
-        cpc_argc += 1;
-        cpc_args_buf[cpc_argc] = zig_file;
-        cpc_argc += 1;
+        if (opts.is_modular) {
+            cpc_args_buf[cpc_argc] = "--emit-dir";
+            cpc_argc += 1;
+            cpc_args_buf[cpc_argc] = ws_paths.zig_root_dir;
+            cpc_argc += 1;
+            if (opts.force_rebuild) {
+                cpc_args_buf[cpc_argc] = "--force";
+                cpc_argc += 1;
+            }
+            cpc_args_buf[cpc_argc] = filename;
+            cpc_argc += 1;
+        } else {
+            cpc_args_buf[cpc_argc] = filename;
+            cpc_argc += 1;
+            cpc_args_buf[cpc_argc] = "--output";
+            cpc_argc += 1;
+            cpc_args_buf[cpc_argc] = zig_file_buf.?;
+            cpc_argc += 1;
+        }
         cpc_args_buf[cpc_argc] = "-I";
         cpc_argc += 1;
         cpc_args_buf[cpc_argc] = "/data/dev/cp/cap/cap_modules";
@@ -1647,7 +1972,7 @@ fn compileSingleFile(
         cpc_argc += 1;
         cpc_args_buf[cpc_argc] = "/data/dev/cp/lib";
         cpc_argc += 1;
-        if (is_beam) {
+        if (opts.is_beam) {
             cpc_args_buf[cpc_argc] = "-b";
             cpc_argc += 1;
         }
@@ -1658,25 +1983,38 @@ fn compileSingleFile(
             .exited => |code| if (code != 0) return error.CompileFailed,
             else => return error.CompileFailed,
         }
+
+        if (opts.is_modular) {
+            if (zig_file_buf) |old_zf| {
+                allocator.free(old_zf);
+                zig_file_buf = null;
+            }
+            zig_file_buf = try resolveModularEntryFile(allocator, ws_paths.zig_root_dir, entry_stem);
+            if (zig_file_buf == null) {
+                std.debug.print("Error: --modular compilation did not produce {s}/__cp_entry.zig or {s}/{s}.zig\n", .{ ws_paths.zig_root_dir, ws_paths.zig_root_dir, entry_stem });
+                return error.CompileFailed;
+            }
+            if (fs_shim.cwd().openDir(ws_paths.zig_root_dir, .{ .iterate = true })) |mod_dir_val| {
+                var mod_dir = mod_dir_val;
+                defer mod_dir.close(global_io);
+                cur_zig_mtime_ns = computeMaxMtimeInDir(mod_dir, ".zig", false);
+            } else |_| {}
+            if (cur_zig_mtime_ns == null) {
+                if (fs_shim.cwd().statFile(zig_file_buf.?)) |st| {
+                    cur_zig_mtime_ns = st.mtime.nanoseconds;
+                } else |_| {}
+            }
+        } else {
+            if (fs_shim.cwd().statFile(zig_file_buf.?)) |st| {
+                cur_zig_mtime_ns = st.mtime.nanoseconds;
+            } else |_| {}
+        }
+
         const cpc_ms = cpc_start.durationTo(std.Io.Timestamp.now(global_io, .awake)).toMilliseconds();
         std.debug.print("  → [cpc] Transpiled in {d}ms\n", .{cpc_ms});
     }
 
-    // Emit Type Definitions (.d.cp)
-    {
-        const cpc_bin = try getCpcBin(allocator);
-        defer allocator.free(cpc_bin);
-        const type_out_path = try std.fmt.allocPrint(allocator, "{s}/{s}.d.cp", .{ out_dir_val, bin_subpath });
-        defer allocator.free(type_out_path);
-        if (std.Io.Dir.path.dirname(type_out_path)) |dirname| {
-            fs_shim.cwd().createDirPath(global_io, dirname) catch {};
-        }
-        const emit_types_args = &[_][]const u8{ cpc_bin, "emit-types", filename, "--output", type_out_path };
-        var emit_types_child = try std.process.spawn(global_io, .{ .argv = emit_types_args });
-        _ = try emit_types_child.wait(global_io);
-    }
-
-    fs_shim.cwd().createDirPath(global_io, ".cap/zig-cache") catch {};
+    const zig_file = zig_file_buf.?;
 
     var mf_opt: ?manifest.Manifest = null;
     var mf_content: ?[]const u8 = null;
@@ -1689,13 +2027,34 @@ fn compileSingleFile(
     } else |_| {}
     defer if (mf_opt) |*m| m.deinit(allocator);
 
+    const build_type_resolved = try resolveBuildType(allocator, opts.build_type, mf_opt, filename);
+
+    // Emit Type Definitions (.d.cp) only for libraries or when explicitly requested
+    if (opts.emit_types or std.mem.eql(u8, build_type_resolved, "build-lib")) {
+        const cpc_bin = try getCpcBin(allocator);
+        defer allocator.free(cpc_bin);
+        const type_out_path = try std.fmt.allocPrint(allocator, "{s}/{s}.d.cp", .{ opts.out_dir_val, bin_subpath });
+        defer allocator.free(type_out_path);
+        if (std.Io.Dir.path.dirname(type_out_path)) |dirname| {
+            fs_shim.cwd().createDirPath(global_io, dirname) catch {};
+        }
+        const emit_types_args = &[_][]const u8{ cpc_bin, "emit-types", filename, "--output", type_out_path };
+        var emit_types_child = try std.process.spawn(global_io, .{ .argv = emit_types_args });
+        _ = try emit_types_child.wait(global_io);
+    }
+
+    fs_shim.cwd().createDirPath(global_io, ws_paths.zig_cache_dir) catch {};
+
+    const is_x86_64_linux_host = builtin.cpu.arch == .x86_64 and builtin.os.tag == .linux;
+    const has_explicit_llvm_flag = opts.force_llvm or hasArg(opts.zig_args, "-fllvm") or hasArg(opts.zig_args, "-fno-llvm");
+
     for (targets_to_run[0..target_count]) |t| {
         var dir_path: ?[]const u8 = null;
         defer if (dir_path) |d| allocator.free(d);
-        var target_out_dir: []const u8 = out_dir_val;
+        var target_out_dir: []const u8 = opts.out_dir_val;
         const is_target_native = std.mem.eql(u8, t.name, "Native") or std.mem.eql(u8, t.triple, "native");
-        if (!is_target_native and explicit_target == null) {
-            dir_path = try std.fmt.allocPrint(allocator, "{s}/{s}", .{ out_dir_val, t.name });
+        if (!is_target_native and opts.explicit_target == null) {
+            dir_path = try std.fmt.allocPrint(allocator, "{s}/{s}", .{ opts.out_dir_val, t.name });
             target_out_dir = dir_path.?;
             fs_shim.cwd().createDirPath(global_io, target_out_dir) catch {};
         }
@@ -1708,50 +2067,46 @@ fn compileSingleFile(
         }
 
         const out_stat = fs_shim.cwd().statFile(out_file_path) catch null;
-        const cur_zig_stat = fs_shim.cwd().statFile(zig_file) catch null;
-        if (!force_rebuild and out_stat != null and cur_zig_stat != null and out_stat.?.mtime.nanoseconds >= cur_zig_stat.?.mtime.nanoseconds) {
+        if (!opts.force_rebuild and
+            out_stat != null and
+            cur_zig_mtime_ns != null and
+            max_src_mtime_ns != null and
+            out_stat.?.mtime.nanoseconds >= cur_zig_mtime_ns.? and
+            out_stat.?.mtime.nanoseconds >= max_src_mtime_ns.?)
+        {
             std.debug.print("  → [{s}] Target binary is up to date (skipped)\n", .{t.name});
             continue;
         }
 
         var emit_flag: []const u8 = "-femit-bin=";
-        if (std.mem.eql(u8, build_type, "build-obj")) emit_flag = "-femit-obj=";
+        if (std.mem.eql(u8, opts.build_type, "build-obj")) emit_flag = "-femit-obj=";
 
-        const emit_arg = try std.fmt.allocPrint(allocator, "{s}{s}", .{ emit_flag, out_file_path });
+        const tmp_out_path = try std.fmt.allocPrint(allocator, "{s}.tmp.{d}", .{ out_file_path, getCurrentPid() });
+        defer allocator.free(tmp_out_path);
+        const emit_arg = try std.fmt.allocPrint(allocator, "{s}{s}", .{ emit_flag, tmp_out_path });
         defer allocator.free(emit_arg);
 
-        std.debug.print("  → Compiling for {s} ({s})...\n", .{ t.name, optimize_mode });
+        const use_no_llvm = is_x86_64_linux_host and
+            std.mem.eql(u8, opts.optimize_mode, "Debug") and
+            is_target_native and
+            !opts.is_beam and
+            std.mem.eql(u8, build_type_resolved, "build-exe") and
+            !has_explicit_llvm_flag;
+
+        if (use_no_llvm) {
+            std.debug.print("  → Compiling for {s} ({s}, -fno-llvm)...\n", .{ t.name, opts.optimize_mode });
+        } else {
+            std.debug.print("  → Compiling for {s} ({s})...\n", .{ t.name, opts.optimize_mode });
+        }
         const zig_start = std.Io.Timestamp.now(global_io, .awake);
 
-        var build_type_resolved = build_type;
-        if (std.mem.eql(u8, build_type_resolved, "build-exe")) {
-            // Only use build-exe for the actual main entry point
-            if (mf_opt) |mf| {
-                const main_target = mf.main orelse (if (mf.build_config) |bc| bc.entry else null);
-                if (main_target) |main_file| {
-                    const full_main_path = if (std.mem.startsWith(u8, main_file, "src/"))
-                        try allocator.dupe(u8, main_file)
-                    else
-                        try std.fmt.allocPrint(allocator, "src/{s}", .{main_file});
-                    defer allocator.free(full_main_path);
-                    if (!std.mem.eql(u8, filename, full_main_path)) {
-                        build_type_resolved = "build-lib";
-                    }
-                } else {
-                    build_type_resolved = "build-lib";
-                }
-            } else {
-                build_type_resolved = "build-lib";
-            }
-        }
-
-        var child_args: [100][]const u8 = undefined;
+        var child_args: [128][]const u8 = undefined;
         var argc: usize = 0;
         child_args[argc] = "zig";
         argc += 1;
         child_args[argc] = build_type_resolved;
         argc += 1;
-        if (is_beam) {
+        if (opts.is_beam) {
             child_args[argc] = "-dynamic";
             argc += 1;
         }
@@ -1761,11 +2116,11 @@ fn compileSingleFile(
         argc += 1;
         child_args[argc] = "--cache-dir";
         argc += 1;
-        child_args[argc] = ".cap/zig-cache";
+        child_args[argc] = ws_paths.zig_cache_dir;
         argc += 1;
         child_args[argc] = "-O";
         argc += 1;
-        child_args[argc] = optimize_mode;
+        child_args[argc] = opts.optimize_mode;
         argc += 1;
         child_args[argc] = "-lc";
         argc += 1;
@@ -1777,23 +2132,41 @@ fn compileSingleFile(
             argc += 1;
         }
 
-        for (zig_args) |za| {
-            child_args[argc] = za;
-            argc += 1;
+        for (opts.zig_args) |za| {
+            addArg(&child_args, &argc, za);
         }
 
         var local_alloc_libs: [64][]const u8 = undefined;
         var local_alloc_libs_len: usize = 0;
         defer for (local_alloc_libs[0..local_alloc_libs_len]) |al| allocator.free(al);
 
-        try appendLinkArgs(allocator, &child_args, &argc, &local_alloc_libs, &local_alloc_libs_len, mf_opt, t.triple, optimize_mode, zig_file);
+        try appendLinkArgs(allocator, &child_args, &argc, &local_alloc_libs, &local_alloc_libs_len, mf_opt, t.triple, opts.optimize_mode, zig_file, ws_paths.zig_cache_dir);
         scanZigFileForLinkPragmas(allocator, zig_file, &child_args, &argc, &local_alloc_libs, &local_alloc_libs_len);
+        if (opts.is_modular) {
+            scanModularManifestForLinkPragmas(allocator, ws_paths.zig_root_dir, &child_args, &argc, &local_alloc_libs, &local_alloc_libs_len);
+        }
 
-        var build_child = try std.process.spawn(global_io, .{ .argv = child_args[0..argc] });
-        const build_res = try build_child.wait(global_io);
-        if (build_res.exited != 0) {
+        const base_argc = argc;
+        if (use_no_llvm and argc < child_args.len) {
+            child_args[argc] = "-fno-llvm";
+            argc += 1;
+        }
+
+        var build_ok = try spawnAndWaitSuccess(child_args[0..argc]);
+        if (!build_ok and use_no_llvm) {
+            fs_shim.cwd().deleteFile(tmp_out_path) catch {};
+            std.debug.print("  ! [-fno-llvm] Native backend failed for {s}, falling back to LLVM...\n", .{t.name});
+            build_ok = try spawnAndWaitSuccess(child_args[0..base_argc]);
+        }
+
+        if (!build_ok) {
+            fs_shim.cwd().deleteFile(tmp_out_path) catch {};
             std.debug.print("Failed to build for {s}\n", .{t.name});
         } else {
+            fs_shim.cwd().rename(tmp_out_path, out_file_path) catch |err| {
+                fs_shim.cwd().deleteFile(tmp_out_path) catch {};
+                return err;
+            };
             const zig_ms = zig_start.durationTo(std.Io.Timestamp.now(global_io, .awake)).toMilliseconds();
             if (zig_ms >= 1000) {
                 const zig_sec = @as(f64, @floatFromInt(zig_ms)) / 1000.0;
@@ -2192,7 +2565,7 @@ fn runTestSingleFile(allocator: std.mem.Allocator, filename: []const u8) !void {
     var allocated_libs_len: usize = 0;
     defer for (allocated_libs[0..allocated_libs_len]) |al| allocator.free(al);
 
-    try appendLinkArgs(allocator, &build_args_buf, &build_argc, &allocated_libs, &allocated_libs_len, mf_opt, "native", "ReleaseSafe", zig_file);
+    try appendLinkArgs(allocator, &build_args_buf, &build_argc, &allocated_libs, &allocated_libs_len, mf_opt, "native", "ReleaseSafe", zig_file, ".cap/zig-cache");
     scanZigFileForLinkPragmas(allocator, zig_file, &build_args_buf, &build_argc, &allocated_libs, &allocated_libs_len);
 
     var build_child = try std.process.spawn(global_io, .{ .argv = build_args_buf[0..build_argc] });
@@ -2301,7 +2674,7 @@ fn runFuzzSingleFile(allocator: std.mem.Allocator, filename: []const u8, fuzz_op
     var allocated_libs_len: usize = 0;
     defer for (allocated_libs[0..allocated_libs_len]) |al| allocator.free(al);
 
-    try appendLinkArgs(allocator, &link_args_buf, &link_argc, &allocated_libs, &allocated_libs_len, mf_opt, "native", "ReleaseSafe", zig_file);
+    try appendLinkArgs(allocator, &link_args_buf, &link_argc, &allocated_libs, &allocated_libs_len, mf_opt, "native", "ReleaseSafe", zig_file, ".cap/zig-cache");
     scanZigFileForLinkPragmas(allocator, zig_file, &link_args_buf, &link_argc, &allocated_libs, &allocated_libs_len);
 
     var link_child = try std.process.spawn(global_io, .{ .argv = link_args_buf[0..link_argc] });

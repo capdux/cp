@@ -74,7 +74,10 @@ impl Codegen {
                     String::new()
                 };
                 if *is_comptime {
-                    format!("(if (comptime {}){} {} else {})", test_s, cap_s, cons_s, alt_s)
+                    format!(
+                        "(if (comptime {}){} {} else {})",
+                        test_s, cap_s, cons_s, alt_s
+                    )
                 } else {
                     format!("(if ({}){} {} else {})", test_s, cap_s, cons_s, alt_s)
                 }
@@ -308,7 +311,14 @@ impl Codegen {
             }
             Expr::Member(member) => {
                 if let Expr::Ident(id) = &*member.obj {
-                    if id.sym == "error" && member.prop.sym.chars().next().map_or(false, |c| c.is_ascii_uppercase()) {
+                    if id.sym == "error"
+                        && member
+                            .prop
+                            .sym
+                            .chars()
+                            .next()
+                            .map_or(false, |c| c.is_ascii_uppercase())
+                    {
                         return format!("error.{}", member.prop.sym);
                     }
                     if id.sym == "Math" {
@@ -354,7 +364,9 @@ impl Codegen {
                 let obj_ty = self.infer_zig_type(None, Some(&member.obj));
 
                 let is_array_or_string = match &cp_ty {
-                    Some(Type::String) | Some(Type::Array(_)) | Some(Type::FixedArray(_, _)) => true,
+                    Some(Type::String) | Some(Type::Array(_)) | Some(Type::FixedArray(_, _)) => {
+                        true
+                    }
                     _ => false,
                 };
                 let prop_str = if is_array_or_string && member.prop.sym == "length" {
@@ -426,6 +438,9 @@ impl Codegen {
                 let old_fn = self.current_zig_fn_name.clone();
                 let mut lambda_output = String::new();
                 let mut lambda_gen = Codegen::new();
+                lambda_gen.modular_mode = self.modular_mode;
+                lambda_gen.is_lib_mode = self.is_lib_mode;
+                lambda_gen.is_beam_mode = self.is_beam_mode;
                 lambda_gen.globals = self.globals.clone();
                 lambda_gen.class_defs = self.class_defs.clone();
                 lambda_gen.ref_classes = self.ref_classes.clone();
@@ -493,7 +508,9 @@ impl Codegen {
 
                 for param in &arrow.params {
                     if let Pattern::Ident(pid) = param {
-                        lambda_gen.locals.insert(pid.sym.clone(), "?*anyopaque".to_string());
+                        lambda_gen
+                            .locals
+                            .insert(pid.sym.clone(), "?*anyopaque".to_string());
                         writeln!(lambda_output, "    {}: ?*anyopaque = null,", pid.sym).unwrap();
                     }
                 }
@@ -533,7 +550,11 @@ impl Codegen {
                 for case in &lambda_gen.cases {
                     lambda_output.push_str(case);
                 }
-                writeln!(lambda_output, "        else => unreachable,\n    }} }} }}\n").unwrap();
+                writeln!(
+                    lambda_output,
+                    "        else => unreachable,\n    }} }} }}\n"
+                )
+                .unwrap();
                 self.lambda_funcs.push(lambda_output);
 
                 self.lambda_moved_vars

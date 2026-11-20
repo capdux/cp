@@ -29,7 +29,10 @@ impl Codegen {
                         let is_fn_native = match &self.current_fn_ret_ty {
                             Some(Type::ResultType { err: fn_err, .. }) => {
                                 let s = self.map_error_type(fn_err);
-                                self.is_lib_mode || s.contains('.') || s == "anyerror" || self.error_sets.contains_key(&s)
+                                self.is_lib_mode
+                                    || s.contains('.')
+                                    || s == "anyerror"
+                                    || self.error_sets.contains_key(&s)
                             }
                             Some(Type::ErrorUnion(_)) => true,
                             _ => false,
@@ -54,7 +57,9 @@ impl Codegen {
                                 format!("const __e_{id} = cp_unwrap_err_val(__r_{id}); return .{{ .err = cp_convert_err({tgt_zig}, __e_{id}) }};")
                             }
                         } else if is_fn_native {
-                            format!("const __e_{id} = cp_unwrap_err_val(__r_{id}); return __e_{id};")
+                            format!(
+                                "const __e_{id} = cp_unwrap_err_val(__r_{id}); return __e_{id};"
+                            )
                         } else {
                             panic!("CP Compile Error: Operator '?' cannot be used on '!Error' expression inside a function that does not return '!Error'");
                         };
@@ -314,7 +319,13 @@ impl Codegen {
                             code
                         } else {
                             let ec = self.generate_expr(e);
-                            if ec == "unreachable" || ec.starts_with("@panic") || ec.starts_with("@compileError") || ec.starts_with("break") || ec.starts_with("return") || ec.starts_with("continue") {
+                            if ec == "unreachable"
+                                || ec.starts_with("@panic")
+                                || ec.starts_with("@compileError")
+                                || ec.starts_with("break")
+                                || ec.starts_with("return")
+                                || ec.starts_with("continue")
+                            {
                                 format!("{};", ec)
                             } else if let Some(ty_str) = &target_payload_ty {
                                 format!("break :{} @as({}, {});", blk_label, ty_str, ec)
@@ -354,14 +365,23 @@ impl Codegen {
                                                 blk_label, ty_str, default_val
                                             ));
                                         } else if self.is_lib_mode {
-                                            self.write_to_case(&format!("break :{} {{}};", blk_label));
+                                            self.write_to_case(&format!(
+                                                "break :{} {{}};",
+                                                blk_label
+                                            ));
                                         } else {
-                                            self.write_to_case(&format!("break :{} cp_val({{}});", blk_label));
+                                            self.write_to_case(&format!(
+                                                "break :{} cp_val({{}});",
+                                                blk_label
+                                            ));
                                         }
                                         continue;
                                     }
                                     let ec = self.generate_expr(e);
-                                    if ec == "unreachable" || ec.starts_with("@panic") || ec.starts_with("@compileError") {
+                                    if ec == "unreachable"
+                                        || ec.starts_with("@panic")
+                                        || ec.starts_with("@compileError")
+                                    {
                                         self.write_to_case(&format!("{};", ec));
                                     } else if let Some(ty_str) = &target_payload_ty {
                                         self.write_to_case(&format!(
@@ -542,10 +562,14 @@ impl Codegen {
                     let cls_opt = self.class_defs.get(base_name).cloned();
                     if let Some(ref cls) = cls_opt {
                         if cls.is_static {
-                            panic!("CP Compile Error: Cannot instantiate static class or struct '{}'", ei.enum_name.sym);
+                            panic!(
+                                "CP Compile Error: Cannot instantiate static class or struct '{}'",
+                                ei.enum_name.sym
+                            );
                         }
                     }
-                    let mut subst_map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+                    let mut subst_map: std::collections::HashMap<String, String> =
+                        std::collections::HashMap::new();
                     if let Some(pos) = target_sym.find('<') {
                         if target_sym.ends_with('>') {
                             let args_str = &target_sym[pos + 1..target_sym.len() - 1];
@@ -585,14 +609,16 @@ impl Codegen {
                         self.map_type_name(&ei.enum_name.sym)
                     };
                     if let Some(tuple_args) = &ei.tuple_args {
-                        let args_str: Vec<String> = tuple_args.iter().map(|a| self.generate_expr(a)).collect();
+                        let args_str: Vec<String> =
+                            tuple_args.iter().map(|a| self.generate_expr(a)).collect();
                         return format!("{}{{ {} }}", mapped_name, args_str.join(", "));
                     }
                     let mut s = format!("{}{{ ", mapped_name);
                     for (idx, f) in fields_slice.iter().enumerate() {
                         let old_array_elem = self.expected_array_elem_type.clone();
                         if let Some(ref cls) = cls_opt {
-                            if let Some(cf) = cls.fields.iter().find(|fl| fl.ident.sym == f.key.sym) {
+                            if let Some(cf) = cls.fields.iter().find(|fl| fl.ident.sym == f.key.sym)
+                            {
                                 if let Type::FixedArray(elem, _) | Type::Array(elem) = &cf.ty {
                                     let mut el = (**elem).clone();
                                     if let Type::Ref(ref mut id) = el {
@@ -617,9 +643,9 @@ impl Codegen {
                 if ei.enum_name.sym.is_empty() {
                     if let Some(tuple_args) = &ei.tuple_args {
                         let is_known_payload_variant = self.enum_defs.values().any(|en| {
-                            en.variants
-                                .iter()
-                                .any(|v| v.ident.sym == ei.variant_name.sym && v.tuple_type.is_some())
+                            en.variants.iter().any(|v| {
+                                v.ident.sym == ei.variant_name.sym && v.tuple_type.is_some()
+                            })
                         });
                         let starts_lower = ei
                             .variant_name
@@ -680,7 +706,8 @@ impl Codegen {
                             format!(".{}", ei.variant_name.sym)
                         }
                     } else {
-                        let anon_cls_opt = if let Some(Type::Ref(ret_id)) = &self.current_fn_ret_ty {
+                        let anon_cls_opt = if let Some(Type::Ref(ret_id)) = &self.current_fn_ret_ty
+                        {
                             let b = ret_id.sym.split('<').next().unwrap_or(&ret_id.sym);
                             self.class_defs.get(b).cloned()
                         } else if let Some(ref cname) = self.current_class_name {
@@ -725,12 +752,13 @@ impl Codegen {
                             args_str.join(", ")
                         )
                     } else {
-                        let is_expected_tuple = self.enum_defs.get(&ei.enum_name.sym).map_or(false, |en| {
-                            en.variants.iter().any(|v| {
-                                &v.ident.sym == &ei.variant_name.sym
-                                    && matches!(v.tuple_type, Some(Type::Tuple(_)))
-                            })
-                        });
+                        let is_expected_tuple =
+                            self.enum_defs.get(&ei.enum_name.sym).map_or(false, |en| {
+                                en.variants.iter().any(|v| {
+                                    &v.ident.sym == &ei.variant_name.sym
+                                        && matches!(v.tuple_type, Some(Type::Tuple(_)))
+                                })
+                            });
                         if tuple_slice.len() == 1 {
                             if is_expected_tuple {
                                 if let Expr::Array(items) = &tuple_slice[0] {
@@ -774,11 +802,14 @@ impl Codegen {
                     if !is_enum {
                         format!("{}.{}", ei.enum_name.sym, ei.variant_name.sym)
                     } else {
-                        let is_pure_enum = self.enum_defs.get(&ei.enum_name.sym).map_or(false, |en| {
-                            en.variants.iter().all(|v| {
-                                v.fields.is_none() && v.tuple_type.is_none() && v.from_err.is_none()
-                            })
-                        });
+                        let is_pure_enum =
+                            self.enum_defs.get(&ei.enum_name.sym).map_or(false, |en| {
+                                en.variants.iter().all(|v| {
+                                    v.fields.is_none()
+                                        && v.tuple_type.is_none()
+                                        && v.from_err.is_none()
+                                })
+                            });
                         if is_pure_enum {
                             format!("{}.{}", ei.enum_name.sym, ei.variant_name.sym)
                         } else {
@@ -803,7 +834,10 @@ impl Codegen {
                             .next()
                             .map_or(false, |c| c.is_uppercase())
                     {
-                        format!("{}.{}{{ {} }}", ei.enum_name.sym, ei.variant_name.sym, f_str)
+                        format!(
+                            "{}.{}{{ {} }}",
+                            ei.enum_name.sym, ei.variant_name.sym, f_str
+                        )
                     } else {
                         format!(
                             "{}{{ .{} = .{{ {} }} }}",
@@ -858,5 +892,4 @@ impl Codegen {
             }
         }
     }
-
 }

@@ -5,6 +5,7 @@ pub mod dcp;
 pub mod diagnostic;
 pub mod lexer;
 pub mod lsp;
+pub mod modular;
 pub mod parser;
 pub mod resolver;
 pub mod sema;

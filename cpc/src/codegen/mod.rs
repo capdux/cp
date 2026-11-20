@@ -5,14 +5,14 @@ use std::fmt::Write;
 
 pub mod actor;
 pub mod borrow;
+pub mod decl_class;
+pub mod decl_enum;
 pub mod expr;
 pub mod pattern;
 pub mod prelude;
+pub mod runtime_emit;
 pub mod stmt;
 pub mod types;
-pub mod decl_class;
-pub mod decl_enum;
-pub mod runtime_emit;
 pub mod zig_escape;
 
 pub use actor::*;
@@ -194,6 +194,14 @@ pub struct Codegen {
     pub arena_allocator_stack: Vec<String>,
     pub has_imported_ptr: bool,
     pub linker_paths: Vec<String>,
+    pub modular_mode: bool,
+    pub modular_is_entry: bool,
+    pub modular_runtime_import: Option<String>,
+    pub modular_inc_hash: Option<String>,
+    pub modular_import_map: HashMap<String, String>,
+    pub modular_module_exports: HashMap<String, Vec<String>>,
+    pub modular_local_exports: HashSet<String>,
+    pub modular_imported_symbols: HashSet<String>,
 }
 
 impl Codegen {
@@ -291,16 +299,72 @@ impl Codegen {
             arena_allocator_stack: Vec::new(),
             has_imported_ptr: false,
             linker_paths,
+            modular_mode: false,
+            modular_is_entry: false,
+            modular_runtime_import: None,
+            modular_inc_hash: None,
+            modular_import_map: HashMap::new(),
+            modular_module_exports: HashMap::new(),
+            modular_local_exports: HashSet::new(),
+            modular_imported_symbols: HashSet::new(),
+        }
+    }
+
+    pub(crate) fn rt_sym(&self, name: &str) -> String {
+        if self.modular_mode {
+            format!("__cp_rt.{}", name)
+        } else {
+            name.to_string()
         }
     }
 
     pub fn escape_zig_ident(ident: &str) -> String {
         let keywords = [
-            "align", "and", "asm", "async", "await", "break", "catch", "comptime", "const", "continue",
-            "defer", "else", "enum", "errdefer", "error", "export", "extern", "false", "fn", "for",
-            "if", "inline", "noalias", "noinline", "nosuspend", "null", "opaque", "or", "orelse",
-            "pub", "resume", "return", "linksection", "struct", "suspend", "switch", "test",
-            "threadlocal", "true", "try", "union", "unreachable", "usingnamespace", "var", "volatile",
+            "align",
+            "and",
+            "asm",
+            "async",
+            "await",
+            "break",
+            "catch",
+            "comptime",
+            "const",
+            "continue",
+            "defer",
+            "else",
+            "enum",
+            "errdefer",
+            "error",
+            "export",
+            "extern",
+            "false",
+            "fn",
+            "for",
+            "if",
+            "inline",
+            "noalias",
+            "noinline",
+            "nosuspend",
+            "null",
+            "opaque",
+            "or",
+            "orelse",
+            "pub",
+            "resume",
+            "return",
+            "linksection",
+            "struct",
+            "suspend",
+            "switch",
+            "test",
+            "threadlocal",
+            "true",
+            "try",
+            "union",
+            "unreachable",
+            "usingnamespace",
+            "var",
+            "volatile",
             "while",
         ];
         if keywords.contains(&ident) {
@@ -395,9 +459,24 @@ impl Codegen {
     }
 
     pub fn generate_module(&mut self, module: &Module) -> String {
+        if let Some(ref inc_hash) = self.modular_inc_hash.clone() {
+            self.writeln(&format!("// @cp_inc_hash:{}", inc_hash));
+        }
         let features = ModuleFeatures::scan(module, self.is_lib_mode);
         self.has_imported_ptr = features.has_imported_ptr;
-        
+
+        if self.modular_mode {
+            for item in &module.body {
+                if let ModuleItem::Export(exp) = item {
+                    if exp.source.is_none() {
+                        for s in &exp.specifiers {
+                            self.modular_local_exports.insert(s.sym.clone());
+                        }
+                    }
+                }
+            }
+        }
+
         let linker_paths = self.linker_paths.clone();
         for path in linker_paths {
             self.writeln(&format!("// @linkPath(\"{}\")", path));
@@ -408,6 +487,7 @@ impl Codegen {
         let mut has_single_thread_meta = false;
         for item in &module.body {
             if let ModuleItem::Decl(Decl::Func(f)) = item {
+                self.modular_imported_symbols.remove(&f.ident.sym);
                 self.globals.insert(f.ident.sym.clone());
                 self.fn_sigs.insert(f.ident.sym.clone(), f.clone());
                 if f.ident.sym == "main" {
@@ -477,11 +557,15 @@ impl Codegen {
                 }
             }
             if let ModuleItem::Decl(Decl::Class(c)) = item {
+                self.modular_imported_symbols.remove(&c.ident.sym);
                 self.globals.insert(c.ident.sym.clone());
                 if (c.is_ref || c.meta.iter().any(|m| m.name.sym == "ref"))
                     && !c.meta.iter().any(|m| m.name.sym == "value")
                 {
                     self.ref_classes.insert(c.ident.sym.clone());
+                    self.value_classes.remove(&c.ident.sym);
+                } else {
+                    self.ref_classes.remove(&c.ident.sym);
                 }
                 if c.meta.iter().any(|m| m.name.sym == "value") {
                     self.value_classes.insert(c.ident.sym.clone());
@@ -512,15 +596,18 @@ impl Codegen {
                 self.class_defs.insert(c.ident.sym.clone(), c.clone());
             }
             if let ModuleItem::Decl(Decl::Enum(e)) = item {
+                self.modular_imported_symbols.remove(&e.ident.sym);
                 self.globals.insert(e.ident.sym.clone());
                 self.enum_defs.insert(e.ident.sym.clone(), e.clone());
             }
             if let ModuleItem::Decl(Decl::ErrorSet(es)) = item {
+                self.modular_imported_symbols.remove(&es.ident.sym);
                 self.globals.insert(es.ident.sym.clone());
                 self.error_sets
                     .insert(es.ident.sym.clone(), es.variants.clone());
             }
             if let ModuleItem::Decl(Decl::Trait(t)) = item {
+                self.modular_imported_symbols.remove(&t.ident.sym);
                 self.globals.insert(t.ident.sym.clone());
                 self.trait_defs.insert(t.ident.sym.clone(), t.clone());
             }
@@ -531,6 +618,7 @@ impl Codegen {
                 self.dec_defs.insert(d.ident.sym.clone(), d.clone());
             }
             if let ModuleItem::Decl(Decl::TypeAlias(ta)) = item {
+                self.modular_imported_symbols.remove(&ta.ident.sym);
                 self.globals.insert(ta.ident.sym.clone());
                 self.type_aliases.insert(ta.ident.sym.clone(), ta.clone());
             }
@@ -740,7 +828,10 @@ impl Codegen {
             }
         }
 
-        if !self.is_parallel_runtime && !has_single_thread_meta {
+        if !self.is_parallel_runtime
+            && !has_single_thread_meta
+            && (!self.modular_mode || self.modular_is_entry)
+        {
             if let Ok(cap_content) = std::fs::read_to_string("cap.json") {
                 if cap_content.contains("\"mode\": \"parallel\"")
                     || cap_content.contains("\"mode\":\"parallel\"")
@@ -832,11 +923,15 @@ impl Codegen {
                     Pattern::Ident(id) => id.sym == name || id.sym == escaped,
                     _ => false,
                 },
-                ModuleItem::Decl(Decl::TypeAlias(ta)) => ta.ident.sym == name || ta.ident.sym == escaped,
+                ModuleItem::Decl(Decl::TypeAlias(ta)) => {
+                    ta.ident.sym == name || ta.ident.sym == escaped
+                }
                 ModuleItem::Decl(Decl::Class(c)) => c.ident.sym == name || c.ident.sym == escaped,
                 ModuleItem::Decl(Decl::Enum(e)) => e.ident.sym == name || e.ident.sym == escaped,
                 ModuleItem::Decl(Decl::Trait(t)) => t.ident.sym == name || t.ident.sym == escaped,
-                ModuleItem::Decl(Decl::ErrorSet(e)) => e.ident.sym == name || e.ident.sym == escaped,
+                ModuleItem::Decl(Decl::ErrorSet(e)) => {
+                    e.ident.sym == name || e.ident.sym == escaped
+                }
                 ModuleItem::Decl(Decl::Func(f)) => f.ident.sym == name || f.ident.sym == escaped,
                 ModuleItem::Import(imp) => {
                     imp.default_specifier
@@ -871,6 +966,9 @@ impl Codegen {
         if !has_top_string_decl {
             self.writeln("const string = []const u8;");
         }
+        if let Some(ref rt_path) = self.modular_runtime_import.clone() {
+            self.writeln(&format!("const __cp_rt = @import(\"{}\");", rt_path));
+        }
         if self.is_beam_mode {
             self.writeln("const beam = @import(\"beam.zig\");");
         }
@@ -894,7 +992,34 @@ impl Codegen {
         }
         self.writeln("");
 
-        self.emit_early_preludes(&features, has_top_err_decl, has_top_error_decl);
+        let declares_fn = |name: &str| -> bool {
+            module.body.iter().any(|item| match item {
+                ModuleItem::Decl(Decl::Func(f)) => f.ident.sym == name,
+                _ => false,
+            })
+        };
+        let declares_class = |name: &str| -> bool {
+            module.body.iter().any(|item| match item {
+                ModuleItem::Decl(Decl::Class(c)) => c.ident.sym == name,
+                _ => false,
+            })
+        };
+
+        if !self.modular_mode {
+            self.emit_early_preludes(&features, has_top_err_decl, has_top_error_decl);
+        } else {
+            self.emit_modular_runtime_aliases(
+                &features,
+                &has_top_decl,
+                has_top_err_decl,
+                has_top_error_decl,
+                declares_fn("print"),
+                declares_fn("spawn"),
+                declares_fn("join"),
+                declares_class("PID"),
+                declares_class("Message"),
+            );
+        }
         // --- Top-Level C-FFI / Zig Escapes ---
         for item in &module.body {
             if let ModuleItem::Stmt(Stmt::Expr(Expr::Zig(zig))) = item {
@@ -921,7 +1046,11 @@ impl Codegen {
                 };
                 if var.is_extern {
                     if let Pattern::Ident(ident) = &var.pat {
-                        let pub_str = if var.is_pub || var.is_extern || !self.is_lib_mode {
+                        let pub_str = if var.is_pub
+                            || var.is_extern
+                            || !self.is_lib_mode
+                            || self.modular_local_exports.contains(&ident.sym)
+                        {
                             "pub "
                         } else {
                             ""
@@ -961,61 +1090,119 @@ impl Codegen {
             }
         }
 
-        self.emit_runtime_preludes(&features);
-        for item in &module.body {
-            if let ModuleItem::Export(exp) = item {
-                if let Some(src) = &exp.source {
-                    let zig_source = if src.ends_with(".cp") {
-                        format!("{}.zig", &src[..src.len() - 3])
-                    } else {
-                        src.clone()
-                    };
-                    for s in &exp.specifiers {
-                        self.globals.insert(s.sym.clone());
-                        self.value_classes.insert(s.sym.clone());
-                        self.writeln(&format!(
-                            "pub const {0} = @import(\"{1}\").{0};",
-                            Self::escape_zig_ident(&s.sym),
-                            zig_source
-                        ));
-                    }
-                }
-            }
+        if !self.modular_mode {
+            self.emit_runtime_preludes(&features);
         }
-        for item in &module.body {
-            if let ModuleItem::Import(imp) = item {
-                let zig_source = if imp.source.ends_with(".cp") {
-                    format!("{}.zig", &imp.source[..imp.source.len() - 3])
-                } else {
-                    imp.source.clone()
-                };
-                if let Some(def) = &imp.default_specifier {
-                    self.globals.insert(def.sym.clone());
-                    self.value_classes.insert(def.sym.clone());
-                    if def.sym == "std" && zig_source == "std" {
-                        continue;
-                    }
-                    self.writeln(&format!(
-                        "pub const {0} = @import(\"{1}\");",
-                        Self::escape_zig_ident(&def.sym),
-                        zig_source
-                    ));
+        if self.modular_mode {
+            let mut emitted_mod_aliases: HashMap<String, String> = HashMap::new();
+            let mut mod_alias_counter = 0usize;
+            let mut get_or_emit_mod = |cg: &mut Codegen, zig_src: &str| -> String {
+                if let Some(existing) = emitted_mod_aliases.get(zig_src) {
+                    return existing.clone();
                 }
-                for s in &imp.specifiers {
-                    if !self.globals.insert(s.sym.clone()) {
-                        continue;
+                let alias = format!("__cp_mod_{}", mod_alias_counter);
+                mod_alias_counter += 1;
+                cg.writeln(&format!("const {} = @import(\"{}\");", alias, zig_src));
+                emitted_mod_aliases.insert(zig_src.to_string(), alias.clone());
+                alias
+            };
+
+            for item in &module.body {
+                if let ModuleItem::Export(exp) = item {
+                    if let Some(src) = &exp.source {
+                        let zig_source =
+                            self.modular_import_map
+                                .get(src)
+                                .cloned()
+                                .unwrap_or_else(|| {
+                                    if src.ends_with(".cp") {
+                                        format!("{}.zig", &src[..src.len() - 3])
+                                    } else {
+                                        src.clone()
+                                    }
+                                });
+                        let mod_var = get_or_emit_mod(self, &zig_source);
+                        if exp.specifiers.is_empty() {
+                            if let Some(star_syms) = self.modular_module_exports.get(src).cloned() {
+                                for sym in star_syms {
+                                    if !self.globals.insert(sym.clone()) {
+                                        continue;
+                                    }
+                                    if !self.class_defs.contains_key(&sym)
+                                        && !self.ref_classes.contains(&sym)
+                                    {
+                                        self.value_classes.insert(sym.clone());
+                                    }
+                                    let esc = Self::escape_zig_ident(&sym);
+                                    self.writeln(&format!(
+                                        "pub const {0} = {1}.{0};",
+                                        esc, mod_var
+                                    ));
+                                }
+                            }
+                        } else {
+                            for s in &exp.specifiers {
+                                if !self.globals.insert(s.sym.clone()) {
+                                    continue;
+                                }
+                                if !self.class_defs.contains_key(&s.sym)
+                                    && !self.ref_classes.contains(&s.sym)
+                                {
+                                    self.value_classes.insert(s.sym.clone());
+                                }
+                                let esc = Self::escape_zig_ident(&s.sym);
+                                self.writeln(&format!("pub const {0} = {1}.{0};", esc, mod_var));
+                            }
+                        }
                     }
-                    self.value_classes.insert(s.sym.clone());
-                    if s.sym == "std" && zig_source == "std" {
-                        continue;
-                    }
-                    self.writeln(&format!(
-                        "const {0} = @import(\"{1}\").{0};",
-                        Self::escape_zig_ident(&s.sym),
-                        zig_source
-                    ));
                 }
             }
+            for item in &module.body {
+                if let ModuleItem::Import(imp) = item {
+                    let zig_source = self
+                        .modular_import_map
+                        .get(&imp.source)
+                        .cloned()
+                        .unwrap_or_else(|| {
+                            if imp.source.ends_with(".cp") {
+                                format!("{}.zig", &imp.source[..imp.source.len() - 3])
+                            } else {
+                                imp.source.clone()
+                            }
+                        });
+                    if zig_source == "std" {
+                        continue;
+                    }
+                    let mod_var = get_or_emit_mod(self, &zig_source);
+                    if let Some(def) = &imp.default_specifier {
+                        if def.sym == "std" && zig_source == "std" {
+                            continue;
+                        }
+                        if self.globals.insert(def.sym.clone()) {
+                            self.value_classes.insert(def.sym.clone());
+                            let esc = Self::escape_zig_ident(&def.sym);
+                            self.writeln(&format!("pub const {0} = {1};", esc, mod_var));
+                        }
+                    }
+                    for s in &imp.specifiers {
+                        if s.sym == "std" && zig_source == "std" {
+                            continue;
+                        }
+                        if !self.globals.insert(s.sym.clone()) {
+                            continue;
+                        }
+                        if !self.class_defs.contains_key(&s.sym)
+                            && !self.ref_classes.contains(&s.sym)
+                        {
+                            self.value_classes.insert(s.sym.clone());
+                        }
+                        let esc = Self::escape_zig_ident(&s.sym);
+                        self.writeln(&format!("pub const {0} = {1}.{0};", esc, mod_var));
+                    }
+                }
+            }
+        } else {
+            self.emit_runtime_preludes_exports_imports(module);
         }
 
         for item in &module.body {
@@ -1188,7 +1375,12 @@ impl Codegen {
         }
         for item in &module.body {
             if let ModuleItem::Decl(Decl::TypeAlias(ta)) = item {
-                let pub_prefix = if ta.is_pub { "pub " } else { "" };
+                let pub_prefix = if ta.is_pub || self.modular_local_exports.contains(&ta.ident.sym)
+                {
+                    "pub "
+                } else {
+                    ""
+                };
                 let mapped = self.map_type(&ta.target_ty);
                 self.writeln(&format!(
                     "{}const {} = {};",
@@ -1208,20 +1400,25 @@ impl Codegen {
                 } else {
                     String::new()
                 };
+                let ident_pub = match &var.pat {
+                    Pattern::Ident(id) => self.modular_local_exports.contains(&id.sym),
+                    _ => false,
+                };
+                let is_var_pub = var.is_pub || ident_pub;
                 let kw = if var.is_threadlocal {
-                    if var.is_pub {
+                    if is_var_pub {
                         "pub threadlocal var"
                     } else {
                         "threadlocal var"
                     }
                 } else if var.kind == VarDeclKind::Const {
-                    if var.is_pub {
+                    if is_var_pub {
                         "pub const"
                     } else {
                         "const"
                     }
                 } else {
-                    if var.is_pub {
+                    if is_var_pub {
                         "pub var"
                     } else {
                         "var"
@@ -1329,20 +1526,47 @@ impl Codegen {
             self.writeln("export const _nif_entry = beam.defineNifEntry(\"cp_agents_lib\", &[_]beam.NifFunc{ .{ .name = \"native_dispatch\", .arity = 5, .fptr = @ptrCast(&native_dispatch_nif), .flags = 0 } }, null, null, null);");
             self.writeln("export fn nif_init() *beam.NifEntry { return @constCast(&_nif_entry); }");
         } else {
-            if !self.is_lib_mode {
-                self.writeln("\npub var global_io: std.Io = undefined;");
-                self.writeln("pub var __cap_test_total: usize = 0;");
-                self.writeln("pub var __cap_test_passed: usize = 0;");
-                self.writeln("pub var __cap_test_failed: usize = 0;");
-            } else if features.needs_actors {
-                self.writeln("\npub var global_io: std.Io = undefined;");
+            if !self.modular_mode {
+                if !self.is_lib_mode {
+                    self.writeln("\npub var global_io: std.Io = undefined;");
+                    self.writeln("pub var __cap_test_total: usize = 0;");
+                    self.writeln("pub var __cap_test_passed: usize = 0;");
+                    self.writeln("pub var __cap_test_failed: usize = 0;");
+                } else if features.needs_actors {
+                    self.writeln("\npub var global_io: std.Io = undefined;");
+                }
             }
 
-            let has_main = self.fn_sigs.contains_key("main");
-            if !self.is_lib_mode && !self.is_fuzz_mode && has_main {
+            let has_main =
+                self.fn_sigs.contains_key("main") && (!self.modular_mode || self.modular_is_entry);
+            if (!self.is_lib_mode || (self.modular_mode && self.modular_is_entry))
+                && !self.is_fuzz_mode
+                && has_main
+            {
+                let rt_global_io = self.rt_sym("global_io");
+                let rt_shutdown = self.rt_sym("global_runtime_shutdown");
+                let rt_worker_pool = self.rt_sym("_WorkerPoolRunner");
+                let rt_pid = self.rt_sym("PID");
+                let rt_next_local_id = self.rt_sym("next_local_id");
+                let rt_drain = self.rt_sym("drain_cross_thread_mailbox");
+                let rt_gtq = self.rt_sym("global_task_queue");
+                let rt_running_workers = self.rt_sym("global_running_workers");
+                let rt_queue_len = self.rt_sym("queue_len");
+                let rt_task_queue = self.rt_sym("task_queue");
+                let rt_active_fds = self.rt_sym("active_fds");
+                let rt_waiting_count = self.rt_sym("waiting_count");
+                let rt_active_tasks = self.rt_sym("global_active_tasks");
+                let rt_poll_fds = self.rt_sym("poll_fds");
+                let rt_schedule = self.rt_sym("schedule");
+                let rt_fd_to_run = self.rt_sym("fd_to_run");
+                let rt_fd_to_ctx = self.rt_sym("fd_to_ctx");
+                let rt_test_total = self.rt_sym("__cap_test_total");
+                let rt_test_passed = self.rt_sym("__cap_test_passed");
+                let rt_test_failed = self.rt_sym("__cap_test_failed");
+
                 self.writeln("pub fn main(init: std.process.Init) !void {");
                 self.indent();
-                self.writeln("global_io = init.io;");
+                self.writeln(&format!("{} = init.io;", rt_global_io));
                 self.writeln("var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator); defer arena.deinit();");
                 if self.is_parallel_runtime {
                     let wc_expr = if self.parallel_worker_count > 0 {
@@ -1354,36 +1578,49 @@ impl Codegen {
                     self.writeln(
                         "var __workers = try arena.allocator().alloc(std.Thread, __worker_count);",
                     );
-                    self.writeln("for (0..__worker_count) |wi| { __workers[wi] = try std.Thread.spawn(.{}, _WorkerPoolRunner.run, .{}); }");
-                    self.writeln("defer { global_runtime_shutdown.store(true, .release); for (__workers) |wt| { wt.join(); } }");
+                    self.writeln(&format!("for (0..__worker_count) |wi| {{ __workers[wi] = try std.Thread.spawn(.{{}}, {}.run, .{{}}); }}", rt_worker_pool));
+                    self.writeln(&format!("defer {{ {}.store(true, .release); for (__workers) |wt| {{ wt.join(); }} }}", rt_shutdown));
                 }
-                self.writeln("var ctx: cp_main_Context = undefined; ctx.pc = 0; ctx._self = PID{ .node_id = 0, .local_id = 1 }; next_local_id = 2; ctx.arena = &arena; ctx._parent = null; ctx._parent_fn = null; ctx.received_msg = null; ctx.received_sender = null;");
+                self.writeln(&format!("var ctx: cp_main_Context = undefined; ctx.pc = 0; ctx._self = {}{{ .node_id = 0, .local_id = 1 }}; {} = 2; ctx.arena = &arena; ctx._parent = null; ctx._parent_fn = null; ctx.received_msg = null; ctx.received_sender = null;", rt_pid, rt_next_local_id));
                 self.writeln("try cp_main(&ctx);");
                 self.writeln("while (true) {");
                 self.indent();
-                self.writeln("drain_cross_thread_mailbox();");
-                self.writeln("while (global_task_queue.pop()) |task| { _ = global_running_workers.fetchAdd(1, .acquire); try task.run(task.ctx); _ = global_running_workers.fetchSub(1, .release); }");
-                self.writeln("while (queue_len > 0) { const task = task_queue[0]; for (task_queue[1..queue_len], 0..) |t, j| { task_queue[j] = t; } queue_len -= 1; try task.run(task.ctx); }");
-                self.writeln("drain_cross_thread_mailbox();");
-                self.writeln("if (active_fds == 0 and queue_len == 0 and global_task_queue.len() == 0 and waiting_count == 0 and global_active_tasks.load(.acquire) == 0 and global_running_workers.load(.acquire) == 0) break;");
-                self.writeln("if (queue_len == 0 and global_task_queue.len() == 0 and (waiting_count > 0 or global_active_tasks.load(.acquire) > 0 or global_running_workers.load(.acquire) > 0) and active_fds == 0) { const ts = std.os.linux.timespec{ .sec = 0, .nsec = 500_000 }; _ = std.os.linux.nanosleep(&ts, null); }");
-                self.writeln("if (active_fds > 0) {");
+                self.writeln(&format!("{}();", rt_drain));
+                self.writeln(&format!("while ({}.pop()) |task| {{ _ = {}.fetchAdd(1, .acquire); try task.run(task.ctx); _ = {}.fetchSub(1, .release); }}", rt_gtq, rt_running_workers, rt_running_workers));
+                self.writeln(&format!("while ({0} > 0) {{ const task = {1}[0]; for ({1}[1..{0}], 0..) |t, j| {{ {1}[j] = t; }} {0} -= 1; try task.run(task.ctx); }}", rt_queue_len, rt_task_queue));
+                self.writeln(&format!("{}();", rt_drain));
+                self.writeln(&format!("if ({} == 0 and {} == 0 and {}.len() == 0 and {} == 0 and {}.load(.acquire) == 0 and {}.load(.acquire) == 0) break;", rt_active_fds, rt_queue_len, rt_gtq, rt_waiting_count, rt_active_tasks, rt_running_workers));
+                self.writeln(&format!("if ({} == 0 and {}.len() == 0 and ({} > 0 or {}.load(.acquire) > 0 or {}.load(.acquire) > 0) and {} == 0) {{ const ts = std.os.linux.timespec{{ .sec = 0, .nsec = 500_000 }}; _ = std.os.linux.nanosleep(&ts, null); }}", rt_queue_len, rt_gtq, rt_waiting_count, rt_active_tasks, rt_running_workers, rt_active_fds));
+                self.writeln(&format!("if ({} > 0) {{", rt_active_fds));
                 self.indent();
-                self.writeln(
-                    "const ready_count = try std.posix.poll(poll_fds[0..active_fds], 10);",
-                );
+                self.writeln(&format!(
+                    "const ready_count = try std.posix.poll({}[0..{}], 10);",
+                    rt_poll_fds, rt_active_fds
+                ));
                 self.writeln("if (ready_count > 0) {");
                 self.indent();
                 self.writeln("var i: usize = 0;");
-                self.writeln("while (i < active_fds) {");
+                self.writeln(&format!("while (i < {}) {{", rt_active_fds));
                 self.indent();
-                self.writeln("if (poll_fds[i].revents != 0) {");
+                self.writeln(&format!("if ({}[i].revents != 0) {{", rt_poll_fds));
                 self.indent();
-                self.writeln("schedule(fd_to_run[i], fd_to_ctx[i]);");
-                self.writeln("poll_fds[i] = poll_fds[active_fds - 1];");
-                self.writeln("fd_to_ctx[i] = fd_to_ctx[active_fds - 1];");
-                self.writeln("fd_to_run[i] = fd_to_run[active_fds - 1];");
-                self.writeln("active_fds -= 1;");
+                self.writeln(&format!(
+                    "{}({}[i], {}[i]);",
+                    rt_schedule, rt_fd_to_run, rt_fd_to_ctx
+                ));
+                self.writeln(&format!(
+                    "{0}[i] = {0}[{1} - 1];",
+                    rt_poll_fds, rt_active_fds
+                ));
+                self.writeln(&format!(
+                    "{0}[i] = {0}[{1} - 1];",
+                    rt_fd_to_ctx, rt_active_fds
+                ));
+                self.writeln(&format!(
+                    "{0}[i] = {0}[{1} - 1];",
+                    rt_fd_to_run, rt_active_fds
+                ));
+                self.writeln(&format!("{} -= 1;", rt_active_fds));
                 self.dedent();
                 self.writeln("} else { i += 1; }");
                 self.dedent();
@@ -1395,7 +1632,7 @@ impl Codegen {
                 self.dedent();
                 self.writeln("}"); // Close while (true)
 
-                self.writeln("if (__cap_test_total > 0) {");
+                self.writeln(&format!("if ({} > 0) {{", rt_test_total));
                 self.indent();
                 self.writeln(
                     "@import(\"std\").debug.print(\"\\n===========================\\n\", .{});",
@@ -1404,19 +1641,25 @@ impl Codegen {
                 self.writeln(
                     "@import(\"std\").debug.print(\"===========================\\n\", .{});",
                 );
-                self.writeln(
-                    "@import(\"std\").debug.print(\"Total:  {d}\\n\", .{__cap_test_total});",
-                );
-                self.writeln(
-                    "@import(\"std\").debug.print(\"Passed: {d}\\n\", .{__cap_test_passed});",
-                );
-                self.writeln(
-                    "@import(\"std\").debug.print(\"Failed: {d}\\n\", .{__cap_test_failed});",
-                );
+                self.writeln(&format!(
+                    "@import(\"std\").debug.print(\"Total:  {{d}}\\n\", .{{{}}});",
+                    rt_test_total
+                ));
+                self.writeln(&format!(
+                    "@import(\"std\").debug.print(\"Passed: {{d}}\\n\", .{{{}}});",
+                    rt_test_passed
+                ));
+                self.writeln(&format!(
+                    "@import(\"std\").debug.print(\"Failed: {{d}}\\n\", .{{{}}});",
+                    rt_test_failed
+                ));
                 self.writeln(
                 "@import(\"std\").debug.print(\"Coverage: 100% (Native CP Evaluated)\\n\", .{});",
             );
-                self.writeln("if (__cap_test_failed > 0) @import(\"std\").process.exit(1);");
+                self.writeln(&format!(
+                    "if ({} > 0) @import(\"std\").process.exit(1);",
+                    rt_test_failed
+                ));
                 self.dedent();
                 self.writeln("}");
 
@@ -1496,4 +1739,61 @@ impl Codegen {
             .push_str(&format!("{}{}\n", indent, s));
     }
 
+    fn emit_runtime_preludes_exports_imports(&mut self, module: &Module) {
+        for item in &module.body {
+            if let ModuleItem::Export(exp) = item {
+                if let Some(src) = &exp.source {
+                    let zig_source = if src.ends_with(".cp") {
+                        format!("{}.zig", &src[..src.len() - 3])
+                    } else {
+                        src.clone()
+                    };
+                    for s in &exp.specifiers {
+                        self.globals.insert(s.sym.clone());
+                        self.value_classes.insert(s.sym.clone());
+                        self.writeln(&format!(
+                            "pub const {0} = @import(\"{1}\").{0};",
+                            Self::escape_zig_ident(&s.sym),
+                            zig_source
+                        ));
+                    }
+                }
+            }
+        }
+        for item in &module.body {
+            if let ModuleItem::Import(imp) = item {
+                let zig_source = if imp.source.ends_with(".cp") {
+                    format!("{}.zig", &imp.source[..imp.source.len() - 3])
+                } else {
+                    imp.source.clone()
+                };
+                if let Some(def) = &imp.default_specifier {
+                    self.globals.insert(def.sym.clone());
+                    self.value_classes.insert(def.sym.clone());
+                    if def.sym == "std" && zig_source == "std" {
+                        continue;
+                    }
+                    self.writeln(&format!(
+                        "pub const {0} = @import(\"{1}\");",
+                        Self::escape_zig_ident(&def.sym),
+                        zig_source
+                    ));
+                }
+                for s in &imp.specifiers {
+                    if !self.globals.insert(s.sym.clone()) {
+                        continue;
+                    }
+                    self.value_classes.insert(s.sym.clone());
+                    if s.sym == "std" && zig_source == "std" {
+                        continue;
+                    }
+                    self.writeln(&format!(
+                        "const {0} = @import(\"{1}\").{0};",
+                        Self::escape_zig_ident(&s.sym),
+                        zig_source
+                    ));
+                }
+            }
+        }
+    }
 }

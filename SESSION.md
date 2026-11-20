@@ -2547,3 +2547,16 @@
 - **执行成果**：
   - 发布 `cpc` Release 正式版并同步更新 `GEMINI.md`；向用户完整拆解 CapSurf 编译耗时根因与 `--debug` / `cpc check` / `cap test` 分层提速方案；
   - Batch 3 双子智能体（`string/blob/image/mem` + `ffi/bigint/bench/cli`）全部高质量交付并回收，5/5 联合回归套件 PASS，全仓溯源 100% 合规，执行 Git 提交固化并立即自主拉起 Batch 4。
+
+### 2026-11-20（`cap` + `cpc` 极速 Debug 原生后端与模块级增量编译攻坚落地、发布与双子智能体恢复标准库吸收）
+- **用户指令**：
+  1. 确认暂停库吸收、开启 2 个子智能体全力攻坚 `cap` 与 `cpc` 编译提速优化（递归 `mtime`、`-fno-llvm` 快速后端、独立缓存隔离、原子产物防 `ETXTBSY` 及按模块分文件增量发射 `.zig`）；
+  2. 询问增量编译原理、实测 `--debug` 提速 14.3×（50.22s -> 3.51s）的原因以及跳过 LLVM 后端的取舍与影响；
+  3. 要求恢复并保持 2 个子智能体并行推进标准库吸收任务。
+- **执行成果**：
+  1. **原理剖析与答疑**：完整阐释了 Zig 0.17 `-fno-llvm` 原生 x86_64 后端为何比 LLVM `-O3` 快 35.8×（14.3× 总提速），以及开发联调用 `-d`（`-fno-llvm`）与发版压测用 `-r -f`（LLVM `-O3`）的分层最佳实践；
+  2. **`cap` + `cpc` 深度合流、发布与实测验证**：
+     - 完成 `cpc/src/modular.rs`（`--emit-dir`/`--force` 文件级 FNV-1a 增量哈希 + 共享 `__cp_runtime.zig` + `__cp_entry.zig` + `.cp_modular_manifest.txt`）与 `cap/src/main.zig`（全工程递归 `mtime`、`-d` 自动 `-fno-llvm` 含 LLVM 回退、原子 `rename` 防 `ETXTBSY`、`-o` 自动 `.cap/ws/<name>/` 无锁缓存隔离、`-m` 模块级增量构建与 manifest 链接扫描）无缝合流；
+     - 发布 `cpc` Release（`bash scripts/sync_cpc.sh release`）与 `cap` ReleaseFast（同步部署 `/data/dev/cp/cap/bin/cap` 与 `/root/.cap/bin/cap`）；
+     - 端到端多文件验证全部通过：冷构建 618ms、0 改动 0ms 跳过、单文件修改 `transpiled=1 cached=8 (7ms)` 且未改动 `.zig` `mtime` 零变动、双路 `-o` 并行无锁构建 ~696ms、标准库回归套件与 `check_cpc_size.sh` 全部通过；
+  3. **恢复双子智能体持续吸收标准库**：Batch 4B（`cap:aio` + `cap:safety` CPUID/CrashReport + `cap:patch` DiffFormatter，2,202 行，3/3 套件 PASS）已完工回收，随即无缝拉起 Batch 5A（`lib/css/` 去 Bun 化审计重构）与 Batch 4A（`cap:resolver` + `cap:bundler`）保持双路全速并行；同时通过多 AGY 通信广播通知 `capsurf_agy` 与 `bun_agy` 启用全新工具链能力。

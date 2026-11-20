@@ -1,3 +1,31 @@
+## [2026-11-20] - 核心里程碑：`cap` + `cpc` 模块级增量编译、Zig `-fno-llvm` 极速原生后端与多智能体无锁并发构建升级
+
+### 编译器前端模块级增量转译 (`cpc`)
+- **按文件发射与 FNV-1a 内容哈希增量缓存 (`--emit-dir` / `--force`)**:
+  - [`cpc/src/modular.rs`](file:///data/dev/cp/cpc/src/modular.rs)（新增，1,101 行）与 [`cpc/src/lib.rs`](file:///data/dev/cp/cpc/src/lib.rs)、[`cpc/src/main.rs`](file:///data/dev/cp/cpc/src/main.rs)：
+    - 新增 `cpc compile --emit-dir <DIR> [--force]` 模式，告别全量内联单一巨型 `.zig`，按依赖图拓扑将每个 `.cp` 模块独立发射为对应 `.zig` 文件（同步复制 `.zig` 垫片，共享 `__cp_runtime.zig`，根目录生成入口包装 `__cp_entry.zig` 与依赖清单 `.cp_modular_manifest.txt`）；
+    - 基于文件内容 + 直接导入签名计算 64 位 FNV-1a 增量哈希（`// @cp_inc_hash:<hex>`）并持久化 `.cp_inc_cache.json`，未修改的 `.cp` 文件直接跳过重转译并原样保留 `.zig` 的 `mtime`，彻底激活 Zig 增量编译缓存；
+    - 跨模块精确报错定位：Sema 诊断直接指向真实子模块文件与行号，消除巨型单文件行号漂移。
+  - [`cpc/src/sema/mod.rs`](file:///data/dev/cp/cpc/src/sema/mod.rs)、[`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)、[`cpc/src/codegen/runtime_emit.rs`](file:///data/dev/cp/cpc/src/codegen/runtime_emit.rs)、[`cpc/src/codegen/expr/`](file:///data/dev/cp/cpc/src/codegen/expr/)：
+    - 支持 `ImportedEnv` 跨模块符号预注册、共享 `__cp_runtime.zig` 统一引用（`rt_sym`）及模块间 `@import` 路径重写。
+  - 已通过 `bash scripts/sync_cpc.sh release` 编译并原子部署 Release 正式版至 `/data/dev/cp/cap/bin/cpc`。
+
+### 构建工具极速 Debug 后端与并发隔离升级 (`cap`)
+- **五大构建提速与防冲突升级 (`cap/src/main.zig`)**:
+  - [`cap/src/main.zig`](file:///data/dev/cp/cap/src/main.zig)：
+    1. **全工程递归 `mtime` 感知**：`computeMaxSourceMtimeNs` 递归扫描 `src/**/*.cp` 与 `cap.json` 最新修改时间，支持 0 改动毫秒级 `[Up-to-date]` 跳过，彻底告别被迫 `-B` 全量强制重编；
+    2. **`-d` / `--debug` 自动启用 Zig `-fno-llvm` 原生 x86_64 后端**：跳过 LLVM 优化/指令选择管线，实测 5.4 万行 CapSurf 后端编译从 47.99s 骤降至 1.34s（14.3× 总提速），同时内置原生后端失败自动回退 LLVM 与 `--llvm` 显式开关兜底；
+    3. **原子产物替换消除 `FileBusy (ETXTBSY)`**：编译输出先落盘 `<out>.tmp.<pid>` 再原子 `rename` 覆盖目标二进制，运行期间重编零冲突；
+    4. **多智能体工作区与缓存自动隔离**：指定 `-o`/`--out-dir` 或 `--cache-dir` 时自动隔离至 `.cap/ws/<sanitized>/{zig,zig-cache}`，多路并发构建彻底告别 `flock` 串行排队；
+    5. **`-m` / `--modular` 模块级增量模式接线**：自动调用 `cpc compile --emit-dir`（配合 `-B` 透传 `--force`），识别 `__cp_entry.zig` 并从 `.cp_modular_manifest.txt` 提取聚合链接参数（`-L`/`-l`）；且对 `build-exe` 跳过冗余 `cpc emit-types`。
+  - 已通过 `zig build -Doptimize=ReleaseFast` 编译并原子部署至 `/data/dev/cp/cap/bin/cap` 与 `/root/.cap/bin/cap`。
+
+### 端到端实测验证
+- 多文件增量构建测试（`temp/test_modular_e2e/`）：冷编译 `618ms`（`-fno-llvm`）、0 改动快速跳过 `0ms`、改 1 文件增量重编 `transpiled=1 cached=8 (7ms)` 且未改动 `.zig` `mtime` 零变动、双路 `-o bin_p1`/`-o bin_p2` 无锁并发构建均 `~696ms`、原子替换零 `ETXTBSY`；
+- 标准库回归：`test_event_loop.cp`（5/5 PASS，703ms）、`test_http_router_sql_deep.cp`（8/8 PASS，1213ms）；`scripts/check_cpc_size.sh` 0 超限。
+
+---
+
 ## [2026-11-20] - 核心任务：消除 sys 动态库依赖、集成 vendor/zlib 纯静态编译与工程递归 cap 依赖自动探测
 
 ### 工具链与构建系统升级 (Toolchain & Build System)

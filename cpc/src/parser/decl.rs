@@ -795,7 +795,11 @@ impl<'a> Parser<'a> {
         })
     }
 
-    pub(super) fn parse_decl(&mut self, meta: Vec<MetaItem>, mut is_pub: bool) -> ParseResult<Decl> {
+    pub(super) fn parse_decl(
+        &mut self,
+        meta: Vec<MetaItem>,
+        mut is_pub: bool,
+    ) -> ParseResult<Decl> {
         while self.peek() == Some(&Token::Export) || self.peek() == Some(&Token::Private) {
             if self.peek() == Some(&Token::Export) {
                 is_pub = true;

@@ -1,7 +1,7 @@
+use super::{lower_struct_body, strip_redundant_comptime, type_to_display_string, Codegen};
 use crate::ast::*;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
-use super::{Codegen, lower_struct_body, strip_redundant_comptime, type_to_display_string};
 
 impl Codegen {
     fn field_align_str(&mut self, f: &Field) -> String {
@@ -50,6 +50,7 @@ impl Codegen {
         sub.is_lib_mode = self.is_lib_mode;
         sub.is_beam_mode = self.is_beam_mode;
         sub.has_imported_ptr = self.has_imported_ptr;
+        sub.modular_mode = self.modular_mode;
         sub.globals = self.globals.clone();
         for name in self.current_fn_params.iter().chain(self.locals.keys()) {
             sub.globals.insert(name.clone());
@@ -327,7 +328,10 @@ impl Codegen {
             .unwrap();
             self.indent();
         } else {
-            let cls_pub_prefix = if class.meta.iter().any(|m| m.name.sym == "c") && !class.is_pub {
+            let cls_pub_prefix = if class.meta.iter().any(|m| m.name.sym == "c")
+                && !class.is_pub
+                && !self.modular_local_exports.contains(&class.ident.sym)
+            {
                 ""
             } else {
                 "pub "
@@ -708,6 +712,9 @@ impl Codegen {
     pub(crate) fn generate_reflection_tables(&mut self) {
         let class_names: Vec<String> = self.class_defs.keys().cloned().collect();
         for cls_name in class_names {
+            if self.modular_imported_symbols.contains(&cls_name) {
+                continue;
+            }
             let cls = self.class_defs[&cls_name].clone();
             if !cls.meta.iter().any(|m| m.name.sym == "reflect") {
                 continue;
@@ -832,5 +839,4 @@ impl Codegen {
             self.writeln("}");
         }
     }
-
 }

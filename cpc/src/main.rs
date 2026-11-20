@@ -20,6 +20,14 @@ struct Cli {
     #[arg(short = 'o', long)]
     output: Option<PathBuf>,
 
+    /// Emit modular per-file Zig outputs into directory (incremental)
+    #[arg(long)]
+    emit_dir: Option<PathBuf>,
+
+    /// Force re-transpile all modules in --emit-dir mode
+    #[arg(long)]
+    force: bool,
+
     /// Include paths for module resolution
     #[arg(short = 'I', long)]
     include: Vec<PathBuf>,
@@ -55,6 +63,10 @@ enum Commands {
         input: PathBuf,
         #[arg(short = 'o', long)]
         output: Option<PathBuf>,
+        #[arg(long)]
+        emit_dir: Option<PathBuf>,
+        #[arg(long)]
+        force: bool,
         #[arg(short = 'I', long)]
         include: Vec<PathBuf>,
         #[arg(short = 'b', long)]
@@ -240,6 +252,8 @@ fn run(cli: Cli) -> anyhow::Result<()> {
             Commands::Compile {
                 input,
                 output,
+                emit_dir,
+                force,
                 include,
                 beam,
                 nest,
@@ -247,15 +261,28 @@ fn run(cli: Cli) -> anyhow::Result<()> {
                 fuzz,
                 fuzz_target,
             } => {
-                compile_file(
-                    &input,
-                    output.as_ref(),
-                    &include,
-                    beam || nest,
-                    lib,
-                    fuzz,
-                    fuzz_target,
-                )?;
+                if let Some(ref dir) = emit_dir {
+                    cpc::modular::compile_modular(&cpc::modular::ModularOptions {
+                        entry: &input,
+                        emit_dir: dir,
+                        include_paths: &include,
+                        beam: beam || nest,
+                        lib,
+                        fuzz,
+                        fuzz_target,
+                        force,
+                    })?;
+                } else {
+                    compile_file(
+                        &input,
+                        output.as_ref(),
+                        &include,
+                        beam || nest,
+                        lib,
+                        fuzz,
+                        fuzz_target,
+                    )?;
+                }
             }
             Commands::Check {
                 input,
@@ -307,15 +334,28 @@ fn run(cli: Cli) -> anyhow::Result<()> {
             }
         }
     } else if let Some(input) = cli.input {
-        compile_file(
-            &input,
-            cli.output.as_ref(),
-            &cli.include,
-            cli.beam || cli.nest,
-            cli.lib,
-            cli.fuzz,
-            cli.fuzz_target,
-        )?;
+        if let Some(ref dir) = cli.emit_dir {
+            cpc::modular::compile_modular(&cpc::modular::ModularOptions {
+                entry: &input,
+                emit_dir: dir,
+                include_paths: &cli.include,
+                beam: cli.beam || cli.nest,
+                lib: cli.lib,
+                fuzz: cli.fuzz,
+                fuzz_target: cli.fuzz_target,
+                force: cli.force,
+            })?;
+        } else {
+            compile_file(
+                &input,
+                cli.output.as_ref(),
+                &cli.include,
+                cli.beam || cli.nest,
+                cli.lib,
+                cli.fuzz,
+                cli.fuzz_target,
+            )?;
+        }
     } else {
         use clap::CommandFactory;
         Cli::command().print_help()?;

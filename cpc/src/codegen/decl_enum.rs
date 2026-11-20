@@ -1,6 +1,6 @@
+use super::Codegen;
 use crate::ast::*;
 use std::fmt::Write;
-use super::Codegen;
 
 impl Codegen {
     pub(crate) fn generate_trait(&mut self, t: &TraitDecl) {
@@ -142,7 +142,9 @@ impl Codegen {
                 }
             }
             if !has_name {
-                self.writeln("pub fn name(__cp_self: @This()) []const u8 { return @tagName(__cp_self); }");
+                self.writeln(
+                    "pub fn name(__cp_self: @This()) []const u8 { return @tagName(__cp_self); }",
+                );
             }
             if !e.methods.is_empty() {
                 for m in &e.methods {
@@ -278,5 +280,4 @@ impl Codegen {
         self.dedent();
         self.writeln("}; };\n");
     }
-
 }
