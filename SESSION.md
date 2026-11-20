@@ -248,3 +248,6 @@
 
 ### 2026-11-21（`cap:quadtree` 验收固化，顶替以 `inherit` 拉起 `cap:optimize` 维持 2 路并行）
 - **执行成果**：`lib/quadtree/`（5/5 PASS，含 `cap.quadtree` 动态挂载与 `doc/lib/quadtree.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/optimize/`（Brent 求根、黄金分割极小化、Nelder-Mead 无导数多维最优化与 Adam 梯度优化引擎），与 `lib/selector/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:optimize` 验收固化，顶替以 `inherit` 拉起 `cap:feed` 维持 2 路并行）
+- **执行成果**：`lib/optimize/`（5/5 PASS，含 `cap.optimize` 动态挂载与 `doc/lib/optimize.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/feed/`（RSS 2.0 / Atom 1.0 / JSON Feed 1.1 自动探测、统一解析与生成引擎），与 `lib/selector/` 保持 2 路正交并行。

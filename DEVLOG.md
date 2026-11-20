@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:optimize` 数值求根与多维函数最优化引擎（5/5 PASS，文档直写 `doc/lib/optimize.md`）
+
+- **落地成果**：`lib/optimize/`（`opt.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:feed`（RSS 2.0 / Atom 1.0 / JSON Feed 1.1 自动识别、统一解析与生成引擎），与 `lib/selector/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:quadtree` 2D 空间四叉树索引与 KNN 引擎（5/5 PASS，文档直写 `doc/lib/quadtree.md`）
 
 - **落地成果**：`lib/quadtree/`（`quadtree.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:optimize`（数值求根 Brent/Bisection、黄金分割 1D 极小化、Nelder-Mead 无导数多维最优化与 Adam 梯度优化器），与 `lib/selector/` 保持 2 路正交并行。

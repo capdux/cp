@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:optimize` 数值求根、Nelder-Mead 与 Adam 多维优化引擎（5/5 PASS，自动动态挂载 `cap.optimize`）
+
+- 新建 [`lib/optimize/`](file:///data/dev/cp/lib/optimize/index.cp)（`opt.cp`、`index.cp`）：`Optimizer`（`bisect`、超线性收敛 `brentRoot`、`goldenSectionMin` 区间极小化、中心差分 `numericalGradient`、无导数多维 `nelderMead` 单纯形法及解析/数值双模式 `adamMinimize`，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/optimize.md`](file:///data/dev/cp/doc/lib/optimize.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_optimize_production_deep.cp`](file:///data/dev/cp/cap/test/test_optimize_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:quadtree` 动态分裂合并 2D 空间四叉树索引与 KNN 引擎（5/5 PASS，自动动态挂载 `cap.quadtree`）
 
 - 新建 [`lib/quadtree/`](file:///data/dev/cp/lib/quadtree/index.cp)（`quadtree.cp`、`index.cp`）：`QuadTree`（安全索引池 4 分裂下推、同坐标点防无限分裂、`remove`/`update` 动态向上合并回收节点、`queryRect`/`queryCircle` 及双堆包围盒下界剪枝 `nearestK`，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/quadtree.md`](file:///data/dev/cp/doc/lib/quadtree.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_quadtree_production_deep.cp`](file:///data/dev/cp/cap/test/test_quadtree_production_deep.cp) `-m` 5/5 PASS。
