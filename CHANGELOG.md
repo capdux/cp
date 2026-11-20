@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:onnx` 纯 CP ONNX ModelProto/GraphProto/TensorProto 二进制编解码、权重提取与三色 DFS 拓扑无环校验引擎（支持 `cap.onnx` 自动动态挂载，详见 `doc/lib/onnx.md`）（5/5 PASS，自动动态挂载 `cap.onnx`）
+- **新增标准库**：`lib/onnx/{wire,ir,codec,index}.cp`，实现 32 层深度防护确定性 Protobuf Wire 编解码、ONNX IR 模型（含动态符号轴与 `raw_data`/packed repeated 权重提取）及三色 DFS `validateGraphAcyclic`。
+- **新增文档与测试**：`doc/lib/onnx.md` 扁平文档与 `cap/test/test_onnx_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:attention` 纯 CP Transformer Scaled Dot-Product/GQA 注意力、支持 Speculative 回滚的 KvCache 与 Top-K/Top-P/RepetitionPenalty 采样器引擎（支持 `cap.attention` 自动动态挂载，详见 `doc/lib/attention.md`）（5/5 PASS，自动动态挂载 `cap.attention`）
 - **新增标准库**：`lib/attention/{sdpa,kv_cache,sampler,index}.cp`，实现因果掩码 `scaledDotProductAttention`、`groupedQueryAttention`、支持 `truncateTo` 回滚的 `KvCache` 及集成 Temperature/RepetitionPenalty/Top-K/Top-P 的 `sampleToken`。
 - **新增文档与测试**：`doc/lib/attention.md` 扁平文档与 `cap/test/test_attention_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

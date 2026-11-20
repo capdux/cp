@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:onnx` 纯 CP ONNX ModelProto/GraphProto/TensorProto 二进制编解码、权重提取与三色 DFS 拓扑无环校验引擎（支持 `cap.onnx` 自动动态挂载，详见 `doc/lib/onnx.md`）（5/5 PASS，文档直写 `doc/lib/onnx.md`）
+- **核心设计**：内置确定性 Protobuf Wire 读写器并严格执行 `CyclicGraph`/`DuplicateOutput` 与越界长度拦截，全路径通过 `std.testing.allocator` / `DebugAllocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:attention` 纯 CP Transformer Scaled Dot-Product/GQA 注意力、支持 Speculative 回滚的 KvCache 与 Top-K/Top-P/RepetitionPenalty 采样器引擎（支持 `cap.attention` 自动动态挂载，详见 `doc/lib/attention.md`）（5/5 PASS，文档直写 `doc/lib/attention.md`）
 - **核心设计**：SDPA 减去行最大值保证指数数值稳定，GQA 严格校验 `num_q_heads % num_kv_heads == 0`，`KvCache` 支持 Speculative Decoding 步长回滚，全路径 `std.testing.allocator` 零泄漏。
 
