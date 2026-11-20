@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:interchange` 纯 CP JSON/JSONC/JSON5/TOML/YAML 统一数据交换引擎（5/5 PASS，自动动态挂载 `cap.interchange`）
+- **新增标准库**：`lib/interchange/{value,json5,bridge,interchange,index}.cp`（吸收对标 Bun `src/interchange/`），提供统一 `InterchangeValue`（含 `max_depth = 64`、`getPath`、`clone`、`equals`）、原生 JSON5/JSONC 解析序列化，并桥接复用 `cap:toml`/`cap:yaml` 实现五格式统一 `parse`/`parseAuto`/`stringify`/`convert`。
+- **新增文档与测试**：`doc/lib/interchange.md` 扁平文档与 `cap/test/test_interchange_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:valkey` 纯 CP RESP2/RESP3 Valkey/Redis 协议编解码与增量流式解析引擎（5/5 PASS，自动动态挂载 `cap.valkey`）
 - **新增标准库**：`lib/valkey/{valkey,index}.cp`（吸收对标 Bun `src/valkey/`），完整建模 RESP2/RESP3 14 种核心类型（含 `Map`/`Set`/`Push`/`VerbatimString`/`BigNumber`/`Double` 与 `Attribute` 跳过），提供 `RespStreamParser` 增量半包黏包解析、`encodeCommand`/`encodeValue` 及 `max_depth`/`max_bulk_len` 防资源耗尽守卫。
 - **新增文档与测试**：`doc/lib/valkey.md` 扁平文档与 `cap/test/test_valkey_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

@@ -593,3 +593,6 @@
 
 ### 2026-11-21（`cap:valkey` 验收提交，顶替拉起 `cap:picohttp` 维持 2 路常规并行）
 - **执行成果**：`lib/valkey/`（5/5 PASS，`doc/lib/valkey.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/picohttp/`（吸收对标 Bun `src/http/picohttp.cp` 等的高性能零分配 HTTP/1.1 请求/响应与 Chunked 解析引擎），与 `lib/interchange/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:interchange` 验收提交，顶替拉起 `cap:unicode` 维持 2 路常规并行）
+- **执行成果**：`lib/interchange/`（5/5 PASS，`doc/lib/interchange.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/unicode/`（吸收对标 Bun `src/unicode/` 的 UTF-8/UTF-16 编解码、Unicode 属性/宽度计算与 Grapheme/大小写折叠原语引擎），与 `lib/picohttp/` 维持 2 路常规并行。

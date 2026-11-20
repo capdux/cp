@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:interchange` 纯 CP JSON/JSONC/JSON5/TOML/YAML 统一数据交换引擎（5/5 PASS，文档直写 `doc/lib/interchange.md`）
+- **核心设计**：以独立拥有的 `InterchangeValue` 树为中间表示，JSON/JSONC/JSON5 由原生纯 CP 状态机解析（支持注释、单引号、未引号键、`Infinity`/`NaN` 与代理对转义），TOML/YAML 复用现有 `cap:toml`/`cap:yaml` 后深拷贝并立即释放原文档，实现零泄漏格式互转。
+
 ## 2026-11-21: 新建 `cap:valkey` 纯 CP RESP2/RESP3 Valkey/Redis 协议编解码与增量流式解析引擎（5/5 PASS，文档直写 `doc/lib/valkey.md`）
 - **核心设计**：剔除所有 Bun/JSValue 耦合，基于 `std.mem.Allocator` 实现可自释放 `RespValue` 树；`RespStreamParser` 在预分配前先校验长度与嵌套深度上限，支持 `1..7` 字节切片连续投喂并精准区分 `Incomplete` 与协议异常。
 
