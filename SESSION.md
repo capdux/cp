@@ -557,3 +557,6 @@
 
 ### 2026-11-21（`cap:stomp` & `cap:geojson` 双路合并验收提交，拉起 `cap:wkt` 与 `cap:lzw` 维持 2 路并行）
 - **执行成果**：`lib/stomp/`（5/5 PASS，`doc/lib/stomp.md`）与 `lib/geojson/`（5/5 PASS，`doc/lib/geojson.md`）双双经 `verify_module.sh` 一次性验收回收并合并提交 Git；使用 `Model: "inherit"` 同步拉起 `lib/wkt/`（OGC WKT/WKB 空间几何双向编解码引擎）与 `lib/lzw/`（GIF/TIFF/PDF LZW 可变位宽字典无损压缩解压引擎），继续维持 2 路常规并行。
+
+### 2026-11-21（`cap:lzw` 验收提交，顶替拉起 `cap:gif` 维持 2 路常规并行）
+- **执行成果**：`lib/lzw/`（5/5 PASS，`doc/lib/lzw.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/gif/`（复用 `cap:lzw` 的纯 CP GIF87a/GIF89a 多帧动画编解码引擎），与 `lib/wkt/` 维持 2 路常规并行。

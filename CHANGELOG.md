@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:lzw` 可变位宽 LZW 字典无损压缩与解压引擎（5/5 PASS，自动动态挂载 `cap.lzw`）
+- **新增标准库**：`lib/lzw/{lzw,index}.cp`，实现支持 `LsbFirst`（GIF）与 `MsbFirst`（TIFF/PDF）双位序的 2..12-bit 动态位宽升档、`ClearCode` 自动重置、`KwKwK` 解码及 `OutputTooLarge` 防炸弹上限。
+- **新增文档与测试**：`doc/lib/lzw.md` 扁平文档与 `cap/test/test_lzw_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:stomp` 与 `cap:geojson` 纯 CP 标准库（均 5/5 PASS，自动动态挂载）
 - **新增 `cap:stomp`**：`lib/stomp/{stomp,index}.cp`、`doc/lib/stomp.md`、`cap/test/test_stomp_production_deep.cp`（5/5 PASS），实现 STOMP 1.2 帧编解码、头部转义反转义、心跳 EOL 跳过、`content-length` 内嵌 `\x00` 载荷及 `BodyTooLarge` 防护。
 - **新增 `cap:geojson`**：`lib/geojson/{geojson,index}.cp`、`doc/lib/geojson.md`、`cap/test/test_geojson_production_deep.cp`（5/5 PASS），实现 RFC 7946 GeoJSON 校验编解码、`computeBBox`、支持内环孔洞排除的 `pointInPolygon` 及迭代式 `simplifyDouglasPeucker` 抽稀。

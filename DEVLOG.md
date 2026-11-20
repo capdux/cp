@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:lzw` 可变位宽 LZW 字典无损压缩与解压引擎（5/5 PASS，文档直写 `doc/lib/lzw.md`）
+- **核心设计**：统一支持 LSB/MSB 位流打包及 `2..8` 初始码宽，满 4096 字典自动发出 `ClearCode` 复位；解码端完整处理经典 `KwKwK` 码字并拦截缺失 `EOI`、非法码字与超限输出。
+
 ## 2026-11-21: 新建 `cap:stomp` 与 `cap:geojson`（均 5/5 PASS，扁平文档直写 `doc/lib/`）
 - **`cap:stomp`**：`StompStreamParser` 支持 1..5 字节任意切分半包拆帧并正确处理 STOMP 1.2 `\r`/`\n`/`\c`/`\\` 头部转义及重复头取首个规范；拦截非转义命令、缺 `\x00` 终止符与超限载荷。
 - **`cap:geojson`**：遵循 RFC 7946 校验 Polygon 环至少 4 点首尾闭合；Ray-Casting 射线法结合边界判定支持多内环孔洞排除，Douglas-Peucker 采用显式栈迭代防止深递归溢出。
