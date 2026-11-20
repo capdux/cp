@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:i18n` 国际化消息目录、CLDR 复数规则与 `Accept-Language` 协商引擎（5/5 PASS，自动动态挂载 `cap.i18n`）
+
+- 新建 [`lib/i18n/`](file:///data/dev/cp/lib/i18n/index.cp)（`catalog.cp`、`index.cp`）：`LocaleNegotiator`（RFC 4647 `Accept-Language` q-value 加权协商与多级回退链）、`PluralRules`（英/法/中/日/俄/波/阿 CLDR 基数复数规则）及 `I18nCatalog`（`loadJson` 嵌套 JSON 扁平导入、单遍 `{key}` 安全插值防二次展开、`tp` 复数与回退渲染）；文档 [`doc/lib/i18n.md`](file:///data/dev/cp/doc/lib/i18n.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_i18n_production_deep.cp`](file:///data/dev/cp/cap/test/test_i18n_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:timeseries` 时序存储、Rollup 降采样与 Z-Score 异常检测引擎（5/5 PASS，自动动态挂载 `cap.timeseries`）
 
 - 新建 [`lib/timeseries/`](file:///data/dev/cp/lib/timeseries/index.cp)（`series.cp`、`index.cp`）：`TimeSeries`（有限值与单调时间戳校验、`retention_ms` 均摊 $O(1)$ 头部淘汰、$O(\log N)$ 二分 `queryRange`、8 种 `AggOp` 步长对齐 `downsample`、支持归零重置的 `rate`、`sma`/`ema` 平滑、Welford `summarize`、`detectAnomaliesZScore` 与 `toJson`）；文档 [`doc/lib/timeseries.md`](file:///data/dev/cp/doc/lib/timeseries.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_timeseries_production_deep.cp`](file:///data/dev/cp/cap/test/test_timeseries_production_deep.cp) `-m` 5/5 PASS。

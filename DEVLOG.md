@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:i18n` 国际化消息目录与语言协商引擎（5/5 PASS，文档直写 `doc/lib/i18n.md`）
+
+- **落地成果**：`lib/i18n/`（`catalog.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:uritemplate`（RFC 6570 Level 1~4 URI Template 展开与参数提取引擎），与 `lib/ringbuf/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:timeseries` 时序存储、降采样与异常检测引擎（5/5 PASS，文档直写 `doc/lib/timeseries.md`）
 
 - **落地成果**：`lib/timeseries/`（`series.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:ringbuf`（泛型有界环形缓冲、零拷贝字节环形管道与双阈值微批聚合器），与 `lib/i18n/` 保持 2 路正交并行。

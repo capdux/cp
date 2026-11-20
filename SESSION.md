@@ -176,3 +176,6 @@
 
 ### 2026-11-21（`cap:timeseries` 验收固化，顶替以 `inherit` 拉起 `cap:ringbuf` 维持 2 路并行）
 - **执行成果**：`lib/timeseries/`（5/5 PASS，含 `cap.timeseries` 动态挂载与 `doc/lib/timeseries.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/ringbuf/`（泛型有界环形缓冲、字节环形管道与双阈值 `MicroBatcher` 微批聚合引擎），与 `lib/i18n/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:i18n` 验收固化，顶替以 `inherit` 拉起 `cap:uritemplate` 维持 2 路并行）
+- **执行成果**：`lib/i18n/`（5/5 PASS，含 `cap.i18n` 动态挂载与 `doc/lib/i18n.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/uritemplate/`（RFC 6570 Level 1~4 URI Template 展开、百分比编码校验与变量反解引擎），与 `lib/ringbuf/` 保持 2 路正交并行。
