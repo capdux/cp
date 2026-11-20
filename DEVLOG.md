@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:sdp` RFC 8866 WebRTC SDP 会话描述解析与构建引擎（5/5 PASS，文档直写 `doc/lib/sdp.md`）
+- **核心设计**：按会话级与媒体流区块两层解析，零拷贝引用原始字段切片并通过 `errdefer` 完整回滚异常路径内存；严格校验 `v=0`、`o=`、`s=` 及 `m=` 端口与格式列表。
+
+## 2026-11-21: 新建 `cap:smtp` RFC 5321/5322 SMTP 协议编解码与 MIME 邮件构建引擎（5/5 PASS，文档直写 `doc/lib/smtp.md`）
+- **核心设计**：零网络系统调用实现无状态 SMTP 命令/多行响应编解码、RFC 5321 §4.5.2 行首点号透明转义以及复合 `multipart/alternative` + `multipart/mixed` 邮件组装，全程校验防头注入。
+
 ## 2026-11-21: 新建 `cap:stun` RFC 5389/8489 STUN NAT 穿透消息与完整性校验引擎（5/5 PASS，文档直写 `doc/lib/stun.md`）
 - **核心设计**：`StunBuilder` 按 RFC 5389 规范自动对变长属性做 4 字节补零对齐并依次计算 `MESSAGE-INTEGRITY` 与 `FINGERPRINT`；`verifyMessageIntegrity` 采用恒定时间比较并严格校验 `MAGIC_COOKIE` 与头前 2 位 `00`。
 

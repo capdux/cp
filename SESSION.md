@@ -506,3 +506,9 @@
 
 ### 2026-11-21（`cap:stun` 验收提交，顶替拉起 `cap:sdp` 维持 2 路常规并行）
 - **执行成果**：`lib/stun/`（5/5 PASS，`doc/lib/stun.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/sdp/`（RFC 8866 WebRTC SDP 会话描述解析与构建引擎），与 `lib/smtp/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:smtp` 验收提交，顶替拉起 `cap:rtp` 维持 2 路常规并行）
+- **执行成果**：`lib/smtp/`（5/5 PASS，`doc/lib/smtp.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/rtp/`（RFC 3550 RTP/RTCP 实时传输包编解码与 Jitter Buffer 乱序重排引擎），与 `lib/sdp/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:sdp` 验收合并提交，顶替拉起 `cap:rtree` 维持 2 路常规并行）
+- **执行成果**：`lib/sdp/`（5/5 PASS，`doc/lib/sdp.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/smtp/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/rtree/`（2D 轴对齐边界框 AABB R-Tree 空间索引与碰撞检索引擎），与 `lib/rtp/` 维持 2 路常规并行。

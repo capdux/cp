@@ -2,6 +2,14 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:sdp` RFC 8866 WebRTC SDP 会话描述解析与构建引擎（5/5 PASS，自动动态挂载 `cap.sdp`）
+- **新增标准库**：`lib/sdp/{sdp,index}.cp`，实现 `SdpSession` 零拷贝解析与格式化、多 `MediaSection`、`rtpmaps()`、`candidates()`（ICE `host`/`srflx`/`relay`）及 `direction()` 提取。
+- **新增文档与测试**：`doc/lib/sdp.md` 扁平文档与 `cap/test/test_sdp_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
+## [2026-11-21] - 新建 `cap:smtp` RFC 5321/5322 SMTP 协议编解码与 MIME 邮件构建引擎（5/5 PASS，自动动态挂载 `cap.smtp`）
+- **新增标准库**：`lib/smtp/{smtp,index}.cp`，实现多行 SMTP 响应与增强状态码解析 `parseReply`、`SmtpCommandCodec`（`EHLO`/`AUTH PLAIN`/`MAIL FROM`/`RCPT TO`）、RFC 5321 `dotStuff`/`dotUnstuff` 以及支持 RFC 2047 主题与 Base64 附件的 `MailBuilder`（拦截 CR/LF 头注入）。
+- **新增文档与测试**：`doc/lib/smtp.md` 扁平文档与 `cap/test/test_smtp_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:stun` RFC 5389/8489 STUN NAT 穿透消息与完整性校验引擎（5/5 PASS，自动动态挂载 `cap.stun`）
 - **新增标准库**：`lib/stun/{stun,index}.cp`，复用 `cap:deflate` `crc32` 实现 STUN 20 字节头与 4 字节对齐属性编解码、`XOR-MAPPED-ADDRESS`（IPv4/IPv6）、`ERROR-CODE`、`MESSAGE-INTEGRITY`（HMAC-SHA1）及 `FINGERPRINT`（CRC32 `^ 0x5354554e`）。
 - **新增文档与测试**：`doc/lib/stun.md` 扁平文档与 `cap/test/test_stun_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
