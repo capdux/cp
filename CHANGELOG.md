@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:exe_format` 纯 CP ELF64/PE32+/Mach-O 64/WASM/Shebang 魔数探测、节区解析与自包含可执行尾部载荷读写引擎（吸收对标 Bun `src/exe_format/`，详见 `doc/lib/exe_format.md`）（5/5 PASS，自动动态挂载 `cap.exe_format`）
+- **新增标准库**：`lib/exe_format/{types,elf,pe,macho,trailer,index}.cp`（吸收对标 Bun `src/exe_format/`），支持 ELF64 节区与 `.shstrtab` 查找、PE32+/Mach-O 64 头校验及带 FNV-1a 校验和的 `StandaloneTrailer` 自包含载荷读写。
+- **新增文档与测试**：`doc/lib/exe_format.md` 扁平文档与 `cap/test/test_exe_format_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:shell_parser` 纯 CP POSIX/Bash Shell 词法分词、管道与重定向 AST 解析及防注入单引号转义引擎（吸收对标 Bun `src/shell_parser/`，详见 `doc/lib/shell_parser.md`）（5/5 PASS，自动动态挂载 `cap.shell_parser`）
 - **新增标准库**：`lib/shell_parser/{lexer,ast,quote,index}.cp`（吸收对标 Bun `src/shell_parser/`），实现单/双引号/反斜杠转义与 `$VAR` 分词、管道/重定向/控制流 `ShellScript` AST 解析（零泄漏 `deinit`）以及防命令注入 `quoteArg`/`joinCommand`。
 - **新增文档与测试**：`doc/lib/shell_parser.md` 扁平文档与 `cap/test/test_shell_parser_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

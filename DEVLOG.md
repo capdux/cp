@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:exe_format` 纯 CP ELF64/PE32+/Mach-O 64/WASM/Shebang 魔数探测、节区解析与自包含可执行尾部载荷读写引擎（吸收对标 Bun `src/exe_format/`，详见 `doc/lib/exe_format.md`）（5/5 PASS，文档直写 `doc/lib/exe_format.md`）
+- **核心设计**：全部头部/节区表解析采用零拷贝边界安全小端读取并拦截畸形偏移；`StandaloneTrailer` 在文件末尾写入定长魔数、长度与 FNV-1a 64 校验和，支持篡改与截断拦截。
+
 ## 2026-11-21: 新建 `cap:shell_parser` 纯 CP POSIX/Bash Shell 词法分词、管道与重定向 AST 解析及防注入单引号转义引擎（吸收对标 Bun `src/shell_parser/`，详见 `doc/lib/shell_parser.md`）（5/5 PASS，文档直写 `doc/lib/shell_parser.md`）
 - **核心设计**：词法层严格拦截 `UnterminatedQuote` 与 `TrailingEscape`，语法层拦截连续空管道 `UnexpectedToken`；`quoteArg` 采用 POSIX 安全单引号与内部 `'` 转义，全路径通过 `std.testing.allocator` 零泄漏验证。
 
