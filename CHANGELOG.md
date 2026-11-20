@@ -2,6 +2,14 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:pcap` libpcap 容器与 L2–L4 网络报文解包引擎（5/5 PASS，自动动态挂载 `cap.pcap`）
+- **新增标准库**：`lib/pcap/{pcap,index}.cp`，实现 Microsecond/Nanosecond 大小端 `.pcap` 容器读写与 `snaplen`/`PacketTooLarge` 防护，以及 Ethernet II（含 802.1Q/QinQ VLAN）、IPv4、TCP、UDP 无拷贝分层解包器。
+- **新增文档与测试**：`doc/lib/pcap.md` 扁平文档与 `cap/test/test_pcap_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
+## [2026-11-21] - 新建 `cap:rtsp` RFC 2326 RTSP 协议与 `$` TCP 交织帧拆包引擎（5/5 PASS，自动动态挂载 `cap.rtsp`）
+- **新增标准库**：`lib/rtsp/{rtsp,index}.cp`，实现 11 种 RTSP 方法与响应编解码、`Transport` 头解析/格式化、`RtspBuilder`（防 CRLF 头注入）及混合支持 RTSP 文本 + `$` 二进制交织 RTP/RTCP 帧的跨分片 `RtspStreamParser`。
+- **新增文档与测试**：`doc/lib/rtsp.md` 扁平文档与 `cap/test/test_rtsp_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:avro` Apache Avro Schema 驱动二进制编解码与 OCF 容器引擎（5/5 PASS，自动动态挂载 `cap.avro`）
 - **新增标准库**：`lib/avro/{avro,index}.cp`，实现全类型 `AvroSchema`（含 `record`/`union`/`enum`/`fixed`/`array`/`map`）、ZigZag + Varint `encodeDatum`/`decodeDatum` 以及 OCF `"Obj\x01"` 容器 `writeContainer`/`readContainer`（含 16 字节 `sync_marker` 校验）。
 - **新增文档与测试**：`doc/lib/avro.md` 扁平文档与 `cap/test/test_avro_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

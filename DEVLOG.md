@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:pcap` libpcap 容器与 L2–L4 网络报文解包引擎（5/5 PASS，文档直写 `doc/lib/pcap.md`）
+- **核心设计**：完整支持 `0xa1b2c3d4`/`0xd4c3b2a1`/`0xa1b23c4d`/`0x4d3cb2a1` 四种魔数与 2.4 版本头，`incl_len <= snaplen` 严格校验；L2–L4 解包器零堆分配切片借用并通过 `std.testing.allocator` 验证零泄漏。
+
+## 2026-11-21: 新建 `cap:rtsp` RFC 2326 RTSP 协议与 `$` TCP 交织帧拆包引擎（5/5 PASS，文档直写 `doc/lib/rtsp.md`）
+- **核心设计**：`RtspStreamParser` 通过首字节 `'\$'` 实时判别二进制交织帧与文本报文，在 `1..7` 字节任意切分输入下均能无损拆帧并拦截超限 `max_payload_bytes` 与 CRLF 注入。
+
 ## 2026-11-21: 新建 `cap:avro` Apache Avro Schema 驱动二进制编解码与 OCF 容器引擎（5/5 PASS，文档直写 `doc/lib/avro.md`）
 - **核心设计**：在 `AvroSchema` 内部使用 `ArenaAllocator` 管理复杂嵌套与命名类型引用，编解码器严格校验 `SchemaMismatch`、`InvalidUnionIndex`、Varint 溢出与 OCF 块 `sync_marker` 一致性，零泄漏。
 

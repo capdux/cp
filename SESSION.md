@@ -572,3 +572,9 @@
 
 ### 2026-11-21（`cap:avro` 验收提交，顶替拉起 `cap:pcap` 维持 2 路常规并行）
 - **执行成果**：`lib/avro/`（5/5 PASS，`doc/lib/avro.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/pcap/`（经典 libpcap `.pcap` 容器与 L2/L3/L4 网络报文解包引擎），与 `lib/rtsp/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:rtsp` 验收提交，顶替拉起 `cap:zstd` 维持 2 路常规并行）
+- **执行成果**：`lib/rtsp/`（5/5 PASS，`doc/lib/rtsp.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/zstd/`（RFC 8878 Zstandard 帧格式、XXH64 校验与 RLE/Raw/FSE 块编解码引擎），与 `lib/pcap/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:pcap` 验收合并提交，顶替拉起 `cap:brotli` 维持 2 路常规并行）
+- **执行成果**：`lib/pcap/`（5/5 PASS，`doc/lib/pcap.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/rtsp/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/brotli/`（RFC 7932 Brotli 元块编码与解码引擎），与 `lib/zstd/` 维持 2 路常规并行。

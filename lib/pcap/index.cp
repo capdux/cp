@@ -1,0 +1,30 @@
+// Source: cp/lib/pcap/index.cp (Unified Exports for cap:pcap)
+// Pure CP libpcap (.pcap) Container & L2-L4 Network Dissector.
+
+export {
+    PCAP_MAGIC_US,
+    PCAP_MAGIC_US_SWAPPED,
+    PCAP_MAGIC_NS,
+    PCAP_MAGIC_NS_SWAPPED,
+    PCAP_VERSION_MAJOR,
+    PCAP_VERSION_MINOR,
+    DEFAULT_MAX_SNAPLEN,
+    PcapError,
+    PcapEndian,
+    PcapPrecision,
+    LinkType,
+    PcapGlobalHeader,
+    PcapPacket,
+    PcapFile,
+    EthernetFrame,
+    Ipv4Packet,
+    TcpSegment,
+    UdpDatagram,
+    PcapWriter,
+    parsePcap,
+    parsePcapWithMaxSnaplen,
+    parseEthernet,
+    parseIpv4,
+    parseTcp,
+    parseUdp,
+} from "./pcap.cp";
