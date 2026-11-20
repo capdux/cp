@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:table` 宽度感知终端与 Markdown 表格渲染引擎（5/5 PASS，文档直写 `doc/lib/table.md`）
+
+- **落地成果**：`lib/table/`（`width.cp`/`table.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:search`（本地全文倒排索引、前缀自动补全 Trie、Bool 检索与关键词高亮摘要引擎），与 `lib/di/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:ini` 无损 INI/Systemd/Gitconfig 引擎与解除 `cpc` `"ini"` 别名（5/5 PASS，文档直写 `doc/lib/ini.md`）
 
 - **落地成果**：解除 `cpc/src/resolver.rs` 中 `"ini" => "conf"` 旧映射并发布 Release 版 `cpc`（保留 `Ini`/`ini` 兼容导出），`lib/ini/` 经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:di`（生命周期管理 `Singleton`/`Scoped`/`Transient` 服务容器与循环依赖检测），与 `lib/table/` 保持 2 路正交并行。

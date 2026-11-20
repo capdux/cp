@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:table` ANSI/UTF-8 宽度感知终端与 Markdown 表格渲染引擎（5/5 PASS，自动动态挂载 `cap.table`）
+
+- 新建 [`lib/table/`](file:///data/dev/cp/lib/table/index.cp)（`width.cp`、`table.cp`、`index.cp`）：`DisplayWidth`（跳过 ANSI CSI 颜色序列、UTF-8 解码与 CJK 双倍/组合字符零宽计算、安全不截断 UTF-8 字符并保留 `\x1b[0m`）及 `Table`（`Ascii`/`Box`/`Rounded`/`Markdown`/`Borderless` 五大样式、列对齐与 GFM `:---:` 标记、Footer 分隔线、`max_width` 自动折行、文本与数值排序及 `ColumnMismatch` 校验）；文档 [`doc/lib/table.md`](file:///data/dev/cp/doc/lib/table.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_table_production_deep.cp`](file:///data/dev/cp/cap/test/test_table_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:ini` 无损 INI/Systemd/Gitconfig 解析编辑引擎 & 解除 `cpc` `"ini"` 旧路由别名（5/5 PASS）
 
 - 解除 [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs) `"ini" => "conf"` 旧别名并原子部署新版 `cpc`（Release），同时在 `lib/ini/index.cp` 保留 `Ini`/`ini` 向后兼容重导出（既有 `test_conf_complete.cp` 2/2 零回归）；
