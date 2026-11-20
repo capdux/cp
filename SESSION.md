@@ -109,3 +109,6 @@
 
 ### 2026-11-21（`cap:dns_wire` 验收，主控亲自完成第 3 路 `cap:dns_wire` 验收提交，维持 `cap:jmespath` 与 `cap:capnp` 并发）
 - **执行成果**：`lib/dns_wire/`（5/5 PASS，`doc/lib/dns_wire.md`）经 `verify_module.sh` 一次性验收回收；主控亲自完成第 3 路 `cap:dns_wire` 验收提交，维持 `cap:jmespath` 与 `cap:capnp` 并发
+
+### 2026-11-21（`cap:jmespath` 验收，顶替拉起 `cap:redis_cluster` 维持 2 路常规并行）
+- **执行成果**：`lib/jmespath/`（5/5 PASS，`doc/lib/jmespath.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:redis_cluster` 维持 2 路常规并行

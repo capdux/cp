@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:jmespath` 纯 CP JMESPath JSON 查询、切片/通配符/Flatten 投影、MultiSelect、管道与 13 种内置函数引擎（支持 `cap.jmespath` 自动动态挂载，详见 `doc/lib/jmespath.md`）（5/5 PASS，文档直写 `doc/lib/jmespath.md`）
+- **核心设计**：内置 `MAX_DEPTH = 64`、零步长 `InvalidSliceStep` 与函数参数类型强校验，全路径 `std.testing.allocator` 零泄漏。
+
 ## 2026-11-21: 新建 `cap:dns_wire` 纯 CP RFC 1035/6891 二进制 DNS 报文编解码、0xC0xx 后缀压缩与防循环指针炸弹引擎（支持 `cap.dns_wire` 自动动态挂载，详见 `doc/lib/dns_wire.md`）（5/5 PASS，文档直写 `doc/lib/dns_wire.md`）
 - **核心设计**：解码端对 `0xC0xx` 压缩指针严格限制最大跳转深度（32 跳）并校验非 `0x00`/`0xC0` 非法标签；编码端支持可选后缀字典压缩，全路径 `std.testing.allocator` 零泄漏。
 

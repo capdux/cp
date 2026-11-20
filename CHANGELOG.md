@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:jmespath` 纯 CP JMESPath JSON 查询、切片/通配符/Flatten 投影、MultiSelect、管道与 13 种内置函数引擎（支持 `cap.jmespath` 自动动态挂载，详见 `doc/lib/jmespath.md`）（5/5 PASS，自动动态挂载 `cap.jmespath`）
+- **新增标准库**：`lib/jmespath/{value,parser,eval,index}.cp`，实现 RFC 风格 `compileJmesPath`/`searchJmesPath`（覆盖 `[]`/`[*]`/`*`/过滤器 `[?expr]`/`{k:v}`/`[a,b]`/`|`/`@`/反引号字面量与 13 个内置函数）及 `MAX_DEPTH = 64`/零步长防 DoS 拦截。
+- **新增文档与测试**：`doc/lib/jmespath.md` 扁平文档与 `cap/test/test_jmespath_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:dns_wire` 纯 CP RFC 1035/6891 二进制 DNS 报文编解码、0xC0xx 后缀压缩与防循环指针炸弹引擎（支持 `cap.dns_wire` 自动动态挂载，详见 `doc/lib/dns_wire.md`）（5/5 PASS，自动动态挂载 `cap.dns_wire`）
 - **新增标准库**：`lib/dns_wire/{types,codec,index}.cp`，实现 12 字节 `DnsHeader`、全记录类型（A/AAAA/CNAME/NS/PTR/MX/TXT/SRV/SOA/OPT）编解码、`0xC0xx` 后缀压缩与 32 跳 `CompressionLoop` 防循环指针拦截。
 - **新增文档与测试**：`doc/lib/dns_wire.md` 扁平文档与 `cap/test/test_dns_wire_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
