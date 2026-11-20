@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:analytics` 纯 CP 有界环形缓冲遥测收集、背压策略、敏感字段自动脱敏与 JSON/NDJSON 批量导出引擎（吸收对标 Bun `src/analytics/`，详见 `doc/lib/analytics.md`）（5/5 PASS，自动动态挂载 `cap.analytics`）
+- **新增标准库**：`lib/analytics/{types,collector,json,index}.cp`（吸收对标 Bun `src/analytics/`），实现敏感键自动脱敏（`"[REDACTED]"`）、`DropOldest`/`DropNewest`/`RejectWhenFull` 三种背压环形缓冲收集器 `AnalyticsCollector` 与 RFC 8259 转义 `encodeBatchJson`/`encodeBatchNdjson`。
+- **新增文档与测试**：`doc/lib/analytics.md` 扁平文档与 `cap/test/test_analytics_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:sha_hmac` 纯 CP 统一密码学摘要、流式 HMAC 常量时间验签与 RFC 5869 HKDF / RFC 2898 PBKDF2 密钥派生引擎（吸收对标 Bun `src/sha_hmac/`，详见 `doc/lib/sha_hmac.md`）（5/5 PASS，自动动态挂载 `cap.sha_hmac`）
 - **新增标准库**：`lib/sha_hmac/{hash,hmac,kdf,index}.cp`（吸收对标 Bun `src/sha_hmac/`），统一封装 SHA-1/SHA-2/BLAKE2b/BLAKE2s 流式摘要与 HMAC 常量时间验签，以及 RFC 5869 HKDF 与 RFC 2898 PBKDF2-HMAC。
 - **新增文档与测试**：`doc/lib/sha_hmac.md` 扁平文档与 `cap/test/test_sha_hmac_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

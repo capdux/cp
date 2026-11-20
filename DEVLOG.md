@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:analytics` 纯 CP 有界环形缓冲遥测收集、背压策略、敏感字段自动脱敏与 JSON/NDJSON 批量导出引擎（吸收对标 Bun `src/analytics/`，详见 `doc/lib/analytics.md`）（5/5 PASS，文档直写 `doc/lib/analytics.md`）
+- **核心设计**：`AnalyticsCollector` 固定容量环形队列严格执行溢出策略与输入长度边界校验，配合 `freeBatch` 与 `DebugAllocator`/`std.testing.allocator` 验证零内存泄漏。
+
 ## 2026-11-21: 新建 `cap:sha_hmac` 纯 CP 统一密码学摘要、流式 HMAC 常量时间验签与 RFC 5869 HKDF / RFC 2898 PBKDF2 密钥派生引擎（吸收对标 Bun `src/sha_hmac/`，详见 `doc/lib/sha_hmac.md`）（5/5 PASS，文档直写 `doc/lib/sha_hmac.md`）
 - **核心设计**：流式 `StreamingHasher`/`StreamingHmac` 与一次性 API 比特级等价；HKDF 严格校验 `out_len <= 255 * HashLen`、PBKDF2 拦截 `iterations == 0`，并通过 RFC 4231/5869/6070 官方向量全量验证。
 
