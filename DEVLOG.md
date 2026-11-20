@@ -2,6 +2,18 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:highlight` 多语言词法高亮与 ANSI/HTML 渲染引擎（5/5 PASS，文档直写 `doc/lib/highlight.md`）
+
+- **落地成果**：`lib/highlight/`（`highlight.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），与 `lib/vcard/` 合并提交，并以 `Model: "inherit"` 顶替派发 `cap:http_cache`（RFC 9111 HTTP `Cache-Control` 解析、强弱 `ETag` 304 条件协商与新鲜度寿命引擎），与 `lib/dedup/` 保持 2 路正交并行。
+
+---
+
+## 2026-11-21: 新建 `cap:vcard` RFC 6350 vCard 通讯录解析与生成引擎（5/5 PASS，文档直写 `doc/lib/vcard.md`）
+
+- **落地成果**：`lib/vcard/`（`vcard.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:dedup`（SimHash 海明分片索引 + MinHash + LSH 近重复文本与 RAG 语料去重引擎），与 `lib/highlight/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:sat` DPLL 布尔 SAT 求解器与约束建模引擎（5/5 PASS，文档直写 `doc/lib/sat.md`）
 
 - **落地成果**：`lib/sat/`（`solver.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:highlight`（多语言代码词法高亮引擎：CP/Zig/Rust/TS/Python/JSON/SQL/Bash 词法切分与 ANSI/HTML 渲染），与 `lib/vcard/` 保持 2 路正交并行。

@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:highlight` 八语言词法高亮与 ANSI/HTML 渲染引擎（5/5 PASS，自动动态挂载 `cap.highlight`）
+
+- 新建 [`lib/highlight/`](file:///data/dev/cp/lib/highlight/index.cp)（`highlight.cp`、`index.cp`）：`Highlighter`（覆盖 CP/Zig/Rust/TypeScript/Python/JSON/SQL/Bash 八大语言无损 `tokenize`、`toAnsi` 终端着色与 `AnsiColorCodec.stripAnsi` 还原、`toHtml` 严格转义防 XSS，零泄漏）；文档 [`doc/lib/highlight.md`](file:///data/dev/cp/doc/lib/highlight.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_highlight_production_deep.cp`](file:///data/dev/cp/cap/test/test_highlight_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
+## [2026-11-21] - 新建 `cap:vcard` RFC 6350/2426 vCard 3.0 & 4.0 电子名片解析与生成引擎（5/5 PASS，自动动态挂载 `cap.vcard`）
+
+- 新建 [`lib/vcard/`](file:///data/dev/cp/lib/vcard/index.cp)（`vcard.cp`、`index.cp`）：`VCardContact` & `VCardCodec`（75 字节行折行展开与 UTF-8 安全折行生成、`group.` 属性组前缀剥离、结构化 `N`/`ADR` 转义分号切分、多值 `TEL`/`EMAIL` `TYPE=` 提取、`MissingFn`/`UnbalancedCard` 校验，零泄漏）；文档 [`doc/lib/vcard.md`](file:///data/dev/cp/doc/lib/vcard.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_vcard_production_deep.cp`](file:///data/dev/cp/cap/test/test_vcard_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:sat` DPLL 布尔 SAT 求解器与声明式约束建模引擎（5/5 PASS，自动动态挂载 `cap.sat`）
 
 - 新建 [`lib/sat/`](file:///data/dev/cp/lib/sat/index.cp)（`solver.cp`、`index.cp`）：`SatSolver`（1-based 编号、DPLL 单位传播 + 纯文字消除 + MOM 启发式分支、标准 `parseDimacs` 与 100% 子句校验）及 `ConstraintModel`（`implies`/`conflicts`/`atMostOne`/`exactlyOne`/`solveNamed`，实测鸽巢 `PHP(4,3)` UNSAT、包依赖冲突与 4 皇后求解，零泄漏）；文档 [`doc/lib/sat.md`](file:///data/dev/cp/doc/lib/sat.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_sat_production_deep.cp`](file:///data/dev/cp/cap/test/test_sat_production_deep.cp) `-m` 5/5 PASS。

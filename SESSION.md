@@ -299,3 +299,9 @@
 
 ### 2026-11-21（`cap:sat` 验收固化，顶替以 `inherit` 拉起 `cap:highlight` 维持 2 路并行）
 - **执行成果**：`lib/sat/`（5/5 PASS，含 `cap.sat` 动态挂载与 `doc/lib/sat.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/highlight/`（多语言代码词法高亮与 ANSI/HTML 渲染引擎），与 `lib/vcard/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:vcard` 验收固化，顶替以 `inherit` 拉起 `cap:dedup` 维持 2 路并行）
+- **执行成果**：`lib/vcard/`（5/5 PASS，含 `cap.vcard` 动态挂载与 `doc/lib/vcard.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/dedup/`（SimHash 海明距离索引 + MinHash + LSH 近重复文档与 AI RAG 语料去重引擎），与 `lib/highlight/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:highlight` 验收固化，顶替以 `inherit` 拉起 `cap:http_cache` 维持 2 路并行）
+- **执行成果**：`lib/highlight/`（5/5 PASS，含 `cap.highlight` 动态挂载与 `doc/lib/highlight.md`）经 `verify_module.sh` 一键验收回收并与 `lib/vcard/` 合并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/http_cache/`（RFC 9111 HTTP `Cache-Control` 解析、强弱 `ETag` 条件 304 协商与新鲜度寿命引擎），与 `lib/dedup/` 保持 2 路正交并行。
