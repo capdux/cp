@@ -26,6 +26,7 @@ impl<'a> Parser<'a> {
             Token::Own => "own".to_string(),
             Token::Import => "import".to_string(),
             Token::Export => "export".to_string(),
+            Token::Pub => "pub".to_string(),
             Token::TypeKw => "type".to_string(),
             Token::CStr => "cstr".to_string(),
             Token::As => "as".to_string(),
@@ -63,6 +64,7 @@ impl<'a> Parser<'a> {
                 | Some(Token::Own)
                 | Some(Token::Import)
                 | Some(Token::Export)
+                | Some(Token::Pub)
                 | Some(Token::TypeKw)
                 | Some(Token::CStr)
                 | Some(Token::As)
@@ -279,7 +281,7 @@ impl<'a> Parser<'a> {
             if self.peek() == Some(&Token::Private) {
                 self.bump()?;
                 is_pub = false;
-            } else if self.peek() == Some(&Token::Export) {
+            } else if self.peek() == Some(&Token::Export) || self.peek() == Some(&Token::Pub) {
                 self.bump()?;
                 is_pub = true;
             }
@@ -308,11 +310,21 @@ impl<'a> Parser<'a> {
 
     pub(super) fn parse_module_item(&mut self) -> ParseResult<Vec<ModuleItem>> {
         let mut is_pub = false;
+        let mut is_export = false;
         let mut has_pub_or_priv = false;
-        while self.peek() == Some(&Token::Export) || self.peek() == Some(&Token::Private) {
+        while matches!(
+            self.peek(),
+            Some(Token::Export) | Some(Token::Pub) | Some(Token::Private)
+        ) {
             has_pub_or_priv = true;
             if self.peek() == Some(&Token::Export) {
                 is_pub = true;
+                is_export = true;
+            } else if self.peek() == Some(&Token::Pub) {
+                is_pub = true;
+            } else if self.peek() == Some(&Token::Private) {
+                is_pub = false;
+                is_export = false;
             }
             self.bump()?;
         }
@@ -364,13 +376,19 @@ impl<'a> Parser<'a> {
                 while self.peek() != Some(&Token::RBrace) && self.peek().is_some() {
                     let mut item_meta = self.parse_meta_list()?;
                     let mut item_is_pub = is_pub;
-                    while self.peek() == Some(&Token::Export)
-                        || self.peek() == Some(&Token::Private)
-                    {
+                    let mut item_is_export = is_export;
+                    while matches!(
+                        self.peek(),
+                        Some(Token::Export) | Some(Token::Pub) | Some(Token::Private)
+                    ) {
                         if self.peek() == Some(&Token::Export) {
+                            item_is_pub = true;
+                            item_is_export = true;
+                        } else if self.peek() == Some(&Token::Pub) {
                             item_is_pub = true;
                         } else {
                             item_is_pub = false;
+                            item_is_export = false;
                         }
                         self.bump()?;
                     }
@@ -440,6 +458,7 @@ impl<'a> Parser<'a> {
                         v.is_extern =
                             v.init.is_none() || matches!(v.init, Some(Expr::Lit(Lit::Undefined)));
                         v.is_pub = item_is_pub;
+                        v.is_export = item_is_export;
                         items.push(ModuleItem::Stmt(Stmt::Var(v)));
                     } else if matches!(self.peek(), Some(Token::Ident(s)) if s == "extern")
                         && matches!(
@@ -455,11 +474,22 @@ impl<'a> Parser<'a> {
                         v.is_c = true;
                         v.is_extern = true;
                         v.is_pub = item_is_pub;
+                        v.is_export = item_is_export;
                         items.push(ModuleItem::Stmt(Stmt::Var(v)));
                     } else {
                         let mut f = self.parse_function()?;
                         f.is_pub = item_is_pub;
                         f.meta.append(&mut item_meta);
+                        if item_is_export && !f.meta.iter().any(|m| m.name.sym == "export") {
+                            f.meta.push(MetaItem {
+                                span: f.span,
+                                name: Ident {
+                                    span: f.span,
+                                    sym: "export".to_string(),
+                                },
+                                args: vec![],
+                            });
+                        }
                         if !f.meta.iter().any(|m| m.name.sym == "c") {
                             f.meta.push(MetaItem {
                                 span: c_ident.span,
@@ -520,6 +550,12 @@ impl<'a> Parser<'a> {
                     }
                 }
             }
+            while matches!(
+                clone.peek(),
+                Some(Token::Export) | Some(Token::Pub) | Some(Token::Private)
+            ) {
+                let _ = clone.bump();
+            }
             let mut is_extern = false;
             if matches!(clone.peek(), Some(Token::Ident(id)) if id == "extern") {
                 let _ = clone.bump();
@@ -531,6 +567,22 @@ impl<'a> Parser<'a> {
                     Token::Let | Token::Const | Token::Var | Token::ThreadLocal
                 ) {
                     let meta_list = self.parse_meta_list()?;
+                    while matches!(
+                        self.peek(),
+                        Some(Token::Export) | Some(Token::Pub) | Some(Token::Private)
+                    ) {
+                        has_pub_or_priv = true;
+                        if self.peek() == Some(&Token::Export) {
+                            is_pub = true;
+                            is_export = true;
+                        } else if self.peek() == Some(&Token::Pub) {
+                            is_pub = true;
+                        } else {
+                            is_pub = false;
+                            is_export = false;
+                        }
+                        self.bump()?;
+                    }
                     if is_extern {
                         self.bump()?; // consume 'extern'
                     }
@@ -541,6 +593,7 @@ impl<'a> Parser<'a> {
                     let mut v = self.parse_var_decl()?;
                     if has_pub_or_priv {
                         v.is_pub = is_pub;
+                        v.is_export = is_export;
                     }
                     if is_tl {
                         v.is_threadlocal = true;
@@ -559,7 +612,9 @@ impl<'a> Parser<'a> {
             }
             if has_decl {
                 let meta_list = self.parse_meta_list()?;
-                return Ok(vec![ModuleItem::Decl(self.parse_decl(meta_list, is_pub)?)]);
+                return Ok(vec![ModuleItem::Decl(
+                    self.parse_decl(meta_list, is_pub, is_export)?,
+                )]);
             }
         }
         match self.peek() {
@@ -568,6 +623,7 @@ impl<'a> Parser<'a> {
                 let mut v = self.parse_var_decl()?;
                 if has_pub_or_priv {
                     v.is_pub = is_pub;
+                    v.is_export = is_export;
                 }
                 v.is_threadlocal = true;
                 Ok(vec![ModuleItem::Stmt(Stmt::Var(v))])
@@ -576,6 +632,7 @@ impl<'a> Parser<'a> {
                 let mut v = self.parse_var_decl()?;
                 if has_pub_or_priv {
                     v.is_pub = is_pub;
+                    v.is_export = is_export;
                 }
                 if v.kind == VarDeclKind::Const && v.ty.is_none() {
                     if let Pattern::Ident(ident) = &v.pat {
@@ -618,7 +675,11 @@ impl<'a> Parser<'a> {
             | Some(Token::Async)
             | Some(Token::Static)
             | Some(Token::Fuzz)
-            | Some(Token::TypeKw) => Ok(vec![ModuleItem::Decl(self.parse_decl(vec![], is_pub)?)]),
+            | Some(Token::TypeKw) => Ok(vec![ModuleItem::Decl(self.parse_decl(
+                vec![],
+                is_pub,
+                is_export,
+            )?)]),
             Some(Token::Ident(ref id)) if id == "extern" || id == "inline" || id == "noinline" => {
                 if id == "extern"
                     && matches!(
@@ -635,16 +696,25 @@ impl<'a> Parser<'a> {
                     v.is_c = true;
                     if has_pub_or_priv {
                         v.is_pub = is_pub;
+                        v.is_export = is_export;
                     }
                     return Ok(vec![ModuleItem::Stmt(Stmt::Var(v))]);
                 }
-                Ok(vec![ModuleItem::Decl(self.parse_decl(vec![], is_pub)?)])
+                Ok(vec![ModuleItem::Decl(self.parse_decl(
+                    vec![],
+                    is_pub,
+                    is_export,
+                )?)])
             }
             Some(Token::Unsafe) => {
                 if self.peek_next() == Some(&Token::LBrace) {
                     Ok(vec![ModuleItem::Stmt(self.parse_stmt()?)])
                 } else {
-                    Ok(vec![ModuleItem::Decl(self.parse_decl(vec![], is_pub)?)])
+                    Ok(vec![ModuleItem::Decl(self.parse_decl(
+                        vec![],
+                        is_pub,
+                        is_export,
+                    )?)])
                 }
             }
             _ => Ok(vec![ModuleItem::Stmt(self.parse_stmt()?)]),
@@ -799,12 +869,20 @@ impl<'a> Parser<'a> {
         &mut self,
         meta: Vec<MetaItem>,
         mut is_pub: bool,
+        mut is_export: bool,
     ) -> ParseResult<Decl> {
-        while self.peek() == Some(&Token::Export) || self.peek() == Some(&Token::Private) {
+        while matches!(
+            self.peek(),
+            Some(Token::Export) | Some(Token::Pub) | Some(Token::Private)
+        ) {
             if self.peek() == Some(&Token::Export) {
+                is_pub = true;
+                is_export = true;
+            } else if self.peek() == Some(&Token::Pub) {
                 is_pub = true;
             } else if self.peek() == Some(&Token::Private) {
                 is_pub = false;
+                is_export = false;
             }
             self.bump()?;
         }
@@ -830,6 +908,16 @@ impl<'a> Parser<'a> {
                     if is_pub {
                         f.is_pub = true;
                     }
+                    if is_export && !f.meta.iter().any(|m| m.name.sym == "export") {
+                        f.meta.push(MetaItem {
+                            span: f.span,
+                            name: Ident {
+                                span: f.span,
+                                sym: "export".to_string(),
+                            },
+                            args: vec![],
+                        });
+                    }
                     Ok(Decl::Func(f))
                 }
             }
@@ -839,6 +927,16 @@ impl<'a> Parser<'a> {
                 if is_pub {
                     f.is_pub = true;
                 }
+                if is_export && !f.meta.iter().any(|m| m.name.sym == "export") {
+                    f.meta.push(MetaItem {
+                        span: f.span,
+                        name: Ident {
+                            span: f.span,
+                            sym: "export".to_string(),
+                        },
+                        args: vec![],
+                    });
+                }
                 Ok(Decl::Func(f))
             }
             Some(Token::Ident(ref id)) if id == "extern" || id == "inline" || id == "noinline" => {
@@ -846,6 +944,16 @@ impl<'a> Parser<'a> {
                 f.meta.extend(meta);
                 if is_pub {
                     f.is_pub = true;
+                }
+                if is_export && !f.meta.iter().any(|m| m.name.sym == "export") {
+                    f.meta.push(MetaItem {
+                        span: f.span,
+                        name: Ident {
+                            span: f.span,
+                            sym: "export".to_string(),
+                        },
+                        args: vec![],
+                    });
                 }
                 Ok(Decl::Func(f))
             }
@@ -905,6 +1013,7 @@ impl<'a> Parser<'a> {
                 | Some(Token::Async)
                 | Some(Token::Unsafe)
                 | Some(Token::Export)
+                | Some(Token::Pub)
                 | Some(Token::Private)
         ) || matches!(self.peek(), Some(Token::Ident(id)) if id == "inline" || id == "extern" || id == "noinline")
         {
@@ -931,6 +1040,9 @@ impl<'a> Parser<'a> {
                     },
                     args: vec![],
                 });
+            } else if self.peek() == Some(&Token::Pub) {
+                self.bump()?;
+                is_pub = true;
             } else if self.peek() == Some(&Token::Private) {
                 self.bump()?;
                 is_pub = false;

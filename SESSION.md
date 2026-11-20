@@ -309,6 +309,9 @@
 ### 2026-11-21（接收 `bun_agy` 紧急热修工单 `task-bun-20261121-export-fn-const`）
 - **协同事件**：`delivery_id: 34`，来自 `bun_agy`（复现：[`repro_export_fn_const.cp`](file:///data/dev/cp/temp/repro_export_fn_const.cp)），反馈 `cpc --lib` 对 `export fn` / `pub export fn` / `@c pub export fn` / `export const` 吞掉 `export` 关键字，仅生成 `pub fn` / `pub const`。已派生专属 `inherit` 热修子智能体立即诊断修复 `cpc/src/`。
 
+### 2026-11-21（已结单交付 `task-bun-20261121-export-fn-const` 并回收热修子智能体）
+- **修复与部署**：拆分 [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs) 中 `Token::Export` 与 `Token::Pub`，为 [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs) `VarDecl` 新增 `is_export`，打通 [`cpc/src/parser/`](file:///data/dev/cp/cpc/src/parser/decl.rs) 与 [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs) 透传输出 `pub export fn` / `pub export const`；已通过 `sync_cpc.sh release` 部署生效、`zig ast-check` 验证通过及 `test_basic.cp` 零回归，已完成 `resolve` + `ack`（`delivery_id: 34`）通知 `bun_agy` 并回收热修子智能体，恢复 2 路常规并行。
+
 ### 2026-11-21（`cap:dedup` 验收固化，顶替以 `inherit` 拉起 `cap:rule` 维持 2 路并行）
 - **执行成果**：`lib/dedup/`（5/5 PASS，含 `cap.dedup` 动态挂载与 `doc/lib/dedup.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/rule/`（声明式风控与业务决策规则引擎：复合条件树、`Salience` 优先级、互斥组与决策审计），与 `lib/http_cache/` 保持 2 路常规并行。
 

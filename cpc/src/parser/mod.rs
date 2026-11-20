@@ -355,6 +355,7 @@ impl<'a> Parser<'a> {
                     return;
                 }
                 Token::Export
+                | Token::Pub
                 | Token::Private
                 | Token::Import
                 | Token::Class
@@ -437,6 +438,7 @@ impl<'a> Parser<'a> {
         matches!(
             t,
             Token::Export
+                | Token::Pub
                 | Token::Const
                 | Token::Let
                 | Token::Var

@@ -1457,25 +1457,16 @@ impl Codegen {
                     _ => false,
                 };
                 let is_var_pub = var.is_pub || ident_pub;
-                let kw = if var.is_threadlocal {
-                    if is_var_pub {
-                        "pub threadlocal var"
-                    } else {
-                        "threadlocal var"
-                    }
+                let pub_prefix = if is_var_pub { "pub " } else { "" };
+                let export_prefix = if var.is_export { "export " } else { "" };
+                let kind_kw = if var.is_threadlocal {
+                    "threadlocal var"
                 } else if var.kind == VarDeclKind::Const {
-                    if is_var_pub {
-                        "pub const"
-                    } else {
-                        "const"
-                    }
+                    "const"
                 } else {
-                    if is_var_pub {
-                        "pub var"
-                    } else {
-                        "var"
-                    }
+                    "var"
                 };
+                let kw = format!("{}{}{}", pub_prefix, export_prefix, kind_kw);
                 let old_array_elem = self.expected_array_elem_type.clone();
                 if let Some(ty) = &var.ty {
                     if let Some(el) = Self::fixed_or_vec_elem_type(ty) {

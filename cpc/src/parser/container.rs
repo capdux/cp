@@ -108,9 +108,12 @@ impl<'a> Parser<'a> {
             let meta_list = self.parse_meta_list()?;
             let mut member_is_pub = true;
             let mut has_pub_or_priv = false;
-            while self.peek() == Some(&Token::Export) || self.peek() == Some(&Token::Private) {
+            while self.peek() == Some(&Token::Export)
+                || self.peek() == Some(&Token::Pub)
+                || self.peek() == Some(&Token::Private)
+            {
                 has_pub_or_priv = true;
-                if self.peek() == Some(&Token::Export) {
+                if self.peek() == Some(&Token::Export) || self.peek() == Some(&Token::Pub) {
                     member_is_pub = true;
                 } else if self.peek() == Some(&Token::Private) {
                     member_is_pub = false;
@@ -437,8 +440,11 @@ impl<'a> Parser<'a> {
             }
             let meta_list = self.parse_meta_list()?;
             let mut method_is_pub = true;
-            while self.peek() == Some(&Token::Export) || self.peek() == Some(&Token::Private) {
-                if self.peek() == Some(&Token::Export) {
+            while self.peek() == Some(&Token::Export)
+                || self.peek() == Some(&Token::Pub)
+                || self.peek() == Some(&Token::Private)
+            {
+                if self.peek() == Some(&Token::Export) || self.peek() == Some(&Token::Pub) {
                     method_is_pub = true;
                 } else {
                     method_is_pub = false;

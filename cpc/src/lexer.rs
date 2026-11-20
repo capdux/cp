@@ -60,8 +60,9 @@ pub enum Token {
     Macro,
 
     #[token("export")]
-    #[token("pub")]
     Export,
+    #[token("pub")]
+    Pub,
     #[token("priv")]
     #[token("private")]
     Private,

@@ -1387,6 +1387,7 @@ impl<'a> Parser<'a> {
             Token::TypeKw => "type".to_string(),
             Token::Import => "import".to_string(),
             Token::Export => "export".to_string(),
+            Token::Pub => "pub".to_string(),
             Token::Const => "const".to_string(),
             Token::Let => "let".to_string(),
             Token::Var => "var".to_string(),

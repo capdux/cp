@@ -294,6 +294,8 @@ pub struct VarDecl {
     #[serde(default)]
     pub is_pub: bool,
     #[serde(default)]
+    pub is_export: bool,
+    #[serde(default)]
     pub is_comptime: bool,
     #[serde(default)]
     pub is_extern: bool,

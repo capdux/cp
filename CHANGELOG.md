@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 热修 `cpc` 保留 C ABI `export fn` / `export const` 关键字（`task-bun-20261121-export-fn-const`）
+
+- 拆分 [`cpc/src/lexer.rs`](file:///data/dev/cp/cpc/src/lexer.rs) `Token::Export` 与 `Token::Pub`，为 [`cpc/src/ast.rs`](file:///data/dev/cp/cpc/src/ast.rs) `VarDecl` 新增 `is_export` 并打通 [`parser/`](file:///data/dev/cp/cpc/src/parser/decl.rs) 与 [`codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)，使 `export fn` / `pub export fn` / `@c pub export fn` / `export const` 正确输出 `export`；已执行 `sync_cpc.sh release` 原子发布，经 [`repro_export_fn_const.cp`](file:///data/dev/cp/temp/repro_export_fn_const.cp) + `zig ast-check` 全绿验证并结单通知 `bun_agy`。
+
+---
+
 ## [2026-11-21] - 新建 `cap:http_cache` RFC 9111 HTTP 缓存语义与强弱 `ETag` 条件协商引擎（5/5 PASS，自动动态挂载 `cap.http_cache`）
 
 - 新建 [`lib/http_cache/`](file:///data/dev/cp/lib/http_cache/index.cp)（`cache_policy.cp`、`index.cp`）：`CacheControl`（全指令解析与往返 `toHeader`）、`EntityTag`（强弱比较、`If-None-Match` 弱比较 304 与 `If-Match` 强比较 412 防并发覆盖）及 `HttpCacheEvaluator`（`s-maxage`>`max-age` 新鲜度评估、`private`/`no-store` 与 `buildVaryKey`，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/http_cache.md`](file:///data/dev/cp/doc/lib/http_cache.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_http_cache_production_deep.cp`](file:///data/dev/cp/cap/test/test_http_cache_production_deep.cp) `-m` 5/5 PASS。

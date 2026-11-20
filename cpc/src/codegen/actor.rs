@@ -179,6 +179,7 @@ impl Codegen {
                     kind: VarDeclKind::Let,
                     is_threadlocal: false,
                     is_pub: false,
+                    is_export: false,
                     is_comptime: false,
                     is_extern: false,
                     is_c: false,
