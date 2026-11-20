@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:graphql` 纯 CP GraphQL 词法分词、递归下降 AST、块字符串解析、Fragment 循环检测与深度/复杂度防 DoS 引擎（支持 `cap.graphql` 自动动态挂载，详见 `doc/lib/graphql.md`）（5/5 PASS，自动动态挂载 `cap.graphql`）
+- **新增标准库**：`lib/graphql/{lexer,ast,parser,validator,index}.cp`，实现全 GraphQL 词法（含块字符串 `"""..."""` 缩进剥离）、32 层深度防护递归下降 AST 解析、`validateDocument`（`CyclicFragment`/`UnknownFragment`）、`computeQueryDepth`/`computeQueryComplexity` 及 `formatDocument` 往返。
+- **新增文档与测试**：`doc/lib/graphql.md` 扁平文档与 `cap/test/test_graphql_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:sql_ast` 纯 CP SQL 词法分词、递归下降 DML/DDL/SELECT AST 解析、指纹脱敏与堆叠注入拦截引擎（支持 `cap.sql_ast` 自动动态挂载，详见 `doc/lib/sql_ast.md`）（5/5 PASS，自动动态挂载 `cap.sql_ast`）
 - **新增标准库**：`lib/sql_ast/{lexer,ast,parser,analyzer,index}.cp`，实现全 SQL 词法分词（注释/转义/`?`/`$1`）、32 层深度防护递归下降 `SELECT`/`INSERT`/`UPDATE`/`DELETE`/`CREATE TABLE` 解析器，以及 `normalizeSqlFingerprint`、`extractTableNames`、`isReadOnlyQuery` 多语句堆叠注入拦截。
 - **新增文档与测试**：`doc/lib/sql_ast.md` 扁平文档与 `cap/test/test_sql_ast_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:graphql` 纯 CP GraphQL 词法分词、递归下降 AST、块字符串解析、Fragment 循环检测与深度/复杂度防 DoS 引擎（支持 `cap.graphql` 自动动态挂载，详见 `doc/lib/graphql.md`）（5/5 PASS，文档直写 `doc/lib/graphql.md`）
+- **核心设计**：`validator.cp` 对命名 Fragment 展开执行三色环路检测与最大深度/复杂度预算拦截，彻底阻断恶意深嵌套 GraphQL 查询，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:sql_ast` 纯 CP SQL 词法分词、递归下降 DML/DDL/SELECT AST 解析、指纹脱敏与堆叠注入拦截引擎（支持 `cap.sql_ast` 自动动态挂载，详见 `doc/lib/sql_ast.md`）（5/5 PASS，文档直写 `doc/lib/sql_ast.md`）
 - **核心设计**：词法与语法层完整拦截未闭合字符串/块注释、深度超限与多语句 `; DROP` 堆叠注入，`normalizeSqlFingerprint` 自动脱敏字面量为 `?`，全路径 `std.testing.allocator` 零泄漏。
 
