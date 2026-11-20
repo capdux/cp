@@ -1,3 +1,18 @@
+## [2026-11-20] - `cap:net` 工业网络底座升级（+1,891 行）与 `cap:pack` ZIP/PAX-TAR/魔数引擎升级（+1,048 行）双路落地
+
+### `cap:net` 工业网络基础设施升级 (`lib/net/`，0 `std.posix`，0 `@import("bun")`)
+- 新增 [`lib/net/cidr.cp`](file:///data/dev/cp/lib/net/cidr.cp)（822 行）：IPv4/IPv6 `Ipv4Cidr`/`Ipv6Cidr`（解析/包含/重叠/网络与广播地址）、`IpAddrCodec`（RFC 5952）与 `IpClass`/`CidrAllowlist`（私网/环回/链路本地/CGNAT 分类与出站边界防护）；
+- 新增 [`lib/net/sockopts.cp`](file:///data/dev/cp/lib/net/sockopts.cp)（371 行）：纯 Zig 0.17 `std.os.linux` `SocketOptions`（`TCP_NODELAY`/`SO_KEEPALIVE`/`SO_REUSEADDR`/`SO_REUSEPORT`/`SO_RCVBUF`/`SO_SNDBUF`/收发超时/非阻塞/`SO_ERROR`）与 `pollSingleFd`/`pollManyFds`；
+- 新增 [`lib/net/socks5.cp`](file:///data/dev/cp/lib/net/socks5.cp)（417 行）：RFC 1928/1929 `Socks5Codec`（Greeting、UserPass 鉴权、IPv4/Domain/IPv6 CONNECT 编解码）与 `HttpConnectCodec`；
+- 新增 [`lib/net/pool.cp`](file:///data/dev/cp/lib/net/pool.cp)（281 行）：`ConnectionPool`（按 `host:port` 分桶复用、TTL 过期与容量上限淘汰、`PoolStats`）；同步更新 [`lib/net/proxy.cp`](file:///data/dev/cp/lib/net/proxy.cp)、[`lib/net/index.cp`](file:///data/dev/cp/lib/net/index.cp)、[`docs/net/net.md`](file:///data/dev/cp/docs/net/net.md) 与 [`cap/test/test_net_production_deep.cp`](file:///data/dev/cp/cap/test/test_net_production_deep.cp)（5/5 PASS，`-m` 5/5 PASS，既有回归 11/11 PASS）。
+
+### `cap:pack` 压缩与归档引擎升级 (`lib/pack/`，0 `std.posix`，0 `@import("bun")`)
+- 新增 [`lib/pack/zip_writer.cp`](file:///data/dev/cp/lib/pack/zip_writer.cp)（325 行）：PKWARE APPNOTE 6.3.10 `ZipWriter`（Stored/Deflate 写入、UTF-8 标志位、CRC-32、Local/Central Directory/EOCD 与 `decompressAndVerify` 读回校验）；
+- 新增 [`lib/pack/tar_pax.cp`](file:///data/dev/cp/lib/pack/tar_pax.cp)（568 行）：POSIX.1-2001 `PaxTarWriter`/`PaxTarReader`（USTAR + PAX `'x'` 扩展头突破 100B 路径/软链限制）与 `validateArchivePath`（严格拦截绝对路径与 `..` 穿越）；
+- 新增 [`lib/pack/magic.cp`](file:///data/dev/cp/lib/pack/magic.cp)（155 行）：`ArchiveSniffer`（Gzip/Zlib/Zstd/ZIP/TAR/XZ/BZ2/LZ4/BrotliHint 魔数探测与 MIME/扩展名映射）；同步更新 [`lib/pack/index.cp`](file:///data/dev/cp/lib/pack/index.cp)、[`docs/pack/pack.md`](file:///data/dev/cp/docs/pack/pack.md) 与 [`cap/test/test_pack_production_deep.cp`](file:///data/dev/cp/cap/test/test_pack_production_deep.cp)（5/5 PASS，`-m` 5/5 PASS，既有回归全部 PASS）。
+
+---
+
 ## [2026-11-20] - `cap:crypto` 现代零 C 依赖密码学全栈生产升级（Ed25519/X25519/P-256/HKDF/Scrypt/Argon2id/BLAKE3/SHA3/XChaCha20/JWT/PEM）
 
 ### 标准库深度升级 (`lib/crypto/`，+1,167 行纯 CP，保留 `_boringssl.zig` 与既有 API 100% 兼容)

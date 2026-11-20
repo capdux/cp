@@ -39,3 +39,6 @@ export * from "./_archive.cp";
 export * from "./tar.cp";
 export * from "./zip.cp";
 export * from "./native.cp";
+export * from "./zip_writer.cp";
+export * from "./tar_pax.cp";
+export * from "./magic.cp";

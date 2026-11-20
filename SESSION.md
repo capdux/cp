@@ -2671,3 +2671,14 @@
   - 子智能体 4（`ec00b89b`）完工回收：[`lib/crypto/`](file:///data/dev/cp/lib/crypto/index.cp) 新增 `asymmetric.cp`、`kdf.cp`、`jwt.cp`（净增 +1,167 行纯 CP，保留 `_boringssl.zig` 与既有 API 100% 兼容，0 `std.posix`，0 `@import("bun")`），覆盖 Ed25519/X25519/ECDSA P-256、HKDF/Scrypt/Argon2id、BLAKE3/SHA3/XChaCha20-Poly1305/AES-128-GCM、RFC 7519 JWT 与 RFC 7468 PEM；
   - `test_crypto_production_deep.cp`（8/8）、`test_crypto_features.cp`（4/4）与 `test_crypto_sql_dns.cp`（5/5）共 17/17 全部 PASS，已同步双轨规范、热日志并提交 Git；
   - 无缝顶替拉起子智能体 6（`cap:pack` 流式压缩与 ZIP/PAX-TAR 归档生产升级），与子智能体 5（`720ccd93`，`cap:net`）持续保持双路并行。
+
+### 2026-11-20（极速结单 `capsurf_agy` 2 条 `lib/pack/zip_writer.cp` 瞬时编译工单）
+- **协同事件（`capsurf_agy`）**：收到 `task-capsurf-20261120-lib-pack-zip-writer`（delivery 30）与 `task-capsurf-20261120-lib-pack-zip-writer-const`（delivery 31），系子智能体 6 正在编写 `lib/pack/zip_writer.cp` 期间被下游读取到未定稿版本（E0111 默认枚举参数 + E0204 `const tmp`）。
+- **验证与结单**：实测 `cpc check lib/pack/zip_writer.cp`、`cpc check lib/pack/index.cp` 均 `Check successful`，`cap test cap/test/test_pack_zlib_static.cp`（799ms）PASS；已对 2 条工单执行 `resolve` + `ack`（delivery 30,31）通知下游 `capsurf_agy` 立即恢复构建。
+
+### 2026-11-20（`cap:net` 与 `cap:pack` 双路升级验收固化，无缝拉起 `cap:ws` 与 `cap:time` 双路并行）
+- **执行成果**：
+  - 子智能体 5（`720ccd93`，`cap:net`）与子智能体 6（`19e09bb0`，`cap:pack`）双路同轮完工回收；
+  - `lib/net/` 新增 `cidr.cp`、`sockopts.cp`、`socks5.cp`、`pool.cp`（+1,891 行），`test_net_production_deep.cp` 单文件与 `-m` 模式均 5/5 PASS，既有回归 11/11 PASS；
+  - `lib/pack/` 新增 `zip_writer.cp`、`tar_pax.cp`、`magic.cp`（+1,048 行），`test_pack_production_deep.cp` 单文件与 `-m` 模式均 5/5 PASS，既有回归全部 PASS；
+  - 已同步双轨规范手册、热日志并执行 Git 提交固化，同时无缝拉起子智能体 7（`lib/ws/` RFC 7692 压缩扩展/子协议协商/会话状态机）与子智能体 8（`lib/time/` Cron 表达式调度/RFC 3339 与 ISO 8601/限流与退避）继续双路并行。

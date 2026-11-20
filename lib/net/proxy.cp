@@ -89,70 +89,7 @@ pub struct HttpConnectTunnel {
     }
 }
 
-pub enum Socks5AddrType: u8 {
-    Ipv4 = 0x01,
-    Domain = 0x03,
-    Ipv6 = 0x04,
-}
-
-pub struct Socks5Codec {
-    /// Encodes a 3-byte SOCKS5 no-authentication greeting (`[0x05, 0x01, 0x00]`).
-    pub static fn encodeGreetingNoAuth(out: []u8): usize {
-        if (out.len < 3) {
-            return 0;
-        }
-        out[0] = 0x05;
-        out[1] = 0x01;
-        out[2] = 0x00;
-        return 3;
-    }
-
-    /// Verifies a 2-byte SOCKS5 server greeting reply (`[0x05, 0x00]`).
-    pub static fn verifyGreetingReply(reply_buf: []const u8): bool {
-        return reply_buf.len >= 2 && reply_buf[0] == 0x05 && reply_buf[1] == 0x00;
-    }
-
-    /// Encodes a 10-byte SOCKS5 CONNECT request to an IPv4 address and port.
-    pub static fn encodeConnectIpv4(out: []u8, ip: [4]u8, port: u16): usize {
-        if (out.len < 10) {
-            return 0;
-        }
-        out[0] = 0x05; // VER = 5
-        out[1] = 0x01; // CMD = CONNECT
-        out[2] = 0x00; // RSV = 0
-        out[3] = 0x01; // ATYP = IPv4
-        out[4] = ip[0];
-        out[5] = ip[1];
-        out[6] = ip[2];
-        out[7] = ip[3];
-        out[8] = ((port >> 8) & 0xFF) as u8;
-        out[9] = (port & 0xFF) as u8;
-        return 10;
-    }
-
-    /// Encodes a SOCKS5 CONNECT request to a domain name and port.
-    pub static fn encodeConnectDomain(out: []u8, domain: []const u8, port: u16): usize {
-        const total = 4 + 1 + domain.len + 2;
-        if (domain.len == 0 || domain.len > 255 || out.len < total) {
-            return 0;
-        }
-        out[0] = 0x05; // VER = 5
-        out[1] = 0x01; // CMD = CONNECT
-        out[2] = 0x00; // RSV = 0
-        out[3] = 0x03; // ATYP = DOMAINNAME
-        out[4] = domain.len as u8;
-        let i: usize = 0;
-        while (i < domain.len) {
-            out[5 + i] = domain[i];
-            i += 1;
-        }
-        out[5 + domain.len] = ((port >> 8) & 0xFF) as u8;
-        out[6 + domain.len] = (port & 0xFF) as u8;
-        return total;
-    }
-
-    /// Verifies a SOCKS5 CONNECT reply (`VER == 0x05` and `REP == 0x00` succeeded).
-    pub static fn verifyConnectReply(reply_buf: []const u8): bool {
-        return reply_buf.len >= 4 && reply_buf[0] == 0x05 && reply_buf[1] == 0x00;
-    }
-}
+export {
+    Socks5AddrType,
+    Socks5Codec
+} from "./socks5";

@@ -1,64 +1,93 @@
-# CP 标准库：高性能网络传输、套接字抽象与代理隧道手册 (`cap:net`)
+# CP 标准库：高性能网络传输、套接字抽象、CIDR/SSRF 防护、代理隧道与连接池手册 (`cap:net`)
 
 ## 一、 架构总览与设计准则
 
-`cap:net` 是 CP 语言官方内置的高性能网络传输标准库，涵盖 IPv4/IPv6 地址解析、RAII 风格 `SafeSocket` 生命周期管理、带 16KB 软塞（Corking）缓冲的 `TcpStream`、多选项监听配置的 `TcpServer`、无连接 `UdpSocket` 数据报传输，以及 RFC 7231 HTTP `CONNECT` / RFC 1928 SOCKS5 代理握手编解码器。核心架构吸收自 Bun 原生 uSockets 与 Socket 子系统（`/data/dev/bun/src/uws/`、`src/uws_sys/`、`src/runtime/socket/` 与 `src/http/ProxyTunnel.cp`）。
+`cap:net` 是 CP 语言官方内置的工业生产级网络传输标准库，涵盖 IPv4/IPv6 地址与 CIDR/SSRF 边界校验、Linux 原生套接字选项与 `poll` 就绪轮询、RAII 风格 `SafeSocket` 生命周期管理、带 16KB 软塞（Corking）缓冲的 `TcpStream`、多选项监听配置的 `TcpServer`、无连接 `UdpSocket` 数据报传输、完整 RFC 1928/1929 SOCKS5 与 HTTP `CONNECT` 代理隧道编解码器，以及工业级 TCP 连接池 `ConnectionPool`。核心传输层吸收自 Bun 原生 uSockets 与 Socket 子系统，新增基础设施层 100% 纯 CP 零外部依赖实现。
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                       CP 用户层网络应用 (Application)                    │
 ├───────────────────┬─────────────────────┬───────────────────────────────┤
-│ 传输层高阶封装     │  地址与协议编解码    │  旧版 Actor/Async 兼容层       │
-│ TcpServer /       │  Ipv4Addr / Ipv6Addr│  Server / Socket              │
-│ TcpStream (Cork)  │  SocketAddress      │  listen(port) / connect(port) │
-│ UdpSocket / Packet│  HttpConnectTunnel  │  async read() / write()       │
-│ SafeSocket (RAII) │  Socks5Codec        │                               │
+│ 传输与连接池封装   │ 地址/CIDR/代理编解码 │ 套接字选项与旧版兼容层        │
+│ TcpServer /       │ Ipv4Addr / Ipv6Addr │ SocketOptions / PollEvent     │
+│ TcpStream (Cork)  │ SocketAddress       │ pollSingleFd / pollManyFds    │
+│ UdpSocket / Packet│ Ipv4Cidr / Ipv6Cidr │ SafeSocket (RAII)             │
+│ ConnectionPool    │ IpClass / Allowlist │ Server / Socket / listen()    │
+│                   │ Socks5Codec /       │                               │
+│                   │ HttpConnectCodec    │                               │
 ├───────────────────┴─────────────────────┴───────────────────────────────┤
-│            uSockets C-FFI 绑定层 (_usockets.cp / @c & @opaque)          │
+│   uSockets C-FFI (_usockets.cp) & Zig std.os.linux 原生系统调用层        │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### 1. 模块文件拓扑与谱系来源
 
-`lib/net/` 下全部 8 个源文件第 1 行均严格标记上游 Bun 源码谱系：
+`lib/net/` 下全部 12 个源文件第 1 行均严格标记来源谱系：
 
 | 文件路径 | 上游谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
 | `lib/net/_usockets.cp` | `// Source: /data/dev/bun/src/uws_sys/ & /data/dev/bun/src/uws/uws.cp` | 底层 uSockets `@c` FFI 声明、`@opaque` 句柄类型、监听位掩码常量及 `SocketCloseCode` / `SocketKind` / `SendStatus` 枚举 |
 | `lib/net/address.cp` | `// Source: /data/dev/bun/src/runtime/socket/SocketAddress.cp` | `AddressFamily`、`Ipv4Addr`、`Ipv6Addr`、`SocketAddress` 零分配解析、私有/回环/组播判定与 IPv4-Mapped IPv6 转换 |
+| `lib/net/cidr.cp` | `// Source: cp/lib/net/cidr.cp (RFC 4632 / RFC 4291 / RFC 1918)` | `IpAddr`、`IpKind`、`IpAddrCodec`、`Ipv4Cidr`、`Ipv6Cidr`、`IpClass` 与 `CidrAllowlist`（CIDR 解析/包含/重叠与 SSRF 出站防护） |
+| `lib/net/sockopts.cp` | `// Source: cp/lib/net/sockopts.cp (POSIX Socket Options & Linux Poll)` | 基于 `std.os.linux` 的 `SocketOptions`、`setNoDelay`/`setKeepAlive`/`setReuseAddr`/`setReusePort`/`setRecvBufSize`/`setSendBufSize`/`setRecvTimeoutMs`/`setSendTimeoutMs`/`setNonBlocking`/`getSocketError`、`PollEvent` 与 `pollSingleFd`/`pollManyFds` |
+| `lib/net/socks5.cp` | `// Source: cp/lib/net/socks5.cp (RFC 1928 / RFC 1929)` | 完整 RFC 1928/1929 `Socks5AuthMethod`、`Socks5ReplyCode`、`Socks5Codec`（Greeting/MethodSelection/UserPassAuth/IPv4+Domain+IPv6 Connect 编解码）与 `HttpConnectCodec` |
+| `lib/net/pool.cp` | `// Source: cp/lib/net/pool.cp (Production TCP Connection Pool)` | `ConnPoolConfig`、`PoolEntry`、`PoolStats` 与 `ConnectionPool`（`host:port` 分桶复用、TTL 空闲超时、最大生存期淘汰与容量上限驱逐） |
+| `lib/net/proxy.cp` | `// Source: /data/dev/bun/src/http/ProxyTunnel.cp` | 向后兼容 `HttpConnectTunnel`（RFC 7231 `CONNECT` 报文构造与响应解析）及重导出 `Socks5AddrType`、`Socks5Codec` |
 | `lib/net/socket.cp` | `// Source: /data/dev/bun/src/uws_sys/socket.cp` | `SafeSocket` 状态机、读写统计 `SocketStats`、`>240s` 自动升级分钟级长超时、半关闭与 RAII `release()`，以及兼容型 `Socket` |
 | `lib/net/tcp_stream.cp` | `// Source: /data/dev/bun/src/uws/uws.cp` | 16KB `StreamBuffer`（`STREAM_CORK_BUFFER_SIZE = 16384`）与支持 `cork()` / `uncork()` / `flush()` 批聚合发送的 `TcpStream` |
 | `lib/net/tcp_server.cp` | `// Source: /data/dev/bun/src/runtime/socket/Listener.cp` | `ListenConfig`（`toLibusOptions()` 位掩码生成）、`TcpServer` 连接接入计数与生命周期，以及兼容型 `Server` / `listen()` / `connect()` |
 | `lib/net/udp.cp` | `// Source: /data/dev/bun/src/uws_sys/udp.cp` | `UdpPacket`、`UdpSocket` 绑定、对端关联（`connectPeer`）、广播/单播 TTL/组播 TTL 与回环选项控制 |
-| `lib/net/proxy.cp` | `// Source: /data/dev/bun/src/http/ProxyTunnel.cp` | `HttpConnectTunnel`（RFC 7231 `CONNECT` 报文构造与响应状态码解析）与 `Socks5Codec`（RFC 1928 握手与 IPv4/域名目标连接编码） |
 | `lib/net/index.cp` | `// Source: /data/dev/bun/src/uws/uws.cp & /data/dev/bun/src/runtime/socket/` | `cap:net` 统一公开导出入口 |
 
 ---
 
 ## 二、 核心 API 与关键机制
 
-### 1. 地址模型（`Ipv4Addr`、`Ipv6Addr`、`SocketAddress`）
+### 1. 地址模型与 CIDR / SSRF 防护（`address.cp` & `cidr.cp`）
 
-- **`Ipv4Addr`**：提供 `init(a, b, c, d)`、`loopback()`、`any()`、`broadcast()`、`parse(text)`、`toU32()` / `fromU32(val)`，以及语义判定方法 `isLoopback()`、`isUnspecified()`、`isPrivate()`（RFC 1918 10/8、172.16/12、192.168/16）、`isMulticast()`（224.0.0.0/4）。
-- **`Ipv6Addr`**：提供 `loopback()`（`::1`）、`any()`（`::`）、`fromIpv4Mapped(v4)`（`::ffff:a.b.c.d`），以及 `isLoopback()`、`isUnspecified()`、`isIpv4Mapped()`。
-- **`SocketAddress`**：统一封装 IPv4 / IPv6 端点（含 `port`、`flowlabel`、`scope_id`），提供 `v4`、`v6`、`loopbackV4`、`loopbackV6`、`parseV4` / `parseIpv4`、`isIPv6()` 与 `socklen()`（IPv4 返回 `16`，IPv6 返回 `28`）。
+- **`Ipv4Addr` / `Ipv6Addr` / `SocketAddress`**：提供 `init`、`loopback`、`any`、`broadcast`、`parse`、`toU32`/`fromU32`、`fromIpv4Mapped`，以及 `socklen()`（IPv4 返回 `16`，IPv6 返回 `28`）。
+- **`IpAddrCodec`**：提供纯 CP 无堆分配 IPv6 解析（完整支持 `::` 零压缩与 `::ffff:a.b.c.d` 内嵌 IPv4）、RFC 5952 规范化 IPv6 格式化（`formatV6`）、IPv4 格式化（`formatV4`）与 `u128`/字节数组互转。
+- **`Ipv4Cidr` / `Ipv6Cidr`**：支持 `parse("192.168.1.42/24")` / `parse("fe80::/10")`、自动规范化网络地址、`networkAddress()`、`broadcastAddress()`（IPv4）、`prefixLen()`、`contains(ip)`、`overlaps(other)` 与 `format(out)`。
+- **`IpClass` 与 `CidrAllowlist`**：
+  - `IpClass` 精准判定 `isLoopback`（`127/8`, `::1`）、`isPrivate`（RFC 1918 `10/8`, `172.16/12`, `192.168/16`, RFC 4193 `fc00::/7`）、`isLinkLocal`（`169.254/16`, `fe80::/10`）、`isCgnat`（RFC 6598 `100.64/10`）、`isMulticast`（`224/4`, `ff00::/8`）与 `isGlobalUnicast`；
+  - `CidrAllowlist` 支持 `addRule("10.10.0.0/16")` / `addRule("fc00::/7")` / 单 IP 自动补 `/32` 或 `/128`，并提供 `isAllowedOutbound(ip)` 作为开箱即用的 SSRF / 内网边界守卫。
 
-### 2. `SafeSocket` 与超时自动分级机制
+### 2. 真实系统套接字选项与轻量轮询（`sockopts.cp`）
 
-- 完整管理 `SocketState`（`Connecting` / `Connected` / `Closing` / `Closed` / `Detached`）与 `SocketStats`（读写字节数与调用次数）。
-- **uSockets 240 秒阈值自动升级**：`setTimeout(seconds)` 在 `seconds <= 240` 时配置 4 秒粒度的短超时 `timeout_sec`；超过 `240` 秒时自动清零短超时并晋升为分钟级长超时 `long_timeout_min = seconds / 60`，消除长连接高频定时器轮询开销。
-- 支持半关闭 `shutdown()`（关闭写端）与 `shutdownRead()`（关闭读端）、流控 `pause()` / `resumeSocket()`，以及 `release()` 统一兜底关闭并释放堆对象。
+- 全量使用 Zig 0.17 `std.os.linux`（零 `std.posix`、零外部依赖）：
+  - `setNoDelay` / `getNoDelay`（`TCP_NODELAY`）
+  - `setKeepAlive` / `getKeepAlive`（`SO_KEEPALIVE`）
+  - `setReuseAddr` / `getReuseAddr`（`SO_REUSEADDR`）
+  - `setReusePort` / `getReusePort`（`SO_REUSEPORT`）
+  - `setRecvBufSize` / `getRecvBufSize`（`SO_RCVBUF`）、`setSendBufSize` / `getSendBufSize`（`SO_SNDBUF`）
+  - `setRecvTimeoutMs` / `setSendTimeoutMs`（`SO_RCVTIMEO` / `SO_SNDTIMEO`）
+  - `setNonBlocking` / `isNonBlocking`（`fcntl` `O_NONBLOCK`）
+  - `getSocketError`（`getsockopt` `SO_ERROR`）
+  - `SocketOptions` 批量配置结构体（`opts.apply(fd)`）与辅助 `createTcpSocket`、`createSocketPair`、`closeSocketFd`、`writeFd`、`readFd`。
+- **`PollEvent` & `pollSingleFd` / `pollManyFds`**：基于 `std.os.linux.poll` / `std.os.linux.pollfd` 实现轻量级 `EINTR` 自重试就绪轮询，支持 `isReadable()`、`isWritable()`、`hasError()`、`isHup()`。
 
-### 3. `TcpStream` 16KB Corking 与 `TcpServer`
+### 3. 完整 SOCKS5 与 HTTP CONNECT 线缆编解码（`socks5.cp` & `proxy.cp`）
 
-- **`StreamBuffer` & `TcpStream`**：开启 `cork()` 后，多次小块 `write()` 会零系统调用地聚合进 16KB（`STREAM_CORK_BUFFER_SIZE`）发送缓冲；调用 `uncork()` 或缓冲区满时自动批量 `flush()`，大幅降低内核态切换次数。
-- **`ListenConfig` & `TcpServer`**：通过 `ListenConfig.defaultForPort(port)` 配置 `reuse_port`、`reuse_addr`、`exclusive_port`、`allow_half_open`、`ipv6_only` 等，调用 `toLibusOptions()` 直接生成 uSockets 位掩码；`TcpServer.bind(addr, cfg)` 管理 `active_connections` 与 `total_accepted` 统计。
+- **`Socks5Codec`**：
+  - 握手协商：`encodeGreeting(out, methods)`（支持 `NoAuth` `0x00`、`GssApi` `0x01`、`UserPass` `0x02`）与 `decodeMethodSelection(buf)`；
+  - RFC 1929 用户名密码子协商：`encodeUserPassAuth(out, user, pass)` 与 `decodeUserPassReply(buf)`；
+  - `CONNECT` 请求与响应：`encodeConnectRequest(out, host, port)` 自动识别 IPv4 (`0x01`)、Domain (`0x03`)、IPv6 (`0x04`)；`decodeConnectReply(buf)` 完整解析 `Socks5ReplyCode`、绑定地址（IPv4/Domain/IPv6）及端口；并 100% 保留旧版 `encodeGreetingNoAuth` / `verifyGreetingReply` / `encodeConnectIpv4` / `encodeConnectDomain` / `verifyConnectReply`。
+- **`HttpConnectCodec` & `HttpConnectTunnel`**：
+  - `HttpConnectCodec.encodeRequest(out, host, port, proxy_auth_header)` 支持 IPv6 自动加方括号 `[::1]:port` 与可选 `Proxy-Authorization` 请求头；`parseResponseStatus(buf)` 解析状态码。
 
-### 4. `UdpSocket` 与代理隧道编解码（`HttpConnectTunnel`、`Socks5Codec`）
+### 4. 生产级 TCP 连接池（`pool.cp`）
 
-- **`UdpSocket`**：支持 `bind(addr)`、`connectPeer(peer)` / `disconnectPeer()`、`setBroadcast`、`setUnicastTTL`、`setMulticastTTL`、`setMulticastLoopback`、`sendTo` / `send`。
-- **`HttpConnectTunnel`**：零堆分配构造 `CONNECT host:port HTTP/1.1` 请求（`buildConnectRequest`），并解析代理响应状态码（`parseConnectResponse` / `isTunnelEstablished`）。
-- **`Socks5Codec`**：支持无认证握手包编码（`encodeGreetingNoAuth` -> `[0x05, 0x01, 0x00]`）、服务端握手校验（`verifyGreetingReply`）、IPv4/域名 `CONNECT` 请求编码（`encodeConnectIpv4` / `encodeConnectDomain`）及连接响应校验（`verifyConnectReply`）。
+- **`ConnPoolConfig` & `ConnectionPool`**：
+  - 支持配置 `max_idle_per_host`、`max_total_idle`、`idle_timeout_ms`、`max_lifetime_ms` 与 `close_on_evict` / 自定义关闭回调 `setCloseCallback`；
+  - 按 `host:port` 分桶，采用 LIFO（最近归还优先）策略 `acquire(host, port, now_ms)` 复用连接，并自动跳过和关闭已超时/超寿的陈旧 FD；
+  - `release` / `releaseFd` / `releaseWithCreated` 自动执行过期清理、单主机上限淘汰与全局容量上限驱逐；
+  - `evictExpired(now_ms)`、`hostIdleCount(host, port)`、`stats(): PoolStats`（`hits` / `misses` / `evictions` / `idle_count`）与 `deinit()`。
+
+### 5. `SafeSocket`、`TcpStream` 16KB Corking、`TcpServer` 与 `UdpSocket`
+
+- **`SafeSocket`**：管理 `SocketState`、`SocketStats` 及 uSockets 240 秒自动升级分钟级长超时策略。
+- **`TcpStream` & `TcpServer`**：16KB `StreamBuffer` 聚合发送、`ListenConfig.toLibusOptions()` 位掩码映射。
+- **`UdpSocket`**：绑定、对端关联、广播及单播/组播 TTL 控制。
 
 ---
 
@@ -67,53 +96,71 @@
 ```typescript
 const std = @import("std");
 import {
-    Ipv4Addr,
-    Ipv6Addr,
-    SocketAddress,
-    SafeSocket,
-    SocketKind,
-    ListenConfig,
-    TcpServer,
-    UdpSocket,
-    HttpConnectTunnel,
+    Ipv4Cidr,
+    Ipv6Cidr,
+    IpAddr,
+    IpClass,
+    CidrAllowlist,
+    PollEvent,
+    setNoDelay,
+    setNonBlocking,
+    pollSingleFd,
+    createSocketPair,
+    closeSocketFd,
+    writeFd,
+    readFd,
+    Socks5AuthMethod,
     Socks5Codec,
+    HttpConnectCodec,
+    ConnPoolConfig,
+    ConnectionPool,
 } from "cap:net";
 
-pub fn demoNetSubsystem() {
-    // 1. IPv4 / IPv6 地址解析与转换
-    const ip = Ipv4Addr.parse("10.0.1.42").?;
-    // ip.isPrivate() == true, ip.toU32() == 0x0A00012A
-    const v6_mapped = Ipv6Addr.fromIpv4Mapped(ip);
-    // v6_mapped.isIpv4Mapped() == true
+pub fn demoProductionNet() {
+    // 1. CIDR 与 SSRF 安全校验
+    const c4 = Ipv4Cidr.parse("192.168.1.42/24").?;
+    // c4.networkAddress() == 192.168.1.0, c4.broadcastAddress() == 192.168.1.255
+    * = c4.contains(IpAddr.parse("192.168.1.10").?); // 或传 Ipv4Addr
+    let allow = CidrAllowlist.init();
+    defer allow.deinit();
+    * = allow.addRule("10.10.0.0/16");
+    const safe_public = allow.isAllowedOutboundStr("8.8.8.8"); // true
+    const blocked_meta = allow.isAllowedOutboundStr("169.254.169.254"); // false
+    * = safe_public;
+    * = blocked_meta;
 
-    // 2. TcpServer + TcpStream Corking 聚合发送（CP 编译器自动注入 RAII release）
-    const bind_addr = SocketAddress.loopbackV4(8080);
-    const cfg = ListenConfig.defaultForPort(8080);
-    let server = TcpServer.bind(bind_addr, cfg);
-
-    const peer = SocketAddress.parseV4("192.168.1.20", 54321).?;
-    if (stream := server.acceptConnection(peer)) {
-        stream.setTimeout(360); // >240s 自动晋升为 6 分钟长超时
-        stream.cork();
-        * = stream.write("HTTP/1.1 200 OK\r\n\r\n");
-        * = stream.write("Hello cap:net");
-        const flushed = stream.uncork(); // 一次批量刷出 32 字节
-        * = flushed;
-        stream.release();
+    // 2. Socketpair + sockopts + pollSingleFd
+    const pair = createSocketPair(true).?;
+    defer closeSocketFd(pair[0]);
+    defer closeSocketFd(pair[1]);
+    * = setNonBlocking(pair[0], true);
+    * = writeFd(pair[0], "hello");
+    const ev = pollSingleFd(pair[1], PollEvent.IN, 100);
+    if (ev.isReadable()) {
+        let rbuf: [16]u8 = [0; 16];
+        * = readFd(pair[1], rbuf[0..16]);
     }
 
-    // 3. HTTP CONNECT 与 SOCKS5 代理握手编解码
-    let req_buf: [256]u8 = [0 as u8; 256];
-    const req_len = HttpConnectTunnel.buildConnectRequest(req_buf[0..256], "api.cp-lang.org", 443);
-    const ok = HttpConnectTunnel.isTunnelEstablished("HTTP/1.1 200 Connection Established\r\n\r\n");
-    * = req_len;
-    * = ok;
+    // 3. SOCKS5 (RFC 1928/1929) & HTTP CONNECT
+    let wire: [128]u8 = [0; 128];
+    let methods: [2]Socks5AuthMethod = [Socks5AuthMethod.NoAuth, Socks5AuthMethod.UserPass];
+    * = Socks5Codec.encodeGreeting(wire[0..128], methods[0..2]);
+    * = Socks5Codec.encodeUserPassAuth(wire[0..128], "user", "pass");
+    * = Socks5Codec.encodeConnectRequest(wire[0..128], "2001:db8::1", 443);
+    * = HttpConnectCodec.encodeRequest(wire[0..128], "api.cp-lang.org", 443, "Basic dXNlcjpwYXNz");
 
-    let s5_buf: [64]u8 = [0 as u8; 64];
-    const g_len = Socks5Codec.encodeGreetingNoAuth(s5_buf[0..64]); // [0x05, 0x01, 0x00]
-    const c_len = Socks5Codec.encodeConnectDomain(s5_buf[0..64], "registry.cp-lang.org", 443);
-    * = g_len;
-    * = c_len;
+    // 4. ConnectionPool 复用与淘汰
+    let pool = ConnectionPool.init(ConnPoolConfig {
+        max_idle_per_host: 4,
+        max_total_idle: 32,
+        idle_timeout_ms: 30000,
+        max_lifetime_ms: 300000,
+        close_on_evict: false,
+    });
+    defer pool.deinit();
+    * = pool.releaseFd("api.cp-lang.org", 443, 12, 1000);
+    const reused = pool.acquire("api.cp-lang.org", 443, 1500);
+    * = reused;
 }
 ```
 
@@ -121,11 +168,11 @@ pub fn demoNetSubsystem() {
 
 ## 四、 与 Bun / Node.js API 对照表
 
-| 功能特性 | Bun (`Bun.listen` / `Bun.udpSocket` / `src/uws`) | Node.js (`node:net` / `node:dgram`) | CP 标准库 (`cap:net`) |
+| 功能特性 | Bun (`Bun.listen` / `src/uws`) | Node.js (`node:net` / `node:dgram`) | CP 标准库 (`cap:net`) |
 | :--- | :--- | :--- | :--- |
-| **地址解析与判定** | `SocketAddress` (`src/runtime/socket/`) | `net.isIPv4()` / `net.isIPv6()` | `Ipv4Addr.parse` / `Ipv6Addr` / `SocketAddress` |
-| **TCP 服务端监听** | `Bun.listen({ hostname, port, socket })` | `net.createServer().listen()` | `TcpServer.bind(addr, ListenConfig)` / `listen(port)` |
-| **TCP 批聚合发送 (Cork)** | uSockets `us_socket_stream_buffer_t` | `socket.cork()` / `socket.uncork()` | `TcpStream.cork()` / `.uncork()` / `StreamBuffer` (16KB) |
-| **套接字选项与长超时** | `SocketHandler.setTimeout` (`>240s` 升级) | `socket.setNoDelay()` / `setKeepAlive()` / `setTimeout()` | `SafeSocket.setNoDelay` / `setKeepAlive` / `setTimeout` |
+| **地址与 CIDR / SSRF 校验** | `SocketAddress` (`src/runtime/socket/`) | `net.BlockList` / `net.isIP()` | `Ipv4Addr` / `Ipv6Addr` / `Ipv4Cidr` / `Ipv6Cidr` / `IpClass` / `CidrAllowlist` |
+| **套接字选项与 Poll** | `uSockets` / `std.posix` | `socket.setNoDelay()` / `setKeepAlive()` | `SocketOptions` / `setNoDelay` / `setNonBlocking` / `getSocketError` / `pollSingleFd` |
+| **TCP 服务端监听 & Cork** | `Bun.listen` / `us_socket_stream_buffer_t` | `net.createServer().listen()` / `cork()` | `TcpServer.bind` / `TcpStream.cork()` / `.uncork()` (16KB) |
 | **UDP 数据报套接字** | `Bun.udpSocket({ port, socket })` | `dgram.createSocket('udp4')` | `UdpSocket.bind(addr)` / `sendTo` / `setMulticastTTL` |
-| **HTTP CONNECT / SOCKS5 代理** | `src/http/ProxyTunnel.cp` | 第三方库（`https-proxy-agent` / `socks`） | `HttpConnectTunnel` / `Socks5Codec` |
+| **HTTP CONNECT / SOCKS5 代理** | `src/http/ProxyTunnel.cp` | 第三方库（`https-proxy-agent` / `socks`） | `HttpConnectCodec` / `HttpConnectTunnel` / `Socks5Codec` (RFC 1928/1929) |
+| **TCP 连接池** | 内置 `HTTPClient` 连接池 | `http.Agent({ keepAlive, maxSockets })` | `ConnectionPool` / `ConnPoolConfig` / `PoolStats` |

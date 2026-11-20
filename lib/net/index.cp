@@ -8,6 +8,11 @@
 //   - tcp_stream.cp : High-throughput TCP Stream with 16KB StreamBuffer corking
 //   - tcp_server.cp : TcpServer, ListenConfig, and legacy Server / listen() API
 //   - udp.cp        : UdpSocket and UdpPacket datagram abstraction
+//   - proxy.cp      : HttpConnectTunnel RFC 7231 proxy tunnel helper
+//   - cidr.cp       : IPv4/IPv6 CIDR parsing, matching, IpClass & CidrAllowlist
+//   - sockopts.cp   : POSIX/Linux socket options & PollEvent / pollSingleFd
+//   - socks5.cp     : Full RFC 1928/1929 SOCKS5 & HttpConnectCodec wire codecs
+//   - pool.cp       : Production TCP ConnectionPool with TTL & capacity eviction
 
 export {
     LIBUS_TIMEOUT_GRANULARITY,
@@ -68,7 +73,62 @@ export {
 } from "./udp";
 
 export {
-    HttpConnectTunnel,
-    Socks5AddrType,
-    Socks5Codec
+    HttpConnectTunnel
 } from "./proxy";
+
+export {
+    IpKind,
+    IpAddr,
+    IpAddrCodec,
+    Ipv4Cidr,
+    Ipv6Cidr,
+    IpClass,
+    CidrAllowlist
+} from "./cidr";
+
+export {
+    PollEvent,
+    SocketOptions,
+    setNoDelay,
+    getNoDelay,
+    setKeepAlive,
+    getKeepAlive,
+    setReuseAddr,
+    getReuseAddr,
+    setReusePort,
+    getReusePort,
+    setRecvBufSize,
+    getRecvBufSize,
+    setSendBufSize,
+    getSendBufSize,
+    setRecvTimeoutMs,
+    setSendTimeoutMs,
+    setNonBlocking,
+    isNonBlocking,
+    getSocketError,
+    pollSingleFd,
+    pollManyFds,
+    createTcpSocket,
+    createSocketPair,
+    closeSocketFd,
+    writeFd,
+    readFd
+} from "./sockopts";
+
+export {
+    Socks5AddrType,
+    Socks5AuthMethod,
+    Socks5ReplyCode,
+    Socks5MethodSelection,
+    Socks5ConnectReply,
+    Socks5Codec,
+    HttpConnectCodec
+} from "./socks5";
+
+export {
+    PoolCloseFn,
+    ConnPoolConfig,
+    PoolEntry,
+    PoolStats,
+    ConnectionPool
+} from "./pool";

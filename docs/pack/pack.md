@@ -41,7 +41,10 @@
 | `lib/pack/zstd.cp` | RFC 8478 Zstandard 帧头解析（`ZstdFrameHeader`）、压缩上界与编解码接口 | `/data/dev/bun/src/zstd/zstd.cp` |
 | `lib/pack/brotli.cp` | RFC 7932 Brotli 模式枚举（`BrotliMode`）、窗口位数解析（`BrotliHeader`）与上界 | `/data/dev/bun/src/brotli/brotli.cp` |
 | `lib/pack/tar.cp` | POSIX.1-1988 USTAR 512 字节块编解码（`TarHeader`）与零拷贝读取器（`TarReader`） | `/data/dev/bun/src/libarchive/libarchive.cp` |
+| `lib/pack/tar_pax.cp` | POSIX.1-2001 PAX 扩展头（`'x'`）安全归档读写器（`PaxTarWriter` / `PaxTarReader`）与 `validateArchivePath` | `cp/lib/pack/tar_pax.cp` (POSIX.1-2001 PAX & USTAR) |
 | `lib/pack/zip.cp` | PKZIP Local Header / Central Directory / EOCD 反向扫描与零拷贝读取器（`ZipReader`） | `/data/dev/bun/src/libarchive/` |
+| `lib/pack/zip_writer.cp` | PKWARE APPNOTE 6.3.10 内存/流式 ZIP 归档写入器（`ZipWriter` / `ZipCompressionMethod`） | `cp/lib/pack/zip_writer.cp` (PKWARE APPNOTE 6.3.10) |
+| `lib/pack/magic.cp` | 归档与压缩容器魔数嗅探器（`ArchiveSniffer` / `ArchiveMagicFormat`）与 MIME / 扩展名映射 | `cp/lib/pack/magic.cp` (Format Sniffer) |
 | `lib/pack/checksum.cp` | IEEE 802.3 `Crc32` 与 RFC 1950 `Adler32` 流式增量及单次校验器 | `/data/dev/bun/src/zlib/` & IEEE 802.3 / RFC 1950 specs |
 | `lib/pack/_codecs.cp` | Zlib / Zstd / Brotli C-FFI 声明、状态枚举与 `CompressBoundEstimator` | `/data/dev/bun/src/zlib/zlib.cp`, `brotli.cp`, `zstd.cp` |
 | `lib/pack/_archive.cp` | Libarchive C-FFI 类型、格式常量与状态码绑定 | `/data/dev/bun/src/libarchive/` |
@@ -321,6 +324,83 @@ pub fn demoChecksums() {
     adler_stream.update("Wiki");
     adler_stream.update("pedia");
     const adler_final = adler_stream.final();          // 0x11E60398
+}
+```
+
+---
+
+### 7. 工业级 ZIP 写入器 (`ZipWriter` / `ZipWriteEntry` / `ZipCompressionMethod`)
+
+`lib/pack/zip_writer.cp` 实现了符合 PKWARE APPNOTE 6.3.10 的完整内存 ZIP 构造器，并与 `ZipReader` 无缝互通：
+
+- 支持 `Stored`（0）与 `Deflate`（8，基于 `deflateRaw` / `vendor/zlib`）两种压缩方式；
+- 自动计算 IEEE CRC-32、设置 UTF-8 文件名标志位（bit 11 = `0x0800`）、生成 Local File Header（`0x04034b50`）、Central Directory（`0x02014b50`）与 EOCD（`0x06054b50`）；
+- 支持目录条目（`addDirectory`）与归档注释（`setComment`），提供 `ZipWriter.decompressAndVerify()` 对读回的 `ZipEntryView` 自动解压并核验 CRC-32。
+
+```typescript
+import { ZipWriter, ZipReader } from "cap:pack";
+
+pub fn demoZipWriter() {
+    let zw = ZipWriter.init();
+    * = zw.addDirectory("docs");
+    * = zw.addStored("docs/readme.txt", "Stored payload");
+    * = zw.addDeflate("src/data.txt", "Compressed payload...", 6);
+    const zip_bytes = zw.finish();
+
+    let zr = ZipReader.init(zip_bytes);
+    while (entry := zr.next()) {
+        const plain = ZipWriter.decompressAndVerify(entry).?;
+        @print("ZIP 条目: {s}, 原始大小: {d}\n", entry.name, plain.len);
+    }
+}
+```
+
+---
+
+### 8. POSIX.1-2001 PAX 安全 Tar 归档引擎 (`PaxTarWriter` / `PaxTarReader` / `validateArchivePath`)
+
+`lib/pack/tar_pax.cp` 在 USTAR 基础上完整支持 **POSIX.1-2001 PAX 扩展头（`typeflag = 'x'`）** 与路径安全校验：
+
+- 自动突破 USTAR 100 字节路径限制与 8GiB 文件体积上限，支持超长路径（>150 字节）、超长符号链接目标（>100 字节）及 POSIX 权限位保留；
+- 内置 `validateArchivePath(path)`：严格拦截空路径、空字节（`\0`）、绝对路径（`/`、`\` 或驱动器前缀 `C:`）以及 `..` 路径穿越段；
+- `PaxTarReader` 默认开启 `strict_paths = true`，读取时自动拦截恶意构造的穿越路径。
+
+```typescript
+import { PaxTarWriter, PaxTarReader, validateArchivePath } from "cap:pack";
+
+pub fn demoPaxTar() {
+    const safe = validateArchivePath("pkg/src/main.cp"); // true
+    const unsafe = validateArchivePath("../etc/passwd"); // false
+
+    let tw = PaxTarWriter.init();
+    * = tw.addDirectory("pkg/src", 0o755, 1700000000);
+    * = tw.addFile("very/long/.../exceeding_100_bytes_path.cp", "content", 0o644, 1700000000);
+    const tar_bytes = tw.finish();
+
+    let tr = PaxTarReader.init(tar_bytes);
+    while (entry := tr.next()) {
+        @print("PAX Tar 条目: {s}, 权限: {o}\n", entry.name, entry.mode);
+    }
+}
+```
+
+---
+
+### 9. 归档与压缩格式魔数嗅探器 (`ArchiveSniffer` / `ArchiveMagicFormat`)
+
+`lib/pack/magic.cp` 提供零分配魔数探测与元数据映射（枚举命名为 `ArchiveMagicFormat`，避免与 `_archive.cp` 中 libarchive 常量 `ArchiveFormat` 在单文件内联模式下重名冲突）：
+
+- 支持识别：`Gzip`（`1F 8B`）、`Zlib`（RFC 1950 CMF/FLG mod-31 校验）、`Zstd`（`28 B5 2F FD` 及 Skippable 帧）、`Zip`（`50 4B 03 04`/`05 06`/`07 08`）、`Tar`（257 偏移 `"ustar"`）、`Xz`（`FD 37 7A 58 5A 00`）、`Bz2`（`BZh`）、`Lz4`（`04 22 4D 18`）、`BrotliHint` 及 `Unknown`；
+- 提供 `ArchiveSniffer.mimeType(fmt)` 与 `ArchiveSniffer.extension(fmt)` 标准映射。
+
+```typescript
+import { ArchiveSniffer, ArchiveMagicFormat, gzip } from "cap:pack";
+
+pub fn demoSniffer() {
+    const gz = gzip("hello", 6);
+    const fmt = ArchiveSniffer.detect(gz); // ArchiveMagicFormat.Gzip
+    const mime = ArchiveSniffer.mimeType(fmt); // "application/gzip"
+    const ext = ArchiveSniffer.extension(fmt); // ".gz"
 }
 ```
 

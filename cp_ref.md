@@ -6126,7 +6126,7 @@ export class SocketContext<Handler> {
 | `cap:col`（兼容 `cap:collections`） | `BoundedArray`, `BabyList`, `OffsetByteList`, `LinearFifo`, `HiveArray`, `ObjectPool`, `BitSet64`, `BitSet128`, `BitSet256`, `BitSet512`, `BitSet1024`, `DynamicBitSet`, `Range`, `Soa<T>`, `StaticStringMap`, `VecDeque`, `BinaryHeap`, `BTreeMap`, `BTreeSet`, `HashMap`, `HashSet` | **已全面实装** |
 | `cap:event`（兼容 `cap:event_loop` / `cap:events`） | 统一事件循环与事件总线：`EventLoop`, `Timer`, `TimerHeap`, `ConcurrentTask`, `ConcurrentQueue`, `DeferredTaskQueue`, `PollEngine`, `EventEmitter` | **已全面实装** |
 | `cap:conf`（兼容 `cap:dotenv` / `cap:ini`） | 统一配置中心（直迁 Bun `interchange/` 4.5K 行）：`DotEnv`、`Ini`、统一 AST `ConfValue`/`ConfDateTime`（RFC 3339）、完整 YAML 1.2（`YamlParser`/`YamlStream` 多文档/锚点别名/合并键 `<<`/块标量 `|` `>`/流式集合/类型标签/双向序列化）、TOML 1.0（内联表/点分与引号键/RFC 3339/`[[array]]`）、`JSON5` 与 `ConfValueParser` | **已全面实装** |
-| `cap:pack`（兼容 `cap:compress`） | 流式压缩与归档打包：RFC 1952/1950/1951 工业级全量与流式分块压缩 `gzip`, `gunzip`, `deflate`, `inflate`, `deflateRaw`, `inflateRaw`, `GzipStream`, `GunzipStream`, `DeflateStream`, `InflateStream`, `Gzip`, `Gunzip`, `DeflateCodec`, `InflateCodec`, `NativeZlib`, `Zlib`, `Zstd`, `Brotli`, `CompressionFormat`, `Crc32`, `Adler32`, `GzipHeader`, `RleCodec`, `TarHeader`, `TarReader`, `ZipReader`, `ZipLocalHeader`, `ZipCentralHeader`, `ZipEocd` | **已全面实装** |
+| `cap:pack`（兼容 `cap:compress`） | 流式压缩与归档打包：`gzip`/`gunzip`/`deflate`/`inflate`/`deflateRaw`/`inflateRaw`、`GzipStream`/`DeflateStream`、`Zstd`/`Brotli`、`Crc32`/`Adler32`、`TarHeader`/`TarReader`、`PaxTarWriter`/`PaxTarReader`（PAX `'x'` 超长路径 + `validateArchivePath` 路径安全防护）、`ZipReader`/`ZipWriter`（Stored+Deflate+UTF-8）、`ArchiveSniffer` | **已全面实装** |
 | `cap:redis`       | Redis / Valkey RESP2 & RESP3 零拷贝协议帧、命令构建与 Pipeline 批处理（`RESPType`, `RESPFrame`, `RESPParser`, `RESPEncoder`, `RedisCommand`, `RedisPipeline`） | **已全面实装** |
 | `cap:cli`         | 命令行参数解析（`CliArgs`, `CliOption`）、15+ CI/CD 环境与终端宽度探测（`CiInfo`/`CiVendor`）、多级子命令路由与编辑距离纠错（`SubcommandRouter`）、并发进度树与转轮（`MultiProgress`/`Spinner`）、ANSI 色彩与 ASCII 表格（`CliTable`） | **已全面实装** |
 | `cap:watch`       | 跨平台文件系统监控引擎、路径忽略过滤与防抖器（`FileWatcher`, `WatchEvent`, `WatchMask`, `WatchFilter`, `DebounceTracker`） | **已全面实装** |
@@ -6163,7 +6163,7 @@ export class SocketContext<Handler> {
 | `cap:parallel`    | `spawn`, `join`, `Task`（注：`cap:task` / `Task.all` / `Task.race` 规划中） | **已全面实装** |
 | `cap:actor`       | `yield`, `receive`, `sleep`, `join`, `self_pid`, `sender`, `send`, `reply`（内建 `@spawn`/`@receive`/`@reply`/`@send`/`@self`/`@sender`） | **已全面实装** |
 | `cap:fs`          | 异步/同步文件读取、写入、目录创建、流式 I/O                            | **已全面实装** |
-| `cap:net`         | `SocketAddress`, `UdpSocket`, `UdpPacket`, `TcpStream`, `TcpServer`, `SafeSocket`, `HttpConnectTunnel`, `Socks5Codec` | **已全面实装** |
+| `cap:net`         | `SocketAddress`, `UdpSocket`, `TcpStream`, `TcpServer`, `SafeSocket`, `Ipv4Cidr`/`Ipv6Cidr`, `IpClass`/`CidrAllowlist`, `SocketOptions`/`pollSingleFd`, `Socks5Codec`/`HttpConnectCodec`, `ConnectionPool` | **已全面实装** |
 | `cap:dns`         | RFC 1035/3596 DNS 报文头/压缩编解码、A/AAAA/CNAME/MX/SRV/TXT 资源记录解析、IPv4/IPv6 `DnsCache` 与 `/etc/hosts`（`lookupIPv6`） | **已全面实装** |
 | `cap:s3`          | AWS S3 完备客户端、全量可选头 SigV4 签名、STS `session_token` 预签名与分片预签名（`presignPartUrl`）、分块上传状态机、XML 流式解析与分片下载流 | **已全面实装** |
 | `cap:sourcemap`   | Base64 VLQ/Varint 编解码、二分/动态行偏移表、二进制 InternalSourceMap 与 SourceMap v3 生成/反查 | **已全面实装** |
@@ -10357,7 +10357,7 @@ flowchart TD
 
 ##### 13. 标准库独立专著文档索引体系 (`docs/<lib>/<lib>.md`)
 为保持权威规范手册与智能体契约手册的高密度精简，各标准库模块的详细架构图、完整代码示例、参数矩阵与 Bun/Node.js 对照表统一归档于 `docs/<库名>/<库名>.md`：
-- **压缩与归档 (`cap:pack`)**：[`docs/pack/pack.md`](file:///data/dev/cp/docs/pack/pack.md)、[`docs/pack/zlib.md`](file:///data/dev/cp/docs/pack/zlib.md)（Gzip/Zlib/Deflate/Brotli/Zstd/Tar/Zip/CRC32/Adler32）
+- **压缩与归档 (`cap:pack`)**：[`docs/pack/pack.md`](file:///data/dev/cp/docs/pack/pack.md)、[`docs/pack/zlib.md`](file:///data/dev/cp/docs/pack/zlib.md)（Gzip/Zlib/Deflate/Brotli/Zstd/Tar/PAX-Tar/Zip/ZipWriter/ArchiveSniffer/CRC32/Adler32）
 - **高性能容器 (`cap:col`)**：[`docs/col/col.md`](file:///data/dev/cp/docs/col/col.md)（BabyList/HiveArray/ObjectPool/BoundedArray/LinearFifo/PriorityQueue/BitSet/Treap/HashMap/StringMap/Soa/Leb128）
 - **编码与解码 (`cap:encoding`)**：[`docs/encoding/encoding.md`](file:///data/dev/cp/docs/encoding/encoding.md)（Base64 标准与 URL-Safe、原地解码、Hex）
 - **URL 与查询参数 (`cap:url`)**：[`docs/url/url.md`](file:///data/dev/cp/docs/url/url.md)（WHATWG URL 零拷贝解析、URLSearchParams、RFC 3986 Percent 编解码）
@@ -10390,7 +10390,7 @@ flowchart TD
 - **可执行格式嗅探 (`cap:elf`)**：[`docs/elf/elf.md`](file:///data/dev/cp/docs/elf/elf.md)（ELF64 / Mach-O / PE-COFF）
 - **动态 FFI (`cap:ffi`)**：[`docs/ffi/ffi.md`](file:///data/dev/cp/docs/ffi/ffi.md)（`DynLib`、`CStructLayout` C-ABI 对齐）
 - **HTTP/1.1 & H2 & H3 全协议栈 (`cap:http`)**：[`docs/http/http.md`](file:///data/dev/cp/docs/http/http.md)（PicoHttpParser、Headers/Cookie/FormData/ETag/Mime、H2/HPACK、H3/Alt-Svc、`serve`/`fetch`）
-- **网络套接字与代理 (`cap:net`)**：[`docs/net/net.md`](file:///data/dev/cp/docs/net/net.md)（IPv4/IPv6、TCP/UDP、uSockets SafeSocket、HTTP CONNECT & SOCKS5 代理隧道）
+- **网络套接字与代理 (`cap:net`)**：[`docs/net/net.md`](file:///data/dev/cp/docs/net/net.md)（IPv4/IPv6 CIDR 与出站边界防护、TCP/UDP、POSIX Socket 选项/轮询、uSockets SafeSocket、SOCKS5/HTTP CONNECT 编解码、连接池）
 - **WebSocket 协议 (`cap:ws`)**：[`docs/ws/ws.md`](file:///data/dev/cp/docs/ws/ws.md)（RFC 6455 帧头编解码、控制帧与 XOR 掩码）
 - **Radix-Tree 路由 (`cap:router`)**：[`docs/router/router.md`](file:///data/dev/cp/docs/router/router.md)（静态优先、`:param`/`*path` 动态捕获与 `RouteFormatter` 反向格式化）
 - **统一 I/O 流 (`cap:io`)**：[`docs/io/io.md`](file:///data/dev/cp/docs/io/io.md)（`Reader`/`Writer`、`BufferReader`/`BufferedWriter`、`copyStream`、`MaxBuf`、OS `Pipe`）

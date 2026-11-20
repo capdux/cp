@@ -2,6 +2,15 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-20: `cap:net` 工业网络升级（+1,891 行）与 `cap:pack` ZIP/PAX-TAR/魔数引擎升级（+1,048 行）双路完工
+
+- **落地成果**：
+  - `lib/net/` 新增 `cidr.cp`、`sockopts.cp`、`socks5.cp`、`pool.cp`（IPv4/IPv6 CIDR + 出站边界防护、POSIX Socket 选项与 Linux `poll`、RFC 1928/1929 SOCKS5 + HTTP CONNECT 编解码、按主机分桶 TTL/上限连接池），单文件与 `-m` 模块模式 5/5 PASS，既有网络测试 11/11 零回归；
+  - `lib/pack/` 新增 `zip_writer.cp`（Stored+Deflate+CRC32+UTF-8）、`tar_pax.cp`（PAX `'x'` 超长路径 + `validateArchivePath` 路径穿越防护）与 `magic.cp`（`ArchiveSniffer`），单文件与 `-m` 模式 5/5 PASS，既有归档测试全绿；
+  - 同期极速处理并结单 `capsurf_agy` 关于 `zip_writer.cp` 开发态瞬时写入的 2 条工单（`task-capsurf-20261120-lib-pack-zip-writer` 及 `-const`）。
+
+---
+
 ## 2026-11-20: `cap:crypto` 现代零 C 依赖密码学全栈升级（+1,167 行，8/8 PASS）
 
 - **落地成果**：在保持 `_boringssl.zig` 与既有 API 100% 向后兼容前提下，基于 Zig 0.17 `std.crypto` 在 `lib/crypto/` 新增 `asymmetric.cp`（Ed25519/X25519/ECDSA P-256）、`kdf.cp`（HKDF/Scrypt/Argon2id/BLAKE3/SHA3/HMAC-SHA384&512/XChaCha20-Poly1305/AES-128-GCM）与 `jwt.cp`（RFC 7519 JWT HS256-512/EdDSA + RFC 7468 PEM + 恒定时间比对），0 `@import("bun")`，0 `std.posix`，3 套测试共 17/17 全部 PASS。
