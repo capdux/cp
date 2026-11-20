@@ -524,3 +524,6 @@
 
 ### 2026-11-21（`cap:png` 验收合并提交，顶替拉起 `cap:wav` 维持 2 路常规并行）
 - **执行成果**：`lib/png/`（5/5 PASS，`doc/lib/png.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/http2/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/wav/`（纯 CP RIFF/WAVE PCM 音频容器编解码与重采样/混音引擎），与 `lib/sip/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:sip` 验收提交，顶替拉起 `cap:quic` 维持 2 路常规并行）
+- **执行成果**：`lib/sip/`（5/5 PASS，`doc/lib/sip.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/quic/`（RFC 9000 QUIC 变长整数、Long/Short Header 与 STREAM/ACK/CRYPTO 帧编解码引擎），与 `lib/wav/` 维持 2 路常规并行。

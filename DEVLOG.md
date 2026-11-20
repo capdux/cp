@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:sip` RFC 3261 SIP 会话初始协议报文解析与构建引擎（5/5 PASS，文档直写 `doc/lib/sip.md`）
+- **核心设计**：按 `SIP/2.0` 协议规范实现大小写不敏感与紧凑单字母头名无缝互查，`parse()` 严格校验状态码 `100..699` 与 `Content-Length` 载荷完整性，`SipBuilder` 自动维护 `Content-Length` 并阻断 CRLF 注入。
+
 ## 2026-11-21: 新建 `cap:png` 纯 CP PNG 图像无损编解码与 Paeth 滤波引擎（5/5 PASS，文档直写 `doc/lib/png.md`）
 - **核心设计**：零 `libpng` 依赖，复用 `cap:deflate` 的 `compressZlib`/`decompressZlib`/`crc32` 完成完整 PNG 流式编解码，编码端自动按最小 SAD 选择最优扫描行滤波器，解码端严格拦截签名/CRC/滤波/缺失 `IEND` 及超限尺寸。
 

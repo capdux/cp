@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:sip` RFC 3261 SIP 会话初始协议报文解析与构建引擎（5/5 PASS，自动动态挂载 `cap.sip`）
+- **新增标准库**：`lib/sip/{sip,index}.cp`，实现 SIP/2.0 Request/Response 解析与格式化、RFC 3261 §7.3.3 紧凑头名映射（`v`/`f`/`t`/`i`/`m`/`c`/`l`/`s`/`k`）、多行折叠头、`Content-Length` 截断校验及防 `\r`/`\n` 头注入 `SipBuilder`。
+- **新增文档与测试**：`doc/lib/sip.md` 扁平文档与 `cap/test/test_sip_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:png` 纯 CP PNG 图像无损编解码与 Paeth 滤波引擎（5/5 PASS，自动动态挂载 `cap.png`）
 - **新增标准库**：`lib/png/{png,index}.cp`，复用 `cap:deflate` 实现 PNG 签名、逐块 CRC-32、5 种扫描行滤波编解码（含最小 SAD 自适应滤波选择）、多 `IDAT` 拼接与 `PLTE`+`tRNS` 调色板展开及 `ImageTooLarge` 尺寸上限防护。
 - **新增文档与测试**：`doc/lib/png.md` 扁平文档与 `cap/test/test_png_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
