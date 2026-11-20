@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:snappy` Snappy Block Format 高速无损压缩与解压引擎（5/5 PASS，自动动态挂载 `cap.snappy`）
+- **新增标准库**：`lib/snappy/{snappy,index}.cp`，实现 Snappy Block Format 14-bit 哈希表压缩、Literal/Copy-1/Copy-2/Copy-4 解压与 RLE 重叠拷贝，并内置 `InvalidOffset` 与 `decompressWithMaxSize` 资源耗尽防护。
+- **新增文档与测试**：`doc/lib/snappy.md` 扁平文档与 `cap/test/test_snappy_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:ringhash` 一致性哈希环、Jump Hash 与 Rendezvous 负载均衡引擎（5/5 PASS，自动动态挂载 `cap.ringhash`）
 - **新增标准库**：`lib/ringhash/{ringhash,index}.cp`，实现加权虚拟节点二分查找 `ConsistentRing`（含物理节点严格去重 `getReplicas`）、$O(\ln N)$ 无状态 `jumpConsistentHash` 及 `RendezvousHasher`（HRW）。
 - **新增文档与测试**：`doc/lib/ringhash.md` 扁平文档与 `cap/test/test_ringhash_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:snappy` Snappy Block Format 高速无损压缩与解压引擎（5/5 PASS，文档直写 `doc/lib/snappy.md`）
+- **核心设计**：压缩器采用 14-bit 乘法哈希表实现 64KB 块内 $O(1)$ 前缀匹配；解压器完整支持 0..4 字节扩展字面量与 Copy-1/2/4 重叠拷贝，严格拦截 `offset=0`/越界偏移与超大 Varint 解压声明。
+
 ## 2026-11-21: 新建 `cap:ringhash` 一致性哈希环、Jump Hash 与 Rendezvous 负载均衡引擎（5/5 PASS，文档直写 `doc/lib/ringhash.md`）
 - **核心设计**：`ConsistentRing` 与 `RendezvousHasher` 内部均独立拷贝 `node_id` 避免调用方切片悬垂，`ConsistentRing.getReplicas` 顺时针扫描相邻虚拟节点时严格按物理节点去重；同时提供无状态 $O(\ln N)$ `jumpConsistentHash`。
 
