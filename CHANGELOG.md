@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-20] - 3 路新标准库 `cap:math`/`cap:schema`/`cap:rpc` 全绿落地与子智能体分级模型选型固化
+
+- **分级模型选型固化**（[`GEMINI.md`](file:///data/dev/cp/GEMINI.md)）：明确常规 3 路标准库并行子智能体使用 `Model: "flash"`（Gemini 4 Hydrogen），疑难 `cpc` 编译器热修子智能体使用 `Model: "inherit"`（继承主控模型），修完即收；
+- **`cap:math`**（[`lib/math/`](file:///data/dev/cp/lib/math/index.cp)）：`Vec2/3/4` 与列主序 `Mat4`、Welford 单遍统计/分位数/皮尔逊相关与线性回归、8-lane `@Vector(8, f32)` SIMD 向量相似度、`softmaxInPlace`、`topKIndices` 及对称 Int8 量化，[`test_math_production_deep.cp`](file:///data/dev/cp/cap/test/test_math_production_deep.cp) `-m` 5/5 PASS；
+- **`cap:schema`**（[`lib/schema/`](file:///data/dev/cp/lib/schema/index.cp)）：JSON Schema Draft 2020-12 流式 `Schema` 与 `Schema.fromJson`（兼容 OpenAI/MCP Tool Calling）、`SchemaValidator`（5 种内置格式、`required`/`additionalProperties`/`uniqueItems`/64 层深度防护与 RFC 6901 JSON Pointer 路径诊断），[`test_schema_production_deep.cp`](file:///data/dev/cp/cap/test/test_schema_production_deep.cp) `-m` 5/5 PASS；
+- **`cap:rpc`**（[`lib/rpc/`](file:///data/dev/cp/lib/rpc/index.cp)）：JSON-RPC 2.0 编解码（`JsonRpcCodec`）、LSP/MCP `ContentLengthFramer` 与 `LineRpcFramer` 增量分帧及 `McpServer` 全链路分发器（`initialize`/`ping`/`tools/list`/`tools/call`/`resources/list`），[`test_rpc_production_deep.cp`](file:///data/dev/cp/cap/test/test_rpc_production_deep.cp) `-m` 5/5 PASS；同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)。
+
+---
+
 ## [2026-11-20] - 新建 `cap:template` Mustache 兼容模板引擎（5/5 PASS，自动动态挂载 `cap.template`）
 
 - 新建 [`lib/template/`](file:///data/dev/cp/lib/template/index.cp)（`value.cp`、`engine.cp`、`index.cp`）：支持 `TemplateValue`/`TemplateContext` 点分路径与父子作用域栈、`{{var}}` HTML 转义与 `{{{raw}}}`/`{{&raw}}`/`renderRaw`、`{{#section}}`/`{{^inverted}}`/`{{! comment}}`/`{{> partial}}`（含最大递归深度防护与独立行空白修剪）；同步 [`docs/template/template.md`](file:///data/dev/cp/docs/template/template.md) 与 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_template_production_deep.cp`](file:///data/dev/cp/cap/test/test_template_production_deep.cp) `-m` 5/5 PASS。

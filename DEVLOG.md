@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-20: 3 路 AI Agent 核心库 `cap:math`/`cap:schema`/`cap:rpc`（15/15 PASS）合并提交 + 分级模型选型写入 `GEMINI.md`
+
+- **落地成果**：`lib/math/`（8-lane SIMD Embedding）、`lib/schema/`（JSON Schema 2020-12 Tool Calling 校验）与 `lib/rpc/`（JSON-RPC 2.0 + LSP/MCP 分帧与 `McpServer`）全部经 `verify_module.sh` 一键全绿通过，均实证动态 `cap.<ns>` 零改动 `cpc` 自动挂载；按用户确认将“标准库用 `flash`、疑难热修用 `inherit`”固化至 `GEMINI.md`，合并单次提交并维持 `lib/cache/`、`lib/fsm/`、`lib/vector/` 3 路并行。
+
+---
+
 ## 2026-11-20: 新建 `cap:template` Mustache 模板引擎（5/5 PASS，支持 AI Prompt `renderRaw` 与 `cap.template` 动态挂载）
 
 - **落地成果**：`lib/template/`（`value.cp`/`engine.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过，单轮完成回收、`cp_lib_ref.md` 更新与提交，并顶替派发 `cap:rpc`（JSON-RPC 2.0 & MCP 协议帧与分发器）。
