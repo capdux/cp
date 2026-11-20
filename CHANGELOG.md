@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:ulid` 纯 CP Crockford Base32 128-bit 单调递增 ULID 编解码、UUID 互转与 CSPRNG 生成器引擎（支持 `cap.ulid` 自动动态挂载，详见 `doc/lib/ulid.md`）（5/5 PASS，自动动态挂载 `cap.ulid`）
+- **新增标准库**：`lib/ulid/{types,codec,ulid,generator,index}.cp`，实现零堆分配 Crockford Base32 编解码（严格/容错双模式与首字符 `<=7` 128-bit 溢出拦截）、`MonotonicUlidGenerator` 同毫秒 80-bit 单调递增与 `toUuidString`/`fromUuidString` 双向无损互转。
+- **新增文档与测试**：`doc/lib/ulid.md` 扁平文档与 `cap/test/test_ulid_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:graph` 纯 CP 有向加权图、DAG 拓扑排序、显式栈 Tarjan SCC 与 Dijkstra/Bellman-Ford 最短路径引擎（详见 `doc/lib/graph.md`）（5/5 PASS，自动动态挂载 `cap.graph`）
 - **升级标准库**：`lib/graph/{graph,directed_graph,dag_algorithms,index}.cp`，在保留既有 `Graph` 的基础上新增稠密索引 `DirectedGraph`、`topologicalSort`（Kahn）、非递归三色 `findCycle`、迭代式 `tarjanScc`、`dijkstra` 与支持负权环检测的 `bellmanFord`。
 - **更新文档与测试**：`doc/lib/graph.md` 扁平文档与 `cap/test/test_graph_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

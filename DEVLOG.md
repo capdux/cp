@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:ulid` 纯 CP Crockford Base32 128-bit 单调递增 ULID 编解码、UUID 互转与 CSPRNG 生成器引擎（支持 `cap.ulid` 自动动态挂载，详见 `doc/lib/ulid.md`）（5/5 PASS，文档直写 `doc/lib/ulid.md`）
+- **核心设计**：全路径零堆分配栈上编解码，`MonotonicUlidGenerator` 使用 `std.crypto.random.bytes` 初始化熵并在同毫秒内对 80-bit 大端递增，溢出时严格返回 `UlidError.MonotonicOverflow` 杜绝碰撞。
+
 ## 2026-11-21: 新建 `cap:graph` 纯 CP 有向加权图、DAG 拓扑排序、显式栈 Tarjan SCC 与 Dijkstra/Bellman-Ford 最短路径引擎（详见 `doc/lib/graph.md`）（5/5 PASS，文档直写 `doc/lib/graph.md`）
 - **核心设计**：`findCycle` 与 `tarjanScc` 均采用显式栈迭代实现以规避深图递归栈溢出；`DirectedGraph` 与所有算法返回值严格配合 `std.testing.allocator` 实现零内存泄漏。
 
