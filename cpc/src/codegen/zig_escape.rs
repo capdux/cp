@@ -219,7 +219,13 @@ pub fn lower_struct_body(code: &str) -> String {
                     k += 1;
                 }
                 if k < n && chars[k] == '(' {
-                    res.push_str("*const fn");
+                    let already_ptr =
+                        res.trim_end().ends_with("*const") || res.trim_end().ends_with('*');
+                    if already_ptr {
+                        res.push_str("fn");
+                    } else {
+                        res.push_str("*const fn");
+                    }
                     i = k;
                     continue;
                 }

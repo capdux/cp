@@ -2628,3 +2628,9 @@
   - **Phase B-2 完工入库**：`lib/shell/`（10 文件 7,102 行，30+ 内置命令、POSIX 展开/控制流/子 Shell 隔离/多级 `PosixSpawn` 管道，根治 Glob 与 `set --` 两处隐患），3 套测试 12/12 PASS；
   - **Phase C-2 完工入库**：`lib/http/`（37 文件 7,492 行：201 MIME、Header 解析、RFC 7541 全量 HPACK+257 Huffman+H2 流控）+ `lib/conf/`（9 文件 4,515 行：完整 YAML 1.2 与 TOML 1.0），7 套测试 31/31 PASS；
   - 已同步双轨规范与热日志并提交 Git；当前维持 3 路全新子智能体持续并行：Phase D-1（`7694986f`，`lib/css/engine/` LightningCSS）、Phase C-3（`6cb906e6`，`lib/resolver/` + `lib/test_runner/`）与 Phase E-1（`lib/mem/` + `lib/cli/` + `lib/bundler/`）。
+
+### 2026-11-20（极速热修 `bun_agy` 2 条函数指针工单并结单 + Phase D-1 `lib/css/engine/` LightningCSS 4.8K 验收入库）
+- **协同事件（`bun_agy`）**：
+  1. `task-bun-20261120-fnptr-ret-union`：修复 `union`/`union(enum)` 未入 `value_classes` 导致 `*const fn (*R) Action` 错生成 `*Action`，已部署 Release、验证 `repro_fnptr_ret.cp` 并 `resolve` + `ack` 结单；
+  2. `task-bun-20261120-fn-callconv-ptr`：修复 `parse_fn_type_sig_body` 吸收 `callconv(.c)` 保留返回类型 `void`，并修复 `zig_escape.rs` 避免 `*const fn` 重复前缀生成双层 `*const *const fn`，已部署 Release、验证 `repro_fn_callconv_ptr.cp` + `zig ast-check` 并 `resolve` + `ack` 结单。
+- **Phase D-1 完工入库**：子智能体 D-1 完工回收，新建 [`lib/css/engine/`](file:///data/dev/cp/lib/css/engine/index.cp)（7 文件 4,803 行，零触碰既有 8 文件保 `capsurf` 零抖动），[`cap/test/test_phase_d_css_lightning_port.cp`](file:///data/dev/cp/cap/test/test_phase_d_css_lightning_port.cp)（6/6）及 3 套既有 CSS 测试共 22/22 PASS，已同步双轨规范并提交 Git；当前 Phase C-3（`6cb906e6`）与 Phase E-1（`caa1cd34`）继续双路并行推进。

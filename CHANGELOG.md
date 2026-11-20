@@ -1,3 +1,20 @@
+## [2026-11-20] - Phase D-1 LightningCSS 工业引擎直迁（`lib/css/engine/` 4.8K）与 `bun_agy` 双工单热修结单
+
+### 标准库：`lib/css/engine/` LightningCSS 核心引擎（7 模块 4,803 行，源自 Bun `src/css/`）
+- 在零触碰既有 8 个 `lib/css/*.cp` 文件（保障下游 `capsurf_agy` 0 抖动）前提下，新建 [`lib/css/engine/`](file:///data/dev/cp/lib/css/engine/index.cp)：
+  - [`targets.cp`](file:///data/dev/cp/lib/css/engine/targets.cp)（853 行）：9 大浏览器 24 位版本矩阵、`Feature` 27 项现代特性兼容判定与精准前缀计算；
+  - [`values.cp`](file:///data/dev/cp/lib/css/engine/values.cp)（1,038 行）：`Angle`/`Time`/`Resolution`/`Ratio`/`Position`、`EasingFunction`（`cubic-bezier` 牛顿-二分求值/`steps()`）与 `Gradient`（Linear/Radial/Conic）；
+  - [`properties.cp`](file:///data/dev/cp/lib/css/engine/properties.cp)（1,169 行）：`RectShorthand`/`BorderShorthand`/`BorderRadius`/`BoxShadowList`/`TransformList`+`Matrix2D`/`FlexShorthand`/`TransitionItem`/`AnimationItem`/`DisplayValue`/`FilterList` 简写展开与压缩；
+  - [`rules.cp`](file:///data/dev/cp/lib/css/engine/rules.cp)（900 行）：`SupportsAst`、`MediaRangeQuery`（L4 范围语法降级）、`ContainerQuery`、`LayerManager`、`FontFaceRule`、`PropertyRule`、`ScopeRule`；
+  - [`compiler.cp`](file:///data/dev/cp/lib/css/engine/compiler.cp)（674 行）：`CssModulesHasher` 与 `CssCompiler.compile()` 全管线；增量导出至 [`lib/css/index.cp`](file:///data/dev/cp/lib/css/index.cp)，更新 [`docs/css/css.md`](file:///data/dev/cp/docs/css/css.md)；
+  - 新增 [`cap/test/test_phase_d_css_lightning_port.cp`](file:///data/dev/cp/cap/test/test_phase_d_css_lightning_port.cp)（6/6 PASS），全部 4 套 CSS 套件 22/22 PASS。
+
+### 编译器极速热修 (`cpc` Release 已部署，结单 `bun_agy` 2 条工单)
+- **`task-bun-20261120-fnptr-ret-union`**：[`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)、[`cpc/src/modular.rs`](file:///data/dev/cp/cpc/src/modular.rs)、[`cpc/src/codegen/types/map_type.rs`](file:///data/dev/cp/cpc/src/codegen/types/map_type.rs) 将 `union`/`union(enum)` 统一登记为值语义类型，不再错误加 `*`（`*const fn (*R) Action` 正确输出）；
+- **`task-bun-20261120-fn-callconv-ptr`**：[`cpc/src/parser/types.rs`](file:///data/dev/cp/cpc/src/parser/types.rs) 在 `parse_fn_type_sig_body` 中吸收 `)` 后的 `callconv(.c)` 再解析返回类型；[`cpc/src/codegen/zig_escape.rs`](file:///data/dev/cp/cpc/src/codegen/zig_escape.rs) 在已有 `*const` 前缀时不再重复插入 `*const` 消除双层 `*const *const fn`。
+
+---
+
 ## [2026-11-20] - Phase B-2 & Phase C-2 双路大里程碑落地：`lib/shell/`（7.1K）、`lib/http/`（7.5K）与 `lib/conf/`（4.5K）工业级原版直迁
 
 ### `lib/shell/` 工业级跨平台 Shell 引擎（10 文件 7,102 行，直迁 Bun `shell/` + `shell_parser/`）

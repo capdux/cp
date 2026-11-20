@@ -204,7 +204,7 @@ impl Codegen {
                     return ident.sym.clone();
                 }
                 if let Some(cls) = self.class_defs.get(base_name) {
-                    if !cls.generic_params.is_empty() {
+                    if !cls.generic_params.is_empty() || cls.is_union || cls.is_ref {
                         return ident.sym.clone();
                     }
                 } else if !self.ref_classes.contains(base_name) {
@@ -218,6 +218,7 @@ impl Codegen {
                     if let Some(cls) = self.class_defs.get(target_base) {
                         if !cls.generic_params.is_empty()
                             || cls.is_ref
+                            || cls.is_union
                             || self.value_classes.contains(target_base)
                         {
                             return ident.sym.clone();

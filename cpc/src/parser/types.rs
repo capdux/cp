@@ -262,7 +262,7 @@ impl<'a> Parser<'a> {
         self.parse_fn_type_sig_body(is_c)
     }
 
-    pub(super) fn parse_fn_type_sig_body(&mut self, is_c: bool) -> ParseResult<Type> {
+    pub(super) fn parse_fn_type_sig_body(&mut self, mut is_c: bool) -> ParseResult<Type> {
         self.expect(Token::LParen)?;
         let mut param_types = Vec::new();
         while self.peek() != Some(&Token::RParen) && self.peek().is_some() {
@@ -290,6 +290,48 @@ impl<'a> Parser<'a> {
             }
         }
         self.expect(Token::RParen)?;
+        if matches!(self.peek(), Some(Token::Ident(s)) if s == "callconv") {
+            self.bump()?; // callconv
+            if self.peek() == Some(&Token::LParen) {
+                self.bump()?; // '('
+                let mut conv_tokens = String::new();
+                let mut depth = 1usize;
+                while depth > 0 && self.peek().is_some() {
+                    match self.peek() {
+                        Some(Token::LParen) => {
+                            depth += 1;
+                            conv_tokens.push('(');
+                            let _ = self.bump();
+                        }
+                        Some(Token::RParen) => {
+                            depth -= 1;
+                            if depth > 0 {
+                                conv_tokens.push(')');
+                            }
+                            let _ = self.bump();
+                        }
+                        Some(Token::Dot) => {
+                            conv_tokens.push('.');
+                            let _ = self.bump();
+                        }
+                        Some(Token::Ident(id)) => {
+                            conv_tokens.push_str(id);
+                            let _ = self.bump();
+                        }
+                        _ => {
+                            let _ = self.bump();
+                        }
+                    }
+                }
+                if conv_tokens == ".c"
+                    || conv_tokens == "c"
+                    || conv_tokens == ".C"
+                    || conv_tokens == "C"
+                {
+                    is_c = true;
+                }
+            }
+        }
         let ret_ty = if self.peek() == Some(&Token::Colon) || self.peek() == Some(&Token::Arrow) {
             self.bump()?;
             self.parse_type()?

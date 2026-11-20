@@ -631,7 +631,7 @@ fn populate_codegen_from_env(codegen: &mut Codegen, env: &ImportedEnv) {
                 {
                     codegen.ref_classes.insert(c.ident.sym.clone());
                 }
-                if c.meta.iter().any(|m| m.name.sym == "value") {
+                if c.is_union || c.meta.iter().any(|m| m.name.sym == "value") {
                     codegen.value_classes.insert(c.ident.sym.clone());
                 }
                 codegen.class_defs.insert(c.ident.sym.clone(), c.clone());

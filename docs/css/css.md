@@ -158,3 +158,21 @@ pub fn demoCssEngine() {
     _ = minified;
 }
 ```
+
+---
+
+## 四、 LightningCSS 工业级引擎子系统 (`lib/css/engine/`)
+
+在保持既有 8 个对外基础模块零破坏的前提下，`cap:css` 新增 `lib/css/engine/` 工业级编译子系统，直迁自 `/data/dev/bun/src/css/`，已通过 `lib/css/index.cp` 统一导出至 `cap:css`。
+
+### 新增模块清单
+
+| 模块文件 | 上游谱系 (`// Source:`) | 核心能力 |
+| :--- | :--- | :--- |
+| `lib/css/engine/_utils.cp` | `/data/dev/bun/src/css/css_parser.cp` | 零分配公共扫描工具（`engAppendBytes`、`engFormatFloat`、`engSplitCommaTop`、`engSplitSpaceTop`、`engFindMatchingParen`） |
+| `lib/css/engine/targets.cp` | `/data/dev/bun/src/css/targets.cp` | `Browsers` 24 位压缩版本矩阵（`major << 16 \| minor << 8 \| patch`）、`es2015`–`es2023` 与浏览器版本解析、`Feature`（27 项现代 CSS 特性兼容性判定）、`Features` 位掩码、`PrefixFlags` / `PrefixFeature` 与 `Targets.shouldCompile()` / `Targets.prefixes()` |
+| `lib/css/engine/values.cp` | `/data/dev/bun/src/css/values/values.cp` | `Angle`（deg/rad/grad/turn）、`Time`（s/ms 智能最短压缩）、`Resolution`（dpi/dpcm/dppx/x）、`Ratio`、`AlphaValue`、`UrlValue`、`CssRect`、`Position`（1–4 值解析）、`EasingFunction`（含牛顿-二分 `eval(t)` 贝塞尔求值与 `steps()`）、`Gradient`（Linear/Radial/Conic 及双位置色标降级） |
+| `lib/css/engine/properties.cp` | `/data/dev/bun/src/css/properties/properties.cp` | `RectShorthand`（`margin`/`padding`/`inset`/`border-*` 展开与最短合并）、`BorderShorthand`、`BorderRadius`（含 `/` 椭圆半径）、`BoxShadowList`、`TransformList` + `Matrix2D` 2D 矩阵合成、`FlexShorthand`、`TransitionItem`、`AnimationItem`、`DisplayValue`（内外双值最小化）、`FilterList` |
+| `lib/css/engine/rules.cp` | `/data/dev/bun/src/css/rules/rules.cp` | `SupportsAst`（`@supports` 递归 `not`/`and`/`or`/`selector()` AST 解析与求值）、`MediaRangeQuery`（Media Queries Level 4 `(400px <= width < 900px)` → `(min-width: 400px) and (max-width: 899.98px)` 降级）、`ContainerQuery`、`LayerManager`（`@layer` 级联权重）、`FontFaceRule`、`PropertyRule`、`ScopeRule` |
+| `lib/css/engine/compiler.cp` | `/data/dev/bun/src/css/printer.cp` | `CssCompileOptions`、`CssCompileStats`、`CssModulesHasher`（确定性类名作用域哈希与 `:global(...)` 保留）与 `CssCompiler.compile()`（Nesting 展平 + 未使用符号裁剪 + Media Range L4 降级 + 逻辑属性展开 + 简写压缩 + 靶向厂商前缀 + Minify/Pretty 输出） |
+| `lib/css/engine/index.cp` | `/data/dev/bun/src/css/css_parser.cp` | 引擎子模块统一重导出出口 |

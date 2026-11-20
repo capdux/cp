@@ -575,7 +575,7 @@ impl Codegen {
                 } else {
                     self.ref_classes.remove(&c.ident.sym);
                 }
-                if c.meta.iter().any(|m| m.name.sym == "value") {
+                if c.is_union || c.meta.iter().any(|m| m.name.sym == "value") {
                     self.value_classes.insert(c.ident.sym.clone());
                 }
                 for code in &c.extra_zig {

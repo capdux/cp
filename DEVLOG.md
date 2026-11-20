@@ -2,6 +2,15 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-20: Phase D-1 `lib/css/engine/` LightningCSS 核心引擎（4.8K）落地与 `bun_agy` 双工单热修
+
+- **Phase D-1**：在全新目录 `lib/css/engine/` 零干扰落地 7 个 Bun LightningCSS 工业模块（4,803 行：9 浏览器 27 特性 `Targets`、Values/Easing/Gradients、全套简写展开压缩、现代 At-Rules 与 `CssCompiler`/CSS Modules），全部 4 套 CSS 测试 22/22 PASS，0 `@import("bun")`，0 `std.posix`。
+- **`bun_agy` 2 条热修结单**：
+  1. `task-bun-20261120-fnptr-ret-union`：`union`/`union(enum)` 统一按值语义映射，消除 `*const fn (*R) *Action` 多余指针；
+  2. `task-bun-20261120-fn-callconv-ptr`：`parse_fn_type_sig_body` 支持 `callconv(.c)` 前置修饰符，`zig_escape.rs` 避免已有 `*const` 前缀时重复发射 `*const fn`。
+
+---
+
 ## 2026-11-20: Phase B-2（`lib/shell/` 7.1K）与 Phase C-2（`lib/http/` 7.5K + `lib/conf/` 4.5K）双路原版直迁完工
 
 - **落地成果**：
