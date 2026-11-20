@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:shell_parser` 纯 CP POSIX/Bash Shell 词法分词、管道与重定向 AST 解析及防注入单引号转义引擎（吸收对标 Bun `src/shell_parser/`，详见 `doc/lib/shell_parser.md`）（5/5 PASS，自动动态挂载 `cap.shell_parser`）
+- **新增标准库**：`lib/shell_parser/{lexer,ast,quote,index}.cp`（吸收对标 Bun `src/shell_parser/`），实现单/双引号/反斜杠转义与 `$VAR` 分词、管道/重定向/控制流 `ShellScript` AST 解析（零泄漏 `deinit`）以及防命令注入 `quoteArg`/`joinCommand`。
+- **新增文档与测试**：`doc/lib/shell_parser.md` 扁平文档与 `cap/test/test_shell_parser_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:threading` 纯 CP Futex 驱动零堆并发同步原语集（ResetEvent/WaitGroup/CountDownLatch/Semaphore/SpinLock/OnceFlag/Barrier，吸收对标 Bun `src/threading/`，详见 `doc/lib/threading.md`）（5/5 PASS，自动动态挂载 `cap.threading`）
 - **新增标准库**：`lib/threading/{reset_event,wait_group,countdown_latch,semaphore,spin_lock,once_flag,barrier,index}.cp`（吸收对标 Bun `src/threading/`），实现零堆分配 Futex 同步原语并移除 `cpc/src/resolver.rs` 中旧 `"threading"` 别名阻塞。
 - **新增文档与测试**：`doc/lib/threading.md` 扁平文档与 `cap/test/test_threading_production_deep.cp`（5/5 PASS，真实 `std.Thread.spawn` 多线程压测通过）。

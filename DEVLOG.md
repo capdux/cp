@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:shell_parser` 纯 CP POSIX/Bash Shell 词法分词、管道与重定向 AST 解析及防注入单引号转义引擎（吸收对标 Bun `src/shell_parser/`，详见 `doc/lib/shell_parser.md`）（5/5 PASS，文档直写 `doc/lib/shell_parser.md`）
+- **核心设计**：词法层严格拦截 `UnterminatedQuote` 与 `TrailingEscape`，语法层拦截连续空管道 `UnexpectedToken`；`quoteArg` 采用 POSIX 安全单引号与内部 `'` 转义，全路径通过 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:threading` 纯 CP Futex 驱动零堆并发同步原语集（ResetEvent/WaitGroup/CountDownLatch/Semaphore/SpinLock/OnceFlag/Barrier，吸收对标 Bun `src/threading/`，详见 `doc/lib/threading.md`）（5/5 PASS，文档直写 `doc/lib/threading.md`）
 - **核心设计**：全部 7 种同步原语基于 `std.atomic.Value` 与 `std.Thread.Futex` 实现零堆分配并发协同，CAS 防计数下溢，`Barrier` 通过 generation 计数支持多轮复用。
 
