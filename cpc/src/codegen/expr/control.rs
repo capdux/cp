@@ -310,6 +310,8 @@ impl Codegen {
                 }
             }
             Expr::Member(member) => {
+                let is_call_callee = self.in_call_callee;
+                self.in_call_callee = false;
                 if let Expr::Ident(id) = &*member.obj {
                     if id.sym == "error"
                         && member
@@ -404,7 +406,7 @@ impl Codegen {
                     Some(Type::Ref(id)) => self.enum_defs.contains_key(&id.sym),
                     _ => false,
                 };
-                if !is_struct_or_class {
+                if !is_struct_or_class && !is_call_callee {
                     if is_enum && member.prop.sym == "name" {
                         return format!("@tagName({})", obj);
                     }

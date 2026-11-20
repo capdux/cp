@@ -2587,3 +2587,9 @@
   - Subagent 6A 完工回收：新增 [`lib/meta/`](file:///data/dev/cp/lib/meta/index.cp)（`bits` + Zig 0.17 `traits`）、[`lib/platform/`](file:///data/dev/cp/lib/platform/index.cp)（`KernelVersion` + Linux `uname` 真实内核特性探测 + `/proc/self/exe`），增量补强 [`lib/resolver/`](file:///data/dev/cp/lib/resolver/index.cp)（W3C SRI `Integrity` + `HostedGitInfo`）；
   - 验收通过：`test_meta_platform_sri_deep.cp`（5/5 PASS）、`test_resolver_bundler_deep.cp`（7/7 PASS），全仓 `lib/**/*.cp` 100% 首行 `// Source:` 合规且 `@import("bun")` 归零；
   - 已同步定稿双轨规范手册 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md) 与 [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md) 并执行干净收官 Git 提交。
+
+### 2026-11-20（修复 CapSurf 反馈 `-m` 模式 `IsolatedWorldEntry.name()` 与嵌套数组重复字面量 Bug，真实 CapSurf 81 模块 `-m -d` 100% 打通）
+- **用户指令**：`capsurf` 反馈实测 `-m` 模块模式在 `IsolatedWorldEntry.name()` 方法调用处存在 `struct .name()` lowering 边界，询问是否为 Bug。
+- **执行成果**：
+  - 确认并修复两处真实 `cpc` 代码生成 Bug：① `cpc/src/codegen/expr/{call,control}.rs` + `mod.rs` 引入 `in_call_callee` 防止方法调用 `.name()` / `.value()` 误走枚举属性 `@tagName` / `@intFromEnum` 改写；② `cpc/src/codegen/expr/mod.rs` 逐层剥离嵌套 `ArrayRepeat`（`[[0; 128]; 16]`）外层元素期望类型；
+  - 发布 `cpc` Release 正式版（`bash scripts/sync_cpc.sh release`），新增回归测试 [`cap/test/test_struct_name_and_nested_repeat.cp`](file:///data/dev/cp/cap/test/test_struct_name_and_nested_repeat.cp)（1/1 PASS），并在真实 CapSurf（81 模块）上实测 `-m` 冷发射 `2.67s`、热发射 `12ms`、`-O Debug -fno-llvm` 全量原生链接 `1.86s` 并运行 `--help` 100% 通过；已完成提交并广播通知 `capsurf_agy`。

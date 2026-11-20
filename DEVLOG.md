@@ -2,6 +2,15 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-20: 修复 `-m` 模块模式 `struct.name()` 方法调用与嵌套数组重复字面量降级，打通真实 CapSurf 81 模块原生链接
+
+- **根因剖析**：
+  1. `capsurf_agy` 反馈 `-m` 模式下 `session.isolated_worlds[wi].name()` 报错；实测复现定位到 `cpc/src/codegen/expr/call.rs` 回退降级 `Expr::Member` 调用目标时，触发了 `control.rs` 的枚举属性 `.name` 改写，生成 `(if (...) @tagName(...) else x.name)()`（Zig 不允许对方法加括号，视作字段访问导致 `no field named 'name'`）。通过引入最外层单步 `in_call_callee` 标记彻底根除。
+  2. 同步在真实 CapSurf 81 模块复现中发现第二处缺陷：`session.cp` 的 `binding_names: [16][128]u8 = [[0; 128]; 16]` 在 `Expr::ArrayRepeat` 递归时未剥离外层 `expected_array_elem_type`，导致内层 `[0; 128]` 错用 `[128]u8`。改为逐层解包后彻底修复。
+- **验证**：部署 `cpc` Release 版；新增回归测试 `test_struct_name_and_nested_repeat.cp` PASS；真实 CapSurf 81 模块 `-m` 冷转译 2.67s / 热转译 12ms / `-O Debug -fno-llvm` 原生链接 1.86s 并成功运行 `--help`。
+
+---
+
 ## 2026-11-20: Batch 6A 收官批次（`cap:meta`、`cap:platform`、`cap:resolver` SRI/HostedGit）与全仓 Bun 标准库对标总收官
 
 - **收官范围**：逐目录比对 `/data/dev/bun/src/` 与 `/data/dev/cp/lib/`，确认除 JS/TS/JSC/Bundler 强耦合目录外，最后一批高价值通用基础资产为 `src/meta/`、`src/platform/` 与 `src/install/{integrity,hosted_git_info}`；由 Subagent 6A 以 100% 纯正 CP + Zig 0.17 原生 API 吸收落地并验证通过。

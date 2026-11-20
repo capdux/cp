@@ -272,11 +272,20 @@ impl Codegen {
                 }
             }
             Expr::ArrayRepeat(val, count) => {
+                let outer_expected = self.expected_array_elem_type.clone();
+                let inner_expected = match &outer_expected {
+                    Some(Type::FixedArray(inner, _)) | Some(Type::Array(inner)) => {
+                        Some((**inner).clone())
+                    }
+                    _ => None,
+                };
+                let old_expected =
+                    std::mem::replace(&mut self.expected_array_elem_type, inner_expected);
                 let val_code = self.generate_expr(val);
+                self.expected_array_elem_type = None;
                 let count_code = self.generate_expr(count);
-                let elem_zig_ty = self
-                    .expected_array_elem_type
-                    .clone()
+                self.expected_array_elem_type = old_expected;
+                let elem_zig_ty = outer_expected
                     .or_else(|| self.infer_cp_type(val))
                     .map(|t| self.map_type(&t))
                     .unwrap_or_else(|| "u8".to_string());

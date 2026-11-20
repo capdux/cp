@@ -1,3 +1,17 @@
+## [2026-11-20] - 热修与实测闭环：修复 `-m` 模块模式 `struct.name()` 方法调用误改写与嵌套定长数组重复字面量降级，真实 CapSurf 81 模块 `-m -d` 全量原生链接 100% 通过
+
+### 编译器修复 (`cpc`)
+- **修复结构体 `.name()` / `.value()` 方法调用误触发枚举属性改写**：
+  - [`cpc/src/codegen/mod.rs`](file:///data/dev/cp/cpc/src/codegen/mod.rs)、[`cpc/src/codegen/expr/call.rs`](file:///data/dev/cp/cpc/src/codegen/expr/call.rs)、[`cpc/src/codegen/expr/control.rs`](file:///data/dev/cp/cpc/src/codegen/expr/control.rs)：引入 `in_call_callee` 标记（进入 `Expr::Member` 评估 `member.obj` 前即刻清零），确保方法调用 `obj.name()` / `obj.value()` 永远发射为合法 Zig 方法调用，不再误落入枚举属性改写 `(if (@typeInfo(...) == .@"enum") @tagName(...) else obj.name)()`（解决 CapSurf `-m` 模式 `IsolatedWorldEntry.name()` 报错），同时 100% 保持枚举属性 `.name` / `.value` 兼容。
+- **修复嵌套固定数组重复字面量（如 `[[0; 128]; 16]`）类型泄露**：
+  - [`cpc/src/codegen/expr/mod.rs`](file:///data/dev/cp/cpc/src/codegen/expr/mod.rs)：在 `Expr::ArrayRepeat` 递归降级元素值前逐层剥离外层 `Type::FixedArray`/`Type::Array` 期望类型，解决 CapSurf `session.cp` 中 `binding_names: [16][128]u8 = [[0; 128]; 16]` 内层误套 `[128]u8` 的问题。
+- **发布与实测验证**：
+  - 已通过 `bash scripts/sync_cpc.sh release` 原子部署 Release 正式版；
+  - 新增回归测试 [`cap/test/test_struct_name_and_nested_repeat.cp`](file:///data/dev/cp/cap/test/test_struct_name_and_nested_repeat.cp)（1/1 PASS，978ms）；
+  - 真实 CapSurf（81 模块）`-m` 全量验证：冷发射 `2.67s`、热发射 `12ms`、`-O Debug -fno-llvm` 原生链接 `1.86s`（热缓存命中 `0.02s`）并成功运行 `--help`。
+
+---
+
 ## [2026-11-20] - Batch 6A（收官批次）：新增 `cap:meta`、`cap:platform` 与 `cap:resolver` SRI/HostedGit，全仓 Bun 资产吸收与对标审核圆满收官
 
 ### 新增与补强标准库 (Final Bun Assets Absorption)

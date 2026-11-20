@@ -1415,6 +1415,13 @@ impl Codegen {
                                 ident.sym.clone()
                             }
                         }
+                        Expr::Member(_) => {
+                            let prev = self.in_call_callee;
+                            self.in_call_callee = true;
+                            let res = self.generate_expr(&call.callee);
+                            self.in_call_callee = prev;
+                            res
+                        }
                         _ => self.generate_expr(&call.callee),
                     }
                 };
