@@ -182,3 +182,9 @@
 
 ### 2026-11-21（`cap:ringbuf` 验收固化，顶替以 `inherit` 拉起 `cap:pipeline` 维持 2 路并行）
 - **执行成果**：`lib/ringbuf/`（5/5 PASS，含 `cap.ringbuf` 动态挂载与 `doc/lib/ringbuf.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/pipeline/`（可组合中间件洋葱链、短路拦截、异常兜底与阶段可观测执行管道），与 `lib/uritemplate/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:uritemplate` 验收固化，顶替以 `inherit` 拉起 `cap:bitset` 维持 2 路并行）
+- **执行成果**：`lib/uritemplate/`（5/5 PASS，含 `cap.uritemplate` 动态挂载与 `doc/lib/uritemplate.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/bitset/`（64-bit 字级动态位图、Popcount/CTZ 位扫描与高性能集合布尔/Jaccard 引擎），与 `lib/pipeline/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:pipeline` 验收固化，顶替以 `inherit` 拉起 `cap:pool` 维持 2 路并行）
+- **执行成果**：`lib/pipeline/`（5/5 PASS，含 `cap.pipeline` 动态挂载与 `doc/lib/pipeline.md`）经 `verify_module.sh` 一键验收回收并与 `lib/uritemplate/` 合并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/pool/`（有界通用资源/连接池、空闲与最大寿命驱逐、健康校验与 `PoolStats` 观测），与 `lib/bitset/` 保持 2 路正交并行。

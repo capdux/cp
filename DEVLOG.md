@@ -2,6 +2,18 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:pipeline` 洋葱模型中间件与多阶段流水线引擎（5/5 PASS，文档直写 `doc/lib/pipeline.md`）
+
+- **落地成果**：`lib/pipeline/`（`pipeline.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），与 `lib/uritemplate/` 合并收尾提交，并以 `Model: "inherit"` 顶替派发 `cap:pool`（通用资源与连接池引擎：空闲/最大生命周期驱逐、健康校验与泄漏观测），与 `lib/bitset/` 保持 2 路正交并行。
+
+---
+
+## 2026-11-21: 新建 `cap:uritemplate` RFC 6570 URI Template 展开引擎（5/5 PASS，文档直写 `doc/lib/uritemplate.md`）
+
+- **落地成果**：`lib/uritemplate/`（`template.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:bitset`（字级 64-bit 向量化动态位图、硬件 Popcount/CTZ 快速迭代与集合布尔/Jaccard 运算引擎），与 `lib/pipeline/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:ringbuf` 环形缓冲、字节环与微批聚合引擎（5/5 PASS，文档直写 `doc/lib/ringbuf.md`）
 
 - **落地成果**：`lib/ringbuf/`（`ring.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:pipeline`（可组合中间件洋葱链、短路拦截与多阶段可观测执行管道），与 `lib/uritemplate/` 保持 2 路正交并行。

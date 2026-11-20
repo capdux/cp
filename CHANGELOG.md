@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:pipeline` 洋葱模型中间件与可观测多阶段流水线引擎（5/5 PASS，自动动态挂载 `cap.pipeline`）
+
+- 新建 [`lib/pipeline/`](file:///data/dev/cp/lib/pipeline/index.cp)（`pipeline.cp`、`index.cp`）：`Pipeline` & `PipelineContext`（`before`/`after`/`onError` 洋葱模型钩子、短路 `halt` 仍按逆序清理已进入阶段、条件阶段 `useConditional`、动态启停及 `StageTrace` 耗时轨迹）；文档 [`doc/lib/pipeline.md`](file:///data/dev/cp/doc/lib/pipeline.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_pipeline_production_deep.cp`](file:///data/dev/cp/cap/test/test_pipeline_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
+## [2026-11-21] - 新建 `cap:uritemplate` RFC 6570 Level 1~4 URI Template 解析与展开引擎（5/5 PASS，自动动态挂载 `cap.uritemplate`）
+
+- 新建 [`lib/uritemplate/`](file:///data/dev/cp/lib/uritemplate/index.cp)（`template.cp`、`index.cp`）：`UriTemplate` & `TemplateVars`（全面支持 RFC 6570 8 种操作符、UTF-8 字符级前缀截取 `{var:N}`、列表/关联表爆炸 `{list*}`/`{keys*}`、精确百分号编码、未定义变量跳过与去重 `variables()` 提取）；文档 [`doc/lib/uritemplate.md`](file:///data/dev/cp/doc/lib/uritemplate.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_uritemplate_production_deep.cp`](file:///data/dev/cp/cap/test/test_uritemplate_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:ringbuf` 有界环形缓冲、字节流管道与双阈值微批聚合引擎（5/5 PASS，自动动态挂载 `cap.ringbuf`）
 
 - 新建 [`lib/ringbuf/`](file:///data/dev/cp/lib/ringbuf/index.cp)（`ring.cp`、`index.cp`）：`RingBuffer<T>`（`Reject`/`OverwriteOldest`、`overwrittenCount`、跨回绕 `popBatch`）、`ByteRing`（跨尾两段 `@memcpy` 读写与 `readUntilByte` 增量帧切分）及 `MicroBatcher<T>`（条数/超时双触发与 `drain` 复位）；文档 [`doc/lib/ringbuf.md`](file:///data/dev/cp/doc/lib/ringbuf.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_ringbuf_production_deep.cp`](file:///data/dev/cp/cap/test/test_ringbuf_production_deep.cp) `-m` 5/5 PASS。
