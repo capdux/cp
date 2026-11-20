@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:sitemap` RFC 9309 `robots.txt` 与 XML Sitemap 0.9 / Index 引擎（5/5 PASS，自动动态挂载 `cap.sitemap`）
+
+- 新建 [`lib/sitemap/`](file:///data/dev/cp/lib/sitemap/index.cp)（`sitemap.cp`、`index.cp`）：`RobotsRules`（RFC 9309 多 `User-agent`、`*` 回退、最长模式匹配与等长 `Allow` 优先、`*` & `$` 通配符、`Crawl-delay` 与 `Sitemap:` 列表）及 `SitemapCodec`（`detectKind`/`parseUrlSet`/`parseIndex`/`buildUrlSet`/`buildIndex` 含 50,000 上限与 `&` 转义）；文档 [`doc/lib/sitemap.md`](file:///data/dev/cp/doc/lib/sitemap.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_sitemap_production_deep.cp`](file:///data/dev/cp/cap/test/test_sitemap_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:lz4` 纯 CP LZ4 Block & Frame 压缩解压与 XXH32 校验引擎（5/5 PASS，自动动态挂载 `cap.lz4`）
 
 - 新建 [`lib/lz4/`](file:///data/dev/cp/lib/lz4/index.cp)（`lz4.cp`、`index.cp`）：`xxhash32`、`Lz4Block`（4096 槽位哈希压缩、重叠 RLE 匹配复制、`InvalidOffset`/`OutputTooLarge` 防膨胀）及 `Lz4Frame`（`0x184D2204` 魔数、64KB 分块回退、XXH32 头部与内容双重校验，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/lz4.md`](file:///data/dev/cp/doc/lib/lz4.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_lz4_production_deep.cp`](file:///data/dev/cp/cap/test/test_lz4_production_deep.cp) `-m` 5/5 PASS。

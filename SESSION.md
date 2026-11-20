@@ -269,3 +269,6 @@
 
 ### 2026-11-21（`cap:lz4` 验收固化，顶替以 `inherit` 拉起 `cap:ledger` 维持 2 路并行）
 - **执行成果**：`lib/lz4/`（5/5 PASS，含 `cap.lz4` 动态挂载与 `doc/lib/lz4.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/ledger/`（复式记账双分录会计总账、幂等记账、不可变冲正与试算平衡引擎），与 `lib/sitemap/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:sitemap` 验收固化，顶替以 `inherit` 拉起 `cap:billing` 维持 2 路并行）
+- **执行成果**：`lib/sitemap/`（5/5 PASS，含 `cap.sitemap` 动态挂载与 `doc/lib/sitemap.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/billing/`（SaaS & AI Token 阶梯用量计费、周期折算 Proration、折扣券与发票生成引擎），与 `lib/ledger/` 保持 2 路正交并行。

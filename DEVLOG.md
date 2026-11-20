@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:sitemap` RFC 9309 `robots.txt` 与 XML Sitemap 引擎（5/5 PASS，文档直写 `doc/lib/sitemap.md`）
+
+- **落地成果**：`lib/sitemap/`（`sitemap.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:billing`（SaaS & AI API 阶梯/累进用量计费、周期按比例折算 Proration、Coupon 折扣与发票生成引擎），与 `lib/ledger/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:lz4` 纯 CP LZ4 Block & Frame 压缩引擎（5/5 PASS，文档直写 `doc/lib/lz4.md`）
 
 - **落地成果**：`lib/lz4/`（`lz4.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:ledger`（复式记账双分录会计总账、不可变冲正与试算平衡对账引擎），与 `lib/sitemap/` 保持 2 路正交并行。
