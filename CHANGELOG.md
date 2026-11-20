@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:ssh_wire` 纯 CP RFC 4251 SSH-2 Wire 编解码、OpenSSH 公私钥解析与 SSHSIG 签名验签引擎（支持 `cap.ssh_wire` 自动动态挂载，详见 `doc/lib/ssh_wire.md`）（5/5 PASS，自动动态挂载 `cap.ssh_wire`）
+- **新增标准库**：`lib/ssh_wire/{wire,keys,openssh_key,sshsig,index}.cp`，实现 RFC 4251 `SshReader`/`SshWriter`（含 `mpint` 规范补码）、`ssh-ed25519`/`ecdsa-sha2-nistp256` 公钥与 `SHA256:` 指纹、`openssh-key-v1` 私钥解析及 `SSHSIG` PEM 签名验签。
+- **新增文档与测试**：`doc/lib/ssh_wire.md` 扁平文档与 `cap/test/test_ssh_wire_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:parquet` 纯 CP Apache Parquet 列式容器读写、Thrift TCompactProtocol 与 RLE/Bit-Packed Hybrid 编解码引擎（支持 `cap.parquet` 自动动态挂载，详见 `doc/lib/parquet.md`）（5/5 PASS，自动动态挂载 `cap.parquet`）
 - **新增标准库**：`lib/parquet/{types,thrift,rle,codec,index}.cp`，实现 ZigZag Varint 与 32 层深度防护 `ThriftReader`/`ThriftWriter`、Parquet RLE/Bit-Packed 混合编解码、`PAR1` 容器校验及 `INT32`/`INT64`/`DOUBLE`/`BYTE_ARRAY`/`BOOLEAN` 列 `writeParquet`/`readParquet`。
 - **新增文档与测试**：`doc/lib/parquet.md` 扁平文档与 `cap/test/test_parquet_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
