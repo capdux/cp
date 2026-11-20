@@ -437,3 +437,6 @@
 
 ### 2026-11-21（`cap:jsonschema` 验收提交，顶替拉起 `cap:pqueue` 维持 2 路常规并行）
 - **执行成果**：`lib/jsonschema/`（5/5 PASS，`doc/lib/jsonschema.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/pqueue/`（带句柄原地调优索引堆、流式 Top-K 与双堆实时中位数优先队列引擎），与 `lib/interval/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:interval` 验收提交，顶替拉起 `cap:fuzzy` 维持 2 路常规并行）
+- **执行成果**：`lib/interval/`（5/5 PASS，`doc/lib/interval.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/fuzzy/`（Damerau-Levenshtein / Jaro-Winkler / fzf 风格模糊评分与命中下标高亮引擎），与 `lib/pqueue/` 维持 2 路常规并行。

@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:interval` 区间集合代数与 AVL 增强区间树重叠检索引擎（5/5 PASS，自动动态挂载 `cap.interval`）
+- **新增标准库**：`lib/interval/{interval,index}.cp`，实现半开区间 `[start, end)` 原语、`IntervalSet`（二分自动合并、`subtract` 挖洞分裂、`gaps` 空档提取、双指针 $O(M+N)$ `unionWith`/`intersectWith`/`differenceWith`）与 AVL 平衡增强 `IntervalTree<V>`。
+- **新增文档与测试**：`doc/lib/interval.md` 扁平文档与 `cap/test/test_interval_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:jsonschema` JSON Schema 结构化校验与 `$ref` 路径诊断引擎（5/5 PASS，自动动态挂载 `cap.jsonschema`）
 - **新增标准库**：`lib/jsonschema/{jsonschema,index}.cp`，实现 `SchemaValidator`（覆盖 `type` 严格 `integer`/`number` 区分、数值/UTF-8 码点长度/数组 `uniqueItems`/对象 `additionalProperties`/`enum`/`const`/`allOf`/`anyOf`/`oneOf`/`not`、本地 `#/$defs/...` `$ref` 解析与 64 层循环引用 `MaxDepthExceeded` 防护）。
 - **新增文档与测试**：`doc/lib/jsonschema.md` 扁平文档与 `cap/test/test_jsonschema_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

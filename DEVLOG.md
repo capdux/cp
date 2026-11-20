@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:interval` 区间集合代数与 AVL 增强区间树重叠检索引擎（5/5 PASS，文档直写 `doc/lib/interval.md`）
+- **核心设计**：`Interval` 长度采用 `i128` 防止跨正负极值溢出；`IntervalSet` 维持规范化不相交有序不变量，`IntervalTree<V>` 采用 AVL 自平衡树维护子树 `max_end` 实现剪枝检索并全程零泄漏。
+
 ## 2026-11-21: 新建 `cap:jsonschema` JSON Schema 结构化校验与 `$ref` 路径诊断引擎（5/5 PASS，文档直写 `doc/lib/jsonschema.md`）
 - **核心设计**：在 `SchemaValidator` 内部使用独立 `ArenaAllocator` 持有编译后 Schema AST，校验时输出完整 JSONPath（如 `$.user.email`）与关键字诊断，并在 `$ref` 解析链路强制 64 层递归深度上限。
 
