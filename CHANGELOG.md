@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:sketch` 流式概率素描引擎（HLL / T-Digest / ReservoirSampler，5/5 PASS）
+
+- 新建 [`lib/sketch/`](file:///data/dev/cp/lib/sketch/index.cp)（`sketch.cp`、`index.cp`）：`HyperLogLog`（FNV-1a+SplitMix64 混洗、LinearCounting 修正与 `merge`）、`QuantileDigest`（T-Digest 质心局部密度合并估算 P50/P95/P99 与 `merge`）及 `ReservoirSampler<T>`（Algorithm R + Lemire 无偏蓄水池抽样）；文档 [`doc/lib/sketch.md`](file:///data/dev/cp/doc/lib/sketch.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_sketch_production_deep.cp`](file:///data/dev/cp/cap/test/test_sketch_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:intern` 指针稳定字符串驻留池与 1:1 双向映射表引擎（5/5 PASS，自动动态挂载 `cap.intern`）
 
 - 新建 [`lib/intern/`](file:///data/dev/cp/lib/intern/index.cp)（`intern.cp`、`index.cp`）：`StringInterner`（4KB 指针稳定分块 Arena + `SymbolId` 去重驻留、`lookup`/`resolve`/`totalBytes`）与 `StringBiMap`（严格 1:1 双射 `insert`、`forcePut` 原子置换与双向查询删除，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/intern.md`](file:///data/dev/cp/doc/lib/intern.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_intern_production_deep.cp`](file:///data/dev/cp/cap/test/test_intern_production_deep.cp) `-m` 5/5 PASS。
