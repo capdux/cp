@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:http3` RFC 9114 HTTP/3 帧与 RFC 9204 QPACK 静态表引擎（5/5 PASS，文档直写 `doc/lib/http3.md`）
+- **核心设计**：内置 RFC 9000 Varint 与 RFC 9204 Appendix A 全量 99 项静态表，严格拦截 HTTP/2 保留设置/帧及重复设置 ID；解码器采用零拷贝载荷切片并按 `max_frame_size` 防御超大帧。
+
 ## 2026-11-21: 新建 `cap:bmp` 纯 CP BMP 位图图像编解码引擎（5/5 PASS，文档直写 `doc/lib/bmp.md`）
 - **核心设计**：统一将 `bottom-up` 与负高度 `top-down` BMP 归一为紧凑 top-down RGB/RGBA 缓冲区，编码端自动按 4 字节步长补零对齐，解码端严格拦截签名、`BI_RGB`/`BI_BITFIELDS` 之外的压缩及超限尺寸。
 

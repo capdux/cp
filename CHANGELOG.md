@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:http3` RFC 9114 HTTP/3 帧与 RFC 9204 QPACK 静态表引擎（5/5 PASS，自动动态挂载 `cap.http3`）
+- **新增标准库**：`lib/http3/{http3,index}.cp`，实现 HTTP/3 全帧类型编解码（含 GREASE 未知帧透传、`FrameTooLarge` 上限与 HTTP/2 保留帧/保留设置拦截）及完整 99 项 RFC 9204 QPACK 静态表头部编解码。
+- **新增文档与测试**：`doc/lib/http3.md` 扁平文档与 `cap/test/test_http3_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:bmp` 纯 CP BMP 位图图像编解码引擎（5/5 PASS，自动动态挂载 `cap.bmp`）
 - **新增标准库**：`lib/bmp/{bmp,index}.cp`，实现 24-bit RGB / 32-bit RGBA（4 字节行填充自动对齐）编解码，支持 `bottom-up`/`top-down` 负高度与 8-bit 调色板展开及 `ImageTooLarge` 尺寸上限防护。
 - **新增文档与测试**：`doc/lib/bmp.md` 扁平文档与 `cap/test/test_bmp_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

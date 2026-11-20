@@ -539,3 +539,6 @@
 
 ### 2026-11-21（`cap:bmp` 验收提交，顶替拉起 `cap:ldap` 维持 2 路常规并行）
 - **执行成果**：`lib/bmp/`（5/5 PASS，`doc/lib/bmp.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/ldap/`（RFC 4515 LDAP 搜索过滤器解析、防注入转义与内存属性求值引擎），与 `lib/http3/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:http3` 验收提交，顶替拉起 `cap:amqp` 维持 2 路常规并行）
+- **执行成果**：`lib/http3/`（5/5 PASS，`doc/lib/http3.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/amqp/`（AMQP 0-9-1 二进制协议帧、FieldTable 与增量拆帧引擎），与 `lib/ldap/` 维持 2 路常规并行。
