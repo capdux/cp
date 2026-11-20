@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:capnp` 纯 CP CapnProto 零拷贝分段消息帧、Struct/List/Far/Double-Far 指针与 TraversalLimit 防放大攻击引擎（支持 `cap.capnp` 自动动态挂载，详见 `doc/lib/capnp.md`）（5/5 PASS，文档直写 `doc/lib/capnp.md`）
+- **核心设计**：`MessageReader` 采用零拷贝分段视图与 `TraversalLimit` 读预算，彻底拦截循环指针与指针重叠放大攻击，全路径 `std.testing.allocator` 零泄漏。
+
 ## 2026-11-21: 新建 `cap:msgpack_rpc` 纯 CP MessagePack-RPC (Request/Response/Notification) 编解码、深度防护与半包黏包流式拆帧引擎（支持 `cap.msgpack_rpc` 自动动态挂载，详见 `doc/lib/msgpack_rpc.md`）（5/5 PASS，文档直写 `doc/lib/msgpack_rpc.md`）
 - **核心设计**：自包含轻量化 MessagePack-RPC 编解码器与 `RpcStreamDecoder`，严格校验数组长度、消息类型与最大帧字节上限，全路径 `std.testing.allocator` 零泄漏。
 

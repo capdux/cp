@@ -115,3 +115,6 @@
 
 ### 2026-11-21（`cap:msgpack_rpc` 验收，主控亲自完成第 3 路 `cap:msgpack_rpc` 验收提交，维持 `cap:capnp` 与 `cap:redis_cluster` 并发）
 - **执行成果**：`lib/msgpack_rpc/`（5/5 PASS，`doc/lib/msgpack_rpc.md`）经 `verify_module.sh` 一次性验收回收；主控亲自完成第 3 路 `cap:msgpack_rpc` 验收提交，维持 `cap:capnp` 与 `cap:redis_cluster` 并发
+
+### 2026-11-21（`cap:capnp` 验收，验收提交 `cap:capnp`）
+- **执行成果**：`lib/capnp/`（5/5 PASS，`doc/lib/capnp.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:capnp`

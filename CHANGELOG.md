@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:capnp` 纯 CP CapnProto 零拷贝分段消息帧、Struct/List/Far/Double-Far 指针与 TraversalLimit 防放大攻击引擎（支持 `cap.capnp` 自动动态挂载，详见 `doc/lib/capnp.md`）（5/5 PASS，自动动态挂载 `cap.capnp`）
+- **新增标准库**：`lib/capnp/{types,pointer,reader,builder,index}.cp`，实现 CapnProto 分段流帧（含奇偶段对齐）、Struct/List/Far/Double-Far 指针编解码、默认值 XOR 编码及 `TraversalLimit` (64 MiB/64 层) 防放大攻击。
+- **新增文档与测试**：`doc/lib/capnp.md` 扁平文档与 `cap/test/test_capnp_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:msgpack_rpc` 纯 CP MessagePack-RPC (Request/Response/Notification) 编解码、深度防护与半包黏包流式拆帧引擎（支持 `cap.msgpack_rpc` 自动动态挂载，详见 `doc/lib/msgpack_rpc.md`）（5/5 PASS，自动动态挂载 `cap.msgpack_rpc`）
 - **新增标准库**：`lib/msgpack_rpc/{codec,index}.cp`，实现完整 MessagePack 类型编解码、Request/Response/Notification 帧、`MAX_RPC_DEPTH = 32` 与 `RpcStreamDecoder` 半包黏包拆帧。
 - **新增文档与测试**：`doc/lib/msgpack_rpc.md` 扁平文档与 `cap/test/test_msgpack_rpc_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
