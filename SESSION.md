@@ -321,6 +321,12 @@
 ### 2026-11-21（`cap:sheet` & `cap:tz` 双路合并验收提交，顶替拉起 `cap:tlv` 与 `cap:lsm` 维持 2 路并行）
 - **执行成果**：`lib/sheet/`（5/5 PASS，`doc/lib/sheet.md`）与 `lib/tz/`（5/5 PASS，`doc/lib/tz.md`）双双经 `verify_module.sh` 一键验收回收并合并提交 Git；使用 `Model: "inherit"` 同步派发 `lib/tlv/`（二进制 TLV 编解码、半包/黏包分帧与 CRC32C 校验引擎）与 `lib/lsm/`（LSM-Tree MemTable + SSTable 分块与多路归并压缩引擎），维持 2 路常规并行。
 
+### 2026-11-21（`cap:tlv` 验收固化，顶替以 `inherit` 拉起 `cap:mqtt` 维持 2 路并行）
+- **执行成果**：`lib/tlv/`（5/5 PASS，含 `cap.tlv` 动态挂载与 `doc/lib/tlv.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/mqtt/`（MQTT 3.1.1 二进制 Wire 报文编解码、Varint 剩余长度与半包黏包拆帧引擎），与 `lib/lsm/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:lsm` 验收固化，顶替以 `inherit` 拉起 `cap:paseto` 维持 2 路并行）
+- **执行成果**：`lib/lsm/`（5/5 PASS，含 `cap.lsm` 动态挂载与 `doc/lib/lsm.md`）经 `verify_module.sh` 一键验收回收并与 `lib/tlv/` 合并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/paseto/`（PASETO v4.local 对称加密与 v4.public Ed25519 签名安全令牌引擎），与 `lib/mqtt/` 保持 2 路正交并行。
+
 ### 2026-11-21（`cap:dedup` 验收固化，顶替以 `inherit` 拉起 `cap:rule` 维持 2 路并行）
 - **执行成果**：`lib/dedup/`（5/5 PASS，含 `cap.dedup` 动态挂载与 `doc/lib/dedup.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/rule/`（声明式风控与业务决策规则引擎：复合条件树、`Salience` 优先级、互斥组与决策审计），与 `lib/http_cache/` 保持 2 路常规并行。
 

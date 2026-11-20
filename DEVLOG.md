@@ -2,6 +2,18 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:lsm` LSM-Tree 存储引擎（5/5 PASS，文档直写 `doc/lib/lsm.md`）
+
+- **落地成果**：`lib/lsm/`（`lsm.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），与 `lib/tlv/` 合并回收提交，并以 `Model: "inherit"` 顶替派发 `cap:paseto`（PASETO v4.local & v4.public 现代无歧义安全令牌引擎），与 `lib/mqtt/` 保持 2 路正交并行。
+
+---
+
+## 2026-11-21: 新建 `cap:tlv` 二进制 TLV、分帧与 CRC32C 校验引擎（5/5 PASS，文档直写 `doc/lib/tlv.md`）
+
+- **落地成果**：`lib/tlv/`（`tlv.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:mqtt`（MQTT 3.1.1 二进制 Wire 报文编解码、Varint 剩余长度与流式拆包引擎），与 `lib/lsm/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:sheet`（5/5）与 `cap:tz`（5/5）双标准库全绿合并提交
 
 - **落地成果**：`lib/sheet/`（公式 DAG 拓扑重算与 `#CYCLE!` 防护）与 `lib/tz/`（IANA/POSIX DST 时区互转）双双经 `verify_module.sh` 一键全绿通过（零内存泄漏），单轮合并回收提交，并以 `Model: "inherit"` 顶替派发 `cap:tlv`（二进制 TLV 编解码、黏包分帧与 Castagnoli CRC32C 校验引擎）与 `cap:lsm`（LSM-Tree MemTable + SSTable 分块索引 + Tombstone 多路归并压缩引擎），维持 2 路常规正交并行。

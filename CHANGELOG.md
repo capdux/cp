@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:lsm` LSM-Tree MemTable / SSTable 与多路归并压缩存储引擎（5/5 PASS，自动动态挂载 `cap.lsm`）
+
+- 新建 [`lib/lsm/`](file:///data/dev/cp/lib/lsm/index.cp)（`lsm.cp`、`index.cp`）：`SsTable`（有序 Data Block、每 16 条采样稀疏 Index Block 与 `"CPS1"`+CRC32 篡改校验）及 `LsmEngine`（`MemTable` 阈值自动 `flush`、Tombstone 墓碑不穿透、`rangeScan` 多路最新 `seq` 归并与 `compact` 全量空间回收，零泄漏）；文档 [`doc/lib/lsm.md`](file:///data/dev/cp/doc/lib/lsm.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_lsm_production_deep.cp`](file:///data/dev/cp/cap/test/test_lsm_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
+## [2026-11-21] - 新建 `cap:tlv` 二进制 TLV 编解码、流式分帧与 CRC32C 校验引擎（5/5 PASS，自动动态挂载 `cap.tlv`）
+
+- 新建 [`lib/tlv/`](file:///data/dev/cp/lib/tlv/index.cp)（`tlv.cp`、`index.cp`）：`crc32c`（Castagnoli 查找表）、`TlvWriter`/`TlvReader`（`u16` Tag + `u32` Length 32 层嵌套容器）及 `LengthPrefixedFramer`（`U16Be`/`U32Be`/`U32Le` 半包黏包拆帧、DoS 上限防护与可选尾随 CRC32C 校验，零泄漏）；文档 [`doc/lib/tlv.md`](file:///data/dev/cp/doc/lib/tlv.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_tlv_production_deep.cp`](file:///data/dev/cp/cap/test/test_tlv_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:sheet`（5/5）与 `cap:tz`（5/5）双标准库落地（自动动态挂载 `cap.sheet` / `cap.tz`）
 
 - **`cap:sheet`**（[`lib/sheet/`](file:///data/dev/cp/lib/sheet/index.cp)）：`CellCoord`（`A1`..`ZZ9999` 双向转换）与 `Spreadsheet`（四则/比较、`SUM`/`AVG`/`MIN`/`MAX`/`COUNT`/`IF`/`ROUND` 公式、Kahn 拓扑排序级联重算、`CycleDetected` 环路拦截与 RFC-4180 `toCsv`，零泄漏），文档 [`doc/lib/sheet.md`](file:///data/dev/cp/doc/lib/sheet.md)，`-m` 5/5 PASS；
