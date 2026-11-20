@@ -945,6 +945,8 @@ impl<'a> Parser<'a> {
         let ident = self.parse_ident()?;
         let generic_params = self.parse_generic_params()?;
         let mut params = self.parse_params()?;
+        // Absorb Zig-style function qualifiers placed before return type (e.g. `fn cb(x: i32) callconv(.c) {`)
+        self.parse_zig_fn_qualifiers(&mut meta)?;
         let mut return_type = None;
         if self.peek() == Some(&Token::Bang) {
             self.bump()?;
@@ -1030,6 +1032,8 @@ impl<'a> Parser<'a> {
 
         let trailing_meta = self.parse_meta_list()?;
         meta.extend(trailing_meta);
+        // Also absorb Zig-style function qualifiers placed after return type (e.g. `fn cb(): i32 callconv(.c) {`)
+        self.parse_zig_fn_qualifiers(&mut meta)?;
 
         let body;
         let end;
@@ -1124,6 +1128,22 @@ impl<'a> Parser<'a> {
             meta,
             is_pub,
         })
+    }
+
+    pub(super) fn parse_zig_fn_qualifiers(&mut self, meta: &mut Vec<MetaItem>) -> ParseResult<()> {
+        loop {
+            let is_qual = matches!(
+                self.peek(),
+                Some(Token::Ident(s)) if matches!(s.as_str(), "callconv" | "align" | "linksection" | "addrspace")
+            ) && self.peek_next() == Some(&Token::LParen);
+            if !is_qual {
+                break;
+            }
+            let start = self.peek_span().start;
+            let item = self.parse_single_meta_inner(start)?;
+            meta.push(item);
+        }
+        Ok(())
     }
 
     pub(super) fn block_assigns_ident_directly(block: &BlockStmt, target: &str) -> bool {

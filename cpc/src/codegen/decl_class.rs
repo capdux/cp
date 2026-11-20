@@ -45,36 +45,81 @@ impl Codegen {
         None
     }
 
+    fn spawn_sub_codegen(&self) -> Codegen {
+        let mut sub = Codegen::new();
+        sub.is_lib_mode = self.is_lib_mode;
+        sub.is_beam_mode = self.is_beam_mode;
+        sub.has_imported_ptr = self.has_imported_ptr;
+        sub.globals = self.globals.clone();
+        for name in self.current_fn_params.iter().chain(self.locals.keys()) {
+            sub.globals.insert(name.clone());
+        }
+        sub.ref_classes = self.ref_classes.clone();
+        sub.value_classes = self.value_classes.clone();
+        sub.fn_sigs = self.fn_sigs.clone();
+        sub.class_defs = self.class_defs.clone();
+        sub.trait_defs = self.trait_defs.clone();
+        sub.enum_defs = self.enum_defs.clone();
+        sub.error_sets = self.error_sets.clone();
+        sub.type_aliases = self.type_aliases.clone();
+        sub.dec_defs = self.dec_defs.clone();
+        sub.anon_obj_structs = self.anon_obj_structs.clone();
+        sub
+    }
+
     pub(crate) fn lower_extra_zig_member(&mut self, code: &str) -> String {
         let mut parser = crate::parser::Parser::new(code);
         let (module, diags) = parser.parse_module_with_recovery();
-        if diags.is_empty() && module.body.len() == 1 {
-            if let ModuleItem::Stmt(Stmt::Var(var)) = &module.body[0] {
-                if let Pattern::Ident(ident) = &var.pat {
-                    if let Some(init) = &var.init {
-                        let pub_prefix = if var.is_pub { "pub " } else { "" };
-                        let tls_prefix = if var.is_threadlocal {
-                            "threadlocal "
-                        } else {
-                            ""
-                        };
-                        let kw = if var.kind == VarDeclKind::Const {
-                            "const"
-                        } else {
-                            "var"
-                        };
-                        let ty_str = if let Some(t) = &var.ty {
-                            format!(": {}", self.map_type(t))
-                        } else {
-                            String::new()
-                        };
-                        let init_str = self.generate_expr(init);
-                        return format!(
-                            "{}{}{} {}{} = {};",
-                            pub_prefix, tls_prefix, kw, ident.sym, ty_str, init_str
-                        );
+        let has_syntax_break = diags
+            .iter()
+            .any(|d| matches!(d.code.as_str(), "E0100" | "E0111" | "E0199"));
+        if !has_syntax_break && module.body.len() == 1 {
+            match &module.body[0] {
+                ModuleItem::Stmt(Stmt::Var(var)) => {
+                    if let Pattern::Ident(ident) = &var.pat {
+                        if let Some(init) = &var.init {
+                            let pub_prefix = if var.is_pub { "pub " } else { "" };
+                            let tls_prefix = if var.is_threadlocal {
+                                "threadlocal "
+                            } else {
+                                ""
+                            };
+                            let kw = if var.kind == VarDeclKind::Const {
+                                "const"
+                            } else {
+                                "var"
+                            };
+                            let ty_str = if let Some(t) = &var.ty {
+                                format!(": {}", self.map_type(t))
+                            } else {
+                                String::new()
+                            };
+                            let init_str = self.generate_expr(init);
+                            return format!(
+                                "{}{}{} {}{} = {};",
+                                pub_prefix, tls_prefix, kw, ident.sym, ty_str, init_str
+                            );
+                        }
                     }
                 }
+                ModuleItem::Decl(Decl::Class(cls)) => {
+                    let mut sub = self.spawn_sub_codegen();
+                    sub.value_classes.insert(cls.ident.sym.clone());
+                    sub.class_defs.insert(cls.ident.sym.clone(), cls.clone());
+                    sub.generate_class(cls);
+                    return sub.output.content.trim_end().to_string();
+                }
+                ModuleItem::Decl(Decl::Enum(e)) => {
+                    let mut sub = self.spawn_sub_codegen();
+                    sub.generate_enum(e);
+                    return sub.output.content.trim_end().to_string();
+                }
+                ModuleItem::Decl(Decl::TypeAlias(ta)) => {
+                    let pub_prefix = if ta.is_pub { "pub " } else { "" };
+                    let target = self.map_type(&ta.target_ty);
+                    return format!("{}const {} = {};", pub_prefix, ta.ident.sym, target);
+                }
+                _ => {}
             }
         }
         lower_struct_body(code)

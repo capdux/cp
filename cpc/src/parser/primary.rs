@@ -1825,6 +1825,8 @@ impl<'a> Parser<'a> {
 
     pub(super) fn parse_object_fields(&mut self, is_dot_brace: bool) -> ParseResult<Vec<ObjectField>> {
         let mut fields = Vec::new();
+        let mut shorthand_indices: Vec<usize> = Vec::new();
+        let mut has_positional = false;
         while self.peek() != Some(&Token::RBrace) && self.peek().is_some() {
             if self.peek() == Some(&Token::DotDotDot) {
                 self.bump()?;
@@ -1892,30 +1894,64 @@ impl<'a> Parser<'a> {
                     });
                 }
             } else {
+                let checkpoint = self.lexer.clone();
+                let peeked_checkpoint = self.peeked.clone();
+                let peeked2_checkpoint = self.peeked2.clone();
+                let prev_end_checkpoint = self.prev_token_end;
+
                 let is_str = matches!(self.peek(), Some(Token::StringLiteral(_)));
-                let key = if is_str {
+                let parsed_key = if is_str {
                     let (tok, span) = self.bump()?;
                     if let Token::StringLiteral(s) = tok {
-                        Ident { span, sym: s }
+                        Some(Ident { span, sym: s })
                     } else {
                         unreachable!()
                     }
                 } else {
-                    self.parse_ident()?
+                    self.parse_ident().ok()
                 };
-                if self.peek() == Some(&Token::Colon) || self.peek() == Some(&Token::Assign) {
-                    self.bump()?;
-                    let val = self.parse_expr()?;
-                    fields.push(ObjectField {
-                        key: Some(key),
-                        val,
-                        is_spread: false,
-                    });
+
+                if let Some(key) = parsed_key {
+                    if self.peek() == Some(&Token::Colon) || self.peek() == Some(&Token::Assign) {
+                        self.bump()?;
+                        let val = self.parse_expr()?;
+                        fields.push(ObjectField {
+                            key: Some(key),
+                            val,
+                            is_spread: false,
+                        });
+                    } else if matches!(self.peek(), Some(Token::Comma) | Some(Token::RBrace)) && !is_str {
+                        // Shorthand `{ key }` -> `{ key: key }` (or positional if mixed with tuple exprs)
+                        shorthand_indices.push(fields.len());
+                        fields.push(ObjectField {
+                            key: Some(key.clone()),
+                            val: Expr::Ident(key),
+                            is_spread: false,
+                        });
+                    } else {
+                        // Positional tuple element (e.g. `{ fd, bufs.ptr, bufs.len }`)
+                        self.lexer = checkpoint;
+                        self.peeked = peeked_checkpoint;
+                        self.peeked2 = peeked2_checkpoint;
+                        self.prev_token_end = prev_end_checkpoint;
+                        let val = self.parse_expr()?;
+                        has_positional = true;
+                        fields.push(ObjectField {
+                            key: None,
+                            val,
+                            is_spread: false,
+                        });
+                    }
                 } else {
-                    // Shorthand { key } -> { key: key }
+                    self.lexer = checkpoint;
+                    self.peeked = peeked_checkpoint;
+                    self.peeked2 = peeked2_checkpoint;
+                    self.prev_token_end = prev_end_checkpoint;
+                    let val = self.parse_expr()?;
+                    has_positional = true;
                     fields.push(ObjectField {
-                        key: Some(key.clone()),
-                        val: Expr::Ident(key),
+                        key: None,
+                        val,
                         is_spread: false,
                     });
                 }
@@ -1925,6 +1961,11 @@ impl<'a> Parser<'a> {
             }
         }
         self.expect(Token::RBrace)?;
+        if has_positional {
+            for idx in shorthand_indices {
+                fields[idx].key = None;
+            }
+        }
         Ok(fields)
     }
 

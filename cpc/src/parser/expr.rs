@@ -462,6 +462,28 @@ impl<'a> Parser<'a> {
                             None
                         };
                         Expr::Return(span, val)
+                    } else if self.peek() == Some(&Token::LBrace)
+                        && matches!(
+                            self.peek_next(),
+                            Some(
+                                Token::Return
+                                    | Token::Break
+                                    | Token::Continue
+                                    | Token::Let
+                                    | Token::Const
+                                    | Token::If
+                                    | Token::While
+                                    | Token::For
+                                    | Token::Switch
+                                    | Token::Match
+                                    | Token::Defer
+                                    | Token::ErrDefer
+                                    | Token::Unsafe
+                            )
+                        )
+                    {
+                        let block = self.parse_block_stmt()?;
+                        Expr::LabeledBlock { label: None, block }
                     } else {
                         self.parse_expr()?
                     };

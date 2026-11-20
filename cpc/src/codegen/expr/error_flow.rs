@@ -233,6 +233,14 @@ impl Codegen {
                         let ret_stmt = self.build_ret_stmt_for_fallback(ret_expr.as_deref());
                         format!("(({}) orelse {{ {} }})", l_code, ret_stmt)
                     }
+                    Expr::LabeledBlock { label: None, block } => {
+                        let old_case = std::mem::take(&mut self.current_case_content);
+                        for s in &block.body {
+                            self.generate_stmt(s);
+                        }
+                        let body_code = std::mem::replace(&mut self.current_case_content, old_case);
+                        format!("(({}) orelse {{\n{}\n}})", l_code, body_code.trim_end())
+                    }
                     _ => {
                         let r_code = self.generate_expr(right);
                         if self.is_lib_mode {

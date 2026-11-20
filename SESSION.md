@@ -2529,3 +2529,7 @@
 
 ### 2026-11-20（完成 `cpc` 编译器 Stage 1 ~ Stage 5 全量零回归模块化拆分）
 - **执行成果**：按用户认可的五阶段方案，连续完成 `codegen/mod.rs`（4,330 -> 1,499 行 + `runtime/json.zig`）、`codegen/expr.rs`（4,957 行 -> 6 文件）、`parser.rs`（9,568 行 -> 8 文件）、`sema.rs`（7,310 行 -> 7 文件）与 `codegen/types.rs`（2,927 行 -> 4 文件）全部拆分；每个阶段均通过 10/10 确定性 SHA256 0 字节差异校验与端到端 `cap test` 验证，并新增防反弹脚本 `scripts/check_cpc_size.sh` 固化提交。
+
+### 2026-11-20（极速热修 `bun_agy` 工单 `task-bun-20261120-return-struct-rawzig-fallback` 并结单交付）
+- **协同事件**：收到 `bun_agy` 投递的 `task-bun-20261120-return-struct-rawzig-fallback`（泛型函数 `return struct { ... }` 内 `callconv(.c)` 省略 `void` 与嵌套 `struct` 触发 `rawzig` 静默透传）。
+- **修复与交付**：借助刚拆完的 `cpc` 模块化架构秒级定位并修复 4 处根因：`parser/decl.rs` 吸收 `callconv/align/linksection/addrspace` 函数修饰符、`parser/primary.rs` 支持无点号位置元组、`parser/expr.rs` + `codegen/expr/error_flow.rs` 支持 `?? { <stmt>... }`、`codegen/decl_class.rs` 让 `lower_extra_zig_member` 正常 lower 嵌套 `Class`/`Enum`/`TypeAlias`。`repro_return_struct_rawzig_fallback.cp` 100% 通过 `zig ast-check`，真实 `node_fs.cp` 残留透传 `static fn` 由 64 降至 3，已 `resolve` + `ack` 结单并提交 Git。
