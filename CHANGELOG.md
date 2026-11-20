@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:mermaid` 声明式 Mermaid 图表构建与安全转义引擎（5/5 PASS，自动动态挂载 `cap.mermaid`）
+
+- 新建 [`lib/mermaid/`](file:///data/dev/cp/lib/mermaid/index.cp)（`diagram.cp`、`index.cp`）：`FlowchartBuilder`（多形状/子图 `subgraph`/特殊字符自动安全引号转义与 ````mermaid```` 围栏输出）、`SequenceBuilder`（`participant`/`actor`/消息箭头/激活条/`loop`/`alt`/`else`）、`ErBuilder`（`PK`/`FK`/`UK` 与基数关系）及 `StateBuilder`；文档 [`doc/lib/mermaid.md`](file:///data/dev/cp/doc/lib/mermaid.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_mermaid_production_deep.cp`](file:///data/dev/cp/cap/test/test_mermaid_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:bplus` B+ 树有序键值索引与叶子链表范围扫描引擎（5/5 PASS，自动动态挂载 `cap.bplus`）
 
 - 新建 [`lib/bplus/`](file:///data/dev/cp/lib/bplus/index.cp)（`bplus.cp`、`index.cp`）：`BPlusTree`（索引池与双向叶子链表、1000+ 乱序多层分裂、大规模删除借位/合并与缩层、`lowerBound`/`rangeScan`/`prefixScan`/`verifyInvariants` 自检，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/bplus.md`](file:///data/dev/cp/doc/lib/bplus.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_bplus_production_deep.cp`](file:///data/dev/cp/cap/test/test_bplus_production_deep.cp) `-m` 5/5 PASS。

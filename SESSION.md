@@ -263,3 +263,6 @@
 
 ### 2026-11-21（`cap:bplus` 验收固化，顶替以 `inherit` 拉起 `cap:lz4` 维持 2 路并行）
 - **执行成果**：`lib/bplus/`（5/5 PASS，含 `cap.bplus` 动态挂载与 `doc/lib/bplus.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/lz4/`（纯 CP LZ4 Block & Frame 极速压缩解压与 XXH32 校验引擎），与 `lib/mermaid/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:mermaid` 验收固化，顶替以 `inherit` 拉起 `cap:sitemap` 维持 2 路并行）
+- **执行成果**：`lib/mermaid/`（5/5 PASS，含 `cap.mermaid` 动态挂载与 `doc/lib/mermaid.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/sitemap/`（RFC 9309 `robots.txt` 爬虫规则匹配与 XML Sitemap 0.9 / Index 解析生成引擎），与 `lib/lz4/` 保持 2 路正交并行。

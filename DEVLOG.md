@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:mermaid` 声明式 Mermaid 图表构建引擎（5/5 PASS，文档直写 `doc/lib/mermaid.md`）
+
+- **落地成果**：`lib/mermaid/`（`diagram.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:sitemap`（RFC 9309 `robots.txt` 规则匹配与 XML Sitemap 0.9 / Sitemap Index 解析生成引擎），与 `lib/lz4/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:bplus` B+ 树有序键值索引与范围扫描引擎（5/5 PASS，文档直写 `doc/lib/bplus.md`）
 
 - **落地成果**：`lib/bplus/`（`bplus.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:lz4`（纯 CP LZ4 Block & Frame 极速压缩解压与 XXH32 校验引擎），与 `lib/mermaid/` 保持 2 路正交并行。
