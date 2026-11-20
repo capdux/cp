@@ -37,3 +37,6 @@
 
 ### 2026-11-21（`cap:kafka_wire` 验收，顶替拉起 `cap:grpc_wire` 维持 2 路常规并行）
 - **执行成果**：`lib/kafka_wire/`（5/5 PASS，`doc/lib/kafka_wire.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:grpc_wire` 维持 2 路常规并行
+
+### 2026-11-21（`cap:grpc_wire` 验收，顶替拉起 `cap:lsm_sst` 维持 2 路常规并行）
+- **执行成果**：`lib/grpc_wire/`（5/5 PASS，`doc/lib/grpc_wire.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:lsm_sst` 维持 2 路常规并行

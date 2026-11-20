@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:grpc_wire` 纯 CP gRPC over HTTP/2 5 字节 Length-Prefixed 增量分帧、grpc-timeout 六单位与状态头编解码引擎（支持 `cap.grpc_wire` 自动动态挂载，详见 `doc/lib/grpc_wire.md`）（5/5 PASS，自动动态挂载 `cap.grpc_wire`）
+- **新增标准库**：`lib/grpc_wire/{status,headers,frame,index}.cp`，实现 17 种 `GrpcStatus`、`parseServiceMethodPath`、`grpc-timeout` 六单位防溢出编解码、`grpc-message` 百分号转义、`-bin` Base64 头及支持 `1..7` 字节切片拆包的 `GrpcStreamFramer`。
+- **新增文档与测试**：`doc/lib/grpc_wire.md` 扁平文档与 `cap/test/test_grpc_wire_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:kafka_wire` 纯 CP Apache Kafka Wire Protocol、ApiVersions/Metadata、流式分帧与 CRC32C RecordBatch v2 引擎（支持 `cap.kafka_wire` 自动动态挂载，详见 `doc/lib/kafka_wire.md`）（5/5 PASS，自动动态挂载 `cap.kafka_wire`）
 - **新增标准库**：`lib/kafka_wire/{wire,protocol,record_batch,index}.cp`，实现 ZigZag Varint/Compact String/Tagged Fields 原语、`ApiVersions`/`Metadata` 请求响应编解码、`KafkaStreamFramer` `1..7` 字节半包黏包拆包及 Castagnoli CRC32C 校验的 `RecordBatch v2`。
 - **新增文档与测试**：`doc/lib/kafka_wire.md` 扁平文档与 `cap/test/test_kafka_wire_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
