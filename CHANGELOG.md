@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:audio` WAV PCM16/F32 编解码、重采样与语音 AI Energy VAD 引擎（5/5 PASS，自动动态挂载 `cap.audio`）
+
+- 新建 [`lib/audio/`](file:///data/dev/cp/lib/audio/index.cp)（`wav.cp`、`dsp.cp`、`index.cp`）：`WavCodec`（RIFF/WAVE PCM16 & Float32 编解码 + `LIST`/`JUNK`/`fact` 扩展块跳过）、`AudioDsp`（48kHz→16kHz 线性重采样、`stereoToMono`、RMS/dBFS/Peak/ZCR、正弦波生成）及 `EnergyVad` 语音活动区间检测；文档 [`doc/lib/audio.md`](file:///data/dev/cp/doc/lib/audio.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_audio_production_deep.cp`](file:///data/dev/cp/cap/test/test_audio_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:git`（5/5）与 `cap:pdf`（5/5）双标准库落地（自动动态挂载 `cap.git` / `cap.pdf`）
 
 - **`cap:git`**（[`lib/git/`](file:///data/dev/cp/lib/git/index.cp)）：`GitOid`/`GitObject`（与 `git hash-object` 逐字节一致的 SHA-1）、`GitTreeCodec`/`GitCommitCodec`、完整 `.gitignore` 规则引擎及 `GitRepo.readHead`（松散/`packed-refs`/worktree），文档 [`doc/lib/git.md`](file:///data/dev/cp/doc/lib/git.md)，`-m` 5/5 PASS；

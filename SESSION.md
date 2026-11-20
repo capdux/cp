@@ -94,3 +94,6 @@
   - 已更新 [`GEMINI.md`](file:///data/dev/cp/GEMINI.md) 固化“常规 2 路 `flash` 正交并行 + 热修单独开 `inherit` 子智能体、修完即收”；
   - 回收并验收子智能体 45（`lib/git/` 5/5）与子智能体 46（`lib/pdf/` 5/5），文档直写 `doc/lib/{git,pdf}.md`，合并单次提交 Git；
   - 当前已在跑的 3 个子智能体（`lib/audio/`、`lib/tui/`、`lib/wasm/`）待首个完工回收后不再补位，自然平滑回落至长期 2 路并行。
+
+### 2026-11-21（`cap:audio` 验收固化，不补位平滑回落至 2 路常规并行）
+- **执行成果**：子智能体 47（`lib/audio/`，5/5 PASS，含 `cap.audio` 动态挂载与 `doc/lib/audio.md`）经 `verify_module.sh` 一键验收回收并提交 Git；按节约配额规范不再补位，当前稳定保持 **2 路**常规 `flash` 子智能体并行（`lib/tui/` 与 `lib/wasm/`）。
