@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:pubsub` NATS/MQTT 通配符主题消息代理与背压/保留消息引擎（5/5 PASS，自动动态挂载 `cap.pubsub`）
+
+- 新建 [`lib/pubsub/`](file:///data/dev/cp/lib/pubsub/index.cp)（`topic.cp`、`broker.cp`、`index.cp`）：零分配 `TopicMatcher`（支持 NATS `.`/`*`/`>` 与 MQTT `/`/`+`/`#` 及畸形模式拦截）与 `PubSubBroker`（多订阅扇出、`DropOldest`/`DropNewest` 有界背压与 `publishRetained` 保留消息回放/清除）；文档 [`doc/lib/pubsub.md`](file:///data/dev/cp/doc/lib/pubsub.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_pubsub_production_deep.cp`](file:///data/dev/cp/cap/test/test_pubsub_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:wasm` WebAssembly 1.0 二进制解析、校验与构造引擎（5/5 PASS，自动动态挂载 `cap.wasm`）
 
 - 新建 [`lib/wasm/`](file:///data/dev/cp/lib/wasm/index.cp)（`leb128.cp`、`module.cp`、`builder.cp`、`index.cp`）：`Leb128`（U32/U64/I32/I64 溢出与截断防护）、`WasmModule.parse`（`\0asm` 魔数/版本/节序递增校验、Type/Import/Func/Memory/Export/Start/Code/Custom 全解析）与 `WasmBuilder`；文档 [`doc/lib/wasm.md`](file:///data/dev/cp/doc/lib/wasm.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_wasm_production_deep.cp`](file:///data/dev/cp/cap/test/test_wasm_production_deep.cp) `-m` 5/5 PASS。

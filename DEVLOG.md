@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:pubsub` NATS/MQTT 通配符消息代理（5/5 PASS，文档直写 `doc/lib/pubsub.md`）
+
+- **落地成果**：`lib/pubsub/`（`topic.cp`/`broker.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过，单轮完成回收与提交，并顶替派发 `cap:graphql`（GraphQL 查询词法、AST 解析、深度防护与格式化器），严格保持 2 路常规并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:wasm` WebAssembly 1.0 解析与构造引擎（5/5 PASS，文档直写 `doc/lib/wasm.md`）
 
 - **落地成果**：`lib/wasm/`（`leb128.cp`/`module.cp`/`builder.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过，单轮完成回收与提交，并顶替派发 `cap:pubsub`（NATS/MQTT 通配符主题路由与背压/保留消息代理），维持 2 路常规并行。

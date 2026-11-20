@@ -103,3 +103,6 @@
 
 ### 2026-11-21（`cap:wasm` 验收固化，顶替拉起 `cap:pubsub` NATS/MQTT 通配符消息代理维持 2 路并行）
 - **执行成果**：子智能体 49（`lib/wasm/`，5/5 PASS，含 `cap.wasm` 动态挂载与 `doc/lib/wasm.md`）经 `verify_module.sh` 一键验收回收并提交 Git；顶替派发子智能体 51（新建 `lib/pubsub/` NATS `*`/`>` 与 MQTT `+`/`#` 通配符路由、有界背压队列与保留消息代理），与 `lib/asn1/` 严格保持 2 路常规并行。
+
+### 2026-11-21（`cap:pubsub` 验收固化，顶替拉起 `cap:graphql` 查询解析与格式化引擎维持 2 路并行）
+- **执行成果**：子智能体 51（`lib/pubsub/`，5/5 PASS，含 `cap.pubsub` 动态挂载与 `doc/lib/pubsub.md`）经 `verify_module.sh` 一键验收回收并提交 Git；顶替派发子智能体 52（新建 `lib/graphql/` GraphQL 词法/AST/查询深度防护与格式化器），与 `lib/asn1/` 严格保持 2 路常规并行。
