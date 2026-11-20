@@ -527,3 +527,6 @@
 
 ### 2026-11-21（`cap:sip` 验收提交，顶替拉起 `cap:quic` 维持 2 路常规并行）
 - **执行成果**：`lib/sip/`（5/5 PASS，`doc/lib/sip.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/quic/`（RFC 9000 QUIC 变长整数、Long/Short Header 与 STREAM/ACK/CRYPTO 帧编解码引擎），与 `lib/wav/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:wav` 验收提交，顶替拉起 `cap:midi` 维持 2 路常规并行）
+- **执行成果**：`lib/wav/`（5/5 PASS，`doc/lib/wav.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/midi/`（Standard MIDI File Format 0/1 多轨音序编解码与 VLQ/Running Status 引擎），与 `lib/quic/` 维持 2 路常规并行。

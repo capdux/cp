@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:wav` 纯 CP RIFF/WAVE PCM 音频容器编解码与重采样引擎（5/5 PASS，文档直写 `doc/lib/wav.md`）
+- **核心设计**：统一将五种 PCM/Float 采样格式归一化为交错 `f32` 缓冲并在编码端执行饱和钳位，跳过 `JUNK`/`LIST`/`fact` 等非关键块并严格校验 RIFF/WAVE 头与截断边界。
+
 ## 2026-11-21: 新建 `cap:sip` RFC 3261 SIP 会话初始协议报文解析与构建引擎（5/5 PASS，文档直写 `doc/lib/sip.md`）
 - **核心设计**：按 `SIP/2.0` 协议规范实现大小写不敏感与紧凑单字母头名无缝互查，`parse()` 严格校验状态码 `100..699` 与 `Content-Length` 载荷完整性，`SipBuilder` 自动维护 `Content-Length` 并阻断 CRLF 注入。
 
