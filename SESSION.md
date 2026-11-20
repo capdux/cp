@@ -341,3 +341,6 @@
 
 ### 2026-11-21（`cap:merkle` 验收合并提交，顶替拉起 `cap:syslog` 维持 2 路并行）
 - **执行成果**：`lib/merkle/`（5/5 PASS，`doc/lib/merkle.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/cuckoo/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/syslog/`（RFC 5424 / RFC 3164 结构化 Syslog 解析与格式化引擎），与 `lib/hpack/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:syslog` 验收提交，顶替拉起 `cap:radix` 维持 2 路并行）
+- **执行成果**：`lib/syslog/`（5/5 PASS，`doc/lib/syslog.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/radix/`（压缩基数树 / Patricia Radix Trie 与前缀路由引擎），与 `lib/hpack/` 维持 2 路常规并行。

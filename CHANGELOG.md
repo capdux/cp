@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:syslog` RFC 5424 / RFC 3164 结构化 Syslog 解析与格式化引擎（5/5 PASS，自动动态挂载 `cap.syslog`）
+- **新增标准库**：`lib/syslog/{types,parser,formatter,index}.cp`，实现 RFC 5424 与 RFC 3164 自动识别解析、PRI 0..191 校验、NILVALUE `-`、UTF-8 BOM 剥离及多 `SD-ELEMENT` 转义解析/序列化。
+- **新增文档与测试**：`doc/lib/syslog.md` 扁平文档与 `cap/test/test_syslog_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:merkle` RFC 6962 域分离 Merkle 哈希树与双树差异定位引擎（5/5 PASS，自动动态挂载 `cap.merkle`）
 - **新增标准库**：`lib/merkle/{merkle,index}.cp`，实现 RFC 6962 域分离 `0x00`/`0x01` SHA-256 哈希、非 2 次幂奇数节点提升、`generateProof`、`verifyProof` 与 $O(k \log N)$ 跨规模 `diffTrees` 差异定位。
 - **新增文档与测试**：`doc/lib/merkle.md` 扁平文档与 `cap/test/test_merkle_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

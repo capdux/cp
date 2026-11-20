@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:syslog` RFC 5424 / RFC 3164 结构化 Syslog 解析与格式化引擎（5/5 PASS，文档直写 `doc/lib/syslog.md`）
+- **核心设计**：按 `types`/`parser`/`formatter` 三层解耦，`parse()` 基于 `<PRI>` 后首字符是否为版本号数字自动分流 RFC 5424 与 RFC 3164；`SD-PARAM` 严格处理 `\"`、`\\`、`\]` 转义往返与 UTF-8 BOM 剥离，保证 `std.testing.allocator` 零泄漏。
+
 ## 2026-11-21: 新建 `cap:merkle` RFC 6962 域分离 Merkle 哈希树与双树差异定位引擎（5/5 PASS，文档直写 `doc/lib/merkle.md`）
 - **核心设计**：叶子前缀 `0x00` 与内部节点前缀 `0x01` 严格域分离复用 `cap:crypto` `sha256Raw`，彻底消除二阶原像碰撞；奇数叶子层自动将末尾节点直接提升，并通过自顶向下哈希剪枝实现 $O(k \log N)$ 同规模/跨规模 `diffTrees` 差异叶子定位。
 
