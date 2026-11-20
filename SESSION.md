@@ -383,3 +383,9 @@
 
 ### 2026-11-21（`cap:nanoid` 验收提交，顶替拉起 `cap:ratelimit` 维持 2 路常规并行）
 - **执行成果**：`lib/nanoid/`（5/5 PASS，`doc/lib/nanoid.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/ratelimit/`（Token Bucket / 滑动窗口 / GCRA 通用信元速率限流与配额控制引擎），与 `lib/msgpack/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:ratelimit` 验收提交，顶替拉起 `cap:wal` 维持 2 路常规并行）
+- **执行成果**：`lib/ratelimit/`（5/5 PASS，`doc/lib/ratelimit.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/wal/`（纯 CP CRC32C 校验预写日志 WAL 帧编码、崩溃截断恢复与 Checkpoint 引擎），与 `lib/msgpack/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:msgpack` 验收合并提交，顶替拉起 `cap:hll` 维持 2 路常规并行）
+- **执行成果**：`lib/msgpack/`（5/5 PASS，`doc/lib/msgpack.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/ratelimit/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/hll/`（HyperLogLog++ 亚千字节超大规模基数估算引擎），与 `lib/wal/` 维持 2 路常规并行。

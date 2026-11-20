@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:msgpack` MessagePack 二进制紧凑编解码与深度安全防护引擎（5/5 PASS，文档直写 `doc/lib/msgpack.md`）
+- **核心设计**：编码器自动按值域选择最小字节表示（如 `fixint`/`fixstr`/`fixarray`），解码器零拷贝借用 `str`/`bin`/`ext` 原始切片并通过 `errdefer` 完整回收已构造嵌套容器，默认 64 层深度限制防止堆栈与资源耗尽。
+
+## 2026-11-21: 新建 `cap:ratelimit` 多算法确定性限流与配额控制引擎（5/5 PASS，文档直写 `doc/lib/ratelimit.md`）
+- **核心设计**：全量采用确定性单调毫秒 `now_ms: i64` 注入与时间回拨钳位，零系统调用；涵盖 `TokenBucket`、`SlidingWindowCounter`、`GcraLimiter` 与多租户 `KeyedRateLimiter`，`std.testing.allocator` 零泄漏。
+
 ## 2026-11-21: 新建 `cap:nanoid` NanoID / 单调 ULID / RFC 9562 UUID v7 分布式短 ID 引擎（5/5 PASS，文档直写 `doc/lib/nanoid.md`）
 - **核心设计**：采用位掩码拒绝采样消除非 2 次幂字母表的模数偏差；`MonotonicUlidGenerator` 在同毫秒内严格递增 80-bit 随机数并在全 `0xFF` 时返回 `MonotonicOverflow`；`UuidV7` 严格校验 RFC 9562 `version == 7` 与 `variant == 2`。
 

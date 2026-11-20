@@ -2,6 +2,14 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:msgpack` MessagePack 二进制紧凑编解码与深度安全防护引擎（5/5 PASS，自动动态挂载 `cap.msgpack`）
+- **新增标准库**：`lib/msgpack/{msgpack,index}.cp`，实现全规格 MessagePack 自动最小编码 `MsgPackWriter` 与零拷贝切片解码 `MsgPackReader`，支持 `fixint`/`int`/`uint`/`float`/`str`/`bin`/`array`/`map`/`ext` 并严格防御保留标签 `0xc1`、`TrailingBytes` 与超深嵌套。
+- **新增文档与测试**：`doc/lib/msgpack.md` 扁平文档与 `cap/test/test_msgpack_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
+## [2026-11-21] - 新建 `cap:ratelimit` 多算法确定性限流与配额控制引擎（5/5 PASS，自动动态挂载 `cap.ratelimit`）
+- **新增标准库**：`lib/ratelimit/{ratelimit,index}.cp`，实现 `TokenBucket`、`SlidingWindowCounter`（双窗平滑加权防边界毛刺）、`GcraLimiter`（O(1) 单 `tat_ms` 状态）及 `KeyedRateLimiter`（多租户隔离与 `evictIdle` 过期淘汰）。
+- **新增文档与测试**：`doc/lib/ratelimit.md` 扁平文档与 `cap/test/test_ratelimit_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:nanoid` NanoID / 单调 ULID / RFC 9562 UUID v7 分布式短 ID 引擎（5/5 PASS，自动动态挂载 `cap.nanoid`）
 - **新增标准库**：`lib/nanoid/{nanoid,index}.cp`，实现无模数偏差拒绝采样 `NanoId`、Crockford Base32 编码及同毫秒 80-bit 单调递增 `MonotonicUlidGenerator`、以及 RFC 9562 位布局 `UuidV7` 生成与校验。
 - **新增文档与测试**：`doc/lib/nanoid.md` 扁平文档与 `cap/test/test_nanoid_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
