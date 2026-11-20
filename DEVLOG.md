@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-20: 新建 `cap:template` Mustache 模板引擎（5/5 PASS，支持 AI Prompt `renderRaw` 与 `cap.template` 动态挂载）
+
+- **落地成果**：`lib/template/`（`value.cp`/`engine.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过，单轮完成回收、`cp_lib_ref.md` 更新与提交，并顶替派发 `cap:rpc`（JSON-RPC 2.0 & MCP 协议帧与分发器）。
+
+---
+
 ## 2026-11-20: 新建 `cap:csv`（5/5）与 `cap:uuid`（5/5），连续端到端实证动态 `cap.<ns>` 零改动编译器自动挂载
 
 - **落地成果**：`lib/csv/`（`parser.cp`/`writer.cp`/`table.cp`/`index.cp`）与 `lib/uuid/`（`uuid.cp`/`ulid.cp`/`nanoid.cp`/`index.cp`）均经 `verify_module.sh` 一键全绿通过，并双双实证 `import cap from "cap"; cap.csv` / `cap.uuid` 零改动 `cpc` 自动挂载（每次省去 45s 编译器重编），合并单次提交。

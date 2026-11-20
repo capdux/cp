@@ -25,3 +25,6 @@
 ### 2026-11-20（回答子智能体模型分层原因 + `cap:csv` 验收提交，顶替拉起 `cap:math` 保持 3 路并行）
 - **用户询问**：询问为何主模型为 Gemini 4 Neon · Medium 而子智能体显示为 Gemini 4 Hydrogen，并询问 Hydrogen 档位。已如实说明此前传入 `Model: "flash"` 以实现快慢分层与配额隔离，并提供保持分层或统一 `inherit` 两项选择。
 - **执行成果**：子智能体 16（`lib/csv/`，5/5 PASS）与子智能体 17（`lib/uuid/`，5/5 PASS）双双经 `verify_module.sh` 一键验收回收（含动态 `cap.csv` / `cap.uuid` 自动挂载实证），合并单次提交 Git；顶替派发子智能体 19（`lib/math/` 线性代数/统计/AI 向量相似度与量化）与子智能体 20（`lib/schema/` JSON Schema 2020-12 运行时校验器），与 `lib/template/` 维持 3 路正交并行。
+
+### 2026-11-20（`cap:template` 验收固化，顶替拉起 `cap:rpc` JSON-RPC 2.0 / MCP 协议引擎维持 3 路并行）
+- **执行成果**：子智能体 18（`lib/template/`，5/5 PASS，含 `cap.template` 动态挂载）经 `verify_module.sh` 一键验收回收并提交 Git；立即顶替派发子智能体 21（新建 `lib/rpc/` JSON-RPC 2.0 + LSP/MCP Content-Length 分帧 + MCP Server 分发器），与 `lib/math/`、`lib/schema/` 保持 3 路正交并行。

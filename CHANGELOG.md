@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-20] - 新建 `cap:template` Mustache 兼容模板引擎（5/5 PASS，自动动态挂载 `cap.template`）
+
+- 新建 [`lib/template/`](file:///data/dev/cp/lib/template/index.cp)（`value.cp`、`engine.cp`、`index.cp`）：支持 `TemplateValue`/`TemplateContext` 点分路径与父子作用域栈、`{{var}}` HTML 转义与 `{{{raw}}}`/`{{&raw}}`/`renderRaw`、`{{#section}}`/`{{^inverted}}`/`{{! comment}}`/`{{> partial}}`（含最大递归深度防护与独立行空白修剪）；同步 [`docs/template/template.md`](file:///data/dev/cp/docs/template/template.md) 与 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_template_production_deep.cp`](file:///data/dev/cp/cap/test/test_template_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-20] - 新建 `cap:csv`（5/5）与 `cap:uuid`（5/5）双标准库落地（零改动编译器自动动态挂载 `cap.csv` / `cap.uuid`）
 
 - **`cap:csv`**（[`lib/csv/`](file:///data/dev/cp/lib/csv/index.cp)）：RFC 4180 增量 `StreamingCsvReader`（跨 chunk BOM/引号换行/双引号转义/列校验/`max_record_bytes` 防护）、`CsvWriter`（CSV/TSV 与公式注入防护）及 `CsvTable`（表头索引、过滤与 `toJsonLines` NDJSON 导出），[`test_csv_production_deep.cp`](file:///data/dev/cp/cap/test/test_csv_production_deep.cp) `-m` 5/5 PASS；
