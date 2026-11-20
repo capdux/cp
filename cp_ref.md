@@ -6176,7 +6176,7 @@ export class SocketContext<Handler> {
 | `cap:meta`        | 编译期反射特征与无分支位操作套件：`bits`（2 的幂对齐、位计数/旋转、字节序打包、packed 位域运算）与 `traits`（Zig 0.17 `@typeInfo` 全类型特征探测、`ChildType`/`ItemType`） | **已全面实装** |
 | `cap:platform`    | 跨平台宿主环境与内核特性探测：`OsKind`/`ArchKind`/`Endianness`、`KernelVersion` 与 `PlatformInfo`（Linux `uname` 真实内核版本、`io_uring`/`copy_file_range`/`statx`/`pidfd` 特性开关、`/proc/self/exe`、`pageSize`、`cpuCount`） | **已全面实装** |
 | **`cap`（根按需挂载容器）** | `import cap from "cap";`（支持任意别名与 `@import("cap")`）：极薄零重依赖微核心（`lib/_cap/core.cp`：`OOM`/`handleOom`/`Environment`/`assert`/`clamp`/`FD`/`O`/`S`/`Output`/`ComptimeStringMap`）+ **`cpc` 编译期不动点扫描按需惰性挂载 59 个标准库**（未引用库 0 读取、0 转译、0 编译） | **已全面实装** |
-| `cap:pkg`（兼容 `cap.pkg` / `cap.install`） | 工业级包管理核心引擎（直迁自 Bun `install/`）：`DependencyVersion` 10 协议解析、`.npmrc`/`RegistryConfig` 与 `NpmPackageManifest` Packument、DAG `Lockfile`（确定性 JSON + 紧凑二进制 `CPLK0001` 含 CRC32）、安全 `TarballExtractor`（gzip+tar+SRI+路径穿越/软链逃逸防护）、`PackageLinker`（Hoisted/Isolated、硬链/拷贝/软链、`.bin` `0o755` 与 `patch_install`）及 `PackageManager` 端到端闭环 | **已全面实装** |
+| `cap:pkg`（兼容 `cap.pkg` / `cap.install`） | 工业级包管理核心引擎（直迁自 Bun `install/`，13 模块 7.9K 行）：`DependencyVersion` 10 协议解析、`.npmrc`/`RegistryConfig` 与 `NpmPackageManifest` Packument、`RegistryHttpClient`（ETag/304 磁盘缓存+指数退避重试）、Monorepo `WorkspaceGraph`（`workspace:*^~`/`catalog:`/拓扑排序）、零信任 `LifecycleRunner`（`trustedDependencies`+`PosixSpawn`）、DAG `Lockfile`（JSON + 二进制 `CPLK0001`/CRC32）、`LockfileMigrator`（npm/yarn/pnpm 三生态一键迁移）与 `DependencyAnalyzer`（`why`/`findDuplicates`/`auditIntegrity`）、安全 `TarballExtractor`、`PackageLinker`（Hoisted/Isolated/补丁）及 `PackageManager` | **已全面实装** |
 
 ---
 

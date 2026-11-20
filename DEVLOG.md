@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-20: Phase B-3 `cap:pkg` 四大生产子系统直迁完工（Monorepo Workspaces / Registry 缓存 / 零信任生命周期 / 三生态 Lockfile 迁移）
+
+- **落地成果**：`lib/pkg/` 扩充至 13 模块 7,948 行（+3,436 行），完整补齐 Monorepo Workspaces + Catalogs、Registry HTTP ETag/304 磁盘缓存与指数退避重试、零信任 `trustedDependencies` 生命周期脚本执行器，以及 npm/yarn/pnpm 三生态 Lockfile 迁移与 `why`/`findDuplicates`/`auditIntegrity` 诊断引擎；2 套测试共 10/10 PASS，0 `@import("bun")`，0 `std.posix`。
+
+---
+
 ## 2026-11-20: Phase C-3 收官批次（`lib/resolver/` + `lib/test_runner/`，+4,195 行）与 Bun 全生态原版直迁收官总检
 
 - **落地成果**：完成 `lib/resolver/` 生产级目录缓存/软链穿透/`TsConfigChainLoader`/`BrowserFieldMap`/`SideEffectsMatcher`/`SelfReferenceResolver` 与全新 `lib/test_runner/`（`TestOrder`/`TestRunner`/`SnapshotStore`/TAP+JUnit+JSON `TestReporter`），全部测试 100% PASS。

@@ -2648,3 +2648,9 @@
 ### 2026-11-20（极速热修 `bun_agy` 工单 `task-bun-20261120-sentinel-ptr-const` 并结单）
 - **协同事件**：收到 `bun_agy` 工单 `task-bun-20261120-sentinel-ptr-const`（`[*:0]const u8?` 被降级为 `?[*:0]u8` 丢失 `const`）。
 - **修复与交付**：修复 [`cpc/src/parser/types.rs`](file:///data/dev/cp/cpc/src/parser/types.rs) 中 `[*:sentinel]` 与 `[*c:sentinel]` 分支，统一调用 `parse_ptr_qualifiers()` + `apply_ptr_qualifiers()` 保留 `const`/对齐限定符；通过 `bash scripts/sync_cpc.sh release` 部署正式版，`repro_sentinel_const.cp` + `zig ast-check` 验证精确输出 `h2: ?[*:0]const u8 = null`，已 `resolve` + `ack` 结单并提交 Git。
+
+### 2026-11-20（持续双子智能体推进：Phase B-3 `cap:pkg` 四大生产子系统验收入库，无缝拉起 `cap` CLI 强化子智能体）
+- **用户指令**：开启两个子智能体继续工作，收到热修任务时单独开启专门热修子智能体急修并在修完后收回。
+- **执行成果**：
+  - 子智能体 2（Phase B-3）完工回收：[`lib/pkg/`](file:///data/dev/cp/lib/pkg/index.cp) 扩充至 13 模块 7,948 行（新增 `workspace.cp`、`registry_client.cp`、`lifecycle.cp`、`migration.cp`），[`test_phase_b3_pkg_production.cp`](file:///data/dev/cp/cap/test/test_phase_b3_pkg_production.cp)（4/4）与 `test_pkg_install_deep.cp`（6/6）共 10/10 PASS，13/13 `// Source:` 合规，0 `@import("bun")`，0 `std.posix`，已同步双轨规范与热日志并执行 Git 提交固化；
+  - 无缝顶替拉起子智能体 3（`7da54810`，`cap/src/` CLI 可靠性与模块化测试增强：修复 `cap build` 假退出码 0、新增 `cap clean [--all]`、`cap test -m` 与 `cap build --timings`），与子智能体 1（`5c0912b3`，全仓回归测试大扫荡与跨模块符号卫生）保持双路并行。

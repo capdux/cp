@@ -1,3 +1,15 @@
+## [2026-11-20] - Phase B-3 `cap:pkg` 工业级包管理四大生产子系统直迁落地（13 模块 7,948 行）
+
+### 标准库深度升级 (`cap:pkg` / `lib/pkg/`)
+- 新增 4 个源自 Bun `src/install/` 的核心生产模块（累计 `lib/pkg/` 达 13 模块 **7,948 行**，0 `@import("bun")`，0 `std.posix`）：
+  - [`lib/pkg/workspace.cp`](file:///data/dev/cp/lib/pkg/workspace.cp)（723 行）：Monorepo `WorkspaceGraph`/`CatalogMap`，基于 `cap:glob`+`cap:sys` 扫描 `workspaces`（数组/对象/取反排除）、解析 `workspace:*^~` 与 `catalog:`、成员依赖环检测与 DAG 拓扑排序；
+  - [`lib/pkg/registry_client.cp`](file:///data/dev/cp/lib/pkg/registry_client.cp)（894 行）：`RegistryHttpClient`/`RetryPolicy`，支持作用域 Bearer/Basic 鉴权、ETag/304 磁盘元数据缓存复用与 429/5xx 指数退避重试；
+  - [`lib/pkg/lifecycle.cp`](file:///data/dev/cp/lib/pkg/lifecycle.cp)（567 行）：默认零信任 `TrustedPolicy`（仅 `trustedDependencies` 白名单允许执行，统计拦截数）+ 基于 `PosixSpawn`+`Pipe` 的真实 `LifecycleRunner`；
+  - [`lib/pkg/migration.cp`](file:///data/dev/cp/lib/pkg/migration.cp)（1,248 行）：`LockfileMigrator`（一键迁移 `package-lock.json` v2/v3、`yarn.lock` v1、`pnpm-lock.yaml` v6-v9 至原生 `Lockfile`）与 `DependencyAnalyzer`（`why`/`findDuplicates`/`auditIntegrity`）；
+- 增量导出至 [`lib/pkg/index.cp`](file:///data/dev/cp/lib/pkg/index.cp)，更新 [`docs/pkg/pkg.md`](file:///data/dev/cp/docs/pkg/pkg.md) 与双轨规范手册；新增 [`cap/test/test_phase_b3_pkg_production.cp`](file:///data/dev/cp/cap/test/test_phase_b3_pkg_production.cp)（4/4 PASS），回归 `test_pkg_install_deep.cp`（6/6 PASS）。
+
+---
+
 ## [2026-11-20] - Phase C-3 收官批次落地：`lib/resolver/` 生产缓存与高级特性 + 新建 `lib/test_runner/` 纯 CP 测试框架（+4,195 行）
 
 ### 标准库升级与新增 (Phase C-3 Direct Port)

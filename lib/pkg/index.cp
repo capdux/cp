@@ -12,3 +12,7 @@ export * from "./lockfile.cp";
 export * from "./tarball.cp";
 export * from "./linker.cp";
 export * from "./manager.cp";
+export * from "./workspace.cp";
+export * from "./registry_client.cp";
+export * from "./lifecycle.cp";
+export * from "./migration.cp";

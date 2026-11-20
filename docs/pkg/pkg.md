@@ -1,7 +1,7 @@
 # `cap:pkg` — CP 工业级包管理核心标准库文档 (`lib/pkg/`)
 
 > **源资产迁移来源**：`/data/dev/bun/src/install/` 与 `/data/dev/bun/src/install_types/`  
-> **设计原则**：零 `@import("bun")`、零 `std.posix`、零 JSC 耦合、100% 纯正 CP 语法，复用 `cap:semver`、`cap:pack`、`cap:patch`、`cap:json`、`cap:encoding`、`cap:hash`、`cap:sys` 与 `lib/resolver/{integrity,hosted_git,package_json}.cp`。
+> **设计原则**：零 `@import("bun")`、零 `std.posix`、零 JSC 耦合、100% 纯正 CP 语法，复用 `cap:semver`、`cap:pack`、`cap:patch`、`cap:json`、`cap:encoding`、`cap:hash`、`cap:sys`、`cap:glob`、`cap:io` 与 `lib/{http,conf,resolver}/`。
 
 ---
 
@@ -17,10 +17,15 @@
 | [lib/pkg/tarball.cp](file:///data/dev/cp/lib/pkg/tarball.cp) | 294 | `install/extract_tarball.cp` | 安全 Tarball 构建/校验/解包引擎 `TarballBuilder`/`TarballExtractor`（路径穿越拦截、W3C SRI 校验、可执行权限还原） |
 | [lib/pkg/linker.cp](file:///data/dev/cp/lib/pkg/linker.cp) | 331 | `install/hoisted_install.cp` | 模块树链接与补丁引擎 `InstallStrategy`（`Hoisted`/`Isolated`）、`BinLinker`（`.bin` 软链与 `0o755`）、`PackageLinker`（硬链/拷贝/软链与 `cap:patch` 补丁注入） |
 | [lib/pkg/manager.cp](file:///data/dev/cp/lib/pkg/manager.cp) | 615 | `install/PackageManager.cp` | 端到端包管理引擎 `PackageManager`（`package.json` → 增量 `cap.lock` → 解析 → 缓存/解包+SRI → Hoisted/Isolated 链接 + `.bin` + 补丁 → Lockfile 落盘） |
-| [lib/pkg/index.cp](file:///data/dev/cp/lib/pkg/index.cp) | 14 | `install/install.cp` | `cap:pkg` 统一导出入口（重导出全部子模块及 `Integrity`/`IntegrityTag`） |
-| **核心库合计** | **4,512** | — | **9 个模块全部 `cpc check` 0 报错** |
-| [cap/test/test_pkg_install_deep.cp](file:///data/dev/cp/cap/test/test_pkg_install_deep.cp) | 607 | — | 6 大深度端到端测试套件（6/6 100% PASS） |
-| **总代码量** | **5,119** | — | — |
+| [lib/pkg/workspace.cp](file:///data/dev/cp/lib/pkg/workspace.cp) | 723 | `install/lockfile.cp` & `PnpmMatcher.cp` | Monorepo Workspaces 引擎 `WorkspaceGraph`/`WorkspaceMember`/`CatalogMap`（`cap:glob` 扫描、`workspace:*`/`^`/`~`、`catalog:`/`catalog:<name>`、成员 DAG `topoSortMembers()` 与环检测） |
+| [lib/pkg/registry_client.cp](file:///data/dev/cp/lib/pkg/registry_client.cp) | 894 | `install/NetworkTask.cp` & `PackageManifestMap.cp` | 工业级 Registry HTTP 客户端与缓存层 `RegistryHttpClient`/`RegistryCacheEntry`/`RetryPolicy`/`MockRegistryTransport`（`Accept`、`If-None-Match`/304、`Bearer`/`Basic`、`<cache_dir>/manifests/<hash>.{json,etag,meta}` 磁盘缓存、429/5xx + `Retry-After` 退避） |
+| [lib/pkg/lifecycle.cp](file:///data/dev/cp/lib/pkg/lifecycle.cp) | 567 | `install/lifecycle_script_runner.cp` & `postinstall_optimizer.cp` | 零信任生命周期脚本执行器 `LifecycleRunner`/`TrustedPolicy`/`LifecyclePhase`（`trustedDependencies` 白名单拦截 `blocked_scripts`、`PosixSpawn` + `Pipe` 捕获、注入 `PATH` + `npm_*` + `INIT_CWD`） |
+| [lib/pkg/migration.cp](file:///data/dev/cp/lib/pkg/migration.cp) | 1248 | `install/migration.cp` & `yarn.cp` & `pnpm.cp` | 多生态 Lockfile 迁移器 `LockfileMigrator`（`package-lock.json` v2/v3、`yarn.lock` v1、`pnpm-lock.yaml` v6-v9 YAML AST）与依赖图诊断引擎 `DependencyAnalyzer`（`why`/`findDuplicates`/`auditIntegrity`） |
+| [lib/pkg/index.cp](file:///data/dev/cp/lib/pkg/index.cp) | 18 | `install/install.cp` | `cap:pkg` 统一导出入口（重导出全部 12 个核心子模块及 `Integrity`/`IntegrityTag`） |
+| **核心库合计** | **7,948** | — | **13 个模块全部 `cpc check` 0 报错** |
+| [cap/test/test_pkg_install_deep.cp](file:///data/dev/cp/cap/test/test_pkg_install_deep.cp) | 607 | — | Phase B-1 6 大深度端到端测试套件（6/6 100% PASS） |
+| [cap/test/test_phase_b3_pkg_production.cp](file:///data/dev/cp/cap/test/test_phase_b3_pkg_production.cp) | 405 | — | Phase B-3 4 大生产子系统端到端测试套件（4/4 100% PASS） |
+| **总代码量** | **8,960** | — | — |
 
 ---
 
@@ -81,16 +86,46 @@
 ### 8. 端到端包管理器 (`lib/pkg/manager.cp`)
 - **`PackageManager`**：串联 `readRootPackageJson` → `planInstall`（增量 `cap.lock` 对比与缓存命中统计）→ `install`（递归依赖解析、环检测、缓存检查/Tarball 解包+SRI 校验、Hoisted/Isolated 落盘与传递隔离软链、补丁应用、`.bin` 链接、`cap.lock` & `cap.lockb` 双落盘）。
 
+### 9. Monorepo Workspaces 与 Catalogs (`lib/pkg/workspace.cp`)
+- **`WorkspaceGraph` / `WorkspaceMember` / `CatalogMap`**：
+  - 支持根目录 `package.json` 与 `cap.json` 中的 `workspaces` 数组形式（`["packages/*", "!packages/ignored"]`）及对象形式（`{ packages, catalog, catalogs }`），结合 `cap:glob` 与 `cap:sys` 扫描工作区成员并自动跳过 `node_modules`/隐藏目录；
+  - 完整解析 `workspace:*`、`workspace:^`、`workspace:~`、`workspace:<range>` 为真实本地成员版本；
+  - 支持 `catalog:` 与 `catalog:<name>` 版本查表解析；
+  - 提供 `hasCycle()` 环检测与 `topoSortMembers()` 成员依赖 DAG 拓扑排序（确保被依赖包优先构建/安装），并支持 `applyToLockfile()` 落盘。
+
+### 10. Registry HTTP 客户端与磁盘元数据缓存 (`lib/pkg/registry_client.cp`)
+- **`RegistryHttpClient` / `RegistryCacheEntry` / `RetryPolicy` / `MockRegistryTransport`**：
+  - 自动生成标准 HTTP/1.1 请求（`Accept: application/vnd.npm.install-v1+json; q=1.0, application/json; q=0.8, */*`、`If-None-Match`、`Authorization: Bearer/Basic`）；
+  - 持久化磁盘元数据缓存（`<cache_dir>/manifests/<hash>.{json,etag,meta}`），支持 `Cache-Control: max-age` TTL 新鲜度短路与 `304 Not Modified` 零流量复用；
+  - 针对 `429`/`500`/`502`/`503`/`504` 实现指数退避重试与 `Retry-After` 解析，并与 `NpmPackageManifest.parsePackument` 无缝衔接。
+
+### 11. 零信任生命周期脚本执行器 (`lib/pkg/lifecycle.cp`)
+- **`LifecycleRunner` / `TrustedPolicy` / `LifecyclePhase`**：
+  - 默认零信任安全模型（`allow_all == false`）：仅允许 `trustedDependencies` 白名单内包运行 `preinstall`/`install`/`postinstall`/`prepare` 脚本，未授权脚本拦截并统计至 `stats.blocked_scripts` 与 `stats.blocked_packages`；
+  - 通过 `cap:sys` `PosixSpawn` + `cap:io` `Pipe` 在目标包目录内真实执行脚本，自动前置 `node_modules/.bin` 至 `PATH` 并注入 `npm_package_name`/`npm_package_version`/`npm_lifecycle_event`/`npm_lifecycle_script`/`INIT_CWD`，完整捕获 stdout/stderr/exit_code 与纳秒级耗时。
+
+### 12. 多生态 Lockfile 迁移与依赖图诊断 (`lib/pkg/migration.cp`)
+- **`LockfileMigrator`**：一键自动探测并迁移 npm `package-lock.json`（v2/v3，支持嵌套 `node_modules` 与 workspace `link`）、Yarn v1 `yarn.lock`（缩进键值与多 spec 合并）与 pnpm `pnpm-lock.yaml`（v6-v9 YAML 解析为 `ConfValue` AST，支持 `importers`/`packages`/`snapshots`/`overrides`/`patchedDependencies`）至原生 `Lockfile`。
+- **`DependencyAnalyzer`**：
+  - `why(allocator, lf, pkg_name)`：逆向/正向追踪从根包到目标包的全部依赖路径链与命中版本；
+  - `findDuplicates(allocator, lf)`：扫描同名多版本重复安装并统计入度以指导 `dedupe`；
+  - `auditIntegrity(allocator, lf)`：审计缺失 SRI 哈希（`Missing`）或使用弱算法 `sha1`（`WeakSha1`）的包。
+
 ---
 
 ## 三、 验证与测试结果
 
-1. **静态语法与借用检查（`cpc check --brief lib/pkg/*.cp`）**：9 个文件全部 `0 errors`。
+1. **静态语法与借用检查（`cpc check --brief lib/pkg/*.cp`）**：13 个模块 + 2 个测试文件全部 `0 errors`。
 2. **耦合隔离检查**：`rg -n '@import\("bun"\)|std\.posix' lib/pkg/` 无任何匹配（`0` 残留）。
-3. **端到端测试套件（`cap test cap/test/test_pkg_install_deep.cp`）**：**6/6 全部 PASS（100%）**：
+3. **Phase B-1 端到端测试套件（`cap test cap/test/test_pkg_install_deep.cp`）**：**6/6 全部 PASS（100%）**：
    - `cap:pkg core types, strings, slices, behaviors & cap hub` — PASS
    - `cap:pkg DependencyVersion.parse all protocols & DependencyList` — PASS
    - `cap:pkg RegistryConfig (.npmrc), Auth & NpmPackageManifest Packument` — PASS
    - `cap:pkg Lockfile graph, cycle detection, topoOrder & text/binary CPLK0001 round-trip` — PASS
    - `cap:pkg TarballBuilder -> gzip -> SRI verify -> safe extract & path traversal defense` — PASS
    - `cap:pkg E2E PackageManager Hoisted & Isolated install + .bin + patch_install` — PASS
+4. **Phase B-3 生产子系统测试套件（`cap test cap/test/test_phase_b3_pkg_production.cp`）**：**4/4 全部 PASS（100%）**：
+   - `Phase B-3 (1): Monorepo Workspaces, Catalogs, workspace:*^~ & DAG topoSort` — PASS
+   - `Phase B-3 (2): RegistryHttpClient Auth, ETag/304 Disk Cache & RetryPolicy` — PASS
+   - `Phase B-3 (3): LifecycleRunner Zero-Trust Policy & PosixSpawn Execution` — PASS
+   - `Phase B-3 (4): LockfileMigrator (npm/yarn/pnpm) & DependencyAnalyzer (why/dups/audit)` — PASS
