@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-20] - 新建 `cap:vector` 本地 SIMD 向量索引 + Okapi BM25 + RRF 混合 RAG 搜索引擎（5/5 PASS）
+
+- 新建 [`lib/vector/`](file:///data/dev/cp/lib/vector/index.cp)（`flat_index.cp`、`bm25.cp`、`hybrid.cp`、`index.cp`）：复用 `cap:math` SIMD 算子的 `VectorIndex`（Cosine/Dot/Euclidean + O(1) Swap-Remove）、`Bm25Index`（Okapi BM25 词频饱和与平滑 IDF）及 `RrfFusion`（Reciprocal Rank Fusion 混合检索去重提权）；同步 [`docs/vector/vector.md`](file:///data/dev/cp/docs/vector/vector.md) 与 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_vector_production_deep.cp`](file:///data/dev/cp/cap/test/test_vector_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-20] - 新建 `cap:fsm`（5/5）与 `cap:cache`（5/5）双标准库落地（自动动态挂载 `cap.fsm` / `cap.cache`）
 
 - **`cap:fsm`**（[`lib/fsm/`](file:///data/dev/cp/lib/fsm/index.cp)）：确定性 `StateMachine`（审计历史 + `toMermaid`）、三态 `CircuitBreaker`（`Closed`/`Open`/`HalfOpen` + 探针限流与统计）及 `WorkflowDag`（Kahn 分层并行 `executionWaves`、环路拦截、`readyNodes` 与上游失败 BFS 级联 `Skipped`），[`test_fsm_production_deep.cp`](file:///data/dev/cp/cap/test/test_fsm_production_deep.cp) `-m` 5/5 PASS；

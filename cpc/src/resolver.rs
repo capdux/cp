@@ -458,7 +458,7 @@ pub fn resolve_source_path(
             "pack" | "compress" => "pack".to_string(),
             "sys" | "system" => "sys".to_string(),
             "bigint" | "big_int" => "bigint".to_string(),
-            "simd" | "vector" => "simd".to_string(),
+            "simd" => "simd".to_string(),
             "css" => "css".to_string(),
             other => other.to_string(),
         };
@@ -478,7 +478,7 @@ pub fn resolve_source_path(
             "pack" | "compress" => "pack".to_string(),
             "sys" | "system" => "sys".to_string(),
             "bigint" | "big_int" => "bigint".to_string(),
-            "simd" | "vector" => "simd".to_string(),
+            "simd" => "simd".to_string(),
             "css" => "css".to_string(),
             other => other.to_string(),
         };

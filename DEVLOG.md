@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-20: 新建 `cap:vector` 本地 SIMD 向量检索 + BM25 + RRF 混合 RAG 引擎（5/5 PASS）
+
+- **落地成果**：`lib/vector/`（`flat_index.cp`/`bm25.cp`/`hybrid.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过，单轮完成回收、`cp_lib_ref.md` 更新与提交，并顶替派发 `cap:xml`（XML 1.0 解析/DOM/Writer/路径查询）。
+
+---
+
 ## 2026-11-20: 新建 `cap:fsm`（5/5）与 `cap:cache`（5/5），双双实证动态 `cap.<ns>` 自动挂载并合并提交
 
 - **落地成果**：`lib/fsm/`（状态机/熔断器/Workflow DAG）与 `lib/cache/`（O(1) LRU+TTL/BloomFilter/Count-Min Sketch）均经 `verify_module.sh` 一键全绿通过，单轮合并完成回收、`cp_lib_ref.md` 更新与提交，并顶替派发 `cap:metrics` 与 `cap:text`。

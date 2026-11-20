@@ -36,3 +36,7 @@
 
 ### 2026-11-20（`cap:fsm` & `cap:cache` 双路合并验收提交，顶替拉起 `cap:metrics` 与 `cap:text` 维持 3 路并行）
 - **执行成果**：子智能体 23（`lib/fsm/` 5/5）与子智能体 22（`lib/cache/` 5/5）双双经 `verify_module.sh` 一键验收回收（含动态 `cap.fsm`/`cap.cache` 挂载验证），合并单次提交 Git；立即顶替派发子智能体 25（`lib/metrics/` Prometheus/OpenMetrics）与子智能体 26（`lib/text/` AI RAG 文本分块、模糊搜索与 Token 预算估算），与 `lib/vector/` 保持 3 路正交并行。
+
+### 2026-11-20（排查收口旧 Swarm 面板提示 + `cap:vector` 验收提交，顶替拉起 `cap:xml` 维持 3 路并行）
+- **用户指令**：要求处理底部旧 Swarm 提示（`task-capsurf-20261119-compiler-regression`），不再发送或提示。已确认 `queue.db` 双端 `unacked` 均为 `[]`、旧 Swarm 成员均已 `killed`，在面板追加无 `@` 的 `[归档闭环]` 收口记录（`seq: 9`）顶掉旧预览。
+- **执行成果**：子智能体 24（`lib/vector/`，5/5 PASS，含 `cap.vector` 动态挂载）经 `verify_module.sh` 一键验收回收并提交 Git；顶替派发子智能体 27（新建 `lib/xml/` XML 1.0 解析/DOM/安全 Writer/路径查询），与 `lib/metrics/`、`lib/text/` 保持 3 路正交并行。
