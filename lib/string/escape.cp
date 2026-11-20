@@ -219,6 +219,31 @@ pub struct StringEscape {
         return pos;
     }
 
+    pub static fn escapeHtmlAlloc(allocator: std.mem.Allocator, input: []const u8): ![]u8 {
+        if (!StringEscape.needsHtmlEscape(input)) {
+            return allocator.dupe(u8, input);
+        }
+        // Worst case: every byte becomes `&#x27;` or `&quot;` (6x)
+        const max_len = input.len * 6;
+        const buf = try allocator.alloc(u8, max_len);
+        const written = StringEscape.escapeHtml(input, buf);
+        if (written == max_len) {
+            return buf;
+        }
+        return try allocator.realloc(buf, written);
+    }
+
+    pub static fn escapeRegExpAlloc(allocator: std.mem.Allocator, input: []const u8): ![]u8 {
+        const max_len = input.len * 4;
+        if (max_len == 0) return allocator.dupe(u8, "");
+        const buf = try allocator.alloc(u8, max_len);
+        const written = StringEscape.escapeRegExp(input, buf);
+        if (written == max_len) {
+            return buf;
+        }
+        return try allocator.realloc(buf, written);
+    }
+
     pub static fn escapeJsAlloc(allocator: std.mem.Allocator, input: []const u8): ![]u8 {
         if (!StringEscape.needsJsEscape(input)) {
             return allocator.dupe(u8, input);
@@ -235,6 +260,26 @@ pub struct StringEscape {
     }
 }
 
+pub fn escapeHtml(input: []const u8, out: []u8): usize {
+    return StringEscape.escapeHtml(input, out);
+}
+
+pub fn escapeHtmlAlloc(allocator: std.mem.Allocator, input: []const u8): ![]u8 {
+    return StringEscape.escapeHtmlAlloc(allocator, input);
+}
+
+pub fn escapeRegExp(input: []const u8, out: []u8): usize {
+    return StringEscape.escapeRegExp(input, out);
+}
+
+pub fn escapeRegExpAlloc(allocator: std.mem.Allocator, input: []const u8): ![]u8 {
+    return StringEscape.escapeRegExpAlloc(allocator, input);
+}
+
 pub fn escapeJs(input: []const u8, out: []u8): usize {
     return StringEscape.escapeJs(input, out);
+}
+
+pub fn escapeJsAlloc(allocator: std.mem.Allocator, input: []const u8): ![]u8 {
+    return StringEscape.escapeJsAlloc(allocator, input);
 }

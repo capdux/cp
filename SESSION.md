@@ -2602,3 +2602,9 @@
   - 完成逐目录行数与 JSC 耦合度实测报告并和用户 100% 对齐 `cap` 惰性挂载容器 + 分阶段原版直迁方案；
   - 子智能体 1 完工回收：落地 [`lib/_cap/core.cp`](file:///data/dev/cp/lib/_cap/core.cp)、[`docs/core/cap_hub.md`](file:///data/dev/cp/docs/core/cap_hub.md) 与 `cpc` 单文件/`-m` 双模式编译期不动点按需挂载引擎，[`cap/test/test_cap_lazy_hub.cp`](file:///data/dev/cp/cap/test/test_cap_lazy_hub.cp) 单文件与 `-m` 均 100% PASS（manifest 实证仅加载 7 模块、未用库 0 负载），已发布 `cpc` Release 版并固化提交；
   - 随即无缝拉起子智能体 3（Phase C-1：`md/` 10.6K + `sql/` 4.5K 原版直迁）与正在收尾的子智能体 2（Phase A：`sys/` + `io/` + `string/unicode/` 原版直迁）保持双路并行。
+
+### 2026-11-20（Phase A 底座三件套原版直迁验收入库，无缝拉起 Phase B-1 `lib/pkg/` 包管理引擎直迁）
+- **执行成果**：
+  - 子智能体 2 完工回收：`lib/sys/`（11 文件 3,118 行）、`lib/io/`（8 文件 2,067 行）、`lib/string/`（15 文件 4,088 行）合计 34 文件 9,273 行 100% 对齐 Bun 生产契约（`Maybe<T>`/`SysError`/`DirIterator`/`PosixSpawn`、非阻塞 `PipeReader`/`FileReader`、全套 `strings.*`/`Wtf8`/`StringBuilder`/`MutableString`/`Unicode`），0 `@import("bun")`，0 `std.posix`，34/34 文件 `// Source:` 合规；
+  - 5 套测试共 23/23 用例 100% PASS（`test_phase_a_foundation_port.cp`、`test_path_sourcemap_io_sys_errno_deep.cp`、`test_net_io_full.cp`、`test_string_blob_image_mem_deep.cp`、`test_bun_new_assets.cp`），已更新双轨规范与热日志并执行 Git 提交固化；
+  - 无缝顶替拉起子智能体 4（`a9544a47`，Phase B-1：Bun `install/` + `install_types/` 工业级包管理核心直迁 → `lib/pkg/`），与子智能体 3（`eb009530`，Phase C-1：`md/` + `sql/`）保持双路并行推进。

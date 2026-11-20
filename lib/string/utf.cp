@@ -210,6 +210,165 @@ pub struct Utf8 {
     }
 }
 
+pub struct EncodeIntoResult {
+    read: u32 = 0,
+    written: u32 = 0,
+}
+
+/// WTF-8（允许孤立 UTF-16 代理对编码）编解码支持，移植自 Bun src/string/wtf.zig
+pub struct Wtf8 {
+    pub static fn byteSequenceLength(lead: u8): u8 {
+        if (lead < 0x80) return 1;
+        if (lead >= 0xC2 && lead <= 0xDF) return 2;
+        if (lead >= 0xE0 && lead <= 0xEF) return 3;
+        if (lead >= 0xF0 && lead <= 0xF4) return 4;
+        return 0;
+    }
+
+    pub static fn encodeSurrogatePair(high: u16, low: u16): u32 {
+        if (high < 0xD800 || high > 0xDBFF || low < 0xDC00 || low > 0xDFFF) {
+            return REPLACEMENT_CHAR;
+        }
+        return (0x10000 as u32) + (((high as u32) - 0xD800) << 10) + ((low as u32) - 0xDC00);
+    }
+
+    pub static fn decodeSurrogatePair(cp: u32): [2]u16 {
+        if (cp < 0x10000 || cp > 0x10FFFF) {
+            return [0xFFFD, 0];
+        }
+        const adj = cp - 0x10000;
+        return [(0xD800 + (adj >> 10)) as u16, (0xDC00 + (adj & 0x3FF)) as u16];
+    }
+
+    /// WTF-8 编码：允许 0xD800..0xDFFF 代理码点
+    pub static fn encodeRune(cp: u32, out: []u8): usize {
+        if (cp <= 0x7F) {
+            if (out.len < 1) return 0;
+            out[0] = cp as u8;
+            return 1;
+        }
+        if (cp <= 0x7FF) {
+            if (out.len < 2) return 0;
+            out[0] = (0xC0 | (cp >> 6)) as u8;
+            out[1] = (0x80 | (cp & 0x3F)) as u8;
+            return 2;
+        }
+        if (cp <= 0xFFFF) {
+            if (out.len < 3) return 0;
+            out[0] = (0xE0 | (cp >> 12)) as u8;
+            out[1] = (0x80 | ((cp >> 6) & 0x3F)) as u8;
+            out[2] = (0x80 | (cp & 0x3F)) as u8;
+            return 3;
+        }
+        if (cp <= 0x10FFFF) {
+            if (out.len < 4) return 0;
+            out[0] = (0xF0 | (cp >> 18)) as u8;
+            out[1] = (0x80 | ((cp >> 12) & 0x3F)) as u8;
+            out[2] = (0x80 | ((cp >> 6) & 0x3F)) as u8;
+            out[3] = (0x80 | (cp & 0x3F)) as u8;
+            return 4;
+        }
+        return 0;
+    }
+
+    /// WTF-8 解码：允许 ED A0..BF xx 孤立代理对
+    pub static fn decodeRune(input: []const u8, offset: usize): DecodeResult {
+        if (offset >= input.len) {
+            return DecodeResult{ codepoint: 0, bytes_consumed: 0, valid: false };
+        }
+        const b0 = input[offset];
+        if (b0 < 0x80) {
+            return DecodeResult{ codepoint: b0 as u32, bytes_consumed: 1, valid: true };
+        }
+        const seq_len = Wtf8.byteSequenceLength(b0);
+        if (seq_len == 0 || offset + (seq_len as usize) > input.len) {
+            return DecodeResult{ codepoint: REPLACEMENT_CHAR, bytes_consumed: 1, valid: false };
+        }
+        if (seq_len == 2) {
+            const b1 = input[offset + 1];
+            if ((b1 & 0xC0) != 0x80) return DecodeResult{ codepoint: REPLACEMENT_CHAR, bytes_consumed: 1, valid: false };
+            const cp = (((b0 & 0x1F) as u32) << 6) | ((b1 & 0x3F) as u32);
+            return DecodeResult{ codepoint: cp, bytes_consumed: 2, valid: true };
+        }
+        if (seq_len == 3) {
+            const b1 = input[offset + 1];
+            const b2 = input[offset + 2];
+            if ((b1 & 0xC0) != 0x80 || (b2 & 0xC0) != 0x80) {
+                return DecodeResult{ codepoint: REPLACEMENT_CHAR, bytes_consumed: 1, valid: false };
+            }
+            if (b0 == 0xE0 && b1 < 0xA0) {
+                return DecodeResult{ codepoint: REPLACEMENT_CHAR, bytes_consumed: 1, valid: false };
+            }
+            const cp = (((b0 & 0x0F) as u32) << 12) | (((b1 & 0x3F) as u32) << 6) | ((b2 & 0x3F) as u32);
+            return DecodeResult{ codepoint: cp, bytes_consumed: 3, valid: true };
+        }
+        const b1 = input[offset + 1];
+        const b2 = input[offset + 2];
+        const b3 = input[offset + 3];
+        if ((b1 & 0xC0) != 0x80 || (b2 & 0xC0) != 0x80 || (b3 & 0xC0) != 0x80) {
+            return DecodeResult{ codepoint: REPLACEMENT_CHAR, bytes_consumed: 1, valid: false };
+        }
+        if ((b0 == 0xF0 && b1 < 0x90) || (b0 == 0xF4 && b1 >= 0x90)) {
+            return DecodeResult{ codepoint: REPLACEMENT_CHAR, bytes_consumed: 1, valid: false };
+        }
+        const cp = (((b0 & 0x07) as u32) << 18) | (((b1 & 0x3F) as u32) << 12) | (((b2 & 0x3F) as u32) << 6) | ((b3 & 0x3F) as u32);
+        return DecodeResult{ codepoint: cp, bytes_consumed: 4, valid: true };
+    }
+
+    pub static fn isValid(input: []const u8): bool {
+        let pos: usize = 0;
+        while (pos < input.len) {
+            const decoded = Wtf8.decodeRune(input, pos);
+            if (!decoded.valid) return false;
+            pos += decoded.bytes_consumed as usize;
+        }
+        return true;
+    }
+
+    pub static fn fromUtf16(input: []const u16, out: []u8): usize {
+        let i: usize = 0;
+        let out_pos: usize = 0;
+        while (i < input.len) {
+            const unit0 = input[i] as u32;
+            let cp: u32 = unit0;
+            if (unit0 >= 0xD800 && unit0 <= 0xDBFF && i + 1 < input.len) {
+                const unit1 = input[i + 1] as u32;
+                if (unit1 >= 0xDC00 && unit1 <= 0xDFFF) {
+                    cp = Wtf8.encodeSurrogatePair(@intCast(unit0), @intCast(unit1));
+                    i += 1;
+                }
+            }
+            const n = Wtf8.encodeRune(cp, out[out_pos..out.len]);
+            if (n == 0) break;
+            out_pos += n;
+            i += 1;
+        }
+        return out_pos;
+    }
+
+    pub static fn toUtf16(input: []const u8, out: []u16): usize {
+        let pos: usize = 0;
+        let out_idx: usize = 0;
+        while (pos < input.len) {
+            const decoded = Wtf8.decodeRune(input, pos);
+            const cp = decoded.codepoint;
+            if (cp < 0x10000) {
+                if (out_idx >= out.len) break;
+                out[out_idx] = cp as u16;
+                out_idx += 1;
+            } else {
+                if (out_idx + 1 >= out.len) break;
+                const pair = Wtf8.decodeSurrogatePair(cp);
+                out[out_idx] = pair[0];
+                out[out_idx + 1] = pair[1];
+                out_idx += 2;
+            }
+            pos += if (decoded.bytes_consumed > 0) (decoded.bytes_consumed as usize) else 1;
+        }
+        return out_idx;
+    }
+}
+
 pub struct Utf16 {
     pub static fn isHighSurrogate(unit: u16): bool {
         return unit >= 0xD800 && unit <= 0xDBFF;
@@ -480,4 +639,151 @@ pub struct UnicodeWidth {
         }
         return width;
     }
+}
+
+pub fn utf8ByteSequenceLength(lead: u8): u8 {
+    return Utf8.sequenceLength(lead);
+}
+
+pub fn decodeUTF8(input: []const u8, offset: usize): DecodeResult {
+    return Utf8.decodeNext(input, offset);
+}
+
+pub fn encodeUTF8(cp: u32, out: []u8): usize {
+    return Utf8.encodeCodepoint(cp, out);
+}
+
+pub fn elementLengthLatin1IntoUTF8(latin1: []const u8): usize {
+    let total: usize = 0;
+    let i: usize = 0;
+    while (i < latin1.len) {
+        total += if (latin1[i] >= 0x80) (2 as usize) else (1 as usize);
+        i += 1;
+    }
+    return total;
+}
+
+/// 将 Latin-1 字节流转码为 UTF-8，返回实际读取与写入字节数（对齐 Bun copyLatin1IntoUTF8）
+pub fn copyLatin1IntoUTF8(out: []u8, latin1: []const u8): EncodeIntoResult {
+    let read_pos: usize = 0;
+    let write_pos: usize = 0;
+    while (read_pos < latin1.len && write_pos < out.len) {
+        const b = latin1[read_pos];
+        if (b < 0x80) {
+            out[write_pos] = b;
+            write_pos += 1;
+            read_pos += 1;
+        } else {
+            if (write_pos + 2 > out.len) break;
+            out[write_pos] = (0xC0 | ((b as u32) >> 6)) as u8;
+            out[write_pos + 1] = (0x80 | ((b as u32) & 0x3F)) as u8;
+            write_pos += 2;
+            read_pos += 1;
+        }
+    }
+    return EncodeIntoResult{
+        read: @intCast(read_pos),
+        written: @intCast(write_pos),
+    };
+}
+
+pub fn elementLengthUTF16IntoUTF8(utf16: []const u16): usize {
+    return Utf16.utf8LengthFromUtf16Le(utf16);
+}
+
+/// 将 UTF-16LE 单元流转码为 UTF-8，孤立代理替换为 U+FFFD，返回实际读取单元与写入字节数
+pub fn copyUTF16IntoUTF8(out: []u8, utf16: []const u16): EncodeIntoResult {
+    let read_pos: usize = 0;
+    let write_pos: usize = 0;
+    while (read_pos < utf16.len && write_pos < out.len) {
+        const unit0 = utf16[read_pos] as u32;
+        if (unit0 < 0x80) {
+            out[write_pos] = unit0 as u8;
+            write_pos += 1;
+            read_pos += 1;
+        } else if (unit0 < 0x800) {
+            if (write_pos + 2 > out.len) break;
+            out[write_pos] = (0xC0 | (unit0 >> 6)) as u8;
+            out[write_pos + 1] = (0x80 | (unit0 & 0x3F)) as u8;
+            write_pos += 2;
+            read_pos += 1;
+        } else if (unit0 >= 0xD800 && unit0 <= 0xDBFF) {
+            if (read_pos + 1 < utf16.len && utf16[read_pos + 1] >= 0xDC00 && utf16[read_pos + 1] <= 0xDFFF) {
+                if (write_pos + 4 > out.len) break;
+                const cp = Wtf8.encodeSurrogatePair(@intCast(unit0), utf16[read_pos + 1]);
+                const n = Utf8.encodeCodepoint(cp, out[write_pos..out.len]);
+                if (n == 0) break;
+                write_pos += n;
+                read_pos += 2;
+            } else {
+                if (write_pos + 3 > out.len) break;
+                const n = Utf8.encodeCodepoint(REPLACEMENT_CHAR, out[write_pos..out.len]);
+                if (n == 0) break;
+                write_pos += n;
+                read_pos += 1;
+            }
+        } else if (unit0 >= 0xDC00 && unit0 <= 0xDFFF) {
+            if (write_pos + 3 > out.len) break;
+            const n = Utf8.encodeCodepoint(REPLACEMENT_CHAR, out[write_pos..out.len]);
+            if (n == 0) break;
+            write_pos += n;
+            read_pos += 1;
+        } else {
+            if (write_pos + 3 > out.len) break;
+            out[write_pos] = (0xE0 | (unit0 >> 12)) as u8;
+            out[write_pos + 1] = (0x80 | ((unit0 >> 6) & 0x3F)) as u8;
+            out[write_pos + 2] = (0x80 | (unit0 & 0x3F)) as u8;
+            write_pos += 3;
+            read_pos += 1;
+        }
+    }
+    return EncodeIntoResult{
+        read: @intCast(read_pos),
+        written: @intCast(write_pos),
+    };
+}
+
+pub fn convertUTF8toUTF16(allocator: std.mem.Allocator, input: []const u8): ![]u16 {
+    return Utf16.encodeUtf8ToUtf16LeAlloc(allocator, input);
+}
+
+pub fn convertUTF8toUTF16InBuffer(out: []u16, input: []const u8): EncodeIntoResult {
+    let pos: usize = 0;
+    let out_idx: usize = 0;
+    while (pos < input.len) {
+        const dec_res = Utf8.decodeNext(input, pos);
+        const cp = dec_res.codepoint;
+        const step: usize = if (dec_res.bytes_consumed > 0) (dec_res.bytes_consumed as usize) else 1;
+        if (cp < 0x10000) {
+            if (out_idx >= out.len) break;
+            out[out_idx] = cp as u16;
+            out_idx += 1;
+        } else {
+            if (out_idx + 1 >= out.len) break;
+            const adj = cp - 0x10000;
+            out[out_idx] = (0xD800 + (adj >> 10)) as u16;
+            out[out_idx + 1] = (0xDC00 + (adj & 0x3FF)) as u16;
+            out_idx += 2;
+        }
+        pos += step;
+    }
+    return EncodeIntoResult{
+        read: @intCast(pos),
+        written: @intCast(out_idx),
+    };
+}
+
+pub fn convertUTF16toUTF8(allocator: std.mem.Allocator, input: []const u16): ![]u8 {
+    return Utf16.decodeUtf16LeToUtf8Alloc(allocator, input);
+}
+
+pub fn convertUTF16toUTF8InBuffer(out: []u8, input: []const u16): EncodeIntoResult {
+    return copyUTF16IntoUTF8(out, input);
+}
+
+pub fn withoutUTF8BOM(bytes: []const u8): []const u8 {
+    if (bytes.len >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF) {
+        return bytes[3..bytes.len];
+    }
+    return bytes;
 }

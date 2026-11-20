@@ -134,6 +134,34 @@ pub class BufferedReader<R: Reader> implements Reader {
         return _.cache_len - _.cache_pos;
     }
 
+    pub fn unreadSlice(): []const u8 {
+        if (_.cache_pos >= _.cache_len) return "";
+        return _.cache[_.cache_pos.._.cache_len];
+    }
+
+    /// 滑动窗口压缩：将未读数据移至缓冲区头部 (0..rem)
+    pub fn shift(*_) {
+        let rem = _.buffered();
+        if (rem > 0 && _.cache_pos > 0) {
+            let i: usize = 0;
+            while (i < rem) {
+                _.cache[i] = _.cache[_.cache_pos + i];
+                i += 1;
+            }
+        }
+        _.cache_pos = 0;
+        _.cache_len = rem;
+    }
+
+    pub fn fill(*_): usize! {
+        return _.compactAndFill();
+    }
+
+    pub fn clear(*_) {
+        _.cache_pos = 0;
+        _.cache_len = 0;
+    }
+
     fn compactAndFill(*_): usize! {
         let rem = _.buffered();
         if (rem > 0 && _.cache_pos > 0) {
@@ -294,6 +322,11 @@ pub class BufferedReader<R: Reader> implements Reader {
         }
     }
 
+    /// 别名方法：按分隔符读取（含分隔符）至定长切片
+    pub fn readUntilDelimiter(*_, delim: u8, out: *[]u8): usize! {
+        return _.readUntil(delim, out);
+    }
+
     /// 动态分配版 readUntil（读取直至 delim 或 EOF，包含 delim）
     pub fn readUntilAlloc(*_, allocator: std.mem.Allocator, delim: u8): ([]u8)! {
         let list: std.ArrayListUnmanaged(u8) = .empty;
@@ -406,6 +439,10 @@ pub class BufferedWriter<W: Writer> implements Writer {
             }
             pos += n;
         }
+    }
+
+    pub fn clear(*_) {
+        _.cache_len = 0;
     }
 
     pub fn flush(*_): void! {

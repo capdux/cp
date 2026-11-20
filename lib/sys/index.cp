@@ -6,16 +6,75 @@
 const std = @import("std");
 
 export {
+    SyscallTag,
+    SysError,
+    Maybe,
+    EPERM,
+    ENOENT,
+    ESRCH,
+    EINTR,
+    EIO,
+    ENXIO,
+    E2BIG,
+    ENOEXEC,
+    EBADF,
+    ECHILD,
+    EAGAIN,
+    ENOMEM,
+    EACCES,
+    EFAULT,
+    EBUSY,
+    EEXIST,
+    EXDEV,
+    ENODEV,
+    ENOTDIR,
+    EISDIR,
+    EINVAL,
+    ENFILE,
+    EMFILE,
+    ENOTTY,
+    ETXTBSY,
+    EFBIG,
+    ENOSPC,
+    ESPIPE,
+    EROFS,
+    EMLINK,
+    EPIPE,
+    ERANGE,
+    ENAMETOOLONG,
+    ENOSYS,
+    ENOTEMPTY,
+    ELOOP,
+    EWOULDBLOCK,
+    EOPNOTSUPP,
+    ECONNRESET,
+    ECONNREFUSED,
+    ETIMEDOUT,
+    ECANCELED,
+    linuxSyscallErrno,
+    cErrno,
+    errnoToError,
+} from "./error";
+
+export {
     FD,
     O_RDONLY,
     O_WRONLY,
     O_RDWR,
     O_CREAT,
     O_EXCL,
+    O_NOCTTY,
     O_TRUNC,
     O_APPEND,
     O_NONBLOCK,
+    O_DSYNC,
+    O_DIRECT,
+    O_DIRECTORY,
+    O_NOFOLLOW,
     O_CLOEXEC,
+    O_SYNC,
+    O_PATH,
+    O_TMPFILE,
     F_OK,
     X_OK,
     W_OK,
@@ -23,13 +82,41 @@ export {
     SEEK_SET,
     SEEK_CUR,
     SEEK_END,
+    AT_FDCWD,
+    AT_SYMLINK_NOFOLLOW,
+    AT_REMOVEDIR,
+    AT_SYMLINK_FOLLOW,
+    AT_EMPTY_PATH,
+    LOCK_SH,
+    LOCK_EX,
+    LOCK_NB,
+    LOCK_UN,
+    F_DUPFD,
+    F_GETFD,
+    F_SETFD,
+    F_GETFL,
+    F_SETFL,
+    F_DUPFD_CLOEXEC,
+    FD_CLOEXEC,
 } from "./fd";
 
 export {
+    FileKind,
+    StatxField,
+    kindFromMode,
     Stat,
+    PosixStat,
     stat,
     lstat,
     fstat,
+    fstatat,
+    lstatat,
+    statMaybe,
+    lstatMaybe,
+    fstatMaybe,
+    fstatatMaybe,
+    lstatatMaybe,
+    statx,
 } from "./stat";
 
 export {
@@ -37,9 +124,20 @@ export {
 } from "./file";
 
 export {
+    DirEntryKind,
+    DirEntry,
+    DirEntryOpt,
+    DirIterator,
+    Dir,
+} from "./dir";
+
+export {
+    CopyFileState,
     copyFile,
     copyFileByFd,
     copyFileRange,
+    sendfile,
+    copyFileWithState,
 } from "./copy_file";
 
 export {
@@ -57,7 +155,29 @@ export {
 } from "./tmp";
 
 export {
+    RENAME_NOREPLACE,
+    RENAME_EXCHANGE,
+    POLLIN,
+    POLLPRI,
+    POLLOUT,
+    POLLERR,
+    POLLHUP,
+    POLLNVAL,
+    PollFd,
+    EpollEvent,
+    EPOLL_CTL_ADD,
+    EPOLL_CTL_DEL,
+    EPOLL_CTL_MOD,
+    EPOLLIN,
+    EPOLLOUT,
+    EPOLLERR,
+    EPOLLHUP,
+    EPOLLRDHUP,
+    EPOLLET,
     open,
+    openat,
+    openMaybe,
+    openatMaybe,
     close,
     read,
     write,
@@ -68,19 +188,58 @@ export {
     dupFd,
     dup2,
     mkdir,
+    mkdirat,
+    mkdiratMaybe,
+    mkdirAll,
+    mkdirAllAt,
     rmdir,
+    rmdirat,
+    rmdirRecursive,
+    rmdirRecursiveAt,
     unlink,
+    unlinkat,
+    unlinkatMaybe,
     rename,
+    renameat,
+    renameat2,
+    renameat2Maybe,
     symlink,
+    symlinkat,
     readlink,
+    readlinkat,
+    link,
+    linkat,
     chmod,
+    fchmod,
+    chown,
+    fchown,
+    fsync,
+    fdatasync,
+    flock,
+    fcntl,
+    ioctl,
+    createPipe,
+    pipe2,
+    poll,
+    epollCreate,
+    epollCtl,
+    epollWait,
     access,
+    exists,
     getcwd,
     chdir,
+    readFile,
+    writeFile,
 } from "./fs_ops";
 
 export {
+    WNOHANG,
+    WUNTRACED,
+    WCONTINUED,
     UnameInfo,
+    WaitPidResult,
+    SpawnOptions,
+    PosixSpawn,
     getpid,
     getppid,
     getuid,
@@ -90,19 +249,33 @@ export {
     cpuCount,
     monotonicNs,
     realtimeMs,
+    waitpid,
+    waitpidMaybe,
+    kill,
+    killMaybe,
 } from "./process";
 
+import { pipe2 as sysPipe2, createPipe as sysCreatePipe } from "./fs_ops";
+
 pub struct Sys {
-    pub static fn dup(fd: FD): !FD {
+    static fn dup(fd: FD): !FD {
         return fd.dup();
     }
 
-    pub static fn dup2(old_fd: FD, new_fd: FD): !FD {
+    static fn dup2(old_fd: FD, new_fd: FD): !FD {
         return old_fd.dup2(new_fd);
     }
 
+    static fn pipe(): ![2]FD {
+        return sysCreatePipe();
+    }
+
+    static fn pipe2(flags: i32): ![2]FD {
+        return sysPipe2(flags);
+    }
+
     /// Bind the current thread to a specific CPU core using Zig 0.17 std.os.linux.
-    pub static fn setAffinity(core_id: usize): !void {
+    static fn setAffinity(core_id: usize): !void {
         zig {
             var cpu_set = std.mem.zeroes(std.os.linux.cpu_set_t);
             const word_idx = core_id / @bitSizeOf(usize);
@@ -119,16 +292,16 @@ pub struct Sys {
     pub struct Lib {
         handle: std.DynLib,
 
-        pub static fn open(path: []const u8): !Lib {
-            let lib = try std.DynLib.open(path);
+        static fn open(path: []const u8): !Lib {
+            const lib = try std.DynLib.open(path);
             return Lib{ handle: lib };
         }
 
-        pub fn deinit(*_) {
+        fn deinit(*_) {
             _.handle.close();
         }
 
-        pub fn lookup(*_, comptime T: type, symbol: []const u8): T {
+        fn lookup(*_, comptime T: type, symbol: []const u8): T {
             return _.handle.lookup(T, symbol) orelse @panic("Failed to find symbol");
         }
     }

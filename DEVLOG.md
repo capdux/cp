@@ -2,6 +2,13 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-20: Phase A 底座三件套（`lib/sys/`、`lib/io/`、`lib/string/`）Bun 原版直迁完工
+
+- **落地成果**：基于 Bun 0-JSC-耦合底层实现，将 `lib/sys/`（3,118 行）、`lib/io/`（2,067 行）、`lib/string/`（4,088 行）全面升级为 9,273 行生产级纯 CP 底座（完整补齐上层 `install`/`shell`/`http`/`css` 最高频依赖的 `Maybe<T>`/`SysError`/`*at`/`DirIterator`/`PosixSpawn`、非阻塞 `PipeReader`/`FileReader` 与全套 `strings.*`/`Wtf8`/`StringBuilder`/`MutableString`/`Unicode`），100% 保持现有对外 API 零破坏。
+- **验收与接力**：5 套新建及既有回归测试共 23/23 全部 PASS，34/34 文件 `// Source:` 100% 合规且 0 `@import("bun")` / 0 `std.posix`；立即启动 Phase B-1（Bun `install/` → `lib/pkg/`，54K 核心直迁）与 Phase C-1（`md/` + `sql/`）双路并行。
+
+---
+
 ## 2026-11-20: 落地 `import cap from "cap"` 编译期按需惰性挂载容器，为 Bun 原版工业资产零造轮子直迁打通底座
 
 - **战略背景与架构设计**：

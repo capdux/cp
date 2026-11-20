@@ -2,22 +2,18 @@
 
 ## 一、 架构总览与设计准则
 
-`cap:sys` 是 CP 语言官方内置的底层系统调用与操作系统原语标准库，完全基于 Zig 0.17 原生 `std.c.*` 与 `std.os.linux.*` 构建（零废弃旧 API 依赖），提供强类型文件描述符 `FD`、RAII 文件句柄 `File`、POSIX 元数据自省 `Stat`（`stat` / `lstat` / `fstat`）、完整文件与目录系统调用原语（`open`/`close`/`read`/`write`/`pread`/`pwrite`/`lseek`/`ftruncate`/`mkdir`/`rmdir`/`unlink`/`rename`/`symlink`/`readlink`/`chmod`/`access`/`dup`/`dup2`/`getcwd`/`chdir`）、内核零拷贝复制（`copyFile` / `copyFileByFd` / `copyFileRange`）、进程与硬件信息原语（`getpid`/`getppid`/`getuid`/`getgid`/`uname`/`pageSize`/`cpuCount`/`monotonicNs`/`realtimeMs`）、防冲突临时文件工具集以及 POSIX 信号（`Signal`）。
+`cap:sys` 是 CP 语言官方内置的底层系统调用与操作系统原语标准库，深度吸收 Bun 生产级 `src/sys/` 实现，并完全基于 Zig 0.17 原生 `std.c.*` 与 `std.os.linux.*` 构建（零 `@import("bun")` 与零废弃 `std.posix` 依赖）。
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                       CP 系统编程与运行时底座 (`cap:sys`)                 │
 ├──────────────────────┬─────────────────────────┬────────────────────────┤
-│ 文件与目录系统调用    │  进程、时钟与硬件原语    │  零拷贝、信号与临时资源 │
-│ FD / File / Stat     │  getpid / getppid       │  copyFile / copyFileByFd│
-│ open / close / read  │  getuid / getgid        │  copyFileRange         │
-│ write / pread/pwrite │  uname() -> UnameInfo   │  getTempDir / makeTemp │
-│ lseek / ftruncate    │  pageSize / cpuCount    │  Signal (1..31 枚举)   │
-│ stat / lstat / fstat │  monotonicNs / realtime │  Sys.setAffinity(core) │
-│ mkdir/rmdir/unlink   │                         │  Sys.Lib (dlopen/dlsym)│
-│ rename/symlink/chmod │                         │                        │
-│ readlink/access/dup2 │                         │                        │
-│ getcwd / chdir       │                         │                        │
+│ 结构化错误与结果类型  │  *at 原子文件与零堆目录   │  零拷贝、Poll 与子进程  │
+│ Maybe<T>             │  openat / mkdirat       │  copyFileRange         │
+│ SysError             │  unlinkat / renameat2   │  sendfile              │
+│ SyscallTag           │  symlinkat / readlinkat │  copyFileWithState     │
+│ SystemErrno 联动     │  fstatat / lstatat/statx│  poll / epoll*         │
+│ EINTR 自动重试       │  DirIterator(getdents64)│  PosixSpawn / waitpid  │
 ├──────────────────────┴─────────────────────────┴────────────────────────┤
 │              Zig 0.17 std.c.* / std.os.linux.* 原生适配层               │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -27,35 +23,38 @@
 
 | 文件路径 | 上游谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
-| `lib/sys/fd.cp` | `// Source: /data/dev/bun/src/sys/fd.cp` | `FD` 强类型描述符、`O_*` / `F_OK` / `R_OK` / `W_OK` / `X_OK` / `SEEK_*` 常量，以及 `read`/`write`/`writeAll`/`pread`/`pwrite`/`lseek`/`seekTo`/`seekBy`/`seekFromEnd`/`ftruncate`/`dup`/`dup2`/`sync`/`close` |
-| `lib/sys/stat.cp` | `// Source: /data/dev/bun/src/sys/PosixStat.cp` | `Stat` 元数据结构与 `stat`/`lstat`/`fstat`（基于 `std.c.statx` 实现，不跟随符号链接的 `lstat`） |
-| `lib/sys/file.cp` | `// Source: /data/dev/bun/src/sys/File.cp` | `File` 高阶句柄，`open`/`create`/`openReadOnly`/`close`/`ftruncate`/`lseek`/`sync`/`dup`/`stat`/`size`/`readToEndAlloc` |
-| `lib/sys/fs_ops.cp` | `// Source: /data/dev/bun/src/sys/sys.cp` | 独立导出系统调用函数：`open`/`close`/`read`/`write`/`pread`/`pwrite`/`lseek`/`ftruncate`/`dup`/`dup2`/`mkdir`/`rmdir`/`unlink`/`rename`/`symlink`/`readlink`/`chmod`/`access`/`getcwd`/`chdir` |
-| `lib/sys/process.cp` | `// Source: /data/dev/bun/src/platform/linux.cp` | 进程与硬件原语：`getpid`/`getppid`/`getuid`/`getgid`/`UnameInfo`/`uname`/`pageSize`/`cpuCount`/`monotonicNs`/`realtimeMs` |
-| `lib/sys/copy_file.cp` | `// Source: /data/dev/bun/src/sys/copy_file.cp` | `copyFile` / `copyFileByFd` / `copyFileRange` |
+| `lib/sys/error.cp` | `// Source: /data/dev/bun/src/sys/Error.cp` | `SyscallTag` 枚举、`SysError`（`fromCode`/`fromErrno`/`withPath`/`withDest`/`withFd`/`toError`/`format`/语义谓词）、`Maybe<T>`（`initResult`/`initErr`/`isOk`/`isErr`/`errno`/`asValue`/`asErr`/`unwrap`/`unwrapOr`）、`linuxSyscallErrno`/`cErrno` |
+| `lib/sys/fd.cp` | `// Source: /data/dev/bun/src/sys/fd.cp` | `FD` 强类型描述符（`cwd`/`fromSystem`/`unwrapValid`/`native`/`isTty`/`isNonblocking`/`setNonblocking`/`setCloseOnExec`/`dupCloexec`/`flock`/`fchmod`/`fchown`/`getFdPath`/`readMaybe`/`writeMaybe`/`preadMaybe`/`pwriteMaybe`）、`O_*`/`AT_*`/`LOCK_*`/`F_*` 常量、`flagsToLinuxO` |
+| `lib/sys/stat.cp` | `// Source: /data/dev/bun/src/sys/PosixStat.cp & /data/dev/bun/src/sys/sys.cp` | `FileKind`、`StatxField`、`Stat`/`PosixStat`（含纳秒时间戳与 `kind`/`isSymLink`/`isSymlink`），以及 `stat`/`lstat`/`fstat`/`fstatat`/`lstatat`/`statx`（含 `*Maybe` 变体） |
+| `lib/sys/dir.cp` | `// Source: /data/dev/bun/src/runtime/node/dir_iterator.cp & /data/dev/bun/src/sys/dir.cp` | 基于 Linux `getdents64` 与 8KB 栈内联缓冲的零堆目录迭代器 `DirIterator`、`DirEntry`、`DirEntryKind` 与 `Dir` |
+| `lib/sys/file.cp` | `// Source: /data/dev/bun/src/sys/File.cp` | `File` 高阶句柄（`open`/`create`/`openReadOnly`/`openat`/`openMaybe`/`openatMaybe`/`makeOpen`/`makeOpenat`/`fromFd`/`readAll`/`pwriteAll`/`readToEndAlloc`/`fdatasync`/`flock`/`fchmod`/`setNonblocking`/`isTty`/`getPath`） |
+| `lib/sys/copy_file.cp` | `// Source: /data/dev/bun/src/sys/copy_file.cp & /data/dev/bun/src/sys/sys.cp` | `CopyFileState`、`copyFileRange`、`sendfile`、`copyFileWithState`（三级自适应：`copy_file_range` -> `sendfile` -> 32KB R/W）、`copyFileByFd`、`copyFile` |
+| `lib/sys/fs_ops.cp` | `// Source: /data/dev/bun/src/sys/sys.cp` | POSIX/Linux 系统调用全集：`openat`/`mkdirat`/`mkdirAll`/`mkdirAllAt`/`unlinkat`/`rmdirat`/`rmdirRecursive`/`renameat`/`renameat2`/`symlinkat`/`readlinkat`/`link`/`linkat`/`fchmod`/`chown`/`fchown`/`fsync`/`fdatasync`/`flock`/`fcntl`/`ioctl`/`createPipe`/`pipe2`/`poll`/`epollCreate`/`epollCtl`/`epollWait`/`exists`/`readFile`/`writeFile` |
+| `lib/sys/process.cp` | `// Source: /data/dev/bun/src/runtime/api/bun/spawn.cp & /data/dev/bun/src/platform/linux.cp` | `PosixSpawn`（支持 `cwd`/`envp`/`stdin_fd`/`stdout_fd`/`stderr_fd`/`detached`/`new_process_group`/`pdeathsig`/`search_path` 与子进程 errno 管道回传）、`WaitPidResult`/`waitpid`/`kill`、时钟与硬件自省 |
 | `lib/sys/tmp.cp` | `// Source: /data/dev/bun/src/sys/tmp.cp` | `getTempDir` / `makeTempFile` / `makeTempDir` / `removeFile` / `removeDir` |
 | `lib/sys/signal.cp` | `// Source: /data/dev/bun/src/sys/SignalCode.cp` | 30 个标准 POSIX `Signal` 枚举、`description`、`toExitCode`、`fromNumber`、`fromName` |
-| `lib/sys/index.cp` | `// Source: /data/dev/bun/src/sys/sys.zig & /data/dev/bun/src/sys/Error.cp` | `cap:sys` 统一导出、`Sys`/`sys` 命名空间、`Sys.setAffinity` 与 `Sys.Lib` |
+| `lib/sys/index.cp` | `// Source: /data/dev/bun/src/sys/sys.zig & /data/dev/bun/src/sys/Error.cp` | `cap:sys` 统一导出、`Sys`/`sys` 命名空间（含 `Sys.pipe`/`Sys.pipe2`/`Sys.dup`/`Sys.dup2`/`Sys.setAffinity`/`Sys.Lib`） |
 
 ---
 
 ## 二、 核心 API 矩阵
 
-### 1. 文件与文件系统原语（`cap:sys` & `Sys.*`）
+### 1. 结构化错误与零异常开销分支 (`Maybe<T>` / `SysError`)
 
-- **打开与关闭**：`open(path, flags, mode): !FD`、`close(fd)`、`Sys.dup(fd)` / `dupFd(fd)` / `fd.dup(): !FD`、`dup2(old_fd, new_fd): !FD`
-- **读写与定位**：`read(fd, buf): !usize`、`write(fd, data): !usize`、`pread(fd, buf, offset): !usize`、`pwrite(fd, data, offset): !usize`、`lseek(fd, offset, whence): !u64`、`ftruncate(fd, length): !void`
-- **元数据与链接**：`stat(path): !Stat`、`lstat(path): !Stat`、`fstat(fd): !Stat`、`symlink(target, link_path): !void`、`readlink(path, buf): ![]const u8`
-- **目录与权限**：`mkdir(path, mode): !void`、`rmdir(path): !void`、`unlink(path): !void`、`rename(old_path, new_path): !void`、`chmod(path, mode): !void`、`access(path, mode): !void`、`getcwd(buf): ![]const u8`、`chdir(path): !void`
-- **零拷贝复制**：`copyFileRange(src_fd, src_off, dest_fd, dest_off, len): !usize`、`copyFileByFd(src, dst)`、`copyFile(src_path, dst_path)`
+- `Maybe<T>`：`Maybe<T>.initResult(val)`、`Maybe<T>.initErr(se)`、`isOk()`、`isErr()`、`errno()`、`asValue()`、`asErr()`、`unwrap()`、`unwrapOr(default)`。
+- `SysError`：`fromCode(code, tag)`、`fromErrno(e, tag)`、`withPath(p)`、`withDest(d)`、`withFd(fd)`、`toError()`、`format(buf)`、`isRetry()`、`isNotFound()`、`isAlreadyExists()`。
 
-### 2. 进程、系统信息与高精度时钟原语
+### 2. `*at` 原子目录/文件原语与 `DirIterator`
 
-- `getpid(): i32` / `getppid(): i32` / `getuid(): u32` / `getgid(): u32`
-- `uname(): !UnameInfo`（提供 `sysnameStr()`, `nodenameStr()`, `releaseStr()`, `versionStr()`, `machineStr()`）
-- `pageSize(): usize` / `cpuCount(): usize`
-- `monotonicNs(): u64`（单调纳秒时钟，适用于耗时测量与超时调度）
-- `realtimeMs(): i64`（Unix 纪元毫秒时间戳）
+- `mkdirAll(path, mode)` / `mkdirAllAt(dir_fd, path, mode)`、`rmdirRecursive(path)` / `rmdirRecursiveAt(dir_fd, path)`
+- `openat`/`openatMaybe`、`fstatat`/`lstatat`/`statx`、`symlinkat`/`readlinkat`、`renameat2`（`RENAME_NOREPLACE` / `RENAME_EXCHANGE`）
+- `DirIterator.open(path)` / `DirIterator.openAt(dir_fd, path)`：`next()` 返回 `DirEntry?`，零堆内存扫描目录项与文件类型。
+
+### 3. 子进程派生 (`PosixSpawn`)
+
+- `SpawnOptions`：`cwd`、`envp`、`stdin_fd`、`stdout_fd`、`stderr_fd`、`detached`、`new_process_group`、`pdeathsig`、`search_path`。
+- `PosixSpawn.spawn(allocator, argv, opts): !i32` 与 `PosixSpawn.spawnMaybe(...)`: `Maybe<i32>`。
+- `waitpid(pid, flags): !WaitPidResult`（`exited()` / `exitCode()` / `signaled()` / `termSig()` / `stopped()`）。
 
 ---
 
@@ -64,52 +63,31 @@
 ```typescript
 const std = @import("std");
 import {
-    FD, O_RDWR, O_CREAT, O_TRUNC, O_CLOEXEC,
-    F_OK, R_OK, W_OK, SEEK_SET,
-    open, close, write, pread, lseek, ftruncate,
-    stat, lstat, mkdir, rmdir, unlink, rename,
-    symlink, readlink, chmod, access, Sys, dupFd, dup2,
-    getcwd, chdir, copyFileRange,
-    getpid, getppid, getuid, getgid, uname,
-    pageSize, cpuCount, monotonicNs, realtimeMs,
-    makeTempDir,
+    FD, DirIterator, PosixSpawn, SpawnOptions,
+    O_RDONLY, O_RDWR, O_CREAT, O_TRUNC, O_CLOEXEC,
+    AT_FDCWD, openat, mkdirAll, rmdirRecursive, waitpid,
 } from "cap:sys";
 
-pub fn demoSysPrimitives()! {
-    // 1. 进程与系统自省
-    const pid = getpid();
-    const ppid = getppid();
-    const pagesz = pageSize();
-    const cpus = cpuCount();
-    const t0 = monotonicNs();
-    const now_ms = realtimeMs();
-    let info = try uname();
-    * = pid; * = ppid; * = pagesz; * = cpus; * = t0; * = now_ms;
-    * = info.sysnameStr();
+pub fn demoPhaseASys(): !void {
+    const gpa = std.heap.page_allocator;
+    try mkdirAll("/tmp/cp_sys_demo/sub", 0o755);
+    defer * = rmdirRecursive("/tmp/cp_sys_demo") catch {};
 
-    // 2. 临时目录、open/write/ftruncate/lseek/pread/dup/symlink/lstat/readlink/rename/chmod/access
-    let dir_buf: [512]u8 = undefined;
-    const tmp_dir = try makeTempDir("sys_demo", &dir_buf);
-    defer rmdir(tmp_dir) catch {};
+    const fd = try openat(FD.fromNative(AT_FDCWD), "/tmp/cp_sys_demo/sub/hello.txt", O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, 0o644);
+    try fd.writeAll("hello cap:sys");
+    fd.close();
 
-    let pbuf: [512]u8 = undefined;
-    const fpath = try std.fmt.bufPrint(&pbuf, "{s}/a.txt", .{tmp_dir});
-    const fd = try open(fpath, O_CREAT | O_RDWR | O_TRUNC | O_CLOEXEC, 0o644);
-    * = try write(fd, "hello world");
-    try ftruncate(fd, 5); // 截断为 "hello"
-    * = try lseek(fd, 0, SEEK_SET);
-    close(fd);
+    let it = try DirIterator.open("/tmp/cp_sys_demo/sub");
+    defer it.close();
+    while (true) {
+        const entry = try it.next();
+        if (entry == null) break;
+        * = entry.?.name;
+    }
 
-    try access(fpath, F_OK | R_OK | W_OK);
-    try chmod(fpath, 0o600);
-
-    let lbuf: [512]u8 = undefined;
-    const link_path = try std.fmt.bufPrint(&lbuf, "{s}/a.link", .{tmp_dir});
-    try symlink(fpath, link_path);
-    const lst = try lstat(link_path);
-    // lst.isSymLink() == true
-    * = lst;
-    try unlink(link_path);
-    try unlink(fpath);
+    let argv: [2][]const u8 = ["/bin/echo", "spawn-ok"];
+    const pid = try PosixSpawn.spawn(gpa, argv[0..2], SpawnOptions{ cwd: "/tmp", search_path: true });
+    const res = try waitpid(pid, 0);
+    * = res.exited();
 }
 ```

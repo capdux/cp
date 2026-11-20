@@ -11,6 +11,9 @@ export error IOError {
     BufferFull,
     ShortWrite,
     InvalidSeek,
+    WouldBlock,
+    BrokenPipe,
+    AccessDenied,
 }
 
 pub enum SeekOrigin {

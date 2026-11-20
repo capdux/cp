@@ -1,7 +1,7 @@
 // Source: /data/dev/bun/src/io/io.cp
 /**
  * CP Standard I/O (cap:io)
- * 工业级统一高性能 I/O 流体系、管道与标准终端
+ * 工业级统一高性能 I/O 流体系、非阻塞管道/文件流与标准终端
  */
 
 export {
@@ -12,6 +12,16 @@ export {
     Closer,
     Seeker
 } from "./traits";
+
+export {
+    IoStatus,
+    ReadState,
+    WriteStatus,
+    PollState,
+    FileType,
+    PollResult,
+    IoSource
+} from "./source";
 
 export {
     BufferReader,
@@ -45,7 +55,14 @@ export {
 } from "./max_buf";
 
 export {
+    PipeReadResult,
+    PipeWriteResult,
     PipeReader,
     PipeWriter,
     Pipe
 } from "./pipe";
+
+export {
+    FileReader,
+    FileWriter
+} from "./file_stream";

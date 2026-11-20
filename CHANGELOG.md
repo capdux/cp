@@ -1,3 +1,19 @@
+## [2026-11-20] - Phase A 底层三件套 Bun 原版直迁落地：`lib/sys/`、`lib/io/`、`lib/string/` 全面对齐生产契约（34 文件 9,273 行）
+
+### 底层基石原版升级 (Phase A Foundation Direct Port)
+- **`lib/sys/`（11 文件，3,118 行，0 `@import("bun")`，0 `std.posix`）**：
+  - 新增 [`lib/sys/error.cp`](file:///data/dev/cp/lib/sys/error.cp)（`SyscallTag`、`SysError`、`Maybe<T>`）与 [`lib/sys/dir.cp`](file:///data/dev/cp/lib/sys/dir.cp)（Linux `getdents64` 8KB 栈内联零堆 `DirIterator`）；
+  - 升级 [`fd.cp`](file:///data/dev/cp/lib/sys/fd.cp)、[`stat.cp`](file:///data/dev/cp/lib/sys/stat.cp)、[`file.cp`](file:///data/dev/cp/lib/sys/file.cp)、[`copy_file.cp`](file:///data/dev/cp/lib/sys/copy_file.cp)、[`fs_ops.cp`](file:///data/dev/cp/lib/sys/fs_ops.cp)、[`process.cp`](file:///data/dev/cp/lib/sys/process.cp)：全量 `*at` 原子系统调用、`EINTR` 自动重试、`mkdirAll`/`rmdirRecursive`、`CopyFileState`/`sendfile`、`poll`/`epoll`/`pipe2` 及 `PosixSpawn`（支持 `cwd`/`envp`/FD 重定向/`PATH` 搜索/子进程 errno 管道回传）。
+- **`lib/io/`（8 文件，2,067 行）**：
+  - 新增 [`lib/io/source.cp`](file:///data/dev/cp/lib/io/source.cp)（`IoStatus`/`ReadState`/`WriteStatus`/`PollState`/`IoSource`）与 [`lib/io/file_stream.cp`](file:///data/dev/cp/lib/io/file_stream.cp)（`FileReader`/`FileWriter` 含 `pread`/`pwrite`/`copy_file_range`/`sendfile`）；
+  - 升级 [`pipe.cp`](file:///data/dev/cp/lib/io/pipe.cp)（`pipe2(O_CLOEXEC|O_NONBLOCK)` 非阻塞 `EAGAIN`/`BrokenPipe` 状态机）、[`max_buf.cp`](file:///data/dev/cp/lib/io/max_buf.cp)、[`buffer_stream.cp`](file:///data/dev/cp/lib/io/buffer_stream.cp)（`readUntilDelimiter`/`shift`/`peek`）。
+- **`lib/string/`（15 文件，4,088 行）**：
+  - 新增 [`lib/string/unicode.cp`](file:///data/dev/cp/lib/string/unicode.cp)（`Unicode` 分类/大小写折叠与零堆 `CodepointIterator`）与 [`lib/string/mutable_string.cp`](file:///data/dev/cp/lib/string/mutable_string.cp)（`MutableString`）；
+  - 升级 [`utils.cp`](file:///data/dev/cp/lib/string/utils.cp)（全套 Bun `strings.*` 匹配/切分/拼接/修剪）、[`utf.cp`](file:///data/dev/cp/lib/string/utf.cp)（`Wtf8`、Latin-1/UTF-16/UTF-8 互转）、[`builder.cp`](file:///data/dev/cp/lib/string/builder.cp)（`StringBuilder` 预估容量零重分配）、[`escape.cp`](file:///data/dev/cp/lib/string/escape.cp)（`escapeHtml`/`escapeRegExp`/`escapeJsAlloc`）。
+- **文档、规范与验证**：同步更新 [`docs/sys/sys.md`](file:///data/dev/cp/docs/sys/sys.md)、[`docs/io/io.md`](file:///data/dev/cp/docs/io/io.md)、[`docs/string/string.md`](file:///data/dev/cp/docs/string/string.md) 与双轨规范手册；新增 [`cap/test/test_phase_a_foundation_port.cp`](file:///data/dev/cp/cap/test/test_phase_a_foundation_port.cp)（3/3 PASS），5 套新建与既有回归共 23/23 用例 100% PASS，34/34 文件 `// Source:` 100% 合规。
+
+---
+
 ## [2026-11-20] - 核心架构里程碑：`import cap from "cap"` 编译期按需惰性挂载容器与 `lib/_cap/core.cp` 微核心落地
 
 ### 编译器按需惰性挂载引擎 (`cpc`)
