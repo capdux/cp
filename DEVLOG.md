@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:dwarf` 纯 CP DWARF v4/v5 `.debug_line` 行号表状态机与 `.debug_abbrev`/`.debug_info`/`.debug_str` DIE 调试信息解析引擎（支持 `cap.dwarf` 自动动态挂载，详见 `doc/lib/dwarf.md`）（5/5 PASS，文档直写 `doc/lib/dwarf.md`）
+- **核心设计**：`.debug_line` 状态机内置循环步数上限与 `file_index` 越界防护，`lookupAddress` 支持区间二分定位 `file:line:column`，全路径 `std.testing.allocator` 零泄漏。
+
 ## 2026-11-21: 新建 `cap:wasm_fmt` 纯 CP WebAssembly `.wasm` 二进制解析、LEB128 5 字节溢出防护与 Custom Section 构建引擎（支持 `cap.wasm_fmt` 自动动态挂载，详见 `doc/lib/wasm_fmt.md`）（5/5 PASS，文档直写 `doc/lib/wasm_fmt.md`）
 - **核心设计**：`parseWasm` 严格校验标准 Section ID 单调递增与 Payload 边界，禁止重复标准段并拦截第 5 字节符号位溢出，全路径 `std.testing.allocator` 零泄漏。
 

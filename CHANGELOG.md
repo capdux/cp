@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:dwarf` 纯 CP DWARF v4/v5 `.debug_line` 行号表状态机与 `.debug_abbrev`/`.debug_info`/`.debug_str` DIE 调试信息解析引擎（支持 `cap.dwarf` 自动动态挂载，详见 `doc/lib/dwarf.md`）（5/5 PASS，自动动态挂载 `cap.dwarf`）
+- **新增标准库**：`lib/dwarf/{types,line,info,index}.cp`，实现 DWARF v4/v5 `.debug_line` 状态机（Standard/Extended/Special Opcodes）与 `lookupAddress` 二分映射，以及 `.debug_abbrev`/`.debug_info`/`.debug_str` DIE 树与常见 `DW_FORM_*` 解析。
+- **新增文档与测试**：`doc/lib/dwarf.md` 扁平文档与 `cap/test/test_dwarf_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:wasm_fmt` 纯 CP WebAssembly `.wasm` 二进制解析、LEB128 5 字节溢出防护与 Custom Section 构建引擎（支持 `cap.wasm_fmt` 自动动态挂载，详见 `doc/lib/wasm_fmt.md`）（5/5 PASS，自动动态挂载 `cap.wasm_fmt`）
 - **新增标准库**：`lib/wasm_fmt/{types,leb128,codec,index}.cp`，实现 ULEB128/SLEB128 严格 5 字节溢出拦截、全标准 Section 解析编码、段单调递增去重校验及 `findExport`/`addCustomSection`。
 - **新增文档与测试**：`doc/lib/wasm_fmt.md` 扁平文档与 `cap/test/test_wasm_fmt_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

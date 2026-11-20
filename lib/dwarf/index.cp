@@ -1,0 +1,56 @@
+// Source: cp/lib/dwarf/index.cp (Public exports for cap:dwarf / cap.dwarf)
+
+export {
+    DwarfError,
+    DwTag,
+    DwAt,
+    DwForm,
+    Cursor,
+    writeUleb128,
+    writeSleb128,
+    writeU16,
+    writeU32,
+    writeU64,
+} from "./types.cp";
+
+export {
+    DW_LNS_copy,
+    DW_LNS_advance_pc,
+    DW_LNS_advance_line,
+    DW_LNS_set_file,
+    DW_LNS_set_column,
+    DW_LNS_negate_stmt,
+    DW_LNS_set_basic_block,
+    DW_LNS_const_add_pc,
+    DW_LNS_fixed_advance_pc,
+    DW_LNS_set_prologue_end,
+    DW_LNS_set_epilogue_begin,
+    DW_LNS_set_isa,
+    DW_LNE_end_sequence,
+    DW_LNE_set_address,
+    DW_LNE_define_file,
+    DW_LNE_set_discriminator,
+    FileEntry,
+    LineProgramHeader,
+    LineRow,
+    LineLocation,
+    LineEncodeEntry,
+    LineTable,
+    parseDebugLine,
+    lookupAddress,
+    encodeDebugLineV4,
+} from "./line.cp";
+
+export {
+    AttrSpec,
+    AbbrevEntry,
+    AbbrevTable,
+    AttrValueKind,
+    AttrValue,
+    DieAttr,
+    DieNode,
+    CompileUnitHeader,
+    CompileUnit,
+    parseAbbrevTable,
+    parseDebugInfoCu,
+} from "./info.cp";
