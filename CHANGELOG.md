@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:paths` 纯 CP POSIX/Windows 双风格路径解析、规范化与防目录穿越安全边界引擎（吸收对标 Bun `src/paths/`，详见 `doc/lib/paths.md`）（5/5 PASS，自动动态挂载 `cap.paths`）
+- **新增标准库**：`lib/paths/{types,parse,ops,security,index}.cp`（吸收对标 Bun `src/paths/`），提供 POSIX/Windows 盘符与 UNC 路径零堆切片解析、`normalize`/`join`/`resolve`/`relative`、`safeJoin`/`isSubpath` 防穿越与空字节拦截及 `matchGlobSimple`。
+- **新增文档与测试**：`doc/lib/paths.md` 扁平文档与 `cap/test/test_paths_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:tlv` 纯 CP ASN.1 BER/DER Tag-Length-Value 严格编解码、OID 双向互转与流式构建引擎（支持 `cap.tlv` 自动动态挂载，详见 `doc/lib/tlv.md`）（5/5 PASS，自动动态挂载 `cap.tlv`）
 - **升级/重构标准库**：`lib/tlv/{types,oid,decoder,encoder,index}.cp`（移除旧 `tlv.cp`），实现单/高编号 Base-128 Tag、严格 DER 长度/不定长/深度防护解码、点分 OID 双向互转及整数最小补码规范化 `TlvWriter`。
 - **更新文档与测试**：`doc/lib/tlv.md` 扁平文档与 `cap/test/test_tlv_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

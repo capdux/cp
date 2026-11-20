@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:paths` 纯 CP POSIX/Windows 双风格路径解析、规范化与防目录穿越安全边界引擎（吸收对标 Bun `src/paths/`，详见 `doc/lib/paths.md`）（5/5 PASS，文档直写 `doc/lib/paths.md`）
+- **核心设计**：`parse`/`dirname`/`basename`/`extname` 保持零堆切片视图；`isSubpath`/`safeJoin` 在规范化后按分段对比，免疫 `/var/www` vs `/var/www2` 前缀陷阱并拦截空字节与绝对路径/盘符注入。
+
 ## 2026-11-21: 新建 `cap:tlv` 纯 CP ASN.1 BER/DER Tag-Length-Value 严格编解码、OID 双向互转与流式构建引擎（支持 `cap.tlv` 自动动态挂载，详见 `doc/lib/tlv.md`）（5/5 PASS，文档直写 `doc/lib/tlv.md`）
 - **核心设计**：`TlvNode` 对原语载荷采用零拷贝 `raw_value` 切片视图；严格拦截 `0x80` 不定长与非最短 DER 长度编码，并在 `std.testing.allocator` 下全路径零泄漏。
 

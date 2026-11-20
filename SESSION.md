@@ -40,3 +40,6 @@
 
 ### 2026-11-21（`cap:tlv` 验收，顶替拉起 `cap:perf` 维持 2 路常规并行）
 - **执行成果**：`lib/tlv/`（5/5 PASS，`doc/lib/tlv.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:perf` 维持 2 路常规并行
+
+### 2026-11-21（`cap:paths` 验收，顶替拉起 `cap:collections` 维持 2 路常规并行）
+- **执行成果**：`lib/paths/`（5/5 PASS，`doc/lib/paths.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:collections` 维持 2 路常规并行
