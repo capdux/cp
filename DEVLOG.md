@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:noise` 确定性 Perlin/Worley/fBm 噪声引擎（5/5 PASS，文档直写 `doc/lib/noise.md`）
+
+- **落地成果**：`lib/noise/`（`noise.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:sat`（DPLL + 单位传播布尔可满足性 SAT 求解器与依赖/排班约束建模器），与 `lib/tween/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:spell` SymSpell / BK-Tree / Soundex 拼写纠错引擎（5/5 PASS，文档直写 `doc/lib/spell.md`）
 
 - **落地成果**：`lib/spell/`（`spell.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:tween`（24+ Easing 缓动曲线、关键帧轨道插值与二阶弹簧阻尼物理动画引擎），与 `lib/noise/` 保持 2 路正交并行。

@@ -290,3 +290,6 @@
 
 ### 2026-11-21（`cap:spell` 验收固化，顶替以 `inherit` 拉起 `cap:tween` 维持 2 路并行）
 - **执行成果**：`lib/spell/`（5/5 PASS，含 `cap.spell` 动态挂载与 `doc/lib/spell.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/tween/`（24+ Easing 缓动曲线、关键帧轨道与二阶弹簧阻尼物理动画引擎），与 `lib/noise/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:noise` 验收固化，顶替以 `inherit` 拉起 `cap:sat` 维持 2 路并行）
+- **执行成果**：`lib/noise/`（5/5 PASS，含 `cap.noise` 动态挂载与 `doc/lib/noise.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/sat/`（DPLL 单位传播布尔 SAT 求解器、DIMACS CNF 解析与依赖/排班约束建模引擎），与 `lib/tween/` 保持 2 路正交并行。
