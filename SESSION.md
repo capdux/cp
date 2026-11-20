@@ -488,3 +488,9 @@
 
 ### 2026-11-21（`cap:pem` 验收合并提交，顶替拉起 `cap:x509` 维持 2 路常规并行）
 - **执行成果**：`lib/pem/`（5/5 PASS，`doc/lib/pem.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/deflate/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/x509/`（纯 CP X.509 v3 DER/PEM 证书解析、SAN 主机名匹配与有效期校验引擎），与 `lib/zip/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:zip` 验收提交，顶替拉起 `cap:socks5` 维持 2 路常规并行）
+- **执行成果**：`lib/zip/`（5/5 PASS，`doc/lib/zip.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/socks5/`（RFC 1928/1929 SOCKS5 代理协议无状态编解码引擎），与 `lib/x509/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:x509` 验收合并提交，顶替拉起 `cap:prometheus` 维持 2 路常规并行）
+- **执行成果**：`lib/x509/`（5/5 PASS，`doc/lib/x509.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/zip/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/prometheus/`（Prometheus/OpenMetrics 指标注册表、Histogram 分桶与文本格式编解码引擎），与 `lib/socks5/` 维持 2 路常规并行。

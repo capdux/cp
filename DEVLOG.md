@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:x509` 纯 CP X.509 v3 DER/PEM 证书解析与 SAN 校验引擎（5/5 PASS，文档直写 `doc/lib/x509.md`）
+- **核心设计**：复用 `cap:asn1` 与 `cap:pem` 并由独立 `ArenaAllocator` 统一托管解析期所有派生切片，严格遵循 RFC 6125 单级通配符主机名匹配与 CA 基本约束校验，全量测试零泄漏。
+
+## 2026-11-21: 新建 `cap:zip` 纯 CP PKZIP 归档打包与安全解包引擎（5/5 PASS，文档直写 `doc/lib/zip.md`）
+- **核心设计**：直接复用 `cap:deflate` 压缩与 `crc32` 校验，零外部 C/系统调用实现 PKZIP 打包解包；解包器在分配内存前先验证条目总数、未压缩大小上限及安全相对路径，彻底阻断路径穿越与超限膨胀。
+
 ## 2026-11-21: 新建 `cap:pem` RFC 7468 PEM 证书链与密钥块编解码引擎（5/5 PASS，文档直写 `doc/lib/pem.md`）
 - **核心设计**：严格校验 `-----BEGIN <LABEL>-----` 与 `-----END <LABEL>-----` 匹配与 Base64 字符集完整性，支持 RFC 1421 `Proc-Type`/`DEK-Info` 头字段保留与 `TooManyBlocks` 资源上限防护，零泄漏。
 

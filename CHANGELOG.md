@@ -2,6 +2,14 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:x509` 纯 CP X.509 v3 DER/PEM 证书解析与 SAN 校验引擎（5/5 PASS，自动动态挂载 `cap.x509`）
+- **新增标准库**：`lib/x509/{x509,index}.cp`，复用 `cap:asn1` 与 `cap:pem` 实现 DER/PEM 证书解析、UTCTime/GeneralizedTime 换算、`isValidAt` 有效期校验、RFC 6125 通配符/IP SAN `matchesHostname`、`isIssuedBy` CA 链校验及 SHA-256 指纹计算。
+- **新增文档与测试**：`doc/lib/x509.md` 扁平文档与 `cap/test/test_x509_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
+## [2026-11-21] - 新建 `cap:zip` 纯 CP PKZIP 归档打包与安全解包引擎（5/5 PASS，自动动态挂载 `cap.zip`）
+- **新增标准库**：`lib/zip/{zip,index}.cp`，复用 `cap:deflate` 实现 `ZipBuilder`（混合 `Stored`/`Deflated` 与完整 LFH/CD/EOCD 结构）及 `readArchive`/`readArchiveWithLimits`（校验 CRC-32 并拦截 `..`/前导 `/`/`\` 路径穿越与 `TooManyEntries`/`EntryTooLarge`）。
+- **新增文档与测试**：`doc/lib/zip.md` 扁平文档与 `cap/test/test_zip_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:pem` RFC 7468 PEM 证书链与密钥块编解码引擎（5/5 PASS，自动动态挂载 `cap.pem`）
 - **新增标准库**：`lib/pem/{pem,index}.cp`，实现单块/多块证书链解析（支持块间注释、RFC 1421 `Key: Value` 头字段、标签一致性与 `TooManyBlocks` 防护）以及 64 列规范 Base64 折行编码。
 - **新增文档与测试**：`doc/lib/pem.md` 扁平文档与 `cap/test/test_pem_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
