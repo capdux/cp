@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:bitstream` MSB/LSB 位流与 ULEB128/SLEB128/Exp-Golomb 编码引擎（5/5 PASS，自动动态挂载 `cap.bitstream`）
+- **新增标准库**：`lib/bitstream/{bitstream,index}.cp`，实现支持 `MsbFirst`/`LsbFirst` 双位序的 `BitWriter`/`BitReader`（含 `1..64` 位非对齐读写、`peekBits`、H.264/HEVC `Exp-Golomb` `ue(v)`/`se(v)`）及 `Leb128`（严格拦截 >10 字节溢出）。
+- **新增文档与测试**：`doc/lib/bitstream.md` 扁平文档与 `cap/test/test_bitstream_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:cidr` IPv4/IPv6 CIDR 子网划分、超网聚合与 LPM 路由表引擎（5/5 PASS，自动动态挂载 `cap.cidr`）
 - **新增标准库**：`lib/cidr/{cidr,index}.cp`，实现 `Ipv4Addr`/`Ipv6Addr`（RFC 5952 规范格式化）、`Cidr4`/`Cidr6`（主机位归一化、`splitSubnets` 与递归兄弟合并 `summarize`）及基于二进制基数树的 `LpmTable4<V>`。
 - **新增文档与测试**：`doc/lib/cidr.md` 扁平文档与 `cap/test/test_cidr_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

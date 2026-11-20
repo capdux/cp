@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:bitstream` MSB/LSB 位流与 ULEB128/SLEB128/Exp-Golomb 编码引擎（5/5 PASS，文档直写 `doc/lib/bitstream.md`）
+- **核心设计**：统一 `BitWriter`/`BitReader` 支持 `MsbFirst`（网络/视频流）与 `LsbFirst`（压缩/容器流）双位序；`Leb128` 严格限制 64-bit 最多 10 字节编码并正确完成有符号补码扩展。
+
 ## 2026-11-21: 新建 `cap:cidr` IPv4/IPv6 CIDR 子网划分、超网聚合与 LPM 路由表引擎（5/5 PASS，文档直写 `doc/lib/cidr.md`）
 - **核心设计**：`Cidr4.summarize` 先按网络地址与前缀长度排序去重被包含子网，再迭代合并相邻兄弟前缀；`LpmTable4<V>` 采用二进制基数树实现 $O(32)$ 最长前缀匹配（含 `/0` 兜底）。
 
