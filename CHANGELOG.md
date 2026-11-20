@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:cidr` IPv4/IPv6 CIDR 子网划分、超网聚合与 LPM 路由表引擎（5/5 PASS，自动动态挂载 `cap.cidr`）
+- **新增标准库**：`lib/cidr/{cidr,index}.cp`，实现 `Ipv4Addr`/`Ipv6Addr`（RFC 5952 规范格式化）、`Cidr4`/`Cidr6`（主机位归一化、`splitSubnets` 与递归兄弟合并 `summarize`）及基于二进制基数树的 `LpmTable4<V>`。
+- **新增文档与测试**：`doc/lib/cidr.md` 扁平文档与 `cap/test/test_cidr_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:suffixarray` 后缀数组、Kasai LCP 数组与全文本二分索引引擎（5/5 PASS，自动动态挂载 `cap.suffixarray`）
 - **新增标准库**：`lib/suffixarray/{suffixarray,index}.cp`，实现 $O(N \log N)$ 倍增基数排序构建 `sa` 与 Kasai $O(N)$ `lcp` 数组，支持 $O(|P| \log N)$ 子串检索、`longestRepeatedSubstring` 与 `distinctSubstringCount`（含 `\x00` 二进制载荷）。
 - **新增文档与测试**：`doc/lib/suffixarray.md` 扁平文档与 `cap/test/test_suffixarray_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

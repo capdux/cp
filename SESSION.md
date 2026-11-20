@@ -461,3 +461,6 @@
 
 ### 2026-11-21（`cap:suffixarray` 验收提交，顶替拉起 `cap:jsonpatch` 维持 2 路常规并行）
 - **执行成果**：`lib/suffixarray/`（5/5 PASS，`doc/lib/suffixarray.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/jsonpatch/`（RFC 6901 JSON Pointer 与 RFC 6902 JSON Patch 原子事务引擎），与 `lib/cidr/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:cidr` 验收提交，顶替拉起 `cap:bitstream` 维持 2 路常规并行）
+- **执行成果**：`lib/cidr/`（5/5 PASS，`doc/lib/cidr.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/bitstream/`（MSB/LSB 任意位宽位流与 ULEB128/SLEB128/ZigZag 紧凑变长整数引擎），与 `lib/jsonpatch/` 维持 2 路常规并行。
