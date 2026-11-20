@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:mysql_wire` 纯 CP MySQL Client/Server Wire Protocol 报文编解码、增量分帧与双 SHA-1 认证引擎（支持 `cap.mysql_wire` 自动动态挂载，详见 `doc/lib/mysql_wire.md`）（5/5 PASS，文档直写 `doc/lib/mysql_wire.md`）
+- **核心设计**：4 字节小端帧头支持 `max_packet_bytes` 上限拦截；`TextResultRow` 正确区分 `0xFB` NULL 列与空字符串，全路径通过 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:pgwire` 纯 CP PostgreSQL v3.0 Wire Protocol 报文编解码、增量半包拆包与 MD5 认证引擎（支持 `cap.pgwire` 自动动态挂载，详见 `doc/lib/pgwire.md`）（5/5 PASS，文档直写 `doc/lib/pgwire.md`）
 - **核心设计**：`PgFrontendStreamDecoder` 在 `SslRequest` 后保持 `expect_startup` 状态以正确衔接后续 `StartupMessage`；全路径严格校验包长下限与 `max_packet_bytes` 防资源耗尽，零内存泄漏。
 
