@@ -242,3 +242,6 @@
 
 ### 2026-11-21（`cap:geom2d` 验收固化，顶替以 `inherit` 拉起 `cap:quadtree` 维持 2 路并行）
 - **执行成果**：`lib/geom2d/`（5/5 PASS，含 `cap.geom2d` 动态挂载与 `doc/lib/geom2d.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/quadtree/`（2D 空间四叉树索引、矩形/圆形范围检索与 $K$ 近邻查询引擎），与 `lib/prob/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:prob` 验收固化，顶替以 `inherit` 拉起 `cap:selector` 维持 2 路并行）
+- **执行成果**：`lib/prob/`（5/5 PASS，含 `cap.prob` 动态挂载与 `doc/lib/prob.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/selector/`（CSS3 选择器编译器、伪类/属性匹配与 DOM 树查询引擎），与 `lib/quadtree/` 保持 2 路正交并行。

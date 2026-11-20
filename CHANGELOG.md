@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:prob` 概率分布、确定性采样器与 A/B 显著性假设检验引擎（5/5 PASS，自动动态挂载 `cap.prob`）
+
+- 新建 [`lib/prob/`](file:///data/dev/cp/lib/prob/index.cp)（`dist.cp`、`index.cp`）：`Rng`（SplitMix64 + xoshiro256**、Box-Muller 正态、Knuth/PTRS 泊松、`weightedChoice` 与 `shuffle`）、`NormalDist`（Acklam 高精度 `invCdf`）/`ExponentialDist`/`BinomialDist`（`lgammaApprox` 防大数溢出）/`PoissonDist` 及 `HypothesisTest`（`twoProportionZTest`/`twoSampleZTest` 含 p-value 与置信区间）；文档 [`doc/lib/prob.md`](file:///data/dev/cp/doc/lib/prob.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_prob_production_deep.cp`](file:///data/dev/cp/cap/test/test_prob_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:geom2d` 2D 计算几何、凸包与碰撞检测引擎（5/5 PASS，自动动态挂载 `cap.geom2d`）
 
 - 新建 [`lib/geom2d/`](file:///data/dev/cp/lib/geom2d/index.cp)（`geom.cp`、`index.cp`）：`Point2`/`Segment2`/`Aabb2`/`Circle2` 及 `Geom2D`（`segmentsIntersect` & `segmentIntersectionPoint` 含 T 形与共线边界、`pointToSegmentDist`、Shoelace `polygonArea`/`polygonCentroid`、射线法 `pointInPolygon`、Andrew 单调链 $O(N \log N)$ `convexHull` 及 AABB/Circle 碰撞）；文档 [`doc/lib/geom2d.md`](file:///data/dev/cp/doc/lib/geom2d.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_geom2d_production_deep.cp`](file:///data/dev/cp/cap/test/test_geom2d_production_deep.cp) `-m` 5/5 PASS。
