@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:billing` SaaS & AI API 阶梯计费、周期折算与发票引擎（5/5 PASS，自动动态挂载 `cap.billing`）
+
+- 新建 [`lib/billing/`](file:///data/dev/cp/lib/billing/index.cp)（`billing.cp`、`index.cp`）：`BillingCalculator`（`Graduated` 累进 / `Volume` 统一档位 `priceMeteredUsage`、周期升降级对称折算 `calculateProration`、防负券封顶与基点税率 `buildInvoice`）及 RFC 8259 转义 `Invoice.toJson`；文档 [`doc/lib/billing.md`](file:///data/dev/cp/doc/lib/billing.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_billing_production_deep.cp`](file:///data/dev/cp/cap/test/test_billing_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:ledger` 复式记账双分录会计总账与试算平衡引擎（5/5 PASS，自动动态挂载 `cap.ledger`）
 
 - 新建 [`lib/ledger/`](file:///data/dev/cp/lib/ledger/index.cp)（`ledger.cp`、`index.cp`）：`Ledger`（精确 `i128` 最小货币单位、借贷必相等原子过账与失败零污染回滚、同币种校验、透支拦截、`idempotency_key` 幂等防重入、`reverseTransaction` 红字冲正防二冲、`statementForAccount` 流水及 `verifyTrialBalance` 会计恒等式校验）；文档 [`doc/lib/ledger.md`](file:///data/dev/cp/doc/lib/ledger.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_ledger_production_deep.cp`](file:///data/dev/cp/cap/test/test_ledger_production_deep.cp) `-m` 5/5 PASS。
