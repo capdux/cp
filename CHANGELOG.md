@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:jsonpatch` RFC 6901 JSON Pointer 与 RFC 6902 JSON Patch 原子事务引擎（5/5 PASS，自动动态挂载 `cap.jsonpatch`）
+- **新增标准库**：`lib/jsonpatch/{jsonpatch,index}.cp`，实现 RFC 6901 `~0`/`~1` 转义与前导零校验的 `resolvePointer`、隔离深拷贝 Arena 上的 RFC 6902 六操作原子 `applyPatch`（含 `CycleMove` 检测）以及最小差分 `createDiffPatch`。
+- **新增文档与测试**：`doc/lib/jsonpatch.md` 扁平文档与 `cap/test/test_jsonpatch_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:bitstream` MSB/LSB 位流与 ULEB128/SLEB128/Exp-Golomb 编码引擎（5/5 PASS，自动动态挂载 `cap.bitstream`）
 - **新增标准库**：`lib/bitstream/{bitstream,index}.cp`，实现支持 `MsbFirst`/`LsbFirst` 双位序的 `BitWriter`/`BitReader`（含 `1..64` 位非对齐读写、`peekBits`、H.264/HEVC `Exp-Golomb` `ue(v)`/`se(v)`）及 `Leb128`（严格拦截 >10 字节溢出）。
 - **新增文档与测试**：`doc/lib/bitstream.md` 扁平文档与 `cap/test/test_bitstream_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

@@ -467,3 +467,6 @@
 
 ### 2026-11-21（`cap:bitstream` 验收提交，顶替拉起 `cap:kdtree` 维持 2 路常规并行）
 - **执行成果**：`lib/bitstream/`（5/5 PASS，`doc/lib/bitstream.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/kdtree/`（多维空间 K-D Tree 最近邻/K近邻与超矩形范围检索引擎），与 `lib/jsonpatch/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:jsonpatch` 验收提交，顶替拉起 `cap:ndjson` 维持 2 路常规并行）
+- **执行成果**：`lib/jsonpatch/`（5/5 PASS，`doc/lib/jsonpatch.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/ndjson/`（NDJSON / JSON Lines 增量流式分帧与校验引擎），与 `lib/kdtree/` 维持 2 路常规并行。

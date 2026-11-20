@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:jsonpatch` RFC 6901 JSON Pointer 与 RFC 6902 JSON Patch 原子事务引擎（5/5 PASS，文档直写 `doc/lib/jsonpatch.md`）
+- **核心设计**：`applyPatch` 在独立 `ArenaAllocator` 深拷贝树上顺序执行补丁操作，任意校验或路径异常立即回滚释放并保持原输入不变；`createDiffPatch` 递归对比 JSON 树生成可逆最小 Patch 数组。
+
 ## 2026-11-21: 新建 `cap:bitstream` MSB/LSB 位流与 ULEB128/SLEB128/Exp-Golomb 编码引擎（5/5 PASS，文档直写 `doc/lib/bitstream.md`）
 - **核心设计**：统一 `BitWriter`/`BitReader` 支持 `MsbFirst`（网络/视频流）与 `LsbFirst`（压缩/容器流）双位序；`Leb128` 严格限制 64-bit 最多 10 字节编码并正确完成有符号补码扩展。
 
