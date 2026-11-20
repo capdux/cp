@@ -21,11 +21,17 @@ pub enum SubscriptionPushMessage: u8 {
     Message = 0,
     Subscribe = 1,
     Unsubscribe = 2,
+    PMessage = 3,
+    PSubscribe = 4,
+    PUnsubscribe = 5,
 
     pub static fn fromString(s: []const u8): SubscriptionPushMessage? {
         if (s == "message") return SubscriptionPushMessage.Message;
         if (s == "subscribe") return SubscriptionPushMessage.Subscribe;
         if (s == "unsubscribe") return SubscriptionPushMessage.Unsubscribe;
+        if (s == "pmessage") return SubscriptionPushMessage.PMessage;
+        if (s == "psubscribe") return SubscriptionPushMessage.PSubscribe;
+        if (s == "punsubscribe") return SubscriptionPushMessage.PUnsubscribe;
         return null;
     }
 }

@@ -2576,3 +2576,8 @@
 - **执行成果**：
   - Subagent 5A 完工回收：彻底清理 `lib/css/` 94 个 Bun/JSC 耦合死文件，重构为 8 个零耦合纯 CP 模块（4,157 行：Tokenizer/Color 4/Calc/Selectors L4/Variables/Prefixer/Logical/Nesting/Stylesheet AST/Minify/PrettyPrint），全仓 `lib/**/*.cp` `@import("bun")` 彻底归零；
   - `test_css.cp`（5/5）、`test_css_full.cp`（4/4）、`test_css_deep.cp`（7/7）全部 16/16 PASS，已同步双轨规范与热日志并执行 Git 提交固化。
+
+### 2026-11-20（Batch 5B Tier-1 18 大核心标准库终审补缺验收固化）
+- **执行成果**：
+  - Subagent 5B 完工回收：完成全部 18 个 Tier-1 模块对标 Bun 终审（11 模块确认完备，7 模块 `s3`/`dns`/`encoding`/`redis`/`url`/`which`/`watcher` 精准补缺并更新 7 份文档）；
+  - 新增 [`cap/test/test_tier1_parity_deep.cp`](file:///data/dev/cp/cap/test/test_tier1_parity_deep.cp)（6/6 PASS）及 12 套存量回归测试全部 100% PASS，已同步双轨规范手册与热日志并执行干净 Git 提交固化；当前等待最后一路 Batch 6A（`cap:meta` + `cap:platform` + `cap:resolver` SRI/HostedGit）完成收官。

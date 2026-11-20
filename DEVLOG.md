@@ -2,6 +2,13 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-20: Batch 5B Tier-1 18 大核心标准库对标 Bun 终审体检与 7 模块精准补缺
+
+- **终审结论**：对全部 18 个 Tier-1 核心标准库逐一比对 `/data/dev/bun/src/` 与 `// Source:` 合规性：11 个模块已 100% 完备；在 `s3`（SigV4 全量可选头/STS/分片预签名）、`dns`（AAAA/MX/SRV/TXT wire 解析与 IPv6 缓存）、`encoding`（UTF-16BE/Ascii/Percent 统一导出）、`redis`（RESP3 标量/集合/PubSub/`skipFrame`）、`url`（RFC 3986 相对解析与 `URLSearchParams` 完备操作）、`which`（`PATHEXT` 与 `whichAll`）、`watcher`（过滤规则真正接入监听流水线）7 个模块识别并补齐了高实用价值缺口。
+- **验收**：`test_tier1_parity_deep.cp`（6/6 PASS）及 12 套既有回归测试全部 100% PASS，无任何 API 破坏性变更。
+
+---
+
 ## 2026-11-20: Batch 5A `cap:css` 全面去 `@import("bun")` 化与 8 模块纯 CP 重构
 
 - **根因与清理决策**：前期审计发现 `lib/css/` 中有 94 个早期从 Bun 拷贝的文件包含 `@import("bun")` / `bun.*` / `../css_jsc/*`，完全无法脱离 Bun 编译运行。此次彻底清除全部 94 个死文件，将其中的高价值核心能力（Tokenizer、Color 4 149 命名色、递归下降 `calc()`、Selectors L4、`var()` 递归解析防环、厂商前缀与逻辑属性、CSS Nesting 展平与美化器）重构为 8 个零外部依赖、100% 可通过 `cpc` 独立编译的纯 CP 模块（共 4,157 行），并保留原有导出 API 100% 向后兼容。

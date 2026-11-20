@@ -1,3 +1,19 @@
+## [2026-11-20] - Batch 5B：Tier-1 18 大核心标准库终审体检与 7 模块缺口补齐
+
+### 标准库终审与精准补缺 (Tier-1 Parity Audit & Gap Fill)
+- **终审确认完备（11 个）**：`cap:pack`、`cap:crypto`、`cap:net`、`cap:conf`、`cap:event`、`cap:security`、`cap:clap`、`cap:hash`、`cap:ptr`、`cap:sync`、`cap:col`；
+- **精准补齐缺口（7 个，100% 向后兼容）**：
+  - [`lib/s3/`](file:///data/dev/cp/lib/s3/client.cp)：`S3RequestBuilder.buildSignedRequest` 补齐全部 8 项可选头字母序 SigV4 签名，`buildPresignedUrl` 支持 STS `session_token` 与自定义查询串，`S3Client.presignPartUrl` 分片预签名；
+  - [`lib/dns/`](file:///data/dev/cp/lib/dns/packet.cp)：`DnsWireCodec` 新增 `decodeQuestion`/`decodeResourceRecord`/A/AAAA/CNAME/MX/SRV/TXT 记录解析与 IPv4/IPv6 格式化，`DnsCache` 新增 IPv6 `putAAAA`/`lookupAAAA`，`HostsTable` 新增 `lookupIPv6`；
+  - [`lib/encoding/`](file:///data/dev/cp/lib/encoding/utf16be.cp)：新增 `utf16be.cp`（`Utf16BE` 大端编解码与 `Ascii` 工具）并在 `index.cp` 聚合导出 `PercentEncoding`；
+  - [`lib/redis/`](file:///data/dev/cp/lib/redis/resp.cp)：补齐 RESP3 `Double`/`BigNumber`/`BlobError`/`VerbatimString`/`Push`/`Attribute` 编解码、`ValkeyReader.skipFrame`、`PMessage`/`PSubscribe` 与 `HELLO`/PubSub/`INCR`/`TTL`/`SELECT`/`QUIT` 命令；
+  - [`lib/url/`](file:///data/dev/cp/lib/url/url.cp)：`URL` 新增 RFC 3986 `normalizePath`/`resolve`/`parseWithBase`/`formatOrigin`/`format`，`URLSearchParams` 新增 `setUnique`/`hasValue`/`deleteValue`/`clear`/`toEncodedString`；
+  - [`lib/which/`](file:///data/dev/cp/lib/which/which.cp)：`WhichOptions.pathext`、`endsWithPathext` 与多路径全量检索 `whichAll`；
+  - [`lib/watcher/`](file:///data/dev/cp/lib/watcher/watcher.cp)：`WatchOptions` 忽略配置、`WatchFilter` 隐藏文件/通配过滤，并正式接入 `Watcher` 事件分发与 `poll` 流水线。
+- **文档、规范与测试**：同步更新 7 份 `docs/<mod>/<mod>.md` 及双轨规范手册 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md)、[`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)；新增 [`cap/test/test_tier1_parity_deep.cp`](file:///data/dev/cp/cap/test/test_tier1_parity_deep.cp)（6/6 PASS），联合 12 套存量回归测试全部 100% PASS。
+
+---
+
 ## [2026-11-20] - Batch 5A：`cap:css` 全面去 `@import("bun")` 化重构（清理 94 个死文件，重建 8 模块纯 CP CSS 全栈引擎）
 
 ### 标准库重构与清理 (`cap:css`)

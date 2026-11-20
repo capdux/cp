@@ -27,7 +27,8 @@
 | `lib/encoding/base64_.cp` | `// Source: /data/dev/bun/src/base64/base64.cp` | 底层 Base64 字符集、单字节解码映射、`Base64Encoder`、`Base64Decoder`、`Codecs` 预设实例 |
 | `lib/encoding/base64.cp` | `// Source: /data/dev/bun/src/base64/base64.cp` | 面向用户的 `Base64` 高阶静态类（标准/URL-Safe、预分配/动态分配、原地解码、合法性校验） |
 | `lib/encoding/hex.cp` | `// Source: /data/dev/bun/src/base64/base64.cp` | 零堆分配查表驱动的 `Hex` 十六进制大小写编码、解码、原地解码与合法性校验 |
-| `lib/encoding/index.cp` | `// Source: /data/dev/bun/src/base64/base64.cp` | `cap:encoding` 标准库统一导出入口（聚合 Base64、Hex 与 UTF-8/UTF-16 工具） |
+| `lib/encoding/utf16be.cp` | `// Source: /data/dev/bun/src/string/wtf.cp` | `Utf16BE` 大端 UTF-16 编解码与 `Ascii`（大小写转换、Latin-1 转 UTF-8）原语 |
+| `lib/encoding/index.cp` | `// Source: /data/dev/bun/src/base64/base64.cp` | `cap:encoding` 标准库统一导出入口（聚合 Base64、Hex、UTF-8/UTF-16LE/UTF-16BE、Ascii 与 PercentEncoding） |
 
 ### 2. 核心设计特性与性能优势
 

@@ -140,7 +140,8 @@ pub fn demoDnsSubsystem() {
 | :--- | :--- | :--- |
 | **DNS 记录类型枚举** | `NSType` (`A`, `AAAA`, `CNAME`, `MX`, `TXT`, `SRV`, `CAA`) | `NSType` (`A`, `AAAA`, `CNAME`, `MX`, `TXT`, `SRV`, `CAA`) |
 | **RFC 1035 报文头编解码** | `dns/packet` 12-byte Header | `DnsHeader.encode` / `DnsHeader.decode` |
-| **域名标签与 `0xC0` 解压** | `c-ares` / 内置 DNS 解析器 | `DnsWireCodec.encodeDomainName` / `decodeDomainName` / `buildQueryPacket` |
-| **`/etc/hosts` 静态解析** | `etc_hosts` 本地覆盖表 | `HostsTable.parse(content)` -> `.lookup(host)` / `.lookupIPv4(host)` |
-| **TTL 缓存管理** | `Bun.dns.prefetch` / 内置 DNS Cache | `DnsCache<CAP>.init()` -> `.put(...)` / `.lookup(...)` / `.evictExpired(...)` |
+| **域名标签与 `0xC0` 解压** | `c-ares` / 内置 DNS 解析器 | `DnsWireCodec.encodeDomainName` / `decodeDomainName` / `buildQueryPacket` / `decodeQuestion` |
+| **资源记录 (RR)  wire 解码** | `SRV` / `TXT` / `MX` / `AAAA` / `A` / `CNAME` | `decodeResourceRecord` + `parseARdata` / `parseAAAARdata` / `parseNameRdata` / `parseMxRdata` / `parseSrvRdata` / `parseTxtRdata` + `formatIPv4` / `formatIPv6` |
+| **`/etc/hosts` 静态解析** | `etc_hosts` 本地覆盖表 | `HostsTable.parse(content)` -> `.lookup(host)` / `.lookupIPv4(host)` / `.lookupIPv6(host)` |
+| **TTL 缓存管理** | `Bun.dns.prefetch` / 内置 DNS Cache | `DnsCache<CAP>.init()` -> `.put` / `.putAAAA` / `.lookup` / `.lookupAAAA` / `.evictExpired` |
 | **c-ares 状态码诊断** | `ares_strerror` | `CaresStatus.codeName(code)` / `CaresStatus.isRetryable(code)` |

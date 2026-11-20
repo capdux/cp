@@ -169,14 +169,15 @@ pub fn demoUrlAndQuery(): !void {
 
 | 功能特性 | Web 标准 (`URL` / `URLSearchParams`) | Bun (`bun/src/url/url.cp`) | CP 标准库 (`cap:url`) |
 | :--- | :--- | :--- | :--- |
-| **解析 URL** | `new URL(input)` | `URL.parse(input)` | `URL.parse(input, alloc)` / `URL.parseSlice(input)` |
+| **解析 URL** | `new URL(input)` | `URL.parse(input)` | `URL.parse(input, alloc)` / `URL.parseSlice(input)` / `URL.parseWithBase(input, base, alloc, buf)` |
+| **相对路径与点段归并** | `new URL(rel, base)` | `URL.resolve` / `normalizePath` | `URL.resolve(base, rel, out)` / `URL.normalizePath(path, out)` / `url.format(out)` / `url.formatOrigin(out)` |
 | **协议提取** | `url.protocol` (`"https:"`) | `url.protocol` / `url.displayProtocol()` | `url.protocol` (`"https:"`) / `url.scheme` (`"https"`) / `url.displayProtocol()` |
 | **认证信息** | `url.username` / `url.password` | `url.username` / `url.password` | `url.username` / `url.password` |
 | **主机与端口** | `url.host` / `url.hostname` / `url.port` | `url.host` / `url.hostname` / `url.port` | `url.host` / `url.hostname` / `url.port` |
 | **数值端口推导** | `Number(url.port) \|\| defaultPort` | `url.getPort()` / `url.getPortAuto()` | `url.getPort()` (`u16?`) / `url.getPortAuto()` (`u16`) |
 | **路径、查询与锚点** | `url.pathname` / `url.search` / `url.hash` | `url.pathname` / `url.search` / `url.hash` | `url.pathname` / `url.search` / `url.hash` |
 | **S3 路径提取** | *需手动截取* | `url.s3Path()` | `url.s3Path()` |
-| **查询参数解析** | `new URLSearchParams(str)` | `QueryStringMap.init(alloc, str)` | `URLSearchParams.parse(str, alloc)` / `SearchParams.parse(str, alloc)` |
+| **查询参数解析与操作** | `new URLSearchParams(str)` | `QueryStringMap.init(alloc, str)` | `URLSearchParams.parse(str, alloc)` / `setUnique` / `hasValue` / `deleteValue` / `clear` / `toEncodedString` |
 | **零分配流式扫描** | *不支持* | `Scanner.init(str)` -> `scanner.next()` | `Scanner.init(str)` -> `scanner.next()` |
 | **查询参数排序** | `params.sort()` | *不支持原地排序* | `params.sort()` |
 | **URI 组件编码** | `encodeURIComponent(str)` | `PercentEncoding.encode` | `PercentEncoding.encodeComponentToBuf(str, out)` / `PercentEncoding.encodeComponent(str, alloc)` |

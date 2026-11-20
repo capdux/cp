@@ -157,9 +157,9 @@ pub fn demoStreamReader() {
 | 功能特性 | Bun (`Bun.redis` / `src/valkey/valkey_protocol.cp`) | CP 标准库 (`cap:redis`) |
 | :--- | :--- | :--- |
 | **RESP 类型识别** | `RESPType.fromByte(byte)` | `RESPType.fromByte(byte)` |
-| **单帧零拷贝解析** | `ValkeyReader.readValue()` | `RESPParser.parseFrame(buf)` |
-| **流式多帧游标读取** | `ValkeyReader.init(buf)` | `ValkeyReader.init(buf)` -> `reader.nextFrame()` |
-| **RESP3 Verbatim 解析** | `reader.readVerbatimString()` | `VerbatimString.parse(frame.str_val)` |
-| **Pub/Sub 推送分类** | `SubscriptionPushMessage.map` | `SubscriptionPushMessage.fromString(kind)` |
-| **基础命令编码** | `ValkeyClient` 内部格式化 | `RedisCommand.encodeGet` / `encodeSet` / `encodeHSet` / `encodeExpire` 等 |
-| **流水线批量打包** | 自动 Auto-Pipelining 队列 | `RedisPipeline.init()` -> `pipe.set(...)` / `pipe.get(...)` -> `pipe.bytes()` |
+| **单帧零拷贝解析与编码** | `ValkeyReader.readValue()` | `RESPParser.parseFrame(buf)` / `parseDouble` + `RESPEncoder`（含 RESP3 Double / BigNumber / BlobError / VerbatimString / Push / Attribute / `encodeCommand`） |
+| **流式多帧游标读取** | `ValkeyReader.init(buf)` | `ValkeyReader.init(buf)` -> `reader.nextFrame()` / `reader.skipFrame()` |
+| **RESP3 Verbatim 解析** | `reader.readVerbatimString()` | `frame.asVerbatimString()` / `VerbatimString.parse(frame.str_val)` |
+| **Pub/Sub 推送与命令** | `SubscriptionPushMessage.map` | `SubscriptionPushMessage.fromString(kind)`（含 `Message` / `Subscribe` / `Unsubscribe` / `PMessage` / `PSubscribe` / `PUnsubscribe`）+ `encodePublish` / `encodeSubscribe` / `encodePSubscribe` |
+| **基础命令编码** | `ValkeyClient` 内部格式化 | `RedisCommand.encodeCommandN` / `encodeHello` / `encodeGet` / `encodeSet` / `encodeHSet` / `encodeIncr` / `encodeDecr` / `encodeTtl` / `encodeSelect` / `encodeQuit` 等 |
+| **流水线批量打包** | 自动 Auto-Pipelining 队列 | `RedisPipeline.init()` -> `pipe.hello(3)` / `pipe.set(...)` / `pipe.publish(...)` / `pipe.command(&args)` -> `pipe.bytes()` |

@@ -6147,13 +6147,13 @@ export class SocketContext<Handler> {
 | `cap:router`      | 超高性能 Radix-Tree 路由引擎与路径反向生成器 `Router<T>`, `RadixNode<T>`, `ParamMap`, `RouteMatch`, `RouteFormatter` | **已全面实装** |
 | `cap:http`        | `Method`, `Headers`, `ETag`, `MimeType`, `CookieMap`, `FormData`, `Request`, `Response`, `HttpServer`, `HTTPClient`, `H2ClientSession`, `HpackCodec`, `H3ClientSession`, `fetch`, `serve`, `json` | **已全面实装** |
 | `cap:path`        | 跨平台路径计算 `Path`, `PosixPath`, `WindowsPath`（`join`, `resolve`, `normalize`, `dirname`, `basename`, `extname`, `isAbsolute`） | **已全面实装** |
-| `cap:url`         | WHATWG 规范 `URL`, `URLSearchParams`, `QueryParam` 与 RFC 3986 百分号编解码器 `PercentEncoding` | **已全面实装** |
-| `cap:encoding`    | 极速 Base64 编解码器（Standard, URL-Safe, 无填充, `decodeInPlace` 原地解码）、Codecs 预设工厂与零堆查表十六进制编解码器 `Hex` | **已全面实装** |
+| `cap:url`         | WHATWG 规范 `URL`（含 RFC 3986 `normalizePath`/`resolve`/`parseWithBase`/`formatOrigin`）、`URLSearchParams`（`setUnique`/`hasValue`/`deleteValue`/`toEncodedString`）与百分号编解码器 `PercentEncoding` | **已全面实装** |
+| `cap:encoding`    | 极速 Base64 编解码器（Standard, URL-Safe, 无填充, `decodeInPlace`）、`Hex`、`Utf8`/`Utf16`/`Utf16BE`、`Ascii` 与 `PercentEncoding` | **已全面实装** |
 | `cap:glob`        | 工业级 Unix Glob 模式匹配（递归 `**`、花括号展开 `{a,b}`、单级 `*`、`?`、字符集 `[a-z]`、`!`、`hasMagic`）与零堆分配目录扫描引擎 `GlobWalker` | **已全面实装** |
 | `cap:ptr`         | 工业级智能指针与底层内存抽象套件（`Shared<T>`, `AtomicShared<T>`, `Weak<T>`, `AtomicWeak<T>`, `Cow<T>`, `CowSlice<T>`, `Owned<T>`, `TaggedPointer<T>`, `LowTagPointer<T>`, `RefCount<T>`, `RefPtr<T>`） | **已全面实装** |
 | `cap:semver`      | Semver 2.0.0 规范点分标识符排序梯级、高级范围比较（`^`, `~`, `>=`, `<=`, `-`, `||`, `*`）、`maxSatisfying` 与原子版本递增 | **已全面实装** |
 | `cap:dotenv`      | 工业级 `.env` 词法/语法解析、`${VAR:-default}` 变量展开、`.env.<mode>.local` 级联覆盖状态机与环境变量注入 | **已全面实装** |
-| `cap:which`       | 跨平台可执行二进制定位器（支持 `PATH` 环境变量遍历、相对/绝对路径解析与执行权限校验） | **已全面实装** |
+| `cap:which`       | 跨平台可执行二进制定位器（支持 `PATH`、`PATHEXT` 扩展名探测、多路径全量检索 `whichAll` 与执行权限校验） | **已全面实装** |
 | `cap:ws`          | RFC 6455 现代 WebSocket 协议帧处理（Opcode、打包分片、4 字节极速异或掩码、控制帧） | **已全面实装** |
 | `cap:crypto`      | 工业级密码学体系：CSPRNG、UUID v4、散列哈希（SHA256/512/1/MD5/流式）、HMAC、PBKDF2、AEAD 对称加密（AES-256-GCM、ChaCha20-Poly1305）、BoringSSL X.509 校验 | **已全面实装** |
 | `cap:safety`      | 生产级并发安全、硬件探测与崩溃诊断套件：线程 ID 极速获取（`thread_id`）、单线程属主防御锁（`ThreadLock`）、可重入并发读写竞态检测（`CriticalSection`）、非托管容器防混用（`CheckedAllocator`）、原生 ASAN 内存毒化（`asan`）、CPU 指令集运行时探测（`CpuFeatures`）、OOM 策略守卫（`OomGuard`）与崩溃报告格式化（`CrashReport`） | **已全面实装** |
@@ -6164,8 +6164,8 @@ export class SocketContext<Handler> {
 | `cap:actor`       | `yield`, `receive`, `sleep`, `join`, `self_pid`, `sender`, `send`, `reply`（内建 `@spawn`/`@receive`/`@reply`/`@send`/`@self`/`@sender`） | **已全面实装** |
 | `cap:fs`          | 异步/同步文件读取、写入、目录创建、流式 I/O                            | **已全面实装** |
 | `cap:net`         | `SocketAddress`, `UdpSocket`, `UdpPacket`, `TcpStream`, `TcpServer`, `SafeSocket`, `HttpConnectTunnel`, `Socks5Codec` | **已全面实装** |
-| `cap:dns`         | RFC 1035 DNS 报文头/域名压缩编解码与 `/etc/hosts` 解析器               | **已全面实装** |
-| `cap:s3`          | AWS S3 完备客户端、SigV4 签名、分块上传状态机、XML 流式解析与分片下载流 | **已全面实装** |
+| `cap:dns`         | RFC 1035/3596 DNS 报文头/压缩编解码、A/AAAA/CNAME/MX/SRV/TXT 资源记录解析、IPv4/IPv6 `DnsCache` 与 `/etc/hosts`（`lookupIPv6`） | **已全面实装** |
+| `cap:s3`          | AWS S3 完备客户端、全量可选头 SigV4 签名、STS `session_token` 预签名与分片预签名（`presignPartUrl`）、分块上传状态机、XML 流式解析与分片下载流 | **已全面实装** |
 | `cap:sourcemap`   | Base64 VLQ/Varint 编解码、二分/动态行偏移表、二进制 InternalSourceMap 与 SourceMap v3 生成/反查 | **已全面实装** |
 | `cap:clap`        | 工业级命令行参数解析：POSIX 引号 Shell 词法分词、声明式语法、流式解析与编译期强类型提取 | **已全面实装** |
 | `cap:reflect`     | 编译期与运行时 `type_of`, `fields_of`, 结构体自省                      | **已全面实装** |

@@ -9,6 +9,7 @@ import {
     getNowMs,
 } from "./events.cp";
 import { DebounceEngine, MAX_DEBOUNCE_ENTRIES } from "./debounce.cp";
+import { WatchFilter } from "./filter.cp";
 import {
     InotifyBackend,
     InotifyRawEvent,
@@ -185,8 +186,20 @@ pub struct Watcher {
         _.callback_ctx = ctx;
     }
 
+    pub fn shouldIgnore(*_, path: []const u8): bool {
+        return WatchFilter.shouldIgnoreWith(
+            path,
+            _.options.ignore_defaults,
+            _.options.ignore_hidden,
+            _.options.ignore_patterns,
+        );
+    }
+
     pub fn dispatchMockEvent(*_, path: []const u8, action: WatchAction, is_dir: bool, now_ms: i64): bool {
         if (!_.is_active || _.is_paused) {
+            return false;
+        }
+        if (_.shouldIgnore(path)) {
             return false;
         }
         return _.debounce.push(path, action, is_dir, now_ms);
@@ -257,7 +270,9 @@ pub struct Watcher {
                         action = WatchAction.modify;
                     }
                     let is_dir = (mask & IN_ISDIR) != 0;
-                    * = _.debounce.push(full_path, action, is_dir, now_ms);
+                    if (!_.shouldIgnore(full_path)) {
+                        * = _.debounce.push(full_path, action, is_dir, now_ms);
+                    }
                 }
                 r += 1;
             }

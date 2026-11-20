@@ -17,6 +17,8 @@ export {
     decodeByteUnified,
 } from "./base64.cp";
 export { Hex } from "./hex.cp";
+export { Utf16BE, Ascii } from "./utf16be.cp";
+export { PercentEncoding, Percent } from "../url/percent.cp";
 export {
     REPLACEMENT_CHAR,
     DecodeResult,

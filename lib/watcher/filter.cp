@@ -37,6 +37,88 @@ pub struct WatchFilter {
         }
         return false;
     }
+
+    /// Returns `true` if any path component (except `.` or `..`) starts with `.`.
+    pub static fn isHidden(path: []const u8): bool {
+        let iter = std.mem.splitScalar(u8, path, '/');
+        while (seg := iter.next()) {
+            if (seg.len == 0 || std.mem.eql(u8, seg, ".") || std.mem.eql(u8, seg, "..")) {
+                continue;
+            }
+            if (seg[0] == '.') {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// Simple glob/segment pattern matcher supporting `*` wildcard, prefix/suffix, and directory segment matches.
+    pub static fn matchesPattern(path: []const u8, pattern: []const u8): bool {
+        if (pattern.len == 0) return false;
+        if (std.mem.indexOfScalar(u8, pattern, '*') == null) {
+            if (std.mem.eql(u8, path, pattern)) return true;
+            let iter = std.mem.splitScalar(u8, path, '/');
+            while (seg := iter.next()) {
+                if (std.mem.eql(u8, seg, pattern)) return true;
+            }
+            return std.mem.endsWith(u8, path, pattern);
+        }
+        // Single-star wildcard match against basename and full path
+        let basename = path;
+        if (last_slash := std.mem.lastIndexOfScalar(u8, path, '/')) {
+            basename = path[last_slash + 1 ..];
+        }
+        if (matchStar(basename, pattern) || matchStar(path, pattern)) {
+            return true;
+        }
+        return false;
+    }
+
+    /// Evaluates default ignores, hidden files, and custom `patterns`.
+    pub static fn shouldIgnoreWith(
+        path: []const u8,
+        ignore_defaults: bool,
+        ignore_hidden: bool,
+        patterns: []const []const u8,
+    ): bool {
+        if (path.len == 0) return true;
+        if (ignore_defaults && WatchFilter.shouldIgnore(path)) return true;
+        if (ignore_hidden && WatchFilter.isHidden(path)) return true;
+        let i: usize = 0;
+        while (i < patterns.len) {
+            if (WatchFilter.matchesPattern(path, patterns[i])) return true;
+            i += 1;
+        }
+        return false;
+    }
+}
+
+fn matchStar(text: []const u8, pattern: []const u8): bool {
+    let ti: usize = 0;
+    let pi: usize = 0;
+    let star_pi: (usize)? = null;
+    let match_ti: usize = 0;
+
+    while (ti < text.len) {
+        if (pi < pattern.len && pattern[pi] == text[ti]) {
+            pi += 1;
+            ti += 1;
+        } else if (pi < pattern.len && pattern[pi] == '*') {
+            star_pi = pi;
+            match_ti = ti;
+            pi += 1;
+        } else if (sp := star_pi) {
+            pi = sp + 1;
+            match_ti += 1;
+            ti = match_ti;
+        } else {
+            return false;
+        }
+    }
+    while (pi < pattern.len && pattern[pi] == '*') {
+        pi += 1;
+    }
+    return pi == pattern.len;
 }
 
 pub struct TrackerEntry {

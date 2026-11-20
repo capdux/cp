@@ -347,6 +347,243 @@ pub struct URL {
             _.allocated_origin = null;
         }
     }
+
+    /// Formats the URL origin (`scheme://host` or `"null"` for file://) into `out` without heap allocation.
+    pub fn formatOrigin(out: []u8): string {
+        if (_.isFile()) {
+            const null_str = "null";
+            if (out.len < null_str.len) return "";
+            @memcpy(out[0..null_str.len], null_str);
+            return out[0..null_str.len];
+        }
+        if (_.protocol.len == 0 or _.host.len == 0) return "";
+        const needed = _.protocol.len + 2 + _.host.len;
+        if (out.len < needed) return "";
+        @memcpy(out[0.._.protocol.len], _.protocol);
+        out[_.protocol.len] = 47 as u8;
+        out[_.protocol.len + 1] = 47 as u8;
+        @memcpy(out[_.protocol.len + 2 .. needed], _.host);
+        return out[0..needed];
+    }
+
+    /// Serializes the full URL back into `out` without heap allocation.
+    pub fn format(out: []u8): string {
+        let pos: usize = 0;
+        if (_.protocol.len > 0) {
+            if (pos + _.protocol.len > out.len) return out[0..pos];
+            @memcpy(out[pos .. pos + _.protocol.len], _.protocol);
+            pos += _.protocol.len;
+            if (_.host.len > 0 or _.isFile()) {
+                if (pos + 2 > out.len) return out[0..pos];
+                out[pos] = 47 as u8;
+                out[pos + 1] = 47 as u8;
+                pos += 2;
+            }
+        }
+        if (_.username.len > 0) {
+            if (pos + _.username.len > out.len) return out[0..pos];
+            @memcpy(out[pos .. pos + _.username.len], _.username);
+            pos += _.username.len;
+            if (_.password.len > 0) {
+                if (pos + 1 + _.password.len > out.len) return out[0..pos];
+                out[pos] = 58 as u8; // ':'
+                pos += 1;
+                @memcpy(out[pos .. pos + _.password.len], _.password);
+                pos += _.password.len;
+            }
+            if (pos + 1 > out.len) return out[0..pos];
+            out[pos] = 64 as u8; // '@'
+            pos += 1;
+        }
+        if (_.host.len > 0) {
+            if (pos + _.host.len > out.len) return out[0..pos];
+            @memcpy(out[pos .. pos + _.host.len], _.host);
+            pos += _.host.len;
+        }
+        if (_.pathname.len > 0) {
+            if (pos + _.pathname.len > out.len) return out[0..pos];
+            @memcpy(out[pos .. pos + _.pathname.len], _.pathname);
+            pos += _.pathname.len;
+        }
+        if (_.search.len > 0) {
+            if (pos + _.search.len > out.len) return out[0..pos];
+            @memcpy(out[pos .. pos + _.search.len], _.search);
+            pos += _.search.len;
+        }
+        if (_.hash.len > 0) {
+            if (pos + _.hash.len > out.len) return out[0..pos];
+            @memcpy(out[pos .. pos + _.hash.len], _.hash);
+            pos += _.hash.len;
+        }
+        return out[0..pos];
+    }
+
+    /// RFC 3986 Section 5.2.4 dot-segment normalization (resolves `.` and `..` in `path`).
+    pub static fn normalizePath(path: string, out: []u8): string {
+        if (out.len == 0) return "";
+        if (path.len == 0) {
+            out[0] = 47 as u8;
+            return out[0..1];
+        }
+        let seg_starts: [64]usize = [0; 64];
+        let seg_lens: [64]usize = [0; 64];
+        let seg_count: usize = 0;
+
+        let trailing_slash = path[path.len - 1] == (47 as u8);
+        let i: usize = 0;
+        while (i <= path.len) {
+            let start = i;
+            while (i < path.len and path[i] != (47 as u8)) {
+                i += 1;
+            }
+            const seg = path[start..i];
+            if (seg.len == 0 or std.mem.eql(u8, seg, ".")) {
+                // skip empty or "."
+            } else if (std.mem.eql(u8, seg, "..")) {
+                if (seg_count > 0) {
+                    seg_count -= 1;
+                }
+            } else {
+                if (seg_count < 64) {
+                    seg_starts[seg_count] = start;
+                    seg_lens[seg_count] = seg.len;
+                    seg_count += 1;
+                }
+            }
+            if (i < path.len) {
+                i += 1; // skip '/'
+            } else {
+                break;
+            }
+        }
+
+        let pos: usize = 0;
+        if (seg_count == 0) {
+            out[0] = 47 as u8;
+            return out[0..1];
+        }
+        let s: usize = 0;
+        while (s < seg_count) {
+            if (pos >= out.len) break;
+            out[pos] = 47 as u8;
+            pos += 1;
+            const slen = seg_lens[s];
+            const sstart = seg_starts[s];
+            if (pos + slen > out.len) break;
+            @memcpy(out[pos .. pos + slen], path[sstart .. sstart + slen]);
+            pos += slen;
+            s += 1;
+        }
+        if (trailing_slash and pos < out.len and (pos == 0 or out[pos - 1] != (47 as u8))) {
+            out[pos] = 47 as u8;
+            pos += 1;
+        }
+        return out[0..pos];
+    }
+
+    /// Resolves a relative or absolute URL reference `relative_str` against `base_str` into `out` (RFC 3986 §5.2).
+    pub static fn resolve(base_str: string, relative_str: string, out: []u8): string? {
+        if (relative_str.len == 0) {
+            if (base_str.len > out.len) return null;
+            @memcpy(out[0..base_str.len], base_str);
+            return out[0..base_str.len];
+        }
+
+        // Check if relative_str already has a scheme (e.g. "https://...")
+        if (c_idx := indexOfChar(relative_str, 58 as u8)) {
+            let is_scheme = c_idx > 0;
+            let k: usize = 0;
+            while (k < c_idx) {
+                const ch = relative_str[k];
+                if (ch == (47 as u8) or ch == (63 as u8) or ch == (35 as u8) or ch == (64 as u8)) {
+                    is_scheme = false;
+                    break;
+                }
+                k += 1;
+            }
+            if (is_scheme) {
+                if (relative_str.len > out.len) return null;
+                @memcpy(out[0..relative_str.len], relative_str);
+                return out[0..relative_str.len];
+            }
+        }
+
+        const base = URL.parseSlice(base_str);
+        if (base.protocol.len == 0) return null;
+
+        // Protocol-relative "//host/path..."
+        if (relative_str.len >= 2 and relative_str[0] == (47 as u8) and relative_str[1] == (47 as u8)) {
+            const needed = base.protocol.len + relative_str.len;
+            if (needed > out.len) return null;
+            @memcpy(out[0..base.protocol.len], base.protocol);
+            @memcpy(out[base.protocol.len .. needed], relative_str);
+            return out[0..needed];
+        }
+
+        // Split relative_str into path, ?search, #hash
+        let rel = relative_str;
+        let rel_hash: string = "";
+        if (h_idx := indexOfChar(rel, 35 as u8)) {
+            rel_hash = rel[h_idx..];
+            rel = rel[0..h_idx];
+        }
+        let rel_search: string = "";
+        if (q_idx := indexOfChar(rel, 63 as u8)) {
+            rel_search = rel[q_idx..];
+            rel = rel[0..q_idx];
+        }
+
+        let norm_path_buf: [1024]u8 = undefined;
+        let final_path: string = base.pathname;
+        let final_search: string = rel_search;
+
+        if (rel.len == 0) {
+            if (rel_search.len == 0) {
+                final_search = base.search;
+            }
+        } else if (rel[0] == (47 as u8)) {
+            final_path = URL.normalizePath(rel, &norm_path_buf);
+        } else {
+            // Merge relative path with base directory
+            let merged_buf: [1024]u8 = undefined;
+            let m_pos: usize = 0;
+            if (last_sl := lastIndexOfChar(base.pathname, 47 as u8)) {
+                const dir_len = last_sl + 1;
+                if (dir_len <= merged_buf.len) {
+                    @memcpy(merged_buf[0..dir_len], base.pathname[0..dir_len]);
+                    m_pos = dir_len;
+                }
+            } else {
+                merged_buf[0] = 47 as u8;
+                m_pos = 1;
+            }
+            if (m_pos + rel.len > merged_buf.len) return null;
+            @memcpy(merged_buf[m_pos .. m_pos + rel.len], rel);
+            m_pos += rel.len;
+            final_path = URL.normalizePath(merged_buf[0..m_pos], &norm_path_buf);
+        }
+
+        let resolved = URL{
+            .protocol = base.protocol,
+            .scheme = base.scheme,
+            .username = base.username,
+            .password = base.password,
+            .host = base.host,
+            .hostname = base.hostname,
+            .port = base.port,
+            .pathname = final_path,
+            .path = final_path,
+            .search = final_search,
+            .hash = rel_hash,
+        };
+        return resolved.format(out);
+    }
+
+    /// Resolves `input` against `base_str` into `out_buf` and parses the resulting `URL`.
+    pub static fn parseWithBase(input: string, base_str: string, alloc: std.mem.Allocator?, out_buf: []u8): !URL {
+        const resolved = URL.resolve(base_str, input, out_buf) orelse return err.InvalidUrl;
+        return URL.parse(resolved, alloc);
+    }
 }
 
 pub const Url = URL;

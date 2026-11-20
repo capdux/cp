@@ -26,9 +26,10 @@
 | 功能描述 | `cap:which` API | `Bun.which` (JS/TS) 对照 | 说明 |
 | :--- | :--- | :--- | :--- |
 | **定位可执行程序** | `which(bin, options, out_buf)` | `Bun.which(bin, { PATH, cwd })` | 找到返回 `([]const u8)?`，未找到返回 `null` |
-| **自定义查找配置** | `WhichOptions { path, cwd }` | `{ PATH?: string, cwd?: string }` | `path` 覆盖系统 `PATH`；`cwd` 指定相对路径基准目录 |
+| **多路径全量检索** | `whichAll(bin, options, out_buf, out_paths)` | *多次遍历 PATH* | 零堆分配收集 `PATH` 中全部同名可执行文件 |
+| **自定义查找配置** | `WhichOptions { path, cwd, pathext }` | `{ PATH?: string, cwd?: string }` | `path` 覆盖 `PATH`；`cwd` 指定基准目录；`pathext` 覆盖 `PATHEXT` |
 | **校验文件可执行性** | `isExecutable(filepath)` | `bun.sys.isExecutableFilePath(p)` | 校验文件存在、非目录且具备可执行权限 |
-| **Windows 扩展名判定** | `endsWithExtension(str)` | `bun.which.endsWithExtension(s)` | 大小写不敏感检测 `.exe` / `.cmd` / `.bat` 后缀 |
+| **Windows / PATHEXT 判定** | `endsWithExtension(str)` / `endsWithPathext(str, pathext)` | `bun.which.endsWithExtension(s)` | 大小写不敏感检测 `.exe` / `.cmd` / `.bat` 及自定义 `PATHEXT` 后缀 |
 
 ---
 

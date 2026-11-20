@@ -45,6 +45,8 @@ pub enum RESPType: u8 {
     }
 }
 
+import { VerbatimString } from "./protocol.cp";
+
 pub struct RESPFrame {
     pub kind: RESPType = RESPType.Null;
     pub str_val: []const u8 = "";
@@ -53,6 +55,16 @@ pub struct RESPFrame {
     pub is_null: bool = false;
     pub array_count: i64 = 0;
     pub bytes_consumed: usize = 0;
+
+    pub fn asDouble(): f64? {
+        if (_.kind != RESPType.Double) return null;
+        return RESPParser.parseDouble(_.str_val);
+    }
+
+    pub fn asVerbatimString(): VerbatimString? {
+        if (_.kind != RESPType.VerbatimString) return null;
+        return VerbatimString.parse(_.str_val);
+    }
 }
 
 pub struct RESPParser {
@@ -97,6 +109,18 @@ pub struct RESPParser {
             idx += 1;
         }
         return if (neg) -acc else acc;
+    }
+
+    /// Parses a RESP3 Double payload (`3.14`, `-0.5`, `inf`, `-inf`, `nan`).
+    pub static fn parseDouble(slice: []const u8): f64? {
+        if (slice.len == 0) return null;
+        if (slice == "inf" || slice == "+inf") return std.math.inf(f64);
+        if (slice == "-inf") {
+            const inf_val = std.math.inf(f64);
+            return -inf_val;
+        }
+        if (slice == "nan") return std.math.nan(f64);
+        return std.fmt.parseFloat(f64, slice) catch null;
     }
 
     /// Parses a single RESP2/RESP3 frame header or scalar value from `buf`.
@@ -230,6 +254,37 @@ pub struct ValkeyReader {
             return frame;
         }
         return null;
+    }
+
+    /// Skips one complete RESP2/RESP3 frame (including nested Array/Set/Push/Map/Attribute items).
+    pub fn skipFrame(*_): bool {
+        return _.skipFrameDepth(0);
+    }
+
+    fn skipFrameDepth(*_, depth: usize): bool {
+        if (depth >= 128) return false;
+        const frame = _.nextFrame() ?? return false;
+        if (frame.is_null) return true;
+        if (frame.kind == RESPType.Array || frame.kind == RESPType.Set || frame.kind == RESPType.Push) {
+            if (frame.array_count <= 0) return true;
+            let i: i64 = 0;
+            while (i < frame.array_count) {
+                if (!_.skipFrameDepth(depth + 1)) return false;
+                i += 1;
+            }
+            return true;
+        }
+        if (frame.kind == RESPType.Map || frame.kind == RESPType.Attribute) {
+            if (frame.array_count <= 0) return true;
+            let i: i64 = 0;
+            const pairs = frame.array_count * 2;
+            while (i < pairs) {
+                if (!_.skipFrameDepth(depth + 1)) return false;
+                i += 1;
+            }
+            return true;
+        }
+        return true;
     }
 }
 
@@ -383,6 +438,114 @@ pub struct RESPEncoder {
         out[1 + dlen] = '\r';
         out[2 + dlen] = '\n';
         return 1 + dlen + 2;
+    }
+
+    pub static fn encodePushHeader(out: []u8, count: usize): usize {
+        if (out.len < 4) { return 0; }
+        out[0] = '>';
+        const dlen = RESPEncoder.writeUint(out[1..], count);
+        if (dlen == 0 || out.len < 1 + dlen + 2) { return 0; }
+        out[1 + dlen] = '\r';
+        out[2 + dlen] = '\n';
+        return 1 + dlen + 2;
+    }
+
+    pub static fn encodeAttributeHeader(out: []u8, count: usize): usize {
+        if (out.len < 4) { return 0; }
+        out[0] = '|';
+        const dlen = RESPEncoder.writeUint(out[1..], count);
+        if (dlen == 0 || out.len < 1 + dlen + 2) { return 0; }
+        out[1 + dlen] = '\r';
+        out[2 + dlen] = '\n';
+        return 1 + dlen + 2;
+    }
+
+    pub static fn encodeDoubleStr(out: []u8, val_str: []const u8): usize {
+        const needed = 1 + val_str.len + 2;
+        if (out.len < needed) { return 0; }
+        out[0] = ',';
+        let i: usize = 0;
+        while (i < val_str.len) {
+            out[1 + i] = val_str[i];
+            i += 1;
+        }
+        out[1 + val_str.len] = '\r';
+        out[2 + val_str.len] = '\n';
+        return needed;
+    }
+
+    pub static fn encodeBigNumber(out: []u8, num_str: []const u8): usize {
+        const needed = 1 + num_str.len + 2;
+        if (out.len < needed) { return 0; }
+        out[0] = '(';
+        let i: usize = 0;
+        while (i < num_str.len) {
+            out[1 + i] = num_str[i];
+            i += 1;
+        }
+        out[1 + num_str.len] = '\r';
+        out[2 + num_str.len] = '\n';
+        return needed;
+    }
+
+    pub static fn encodeBlobError(out: []u8, err_msg: []const u8): usize {
+        if (out.len < 4) { return 0; }
+        out[0] = '!';
+        const dlen = RESPEncoder.writeUint(out[1..], err_msg.len);
+        if (dlen == 0) { return 0; }
+        const header_len = 1 + dlen + 2;
+        const total = header_len + err_msg.len + 2;
+        if (out.len < total) { return 0; }
+        out[1 + dlen] = '\r';
+        out[2 + dlen] = '\n';
+        let i: usize = 0;
+        while (i < err_msg.len) {
+            out[header_len + i] = err_msg[i];
+            i += 1;
+        }
+        out[header_len + err_msg.len] = '\r';
+        out[header_len + err_msg.len + 1] = '\n';
+        return total;
+    }
+
+    pub static fn encodeVerbatimString(out: []u8, fmt3: []const u8, content: []const u8): usize {
+        if (fmt3.len != 3 || out.len < 8) { return 0; }
+        const payload_len = 4 + content.len;
+        out[0] = '=';
+        const dlen = RESPEncoder.writeUint(out[1..], payload_len);
+        if (dlen == 0) { return 0; }
+        const header_len = 1 + dlen + 2;
+        const total = header_len + payload_len + 2;
+        if (out.len < total) { return 0; }
+        out[1 + dlen] = '\r';
+        out[2 + dlen] = '\n';
+        out[header_len] = fmt3[0];
+        out[header_len + 1] = fmt3[1];
+        out[header_len + 2] = fmt3[2];
+        out[header_len + 3] = ':';
+        let i: usize = 0;
+        while (i < content.len) {
+            out[header_len + 4 + i] = content[i];
+            i += 1;
+        }
+        out[header_len + payload_len] = '\r';
+        out[header_len + payload_len + 1] = '\n';
+        return total;
+    }
+
+    /// Encodes an arbitrary N-argument Redis command (`*N\r\n$...\r\n...`) into `out`.
+    pub static fn encodeCommand(out: []u8, args: []const []const u8): usize {
+        if (args.len == 0) { return 0; }
+        let pos: usize = RESPEncoder.encodeArrayHeader(out, args.len);
+        if (pos == 0) { return 0; }
+        let i: usize = 0;
+        while (i < args.len) {
+            const n = RESPEncoder.encodeBulkString(out[pos..], args[i]);
+            if (n == 0) { return 0; }
+            pos += n;
+            i += 1;
+        }
+        return pos;
     }
 
     /// Encodes a 2-token Redis command (e.g. `GET key`) into `out`.

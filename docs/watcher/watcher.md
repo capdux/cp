@@ -38,9 +38,9 @@
 
 | 组件名称 | 核心方法 | 功能说明 |
 | :--- | :--- | :--- |
-| **`Watcher`** | `createWatcher(opts)`, `watch(p)`, `unwatch(p)`, `pause()`, `resumeWatch()`, `poll(now_ms, &out)`, `close()` | 完整封装 `InotifyBackend` 与 `DebounceEngine` 的热重载监控器 |
+| **`Watcher`** | `createWatcher(opts)`, `watch(p)`, `unwatch(p)`, `pause()`, `resumeWatch()`, `shouldIgnore(p)`, `poll(now_ms, &out)`, `close()` | 完整封装 `InotifyBackend`、`WatchFilter`（默认/隐藏/自定义 glob 过滤）与 `DebounceEngine` 的热重载监控器 |
 | **`FileWatcher`** | `FileWatcher.init()`, `addWatch(path, is_dir)`, `removeWatch(wd)`, `findPath(wd)`, `activeCount()` | 轻量级监控描述符（`wd` <-> `path`）映射表管理器 |
-| **`WatchFilter`** | `WatchFilter.shouldIgnore(path): bool` | 零分配检测路径是否属于构建缓存、VCS 或编辑器交换文件 |
+| **`WatchFilter`** | `shouldIgnore(path)` / `isHidden(path)` / `matchesPattern(path, pat)` / `shouldIgnoreWith(...)` | 零分配检测路径是否属于构建缓存、VCS、隐藏文件、编辑器交换文件或自定义 glob 规则 |
 | **`DebounceTracker<CAP>`** | `DebounceTracker<8>.init(window_ns)`, `shouldEmit(path, now_ns)`, `clear()` | 固定容量泛型纳秒时间戳防抖器 |
 | **`DebounceEngine`** | `DebounceEngine.init(ms)`, `push(p, act, dir, ms)`, `drainReady(ms, &out)`, `drainAll(&out)` | 支持操作位图合并（`WatchEventOp.merge`）的事件防抖队列 |
 

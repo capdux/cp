@@ -75,6 +75,60 @@ pub struct RedisCommand {
     pub static fn encodeRPop(out: []u8, key: []const u8): usize {
         return RESPEncoder.encodeCommand2(out, "RPOP", key);
     }
+
+    pub static fn encodeCommandN(out: []u8, args: []const []const u8): usize {
+        return RESPEncoder.encodeCommand(out, args);
+    }
+
+    pub static fn encodeHello(out: []u8, proto_ver: usize): usize {
+        let ver_buf: [8]u8 = [0; 8];
+        const vlen = RESPEncoder.writeUint(ver_buf[0..8], proto_ver);
+        if (vlen == 0) { return 0; }
+        return RESPEncoder.encodeCommand2(out, "HELLO", ver_buf[0..vlen]);
+    }
+
+    pub static fn encodePublish(out: []u8, channel: []const u8, message: []const u8): usize {
+        return RESPEncoder.encodeCommand3(out, "PUBLISH", channel, message);
+    }
+
+    pub static fn encodeSubscribe(out: []u8, channel: []const u8): usize {
+        return RESPEncoder.encodeCommand2(out, "SUBSCRIBE", channel);
+    }
+
+    pub static fn encodeUnsubscribe(out: []u8, channel: []const u8): usize {
+        return RESPEncoder.encodeCommand2(out, "UNSUBSCRIBE", channel);
+    }
+
+    pub static fn encodePSubscribe(out: []u8, pattern: []const u8): usize {
+        return RESPEncoder.encodeCommand2(out, "PSUBSCRIBE", pattern);
+    }
+
+    pub static fn encodePUnsubscribe(out: []u8, pattern: []const u8): usize {
+        return RESPEncoder.encodeCommand2(out, "PUNSUBSCRIBE", pattern);
+    }
+
+    pub static fn encodeIncr(out: []u8, key: []const u8): usize {
+        return RESPEncoder.encodeCommand2(out, "INCR", key);
+    }
+
+    pub static fn encodeDecr(out: []u8, key: []const u8): usize {
+        return RESPEncoder.encodeCommand2(out, "DECR", key);
+    }
+
+    pub static fn encodeTtl(out: []u8, key: []const u8): usize {
+        return RESPEncoder.encodeCommand2(out, "TTL", key);
+    }
+
+    pub static fn encodeSelect(out: []u8, db_index: usize): usize {
+        let db_buf: [16]u8 = [0; 16];
+        const dlen = RESPEncoder.writeUint(db_buf[0..16], db_index);
+        if (dlen == 0) { return 0; }
+        return RESPEncoder.encodeCommand2(out, "SELECT", db_buf[0..dlen]);
+    }
+
+    pub static fn encodeQuit(out: []u8): usize {
+        return RedisCommand.encodeCommand1(out, "QUIT");
+    }
 }
 
 pub struct RedisPipeline {
@@ -183,6 +237,78 @@ pub struct RedisPipeline {
     pub fn rpop(*_, key: []const u8): bool {
         if (_.len >= 4096) { return false; }
         const n = RedisCommand.encodeRPop(_.buf[_.len..4096], key);
+        if (n == 0) { return false; }
+        _.len += n;
+        _.command_count += 1;
+        return true;
+    }
+
+    pub fn hello(*_, proto_ver: usize): bool {
+        if (_.len >= 4096) { return false; }
+        const n = RedisCommand.encodeHello(_.buf[_.len..4096], proto_ver);
+        if (n == 0) { return false; }
+        _.len += n;
+        _.command_count += 1;
+        return true;
+    }
+
+    pub fn publish(*_, channel: []const u8, message: []const u8): bool {
+        if (_.len >= 4096) { return false; }
+        const n = RedisCommand.encodePublish(_.buf[_.len..4096], channel, message);
+        if (n == 0) { return false; }
+        _.len += n;
+        _.command_count += 1;
+        return true;
+    }
+
+    pub fn subscribe(*_, channel: []const u8): bool {
+        if (_.len >= 4096) { return false; }
+        const n = RedisCommand.encodeSubscribe(_.buf[_.len..4096], channel);
+        if (n == 0) { return false; }
+        _.len += n;
+        _.command_count += 1;
+        return true;
+    }
+
+    pub fn unsubscribe(*_, channel: []const u8): bool {
+        if (_.len >= 4096) { return false; }
+        const n = RedisCommand.encodeUnsubscribe(_.buf[_.len..4096], channel);
+        if (n == 0) { return false; }
+        _.len += n;
+        _.command_count += 1;
+        return true;
+    }
+
+    pub fn incr(*_, key: []const u8): bool {
+        if (_.len >= 4096) { return false; }
+        const n = RedisCommand.encodeIncr(_.buf[_.len..4096], key);
+        if (n == 0) { return false; }
+        _.len += n;
+        _.command_count += 1;
+        return true;
+    }
+
+    pub fn decr(*_, key: []const u8): bool {
+        if (_.len >= 4096) { return false; }
+        const n = RedisCommand.encodeDecr(_.buf[_.len..4096], key);
+        if (n == 0) { return false; }
+        _.len += n;
+        _.command_count += 1;
+        return true;
+    }
+
+    pub fn ttl(*_, key: []const u8): bool {
+        if (_.len >= 4096) { return false; }
+        const n = RedisCommand.encodeTtl(_.buf[_.len..4096], key);
+        if (n == 0) { return false; }
+        _.len += n;
+        _.command_count += 1;
+        return true;
+    }
+
+    pub fn command(*_, args: []const []const u8): bool {
+        if (_.len >= 4096) { return false; }
+        const n = RedisCommand.encodeCommandN(_.buf[_.len..4096], args);
         if (n == 0) { return false; }
         _.len += n;
         _.command_count += 1;

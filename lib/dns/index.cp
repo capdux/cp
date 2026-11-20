@@ -48,6 +48,10 @@ export {
     DnsRCode,
     DnsHeader,
     DecodedDomain,
+    DnsQuestion,
+    DnsResourceRecord,
+    DnsMxRecord,
+    DnsSrvRecord,
     DnsWireCodec,
 } from "./packet.cp";
 

@@ -33,6 +33,8 @@ pub struct ResolveOptions {
 pub struct DnsCacheEntry {
     pub host: []const u8 = "";
     pub ipv4_packed: u32 = 0;
+    pub ipv6_addr: [16]u8 = [0; 16];
+    pub is_ipv6: bool = false;
     pub port: u16 = 0;
     pub expires_at_ms: u64 = 0;
     pub hits: u32 = 0;
@@ -57,6 +59,8 @@ pub struct DnsCache<const CAP: usize> {
             c.entries[i] = DnsCacheEntry{
                 host: "",
                 ipv4_packed: 0,
+                ipv6_addr: [0; 16],
+                is_ipv6: false,
                 port: 0,
                 expires_at_ms: 0,
                 hits: 0,
@@ -74,7 +78,7 @@ pub struct DnsCache<const CAP: usize> {
         while (i < CAP) {
             if (_.entries[i].active) {
                 const same = _.entries[i].host == host;
-                if (same && _.entries[i].port == port) {
+                if (same && !_.entries[i].is_ipv6 && _.entries[i].port == port) {
                     _.entries[i].ipv4_packed = ipv4_packed;
                     _.entries[i].expires_at_ms = now_ms + ttl_ms;
                     return true;
@@ -94,6 +98,47 @@ pub struct DnsCache<const CAP: usize> {
             _.entries[free_slot] = DnsCacheEntry{
                 host: host,
                 ipv4_packed: ipv4_packed,
+                ipv6_addr: [0; 16],
+                is_ipv6: false,
+                port: port,
+                expires_at_ms: now_ms + ttl_ms,
+                hits: 0,
+                active: true,
+            };
+            _.count += 1;
+            return true;
+        }
+        return false;
+    }
+
+    pub fn putAAAA(*_, host: []const u8, ipv6_addr: [16]u8, port: u16, now_ms: u64, ttl_ms: u64): bool {
+        let free_slot: usize = CAP;
+        let i: usize = 0;
+        while (i < CAP) {
+            if (_.entries[i].active) {
+                const same = _.entries[i].host == host;
+                if (same && _.entries[i].is_ipv6 && _.entries[i].port == port) {
+                    _.entries[i].ipv6_addr = ipv6_addr;
+                    _.entries[i].expires_at_ms = now_ms + ttl_ms;
+                    return true;
+                }
+                if (now_ms >= _.entries[i].expires_at_ms && free_slot == CAP) {
+                    _.entries[i].active = false;
+                    _.count -= 1;
+                    free_slot = i;
+                }
+            } else if (free_slot == CAP) {
+                free_slot = i;
+            }
+            i += 1;
+        }
+
+        if (free_slot < CAP) {
+            _.entries[free_slot] = DnsCacheEntry{
+                host: host,
+                ipv4_packed: 0,
+                ipv6_addr: ipv6_addr,
+                is_ipv6: true,
                 port: port,
                 expires_at_ms: now_ms + ttl_ms,
                 hits: 0,
@@ -108,13 +153,37 @@ pub struct DnsCache<const CAP: usize> {
     pub fn lookup(*_, host: []const u8, port: u16, now_ms: u64): u32? {
         let i: usize = 0;
         while (i < CAP) {
-            if (_.entries[i].active && _.entries[i].port == port) {
+            if (_.entries[i].active && !_.entries[i].is_ipv6 && _.entries[i].port == port) {
                 const same = _.entries[i].host == host;
                 if (same) {
                     if (now_ms < _.entries[i].expires_at_ms) {
                         _.entries[i].hits += 1;
                         _.total_hits += 1;
                         return _.entries[i].ipv4_packed;
+                    } else {
+                        _.entries[i].active = false;
+                        _.count -= 1;
+                        _.total_misses += 1;
+                        return null;
+                    }
+                }
+            }
+            i += 1;
+        }
+        _.total_misses += 1;
+        return null;
+    }
+
+    pub fn lookupAAAA(*_, host: []const u8, port: u16, now_ms: u64): ([16]u8)? {
+        let i: usize = 0;
+        while (i < CAP) {
+            if (_.entries[i].active && _.entries[i].is_ipv6 && _.entries[i].port == port) {
+                const same = _.entries[i].host == host;
+                if (same) {
+                    if (now_ms < _.entries[i].expires_at_ms) {
+                        _.entries[i].hits += 1;
+                        _.total_hits += 1;
+                        return _.entries[i].ipv6_addr;
                     } else {
                         _.entries[i].active = false;
                         _.count -= 1;
@@ -289,6 +358,18 @@ pub struct HostsTable {
         while (i < _.count) {
             if (!_.entries[i].is_ipv6 && _.entries[i].host == host) {
                 return _.entries[i].ipv4_packed;
+            }
+            i += 1;
+        }
+        return null;
+    }
+
+    /// Looks up the first matching IPv6 string for `host`.
+    pub fn lookupIPv6(host: []const u8): ([]const u8)? {
+        let i: usize = 0;
+        while (i < _.count) {
+            if (_.entries[i].is_ipv6 && _.entries[i].host == host) {
+                return _.entries[i].ip_str;
             }
             i += 1;
         }

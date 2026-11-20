@@ -83,6 +83,31 @@ pub struct S3Client {
         )?;
     }
 
+    /// Generates an AWS SigV4 Presigned URL for a multipart upload part (`PUT ?partNumber=N&uploadId=...`).
+    pub fn presignPartUrl(
+        path: string,
+        upload_id: string,
+        part_number: u16,
+        date_yyyymmdd: string,
+        amz_date: string,
+        expires_seconds: usize,
+        url_buf: []u8
+    ): !string {
+        let q_buf: [256]u8 = undefined;
+        let q_len = formatUploadPartQuery(part_number, upload_id, q_buf[0..256]);
+        // formatUploadPartQuery produces "?partNumber=...&uploadId=...&x-id=UploadPart"
+        return S3RequestBuilder.buildPresignedUrlWithQuery(
+            &_.credentials,
+            "PUT",
+            path,
+            q_buf[0..q_len],
+            date_yyyymmdd,
+            amz_date,
+            expires_seconds,
+            url_buf
+        )?;
+    }
+
     /// Prepares options for a HEAD (stat) request.
     pub fn stat(path: string): S3SimpleRequestOptions {
         * = _.credentials;

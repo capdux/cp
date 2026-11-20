@@ -237,6 +237,72 @@ pub struct URLSearchParams {
         }
     }
 
+    /// Removes all entries from this `URLSearchParams`.
+    pub fn clear(*_) {
+        _.len = 0;
+    }
+
+    /// Returns `true` if at least one entry matches both `key` and `value` (WHATWG 2-arg `has`).
+    pub fn hasValue(key: string, value: string): bool {
+        let i: usize = 0;
+        while (i < _.len) {
+            let entry = _.getEntry(i);
+            if (std.mem.eql(u8, entry.key, key) and std.mem.eql(u8, entry.value, value)) {
+                return true;
+            }
+            i += 1;
+        }
+        return false;
+    }
+
+    /// Deletes only entries matching both `key` and `value` (WHATWG 2-arg `delete`).
+    pub fn deleteValue(*_, key: string, value: string) {
+        let i: usize = 0;
+        while (i < _.len) {
+            let entry = _.getEntry(i);
+            if (std.mem.eql(u8, entry.key, key) and std.mem.eql(u8, entry.value, value)) {
+                let j = i;
+                while (j + 1 < _.len) {
+                    let next_entry = _.getEntry(j + 1);
+                    _.setEntry(j, next_entry);
+                    j += 1;
+                }
+                _.len -= 1;
+            } else {
+                i += 1;
+            }
+        }
+    }
+
+    /// Sets the first matching `key` to `value` and deletes any subsequent duplicates (strict WHATWG `set`).
+    pub fn setUnique(*_, key: string, value: string) {
+        let found_first = false;
+        let i: usize = 0;
+        while (i < _.len) {
+            let entry = _.getEntry(i);
+            if (std.mem.eql(u8, entry.key, key)) {
+                if (!found_first) {
+                    _.setEntry(i, QueryParam{ .key = key, .value = value });
+                    found_first = true;
+                    i += 1;
+                } else {
+                    let j = i;
+                    while (j + 1 < _.len) {
+                        let next_entry = _.getEntry(j + 1);
+                        _.setEntry(j, next_entry);
+                        j += 1;
+                    }
+                    _.len -= 1;
+                }
+            } else {
+                i += 1;
+            }
+        }
+        if (!found_first) {
+            _.append(key, value);
+        }
+    }
+
     /// Sorts all query parameters in-place by key name lexicographically
     pub fn sort(*_) {
         if (_.len <= 1) return;
@@ -304,6 +370,27 @@ pub struct URLSearchParams {
         }
         let buf = allocator.alloc(u8, total_len)?;
         return _.toString(buf);
+    }
+
+    /// Serializes parameters into `out` with RFC 3986 percent-encoding for keys and values.
+    pub fn toEncodedString(*_, out: []u8): string {
+        let out_idx: usize = 0;
+        let i: usize = 0;
+        while (i < _.len) {
+            let entry = _.getEntry(i);
+            if (i > 0 and out_idx < out.len) {
+                out[out_idx] = 38 as u8; // '&'
+                out_idx += 1;
+            }
+            out_idx += PercentEncoding.encodeComponentToBuf(entry.key, out[out_idx..]);
+            if (out_idx < out.len) {
+                out[out_idx] = 61 as u8; // '='
+                out_idx += 1;
+            }
+            out_idx += PercentEncoding.encodeComponentToBuf(entry.value, out[out_idx..]);
+            i += 1;
+        }
+        return out[0..out_idx];
     }
 }
 

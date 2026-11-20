@@ -122,6 +122,9 @@ pub enum WatchItemKind {
 pub struct WatchOptions {
     pub recursive: bool = true,
     pub debounce_ms: i64 = 50,
+    pub ignore_defaults: bool = true,
+    pub ignore_hidden: bool = false,
+    pub ignore_patterns: []const []const u8 = [],
 }
 
 pub type WatchCallback = *const fn (event: WatchEvent, ctx: *anyopaque) void;

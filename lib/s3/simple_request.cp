@@ -176,10 +176,71 @@ pub struct S3SignedRequest {
     amz_date: string = "",
     content_sha256: string = "",
     auth_header: string = "",
+    signed_headers: string = "host;x-amz-content-sha256;x-amz-date",
+    security_token: string? = null,
+}
+
+fn s3AppendPercentEncoded(dst: []u8, pos_in: usize, src: []const u8): usize {
+    const hex_upper: []const u8 = "0123456789ABCDEF";
+    let pos = pos_in;
+    let i: usize = 0;
+    while (i < src.len) {
+        const c = src[i];
+        const is_unreserved = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '.' || c == '_' || c == '~';
+        if (is_unreserved) {
+            if (pos + 1 > dst.len) break;
+            dst[pos] = c;
+            pos += 1;
+        } else {
+            if (pos + 3 > dst.len) break;
+            dst[pos] = '%';
+            dst[pos + 1] = hex_upper[((c >> 4) & 0x0F) as usize];
+            dst[pos + 2] = hex_upper[(c & 0x0F) as usize];
+            pos += 3;
+        }
+        i += 1;
+    }
+    return pos;
+}
+
+struct S3HeaderCursor {
+    c_pos: usize = 0,
+    sh_pos: usize = 0,
+}
+
+fn s3AppendHeaderLine(
+    can_buf: []u8,
+    c_pos_in: usize,
+    sh_buf: []u8,
+    sh_pos_in: usize,
+    name: string,
+    val: string,
+): S3HeaderCursor {
+    let c_pos = c_pos_in;
+    let sh_pos = sh_pos_in;
+    if (sh_pos > 0 && sh_pos < sh_buf.len) {
+        sh_buf[sh_pos] = ';';
+        sh_pos += 1;
+    }
+    if (sh_pos + name.len <= sh_buf.len) {
+        @memcpy(sh_buf[sh_pos .. sh_pos + name.len], name);
+        sh_pos += name.len;
+    }
+    if (c_pos + name.len + 1 + val.len + 1 <= can_buf.len) {
+        @memcpy(can_buf[c_pos .. c_pos + name.len], name);
+        c_pos += name.len;
+        can_buf[c_pos] = ':';
+        c_pos += 1;
+        @memcpy(can_buf[c_pos .. c_pos + val.len], val);
+        c_pos += val.len;
+        can_buf[c_pos] = '\n';
+        c_pos += 1;
+    }
+    return S3HeaderCursor{ .c_pos = c_pos, .sh_pos = sh_pos };
 }
 
 pub struct S3RequestBuilder {
-    /// 构造标准 AWS SigV4 签名请求
+    /// 构造标准 AWS SigV4 签名请求（支持全量可选标头与 STS session_token）
     pub static fn buildSignedRequest(
         creds: *const S3Credentials,
         opts: S3SimpleRequestOptions,
@@ -201,6 +262,7 @@ pub struct S3RequestBuilder {
         // 构造完整请求 URL
         const proto = if (creds.insecure_http) "http://" else "https://";
         let u_pos: usize = 0;
+        if (url_buf.len < proto.len + host_len + uri_len) return err.BufferTooSmall;
         @memcpy(url_buf[0..proto.len], proto);
         u_pos += proto.len;
         @memcpy(url_buf[u_pos .. u_pos + host_len], host_str);
@@ -210,6 +272,8 @@ pub struct S3RequestBuilder {
 
         if (sp := opts.search_params) {
             if (sp.len > 0) {
+                const need_q: usize = if (sp[0] != '?') 1 else 0;
+                if (u_pos + need_q + sp.len > url_buf.len) return err.BufferTooSmall;
                 if (sp[0] != '?') {
                     url_buf[u_pos] = '?';
                     u_pos += 1;
@@ -225,9 +289,8 @@ pub struct S3RequestBuilder {
         let sha_len = SigV4Signer.sha256Hex(opts.body, auth_buf[0..64]);
         const payload_hash = auth_buf[0..sha_len];
 
-        // 构造 Canonical Headers 与 SignedHeaders
-        // host, x-amz-content-sha256, x-amz-date
-        let canonical_buf: [1024]u8 = undefined;
+        // 构造 Canonical Headers 与 SignedHeaders（严格按 ASCII 字母序）
+        let canonical_buf: [2048]u8 = undefined;
         let c_pos: usize = 0;
 
         // Method\n
@@ -251,42 +314,94 @@ pub struct S3RequestBuilder {
         canonical_buf[c_pos] = '\n';
         c_pos += 1;
 
-        // Headers (严格字母序): host, x-amz-content-sha256, x-amz-date
-        // host:...
-        const h_prefix = "host:";
-        @memcpy(canonical_buf[c_pos .. c_pos + h_prefix.len], h_prefix);
-        c_pos += h_prefix.len;
-        @memcpy(canonical_buf[c_pos .. c_pos + host_len], host_str);
-        c_pos += host_len;
-        canonical_buf[c_pos] = '\n';
-        c_pos += 1;
+        // 按严格字母序写入 CanonicalHeaders 与 SignedHeaders:
+        // content-disposition, content-encoding, content-type, host, range,
+        // x-amz-acl, x-amz-content-sha256, x-amz-date, x-amz-request-payer,
+        // x-amz-security-token, x-amz-storage-class
+        let sh_buf: [256]u8 = undefined;
+        let sh_pos: usize = 0;
 
-        // x-amz-content-sha256:...
-        const sha_hdr = "x-amz-content-sha256:";
-        @memcpy(canonical_buf[c_pos .. c_pos + sha_hdr.len], sha_hdr);
-        c_pos += sha_hdr.len;
-        @memcpy(canonical_buf[c_pos .. c_pos + sha_len], payload_hash);
-        c_pos += sha_len;
-        canonical_buf[c_pos] = '\n';
-        c_pos += 1;
-
-        // x-amz-date:...
-        const date_hdr = "x-amz-date:";
-        @memcpy(canonical_buf[c_pos .. c_pos + date_hdr.len], date_hdr);
-        c_pos += date_hdr.len;
-        @memcpy(canonical_buf[c_pos .. c_pos + amz_date.len], amz_date);
-        c_pos += amz_date.len;
-        canonical_buf[c_pos] = '\n';
-        c_pos += 1;
+        if (cd := opts.content_disposition) {
+            if (cd.len > 0) {
+                const r = s3AppendHeaderLine(&canonical_buf, c_pos, &sh_buf, sh_pos, "content-disposition", cd);
+                c_pos = r.c_pos;
+                sh_pos = r.sh_pos;
+            }
+        }
+        if (ce := opts.content_encoding) {
+            if (ce.len > 0) {
+                const r = s3AppendHeaderLine(&canonical_buf, c_pos, &sh_buf, sh_pos, "content-encoding", ce);
+                c_pos = r.c_pos;
+                sh_pos = r.sh_pos;
+            }
+        }
+        if (ct := opts.content_type) {
+            if (ct.len > 0) {
+                const r = s3AppendHeaderLine(&canonical_buf, c_pos, &sh_buf, sh_pos, "content-type", ct);
+                c_pos = r.c_pos;
+                sh_pos = r.sh_pos;
+            }
+        }
+        {
+            const r = s3AppendHeaderLine(&canonical_buf, c_pos, &sh_buf, sh_pos, "host", host_str);
+            c_pos = r.c_pos;
+            sh_pos = r.sh_pos;
+        }
+        if (rng := opts.range) {
+            if (rng.len > 0) {
+                const r = s3AppendHeaderLine(&canonical_buf, c_pos, &sh_buf, sh_pos, "range", rng);
+                c_pos = r.c_pos;
+                sh_pos = r.sh_pos;
+            }
+        }
+        let effective_acl: S3Acl? = opts.acl;
+        if (effective_acl == null) {
+            effective_acl = creds.acl;
+        }
+        if (acl := effective_acl) {
+            const acl_str = S3Acl.toString(acl);
+            const r = s3AppendHeaderLine(&canonical_buf, c_pos, &sh_buf, sh_pos, "x-amz-acl", acl_str);
+            c_pos = r.c_pos;
+            sh_pos = r.sh_pos;
+        }
+        {
+            const r = s3AppendHeaderLine(&canonical_buf, c_pos, &sh_buf, sh_pos, "x-amz-content-sha256", payload_hash);
+            c_pos = r.c_pos;
+            sh_pos = r.sh_pos;
+        }
+        {
+            const r = s3AppendHeaderLine(&canonical_buf, c_pos, &sh_buf, sh_pos, "x-amz-date", amz_date);
+            c_pos = r.c_pos;
+            sh_pos = r.sh_pos;
+        }
+        if (opts.request_payer) {
+            const r = s3AppendHeaderLine(&canonical_buf, c_pos, &sh_buf, sh_pos, "x-amz-request-payer", "requester");
+            c_pos = r.c_pos;
+            sh_pos = r.sh_pos;
+        }
+        if (creds.session_token.len > 0) {
+            const r = s3AppendHeaderLine(&canonical_buf, c_pos, &sh_buf, sh_pos, "x-amz-security-token", creds.session_token);
+            c_pos = r.c_pos;
+            sh_pos = r.sh_pos;
+        }
+        let effective_sc: S3StorageClass? = opts.storage_class;
+        if (effective_sc == null) {
+            effective_sc = creds.storage_class;
+        }
+        if (sc := effective_sc) {
+            const sc_str = S3StorageClass.toString(sc);
+            const r = s3AppendHeaderLine(&canonical_buf, c_pos, &sh_buf, sh_pos, "x-amz-storage-class", sc_str);
+            c_pos = r.c_pos;
+            sh_pos = r.sh_pos;
+        }
 
         // Blank line separating headers & signed headers
         canonical_buf[c_pos] = '\n';
         c_pos += 1;
 
         // SignedHeaders
-        const signed_headers = "host;x-amz-content-sha256;x-amz-date";
-        @memcpy(canonical_buf[c_pos .. c_pos + signed_headers.len], signed_headers);
-        c_pos += signed_headers.len;
+        @memcpy(canonical_buf[c_pos .. c_pos + sh_pos], sh_buf[0..sh_pos]);
+        c_pos += sh_pos;
         canonical_buf[c_pos] = '\n';
         c_pos += 1;
 
@@ -305,12 +420,21 @@ pub struct S3RequestBuilder {
             canonical_req,
             &sig_buf,
         );
+        if (sig_len != 64) return err.SignError;
         const sig_str = sig_buf[0..sig_len];
 
-        // 构造 Authorization 报头（写入 auth_buf[64..]）
-        // AWS4-HMAC-SHA256 Credential=<ak>/<scope>, SignedHeaders=<signed_headers>, Signature=<sig>
+        // 将 signed_headers 持久化于 auth_buf[64 .. 64 + sh_pos]，auth_header 紧随其后
         let a_pos: usize = 64;
+        if (a_pos + sh_pos > auth_buf.len) return err.BufferTooSmall;
+        @memcpy(auth_buf[a_pos .. a_pos + sh_pos], sh_buf[0..sh_pos]);
+        const signed_headers_slice = auth_buf[a_pos .. a_pos + sh_pos];
+        a_pos += sh_pos;
+
+        const auth_start = a_pos;
         const auth_prefix = "AWS4-HMAC-SHA256 Credential=";
+        if (a_pos + auth_prefix.len + creds.access_key_id.len + 1 + 64 + 17 + sh_pos + 12 + sig_len > auth_buf.len) {
+            return err.BufferTooSmall;
+        }
         @memcpy(auth_buf[a_pos .. a_pos + auth_prefix.len], auth_prefix);
         a_pos += auth_prefix.len;
 
@@ -327,14 +451,20 @@ pub struct S3RequestBuilder {
         );
         a_pos += scope_len;
 
-        const sh_part = ", SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=";
-        @memcpy(auth_buf[a_pos .. a_pos + sh_part.len], sh_part);
-        a_pos += sh_part.len;
+        const sh_label = ", SignedHeaders=";
+        @memcpy(auth_buf[a_pos .. a_pos + sh_label.len], sh_label);
+        a_pos += sh_label.len;
+        @memcpy(auth_buf[a_pos .. a_pos + sh_pos], sh_buf[0..sh_pos]);
+        a_pos += sh_pos;
+
+        const sig_label = ", Signature=";
+        @memcpy(auth_buf[a_pos .. a_pos + sig_label.len], sig_label);
+        a_pos += sig_label.len;
 
         @memcpy(auth_buf[a_pos .. a_pos + sig_len], sig_str);
         a_pos += sig_len;
 
-        const auth_header = auth_buf[64..a_pos];
+        const auth_header = auth_buf[auth_start..a_pos];
 
         return S3SignedRequest{
             method: opts.method,
@@ -345,15 +475,40 @@ pub struct S3RequestBuilder {
             amz_date: amz_date,
             content_sha256: payload_hash,
             auth_header: auth_header,
+            signed_headers: signed_headers_slice,
+            security_token: if (creds.session_token.len > 0) creds.session_token else null,
         };
     }
 
     /// 构造 AWS SigV4 预签名 URL (Presigned URL, Query-based Authentication)
-    /// 采用 `UNSIGNED-PAYLOAD` 与 `X-Amz-SignedHeaders=host`，将完整 URL 写入 `url_buf` 并返回切片
+    /// 采用 `UNSIGNED-PAYLOAD` 与 `X-Amz-SignedHeaders=host`，支持 STS `session_token` 与附加查询参数
     pub static fn buildPresignedUrl(
         creds: *const S3Credentials,
         method: string,
         path: string,
+        date_yyyymmdd: string,
+        amz_date: string,
+        expires_seconds: usize,
+        url_buf: []u8,
+    ): string! {
+        return S3RequestBuilder.buildPresignedUrlWithQuery(
+            creds,
+            method,
+            path,
+            null,
+            date_yyyymmdd,
+            amz_date,
+            expires_seconds,
+            url_buf,
+        )?;
+    }
+
+    /// 构造带自定义查询参数（如 `partNumber=1&uploadId=...`）的 AWS SigV4 预签名 URL
+    pub static fn buildPresignedUrlWithQuery(
+        creds: *const S3Credentials,
+        method: string,
+        path: string,
+        extra_query: string?,
         date_yyyymmdd: string,
         amz_date: string,
         expires_seconds: usize,
@@ -394,8 +549,9 @@ pub struct S3RequestBuilder {
         const region = creds.effectiveRegion();
 
         // Build Canonical Query String in alphabetical order:
-        // X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=<ak>%2F<date>%2F<region>%2Fs3%2Faws4_request&X-Amz-Date=<amz_date>&X-Amz-Expires=<expires>&X-Amz-SignedHeaders=host
-        let query_buf: [512]u8 = undefined;
+        // X-Amz-Algorithm, X-Amz-Credential, X-Amz-Date, X-Amz-Expires,
+        // [X-Amz-Security-Token], X-Amz-SignedHeaders, [extra lowercase query params]
+        let query_buf: [1024]u8 = undefined;
         let q_pos: usize = 0;
         const p1 = "X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=";
         @memcpy(query_buf[q_pos .. q_pos + p1.len], p1);
@@ -420,14 +576,35 @@ pub struct S3RequestBuilder {
         q_pos += p3.len;
         @memcpy(query_buf[q_pos .. q_pos + exp_len], exp_str);
         q_pos += exp_len;
+
+        if (creds.session_token.len > 0) {
+            const p_tok = "&X-Amz-Security-Token=";
+            if (q_pos + p_tok.len + creds.session_token.len > query_buf.len) return err.BufferTooSmall;
+            @memcpy(query_buf[q_pos .. q_pos + p_tok.len], p_tok);
+            q_pos += p_tok.len;
+            q_pos = s3AppendPercentEncoded(&query_buf, q_pos, creds.session_token);
+        }
+
         const p4 = "&X-Amz-SignedHeaders=host";
+        if (q_pos + p4.len > query_buf.len) return err.BufferTooSmall;
         @memcpy(query_buf[q_pos .. q_pos + p4.len], p4);
         q_pos += p4.len;
+
+        if (eq := extra_query) {
+            const clean_eq = if (eq.len > 0 && eq[0] == '?') eq[1..] else eq;
+            if (clean_eq.len > 0) {
+                if (q_pos + 1 + clean_eq.len > query_buf.len) return err.BufferTooSmall;
+                query_buf[q_pos] = '&';
+                q_pos += 1;
+                @memcpy(query_buf[q_pos .. q_pos + clean_eq.len], clean_eq);
+                q_pos += clean_eq.len;
+            }
+        }
         const canonical_query = query_buf[0..q_pos];
 
         // Build Canonical Request:
         // <Method>\n<CanonicalURI>\n<CanonicalQueryString>\nhost:<host>\n\nhost\nUNSIGNED-PAYLOAD
-        let canonical_buf: [1024]u8 = undefined;
+        let canonical_buf: [2048]u8 = undefined;
         let c_pos: usize = 0;
         @memcpy(canonical_buf[c_pos .. c_pos + method.len], method);
         c_pos += method.len;

@@ -12,6 +12,7 @@ const builtin = @import("builtin");
 pub const WhichOptions = struct {
     path: ([]const u8)? = null,
     cwd: ([]const u8)? = null,
+    pathext: ([]const u8)? = null,
 };
 
 pub const Which = struct {
@@ -19,6 +20,17 @@ pub const Which = struct {
         return std.ascii.endsWithIgnoreCase(str, ".exe") or
             std.ascii.endsWithIgnoreCase(str, ".cmd") or
             std.ascii.endsWithIgnoreCase(str, ".bat");
+    }
+
+    pub fn endsWithPathext(str: []const u8, pathext: []const u8): bool {
+        let iter = std.mem.tokenizeScalar(u8, pathext, ';');
+        while (ext := iter.next()) {
+            const clean = std.mem.trim(u8, ext, " \t");
+            if (clean.len > 0 and std.ascii.endsWithIgnoreCase(str, clean)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     pub fn isExecutable(filepath: []const u8): bool {
@@ -102,18 +114,71 @@ pub const Which = struct {
                 return candidate;
             }
 
-            // On Windows, also test .exe, .cmd, .bat if no extension
-            if (builtin.os.tag == .windows and !Which.endsWithExtension(bin)) {
-                let exts: [3][]const u8 = [ ".exe", ".cmd", ".bat" ];
-                for (ext of exts) {
-                    const win_cand = std.fmt.bufPrint(out_buf, "{s}/{s}{s}", .{ trimmed_seg, bin, ext }) catch continue;
-                    if (Which.isExecutable(win_cand)) {
-                        return win_cand;
+            // Probe PATHEXT extensions when provided explicitly or on Windows
+            let effective_pathext: ([]const u8)? = options.pathext;
+            if (effective_pathext == null and builtin.os.tag == .windows) {
+                const raw_pe = std.c.getenv("PATHEXT");
+                if (raw_pe != null) {
+                    effective_pathext = std.mem.span(raw_pe.?);
+                } else {
+                    effective_pathext = ".COM;.EXE;.BAT;.CMD";
+                }
+            }
+            if (pe := effective_pathext) {
+                if (!Which.endsWithPathext(bin, pe)) {
+                    let ext_iter = std.mem.tokenizeScalar(u8, pe, ';');
+                    while (ext := ext_iter.next()) {
+                        const clean_ext = std.mem.trim(u8, ext, " \t");
+                        if (clean_ext.len == 0) continue;
+                        const ext_cand = std.fmt.bufPrint(out_buf, "{s}/{s}{s}", .{ trimmed_seg, bin, clean_ext }) catch continue;
+                        if (Which.isExecutable(ext_cand)) {
+                            return ext_cand;
+                        }
                     }
                 }
             }
         }
 
         return null;
+    }
+
+    /// Finds all executable matches for `bin` across PATH segments, packing slices into `out_buf` and `out_paths`.
+    pub fn whichAll(bin: []const u8, options: WhichOptions, out_buf: []u8, out_paths: [][]const u8): usize {
+        if (bin.len == 0 or out_paths.len == 0) return 0;
+
+        if (std.fs.path.isAbsolute(bin) or std.mem.indexOfScalar(u8, bin, '/') != null or std.mem.indexOfScalar(u8, bin, '\\') != null) {
+            if (found := Which.which(bin, options, out_buf)) {
+                out_paths[0] = found;
+                return 1;
+            }
+            return 0;
+        }
+
+        let path_val: []const u8 = "";
+        if (opt_p := options.path) {
+            path_val = opt_p;
+        } else {
+            const raw_env = std.c.getenv("PATH");
+            if (raw_env == null) return 0;
+            path_val = std.mem.span(raw_env.?);
+        }
+
+        const sep: u8 = if (builtin.os.tag == .windows) ';' else ':';
+        let iter = std.mem.tokenizeScalar(u8, path_val, sep);
+        let count: usize = 0;
+        let used: usize = 0;
+
+        while (segment := iter.next()) {
+            if (count >= out_paths.len or used >= out_buf.len) break;
+            if (segment.len == 0) continue;
+            const trimmed_seg = std.mem.trimEnd(u8, segment, "/\\");
+            const candidate = std.fmt.bufPrint(out_buf[used..], "{s}/{s}", .{ trimmed_seg, bin }) catch break;
+            if (Which.isExecutable(candidate)) {
+                out_paths[count] = candidate;
+                count += 1;
+                used += candidate.len;
+            }
+        }
+        return count;
     }
 };

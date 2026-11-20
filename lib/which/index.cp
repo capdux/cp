@@ -7,5 +7,7 @@
 export { Which, WhichOptions } from "./which";
 
 pub const which = Which.which;
+pub const whichAll = Which.whichAll;
 pub const isExecutable = Which.isExecutable;
 pub const endsWithExtension = Which.endsWithExtension;
+pub const endsWithPathext = Which.endsWithPathext;
