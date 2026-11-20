@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:hnsw` 纯 CP HNSW 多层近似最近邻向量图索引（L2/Cosine/InnerProduct、Beam Search、软删除与二进制快照，支持 `cap.hnsw` 自动动态挂载，详见 `doc/lib/hnsw.md`）（5/5 PASS，文档直写 `doc/lib/hnsw.md`）
+- **核心设计**：采用确定性 SplitMix64 层高采样与双向邻接表裁剪保证图连通性与可复现性，并通过紧凑小端快照序列化与 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:mvcc` 纯 CP MVCC 多版本事务快照隔离（First-Committer-Wins 写写冲突检测、Read-Your-Own-Writes 与水位线 GC）引擎（支持 `cap.mvcc` 自动动态挂载，详见 `doc/lib/mvcc.md`）（5/5 PASS，文档直写 `doc/lib/mvcc.md`）
 - **核心设计**：`commit()` 检查写集内各键最新版本是否晚于 `read_ts`，冲突即自动回滚并返回 `WriteConflict`；`gcVersions` 严格保留每个键 `<= safe_watermark_ts` 的最新基准版本，全路径零泄漏。
 

@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:hnsw` 纯 CP HNSW 多层近似最近邻向量图索引（L2/Cosine/InnerProduct、Beam Search、软删除与二进制快照，支持 `cap.hnsw` 自动动态挂载，详见 `doc/lib/hnsw.md`）（5/5 PASS，自动动态挂载 `cap.hnsw`）
+- **新增标准库**：`lib/hnsw/{metric,graph,index}.cp`，实现 SplitMix64 `mL` 层高采样、贪心下降 + `ef_construction` Beam Search、`M`/`M0` 双向裁剪、`markDeleted` 软删除过滤及 `saveBytes`/`loadBytes` 二进制快照。
+- **新增文档与测试**：`doc/lib/hnsw.md` 扁平文档与 `cap/test/test_hnsw_production_deep.cp`（5/5 PASS，16D 120 向量 Recall@5 >= 0.9，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:mvcc` 纯 CP MVCC 多版本事务快照隔离（First-Committer-Wins 写写冲突检测、Read-Your-Own-Writes 与水位线 GC）引擎（支持 `cap.mvcc` 自动动态挂载，详见 `doc/lib/mvcc.md`）（5/5 PASS，自动动态挂载 `cap.mvcc`）
 - **新增标准库**：`lib/mvcc/{types,store,index}.cp`，实现单调时间戳 Oracle、降序版本链、Read-Your-Own-Writes + Snapshot Isolation、First-Committer-Wins `WriteConflict` 拦截及 `minActiveReadTs`/`gcVersions` 安全版本清理。
 - **新增文档与测试**：`doc/lib/mvcc.md` 扁平文档与 `cap/test/test_mvcc_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
