@@ -2,6 +2,18 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:fft` Radix-2 FFT/IFFT 与频谱分析引擎（5/5 PASS，文档直写 `doc/lib/fft.md`）
+
+- **落地成果**：`lib/fft/`（`fft.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），与 `lib/linalg/` 合并提交，并以 `Model: "inherit"` 顶替派发 `cap:geom2d`（2D 计算几何、Andrew 凸包、线段相交与碰撞检测引擎），与 `lib/prob/` 保持 2 路正交并行。
+
+---
+
+## 2026-11-21: 新建 `cap:linalg` 通用稠密矩阵与数值线性代数引擎（5/5 PASS，文档直写 `doc/lib/linalg.md`）
+
+- **落地成果**：`lib/linalg/`（`matrix.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:prob`（概率分布 PDF/CDF/分位数、蒙特卡洛采样与 A/B 测试显著性 Z-test/t-test 引擎），与 `lib/fft/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:bpe` Byte-Level BPE Tokenizer 引擎（5/5 PASS，文档直写 `doc/lib/bpe.md`）
 
 - **落地成果**：`lib/bpe/`（`bpe.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），与 `lib/regex/` 合并提交，并以 `Model: "inherit"` 顶替派发 `cap:fft`（Cooley-Tukey Radix-2 FFT/IFFT、窗函数、频谱功率与主频提取 DSP 引擎），与 `lib/linalg/` 保持 2 路正交并行。

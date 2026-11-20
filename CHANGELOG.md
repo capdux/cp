@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:fft` Cooley-Tukey Radix-2 FFT/IFFT 与频域卷积引擎（5/5 PASS，自动动态挂载 `cap.fft`）
+
+- 新建 [`lib/fft/`](file:///data/dev/cp/lib/fft/index.cp)（`fft.cp`、`index.cp`）：`Complex` & `Fft`（迭代位反转 Radix-2 `forward`/`inverse` 往返精度 `< 1e-9`、Hann/Hamming/Blackman 窗函数、Parseval 守恒 `rfftMagnitude`、`dominantFrequency` 频谱峰值提取及自动零填充 `convolve`）；文档 [`doc/lib/fft.md`](file:///data/dev/cp/doc/lib/fft.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_fft_production_deep.cp`](file:///data/dev/cp/cap/test/test_fft_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
+## [2026-11-21] - 新建 `cap:linalg` 通用稠密矩阵与数值线性代数引擎（5/5 PASS，自动动态挂载 `cap.linalg`）
+
+- 新建 [`lib/linalg/`](file:///data/dev/cp/lib/linalg/index.cp)（`matrix.cp`、`index.cp`）：`Matrix`（`zeros`/`identity`/`fromSlice`/`mul`/`transpose`/`trace`/`frobeniusNorm`、列主元部分选主元 LU `determinant`/`solve`/`inverse`、Householder QR `leastSquares` 超定最小二乘求解与向量范数，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/linalg.md`](file:///data/dev/cp/doc/lib/linalg.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_linalg_production_deep.cp`](file:///data/dev/cp/cap/test/test_linalg_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:bpe` Byte-Level BPE Tokenizer 训练与无损编解码引擎（5/5 PASS，自动动态挂载 `cap.bpe`）
 
 - 新建 [`lib/bpe/`](file:///data/dev/cp/lib/bpe/index.cp)（`bpe.cp`、`index.cp`）：`BpeTokenizer`（256 字节无损基础词表、`addSpecialToken` 最长匹配隔离、`train` 统计高频字节对迭代合并、`addMerge` 手动规则加载、`encode`/`decode` 任意 UTF-8/Emoji 100% 无损往返）；文档 [`doc/lib/bpe.md`](file:///data/dev/cp/doc/lib/bpe.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_bpe_production_deep.cp`](file:///data/dev/cp/cap/test/test_bpe_production_deep.cp) `-m` 5/5 PASS。

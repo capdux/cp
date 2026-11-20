@@ -233,3 +233,9 @@
 
 ### 2026-11-21（`cap:bpe` 验收固化，顶替以 `inherit` 拉起 `cap:fft` 维持 2 路并行）
 - **执行成果**：`lib/bpe/`（5/5 PASS，含 `cap.bpe` 动态挂载与 `doc/lib/bpe.md`）经 `verify_module.sh` 一键验收回收并与 `lib/regex/` 合并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/fft/`（Cooley-Tukey Radix-2 FFT/IFFT、窗函数与频谱主频分析引擎），与 `lib/linalg/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:linalg` 验收固化，顶替以 `inherit` 拉起 `cap:prob` 维持 2 路并行）
+- **执行成果**：`lib/linalg/`（5/5 PASS，含 `cap.linalg` 动态挂载与 `doc/lib/linalg.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/prob/`（概率分布 PDF/CDF/PPF、确定性随机采样与 A/B 实验统计显著性检验引擎），与 `lib/fft/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:fft` 验收固化，顶替以 `inherit` 拉起 `cap:geom2d` 维持 2 路并行）
+- **执行成果**：`lib/fft/`（5/5 PASS，含 `cap.fft` 动态挂载与 `doc/lib/fft.md`）经 `verify_module.sh` 一键验收回收并与 `lib/linalg/` 合并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/geom2d/`（2D 计算几何、线段相交、Andrew 单调链凸包与 AABB/圆碰撞检测引擎），与 `lib/prob/` 保持 2 路正交并行。
