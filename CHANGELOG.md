@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:idna` 纯 CP RFC 3492 Punycode 编解码与 IDNA 国际化域名转换校验引擎（支持 `cap.idna` 自动动态挂载，详见 `doc/lib/idna.md`）（5/5 PASS，自动动态挂载 `cap.idna`）
+- **新增标准库**：`lib/idna/{punycode,idna,index}.cp`，实现严格 RFC 3492 Bootstring 编解码（含全路径 `u32`/码点溢出保护）、`toAscii`/`toUnicode`（支持 `.` 及全角等价分隔符）、零堆分配 `isValidDomain` 与 RFC 1034/1123 长度/连字符/双向控制符校验。
+- **新增文档与测试**：`doc/lib/idna.md` 扁平文档与 `cap/test/test_idna_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:bencode` 纯 CP BEP-3 BitTorrent Bencode 严格编解码、规范化字典排序与零拷贝 InfoHash SHA-1 引擎（支持 `cap.bencode` 自动动态挂载，详见 `doc/lib/bencode.md`）（5/5 PASS，自动动态挂载 `cap.bencode`）
 - **新增标准库**：`lib/bencode/{types,codec,torrent,index}.cp`，严格校验 BEP-3 前导零/负零/乱序重复键/64 层深度上限，支持字典自动排序编码及零 AST 分配 `.torrent` `"info"` 切片提取与 `computeInfoHashSha1`。
 - **新增文档与测试**：`doc/lib/bencode.md` 扁平文档与 `cap/test/test_bencode_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
