@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:mvcc` 纯 CP MVCC 多版本事务快照隔离（First-Committer-Wins 写写冲突检测、Read-Your-Own-Writes 与水位线 GC）引擎（支持 `cap.mvcc` 自动动态挂载，详见 `doc/lib/mvcc.md`）（5/5 PASS，文档直写 `doc/lib/mvcc.md`）
+- **核心设计**：`commit()` 检查写集内各键最新版本是否晚于 `read_ts`，冲突即自动回滚并返回 `WriteConflict`；`gcVersions` 严格保留每个键 `<= safe_watermark_ts` 的最新基准版本，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:bplus_tree` 纯 CP 可变阶 B+ 树索引（支持分裂/借位/合并/叶子双向链表扫描）与 4KB CRC32C Slotted Page 二进制页引擎（支持 `cap.bplus_tree` 自动动态挂载，详见 `doc/lib/bplus_tree.md`）（5/5 PASS，文档直写 `doc/lib/bplus_tree.md`）
 - **核心设计**：500 条乱序插入与 300 条删除全过程持续执行 `validateInvariants()` 校验叶子同深与双向链表一致性；4KB `SlottedPage` 采用数据库经典向心增长布局与尾部 CRC32C 防篡改，全路径零泄漏。
 

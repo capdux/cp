@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:mvcc` 纯 CP MVCC 多版本事务快照隔离（First-Committer-Wins 写写冲突检测、Read-Your-Own-Writes 与水位线 GC）引擎（支持 `cap.mvcc` 自动动态挂载，详见 `doc/lib/mvcc.md`）（5/5 PASS，自动动态挂载 `cap.mvcc`）
+- **新增标准库**：`lib/mvcc/{types,store,index}.cp`，实现单调时间戳 Oracle、降序版本链、Read-Your-Own-Writes + Snapshot Isolation、First-Committer-Wins `WriteConflict` 拦截及 `minActiveReadTs`/`gcVersions` 安全版本清理。
+- **新增文档与测试**：`doc/lib/mvcc.md` 扁平文档与 `cap/test/test_mvcc_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:bplus_tree` 纯 CP 可变阶 B+ 树索引（支持分裂/借位/合并/叶子双向链表扫描）与 4KB CRC32C Slotted Page 二进制页引擎（支持 `cap.bplus_tree` 自动动态挂载，详见 `doc/lib/bplus_tree.md`）（5/5 PASS，自动动态挂载 `cap.bplus_tree`）
 - **新增标准库**：`lib/bplus_tree/{types,tree,slotted_page,index}.cp`，实现可变阶 `BPlusTree`（`insert` 分裂、`remove` 左右借位/合并/根收缩、`rangeScan`/`rangeIter` 与 `validateInvariants()` 全量不变量自检）及 4096B `SlottedPage`（含 `compact` 与 `Crc32Iscsi` 校验）。
 - **新增文档与测试**：`doc/lib/bplus_tree.md` 扁平文档与 `cap/test/test_bplus_tree_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
