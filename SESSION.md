@@ -566,3 +566,6 @@
 
 ### 2026-11-21（`cap:gif` 验收提交，顶替拉起 `cap:tiff` 维持 2 路常规并行）
 - **执行成果**：`lib/gif/`（5/5 PASS，`doc/lib/gif.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/tiff/`（Baseline TIFF 双端序 IFD 目录、LZW/Deflate/PackBits 图像编解码引擎），与 `lib/avro/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:tiff` 验收提交，顶替拉起 `cap:rtsp` 维持 2 路常规并行）
+- **执行成果**：`lib/tiff/`（5/5 PASS，`doc/lib/tiff.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/rtsp/`（RFC 2326 RTSP 协议解析、Transport 头与 `$` TCP 交织帧拆包引擎），与 `lib/avro/` 维持 2 路常规并行。

@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:tiff` Baseline TIFF 多页双端序与多压缩算法编解码引擎（5/5 PASS，文档直写 `doc/lib/tiff.md`）
+- **核心设计**：统一抽象 `"II"` 小端与 `"MM"` 大端 IFD 读写器并检测循环 IFD 链表，复用 `cap:lzw` 与 `cap:deflate` 结合内联 PackBits 与 `Predictor = 2` 水平差分还原，全量测试零泄漏。
+
 ## 2026-11-21: 新建 `cap:gif` 纯 CP GIF87a/GIF89a 多帧动画编解码引擎（5/5 PASS，文档直写 `doc/lib/gif.md`）
 - **核心设计**：复用 `cap:lzw` (`LsbFirst`) 处理 255 字节最大数据子块流，支持 4-pass Interlaced 重排与局部调色板覆盖全局调色板，并在解码前严格校验宽高与帧数上限防炸弹。
 
