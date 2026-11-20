@@ -179,3 +179,6 @@
 
 ### 2026-11-21（`cap:i18n` 验收固化，顶替以 `inherit` 拉起 `cap:uritemplate` 维持 2 路并行）
 - **执行成果**：`lib/i18n/`（5/5 PASS，含 `cap.i18n` 动态挂载与 `doc/lib/i18n.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/uritemplate/`（RFC 6570 Level 1~4 URI Template 展开、百分比编码校验与变量反解引擎），与 `lib/ringbuf/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:ringbuf` 验收固化，顶替以 `inherit` 拉起 `cap:pipeline` 维持 2 路并行）
+- **执行成果**：`lib/ringbuf/`（5/5 PASS，含 `cap.ringbuf` 动态挂载与 `doc/lib/ringbuf.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/pipeline/`（可组合中间件洋葱链、短路拦截、异常兜底与阶段可观测执行管道），与 `lib/uritemplate/` 保持 2 路正交并行。

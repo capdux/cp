@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:ringbuf` 有界环形缓冲、字节流管道与双阈值微批聚合引擎（5/5 PASS，自动动态挂载 `cap.ringbuf`）
+
+- 新建 [`lib/ringbuf/`](file:///data/dev/cp/lib/ringbuf/index.cp)（`ring.cp`、`index.cp`）：`RingBuffer<T>`（`Reject`/`OverwriteOldest`、`overwrittenCount`、跨回绕 `popBatch`）、`ByteRing`（跨尾两段 `@memcpy` 读写与 `readUntilByte` 增量帧切分）及 `MicroBatcher<T>`（条数/超时双触发与 `drain` 复位）；文档 [`doc/lib/ringbuf.md`](file:///data/dev/cp/doc/lib/ringbuf.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_ringbuf_production_deep.cp`](file:///data/dev/cp/cap/test/test_ringbuf_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:i18n` 国际化消息目录、CLDR 复数规则与 `Accept-Language` 协商引擎（5/5 PASS，自动动态挂载 `cap.i18n`）
 
 - 新建 [`lib/i18n/`](file:///data/dev/cp/lib/i18n/index.cp)（`catalog.cp`、`index.cp`）：`LocaleNegotiator`（RFC 4647 `Accept-Language` q-value 加权协商与多级回退链）、`PluralRules`（英/法/中/日/俄/波/阿 CLDR 基数复数规则）及 `I18nCatalog`（`loadJson` 嵌套 JSON 扁平导入、单遍 `{key}` 安全插值防二次展开、`tp` 复数与回退渲染）；文档 [`doc/lib/i18n.md`](file:///data/dev/cp/doc/lib/i18n.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_i18n_production_deep.cp`](file:///data/dev/cp/cap/test/test_i18n_production_deep.cp) `-m` 5/5 PASS。
