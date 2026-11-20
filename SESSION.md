@@ -49,3 +49,6 @@
 
 ### 2026-11-20（`cap:cbor` 验收固化，顶替拉起 `cap:kv` 崩溃安全 WAL 嵌入式存储引擎维持 3 路并行）
 - **执行成果**：子智能体 28（`lib/cbor/`，5/5 PASS，含 `cap.cbor` 动态挂载）经 `verify_module.sh` 一键验收回收并提交 Git；立即顶替派发子智能体 31（新建 `lib/kv/` CRC32 WAL + Bitcask 持久化 KV 存储与原子压缩），与 `lib/protobuf/`、`lib/expr/` 保持 3 路正交并行。
+
+### 2026-11-20（`cap:expr` & `cap:protobuf` 双路合并验收提交，顶替拉起 `cap:queue` 与 `cap:graph` 维持 3 路并行）
+- **执行成果**：子智能体 30（`lib/expr/` 5/5）与子智能体 29（`lib/protobuf/` 5/5）双双经 `verify_module.sh` 一键验收回收（含动态 `cap.expr`/`cap.protobuf` 挂载验证），合并单次提交 Git；立即顶替派发子智能体 32（`lib/queue/` 优先级/延迟/死信任务队列）与子智能体 33（`lib/graph/` 图论与 GraphRAG 知识图谱算法：Dijkstra/Tarjan SCC/拓扑排序/Kruskal MST/PageRank），与 `lib/kv/` 保持 3 路正交并行。

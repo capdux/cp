@@ -2,6 +2,13 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-20] - 新建 `cap:expr`（5/5）与 `cap:protobuf`（5/5）双标准库落地（自动动态挂载 `cap.expr` / `cap.protobuf`）
+
+- **`cap:expr`**（[`lib/expr/`](file:///data/dev/cp/lib/expr/index.cp)）：`ExprValue`/`ExprEnv` 只读点分变量上下文、爬山法优先级求值器（三元/短路 `&&`/`||`/`in`/9 个内置纯函数）及 `MAX_DEPTH=64`/`MAX_STEPS=10000` 沙盒防护，[`test_expr_production_deep.cp`](file:///data/dev/cp/cap/test/test_expr_production_deep.cp) `-m` 5/5 PASS；
+- **`cap:protobuf`**（[`lib/protobuf/`](file:///data/dev/cp/lib/protobuf/index.cp)）：Proto3 零拷贝 `ProtoWriter`/`ProtoReader`（Varint/ZigZag/Packed Repeated/`skipField` 与 11B 溢出/保留区防护）及 `GrpcFrameCodec`/`GrpcFrameStream`/`GrpcStatus`/`GrpcTimeout`，[`test_protobuf_production_deep.cp`](file:///data/dev/cp/cap/test/test_protobuf_production_deep.cp) `-m` 5/5 PASS；同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)。
+
+---
+
 ## [2026-11-20] - 新建 `cap:cbor` RFC 8949 CBOR & MessagePack 紧凑二进制序列化引擎（5/5 PASS，自动动态挂载 `cap.cbor`）
 
 - 新建 [`lib/cbor/`](file:///data/dev/cp/lib/cbor/index.cp)（`value.cp`、`cbor.cp`、`msgpack.cp`、`index.cp`）：共享 `BinValue`/`BinDocument` AST，完整支持 RFC 8949 CBOR Major 0-7（含 Float16/32/64、语义 Tag 与不定长编解码）及 MessagePack 全类型编解码，内置 64 层深度与截断/尾随字节防护；同步 [`docs/cbor/cbor.md`](file:///data/dev/cp/docs/cbor/cbor.md) 与 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_cbor_production_deep.cp`](file:///data/dev/cp/cap/test/test_cbor_production_deep.cp) `-m` 5/5 PASS。

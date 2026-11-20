@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-20: 新建 `cap:expr`（5/5）与 `cap:protobuf`（5/5），双双实证动态 `cap.<ns>` 自动挂载并合并提交
+
+- **落地成果**：`lib/expr/`（沙盒安全表达式与 Guardrail 求值）与 `lib/protobuf/`（Proto3 零拷贝 Wire + gRPC 分帧/状态码/超时）均经 `verify_module.sh` 一键全绿通过，单轮合并完成回收、`cp_lib_ref.md` 更新与提交，并顶替派发 `cap:queue` 与 `cap:graph`。
+
+---
+
 ## 2026-11-20: 新建 `cap:cbor` RFC 8949 CBOR & MessagePack 紧凑二进制编解码引擎（5/5 PASS，自动动态挂载 `cap.cbor`）
 
 - **落地成果**：`lib/cbor/`（`value.cp`/`cbor.cp`/`msgpack.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过，单轮完成回收、`cp_lib_ref.md` 更新与提交，并顶替派发 `cap:kv`（Bitcask/WAL 崩溃安全嵌入式键值存储）。
