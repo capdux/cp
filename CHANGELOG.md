@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:raft` 纯 CP Sans-IO Raft 分布式共识状态机、日志复制、冲突回退与快照截断引擎（支持 `cap.raft` 自动动态挂载，详见 `doc/lib/raft.md`）（5/5 PASS，自动动态挂载 `cap.raft`）
+- **新增标准库**：`lib/raft/{types,log,node,index}.cp`，实现确定性 Sans-IO `RaftNode`、选举定时器与 Log Up-to-Date 投票校验、Leader `AppendEntries` 冲突回退优化、Raft §5.4.2 仅提交当前任期规则及 `RaftLog.compactTo` 快照基线管理。
+- **新增文档与测试**：`doc/lib/raft.md` 扁平文档与 `cap/test/test_raft_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:mcp` 纯 CP Model Context Protocol (MCP 2025-03-26) Agent 工具/资源/提示词路由与 NDJSON/Content-Length 增量分帧引擎（支持 `cap.mcp` 自动动态挂载，详见 `doc/lib/mcp.md`）（5/5 PASS，自动动态挂载 `cap.mcp`）
 - **新增标准库**：`lib/mcp/{protocol,framer,server,index}.cp`，实现 MCP 2025-03-26 能力协商、`tools`/`resources`/`prompts` 路由、`isError: true` 自动封装与支持 `1..7` 字节半包黏包及 `max_frame_bytes` 防护的 `McpStreamFramer`。
 - **新增文档与测试**：`doc/lib/mcp.md` 扁平文档与 `cap/test/test_mcp_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

@@ -1,15 +1,21 @@
-// Source: cp/lib/raft/index.cp (Unified Exports for cap:raft)
-// Pure CP zero-network-coupling deterministic Raft consensus state machine (cap:raft & cap.raft).
-
+// Source: cp/lib/raft/index.cp (Public module exports for cap:raft / cap.raft)
 export {
     RaftError,
-    RaftRole,
+    Role,
     LogEntry,
     RequestVoteReq,
     RequestVoteResp,
     AppendEntriesReq,
     AppendEntriesResp,
-    RaftPayload,
-    RaftOutboundMsg,
-    RaftNode,
-} from "./raft.cp";
+    PersistState,
+    ApplyEntry,
+    SendRequestVoteAction,
+    SendAppendEntriesAction,
+    RaftAction,
+    VoteResult,
+    AppendResult,
+    deinitActions,
+} from "./types.cp";
+
+export { RaftLog } from "./log.cp";
+export { RaftConfig, RaftNode } from "./node.cp";

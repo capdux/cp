@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:raft` 纯 CP Sans-IO Raft 分布式共识状态机、日志复制、冲突回退与快照截断引擎（支持 `cap.raft` 自动动态挂载，详见 `doc/lib/raft.md`）（5/5 PASS，文档直写 `doc/lib/raft.md`）
+- **核心设计**：Sans-IO 架构将共识状态机与网络/存储解耦，所有输出以 `RaftAction` 动作列表返回，天然适配内存集群确定性仿真与 CP Actor 信箱驱动，全路径 `std.testing.allocator` 零泄漏。
+
 ## 2026-11-21: 新建 `cap:mcp` 纯 CP Model Context Protocol (MCP 2025-03-26) Agent 工具/资源/提示词路由与 NDJSON/Content-Length 增量分帧引擎（支持 `cap.mcp` 自动动态挂载，详见 `doc/lib/mcp.md`）（5/5 PASS，文档直写 `doc/lib/mcp.md`）
 - **核心设计**：`McpStreamFramer` 同时支持 NDJSON 与 LSP `Content-Length` 双传输分帧，并在分配帧缓冲前拦截超限载荷；`McpServer` 自动将业务 handler 错误转为协议合规的 `isError: true` 工具结果，全路径零泄漏。
 

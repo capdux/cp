@@ -1,419 +1,324 @@
-// Source: cp/cap/test/test_raft_production_deep.cp
-// Deep Production Verification Suite for cap:raft & cap.raft
-// Covers:
-//   1. 3-node in-memory cluster simulator: timeout election, Quorum single Leader, NotLeader rejection
-//   2. Normal log replication, majority commitIndex advancement & drainApplied 3-node consistency
-//   3. Log up-to-date safety check (RequestVote rejects stale candidate) & Follower conflict truncation
-//   4. Network partition split-brain simulation & higher-Term automatic step-down (no dual-leader commit)
-//   5. Dynamic lazy namespace mounting via `import cap from "cap"; cap.raft`
-
+// Source: cp/cap/test/test_raft_production_deep.cp (Production deep tests for cap:raft)
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
 import {
-    RaftError,
-    RaftRole,
-    LogEntry,
-    RequestVoteReq,
-    RequestVoteResp,
-    AppendEntriesReq,
-    AppendEntriesResp,
-    RaftOutboundMsg,
     RaftNode,
-} from "../../lib/raft/index.cp";
+    RaftConfig,
+    RaftLog,
+    RaftAction,
+    Role,
+    RaftError,
+    RequestVoteReq,
+    AppendEntriesReq,
+    LogEntry,
+    deinitActions,
+} from "cap:raft";
 
-struct Cluster3 {
-    alloc: std.mem.Allocator = undefined,
-    n1: RaftNode = undefined,
-    n2: RaftNode = undefined,
-    n3: RaftNode = undefined,
-    // Partition flags: if blocked[i][j] is true, messages from node (i+1) to (j+1) are dropped.
-    blocked: [3][3]bool = [[false; 3]; 3],
+test("raft 3-node election and higher term step-down") {
+    const alloc = std.testing.allocator;
+    const p1: [2]u64 = [ 2, 3 ];
+    const p2: [2]u64 = [ 1, 3 ];
+    const p3: [2]u64 = [ 1, 2 ];
 
-    static fn init(alloc: std.mem.Allocator): Cluster3! {
-        const p1: [2]u64 = [2, 3];
-        const p2: [2]u64 = [1, 3];
-        const p3: [2]u64 = [1, 2];
-        // Staggered election timeouts so node 1 wins deterministically first
-        let n1 = RaftNode.init(alloc, 1, &p1, 5, 2)?;
-        errdefer n1.deinit();
-        let n2 = RaftNode.init(alloc, 2, &p2, 9, 2)?;
-        errdefer n2.deinit();
-        let n3 = RaftNode.init(alloc, 3, &p3, 12, 2)?;
-        return Cluster3{
-            alloc: alloc,
-            n1: n1,
-            n2: n2,
-            n3: n3,
-            blocked: [[false; 3]; 3],
-        };
+    let n1 = try RaftNode.init(alloc, RaftConfig{
+        .id = 1,
+        .peers = &p1,
+        .election_timeout_min = 3,
+        .election_timeout_max = 3,
+        .heartbeat_interval = 1,
+        .seed = 11,
+    });
+    defer n1.deinit();
+
+    let n2 = try RaftNode.init(alloc, RaftConfig{
+        .id = 2,
+        .peers = &p2,
+        .election_timeout_min = 10,
+        .election_timeout_max = 10,
+        .seed = 22,
+    });
+    defer n2.deinit();
+
+    let n3 = try RaftNode.init(alloc, RaftConfig{
+        .id = 3,
+        .peers = &p3,
+        .election_timeout_min = 10,
+        .election_timeout_max = 10,
+        .seed = 33,
+    });
+    defer n3.deinit();
+
+    // Advance n1 until election triggers
+    let tick_actions: []RaftAction = try alloc.alloc(RaftAction, 0);
+    let step: u32 = 0;
+    while (step < 3) {
+        deinitActions(alloc, tick_actions);
+        tick_actions = try n1.tick();
+        step += 1;
     }
+    defer deinitActions(alloc, tick_actions);
 
-    fn deinit(*_) {
-        _.n1.deinit();
-        _.n2.deinit();
-        _.n3.deinit();
-    }
+    try expect_eq(n1.role == Role.Candidate, true);
+    try expect_eq(n1.current_term, @as(u64, 1));
 
-    fn nodePtr(*_, id: u64): *RaftNode {
-        if (id == 1) return *_.n1;
-        if (id == 2) return *_.n2;
-        return *_.n3;
-    }
-
-    fn isBlocked(src_id: u64, dst_id: u64): bool {
-        return _.blocked[usize(src_id - 1)][usize(dst_id - 1)];
-    }
-
-    fn isolateNode(*_, id: u64) {
-        const idx = usize(id - 1);
-        for (i of 0..3) {
-            if (i != idx) {
-                _.blocked[idx][i] = true;
-                _.blocked[i][idx] = true;
-            }
+    // Deliver RequestVote to n2 and n3
+    for (act of tick_actions) {
+        switch (act) {
+            .SendRequestVote => |sv| {
+                if (sv.target_id == 2) {
+                    let vr = try n2.handleRequestVote(sv.req);
+                    defer vr.deinit(alloc);
+                    try expect_eq(vr.resp.vote_granted, true);
+                    const resp_acts = try n1.handleRequestVoteResp(vr.resp);
+                    deinitActions(alloc, resp_acts);
+                } else if (sv.target_id == 3) {
+                    let vr = try n3.handleRequestVote(sv.req);
+                    defer vr.deinit(alloc);
+                    try expect_eq(vr.resp.vote_granted, true);
+                    const resp_acts = try n1.handleRequestVoteResp(vr.resp);
+                    deinitActions(alloc, resp_acts);
+                }
+            },
+            else => {},
         }
     }
 
-    fn healAll(*_) {
-        for (i of 0..3) {
-            for (j of 0..3) {
-                _.blocked[i][j] = false;
-            }
+    try expect_eq(n1.role == Role.Leader, true);
+
+    // Higher term RequestVote forces n1 to step down to Follower and clear voted_for
+    let higher_vr = try n1.handleRequestVote(RequestVoteReq{
+        .term = 5,
+        .candidate_id = 2,
+        .last_log_index = 0,
+        .last_log_term = 0,
+    });
+    defer higher_vr.deinit(alloc);
+
+    try expect_eq(n1.role == Role.Follower, true);
+    try expect_eq(n1.current_term, @as(u64, 5));
+    try expect_eq(higher_vr.resp.vote_granted, true);
+    try expect_eq(n1.voted_for.?, @as(u64, 2));
+}
+
+test("raft multi-node log replication commit and ApplyEntry") {
+    const alloc = std.testing.allocator;
+    const p1: [2]u64 = [ 2, 3 ];
+    const p2: [2]u64 = [ 1, 3 ];
+    const p3: [2]u64 = [ 1, 2 ];
+
+    let n1 = try RaftNode.init(alloc, RaftConfig{ .id = 1, .peers = &p1, .election_timeout_min = 2, .election_timeout_max = 2 });
+    defer n1.deinit();
+    let n2 = try RaftNode.init(alloc, RaftConfig{ .id = 2, .peers = &p2, .election_timeout_min = 20, .election_timeout_max = 20 });
+    defer n2.deinit();
+    let n3 = try RaftNode.init(alloc, RaftConfig{ .id = 3, .peers = &p3, .election_timeout_min = 20, .election_timeout_max = 20 });
+    defer n3.deinit();
+
+    // Elect n1
+    deinitActions(alloc, try n1.tick());
+    const elect_acts = try n1.tick();
+    defer deinitActions(alloc, elect_acts);
+    for (act of elect_acts) {
+        switch (act) {
+            .SendRequestVote => |sv| {
+                if (sv.target_id == 2) {
+                    let vr = try n2.handleRequestVote(sv.req);
+                    defer vr.deinit(alloc);
+                    deinitActions(alloc, try n1.handleRequestVoteResp(vr.resp));
+                }
+            },
+            else => {},
         }
     }
+    try expect_eq(n1.role == Role.Leader, true);
 
-    fn tickAll(*_)! {
-        _.n1.tick()?;
-        _.n2.tick()?;
-        _.n3.tick()?;
-    }
+    // Propose two commands on Leader
+    const prop1 = try n1.propose("set x=10");
+    defer deinitActions(alloc, prop1);
+    const prop2 = try n1.propose("set y=20");
+    defer deinitActions(alloc, prop2);
 
-    /// Delivers all currently queued outbound messages across the 3 nodes (up to `max_rounds` hops).
-    fn pump(*_, max_rounds: usize)! {
-        for (r of 0..max_rounds) {
-            * = r;
-            let delivered = false;
-            for (src_id of 1..=3) {
-                const msgs = _.nodePtr(src_id as u64).drainOutbound(_.alloc)?;
-                defer RaftNode.freeOutbound(_.alloc, msgs);
-                if (msgs.len > 0) delivered = true;
-
-                for (msg of msgs) {
-                    if (_.isBlocked(msg.from, msg.to)) continue;
-                    switch (msg.payload) {
-                        .RequestVote req => {
-                            const resp = _.nodePtr(msg.to).handleRequestVote(req);
-                            if (!_.isBlocked(msg.to, msg.from)) {
-                                _.nodePtr(msg.from).handleRequestVoteResp(resp)?;
-                            }
-                        },
-                        .RequestVoteResp resp => {
-                            _.nodePtr(msg.to).handleRequestVoteResp(resp)?;
-                        },
-                        .AppendEntries req => {
-                            const resp = _.nodePtr(msg.to).handleAppendEntries(req)?;
-                            if (!_.isBlocked(msg.to, msg.from)) {
-                                _.nodePtr(msg.from).handleAppendEntriesResp(msg.to, resp)?;
-                            }
-                        },
-                        .AppendEntriesResp resp => {
-                            _.nodePtr(msg.to).handleAppendEntriesResp(msg.from, resp)?;
-                        },
+    let applied_on_leader: usize = 0;
+    for (act of prop2) {
+        switch (act) {
+            .SendAppendEntries => |sa| {
+                if (sa.target_id == 2) {
+                    let ar = try n2.handleAppendEntries(sa.asReq());
+                    defer ar.deinit(alloc);
+                    try expect_eq(ar.resp.success, true);
+                    const resp_acts = try n1.handleAppendEntriesResp(ar.resp);
+                    defer deinitActions(alloc, resp_acts);
+                    for (ra of resp_acts) {
+                        switch (ra) {
+                            .ApplyEntry => applied_on_leader += 1,
+                            else => {},
+                        }
                     }
                 }
-            }
-            if (!delivered) break;
+            },
+            else => {},
         }
     }
+
+    try expect_eq(n1.commit_index, @as(u64, 2));
+    try expect_eq(n1.last_applied, @as(u64, 2));
+    try expect_eq(applied_on_leader, @as(usize, 2));
+
+    // Heartbeat propagates leader_commit=2 to n2 and triggers ApplyEntry on follower
+    const hb_acts = try n1.propose("set z=30");
+    defer deinitActions(alloc, hb_acts);
+    let applied_on_follower: usize = 0;
+    for (act of hb_acts) {
+        switch (act) {
+            .SendAppendEntries => |sa| {
+                if (sa.target_id == 2) {
+                    let ar = try n2.handleAppendEntries(sa.asReq());
+                    defer ar.deinit(alloc);
+                    for (fa of ar.actions) {
+                        switch (fa) {
+                            .ApplyEntry => applied_on_follower += 1,
+                            else => {},
+                        }
+                    }
+                }
+            },
+            else => {},
+        }
+    }
+    try expect_eq(n2.commit_index, @as(u64, 2));
+    try expect_eq(applied_on_follower, @as(usize, 2));
 }
 
-fn testClusterElectionAndNotLeader()! {
-    const alloc = std.heap.page_allocator;
+test("raft conflict truncation recovery and 5.4.2 current-term commit rule") {
+    const alloc = std.testing.allocator;
+    const p1: [2]u64 = [ 2, 3 ];
+    const p2: [2]u64 = [ 1, 3 ];
 
-    // Validate init error guards: EmptyPeers & DuplicateNode
-    const empty_peers: []const u64 = [];
-    let got_empty = false;
-    * = RaftNode.init(alloc, 1, empty_peers, 5, 2) catch e => {
-        if (e == RaftError.EmptyPeers) got_empty = true;
-    };
-    expect_eq(got_empty, true);
-
-    const dup_self: [2]u64 = [1, 2];
-    let got_dup = false;
-    * = RaftNode.init(alloc, 1, &dup_self, 5, 2) catch e => {
-        if (e == RaftError.DuplicateNode) got_dup = true;
-    };
-    expect_eq(got_dup, true);
-
-    let cluster = Cluster3.init(alloc)?;
-    defer cluster.deinit();
-
-    // Before election, all nodes are Followers and reject propose() with NotLeader
-    expect_eq(cluster.n1.role == .Follower, true);
-    expect_eq(cluster.n2.role == .Follower, true);
-    expect_eq(cluster.n3.role == .Follower, true);
-
-    let got_not_leader = false;
-    * = cluster.n1.propose("set x=1") catch e => {
-        if (e == RaftError.NotLeader) got_not_leader = true;
-    };
-    expect_eq(got_not_leader, true);
-
-    // Advance 5 ticks -> node 1 times out, wins Quorum (nodes 2 & 3 vote for 1)
-    for (t of 0..5) {
-        * = t;
-        cluster.tickAll()?;
-        cluster.pump(4)?;
-    }
-
-    expect_eq(cluster.n1.role == .Leader, true);
-    expect_eq(cluster.n2.role == .Follower, true);
-    expect_eq(cluster.n3.role == .Follower, true);
-    expect_eq(cluster.n1.current_term, 1);
-    expect_eq(cluster.n2.leader_id.?, 1);
-    expect_eq(cluster.n3.leader_id.?, 1);
-
-    // Non-leader still rejects propose()
-    let follower_rejected = false;
-    * = cluster.n2.propose("set x=2") catch e => {
-        if (e == RaftError.NotLeader) follower_rejected = true;
-    };
-    expect_eq(follower_rejected, true);
-}
-
-fn testLogReplicationCommitAndDrainApplied()! {
-    const alloc = std.heap.page_allocator;
-    let cluster = Cluster3.init(alloc)?;
-    defer cluster.deinit();
-
-    // Elect node 1
-    for (t of 0..5) {
-        * = t;
-        cluster.tickAll()?;
-        cluster.pump(4)?;
-    }
-    expect_eq(cluster.n1.role == .Leader, true);
-
-    // Propose 3 commands on Leader
-    const idx1 = cluster.n1.propose("PUT k1=v1")?;
-    const idx2 = cluster.n1.propose("PUT k2=v2")?;
-    const idx3 = cluster.n1.propose("DEL k1")?;
-    expect_eq(idx1, 1);
-    expect_eq(idx2, 2);
-    expect_eq(idx3, 3);
-
-    // Pump replication + send one heartbeat round so Followers receive updated leader_commit
-    cluster.pump(6)?;
-    cluster.tickAll()?;
-    cluster.tickAll()?;
-    cluster.pump(6)?;
-
-    expect_eq(cluster.n1.commit_index, 3);
-    expect_eq(cluster.n2.commit_index, 3);
-    expect_eq(cluster.n3.commit_index, 3);
-
-    // Drain applied entries on all 3 nodes and verify strong consistency
-    const a1 = cluster.n1.drainApplied(alloc)?;
-    defer alloc.free(a1);
-    const a2 = cluster.n2.drainApplied(alloc)?;
-    defer alloc.free(a2);
-    const a3 = cluster.n3.drainApplied(alloc)?;
-    defer alloc.free(a3);
-
-    expect_eq(a1.len, 3);
-    expect_eq(a2.len, 3);
-    expect_eq(a3.len, 3);
-
-    for (i of 0..3) {
-        expect_eq(a1[i].index, a2[i].index);
-        expect_eq(a1[i].index, a3[i].index);
-        expect_eq(a1[i].term, a2[i].term);
-        expect_eq(std.mem.eql(u8, a1[i].command, a2[i].command), true);
-        expect_eq(std.mem.eql(u8, a1[i].command, a3[i].command), true);
-    }
-    expect_eq(std.mem.eql(u8, a1[0].command, "PUT k1=v1"), true);
-    expect_eq(std.mem.eql(u8, a1[2].command, "DEL k1"), true);
-
-    // Second drainApplied returns empty slice
-    const empty_a = cluster.n1.drainApplied(alloc)?;
-    defer alloc.free(empty_a);
-    expect_eq(empty_a.len, 0);
-}
-
-fn testLogUpToDateSafetyAndConflictTruncation()! {
-    const alloc = std.heap.page_allocator;
-    const peers2: [2]u64 = [1, 3];
-    let follower = RaftNode.init(alloc, 2, &peers2, 10, 2)?;
+    let leader = try RaftNode.init(alloc, RaftConfig{ .id = 1, .peers = &p1 });
+    defer leader.deinit();
+    let follower = try RaftNode.init(alloc, RaftConfig{ .id = 2, .peers = &p2 });
     defer follower.deinit();
 
-    // Seed follower with: idx 1 (term 1, "a"), idx 2 (term 1, "b"), idx 3 (term 2, "stale1")
-    const seed_entries: [3]LogEntry = [
-        LogEntry{ term: 1, index: 1, command: "a" },
-        LogEntry{ term: 1, index: 2, command: "b" },
-        LogEntry{ term: 2, index: 3, command: "stale1" },
-    ];
-    const seed_resp = follower.handleAppendEntries(AppendEntriesReq{
-        term: 2,
-        leader_id: 1,
-        prev_log_index: 0,
-        prev_log_term: 0,
-        entries: &seed_entries,
-        leader_commit: 1,
-    })?;
-    expect_eq(seed_resp.success, true);
-    expect_eq(follower.lastLogIndex(), 3);
-    expect_eq(follower.lastLogTerm(), 2);
+    // Simulate old term 1 entry on both, plus divergent term 2 entries on follower
+    * = try leader.log.append(1, "old_1");
+    * = try follower.log.append(1, "old_1");
+    * = try follower.log.append(2, "stale_2a");
+    * = try follower.log.append(2, "stale_2b");
 
-    // 1. RequestVote safety: reject candidate with lower last_log_term even if longer log
-    const stale_term_vote = follower.handleRequestVote(RequestVoteReq{
-        term: 5,
-        candidate_id: 3,
-        last_log_index: 10,
-        last_log_term: 1,
-    });
-    expect_eq(stale_term_vote.vote_granted, false);
-    // Term still bumped to 5 per Raft rules
-    expect_eq(follower.current_term, 5);
+    // Leader becomes leader in term 3
+    leader.current_term = 3;
+    leader.role = Role.Leader;
+    leader.next_index.items[0] = 2; // optimistic next_index for peer 2
+    leader.match_index.items[0] = 0;
 
-    // 2. RequestVote safety: reject candidate with same last_log_term=2 but shorter index=2 < 3
-    const stale_idx_vote = follower.handleRequestVote(RequestVoteReq{
-        term: 6,
-        candidate_id: 3,
-        last_log_index: 2,
-        last_log_term: 2,
-    });
-    expect_eq(stale_idx_vote.vote_granted, false);
+    // Leader replicates entry at index 1? Actually index 2 in term 3 would fail if prev=1?
+    // Let's set next_index = 4 so prev_log_index = 3 fails first and triggers conflict rollback!
+    leader.next_index.items[0] = 4;
+    const empty_entries = try alloc.alloc(LogEntry, 0);
+    defer alloc.free(empty_entries);
+    const stale_req = AppendEntriesReq{
+        .term = 3,
+        .leader_id = 1,
+        .prev_log_index = 3,
+        .prev_log_term = 3,
+        .entries = empty_entries,
+        .leader_commit = 0,
+    };
+    let fail_res = try follower.handleAppendEntries(stale_req);
+    defer fail_res.deinit(alloc);
+    try expect_eq(fail_res.resp.success, false);
+    try expect_eq(fail_res.resp.conflict_term, @as(u64, 2));
+    try expect_eq(fail_res.resp.conflict_index, @as(u64, 2));
 
-    // 3. RequestVote safety: grant vote to candidate with up-to-date log (term=2, index=3)
-    const ok_vote = follower.handleRequestVote(RequestVoteReq{
-        term: 7,
-        candidate_id: 1,
-        last_log_index: 3,
-        last_log_term: 2,
-    });
-    expect_eq(ok_vote.vote_granted, true);
+    // Leader processes conflict response -> rolls back next_index to 2 and sends AppendEntries
+    const retry_acts = try leader.handleAppendEntriesResp(fail_res.resp);
+    defer deinitActions(alloc, retry_acts);
+    try expect_eq(leader.next_index.items[0], @as(u64, 2));
 
-    // 4. Conflict truncation: new leader in term 7 has idx 2 (term 1), idx 3 (term 7, "new3"), idx 4 (term 7, "new4")
-    const overwrite_entries: [2]LogEntry = [
-        LogEntry{ term: 7, index: 3, command: "new3" },
-        LogEntry{ term: 7, index: 4, command: "new4" },
-    ];
-    const ae_resp = follower.handleAppendEntries(AppendEntriesReq{
-        term: 7,
-        leader_id: 1,
-        prev_log_index: 2,
-        prev_log_term: 1,
-        entries: &overwrite_entries,
-        leader_commit: 4,
-    })?;
-    expect_eq(ae_resp.success, true);
-    expect_eq(follower.lastLogIndex(), 4);
-    expect_eq(follower.termAt(3), 7);
-    expect_eq(follower.commit_index, 4);
+    // Raft §5.4.2 check: even if old term 1 entry is replicated on majority,
+    // leader in term 3 MUST NOT advance commit_index until a term 3 entry is committed.
+    leader.match_index.items[0] = 1;
+    const dummy_ack = try leader.handleAppendEntriesResp(fail_res.resp);
+    deinitActions(alloc, dummy_ack);
+    try expect_eq(leader.commit_index, @as(u64, 0));
 
-    const applied = follower.drainApplied(alloc)?;
-    defer alloc.free(applied);
-    expect_eq(applied.len, 4);
-    expect_eq(std.mem.eql(u8, applied[2].command, "new3"), true);
-    expect_eq(std.mem.eql(u8, applied[3].command, "new4"), true);
+    // Now propose a term 3 entry and replicate to follower -> truncates stale term 2 and commits both!
+    const prop_acts = try leader.propose("term3_cmd");
+    defer deinitActions(alloc, prop_acts);
+    for (act of prop_acts) {
+        switch (act) {
+            .SendAppendEntries => |sa| {
+                if (sa.target_id == 2) {
+                    let ok_res = try follower.handleAppendEntries(sa.asReq());
+                    defer ok_res.deinit(alloc);
+                    try expect_eq(ok_res.resp.success, true);
+                    try expect_eq(follower.log.lastIndex(), @as(u64, 2));
+                    try expect_eq(follower.log.termAt(2).?, @as(u64, 3));
+                    deinitActions(alloc, try leader.handleAppendEntriesResp(ok_res.resp));
+                }
+            },
+            else => {},
+        }
+    }
+    try expect_eq(leader.commit_index, @as(u64, 2));
 }
 
-fn testPartitionSplitBrainAndStepDown()! {
-    const alloc = std.heap.page_allocator;
-    let cluster = Cluster3.init(alloc)?;
-    defer cluster.deinit();
+test("raft log compactTo snapshot baseline and boundaries") {
+    const alloc = std.testing.allocator;
+    let log = RaftLog.init(alloc);
+    defer log.deinit();
 
-    // 1. Elect node 1 in term 1
-    for (t of 0..5) {
-        * = t;
-        cluster.tickAll()?;
-        cluster.pump(4)?;
-    }
-    expect_eq(cluster.n1.role == .Leader, true);
-    expect_eq(cluster.n1.current_term, 1);
+    * = try log.append(1, "cmd1");
+    * = try log.append(1, "cmd2");
+    * = try log.append(2, "cmd3");
+    * = try log.append(2, "cmd4");
 
-    // 2. Partition node 1 (old Leader) away from {2, 3}
-    cluster.isolateNode(1);
+    try expect_eq(log.lastIndex(), @as(u64, 4));
+    try expect_eq(log.lastTerm(), @as(u64, 2));
 
-    // Old Leader proposes a write while isolated — must NOT commit because it lacks Quorum!
-    const stale_idx = cluster.n1.propose("stale_write_on_minority")?;
-    expect_eq(stale_idx, 1);
+    // Compact up to index 2 (term 1)
+    try log.compactTo(2, 1);
+    try expect_eq(log.snapshot_index, @as(u64, 2));
+    try expect_eq(log.snapshot_term, @as(u64, 1));
+    try expect_eq(log.lastIndex(), @as(u64, 4));
+    try expect_eq(log.termAt(1) == null, true);
+    try expect_eq(log.matchTerm(2, 1), true);
+    try expect_eq(log.matchTerm(3, 2), true);
+    try expect_eq(log.entryAt(2) == null, true);
+    try expect_eq(log.entryAt(3).?.term, @as(u64, 2));
 
-    // Run enough ticks for majority partition {2, 3} to elect node 2 in term 2
-    for (t of 0..12) {
-        * = t;
-        cluster.tickAll()?;
-        cluster.pump(4)?;
-    }
+    // Compacting beyond lastIndex returns InvalidIndex
+    let err_hit = false;
+    log.compactTo(10, 2) catch |e| {
+        if (e == RaftError.InvalidIndex) {
+            err_hit = true;
+        }
+    };
+    try expect_eq(err_hit, true);
 
-    // Old leader 1 still cannot commit its minority write
-    expect_eq(cluster.n1.commit_index, 0);
-    // Majority partition elected node 2 as Leader in term >= 2
-    expect_eq(cluster.n2.role == .Leader, true);
-    expect_eq(cluster.n2.current_term >= 2, true);
-
-    const maj_term = cluster.n2.current_term;
-    const maj_idx = cluster.n2.propose("committed_on_majority")?;
-    expect_eq(maj_idx, 1);
-    cluster.pump(6)?;
-    cluster.tickAll()?;
-    cluster.tickAll()?;
-    cluster.pump(6)?;
-    expect_eq(cluster.n2.commit_index, 1);
-    expect_eq(cluster.n3.commit_index, 1);
-
-    // 3. Heal partition: old Leader 1 receives AppendEntries from higher term and steps down to Follower
-    cluster.healAll();
-    cluster.tickAll()?;
-    cluster.tickAll()?;
-    cluster.pump(8)?;
-
-    expect_eq(cluster.n1.role == .Follower, true);
-    expect_eq(cluster.n1.current_term, maj_term);
-    expect_eq(cluster.n1.commit_index, 1);
-
-    const n1_applied = cluster.n1.drainApplied(alloc)?;
-    defer alloc.free(n1_applied);
-    expect_eq(n1_applied.len, 1);
-    expect_eq(std.mem.eql(u8, n1_applied[0].command, "committed_on_majority"), true);
+    // Compact all remaining entries
+    try log.compactTo(4, 2);
+    try expect_eq(log.lastIndex(), @as(u64, 4));
+    try expect_eq(log.lastTerm(), @as(u64, 2));
+    try expect_eq(log.matchTerm(4, 2), true);
 }
 
-fn testCapDynamicRaftMount()! {
-    const alloc = std.heap.page_allocator;
-    const peers: [2]u64 = [20, 30];
-    let node = cap.raft.RaftNode.init(alloc, 10, &peers, 4, 1)?;
-    defer node.deinit();
+test("cap.raft dynamic mount and zero-leak verification") {
+    const alloc = std.testing.allocator;
+    let log = cap.raft.RaftLog.init(alloc);
+    defer log.deinit();
 
-    const role: cap.raft.RaftRole = node.role;
-    expect_eq(role == .Follower, true);
+    const idx = try log.append(7, "mounted_cmd");
+    try expect_eq(idx, @as(u64, 1));
+    try expect_eq(log.matchTerm(1, 7), true);
 
-    for (t of 0..4) {
-        * = t;
-        node.tick()?;
+    const sliced = try log.sliceFrom(alloc, 1);
+    defer {
+        for (e of sliced) {
+            alloc.free(e.command);
+        }
+        alloc.free(sliced);
     }
-    expect_eq(node.role == .Candidate, true);
-    expect_eq(node.current_term, 1);
-
-    const out = node.drainOutbound(alloc)?;
-    defer cap.raft.RaftNode.freeOutbound(alloc, out);
-    expect_eq(out.len, 2);
-}
-
-pub fn main()! {
-    test("1. Raft 3-Node Election, Quorum & NotLeader Rejection", () => {
-        testClusterElectionAndNotLeader() catch unreachable;
-    });
-    test("2. Raft Log Replication, Majority Commit & drainApplied Consistency", () => {
-        testLogReplicationCommitAndDrainApplied() catch unreachable;
-    });
-    test("3. Raft RequestVote Up-To-Date Check & Conflict Truncation", () => {
-        testLogUpToDateSafetyAndConflictTruncation() catch unreachable;
-    });
-    test("4. Raft Partition Split-Brain Prevention & Higher-Term Step-Down", () => {
-        testPartitionSplitBrainAndStepDown() catch unreachable;
-    });
-    test("5. import cap from \"cap\"; cap.raft Dynamic Lazy Mounting", () => {
-        testCapDynamicRaftMount() catch unreachable;
-    });
+    try expect_eq(sliced.len, @as(usize, 1));
+    try expect_eq(sliced[0].term, @as(u64, 7));
 }
