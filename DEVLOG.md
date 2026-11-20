@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:murmur3` 纯 CP 零堆 MurmurHash3 x86_32 & x64_128 非加密哈希与流式增量计算引擎（支持 `cap.murmur3` 自动动态挂载，详见 `doc/lib/murmur3.md`）（5/5 PASS，文档直写 `doc/lib/murmur3.md`）
+- **核心设计**：全路径零堆分配实现，流式与一次性接口 100% 比特一致并通过 SMHasher 官方测试向量精确比对。
+
 ## 2026-11-21: 新建 `cap:siphash` 纯 CP 零堆 SipHash-2-4 (64/128-bit) 与 SipHash-1-3 抗 Hash-Flooding PRF 与流式认证码引擎（支持 `cap.siphash` 自动动态挂载，详见 `doc/lib/siphash.md`）（5/5 PASS，文档直写 `doc/lib/siphash.md`）
 - **核心设计**：全路径零堆分配实现，匹配官方 Appendix A 全系列 64-bit/128-bit 标准向量，以 `timing_safe.eql` 实现抗侧信道标签验签。
 
