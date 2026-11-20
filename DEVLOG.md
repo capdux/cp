@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:reed_solomon` 纯 CP GF(2^8) 系统性 Cauchy Reed-Solomon 纠删码与高斯-约旦无损恢复引擎（支持 `cap.reed_solomon` 自动动态挂载，详见 `doc/lib/reed_solomon.md`）（5/5 PASS，文档直写 `doc/lib/reed_solomon.md`）
+- **核心设计**：采用系统性 Cauchy 矩阵保证任意 `K` 行子矩阵满秩可逆，全路径 `std.testing.allocator` 零泄漏。
+
 ## 2026-11-21: 新建 `cap:http_router` 纯 CP Radix Trie 高性能 HTTP 路由器、零堆参数提取、405 Allow 头生成与 RouteGroup 引擎（支持 `cap.http_router` 自动动态挂载，详见 `doc/lib/http_router.md`）（5/5 PASS，文档直写 `doc/lib/http_router.md`）
 - **核心设计**：匹配路径采用栈上段切片零堆提取参数，插入期自动阻断同级不同参数名冲突与非末尾通配符，全路径零泄漏。
 

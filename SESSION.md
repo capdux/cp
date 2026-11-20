@@ -31,3 +31,6 @@
 
 ### 2026-11-21（`cap:http_router` 验收，与 `cap:xxhash` 同批验收并拉起 `cap:rope` 与 `cap:lockfree_queue`）
 - **执行成果**：`lib/http_router/`（5/5 PASS，`doc/lib/http_router.md`）经 `verify_module.sh` 一次性验收回收；与 `cap:xxhash` 同批验收并拉起 `cap:rope` 与 `cap:lockfree_queue`
+
+### 2026-11-21（`cap:reed_solomon` 验收，主控亲自完成第 6 路 `cap:reed_solomon` 验收提交，维持 `cap:rope` 与 `cap:lockfree_queue` 并发）
+- **执行成果**：`lib/reed_solomon/`（5/5 PASS，`doc/lib/reed_solomon.md`）经 `verify_module.sh` 一次性验收回收；主控亲自完成第 6 路 `cap:reed_solomon` 验收提交，维持 `cap:rope` 与 `cap:lockfree_queue` 并发

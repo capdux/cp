@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:reed_solomon` 纯 CP GF(2^8) 系统性 Cauchy Reed-Solomon 纠删码与高斯-约旦无损恢复引擎（支持 `cap.reed_solomon` 自动动态挂载，详见 `doc/lib/reed_solomon.md`）（5/5 PASS，自动动态挂载 `cap.reed_solomon`）
+- **新增标准库**：`lib/reed_solomon/{rs,index}.cp`，实现 GF(2^8) 有限域运算、系统性 Cauchy 编码矩阵（支持 `K + M <= 256`）及任意 `<= M` 丢失数据/校验分片的高斯-约旦无损恢复。
+- **新增文档与测试**：`doc/lib/reed_solomon.md` 扁平文档与 `cap/test/test_reed_solomon_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:http_router` 纯 CP Radix Trie 高性能 HTTP 路由器、零堆参数提取、405 Allow 头生成与 RouteGroup 引擎（支持 `cap.http_router` 自动动态挂载，详见 `doc/lib/http_router.md`）（5/5 PASS，自动动态挂载 `cap.http_router`）
 - **新增标准库**：`lib/http_router/{types,trie,index}.cp`，实现 Static > Param > CatchAll Radix Trie 匹配、零堆 `MAX_PARAMS = 16` 提取、405 自动 `Allow` 头、路由冲突检测与嵌套 `RouteGroup`。
 - **新增文档与测试**：`doc/lib/http_router.md` 扁平文档与 `cap/test/test_http_router_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
