@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:bitset` 64-bit 字级动态位图与零堆固定位图引擎（5/5 PASS，自动动态挂载 `cap.bitset`）
+
+- 新建 [`lib/bitset/`](file:///data/dev/cp/lib/bitset/index.cp)（`bitset.cp`、`index.cp`）：`BitSet`（动态扩容 `u64` 字数组、`setRange`/`clearRange`、`@popCount`/`@ctz` 快速 `count`/`firstSetBit`/`nextSetBit`/`toIndices`、不等长安全并/交/差/对称差与 `jaccardSimilarity`、紧凑十六进制 `toHex`/`fromHex`）及零堆 `FixedBitSet(N)`；文档 [`doc/lib/bitset.md`](file:///data/dev/cp/doc/lib/bitset.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_bitset_production_deep.cp`](file:///data/dev/cp/cap/test/test_bitset_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:pipeline` 洋葱模型中间件与可观测多阶段流水线引擎（5/5 PASS，自动动态挂载 `cap.pipeline`）
 
 - 新建 [`lib/pipeline/`](file:///data/dev/cp/lib/pipeline/index.cp)（`pipeline.cp`、`index.cp`）：`Pipeline` & `PipelineContext`（`before`/`after`/`onError` 洋葱模型钩子、短路 `halt` 仍按逆序清理已进入阶段、条件阶段 `useConditional`、动态启停及 `StageTrace` 耗时轨迹）；文档 [`doc/lib/pipeline.md`](file:///data/dev/cp/doc/lib/pipeline.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_pipeline_production_deep.cp`](file:///data/dev/cp/cap/test/test_pipeline_production_deep.cp) `-m` 5/5 PASS。

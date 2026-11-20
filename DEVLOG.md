@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:bitset` 动态位图与零堆固定位图引擎（5/5 PASS，文档直写 `doc/lib/bitset.md`）
+
+- **落地成果**：`lib/bitset/`（`bitset.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:health`（云原生 Liveness/Readiness/Startup 健康探针汇聚与优雅停机 `ShutdownCoordinator` 引擎），与 `lib/pool/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:pipeline` 洋葱模型中间件与多阶段流水线引擎（5/5 PASS，文档直写 `doc/lib/pipeline.md`）
 
 - **落地成果**：`lib/pipeline/`（`pipeline.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），与 `lib/uritemplate/` 合并收尾提交，并以 `Model: "inherit"` 顶替派发 `cap:pool`（通用资源与连接池引擎：空闲/最大生命周期驱逐、健康校验与泄漏观测），与 `lib/bitset/` 保持 2 路正交并行。

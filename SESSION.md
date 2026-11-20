@@ -188,3 +188,6 @@
 
 ### 2026-11-21（`cap:pipeline` 验收固化，顶替以 `inherit` 拉起 `cap:pool` 维持 2 路并行）
 - **执行成果**：`lib/pipeline/`（5/5 PASS，含 `cap.pipeline` 动态挂载与 `doc/lib/pipeline.md`）经 `verify_module.sh` 一键验收回收并与 `lib/uritemplate/` 合并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/pool/`（有界通用资源/连接池、空闲与最大寿命驱逐、健康校验与 `PoolStats` 观测），与 `lib/bitset/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:bitset` 验收固化，顶替以 `inherit` 拉起 `cap:health` 维持 2 路并行）
+- **执行成果**：`lib/bitset/`（5/5 PASS，含 `cap.bitset` 动态挂载与 `doc/lib/bitset.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/health/`（Liveness/Readiness/Startup 健康探针汇聚、HTTP 状态码映射与有序优雅停机协调器），与 `lib/pool/` 保持 2 路正交并行。
