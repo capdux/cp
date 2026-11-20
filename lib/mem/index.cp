@@ -89,3 +89,18 @@ export {
 export {
     SlabPool,
 } from "./pool.cp";
+
+export {
+    ScopeError,
+    ScopeStats,
+    TrackedAllocation,
+    AllocationScope,
+} from "./allocation_scope.cp";
+
+export {
+    FallbackAllocError,
+    BufferFallbackAllocator,
+    MaybeOwned,
+    MemFdError,
+    MemFdBuffer,
+} from "./fallback_allocator.cp";

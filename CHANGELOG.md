@@ -1,3 +1,24 @@
+## [2026-11-20] - Phase C-3 收官批次落地：`lib/resolver/` 生产缓存与高级特性 + 新建 `lib/test_runner/` 纯 CP 测试框架（+4,195 行）
+
+### 标准库升级与新增 (Phase C-3 Direct Port)
+- **`lib/resolver/` 深度升级（源自 Bun `src/resolver/`）**：
+  - 新增 [`dir_cache.cp`](file:///data/dev/cp/lib/resolver/dir_cache.cp)（600 行：`DirEntryCache` 基于 `getdents64`+`StatHash` 目录缓存与 `RealpathResolver` 40 级软链环 `ELOOP` 防护）与 [`advanced.cp`](file:///data/dev/cp/lib/resolver/advanced.cp)（791 行：`TsConfigChainLoader` 多级 `extends` 继承合并、`BrowserFieldMap`、`SideEffectsMatcher`、`SelfReferenceResolver`）；更新 [`docs/resolver/resolver.md`](file:///data/dev/cp/docs/resolver/resolver.md)。
+- **新建 `lib/test_runner/`（`cap:test_runner`，源自 Bun `src/test_runner/`，零 JSC 耦合）**：
+  - [`order.cp`](file:///data/dev/cp/lib/test_runner/order.cp)（155 行：SplitMix64/Xoshiro256++ 确定性种子洗牌 `TestOrder`）、[`suite.cp`](file:///data/dev/cp/lib/test_runner/suite.cp)（631 行：树形嵌套 `describe`、`beforeAll`/`beforeEach`/`afterEach`/`afterAll`、`.only`/`.skip`/`.todo` 过滤与纳秒计时 `TestRunner`）、[`snapshot.cp`](file:///data/dev/cp/lib/test_runner/snapshot.cp)（333 行：Bun 风格 `.snap` 快照引擎 `SnapshotStore` + `DiffFormatter` 彩色差分）、[`reporter.cp`](file:///data/dev/cp/lib/test_runner/reporter.cp)（541 行：`PrettyFormat` 与 TAP v13 / JUnit XML / JSON `TestReporter`）及 [`docs/test_runner/test_runner.md`](file:///data/dev/cp/docs/test_runner/test_runner.md)。
+- **测试与规范**：新增 [`cap/test/test_phase_c3_resolver_testrunner_port.cp`](file:///data/dev/cp/cap/test/test_phase_c3_resolver_testrunner_port.cp)（5/5 PASS），回归 `test_meta_platform_sri_deep.cp`（5/5）与 `test_resolver_bundler_deep.cp`（7/7）全部 PASS；同步更新双轨规范手册。
+
+---
+
+## [2026-11-20] - Phase E-1 原版直迁落地：`lib/mem/`、`lib/cli/`、`lib/bundler/` 生产级分配器/终端框架/代码分割增强（+4,043 行）
+
+### 标准库增强 (Phase E-1 Direct Port)
+- **`lib/mem/`**（源自 Bun `bun_alloc/`）：新增 [`allocation_scope.cp`](file:///data/dev/cp/lib/mem/allocation_scope.cp)（438 行：`AllocationScope` 泄漏/峰值/重复与悬空释放追踪分配器）与 [`fallback_allocator.cp`](file:///data/dev/cp/lib/mem/fallback_allocator.cp)（566 行：`BufferFallbackAllocator<N>` 栈优先热路径+堆回退、`MaybeOwned<T>`、Linux `memfd_create`+`mmap` `MemFdBuffer`），同步更新 [`docs/mem/mem.md`](file:///data/dev/cp/docs/mem/mem.md)；
+- **`lib/cli/`**（源自 Bun `cli/ci_info.cp` & `bun_core/Progress.cp`）：新增 [`ci_info.cp`](file:///data/dev/cp/lib/cli/ci_info.cp)（366 行：15+ CI 厂商/PR/ANSI/OSC-8/`TIOCGWINSZ` 探测）与 [`subcommand.cp`](file:///data/dev/cp/lib/cli/subcommand.cp)（688 行：多级 `SubcommandRouter` + Levenshtein 拼写纠错 + 彩色 `--help` + 原子锁 `MultiProgress`/`Spinner`），同步更新 [`docs/cli/cli.md`](file:///data/dev/cp/docs/cli/cli.md)；
+- **`lib/bundler/`**（源自 Bun `bundler/`）：新增 [`metafile.cp`](file:///data/dev/cp/lib/bundler/metafile.cp)（418 行：esbuild/Bun 兼容 `Metafile` JSON 与彩色体积占比树状表）与 [`splitting.cp`](file:///data/dev/cp/lib/bundler/splitting.cp)（403 行：多入口 `u64` 位掩码共享 Chunk 抽取 `CodeSplitter` 与 `AssetManifest`），同步更新 [`docs/bundler/bundler.md`](file:///data/dev/cp/docs/bundler/bundler.md)；
+- 新增 [`cap/test/test_phase_e1_mem_cli_bundler_port.cp`](file:///data/dev/cp/cap/test/test_phase_e1_mem_cli_bundler_port.cp)（5/5 PASS），回归 `test_string_blob_image_mem_deep.cp`（5/5）与 `test_ffi_bigint_bench_cli_deep.cp`（4/4）全部 PASS，同步更新双轨规范手册。
+
+---
+
 ## [2026-11-20] - Phase D-1 LightningCSS 工业引擎直迁（`lib/css/engine/` 4.8K）与 `bun_agy` 双工单热修结单
 
 ### 标准库：`lib/css/engine/` LightningCSS 核心引擎（7 模块 4,803 行，源自 Bun `src/css/`）

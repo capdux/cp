@@ -2,6 +2,19 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-20: Phase C-3 收官批次（`lib/resolver/` + `lib/test_runner/`，+4,195 行）与 Bun 全生态原版直迁收官总检
+
+- **落地成果**：完成 `lib/resolver/` 生产级目录缓存/软链穿透/`TsConfigChainLoader`/`BrowserFieldMap`/`SideEffectsMatcher`/`SelfReferenceResolver` 与全新 `lib/test_runner/`（`TestOrder`/`TestRunner`/`SnapshotStore`/TAP+JUnit+JSON `TestReporter`），全部测试 100% PASS。
+- **全阶段总计**：自启用 `import cap from "cap"` 编译期按需惰性挂载容器以来，经 Phase A / B-1 / B-2 / C-1 / C-2 / C-3 / D-1 / E-1 全部 8 个原版直迁批次，CP 标准库从 75,834 行跃升至 **~12 万行生产级纯 CP 代码**（59 个标准库目录），全仓 `.cp` 0 处 `@import("bun")`，100% 首行 `// Source:` 溯源合规，并同步秒级修复结单 `bun_agy` 3 条编译器工单。
+
+---
+
+## 2026-11-20: Phase E-1 `lib/mem/`、`lib/cli/`、`lib/bundler/` 生产增强直迁落地（+4,043 行）
+
+- **落地成果**：直迁 Bun `bun_alloc/`（`AllocationScope`、`BufferFallbackAllocator<N>`、`MaybeOwned<T>`、`MemFdBuffer`）、`cli/`（15+ CI 探测、多级 `SubcommandRouter` + Levenshtein 纠错、`MultiProgress`/`Spinner`）与 `bundler/`（`Metafile` + 多入口 `u64` 位掩码 `CodeSplitter`/`AssetManifest`），3 套专项及回归测试共 14/14 全部 PASS，0 `@import("bun")`，0 `std.posix`。
+
+---
+
 ## 2026-11-20: Phase D-1 `lib/css/engine/` LightningCSS 核心引擎（4.8K）落地与 `bun_agy` 双工单热修
 
 - **Phase D-1**：在全新目录 `lib/css/engine/` 零干扰落地 7 个 Bun LightningCSS 工业模块（4,803 行：9 浏览器 27 特性 `Targets`、Values/Easing/Gradients、全套简写展开压缩、现代 At-Rules 与 `CssCompiler`/CSS Modules），全部 4 套 CSS 测试 22/22 PASS，0 `@import("bun")`，0 `std.posix`。

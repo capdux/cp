@@ -36,3 +36,21 @@ export {
     StandaloneModuleEntry,
     StandaloneModuleGraph,
 } from "./standalone";
+
+export {
+    MetafileImport,
+    MetafileInput,
+    MetafileOutputInput,
+    MetafileOutput,
+    MetafileError,
+    Metafile,
+} from "./metafile";
+
+export {
+    SplittingError,
+    SplitChunk,
+    AssetManifestEntry,
+    AssetManifest,
+    SplitResult,
+    CodeSplitter,
+} from "./splitting";

@@ -5,7 +5,7 @@
 
 const std = @import("std");
 import { Base64 } from "cap:encoding";
-import { PercentEncoding } from "cap:url";
+import { PercentEncoding } from "../url/percent";
 
 pub err DataUrlError {
     InvalidDataURL,

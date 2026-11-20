@@ -2635,3 +2635,12 @@
   2. `task-bun-20261120-fn-callconv-ptr`：修复 `parse_fn_type_sig_body` 吸收 `callconv(.c)` 保留返回类型 `void`，并修复 `zig_escape.rs` 避免 `*const fn` 重复前缀生成双层 `*const *const fn`，已部署 Release、验证 `repro_fn_callconv_ptr.cp` + `zig ast-check` 并 `resolve` + `ack` 结单；
   3. `task-bun-20261120-errset-merge-or`：修复 `cpc/src/codegen/expr/ops.rs` 中 `BinaryOp::LogicalOr` 对错误集合并（`std.mem.Allocator.Error || error{ A }` / `OOM || ...`）误生成 Zig `or`，改为识别错误集保持 `||`，已部署 Release、验证 `repro_errset_merge.cp` + `zig ast-check` 并 `resolve` + `ack` 结单。
 - **Phase D-1 完工入库**：子智能体 D-1 完工回收，新建 [`lib/css/engine/`](file:///data/dev/cp/lib/css/engine/index.cp)（7 文件 4,803 行，零触碰既有 8 文件保 `capsurf` 零抖动），[`cap/test/test_phase_d_css_lightning_port.cp`](file:///data/dev/cp/cap/test/test_phase_d_css_lightning_port.cp)（6/6）及 3 套既有 CSS 测试共 22/22 PASS，已同步双轨规范并提交 Git；当前 Phase C-3（`6cb906e6`）与 Phase E-1（`caa1cd34`）继续双路并行推进。
+
+### 2026-11-20（Phase E-1 `lib/mem/` + `lib/cli/` + `lib/bundler/` 验收固化）
+- **执行成果**：子智能体 E-1 完工回收，直迁 `AllocationScope`/`BufferFallbackAllocator`/`MaybeOwned`/`MemFdBuffer`（`lib/mem/`）、`CiInfo`/`SubcommandRouter`/`MultiProgress`/`Spinner`（`lib/cli/`）与 `Metafile`/`CodeSplitter`/`AssetManifest`（`lib/bundler/`）共 +4,043 行，[`test_phase_e1_mem_cli_bundler_port.cp`](file:///data/dev/cp/cap/test/test_phase_e1_mem_cli_bundler_port.cp)（5/5）及 2 套既有回归共 14/14 PASS，已同步双轨规范与热日志并执行 Git 提交固化；同时等待 Phase C-3（`6cb906e6`）完工收官并顺手清理两处跨库单文件内联符号冲突回归。
+
+### 2026-11-20（Phase C-3 `lib/resolver/` + `lib/test_runner/` 收官验收固化，Bun 非 JSC 生产资产全量直迁圆满完成）
+- **执行成果**：
+  - 子智能体 C-3 完工回收：升级 [`lib/resolver/`](file:///data/dev/cp/lib/resolver/index.cp)（`DirEntryCache`/`RealpathResolver`/`TsConfigChainLoader`/`BrowserFieldMap`/`SideEffectsMatcher`/`SelfReferenceResolver`）并新建 [`lib/test_runner/`](file:///data/dev/cp/lib/test_runner/index.cp)（`TestOrder`/`TestRunner`/`SnapshotStore`+彩色 Diff/TAP+JUnit+JSON `TestReporter`），共 +4,195 行；
+  - 修正 `cap/test/test_resolver_bundler_deep.cp` 局部 `order` 遮蔽变量，`test_phase_c3_resolver_testrunner_port.cp`（5/5）、`test_meta_platform_sri_deep.cp`（5/5）、`test_resolver_bundler_deep.cp`（7/7）全部 100% PASS；
+  - 全仓总检通过，同步定稿双轨手册与热日志并执行干净收官 Git 提交。

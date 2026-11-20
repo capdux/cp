@@ -6128,7 +6128,7 @@ export class SocketContext<Handler> {
 | `cap:conf`（兼容 `cap:dotenv` / `cap:ini`） | 统一配置中心（直迁 Bun `interchange/` 4.5K 行）：`DotEnv`、`Ini`、统一 AST `ConfValue`/`ConfDateTime`（RFC 3339）、完整 YAML 1.2（`YamlParser`/`YamlStream` 多文档/锚点别名/合并键 `<<`/块标量 `|` `>`/流式集合/类型标签/双向序列化）、TOML 1.0（内联表/点分与引号键/RFC 3339/`[[array]]`）、`JSON5` 与 `ConfValueParser` | **已全面实装** |
 | `cap:pack`（兼容 `cap:compress`） | 流式压缩与归档打包：RFC 1952/1950/1951 工业级全量与流式分块压缩 `gzip`, `gunzip`, `deflate`, `inflate`, `deflateRaw`, `inflateRaw`, `GzipStream`, `GunzipStream`, `DeflateStream`, `InflateStream`, `Gzip`, `Gunzip`, `DeflateCodec`, `InflateCodec`, `NativeZlib`, `Zlib`, `Zstd`, `Brotli`, `CompressionFormat`, `Crc32`, `Adler32`, `GzipHeader`, `RleCodec`, `TarHeader`, `TarReader`, `ZipReader`, `ZipLocalHeader`, `ZipCentralHeader`, `ZipEocd` | **已全面实装** |
 | `cap:redis`       | Redis / Valkey RESP2 & RESP3 零拷贝协议帧、命令构建与 Pipeline 批处理（`RESPType`, `RESPFrame`, `RESPParser`, `RESPEncoder`, `RedisCommand`, `RedisPipeline`） | **已全面实装** |
-| `cap:cli`         | 命令行参数解析（`CliArgs`, `CliOption`）、ANSI 转义剥离（`AnsiColor`）、终端进度条（`ProgressBar`）与 ASCII 表格渲染器（`CliTable`, `CliTableAlign`） | **已全面实装** |
+| `cap:cli`         | 命令行参数解析（`CliArgs`, `CliOption`）、15+ CI/CD 环境与终端宽度探测（`CiInfo`/`CiVendor`）、多级子命令路由与编辑距离纠错（`SubcommandRouter`）、并发进度树与转轮（`MultiProgress`/`Spinner`）、ANSI 色彩与 ASCII 表格（`CliTable`） | **已全面实装** |
 | `cap:watch`       | 跨平台文件系统监控引擎、路径忽略过滤与防抖器（`FileWatcher`, `WatchEvent`, `WatchMask`, `WatchFilter`, `DebounceTracker`） | **已全面实装** |
 | `cap:patch`       | Unified Diff 解析、Hunk 渲染、Myers 行级差异比对与彩色终端对比渲染（`UnifiedDiff`, `UnifiedHunkHeader`, `LineDiffer`, `DiffOp`, `DiffFormatter`, `DiffFormatOptions`） | **已全面实装** |
 | `cap:bench`       | 纳秒级硬件计时器（`HwTimer`, `Stopwatch`）、分位数统计（`BenchStats`）与对数桶延迟直方图（`LatencyHistogram`） | **已全面实装** |
@@ -6158,7 +6158,7 @@ export class SocketContext<Handler> {
 | `cap:crypto`      | 工业级密码学体系：CSPRNG、UUID v4、散列哈希（SHA256/512/1/MD5/流式）、HMAC、PBKDF2、AEAD 对称加密（AES-256-GCM、ChaCha20-Poly1305）、BoringSSL X.509 校验 | **已全面实装** |
 | `cap:safety`      | 生产级并发安全、硬件探测与崩溃诊断套件：线程 ID 极速获取（`thread_id`）、单线程属主防御锁（`ThreadLock`）、可重入并发读写竞态检测（`CriticalSection`）、非托管容器防混用（`CheckedAllocator`）、原生 ASAN 内存毒化（`asan`）、CPU 指令集运行时探测（`CpuFeatures`）、OOM 策略守卫（`OomGuard`）与崩溃报告格式化（`CrashReport`） | **已全面实装** |
 | `cap:security`    | 安全防护与防跨站请求伪造子系统：CSPRNG 随机 Nonce、HMAC-SHA256 签名与篡改校验、恒定时间防时序攻击比对（`constantTimeEql`）、多格式编解码（Base64Url, Base64, Hex） | **已全面实装** |
-| `cap:mem`         | `Arena`, `SharedTensor`, `Cow`, `CowSlice`, `TaggedPointer`, `TaggedPtr`, `MaxHeapAllocator` | **已全面实装** |
+| `cap:mem`         | `Arena`, `SharedTensor`, `Cow`, `CowSlice`, `TaggedPointer`, `TaggedPtr`, `MaxHeapAllocator`, `AllocationScope`（泄漏/峰值/重复与悬空释放检测）, `BufferFallbackAllocator<N>`（栈热路径+堆回退）, `MaybeOwned<T>`, `MemFdBuffer`（Linux `memfd_create` + `mmap`） | **已全面实装** |
 | `cap:string`      | `ZigString`, `WTF8`/`Wtf8`, `SimdUtf`, `Utf8Grapheme`, `Unicode` 分类与 `CodepointIterator`, `Strings`/`strings`（`eqlComptime`/`hasPrefixComptime`/`indexOfAny`/`splitScalar`/`concat`/`join`/`escapeHtml`/`escapeRegExp`）, `Latin-1/UTF-16/UTF-8` 互转, `StringBuilder`, `MutableString`, `SmolStr`, `HashedString`, `PathString`, `StringJoiner` | **已全面实装** |
 | `cap:parallel`    | `spawn`, `join`, `Task`（注：`cap:task` / `Task.all` / `Task.race` 规划中） | **已全面实装** |
 | `cap:actor`       | `yield`, `receive`, `sleep`, `join`, `self_pid`, `sender`, `send`, `reply`（内建 `@spawn`/`@receive`/`@reply`/`@send`/`@self`/`@sender`） | **已全面实装** |
@@ -6169,9 +6169,10 @@ export class SocketContext<Handler> {
 | `cap:sourcemap`   | Base64 VLQ/Varint 编解码、二分/动态行偏移表、二进制 InternalSourceMap 与 SourceMap v3 生成/反查 | **已全面实装** |
 | `cap:clap`        | 工业级命令行参数解析：POSIX 引号 Shell 词法分词、声明式语法、流式解析与编译期强类型提取 | **已全面实装** |
 | `cap:reflect`     | 编译期与运行时 `type_of`, `fields_of`, 结构体自省                      | **已全面实装** |
-| `cap:resolver`    | 工业级模块解析器与包配置套件：RFC 2397 `DataURL`、`PackageJson`（`exports`/`imports` 条件路由与通配符）、JSONC `TsConfigJson`（`paths` 别名重写）、`StatHash`、`ModuleResolver`、W3C SRI `Integrity`（SHA-1/256/384/512 恒定时间校验）与 `HostedGitInfo`（GitHub/GitLab/Bitbucket/Gist/SourceHut 解析） | **已全面实装** |
+| `cap:resolver`    | 工业级模块解析器与包配置套件（直迁 Bun `resolver/` 3.6K 行）：RFC 2397 `DataURL`、`PackageJson`（`exports`/`imports` 条件路由）、JSONC `TsConfigJson`、`TsConfigChainLoader`（多级 `extends` 继承合并）、`DirEntryCache`（`getdents64`+`StatHash` 目录缓存）、`RealpathResolver`（40 级软链环防护）、`BrowserFieldMap`、`SideEffectsMatcher`、`SelfReferenceResolver`、`ModuleResolver`、W3C SRI `Integrity` 与 `HostedGitInfo` | **已全面实装** |
+| `cap:test_runner` | 纯 CP 生产级测试运行器基础设施（直迁 Bun `test_runner/`）：`TestOrder`（SplitMix64/Xoshiro256 确定性种子洗牌）、树形 `TestRunner`（嵌套 `describe`、`beforeAll`/`beforeEach`/`afterEach`/`afterAll`、`.only`/`.skip`/`.todo` 过滤）、`SnapshotStore`（`.snap` 快照读写更新 + `DiffFormatter` 彩色字符级差分）、`PrettyFormat` 与三格式 CI `TestReporter`（TAP v13 / JUnit XML / JSON） | **已全面实装** |
 | `cap:aio`         | 异步 I/O 环形队列与进程监控套件：`ParentDeathWatchdog`（Linux `PR_SET_PDEATHSIG` + 竞态防护）与零堆固定容量 `AioQueue<CAP>`（Open/Read/Write/Pread/Pwrite/Stat/Fsync/Close/Unlink/Mkdir） | **已全面实装** |
-| `cap:bundler`     | 静态打包与单文件分发引擎：`BundleConfig`、`ChunkOrder`、`BundleV2`、`CompileTarget`（跨平台目标三元组）、`StandaloneModuleGraph`（单文件虚拟 FS 二进制编解码）与 `ModuleGraph`（三色 DFS 环检测、拓扑排序与 Tree-Shaking） | **已全面实装** |
+| `cap:bundler`     | 静态打包与单文件分发引擎：`BundleConfig`、`ChunkOrder`、`BundleV2`、`CompileTarget`、`StandaloneModuleGraph`、`ModuleGraph`（环检测/拓扑/Tree-Shaking）、`Metafile`（esbuild/Bun 兼容 JSON 与彩色树状体积分析）与多入口 `CodeSplitter`（`u64` 位掩码共享 Chunk 抽取与 `AssetManifest`） | **已全面实装** |
 | `cap:meta`        | 编译期反射特征与无分支位操作套件：`bits`（2 的幂对齐、位计数/旋转、字节序打包、packed 位域运算）与 `traits`（Zig 0.17 `@typeInfo` 全类型特征探测、`ChildType`/`ItemType`） | **已全面实装** |
 | `cap:platform`    | 跨平台宿主环境与内核特性探测：`OsKind`/`ArchKind`/`Endianness`、`KernelVersion` 与 `PlatformInfo`（Linux `uname` 真实内核版本、`io_uring`/`copy_file_range`/`statx`/`pidfd` 特性开关、`/proc/self/exe`、`pageSize`、`cpuCount`） | **已全面实装** |
 | **`cap`（根按需挂载容器）** | `import cap from "cap";`（支持任意别名与 `@import("cap")`）：极薄零重依赖微核心（`lib/_cap/core.cp`：`OOM`/`handleOom`/`Environment`/`assert`/`clamp`/`FD`/`O`/`S`/`Output`/`ComptimeStringMap`）+ **`cpc` 编译期不动点扫描按需惰性挂载 59 个标准库**（未引用库 0 读取、0 转译、0 编译） | **已全面实装** |
@@ -10410,7 +10411,8 @@ flowchart TD
 - **核心运行时与并发 (`cap:actor` / `beam` / `parallel` / `worker` / `reflect` / `serde` / `test` / `sqlite`)**：[`docs/runtime/runtime.md`](file:///data/dev/cp/docs/runtime/runtime.md)
 - **跨平台系统错误码 (`cap:errno`，新吸收)**：[`docs/errno/errno.md`](file:///data/dev/cp/docs/errno/errno.md)（65 个 POSIX/Linux 错误码、负 syscall 转换与语义判定）
 - **结构化诊断日志 (`cap:logger`，新吸收)**：[`docs/logger/logger.md`](file:///data/dev/cp/docs/logger/logger.md)（`Source`/`Loc`/`Range`/`DiagMsg`/`Log` 源码行摘录与 ANSI 标尺高亮）
-- **模块解析器与包配置 (`cap:resolver`，新吸收)**：[`docs/resolver/resolver.md`](file:///data/dev/cp/docs/resolver/resolver.md)（RFC 2397 `DataURL`、`PackageJson` 条件 `exports`/`imports`、JSONC `TsConfigJson` 别名、`StatHash`、`ModuleResolver`、W3C SRI `Integrity` 与 `HostedGitInfo`）
+- **模块解析器与包配置 (`cap:resolver`，新吸收)**：[`docs/resolver/resolver.md`](file:///data/dev/cp/docs/resolver/resolver.md)（RFC 2397 `DataURL`、`PackageJson`、`TsConfigChainLoader`、`DirEntryCache`、`RealpathResolver`、`BrowserFieldMap`、`SideEffectsMatcher`、`SelfReferenceResolver`、W3C SRI `Integrity` 与 `HostedGitInfo`）
+- **生产测试运行器框架 (`cap:test_runner`，新吸收)**：[`docs/test_runner/test_runner.md`](file:///data/dev/cp/docs/test_runner/test_runner.md)（`TestOrder` 确定性洗牌、嵌套 `TestRunner` 钩子、`.snap` `SnapshotStore` + 彩色 Diff、TAP v13 / JUnit XML / JSON `TestReporter`）
 - **异步 I/O 队列与父进程看门狗 (`cap:aio`，新吸收)**：[`docs/aio/aio.md`](file:///data/dev/cp/docs/aio/aio.md)（`ParentDeathWatchdog` `PR_SET_PDEATHSIG` 与零堆 `AioQueue<CAP>` 环形 I/O 队列）
 - **编译期元编程与位操作 (`cap:meta`，新吸收)**：[`docs/meta/meta.md`](file:///data/dev/cp/docs/meta/meta.md)（无分支位运算/对齐/位域与 Zig 0.17 `@typeInfo` 编译期类型特征 `traits`）
 - **宿主平台与内核探测 (`cap:platform`，新吸收)**：[`docs/platform/platform.md`](file:///data/dev/cp/docs/platform/platform.md)（`KernelVersion`、Linux `uname` 真实内核特性探测与 `/proc/self/exe`）

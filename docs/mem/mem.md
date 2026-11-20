@@ -192,3 +192,56 @@ pub fn demoFixedAndSlabPool() {
     const ok2 = pool.free(slot); // false (安全拦截 double-free)
 }
 ```
+
+---
+
+### 6. 泄漏追踪包装分配器 (`AllocationScope`)、泛型回退 (`BufferFallbackAllocator<N>` / `MaybeOwned<T>`) 与 `MemFdBuffer`
+
+新增源自 `/data/dev/bun/src/bun_alloc/` 的三大生产级组件：
+
+- **`AllocationScope`** (`lib/mem/allocation_scope.cp`)：
+  - 完整包装 `std.mem.Allocator` 虚表（`scope.allocator()`），同时提供直调方法 `allocBytes` / `freeBytes` / `trackExternalAlloc` / `trackExternalFree`；
+  - 实时统计 `liveAllocations()`、`liveBytes()`、`totalAllocatedBytes()`、`peakBytes()`、`totalFrees()`；
+  - 精准拦截重复释放（`ScopeError.DoubleFree` + `doubleFrees()`）与悬空/未登记指针释放（`ScopeError.InvalidFree` + `invalidFrees()`）；
+  - 提供 `assertNoLeaks()`、`isOwned()`、`formatReport()` / `formatReportAlloc()`。
+- **`BufferFallbackAllocator<const N: usize>`** (`lib/mem/fallback_allocator.cp`)：
+  - 内置 `N` 字节栈定长缓冲，热路径优先栈上 bump 分配（`allocStack` / `allocBytes` / `allocAligned` / `allocator()`），溢出自动无缝回退至堆分配器并记录 `heapAllocs()` / `heapBytes()`。
+- **`MaybeOwned<T>`** (`lib/mem/fallback_allocator.cp`)：
+  - 泛型零成本统一借用切片（`initBorrowed`）与堆拥有切片（`initOwned` / `initOwnedCopy`），支持 `asSlice()`、`toOwned()`（原地按需克隆提升为拥有态）与 `deinit()`。
+- **`MemFdBuffer`** (`lib/mem/fallback_allocator.cp`)：
+  - 基于 Linux `memfd_create` + `ftruncate` + `pwrite` + `mmap(MAP.SHARED)` 的匿名内存文件缓冲区，支持 `asSlice()` / `asMutSlice()`、`readFd()` / `writeFd()`、`cloneView()` 零拷贝共享视图映射与 `fd()` 文件描述符传递。
+
+```typescript
+import {
+    AllocationScope,
+    BufferFallbackAllocator,
+    MaybeOwned,
+    MemFdBuffer,
+} from "cap:mem";
+
+pub fn demoPhaseE1Mem(): ! {
+    // 1. AllocationScope 泄漏与峰值追踪
+    let scope = AllocationScope.initDefault()?;
+    defer scope.deinit();
+    const b = scope.allocBytes(256, "packet")?;
+    // scope.liveAllocations() == 1, scope.peakBytes() == 256
+    scope.freeBytes(b)?;
+    scope.assertNoLeaks()?;
+
+    // 2. BufferFallbackAllocator<64> 栈热路径 + 堆回退
+    let fba = BufferFallbackAllocator<64>.initDefault();
+    const s1 = fba.allocBytes(32)?; // 栈上分配 (fba.ownsSlice(s1) == true)
+    const s2 = fba.allocBytes(64)?; // 自动回退堆分配 (fba.heapAllocs() == 1)
+    fba.freeBytes(s2);
+    fba.freeBytes(s1);
+
+    // 3. MaybeOwned<u8> & MemFdBuffer
+    let mo = MaybeOwned<u8>.initBorrowed("hello");
+    defer mo.deinit();
+    const owned = mo.toOwned()?;
+    owned[0] = 'H';
+
+    let mfd = MemFdBuffer.create("zero-copy-memfd", "demo")?;
+    defer mfd.deinit();
+}
+```

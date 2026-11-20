@@ -42,3 +42,29 @@ export {
     GitHost,
     HostedGitInfo,
 } from "./hosted_git";
+
+export {
+    MAX_SYMLINK_DEPTH,
+    RealpathError,
+    CachedDirEntry,
+    DirInfo,
+    DirCacheStats,
+    DirEntryCache,
+    RealpathResult,
+    RealpathResolver,
+} from "./dir_cache";
+
+export {
+    MAX_EXTENDS_DEPTH,
+    TsConfigChainError,
+    TsConfigChainResult,
+    TsConfigChainLoader,
+    BrowserMapAction,
+    BrowserLookupResult,
+    BrowserMappingEntry,
+    BrowserFieldMap,
+    SideEffectsMode,
+    SideEffectsMatcher,
+    SelfReferenceMatch,
+    SelfReferenceResolver,
+} from "./advanced";

@@ -71,3 +71,20 @@ pub fn demoWidgets() {
     const len = tbl.renderToBuf(&out);
 }
 ```
+
+---
+
+### 3. CI/CD 环境探测 (`CiInfo` / `CiVendor`)、多级子命令路由 (`SubcommandRouter`) 与并发进度树 (`MultiProgress`)
+
+源自 `/data/dev/bun/src/cli/ci_info.cp`、`/data/dev/bun/src/cli/cli.cp` 与 `/data/dev/bun/src/bun_core/Progress.cp`：
+
+- **`CiInfo` & `CiVendor`** (`lib/cli/ci_info.cp`)：
+  - 探测 GitHub Actions、GitLab CI、CircleCI、Travis CI、Jenkins、Buildkite、Azure Pipelines、Vercel、Netlify、Cloudflare Pages、Bitbucket Pipelines、TeamCity、AWS CodeBuild、Drone 与 Generic CI；
+  - 自动解析 Pull Request 状态（`is_pr`）、ANSI/TrueColor/OSC-8 超链接支持能力（尊重 `NO_COLOR`、`FORCE_COLOR`、`TERM=dumb`）以及 Linux `ioctl(TIOCGWINSZ)` 真实终端宽高（兼容 `COLUMNS` 覆盖）；
+  - 提供 `CiInfo.detect()`、`CiInfo.detectWithEnv(...)` 与 Bun 兼容函数 `isCI()` / `detectCIName()`。
+- **`SubcommandRouter` & `SubcommandSpec`** (`lib/cli/subcommand.cp`)：
+  - 支持多级子命令路由（如 `pm cache ls`）、别名匹配、全局/命令标志定义；
+  - 基于 Levenshtein 编辑距离提供 `didYouMean(input, parent)` 拼写纠错建议；
+  - `formatHelp()` 自动计算对齐列宽并生成彩色 `--help` 文本。
+- **`MultiProgress`** (`lib/cli/subcommand.cp`)：
+  - 基于原子自旋锁的线程安全多任务进度树，支持父子任务层级、帧动画 `Spinner`、吞吐格式化（`MB/s`、`files/s`）、`ETA` 计算与树状渲染（`renderTree`）。

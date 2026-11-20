@@ -492,13 +492,13 @@ fn testModuleGraphAndCompat(): !void {
 
     // Deterministic dependency-first topological sort:
     // shared must precede a and b; a and b must precede entry
-    const order = try mg.topoSort(alloc);
-    expect_eq(order.len, 5);
-    expect_eq(order[0], id_shared);
-    expect_eq(order[1], id_a);
-    expect_eq(order[2], id_b);
-    expect_eq(order[3], id_entry);
-    expect_eq(order[4], id_dead);
+    const topo_order = try mg.topoSort(alloc);
+    expect_eq(topo_order.len, 5);
+    expect_eq(topo_order[0], id_shared);
+    expect_eq(topo_order[1], id_a);
+    expect_eq(topo_order[2], id_b);
+    expect_eq(topo_order[3], id_entry);
+    expect_eq(topo_order[4], id_dead);
 
     // Tree-shaking reachability
     mg.markAllEntryPointsReachable();
