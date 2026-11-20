@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:migrate` 确定性 Schema 迁移规划、防篡改校验与 SQLite 事务执行引擎（5/5 PASS，自动动态挂载 `cap.migrate`）
+
+- 新建 [`lib/migrate/`](file:///data/dev/cp/lib/migrate/index.cp)（`migrator.cp`、`index.cp`）：`MigrationRegistry`（`-- +migrate Up`/`Down` 双段 SQL 解析、乱序自动升序 `planUp`、逆序步进 `planDown`、SHA-256 校验和 `ChecksumMismatch` & `MissingAppliedMigration` 防篡改校验、`statusReport`）及 `SqliteMigrator`（基于 `cap:sqlite` 自动管理 `_cap_migrations` 并支持事务级升级/幂等跳过/回滚）；文档 [`doc/lib/migrate.md`](file:///data/dev/cp/doc/lib/migrate.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_migrate_production_deep.cp`](file:///data/dev/cp/cap/test/test_migrate_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:feature` Feature Flags、确定性单调灰度分桶与 A/B/n 实验引擎（5/5 PASS，自动动态挂载 `cap.feature`）
 
 - 新建 [`lib/feature/`](file:///data/dev/cp/lib/feature/index.cp)（`flags.cp`、`index.cp`）：`FeatureEngine`（`KillSwitch` 一键熔断、`TargetingRule` 多操作符属性靶向、基于 FNV-1a `% 10000` 的确定性单调分桶、多变体 A/B/n 权重校验分流、缺失降级 `FlagNotFound` 与 `toJsonSnapshot`）；文档 [`doc/lib/feature.md`](file:///data/dev/cp/doc/lib/feature.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_feature_production_deep.cp`](file:///data/dev/cp/cap/test/test_feature_production_deep.cp) `-m` 5/5 PASS。
