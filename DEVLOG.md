@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:imap` RFC 3501/9051 IMAP4 协议命令与 Literal 解析引擎（5/5 PASS，文档直写 `doc/lib/imap.md`）
+- **核心设计**：`ImapStreamParser` 支持任意分块边界解析同步/非同步 `{N}`/`{N+}` 二进制 Literal 块并通过 `markEof`/`finish` 精确检测截断；命令编码器自动转义引号与反斜杠并阻断 CR/LF 注入。
+
 ## 2026-11-21: 新建 `cap:nats` NATS Wire 协议与 HPUB/HMSG 增量流式解析编码引擎（5/5 PASS，文档直写 `doc/lib/nats.md`）
 - **核心设计**：`NatsParser` 支持 `1..7` 字节任意切分流式解析及二进制 `\r\n\x00` 载荷零损耗提取，严格校验 `hdr_len <= total_len` 与 `max_payload_bytes` 上限；`NatsEncoder` 全面拦截主题空白与 CR/LF 命令注入。
 

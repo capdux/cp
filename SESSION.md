@@ -551,3 +551,6 @@
 
 ### 2026-11-21（`cap:nats` 验收合并提交，顶替拉起 `cap:stomp` 维持 2 路常规并行）
 - **执行成果**：`lib/nats/`（5/5 PASS，`doc/lib/nats.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/ldap/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/stomp/`（STOMP 1.2 文本帧消息代理协议编解码与增量解析引擎），与 `lib/imap/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:imap` 验收提交，顶替拉起 `cap:geojson` 维持 2 路常规并行）
+- **执行成果**：`lib/imap/`（5/5 PASS，`doc/lib/imap.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/geojson/`（RFC 7946 GeoJSON 编解码、地理围栏多边形孔洞判定与 Douglas-Peucker 抽稀引擎），与 `lib/stomp/` 维持 2 路常规并行。

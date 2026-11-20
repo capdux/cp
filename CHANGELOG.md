@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:imap` RFC 3501/9051 IMAP4 协议命令与 Literal 解析引擎（5/5 PASS，自动动态挂载 `cap.imap`）
+- **新增标准库**：`lib/imap/{imap,index}.cp`，实现递增标签 `ImapCommandCodec`（防 `\r`/`\n`/`\0` 注入）、跨 Chunk `{N}`/`{N+}` Literal 增量解析器 `ImapStreamParser` 及 `parseCapability`/`parseSearchUids`/`parseExistsCount`/`parseFetchFlags` 语义辅助。
+- **新增文档与测试**：`doc/lib/imap.md` 扁平文档与 `cap/test/test_imap_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:nats` NATS Wire 协议与 HPUB/HMSG 增量流式解析编码引擎（5/5 PASS，自动动态挂载 `cap.nats`）
 - **新增标准库**：`lib/nats/{nats,index}.cp`，实现 `NatsEncoder`（`CONNECT`/`PUB`/`HPUB`/`SUB`/`UNSUB`/`PING`/`PONG`，拦截空白主题与 CRLF 注入）及跨 Chunk 半包黏包 `NatsParser`（支持 `INFO`/`MSG`/`HMSG` `NATS/1.0` 多值头与 `PayloadTooLarge` 防护）。
 - **新增文档与测试**：`doc/lib/nats.md` 扁平文档与 `cap/test/test_nats_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
