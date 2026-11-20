@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:supervisor` BEAM OTP 监督树状态机与分布式弹性原语（5/5 PASS，自动动态挂载 `cap.supervisor`）
+
+- 新建 [`lib/supervisor/`](file:///data/dev/cp/lib/supervisor/index.cp)（`strategy.cp`、`resilience.cp`、`index.cp`）：`SupervisorTree`（`OneForOne`/`OneForAll`/`RestForOne` OTP 拓扑逆序停止与顺序重启、`Permanent`/`Transient`/`Temporary` 策略与滑动时间窗重启风暴熔断 `EscalateShutdown`）、`BackoffPolicy`（Fixed/Linear/Exponential/FullJitter/DecorrelatedJitter + SplitMix64）、`Bulkhead` 并发舱壁与 `RetryBudget` 滑动窗口重试预算；文档 [`doc/lib/supervisor.md`](file:///data/dev/cp/doc/lib/supervisor.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_supervisor_production_deep.cp`](file:///data/dev/cp/cap/test/test_supervisor_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:openapi` OpenAPI 3.1.0 规范构造与请求契约校验引擎（5/5 PASS，自动动态挂载 `cap.openapi`）
 
 - 新建 [`lib/openapi/`](file:///data/dev/cp/lib/openapi/index.cp)（`spec.cp`、`router.cp`、`index.cp`）：`OpenApiDoc`（OpenAPI 3.1.0 Info/Server/Tag/SecurityScheme/ComponentSchema/Operation 构造、路径模板与 `operationId` 唯一性校验、RFC 8259 JSON 导出）及 `OpenApiValidator`（静态段优先路径匹配、404 `RouteNotFound` vs 405 `MethodNotAllowed` 判别、path/query/header/cookie 必填与基础类型及请求体契约校验）；文档 [`doc/lib/openapi.md`](file:///data/dev/cp/doc/lib/openapi.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_openapi_production_deep.cp`](file:///data/dev/cp/cap/test/test_openapi_production_deep.cp) `-m` 5/5 PASS。

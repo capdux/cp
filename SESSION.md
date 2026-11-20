@@ -124,3 +124,6 @@
 
 ### 2026-11-21（`cap:openapi` 验收固化，顶替拉起 `cap:codec` 多进制编解码引擎维持 2 路并行）
 - **执行成果**：`lib/openapi/`（5/5 PASS，含 `cap.openapi` 动态挂载与 `doc/lib/openapi.md`）经 `verify_module.sh` 一键验收回收并提交 Git；顶替派发 `lib/codec/`（Base58/Base58Check、ASCII85/Base85、Bech32/Bech32m 与 Crockford Base32 编解码），与 `lib/supervisor/` 严格保持 2 路正交并行。
+
+### 2026-11-21（`cap:supervisor` 验收固化，顶替拉起 `cap:prompt` AI Agent 上下文窗口与 LLM 输出提取引擎维持 2 路并行）
+- **执行成果**：`lib/supervisor/`（5/5 PASS，含 `cap.supervisor` 动态挂载与 `doc/lib/supervisor.md`）经 `verify_module.sh` 一键验收回收并提交 Git；顶替派发 `lib/prompt/`（多角色对话窗口 Token 预算裁剪、OpenAI/Anthropic 导出与 LLM Fenced/JSON/XML 输出提取），与 `lib/codec/` 严格保持 2 路正交并行。
