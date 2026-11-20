@@ -362,3 +362,6 @@
 
 ### 2026-11-21（`cap:geohash` 验收提交，顶替拉起 `cap:circuit` 维持 2 路常规并行）
 - **执行成果**：`lib/geohash/`（5/5 PASS，`doc/lib/geohash.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/circuit/`（分布式弹性断路器、指数退避抖动重试与舱壁并发限流引擎），与 `lib/fx/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:fx` 验收提交，顶替拉起 `cap:crdt` 维持 2 路常规并行）
+- **执行成果**：`lib/fx/`（5/5 PASS，`doc/lib/fx.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/crdt/`（分布式无冲突复制数据类型 CRDT 引擎：`GCounter`/`PNCounter`/`LWWRegister`/`ORSet`），与 `lib/circuit/` 维持 2 路常规并行。

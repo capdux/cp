@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:fx` 定点多币种金融货币运算与外汇三角换算引擎（5/5 PASS，自动动态挂载 `cap.fx`）
+- **新增标准库**：`lib/fx/{money,rates,index}.cp`，实现 ISO-4217 货币小数位注册、256 位中间精度 `Money.mulScale`、Hamilton 最大余数零分币丢失 `allocate`、5 种舍入模式（含 `HalfEven`）以及 `FxBook` 直连/逆向/1 跳三角汇率路由兑换。
+- **新增文档与测试**：`doc/lib/fx.md` 扁平文档与 `cap/test/test_fx_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:geohash` 零分配 Geohash 空间网格与 Haversine 距离引擎（5/5 PASS，自动动态挂载 `cap.geohash`）
 - **新增标准库**：`lib/geohash/{geohash,index}.cp`，实现栈上定长 `GeohashCode`、`encode`/`decode`/`decodeBounds`、8 邻域 `neighbors`（含 `±180°` 国际日界线环绕与极点钳位）、64-bit Morton 整型 `encodeInt`/`decodeInt` 及 `haversineMeters`/`precisionForRadiusMeters`。
 - **新增文档与测试**：`doc/lib/geohash.md` 扁平文档与 `cap/test/test_geohash_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

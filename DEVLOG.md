@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:fx` 定点多币种金融货币运算与外汇三角换算引擎（5/5 PASS，文档直写 `doc/lib/fx.md`）
+- **核心设计**：采用 `i128` 最小单位定点表示与 256 位中间乘除规避浮点误差和溢出，`allocate` 采用 Hamilton 最大余数法确保分配总额严格守恒；`FxBook` 自动推导逆汇率并在无直连时搜索 1 跳公共枢纽币种完成三角换算。
+
 ## 2026-11-21: 新建 `cap:geohash` 零分配 Geohash 空间网格与 Haversine 距离引擎（5/5 PASS，文档直写 `doc/lib/geohash.md`）
 - **核心设计**：采用栈上定长 `GeohashCode` 与 `Neighbors` 结构体实现零堆分配编解码与 8 邻域查找，经度按 `±180°` 环绕、纬度按 `±90°` 极点钳位，并提供 64-bit Z-order Morton 整型索引接口。
 
