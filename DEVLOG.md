@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:bson` MongoDB BSON 1.1 二进制文档与 ObjectId 编解码引擎（5/5 PASS，文档直写 `doc/lib/bson.md`）
+- **核心设计**：严格遵循 BSON 1.1 规范校验 4 字节总长、EOO `0x00` 终止符、CString 无内嵌零字节、UTF-8 合法性及默认 64 层深度上限；`ObjectId` 按大端序时间戳+随机数+计数器封装并支持 24 位 Hex 互转。
+
 ## 2026-11-21: 新建 `cap:prometheus` Prometheus / OpenMetrics 指标注册表与文本编解码引擎（5/5 PASS，文档直写 `doc/lib/prometheus.md`）
 - **核心设计**：在注册期严格校验指标名、标签名（拒绝 `__` 保留前缀）、Counter 非负增量与 Histogram 严格升序桶边界；`exportText` 与 `parseExposition` 完整支持标签值转义往返与 `+Inf`/`-Inf`/`NaN` 解析。
 

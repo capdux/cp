@@ -500,3 +500,6 @@
 
 ### 2026-11-21（`cap:prometheus` 验收提交，顶替拉起 `cap:stun` 维持 2 路常规并行）
 - **执行成果**：`lib/prometheus/`（5/5 PASS，`doc/lib/prometheus.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/stun/`（RFC 5389/8489 STUN NAT 穿透消息与 XOR-MAPPED-ADDRESS / FINGERPRINT / MESSAGE-INTEGRITY 编解码引擎），与 `lib/bson/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:bson` 验收提交，顶替拉起 `cap:smtp` 维持 2 路常规并行）
+- **执行成果**：`lib/bson/`（5/5 PASS，`doc/lib/bson.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/smtp/`（RFC 5321/5322 SMTP 协议编解码、点号透明转义与 MIME 邮件构建引擎），与 `lib/stun/` 维持 2 路常规并行。

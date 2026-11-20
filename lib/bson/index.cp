@@ -1,0 +1,30 @@
+// Source: cp/lib/bson/index.cp (Unified Exports for cap:bson)
+// Pure CP MongoDB BSON 1.1 Binary Document & 12-Byte ObjectId Codec.
+
+export {
+    BSON_MAX_DEPTH,
+    BSON_TYPE_DOUBLE,
+    BSON_TYPE_UTF8,
+    BSON_TYPE_DOCUMENT,
+    BSON_TYPE_ARRAY,
+    BSON_TYPE_BINARY,
+    BSON_TYPE_OBJECT_ID,
+    BSON_TYPE_BOOLEAN,
+    BSON_TYPE_UTC_DATETIME,
+    BSON_TYPE_NULL,
+    BSON_TYPE_INT32,
+    BSON_TYPE_TIMESTAMP,
+    BSON_TYPE_INT64,
+    BsonError,
+    ObjectId,
+    BsonBinary,
+    BsonTimestamp,
+    BsonField,
+    BsonValue,
+    deinitDocument,
+    getField,
+    eqlFields,
+    encodeDocument,
+    decodeDocument,
+    decodeDocumentWithMaxDepth,
+} from "./bson.cp";
