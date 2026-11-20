@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:bmp` 纯 CP BMP 位图图像编解码引擎（5/5 PASS，文档直写 `doc/lib/bmp.md`）
+- **核心设计**：统一将 `bottom-up` 与负高度 `top-down` BMP 归一为紧凑 top-down RGB/RGBA 缓冲区，编码端自动按 4 字节步长补零对齐，解码端严格拦截签名、`BI_RGB`/`BI_BITFIELDS` 之外的压缩及超限尺寸。
+
 ## 2026-11-21: 新建 `cap:midi` Standard MIDI File 多轨音序编解码引擎（5/5 PASS，文档直写 `doc/lib/midi.md`）
 - **核心设计**：精确处理 MIDI Running Status 状态继承与 SysEx/Meta 事件清除边界；VLQ 限制最多 4 字节（`<= 0x0FFFFFFF`）并自动补齐 `End of Track` (`FF 2F 00`)，零泄漏。
 

@@ -536,3 +536,6 @@
 
 ### 2026-11-21（`cap:midi` 验收合并提交，顶替拉起 `cap:bmp` 维持 2 路常规并行）
 - **执行成果**：`lib/midi/`（5/5 PASS，`doc/lib/midi.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/quic/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/bmp/`（纯 CP BMP 位图图像编解码与 4 字节行对齐引擎），与 `lib/http3/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:bmp` 验收提交，顶替拉起 `cap:ldap` 维持 2 路常规并行）
+- **执行成果**：`lib/bmp/`（5/5 PASS，`doc/lib/bmp.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/ldap/`（RFC 4515 LDAP 搜索过滤器解析、防注入转义与内存属性求值引擎），与 `lib/http3/` 维持 2 路常规并行。

@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:bmp` 纯 CP BMP 位图图像编解码引擎（5/5 PASS，自动动态挂载 `cap.bmp`）
+- **新增标准库**：`lib/bmp/{bmp,index}.cp`，实现 24-bit RGB / 32-bit RGBA（4 字节行填充自动对齐）编解码，支持 `bottom-up`/`top-down` 负高度与 8-bit 调色板展开及 `ImageTooLarge` 尺寸上限防护。
+- **新增文档与测试**：`doc/lib/bmp.md` 扁平文档与 `cap/test/test_bmp_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:midi` Standard MIDI File 多轨音序编解码引擎（5/5 PASS，自动动态挂载 `cap.midi`）
 - **新增标准库**：`lib/midi/{midi,index}.cp`，实现 SMF Format 0/1/2 多轨解析与编码，完整支持 1..4 字节 7-bit VLQ 变长时间戳、MIDI Running Status 复用/清除、`meta_tempo`/`sysex` 与 `ticksToMs` 换算。
 - **新增文档与测试**：`doc/lib/midi.md` 扁平文档与 `cap/test/test_midi_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
