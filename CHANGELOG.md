@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:bplus_tree` 纯 CP 可变阶 B+ 树索引（支持分裂/借位/合并/叶子双向链表扫描）与 4KB CRC32C Slotted Page 二进制页引擎（支持 `cap.bplus_tree` 自动动态挂载，详见 `doc/lib/bplus_tree.md`）（5/5 PASS，自动动态挂载 `cap.bplus_tree`）
+- **新增标准库**：`lib/bplus_tree/{types,tree,slotted_page,index}.cp`，实现可变阶 `BPlusTree`（`insert` 分裂、`remove` 左右借位/合并/根收缩、`rangeScan`/`rangeIter` 与 `validateInvariants()` 全量不变量自检）及 4096B `SlottedPage`（含 `compact` 与 `Crc32Iscsi` 校验）。
+- **新增文档与测试**：`doc/lib/bplus_tree.md` 扁平文档与 `cap/test/test_bplus_tree_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:lsm_sst` 纯 CP LSM-Tree 前缀压缩 SSTable 数据块、Kirsch-Mitzenmacher 布隆过滤器、CRC32C 校验与多路墓碑归并引擎（支持 `cap.lsm_sst` 自动动态挂载，详见 `doc/lib/lsm_sst.md`）（5/5 PASS，自动动态挂载 `cap.lsm_sst`）
 - **新增标准库**：`lib/lsm_sst/{block,bloom,sstable,index}.cp`，实现 Restart Points 二分查找前缀压缩块、`BloomFilter`、`"CPSST001"` Footer + `Crc32Iscsi` 块校验 `SstBuilder`/`SstReader` 及支持墓碑覆盖的 `SstMergeIter`。
 - **新增文档与测试**：`doc/lib/lsm_sst.md` 扁平文档与 `cap/test/test_lsm_sst_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

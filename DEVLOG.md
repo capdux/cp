@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:bplus_tree` 纯 CP 可变阶 B+ 树索引（支持分裂/借位/合并/叶子双向链表扫描）与 4KB CRC32C Slotted Page 二进制页引擎（支持 `cap.bplus_tree` 自动动态挂载，详见 `doc/lib/bplus_tree.md`）（5/5 PASS，文档直写 `doc/lib/bplus_tree.md`）
+- **核心设计**：500 条乱序插入与 300 条删除全过程持续执行 `validateInvariants()` 校验叶子同深与双向链表一致性；4KB `SlottedPage` 采用数据库经典向心增长布局与尾部 CRC32C 防篡改，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:lsm_sst` 纯 CP LSM-Tree 前缀压缩 SSTable 数据块、Kirsch-Mitzenmacher 布隆过滤器、CRC32C 校验与多路墓碑归并引擎（支持 `cap.lsm_sst` 自动动态挂载，详见 `doc/lib/lsm_sst.md`）（5/5 PASS，文档直写 `doc/lib/lsm_sst.md`）
 - **核心设计**：`BlockBuilder` 每 16 条记录写一个 Restart Point 支持块内二分；`SstBuilder` 强制字典序输入并在每块尾部附加 `Crc32Iscsi` 防损坏篡改，全路径 `std.testing.allocator` 零泄漏。
 
