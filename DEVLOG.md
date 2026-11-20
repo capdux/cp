@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:siphash` 纯 CP 零堆 SipHash-2-4 (64/128-bit) 与 SipHash-1-3 抗 Hash-Flooding PRF 与流式认证码引擎（支持 `cap.siphash` 自动动态挂载，详见 `doc/lib/siphash.md`）（5/5 PASS，文档直写 `doc/lib/siphash.md`）
+- **核心设计**：全路径零堆分配实现，匹配官方 Appendix A 全系列 64-bit/128-bit 标准向量，以 `timing_safe.eql` 实现抗侧信道标签验签。
+
 ## 2026-11-21: 新建 `cap:nfa_regex` 纯 CP Thompson NFA 线性时间 O(N*M) 无回溯正则表达式引擎（免疫 ReDoS，支持锚点/字符类/分组/多分支，详见 `doc/lib/nfa_regex.md`）（5/5 PASS，文档直写 `doc/lib/nfa_regex.md`）
 - **核心设计**：基于状态代际时间戳 `gen_buf` 的零回溯 NFA 模拟，彻底消除指数级回溯风险并限制 `MAX_NFA_STATES = 4096`，全路径 `std.testing.allocator` 零泄漏。
 

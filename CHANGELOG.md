@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:siphash` 纯 CP 零堆 SipHash-2-4 (64/128-bit) 与 SipHash-1-3 抗 Hash-Flooding PRF 与流式认证码引擎（支持 `cap.siphash` 自动动态挂载，详见 `doc/lib/siphash.md`）（5/5 PASS，自动动态挂载 `cap.siphash`）
+- **新增标准库**：`lib/siphash/{siphash,index}.cp`，实现官方测试向量全匹配的 SipHash-2-4 (64/128-bit)、SipHash-1-3、零堆流式 `SipHashStream` 及常量时间 `verifySipHash24`。
+- **新增文档与测试**：`doc/lib/siphash.md` 扁平文档与 `cap/test/test_siphash_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:nfa_regex` 纯 CP Thompson NFA 线性时间 O(N*M) 无回溯正则表达式引擎（免疫 ReDoS，支持锚点/字符类/分组/多分支，详见 `doc/lib/nfa_regex.md`）（5/5 PASS，自动动态挂载 `cap.nfa_regex`）
 - **新增标准库**：`lib/nfa_regex/{nfa,index}.cp`，实现免疫 ReDoS 的 Thompson NFA 编译与线性模拟引擎，支持 `^`/`$`、`[a-z0-9]`/`[^...]`、`\d`/`\w`/`\s`、分组与多分支以及 `findFirst`/`findAll`。
 - **新增文档与测试**：`doc/lib/nfa_regex.md` 扁平文档与 `cap/test/test_nfa_regex_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
