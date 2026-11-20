@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:a2a` 纯 CP Agent-to-Agent (A2A) 多智能体协作协议、AgentCard 发现、Task 状态机与 SSE 事件编解码引擎（支持 `cap.a2a` 自动动态挂载，详见 `doc/lib/a2a.md`）（5/5 PASS，文档直写 `doc/lib/a2a.md`）
+- **核心设计**：`A2aServer` 严格执行终态不可逆转换与 `-32002 TaskNotCancelable` 拦截，内置任务/历史/产物容量上限防护，全路径通过 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:raft` 纯 CP Sans-IO Raft 分布式共识状态机、日志复制、冲突回退与快照截断引擎（支持 `cap.raft` 自动动态挂载，详见 `doc/lib/raft.md`）（5/5 PASS，文档直写 `doc/lib/raft.md`）
 - **核心设计**：Sans-IO 架构将共识状态机与网络/存储解耦，所有输出以 `RaftAction` 动作列表返回，天然适配内存集群确定性仿真与 CP Actor 信箱驱动，全路径 `std.testing.allocator` 零泄漏。
 
