@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:oauth` OAuth 2.0 & PKCE S256 原语（5/5 PASS，文档直写 `doc/lib/oauth.md`）
+
+- **落地成果**：`lib/oauth/`（`pkce.cp`/`flow.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过，单轮完成回收与提交，并顶替派发 `cap:audio`（WAV PCM16/F32 编解码、48kHz->16kHz 重采样与语音 AI Agent Energy VAD 引擎）。
+
+---
+
 ## 2026-11-21: 新建 `cap:intl`（5/5）与 `cap:webhook`（5/5），双双直写 `doc/lib/*.md` 并合并提交
 
 - **落地成果**：`lib/intl/`（数值/字节/时长/相对时间）与 `lib/webhook/`（Standard Webhooks/GitHub/Stripe 签名验签与幂等去重）均经 `verify_module.sh` 一键全绿通过，单轮合并回收提交并顶替派发 `cap:git` 与 `cap:pdf`。

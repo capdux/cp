@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:oauth` OAuth 2.0 & RFC 7636 PKCE S256 认证客户端原语（5/5 PASS，自动动态挂载 `cap.oauth`）
+
+- 新建 [`lib/oauth/`](file:///data/dev/cp/lib/oauth/index.cp)（`pkce.cp`、`flow.cp`、`index.cp`）：RFC 7636 `Pkce`（CSPRNG 43B Verifier + SHA-256 Base64URL S256 恒定时间校验 + `generateState`）、RFC 6749 `OAuthFlow`（授权 URL / Token 交换 / 刷新 / Client Credentials）、`OAuthTokenResponse` 与 `AuthHeader`（Bearer/Basic）；文档 [`doc/lib/oauth.md`](file:///data/dev/cp/doc/lib/oauth.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_oauth_production_deep.cp`](file:///data/dev/cp/cap/test/test_oauth_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:intl`（5/5）与 `cap:webhook`（5/5）双标准库落地（自动动态挂载 `cap.intl` / `cap.webhook`）
 
 - **`cap:intl`**（[`lib/intl/`](file:///data/dev/cp/lib/intl/index.cp)）：`NumberFormatter`（美/欧式千分位、紧凑 `K/M/B/T`、序数词、百分比）、`ByteSize`（SI/IEC 格式化与 `u128` 精确防溢出解析）、`HumanDuration` 与 `RelativeTime`，文档 [`doc/lib/intl.md`](file:///data/dev/cp/doc/lib/intl.md)，`-m` 5/5 PASS；
