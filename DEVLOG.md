@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:sse` W3C Server-Sent Events 增量流式解析与编码引擎（5/5 PASS，文档直写 `doc/lib/sse.md`）
+- **核心设计**：`SseParser` 逐字节状态机正确处理 `\r\n` 跨 Chunk 边界及流首 UTF-8 BOM，严格遵循冒号单前导空格剥离、空 `data` 不触发事件、`id:` 含 `\x00` 忽略以及 `max_event_bytes` 上限拦截。
+
 ## 2026-11-21: 新建 `cap:kdtree` 多维空间 K-D Tree 最近邻与范围检索引擎（5/5 PASS，文档直写 `doc/lib/kdtree.md`）
 - **核心设计**：建树期按各维方差与中位数划分平衡超平面，`kNearest` 结合最大堆边界剪枝回溯，并在 2D/3D/5D 高维点集下与全量暴力欧氏距离对拍 100% 一致。
 

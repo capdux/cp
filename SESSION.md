@@ -476,3 +476,6 @@
 
 ### 2026-11-21（`cap:kdtree` 验收合并提交，顶替拉起 `cap:multipart` 维持 2 路常规并行）
 - **执行成果**：`lib/kdtree/`（5/5 PASS，`doc/lib/kdtree.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/ndjson/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/multipart/`（RFC 7578 `multipart/form-data` 解析与构建引擎），与 `lib/sse/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:sse` 验收提交，顶替拉起 `cap:deflate` 维持 2 路常规并行）
+- **执行成果**：`lib/sse/`（5/5 PASS，`doc/lib/sse.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/deflate/`（纯 CP RFC 1951/1952/1950 DEFLATE/GZIP/ZLIB 无损压缩解压引擎），与 `lib/multipart/` 维持 2 路常规并行。
