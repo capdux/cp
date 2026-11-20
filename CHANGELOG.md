@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:aho` Aho-Corasick 多模式自动机与敏感词替换引擎（5/5 PASS，自动动态挂载 `cap.aho`）
+- **新增标准库**：`lib/aho/{aho,index}.cp`，实现 Trie + BFS Failure Link + Dictionary Suffix Link + 完整 DFA 状态转移表，支持重叠匹配 `findAll`、非重叠消歧 `LeftmostFirst`/`LeftmostLongest`、零分配短路 `containsAny`、`replaceAll` 与大小写不敏感模式。
+- **新增文档与测试**：`doc/lib/aho.md` 扁平文档与 `cap/test/test_aho_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 升级加固 `cap:cbor` RFC 8949 CBOR 确定性编码与安全解码引擎（5/5 PASS，自动动态挂载 `cap.cbor`）
 - **新增与重构**：在 `lib/cbor/{value,cbor,index}.cp` 实现标准 `CborValue`（Major Type 0..7、`f16`/`f32`/`f64`、Tag）、RFC 8949 Section 4.2 `encodeCanonical` 确定性键排序编码与 `decode`/`decodeWithMaxDepth` 安全解码（严格 UTF-8、AI 28..30、Break、`TrailingBytes` 与 `MaxDepthExceeded` 防护），同时保留 `Bin*` 兼容导出。
 - **更新文档与测试**：`doc/lib/cbor.md` 扁平文档与 `cap/test/test_cbor_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

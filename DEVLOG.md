@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:aho` Aho-Corasick 多模式自动机与敏感词替换引擎（5/5 PASS，文档直写 `doc/lib/aho.md`）
+- **核心设计**：在 `build()` 阶段将 Failure Link 展开为完整 DFA 状态转移表并维护 Dictionary Suffix Link，使文本扫描复杂度严格锁定为 $O(N)$，550+ 模式大词典零泄漏稳定运行。
+
 ## 2026-11-21: 升级加固 `cap:cbor` RFC 8949 CBOR 确定性编码与安全解码引擎（5/5 PASS，文档直写 `doc/lib/cbor.md`）
 - **核心设计**：在兼容既有 `Bin*` 接口的前提下补齐 RFC 8949 标准 `CborValue` 与 `encodeCanonical`（最小整数/浮点及 Map 键按编码字节序排序），并在 `decode` 全链路通过 `errdefer` 清理已构造容器，`std.testing.allocator` 零泄漏。
 
