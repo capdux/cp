@@ -70,6 +70,7 @@ pub fn resolve_cap_hub_target(ns: &str) -> Option<&'static str> {
         "bigint" => Some("bigint/index.cp"),
         "test" => Some("test.cp"),
         "test_runner" => Some("test_runner/index.cp"),
+        "time" => Some("time/index.cp"),
         _ => None,
     }
 }

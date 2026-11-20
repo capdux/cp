@@ -2682,3 +2682,8 @@
   - `lib/net/` 新增 `cidr.cp`、`sockopts.cp`、`socks5.cp`、`pool.cp`（+1,891 行），`test_net_production_deep.cp` 单文件与 `-m` 模式均 5/5 PASS，既有回归 11/11 PASS；
   - `lib/pack/` 新增 `zip_writer.cp`、`tar_pax.cp`、`magic.cp`（+1,048 行），`test_pack_production_deep.cp` 单文件与 `-m` 模式均 5/5 PASS，既有回归全部 PASS；
   - 已同步双轨规范手册、热日志并执行 Git 提交固化，同时无缝拉起子智能体 7（`lib/ws/` RFC 7692 压缩扩展/子协议协商/会话状态机）与子智能体 8（`lib/time/` Cron 表达式调度/RFC 3339 与 ISO 8601/限流与退避）继续双路并行。
+
+### 2026-11-20（`cap:time` 工业级时间/Cron/限流套件验收固化，无缝拉起 `cap:http` SSE/Multipart/CookieJar 升级子智能体）
+- **执行成果**：
+  - 子智能体 8（`8453b6be`）完工回收：[`lib/time/`](file:///data/dev/cp/lib/time/index.cp) 新增 `clock.cp`、`iso8601.cp`、`cron.cp`、`ratelimit.cp` 与 `index.cp`（0 `std.posix`，0 `@import("bun")`，5/5 `// Source:` 合规），[`test_time_production_deep.cp`](file:///data/dev/cp/cap/test/test_time_production_deep.cp) 单文件与 `-m` 模式均 6/6 PASS；
+  - 已更新热日志、双轨手册并提交 Git，同时无缝顶替拉起子智能体 9（`cap:http` 生产 Web 原语：RFC 8895 SSE 流解析与构建、RFC 7578 Multipart FormData、RFC 6265 CookieJar），与子智能体 7（`d56647d1`，`lib/ws/`）持续保持双路并行。

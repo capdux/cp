@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-20: `cap:time` 工业级时间、Cron 调度与限流退避套件落地（5 模块，6/6 PASS）
+
+- **落地成果**：在 [`lib/time/`](file:///data/dev/cp/lib/time/index.cp) 落地 `clock.cp`、`iso8601.cp`、`cron.cp`、`ratelimit.cp` 与 `index.cp`，提供单调/墙钟、Howard Hinnant 纯算法 RFC 3339/ISO 8601 与 `IsoDuration`、POSIX 5 字段 Cron 调度器 `CronExpr.nextAfter` 及 `TokenBucket`/`SlidingWindowLimiter`/`ExponentialBackoff`，0 `@import("bun")`，0 `std.posix`，单文件与 `-m` 模式均 6/6 PASS。
+
+---
+
 ## 2026-11-20: `cap:net` 工业网络升级（+1,891 行）与 `cap:pack` ZIP/PAX-TAR/魔数引擎升级（+1,048 行）双路完工
 
 - **落地成果**：

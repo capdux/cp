@@ -1,3 +1,14 @@
+## [2026-11-20] - `cap:time` 工业级时间、Cron 调度与限流退避套件落地（5 模块，6/6 PASS）
+
+### 新增标准库 (`lib/time/`，`cap:time`，0 `std.posix`，0 `@import("bun")`)
+- 新增 [`lib/time/clock.cp`](file:///data/dev/cp/lib/time/clock.cp)：`TimeUnit`、`Duration` 与基于 `std.os.linux.clock_gettime` 的 `WallClock`（墙钟与单调纳秒/毫秒时钟）；
+- 新增 [`lib/time/iso8601.cp`](file:///data/dev/cp/lib/time/iso8601.cp)：`CivilDateTime`（Howard Hinnant 纯算法 Civil<->Epoch 转换，支持 1970 前后与 400 年闰年周期）、`Iso8601`（RFC 3339 严格解析与格式化）及 `IsoDuration`（`P1DT2H30M15S` 双向解析与格式化）；
+- 新增 [`lib/time/cron.cp`](file:///data/dev/cp/lib/time/cron.cp)：POSIX 5 字段 `CronExpr`（`*`/`*/n`/`a-b`/`JAN-DEC`/`SUN-SAT`/`@daily` 等别名）、`matches` 与字段跳跃式 `nextAfter`（精准跨闰年与非闰世纪年）；
+- 新增 [`lib/time/ratelimit.cp`](file:///data/dev/cp/lib/time/ratelimit.cp)：`TokenBucket`（令牌桶）、`SlidingWindowLimiter`（O(1) 双窗口加权滑动限流）与 `ExponentialBackoff`（SplitMix64 确定性全抖动/等抖动指数退避）；
+- 统一导出至 [`lib/time/index.cp`](file:///data/dev/cp/lib/time/index.cp)，同步 [`docs/time/time.md`](file:///data/dev/cp/docs/time/time.md) 与双轨规范；新增 [`cap/test/test_time_production_deep.cp`](file:///data/dev/cp/cap/test/test_time_production_deep.cp)（单文件与 `-m` 模式均 6/6 PASS）。
+
+---
+
 ## [2026-11-20] - `cap:net` 工业网络底座升级（+1,891 行）与 `cap:pack` ZIP/PAX-TAR/魔数引擎升级（+1,048 行）双路落地
 
 ### `cap:net` 工业网络基础设施升级 (`lib/net/`，0 `std.posix`，0 `@import("bun")`)
