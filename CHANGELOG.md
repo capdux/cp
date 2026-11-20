@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:gossip` 纯 CP Sans-IO SWIM 分布式集群成员发现、Incarnation 冲突消解与故障探测引擎（支持 `cap.gossip` 自动动态挂载，详见 `doc/lib/gossip.md`）（5/5 PASS，自动动态挂载 `cap.gossip`）
+- **新增标准库**：`lib/gossip/{types,wire,node,index}.cp`，实现 SWIM 成员状态冲突消解、Piggyback 感染传播队列、紧凑二进制 Wire 编解码及 Sans-IO `SwimClusterNode`（支持 `Ping`/`PingReq`/`Ack`/`Sync` 与自证清白 Refutation）。
+- **新增文档与测试**：`doc/lib/gossip.md` 扁平文档与 `cap/test/test_gossip_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:a2a` 纯 CP Agent-to-Agent (A2A) 多智能体协作协议、AgentCard 发现、Task 状态机与 SSE 事件编解码引擎（支持 `cap.a2a` 自动动态挂载，详见 `doc/lib/a2a.md`）（5/5 PASS，自动动态挂载 `cap.a2a`）
 - **新增标准库**：`lib/a2a/{protocol,server,index}.cp`，实现 RFC 8259 转义 `AgentCard`、7 态不可逆 `TaskState` 状态机、`tasks/send`/`tasks/get`/`tasks/cancel` JSON-RPC 调度与 `TaskStatusUpdateEvent`/`TaskArtifactUpdateEvent` SSE 流式编解码。
 - **新增文档与测试**：`doc/lib/a2a.md` 扁平文档与 `cap/test/test_a2a_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

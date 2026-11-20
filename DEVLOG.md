@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:gossip` 纯 CP Sans-IO SWIM 分布式集群成员发现、Incarnation 冲突消解与故障探测引擎（支持 `cap.gossip` 自动动态挂载，详见 `doc/lib/gossip.md`）（5/5 PASS，文档直写 `doc/lib/gossip.md`）
+- **核心设计**：Sans-IO 引擎将成员探测定时器与传输分离，严格执行 `incarnation` 优先级及 `Left > Offline > Suspect > Active` 仲裁，全路径通过 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:a2a` 纯 CP Agent-to-Agent (A2A) 多智能体协作协议、AgentCard 发现、Task 状态机与 SSE 事件编解码引擎（支持 `cap.a2a` 自动动态挂载，详见 `doc/lib/a2a.md`）（5/5 PASS，文档直写 `doc/lib/a2a.md`）
 - **核心设计**：`A2aServer` 严格执行终态不可逆转换与 `-32002 TaskNotCancelable` 拦截，内置任务/历史/产物容量上限防护，全路径通过 `std.testing.allocator` 零泄漏验证。
 
