@@ -434,3 +434,6 @@
 
 ### 2026-11-21（`cap:skiplist` 验收提交，顶替拉起 `cap:interval` 维持 2 路常规并行）
 - **执行成果**：`lib/skiplist/`（5/5 PASS，`doc/lib/skiplist.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/interval/`（区间集合合并、差集空档提取与增强区间树重叠检索引擎），与 `lib/jsonschema/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:jsonschema` 验收提交，顶替拉起 `cap:pqueue` 维持 2 路常规并行）
+- **执行成果**：`lib/jsonschema/`（5/5 PASS，`doc/lib/jsonschema.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/pqueue/`（带句柄原地调优索引堆、流式 Top-K 与双堆实时中位数优先队列引擎），与 `lib/interval/` 维持 2 路常规并行。
