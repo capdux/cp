@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:decimal` 128 位金融十进制算术与货币分账引擎（5/5 PASS，文档直写 `doc/lib/decimal.md`）
+
+- **落地成果**：`lib/decimal/`（`decimal.cp`/`money.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过，单轮完成回收与提交，并顶替派发 `cap:qrcode`（ISO/IEC 18004 QR Code 编码器 + Reed-Solomon GF(256) + 终端半块/SVG 渲染）。
+
+---
+
 ## 2026-11-21: 新建 `cap:color` 色彩科学/WCAG 2.1/ANSI 配色引擎（5/5 PASS，文档直写 `doc/lib/color.md`）
 
 - **落地成果**：`lib/color/`（`spaces.cp`/`wcag.cp`/`ansi.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过，单轮完成回收与提交，并顶替派发 `cap:email`（RFC 5322/2045 MIME 邮件构建解析与 RFC 5321 SMTP 线缆编解码）。

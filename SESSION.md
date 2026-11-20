@@ -72,3 +72,6 @@
 
 ### 2026-11-21（`cap:color` 验收固化，顶替拉起 `cap:email` RFC 5322/MIME/SMTP 引擎维持 3 路并行）
 - **执行成果**：子智能体 37（`lib/color/`，5/5 PASS，含 `cap.color` 动态挂载与 `doc/lib/color.md`）经 `verify_module.sh` 一键验收回收并提交 Git；立即顶替派发子智能体 40（新建 `lib/email/` RFC 5322 地址校验/MIME 邮件构建解析/SMTP 线缆编解码），与 `lib/decimal/`、`lib/query/` 保持 3 路正交并行。
+
+### 2026-11-21（`cap:decimal` 验收固化，顶替拉起 `cap:qrcode` QR 码编码与渲染引擎维持 3 路并行）
+- **执行成果**：子智能体 38（`lib/decimal/`，5/5 PASS，含 `cap.decimal` 动态挂载与 `doc/lib/decimal.md`）经 `verify_module.sh` 一键验收回收并提交 Git；立即顶替派发子智能体 41（新建 `lib/qrcode/` ISO/IEC 18004 QR 码编码器、Reed-Solomon GF(256) 与终端半块/SVG 渲染），与 `lib/query/`、`lib/email/` 保持 3 路正交并行。

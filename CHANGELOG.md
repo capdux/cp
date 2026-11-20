@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:decimal` 128 位十进制金融算术与零分钱丢失货币分账引擎（5/5 PASS，自动动态挂载 `cap.decimal`）
+
+- 新建 [`lib/decimal/`](file:///data/dev/cp/lib/decimal/index.cp)（`decimal.cp`、`money.cp`、`index.cp`）：内置栈上 `U384` 无堆中间算术的 `Decimal`（`0.1 + 0.2 == 0.3`、科学计数法、5 种舍入含银行家舍入 `HalfEven`）与 ISO 4217 `Money`（异币种拦截、Hamilton 最大余数法 `allocateEven`/`allocateRatios`）；文档 [`doc/lib/decimal.md`](file:///data/dev/cp/doc/lib/decimal.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_decimal_production_deep.cp`](file:///data/dev/cp/cap/test/test_decimal_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:color` 色彩科学、WCAG 2.1 无障碍与终端 ANSI 配色引擎（5/5 PASS，自动动态挂载 `cap.color`）
 
 - 新建 [`lib/color/`](file:///data/dev/cp/lib/color/index.cp)（`spaces.cp`、`wcag.cp`、`ansi.cp`、`index.cp`）：`Rgba`/`Hsl`/`Hsv`/`Oklab`/`Oklch` 双向转换与感知插值 `mixOklab`、WCAG 2.1 对比度/AA/AAA/`bestTextColor` 与 `Palette`、ANSI TrueColor/xterm-256 量化与 `stripAnsi`；文档 [`doc/lib/color.md`](file:///data/dev/cp/doc/lib/color.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_color_production_deep.cp`](file:///data/dev/cp/cap/test/test_color_production_deep.cp) `-m` 5/5 PASS。
