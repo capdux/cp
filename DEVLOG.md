@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:dedup` SimHash / MinHash / LSH 近重复去重引擎（5/5 PASS，文档直写 `doc/lib/dedup.md`）
+
+- **落地成果**：`lib/dedup/`（`dedup.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:rule`（声明式业务风控与决策规则引擎：多条件树、Salience 优先级、互斥组与审计报告），与 `lib/http_cache/` 保持 2 路常规并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:highlight` 多语言词法高亮与 ANSI/HTML 渲染引擎（5/5 PASS，文档直写 `doc/lib/highlight.md`）
 
 - **落地成果**：`lib/highlight/`（`highlight.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），与 `lib/vcard/` 合并提交，并以 `Model: "inherit"` 顶替派发 `cap:http_cache`（RFC 9111 HTTP `Cache-Control` 解析、强弱 `ETag` 304 条件协商与新鲜度寿命引擎），与 `lib/dedup/` 保持 2 路正交并行。

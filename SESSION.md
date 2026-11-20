@@ -305,3 +305,9 @@
 
 ### 2026-11-21（`cap:highlight` 验收固化，顶替以 `inherit` 拉起 `cap:http_cache` 维持 2 路并行）
 - **执行成果**：`lib/highlight/`（5/5 PASS，含 `cap.highlight` 动态挂载与 `doc/lib/highlight.md`）经 `verify_module.sh` 一键验收回收并与 `lib/vcard/` 合并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/http_cache/`（RFC 9111 HTTP `Cache-Control` 解析、强弱 `ETag` 条件 304 协商与新鲜度寿命引擎），与 `lib/dedup/` 保持 2 路正交并行。
+
+### 2026-11-21（接收 `bun_agy` 紧急热修工单 `task-bun-20261121-export-fn-const`）
+- **协同事件**：`delivery_id: 34`，来自 `bun_agy`（复现：[`repro_export_fn_const.cp`](file:///data/dev/cp/temp/repro_export_fn_const.cp)），反馈 `cpc --lib` 对 `export fn` / `pub export fn` / `@c pub export fn` / `export const` 吞掉 `export` 关键字，仅生成 `pub fn` / `pub const`。已派生专属 `inherit` 热修子智能体立即诊断修复 `cpc/src/`。
+
+### 2026-11-21（`cap:dedup` 验收固化，顶替以 `inherit` 拉起 `cap:rule` 维持 2 路并行）
+- **执行成果**：`lib/dedup/`（5/5 PASS，含 `cap.dedup` 动态挂载与 `doc/lib/dedup.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/rule/`（声明式风控与业务决策规则引擎：复合条件树、`Salience` 优先级、互斥组与决策审计），与 `lib/http_cache/` 保持 2 路常规并行。

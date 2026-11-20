@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:dedup` SimHash / MinHash / LSH 近重复文档去重引擎（5/5 PASS，自动动态挂载 `cap.dedup`）
+
+- 新建 [`lib/dedup/`](file:///data/dev/cp/lib/dedup/index.cp)（`dedup.cp`、`index.cp`）：`SimHash`（FNV-1a+SplitMix64 64-bit 指纹与 `@popCount` 海明距离）、`SimHashIndex`（4x16-bit 抽屉分片桶 $k \le 3$ 鸽巢精确召回）、`MinHash` & `LshIndex`（$k$-shingle Jaccard 近似估算与分桶检索，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/dedup.md`](file:///data/dev/cp/doc/lib/dedup.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_dedup_production_deep.cp`](file:///data/dev/cp/cap/test/test_dedup_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:highlight` 八语言词法高亮与 ANSI/HTML 渲染引擎（5/5 PASS，自动动态挂载 `cap.highlight`）
 
 - 新建 [`lib/highlight/`](file:///data/dev/cp/lib/highlight/index.cp)（`highlight.cp`、`index.cp`）：`Highlighter`（覆盖 CP/Zig/Rust/TypeScript/Python/JSON/SQL/Bash 八大语言无损 `tokenize`、`toAnsi` 终端着色与 `AnsiColorCodec.stripAnsi` 还原、`toHtml` 严格转义防 XSS，零泄漏）；文档 [`doc/lib/highlight.md`](file:///data/dev/cp/doc/lib/highlight.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_highlight_production_deep.cp`](file:///data/dev/cp/cap/test/test_highlight_production_deep.cp) `-m` 5/5 PASS。
