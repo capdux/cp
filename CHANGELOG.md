@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:semver_range` 纯 CP Semver 2.0 语义化版本解析、npm/Cargo 范围表达式求值与选版引擎（支持 `cap.semver_range` 自动动态挂载，详见 `doc/lib/semver_range.md`）（5/5 PASS，自动动态挂载 `cap.semver_range`）
+- **新增标准库**：`lib/semver_range/{types,version,range,selector,index}.cp`，实现严格 Semver 2.0 解析比较、Caret/Tilde/通配符/连字符区间/`||` 并集范围求值、默认预发布隔离与 `maxSatisfying`/`minSatisfying`/`intersects` 选版引擎。
+- **新增文档与测试**：`doc/lib/semver_range.md` 扁平文档与 `cap/test/test_semver_range_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:ulid` 纯 CP Crockford Base32 128-bit 单调递增 ULID 编解码、UUID 互转与 CSPRNG 生成器引擎（支持 `cap.ulid` 自动动态挂载，详见 `doc/lib/ulid.md`）（5/5 PASS，自动动态挂载 `cap.ulid`）
 - **新增标准库**：`lib/ulid/{types,codec,ulid,generator,index}.cp`，实现零堆分配 Crockford Base32 编解码（严格/容错双模式与首字符 `<=7` 128-bit 溢出拦截）、`MonotonicUlidGenerator` 同毫秒 80-bit 单调递增与 `toUuidString`/`fromUuidString` 双向无损互转。
 - **新增文档与测试**：`doc/lib/ulid.md` 扁平文档与 `cap/test/test_ulid_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

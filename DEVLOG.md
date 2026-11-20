@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:semver_range` 纯 CP Semver 2.0 语义化版本解析、npm/Cargo 范围表达式求值与选版引擎（支持 `cap.semver_range` 自动动态挂载，详见 `doc/lib/semver_range.md`）（5/5 PASS，文档直写 `doc/lib/semver_range.md`）
+- **核心设计**：按 Semver 2.0 第 11 条优先级规则实现预发布数字/字母比对并忽略 `+build`；范围求值遵循 npm 同 `[major, minor, patch]` 元组预发布隔离规则，并在 `std.testing.allocator` 下全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:ulid` 纯 CP Crockford Base32 128-bit 单调递增 ULID 编解码、UUID 互转与 CSPRNG 生成器引擎（支持 `cap.ulid` 自动动态挂载，详见 `doc/lib/ulid.md`）（5/5 PASS，文档直写 `doc/lib/ulid.md`）
 - **核心设计**：全路径零堆分配栈上编解码，`MonotonicUlidGenerator` 使用 `std.crypto.random.bytes` 初始化熵并在同毫秒内对 80-bit 大端递增，溢出时严格返回 `UlidError.MonotonicOverflow` 杜绝碰撞。
 

@@ -34,3 +34,6 @@
 
 ### 2026-11-21（`cap:ulid` 验收，顶替拉起 `cap:tlv` 维持 2 路常规并行）
 - **执行成果**：`lib/ulid/`（5/5 PASS，`doc/lib/ulid.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:tlv` 维持 2 路常规并行
+
+### 2026-11-21（`cap:semver_range` 验收，顶替拉起 `cap:paths` 维持 2 路常规并行）
+- **执行成果**：`lib/semver_range/`（5/5 PASS，`doc/lib/semver_range.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:paths` 维持 2 路常规并行
