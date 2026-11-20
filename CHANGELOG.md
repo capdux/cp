@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:wasm` WebAssembly 1.0 二进制解析、校验与构造引擎（5/5 PASS，自动动态挂载 `cap.wasm`）
+
+- 新建 [`lib/wasm/`](file:///data/dev/cp/lib/wasm/index.cp)（`leb128.cp`、`module.cp`、`builder.cp`、`index.cp`）：`Leb128`（U32/U64/I32/I64 溢出与截断防护）、`WasmModule.parse`（`\0asm` 魔数/版本/节序递增校验、Type/Import/Func/Memory/Export/Start/Code/Custom 全解析）与 `WasmBuilder`；文档 [`doc/lib/wasm.md`](file:///data/dev/cp/doc/lib/wasm.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_wasm_production_deep.cp`](file:///data/dev/cp/cap/test/test_wasm_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:tui` 终端 UI Flex 布局、ANSI 键盘解析与零闪烁差分渲染引擎（5/5 PASS，自动动态挂载 `cap.tui`）
 
 - 新建 [`lib/tui/`](file:///data/dev/cp/lib/tui/index.cp)（`input.cp`、`layout.cp`、`canvas.cp`、`index.cp`）：`InputParser`（ASCII/UTF-8/Ctrl/Alt/CSI/SS3 键盘解析）、`Rect`/`Constraint`/`Layout`（严格守恒 Flex 分割）、`TuiBuffer`（单/双/圆角边框与 Sparkline）及零闪烁 `TuiDiff.renderDiff`；文档 [`doc/lib/tui.md`](file:///data/dev/cp/doc/lib/tui.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_tui_production_deep.cp`](file:///data/dev/cp/cap/test/test_tui_production_deep.cp) `-m` 5/5 PASS。
