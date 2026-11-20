@@ -22,3 +22,6 @@
 
 ### 2026-11-21（`cap:websocket_frame` 验收，顶替拉起 `cap:idna` 维持 2 路常规并行）
 - **执行成果**：`lib/websocket_frame/`（5/5 PASS，`doc/lib/websocket_frame.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:idna` 维持 2 路常规并行
+
+### 2026-11-21（`cap:bencode` 验收，顶替拉起 `cap:graph` 维持 2 路常规并行）
+- **执行成果**：`lib/bencode/`（5/5 PASS，`doc/lib/bencode.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:graph` 维持 2 路常规并行

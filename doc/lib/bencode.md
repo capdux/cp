@@ -1,7 +1,7 @@
 // Source: cp/doc/lib/bencode.md
-# `cap:bencode` — BEP-3 Bencode 编解码器与 Torrent 元信息引擎
+# `cap:bencode` — BEP-3 Bencode 编解码与 Torrent 规范化哈希引擎
 
-纯 CP、零 C 依赖的 BitTorrent BEP-3 Bencode 严格编解码器、规范字典序校验器与 `.torrent` MetaInfo / SHA-1 `info_hash` 提取引擎（复用 `cap:crypto` SHA-1）。
+纯 CP、零 C 依赖的 BitTorrent BEP-3 Bencode 严格编解码器、规范化字典序编码器、零拷贝原始段提取器与 SHA-1 `info_hash` 计算引擎。
 
 ## 导入方式
 
@@ -12,53 +12,56 @@ import {
     BencodeKind,
     BencodeDictEntry,
     BencodeValue,
-    BencodeDoc,
-    BencodeCodec,
-    TorrentMetaInfo,
-    TorrentParser,
+    decode,
+    decodeWithLimits,
+    encode,
+    extractRawSection,
+    computeInfoHashSha1,
+    formatInfoHashHex,
 } from "cap:bencode";
 
 // 或动态命名空间挂载：
 import cap from "cap";
-// cap.bencode.BencodeCodec / cap.bencode.TorrentParser
+// cap.bencode.decode / cap.bencode.encode / cap.bencode.computeInfoHashSha1
 ```
 
-## 核心类型
+## 核心类型与错误建模
 
 ### `BencodeError`
 - `UnexpectedEof`：输入提前结束或字节串长度超出剩余缓冲
-- `InvalidInteger`：非法的整数格式或 `i64` 溢出
-- `LeadingZeroNotAllowed`：整数或字节串长度出现非法前导零（如 `i03e`、`02:ab`）
-- `NegativeZeroNotAllowed`：出现非法负零整数 `i-0e`
-- `InvalidStringLength`：非法的字节串长度或字典键非字节串
-- `UnsortedDictKeys`：字典键未按原始字节序严格递增
+- `InvalidSyntax`：非法语法前缀、缺失分隔符、非字节串字典键或负字节串长度
+- `InvalidInteger`：空整数（`ie`）、非数字字符或 `i64` 溢出
+- `LeadingZero`：整数或字节串长度出现非法前导零（如 `i03e`、`i-03e`、`02:ab`）
+- `NegativeZero`：非法负零整数 `i-0e`
+- `UnorderedDictKeys`：字典键未按原始字节字典序严格递增
 - `DuplicateDictKey`：字典中出现重复键
-- `TrailingBytes`：顶层值解析完毕后存在多余尾部字节
-- `MaxDepthExceeded`：列表/字典嵌套深度超过 `BENCODE_MAX_DEPTH`（64）
-- `InvalidTorrent`：缺少必需字段或字段类型不合法的 `.torrent` 元数据
+- `TrailingBytes`：顶层值解码完毕后存在多余尾部字节
+- `MaxDepthExceeded`：嵌套深度超过限制（默认 `BENCODE_MAX_DEPTH = 64`）
+- `MaxSizeExceeded`：解码节点总数超过 `max_items` 限制
+- `KeyNotFound`：在顶层字典中未找到目标键
 - `OutOfMemory`：内存分配失败
 
-### `BencodeKind` & `BencodeValue` & `BencodeDoc`
-- `BencodeKind`：`Int`、`Bytes`、`List`、`Dict`
-- `BencodeValue`：
-  - `makeInt(v: i64)` / `makeBytes(v: []const u8)` / `makeList(items: []BencodeValue)` / `makeDict(entries: []BencodeDictEntry)`
-  - `kind(): BencodeKind`
-  - `asInt(): i64?`、`asBytes(): ([]const u8)?`、`asList(): ([]BencodeValue)?`、`asDict(): ([]BencodeDictEntry)?`
+### `BencodeDictEntry` & `BencodeValue`
+- `BencodeDictEntry`：`{ key: []const u8, value: BencodeValue }`
+- `BencodeValue`：`Int(i64)` | `Bytes([]const u8)` | `List([]BencodeValue)` | `Dict([]BencodeDictEntry)`
+  - `deinit(*_, alloc: std.mem.Allocator)`：递归释放所有堆分配切片
   - `get(key: []const u8): BencodeValue?`
-  - `deinit(*_, alloc: std.mem.Allocator)`：完整递归释放堆分配节点
-- `BencodeDoc`：
-  - `init(alloc, root)` / `deinit(*_)`
-  - `value(): BencodeValue`、`kind()`、`get(key)`、`asInt()`、`asBytes()`、`asList()`、`asDict()`
+  - `getBytes(key: []const u8): ([]const u8)?`
+  - `getInt(key: []const u8): i64?`
+  - `equals(other: BencodeValue): bool`
+  - `clone(alloc: std.mem.Allocator): BencodeValue ! BencodeError`
 
-## 编解码 (`BencodeCodec`)
-- `BencodeCodec.decode(alloc, data: []const u8): BencodeDoc ! BencodeError`
-  - 严格执行 BEP-3 校验：拦截 `i03e`、`i-0e`、`02:ab`、乱序字典键、重复字典键、尾部多余字节及 64 层深度限制。
-- `BencodeCodec.encode(alloc, val: BencodeValue): ([]u8) ! BencodeError`
-- `BencodeCodec.encodeDoc(alloc, doc: BencodeDoc): ([]u8) ! BencodeError`
-  - 对字典自动按原始字节序排序后输出规范 Bencode。
+## 编解码与 Torrent 哈希 API
 
-## Torrent 元信息与 InfoHash (`TorrentParser`)
-- `TorrentParser.parseMetaInfo(alloc, torrent_bytes: []const u8): TorrentMetaInfo ! BencodeError`
-  - 直接定位原始字节流中顶层 `"info"` 字典的起止切片，通过 `cap:crypto` 的 `sha1Raw` 计算 20 字节 `info_hash` 与 40 位小写 hex `info_hash_hex`。
-  - 自动兼容单文件（`length`）与多文件（`files` 累加）`.torrent` 结构，提取 `announce`、`name`、`piece_length`、`pieces_count`、`total_size`。
-  - 使用完毕后调用 `meta.deinit()` 释放内存。
+- `decode(alloc, data: []const u8): BencodeValue ! BencodeError`
+  - 使用默认深度上限 `BENCODE_MAX_DEPTH = 64` 严格解码 BEP-3 数据。
+- `decodeWithLimits(alloc, data: []const u8, max_depth: usize, max_items: usize): BencodeValue ! BencodeError`
+  - 支持自定义最大嵌套深度与最大节点数量上限。
+- `encode(alloc, value: BencodeValue): ([]u8) ! BencodeError`
+  - 规范化编码：字典自动按原始字节字典序排序输出。
+- `extractRawSection(data: []const u8, dict_key: []const u8): ([]const u8) ! BencodeError`
+  - 零分配扫描顶层字典并直接返回指定键对应值的原始切片。
+- `computeInfoHashSha1(torrent_bytes: []const u8): ([20]u8) ! BencodeError`
+  - 提取原始 `"info"` 字典切片并通过 `std.crypto.hash.Sha1` 计算 20 字节 `info_hash`。
+- `formatInfoHashHex(digest: [20]u8): [40]u8`
+  - 将 20 字节哈希格式化为 40 位小写十六进制数组。

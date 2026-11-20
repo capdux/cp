@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:bencode` 纯 CP BEP-3 BitTorrent Bencode 严格编解码、规范化字典排序与零拷贝 InfoHash SHA-1 引擎（支持 `cap.bencode` 自动动态挂载，详见 `doc/lib/bencode.md`）（5/5 PASS，文档直写 `doc/lib/bencode.md`）
+- **核心设计**：解码端在分配容器前先校验整数规范性与字典严格字典序，`extractRawSection` 直接在原始字节流跳过标量与嵌套结构定位 `"info"` 原始区间，确保 `info_hash` 计算零 AST 重编码偏差。
+
 ## 2026-11-21: 新建 `cap:websocket_frame` 纯 CP RFC 6455 WebSocket 帧协议、XOR 掩码、分片重组与控制帧交织引擎（支持 `cap.websocket_frame` 自动动态挂载，详见 `doc/lib/websocket_frame.md`）（5/5 PASS，文档直写 `doc/lib/websocket_frame.md`）
 - **核心设计**：零堆分配计算 `Sec-WebSocket-Accept` 28 字节指纹；`WsStreamAssembler` 严格遵循 RFC 6455 §5.4 允许分片消息中途插入 Ping/Pong/Close 控制帧，并在组装完毕后执行完整 UTF-8 与 Close 状态码校验，全路径零泄漏。
 

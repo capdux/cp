@@ -1,5 +1,5 @@
 // Source: cp/lib/bencode/index.cp (Unified Exports for cap:bencode)
-// Pure CP zero-C-dependency BitTorrent BEP-3 Bencode & Torrent MetaInfo library.
+// Pure CP zero-C-dependency BitTorrent BEP-3 Bencode & Torrent InfoHash library.
 
 export {
     BENCODE_MAX_DEPTH,
@@ -7,8 +7,16 @@ export {
     BencodeKind,
     BencodeDictEntry,
     BencodeValue,
-    BencodeDoc,
-    BencodeCodec,
-    TorrentMetaInfo,
-    TorrentParser,
-} from "./bencode.cp";
+} from "./types.cp";
+
+export {
+    decode,
+    decodeWithLimits,
+    encode,
+} from "./codec.cp";
+
+export {
+    extractRawSection,
+    computeInfoHashSha1,
+    formatInfoHashHex,
+} from "./torrent.cp";
