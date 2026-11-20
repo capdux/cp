@@ -2632,5 +2632,6 @@
 ### 2026-11-20（极速热修 `bun_agy` 2 条函数指针工单并结单 + Phase D-1 `lib/css/engine/` LightningCSS 4.8K 验收入库）
 - **协同事件（`bun_agy`）**：
   1. `task-bun-20261120-fnptr-ret-union`：修复 `union`/`union(enum)` 未入 `value_classes` 导致 `*const fn (*R) Action` 错生成 `*Action`，已部署 Release、验证 `repro_fnptr_ret.cp` 并 `resolve` + `ack` 结单；
-  2. `task-bun-20261120-fn-callconv-ptr`：修复 `parse_fn_type_sig_body` 吸收 `callconv(.c)` 保留返回类型 `void`，并修复 `zig_escape.rs` 避免 `*const fn` 重复前缀生成双层 `*const *const fn`，已部署 Release、验证 `repro_fn_callconv_ptr.cp` + `zig ast-check` 并 `resolve` + `ack` 结单。
+  2. `task-bun-20261120-fn-callconv-ptr`：修复 `parse_fn_type_sig_body` 吸收 `callconv(.c)` 保留返回类型 `void`，并修复 `zig_escape.rs` 避免 `*const fn` 重复前缀生成双层 `*const *const fn`，已部署 Release、验证 `repro_fn_callconv_ptr.cp` + `zig ast-check` 并 `resolve` + `ack` 结单；
+  3. `task-bun-20261120-errset-merge-or`：修复 `cpc/src/codegen/expr/ops.rs` 中 `BinaryOp::LogicalOr` 对错误集合并（`std.mem.Allocator.Error || error{ A }` / `OOM || ...`）误生成 Zig `or`，改为识别错误集保持 `||`，已部署 Release、验证 `repro_errset_merge.cp` + `zig ast-check` 并 `resolve` + `ack` 结单。
 - **Phase D-1 完工入库**：子智能体 D-1 完工回收，新建 [`lib/css/engine/`](file:///data/dev/cp/lib/css/engine/index.cp)（7 文件 4,803 行，零触碰既有 8 文件保 `capsurf` 零抖动），[`cap/test/test_phase_d_css_lightning_port.cp`](file:///data/dev/cp/cap/test/test_phase_d_css_lightning_port.cp)（6/6）及 3 套既有 CSS 测试共 22/22 PASS，已同步双轨规范并提交 Git；当前 Phase C-3（`6cb906e6`）与 Phase E-1（`caa1cd34`）继续双路并行推进。

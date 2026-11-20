@@ -526,7 +526,40 @@ impl Codegen {
                                 l, ret_stmt
                             )
                         }
-                        _ => format!("({} or {})", l, r),
+                        _ => {
+                            let is_errset = |s: &str| -> bool {
+                                let t = s.trim().trim_start_matches('(').trim_end_matches(')');
+                                if t.starts_with("error{")
+                                    || t.starts_with("error {")
+                                    || t.contains(" || ")
+                                    || t == "OOM"
+                                    || t == "anyerror"
+                                    || t == "Error"
+                                    || self.error_sets.contains_key(t)
+                                {
+                                    return true;
+                                }
+                                if let Some(last) = t.rsplit('.').next() {
+                                    if last == "OOM"
+                                        || last == "Error"
+                                        || (last
+                                            .chars()
+                                            .next()
+                                            .map_or(false, |c| c.is_ascii_uppercase())
+                                            && last.ends_with("Error"))
+                                        || self.error_sets.contains_key(last)
+                                    {
+                                        return true;
+                                    }
+                                }
+                                false
+                            };
+                            if is_errset(&l) || is_errset(&r) {
+                                format!("({} || {})", l, r)
+                            } else {
+                                format!("({} or {})", l, r)
+                            }
+                        }
                     },
                     BinaryOp::Assign => {
                         if let Expr::Ident(id) = &*bin.left {
