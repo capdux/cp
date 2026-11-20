@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:skiplist` 有序跳表（SkipList）内存索引与范围扫描引擎（5/5 PASS，自动动态挂载 `cap.skiplist`）
+- **新增标准库**：`lib/skiplist/{skiplist,index}.cp`，基于连续节点池与空闲槽回收实现泛型 `SkipList<V>`（支持 1..32 层高、`upsert`、`removeKey`、`lowerBound`、$O(1)$ `first`/`last` 与严格字典序 `rangeScan`）。
+- **新增文档与测试**：`doc/lib/skiplist.md` 扁平文档与 `cap/test/test_skiplist_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:roaring` Roaring Bitmap 自适应压缩位图集合引擎（5/5 PASS，自动动态挂载 `cap.roaring`）
 - **新增标准库**：`lib/roaring/{roaring,index}.cp`，实现高 16 位分块与 `ArrayContainer`（`<= 4096`）/ `BitsetContainer`（`> 4096`）双向自适应升降级、`addRange`、`rank`、完整集合代数运算及 `"ROAR"` 二进制序列化。
 - **新增文档与测试**：`doc/lib/roaring.md` 扁平文档与 `cap/test/test_roaring_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

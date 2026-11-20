@@ -431,3 +431,6 @@
 
 ### 2026-11-21（`cap:roaring` 验收提交，顶替拉起 `cap:jsonschema` 维持 2 路常规并行）
 - **执行成果**：`lib/roaring/`（5/5 PASS，`doc/lib/roaring.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/jsonschema/`（JSON Schema 结构化校验与 `$ref` 路径错误诊断引擎），与 `lib/skiplist/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:skiplist` 验收提交，顶替拉起 `cap:interval` 维持 2 路常规并行）
+- **执行成果**：`lib/skiplist/`（5/5 PASS，`doc/lib/skiplist.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/interval/`（区间集合合并、差集空档提取与增强区间树重叠检索引擎），与 `lib/jsonschema/` 维持 2 路常规并行。
