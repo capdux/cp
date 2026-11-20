@@ -311,3 +311,6 @@
 
 ### 2026-11-21（`cap:dedup` 验收固化，顶替以 `inherit` 拉起 `cap:rule` 维持 2 路并行）
 - **执行成果**：`lib/dedup/`（5/5 PASS，含 `cap.dedup` 动态挂载与 `doc/lib/dedup.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/rule/`（声明式风控与业务决策规则引擎：复合条件树、`Salience` 优先级、互斥组与决策审计），与 `lib/http_cache/` 保持 2 路常规并行。
+
+### 2026-11-21（`cap:http_cache` 验收固化，顶替以 `inherit` 拉起 `cap:ssh` 维持 2 路并行）
+- **执行成果**：`lib/http_cache/`（5/5 PASS，含 `cap.http_cache` 动态挂载与 `doc/lib/http_cache.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/ssh/`（OpenSSH 公钥 Wire 格式解析、`SHA256:` 指纹与 `authorized_keys` 策略校验引擎），与 `lib/rule/` 保持 2 路常规并行。

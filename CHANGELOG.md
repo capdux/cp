@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:http_cache` RFC 9111 HTTP 缓存语义与强弱 `ETag` 条件协商引擎（5/5 PASS，自动动态挂载 `cap.http_cache`）
+
+- 新建 [`lib/http_cache/`](file:///data/dev/cp/lib/http_cache/index.cp)（`cache_policy.cp`、`index.cp`）：`CacheControl`（全指令解析与往返 `toHeader`）、`EntityTag`（强弱比较、`If-None-Match` 弱比较 304 与 `If-Match` 强比较 412 防并发覆盖）及 `HttpCacheEvaluator`（`s-maxage`>`max-age` 新鲜度评估、`private`/`no-store` 与 `buildVaryKey`，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/http_cache.md`](file:///data/dev/cp/doc/lib/http_cache.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_http_cache_production_deep.cp`](file:///data/dev/cp/cap/test/test_http_cache_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:dedup` SimHash / MinHash / LSH 近重复文档去重引擎（5/5 PASS，自动动态挂载 `cap.dedup`）
 
 - 新建 [`lib/dedup/`](file:///data/dev/cp/lib/dedup/index.cp)（`dedup.cp`、`index.cp`）：`SimHash`（FNV-1a+SplitMix64 64-bit 指纹与 `@popCount` 海明距离）、`SimHashIndex`（4x16-bit 抽屉分片桶 $k \le 3$ 鸽巢精确召回）、`MinHash` & `LshIndex`（$k$-shingle Jaccard 近似估算与分桶检索，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/dedup.md`](file:///data/dev/cp/doc/lib/dedup.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_dedup_production_deep.cp`](file:///data/dev/cp/cap/test/test_dedup_production_deep.cp) `-m` 5/5 PASS。
