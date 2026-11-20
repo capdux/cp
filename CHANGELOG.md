@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:mime` RFC 6838 MediaType、`Accept` 内容协商与 `MimeDb` 引擎（5/5 PASS，自动动态挂载 `cap.mime`）
+
+- 新建 [`lib/mime/`](file:///data/dev/cp/lib/mime/index.cp)（`mime.cp`、`db.cp`、`index.cp`）：`MediaType`（大小写归一化、引号参数、`+suffix` 匹配与 `toString`）、`ContentNegotiator`（RFC 9110 `Accept` `q=0..1` 权重与 specificity 精确排序）及 `MimeDb`（110+ 常见扩展名双向映射与 `isText`/`isCompressible`）；文档 [`doc/lib/mime.md`](file:///data/dev/cp/doc/lib/mime.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_mime_production_deep.cp`](file:///data/dev/cp/cap/test/test_mime_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:jsonpath` RFC 9535 JSONPath 编译器与过滤查询引擎（5/5 PASS，自动动态挂载 `cap.jsonpath`）
 
 - 新建 [`lib/jsonpath/`](file:///data/dev/cp/lib/jsonpath/index.cp)（`parser.cp`、`query.cp`、`index.cp`）：`JsonPath`（预编译校验 + 32 层深度守卫、点分/引号/负下标/通配符 `*`/多选并集/正负步长切片 `[s:e:step]`/递归下降 `..`/复合过滤表达式 `[?(@.a && !@.b)]`、Normalized Path 生成与 `evalJson` 便捷入口）；文档 [`doc/lib/jsonpath.md`](file:///data/dev/cp/doc/lib/jsonpath.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_jsonpath_production_deep.cp`](file:///data/dev/cp/cap/test/test_jsonpath_production_deep.cp) `-m` 5/5 PASS。

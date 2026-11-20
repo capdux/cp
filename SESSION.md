@@ -203,3 +203,6 @@
 
 ### 2026-11-21（`cap:jsonpath` 验收固化，顶替以 `inherit` 拉起 `cap:agentmem` 维持 2 路并行）
 - **执行成果**：`lib/jsonpath/`（5/5 PASS，含 `cap.jsonpath` 动态挂载与 `doc/lib/jsonpath.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/agentmem/`（AI Agent 分层长期记忆：Working/Episodic/Semantic、三因子时间衰减召回评分与记忆巩固/遗忘引擎），与 `lib/mime/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:mime` 验收固化，顶替以 `inherit` 拉起 `cap:raft` 维持 2 路并行）
+- **执行成果**：`lib/mime/`（5/5 PASS，含 `cap.mime` 动态挂载与 `doc/lib/mime.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/raft/`（确定性 Raft 共识状态机：Leader 选举、日志复制、`commitIndex` 多数派推进与任期退位），与 `lib/agentmem/` 保持 2 路正交并行。

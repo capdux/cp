@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:mime` MediaType 解析、`Accept` 协商与 `MimeDb` 引擎（5/5 PASS，文档直写 `doc/lib/mime.md`）
+
+- **落地成果**：`lib/mime/`（`mime.cp`/`db.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:raft`（确定性无 I/O Raft 共识核心状态机：任期选举、日志新旧校验、多数派提交与防脑裂退位），与 `lib/agentmem/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:jsonpath` RFC 9535 JSONPath 编译器与查询引擎（5/5 PASS，文档直写 `doc/lib/jsonpath.md`）
 
 - **落地成果**：`lib/jsonpath/`（`parser.cp`/`query.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:agentmem`（AI Agent 分层长期记忆引擎：Working/Episodic/Semantic 三层记忆、三因子召回评分与巩固遗忘机制），与 `lib/mime/` 保持 2 路正交并行。
