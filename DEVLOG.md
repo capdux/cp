@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:base58` Base58 / Base58Check 与 Bech32/Bech32m 编码校验引擎（5/5 PASS，文档直写 `doc/lib/base58.md`）
+- **核心设计**：`Base58` 保留前导零字节映射并复用 `cap:crypto` `sha256Raw` 完成 Double-SHA256 校验；`Bech32` 严格执行大小写不混用与 polymod 常数区分 `Bech32 (1)` / `Bech32m (0x2bc830a3)`，并提供通用 `convertBits` 位宽转换。
+
 ## 2026-11-21: 升级加固 `cap:expr` 安全业务规则与公式表达式求值引擎（5/5 PASS，文档直写 `doc/lib/expr.md`）
 - **核心设计**：在 `lib/expr/expr.cp` 统一封装词法、Pratt/递归下降 AST 与求值上下文，采用解析期与求值期双重深度上限防御畸形深嵌套载荷，并通过 `std.testing.allocator` 确认 5/5 用例零泄漏。
 

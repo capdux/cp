@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:base58` Base58 / Base58Check 与 Bech32/Bech32m 编码校验引擎（5/5 PASS，自动动态挂载 `cap.base58`）
+- **新增标准库**：`lib/base58/{base58,index}.cp`，实现 Bitcoin 字母表 `Base58`（保留前导 `0x00` <-> `'1'`）、Double-SHA256 `encodeCheck`/`decodeCheck` 以及 BIP-173 Bech32 / BIP-350 Bech32m 多态检错编解码与 `convertBits`。
+- **新增文档与测试**：`doc/lib/base58.md` 扁平文档与 `cap/test/test_base58_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 升级加固 `cap:expr` 安全业务规则与公式表达式求值引擎（5/5 PASS，自动动态挂载 `cap.expr`）
 - **新增与重构**：`lib/expr/expr.cp` 替代旧 `value.cp`/`eval.cp`，实现完整词法与递归下降 AST 解析器、短路 `&&`/`||`、惰性三元条件、`ExprContext` 变量绑定、10 个纯内置函数及默认 64 层递归深度防护（`MaxDepthExceeded`）。
 - **更新文档与测试**：`doc/lib/expr.md` 扁平文档与 `cap/test/test_expr_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
