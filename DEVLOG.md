@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:libarchive` 纯 CP 归档魔数探测、Unix Ar、SVR4 CPIO (newc/crc) 与 USTAR Tar 编解码及路径防穿越引擎（吸收对标 Bun `src/libarchive/`，详见 `doc/lib/libarchive.md`）（5/5 PASS，文档直写 `doc/lib/libarchive.md`）
+- **核心设计**：零 C `libarchive` 外部依赖实现 Ar/Cpio/Tar 三格式统一 `ArchiveEntry` 模型；解码入口严格拦截 `..` 目录穿越、空字节注入与总解包字节超限，全路径 `std.testing.allocator` 零泄漏。
+
 ## 2026-11-21: 新建 `cap:bun_alloc` 纯 CP 零堆 BumpAllocator、O(1) 对象池 PoolAllocator、泄漏审计 TrackingAllocator 与可回滚 ScratchArena 内存分配器套件（吸收对标 Bun `src/bun_alloc/`，详见 `doc/lib/bun_alloc.md`）（5/5 PASS，文档直写 `doc/lib/bun_alloc.md`）
 - **核心设计**：全部自定义分配器实现标准 `std.mem.Allocator` VTable 接口，无缝接入任意 CP 标准库数据结构；`ScratchArena` 支持解析器临时区段局部 `rewind`，全路径零泄漏。
 

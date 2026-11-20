@@ -79,3 +79,6 @@
 
 ### 2026-11-21（`cap:bun_alloc` 验收，顶替拉起 `cap:zlib` 维持 2 路常规并行）
 - **执行成果**：`lib/bun_alloc/`（5/5 PASS，`doc/lib/bun_alloc.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:zlib` 维持 2 路常规并行
+
+### 2026-11-21（`cap:libarchive` 验收，顶替拉起 `cap:paseto` 维持 2 路常规并行）
+- **执行成果**：`lib/libarchive/`（5/5 PASS，`doc/lib/libarchive.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:paseto` 维持 2 路常规并行

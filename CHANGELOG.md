@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:libarchive` 纯 CP 归档魔数探测、Unix Ar、SVR4 CPIO (newc/crc) 与 USTAR Tar 编解码及路径防穿越引擎（吸收对标 Bun `src/libarchive/`，详见 `doc/lib/libarchive.md`）（5/5 PASS，自动动态挂载 `cap.libarchive`）
+- **新增标准库**：`lib/libarchive/{format,ar,cpio,tar,index}.cp`（吸收对标 Bun `src/libarchive/`），统一支持 Ar/CpioNewc/CpioCrc/Tar/Zip/Gzip/Zstd 魔数探测、Unix `ar`（含 GNU `//` 与 BSD `#1/` 长名）、SVR4 `cpio newc` 与 USTAR Tar 读写，内置 `validateArchivePath` 与 `ArchiveLimits` 防资源耗尽守卫。
+- **新增文档与测试**：`doc/lib/libarchive.md` 扁平文档与 `cap/test/test_libarchive_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:bun_alloc` 纯 CP 零堆 BumpAllocator、O(1) 对象池 PoolAllocator、泄漏审计 TrackingAllocator 与可回滚 ScratchArena 内存分配器套件（吸收对标 Bun `src/bun_alloc/`，详见 `doc/lib/bun_alloc.md`）（5/5 PASS，自动动态挂载 `cap.bun_alloc`）
 - **新增标准库**：`lib/bun_alloc/{bump,pool,tracking,scratch,index}.cp`（吸收对标 Bun `src/bun_alloc/`），提供 `BumpAllocator` 栈上对齐分配、`PoolAllocator(T)` O(1) 空闲链表对象池、`TrackingAllocator` 峰值/泄漏审计及支持 `mark`/`rewind` 局部回滚的 `ScratchArena`。
 - **新增文档与测试**：`doc/lib/bun_alloc.md` 扁平文档与 `cap/test/test_bun_alloc_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
