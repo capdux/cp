@@ -2,6 +2,13 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:intl`（5/5）与 `cap:webhook`（5/5）双标准库落地（自动动态挂载 `cap.intl` / `cap.webhook`）
+
+- **`cap:intl`**（[`lib/intl/`](file:///data/dev/cp/lib/intl/index.cp)）：`NumberFormatter`（美/欧式千分位、紧凑 `K/M/B/T`、序数词、百分比）、`ByteSize`（SI/IEC 格式化与 `u128` 精确防溢出解析）、`HumanDuration` 与 `RelativeTime`，文档 [`doc/lib/intl.md`](file:///data/dev/cp/doc/lib/intl.md)，`-m` 5/5 PASS；
+- **`cap:webhook`**（[`lib/webhook/`](file:///data/dev/cp/lib/webhook/index.cp)）：`StandardWebhook`/`GitHubWebhook`/`StripeWebhook` HMAC-SHA256 恒定时间签名验签（含多签名密钥轮换与重放窗口保护）及 TTL 幂等去重 `IdempotencyStore`，文档 [`doc/lib/webhook.md`](file:///data/dev/cp/doc/lib/webhook.md)，`-m` 5/5 PASS；同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)。
+
+---
+
 ## [2026-11-21] - 新建 `cap:query`（5/5）与 `cap:email`（5/5）双标准库落地（自动动态挂载 `cap.query` / `cap.email`）
 
 - **`cap:query`**（[`lib/query/`](file:///data/dev/cp/lib/query/index.cp)）：PostgreSQL/MySQL/SQLite 三方言 `IdentCodec` 防注入标识符转义及 `SelectBuilder`/`InsertBuilder`（批量多行 + `RETURNING`）/`UpdateBuilder`/`DeleteBuilder`，文档 [`doc/lib/query.md`](file:///data/dev/cp/doc/lib/query.md)，`-m` 5/5 PASS；

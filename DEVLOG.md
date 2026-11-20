@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:intl`（5/5）与 `cap:webhook`（5/5），双双直写 `doc/lib/*.md` 并合并提交
+
+- **落地成果**：`lib/intl/`（数值/字节/时长/相对时间）与 `lib/webhook/`（Standard Webhooks/GitHub/Stripe 签名验签与幂等去重）均经 `verify_module.sh` 一键全绿通过，单轮合并回收提交并顶替派发 `cap:git` 与 `cap:pdf`。
+
+---
+
 ## 2026-11-21: 新建 `cap:query`（5/5）与 `cap:email`（5/5），双双直写 `doc/lib/*.md` 并合并提交
 
 - **落地成果**：`lib/query/`（多方言防注入 SQL 查询构建器）与 `lib/email/`（RFC 5322/MIME/SMTP 编解码）均经 `verify_module.sh` 一键全绿通过，单轮合并回收提交并顶替派发 `cap:oauth` 与 `cap:webhook`。

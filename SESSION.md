@@ -81,3 +81,6 @@
 
 ### 2026-11-21（`cap:query` & `cap:email` 双路合并验收提交，顶替拉起 `cap:oauth` 与 `cap:webhook` 维持 3 路并行）
 - **执行成果**：子智能体 39（`lib/query/` 5/5）与子智能体 40（`lib/email/` 5/5）双双经 `verify_module.sh` 一键验收回收，文档直写 `doc/lib/{query,email}.md` 并合并提交 Git；立即顶替派发子智能体 43（`lib/oauth/` OAuth 2.0/PKCE S256）与子智能体 44（`lib/webhook/` Standard Webhooks/GitHub/Stripe 签名验签 + 防重放 + 幂等去重表），与 `lib/intl/` 保持 3 路正交并行。
+
+### 2026-11-21（`cap:intl` & `cap:webhook` 双路合并验收提交，顶替拉起 `cap:git` 与 `cap:pdf` 维持 3 路并行）
+- **执行成果**：子智能体 42（`lib/intl/` 5/5）与子智能体 44（`lib/webhook/` 5/5）双双经 `verify_module.sh` 一键验收回收，文档直写 `doc/lib/{intl,webhook}.md` 并合并提交 Git；立即顶替派发子智能体 45（`lib/git/` Git 对象/`.gitignore`/仓库内省）与子智能体 46（`lib/pdf/` 零依赖 PDF 1.4 生成与 XRef/元数据内省），与 `lib/oauth/` 保持 3 路正交并行。
