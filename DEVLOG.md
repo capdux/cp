@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:gif` 纯 CP GIF87a/GIF89a 多帧动画编解码引擎（5/5 PASS，文档直写 `doc/lib/gif.md`）
+- **核心设计**：复用 `cap:lzw` (`LsbFirst`) 处理 255 字节最大数据子块流，支持 4-pass Interlaced 重排与局部调色板覆盖全局调色板，并在解码前严格校验宽高与帧数上限防炸弹。
+
 ## 2026-11-21: 新建 `cap:wkt` OGC WKT 与 WKB 空间几何双向编解码引擎（5/5 PASS，文档直写 `doc/lib/wkt.md`）
 - **核心设计**：统一 `WktGeometry` AST 模型同时服务 WKT 文本与 ISO WKB 大小端二进制双向无损转换，并在解析与解码入口强制校验 Polygon 闭合环、WKB 字节序标记及 32 层 `GEOMETRYCOLLECTION` 递归上限。
 

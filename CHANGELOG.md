@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:gif` 纯 CP GIF87a/GIF89a 多帧动画编解码引擎（5/5 PASS，自动动态挂载 `cap.gif`）
+- **新增标准库**：`lib/gif/{gif,index}.cp`，复用 `cap:lzw` 实现 GIF87a/89a 编解码，支持全局/局部调色板、Netscape 2.0 循环扩展、GCE 透明色/延时/Disposal、4-pass 隔行扫描及 `ImageTooLarge`/`TooManyFrames` 防护。
+- **新增文档与测试**：`doc/lib/gif.md` 扁平文档与 `cap/test/test_gif_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:wkt` OGC WKT 与 WKB 空间几何双向编解码引擎（5/5 PASS，自动动态挂载 `cap.wkt`）
 - **新增标准库**：`lib/wkt/{wkt,index}.cp`，实现大小写不敏感 `parseWkt`/`formatWkt`（支持 2D/Z/M/ZM、`EMPTY` 及两种 `MULTIPOINT` 写法）与 ISO WKB 1..7 大小端双向 `encodeWkb`/`decodeWkb`，内置 Polygon 环闭合与 32 层 `MaxDepthExceeded` 防护。
 - **新增文档与测试**：`doc/lib/wkt.md` 扁平文档与 `cap/test/test_wkt_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
