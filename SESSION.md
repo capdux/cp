@@ -100,3 +100,6 @@
 
 ### 2026-11-21（`cap:ssh_wire` 验收，顶替拉起 `cap:wireguard` 维持 2 路常规并行）
 - **执行成果**：`lib/ssh_wire/`（5/5 PASS，`doc/lib/ssh_wire.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:wireguard` 维持 2 路常规并行
+
+### 2026-11-21（`cap:arrow_ipc` 验收，顶替拉起 `cap:mcp` 维持 2 路常规并行）
+- **执行成果**：`lib/arrow_ipc/`（5/5 PASS，`doc/lib/arrow_ipc.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:mcp` 维持 2 路常规并行

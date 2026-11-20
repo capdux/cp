@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:arrow_ipc` 纯 CP Apache Arrow IPC Streaming 与 `"ARROW1"` File Format 列式内存批处理及零拷贝读写引擎（支持 `cap.arrow_ipc` 自动动态挂载，详见 `doc/lib/arrow_ipc.md`）（5/5 PASS，文档直写 `doc/lib/arrow_ipc.md`）
+- **核心设计**：内置确定性 Flatbuffer 读写器避免外部依赖，所有 `Buffer` 偏移/长度、`Footer` 边界与 `Utf8` offsets 均执行防越界拦截，全路径通过 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:ssh_wire` 纯 CP RFC 4251 SSH-2 Wire 编解码、OpenSSH 公私钥解析与 SSHSIG 签名验签引擎（支持 `cap.ssh_wire` 自动动态挂载，详见 `doc/lib/ssh_wire.md`）（5/5 PASS，文档直写 `doc/lib/ssh_wire.md`）
 - **核心设计**：严格执行 RFC 4251 `mpint` 高位 `0x80` 前导 `0x00` 补码、`openssh-key-v1` `checkint1 == checkint2` 与 8 字节对齐校验，以及 `SSHSIG` `"SSHSIG"` 魔数与 `namespace` 绑定验签，全路径零泄漏。
 
