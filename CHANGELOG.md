@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:search` 本地全文倒排索引、前缀自动补全与高亮摘要引擎（5/5 PASS，自动动态挂载 `cap.search`）
+
+- 新建 [`lib/search/`](file:///data/dev/cp/lib/search/index.cp)（`trie.cp`、`engine.cp`、`index.cp`）：`PrefixTrie`（频次降序 Top-K 自动补全）及 `SearchIndex`（`title`/`body` 多字段 BM25F 加权、`+must`/`-exclude`/`AND`/`OR`/`NOT` 布尔检索、`"exact phrase"` 连续词序匹配、`upsertDocument`/`removeDocument` 与 `highlightSnippet` 稠密窗口 `<mark>` 高亮摘要）；文档 [`doc/lib/search.md`](file:///data/dev/cp/doc/lib/search.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_search_production_deep.cp`](file:///data/dev/cp/cap/test/test_search_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:table` ANSI/UTF-8 宽度感知终端与 Markdown 表格渲染引擎（5/5 PASS，自动动态挂载 `cap.table`）
 
 - 新建 [`lib/table/`](file:///data/dev/cp/lib/table/index.cp)（`width.cp`、`table.cp`、`index.cp`）：`DisplayWidth`（跳过 ANSI CSI 颜色序列、UTF-8 解码与 CJK 双倍/组合字符零宽计算、安全不截断 UTF-8 字符并保留 `\x1b[0m`）及 `Table`（`Ascii`/`Box`/`Rounded`/`Markdown`/`Borderless` 五大样式、列对齐与 GFM `:---:` 标记、Footer 分隔线、`max_width` 自动折行、文本与数值排序及 `ColumnMismatch` 校验）；文档 [`doc/lib/table.md`](file:///data/dev/cp/doc/lib/table.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_table_production_deep.cp`](file:///data/dev/cp/cap/test/test_table_production_deep.cp) `-m` 5/5 PASS。

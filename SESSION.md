@@ -155,3 +155,6 @@
 
 ### 2026-11-21（`cap:table` 验收固化，顶替以 `inherit` 拉起 `cap:search` 维持 2 路并行）
 - **执行成果**：`lib/table/`（5/5 PASS，含 `cap.table` 动态挂载与 `doc/lib/table.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/search/`（全文倒排索引、前缀自动补全 Trie、Bool 查询与关键词高亮摘要引擎），与 `lib/di/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:search` 验收固化，顶替以 `inherit` 拉起 `cap:feature` 维持 2 路并行）
+- **执行成果**：`lib/search/`（5/5 PASS，含 `cap.search` 动态挂载与 `doc/lib/search.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/feature/`（Feature Flags、确定性灰度分桶、属性靶向规则与 A/B 实验分流引擎），与 `lib/di/` 保持 2 路正交并行。
