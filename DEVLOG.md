@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:ringhash` 一致性哈希环、Jump Hash 与 Rendezvous 负载均衡引擎（5/5 PASS，文档直写 `doc/lib/ringhash.md`）
+- **核心设计**：`ConsistentRing` 与 `RendezvousHasher` 内部均独立拷贝 `node_id` 避免调用方切片悬垂，`ConsistentRing.getReplicas` 顺时针扫描相邻虚拟节点时严格按物理节点去重；同时提供无状态 $O(\ln N)$ `jumpConsistentHash`。
+
 ## 2026-11-21: 新建 `cap:base58` Base58 / Base58Check 与 Bech32/Bech32m 编码校验引擎（5/5 PASS，文档直写 `doc/lib/base58.md`）
 - **核心设计**：`Base58` 保留前导零字节映射并复用 `cap:crypto` `sha256Raw` 完成 Double-SHA256 校验；`Bech32` 严格执行大小写不混用与 polymod 常数区分 `Bech32 (1)` / `Bech32m (0x2bc830a3)`，并提供通用 `convertBits` 位宽转换。
 

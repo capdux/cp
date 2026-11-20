@@ -404,3 +404,6 @@
 
 ### 2026-11-21（`cap:base58` 验收提交，顶替拉起 `cap:protobuf` 维持 2 路常规并行）
 - **执行成果**：`lib/base58/`（5/5 PASS，`doc/lib/base58.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/protobuf/`（Protocol Buffers v2/v3 Wire 格式无代码生成动态编解码引擎），与 `lib/ringhash/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:ringhash` 验收提交，顶替拉起 `cap:snappy` 维持 2 路常规并行）
+- **执行成果**：`lib/ringhash/`（5/5 PASS，`doc/lib/ringhash.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/snappy/`（Snappy Block Format 高速无损压缩与解压引擎），与 `lib/protobuf/` 维持 2 路常规并行。

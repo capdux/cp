@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:ringhash` 一致性哈希环、Jump Hash 与 Rendezvous 负载均衡引擎（5/5 PASS，自动动态挂载 `cap.ringhash`）
+- **新增标准库**：`lib/ringhash/{ringhash,index}.cp`，实现加权虚拟节点二分查找 `ConsistentRing`（含物理节点严格去重 `getReplicas`）、$O(\ln N)$ 无状态 `jumpConsistentHash` 及 `RendezvousHasher`（HRW）。
+- **新增文档与测试**：`doc/lib/ringhash.md` 扁平文档与 `cap/test/test_ringhash_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:base58` Base58 / Base58Check 与 Bech32/Bech32m 编码校验引擎（5/5 PASS，自动动态挂载 `cap.base58`）
 - **新增标准库**：`lib/base58/{base58,index}.cp`，实现 Bitcoin 字母表 `Base58`（保留前导 `0x00` <-> `'1'`）、Double-SHA256 `encodeCheck`/`decodeCheck` 以及 BIP-173 Bech32 / BIP-350 Bech32m 多态检错编解码与 `convertBits`。
 - **新增文档与测试**：`doc/lib/base58.md` 扁平文档与 `cap/test/test_base58_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
