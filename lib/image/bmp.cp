@@ -93,6 +93,25 @@ pub class Bmp {
         // BMP 行长度必须按 4 字节向上对齐
         let row_stride = ((row_bytes_raw + 3) >> 2) << 2;
 
+        // For 32bpp BMP, detect whether any pixel has non-zero alpha (to distinguish BGRA vs BGRX)
+        let has_nonzero_alpha = false;
+        if (is_32) {
+            let sy_chk: usize = 0;
+            while (sy_chk < h as usize && !has_nonzero_alpha) {
+                let row_off = (hdr.pix_off as usize) + sy_chk * row_stride;
+                if (row_off + row_bytes_raw > bytes.len) break;
+                let sx_chk: usize = 0;
+                while (sx_chk < w as usize) {
+                    if (bytes[row_off + sx_chk * 4 + 3] != 0) {
+                        has_nonzero_alpha = true;
+                        break;
+                    }
+                    sx_chk += 1;
+                }
+                sy_chk += 1;
+            }
+        }
+
         let y: usize = 0;
         while (y < h as usize) {
             // Windows BMP 默认 bottom-up（倒序）
@@ -110,7 +129,7 @@ pub class Bmp {
                     out_rgba[dst_idx + 1] = bytes[s + 1]; // G
                     out_rgba[dst_idx + 2] = bytes[s];     // B
                     let a = bytes[s + 3];
-                    out_rgba[dst_idx + 3] = if (a == 0) 255 else a; // 默认不透明
+                    out_rgba[dst_idx + 3] = if (has_nonzero_alpha) a else 255;
                 } else {
                     let s = src_row_off + x * 3;
                     // Windows BMP 24bpp 是 BGR

@@ -28,8 +28,8 @@ pub class Webp {
 
         let chunk = bytes[12..16];
         if (chunk[0] == 'V' && chunk[1] == 'P' && chunk[2] == '8' && chunk[3] == ' ') {
-            // VP8 Simple Lossy
-            if (bytes.len < 30) {
+            // VP8 Simple Lossy (check VP8 keyframe sync code 0x9D 0x01 0x2A at offset 23..25)
+            if (bytes.len < 30 || bytes[23] != 0x9D || bytes[24] != 0x01 || bytes[25] != 0x2A) {
                 return null;
             }
             let w = ((bytes[26] as usize) | ((bytes[27] as usize) << 8)) & 0x3FFF;

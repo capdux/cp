@@ -3,6 +3,7 @@
 // Absorbed from Bun: bun/src/runtime/image/codec_gif.cp
 // Upstream Sync: Refer to bun/src/runtime/image/codec_gif.zig for future upstream updates.
 // ============================================================================
+const std = @import("std");
 import { Codecs } from "./codecs";
 
 pub struct GifHeader {
@@ -56,7 +57,9 @@ struct BitReader {
                 break;
             }
             let byte_val = (_.src[_.i] as u32);
-            _.acc = _.acc | (byte_val << (_.nbits as u5));
+            zig {
+                self.acc = self.acc | (byte_val << @as(u5, @intCast(self.nbits)));
+            }
             _.i = _.i + 1;
             _.block = _.block - 1;
             _.nbits = _.nbits + 8;
@@ -64,9 +67,13 @@ struct BitReader {
         if (_.nbits < n) {
             return 0;
         }
-        let mask = ((1 as u32) << (n as u5)) - 1;
-        let v = ((_.acc & mask) as u16);
-        _.acc = _.acc >> (n as u5);
+        let v: u16 = 0;
+        zig {
+            const shift: u5 = @intCast(n);
+            const mask: u32 = (@as(u32, 1) << shift) - 1;
+            v = @as(u16, @intCast(self.acc & mask));
+            self.acc = self.acc >> shift;
+        }
         _.nbits = _.nbits - n;
         return v;
     }
@@ -194,16 +201,14 @@ pub class Gif {
                     return null;
                 }
 
-                let ct = if (has_lct) {
+                let ct: []const u8 = gct;
+                if (has_lct) {
                     if (offset + lct_size * (3 as usize) > bytes.len) {
                         return null;
                     }
-                    let slice = bytes[offset .. (offset + lct_size * (3 as usize))];
+                    ct = bytes[offset .. (offset + lct_size * (3 as usize))];
                     offset = offset + lct_size * (3 as usize);
-                    slice
-                } else {
-                    gct
-                };
+                }
 
                 if (ct.len == 0 || offset >= bytes.len) {
                     return null;
@@ -237,15 +242,25 @@ pub class Gif {
 
         let min_code = if (min_code_in < 2) 2 else if (min_code_in > 11) 11 else min_code_in;
 
-        let clear: u16 = ((1 as u16) << (min_code as u4));
+        let clear: u16 = 0;
+        zig {
+            clear = @as(u16, 1) << @as(u4, @intCast(min_code));
+        }
         let eoi: u16 = clear + 1;
         let code_size = min_code + 1;
         let avail: u16 = eoi + 1;
         let prev_code: i32 = -1;
 
         // 4096 节点 LZW 字典
-        let prefix_buf: [*]u8 = @alloc(4096 * 2);
-        let prefix = (prefix_buf as [*]u16)[0..4096];
+        let prefix: []u16 = [];
+        zig {
+            prefix = std.heap.page_allocator.alloc(u16, 4096) catch unreachable;
+        }
+        defer {
+            zig {
+                std.heap.page_allocator.free(prefix);
+            }
+        }
         let suffix_ptr: [*]u8 = @alloc(4096);
         let suffix = suffix_ptr[0..4096];
         let scratch_ptr: [*]u8 = @alloc(4096);
@@ -287,8 +302,10 @@ pub class Gif {
                 first_byte = scratch[n - 1];
 
                 let cap = if (n < (npix - written)) n else (npix - written);
-                for (let k in 0..cap) {
+                let k: usize = 0;
+                while (k < cap) {
                     idx_buf[written + k] = scratch[n - 1 - k];
+                    k += 1;
                 }
                 written = written + cap;
             } else if (code == avail && prev_code >= 0) {
@@ -305,8 +322,10 @@ pub class Gif {
                 first_byte = scratch[n - 1];
 
                 let cap = if (n < (npix - written)) n else (npix - written);
-                for (let k in 0..cap) {
+                let k: usize = 0;
+                while (k < cap) {
                     idx_buf[written + k] = scratch[n - 1 - k];
+                    k += 1;
                 }
                 written = written + cap;
                 if (written < npix) {
@@ -321,7 +340,11 @@ pub class Gif {
                 prefix[avail as usize] = (prev_code as u16);
                 suffix[avail as usize] = first_byte;
                 avail = avail + 1;
-                if (avail == ((1 as u16) << (code_size as u4)) && code_size < 12) {
+                let limit_code: u16 = 0;
+                zig {
+                    limit_code = @as(u16, 1) << @as(u4, @intCast(code_size));
+                }
+                if (avail == limit_code && code_size < 12) {
                     code_size = code_size + 1;
                 }
             }
@@ -335,7 +358,8 @@ pub class Gif {
         let rgba = rgba_ptr[0..rgba_len];
 
         if (!interlace) {
-            for (let p in 0..npix) {
+            let p: usize = 0;
+            while (p < npix) {
                 let color_idx = (idx_buf[p] as usize);
                 let dst_off = p * 4;
                 if (color_idx * 3 + 2 < ct.len) {
@@ -352,19 +376,22 @@ pub class Gif {
                 } else {
                     rgba[dst_off + 3] = 255;
                 }
+                p += 1;
             }
         } else {
             // GIF 4-pass 交织扫描
-            let passes_start = [0, 4, 2, 1];
-            let passes_step = [8, 8, 4, 2];
+            let passes_start: [4]usize = [0, 4, 2, 1];
+            let passes_step: [4]usize = [8, 8, 4, 2];
             let src_pix: usize = 0;
 
-            for (let pass in 0..4) {
+            let pass: usize = 0;
+            while (pass < 4) {
                 let start_y = passes_start[pass];
                 let step_y = passes_step[pass];
                 let y = start_y;
                 while (y < h && src_pix < npix) {
-                    for (let x in 0..w) {
+                    let x: usize = 0;
+                    while (x < w) {
                         if (src_pix >= npix) {
                             break;
                         }
@@ -386,9 +413,11 @@ pub class Gif {
                         } else {
                             rgba[dst_off + 3] = 255;
                         }
+                        x += 1;
                     }
                     y = y + step_y;
                 }
+                pass += 1;
             }
         }
 

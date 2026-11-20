@@ -1,11 +1,19 @@
-// Source: /data/dev/bun/src/cli/
+// Source: /data/dev/bun/src/cli/cli.cp
 // lib/cli/table.cp
-// Terminal ASCII Table Formatter with Auto Column Width, Alignment & Header Separator
+// Terminal Table Formatter with Unicode/CJK/Emoji Display Width Alignment (cap:string) & Ascii/Box/Markdown Borders
+
+import { stringWidth } from "cap:string";
 
 pub enum CliTableAlign: u8 {
     Left = 0,
     Center = 1,
     Right = 2,
+}
+
+pub enum CliTableBorder: u8 {
+    Ascii = 0,
+    Box = 1,
+    Markdown = 2,
 }
 
 pub struct CliTable {
@@ -15,6 +23,7 @@ pub struct CliTable {
     rows: [32][8][]const u8 = undefined;
     col_count: usize = 0;
     row_count: usize = 0;
+    border: CliTableBorder = CliTableBorder.Ascii;
 
     pub static fn init(col_count: usize): CliTable {
         const clamped_cols = if (col_count > 8) (8 as usize) else col_count;
@@ -25,6 +34,7 @@ pub struct CliTable {
             rows: undefined,
             col_count: clamped_cols,
             row_count: 0,
+            border: CliTableBorder.Ascii,
         };
         let c: usize = 0;
         while (c < 8) {
@@ -36,49 +46,67 @@ pub struct CliTable {
         return tbl;
     }
 
+    pub fn setBorder(*_, border_style: CliTableBorder) {
+        _.border = border_style;
+    }
+
+    pub static fn cellWidth(text: []const u8): usize {
+        return stringWidth(text, false);
+    }
+
     pub fn setHeader(*_, col: usize, title: []const u8, align_mode: CliTableAlign) {
         if (col >= _.col_count) {
             return;
         }
         _.headers[col] = title;
         _.aligns[col] = align_mode;
-        if (title.len > _.widths[col]) {
-            _.widths[col] = title.len;
+        const w = CliTable.cellWidth(title);
+        if (w > _.widths[col]) {
+            _.widths[col] = w;
         }
     }
 
-    pub fn addRow2(*_, c0: []const u8, c1: []const u8): bool {
+    pub fn addRow(*_, cells: []const []const u8): bool {
         if (_.row_count >= 32) {
             return false;
         }
-        let r = _.row_count;
+        const r = _.row_count;
         let k: usize = 0;
         while (k < 8) {
             _.rows[r][k] = "";
             k += 1;
         }
-        if (_.col_count > 0) {
-            _.rows[r][0] = c0;
-            if (c0.len > _.widths[0]) { _.widths[0] = c0.len; }
-        }
-        if (_.col_count > 1) {
-            _.rows[r][1] = c1;
-            if (c1.len > _.widths[1]) { _.widths[1] = c1.len; }
+        let c: usize = 0;
+        while (c < _.col_count && c < cells.len) {
+            _.rows[r][c] = cells[c];
+            const w = CliTable.cellWidth(cells[c]);
+            if (w > _.widths[c]) {
+                _.widths[c] = w;
+            }
+            c += 1;
         }
         _.row_count += 1;
         return true;
     }
 
+    pub fn addRow1(*_, c0: []const u8): bool {
+        let cells: [1][]const u8 = [c0];
+        return _.addRow(&cells);
+    }
+
+    pub fn addRow2(*_, c0: []const u8, c1: []const u8): bool {
+        let cells: [2][]const u8 = [c0, c1];
+        return _.addRow(&cells);
+    }
+
     pub fn addRow3(*_, c0: []const u8, c1: []const u8, c2: []const u8): bool {
-        if (!_.addRow2(c0, c1)) {
-            return false;
-        }
-        if (_.col_count > 2) {
-            const r = _.row_count - 1;
-            _.rows[r][2] = c2;
-            if (c2.len > _.widths[2]) { _.widths[2] = c2.len; }
-        }
-        return true;
+        let cells: [3][]const u8 = [c0, c1, c2];
+        return _.addRow(&cells);
+    }
+
+    pub fn addRow4(*_, c0: []const u8, c1: []const u8, c2: []const u8, c3: []const u8): bool {
+        let cells: [4][]const u8 = [c0, c1, c2, c3];
+        return _.addRow(&cells);
     }
 
     pub static fn appendChar(out: []u8, pos: usize, ch: u8, count: usize): usize {
@@ -104,6 +132,16 @@ pub struct CliTable {
         return pos + s.len;
     }
 
+    pub static fn appendRepeatSlice(out: []u8, pos: usize, s: []const u8, count: usize): usize {
+        let p = pos;
+        let i: usize = 0;
+        while (i < count) {
+            p = CliTable.appendSlice(out, p, s);
+            i += 1;
+        }
+        return p;
+    }
+
     pub static fn appendAlignedCell(
         out: []u8,
         pos: usize,
@@ -112,7 +150,8 @@ pub struct CliTable {
         align_mode: CliTableAlign
     ): usize {
         let p = pos;
-        const pad_total = if (width > text.len) (width - text.len) else (0 as usize);
+        const vis_w = CliTable.cellWidth(text);
+        const pad_total = if (width > vis_w) (width - vis_w) else (0 as usize);
         let pad_left: usize = 0;
         let pad_right: usize = pad_total;
         if (align_mode == CliTableAlign.Right) {
@@ -142,40 +181,95 @@ pub struct CliTable {
         return p;
     }
 
-    /// Renders the complete ASCII box table into `out` and returns the number of bytes written.
+    fn renderBoxRule(out: []u8, pos: usize, left: []const u8, mid: []const u8, right: []const u8): usize {
+        let p = pos;
+        p = CliTable.appendSlice(out, p, left);
+        let c: usize = 0;
+        while (c < _.col_count) {
+            p = CliTable.appendRepeatSlice(out, p, "─", _.widths[c] + 2);
+            p = CliTable.appendSlice(out, p, if (c + 1 < _.col_count) mid else right);
+            c += 1;
+        }
+        p = CliTable.appendChar(out, p, '\n', 1);
+        return p;
+    }
+
+    fn renderMarkdownSeparator(out: []u8, pos: usize): usize {
+        let p = pos;
+        p = CliTable.appendChar(out, p, '|', 1);
+        let c: usize = 0;
+        while (c < _.col_count) {
+            const col_w = if (_.widths[c] < 3) (3 as usize) else _.widths[c];
+            p = CliTable.appendChar(out, p, ' ', 1);
+            if (_.aligns[c] == CliTableAlign.Left) {
+                p = CliTable.appendChar(out, p, ':', 1);
+                p = CliTable.appendChar(out, p, '-', col_w - 1);
+            } else if (_.aligns[c] == CliTableAlign.Center) {
+                p = CliTable.appendChar(out, p, ':', 1);
+                p = CliTable.appendChar(out, p, '-', if (col_w > 2) (col_w - 2) else 1);
+                p = CliTable.appendChar(out, p, ':', 1);
+            } else {
+                p = CliTable.appendChar(out, p, '-', col_w - 1);
+                p = CliTable.appendChar(out, p, ':', 1);
+            }
+            p = CliTable.appendSlice(out, p, " |");
+            c += 1;
+        }
+        p = CliTable.appendChar(out, p, '\n', 1);
+        return p;
+    }
+
+    fn renderDataRow(out: []u8, pos: usize, cells: []const []const u8, bar: []const u8): usize {
+        let p = pos;
+        p = CliTable.appendSlice(out, p, bar);
+        let c: usize = 0;
+        while (c < _.col_count) {
+            const cell = if (c < cells.len) cells[c] else "";
+            p = CliTable.appendAlignedCell(out, p, cell, _.widths[c], _.aligns[c]);
+            p = CliTable.appendSlice(out, p, bar);
+            c += 1;
+        }
+        p = CliTable.appendChar(out, p, '\n', 1);
+        return p;
+    }
+
+    /// Renders the table in the configured `border` style (`Ascii`, `Box`, or `Markdown`) into `out`.
     pub fn renderToBuf(out: []u8): usize {
         if (_.col_count == 0) {
             return 0;
         }
         let pos: usize = 0;
-        pos = _.renderSeparator(out, pos);
+        const bar: []const u8 = if (_.border == CliTableBorder.Box) "│" else "|";
+
+        if (_.border == CliTableBorder.Ascii) {
+            pos = _.renderSeparator(out, pos);
+        } else if (_.border == CliTableBorder.Box) {
+            pos = _.renderBoxRule(out, pos, "┌", "┬", "┐");
+        }
 
         // Header row
-        pos = CliTable.appendChar(out, pos, '|', 1);
-        let c: usize = 0;
-        while (c < _.col_count) {
-            pos = CliTable.appendAlignedCell(out, pos, _.headers[c], _.widths[c], _.aligns[c]);
-            pos = CliTable.appendChar(out, pos, '|', 1);
-            c += 1;
+        pos = _.renderDataRow(out, pos, _.headers[0.._.col_count], bar);
+
+        if (_.border == CliTableBorder.Ascii) {
+            pos = _.renderSeparator(out, pos);
+        } else if (_.border == CliTableBorder.Box) {
+            pos = _.renderBoxRule(out, pos, "├", "┼", "┤");
+        } else {
+            pos = _.renderMarkdownSeparator(out, pos);
         }
-        pos = CliTable.appendChar(out, pos, '\n', 1);
-        pos = _.renderSeparator(out, pos);
 
         // Data rows
         let r: usize = 0;
         while (r < _.row_count) {
-            pos = CliTable.appendChar(out, pos, '|', 1);
-            let col: usize = 0;
-            while (col < _.col_count) {
-                pos = CliTable.appendAlignedCell(out, pos, _.rows[r][col], _.widths[col], _.aligns[col]);
-                pos = CliTable.appendChar(out, pos, '|', 1);
-                col += 1;
-            }
-            pos = CliTable.appendChar(out, pos, '\n', 1);
+            pos = _.renderDataRow(out, pos, _.rows[r][0.._.col_count], bar);
             r += 1;
         }
 
-        pos = _.renderSeparator(out, pos);
+        if (_.border == CliTableBorder.Ascii) {
+            pos = _.renderSeparator(out, pos);
+        } else if (_.border == CliTableBorder.Box) {
+            pos = _.renderBoxRule(out, pos, "└", "┴", "┘");
+        }
         return pos;
     }
 }

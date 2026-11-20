@@ -23,6 +23,9 @@ pub struct RefCounter {
     }
 
     pub fn decrement(*_): DecrementResult {
+        if (_.raw_value == 0) {
+            return .ShouldDestroy;
+        }
         _.raw_value -= 1;
         if (_.raw_value == 0) {
             return .ShouldDestroy;
@@ -100,6 +103,10 @@ pub struct WeakControlBlock {
     }
 
     pub fn decStrong(*_): DecrementResult {
+        if (_.strong_count == 0) {
+            _.finalized = true;
+            return .ShouldDestroy;
+        }
         _.strong_count -= 1;
         if (_.strong_count == 0) {
             _.finalized = true;
@@ -114,7 +121,9 @@ pub struct WeakControlBlock {
     }
 
     pub fn decWeak(*_): bool {
-        _.weak_count -= 1;
+        if (_.weak_count > 0) {
+            _.weak_count -= 1;
+        }
         return _.finalized && _.weak_count == 0;
     }
 

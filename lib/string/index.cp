@@ -24,6 +24,7 @@ export {
 
 export {
     StringEscape,
+    escapeJs,
 } from "./escape.cp";
 
 export * from "./grapheme.cp";
@@ -33,3 +34,4 @@ export * from "./hashed.cp";
 export * from "./path.cp";
 export * from "./joiner.cp";
 export * from "./wcwidth.cp";
+export * from "./utils.cp";

@@ -42,9 +42,10 @@
 
 | API 签名 | 说明 |
 | :--- | :--- |
-| `Codecs.sniff(bytes): ImageFormat?` | 通过魔数识别 PNG、JPEG、WebP、BMP、GIF、TIFF、AVIF、HEIC |
-| `Codecs.mime(fmt): string` | 返回对应标准 MIME 字符串（如 `"image/png"`、`"image/webp"`） |
-| `Codecs.fromExtension(path): ImageFormat?` | 根据文件后缀推导图像格式 |
+| `ImageFormat.detect(bytes): ImageFormat?` / `Codecs.sniff(bytes)` | 通过魔数/XML 嗅探自动识别 PNG、JPEG、GIF、WebP、BMP、ICO、SVG、TIFF、AVIF、HEIC |
+| `probeDimensions(bytes): ImageDimensions?` / `Codecs.probeDimensions(bytes)` | **零像素全量解码**，极速读取 PNG、JPEG (全部 SOF 帧)、GIF、WebP (VP8/VP8L/VP8X)、BMP、ICO、SVG 宽高 |
+| `Codecs.mime(fmt): string` | 返回对应标准 MIME 字符串（含 `"image/x-icon"`、`"image/svg+xml"` 等） |
+| `Codecs.fromExtension(path): ImageFormat?` | 根据文件后缀（大小写无关）推导图像格式 |
 | `Codecs.getOrientationTransform(ori): ExifTransform` | 将 RFC EXIF 1~8 方向码映射为 `{ flop, flip, rotate }` 几何变换 |
 | `Exif.readJpeg(bytes): ExifOrientation` | 解析 JPEG APP1 中的 EXIF 方向标号（无标签时返回 `.Normal`） |
 | `Exif.parseTiff(tiff): ExifOrientation?` | 直接解析大端 (`MM`) 或小端 (`II`) TIFF IFD0 目录中的 `0x0112` 标签 |
@@ -66,12 +67,13 @@
 
 | API 签名 | 说明 |
 | :--- | :--- |
-| `Image.init(width, height, rgba)` / `Image.load(path)` | 构造或从磁盘加载 RGBA8 图像对象 |
-| `img.flop()` / `img.flip()` / `img.rotate(90 \| 180 \| 270)` | 水平镜像、垂直翻转与顺时针 90/180/270 度旋转 |
-| `img.crop(x, y, crop_w, crop_h)` / `img.resize(target_w, target_h)` | 边界安全的区域裁切与图像缩放 |
-| `img.thumbhash()` / `img.toPng()` / `img.toBmp()` | 一键生成 ThumbHash、导出 PNG 或 BMP 字节流 |
+| `Image.init(width, height, rgba)` / `Image.decode(bytes)` / `Image.load(path)` | 构造或自动嗅探解码 PNG/BMP/GIF 图像对象 |
+| `img.flop()` / `img.flip()` / `img.rotate(90 \| 180 \| 270)` / `applyExifOrientation(ori)` | 水平镜像、垂直翻转、顺时针旋转与 EXIF 自动方向矫正 |
+| `img.crop(x, y, crop_w, crop_h)` / `img.resize(target_w, target_h)` / `resizeNearest(...)` / `thumbnail(max_w, max_h)` | 边界安全裁切、双线性/最邻近缩放与等比例缩略图生成 |
+| `img.grayscale()` / `invert()` / `brightness(delta)` / `sepia()` / `blur()` | 灰度（BT.601）、反色、亮度调节、复古棕褐色与 3x3 均值模糊滤镜 |
+| `img.thumbhash()` / `toPng()` / `toBmp()` / `savePng(path)` / `saveBmp(path)` | 一键生成 ThumbHash、导出字节流或持久化写入磁盘 |
 | `Quantizer.quantize(rgba, w, h, max_colors): QuantizeResult` | 生成不超过 `max_colors`（最大 256）色的紧凑调色板与索引图 |
-| `ThumbHash.encode(rgba, w, h)` / `decode(hash)` / `toDataUrl(hash)` | 生成/还原 25 字节微缩占位图（LQIP） |
+| `ThumbHash.encode(rgba, w, h)` / `decode(hash)` / `toDataUrl(hash)` | 生成/还原 25 字节空间网格 ThumbHash 及完整合法 `data:image/png;base64,...` URL |
 
 ---
 

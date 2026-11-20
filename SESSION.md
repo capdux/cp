@@ -2538,3 +2538,12 @@
 - **用户指令**：切回下一批标准库，对比 Bun 仔细审核功能是否完备，启动 2 个子智能体加快速度。
 - **执行成果**：
   - Subagent A（`md`/`html`/`json`/`ws`）与 Subagent B（`shell`/`napi`/`elf`/`logger`）均已高质量完工并回收，累计净增超 11,000 行纯 CP 代码、8 份专著文档同步更新、新增 2 套综合深度测试；6/6 联合测试套件 100% PASS，全仓 414/414 `.cp` 溯源头 100% 合规，执行一次性 Git Commit 固化。
+
+### 2026-11-20（Batch 3 八大标准库补全验收固化、`cpc` Release 发布与 CapSurf 编译耗时诊断）
+- **用户指令**：
+  1. 明确要求保持 2 个子智能体连续自主推进，每阶段完成更新文档并提交 Git 后自动推导并切入下一阶段，直至全部 Bun 资产审核与增量吸收完成；
+  2. 明确 `cpc` 稳定后使用 `bash scripts/sync_cpc.sh release` 发布优化正式版；
+  3. 咨询 CapSurf `cap build -B -r -f src/main.cp` 耗时 40~48s 的原因。
+- **执行成果**：
+  - 发布 `cpc` Release 正式版并同步更新 `GEMINI.md`；向用户完整拆解 CapSurf 编译耗时根因与 `--debug` / `cpc check` / `cap test` 分层提速方案；
+  - Batch 3 双子智能体（`string/blob/image/mem` + `ffi/bigint/bench/cli`）全部高质量交付并回收，5/5 联合回归套件 PASS，全仓溯源 100% 合规，执行 Git 提交固化并立即自主拉起 Batch 4。

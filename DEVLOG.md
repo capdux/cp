@@ -1729,3 +1729,8 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
   1. Web 内容与协议栈（`md`/`html`/`json`/`ws`）：将 4 个轻量实现全面拉齐至生产级 RFC / Bun 完备度（CommonMark+GFM AST、HTML5 RawText Tokenizer + `HtmlRewriter`、RFC 8259 UTF-16 代理对 + RFC 6901 Pointer、RFC 6455 SHA-1 握手 + SIMD Mask + 分片重组状态机）；
   2. 系统与运行时工具（`shell`/`napi`/`elf`/`logger`）：补全 23 条进程内 Shell Builtin 与完整变量展开/重定向、N-API v9 24 项状态与离线 `NapiEnvMock`、完整 ELF64（Phdr/Shdr/Sym/Dyn 实测解析 `cpc` 本体）及 Logger 二分行索引/跨文件 `DiagNote`/JSON 诊断。
 - 全库 414/414 `.cp` 文件 `// Source:` 合规，6 套联合回归测试全部 100% PASS。
+
+### 第十三阶段：Batch 3 八大标准库深度补全（string/blob/image/mem + ffi/bigint/bench/cli）与 `cpc` Release 正式版发布
+- 双路子智能体并行完成 8 大模块的彻底审计与补全，清除了多处隐蔽假桩与未覆盖缺陷（如 `thumbhash.toDataUrl` 假桩、`gif.decode` 对齐与位宽缺陷、`Blob.fromFile` 崩溃、`DynLib.open` mock 占位、`CliTable` 按字节长度对齐导致中文错位等），同时吸收了 Bun `src/perf/` 的 `PerfTrace`/`TraceRingBuffer` 与 `src/unicode/` 的 UAX #29 Grapheme 切分器。
+- 按用户要求将当前稳定 `cpc` 通过 `bash scripts/sync_cpc.sh release` 编译发布正式优化版，并为 CapSurf 的 40~48s ReleaseFast 编译耗时定位出精确根因（3.4MB 单文件 `main.zig` + 全量 `-r -f` + `cap build` 未递归检查子文件 `mtime` 导致被迫传 `-B`）。
+- 接下来按自主连续流水线自动切入 **Batch 4**：双子智能体并行吸收 Bun 尚未吸收的高价值基础设施新资产（`cap:resolver` + `bundler` `StandaloneModuleGraph`/`CompileTarget`；`cap:aio` + `CPUFeatures`/Crash 诊断 + 彩色 `DiffFormat`）。

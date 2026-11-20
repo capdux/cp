@@ -73,3 +73,19 @@ export {
     WeakControlBlock,
     Rc,
 } from "./rc.cp";
+
+export {
+    isPowerOfTwo,
+    alignForward,
+    alignBackward,
+    alignDelta,
+    secureZero,
+} from "./primitives.cp";
+
+export {
+    FixedBufferAllocator,
+} from "./fixed_buffer.cp";
+
+export {
+    SlabPool,
+} from "./pool.cp";

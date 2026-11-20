@@ -1,4 +1,4 @@
-// Source: Custom (agy-generated export index)
+// Source: /data/dev/bun/src/cli/cli.cp
 // lib/cli/index.cp
 // Unified Public Exports for cap:cli
 

@@ -153,3 +153,42 @@ pub fn demoRcAndTaggedPtr() {
 | **所有权感知只读缓冲** | `MaybeOwned` | `MaybeOwnedBuf` | 统一借用与拥有的释放契约 |
 | **写时复制字节切片** | `CowSlice` | `CowBytes`, `CowSlice`, `Cow` | 惰性堆克隆，读取零开销 |
 | **Mimalloc C-FFI 绑定**| `bun.mimalloc` | `MiHeap`, `mi_malloc`, `mi_heap_*`| 支持线程独立堆（`MiHeap`）与 0 碎片分配 |
+| **固定缓冲分配器** | `FixedBufferAllocator` | `FixedBufferAllocator` (`alloc`, `allocAligned`, `free`, `reset`) | 零堆分配，支持对齐分配与 LIFO 回退 |
+| **定长对象池** | `SlabPool` | `SlabPool` (`alloc`, `free`, `contains`, `reset`) | $O(1)$ 空闲链分配回收 + 防 double-free 校验 |
+| **对齐与安全清零原语** | `memory.cp` | `isPowerOfTwo`, `alignForward`, `alignBackward`, `alignDelta`, `secureZero` | 2 的幂对齐原语 + `volatile` 防编译器优化敏感清零 |
+
+---
+
+### 5. 固定缓冲分配器 (`FixedBufferAllocator`)、$O(1)$ 对象池 (`SlabPool`) 与内存原语
+
+- **`FixedBufferAllocator`**：基于调用方传入切片 `[]u8` 进行零堆分配管理，支持 `alloc(len)`、`allocAligned(len, alignment)`、LIFO 尾部释放 `free(slice)`、`ownsSlice`、`used()`、`remaining()` 与 `reset()`。
+- **`SlabPool`**：定长槽位空闲链表池，提供 $O(1)$ `alloc()` 与 `free(slice)`，内置边界/步长对齐校验与 `in_use` 状态位图，在遭遇 double-free 或外部非法切片时安全返回 `false` 防止链表破坏。
+- **对齐与安全擦除原语**：`isPowerOfTwo(n)`、`alignForward(addr, align)`、`alignBackward(addr, align)`、`alignDelta(addr, align)`，以及通过 `volatile` 指针写保证不被死存储消除（DSE）的 `secureZero(buf)`。
+
+```typescript
+import {
+    isPowerOfTwo, alignForward, alignBackward, secureZero,
+    FixedBufferAllocator, SlabPool,
+} from "cap:mem";
+
+pub fn demoFixedAndSlabPool() {
+    // 1. 对齐与安全清零原语
+    const aligned = alignForward(13, 8); // 16
+    let secret: [16]u8 = [0xAA; 16];
+    secureZero(secret[0..16]);
+
+    // 2. FixedBufferAllocator (零堆分配)
+    let backing: [256]u8 = [0; 256];
+    let fba = FixedBufferAllocator.init(backing[0..256]);
+    const simd_buf = fba.allocAligned(32, 16).?;
+    fba.free(simd_buf);
+    fba.reset();
+
+    // 3. SlabPool (O(1) 空闲链 + 防 double-free)
+    let pool = SlabPool.init(64, 8);
+    defer pool.release();
+    const slot = pool.alloc().?;
+    const ok1 = pool.free(slot); // true
+    const ok2 = pool.free(slot); // false (安全拦截 double-free)
+}
+```

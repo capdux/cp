@@ -51,10 +51,9 @@
 2. **高频流程必须脚本化（消除交互延迟与节省 Token）**：
    - 严禁在对话中反复长篇输出 `cargo check --manifest-path ... && cargo build ... && cp ...`，不仅浪费海量 Token，且容易因长路径拼写导致模型幻觉。
    - 遇到构建和同步 `cpc` 编译器，必须直接调用预置原子脚本：
-     ```bash
-     bash scripts/sync_cpc.sh
-     ```
-   - 脚本内部自带 `set -e` 安全守卫，只要一条原子命令，秒级完成编译与生效！
+     - **调试阶段（默认 debug，秒级编译）**：`bash scripts/sync_cpc.sh`
+     - **稳定发布（正式优化版，大幅提速下游编译）**：`bash scripts/sync_cpc.sh release`
+   - 脚本内部自带 `set -e` 安全守卫，调试验证稳定后务必执行 `bash scripts/sync_cpc.sh release` 发布正式优化版！
 
 ### 6. 代码格式化与测试规范
 

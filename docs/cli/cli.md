@@ -1,113 +1,73 @@
-# CP 标准库：零分配命令行参数解析、终端配色、进度条与表格渲染手册 (`cap:cli`)
+# CP 标准库：命令行解析、POSIX 终端探测、16/256/RGB 配色、Spinner 与多边框表格手册 (`cap:cli`)
 
-## 一、 架构总览与设计哲学
-
-`cap:cli` 是 CP 语言内置的**命令行工具开发套件**，吸收自 Bun 的 `src/clap/args.cp`、`src/bun_core/tty.cp` 与 `src/cli/`。全套模块坚持**零堆分配（Zero-Allocation）**设计：参数切片直接引用 `argv` 原内存，ANSI 剥离、进度条与 ASCII 表格直接渲染至调用方栈缓冲区，启动延迟低至微秒级。
-
-```text
-┌────────────────────────────────────────────────────────────────────────────┐
-│                           cap:cli 工具链分层                                │
-│                                                                            │
-│  ┌──────────────────────────────┐   ┌───────────────────────────────────┐  │
-│  │ 参数解析层 (args.cp)          │   │ 终端控制与渲染层 (tty.cp/table.cp) │  │
-│  │  • SliceIterator (参数流)     │   │  • TtyMode (Normal / Raw / Io)    │  │
-│  │  • CliArgs.parse(argv)       │   │  • AnsiColor (CSI 常量 & stripAnsi)│  │
-│  │    --flag / --k=v / -abc / --│   │  • ProgressBar ([#####-----])     │  │
-│  │  • hasFlag / getOption       │   │  • CliTable (自动列宽/左中右对齐)   │  │
-│  └──────────────────────────────┘   └───────────────────────────────────┘  │
-└────────────────────────────────────────────────────────────────────────────┘
-```
+> **上游溯源**: `/data/dev/bun/src/clap/args.cp`, `/data/dev/bun/src/bun_core/tty.cp`, `/data/dev/bun/src/cli/cli.cp`  
+> **模块路径**: `lib/cli/`  
+> **导入协议**: `import { CliArgs, SliceIterator, TtyMode, Terminal, AnsiColor, Spinner, SpinnerStyle, ProgressBar, CliTable, CliTableAlign, CliTableBorder } from "cap:cli";`
 
 ---
 
-## 二、 核心 API 详解与代码示例
+## 一、 架构总览与核心能力
 
-### 1. 命令行参数解析 (`CliArgs` & `SliceIterator`)
+`cap:cli` 提供零堆分配的完整终端交互工具链：
 
-支持长标志（`--release`）、长选项（`--target=x86_64-linux`）、组合短标志（`-vf` 等价 `-v -f`）、短选项赋值（`-p=8080`）以及 `--` 双横线之后的所有原始位置参数：
+1. **命令行参数解析 (`CliArgs`, `SliceIterator`)**：支持 `--flag`、`--key=value`、组合短标志 `-vf`、`-p=8080` 与 `--` 位置分隔符。
+2. **真实 POSIX 终端探测 (`Terminal`, `TtyMode`)**：
+   - `Terminal.isTty(fd)` 调用 `std.c.isatty(fd)` 探测交互式终端；
+   - `Terminal.getSize(fd)` 通过 Linux `ioctl(TIOCGWINSZ)` 获取真实终端行列尺寸，非 TTY 或失败时安全回退为 `80x24`；
+   - 提供 `supportsColor(fd)`（尊重 `NO_COLOR` 与 `TERM=dumb`）与 `supportsTrueColor()`（检测 `COLORTERM`）。
+3. **完整 ANSI 16/256/24-bit TrueColor 与转义剥离 (`AnsiColor`)**：
+   - 覆盖 16 标准前景色/背景色、文本样式（`BOLD`, `DIM`, `ITALIC`, `UNDERLINE`, `BLINK`, `INVERSE`, `HIDDEN`, `STRIKETHROUGH`）；
+   - 提供零堆分配 `fg256` / `bg256`（`\x1b[38;5;Nm`）与 `fgRgb` / `bgRgb`（`\x1b[38;2;R;G;Bm`）；
+   - `stripAnsi` 完整剥离 CSI（含 256 色/TrueColor）、OSC（`\x1b]...BEL/ST`）及 2 字节 ESC 控制序列。
+4. **动画指示器 (`Spinner`) 与吞吐/ETA 进度条 (`ProgressBar`)**：
+   - `Spinner` 支持 `Dots` / `Line` / `Arrow` 多帧动画推进（`tick`）、成功/失败终态切换（`succeed`/`fail`）及文本渲染；
+   - `ProgressBar` 在 `[#####-----]` 条形渲染基础上，新增 `itemsPerSec()` 吞吐计算、`etaSeconds()` 剩余时间估算与 `renderLine()` 完整状态行渲染。
+5. **Unicode 宽字符对齐表格 (`CliTable`)**：
+   - 集成 `cap:string` 的 `stringWidth` 精确计算中文 CJK（双宽）、Emoji 与含 ANSI 转义字符串的显示列宽；
+   - 支持 `CliTableBorder.Ascii`（`+---+`）、`CliTableBorder.Box`（`┌─┬─┐`）与 `CliTableBorder.Markdown`（`| :--- | :---: | ---: |`）三种边框风格。
+
+---
+
+## 二、 实战代码示例
+
+### 1. 终端尺寸探测、TrueColor 与 ANSI 剥离
 
 ```typescript
-import { CliArgs, SliceIterator } from "cap:cli";
+import { Terminal, AnsiColor } from "cap:cli";
 
-pub fn demoArgs() {
-    let argv: [6][]const u8 = undefined;
-    argv[0] = "build";
-    argv[1] = "--release";
-    argv[2] = "--out=dist";
-    argv[3] = "-vf";
-    argv[4] = "--";
-    argv[5] = "--literal-file";
+pub fn demoTerminalAndAnsi() {
+    const sz = Terminal.getSize(1); // 真实 TTY 返回实际行列，管道/非 TTY 安全返回 80x24
+    let rgb_buf: [32]u8 = undefined;
+    const orange = AnsiColor.fgRgb(255, 128, 0, &rgb_buf);
 
-    const args = CliArgs.parse(&argv);
-    const is_release = args.hasFlag("release");                // true
-    const verbose = args.hasFlag("v");                         // true
-    const out_dir = args.getOptionOr("out", "build");          // "dist"
-    const cmd = args.positional(0);                            // "build"
-    const literal = args.positional(1);                        // "--literal-file"
+    let plain_buf: [128]u8 = undefined;
+    const clean = AnsiColor.stripAnsi("\x1b[38;2;255;0;0mFAIL\x1b[0m", &plain_buf); // "FAIL"
 }
 ```
 
-### 2. 终端模式与 ANSI 配色 (`TtyMode` & `AnsiColor`)
-
-提供标准 ANSI SGR 常量（`RESET`/`BOLD`/`DIM`/`RED`/`GREEN`/`YELLOW`/`BLUE`/`MAGENTA`/`CYAN`/`GRAY`）及 `AnsiColor.stripAnsi` 用于日志落盘或计算可见字符宽度：
+### 2. `Spinner`、`ProgressBar` 与 CJK/Box/Markdown `CliTable`
 
 ```typescript
-import { TtyMode, AnsiColor } from "cap:cli";
+import { Spinner, SpinnerStyle, ProgressBar, CliTable, CliTableAlign, CliTableBorder } from "cap:cli";
 
-pub fn demoAnsi() {
-    const mode = TtyMode.Raw;
-    let out: [128]u8 = undefined;
-    const clean = AnsiColor.stripAnsi("\x1b[32mOK\x1b[0m built in 12ms", &out);
-    // clean == "OK built in 12ms"
-}
-```
+pub fn demoWidgets() {
+    let sp = Spinner.init("Building", SpinnerStyle.Dots);
+    * = sp.tick();
+    sp.succeed("Done");
 
-### 3. 确定性 ASCII 进度条 (`ProgressBar` / `Progress`)
+    let pb = ProgressBar.init(100, 10);
+    pb.tick(50);
+    let line_buf: [128]u8 = undefined;
+    const line = pb.renderLine(&line_buf);
 
-```typescript
-import { ProgressBar } from "cap:cli";
-
-pub fn demoProgress() {
-    let pb = ProgressBar.init(100, 20);
-    pb.tick(35);
-    const pct = pb.percent(); // 35
-
-    let buf: [32]u8 = undefined;
-    const bar_str = pb.renderBar(&buf); // "[#######-------------]"
-    pb.set(100);
-    const done = pb.isComplete();       // true
-}
-```
-
-### 4. 自动列宽 ASCII 表格 (`CliTable` & `CliTableAlign`)
-
-支持最多 8 列、32 行零堆分配自动计算列宽，并支持 `Left`、`Center`、`Right` 三种单元格对齐模式：
-
-```typescript
-import { CliTable, CliTableAlign } from "cap:cli";
-
-pub fn demoTable() {
     let tbl = CliTable.init(3);
-    tbl.setHeader(0, "Module", CliTableAlign.Left);
-    tbl.setHeader(1, "Status", CliTableAlign.Center);
-    tbl.setHeader(2, "Latency", CliTableAlign.Right);
+    tbl.setBorder(CliTableBorder.Box);
+    tbl.setHeader(0, "模块", CliTableAlign.Left);
+    tbl.setHeader(1, "状态", CliTableAlign.Center);
+    tbl.setHeader(2, "耗时", CliTableAlign.Right);
+    * = tbl.addRow3("测试", "🚀", "12ms");
 
-    * = tbl.addRow3("cap:http", "PASS", "12ms");
-    * = tbl.addRow3("cap:bench", "PASS", "2ms");
-
-    let out: [1024]u8 = undefined;
+    let out: [512]u8 = undefined;
     const len = tbl.renderToBuf(&out);
-    const table_text = out[0..len];
 }
 ```
-
----
-
-## 三、 与 Node.js / Bun CLI 能力对照表
-
-| 能力 | Node.js / Bun | CP (`cap:cli`) | 核心优势 |
-|---|---|---|---|
-| 参数解析 | `util.parseArgs()` / `commander` | `CliArgs.parse(argv)` | 64 选项 + 64 位置参数栈内解析，零堆分配 |
-| ANSI 剥离 | `Bun.stripANSI(str)` / `util.stripVTControlCharacters` | `AnsiColor.stripAnsi(input, &buf)` | 零拷贝写入栈缓冲，无临时字符串分配 |
-| 终端模式 | `process.stdin.setRawMode(true)` | `TtyMode` (`Normal`/`Raw`/`Io`) | 强类型 C-ABI 枚举直通底层 TTY 驱动 |
-| 进度条与表格 | `cli-progress` / `console.table` | `ProgressBar` & `CliTable` | 零依赖内置标准库，确定性输出到字节切片 |

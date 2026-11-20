@@ -140,6 +140,9 @@ pub struct BumpArena {
     }
 
     pub fn allocAligned(*_, len: usize, align_pow2: usize): ([]u8)? {
+        if (align_pow2 == 0 || (align_pow2 & (align_pow2 - 1)) != 0) {
+            return null;
+        }
         const mask = align_pow2 - 1;
         const aligned_offset = (_.offset + mask) & ~mask;
         if (aligned_offset + len > _.cap) {

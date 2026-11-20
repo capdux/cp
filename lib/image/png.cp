@@ -244,26 +244,40 @@ pub class Png {
         let height: u32 = 0;
         let bit_depth: u8 = 8;
         let color_type_raw: u8 = 6;
+        let plte_offset: usize = 0;
+        let plte_len: usize = 0;
+        let trns_offset: usize = 0;
+        let trns_len: usize = 0;
 
-        // 2. 遍历 Chunks 搜集 IHDR 与 IDAT 数据
+        // 2. 遍历 Chunks 搜集 IHDR, PLTE, tRNS 与 IDAT 数据
         let offset: usize = 8;
         let total_idat_bytes: usize = 0;
 
-        // 首轮扫描：确定尺寸与 IDAT 总长度
+        // 首轮扫描：确定尺寸、调色板与 IDAT 总长度（带严格边界防护）
         while (offset + 12 <= bytes.len) {
             let chunk_len = Png.readU32Be(bytes, offset) as usize;
+            if (chunk_len > bytes.len - offset - 12) {
+                return null;
+            }
             let c0 = bytes[offset + 4];
             let c1 = bytes[offset + 5];
             let c2 = bytes[offset + 6];
             let c3 = bytes[offset + 7];
 
             if (c0 == 0x49 && c1 == 0x48 && c2 == 0x44 && c3 == 0x52) { // IHDR
-                if (chunk_len >= 13 && offset + 8 + 13 <= bytes.len) {
-                    width = Png.readU32Be(bytes, offset + 8);
-                    height = Png.readU32Be(bytes, offset + 12);
-                    bit_depth = bytes[offset + 16];
-                    color_type_raw = bytes[offset + 17];
+                if (chunk_len < 13) {
+                    return null;
                 }
+                width = Png.readU32Be(bytes, offset + 8);
+                height = Png.readU32Be(bytes, offset + 12);
+                bit_depth = bytes[offset + 16];
+                color_type_raw = bytes[offset + 17];
+            } else if (c0 == 0x50 && c1 == 0x4C && c2 == 0x54 && c3 == 0x45) { // PLTE
+                plte_offset = offset + 8;
+                plte_len = chunk_len;
+            } else if (c0 == 0x74 && c1 == 0x52 && c2 == 0x4E && c3 == 0x53) { // tRNS
+                trns_offset = offset + 8;
+                trns_len = chunk_len;
             } else if (c0 == 0x49 && c1 == 0x44 && c2 == 0x41 && c3 == 0x54) { // IDAT
                 total_idat_bytes += chunk_len;
             } else if (c0 == 0x49 && c1 == 0x45 && c2 == 0x4E && c3 == 0x44) { // IEND
@@ -272,7 +286,11 @@ pub class Png {
             offset += 12 + chunk_len;
         }
 
-        if (width == 0 || height == 0 || total_idat_bytes == 0) {
+        if (width == 0 || height == 0 || total_idat_bytes == 0 || bit_depth != 8) {
+            return null;
+        }
+        // Guard against width * height * 4 overflow
+        if ((width as u64) * (height as u64) > 268435456) {
             return null;
         }
 
@@ -284,6 +302,9 @@ pub class Png {
         let idat_write_pos: usize = 0;
         while (offset + 12 <= bytes.len) {
             let chunk_len = Png.readU32Be(bytes, offset) as usize;
+            if (chunk_len > bytes.len - offset - 12) {
+                return null;
+            }
             let c0 = bytes[offset + 4];
             let c1 = bytes[offset + 5];
             let c2 = bytes[offset + 6];
@@ -291,7 +312,7 @@ pub class Png {
 
             if (c0 == 0x49 && c1 == 0x44 && c2 == 0x41 && c3 == 0x54) { // IDAT
                 let di: usize = 0;
-                while (di < chunk_len && offset + 8 + di < bytes.len) {
+                while (di < chunk_len) {
                     combined_idat[idat_write_pos] = bytes[offset + 8 + di];
                     idat_write_pos += 1;
                     di += 1;
@@ -309,7 +330,7 @@ pub class Png {
             0 => 1 as usize, // Grayscale
             3 => 1 as usize, // Indexed
             4 => 2 as usize, // Grayscale + Alpha
-            else => 4 as usize,
+            else => return null,
         };
 
         let row_bytes = (width as usize) * bpp;
@@ -321,7 +342,7 @@ pub class Png {
         let actual_decomp_len: usize = decompressed_scanlines_len;
         let u_res = uncompress(uncomp_buf.ptr, &actual_decomp_len, combined_idat.ptr, total_idat_bytes);
 
-        if (u_res != 0) {
+        if (u_res != 0 || actual_decomp_len < decompressed_scanlines_len) {
             return null;
         }
 
@@ -397,13 +418,27 @@ pub class Png {
                     out_rgba[out_idx + 1] = curr_recon[src_px + 1];
                     out_rgba[out_idx + 2] = curr_recon[src_px + 2];
                     out_rgba[out_idx + 3] = 255;
-                } else if (color_type_raw == 0 || color_type_raw == 3) {
-                    // Grayscale / Indexed fallback
+                } else if (color_type_raw == 0) {
+                    // Grayscale
                     let gray = curr_recon[px];
                     out_rgba[out_idx] = gray;
                     out_rgba[out_idx + 1] = gray;
                     out_rgba[out_idx + 2] = gray;
                     out_rgba[out_idx + 3] = 255;
+                } else if (color_type_raw == 3) {
+                    // Indexed (PLTE + optional tRNS)
+                    let pidx = curr_recon[px] as usize;
+                    if (pidx * 3 + 2 < plte_len) {
+                        let po = plte_offset + pidx * 3;
+                        out_rgba[out_idx] = bytes[po];
+                        out_rgba[out_idx + 1] = bytes[po + 1];
+                        out_rgba[out_idx + 2] = bytes[po + 2];
+                    } else {
+                        out_rgba[out_idx] = 0;
+                        out_rgba[out_idx + 1] = 0;
+                        out_rgba[out_idx + 2] = 0;
+                    }
+                    out_rgba[out_idx + 3] = if (pidx < trns_len) bytes[trns_offset + pidx] else 255;
                 } else if (color_type_raw == 4) {
                     // Grayscale + Alpha
                     let src_px = px * 2;

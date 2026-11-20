@@ -1,27 +1,29 @@
 # `cap:string` — 工业级字符串引擎、Unicode 字素簇与 SSO 内存优化标准库
 
-> **上游溯源**: `/data/dev/bun/src/string/` & `/data/dev/bun/src/unicode/` (`SmolStr.cp`, `HashedString.cp`, `StringBuilder.cp`, `StringJoiner.cp`, `PathString.cp`, `wtf.cp`, `immutable.cp`, `escapeRegExp.cp`)  
+> **上游溯源**: `/data/dev/bun/src/string/` & `/data/dev/bun/src/unicode/` (`SmolStr.cp`, `HashedString.cp`, `StringBuilder.cp`, `StringJoiner.cp`, `PathString.cp`, `wtf.cp`, `immutable.cp`, `escapeRegExp.cp`, `uucode_lib/src/grapheme.zig`)  
 > **模块路径**: `lib/string/`  
-> **导入协议**: `import { SmolStr, HashedString, Utf8, Utf16, UnicodeWidth, Utf8Grapheme, CaseConverter, StringBuilder, StringJoiner, PathString, StringEscape, SimdScanner } from "cap:string";`
+> **导入协议**: `import { SmolStr, HashedString, Utf8, Utf16, UnicodeWidth, Utf8Grapheme, GraphemeIterator, graphemeCount, CaseConverter, StringBuilder, StringJoiner, PathString, StringEscape, escapeJs, SimdScanner, Strings, SplitIterator, isAllAscii, toLowerAscii, toUpperAscii, eqlIgnoreCaseAscii, trim, trimStart, trimEnd, startsWith, endsWith, indexOf, lastIndexOf, split, replaceAll } from "cap:string";`
 
 ---
 
 ## 一、 架构概述与核心组件矩阵
 
-`cap:string` 完整吸收自 Bun 高性能字符串与 Unicode 子系统（`bun/src/string` 与 `bun/src/unicode`），针对百万级并发 Agent 与高吞吐网络/编译工作负载提供了 10 大零分配或单次分配原语：
+`cap:string` 完整吸收自 Bun 高性能字符串与 Unicode 子系统（`bun/src/string` 与 `bun/src/unicode`），针对百万级并发 Agent 与高吞吐网络/编译工作负载提供了 12 大零分配或单次分配原语：
 
 ```text
 lib/string/
 ├── index.cp         # 模块统一导出门面 (cap:string)
 ├── smol.cp          # SmolStr: 15 字节栈内联短字符串优化 (SSO) 容器
 ├── hashed.cp        # HashedString: FNV-1a 32-bit 预计算哈希 O(1) 字符串比较视图
-├── utf.cp           # Utf8 / Utf16 / UnicodeWidth: UTF-8/UTF-16LE 编解码与终端显示宽度
-├── grapheme.cp      # Utf8Grapheme: RFC 3629 校验与 UAX #29 扩展字素簇 (Emoji ZWJ) 分词计数
+├── utf.cp           # Utf8 / Utf16 / UnicodeWidth: UTF-8/UTF-16LE 双向编解码（含严格报错与长度计算）
+├── grapheme.cp      # GraphemeIterator / graphemeCount / Utf8Grapheme: UAX #29 字素簇切分与计数
 ├── simd_scan.cp     # SimdScanner: 16 字节 @Vector(16, u8) 向量 ASCII 与字节扫描器
+├── utils.cp         # Strings / SplitIterator: 32/16 字节 SIMD 大小写、isAllAscii、trim/split/replaceAll/indexOf
 ├── builder.cp       # StringBuilder: 两阶段 (Count -> Allocate -> Append) 零重分配构建器
 ├── joiner.cp        # StringJoiner: 动态缓冲拼接与切片数组分隔符连接器
 ├── case.cp          # CaseConverter: 零堆分配命名风格转换器 (snake/kebab/camel/Pascal/SCREAMING)
-├── escape.cp        # StringEscape: 高速 HTML 实体转义与 RegExp 元字符转义
+├── escape.cp        # StringEscape: HTML 实体转义、JS/JSON 字符串转义 (`escapeJs`) 与 RegExp 转义
+├── wcwidth.cp       # wcwidth / stringWidth: Bun.stringWidth 等价终端列宽计算
 └── path.cp          # PathString: 轻量级零拷贝路径字符串视图
 ```
 
@@ -197,5 +199,49 @@ fn demoStringWidth(): void {
     const w6 = StringWidth.measure("\x1b]8;;https://cp.dev\x07CP文档\x1b]8;;\x07"); // 6 (忽略 OSC 超链接)
     _ = w_ascii; _ = w_cjk; _ = w_comb; _ = w_emoji;
     _ = w1; _ = w2; _ = w3; _ = w4; _ = w5; _ = w6;
+}
+```
+
+---
+
+## 六、 深度补全能力：UAX #29 `GraphemeIterator`、严格 UTF-16 编解码与 SIMD 字符串工具箱
+
+### 1. UAX #29 字素簇迭代器 (`GraphemeIterator` & `graphemeCount`)
+- 支持 `\r\n` (CRLF) 合并、Unicode 组合变音符号（Extending Marks）、Emoji 肤色修饰符、ZWJ 连字序列（如 `"👨‍👩‍👧"`）、韩文 Hangul Jamo 组合以及 **Regional Indicator 国旗成对切分**（如 `"🇺🇸🇨🇳"` 精确切分为 2 个字素簇）。
+- `GraphemeIterator.init(bytes)` 提供 `.next()`、`.nextSpan()`、`.peek()` 与 `.reset()`。
+
+### 2. 完整 UTF-8 ↔ UTF-16LE 编解码器（容错 + 严格报错）
+- `Utf8.encodedLength(cp)` / `Utf8.decodeNextStrict(input, offset)` / `Utf8.replaceInvalid(input, out)` / `Utf8.utf8LengthFromUtf16Le(u16)`
+- `Utf16.isValid(u16)` / `Utf16.utf8LengthFromUtf16Le(u16)` / `Utf16.utf16LengthFromUtf8(u8)`
+- `Utf16.encodeUtf8ToUtf16LeStrict(u8, out)` / `Utf16.decodeUtf16LeToUtf8Strict(u16, out)`（遇非法 UTF-8 或孤立代理项 `0xD800..0xDFFF` 返回错误联合）
+- `Utf16.encodeUtf8ToUtf16LeAlloc(alloc, u8)` / `Utf16.decodeUtf16LeToUtf8Alloc(alloc, u16)`
+
+### 3. SIMD 字符串工具箱与 JS/JSON 转义 (`utils.cp` & `escape.cp`)
+- **32/16 字节 SIMD 快路径**：`isAllAscii(s)`、`toLowerAscii(s, out)`、`toUpperAscii(s, out)`、`eqlIgnoreCaseAscii(a, b)`
+- **零拷贝查找/修剪/切分/替换**：`trim` / `trimStart` / `trimEnd` / `trimChars`、`startsWith` / `endsWith`、`indexOf` / `lastIndexOf`、`split(s, delim)`（`SplitIterator`）、`replaceAll` / `replaceAllAlloc`
+- **JS/JSON 字符串转义**：`escapeJs(input, out)` / `StringEscape.escapeJs` / `StringEscape.escapeJsAlloc` / `StringEscape.needsJsEscape`（转义 `"`、`\`、`\b`、`\f`、`\n`、`\r`、`\t`、控制字符 `\u00XX` 与 `U+2028`/`U+2029`）。
+
+```typescript
+import {
+    GraphemeIterator, graphemeCount, isAllAscii, toLowerAscii,
+    eqlIgnoreCaseAscii, trim, split, replaceAll, escapeJs,
+} from "cap:string";
+
+fn demoStringToolkit() {
+    // 1. 国旗成对切分与字素迭代
+    let it = GraphemeIterator.init("a\r\n🇺🇸🇨🇳");
+    // 产出: "a", "\r\n", "🇺🇸", "🇨🇳" (graphemeCount == 4)
+
+    // 2. SIMD ASCII 检查与大小写转换
+    let ok = isAllAscii("0123456789abcdef0123456789abcdef_fast");
+    let buf: [64]u8 = [0; 64];
+    let lower = toLowerAscii("CP_Runtime_2026", buf[0..64]);
+    let eq = eqlIgnoreCaseAscii(lower, "cp_runtime_2026");
+
+    // 3. trim / split / replaceAll / escapeJs
+    let clean = trim("  hello::world  ");
+    let sp = split(clean, "::");
+    let rep = replaceAll("a-b-c", "-", "/", buf[0..64]);
+    let js_len = escapeJs("line1\n\"quoted\"", buf[0..64]);
 }
 ```

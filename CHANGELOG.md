@@ -1400,3 +1400,16 @@ hotfix: resolve keyword conflict for "test" and prevent redundant re-export of i
   - `lib/elf/`: 新增 `elf64.cp`（653 行：`Elf64File` 完整解析 Phdr/Shdr/Symtab/Strtab/Dynamic `DT_NEEDED`/`soname`/`rpath`）与 `ExeFormat.detect`（ELF32/64、Mach-O 32/64/Fat、PE、WASM、Shebang），实测解析当前 `/data/dev/cp/cap/bin/cpc`。
   - `lib/logger/`: 升级 `logger.cp` 支持 `LineIndex` $O(\log N)$ 行缓存、跨文件 `DiagNote` 副定位标尺、`max_errors` 熔断器、`merge` 与 `formatJson` 机器可读输出。
 - **文档与测试**：同步更新 8 份 `docs/<lib>/<lib>.md`，新增 `cap/test/test_md_html_json_ws_deep.cp` 与 `cap/test/test_shell_napi_elf_logger_deep.cp`；6/6 联合回归套件 100% PASS，全库 414/414 文件 `// Source:` 100% 合规。
+
+### 2026-11-20（Batch 3 八大标准库深度审核补全里程碑：string/blob/image/mem + ffi/bigint/bench/cli）
+- **第一路 (`lib/string`, `lib/blob`, `lib/image`, `lib/mem`)**：
+  - `lib/string/`: 补齐 UTF-8 ↔ UTF-16LE 代理对严格编解码、`GraphemeIterator`（UAX #29：CRLF/ZWJ/国旗 Regional Indicator/Hangul Jamo）、`escapeJs` 与新增 `utils.cp`（441 行 SIMD `isAllAscii`/`eqlIgnoreCaseAscii`/`indexOf`/`split`/`replaceAll`/`trim`）。
+  - `lib/blob/`: 补齐负索引 `sliceSigned`、`Blob.concat`/`equals`/`stream`（`BlobChunkReader`）；修复 `Blob.fromFile` 安全返回 `null`；补齐 `File` `exists`/`write`/`delete` 与真实 `statx` `lastModified`。
+  - `lib/image/`: 全面审核 11 文件并清零隐患：修复 `thumbhash.cp` `toDataUrl` 占位符为真实 Base64 编码、修复 `gif.cp` `Gif.decode` 编译与对齐缺陷、补全 `ImageFormat.detect`/`probeDimensions`（PNG/JPEG/GIF/WebP/BMP/ICO/SVG）、Indexed PNG `PLTE`/`tRNS` 及双线性缩放/滤镜管线。
+  - `lib/mem/`: 新增 `primitives.cp`（`volatile` `secureZero` + 对齐原语）、`fixed_buffer.cp`（`FixedBufferAllocator`）、`pool.cp`（防 double-free `SlabPool`）并加固 `BumpArena`/`RefCounter` 边界校验。
+- **第二路 (`lib/ffi`, `lib/bigint`, `lib/bench`, `lib/cli`)**：
+  - `lib/ffi/`: 补齐 16 种 C-ABI 类型矩阵、真实 POSIX `dlopen`/`dlsym`/`dlclose`/`dlerror`（实测加载调用 `strlen`/`abs`）、嵌套/`#packed` `CStructLayout`、零拷贝 `CString` 与 `FfiCallbackDesc`。
+  - `lib/bigint/`: 补全任意精度 `BigInt` 全套四则/`divMod`/`mod`/位运算/`pow`/`modPow`/`gcd`/多进制双向转换，及 `BigInt256` 除模/移位/位运算/溢出检测。
+  - `lib/bench/`: 吸收 Bun `src/perf/` 资产，新增 `trace.cp`（零堆 `TraceRingBuffer`/`PerfTrace` Chrome Trace JSON）与 `suite.cp`（`BenchSuite` 预热与 Markdown/JSON 报告），升级 `BenchStats` 至 512 槽 Welford 方差与 P50/P75/P90/P95/P99/P999 分位数。
+  - `lib/cli/`: 补齐 16/256/TrueColor RGB 与 `stripAnsi`、`Terminal.getSize`（Linux `ioctl TIOCGWINSZ`）、`Spinner`、`ProgressBar` ETA/吞吐、以及集成 `cap:string` `stringWidth` 精准宽字符对齐的 `CliTable`（Ascii/Box/Markdown 边框）。
+- **文档、测试与编译器正式版**：同步更新 8 份 `docs/<lib>/<lib>.md`，新增 `test_string_blob_image_mem_deep.cp` 与 `test_ffi_bigint_bench_cli_deep.cp`；发布 `cpc` Release 优化正式版（`bash scripts/sync_cpc.sh release`）并更新 `GEMINI.md`。

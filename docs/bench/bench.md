@@ -1,121 +1,65 @@
-# CP 标准库：纳秒级硬件计时器、基准统计与对数延迟直方图使用手册 (`cap:bench`)
+# CP 标准库：纳秒级计时器、分位数基准套件与 Chrome Trace 埋点手册 (`cap:bench`)
 
-## 一、 架构总览与设计哲学
-
-`cap:bench` 是 CP 语言内置的**零堆分配、纳秒级性能基准测试与延迟观测子系统**，吸收自 Bun 的性能剖析模块（`/data/dev/bun/src/perf/hw_timer.cp` 与 `perf.cp`）。全部数据结构均为栈上固定布局，测量过程不引入任何动态内存分配，避免观测工具本身干扰微基准（Microbenchmark）结果。
-
-```text
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                        cap:bench 性能剖析与统计分层                           │
-│                                                                              │
-│  ┌──────────────────────────────┐     ┌───────────────────────────────────┐  │
-│  │ L1 · 硬件单调时钟原语         │     │ L2 · 高层计时器                   │  │
-│  │  • HwTimer.nowNs()           │ ──▶ │  • Stopwatch.start()              │  │
-│  │  • HwTimer.nowUs() / nowMs() │     │  • readNs / readUs / readMs       │  │
-│  │  (CLOCK_MONOTONIC, 零回拨)    │     │  • lap() / reset()                │  │
-│  └──────────────────────────────┘     └─────────────────┬─────────────────┘  │
-│                                                         ▼                    │
-│  ┌───────────────────────────────────────┐ ┌──────────────────────────────┐  │
-│  │ L3-A · 精确小样本分位数统计            │ │ L3-B · 无限样本对数直方图     │  │
-│  │  • BenchStats (128 槽插入排序)        │ │  • LatencyHistogram (8 档)   │  │
-│  │  • meanNs / p50Ns / p95Ns / p99Ns    │ │  • <100ns … >=100ms          │  │
-│  │  • opsPerSec() 吞吐估算               │ │  • estimatePercentileBoundNs │  │
-│  └───────────────────────────────────────┘ └──────────────────────────────┘  │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
+> **上游溯源**: `/data/dev/bun/src/perf/hw_timer.cp`, `/data/dev/bun/src/perf/perf.cp`, `/data/dev/bun/src/perf/tracy.cp`  
+> **模块路径**: `lib/bench/`  
+> **导入协议**: `import { HwTimer, Stopwatch, BenchStats, LatencyHistogram, TracePhase, TraceEvent, TraceRingBuffer, PerfTrace, BenchSuite } from "cap:bench";`
 
 ---
 
-## 二、 核心 API 详解与代码示例
+## 一、 架构总览与核心分层
 
-### 1. 硬件单调时钟 (`HwTimer`) 与秒表 (`Stopwatch`)
+`cap:bench` 吸收自 Bun `src/perf/` 性能剖析引擎，全部核心组件均采用**零堆分配固定布局**：
 
-基于 Linux `CLOCK_MONOTONIC`，不受系统墙上时钟（NTP/手动校时）跳变影响：
-
-```typescript
-import { HwTimer, Stopwatch } from "cap:bench";
-
-pub fn demoTimer() {
-    const t0 = HwTimer.nowNs();
-    let sw = Stopwatch.start();
-
-    // ... 执行待测逻辑第一阶段 ...
-    const stage1_ns = sw.lap();
-
-    // ... 执行待测逻辑第二阶段 ...
-    const stage2_ns = sw.lap();
-    const total_us = sw.readUs();
-
-    sw.reset();
-    const elapsed_ms = HwTimer.nowMs() - (t0 / 1000000);
-}
-```
-
-### 2. 精确分位数与吞吐统计 (`BenchStats`)
-
-`BenchStats` 在栈内维护 128 个有序纳秒样本（插入时维持升序），实现 $O(1)$ 查询 `p50`、`p95`、`p99` 与 `ops/s`：
-
-```typescript
-import { Stopwatch, BenchStats } from "cap:bench";
-
-pub fn demoBenchStats() {
-    let stats = BenchStats.init();
-
-    let i: usize = 0;
-    while (i < 100) : (i += 1) {
-        let sw = Stopwatch.start();
-        // ... 执行单次操作 ...
-        stats.record(sw.readNs());
-    }
-
-    const avg = stats.meanNs();
-    const p50 = stats.p50Ns();
-    const p95 = stats.p95Ns();
-    const p99 = stats.p99Ns();
-    const throughput = stats.opsPerSec();
-}
-```
-
-### 3. 8 档对数延迟直方图 (`LatencyHistogram`)
-
-当采样次数达到数百万次（如高频 RPC / HTTP 服务端延迟监控）时，使用 `LatencyHistogram` 可在恒定内存（仅 160 字节）下以 $O(1)$ 记录任意数量样本：
-
-| 桶索引 | 覆盖区间 | 桶上界 (`bounds[i]`) |
-|---|---|---|
-| `0` | `< 100 ns` | `100` |
-| `1` | `100 ns .. < 1 µs` | `1,000` |
-| `2` | `1 µs .. < 10 µs` | `10,000` |
-| `3` | `10 µs .. < 100 µs` | `100,000` |
-| `4` | `100 µs .. < 1 ms` | `1,000,000` |
-| `5` | `1 ms .. < 10 ms` | `10,000,000` |
-| `6` | `10 ms .. < 100 ms` | `100,000,000` |
-| `7` | `>= 100 ms` | `max_ns` |
-
-```typescript
-import { LatencyHistogram } from "cap:bench";
-
-pub fn demoHistogram() {
-    let hist = LatencyHistogram.init();
-    hist.record(42);
-    hist.record(850);
-    hist.record(12500);
-    hist.record(450000);
-
-    const total = hist.count();                         // 4
-    const mean = hist.meanNs();
-    const p99_bound = hist.estimatePercentileBoundNs(99);
-    const sub_1us = hist.bucketCount(0) + hist.bucketCount(1);
-    hist.reset();
-}
-```
+1. **硬件单调时钟原语 (`HwTimer` & `Stopwatch`)**：基于 `CLOCK_MONOTONIC` 的纳秒/微秒/毫秒单调计时与分段 `lap()` 测量。
+2. **完整分位数与 Welford 方差统计 (`BenchStats`)**：
+   - 维护最多 512 个有序样本及 Welford 在线方差状态；
+   - 提供 `minNs` / `maxNs` / `meanNs` / `medianNs` (`p50Ns`) / `p75Ns` / `p90Ns` / `p95Ns` / `p99Ns` / `p999Ns` / `stdDevNs` / `stdDevNsF64` / `opsPerSec` / `opsPerSecF64`。
+3. **8 档对数桶延迟直方图 (`LatencyHistogram`)**：恒定栈内存记录任意规模样本，支持 `<100ns` .. `>=100ms` 分桶与分位上界估算。
+4. **零堆分配 Perf 埋点事件环 (`TraceRingBuffer<CAP>` / `PerfTrace`)**：
+   - 吸收自 Bun `tracy.cp`，支持 `begin` / `end` / `endSpan` / `instant` / `complete` 四类 Trace 阶段；
+   - 支持直接导出标准 Chrome Trace Event JSON（`exportChromeTraceJson`），可在 `chrome://tracing` 或 Perfetto 中可视化火焰图。
+5. **多用例基准套件 (`BenchSuite`)**：
+   - 支持配置预热次数（`warmup_iters`）、最小迭代（`min_iters`）与最小时长（`min_time_ns`）；
+   - 支持导出 Markdown 对比表格（`toMarkdown`）与全量指标 JSON 报告（`toJson`）。
 
 ---
 
-## 三、 与 Bun / Node.js 性能 API 对照表
+## 二、 实战代码示例
 
-| 能力 | Node.js / Bun | CP (`cap:bench`) | 优势说明 |
-|---|---|---|---|
-| 纳秒单调时钟 | `Bun.nanoseconds()` / `process.hrtime.bigint()` | `HwTimer.nowNs()` | 返回原生 `u64`，无 BigInt 装箱与 GC 开销 |
-| 分段计时器 | 手动相减 `performance.now()` | `Stopwatch.start()` / `lap()` / `readNs()` | 封装单调防倒退差值，API 简洁直观 |
-| 基准统计 | 第三方 `mitata` / `tinybench` | 内置 `BenchStats` | 零堆分配栈内排序，直接提供 `p50/p95/p99/opsPerSec` |
-| 延迟直方图 | `perf_hooks.createHistogram()` | `LatencyHistogram` | 固定 160B 栈结构，$O(1)$ 记录，适合微秒/纳秒级热路径 |
+### 1. `BenchSuite` 与完整分位数统计
+
+```typescript
+import { BenchStats, BenchSuite } from "cap:bench";
+
+fn work() {
+    let s: u64 = 0;
+    for (i of 0..64) { s +%= i; }
+}
+
+pub fn demoSuite() {
+    let suite = BenchSuite.init("HotPath Bench", 5, 50, 1000000, 10000);
+    suite.run("sum_64", work);
+
+    let md_buf: [2048]u8 = undefined;
+    const md = suite.toMarkdown(&md_buf);
+
+    let json_buf: [2048]u8 = undefined;
+    const json = suite.toJson(&json_buf);
+}
+```
+
+### 2. `PerfTrace` / `TraceRingBuffer` 纳秒级埋点与 Chrome Trace 导出
+
+```typescript
+import { PerfTrace } from "cap:bench";
+
+pub fn demoTrace() {
+    let trace = PerfTrace.init();
+    const span = trace.begin("parse", "compiler");
+    trace.instant("lex_done", "compiler");
+    * = trace.endSpan(span);
+
+    let json_buf: [4096]u8 = undefined;
+    const chrome_json = trace.exportChromeTraceJson(&json_buf);
+}
+```

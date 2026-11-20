@@ -63,21 +63,29 @@
 | `Blob.fromFile(path, mime_type): Blob?` | 从磁盘读取文件构建 `Blob`，支持按后缀自动推导 MIME |
 | `blob.bytes(): []const u8` | 零拷贝返回当前 `[offset .. offset + size]` 只读字节视图 |
 | `blob.text(): string` | 零拷贝返回 UTF-8 文本视图 |
-| `blob.slice(start, end, content_type): Blob` | 零拷贝切分子视图并递增共享 `BlobStore` 引用计数 |
+| `blob.slice(start, end, content_type): Blob` | 零拷贝切分子视图并递增共享 `BlobStore` 引用计数（向后兼容 `usize`） |
+| `blob.sliceSigned(start: isize, end: isize, content_type): Blob` | 支持负索引（如 `-4, -1`）与反转范围（返回 0 字节空视图）的 W3C 标准切片 |
+| `Blob.concat(parts: []const Blob, mime_type): Blob` | 将多段 `Blob` 高效合并为单一连续 `Blob` |
+| `blob.equals(other: Blob): bool` | 按存储指针快速路径或逐字节比较两个 `Blob` 内容是否一致 |
+| `blob.stream(chunk_size: usize): BlobChunkReader` | 返回分块流式迭代器，支持 `next()`、`remaining()` 与 `reset()` |
 | `blob.arrayBuffer(): []u8` | 分配并返回当前视图数据的独立可变堆拷贝 |
 | `blob.release()` / `blob.deinit()` | 递减底层 `BlobStore` 引用计数 |
 
 ### 3. `File` 具名文件对象
 
-字段：`blob: Blob`、`name: string`、`lastModified: i64`、`size: usize`、`type: string`。
+字段：`blob: Blob`、`name: string`、`path: string`、`lastModified: i64`、`size: usize`、`type: string`（磁盘操作基于 Zig 0.17 `std.c.open` / `read` / `write` / `statx` / `access` / `unlink`）。
 
 | API 签名 | 说明 |
 | :--- | :--- |
 | `File.init(data, name, mime_type, last_modified): File` | 从内存字节构建带文件名与时间戳的 `File` 对象 |
-| `File.fromPath(path, mime_type): File?` | 从磁盘路径加载 `File`，自动提取文件名与推导 MIME 类型 |
+| `File.fromPath(path, mime_type): File?` | 从磁盘读取文件与 `statx` 元数据（路径不存在时安全返回 `null`） |
+| `File.at(path, mime_type): File` | 构造绑定磁盘路径的 `File` 句柄（自动探测存在性与 `lastModified`） |
+| `file.exists(): bool` | 通过 `std.c.access` 检测磁盘文件是否存在 |
 | `file.bytes()` / `file.text()` | 获取只读字节视图或文本视图 |
-| `file.slice(start, end, content_type): File` | 零拷贝切分 `File`（保留 `name` 与 `lastModified`） |
-| `file.save(dest_path)` / `file.writeTo(dest_path): bool` | 将当前视图内容持久化写入磁盘文件 |
+| `file.slice(start, end, content_type)` / `sliceSigned(...)` | 零拷贝切分 `File`（保留 `name`、`path` 与 `lastModified`） |
+| `file.write(data): bool` | 通过 `std.c.open`/`write` 将数据写入 `file.path` 并同步内存元数据 |
+| `file.delete(): bool` | 通过 `std.c.unlink` 删除磁盘上的 `file.path` |
+| `file.save(dest_path)` / `file.writeTo(dest_path): bool` | 将当前视图内容持久化写入目标磁盘路径 |
 | `file.release()` / `file.deinit()` | 释放底层 `Blob` 引用 |
 
 ---

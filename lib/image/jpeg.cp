@@ -34,7 +34,7 @@ pub class Jpeg {
                 offset = offset + 1;
                 continue;
             }
-            if (marker >= 0xD0 && marker <= 0xD8) {
+            if (marker == 0x00 || marker == 0x01 || (marker >= 0xD0 && marker <= 0xD8)) {
                 offset = offset + 2;
                 continue;
             }
@@ -48,8 +48,12 @@ pub class Jpeg {
                 break;
             }
 
-            // SOF0 (0xC0: Baseline), SOF2 (0xC2: Progressive)
-            if (marker == 0xC0 || marker == 0xC2) {
+            // All SOF markers (SOF0..SOF3, SOF5..SOF7, SOF9..SOF11, SOF13..SOF15)
+            const is_sof = (marker >= 0xC0 && marker <= 0xC3) ||
+                (marker >= 0xC5 && marker <= 0xC7) ||
+                (marker >= 0xC9 && marker <= 0xCB) ||
+                (marker >= 0xCD && marker <= 0xCF);
+            if (is_sof) {
                 if (seglen < 8) {
                     return null;
                 }

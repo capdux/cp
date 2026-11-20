@@ -4,6 +4,7 @@
 // Absorbed from bun/src/string/immutable/unicode.zig, wtf.zig, visible.zig & unicode/uucode/
 
 import { SimdScanner } from "./simd_scan.cp";
+const std = @import("std");
 
 pub const REPLACEMENT_CHAR: u32 = 0xFFFD;
 
@@ -164,9 +165,117 @@ pub struct Utf8 {
         }
         return 0;
     }
+
+    // Returns exact UTF-8 byte length (1..4) for a valid Unicode scalar value, or 0 if invalid/surrogate
+    pub static fn encodedLength(cp: u32): usize {
+        if (cp <= 0x7F) { return 1; }
+        if (cp <= 0x7FF) { return 2; }
+        if (cp >= 0xD800 && cp <= 0xDFFF) { return 0; }
+        if (cp <= 0xFFFF) { return 3; }
+        if (cp <= 0x10FFFF) { return 4; }
+        return 0;
+    }
+
+    // Strict UTF-8 sequence decoder that returns an error on any invalid byte or truncated sequence
+    pub static fn decodeNextStrict(input: []const u8, offset: usize): !DecodeResult {
+        if (offset >= input.len) {
+            return error.EndOfInput;
+        }
+        const res = Utf8.decodeNext(input, offset);
+        if (!res.valid) {
+            return error.InvalidUtf8;
+        }
+        return res;
+    }
+
+    // Copies `input` into `out`, replacing any invalid UTF-8 byte sequences with U+FFFD
+    pub static fn replaceInvalid(input: []const u8, out: []u8): usize {
+        let pos: usize = 0;
+        let out_pos: usize = 0;
+        while (pos < input.len) {
+            const dec_res = Utf8.decodeNext(input, pos);
+            const written = Utf8.encodeCodepoint(dec_res.codepoint, out[out_pos..out.len]);
+            if (written == 0) {
+                break;
+            }
+            out_pos += written;
+            pos += (dec_res.bytes_consumed as usize);
+        }
+        return out_pos;
+    }
+
+    // Computes exact UTF-8 byte length required to encode a UTF-16LE slice (replacing lone surrogates with U+FFFD)
+    pub static fn utf8LengthFromUtf16Le(input: []const u16): usize {
+        return Utf16.utf8LengthFromUtf16Le(input);
+    }
 }
 
 pub struct Utf16 {
+    pub static fn isHighSurrogate(unit: u16): bool {
+        return unit >= 0xD800 && unit <= 0xDBFF;
+    }
+
+    pub static fn isLowSurrogate(unit: u16): bool {
+        return unit >= 0xDC00 && unit <= 0xDFFF;
+    }
+
+    pub static fn isSurrogate(unit: u16): bool {
+        return unit >= 0xD800 && unit <= 0xDFFF;
+    }
+
+    // Returns true if `input` contains no unpaired UTF-16 surrogates
+    pub static fn isValid(input: []const u16): bool {
+        let i: usize = 0;
+        while (i < input.len) {
+            const u = input[i];
+            if (Utf16.isHighSurrogate(u)) {
+                if (i + 1 >= input.len || !Utf16.isLowSurrogate(input[i + 1])) {
+                    return false;
+                }
+                i += 2;
+            } else if (Utf16.isLowSurrogate(u)) {
+                return false;
+            } else {
+                i += 1;
+            }
+        }
+        return true;
+    }
+
+    // Computes exact UTF-8 byte length from UTF-16LE input (handles BMP, surrogate pairs, and U+FFFD fallback)
+    pub static fn utf8LengthFromUtf16Le(input: []const u16): usize {
+        let total: usize = 0;
+        let i: usize = 0;
+        while (i < input.len) {
+            const unit0 = input[i] as u32;
+            if (unit0 >= 0xD800 && unit0 <= 0xDBFF) {
+                if (i + 1 < input.len) {
+                    const unit1 = input[i + 1] as u32;
+                    if (unit1 >= 0xDC00 && unit1 <= 0xDFFF) {
+                        total += 4;
+                        i += 2;
+                        continue;
+                    }
+                }
+                total += 3; // U+FFFD
+                i += 1;
+            } else if (unit0 >= 0xDC00 && unit0 <= 0xDFFF) {
+                total += 3; // U+FFFD
+                i += 1;
+            } else if (unit0 <= 0x7F) {
+                total += 1;
+                i += 1;
+            } else if (unit0 <= 0x7FF) {
+                total += 2;
+                i += 1;
+            } else {
+                total += 3;
+                i += 1;
+            }
+        }
+        return total;
+    }
+
     // Computes exact UTF-16 code unit length from UTF-8 input (matching Bun elementLengthUTF8IntoUTF16)
     pub static fn utf16LengthFromUtf8(input: []const u8): usize {
         let u16_len: usize = 0;
@@ -242,6 +351,82 @@ pub struct Utf16 {
             i += 1;
         }
         return out_pos;
+    }
+
+    // Strict UTF-8 -> UTF-16LE encoder: returns error on invalid UTF-8 or insufficient output buffer
+    pub static fn encodeUtf8ToUtf16LeStrict(input: []const u8, out: []u16): !usize {
+        let pos: usize = 0;
+        let out_idx: usize = 0;
+        while (pos < input.len) {
+            const dec_res = Utf8.decodeNext(input, pos);
+            if (!dec_res.valid) {
+                return error.InvalidUtf8;
+            }
+            const cp = dec_res.codepoint;
+            if (cp < 0x10000) {
+                if (out_idx >= out.len) {
+                    return error.BufferTooSmall;
+                }
+                out[out_idx] = cp as u16;
+                out_idx += 1;
+            } else {
+                if (out_idx + 1 >= out.len) {
+                    return error.BufferTooSmall;
+                }
+                const adj = cp - 0x10000;
+                out[out_idx] = (0xD800 + (adj >> 10)) as u16;
+                out[out_idx + 1] = (0xDC00 + (adj & 0x3FF)) as u16;
+                out_idx += 2;
+            }
+            pos += (dec_res.bytes_consumed as usize);
+        }
+        return out_idx;
+    }
+
+    // Strict UTF-16LE -> UTF-8 decoder: returns error on lone surrogate or insufficient output buffer
+    pub static fn decodeUtf16LeToUtf8Strict(input: []const u16, out: []u8): !usize {
+        let i: usize = 0;
+        let out_pos: usize = 0;
+        while (i < input.len) {
+            const unit0 = input[i] as u32;
+            let cp: u32 = unit0;
+            if (unit0 >= 0xD800 && unit0 <= 0xDBFF) {
+                if (i + 1 >= input.len) {
+                    return error.InvalidSurrogatePair;
+                }
+                const unit1 = input[i + 1] as u32;
+                if (unit1 < 0xDC00 || unit1 > 0xDFFF) {
+                    return error.InvalidSurrogatePair;
+                }
+                cp = (0x10000 as u32) + ((unit0 - 0xD800) << 10) + (unit1 - 0xDC00);
+                i += 1;
+            } else if (unit0 >= 0xDC00 && unit0 <= 0xDFFF) {
+                return error.InvalidSurrogatePair;
+            }
+            const written = Utf8.encodeCodepoint(cp, out[out_pos..out.len]);
+            if (written == 0) {
+                return error.BufferTooSmall;
+            }
+            out_pos += written;
+            i += 1;
+        }
+        return out_pos;
+    }
+
+    // Allocates an exact-sized UTF-16LE buffer and encodes UTF-8 input into it
+    pub static fn encodeUtf8ToUtf16LeAlloc(allocator: std.mem.Allocator, input: []const u8): ![]u16 {
+        const needed = Utf16.utf16LengthFromUtf8(input);
+        const buf = try allocator.alloc(u16, needed);
+        const written = Utf16.encodeUtf8ToUtf16Le(input, buf);
+        return buf[0..written];
+    }
+
+    // Allocates an exact-sized UTF-8 buffer and decodes UTF-16LE input into it
+    pub static fn decodeUtf16LeToUtf8Alloc(allocator: std.mem.Allocator, input: []const u16): ![]u8 {
+        const needed = Utf16.utf8LengthFromUtf16Le(input);
+        const buf = try allocator.alloc(u8, needed);
+        const written = Utf16.decodeUtf16LeToUtf8(input, buf);
+        return buf[0..written];
     }
 }
 
