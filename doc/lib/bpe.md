@@ -1,88 +1,40 @@
-# CP 标准库：Byte-Level BPE Tokenizer 引擎手册 (`cap:bpe`)
+# `cap:bpe` — Byte-Pair Encoding (BPE) LLM Tokenizer & Token Budget Engine
 
-## 一、 架构总览与设计准则
+## 1. 概述
+`cap:bpe`（`lib/bpe/`）是纯 CP 实现的零 C 依赖工业级 Byte-Level BPE（Tiktoken 风格）分词器与 Token 预算控制引擎。内置 0..255 单字节兜底词表保证永不 OOV，支持最小 rank 优先相邻对合并、特殊 Token 切分与防注入普通编码、Tiktoken Base64 词表解析、语料自训练以及 UTF-8 边界安全的 Token 预算截断。
 
-`cap:bpe` 是 CP 语言官方内置的纯 CP **字节级 BPE（Byte Pair Encoding）分词引擎**，**零 C 依赖、零 `std.posix`、零 `@import("bun")`**，专为 CP 原生 AI 推理、LLM Token 精确计数与无损文本压缩设计。既可通过 `import { ... } from "cap:bpe"` 导入，也支持 `import cap from "cap"; cap.bpe.*` 动态懒挂载调用。
+## 2. 核心类型
+- `BpeError`: 词表与编解码错误枚举（`InvalidFormat`、`InvalidBase64`、`UnknownTokenId`、`DuplicateToken`、`InvalidTargetVocabSize`、`OutOfMemory`）。
+- `SpecialToken`: 特殊控制 Token 结构（`text: []const u8`、`id: u32`）。
+- `BpeMerge`: BPE 相邻合并规则（`left_id`、`right_id`、`merged_id`、`rank`）。
+- `BpeVocab`: 词表、Merge 规则与特殊 Token 注册中心，内部统一托管所有堆分配字节切片的生命周期。
+- `BpeTokenizer`: 核心 BPE 编解码、语料训练与 Token 预算截断引擎。
 
-### 核心特性
-- **256 字节无损基础词表**：初始化自动预置 `0..255` 全部单字节基础 Token，任何 UTF-8 中英文、Emoji、二进制控制字节均**永不产生 `<UNK>`**，严格保证 `decode(encode(text)) == text`。
-- **确定性 BPE 训练 (`train`)**：统计语料内相邻 Token 对频次，每次选取最高频（频次相同按 `(left, right)` 字典序确定性打破平局）的相邻对合并并分配递增 `rank`，直至达到目标词表大小或无频次 `>= 2` 的对。
-- **Merge Ranks 优先级编码 (`encode`)**：普通字节片段按最低 `rank` 优先反复贪心合并。
-- **Special Tokens 保护**：通过 `addSpecialToken` 注册特殊标记（如 `<|endoftext|>`, `<|im_start|>`），在编码与训练切分阶段采用最长匹配保护，绝不被内部拆分或参与合并。
+## 3. API 速查
+- **词表构建 (`BpeVocab`)**：
+  - `BpeVocab.init(alloc)` / `deinit()`
+  - `addByteTokens()`: 注册 0..255 单字节基础词表
+  - `addToken(bytes, rank_id)` / `addMerge(left_bytes, right_bytes)` / `addSpecialToken(text, id)`
+  - `loadTiktokenText(alloc, content)`: 解析 `<base64_token> <rank>` 格式 Tiktoken 词表
+- **编解码与预算 (`BpeTokenizer`)**：
+  - `BpeTokenizer.init(alloc)` / `fromVocab(vocab)` / `loadTiktoken(alloc, content)` / `deinit()`
+  - `trainFromCorpus(alloc, text, target_vocab_size)`: 从语料迭代统计最高频相邻对并生成 Merge 规则
+  - `encode(alloc, text)`: 识别 `special_tokens` 切分后执行 Byte-Level BPE 合并
+  - `encodeOrdinary(alloc, text)`: 忽略 `special_tokens` 按普通文本编码（防 Prompt 注入）
+  - `decode(alloc, token_ids)`: 无损还原为 UTF-8 字节流（未知 ID 返回 `BpeError.UnknownTokenId`）
+  - `countTokens(alloc, text)`: 统计文本 Token 数
+  - `truncateToMaxTokens(alloc, text, max_tokens)`: 按 Token 预算截断并保证截断后 UTF-8 边界完整不乱码
 
-### 模块文件拓扑与谱系来源
-
-| 文件路径 | 谱系注释 | 核心职责 |
-| :--- | :--- | :--- |
-| `lib/bpe/bpe.cp` | `// Source: cp/lib/bpe/bpe.cp (...)` | `BpeError`、`MergePair`、`BpeTokenizer` |
-| `lib/bpe/index.cp` | `// Source: cp/lib/bpe/index.cp (...)` | `cap:bpe` 统一公开导出入口 |
-
----
-
-## 二、 核心 API 详解
-
-### 1. 错误集 `BpeError`
-- `InvalidVocabSize`：`train` 传入 `target_vocab_size < 256`。
-- `UnknownTokenId`：`decode` 遇到越界 Token ID（`id >= vocabSize()`）。
-- `DuplicateSpecialToken`：`addSpecialToken` 重复注册同一特殊标记。
-- `InvalidMergeRule`：`addMerge` 传入越界 ID、特殊标记 ID、重复合并对，或 `addSpecialToken` 传入空字符串。
-- `OutOfMemory`：底层词表、哈希表或输出切片内存分配失败。
-
-### 2. 结构 `MergePair`
-```typescript
-pub struct MergePair {
-    left: u32;
-    right: u32;
-    new_id: u32;
-    rank: u32;
-}
-```
-
-### 3. `BpeTokenizer`
-- **生命周期**：
-  - `BpeTokenizer.init(alloc: std.mem.Allocator): BpeTokenizer ! BpeError`（自动预置 `0..255` 单字节 Token）
-  - `deinit(*_)`
-- **词表与规则构建**：
-  - `addSpecialToken(*_, token_str: string): u32 ! BpeError`
-  - `addMerge(*_, left_id: u32, right_id: u32): u32 ! BpeError`
-  - `train(*_, corpus: string, target_vocab_size: usize): void ! BpeError`
-- **编解码与查询**：
-  - `encode(alloc: std.mem.Allocator, text: string): []u32 ! BpeError`（调用方需使用 `alloc.free` 释放）
-  - `decode(alloc: std.mem.Allocator, ids: []const u32): []u8 ! BpeError`（调用方需使用 `alloc.free` 释放）
-  - `countTokens(alloc: std.mem.Allocator, text: string): usize ! BpeError`
-  - `vocabSize(): usize`
-  - `tokenBytes(id: u32): ([]const u8)?`
-
----
-
-## 三、 可运行代码示例
-
-```typescript
-const std = @import("std");
+## 4. 示例
+```cp
 import { BpeTokenizer } from "cap:bpe";
-import cap from "cap";
 
-pub fn demoBpe(): ! {
-    const alloc = std.heap.page_allocator;
+let tok = try BpeTokenizer.trainFromCorpus(alloc, "hello hello world", 260);
+defer tok.deinit();
 
-    let tok = BpeTokenizer.init(alloc)?;
-    defer tok.deinit();
+const ids = try tok.encode(alloc, "hello world");
+defer alloc.free(ids);
 
-    const im_start = tok.addSpecialToken("<|im_start|>")?;
-    const im_end = tok.addSpecialToken("<|im_end|>")?;
-    * = im_start;
-    * = im_end;
-
-    tok.train("hello world hello cp-lang hello bpe!", 270)?;
-
-    const input = "<|im_start|>hello cp-lang!<|im_end|>";
-    const ids = tok.encode(alloc, input)?;
-    defer alloc.free(ids);
-
-    const restored = tok.decode(alloc, ids)?;
-    defer alloc.free(restored);
-
-    const n = cap.bpe.BpeTokenizer.init(alloc)?;
-    n.deinit();
-}
+const decoded = try tok.decode(alloc, ids);
+defer alloc.free(decoded);
 ```

@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:bpe` 纯 CP Byte-Pair Encoding (Tiktoken 风格) LLM Tokenizer 编解码、语料训练与 UTF-8 安全截断引擎（支持 `cap.bpe` 自动动态挂载，详见 `doc/lib/bpe.md`）（5/5 PASS，自动动态挂载 `cap.bpe`）
+- **新增标准库**：`lib/bpe/{types,vocab,tokenizer,index}.cp`，实现 Byte-Level 0..255 兜底词表、`special_tokens` 切分与 `encodeOrdinary` 防注入、`loadTiktokenText` 解析、`trainFromCorpus` 语料训练及 `truncateToMaxTokens` UTF-8 边界安全截断。
+- **新增文档与测试**：`doc/lib/bpe.md` 扁平文档与 `cap/test/test_bpe_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:quant` 纯 CP AI Embedding 向量量化（Scalar Int8 对称/仿射、Binary 1-bit @popCount 汉明距离、Product Quantization K-Means & ADC 查表）引擎（支持 `cap.quant` 自动动态挂载，详见 `doc/lib/quant.md`）（5/5 PASS，自动动态挂载 `cap.quant`）
 - **新增标准库**：`lib/quant/{types,scalar,binary,pq,index}.cp`，实现 Int8 对称/仿射量化与 `dotInt8`、32 倍压缩 Binary 1-bit `@popCount` 汉明检索、以及 `trainPqKMeans`/`encodePq`/`buildAdcDistanceTable`/`adcDistance` PQ 子空间量化。
 - **新增文档与测试**：`doc/lib/quant.md` 扁平文档与 `cap/test/test_quant_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
