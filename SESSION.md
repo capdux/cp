@@ -245,3 +245,6 @@
 
 ### 2026-11-21（`cap:prob` 验收固化，顶替以 `inherit` 拉起 `cap:selector` 维持 2 路并行）
 - **执行成果**：`lib/prob/`（5/5 PASS，含 `cap.prob` 动态挂载与 `doc/lib/prob.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/selector/`（CSS3 选择器编译器、伪类/属性匹配与 DOM 树查询引擎），与 `lib/quadtree/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:quadtree` 验收固化，顶替以 `inherit` 拉起 `cap:optimize` 维持 2 路并行）
+- **执行成果**：`lib/quadtree/`（5/5 PASS，含 `cap.quadtree` 动态挂载与 `doc/lib/quadtree.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/optimize/`（Brent 求根、黄金分割极小化、Nelder-Mead 无导数多维最优化与 Adam 梯度优化引擎），与 `lib/selector/` 保持 2 路正交并行。

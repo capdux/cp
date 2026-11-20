@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:quadtree` 动态分裂合并 2D 空间四叉树索引与 KNN 引擎（5/5 PASS，自动动态挂载 `cap.quadtree`）
+
+- 新建 [`lib/quadtree/`](file:///data/dev/cp/lib/quadtree/index.cp)（`quadtree.cp`、`index.cp`）：`QuadTree`（安全索引池 4 分裂下推、同坐标点防无限分裂、`remove`/`update` 动态向上合并回收节点、`queryRect`/`queryCircle` 及双堆包围盒下界剪枝 `nearestK`，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/quadtree.md`](file:///data/dev/cp/doc/lib/quadtree.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_quadtree_production_deep.cp`](file:///data/dev/cp/cap/test/test_quadtree_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:prob` 概率分布、确定性采样器与 A/B 显著性假设检验引擎（5/5 PASS，自动动态挂载 `cap.prob`）
 
 - 新建 [`lib/prob/`](file:///data/dev/cp/lib/prob/index.cp)（`dist.cp`、`index.cp`）：`Rng`（SplitMix64 + xoshiro256**、Box-Muller 正态、Knuth/PTRS 泊松、`weightedChoice` 与 `shuffle`）、`NormalDist`（Acklam 高精度 `invCdf`）/`ExponentialDist`/`BinomialDist`（`lgammaApprox` 防大数溢出）/`PoissonDist` 及 `HypothesisTest`（`twoProportionZTest`/`twoSampleZTest` 含 p-value 与置信区间）；文档 [`doc/lib/prob.md`](file:///data/dev/cp/doc/lib/prob.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_prob_production_deep.cp`](file:///data/dev/cp/cap/test/test_prob_production_deep.cp) `-m` 5/5 PASS。
