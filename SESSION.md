@@ -227,3 +227,9 @@
 
 ### 2026-11-21（`cap:svg` 验收固化，顶替以 `inherit` 拉起 `cap:bpe` 维持 2 路并行）
 - **执行成果**：`lib/svg/`（5/5 PASS，含 `cap.svg` 动态挂载与 `doc/lib/svg.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/bpe/`（Byte-Level BPE Tokenizer 训练、编码、无损解码与 Special Tokens 隔离引擎），与 `lib/regex/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:regex` 验收固化，顶替以 `inherit` 拉起 `cap:linalg` 维持 2 路并行）
+- **执行成果**：`lib/regex/`（5/5 PASS，含 `cap.regex` 动态挂载与 `doc/lib/regex.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/linalg/`（通用 `M x N` 稠密矩阵运算、列主元高斯消元求解、求逆、行列式与最小二乘拟合引擎），与 `lib/bpe/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:bpe` 验收固化，顶替以 `inherit` 拉起 `cap:fft` 维持 2 路并行）
+- **执行成果**：`lib/bpe/`（5/5 PASS，含 `cap.bpe` 动态挂载与 `doc/lib/bpe.md`）经 `verify_module.sh` 一键验收回收并与 `lib/regex/` 合并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/fft/`（Cooley-Tukey Radix-2 FFT/IFFT、窗函数与频谱主频分析引擎），与 `lib/linalg/` 保持 2 路正交并行。

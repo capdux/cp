@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:bpe` Byte-Level BPE Tokenizer 训练与无损编解码引擎（5/5 PASS，自动动态挂载 `cap.bpe`）
+
+- 新建 [`lib/bpe/`](file:///data/dev/cp/lib/bpe/index.cp)（`bpe.cp`、`index.cp`）：`BpeTokenizer`（256 字节无损基础词表、`addSpecialToken` 最长匹配隔离、`train` 统计高频字节对迭代合并、`addMerge` 手动规则加载、`encode`/`decode` 任意 UTF-8/Emoji 100% 无损往返）；文档 [`doc/lib/bpe.md`](file:///data/dev/cp/doc/lib/bpe.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_bpe_production_deep.cp`](file:///data/dev/cp/cap/test/test_bpe_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
+## [2026-11-21] - 新建 `cap:regex` 抗 ReDoS 线性时间 Pike VM / Thompson NFA 正则表达式引擎（5/5 PASS，自动动态挂载 `cap.regex`）
+
+- 新建 [`lib/regex/`](file:///data/dev/cp/lib/regex/index.cp)（`compiler.cp`、`vm.cp`、`index.cp`）：Thompson NFA 字节码编译器（字符类/否定类、`\d\w\s` 转义、捕获与非捕获组、分支 `|`、锚点 `^`/`$`、贪婪与惰性量词 `{m,n}?`）与稀疏去重 Pike VM（$O(N \cdot M)$ 抗 ReDoS 线性时间、`find`/`findAll`/`captures`/`replaceAll`/`split`）；文档 [`doc/lib/regex.md`](file:///data/dev/cp/doc/lib/regex.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_regex_production_deep.cp`](file:///data/dev/cp/cap/test/test_regex_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:svg` 矢量 SVG 画布与统计图表渲染引擎（5/5 PASS，自动动态挂载 `cap.svg`）
 
 - 新建 [`lib/svg/`](file:///data/dev/cp/lib/svg/index.cp)（`canvas.cp`、`charts.cp`、`index.cp`）：`SvgPathBuilder` & `SvgCanvas`（基础图元、分组嵌套、有限数值校验与 XML XSS 安全转义）及 `SvgCharts`（Heckbert Nice Ticks `barChart`、多系列归一化 `lineChart`、实心/环形与 100% 扇区 `pieChart`，经 `cap:xml` 解析验证）；文档 [`doc/lib/svg.md`](file:///data/dev/cp/doc/lib/svg.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_svg_production_deep.cp`](file:///data/dev/cp/cap/test/test_svg_production_deep.cp) `-m` 5/5 PASS。

@@ -2,6 +2,18 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:bpe` Byte-Level BPE Tokenizer 引擎（5/5 PASS，文档直写 `doc/lib/bpe.md`）
+
+- **落地成果**：`lib/bpe/`（`bpe.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），与 `lib/regex/` 合并提交，并以 `Model: "inherit"` 顶替派发 `cap:fft`（Cooley-Tukey Radix-2 FFT/IFFT、窗函数、频谱功率与主频提取 DSP 引擎），与 `lib/linalg/` 保持 2 路正交并行。
+
+---
+
+## 2026-11-21: 新建 `cap:regex` 抗 ReDoS 线性时间 Pike VM 正则引擎（5/5 PASS，文档直写 `doc/lib/regex.md`）
+
+- **落地成果**：`lib/regex/`（`compiler.cp`/`vm.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:linalg`（通用任意维度稠密矩阵运算、列主元 LU/高斯消元求解、求逆、行列式与最小二乘线性拟合引擎），与 `lib/bpe/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:svg` 矢量 SVG 画布与统计图表引擎（5/5 PASS，文档直写 `doc/lib/svg.md`）
 
 - **落地成果**：`lib/svg/`（`canvas.cp`/`charts.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:bpe`（Byte-Level BPE Tokenizer 训练、合并规则编码、字节级无损解码与 Special Tokens 隔离引擎），与 `lib/regex/` 保持 2 路正交并行。
