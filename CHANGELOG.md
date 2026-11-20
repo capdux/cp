@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:wkt` OGC WKT 与 WKB 空间几何双向编解码引擎（5/5 PASS，自动动态挂载 `cap.wkt`）
+- **新增标准库**：`lib/wkt/{wkt,index}.cp`，实现大小写不敏感 `parseWkt`/`formatWkt`（支持 2D/Z/M/ZM、`EMPTY` 及两种 `MULTIPOINT` 写法）与 ISO WKB 1..7 大小端双向 `encodeWkb`/`decodeWkb`，内置 Polygon 环闭合与 32 层 `MaxDepthExceeded` 防护。
+- **新增文档与测试**：`doc/lib/wkt.md` 扁平文档与 `cap/test/test_wkt_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:lzw` 可变位宽 LZW 字典无损压缩与解压引擎（5/5 PASS，自动动态挂载 `cap.lzw`）
 - **新增标准库**：`lib/lzw/{lzw,index}.cp`，实现支持 `LsbFirst`（GIF）与 `MsbFirst`（TIFF/PDF）双位序的 2..12-bit 动态位宽升档、`ClearCode` 自动重置、`KwKwK` 解码及 `OutputTooLarge` 防炸弹上限。
 - **新增文档与测试**：`doc/lib/lzw.md` 扁平文档与 `cap/test/test_lzw_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

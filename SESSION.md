@@ -560,3 +560,6 @@
 
 ### 2026-11-21（`cap:lzw` 验收提交，顶替拉起 `cap:gif` 维持 2 路常规并行）
 - **执行成果**：`lib/lzw/`（5/5 PASS，`doc/lib/lzw.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/gif/`（复用 `cap:lzw` 的纯 CP GIF87a/GIF89a 多帧动画编解码引擎），与 `lib/wkt/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:wkt` 验收提交，顶替拉起 `cap:avro` 维持 2 路常规并行）
+- **执行成果**：`lib/wkt/`（5/5 PASS，`doc/lib/wkt.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/avro/`（Apache Avro Schema 驱动二进制编解码与 OCF 容器引擎），与 `lib/gif/` 维持 2 路常规并行。
