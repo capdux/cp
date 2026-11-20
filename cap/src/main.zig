@@ -188,8 +188,8 @@ fn usage() void {
         \\  cap <file.cp|dir>             Run a CP file or directory directly (Debug)
         \\  cap run <file|script>         Run a script or file explicitly
         \\  cap build [target] [options]  Build a CP package or directory
-        \\  cap clean                     Clean intermediate Zig code and build caches
-        \\  cap test [dir] [--fuzz]       Run test suite (default: test/) or libFuzzer
+        \\  cap clean [--all]             Clean .cap/ build caches (use --all to also remove bin/)
+        \\  cap test [dir] [-m] [--fuzz]  Run test suite (default: test/) or libFuzzer
         \\  cap fuzz [target] [options]   Fuzz test target using LLVM libFuzzer + ASan
         \\  cap bench <file.cp>           Run microsecond benchmark (ReleaseFast)
         \\  cap demangle [trace_file]     Demangle Zig stack traces to original CP lines
@@ -200,6 +200,9 @@ fn usage() void {
         \\  cap install                   Install all dependencies from cap.json
         \\  cap sniff                     Detect hardware features (AVX2, CPU, OS)
         \\  cap help                      Show this help message
+        \\
+        \\Test Options:
+        \\  -m, --modular                 Share modular Zig cache (.cap/test-mod/) across tests
         \\
         \\Fuzz Options:
         \\  --fuzz                        Enable LLVM libFuzzer mode with AddressSanitizer
@@ -220,6 +223,7 @@ fn usage() void {
         \\  --cache-dir=<path>            Override Zig compiler cache directory (isolates concurrent builds)
         \\  -m, --modular                 Enable modular multi-file Zig codegen (cpc compile --emit-dir)
         \\  --emit-types                  Emit .d.cp type definitions even when building executables
+        \\  --timings                     Print per-stage build timings breakdown in ms
         \\  -t, --target=<triple>         Cross-compile for specific target triple
         \\  -b, --beam                    Build dynamic library (.so) for BEAM/Nest runtime
         \\  --exe                         Produce standalone executable (default)
@@ -266,40 +270,77 @@ fn handleRun(allocator: std.mem.Allocator, args: []const []const u8) !bool {
 }
 
 fn handleClean(allocator: std.mem.Allocator, args: []const []const u8) !void {
-    _ = args;
+    var clean_all = false;
+    for (args) |arg| {
+        if (std.mem.eql(u8, arg, "--all") or std.mem.eql(u8, arg, "-a")) {
+            clean_all = true;
+        } else if (std.mem.eql(u8, arg, "-h") or std.mem.eql(u8, arg, "--help")) {
+            std.debug.print("Usage: cap clean [--all]\n", .{});
+            std.debug.print("  (default)  Clean .cap/ build caches and .cap/ws/ isolated workspaces (preserves src/ and bin/)\n", .{});
+            std.debug.print("  --all      Also remove bin/ and configured output directory\n", .{});
+            return;
+        } else if (std.mem.startsWith(u8, arg, "-")) {
+            std.debug.print("Unknown option for `cap clean`: {s}\nUsage: cap clean [--all]\n", .{arg});
+            return error.InvalidArgs;
+        }
+    }
+
     std.debug.print("Cleaning build caches and intermediate artifacts...\n", .{});
 
-    fs_shim.cwd().deleteTree(".cap/zig") catch {};
-    std.debug.print("  ✓ Removed intermediate Zig source (.cap/zig/)\n", .{});
-
-    fs_shim.cwd().deleteTree(".cap/zig-cache") catch {};
-    std.debug.print("  ✓ Removed Zig compiler cache (.cap/zig-cache/)\n", .{});
-
-    fs_shim.cwd().deleteTree(".cap/ws") catch {};
-    std.debug.print("  ✓ Removed isolated build workspaces (.cap/ws/)\n", .{});
-
-    fs_shim.cwd().deleteTree(".cap/obj") catch {};
-    std.debug.print("  ✓ Removed object files (.cap/obj/)\n", .{});
-
-    if (fs_shim.cwd().statFile("bin")) |_| {
-        fs_shim.cwd().deleteTree("bin") catch {};
-        std.debug.print("  ✓ Removed build output directory (bin/)\n", .{});
+    var removed_any = false;
+    if (fs_shim.cwd().statFile(".cap/ws")) |_| {
+        fs_shim.cwd().deleteTree(".cap/ws") catch {};
+        std.debug.print("  ✓ Removed isolated build workspaces (.cap/ws/)\n", .{});
+        removed_any = true;
     } else |_| {}
 
-    if (fs_shim.cwd().readFileAlloc(allocator, "cap.json", 1024 * 1024)) |content| {
-        defer allocator.free(content);
-        if (manifest.Manifest.parse(allocator, content)) |mf| {
-            if (mf.build_config) |bc| {
-                if (bc.out_dir) |od| {
-                    if (!std.mem.eql(u8, od, "bin") and !std.mem.eql(u8, od, "cap/bin")) {
-                        fs_shim.cwd().deleteTree(od) catch {};
-                        std.debug.print("  ✓ Removed custom output directory ({s}/)\n", .{od});
+    if (fs_shim.cwd().statFile(".cap")) |_| {
+        fs_shim.cwd().deleteTree(".cap") catch {};
+        std.debug.print("  ✓ Removed build cache directory (.cap/)\n", .{});
+        removed_any = true;
+    } else |_| {}
+
+    if (clean_all) {
+        if (fs_shim.cwd().statFile("bin")) |_| {
+            fs_shim.cwd().deleteTree("bin") catch {};
+            std.debug.print("  ✓ Removed build output directory (bin/)\n", .{});
+            removed_any = true;
+        } else |_| {}
+
+        if (fs_shim.cwd().readFileAlloc(allocator, "cap.json", 1024 * 1024)) |content| {
+            defer allocator.free(content);
+            if (manifest.Manifest.parse(allocator, content)) |mf_val| {
+                var mf = mf_val;
+                defer mf.deinit(allocator);
+                if (mf.build_config) |bc| {
+                    if (bc.out_dir) |od| {
+                        const norm_od = trimTrailingSlashes(od);
+                        if (!std.mem.eql(u8, norm_od, "bin") and
+                            !std.mem.eql(u8, norm_od, "./bin") and
+                            !std.mem.eql(u8, norm_od, "cap/bin") and
+                            !std.mem.eql(u8, norm_od, ".") and
+                            !std.mem.eql(u8, norm_od, "src") and
+                            !std.mem.eql(u8, norm_od, "test"))
+                        {
+                            if (fs_shim.cwd().statFile(norm_od)) |_| {
+                                fs_shim.cwd().deleteTree(norm_od) catch {};
+                                std.debug.print("  ✓ Removed custom output directory ({s}/)\n", .{norm_od});
+                                removed_any = true;
+                            } else |_| {}
+                        }
                     }
                 }
-            }
+            } else |_| {}
         } else |_| {}
-    } else |_| {}
+    } else {
+        if (fs_shim.cwd().statFile("bin")) |_| {
+            std.debug.print("  • Preserved output directory (bin/); pass --all to remove\n", .{});
+        } else |_| {}
+    }
 
+    if (!removed_any) {
+        std.debug.print("  • Nothing to clean (already clean)\n", .{});
+    }
     std.debug.print("Clean completed successfully!\n", .{});
 }
 
@@ -1427,7 +1468,15 @@ const BuildOptions = struct {
     force_llvm: bool = false,
     emit_types: bool = false,
     is_modular: bool = false,
+    timings: bool = false,
     explicit_cache_dir: ?[]const u8 = null,
+};
+
+const BuildTimings = struct {
+    source_scan_ns: i128 = 0,
+    cpc_transpile_ns: i128 = 0,
+    zig_compile_ns: i128 = 0,
+    atomic_install_ns: i128 = 0,
 };
 
 const WorkspacePaths = struct {
@@ -1694,6 +1743,8 @@ fn buildPackage(allocator: std.mem.Allocator, args: []const []const u8) !void {
             opts.force_llvm = true;
         } else if (std.mem.eql(u8, arg, "--emit-types")) {
             opts.emit_types = true;
+        } else if (std.mem.eql(u8, arg, "--timings")) {
+            opts.timings = true;
         } else if (std.mem.eql(u8, arg, "-m") or std.mem.eql(u8, arg, "--modular")) {
             opts.is_modular = true;
         } else if (std.mem.eql(u8, arg, "--safe")) {
@@ -1764,15 +1815,34 @@ fn buildPackage(allocator: std.mem.Allocator, args: []const []const u8) !void {
         }
     }
 
+    var timings = BuildTimings{};
     for (targets_to_build[0..targets_len]) |target_path| {
-        try buildTarget(allocator, target_path, opts, ws_paths);
+        try buildTarget(allocator, target_path, opts, ws_paths, &timings);
     }
-    const total_ms = build_start.durationTo(std.Io.Timestamp.now(global_io, .awake)).toMilliseconds();
+    const total_dur = build_start.durationTo(std.Io.Timestamp.now(global_io, .awake));
+    const total_ms = total_dur.toMilliseconds();
     if (total_ms >= 1000) {
         const total_sec = @as(f64, @floatFromInt(total_ms)) / 1000.0;
         std.debug.print("Build completed in {d:.2}s! Artifacts in {s}/\n", .{ total_sec, opts.out_dir_val });
     } else {
         std.debug.print("Build completed in {d}ms! Artifacts in {s}/\n", .{ total_ms, opts.out_dir_val });
+    }
+
+    if (opts.timings) {
+        const total_ns: i128 = @intCast(total_dur.toNanoseconds());
+        const scan_ms = @as(f64, @floatFromInt(timings.source_scan_ns)) / 1_000_000.0;
+        const cpc_ms = @as(f64, @floatFromInt(timings.cpc_transpile_ns)) / 1_000_000.0;
+        const zig_ms = @as(f64, @floatFromInt(timings.zig_compile_ns)) / 1_000_000.0;
+        const install_ms = @as(f64, @floatFromInt(timings.atomic_install_ns)) / 1_000_000.0;
+        const tot_f_ms = @as(f64, @floatFromInt(total_ns)) / 1_000_000.0;
+        const denom: f64 = if (tot_f_ms > 0.0) tot_f_ms else 1.0;
+
+        std.debug.print("\nBuild Timings:\n", .{});
+        std.debug.print("  Source mtime scan  : {d:>8.2}ms ({d:>5.1}%)\n", .{ scan_ms, scan_ms * 100.0 / denom });
+        std.debug.print("  cpc Transpile      : {d:>8.2}ms ({d:>5.1}%)\n", .{ cpc_ms, cpc_ms * 100.0 / denom });
+        std.debug.print("  Zig Native Compile : {d:>8.2}ms ({d:>5.1}%)\n", .{ zig_ms, zig_ms * 100.0 / denom });
+        std.debug.print("  Atomic Install     : {d:>8.2}ms ({d:>5.1}%)\n", .{ install_ms, install_ms * 100.0 / denom });
+        std.debug.print("  Total              : {d:>8.2}ms\n", .{tot_f_ms});
     }
 }
 
@@ -1781,6 +1851,7 @@ fn buildTarget(
     target_path: []const u8,
     opts: BuildOptions,
     ws_paths: WorkspacePaths,
+    timings: *BuildTimings,
 ) !void {
     const stat = fs_shim.cwd().statFile(target_path) catch return;
     if (stat.kind == .directory) {
@@ -1790,10 +1861,10 @@ fn buildTarget(
         while (try it.next(global_io)) |entry| {
             const child_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ target_path, entry.name });
             defer allocator.free(child_path);
-            try buildTarget(allocator, child_path, opts, ws_paths);
+            try buildTarget(allocator, child_path, opts, ws_paths, timings);
         }
     } else if (std.mem.endsWith(u8, target_path, ".cp")) {
-        try compileSingleFile(allocator, target_path, opts, ws_paths);
+        try compileSingleFile(allocator, target_path, opts, ws_paths, timings);
     }
 }
 
@@ -1802,6 +1873,7 @@ fn compileSingleFile(
     filename: []const u8,
     opts: BuildOptions,
     ws_paths: WorkspacePaths,
+    timings: *BuildTimings,
 ) !void {
     const base_name = filename[0 .. filename.len - 3];
     var bin_subpath: []const u8 = base_name;
@@ -1857,6 +1929,7 @@ fn compileSingleFile(
     const entry_stem = std.Io.Dir.path.stem(filename);
 
     // 1. Recursive source mtime (all .cp under src/ + filename + cap.json)
+    const scan_start = std.Io.Timestamp.now(global_io, .awake);
     const max_src_mtime_ns = computeMaxSourceMtimeNs(filename);
 
     var zig_file_buf: ?[]const u8 = null;
@@ -1909,6 +1982,7 @@ fn compileSingleFile(
             }
         }
     }
+    timings.source_scan_ns += @intCast(scan_start.durationTo(std.Io.Timestamp.now(global_io, .awake)).toNanoseconds());
 
     if (all_up_to_date) {
         std.debug.print("Building: {s} (Mode: {s})...\n", .{ filename, opts.optimize_mode });
@@ -2010,7 +2084,9 @@ fn compileSingleFile(
             } else |_| {}
         }
 
-        const cpc_ms = cpc_start.durationTo(std.Io.Timestamp.now(global_io, .awake)).toMilliseconds();
+        const cpc_dur = cpc_start.durationTo(std.Io.Timestamp.now(global_io, .awake));
+        timings.cpc_transpile_ns += @intCast(cpc_dur.toNanoseconds());
+        const cpc_ms = cpc_dur.toMilliseconds();
         std.debug.print("  → [cpc] Transpiled in {d}ms\n", .{cpc_ms});
     }
 
@@ -2031,6 +2107,7 @@ fn compileSingleFile(
 
     // Emit Type Definitions (.d.cp) only for libraries or when explicitly requested
     if (opts.emit_types or std.mem.eql(u8, build_type_resolved, "build-lib")) {
+        const emit_start = std.Io.Timestamp.now(global_io, .awake);
         const cpc_bin = try getCpcBin(allocator);
         defer allocator.free(cpc_bin);
         const type_out_path = try std.fmt.allocPrint(allocator, "{s}/{s}.d.cp", .{ opts.out_dir_val, bin_subpath });
@@ -2041,6 +2118,7 @@ fn compileSingleFile(
         const emit_types_args = &[_][]const u8{ cpc_bin, "emit-types", filename, "--output", type_out_path };
         var emit_types_child = try std.process.spawn(global_io, .{ .argv = emit_types_args });
         _ = try emit_types_child.wait(global_io);
+        timings.cpc_transpile_ns += @intCast(emit_start.durationTo(std.Io.Timestamp.now(global_io, .awake)).toNanoseconds());
     }
 
     fs_shim.cwd().createDirPath(global_io, ws_paths.zig_cache_dir) catch {};
@@ -2048,6 +2126,7 @@ fn compileSingleFile(
     const is_x86_64_linux_host = builtin.cpu.arch == .x86_64 and builtin.os.tag == .linux;
     const has_explicit_llvm_flag = opts.force_llvm or hasArg(opts.zig_args, "-fllvm") or hasArg(opts.zig_args, "-fno-llvm");
 
+    var any_failed = false;
     for (targets_to_run[0..target_count]) |t| {
         var dir_path: ?[]const u8 = null;
         defer if (dir_path) |d| allocator.free(d);
@@ -2159,15 +2238,21 @@ fn compileSingleFile(
             build_ok = try spawnAndWaitSuccess(child_args[0..base_argc]);
         }
 
+        const zig_dur = zig_start.durationTo(std.Io.Timestamp.now(global_io, .awake));
+        timings.zig_compile_ns += @intCast(zig_dur.toNanoseconds());
+
         if (!build_ok) {
             fs_shim.cwd().deleteFile(tmp_out_path) catch {};
             std.debug.print("Failed to build for {s}\n", .{t.name});
+            any_failed = true;
         } else {
+            const install_start = std.Io.Timestamp.now(global_io, .awake);
             fs_shim.cwd().rename(tmp_out_path, out_file_path) catch |err| {
                 fs_shim.cwd().deleteFile(tmp_out_path) catch {};
                 return err;
             };
-            const zig_ms = zig_start.durationTo(std.Io.Timestamp.now(global_io, .awake)).toMilliseconds();
+            timings.atomic_install_ns += @intCast(install_start.durationTo(std.Io.Timestamp.now(global_io, .awake)).toNanoseconds());
+            const zig_ms = zig_dur.toMilliseconds();
             if (zig_ms >= 1000) {
                 const zig_sec = @as(f64, @floatFromInt(zig_ms)) / 1000.0;
                 std.debug.print("  ✓ Built {s} in {d:.2}s\n", .{ t.name, zig_sec });
@@ -2176,6 +2261,7 @@ fn compileSingleFile(
             }
         }
     }
+    if (any_failed) return error.BuildFailed;
 }
 
 fn handleInit(allocator: std.mem.Allocator, args: []const []const u8) !void {
@@ -2334,6 +2420,7 @@ fn handleInit(allocator: std.mem.Allocator, args: []const []const u8) !void {
 
 pub const FuzzOptions = struct {
     is_fuzz: bool = false,
+    is_modular: bool = false,
     timeout: ?[]const u8 = null,
     jobs: ?[]const u8 = null,
     repro: ?[]const u8 = null,
@@ -2356,6 +2443,8 @@ fn handleTestWithFuzz(allocator: std.mem.Allocator, args: []const []const u8, de
         const arg = args[i];
         if (std.mem.eql(u8, arg, "--fuzz")) {
             fuzz_opts.is_fuzz = true;
+        } else if (std.mem.eql(u8, arg, "-m") or std.mem.eql(u8, arg, "--modular")) {
+            fuzz_opts.is_modular = true;
         } else if (std.mem.eql(u8, arg, "--timeout")) {
             if (i + 1 < args.len) {
                 i += 1;
@@ -2430,6 +2519,8 @@ fn handleTestWithFuzz(allocator: std.mem.Allocator, args: []const []const u8, de
 
     if (fuzz_opts.is_fuzz) {
         std.debug.print("Discovered {d} fuzz target(s). Running with LLVM libFuzzer + ASan...\n\n", .{test_files.items.len});
+    } else if (fuzz_opts.is_modular) {
+        std.debug.print("Discovered {d} test file(s). Running in Debug mode (modular .cap/test-mod/)...\n\n", .{test_files.items.len});
     } else {
         std.debug.print("Discovered {d} test file(s). Running in Debug mode...\n\n", .{test_files.items.len});
     }
@@ -2449,7 +2540,7 @@ fn handleTestWithFuzz(allocator: std.mem.Allocator, args: []const []const u8, de
         const run_res = if (fuzz_opts.is_fuzz)
             runFuzzSingleFile(allocator, tfile, fuzz_opts)
         else
-            runTestSingleFile(allocator, tfile);
+            runTestSingleFile(allocator, tfile, fuzz_opts.is_modular);
 
         const duration = file_start.durationTo(std.Io.Timestamp.now(global_io, .awake)).toMilliseconds();
 
@@ -2493,31 +2584,69 @@ fn collectTestFiles(allocator: std.mem.Allocator, dir_path: []const u8, list: *s
     }
 }
 
-fn runTestSingleFile(allocator: std.mem.Allocator, filename: []const u8) !void {
+fn runTestSingleFile(allocator: std.mem.Allocator, filename: []const u8, is_modular: bool) !void {
     const base_name = filename[0 .. filename.len - 3];
-    const zig_file = try std.fmt.allocPrint(allocator, ".cap/zig/{s}.zig", .{base_name});
-    defer allocator.free(zig_file);
-
-    if (std.Io.Dir.path.dirname(zig_file)) |dirname| {
-        fs_shim.cwd().createDirPath(global_io, dirname) catch {};
-    }
+    const test_mod_dir = ".cap/test-mod";
+    var zig_file_buf: ?[]const u8 = null;
+    defer if (zig_file_buf) |zf| allocator.free(zf);
 
     const cpc_bin = try getCpcBin(allocator);
     defer allocator.free(cpc_bin);
-    const cpc_args = &[_][]const u8{
-        cpc_bin,
-        "compile",
-        filename,
-        "--output",
-        zig_file,
-        "-I",
-        "/data/dev/cp/cap/cap_modules",
-        "-I",
-        "/data/dev/cp/lib",
-    };
-    var compile_child = try std.process.spawn(global_io, .{ .argv = cpc_args });
-    const compile_res = try compile_child.wait(global_io);
-    if (compile_res.exited != 0) return error.CompileFailed;
+
+    if (is_modular) {
+        fs_shim.cwd().createDirPath(global_io, test_mod_dir) catch {};
+        const cpc_args = &[_][]const u8{
+            cpc_bin,
+            "compile",
+            "--emit-dir",
+            test_mod_dir,
+            filename,
+            "-I",
+            "/data/dev/cp/cap/cap_modules",
+            "-I",
+            "/data/dev/cp/lib",
+        };
+        var compile_child = try std.process.spawn(global_io, .{ .argv = cpc_args });
+        const compile_res = try compile_child.wait(global_io);
+        switch (compile_res) {
+            .exited => |code| if (code != 0) return error.CompileFailed,
+            else => return error.CompileFailed,
+        }
+
+        const entry_stem = std.Io.Dir.path.stem(filename);
+        zig_file_buf = try resolveModularEntryFile(allocator, test_mod_dir, entry_stem);
+        if (zig_file_buf == null) {
+            std.debug.print("Error: --modular test compilation did not produce {s}/__cp_entry.zig or {s}/{s}.zig\n", .{ test_mod_dir, test_mod_dir, entry_stem });
+            return error.CompileFailed;
+        }
+    } else {
+        const single_zig = try std.fmt.allocPrint(allocator, ".cap/zig/{s}.zig", .{base_name});
+        zig_file_buf = single_zig;
+
+        if (std.Io.Dir.path.dirname(single_zig)) |dirname| {
+            fs_shim.cwd().createDirPath(global_io, dirname) catch {};
+        }
+
+        const cpc_args = &[_][]const u8{
+            cpc_bin,
+            "compile",
+            filename,
+            "--output",
+            single_zig,
+            "-I",
+            "/data/dev/cp/cap/cap_modules",
+            "-I",
+            "/data/dev/cp/lib",
+        };
+        var compile_child = try std.process.spawn(global_io, .{ .argv = cpc_args });
+        const compile_res = try compile_child.wait(global_io);
+        switch (compile_res) {
+            .exited => |code| if (code != 0) return error.CompileFailed,
+            else => return error.CompileFailed,
+        }
+    }
+
+    const zig_file = zig_file_buf.?;
 
     const bin_path = try std.fmt.allocPrint(allocator, "bin/test/{s}", .{std.Io.Dir.path.basename(base_name)});
     defer allocator.free(bin_path);
@@ -2565,17 +2694,27 @@ fn runTestSingleFile(allocator: std.mem.Allocator, filename: []const u8) !void {
     var allocated_libs_len: usize = 0;
     defer for (allocated_libs[0..allocated_libs_len]) |al| allocator.free(al);
 
-    try appendLinkArgs(allocator, &build_args_buf, &build_argc, &allocated_libs, &allocated_libs_len, mf_opt, "native", "ReleaseSafe", zig_file, ".cap/zig-cache");
+    const link_scan_file = if (is_modular) filename else zig_file;
+    try appendLinkArgs(allocator, &build_args_buf, &build_argc, &allocated_libs, &allocated_libs_len, mf_opt, "native", "ReleaseSafe", link_scan_file, ".cap/zig-cache");
     scanZigFileForLinkPragmas(allocator, zig_file, &build_args_buf, &build_argc, &allocated_libs, &allocated_libs_len);
+    if (is_modular) {
+        scanModularManifestForLinkPragmas(allocator, test_mod_dir, &build_args_buf, &build_argc, &allocated_libs, &allocated_libs_len);
+    }
 
     var build_child = try std.process.spawn(global_io, .{ .argv = build_args_buf[0..build_argc] });
     const build_res = try build_child.wait(global_io);
-    if (build_res.exited != 0) return error.BuildFailed;
+    switch (build_res) {
+        .exited => |code| if (code != 0) return error.BuildFailed,
+        else => return error.BuildFailed,
+    }
 
     // Run test binary
     var test_child = try std.process.spawn(global_io, .{ .argv = &[_][]const u8{bin_path} });
     const test_res = try test_child.wait(global_io);
-    if (test_res.exited != 0) return error.TestExecutionFailed;
+    switch (test_res) {
+        .exited => |code| if (code != 0) return error.TestExecutionFailed,
+        else => return error.TestExecutionFailed,
+    }
 }
 
 fn runFuzzSingleFile(allocator: std.mem.Allocator, filename: []const u8, fuzz_opts: FuzzOptions) !void {

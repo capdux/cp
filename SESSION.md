@@ -2660,3 +2660,8 @@
   - 子智能体 1 完工回收：完成全仓 289 项测试系统扫荡（正向 185/237 PASS，全部核心及 Bun 直迁回归套件 100% 全绿）；解耦 `cap:fs` vs `cap:sys`/`cap:io` 符号冲突（新增 `lib/sys/{io_ops,fstat}.cp`），彻底清零全仓 `lib/` 最后 4 处 `std.posix` 残留，修复 6 处跨模块符号重名与 4 处测试缺陷，并在 `cpc/src/resolver.rs` 补齐 `test_runner` 实现 58/58 标准库目录全覆盖 `cap` 惰性路由；
   - 顺手加固 `cpc/src/codegen/expr/ops.rs` 中 `is_errset` 判定（避免 `kind == RESPType.Error || ...` 误走 Zig `||`），正在构建 `cpc` Release 正式版；
   - 无缝顶替拉起子智能体 4（`cap:crypto` 现代密码学全栈升级：Ed25519/X25519/ECDSA P-256/HKDF/Scrypt/Argon2id/BLAKE3/SHA3/XChaCha20-Poly1305/JWT/PEM），与子智能体 3（`7da54810`，`cap` CLI 强化）保持双路并行。
+
+### 2026-11-20（`cap` CLI 构建工具链可靠性升级验收固化，无缝拉起 `cap:net` 工业网络升级子智能体）
+- **执行成果**：
+  - 子智能体 3（`7da54810`）完工回收：升级 [`cap/src/main.zig`](file:///data/dev/cp/cap/src/main.zig)，修复 `cap build` 失败假退出码 0 隐患、完善 `cap clean [--all]`、新增 `cap test -m/--modular` 模块化增量测试与 `cap build --timings` 四阶段耗时诊断；ReleaseFast 双路径原子安装至 `/data/dev/cp/cap/bin/cap` 与 `/root/.cap/bin/cap`（SHA-256 一致），`cap test -m cap/test/test_cap_lazy_hub.cp`（`total=7`，868ms）验证通过；
+  - 已更新热日志并提交 Git，同时无缝顶替拉起子智能体 5（`cap:net` 工业网络升级：IPv4/IPv6 CIDR 与分类器、连接池、POSIX Socket 选项/轮询、RFC 1928 SOCKS5 编解码），与子智能体 4（`ec00b89b`，`cap:crypto`）持续保持双路并行。

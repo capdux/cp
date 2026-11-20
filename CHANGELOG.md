@@ -1,3 +1,14 @@
+## [2026-11-20] - `cap` CLI 构建工具链可靠性与模块化测试升级：`cap test -m`、`cap clean [--all]`、`cap build --timings` 与失败退出码修复
+
+### 构建工具链升级 (`cap/src/main.zig`，ReleaseFast 已双路径同步部署)
+- **修复 `cap build` 失败时退出码为 `0` 的隐患**：`compileSingleFile` 追踪 `any_failed`，任一目标构建失败时跳过 `Build completed!` 并返回 `error.BuildFailed`（退出码 `1`）；
+- **完善 `cap clean` / `cap clean --all`（兼容 `-a`）**：`cap clean` 安全清理 `.cap/`（含 `.cap/ws/`、`.cap/test-mod/`）保留源码与 `bin/`；`cap clean --all` 同时清理 `bin/` 与安全 `out_dir`（防护误删 `.`/`src`/`test`）；
+- **新增 `cap test -m` / `--modular` 模块化增量测试**：对接 `cpc compile --emit-dir .cap/test-mod` 复用共享 `_lib/` 与 `__cp_runtime.zig`，实测多测试文件 15/16 模块缓存命中（3ms 增量转译）；
+- **新增 `cap build --timings` 分阶段耗时诊断**：精准输出 `Source mtime scan`、`cpc Transpile`、`Zig Native Compile`、`Atomic Install` 与 `Total` 的毫秒和占比；
+- **二进制双路径同步**：原子安装至 `/data/dev/cp/cap/bin/cap` 与 `/root/.cap/bin/cap`（SHA-256 一致），`cap test -m cap/test/test_cap_lazy_hub.cp` 验证通过（`total=7`，868ms）。
+
+---
+
 ## [2026-11-20] - 全仓回归大扫荡与跨模块符号卫生治理：清零全仓 `lib/` `std.posix`、58/58 标准库全入 `cap` 惰性路由、185 个正向测试全绿
 
 ### 跨模块符号卫生与 `std.posix` 全仓清零

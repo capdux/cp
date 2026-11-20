@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-20: `cap` CLI 构建工具链可靠性强化（失败非零退出码、`cap clean`、`cap test -m`、`cap build --timings`）
+
+- **落地成果**：在 [`cap/src/main.zig`](file:///data/dev/cp/cap/src/main.zig) 补齐 4 项高频开发体验与 CI 可靠性能力：修复 `cap build` 构建失败仍返回退出码 0 的缺陷；完善 `cap clean [--all]` 精准清理 `.cap/ws/` 及构建缓存；新增 `cap test -m/--modular` 模块级增量测试（复用 `.cap/test-mod/_lib/` 与 `__cp_runtime.zig`，缓存命中转译 3ms）；新增 `cap build --timings` 四阶段耗时拆解。ReleaseFast 原子同步至 `/data/dev/cp/cap/bin/cap` 与 `/root/.cap/bin/cap`，端到端全绿验收。
+
+---
+
 ## 2026-11-20: 全仓 289 项测试回归扫荡、跨模块符号解耦、`std.posix` 清零与 `is_errset` 边界加固
 
 - **系统性清障**：对全仓 `cap/test/test_*.cp` 执行全量批量扫描（237 项正向测试，185 项 PASS，全部核心与近期直迁套件 100% 全绿），一次性根治 `cap:fs` vs `cap:sys` 顶层符号冲突、全仓最后 4 处 `std.posix`、6 处跨模块重名/遮蔽，并在 `cpc/src/codegen/expr/ops.rs` 加固 `is_errset` 防止比较表达式右侧带 `.Error` 误触发 Zig 错误集合并 `||`，同步在 `cpc/src/resolver.rs` 补齐 `test_runner` 使 58/58 标准库目录全覆盖 `cap` 按需惰性挂载。
