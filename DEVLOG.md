@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 升级加固 `cap:protobuf` Protocol Buffers Wire 格式动态编解码引擎（5/5 PASS，文档直写 `doc/lib/protobuf.md`）
+- **核心设计**：在 `lib/protobuf/protobuf.cp` 实现无 `.proto` 代码生成的零拷贝流式编解码器，严格校验 10 字节 Varint 溢出、0 号字段、`WireType` 合法性与 64 层子消息嵌套深度上限，并通过 `DebugAllocator` 确认零泄漏。
+
 ## 2026-11-21: 新建 `cap:snappy` Snappy Block Format 高速无损压缩与解压引擎（5/5 PASS，文档直写 `doc/lib/snappy.md`）
 - **核心设计**：压缩器采用 14-bit 乘法哈希表实现 64KB 块内 $O(1)$ 前缀匹配；解压器完整支持 0..4 字节扩展字面量与 Copy-1/2/4 重叠拷贝，严格拦截 `offset=0`/越界偏移与超大 Varint 解压声明。
 

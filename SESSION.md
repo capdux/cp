@@ -410,3 +410,6 @@
 
 ### 2026-11-21（`cap:snappy` 验收提交，顶替拉起 `cap:lru` 维持 2 路常规并行）
 - **执行成果**：`lib/snappy/`（5/5 PASS，`doc/lib/snappy.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/lru/`（O(1) LRU + TTL 过期与字节权重配额缓存淘汰引擎），与 `lib/protobuf/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:protobuf` 加固验收提交，顶替拉起 `cap:cbor` 维持 2 路常规并行）
+- **执行成果**：`lib/protobuf/`（5/5 PASS，`doc/lib/protobuf.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/cbor/`（RFC 8949 CBOR 确定性编码与 COSE/WebAuthn 二进制对象引擎），与 `lib/lru/` 维持 2 路常规并行。

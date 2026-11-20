@@ -1,17 +1,19 @@
 // Source: cp/lib/protobuf/index.cp (Unified Exports for cap:protobuf)
-// Unified Public Exports for Protocol Buffers v3 Wire Format & gRPC Framing Engine (cap:protobuf & cap.protobuf)
+// Unified Public Exports for Protocol Buffers Wire Format & gRPC Framing Engine (cap:protobuf & cap.protobuf)
 
 export {
+    MAX_FIELD_NUMBER,
+    DEFAULT_MAX_DEPTH,
     ProtoError,
     WireType,
-    ZigZag,
-    MAX_FIELD_NUMBER,
-    RESERVED_FIELD_START,
-    RESERVED_FIELD_END,
-    ProtoTag,
+    zigzagEncode32,
+    zigzagDecode32,
+    zigzagEncode64,
+    zigzagDecode64,
+    ProtoField,
     ProtoWriter,
     ProtoReader,
-} from "./wire.cp";
+} from "./protobuf.cp";
 
 export {
     DEFAULT_MAX_MESSAGE_BYTES,
