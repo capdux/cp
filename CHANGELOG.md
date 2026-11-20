@@ -1362,3 +1362,20 @@ hotfix: resolve keyword conflict for "test" and prevent redundant re-export of i
   - **清理 3 组冗余目录**：合并 `lib/valkey/` -> `lib/redis/protocol.cp`、合并 `lib/watch/` -> `lib/watcher/{filter,file_watcher}.cp`（文档迁至 `docs/watcher/watcher.md`）、清理零引用的历史旧目录 `lib/threading/`。
   - 更新适配 `cap/test/test_event_loop.cp`、`cap/test/test_bench_cli_napi_bigint_event.cp`、`cap/test/test_shell_watch_elf_ffi.cp`，9/9 回归套件 100% PASS。
 - **GEMINI.md**: 更新多 AGY SQLite 通信命令为绝对路径 `/root/.agy/comm/task_queue.py`。
+
+### 2026-11-20（12 大核心标准库对标 Bun 深度补全里程碑：glob/semver/dotenv/patch + http/router/sql + path/sourcemap/io/sys/errno）
+- **第一路 (`lib/glob`, `lib/semver`, `lib/dotenv`, `lib/patch`)**：
+  - `lib/glob/`: 完整递归 `**`、多层嵌套花括号展开 `{a,b}`、UTF-8 码点字符类 `[a-z]`/`[!a-z]`、`GlobMatchOptions`（大小写/路径规范化/dot）与 `Glob.scanSync` 真实目录遍历。
+  - `lib/semver/`: 完整 Semver 2.0 `parseStrict`/`parseLoose`、Section 11 大整数安全 prerelease 排序、完整 Range（`~>`/`==`/`1.0.0 - *`/`include_prerelease`）、`sort`/`rsort`/`validRange`。
+  - `lib/dotenv/`: BOM/CRLF/UTF-8 空白兼容、`export`、多行引号转义、`${VAR:-default}` vs `${VAR-default}` 与嵌套展开、偏移索引值语义重定位安全。
+  - `lib/patch/`: 多文件/多 Hunk Unified Diff 解析（含 `\ No newline at end of file`、新增/删除/重命名/权限）、精确/偏移/模糊三阶容错 `apply`、零堆 Myers $O(ND)$ 差分与 `diffLines` 标准 Unified Diff 生成。
+- **第二路 (`lib/http`, `lib/router`, `lib/sql`)**：
+  - `lib/http/`: 新增 `chunked.cp`（RFC 9112 流式 1 字节边界解码与 Trailers）、`redirect.cp`（301/302/303/307/308 方法重写、URL 合并、环路检测与跨域脱敏）；补全 `HttpConnectionPool`、`HttpProxyTunnel` + `NoProxyMatcher`（Basic Auth / CIDR）、`ContentEncodingNegotiator` 与对接 `cap:pack` 的 `StreamingDecompressor`。
+  - `lib/router/`: 升级 5 级严格优先级回溯 Radix 引擎与 `TrailingSlashMode`；新增 `fs_router.cp`（`FileSystemRouter` 支持 `[slug]`/`[...all]`/`[[...opt]]`/`(group)` 与磁盘扫描）。
+  - `lib/sql/`: 补全 Postgres v3 扩展查询（`Parse`/`Bind`/`Describe`/`Execute`/`Sync`）、RFC 5802/7677 `ScramSha256Client` 与全后端帧解码；补全 MySQL v10 握手/lenenc/命令帧编码；新增 SQLite 扩展 C-ABI、`SqlValue`、`SqlConnectionPool` 与多方言 `SqlTransactionStateMachine`。
+- **第三路 (`lib/path`, `lib/sourcemap`, `lib/io`, `lib/sys`, `lib/errno`)**：
+  - `lib/path/`: 补齐 POSIX/Windows 双模式 `parse`/`format`/`resolve`/`relative`/`normalize`/`toNamespacedPath`、UNC `\\?\UNC\server\share` 与多盘符边界处理。
+  - `lib/sourcemap/`: 升级 `u64`/`VLQ64` 全边界编解码、新增 `MappingList`（排序 + 二分查找）、UTF-8 ↔ UTF-16 行列转换、`ParsedSourceMapRecord.toJSON()` 与 `SourceMapChunk` 多段合并。
+  - `lib/io/`: 补全 `BufferedReader`（`readLine`/`readUntil`/`peek`/`discard`/`readFull`）、`BufferedWriter`（阈控刷盘与大块直通）、`LimitedReader`/`MultiReader`/`TeeReader`/`DiscardWriter`/`CountingWriter`/`ChunkedBuffer`。
+  - `lib/sys/` & `lib/errno/`: 零 `std.posix` 残留全面适配 Zig 0.17 `std.c`/`std.os.linux`，新增 `fs_ops.cp` 与 `process.cp`；`lib/errno/` 扩充至 135 项完整 POSIX/Linux 错误码、全量英文 `description()` 与语义判定。
+- **文档与测试**：同步更新 12 份 `docs/<lib>/<lib>.md` 专著文档，新增 3 套综合深度测试（`test_glob_semver_dotenv_patch_deep.cp`、`test_http_router_sql_deep.cp`、`test_path_sourcemap_io_sys_errno_deep.cp`），10/10 联合回归测试套件 100% PASS，全库 405/405 `.cp` 文件 `// Source:` 100% 合规。

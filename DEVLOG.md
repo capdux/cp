@@ -1706,3 +1706,11 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
 - **多 AGY SQLite 通信系统修复**：定位并根治了因各 AGY 节点进程设置独立 `HOME=/root/.agy/node<N>` 导致的 `~/.agy/comm` 路径与 SQLite 脑裂缺陷，将 `/root/.agy/comm/{task_queue,resolve_task,agy_dispatcher}.py` 全部改为基于 `os.path.realpath(__file__)` 定位并为三节点建立软链兜底，随即顺利接收并极速结单 `bun_agy` 投递的 6 条编译阻断工单。
 - **编译器代码生成抗遮蔽加固**：将内部错误结构体抽离为 `const __CpErr` 并以 `has_top_decl` 守卫条件导出 `Err`/`Error`；prelude 与 RAII `defer` 内局部标识符统一加 `__cp_` 前缀，杜绝 `Child`/`RType`/`Target`/`ptr`/`tid` 遮蔽；enum `fromName`/`get` 彻底摆脱裸 `get(s)` 调用。
 - **标准库 4 组重复目录归并**：将 `lib/event_loop` 完整并入 `lib/event`（保留配对最小堆零分配内核与 `PollEngine`/`EventBus`/`EventEmitter`），同步归并删除 `lib/valkey`（并入 `lib/redis`）、`lib/watch`（并入 `lib/watcher`）、`lib/threading`（已映射 `lib/sync`）；同时消除 `ManagedTask.run()` 与 CP 自动 RAII `defer release()` 的双重释放隐患，9 套测试 100% PASS。
+
+### 第十阶段：12 大第二/第三梯队标准库对标 Bun 深度补全（三路并行）
+- 针对前序全面体检中识别出的第二/第三梯队薄弱模块，采用三路互斥文件域并行补全：
+  1. 文本与构建工具链（`glob`/`semver`/`dotenv`/`patch`）：彻底消灭简化实现，落地完整递归双星号与目录扫描、Semver 2.0 严格/宽松解析与排序、Dotenv 偏移索引防悬垂与完整变量展开、以及真 Myers $O(ND)$ 差分与三阶容错 Unified Diff 引擎；
+  2. 网络与数据协议栈（`http`/`router`/`sql`）：补齐 HTTP Chunked 流式解析、Keep-Alive 连接池、重定向策略与代理隧道、5 级优先级 Radix + `FileSystemRouter`、Postgres v3 SCRAM-SHA-256/扩展查询与 MySQL v10/连接池/事务状态机；
+  3. 系统与底层基础库（`path`/`sourcemap`/`io`/`sys`/`errno`）：补全 Windows UNC/`toNamespacedPath`、VLQ64/UTF-16/SourceMap 拼接、6 大流组合器与动态 `ChunkedBuffer`、全 Zig 0.17 系统调用及 135 项完整 POSIX `errno`。
+- 跨模块合流验证：通过将 `lib/sys` 顶层导出定名为 `dupFd`（容器方法保留 `.dup`）消除与 `lib/glob/walker.cp` 局部变量的命名碰撞，最终 10 套深度与既有联合测试全部 100% PASS，405/405 溯源合规。
+- 下一步规划（已获用户认可）：进入 `cpc` 编译器 5 阶段零回归模块化大拆分（Stage 1 `codegen/mod.rs` + `runtime/*.zig` -> Stage 2 `codegen/expr/` -> Stage 3 `parser/` -> Stage 4 `sema/` -> Stage 5 `codegen/types/`），每次拆分前做 `.zig` 输出 SHA256 快照比对确保 0 字节差异。

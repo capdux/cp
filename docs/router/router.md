@@ -1,32 +1,36 @@
-# CP 标准库：高性能 Radix-Tree 路由引擎与反向路径格式化手册 (`cap:router`)
+# CP 标准库：高性能 Radix-Tree 与文件系统路由引擎手册 (`cap:router`)
 
 ## 一、 架构总览与设计准则
 
-`cap:router` 是 CP 语言官方内置的泛型 Radix-Tree（前缀字典树）HTTP 路由匹配与反向路径格式化标准库，支持按 HTTP 方法隔离路由树、静态段优先匹配、`:param` / `[param]` 动态参数提取、`*path` / `[...path]` 通配符捕获、栈内联零堆分配参数字典 `ParamMap`，以及模板反向路径渲染器 `RouteFormatter`。核心架构吸收自 Bun 路由子系统（`/data/dev/bun/src/router/`）。
+`cap:router` 是 CP 语言官方内置的泛型 Radix-Tree（前缀字典树）与 Next.js/Bun 风格 `FileSystemRouter` 路由标准库，支持按 HTTP 方法隔离路由树、5 级严格优先级匹配（静态段 > 混合前缀/后缀段 > `:param`/`[param]` 参数段 > `*`/`**`/`[...all]` 通配段 > `[[...opt]]` 可选捕获段）、回溯多参数提取、冲突/重复检测、尾随斜杠模式、栈内联零堆分配 `ParamMap` 以及 `RouteFormatter`。核心架构吸收自 Bun 路由子系统（`/data/dev/bun/src/router/`）。
 
 ```text
-┌─────────────────────────────────────────────────────────────────────────┐
-│                       Router(T) 按方法分片森林                           │
-│   [0:GET] [1:POST] [2:PUT] [3:DELETE] [4:PATCH] [5:HEAD] [6:OPTIONS]    │
-│   [7:ALL  (兜底方法树：当特定方法未命中时自动回退匹配)]                    │
-├─────────────────────────────────────────────────────────────────────────┤
-│                    RadixNode(T) 三级匹配优先级                           │
-│   ① 静态子节点 children[16]  >  ② 动态参数 param_child  >  ③ 通配 wildcard│
-├────────────────────────────────────┬────────────────────────────────────┤
-│ RouteMatch(T) + ParamMap (16 栈槽)  │ RouteFormatter (反向路径生成)       │
-│ handler: T, params.get("id")       │ extractParamNames / formatPath     │
-└────────────────────────────────────┴────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       Router(T) 按方法分片森林                               │
+│   [0:GET] [1:POST] [2:PUT] [3:DELETE] [4:PATCH] [5:HEAD] [6:OPTIONS]        │
+│   [7:ALL  (兜底方法树：当特定方法未命中时自动回退匹配)]                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                    RadixNode(T) 五级匹配优先级（支持回溯）                    │
+│   ① 静态段 children  >  ② 混合段 hybrid_children (`doc-:id.json`)           │
+│   ③ 动态参数 param_child (`:id` / `[id]`)                                   │
+│   ④ 必选通配 wildcard_child (`*` / `**` / `[...path]`)                      │
+│   ⑤ 可选通配 optional_catch_all_child (`[[...path]]`, 匹配 0 或多段)         │
+├────────────────────────────────────┬────────────────────────────────────────┤
+│ FileSystemRouter (Next.js/Bun 风格) │ RouteFormatter (反向路径生成)           │
+│ [slug].cp / [...all].cp / (group)  │ extractParamNames / formatPath         │
+└────────────────────────────────────┴────────────────────────────────────────┘
 ```
 
 ### 1. 模块文件拓扑与谱系来源
 
-`lib/router/` 下全部 5 个源文件第 1 行均严格标记上游 Bun 源码谱系：
+`lib/router/` 下全部源文件第 1 行均严格标记上游 Bun 源码谱系：
 
 | 文件路径 | 上游谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
 | `lib/router/param_map.cp` | `// Source: /data/dev/bun/src/router/ParamMap.cp` | `Param` 与 `ParamMap`（固定 16 槽位栈内联存储，提供只读 `get`/`has`/`at`/`count`/`isEmpty` 与写入 `append`） |
 | `lib/router/route.cp` | `// Source: /data/dev/bun/src/router/Route.cp` | 泛型匹配结果 `RouteMatch(comptime T: type)`，封装 `handler: T` 与 `params: ParamMap` |
-| `lib/router/radix.cp` | `// Source: /data/dev/bun/src/router/Router.cp` | 泛型 `RadixNode(T)` 与 `Router(T)`，支持 `get`/`post`/`put`/`delete`/`patch`/`all` 注册与 `lookup` 查找 |
+| `lib/router/radix.cp` | `// Source: /data/dev/bun/src/router/Router.cp` | 泛型 `RadixNode(T)`、`HybridSegment`、`RouterOptions`、`TrailingSlashMode` 与 `Router(T)` |
+| `lib/router/fs_router.cp` | `// Source: /data/dev/bun/src/router/router.cp` | `FileSystemRouter`：支持 `[slug].cp`、`[...catchall].cp`、`[[...optional]].cp`、`(group)` 分组忽略、`scanDir` 与优先级自动排序 |
 | `lib/router/pattern.cp` | `// Source: /data/dev/bun/src/router/Router.cp` | `RouteFormatter`：占位符提取 `extractParamNames` 与反向路径渲染 `formatPath` |
 | `lib/router/index.cp` | `// Source: /data/dev/bun/src/router/router.cp` | `cap:router` 统一对外导出入口 |
 
@@ -34,23 +38,34 @@
 
 ## 二、 核心 API 与匹配语义
 
-### 1. 路径语法与优先级规则
+### 1. 路径语法与 5 级严格优先级规则
 
-`Router(T)` 自动规范化首尾斜杠（如 `/users/` 与 `/users` 等价），每层段匹配遵循严格的三级优先级：
+每层段匹配遵循严格五级优先级，且支持在深层静态分支失配时自动回溯到同级混合段、参数段或通配段：
 
-1. **静态段（最高优先级）**：精确字节比较，例如 `/users/profile` 优先于 `/users/:id`。
-2. **动态参数段**：同时兼容 Express 风格 `:id` 与文件路由风格 `[id]`，捕获单段内容存入 `ParamMap`。
-3. **通配符捕获段（兜底优先级）**：同时兼容 `*filepath` / `*` 与 `[...docpath]`，将剩余全部子路径（含 `/`）一次性捕获并结束匹配。
+1. **静态段（最高优先级）**：精确字节比较，例如 `/files/latest.json` 优先于 `/files/doc-:id.json`。
+2. **前缀/后缀混合段**：支持 `prefix-:param`、`:name.json`、`doc-:id.json`、`file-[id].cp` 等混合段，按 `prefix.len + suffix.len` 降序排列。
+3. **动态参数段**：同时兼容 Express 风格 `:id` 与文件路由风格 `[id]`，捕获单段内容存入 `ParamMap`。
+4. **通配符捕获段**：同时兼容 `*filepath` / `*` / `**` / `[...docpath]`，至少匹配 1 段并捕获全部剩余子路径。
+5. **可选捕获段（兜底优先级）**：支持 `[[...rest]]`，可匹配 0 段（不写入参数）或任意多段剩余子路径。
 
-### 2. HTTP 方法分片与 `ALL` 回退
+### 2. 冲突检测与尾随斜杠规范化 (`RouterOptions` & `tryInsert`)
 
-- `Router(T)` 内建 8 棵独立的 Radix 树，按 `methodIndex` 映射：`GET (0)`、`POST (1)`、`PUT (2)`、`DELETE (3)`、`PATCH (4)`、`HEAD (5)`、`OPTIONS (6)`、`ALL (7)`。
-- 调用 `lookup(method, path)` 时，先在对应方法树查找；若未命中且 `method != "ALL"`，自动回退查询 `trees[7]`（由 `router.all(path, handler)` 注册的跨方法路由）。
+- `TrailingSlashMode`：`Ignore`（默认，`/users/` 等价于 `/users`）、`Strict`（区分 `/users/` 与 `/users`）、`Canonical`。
+- `router.tryInsert(method, path, handler)` 在 `detect_conflicts = true` 时静态检测：
+  - `error.DuplicateRoute`（同方法同路径重复注册）；
+  - `error.RouteConflict`（同层级参数名不一致冲突，如 `/users/:id` vs `/users/:name`）；
+  - `error.CatchAllMustBeAtEnd`（通配符未置于路径末尾）。
 
-### 3. 反向路由格式化 (`RouteFormatter`)
+### 3. 文件系统路由映射器 (`FileSystemRouter`)
 
-- **`extractParamNames(pattern, out_names): usize`**：扫描路径模板中的所有 `:param` 占位符，返回参数个数并将参数名切片写入 `out_names`（零分配）。
-- **`formatPath(pattern, params, out): usize!`**：将模板中的 `:param` 和 `*` 按 `ParamMap` 替换为真实路径并写入 `out`。缺少必需参数时返回 `error.MissingRouteParam`，目标缓冲区不足时返回 `error.BufferTooSmall`。
+- **规则映射**：
+  - `index.cp` -> `/`；`users/index.cp` -> `/users`；
+  - `(group)/about.cp` -> `/about`（圆括号路由组从 URL 中自动剥离，保留原 `file_path`）；
+  - `blog/[slug].cp` -> 动态参数 `slug`；
+  - `files/[...catchall].cp` -> 必选全捕获 `catchall`（至少 1 段）；
+  - `docs/[[...optional]].cp` -> 可选全捕获 `optional`（支持 `/docs` 与 `/docs/a/b`）；
+- **自动优先级排序**：`Static < Dynamic < CatchAll < OptionalCatchAll`，并按段优先级及静态段数量排序；跨路由组路径冲突自动返回 `error.DuplicateRoute`。
+- **目录扫描**：支持内存注册 `addFile("...")` 以及递归磁盘扫描 `scanDir("/path/to/pages")`。
 
 ---
 
@@ -58,45 +73,51 @@
 
 ```typescript
 const std = @import("std");
-import { Router, ParamMap, RouteFormatter } from "cap:router";
+import {
+    Router,
+    RouterOptions,
+    TrailingSlashMode,
+    FileSystemRouter,
+    ParamMap,
+    RouteFormatter
+} from "cap:router";
 
 pub fn demoRouter(): !void {
-    let router = Router(string).init(std.heap.page_allocator);
+    let router = Router(string).initWithOptions(std.heap.page_allocator, RouterOptions{
+        trailing_slash: TrailingSlashMode.Ignore,
+        detect_conflicts: true,
+    });
 
-    // 1. 注册静态、动态参数与通配符路由
-    router.get("/", "index_handler");
-    router.get("/users/:id/posts/:postId", "user_post_handler");
-    router.get("/org/[orgId]/members/[memberId]", "org_member_handler");
-    router.get("/assets/*filepath", "static_asset_handler");
+    // 1. 注册静态、混合前缀/后缀、动态参数、通配符与可选捕获路由
+    try router.tryInsert("GET", "/", "index_handler");
+    try router.tryInsert("GET", "/files/latest.json", "latest_handler");
+    try router.tryInsert("GET", "/files/doc-:id.json", "doc_handler");
+    try router.tryInsert("GET", "/users/:id/posts/:postId", "user_post_handler");
+    try router.tryInsert("GET", "/assets/**filepath", "static_asset_handler");
+    try router.tryInsert("GET", "/docs/[[...slug]]", "docs_handler");
     router.all("/health", "health_handler");
 
-    // 2. 路由查找与零分配参数读取
-    if (m := router.lookup("GET", "/users/42/posts/99")) {
-        // m.handler == "user_post_handler"
-        const uid = m.params.get("id").?;       // "42"
-        const pid = m.params.get("postId").?;   // "99"
-        * = uid;
-        * = pid;
+    // 2. 混合段与可选捕获查询
+    if (m := router.lookup("GET", "/files/doc-42.json")) {
+        const id = m.params.get("id").?; // "42"
+        * = id;
+    }
+    if (d0 := router.lookup("GET", "/docs")) {
+        // 0 段匹配成功，d0.handler == "docs_handler"
+        * = d0;
     }
 
-    if (asset := router.lookup("GET", "/assets/img/logo.svg")) {
-        const fp = asset.params.get("filepath").?; // "img/logo.svg"
-        * = fp;
+    // 3. FileSystemRouter 文件系统路由映射
+    let fsr = FileSystemRouter.init(std.heap.page_allocator);
+    try fsr.addFile("docs/[[...optional]].cp");
+    try fsr.addFile("(marketing)/about.cp");
+    try fsr.addFile("blog/[slug].cp");
+    fsr.sortRoutes();
+
+    if (fm := fsr.matchRoute("/about")) {
+        // fm.file_path == "(marketing)/about.cp"
+        * = fm;
     }
-
-    // 3. 反向路径生成与占位符提取
-    let names: [4][]const u8 = undefined;
-    const n_cnt = RouteFormatter.extractParamNames("/users/:id/posts/:postId", names[0..4]);
-    * = n_cnt; // 2
-
-    let pm = ParamMap.init();
-    pm.append("id", "42");
-    pm.append("postId", "99");
-
-    let out: [128]u8 = [0 as u8; 128];
-    const url_len = try RouteFormatter.formatPath("/users/:id/posts/:postId", &pm, out[0..128]);
-    // out[0..url_len] == "/users/42/posts/99"
-    * = url_len;
 }
 ```
 
@@ -106,9 +127,10 @@ pub fn demoRouter(): !void {
 
 | 功能特性 | Bun (`Bun.FileSystemRouter` / `Bun.serve({ routes })`) | Node.js (`find-my-way` / `express.Router`) | CP 标准库 (`cap:router`) |
 | :--- | :--- | :--- | :--- |
-| **Radix 路由表** | `Bun.serve` 内置 Radix 路由树 | `find-my-way` / `rou3` | `Router(T).init(allocator)` |
-| **动态参数语法** | `:id` 与 `[id]`（Next.js 风格） | `:id` | 同时支持 `:id` 与 `[id]` |
-| **通配符捕获** | `*` 与 `[...slug]` | `*` | 同时支持 `*name`、`*` 与 `[...name]` |
+| **Radix 路由表** | `Bun.serve` 内置 Radix 路由树 | `find-my-way` / `rou3` | `Router(T).initWithOptions(allocator, opts)` |
+| **混合前缀/后缀段** | — | `find-my-way` 参数后缀 | `HybridSegment`（`doc-:id.json` / `file-[id].cp`） |
+| **动态与捕获语法** | `:id`、`[id]`、`[...slug]`、`[[...opt]]` | `:id`、`*` | 全面支持 `:id`、`[id]`、`*`、`**`、`[...all]`、`[[...opt]]` |
+| **文件系统路由** | `new Bun.FileSystemRouter({ dir })` | Next.js App/Pages Router | `FileSystemRouter`（含 `(group)` 分组与 `scanDir`） |
+| **冲突与重复检测** | `RouteLoader` 重复路径报错 | 启动期抛异常 | `tryInsert` 返回 `DuplicateRoute` / `RouteConflict` |
 | **参数容器** | `req.params` (JS Object) | `req.params` (JS Object) | `ParamMap`（16 槽栈内联零堆分配） |
-| **全方法兜底** | `routes["/health"]` | `app.all("/health", fn)` | `router.all("/health", handler)` |
 | **反向路径渲染** | — | `path-to-regexp` `compile()` | `RouteFormatter.formatPath` / `extractParamNames` |

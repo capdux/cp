@@ -1,4 +1,7 @@
-// Source: /data/dev/bun/src/dotenv/
+// Source: /data/dev/bun/src/dotenv/env_loader.cp
+// lib/dotenv/loader.cp
+// Multi-environment cascade loader for .env files
+
 import std from "std";
 import { EnvMap, EnvParser, expandString } from "./parser.cp";
 
@@ -23,20 +26,24 @@ pub struct DotenvLoader {
         };
     }
 
-    pub fn get(key: []const u8): ([]const u8)? {
+    pub fn get(*_, key: []const u8): ([]const u8)? {
         return _.map.get(key);
     }
 
-    pub fn getOr(key: []const u8, default_val: []const u8): []const u8 {
+    pub fn getOr(*_, key: []const u8, default_val: []const u8): []const u8 {
         return _.map.getOr(key, default_val);
     }
 
-    pub fn has(key: []const u8): bool {
+    pub fn has(*_, key: []const u8): bool {
         return _.map.has(key);
     }
 
     pub fn count(): usize {
         return _.map.count;
+    }
+
+    pub fn put(*_, key: []const u8, val: []const u8, overwrite: bool): bool {
+        return _.map.put(key, val, overwrite);
     }
 
     pub fn loadFromString(*_, content: []const u8, overwrite: bool, expand: bool) {
@@ -48,9 +55,14 @@ pub struct DotenvLoader {
         let fd = std.posix.openat(std.posix.AT.FDCWD, file_path, .{ .ACCMODE = .RDONLY }, 0) catch return false;
         defer * = std.c.close(fd);
 
-        let file_buf: [16384]u8 = undefined;
-        let bytes_read = std.posix.read(fd, &file_buf) catch return false;
-        let content = file_buf[0..bytes_read];
+        let file_buf: [32768]u8 = undefined;
+        let total_read: usize = 0;
+        while (total_read < file_buf.len) {
+            const n = std.posix.read(fd, file_buf[total_read..]) catch return false;
+            if (n == 0) break;
+            total_read += n;
+        }
+        let content = file_buf[0..total_read];
 
         _.loadFromString(content, overwrite, expand);
         if (_.loaded_files_count < 8) {
@@ -62,7 +74,7 @@ pub struct DotenvLoader {
     }
 
     pub fn loadCascade(*_, cwd: []const u8, mode: []const u8, overwrite: bool, expand: bool) {
-        let path_buf: [256]u8 = undefined;
+        let path_buf: [512]u8 = undefined;
 
         // 1. .env.<mode>.local (highest priority)
         let p1 = formatCascadePath(cwd, ".env.", mode, ".local", &path_buf);
@@ -86,32 +98,32 @@ pub struct DotenvLoader {
 
 pub fn formatCascadePath(cwd: []const u8, p1: []const u8, p2: []const u8, p3: []const u8, out_buf: []u8): []const u8 {
     let out_len: usize = 0;
-    if (cwd.len > 0 and !std.mem.eql(u8, cwd, ".")) {
+    if (cwd.len > 0 && !std.mem.eql(u8, cwd, ".")) {
         let i: usize = 0;
-        while (i < cwd.len and out_len < out_buf.len) {
+        while (i < cwd.len && out_len < out_buf.len) {
             out_buf[out_len] = cwd[i];
             out_len += 1;
             i += 1;
         }
-        if (out_len < out_buf.len and out_buf[out_len - 1] != '/') {
+        if (out_len > 0 && out_len < out_buf.len && out_buf[out_len - 1] != '/') {
             out_buf[out_len] = '/';
             out_len += 1;
         }
     }
     let s: usize = 0;
-    while (s < p1.len and out_len < out_buf.len) {
+    while (s < p1.len && out_len < out_buf.len) {
         out_buf[out_len] = p1[s];
         out_len += 1;
         s += 1;
     }
     s = 0;
-    while (s < p2.len and out_len < out_buf.len) {
+    while (s < p2.len && out_len < out_buf.len) {
         out_buf[out_len] = p2[s];
         out_len += 1;
         s += 1;
     }
     s = 0;
-    while (s < p3.len and out_len < out_buf.len) {
+    while (s < p3.len && out_len < out_buf.len) {
         out_buf[out_len] = p3[s];
         out_len += 1;
         s += 1;

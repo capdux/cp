@@ -15,6 +15,15 @@ pub const O_APPEND: i32 = 1024;
 pub const O_NONBLOCK: i32 = 2048;
 pub const O_CLOEXEC: i32 = 524288;
 
+pub const F_OK: i32 = 0;
+pub const X_OK: i32 = 1;
+pub const W_OK: i32 = 2;
+pub const R_OK: i32 = 4;
+
+pub const SEEK_SET: i32 = 0;
+pub const SEEK_CUR: i32 = 1;
+pub const SEEK_END: i32 = 2;
+
 pub const FD = struct {
     raw: i32 = -1,
 
@@ -79,9 +88,23 @@ pub const FD = struct {
         return @intCast(rc);
     }
 
+    pub fn lseek(self: FD, offset: i64, whence: i32): !u64 {
+        if (!self.isValid()) return error.BadFileDescriptor;
+        let rc = std.c.lseek(self.raw, @intCast(offset), @intCast(whence));
+        if (rc < 0) return error.SeekFailed;
+        return @intCast(rc);
+    }
+
     pub fn seekTo(self: FD, offset: i64): !u64 {
         if (!self.isValid()) return error.BadFileDescriptor;
         let rc = std.c.lseek(self.raw, @intCast(offset), std.c.SEEK.SET);
+        if (rc < 0) return error.SeekFailed;
+        return @intCast(rc);
+    }
+
+    pub fn seekBy(self: FD, offset: i64): !u64 {
+        if (!self.isValid()) return error.BadFileDescriptor;
+        let rc = std.c.lseek(self.raw, @intCast(offset), std.c.SEEK.CUR);
         if (rc < 0) return error.SeekFailed;
         return @intCast(rc);
     }
@@ -91,6 +114,26 @@ pub const FD = struct {
         let rc = std.c.lseek(self.raw, @intCast(offset), std.c.SEEK.END);
         if (rc < 0) return error.SeekFailed;
         return @intCast(rc);
+    }
+
+    pub fn ftruncate(self: FD, length: u64): !void {
+        if (!self.isValid()) return error.BadFileDescriptor;
+        let rc = std.c.ftruncate(self.raw, @intCast(length));
+        if (rc != 0) return error.TruncateFailed;
+    }
+
+    pub fn dup(self: FD): !FD {
+        if (!self.isValid()) return error.BadFileDescriptor;
+        let new_raw = std.c.dup(self.raw);
+        if (new_raw < 0) return error.DupFailed;
+        return FD.fromNative(new_raw);
+    }
+
+    pub fn dup2(self: FD, new_fd: FD): !FD {
+        if (!self.isValid() or new_fd.raw < 0) return error.BadFileDescriptor;
+        let rc = std.c.dup2(self.raw, new_fd.raw);
+        if (rc < 0) return error.DupFailed;
+        return FD.fromNative(rc);
     }
 
     pub fn close(self: FD): void {

@@ -58,9 +58,11 @@
 | `lib/http/form_data.cp` | `x-www-form-urlencoded` 解析与 `multipart/form-data` 边界提取 | `src/runtime/webcore/FormData.cp` |
 | `lib/http/request.cp` / `response.cp` / `server.cp` | 高层 `Request` / `Response` / `HttpServer`、`serve` / `fetch` / `json` | `src/http/http.cp` |
 | `lib/http/client.cp` | 工业级 HTTP/1.1 `HTTPClient`（URL 解析、请求格式化、Chunked 解码） | `src/http/http.cp` |
-| `lib/http/context.cp` | `HTTPContext` Keep-Alive 64 槽 Socket 连接池 | `src/http/HTTPContext.cp` |
-| `lib/http/proxy.cp` / `sendfile.cp` / `decompressor.cp` | CONNECT 代理隧道、Linux `sendfile` 零拷贝上传、响应流解压 | `ProxyTunnel.cp` / `SendFile.cp` / `Decompressor.cp` |
-| `lib/http/url_path.cp` / `encoding.cp` / `fetch_modes.cp` / `signals.cp` / `internal_state.cp` / `request_body.cp` / `cert.cp` | 路径解析、内容编码、Fetch 模式枚举、原子中止信号、状态机与证书信息 | `src/http/` & `src/http_types/` |
+| `lib/http/chunked.cp` | RFC 9112 §7.1 流式 `ChunkedDecoder`（hex size/extensions/trailers/`0\r\n\r\n`）与 `ChunkedEncoder` | `src/http/http.cp` |
+| `lib/http/redirect.cp` | `RedirectPolicy` 自动重定向策略引擎（301/302/303/307/308 方法重写、URL 合并、循环检测、跨域敏感头剥离） | `src/http/http.cp` |
+| `lib/http/context.cp` | `HTTPContext` 与 `HttpConnectionPool`（按 host:port 复用、空闲超时驱逐、最大连接数与健康检查） | `src/http/HTTPContext.cp` |
+| `lib/http/proxy.cp` / `sendfile.cp` / `decompressor.cp` | `ProxyTunnel` / `HttpProxyTunnel`（Basic 认证与 `NoProxyMatcher`）、`SendFile`、与 `cap:pack` 协同的 `Decompressor` / `StreamingDecompressor` | `ProxyTunnel.cp` / `SendFile.cp` / `Decompressor.cp` |
+| `lib/http/url_path.cp` / `encoding.cp` / `fetch_modes.cp` / `signals.cp` / `internal_state.cp` / `request_body.cp` / `cert.cp` | 路径解析、`ContentEncodingNegotiator` (`Accept-Encoding` q-value 协商)、Fetch 模式枚举、原子中止信号、状态机与证书信息 | `src/http/` & `src/http_types/` |
 | `lib/http/h2/frame.cp` / `client.cp` / `hpack.cp` | RFC 7540 二进制帧、多路复用流状态机、RFC 7541 HPACK 头部压缩 | `H2FrameParser.cp` / `h2_client/ClientSession.cp` / `lshpack.cp` |
 | `lib/http/h3/alt_svc.cp` / `client.cp` | RFC 7838 `Alt-Svc` 升级头解析、HTTP/3 QUIC 会话与双向流 | `h3_client/AltSvc.cp` / `h3_client/ClientSession.cp` |
 
@@ -397,6 +399,71 @@ pub fn demoHttp3() {
     let stream4 = h3.newRequestStream(); // id == 4
     stream0.close();                     // isOpen() == false
 }
+```
+
+---
+
+### 10. 流式 Chunked 编解码、Keep-Alive 连接池、自动重定向、代理隧道与内容编码协商
+
+`cap:http` 针对生产级 HTTP/1.1 客户端补全了全套传输控制与协议协商引擎：
+
+1. **流式 Chunked Transfer-Encoding (`ChunkedDecoder` / `ChunkedEncoder`)**：
+   - `ChunkedDecoder.init(consume_trailer)` 支持逐字节或任意分片喂入 `feed(input, out)`，自动解析十六进制 chunk 长度、跳过 `;ext=val` chunk extensions、提取最多 16 个 Trailer Header（`getTrailer("X-Checksum")`），并严格校验终止块 `0\r\n\r\n`。
+   - `ChunkedEncoder` 提供 `encodeChunk`、`encodeFinal`、`encodeFinalWithTrailers` 与 `encodeBody`（自动按分片大小切块并附带结束帧）。
+- **工业级 Keep-Alive 连接池 (`HttpConnectionPool`)**：
+   - 按 `(host, port, is_ssl)` 管理连接生命周期（`Idle` / `InUse` / `Dead`），支持 `max_per_host`、`max_total_connections`、`idle_timeout_ms`、`max_requests_per_conn`、LIFO 复用、`acquire`/`releaseConnection`、`evictExpired`、`healthCheck` 与 `PoolStats` 监控指标。
+3. **自动重定向策略引擎 (`RedirectPolicy`)**：
+   - 完整实现 WHATWG Fetch 重定向语义：301/302 对 `POST` 重写为 `GET` 并丢弃请求体；303 对非 `GET`/`HEAD` 重写为 `GET`；307/308 严格保留原方法与请求体。
+   - `RedirectPolicy.resolveLocation` 支持绝对 URL、`//host` 协议相对 URL、`/path` 根相对路径、`./`/`../` 相对路径归一化与 `?query` 合并；内置历史哈希环路检测、最大跳数限制以及跨域自动剥离 `Authorization`/`Cookie`/`Proxy-Authorization`（通过 `applyHeaderPolicy`）。
+4. **HTTP 代理隧道与 `NO_PROXY` 匹配 (`ProxyTunnel` / `HttpProxyTunnel` / `NoProxyMatcher`)**：
+   - `tunnel.setBasicAuth(user, pass)` 基于 `cap:encoding` `Base64` 自动生成 `Proxy-Authorization: Basic ...` 请求头；`parseConnectResponse` 识别 200 隧道建立与 407 `Proxy-Authenticate` 挑战。
+   - `NoProxyMatcher.matches(host, port, no_proxy)` 支持 `*`、精确域名、`.domain` / `domain` 后缀匹配、`:port` 过滤与 IPv4 CIDR（如 `10.0.0.0/8`）。
+5. **Content-Encoding 协商与 `cap:pack` 流式解压 (`ContentEncodingNegotiator` / `Decompressor` / `StreamingDecompressor`)**：
+   - `ContentEncodingNegotiator.parseAcceptEncoding` 与 `negotiate` 解析 `;q=0.x` 权重并按降序匹配服务器支持编码（支持显式 `q=0` 拒绝与 `*` 通配符）。
+   - `Decompressor.decompressStrict` 与 `StreamingDecompressor`（`feed` / `finish`）直接桥接 `cap:pack`（`gunzip`/`inflate`/`inflateRaw` 与 `GunzipStream`/`InflateStream`）完成真实 Gzip/Deflate 解压。
+
+```typescript
+import {
+    Method,
+    FetchRedirect,
+    ChunkedDecoder,
+    ChunkedEncoder,
+    HttpConnectionPool,
+    RedirectPolicy,
+    ProxyTunnel,
+    NoProxyMatcher,
+    ContentEncodingNegotiator,
+    StreamingDecompressor,
+    Encoding
+} from "cap:http";
+const std = @import("std");
+
+pub fn demoDeepHttpEngines(): !void {
+    // 1. 流式 Chunked 解码
+    let dec = ChunkedDecoder.init(true);
+    let out: [128]u8 = undefined;
+    const res = try dec.feed("5;ext=1\r\nHello\r\n0\r\nX-Tag: ok\r\n\r\n", &out);
+    // out[0..res.bytes_written] == "Hello", dec.getTrailer("X-Tag").? == "ok"
+
+    // 2. Keep-Alive 连接池
+    let pool = HttpConnectionPool.init(4, 32, 60000, 1000);
+    * = pool.addConnection(10, "api.cp.dev", 443, true, 1000);
+    * = pool.releaseConnection(10, "api.cp.dev", 443, true, 1200, true);
+    const fd = pool.acquire("api.cp.dev", 443, true, 2000); // 10
+
+    // 3. 自动重定向评估与 NO_PROXY 判定
+    let policy = RedirectPolicy.init(FetchRedirect.Follow, 10);
+    let url_buf: [256]u8 = undefined;
+    const decision = policy.evaluate(302, Method.POST, "https://api.cp.dev/a", "https://cdn.cp.dev/b", &url_buf);
+    // decision.next_method == Method.GET, decision.strip_auth_headers == true
+
+    const bypass = NoProxyMatcher.matches("10.1.2.3", 443, "localhost,.internal,10.0.0.0/8"); // true
+
+    // 4. Content-Encoding 协商
+    const supported = [Encoding.Gzip, Encoding.Deflate, Encoding.Identity];
+    const chosen = ContentEncodingNegotiator.negotiate("deflate;q=0.5, gzip;q=0.9", supported[0..3]); // Encoding.Gzip
+}
+```
 ```
 
 ---

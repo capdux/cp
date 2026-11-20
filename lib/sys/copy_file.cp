@@ -9,6 +9,35 @@ import { FD } from "./fd";
 import { File } from "./file";
 import { fstat } from "./stat";
 
+pub fn copyFileRange(src_fd: FD, src_off: (*u64)?, dest_fd: FD, dest_off: (*u64)?, len: usize): !usize {
+    if (!src_fd.isValid() or !dest_fd.isValid()) {
+        return error.BadFileDescriptor;
+    }
+    let s_off_val: i64 = 0;
+    let s_ptr: (*i64!)? = null;
+    if (sp := src_off) {
+        s_off_val = @intCast(sp.*);
+        unsafe { s_ptr = *s_off_val!; }
+    }
+    let d_off_val: i64 = 0;
+    let d_ptr: (*i64!)? = null;
+    if (dp := dest_off) {
+        d_off_val = @intCast(dp.*);
+        unsafe { d_ptr = *d_off_val!; }
+    }
+
+    let n = std.c.copy_file_range(src_fd.raw, s_ptr, dest_fd.raw, d_ptr, len, 0);
+    if (n < 0) return error.CopyFileRangeFailed;
+
+    if (sp := src_off) {
+        sp.* = @intCast(s_off_val);
+    }
+    if (dp := dest_off) {
+        dp.* = @intCast(d_off_val);
+    }
+    return @intCast(n);
+}
+
 pub fn copyFileByFd(src_fd: FD, dest_fd: FD): !void {
     if (!src_fd.isValid() or !dest_fd.isValid()) {
         return error.BadFileDescriptor;

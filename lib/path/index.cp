@@ -5,7 +5,7 @@
 
 export { PosixPath } from "./posix";
 export { WindowsPath } from "./windows";
-export { Path, ParsedPath } from "./path";
+export { Path, ParsedPath, formatParsedPath } from "./path";
 export { EnvPath, EnvPathIterator } from "./env_path";
 export { PathBufferPool, PathBuffer, MAX_PATH_BYTES } from "./buffer_pool";
 export {
@@ -26,6 +26,8 @@ export {
     resolveWindows,
     relativePosix,
     relativeWindows,
+    toNamespacedPathPosix,
+    toNamespacedPathWindows,
     longestCommonPathPosix,
     longestCommonPathWindows,
 } from "./resolve";

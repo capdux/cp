@@ -17,15 +17,7 @@ pub const File = struct {
         path_buf[path.len] = 0;
         let path_z: [*:0]const u8 = path_buf[0 .. path.len :0].ptr;
 
-        let acc: std.posix.ACCMODE = .RDONLY;
-        if ((flags & O_RDWR) != 0) {
-            acc = .RDWR;
-        } else if ((flags & O_WRONLY) != 0) {
-            acc = .WRONLY;
-        }
-
         let z_flags = std.c.O{
-            .ACCMODE = acc,
             .CREAT = (flags & O_CREAT) != 0,
             .EXCL = (flags & O_EXCL) != 0,
             .TRUNC = (flags & O_TRUNC) != 0,
@@ -33,6 +25,11 @@ pub const File = struct {
             .NONBLOCK = (flags & O_NONBLOCK) != 0,
             .CLOEXEC = (flags & O_CLOEXEC) != 0,
         };
+        if ((flags & O_RDWR) != 0) {
+            z_flags.ACCMODE = .RDWR;
+        } else if ((flags & O_WRONLY) != 0) {
+            z_flags.ACCMODE = .WRONLY;
+        }
 
         let raw = std.c.open(path_z, z_flags, @as(std.c.mode_t, @intCast(mode)));
         if (raw < 0) return error.OpenFailed;
@@ -40,11 +37,11 @@ pub const File = struct {
     }
 
     pub fn create(path: []const u8): !File {
-        return open(path, O_CREAT | O_TRUNC | O_WRONLY | O_CLOEXEC, 0o644);
+        return File.open(path, O_CREAT | O_TRUNC | O_WRONLY | O_CLOEXEC, 0o644);
     }
 
     pub fn openReadOnly(path: []const u8): !File {
-        return open(path, O_RDONLY | O_CLOEXEC, 0);
+        return File.open(path, O_RDONLY | O_CLOEXEC, 0);
     }
 
     pub fn close(*_): void {
@@ -72,12 +69,29 @@ pub const File = struct {
         return _.fd.pwrite(data, offset);
     }
 
+    pub fn lseek(*_, offset: i64, whence: i32): !u64 {
+        return _.fd.lseek(offset, whence);
+    }
+
     pub fn seekTo(*_, offset: i64): !u64 {
         return _.fd.seekTo(offset);
     }
 
     pub fn seekFromEnd(*_, offset: i64): !u64 {
         return _.fd.seekFromEnd(offset);
+    }
+
+    pub fn ftruncate(*_, length: u64): !void {
+        return _.fd.ftruncate(length);
+    }
+
+    pub fn sync(*_): !void {
+        return _.fd.sync();
+    }
+
+    pub fn dup(*_): !File {
+        let new_fd = try _.fd.dup();
+        return File{ fd: new_fd };
     }
 
     pub fn stat(*_): !Stat {

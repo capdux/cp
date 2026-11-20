@@ -37,26 +37,13 @@ pub const Stat = struct {
     pub fn isFIFO(self: Stat): bool {
         return (self.mode & 0o170000) == 0o010000;
     }
+
+    pub fn permissions(self: Stat): u32 {
+        return self.mode & 0o7777;
+    }
 };
 
-pub fn fstat(fd: FD): !Stat {
-    if (!fd.isValid()) return error.BadFileDescriptor;
-    let stx: std.os.linux.Statx = undefined;
-    const mask = std.os.linux.STATX{
-        .TYPE = true,
-        .MODE = true,
-        .NLINK = true,
-        .UID = true,
-        .GID = true,
-        .ATIME = true,
-        .MTIME = true,
-        .CTIME = true,
-        .INO = true,
-        .SIZE = true,
-    };
-    const rc = std.c.statx(fd.raw, "", std.os.linux.AT.EMPTY_PATH, mask, &stx);
-    if (rc != 0) return error.StatFailed;
-
+fn statxToStat(stx: *const std.os.linux.Statx): Stat {
     return Stat{
         size: stx.size,
         mode: @as(u32, stx.mode),
@@ -71,6 +58,29 @@ pub fn fstat(fd: FD): !Stat {
     };
 }
 
+fn defaultStatxMask(): std.os.linux.STATX {
+    return std.os.linux.STATX{
+        .TYPE = true,
+        .MODE = true,
+        .NLINK = true,
+        .UID = true,
+        .GID = true,
+        .ATIME = true,
+        .MTIME = true,
+        .CTIME = true,
+        .INO = true,
+        .SIZE = true,
+    };
+}
+
+pub fn fstat(fd: FD): !Stat {
+    if (!fd.isValid()) return error.BadFileDescriptor;
+    let stx: std.os.linux.Statx = undefined;
+    const rc = std.c.statx(fd.raw, "", std.os.linux.AT.EMPTY_PATH, defaultStatxMask(), &stx);
+    if (rc != 0) return error.StatFailed;
+    return statxToStat(&stx);
+}
+
 pub fn stat(path: []const u8): !Stat {
     let path_buf: [1024]u8 = undefined;
     if (path.len >= path_buf.len) return error.NameTooLong;
@@ -78,10 +88,21 @@ pub fn stat(path: []const u8): !Stat {
     path_buf[path.len] = 0;
     let path_z: [*:0]const u8 = path_buf[0 .. path.len :0].ptr;
 
-    let raw_fd = std.c.open(path_z, std.c.O{ .ACCMODE = .RDONLY, .CLOEXEC = true }, @as(std.c.mode_t, 0));
-    if (raw_fd < 0) return error.OpenFailed;
-    let fd = FD.fromNative(raw_fd);
-    defer fd.close();
+    let stx: std.os.linux.Statx = undefined;
+    const rc = std.c.statx(std.os.linux.AT.FDCWD, path_z, 0, defaultStatxMask(), &stx);
+    if (rc != 0) return error.StatFailed;
+    return statxToStat(&stx);
+}
 
-    return fstat(fd);
+pub fn lstat(path: []const u8): !Stat {
+    let path_buf: [1024]u8 = undefined;
+    if (path.len >= path_buf.len) return error.NameTooLong;
+    @memcpy(path_buf[0 .. path.len], path);
+    path_buf[path.len] = 0;
+    let path_z: [*:0]const u8 = path_buf[0 .. path.len :0].ptr;
+
+    let stx: std.os.linux.Statx = undefined;
+    const rc = std.c.statx(std.os.linux.AT.FDCWD, path_z, std.os.linux.AT.SYMLINK_NOFOLLOW, defaultStatxMask(), &stx);
+    if (rc != 0) return error.StatFailed;
+    return statxToStat(&stx);
 }

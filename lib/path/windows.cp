@@ -13,8 +13,10 @@ import {
     joinWindows,
     resolveWindows,
     relativeWindows,
+    toNamespacedPathWindows,
     longestCommonPathWindows,
 } from "./resolve";
+import { ParsedPath, formatParsedPath } from "./path";
 
 pub const WindowsPath = struct {
     pub const sep: u8 = '\\';
@@ -39,14 +41,16 @@ pub const WindowsPath = struct {
 
     pub fn basename(filepath: []const u8, ext: ([]const u8)?): []const u8 {
         let p = filepath;
-        while (p.len > 1 and isSeparator(p[p.len - 1])) {
+        let vol = volumeName(p);
+        while (p.len > vol.len + 1 and isSeparator(p[p.len - 1])) {
             p = p[0 .. p.len - 1];
         }
-        if (p.len == 0) return "";
+        if (p.len == 0 or p.len == vol.len) return "";
+        if (p.len == vol.len + 1 and isSeparator(p[vol.len])) return "";
 
         let last_slash: usize? = null;
         let i: usize = p.len;
-        while (i > 0) {
+        while (i > vol.len) {
             i -= 1;
             if (isSeparator(p[i])) {
                 last_slash = i;
@@ -54,7 +58,7 @@ pub const WindowsPath = struct {
             }
         }
 
-        let base = p;
+        let base = p[vol.len ..];
         if (idx := last_slash) {
             base = p[idx + 1 ..];
         }
@@ -68,12 +72,12 @@ pub const WindowsPath = struct {
 
     pub fn dirname(filepath: []const u8): []const u8 {
         let p = filepath;
-        while (p.len > 1 and isSeparator(p[p.len - 1])) {
+        let vol = volumeName(p);
+        while (p.len > vol.len + 1 and isSeparator(p[p.len - 1])) {
             p = p[0 .. p.len - 1];
         }
         if (p.len == 0) return ".";
 
-        let vol = volumeName(p);
         if (p.len == vol.len) return p;
         if (p.len == vol.len + 1 and isSeparator(p[vol.len])) return p;
 
@@ -134,7 +138,48 @@ pub const WindowsPath = struct {
         return relativeWindows(from_path, to_path, buf);
     }
 
+    pub fn toNamespacedPath(filepath: []const u8, buf: []u8): []const u8 {
+        return toNamespacedPathWindows(filepath, buf);
+    }
+
     pub fn longestCommonPath(paths: []const []const u8): []const u8 {
         return longestCommonPathWindows(paths);
+    }
+
+    pub fn parse(filepath: []const u8): ParsedPath {
+        if (filepath.len == 0) return ParsedPath{};
+        let vol = volumeName(filepath);
+        let r: []const u8 = "";
+        if (vol.len > 0) {
+            if (filepath.len > vol.len and isSeparator(filepath[vol.len])) {
+                r = filepath[0 .. vol.len + 1];
+            } else {
+                r = vol;
+            }
+        } else if (isSeparator(filepath[0])) {
+            r = filepath[0 .. 1];
+        }
+
+        let b = basename(filepath, null);
+        let d = dirname(filepath);
+        if (std.mem.eql(u8, d, ".") and vol.len == 0 and !std.mem.startsWith(u8, filepath, ".\\") and !std.mem.startsWith(u8, filepath, "./") and !std.mem.eql(u8, filepath, ".")) {
+            d = "";
+        }
+        let e = extname(filepath);
+        let n = b;
+        if (e.len > 0 and b.len >= e.len) {
+            n = b[0 .. b.len - e.len];
+        }
+        return ParsedPath{
+            root: r,
+            dir: d,
+            base: b,
+            ext: e,
+            name: n,
+        };
+    }
+
+    pub fn format(p: ParsedPath, buf: []u8): []const u8 {
+        return formatParsedPath(p, sep, buf);
     }
 };

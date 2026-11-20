@@ -2518,3 +2518,11 @@
 
 ### 2026-11-20（`event_loop` 重新合并回 `event`、清理 4 组重复目录并固化 Git 提交）
 - **执行成果**：完成 `lib/event_loop` -> `lib/event`、`lib/valkey` -> `lib/redis`、`lib/watch` -> `lib/watcher`、`lib/threading` -> `lib/sync` 四组去重归并，修复 `ManagedTask` 与 CP RAII 双重释放问题及 `async fn` `print` 导入问题；9/9 回归套件全部 PASS，同步双轨规范与四线文档并执行 Git 提交；随即启动 3 个并行子智能体开始第二/第三梯队标准库对标 Bun 深度补全。
+
+### 2026-11-20（三子智能体并行完成 12 大标准库深度补全并提交固化；确认 `cpc` 五阶段模块化拆分方案）
+- **用户指令**：
+  1. 同意分批合并去重并开启三个子智能体加速补全标准库；
+  2. 提出 `cpc` 编译器 `parser.rs` (~9568行)、`codegen/expr.rs` (~4957行)、`codegen/mod.rs` (~4330行) 过大消耗 Token 与修改困难的问题，认可由主智能体提出的五阶段零回归模块化拆分 + `codegen/runtime/*.zig` 抽离方案。
+- **执行成果**：
+  - 3 个并行子智能体全部高质量交付并已回收：累计补全 `glob`/`semver`/`dotenv`/`patch`、`http`/`router`/`sql`、`path`/`sourcemap`/`io`/`sys`/`errno` 12 大标准库与 12 份专著文档，新增 3 套深度综合测试；10/10 联合回归测试套件 100% PASS，405/405 `.cp` 文件 `// Source:` 100% 合规，执行干净 Git Commit 固化。
+  - 立即启动 `cpc` 编译器五阶段零回归模块化拆分（Stage 1 起步）。

@@ -10,8 +10,10 @@ import {
     joinPosix,
     resolvePosix,
     relativePosix,
+    toNamespacedPathPosix,
     longestCommonPathPosix,
 } from "./resolve";
+import { ParsedPath, formatParsedPath } from "./path";
 
 pub const PosixPath = struct {
     pub const sep: u8 = '/';
@@ -113,7 +115,41 @@ pub const PosixPath = struct {
         return relativePosix(from_path, to_path, buf);
     }
 
+    pub fn toNamespacedPath(filepath: []const u8, buf: []u8): []const u8 {
+        return toNamespacedPathPosix(filepath, buf);
+    }
+
     pub fn longestCommonPath(paths: []const []const u8): []const u8 {
         return longestCommonPathPosix(paths);
+    }
+
+    pub fn parse(filepath: []const u8): ParsedPath {
+        if (filepath.len == 0) return ParsedPath{};
+        let r: []const u8 = if (isAbsolute(filepath)) "/" else "";
+        let b = basename(filepath, null);
+        if (std.mem.eql(u8, b, "/")) b = "";
+        let d = dirname(filepath);
+        if (b.len == 0 and d.len == 1 and d[0] == '/') {
+            return ParsedPath{ root: "/", dir: "/", base: "", ext: "", name: "" };
+        }
+        if (std.mem.eql(u8, d, ".") and !std.mem.startsWith(u8, filepath, "./") and !std.mem.eql(u8, filepath, ".")) {
+            d = "";
+        }
+        let e = extname(filepath);
+        let n = b;
+        if (e.len > 0 and b.len >= e.len) {
+            n = b[0 .. b.len - e.len];
+        }
+        return ParsedPath{
+            root: r,
+            dir: d,
+            base: b,
+            ext: e,
+            name: n,
+        };
+    }
+
+    pub fn format(p: ParsedPath, buf: []u8): []const u8 {
+        return formatParsedPath(p, sep, buf);
     }
 };

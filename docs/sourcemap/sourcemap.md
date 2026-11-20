@@ -2,166 +2,123 @@
 
 ## 一、 架构总览与设计哲学
 
-`cap:sourcemap` 是 CP 语言官方内置的工业级 **SourceMap v3 (ECMA-426)** 源码位置映射、Base64 VLQ 变长编解码、行偏移 $O(\log N)$ 二分定位以及紧凑二进制检查点（`InternalSourceMap`）标准库。完整吸收自 Bun（`/data/dev/bun/src/sourcemap/`），专为 CP 编译器转译堆栈还原、打包器（Bundler）分块拼接与调试器（LSP / DAP）单步断点定位设计。
+`cap:sourcemap` 是 CP 语言官方内置的工业级 **SourceMap v3 (ECMA-426)** 源码位置映射、Base64 VLQ 变长编解码、行偏移 $O(\log N)$ 二分定位、`MappingList` 排序与反查、`SourceMapChunk` 多段拼接以及紧凑二进制检查点（`InternalSourceMap`）标准库。完整吸收自 Bun（`/data/dev/bun/src/sourcemap/`）。
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                            cap:sourcemap 源码映射架构体系                               │
 ├───────────────────────────┬─────────────────────────────┬──────────────────────────────┤
-│   高级生成与消费门面       │    紧凑内存与二分索引引擎    │     底层变长编码原语          │
-│  • SourceMapGenerator     │  • LineOffsetTable<MAX>     │  • Base64 VLQ (7B 栈内联)    │
-│  • SourceMapConsumer      │  • DynamicLineOffsetTable   │  • ZigZag 有符号映射         │
-│  • Chunk (分块拼接与JSON) │  • ParsedSourceMap<CAP>     │  • Varint 7-bit 字节流       │
-│  • ParsedSourceMapRecord  │  • InternalSourceMap (64步) │                              │
+│   高级生成、拼接与消费     │    紧凑内存与二分索引引擎    │     底层变长编码原语          │
+│  • SourceMapGenerator     │  • MappingList (sort/find)  │  • Base64 VLQ (i32全范围)    │
+│  • SourceMapConsumer      │  • LineOffsetTable<MAX>     │  • VLQ64 (i64 64位有符号)    │
+│  • SourceMapChunk / Chunk │  • DynamicLineOffsetTable   │  • ZigZag 有符号映射         │
+│  • ParsedSourceMapRecord  │  • InternalSourceMap (64步) │  • Varint 7-bit 字节流       │
 └───────────────────────────┴─────────────────────────────┴──────────────────────────────┘
 ```
 
 ---
 
-## 二、 Base64 VLQ 编码原理与 SourceMap v3 规范
+## 二、 核心能力与边界规格
 
-### 1. Base64 VLQ (Variable-Length Quantity) 编码机制
+### 1. 完整 Base64 VLQ 有符号编解码 (`vlq.cp`)
 
-SourceMap v3 的 `"mappings"` 字符串由分号 `;`（代表生成代码换行，且生成列归零）与逗号 `,`（代表同一生成行内的下一个映射段）分隔。每个映射段包含 **1、4 或 5 个相对增量字段**，每个有符号整数 `value: i32` 按如下规则编码为 Base64 VLQ：
+- **`VLQ.encode(value: i32)` / `VLQ.decode(encoded, start)`**：内部采用 64 位无符号算术，完整覆盖 `i32` 全边界（包括 `-2147483648` 最小负整数与 `2147483647` 最大正整数），彻底避免取反溢出与移位截断。
+- **`VLQ.encodeValues` / `VLQ.decodeValues`**：批量编码与解码连续 VLQ 序列。
+- **`VLQ.encode64(value: i64)` / `VLQ.decode64(encoded, start)`**：支持完整 64 位有符号整数（最多 13 个 Base64 字节，`VLQ64`），适用于超大偏移与大整数边界场景。
 
-1. **符号位最低位折叠（LSB Sign Bit）**：
-   - 将有符号整数映射为无符号 `u32`：若 `value >= 0`，则 `vlq = value << 1`；若 `value < 0`，则 `vlq = ((-value) << 1) | 1`。
-2. **5-bit 分组与第 6 位延续标志（Continuation Bit）**：
-   - 每次提取 `vlq` 的低 5 位（`digit = vlq & 31`），并将 `vlq >>= 5`；
-   - 若后续仍有非零高位（`vlq != 0`），则置第 6 位延续位 `digit |= 32`（`0x20`）；
-   - 将 `0..63` 的 `digit` 通过标准 Base64 字符表（`A-Z a-z 0-9 + /`）映射为单个 ASCII 字节。
-3. **栈内联零堆分配（`VLQ` 结构体）**：
-   - 32 位有符号整数最多仅需 7 个 Base64 字节，`VLQ` 结构体直接在栈帧内使用 `bytes: [7]u8` 存储，零堆内存分配。
+### 2. `MappingList` 排序与二分反查 (`mapping.cp`)
 
-| 原始有符号值 (`i32`) | 折叠后无符号值 (`u32`) | 6-bit 组序列 | Base64 VLQ 字符串 |
-| :---: | :---: | :---: | :---: |
-| `0` | `0` (`0b00000`) | `[0]` | `"A"` |
-| `1` | `2` (`0b00010`) | `[2]` | `"C"` |
-| `-1` | `3` (`0b00011`) | `[3]` | `"D"` |
-| `16` | `32` (`0b100000`) | `[32 \| 0, 1]` | `"gB"` |
+- **`MappingList`**：动态可增长映射列表，自动追踪排序状态：
+  - `append(allocator, mapping)` / `appendParts(...)`：追加映射项；
+  - `sort()`：按 `(generated_line, generated_column)` 升序执行稳定原地排序；
+  - `find(generated_line, generated_col)` / `findIndex(...)` / `findOnLine(...)`：在 $O(\log N)$ 时间内二分定位最近左侧映射项（若尚未排序则自动先排序）；
+  - `parseMappings(allocator, str)` / `toMappingsString(allocator)`：标准 SourceMap v3 `"mappings"` 双向编解码。
 
----
+### 3. `LineOffsetTable` 字节偏移与行列双向转换 (`line_offset.cp`)
 
-## 三、 核心组件详解与完整代码示例
+- 同时提供栈内零堆分配 **`LineOffsetTable<MAX_LINES>`** 与动态 **`DynamicLineOffsetTable`**：
+  - `resolveLocation(byte_offset)` / `resolveByteOffset(line, column)` / `resolveByteOffsetClamped(line, column)`；
+  - `lineRange(line)` / `lineLength(line)` / `lineText(contents, line)` / `lineCount()`；
+  - `utf8ToUtf16Column` / `utf16ToUtf8Column` / `resolveUtf16Location`：精确处理多字节 UTF-8（CJK 与 4 字节 Emoji 代理对）与 SourceMap v3 UTF-16 码元列号换算。
 
-### 1. Base64 VLQ 与 ZigZag / Varint 编解码 (`vlq.cp` & `internal_source_map.cp`)
+### 4. SourceMap v3 JSON 解析/序列化与 `SourceMapChunk` 多段拼接 (`parsed_source_map.cp`, `chunk.cp`)
 
-```typescript
-import {
-    VLQ,
-    zigzagEncode,
-    zigzagDecode,
-    writeVarint,
-    readVarint,
-} from "cap:sourcemap";
-
-pub fn demoVlqAndVarint() {
-    // 1. 单值 Base64 VLQ 编解码
-    let v = VLQ.encode(-12345);
-    const decoded = VLQ.decode(v.slice(), 0);
-    // decoded.valid == true, decoded.value == -12345
-
-    // 2. 批量数组编码为连续 Base64 VLQ 字符串
-    let fields: [4]i32 = [0, 1, -1, 16];
-    let out_buf: [32]u8 = undefined;
-    const written = VLQ.encodeValues(&fields, &out_buf); // "ACDgB"
-
-    // 3. ZigZag + Varint 二进制紧凑编解码
-    let varint_buf: [16]u8 = undefined;
-    const n = writeVarint(&varint_buf, 0, -9999);
-    let pos: usize = 0;
-    const val = readVarint(&varint_buf, &pos); // -9999
-}
-```
+- **`ParsedSourceMapRecord.parse` / `toJSON`**：完整顶层 JSON 状态机扫描，正确处理字符串转义（`\"`, `\\`, `\n`, `\r`, `\t`, `\uXXXX`）、`sourcesContent` 中的 `null` 占位符、`sourceRoot` 与 `version: 3`。
+- **`SourceMapChunk` (`Chunk`)**：
+  - `appendChunk(allocator, &other, line_offset, col_offset)`：将其他 Chunk 合并到当前 Chunk，自动对 `sources`、`sourcesContent`、`names` 去重并建立重映射表，同步偏移生成行列；
+  - `Chunk.merge(allocator, chunks, line_offsets)`：批量合并多个分段 Chunk 并排序；
+  - `Chunk.fromParsed(allocator, &record)`：将已解析 JSON 还原为可拼接 Chunk。
 
 ---
 
-### 2. 行偏移表与 $O(\log N)$ 二分行列定位 (`LineOffsetTable` / `DynamicLineOffsetTable`)
+## 三、 核心组件完整代码示例
 
-在编译器与打包器中，词法分析器通常只记录 32 位字节偏移 `byte_offset: u32`。`LineOffsetTable` 预先扫描源码中的 `'\n'` 构建行首偏移数组，随后通过二分查找在 $O(\log N)$ 时间内将任意字节偏移与 `(line, column)` 双向互转：
+### 1. `VLQ` 极端边界、`MappingList` 排序与二分反查
 
 ```typescript
-import { LineOffsetTable, DynamicLineOffsetTable } from "cap:sourcemap";
 const std = @import("std");
+import { VLQ, MappingList, SourceMapping, LineOffsetTable } from "cap:sourcemap";
 
-pub fn demoLineOffset()! {
-    const source = "fn add(a: i32, b: i32): i32 {\n    return a + b;\n}\n";
+pub fn demoMappingListAndVlq()! {
+    const alloc = std.heap.page_allocator;
 
-    // 1. 零堆分配编译期定容行偏移表（适用于栈内快速定位）
-    const table = LineOffsetTable<64>.build(source);
-    const loc = table.resolveLocation(34); // line = 1, column = 4 ("return a + b;")
-    const offset = table.resolveByteOffset(loc.line, loc.column); // 34
+    // 1. 极端边界 i32 & i64 VLQ 编解码
+    let v_min = VLQ.encode(-2147483648);
+    const d_min = VLQ.decode(v_min.slice(), 0);
+    // d_min.valid == true && d_min.value == -2147483648
 
-    // 2. 动态堆分配行偏移表（适用于任意超大源码文件）
-    const allocator = std.heap.page_allocator;
-    let dyn_table = try DynamicLineOffsetTable.build(allocator, source);
-    defer dyn_table.deinit(allocator);
-    const dyn_loc = dyn_table.resolveLocation(34);
-}
-```
+    let v64 = VLQ.encode64(-9007199254740991);
+    const d64 = VLQ.decode64(v64.slice(), 0);
+    // d64.valid == true && d64.value == -9007199254740991
 
----
+    // 2. 乱序追加后自动排序并二分查找
+    let list = MappingList.init();
+    defer list.deinit(alloc);
+    try list.appendParts(alloc, 2, 10, 20, 4, 0, 1);
+    try list.appendParts(alloc, 0, 0, 0, 0, 0, -1);
+    try list.appendParts(alloc, 1, 4, 5, 2, 0, 0);
+    list.sort();
 
-### 3. 零堆分配定容映射表与二分位置反查 (`ParsedSourceMap<CAP>`)
-
-```typescript
-import { ParsedSourceMap } from "cap:sourcemap";
-
-pub fn demoStaticParsedSourceMap() {
-    // 解析两行共 3 个映射段的 SourceMap v3 mappings 字符串
-    const sm = ParsedSourceMap<16>.parseMappings("AAAA,IAAIA;ECAA");
-
-    // 二分查找生成代码第 1 行、第 5 列对应的最近左侧原始位置映射
-    if (m := sm.findMapping(1, 5)) {
-        @print("原始文件索引: {d}, 原始行: {d}, 原始列: {d}\n",
-            m.source_index, m.original_line, m.original_column);
+    if (m := list.find(1, 8)) {
+        // 命中 (1, 4) -> original (5, 2)
+        * = m;
     }
 }
 ```
 
----
-
-### 4. SourceMap v3 生成器与消费者闭环 (`SourceMapGenerator` & `SourceMapConsumer`)
+### 2. `SourceMapChunk` 多段映射拼接合并
 
 ```typescript
-import { SourceMapGenerator, SourceMapConsumer } from "cap:sourcemap";
 const std = @import("std");
+import { SourceMapChunk, Chunk, SourceMapping, SourceMapConsumer } from "cap:sourcemap";
 
-pub fn demoGeneratorAndConsumer()! {
-    const allocator = std.heap.page_allocator;
+pub fn demoChunkMerge()! {
+    const alloc = std.heap.page_allocator;
 
-    // 1. 使用 SourceMapGenerator 构建完整 SourceMap v3 JSON
-    let gen = SourceMapGenerator.init(allocator, "bundle.js");
-    defer gen.deinit();
+    let c1 = SourceMapChunk.init();
+    defer c1.deinit(alloc);
+    const s1 = try c1.addSource(alloc, "a.cp", "fn a() {}");
+    try c1.addMapping(alloc, SourceMapping{ generated_line: 0, generated_column: 0, source_index: s1, original_line: 0, original_column: 0 });
 
-    const src_idx = try gen.addSourceWithContent(
-        "src/math.cp",
-        "pub fn multiply(x: i32, y: i32): i32 { return x * y; }"
-    );
-    const name_idx = try gen.addName("multiply");
+    let c2 = SourceMapChunk.init();
+    defer c2.deinit(alloc);
+    const s2 = try c2.addSource(alloc, "b.cp", "fn b() {}");
+    const n2 = try c2.addName(alloc, "b");
+    try c2.addMapping(alloc, SourceMapping{ generated_line: 0, generated_column: 0, source_index: s2, original_line: 3, original_column: 2, name_index: n2 });
 
-    try gen.addMapping(0, 0, 0, 0, src_idx, -1);
-    try gen.addMapping(0, 9, 0, 7, src_idx, name_idx);
+    // c2 拼接至第 10 行起
+    let merged = SourceMapChunk.init();
+    defer merged.deinit(alloc);
+    try merged.appendChunk(alloc, &c1, 0, 0);
+    try merged.appendChunk(alloc, &c2, 10, 0);
 
-    const json_bytes = try gen.generateJSON(allocator, true);
-    defer allocator.free(json_bytes);
-
-    // 2. 使用 SourceMapConsumer 解析 JSON 并反查报错位置
-    let consumer = try SourceMapConsumer.init(allocator, json_bytes);
+    const json = try merged.printSourceMapJSON(alloc, "bundle.js", true);
+    defer alloc.free(json);
+    let consumer = try SourceMapConsumer.init(alloc, json);
     defer consumer.deinit();
-
-    if (orig := consumer.originalPositionFor(0, 12)) {
-        @print("定位成功 -> 源文件: {s}, 行: {d}, 列: {d}, 符号名: {s}\n",
-            orig.source, orig.line, orig.column, orig.name);
-    }
+    // consumer.originalPositionFor(10, 2) => source="b.cp", line=3, column=2, name="b"
 }
 ```
-
----
-
-### 5. 紧凑二进制同步检查点映射表 (`InternalSourceMap` & `InternalSourceMapBuilder`)
-
-源自 `/data/dev/bun/src/sourcemap/InternalSourceMap.cp`。当运行时长驻数千个模块的 SourceMap 时，全量展开 `SourceMapping` 数组会占用大量内存。`InternalSourceMap` 每隔 `SYNC_INTERVAL = 64` 条映射记录一个全量同步检查点（`SyncEntry`），中间 63 条映射以 ZigZag + Varint 相对增量字节流压缩存储。查询时先在 `sync_entries` 上执行 $O(\log(N/64))$ 二分查找，再重放至多 63 条 Varint 增量，兼顾极致内存压缩率与微秒级反查延迟。
 
 ---
 
@@ -169,9 +126,9 @@ pub fn demoGeneratorAndConsumer()! {
 
 | 功能模块 | Mozilla `source-map` (JS) | Bun (`src/sourcemap/*.cp`) | CP 标准库 (`cap:sourcemap`) |
 | :--- | :--- | :--- | :--- |
-| **Base64 VLQ 编解码** | `base64-vlq.encode / decode` | `VLQ.encode` / `VLQ.decode` | `VLQ.encode` / `VLQ.decode` / `encodeValues` |
-| **字节偏移转行列号** | 需手动 split lines | `LineOffsetTable` | `LineOffsetTable<MAX>` / `DynamicLineOffsetTable` |
-| **栈内零堆映射反查** | 不支持（全堆对象） | `ParsedSourceMap` | `ParsedSourceMap<CAP>.parseMappings` / `findMapping` |
-| **运行时二进制压缩表**| 不支持 | `InternalSourceMap` | `InternalSourceMapBuilder` / `InternalSourceMap.find` |
-| **分块构建与 JSON 序列化** | `SourceNode` | `Chunk` | `Chunk` / `SourceMapGenerator` |
-| **JSON 解析与堆栈反查** | `new SourceMapConsumer(json)`| `ParsedSourceMap` | `SourceMapConsumer` / `ParsedSourceMapRecord` |
+| **Base64 VLQ 编解码** | `base64-vlq.encode / decode` | `VLQ.encode` / `VLQ.decode` | `VLQ.encode` / `decode` / `encode64` / `decode64` |
+| **字节偏移与 UTF-16 行列** | 需手动 split lines | `LineOffsetTable` | `LineOffsetTable<MAX>` / `DynamicLineOffsetTable` / `utf8ToUtf16Column` |
+| **映射排序与二分查找** | `SourceMapConsumer` | `Mapping.List` (`sort`, `find`) | `MappingList` (`sort`, `find`, `findOnLine`, `findIndex`) |
+| **运行时二进制压缩表** | 不支持 | `InternalSourceMap` | `InternalSourceMapBuilder` / `InternalSourceMap.find` |
+| **多段 Chunk 拼接合并** | `SourceNode` | `Chunk` / `appendSourceMapChunk` | `SourceMapChunk` (`appendChunk`, `merge`, `fromParsed`) |
+| **JSON 解析与序列化** | `new SourceMapConsumer(json)` | `ParsedSourceMap` | `SourceMapConsumer` / `ParsedSourceMapRecord.parse` / `toJSON` |

@@ -46,29 +46,101 @@ pub enum SystemErrno: u16 {
     ENOTEMPTY = 39,
     ELOOP = 40,
     EWOULDBLOCK = 41,
+    ENOMSG = 42,
+    EIDRM = 43,
+    ECHRNG = 44,
+    EL2NSYNC = 45,
+    EL3HLT = 46,
+    EL3RST = 47,
+    ELNRNG = 48,
+    EUNATCH = 49,
+    ENOCSI = 50,
+    EL2HLT = 51,
+    EBADE = 52,
+    EBADR = 53,
+    EXFULL = 54,
+    ENOANO = 55,
+    EBADRQC = 56,
+    EBADSLT = 57,
+    EDEADLOCK = 58,
+    EBFONT = 59,
+    ENOSTR = 60,
+    ENODATA = 61,
+    ETIME = 62,
+    ENOSR = 63,
+    ENONET = 64,
+    ENOPKG = 65,
+    EREMOTE = 66,
+    ENOLINK = 67,
+    EADV = 68,
+    ESRMNT = 69,
+    ECOMM = 70,
+    EPROTO = 71,
+    EMULTIHOP = 72,
+    EDOTDOT = 73,
+    EBADMSG = 74,
     EOVERFLOW = 75,
+    ENOTUNIQ = 76,
+    EBADFD = 77,
+    EREMCHG = 78,
+    ELIBACC = 79,
+    ELIBBAD = 80,
+    ELIBSCN = 81,
+    ELIBMAX = 82,
+    ELIBEXEC = 83,
+    EILSEQ = 84,
+    ERESTART = 85,
+    ESTRPIPE = 86,
+    EUSERS = 87,
     ENOTSOCK = 88,
+    EDESTADDRREQ = 89,
     EMSGSIZE = 90,
+    EPROTOTYPE = 91,
+    ENOPROTOOPT = 92,
+    EPROTONOSUPPORT = 93,
+    ESOCKTNOSUPPORT = 94,
     ENOTSUP = 95,
+    EPFNOSUPPORT = 96,
     EAFNOSUPPORT = 97,
     EADDRINUSE = 98,
     EADDRNOTAVAIL = 99,
     ENETDOWN = 100,
     ENETUNREACH = 101,
+    ENETRESET = 102,
     ECONNABORTED = 103,
     ECONNRESET = 104,
     ENOBUFS = 105,
     EISCONN = 106,
     ENOTCONN = 107,
     ESHUTDOWN = 108,
+    ETOOMANYREFS = 109,
     ETIMEDOUT = 110,
     ECONNREFUSED = 111,
     EHOSTDOWN = 112,
     EHOSTUNREACH = 113,
     EALREADY = 114,
     EINPROGRESS = 115,
+    ESTALE = 116,
+    EUCLEAN = 117,
+    ENOTNAM = 118,
+    ENAVAIL = 119,
+    EISNAM = 120,
+    EREMOTEIO = 121,
+    EDQUOT = 122,
+    ENOMEDIUM = 123,
+    EMEDIUMTYPE = 124,
     ECANCELED = 125,
+    ENOKEY = 126,
+    EKEYEXPIRED = 127,
+    EKEYREVOKED = 128,
+    EKEYREJECTED = 129,
+    EOWNERDEAD = 130,
+    ENOTRECOVERABLE = 131,
+    ERFKILL = 132,
+    EHWPOISON = 133,
     UNKNOWN = 65535,
+
+    pub const max: u16 = 134;
 
     /// Converts a raw OS errno (positive POSIX code or negative Linux syscall return `-errno`) into `SystemErrno`.
     pub static fn fromCode(code: i32): SystemErrno {
@@ -116,28 +188,98 @@ pub enum SystemErrno: u16 {
             39 => SystemErrno.ENOTEMPTY,
             40 => SystemErrno.ELOOP,
             41 => SystemErrno.EWOULDBLOCK,
+            42 => SystemErrno.ENOMSG,
+            43 => SystemErrno.EIDRM,
+            44 => SystemErrno.ECHRNG,
+            45 => SystemErrno.EL2NSYNC,
+            46 => SystemErrno.EL3HLT,
+            47 => SystemErrno.EL3RST,
+            48 => SystemErrno.ELNRNG,
+            49 => SystemErrno.EUNATCH,
+            50 => SystemErrno.ENOCSI,
+            51 => SystemErrno.EL2HLT,
+            52 => SystemErrno.EBADE,
+            53 => SystemErrno.EBADR,
+            54 => SystemErrno.EXFULL,
+            55 => SystemErrno.ENOANO,
+            56 => SystemErrno.EBADRQC,
+            57 => SystemErrno.EBADSLT,
+            58 => SystemErrno.EDEADLOCK,
+            59 => SystemErrno.EBFONT,
+            60 => SystemErrno.ENOSTR,
+            61 => SystemErrno.ENODATA,
+            62 => SystemErrno.ETIME,
+            63 => SystemErrno.ENOSR,
+            64 => SystemErrno.ENONET,
+            65 => SystemErrno.ENOPKG,
+            66 => SystemErrno.EREMOTE,
+            67 => SystemErrno.ENOLINK,
+            68 => SystemErrno.EADV,
+            69 => SystemErrno.ESRMNT,
+            70 => SystemErrno.ECOMM,
+            71 => SystemErrno.EPROTO,
+            72 => SystemErrno.EMULTIHOP,
+            73 => SystemErrno.EDOTDOT,
+            74 => SystemErrno.EBADMSG,
             75 => SystemErrno.EOVERFLOW,
+            76 => SystemErrno.ENOTUNIQ,
+            77 => SystemErrno.EBADFD,
+            78 => SystemErrno.EREMCHG,
+            79 => SystemErrno.ELIBACC,
+            80 => SystemErrno.ELIBBAD,
+            81 => SystemErrno.ELIBSCN,
+            82 => SystemErrno.ELIBMAX,
+            83 => SystemErrno.ELIBEXEC,
+            84 => SystemErrno.EILSEQ,
+            85 => SystemErrno.ERESTART,
+            86 => SystemErrno.ESTRPIPE,
+            87 => SystemErrno.EUSERS,
             88 => SystemErrno.ENOTSOCK,
+            89 => SystemErrno.EDESTADDRREQ,
             90 => SystemErrno.EMSGSIZE,
+            91 => SystemErrno.EPROTOTYPE,
+            92 => SystemErrno.ENOPROTOOPT,
+            93 => SystemErrno.EPROTONOSUPPORT,
+            94 => SystemErrno.ESOCKTNOSUPPORT,
             95 => SystemErrno.ENOTSUP,
+            96 => SystemErrno.EPFNOSUPPORT,
             97 => SystemErrno.EAFNOSUPPORT,
             98 => SystemErrno.EADDRINUSE,
             99 => SystemErrno.EADDRNOTAVAIL,
             100 => SystemErrno.ENETDOWN,
             101 => SystemErrno.ENETUNREACH,
+            102 => SystemErrno.ENETRESET,
             103 => SystemErrno.ECONNABORTED,
             104 => SystemErrno.ECONNRESET,
             105 => SystemErrno.ENOBUFS,
             106 => SystemErrno.EISCONN,
             107 => SystemErrno.ENOTCONN,
             108 => SystemErrno.ESHUTDOWN,
+            109 => SystemErrno.ETOOMANYREFS,
             110 => SystemErrno.ETIMEDOUT,
             111 => SystemErrno.ECONNREFUSED,
             112 => SystemErrno.EHOSTDOWN,
             113 => SystemErrno.EHOSTUNREACH,
             114 => SystemErrno.EALREADY,
             115 => SystemErrno.EINPROGRESS,
+            116 => SystemErrno.ESTALE,
+            117 => SystemErrno.EUCLEAN,
+            118 => SystemErrno.ENOTNAM,
+            119 => SystemErrno.ENAVAIL,
+            120 => SystemErrno.EISNAM,
+            121 => SystemErrno.EREMOTEIO,
+            122 => SystemErrno.EDQUOT,
+            123 => SystemErrno.ENOMEDIUM,
+            124 => SystemErrno.EMEDIUMTYPE,
             125 => SystemErrno.ECANCELED,
+            126 => SystemErrno.ENOKEY,
+            127 => SystemErrno.EKEYEXPIRED,
+            128 => SystemErrno.EKEYREVOKED,
+            129 => SystemErrno.EKEYREJECTED,
+            130 => SystemErrno.EOWNERDEAD,
+            131 => SystemErrno.ENOTRECOVERABLE,
+            132 => SystemErrno.ERFKILL,
+            133 => SystemErrno.EHWPOISON,
             else => SystemErrno.UNKNOWN,
         };
     }
@@ -148,83 +290,16 @@ pub enum SystemErrno: u16 {
     }
 
     /// Returns the canonical symbolic POSIX name (e.g., `"ENOENT"`, `"ECONNREFUSED"`).
-    /// Note: CP enums also expose `.name` property and `.toString()` returning the variant tag name.
     pub fn codeName(): []const u8 {
         return SystemErrno.name(_);
     }
 
-    /// Returns the canonical symbolic POSIX name (usable via `SystemErrno.name(err)`).
+    /// Returns the canonical symbolic POSIX name (usable via `SystemErrno.name(err)` or `err.name()`).
     pub fn name(): []const u8 {
-        return switch (_) {
-            .SUCCESS => "SUCCESS",
-            .EPERM => "EPERM",
-            .ENOENT => "ENOENT",
-            .ESRCH => "ESRCH",
-            .EINTR => "EINTR",
-            .EIO => "EIO",
-            .ENXIO => "ENXIO",
-            .E2BIG => "E2BIG",
-            .ENOEXEC => "ENOEXEC",
-            .EBADF => "EBADF",
-            .ECHILD => "ECHILD",
-            .EAGAIN => "EAGAIN",
-            .ENOMEM => "ENOMEM",
-            .EACCES => "EACCES",
-            .EFAULT => "EFAULT",
-            .ENOTBLK => "ENOTBLK",
-            .EBUSY => "EBUSY",
-            .EEXIST => "EEXIST",
-            .EXDEV => "EXDEV",
-            .ENODEV => "ENODEV",
-            .ENOTDIR => "ENOTDIR",
-            .EISDIR => "EISDIR",
-            .EINVAL => "EINVAL",
-            .ENFILE => "ENFILE",
-            .EMFILE => "EMFILE",
-            .ENOTTY => "ENOTTY",
-            .ETXTBSY => "ETXTBSY",
-            .EFBIG => "EFBIG",
-            .ENOSPC => "ENOSPC",
-            .ESPIPE => "ESPIPE",
-            .EROFS => "EROFS",
-            .EMLINK => "EMLINK",
-            .EPIPE => "EPIPE",
-            .EDOM => "EDOM",
-            .ERANGE => "ERANGE",
-            .EDEADLK => "EDEADLK",
-            .ENAMETOOLONG => "ENAMETOOLONG",
-            .ENOLCK => "ENOLCK",
-            .ENOSYS => "ENOSYS",
-            .ENOTEMPTY => "ENOTEMPTY",
-            .ELOOP => "ELOOP",
-            .EWOULDBLOCK => "EWOULDBLOCK",
-            .EOVERFLOW => "EOVERFLOW",
-            .ENOTSOCK => "ENOTSOCK",
-            .EMSGSIZE => "EMSGSIZE",
-            .ENOTSUP => "ENOTSUP",
-            .EAFNOSUPPORT => "EAFNOSUPPORT",
-            .EADDRINUSE => "EADDRINUSE",
-            .EADDRNOTAVAIL => "EADDRNOTAVAIL",
-            .ENETDOWN => "ENETDOWN",
-            .ENETUNREACH => "ENETUNREACH",
-            .ECONNABORTED => "ECONNABORTED",
-            .ECONNRESET => "ECONNRESET",
-            .ENOBUFS => "ENOBUFS",
-            .EISCONN => "EISCONN",
-            .ENOTCONN => "ENOTCONN",
-            .ESHUTDOWN => "ESHUTDOWN",
-            .ETIMEDOUT => "ETIMEDOUT",
-            .ECONNREFUSED => "ECONNREFUSED",
-            .EHOSTDOWN => "EHOSTDOWN",
-            .EHOSTUNREACH => "EHOSTUNREACH",
-            .EALREADY => "EALREADY",
-            .EINPROGRESS => "EINPROGRESS",
-            .ECANCELED => "ECANCELED",
-            .UNKNOWN => "UNKNOWN",
-        };
+        return @tagName(_);
     }
 
-    /// Returns a human-readable POSIX diagnostic description.
+    /// Returns a human-readable POSIX `strerror` diagnostic description.
     pub fn description(): []const u8 {
         return switch (_) {
             .SUCCESS => "Success",
@@ -269,53 +344,99 @@ pub enum SystemErrno: u16 {
             .ENOTEMPTY => "Directory not empty",
             .ELOOP => "Too many levels of symbolic links",
             .EWOULDBLOCK => "Operation would block",
+            .ENOMSG => "No message of desired type",
+            .EIDRM => "Identifier removed",
+            .ECHRNG => "Channel number out of range",
+            .EL2NSYNC => "Level 2 not synchronized",
+            .EL3HLT => "Level 3 halted",
+            .EL3RST => "Level 3 reset",
+            .ELNRNG => "Link number out of range",
+            .EUNATCH => "Protocol driver not attached",
+            .ENOCSI => "No CSI structure available",
+            .EL2HLT => "Level 2 halted",
+            .EBADE => "Invalid exchange",
+            .EBADR => "Invalid request descriptor",
+            .EXFULL => "Exchange full",
+            .ENOANO => "No anode",
+            .EBADRQC => "Invalid request code",
+            .EBADSLT => "Invalid slot",
+            .EDEADLOCK => "File locking deadlock error",
+            .EBFONT => "Bad font file format",
+            .ENOSTR => "Device not a stream",
+            .ENODATA => "No data available",
+            .ETIME => "Timer expired",
+            .ENOSR => "Out of streams resources",
+            .ENONET => "Machine is not on the network",
+            .ENOPKG => "Package not installed",
+            .EREMOTE => "Object is remote",
+            .ENOLINK => "Link has been severed",
+            .EADV => "Advertise error",
+            .ESRMNT => "Srmount error",
+            .ECOMM => "Communication error on send",
+            .EPROTO => "Protocol error",
+            .EMULTIHOP => "Multihop attempted",
+            .EDOTDOT => "RFS specific error",
+            .EBADMSG => "Bad message",
             .EOVERFLOW => "Value too large for defined data type",
+            .ENOTUNIQ => "Name not unique on network",
+            .EBADFD => "File descriptor in bad state",
+            .EREMCHG => "Remote address changed",
+            .ELIBACC => "Can not access a needed shared library",
+            .ELIBBAD => "Accessing a corrupted shared library",
+            .ELIBSCN => ".lib section in a.out corrupted",
+            .ELIBMAX => "Attempting to link in too many shared libraries",
+            .ELIBEXEC => "Cannot exec a shared library directly",
+            .EILSEQ => "Invalid or incomplete multibyte or wide character",
+            .ERESTART => "Interrupted system call should be restarted",
+            .ESTRPIPE => "Streams pipe error",
+            .EUSERS => "Too many users",
             .ENOTSOCK => "Socket operation on non-socket",
+            .EDESTADDRREQ => "Destination address required",
             .EMSGSIZE => "Message too long",
+            .EPROTOTYPE => "Protocol wrong type for socket",
+            .ENOPROTOOPT => "Protocol not available",
+            .EPROTONOSUPPORT => "Protocol not supported",
+            .ESOCKTNOSUPPORT => "Socket type not supported",
             .ENOTSUP => "Operation not supported",
+            .EPFNOSUPPORT => "Protocol family not supported",
             .EAFNOSUPPORT => "Address family not supported by protocol",
             .EADDRINUSE => "Address already in use",
             .EADDRNOTAVAIL => "Cannot assign requested address",
             .ENETDOWN => "Network is down",
             .ENETUNREACH => "Network is unreachable",
+            .ENETRESET => "Network dropped connection on reset",
             .ECONNABORTED => "Software caused connection abort",
             .ECONNRESET => "Connection reset by peer",
             .ENOBUFS => "No buffer space available",
             .EISCONN => "Transport endpoint is already connected",
             .ENOTCONN => "Transport endpoint is not connected",
             .ESHUTDOWN => "Cannot send after transport endpoint shutdown",
+            .ETOOMANYREFS => "Too many references: cannot splice",
             .ETIMEDOUT => "Connection timed out",
             .ECONNREFUSED => "Connection refused",
             .EHOSTDOWN => "Host is down",
             .EHOSTUNREACH => "No route to host",
             .EALREADY => "Operation already in progress",
             .EINPROGRESS => "Operation now in progress",
+            .ESTALE => "Stale file handle",
+            .EUCLEAN => "Structure needs cleaning",
+            .ENOTNAM => "Not a XENIX named type file",
+            .ENAVAIL => "No XENIX semaphores available",
+            .EISNAM => "Is a named type file",
+            .EREMOTEIO => "Remote I/O error",
+            .EDQUOT => "Disk quota exceeded",
+            .ENOMEDIUM => "No medium found",
+            .EMEDIUMTYPE => "Wrong medium type",
             .ECANCELED => "Operation canceled",
+            .ENOKEY => "Required key not available",
+            .EKEYEXPIRED => "Key has expired",
+            .EKEYREVOKED => "Key has been revoked",
+            .EKEYREJECTED => "Key was rejected by service",
+            .EOWNERDEAD => "Owner died",
+            .ENOTRECOVERABLE => "State not recoverable",
+            .ERFKILL => "Operation not possible due to RF-kill",
+            .EHWPOISON => "Memory page has hardware error",
             .UNKNOWN => "Unknown system error",
-        };
-    }
-
-    /// Returns `true` if the error represents a transient condition where retrying may succeed.
-    pub fn isRetryable(): bool {
-        return switch (_) {
-            .EINTR, .EAGAIN, .EWOULDBLOCK, .EBUSY, .ETIMEDOUT => true,
-            else => false,
-        };
-    }
-
-    /// Returns `true` if the target file, directory, device, or process was not found.
-    pub fn isNotFound(): bool {
-        return switch (_) {
-            .ENOENT, .ESRCH, .ENODEV, .ENXIO => true,
-            else => false,
-        };
-    }
-
-    /// Returns `true` if the operation was rejected due to missing permissions or read-only media.
-    pub fn isPermissionDenied(): bool {
-        return switch (_) {
-            .EPERM, .EACCES, .EROFS => true,
-            else => false,
         };
     }
 
@@ -324,23 +445,100 @@ pub enum SystemErrno: u16 {
         return _ == SystemErrno.SUCCESS;
     }
 
+    /// Returns `true` if the error represents a transient condition where retrying may succeed.
+    pub fn isRetryable(): bool {
+        return switch (_) {
+            .EINTR, .EAGAIN, .EWOULDBLOCK, .EBUSY, .ETIMEDOUT, .ERESTART => true,
+            else => false,
+        };
+    }
+
+    /// Returns `true` if the target file, directory, device, or process was not found.
+    pub fn isNotFound(): bool {
+        return switch (_) {
+            .ENOENT, .ESRCH, .ENODEV, .ENXIO, .ENOMEDIUM => true,
+            else => false,
+        };
+    }
+
+    /// Returns `true` if the operation was rejected due to missing permissions or read-only media.
+    pub fn isPermissionDenied(): bool {
+        return switch (_) {
+            .EPERM, .EACCES, .EROFS, .EKEYEXPIRED, .EKEYREVOKED, .EKEYREJECTED => true,
+            else => false,
+        };
+    }
+
+    /// Returns `true` if the operation would block on a non-blocking descriptor.
+    pub fn isWouldBlock(): bool {
+        return switch (_) {
+            .EAGAIN, .EWOULDBLOCK => true,
+            else => false,
+        };
+    }
+
+    /// Returns `true` if the error indicates a broken, reset, refused, or unreachable connection.
+    pub fn isConnectionError(): bool {
+        return switch (_) {
+            .ECONNABORTED,
+            .ECONNRESET,
+            .ECONNREFUSED,
+            .ENOTCONN,
+            .EISCONN,
+            .ESHUTDOWN,
+            .EPIPE,
+            .ENETDOWN,
+            .ENETUNREACH,
+            .ENETRESET,
+            .EHOSTDOWN,
+            .EHOSTUNREACH => true,
+            else => false,
+        };
+    }
+
+    /// Returns `true` if the error represents an operation or timer timeout.
+    pub fn isTimeout(): bool {
+        return switch (_) {
+            .ETIMEDOUT, .ETIME => true,
+            else => false,
+        };
+    }
+
+    /// Returns `true` if the target path or resource already exists.
+    pub fn isAlreadyExists(): bool {
+        return _ == SystemErrno.EEXIST;
+    }
+
     /// Returns `true` for socket and network transport error codes.
     pub fn isNetworkError(): bool {
         return switch (_) {
+            .ENOTSOCK,
+            .EDESTADDRREQ,
+            .EMSGSIZE,
+            .EPROTOTYPE,
+            .ENOPROTOOPT,
+            .EPROTONOSUPPORT,
+            .ESOCKTNOSUPPORT,
+            .EPFNOSUPPORT,
+            .EAFNOSUPPORT,
             .EADDRINUSE,
             .EADDRNOTAVAIL,
             .ENETDOWN,
             .ENETUNREACH,
+            .ENETRESET,
             .ECONNABORTED,
             .ECONNRESET,
             .ENOBUFS,
             .EISCONN,
             .ENOTCONN,
             .ESHUTDOWN,
+            .ETOOMANYREFS,
             .ETIMEDOUT,
             .ECONNREFUSED,
             .EHOSTDOWN,
-            .EHOSTUNREACH => true,
+            .EHOSTUNREACH,
+            .EALREADY,
+            .EINPROGRESS => true,
             else => false,
         };
     }

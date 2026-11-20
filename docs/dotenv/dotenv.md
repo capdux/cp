@@ -10,14 +10,16 @@
 
 `cap:dotenv` 吸收自 Bun 内置的 `.env` 加载引擎（`bun/src/dotenv/env_loader.cp`），采用**全栈内建线性竞技场缓冲（Zero-Heap In-Struct Arena Buffer）**架构：
 
-1. **零堆分配存储结构 (`EnvMap`)**：内置 `256` 个键值对槽位（`MAX_ENV_ENTRIES`）与 `32KB` 连续字符缓冲区（`ENV_BUFFER_CAPACITY`），所有反转义与变量插值后的字符串直接落在结构体内部缓冲区，无需调用系统堆分配器。
-2. **完整的 `.env` 词法语法支持 (`EnvParser`)**：
-   - 支持标准 `KEY=VALUE`、`KEY: VALUE` 以及 Shell 风格的 `export KEY=VALUE` 声明。
-   - 支持未加引号值（自动剥离行尾 `#` 内联注释）、单引号原始字面量 `'raw'`、反引号字面量 `` `raw` `` 以及双引号转义字符串 `"line1\nline2\t\"quoted\""`。
-3. **Shell 风格变量插值与默认值引擎 (`expandString`)**：
-   - 支持 `$VAR` 与 `${VAR}` 引用已定义的环境变量。
-   - 支持 `${VAR:-default_value}` 缺省回退语法（当 `VAR` 未定义或为空字符串时自动采用 `default_value`）。
-   - 支持 `\$` 转义字面量美元符号，阻止变量展开。
+1. **零堆分配存储结构 (`EnvMap`)**：内置 `256` 个键值对槽位（`MAX_ENV_ENTRIES`）与 `32KB` 连续字符缓冲区（`ENV_BUFFER_CAPACITY`），所有反转义、CRLF 换行归一化与变量插值后的字符串直接落在结构体内部缓冲区，零系统堆分配。
+2. **完备 `.env` 词法与多行引号状态机 (`EnvParser`)**：
+   - 自动剥离文件开头 **UTF-8 BOM (`\xEF\xBB\xBF`)**；完整兼容 **CRLF (`\r\n`)**、孤立 `\r`、LF (`\n`) 与 **UTF-8 空白行**（包括空格、Tab、VT/FF、`U+00A0` NBSP 与 `U+3000` 全角空格）。
+   - 支持标准 `KEY=VAL`、`KEY: VAL` 与 `export KEY=VAL`（空格或 Tab 分隔）。
+   - 支持未加引号值（自动剥离行内 `# 注释`，支持 `KEY=#comment` 置空而保留引号内 `#` 与非空白分隔 URL 锚点）、单引号跨行原始字面量 `'...'`、反引号跨行字面量 `` `...` ``（内部可自由包含 `'` 与 `"`）以及双引号跨行转义字符串 `"..."`（解析 `\n`、`\r`、`\t`、`\"`、`\\` 与 `\$`）。
+   - 支持引号闭合后的同行尾 `# 注释`（如 `KEY="val" # inline comment`）。
+3. **Shell 风格变量插值与默认值回退引擎 (`expandString`)**：
+   - 支持 `$VAR`（按 POSIX 标识符边界 `[a-zA-Z_][a-zA-Z0-9_]*` 精准切分，如 `$HOST:$PORT`、`$USER-dev`）与 `${VAR}`。
+   - 严格区分 **`${VAR:-default}`**（变量**未定义或为空字符串**时使用 `default`）与 **`${VAR-default}`**（仅当变量**未定义**时使用 `default`，若已定义为空串则保持空串 `""`）。
+   - 支持**嵌套默认值**（如 `${A:-${B:-fallback}}`）与**链式递归引用**（深度上限 8 层防环），以及 `\$` 转义输出字面量 `$`。
 4. **Bun 标准四级多环境级联加载 (`DotenvLoader.loadCascade`)**：按优先级从高到低依次加载 `.env.<mode>.local` -> `.env.local` -> `.env.<mode>` -> `.env`。
 
 ---
@@ -28,25 +30,23 @@
 
 | 语法特性 | `.env` 示例 | 解析结果 (`env.get(...)`) | 规则说明 |
 | :--- | :--- | :--- | :--- |
-| **基础键值对** | `PORT = 8080` | `"8080"` | 自动修剪键名与值两端的空白字符 |
-| **`export` 前缀** | `export NODE_ENV=production` | `"production"` | 自动识别并跳过行首 `export ` 或 `export\t` |
-| **冒号分隔符** | `HOST: 127.0.0.1` | `"127.0.0.1"` | 兼容 YAML 风格 `:` 键值分隔符 |
-| **行尾内联注释** | `TIMEOUT=30 # 单位秒` | `"30"` | 未加引号值中，空格后紧跟的 `#` 视为内联注释 |
-| **双引号转义** | `MSG="Hello\nWorld\t\"CP\""` | `"Hello\nWorld\t\"CP\""` | 解析 `\n`, `\r`, `\t`, `\"`, `\\`, `\$` 转义序列 |
-| **单引号原样字面量** | `RAW='literal \n texto'` | `"literal \\n texto"` | 单引号内不执行反斜杠转义，原样保留 |
-| **变量插值展开** | `URL=http://${HOST}:${PORT}` | `"http://127.0.0.1:8080"` | 自动引用前文或同文件内定义的变量 |
-| **默认值回退 (`:-`)** | `POOL=${DB_POOL:-16}` | `"16"` | 当 `DB_POOL` 未定义或为空时回退至 `"16"` |
-| **美元符号转义** | `PRICE=\${AMOUNT}` | `"${AMOUNT}"` | `\$` 输出字面量 `$` 且不触发插值 |
+| **UTF-8 BOM & CRLF** | `\xEF\xBB\xBFKEY=val\r\n` | `"val"` | 自动剥离 UTF-8 BOM 并归一化 CRLF 换行 |
+| **`export` 前缀** | `export NODE_ENV=production` | `"production"` | 自动跳过行首 `export ` / `export\t` |
+| **行内 `#` 注释** | `PORT=8080 # 端口` / `E=#note` | `"8080"` / `""` | 仅在非引号内生效；引号内 `#` 原样保留 |
+| **双引号多行与转义** | `MSG="a\nb\t\"c\"\\d\n"` | `"a\nb\t\"c\"\\d\n"` | 解析 `\n`, `\r`, `\t`, `\"`, `\\`, `\$`，并支持跨行续行 |
+| **单引号/反引号多行** | ``TXT=`a 'b' "c"\nd` `` | `"a 'b' \"c\"\nd"` | 原始保留反斜杠，自动归一化内部 `\r\n` -> `\n` |
+| **标识符边界展开** | `URL=http://$HOST:$PORT` | `"http://127.0.0.1:8080"` | `$VAR` 在 `:` / `-` / `.` 边界自动截断 |
+| **`:-` vs `-` 回退** | `${EMPTY:-def}` vs `${EMPTY-def}` | `"def"` vs `""` | `:-` 对空串回退；`-` 仅对未定义变量回退 |
+| **嵌套默认值展开** | `${A:-${B:-fallback}}` | `"fallback"` | 支持任意合法大括号嵌套插值 |
+| **美元符号转义** | `RAW="\${KEEP}"` | `"${KEEP}"` | `\$` 输出字面量 `$` 且阻止二次展开 |
 
 ### 2. 多环境级联加载优先级（Cascade Priority）
 
-当调用 `load(mode)` 或 `config(DotenvOptions{ mode: "development", override: false })` 时，加载器按以下优先级顺序读取（先加载的高优变量不会被后加载的低优文件覆盖）：
-
 | 优先级排序 | 文件名模板 | `mode = "development"` 示例 | 适用场景说明 |
 | :---: | :--- | :--- | :--- |
-| **1 (最高)** | `.env.<mode>.local` | `.env.development.local` | 特定环境下的本地私有覆盖配置（通常加入 `.gitignore`） |
-| **2** | `.env.local` | `.env.local` | 所有环境通用的本地私有配置（注：`mode == "test"` 时自动跳过以保证测试确定性） |
-| **3** | `.env.<mode>` | `.env.development` | 特定环境（`development` / `production` / `test`）团队共享配置 |
+| **1 (最高)** | `.env.<mode>.local` | `.env.development.local` | 特定环境下的本地私有覆盖配置 |
+| **2** | `.env.local` | `.env.local` | 所有环境通用本地配置（`mode == "test"` 时自动跳过） |
+| **3** | `.env.<mode>` | `.env.development` | 特定环境共享配置 |
 | **4 (最低)** | `.env` | `.env` | 全局基础默认配置 |
 
 ---
@@ -66,52 +66,27 @@
 
 ## 四、 代码示例
 
-### 1. 解析 `.env` 字符串与 `${VAR:-default}` 插值展开
-
 ```typescript
 const std = @import("std");
-import { parse } from "cap:dotenv";
+import { parse, DotenvLoader, DotenvOptions, config } from "cap:dotenv";
 
-fn demoDotenvParse(): void {
+fn demoDotenv() {
     const src =
-        "# 数据库配置\n" +
-        "DB_HOST=127.0.0.1\n" +
-        "DB_PORT=5432\n" +
-        "export DB_NAME=cp_cloud\n" +
-        "DB_USER=${CUSTOM_USER:-postgres}\n" +
-        "DATABASE_URL=\"postgres://${DB_USER}@${DB_HOST}:${DB_PORT}/${DB_NAME}\"\n";
+        "\xEF\xBB\xBF" ++ // UTF-8 BOM
+        "# 数据库配置\r\n" ++
+        "export DB_HOST=127.0.0.1\r\n" ++
+        "DB_PORT=5432 # 注释\r\n" ++
+        "EMPTY_STR=\r\n" ++
+        "WITH_COLON_DASH=${EMPTY_STR:-postgres}\r\n" ++
+        "WITH_DASH_ONLY=${EMPTY_STR-postgres}\r\n" ++
+        "NESTED=${CUSTOM_DB:-${FALLBACK_DB:-cp_cloud}}\r\n" ++
+        "CERT=`-----BEGIN\r\nDATA-----` # 引号后注释\r\n" ++
+        "URL=\"postgres://${WITH_COLON_DASH}@$DB_HOST:$DB_PORT/${NESTED}\"\r\n";
 
     let env = parse(src);
-
-    let url = env.get("DATABASE_URL").?;
-    // url => "postgres://postgres@127.0.0.1:5432/cp_cloud"
-
-    let timeout = env.getOr("CONNECT_TIMEOUT", "10s");
-    // timeout => "10s"
-}
-```
-
-### 2. 多环境级联加载器 (`DotenvLoader`)
-
-```typescript
-import { DotenvLoader, DotenvOptions, config } from "cap:dotenv";
-
-fn demoCascadeLoader(): void {
-    // 1. 从工作目录自动按 .env.production.local -> .env.local -> .env.production -> .env 级联加载
-    let prod_loader = config(DotenvOptions{
-        path: "",
-        mode: "production",
-        cwd: ".",
-        override: false,
-        expand: true,
-    });
-
-    // 2. 手动模拟多层级联覆盖（overwrite = false 保留先加载的高优先级键）
-    let custom = DotenvLoader.init();
-    custom.loadFromString("PORT=9000\n", false, true); // 高优：.env.local
-    custom.loadFromString("PORT=3000\nHOST=0.0.0.0\n", false, true); // 低优：.env
-
-    // custom.get("PORT").? => "9000"
-    // custom.get("HOST").? => "0.0.0.0"
+    // env.get("WITH_COLON_DASH").? => "postgres"
+    // env.get("WITH_DASH_ONLY").?  => ""
+    // env.get("URL").?             => "postgres://postgres@127.0.0.1:5432/cp_cloud"
+    // env.get("CERT").?            => "-----BEGIN\nDATA-----"
 }
 ```

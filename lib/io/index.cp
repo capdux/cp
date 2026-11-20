@@ -18,6 +18,12 @@ export {
     BufferWriter,
     BufferedReader,
     BufferedWriter,
+    LimitedReader,
+    MultiReader,
+    TeeReader,
+    DiscardWriter,
+    CountingWriter,
+    ChunkedBuffer,
     copyStream,
     copyN
 } from "./buffer_stream";

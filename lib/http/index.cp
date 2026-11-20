@@ -11,7 +11,7 @@ export { Response } from "./response";
 export { HttpServer, fetch, json, serve } from "./server";
 
 // --- Step 1: HTTP Infrastructure Types & Enums ---
-export { Encoding } from "./encoding";
+export { Encoding, AcceptEncodingItem, ContentEncodingNegotiator } from "./encoding";
 export { FetchCacheMode, FetchRedirect, FetchRequestMode } from "./fetch_modes";
 export { HTTPCertError, CertificateInfo, InitError } from "./cert";
 export { URLPath } from "./url_path";
@@ -29,6 +29,23 @@ export {
     InternalStateFlags,
     InternalState
 } from "./internal_state";
+export {
+    MAX_CHUNK_TRAILERS,
+    ChunkedDecoderState,
+    ChunkTrailer,
+    ChunkTrailerSpan,
+    ChunkedDecodeResult,
+    ChunkedDecoder,
+    ChunkedEncoder
+} from "./chunked";
+export {
+    MAX_REDIRECT_HOPS,
+    MAX_REDIRECT_HISTORY,
+    RedirectAction,
+    ParsedHttpOrigin,
+    RedirectDecision,
+    RedirectPolicy
+} from "./redirect";
 
 // --- Step 2: HTTP/2 & HTTP/3 Subsystems ---
 export {
@@ -68,12 +85,16 @@ export {
 // --- Step 3: Industrial Client Engine & Lifecycle ---
 export {
     DecompressorType,
-    Decompressor
+    Decompressor,
+    StreamingDecompressor
 } from "./decompressor";
 
 export {
     ProxyTunnelSocketType,
-    ProxyTunnel
+    ProxyConnectResponse,
+    NoProxyMatcher,
+    ProxyTunnel,
+    HttpProxyTunnel
 } from "./proxy";
 
 export {
@@ -84,7 +105,11 @@ export {
 export {
     MAX_POOLED_SOCKETS,
     PooledSocket,
-    HTTPContext
+    HTTPContext,
+    PoolEntryState,
+    PooledConnection,
+    PoolStats,
+    HttpConnectionPool
 } from "./context";
 
 export {

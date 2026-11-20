@@ -16,6 +16,46 @@ pub const ParsedPath = struct {
     name: []const u8 = "",
 };
 
+pub fn formatParsedPath(p: ParsedPath, sep_char: u8, buf: []u8): []const u8 {
+    if (buf.len == 0) return "";
+    let out_len: usize = 0;
+
+    let prefix = if (p.dir.len > 0) p.dir else p.root;
+    if (prefix.len > 0) {
+        let copy_prefix = if (out_len + prefix.len <= buf.len) prefix.len else (buf.len - out_len);
+        @memcpy(buf[out_len .. out_len + copy_prefix], prefix[0 .. copy_prefix]);
+        out_len += copy_prefix;
+
+        let needs_sep = (p.dir.len > 0) and
+            !std.mem.eql(u8, p.dir, p.root) and
+            (buf[out_len - 1] != sep_char) and
+            (sep_char != '\\' or buf[out_len - 1] != '/');
+        if (needs_sep and out_len < buf.len) {
+            buf[out_len] = sep_char;
+            out_len += 1;
+        }
+    }
+
+    if (p.base.len > 0) {
+        let copy_base = if (out_len + p.base.len <= buf.len) p.base.len else (buf.len - out_len);
+        @memcpy(buf[out_len .. out_len + copy_base], p.base[0 .. copy_base]);
+        out_len += copy_base;
+    } else {
+        if (p.name.len > 0) {
+            let copy_name = if (out_len + p.name.len <= buf.len) p.name.len else (buf.len - out_len);
+            @memcpy(buf[out_len .. out_len + copy_name], p.name[0 .. copy_name]);
+            out_len += copy_name;
+        }
+        if (p.ext.len > 0) {
+            let copy_ext = if (out_len + p.ext.len <= buf.len) p.ext.len else (buf.len - out_len);
+            @memcpy(buf[out_len .. out_len + copy_ext], p.ext[0 .. copy_ext]);
+            out_len += copy_ext;
+        }
+    }
+
+    return buf[0 .. out_len];
+}
+
 pub const Path = struct {
     pub const posix = PosixPath;
     pub const win32 = WindowsPath;
@@ -88,6 +128,14 @@ pub const Path = struct {
         }
     }
 
+    pub fn toNamespacedPath(filepath: []const u8, buf: []u8): []const u8 {
+        if (@import("builtin").os.tag == .windows) {
+            return WindowsPath.toNamespacedPath(filepath, buf);
+        } else {
+            return PosixPath.toNamespacedPath(filepath, buf);
+        }
+    }
+
     pub fn longestCommonPath(paths: []const []const u8): []const u8 {
         if (@import("builtin").os.tag == .windows) {
             return WindowsPath.longestCommonPath(paths);
@@ -97,58 +145,14 @@ pub const Path = struct {
     }
 
     pub fn parse(filepath: []const u8): ParsedPath {
-        let b = basename(filepath, null);
-        let d = dirname(filepath);
-        let e = extname(filepath);
-        let n = b;
-        if (e.len > 0 and b.len > e.len) {
-            n = b[0 .. b.len - e.len];
-        }
-        let r = "";
         if (@import("builtin").os.tag == .windows) {
-            r = WindowsPath.volumeName(filepath);
-        } else if (isAbsolute(filepath)) {
-            r = "/";
+            return WindowsPath.parse(filepath);
+        } else {
+            return PosixPath.parse(filepath);
         }
-        return ParsedPath{
-            root: r,
-            dir: d,
-            base: b,
-            ext: e,
-            name: n,
-        };
     }
 
     pub fn format(p: ParsedPath, buf: []u8): []const u8 {
-        let out_len: usize = 0;
-        let b_str = p.base;
-        if (b_str.len == 0 and (p.name.len > 0 or p.ext.len > 0)) {
-            // Reconstruct base from name + ext
-            let copy_name = if (out_len + p.name.len <= buf.len) p.name.len else (buf.len - out_len);
-            @memcpy(buf[out_len .. out_len + copy_name], p.name[0 .. copy_name]);
-            out_len += copy_name;
-
-            let copy_ext = if (out_len + p.ext.len <= buf.len) p.ext.len else (buf.len - out_len);
-            @memcpy(buf[out_len .. out_len + copy_ext], p.ext[0 .. copy_ext]);
-            out_len += copy_ext;
-            return buf[0 .. out_len];
-        }
-
-        if (p.dir.len > 0) {
-            let copy_dir = if (out_len + p.dir.len <= buf.len) p.dir.len else (buf.len - out_len);
-            @memcpy(buf[out_len .. out_len + copy_dir], p.dir[0 .. copy_dir]);
-            out_len += copy_dir;
-
-            if (out_len > 0 and buf[out_len - 1] != sep and out_len < buf.len) {
-                buf[out_len] = sep;
-                out_len += 1;
-            }
-        }
-
-        let copy_base = if (out_len + b_str.len <= buf.len) b_str.len else (buf.len - out_len);
-        @memcpy(buf[out_len .. out_len + copy_base], b_str[0 .. copy_base]);
-        out_len += copy_base;
-
-        return buf[0 .. out_len];
+        return formatParsedPath(p, sep, buf);
     }
 };

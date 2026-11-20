@@ -16,11 +16,19 @@ export {
     O_APPEND,
     O_NONBLOCK,
     O_CLOEXEC,
+    F_OK,
+    X_OK,
+    W_OK,
+    R_OK,
+    SEEK_SET,
+    SEEK_CUR,
+    SEEK_END,
 } from "./fd";
 
 export {
     Stat,
     stat,
+    lstat,
     fstat,
 } from "./stat";
 
@@ -31,6 +39,7 @@ export {
 export {
     copyFile,
     copyFileByFd,
+    copyFileRange,
 } from "./copy_file";
 
 export {
@@ -47,38 +56,62 @@ export {
     removeDir,
 } from "./tmp";
 
-const mod_fd = @import("./fd");
-const mod_file = @import("./file");
-const mod_stat = @import("./stat");
-const mod_copy_file = @import("./copy_file");
-const mod_signal = @import("./signal");
-const mod_tmp = @import("./tmp");
+export {
+    open,
+    close,
+    read,
+    write,
+    pread,
+    pwrite,
+    lseek,
+    ftruncate,
+    dupFd,
+    dup2,
+    mkdir,
+    rmdir,
+    unlink,
+    rename,
+    symlink,
+    readlink,
+    chmod,
+    access,
+    getcwd,
+    chdir,
+} from "./fs_ops";
+
+export {
+    UnameInfo,
+    getpid,
+    getppid,
+    getuid,
+    getgid,
+    uname,
+    pageSize,
+    cpuCount,
+    monotonicNs,
+    realtimeMs,
+} from "./process";
 
 pub struct Sys {
-    pub const FD = mod_fd.FD;
-    pub const File = mod_file.File;
-    pub const Stat = mod_stat.Stat;
-    pub const stat = mod_stat.stat;
-    pub const fstat = mod_stat.fstat;
-    pub const copyFile = mod_copy_file.copyFile;
-    pub const copyFileByFd = mod_copy_file.copyFileByFd;
-    pub const Signal = mod_signal.Signal;
-    pub const getTempDir = mod_tmp.getTempDir;
-    pub const makeTempFile = mod_tmp.makeTempFile;
-    pub const makeTempDir = mod_tmp.makeTempDir;
-    pub const removeFile = mod_tmp.removeFile;
-    pub const removeDir = mod_tmp.removeDir;
+    pub static fn dup(fd: FD): !FD {
+        return fd.dup();
+    }
 
-    /// Bind the current thread to a specific CPU core.
+    pub static fn dup2(old_fd: FD, new_fd: FD): !FD {
+        return old_fd.dup2(new_fd);
+    }
+
+    /// Bind the current thread to a specific CPU core using Zig 0.17 std.os.linux.
     pub static fn setAffinity(core_id: usize): !void {
         zig {
-            const posix = std.posix;
-            var cpu_set = posix.cpu_set_t{};
-            posix.CPU_ZERO(&cpu_set);
-            posix.CPU_SET(core_id, &cpu_set);
-            
-            const tid = posix.gettid();
-            try posix.sched_setaffinity(tid, @sizeOf(posix.cpu_set_t), &cpu_set);
+            var cpu_set = std.mem.zeroes(std.os.linux.cpu_set_t);
+            const word_idx = core_id / @bitSizeOf(usize);
+            const bit_idx: u6 = @intCast(core_id % @bitSizeOf(usize));
+            if (word_idx < cpu_set.len) {
+                cpu_set[word_idx] |= (@as(usize, 1) << bit_idx);
+            }
+            const tid: std.os.linux.pid_t = @intCast(std.os.linux.syscall0(.gettid));
+            try std.os.linux.sched_setaffinity(tid, &cpu_set);
         }
     }
 

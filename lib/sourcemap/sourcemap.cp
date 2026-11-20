@@ -5,10 +5,10 @@
 // ============================================================================
 
 import { VLQ } from "./vlq.cp";
-import { LineOffsetTable, SourceLocation } from "./line_offset.cp";
-import { SourceMapping, ParsedSourceMap } from "./mapping.cp";
+import { LineOffsetTable, DynamicLineOffsetTable, SourceLocation } from "./line_offset.cp";
+import { SourceMapping, MappingList, ParsedSourceMap } from "./mapping.cp";
 import { InternalSourceMap } from "./internal_source_map.cp";
-import { Chunk } from "./chunk.cp";
+import { Chunk, SourceMapChunk } from "./chunk.cp";
 import { ParsedSourceMapRecord, OriginalPosition } from "./parsed_source_map.cp";
 const std = @import("std");
 
@@ -35,6 +35,10 @@ pub struct SourceMapGenerator {
         };
     }
 
+    pub fn setSourceRoot(*_, root: string): !void {
+        try _.chunk.setSourceRoot(_.allocator, root);
+    }
+
     pub fn addSource(*_, source_path: string): i32! {
         return _.chunk.addSource(_.allocator, source_path, "");
     }
@@ -57,6 +61,14 @@ pub struct SourceMapGenerator {
             name_index: name_idx,
         };
         try _.chunk.addMapping(_.allocator, m);
+    }
+
+    pub fn appendChunk(*_, other: &Chunk, line_offset: i32, col_offset: i32): !void {
+        try _.chunk.appendChunk(_.allocator, other, line_offset, col_offset);
+    }
+
+    pub fn sortMappings(*_) {
+        _.chunk.sortMappings();
     }
 
     pub fn generateMappings(*_, allocator: std.mem.Allocator): []u8! {
@@ -93,6 +105,20 @@ pub struct SourceMapConsumer {
         return _.record.findMapping(gen_line, gen_col);
     }
 
+    pub fn sourceContentFor(*_, source_path: string): string? {
+        let i: usize = 0;
+        while (i < _.record.sources.len) {
+            if (std.mem.eql(u8, _.record.sources[i], source_path)) {
+                if (i < _.record.sources_content.len && _.record.sources_content[i].len > 0) {
+                    return _.record.sources_content[i];
+                }
+                return null;
+            }
+            i += 1;
+        }
+        return null;
+    }
+
     pub fn deinit(*_) {
         _.record.deinit(_.allocator);
     }
@@ -101,4 +127,6 @@ pub struct SourceMapConsumer {
 pub struct SourceMap {
     pub const Generator = SourceMapGenerator;
     pub const Consumer = SourceMapConsumer;
+    pub const Chunk = SourceMapChunk;
+    pub const List = MappingList;
 }

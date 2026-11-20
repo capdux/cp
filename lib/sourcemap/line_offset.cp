@@ -11,15 +11,94 @@ pub struct SourceLocation {
     column: u32 = 0,    // 0-based byte column within line
 }
 
+pub struct LineRange {
+    start: u32 = 0,
+    end: u32 = 0,
+}
+
+fn findLineBinary(offsets: []const u32, byte_offset: u32): u32 {
+    if (offsets.len == 0) { return 0; }
+    let low: usize = 0;
+    let count: usize = offsets.len;
+    while (count > 0) {
+        let step = count / 2;
+        let mid = low + step;
+        if (offsets[mid] <= byte_offset) {
+            low = mid + 1;
+            count = count - step - 1;
+        } else {
+            count = step;
+        }
+    }
+    if (low == 0) { return 0; }
+    return (low - 1) as u32;
+}
+
+/// 将行内 UTF-8 字节列号转换为 SourceMap v3 标准 UTF-16 码元列号
+pub fn utf8ToUtf16Column(line_bytes: []const u8, byte_col: u32): u32 {
+    let limit = if ((byte_col as usize) <= line_bytes.len) (byte_col as usize) else line_bytes.len;
+    let i: usize = 0;
+    let utf16_col: u32 = 0;
+    while (i < limit) {
+        let b = line_bytes[i];
+        if (b < 0x80) {
+            i += 1;
+            utf16_col += 1;
+        } else if ((b & 0xE0) == 0xC0) {
+            i += 2;
+            utf16_col += 1;
+        } else if ((b & 0xF0) == 0xE0) {
+            i += 3;
+            utf16_col += 1;
+        } else if ((b & 0xF8) == 0xF0) {
+            i += 4;
+            utf16_col += 2; // surrogate pair
+        } else {
+            i += 1;
+            utf16_col += 1;
+        }
+    }
+    return utf16_col;
+}
+
+/// 将 UTF-16 码元列号转换为行内 UTF-8 字节列号
+pub fn utf16ToUtf8Column(line_bytes: []const u8, utf16_col: u32): u32 {
+    let i: usize = 0;
+    let cur_u16: u32 = 0;
+    while (i < line_bytes.len && cur_u16 < utf16_col) {
+        let b = line_bytes[i];
+        if (b < 0x80) {
+            i += 1;
+            cur_u16 += 1;
+        } else if ((b & 0xE0) == 0xC0) {
+            i += 2;
+            cur_u16 += 1;
+        } else if ((b & 0xF0) == 0xE0) {
+            i += 3;
+            cur_u16 += 1;
+        } else if ((b & 0xF8) == 0xF0) {
+            i += 4;
+            cur_u16 += 2;
+        } else {
+            i += 1;
+            cur_u16 += 1;
+        }
+    }
+    if (i > line_bytes.len) return line_bytes.len as u32;
+    return i as u32;
+}
+
 /// 零堆分配编译期定容行偏移查找表（支持 O(log N) 二分字节偏移定位）
 pub struct LineOffsetTable<const MAX_LINES: usize> {
     offsets: [MAX_LINES]u32 = undefined,
     line_count: usize = 0,
+    total_bytes: u32 = 0,
 
     pub static fn build(contents: []const u8): LineOffsetTable<MAX_LINES> {
         let table = LineOffsetTable<MAX_LINES>{
             offsets: undefined,
             line_count: 0,
+            total_bytes: contents.len as u32,
         };
         if (MAX_LINES == 0) {
             return table;
@@ -40,27 +119,47 @@ pub struct LineOffsetTable<const MAX_LINES: usize> {
         return table;
     }
 
+    pub fn lineCount(): usize {
+        return _.line_count;
+    }
+
     /// 二分查找给定字节偏移对应的 0-based 行号
     pub fn findLine(byte_offset: u32): u32 {
-        if (_.line_count == 0) { return 0; }
-        let low: usize = 0;
-        let count: usize = _.line_count;
-        while (count > 0) {
-            let step = count / 2;
-            let mid = low + step;
-            if (_.offsets[mid] <= byte_offset) {
-                low = mid + 1;
-                count = count - step - 1;
-            } else {
-                count = step;
-            }
+        return findLineBinary(_.offsets[0.._.line_count], byte_offset);
+    }
+
+    /// 获取给定行的起始与结束字节偏移（不含换行符）
+    pub fn lineRange(line: u32): LineRange? {
+        let idx = line as usize;
+        if (idx >= _.line_count) return null;
+        let start = _.offsets[idx];
+        let end = if (idx + 1 < _.line_count) (_.offsets[idx + 1] - 1) else _.total_bytes;
+        if (end < start) end = start;
+        return LineRange{ start: start, end: end };
+    }
+
+    pub fn lineLength(line: u32): u32 {
+        if (r := _.lineRange(line)) {
+            return r.end - r.start;
         }
-        if (low == 0) { return 0; }
-        return (low - 1) as u32;
+        return 0;
+    }
+
+    pub fn lineText(contents: []const u8, line: u32): []const u8 {
+        if (r := _.lineRange(line)) {
+            let s = if ((r.start as usize) <= contents.len) (r.start as usize) else contents.len;
+            let e = if ((r.end as usize) <= contents.len) (r.end as usize) else contents.len;
+            if (e > s && contents[e - 1] == '\r') {
+                e -= 1;
+            }
+            return contents[s..e];
+        }
+        return "";
     }
 
     /// 将字节偏移转换为 0-based (line, column)
     pub fn resolveLocation(byte_offset: u32): SourceLocation {
+        if (_.line_count == 0) return SourceLocation{};
         let line_idx = _.findLine(byte_offset);
         let line_start = _.offsets[line_idx as usize];
         let col: u32 = if (byte_offset >= line_start) (byte_offset - line_start) else (0 as u32);
@@ -70,10 +169,30 @@ pub struct LineOffsetTable<const MAX_LINES: usize> {
         };
     }
 
+    /// 将字节偏移转换为 SourceMap v3 UTF-16 码元 (line, column)
+    pub fn resolveUtf16Location(contents: []const u8, byte_offset: u32): SourceLocation {
+        let loc = _.resolveLocation(byte_offset);
+        let text = _.lineText(contents, loc.line);
+        return SourceLocation{
+            line: loc.line,
+            column: utf8ToUtf16Column(text, loc.column),
+        };
+    }
+
     /// 将 0-based (line, column) 还原为字节偏移
     pub fn resolveByteOffset(line: u32, column: u32): u32 {
         if (line as usize >= _.line_count) return 0;
         return _.offsets[line as usize] + column;
+    }
+
+    /// 将 0-based (line, column) 还原为字节偏移并钳位到该行合法范围
+    pub fn resolveByteOffsetClamped(line: u32, column: u32): u32 {
+        if (r := _.lineRange(line)) {
+            let max_col = r.end - r.start;
+            let clamped = if (column <= max_col) column else max_col;
+            return r.start + clamped;
+        }
+        return _.total_bytes;
     }
 }
 
@@ -81,6 +200,7 @@ pub struct LineOffsetTable<const MAX_LINES: usize> {
 pub struct DynamicLineOffsetTable {
     offsets: []u32 = [],
     line_count: usize = 0,
+    total_bytes: u32 = 0,
 
     pub static fn build(allocator: std.mem.Allocator, contents: []const u8): DynamicLineOffsetTable! {
         let list: std.ArrayListUnmanaged(u32) = .empty;
@@ -102,28 +222,48 @@ pub struct DynamicLineOffsetTable {
         return DynamicLineOffsetTable{
             offsets: slice,
             line_count: slice.len,
+            total_bytes: contents.len as u32,
         };
     }
 
+    pub fn lineCount(): usize {
+        return _.line_count;
+    }
+
     pub fn findLine(byte_offset: u32): u32 {
-        if (_.line_count == 0) { return 0; }
-        let low: usize = 0;
-        let count: usize = _.line_count;
-        while (count > 0) {
-            let step = count / 2;
-            let mid = low + step;
-            if (_.offsets[mid] <= byte_offset) {
-                low = mid + 1;
-                count = count - step - 1;
-            } else {
-                count = step;
-            }
+        return findLineBinary(_.offsets[0.._.line_count], byte_offset);
+    }
+
+    pub fn lineRange(line: u32): LineRange? {
+        let idx = line as usize;
+        if (idx >= _.line_count) return null;
+        let start = _.offsets[idx];
+        let end = if (idx + 1 < _.line_count) (_.offsets[idx + 1] - 1) else _.total_bytes;
+        if (end < start) end = start;
+        return LineRange{ start: start, end: end };
+    }
+
+    pub fn lineLength(line: u32): u32 {
+        if (r := _.lineRange(line)) {
+            return r.end - r.start;
         }
-        if (low == 0) { return 0; }
-        return (low - 1) as u32;
+        return 0;
+    }
+
+    pub fn lineText(contents: []const u8, line: u32): []const u8 {
+        if (r := _.lineRange(line)) {
+            let s = if ((r.start as usize) <= contents.len) (r.start as usize) else contents.len;
+            let e = if ((r.end as usize) <= contents.len) (r.end as usize) else contents.len;
+            if (e > s && contents[e - 1] == '\r') {
+                e -= 1;
+            }
+            return contents[s..e];
+        }
+        return "";
     }
 
     pub fn resolveLocation(byte_offset: u32): SourceLocation {
+        if (_.line_count == 0) return SourceLocation{};
         let line_idx = _.findLine(byte_offset);
         let line_start = _.offsets[line_idx as usize];
         let col: u32 = if (byte_offset >= line_start) (byte_offset - line_start) else (0 as u32);
@@ -133,9 +273,27 @@ pub struct DynamicLineOffsetTable {
         };
     }
 
+    pub fn resolveUtf16Location(contents: []const u8, byte_offset: u32): SourceLocation {
+        let loc = _.resolveLocation(byte_offset);
+        let text = _.lineText(contents, loc.line);
+        return SourceLocation{
+            line: loc.line,
+            column: utf8ToUtf16Column(text, loc.column),
+        };
+    }
+
     pub fn resolveByteOffset(line: u32, column: u32): u32 {
         if (line as usize >= _.line_count) return 0;
         return _.offsets[line as usize] + column;
+    }
+
+    pub fn resolveByteOffsetClamped(line: u32, column: u32): u32 {
+        if (r := _.lineRange(line)) {
+            let max_col = r.end - r.start;
+            let clamped = if (column <= max_col) column else max_col;
+            return r.start + clamped;
+        }
+        return _.total_bytes;
     }
 
     pub fn deinit(*_, allocator: std.mem.Allocator) {
@@ -143,6 +301,7 @@ pub struct DynamicLineOffsetTable {
             allocator.free(_.offsets);
             _.offsets = [];
             _.line_count = 0;
+            _.total_bytes = 0;
         }
     }
 }

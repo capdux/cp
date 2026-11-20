@@ -2,133 +2,124 @@
 
 ## 一、 架构总览与设计准则
 
-`cap:io` 是 CP 语言官方内置的统一流式 I/O 标准库，基于 `Reader` / `Writer` / `Closer` / `Seeker` 四大解耦 Trait 契约，构建了零堆分配的内存缓冲流（`BufferReader` / `BufferWriter`）、256 字节聚合缓存装饰器（`BufferedReader<R>` / `BufferedWriter<W>`）、流式拷贝引擎（`copyStream` / `copyN`）、防资源耗尽的 `MaxBuf` 字节限额守卫、OS 原生匿名管道（`Pipe` / `PipeReader` / `PipeWriter`）以及兼容独立模式与 BEAM 调度模式的标准控制台输出（`Console` / `Stdio`）。核心设计吸收自 Bun 原生 I/O 子系统（`/data/dev/bun/src/io/`）。
+`cap:io` 是 CP 语言官方内置的统一流式 I/O 标准库，基于 `Reader` / `Writer` / `Closer` / `Seeker` 四大解耦 Trait 契约，构建了内存缓冲流（`BufferReader` / `BufferWriter` / `ChunkedBuffer`）、增强型 4KB 缓冲装饰器（`BufferedReader<R>` / `BufferedWriter<W>`）、流式组合器（`LimitedReader` / `MultiReader` / `TeeReader` / `DiscardWriter` / `CountingWriter`）、流式拷贝引擎（`copyStream` / `copyN`）、防资源耗尽的 `MaxBuf` 字节限额守卫、OS 原生匿名管道（`Pipe` / `PipeReader` / `PipeWriter`）以及兼容独立模式与 BEAM 调度模式的标准控制台输出（`Console` / `Stdio`）。核心设计吸收自 Bun 原生 I/O 子系统（`/data/dev/bun/src/io/`）。
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                       CP 统一流式 Trait 契约层                           │
 │     Reader (read)  |  Writer (write)  |  Closer (close)  | Seeker (seek)│
 ├──────────────────────┬─────────────────────────┬────────────────────────┤
-│ 内存切片与聚合缓冲流   │  OS 原生管道与限额守卫   │  控制台与终端交互       │
-│ BufferReader         │  Pipe.create()          │  Console / console     │
-│ BufferWriter (4KB)   │    PipeReader (fd)      │  Stdio / stdio         │
-│ BufferedReader<R>    │    PipeWriter (fd)      │  print / println       │
-│ BufferedWriter<W>    │  MaxBuf (防内存耗尽守卫)  │  eprint / eprintln     │
-│ copyStream / copyN   │                         │                        │
+│ 内存流与动态缓冲      │  增强型缓冲与组合装饰器  │  OS 管道与限额守卫      │
+│ BufferReader         │  BufferedReader<R>      │  Pipe.create()         │
+│ BufferWriter (4KB)   │    readLine / readUntil │    PipeReader / Writer │
+│ ChunkedBuffer        │    peek / discard       │  MaxBuf (防内存耗尽)    │
+│   动态按块扩容       │    readFull             │  Console / Stdio       │
+│                      │  BufferedWriter<W>      │  print / println       │
+│                      │    刷盘阈值 & 大块直通   │                        │
+│                      │  LimitedReader / Multi  │                        │
+│                      │  TeeReader / Counting   │                        │
+│                      │  DiscardWriter          │                        │
 └──────────────────────┴─────────────────────────┴────────────────────────┘
 ```
 
 ### 1. 模块文件拓扑与谱系来源
 
-`lib/io/` 下全部 6 个源文件第 1 行均严格标记上游 Bun 源码谱系：
-
 | 文件路径 | 上游谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
 | `lib/io/traits.cp` | `// Source: /data/dev/bun/src/io/pipes.cp` | `IOError` 错误集、`SeekOrigin` 枚举及 `Reader` / `Writer` / `Closer` / `Seeker` 核心 Trait |
-| `lib/io/buffer_stream.cp` | `// Source: /data/dev/bun/src/io/pipes.cp` | `BufferReader`、`BufferWriter`、`BufferedReader<R>`、`BufferedWriter<W>` 以及泛型 `copyStream` / `copyN` |
-| `lib/io/max_buf.cp` | `// Source: /data/dev/bun/src/io/MaxBuf.cp` | `MaxBufKind` 与 `MaxBuf` 最大读取字节限制守卫（防止超大输出耗尽内存） |
-| `lib/io/pipe.cp` | `// Source: /data/dev/bun/src/io/PipeReader.cp & /data/dev/bun/src/io/PipeWriter.cp` | 基于 `std.c.pipe/read/write/close` 的 `PipeReader`、`PipeWriter` 与 `Pipe.create()` 工厂 |
-| `lib/io/stdio.cp` | `// Source: /data/dev/bun/src/io/source.cp` | `Console`、`Stdio`、`print` / `println` / `eprint` / `eprintln`（自动区分 `@is_nest` BEAM 与原生终端模式） |
+| `lib/io/buffer_stream.cp` | `// Source: /data/dev/bun/src/io/pipes.cp` | `BufferReader`、`BufferWriter`、`BufferedReader<R>`、`BufferedWriter<W>`、`LimitedReader<R>`、`MultiReader<R>`、`TeeReader<R, W>`、`DiscardWriter`、`CountingWriter<W>`、`ChunkedBuffer`、`copyStream` / `copyN` |
+| `lib/io/max_buf.cp` | `// Source: /data/dev/bun/src/io/MaxBuf.cp` | `MaxBufKind` 与 `MaxBuf` 最大读取字节限制守卫 |
+| `lib/io/pipe.cp` | `// Source: /data/dev/bun/src/io/PipeReader.cp & /data/dev/bun/src/io/PipeWriter.cp` | `PipeReader`、`PipeWriter` 与 `Pipe.create()` |
+| `lib/io/stdio.cp` | `// Source: /data/dev/bun/src/io/source.cp` | `Console`、`Stdio`、`print` / `println` / `eprint` / `eprintln` |
 | `lib/io/index.cp` | `// Source: /data/dev/bun/src/io/io.cp` | `cap:io` 统一公开导出入口 |
 
 ---
 
-## 二、 核心 API 与设计要点
+## 二、 核心 API 与增强能力详解
 
-### 1. 错误集与 Trait 契约 (`traits.cp`)
+### 1. 增强型 `BufferedReader<R: Reader>` (`buffer_stream.cp`)
 
-- **`IOError`**：`EndOfStream`、`UnexpectedEof`、`Closed`、`BufferFull`、`ShortWrite`、`InvalidSeek`。
-- **`SeekOrigin`**：`Start`（从头定位）、`Current`（相对当前游标）、`End`（相对末尾定位）。
-- **四大 Trait**：
-  - `Reader`：`fn read(*_, buf: *[]u8): usize!`（返回 `0` 表示 EOF）
-  - `Writer`：`fn write(*_, buf: []const u8): usize!`
-  - `Closer`：`fn close(*_)`
-  - `Seeker`：`fn seek(*_, offset: i64, origin: SeekOrigin): u64!`
+- 内置 `4096` 字节读缓存，支持：
+  - `readByte(): u8!` / `read(buf: *[]u8): usize!`（大块 `>= 4096` 缓存空时自动直通底层）
+  - `readFull(buf: *[]u8): usize!`：必须读满 `buf.len` 字节，提前遭遇 EOF 返回 `err.UnexpectedEof`
+  - `peek(n: usize): ([]const u8)!` & `peekByte(): u8!`：预读缓存数据但不推进游标
+  - `discard(n: usize): usize!`：高效跳过指定字节数
+  - `readUntil(delim: u8, out: *[]u8): usize!` & `readUntilAlloc(allocator, delim): ([]u8)!`：读至分隔符（包含分隔符）
+  - `readLine(out: *[]u8): ([]const u8)?!` & `readLineAlloc(allocator): ([]u8)?!`：按行读取并自动剥离 `\n` / `\r\n`，EOF 时返回 `null`
+  - `buffered(): usize`：返回当前缓存内未读字节数
 
-### 2. 内存流与泛型缓冲装饰器 (`buffer_stream.cp`)
+### 2. 增强型 `BufferedWriter<W: Writer>` (`buffer_stream.cp`)
 
-- **`BufferReader`**：直接包装 `[]const u8` 切片，零拷贝支持 `read`、`seek`、`remaining()`、`reset()`；越界寻址返回 `err.InvalidSeek`。
-- **`BufferWriter`**：内置 4096 字节固定缓冲区，支持 `write`、`bytes()`、`len()`、`reset()`；空间耗尽时返回 `err.BufferFull`。
-- **`BufferedReader<R: Reader>`**：内置 256 字节读缓存，提供高频单字节 `readByte()` 与分块 `read()`，读至 EOF 时 `readByte()` 返回 `err.EndOfStream`。
-- **`BufferedWriter<W: Writer>`**：内置 256 字节写缓存，写满自动刷出，并提供显式 `flush()`。
-- **泛型管线函数**：
-  - `copyStream<R: Reader, W: Writer>(r: *R, w: *W): usize!`：以 256 字节分块全量传输直至 EOF；
-  - `copyN<R: Reader, W: Writer>(r: *R, w: *W, limit: usize): usize!`：精确复制最多 `limit` 字节。
+- `init(writer: *W)`：默认 4KB 缓存与 `4096` 字节刷盘阈值；
+- `withThreshold(writer: *W, threshold: usize)`：自定义自动刷盘阈值（如 `64` / `512`），写满阈值即刻自动 `flush()`；
+- **大块数据零拷贝写直通**：当写入长度 `data.len >= flush_threshold` 时，先 `flush()` 已有缓存，再绕过中间拷贝直接写入底层 `writer`；
+- `writeByte(b)`、`flush()`、`buffered()`、`available()`。
 
-### 3. 资源限额守卫 (`MaxBuf`) 与原生管道 (`Pipe`)
+### 3. 组合流装饰器与动态 `ChunkedBuffer`
 
-- **`MaxBuf`**：每次收到数据块调用 `onReadBytes(bytes)` 扣减剩余配额；超限时返回 `err.BufferFull` 并置 `isExceeded() == true`，支持 `remaining()`、`reset()` 及 `MaxBuf.withKind(limit, kind)` 分类标记（`Stdout` / `Stderr` / `Custom`）。
-- **`Pipe`**：调用 `Pipe.create()` 创建一对连通的内核匿名管道（`reader: PipeReader`、`writer: PipeWriter`），读写均满足 `Reader` / `Writer` / `Closer` 契约，关闭后再次操作安全返回 `err.Closed`。
+- **`LimitedReader<R>`**：限长读取装饰器，最多读取 `limit` 字节后返回 EOF（`0`），提供 `bytesRemaining()` 与 `isExhausted()`；
+- **`MultiReader<R>`**：按序串联多个同构 `Reader`，前一个 EOF 后自动切换至下一个；
+- **`TeeReader<R, W>`**：读取的同时将所有读出字节镜像写入目标 `Writer`（典型用于流式边读边算哈希/写日志）；
+- **`DiscardWriter`**：零开销丢弃写入内容并统计 `bytesDiscarded()`；
+- **`CountingWriter<W>`**：包装底层 `Writer` 并精确统计 `count()`，支持 `resetCount()`；
+- **`ChunkedBuffer`**：基于 `std.mem.Allocator` 的动态按块（默认 4096 字节）可扩展字节流缓冲，完整实现 `Reader` + `Writer` + `Seeker`，支持 `write` / `writeByte` / `read` / `readByte` / `peek` / `seek` / `bytes` / `unreadBytes` / `chunkCount` / `reset` / `clear` / `toOwnedSlice`。
 
 ---
 
 ## 三、 可运行代码示例
 
 ```typescript
+const std = @import("std");
 import {
     SeekOrigin,
     BufferReader,
     BufferWriter,
     BufferedReader,
     BufferedWriter,
-    copyStream,
-    copyN,
-    MaxBuf,
-    MaxBufKind,
-    Pipe,
+    LimitedReader,
+    MultiReader,
+    TeeReader,
+    DiscardWriter,
+    CountingWriter,
+    ChunkedBuffer,
 } from "cap:io";
 
-pub fn demoIoSubsystem() {
-    // 1. BufferReader + Seek + BufferWriter + copyStream / copyN
-    let r = new BufferReader("CP zero-copy I/O stream pipeline");
-    let w = new BufferWriter();
-    const total = copyStream(r, w) catch 0;
-    * = total; // 32
+pub fn demoEnhancedIo()! {
+    const alloc = std.heap.page_allocator;
 
-    * = r.seek(3, SeekOrigin.Start) catch 0;
-    let w_part = new BufferWriter();
-    const partial = copyN(r, w_part, 9) catch 0; // "zero-copy"
-    * = partial;
+    // 1. ChunkedBuffer 动态扩容 + BufferedReader 按行/预读/精确读
+    let cb = new ChunkedBuffer(alloc);
+    defer cb.deinit();
+    * = try cb.write("HEADER\r\nline1: alpha\nline2: beta");
 
-    // 2. BufferedReader / BufferedWriter 聚合缓存
-    let raw_r = new BufferReader("ABCD");
-    let br = new BufferedReader<BufferReader>(raw_r);
-    const ch0 = br.readByte() catch 0; // 'A' (65)
-    * = ch0;
+    let br = new BufferedReader<ChunkedBuffer>(cb);
+    const head_peek = try br.peek(6); // "HEADER"（不推进游标）
+    * = head_peek;
+    * = try br.discard(8); // 跳过 "HEADER\r\n"
 
-    let raw_w = new BufferWriter();
-    let bw = new BufferedWriter<BufferWriter>(raw_w);
-    * = bw.write("buffered chunk") catch 0;
-    bw.flush() catch {};
+    let line_buf: [128]u8 = undefined;
+    const l1 = try br.readLine(line_buf[0..128]); // "line1: alpha"
+    * = l1;
 
-    // 3. MaxBuf 缓冲区字节限额守卫
-    let guard = MaxBuf.withKind(1024, MaxBufKind.Stdout);
-    const ok1 = guard.onReadBytes(512) catch false;   // true, remaining == 512
-    const ok2 = guard.onReadBytes(600) catch false;   // false (err.BufferFull)
-    * = ok1;
-    * = ok2;
+    // 2. BufferedWriter 自定义阈值与写直通 + CountingWriter
+    let dst = new ChunkedBuffer(alloc);
+    defer dst.deinit();
+    let bw = new BufferedWriter<ChunkedBuffer>(dst);
+    bw.setThreshold(16);
+    * = try bw.write("small");
+    // 仍停留在缓存中，写入 >= 16 字节将触发先刷盘再直通
+    * = try bw.write("0123456789ABCDEF0123");
+    try bw.flush();
 
-    // 4. OS 原生匿名管道 IPC
-    let pipe = Pipe.create() catch unreachable;
-    * = pipe.writer.write("ping-pipe") catch 0;
-    let recv: [32]u8 = [0 as u8; 32];
-    const n = pipe.reader.read(recv[0..32]) catch 0;
-    * = n; // 9
-    pipe.writer.close();
-    pipe.reader.close();
+    // 3. LimitedReader + TeeReader + CountingWriter + DiscardWriter
+    let src = new BufferReader("hello world!");
+    let lim = new LimitedReader<BufferReader>(src, 5);
+    let tee_dst = new BufferWriter();
+    let tee = new TeeReader<BufferReader, BufferWriter>(new BufferReader("hello"), tee_dst);
+    let out: [16]u8 = undefined;
+    const n = try tee.read(out[0..16]); // 5 ("hello")
+    * = n;
+    * = lim.bytesRemaining();
+    * = tee_dst.bytes(); // "hello"
 }
 ```
-
----
-
-## 四、 与 Bun / Node.js API 对照表
-
-| 功能特性 | Bun (`src/io/` / `Bun.ArrayBufferSink`) | Node.js (`node:stream`) | CP 标准库 (`cap:io`) |
-| :--- | :--- | :--- | :--- |
-| **统一流接口** | Zig `Reader` / `Writer` + `pipes.cp` | `stream.Readable` / `stream.Writable` | `Reader` / `Writer` / `Closer` / `Seeker` Trait |
-| **内存读写流** | `BufferReader` / `ArrayBufferSink` | `Readable.from(buf)` / `PassThrough` | `BufferReader` / `BufferWriter` |
-| **缓冲装饰器** | `BufferedReader` / `BufferedWriter` | `highWaterMark` 内部队列 | `BufferedReader<R>` / `BufferedWriter<W>` |
-| **流式传输与限长复制** | `pipe()` / `Bun.write(dst, src)` | `stream.pipeline()` | `copyStream(r, w)` / `copyN(r, w, limit)` |
-| **输出限额防护** | `MaxBuf` (`src/io/MaxBuf.cp`) | `child_process` `maxBuffer` | `MaxBuf` (`onReadBytes` / `isExceeded`) |
-| **匿名管道 IPC** | `PipeReader` / `PipeWriter` | `child.stdout` / `child.stdin` | `Pipe.create()` -> `PipeReader` / `PipeWriter` |
-| **控制台输出** | `console.log` / `process.stdout` | `console.log` / `console.error` | `console.log` / `print` / `println` / `eprintln` |
