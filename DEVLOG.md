@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:roaring` Roaring Bitmap 自适应压缩位图集合引擎（5/5 PASS，文档直写 `doc/lib/roaring.md`）
+- **核心设计**：高 16 位桶有序存储，单块基数跨越 4096 阈值自动在有序 `u16` 切片与 `1024 x u64` 位图之间双向切换；混合容器交并差及 `andCardinality` 直接按对偶容器算法高效归约。
+
 ## 2026-11-21: 新建 `cap:aho` Aho-Corasick 多模式自动机与敏感词替换引擎（5/5 PASS，文档直写 `doc/lib/aho.md`）
 - **核心设计**：在 `build()` 阶段将 Failure Link 展开为完整 DFA 状态转移表并维护 Dictionary Suffix Link，使文本扫描复杂度严格锁定为 $O(N)$，550+ 模式大词典零泄漏稳定运行。
 

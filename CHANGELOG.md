@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:roaring` Roaring Bitmap 自适应压缩位图集合引擎（5/5 PASS，自动动态挂载 `cap.roaring`）
+- **新增标准库**：`lib/roaring/{roaring,index}.cp`，实现高 16 位分块与 `ArrayContainer`（`<= 4096`）/ `BitsetContainer`（`> 4096`）双向自适应升降级、`addRange`、`rank`、完整集合代数运算及 `"ROAR"` 二进制序列化。
+- **新增文档与测试**：`doc/lib/roaring.md` 扁平文档与 `cap/test/test_roaring_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:aho` Aho-Corasick 多模式自动机与敏感词替换引擎（5/5 PASS，自动动态挂载 `cap.aho`）
 - **新增标准库**：`lib/aho/{aho,index}.cp`，实现 Trie + BFS Failure Link + Dictionary Suffix Link + 完整 DFA 状态转移表，支持重叠匹配 `findAll`、非重叠消歧 `LeftmostFirst`/`LeftmostLongest`、零分配短路 `containsAny`、`replaceAll` 与大小写不敏感模式。
 - **新增文档与测试**：`doc/lib/aho.md` 扁平文档与 `cap/test/test_aho_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
