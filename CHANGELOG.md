@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:bplus` B+ 树有序键值索引与叶子链表范围扫描引擎（5/5 PASS，自动动态挂载 `cap.bplus`）
+
+- 新建 [`lib/bplus/`](file:///data/dev/cp/lib/bplus/index.cp)（`bplus.cp`、`index.cp`）：`BPlusTree`（索引池与双向叶子链表、1000+ 乱序多层分裂、大规模删除借位/合并与缩层、`lowerBound`/`rangeScan`/`prefixScan`/`verifyInvariants` 自检，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/bplus.md`](file:///data/dev/cp/doc/lib/bplus.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_bplus_production_deep.cp`](file:///data/dev/cp/cap/test/test_bplus_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:bencode` BitTorrent BEP-3 Bencode 编解码与 Torrent InfoHash 引擎（5/5 PASS，自动动态挂载 `cap.bencode`）
 
 - 新建 [`lib/bencode/`](file:///data/dev/cp/lib/bencode/index.cp)（`bencode.cp`、`index.cp`）：`BencodeCodec`（严格拦截前导零 `i03e`/`02:ab`、负零 `i-0e`、字典乱序/重复键、尾部字节与 64 层深度限制，并支持字典自动排序编码）及 `TorrentParser`（定位原始 `"info"` 字典切片计算 20B/40-hex SHA-1 `info_hash` 并解析单/多文件元数据，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/bencode.md`](file:///data/dev/cp/doc/lib/bencode.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_bencode_production_deep.cp`](file:///data/dev/cp/cap/test/test_bencode_production_deep.cp) `-m` 5/5 PASS。
