@@ -164,3 +164,6 @@
 
 ### 2026-11-21（`cap:audit` 验收固化，顶替以 `inherit` 拉起 `cap:migrate` 维持 2 路并行）
 - **执行成果**：`lib/audit/`（5/5 PASS，含 `cap.audit` 动态挂载与 `doc/lib/audit.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/migrate/`（确定性 Schema 迁移规划、SHA-256 脚本校验和防篡改与回滚引擎），与 `lib/feature/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:feature` 验收固化，顶替以 `inherit` 拉起 `cap:guardrail` 维持 2 路并行）
+- **执行成果**：`lib/feature/`（5/5 PASS，含 `cap.feature` 动态挂载与 `doc/lib/feature.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/guardrail/`（AI Agent 安全护栏：PII/API Key 自动识别与脱敏、Prompt 越权模式检测与输出合规拦截），与 `lib/migrate/` 保持 2 路正交并行。
