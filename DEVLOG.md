@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:websocket_frame` 纯 CP RFC 6455 WebSocket 帧协议、XOR 掩码、分片重组与控制帧交织引擎（支持 `cap.websocket_frame` 自动动态挂载，详见 `doc/lib/websocket_frame.md`）（5/5 PASS，文档直写 `doc/lib/websocket_frame.md`）
+- **核心设计**：零堆分配计算 `Sec-WebSocket-Accept` 28 字节指纹；`WsStreamAssembler` 严格遵循 RFC 6455 §5.4 允许分片消息中途插入 Ping/Pong/Close 控制帧，并在组装完毕后执行完整 UTF-8 与 Close 状态码校验，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:oauth2` 纯 CP RFC 6749/7636 OAuth 2.0、PKCE S256 与 OIDC 协议引擎（支持 `cap.oauth2` 自动动态挂载，详见 `doc/lib/oauth2.md`）（5/5 PASS，文档直写 `doc/lib/oauth2.md`）
 - **核心设计**：使用 `getrandom` 拒绝采样消除 PKCE 生成模偏差，以常量时间比对防范 `state`/Verifier 时序侧信道；`TokenResponse` 兼容标准令牌与 OAuth2 错误 JSON 解析并在全路径通过 `std.testing.allocator` 零泄漏验证。
 

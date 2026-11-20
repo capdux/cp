@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:websocket_frame` 纯 CP RFC 6455 WebSocket 帧协议、XOR 掩码、分片重组与控制帧交织引擎（支持 `cap.websocket_frame` 自动动态挂载，详见 `doc/lib/websocket_frame.md`）（5/5 PASS，自动动态挂载 `cap.websocket_frame`）
+- **新增标准库**：`lib/websocket_frame/{types,codec,assembler,index}.cp`，实现 RFC 6455 `computeAcceptKey`、7/16/64-bit 帧编码与 4B 循环掩码、`decodeFrame` 及支持 1..N 字节半包黏包与分片中途交织控制帧的 `WsStreamAssembler`。
+- **新增文档与测试**：`doc/lib/websocket_frame.md` 扁平文档与 `cap/test/test_websocket_frame_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:oauth2` 纯 CP RFC 6749/7636 OAuth 2.0、PKCE S256 与 OIDC 协议引擎（支持 `cap.oauth2` 自动动态挂载，详见 `doc/lib/oauth2.md`）（5/5 PASS，自动动态挂载 `cap.oauth2`）
 - **新增标准库**：`lib/oauth2/{types,pkce,authorize,token,index}.cp`，实现拒绝采样 CSPRNG PKCE `S256`、常量时间 `state`/Challenge 校验、RFC 3986 授权 URL 与回调解析、三大 Grant/Revocation 表单编码及 `TokenResponse` 解析。
 - **新增文档与测试**：`doc/lib/oauth2.md` 扁平文档与 `cap/test/test_oauth2_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
