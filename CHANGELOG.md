@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-20] - 新建 `cap:kv` 零 C 依赖 CRC32 WAL + Bitcask 崩溃安全持久化嵌入式存储（5/5 PASS，自动动态挂载 `cap.kv`）
+
+- 新建 [`lib/kv/`](file:///data/dev/cp/lib/kv/index.cp)（`wal.cp`、`store.cp`、`index.cp`）：`WalCodec`（`"CPKV"` + IEEE CRC32 校验 + `TornTail`/`CorruptRecord` 区分）与 `KvStore`（`open`/`put`/`get`/`delete`/`prefixScan`/`sync`、模拟崩溃尾部 `ftruncate` 自动恢复、`renameat2` 原子 `compact()` 回收死记录）；同步 [`docs/kv/kv.md`](file:///data/dev/cp/docs/kv/kv.md) 与 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_kv_production_deep.cp`](file:///data/dev/cp/cap/test/test_kv_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-20] - 新建 `cap:expr`（5/5）与 `cap:protobuf`（5/5）双标准库落地（自动动态挂载 `cap.expr` / `cap.protobuf`）
 
 - **`cap:expr`**（[`lib/expr/`](file:///data/dev/cp/lib/expr/index.cp)）：`ExprValue`/`ExprEnv` 只读点分变量上下文、爬山法优先级求值器（三元/短路 `&&`/`||`/`in`/9 个内置纯函数）及 `MAX_DEPTH=64`/`MAX_STEPS=10000` 沙盒防护，[`test_expr_production_deep.cp`](file:///data/dev/cp/cap/test/test_expr_production_deep.cp) `-m` 5/5 PASS；

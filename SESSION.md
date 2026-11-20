@@ -52,3 +52,6 @@
 
 ### 2026-11-20（`cap:expr` & `cap:protobuf` 双路合并验收提交，顶替拉起 `cap:queue` 与 `cap:graph` 维持 3 路并行）
 - **执行成果**：子智能体 30（`lib/expr/` 5/5）与子智能体 29（`lib/protobuf/` 5/5）双双经 `verify_module.sh` 一键验收回收（含动态 `cap.expr`/`cap.protobuf` 挂载验证），合并单次提交 Git；立即顶替派发子智能体 32（`lib/queue/` 优先级/延迟/死信任务队列）与子智能体 33（`lib/graph/` 图论与 GraphRAG 知识图谱算法：Dijkstra/Tarjan SCC/拓扑排序/Kruskal MST/PageRank），与 `lib/kv/` 保持 3 路正交并行。
+
+### 2026-11-21（`cap:kv` 验收固化，顶替拉起 `cap:cluster` 分布式集群协调原语维持 3 路并行）
+- **执行成果**：子智能体 31（`lib/kv/`，5/5 PASS，含 `cap.kv` 动态挂载）经 `verify_module.sh` 一键验收回收并提交 Git；立即顶替派发子智能体 34（新建 `lib/cluster/` 虚拟节点一致性哈希环、SWIM 成员状态机与单调 Fencing Token 选主租约），与 `lib/queue/`、`lib/graph/` 保持 3 路正交并行。
