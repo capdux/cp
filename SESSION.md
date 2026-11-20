@@ -395,3 +395,6 @@
 
 ### 2026-11-21（`cap:wal` 验收合并提交，顶替拉起 `cap:expr` 维持 2 路常规并行）
 - **执行成果**：`lib/wal/`（5/5 PASS，`doc/lib/wal.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/hll/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/expr/`（安全无副作用业务规则与公式表达式求值引擎），与 `lib/fsm/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:fsm` 加固验收提交，顶替拉起 `cap:base58` 维持 2 路常规并行）
+- **执行成果**：`lib/fsm/`（5/5 PASS，`doc/lib/fsm.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/base58/`（Base58 / Base58Check / BIP-173 Bech32 & BIP-350 Bech32m 编码校验引擎），与 `lib/expr/` 维持 2 路常规并行。

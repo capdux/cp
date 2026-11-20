@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 升级加固 `cap:fsm` 确定性有限状态机 DFA、守卫回调与 GraphViz DOT 引擎（5/5 PASS，文档直写 `doc/lib/fsm.md`）
+- **核心设计**：在 `lib/fsm/fsm.cp` 引入动态字符串状态/事件建模与 `GuardFn` 守卫、`TransitionRecord` 轨迹录制及 BFS 拓扑死胡同检测；清理旧 `state_machine.cp` 并通过 `DebugAllocator` 确认 5/5 用例零泄漏。
+
 ## 2026-11-21: 新建 `cap:wal` CRC32C 校验预写日志（WAL）帧编解码与崩溃恢复引擎（5/5 PASS，文档直写 `doc/lib/wal.md`）
 - **核心设计**：采用 24 字节自描述帧头与 Castagnoli CRC32C（`0x82F63B78`）全帧保护，提供严格校验 `recoverStrict` 与掉电容错 `recoverWithTailTruncation` 双模式，并在截断恢复后支持原地 `restoreTruncated` 续写。
 

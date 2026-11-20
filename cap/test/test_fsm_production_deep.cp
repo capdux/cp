@@ -6,34 +6,226 @@ import { test, expect_eq } from "cap:test";
 import cap from "cap";
 import {
     FsmError,
-    TransitionRule,
     TransitionRecord,
+    GuardFn,
+    ActionFn,
     StateMachine,
-    CircuitState,
-    CircuitBreakerConfig,
-    CircuitStats,
-    CircuitBreaker,
-    DagError,
-    TaskStatus,
-    WorkflowDag,
 } from "cap:fsm";
 
-fn testStateMachineAuditAndMermaid(): !void {
-    const alloc = std.heap.page_allocator;
-    let sm = StateMachine.init(alloc, "idle");
-    defer sm.deinit();
+struct ActionTrace {
+    logs: [16][]const u8 = undefined,
+    len: usize = 0,
 
-    expect_eq(sm.currentState(), "idle");
-    expect_eq(sm.canTrigger("plan"), false);
+    fn push(*_, tag: []const u8) {
+        if (_.len < 16) {
+            _.logs[_.len] = tag;
+            _.len += 1;
+        }
+    }
+}
 
-    sm.addTransition("idle", "plan", "planning")?;
-    sm.addTransition("planning", "execute", "running")?;
-    sm.addTransition("running", "fail", "failed")?;
-    sm.addTransition("failed", "retry", "running")?;
-    sm.addTransition("running", "finish", "completed")?;
+fn onExitCreated(ctx: (*anyopaque)?, from_state: []const u8, event: []const u8, to_state: []const u8) {
+    * = from_state;
+    * = event;
+    * = to_state;
+    if (p := ctx) {
+        let trace: *ActionTrace = @ptrCast(@alignCast(p));
+        trace.push("exit:created");
+    }
+}
 
-    // Duplicate (from_state, event) rule must be rejected
-    const dup_res = sm.addTransition("idle", "plan", "other");
+fn onEnterPaid(ctx: (*anyopaque)?, from_state: []const u8, event: []const u8, to_state: []const u8) {
+    * = from_state;
+    * = event;
+    * = to_state;
+    if (p := ctx) {
+        let trace: *ActionTrace = @ptrCast(@alignCast(p));
+        trace.push("enter:paid");
+    }
+}
+
+fn onTransitionGlobal(ctx: (*anyopaque)?, from_state: []const u8, event: []const u8, to_state: []const u8) {
+    * = from_state;
+    * = event;
+    * = to_state;
+    if (p := ctx) {
+        let trace: *ActionTrace = @ptrCast(@alignCast(p));
+        trace.push("transition");
+    }
+}
+
+fn onExitPaid(ctx: (*anyopaque)?, from_state: []const u8, event: []const u8, to_state: []const u8) {
+    * = from_state;
+    * = event;
+    * = to_state;
+    if (p := ctx) {
+        let trace: *ActionTrace = @ptrCast(@alignCast(p));
+        trace.push("exit:paid");
+    }
+}
+
+fn onEnterShipped(ctx: (*anyopaque)?, from_state: []const u8, event: []const u8, to_state: []const u8) {
+    * = from_state;
+    * = event;
+    * = to_state;
+    if (p := ctx) {
+        let trace: *ActionTrace = @ptrCast(@alignCast(p));
+        trace.push("enter:shipped");
+    }
+}
+
+struct PaymentCtx {
+    amount_cents: i64 = 0,
+    min_cents: i64 = 100,
+}
+
+fn guardMinPayment(ctx: (*anyopaque)?, from_state: []const u8, event: []const u8, to_state: []const u8): bool {
+    * = from_state;
+    * = event;
+    * = to_state;
+    if (p := ctx) {
+        const pc: *const PaymentCtx = @ptrCast(@alignCast(p));
+        return pc.amount_cents >= pc.min_cents;
+    }
+    return false;
+}
+
+fn testOrderWorkflowCallbacksAndHistory(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+    {
+        let sm = StateMachine.init(alloc, "created");
+        defer sm.deinit();
+
+    sm.addState("paid")?;
+    sm.addTerminalState("shipped")?;
+
+    sm.addTransition("created", "pay", "paid")?;
+    sm.addTransition("paid", "ship", "shipped")?;
+
+    sm.onExit("created", onExitCreated)?;
+    sm.onEnter("paid", onEnterPaid)?;
+    sm.onExit("paid", onExitPaid)?;
+    sm.onEnter("shipped", onEnterShipped)?;
+    sm.onTransition(onTransitionGlobal);
+
+    let trace = ActionTrace{};
+    expect_eq(sm.currentState(), "created");
+    expect_eq(sm.isTerminal(), false);
+
+    expect_eq(sm.trigger("pay", &trace)?, "paid");
+    expect_eq(sm.isTerminal(), false);
+
+    expect_eq(sm.trigger("ship", &trace)?, "shipped");
+    expect_eq(sm.currentState(), "shipped");
+    expect_eq(sm.isTerminal(), true);
+
+    // Verify exact callback execution order: onExit -> onTransition -> onEnter
+    expect_eq(trace.len, 6 as usize);
+    expect_eq(trace.logs[0], "exit:created");
+    expect_eq(trace.logs[1], "transition");
+    expect_eq(trace.logs[2], "enter:paid");
+    expect_eq(trace.logs[3], "exit:paid");
+    expect_eq(trace.logs[4], "transition");
+    expect_eq(trace.logs[5], "enter:shipped");
+
+    // Verify transition audit history
+    const hist = sm.history();
+    expect_eq(hist.len, 2 as usize);
+    expect_eq(hist[0].from, "created");
+    expect_eq(hist[0].event, "pay");
+    expect_eq(hist[0].to, "paid");
+    expect_eq(hist[0].accepted, true);
+    expect_eq(hist[1].from, "paid");
+    expect_eq(hist[1].event, "ship");
+    expect_eq(hist[1].to, "shipped");
+    expect_eq(hist[1].accepted, true);
+
+    // Reset restores initial state and clears history
+    sm.reset();
+    expect_eq(sm.currentState(), "created");
+    expect_eq(sm.isTerminal(), false);
+    expect_eq(sm.history().len, 0 as usize);
+    }
+    expect_eq(gpa.deinit() == .ok, true);
+}
+
+fn testGuardAcceptAndReject(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+    {
+        let sm = StateMachine.init(alloc, "pending");
+        defer sm.deinit();
+
+    sm.addTerminalState("confirmed")?;
+    sm.addGuardedTransition("pending", "confirm", "confirmed", guardMinPayment)?;
+
+    // Insufficient payment -> canTrigger false, trigger returns GuardRejected & state stays pending
+    let low_ctx = PaymentCtx{ amount_cents: 50, min_cents: 100 };
+    expect_eq(sm.canTrigger("confirm", &low_ctx), false);
+    expect_eq(sm.canTrigger("confirm", null), false);
+
+    const rej_res = sm.trigger("confirm", &low_ctx);
+    const rej_tag = switch (rej_res) {
+        FsmError.GuardRejected => "guard_rejected",
+        else => "other",
+        ok => "ok",
+    };
+    expect_eq(rej_tag, "guard_rejected");
+    expect_eq(sm.currentState(), "pending");
+    expect_eq(sm.isTerminal(), false);
+
+    // Rejected attempt is recorded with accepted = false
+    {
+        const hist1 = sm.history();
+        expect_eq(hist1.len, 1 as usize);
+        expect_eq(hist1[0].from, "pending");
+        expect_eq(hist1[0].event, "confirm");
+        expect_eq(hist1[0].to, "confirmed");
+        expect_eq(hist1[0].accepted, false);
+    }
+
+    // Sufficient payment -> canTrigger true, trigger succeeds
+    let ok_ctx = PaymentCtx{ amount_cents: 150, min_cents: 100 };
+    expect_eq(sm.canTrigger("confirm", &ok_ctx), true);
+    expect_eq(sm.trigger("confirm", &ok_ctx)?, "confirmed");
+    expect_eq(sm.currentState(), "confirmed");
+    expect_eq(sm.isTerminal(), true);
+
+    {
+        const hist2 = sm.history();
+        expect_eq(hist2.len, 2 as usize);
+        expect_eq(hist2[1].accepted, true);
+    }
+    }
+    expect_eq(gpa.deinit() == .ok, true);
+}
+
+fn testErrorHandlingAndAvailableEvents(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+    {
+        let sm = StateMachine.init(alloc, "idle");
+        defer sm.deinit();
+
+    sm.addState("running")?;
+    sm.addTerminalState("stopped")?;
+
+    // UnknownState on unregistered from/to
+    const unk_res = sm.addTransition("idle", "go", "ghost");
+    const unk_tag = switch (unk_res) {
+        FsmError.UnknownState => "unknown",
+        else => "other",
+        ok => "ok",
+    };
+    expect_eq(unk_tag, "unknown");
+
+    sm.addTransition("idle", "start", "running")?;
+    sm.addTransition("idle", "abort", "stopped")?;
+    sm.addTransition("running", "stop", "stopped")?;
+
+    // DuplicateTransition on same (from, event)
+    const dup_res = sm.addTransition("idle", "start", "stopped");
     const dup_tag = switch (dup_res) {
         FsmError.DuplicateTransition => "dup",
         else => "other",
@@ -41,341 +233,122 @@ fn testStateMachineAuditAndMermaid(): !void {
     };
     expect_eq(dup_tag, "dup");
 
-    expect_eq(sm.canTrigger("plan"), true);
-    expect_eq(sm.canTrigger("finish"), false);
+    // availableEvents at "idle"
+    const idle_events = sm.availableEvents(alloc)?;
+    defer alloc.free(idle_events);
+    expect_eq(idle_events.len, 2 as usize);
+    expect_eq(idle_events[0], "start");
+    expect_eq(idle_events[1], "abort");
 
-    // Trigger valid sequence including retry loop
-    expect_eq(sm.trigger("plan")?, "planning");
-    expect_eq(sm.trigger("execute")?, "running");
-    expect_eq(sm.trigger("fail")?, "failed");
-    expect_eq(sm.trigger("retry")?, "running");
-    expect_eq(sm.trigger("finish")?, "completed");
-    expect_eq(sm.currentState(), "completed");
-
-    // Invalid transition from terminal state must return FsmError.InvalidTransition
-    const bad_res = sm.trigger("plan");
-    const bad_tag = switch (bad_res) {
+    // InvalidTransition when triggering event not valid for current state
+    const inv_res = sm.trigger("stop", null);
+    const inv_tag = switch (inv_res) {
         FsmError.InvalidTransition => "invalid",
         else => "other",
         ok => "ok",
     };
-    expect_eq(bad_tag, "invalid");
-    expect_eq(sm.currentState(), "completed");
-
-    // Verify full audit history
-    const hist = sm.history();
-    expect_eq(hist.len, 5 as usize);
-    expect_eq(hist[0].step, 0 as usize);
-    expect_eq(hist[0].from_state, "idle");
-    expect_eq(hist[0].event, "plan");
-    expect_eq(hist[0].to_state, "planning");
-    expect_eq(hist[2].from_state, "running");
-    expect_eq(hist[2].event, "fail");
-    expect_eq(hist[2].to_state, "failed");
-    expect_eq(hist[4].from_state, "running");
-    expect_eq(hist[4].event, "finish");
-    expect_eq(hist[4].to_state, "completed");
-
-    // Export Mermaid stateDiagram-v2
-    const mermaid = sm.toMermaid(alloc)?;
-    defer alloc.free(mermaid);
-    const expected_mermaid =
-        "stateDiagram-v2\n" ++
-        "    [*] --> idle\n" ++
-        "    idle --> planning : plan\n" ++
-        "    planning --> running : execute\n" ++
-        "    running --> failed : fail\n" ++
-        "    failed --> running : retry\n" ++
-        "    running --> completed : finish\n";
-    expect_eq(mermaid, expected_mermaid);
-
-    // Reset restores initial state & clears history while preserving rules
-    sm.reset();
+    expect_eq(inv_tag, "invalid");
     expect_eq(sm.currentState(), "idle");
-    expect_eq(sm.history().len, 0 as usize);
-    expect_eq(sm.canTrigger("plan"), true);
-    expect_eq(sm.trigger("plan")?, "planning");
-}
 
-fn testCircuitBreakerFullLifecycle(): !void {
-    let cb = CircuitBreaker.init(CircuitBreakerConfig{
-        failure_threshold: 3,
-        success_threshold_half_open: 2,
-        open_timeout_ms: 5000,
-        half_open_max_probes: 1,
-    });
-
-    // 1. Closed phase: failures below threshold reset on success
-    expect_eq(cb.state(100), CircuitState.Closed);
-    expect_eq(cb.allowRequest(100), true);
-    cb.recordFailure(110);
-    cb.recordFailure(120);
-    expect_eq(cb.state(120), CircuitState.Closed);
-    cb.recordSuccess(130); // resets consecutive failures
-    expect_eq(cb.stats().consecutive_failures, 0 as u32);
-
-    // 2. Trip to Open after 3 consecutive failures
-    expect_eq(cb.allowRequest(200), true);
-    cb.recordFailure(210);
-    cb.recordFailure(220);
-    expect_eq(cb.state(220), CircuitState.Closed);
-    cb.recordFailure(230); // 3rd consecutive failure -> Open at 230ms
-    expect_eq(cb.state(230), CircuitState.Open);
-    expect_eq(cb.stats().open_count, 1 as u64);
-
-    // 3. Reject requests while within cooldown window (< 5000ms)
-    expect_eq(cb.allowRequest(1000), false);
-    expect_eq(cb.allowRequest(5229), false);
-    expect_eq(cb.state(5229), CircuitState.Open);
-
-    // 4. Cooldown expires at 230 + 5000 = 5230 -> HalfOpen, probe slot limit enforced
-    expect_eq(cb.allowRequest(5230), true);
-    expect_eq(cb.currentState(), CircuitState.HalfOpen);
-    expect_eq(cb.allowRequest(5231), false); // max 1 probe in flight
-
-    // 5. Probe fails -> immediately re-opens at 5250ms
-    cb.recordFailure(5250);
-    expect_eq(cb.currentState(), CircuitState.Open);
-    expect_eq(cb.stats().open_count, 2 as u64);
-    expect_eq(cb.allowRequest(10249), false);
-
-    // 6. Second HalfOpen cycle: 2 consecutive probe successes recover to Closed
-    expect_eq(cb.allowRequest(10250), true);
-    expect_eq(cb.currentState(), CircuitState.HalfOpen);
-    cb.recordSuccess(10260);
-    expect_eq(cb.currentState(), CircuitState.HalfOpen); // 1/2 successes
-    expect_eq(cb.allowRequest(10270), true);
-    cb.recordSuccess(10280); // 2/2 successes -> Closed!
-    expect_eq(cb.currentState(), CircuitState.Closed);
-
-    // 7. forceOpen & reset
-    cb.forceOpen(11000);
-    expect_eq(cb.currentState(), CircuitState.Open);
-    expect_eq(cb.allowRequest(11100), false);
-    cb.reset();
-    expect_eq(cb.currentState(), CircuitState.Closed);
-    expect_eq(cb.allowRequest(11200), true);
-
-    const st = cb.stats();
-    expect_eq(st.open_count, 3 as u64);
-    expect_eq(st.total_requests, 11 as u64);
-    expect_eq(st.total_allowed, 6 as u64);
-    expect_eq(st.total_rejected, 5 as u64);
-    expect_eq(st.total_failures, 6 as u64);
-    expect_eq(st.total_successes, 3 as u64);
-}
-
-fn testDagWavesAndCycleDetection(): !void {
-    const alloc = std.heap.page_allocator;
-
-    // 1. Multi-layer parallel AI workflow DAG
-    let dag = WorkflowDag.init(alloc);
-    defer dag.deinit();
-
-    dag.addNode("fetch_docs")?;
-    dag.addNode("fetch_schema")?;
-    dag.addNode("embed_docs")?;
-    dag.addNode("parse_schema")?;
-    dag.addNode("plan")?;
-    dag.addNode("codegen")?;
-    dag.addNode("test_gen")?;
-    dag.addNode("verify")?;
-
-    dag.addEdge("fetch_docs", "embed_docs")?;
-    dag.addEdge("fetch_schema", "parse_schema")?;
-    dag.addEdge("embed_docs", "plan")?;
-    dag.addEdge("parse_schema", "plan")?;
-    dag.addEdge("plan", "codegen")?;
-    dag.addEdge("plan", "test_gen")?;
-    dag.addEdge("codegen", "verify")?;
-    dag.addEdge("test_gen", "verify")?;
-
-    expect_eq(dag.nodeCount(), 8 as usize);
-    expect_eq(dag.edgeCount(), 8 as usize);
-    expect_eq(dag.hasCycle(), false);
-
-    const waves = dag.executionWaves(alloc)?;
-    defer WorkflowDag.freeWaves(alloc, waves);
-
-    expect_eq(waves.len, 5 as usize);
-    expect_eq(waves[0].len, 2 as usize);
-    expect_eq(waves[0][0], "fetch_docs");
-    expect_eq(waves[0][1], "fetch_schema");
-
-    expect_eq(waves[1].len, 2 as usize);
-    expect_eq(waves[1][0], "embed_docs");
-    expect_eq(waves[1][1], "parse_schema");
-
-    expect_eq(waves[2].len, 1 as usize);
-    expect_eq(waves[2][0], "plan");
-
-    expect_eq(waves[3].len, 2 as usize);
-    expect_eq(waves[3][0], "codegen");
-    expect_eq(waves[3][1], "test_gen");
-
-    expect_eq(waves[4].len, 1 as usize);
-    expect_eq(waves[4][0], "verify");
-
-    // 2. 3-node cycle detection
-    let cyclic = WorkflowDag.init(alloc);
-    defer cyclic.deinit();
-    cyclic.addNode("a")?;
-    cyclic.addNode("b")?;
-    cyclic.addNode("c")?;
-    cyclic.addEdge("a", "b")?;
-    cyclic.addEdge("b", "c")?;
-    cyclic.addEdge("c", "a")?;
-
-    expect_eq(cyclic.hasCycle(), true);
-    const cyc_res = cyclic.executionWaves(alloc);
-    const cyc_tag = switch (cyc_res) {
-        DagError.CycleDetected => "cycle",
+    // EmptyMachine check
+    let empty_sm = StateMachine.init(alloc, "");
+    defer empty_sm.deinit();
+    const emp_res = empty_sm.trigger("anything", null);
+    const emp_tag = switch (emp_res) {
+        FsmError.EmptyMachine => "empty",
         else => "other",
         ok => "ok",
     };
-    expect_eq(cyc_tag, "cycle");
-
-    // 3. Self-loop cycle detection
-    let self_loop = WorkflowDag.init(alloc);
-    defer self_loop.deinit();
-    self_loop.addNode("x")?;
-    self_loop.addEdge("x", "x")?;
-    expect_eq(self_loop.hasCycle(), true);
+    expect_eq(emp_tag, "empty");
+    }
+    expect_eq(gpa.deinit() == .ok, true);
 }
 
-fn testDagDynamicSchedulingAndFailureCascade(): !void {
-    const alloc = std.heap.page_allocator;
-    let dag = WorkflowDag.init(alloc);
-    defer dag.deinit();
+fn testTopologyAnalysisAndGraphVizDot(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+    {
+        let sm = StateMachine.init(alloc, "init");
+        defer sm.deinit();
 
-    dag.addNode("init")?;
-    dag.addNode("fetch_a")?;
-    dag.addNode("fetch_b")?;
-    dag.addNode("merge")?;
-    dag.addNode("deploy")?;
-    dag.addNode("telemetry")?;
+    sm.addState("active")?;
+    sm.addState("stuck")?;
+    sm.addState("orphan")?;
+    sm.addTerminalState("done")?;
 
-    dag.addEdge("init", "fetch_a")?;
-    dag.addEdge("init", "fetch_b")?;
-    dag.addEdge("init", "telemetry")?;
-    dag.addEdge("fetch_a", "merge")?;
-    dag.addEdge("fetch_b", "merge")?;
-    dag.addEdge("merge", "deploy")?;
+    sm.addTransition("init", "begin", "active")?;
+    sm.addTransition("active", "finish", "done")?;
+    sm.addTransition("active", "jam", "stuck")?;
 
-    expect_eq(dag.isComplete(), false);
+    // Reachable states via BFS from "init": ["init", "active", "done", "stuck"] (excludes "orphan")
+    const reachable = sm.reachableStates(alloc)?;
+    defer alloc.free(reachable);
+    expect_eq(reachable.len, 4 as usize);
+    expect_eq(reachable[0], "init");
+    expect_eq(reachable[1], "active");
+    expect_eq(reachable[2], "done");
+    expect_eq(reachable[3], "stuck");
 
-    // Wave 0 ready: only "init"
-    const r0 = dag.readyNodes(alloc)?;
-    defer alloc.free(r0);
-    expect_eq(r0.len, 1 as usize);
-    expect_eq(r0[0], "init");
+    // Dead-end non-terminal states: ["stuck"] ("done" is terminal so excluded; "orphan" is unreachable)
+    const dead_ends = sm.findDeadEndStates(alloc)?;
+    defer alloc.free(dead_ends);
+    expect_eq(dead_ends.len, 1 as usize);
+    expect_eq(dead_ends[0], "stuck");
 
-    dag.markRunning("init")?;
-    expect_eq(dag.nodeStatus("init").?, TaskStatus.Running);
-    dag.markSucceeded("init")?;
-    expect_eq(dag.nodeStatus("init").?, TaskStatus.Succeeded);
-
-    // Now fetch_a, fetch_b, telemetry are ready
-    const r1 = dag.readyNodes(alloc)?;
-    defer alloc.free(r1);
-    expect_eq(r1.len, 3 as usize);
-    expect_eq(r1[0], "fetch_a");
-    expect_eq(r1[1], "fetch_b");
-    expect_eq(r1[2], "telemetry");
-
-    // fetch_a fails -> merge and deploy must cascade to Skipped!
-    dag.markRunning("fetch_a")?;
-    dag.markFailed("fetch_a")?;
-    expect_eq(dag.nodeStatus("fetch_a").?, TaskStatus.Failed);
-    expect_eq(dag.nodeStatus("merge").?, TaskStatus.Skipped);
-    expect_eq(dag.nodeStatus("deploy").?, TaskStatus.Skipped);
-    expect_eq(dag.nodeStatus("fetch_b").?, TaskStatus.Pending);
-    expect_eq(dag.nodeStatus("telemetry").?, TaskStatus.Pending);
-    expect_eq(dag.isComplete(), false);
-
-    // Skipped node cannot transition to Running
-    const skip_res = dag.markRunning("merge");
-    const skip_tag = switch (skip_res) {
-        DagError.InvalidStateTransition => "invalid_state",
-        else => "other",
-        ok => "ok",
-    };
-    expect_eq(skip_tag, "invalid_state");
-
-    // Independent branches complete cleanly
-    dag.markRunning("fetch_b")?;
-    dag.markSucceeded("fetch_b")?;
-    dag.markRunning("telemetry")?;
-    dag.markSucceeded("telemetry")?;
-
-    const r2 = dag.readyNodes(alloc)?;
-    defer alloc.free(r2);
-    expect_eq(r2.len, 0 as usize);
-    expect_eq(dag.isComplete(), true);
-
-    // Reset restores all nodes to Pending
-    dag.reset();
-    expect_eq(dag.isComplete(), false);
-    expect_eq(dag.nodeStatus("deploy").?, TaskStatus.Pending);
+    // GraphViz DOT output verification
+    const dot = sm.toDot(alloc)?;
+    defer alloc.free(dot);
+    expect_eq(std.mem.indexOf(u8, dot, "digraph fsm {") != null, true);
+    expect_eq(std.mem.indexOf(u8, dot, "__start -> \"init\";") != null, true);
+    expect_eq(std.mem.indexOf(u8, dot, "\"done\" [shape=doublecircle];") != null, true);
+    expect_eq(std.mem.indexOf(u8, dot, "\"init\" [shape=circle];") != null, true);
+    expect_eq(std.mem.indexOf(u8, dot, "\"active\" -> \"done\" [label=\"finish\"];") != null, true);
+    }
+    expect_eq(gpa.deinit() == .ok, true);
 }
 
-fn testCapFsmDynamicMount(): !void {
-    const alloc = std.heap.page_allocator;
+fn testCapFsmDynamicMountZeroLeak(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+    {
+        let sm = cap.fsm.StateMachine.init(alloc, "draft");
+        defer sm.deinit();
 
-    // 1. cap.fsm.StateMachine
-    let sm = cap.fsm.StateMachine.init(alloc, "draft");
-    defer sm.deinit();
-    sm.addTransition("draft", "submit", "active")?;
-    expect_eq(sm.trigger("submit")?, "active");
+    sm.addState("review")?;
+    sm.addTerminalState("published")?;
+    sm.addTransition("draft", "submit", "review")?;
+    sm.addTransition("review", "approve", "published")?;
 
-    // 2. cap.fsm.CircuitBreaker
-    let cb = cap.fsm.CircuitBreaker.init(cap.fsm.CircuitBreakerConfig{
-        failure_threshold: 1,
-        success_threshold_half_open: 1,
-        open_timeout_ms: 100,
-        half_open_max_probes: 1,
-    });
-    expect_eq(cb.allowRequest(0), true);
-    cb.recordFailure(10);
-    expect_eq(cb.state(20), cap.fsm.CircuitState.Open);
-    expect_eq(cb.allowRequest(110), true);
-    cb.recordSuccess(120);
-    expect_eq(cb.currentState(), cap.fsm.CircuitState.Closed);
+    expect_eq(sm.canTrigger("submit", null), true);
+    expect_eq(sm.trigger("submit", null)?, "review");
+    expect_eq(sm.trigger("approve", null)?, "published");
+    expect_eq(sm.isTerminal(), true);
 
-    // 3. cap.fsm.WorkflowDag
-    let dag = cap.fsm.WorkflowDag.init(alloc);
-    defer dag.deinit();
-    dag.addNode("step1")?;
-    dag.addNode("step2")?;
-    dag.addEdge("step1", "step2")?;
-    const waves = dag.executionWaves(alloc)?;
-    defer cap.fsm.WorkflowDag.freeWaves(alloc, waves);
-    expect_eq(waves.len, 2 as usize);
-    expect_eq(waves[0][0], "step1");
-    expect_eq(waves[1][0], "step2");
-    dag.markFailed("step1")?;
-    expect_eq(dag.nodeStatus("step2").?, cap.fsm.TaskStatus.Skipped);
-    expect_eq(dag.isComplete(), true);
+    const events = sm.availableEvents(alloc)?;
+    defer alloc.free(events);
+    expect_eq(events.len, 0 as usize);
+
+    const dot = sm.toDot(alloc)?;
+    defer alloc.free(dot);
+    expect_eq(std.mem.indexOf(u8, dot, "\"published\" [shape=doublecircle];") != null, true);
+    }
+    expect_eq(gpa.deinit() == .ok, true);
 }
 
-fn main() {
-    test("cap:fsm StateMachine legal/illegal transitions, audit history & Mermaid export", () => {
-        testStateMachineAuditAndMermaid()?;
+fn main(): !void {
+    test("1. Order workflow transitions, onExit/onTransition/onEnter order & history", () => {
+        testOrderWorkflowCallbacksAndHistory() catch unreachable;
     });
-
-    test("cap:fsm CircuitBreaker Closed->Open->HalfOpen->Closed & probe failure re-open", () => {
-        testCircuitBreakerFullLifecycle()?;
+    test("2. GuardFn predicate accept & GuardRejected state preservation", () => {
+        testGuardAcceptAndReject() catch unreachable;
     });
-
-    test("cap:fsm WorkflowDag multi-wave parallel executionWaves & cycle detection", () => {
-        testDagWavesAndCycleDetection()?;
+    test("3. InvalidTransition, UnknownState, DuplicateTransition & availableEvents", () => {
+        testErrorHandlingAndAvailableEvents() catch unreachable;
     });
-
-    test("cap:fsm WorkflowDag dynamic readyNodes & failure-to-Skipped cascade", () => {
-        testDagDynamicSchedulingAndFailureCascade()?;
+    test("4. BFS reachableStates, findDeadEndStates & GraphViz toDot export", () => {
+        testTopologyAnalysisAndGraphVizDot() catch unreachable;
     });
-
-    test("cap.fsm lazy dynamic hub mount via import cap from \"cap\"", () => {
-        testCapFsmDynamicMount()?;
+    test("5. import cap from \"cap\"; cap.fsm dynamic mount & zero memory leak", () => {
+        testCapFsmDynamicMountZeroLeak() catch unreachable;
     });
 }

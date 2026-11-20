@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 升级加固 `cap:fsm` 确定性有限状态机 DFA、守卫回调与 GraphViz DOT 引擎（5/5 PASS，自动动态挂载 `cap.fsm`）
+- **新增与重构**：`lib/fsm/fsm.cp` 替代旧 `state_machine.cp`，实现 `StateMachine`（`GuardFn` 守卫、`onEnter`/`onExit`/`onTransition` 生命周期钩子、`history` 轨迹、BFS `reachableStates`/`findDeadEndStates` 死胡同检测与 `toDot` GraphViz 导出），并与 `circuit_breaker.cp`/`dag.cp` 经 `index.cp` 统一导出。
+- **更新文档与测试**：`doc/lib/fsm.md` 扁平文档与 `cap/test/test_fsm_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:wal` CRC32C 校验预写日志（WAL）帧编解码与崩溃恢复引擎（5/5 PASS，自动动态挂载 `cap.wal`）
 - **新增标准库**：`lib/wal/{wal,index}.cp`，实现固定 24 字节小端序 `"WAL1"` 帧头与 Castagnoli CRC32C 校验、`recoverStrict` / `recoverWithTailTruncation` 掉电尾部截断恢复以及 `compactBefore` 日志压缩。
 - **新增文档与测试**：`doc/lib/wal.md` 扁平文档与 `cap/test/test_wal_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
