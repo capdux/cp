@@ -1,7 +1,7 @@
 // Source: cp/doc/lib/tlv.md
-# `cap:tlv` — 二进制 TLV 编解码、流式分帧与 Castagnoli CRC32C 校验引擎
+# `cap:tlv` — ASN.1 BER/DER Tag-Length-Value (TLV) 二进制编解码标准库
 
-纯 CP、零 C 依赖的工业级二进制 TLV（Tag-Length-Value）编解码器、黏包/半包流式分帧器（`LengthPrefixedFramer`）与 Castagnoli CRC32C 完整性校验库，适用于网络传输协议、IoT 嵌入式报文与 RPC 底层帧。
+纯 CP、零 C 依赖的工业级 ASN.1 BER/DER Tag-Length-Value（TLV）二进制编解码标准库，提供严格 DER 解码（零拷贝切片视图、防深度耗尽、防非最短长度与不定长）、高编号 Base-128 Tag 编解码、最小补码整数字节规范化、OID 双向无损互转以及嵌套容器流式构建器 `TlvWriter`。
 
 ## 导入方式
 
@@ -9,80 +9,69 @@
 import {
     TLV_MAX_DEPTH,
     TlvError,
-    FrameHeaderKind,
-    TlvNestToken,
-    TlvField,
+    TagClass,
+    TlvTag,
+    TlvNode,
     TlvWriter,
-    TlvReader,
-    LengthPrefixedFramer,
-    crc32c,
+    decodeDer,
+    decodeDerWithMaxDepth,
+    encodeDerNode,
+    encodeOidBytes,
+    decodeOid,
 } from "cap:tlv";
 
 // 或动态命名空间挂载：
 import cap from "cap";
-// cap.tlv.TlvWriter / cap.tlv.TlvReader / cap.tlv.LengthPrefixedFramer / cap.tlv.crc32c
+// cap.tlv.decodeDer / cap.tlv.TlvWriter / cap.tlv.encodeDerNode / cap.tlv.decodeOid
 ```
 
-## 线格式契约
-
-- **TLV 记录格式**：`Tag (u16 BE, 2B)` + `Length (u32 BE, 4B)` + `Value (Length B)`
-- **最大嵌套深度**：`TLV_MAX_DEPTH = 32`
-- **分帧器格式**：`Header (2B U16Be / 4B U32Be / 4B U32Le)` + `Payload (Length B)` + `[可选 CRC32C (4B u32 BE)]`
-
-## 错误与枚举
+## 核心类型与错误
 
 ### `TlvError`
-- `Truncated`：缓冲区剩余字节不足以解析 TLV 头部或完整载荷
-- `TagNotFound`：`findTag` 未找到指定 Tag
-- `InvalidLength`：长度超出 `u32` 范围或嵌套闭合令牌不匹配
-- `FrameTooLarge`：帧载荷超过 `max_frame_bytes` 或 `FrameHeaderKind` 上限
-- `InvalidChecksum`：CRC32C 校验和不匹配（载荷被篡改）
-- `MaxDepthExceeded`：嵌套容器深度超过 `TLV_MAX_DEPTH`（32）
-- `TypeMismatch`：字段长度或编码格式与目标类型不符（如 `asU64` 非 8 字节、`asBool` 非 `0/1`、`asStr` 非合法 UTF-8）
+- `UnexpectedEof`：输入缓冲区截断或长度超出剩余字节
+- `InvalidTag`：高编号 Base-128 Tag 存在冗余前导 `0x80`、非最小编码（`< 31` 使用多字节）或 `u32` 溢出
+- `InvalidLength`：长度字段保留字（`0xFF`）、超出 `usize` 范围或 `TlvWriter` 嵌套未闭合
+- `NonCanonicalLength`：DER 长形式存在前导 `0x00` 或长度 `< 128` 却使用了长形式编码
+- `IndefiniteLengthNotAllowed`：DER 严禁不定长编码 `0x80`
+- `TrailingBytes`：根节点解码完成后存在多余尾部字节
+- `MaxDepthExceeded`：嵌套深度超过 `max_depth`（默认 `TLV_MAX_DEPTH = 32`）
+- `InvalidBoolean`：DER BOOLEAN 长度非 1 或值非 `0x00`/`0xFF`
+- `InvalidInteger`：DER INTEGER 为空或存在非最小补码前导 `0x00`/`0xFF`
+- `TagMismatch`：`TlvNode` 类型辅助方法与节点 Tag 不匹配
+- `InvalidOid`：点分 OID 字符串或 DER OID 编码非法
 - `OutOfMemory`：内存分配失败
 
-### `FrameHeaderKind`
-- `U16Be`：2 字节大端无符号长度头
-- `U32Be`：4 字节大端无符号长度头
-- `U32Le`：4 字节小端无符号长度头
+### `TagClass` & `TlvTag`
+- `TagClass`：`Universal = 0`、`Application = 1`、`ContextSpecific = 2`、`Private = 3`
+- `TlvTag`：`tag_class: TagClass`、`constructed: bool`、`number: u32`
+  - 构造：`TlvTag.init(tag_class, constructed, number)`、`TlvTag.universal(number, constructed)`、`TlvTag.application(number, constructed)`、`TlvTag.contextSpecific(number, constructed)`、`TlvTag.privateTag(number, constructed)`
+  - 编解码：`tag.encodedLen()`、`tag.encodeTo(buf)`、`TlvTag.decode(bytes)`（支持 `0..30` 单字节及 Base-128 高编号多字节 Tag）
 
-## Castagnoli CRC32C
-
-- `crc32c(data: []const u8): u32`
-  - 使用 Castagnoli `0x82F63B78` 多项式编译期查找表，与 RocksDB / gRPC / SCTP 标准一致（`crc32c("123456789") == 0xE3069283`）。
-
-## TLV 编解码 (`TlvWriter` & `TlvReader` & `TlvField`)
-
-### `TlvWriter`
-- `TlvWriter.init(alloc: std.mem.Allocator): TlvWriter`
-- `deinit(*_)` / `reset(*_)`
-- `bytes(): []const u8` / `toOwnedSlice(*_): ([]u8) ! TlvError`
-- `writeBytes(*_, tag: u16, data: []const u8): ! TlvError`
-- `writeU64(*_, tag: u16, v: u64): ! TlvError`
-- `writeI64(*_, tag: u16, v: i64): ! TlvError`
-- `writeStr(*_, tag: u16, s: []const u8): ! TlvError`
-- `writeBool(*_, tag: u16, b: bool): ! TlvError`
-- `beginNested(*_, tag: u16): TlvNestToken ! TlvError`
-- `endNested(*_, token: TlvNestToken): ! TlvError`
-
-### `TlvReader` & `TlvField`
-- `TlvReader.init(data: []const u8): TlvReader`
-- `TlvReader.initWithDepth(data: []const u8, depth: usize): TlvReader ! TlvError`
-- `reset(*_)` / `remaining(): usize`
-- `next(*_): TlvField? ! TlvError`：顺序迭代读取下一个 TLV 字段，到达末尾返回 `null`
-- `findTag(tag: u16): TlvField ! TlvError`：扫描查找指定 Tag，未找到返回 `TlvError.TagNotFound`
-- `TlvField` 视图方法：
-  - `asBytes(): []const u8`
+### `TlvNode`
+- 字段：`tag: TlvTag`、`raw_value: []const u8`（零拷贝切片视图）、`children: []TlvNode`
+- 生命周期：`node.deinit(alloc)` 递归释放所有子节点切片
+- 查询与类型视图：
+  - `findChild(tag_number: u32): TlvNode?`
+  - `asBoolean(): bool ! TlvError`
+  - `asIntegerBytes(): ([]const u8) ! TlvError`
   - `asU64(): u64 ! TlvError`
-  - `asI64(): i64 ! TlvError`
-  - `asBool(): bool ! TlvError`
-  - `asStr(): ([]const u8) ! TlvError`
-  - `reader(): TlvReader ! TlvError`：进入嵌套容器（自动递增深度并校验 `TLV_MAX_DEPTH`）
+  - `asOctetString(): ([]const u8) ! TlvError`
+  - `asUtf8String(): ([]const u8) ! TlvError`
 
-## 流式分帧器 (`LengthPrefixedFramer`)
+## 严格 DER 解码与节点编码
 
-- `LengthPrefixedFramer.init(alloc, kind: FrameHeaderKind, max_frame_bytes: usize, with_crc32c: bool): LengthPrefixedFramer`
-- `deinit(*_)` / `bufferedBytes(): usize`
-- `encodeFrame(alloc, payload: []const u8): ([]u8) ! TlvError`：打包带长度头与可选尾随 CRC32C 的完整帧
-- `feed(*_, chunk: []const u8): ! TlvError`：喂入任意分片/黏包数据
-- `nextFrame(*_, alloc): ([]u8)? ! TlvError`：尝试提取下一完整帧；半包返回 `null`，超限返回 `FrameTooLarge`，篡改返回 `InvalidChecksum`
+- `decodeDer(alloc, bytes): TlvNode ! TlvError`（默认 `TLV_MAX_DEPTH = 32`）
+- `decodeDerWithMaxDepth(alloc, bytes, max_depth): TlvNode ! TlvError`
+- `encodeDerNode(alloc, node): ([]u8) ! TlvError`
+
+## 流式 DER 构建器 `TlvWriter` & OID 编解码
+
+- `TlvWriter.init(alloc)` / `deinit(*_)` / `reset(*_)` / `bytes()` / `toOwnedSlice(*_)`
+- `writeRaw(*_, tag, value)`
+- `writeBoolean(*_, val)` / `writeNull(*_)`
+- `writeIntegerBytes(*_, bytes)`：剔除冗余前导 `0x00`/`0xFF`，保持最小 DER 补码表示
+- `writeUnsignedIntegerBytes(*_, bytes)`：剔除多余前导 `0x00`，并在最高位为 `1` 时自动补齐前导 `0x00`
+- `writeOctetString(*_, data)` / `writeUtf8String(*_, s)`
+- `writeOid(*_, oid_str)`：将点分 OID（如 `"1.2.840.113549.1.1.11"`）编码为 DER OID
+- `beginSequence(*_)` / `beginSet(*_)` / `beginConstructed(*_, tag)` / `endConstructed(*_)`：自动回填规范 DER 长度
+- `encodeOidBytes(alloc, oid_str)` & `decodeOid(alloc, bytes)`：点分 OID 字符串与 DER OID 字节双向无损转换

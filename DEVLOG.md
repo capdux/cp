@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:tlv` 纯 CP ASN.1 BER/DER Tag-Length-Value 严格编解码、OID 双向互转与流式构建引擎（支持 `cap.tlv` 自动动态挂载，详见 `doc/lib/tlv.md`）（5/5 PASS，文档直写 `doc/lib/tlv.md`）
+- **核心设计**：`TlvNode` 对原语载荷采用零拷贝 `raw_value` 切片视图；严格拦截 `0x80` 不定长与非最短 DER 长度编码，并在 `std.testing.allocator` 下全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:semver_range` 纯 CP Semver 2.0 语义化版本解析、npm/Cargo 范围表达式求值与选版引擎（支持 `cap.semver_range` 自动动态挂载，详见 `doc/lib/semver_range.md`）（5/5 PASS，文档直写 `doc/lib/semver_range.md`）
 - **核心设计**：按 Semver 2.0 第 11 条优先级规则实现预发布数字/字母比对并忽略 `+build`；范围求值遵循 npm 同 `[major, minor, patch]` 元组预发布隔离规则，并在 `std.testing.allocator` 下全路径零泄漏。
 

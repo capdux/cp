@@ -1,275 +1,259 @@
 // Source: cp/cap/test/test_tlv_production_deep.cp
-// Deep Production Test Suite for cap:tlv
+// Deep Production Test Suite for cap:tlv (ASN.1 BER/DER TLV)
 // Covers:
-//   1. TlvWriter / TlvReader multi-type fields, nested containers, findTag, TypeMismatch, Truncated, MaxDepthExceeded
-//   2. Castagnoli crc32c standard test vectors ("123456789" == 0xE3069283)
-//   3. LengthPrefixedFramer byte-by-byte half-packet feeding & multi-frame sticky-packet splitting
-//   4. Frame tampering InvalidChecksum, oversized FrameTooLarge DoS guard & std.testing.allocator zero leaks
-//   5. Dynamic namespace mounting via `import cap from "cap"; cap.tlv`
+//   1. DER nested SEQUENCE/SET and high-tag-number (Base-128) encode/decode round-trip
+//   2. Bidirectional lossless OID dotted string <-> DER OID octets conversion
+//   3. TlvWriter minimal two's-complement integer normalization (0x00/0xFF trimming & 0x00 sign padding)
+//   4. Strict DER guards: NonCanonicalLength, IndefiniteLengthNotAllowed (0x80), MaxDepthExceeded, UnexpectedEof, TrailingBytes
+//   5. Dynamic namespace mounting via `import cap from "cap"; cap.tlv` & std.testing.allocator zero leaks
 
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import {
     TLV_MAX_DEPTH,
+    TAG_NUM_SEQUENCE,
+    TAG_NUM_SET,
+    TAG_NUM_OID,
     TlvError,
-    FrameHeaderKind,
-    TlvNestToken,
-    TlvField,
+    TagClass,
+    TlvTag,
+    TlvNode,
     TlvWriter,
-    TlvReader,
-    LengthPrefixedFramer,
-    crc32c,
+    decodeDer,
+    decodeDerWithMaxDepth,
+    encodeDerNode,
+    encodeOidBytes,
+    decodeOid,
 } from "cap:tlv";
 import cap from "cap";
 
-fn testTlvRoundTripAndGuards()! {
+fn testSequenceSetAndHighTagRoundTrip()! {
     const alloc = std.testing.allocator;
 
     let w = TlvWriter.init(alloc);
     defer w.deinit();
 
-    w.writeU64(0x0001, 0x0123456789ABCDEF)?;
-    w.writeI64(0x0002, -9876543210123)?;
-    w.writeStr(0x0003, "cp-tlv-protocol")?;
-    w.writeBool(0x0004, true)?;
-    w.writeBool(0x0005, false)?;
-    w.writeBytes(0x0006, "\x00\xFF\x80\x7F")?;
+    // Outer SEQUENCE
+    w.beginSequence()?;
+    w.writeBoolean(true)?;
+    w.writeBoolean(false)?;
+    w.writeOctetString("\xDE\xAD\xBE\xEF")?;
+    w.writeUtf8String("cp-asn1-der")?;
 
-    const outer_tok = w.beginNested(0x0100)?;
-    w.writeStr(0x0101, "outer-name")?;
-    const inner_tok = w.beginNested(0x0200)?;
-    w.writeU64(0x0201, 42)?;
-    w.writeBool(0x0202, true)?;
-    w.endNested(inner_tok)?;
-    w.endNested(outer_tok)?;
+    // Nested SET
+    w.beginSet()?;
+    // High-tag-number ContextSpecific constructed (tag 0x1234 = 4660)
+    const high_tag = TlvTag.contextSpecific(4660, true);
+    w.beginConstructed(high_tag)?;
+    // High-tag-number Application primitive (tag 31)
+    const app_tag = TlvTag.application(31, false);
+    w.writeRaw(app_tag, "hi-tag-31")?;
+    w.endConstructed()?;
+    w.endConstructed()?;
 
-    const encoded = w.toOwnedSlice()?;
-    defer alloc.free(encoded);
+    w.endConstructed()?;
 
-    let r = TlvReader.init(encoded);
-    const f1 = (r.next()?).?;
-    expect_eq(f1.tag, 0x0001 as u16);
-    expect_eq(f1.asU64()?, 0x0123456789ABCDEF as u64);
+    const der_bytes = w.toOwnedSlice()?;
+    defer alloc.free(der_bytes);
 
-    const f2 = (r.next()?).?;
-    expect_eq(f2.tag, 0x0002 as u16);
-    expect_eq(f2.asI64()?, -9876543210123 as i64);
+    let root = decodeDer(alloc, der_bytes)?;
+    defer root.deinit(alloc);
 
-    const f3 = (r.next()?).?;
-    expect_eq(std.mem.eql(u8, f3.asStr()?, "cp-tlv-protocol"), true);
+    expect_eq(root.tag.number, TAG_NUM_SEQUENCE);
+    expect_eq(root.tag.constructed, true);
+    expect_eq(root.children.len, 5 as usize);
+    expect_eq(root.children[0].asBoolean()?, true);
+    expect_eq(root.children[1].asBoolean()?, false);
+    expect_eq(std.mem.eql(u8, root.children[2].asOctetString()?, "\xDE\xAD\xBE\xEF"), true);
+    expect_eq(std.mem.eql(u8, root.children[3].asUtf8String()?, "cp-asn1-der"), true);
 
-    const f4 = (r.next()?).?;
-    expect_eq(f4.asBool()?, true);
+    const set_node = root.children[4];
+    expect_eq(set_node.tag.number, TAG_NUM_SET);
+    const high_node = set_node.findChild(4660).?;
+    expect_eq(high_node.tag.constructed, true);
+    const app_node = high_node.findChild(31).?;
+    expect_eq(app_node.tag.constructed, false);
+    expect_eq(std.mem.eql(u8, app_node.raw_value, "hi-tag-31"), true);
 
-    const f5 = (r.next()?).?;
-    expect_eq(f5.asBool()?, false);
+    // Re-encode decoded TlvNode tree and verify byte-for-byte DER identity
+    const reencoded = encodeDerNode(alloc, root)?;
+    defer alloc.free(reencoded);
+    expect_eq(std.mem.eql(u8, der_bytes, reencoded), true);
+}
 
-    const f6 = (r.next()?).?;
-    expect_eq(std.mem.eql(u8, f6.asBytes(), "\x00\xFF\x80\x7F"), true);
+fn testOidBidirectionalConversion()! {
+    const alloc = std.testing.allocator;
 
-    const f_nested = (r.next()?).?;
-    expect_eq(f_nested.tag, 0x0100 as u16);
-    expect_eq(r.next()? == null, true);
+    // sha256WithRSAEncryption: 1.2.840.113549.1.1.11
+    const sha256_rsa = "1.2.840.113549.1.1.11";
+    const expected_sha256_rsa = "\x2A\x86\x48\x86\xF7\x0D\x01\x01\x0B";
 
-    // Nested reader + findTag
-    let outer_r = f_nested.reader()?;
-    const outer_name = outer_r.findTag(0x0101)?;
-    expect_eq(std.mem.eql(u8, outer_name.asStr()?, "outer-name"), true);
+    let w = TlvWriter.init(alloc);
+    defer w.deinit();
+    w.writeOid(sha256_rsa)?;
 
-    const inner_field = outer_r.findTag(0x0200)?;
-    let inner_r = inner_field.reader()?;
-    expect_eq(inner_r.findTag(0x0201)?.asU64()?, 42 as u64);
-    expect_eq(inner_r.findTag(0x0202)?.asBool()?, true);
+    const der_oid = w.toOwnedSlice()?;
+    defer alloc.free(der_oid);
 
-    // TagNotFound
-    switch (inner_r.findTag(0x9999)) {
+    let node = decodeDer(alloc, der_oid)?;
+    defer node.deinit(alloc);
+    expect_eq(node.tag.number, TAG_NUM_OID);
+    expect_eq(std.mem.eql(u8, node.raw_value, expected_sha256_rsa), true);
+
+    const decoded_str = decodeOid(alloc, node.raw_value)?;
+    defer alloc.free(decoded_str);
+    expect_eq(std.mem.eql(u8, decoded_str, sha256_rsa), true);
+
+    // Arc0 = 2 with large arc1: 2.999.123456
+    const large_oid = "2.999.123456";
+    const raw_large = encodeOidBytes(alloc, large_oid)?;
+    defer alloc.free(raw_large);
+    const decoded_large = decodeOid(alloc, raw_large)?;
+    defer alloc.free(decoded_large);
+    expect_eq(std.mem.eql(u8, decoded_large, large_oid), true);
+
+    // Invalid OID guard (arc0 > 2)
+    switch (encodeOidBytes(alloc, "3.1.2")) {
+        v => { alloc.free(v); expect_eq(true, false); },
+        err(e) => expect_eq(e == TlvError.InvalidOid, true),
+    }
+}
+
+fn testIntegerMinimalNormalization()! {
+    const alloc = std.testing.allocator;
+
+    let w = TlvWriter.init(alloc);
+    defer w.deinit();
+
+    w.beginSequence()?;
+    // Redundant leading 0x00s for positive integer 0x7F -> 02 01 7F
+    w.writeIntegerBytes("\x00\x00\x7F")?;
+    // Redundant leading 0xFFs for negative integer -128 -> 02 01 80
+    w.writeIntegerBytes("\xFF\xFF\x80")?;
+    // Unsigned integer with MSB=1 (0x80 0x01) -> needs 0x00 sign prefix -> 02 03 00 80 01
+    w.writeUnsignedIntegerBytes("\x00\x00\x80\x01")?;
+    // Empty integer -> 02 01 00
+    w.writeIntegerBytes("")?;
+    w.endConstructed()?;
+
+    const der = w.toOwnedSlice()?;
+    defer alloc.free(der);
+
+    let root = decodeDer(alloc, der)?;
+    defer root.deinit(alloc);
+
+    expect_eq(root.children.len, 4 as usize);
+    expect_eq(std.mem.eql(u8, root.children[0].asIntegerBytes()?, "\x7F"), true);
+    expect_eq(root.children[0].asU64()?, 127 as u64);
+
+    expect_eq(std.mem.eql(u8, root.children[1].asIntegerBytes()?, "\x80"), true);
+    expect_eq(std.mem.eql(u8, root.children[2].asIntegerBytes()?, "\x00\x80\x01"), true);
+    expect_eq(root.children[2].asU64()?, 0x8001 as u64);
+    expect_eq(std.mem.eql(u8, root.children[3].asIntegerBytes()?, "\x00"), true);
+    expect_eq(root.children[3].asU64()?, 0 as u64);
+
+    // Non-minimal integer in raw DER must be rejected by asIntegerBytes()
+    const bad_int_der = "\x02\x02\x00\x7F";
+    let bad_node = decodeDer(alloc, bad_int_der)?;
+    defer bad_node.deinit(alloc);
+    switch (bad_node.asIntegerBytes()) {
         v => { * = v; expect_eq(true, false); },
-        err(e) => expect_eq(e == TlvError.TagNotFound, true),
+        err(e) => expect_eq(e == TlvError.InvalidInteger, true),
+    }
+}
+
+fn testStrictDerGuards()! {
+    const alloc = std.testing.allocator;
+
+    // 1. Indefinite length 0x80 -> IndefiniteLengthNotAllowed
+    switch (decodeDer(alloc, "\x30\x80\x00\x00")) {
+        n => { n.deinit(alloc); expect_eq(true, false); },
+        err(e) => expect_eq(e == TlvError.IndefiniteLengthNotAllowed, true),
     }
 
-    // TypeMismatch: asU64 on 1-byte bool, asBool on 8-byte u64, asStr on invalid UTF-8
-    switch (f4.asU64()) {
-        v => { * = v; expect_eq(true, false); },
-        err(e) => expect_eq(e == TlvError.TypeMismatch, true),
-    }
-    switch (f1.asBool()) {
-        v => { * = v; expect_eq(true, false); },
-        err(e) => expect_eq(e == TlvError.TypeMismatch, true),
-    }
-    switch (f6.asStr()) {
-        v => { * = v; expect_eq(true, false); },
-        err(e) => expect_eq(e == TlvError.TypeMismatch, true),
+    // 2. Non-canonical length (< 128 encoded in long form: 0x81 0x05) -> NonCanonicalLength
+    switch (decodeDer(alloc, "\x04\x81\x05hello")) {
+        n => { n.deinit(alloc); expect_eq(true, false); },
+        err(e) => expect_eq(e == TlvError.NonCanonicalLength, true),
     }
 
-    // Truncated header & truncated payload
-    let trunc_hdr = TlvReader.init(encoded[0..4]);
-    switch (trunc_hdr.next()) {
-        null => expect_eq(true, false),
-        v => { * = v; expect_eq(true, false); },
-        err(e) => expect_eq(e == TlvError.Truncated, true),
-    }
-    let trunc_val = TlvReader.init(encoded[0..10]);
-    switch (trunc_val.next()) {
-        null => expect_eq(true, false),
-        v => { * = v; expect_eq(true, false); },
-        err(e) => expect_eq(e == TlvError.Truncated, true),
+    // 3. Long form with redundant leading 0x00 (0x82 0x00 0x80) -> NonCanonicalLength
+    switch (decodeDer(alloc, "\x04\x82\x00\x80")) {
+        n => { n.deinit(alloc); expect_eq(true, false); },
+        err(e) => expect_eq(e == TlvError.NonCanonicalLength, true),
     }
 
-    // MaxDepthExceeded (32 allowed, 33rd rejected)
-    let dw = TlvWriter.init(alloc);
-    defer dw.deinit();
-    let tokens: [32]TlvNestToken = undefined;
-    let d: usize = 0;
-    while (d < TLV_MAX_DEPTH) : (d += 1) {
-        tokens[d] = dw.beginNested(0x0010)?;
+    // 4. Truncated payload -> UnexpectedEof
+    switch (decodeDer(alloc, "\x04\x05abc")) {
+        n => { n.deinit(alloc); expect_eq(true, false); },
+        err(e) => expect_eq(e == TlvError.UnexpectedEof, true),
     }
-    switch (dw.beginNested(0x0010)) {
-        v => { * = v; expect_eq(true, false); },
+
+    // 5. Trailing bytes after root element -> TrailingBytes
+    switch (decodeDer(alloc, "\x05\x00\x00")) {
+        n => { n.deinit(alloc); expect_eq(true, false); },
+        err(e) => expect_eq(e == TlvError.TrailingBytes, true),
+    }
+
+    // 6. MaxDepthExceeded (3 nested SEQUENCEs with max_depth = 1)
+    const nested3 = "\x30\x04\x30\x02\x30\x00";
+    switch (decodeDerWithMaxDepth(alloc, nested3, 1)) {
+        n => { n.deinit(alloc); expect_eq(true, false); },
         err(e) => expect_eq(e == TlvError.MaxDepthExceeded, true),
     }
-    while (d > 0) {
-        d -= 1;
-        dw.endNested(tokens[d])?;
+
+    // 7. InvalidBoolean (0x01 instead of 0xFF)
+    let bad_bool = decodeDer(alloc, "\x01\x01\x01")?;
+    defer bad_bool.deinit(alloc);
+    switch (bad_bool.asBoolean()) {
+        v => { * = v; expect_eq(true, false); },
+        err(e) => expect_eq(e == TlvError.InvalidBoolean, true),
     }
 }
 
-fn testCrc32cVectors() {
-    expect_eq(crc32c(""), 0x00000000 as u32);
-    expect_eq(crc32c("123456789"), 0xE3069283 as u32);
-    const a = crc32c("cp-lang-tlv");
-    const b = crc32c("cp-lang-tlv");
-    const c = crc32c("cp-lang-tlw");
-    expect_eq(a, b);
-    expect_eq(a != c, true);
-}
-
-fn testFramerHalfAndStickyPackets()! {
+fn testDynamicCapTlvNamespace()! {
     const alloc = std.testing.allocator;
-
-    const kinds: [3]FrameHeaderKind = [
-        FrameHeaderKind.U16Be,
-        FrameHeaderKind.U32Be,
-        FrameHeaderKind.U32Le,
-    ];
-
-    let ki: usize = 0;
-    while (ki < 3) : (ki += 1) {
-        let framer = LengthPrefixedFramer.init(alloc, kinds[ki], 4096, true);
-        defer framer.deinit();
-
-        const p1 = "frame-one-hello";
-        const p2 = "frame-two-\x00\xFF-binary";
-        const p3 = "";
-
-        const f1 = framer.encodeFrame(alloc, p1)?;
-        defer alloc.free(f1);
-        const f2 = framer.encodeFrame(alloc, p2)?;
-        defer alloc.free(f2);
-        const f3 = framer.encodeFrame(alloc, p3)?;
-        defer alloc.free(f3);
-
-        // Combine all 3 frames into one sticky buffer
-        const total_len = f1.len + f2.len + f3.len;
-        const combined = alloc.alloc(u8, total_len)?;
-        defer alloc.free(combined);
-        std.mem.copyForwards(u8, combined[0..f1.len], f1);
-        std.mem.copyForwards(u8, combined[f1.len .. f1.len + f2.len], f2);
-        std.mem.copyForwards(u8, combined[f1.len + f2.len .. total_len], f3);
-
-        // Feed half-packet byte-by-byte for the first frame
-        let idx: usize = 0;
-        while (idx < f1.len - 1) : (idx += 1) {
-            framer.feed(combined[idx .. idx + 1])?;
-            expect_eq(framer.nextFrame(alloc)? == null, true);
-        }
-
-        // Feed remaining bytes (last byte of f1 + all of f2 + all of f3) at once (sticky!)
-        framer.feed(combined[f1.len - 1 .. total_len])?;
-
-        const out1 = (framer.nextFrame(alloc)?).?;
-        defer alloc.free(out1);
-        expect_eq(std.mem.eql(u8, out1, p1), true);
-
-        const out2 = (framer.nextFrame(alloc)?).?;
-        defer alloc.free(out2);
-        expect_eq(std.mem.eql(u8, out2, p2), true);
-
-        const out3 = (framer.nextFrame(alloc)?).?;
-        defer alloc.free(out3);
-        expect_eq(std.mem.eql(u8, out3, p3), true);
-
-        expect_eq(framer.nextFrame(alloc)? == null, true);
-        expect_eq(framer.bufferedBytes(), 0 as usize);
-    }
-}
-
-fn testFramerTamperAndDosGuards()! {
-    const alloc = std.testing.allocator;
-
-    let framer = LengthPrefixedFramer.init(alloc, FrameHeaderKind.U32Be, 64, true);
-    defer framer.deinit();
-
-    // 1. Tampered payload -> InvalidChecksum
-    let valid = framer.encodeFrame(alloc, "secure-payload")?;
-    defer alloc.free(valid);
-    valid[6] = valid[6] ^ 0xFF;
-    framer.feed(valid)?;
-    switch (framer.nextFrame(alloc)) {
-        null => expect_eq(true, false),
-        v => { alloc.free(v); expect_eq(true, false); },
-        err(e) => expect_eq(e == TlvError.InvalidChecksum, true),
-    }
-
-    // 2. Oversized encodeFrame -> FrameTooLarge
-    const big_payload: [65]u8 = [0xAA; 65];
-    switch (framer.encodeFrame(alloc, &big_payload)) {
-        v => { alloc.free(v); expect_eq(true, false); },
-        err(e) => expect_eq(e == TlvError.FrameTooLarge, true),
-    }
-
-    // 3. Oversized incoming header -> FrameTooLarge immediately without needing full body
-    const evil_hdr: [4]u8 = [0x00, 0x00, 0x01, 0x00]; // 256 > 64
-    framer.feed(&evil_hdr)?;
-    switch (framer.nextFrame(alloc)) {
-        null => expect_eq(true, false),
-        v => { alloc.free(v); expect_eq(true, false); },
-        err(e) => expect_eq(e == TlvError.FrameTooLarge, true),
-    }
-}
-
-fn testCapDynamicNamespaceMount()! {
-    const alloc = std.testing.allocator;
-
-    expect_eq(cap.tlv.crc32c("123456789"), 0xE3069283 as u32);
-    expect_eq(cap.tlv.TLV_MAX_DEPTH, 32 as usize);
+    expect_eq(cap.tlv.TLV_MAX_DEPTH, TLV_MAX_DEPTH);
 
     let w = cap.tlv.TlvWriter.init(alloc);
     defer w.deinit();
-    w.writeStr(0x000A, "dynamic-cap-tlv")?;
+    w.beginSequence()?;
+    w.writeOid("1.3.6.1.5.5.7.1.1")?;
+    w.writeUtf8String("ok")?;
+    w.endConstructed()?;
+
     const raw = w.toOwnedSlice()?;
     defer alloc.free(raw);
 
-    let r = cap.tlv.TlvReader.init(raw);
-    const f = r.findTag(0x000A)?;
-    expect_eq(std.mem.eql(u8, f.asStr()?, "dynamic-cap-tlv"), true);
+    let root = cap.tlv.decodeDer(alloc, raw)?;
+    defer root.deinit(alloc);
+
+    const oid_str = cap.tlv.decodeOid(alloc, root.children[0].raw_value)?;
+    defer alloc.free(oid_str);
+    expect_eq(std.mem.eql(u8, oid_str, "1.3.6.1.5.5.7.1.1"), true);
+    expect_eq(std.mem.eql(u8, root.children[1].asUtf8String()?, "ok"), true);
+
+    const reencoded = cap.tlv.encodeDerNode(alloc, root)?;
+    defer alloc.free(reencoded);
+    expect_eq(std.mem.eql(u8, raw, reencoded), true);
 }
 
-test("tlv: writer/reader multi-type round-trip, nested containers, findTag, TypeMismatch, Truncated, MaxDepthExceeded", () => {
-    testTlvRoundTripAndGuards() catch unreachable;
+test("tlv: DER SEQUENCE/SET & high-tag-number round-trip", () => {
+    try testSequenceSetAndHighTagRoundTrip();
 });
 
-test("tlv: Castagnoli crc32c standard check vectors", () => {
-    testCrc32cVectors();
+test("tlv: OID dotted string <-> DER octets bidirectional conversion", () => {
+    try testOidBidirectionalConversion();
 });
 
-test("tlv: LengthPrefixedFramer byte-by-byte half-packet & multi-frame sticky-packet reassembly", () => {
-    testFramerHalfAndStickyPackets() catch unreachable;
+test("tlv: TlvWriter minimal two's-complement integer normalization", () => {
+    try testIntegerMinimalNormalization();
 });
 
-test("tlv: frame tampering InvalidChecksum, FrameTooLarge DoS guard & zero memory leak", () => {
-    testFramerTamperAndDosGuards() catch unreachable;
+test("tlv: strict DER guards (NonCanonicalLength, 0x80, MaxDepthExceeded, EOF, TrailingBytes)", () => {
+    try testStrictDerGuards();
 });
 
-test("tlv: dynamic cap.tlv namespace mounting", () => {
-    testCapDynamicNamespaceMount() catch unreachable;
+test("tlv: dynamic cap.tlv namespace mounting & zero-leak", () => {
+    try testDynamicCapTlvNamespace();
 });

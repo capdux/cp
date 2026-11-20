@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:tlv` 纯 CP ASN.1 BER/DER Tag-Length-Value 严格编解码、OID 双向互转与流式构建引擎（支持 `cap.tlv` 自动动态挂载，详见 `doc/lib/tlv.md`）（5/5 PASS，自动动态挂载 `cap.tlv`）
+- **升级/重构标准库**：`lib/tlv/{types,oid,decoder,encoder,index}.cp`（移除旧 `tlv.cp`），实现单/高编号 Base-128 Tag、严格 DER 长度/不定长/深度防护解码、点分 OID 双向互转及整数最小补码规范化 `TlvWriter`。
+- **更新文档与测试**：`doc/lib/tlv.md` 扁平文档与 `cap/test/test_tlv_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:semver_range` 纯 CP Semver 2.0 语义化版本解析、npm/Cargo 范围表达式求值与选版引擎（支持 `cap.semver_range` 自动动态挂载，详见 `doc/lib/semver_range.md`）（5/5 PASS，自动动态挂载 `cap.semver_range`）
 - **新增标准库**：`lib/semver_range/{types,version,range,selector,index}.cp`，实现严格 Semver 2.0 解析比较、Caret/Tilde/通配符/连字符区间/`||` 并集范围求值、默认预发布隔离与 `maxSatisfying`/`minSatisfying`/`intersects` 选版引擎。
 - **新增文档与测试**：`doc/lib/semver_range.md` 扁平文档与 `cap/test/test_semver_range_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
