@@ -62,3 +62,6 @@
 ### 2026-11-21（文档目录非复数化与扁平化重构：`docs/` -> `doc/lib/*.md`）
 - **用户指令**：将 `docs/` 改为单数 `doc/`，所有库文件说明统一扁平放入 `doc/lib/<mod>.md`，去掉文件同名目录。
 - **执行成果**：已通过 `git mv` 将全部 85 份已提交标准库文档迁移至 `doc/lib/*.md`，清理 `docs/pack/zlig.md` 及 `docs/stdlib/` 16 份历史重复稿，全量更新 `cp_lib_ref.md`、`cp_agent_ref.md` 与 `GEMINI.md` 路径引用（`docs/` 0 残留），并通知后台运行中的子智能体使用新路径，单次提交固化。
+
+### 2026-11-21（3 路 `cap:cluster` / `cap:geo` / `cap:graph` 合并验收提交，旧 `docs/` 彻底清空，启动 `cap:crdt` / `cap:color` / `cap:decimal` 3 路并行）
+- **执行成果**：子智能体 34（`lib/cluster/` 5/5）、35（`lib/geo/` 5/5）、33（`lib/graph/` 5/5）全部经 `verify_module.sh` 一键验收回收，文档全部归口至 `doc/lib/` 且旧 `docs/` 目录已彻底删除，合并单次提交 Git；当前无缝维持 `lib/crdt/`、`lib/color/`、`lib/decimal/`（高精度 Decimal128 金融定点算术与货币分配）3 路正交并行。

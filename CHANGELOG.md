@@ -2,6 +2,14 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 3 路新标准库 `cap:cluster`/`cap:geo`/`cap:graph` 全绿落地（15/15 PASS，全部归口 `doc/lib/*.md` 并清零旧 `docs/` 目录）
+
+- **`cap:cluster`**（[`lib/cluster/`](file:///data/dev/cp/lib/cluster/index.cp)）：虚拟节点二分查找 `ConsistentHashRing`（含物理节点去重 `getReplicaNodes`）、SWIM `incarnation` CRDT `MembershipTable` 及单调 `fencing_token` 防脑裂 `LeaderLease`，文档 [`doc/lib/cluster.md`](file:///data/dev/cp/doc/lib/cluster.md)，`-m` 5/5 PASS；
+- **`cap:geo`**（[`lib/geo/`](file:///data/dev/cp/lib/geo/index.cp)）：`LatLng`/`BBox`/`Geo`（Haversine 测距/方位角/目标点投影/多边形地理围栏）、Base32 `Geohash`（1..12 位编解码 + 8 邻域）与 `SpatialIndex`（`withinRadius`/`nearestK`），文档 [`doc/lib/geo.md`](file:///data/dev/cp/doc/lib/geo.md)，`-m` 5/5 PASS；
+- **`cap:graph`**（[`lib/graph/`](file:///data/dev/cp/lib/graph/index.cp)）：有向无向加权图 `Graph`（BFS/DFS/GraphRAG `kHopSubgraph`）及 `GraphAlgo`（`dijkstra`/`topologicalSort`/迭代式 `tarjanScc`/`kruskalMst`/`pageRank`），文档 [`doc/lib/graph.md`](file:///data/dev/cp/doc/lib/graph.md)，`-m` 5/5 PASS；同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)。
+
+---
+
 ## [2026-11-21] - 文档目录非复数化与扁平化重构：`docs/<mod>/<mod>.md` → `doc/lib/<mod>.md`
 
 - 将原 `docs/` 统一重构为单数 `doc/`，全部 85 份标准库文档扁平化归口至 [`doc/lib/`](file:///data/dev/cp/doc/lib/)（消除 1 文件同名子目录，清理 `docs/pack/zlig.md` 拼写残留及 `docs/stdlib/` 16 份历史重复旧稿，保留 4 份独有文档并迁入 `doc/lib/`）；

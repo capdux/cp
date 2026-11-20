@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 3 路新标准库 `cap:cluster`/`cap:geo`/`cap:graph`（15/15 PASS）全绿合并提交，旧 `docs/` 彻底清零
+
+- **落地成果**：`lib/cluster/`、`lib/geo/`、`lib/graph/` 全部经 `verify_module.sh` 一键全绿通过，3 份手册归口至 `doc/lib/{cluster,geo,graph}.md` 并彻底移除旧 `docs/` 空目录，合并单次提交并维持 `lib/crdt/`、`lib/color/`、`lib/decimal/` 3 路并行。
+
+---
+
 ## 2026-11-21: 文档目录重构为 `doc/lib/<mod>.md`（非复数化 + 扁平化）
 
 - **重构成果**：响应用户建议将 `docs/` 改为单数 `doc/`，并将全部 85 份标准库手册从 `docs/<mod>/<mod>.md` 扁平化迁移至 `doc/lib/<mod>.md`，同步清理历史重复旧稿并全量重写 `cp_lib_ref.md`、`cp_agent_ref.md` 与 `GEMINI.md` 路径规范。
