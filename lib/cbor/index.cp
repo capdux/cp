@@ -1,5 +1,5 @@
 // Source: cp/lib/cbor/index.cp (Unified Exports for cap:cbor)
-// Pure CP RFC 8949 CBOR & MessagePack zero-dependency binary serialization engine.
+// Pure CP RFC 8949 CBOR & Deterministic Canonical Encoding + MessagePack binary serialization engine.
 
 export {
     BinError,
@@ -7,6 +7,10 @@ export {
     BinMapEntry,
     BinValue,
     BinDocument,
+    CborError,
+    CborMapEntry,
+    CborTag,
+    CborValue,
 } from "./value.cp";
 
 export {
@@ -16,6 +20,10 @@ export {
     CBOR_TAG_ENCODED_CBOR,
     CBOR_TAG_SELF_DESCRIBE,
     Cbor,
+    encode,
+    encodeCanonical,
+    decode,
+    decodeWithMaxDepth,
 } from "./cbor.cp";
 
 export {

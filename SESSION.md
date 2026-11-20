@@ -419,3 +419,9 @@
 
 ### 2026-11-21（`cap:otp` 验收提交，顶替拉起 `cap:xml` 维持 2 路常规并行）
 - **执行成果**：`lib/otp/`（5/5 PASS，`doc/lib/otp.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/xml/`（纯 CP XML 1.0 解析、命名空间/CDATA/实体转义与深度防护序列化引擎），与 `lib/cbor/` 维持 2 路常规并行。
+
+### 2026-11-21（确认 `cap:xml` 现网 5/5 PASS 保持向后兼容，切换拉起 `cap:aho` 维持 2 路常规并行）
+- **执行成果**：确认仓库现有 `lib/xml/`（被 `cap:sitemap`/`cap:selector`/`cap:feed` 依赖）已通过 `verify_module.sh` 5/5 PASS，保持现有 API 向后兼容未改；回收 `1aacbfb2` 并拉起全新 `Model: "inherit"` 子智能体 `lib/aho/`（Aho-Corasick 多模式自动机匹配引擎），与 `lib/cbor/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:cbor` 加固验收提交，顶替拉起 `cap:roaring` 维持 2 路常规并行）
+- **执行成果**：`lib/cbor/`（5/5 PASS，`doc/lib/cbor.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/roaring/`（Roaring Bitmap 自适应压缩位图集合引擎），与 `lib/aho/` 维持 2 路常规并行。

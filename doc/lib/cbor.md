@@ -1,17 +1,17 @@
-# CP 标准库：RFC 8949 CBOR 与 MessagePack 紧凑二进制编解码引擎 (`cap:cbor`)
+# CP 标准库：RFC 8949 CBOR 确定性编解码引擎 (`cap:cbor`)
 
 ## 一、 架构总览与设计准则
 
-`cap:cbor` 是 CP 语言官方内置的高性能紧凑二进制序列化标准库，提供 **RFC 8949 CBOR** 与 **MessagePack** 双向编解码能力。**零外部依赖、零 `std.posix`、零 `@import("bun")`**，既支持 `import { ... } from "cap:cbor"`，也支持 `import cap from "cap"; cap.cbor.*` 动态懒挂载调用。
+`cap:cbor` 是 CP 语言官方内置的高性能紧凑二进制序列化标准库，提供完整的 **RFC 8949 CBOR** 与 **Section 4.2 确定性规范编码（Deterministic Canonical Encoding）** 能力（同时兼容 `BinValue`/`BinDocument` 与 `MsgPack`）。**零外部依赖、零 `std.posix`、零 `@import("bun")`**，既支持 `import { ... } from "cap:cbor"`，也支持 `import cap from "cap"; cap.cbor.*` 动态懒挂载调用。
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                    CP 紧凑二进制编解码引擎 (cap:cbor)                    │
+│                    CP RFC 8949 CBOR 编解码引擎 (cap:cbor)                │
 ├───────────────────────┬─────────────────────────┬───────────────────────┤
-│ 共享二进制 AST        │ RFC 8949 CBOR 编解码器   │ MessagePack 编解码器  │
-│ BinValue / BinMapEntry│ Cbor.encode / decode    │ MsgPack.encode/decode │
-│ BinTag / BinDocument  │ Major 0-7 / Tag / f16   │ fix*/int*/uint*/bin*  │
-│ Arena 统一 O(1) 释放  │ 最短编码 + 64 层深度防护 │ 最短编码 + 64 层防护   │
+│ 强类型 CBOR AST       │ 确定性编码 (Sec 4.2)    │ 安全解码与深度防护     │
+│ CborValue / CborTag   │ encode / encodeCanonical│ decode / decodeWithMax│
+│ CborMapEntry / Error  │ 最短整数/Float16/32/64  │ UTF-8/AI28-30/Trailing│
+│ deinit(alloc) 零泄漏  │ Map 键按编码字节序排序  │ MaxDepthExceeded 防护  │
 └───────────────────────┴─────────────────────────┴───────────────────────┘
 ```
 
@@ -19,38 +19,33 @@
 
 | 文件路径 | 谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
-| `lib/cbor/value.cp` | `// Source: cp/lib/cbor/value.cp (Shared Compact Binary Value AST for CBOR & MessagePack)` | `BinError`、`BinTag`、`BinMapEntry`、`BinValue`、`eql(other)` 与 `BinDocument`（Arena 统一释放） |
-| `lib/cbor/cbor.cp` | `// Source: cp/lib/cbor/cbor.cp (RFC 8949 CBOR Encoder & Decoder)` | RFC 8949 Major 0-7 全支持、最小整数/浮点编码、Float16/32/64 解码、语义 Tag 与不定长解码 |
-| `lib/cbor/msgpack.cp` | `// Source: cp/lib/cbor/msgpack.cp (MessagePack Binary Encoder & Decoder)` | MessagePack 全格式编解码（fixint/uint/int/float/str/bin/array/map）与安全边界防护 |
+| `lib/cbor/value.cp` | `// Source: cp/lib/cbor/value.cp (Shared Compact Binary Value AST for CBOR & MessagePack)` | `CborError`、`CborTag`、`CborMapEntry`、`CborValue`（含 `deinit(allocator)` 与 `eql(other)`）以及 `BinValue`/`BinDocument` |
+| `lib/cbor/cbor.cp` | `// Source: cp/lib/cbor/cbor.cp (RFC 8949 CBOR Encoder & Decoder)` | `encode`、`encodeCanonical`、`decode`、`decodeWithMaxDepth`（Major 0-7、Float16/32/64、Tag、UTF-8 校验、64 层深度防护） |
+| `lib/cbor/msgpack.cp` | `// Source: cp/lib/cbor/msgpack.cp (MessagePack Binary Encoder & Decoder)` | MessagePack 全格式编解码（兼容导出） |
 | `lib/cbor/index.cp` | `// Source: cp/lib/cbor/index.cp (Unified Exports for cap:cbor)` | `cap:cbor` 统一公开导出入口 |
 
 ---
 
 ## 二、 核心 API 详解
 
-### 1. 共享 AST 与文档容器（`value.cp`）
+### 1. 错误与 AST 类型（`value.cp`）
 
-- **`BinError`**：`UnexpectedEof`、`InvalidFormat`、`UnsupportedFeature`、`MaxDepthExceeded`、`TrailingBytes`、`OutOfMemory`。
-- **`BinTag`**：`{ tag: u64, value: *const BinValue }`，承载 CBOR Major 6 语义标签。
-- **`BinMapEntry`**：`{ key: BinValue, val: BinValue }`，支持任意 `BinValue` 作为键（整数、文本、字节等）。
-- **`BinValue`**：带载荷联合枚举：
-  - 变体：`Null`、`Bool(bool)`、`Uint(u64)`、`Int(i64)`、`Float(f64)`、`Bytes([]const u8)`、`Text([]const u8)`、`Array([]BinValue)`、`Map([]BinMapEntry)`、`Tag(BinTag)`；
-  - 工厂构造：`makeNull()`、`makeBool(v)`、`makeUint(v)`、`makeInt(v)`、`makeFloat(v)`、`makeBytes(v)`、`makeText(v)`、`makeArray(items)`、`makeMap(entries)`、`makeTag(tag, ptr)`、`allocTag(alloc, tag, inner)`；
-  - 查询与比较：`isNull()`、`asBool()`、`asUint()`、`asInt()`、`asFloat()`、`asBytes()`、`asText()`、`asArray()`、`asMap()`、`asTag()`、`get(key_text)`、`getIndex(idx)`、`len()`、`eql(other)`。
-- **`BinDocument`**：封装 `root: BinValue` 与内部 `std.heap.ArenaAllocator`，调用 `doc.deinit()` 即可 O(1) 一次性释放整棵解码树的所有字符串、字节串、数组、Map 与 Tag 节点内存。
+- **`CborError`**：
+  - `UnexpectedEof`、`InvalidAdditionalInfo`、`InvalidBreak`、`UnsupportedIndefinite`、`MaxDepthExceeded`、`TrailingBytes`、`InvalidUtf8`、`IntegerOverflow`、`OutOfMemory`。
+- **`CborMapEntry`**：`{ key: CborValue, value: CborValue }`，支持任意 `CborValue` 作为 Map 键。
+- **`CborTag`**：`{ tag: u64, value: *CborValue }`，承载 CBOR Major 6 语义标签。
+- **`CborValue`**（Tagged Union）：
+  - 变体：`unsigned: u64`、`negative: i64`、`bytes: []const u8`、`text: []const u8`、`array: []CborValue`、`map: []CborMapEntry`、`tag: CborTag`、`boolean: bool`、`null_val`、`undefined_val`、`float: f64`。
+  - 方法：`deinit(allocator)` 递归释放解码树内存；`eql(other)` 进行深度结构比较（支持 `NaN` 相等）。
 
-### 2. RFC 8949 CBOR 编解码器（`cbor.cp`）
+### 2. RFC 8949 编解码与确定性编码（`cbor.cp`）
 
-- **`Cbor.encode(alloc, val): ([]u8)!`**：按 RFC 8949 优选最短整数与 IEEE 754 最短浮点（Float16/Float32/Float64）编码全部 Major 0-7 类型。
-- **`Cbor.decode(alloc, bytes): BinDocument!`** / **`Cbor.decodeValue(alloc, bytes): BinValue!`**（Arena 直出）：
-  - 完整解码 Major 0（`u64`）、Major 1（`-1 - n` 负整数，支持至 `i64` 最小值）、Major 2（定长/不定长字节串）、Major 3（定长/不定长 UTF-8 校验文本串）、Major 4（定长/不定长数组）、Major 5（定长/不定长 Map）、Major 6（Tag 0/1/24/任意 `u64` 标签）、Major 7（`false`/`true`/`null`/`undefined` 及 IEEE 754 Float16/Float32/Float64）；
-  - 最大嵌套深度 `CBOR_MAX_DEPTH = 64`，拦截截断报文（`UnexpectedEof`）与尾随垃圾字节（`TrailingBytes`）。
-
-### 3. MessagePack 编解码器（`msgpack.cp`）
-
-- **`MsgPack.encode(alloc, val): ([]u8)!`**：按最小空间编码 `positive/negative fixint`、`uint8/16/32/64`、`int8/16/32/64`、`nil`、`bool`、`float32/64`、`fixstr/str8/16/32`、`bin8/16/32`、`fixarray/array16/32`、`fixmap/map16/32`。
-- **`MsgPack.decode(alloc, bytes): BinDocument!`** / **`MsgPack.decodeValue(alloc, bytes): BinValue!`**（Arena 直出）：
-  - 完整解码 MessagePack 规范类型；最大嵌套深度 `MSGPACK_MAX_DEPTH = 64`，拒绝截断、保留字节 `0xC1`、非法 UTF-8 及尾随字节。
+- **`encode(allocator, value): ([]u8)!`**：按 RFC 8949 最短整数与最短 IEEE 754 浮点（Float16/Float32/Float64）编码全部 Major 0-7 类型。
+- **`encodeCanonical(allocator, value): ([]u8)!`**：遵循 **RFC 8949 Section 4.2 确定性编码规范**（适用于 WebAuthn / COSE 签名）：
+  - 最小整数与长度前缀编码、最短无损浮点编码（NaN 规范化为 `0xF9 0x7E 0x00`）；
+  - 全部 Map 键递归按**规范 CBOR 编码后的字节序列字典升序**（`std.mem.order`）排列。
+- **`decode(allocator, bytes): CborValue!`** / **`decodeWithMaxDepth(allocator, bytes, max_depth): CborValue!`**：
+  - 完整解码 Major 0-7，校验 UTF-8（`InvalidUtf8`）、拒绝保留 Additional Info 28..30（`InvalidAdditionalInfo`）、孤立 Break `0xFF`（`InvalidBreak`）、不定长流（`UnsupportedIndefinite`）、`i64` 负整数溢出（`IntegerOverflow`）、尾随垃圾字节（`TrailingBytes`）及嵌套深度超限（`MaxDepthExceeded`）。
 
 ---
 
@@ -58,33 +53,24 @@
 
 ```typescript
 const std = @import("std");
-import { BinValue, BinMapEntry, Cbor, MsgPack } from "cap:cbor";
+import { CborValue, CborMapEntry, encodeCanonical, decode } from "cap:cbor";
 import cap from "cap";
 
-pub fn demoCborAndMsgPack()! {
+pub fn demoCanonicalCbor()! {
     const alloc = std.heap.page_allocator;
 
-    let entries: [2]BinMapEntry = [
-        BinMapEntry.init(BinValue.makeText("model"), BinValue.makeText("cp-agent")),
-        BinMapEntry.init(BinValue.makeText("score"), BinValue.makeFloat(1.0)),
+    let entries: [2]CborMapEntry = [
+        CborMapEntry{ key: CborValue.text("long_key"), value: CborValue.unsigned(100) },
+        CborMapEntry{ key: CborValue.unsigned(1), value: CborValue.text("short_int_key") },
     ];
-    const doc_val = BinValue.makeMap(&entries);
+    const val = CborValue.map(&entries);
 
-    // 1. CBOR 编码与解码
-    const cbor_bytes = Cbor.encode(alloc, doc_val)?;
-    defer alloc.free(cbor_bytes);
+    // 确定性编码：整数键 1 (0x01) 自动排在文本键 "long_key" (0x68...) 之前
+    const bytes = encodeCanonical(alloc, val)?;
+    defer alloc.free(bytes);
 
-    let decoded_cbor = Cbor.decode(alloc, cbor_bytes)?;
-    defer decoded_cbor.deinit();
-    const same_cbor = decoded_cbor.root.eql(doc_val);
-
-    // 2. MessagePack 编码与动态 cap.cbor 命名空间解码
-    const mp_bytes = MsgPack.encode(alloc, doc_val)?;
-    defer alloc.free(mp_bytes);
-
-    let decoded_mp = cap.cbor.MsgPack.decode(alloc, mp_bytes)?;
-    defer decoded_mp.deinit();
-    const same_mp = decoded_mp.root.eql(doc_val);
-    * = same_cbor && same_mp;
+    let decoded = cap.cbor.decode(alloc, bytes)?;
+    defer decoded.deinit(alloc);
+    * = decoded.eql(val);
 }
 ```

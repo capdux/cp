@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 升级加固 `cap:cbor` RFC 8949 CBOR 确定性编码与安全解码引擎（5/5 PASS，自动动态挂载 `cap.cbor`）
+- **新增与重构**：在 `lib/cbor/{value,cbor,index}.cp` 实现标准 `CborValue`（Major Type 0..7、`f16`/`f32`/`f64`、Tag）、RFC 8949 Section 4.2 `encodeCanonical` 确定性键排序编码与 `decode`/`decodeWithMaxDepth` 安全解码（严格 UTF-8、AI 28..30、Break、`TrailingBytes` 与 `MaxDepthExceeded` 防护），同时保留 `Bin*` 兼容导出。
+- **更新文档与测试**：`doc/lib/cbor.md` 扁平文档与 `cap/test/test_cbor_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:otp` RFC 4226 HOTP / RFC 6238 TOTP 与 `otpauth://` URI 认证引擎（5/5 PASS，自动动态挂载 `cap.otp`）
 - **新增标准库**：`lib/otp/{otp,index}.cp`，实现 RFC 4648 Base32 编解码、HOTP/TOTP（支持 `SHA1`/`SHA256`/`SHA512` 与 `6..8` 位前导零格式化）、恒定时间 `verifyTotp` 窗口漂移校验与防重放 `matched_step`，以及 `otpauth://` URI 格式化/解析。
 - **新增文档与测试**：`doc/lib/otp.md` 扁平文档与 `cap/test/test_otp_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

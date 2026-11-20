@@ -300,3 +300,192 @@ pub struct BinDocument {
         return _.root.eql(other.root);
     }
 }
+
+// ============================================================================
+// RFC 8949 CborValue AST & Error Types
+// ============================================================================
+
+pub err CborError {
+    UnexpectedEof,
+    InvalidAdditionalInfo,
+    InvalidBreak,
+    UnsupportedIndefinite,
+    MaxDepthExceeded,
+    TrailingBytes,
+    InvalidUtf8,
+    IntegerOverflow,
+    OutOfMemory,
+}
+
+pub struct CborMapEntry {
+    key: CborValue = .null_val,
+    value: CborValue = .null_val,
+
+    pub static fn init(key: CborValue, value: CborValue): CborMapEntry {
+        return CborMapEntry{ key: key, value: value };
+    }
+}
+
+pub struct CborTag {
+    tag: u64 = 0,
+    value: *CborValue = undefined,
+}
+
+pub enum CborValue {
+    unsigned: u64,
+    negative: i64,
+    bytes: []const u8,
+    text: []const u8,
+    array: []CborValue,
+    map: []CborMapEntry,
+    tag: CborTag,
+    boolean: bool,
+    null_val,
+    undefined_val,
+    float: f64,
+
+    pub static fn makeUnsigned(v: u64): CborValue {
+        zig { return .{ .unsigned = v }; }
+    }
+
+    pub static fn makeNegative(v: i64): CborValue {
+        zig { return .{ .negative = v }; }
+    }
+
+    pub static fn makeBytes(v: []const u8): CborValue {
+        zig { return .{ .bytes = v }; }
+    }
+
+    pub static fn makeText(v: []const u8): CborValue {
+        zig { return .{ .text = v }; }
+    }
+
+    pub static fn makeArray(items: []CborValue): CborValue {
+        zig { return .{ .array = items }; }
+    }
+
+    pub static fn makeMap(entries: []CborMapEntry): CborValue {
+        zig { return .{ .map = entries }; }
+    }
+
+    pub static fn makeTag(tag_num: u64, value_ptr: *CborValue): CborValue {
+        zig { return .{ .tag = .{ .tag = tag_num, .value = value_ptr } }; }
+    }
+
+    pub static fn makeBool(v: bool): CborValue {
+        zig { return .{ .boolean = v }; }
+    }
+
+    pub static fn makeNull(): CborValue {
+        return .null_val;
+    }
+
+    pub static fn makeUndefined(): CborValue {
+        return .undefined_val;
+    }
+
+    pub static fn makeFloat(v: f64): CborValue {
+        zig { return .{ .float = v }; }
+    }
+
+    pub fn deinit(*_, allocator: std.mem.Allocator) {
+        switch (_.*) {
+            .bytes b => {
+                allocator.free(b);
+            },
+            .text s => {
+                allocator.free(s);
+            },
+            .array items => {
+                let i: usize = 0;
+                while (i < items.len) : (i += 1) {
+                    items[i].deinit(allocator);
+                }
+                allocator.free(items);
+            },
+            .map entries => {
+                let i: usize = 0;
+                while (i < entries.len) : (i += 1) {
+                    entries[i].key.deinit(allocator);
+                    entries[i].value.deinit(allocator);
+                }
+                allocator.free(entries);
+            },
+            .tag t => {
+                t.value.*.deinit(allocator);
+                allocator.destroy(t.value);
+            },
+            .unsigned, .negative, .boolean, .null_val, .undefined_val, .float => {},
+        }
+    }
+
+    pub fn eql(other: CborValue): bool {
+        return switch (_) {
+            .unsigned a => switch (other) {
+                .unsigned b => a == b,
+                else => false,
+            },
+            .negative a => switch (other) {
+                .negative b => a == b,
+                else => false,
+            },
+            .bytes a => switch (other) {
+                .bytes b => std.mem.eql(u8, a, b),
+                else => false,
+            },
+            .text a => switch (other) {
+                .text b => std.mem.eql(u8, a, b),
+                else => false,
+            },
+            .array a => switch (other) {
+                .array b => {
+                    if (a.len != b.len) return false;
+                    let i: usize = 0;
+                    while (i < a.len) : (i += 1) {
+                        if (!a[i].eql(b[i])) return false;
+                    }
+                    return true;
+                },
+                else => false,
+            },
+            .map a => switch (other) {
+                .map b => {
+                    if (a.len != b.len) return false;
+                    let i: usize = 0;
+                    while (i < a.len) : (i += 1) {
+                        if (!a[i].key.eql(b[i].key)) return false;
+                        if (!a[i].value.eql(b[i].value)) return false;
+                    }
+                    return true;
+                },
+                else => false,
+            },
+            .tag a => switch (other) {
+                .tag b => {
+                    if (a.tag != b.tag) return false;
+                    return a.value.*.eql(b.value.*);
+                },
+                else => false,
+            },
+            .boolean a => switch (other) {
+                .boolean b => a == b,
+                else => false,
+            },
+            .null_val => switch (other) {
+                .null_val => true,
+                else => false,
+            },
+            .undefined_val => switch (other) {
+                .undefined_val => true,
+                else => false,
+            },
+            .float a => switch (other) {
+                .float b => {
+                    if (std.math.isNan(a) && std.math.isNan(b)) return true;
+                    return a == b;
+                },
+                else => false,
+            },
+        };
+    }
+}

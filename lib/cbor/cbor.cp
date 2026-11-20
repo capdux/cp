@@ -5,7 +5,17 @@
 // max nesting depth 64 guard, and strict EOF / trailing-bytes validation.
 
 const std = @import("std");
-import { BinError, BinTag, BinMapEntry, BinValue, BinDocument } from "./value.cp";
+import {
+    BinError,
+    BinTag,
+    BinMapEntry,
+    BinValue,
+    BinDocument,
+    CborError,
+    CborMapEntry,
+    CborTag,
+    CborValue,
+} from "./value.cp";
 
 pub const CBOR_MAX_DEPTH: usize = 64;
 
@@ -498,4 +508,392 @@ pub struct Cbor {
         doc.root = Cbor.decodeValue(arena_alloc, bytes)?;
         return doc;
     }
+}
+
+// ============================================================================
+// RFC 8949 CborValue & Deterministic Canonical Encoding API (Section 4.2)
+// ============================================================================
+
+struct CanonicalMapItem {
+    key_bytes: []u8 = "",
+    val_bytes: []u8 = "",
+}
+
+fn canonicalItemLessThan(_: void, a: CanonicalMapItem, b: CanonicalMapItem): bool {
+    return std.mem.order(u8, a.key_bytes, b.key_bytes) == .lt;
+}
+
+fn encodeCborValue(
+    out: *std.ArrayList(u8),
+    alloc: std.mem.Allocator,
+    value: CborValue,
+    depth: usize,
+    canonical: bool,
+): ! {
+    switch (value) {
+        .unsigned u => {
+            Cbor.writeTypeAndArg(out, alloc, 0, u) catch return err.OutOfMemory;
+        },
+        .negative i => {
+            if (i >= 0) {
+                Cbor.writeTypeAndArg(out, alloc, 0, i as u64) catch return err.OutOfMemory;
+            } else {
+                let n: u64 = 0;
+                zig {
+                    n = @intCast(-(i +% 1));
+                }
+                Cbor.writeTypeAndArg(out, alloc, 1, n) catch return err.OutOfMemory;
+            }
+        },
+        .bytes bs => {
+            Cbor.writeTypeAndArg(out, alloc, 2, bs.len as u64) catch return err.OutOfMemory;
+            out.appendSlice(alloc, bs) catch return err.OutOfMemory;
+        },
+        .text s => {
+            Cbor.writeTypeAndArg(out, alloc, 3, s.len as u64) catch return err.OutOfMemory;
+            out.appendSlice(alloc, s) catch return err.OutOfMemory;
+        },
+        .array items => {
+            if (depth >= CBOR_MAX_DEPTH) {
+                return err.MaxDepthExceeded;
+            }
+            Cbor.writeTypeAndArg(out, alloc, 4, items.len as u64) catch return err.OutOfMemory;
+            for (item of items) {
+                encodeCborValue(out, alloc, item, depth + 1, canonical)?;
+            }
+        },
+        .map entries => {
+            if (depth >= CBOR_MAX_DEPTH) {
+                return err.MaxDepthExceeded;
+            }
+            Cbor.writeTypeAndArg(out, alloc, 5, entries.len as u64) catch return err.OutOfMemory;
+            if (!canonical || entries.len <= 1) {
+                for (entry of entries) {
+                    encodeCborValue(out, alloc, entry.key, depth + 1, canonical)?;
+                    encodeCborValue(out, alloc, entry.value, depth + 1, canonical)?;
+                }
+                return;
+            }
+
+            let items: std.ArrayList(CanonicalMapItem) = .empty;
+            errdefer {
+                for (it of items.items) {
+                    alloc.free(it.key_bytes);
+                    alloc.free(it.val_bytes);
+                }
+                items.deinit(alloc);
+            }
+
+            for (entry of entries) {
+                let kbuf: std.ArrayList(u8) = .empty;
+                errdefer kbuf.deinit(alloc);
+                encodeCborValue(&kbuf, alloc, entry.key, depth + 1, true)?;
+                const kb = kbuf.toOwnedSlice(alloc) catch return err.OutOfMemory;
+                errdefer alloc.free(kb);
+
+                let vbuf: std.ArrayList(u8) = .empty;
+                errdefer vbuf.deinit(alloc);
+                encodeCborValue(&vbuf, alloc, entry.value, depth + 1, true)?;
+                const vb = vbuf.toOwnedSlice(alloc) catch return err.OutOfMemory;
+                errdefer alloc.free(vb);
+
+                items.append(alloc, CanonicalMapItem{ key_bytes: kb, val_bytes: vb }) catch return err.OutOfMemory;
+            }
+
+            std.sort.pdq(CanonicalMapItem, items.items, {}, canonicalItemLessThan);
+
+            for (it of items.items) {
+                out.appendSlice(alloc, it.key_bytes) catch return err.OutOfMemory;
+                out.appendSlice(alloc, it.val_bytes) catch return err.OutOfMemory;
+            }
+
+            for (it of items.items) {
+                alloc.free(it.key_bytes);
+                alloc.free(it.val_bytes);
+            }
+            items.deinit(alloc);
+        },
+        .tag t => {
+            if (depth >= CBOR_MAX_DEPTH) {
+                return err.MaxDepthExceeded;
+            }
+            Cbor.writeTypeAndArg(out, alloc, 6, t.tag) catch return err.OutOfMemory;
+            encodeCborValue(out, alloc, t.value.*, depth + 1, canonical)?;
+        },
+        .boolean b => {
+            out.append(alloc, if (b) 0xF5 else 0xF4) catch return err.OutOfMemory;
+        },
+        .null_val => {
+            out.append(alloc, 0xF6) catch return err.OutOfMemory;
+        },
+        .undefined_val => {
+            out.append(alloc, 0xF7) catch return err.OutOfMemory;
+        },
+        .float f => {
+            Cbor.writeFloat(out, alloc, f) catch return err.OutOfMemory;
+        },
+    }
+}
+
+pub fn encode(allocator: std.mem.Allocator, value: CborValue): ([]u8)! {
+    let out: std.ArrayList(u8) = .empty;
+    errdefer out.deinit(allocator);
+
+    encodeCborValue(&out, allocator, value, 0, false)?;
+    return out.toOwnedSlice(allocator) catch return err.OutOfMemory;
+}
+
+pub fn encodeCanonical(allocator: std.mem.Allocator, value: CborValue): ([]u8)! {
+    let out: std.ArrayList(u8) = .empty;
+    errdefer out.deinit(allocator);
+
+    encodeCborValue(&out, allocator, value, 0, true)?;
+    return out.toOwnedSlice(allocator) catch return err.OutOfMemory;
+}
+
+struct CborValueReader {
+    src: []const u8 = "",
+    pos: usize = 0,
+    alloc: std.mem.Allocator = undefined,
+    max_depth: usize = CBOR_MAX_DEPTH,
+
+    fn remaining(): usize {
+        if (_.pos >= _.src.len) return 0;
+        return _.src.len - _.pos;
+    }
+
+    fn readByte(*_): u8! {
+        if (_.pos >= _.src.len) {
+            return err.UnexpectedEof;
+        }
+        const b = _.src[_.pos];
+        _.pos += 1;
+        return b;
+    }
+
+    fn readSlice(*_, n: usize): ([]const u8)! {
+        if (n > _.remaining()) {
+            return err.UnexpectedEof;
+        }
+        const s = _.src[_.pos .. _.pos + n];
+        _.pos += n;
+        return s;
+    }
+
+    fn readUint16(*_): u16! {
+        const s = _.readSlice(2)?;
+        return ((s[0] as u16) << 8) | (s[1] as u16);
+    }
+
+    fn readUint32(*_): u32! {
+        const s = _.readSlice(4)?;
+        return ((s[0] as u32) << 24) |
+            ((s[1] as u32) << 16) |
+            ((s[2] as u32) << 8) |
+            (s[3] as u32);
+    }
+
+    fn readUint64(*_): u64! {
+        const s = _.readSlice(8)?;
+        return ((s[0] as u64) << 56) |
+            ((s[1] as u64) << 48) |
+            ((s[2] as u64) << 40) |
+            ((s[3] as u64) << 32) |
+            ((s[4] as u64) << 24) |
+            ((s[5] as u64) << 16) |
+            ((s[6] as u64) << 8) |
+            (s[7] as u64);
+    }
+
+    fn readArg(*_, ai: u8): u64! {
+        if (ai < 24) {
+            return ai as u64;
+        }
+        if (ai == 24) {
+            return (_.readByte()?) as u64;
+        }
+        if (ai == 25) {
+            return (_.readUint16()?) as u64;
+        }
+        if (ai == 26) {
+            return (_.readUint32()?) as u64;
+        }
+        if (ai == 27) {
+            return _.readUint64()?;
+        }
+        return err.InvalidAdditionalInfo;
+    }
+
+    fn readCborValue(*_, depth: usize): CborValue! {
+        const ib = _.readByte()?;
+        const major = ib >> 5;
+        const ai = ib & 0x1F;
+
+        switch (major) {
+            0 => {
+                if (ai == 31) return err.InvalidAdditionalInfo;
+                const v = _.readArg(ai)?;
+                return CborValue.makeUnsigned(v);
+            },
+            1 => {
+                if (ai == 31) return err.InvalidAdditionalInfo;
+                const n = _.readArg(ai)?;
+                if (n > 9223372036854775807) {
+                    return err.IntegerOverflow;
+                }
+                return CborValue.makeNegative(-1 - (n as i64));
+            },
+            2 => {
+                if (ai == 31) return err.UnsupportedIndefinite;
+                const len_u64 = _.readArg(ai)?;
+                if (len_u64 > (_.remaining() as u64)) {
+                    return err.UnexpectedEof;
+                }
+                const raw = _.readSlice(len_u64 as usize)?;
+                const duped = _.alloc.dupe(u8, raw) catch return err.OutOfMemory;
+                return CborValue.makeBytes(duped);
+            },
+            3 => {
+                if (ai == 31) return err.UnsupportedIndefinite;
+                const len_u64 = _.readArg(ai)?;
+                if (len_u64 > (_.remaining() as u64)) {
+                    return err.UnexpectedEof;
+                }
+                const raw = _.readSlice(len_u64 as usize)?;
+                if (!std.unicode.utf8ValidateSlice(raw)) {
+                    return err.InvalidUtf8;
+                }
+                const duped = _.alloc.dupe(u8, raw) catch return err.OutOfMemory;
+                return CborValue.makeText(duped);
+            },
+            4 => {
+                if (depth >= _.max_depth) {
+                    return err.MaxDepthExceeded;
+                }
+                if (ai == 31) return err.UnsupportedIndefinite;
+                const count_u64 = _.readArg(ai)?;
+                if (count_u64 > (_.remaining() as u64)) {
+                    return err.UnexpectedEof;
+                }
+                const count = count_u64 as usize;
+                let items = _.alloc.alloc(CborValue, count) catch return err.OutOfMemory;
+                let decoded_count: usize = 0;
+                errdefer {
+                    let j: usize = 0;
+                    while (j < decoded_count) : (j += 1) {
+                        items[j].deinit(_.alloc);
+                    }
+                    _.alloc.free(items);
+                }
+                while (decoded_count < count) : (decoded_count += 1) {
+                    items[decoded_count] = _.readCborValue(depth + 1)?;
+                }
+                return CborValue.makeArray(items);
+            },
+            5 => {
+                if (depth >= _.max_depth) {
+                    return err.MaxDepthExceeded;
+                }
+                if (ai == 31) return err.UnsupportedIndefinite;
+                const count_u64 = _.readArg(ai)?;
+                if (count_u64 > ((_.remaining() / 2) as u64)) {
+                    return err.UnexpectedEof;
+                }
+                const count = count_u64 as usize;
+                let entries = _.alloc.alloc(CborMapEntry, count) catch return err.OutOfMemory;
+                let decoded_count: usize = 0;
+                errdefer {
+                    let j: usize = 0;
+                    while (j < decoded_count) : (j += 1) {
+                        entries[j].key.deinit(_.alloc);
+                        entries[j].value.deinit(_.alloc);
+                    }
+                    _.alloc.free(entries);
+                }
+                while (decoded_count < count) : (decoded_count += 1) {
+                    let k = _.readCborValue(depth + 1)?;
+                    errdefer k.deinit(_.alloc);
+                    const v = _.readCborValue(depth + 1)?;
+                    entries[decoded_count] = CborMapEntry{ key: k, value: v };
+                }
+                return CborValue.makeMap(entries);
+            },
+            6 => {
+                if (depth >= _.max_depth) {
+                    return err.MaxDepthExceeded;
+                }
+                if (ai == 31) return err.InvalidAdditionalInfo;
+                const tag_num = _.readArg(ai)?;
+                let inner = _.readCborValue(depth + 1)?;
+                errdefer inner.deinit(_.alloc);
+                let boxed = _.alloc.create(CborValue) catch return err.OutOfMemory;
+                unsafe {
+                    boxed.* = inner;
+                }
+                return CborValue.makeTag(tag_num, boxed);
+            },
+            7 => {
+                if (ai == 20) return CborValue.makeBool(false);
+                if (ai == 21) return CborValue.makeBool(true);
+                if (ai == 22) return .null_val;
+                if (ai == 23) return .undefined_val;
+                if (ai == 24) {
+                    const s = _.readByte()?;
+                    if (s < 32) return err.InvalidAdditionalInfo;
+                    return err.InvalidAdditionalInfo;
+                }
+                if (ai == 25) {
+                    const bits = _.readUint16()?;
+                    let f: f64 = 0.0;
+                    zig {
+                        const h: f16 = @bitCast(bits);
+                        f = @floatCast(h);
+                    }
+                    return CborValue.makeFloat(f);
+                }
+                if (ai == 26) {
+                    const bits = _.readUint32()?;
+                    let f: f64 = 0.0;
+                    zig {
+                        const s: f32 = @bitCast(bits);
+                        f = @floatCast(s);
+                    }
+                    return CborValue.makeFloat(f);
+                }
+                if (ai == 27) {
+                    const bits = _.readUint64()?;
+                    let f: f64 = 0.0;
+                    zig {
+                        f = @bitCast(bits);
+                    }
+                    return CborValue.makeFloat(f);
+                }
+                if (ai == 31) return err.InvalidBreak;
+                return err.InvalidAdditionalInfo;
+            },
+            else => return err.InvalidAdditionalInfo,
+        }
+    }
+}
+
+pub fn decodeWithMaxDepth(allocator: std.mem.Allocator, bytes: []const u8, max_depth: usize): CborValue! {
+    if (bytes.len == 0) {
+        return err.UnexpectedEof;
+    }
+    let reader = CborValueReader{
+        src: bytes,
+        pos: 0,
+        alloc: allocator,
+        max_depth: max_depth,
+    };
+    let root = reader.readCborValue(0)?;
+    if (reader.pos < reader.src.len) {
+        root.deinit(allocator);
+        return err.TrailingBytes;
+    }
+    return root;
+}
+
+pub fn decode(allocator: std.mem.Allocator, bytes: []const u8): CborValue! {
+    return decodeWithMaxDepth(allocator, bytes, CBOR_MAX_DEPTH);
 }

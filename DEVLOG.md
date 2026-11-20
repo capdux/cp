@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 升级加固 `cap:cbor` RFC 8949 CBOR 确定性编码与安全解码引擎（5/5 PASS，文档直写 `doc/lib/cbor.md`）
+- **核心设计**：在兼容既有 `Bin*` 接口的前提下补齐 RFC 8949 标准 `CborValue` 与 `encodeCanonical`（最小整数/浮点及 Map 键按编码字节序排序），并在 `decode` 全链路通过 `errdefer` 清理已构造容器，`std.testing.allocator` 零泄漏。
+
 ## 2026-11-21: 新建 `cap:otp` RFC 4226 HOTP / RFC 6238 TOTP 与 `otpauth://` URI 认证引擎（5/5 PASS，文档直写 `doc/lib/otp.md`）
 - **核心设计**：采用显式 `unix_sec: u64` 注入规避系统时钟依赖，并通过 RFC 4226 Appendix D 与 RFC 6238 Appendix B 全量标准向量逐项比对验证；`verifyTotp` 使用恒定时间比较并返回 `matched_step` 便于上层防重放。
 
