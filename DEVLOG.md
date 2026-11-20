@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:svg` 矢量 SVG 画布与统计图表引擎（5/5 PASS，文档直写 `doc/lib/svg.md`）
+
+- **落地成果**：`lib/svg/`（`canvas.cp`/`charts.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:bpe`（Byte-Level BPE Tokenizer 训练、合并规则编码、字节级无损解码与 Special Tokens 隔离引擎），与 `lib/regex/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:sketch` HLL / T-Digest / 蓄水池概率素描引擎（5/5 PASS，文档直写 `doc/lib/sketch.md`）
 
 - **落地成果**：`lib/sketch/`（`sketch.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:regex`（抗 ReDoS 线性时间 Pike VM / Thompson NFA 正则表达式编译器、捕获组与替换分割引擎），与 `lib/svg/` 保持 2 路正交并行。

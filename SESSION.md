@@ -224,3 +224,6 @@
 
 ### 2026-11-21（`cap:sketch` 验收固化，顶替以 `inherit` 拉起 `cap:regex` 维持 2 路并行）
 - **执行成果**：`lib/sketch/`（5/5 PASS，含 `cap.sketch` 动态挂载与 `doc/lib/sketch.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/regex/`（抗 ReDoS 线性时间 Pike VM / Thompson NFA 正则表达式引擎），与 `lib/svg/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:svg` 验收固化，顶替以 `inherit` 拉起 `cap:bpe` 维持 2 路并行）
+- **执行成果**：`lib/svg/`（5/5 PASS，含 `cap.svg` 动态挂载与 `doc/lib/svg.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/bpe/`（Byte-Level BPE Tokenizer 训练、编码、无损解码与 Special Tokens 隔离引擎），与 `lib/regex/` 保持 2 路正交并行。
