@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:bm25` 纯 CP Okapi BM25 倒排索引全文检索、邻接短语匹配与 RRF 混合检索融合引擎（支持 `cap.bm25` 自动动态挂载，详见 `doc/lib/bm25.md`）（5/5 PASS，文档直写 `doc/lib/bm25.md`）
+- **核心设计**：`Bm25Index` 在倒排表中记录词元位置列表支持二分邻接短语校验，并与 `rrfFuse` 协同为 `cap:hnsw` 混合检索提供词法打分基石，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:hnsw` 纯 CP HNSW 多层近似最近邻向量图索引（L2/Cosine/InnerProduct、Beam Search、软删除与二进制快照，支持 `cap.hnsw` 自动动态挂载，详见 `doc/lib/hnsw.md`）（5/5 PASS，文档直写 `doc/lib/hnsw.md`）
 - **核心设计**：采用确定性 SplitMix64 层高采样与双向邻接表裁剪保证图连通性与可复现性，并通过紧凑小端快照序列化与 `std.testing.allocator` 零泄漏验证。
 

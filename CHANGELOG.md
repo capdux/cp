@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:bm25` 纯 CP Okapi BM25 倒排索引全文检索、邻接短语匹配与 RRF 混合检索融合引擎（支持 `cap.bm25` 自动动态挂载，详见 `doc/lib/bm25.md`）（5/5 PASS，自动动态挂载 `cap.bm25`）
+- **新增标准库**：`lib/bm25/{tokenizer,bm25,rrf,index}.cp`，实现停用词与 UTF-8/CJK 保留分词器、支持 `removeDocument` 与 `positions` 邻接短语检索的 `Bm25Index` 及多路无量纲 `rrfFuse`。
+- **新增文档与测试**：`doc/lib/bm25.md` 扁平文档与 `cap/test/test_bm25_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:hnsw` 纯 CP HNSW 多层近似最近邻向量图索引（L2/Cosine/InnerProduct、Beam Search、软删除与二进制快照，支持 `cap.hnsw` 自动动态挂载，详见 `doc/lib/hnsw.md`）（5/5 PASS，自动动态挂载 `cap.hnsw`）
 - **新增标准库**：`lib/hnsw/{metric,graph,index}.cp`，实现 SplitMix64 `mL` 层高采样、贪心下降 + `ef_construction` Beam Search、`M`/`M0` 双向裁剪、`markDeleted` 软删除过滤及 `saveBytes`/`loadBytes` 二进制快照。
 - **新增文档与测试**：`doc/lib/hnsw.md` 扁平文档与 `cap/test/test_hnsw_production_deep.cp`（5/5 PASS，16D 120 向量 Recall@5 >= 0.9，经 `verify_module.sh` 校验通过）。
