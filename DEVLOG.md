@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:tensor` 纯 CP Strided 多维张量视图、广播代数、矩阵乘法与 Transformer 核心算子（Softmax/RMSNorm/LayerNorm/SiLU/GELU/RoPE）引擎（支持 `cap.tensor` 自动动态挂载，详见 `doc/lib/tensor.md`）（5/5 PASS，文档直写 `doc/lib/tensor.md`）
+- **核心设计**：`Tensor` 支持 `MAX_TENSOR_DIMS = 4` 的零拷贝步幅视图与连续化检查；`softmaxRows` 采用减去行最大值防溢出，全路径 `std.testing.allocator` 零泄漏。
+
 ## 2026-11-21: 新建 `cap:gguf` 纯 CP GGUF v2/v3 llama.cpp 本地大模型二进制格式解析、对齐写入与 Q8_0/Q4_0 块量化反量化引擎（支持 `cap.gguf` 自动动态挂载，详见 `doc/lib/gguf.md`）（5/5 PASS，文档直写 `doc/lib/gguf.md`）
 - **核心设计**：`parseGguf` 严格校验数组嵌套深度/长度炸弹上限与张量数据区间不越界总长度，`Q8_0`/`Q4_0` 实现 32 权重/块精确反量化，全路径零泄漏。
 

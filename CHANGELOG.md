@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:tensor` 纯 CP Strided 多维张量视图、广播代数、矩阵乘法与 Transformer 核心算子（Softmax/RMSNorm/LayerNorm/SiLU/GELU/RoPE）引擎（支持 `cap.tensor` 自动动态挂载，详见 `doc/lib/tensor.md`）（5/5 PASS，自动动态挂载 `cap.tensor`）
+- **新增标准库**：`lib/tensor/{core,ops,nn,index}.cp`，实现 Strided 零拷贝 `transpose2d`/`sliceAxis`、标量/行广播 `add`/`mul`、Strided `matmul` 及数值稳定 `softmaxRows`/`rmsNorm`/`layerNorm`/`silu`/`gelu`/`applyRope`。
+- **新增文档与测试**：`doc/lib/tensor.md` 扁平文档与 `cap/test/test_tensor_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:gguf` 纯 CP GGUF v2/v3 llama.cpp 本地大模型二进制格式解析、对齐写入与 Q8_0/Q4_0 块量化反量化引擎（支持 `cap.gguf` 自动动态挂载，详见 `doc/lib/gguf.md`）（5/5 PASS，自动动态挂载 `cap.gguf`）
 - **新增标准库**：`lib/gguf/{types,quant,parser,builder,index}.cp`，实现全 13 种 KV 元数据类型、`general.alignment` 2 的幂次对齐、张量区间防越界校验、`GgufBuilder` 以及标准 GGML `Q8_0`/`Q4_0` 块量化反量化。
 - **新增文档与测试**：`doc/lib/gguf.md` 扁平文档与 `cap/test/test_gguf_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

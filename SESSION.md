@@ -70,3 +70,6 @@
 
 ### 2026-11-21（`cap:gguf` 验收，顶替拉起 `cap:onnx` 维持 2 路常规并行）
 - **执行成果**：`lib/gguf/`（5/5 PASS，`doc/lib/gguf.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:onnx` 维持 2 路常规并行
+
+### 2026-11-21（`cap:tensor` 验收，顶替拉起 `cap:attention` 维持 2 路常规并行）
+- **执行成果**：`lib/tensor/`（5/5 PASS，`doc/lib/tensor.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:attention` 维持 2 路常规并行
