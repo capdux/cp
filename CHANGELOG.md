@@ -2,6 +2,14 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:unicode` 纯 CP UTF-8/UTF-16、UAX #29 Grapheme 与终端显示宽度引擎（5/5 PASS，自动动态挂载 `cap.unicode`）
+- **新增标准库**：`lib/unicode/{utf,props,grapheme,width,index}.cp`（吸收对标 Bun `src/unicode/`），实现 UTF-8/UTF-16 代理对编解码、Unicode 空白/标识符/大小写属性、零分配 `GraphemeIterator`（ZWJ/国旗/组合音标/CRLF）及跳过 ANSI 转义的 `displayWidth`/`truncateByWidth`。
+- **新增文档与测试**：`doc/lib/unicode.md` 扁平文档与 `cap/test/test_unicode_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
+## [2026-11-21] - 新建 `cap:picohttp` 纯 CP 零堆分配 HTTP/1.1 & Chunked 流式解析引擎（5/5 PASS，自动动态挂载 `cap.picohttp`）
+- **新增标准库**：`lib/picohttp/{picohttp,index}.cp`，基于 caller-provided 缓冲实现 RFC 9110/9112 `parseRequest`/`parseResponse`/`parseHeaders`、`ChunkedDecoder`（支持任意 `1..N` 字节半包跨 chunk、`chunk-ext` 与 Trailer 跳过）以及 `findHeader`/`parseContentLength` 冲突校验。
+- **新增文档与测试**：`doc/lib/picohttp.md` 扁平文档与 `cap/test/test_picohttp_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:interchange` 纯 CP JSON/JSONC/JSON5/TOML/YAML 统一数据交换引擎（5/5 PASS，自动动态挂载 `cap.interchange`）
 - **新增标准库**：`lib/interchange/{value,json5,bridge,interchange,index}.cp`（吸收对标 Bun `src/interchange/`），提供统一 `InterchangeValue`（含 `max_depth = 64`、`getPath`、`clone`、`equals`）、原生 JSON5/JSONC 解析序列化，并桥接复用 `cap:toml`/`cap:yaml` 实现五格式统一 `parse`/`parseAuto`/`stringify`/`convert`。
 - **新增文档与测试**：`doc/lib/interchange.md` 扁平文档与 `cap/test/test_interchange_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

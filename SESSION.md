@@ -596,3 +596,9 @@
 
 ### 2026-11-21（`cap:interchange` 验收提交，顶替拉起 `cap:unicode` 维持 2 路常规并行）
 - **执行成果**：`lib/interchange/`（5/5 PASS，`doc/lib/interchange.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/unicode/`（吸收对标 Bun `src/unicode/` 的 UTF-8/UTF-16 编解码、Unicode 属性/宽度计算与 Grapheme/大小写折叠原语引擎），与 `lib/picohttp/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:picohttp` 验收通过，顶替拉起 `cap:histogram` 维持 2 路常规并行）
+- **执行成果**：`lib/picohttp/`（5/5 PASS，`doc/lib/picohttp.md`）经 `verify_module.sh` 一次性验收回收；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/histogram/`（纯 CP 高动态范围 HDR 延迟直方图、P50/P95/P99/P999 精确分位统计、EWMA 与滑动窗口速率引擎），与 `lib/unicode/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:unicode` 验收合并提交，顶替拉起 `cap:oauth2` 维持 2 路常规并行）
+- **执行成果**：`lib/unicode/`（5/5 PASS，`doc/lib/unicode.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/picohttp/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/oauth2/`（RFC 6749/7636/7523 OAuth2 & PKCE/OIDC 授权码流、Client Credentials、Token 交换与 JWT Scope 校验引擎），与 `lib/histogram/` 维持 2 路常规并行。
