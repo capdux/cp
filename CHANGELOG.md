@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:geom2d` 2D 计算几何、凸包与碰撞检测引擎（5/5 PASS，自动动态挂载 `cap.geom2d`）
+
+- 新建 [`lib/geom2d/`](file:///data/dev/cp/lib/geom2d/index.cp)（`geom.cp`、`index.cp`）：`Point2`/`Segment2`/`Aabb2`/`Circle2` 及 `Geom2D`（`segmentsIntersect` & `segmentIntersectionPoint` 含 T 形与共线边界、`pointToSegmentDist`、Shoelace `polygonArea`/`polygonCentroid`、射线法 `pointInPolygon`、Andrew 单调链 $O(N \log N)$ `convexHull` 及 AABB/Circle 碰撞）；文档 [`doc/lib/geom2d.md`](file:///data/dev/cp/doc/lib/geom2d.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_geom2d_production_deep.cp`](file:///data/dev/cp/cap/test/test_geom2d_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:fft` Cooley-Tukey Radix-2 FFT/IFFT 与频域卷积引擎（5/5 PASS，自动动态挂载 `cap.fft`）
 
 - 新建 [`lib/fft/`](file:///data/dev/cp/lib/fft/index.cp)（`fft.cp`、`index.cp`）：`Complex` & `Fft`（迭代位反转 Radix-2 `forward`/`inverse` 往返精度 `< 1e-9`、Hann/Hamming/Blackman 窗函数、Parseval 守恒 `rfftMagnitude`、`dominantFrequency` 频谱峰值提取及自动零填充 `convolve`）；文档 [`doc/lib/fft.md`](file:///data/dev/cp/doc/lib/fft.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_fft_production_deep.cp`](file:///data/dev/cp/cap/test/test_fft_production_deep.cp) `-m` 5/5 PASS。

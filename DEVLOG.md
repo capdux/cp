@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:geom2d` 2D 计算几何、凸包与碰撞检测引擎（5/5 PASS，文档直写 `doc/lib/geom2d.md`）
+
+- **落地成果**：`lib/geom2d/`（`geom.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:quadtree`（2D 空间四叉树索引、矩形/圆形范围检索与 K 近邻查询引擎），与 `lib/prob/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:fft` Radix-2 FFT/IFFT 与频谱分析引擎（5/5 PASS，文档直写 `doc/lib/fft.md`）
 
 - **落地成果**：`lib/fft/`（`fft.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），与 `lib/linalg/` 合并提交，并以 `Model: "inherit"` 顶替派发 `cap:geom2d`（2D 计算几何、Andrew 凸包、线段相交与碰撞检测引擎），与 `lib/prob/` 保持 2 路正交并行。

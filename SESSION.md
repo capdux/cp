@@ -239,3 +239,6 @@
 
 ### 2026-11-21（`cap:fft` 验收固化，顶替以 `inherit` 拉起 `cap:geom2d` 维持 2 路并行）
 - **执行成果**：`lib/fft/`（5/5 PASS，含 `cap.fft` 动态挂载与 `doc/lib/fft.md`）经 `verify_module.sh` 一键验收回收并与 `lib/linalg/` 合并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/geom2d/`（2D 计算几何、线段相交、Andrew 单调链凸包与 AABB/圆碰撞检测引擎），与 `lib/prob/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:geom2d` 验收固化，顶替以 `inherit` 拉起 `cap:quadtree` 维持 2 路并行）
+- **执行成果**：`lib/geom2d/`（5/5 PASS，含 `cap.geom2d` 动态挂载与 `doc/lib/geom2d.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/quadtree/`（2D 空间四叉树索引、矩形/圆形范围检索与 $K$ 近邻查询引擎），与 `lib/prob/` 保持 2 路正交并行。
