@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:timeseries` 时序存储、Rollup 降采样与 Z-Score 异常检测引擎（5/5 PASS，自动动态挂载 `cap.timeseries`）
+
+- 新建 [`lib/timeseries/`](file:///data/dev/cp/lib/timeseries/index.cp)（`series.cp`、`index.cp`）：`TimeSeries`（有限值与单调时间戳校验、`retention_ms` 均摊 $O(1)$ 头部淘汰、$O(\log N)$ 二分 `queryRange`、8 种 `AggOp` 步长对齐 `downsample`、支持归零重置的 `rate`、`sma`/`ema` 平滑、Welford `summarize`、`detectAnomaliesZScore` 与 `toJson`）；文档 [`doc/lib/timeseries.md`](file:///data/dev/cp/doc/lib/timeseries.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_timeseries_production_deep.cp`](file:///data/dev/cp/cap/test/test_timeseries_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:guardrail` AI Agent 安全护栏、PII/密钥脱敏与输入输出拦截引擎（5/5 PASS，自动动态挂载 `cap.guardrail`）
 
 - 新建 [`lib/guardrail/`](file:///data/dev/cp/lib/guardrail/index.cp)（`pii.cp`、`policy.cp`、`index.cp`）：`PiiScanner`（Email/IPv4/Luhn 校验银行卡/`sk-`/`ghp_`/`AKIA`/JWT 识别与 `redact`/`redactTyped` 脱敏）及 `GuardrailPolicy`（`Allow`/`Redact`/`Block` 多级流水线、超长/禁用短语/越界特征拦截与 `inspectInput`/`inspectOutput` 防泄漏）；文档 [`doc/lib/guardrail.md`](file:///data/dev/cp/doc/lib/guardrail.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_guardrail_production_deep.cp`](file:///data/dev/cp/cap/test/test_guardrail_production_deep.cp) `-m` 5/5 PASS。
