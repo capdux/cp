@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:audit` SHA-256 防篡改哈希链审计日志与合规导出引擎（5/5 PASS，自动动态挂载 `cap.audit`）
+
+- 新建 [`lib/audit/`](file:///data/dev/cp/lib/audit/index.cp)（`trail.cp`、`index.cp`）：`AuditTrail`（基于 `"CP-AUDIT-V1\x00"` 规范编码 + `cap:crypto` SHA-256 链式哈希、`verifyChain` 逐条验链并精确定位 `first_corrupt_seq`、按 `actor`/`action`/时间窗检索、`exportJsonl`/`importJsonl` 往返完整性校验及 RFC-4180 `exportCsv`）；文档 [`doc/lib/audit.md`](file:///data/dev/cp/doc/lib/audit.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_audit_production_deep.cp`](file:///data/dev/cp/cap/test/test_audit_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:di` IoC 依赖注入与生命周期管理服务容器（5/5 PASS，自动动态挂载 `cap.di`）
 
 - 新建 [`lib/di/`](file:///data/dev/cp/lib/di/index.cp)（`container.cp`、`index.cp`）：`ServiceContainer` & `ServiceScope`（`Singleton`/`Scoped`/`Transient` 三态生命周期、严格按实例化逆序 `deinit`、调用栈循环依赖 `CircularDependency` 环路路径追踪、`Singleton` 捕获 `Scoped` 的 `ScopeViolation` 防护、`registerMany` 多实现扩展点与 `build()` 冻结）；文档 [`doc/lib/di.md`](file:///data/dev/cp/doc/lib/di.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_di_production_deep.cp`](file:///data/dev/cp/cap/test/test_di_production_deep.cp) `-m` 5/5 PASS。

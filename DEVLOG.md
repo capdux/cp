@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:audit` 防篡改加密哈希链审计日志引擎（5/5 PASS，文档直写 `doc/lib/audit.md`）
+
+- **落地成果**：`lib/audit/`（`trail.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:migrate`（确定性 Schema/数据库迁移规划、SHA-256 历史脚本防篡改校验与回滚引擎），与 `lib/feature/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:di` IoC 依赖注入与生命周期管理服务容器（5/5 PASS，文档直写 `doc/lib/di.md`）
 
 - **落地成果**：`lib/di/`（`container.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:audit`（SHA-256 防篡改哈希链审计日志与合规留痕引擎），与 `lib/feature/` 保持 2 路正交并行。

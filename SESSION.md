@@ -161,3 +161,6 @@
 
 ### 2026-11-21（`cap:di` 验收固化，顶替以 `inherit` 拉起 `cap:audit` 维持 2 路并行）
 - **执行成果**：`lib/di/`（5/5 PASS，含 `cap.di` 动态挂载与 `doc/lib/di.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/audit/`（SHA-256 防篡改哈希链审计日志、断链/篡改精确定位与结构化合规导出引擎），与 `lib/feature/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:audit` 验收固化，顶替以 `inherit` 拉起 `cap:migrate` 维持 2 路并行）
+- **执行成果**：`lib/audit/`（5/5 PASS，含 `cap.audit` 动态挂载与 `doc/lib/audit.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/migrate/`（确定性 Schema 迁移规划、SHA-256 脚本校验和防篡改与回滚引擎），与 `lib/feature/` 保持 2 路正交并行。
