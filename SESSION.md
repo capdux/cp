@@ -278,3 +278,6 @@
 
 ### 2026-11-21（`cap:billing` 验收固化，顶替以 `inherit` 拉起 `cap:pathfinding` 维持 2 路并行）
 - **执行成果**：`lib/billing/`（5/5 PASS，含 `cap.billing` 动态挂载与 `doc/lib/billing.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/pathfinding/`（2D 加权网格 A* 防穿角寻路、Dijkstra 距离场与 Bresenham 视线平滑引擎），与 `lib/barcode/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:pathfinding` 验收固化，顶替以 `inherit` 拉起 `cap:ecs` 维持 2 路并行）
+- **执行成果**：`lib/pathfinding/`（5/5 PASS，含 `cap.pathfinding` 动态挂载与 `doc/lib/pathfinding.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/ecs/`（Sparse-Set 世代防 ABA 实体组件系统 ECS 引擎），与 `lib/barcode/` 保持 2 路正交并行。

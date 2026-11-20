@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:pathfinding` 2D 网格 A* 与视线平滑寻路引擎（5/5 PASS，文档直写 `doc/lib/pathfinding.md`）
+
+- **落地成果**：`lib/pathfinding/`（`grid.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:ecs`（Sparse-Set 架构世代防 ABA 实体组件系统 ECS 引擎），与 `lib/barcode/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:billing` SaaS 用量计费、周期折算与发票引擎（5/5 PASS，文档直写 `doc/lib/billing.md`）
 
 - **落地成果**：`lib/billing/`（`billing.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:pathfinding`（2D 加权网格 A* 防穿角寻路、Dijkstra 距离场与 Bresenham 视线平滑引擎），与 `lib/barcode/` 保持 2 路正交并行。

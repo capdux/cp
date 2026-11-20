@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:pathfinding` 2D 加权网格 A* 防穿角寻路与视线平滑引擎（5/5 PASS，自动动态挂载 `cap.pathfinding`）
+
+- 新建 [`lib/pathfinding/`](file:///data/dev/cp/lib/pathfinding/index.cp)（`grid.cp`、`index.cp`）：`GridMap`（可配地形代价权重、二叉最小堆 A* 支持 4/8 方向严格防穿墙角 Corner-Cutting Prevention、超覆盖 Bresenham `hasLineOfSight` 与 `smoothPath` 路径拉直、Dijkstra `computeDistanceField` 全图距离场，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/pathfinding.md`](file:///data/dev/cp/doc/lib/pathfinding.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_pathfinding_production_deep.cp`](file:///data/dev/cp/cap/test/test_pathfinding_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:billing` SaaS & AI API 阶梯计费、周期折算与发票引擎（5/5 PASS，自动动态挂载 `cap.billing`）
 
 - 新建 [`lib/billing/`](file:///data/dev/cp/lib/billing/index.cp)（`billing.cp`、`index.cp`）：`BillingCalculator`（`Graduated` 累进 / `Volume` 统一档位 `priceMeteredUsage`、周期升降级对称折算 `calculateProration`、防负券封顶与基点税率 `buildInvoice`）及 RFC 8259 转义 `Invoice.toJson`；文档 [`doc/lib/billing.md`](file:///data/dev/cp/doc/lib/billing.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_billing_production_deep.cp`](file:///data/dev/cp/cap/test/test_billing_production_deep.cp) `-m` 5/5 PASS。
