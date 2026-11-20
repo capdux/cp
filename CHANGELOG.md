@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:pool` 通用有界资源与连接池引擎（5/5 PASS，自动动态挂载 `cap.pool`）
+
+- 新建 [`lib/pool/`](file:///data/dev/cp/lib/pool/index.cp)（`pool.cp`、`index.cp`）：`ResourcePool`（`min_idle` 预热 `warmup`、`Lifo`/`Fifo` 借出策略、`idle_timeout_ms` 空闲驱逐与 `max_lifetime_ms` 寿命淘汰、`validate_fn` 失效透明重建、`checkin`/`discard` 及 `deinit` 零泄漏保障）；文档 [`doc/lib/pool.md`](file:///data/dev/cp/doc/lib/pool.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_pool_production_deep.cp`](file:///data/dev/cp/cap/test/test_pool_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:bitset` 64-bit 字级动态位图与零堆固定位图引擎（5/5 PASS，自动动态挂载 `cap.bitset`）
 
 - 新建 [`lib/bitset/`](file:///data/dev/cp/lib/bitset/index.cp)（`bitset.cp`、`index.cp`）：`BitSet`（动态扩容 `u64` 字数组、`setRange`/`clearRange`、`@popCount`/`@ctz` 快速 `count`/`firstSetBit`/`nextSetBit`/`toIndices`、不等长安全并/交/差/对称差与 `jaccardSimilarity`、紧凑十六进制 `toHex`/`fromHex`）及零堆 `FixedBitSet(N)`；文档 [`doc/lib/bitset.md`](file:///data/dev/cp/doc/lib/bitset.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_bitset_production_deep.cp`](file:///data/dev/cp/cap/test/test_bitset_production_deep.cp) `-m` 5/5 PASS。

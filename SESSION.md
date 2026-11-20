@@ -191,3 +191,6 @@
 
 ### 2026-11-21（`cap:bitset` 验收固化，顶替以 `inherit` 拉起 `cap:health` 维持 2 路并行）
 - **执行成果**：`lib/bitset/`（5/5 PASS，含 `cap.bitset` 动态挂载与 `doc/lib/bitset.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/health/`（Liveness/Readiness/Startup 健康探针汇聚、HTTP 状态码映射与有序优雅停机协调器），与 `lib/pool/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:pool` 验收固化，顶替以 `inherit` 拉起 `cap:lock` 维持 2 路并行）
+- **执行成果**：`lib/pool/`（5/5 PASS，含 `cap.pool` 动态挂载与 `doc/lib/pool.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/lock/`（按名逻辑读写锁、等待图死锁环路检测与 TTL/Fencing Token 租约锁引擎），与 `lib/health/` 保持 2 路正交并行。
