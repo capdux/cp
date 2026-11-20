@@ -43,3 +43,6 @@
 
 ### 2026-11-21（`cap:http2_frame` 验收，顶替拉起 `cap:bplus_tree` 维持 2 路常规并行）
 - **执行成果**：`lib/http2_frame/`（5/5 PASS，`doc/lib/http2_frame.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:bplus_tree` 维持 2 路常规并行
+
+### 2026-11-21（`cap:lsm_sst` 验收，顶替拉起 `cap:mvcc` 维持 2 路常规并行）
+- **执行成果**：`lib/lsm_sst/`（5/5 PASS，`doc/lib/lsm_sst.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:mvcc` 维持 2 路常规并行

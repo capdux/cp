@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:lsm_sst` 纯 CP LSM-Tree 前缀压缩 SSTable 数据块、Kirsch-Mitzenmacher 布隆过滤器、CRC32C 校验与多路墓碑归并引擎（支持 `cap.lsm_sst` 自动动态挂载，详见 `doc/lib/lsm_sst.md`）（5/5 PASS，文档直写 `doc/lib/lsm_sst.md`）
+- **核心设计**：`BlockBuilder` 每 16 条记录写一个 Restart Point 支持块内二分；`SstBuilder` 强制字典序输入并在每块尾部附加 `Crc32Iscsi` 防损坏篡改，全路径 `std.testing.allocator` 零泄漏。
+
 ## 2026-11-21: 新建 `cap:http2_frame` 纯 CP RFC 9113 HTTP/2 9 字节帧头、10 种帧编解码、半包黏包流式拆包与流控状态机引擎（支持 `cap.http2_frame` 自动动态挂载，详见 `doc/lib/http2_frame.md`）（5/5 PASS，文档直写 `doc/lib/http2_frame.md`）
 - **核心设计**：`H2StreamDecoder` 对 `PING`/`RST_STREAM`/`WINDOW_UPDATE` 执行定长约束与 `2^31-1` 窗口溢出检测，`H2ConnectionWindow` 精确跟踪多路复用流状态转移，全路径零泄漏。
 

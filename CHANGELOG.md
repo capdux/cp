@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:lsm_sst` 纯 CP LSM-Tree 前缀压缩 SSTable 数据块、Kirsch-Mitzenmacher 布隆过滤器、CRC32C 校验与多路墓碑归并引擎（支持 `cap.lsm_sst` 自动动态挂载，详见 `doc/lib/lsm_sst.md`）（5/5 PASS，自动动态挂载 `cap.lsm_sst`）
+- **新增标准库**：`lib/lsm_sst/{block,bloom,sstable,index}.cp`，实现 Restart Points 二分查找前缀压缩块、`BloomFilter`、`"CPSST001"` Footer + `Crc32Iscsi` 块校验 `SstBuilder`/`SstReader` 及支持墓碑覆盖的 `SstMergeIter`。
+- **新增文档与测试**：`doc/lib/lsm_sst.md` 扁平文档与 `cap/test/test_lsm_sst_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:http2_frame` 纯 CP RFC 9113 HTTP/2 9 字节帧头、10 种帧编解码、半包黏包流式拆包与流控状态机引擎（支持 `cap.http2_frame` 自动动态挂载，详见 `doc/lib/http2_frame.md`）（5/5 PASS，自动动态挂载 `cap.http2_frame`）
 - **新增标准库**：`lib/http2_frame/{types,codec,decoder,window,index}.cp`，实现 RFC 9113 全 10 种帧类型编解码、`H2StreamDecoder` `1..7` 字节切片拆包、`FRAME_SIZE_ERROR` 校验及 `H2ConnectionWindow` 连接/流级流控窗口与状态机。
 - **新增文档与测试**：`doc/lib/http2_frame.md` 扁平文档与 `cap/test/test_http2_frame_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
