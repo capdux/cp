@@ -1,5 +1,5 @@
 // cap/test/test_event_loop.cp
-// End-to-end regression test for Unified Event Loop Subsystem (cap:event_loop)
+// End-to-end regression test for Unified Event & EventLoop Subsystem (cap:event)
 
 import { test, expect_eq } from "cap:test";
 const std = @import("std");
@@ -13,7 +13,7 @@ import {
     PollEngine,
     PollEvents,
     EventLoop
-} from "../../lib/event_loop/index.cp";
+} from "cap:event";
 
 class CounterState {
     pub count: i32 = 0;
@@ -25,21 +25,27 @@ class CounterState {
     }
 }
 
-fn timer_callback(ctx: *anyopaque?)  {
+fn timer_callback(t: *Timer) {
+    if (p := t.ctx) {
+        let state: *CounterState = @ptrCast(@alignCast(p));
+        state.count += 1;
+    }
+}
+
+fn task_callback(ctx: (*anyopaque)?) {
     if (p := ctx) {
         let state: *CounterState = @ptrCast(@alignCast(p));
         state.count += 1;
     }
 }
 
-fn deferred_callback(ctx: *anyopaque?)  {
-    if (p := ctx) {
-        let state: *CounterState = @ptrCast(@alignCast(p));
-        state.count += 10;
-    }
+fn deferred_callback(ctx: *anyopaque): bool {
+    let state: *CounterState = @ptrCast(@alignCast(ctx));
+    state.count += 10;
+    return false;
 }
 
-fn pipe_poll_callback(_fd: i32, _events: u32, ctx: *anyopaque?)  {
+fn pipe_poll_callback(_fd: i32, _events: u32, ctx: *!?) {
     if (p := ctx) {
         let state: *CounterState = @ptrCast(@alignCast(p));
         state.count += 100;
@@ -48,98 +54,74 @@ fn pipe_poll_callback(_fd: i32, _events: u32, ctx: *anyopaque?)  {
 
 fn testTimerHeap(): !void {
     let heap = TimerHeap.init();
-    expect_eq(heap.count(), 0);
-    expect_eq(heap.isEmpty(), true);
+    expect_eq(heap.count(), 0 as usize);
 
     const state = CounterState.create();
     const state_ptr: *anyopaque = @ptrCast(state);
 
-    // Push timers out of order: 50ms, 10ms, 30ms
-    const t50 = Timer.create(1, 50, 0, timer_callback, state_ptr);
-    const t10 = Timer.create(2, 10, 0, timer_callback, state_ptr);
-    const t30 = Timer.create(3, 30, 0, timer_callback, state_ptr);
+    let t1 = Timer{ expires_at_ms: 200, callback: timer_callback, ctx: state_ptr };
+    let t2 = Timer{ expires_at_ms: 50, callback: timer_callback, ctx: state_ptr };
+    let t3 = Timer{ expires_at_ms: 120, callback: timer_callback, ctx: state_ptr };
 
-    heap.push(t50);
-    heap.push(t10);
-    heap.push(t30);
+    heap.insert(&t1);
+    heap.insert(&t2);
+    heap.insert(&t3);
+    expect_eq(heap.count(), 3 as usize);
+    expect_eq(heap.peek().?.expires_at_ms, 50 as i64);
 
-    expect_eq(heap.count(), 3);
-    expect_eq(heap.isEmpty(), false);
+    // Cancel middle timer
+    expect_eq(heap.remove(&t3), true);
+    expect_eq(heap.count(), 2 as usize);
 
-    // Min-heap top should be t10 (lowest fire_at_ms)
-    const top = heap.peek().?;
-    expect_eq(top.id, 2);
+    // Fire up to 150ms -> only t2 (50ms) fires
+    const fired1 = heap.fireExpired(150);
+    expect_eq(fired1, 1 as usize);
+    expect_eq(state.count, 1);
 
-    // Cancel t30 before it fires
-    const removed = heap.remove(t30);
-    expect_eq(removed, true);
-    expect_eq(heap.count(), 2);
-
-    // Sleep 15ms so t10 expires but t50 does not
-    TimerHeap.sleepMs(15);
-    const now = TimerHeap.nowMs();
-    const drained = heap.drainExpired(now, 10);
-    expect_eq(drained, 1);
-    expect_eq(state.count, 1); // t10 fired!
-    expect_eq(heap.count(), 1);
-
-    // Sleep another 45ms so t50 expires
-    TimerHeap.sleepMs(45);
-    const now2 = TimerHeap.nowMs();
-    const drained2 = heap.drainExpired(now2, 10);
-    expect_eq(drained2, 1);
-    expect_eq(state.count, 2); // t50 fired!
-    expect_eq(heap.count(), 0);
+    // Fire up to 250ms -> t1 (200ms) fires
+    const fired2 = heap.fireExpired(250);
+    expect_eq(fired2, 1 as usize);
+    expect_eq(state.count, 2);
+    expect_eq(heap.isEmpty(), true);
 }
 
 fn testConcurrentQueue(): !void {
     let q = ConcurrentQueue.init();
-    expect_eq(q.len(), 0);
+    expect_eq(q.len(), 0 as usize);
 
     const state = CounterState.create();
     const state_ptr: *anyopaque = @ptrCast(state);
 
-    const task1 = ConcurrentTask.create(timer_callback, state_ptr, true);
-    const task2 = ConcurrentTask.create(timer_callback, state_ptr, true);
-    const task3 = ConcurrentTask.create(timer_callback, state_ptr, true);
+    let t1 = ConcurrentTask.init(task_callback, state_ptr, false);
+    let t2 = ConcurrentTask.init(task_callback, state_ptr, false);
+    q.push(&t1);
+    q.push(&t2);
+    expect_eq(q.len(), 2 as usize);
 
-    q.push(task1);
-    q.push(task2);
-    q.push(task3);
-
-    expect_eq(q.len(), 3);
-
-    const processed = q.drain(10);
-    expect_eq(processed, 3);
-    expect_eq(state.count, 3);
-    expect_eq(q.len(), 0);
+    const ran = q.drainAll();
+    expect_eq(ran, 2 as usize);
+    expect_eq(state.count, 2);
+    expect_eq(q.isEmpty(), true);
 }
 
 fn testDeferredQueue(): !void {
-    let dq = DeferredTaskQueue.init();
-    expect_eq(dq.count(), 0);
-
+    let q = DeferredTaskQueue.init();
     const state = CounterState.create();
     const state_ptr: *anyopaque = @ptrCast(state);
 
-    // Post tasks, deduplicating on the same ctx pointer
-    const dup1 = dq.postTask(state_ptr, deferred_callback);
-    expect_eq(dup1, false); // first time: not found existing
-    expect_eq(dq.count(), 1);
+    expect_eq(q.postTask(state_ptr, deferred_callback), true);
+    expect_eq(q.postTask(state_ptr, deferred_callback), false); // deduplicated
+    expect_eq(q.count(), 1 as usize);
 
-    const dup2 = dq.postTask(state_ptr, deferred_callback);
-    expect_eq(dup2, true); // second time: found existing and replaced
-    expect_eq(dq.count(), 1); // count remains 1 due to deduplication
-
-    const executed = dq.run();
-    expect_eq(executed, 1);
+    const ran = q.run();
+    expect_eq(ran, 1 as usize);
     expect_eq(state.count, 10);
-    expect_eq(dq.count(), 0);
+    expect_eq(q.count(), 0 as usize);
 }
 
 fn testPollEngine(): !void {
     let pe = PollEngine.init();
-    expect_eq(pe.count(), 0);
+    expect_eq(pe.count(), 0 as usize);
 
     let r_fd: i32 = 0;
     let w_fd: i32 = 0;
@@ -155,29 +137,24 @@ fn testPollEngine(): !void {
     const state = CounterState.create();
     const state_ptr: *anyopaque = @ptrCast(state);
 
-    // Register read end
     const reg_ok = pe.register(r_fd, PollEvents.Readable, pipe_poll_callback, state_ptr);
     expect_eq(reg_ok, true);
-    expect_eq(pe.count(), 1);
+    expect_eq(pe.count(), 1 as usize);
 
-    // Poll with 0 timeout when pipe is empty -> should not trigger
     const polled_empty = pe.poll(0);
-    expect_eq(polled_empty, 0);
+    expect_eq(polled_empty, 0 as usize);
     expect_eq(state.count, 0);
 
-    // Write a byte to the pipe
     const data = "x";
     * = std.os.linux.write(w_fd, data.ptr, data.len);
 
-    // Poll -> should be readable and invoke callback
     const polled_ready = pe.poll(50);
-    expect_eq(polled_ready, 1);
+    expect_eq(polled_ready, 1 as usize);
     expect_eq(state.count, 100);
 
-    // Unregister
     const unreg = pe.unregister(r_fd);
     expect_eq(unreg, true);
-    expect_eq(pe.count(), 0);
+    expect_eq(pe.count(), 0 as usize);
 }
 
 fn testEventLoopIntegration(): !void {
@@ -187,31 +164,26 @@ fn testEventLoopIntegration(): !void {
     const state = CounterState.create();
     const state_ptr: *anyopaque = @ptrCast(state);
 
-    // Schedule a deferred task and a short timer
-    * = loop.deferTask(deferred_callback, state_ptr);
-    * = loop.setTimeout(timer_callback, 10, state_ptr);
+    * = loop.deferTask(state_ptr, deferred_callback);
+    * = loop.setTimeout(10, timer_callback, state_ptr);
 
     expect_eq(loop.hasActiveHandles(), true);
 
-    // First tick with 0 timeout: should run deferred microtask (+10) but timer not yet expired
-    * = loop.tick(0);
+    * = loop.tick();
     expect_eq(state.count, 10);
 
-    // Sleep 15ms and tick again: timer should fire (+1)
     TimerHeap.sleepMs(15);
-    * = loop.tick(0);
+    * = loop.tick();
     expect_eq(state.count, 11);
-
-    // All tasks completed
     expect_eq(loop.hasActiveHandles(), false);
 }
 
 fn main() {
-    test("Intrusive Binary Min-Heap Timer Scheduling", () => {
+    test("Intrusive Pairing Min-Heap Timer Scheduling", () => {
         testTimerHeap()?;
     });
 
-    test("16-byte Lock-Free Concurrent Task Queue", () => {
+    test("Spin-Locked Concurrent Task Queue", () => {
         testConcurrentQueue()?;
     });
 

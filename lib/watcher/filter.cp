@@ -1,5 +1,5 @@
 // Source: /data/dev/bun/src/watcher/Watcher.cp
-// lib/watch/filter.cp
+// lib/watcher/filter.cp
 // Filesystem Watch Path Ignore Filter & Timestamp-Based Event Debouncer
 // Absorbed from Bun src/watcher/
 

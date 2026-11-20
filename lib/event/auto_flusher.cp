@@ -1,6 +1,9 @@
 // Source: /data/dev/bun/src/event_loop/AutoFlusher.cp
+// lib/event/auto_flusher.cp
+// Deferred flush coalescer for buffered I/O writers in cap:event
+
 import std from "std";
-import { DeferredTaskQueue } from "./deferred_task_queue.cp";
+import { DeferredTaskQueue } from "./deferred_task.cp";
 
 pub struct AutoFlusher {
     pub registered: bool = false,

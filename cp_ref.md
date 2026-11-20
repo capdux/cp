@@ -10365,7 +10365,7 @@ flowchart TD
 - **命令行参数解析 (`cap:clap`)**：[`docs/clap/clap.md`](file:///data/dev/cp/docs/clap/clap.md)（零分配流式 `StreamingClap` 与编译期 `ComptimeClap`）
 - **智能指针与打标压缩 (`cap:ptr`)**：[`docs/ptr/ptr.md`](file:///data/dev/cp/docs/ptr/ptr.md)（64 位 `TaggedPointer`、`CowSlice`、`Shared`/`Weak`/`RefCount`）
 - **内存与线程安全守卫 (`cap:safety`)**：[`docs/safety/safety.md`](file:///data/dev/cp/docs/safety/safety.md)（`ThreadLock`、`CriticalSection`、`CheckedAllocator`、ASAN 内存毒化）
-- **高性能事件循环 (`cap:event_loop`)**：[`docs/event_loop/event_loop.md`](file:///data/dev/cp/docs/event_loop/event_loop.md)（`EventLoop`、侵入式最小堆 `TimerHeap`、`ConcurrentTaskQueue`）
+- **事件总线与高性能事件循环 (`cap:event` / `cap:events` / `cap:event_loop`)**：[`docs/event/event.md`](file:///data/dev/cp/docs/event/event.md)（`EventBus`、`EventEmitter`、`EventLoop`、侵入式配对最小堆 `TimerHeap`、`ConcurrentTaskQueue`、`AutoFlusher`、`PollEngine`）
 - **云存储签名与客户端 (`cap:s3`)**：[`docs/s3/s3.md`](file:///data/dev/cp/docs/s3/s3.md)（AWS SigV4 四级签名、`presignUrl` 预签名 URL、Multipart 分片上传）
 - **CSRF 安全防护 (`cap:security`)**：[`docs/security/security.md`](file:///data/dev/cp/docs/security/security.md)（64 字节二进制 CSRF Token、时钟偏移与防溢出校验、恒定时间比对）
 - **缓存通信协议 (`cap:redis`)**：[`docs/redis/redis.md`](file:///data/dev/cp/docs/redis/redis.md)（RESP2/RESP3 编解码、`ValkeyReader` 流式零拷贝解析、`RedisPipeline`）

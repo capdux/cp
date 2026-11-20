@@ -144,14 +144,14 @@ pub fn resolve_source_path(
     let is_cap_builtin = if let Some(stripped) = search_source.strip_prefix("cap:") {
         search_source = match stripped {
             "col" | "collections" => "col".to_string(),
-            "event_loop" => "event_loop".to_string(),
-            "event" | "events" => "event".to_string(),
+            "event" | "events" | "event_loop" => "event".to_string(),
             "sync" | "threading" => "sync".to_string(),
             "shell" | "sh" => "shell".to_string(),
             "image" | "img" | "png" => "image".to_string(),
             "blob" | "file" => "blob".to_string(),
             "dotenv" => "dotenv".to_string(),
             "watcher" | "watch" => "watcher".to_string(),
+            "redis" | "valkey" => "redis".to_string(),
             "conf" | "ini" => "conf".to_string(),
             "pack" | "compress" => "pack".to_string(),
             "sys" | "system" => "sys".to_string(),
@@ -164,14 +164,14 @@ pub fn resolve_source_path(
     } else if let Some(stripped) = search_source.strip_prefix("std/") {
         search_source = match stripped {
             "col" | "collections" => "col".to_string(),
-            "event_loop" => "event_loop".to_string(),
-            "event" | "events" => "event".to_string(),
+            "event" | "events" | "event_loop" => "event".to_string(),
             "sync" | "threading" => "sync".to_string(),
             "shell" | "sh" => "shell".to_string(),
             "image" | "img" | "png" => "image".to_string(),
             "blob" | "file" => "blob".to_string(),
             "dotenv" => "dotenv".to_string(),
             "watcher" | "watch" => "watcher".to_string(),
+            "redis" | "valkey" => "redis".to_string(),
             "conf" | "ini" => "conf".to_string(),
             "pack" | "compress" => "pack".to_string(),
             "sys" | "system" => "sys".to_string(),

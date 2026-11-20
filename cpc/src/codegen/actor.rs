@@ -805,7 +805,7 @@ impl Codegen {
                 }
                 if self.current_receiver_mode == ReceiverMode::Move && func.ident.sym != "release" {
                     self.writeln("var __self_moved = false; _ = &__self_moved;");
-                    self.writeln("defer if (!__self_moved) { const __T = @TypeOf(self); if (@typeInfo(__T) == .pointer) { const Child = @typeInfo(__T).pointer.child; if (@typeInfo(Child) == .@\"struct\" and @hasDecl(Child, \"release\")) { const RType = @typeInfo(@TypeOf(Child.release)).@\"fn\".return_type.?; if (@typeInfo(RType) == .error_union) { _ = self.release() catch {}; } else { self.release(); } } } };");
+                    self.writeln("defer if (!__self_moved) { const __T = @TypeOf(self); if (@typeInfo(__T) == .pointer) { const __CpChild = @typeInfo(__T).pointer.child; if (@typeInfo(__CpChild) == .@\"struct\" and @hasDecl(__CpChild, \"release\")) { const __CpRType = @typeInfo(@TypeOf(__CpChild.release)).@\"fn\".return_type.?; if (@typeInfo(__CpRType) == .error_union) { _ = self.release() catch {}; } else { self.release(); } } } };");
                 }
             }
             for name in &mutable_copy_params {
@@ -852,7 +852,7 @@ impl Codegen {
                             "var __{}_moved = false; _ = &__{}_moved;",
                             p.ident.sym, p.ident.sym
                         ));
-                        self.writeln(&format!("defer if (!__{0}_moved) {{ const __T = @TypeOf({0}); if (@typeInfo(__T) == .pointer) {{ const Child = @typeInfo(__T).pointer.child; if (@typeInfo(Child) == .@\"struct\" and @hasDecl(Child, \"release\")) {{ const RType = @typeInfo(@TypeOf(Child.release)).@\"fn\".return_type.?; if (@typeInfo(RType) == .error_union) {{ _ = {0}.release() catch {{}}; }} else {{ {0}.release(); }} }} }} else if (@typeInfo(__T) == .@\"struct\" and @hasDecl(__T, \"release\")) {{ var _drop_val = {0}; _drop_val.release(); }} }};", p.ident.sym));
+                        self.writeln(&format!("defer if (!__{0}_moved) {{ const __T = @TypeOf({0}); if (@typeInfo(__T) == .pointer) {{ const __CpChild = @typeInfo(__T).pointer.child; if (@typeInfo(__CpChild) == .@\"struct\" and @hasDecl(__CpChild, \"release\")) {{ const __CpRType = @typeInfo(@TypeOf(__CpChild.release)).@\"fn\".return_type.?; if (@typeInfo(__CpRType) == .error_union) {{ _ = {0}.release() catch {{}}; }} else {{ {0}.release(); }} }} }} else if (@typeInfo(__T) == .@\"struct\" and @hasDecl(__T, \"release\")) {{ var _drop_val = {0}; _drop_val.release(); }} }};", p.ident.sym));
                     }
                 }
             }

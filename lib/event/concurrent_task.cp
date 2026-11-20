@@ -1,16 +1,22 @@
 // Source: /data/dev/bun/src/event_loop/ConcurrentTask.cp
 // lib/event/concurrent_task.cp
-// 16-byte lock-free cross-thread task representation and thread-safe queue
+// Cross-thread task representation and spin-locked intrusive queue for cap:event
 
-const std = @import("std");
+import std from "std";
 
-pub type TaskFn = fn(ctx: *!?);
+pub type TaskFn = fn ((*anyopaque)?) void;
 
-pub struct TaskSpinLock {
-    pub state: std.atomic.Value(u32) = std.atomic.Value(u32).init(0);
+pub struct SpinLock {
+    state: std.atomic.Value(u32) = std.atomic.Value(u32).init(0),
+
+    pub static fn init(): SpinLock {
+        return SpinLock{
+            state: std.atomic.Value(u32).init(0),
+        };
+    }
 
     pub fn lock(*_) {
-        while (_.state.cmpxchgWeak(0, 1, .acquire, .monotonic) != null) {
+        while (_.state.swap(1, .acquire) != 0) {
             std.atomic.spinLoopHint();
         }
     }
@@ -20,45 +26,66 @@ pub struct TaskSpinLock {
     }
 }
 
-pub class ConcurrentTask {
-    pub callback: TaskFn = undefined;
-    pub ctx: *!? = null;
-    pub auto_delete: bool = true;
-    pub next: (*ConcurrentTask)? = null;
+pub type TaskSpinLock = SpinLock;
 
-    pub static fn create(cb: TaskFn, ctx: *!?, auto_delete: bool): *ConcurrentTask {
-        let t = std.heap.page_allocator.create(ConcurrentTask) catch unreachable;
-        t.callback = cb;
-        t.ctx = ctx;
-        t.auto_delete = auto_delete;
-        t.next = null;
-        return t;
+pub struct ConcurrentTask {
+    pub func: fn ((*anyopaque)?) void = defaultConcurrentFunc,
+    pub ctx: (*anyopaque)? = null,
+    pub next: (*ConcurrentTask)? = null,
+    pub auto_delete: bool = false,
+
+    pub static fn defaultConcurrentFunc(c: (*anyopaque)?) {}
+
+    pub static fn init(func: fn ((*anyopaque)?) void, ctx: (*anyopaque)?, auto_delete: bool): ConcurrentTask {
+        return ConcurrentTask{
+            func: func,
+            ctx: ctx,
+            next: null,
+            auto_delete: auto_delete,
+        };
+    }
+
+    pub static fn create(func: fn ((*anyopaque)?) void, ctx: (*anyopaque)?, auto_delete: bool): *ConcurrentTask! {
+        let ptr: *ConcurrentTask! = unsafe { @ptrFromInt(8) };
+        zig {
+            const mem = std.heap.page_allocator.create(ConcurrentTask) catch unreachable;
+            mem.* = ConcurrentTask{
+                .func = func,
+                .ctx = ctx,
+                .next = null,
+                .auto_delete = auto_delete,
+            };
+            ptr = mem;
+        }
+        return ptr;
     }
 
     pub fn run(*_) {
-        const cb = _.callback;
-        const c = _.ctx;
-        const auto_del = _.auto_delete;
+        let cb = _.func;
+        let c = _.ctx;
+        let auto_del = _.auto_delete;
         cb(c);
         if (auto_del) {
-            std.heap.page_allocator.destroy(_);
+            zig {
+                std.heap.page_allocator.destroy(self);
+            }
         }
     }
 }
 
-pub class ConcurrentQueue {
-    head: (*ConcurrentTask)? = null;
-    tail: (*ConcurrentTask)? = null;
-    lock: TaskSpinLock = TaskSpinLock{};
-    count: usize = 0;
+pub struct ConcurrentTaskQueue {
+    pub head: (*ConcurrentTask)? = null,
+    pub tail: (*ConcurrentTask)? = null,
+    pub item_count: usize = 0,
+    pub lock: SpinLock = SpinLock{},
 
-    pub static fn init(): *ConcurrentQueue {
-        let q = std.heap.page_allocator.create(ConcurrentQueue) catch unreachable;
-        q.head = null;
-        q.tail = null;
-        q.lock = TaskSpinLock{};
-        q.count = 0;
-        return q;
+    pub static fn init(): ConcurrentTaskQueue {
+        return ConcurrentTaskQueue{
+            head: null,
+            tail: null,
+            item_count: 0,
+            lock: SpinLock.init(),
+        };
     }
 
     pub fn push(*_, task: *ConcurrentTask) {
@@ -67,47 +94,75 @@ pub class ConcurrentQueue {
 
         task.next = null;
         if (t := _.tail) {
-            t.next = task;
-            _.tail = task;
+            t.next = @ptrCast(task);
+            _.tail = @ptrCast(task);
         } else {
-            _.head = task;
-            _.tail = task;
+            _.head = @ptrCast(task);
+            _.tail = @ptrCast(task);
         }
-        _.count += 1;
+        _.item_count += 1;
     }
 
     pub fn pop(*_): (*ConcurrentTask)? {
         _.lock.lock();
         defer _.lock.unlock();
 
-        if (h := _.head) {
-            _.head = h.next;
-            if (_.head == null) {
-                _.tail = null;
-            }
-            _.count -= 1;
-            h.next = null;
-            return h;
+        let h = _.head orelse return null;
+        _.head = @ptrCast(h.next);
+        if (_.head == null) {
+            _.tail = null;
         }
-        return null;
+        h.next = null;
+        _.item_count -= 1;
+        return h;
     }
 
-    pub fn len(*_): usize {
+    pub fn drain(*_): (*ConcurrentTask)? {
         _.lock.lock();
         defer _.lock.unlock();
-        return _.count;
+
+        let h = _.head;
+        _.head = null;
+        _.tail = null;
+        _.item_count = 0;
+        return h;
     }
 
-    pub fn drain(*_, limit: usize): usize {
-        let processed: usize = 0;
-        while (processed < limit) {
-            if (task := _.pop()) {
-                task.run();
-                processed += 1;
-            } else {
-                break;
-            }
+    pub fn drainAll(*_): usize {
+        let list = _.drain();
+        let executed: usize = 0;
+        let curr = list;
+        while (curr != null) {
+            let task = curr.?;
+            curr = @ptrCast(task.next);
+            task.next = null;
+            task.run();
+            executed += 1;
         }
-        return processed;
+        return executed;
+    }
+
+    pub fn drainMax(*_, max_count: usize): usize {
+        let executed: usize = 0;
+        while (executed < max_count) {
+            let task = _.pop() orelse break;
+            task.run();
+            executed += 1;
+        }
+        return executed;
+    }
+
+    pub fn count(): usize {
+        return _.item_count;
+    }
+
+    pub fn len(): usize {
+        return _.item_count;
+    }
+
+    pub fn isEmpty(): bool {
+        return _.head == null;
     }
 }
+
+pub type ConcurrentQueue = ConcurrentTaskQueue;

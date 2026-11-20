@@ -2490,3 +2490,31 @@
        3. `lib/string/wcwidth.cp`（`Bun.stringWidth`，吸收自 `bun/src/unicode/.../wcwidth.cp`）：CJK/Emoji/ZWJ/ANSI 感知终端显示列宽 `wcwidth`/`stringWidth`；更新 [docs/string/string.md](file:///data/dev/cp/docs/string/string.md)；
        - 综合测试 [cap/test/test_bun_new_assets.cp](file:///data/dev/cp/cap/test/test_bun_new_assets.cp)（4/4 PASS）+ `test_string_simd_sort.cp`（3/3 PASS）；
      - **全仓总核查**：`lib/**/*.cp` 共 **431 个文件，431/431（100%）首行 `// Source:` 溯源合规，0 个遗漏、0 个 `UNVERIFIED`**。
+
+### 2026-11-20（多 AGY 新版 SQLite 通信系统巡检与自发自收闭环验证）
+- **用户指令**：多 agy 通信机制从文件更新到 SQLite，按新版 `GEMINI.md` / `/root/.agy/comm/COMM.md` 检查并汇报当前 agy 通信系统是否正常可用（给自己发一条消息验证能否收到）。
+- **执行与验证结果**：
+  1. **后台守护与唤醒链路（✅ 100% 正常）**：`agy-comm.service`（PID `2924900`）运行正常，心跳实时刷新；向 `cp_agy` 投递自测工单 `task-cp-20261120-selftest` 后 1 秒内触发投递，且自动完成了 `copy-mode` 退出与 `tmux send-keys` 唤醒回环；随后执行 `unacked` -> `ack` -> `resolve` -> `ack` 完成闭环，看板已清零（0 Pending / 0 Unacked）。
+  2. **发现的关键缺陷（⚠️ 需修复）**：因各 AGY 节点进程设置了独立 `HOME=/root/.agy/node<N>`（如 `cp_agy` 为 `node1`），而 `task_queue.py`、`resolve_task.py`、`agy_dispatcher.py` 及唤醒命令均使用了 `~/.agy/comm`，导致 AGY 进程内直接执行时 `~` 展开错位（找不到脚本，或在绝对路径调用时于 `/root/.agy/node<N>/.agy/comm/` 悄悄创建孤岛 `queue.db`，与 `agy-comm.service` 所盯的 `/root/.agy/comm/queue.db` 脑裂）。建议将脚本内 `COMM_DIR` 改为 `os.path.dirname(os.path.abspath(__file__))` 并将文档/唤醒命令改为绝对路径 `/root/.agy/comm/task_queue.py`。
+
+### 2026-11-20（修复多 AGY SQLite 通信系统 `$HOME` 路径脑裂缺陷）
+- **用户指令**：执行 1, 修复 多 agy 通信系统。
+- **执行结果**：
+  1. 修复 `/root/.agy/comm/task_queue.py`、`/root/.agy/comm/resolve_task.py`、`/root/.agy/comm/agy_dispatcher.py`：`COMM_DIR` 改为 `os.environ.get("AGY_COMM_DIR") or os.path.dirname(os.path.realpath(__file__))`，`NODES_CONFIG` 改为基于 `COMM_DIR` 上级目录定位，唤醒命令改为绝对路径 `/root/.agy/comm/task_queue.py`。
+  2. 同步更新 `/root/.agy/comm/COMM.md` 与 `/data/dev/cp/GEMINI.md` 命令为绝对路径 `/root/.agy/comm/`。
+  3. 为 `/root/.agy/node{1,2,3}/.agy/comm` 创建指向 `/root/.agy/comm` 的软链兜底，兼容任何历史 `~/.agy/comm` 调用。
+  4. 修正 `/etc/systemd/system/agy-comm.service` 中 `StartLimitIntervalSec=0` 到 `[Unit]` 段，完成 `daemon-reload` + 重启并验证 `HOME=/root/.agy/node1` 下直连与 `~` 两种调用均 100% 命中全局唯一 `/root/.agy/comm/queue.db`。
+
+### 2026-11-20（极速批量热修 `bun_agy` 5 条编译阻断工单并结单交付）
+- **协同事件**：通过新版 SQLite 多 AGY 通信系统收到 `bun_agy` 投递的 5 条编译阻断工单：
+  1. `task-bun-20261120-enum-fromname-ambiguous-get`（enum `fromName` 调用裸 `get(s)` 与顶层 `pub fn get` 歧义）
+  2. `task-bun-20261120-enum-tag-get-fromname`（enum 含 `get` 变体时跳过 `fn get` 但 `fromName` 仍引用 `get(s)`）
+  3. `task-bun-20261120-prelude-ptr-shadow`（`Err.with_cause` 局部变量 `ptr`/`tid` 遮蔽顶层声明）
+  4. `task-bun-20261120-prelude-target-shadow`（`Err.downcast` 形参 `Target` 遮蔽顶层 `pub enum Target`）
+  5. `task-bun-20261120-pub-const-error-collision`（模块已有 `pub const Error` 时 preamble 重复注入 `pub const Error = Err;`）
+- **修复与交付**：集中修改 `cpc/src/codegen/mod.rs`（增加 `has_top_error_decl` 守卫、prelude 全部形参/局部变量加 `__cp_` 前缀、enum `get`/`fromName` 限定 `@This().fromString` 或直调 `std.meta.stringToEnum`），通过 `bash scripts/sync_cpc.sh` 部署生效，5/5 repro 全部通过 `cpc --lib` + `zig ast-check`，已批量 `resolve` + `ack` 结单交付 `bun_agy`（注：排查发现 `cpc_dev/src/codegen/{mod,expr}.rs` 存在历史内核 D-state I/O 锁死 inode，已跳过该坏文件直接在正式 `cpc/src` 修复部署）。
+
+- **追加极速热修结单**：处理 `bun_agy` 新到工单 `task-bun-20261120-lib-err-error-shadow`（模块同时声明 `pub const Err` / `pub const Error` 与 runtime prelude 冲突），将内部运行时结构体统一更名为 `const __CpErr` 并仅在无顶层同名声明时按需导出 `Err`/`Error` 别名，`repro_css_parser_err_shadow.cp` 等 6/6 repro 全部 `zig ast-check` PASS，已 `resolve` + `ack` 结单交付。
+
+### 2026-11-20（`event_loop` 重新合并回 `event`、清理 4 组重复目录并固化 Git 提交）
+- **执行成果**：完成 `lib/event_loop` -> `lib/event`、`lib/valkey` -> `lib/redis`、`lib/watch` -> `lib/watcher`、`lib/threading` -> `lib/sync` 四组去重归并，修复 `ManagedTask` 与 CP RAII 双重释放问题及 `async fn` `print` 导入问题；9/9 回归套件全部 PASS，同步双轨规范与四线文档并执行 Git 提交；随即启动 3 个并行子智能体开始第二/第三梯队标准库对标 Bun 深度补全。

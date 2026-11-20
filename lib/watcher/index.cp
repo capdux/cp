@@ -17,12 +17,12 @@ export {
     WatchFilter,
     TrackerEntry,
     DebounceTracker,
-} from "../watch/filter.cp";
+} from "./filter.cp";
 
 export {
     WatchEntry,
     FileWatcher,
-} from "../watch/watcher.cp";
+} from "./file_watcher.cp";
 
 export {
     MAX_DEBOUNCE_ENTRIES,

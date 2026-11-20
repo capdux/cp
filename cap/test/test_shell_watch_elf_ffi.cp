@@ -126,7 +126,7 @@ fn testCapWatchSubsystem(): !void {
     // 2. FileWatcher descriptor management
     let watcher = FileWatcher.init();
     const wd1 = watcher.addWatch("lib/shell", true);
-    const wd2 = watcher.addWatch("lib/watch/watcher.cp", false);
+    const wd2 = watcher.addWatch("lib/watcher/watcher.cp", false);
     expect_eq(wd1 > 0, true);
     expect_eq(wd2 > wd1, true);
     expect_eq(watcher.activeCount(), 2);

@@ -1,41 +1,38 @@
-# CP 标准库：事件发布/订阅与事件循环驱动子系统使用手册 (`cap:event` / `cap:events`)
+# CP 标准库：事件发布/订阅与高性能异步事件循环统一子系统 (`cap:event` / `cap:events` / `cap:event_loop`)
 
 ## 一、 架构总览与设计哲学
 
-`cap:event`（别名 `cap:events`）统一提供 CP 语言的**事件发布/订阅模型**（`EventBus`、`EventEmitter`、协程信号 `Event`）与**底层异步事件调度原语**（`EventLoop`、`TimerHeap`、`DeferredTaskQueue`、`ConcurrentQueue`、`PollEngine`、`AnyTask`/`ManagedTask`），吸收自 Bun 的 `/data/dev/bun/src/js/node/events.ts` 与 `/data/dev/bun/src/event_loop/`。
+`cap:event`（别名 `cap:events`、`cap:event_loop`）统一整合 CP 语言的**应用层事件发布/订阅模型**（`EventBus`、`EventEmitter`、协程信号 `Event`）与**底层高性能异步事件循环内核**（侵入式配对最小堆 `TimerHeap`、自旋锁保护跨线程并发队列 `ConcurrentTaskQueue`/`ConcurrentQueue`、去重延迟微任务队列 `DeferredTaskQueue`、I/O 自动刷盘合并器 `AutoFlusher`、跨平台 FD 轮询器 `PollEngine`、类型擦除与可取消受管任务 `AnyTask`/`AnyTaskWithExtraContext`/`ManagedTask` 与统一事件循环引擎 `EventLoop`）。完整吸收自 Bun 的 `/data/dev/bun/src/js/node/events.ts` 与 `/data/dev/bun/src/event_loop/`。
 
 ```text
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                       cap:event 分层事件驱动模型                              │
-│                                                                              │
-│  ┌────────────────────────────────────────────────────────────────────────┐  │
-│  │ 应用发布/订阅与同步原语 (emitter.cp)                                    │  │
-│  │  • EventBus      — 64 槽零堆分配确定性回调总线 (on / once / off / emit)  │  │
-│  │  • EventEmitter  — Node.js 风格事件发射器 (返回退订闭包支持 defer)      │  │
-│  │  • Event         — 协程/任务就绪屏障 (set / reset / isSet / wait)       │  │
-│  └───────────────────────────────────┬────────────────────────────────────┘  │
-│                                      ▼                                       │
-│  ┌────────────────────────────────────────────────────────────────────────┐  │
-│  │ 统一事件循环与多源调度引擎 (loop.cp / timer.cp / file_poll.cp / ...)    │  │
-│  │  • ConcurrentQueue  — 自旋锁保护的跨线程任务投递队列                    │  │
-│  │  • DeferredTaskQueue— 按上下文指针自动去重的延迟微任务队列               │  │
-│  │  • PollEngine       — 基于 std.posix.poll 的跨平台 FD 多路复用器        │  │
-│  │  • TimerHeap        — 侵入式二叉最小堆单调时钟定时器 (setTimeout/Interval)│  │
-│  │  • AnyTask / ManagedTask — 类型擦除与可取消受管任务封装                 │  │
-│  └────────────────────────────────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                     cap:event (cap:events / cap:event_loop) 统一事件架构               │
+│                                                                                        │
+│  ┌──────────────────────────────────────────────────────────────────────────────────┐  │
+│  │ 应用发布/订阅与同步原语 (emitter.cp)                                              │  │
+│  │  • EventBus      — 64 槽零堆分配确定性回调总线 (on / once / off / emit)           │  │
+│  │  • EventEmitter  — Node.js 风格事件发射器 (返回退订闭包支持 defer)                │  │
+│  │  • Event         — 协程/任务就绪屏障 (set / reset / isSet / wait)                 │  │
+│  └────────────────────────────────────────┬─────────────────────────────────────────┘  │
+│                                           ▼                                            │
+│  ┌──────────────────────────────────────────────────────────────────────────────────┐  │
+│  │ 统一事件循环四阶段调度引擎 (loop.cp)                                              │  │
+│  │  Phase 1: ConcurrentTaskQueue.drainAll — SpinLock O(1) 整链摘除，无锁执行跨线程回调│  │
+│  │  Phase 2: DeferredTaskQueue.run & AutoFlusher — 按 ctx 去重，批量刷盘/微任务      │  │
+│  │  Phase 3: PollEngine.poll — 按需懒初始化 POSIX poll 文件描述符 I/O 多路复用       │  │
+│  │  Phase 4: TimerHeap.fireExpired — 侵入式配对最小堆 O(1) 插入 / O(log N) 取消      │  │
+│  └──────────────────────────────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 二、 核心 API 详解与代码示例
+## 二、 核心组件详解与代码示例
 
-### 1. 确定性零堆分配发布/订阅总线 (`EventBus`)
-
-`EventBus` 面向系统级高吞吐场景，在栈内维护 64 个监听槽位，直接按事件名精确分发强类型回调 `EventListenerFn = fn(payload: []const u8, ctx: (*anyopaque)?)`，支持 `once` 自动注销与 `off`/`removeAllListeners`：
+### 1. 确定性零堆分配发布/订阅总线 (`EventBus`) 与 `EventEmitter` / `Event`
 
 ```typescript
-import { EventBus } from "cap:event";
+import { EventBus, EventEmitter, Event } from "cap:event";
 
 struct Metrics {
     pub received: i32 = 0;
@@ -48,7 +45,7 @@ fn onData(payload: []const u8, ctx: (*anyopaque)?) {
     }
 }
 
-pub fn demoEventBus() {
+pub fn demoPubSub() {
     let bus = EventBus.init();
     let metrics = Metrics{ received: 0 };
 
@@ -57,27 +54,14 @@ pub fn demoEventBus() {
 
     const n1 = bus.emit("chunk", "hello"); // 1
     const n2 = bus.emit("ready", "ok");    // 1 (触发后自动移除)
-    const n3 = bus.emit("ready", "again"); // 0
-
     * = bus.off("chunk", onData);
-    * = bus.removeAllListeners("chunk");
-}
-```
 
-### 2. Node.js 风格 `EventEmitter` 与协程屏障 `Event`
-
-```typescript
-import { EventEmitter, Event } from "cap:event";
-
-pub fn demoEmitterAndSignal() {
+    // Node.js 风格 EventEmitter + 协程信号 Event
     let ee = new EventEmitter();
     const unsub = ee.on("connected", null);
-    defer unsub(); // 离开作用域自动退订，杜绝监听器泄漏
+    defer unsub();
+    * = ee.emit("connected");
 
-    const has_listeners = ee.emit("connected"); // true
-    const count = ee.listenerCount("connected"); // 1
-
-    // 协程同步信号原语
     let ready = new Event();
     ready.set();
     const ok = ready.isSet(); // true
@@ -85,52 +69,90 @@ pub fn demoEmitterAndSignal() {
 }
 ```
 
-### 3. 统一事件循环与任务调度 (`EventLoop` / `TimerHeap` / `DeferredTaskQueue` / `ConcurrentQueue`)
+### 2. 侵入式配对最小堆定时器 (`Timer` & `TimerHeap`)
 
-`EventLoop.tick()` 按固定 6 阶段顺序调度：`ConcurrentQueue.drain` → `DeferredTaskQueue.run` → 计算最近定时器超时 → `PollEngine.poll` / 休眠 → `TimerHeap.drainExpired` → 尾随微任务排空：
+源自 `/data/dev/bun/src/event_loop/EventLoopTimer.cp`。`Timer` 在结构体内直接嵌入 `child`/`prev`/`next` 侵入式配对堆（Pairing Heap）指针，零堆分配：
+- `insert(&timer)` / `peek()` / `nextTimeoutMs(now_ms)`：严格 $O(1)$；
+- `deleteMin()` / `remove(&timer)`：均摊 $O(\log N)$ 任意位置取消；
+- `fireExpired(now_ms)`：批量触发所有到期定时器，并对 `interval_ms > 0` 的周期定时器自动重入堆。
 
 ```typescript
-import { EventLoop, ManagedTask } from "cap:event";
+import { Timer, TimerHeap } from "cap:event";
 
-struct LoopState {
-    pub steps: i32 = 0;
+fn onTimeout(t: *Timer) {}
+
+pub fn demoTimerHeap() {
+    let heap = TimerHeap.init();
+    let t1 = Timer{ expires_at_ms: 200, callback: onTimeout };
+    let t2 = Timer{ expires_at_ms: 50,  callback: onTimeout };
+    heap.insert(&t1);
+    heap.insert(&t2);
+    * = heap.remove(&t1);            // O(log N) 取消
+    const fired = heap.fireExpired(100); // 1
+}
+```
+
+### 3. 跨线程并发任务队列 (`ConcurrentTask` & `ConcurrentTaskQueue` / `ConcurrentQueue`)
+
+源自 `/data/dev/bun/src/event_loop/ConcurrentTask.cp`。使用原子 `SpinLock` 保护 O(1) `drain()` 整链摘除，随后在无锁状态下通过 `drainAll()` 或 `drainMax(limit)` 执行。
+
+### 4. 去重延迟微任务队列与自动刷盘器 (`DeferredTaskQueue` & `AutoFlusher`)
+
+源自 `/data/dev/bun/src/event_loop/DeferredTaskQueue.cp` 与 `AutoFlusher.cp`。同一 Tick 内按 `ctx` 指针自动幂等去重；回调返回 `true` 续期至下一轮，返回 `false` 自动移出。
+
+```typescript
+import { DeferredTaskQueue, AutoFlusher } from "cap:event";
+
+fn onFlush(ctx: *anyopaque): bool {
+    return false;
 }
 
-fn onTick(ctx: *!?) {
-    if (c := ctx) {
-        let st: *LoopState = @alignCast(@ptrCast(c));
-        st.steps += 1;
+pub fn demoAutoFlusher() {
+    let queue = DeferredTaskQueue.init();
+    let flusher = AutoFlusher.init();
+    let fd_ctx: i32 = 1;
+    * = flusher.registerDeferred(&queue, @ptrCast(&fd_ctx), onFlush);
+    * = queue.run();
+    flusher.markUnregistered();
+}
+```
+
+### 5. 通用任务封装 (`AnyTask` / `AnyTaskWithExtraContext` / `ManagedTask`) 与统一事件循环 (`EventLoop`)
+
+- `ManagedTask` 同时支持栈分配值语义 `ManagedTask.init(ctx, cb)` 与堆分配指针语义 `ManagedTask.create(ctx, cb)`，内置 `is_heap_allocated` 守卫杜绝栈误释放与重复释放。
+- `EventLoop` 内置 64 槽位零堆分配定时器池与任务池，按需懒初始化 `PollEngine` 支持 `watch(fd, events, cb, ctx)` / `unwatch(fd)`：
+
+```typescript
+import { EventLoop, Timer } from "cap:event";
+
+struct AppState { ticks: i32 = 0 }
+
+fn onTimer(t: *Timer) {
+    if (c := t.ctx) {
+        let s: *AppState = @alignCast(@ptrCast(c));
+        s.ticks += 1;
     }
 }
 
 pub fn demoEventLoop() {
     let loop = EventLoop.init();
-    let state = LoopState{ steps: 0 };
-
-    // 1. 注册 0ms 定时器、去重微任务与跨线程任务
-    const t = loop.setTimeout(onTick, 0, @ptrCast(&state));
-    * = loop.deferTask(onTick, @ptrCast(&state));
-    loop.postTask(onTick, @ptrCast(&state));
-
-    // 2. 驱动单次事件循环 Tick
-    const handled = loop.tick(0); // >= 3, state.steps == 3
-    * = loop.clearTimeout(t);
-
-    // 3. 受管可取消任务
-    let task = ManagedTask.create(@ptrCast(&state), onTick);
-    task.cancel();
-    task.run(); // 已取消，跳过回调并自动释放
+    let state = AppState{ ticks: 0 };
+    * = loop.setTimeout(0, onTimer, @ptrCast(&state));
+    const processed = loop.tick();
 }
 ```
 
 ---
 
-## 三、 与 Node.js `events` / Bun EventLoop 对照表
+## 三、 与 Node.js `events` / Bun `src/event_loop/` 对照表
 
-| 能力 | Node.js / Bun | CP (`cap:event`) | 核心差异与优势 |
-|---|---|---|---|
-| 事件订阅/分发 | `new EventEmitter()` (`on`/`once`/`off`/`emit`) | `EventBus`（真实回调零堆分配）& `EventEmitter`（带退订闭包） | `EventBus` 零堆分配、无闭包 GC 压力；`EventEmitter.on` 返回退订函数适配 `defer` |
-| 异步就绪屏障 | 手动封装 `Promise` + `resolve` | 内置 `Event` (`set`/`reset`/`isSet`/`wait`) | 直接集成 CP 原生任务句柄，零 Promise 对象分配 |
-| 延迟微任务去重 | `queueMicrotask`（不去重） | `DeferredTaskQueue.postTask(ctx, fn)` | 按 `ctx` 指针自动去重，适配高频 I/O 批量刷盘 |
-| 跨线程回调投递 | libuv `uv_async_send` | `ConcurrentQueue`（自旋锁保护侵入式链表） | 轻量无系统调用唤醒延迟，批量 `drain(limit)` |
-| 定时器与 I/O 调度 | `setTimeout` / `setInterval` + libuv/epoll | `EventLoop` + `TimerHeap` + `PollEngine` | 纯 CP 实现，可独立嵌入任意自定义协议引擎与测试夹具 |
+| 组件 | Bun / Node.js 来源 | CP (`cap:event` / `cap:event_loop`) | 关键性能特征 |
+| :--- | :--- | :--- | :--- |
+| **发布/订阅总线** | `js/node/events.ts` | `EventBus`, `EventEmitter`, `Event` | 64 槽零堆分配 + 退订闭包适配 `defer` |
+| **侵入式配对堆定时器** | `event_loop/EventLoopTimer.cp` | `Timer`, `TimerHeap`, `TimeSpec`, `TimerState` | $O(1)$ 插入/窥视，$O(\log N)$ 取消 |
+| **跨线程并发任务队列** | `event_loop/ConcurrentTask.cp` | `SpinLock`, `ConcurrentTask`, `ConcurrentTaskQueue` (`ConcurrentQueue`) | $O(1)$ 整链原子摘除（`drainAll` / `drainMax`） |
+| **去重延迟微任务队列** | `event_loop/DeferredTaskQueue.cp` | `DeferredTaskQueue`, `DeferredTaskEntry` | 128 槽零分配、按 `ctx` 幂等去重、支持 `bool` 续期 |
+| **自动刷盘合并器** | `event_loop/AutoFlusher.cp` | `AutoFlusher` | 单 Tick 聚合多次小块写缓冲 Flush |
+| **FD 多路复用器** | `event_loop/AnyEventLoop.cp` | `PollEngine`, `PollEvents`, `FilePollRegistration` | 懒初始化 POSIX `poll` 监听 |
+| **类型擦除与受管任务** | `event_loop/AnyTask.cp`, `ManagedTask.cp` | `AnyTask`, `AnyTaskWithExtraContext`, `ManagedTask` | 栈/堆双模安全释放，支持 `cancel()` |
+| **统一事件循环内核** | `event_loop/MiniEventLoop.cp` | `EventLoop` | 零堆碎片 64 槽定时/任务池 + 四阶段 `tick` |

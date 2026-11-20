@@ -1,5 +1,5 @@
 // Source: /data/dev/bun/src/watcher/INotifyWatcher.cp
-// lib/watch/watcher.cp
+// lib/watcher/file_watcher.cp
 // Cross-Platform Filesystem Watcher & Linux inotify / macOS kqueue Event Abstraction
 // Absorbed from Bun src/watcher/INotifyWatcher.cp, KEventWatcher.cp & Watcher.cp
 
@@ -9,7 +9,7 @@ import {
     WatchEventKind,
     WatchMask,
     WatchEvent,
-} from "../watcher/events.cp";
+} from "./events.cp";
 
 export {
     WatchEventKind,

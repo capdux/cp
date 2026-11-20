@@ -38,7 +38,8 @@ import {
     ConcurrentTask,
     ConcurrentQueue,
     TimerHeap,
-    EventLoop
+    EventLoop,
+    Timer
 } from "cap:event";
 
 const std = @import("std");
@@ -67,6 +68,19 @@ fn onBusOnce(payload: []const u8, ctx: (*anyopaque)?) {
 
 fn onSimpleTask(ctx: *!?) {
     if (c := ctx) {
+        let counter: *EventTestCounter = @alignCast(@ptrCast(c));
+        counter.total += 1;
+    }
+}
+
+fn onDeferredOnce(ctx: *anyopaque): bool {
+    let counter: *EventTestCounter = @alignCast(@ptrCast(ctx));
+    counter.total += 1;
+    return false;
+}
+
+fn onEventTimer(t: *Timer) {
+    if (c := t.ctx) {
         let counter: *EventTestCounter = @alignCast(@ptrCast(c));
         counter.total += 1;
     }
@@ -354,8 +368,8 @@ fn testEventSuite(): !void {
 
     // 4. DeferredTaskQueue deduplication & execution
     let dq = DeferredTaskQueue.init();
-    expect_eq(dq.postTask(@ptrCast(&task_counter), onSimpleTask), false);
-    expect_eq(dq.postTask(@ptrCast(&task_counter), onSimpleTask), true); // deduplicated
+    expect_eq(dq.postTask(@ptrCast(&task_counter), onDeferredOnce), true);
+    expect_eq(dq.postTask(@ptrCast(&task_counter), onDeferredOnce), false); // deduplicated
     expect_eq(dq.count(), 1);
     expect_eq(dq.run(), 1);
     expect_eq(task_counter.total, 3);
@@ -366,15 +380,15 @@ fn testEventSuite(): !void {
     const ct = ConcurrentTask.create(onSimpleTask, @ptrCast(&task_counter), true);
     cq.push(ct);
     expect_eq(cq.len(), 1);
-    expect_eq(cq.drain(8), 1);
+    expect_eq(cq.drainMax(8), 1);
     expect_eq(task_counter.total, 4);
 
     let loop = EventLoop.init();
-    * = loop.setTimeout(onSimpleTask, 0, @ptrCast(&task_counter));
-    * = loop.deferTask(onSimpleTask, @ptrCast(&task_counter));
-    loop.postTask(onSimpleTask, @ptrCast(&task_counter));
+    * = loop.setTimeout(0, onEventTimer, @ptrCast(&task_counter));
+    * = loop.deferTask(@ptrCast(&task_counter), onDeferredOnce);
+    * = loop.postTask(onSimpleTask, @ptrCast(&task_counter));
     expect_eq(loop.hasActiveHandles(), true);
-    const processed = loop.tick(0);
+    const processed = loop.tick();
     expect_eq(processed >= 3, true);
     expect_eq(task_counter.total, 7);
     expect_eq(TimerHeap.nowMs() > 0, true);

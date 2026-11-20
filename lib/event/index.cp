@@ -1,35 +1,54 @@
-// Source: Custom (agy-generated export index)
+// Source: /data/dev/bun/src/event_loop/MiniEventLoop.cp
 // lib/event/index.cp
-// Unified Event Loop & EventEmitter Subsystem (cap:event / cap:events)
+// Unified Event & EventLoop Subsystem (cap:event / cap:events / cap:event_loop)
 
 export {
+    getNowMs,
+    TimeSpec,
+    TimerState,
     Timer,
     TimerHeap,
     TimerCallback,
-} from "./timer";
+} from "./timer.cp";
 
 export {
-    ConcurrentTask,
-    ConcurrentQueue,
+    SpinLock,
+    TaskSpinLock,
     TaskFn,
-} from "./concurrent_task";
+    ConcurrentTask,
+    ConcurrentTaskQueue,
+    ConcurrentQueue,
+} from "./concurrent_task.cp";
 
 export {
-    DeferredTaskQueue,
+    MAX_DEFERRED_TASKS,
+    DeferredTaskEntry,
     DeferredEntry,
     DeferredFn,
-} from "./deferred_task";
+    DeferredTaskQueue,
+} from "./deferred_task.cp";
+
+export {
+    AnyTask,
+    AnyTaskWithExtraContext,
+    ManagedTask,
+} from "./task.cp";
+
+export {
+    AutoFlusher,
+} from "./auto_flusher.cp";
 
 export {
     PollEngine,
     PollEvents,
     PollCallback,
     FilePollRegistration,
-} from "./file_poll";
+} from "./file_poll.cp";
 
 export {
+    MAX_LOOP_TIMERS,
+    MAX_LOOP_TASKS,
     EventLoop,
-} from "./loop";
+} from "./loop.cp";
 
 export * from "./emitter.cp";
-export * from "./task.cp";

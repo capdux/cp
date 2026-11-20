@@ -1,6 +1,6 @@
 // Source: /data/dev/bun/src/valkey/valkey_protocol.cp
-// lib/valkey/valkey_protocol_.cp
-// Low-level RESP2 / RESP3 Protocol Types, Error Codes & Verbatim String Slice View in pure CP
+// lib/redis/protocol.cp
+// Low-level RESP2 / RESP3 Protocol Types & Verbatim String Slice View in pure CP
 
 pub struct VerbatimString {
     pub format: []const u8 = "txt";

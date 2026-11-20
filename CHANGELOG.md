@@ -1352,3 +1352,13 @@ hotfix: resolve keyword conflict for "test" and prevent redundant re-export of i
   - 新增 `lib/errno/{errno,index}.cp`、`lib/logger/{logger,index}.cp`、`lib/string/wcwidth.cp`（导出至 `lib/string/index.cp`）。
   - 新增 `docs/errno/errno.md`、`docs/logger/logger.md`，更新 `docs/string/string.md`，新增 `cap/test/test_bun_new_assets.cp`。
 - **cp_ref.md & cp_agent_ref.md**: 同步第五批 12 份专著文档索引与协议矩阵（补充 `cap:errno`/`cap:logger`/`cap:napi`/`cap:bigint`/`cap:bundler` 及 `stringWidth`）。
+
+### 2026-11-20（`cpc` 6 项 `bun_agy` 热修 + `event_loop` 合并回 `event` + 4 组重复目录清理）
+- **cpc 编译器加固 (`cpc/src/codegen/{mod,actor,stmt}.rs`, `cpc/src/resolver.rs`)**:
+  - 修复 6 条 `bun_agy` 阻断工单：内部运行时错误类型更名为 `const __CpErr` 并按需导出 `Err`/`Error`；prelude、trait `downcast`、RAII `defer` 块及 enum 辅助方法内部形参/局部变量全面加 `__cp_` 前缀根治遮蔽；enum `get`/`fromName` 限定 `@This().fromString` 或直调 `std.meta.stringToEnum(@This(), __cp_s)`。
+  - 修复 `async fn` 中 `import { print } from "cap:io"` 丢失 `print` 定义问题；`resolver.rs` 统一映射 `event_loop -> event`、`valkey -> redis`。
+- **标准库去重与合并**:
+  - **合并 `lib/event_loop/` -> `lib/event/`**：融合配对最小堆 `TimerHeap`、`AutoFlusher`、`ConcurrentTaskQueue`/`ConcurrentQueue`、`DeferredTaskQueue`、`AnyTaskWithExtraContext`、栈/堆双模安全 `ManagedTask` 与懒初始化 `PollEngine` 的 `EventLoop`；合并文档至 `docs/event/event.md` 并删除 `lib/event_loop/`、`docs/event_loop/`。
+  - **清理 3 组冗余目录**：合并 `lib/valkey/` -> `lib/redis/protocol.cp`、合并 `lib/watch/` -> `lib/watcher/{filter,file_watcher}.cp`（文档迁至 `docs/watcher/watcher.md`）、清理零引用的历史旧目录 `lib/threading/`。
+  - 更新适配 `cap/test/test_event_loop.cp`、`cap/test/test_bench_cli_napi_bigint_event.cp`、`cap/test/test_shell_watch_elf_ffi.cp`，9/9 回归套件 100% PASS。
+- **GEMINI.md**: 更新多 AGY SQLite 通信命令为绝对路径 `/root/.agy/comm/task_queue.py`。

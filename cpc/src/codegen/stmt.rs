@@ -369,7 +369,7 @@ impl Codegen {
                                     "var __{}_moved = false; _ = &__{}_moved;",
                                     ident.sym, ident.sym
                                 ));
-                                self.write_to_case(&format!("defer if (!__{0}_moved) {{ const __T = @TypeOf({0}); if (@typeInfo(__T) == .pointer) {{ const Child = @typeInfo(__T).pointer.child; if (@typeInfo(Child) == .@\"struct\" and @hasDecl(Child, \"release\")) {{ const RType = @typeInfo(@TypeOf(Child.release)).@\"fn\".return_type.?; if (@typeInfo(RType) == .error_union) {{ _ = {0}.release() catch {{}}; }} else {{ {0}.release(); }} }} }} else if (@typeInfo(__T) == .@\"struct\" and @hasDecl(__T, \"release\")) {{ var _drop_val = {0}; _drop_val.release(); }} }};", ident.sym));
+                                self.write_to_case(&format!("defer if (!__{0}_moved) {{ const __T = @TypeOf({0}); if (@typeInfo(__T) == .pointer) {{ const __CpChild = @typeInfo(__T).pointer.child; if (@typeInfo(__CpChild) == .@\"struct\" and @hasDecl(__CpChild, \"release\")) {{ const __CpRType = @typeInfo(@TypeOf(__CpChild.release)).@\"fn\".return_type.?; if (@typeInfo(__CpRType) == .error_union) {{ _ = {0}.release() catch {{}}; }} else {{ {0}.release(); }} }} }} else if (@typeInfo(__T) == .@\"struct\" and @hasDecl(__T, \"release\")) {{ var _drop_val = {0}; _drop_val.release(); }} }};", ident.sym));
                             } else if !self.is_state_machine {
                                 if !is_const {
                                     self.write_to_case(&format!("_ = &{};", ident.sym));
@@ -1671,7 +1671,7 @@ impl Codegen {
                             "var __{0}_moved = false; _ = &__{0}_moved;",
                             id.sym
                         ));
-                        self.write_to_case(&format!("defer if (!__{0}_moved) {{ const __T = @TypeOf({0}); if (@typeInfo(__T) == .pointer) {{ const Child = @typeInfo(__T).pointer.child; if (@typeInfo(Child) == .@\"struct\" and @hasDecl(Child, \"release\")) {{ const RType = @typeInfo(@TypeOf(Child.release)).@\"fn\".return_type.?; if (@typeInfo(RType) == .error_union) {{ _ = {0}.release() catch {{}}; }} else {{ {0}.release(); }} }} }} else if (@typeInfo(__T) == .@\"struct\" and @hasDecl(__T, \"release\")) {{ var _drop_val = {0}; _drop_val.release(); }} }};", id.sym));
+                        self.write_to_case(&format!("defer if (!__{0}_moved) {{ const __T = @TypeOf({0}); if (@typeInfo(__T) == .pointer) {{ const __CpChild = @typeInfo(__T).pointer.child; if (@typeInfo(__CpChild) == .@\"struct\" and @hasDecl(__CpChild, \"release\")) {{ const __CpRType = @typeInfo(@TypeOf(__CpChild.release)).@\"fn\".return_type.?; if (@typeInfo(__CpRType) == .error_union) {{ _ = {0}.release() catch {{}}; }} else {{ {0}.release(); }} }} }} else if (@typeInfo(__T) == .@\"struct\" and @hasDecl(__T, \"release\")) {{ var _drop_val = {0}; _drop_val.release(); }} }};", id.sym));
                     }
                 } else {
                     let item_var = format!("__item_{}", tmp_id);

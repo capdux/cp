@@ -1701,3 +1701,8 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
   2. `lib/napi` 移除外部 `#include "js_native_api.h"` 硬依赖阻断，纯 CP 实现 Node-API v9 结构体与错误集；`lib/bundler/bundle.cp` 清除悬空占位导入并升级为可运行 `BundleV2`；
   3. 从 Bun 吸收三项高价值空白资产填补 CP 生态：`cap:errno`（65 个 POSIX/Linux 跨平台错误码）、`cap:logger`（零堆分配源码诊断日志引擎）、`lib/string/wcwidth.cp`（`Bun.stringWidth` 终端显示列宽计算）；
   4. 全仓自动化校验：`lib/**/*.cp` 全部 **431 / 431** 文件首行 `// Source:` 100% 达标（0 遗漏、0 `UNVERIFIED`），累计落地 45+ 份 `docs/<库名>/<库名>.md` 专著文档与 15+ 套离线全功能回归测试套件。
+
+### 第九阶段：`bun_agy` 6 项编译器热修 + `event_loop` 重新合并回 `event` 与全库去重
+- **多 AGY SQLite 通信系统修复**：定位并根治了因各 AGY 节点进程设置独立 `HOME=/root/.agy/node<N>` 导致的 `~/.agy/comm` 路径与 SQLite 脑裂缺陷，将 `/root/.agy/comm/{task_queue,resolve_task,agy_dispatcher}.py` 全部改为基于 `os.path.realpath(__file__)` 定位并为三节点建立软链兜底，随即顺利接收并极速结单 `bun_agy` 投递的 6 条编译阻断工单。
+- **编译器代码生成抗遮蔽加固**：将内部错误结构体抽离为 `const __CpErr` 并以 `has_top_decl` 守卫条件导出 `Err`/`Error`；prelude 与 RAII `defer` 内局部标识符统一加 `__cp_` 前缀，杜绝 `Child`/`RType`/`Target`/`ptr`/`tid` 遮蔽；enum `fromName`/`get` 彻底摆脱裸 `get(s)` 调用。
+- **标准库 4 组重复目录归并**：将 `lib/event_loop` 完整并入 `lib/event`（保留配对最小堆零分配内核与 `PollEngine`/`EventBus`/`EventEmitter`），同步归并删除 `lib/valkey`（并入 `lib/redis`）、`lib/watch`（并入 `lib/watcher`）、`lib/threading`（已映射 `lib/sync`）；同时消除 `ManagedTask.run()` 与 CP 自动 RAII `defer release()` 的双重释放隐患，9 套测试 100% PASS。

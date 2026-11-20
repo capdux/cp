@@ -1,132 +1,235 @@
 // Source: /data/dev/bun/src/event_loop/MiniEventLoop.cp
 // lib/event/loop.cp
-// Unified EventLoop integrating intrusive timers, deferred microtasks, cross-thread tasks, and I/O polling
+// Unified EventLoop integrating intrusive pairing-heap timers, deferred microtasks,
+// cross-thread concurrent tasks, AutoFlusher, and lazy POSIX I/O polling for cap:event
 
-const std = @import("std");
-import { Timer, TimerHeap, TimerCallback } from "./timer";
-import { ConcurrentTask, ConcurrentQueue, TaskFn } from "./concurrent_task";
-import { DeferredTaskQueue, DeferredFn } from "./deferred_task";
-import { PollEngine, PollEvents, PollCallback } from "./file_poll";
+import std from "std";
+import { Timer, TimerHeap, TimerState, getNowMs } from "./timer.cp";
+import { ConcurrentTask, ConcurrentTaskQueue } from "./concurrent_task.cp";
+import { DeferredTaskQueue } from "./deferred_task.cp";
+import { AnyTask, ManagedTask } from "./task.cp";
+import { AutoFlusher } from "./auto_flusher.cp";
+import { PollEngine, PollEvents, PollCallback } from "./file_poll.cp";
 
-pub class EventLoop {
-    timers: *TimerHeap = undefined;
-    deferred: *DeferredTaskQueue = undefined;
-    poll_engine: *PollEngine = undefined;
-    concurrent: *ConcurrentQueue = undefined;
-    next_timer_id: u64 = 1;
-    running: bool = false;
-    stopped: bool = false;
+pub const MAX_LOOP_TIMERS: usize = 64;
+pub const MAX_LOOP_TASKS: usize = 64;
 
-    pub static fn init(): *EventLoop {
-        let el = std.heap.page_allocator.create(EventLoop) catch unreachable;
-        el.timers = TimerHeap.init();
-        el.deferred = DeferredTaskQueue.init();
-        el.poll_engine = PollEngine.init();
-        el.concurrent = ConcurrentQueue.init();
-        el.next_timer_id = 1;
-        el.running = false;
-        el.stopped = false;
-        return el;
+pub struct EventLoop {
+    pub timers: TimerHeap = TimerHeap{},
+    pub deferred_tasks: DeferredTaskQueue = DeferredTaskQueue{},
+    pub concurrent_tasks: ConcurrentTaskQueue = ConcurrentTaskQueue{},
+    pub poll_engine: (*PollEngine)? = null,
+    pub iteration: u64 = 0,
+    pub stopped: bool = false,
+
+    internal_timers: [MAX_LOOP_TIMERS]Timer = undefined,
+    internal_timers_used: [MAX_LOOP_TIMERS]bool = [false; MAX_LOOP_TIMERS],
+
+    internal_tasks: [MAX_LOOP_TASKS]ConcurrentTask = undefined,
+    internal_tasks_used: [MAX_LOOP_TASKS]bool = [false; MAX_LOOP_TASKS],
+
+    pub static fn init(): EventLoop {
+        return EventLoop{
+            timers: TimerHeap.init(),
+            deferred_tasks: DeferredTaskQueue.init(),
+            concurrent_tasks: ConcurrentTaskQueue.init(),
+            poll_engine: null,
+            iteration: 0,
+            stopped: false,
+            internal_timers: undefined,
+            internal_timers_used: [false; MAX_LOOP_TIMERS],
+            internal_tasks: undefined,
+            internal_tasks_used: [false; MAX_LOOP_TASKS],
+        };
     }
 
-    pub fn setTimeout(*_, cb: TimerCallback, delay_ms: i64, ctx: *!?): *Timer {
-        const id = _.next_timer_id;
-        _.next_timer_id += 1;
-        const timer = Timer.create(id, delay_ms, 0, cb, ctx);
-        _.timers.push(timer);
-        return timer;
+    pub fn now(): i64 {
+        return getNowMs();
     }
 
-    pub fn setInterval(*_, cb: TimerCallback, interval_ms: i64, ctx: *!?): *Timer {
-        const id = _.next_timer_id;
-        _.next_timer_id += 1;
-        const timer = Timer.create(id, interval_ms, interval_ms, cb, ctx);
-        _.timers.push(timer);
-        return timer;
-    }
-
-    pub fn clearTimeout(*_, timer: *Timer): bool {
-        return _.timers.remove(timer);
-    }
-
-    pub fn clearInterval(*_, timer: *Timer): bool {
-        return _.timers.remove(timer);
-    }
-
-    pub fn deferTask(*_, task: DeferredFn, ctx: *!?): bool {
-        return _.deferred.postTask(ctx, task);
-    }
-
-    pub fn postTask(*_, cb: TaskFn, ctx: *!?) {
-        const task = ConcurrentTask.create(cb, ctx, true);
-        _.concurrent.push(task);
-    }
-
-    pub fn watch(*_, fd: i32, events: u32, cb: PollCallback, ctx: *!?): bool {
-        return _.poll_engine.register(fd, events, cb, ctx);
-    }
-
-    pub fn unwatch(*_, fd: i32): bool {
-        return _.poll_engine.unregister(fd);
-    }
-
-    pub fn hasActiveHandles(*_): bool {
-        return _.timers.count() > 0 || _.poll_engine.count() > 0 || _.concurrent.len() > 0 || _.deferred.count() > 0;
-    }
-
-    pub fn tick(*_, timeout_override: i32?): usize {
-        let events_processed: usize = 0;
-
-        // 1. Drain concurrent cross-thread tasks
-        events_processed += _.concurrent.drain(64);
-
-        // 2. Run deferred microtasks before sleeping/polling
-        events_processed += _.deferred.run();
-
-        // 3. Compute timeout until next timer
-        const now = TimerHeap.nowMs();
-        let timeout_ms: i32 = 0;
-        if (t := timeout_override) {
-            timeout_ms = t;
-        } else {
-            const next_timeout = _.timers.getTimeoutMs(now);
-            if (t := next_timeout) {
-                timeout_ms = t;
-            } else if (_.poll_engine.count() > 0) {
-                timeout_ms = 100; // default poll interval when waiting for I/O
-            } else {
-                timeout_ms = 0;
-            }
+    pub fn isAlive(): bool {
+        let has_io = false;
+        if (pe := _.poll_engine) {
+            has_io = pe.count() > 0;
         }
-
-        // 4. Poll I/O file descriptors
-        if (_.poll_engine.count() > 0) {
-            events_processed += _.poll_engine.poll(timeout_ms);
-        } else if (timeout_ms > 0) {
-            // Sleep for timeout if no I/O descriptors
-            TimerHeap.sleepMs(timeout_ms as u64);
-        }
-
-        // 5. Drain expired timers
-        const now_after = TimerHeap.nowMs();
-        events_processed += _.timers.drainExpired(now_after, 64);
-
-        // 6. Run any follow-up microtasks triggered by timers or I/O
-        events_processed += _.deferred.run();
-
-        return events_processed;
+        return _.timers.count() > 0 or _.deferred_tasks.count() > 0 or !_.concurrent_tasks.isEmpty() or has_io;
     }
 
-    pub fn run(*_) {
-        _.running = true;
-        _.stopped = false;
-        while (_.hasActiveHandles() && !_.stopped) {
-            * = _.tick(null);
-        }
-        _.running = false;
+    pub fn hasActiveHandles(): bool {
+        return _.isAlive();
     }
 
     pub fn stop(*_) {
         _.stopped = true;
+    }
+
+    pub fn watch(*_, fd: i32, events: u32, cb: PollCallback, ctx: *!?): bool {
+        if (_.poll_engine == null) {
+            _.poll_engine = PollEngine.init();
+        }
+        return _.poll_engine.?.register(fd, events, cb, ctx);
+    }
+
+    pub fn unwatch(*_, fd: i32): bool {
+        if (pe := _.poll_engine) {
+            return pe.unregister(fd);
+        }
+        return false;
+    }
+
+    pub fn tick(*_): usize {
+        return _.tickWithTimeout(0);
+    }
+
+    pub fn tickWithTimeout(*_, poll_timeout_ms: i32): usize {
+        let total_processed: usize = 0;
+
+        // 1. Drain and run cross-thread / concurrent tasks
+        let concurrent_count = _.concurrent_tasks.drainAll();
+        total_processed += concurrent_count;
+        if (_.concurrent_tasks.isEmpty()) {
+            _.resetInternalTasks();
+        }
+
+        // 2. Run deferred microtasks (e.g. socket/buffer auto-flushes)
+        let deferred_count = _.deferred_tasks.run();
+        total_processed += deferred_count;
+
+        // 3. Poll active I/O file descriptors if registered
+        if (pe := _.poll_engine) {
+            if (pe.count() > 0) {
+                total_processed += pe.poll(poll_timeout_ms);
+            }
+        }
+
+        // 4. Fire expired timers
+        let now_ms = getNowMs();
+        let fired_timers = _.timers.fireExpired(now_ms);
+        total_processed += fired_timers;
+
+        _.iteration += 1;
+        return total_processed;
+    }
+
+    pub fn runUntilDone(*_, isDone: fn ((*anyopaque)?) bool, ctx: (*anyopaque)?): usize {
+        let total: usize = 0;
+        while (!isDone(ctx) and !_.stopped) {
+            let processed = _.tick();
+            total += processed;
+
+            if (!_.isAlive() and !isDone(ctx)) {
+                break;
+            }
+        }
+        return total;
+    }
+
+    pub fn run(*_, max_ticks: usize): usize {
+        let total: usize = 0;
+        let ticks: usize = 0;
+        while (ticks < max_ticks and !_.stopped and _.isAlive()) {
+            let processed = _.tick();
+            total += processed;
+            ticks += 1;
+        }
+        return total;
+    }
+
+    pub fn postConcurrent(*_, task: *ConcurrentTask) {
+        _.concurrent_tasks.push(task);
+    }
+
+    pub fn postTask(*_, func: fn ((*anyopaque)?) void, ctx: (*anyopaque)?): bool {
+        let slot = _.allocTaskSlot() orelse return false;
+        slot.* = ConcurrentTask.init(func, ctx, false);
+        _.concurrent_tasks.push(slot);
+        return true;
+    }
+
+    pub fn postDeferred(*_, ctx: *anyopaque, task: fn (*anyopaque) bool): bool {
+        return _.deferred_tasks.postTask(ctx, task);
+    }
+
+    pub fn deferTask(*_, ctx: *anyopaque, task: fn (*anyopaque) bool): bool {
+        return _.deferred_tasks.postTask(ctx, task);
+    }
+
+    pub fn unregisterTask(*_, ctx: *anyopaque): bool {
+        return _.deferred_tasks.unregisterTask(ctx);
+    }
+
+    pub fn scheduleTimer(*_, timer: *Timer) {
+        _.timers.insert(timer);
+    }
+
+    pub fn cancelTimer(*_, timer: *Timer): bool {
+        let removed = _.timers.remove(timer);
+        _.freeTimerSlot(timer);
+        return removed;
+    }
+
+    pub fn setTimeout(*_, delay_ms: u64, callback: fn (*Timer) void, ctx: (*anyopaque)?): (*Timer)? {
+        let slot = _.allocTimerSlot() orelse return null;
+        slot.* = Timer.init(delay_ms, callback, ctx);
+        _.timers.insert(slot);
+        return slot;
+    }
+
+    pub fn setInterval(*_, interval_ms: u64, callback: fn (*Timer) void, ctx: (*anyopaque)?): (*Timer)? {
+        let slot = _.allocTimerSlot() orelse return null;
+        slot.* = Timer.initInterval(interval_ms, callback, ctx);
+        _.timers.insert(slot);
+        return slot;
+    }
+
+    pub fn clearTimeout(*_, timer: *Timer): bool {
+        return _.cancelTimer(timer);
+    }
+
+    pub fn clearInterval(*_, timer: *Timer): bool {
+        return _.cancelTimer(timer);
+    }
+
+    fn allocTimerSlot(*_): (*Timer)? {
+        let i: usize = 0;
+        while (i < MAX_LOOP_TIMERS) {
+            if (!_.internal_timers_used[i]) {
+                _.internal_timers_used[i] = true;
+                return &_.internal_timers[i];
+            }
+            i += 1;
+        }
+        return null;
+    }
+
+    fn freeTimerSlot(*_, timer: *Timer) {
+        let i: usize = 0;
+        while (i < MAX_LOOP_TIMERS) {
+            if (&_.internal_timers[i] == timer) {
+                _.internal_timers_used[i] = false;
+                return;
+            }
+            i += 1;
+        }
+    }
+
+    fn allocTaskSlot(*_): (*ConcurrentTask)? {
+        let i: usize = 0;
+        while (i < MAX_LOOP_TASKS) {
+            if (!_.internal_tasks_used[i]) {
+                _.internal_tasks_used[i] = true;
+                return &_.internal_tasks[i];
+            }
+            i += 1;
+        }
+        return null;
+    }
+
+    fn resetInternalTasks(*_) {
+        let i: usize = 0;
+        while (i < MAX_LOOP_TASKS) {
+            _.internal_tasks_used[i] = false;
+            i += 1;
+        }
     }
 }
