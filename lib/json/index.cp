@@ -7,12 +7,23 @@
 export { JsonTag, JsonField, JsonValue } from "./value";
 export { JsonParser, JsonParseOptions, JsonError, FastJsonScanner } from "./parser";
 export { JsonBufferPool, JsonBufferNode } from "./pool";
-export { JsonSerializer } from "./serializer";
+export { JsonSerializer, JsonSerializeOptions } from "./serializer";
+export {
+    JsonPointer,
+    JsonPatchOpKind,
+    JsonPatchOp,
+    JsonPatch,
+    JsonPatchError,
+    JsonMergePatch,
+} from "./pointer";
+export { NdjsonReader, NdjsonWriter, NdjsonError } from "./ndjson";
 
 const std = @import("std");
 import { JsonParser, JsonParseOptions } from "./parser";
 import { JsonValue } from "./value";
-import { JsonSerializer } from "./serializer";
+import { JsonSerializer, JsonSerializeOptions } from "./serializer";
+import { JsonPatch, JsonPatchOp, JsonMergePatch } from "./pointer";
+import { NdjsonReader, NdjsonWriter } from "./ndjson";
 
 pub class JSON {
     /// High-performance zero-copy dynamic DOM JSON parser (strict RFC 8259)
@@ -38,6 +49,48 @@ pub class JSON {
     /// Serializes a `JsonValue` AST into pretty-printed JSON text with `indent` spaces per level
     pub static fn stringifyPretty(allocator: std.mem.Allocator, val: JsonValue, indent: usize): ([]u8)! {
         return JsonSerializer.stringifyPretty(allocator, val, indent);
+    }
+
+    /// Serializes a `JsonValue` AST with configurable `JsonSerializeOptions`
+    pub static fn stringifyWithOptions(
+        allocator: std.mem.Allocator,
+        val: JsonValue,
+        opts: JsonSerializeOptions,
+    ): ([]u8)! {
+        return JsonSerializer.stringifyWithOptions(allocator, val, opts);
+    }
+
+    /// Serializes a `JsonValue` AST into deterministic RFC 8785 Canonical JSON
+    pub static fn stringifyCanonical(allocator: std.mem.Allocator, val: JsonValue): ([]u8)! {
+        return JsonSerializer.stringifyCanonical(allocator, val);
+    }
+
+    /// Atomically applies an RFC 6902 JSON Patch operation list to a `JsonValue`
+    pub static fn patch(
+        allocator: std.mem.Allocator,
+        doc: JsonValue,
+        ops: []const JsonPatchOp,
+    ): JsonValue! {
+        return JsonPatch.apply(allocator, doc, ops);
+    }
+
+    /// Applies an RFC 7396 JSON Merge Patch to `target`
+    pub static fn mergePatch(
+        allocator: std.mem.Allocator,
+        target: JsonValue,
+        patch_val: JsonValue,
+    ): JsonValue! {
+        return JsonMergePatch.apply(allocator, target, patch_val);
+    }
+
+    /// Parses an NDJSON / JSON Lines payload into a slice of `JsonValue` records
+    pub static fn parseNdjson(allocator: std.mem.Allocator, src: []const u8): ([]JsonValue)! {
+        return NdjsonReader.parseAll(allocator, src);
+    }
+
+    /// Serializes a slice of `JsonValue` records into compact NDJSON (`\n`-delimited)
+    pub static fn stringifyNdjson(allocator: std.mem.Allocator, values: []const JsonValue): ([]u8)! {
+        return NdjsonWriter.stringifyAll(allocator, values);
     }
 
     /// Evaluates an RFC 6901 JSON Pointer query against a `JsonValue`

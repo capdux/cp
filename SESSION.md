@@ -11,3 +11,10 @@
   - `lib/http/` 新增 `sse.cp`、`multipart.cp` 并升级 `cookie.cp`，同时修复 `decompressor.cp` 显式导入 `WINDOW_BITS_AUTO` 打通 `-m` 模块模式，[`test_http_web_primitives_deep.cp`](file:///data/dev/cp/cap/test/test_http_web_primitives_deep.cp) 单文件与 `-m` 均 5/5 PASS，既有回归 14/14 PASS；
   - `lib/logger/` 新增 `structured.cp`、`trace.cp`、`sampler.cp`，[`test_logger_production_deep.cp`](file:///data/dev/cp/cap/test/test_logger_production_deep.cp) 单文件与 `-m` 均 5/5 PASS，既有回归 4/4 PASS；
   - 已同步热日志、`cp_agent_ref.md` 与 `*_H.md` 归档提交 Git，同时无缝拉起子智能体 11（`347ae7c2`，`lib/html/` HTML5 实体/白名单清洗器/AI 网页提取）与子智能体 12（`5dc3d9b8`，`lib/json/` RFC 6901 Pointer/RFC 6902 Patch/RFC 7396 Merge Patch/Pretty&Canonical 序列化/NDJSON 流式读写）双路并行。
+
+### 2026-11-20（固化提速与三轨解耦规范至 `GEMINI.md`、`cp_lib_ref.md` 剥离 + `cap:html` & `cap:json` 验收提交 + 升级 3 路正交并行）
+- **用户指令**：认可提速方案，已清空 `SESSION.md`/`DEVLOG.md`/`CHANGELOG.md` 并迁入 `*_H.md`；要求：1. 后续按提速方案执行；2. 将内置标准库剥离为 `cp_lib_ref.md`，吸收/改库不再触碰 `cp_ref.md`/`cp_agent_ref.md`；3. 日常仅读 `cp_agent_ref.md`，其语法修改按标题打 `[SYNC_PENDING]` 标记后续另开任务同步至 `cp_ref.md`；4. 总结写入 `GEMINI.md` 并修正所有冲突条款。
+- **执行成果**：
+  - 完整落地三轨解耦规范（新建 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)、精简 [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)、全量更新 [`GEMINI.md`](file:///data/dev/cp/GEMINI.md) 消除冲突）、新增 [`scripts/verify_module.sh`](file:///data/dev/cp/scripts/verify_module.sh)、升级 [`scripts/sync_cpc.sh`](file:///data/dev/cp/scripts/sync_cpc.sh) 原子替换与 [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs) 自动探测 `lib/<ns>/index.cp`；
+  - 回收并验收子智能体 11（`lib/html/`，5/5 PASS）与子智能体 12（`lib/json/`，5/5 PASS），一并提交 Git；
+  - 正式启用 96 核 **3 路正交并行**，同步派发子智能体 13（`lib/security/` TOTP/CORS/CSP）、子智能体 14（`lib/dns/` DoH/全记录/resolv.conf）与子智能体 15（`lib/bench/` 统计基准/Welch t-test/分配追踪）。

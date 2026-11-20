@@ -2,6 +2,21 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-20] - 研发提速治理固化（`GEMINI.md` / `cp_lib_ref.md` / `verify_module.sh` / 动态 `cap` 路由）与 `cap:html` + `cap:json` 双路落地
+
+### 研发提速体系与三轨解耦规范落地
+- **剥离标准库独立契约手册**：新建 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，从 [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md) 第十二章剥离全部内置库索引；后续新增/吸收标准库只改 `cp_lib_ref.md` 与 `docs/<mod>/<mod>.md`，日常不读写 `cp_ref.md`；
+- **固化提速与治理铁律**：更新 [`GEMINI.md`](file:///data/dev/cp/GEMINI.md) 消除旧双轨冲突条款，固化三轨解耦规范（`cp_agent_ref.md` 语法修改打 `[SYNC_PENDING]` 标记）、96 核 3 路正交并行、子智能体“最后一步导出 `index.cp`”原子发布纪律与三段式极速调试；
+- **工程提速脚本与原子部署**：新增 [`scripts/verify_module.sh`](file:///data/dev/cp/scripts/verify_module.sh) 一键合规与 `-m` 验收脚本；升级 [`scripts/sync_cpc.sh`](file:///data/dev/cp/scripts/sync_cpc.sh) 为临时文件 + `mv -f` 原子覆盖部署；升级 [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs) 支持 `lib/<ns>/index.cp` 自动动态探测挂载（新增标准库 0 改动 Rust、免 45s 重编）。
+
+### `cap:html` HTML5 实体/白名单清洗/AI 网页提取升级 (`lib/html/`，5/5 PASS)
+- 新增 [`lib/html/entities.cp`](file:///data/dev/cp/lib/html/entities.cp)（206 个 WHATWG 命名实体二分查找、十/十六进制数字引用、C1 Windows-1252 替换与 U+FFFD 兜底）、[`lib/html/sanitizer.cp`](file:///data/dev/cp/lib/html/sanitizer.cp)（白名单清洗、`on*` 剥离、`javascript:`/`vbscript:`/`data:*` 与实体编码绕过拦截）与 [`lib/html/extractor.cp`](file:///data/dev/cp/lib/html/extractor.cp)（AI Agent 单遍流式提取 title/meta/OG/canonical/links/headings 与干净纯文本）；新增 [`cap/test/test_html_production_deep.cp`](file:///data/dev/cp/cap/test/test_html_production_deep.cp)（单文件与 `-m` 均 5/5 PASS，既有回归 4/4 PASS）。
+
+### `cap:json` RFC 6901/6902/7396/8785 与 NDJSON 流式引擎升级 (`lib/json/`，5/5 PASS)
+- 新增 [`lib/json/pointer.cp`](file:///data/dev/cp/lib/json/pointer.cp)（RFC 6901 `JsonPointer`、RFC 6902 `JsonPatch` 原子应用、RFC 7396 `JsonMergePatch`）、[`lib/json/ndjson.cp`](file:///data/dev/cp/lib/json/ndjson.cp)（跨 chunk `NdjsonReader` 含 `LineTooLong` 防护与 `NdjsonWriter`），升级 [`lib/json/serializer.cp`](file:///data/dev/cp/lib/json/serializer.cp)（RFC 8785 Canonical 排序序列化与 HTML 安全转义）；新增 [`cap/test/test_json_rfc_production_deep.cp`](file:///data/dev/cp/cap/test/test_json_rfc_production_deep.cp)（单文件与 `-m` 均 5/5 PASS，既有回归 9/9 PASS）。
+
+---
+
 ## [2026-11-20] - `cap:http` Web/AI Streaming 原语（+1,713 行）与 `cap:logger` 结构化日志/W3C Trace 追踪（+1,671 行）双路落地
 
 ### `cap:http` 生产级 Web / AI Streaming 协议原语升级 (`lib/http/`，0 `std.posix`，0 `@import("bun")`)

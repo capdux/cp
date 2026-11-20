@@ -8,71 +8,38 @@ pub fn is_cap_hub_source(source: &str) -> bool {
     source == "cap" || source == "cap:core"
 }
 
-pub fn resolve_cap_hub_target(ns: &str) -> Option<&'static str> {
-    match ns {
+pub fn resolve_cap_hub_target(ns: &str) -> Option<String> {
+    let aliased = match ns {
         "strings" | "string" => Some("string/index.cp"),
-        "sys" => Some("sys/index.cp"),
-        "io" => Some("io/index.cp"),
-        "path" | "paths" => Some("path/index.cp"),
+        "paths" => Some("path/index.cp"),
         "bits" => Some("meta/bits.cp"),
-        "meta" => Some("meta/index.cp"),
-        "logger" => Some("logger/index.cp"),
-        "http" => Some("http/index.cp"),
-        "shell" => Some("shell/index.cp"),
         "pkg" | "install" => Some("pkg/index.cp"),
-        "css" => Some("css/index.cp"),
-        "md" => Some("md/index.cp"),
-        "sql" => Some("sql/index.cp"),
-        "semver" | "Semver" => Some("semver/index.cp"),
+        "Semver" => Some("semver/index.cp"),
         "col" | "collections" | "bit_set" => Some("col/index.cp"),
-        "glob" => Some("glob/index.cp"),
-        "url" => Some("url/index.cp"),
         "encoding" | "base64" => Some("encoding/index.cp"),
-        "crypto" => Some("crypto/index.cp"),
         "hash" | "wyhash" => Some("hash/index.cp"),
-        "dns" => Some("dns/index.cp"),
-        "net" => Some("net/index.cp"),
-        "s3" => Some("s3/index.cp"),
-        "redis" => Some("redis/index.cp"),
-        "pack" => Some("pack/index.cp"),
-        "patch" => Some("patch/index.cp"),
-        "dotenv" => Some("dotenv/index.cp"),
-        "conf" => Some("conf/index.cp"),
-        "watcher" => Some("watcher/index.cp"),
-        "which" => Some("which/index.cp"),
-        "elf" => Some("elf/index.cp"),
-        "ffi" => Some("ffi/index.cp"),
-        "napi" => Some("napi/index.cp"),
-        "sourcemap" => Some("sourcemap/index.cp"),
-        "resolver" => Some("resolver/index.cp"),
-        "bundler" => Some("bundler/index.cp"),
-        "aio" => Some("aio/index.cp"),
-        "platform" => Some("platform/index.cp"),
-        "safety" => Some("safety/index.cp"),
-        "security" => Some("security/index.cp"),
-        "sync" => Some("sync/index.cp"),
-        "ptr" => Some("ptr/index.cp"),
-        "event" => Some("event/index.cp"),
-        "cli" => Some("cli/index.cp"),
-        "clap" => Some("clap/index.cp"),
-        "bench" => Some("bench/index.cp"),
-        "errno" => Some("errno/index.cp"),
         "fs" => Some("fs.cp"),
-        "json" => Some("json/index.cp"),
-        "html" => Some("html/index.cp"),
-        "image" => Some("image/index.cp"),
-        "blob" => Some("blob/index.cp"),
-        "mem" => Some("mem/index.cp"),
-        "ws" => Some("ws/index.cp"),
-        "router" => Some("router/index.cp"),
-        "simd" => Some("simd/index.cp"),
-        "sort" => Some("sort/index.cp"),
-        "bigint" => Some("bigint/index.cp"),
         "test" => Some("test.cp"),
-        "test_runner" => Some("test_runner/index.cp"),
-        "time" => Some("time/index.cp"),
         _ => None,
+    };
+    if let Some(target) = aliased {
+        return Some(target.to_string());
     }
+    if ns.is_empty()
+        || ns.starts_with('_')
+        || !ns.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
+    {
+        return None;
+    }
+    let dir_index = format!("{}/index.cp", ns);
+    if find_lib_file(&dir_index, &[]).is_some() {
+        return Some(dir_index);
+    }
+    let flat_file = format!("{}.cp", ns);
+    if find_lib_file(&flat_file, &[]).is_some() {
+        return Some(flat_file);
+    }
+    None
 }
 
 pub fn find_lib_file(rel_path: &str, include_paths: &[PathBuf]) -> Option<PathBuf> {
@@ -701,7 +668,7 @@ pub fn resolve_imports_with_cap_hub(
         }
         for ns in members {
             if let Some(rel_cp) = resolve_cap_hub_target(&ns) {
-                if let Some(sub_abs) = find_lib_file(rel_cp, include_paths) {
+                if let Some(sub_abs) = find_lib_file(&rel_cp, include_paths) {
                     cap_hub.mounted_ns.entry(ns).or_insert(sub_abs);
                 }
             }

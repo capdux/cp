@@ -2,6 +2,15 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-20: 提速治理全面固化（三轨解耦规范 + `verify_module.sh` + 动态 `cap` 路由 + 3 路正交并行）与 `cap:html`/`cap:json` 双路完工
+
+- **治理与提速落地**：
+  - 将全部标准库契约从 `cp_agent_ref.md` 剥离为独立 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，日常任务零读写 1 万行 `cp_ref.md`（语法修改仅在 `cp_agent_ref.md` 标题打 `[SYNC_PENDING]` 标记）；
+  - 全量固化至 [`GEMINI.md`](file:///data/dev/cp/GEMINI.md) 并修正冲突旧条款；新增 [`scripts/verify_module.sh`](file:///data/dev/cp/scripts/verify_module.sh)、升级 [`scripts/sync_cpc.sh`](file:///data/dev/cp/scripts/sync_cpc.sh) 原子替换与 [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs) 自动探测 `lib/<ns>/index.cp`。
+- **双路标准库验收**：`lib/html/`（entities/sanitizer/extractor）与 `lib/json/`（pointer/patch/mergePatch/canonical/ndjson）单文件与 `-m` 均 5/5 PASS，既有回归全部 100% PASS。
+
+---
+
 ## 2026-11-20: `cap:http`（SSE / Multipart / CookieJar）与 `cap:logger`（结构化 JSON/Logfmt / W3C Trace / 采样器）双路完工
 
 - **落地成果**：

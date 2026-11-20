@@ -5,3 +5,6 @@
 export * from "./escape.cp";
 export * from "./tokenizer.cp";
 export * from "./selector.cp";
+export * from "./entities.cp";
+export * from "./sanitizer.cp";
+export * from "./extractor.cp";

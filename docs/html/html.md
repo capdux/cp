@@ -1,22 +1,18 @@
-# CP 标准库：HTML5 Tokenizer、实体编解码、选择器与 HTMLRewriter 手册 (`cap:html`)
+# CP 标准库：HTML5 解析、实体编解码、白名单清洗与 AI 网页提取手册 (`cap:html`)
 
 ## 一、 架构总览与设计准则
 
-`cap:html` 是 CP 语言官方内置的 HTML5 解析与流式重写标准库，对标 Bun 的 `HTMLRewriter`（`/data/dev/bun/src/lolhtml_sys/lol_html.cp`）与实体转义子系统（`/data/dev/bun/src/md/entity.cp`），包含完整的 HTML5 Tokenizer、70+ 命名及十进制/十六进制数值实体编解码器、复合 CSS 选择器引擎以及支持元素增删改的流式 `HtmlRewriter`。
+`cap:html` 是 CP 语言官方内置的工业生产级 HTML5 解析、内容安全清洗与 AI Agent 网页语义提取标准库，对标 Bun 的 `HTMLRewriter`（`/data/dev/bun/src/lolhtml_sys/lol_html.cp`）与 WHATWG HTML5 字符引用 / 安全清洗规范，提供纯 CP 零外部依赖的完整工具链：
 
 ```text
-┌───────────────────────────────────────────────────────────────────────────┐
-│                         CP 用户层应用 (Application)                        │
-├──────────────────────────┬─────────────────────────┬──────────────────────┤
-│   HTML5 词法分词器        │   复合 CSS 选择器引擎     │   HTMLRewriter       │
-│  HtmlTokenizer           │  CssSelector.parse()    │  on(sel, handler)    │
-│  StartTag / EndTag       │  tag#id.c1.c2[a=v]      │  HtmlElement API:    │
-│  SelfClosing / Comment   │  [a^=v] [a$=v] [a*=v]   │  setTagName / attr   │
-│  Doctype / CDATA         │  matchesToken()         │  before/after/prepend│
-│  RawText (<script/style>)│  matchesAttributes()    │  append/replaceWith  │
-├──────────────────────────┴─────────────────────────┴──────────────────────┤
-│        HtmlEscape (快路径转义 + 86 个 HTML5 命名实体 + &#NNN; / &#xHHH;)     │
-└───────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                        CP 用户层应用 / AI Agent RAG 管线                       │
+├───────────────────┬──────────────────┬──────────────────┬────────────────────┤
+│  HTML5 词法与重写   │ WHATWG 实体编解码  │  白名单内容清洗器   │  AI 网页语义提取器   │
+│  HtmlTokenizer    │  HtmlEntities    │  HtmlSanitizer   │  HtmlExtractor     │
+│  CssSelector      │  encodeText/Attr │  SanitizerPolicy │  HtmlDocumentSummary│
+│  HtmlRewriter     │  decode (C1/FFFD)│  isSafeUrl       │  title/meta/og/link│
+└───────────────────┴──────────────────┴──────────────────┴────────────────────┘
 ```
 
 ### 1. 模块文件拓扑与谱系来源
@@ -26,44 +22,49 @@
 | `lib/html/index.cp` | `// Source: /data/dev/bun/src/lolhtml_sys/lol_html.cp` | `cap:html` 统一公开导出入口 |
 | `lib/html/tokenizer.cp` | `// Source: /data/dev/bun/src/lolhtml_sys/lol_html.cp` | `HtmlTokenizer`、`HtmlToken`、`HtmlTokenKind`、`HtmlAttribute` HTML5 词法引擎 |
 | `lib/html/selector.cp` | `// Source: /data/dev/bun/src/lolhtml_sys/lol_html.cp` | `CssSelector` 复合选择器、`HtmlElement` 变更句柄与 `HtmlRewriter` 流式重写器 |
-| `lib/html/escape.cp` | `// Source: /data/dev/bun/src/md/entity.cp` | `HtmlEscape` 快路径转义与 HTML5 命名/数值实体编解码 |
+| `lib/html/escape.cp` | `// Source: /data/dev/bun/src/md/entity.cp` | `HtmlEscape` 零拷贝快路径转义与实体解码 |
+| `lib/html/entities.cp` | `// Source: cp/lib/html/entities.cp (WHATWG HTML5 Character Reference Codec)` | `HtmlEntities` WHATWG HTML5 206+ 命名实体与十进制/十六进制/C1 替换编解码 |
+| `lib/html/sanitizer.cp` | `// Source: cp/lib/html/sanitizer.cp (Allowlist HTML5 Content Sanitizer)` | `SanitizerPolicy` 与 `HtmlSanitizer` 白名单流式清洗与 URL 协议防护 |
+| `lib/html/extractor.cp` | `// Source: cp/lib/html/extractor.cp (AI Agent HTML Visible Text & Metadata Extractor)` | `HtmlExtractor`、`HtmlDocumentSummary` 单遍网页元数据与 RAG 规范化纯文本提取 |
 
 ---
 
 ## 二、 核心 API 详解
 
-### 1. `HtmlTokenizer` 与 `HtmlToken` (HTML5 Tokenizer)
+### 1. `HtmlEntities` (WHATWG HTML5 实体编解码器)
 
-- `HtmlTokenKind`：`StartTag`、`EndTag`、`SelfClosingTag`、`Text`、`Comment`、`Doctype`、`Cdata`。
-- 正确解析双引号 `attr="v"`、单引号 `attr='v'`、无引号 `attr=v` 及布尔属性 `disabled`；
-- 对 `<script>`、`<style>`、`<textarea>`、`<title>` 进入 `RawText` 模式，确保内部 JS/CSS 代码中的 `<` / `>`（如 `if (a < b)`）不会被误拆分为 HTML 标签；
-- 自动识别 HTML5 Void 元素（`br`、`img`、`input`、`meta`、`link`、`hr` 等）。
+- `HtmlEntities.encodeText(alloc, text): ([]u8)!`：转义文本节点中的 `&`、`&lt;`/`<`、`>`（输出 `&amp;`、`&lt;`、`&gt;`），调用方负责释放返回切片。
+- `HtmlEntities.encodeAttr(alloc, text): ([]u8)!`：额外转义属性值中的 `"`（`&quot;`）与 `'`（`&#39;`）。
+- `HtmlEntities.decode(alloc, html): ([]u8)!`：
+  - 支持 **206 个高频 HTML5 命名实体**（`&amp;`、`&lt;`、`&gt;`、`&quot;`、`&apos;`、`&nbsp;`、`&copy;`、`&reg;`、`&mdash;`、`&ndash;`、`&hellip;`、`&euro;`、`&yen;`、`&times;`、`&divide;`、`&rarr;`、`&larr;`、希腊字母与常用拉丁重音字符等，O(log N) 二分查找）；
+  - 支持十进制 `&#NNN;` 与十六进制 `&#xHHH;` / `&#XHHH;` 数字引用；
+  - 严格遵循 WHATWG HTML5 规范处理 C1 控制区（`0x80..0x9F` Windows-1252 映射表，如 `&#x80;` -> `€`、`&#151;` -> `—`、`&#x99;` -> `™`）以及零码点/UTF-16 代理区（`0xD800..0xDFFF`）/越界码点替换为 `U+FFFD`。
 
-| API 签名 | 说明 |
-| :--- | :--- |
-| `HtmlTokenizer.init(html): HtmlTokenizer` | 创建流式 HTML5 分词器 |
-| `tok.next(allocator): (HtmlToken?)!` | 读取下一个 `HtmlToken`（结束返回 `null`） |
-| `HtmlTokenizer.tokenizeAll(allocator, html): ([]HtmlToken)!` | 一次性分词为完整 Token 切片 |
-| `token.getAttribute(name)` / `hasAttribute(name)` | 大小写不敏感查询标签属性 |
+### 2. `SanitizerPolicy` 与 `HtmlSanitizer` (白名单 HTML5 内容清洗)
 
-### 2. `HtmlEscape` 实体编解码器
+- `SanitizerPolicy`：
+  - `SanitizerPolicy.defaultSafe()`：允许安全语义与排版标签（`p`、`div`、`span`、`h1`..`h6`、`a`、`img`、`ul`/`ol`/`li`、`table`、`pre`/`code`、`blockquote` 等）与安全属性（`href`/`src`/`alt`/`title`/`class`/`id` 等），限制最大嵌套深度（默认 `256`）。
+  - `SanitizerPolicy.strictTextOnly()`：剥离全部标签并输出安全实体转义后的纯文本。
+  - `SanitizerPolicy.custom(tags, attrs, url_attrs)`：自定义允许标签与安全属性白名单。
+- 危险容器彻底清除：始终阻止 `<script>`、`<style>`、`<iframe>`、`<object>`、`<embed>`、`<svg>`、`<math>`、`<applet>`、`<base>`、`<frame>`、`<frameset>`、`<noscript>`、`<template>` 及其内部载荷。
+- `HtmlSanitizer.isSafeUrl(url): bool`：过滤首尾空白并拒绝内嵌控制字符（`\t`/`\n`/`\r`/`\x00` 等绕过），仅放行 `http://`、`https://`、`mailto:`、`#` 锚点及相对路径；严格拦截 `javascript:`、`vbscript:`、`data:text/html` 等危险协议。
+- `HtmlSanitizer.sanitize(alloc, html, policy): ([]u8)!`：流式状态机清洗，剔除 `on*` 事件属性与危险协议属性（含实体编码绕过解码检测），移除 HTML 注释/DOCTYPE/CDATA，自动闭合未闭合允许标签，并对输出文本和属性进行安全实体转义。
 
-- 支持 `&amp;`、`&lt;`、`&gt;`、`&quot;`、`&apos;`、`&nbsp;`、`&copy;`、`&reg;`、`&trade;`、`&mdash;`、`&ndash;`、`&hellip;`、`&euro;`、希腊字母、箭头、数学符号等 **86 个高频 HTML5 命名实体**（二分查找）；
-- 支持十进制（`&#65;`）与十六进制（`&#x1F600;` -> 4 字节 UTF-8 Emoji）数值实体解码，并按 HTML5 规范将非法代理项/越界码点替换为 `U+FFFD`。
+### 3. `HtmlExtractor` 与 `HtmlDocumentSummary` (AI Agent 网页语义提取)
 
-| API 签名 | 说明 |
-| :--- | :--- |
-| `HtmlEscape.needsEscape(input): bool` | 快速检测是否包含需转义字符 |
-| `HtmlEscape.escapeToBuf(input, out_buf)` / `escapeAlloc(alloc, input)` | HTML 特殊字符转义 |
-| `HtmlEscape.unescapeToBuf(input, out_buf)` / `unescapeAlloc(alloc, input)` | 命名 + 十进制 + 十六进制实体解码 |
+- 数据结构：
+  - `HtmlLink`：`href: []const u8`、`text: []const u8`
+  - `HtmlMeta`：`name: []const u8`、`content: []const u8`
+  - `HtmlHeading`：`level: u8`、`text: []const u8`
+  - `HtmlDocumentSummary`：`title`、`description`、`canonical_url`、`og_title`、`og_image`、`links`、`headings`、`metas`、`plain_text`，提供 `deinit(*_)` 确定性释放全部分配内存。
+- `HtmlExtractor.extract(alloc, html): HtmlDocumentSummary!`：
+  - 单遍流式解析：自动跳过 `<script>`、`<style>`、`<noscript>`、`<template>` 与注释；
+  - 自动解码实体并提取 `<title>`、`<meta name="description">`、`<meta property="og:title">`、`<meta property="og:image">`、`<link rel="canonical">`、`<h1>`..`<h6>` 与 `<a>` 链接；
+  - 将可见正文在块级标签处折叠空白为单空格或单换行，生成紧凑规范的 `plain_text`，直接服务于 AI Agent 网页浏览与 RAG 管线。
 
-### 3. `CssSelector`、`HtmlElement` 与 `HtmlRewriter`
+### 4. `HtmlTokenizer`、`CssSelector`、`HtmlEscape` 与 `HtmlRewriter`
 
-- `CssSelector.parse(sel)` 支持标签（`a`）、通配符（`*`）、ID（`#main`）、多 Class（`.btn.primary`）、复合组合（`div.card#hero`）与多属性匹配（`[href]`、`[type="text"]`、`[href^="https"]`、`[href$=".pdf"]`、`[href*="cp"]`）。
-- `HtmlElement` 回调方法（在 `rw.on(selector, handler)` 中使用）：
-  - 属性与标签：`tagName()`、`setTagName(name)`、`getAttribute(name)`、`hasAttribute(name)`、`setAttribute(name, val)`、`removeAttribute(name)`；
-  - 内容与节点改写：`before(content, is_html)`、`after(content, is_html)`、`prepend(content, is_html)`、`append(content, is_html)`、`setInnerContent(content, is_html)`、`replaceWith(content, is_html)`（另有单参 `replaceHtml` / `replaceText`）、`remove()`、`removeAndKeepContent()`。
-- 静态零堆便捷工具保留：`HtmlRewriter.stripTags(html, out_buf)` 与 `HtmlRewriter.renameTag(html, old_tag, new_tag, out_buf)`。
+- 保持原有全部 API 100% 向后兼容：`HtmlTokenizer.init` / `next` / `tokenizeAll`、`CssSelector.parse` / `matchesToken`、`HtmlRewriter`、`HtmlEscape`。
 
 ---
 
@@ -71,27 +72,31 @@
 
 ```typescript
 const std = @import("std");
-import { HtmlEscape, HtmlElement, HtmlRewriter } from "cap:html";
+import {
+    HtmlEntities,
+    SanitizerPolicy,
+    HtmlSanitizer,
+    HtmlExtractor,
+} from "cap:html";
 
-fn enhanceLink(el: *HtmlElement) {
-    el.setAttribute("rel", "noopener noreferrer");
-    el.setTagName("a");
-    el.prepend("[Link] ", false);
-}
-
-pub fn demoHtmlRewriter(): !void {
+pub fn demoHtmlSecurityAndExtract(): !void {
     const allocator = std.heap.page_allocator;
 
-    let rw = HtmlRewriter.init(allocator);
-    defer rw.deinit();
-    try rw.on("a.external[href^=\"https://\"]", enhanceLink);
+    // 1. WHATWG 实体解码（含 C1 控制区 Windows-1252 映射）
+    const decoded = try HtmlEntities.decode(allocator, "Price: &euro;99 &#x97; &#x1F600;");
+    defer allocator.free(decoded);
 
-    const out = try rw.transform("<p><a class=\"external\" href=\"https://cp-lang.org\">CP</a></p>");
-    defer allocator.free(out);
-    // => <p><a class="external" href="https://cp-lang.org" rel="noopener noreferrer">[Link] CP</a></p>
+    // 2. 白名单 HTML 清洗（防 XSS 与协议绕过）
+    const dirty = "<p onclick=\"alert(1)\">Hello <a href=\"javascript:evil()\">bad</a> <a href=\"https://cp-lang.org\">CP</a></p><script>steal()</script>";
+    const clean = try HtmlSanitizer.sanitize(allocator, dirty, SanitizerPolicy.defaultSafe());
+    defer allocator.free(clean);
 
-    let buf: [64]u8 = [0; 64];
-    const emoji = HtmlEscape.unescapeToBuf("Hi &#x1F600; &amp; &copy;", &buf);
-    * = emoji;
+    // 3. AI Agent 网页结构化提取
+    let summary = try HtmlExtractor.extract(
+        allocator,
+        "<html><head><title>CP Docs</title><meta name=\"description\" content=\"Fast &amp; Safe\"></head><body><h1>Intro</h1><p>Welcome</p></body></html>",
+    );
+    defer summary.deinit();
+    * = summary.plain_text;
 }
 ```

@@ -776,7 +776,7 @@ pub fn compile_modular(opts: &ModularOptions) -> anyhow::Result<()> {
             }
             for ns in &scan.cap_hub_members {
                 if let Some(rel_cp) = resolve_cap_hub_target(ns) {
-                    if let Some(sub_abs) = find_lib_file(rel_cp, opts.include_paths) {
+                    if let Some(sub_abs) = find_lib_file(&rel_cp, opts.include_paths) {
                         mounted_cap_ns
                             .entry(ns.clone())
                             .or_insert_with(|| sub_abs.clone());
