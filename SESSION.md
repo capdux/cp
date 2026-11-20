@@ -2644,3 +2644,7 @@
   - 子智能体 C-3 完工回收：升级 [`lib/resolver/`](file:///data/dev/cp/lib/resolver/index.cp)（`DirEntryCache`/`RealpathResolver`/`TsConfigChainLoader`/`BrowserFieldMap`/`SideEffectsMatcher`/`SelfReferenceResolver`）并新建 [`lib/test_runner/`](file:///data/dev/cp/lib/test_runner/index.cp)（`TestOrder`/`TestRunner`/`SnapshotStore`+彩色 Diff/TAP+JUnit+JSON `TestReporter`），共 +4,195 行；
   - 修正 `cap/test/test_resolver_bundler_deep.cp` 局部 `order` 遮蔽变量，`test_phase_c3_resolver_testrunner_port.cp`（5/5）、`test_meta_platform_sri_deep.cp`（5/5）、`test_resolver_bundler_deep.cp`（7/7）全部 100% PASS；
   - 全仓总检通过，同步定稿双轨手册与热日志并执行干净收官 Git 提交。
+
+### 2026-11-20（极速热修 `bun_agy` 工单 `task-bun-20261120-sentinel-ptr-const` 并结单）
+- **协同事件**：收到 `bun_agy` 工单 `task-bun-20261120-sentinel-ptr-const`（`[*:0]const u8?` 被降级为 `?[*:0]u8` 丢失 `const`）。
+- **修复与交付**：修复 [`cpc/src/parser/types.rs`](file:///data/dev/cp/cpc/src/parser/types.rs) 中 `[*:sentinel]` 与 `[*c:sentinel]` 分支，统一调用 `parse_ptr_qualifiers()` + `apply_ptr_qualifiers()` 保留 `const`/对齐限定符；通过 `bash scripts/sync_cpc.sh release` 部署正式版，`repro_sentinel_const.cp` + `zig ast-check` 验证精确输出 `h2: ?[*:0]const u8 = null`，已 `resolve` + `ack` 结单并提交 Git。

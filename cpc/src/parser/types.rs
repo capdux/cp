@@ -886,6 +886,7 @@ impl<'a> Parser<'a> {
                             _ => "0".to_string(),
                         };
                         self.expect(Token::RBracket)?;
+                        let (qual, has_const) = self.parse_ptr_qualifiers()?;
                         let elem_ty = self.parse_base_type()?;
                         let mut is_optional = false;
                         if self.peek() == Some(&Token::Question)
@@ -905,6 +906,7 @@ impl<'a> Parser<'a> {
                             Type::Optional(inner) => (*inner, true),
                             other => (other, false),
                         };
+                        let elem_ty = Self::apply_ptr_qualifiers(elem_ty, qual, has_const);
                         let mut ty = Type::SentinelPtr(Box::new(elem_ty), sentinel);
                         if is_optional || has_elem_opt {
                             ty = Type::Optional(Box::new(ty));
@@ -948,9 +950,7 @@ impl<'a> Parser<'a> {
                         _ => "0".to_string(),
                     };
                     self.expect(Token::RBracket)?;
-                    if self.peek() == Some(&Token::Const) {
-                        self.bump()?;
-                    }
+                    let (qual, has_const) = self.parse_ptr_qualifiers()?;
                     let elem_ty = self.parse_base_type()?;
                     let mut is_optional = false;
                     if self.peek() == Some(&Token::Question)
@@ -970,6 +970,7 @@ impl<'a> Parser<'a> {
                         Type::Optional(inner) => (*inner, true),
                         other => (other, false),
                     };
+                    let elem_ty = Self::apply_ptr_qualifiers(elem_ty, qual, has_const);
                     let mut ty = Type::SentinelPtr(Box::new(elem_ty), sentinel);
                     if is_optional || has_elem_opt {
                         ty = Type::Optional(Box::new(ty));
