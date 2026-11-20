@@ -97,3 +97,6 @@
 
 ### 2026-11-21（`cap:jq` 验收，顶替拉起 `cap:jsonpath` 维持 2 路常规并行）
 - **执行成果**：`lib/jq/`（5/5 PASS，`doc/lib/jq.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:jsonpath` 维持 2 路常规并行
+
+### 2026-11-21（`cap:mqtt` 验收，顶替拉起 `cap:otlp` 维持 2 路常规并行）
+- **执行成果**：`lib/mqtt/`（5/5 PASS，`doc/lib/mqtt.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:otlp` 维持 2 路常规并行

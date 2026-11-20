@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:mqtt` 纯 CP MQTT v3.1.1/v5.0 变长整数、全报文编解码、1..7B 流式分帧与 §4.7 Topic 通配符路由引擎（支持 `cap.mqtt` 自动动态挂载，详见 `doc/lib/mqtt.md`）（5/5 PASS，自动动态挂载 `cap.mqtt`）
+- **新增标准库**：`lib/mqtt/{types,topic,codec,stream,index}.cp`，实现 1..4 字节 Remaining Length VarInt、`CONNECT`/`CONNACK`/`PUBLISH`/`PUBACK`/`SUBSCRIBE`/`SUBACK`/`PINGREQ`/`DISCONNECT` 编解码、支持 `1..7` 字节半包黏包的 `MqttStreamDecoder` 及严格隔离 `$SYS` 的 `topicMatches`。
+- **新增文档与测试**：`doc/lib/mqtt.md` 扁平文档与 `cap/test/test_mqtt_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:jq` 纯 CP `jq` JSON 结构化查询、多结果流展开、管道组合与有界防 DoS 转换引擎（支持 `cap.jq` 自动动态挂载，详见 `doc/lib/jq.md`）（5/5 PASS，自动动态挂载 `cap.jq`）
 - **新增标准库**：`lib/jq/{value,ast,eval,index}.cp`，实现 RFC 8259 `JqValue`、扁平节点池 `compileJq` AST 编译器，以及支持 `.[]`/`|`/`[...]`/`{...}`/`//`/`select`/`map`/`unique`/`sort` 等全谱系 `runJq`/`runJqJson` 管道引擎。
 - **新增文档与测试**：`doc/lib/jq.md` 扁平文档与 `cap/test/test_jq_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

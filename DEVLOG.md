@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:mqtt` 纯 CP MQTT v3.1.1/v5.0 变长整数、全报文编解码、1..7B 流式分帧与 §4.7 Topic 通配符路由引擎（支持 `cap.mqtt` 自动动态挂载，详见 `doc/lib/mqtt.md`）（5/5 PASS，文档直写 `doc/lib/mqtt.md`）
+- **核心设计**：解码器严格校验第 4 字节 VarInt 延续位防溢出、QoS 与 `packet_id` 一致性及 `max_packet_bytes` 防资源耗尽；`topicMatches` 完整实现 `+`/`#` 与 `$SYS` 前置隔离，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:jq` 纯 CP `jq` JSON 结构化查询、多结果流展开、管道组合与有界防 DoS 转换引擎（支持 `cap.jq` 自动动态挂载，详见 `doc/lib/jq.md`）（5/5 PASS，文档直写 `doc/lib/jq.md`）
 - **核心设计**：采用扁平节点池存储 Filter AST 消除深递归释放复杂度，求值器内置 `MAX_JQ_EVAL_DEPTH = 128` 与 `MAX_JQ_OUTPUTS = 65536` 展开上限防资源耗尽，全路径零泄漏。
 

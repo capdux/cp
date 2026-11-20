@@ -1,24 +1,38 @@
-// Source: cp/lib/mqtt/index.cp (Unified Exports for cap:mqtt)
-// Unified Public Exports for Pure CP MQTT 3.1.1 Wire Codec & Stream Decoder (cap:mqtt & cap.mqtt)
-
+// Source: cp/lib/mqtt/index.cp (cap:mqtt & cap.mqtt Public Entrypoint)
 export {
-    MAX_REMAINING_LENGTH,
     MqttError,
-    MqttPacketType,
-    MqttQos,
-    ConnAckCode,
-    MqttWill,
+    MqttVersion,
+    QoS,
+    PacketType,
+    WillMessage,
     ConnectPacket,
-    ConnAckPacket,
+    ConnackPacket,
     PublishPacket,
-    PacketIdOnly,
+    TopicSubscription,
     TopicFilter,
     SubscribePacket,
-    SubAckPacket,
+    SubackPacket,
     UnsubscribePacket,
-    RemainingLengthResult,
+    DisconnectPacket,
     MqttPacket,
-    DecodeResult,
-    MqttCodec,
+} from "./types.cp";
+
+export {
+    validateTopicName,
+    validateTopicFilter,
+    topicMatches,
+} from "./topic.cp";
+
+export {
+    MAX_VAR_INT,
+    VarIntResult,
+    encodeVarByteInt,
+    decodeVarByteInt,
+    validateMqttUtf8,
+    encodePacket,
+    decodePacket,
+} from "./codec.cp";
+
+export {
     MqttStreamDecoder,
-} from "./packet.cp";
+} from "./stream.cp";
