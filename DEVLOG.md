@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:xorfilter` 极省空间静态 Xor8 / Xor16 近似集合过滤器（5/5 PASS，文档直写 `doc/lib/xorfilter.md`）
+- **核心设计**：采用 SplitMix64 哈希混合与 3-peeling 超图剥离构建，自动排序去重并支持空集合边界；序列化采用 32 字节小端序自描述头（`"XOR8"`/`"XOR6"` + 版本 + `seed` + `block_length` + `item_count`），严格校验截断与非法头。
+
 ## 2026-11-21: 新建 `cap:hpack` RFC 7541 HTTP/2 HPACK 头部压缩编解码引擎（5/5 PASS，文档直写 `doc/lib/hpack.md`）
 - **核心设计**：分离 `huffman`/`table`/`codec` 三模块，`table.cp` 使用 O(1) 环形缓冲管理动态表 FIFO 驱逐并严格遵循单条目超过 `max_size` 时清空动态表规则；`huffman.cp` 校验 EOS 符号与非全 1 或超 7-bit 填充，防御畸形输入。
 

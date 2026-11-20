@@ -347,3 +347,9 @@
 
 ### 2026-11-21（`cap:hpack` 验收提交，顶替拉起 `cap:xorfilter` 维持 2 路并行）
 - **执行成果**：`lib/hpack/`（5/5 PASS，`doc/lib/hpack.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/xorfilter/`（Xor8/Xor16 静态极省空间近似集合过滤器），与 `lib/radix/` 维持 2 路常规并行。
+
+### 2026-11-21（收到下游热修工单 `task-bun-20261121-lib-main`，拉起第 3 路临时热修子智能体）
+- **工单信息**：来自 `bun_agy`（`delivery_id: 36`），复现文件 `/data/dev/cp/temp/repro_lib_main.cp`：`cpc --lib` 模式遇到 `pub fn main()` 时仍将其改写为 CP 纤程状态机并注入 ~700 行纤程运行时代码，导致生成的 `src/main.zig` 缺失 Zig 标准入口 `pub fn main() void`。已拉起第 3 个临时 `inherit` 热修子智能体修复 `/data/dev/cp/cpc/src/`。
+
+### 2026-11-21（`cap:xorfilter` 验收提交，顶替拉起 `cap:geohash` 维持 2 路常规并行）
+- **执行成果**：`lib/xorfilter/`（5/5 PASS，`doc/lib/xorfilter.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/geohash/`（Geohash 空间网格编码、8 邻域检索与 Haversine 距离引擎），与 `lib/radix/` 维持 2 路常规标准库并行（另第 3 路临时热修 `11c8ecfb` 继续中）。

@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:xorfilter` 极省空间静态 Xor8 / Xor16 近似集合过滤器（5/5 PASS，自动动态挂载 `cap.xorfilter`）
+- **新增标准库**：`lib/xorfilter/{xorfilter,index}.cp`，实现 `Xor8Filter`（~9.84 bits/key）与 `Xor16Filter`（~19.68 bits/key）3-peeling 构建、$O(1)$ 三次访存 `contains`、64-bit 哈希直通接口及 `serialize`/`deserialize` 二进制持久化。
+- **新增文档与测试**：`doc/lib/xorfilter.md` 扁平文档与 `cap/test/test_xorfilter_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:hpack` RFC 7541 HTTP/2 HPACK 头部压缩编解码引擎（5/5 PASS，自动动态挂载 `cap.hpack`）
 - **新增标准库**：`lib/hpack/{huffman,table,codec,index}.cp`，实现 RFC 7541 Appendix A 61 项静态表、O(1) 环形 FIFO 动态表、Appendix B 256+EOS 规范 Huffman 编解码、变长前缀整数以及 `HpackEncoder`/`HpackDecoder`。
 - **新增文档与测试**：`doc/lib/hpack.md` 扁平文档与 `cap/test/test_hpack_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
