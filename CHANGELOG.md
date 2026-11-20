@@ -2,6 +2,14 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:merkle` RFC 6962 域分离 Merkle 哈希树与双树差异定位引擎（5/5 PASS，自动动态挂载 `cap.merkle`）
+- **新增标准库**：`lib/merkle/{merkle,index}.cp`，实现 RFC 6962 域分离 `0x00`/`0x01` SHA-256 哈希、非 2 次幂奇数节点提升、`generateProof`、`verifyProof` 与 $O(k \log N)$ 跨规模 `diffTrees` 差异定位。
+- **新增文档与测试**：`doc/lib/merkle.md` 扁平文档与 `cap/test/test_merkle_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
+## [2026-11-21] - 新建 `cap:cuckoo` 支持删除的布谷鸟过滤器（5/5 PASS，自动动态挂载 `cap.cuckoo`）
+- **新增标准库**：`lib/cuckoo/{cuckoo,index}.cp`，实现 4 槽位/桶、16-bit 非零指纹、对合备选桶计算、有界踢出（`MAX_KICKS = 500`）及栈上逆向无损回滚，支持 `insert`、`insertUnique`、`contains`、`delete`、`clear`、`loadFactor`、`stats`。
+- **新增文档与测试**：`doc/lib/cuckoo.md` 扁平文档与 `cap/test/test_cuckoo_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:mqtt` MQTT 3.1.1 二进制 Wire 报文编解码与流式拆包引擎（5/5 PASS，自动动态挂载 `cap.mqtt`）
 
 - 新建 [`lib/mqtt/`](file:///data/dev/cp/lib/mqtt/index.cp)（`packet.cp`、`index.cp`）：`MqttCodec`（1..4 字节 RemainingLength Varint 含第 4 字节 `0x80` 拦截、全 14 类控制报文编解码及 `QoS > 0`/`PUBREL` 标志位严格校验）及 `MqttStreamDecoder`（半包等待、多报文黏包拆分与 `PacketTooLarge` 防护，零泄漏）；文档 [`doc/lib/mqtt.md`](file:///data/dev/cp/doc/lib/mqtt.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_mqtt_production_deep.cp`](file:///data/dev/cp/cap/test/test_mqtt_production_deep.cp) `-m` 5/5 PASS。

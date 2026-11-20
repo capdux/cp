@@ -335,3 +335,9 @@
 
 ### 2026-11-21（`cap:paseto` & `cap:mqtt` 双路合并验收提交，顶替拉起 `cap:merkle` 与 `cap:cuckoo` 维持 2 路并行）
 - **执行成果**：`lib/paseto/`（5/5 PASS，`doc/lib/paseto.md`）与 `lib/mqtt/`（5/5 PASS，`doc/lib/mqtt.md`）双双经 `verify_module.sh` 一键验收回收并合并提交 Git；使用 `Model: "inherit"` 同步派发 `lib/merkle/`（RFC 6962 域分离 Merkle 哈希树、包含证明与双树差异定位引擎）与 `lib/cuckoo/`（支持删除的布谷鸟过滤器 Cuckoo Filter），维持 2 路常规并行。
+
+### 2026-11-21（`cap:cuckoo` 验收提交，顶替拉起 `cap:hpack` 维持 2 路并行）
+- **执行成果**：`lib/cuckoo/`（5/5 PASS，`doc/lib/cuckoo.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/hpack/`（RFC 7541 HTTP/2 HPACK 头部压缩编解码引擎），继续与 `lib/merkle/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:merkle` 验收合并提交，顶替拉起 `cap:syslog` 维持 2 路并行）
+- **执行成果**：`lib/merkle/`（5/5 PASS，`doc/lib/merkle.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/cuckoo/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/syslog/`（RFC 5424 / RFC 3164 结构化 Syslog 解析与格式化引擎），与 `lib/hpack/` 维持 2 路常规并行。

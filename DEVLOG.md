@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:merkle` RFC 6962 域分离 Merkle 哈希树与双树差异定位引擎（5/5 PASS，文档直写 `doc/lib/merkle.md`）
+- **核心设计**：叶子前缀 `0x00` 与内部节点前缀 `0x01` 严格域分离复用 `cap:crypto` `sha256Raw`，彻底消除二阶原像碰撞；奇数叶子层自动将末尾节点直接提升，并通过自顶向下哈希剪枝实现 $O(k \log N)$ 同规模/跨规模 `diffTrees` 差异叶子定位。
+
+## 2026-11-21: 新建 `cap:cuckoo` 支持删除的布谷鸟过滤器（5/5 PASS，文档直写 `doc/lib/cuckoo.md`）
+- **核心设计**：采用 4 槽位/桶与 16-bit 非零指纹（`0` 表示空槽），通过 `(i ^ hashFingerprint(fp)) & mask` 严格保证备选桶对合可逆；踢出路径达到 `MAX_KICKS = 500` 时沿记录路径逆向还原所有槽位，确保返回 `FilterFull` 时零元素丢失。
+
 ## 2026-11-21: 新建 `cap:mqtt` MQTT 3.1.1 二进制 Wire 报文与流式拆包引擎（5/5 PASS，文档直写 `doc/lib/mqtt.md`）
 
 - **落地成果**：`lib/mqtt/`（`packet.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），与 `lib/paseto/` 合并回收提交，并以 `Model: "inherit"` 顶替派发 `cap:cuckoo`（支持删除 `delete` 的布谷鸟过滤器 Cuckoo Filter 近似成员集合引擎），与 `lib/merkle/` 保持 2 路正交并行。
