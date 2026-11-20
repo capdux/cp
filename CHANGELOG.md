@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:otlp` 纯 CP OpenTelemetry OTLP (Traces/Metrics/Logs) JSON 导出与 W3C TraceContext/Baggage 传播引擎（支持 `cap.otlp` 自动动态挂载，详见 `doc/lib/otlp.md`）（5/5 PASS，自动动态挂载 `cap.otlp`）
+- **新增标准库**：`lib/otlp/{context,model,json,index}.cp`，实现 W3C `TraceParent`/`Baggage` 严格校验与派生、Traces/Metrics/Logs 统一遥测模型及符合 OTLP/HTTP 规范的 RFC 8259 转义 JSON 导出器。
+- **新增文档与测试**：`doc/lib/otlp.md` 扁平文档与 `cap/test/test_otlp_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:mqtt` 纯 CP MQTT v3.1.1/v5.0 变长整数、全报文编解码、1..7B 流式分帧与 §4.7 Topic 通配符路由引擎（支持 `cap.mqtt` 自动动态挂载，详见 `doc/lib/mqtt.md`）（5/5 PASS，自动动态挂载 `cap.mqtt`）
 - **新增标准库**：`lib/mqtt/{types,topic,codec,stream,index}.cp`，实现 1..4 字节 Remaining Length VarInt、`CONNECT`/`CONNACK`/`PUBLISH`/`PUBACK`/`SUBSCRIBE`/`SUBACK`/`PINGREQ`/`DISCONNECT` 编解码、支持 `1..7` 字节半包黏包的 `MqttStreamDecoder` 及严格隔离 `$SYS` 的 `topicMatches`。
 - **新增文档与测试**：`doc/lib/mqtt.md` 扁平文档与 `cap/test/test_mqtt_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

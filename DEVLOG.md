@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:otlp` 纯 CP OpenTelemetry OTLP (Traces/Metrics/Logs) JSON 导出与 W3C TraceContext/Baggage 传播引擎（支持 `cap.otlp` 自动动态挂载，详见 `doc/lib/otlp.md`）（5/5 PASS，文档直写 `doc/lib/otlp.md`）
+- **核心设计**：`parseTraceParent` 拒绝全零 ID 与 `ff` 版本，`parseBaggage` 强制执行 `8192B`/`180` 项上限防护；OTLP JSON 导出器将 64 位整数序列化为十进制字符串以兼容 Protobuf-JSON 规范，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:mqtt` 纯 CP MQTT v3.1.1/v5.0 变长整数、全报文编解码、1..7B 流式分帧与 §4.7 Topic 通配符路由引擎（支持 `cap.mqtt` 自动动态挂载，详见 `doc/lib/mqtt.md`）（5/5 PASS，文档直写 `doc/lib/mqtt.md`）
 - **核心设计**：解码器严格校验第 4 字节 VarInt 延续位防溢出、QoS 与 `packet_id` 一致性及 `max_packet_bytes` 防资源耗尽；`topicMatches` 完整实现 `+`/`#` 与 `$SYS` 前置隔离，全路径零泄漏。
 
