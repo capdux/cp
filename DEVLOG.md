@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:zlib` 纯 CP RFC 1950 Zlib、RFC 1952 多成员 Gzip 与 Raw Deflate 统一压缩解压引擎（吸收对标 Bun `src/zlib/`，复用 `cap:deflate`，详见 `doc/lib/zlib.md`）（5/5 PASS，文档直写 `doc/lib/zlib.md`）
+- **核心设计**：自研 `decompressDeflatePrefix` 精确切分多成员 Gzip 拼接流边界并在解码过程实时拦截 `max_output_bytes` 膨胀炸弹，全路径通过 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:libarchive` 纯 CP 归档魔数探测、Unix Ar、SVR4 CPIO (newc/crc) 与 USTAR Tar 编解码及路径防穿越引擎（吸收对标 Bun `src/libarchive/`，详见 `doc/lib/libarchive.md`）（5/5 PASS，文档直写 `doc/lib/libarchive.md`）
 - **核心设计**：零 C `libarchive` 外部依赖实现 Ar/Cpio/Tar 三格式统一 `ArchiveEntry` 模型；解码入口严格拦截 `..` 目录穿越、空字节注入与总解包字节超限，全路径 `std.testing.allocator` 零泄漏。
 

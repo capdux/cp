@@ -82,3 +82,6 @@
 
 ### 2026-11-21（`cap:libarchive` 验收，顶替拉起 `cap:paseto` 维持 2 路常规并行）
 - **执行成果**：`lib/libarchive/`（5/5 PASS，`doc/lib/libarchive.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:paseto` 维持 2 路常规并行
+
+### 2026-11-21（`cap:zlib` 验收，顶替拉起 `cap:cose` 维持 2 路常规并行）
+- **执行成果**：`lib/zlib/`（5/5 PASS，`doc/lib/zlib.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:cose` 维持 2 路常规并行

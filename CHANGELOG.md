@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:zlib` 纯 CP RFC 1950 Zlib、RFC 1952 多成员 Gzip 与 Raw Deflate 统一压缩解压引擎（吸收对标 Bun `src/zlib/`，复用 `cap:deflate`，详见 `doc/lib/zlib.md`）（5/5 PASS，自动动态挂载 `cap.zlib`）
+- **新增标准库**：`lib/zlib/{types,deflate_stream,codec,index}.cp`（吸收对标 Bun `src/zlib/`，复用 `cap:deflate`），实现 `RawDeflate`/`Zlib`/`Gzip`/`AutoDetect` 统一编解码、RFC 1952 `FEXTRA`/`FNAME`/`FCOMMENT`/`FHCRC` 解析、多成员 Gzip 拼接流解压及 `max_output_bytes` 防膨胀炸弹守卫。
+- **新增文档与测试**：`doc/lib/zlib.md` 扁平文档与 `cap/test/test_zlib_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:libarchive` 纯 CP 归档魔数探测、Unix Ar、SVR4 CPIO (newc/crc) 与 USTAR Tar 编解码及路径防穿越引擎（吸收对标 Bun `src/libarchive/`，详见 `doc/lib/libarchive.md`）（5/5 PASS，自动动态挂载 `cap.libarchive`）
 - **新增标准库**：`lib/libarchive/{format,ar,cpio,tar,index}.cp`（吸收对标 Bun `src/libarchive/`），统一支持 Ar/CpioNewc/CpioCrc/Tar/Zip/Gzip/Zstd 魔数探测、Unix `ar`（含 GNU `//` 与 BSD `#1/` 长名）、SVR4 `cpio newc` 与 USTAR Tar 读写，内置 `validateArchivePath` 与 `ArchiveLimits` 防资源耗尽守卫。
 - **新增文档与测试**：`doc/lib/libarchive.md` 扁平文档与 `cap/test/test_libarchive_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
