@@ -1,147 +1,134 @@
-# CP 标准库：DNS 报文编解码、本地 Hosts 解析与 TTL 缓存手册 (`cap:dns`)
+# CP 标准库：DNS 协议套件、记录编解码、DoH 与解析配置手册 (`cap:dns`)
 
 ## 一、 架构总览与设计准则
 
-`cap:dns` 是 CP 语言官方内置的工业级域名解析（DNS）协议编解码、本地 `/etc/hosts` 静态表解析、泛型 TTL 缓存与 `c-ares` 异步解析绑定标准库，全面吸收自 Bun 原生 DNS 子系统（`/data/dev/bun/src/dns/` 与 `src/cares_sys/`）。
+`cap:dns` 是 CP 语言官方内置的工业生产级域名解析（DNS）协议套件，涵盖 RFC 1035/2782/3596/8484/8659 报文与资源记录编解码、DNS-over-HTTPS（DoH）、POSIX `/etc/resolv.conf` 解析器、`/etc/hosts` 静态表解析、泛型 TTL 缓存与 `c-ares` 异步解析绑定。
 
 ```text
-┌────────────────────────────────────────────────────────────────────────┐
-│                        CP 用户层应用 (Application)                      │
-├──────────────────────┬─────────────────────────┬───────────────────────┤
-│ RFC 1035 报文编解码   │  本地 Hosts 静态解析表   │  编译期泛型 TTL 缓存  │
-│ DnsHeader (12 Bytes) │  HostsTable.parse       │  DnsCache<const CAP>  │
-│ DnsWireCodec         │  HostsTable.parseIPv4   │  put / lookup         │
-│ 0xC0 指针解压缩       │  lookup / lookupIPv4    │  evictExpired         │
-├──────────────────────┴─────────────────────────┴───────────────────────┤
-│         c-ares 原生异步解析通道绑定 (_cares.cp / CaresStatus)          │
-└────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────┐
+│                         CP 用户层应用 (Application)                         │
+├──────────────────────┬──────────────────────────┬──────────────────────────┤
+│ RFC 1035/2782/8659   │ RFC 8484 DNS-over-HTTPS  │ POSIX 解析配置与本地表    │
+│ DnsHeader / Wire     │ DohQueryBuilder (GET/POST│ ResolvConf (/etc/resolv) │
+│ DnsNameCodec (PTR/防环│ DohJsonResponse / Answer │ HostsTable (/etc/hosts)  │
+│ SoaRecord/Srv/Caa    │ application/dns-message  │ DnsCache<const CAP>      │
+├──────────────────────┴──────────────────────────┴──────────────────────────┤
+│         c-ares 原生异步解析通道绑定 (_cares.cp / CaresStatus)              │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### 1. 模块文件拓扑与谱系来源
 
-`lib/dns/` 下所有源文件第 1 行均严格标记上游 Bun 源码来源：
-
-| 文件路径 | 上游谱系注释 | 核心职责 |
+| 文件路径 | 谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
-| `lib/dns/packet.cp` | `// Source: /data/dev/bun/src/dns/` | RFC 1035 12 字节 `DnsHeader`、响应码 `DnsRCode`、`DnsWireCodec`（域名标签编码、带防环保护的 `0xC0` 指针压缩解码、查询包构造） |
+| `lib/dns/packet.cp` | `// Source: /data/dev/bun/src/dns/` | RFC 1035 12 字节 `DnsHeader`、响应码 `DnsRCode`、`DnsWireCodec`（域名标签编码、`0xC0` 指针压缩解码、查询包构造、基础 RR 解析） |
 | `lib/dns/cache.cp` | `// Source: /data/dev/bun/src/dns/` | `DnsCache<const CAP: usize>` 零堆分配 TTL 缓存、`HostsTable` `/etc/hosts` 静态映射解析器、`ResolveOptions`、`DnsFamily` |
-| `lib/dns/_cares.cp` | `// Source: /data/dev/bun/src/dns/` | `NSClass`、`NSType`（A/AAAA/CNAME/MX/TXT/SRV/CAA）、`CaresStatus` 错误分类与 `c-ares` C-ABI 声明 |
+| `lib/dns/records.cp` | `// Source: cp/lib/dns/records.cp (...)` | `DnsNameCodec`（16 跳防环解压 + IPv4/IPv6 PTR `.arpa` 构造）、`SoaRecord`、`SrvRecord`、`SrvSelector`、`CaaRecord` |
+| `lib/dns/doh.cp` | `// Source: cp/lib/dns/doh.cp (...)` | RFC 8484 `DohQueryBuilder`（Base64URL 无填充 GET URL / POST 头）与 `DohJsonResponse` / `DohJsonAnswer` 解析器 |
+| `lib/dns/resolv_conf.cp` | `// Source: cp/lib/dns/resolv_conf.cp (...)` | POSIX `/etc/resolv.conf` 解析器、`loadSystem` / `loadFromFile`、`expandSearchDomains`（`ndots` 展开） |
+| `lib/dns/_cares.cp` | `// Source: /data/dev/bun/src/dns/` | `NSClass`、`NSType`、`CaresStatus` 错误分类与 `c-ares` C-ABI 声明 |
 | `lib/dns/index.cp` | `// Source: /data/dev/bun/src/dns/` | `cap:dns` 标准库对外统一导出入口 |
 
 ---
 
-## 二、 RFC 1035 12 字节 DNS 帧头与 `0xC0` 域名压缩指针
+## 二、 RFC 1035 帧头、`0xC0` 防环解压与反向 PTR 构造
 
 ### 1. RFC 1035 Section 4.1.1 12 字节固定报文头 (`DnsHeader`)
 
-```text
-      0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
-    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
- 0  |                      ID                       |  事务标识符 (u16 BE)
-    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
- 2  |QR|   Opcode  |AA|TC|RD|RA|   Z    |   RCODE   |  标志位与响应码
-    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
- 4  |                    QDCOUNT                    |  问题数 (Questions)
-    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
- 6  |                    ANCOUNT                    |  回答资源记录数 (Answers)
-    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
- 8  |                    NSCOUNT                    |  权威名称服务器记录数
-    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-10  |                    ARCOUNT                    |  附加资源记录数
-    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-```
+- `DnsHeader.encode` / `DnsHeader.decode`：编解码 `id`、`is_response`、`opcode`、`authoritative`、`truncated`、`recursion_desired`、`recursion_available`、`rcode`、`qd_count`、`an_count`、`ns_count`、`ar_count`。
 
-### 2. 域名标签序列与 `0xC0` 压缩指针解码 (`DnsWireCodec`)
+### 2. 安全域名解码与防环保护 (`DnsNameCodec`)
 
-- **标签序列编码 (`encodeDomainName`)**：
-  将点分域名 `"api.cap.dev"` 编码为长度前缀标签序列 `"\x03api\x03cap\x03dev\x00"`（单标签最大 63 字节，总长最大 253 字节）。
-- **RFC 1035 Section 4.1.4 指针压缩解码 (`decodeDomainName`)**：
-  当遇到高 2 位为 `11`（即 `len_byte & 0xC0 == 0xC0`）的字节时，自动将其与下一字节组合为 14 位报文内偏移量 `((len_byte & 0x3F) << 8) | next_byte` 并跳转读取后缀标签；内置 **16 跳（`hops < 16`）防恶意死循环指针炸弹保护**，同时精确返回首次跳转前在当前记录中消耗的字节数 `packet_bytes_consumed`。
+- `DnsNameCodec.decode(packet, start_offset, out_name)`：
+  - 支持 RFC 1035 Section 4.1.4 `0xC0` 压缩指针跳转；
+  - 内置 `MAX_JUMPS = 16` 跳转上限与自环检测，遇到死循环指针立即返回 `DnsRecordError.PointerLoop`；
+  - 严格校验标签长度（`<= 63`）、总域名长度（`<= 253`）、保留位（拒绝 `0x40`/`0x80`）与报文边界。
+- 反向解析 PTR 域名构造：
+  - `DnsNameCodec.ipv4ToArpa(addr, out)` / `ipv4StrToArpa(ip_str, out)`：生成 `d.c.b.a.in-addr.arpa`；
+  - `DnsNameCodec.ipv6ToArpa(addr, out)` / `ipv6StrToArpa(ip_str, out)`：按 RFC 3596 将 128 位地址展开为 32 个十六进制半字节逆序格式 `<32 nibbles>.ip6.arpa`（支持 `::` 零压缩解析）。
 
 ---
 
-## 三、 本地 `/etc/hosts` 解析 (`HostsTable`) 与 DNS TTL 缓存 (`DnsCache<CAP>`)
+## 三、 SOA / SRV / CAA 生产级资源记录与 RFC 2782 排序
 
-### 1. 零分配 `/etc/hosts` 解析器 (`HostsTable`)
-
-- 自动剥离 `#` 行内注释、空行与 `\r\n`；
-- 支持单行多别名映射（如 `127.0.0.1 localhost loopback api.local`）；
-- 自动将点分十进制 IPv4 地址（如 `"10.0.0.42"`）解析为大端序 `u32` 紧凑整数（`0x0A00002A`），同时兼容 IPv6 条目（如 `"::1 ip6-localhost"`）。
-
-### 2. 编译期常量泛型 TTL 缓存 (`DnsCache<const CAP: usize>`)
-
-- 采用编译期确定容量的固定数组 `[CAP]DnsCacheEntry`，**100% 零堆内存分配**；
-- `put(host, ipv4_packed, port, now_ms, ttl_ms)`：插入或刷新缓存项，若槽位已满自动回收已过期的槽位；
-- `lookup(host, port, now_ms)`：命中且未过期时自增 `hits` 与 `total_hits`；若已过期则自动惰性驱逐（Lazy Eviction）并计入 `total_misses`；
-- `evictExpired(now_ms)`：主动批量清理所有已过期条目并返回清理数量。
+- **`SoaRecord` (RFC 1035)**：解析与编码 `mname`、`rname`（均支持压缩指针）、`serial`、`refresh`、`retry`、`expire`、`minimum`。
+- **`SrvRecord` & `SrvSelector` (RFC 2782)**：
+  - `SrvRecord.parseRdata` / `parseWire` / `encodeRdata`：编解码 `priority`、`weight`、`port`、`target`；
+  - `SrvSelector.sortByPriorityAndWeight(records)`：按 `priority` 升序排列，同优先级内按 `weight` 降序排列（`weight == 0` 置于同优先级末尾）；
+  - `SrvSelector.shuffleWeighted(records, seed)`：在同优先级组内按 RFC 2782 权重概率加权洗牌。
+- **`CaaRecord` (RFC 8659)**：解析与编码 `flags`（含 `isCritical()` 检查 bit 0 / `0x80`）、`tag`（校验 1..=15 字节 ASCII 字母数字）、`value`。
 
 ---
 
-## 四、 完整代码示例
+## 四、 RFC 8484 DNS-over-HTTPS (`doh.cp`)
+
+- **`DohQueryBuilder`**：
+  - `buildGetUrl(alloc, endpoint, wire_query)`：生成 `?dns=<base64url_no_pad>`（若 `endpoint` 已含 `?` 则自动使用 `&dns=`）；
+  - `buildDnsQueryGetUrl(alloc, endpoint, id, domain, qtype)`：一步构建 DNS 查询报文并生成 DoH GET URL；
+  - `buildPostHeaders()`：返回标准 `Content-Type: application/dns-message` 与 `Accept: application/dns-message` 头。
+- **`DohJsonResponse` & `DohJsonAnswer`**：
+  - `DohJsonResponse.parse(alloc, json_bytes)`：解析 Cloudflare / Google `application/dns-json` 响应中的 `Status`、`TC`、`RD`、`RA`、`AD`、`CD`、`Question[]` 与 `Answer[]`（`name`/`rtype`/`TTL`/`data`），使用完毕后调用 `.deinit(alloc)` 释放内存。
+
+---
+
+## 五、 POSIX `/etc/resolv.conf` 解析器 (`resolv_conf.cp`) 与缓存/Hosts
+
+- **`ResolvConf.parse(text)`**：零堆分配解析：
+  - 自动剥离 `#` 与 `;` 行内注释；
+  - 提取 `nameserver`（IPv4/IPv6，最多 16 个）、`search` / `domain`（最多 16 个搜索域，后出现的覆盖前者）；
+  - 提取 `options ndots:N timeout:N attempts:N rotate edns0 trust-ad use-vc`。
+- **`ResolvConf.loadSystem(alloc)` / `loadFromFile(alloc, path)`**：从宿主文件加载配置（需调用 `.deinit(alloc)`）。
+- **`expandSearchDomains(alloc, host)`**：严格按 `ndots` 阈值展开搜索域（末尾带 `.` 的 FQDN 原样返回；`dots >= ndots` 时先查裸域名再查搜索域；`dots < ndots` 时先查搜索域再兜底裸域名）。
+- **`HostsTable` & `DnsCache<CAP>`**：零堆分配 `/etc/hosts` 静态表解析与泛型 TTL 缓存（保持 100% 向后兼容）。
+
+---
+
+## 六、 完整代码示例
 
 ```typescript
+const std = @import("std");
 import {
     NSType,
-    DnsRCode,
-    DnsHeader,
     DnsWireCodec,
-    DnsCache,
-    HostsTable,
+    DnsNameCodec,
+    SrvRecord,
+    SrvSelector,
+    DohQueryBuilder,
+    DohJsonResponse,
+    ResolvConf,
 } from "cap:dns";
 
-pub fn demoDnsSubsystem() {
-    // =========================================================================
-    // 1. 解析本地 /etc/hosts 静态映射表
-    // =========================================================================
-    const hosts_text =
-        "# Local cluster hosts\n" +
-        "127.0.0.1\tlocalhost loopback\n" +
-        "10.24.0.88  redis.internal db.internal # cache node\n" +
-        "::1         ip6-localhost\n";
+pub fn demoDnsProduction(): !void {
+    const alloc = std.heap.page_allocator;
 
-    let hosts = HostsTable.parse(hosts_text);
-    // hosts.entryCount() == 5
-    const redis_ip_str = hosts.lookup("redis.internal").?; // "10.24.0.88"
-    const redis_ipv4 = hosts.lookupIPv4("db.internal").?;  // 0x0A180058
+    // 1. 反向 PTR 域名构造
+    let ptr_buf: [80]u8 = undefined;
+    const v4_ptr = try DnsNameCodec.ipv4StrToArpa("192.0.2.1", &ptr_buf);
+    // => "1.2.0.192.in-addr.arpa"
 
-    // =========================================================================
-    // 2. 构造 RFC 1035 DNS 查询报文并解压 0xC0 压缩域名
-    // =========================================================================
-    let pkt: [128]u8 = [0; 128];
-    const pkt_len = DnsWireCodec.buildQueryPacket(0x9901, "registry.cp-lang.org", NSType.A, &pkt);
+    // 2. SRV 记录优先级与权重排序
+    let srvs: [3]SrvRecord = [
+        SrvRecord.init(20, 10, 8443, "backup.cp-lang.org"),
+        SrvRecord.init(10, 5, 443, "edge-b.cp-lang.org"),
+        SrvRecord.init(10, 80, 443, "edge-a.cp-lang.org"),
+    ];
+    SrvSelector.sortByPriorityAndWeight(&srvs);
+    // srvs[0] -> edge-a (prio 10, weight 80)
 
-    let decoded_name: [64]u8 = undefined;
-    if (dom := DnsWireCodec.decodeDomainName(pkt[0..pkt_len], 12, &decoded_name)) {
-        // decoded_name[0..dom.name_len] => "registry.cp-lang.org"
-    }
+    // 3. DoH GET URL 构造与 JSON 响应解析
+    const doh_url = try DohQueryBuilder.buildDnsQueryGetUrl(
+        alloc,
+        "https://cloudflare-dns.com/dns-query",
+        0x1234,
+        "cp-lang.org",
+        NSType.A,
+    );
+    defer alloc.free(doh_url);
 
-    // =========================================================================
-    // 3. 编译期泛型 DnsCache<32> 高速 TTL 缓存
-    // =========================================================================
-    let cache = DnsCache<32>.init();
-    const now_ms: u64 = 100000;
-    const ttl_ms: u64 = 30000; // 30s TTL
-
-    * = cache.put("registry.cp-lang.org", redis_ipv4, 443, now_ms, ttl_ms);
-
-    // 10s 后查询 -> 命中 (0x0A180058)
-    const hit_ip = cache.lookup("registry.cp-lang.org", 443, now_ms + 10000);
-
-    // 35s 后查询 -> 已过期返回 null 并自动回收槽位
-    const expired_ip = cache.lookup("registry.cp-lang.org", 443, now_ms + 35000);
+    // 4. /etc/resolv.conf 解析与 ndots 搜索域展开
+    let rc = ResolvConf.parse("nameserver 1.1.1.1\nsearch corp.internal\noptions ndots:2\n");
+    const candidates = try rc.expandSearchDomains(alloc, "api.svc");
+    defer ResolvConf.freeExpandedDomains(alloc, candidates);
+    // candidates => ["api.svc.corp.internal", "api.svc"]
 }
 ```
-
----
-
-## 五、 与 `Bun.dns` / `node:dns` API 对照表
-
-| 功能特性 | Bun (`Bun.dns` / `src/dns/`) | CP 标准库 (`cap:dns`) |
-| :--- | :--- | :--- |
-| **DNS 记录类型枚举** | `NSType` (`A`, `AAAA`, `CNAME`, `MX`, `TXT`, `SRV`, `CAA`) | `NSType` (`A`, `AAAA`, `CNAME`, `MX`, `TXT`, `SRV`, `CAA`) |
-| **RFC 1035 报文头编解码** | `dns/packet` 12-byte Header | `DnsHeader.encode` / `DnsHeader.decode` |
-| **域名标签与 `0xC0` 解压** | `c-ares` / 内置 DNS 解析器 | `DnsWireCodec.encodeDomainName` / `decodeDomainName` / `buildQueryPacket` / `decodeQuestion` |
-| **资源记录 (RR)  wire 解码** | `SRV` / `TXT` / `MX` / `AAAA` / `A` / `CNAME` | `decodeResourceRecord` + `parseARdata` / `parseAAAARdata` / `parseNameRdata` / `parseMxRdata` / `parseSrvRdata` / `parseTxtRdata` + `formatIPv4` / `formatIPv6` |
-| **`/etc/hosts` 静态解析** | `etc_hosts` 本地覆盖表 | `HostsTable.parse(content)` -> `.lookup(host)` / `.lookupIPv4(host)` / `.lookupIPv6(host)` |
-| **TTL 缓存管理** | `Bun.dns.prefetch` / 内置 DNS Cache | `DnsCache<CAP>.init()` -> `.put` / `.putAAAA` / `.lookup` / `.lookupAAAA` / `.evictExpired` |
-| **c-ares 状态码诊断** | `ares_strerror` | `CaresStatus.codeName(code)` / `CaresStatus.isRetryable(code)` |

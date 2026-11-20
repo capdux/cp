@@ -2,6 +2,14 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-20] - 3 路正交并行首批收官：`cap:bench`（9/9）、`cap:security`（9/9）与 `cap:dns`（10/10）全绿验收落地
+
+- **`cap:bench`**（[`lib/bench/`](file:///data/dev/cp/lib/bench/index.cp)）：升级 `suite.cp`（`blackBox<T>`、`BenchOptions`/`BenchResult`/`BenchRunner` 预热与 Welford 分位数统计），新增 `compare.cp`（Welch t-test `BenchComparison` 与 Markdown 报告）及 `alloc_tracker.cp`（`CountingAllocator`/`AllocSnapshot`），[`test_bench_production_deep.cp`](file:///data/dev/cp/cap/test/test_bench_production_deep.cp) `-m` 5/5 + 既有 4/4 PASS；
+- **`cap:security`**（[`lib/security/`](file:///data/dev/cp/lib/security/index.cp)）：新增 `totp.cp`（RFC 4648 Base32、RFC 4226 HOTP、RFC 6238 TOTP 与 `otpauth://`）、`cors.cp`（Fetch CORS 策略引擎与凭据+通配符防线）及 `csp.cp`（`CspBuilder` 防 CRLF 注入 + `SecurityHeadersPreset`），[`test_security_production_deep.cp`](file:///data/dev/cp/cap/test/test_security_production_deep.cp) `-m` 5/5 + 既有 `test_security_csrf.cp` 4/4 PASS；
+- **`cap:dns`**（[`lib/dns/`](file:///data/dev/cp/lib/dns/index.cp)）：新增 `records.cp`（16 跳防环 `DnsNameCodec` + IPv4/IPv6 PTR、SOA/SRV+权重排序/CAA）、`doh.cp`（RFC 8484 Base64URL GET/POST 与 JSON DoH 解析）及 `resolv_conf.cp`（POSIX `/etc/resolv.conf` 与 `ndots` 搜索域展开），[`test_dns_production_deep.cp`](file:///data/dev/cp/cap/test/test_dns_production_deep.cp) `-m` 5/5 + 既有 `test_crypto_sql_dns.cp` 5/5 PASS；同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)（零读写 `cp_ref.md`/`cp_agent_ref.md`）。
+
+---
+
 ## [2026-11-20] - 研发提速治理固化（`GEMINI.md` / `cp_lib_ref.md` / `verify_module.sh` / 动态 `cap` 路由）与 `cap:html` + `cap:json` 双路落地
 
 ### 研发提速体系与三轨解耦规范落地

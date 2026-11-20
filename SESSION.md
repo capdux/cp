@@ -18,3 +18,6 @@
   - 完整落地三轨解耦规范（新建 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)、精简 [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)、全量更新 [`GEMINI.md`](file:///data/dev/cp/GEMINI.md) 消除冲突）、新增 [`scripts/verify_module.sh`](file:///data/dev/cp/scripts/verify_module.sh)、升级 [`scripts/sync_cpc.sh`](file:///data/dev/cp/scripts/sync_cpc.sh) 原子替换与 [`cpc/src/resolver.rs`](file:///data/dev/cp/cpc/src/resolver.rs) 自动探测 `lib/<ns>/index.cp`；
   - 回收并验收子智能体 11（`lib/html/`，5/5 PASS）与子智能体 12（`lib/json/`，5/5 PASS），一并提交 Git；
   - 正式启用 96 核 **3 路正交并行**，同步派发子智能体 13（`lib/security/` TOTP/CORS/CSP）、子智能体 14（`lib/dns/` DoH/全记录/resolv.conf）与子智能体 15（`lib/bench/` 统计基准/Welch t-test/分配追踪）。
+
+### 2026-11-20（3 路正交首批 `cap:bench` / `cap:security` / `cap:dns` 合并验收提交，开启第二批 `cap:csv` / `cap:uuid` / `cap:template` 3 路并行）
+- **执行成果**：首批 3 路子智能体（`lib/bench/` 9/9、`lib/security/` 9/9、`lib/dns/` 10/10）全部通过 `verify_module.sh` 一键验收回收，合并单次更新 `cp_lib_ref.md` 与轻量热日志并提交 Git；立即启动第二批 3 路正交全新标准库（`lib/csv/`、`lib/uuid/`、`lib/template/`，全面验证动态 `cap.<ns>` 零改动编译器自动挂载）。

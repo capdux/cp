@@ -64,3 +64,31 @@ export {
     HostsEntry,
     HostsTable,
 } from "./cache.cp";
+
+export {
+    DnsRecordError,
+    DnsNameCodec,
+    SrvRecord,
+    SrvSelector,
+    SoaRecord,
+    CaaRecord,
+} from "./records.cp";
+
+export {
+    DohError,
+    DohHeader,
+    DohPostHeaders,
+    DohQueryBuilder,
+    DohJsonQuestion,
+    DohJsonAnswer,
+    DohJsonResponse,
+} from "./doh.cp";
+
+export {
+    MAX_NAMESERVERS,
+    MAX_SEARCH_DOMAINS,
+    DEFAULT_NDOTS,
+    DEFAULT_TIMEOUT,
+    DEFAULT_ATTEMPTS,
+    ResolvConf,
+} from "./resolv_conf.cp";
