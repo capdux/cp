@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:msgpack_rpc` 纯 CP MessagePack-RPC (Request/Response/Notification) 编解码、深度防护与半包黏包流式拆帧引擎（支持 `cap.msgpack_rpc` 自动动态挂载，详见 `doc/lib/msgpack_rpc.md`）（5/5 PASS，文档直写 `doc/lib/msgpack_rpc.md`）
+- **核心设计**：自包含轻量化 MessagePack-RPC 编解码器与 `RpcStreamDecoder`，严格校验数组长度、消息类型与最大帧字节上限，全路径 `std.testing.allocator` 零泄漏。
+
 ## 2026-11-21: 新建 `cap:jmespath` 纯 CP JMESPath JSON 查询、切片/通配符/Flatten 投影、MultiSelect、管道与 13 种内置函数引擎（支持 `cap.jmespath` 自动动态挂载，详见 `doc/lib/jmespath.md`）（5/5 PASS，文档直写 `doc/lib/jmespath.md`）
 - **核心设计**：内置 `MAX_DEPTH = 64`、零步长 `InvalidSliceStep` 与函数参数类型强校验，全路径 `std.testing.allocator` 零泄漏。
 

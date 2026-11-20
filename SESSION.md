@@ -112,3 +112,6 @@
 
 ### 2026-11-21（`cap:jmespath` 验收，顶替拉起 `cap:redis_cluster` 维持 2 路常规并行）
 - **执行成果**：`lib/jmespath/`（5/5 PASS，`doc/lib/jmespath.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:redis_cluster` 维持 2 路常规并行
+
+### 2026-11-21（`cap:msgpack_rpc` 验收，主控亲自完成第 3 路 `cap:msgpack_rpc` 验收提交，维持 `cap:capnp` 与 `cap:redis_cluster` 并发）
+- **执行成果**：`lib/msgpack_rpc/`（5/5 PASS，`doc/lib/msgpack_rpc.md`）经 `verify_module.sh` 一次性验收回收；主控亲自完成第 3 路 `cap:msgpack_rpc` 验收提交，维持 `cap:capnp` 与 `cap:redis_cluster` 并发

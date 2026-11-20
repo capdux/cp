@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:msgpack_rpc` 纯 CP MessagePack-RPC (Request/Response/Notification) 编解码、深度防护与半包黏包流式拆帧引擎（支持 `cap.msgpack_rpc` 自动动态挂载，详见 `doc/lib/msgpack_rpc.md`）（5/5 PASS，自动动态挂载 `cap.msgpack_rpc`）
+- **新增标准库**：`lib/msgpack_rpc/{codec,index}.cp`，实现完整 MessagePack 类型编解码、Request/Response/Notification 帧、`MAX_RPC_DEPTH = 32` 与 `RpcStreamDecoder` 半包黏包拆帧。
+- **新增文档与测试**：`doc/lib/msgpack_rpc.md` 扁平文档与 `cap/test/test_msgpack_rpc_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:jmespath` 纯 CP JMESPath JSON 查询、切片/通配符/Flatten 投影、MultiSelect、管道与 13 种内置函数引擎（支持 `cap.jmespath` 自动动态挂载，详见 `doc/lib/jmespath.md`）（5/5 PASS，自动动态挂载 `cap.jmespath`）
 - **新增标准库**：`lib/jmespath/{value,parser,eval,index}.cp`，实现 RFC 风格 `compileJmesPath`/`searchJmesPath`（覆盖 `[]`/`[*]`/`*`/过滤器 `[?expr]`/`{k:v}`/`[a,b]`/`|`/`@`/反引号字面量与 13 个内置函数）及 `MAX_DEPTH = 64`/零步长防 DoS 拦截。
 - **新增文档与测试**：`doc/lib/jmespath.md` 扁平文档与 `cap/test/test_jmespath_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
