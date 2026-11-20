@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:geohash` 零分配 Geohash 空间网格与 Haversine 距离引擎（5/5 PASS，自动动态挂载 `cap.geohash`）
+- **新增标准库**：`lib/geohash/{geohash,index}.cp`，实现栈上定长 `GeohashCode`、`encode`/`decode`/`decodeBounds`、8 邻域 `neighbors`（含 `±180°` 国际日界线环绕与极点钳位）、64-bit Morton 整型 `encodeInt`/`decodeInt` 及 `haversineMeters`/`precisionForRadiusMeters`。
+- **新增文档与测试**：`doc/lib/geohash.md` 扁平文档与 `cap/test/test_geohash_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:radix` 压缩基数树与高性能分段前缀路由引擎（5/5 PASS，自动动态挂载 `cap.radix`）
 - **新增标准库**：`lib/radix/{radix,router,index}.cp`，实现泛型压缩基数树 `RadixTree<T>`（公共前缀分裂、删除单子节点自动压缩合并、`longestPrefix`、`scanPrefix`）与 `RadixRouter<T>`（静态/`:param`/`*wildcard` 优先级路由）。
 - **新增文档与测试**：`doc/lib/radix.md` 扁平文档与 `cap/test/test_radix_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

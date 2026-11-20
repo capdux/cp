@@ -359,3 +359,6 @@
 
 ### 2026-11-21（完成下游热修工单 `task-bun-20261121-lib-main` 结单并回收临时子智能体）
 - **执行成果**：修复 `cpc/src/codegen/{prelude,actor,mod}.rs` 中 `--lib` 模式下误将普通 `pub fn main()` 当作 CP 纤程入口重写并注入运行时的问题；通过 `sync_cpc.sh release`、`repro_lib_main.cp` + `zig ast-check` 与 `test_basic.cp` 验证，已 `resolve` + `ack` 通知 `bun_agy`，回收临时热修子智能体 `11c8ecfb`，并与 `cap:radix` 一并提交 Git。
+
+### 2026-11-21（`cap:geohash` 验收提交，顶替拉起 `cap:circuit` 维持 2 路常规并行）
+- **执行成果**：`lib/geohash/`（5/5 PASS，`doc/lib/geohash.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/circuit/`（分布式弹性断路器、指数退避抖动重试与舱壁并发限流引擎），与 `lib/fx/` 维持 2 路常规并行。

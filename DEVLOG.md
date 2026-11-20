@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:geohash` 零分配 Geohash 空间网格与 Haversine 距离引擎（5/5 PASS，文档直写 `doc/lib/geohash.md`）
+- **核心设计**：采用栈上定长 `GeohashCode` 与 `Neighbors` 结构体实现零堆分配编解码与 8 邻域查找，经度按 `±180°` 环绕、纬度按 `±90°` 极点钳位，并提供 64-bit Z-order Morton 整型索引接口。
+
 ## 2026-11-21: 新建 `cap:radix` 压缩基数树与高性能分段前缀路由引擎（5/5 PASS，文档直写 `doc/lib/radix.md`）
 - **核心设计**：`RadixTree<T>` 在删除节点后自动检测非根孤立单子节点并合并边前缀，保持压缩树结构不变量；`RadixRouter<T>` 按 `/` 分段匹配并严格遵循 `static > :param > *wildcard` 优先级与回溯，保证 `std.testing.allocator` 零泄漏。
 
