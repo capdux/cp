@@ -2,6 +2,14 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:kdtree` 多维空间 K-D Tree 最近邻与范围检索引擎（5/5 PASS，自动动态挂载 `cap.kdtree`）
+- **新增标准库**：`lib/kdtree/{kdtree,index}.cp`，实现任意 `dims >= 1` 维度方差中位数平衡建树 `KdTree<V>` 与动态 `insert`，支持剪枝精确 `nearest` / `kNearest`、球形 `withinRadius` 与 AABB 超矩形 `rangeSearch`。
+- **新增文档与测试**：`doc/lib/kdtree.md` 扁平文档与 `cap/test/test_kdtree_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
+## [2026-11-21] - 新建 `cap:ndjson` NDJSON / JSON Lines 增量流式分帧与校验引擎（5/5 PASS，自动动态挂载 `cap.ndjson`）
+- **新增标准库**：`lib/ndjson/{ndjson,index}.cp`，实现跨 Chunk 增量分帧解析器 `NdjsonStreamParser`（支持 `\n`/`\r\n`、空白行跳过、单行长度上限防护与错误行号定位）、`NdjsonWriter`（拦截裸 `\n`/`\r` 破坏行边界）及 `parseAll`/`stringifyAll`。
+- **新增文档与测试**：`doc/lib/ndjson.md` 扁平文档与 `cap/test/test_ndjson_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:jsonpatch` RFC 6901 JSON Pointer 与 RFC 6902 JSON Patch 原子事务引擎（5/5 PASS，自动动态挂载 `cap.jsonpatch`）
 - **新增标准库**：`lib/jsonpatch/{jsonpatch,index}.cp`，实现 RFC 6901 `~0`/`~1` 转义与前导零校验的 `resolvePointer`、隔离深拷贝 Arena 上的 RFC 6902 六操作原子 `applyPatch`（含 `CycleMove` 检测）以及最小差分 `createDiffPatch`。
 - **新增文档与测试**：`doc/lib/jsonpatch.md` 扁平文档与 `cap/test/test_jsonpatch_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

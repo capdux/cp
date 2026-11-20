@@ -470,3 +470,9 @@
 
 ### 2026-11-21（`cap:jsonpatch` 验收提交，顶替拉起 `cap:ndjson` 维持 2 路常规并行）
 - **执行成果**：`lib/jsonpatch/`（5/5 PASS，`doc/lib/jsonpatch.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/ndjson/`（NDJSON / JSON Lines 增量流式分帧与校验引擎），与 `lib/kdtree/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:ndjson` 验收提交，顶替拉起 `cap:sse` 维持 2 路常规并行）
+- **执行成果**：`lib/ndjson/`（5/5 PASS，`doc/lib/ndjson.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/sse/`（W3C Server-Sent Events `text/event-stream` 增量流式解析与发射器引擎），与 `lib/kdtree/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:kdtree` 验收合并提交，顶替拉起 `cap:multipart` 维持 2 路常规并行）
+- **执行成果**：`lib/kdtree/`（5/5 PASS，`doc/lib/kdtree.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/ndjson/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/multipart/`（RFC 7578 `multipart/form-data` 解析与构建引擎），与 `lib/sse/` 维持 2 路常规并行。

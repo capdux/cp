@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:kdtree` 多维空间 K-D Tree 最近邻与范围检索引擎（5/5 PASS，文档直写 `doc/lib/kdtree.md`）
+- **核心设计**：建树期按各维方差与中位数划分平衡超平面，`kNearest` 结合最大堆边界剪枝回溯，并在 2D/3D/5D 高维点集下与全量暴力欧氏距离对拍 100% 一致。
+
+## 2026-11-21: 新建 `cap:ndjson` NDJSON / JSON Lines 增量流式分帧与校验引擎（5/5 PASS，文档直写 `doc/lib/ndjson.md`）
+- **核心设计**：`NdjsonStreamParser` 维护跨分块行缓冲与行号计数器，严格校验每行完整 JSON 语法并在 `max_line_bytes` 超限时立即阻断；`NdjsonWriter` 禁止未转义换行符注入破坏帧边界。
+
 ## 2026-11-21: 新建 `cap:jsonpatch` RFC 6901 JSON Pointer 与 RFC 6902 JSON Patch 原子事务引擎（5/5 PASS，文档直写 `doc/lib/jsonpatch.md`）
 - **核心设计**：`applyPatch` 在独立 `ArenaAllocator` 深拷贝树上顺序执行补丁操作，任意校验或路径异常立即回滚释放并保持原输入不变；`createDiffPatch` 递归对比 JSON 树生成可逆最小 Patch 数组。
 
