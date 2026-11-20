@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:crash_handler` 纯 CP 结构化崩溃诊断、零堆固定缓冲格式化、环形面包屑与 RFC 8259 JSON 报告导出引擎（吸收对标 Bun `src/crash_handler/`，详见 `doc/lib/crash_handler.md`）（5/5 PASS，自动动态挂载 `cap.crash_handler`）
+- **新增标准库**：`lib/crash_handler/{types,ring,format,index}.cp`（吸收对标 Bun `src/crash_handler/`），提供纯表驱动信号解码、零堆 `FixedCrashWriter(N)` 截断安全格式化、`BreadcrumbRing(CAP)` 环形回放、敏感键脱敏及 `formatCrashText`/`formatCrashJson`。
+- **新增文档与测试**：`doc/lib/crash_handler.md` 扁平文档与 `cap/test/test_crash_handler_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:analytics` 纯 CP 有界环形缓冲遥测收集、背压策略、敏感字段自动脱敏与 JSON/NDJSON 批量导出引擎（吸收对标 Bun `src/analytics/`，详见 `doc/lib/analytics.md`）（5/5 PASS，自动动态挂载 `cap.analytics`）
 - **新增标准库**：`lib/analytics/{types,collector,json,index}.cp`（吸收对标 Bun `src/analytics/`），实现敏感键自动脱敏（`"[REDACTED]"`）、`DropOldest`/`DropNewest`/`RejectWhenFull` 三种背压环形缓冲收集器 `AnalyticsCollector` 与 RFC 8259 转义 `encodeBatchJson`/`encodeBatchNdjson`。
 - **新增文档与测试**：`doc/lib/analytics.md` 扁平文档与 `cap/test/test_analytics_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

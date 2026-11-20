@@ -61,3 +61,6 @@
 
 ### 2026-11-21（`cap:analytics` 验收，顶替拉起 `cap:threading` 维持 2 路常规并行）
 - **执行成果**：`lib/analytics/`（5/5 PASS，`doc/lib/analytics.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:threading` 维持 2 路常规并行
+
+### 2026-11-21（`cap:crash_handler` 验收，顶替拉起 `cap:shell_parser` 维持 2 路常规并行）
+- **执行成果**：`lib/crash_handler/`（5/5 PASS，`doc/lib/crash_handler.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:shell_parser` 维持 2 路常规并行
