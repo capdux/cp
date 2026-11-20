@@ -389,3 +389,9 @@
 
 ### 2026-11-21（`cap:msgpack` 验收合并提交，顶替拉起 `cap:hll` 维持 2 路常规并行）
 - **执行成果**：`lib/msgpack/`（5/5 PASS，`doc/lib/msgpack.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/ratelimit/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/hll/`（HyperLogLog++ 亚千字节超大规模基数估算引擎），与 `lib/wal/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:hll` 验收提交，顶替拉起 `cap:fsm` 维持 2 路常规并行）
+- **执行成果**：`lib/hll/`（5/5 PASS，`doc/lib/hll.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/fsm/`（通用确定性有限状态机 DFA、Guard 守卫与 DOT 图导出引擎），与 `lib/wal/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:wal` 验收合并提交，顶替拉起 `cap:expr` 维持 2 路常规并行）
+- **执行成果**：`lib/wal/`（5/5 PASS，`doc/lib/wal.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/hll/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/expr/`（安全无副作用业务规则与公式表达式求值引擎），与 `lib/fsm/` 维持 2 路常规并行。

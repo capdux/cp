@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:wal` CRC32C 校验预写日志（WAL）帧编解码与崩溃恢复引擎（5/5 PASS，文档直写 `doc/lib/wal.md`）
+- **核心设计**：采用 24 字节自描述帧头与 Castagnoli CRC32C（`0x82F63B78`）全帧保护，提供严格校验 `recoverStrict` 与掉电容错 `recoverWithTailTruncation` 双模式，并在截断恢复后支持原地 `restoreTruncated` 续写。
+
+## 2026-11-21: 新建 `cap:hll` HyperLogLog 亚千字节超大规模基数近似估算引擎（5/5 PASS，文档直写 `doc/lib/hll.md`）
+- **核心设计**：采用 SplitMix64 + FNV-1a 混合哈希提取桶索引与前导零计数，结合 LinearCounting 小基数修正与调和平均估算实现全量程 `< 3%` 高精度估算，并通过 `PrecisionMismatch` 与 `"HLL1"` 头校验保障分布式合并与反序列化安全。
+
 ## 2026-11-21: 新建 `cap:msgpack` MessagePack 二进制紧凑编解码与深度安全防护引擎（5/5 PASS，文档直写 `doc/lib/msgpack.md`）
 - **核心设计**：编码器自动按值域选择最小字节表示（如 `fixint`/`fixstr`/`fixarray`），解码器零拷贝借用 `str`/`bin`/`ext` 原始切片并通过 `errdefer` 完整回收已构造嵌套容器，默认 64 层深度限制防止堆栈与资源耗尽。
 

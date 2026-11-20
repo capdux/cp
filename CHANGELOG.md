@@ -2,6 +2,14 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:wal` CRC32C 校验预写日志（WAL）帧编解码与崩溃恢复引擎（5/5 PASS，自动动态挂载 `cap.wal`）
+- **新增标准库**：`lib/wal/{wal,index}.cp`，实现固定 24 字节小端序 `"WAL1"` 帧头与 Castagnoli CRC32C 校验、`recoverStrict` / `recoverWithTailTruncation` 掉电尾部截断恢复以及 `compactBefore` 日志压缩。
+- **新增文档与测试**：`doc/lib/wal.md` 扁平文档与 `cap/test/test_wal_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
+## [2026-11-21] - 新建 `cap:hll` HyperLogLog 亚千字节超大规模基数近似估算引擎（5/5 PASS，自动动态挂载 `cap.hll`）
+- **新增标准库**：`lib/hll/{hll,index}.cp`，支持精度 `4..16`、LinearCounting 小基数修正与 64-bit 大基数修正、无损分片 `merge` 以及 `"HLL1"` 魔数头 `serialize`/`deserialize` 持久化。
+- **新增文档与测试**：`doc/lib/hll.md` 扁平文档与 `cap/test/test_hll_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:msgpack` MessagePack 二进制紧凑编解码与深度安全防护引擎（5/5 PASS，自动动态挂载 `cap.msgpack`）
 - **新增标准库**：`lib/msgpack/{msgpack,index}.cp`，实现全规格 MessagePack 自动最小编码 `MsgPackWriter` 与零拷贝切片解码 `MsgPackReader`，支持 `fixint`/`int`/`uint`/`float`/`str`/`bin`/`array`/`map`/`ext` 并严格防御保留标签 `0xc1`、`TrailingBytes` 与超深嵌套。
 - **新增文档与测试**：`doc/lib/msgpack.md` 扁平文档与 `cap/test/test_msgpack_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
