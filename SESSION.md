@@ -146,3 +146,6 @@
 
 ### 2026-11-21（`cap:eval` 验收固化，顶替以 `inherit` 拉起 `cap:ini` 维持 2 路并行）
 - **执行成果**：`lib/eval/`（5/5 PASS，含 `cap.eval` 动态挂载与 `doc/lib/eval.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/ini/`（保留注释与原序的 INI / Systemd `.service` / `.gitconfig` 解析、类型安全读取与回写引擎），与 `lib/diff/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:diff` 验收固化，顶替以 `inherit` 拉起 `cap:table` 维持 2 路并行）
+- **执行成果**：`lib/diff/`（5/5 PASS，含 `cap.diff` 动态挂载与 `doc/lib/diff.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/table/`（ANSI/UTF-8 宽度感知终端 ASCII/Unicode/Rounded/Markdown 表格渲染与对齐引擎），与 `lib/ini/` 保持 2 路正交并行。

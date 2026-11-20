@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:diff` Myers Diff、Unified Patch 与三方合并引擎（5/5 PASS，文档直写 `doc/lib/diff.md`）
+
+- **落地成果**：`lib/diff/`（`myers.cp`/`patch.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:table`（ANSI/UTF-8 宽度感知终端与 Markdown 表格渲染引擎），与 `lib/ini/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:eval` AI Agent 评测与 CI 回归门禁引擎（5/5 PASS，文档直写 `doc/lib/eval.md`）
 
 - **落地成果**：`lib/eval/`（`metrics.cp`/`suite.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:ini`（保留注释与顺序的 INI / Systemd / Gitconfig 解析与编辑引擎），与 `lib/diff/` 保持 2 路正交并行。

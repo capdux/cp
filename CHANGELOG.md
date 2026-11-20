@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:diff` Myers 行/词级差异、Unified Diff 补丁与三方合并引擎（5/5 PASS，自动动态挂载 `cap.diff`）
+
+- 新建 [`lib/diff/`](file:///data/dev/cp/lib/diff/index.cp)（`myers.cp`、`patch.cp`、`index.cp`）：`DiffEngine`（前缀/后缀修剪 + 64-bit FNV-1a Myers O(ND) 行级与词级最短编辑脚本）及 `UnifiedDiff`（多 Hunk 拆分与 `\ No newline at end of file` 处理、`applyPatch` 严格上下文校验防篡改、`merge3` 三方合并自动合入与 `<<<<<<< ours` 冲突标记）；文档 [`doc/lib/diff.md`](file:///data/dev/cp/doc/lib/diff.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_diff_production_deep.cp`](file:///data/dev/cp/cap/test/test_diff_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:eval` AI Agent 自动化评测与 CI 回归门禁引擎（5/5 PASS，自动动态挂载 `cap.eval`）
 
 - 新建 [`lib/eval/`](file:///data/dev/cp/lib/eval/index.cp)（`metrics.cp`、`suite.cp`、`index.cp`）：`EvalScorer`（`exactMatch`/`containsAll`/`forbiddenNone`/SQuAD `tokenF1`/联动 `cap:json` 的 `jsonFieldMatch` 与数值稳定 `passAtK`）及 `EvalReport`（加权评分、精确排序 P95 延迟、Token/成本合计、`compareBaseline` CI 防退化门禁与 Markdown/JSON 报告导出）；文档 [`doc/lib/eval.md`](file:///data/dev/cp/doc/lib/eval.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_eval_production_deep.cp`](file:///data/dev/cp/cap/test/test_eval_production_deep.cp) `-m` 5/5 PASS。
