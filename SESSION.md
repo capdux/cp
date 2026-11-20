@@ -254,3 +254,6 @@
 
 ### 2026-11-21（`cap:selector` 验收固化，顶替以 `inherit` 拉起 `cap:bencode` 维持 2 路并行）
 - **执行成果**：`lib/selector/`（5/5 PASS，含 `cap.selector` 动态挂载与 `doc/lib/selector.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/bencode/`（BitTorrent BEP-3 Bencode 编解码、规范字典序校验与 Torrent InfoHash 计算引擎），与 `lib/feed/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:feed` 验收固化，顶替以 `inherit` 拉起 `cap:bplus` 维持 2 路并行）
+- **执行成果**：`lib/feed/`（5/5 PASS，含 `cap.feed` 动态挂载与 `doc/lib/feed.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/bplus/`（B+ 树有序键值索引、节点分裂合并与叶子链表范围/前缀扫描引擎），与 `lib/bencode/` 保持 2 路正交并行。

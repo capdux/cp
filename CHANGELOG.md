@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:feed` RSS 2.0 / Atom 1.0 / JSON Feed 1.1 统一解析与生成引擎（5/5 PASS，自动动态挂载 `cap.feed`）
+
+- 新建 [`lib/feed/`](file:///data/dev/cp/lib/feed/index.cp)（`feed.cp`、`index.cp`）：`Feed` & `FeedCodec`（复用 `cap:xml` 与 `cap:json` 实现格式自动探测 `detectFormat`、RSS 2.0 含 CDATA/`content:encoded`/多 `<category>`、Atom 1.0、JSON Feed 1.1 统一归一化解析与 `toRss2`/`toAtom1`/`toJsonFeed` 跨格式往返生成）；文档 [`doc/lib/feed.md`](file:///data/dev/cp/doc/lib/feed.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_feed_production_deep.cp`](file:///data/dev/cp/cap/test/test_feed_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:selector` CSS3 选择器编译器与 DOM 树查询引擎（5/5 PASS，自动动态挂载 `cap.selector`）
 
 - 新建 [`lib/selector/`](file:///data/dev/cp/lib/selector/index.cp)（`selector.cp`、`index.cp`）：`CssSelector`（支持标签/`#id`/`.class`/`*`、6 种属性操作符、` ` / `>` / `+` / `~` 组合器、`:first-child`/`:last-child`/`:only-child`/`:empty`/`:nth-child(an+b)`/`:not(...)` 伪类、多选择器 `,` 文档序去重及 `selectXml` 一步抽取）；文档 [`doc/lib/selector.md`](file:///data/dev/cp/doc/lib/selector.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_selector_production_deep.cp`](file:///data/dev/cp/cap/test/test_selector_production_deep.cp) `-m` 5/5 PASS。
