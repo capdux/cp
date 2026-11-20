@@ -444,7 +444,7 @@ cpc 源代码几万行，修改、编译、测试非常耗时，需要修改、�
 #### 3.2 后期 cpc 编译器基本稳定，工作中心转向 cpc 热修与标准库开发（2 路正交并发节能规范）
 
 - **2 路正交标准库并发与分级模型选型（节约配额）**：
-  - **常规 2 路标准库并行子智能体**：日常严格保持 **2 个目录正交的子智能体**并显式指定 `Model: "flash"`（**Gemini 4 Hydrogen**）并行开发/吸收/审计不同 `lib/<mod>/` 模块，兼顾高吞吐与节约配额；
+  - **常规 2 路标准库并行子智能体**：日常严格保持 **2 个目录正交的子智能体**并显式指定 `Model: "inherit"`（继承主控模型）并行开发/吸收/审计不同 `lib/<mod>/` 模块，兼顾高吞吐与节约配额；
   - **疑难 `cpc` 编译器热修子智能体**：收到下游 `bun_agy` / `capsurf_agy` 的深层 Rust 编译器前端/Codegen 热修工单时，临时单独开启专属热修子智能体并指定 **`Model: "inherit"`**（继承主控模型）确保疑难 Bug 一击精准定位，修完即刻回收恢复日常 2 路；
 - **子智能体原子发布纪律（杜绝下游误伤）**：子智能体开发新模块时，必须先写完所有新 `.cp` 文件并用 `cpc check --brief` 清零报错，**最后一步才将新导出写入 `lib/<mod>/index.cp`**，彻底防止并发构建的下游 `bun_agy`/`capsurf_agy` 读到半成品报错；
 - **子智能体三段式极速调试**：① 改代码期仅跑 `cpc check --brief <file.cp>`（~15ms）清零语法/借用；② 跑 `cap test -m <test.cp>` 复用 `.cap/test-mod/` 模块缓存（增量转译 1~3ms）；③ 最终用 `bash scripts/verify_module.sh <lib_dir> <test.cp>` 一键完成合规扫描与测试；主控信任验证输出并尽量合并相近完工的子智能体做单次文档更新与提交；
@@ -535,7 +535,15 @@ git status --porcelain cpc_dev/src
 
 - 同一模块中发现的多处同类语法问题（如去除冗余的 `: void`、修复 pipe 捕获为 walrus 语法、清理 `let mut`），必须在单轮中一次性合并完成所有 `edit_file`，再发起单次验证，严禁“改一行、测一次、聊一句”的高频碎步交互。
 
-### 5. 配额超限安全冷却缓冲协议 (Quota Cooldown via Built-in schedule)
+### 5. 标准库并发研发与 Token 极简提速固化规范 (2026-11-21 固化)
+
+1. **脚本化一键收尾**：主控回收验收完成的 `lib/<mod>/` 时，优先直接调用 `python3 scripts/register_stdlib.py ...` 单命令完成 `cp_lib_ref.md` + `CHANGELOG.md` + `DEVLOG.md` + `SESSION.md` 更新及可选 `git commit`，与 `kill` / `invoke_subagent` 同轮并行，将收尾压缩至 1 个回合。
+2. **热文档自动滚动归档**：当 `SESSION.md` / `CHANGELOG.md` / `DEVLOG.md` 超过 ~150 行时，调用 `python3 scripts/archive_hot_logs.py --keep 5` 将历史记录无损追加至 `*_H.md` 末尾，热文件始终保持极简轻量（< 50 行）。
+3. **子智能体 Prompt 内嵌 `cpc` 避坑清单**：派发子智能体时固定附带高频避坑约束（首行 `// Source:` 溯源、禁 `std.posix`/`@import("bun")`、禁自定义 `.release`/`.isLocked` 方法名、控制流条件带括号、子模块先过 `cpc check --brief` 再写 `index.cp`），消除试错编译轮数。
+4. **Bun 吸收强制“大纲索引 + 局部切片读取”**：子智能体读取 `/data/dev/bun/src/` 大文件时，先用 `rg -n "^(pub )?(fn|struct|enum|const)"` 提取符号行号再分段精读，禁止整文件吞入上下文。
+5. **批量合并写入 + 单次终态验证**：子模块 `cpc check --brief` 清零后，同回合并行写入 `index.cp`、`doc/lib/<mod>.md` 与 `cap/test/test_<mod>_production_deep.cp`，随后仅执行一次 `bash scripts/verify_module.sh` 完成全量验收。
+
+### 6. 配额超限安全冷却缓冲协议 (Quota Cooldown via Built-in schedule)
 
 当开发过程中遇到平台配额限制报错时（例如：`⚠ Individual quota reached. Please upgrade your subscription to increase your limits. Resets in XhYmZs`）：
 
@@ -585,7 +593,9 @@ git status --porcelain cpc_dev/src
 
 ## 八、工程提速脚本指南 (Scripts Reference)
 
-| 脚本 / 配置文件 | 核心作用 | 适用场景与时机 | 调用命令示例 |
-| --- | --- | --- | --- |
-| `scripts/sync_cpc.sh` | **原子构建并部署 `cpc`**（临时文件 + `mv -f` 零并发窗口） | 修改 `cpc/src` 后**必须且只能**调用此脚本（日常 `debug`，发布/热修 `release`） | `bash scripts/sync_cpc.sh` / `bash scripts/sync_cpc.sh release` |
-| `scripts/verify_module.sh` | **一键标准库合规与模块化测试验收**（0 `std.posix`/0 `@import("bun")`/首行 `// Source:`/`cpc check`/`cap test -m`） | 子智能体交付前与主控验收时单条命令完成全部检查 | `bash scripts/verify_module.sh lib/json cap/test/test_json_rfc_production_deep.cp` |
+| 脚本 / 配置文件            | 核心作用                                                                                                           | 适用场景与时机                                                                 | 调用命令示例                                                                       |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| `scripts/sync_cpc.sh`      | **原子构建并部署 `cpc`**（临时文件 + `mv -f` 零并发窗口）                                                          | 修改 `cpc/src` 后**必须且只能**调用此脚本（日常 `debug`，发布/热修 `release`） | `bash scripts/sync_cpc.sh` / `bash scripts/sync_cpc.sh release`                    |
+| `scripts/verify_module.sh` | **一键标准库合规与模块化测试验收**（0 `std.posix`/0 `@import("bun")`/首行 `// Source:`/`cpc check`/`cap test -m`） | 子智能体交付前与主控验收时单条命令完成全部检查                                 | `bash scripts/verify_module.sh lib/json cap/test/test_json_rfc_production_deep.cp` |
+| `scripts/archive_hot_logs.py` | **热日志无损滚动归档**（保留最近 N 条于热文件，旧条目无损追加至 `*_H.md` 末尾） | 热文档超过 ~150 行时执行瘦身                                                   | `python3 scripts/archive_hot_logs.py --keep 5` |
+| `scripts/register_stdlib.py` | **标准库验收一键登记与提交**（自动更新 4 线文档并可选 `git add/commit`） | 主控回收子智能体时单命令收尾                                                   | `python3 scripts/register_stdlib.py --mod <mod> ...` |
