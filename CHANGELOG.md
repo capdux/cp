@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:base64` 纯 CP RFC 4648 Base64/Base64URL 查表编解码、MIME 空白忽略与流式分块引擎（吸收对标 Bun `src/base64/`，详见 `doc/lib/base64.md`）（5/5 PASS，自动动态挂载 `cap.base64`）
+- **新增标准库**：`lib/base64/{types,codec,streaming,index}.cp`（吸收对标 Bun `src/base64/`），实现 Standard/StandardNoPad/UrlSafe/UrlSafeNoPad 四变体编解码、RFC 4648 §3.5 非零填充残余比特拦截、MIME 换行忽略解码及任意切片流式 `StreamingBase64Encoder`/`StreamingBase64Decoder`。
+- **新增文档与测试**：`doc/lib/base64.md` 扁平文档与 `cap/test/test_base64_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:exe_format` 纯 CP ELF64/PE32+/Mach-O 64/WASM/Shebang 魔数探测、节区解析与自包含可执行尾部载荷读写引擎（吸收对标 Bun `src/exe_format/`，详见 `doc/lib/exe_format.md`）（5/5 PASS，自动动态挂载 `cap.exe_format`）
 - **新增标准库**：`lib/exe_format/{types,elf,pe,macho,trailer,index}.cp`（吸收对标 Bun `src/exe_format/`），支持 ELF64 节区与 `.shstrtab` 查找、PE32+/Mach-O 64 头校验及带 FNV-1a 校验和的 `StandaloneTrailer` 自包含载荷读写。
 - **新增文档与测试**：`doc/lib/exe_format.md` 扁平文档与 `cap/test/test_exe_format_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

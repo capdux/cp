@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:base64` 纯 CP RFC 4648 Base64/Base64URL 查表编解码、MIME 空白忽略与流式分块引擎（吸收对标 Bun `src/base64/`，详见 `doc/lib/base64.md`）（5/5 PASS，文档直写 `doc/lib/base64.md`）
+- **核心设计**：使用 256 字节 O(1) 解码查表并与 `resolver.rs` 优先真实目录路由协同自动挂载 `cap.base64`；严格执行 RFC 4648 §3.5 规范填充校验，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:exe_format` 纯 CP ELF64/PE32+/Mach-O 64/WASM/Shebang 魔数探测、节区解析与自包含可执行尾部载荷读写引擎（吸收对标 Bun `src/exe_format/`，详见 `doc/lib/exe_format.md`）（5/5 PASS，文档直写 `doc/lib/exe_format.md`）
 - **核心设计**：全部头部/节区表解析采用零拷贝边界安全小端读取并拦截畸形偏移；`StandaloneTrailer` 在文件末尾写入定长魔数、长度与 FNV-1a 64 校验和，支持篡改与截断拦截。
 
