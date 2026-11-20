@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:socks5` RFC 1928/1929 SOCKS5 代理协议 Wire 编解码引擎（5/5 PASS，自动动态挂载 `cap.socks5`）
+- **新增标准库**：`lib/socks5/{socks5,index}.cp`，实现客户端 Greeting / MethodChoice、RFC 1929 账密认证、IPv4/Domain/IPv6 请求回复及 UDP Associate 转发报文编解码与完整越界校验。
+- **新增文档与测试**：`doc/lib/socks5.md` 扁平文档与 `cap/test/test_socks5_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:x509` 纯 CP X.509 v3 DER/PEM 证书解析与 SAN 校验引擎（5/5 PASS，自动动态挂载 `cap.x509`）
 - **新增标准库**：`lib/x509/{x509,index}.cp`，复用 `cap:asn1` 与 `cap:pem` 实现 DER/PEM 证书解析、UTCTime/GeneralizedTime 换算、`isValidAt` 有效期校验、RFC 6125 通配符/IP SAN `matchesHostname`、`isIssuedBy` CA 链校验及 SHA-256 指纹计算。
 - **新增文档与测试**：`doc/lib/x509.md` 扁平文档与 `cap/test/test_x509_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

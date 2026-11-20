@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:socks5` RFC 1928/1929 SOCKS5 代理协议 Wire 编解码引擎（5/5 PASS，文档直写 `doc/lib/socks5.md`）
+- **核心设计**：零网络系统调用实现完整 SOCKS5 握手、账密、请求/响应与 UDP 封装，严格拦截非法版本号、非预期 `ATYP`、超 255 字节域名及截断/尾随字节。
+
 ## 2026-11-21: 新建 `cap:x509` 纯 CP X.509 v3 DER/PEM 证书解析与 SAN 校验引擎（5/5 PASS，文档直写 `doc/lib/x509.md`）
 - **核心设计**：复用 `cap:asn1` 与 `cap:pem` 并由独立 `ArenaAllocator` 统一托管解析期所有派生切片，严格遵循 RFC 6125 单级通配符主机名匹配与 CA 基本约束校验，全量测试零泄漏。
 
