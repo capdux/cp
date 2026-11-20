@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:attention` 纯 CP Transformer Scaled Dot-Product/GQA 注意力、支持 Speculative 回滚的 KvCache 与 Top-K/Top-P/RepetitionPenalty 采样器引擎（支持 `cap.attention` 自动动态挂载，详见 `doc/lib/attention.md`）（5/5 PASS，文档直写 `doc/lib/attention.md`）
+- **核心设计**：SDPA 减去行最大值保证指数数值稳定，GQA 严格校验 `num_q_heads % num_kv_heads == 0`，`KvCache` 支持 Speculative Decoding 步长回滚，全路径 `std.testing.allocator` 零泄漏。
+
 ## 2026-11-21: 新建 `cap:tensor` 纯 CP Strided 多维张量视图、广播代数、矩阵乘法与 Transformer 核心算子（Softmax/RMSNorm/LayerNorm/SiLU/GELU/RoPE）引擎（支持 `cap.tensor` 自动动态挂载，详见 `doc/lib/tensor.md`）（5/5 PASS，文档直写 `doc/lib/tensor.md`）
 - **核心设计**：`Tensor` 支持 `MAX_TENSOR_DIMS = 4` 的零拷贝步幅视图与连续化检查；`softmaxRows` 采用减去行最大值防溢出，全路径 `std.testing.allocator` 零泄漏。
 
