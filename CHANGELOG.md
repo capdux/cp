@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:pgwire` 纯 CP PostgreSQL v3.0 Wire Protocol 报文编解码、增量半包拆包与 MD5 认证引擎（支持 `cap.pgwire` 自动动态挂载，详见 `doc/lib/pgwire.md`）（5/5 PASS，自动动态挂载 `cap.pgwire`）
+- **新增标准库**：`lib/pgwire/{types,codec,stream,auth,index}.cp`，实现 Frontend (`StartupMessage`/`SslRequest`/`Query`/`Parse`/`Bind`/`Execute`/`Sync`) 与 Backend (`Authentication`/`RowDescription`/`DataRow`/`ErrorResponse`/`ReadyForQuery`) 编解码、`1..7` 字节半包黏包流式解析及 `computePgMd5Password`。
+- **新增文档与测试**：`doc/lib/pgwire.md` 扁平文档与 `cap/test/test_pgwire_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:gossip` 纯 CP Sans-IO SWIM 分布式集群成员发现、Incarnation 冲突消解与故障探测引擎（支持 `cap.gossip` 自动动态挂载，详见 `doc/lib/gossip.md`）（5/5 PASS，自动动态挂载 `cap.gossip`）
 - **新增标准库**：`lib/gossip/{types,wire,node,index}.cp`，实现 SWIM 成员状态冲突消解、Piggyback 感染传播队列、紧凑二进制 Wire 编解码及 Sans-IO `SwimClusterNode`（支持 `Ping`/`PingReq`/`Ack`/`Sync` 与自证清白 Refutation）。
 - **新增文档与测试**：`doc/lib/gossip.md` 扁平文档与 `cap/test/test_gossip_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

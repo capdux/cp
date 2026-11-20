@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:pgwire` 纯 CP PostgreSQL v3.0 Wire Protocol 报文编解码、增量半包拆包与 MD5 认证引擎（支持 `cap.pgwire` 自动动态挂载，详见 `doc/lib/pgwire.md`）（5/5 PASS，文档直写 `doc/lib/pgwire.md`）
+- **核心设计**：`PgFrontendStreamDecoder` 在 `SslRequest` 后保持 `expect_startup` 状态以正确衔接后续 `StartupMessage`；全路径严格校验包长下限与 `max_packet_bytes` 防资源耗尽，零内存泄漏。
+
 ## 2026-11-21: 新建 `cap:gossip` 纯 CP Sans-IO SWIM 分布式集群成员发现、Incarnation 冲突消解与故障探测引擎（支持 `cap.gossip` 自动动态挂载，详见 `doc/lib/gossip.md`）（5/5 PASS，文档直写 `doc/lib/gossip.md`）
 - **核心设计**：Sans-IO 引擎将成员探测定时器与传输分离，严格执行 `incarnation` 优先级及 `Left > Offline > Suspect > Active` 仲裁，全路径通过 `std.testing.allocator` 零泄漏验证。
 
