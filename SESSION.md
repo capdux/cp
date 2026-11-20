@@ -284,3 +284,6 @@
 
 ### 2026-11-21（`cap:barcode` 验收固化，顶替以 `inherit` 拉起 `cap:spell` 维持 2 路并行）
 - **执行成果**：`lib/barcode/`（5/5 PASS，含 `cap.barcode` 动态挂载与 `doc/lib/barcode.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/spell/`（SymSpell 对称删除索引、BK-Tree 度量空间树与 Soundex 语音纠错引擎），与 `lib/ecs/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:ecs` 验收固化，顶替以 `inherit` 拉起 `cap:noise` 维持 2 路并行）
+- **执行成果**：`lib/ecs/`（5/5 PASS，含 `cap.ecs` 动态挂载与 `doc/lib/ecs.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/noise/`（确定性 2D/3D Perlin 梯度噪声、Cellular Voronoi 与 fBm 分形地形生成引擎），与 `lib/spell/` 保持 2 路正交并行。

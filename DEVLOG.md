@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:ecs` Sparse-Set 实体组件系统 ECS 引擎（5/5 PASS，文档直写 `doc/lib/ecs.md`）
+
+- **落地成果**：`lib/ecs/`（`ecs.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:noise`（确定性 2D/3D Perlin 梯度噪声、Voronoi Cellular 噪声与 fBm 分形地形生成引擎），与 `lib/spell/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:barcode` Code 128 / EAN-13 / UPC-A 条码编码引擎（5/5 PASS，文档直写 `doc/lib/barcode.md`）
 
 - **落地成果**：`lib/barcode/`（`barcode.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:spell`（SymSpell 对称删除索引、BK-Tree 编辑距离树与 Soundex 语音编码拼写纠错引擎），与 `lib/ecs/` 保持 2 路正交并行。
