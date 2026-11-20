@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:s3_signing` 纯 CP AWS SigV4 请求签名与 S3 预签名 URL 引擎（5/5 PASS，文档直写 `doc/lib/s3_signing.md`）
+- **核心设计**：纯 CP 实现 AWS Signature Version 4 全流程规范化与链式 HMAC-SHA256 派生，精准匹配 AWS 官方标准测试向量；`presignUrl` 内置路径/时间戳/有效期防畸形拦截并通过 `std.testing.allocator` 验证零泄漏。
+
 ## 2026-11-21: 新建 `cap:highway` 纯 CP SIMD 字节扫描与 ASCII 原语引擎（5/5 PASS，文档直写 `doc/lib/highway.md`）
 - **核心设计**：采用 32B -> 16B -> 标量三段式 `@Vector` 流水线实现零外链高频扫描原语，`indexOfSlice` 利用首尾双字符 SIMD 掩码过滤，`isUtf8ValidFast` 利用 SIMD ASCII 快跳过结合标准库回退，0..129 字节全长度梯度对拍 `std.mem` 零偏差。
 

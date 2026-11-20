@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:s3_signing` 纯 CP AWS SigV4 请求签名与 S3 预签名 URL 引擎（5/5 PASS，自动动态挂载 `cap.s3_signing`）
+- **新增标准库**：`lib/s3_signing/{s3_signing,index}.cp`（吸收对标 Bun `src/s3_signing/`），实现严格 RFC 3986 `awsUriEncode`、4 级链式 HMAC-SHA256 `deriveSigningKey`、多 Header 规范化合并签名 `signRequest` 及 1..604800 秒防越界 `presignUrl`。
+- **新增文档与测试**：`doc/lib/s3_signing.md` 扁平文档与 `cap/test/test_s3_signing_production_deep.cp`（5/5 PASS，覆盖 AWS 官方测试向量比对，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:highway` 纯 CP SIMD 字节扫描与 ASCII 原语引擎（5/5 PASS，自动动态挂载 `cap.highway`）
 - **新增标准库**：`lib/highway/{highway,index}.cp`（吸收对标 Bun `src/highway/`），基于 `@Vector(32, u8)` / `@Vector(16, u8)` 与标量尾部实现 `indexOfByte`、`lastIndexOfByte`、`indexOfAnyByte`、`countByte`、`indexOfNeq`、`commonPrefixLen`、`indexOfSlice`、`isAscii`、`isUtf8ValidFast`、`containsControlChars`、`toLowerAscii`、`toUpperAscii`、`replaceByte`。
 - **新增文档与测试**：`doc/lib/highway.md` 扁平文档与 `cap/test/test_highway_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
