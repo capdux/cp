@@ -332,3 +332,6 @@
 
 ### 2026-11-21（`cap:http_cache` 验收固化，顶替以 `inherit` 拉起 `cap:ssh` 维持 2 路并行）
 - **执行成果**：`lib/http_cache/`（5/5 PASS，含 `cap.http_cache` 动态挂载与 `doc/lib/http_cache.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/ssh/`（OpenSSH 公钥 Wire 格式解析、`SHA256:` 指纹与 `authorized_keys` 策略校验引擎），与 `lib/rule/` 保持 2 路常规并行。
+
+### 2026-11-21（`cap:paseto` & `cap:mqtt` 双路合并验收提交，顶替拉起 `cap:merkle` 与 `cap:cuckoo` 维持 2 路并行）
+- **执行成果**：`lib/paseto/`（5/5 PASS，`doc/lib/paseto.md`）与 `lib/mqtt/`（5/5 PASS，`doc/lib/mqtt.md`）双双经 `verify_module.sh` 一键验收回收并合并提交 Git；使用 `Model: "inherit"` 同步派发 `lib/merkle/`（RFC 6962 域分离 Merkle 哈希树、包含证明与双树差异定位引擎）与 `lib/cuckoo/`（支持删除的布谷鸟过滤器 Cuckoo Filter），维持 2 路常规并行。

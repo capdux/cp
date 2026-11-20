@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:mqtt` MQTT 3.1.1 二进制 Wire 报文编解码与流式拆包引擎（5/5 PASS，自动动态挂载 `cap.mqtt`）
+
+- 新建 [`lib/mqtt/`](file:///data/dev/cp/lib/mqtt/index.cp)（`packet.cp`、`index.cp`）：`MqttCodec`（1..4 字节 RemainingLength Varint 含第 4 字节 `0x80` 拦截、全 14 类控制报文编解码及 `QoS > 0`/`PUBREL` 标志位严格校验）及 `MqttStreamDecoder`（半包等待、多报文黏包拆分与 `PacketTooLarge` 防护，零泄漏）；文档 [`doc/lib/mqtt.md`](file:///data/dev/cp/doc/lib/mqtt.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_mqtt_production_deep.cp`](file:///data/dev/cp/cap/test/test_mqtt_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
+## [2026-11-21] - 新建 `cap:paseto` PASETO v4.local / v4.public 安全令牌与 PAE 认证引擎（5/5 PASS，自动动态挂载 `cap.paseto`）
+
+- 新建 [`lib/paseto/`](file:///data/dev/cp/lib/paseto/index.cp)（`paseto.cp`、`index.cp`）：`paeEncode`（LE64 无歧义前置认证编码）及 `PasetoV4`（`v4.public` Ed25519 签名验签免疫 `alg:none`、`v4.local` BLAKE3 密钥派生 + XChaCha20-Poly1305 AEAD 加密、`Footer` & `Implicit Assertion` 及 `verifyClaims` `exp`/`nbf`/`iss`/`aud`/`sub` 校验，零泄漏）；文档 [`doc/lib/paseto.md`](file:///data/dev/cp/doc/lib/paseto.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_paseto_production_deep.cp`](file:///data/dev/cp/cap/test/test_paseto_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:lsm` LSM-Tree MemTable / SSTable 与多路归并压缩存储引擎（5/5 PASS，自动动态挂载 `cap.lsm`）
 
 - 新建 [`lib/lsm/`](file:///data/dev/cp/lib/lsm/index.cp)（`lsm.cp`、`index.cp`）：`SsTable`（有序 Data Block、每 16 条采样稀疏 Index Block 与 `"CPS1"`+CRC32 篡改校验）及 `LsmEngine`（`MemTable` 阈值自动 `flush`、Tombstone 墓碑不穿透、`rangeScan` 多路最新 `seq` 归并与 `compact` 全量空间回收，零泄漏）；文档 [`doc/lib/lsm.md`](file:///data/dev/cp/doc/lib/lsm.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_lsm_production_deep.cp`](file:///data/dev/cp/cap/test/test_lsm_production_deep.cp) `-m` 5/5 PASS。

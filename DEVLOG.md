@@ -2,6 +2,18 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:mqtt` MQTT 3.1.1 二进制 Wire 报文与流式拆包引擎（5/5 PASS，文档直写 `doc/lib/mqtt.md`）
+
+- **落地成果**：`lib/mqtt/`（`packet.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），与 `lib/paseto/` 合并回收提交，并以 `Model: "inherit"` 顶替派发 `cap:cuckoo`（支持删除 `delete` 的布谷鸟过滤器 Cuckoo Filter 近似成员集合引擎），与 `lib/merkle/` 保持 2 路正交并行。
+
+---
+
+## 2026-11-21: 新建 `cap:paseto` PASETO v4.local & v4.public 安全令牌引擎（5/5 PASS，文档直写 `doc/lib/paseto.md`）
+
+- **落地成果**：`lib/paseto/`（`paseto.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:merkle`（RFC 6962 域分离防二阶原像攻击 Merkle 哈希树、$O(\log N)$ 包含证明生成/验证与双树差异定位引擎），与 `lib/mqtt/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:lsm` LSM-Tree 存储引擎（5/5 PASS，文档直写 `doc/lib/lsm.md`）
 
 - **落地成果**：`lib/lsm/`（`lsm.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），与 `lib/tlv/` 合并回收提交，并以 `Model: "inherit"` 顶替派发 `cap:paseto`（PASETO v4.local & v4.public 现代无歧义安全令牌引擎），与 `lib/mqtt/` 保持 2 路正交并行。
