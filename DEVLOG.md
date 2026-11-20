@@ -2,6 +2,16 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-20: Batch 4 增量高价值 Bun 资产吸收（`cap:resolver`、`cap:aio` 与 `bundler`/`safety`/`patch` 深度补强）
+
+- **吸收思路与架构定位**：
+  1. 在前三批完成存量标准库对标 Bun 审计后，Batch 4 聚焦 Bun 生态中尚未被 CP 吸收的五大高实用工程资产：通用模块与包解析（`src/resolver/`）、跨平台编译目标与单文件打包图（`src/options_types/CompileTarget.zig` & `src/standalone_graph/`）、Linux 异步 I/O 队列与父进程看门狗（`src/aio/`）、硬件特性与崩溃/OOM 诊断（`src/crash_handler/`）以及开发者友好的彩色字符级 Diff 渲染（`src/test_runner/diff_format.zig`）。
+  2. 所有模块严格遵循 CP 体系（纯 CP 语义、Zig 0.17 `std.c`/`std.os.linux` API、零 `std.posix` 旧引用、首行 `// Source:` 溯源注释），对原有 `cap:bundler`/`cap:safety`/`cap:patch` 导出保持 100% 向后兼容。
+- **验收与闭环**：
+  - 双子智能体并行累计交付 5,525 行代码与文档；5 套新建及存量联合测试（22 个测试用例）全部 100% PASS；25/25 `.cp` 文件溯源头合规；同步更新双轨规范手册并提交 Git；随后无缝保持 Batch 5A（`lib/css/` 去 Bun 化重构）与 Batch 5B（Tier-1 18 模块终审补缺）双路并行推进。
+
+---
+
 ## 2026-11-20: `cap` + `cpc` 模块级增量编译、Zig `-fno-llvm` 原生后端与多智能体无锁并发提速攻坚
 
 - **任务背景与问题诊断**：

@@ -1,3 +1,28 @@
+## [2026-11-20] - Batch 4 增量高价值 Bun 资产吸收：`cap:resolver`、`cap:aio` 新建与 `cap:bundler`/`cap:safety`/`cap:patch` 深度补强
+
+### 新增标准库 (New Stdlib Modules)
+- **模块解析器与包配置子系统 (`cap:resolver`)**：
+  - [`lib/resolver/data_url.cp`](file:///data/dev/cp/lib/resolver/data_url.cp)：RFC 2397 `DataURL`（MIME/Charset/Base64/Percent 解码与 Base64 编码）；
+  - [`lib/resolver/package_json.cp`](file:///data/dev/cp/lib/resolver/package_json.cp)：`PackageJson` 完整解析与条件 `exports`/`imports`（含数组回退、`null` 禁用与最长前缀通配符）路由；
+  - [`lib/resolver/tsconfig.cp`](file:///data/dev/cp/lib/resolver/tsconfig.cp)：JSONC 注释/尾逗号剥离与 `TsConfigJson` `paths` 通配符别名重写；
+  - [`lib/resolver/resolver.cp`](file:///data/dev/cp/lib/resolver/resolver.cp) & [`lib/resolver/index.cp`](file:///data/dev/cp/lib/resolver/index.cp)：`StatHash`（基于 `statx` + XxHash64）与统一 `ModuleResolver`（`cap:*`/`node:*`/`bun:*`、`data:`、`#imports`、`tsconfig` 别名与 `cap_modules`/`node_modules` 递归解析）；
+  - [`docs/resolver/resolver.md`](file:///data/dev/cp/docs/resolver/resolver.md)：完整 API 手册。
+- **异步 I/O 队列与父进程看门狗 (`cap:aio`)**：
+  - [`lib/aio/watchdog.cp`](file:///data/dev/cp/lib/aio/watchdog.cp)：`ParentDeathWatchdog`（Linux `PR_SET_PDEATHSIG` + 窗口竞态防护 + `/proc/<pid>/stat` 父进程探活）；
+  - [`lib/aio/queue.cp`](file:///data/dev/cp/lib/aio/queue.cp) & [`lib/aio/index.cp`](file:///data/dev/cp/lib/aio/index.cp)：零堆固定容量 `AioQueue<const CAP: usize>` SQ/CQ 环形提交/完成队列，支持 Open/Read/Write/Pread/Pwrite/Stat/Fsync/Close/Unlink/Mkdir；
+  - [`docs/aio/aio.md`](file:///data/dev/cp/docs/aio/aio.md)：完整 API 手册。
+
+### 深度补强标准库 (Enhanced Stdlib Modules)
+- **`cap:bundler`**：新增 [`lib/bundler/target.cp`](file:///data/dev/cp/lib/bundler/target.cp)（`CompileTarget` 跨平台三元组解析/格式化）、[`lib/bundler/standalone.cp`](file:///data/dev/cp/lib/bundler/standalone.cp)（`StandaloneModuleGraph` 单文件虚拟 FS 二进制序列化与越界防护零拷贝反序列化）、扩展 [`lib/bundler/bundle.cp`](file:///data/dev/cp/lib/bundler/bundle.cp)（`ModuleGraph` 三色 DFS 环检测、拓扑排序与 Tree-Shaking 可达性标记），同步更新 [`docs/bundler/bundler.md`](file:///data/dev/cp/docs/bundler/bundler.md)；
+- **`cap:safety`**：新增 [`lib/safety/cpu_features.cp`](file:///data/dev/cp/lib/safety/cpu_features.cp)（x86_64 CPUID+XGETBV / aarch64 硬件特性探测 `CpuFeatures`）与 [`lib/safety/crash.cp`](file:///data/dev/cp/lib/safety/crash.cp)（`OomGuard` 与零堆 `CrashReport` 诊断报告），同步更新 [`docs/safety/safety.md`](file:///data/dev/cp/docs/safety/safety.md)；
+- **`cap:patch`**：新增 [`lib/patch/diff_format.cp`](file:///data/dev/cp/lib/patch/diff_format.cp)（`DiffFormatter` / `DiffFormatOptions` 类似 `bun test` 的彩色/字符级高亮与上下文折叠差分渲染器），同步更新 [`docs/patch/patch.md`](file:///data/dev/cp/docs/patch/patch.md)。
+
+### 规范同步与端到端验收
+- 同步双轨规范手册 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md) 与 [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)；
+- 新增深度测试 [`cap/test/test_resolver_bundler_deep.cp`](file:///data/dev/cp/cap/test/test_resolver_bundler_deep.cp)（7/7 PASS）与 [`cap/test/test_aio_safety_diff_format_deep.cp`](file:///data/dev/cp/cap/test/test_aio_safety_diff_format_deep.cp)（3/3 PASS），5 套联合回归全部 100% PASS；Batch 4 涉及 25 个 `.cp` 文件 `// Source:` 100% 合规。
+
+---
+
 ## [2026-11-20] - 核心里程碑：`cap` + `cpc` 模块级增量编译、Zig `-fno-llvm` 极速原生后端与多智能体无锁并发构建升级
 
 ### 编译器前端模块级增量转译 (`cpc`)

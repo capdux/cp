@@ -1,20 +1,20 @@
-# CP 标准库：模块打包配置、Chunk 拓扑排序与管线状态手册 (`cap:bundler`)
+# CP 标准库：模块打包、交叉目标、单文件图与依赖图引擎手册 (`cap:bundler`)
 
 ## 一、 架构总览与设计准则
 
-`cap:bundler` 是 CP 语言官方内置的模块打包器（Bundler）核心模型标准库，提炼自 Bun 原生 Bundler V2 与 Chunk 拓扑调度架构（`/data/dev/bun/src/bundler/bundle_v2.cp` 与 `Chunk.cp`）。模块采用零堆分配栈内联存储与确定性拓扑排序设计，提供打包目标配置（`BundleConfig`）、多格式产出枚举（`BundleTarget` / `OutputFormat`）、基于 `(distance, tie_breaker)` 的稳定 Chunk 排序器（`ChunkOrder`）以及打包会话状态机（`BundleV2`）。
+`cap:bundler` 是 CP 语言官方内置的模块打包器（Bundler）核心模型标准库，提炼自 Bun 原生 Bundler V2、Chunk 拓扑调度、`CompileTarget` 交叉编译目标解析与 `StandaloneModuleGraph` 单文件可执行虚拟文件系统（`/data/dev/bun/src/bundler/`、`/data/dev/bun/src/options_types/CompileTarget.zig`、`/data/dev/bun/src/standalone_graph/StandaloneModuleGraph.zig`）。
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                        CP Bundler V2 打包管线模型                        │
+│                        CP Bundler V2 打包与单文件架构                    │
 ├──────────────────────┬─────────────────────────┬────────────────────────┤
-│ 配置与目标平台层       │  确定性 Chunk 拓扑排序   │  BundleV2 产出与统计    │
-│ BundleConfig         │  ChunkOrder             │  BundleV2 (32 栈槽)     │
-│   target: Browser/   │    distance (入口距离)   │    addSourceBytes()    │
-│     Node/Bun/CpNative│    tie_breaker (DFS 序) │    emitChunk()         │
-│   format: Esm/Cjs/   │    compare / sort()     │    findChunk(name)     │
-│     Iife             │  ChunkEntry / ChunkKind │    compressionRatio()  │
-│   minify / splitting │    Entry / Shared / Asset│   markTopLevelAwait()  │
+│ 1. 打包与拓扑排序层    │  2. 交叉编译目标三元组层  │  3. 单文件可执行 VFS 层  │
+│   BundleConfig       │    TargetOs / Arch / Abi│   StandaloneModuleGraph│
+│   BundleV2           │    CompileTarget.parse  │     Header (CPSG0001)  │
+│   ChunkOrder.sort    │      linux-x64-musl     │     Entry Table        │
+│   ModuleGraph        │      bun-darwin-arm64   │     Payload Regions    │
+│     topoSort/hasCycle│    exeExt/sharedLibExt  │     Footer Trailer     │
+│     markReachable    │    isUnix / format      │   零拷贝 deserialize    │
 └──────────────────────┴─────────────────────────┴────────────────────────┘
 ```
 
@@ -22,36 +22,41 @@
 
 | 文件路径 | 上游谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
-| `lib/bundler/bundle.cp` | `// Source: /data/dev/bun/src/bundler/` | `BundleTarget`、`OutputFormat`、`ChunkKind`、`ChunkOrder`（确定性排序）、`ChunkEntry`、`BundleConfig` 与 `BundleV2` 会话状态机 |
+| `lib/bundler/bundle.cp` | `// Source: /data/dev/bun/src/bundler/` | `BundleTarget`、`OutputFormat`、`ChunkKind`、`ChunkOrder`、`BundleConfig`、`BundleV2` 与 `ImportKind` / `ImportRecord` / `ModuleGraph`（拓扑排序、循环检测、树摇可达性） |
+| `lib/bundler/target.cp` | `// Source: /data/dev/bun/src/options_types/CompileTarget.zig` | `TargetOs`、`TargetArch`、`TargetAbi`、`CompileTarget` 目标三元组解析、格式化与扩展名判定 |
+| `lib/bundler/standalone.cp` | `// Source: /data/dev/bun/src/standalone_graph/StandaloneModuleGraph.zig` | `StandaloneModuleEntry`、`StandaloneModuleGraph` 二进制序列化与零拷贝越界防护反序列化 |
 | `lib/bundler/index.cp` | `// Source: /data/dev/bun/src/bundler/` | `cap:bundler` 对外统一导出入口 |
 
 ---
 
 ## 二、 核心 API 与设计语义
 
-### 1. 目标与格式枚举
+### 1. `BundleV2`、`ChunkOrder` 与 `ModuleGraph` (`lib/bundler/bundle.cp`)
 
-- **`BundleTarget`**：`Browser (0)`、`Node (1)`、`Bun (2)`、`CpNative (3)`。
-- **`OutputFormat`**：`Esm (0)`、`Cjs (1)`、`Iife (2)`。
-- **`ChunkKind`**：`EntryPoint (0)`、`SharedChunk (1)`、`Asset (2)`。
+- **`BundleConfig` / `BundleV2` / `ChunkOrder`**：100% 保持原 API 兼容，支持 `defaultConfig()`、`productionBrowser(out_dir)`、`ChunkOrder.sort()`、`emitChunk()`、`findChunk()`、`compressionRatioPermille()`。
+- **`ImportKind` & `ImportRecord`**：描述 AST 导入记录（`EntryPoint` / `ImportStmt` / `RequireCall` / `DynamicImport` / `CssAtImport` / `AssetUrl` / `Internal`）。
+- **`ModuleGraph`**：
+  - `addModule(path, is_entry, size_bytes)`：注册模块节点并去重返回稳定 `u32` ID；
+  - `addImport(from_id, record)` / `addDependency(from_id, to_id, specifier, kind)`：注册有向依赖边；
+  - `hasCycle()`：三色深度优先搜索循环依赖检测；
+  - `topoSort(allocator)`：确定性依赖优先（Dependencies-First）拓扑排序，若存在环则返回 `error.CyclicDependency`；
+  - `markReachable(entry_id)` / `markAllEntryPointsReachable()` / `isReachable(id)`：面向 Tree-Shaking 的死代码可达性标记。
 
-### 2. 确定性 Chunk 拓扑排序 (`ChunkOrder`)
+### 2. 交叉编译目标三元组 (`lib/bundler/target.cp`)
 
-沿用 Bun `src/bundler/Chunk.cp` 的稳定排序策略：
-- **主关键字 `distance`**：距离入口模块最近的依赖优先输出；
-- **次关键字 `tie_breaker`**：当两个模块距入口等距时，以 DFS 遍历产生的稳定 `source_index` 打破平局，确保跨机器、多次构建产物字节级 100% 确定性（Deterministic Build）。
-- `ChunkOrder.sort(items)`：原地稳定插入排序，无额外堆分配。
+- **`TargetOs`**：`Linux`、`Darwin`、`Windows`、`FreeBSD`、`Wasi`。
+- **`TargetArch`**：`X64`、`Arm64`、`Riscv64`、`Wasm32`。
+- **`TargetAbi`**：`Gnu`、`Musl`、`Msvc`、`None`。
+- **`CompileTarget`**：
+  - `parse(str)`：支持 `"linux-x64-musl"`、`"bun-darwin-arm64"`、`"windows-x86_64-msvc"`、`"wasi-wasm32"`、`"linux-x64-baseline"` 等格式并拦截非法组合（如 `darwin-musl`）；
+  - `format(buf)` / `formatAlloc(allocator)`：输出规范化三元组；
+  - `exeExt()`（`".exe"` / `".wasm"` / `""`）、`sharedLibExt()`（`".dll"` / `".dylib"` / `".wasm"` / `".so"`）、`isUnix()`。
 
-### 3. 配置与打包会话 (`BundleConfig` & `BundleV2`)
+### 3. 单文件可执行虚拟文件系统 (`lib/bundler/standalone.cp`)
 
-- **`BundleConfig`**：提供 `defaultConfig()`（面向 `CpNative` / `Esm`）与 `productionBrowser(out_dir)`（开启 `minify`、`sourcemap`、`splitting`）两种工厂预设。
-- **`BundleV2`**：
-  - `init(config)`：初始化打包会话；
-  - `addSourceBytes(bytes)`：累计输入源码字节数；
-  - `markTopLevelAwait()`：标记构建图中存在顶层 `await` 模块；
-  - `emitChunk(entry)`：登记产出 Chunk（最多 32 槽栈内联存储，自动更新 `entry_count` 与 `total_output_bytes`）；
-  - `chunkCount()` / `findChunk(name)`：只读查询产出数量与按文件名检索 Chunk 元数据；
-  - `compressionRatioPermille()`：以千分比计算产出体积与源码体积之比（如压缩至 40% 返回 `400`）。
+- **二进制布局**：`[32B Header ("CPSG0001")] + [N * 32B Entry Descriptors] + [Payload] + [40B Footer Trailer ("\n---- CP! -----\n")]`。
+- **`serialize(allocator)`**：生成自包含二进制映像，适合直接附加到原生可执行文件尾部。
+- **`deserialize(allocator, bytes)`**：零拷贝反序列化（模块路径、内容与 SourceMap 切片直接指向原始字节缓冲），严格校验 Header Magic、Footer Trailer Magic、总字节长度、入口 ID 合法性及每条记录偏移边界，防止畸形输入越界读取。
 
 ---
 
@@ -60,59 +65,47 @@
 ```typescript
 const std = @import("std");
 import {
-    BundleTarget,
-    OutputFormat,
-    ChunkKind,
-    ChunkOrder,
-    ChunkEntry,
-    BundleConfig,
-    BundleV2,
+    CompileTarget,
+    StandaloneModuleGraph,
+    StandaloneModuleEntry,
+    ModuleGraph,
+    ImportKind,
 } from "cap:bundler";
 
-pub fn demoBundler() {
-    // 1. 构建面向浏览器生产环境的配置
-    const cfg = BundleConfig.productionBrowser("dist/web");
-    let bundler = BundleV2.init(cfg);
+pub fn demoBundlerDeep(): !void {
+    let arena_alloc = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena_alloc.deinit();
+    const alloc = arena_alloc.allocator();
 
-    // 2. 对模块图进行确定性 Chunk 拓扑排序
-    let orders: [3]ChunkOrder = [
-        ChunkOrder { source_index: 12, distance: 2, tie_breaker: 5 },
-        ChunkOrder { source_index: 4, distance: 1, tie_breaker: 2 },
-        ChunkOrder { source_index: 7, distance: 1, tie_breaker: 1 },
-    ];
-    ChunkOrder.sort(orders[0..3]);
-    // 排序结果: source_index 7 (dist=1, tb=1) -> 4 (dist=1, tb=2) -> 12 (dist=2, tb=5)
+    // 1. 交叉编译目标解析
+    const tgt = CompileTarget.parse("bun-darwin-arm64")?;
+    const is_unix = tgt.isUnix();          // true
+    const dylib = tgt.sharedLibExt();      // ".dylib"
+    * = is_unix;
+    * = dylib;
 
-    // 3. 记录输入源码与产出 Chunk
-    bundler.addSourceBytes(20000);
-    * = bundler.emitChunk(ChunkEntry {
-        name: "index.js",
-        kind: ChunkKind.EntryPoint,
-        source_index: 7,
-        size_bytes: 6000,
-        is_executable: true,
-    });
-    * = bundler.emitChunk(ChunkEntry {
-        name: "vendor.js",
-        kind: ChunkKind.SharedChunk,
-        source_index: 4,
-        size_bytes: 2000,
-        is_executable: false,
-    });
+    // 2. ModuleGraph 拓扑排序与树摇可达性
+    let mg = ModuleGraph.init(alloc);
+    const entry = mg.addModule("src/main.cp", true, 512)?;
+    const util = mg.addModule("src/util.cp", false, 256)?;
+    const dead = mg.addModule("src/dead.cp", false, 128)?;
+    mg.addDependency(entry, util, "./util", ImportKind.ImportStmt)?;
+    const order = mg.topoSort(alloc)?;     // [util, entry, dead]
+    mg.markAllEntryPointsReachable();
+    // mg.isReachable(util) == true, mg.isReachable(dead) == false
+    * = order;
+    * = dead;
 
-    // compressionRatioPermille() == 400 (8000 / 20000 = 40.0%)
-    const ratio = bundler.compressionRatioPermille();
-    * = ratio;
+    // 3. StandaloneModuleGraph 序列化与零拷贝反序列化
+    let sg = StandaloneModuleGraph.init(alloc);
+    * = sg.addModule(StandaloneModuleEntry{
+        path: "/$cpfs/main.js",
+        contents: "console.log('hello');",
+        is_entry: true,
+    })?;
+    const blob = sg.serialize(alloc)?;
+    let decoded = StandaloneModuleGraph.deserialize(alloc, blob)?;
+    const content = decoded.findContent("/$cpfs/main.js");
+    * = content;
 }
 ```
-
----
-
-## 四、 与 Bun / esbuild API 对照表
-
-| 功能特性 | Bun (`Bun.build` / `src/bundler/`) | esbuild (`esbuild.build`) | CP 标准库 (`cap:bundler`) |
-| :--- | :--- | :--- | :--- |
-| **目标平台枚举** | `target: "browser" \| "bun" \| "node"` | `platform: "browser" \| "node"` | `BundleTarget` (`Browser` / `Node` / `Bun` / `CpNative`) |
-| **输出模块格式** | `format: "esm" \| "cjs" \| "iife"` | `format: "esm" \| "cjs" \| "iife"` | `OutputFormat` (`Esm` / `Cjs` / `Iife`) |
-| **稳定 Chunk 排序** | `ChunkOrder.sort` (`src/bundler/Chunk.cp`) | `chunkOrder` | `ChunkOrder.sort` / `ChunkOrder.compare` |
-| **打包会话与产物清单** | `BundleV2` (`src/bundler/bundle_v2.cp`) | `BuildResult.metafile` | `BundleV2` (`emitChunk` / `findChunk` / `compressionRatioPermille`) |

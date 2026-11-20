@@ -1036,7 +1036,7 @@ switch (msg) {
 | `cap:redis` | `RESPType`, `RESPFrame`, `RESPParser`, `RESPEncoder`, `ValkeyReader`, `VerbatimString`, `SubscriptionPushMessage`, `RedisCommand`, `RedisPipeline` | Redis / Valkey RESP2 & RESP3 协议编解码、零拷贝流式多帧解析器、命令与 Pipeline（详见 `docs/redis/redis.md`） |
 | `cap:cli` | `CliArgs`, `CliOption`, `SliceIterator`, `TtyMode`, `AnsiColor`, `ProgressBar`, `Progress`, `CliTable`, `CliTableAlign` | 命令行参数解析、ANSI 色彩、进度条与终端表格渲染（详见 `docs/cli/cli.md`） |
 | `cap:watch` | `FileWatcher`, `WatchEvent`, `WatchEventKind`, `WatchMask`, `WatchEntry`, `WatchFilter`, `DebounceTracker` | 跨平台文件系统变更监控、忽略过滤与防抖器（详见 `docs/watch/watch.md`） |
-| `cap:patch` | `UnifiedDiff`, `UnifiedHunkHeader`, `HunkRange`, `DiffOpKind`, `LineDiffStats`, `LineDiffer`（`diff`, `editDistance`）, `DiffOp` | Unified Diff 解析、Myers 行级差异生成与补丁应用（详见 `docs/patch/patch.md`） |
+| `cap:patch` | `UnifiedDiff`, `UnifiedHunkHeader`, `HunkRange`, `DiffOpKind`, `LineDiffStats`, `LineDiffer`（`diff`, `editDistance`）, `DiffOp`, `DiffFormatOptions`, `DiffFormatter` | Unified Diff 解析、Myers 行级差异、补丁应用与 bun-test 风格彩色字符级差分渲染（详见 `docs/patch/patch.md`） |
 | `cap:bench` | `HwTimer`, `Stopwatch`, `BenchStats`, `LatencyHistogram` | 纳秒级硬件计时器、分位数统计与对数桶延迟直方图（详见 `docs/bench/bench.md`） |
 | `cap:elf` | `ExeFormat`, `Elf64HeaderInfo`, `ElfInspector`, `MachHeader64`, `MachoInspector`, `PeCoffHeader`, `PeInspector` | ELF64 / Mach-O / PE 可执行文件头解析与节区嗅探（详见 `docs/elf/elf.md`） |
 | `cap:md` | `Markdown`（`renderHtml`, `renderAnsi`）, `MdTable`, `MdTableAlign` | CommonMark / GFM 解析器、HTML / ANSI 渲染与 GFM 表格（详见 `docs/md/md.md`） |
@@ -1080,14 +1080,16 @@ switch (msg) {
 | `cap:which` | `which`, `isExecutable`, `endsWithExtension`, `WhichOptions` | 跨平台 `PATH` 可执行程序定位器（详见 `docs/which/which.md`） |
 | `cap:encoding` | `Base64`（`encode`, `decode`, `encodeURLSafe`, `decodeInPlace`, `encodeAlloc`, `decodeAlloc`, `isValid`）, `Base64Encoder`, `Base64Decoder`, `Codecs`, `Hex`（`encode`, `encodeLower`, `encodeUpper`, `decode`, `decodeInPlace`）, `Utf8`, `Utf16` | 高性能 Base64、原地极速解码、十六进制与 UTF 文本编码库（详见 `docs/encoding/encoding.md`） |
 | `cap:crypto` | `sha256`, `sha512`, `randomBytes`, `fillRandom`, `randomUUID`, `Aes256Gcm`, `ChaCha20Poly1305`, `Hmac`, `pbkdf2`, `TlsHostnameVerifier` | 密码学随机数、散列、AEAD 加密与 BoringSSL X.509 校验（详见 `docs/crypto/crypto.md`） |
-| `cap:safety` | `thread_id`, `getCurrent`, `isCurrent`, `isValid`, `ThreadLock`, `CriticalSection`, `CheckedAllocator`, `assertEq`, `assertAllocatorEq`, `assertEqFmt`, `poison`, `unpoison`, `isPoisoned`, `assertPoisoned`, `assertUnpoisoned`, `assert`, `safety_assert`, `safety_panic` | 生产级线程安全、可重入并发竞态检测、非托管容器防混用与原生 ASAN 内存毒化标准库（详见 `docs/safety/safety.md`） |
+| `cap:safety` | `thread_id`, `getCurrent`, `isCurrent`, `isValid`, `ThreadLock`, `CriticalSection`, `CheckedAllocator`, `assertEq`, `assertAllocatorEq`, `assertEqFmt`, `poison`, `unpoison`, `isPoisoned`, `assertPoisoned`, `assertUnpoisoned`, `assert`, `safety_assert`, `safety_panic`, `CpuFeatures`, `OomPolicy`, `OomHookFn`, `OomGuard`, `CrashReport` | 生产级线程安全、竞态检测、ASAN 毒化、CPUID 硬件特性探测、OOM 策略守卫与崩溃诊断报告标准库（详见 `docs/safety/safety.md`） |
 | `cap:security` | `CSRF`（`generate`, `verify`, `generateRaw`, `verifyRaw`, `generateRawAt`, `verifyRawAt`）, `TokenFormat`, `constantTimeEql` | 防 CSRF 签名、时钟偏移与防溢出保护及恒定时间安全比对（详见 `docs/security/security.md`） |
 | `cap:reflect` | `reflect.type<T>()`, `reflect.of()`, `reflect.has()`, `reflect.hasField()`, `reflect.hasMethod()` | 编译期与运行时统一反射内省库（详见 `docs/runtime/runtime.md`） |
 | `cap:errno` | `SystemErrno`（65 POSIX/Linux 错误码、`fromCode`, `toCode`, `codeName`, `description`, `isRetryable`, `isNotFound`, `isPermissionDenied`, `isNetworkError`） | 跨平台系统错误码映射与语义判定（吸收自 Bun `src/errno`，详见 `docs/errno/errno.md`） |
 | `cap:logger` | `LogLevel`, `Loc`, `Range`, `LineCol`, `Source`, `DiagMsg`, `Log` | 零堆分配结构化诊断日志引擎（源码定位、ANSI 标尺高亮、错误计数，吸收自 Bun `src/logger`，详见 `docs/logger/logger.md`） |
 | `cap:napi` | `Napi`, `NapiError`, `NapiStatus`, `NapiValueType`, `NapiModule`, `NapiPropertyDescriptor`, `NapiAddonRegistry` | 纯 CP Node-API v9 C-ABI 布局与原生插件桥接（详见 `docs/napi/napi.md`） |
 | `cap:bigint` | `BigInt`, `BigInt256` | 任意精度大整数与 EVM/Web3 256 位定宽大数运算（详见 `docs/bigint/bigint.md`） |
-| `cap:bundler` | `BundleTarget`, `OutputFormat`, `ChunkKind`, `ChunkOrder`, `ChunkEntry`, `BundleConfig`, `BundleV2` | 静态打包配置、Chunk 拓扑排序与 BundleV2 构建引擎（详见 `docs/bundler/bundler.md`） |
+| `cap:bundler` | `BundleTarget`, `OutputFormat`, `ChunkKind`, `ChunkOrder`, `ChunkEntry`, `BundleConfig`, `BundleV2`, `TargetOs`, `TargetArch`, `TargetAbi`, `CompileTarget`, `StandaloneModuleEntry`, `StandaloneModuleGraph`, `ImportKind`, `ImportRecord`, `ModuleNode`, `ModuleGraph` | 静态打包配置、跨平台编译目标、单文件虚拟 FS 二进制图、拓扑/环检测与 Tree-Shaking（详见 `docs/bundler/bundler.md`） |
+| `cap:resolver` | `DataURL`, `ModuleType`, `PackageJson`, `TsConfigJson`, `ResolveKind`, `ResolvedKind`, `ResolveConditions`, `StatHash`, `ModuleResolver` | RFC 2397 DataURL、PackageJson `exports`/`imports` 条件路由、JSONC TsConfig 路径别名与通用模块解析引擎（详见 `docs/resolver/resolver.md`） |
+| `cap:aio` | `ParentDeathWatchdog`, `AioOpKind`, `AioState`, `AioOp`, `AioCompletion`, `AioQueue<CAP>`, `AIO_O_*` | Linux `PR_SET_PDEATHSIG` 父进程看门狗与零堆固定容量 SQ/CQ 异步文件 I/O 环形队列（详见 `docs/aio/aio.md`） |
 | `cap:test` | `test("desc", () => { expect_eq(a, b); })` | 原生单元测试与断言框架（详见 `docs/runtime/runtime.md`） |
 
 ---

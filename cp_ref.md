@@ -6130,7 +6130,7 @@ export class SocketContext<Handler> {
 | `cap:redis`       | Redis / Valkey RESP2 & RESP3 零拷贝协议帧、命令构建与 Pipeline 批处理（`RESPType`, `RESPFrame`, `RESPParser`, `RESPEncoder`, `RedisCommand`, `RedisPipeline`） | **已全面实装** |
 | `cap:cli`         | 命令行参数解析（`CliArgs`, `CliOption`）、ANSI 转义剥离（`AnsiColor`）、终端进度条（`ProgressBar`）与 ASCII 表格渲染器（`CliTable`, `CliTableAlign`） | **已全面实装** |
 | `cap:watch`       | 跨平台文件系统监控引擎、路径忽略过滤与防抖器（`FileWatcher`, `WatchEvent`, `WatchMask`, `WatchFilter`, `DebounceTracker`） | **已全面实装** |
-| `cap:patch`       | Unified Diff 解析、Hunk 渲染与行级差异比对生成（`UnifiedDiff`, `UnifiedHunkHeader`, `LineDiffer`, `DiffOp`） | **已全面实装** |
+| `cap:patch`       | Unified Diff 解析、Hunk 渲染、Myers 行级差异比对与彩色终端对比渲染（`UnifiedDiff`, `UnifiedHunkHeader`, `LineDiffer`, `DiffOp`, `DiffFormatter`, `DiffFormatOptions`） | **已全面实装** |
 | `cap:bench`       | 纳秒级硬件计时器（`HwTimer`, `Stopwatch`）、分位数统计（`BenchStats`）与对数桶延迟直方图（`LatencyHistogram`） | **已全面实装** |
 | `cap:elf`         | 可执行文件魔数嗅探与 ELF64 / Mach-O / PE 头部解析（`ExeFormat`, `Elf64HeaderInfo`, `ElfInspector`, `MachHeader64`, `MachoInspector`, `PeCoffHeader`, `PeInspector`） | **已全面实装** |
 | `cap:md`          | CommonMark / GFM 解析器、HTML / ANSI 终端渲染与 GFM 表格引擎（`Markdown`, `MdTable`, `MdTableAlign`） | **已全面实装** |
@@ -6156,7 +6156,7 @@ export class SocketContext<Handler> {
 | `cap:which`       | 跨平台可执行二进制定位器（支持 `PATH` 环境变量遍历、相对/绝对路径解析与执行权限校验） | **已全面实装** |
 | `cap:ws`          | RFC 6455 现代 WebSocket 协议帧处理（Opcode、打包分片、4 字节极速异或掩码、控制帧） | **已全面实装** |
 | `cap:crypto`      | 工业级密码学体系：CSPRNG、UUID v4、散列哈希（SHA256/512/1/MD5/流式）、HMAC、PBKDF2、AEAD 对称加密（AES-256-GCM、ChaCha20-Poly1305）、BoringSSL X.509 校验 | **已全面实装** |
-| `cap:safety`      | 生产级并发安全与诊断套件：线程 ID 极速获取（`thread_id`）、单线程属主防御锁（`ThreadLock`）、可重入并发读写竞态检测（`CriticalSection`）、非托管容器防混用（`CheckedAllocator`）与原生 ASAN 内存毒化（`asan`） | **已全面实装** |
+| `cap:safety`      | 生产级并发安全、硬件探测与崩溃诊断套件：线程 ID 极速获取（`thread_id`）、单线程属主防御锁（`ThreadLock`）、可重入并发读写竞态检测（`CriticalSection`）、非托管容器防混用（`CheckedAllocator`）、原生 ASAN 内存毒化（`asan`）、CPU 指令集运行时探测（`CpuFeatures`）、OOM 策略守卫（`OomGuard`）与崩溃报告格式化（`CrashReport`） | **已全面实装** |
 | `cap:security`    | 安全防护与防跨站请求伪造子系统：CSPRNG 随机 Nonce、HMAC-SHA256 签名与篡改校验、恒定时间防时序攻击比对（`constantTimeEql`）、多格式编解码（Base64Url, Base64, Hex） | **已全面实装** |
 | `cap:mem`         | `Arena`, `SharedTensor`, `Cow`, `CowSlice`, `TaggedPointer`, `TaggedPtr`, `MaxHeapAllocator` | **已全面实装** |
 | `cap:string`      | `ZigString`, `WTF8`, `SimdUtf`, `Utf8Grapheme`, `CaseConverter`, `SmolStr` (15B 纯栈 SSO 字符串), `HashedString` (O(1) 预哈希字符串), `PathString`, `StringJoiner` | **已全面实装** |
@@ -6169,6 +6169,9 @@ export class SocketContext<Handler> {
 | `cap:sourcemap`   | Base64 VLQ/Varint 编解码、二分/动态行偏移表、二进制 InternalSourceMap 与 SourceMap v3 生成/反查 | **已全面实装** |
 | `cap:clap`        | 工业级命令行参数解析：POSIX 引号 Shell 词法分词、声明式语法、流式解析与编译期强类型提取 | **已全面实装** |
 | `cap:reflect`     | 编译期与运行时 `type_of`, `fields_of`, 结构体自省                      | **已全面实装** |
+| `cap:resolver`    | 工业级模块解析器与包配置套件：RFC 2397 `DataURL`、`PackageJson`（`exports`/`imports` 条件路由与通配符）、JSONC `TsConfigJson`（`paths` 别名重写）、`StatHash` 与 `ModuleResolver` | **已全面实装** |
+| `cap:aio`         | 异步 I/O 环形队列与进程监控套件：`ParentDeathWatchdog`（Linux `PR_SET_PDEATHSIG` + 竞态防护）与零堆固定容量 `AioQueue<CAP>`（Open/Read/Write/Pread/Pwrite/Stat/Fsync/Close/Unlink/Mkdir） | **已全面实装** |
+| `cap:bundler`     | 静态打包与单文件分发引擎：`BundleConfig`、`ChunkOrder`、`BundleV2`、`CompileTarget`（跨平台目标三元组）、`StandaloneModuleGraph`（单文件虚拟 FS 二进制编解码）与 `ModuleGraph`（三色 DFS 环检测、拓扑排序与 Tree-Shaking） | **已全面实装** |
 
 ---
 
@@ -10358,13 +10361,13 @@ flowchart TD
 - **语义化版本 (`cap:semver`)**：[`docs/semver/semver.md`](file:///data/dev/cp/docs/semver/semver.md)（Semver 2.0 解析、优先级比较与 Range 区间引擎）
 - **可执行文件定位 (`cap:which`)**：[`docs/which/which.md`](file:///data/dev/cp/docs/which/which.md)（跨平台 PATH 检索与执行权限校验）
 - **源码映射 (`cap:sourcemap`)**：[`docs/sourcemap/sourcemap.md`](file:///data/dev/cp/docs/sourcemap/sourcemap.md)（SourceMap v3、Base64 VLQ、LineOffsetTable $O(\log N)$ 反查）
-- **差分与补丁 (`cap:patch`)**：[`docs/patch/patch.md`](file:///data/dev/cp/docs/patch/patch.md)（Myers $O(ND)$ 差分算法、Unified Diff 解析与应用）
+- **差分与补丁 (`cap:patch`)**：[`docs/patch/patch.md`](file:///data/dev/cp/docs/patch/patch.md)（Myers $O(ND)$ 差分算法、Unified Diff 解析应用与 `DiffFormatter` 字符级彩色差分渲染）
 - **极速非加密散列 (`cap:hash`)**：[`docs/hash/hash.md`](file:///data/dev/cp/docs/hash/hash.md)（Wyhash/WyhashStream/XxHash3/CityHash64/Murmur3/FNV-1a/djb2/SipHash）
 - **环境变量加载 (`cap:dotenv`)**：[`docs/dotenv/dotenv.md`](file:///data/dev/cp/docs/dotenv/dotenv.md)（`.env` 解析、引号转义、`${VAR:-default}` 插值展开）
 - **多格式配置中心 (`cap:conf`)**：[`docs/conf/conf.md`](file:///data/dev/cp/docs/conf/conf.md)（INI/TOML/YAML/JSON5 统一解析与 `ConfGetter` 类型安全提取）
 - **命令行参数解析 (`cap:clap`)**：[`docs/clap/clap.md`](file:///data/dev/cp/docs/clap/clap.md)（零分配流式 `StreamingClap` 与编译期 `ComptimeClap`）
 - **智能指针与打标压缩 (`cap:ptr`)**：[`docs/ptr/ptr.md`](file:///data/dev/cp/docs/ptr/ptr.md)（64 位 `TaggedPointer`、`CowSlice`、`Shared`/`Weak`/`RefCount`）
-- **内存与线程安全守卫 (`cap:safety`)**：[`docs/safety/safety.md`](file:///data/dev/cp/docs/safety/safety.md)（`ThreadLock`、`CriticalSection`、`CheckedAllocator`、ASAN 内存毒化）
+- **内存与线程安全守卫 (`cap:safety`)**：[`docs/safety/safety.md`](file:///data/dev/cp/docs/safety/safety.md)（`ThreadLock`、`CriticalSection`、`CheckedAllocator`、ASAN 毒化、`CpuFeatures` CPUID 探测、`OomGuard` 与 `CrashReport`）
 - **事件总线与高性能事件循环 (`cap:event` / `cap:events` / `cap:event_loop`)**：[`docs/event/event.md`](file:///data/dev/cp/docs/event/event.md)（`EventBus`、`EventEmitter`、`EventLoop`、侵入式配对最小堆 `TimerHeap`、`ConcurrentTaskQueue`、`AutoFlusher`、`PollEngine`）
 - **云存储签名与客户端 (`cap:s3`)**：[`docs/s3/s3.md`](file:///data/dev/cp/docs/s3/s3.md)（AWS SigV4 四级签名、`presignUrl` 预签名 URL、Multipart 分片上传）
 - **CSRF 安全防护 (`cap:security`)**：[`docs/security/security.md`](file:///data/dev/cp/docs/security/security.md)（64 字节二进制 CSRF Token、时钟偏移与防溢出校验、恒定时间比对）
@@ -10398,11 +10401,13 @@ flowchart TD
 - **Node-API v9 桥接 (`cap:napi`)**：[`docs/napi/napi.md`](file:///data/dev/cp/docs/napi/napi.md)（纯 CP Node-API C-ABI 布局、`NapiError` 与 `NapiAddonRegistry`）
 - **任意精度与 256 位大数 (`cap:bigint`)**：[`docs/bigint/bigint.md`](file:///data/dev/cp/docs/bigint/bigint.md)（`BigInt` 与 `BigInt256`）
 - **事件总线与循环 (`cap:event`)**：[`docs/event/event.md`](file:///data/dev/cp/docs/event/event.md)（零堆分配 `EventBus`、`EventEmitter` 与底层轮询原语）
-- **静态构建与打包 (`cap:bundler`)**：[`docs/bundler/bundler.md`](file:///data/dev/cp/docs/bundler/bundler.md)（`BundleConfig`、`ChunkOrder`、`BundleV2`）
+- **静态构建与打包 (`cap:bundler`)**：[`docs/bundler/bundler.md`](file:///data/dev/cp/docs/bundler/bundler.md)（`BundleConfig`、`ChunkOrder`、`BundleV2`、`CompileTarget`、`StandaloneModuleGraph` 与 `ModuleGraph` 拓扑/环检测/Tree-Shaking）
 - **文件系统与流 (`cap:fs` / `cap:stream`)**：[`docs/fs/fs.md`](file:///data/dev/cp/docs/fs/fs.md)、[`docs/stream/stream.md`](file:///data/dev/cp/docs/stream/stream.md)（原子写入、双模式文件系统与零拷贝流管道）
 - **核心运行时与并发 (`cap:actor` / `beam` / `parallel` / `worker` / `reflect` / `serde` / `test` / `sqlite`)**：[`docs/runtime/runtime.md`](file:///data/dev/cp/docs/runtime/runtime.md)
 - **跨平台系统错误码 (`cap:errno`，新吸收)**：[`docs/errno/errno.md`](file:///data/dev/cp/docs/errno/errno.md)（65 个 POSIX/Linux 错误码、负 syscall 转换与语义判定）
 - **结构化诊断日志 (`cap:logger`，新吸收)**：[`docs/logger/logger.md`](file:///data/dev/cp/docs/logger/logger.md)（`Source`/`Loc`/`Range`/`DiagMsg`/`Log` 源码行摘录与 ANSI 标尺高亮）
+- **模块解析器与包配置 (`cap:resolver`，新吸收)**：[`docs/resolver/resolver.md`](file:///data/dev/cp/docs/resolver/resolver.md)（RFC 2397 `DataURL`、`PackageJson` 条件 `exports`/`imports`、JSONC `TsConfigJson` 别名、`StatHash` 与 `ModuleResolver`）
+- **异步 I/O 队列与父进程看门狗 (`cap:aio`，新吸收)**：[`docs/aio/aio.md`](file:///data/dev/cp/docs/aio/aio.md)（`ParentDeathWatchdog` `PR_SET_PDEATHSIG` 与零堆 `AioQueue<CAP>` 环形 I/O 队列）
 
 ---
 

@@ -2560,3 +2560,10 @@
      - 发布 `cpc` Release（`bash scripts/sync_cpc.sh release`）与 `cap` ReleaseFast（同步部署 `/data/dev/cp/cap/bin/cap` 与 `/root/.cap/bin/cap`）；
      - 端到端多文件验证全部通过：冷构建 618ms、0 改动 0ms 跳过、单文件修改 `transpiled=1 cached=8 (7ms)` 且未改动 `.zig` `mtime` 零变动、双路 `-o` 并行无锁构建 ~696ms、标准库回归套件与 `check_cpc_size.sh` 全部通过；
   3. **恢复双子智能体持续吸收标准库**：Batch 4B（`cap:aio` + `cap:safety` CPUID/CrashReport + `cap:patch` DiffFormatter，2,202 行，3/3 套件 PASS）已完工回收，随即无缝拉起 Batch 5A（`lib/css/` 去 Bun 化审计重构）与 Batch 4A（`cap:resolver` + `cap:bundler`）保持双路全速并行；同时通过多 AGY 通信广播通知 `capsurf_agy` 与 `bun_agy` 启用全新工具链能力。
+
+### 2026-11-20（Batch 4 增量高价值 Bun 资产联合验收入库与 Batch 5 双路终审全面启动）
+- **执行成果**：
+  - Batch 4A（`cap:resolver` 1,474 行 + `cap:bundler` 1,082 行 + 文档与深度测试，共 3,323 行，7/7 PASS）与 Batch 4B（`cap:aio` + `cap:safety` + `cap:patch`，共 2,202 行，3/3 PASS）全部完工并回收；
+  - 5 套新建及存量联合回归测试（`test_resolver_bundler_deep.cp`、`test_aio_safety_diff_format_deep.cp`、`test_core_runtime_bundler.cp`、`test_ptr_safety_event_loop.cp`、`test_glob_semver_dotenv_patch_deep.cp`）全部 100% PASS，Batch 4 涉及 25/25 `.cp` 文件 `// Source:` 100% 合规；
+  - 同步更新双轨规范手册 `cp_ref.md` 与 `cp_agent_ref.md` 及热日志文档，执行干净 Git 提交固化；
+  - 立即自主派生 Batch 5B（`861b2888`，Tier-1 18 大核心标准库终审补缺）与 Batch 5A（`29fb036c`，`lib/css/` 去 `@import("bun")` 化重构）保持双子智能体持续全速并行。
