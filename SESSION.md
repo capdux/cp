@@ -28,3 +28,6 @@
 
 ### 2026-11-21（`cap:xxhash` 验收，验收提交 `cap:xxhash` 与 `cap:http_router`，顶替拉起 `cap:rope` 与 `cap:lockfree_queue`）
 - **执行成果**：`lib/xxhash/`（5/5 PASS，`doc/lib/xxhash.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:xxhash` 与 `cap:http_router`，顶替拉起 `cap:rope` 与 `cap:lockfree_queue`
+
+### 2026-11-21（`cap:http_router` 验收，与 `cap:xxhash` 同批验收并拉起 `cap:rope` 与 `cap:lockfree_queue`）
+- **执行成果**：`lib/http_router/`（5/5 PASS，`doc/lib/http_router.md`）经 `verify_module.sh` 一次性验收回收；与 `cap:xxhash` 同批验收并拉起 `cap:rope` 与 `cap:lockfree_queue`

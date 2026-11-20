@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:http_router` 纯 CP Radix Trie 高性能 HTTP 路由器、零堆参数提取、405 Allow 头生成与 RouteGroup 引擎（支持 `cap.http_router` 自动动态挂载，详见 `doc/lib/http_router.md`）（5/5 PASS，文档直写 `doc/lib/http_router.md`）
+- **核心设计**：匹配路径采用栈上段切片零堆提取参数，插入期自动阻断同级不同参数名冲突与非末尾通配符，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:xxhash` 纯 CP 零堆 xxHash (XXH32/XXH64/XXH3_64/XXH3_128) 与流式分块增量哈希引擎（支持 `cap.xxhash` 自动动态挂载，详见 `doc/lib/xxhash.md`）（5/5 PASS，文档直写 `doc/lib/xxhash.md`）
 - **核心设计**：全路径零堆分配实现，覆盖 `0..>240B` 全分支 XXH3 累加器与流式状态机，比特级对齐官方标准。
 

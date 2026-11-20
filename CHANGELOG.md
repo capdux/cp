@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:http_router` 纯 CP Radix Trie 高性能 HTTP 路由器、零堆参数提取、405 Allow 头生成与 RouteGroup 引擎（支持 `cap.http_router` 自动动态挂载，详见 `doc/lib/http_router.md`）（5/5 PASS，自动动态挂载 `cap.http_router`）
+- **新增标准库**：`lib/http_router/{types,trie,index}.cp`，实现 Static > Param > CatchAll Radix Trie 匹配、零堆 `MAX_PARAMS = 16` 提取、405 自动 `Allow` 头、路由冲突检测与嵌套 `RouteGroup`。
+- **新增文档与测试**：`doc/lib/http_router.md` 扁平文档与 `cap/test/test_http_router_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:xxhash` 纯 CP 零堆 xxHash (XXH32/XXH64/XXH3_64/XXH3_128) 与流式分块增量哈希引擎（支持 `cap.xxhash` 自动动态挂载，详见 `doc/lib/xxhash.md`）（5/5 PASS，自动动态挂载 `cap.xxhash`）
 - **新增标准库**：`lib/xxhash/{xxh32,xxh64,xxh3,index}.cp`，实现 XXH32/XXH64 流式与一次性哈希及 XXH3_64/XXH3_128 全 7 个长度分段，通过官方向量与 `1..7` 字节流式一致性验证。
 - **新增文档与测试**：`doc/lib/xxhash.md` 扁平文档与 `cap/test/test_xxhash_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
