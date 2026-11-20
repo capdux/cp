@@ -2,6 +2,14 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:base85` Z85 / Adobe Ascii85 / RFC 1924 紧凑编码引擎（5/5 PASS，自动动态挂载 `cap.base85`）
+- **新增标准库**：`lib/base85/{base85,index}.cp`，实现 ZeroMQ `Z85`、Adobe `Ascii85`（含全零 `'z'` 压缩与 `<~...~>` 帧）及 `Rfc1924`，严格拦截 32-bit `ValueOverflow`、非法字符与帧畸形。
+- **新增文档与测试**：`doc/lib/base85.md` 扁平文档与 `cap/test/test_base85_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
+## [2026-11-21] - 新建 `cap:diff3` 三方文本合并与冲突检测引擎（5/5 PASS，自动动态挂载 `cap.diff3`）
+- **新增标准库**：`lib/diff3/{diff3,index}.cp`，实现 LCS/Myers 对齐三方自动融合、双边相同修改消歧、`Standard`/`Diff3`（含 `||||||| base`）冲突标记输出及 `\n`/`\r\n` 换行自动还原。
+- **新增文档与测试**：`doc/lib/diff3.md` 扁平文档与 `cap/test/test_diff3_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:segtree` Fenwick 树状数组与惰性传播线段树范围聚合引擎（5/5 PASS，自动动态挂载 `cap.segtree`）
 - **新增标准库**：`lib/segtree/{segtree,index}.cp`，实现 $O(N)$ 建树 `FenwickTree`（含树上倍增 `lowerBoundPrefix`）与支持 `rangeAdd`/`rangeAssign` 惰性标记合成及 `sum`/`min`/`max` 查询的 `LazySegmentTree`。
 - **新增文档与测试**：`doc/lib/segtree.md` 扁平文档与 `cap/test/test_segtree_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

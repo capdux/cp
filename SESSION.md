@@ -452,3 +452,9 @@
 
 ### 2026-11-21（`cap:segtree` 验收提交，顶替拉起 `cap:base85` 维持 2 路常规并行）
 - **执行成果**：`lib/segtree/`（5/5 PASS，`doc/lib/segtree.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/base85/`（ZeroMQ Z85 / Adobe Ascii85 / RFC 1924 紧凑二进制-ASCII 编码引擎），与 `lib/diff3/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:diff3` 验收提交，顶替拉起 `cap:suffixarray` 维持 2 路常规并行）
+- **执行成果**：`lib/diff3/`（5/5 PASS，`doc/lib/diff3.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/suffixarray/`（后缀数组 Suffix Array、Kasai LCP 数组与二分全文索引引擎），与 `lib/base85/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:base85` 验收合并提交，顶替拉起 `cap:cidr` 维持 2 路常规并行）
+- **执行成果**：`lib/base85/`（5/5 PASS，`doc/lib/base85.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/diff3/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/cidr/`（IPv4/IPv6 CIDR 子网划分、路由聚合与 LPM 最长前缀匹配引擎），与 `lib/suffixarray/` 维持 2 路常规并行。

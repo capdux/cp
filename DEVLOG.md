@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:base85` Z85 / Adobe Ascii85 / RFC 1924 紧凑编码引擎（5/5 PASS，文档直写 `doc/lib/base85.md`）
+- **核心设计**：统一封装三种主流 Base85 变体，使用 `u64` 中间累加防 `u32` 溢出并严格检测 `"%%%%%"`/`"|NsC1"` 越界码字与块内 `'z'` 畸形帧，全量测试零泄漏。
+
+## 2026-11-21: 新建 `cap:diff3` 三方文本合并与冲突检测引擎（5/5 PASS，文档直写 `doc/lib/diff3.md`）
+- **核心设计**：对齐 `base -> ours` 与 `base -> theirs` 编辑区段，自动合并互不重叠修改与双边一致修改，并对真正冲突按 `Standard` 或 `Diff3` 样式生成精确冲突块，全程零泄漏。
+
 ## 2026-11-21: 新建 `cap:segtree` Fenwick 树状数组与惰性传播线段树范围聚合引擎（5/5 PASS，文档直写 `doc/lib/segtree.md`）
 - **核心设计**：`LazySegmentTree` 严格区分 `has_assign` 与 `add_lazy` 标记优先级（`assign` 覆写旧 `add`，后续 `add` 直接叠加至 `assign_val`），经 120 轮交叉随机操作与暴力数组对拍 100% 一致。
 
