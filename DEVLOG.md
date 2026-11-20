@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-20: 新建 `cap:csv`（5/5）与 `cap:uuid`（5/5），连续端到端实证动态 `cap.<ns>` 零改动编译器自动挂载
+
+- **落地成果**：`lib/csv/`（`parser.cp`/`writer.cp`/`table.cp`/`index.cp`）与 `lib/uuid/`（`uuid.cp`/`ulid.cp`/`nanoid.cp`/`index.cp`）均经 `verify_module.sh` 一键全绿通过，并双双实证 `import cap from "cap"; cap.csv` / `cap.uuid` 零改动 `cpc` 自动挂载（每次省去 45s 编译器重编），合并单次提交。
+
+---
+
 ## 2026-11-20: 3 路正交并行首批收官：`cap:bench`（9/9）、`cap:security`（9/9）、`cap:dns`（10/10）全绿合并提交
 
 - **落地成果**：首轮 3 路正交子智能体（`lib/bench/`、`lib/security/`、`lib/dns/`）7 分钟内全部通过 `verify_module.sh` 一键验收（28/28 用例全绿，0 违规，0 下游误伤）；主控合并为单次 Git 提交且仅更新 `cp_lib_ref.md` 与轻量热日志（零触碰 `cp_ref.md`/`cp_agent_ref.md`），研发吞吐与 Token 效率验证大幅跃升。

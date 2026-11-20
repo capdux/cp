@@ -2,6 +2,13 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-20] - 新建 `cap:csv`（5/5）与 `cap:uuid`（5/5）双标准库落地（零改动编译器自动动态挂载 `cap.csv` / `cap.uuid`）
+
+- **`cap:csv`**（[`lib/csv/`](file:///data/dev/cp/lib/csv/index.cp)）：RFC 4180 增量 `StreamingCsvReader`（跨 chunk BOM/引号换行/双引号转义/列校验/`max_record_bytes` 防护）、`CsvWriter`（CSV/TSV 与公式注入防护）及 `CsvTable`（表头索引、过滤与 `toJsonLines` NDJSON 导出），[`test_csv_production_deep.cp`](file:///data/dev/cp/cap/test/test_csv_production_deep.cp) `-m` 5/5 PASS；
+- **`cap:uuid`**（[`lib/uuid/`](file:///data/dev/cp/lib/uuid/index.cp)）：RFC 9562 `Uuid`（v4 CSPRNG、v5 SHA-1 命名空间、v7 同毫秒单调自旋锁可排序）、`Ulid`（Crockford Base32 26 字符含 `I/L->1` `O->0` 与 UUID 互转）及 `NanoId`（无偏拒绝采样），[`test_uuid_production_deep.cp`](file:///data/dev/cp/cap/test/test_uuid_production_deep.cp) `-m` 5/5 PASS；同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)。
+
+---
+
 ## [2026-11-20] - 3 路正交并行首批收官：`cap:bench`（9/9）、`cap:security`（9/9）与 `cap:dns`（10/10）全绿验收落地
 
 - **`cap:bench`**（[`lib/bench/`](file:///data/dev/cp/lib/bench/index.cp)）：升级 `suite.cp`（`blackBox<T>`、`BenchOptions`/`BenchResult`/`BenchRunner` 预热与 Welford 分位数统计），新增 `compare.cp`（Welch t-test `BenchComparison` 与 Markdown 报告）及 `alloc_tracker.cp`（`CountingAllocator`/`AllocSnapshot`），[`test_bench_production_deep.cp`](file:///data/dev/cp/cap/test/test_bench_production_deep.cp) `-m` 5/5 + 既有 4/4 PASS；
