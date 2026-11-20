@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:rbac` 分层角色继承与显式拒绝优先策略鉴权引擎（5/5 PASS，自动动态挂载 `cap.rbac`）
+
+- 新建 [`lib/rbac/`](file:///data/dev/cp/lib/rbac/index.cp)（`permission.cp`、`engine.cp`、`index.cp`）：`PermissionMatcher`（冒号分段、`*`/`**` 尾段通配及请求通配符拦截）与 `RbacEngine`（角色继承 + BFS 环路检测 `CycleDetected` + 主体/角色/继承链三层显式拒绝优先 + 默认拒绝与 `AccessDecision` 审计追踪）；文档 [`doc/lib/rbac.md`](file:///data/dev/cp/doc/lib/rbac.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_rbac_production_deep.cp`](file:///data/dev/cp/cap/test/test_rbac_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:asn1` ITU-T X.690 DER 编解码与零 C 依赖 X.509 v3 证书内省引擎（5/5 PASS，自动动态挂载 `cap.asn1`）
 
 - 新建 [`lib/asn1/`](file:///data/dev/cp/lib/asn1/index.cp)（`der.cp`、`x509.cp`、`index.cp`）：严格最短定长 `DerReader`/`DerWriter`（64 层深度防护）、`OidCodec` 与 `X509Inspector`（解析版本/序列号/签发者与主体 CN+O/UTCTime & GeneralizedTime 有效期/SAN DNS/BasicConstraints CA/SHA-256 指纹）；文档 [`doc/lib/asn1.md`](file:///data/dev/cp/doc/lib/asn1.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_asn1_production_deep.cp`](file:///data/dev/cp/cap/test/test_asn1_production_deep.cp) `-m` 5/5 PASS。

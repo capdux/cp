@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:rbac` 分层 RBAC 与显式拒绝优先策略引擎（5/5 PASS，文档直写 `doc/lib/rbac.md`）+ 响应配额暂停
+
+- **落地成果**：`lib/rbac/`（`permission.cp`/`engine.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交；因收到用户配额不足暂停指令，已即时终止剩余后台子智能体（`lib/graphql/`）并停止派生新任务，待配额恢复后再继续。
+
+---
+
 ## 2026-11-21: 新建 `cap:asn1` DER 编解码与 X.509 v3 证书内省引擎（5/5 PASS，文档直写 `doc/lib/asn1.md`）
 
 - **落地成果**：`lib/asn1/`（`der.cp`/`x509.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（922ms），单轮完成回收与提交，并顶替派发 `cap:rbac`（分层角色继承、通配符权限与显式拒绝优先 RBAC 鉴权引擎），严格保持 2 路常规并行。
