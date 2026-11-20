@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 恢复 2 路并行 + 新建 `cap:graphql` 查询解析/守卫/打印引擎（5/5 PASS，文档直写 `doc/lib/graphql.md`）
+
+- **落地成果**：切号恢复后巡检 `agy-comm.service`（`active`）与 `unacked`（`[]`），重启 2 路 `flash` 并行流水线；`lib/graphql/`（`lexer.cp`/`parser.cp`/`printer.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并顶替派发 `cap:supervisor`（BEAM OTP 监督树策略、抖动退避、舱壁限流与重试预算引擎），与 `lib/openapi/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:rbac` 分层 RBAC 与显式拒绝优先策略引擎（5/5 PASS，文档直写 `doc/lib/rbac.md`）+ 响应配额暂停
 
 - **落地成果**：`lib/rbac/`（`permission.cp`/`engine.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交；因收到用户配额不足暂停指令，已即时终止剩余后台子智能体（`lib/graphql/`）并停止派生新任务，待配额恢复后再继续。

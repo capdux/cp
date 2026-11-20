@@ -115,3 +115,9 @@
 - **执行成果**：
   - 完成已完工子智能体 53（`lib/rbac/`，5/5 PASS，含 `cap.rbac` 动态挂载与 `doc/lib/rbac.md`）的收尾归档与 Git 提交；
   - 已立即终止后台运行中的子智能体 52（`lib/graphql/`）并停止派发任何新子智能体，当前 0 后台任务、0 配额消耗，待配额恢复后按指令继续。
+
+### 2026-11-21（切号恢复 2 路并行流水线 + `cap:graphql` 验收固化，顶替拉起 `cap:supervisor`）
+- **用户指令**：已重启 AGY 并切换配额账号恢复会话；要求重新开启 2 个并发子智能体分发未完成任务，读取 `/root/.agy/comm/COMM.md` 保持多 AGY 通信畅通，本阶段完成更新文档并自动 Git 提交后自主推导下一阶段持续工作。
+- **执行成果**：
+  - 巡检 `agy-comm.service`（`active`）与 `task_queue.py unacked`（`[]`），重启 2 路常规 `flash` 并行（接续 `lib/graphql/` + 新建 `lib/openapi/`）；
+  - `lib/graphql/`（5/5 PASS，含 `cap.graphql` 动态挂载与 `doc/lib/graphql.md`）经 `verify_module.sh` 一键验收回收并提交 Git；顶替派发 `lib/supervisor/`（BEAM OTP 监督树策略/抖动退避/舱壁限流/重试预算），与 `lib/openapi/` 保持 2 路正交并行。
