@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:hpack` RFC 7541 HTTP/2 HPACK 头部压缩编解码引擎（5/5 PASS，文档直写 `doc/lib/hpack.md`）
+- **核心设计**：分离 `huffman`/`table`/`codec` 三模块，`table.cp` 使用 O(1) 环形缓冲管理动态表 FIFO 驱逐并严格遵循单条目超过 `max_size` 时清空动态表规则；`huffman.cp` 校验 EOS 符号与非全 1 或超 7-bit 填充，防御畸形输入。
+
 ## 2026-11-21: 新建 `cap:syslog` RFC 5424 / RFC 3164 结构化 Syslog 解析与格式化引擎（5/5 PASS，文档直写 `doc/lib/syslog.md`）
 - **核心设计**：按 `types`/`parser`/`formatter` 三层解耦，`parse()` 基于 `<PRI>` 后首字符是否为版本号数字自动分流 RFC 5424 与 RFC 3164；`SD-PARAM` 严格处理 `\"`、`\\`、`\]` 转义往返与 UTF-8 BOM 剥离，保证 `std.testing.allocator` 零泄漏。
 

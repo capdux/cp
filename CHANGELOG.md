@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:hpack` RFC 7541 HTTP/2 HPACK 头部压缩编解码引擎（5/5 PASS，自动动态挂载 `cap.hpack`）
+- **新增标准库**：`lib/hpack/{huffman,table,codec,index}.cp`，实现 RFC 7541 Appendix A 61 项静态表、O(1) 环形 FIFO 动态表、Appendix B 256+EOS 规范 Huffman 编解码、变长前缀整数以及 `HpackEncoder`/`HpackDecoder`。
+- **新增文档与测试**：`doc/lib/hpack.md` 扁平文档与 `cap/test/test_hpack_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:syslog` RFC 5424 / RFC 3164 结构化 Syslog 解析与格式化引擎（5/5 PASS，自动动态挂载 `cap.syslog`）
 - **新增标准库**：`lib/syslog/{types,parser,formatter,index}.cp`，实现 RFC 5424 与 RFC 3164 自动识别解析、PRI 0..191 校验、NILVALUE `-`、UTF-8 BOM 剥离及多 `SD-ELEMENT` 转义解析/序列化。
 - **新增文档与测试**：`doc/lib/syslog.md` 扁平文档与 `cap/test/test_syslog_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

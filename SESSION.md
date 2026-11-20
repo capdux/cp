@@ -344,3 +344,6 @@
 
 ### 2026-11-21（`cap:syslog` 验收提交，顶替拉起 `cap:radix` 维持 2 路并行）
 - **执行成果**：`lib/syslog/`（5/5 PASS，`doc/lib/syslog.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/radix/`（压缩基数树 / Patricia Radix Trie 与前缀路由引擎），与 `lib/hpack/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:hpack` 验收提交，顶替拉起 `cap:xorfilter` 维持 2 路并行）
+- **执行成果**：`lib/hpack/`（5/5 PASS，`doc/lib/hpack.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/xorfilter/`（Xor8/Xor16 静态极省空间近似集合过滤器），与 `lib/radix/` 维持 2 路常规并行。
