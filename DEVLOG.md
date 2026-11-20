@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:guardrail` AI Agent 安全护栏与 PII 脱敏引擎（5/5 PASS，文档直写 `doc/lib/guardrail.md`）
+
+- **落地成果**：`lib/guardrail/`（`pii.cp`/`policy.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:i18n`（国际化多语言消息目录、CLDR 复数规则、变量插值与 `Accept-Language` 最佳语言协商引擎），与 `lib/timeseries/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:migrate` Schema 迁移规划与防篡改校验引擎（5/5 PASS，文档直写 `doc/lib/migrate.md`）
 
 - **落地成果**：`lib/migrate/`（`migrator.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:timeseries`（时序数据存储、时间窗 Rollup 降采样、EMA/SMA 平滑与 Z-Score 异常检测引擎），与 `lib/guardrail/` 保持 2 路正交并行。

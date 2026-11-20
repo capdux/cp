@@ -170,3 +170,6 @@
 
 ### 2026-11-21（`cap:migrate` 验收固化，顶替以 `inherit` 拉起 `cap:timeseries` 维持 2 路并行）
 - **执行成果**：`lib/migrate/`（5/5 PASS，含 `cap.migrate` 动态挂载与 `doc/lib/migrate.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/timeseries/`（时序存储、时间窗 Rollup 降采样、SMA/EMA 平滑与 Z-Score 异常尖峰检测引擎），与 `lib/guardrail/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:guardrail` 验收固化，顶替以 `inherit` 拉起 `cap:i18n` 维持 2 路并行）
+- **执行成果**：`lib/guardrail/`（5/5 PASS，含 `cap.guardrail` 动态挂载与 `doc/lib/guardrail.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/i18n/`（国际化多语言消息目录、CLDR 复数选择、变量插值与 `Accept-Language` 语言协商引擎），与 `lib/timeseries/` 保持 2 路正交并行。

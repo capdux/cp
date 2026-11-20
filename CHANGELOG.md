@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:guardrail` AI Agent 安全护栏、PII/密钥脱敏与输入输出拦截引擎（5/5 PASS，自动动态挂载 `cap.guardrail`）
+
+- 新建 [`lib/guardrail/`](file:///data/dev/cp/lib/guardrail/index.cp)（`pii.cp`、`policy.cp`、`index.cp`）：`PiiScanner`（Email/IPv4/Luhn 校验银行卡/`sk-`/`ghp_`/`AKIA`/JWT 识别与 `redact`/`redactTyped` 脱敏）及 `GuardrailPolicy`（`Allow`/`Redact`/`Block` 多级流水线、超长/禁用短语/越界特征拦截与 `inspectInput`/`inspectOutput` 防泄漏）；文档 [`doc/lib/guardrail.md`](file:///data/dev/cp/doc/lib/guardrail.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_guardrail_production_deep.cp`](file:///data/dev/cp/cap/test/test_guardrail_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:migrate` 确定性 Schema 迁移规划、防篡改校验与 SQLite 事务执行引擎（5/5 PASS，自动动态挂载 `cap.migrate`）
 
 - 新建 [`lib/migrate/`](file:///data/dev/cp/lib/migrate/index.cp)（`migrator.cp`、`index.cp`）：`MigrationRegistry`（`-- +migrate Up`/`Down` 双段 SQL 解析、乱序自动升序 `planUp`、逆序步进 `planDown`、SHA-256 校验和 `ChecksumMismatch` & `MissingAppliedMigration` 防篡改校验、`statusReport`）及 `SqliteMigrator`（基于 `cap:sqlite` 自动管理 `_cap_migrations` 并支持事务级升级/幂等跳过/回滚）；文档 [`doc/lib/migrate.md`](file:///data/dev/cp/doc/lib/migrate.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_migrate_production_deep.cp`](file:///data/dev/cp/cap/test/test_migrate_production_deep.cp) `-m` 5/5 PASS。
