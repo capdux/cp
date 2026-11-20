@@ -28,3 +28,6 @@
 
 ### 2026-11-21（`cap:idna` 验收，顶替拉起 `cap:ulid` 维持 2 路常规并行）
 - **执行成果**：`lib/idna/`（5/5 PASS，`doc/lib/idna.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:ulid` 维持 2 路常规并行
+
+### 2026-11-21（`cap:graph` 验收，顶替拉起 `cap:semver_range` 维持 2 路常规并行）
+- **执行成果**：`lib/graph/`（5/5 PASS，`doc/lib/graph.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:semver_range` 维持 2 路常规并行

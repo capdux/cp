@@ -7,8 +7,11 @@ const std = @import("std");
 /// Error set returned by graph construction, traversal, and algorithm operations.
 pub err GraphError {
     NodeNotFound,
+    InvalidVertex,
     NegativeWeight,
     CycleDetected,
+    Disconnected,
+    DuplicateEdge,
     OutOfMemory,
 }
 

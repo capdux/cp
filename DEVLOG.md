@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:graph` 纯 CP 有向加权图、DAG 拓扑排序、显式栈 Tarjan SCC 与 Dijkstra/Bellman-Ford 最短路径引擎（详见 `doc/lib/graph.md`）（5/5 PASS，文档直写 `doc/lib/graph.md`）
+- **核心设计**：`findCycle` 与 `tarjanScc` 均采用显式栈迭代实现以规避深图递归栈溢出；`DirectedGraph` 与所有算法返回值严格配合 `std.testing.allocator` 实现零内存泄漏。
+
 ## 2026-11-21: 新建 `cap:idna` 纯 CP RFC 3492 Punycode 编解码与 IDNA 国际化域名转换校验引擎（支持 `cap.idna` 自动动态挂载，详见 `doc/lib/idna.md`）（5/5 PASS，文档直写 `doc/lib/idna.md`）
 - **核心设计**：在 `punycodeEncode`/`punycodeDecode` 中全面执行 `u32` 乘法与加法溢出保护；`isValidDomain` 使用固定栈缓冲实现零堆分配验证，并完整阻断双向控制符与首尾连字符畸形域名。
 

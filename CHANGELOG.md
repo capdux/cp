@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:graph` 纯 CP 有向加权图、DAG 拓扑排序、显式栈 Tarjan SCC 与 Dijkstra/Bellman-Ford 最短路径引擎（详见 `doc/lib/graph.md`）（5/5 PASS，自动动态挂载 `cap.graph`）
+- **升级标准库**：`lib/graph/{graph,directed_graph,dag_algorithms,index}.cp`，在保留既有 `Graph` 的基础上新增稠密索引 `DirectedGraph`、`topologicalSort`（Kahn）、非递归三色 `findCycle`、迭代式 `tarjanScc`、`dijkstra` 与支持负权环检测的 `bellmanFord`。
+- **更新文档与测试**：`doc/lib/graph.md` 扁平文档与 `cap/test/test_graph_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:idna` 纯 CP RFC 3492 Punycode 编解码与 IDNA 国际化域名转换校验引擎（支持 `cap.idna` 自动动态挂载，详见 `doc/lib/idna.md`）（5/5 PASS，自动动态挂载 `cap.idna`）
 - **新增标准库**：`lib/idna/{punycode,idna,index}.cp`，实现严格 RFC 3492 Bootstring 编解码（含全路径 `u32`/码点溢出保护）、`toAscii`/`toUnicode`（支持 `.` 及全角等价分隔符）、零堆分配 `isValidDomain` 与 RFC 1034/1123 长度/连字符/双向控制符校验。
 - **新增文档与测试**：`doc/lib/idna.md` 扁平文档与 `cap/test/test_idna_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

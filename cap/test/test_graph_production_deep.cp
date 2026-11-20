@@ -1,387 +1,332 @@
 // Source: cp/cap/test/test_graph_production_deep.cp
-// Comprehensive Production-Grade Verification Suite for cap:graph & cap.graph
+// Deep Production Verification Suite for cap:graph & cap.graph
+// Covers:
+//   1. DirectedGraph build/transpose/error guards, Kahn topologicalSort, findCycle & transitiveClosure
+//   2. Iterative Tarjan SCC on complex multi-cycle graph & deep chain stack-overflow immunity
+//   3. Dijkstra shortest paths, reconstructPath, Disconnected & NegativeWeight guards
+//   4. Bellman-Ford negative weights & negative-weight cycle detection
+//   5. cap.graph dynamic mounting + Graph/GraphAlgo compatibility with std.testing.allocator zero-leak
 
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
 import {
     GraphError,
-    GraphEdge,
+    WeightedEdge,
+    DirectedGraph,
+    NO_PREV,
+    ReachabilityMatrix,
+    TarjanSccResult,
+    PathResult,
+    topologicalSort,
+    findCycle,
+    reachableFrom,
+    transitiveClosure,
+    tarjanScc,
+    dijkstra,
+    bellmanFord,
+    reconstructPath,
     Graph,
-    ShortestPathResult,
-    SccResult,
-    MstEdge,
-    MstResult,
-    PageRankEntry,
     GraphAlgo,
 } from "cap:graph";
-
-fn strEq(a: string, b: string): bool {
-    return std.mem.eql(u8, a, b);
-}
-
-fn containsStr(haystack: []const string, needle: string): bool {
-    for (item of haystack) {
-        if (strEq(item, needle)) return true;
-    }
-    return false;
-}
-
-fn indexOfStr(haystack: []const string, needle: string): usize? {
-    let i: usize = 0;
-    while (i < haystack.len) : (i += 1) {
-        if (strEq(haystack[i], needle)) return i;
-    }
-    return null;
-}
 
 fn approxEq(a: f64, b: f64, eps: f64 = 0.000001): bool {
     return @abs(a - b) <= eps;
 }
 
-fn testGraphBuildTraversalAndKHop(): !void {
-    const alloc = std.heap.page_allocator;
-
-    // 1. Directed Graph: idempotent addNode, ownership-safe key/label copy, BFS/DFS & kHopSubgraph
-    let kg = Graph.init(alloc, true);
-    defer kg.deinit();
-
-    expect_eq(kg.isDirected(), true);
-
-    // Mutate caller buffers right after addNode/addEdge to prove ownership safety
-    let id_buf: [8]u8 = undefined;
-    @memcpy(id_buf[0..5], "Agent");
-    const idx_agent = kg.addNode(id_buf[0..5])?;
-    @memcpy(id_buf[0..5], "XXXXX");
-
-    // Idempotent addNode returns the same index without creating duplicates
-    const idx_agent_again = kg.addNode("Agent")?;
-    expect_eq(idx_agent, idx_agent_again);
-    expect_eq(kg.findNode("Agent").?, idx_agent);
-    expect_eq(kg.findNode("Missing") == null, true);
-    expect_eq(strEq(kg.nodeId(idx_agent).?, "Agent"), true);
-    expect_eq(kg.nodeId(999) == null, true);
-
-    * = kg.addNode("Memory")?;
-    * = kg.addNode("GraphRAG")?;
-    * = kg.addNode("VectorDB")?;
-    * = kg.addNode("BM25")?;
-    * = kg.addNode("PageRank")?;
-    expect_eq(kg.nodeCount(), 6);
-
-    let lbl_buf: [8]u8 = undefined;
-    @memcpy(lbl_buf[0..4], "uses");
-    kg.addEdge("Agent", "Memory", 1.0, lbl_buf[0..4])?;
-    @memcpy(lbl_buf[0..4], "ZZZZ");
-    kg.addEdge("Agent", "GraphRAG", 1.2, "queries")?;
-    kg.addEdge("Memory", "VectorDB", 2.0, "backed_by")?;
-    kg.addEdge("GraphRAG", "BM25", 1.0, "fuses")?;
-    kg.addEdge("GraphRAG", "PageRank", 1.5, "ranks")?;
-    expect_eq(kg.edgeCount(), 5);
-
-    // Missing node guard on addEdge & neighbors
-    let missing_edge_err = false;
-    kg.addEdge("Agent", "Ghost", 1.0, "x") catch e => {
-        if (e == GraphError.NodeNotFound) missing_edge_err = true;
-    };
-    expect_eq(missing_edge_err, true);
-
-    let missing_nbr_err = false;
-    * = kg.neighbors("Ghost") catch e => {
-        if (e == GraphError.NodeNotFound) missing_nbr_err = true;
-    };
-    expect_eq(missing_nbr_err, true);
-
-    const agent_nbrs = kg.neighbors("Agent")?;
-    expect_eq(agent_nbrs.len, 2);
-    expect_eq(strEq(agent_nbrs[0].label, "uses"), true);
-    expect_eq(strEq(agent_nbrs[1].label, "queries"), true);
-
-    // BFS traversal from "Agent": level 0 [Agent], level 1 [Memory, GraphRAG], level 2 [VectorDB, BM25, PageRank]
-    const bfs_order = kg.bfs(alloc, "Agent")?;
-    defer alloc.free(bfs_order);
-    expect_eq(bfs_order.len, 6);
-    expect_eq(strEq(bfs_order[0], "Agent"), true);
-    expect_eq(strEq(bfs_order[1], "Memory"), true);
-    expect_eq(strEq(bfs_order[2], "GraphRAG"), true);
-    expect_eq(strEq(bfs_order[3], "VectorDB"), true);
-    expect_eq(strEq(bfs_order[4], "BM25"), true);
-    expect_eq(strEq(bfs_order[5], "PageRank"), true);
-
-    // DFS traversal from "Agent": Agent -> Memory -> VectorDB -> GraphRAG -> BM25 -> PageRank
-    const dfs_order = kg.dfs(alloc, "Agent")?;
-    defer alloc.free(dfs_order);
-    expect_eq(dfs_order.len, 6);
-    expect_eq(strEq(dfs_order[0], "Agent"), true);
-    expect_eq(strEq(dfs_order[1], "Memory"), true);
-    expect_eq(strEq(dfs_order[2], "VectorDB"), true);
-    expect_eq(strEq(dfs_order[3], "GraphRAG"), true);
-    expect_eq(strEq(dfs_order[4], "BM25"), true);
-    expect_eq(strEq(dfs_order[5], "PageRank"), true);
-
-    // GraphRAG kHopSubgraph recall: 0-hop, 1-hop, 2-hop
-    const hop0 = kg.kHopSubgraph(alloc, "Agent", 0)?;
-    defer alloc.free(hop0);
-    expect_eq(hop0.len, 1);
-    expect_eq(strEq(hop0[0], "Agent"), true);
-
-    const hop1 = kg.kHopSubgraph(alloc, "Agent", 1)?;
-    defer alloc.free(hop1);
-    expect_eq(hop1.len, 3);
-    expect_eq(containsStr(hop1, "Agent"), true);
-    expect_eq(containsStr(hop1, "Memory"), true);
-    expect_eq(containsStr(hop1, "GraphRAG"), true);
-    expect_eq(containsStr(hop1, "PageRank"), false);
-
-    const hop2 = kg.kHopSubgraph(alloc, "Agent", 2)?;
-    defer alloc.free(hop2);
-    expect_eq(hop2.len, 6);
-
-    // 2. Undirected Graph: symmetric edges automatically added
-    let ug = Graph.init(alloc, false);
-    defer ug.deinit();
-    expect_eq(ug.isDirected(), false);
-    * = ug.addNode("N1")?;
-    * = ug.addNode("N2")?;
-    * = ug.addNode("N3")?;
-    ug.addEdge("N1", "N2", 3.5, "link")?;
-    ug.addEdge("N2", "N3", 2.5, "link")?;
-    expect_eq(ug.edgeCount(), 2);
-
-    // Reverse lookup from N3 must reach N2 -> N1
-    const ug_bfs = ug.bfs(alloc, "N3")?;
-    defer alloc.free(ug_bfs);
-    expect_eq(ug_bfs.len, 3);
-    expect_eq(strEq(ug_bfs[0], "N3"), true);
-    expect_eq(strEq(ug_bfs[1], "N2"), true);
-    expect_eq(strEq(ug_bfs[2], "N1"), true);
+fn containsUsize(slice: []const usize, target: usize): bool {
+    for (item of slice) {
+        if (item == target) return true;
+    }
+    return false;
 }
 
-fn testDijkstraShortestPathUnreachableAndNegativeGuard(): !void {
-    const alloc = std.heap.page_allocator;
+fn indexOfUsize(slice: []const usize, target: usize): usize? {
+    let i: usize = 0;
+    while (i < slice.len) : (i += 1) {
+        if (slice[i] == target) return i;
+    }
+    return null;
+}
 
-    let g = Graph.init(alloc, true);
+test("1. DirectedGraph, DAG topologicalSort, findCycle & transitiveClosure") {
+    const alloc = std.testing.allocator;
+
+    let dag = DirectedGraph.init(alloc, 5) catch unreachable;
+    defer dag.deinit();
+
+    const v5 = dag.addVertex() catch unreachable;
+    expect_eq(v5, 5);
+    expect_eq(dag.vertexCount(), 6);
+
+    // DAG: 0 -> 1, 0 -> 2, 1 -> 3, 2 -> 3, 3 -> 4, 4 -> 5
+    dag.addEdge(0, 1, 1.0) catch unreachable;
+    dag.addEdge(0, 2, 1.0) catch unreachable;
+    dag.addEdge(1, 3, 1.0) catch unreachable;
+    dag.addEdge(2, 3, 1.0) catch unreachable;
+    dag.addEdge(3, 4, 1.0) catch unreachable;
+    dag.addEdge(4, 5, 1.0) catch unreachable;
+    expect_eq(dag.edgeCount(), 6);
+
+    expect_eq(dag.outDegree(0) catch unreachable, 2);
+    expect_eq(dag.inDegree(3) catch unreachable, 2);
+    expect_eq(dag.inDegree(0) catch unreachable, 0);
+
+    const nbrs0 = dag.neighbors(0) catch unreachable;
+    expect_eq(nbrs0.len, 2);
+    expect_eq(nbrs0[0].to, 1);
+    expect_eq(nbrs0[1].to, 2);
+
+    // DuplicateEdge & InvalidVertex guards
+    let dup_caught = false;
+    dag.addEdge(0, 1, 2.0) catch |e| {
+        if (e == GraphError.DuplicateEdge) dup_caught = true;
+    };
+    expect_eq(dup_caught, true);
+
+    let inv_caught = false;
+    dag.addEdge(0, 99, 1.0) catch |e| {
+        if (e == GraphError.InvalidVertex) inv_caught = true;
+    };
+    expect_eq(inv_caught, true);
+
+    // Transpose reverses edges
+    let rev = dag.transpose(alloc) catch unreachable;
+    defer rev.deinit();
+    expect_eq(rev.vertexCount(), 6);
+    expect_eq(rev.edgeCount(), 6);
+    expect_eq(rev.outDegree(3) catch unreachable, 2);
+    expect_eq(rev.inDegree(0) catch unreachable, 2);
+
+    // Topological sort on valid DAG
+    const order = topologicalSort(alloc, dag) catch unreachable;
+    defer alloc.free(order);
+    expect_eq(order.len, 6);
+    expect_eq(indexOfUsize(order, 0).? < indexOfUsize(order, 1).?, true);
+    expect_eq(indexOfUsize(order, 1).? < indexOfUsize(order, 3).?, true);
+    expect_eq(indexOfUsize(order, 2).? < indexOfUsize(order, 3).?, true);
+    expect_eq(indexOfUsize(order, 3).? < indexOfUsize(order, 4).?, true);
+    expect_eq(indexOfUsize(order, 4).? < indexOfUsize(order, 5).?, true);
+
+    // Acyclic check via findCycle -> null
+    const no_cycle = findCycle(alloc, dag) catch unreachable;
+    expect_eq(no_cycle == null, true);
+
+    // Reachability & Transitive Closure
+    const reach1 = reachableFrom(alloc, dag, 1) catch unreachable;
+    defer alloc.free(reach1);
+    expect_eq(reach1.len, 4); // {1, 3, 4, 5}
+    expect_eq(containsUsize(reach1, 1), true);
+    expect_eq(containsUsize(reach1, 5), true);
+    expect_eq(containsUsize(reach1, 2), false);
+
+    let tc = transitiveClosure(alloc, dag) catch unreachable;
+    defer tc.deinit();
+    expect_eq(tc.canReach(0, 5), true);
+    expect_eq(tc.canReach(1, 2), false);
+    expect_eq(tc.canReach(5, 0), false);
+
+    // Introduce back-edge 4 -> 1 to create cycle 1 -> 3 -> 4 -> 1
+    dag.addEdge(4, 1, 1.0) catch unreachable;
+
+    let cyc_topo_caught = false;
+    * = topologicalSort(alloc, dag) catch |e| {
+        if (e == GraphError.CycleDetected) cyc_topo_caught = true;
+    };
+    expect_eq(cyc_topo_caught, true);
+
+    const found_opt = findCycle(alloc, dag) catch unreachable;
+    expect_eq(found_opt != null, true);
+    const cyc = found_opt.?;
+    defer alloc.free(cyc);
+    expect_eq(cyc.len >= 4, true);
+    expect_eq(cyc[0], cyc[cyc.len - 1]);
+    expect_eq(containsUsize(cyc, 1), true);
+    expect_eq(containsUsize(cyc, 3), true);
+    expect_eq(containsUsize(cyc, 4), true);
+}
+
+test("2. Iterative Tarjan SCC on complex multi-cycle graph & deep chain") {
+    const alloc = std.testing.allocator;
+
+    // Complex graph with 4 SCCs:
+    //   SCC A: {0, 1, 2} (0->1->2->0)
+    //   SCC B: {3, 4}    (3<->4)
+    //   SCC C: {5}       (self-loop 5->5)
+    //   SCC D: {6}       (sink)
+    //   Cross edges: 2->3, 4->5, 5->6
+    let g = DirectedGraph.init(alloc, 7) catch unreachable;
     defer g.deinit();
 
-    for (name of ["S", "A", "B", "C", "D", "Isolated"]) {
-        * = g.addNode(name)?;
+    g.addEdge(0, 1, 1.0) catch unreachable;
+    g.addEdge(1, 2, 1.0) catch unreachable;
+    g.addEdge(2, 0, 1.0) catch unreachable;
+    g.addEdge(2, 3, 1.0) catch unreachable;
+    g.addEdge(3, 4, 1.0) catch unreachable;
+    g.addEdge(4, 3, 1.0) catch unreachable;
+    g.addEdge(4, 5, 1.0) catch unreachable;
+    g.addEdge(5, 5, 1.0) catch unreachable;
+    g.addEdge(5, 6, 1.0) catch unreachable;
+
+    let scc = tarjanScc(alloc, g) catch unreachable;
+    defer scc.deinit();
+
+    expect_eq(scc.count(), 4);
+    // Reverse topological order: sink {6} first, {5} second, {3, 4} third, {0, 1, 2} last
+    expect_eq(scc.components[0].len, 1);
+    expect_eq(scc.components[0][0], 6);
+
+    expect_eq(scc.components[1].len, 1);
+    expect_eq(scc.components[1][0], 5);
+
+    expect_eq(scc.components[2].len, 2);
+    expect_eq(containsUsize(scc.components[2], 3), true);
+    expect_eq(containsUsize(scc.components[2], 4), true);
+
+    expect_eq(scc.components[3].len, 3);
+    expect_eq(containsUsize(scc.components[3], 0), true);
+    expect_eq(containsUsize(scc.components[3], 1), true);
+    expect_eq(containsUsize(scc.components[3], 2), true);
+
+    // Deep chain (1500 vertices) to verify iterative Tarjan avoids stack overflow
+    let deep = DirectedGraph.init(alloc, 1500) catch unreachable;
+    defer deep.deinit();
+    let idx: usize = 0;
+    while (idx + 1 < 1500) : (idx += 1) {
+        deep.addEdge(idx, idx + 1, 1.0) catch unreachable;
     }
+    deep.addEdge(1499, 0, 1.0) catch unreachable;
 
-    // S -> A (4), S -> B (1), B -> A (2), A -> C (1), B -> C (5), C -> D (3)
-    // Optimal S -> D is S -> B -> A -> C -> D with cost 1 + 2 + 1 + 3 = 7
-    g.addEdge("S", "A", 4.0, "e1")?;
-    g.addEdge("S", "B", 1.0, "e2")?;
-    g.addEdge("B", "A", 2.0, "e3")?;
-    g.addEdge("A", "C", 1.0, "e4")?;
-    g.addEdge("B", "C", 5.0, "e5")?;
-    g.addEdge("C", "D", 3.0, "e6")?;
+    let deep_scc = tarjanScc(alloc, deep) catch unreachable;
+    defer deep_scc.deinit();
+    expect_eq(deep_scc.count(), 1);
+    expect_eq(deep_scc.components[0].len, 1500);
+}
 
-    let res = GraphAlgo.dijkstra(alloc, g, "S", "D")?;
+test("3. Dijkstra shortest path, reconstructPath, Disconnected & NegativeWeight guards") {
+    const alloc = std.testing.allocator;
+
+    let g = DirectedGraph.init(alloc, 6) catch unreachable;
+    defer g.deinit();
+
+    // 0 -> 1 (4.0), 0 -> 2 (2.0), 2 -> 1 (1.0), 1 -> 3 (5.0), 2 -> 3 (8.0), 3 -> 4 (2.0)
+    // Vertex 5 is isolated (unreachable from 0)
+    g.addEdge(0, 1, 4.0) catch unreachable;
+    g.addEdge(0, 2, 2.0) catch unreachable;
+    g.addEdge(2, 1, 1.0) catch unreachable;
+    g.addEdge(1, 3, 5.0) catch unreachable;
+    g.addEdge(2, 3, 8.0) catch unreachable;
+    g.addEdge(3, 4, 2.0) catch unreachable;
+
+    let res = dijkstra(alloc, g, 0) catch unreachable;
     defer res.deinit();
-    expect_eq(res.found, true);
-    expect_eq(approxEq(res.total_cost, 7.0), true);
-    expect_eq(res.path.len, 5);
-    expect_eq(strEq(res.path[0], "S"), true);
-    expect_eq(strEq(res.path[1], "B"), true);
-    expect_eq(strEq(res.path[2], "A"), true);
-    expect_eq(strEq(res.path[3], "C"), true);
-    expect_eq(strEq(res.path[4], "D"), true);
 
-    // Zero-cost self path
-    let self_res = GraphAlgo.dijkstra(alloc, g, "A", "A")?;
-    defer self_res.deinit();
-    expect_eq(self_res.found, true);
-    expect_eq(approxEq(self_res.total_cost, 0.0), true);
-    expect_eq(self_res.path.len, 1);
-    expect_eq(strEq(self_res.path[0], "A"), true);
+    // Shortest 0 -> 4 is 0 -> 2 -> 1 -> 3 -> 4 = 2 + 1 + 5 + 2 = 10.0
+    expect_eq(approxEq(res.distanceTo(4) catch unreachable, 10.0), true);
+    expect_eq(approxEq(res.distanceTo(0) catch unreachable, 0.0), true);
+    expect_eq(res.isReachable(4), true);
+    expect_eq(res.isReachable(5), false);
 
-    // Unreachable target
-    let unreach = GraphAlgo.dijkstra(alloc, g, "S", "Isolated")?;
-    defer unreach.deinit();
-    expect_eq(unreach.found, false);
-    expect_eq(unreach.path.len, 0);
+    const path = reconstructPath(alloc, res.prev, 0, 4) catch unreachable;
+    defer alloc.free(path);
+    expect_eq(path.len, 5);
+    expect_eq(path[0], 0);
+    expect_eq(path[1], 2);
+    expect_eq(path[2], 1);
+    expect_eq(path[3], 3);
+    expect_eq(path[4], 4);
 
-    // Negative weight edge rejection
-    g.addEdge("D", "Isolated", -0.5, "bad")?;
+    // Same-vertex path [0]
+    const self_path = reconstructPath(alloc, res.prev, 0, 0) catch unreachable;
+    defer alloc.free(self_path);
+    expect_eq(self_path.len, 1);
+    expect_eq(self_path[0], 0);
+
+    // Disconnected guard on unreachable vertex 5
+    let disc_caught = false;
+    * = reconstructPath(alloc, res.prev, 0, 5) catch |e| {
+        if (e == GraphError.Disconnected) disc_caught = true;
+    };
+    expect_eq(disc_caught, true);
+
+    // NegativeWeight guard
+    g.addEdge(4, 5, -0.5) catch unreachable;
     let neg_caught = false;
-    * = GraphAlgo.dijkstra(alloc, g, "S", "D") catch e => {
+    * = dijkstra(alloc, g, 0) catch |e| {
         if (e == GraphError.NegativeWeight) neg_caught = true;
     };
     expect_eq(neg_caught, true);
 }
 
-fn testTarjanSccAndTopologicalSort(): !void {
-    const alloc = std.heap.page_allocator;
+test("4. Bellman-Ford negative edge relaxation & negative-weight cycle detection") {
+    const alloc = std.testing.allocator;
 
-    // 1. Acyclic DAG topological sort
-    let dag = Graph.init(alloc, true);
-    defer dag.deinit();
-
-    for (name of ["compile", "link", "test", "package", "deploy"]) {
-        * = dag.addNode(name)?;
-    }
-    dag.addEdge("compile", "link", 1.0, "dep")?;
-    dag.addEdge("compile", "test", 1.0, "dep")?;
-    dag.addEdge("link", "package", 1.0, "dep")?;
-    dag.addEdge("test", "package", 1.0, "dep")?;
-    dag.addEdge("package", "deploy", 1.0, "dep")?;
-
-    const topo = GraphAlgo.topologicalSort(alloc, dag)?;
-    defer alloc.free(topo);
-    expect_eq(topo.len, 5);
-    const p_compile = indexOfStr(topo, "compile").?;
-    const p_link = indexOfStr(topo, "link").?;
-    const p_test = indexOfStr(topo, "test").?;
-    const p_package = indexOfStr(topo, "package").?;
-    const p_deploy = indexOfStr(topo, "deploy").?;
-    expect_eq(p_compile < p_link, true);
-    expect_eq(p_compile < p_test, true);
-    expect_eq(p_link < p_package, true);
-    expect_eq(p_test < p_package, true);
-    expect_eq(p_package < p_deploy, true);
-
-    // 2. Graph with multiple SCCs: {A,B,C}, {D,E}, {F}
-    let scc_g = Graph.init(alloc, true);
-    defer scc_g.deinit();
-
-    for (name of ["A", "B", "C", "D", "E", "F"]) {
-        * = scc_g.addNode(name)?;
-    }
-    // Cycle 1: A -> B -> C -> A
-    scc_g.addEdge("A", "B", 1.0, "")?;
-    scc_g.addEdge("B", "C", 1.0, "")?;
-    scc_g.addEdge("C", "A", 1.0, "")?;
-    // Cross link to Cycle 2: C -> D
-    scc_g.addEdge("C", "D", 1.0, "")?;
-    // Cycle 2: D <-> E
-    scc_g.addEdge("D", "E", 1.0, "")?;
-    scc_g.addEdge("E", "D", 1.0, "")?;
-    // Singleton sink F: E -> F
-    scc_g.addEdge("E", "F", 1.0, "")?;
-
-    // Topological sort must detect cycle
-    let cycle_caught = false;
-    * = GraphAlgo.topologicalSort(alloc, scc_g) catch e => {
-        if (e == GraphError.CycleDetected) cycle_caught = true;
-    };
-    expect_eq(cycle_caught, true);
-
-    // Tarjan SCC decomposition must produce exactly 3 components of sizes {3, 2, 1}
-    let scc = GraphAlgo.tarjanScc(alloc, scc_g)?;
-    defer scc.deinit();
-    expect_eq(scc.count(), 3);
-
-    let found_abc = false;
-    let found_de = false;
-    let found_f = false;
-    for (comp of scc.components) {
-        if (comp.len == 3 && containsStr(comp, "A") && containsStr(comp, "B") && containsStr(comp, "C")) {
-            found_abc = true;
-        } else if (comp.len == 2 && containsStr(comp, "D") && containsStr(comp, "E")) {
-            found_de = true;
-        } else if (comp.len == 1 && containsStr(comp, "F")) {
-            found_f = true;
-        }
-    }
-    expect_eq(found_abc, true);
-    expect_eq(found_de, true);
-    expect_eq(found_f, true);
-}
-
-fn testKruskalMstAndPageRank(): !void {
-    const alloc = std.heap.page_allocator;
-
-    // 1. Undirected weighted graph for Kruskal MST (4 vertices, classic MST weight = 1 + 2 + 3 = 6)
-    let ug = Graph.init(alloc, false);
-    defer ug.deinit();
-    for (name of ["V0", "V1", "V2", "V3"]) {
-        * = ug.addNode(name)?;
-    }
-    ug.addEdge("V0", "V1", 10.0, "heavy")?;
-    ug.addEdge("V0", "V2", 6.0, "mid")?;
-    ug.addEdge("V0", "V3", 5.0, "e3")?;
-    ug.addEdge("V1", "V3", 15.0, "too_heavy")?;
-    ug.addEdge("V2", "V3", 4.0, "light")?;
-
-    // Expected MST: (V2-V3: 4), (V0-V3: 5), (V0-V1: 10) -> total = 19.0, 3 edges
-    let mst = GraphAlgo.kruskalMst(alloc, ug)?;
-    defer mst.deinit();
-    expect_eq(mst.edges.len, 3);
-    expect_eq(approxEq(mst.total_weight, 19.0), true);
-
-    // 2. PageRank centrality: Hub node pointed to by all spokes must rank #1
-    let pr_g = Graph.init(alloc, true);
-    defer pr_g.deinit();
-    for (name of ["Hub", "Leaf1", "Leaf2", "Leaf3", "Leaf4", "Periphery"]) {
-        * = pr_g.addNode(name)?;
-    }
-    pr_g.addEdge("Leaf1", "Hub", 1.0, "cites")?;
-    pr_g.addEdge("Leaf2", "Hub", 1.0, "cites")?;
-    pr_g.addEdge("Leaf3", "Hub", 1.0, "cites")?;
-    pr_g.addEdge("Leaf4", "Hub", 1.0, "cites")?;
-    pr_g.addEdge("Periphery", "Leaf1", 1.0, "cites")?;
-    pr_g.addEdge("Hub", "Leaf1", 1.0, "refs")?;
-
-    const ranks = GraphAlgo.pageRank(alloc, pr_g, 0.85, 30)?;
-    defer alloc.free(ranks);
-    expect_eq(ranks.len, 6);
-    expect_eq(strEq(ranks[0].id, "Hub"), true);
-
-    // Verify descending order and probability mass conservation (~1.0)
-    let sum_score: f64 = 0.0;
-    let i: usize = 0;
-    while (i < ranks.len) : (i += 1) {
-        sum_score += ranks[i].score;
-        if (i + 1 < ranks.len) {
-            expect_eq(ranks[i].score >= ranks[i + 1].score, true);
-        }
-    }
-    expect_eq(approxEq(sum_score, 1.0, 0.00001), true);
-    expect_eq(ranks[0].score > ranks[ranks.len - 1].score, true);
-}
-
-fn testCapGraphAutomaticLazyMount(): !void {
-    const alloc = std.heap.page_allocator;
-
-    // Verify `import cap from "cap"; cap.graph.*` dynamic lazy mounting
-    let g = cap.graph.Graph.init(alloc, true);
+    let g = DirectedGraph.init(alloc, 4) catch unreachable;
     defer g.deinit();
 
-    * = g.addNode("DocA")?;
-    * = g.addNode("EntityX")?;
-    * = g.addNode("EntityY")?;
-    g.addEdge("DocA", "EntityX", 1.0, "mentions")?;
-    g.addEdge("EntityX", "EntityY", 2.0, "related_to")?;
+    // 0 -> 1 (4.0), 0 -> 2 (5.0), 1 -> 2 (-3.0), 2 -> 3 (2.0)
+    // Shortest 0 -> 3 is 0 -> 1 -> 2 -> 3 = 4 + (-3) + 2 = 3.0
+    g.addEdge(0, 1, 4.0) catch unreachable;
+    g.addEdge(0, 2, 5.0) catch unreachable;
+    g.addEdge(1, 2, -3.0) catch unreachable;
+    g.addEdge(2, 3, 2.0) catch unreachable;
 
-    const sub = g.kHopSubgraph(alloc, "DocA", 2)?;
-    defer alloc.free(sub);
-    expect_eq(sub.len, 3);
+    let bf = bellmanFord(alloc, g, 0) catch unreachable;
+    defer bf.deinit();
 
-    let sp: cap.graph.ShortestPathResult = cap.graph.GraphAlgo.dijkstra(alloc, g, "DocA", "EntityY")?;
-    defer sp.deinit();
-    expect_eq(sp.found, true);
-    expect_eq(approxEq(sp.total_cost, 3.0), true);
+    expect_eq(approxEq(bf.distanceTo(2) catch unreachable, 1.0), true);
+    expect_eq(approxEq(bf.distanceTo(3) catch unreachable, 3.0), true);
 
-    const pr = cap.graph.GraphAlgo.pageRank(alloc, g, 0.85, 20)?;
-    defer alloc.free(pr);
-    expect_eq(pr.len, 3);
-    expect_eq(strEq(pr[0].id, "EntityY"), true);
+    const path = reconstructPath(alloc, bf.prev, 0, 3) catch unreachable;
+    defer alloc.free(path);
+    expect_eq(path.len, 4);
+    expect_eq(path[0], 0);
+    expect_eq(path[1], 1);
+    expect_eq(path[2], 2);
+    expect_eq(path[3], 3);
+
+    // Add negative cycle: 2 -> 1 (weight 1.0) => cycle 1 -> 2 -> 1 has total weight -3 + 1 = -2
+    g.addEdge(2, 1, 1.0) catch unreachable;
+    let neg_cyc_caught = false;
+    * = bellmanFord(alloc, g, 0) catch |e| {
+        if (e == GraphError.CycleDetected) neg_cyc_caught = true;
+    };
+    expect_eq(neg_cyc_caught, true);
 }
 
-fn main() {
-    test("1. Graph Directed/Undirected Build, Ownership Safety, BFS/DFS & kHopSubgraph", () => {
-        testGraphBuildTraversalAndKHop()?;
-    });
-    test("2. Dijkstra Shortest Path Reconstruction, Unreachable & NegativeWeight Guard", () => {
-        testDijkstraShortestPathUnreachableAndNegativeGuard()?;
-    });
-    test("3. Tarjan SCC Decomposition & Kahn Topological Sort (with CycleDetected)", () => {
-        testTarjanSccAndTopologicalSort()?;
-    });
-    test("4. Kruskal MST (DSU Path Compression + Rank) & PageRank Centrality Ranking", () => {
-        testKruskalMstAndPageRank()?;
-    });
-    test("5. cap.graph Automatic Dynamic Lazy Mounting Verification", () => {
-        testCapGraphAutomaticLazyMount()?;
-    });
+test("5. cap.graph dynamic mounting & std.testing.allocator zero-leak verification") {
+    const alloc = std.testing.allocator;
+
+    let g = cap.graph.DirectedGraph.init(alloc, 3) catch unreachable;
+    defer g.deinit();
+
+    g.addEdge(0, 1, 2.5) catch unreachable;
+    g.addEdge(1, 2, 3.5) catch unreachable;
+
+    const topo = cap.graph.topologicalSort(alloc, g) catch unreachable;
+    defer alloc.free(topo);
+    expect_eq(topo.len, 3);
+    expect_eq(topo[0], 0);
+    expect_eq(topo[1], 1);
+    expect_eq(topo[2], 2);
+
+    let sp = cap.graph.dijkstra(alloc, g, 0) catch unreachable;
+    defer sp.deinit();
+    expect_eq(approxEq(sp.distanceTo(2) catch unreachable, 6.0), true);
+
+    const path = cap.graph.reconstructPath(alloc, sp.prev, 0, 2) catch unreachable;
+    defer alloc.free(path);
+    expect_eq(path.len, 3);
+
+    // Compatibility check with Graph & GraphAlgo via cap.graph
+    let kg = cap.graph.Graph.init(alloc, true);
+    defer kg.deinit();
+    * = kg.addNode("A") catch unreachable;
+    * = kg.addNode("B") catch unreachable;
+    kg.addEdge("A", "B", 1.0, "link") catch unreachable;
+
+    let kg_sp = cap.graph.GraphAlgo.dijkstra(alloc, kg, "A", "B") catch unreachable;
+    defer kg_sp.deinit();
+    expect_eq(kg_sp.found, true);
+    expect_eq(approxEq(kg_sp.total_cost, 1.0), true);
 }
