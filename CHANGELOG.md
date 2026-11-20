@@ -1,3 +1,21 @@
+## [2026-11-20] - Batch 5A：`cap:css` 全面去 `@import("bun")` 化重构（清理 94 个死文件，重建 8 模块纯 CP CSS 全栈引擎）
+
+### 标准库重构与清理 (`cap:css`)
+- **彻底清除 Bun 耦合死文件**：
+  - 清理 `lib/css/` 下 94 个无法独立编译的 Bun/Bundler/JSC 耦合残留文件（`properties/`、`rules/`、`selectors/`、`values/` 及根目录 15 个遗留文件）；全仓 `lib/**/*.cp` 实现 **`@import("bun")` 100% 清零**。
+- **8 模块纯 CP 零耦合 CSS 全栈引擎（共 4,157 行，100% 向后兼容）**：
+  - [`lib/css/tokenizer.cp`](file:///data/dev/cp/lib/css/tokenizer.cp)（新增，541 行）：CSS Syntax Level 3 零分配流式词法器（25 种 `CssTokenKind`、`url()`、转义、注释与行列追踪）；
+  - [`lib/css/variables.cp`](file:///data/dev/cp/lib/css/variables.cp)（新增，211 行）：`CssVariableMap` 与 `CssVarResolver.resolve()`（递归 `var(--name, fallback)` 与 16 层循环防护）；
+  - [`lib/css/prefixes.cp`](file:///data/dev/cp/lib/css/prefixes.cp)（重构，321 行）：`CssVendorPrefix`、`CssPrefixer` 与 `CssLogical` 逻辑属性展开；
+  - [`lib/css/color.cp`](file:///data/dev/cp/lib/css/color.cp)（589 行）：149 个 W3C 命名色（显式 `[149]` 定长数组二分查找，同步解决 `capsurf_agy` 工单 `task-capsurf-20261120-lib-css-color-tuple`）、`hwb()`/`oklab()`/`oklch()`、角度单位与 `lighten`/`darken`/`toHsl`；
+  - [`lib/css/length.cp`](file:///data/dev/cp/lib/css/length.cp)（389 行）：23 种 `CssUnit` 与递归下降 `CssCalc.evalPx`（括号、`min()`/`max()`/`clamp()`、一元符号）；
+  - [`lib/css/selector.cp`](file:///data/dev/cp/lib/css/selector.cp)（512 行）：6 种属性选择器运算符、`:is()/:not()/:has()/:where()` 权重计算与 `CssSelectorList`；
+  - [`lib/css/stylesheet.cp`](file:///data/dev/cp/lib/css/stylesheet.cp)（1,085 行）：15 种 `CssRuleKind`、`CssMediaQuery.matchesFull`、`CssNesting.flatten` 嵌套展平、`CssStylesheet` AST、`minify` 与 `formatPretty`；
+  - [`lib/css/index.cp`](file:///data/dev/cp/lib/css/index.cp)（12 行）与 [`docs/css/css.md`](file:///data/dev/cp/docs/css/css.md)（160 行）。
+- **测试与双轨规范**：新增 [`cap/test/test_css_deep.cp`](file:///data/dev/cp/cap/test/test_css_deep.cp)（7/7 PASS），回归 `test_css.cp`（5/5）与 `test_css_full.cp`（4/4）100% PASS；同步更新 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md) 与 [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)。
+
+---
+
 ## [2026-11-20] - Batch 4 增量高价值 Bun 资产吸收：`cap:resolver`、`cap:aio` 新建与 `cap:bundler`/`cap:safety`/`cap:patch` 深度补强
 
 ### 新增标准库 (New Stdlib Modules)

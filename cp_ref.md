@@ -6135,7 +6135,7 @@ export class SocketContext<Handler> {
 | `cap:elf`         | 可执行文件魔数嗅探与 ELF64 / Mach-O / PE 头部解析（`ExeFormat`, `Elf64HeaderInfo`, `ElfInspector`, `MachHeader64`, `MachoInspector`, `PeCoffHeader`, `PeInspector`） | **已全面实装** |
 | `cap:md`          | CommonMark / GFM 解析器、HTML / ANSI 终端渲染与 GFM 表格引擎（`Markdown`, `MdTable`, `MdTableAlign`） | **已全面实装** |
 | `cap:html`        | CSS 选择器解析（`CssSelector`）、流式 HTML 重写器（`HtmlRewriter`）与零拷贝实体转义器（`HtmlEscape`） | **已全面实装** |
-| `cap:css`         | 工业级 CSS 全栈解析、颜色空间（HEX/RGB/HSL/OKLCH/WCAG 对比度）、尺寸计算（`CssLength`/`CssCalc`）、W3C 选择器权重（`CssSpecificity`）与 94 模块完整样式表/规则/属性引擎（`CssStylesheetParser`, `CssRule`, `CssMediaQuery`, `CssKeyframes`） | **已全面实装** |
+| `cap:css`         | 纯 CP 零 Bun 耦合 CSS 引擎（8 模块）：Syntax Level 3 流式词法器（`CssTokenizer`）、Color Level 4（149 命名色/Hex/RGB/HSL/HWB/OKLAB/OKLCH/WCAG）、23 种单位与递归下降 `calc()/min()/max()/clamp()`、Selectors Level 4 与 `:is()/:not()/:has()/:where()` 权重、`var()` 递归解析防环、厂商前缀与逻辑属性、`CssNesting` 展平、AST 与压缩/美化器 | **已全面实装** |
 | `cap:image`（兼容 `cap:png` / `cap:img`） | 工业级现代全景图像处理标准库：PNG 截图编码器（`Png.encodeRgba`）、PNG 全滤镜解码器（`Png.decode`）、`PngImage`、像素四元组（`RgbaColor`）、BMP/DIB 编解码（`Bmp`）、Median-Cut 调色板颜色量化（`Quantizer`）、GIF89a/87a LZW 解码（`Gif`）、ThumbHash 模糊微缩占位图算法（`ThumbHash`）、EXIF Orientation 方向解析（`Exif`）、高阶图像几何变换与裁切缩放管线（`Image.flop`, `Image.flip`, `Image.rotate`, `Image.crop`, `Image.resize`）与 JPEG/WebP/8大格式嗅探（`Codecs.sniff`, `Jpeg.probe`, `Webp.probe`） | **已全面实装** |
 | `cap:ffi`         | 跨平台动态库加载（`DynLib`）、FFI 调用签名布局（`FFISignature`, `CStructLayout`, `CStructField`）与 TinyCC 内存编译声明（`TccOutputFormat`） | **已全面实装** |
 | `cap:sql`         | 统一 SQL 协议栈：参数化预编译语句（`SqlStatement`）、PostgreSQL v3 Wire/认证/数据行（`PostgresWire`, `PostgresAuthChallenge`, `PostgresDataRow`, `PostgresCommandComplete`）、MySQL Wire/变长整数/OK/ERR 包（`MySqlPacketHeader`, `MySqlLenEnc`, `MySqlCapabilities`, `MySqlOkPacket`, `MySqlErrPacket`）与原生 SQLite3 驱动（`SqliteDatabase`, `SqliteRows`） | **已全面实装** |
@@ -10395,7 +10395,7 @@ flowchart TD
 - **HTML 解析与转义 (`cap:html`)**：[`docs/html/html.md`](file:///data/dev/cp/docs/html/html.md)（`CssSelector`、`HtmlRewriter`、`HtmlEscape`）
 - **全景图像处理 (`cap:image`)**：[`docs/image/image.md`](file:///data/dev/cp/docs/image/image.md)（PNG/BMP/GIF/JPEG/WebP、EXIF、Quantizer、ThumbHash 与几何流水线）
 - **二进制对象 (`cap:blob`)**：[`docs/blob/blob.md`](file:///data/dev/cp/docs/blob/blob.md)（Web 标准 `Blob`/`File`/`BlobStore` 零拷贝切片）
-- **工业级 CSS 引擎 (`cap:css`)**：[`docs/css/css.md`](file:///data/dev/cp/docs/css/css.md)（100 模块分层：Color/OKLCH、18 种单位与 `calc()`、Selectors Level 4 与权重、At-Rules 与 Minifier）
+- **工业级 CSS 引擎 (`cap:css`)**：[`docs/css/css.md`](file:///data/dev/cp/docs/css/css.md)（8 模块纯 CP 零 Bun 耦合：Tokenizer、Color 4、23 种单位与递归下降 `calc()`、Selectors Level 4、`var()` 递归防环、Prefixer/Logical、Nesting/AST/Minifier/PrettyPrint）
 - **性能基准与直方图 (`cap:bench`)**：[`docs/bench/bench.md`](file:///data/dev/cp/docs/bench/bench.md)（`HwTimer`、`Stopwatch`、`BenchStats`、`LatencyHistogram`）
 - **终端与命令行表格 (`cap:cli`)**：[`docs/cli/cli.md`](file:///data/dev/cp/docs/cli/cli.md)（`CliArgs`、`TtyMode`、`AnsiColor`、`ProgressBar`、`CliTable`）
 - **Node-API v9 桥接 (`cap:napi`)**：[`docs/napi/napi.md`](file:///data/dev/cp/docs/napi/napi.md)（纯 CP Node-API C-ABI 布局、`NapiError` 与 `NapiAddonRegistry`）

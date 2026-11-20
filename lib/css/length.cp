@@ -1,7 +1,7 @@
 // Source: /data/dev/bun/src/css/values/length.cp
 // lib/css/length.cp
-// CSS Values & Units Level 4: CssUnit, CssLength, and CssCalc Evaluator
-// Absorbed and unified from Bun src/css/values/length.cp, angle.cp, time.cp, percentage.cp, calc.cp
+// CSS Values & Units Level 4: CssUnit, CssLength, and Recursive-Descent CssCalc Evaluator
+// Absorbed from Bun src/css/values/{length,angle,time,percentage,calc}.cp
 
 const std = @import("std");
 
@@ -18,9 +18,14 @@ pub enum CssUnit {
     Cm,
     Mm,
     In,
+    Pc,
+    Q,
+    Ch,
+    Ex,
     Deg,
     Rad,
     Turn,
+    Grad,
     Sec,
     Ms,
     Unitless,
@@ -39,9 +44,14 @@ pub enum CssUnit {
         if (std.ascii.eqlIgnoreCase(sfx, "cm")) return CssUnit.Cm;
         if (std.ascii.eqlIgnoreCase(sfx, "mm")) return CssUnit.Mm;
         if (std.ascii.eqlIgnoreCase(sfx, "in")) return CssUnit.In;
+        if (std.ascii.eqlIgnoreCase(sfx, "pc")) return CssUnit.Pc;
+        if (std.ascii.eqlIgnoreCase(sfx, "q")) return CssUnit.Q;
+        if (std.ascii.eqlIgnoreCase(sfx, "ch")) return CssUnit.Ch;
+        if (std.ascii.eqlIgnoreCase(sfx, "ex")) return CssUnit.Ex;
         if (std.ascii.eqlIgnoreCase(sfx, "deg")) return CssUnit.Deg;
         if (std.ascii.eqlIgnoreCase(sfx, "rad")) return CssUnit.Rad;
         if (std.ascii.eqlIgnoreCase(sfx, "turn")) return CssUnit.Turn;
+        if (std.ascii.eqlIgnoreCase(sfx, "grad")) return CssUnit.Grad;
         if (std.ascii.eqlIgnoreCase(sfx, "ms")) return CssUnit.Ms;
         if (std.ascii.eqlIgnoreCase(sfx, "s")) return CssUnit.Sec;
         return null;
@@ -61,9 +71,14 @@ pub enum CssUnit {
             .Cm => "cm",
             .Mm => "mm",
             .In => "in",
+            .Pc => "pc",
+            .Q => "q",
+            .Ch => "ch",
+            .Ex => "ex",
             .Deg => "deg",
             .Rad => "rad",
             .Turn => "turn",
+            .Grad => "grad",
             .Sec => "s",
             .Ms => "ms",
             .Unitless => "",
@@ -93,7 +108,6 @@ pub struct CssLength {
             return null;
         }
 
-        // Find split between numeric prefix and unit suffix
         let num_end: usize = 0;
         while (num_end < s.len) {
             const c = s[num_end];
@@ -120,11 +134,20 @@ pub struct CssLength {
         return CssLength { value: val, unit: u };
     }
 
+    pub fn eql(other: CssLength): bool {
+        return _.value == other.value && _.unit == other.unit;
+    }
+
+    pub fn scale(factor: f64): CssLength {
+        return CssLength { value: _.value * factor, unit: _.unit };
+    }
+
     /// Resolves any CSS length unit to canonical pixels (`px`).
     pub fn toPx(root_font_px: f64, viewport_w: f64, viewport_h: f64): f64 {
         return switch (_.unit) {
             .Px, .Unitless => _.value,
             .Rem, .Em => _.value * root_font_px,
+            .Ch, .Ex => _.value * root_font_px * 0.5,
             .Vw => (_.value / 100.0) * viewport_w,
             .Vh => (_.value / 100.0) * viewport_h,
             .Vmin => (_.value / 100.0) * (if (viewport_w < viewport_h) viewport_w else viewport_h),
@@ -132,8 +155,10 @@ pub struct CssLength {
             .Percent => (_.value / 100.0) * viewport_w,
             .In => _.value * 96.0,
             .Pt => _.value * (96.0 / 72.0),
+            .Pc => _.value * 16.0,
             .Cm => _.value * (96.0 / 2.54),
             .Mm => _.value * (96.0 / 25.4),
+            .Q => _.value * (96.0 / 101.6),
             else => _.value,
         };
     }
@@ -147,12 +172,13 @@ pub struct CssLength {
         };
     }
 
-    /// Resolves `<angle>` units (`deg`, `rad`, `turn`) to degrees.
+    /// Resolves `<angle>` units (`deg`, `rad`, `turn`, `grad`) to degrees.
     pub fn toDeg(): f64 {
         return switch (_.unit) {
             .Deg => _.value,
             .Turn => _.value * 360.0,
             .Rad => _.value * (180.0 / std.math.pi),
+            .Grad => _.value * 0.9,
             else => _.value,
         };
     }
@@ -170,77 +196,194 @@ pub struct CssLength {
     }
 }
 
-pub struct CssCalc {
-    /// Evaluates a `calc(...)` expression (such as `calc(100vw - 2rem)` or `calc(16px + 2 * 1.5rem)`)
-    /// into canonical pixels given `root_font_px`, `viewport_w`, and `viewport_h`.
-    pub static fn evalPx(expr: []const u8, root_font_px: f64, viewport_w: f64, viewport_h: f64): f64? {
-        let s = std.mem.trim(u8, expr, " \t\r\n");
-        if (std.ascii.startsWithIgnoreCase(s, "calc(") && s[s.len - 1] == ')') {
-            s = std.mem.trim(u8, s[5 .. s.len - 1], " \t\r\n");
+struct CalcParser {
+    src: []const u8;
+    pos: usize = 0;
+    root_font_px: f64 = 16.0;
+    viewport_w: f64 = 1920.0;
+    viewport_h: f64 = 1080.0;
+    depth: usize = 0;
+
+    fn skipWs(*_) {
+        while (_.pos < _.src.len && (_.src[_.pos] == ' ' || _.src[_.pos] == '\t' || _.src[_.pos] == '\r' || _.src[_.pos] == '\n')) {
+            _.pos += 1;
         }
+    }
+
+    fn peek(*_): u8 {
+        _.skipWs();
+        if (_.pos >= _.src.len) return 0;
+        return _.src[_.pos];
+    }
+
+    fn parseExpr(*_): f64? {
+        let left = _.parseTerm()?;
+        while (true) {
+            const c = _.peek();
+            if (c == '+') {
+                _.pos += 1;
+                const right = _.parseTerm()?;
+                left = left + right;
+            } else if (c == '-') {
+                _.pos += 1;
+                const right = _.parseTerm()?;
+                left = left - right;
+            } else {
+                break;
+            }
+        }
+        return left;
+    }
+
+    fn parseTerm(*_): f64? {
+        let left = _.parseUnary()?;
+        while (true) {
+            const c = _.peek();
+            if (c == '*') {
+                _.pos += 1;
+                const right = _.parseUnary()?;
+                left = left * right;
+            } else if (c == '/') {
+                _.pos += 1;
+                const right = _.parseUnary()?;
+                if (right == 0.0) return null;
+                left = left / right;
+            } else {
+                break;
+            }
+        }
+        return left;
+    }
+
+    fn parseUnary(*_): f64? {
+        const c = _.peek();
+        if (c == '+') {
+            _.pos += 1;
+            return _.parseUnary();
+        }
+        if (c == '-') {
+            _.pos += 1;
+            const v = _.parseUnary()?;
+            return -v;
+        }
+        return _.parsePrimary();
+    }
+
+    fn parsePrimary(*_): f64? {
+        if (_.depth >= 32) return null;
+        const c = _.peek();
+        if (c == 0) return null;
+
+        // Parenthesized expression
+        if (c == '(') {
+            _.pos += 1;
+            _.depth += 1;
+            const val = _.parseExpr();
+            _.depth -= 1;
+            const v = val?;
+            if (_.peek() != ')') return null;
+            _.pos += 1;
+            return v;
+        }
+
+        // Math functions: calc(...), min(...), max(...), clamp(...)
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+            const name_start = _.pos;
+            while (_.pos < _.src.len && ((_.src[_.pos] >= 'a' && _.src[_.pos] <= 'z') || (_.src[_.pos] >= 'A' && _.src[_.pos] <= 'Z'))) {
+                _.pos += 1;
+            }
+            const fn_name = _.src[name_start.._.pos];
+            if (_.peek() != '(') return null;
+            _.pos += 1;
+
+            _.depth += 1;
+            let args: [8]f64 = std.mem.zeroes([8]f64);
+            let argc: usize = 0;
+            while (argc < 8) {
+                const v_opt = _.parseExpr();
+                if (v_opt == null) {
+                    _.depth -= 1;
+                    return null;
+                }
+                args[argc] = v_opt.?;
+                argc += 1;
+                if (_.peek() == ',') {
+                    _.pos += 1;
+                    continue;
+                }
+                break;
+            }
+            _.depth -= 1;
+            if (_.peek() != ')' || argc == 0) return null;
+            _.pos += 1;
+
+            if (std.ascii.eqlIgnoreCase(fn_name, "calc")) {
+                return args[0];
+            }
+            if (std.ascii.eqlIgnoreCase(fn_name, "min")) {
+                let best = args[0];
+                let i: usize = 1;
+                while (i < argc) {
+                    if (args[i] < best) best = args[i];
+                    i += 1;
+                }
+                return best;
+            }
+            if (std.ascii.eqlIgnoreCase(fn_name, "max")) {
+                let best = args[0];
+                let i: usize = 1;
+                while (i < argc) {
+                    if (args[i] > best) best = args[i];
+                    i += 1;
+                }
+                return best;
+            }
+            if (std.ascii.eqlIgnoreCase(fn_name, "clamp") && argc == 3) {
+                const lo = args[0];
+                const val = args[1];
+                const hi = args[2];
+                const clamped = if (val < lo) lo else val;
+                return if (clamped > hi) hi else clamped;
+            }
+            return null;
+        }
+
+        // Numeric literal + optional unit suffix
+        const tok_start = _.pos;
+        while (_.pos < _.src.len) {
+            const ch = _.src[_.pos];
+            if ((ch >= '0' && ch <= '9') || ch == '.' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '%') {
+                _.pos += 1;
+            } else {
+                break;
+            }
+        }
+        if (_.pos == tok_start) return null;
+        const len_val = CssLength.parse(_.src[tok_start.._.pos])?;
+        return len_val.toPx(_.root_font_px, _.viewport_w, _.viewport_h);
+    }
+}
+
+pub struct CssCalc {
+    /// Evaluates CSS math expressions (`calc(...)`, `min(...)`, `max(...)`, `clamp(...)`, parentheses,
+    /// unary signs, and `+`, `-`, `*`, `/`) into canonical pixels given `root_font_px`, `viewport_w`, and `viewport_h`.
+    pub static fn evalPx(expr: []const u8, root_font_px: f64, viewport_w: f64, viewport_h: f64): f64? {
+        const s = std.mem.trim(u8, expr, " \t\r\n");
         if (s.len == 0) {
             return null;
         }
-
-        // Two-pass precedence evaluation over space-separated tokens:
-        // First resolve terms into values and operators (+, -, *, /)
-        let values: [16]f64 = std.mem.zeroes([16]f64);
-        let ops: [16]u8 = std.mem.zeroes([16]u8);
-        let val_count: usize = 0;
-        let op_count: usize = 0;
-
-        let it = std.mem.tokenizeAny(u8, s, " \t\r\n");
-        while (tok := it.next()) {
-            if (tok.len == 1 && (tok[0] == '+' || tok[0] == '-' || tok[0] == '*' || tok[0] == '/')) {
-                if (op_count >= 16) return null;
-                ops[op_count] = tok[0];
-                op_count += 1;
-            } else {
-                if (val_count >= 16) return null;
-                const len_val = CssLength.parse(tok)?;
-                values[val_count] = len_val.toPx(root_font_px, viewport_w, viewport_h);
-                val_count += 1;
-            }
-        }
-
-        if (val_count == 0 || op_count + 1 != val_count) {
+        let parser = CalcParser {
+            src: s,
+            pos: 0,
+            root_font_px: root_font_px,
+            viewport_w: viewport_w,
+            viewport_h: viewport_h,
+        };
+        const res = parser.parseExpr()?;
+        parser.skipWs();
+        if (parser.pos != parser.src.len) {
             return null;
         }
-
-        // Pass 1: handle '*' and '/'
-        let collapsed_vals: [16]f64 = std.mem.zeroes([16]f64);
-        let collapsed_ops: [16]u8 = std.mem.zeroes([16]u8);
-        collapsed_vals[0] = values[0];
-        let c_idx: usize = 0;
-
-        let i: usize = 0;
-        while (i < op_count) {
-            const op = ops[i];
-            const rhs = values[i + 1];
-            if (op == '*') {
-                collapsed_vals[c_idx] = collapsed_vals[c_idx] * rhs;
-            } else if (op == '/') {
-                if (rhs == 0.0) return null;
-                collapsed_vals[c_idx] = collapsed_vals[c_idx] / rhs;
-            } else {
-                collapsed_ops[c_idx] = op;
-                c_idx += 1;
-                collapsed_vals[c_idx] = rhs;
-            }
-            i += 1;
-        }
-
-        // Pass 2: handle '+' and '-'
-        let acc = collapsed_vals[0];
-        let j: usize = 0;
-        while (j < c_idx) {
-            if (collapsed_ops[j] == '+') {
-                acc += collapsed_vals[j + 1];
-            } else {
-                acc -= collapsed_vals[j + 1];
-            }
-            j += 1;
-        }
-        return acc;
+        return res;
     }
 }

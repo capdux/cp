@@ -2567,3 +2567,12 @@
   - 5 套新建及存量联合回归测试（`test_resolver_bundler_deep.cp`、`test_aio_safety_diff_format_deep.cp`、`test_core_runtime_bundler.cp`、`test_ptr_safety_event_loop.cp`、`test_glob_semver_dotenv_patch_deep.cp`）全部 100% PASS，Batch 4 涉及 25/25 `.cp` 文件 `// Source:` 100% 合规；
   - 同步更新双轨规范手册 `cp_ref.md` 与 `cp_agent_ref.md` 及热日志文档，执行干净 Git 提交固化；
   - 立即自主派生 Batch 5B（`861b2888`，Tier-1 18 大核心标准库终审补缺）与 Batch 5A（`29fb036c`，`lib/css/` 去 `@import("bun")` 化重构）保持双子智能体持续全速并行。
+
+### 2026-11-20（极速热修 `capsurf_agy` 工单 `task-capsurf-20261120-lib-css-color-tuple` 并结单交付）
+- **协同事件**：收到 `capsurf_agy` 投递的阻断工单 `task-capsurf-20261120-lib-css-color-tuple`（`lib/css/color.cp` 中 `NAMED_COLORS` 缺少显式数组类型标注导致被生成为 Zig 元组，动态下标索引报错）。
+- **修复与交付**：协同 Batch 5A 将查找表修正为显式定长数组 `const NAMED_COLOR_NAMES: [149][]const u8` 与 `const NAMED_COLOR_RGBA: [149]u32` 并告知 5A 保持同步核查；通过 `cpc compile` + `zig ast-check` + `zig build-exe` 端到端实测运行 `CssColor.parse("red"/"transparent"/"rebeccapurple")` 100% 通过（`CSS_COLOR_OK:255:0:102`），已完成 `resolve` + `ack` 结单通知 `capsurf_agy`。
+
+### 2026-11-20（Batch 5A `cap:css` 去 Bun 化重构验收固化，全仓 `.cp` 实现 `@import("bun")` 清零）
+- **执行成果**：
+  - Subagent 5A 完工回收：彻底清理 `lib/css/` 94 个 Bun/JSC 耦合死文件，重构为 8 个零耦合纯 CP 模块（4,157 行：Tokenizer/Color 4/Calc/Selectors L4/Variables/Prefixer/Logical/Nesting/Stylesheet AST/Minify/PrettyPrint），全仓 `lib/**/*.cp` `@import("bun")` 彻底归零；
+  - `test_css.cp`（5/5）、`test_css_full.cp`（4/4）、`test_css_deep.cp`（7/7）全部 16/16 PASS，已同步双轨规范与热日志并执行 Git 提交固化。

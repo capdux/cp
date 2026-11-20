@@ -1,7 +1,7 @@
 // Source: /data/dev/bun/src/css/values/color.cp
 // lib/css/color.cp
-// CSS Color Level 4 Parser & Color Space Converter (Hex, RGB/RGBA, HSL/HSLA, OKLCH, Named Colors)
-// Absorbed and unified from Bun src/css/values/color.cp & color_generated.cp
+// CSS Color Level 4 Parser & Color Space Converter
+// Supports Hex (3/4/6/8), RGB/RGBA, HSL/HSLA, HWB, OKLAB, OKLCH, 148 W3C Named Colors, WCAG & Mixing
 
 const std = @import("std");
 
@@ -78,6 +78,37 @@ fn parseFloatToken(raw: []const u8): f64? {
         return null;
     }
     return std.fmt.parseFloat(f64, trimmed) catch null;
+}
+
+fn parseAngleDeg(raw: []const u8): f64? {
+    const s = std.mem.trim(u8, raw, " \t\r\n");
+    if (s.len == 0) return null;
+    if (s.len > 4 && std.ascii.eqlIgnoreCase(s[s.len - 4 ..], "grad")) {
+        const grad = parseFloatToken(s[0 .. s.len - 4])?;
+        return grad * 0.9;
+    }
+    if (s.len > 4 && std.ascii.eqlIgnoreCase(s[s.len - 4 ..], "turn")) {
+        const turn = parseFloatToken(s[0 .. s.len - 4])?;
+        return turn * 360.0;
+    }
+    if (s.len > 3 && std.ascii.eqlIgnoreCase(s[s.len - 3 ..], "deg")) {
+        return parseFloatToken(s[0 .. s.len - 3]);
+    }
+    if (s.len > 3 && std.ascii.eqlIgnoreCase(s[s.len - 3 ..], "rad")) {
+        const rad = parseFloatToken(s[0 .. s.len - 3])?;
+        return rad * (180.0 / std.math.pi);
+    }
+    return parseFloatToken(s);
+}
+
+fn parsePctOrUnit(raw: []const u8, pct_scale: f64): f64? {
+    const s = std.mem.trim(u8, raw, " \t\r\n");
+    if (s.len == 0) return null;
+    if (s[s.len - 1] == '%') {
+        const v = parseFloatToken(s[0 .. s.len - 1])?;
+        return (v / 100.0) * pct_scale;
+    }
+    return parseFloatToken(s);
 }
 
 fn parseAlphaToken(raw: []const u8): u8? {
@@ -161,6 +192,73 @@ fn splitColorArgs(inner: []const u8, out_tokens: *[4][]const u8): usize {
     return count;
 }
 
+const NAMED_COLOR_NAMES: [149][]const u8 = [
+    "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure",
+    "beige", "bisque", "black", "blanchedalmond", "blue",
+    "blueviolet", "brown", "burlywood", "cadetblue", "chartreuse",
+    "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson",
+    "cyan", "darkblue", "darkcyan", "darkgoldenrod", "darkgray",
+    "darkgreen", "darkgrey", "darkkhaki", "darkmagenta", "darkolivegreen",
+    "darkorange", "darkorchid", "darkred", "darksalmon", "darkseagreen",
+    "darkslateblue", "darkslategray", "darkslategrey", "darkturquoise", "darkviolet",
+    "deeppink", "deepskyblue", "dimgray", "dimgrey", "dodgerblue",
+    "firebrick", "floralwhite", "forestgreen", "fuchsia", "gainsboro",
+    "ghostwhite", "gold", "goldenrod", "gray", "green",
+    "greenyellow", "grey", "honeydew", "hotpink", "indianred",
+    "indigo", "ivory", "khaki", "lavender", "lavenderblush",
+    "lawngreen", "lemonchiffon", "lightblue", "lightcoral", "lightcyan",
+    "lightgoldenrodyellow", "lightgray", "lightgreen", "lightgrey", "lightpink",
+    "lightsalmon", "lightseagreen", "lightskyblue", "lightslategray", "lightslategrey",
+    "lightsteelblue", "lightyellow", "lime", "limegreen", "linen",
+    "magenta", "maroon", "mediumaquamarine", "mediumblue", "mediumorchid",
+    "mediumpurple", "mediumseagreen", "mediumslateblue", "mediumspringgreen", "mediumturquoise",
+    "mediumvioletred", "midnightblue", "mintcream", "mistyrose", "moccasin",
+    "navajowhite", "navy", "oldlace", "olive", "olivedrab",
+    "orange", "orangered", "orchid", "palegoldenrod", "palegreen",
+    "paleturquoise", "palevioletred", "papayawhip", "peachpuff", "peru",
+    "pink", "plum", "powderblue", "purple", "rebeccapurple",
+    "red", "rosybrown", "royalblue", "saddlebrown", "salmon",
+    "sandybrown", "seagreen", "seashell", "sienna", "silver",
+    "skyblue", "slateblue", "slategray", "slategrey", "snow",
+    "springgreen", "steelblue", "tan", "teal", "thistle",
+    "tomato", "transparent", "turquoise", "violet", "wheat",
+    "white", "whitesmoke", "yellow", "yellowgreen",
+];
+
+// Packed 0xRRGGBBAA
+const NAMED_COLOR_RGBA: [149]u32 = [
+    0xF0F8FFFF, 0xFAEBD7FF, 0x00FFFFFF, 0x7FFFD4FF, 0xF0FFFFFF,
+    0xF5F5DCFF, 0xFFE4C4FF, 0x000000FF, 0xFFEBCDFF, 0x0000FFFF,
+    0x8A2BE2FF, 0xA52A2AFF, 0xDEB887FF, 0x5F9EA0FF, 0x7FFF00FF,
+    0xD2691EFF, 0xFF7F50FF, 0x6495EDFF, 0xFFF8DCFF, 0xDC143CFF,
+    0x00FFFFFF, 0x00008BFF, 0x008B8BFF, 0xB8860BFF, 0xA9A9A9FF,
+    0x006400FF, 0xA9A9A9FF, 0xBDB76BFF, 0x8B008BFF, 0x556B2FFF,
+    0xFF8C00FF, 0x9932CCFF, 0x8B0000FF, 0xE9967AFF, 0x8FBC8FFF,
+    0x483D8BFF, 0x2F4F4FFF, 0x2F4F4FFF, 0x00CED1FF, 0x9400D3FF,
+    0xFF1493FF, 0x00BFFFFF, 0x696969FF, 0x696969FF, 0x1E90FFFF,
+    0xB22222FF, 0xFFFAF0FF, 0x228B22FF, 0xFF00FFFF, 0xDCDCDCFF,
+    0xF8F8FFFF, 0xFFD700FF, 0xDAA520FF, 0x808080FF, 0x008000FF,
+    0xADFF2FFF, 0x808080FF, 0xF0FFF0FF, 0xFF69B4FF, 0xCD5C5CFF,
+    0x4B0082FF, 0xFFFFF0FF, 0xF0E68CFF, 0xE6E6FAFF, 0xFFF0F5FF,
+    0x7CFC00FF, 0xFFFACDFF, 0xADD8E6FF, 0xF08080FF, 0xE0FFFFFF,
+    0xFAFAD2FF, 0xD3D3D3FF, 0x90EE90FF, 0xD3D3D3FF, 0xFFB6C1FF,
+    0xFFA07AFF, 0x20B2AAFF, 0x87CEFAFF, 0x778899FF, 0x778899FF,
+    0xB0C4DEFF, 0xFFFFE0FF, 0x00FF00FF, 0x32CD32FF, 0xFAF0E6FF,
+    0xFF00FFFF, 0x800000FF, 0x66CDAAFF, 0x0000CDFF, 0xBA55D3FF,
+    0x9370DBFF, 0x3CB371FF, 0x7B68EEFF, 0x00FA9AFF, 0x48D1CCFF,
+    0xC71585FF, 0x191970FF, 0xF5FFFAFF, 0xFFE4E1FF, 0xFFE4B5FF,
+    0xFFDEADFF, 0x000080FF, 0xFDF5E6FF, 0x808000FF, 0x6B8E23FF,
+    0xFFA500FF, 0xFF4500FF, 0xDA70D6FF, 0xEEE8AAFF, 0x98FB98FF,
+    0xAFEEEEFF, 0xDB7093FF, 0xFFEFD5FF, 0xFFDAB9FF, 0xCD853FFF,
+    0xFFC0CBFF, 0xDDA0DDFF, 0xB0E0E6FF, 0x800080FF, 0x663399FF,
+    0xFF0000FF, 0xBC8F8FFF, 0x4169E1FF, 0x8B4513FF, 0xFA8072FF,
+    0xF4A460FF, 0x2E8B57FF, 0xFFF5EEFF, 0xA0522DFF, 0xC0C0C0FF,
+    0x87CEEBFF, 0x6A5ACDFF, 0x708090FF, 0x708090FF, 0xFFFAFAFF,
+    0x00FF7FFF, 0x4682B4FF, 0xD2B48CFF, 0x008080FF, 0xD8BFD8FF,
+    0xFF6347FF, 0x00000000, 0x40E0D0FF, 0xEE82EEFF, 0xF5DEB3FF,
+    0xFFFFFFFF, 0xF5F5F5FF, 0xFFFF00FF, 0x9ACD32FF,
+];
+
 pub struct CssColor {
     r: u8 = 0;
     g: u8 = 0;
@@ -201,13 +299,28 @@ pub struct CssColor {
         return CssColor { r: r, g: g, b: b, a: a };
     }
 
-    pub static fn fromOklch(l_val: f64, c_val: f64, h_deg: f64, a: u8): CssColor {
-        const l = std.math.clamp(l_val, 0.0, 1.0);
-        const c = if (c_val < 0.0) 0.0 else c_val;
-        const h_rad = h_deg * (std.math.pi / 180.0);
-        const oklab_a = c * @cos(h_rad);
-        const oklab_b = c * @sin(h_rad);
+    pub static fn fromHwb(h_deg: f64, w_pct: f64, b_pct: f64, a: u8): CssColor {
+        let w = std.math.clamp(w_pct / 100.0, 0.0, 1.0);
+        let bl = std.math.clamp(b_pct / 100.0, 0.0, 1.0);
+        if (w + bl >= 1.0) {
+            const gray = clampU8((w / (w + bl)) * 255.0);
+            return CssColor { r: gray, g: gray, b: gray, a: a };
+        }
+        const pure = CssColor.fromHsl(h_deg, 100.0, 50.0, a);
+        const rf: f64 = @floatFromInt(pure.r);
+        const gf: f64 = @floatFromInt(pure.g);
+        const bf: f64 = @floatFromInt(pure.b);
+        const factor = 1.0 - w - bl;
+        return CssColor {
+            r: clampU8(rf * factor + w * 255.0),
+            g: clampU8(gf * factor + w * 255.0),
+            b: clampU8(bf * factor + w * 255.0),
+            a: a,
+        };
+    }
 
+    pub static fn fromOklab(l_val: f64, oklab_a: f64, oklab_b: f64, a: u8): CssColor {
+        const l = std.math.clamp(l_val, 0.0, 1.0);
         const l_ = l + 0.3963377774 * oklab_a + 0.2158037573 * oklab_b;
         const m_ = l - 0.1055613458 * oklab_a - 0.0638541728 * oklab_b;
         const s_ = l - 0.0894841775 * oklab_a - 1.2914855480 * oklab_b;
@@ -225,11 +338,22 @@ pub struct CssColor {
             g: linearToSrgbChannel(lin_g),
             b: linearToSrgbChannel(lin_b),
             a: a,
-            oklch_l: l,
-            oklch_c: c,
-            oklch_h: h_deg,
-            is_oklch: true,
         };
+    }
+
+    pub static fn fromOklch(l_val: f64, c_val: f64, h_deg: f64, a: u8): CssColor {
+        const l = std.math.clamp(l_val, 0.0, 1.0);
+        const c = if (c_val < 0.0) 0.0 else c_val;
+        const h_rad = h_deg * (std.math.pi / 180.0);
+        const oklab_a = c * @cos(h_rad);
+        const oklab_b = c * @sin(h_rad);
+
+        let col = CssColor.fromOklab(l, oklab_a, oklab_b, a);
+        col.oklch_l = l;
+        col.oklch_c = c;
+        col.oklch_h = h_deg;
+        col.is_oklch = true;
+        return col;
     }
 
     pub static fn parse(input: []const u8): CssColor? {
@@ -277,7 +401,7 @@ pub struct CssColor {
             return null;
         }
 
-        // 2. Functional notations: rgb(), rgba(), hsl(), hsla(), oklch()
+        // 2. Functional notations: rgb(), rgba(), hsl(), hsla(), hwb(), oklab(), oklch()
         if (open_paren := std.mem.indexOfScalar(u8, s, '(')) {
             if (s[s.len - 1] != ')') {
                 return null;
@@ -299,65 +423,73 @@ pub struct CssColor {
             }
 
             if (std.ascii.eqlIgnoreCase(fn_name, "hsl") || std.ascii.eqlIgnoreCase(fn_name, "hsla")) {
-                let h_tok = tokens[0];
-                if (std.mem.endsWith(u8, h_tok, "deg")) {
-                    h_tok = h_tok[0 .. h_tok.len - 3];
-                }
-                const h = parseFloatToken(h_tok)?;
-                const s_raw = tokens[1];
-                const l_raw = tokens[2];
-                const s_str = if (std.mem.endsWith(u8, s_raw, "%")) s_raw[0 .. s_raw.len - 1] else s_raw;
-                const l_str = if (std.mem.endsWith(u8, l_raw, "%")) l_raw[0 .. l_raw.len - 1] else l_raw;
-                const sat = parseFloatToken(s_str)?;
-                const lig = parseFloatToken(l_str)?;
+                const h = parseAngleDeg(tokens[0])?;
+                const sat = parsePctOrUnit(tokens[1], 100.0)?;
+                const lig = parsePctOrUnit(tokens[2], 100.0)?;
                 return CssColor.fromHsl(h, sat, lig, alpha);
             }
 
+            if (std.ascii.eqlIgnoreCase(fn_name, "hwb")) {
+                const h = parseAngleDeg(tokens[0])?;
+                const w = parsePctOrUnit(tokens[1], 100.0)?;
+                const bl = parsePctOrUnit(tokens[2], 100.0)?;
+                return CssColor.fromHwb(h, w, bl, alpha);
+            }
+
+            if (std.ascii.eqlIgnoreCase(fn_name, "oklab")) {
+                const l_val = parsePctOrUnit(tokens[0], 1.0)?;
+                const a_val = parsePctOrUnit(tokens[1], 0.4)?;
+                const b_val = parsePctOrUnit(tokens[2], 0.4)?;
+                return CssColor.fromOklab(l_val, a_val, b_val, alpha);
+            }
+
             if (std.ascii.eqlIgnoreCase(fn_name, "oklch")) {
-                const l_raw = tokens[0];
-                let l_val: f64 = 0.0;
-                if (std.mem.endsWith(u8, l_raw, "%")) {
-                    l_val = (parseFloatToken(l_raw[0 .. l_raw.len - 1])?) / 100.0;
-                } else {
-                    l_val = parseFloatToken(l_raw)?;
-                }
-                const c_val = parseFloatToken(tokens[1])?;
-                let h_tok = tokens[2];
-                if (std.mem.endsWith(u8, h_tok, "deg")) {
-                    h_tok = h_tok[0 .. h_tok.len - 3];
-                }
-                const h_val = parseFloatToken(h_tok)?;
+                const l_val = parsePctOrUnit(tokens[0], 1.0)?;
+                const c_val = parsePctOrUnit(tokens[1], 0.4)?;
+                const h_val = parseAngleDeg(tokens[2])?;
                 return CssColor.fromOklch(l_val, c_val, h_val, alpha);
             }
             return null;
         }
 
-        // 3. Standard CSS Named Colors
-        if (std.ascii.eqlIgnoreCase(s, "transparent")) return CssColor.rgba(0, 0, 0, 0);
-        if (std.ascii.eqlIgnoreCase(s, "black")) return CssColor.rgb(0, 0, 0);
-        if (std.ascii.eqlIgnoreCase(s, "white")) return CssColor.rgb(255, 255, 255);
-        if (std.ascii.eqlIgnoreCase(s, "red")) return CssColor.rgb(255, 0, 0);
-        if (std.ascii.eqlIgnoreCase(s, "green")) return CssColor.rgb(0, 128, 0);
-        if (std.ascii.eqlIgnoreCase(s, "lime")) return CssColor.rgb(0, 255, 0);
-        if (std.ascii.eqlIgnoreCase(s, "blue")) return CssColor.rgb(0, 0, 255);
-        if (std.ascii.eqlIgnoreCase(s, "yellow")) return CssColor.rgb(255, 255, 0);
-        if (std.ascii.eqlIgnoreCase(s, "cyan") || std.ascii.eqlIgnoreCase(s, "aqua")) return CssColor.rgb(0, 255, 255);
-        if (std.ascii.eqlIgnoreCase(s, "magenta") || std.ascii.eqlIgnoreCase(s, "fuchsia")) return CssColor.rgb(255, 0, 255);
-        if (std.ascii.eqlIgnoreCase(s, "orange")) return CssColor.rgb(255, 165, 0);
-        if (std.ascii.eqlIgnoreCase(s, "purple")) return CssColor.rgb(128, 0, 128);
-        if (std.ascii.eqlIgnoreCase(s, "rebeccapurple")) return CssColor.rgb(102, 51, 153);
-        if (std.ascii.eqlIgnoreCase(s, "cornflowerblue")) return CssColor.rgb(100, 149, 237);
-        if (std.ascii.eqlIgnoreCase(s, "gold")) return CssColor.rgb(255, 215, 0);
-        if (std.ascii.eqlIgnoreCase(s, "coral")) return CssColor.rgb(255, 127, 80);
-        if (std.ascii.eqlIgnoreCase(s, "gray") || std.ascii.eqlIgnoreCase(s, "grey")) return CssColor.rgb(128, 128, 128);
-        if (std.ascii.eqlIgnoreCase(s, "silver")) return CssColor.rgb(192, 192, 192);
-        if (std.ascii.eqlIgnoreCase(s, "teal")) return CssColor.rgb(0, 128, 128);
-        if (std.ascii.eqlIgnoreCase(s, "navy")) return CssColor.rgb(0, 0, 128);
+        // 3. Full W3C CSS Color 4 Named Colors (148 entries, binary search)
+        let lo: usize = 0;
+        let hi: usize = NAMED_COLOR_NAMES.len;
+        while (lo < hi) {
+            const mid = lo + (hi - lo) / 2;
+            const ord = std.ascii.orderIgnoreCase(s, NAMED_COLOR_NAMES[mid]);
+            if (ord == .eq) {
+                const rgba_val = NAMED_COLOR_RGBA[mid];
+                const r: u8 = ((rgba_val >> 24) & 0xFF) as u8;
+                const g: u8 = ((rgba_val >> 16) & 0xFF) as u8;
+                const b: u8 = ((rgba_val >> 8) & 0xFF) as u8;
+                const a: u8 = (rgba_val & 0xFF) as u8;
+                return CssColor.rgba(r, g, b, a);
+            }
+            if (ord == .lt) {
+                hi = mid;
+            } else {
+                lo = mid + 1;
+            }
+        }
         return null;
     }
 
     pub fn eql(other: CssColor): bool {
         return _.r == other.r && _.g == other.g && _.b == other.b && _.a == other.a;
+    }
+
+    pub fn withAlpha(new_a: u8): CssColor {
+        return CssColor {
+            r: _.r,
+            g: _.g,
+            b: _.b,
+            a: new_a,
+            oklch_l: _.oklch_l,
+            oklch_c: _.oklch_c,
+            oklch_h: _.oklch_h,
+            is_oklch: _.is_oklch,
+        };
     }
 
     pub fn toHex(out_buf: []u8): []const u8 {
@@ -372,6 +504,50 @@ pub struct CssColor {
             return std.fmt.bufPrint(out_buf, "rgb({d}, {d}, {d})", .{ _.r, _.g, _.b }) catch "";
         }
         return std.fmt.bufPrint(out_buf, "rgba({d}, {d}, {d}, {d})", .{ _.r, _.g, _.b, _.a }) catch "";
+    }
+
+    /// Converts sRGB color to HSL `[h_deg, s_pct, l_pct]`.
+    pub fn toHsl(out_h: *f64, out_s: *f64, out_l: *f64) {
+        const rf: f64 = @as(f64, @floatFromInt(_.r)) / 255.0;
+        const gf: f64 = @as(f64, @floatFromInt(_.g)) / 255.0;
+        const bf: f64 = @as(f64, @floatFromInt(_.b)) / 255.0;
+        const max_c = @max(rf, @max(gf, bf));
+        const min_c = @min(rf, @min(gf, bf));
+        const l = (max_c + min_c) / 2.0;
+        let h: f64 = 0.0;
+        let s: f64 = 0.0;
+        if (max_c != min_c) {
+            const d = max_c - min_c;
+            s = if (l > 0.5) (d / (2.0 - max_c - min_c)) else (d / (max_c + min_c));
+            if (max_c == rf) {
+                const h_off: f64 = if (gf < bf) 6.0 else 0.0;
+                h = (gf - bf) / d + h_off;
+            } else if (max_c == gf) {
+                h = (bf - rf) / d + 2.0;
+            } else {
+                h = (rf - gf) / d + 4.0;
+            }
+            h /= 6.0;
+        }
+        out_h.* = h * 360.0;
+        out_s.* = s * 100.0;
+        out_l.* = l * 100.0;
+    }
+
+    pub fn lighten(amount_pct: f64): CssColor {
+        let h: f64 = 0.0;
+        let s: f64 = 0.0;
+        let l: f64 = 0.0;
+        _.toHsl(&h, &s, &l);
+        return CssColor.fromHsl(h, s, std.math.clamp(l + amount_pct, 0.0, 100.0), _.a);
+    }
+
+    pub fn darken(amount_pct: f64): CssColor {
+        let h: f64 = 0.0;
+        let s: f64 = 0.0;
+        let l: f64 = 0.0;
+        _.toHsl(&h, &s, &l);
+        return CssColor.fromHsl(h, s, std.math.clamp(l - amount_pct, 0.0, 100.0), _.a);
     }
 
     /// Computes WCAG relative luminance in [0.0, 1.0].

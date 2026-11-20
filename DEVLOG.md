@@ -2,6 +2,13 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-20: Batch 5A `cap:css` 全面去 `@import("bun")` 化与 8 模块纯 CP 重构
+
+- **根因与清理决策**：前期审计发现 `lib/css/` 中有 94 个早期从 Bun 拷贝的文件包含 `@import("bun")` / `bun.*` / `../css_jsc/*`，完全无法脱离 Bun 编译运行。此次彻底清除全部 94 个死文件，将其中的高价值核心能力（Tokenizer、Color 4 149 命名色、递归下降 `calc()`、Selectors L4、`var()` 递归解析防环、厂商前缀与逻辑属性、CSS Nesting 展平与美化器）重构为 8 个零外部依赖、100% 可通过 `cpc` 独立编译的纯 CP 模块（共 4,157 行），并保留原有导出 API 100% 向后兼容。
+- **验收**：全仓 `lib/**/*.cp` `@import("bun")` 归零；`cpc check` 8/8 通过；`test_css.cp`(5/5) + `test_css_full.cp`(4/4) + `test_css_deep.cp`(7/7) 全部 16/16 PASS。
+
+---
+
 ## 2026-11-20: Batch 4 增量高价值 Bun 资产吸收（`cap:resolver`、`cap:aio` 与 `bundler`/`safety`/`patch` 深度补强）
 
 - **吸收思路与架构定位**：
