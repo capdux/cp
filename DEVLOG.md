@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 文档目录重构为 `doc/lib/<mod>.md`（非复数化 + 扁平化）
+
+- **重构成果**：响应用户建议将 `docs/` 改为单数 `doc/`，并将全部 85 份标准库手册从 `docs/<mod>/<mod>.md` 扁平化迁移至 `doc/lib/<mod>.md`，同步清理历史重复旧稿并全量重写 `cp_lib_ref.md`、`cp_agent_ref.md` 与 `GEMINI.md` 路径规范。
+
+---
+
 ## 2026-11-21: 新建 `cap:queue` 优先级/延迟/租约超时/死信任务队列引擎（5/5 PASS，自动动态挂载 `cap.queue`）
 
 - **落地成果**：`lib/queue/`（`job.cp`/`scheduler.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过，单轮完成回收、`cp_lib_ref.md` 更新与提交，并顶替派发 `cap:geo`（Haversine 测地线/Geohash 8 邻域/多边形判定与空间半径检索）。

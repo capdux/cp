@@ -2,6 +2,13 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 文档目录非复数化与扁平化重构：`docs/<mod>/<mod>.md` → `doc/lib/<mod>.md`
+
+- 将原 `docs/` 统一重构为单数 `doc/`，全部 85 份标准库文档扁平化归口至 [`doc/lib/`](file:///data/dev/cp/doc/lib/)（消除 1 文件同名子目录，清理 `docs/pack/zlig.md` 拼写残留及 `docs/stdlib/` 16 份历史重复旧稿，保留 4 份独有文档并迁入 `doc/lib/`）；
+- 全量同步更新 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)、[`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md) 与 [`GEMINI.md`](file:///data/dev/cp/GEMINI.md) 中的文档路径引用（`docs/` 引用 0 残留）。
+
+---
+
 ## [2026-11-21] - 新建 `cap:queue` 三堆 O(log N) 优先级/延迟/租约超时/死信任务队列引擎（5/5 PASS，自动动态挂载 `cap.queue`）
 
 - 新建 [`lib/queue/`](file:///data/dev/cp/lib/queue/index.cp)（`job.cp`、`scheduler.cp`、`index.cp`）：`JobPriority`/`RetryPolicy`/`Job` 与 `JobQueue`（ReadyHeap/DelayedHeap/LeaseHeap 三堆 O(log N) 调度、延迟到期回迁、僵尸租约回收、指数退避重试、DLQ 死信与 `requeueDeadLetter`）；同步 [`docs/queue/queue.md`](file:///data/dev/cp/docs/queue/queue.md) 与 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_queue_production_deep.cp`](file:///data/dev/cp/cap/test/test_queue_production_deep.cp) `-m` 5/5 PASS。

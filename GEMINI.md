@@ -287,7 +287,7 @@ hello/
 2. **CHANGELOG.md**: 对每个文件的修改、删除、新增，按日期追加记录，让我知道你新增、删除、修改了什么文件。**之前的记录绝不能丢失！**
 3. **DEVLOG.md**: 开发日志文件。按日期往后追加你每次执行任务解决问题的思路、原理及规划的执行方案与步骤，让我知道你为何这样执行。**绝不能删除之前的记录！**
 4. **三轨解耦规范手册体系（低 Token 高效架构）**：
-   - **`cp_lib_ref.md`（标准库唯一契约索引）**：独立承载全部内置标准库（`lib/*` / `cap:*` / `import cap from "cap"`）。**从 Bun 吸收或升级标准库时，只更新 `cp_lib_ref.md` 与 `docs/<mod>/<mod>.md`，严禁为此读写 `cp_ref.md` 或 `cp_agent_ref.md`**；
+   - **`cp_lib_ref.md`（标准库唯一契约索引）**：独立承载全部内置标准库（`lib/*` / `cap:*` / `import cap from "cap"`）。**从 Bun 吸收或升级标准库时，只更新 `cp_lib_ref.md` 与 `doc/lib/<mod>.md`，严禁为此读写 `cp_ref.md` 或 `cp_agent_ref.md`**；
    - **`cp_agent_ref.md`（智能体日常唯一语法契约）**：承载 CP 全部语法规范与 Top 29 禁手清单。**日常开发只需读取 `cp_agent_ref.md`，严禁在日常任务中读取或修改 1 万行的 `cp_ref.md`**；若确有语法变更，在 `cp_agent_ref.md` 对应章节标题末尾打上 `[SYNC_PENDING: YYYY-MM-DD]` 标记；
    - **`cp_ref.md`（面向程序员的权威全量手册）**：仅在后续单独发起的“规范同步任务”中，按 `cp_agent_ref.md` 中的 `[SYNC_PENDING]` 标记集中细化补全，日常开发零读写。
 
@@ -320,7 +320,7 @@ hello/
 
 1. **标准库专用索引手册（`cp_lib_ref.md`）**：
    - 独立承载全部官方标准库（`lib/*`、`cap:*`、`import cap from "cap"`）高密度 API 契约；
-   - 新增或升级标准库、从 Bun 吸收资产时，**仅更新 `cp_lib_ref.md` 与 `docs/<mod>/<mod>.md`**，完全不碰 `cp_ref.md` 与 `cp_agent_ref.md`。
+   - 新增或升级标准库、从 Bun 吸收资产时，**仅更新 `cp_lib_ref.md` 与 `doc/lib/<mod>.md`**，完全不碰 `cp_ref.md` 与 `cp_agent_ref.md`。
 2. **智能体唯一日常语法手册（`cp_agent_ref.md`）**：
    - 完整覆盖 CP 全部语法、类型、所有权、错误处理与 Top 29 绝对禁手清单；
    - 智能体日常开发与下游转译**只读 `cp_agent_ref.md` + `cp_lib_ref.md`**，无需读取 `cp_ref.md`；

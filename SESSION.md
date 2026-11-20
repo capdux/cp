@@ -58,3 +58,7 @@
 
 ### 2026-11-21（`cap:queue` 验收固化，顶替拉起 `cap:geo` 地理空间与 Geohash 检索引擎维持 3 路并行）
 - **执行成果**：子智能体 32（`lib/queue/`，5/5 PASS，含 `cap.queue` 动态挂载）经 `verify_module.sh` 一键验收回收并提交 Git；立即顶替派发子智能体 35（新建 `lib/geo/` Haversine/方位角/点在多边形内/Geohash 8 邻域与半径空间索引），与 `lib/graph/`、`lib/cluster/` 保持 3 路正交并行。
+
+### 2026-11-21（文档目录非复数化与扁平化重构：`docs/` -> `doc/lib/*.md`）
+- **用户指令**：将 `docs/` 改为单数 `doc/`，所有库文件说明统一扁平放入 `doc/lib/<mod>.md`，去掉文件同名目录。
+- **执行成果**：已通过 `git mv` 将全部 85 份已提交标准库文档迁移至 `doc/lib/*.md`，清理 `docs/pack/zlig.md` 及 `docs/stdlib/` 16 份历史重复稿，全量更新 `cp_lib_ref.md`、`cp_agent_ref.md` 与 `GEMINI.md` 路径引用（`docs/` 0 残留），并通知后台运行中的子智能体使用新路径，单次提交固化。

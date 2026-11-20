@@ -1025,8 +1025,8 @@ switch (msg) {
 
 ## 十二、 官方标准库协议矩阵 (`cap:*`)
 
-> **文档解耦说明**：全部官方标准库（`lib/*` / `cap:*` / `import cap from "cap"`）的高密度 API 契约已独立剥离至 **[`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)**，详细模块手册位于 `docs/<mod>/<mod>.md`。
-> - 新增或修改 `lib/*` 标准库时，**只需更新 `cp_lib_ref.md` 与 `docs/<mod>/<mod>.md`**，无需触碰本文件或 `cp_ref.md`。
+> **文档解耦说明**：全部官方标准库（`lib/*` / `cap:*` / `import cap from "cap"`）的高密度 API 契约已独立剥离至 **[`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)**，详细模块手册位于 `doc/lib/<mod>.md`。
+> - 新增或修改 `lib/*` 标准库时，**只需更新 `cp_lib_ref.md` 与 `doc/lib/<mod>.md`**，无需触碰本文件或 `cp_ref.md`。
 > - 本文件专注承载 **CP 完整语法规范与 Top 29 绝对禁手清单**；日常开发与下游转译只需查阅本文件，无需读取 `cp_ref.md`。
 > - 当修改本文件语法章节时，请在对应章节标题末尾打上 `[SYNC_PENDING: YYYY-MM-DD]` 标记，由独立任务定期批量同步细化至 `cp_ref.md`。
 
