@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:midi` Standard MIDI File 多轨音序编解码引擎（5/5 PASS，文档直写 `doc/lib/midi.md`）
+- **核心设计**：精确处理 MIDI Running Status 状态继承与 SysEx/Meta 事件清除边界；VLQ 限制最多 4 字节（`<= 0x0FFFFFFF`）并自动补齐 `End of Track` (`FF 2F 00`)，零泄漏。
+
+## 2026-11-21: 新建 `cap:quic` RFC 9000 QUIC 变长整数、包头与核心帧编解码引擎（5/5 PASS，文档直写 `doc/lib/quic.md`）
+- **核心设计**：按 RFC 9000 规范实现 1/2/4/8 字节大端序变长整数（严格拦截 `> 2^62 - 1` 溢出）及包头/帧载荷零泄漏解析，异常路径全链路 `errdefer` 自动回滚释放。
+
 ## 2026-11-21: 新建 `cap:wav` 纯 CP RIFF/WAVE PCM 音频容器编解码与重采样引擎（5/5 PASS，文档直写 `doc/lib/wav.md`）
 - **核心设计**：统一将五种 PCM/Float 采样格式归一化为交错 `f32` 缓冲并在编码端执行饱和钳位，跳过 `JUNK`/`LIST`/`fact` 等非关键块并严格校验 RIFF/WAVE 头与截断边界。
 

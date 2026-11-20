@@ -2,6 +2,14 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:midi` Standard MIDI File 多轨音序编解码引擎（5/5 PASS，自动动态挂载 `cap.midi`）
+- **新增标准库**：`lib/midi/{midi,index}.cp`，实现 SMF Format 0/1/2 多轨解析与编码，完整支持 1..4 字节 7-bit VLQ 变长时间戳、MIDI Running Status 复用/清除、`meta_tempo`/`sysex` 与 `ticksToMs` 换算。
+- **新增文档与测试**：`doc/lib/midi.md` 扁平文档与 `cap/test/test_midi_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
+## [2026-11-21] - 新建 `cap:quic` RFC 9000 QUIC 变长整数、包头与核心帧编解码引擎（5/5 PASS，自动动态挂载 `cap.quic`）
+- **新增标准库**：`lib/quic/{quic,index}.cp`，实现 RFC 9000 §16 62-bit 变长整数、§17 `LongHeader`/`ShortHeader`（校验 DCID/SCID `<= 20B` 与 `0x40` 固定位）及 §19 `PADDING`/`PING`/`ACK`/`CRYPTO`/`STREAM`/`MAX_DATA`/`CONNECTION_CLOSE` 帧编解码。
+- **新增文档与测试**：`doc/lib/quic.md` 扁平文档与 `cap/test/test_quic_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:wav` 纯 CP RIFF/WAVE PCM 音频容器编解码与重采样引擎（5/5 PASS，自动动态挂载 `cap.wav`）
 - **新增标准库**：`lib/wav/{wav,index}.cp`，实现 8/16/24/32-bit PCM 与 IEEE Float32 归一化 `decode`/`encode`（支持未知块跳过与奇数字节 Chunk 对齐），以及 `toMono`、`resampleLinear`、`peakAmplitude`/`normalizePeak` 音频原语。
 - **新增文档与测试**：`doc/lib/wav.md` 扁平文档与 `cap/test/test_wav_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

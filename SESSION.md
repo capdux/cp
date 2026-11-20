@@ -530,3 +530,9 @@
 
 ### 2026-11-21（`cap:wav` 验收提交，顶替拉起 `cap:midi` 维持 2 路常规并行）
 - **执行成果**：`lib/wav/`（5/5 PASS，`doc/lib/wav.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/midi/`（Standard MIDI File Format 0/1 多轨音序编解码与 VLQ/Running Status 引擎），与 `lib/quic/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:quic` 验收提交，顶替拉起 `cap:http3` 维持 2 路常规并行）
+- **执行成果**：`lib/quic/`（5/5 PASS，`doc/lib/quic.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/http3/`（RFC 9114 HTTP/3 帧编解码、流类型校验与 QPACK 静态表头部编码引擎），与 `lib/midi/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:midi` 验收合并提交，顶替拉起 `cap:bmp` 维持 2 路常规并行）
+- **执行成果**：`lib/midi/`（5/5 PASS，`doc/lib/midi.md`）经 `verify_module.sh` 一次性验收回收，与 `lib/quic/` 合并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/bmp/`（纯 CP BMP 位图图像编解码与 4 字节行对齐引擎），与 `lib/http3/` 维持 2 路常规并行。
