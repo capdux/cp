@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:lru` O(1) LRU 缓存淘汰、TTL 过期与字节权重配额引擎（5/5 PASS，自动动态挂载 `cap.lru`）
+- **新增标准库**：`lib/lru/{lru,index}.cp`，基于哈希表与连续槽位侵入式双向链表实现严格 $O(1)$ `LruCache<V>`，支持条目数与 `max_weight` 双上限淘汰、确定性 `now_ms` TTL 过期、`purgeExpired`、`resize` 与 `hitRate` 统计。
+- **新增文档与测试**：`doc/lib/lru.md` 扁平文档与 `cap/test/test_lru_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 升级加固 `cap:protobuf` Protocol Buffers Wire 格式动态编解码引擎（5/5 PASS，自动动态挂载 `cap.protobuf`）
 - **新增与重构**：`lib/protobuf/protobuf.cp` 实现 `ProtoWriter` / `ProtoReader`（Varint、ZigZag `sint32`/`sint64`、Fixed32/64、Packed Repeated、零拷贝切片访问、`skipField` 及 64 层嵌套 `MaxDepthExceeded` 防护），并与 `grpc.cp` 经 `index.cp` 统一导出。
 - **更新文档与测试**：`doc/lib/protobuf.md` 扁平文档与 `cap/test/test_protobuf_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
