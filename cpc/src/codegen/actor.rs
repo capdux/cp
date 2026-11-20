@@ -371,7 +371,7 @@ impl Codegen {
             return;
         }
         let func = raw_func;
-        let zig_name = if func.ident.sym == "main" {
+        let zig_name = if func.ident.sym == "main" && (!self.is_lib_mode || func.is_async) {
             "cp_main".to_string()
         } else if func.ident.sym == "test" {
             "cp_test".to_string()
@@ -431,6 +431,7 @@ impl Codegen {
             class_name.is_some() && self.current_receiver_mode != ReceiverMode::Static;
         self.is_main = class_name.is_none()
             && func.ident.sym == "main"
+            && !self.is_lib_mode
             && (!self.modular_mode || self.modular_is_entry);
         let ret_ty = func
             .return_type

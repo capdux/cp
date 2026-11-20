@@ -1582,10 +1582,7 @@ impl Codegen {
 
             let has_main =
                 self.fn_sigs.contains_key("main") && (!self.modular_mode || self.modular_is_entry);
-            if (!self.is_lib_mode || (self.modular_mode && self.modular_is_entry))
-                && !self.is_fuzz_mode
-                && has_main
-            {
+            if !self.is_lib_mode && !self.is_fuzz_mode && has_main {
                 let rt_global_io = self.rt_sym("global_io");
                 let rt_shutdown = self.rt_sym("global_runtime_shutdown");
                 let rt_worker_pool = self.rt_sym("_WorkerPoolRunner");

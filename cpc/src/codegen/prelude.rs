@@ -165,7 +165,7 @@ impl ModuleFeatures {
                 {
                     self.has_imported_ptr = true;
                 }
-                if func.ident.sym == "main" || func.is_async {
+                if (func.ident.sym == "main" && !self.is_lib_mode) || func.is_async {
                     self.needs_actors = true;
                 }
                 if let Some(ret) = &func.return_type {

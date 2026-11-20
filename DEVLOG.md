@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:radix` 压缩基数树与高性能分段前缀路由引擎（5/5 PASS，文档直写 `doc/lib/radix.md`）
+- **核心设计**：`RadixTree<T>` 在删除节点后自动检测非根孤立单子节点并合并边前缀，保持压缩树结构不变量；`RadixRouter<T>` 按 `/` 分段匹配并严格遵循 `static > :param > *wildcard` 优先级与回溯，保证 `std.testing.allocator` 零泄漏。
+
 ## 2026-11-21: 新建 `cap:xorfilter` 极省空间静态 Xor8 / Xor16 近似集合过滤器（5/5 PASS，文档直写 `doc/lib/xorfilter.md`）
 - **核心设计**：采用 SplitMix64 哈希混合与 3-peeling 超图剥离构建，自动排序去重并支持空集合边界；序列化采用 32 字节小端序自描述头（`"XOR8"`/`"XOR6"` + 版本 + `seed` + `block_length` + `item_count`），严格校验截断与非法头。
 
