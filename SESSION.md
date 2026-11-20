@@ -206,3 +206,6 @@
 
 ### 2026-11-21（`cap:mime` 验收固化，顶替以 `inherit` 拉起 `cap:raft` 维持 2 路并行）
 - **执行成果**：`lib/mime/`（5/5 PASS，含 `cap.mime` 动态挂载与 `doc/lib/mime.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/raft/`（确定性 Raft 共识状态机：Leader 选举、日志复制、`commitIndex` 多数派推进与任期退位），与 `lib/agentmem/` 保持 2 路正交并行。
+
+### 2026-11-21（`cap:agentmem` 验收固化，顶替以 `inherit` 拉起 `cap:zset` 维持 2 路并行）
+- **执行成果**：`lib/agentmem/`（5/5 PASS，含 `cap.agentmem` 动态挂载与 `doc/lib/agentmem.md`）经 `verify_module.sh` 一键验收回收并提交 Git；使用 `Model: "inherit"` 顶替派发 `lib/zset/`（跳表 SkipList + 哈希双索引有序集合与排行榜引擎），与 `lib/raft/` 保持 2 路正交并行。

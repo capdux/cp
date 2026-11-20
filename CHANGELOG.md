@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:agentmem` AI Agent 分层长期记忆与三因子联合召回引擎（5/5 PASS，自动动态挂载 `cap.agentmem`）
+
+- 新建 [`lib/agentmem/`](file:///data/dev/cp/lib/agentmem/index.cp)（`memory.cp`、`index.cp`）：`AgentMemory`（`Working`/`Episodic`/`Semantic` 三层模型、`Working` LRU/FIFO 上限自动淘汰、Recency 指数衰减 + Importance + Relevance 关键词/标签相关性三因子联合召回评分、`consolidate` 晋升、`prune` 遗忘及 `exportJsonl`/`importJsonl` 持久化往返）；文档 [`doc/lib/agentmem.md`](file:///data/dev/cp/doc/lib/agentmem.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_agentmem_production_deep.cp`](file:///data/dev/cp/cap/test/test_agentmem_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:mime` RFC 6838 MediaType、`Accept` 内容协商与 `MimeDb` 引擎（5/5 PASS，自动动态挂载 `cap.mime`）
 
 - 新建 [`lib/mime/`](file:///data/dev/cp/lib/mime/index.cp)（`mime.cp`、`db.cp`、`index.cp`）：`MediaType`（大小写归一化、引号参数、`+suffix` 匹配与 `toString`）、`ContentNegotiator`（RFC 9110 `Accept` `q=0..1` 权重与 specificity 精确排序）及 `MimeDb`（110+ 常见扩展名双向映射与 `isText`/`isCompressible`）；文档 [`doc/lib/mime.md`](file:///data/dev/cp/doc/lib/mime.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_mime_production_deep.cp`](file:///data/dev/cp/cap/test/test_mime_production_deep.cp) `-m` 5/5 PASS。
