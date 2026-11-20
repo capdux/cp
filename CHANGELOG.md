@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:pqueue` 索引优先队列、流式 Top-K 与双堆实时中位数引擎（5/5 PASS，自动动态挂载 `cap.pqueue`）
+- **新增标准库**：`lib/pqueue/{pqueue,index}.cp`，实现代际防 ABA `u32` 句柄 `IndexedMinHeap<V>`（支持 $O(\log N)$ 原地 `updatePriority` 与 `removeByHandle`）、$O(K)$ 内存 `BoundedTopK<V>` 与双堆 `StreamingMedian`。
+- **新增文档与测试**：`doc/lib/pqueue.md` 扁平文档与 `cap/test/test_pqueue_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:interval` 区间集合代数与 AVL 增强区间树重叠检索引擎（5/5 PASS，自动动态挂载 `cap.interval`）
 - **新增标准库**：`lib/interval/{interval,index}.cp`，实现半开区间 `[start, end)` 原语、`IntervalSet`（二分自动合并、`subtract` 挖洞分裂、`gaps` 空档提取、双指针 $O(M+N)$ `unionWith`/`intersectWith`/`differenceWith`）与 AVL 平衡增强 `IntervalTree<V>`。
 - **新增文档与测试**：`doc/lib/interval.md` 扁平文档与 `cap/test/test_interval_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

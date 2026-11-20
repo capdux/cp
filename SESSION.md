@@ -440,3 +440,6 @@
 
 ### 2026-11-21（`cap:interval` 验收提交，顶替拉起 `cap:fuzzy` 维持 2 路常规并行）
 - **执行成果**：`lib/interval/`（5/5 PASS，`doc/lib/interval.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/fuzzy/`（Damerau-Levenshtein / Jaro-Winkler / fzf 风格模糊评分与命中下标高亮引擎），与 `lib/pqueue/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:pqueue` 验收提交，顶替拉起 `cap:dsu` 维持 2 路常规并行）
+- **执行成果**：`lib/pqueue/`（5/5 PASS，`doc/lib/pqueue.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/dsu/`（路径压缩/按秩合并/可回溯撤销与带权差分约束并查集引擎），与 `lib/fuzzy/` 维持 2 路常规并行。

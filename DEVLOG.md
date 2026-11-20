@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:pqueue` 索引优先队列、流式 Top-K 与双堆实时中位数引擎（5/5 PASS，文档直写 `doc/lib/pqueue.md`）
+- **核心设计**：`IndexedMinHeap<V>` 采用 20-bit 槽位索引 + 12-bit 代际号的 `u32` 句柄消除槽位复用 ABA 问题；`BoundedTopK<V>` 与 `StreamingMedian` 分别以 $O(K)$ 堆与高低双堆实现流式 Top-K 与精确实时中位数计算。
+
 ## 2026-11-21: 新建 `cap:interval` 区间集合代数与 AVL 增强区间树重叠检索引擎（5/5 PASS，文档直写 `doc/lib/interval.md`）
 - **核心设计**：`Interval` 长度采用 `i128` 防止跨正负极值溢出；`IntervalSet` 维持规范化不相交有序不变量，`IntervalTree<V>` 采用 AVL 自平衡树维护子树 `max_end` 实现剪枝检索并全程零泄漏。
 
