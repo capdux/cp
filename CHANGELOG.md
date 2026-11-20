@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:lock` 逻辑读写锁、等待图死锁检测与 Fencing 租约锁引擎（5/5 PASS，自动动态挂载 `cap.lock`）
+
+- 新建 [`lib/lock/`](file:///data/dev/cp/lib/lock/index.cp)（`wait_graph.cp`、`lock.cp`、`index.cp`）：`WaitForGraph`（3 色迭代 DFS 环路检测）、`NamedLockTable`（多读者共享/排他写/同属主重入、`DeadlockDetected` 实时拦截回滚、`isResourceLocked`/`NotOwner`）及 `LeaseLockManager`（单调 `fencing_token`、TTL 过期抢占、`renewLease`/`releaseLease` 与 `validateToken` 防脑裂）；文档 [`doc/lib/lock.md`](file:///data/dev/cp/doc/lib/lock.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_lock_production_deep.cp`](file:///data/dev/cp/cap/test/test_lock_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:health` 云原生健康探针汇聚与有序优雅停机协调器（5/5 PASS，自动动态挂载 `cap.health`）
 
 - 新建 [`lib/health/`](file:///data/dev/cp/lib/health/index.cp)（`probe.cp`、`index.cp`）：`HealthRegistry`（Liveness/Readiness/Startup/All 探针聚合、`setDraining` 一键排空切 `Readiness` 为 503 同时保活 `Liveness`、RFC 8259 JSON 报告）及 `ShutdownCoordinator`（按 `priority` 降序严格幂等执行停机钩子）；文档 [`doc/lib/health.md`](file:///data/dev/cp/doc/lib/health.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_health_production_deep.cp`](file:///data/dev/cp/cap/test/test_health_production_deep.cp) `-m` 5/5 PASS。
