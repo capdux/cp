@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:prometheus` Prometheus / OpenMetrics 指标注册表与文本编解码引擎（5/5 PASS，自动动态挂载 `cap.prometheus`）
+- **新增标准库**：`lib/prometheus/{prometheus,index}.cp`，实现 `PromRegistry`（`Counter` / `Gauge` / `Histogram` 累计分桶 + `+Inf` + `_sum` + `_count` 与 `exportText`）及 `parseExposition` 文本反向解析，严格校验指标/标签名规则并支持 `\\`, `\"`, `\n` 转义往返。
+- **新增文档与测试**：`doc/lib/prometheus.md` 扁平文档与 `cap/test/test_prometheus_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:socks5` RFC 1928/1929 SOCKS5 代理协议 Wire 编解码引擎（5/5 PASS，自动动态挂载 `cap.socks5`）
 - **新增标准库**：`lib/socks5/{socks5,index}.cp`，实现客户端 Greeting / MethodChoice、RFC 1929 账密认证、IPv4/Domain/IPv6 请求回复及 UDP Associate 转发报文编解码与完整越界校验。
 - **新增文档与测试**：`doc/lib/socks5.md` 扁平文档与 `cap/test/test_socks5_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

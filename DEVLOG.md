@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:prometheus` Prometheus / OpenMetrics 指标注册表与文本编解码引擎（5/5 PASS，文档直写 `doc/lib/prometheus.md`）
+- **核心设计**：在注册期严格校验指标名、标签名（拒绝 `__` 保留前缀）、Counter 非负增量与 Histogram 严格升序桶边界；`exportText` 与 `parseExposition` 完整支持标签值转义往返与 `+Inf`/`-Inf`/`NaN` 解析。
+
 ## 2026-11-21: 新建 `cap:socks5` RFC 1928/1929 SOCKS5 代理协议 Wire 编解码引擎（5/5 PASS，文档直写 `doc/lib/socks5.md`）
 - **核心设计**：零网络系统调用实现完整 SOCKS5 握手、账密、请求/响应与 UDP 封装，严格拦截非法版本号、非预期 `ATYP`、超 255 字节域名及截断/尾随字节。
 

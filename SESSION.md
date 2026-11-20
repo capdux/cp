@@ -497,3 +497,6 @@
 
 ### 2026-11-21（`cap:socks5` 验收提交，顶替拉起 `cap:bson` 维持 2 路常规并行）
 - **执行成果**：`lib/socks5/`（5/5 PASS，`doc/lib/socks5.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/bson/`（MongoDB BSON 二进制文档与 12-byte ObjectId 编解码引擎），与 `lib/prometheus/` 维持 2 路常规并行。
+
+### 2026-11-21（`cap:prometheus` 验收提交，顶替拉起 `cap:stun` 维持 2 路常规并行）
+- **执行成果**：`lib/prometheus/`（5/5 PASS，`doc/lib/prometheus.md`）经 `verify_module.sh` 一次性验收回收并提交 Git；使用 `Model: "inherit"` 拉起正交替代子智能体 `lib/stun/`（RFC 5389/8489 STUN NAT 穿透消息与 XOR-MAPPED-ADDRESS / FINGERPRINT / MESSAGE-INTEGRITY 编解码引擎），与 `lib/bson/` 维持 2 路常规并行。
