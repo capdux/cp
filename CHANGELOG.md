@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:wasm_fmt` 纯 CP WebAssembly `.wasm` 二进制解析、LEB128 5 字节溢出防护与 Custom Section 构建引擎（支持 `cap.wasm_fmt` 自动动态挂载，详见 `doc/lib/wasm_fmt.md`）（5/5 PASS，自动动态挂载 `cap.wasm_fmt`）
+- **新增标准库**：`lib/wasm_fmt/{types,leb128,codec,index}.cp`，实现 ULEB128/SLEB128 严格 5 字节溢出拦截、全标准 Section 解析编码、段单调递增去重校验及 `findExport`/`addCustomSection`。
+- **新增文档与测试**：`doc/lib/wasm_fmt.md` 扁平文档与 `cap/test/test_wasm_fmt_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:onnx` 纯 CP ONNX ModelProto/GraphProto/TensorProto 二进制编解码、权重提取与三色 DFS 拓扑无环校验引擎（支持 `cap.onnx` 自动动态挂载，详见 `doc/lib/onnx.md`）（5/5 PASS，自动动态挂载 `cap.onnx`）
 - **新增标准库**：`lib/onnx/{wire,ir,codec,index}.cp`，实现 32 层深度防护确定性 Protobuf Wire 编解码、ONNX IR 模型（含动态符号轴与 `raw_data`/packed repeated 权重提取）及三色 DFS `validateGraphAcyclic`。
 - **新增文档与测试**：`doc/lib/onnx.md` 扁平文档与 `cap/test/test_onnx_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

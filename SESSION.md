@@ -79,3 +79,6 @@
 
 ### 2026-11-21（`cap:onnx` 验收，顶替拉起 `cap:dwarf` 维持 2 路常规并行）
 - **执行成果**：`lib/onnx/`（5/5 PASS，`doc/lib/onnx.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:dwarf` 维持 2 路常规并行
+
+### 2026-11-21（`cap:wasm_fmt` 验收，顶替拉起 `cap:sql_ast` 维持 2 路常规并行）
+- **执行成果**：`lib/wasm_fmt/`（5/5 PASS，`doc/lib/wasm_fmt.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:sql_ast` 维持 2 路常规并行

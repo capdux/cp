@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:wasm_fmt` 纯 CP WebAssembly `.wasm` 二进制解析、LEB128 5 字节溢出防护与 Custom Section 构建引擎（支持 `cap.wasm_fmt` 自动动态挂载，详见 `doc/lib/wasm_fmt.md`）（5/5 PASS，文档直写 `doc/lib/wasm_fmt.md`）
+- **核心设计**：`parseWasm` 严格校验标准 Section ID 单调递增与 Payload 边界，禁止重复标准段并拦截第 5 字节符号位溢出，全路径 `std.testing.allocator` 零泄漏。
+
 ## 2026-11-21: 新建 `cap:onnx` 纯 CP ONNX ModelProto/GraphProto/TensorProto 二进制编解码、权重提取与三色 DFS 拓扑无环校验引擎（支持 `cap.onnx` 自动动态挂载，详见 `doc/lib/onnx.md`）（5/5 PASS，文档直写 `doc/lib/onnx.md`）
 - **核心设计**：内置确定性 Protobuf Wire 读写器并严格执行 `CyclicGraph`/`DuplicateOutput` 与越界长度拦截，全路径通过 `std.testing.allocator` / `DebugAllocator` 零泄漏验证。
 
