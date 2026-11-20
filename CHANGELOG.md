@@ -1,3 +1,13 @@
+## [2026-11-20] - `cap:ws` RFC 6455 / RFC 7692 工业级 WebSocket 协议栈升级（3 新模块，5/5 PASS）
+
+### 标准库深度升级 (`lib/ws/`，0 `std.posix`，0 `@import("bun")`，100% 向后兼容)
+- 新增 [`lib/ws/subprotocol.cp`](file:///data/dev/cp/lib/ws/subprotocol.cp)：`SubprotocolNegotiator`（RFC 6455 §11.3.4 精确子协议协商）、`WsExtensionHeader`（扩展头解析与序列化）与 `CloseCodeValidator`（RFC 6455 §7.4.1 线缆关闭码与 UTF-8 关闭原因校验）；
+- 新增 [`lib/ws/permessage_deflate.cp`](file:///data/dev/cp/lib/ws/permessage_deflate.cp)：RFC 7692 `PerMessageDeflate`（协商响应头、`compressPayload`/`decompressPayload` 自动剥离/补回尾部 `0x00 0x00 0xFF 0xFF`、`MessageTooBig` 资源耗尽防护）；
+- 新增 [`lib/ws/session.cp`](file:///data/dev/cp/lib/ws/session.cp)：`WsSession` 完整状态机（`Connecting`/`Open`/`Closing`/`Closed`、掩码强制校验、超限帧/消息预检、压缩分片重组、控制帧穿插与自动 Pong、主动/被动 Close 握手与心跳追踪）；
+- 增量导出至 [`lib/ws/index.cp`](file:///data/dev/cp/lib/ws/index.cp)，同步 [`docs/ws/ws.md`](file:///data/dev/cp/docs/ws/ws.md)；新增 [`cap/test/test_ws_production_deep.cp`](file:///data/dev/cp/cap/test/test_ws_production_deep.cp)（单文件与 `-m` 模式均 5/5 PASS，既有 `test_ws.cp` 4/4 与 `test_md_html_json_ws_deep.cp` 4/4 零回归）。
+
+---
+
 ## [2026-11-20] - `cap:time` 工业级时间、Cron 调度与限流退避套件落地（5 模块，6/6 PASS）
 
 ### 新增标准库 (`lib/time/`，`cap:time`，0 `std.posix`，0 `@import("bun")`)

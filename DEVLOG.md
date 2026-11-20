@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-20: `cap:ws` RFC 6455 / RFC 7692 工业级 WebSocket 协议栈升级（5/5 PASS）
+
+- **落地成果**：在 [`lib/ws/`](file:///data/dev/cp/lib/ws/index.cp) 新增 `subprotocol.cp`（子协议/扩展头解析与 RFC 6455 §7.4.1 关闭码校验）、`permessage_deflate.cp`（RFC 7692 协商与 `0x00 0x00 0xFF 0xFF` 尾标压缩解压 + 解压膨胀防护）与 `session.cp`（`WsSession` 全状态机、掩码与超限帧/消息防护、分片重组与自动 Pong/Close 握手），单文件与 `-m` 模式均 5/5 PASS，既有测试全绿。
+
+---
+
 ## 2026-11-20: `cap:time` 工业级时间、Cron 调度与限流退避套件落地（5 模块，6/6 PASS）
 
 - **落地成果**：在 [`lib/time/`](file:///data/dev/cp/lib/time/index.cp) 落地 `clock.cp`、`iso8601.cp`、`cron.cp`、`ratelimit.cp` 与 `index.cp`，提供单调/墙钟、Howard Hinnant 纯算法 RFC 3339/ISO 8601 与 `IsoDuration`、POSIX 5 字段 Cron 调度器 `CronExpr.nextAfter` 及 `TokenBucket`/`SlidingWindowLimiter`/`ExponentialBackoff`，0 `@import("bun")`，0 `std.posix`，单文件与 `-m` 模式均 6/6 PASS。

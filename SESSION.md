@@ -2687,3 +2687,9 @@
 - **执行成果**：
   - 子智能体 8（`8453b6be`）完工回收：[`lib/time/`](file:///data/dev/cp/lib/time/index.cp) 新增 `clock.cp`、`iso8601.cp`、`cron.cp`、`ratelimit.cp` 与 `index.cp`（0 `std.posix`，0 `@import("bun")`，5/5 `// Source:` 合规），[`test_time_production_deep.cp`](file:///data/dev/cp/cap/test/test_time_production_deep.cp) 单文件与 `-m` 模式均 6/6 PASS；
   - 已更新热日志、双轨手册并提交 Git，同时无缝顶替拉起子智能体 9（`cap:http` 生产 Web 原语：RFC 8895 SSE 流解析与构建、RFC 7578 Multipart FormData、RFC 6265 CookieJar），与子智能体 7（`d56647d1`，`lib/ws/`）持续保持双路并行。
+
+### 2026-11-20（`cap:ws` RFC 6455/7692 协议栈升级验收固化，无缝拉起 `cap:logger` 结构化日志与分布式追踪升级子智能体）
+- **执行成果**：
+  - 子智能体 7（`d56647d1`）完工回收：[`lib/ws/`](file:///data/dev/cp/lib/ws/index.cp) 新增 `subprotocol.cp`、`permessage_deflate.cp`、`session.cp`（0 `std.posix`，0 `@import("bun")`，全量首行 `// Source:`），[`test_ws_production_deep.cp`](file:///data/dev/cp/cap/test/test_ws_production_deep.cp) 单文件与 `-m` 均 5/5 PASS，既有 `test_ws.cp`（4/4）与 `test_md_html_json_ws_deep.cp`（4/4）零回归；
+  - `task-4873`（`sync_cpc.sh release` 部署 `cap.time` 惰性路由）同步成功；
+  - 已更新热日志并提交 Git，无缝顶替拉起子智能体 10（`cap:logger` 结构化 JSON/Logfmt 日志器、W3C Trace Context / OpenTelemetry Span 追踪与环形采样器），与子智能体 9（`470ffeac`，`cap:http`）持续双路并行。

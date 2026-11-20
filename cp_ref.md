@@ -6154,7 +6154,7 @@ export class SocketContext<Handler> {
 | `cap:semver`      | Semver 2.0.0 规范点分标识符排序梯级、高级范围比较（`^`, `~`, `>=`, `<=`, `-`, `||`, `*`）、`maxSatisfying` 与原子版本递增 | **已全面实装** |
 | `cap:dotenv`      | 工业级 `.env` 词法/语法解析、`${VAR:-default}` 变量展开、`.env.<mode>.local` 级联覆盖状态机与环境变量注入 | **已全面实装** |
 | `cap:which`       | 跨平台可执行二进制定位器（支持 `PATH`、`PATHEXT` 扩展名探测、多路径全量检索 `whichAll` 与执行权限校验） | **已全面实装** |
-| `cap:ws`          | RFC 6455 现代 WebSocket 协议帧处理（Opcode、打包分片、4 字节极速异或掩码、控制帧） | **已全面实装** |
+| `cap:ws`          | RFC 6455 / RFC 7692 现代 WebSocket 全协议栈：Opcode/掩码/分片帧、子协议与扩展协商（`SubprotocolNegotiator`/`WsExtensionHeader`）、关闭码与 UTF-8 校验（`CloseCodeValidator`）、`PerMessageDeflate` 与完整会话状态机（`WsSession`） | **已全面实装** |
 | `cap:crypto`      | 工业级现代密码学全栈：CSPRNG、UUID v4、SHA/BLAKE3/SHA3、HMAC、PBKDF2/HKDF/Scrypt/Argon2id、AEAD（AES-128/256-GCM、ChaCha20/XChaCha20-Poly1305）、非对称（Ed25519/X25519/ECDSA P-256）、RFC 7519 JWT、RFC 7468 PEM、BoringSSL X.509 校验 | **已全面实装** |
 | `cap:safety`      | 生产级并发安全、硬件探测与崩溃诊断套件：线程 ID 极速获取（`thread_id`）、单线程属主防御锁（`ThreadLock`）、可重入并发读写竞态检测（`CriticalSection`）、非托管容器防混用（`CheckedAllocator`）、原生 ASAN 内存毒化（`asan`）、CPU 指令集运行时探测（`CpuFeatures`）、OOM 策略守卫（`OomGuard`）与崩溃报告格式化（`CrashReport`） | **已全面实装** |
 | `cap:security`    | 安全防护与防跨站请求伪造子系统：CSPRNG 随机 Nonce、HMAC-SHA256 签名与篡改校验、恒定时间防时序攻击比对（`constantTimeEql`）、多格式编解码（Base64Url, Base64, Hex） | **已全面实装** |
@@ -10392,7 +10392,7 @@ flowchart TD
 - **动态 FFI (`cap:ffi`)**：[`docs/ffi/ffi.md`](file:///data/dev/cp/docs/ffi/ffi.md)（`DynLib`、`CStructLayout` C-ABI 对齐）
 - **HTTP/1.1 & H2 & H3 全协议栈 (`cap:http`)**：[`docs/http/http.md`](file:///data/dev/cp/docs/http/http.md)（PicoHttpParser、Headers/Cookie/FormData/ETag/Mime、H2/HPACK、H3/Alt-Svc、`serve`/`fetch`）
 - **网络套接字与代理 (`cap:net`)**：[`docs/net/net.md`](file:///data/dev/cp/docs/net/net.md)（IPv4/IPv6 CIDR 与出站边界防护、TCP/UDP、POSIX Socket 选项/轮询、uSockets SafeSocket、SOCKS5/HTTP CONNECT 编解码、连接池）
-- **WebSocket 协议 (`cap:ws`)**：[`docs/ws/ws.md`](file:///data/dev/cp/docs/ws/ws.md)（RFC 6455 帧头编解码、控制帧与 XOR 掩码）
+- **WebSocket 协议 (`cap:ws`)**：[`docs/ws/ws.md`](file:///data/dev/cp/docs/ws/ws.md)（RFC 6455/7692 帧头与掩码、子协议/扩展协商、关闭码校验、`PerMessageDeflate` 与 `WsSession` 状态机）
 - **Radix-Tree 路由 (`cap:router`)**：[`docs/router/router.md`](file:///data/dev/cp/docs/router/router.md)（静态优先、`:param`/`*path` 动态捕获与 `RouteFormatter` 反向格式化）
 - **统一 I/O 流 (`cap:io`)**：[`docs/io/io.md`](file:///data/dev/cp/docs/io/io.md)（`Reader`/`Writer`、`BufferReader`/`BufferedWriter`、`copyStream`、`MaxBuf`、OS `Pipe`）
 - **系统调用与文件底层 (`cap:sys`)**：[`docs/sys/sys.md`](file:///data/dev/cp/docs/sys/sys.md)（Zig 0.17 `std.c` 文件句柄、`statx`、`copy_file_range`、临时文件与信号）

@@ -19,6 +19,26 @@ export {
     AssembleResult,
     WebSocketMessageAssembler,
 } from "./assembler";
+export {
+    SubprotocolList,
+    SubprotocolNegotiator,
+    WsExtensionParam,
+    WsExtensionHeader,
+    WsExtensionList,
+    CloseCodeValidator,
+} from "./subprotocol";
+export {
+    PMD_SYNC_TRAILER,
+    PerMessageDeflateConfig,
+    PerMessageDeflateNegotiation,
+    PerMessageDeflate,
+} from "./permessage_deflate";
+export {
+    WsSessionState,
+    WsSessionConfig,
+    WsSessionResult,
+    WsSession,
+} from "./session";
 
 import { FrameBuilder } from "./frame";
 import { Mask } from "./mask";
