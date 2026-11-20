@@ -29,3 +29,16 @@ export {
     ResolveResult,
     ModuleResolver,
 } from "./resolver";
+
+export {
+    MAX_DIGEST_LEN,
+    IntegrityError,
+    IntegrityTag,
+    Integrity,
+} from "./integrity";
+
+export {
+    HostedGitError,
+    GitHost,
+    HostedGitInfo,
+} from "./hosted_git";

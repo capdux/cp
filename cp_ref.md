@@ -6169,9 +6169,11 @@ export class SocketContext<Handler> {
 | `cap:sourcemap`   | Base64 VLQ/Varint 编解码、二分/动态行偏移表、二进制 InternalSourceMap 与 SourceMap v3 生成/反查 | **已全面实装** |
 | `cap:clap`        | 工业级命令行参数解析：POSIX 引号 Shell 词法分词、声明式语法、流式解析与编译期强类型提取 | **已全面实装** |
 | `cap:reflect`     | 编译期与运行时 `type_of`, `fields_of`, 结构体自省                      | **已全面实装** |
-| `cap:resolver`    | 工业级模块解析器与包配置套件：RFC 2397 `DataURL`、`PackageJson`（`exports`/`imports` 条件路由与通配符）、JSONC `TsConfigJson`（`paths` 别名重写）、`StatHash` 与 `ModuleResolver` | **已全面实装** |
+| `cap:resolver`    | 工业级模块解析器与包配置套件：RFC 2397 `DataURL`、`PackageJson`（`exports`/`imports` 条件路由与通配符）、JSONC `TsConfigJson`（`paths` 别名重写）、`StatHash`、`ModuleResolver`、W3C SRI `Integrity`（SHA-1/256/384/512 恒定时间校验）与 `HostedGitInfo`（GitHub/GitLab/Bitbucket/Gist/SourceHut 解析） | **已全面实装** |
 | `cap:aio`         | 异步 I/O 环形队列与进程监控套件：`ParentDeathWatchdog`（Linux `PR_SET_PDEATHSIG` + 竞态防护）与零堆固定容量 `AioQueue<CAP>`（Open/Read/Write/Pread/Pwrite/Stat/Fsync/Close/Unlink/Mkdir） | **已全面实装** |
 | `cap:bundler`     | 静态打包与单文件分发引擎：`BundleConfig`、`ChunkOrder`、`BundleV2`、`CompileTarget`（跨平台目标三元组）、`StandaloneModuleGraph`（单文件虚拟 FS 二进制编解码）与 `ModuleGraph`（三色 DFS 环检测、拓扑排序与 Tree-Shaking） | **已全面实装** |
+| `cap:meta`        | 编译期反射特征与无分支位操作套件：`bits`（2 的幂对齐、位计数/旋转、字节序打包、packed 位域运算）与 `traits`（Zig 0.17 `@typeInfo` 全类型特征探测、`ChildType`/`ItemType`） | **已全面实装** |
+| `cap:platform`    | 跨平台宿主环境与内核特性探测：`OsKind`/`ArchKind`/`Endianness`、`KernelVersion` 与 `PlatformInfo`（Linux `uname` 真实内核版本、`io_uring`/`copy_file_range`/`statx`/`pidfd` 特性开关、`/proc/self/exe`、`pageSize`、`cpuCount`） | **已全面实装** |
 
 ---
 
@@ -10406,8 +10408,10 @@ flowchart TD
 - **核心运行时与并发 (`cap:actor` / `beam` / `parallel` / `worker` / `reflect` / `serde` / `test` / `sqlite`)**：[`docs/runtime/runtime.md`](file:///data/dev/cp/docs/runtime/runtime.md)
 - **跨平台系统错误码 (`cap:errno`，新吸收)**：[`docs/errno/errno.md`](file:///data/dev/cp/docs/errno/errno.md)（65 个 POSIX/Linux 错误码、负 syscall 转换与语义判定）
 - **结构化诊断日志 (`cap:logger`，新吸收)**：[`docs/logger/logger.md`](file:///data/dev/cp/docs/logger/logger.md)（`Source`/`Loc`/`Range`/`DiagMsg`/`Log` 源码行摘录与 ANSI 标尺高亮）
-- **模块解析器与包配置 (`cap:resolver`，新吸收)**：[`docs/resolver/resolver.md`](file:///data/dev/cp/docs/resolver/resolver.md)（RFC 2397 `DataURL`、`PackageJson` 条件 `exports`/`imports`、JSONC `TsConfigJson` 别名、`StatHash` 与 `ModuleResolver`）
+- **模块解析器与包配置 (`cap:resolver`，新吸收)**：[`docs/resolver/resolver.md`](file:///data/dev/cp/docs/resolver/resolver.md)（RFC 2397 `DataURL`、`PackageJson` 条件 `exports`/`imports`、JSONC `TsConfigJson` 别名、`StatHash`、`ModuleResolver`、W3C SRI `Integrity` 与 `HostedGitInfo`）
 - **异步 I/O 队列与父进程看门狗 (`cap:aio`，新吸收)**：[`docs/aio/aio.md`](file:///data/dev/cp/docs/aio/aio.md)（`ParentDeathWatchdog` `PR_SET_PDEATHSIG` 与零堆 `AioQueue<CAP>` 环形 I/O 队列）
+- **编译期元编程与位操作 (`cap:meta`，新吸收)**：[`docs/meta/meta.md`](file:///data/dev/cp/docs/meta/meta.md)（无分支位运算/对齐/位域与 Zig 0.17 `@typeInfo` 编译期类型特征 `traits`）
+- **宿主平台与内核探测 (`cap:platform`，新吸收)**：[`docs/platform/platform.md`](file:///data/dev/cp/docs/platform/platform.md)（`KernelVersion`、Linux `uname` 真实内核特性探测与 `/proc/self/exe`）
 
 ---
 

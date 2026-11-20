@@ -1088,8 +1088,10 @@ switch (msg) {
 | `cap:napi` | `Napi`, `NapiError`, `NapiStatus`, `NapiValueType`, `NapiModule`, `NapiPropertyDescriptor`, `NapiAddonRegistry` | 纯 CP Node-API v9 C-ABI 布局与原生插件桥接（详见 `docs/napi/napi.md`） |
 | `cap:bigint` | `BigInt`, `BigInt256` | 任意精度大整数与 EVM/Web3 256 位定宽大数运算（详见 `docs/bigint/bigint.md`） |
 | `cap:bundler` | `BundleTarget`, `OutputFormat`, `ChunkKind`, `ChunkOrder`, `ChunkEntry`, `BundleConfig`, `BundleV2`, `TargetOs`, `TargetArch`, `TargetAbi`, `CompileTarget`, `StandaloneModuleEntry`, `StandaloneModuleGraph`, `ImportKind`, `ImportRecord`, `ModuleNode`, `ModuleGraph` | 静态打包配置、跨平台编译目标、单文件虚拟 FS 二进制图、拓扑/环检测与 Tree-Shaking（详见 `docs/bundler/bundler.md`） |
-| `cap:resolver` | `DataURL`, `ModuleType`, `PackageJson`, `TsConfigJson`, `ResolveKind`, `ResolvedKind`, `ResolveConditions`, `StatHash`, `ModuleResolver` | RFC 2397 DataURL、PackageJson `exports`/`imports` 条件路由、JSONC TsConfig 路径别名与通用模块解析引擎（详见 `docs/resolver/resolver.md`） |
+| `cap:resolver` | `DataURL`, `ModuleType`, `PackageJson`, `TsConfigJson`, `ResolveKind`, `ResolvedKind`, `ResolveConditions`, `StatHash`, `ModuleResolver`, `IntegrityTag`, `Integrity`, `GitHost`, `HostedGitInfo` | RFC 2397 DataURL、PackageJson `exports`/`imports`、JSONC TsConfig、W3C SRI 校验、HostedGit 与模块解析引擎（详见 `docs/resolver/resolver.md`） |
 | `cap:aio` | `ParentDeathWatchdog`, `AioOpKind`, `AioState`, `AioOp`, `AioCompletion`, `AioQueue<CAP>`, `AIO_O_*` | Linux `PR_SET_PDEATHSIG` 父进程看门狗与零堆固定容量 SQ/CQ 异步文件 I/O 环形队列（详见 `docs/aio/aio.md`） |
+| `cap:meta` | `isPowerOfTwo`, `nextPowerOfTwo`, `alignUp`, `alignDown`, `bitCount`, `packU16`/`packU32`/`packU64`, `bitfield*`, `isInt`, `isFloat`, `isSlice`, `isPointer`, `isOptional`, `isStruct`, `isEnum`, `hasField`, `hasDecl`, `ChildType`, `ItemType` | 编译期反射特征探测（适配 Zig 0.17 `@typeInfo`）与无分支位运算/位域工具集（详见 `docs/meta/meta.md`） |
+| `cap:platform` | `OsKind`, `ArchKind`, `Endianness`, `KernelVersion`, `PlatformInfo`（`currentOs`, `currentArch`, `pageSize`, `cpuCount`, `kernelVersion`, `supportsIoUring`, `supportsCopyFileRange`, `supportsStatx`, `supportsPidfd`, `executablePath`, `hostname`） | 宿主操作系统、Linux `uname` 真实内核版本/特性探测与 `/proc/self/exe`（详见 `docs/platform/platform.md`） |
 | `cap:test` | `test("desc", () => { expect_eq(a, b); })` | 原生单元测试与断言框架（详见 `docs/runtime/runtime.md`） |
 
 ---

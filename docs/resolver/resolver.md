@@ -24,6 +24,8 @@
 | `lib/resolver/package_json.cp` | `// Source: /data/dev/bun/src/resolver/package_json.zig` | `PackageJson` 结构化解析、`exports` 条件路由与通配映射、`#imports` 私有导入及依赖查询 |
 | `lib/resolver/tsconfig.cp` | `// Source: /data/dev/bun/src/resolver/tsconfig_json.zig` | JSONC `TsConfigJson` 解析（支持 `//`、`/* */` 与尾逗号）及 `paths` 通配别名展开 `resolveAlias` |
 | `lib/resolver/resolver.cp` | `// Source: /data/dev/bun/src/resolver/resolver.zig` | `ResolveKind`、`ResolveConditions`、`StatHash`（64 位文件指纹）与 `ModuleResolver` |
+| `lib/resolver/integrity.cp` | `// Source: /data/dev/bun/src/install/integrity.cp` | W3C SRI 完整性校验（`IntegrityTag` / `Integrity` 解析、多算法择强、SHA256/512 计算与恒定时间比对） |
+| `lib/resolver/hosted_git.cp` | `// Source: /data/dev/bun/src/install/hosted_git_info.cp` | Git 托管地址解析（`GitHost` / `HostedGitInfo`，支持简写、HTTPS、SSH 与 Tarball URL 生成） |
 | `lib/resolver/index.cp` | `// Source: /data/dev/bun/src/resolver/` | `cap:resolver` 对外统一导出入口 |
 
 ---
@@ -55,6 +57,23 @@
 - `ResolveConditions.defaultForKind(kind, is_browser)`：自动生成条件优先级链（`cp`、`bun`、`import`/`require`、`node`/`browser`、`default`）。
 - `StatHash`：`fromMetadata(size, mode, mtime, ino, path)`、`fromStat(st, path)`、`fromPath(path)`，基于 `XxHash64` 生成 64 位元数据缓存指纹。
 - `ModuleResolver.resolve(allocator, importer_dir, specifier, kind)`：按 `cap:*`/`node:*`/`bun:*` 内置协议 -> `data:` URL -> `#imports` -> `tsconfig` `paths` -> 相对/绝对路径扩展名与 `index.*` 探测 -> 向上遍历 `cap_modules` / `node_modules`（结合 `package.json` `exports` 条件路由）顺序完成解析。
+
+### 5. W3C Subresource Integrity (SRI) 完整性校验 (`Integrity` & `IntegrityTag`)
+
+- `IntegrityTag`：`Unknown`、`Sha1`、`Sha256`、`Sha384`、`Sha512`，按密码学强度分级（`Sha512 > Sha384 > Sha256 > Sha1`）。
+- `Integrity.parse(sri)` / `Integrity.parseMultiple(sri_list)`：解析单个 `"sha512-<base64>"` 或空格分隔的多算法 SRI 列表；`parseMultiple` 遵循 W3C SRI 规范跳过未知算法并自动择取强度最高的有效摘要。
+- `computeSha256(data)` / `computeSha512(data)` / `computeSha384(data)` / `computeSha1(data)`：基于 `std.crypto.hash` 计算摘要。
+- `verify(data)`：重新计算对应算法摘要，并通过恒定时间（Constant-Time）异或比对防止时序旁路攻击。
+- `format(buf)` / `formatAlloc(allocator)`：输出标准 `"<algo>-<base64>"` SRI 字符串。
+
+### 6. Git 托管仓库地址解析 (`GitHost` & `HostedGitInfo`)
+
+- `GitHost`：`GitHub`、`GitLab`、`Bitbucket`、`Gist`、`SourceHut`。
+- `HostedGitInfo.parse(input)`：零堆分配解析：
+  - GitHub 简写：`"user/repo#main"`
+  - 快捷协议：`"github:user/repo#v1.0"`、`"gitlab:org/sub/repo"`、`"bitbucket:user/repo"`、`"gist:id"`、`"sourcehut:~user/repo"`
+  - 标准 URL 与 SSH：`"https://github.com/user/repo.git#commit"`、`"git+ssh://git@gitlab.com/org/proj.git"`、`"git@github.com:user/repo.git#tag"`
+- URL 生成器：`httpsUrlAlloc(allocator)`、`tarballUrlAlloc(allocator)`、`sshUrlAlloc(allocator)`、`gitSshUrlAlloc(allocator)`、`shortcutAlloc(allocator)`。
 
 ---
 

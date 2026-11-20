@@ -2581,3 +2581,9 @@
 - **执行成果**：
   - Subagent 5B 完工回收：完成全部 18 个 Tier-1 模块对标 Bun 终审（11 模块确认完备，7 模块 `s3`/`dns`/`encoding`/`redis`/`url`/`which`/`watcher` 精准补缺并更新 7 份文档）；
   - 新增 [`cap/test/test_tier1_parity_deep.cp`](file:///data/dev/cp/cap/test/test_tier1_parity_deep.cp)（6/6 PASS）及 12 套存量回归测试全部 100% PASS，已同步双轨规范手册与热日志并执行干净 Git 提交固化；当前等待最后一路 Batch 6A（`cap:meta` + `cap:platform` + `cap:resolver` SRI/HostedGit）完成收官。
+
+### 2026-11-20（Batch 6A 收官验收固化：全仓 Bun 高价值资产吸收与对标审计 100% 圆满完成）
+- **执行成果**：
+  - Subagent 6A 完工回收：新增 [`lib/meta/`](file:///data/dev/cp/lib/meta/index.cp)（`bits` + Zig 0.17 `traits`）、[`lib/platform/`](file:///data/dev/cp/lib/platform/index.cp)（`KernelVersion` + Linux `uname` 真实内核特性探测 + `/proc/self/exe`），增量补强 [`lib/resolver/`](file:///data/dev/cp/lib/resolver/index.cp)（W3C SRI `Integrity` + `HostedGitInfo`）；
+  - 验收通过：`test_meta_platform_sri_deep.cp`（5/5 PASS）、`test_resolver_bundler_deep.cp`（7/7 PASS），全仓 `lib/**/*.cp` 100% 首行 `// Source:` 合规且 `@import("bun")` 归零；
+  - 已同步定稿双轨规范手册 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md) 与 [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md) 并执行干净收官 Git 提交。

@@ -1,3 +1,24 @@
+## [2026-11-20] - Batch 6A（收官批次）：新增 `cap:meta`、`cap:platform` 与 `cap:resolver` SRI/HostedGit，全仓 Bun 资产吸收与对标审核圆满收官
+
+### 新增与补强标准库 (Final Bun Assets Absorption)
+- **编译期元编程与位操作套件 (`cap:meta`)**：
+  - [`lib/meta/bits.cp`](file:///data/dev/cp/lib/meta/bits.cp)：2 的幂对齐、位计数/前导尾随零、位翻转/旋转、端序打包解包与 `@packed` 位域辅助运算；
+  - [`lib/meta/traits.cp`](file:///data/dev/cp/lib/meta/traits.cp)：适配 Zig 0.17 `@typeInfo` 的完整编译期类型特征探测（`isInt`/`isSlice`/`isPointer`/`hasField`/`hasDecl`/`ChildType`/`ItemType` 等）；
+  - [`lib/meta/index.cp`](file:///data/dev/cp/lib/meta/index.cp) & [`docs/meta/meta.md`](file:///data/dev/cp/docs/meta/meta.md)。
+- **宿主平台与内核特性探测 (`cap:platform`)**：
+  - [`lib/platform/os_info.cp`](file:///data/dev/cp/lib/platform/os_info.cp)：`OsKind`/`ArchKind`/`Endianness`、`KernelVersion` 与 `PlatformInfo`（Linux 下直调 `std.os.linux.uname` 解析真实内核版本、`io_uring`/`copy_file_range`/`statx`/`pidfd` 能力开关、`readlink("/proc/self/exe")` 与 `hostname`）；
+  - [`lib/platform/index.cp`](file:///data/dev/cp/lib/platform/index.cp) & [`docs/platform/platform.md`](file:///data/dev/cp/docs/platform/platform.md)。
+- **`cap:resolver` 增量补强**：
+  - [`lib/resolver/integrity.cp`](file:///data/dev/cp/lib/resolver/integrity.cp)：W3C SRI `Integrity`（SHA-1/256/384/512 计算、多值择优解析与恒定时间 XOR 校验）；
+  - [`lib/resolver/hosted_git.cp`](file:///data/dev/cp/lib/resolver/hosted_git.cp)：`HostedGitInfo`（GitHub/GitLab/Bitbucket/Gist/SourceHut 短写/HTTPS/SSH 解析与 Tarball URL 生成）；
+  - 增量导出至 [`lib/resolver/index.cp`](file:///data/dev/cp/lib/resolver/index.cp) 并更新 [`docs/resolver/resolver.md`](file:///data/dev/cp/docs/resolver/resolver.md)。
+
+### 全仓收官终检与双轨规范定稿
+- 新增 [`cap/test/test_meta_platform_sri_deep.cp`](file:///data/dev/cp/cap/test/test_meta_platform_sri_deep.cp)（5/5 PASS）及回归 `test_resolver_bundler_deep.cp`（7/7 PASS）；
+- 全仓 `lib/**/*.cp` 100% 首行 `// Source:` 溯源合规、0 处 `@import("bun")`；同步定稿 [`cp_ref.md`](file:///data/dev/cp/cp_ref.md) 与 [`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)。
+
+---
+
 ## [2026-11-20] - Batch 5B：Tier-1 18 大核心标准库终审体检与 7 模块缺口补齐
 
 ### 标准库终审与精准补缺 (Tier-1 Parity Audit & Gap Fill)
