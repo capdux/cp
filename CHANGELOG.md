@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:ical` RFC 5545 iCalendar `.ics` 解析生成与 `RRULE` 重复规则展开引擎（5/5 PASS，自动动态挂载 `cap.ical`）
+
+- 新建 [`lib/ical/`](file:///data/dev/cp/lib/ical/index.cp)（`ical.cp`、`index.cp`）：`IcalDateTime`（$O(1)$ Gregorian 闰年与世纪非闰年日历算术、Sakamoto `dayOfWeek`）、`RRule`（`DAILY`/`WEEKLY`+`BYDAY`/`MONTHLY`+`BYMONTHDAY`/`YEARLY`、`INTERVAL`/`COUNT`/`UNTIL`/`EXDATE` 展开与 `max_instances` 防护）及 `IcalCalendar`（75 字节行折行展开与 `toIcs` 往返）；文档 [`doc/lib/ical.md`](file:///data/dev/cp/doc/lib/ical.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_ical_production_deep.cp`](file:///data/dev/cp/cap/test/test_ical_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:zset` SkipList 跳表 + 哈希双索引有序集合引擎（5/5 PASS，自动动态挂载 `cap.zset`）
 
 - 新建 [`lib/zset/`](file:///data/dev/cp/lib/zset/index.cp)（`zset.cp`、`index.cp`）：`SortedSet`（32 层 `span` 跨度 SkipList + `StringHashMapUnmanaged` 双索引、`(score, member)` 同分字典序决胜、`NaN` 拦截、$O(\log N)$ `zrank`/`zrevrank`、负数切片 `zrange`/`zrevrange`、`zrangeByScore`/`zremRangeByScore`、`zpopMin`/`zpopMax` 与 `Sum`/`Min`/`Max` `unionInto` 聚合，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/zset.md`](file:///data/dev/cp/doc/lib/zset.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_zset_production_deep.cp`](file:///data/dev/cp/cap/test/test_zset_production_deep.cp) `-m` 5/5 PASS。

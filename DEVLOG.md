@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:ical` RFC 5545 iCalendar 与 RRULE 重复规则引擎（5/5 PASS，文档直写 `doc/lib/ical.md`）
+
+- **落地成果**：`lib/ical/`（`ical.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:svg`（零 C 依赖矢量 SVG 绘图画布与折线/柱状/饼图数据可视化引擎），与 `lib/intern/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:zset` 跳表 + 哈希双索引有序集合引擎（5/5 PASS，文档直写 `doc/lib/zset.md`）
 
 - **落地成果**：`lib/zset/`（`zset.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:intern`（高性能字符串驻留池 `StringInterner` + 双向唯一映射表 `BiMap` 引擎），与 `lib/ical/` 保持 2 路正交并行。
