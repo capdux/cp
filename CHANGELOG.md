@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:jsonpath` RFC 9535 JSONPath 编译器与过滤查询引擎（5/5 PASS，自动动态挂载 `cap.jsonpath`）
+
+- 新建 [`lib/jsonpath/`](file:///data/dev/cp/lib/jsonpath/index.cp)（`parser.cp`、`query.cp`、`index.cp`）：`JsonPath`（预编译校验 + 32 层深度守卫、点分/引号/负下标/通配符 `*`/多选并集/正负步长切片 `[s:e:step]`/递归下降 `..`/复合过滤表达式 `[?(@.a && !@.b)]`、Normalized Path 生成与 `evalJson` 便捷入口）；文档 [`doc/lib/jsonpath.md`](file:///data/dev/cp/doc/lib/jsonpath.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_jsonpath_production_deep.cp`](file:///data/dev/cp/cap/test/test_jsonpath_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:lock` 逻辑读写锁、等待图死锁检测与 Fencing 租约锁引擎（5/5 PASS，自动动态挂载 `cap.lock`）
 
 - 新建 [`lib/lock/`](file:///data/dev/cp/lib/lock/index.cp)（`wait_graph.cp`、`lock.cp`、`index.cp`）：`WaitForGraph`（3 色迭代 DFS 环路检测）、`NamedLockTable`（多读者共享/排他写/同属主重入、`DeadlockDetected` 实时拦截回滚、`isResourceLocked`/`NotOwner`）及 `LeaseLockManager`（单调 `fencing_token`、TTL 过期抢占、`renewLease`/`releaseLease` 与 `validateToken` 防脑裂）；文档 [`doc/lib/lock.md`](file:///data/dev/cp/doc/lib/lock.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_lock_production_deep.cp`](file:///data/dev/cp/cap/test/test_lock_production_deep.cp) `-m` 5/5 PASS。

@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:jsonpath` RFC 9535 JSONPath 编译器与查询引擎（5/5 PASS，文档直写 `doc/lib/jsonpath.md`）
+
+- **落地成果**：`lib/jsonpath/`（`parser.cp`/`query.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:agentmem`（AI Agent 分层长期记忆引擎：Working/Episodic/Semantic 三层记忆、三因子召回评分与巩固遗忘机制），与 `lib/mime/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:lock` 读写锁、死锁检测与 Fencing 租约锁引擎（5/5 PASS，文档直写 `doc/lib/lock.md`）
 
 - **落地成果**：`lib/lock/`（`wait_graph.cp`/`lock.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:mime`（RFC 6838 MediaType 解析、HTTP `Accept` 内容协商与 120+ 扩展名双向映射引擎），与 `lib/jsonpath/` 保持 2 路正交并行。
