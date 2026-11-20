@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:quant` 纯 CP AI Embedding 向量量化（Scalar Int8 对称/仿射、Binary 1-bit @popCount 汉明距离、Product Quantization K-Means & ADC 查表）引擎（支持 `cap.quant` 自动动态挂载，详见 `doc/lib/quant.md`）（5/5 PASS，自动动态挂载 `cap.quant`）
+- **新增标准库**：`lib/quant/{types,scalar,binary,pq,index}.cp`，实现 Int8 对称/仿射量化与 `dotInt8`、32 倍压缩 Binary 1-bit `@popCount` 汉明检索、以及 `trainPqKMeans`/`encodePq`/`buildAdcDistanceTable`/`adcDistance` PQ 子空间量化。
+- **新增文档与测试**：`doc/lib/quant.md` 扁平文档与 `cap/test/test_quant_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:bm25` 纯 CP Okapi BM25 倒排索引全文检索、邻接短语匹配与 RRF 混合检索融合引擎（支持 `cap.bm25` 自动动态挂载，详见 `doc/lib/bm25.md`）（5/5 PASS，自动动态挂载 `cap.bm25`）
 - **新增标准库**：`lib/bm25/{tokenizer,bm25,rrf,index}.cp`，实现停用词与 UTF-8/CJK 保留分词器、支持 `removeDocument` 与 `positions` 邻接短语检索的 `Bm25Index` 及多路无量纲 `rrfFuse`。
 - **新增文档与测试**：`doc/lib/bm25.md` 扁平文档与 `cap/test/test_bm25_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

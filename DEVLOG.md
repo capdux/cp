@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:quant` 纯 CP AI Embedding 向量量化（Scalar Int8 对称/仿射、Binary 1-bit @popCount 汉明距离、Product Quantization K-Means & ADC 查表）引擎（支持 `cap.quant` 自动动态挂载，详见 `doc/lib/quant.md`）（5/5 PASS，文档直写 `doc/lib/quant.md`）
+- **核心设计**：Binary 1-bit 利用 `@popCount` 实现单周期汉明距离；PQ K-Means 支持可配置子空间与确定性训练并在 ADC 查表阶段实现 O(M) 近似距离计算，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:bm25` 纯 CP Okapi BM25 倒排索引全文检索、邻接短语匹配与 RRF 混合检索融合引擎（支持 `cap.bm25` 自动动态挂载，详见 `doc/lib/bm25.md`）（5/5 PASS，文档直写 `doc/lib/bm25.md`）
 - **核心设计**：`Bm25Index` 在倒排表中记录词元位置列表支持二分邻接短语校验，并与 `rrfFuse` 协同为 `cap:hnsw` 混合检索提供词法打分基石，全路径零泄漏。
 

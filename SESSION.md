@@ -58,3 +58,6 @@
 
 ### 2026-11-21（`cap:bm25` 验收，顶替拉起 `cap:quant` 维持 2 路常规并行）
 - **执行成果**：`lib/bm25/`（5/5 PASS，`doc/lib/bm25.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:quant` 维持 2 路常规并行
+
+### 2026-11-21（`cap:quant` 验收，顶替拉起 `cap:safetensors` 维持 2 路常规并行）
+- **执行成果**：`lib/quant/`（5/5 PASS，`doc/lib/quant.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:safetensors` 维持 2 路常规并行
