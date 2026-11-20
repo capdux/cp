@@ -91,3 +91,6 @@
 
 ### 2026-11-21（`cap:cose` 验收，顶替拉起 `cap:webauthn` 维持 2 路常规并行）
 - **执行成果**：`lib/cose/`（5/5 PASS，`doc/lib/cose.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:webauthn` 维持 2 路常规并行
+
+### 2026-11-21（`cap:webauthn` 验收，顶替拉起 `cap:ssh_wire` 维持 2 路常规并行）
+- **执行成果**：`lib/webauthn/`（5/5 PASS，`doc/lib/webauthn.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:ssh_wire` 维持 2 路常规并行

@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:webauthn` 纯 CP FIDO2/WebAuthn Passkey 服务端注册与登录断言验证引擎（复用 `cap:cose`，详见 `doc/lib/webauthn.md`）（5/5 PASS，自动动态挂载 `cap.webauthn`）
+- **新增标准库**：`lib/webauthn/{types,auth_data,client_data,verify,index}.cp`（复用 `cap:cose`），实现 `AuthenticatorData` 二进制拆包与 `COSE_Key` 提取、`ClientDataJSON` 常量时间 Challenge/Origin 校验、`verifyRegistrationNone` 与支持 ES256 DER / EdDSA 64B 验签及 `signCount` 防克隆检测的 `verifyAssertion`。
+- **新增文档与测试**：`doc/lib/webauthn.md` 扁平文档与 `cap/test/test_webauthn_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:cose` 纯 CP RFC 9052/9053 COSE_Sign1 (EdDSA/ES256)、COSE_Mac0 (HS256) 与 COSE_Key CBOR 编解码引擎（支持 `cap.cose` 自动动态挂载，详见 `doc/lib/cose.md`）（5/5 PASS，自动动态挂载 `cap.cose`）
 - **新增标准库**：`lib/cose/{types,cbor,key,sign1,mac0,index}.cp`，实现确定性 CBOR 编解码、`CoseKey` (OKP Ed25519 / EC2 P-256 / Symmetric) 往返、`COSE_Sign1` (Tag 18 + `Sig_structure` + AAD) EdDSA/ES256 签名验签与 `COSE_Mac0` (Tag 17) 常量时间校验。
 - **新增文档与测试**：`doc/lib/cose.md` 扁平文档与 `cap/test/test_cose_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
