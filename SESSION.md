@@ -46,3 +46,6 @@
 
 ### 2026-11-20（`cap:xml` & `cap:metrics` 双路合并验收提交，顶替拉起 `cap:protobuf` 与 `cap:expr` 维持 3 路并行）
 - **执行成果**：子智能体 27（`lib/xml/` 5/5）与子智能体 25（`lib/metrics/` 5/5）双双经 `verify_module.sh` 一键验收回收（含动态 `cap.xml`/`cap.metrics` 挂载验证），合并单次提交 Git；立即顶替派发子智能体 29（`lib/protobuf/` Proto3 Wire & gRPC 分帧）与子智能体 30（`lib/expr/` 沙盒安全表达式与策略规则求值引擎），与 `lib/cbor/` 保持 3 路正交并行。
+
+### 2026-11-20（`cap:cbor` 验收固化，顶替拉起 `cap:kv` 崩溃安全 WAL 嵌入式存储引擎维持 3 路并行）
+- **执行成果**：子智能体 28（`lib/cbor/`，5/5 PASS，含 `cap.cbor` 动态挂载）经 `verify_module.sh` 一键验收回收并提交 Git；立即顶替派发子智能体 31（新建 `lib/kv/` CRC32 WAL + Bitcask 持久化 KV 存储与原子压缩），与 `lib/protobuf/`、`lib/expr/` 保持 3 路正交并行。

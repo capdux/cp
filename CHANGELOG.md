@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-20] - 新建 `cap:cbor` RFC 8949 CBOR & MessagePack 紧凑二进制序列化引擎（5/5 PASS，自动动态挂载 `cap.cbor`）
+
+- 新建 [`lib/cbor/`](file:///data/dev/cp/lib/cbor/index.cp)（`value.cp`、`cbor.cp`、`msgpack.cp`、`index.cp`）：共享 `BinValue`/`BinDocument` AST，完整支持 RFC 8949 CBOR Major 0-7（含 Float16/32/64、语义 Tag 与不定长编解码）及 MessagePack 全类型编解码，内置 64 层深度与截断/尾随字节防护；同步 [`docs/cbor/cbor.md`](file:///data/dev/cp/docs/cbor/cbor.md) 与 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_cbor_production_deep.cp`](file:///data/dev/cp/cap/test/test_cbor_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-20] - 新建 `cap:xml`（5/5）与 `cap:metrics`（5/5）双标准库落地（自动动态挂载 `cap.xml` / `cap.metrics`）
 
 - **`cap:xml`**（[`lib/xml/`](file:///data/dev/cp/lib/xml/index.cp)）：XML 1.0 DOM 解析（声明/注释/CDATA/自闭合/命名空间/实体解码与 128 层防护）、`findByPath`/`findAllChildren`/`innerText` 查询及紧凑/美化 `XmlWriter` 与 `XmlSerializer`，[`test_xml_production_deep.cp`](file:///data/dev/cp/cap/test/test_xml_production_deep.cp) `-m` 5/5 PASS；
