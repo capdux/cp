@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:parquet` 纯 CP Apache Parquet 列式容器读写、Thrift TCompactProtocol 与 RLE/Bit-Packed Hybrid 编解码引擎（支持 `cap.parquet` 自动动态挂载，详见 `doc/lib/parquet.md`）（5/5 PASS，文档直写 `doc/lib/parquet.md`）
+- **核心设计**：内置独立 Thrift TCompactProtocol 与 RLE/Bit-Packed Hybrid 编解码器实现零外部依赖 Parquet 列式读写，严格拦截缺失 `PAR1` 魔数、越界 Footer 长度与截断页，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:webauthn` 纯 CP FIDO2/WebAuthn Passkey 服务端注册与登录断言验证引擎（复用 `cap:cose`，详见 `doc/lib/webauthn.md`）（5/5 PASS，文档直写 `doc/lib/webauthn.md`）
 - **核心设计**：直接复用 `cap:cose` 解码 `AttestedCredentialData` 公钥；对 `challenge` 采用常量时间比对、`signCount` 实施防克隆递增拦截，全路径通过 `std.testing.allocator` 零泄漏验证。
 
