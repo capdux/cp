@@ -2665,3 +2665,9 @@
 - **执行成果**：
   - 子智能体 3（`7da54810`）完工回收：升级 [`cap/src/main.zig`](file:///data/dev/cp/cap/src/main.zig)，修复 `cap build` 失败假退出码 0 隐患、完善 `cap clean [--all]`、新增 `cap test -m/--modular` 模块化增量测试与 `cap build --timings` 四阶段耗时诊断；ReleaseFast 双路径原子安装至 `/data/dev/cp/cap/bin/cap` 与 `/root/.cap/bin/cap`（SHA-256 一致），`cap test -m cap/test/test_cap_lazy_hub.cp`（`total=7`，868ms）验证通过；
   - 已更新热日志并提交 Git，同时无缝顶替拉起子智能体 5（`cap:net` 工业网络升级：IPv4/IPv6 CIDR 与分类器、连接池、POSIX Socket 选项/轮询、RFC 1928 SOCKS5 编解码），与子智能体 4（`ec00b89b`，`cap:crypto`）持续保持双路并行。
+
+### 2026-11-20（`cap:crypto` 现代零 C 依赖密码学全栈升级验收固化，无缝拉起 `cap:pack` 归档与流式压缩升级子智能体）
+- **执行成果**：
+  - 子智能体 4（`ec00b89b`）完工回收：[`lib/crypto/`](file:///data/dev/cp/lib/crypto/index.cp) 新增 `asymmetric.cp`、`kdf.cp`、`jwt.cp`（净增 +1,167 行纯 CP，保留 `_boringssl.zig` 与既有 API 100% 兼容，0 `std.posix`，0 `@import("bun")`），覆盖 Ed25519/X25519/ECDSA P-256、HKDF/Scrypt/Argon2id、BLAKE3/SHA3/XChaCha20-Poly1305/AES-128-GCM、RFC 7519 JWT 与 RFC 7468 PEM；
+  - `test_crypto_production_deep.cp`（8/8）、`test_crypto_features.cp`（4/4）与 `test_crypto_sql_dns.cp`（5/5）共 17/17 全部 PASS，已同步双轨规范、热日志并提交 Git；
+  - 无缝顶替拉起子智能体 6（`cap:pack` 流式压缩与 ZIP/PAX-TAR 归档生产升级），与子智能体 5（`720ccd93`，`cap:net`）持续保持双路并行。

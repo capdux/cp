@@ -1,3 +1,13 @@
+## [2026-11-20] - `cap:crypto` 现代零 C 依赖密码学全栈生产升级（Ed25519/X25519/P-256/HKDF/Scrypt/Argon2id/BLAKE3/SHA3/XChaCha20/JWT/PEM）
+
+### 标准库深度升级 (`lib/crypto/`，+1,167 行纯 CP，保留 `_boringssl.zig` 与既有 API 100% 兼容)
+- 新增 [`lib/crypto/asymmetric.cp`](file:///data/dev/cp/lib/crypto/asymmetric.cp)（220 行）：基于 Zig 0.17 `std.crypto` 的 `Ed25519KeyPair`、`X25519KeyPair`（ECDH + 零公钥拒绝）与 `EcdsaP256KeyPair`（支持 33B/65B SEC-1 与 DER 签名）；
+- 新增 [`lib/crypto/kdf.cp`](file:///data/dev/cp/lib/crypto/kdf.cp)（533 行）：`hkdfExtract`/`hkdfExpand`/`hkdfDerive`（SHA-256/SHA-512）、`scryptDerive`、`argon2idDerive`/`argon2idHash`/`argon2idVerify`、`Blake3`/`Blake3Stream`、`Sha384`/`Sha3_256`/`Sha3_512`、`HmacSha384`/`HmacSha512`、`XChaCha20Poly1305` 与 `Aes128Gcm`；
+- 新增 [`lib/crypto/jwt.cp`](file:///data/dev/cp/lib/crypto/jwt.cp)（364 行）：RFC 7519 `Jwt`（HS256/HS384/HS512/EdDSA，恒定时间验签，拒绝 `alg: none` 与跨算法混淆）、RFC 7468 `Pem`（64 列折行编解码与标签校验）、`constantTimeEql`、`base64UrlEncode`/`Decode`；
+- 增量导出至 [`lib/crypto/index.cp`](file:///data/dev/cp/lib/crypto/index.cp)，更新 [`docs/crypto/crypto.md`](file:///data/dev/cp/docs/crypto/crypto.md) 与双轨规范手册；新增 [`cap/test/test_crypto_production_deep.cp`](file:///data/dev/cp/cap/test/test_crypto_production_deep.cp)（8/8 PASS），回归 `test_crypto_features.cp`（4/4）与 `test_crypto_sql_dns.cp`（5/5）全部 100% PASS。
+
+---
+
 ## [2026-11-20] - `cap` CLI 构建工具链可靠性与模块化测试升级：`cap test -m`、`cap clean [--all]`、`cap build --timings` 与失败退出码修复
 
 ### 构建工具链升级 (`cap/src/main.zig`，ReleaseFast 已双路径同步部署)

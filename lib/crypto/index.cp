@@ -55,3 +55,53 @@ export {
     checkX509ServerIdentity,
     checkServerIdentity,
 } from "./tls.cp";
+
+export {
+    Ed25519KeyPair,
+    X25519KeyPair,
+    EcdsaP256KeyPair,
+} from "./asymmetric.cp";
+
+export {
+    hkdfExtract,
+    hkdfExpand,
+    hkdfDerive,
+    hkdfDeriveAlloc,
+    hkdfSha512Extract,
+    hkdfSha512Expand,
+    hkdfSha512Derive,
+    scryptDerive,
+    scryptDeriveAlloc,
+    argon2idDerive,
+    argon2idHash,
+    argon2idVerify,
+    Blake3Stream,
+    Blake3,
+    blake3Raw,
+    blake3,
+    Sha384,
+    Sha3_256,
+    Sha3_512,
+    sha384Raw,
+    sha384,
+    sha3_256Raw,
+    sha3_256,
+    sha3_512Raw,
+    sha3_512,
+    HmacSha384,
+    HmacSha512,
+    hmacSha384Raw,
+    hmacSha384,
+    XChaCha20Poly1305,
+    Aes128Gcm,
+} from "./kdf.cp";
+
+export {
+    constantTimeEql,
+    base64UrlEncode,
+    base64UrlDecode,
+    JwtParts,
+    Jwt,
+    PemBlock,
+    Pem,
+} from "./jwt.cp";

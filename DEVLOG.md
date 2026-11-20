@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本项目采用冷热分离架构，本文件仅保留当日活跃记录。
 
+## 2026-11-20: `cap:crypto` 现代零 C 依赖密码学全栈升级（+1,167 行，8/8 PASS）
+
+- **落地成果**：在保持 `_boringssl.zig` 与既有 API 100% 向后兼容前提下，基于 Zig 0.17 `std.crypto` 在 `lib/crypto/` 新增 `asymmetric.cp`（Ed25519/X25519/ECDSA P-256）、`kdf.cp`（HKDF/Scrypt/Argon2id/BLAKE3/SHA3/HMAC-SHA384&512/XChaCha20-Poly1305/AES-128-GCM）与 `jwt.cp`（RFC 7519 JWT HS256-512/EdDSA + RFC 7468 PEM + 恒定时间比对），0 `@import("bun")`，0 `std.posix`，3 套测试共 17/17 全部 PASS。
+
+---
+
 ## 2026-11-20: `cap` CLI 构建工具链可靠性强化（失败非零退出码、`cap clean`、`cap test -m`、`cap build --timings`）
 
 - **落地成果**：在 [`cap/src/main.zig`](file:///data/dev/cp/cap/src/main.zig) 补齐 4 项高频开发体验与 CI 可靠性能力：修复 `cap build` 构建失败仍返回退出码 0 的缺陷；完善 `cap clean [--all]` 精准清理 `.cap/ws/` 及构建缓存；新增 `cap test -m/--modular` 模块级增量测试（复用 `.cap/test-mod/_lib/` 与 `__cp_runtime.zig`，缓存命中转译 3ms）；新增 `cap build --timings` 四阶段耗时拆解。ReleaseFast 原子同步至 `/data/dev/cp/cap/bin/cap` 与 `/root/.cap/bin/cap`，端到端全绿验收。

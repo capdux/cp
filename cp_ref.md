@@ -6155,7 +6155,7 @@ export class SocketContext<Handler> {
 | `cap:dotenv`      | 工业级 `.env` 词法/语法解析、`${VAR:-default}` 变量展开、`.env.<mode>.local` 级联覆盖状态机与环境变量注入 | **已全面实装** |
 | `cap:which`       | 跨平台可执行二进制定位器（支持 `PATH`、`PATHEXT` 扩展名探测、多路径全量检索 `whichAll` 与执行权限校验） | **已全面实装** |
 | `cap:ws`          | RFC 6455 现代 WebSocket 协议帧处理（Opcode、打包分片、4 字节极速异或掩码、控制帧） | **已全面实装** |
-| `cap:crypto`      | 工业级密码学体系：CSPRNG、UUID v4、散列哈希（SHA256/512/1/MD5/流式）、HMAC、PBKDF2、AEAD 对称加密（AES-256-GCM、ChaCha20-Poly1305）、BoringSSL X.509 校验 | **已全面实装** |
+| `cap:crypto`      | 工业级现代密码学全栈：CSPRNG、UUID v4、SHA/BLAKE3/SHA3、HMAC、PBKDF2/HKDF/Scrypt/Argon2id、AEAD（AES-128/256-GCM、ChaCha20/XChaCha20-Poly1305）、非对称（Ed25519/X25519/ECDSA P-256）、RFC 7519 JWT、RFC 7468 PEM、BoringSSL X.509 校验 | **已全面实装** |
 | `cap:safety`      | 生产级并发安全、硬件探测与崩溃诊断套件：线程 ID 极速获取（`thread_id`）、单线程属主防御锁（`ThreadLock`）、可重入并发读写竞态检测（`CriticalSection`）、非托管容器防混用（`CheckedAllocator`）、原生 ASAN 内存毒化（`asan`）、CPU 指令集运行时探测（`CpuFeatures`）、OOM 策略守卫（`OomGuard`）与崩溃报告格式化（`CrashReport`） | **已全面实装** |
 | `cap:security`    | 安全防护与防跨站请求伪造子系统：CSPRNG 随机 Nonce、HMAC-SHA256 签名与篡改校验、恒定时间防时序攻击比对（`constantTimeEql`）、多格式编解码（Base64Url, Base64, Hex） | **已全面实装** |
 | `cap:mem`         | `Arena`, `SharedTensor`, `Cow`, `CowSlice`, `TaggedPointer`, `TaggedPtr`, `MaxHeapAllocator`, `AllocationScope`（泄漏/峰值/重复与悬空释放检测）, `BufferFallbackAllocator<N>`（栈热路径+堆回退）, `MaybeOwned<T>`, `MemFdBuffer`（Linux `memfd_create` + `mmap`） | **已全面实装** |
@@ -10380,7 +10380,7 @@ flowchart TD
 - **字符串与 Unicode (`cap:string`)**：[`docs/string/string.md`](file:///data/dev/cp/docs/string/string.md)（15B 纯栈 `SmolStr`、UAX #29 `Utf8Grapheme`、`HashedString`）
 - **SIMD 硬件向量加速 (`cap:simd`)**：[`docs/simd/simd.md`](file:///data/dev/cp/docs/simd/simd.md)（16/32 字节 Highway 级字节扫描、无分支大小写转换与数值归约）
 - **工业级排序算法 (`cap:sort`)**：[`docs/sort/sort.md`](file:///data/dev/cp/docs/sort/sort.md)（PDQSort 自适应快排、稳定 BlockSort、堆排序与二分边界搜索）
-- **密码学与 TLS (`cap:crypto`)**：[`docs/crypto/crypto.md`](file:///data/dev/cp/docs/crypto/crypto.md)（SHA/HMAC/PBKDF2、AES-256-GCM/ChaCha20-Poly1305、`TlsHostnameVerifier` RFC 6125）
+- **密码学与 TLS (`cap:crypto`)**：[`docs/crypto/crypto.md`](file:///data/dev/cp/docs/crypto/crypto.md)（SHA/BLAKE3/SHA3/HMAC、PBKDF2/HKDF/Scrypt/Argon2id、AES-128/256-GCM/ChaCha20/XChaCha20-Poly1305、Ed25519/X25519/ECDSA P-256、RFC 7519 JWT/RFC 7468 PEM、`TlsHostnameVerifier` RFC 6125）
 - **数据库协议 (`cap:sql`)**：[`docs/sql/sql.md`](file:///data/dev/cp/docs/sql/sql.md)（PostgreSQL v3 / MySQL / SQLite3、参数绑定防注入）
 - **DNS 报文与 Hosts (`cap:dns`)**：[`docs/dns/dns.md`](file:///data/dev/cp/docs/dns/dns.md)（RFC 1035 帧头、`0xC0` 压缩指针、`HostsTable`、`DnsCache`）
 - **同步原语与线程池 (`cap:sync`)**：[`docs/sync/sync.md`](file:///data/dev/cp/docs/sync/sync.md)（Futex/Mutex/Condition/WaitGroup/Channel/UnboundedQueue/ConcurrentMap/ArcSlice）
