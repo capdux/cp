@@ -539,9 +539,12 @@ git status --porcelain cpc_dev/src
 
 1. **脚本化一键收尾**：主控回收验收完成的 `lib/<mod>/` 时，优先直接调用 `python3 scripts/register_stdlib.py ...` 单命令完成 `cp_lib_ref.md` + `CHANGELOG.md` + `DEVLOG.md` + `SESSION.md` 更新及可选 `git commit`，与 `kill` / `invoke_subagent` 同轮并行，将收尾压缩至 1 个回合。
 2. **热文档自动滚动归档**：当 `SESSION.md` / `CHANGELOG.md` / `DEVLOG.md` 超过 ~150 行时，调用 `python3 scripts/archive_hot_logs.py --keep 5` 将历史记录无损追加至 `*_H.md` 末尾，热文件始终保持极简轻量（< 50 行）。
-3. **子智能体 Prompt 内嵌 `cpc` 避坑清单**：派发子智能体时固定附带高频避坑约束（首行 `// Source:` 溯源、禁 `std.posix`/`@import("bun")`、禁自定义 `.release`/`.isLocked` 方法名、控制流条件带括号、子模块先过 `cpc check --brief` 再写 `index.cp`），消除试错编译轮数。
-4. **Bun 吸收强制“大纲索引 + 局部切片读取”**：子智能体读取 `/data/dev/bun/src/` 大文件时，先用 `rg -n "^(pub )?(fn|struct|enum|const)"` 提取符号行号再分段精读，禁止整文件吞入上下文。
-5. **批量合并写入 + 单次终态验证**：子模块 `cpc check --brief` 清零后，同回合并行写入 `index.cp`、`doc/lib/<mod>.md` 与 `cap/test/test_<mod>_production_deep.cp`，随后仅执行一次 `bash scripts/verify_module.sh` 完成全量验收。
+3. **子智能体“降耗硬核速查 + 免探索最小信息包”派发模板**：派发子智能体时直接在 Prompt 内嵌最小范式，消除子智能体 `read_file` 重复摸索规范（平均省去 8~11 次无效读盘）与 Zig 0.17 / `cpc` 编译试错轮数：
+   - **免读声明**：明确告知无需再读 `cp_agent_ref.md` 或翻阅其他 `lib/` 学格式；
+   - **唯一高频写法直给**：首行 `// Source:` 溯源；导出 `export { ... } from "./sub.cp";`；Zig 0.17 容器统一 `std.ArrayList(T).empty` + `append(alloc, item)` / `deinit(alloc)` / `toOwnedSlice(alloc)`（禁用旧 `.init(alloc)`）；控制流 `if (...)` / `while (...)` 必须带括号；禁用 `std.posix`、`@import("bun")` 与自定义 `.release(...)`/`.isLocked(...)` 方法名；
+   - **两段式批量工具流**：同回合并行 `write_file` 全部子模块 -> 运行 1 次 `cpc check --brief lib/<mod>/*.cp` 清零报错 -> 同回合并行 `write_file` `index.cp` + `doc/lib/<mod>.md`（4 段式）+ `cap/test/test_<mod>_production_deep.cp`（5 个 `test(...)`）-> 仅运行 1 次 `bash /data/dev/cp/scripts/verify_module.sh` 完成验收。
+4. **Bun 吸收强制“大纲索引 + 局部切片读取”**：子智能体读取 `/data/dev/bun/src/` 大文件时，先用 `rg -n "^(pub )?(fn|struct|enum|const)"` 提取符号行号再分段精读，彻底剔除 JSValue/Bun 内部耦合，禁止整文件吞入上下文。
+5. **主控空隙巡检与日志驱动持续调优（不闲着铁律）**：在等待 2 路并发子智能体推进的间隙（或收到用户巡检指令时），主控主动执行全库 `lib/` 合规扫描（`std.posix` / `@import("bun")` / `// Source:` / `doc/lib/*.md` / `cp_lib_ref.md` 完整性）、盘点 `/data/dev/bun/src/` 剩余待吸收清单，并统计分析近期子智能体 `transcript.jsonl`（步数、工具分布、报错重试点），持续把新发现的卡点反哺固化到本规范与派发模板中。
 
 ### 6. 配额超限安全冷却缓冲协议 (Quota Cooldown via Built-in schedule)
 
