@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:spell` SymSpell 对称删除、BK-Tree 与 Soundex 拼写纠错引擎（5/5 PASS，自动动态挂载 `cap.spell`）
+
+- 新建 [`lib/spell/`](file:///data/dev/cp/lib/spell/index.cp)（`spell.cp`、`index.cp`）：`damerauLevenshtein`（OSA 相邻换位滚动三行）、`soundex` 四码、`SymSpellIndex`（对称删除倒排索引与 `(distance, frequency, term)` 排序）及 `BkTree`（三角不等式剪枝与迭代检索，经 `std.testing.allocator` 零泄漏验证）；文档 [`doc/lib/spell.md`](file:///data/dev/cp/doc/lib/spell.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_spell_production_deep.cp`](file:///data/dev/cp/cap/test/test_spell_production_deep.cp) `-m` 5/5 PASS。
+
+---
+
 ## [2026-11-21] - 新建 `cap:ecs` Sparse-Set 世代防 ABA 实体组件系统 ECS 引擎（5/5 PASS，自动动态挂载 `cap.ecs`）
 
 - 新建 [`lib/ecs/`](file:///data/dev/cp/lib/ecs/index.cp)（`ecs.cp`、`index.cp`）：`EntityRegistry`（`free_list` 槽位复用 + `generation` 防 ABA）、`ComponentPool<T>`（Sparse-Set 稀疏映射 + `dense_entities`/`dense_data` 紧凑同步数组与 O(1) Swap-and-Pop 移除）及 `EcsQuery.collectJoined2`（小池驱动交集查询，经 `DebugAllocator` 零泄漏验证）；文档 [`doc/lib/ecs.md`](file:///data/dev/cp/doc/lib/ecs.md)，同步 [`cp_lib_ref.md`](file:///data/dev/cp/cp_lib_ref.md)，[`test_ecs_production_deep.cp`](file:///data/dev/cp/cap/test/test_ecs_production_deep.cp) `-m` 5/5 PASS。

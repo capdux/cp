@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:spell` SymSpell / BK-Tree / Soundex 拼写纠错引擎（5/5 PASS，文档直写 `doc/lib/spell.md`）
+
+- **落地成果**：`lib/spell/`（`spell.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:tween`（24+ Easing 缓动曲线、关键帧轨道插值与二阶弹簧阻尼物理动画引擎），与 `lib/noise/` 保持 2 路正交并行。
+
+---
+
 ## 2026-11-21: 新建 `cap:ecs` Sparse-Set 实体组件系统 ECS 引擎（5/5 PASS，文档直写 `doc/lib/ecs.md`）
 
 - **落地成果**：`lib/ecs/`（`ecs.cp`/`index.cp`）经 `verify_module.sh` 一键全绿通过（5/5，零内存泄漏），完成回收与提交，并以 `Model: "inherit"` 顶替派发 `cap:noise`（确定性 2D/3D Perlin 梯度噪声、Voronoi Cellular 噪声与 fBm 分形地形生成引擎），与 `lib/spell/` 保持 2 路正交并行。
