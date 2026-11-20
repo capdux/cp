@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:cel` 纯 CP Common Expression Language (CEL) 安全策略表达式编译、宏推导与有界沙盒求值引擎（支持 `cap.cel` 自动动态挂载，详见 `doc/lib/cel.md`）（5/5 PASS，文档直写 `doc/lib/cel.md`）
+- **核心设计**：采用非图灵完备有界 `max_steps` 沙盒求值器与严格类型规则（禁止隐式 Int+String），全路径通过 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:graphql` 纯 CP GraphQL 词法分词、递归下降 AST、块字符串解析、Fragment 循环检测与深度/复杂度防 DoS 引擎（支持 `cap.graphql` 自动动态挂载，详见 `doc/lib/graphql.md`）（5/5 PASS，文档直写 `doc/lib/graphql.md`）
 - **核心设计**：`validator.cp` 对命名 Fragment 展开执行三色环路检测与最大深度/复杂度预算拦截，彻底阻断恶意深嵌套 GraphQL 查询，全路径零泄漏。
 

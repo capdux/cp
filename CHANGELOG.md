@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:cel` 纯 CP Common Expression Language (CEL) 安全策略表达式编译、宏推导与有界沙盒求值引擎（支持 `cap.cel` 自动动态挂载，详见 `doc/lib/cel.md`）（5/5 PASS，自动动态挂载 `cap.cel`）
+- **新增标准库**：`lib/cel/{types,parser,eval,index}.cp`，实现强类型 `CelValue`、`CelEnv` 嵌套属性绑定、三元/短路/集合宏（`all`/`exists`/`exists_one`/`filter`/`map`）AST 编译与带 `max_steps`/除零/溢出/越界防护的沙盒求值器。
+- **新增文档与测试**：`doc/lib/cel.md` 扁平文档与 `cap/test/test_cel_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:graphql` 纯 CP GraphQL 词法分词、递归下降 AST、块字符串解析、Fragment 循环检测与深度/复杂度防 DoS 引擎（支持 `cap.graphql` 自动动态挂载，详见 `doc/lib/graphql.md`）（5/5 PASS，自动动态挂载 `cap.graphql`）
 - **新增标准库**：`lib/graphql/{lexer,ast,parser,validator,index}.cp`，实现全 GraphQL 词法（含块字符串 `"""..."""` 缩进剥离）、32 层深度防护递归下降 AST 解析、`validateDocument`（`CyclicFragment`/`UnknownFragment`）、`computeQueryDepth`/`computeQueryComplexity` 及 `formatDocument` 往返。
 - **新增文档与测试**：`doc/lib/graphql.md` 扁平文档与 `cap/test/test_graphql_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

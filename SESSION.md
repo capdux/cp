@@ -91,3 +91,6 @@
 
 ### 2026-11-21（`cap:graphql` 验收，顶替拉起 `cap:jq` 维持 2 路常规并行）
 - **执行成果**：`lib/graphql/`（5/5 PASS，`doc/lib/graphql.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:jq` 维持 2 路常规并行
+
+### 2026-11-21（`cap:cel` 验收，顶替拉起 `cap:mqtt` 维持 2 路常规并行）
+- **执行成果**：`lib/cel/`（5/5 PASS，`doc/lib/cel.md`）经 `verify_module.sh` 一次性验收回收；顶替拉起 `cap:mqtt` 维持 2 路常规并行
