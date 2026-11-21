@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:dns` DNS 协议解析与策略判定统一主包（含 `caa`/`name`/`rtype`/`srv`/`txt`/`wire`/`doh`/`packet`/`records`）（5/5 PASS，自动动态挂载 `cap.dns`）
+- **方案 A 收敛 Wave 1 (`dns_*` -> `cap:dns`)**：将 6 个 `dns_*` 散装目录合并收敛至 `lib/dns/{caa,name,rtype,srv,txt,wire}.cp` 并由 `lib/dns/index.cp` 零破坏聚合导出，更新 `doc/lib/dns.md` 与 6 个测试（含原 `test_dns_production_deep.cp` 共 7/7 PASS），删除 6 个旧目录与旧文档。
+
+## [2026-11-22] - 新建 `cap:sys` 系统底层信息与 Linux `/etc/*` 解析统一主包（含 `group`/`protocols`/`services`/`shells`）（5/5 PASS，自动动态挂载 `cap.sys`）
+- **方案 A 收敛 Wave 1 (`etc_*` -> `cap:sys`)**：将 `etc_group`、`etc_protocols`、`etc_services`、`etc_shells` 4 个散装目录合并收敛至 `lib/sys/{group,protocols,services,shells}.cp` 并由 `lib/sys/index.cp` 统一导出，同步更新 `doc/lib/sys.md` 与 4 个深度测试（4/4 PASS），删除 4 个旧目录与旧文档。
+
 ## [2026-11-22] - 新建 `cap:ansi` ANSI 终端控制序列统一主包（OSC 8 超链接、SGR 16/256/TrueColor 样式、转义剥离与可见宽度）（5/5 PASS，自动动态挂载 `cap.ansi`）
 - **方案 A 收敛 Wave 1 (`cap:ansi`)**：将 `ansi_link`、`ansi_sgr`、`ansi_strip`、`ansi_style` 4 个散装目录合并收敛至 `lib/ansi/{link,sgr,strip,style,index}.cp` 与 `doc/lib/ansi.md`，消除重复导出并更新全部 4 个深度测试（4/4 PASS），删除 4 个旧目录与旧文档。
 

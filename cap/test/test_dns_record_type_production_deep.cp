@@ -4,9 +4,9 @@ import {
     DnsRrType,
     DnsRcode,
     DnsClass,
-    SrvRecord,
+    RrSrvRecord as SrvRecord,
     MxRecord,
-} from "cap:dns_record_type";
+} from "cap:dns";
 
 test("1. DnsRrType round-trips u16 codes and case-insensitive names", () => {
     const t_a = DnsRrType.fromU16(1) ?? unreachable;

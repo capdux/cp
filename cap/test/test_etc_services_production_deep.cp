@@ -3,7 +3,7 @@ import {
     EtcServicesIter,
     findServicePort,
     findServiceByPort,
-} from "cap:etc_services";
+} from "cap:sys";
 import { test, expect, expect_eq } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {

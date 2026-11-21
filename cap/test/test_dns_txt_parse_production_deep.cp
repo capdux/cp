@@ -7,7 +7,7 @@ import {
     DmarcRecord,
     SpfQualifier,
     SpfIter,
-} from "cap:dns_txt_parse";
+} from "cap:dns";
 
 test("1. TxtTagIter and findTxtTag parse semicolon-delimited DKIM/BIMI TXT records", () => {
     const dkim = "v=DKIM1; k=rsa; t=s; p=MIGfMA0GCSqGSIb3DQEBAQUAA4==; ; malformed_no_eq;";

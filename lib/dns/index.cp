@@ -92,3 +92,70 @@ export {
     DEFAULT_ATTEMPTS,
     ResolvConf,
 } from "./resolv_conf.cp";
+
+export {
+    CaaTag,
+    CaaRecord as CaaPolicyRecord,
+    isCaAuthorized,
+} from "./caa.cp";
+
+export {
+    isValidDnsLabel,
+    isValidHostname,
+    encodeWireName,
+    decodeWireName,
+    isSubdomainOf,
+    normalizeHostname,
+} from "./name.cp";
+
+export {
+    DnsRrType,
+    DnsRcode,
+    DnsClass,
+    SrvRecord as RrSrvRecord,
+    MxRecord,
+} from "./rtype.cp";
+
+export {
+    SrvWireHeader,
+    SrvRecord as SrvEntry,
+    SrvServiceName,
+    compareSrvOrder,
+    selectSrvByRoll,
+} from "./srv.cp";
+
+export {
+    TxtTag,
+    TxtTagIter,
+    findTxtTag,
+    DmarcPolicy,
+    DmarcRecord,
+    SpfQualifier,
+    SpfTerm,
+    SpfIter,
+} from "./txt.cp";
+
+export {
+    DNS_HEADER_LEN,
+    DNS_MAX_LABEL_LEN,
+    DNS_MAX_NAME_LEN,
+    DNS_MAX_POINTER_JUMPS,
+    DnsWireError,
+    DnsOpcode,
+    DnsRcode as WireDnsRcode,
+    DnsRecordType,
+    DnsClass as WireDnsClass,
+    DnsHeader as WireDnsHeader,
+    DnsQuestion as WireDnsQuestion,
+    MxData,
+    SrvData,
+    SoaData,
+    DnsRdata,
+    DnsResourceRecord as WireResourceRecord,
+    DnsPacket,
+    DecodedName,
+    decodeDnsName,
+    encodeDnsName,
+    encodeDnsPacket,
+    decodeDnsPacket,
+} from "./wire.cp";

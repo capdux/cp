@@ -283,3 +283,9 @@
 
 ### 2026-11-22（`cap:ansi` 验收，方案 A Wave 1：`cap:ansi` 4 合 1 收敛落地（4/4 PASS），消除 4 个长下划线顶层目录）
 - **执行成果**：`lib/ansi/`（5/5 PASS，`doc/lib/ansi.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 1：`cap:ansi` 4 合 1 收敛落地（4/4 PASS），消除 4 个长下划线顶层目录
+
+### 2026-11-22（`cap:sys` 验收，方案 A Wave 1：`etc_*` 4 目录收敛至 `cap:sys`（4/4 PASS），已派发 Wave 2 `cli_*` -> `cap:cli` 与 `proc_*` -> `cap:sys`）
+- **执行成果**：`lib/sys/`（5/5 PASS，`doc/lib/sys.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 1：`etc_*` 4 目录收敛至 `cap:sys`（4/4 PASS），已派发 Wave 2 `cli_*` -> `cap:cli` 与 `proc_*` -> `cap:sys`
+
+### 2026-11-22（`cap:dns` 验收，方案 A Wave 1 全部完工：`ansi_*`(4) + `etc_*`(4) + `dns_*`(6) 共消除 14 个长下划线顶层目录！Wave 2 三路并行（`cli_*`/`proc_*`/`semver_*`）全面推进）
+- **执行成果**：`lib/dns/`（5/5 PASS，`doc/lib/dns.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 1 全部完工：`ansi_*`(4) + `etc_*`(4) + `dns_*`(6) 共消除 14 个长下划线顶层目录！Wave 2 三路并行（`cli_*`/`proc_*`/`semver_*`）全面推进

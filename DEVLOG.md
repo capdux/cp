@@ -1,3 +1,9 @@
+## 2026-11-22: 新建 `cap:dns` DNS 协议解析与策略判定统一主包（含 `caa`/`name`/`rtype`/`srv`/`txt`/`wire`/`doh`/`packet`/`records`）（5/5 PASS，文档直写 `doc/lib/dns.md`）
+- **收敛要点**：消除 `CaaRecord`/`SrvRecord`/wire 类型重名冲突（聚合别名为 `CaaPolicyRecord`/`SrvEntry`/`RrSrvRecord`/`WireDns*`），全库 `cap:dns_` 引用清零。
+
+## 2026-11-22: 新建 `cap:sys` 系统底层信息与 Linux `/etc/*` 解析统一主包（含 `group`/`protocols`/`services`/`shells`）（5/5 PASS，文档直写 `doc/lib/sys.md`）
+- **收敛要点**：4 个 `/etc/*` 解析器与既有 `cap:sys` 零符号冲突合并；全库 `cap:etc_` 引用清零。
+
 ## 2026-11-22: 新建 `cap:ansi` ANSI 终端控制序列统一主包（OSC 8 超链接、SGR 16/256/TrueColor 样式、转义剥离与可见宽度）（5/5 PASS，文档直写 `doc/lib/ansi.md`）
 - **收敛要点**：消除 `ansi_strip` 与 `ansi_style` 重复导出的 `stripAnsi`/`hasAnsi`，统一由 `lib/ansi/strip.cp` 提供完整实现；全库 `cap:ansi_` 引用清零。
 

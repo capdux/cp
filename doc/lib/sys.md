@@ -33,6 +33,10 @@
 | `lib/sys/process.cp` | `// Source: /data/dev/bun/src/runtime/api/bun/spawn.cp & /data/dev/bun/src/platform/linux.cp` | `PosixSpawn`（支持 `cwd`/`envp`/`stdin_fd`/`stdout_fd`/`stderr_fd`/`detached`/`new_process_group`/`pdeathsig`/`search_path` 与子进程 errno 管道回传）、`WaitPidResult`/`waitpid`/`kill`、时钟与硬件自省 |
 | `lib/sys/tmp.cp` | `// Source: /data/dev/bun/src/sys/tmp.cp` | `getTempDir` / `makeTempFile` / `makeTempDir` / `removeFile` / `removeDir` |
 | `lib/sys/signal.cp` | `// Source: /data/dev/bun/src/sys/SignalCode.cp` | 30 个标准 POSIX `Signal` 枚举、`description`、`toExitCode`、`fromNumber`、`fromName` |
+| `lib/sys/group.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /etc/group Parser)` | Linux `/etc/group` 零分配流式解析与成员查询：`GroupEntry`、`GroupMemberIter`、`EtcGroupIter`、`findGroupByName`、`findGroupByGid`、`isUserInGroup` |
+| `lib/sys/protocols.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /etc/protocols Parser)` | Linux `/etc/protocols` IP 协议号/别名零分配双向查询：`ProtocolEntry`、`EtcProtocolsIter`、`findProtocolNumber`、`findProtocolByNumber` |
+| `lib/sys/services.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /etc/services Parser)` | Linux `/etc/services` 网络服务名与端口/协议零分配双向查询：`ServiceEntry`、`EtcServicesIter`、`findServicePort`、`findServiceByPort` |
+| `lib/sys/shells.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /etc/shells Parser)` | Linux `/etc/shells` 合法登录 Shell 路径清单零分配解析与安全校验：`parseShellLine`、`EtcShellsIter`、`isAllowedShell`、`findShellByBasename`、`countShells`、`isNologinShell` |
 | `lib/sys/index.cp` | `// Source: /data/dev/bun/src/sys/sys.zig & /data/dev/bun/src/sys/Error.cp` | `cap:sys` 统一导出、`Sys`/`sys` 命名空间（含 `Sys.pipe`/`Sys.pipe2`/`Sys.dup`/`Sys.dup2`/`Sys.setAffinity`/`Sys.Lib`） |
 
 ---

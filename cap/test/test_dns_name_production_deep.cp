@@ -7,7 +7,7 @@ import {
     decodeWireName,
     isSubdomainOf,
     normalizeHostname,
-} from "cap:dns_name";
+} from "cap:dns";
 
 test("1. isValidDnsLabel and isValidHostname enforce RFC 1035 / RFC 1123 rules", () => {
     expect_eq(isValidDnsLabel("api"), true);

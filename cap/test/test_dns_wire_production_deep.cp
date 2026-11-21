@@ -5,11 +5,11 @@ import cap from "cap";
 import {
     DnsWireError,
     DnsRecordType,
-    DnsClass,
-    DnsHeader,
-    DnsQuestion,
+    WireDnsClass as DnsClass,
+    WireDnsHeader as DnsHeader,
+    WireDnsQuestion as DnsQuestion,
     DnsRdata,
-    DnsResourceRecord,
+    WireResourceRecord as DnsResourceRecord,
     DnsPacket,
     MxData,
     SrvData,
@@ -17,7 +17,7 @@ import {
     decodeDnsName,
     encodeDnsPacket,
     decodeDnsPacket,
-} from "cap:dns_wire";
+} from "cap:dns";
 
 test("1. DnsHeader 12-byte big-endian flags and counts roundtrip") {
     const hdr = DnsHeader{

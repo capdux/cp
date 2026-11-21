@@ -26,6 +26,12 @@
 | `lib/dns/records.cp` | `// Source: cp/lib/dns/records.cp (...)` | `DnsNameCodec`（16 跳防环解压 + IPv4/IPv6 PTR `.arpa` 构造）、`SoaRecord`、`SrvRecord`、`SrvSelector`、`CaaRecord` |
 | `lib/dns/doh.cp` | `// Source: cp/lib/dns/doh.cp (...)` | RFC 8484 `DohQueryBuilder`（Base64URL 无填充 GET URL / POST 头）与 `DohJsonResponse` / `DohJsonAnswer` 解析器 |
 | `lib/dns/resolv_conf.cp` | `// Source: cp/lib/dns/resolv_conf.cp (...)` | POSIX `/etc/resolv.conf` 解析器、`loadSystem` / `loadFromFile`、`expandSearchDomains`（`ndots` 展开） |
+| `lib/dns/caa.cp` | `// Source: Absorbed from /data/dev/bun/src/dns.zig (...)` | RFC 8659 CAA 记录文本/二进制解析与 CA 签发策略裁定（`CaaTag`、`CaaPolicyRecord`、`isCaAuthorized`） |
+| `lib/dns/name.cp` | `// Source: Absorbed from /data/dev/bun/src/dns.zig (...)` | RFC 1035/1123 域名标签校验、线格式编解码、子域判定与规范化（`isValidDnsLabel`、`isValidHostname`、`encodeWireName`、`decodeWireName`、`isSubdomainOf`、`normalizeHostname`） |
+| `lib/dns/rtype.cp` | `// Source: Absorbed from /data/dev/bun/src/dns.zig (...)` | IANA RRType/Class/RCODE 枚举与 SRV/MX 记录辅助（`DnsRrType`、`DnsRcode`、`DnsClass`、`RrSrvRecord`、`MxRecord`） |
+| `lib/dns/srv.cp` | `// Source: Absorbed from /data/dev/bun/src/dns.zig (...)` | RFC 2782 SRV 文本/二进制头解析、`_service._proto.name` 拆解与加权轮询选择（`SrvWireHeader`、`SrvEntry`、`SrvServiceName`、`compareSrvOrder`、`selectSrvByRoll`） |
+| `lib/dns/txt.cp` | `// Source: Absorbed from /data/dev/bun/src/dns.zig (...)` | DNS TXT 分号键值对迭代、DKIM/BIMI 标签查找与 SPF/DMARC 记录解析（`TxtTag`、`TxtTagIter`、`findTxtTag`、`DmarcPolicy`、`DmarcRecord`、`SpfQualifier`、`SpfTerm`、`SpfIter`） |
+| `lib/dns/wire.cp` | `// Source: cp/lib/dns_wire/types.cp (...)` | 纯 CP RFC 1035/6891 全量 DNS 报文编解码与指针压缩（`DnsWireError`、`DnsOpcode`、`WireDnsRcode`、`DnsRecordType`、`WireDnsClass`、`WireDnsHeader`、`WireDnsQuestion`、`WireResourceRecord`、`DnsRdata`、`DnsPacket`、`encodeDnsPacket`、`decodeDnsPacket`） |
 | `lib/dns/_cares.cp` | `// Source: /data/dev/bun/src/dns/` | `NSClass`、`NSType`、`CaresStatus` 错误分类与 `c-ares` C-ABI 声明 |
 | `lib/dns/index.cp` | `// Source: /data/dev/bun/src/dns/` | `cap:dns` 标准库对外统一导出入口 |
 

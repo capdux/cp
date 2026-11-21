@@ -261,6 +261,38 @@ export {
     killMaybe,
 } from "./process";
 
+export {
+    GroupEntry,
+    GroupMemberIter,
+    EtcGroupIter,
+    findGroupByName,
+    findGroupByGid,
+    isUserInGroup,
+} from "./group";
+
+export {
+    ProtocolEntry,
+    EtcProtocolsIter,
+    findProtocolNumber,
+    findProtocolByNumber,
+} from "./protocols";
+
+export {
+    ServiceEntry,
+    EtcServicesIter,
+    findServicePort,
+    findServiceByPort,
+} from "./services";
+
+export {
+    parseShellLine,
+    EtcShellsIter,
+    isAllowedShell,
+    findShellByBasename,
+    countShells,
+    isNologinShell,
+} from "./shells";
+
 import { pipe2 as sysPipe2, createPipe as sysCreatePipe } from "./fs_ops";
 
 pub struct Sys {

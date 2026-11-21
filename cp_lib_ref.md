@@ -341,7 +341,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:cel` | `CelError`, `CelMapEntry`, `CelValue`, `CelEnv`, `CelExpr`, `compileCel`/`compileCelWithMaxDepth`, `evalCel`/`evalCelWithOptions`, `evalBool`/`evalBoolWithOptions` | 纯 CP Common Expression Language (CEL) 安全策略表达式编译、宏推导与有界沙盒求值引擎（支持 `cap.cel` 自动动态挂载，详见 `doc/lib/cel.md`） |
 | `cap:jq` | `JqError`, `JqTag`, `JqObjEntry`, `JqValue`, `parseJson`/`stringifyJson`, `JqExpr`, `compileJq`, `runJq`, `runJqJson` | 纯 CP `jq` JSON 结构化查询、多结果流展开、管道组合与有界防 DoS 转换引擎（支持 `cap.jq` 自动动态挂载，详见 `doc/lib/jq.md`） |
 | `cap:otlp` | `OtlpError`, `TraceParent`, `BaggageEntry`, `parseTraceParent`/`formatTraceParent`/`newChildSpan`, `parseBaggage`/`formatBaggage`, `AnyValue`, `KeyValue`, `ResourceInfo`, `OtlpSpan`, `OtlpMetric`, `OtlpLogRecord`, `encodeExportTraceRequestJson`, `encodeExportMetricsRequestJson`, `encodeExportLogsRequestJson` | 纯 CP OpenTelemetry OTLP (Traces/Metrics/Logs) JSON 导出与 W3C TraceContext/Baggage 传播引擎（支持 `cap.otlp` 自动动态挂载，详见 `doc/lib/otlp.md`） |
-| `cap:dns_wire` | `DNS_HEADER_LEN`, `DnsWireError`, `DnsOpcode`, `DnsRcode`, `DnsRecordType`, `DnsClass`, `DnsHeader`, `DnsQuestion`, `MxData`, `SrvData`, `SoaData`, `DnsRdata`, `DnsResourceRecord`, `DnsPacket`, `decodeDnsName`/`encodeDnsName`, `encodeDnsPacket`/`decodeDnsPacket` | 纯 CP RFC 1035/6891 二进制 DNS 报文编解码、0xC0xx 后缀压缩与防循环指针炸弹引擎（支持 `cap.dns_wire` 自动动态挂载，详见 `doc/lib/dns_wire.md`） |
 | `cap:jmespath` | `JmesError`, `JmesValue`, `parseJson`/`stringifyJson`, `JmesExpr`, `compileJmesPath`, `searchJmesPath`/`searchJmesPathJson` | 纯 CP JMESPath JSON 查询、切片/通配符/Flatten 投影、MultiSelect、管道与 13 种内置函数引擎（支持 `cap.jmespath` 自动动态挂载，详见 `doc/lib/jmespath.md`） |
 | `cap:msgpack_rpc` | `MAX_RPC_DEPTH`, `DEFAULT_MAX_MSG_BYTES`, `RpcError`, `RpcValue`, `RpcRequest`, `RpcResponse`, `RpcNotification`, `RpcMessage`, `RpcStreamDecoder`, `encodeRpcValue`, `encodeRpcMessage`, `decodeRpcMessage` | 纯 CP MessagePack-RPC (Request/Response/Notification) 编解码、深度防护与半包黏包流式拆帧引擎（支持 `cap.msgpack_rpc` 自动动态挂载，详见 `doc/lib/msgpack_rpc.md`） |
 | `cap:capnp` | `CapnpError`, `PointerKind`, `ElementSize`, `TraversalLimit`, `MessageReader`, `StructReader`, `ListReader`, `MessageBuilder`, `StructBuilder`, `ListBuilder` | 纯 CP CapnProto 零拷贝分段消息帧、Struct/List/Far/Double-Far 指针与 TraversalLimit 防放大攻击引擎（支持 `cap.capnp` 自动动态挂载，详见 `doc/lib/capnp.md`） |
@@ -606,7 +605,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_origin` | Origin, isSameOriginUrl | WHATWG URL Origin 元组解析器、默认端口规范化、Same-Origin 比较与安全上下文判定 |
 | `cap:dockerfile_parse` | DockerInstruction, DockerfileIter, FromSpec, parseFromArgs, ExposePort, parseExposeToken | Dockerfile 指令零分配流式解析器（支持 # escape 续行折叠、注释跳过、FROM 阶段与 EXPOSE 端口拆解） |
 | `cap:markdown_table` | ColAlign, parseDelimiterCell, TableRowIter, parseDelimiterRow, unescapeTableCell, escapeTableCell | GFM Markdown 管道表格行零分配单元格迭代器、对齐分隔行检测与单元格管道符转义器 |
-| `cap:dns_name` | isValidDnsLabel, isValidHostname, encodeWireName, decodeWireName, isSubdomainOf, normalizeHostname | RFC 1035 / RFC 1123 DNS 域名与标签合法性校验、线缆格式编解码与严格点边界子域匹配器 |
 | `cap:cli_progress` | SpinnerStyle, spinnerFrame, ProgressBar | 零分配 CLI 进度条渲染器、百分比/纯整数 ETA 估算器与 ASCII/盲文点阵旋转动画帧生成器 |
 | `cap:frontmatter` | FrontmatterKind, FrontmatterSplit, splitFrontmatter, getFrontmatterField | Markdown 文档 YAML (---) / TOML (+++) Frontmatter 零分配提取器与键值查询 |
 | `cap:http_retry_after` | RetryAfterKind, RetryAfter, formatRetryAfterSeconds | RFC 9110 §10.2.3 Retry-After 响应头解析器（delta-seconds 与 IMF-fixdate）与限幅等待时长计算 |
@@ -674,14 +672,10 @@ const h = cap.hash.wyhash("hello");
 | `cap:xdg_basedir` | DEFAULT_CONFIG_DIRS, DEFAULT_DATA_DIRS, XdgEnv, resolveConfigHome, resolveDataHome, resolveCacheHome, resolveStateHome, resolveRuntimeDir, XdgDirIter | freedesktop.org XDG Base Directory Spec 路径零分配推导器（绝对路径校验、默认回退与防穿越 app_name） |
 | `cap:proxy_protocol_v2` | PROXY_V2_SIGNATURE, hasProxyV2Signature, ProxyV2Command, ProxyV2Family, ProxyV2Transport, ProxyV2Header, ProxyV2Tlv, ProxyV2TlvIter | HAProxy PROXY Protocol v2 二进制头零分配解析、IPv4/LOCAL 编码与 TLV 扩展迭代器 |
 | `cap:npmrc_config` | DEFAULT_NPM_REGISTRY, NpmrcEntry, NpmrcIter, getNpmrcValue, getNpmrcBool, resolveRegistryForScope, findRegistrySetting | .npmrc 配置文件零分配键值解析器、布尔配置查询与 @scope:registry 仓库路由解析器 |
-| `cap:dns_record_type` | DnsRrType, DnsRcode, DnsClass, SrvRecord, MxRecord | IANA DNS 记录类型（18 种 RRType）、Class、RCODE 编解码与 SRV/MX 文本记录解析器 |
 | `cap:proc_net_route` | RTF_UP, RTF_GATEWAY, RTF_HOST, parseHexIpv4Le, RouteEntry, ProcRouteIter, findDefaultGateway | Linux /proc/net/route 内核路由表零分配解析器、小端十六进制 IPv4 解码与最小 metric 默认网关查找器 |
 | `cap:cron_preset` | CronPreset, parseCronPreset, presetToCron5, normalizeCron5 | Vixie Cron @macro 预设（@hourly/@daily/@weekly/@monthly/@yearly/@reboot）零分配展开与 5 段表达式校验器 |
-| `cap:dns_txt_parse` | TxtTag, TxtTagIter, findTxtTag, DmarcPolicy, DmarcRecord, SpfQualifier, SpfTerm, SpfIter | DNS TXT 分号键值标签、DMARC (v=DMARC1) 与 SPF (v=spf1) 策略记录零分配解析器 |
 | `cap:proc_net_dev` | `NetDevStats`, `ProcNetDevIter`, `findNetDev`, `sumNonLoopbackBytes` | Linux `/proc/net/dev` 网络接口收发字节/包/错误/丢包零分配解析器 |
-| `cap:dns_caa_record` | `CaaTag`, `CaaRecord`, `isCaAuthorized` | RFC 8659 DNS CAA 证书颁发机构授权记录文本/线缆格式零分配解析与签发策略判定器 |
 | `cap:proc_cpuinfo` | `CpuBlock`, `CpuSummary`, `ProcCpuInfoIter`, `summarizeCpuInfo`, `hasCpuFlag` | Linux `/proc/cpuinfo`（x86_64/ARM64）逻辑/物理核心与指令集标志零分配解析器 |
-| `cap:dns_srv_record` | `SrvWireHeader`, `SrvRecord`, `SrvServiceName`, `compareSrvOrder`, `selectSrvByRoll` | RFC 2782 DNS SRV 服务发现记录文本/线缆头零分配解析与优先级权重选择器 |
 | `cap:proc_mounts` | `MountEntry`, `ProcMountsIter`, `unescapeMountPath`, `findMountForPath` | Linux `/proc/mounts` 挂载表、八进制路径转义解码与最长边界前缀挂载点匹配器 |
 | `cap:http_expect` | `ExpectItem`, `ExpectIter`, `ExpectDecision`, `evaluateExpectHeader`, `hasContinueExpectation`, `hasUnknownExpectation` | RFC 9110 §10.1.1 HTTP `Expect` 请求头解析与 `100-continue` / 417 协商判定器 |
 | `cap:proc_uptime` | `ProcUptime`, `parseProcUptime` | Linux `/proc/uptime` 系统运行时间与全核空闲占比零分配整数解析与人类可读格式化器 |
@@ -695,12 +689,9 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_allow` | `HttpMethodBit`, `AllowMethodSet`, `parseAllowHeader`, `AllowIter`, `isMethodAllowed`, `isSafeMethod`, `isIdempotentMethod` | RFC 9110 §10.2.1 HTTP `Allow` 方法集位掩码解析、格式化与安全/幂等判定器 |
 | `cap:proc_limits` | `LimitValue`, `parseLimitValue`, `ProcLimitEntry`, `ProcLimitsIter`, `findProcLimit`, `maxOpenFiles` | Linux `/proc/<pid>/limits` 进程软/硬资源限额表零分配解析器 |
 | `cap:http_trailer` | `isForbiddenTrailerField`, `isValidTrailerFieldName`, `TrailerFieldIter`, `validateTrailerHeader`, `hasTrailerField` | RFC 9110 §6.5.1 HTTP `Trailer` 尾部字段声明零分配解析与 25 项禁传字段安全校验器 |
-| `cap:etc_group` | `GroupEntry`, `GroupMemberIter`, `EtcGroupIter`, `findGroupByName`, `findGroupByGid`, `isUserInGroup` | Linux `/etc/group` 系统用户组数据库零分配解析与精确成员查询器 |
 | `cap:http_max_forwards` | `MaxForwardsAction`, `MaxForwardsResult`, `parseMaxForwards`, `evaluateMaxForwards`, `formatMaxForwards` | RFC 9110 §7.6.2 HTTP `Max-Forwards` 代理跳数限制零分配解析与递减裁定器 |
-| `cap:etc_services` | `ServiceEntry`, `EtcServicesIter`, `findServicePort`, `findServiceByPort` | Linux `/etc/services` 网络服务名与端口/协议映射表零分配双向解析器 |
 | `cap:cli_table` | `TableBorderStyle`, `CellAlign`, `computeColumnWidths`, `renderBorderLine`, `renderTableRow`, `renderTable` | 零分配 CLI 终端表格（ASCII/Compact/Unicode 细线、ANSI/宽字符感知）渲染器 |
 | `cap:http_accept_ranges` | `AcceptRangesKind`, `AcceptRanges`, `AcceptRangesIter`, `parseAcceptRanges`, `supportsByteRanges`, `supportsRangeUnit` | RFC 9110 §14.3 HTTP `Accept-Ranges` 响应头零分配解析与分片能力判定器 |
-| `cap:etc_shells` | `parseShellLine`, `EtcShellsIter`, `isAllowedShell`, `findShellByBasename`, `countShells`, `isNologinShell` | Linux `/etc/shells` 合法登录 Shell 路径清单零分配解析与安全校验器 |
 | `cap:cli_tree` | `TreeStyle`, `TreePrefix`, `TreeNode`, `renderFlatTree` | 零分配 CLI 树形结构/依赖树（Unicode/ASCII/圆角，64 层位掩码）渲染器 |
 | `cap:http_accept_language` | `LanguageRange`, `AcceptLanguageIter`, `negotiateLanguage` | RFC 9110 §12.5.4 + RFC 4647 HTTP `Accept-Language` BCP 47 语言权重零分配协商器 |
 | `cap:proc_statm` | `ProcStatm`, `parseProcStatm` | Linux `/proc/<pid>/statm` 7 列内存页计数零分配解析与饱和字节换算器 |

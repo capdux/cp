@@ -1,11 +1,11 @@
 import std from "std";
 import { test, expect_eq } from "cap:test";
 import {
-    SrvRecord,
+    SrvEntry as SrvRecord,
     SrvServiceName,
     compareSrvOrder,
     selectSrvByRoll,
-} from "cap:dns_srv_record";
+} from "cap:dns";
 
 test("1. SrvRecord.parseText and isServiceUnavailable handle standard and '.' unavailable records", () => {
     const r1 = SrvRecord.parseText("10 60 5060 sipserver.example.com.") ?? unreachable;

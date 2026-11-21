@@ -1,6 +1,6 @@
 import std from "std";
 import { test, expect_eq } from "cap:test";
-import { CaaTag, CaaRecord, isCaAuthorized } from "cap:dns_caa_record";
+import { CaaTag, CaaPolicyRecord as CaaRecord, isCaAuthorized } from "cap:dns";
 
 test("1. CaaRecord.parseText parses issue, issuewild, iodef, flags, params, and forbid-all", () => {
     const r1 = CaaRecord.parseText("0 issue \"letsencrypt.org; accounturi=https://acme.example/1\"") ?? unreachable;
