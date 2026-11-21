@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:editorconfig` .editorconfig 零分配解析器、花括号/通配符段匹配与级联属性求值器（5/5 PASS，自动动态挂载 `cap.editorconfig`）
+新增 `cap:editorconfig`（`lib/editorconfig/{editorconfig,index}.cp`、`doc/lib/editorconfig.md`、`cap/test/test_editorconfig_production_deep.cp`），支持 `root=true`、`{a,b}` 段匹配与 8 项核心编辑器属性级联。
+
+## [2026-11-22] - 新建 `cap:env_expand` POSIX Shell 风格环境变量模板零分配展开器（支持 $VAR/${VAR:-def}/${VAR:+alt}/嵌套展开与转义）（5/5 PASS，自动动态挂载 `cap.env_expand`）
+新增 `cap:env_expand`（`lib/env_expand/{expand,index}.cp`、`doc/lib/env_expand.md`、`cap/test/test_env_expand_production_deep.cp`），实现 4 种 POSIX 参数修饰符、8 层嵌套上限与 `$$`/`\$` 转义。
+
+## [2026-11-22] - 新建 `cap:http_digest` RFC 9530 Content-Digest / Repr-Digest 与 Want-Content-Digest 结构化字段零分配解析与算法协商（5/5 PASS，自动动态挂载 `cap.http_digest`）
+新增 `cap:http_digest`（`lib/http_digest/{digest,index}.cp`、`doc/lib/http_digest.md`、`cap/test/test_http_digest_production_deep.cp`），实现 RFC 8941 字节序列字典解析、规范格式化与权重协商。
+
+## [2026-11-22] - 新建 `cap:gitignore_match` Git .gitignore 规则集零分配解析与路径匹配引擎（支持 **/! 反忽略/目录锚定与字符类）（5/5 PASS，自动动态挂载 `cap.gitignore_match`）
+新增 `cap:gitignore_match`（`lib/gitignore_match/{gitignore,index}.cp`、`doc/lib/gitignore_match.md`、`cap/test/test_gitignore_match_production_deep.cp`），实现完整 `.gitignore` 规则解析、后置覆盖与 `!` 反忽略。
+
 ## [2026-11-22] - 新建 `cap:http_range` RFC 9110 §14.1.2 HTTP Range 请求头（bytes=start-end / start- / -suffix）零分配解析与实体区间求值器（5/5 PASS，自动动态挂载 `cap.http_range`）
 新增 `cap:http_range`（`lib/http_range/{range,index}.cp`、`doc/lib/http_range.md`、`cap/test/test_http_range_production_deep.cp`），支持多段区间迭代、末段截断与 HTTP 416 不可满足判定。
 

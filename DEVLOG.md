@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:editorconfig` .editorconfig 零分配解析器、花括号/通配符段匹配与级联属性求值器（5/5 PASS，文档直写 `doc/lib/editorconfig.md`）
+主智能体吸收 `cap:editorconfig`，支持 `unset`/`off` 清除属性与 `effectiveTabWidth()` 推导。
+
+## 2026-11-22: 新建 `cap:env_expand` POSIX Shell 风格环境变量模板零分配展开器（支持 $VAR/${VAR:-def}/${VAR:+alt}/嵌套展开与转义）（5/5 PASS，文档直写 `doc/lib/env_expand.md`）
+Subagent 2 吸收 `cap:env_expand`，零堆分配展开环境变量模板并防止未闭合花括号与缓冲溢出。
+
+## 2026-11-22: 新建 `cap:http_digest` RFC 9530 Content-Digest / Repr-Digest 与 Want-Content-Digest 结构化字段零分配解析与算法协商（5/5 PASS，文档直写 `doc/lib/http_digest.md`）
+主智能体吸收 `cap:http_digest`，完整支持 `sha-256=:base64:` 等 RFC 9530 摘要字段及 `0..=10` 偏好权重协商。
+
+## 2026-11-22: 新建 `cap:gitignore_match` Git .gitignore 规则集零分配解析与路径匹配引擎（支持 **/! 反忽略/目录锚定与字符类）（5/5 PASS，文档直写 `doc/lib/gitignore_match.md`）
+Subagent 1 吸收 `cap:gitignore_match`，支持 `*`/`?`/`[a-z]`/`**` 跨目录通配、尾部 `/` 目录限定与 `\!`/`\#`/`\ ` 转义。
+
 ## 2026-11-22: 新建 `cap:http_range` RFC 9110 §14.1.2 HTTP Range 请求头（bytes=start-end / start- / -suffix）零分配解析与实体区间求值器（5/5 PASS，文档直写 `doc/lib/http_range.md`）
 主智能体吸收 `cap:http_range`，与 `cap:content_range` 形成完整 HTTP 断点续传/分片传输工具链。
 

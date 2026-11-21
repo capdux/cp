@@ -577,3 +577,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:cli_color_detect` | ColorLevel, ColorEnv, parseForceColor, detectColorLevel, supportsColor, supportsTruecolor | 终端 ANSI 色彩能力探测（遵循 NO_COLOR / FORCE_COLOR / CLICOLOR / COLORTERM / TERM / CI 规范） |
 | `cap:semver_sort` | SemverOrder, ParsedSemver, parseSemverStrict, parseSemverLoose, compareSemver, compareSemverStr, sortSemverAsc, sortSemverDesc, maxSemverIndex, minSemverIndex | SemVer 2.0.0 §11 严格优先级比较、预发布标签无溢出比较与原地升降序排序/极值选择 |
 | `cap:http_range` | RangeSpecKind, ByteRangeSpec, ResolvedByteRange, ByteRangeIter, resolveSingleByteRange | RFC 9110 §14.1.2 HTTP Range 请求头（bytes=start-end / start- / -suffix）零分配解析与实体区间求值器 |
+| `cap:gitignore_match` | GitignoreRule, parseGitignoreLine, ruleMatchesPath, isIgnored | Git .gitignore 规则集零分配解析与路径匹配引擎（支持 **/! 反忽略/目录锚定与字符类） |
+| `cap:http_digest` | DigestEntry, DigestIter, findDigest, formatDigest, WantDigestPref, WantDigestIter, negotiateDigestAlg | RFC 9530 Content-Digest / Repr-Digest 与 Want-Content-Digest 结构化字段零分配解析与算法协商 |
+| `cap:env_expand` | EnvPair, lookupEnv, expandEnv, hasEnvRefs | POSIX Shell 风格环境变量模板零分配展开器（支持 $VAR/${VAR:-def}/${VAR:+alt}/嵌套展开与转义） |
+| `cap:editorconfig` | matchSectionPattern, IndentStyle, EndOfLine, Charset, EditorConfigProps, resolveEditorConfig | .editorconfig 零分配解析器、花括号/通配符段匹配与级联属性求值器 |

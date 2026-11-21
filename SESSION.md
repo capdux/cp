@@ -355,3 +355,15 @@
 
 ### 2026-11-22（`cap:http_range` 验收，Batch 51 注册 `cap:http_range` 并提交（突破 150 模块里程碑）。）
 - **执行成果**：`lib/http_range/`（5/5 PASS，`doc/lib/http_range.md`）经 `verify_module.sh` 一次性验收回收；Batch 51 注册 `cap:http_range` 并提交（突破 150 模块里程碑）。
+
+### 2026-11-22（`cap:gitignore_match` 验收，Batch 52 完成 `cap:gitignore_match`、`cap:http_digest`、`cap:env_expand`、`cap:editorconfig` 4 模块吸收与全量验收。）
+- **执行成果**：`lib/gitignore_match/`（5/5 PASS，`doc/lib/gitignore_match.md`）经 `verify_module.sh` 一次性验收回收；Batch 52 完成 `cap:gitignore_match`、`cap:http_digest`、`cap:env_expand`、`cap:editorconfig` 4 模块吸收与全量验收。
+
+### 2026-11-22（`cap:http_digest` 验收，Batch 52 注册 `cap:http_digest`。）
+- **执行成果**：`lib/http_digest/`（5/5 PASS，`doc/lib/http_digest.md`）经 `verify_module.sh` 一次性验收回收；Batch 52 注册 `cap:http_digest`。
+
+### 2026-11-22（`cap:env_expand` 验收，Batch 52 注册 `cap:env_expand`。）
+- **执行成果**：`lib/env_expand/`（5/5 PASS，`doc/lib/env_expand.md`）经 `verify_module.sh` 一次性验收回收；Batch 52 注册 `cap:env_expand`。
+
+### 2026-11-22（`cap:editorconfig` 验收，Batch 52 注册 `cap:editorconfig` 并提交。）
+- **执行成果**：`lib/editorconfig/`（5/5 PASS，`doc/lib/editorconfig.md`）经 `verify_module.sh` 一次性验收回收；Batch 52 注册 `cap:editorconfig` 并提交。
