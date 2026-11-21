@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:xz` XZ v1.1.0 (.xz) Stream Header/Footer, 7-bit VLI, Filter Chain, Index & CRC32 parser（5/5 PASS，文档直写 `doc/lib/xz.md`）
+新增 cap:xz 纯 CP 零分配压缩容器解析库（VLI 1..9B 编解码、Stream/Block/Index 三重 CRC32 校验与 LZMA2 字典大小解码），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:cramfs` Linux CramFS 76B superblock, IEEE CRC32, 12B bitfield Inode & dir zero-alloc parser（5/5 PASS，文档直写 `doc/lib/cramfs.md`）
 新增 cap:cramfs 纯 CP 零分配压缩只读文件系统库（76B 超级块 CRC32、24/6/26-bit 紧缩 Inode 解码与目录零拷贝迭代），通过 cpc check 与 5/5 cap test
 
