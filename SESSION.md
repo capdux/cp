@@ -253,3 +253,6 @@
 
 ### 2026-11-22（`cap:gff` 验收，完成 `cap:gff` 交付验收并登记入库（5/5 PASS）；轮换 `Document & Binary Absorber`（13 库）并派发 `cap:edf`。）
 - **执行成果**：`lib/gff/`（5/5 PASS，`doc/lib/gff.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:gff` 交付验收并登记入库（5/5 PASS）；轮换 `Document & Binary Absorber`（13 库）并派发 `cap:edf`。
+
+### 2026-11-22（`cap:pdb` 验收，完成 `cap:pdb` 交付验收并登记入库（6/6 PASS）；派发 `cap:sdf`。）
+- **执行成果**：`lib/pdb/`（5/5 PASS，`doc/lib/pdb.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:pdb` 交付验收并登记入库（6/6 PASS）；派发 `cap:sdf`。
