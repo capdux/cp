@@ -67,3 +67,6 @@
 
 ### 2026-11-22（`cap:wavelet` 验收，完成并注册纯 CP 零分配标准库 cap:wavelet（5/5 cap test PASS））
 - **执行成果**：`lib/wavelet/`（5/5 PASS，`doc/lib/wavelet.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:wavelet（5/5 cap test PASS）
+
+### 2026-11-22（`cap:gjk` 验收，完成并注册纯 CP 零分配标准库 cap:gjk（6/6 cap test PASS））
+- **执行成果**：`lib/gjk/`（5/5 PASS，`doc/lib/gjk.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:gjk（6/6 cap test PASS）
