@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:dotenv_escape` .env 环境变量文件键名校验、防 $VAR 误展开安全引号序列化与反转义器（5/5 PASS，自动动态挂载 `cap.dotenv_escape`）
+新增 `cap:dotenv_escape`（`lib/dotenv_escape/{dotenv_escape,index}.cp`、`doc/lib/dotenv_escape.md`、`cap/test/test_dotenv_escape_production_deep.cp`），支持双引号转义往返与 `$` 变量展开防护。
+
+## [2026-11-22] - 新建 `cap:http_content_encoding` RFC 9110 §8.4 Content-Encoding 编码栈零分配解析、别名归一化与最大压缩层数安全防护（5/5 PASS，自动动态挂载 `cap.http_content_encoding`）
+新增 `cap:http_content_encoding`（`lib/http_content_encoding/{content_encoding,index}.cp`、`doc/lib/http_content_encoding.md`、`cap/test/test_http_content_encoding_production_deep.cp`），兼容 `x-gzip`/`x-compress` 并限制异常多层压缩链。
+
+## [2026-11-22] - 新建 `cap:number_format` 零分配人类可读数字格式化器（千分位分组、英文序数词、2..36 进制与定点小数）（5/5 PASS，自动动态挂载 `cap.number_format`）
+新增 `cap:number_format`（`lib/number_format/{number_format,index}.cp`、`doc/lib/number_format.md`、`cap/test/test_number_format_production_deep.cp`），安全处理 `i64::MIN` 并支持千分位与定点小数格式化。
+
+## [2026-11-22] - 新建 `cap:unicode_width` Unicode 东亚宽度 / 终端显示列宽（wcwidth）零分配计算器（组合符=0、ASCII=1、CJK/Emoji=2）（5/5 PASS，自动动态挂载 `cap.unicode_width`）
+新增 `cap:unicode_width`（`lib/unicode_width/{width,index}.cp`、`doc/lib/unicode_width.md`、`cap/test/test_unicode_width_production_deep.cp`），实现终端列宽统计与不切裂 CJK 的列宽截断。
+
 ## [2026-11-22] - 新建 `cap:http_te` RFC 9110 / RFC 9112 Transfer-Encoding 与 TE 头零分配解析及异常报文边界校验器（5/5 PASS，自动动态挂载 `cap.http_te`）
 新增 `cap:http_te`（`lib/http_te/{te,index}.cp`、`doc/lib/http_te.md`、`cap/test/test_http_te_production_deep.cp`），拦截重复 `chunked`、非末项 `chunked` 及 `Content-Length` 与 `Transfer-Encoding` 冲突报文。
 

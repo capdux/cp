@@ -114,3 +114,15 @@
 
 ### 2026-11-22（`cap:http_te` 验收，Batch 73 注册 `cap:http_te` 并提交（累计 235 模块）。）
 - **执行成果**：`lib/http_te/`（5/5 PASS，`doc/lib/http_te.md`）经 `verify_module.sh` 一次性验收回收；Batch 73 注册 `cap:http_te` 并提交（累计 235 模块）。
+
+### 2026-11-22（`cap:unicode_width` 验收，Batch 74 完成 `cap:unicode_width`、`cap:number_format`、`cap:http_content_encoding`、`cap:dotenv_escape` 4 模块吸收与全量验收，同时按用户要求切换为主智能体轻量巡检/审核/及时汇报模式。）
+- **执行成果**：`lib/unicode_width/`（5/5 PASS，`doc/lib/unicode_width.md`）经 `verify_module.sh` 一次性验收回收；Batch 74 完成 `cap:unicode_width`、`cap:number_format`、`cap:http_content_encoding`、`cap:dotenv_escape` 4 模块吸收与全量验收，同时按用户要求切换为主智能体轻量巡检/审核/及时汇报模式。
+
+### 2026-11-22（`cap:number_format` 验收，Batch 74 注册 `cap:number_format`。）
+- **执行成果**：`lib/number_format/`（5/5 PASS，`doc/lib/number_format.md`）经 `verify_module.sh` 一次性验收回收；Batch 74 注册 `cap:number_format`。
+
+### 2026-11-22（`cap:http_content_encoding` 验收，Batch 74 注册 `cap:http_content_encoding`。）
+- **执行成果**：`lib/http_content_encoding/`（5/5 PASS，`doc/lib/http_content_encoding.md`）经 `verify_module.sh` 一次性验收回收；Batch 74 注册 `cap:http_content_encoding`。
+
+### 2026-11-22（`cap:dotenv_escape` 验收，Batch 74 注册 `cap:dotenv_escape` 并提交（累计 239 模块）。）
+- **执行成果**：`lib/dotenv_escape/`（5/5 PASS，`doc/lib/dotenv_escape.md`）经 `verify_module.sh` 一次性验收回收；Batch 74 注册 `cap:dotenv_escape` 并提交（累计 239 模块）。

@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:dotenv_escape` .env 环境变量文件键名校验、防 $VAR 误展开安全引号序列化与反转义器（5/5 PASS，文档直写 `doc/lib/dotenv_escape.md`）
+Subagent 1 吸收 `cap:dotenv_escape`，与 `cap:dotenv_parse`/`cap:env_expand` 构成完整 `.env` 工具链。
+
+## 2026-11-22: 新建 `cap:http_content_encoding` RFC 9110 §8.4 Content-Encoding 编码栈零分配解析、别名归一化与最大压缩层数安全防护（5/5 PASS，文档直写 `doc/lib/http_content_encoding.md`）
+Subagent 2 吸收 `cap:http_content_encoding`，零堆分配校验多层内容编码。
+
+## 2026-11-22: 新建 `cap:number_format` 零分配人类可读数字格式化器（千分位分组、英文序数词、2..36 进制与定点小数）（5/5 PASS，文档直写 `doc/lib/number_format.md`）
+主智能体吸收 `cap:number_format`，纯整数实现零浮点误差数字展示。
+
+## 2026-11-22: 新建 `cap:unicode_width` Unicode 东亚宽度 / 终端显示列宽（wcwidth）零分配计算器（组合符=0、ASCII=1、CJK/Emoji=2）（5/5 PASS，文档直写 `doc/lib/unicode_width.md`）
+主智能体吸收 `cap:unicode_width`，服务 CLI 表格与进度条精确排版。
+
 ## 2026-11-22: 新建 `cap:http_te` RFC 9110 / RFC 9112 Transfer-Encoding 与 TE 头零分配解析及异常报文边界校验器（5/5 PASS，文档直写 `doc/lib/http_te.md`）
 Subagent 1 吸收 `cap:http_te`，补齐 HTTP/1.1 传输编码边界防护。
 

@@ -660,3 +660,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_via` | ViaEntry, ViaIter, viaHopCount, viaContainsProxy, appendVia, parseMaxForwards, decrementMaxForwards | RFC 9110 §7.6.3 Via 代理链头与 Max-Forwards 零分配解析、环路检测与追加构造器 |
 | `cap:http_freshness` | CacheFreshness, FreshnessInput | RFC 9111 §4.2 HTTP 缓存新鲜度生存期、Age 修正与 RFC 5861 SWR/SIE 窗口求值器 |
 | `cap:http_te` | TransferCoding, TransferEncodingIter, TransferEncodingValidation, validateTransferEncoding, isChunkedTransfer, hasConflictingClAndTe, teAcceptsTrailers | RFC 9110 / RFC 9112 Transfer-Encoding 与 TE 头零分配解析及异常报文边界校验器 |
+| `cap:unicode_width` | isZeroWidth, isWideChar, codepointWidth, strDisplayWidth, sliceToDisplayWidth | Unicode 东亚宽度 / 终端显示列宽（wcwidth）零分配计算器（组合符=0、ASCII=1、CJK/Emoji=2） |
+| `cap:number_format` | formatGroupedU64, formatGroupedI64, ordinalSuffix, formatOrdinal, formatRadixU64, formatFixedPoint | 零分配人类可读数字格式化器（千分位分组、英文序数词、2..36 进制与定点小数） |
+| `cap:http_content_encoding` | ContentCoding, parseContentCoding, ContentEncodingIter, encodingLayerCount, isCompressed, hasContentEncoding, isValidContentEncoding | RFC 9110 §8.4 Content-Encoding 编码栈零分配解析、别名归一化与最大压缩层数安全防护 |
+| `cap:dotenv_escape` | isValidEnvKey, needsDotenvQuotes, formatDotenvValue, formatDotenvLine, unescapeDotenvDouble | .env 环境变量文件键名校验、防 $VAR 误展开安全引号序列化与反转义器 |
