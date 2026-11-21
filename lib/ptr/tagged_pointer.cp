@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/ptr/tagged_pointer.cp
+// Source: Absorbed from /data/dev/bun/src/ptr/tagged_pointer.cp | Synced: 2026-11-20T10:58:46Z
 // High-bit and low-bit tagged pointers and zero-virtual-table union abstractions
 import std from "std";
 

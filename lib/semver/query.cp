@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/semver/SemverQuery.cp
+// Source: Absorbed from /data/dev/bun/src/semver/SemverQuery.cp | Synced: 2026-11-20T12:48:23Z
 // ============================================================================
 // lib/semver/query.cp — Semver Query & Range Comparator Engine
 // ============================================================================

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/zlib/zlib.cp, /data/dev/bun/src/brotli/brotli.cp, /data/dev/bun/src/zstd/zstd.cp
+// Source: Absorbed from /data/dev/bun/src/zlib/zlib.cp | Synced: 2026-11-20T05:06:41Z
 // ============================================================================
 // lib/pack/_codecs.cp — Zlib / Brotli / Zstd 底层 C-FFI 声明与状态枚举
 // 吸收自 Bun src/zlib/zlib.cp, src/brotli/brotli.cp, src/zstd/zstd.cp

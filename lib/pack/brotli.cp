@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/brotli/brotli.cp
+// Source: Absorbed from /data/dev/bun/src/brotli/brotli.cp | Synced: 2026-11-20T05:06:41Z
 // ============================================================================
 // lib/pack/brotli.cp — Brotli (RFC 7932) 压缩边界计算、帧头解析与流模式配置
 // 吸收自 Bun src/brotli/brotli.cp，适配 CP 现代强类型与零拷贝视图
