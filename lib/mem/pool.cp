@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/bun_alloc/bun_alloc.cp
+// Source: Absorbed from /data/dev/bun/src/bun_alloc/bun_alloc.cp | Synced: 2026-11-21T12:32:04Z
 // lib/mem/pool.cp
 // O(1) Free-List SlabPool with alignment & double-free protection
 

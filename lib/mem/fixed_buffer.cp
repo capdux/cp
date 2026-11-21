@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/bun_alloc/BufferFallbackAllocator.cp
+// Source: Absorbed from /data/dev/bun/src/bun_alloc/BufferFallbackAllocator.cp | Synced: 2026-11-20T08:35:42Z
 // lib/mem/fixed_buffer.cp
 // Zero-heap FixedBufferAllocator over caller-supplied slice with alignment & LIFO rewind
 

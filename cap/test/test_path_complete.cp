@@ -175,7 +175,8 @@ fn testPathBufferPool(): !void {
     let b2 = PathBufferPool.get();
 
     // Two distinct buffers obtained from pool (distinct addresses)
-    expect_eq(@intFromPtr(b1) != @intFromPtr(b2), true);
+    const diff_ptr = unsafe { @intFromPtr(b1) != @intFromPtr(b2) };
+    expect_eq(diff_ptr, true);
 
     b1[0] = 'a';
     b2[0] = 'b';
@@ -187,7 +188,8 @@ fn testPathBufferPool(): !void {
 
     // Next get returns recycled b1
     let b3 = PathBufferPool.get();
-    expect_eq(@intFromPtr(b1) == @intFromPtr(b3), true);
+    const same_ptr = unsafe { @intFromPtr(b1) == @intFromPtr(b3) };
+    expect_eq(same_ptr, true);
 
     PathBufferPool.put(b2);
     PathBufferPool.put(b3);

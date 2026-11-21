@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/url/url.cp
+// Source: Absorbed from /data/dev/bun/src/url/url.cp | Synced: 2026-11-20T07:54:32Z
 // ============================================================================
 // lib/url/search_params.cp — WHATWG URLSearchParams & Query Scanner
 // ============================================================================

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/test_runner/pretty_format.cp & /data/dev/bun/src/test_runner/bun_test.cp
+// Source: Absorbed from /data/dev/bun/src/test_runner/pretty_format.cp | Synced: 2026-11-21T16:35:57Z
 // ============================================================================
 // lib/test_runner/reporter.cp — PrettyFormat & TAP v13 / JUnit XML / JSON Reporters
 // ============================================================================

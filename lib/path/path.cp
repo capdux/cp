@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/paths/Path.cp
+// Source: Absorbed from /data/dev/bun/src/paths/Path.cp | Synced: 2026-11-21T15:18:14Z
 // ============================================================================
 // lib/path/path.cp — Unified Cross-Platform Path Object (cap:path)
 // ============================================================================

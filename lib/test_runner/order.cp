@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/test_runner/Order.cp
+// Source: Absorbed from /data/dev/bun/src/test_runner/Order.cp | Synced: 2026-11-21T09:33:20Z
 // ============================================================================
 // lib/test_runner/order.cp — Deterministic Test Ordering & Seeded PRNG
 // ============================================================================

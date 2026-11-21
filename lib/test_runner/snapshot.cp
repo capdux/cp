@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/test_runner/snapshot.cp
+// Source: Absorbed from /data/dev/bun/src/test_runner/snapshot.cp | Synced: 2026-11-20T21:34:12Z
 // ============================================================================
 // lib/test_runner/snapshot.cp — Bun-Style .snap Snapshot Store & Colored Diff
 // ============================================================================
