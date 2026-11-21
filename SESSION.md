@@ -19,3 +19,6 @@
 
 ### 2026-11-21（`cap:http_types` 验收，主控单兵从 Bun `src/http_types/` 吸收并验收提交 `cap:http_types`）
 - **执行成果**：`lib/http_types/`（5/5 PASS，`doc/lib/http_types.md`）经 `verify_module.sh` 一次性验收回收；主控单兵从 Bun `src/http_types/` 吸收并验收提交 `cap:http_types`
+
+### 2026-11-21（`cap:node_builtins` 验收，主控单兵从 Bun `src/resolve_builtins/` 吸收并验收提交 `cap:node_builtins`）
+- **执行成果**：`lib/node_builtins/`（5/5 PASS，`doc/lib/node_builtins.md`）经 `verify_module.sh` 一次性验收回收；主控单兵从 Bun `src/resolve_builtins/` 吸收并验收提交 `cap:node_builtins`
