@@ -88,3 +88,6 @@
 
 ### 2026-11-22（`cap:srt` 验收，4 合 1 热修 `#96`–`#99` 结单提交并回收 + 新增简洁单单词包 `cap:srt`（5/5 PASS））
 - **执行成果**：`lib/srt/`（5/5 PASS，`doc/lib/srt.md`）经 `verify_module.sh` 一次性验收回收；4 合 1 热修 `#96`–`#99` 结单提交并回收 + 新增简洁单单词包 `cap:srt`（5/5 PASS）
+
+### 2026-11-22（`cap:kdl` 验收，新增简洁单单词包 `cap:kdl`（5/5 PASS））
+- **执行成果**：`lib/kdl/`（5/5 PASS，`doc/lib/kdl.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:kdl`（5/5 PASS）

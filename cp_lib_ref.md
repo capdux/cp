@@ -500,3 +500,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:json5` | `Json5TokenKind`, `Json5Token`, `Json5Iter`, `toStandardJson`, `isValidJson5` | 零分配 JSON5 1.0 词法扫描、语法校验与标准 RFC 8259 JSON 转换器 |
 | `cap:vtt` | `VttCue`, `isWebVttHeader`, `parseVttTimestampMs`, `formatVttTimestampMs`, `VttCueIter`, `formatVttCue` | W3C WebVTT 字幕/时间轴零分配解析、时间戳编解码与格式化器 |
 | `cap:srt` | `SrtCue`, `parseSrtTimestampMs`, `formatSrtTimestampMs`, `SrtCueIter`, `formatSrtCue`, `shiftSrtCue` | 零分配 SubRip `.srt` 字幕解析、时间戳编解码、饱和平移与格式化器 |
+| `cap:kdl` | `KdlTokenKind`, `KdlToken`, `KdlIter`, `KdlNodeSummary`, `KdlNodeIter`, `validateKdl` | 零分配 KDL 配置文档语言词法扫描、节点头迭代与嵌套结构校验器 |

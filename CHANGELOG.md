@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:kdl` 零分配 KDL 配置文档语言词法扫描、节点头迭代与嵌套结构校验器（5/5 PASS，自动动态挂载 `cap.kdl`）
+- 新增 `lib/kdl/{kdl,index}.cp`、`doc/lib/kdl.md`、`cap/test/test_kdl_production_deep.cp`：纯 CP 零分配实现 KDL 词法扫描与节点校验（嵌套 `/* */` 注释、`/-` slashdash、原始字符串 `r#"..."#`、多进制下划线数字与 64 层深度防护）（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:srt` 零分配 SubRip `.srt` 字幕解析、时间戳编解码、饱和平移与格式化器（5/5 PASS，自动动态挂载 `cap.srt`）
 - 新增 `lib/srt/{srt,index}.cp`、`doc/lib/srt.md`、`cap/test/test_srt_production_deep.cp`：纯 CP 零分配实现 SubRip `.srt` 字幕解析与时间轴饱和平移（BOM、CRLF/LF、逗号/点毫秒兼容、逆序/畸形块跳过）（5/5 PASS）。
 
