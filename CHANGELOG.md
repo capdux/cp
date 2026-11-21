@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:hilbert` 2D Hilbert (orders 1..32, 64-bit) & 2D/3D SWAR Morton Z-Order spatial indexing（5/5 PASS，自动动态挂载 `cap.hilbert`）
+新增纯 CP 零分配标准库 cap:hilbert（2D Hilbert 1..32 阶空间填充曲线与 2D/3D SWAR Morton Z-Order 曲线）与 6/6 深度测试
+
 ## [2026-11-22] - 新建 `cap:golay` Extended Golay [24,12,8] & Perfect [23,12,7] 3-bit ECC / 4-bit detect zero-alloc codec（5/5 PASS，自动动态挂载 `cap.golay`）
 新增纯 CP 零分配标准库 cap:golay（扩展二元戈莱码 [24,12,8] & [23,12,7] 3 比特纠错/4 比特检错与字节流编解码）与 5/5 深度测试
 

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:hilbert` 2D Hilbert (orders 1..32, 64-bit) & 2D/3D SWAR Morton Z-Order spatial indexing（5/5 PASS，文档直写 `doc/lib/hilbert.md`）
+新增 cap:hilbert 纯 CP 零分配空间索引库（order=1..32 无溢出 64-bit Hilbert 与无分支 O(1) SWAR 2D/3D Morton 编解码），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:golay` Extended Golay [24,12,8] & Perfect [23,12,7] 3-bit ECC / 4-bit detect zero-alloc codec（5/5 PASS，文档直写 `doc/lib/golay.md`）
 新增 cap:golay 纯 CP 零分配深空通信纠错码库（4 步 IMLD 伴随式译码器、全 4096 码字重量分布与 2324 种 1..3-bit 错误穷举验证），通过 cpc check 与 5/5 cap test
 

@@ -214,3 +214,6 @@
 
 ### 2026-11-22（`cap:golay` 验收，完成并注册纯 CP 零分配标准库 cap:golay（5/5 cap test PASS））
 - **执行成果**：`lib/golay/`（5/5 PASS，`doc/lib/golay.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:golay（5/5 cap test PASS）
+
+### 2026-11-22（`cap:hilbert` 验收，完成并注册纯 CP 零分配标准库 cap:hilbert（6/6 cap test PASS））
+- **执行成果**：`lib/hilbert/`（5/5 PASS，`doc/lib/hilbert.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:hilbert（6/6 cap test PASS）
