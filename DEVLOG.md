@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:crontab` 纯 CP 零堆 5 段式与宏 Cron 表达式位掩码解析、POSIX 匹配及 `nextAfter` 下次触发计算引擎（支持 `cap.crontab` 自动动态挂载，详见 `doc/lib/crontab.md`）（5/5 PASS，文档直写 `doc/lib/crontab.md`）
+- **核心设计**：采用 64 位位掩码零堆表示分钟/小时/日/月/星期，结合 Sakamoto 星期算法与 Hinnant 日历算法实现高精度时间推进。
+
 ## 2026-11-21: 新建 `cap:json_patch` 纯 CP 工业级 RFC 6902 JSON Patch (`add`/`remove`/`replace`/`move`/`copy`/`test`)、RFC 7396 Merge Patch 与 RFC 6901 JSON Pointer 标准库（支持 `cap.json_patch` 自动动态挂载，详见 `doc/lib/json_patch.md`）（5/5 PASS，文档直写 `doc/lib/json_patch.md`）
 - **核心设计**：深度递归克隆与相等性比较确保失败操作原子回滚及 `std.testing.allocator` 零泄漏。
 

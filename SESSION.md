@@ -82,3 +82,6 @@
 
 ### 2026-11-21（`cap:json_patch` 验收，验收提交 `cap:json_patch`）
 - **执行成果**：`lib/json_patch/`（5/5 PASS，`doc/lib/json_patch.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:json_patch`
+
+### 2026-11-21（`cap:crontab` 验收，主控完成 `cap:crontab` 研发验收提交）
+- **执行成果**：`lib/crontab/`（5/5 PASS，`doc/lib/crontab.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:crontab` 研发验收提交

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:crontab` 纯 CP 零堆 5 段式与宏 Cron 表达式位掩码解析、POSIX 匹配及 `nextAfter` 下次触发计算引擎（支持 `cap.crontab` 自动动态挂载，详见 `doc/lib/crontab.md`）（5/5 PASS，自动动态挂载 `cap.crontab`）
+- **新增标准库**：`lib/crontab/{crontab,index}.cp`，实现 5 段式与宏 Cron 位掩码解析、POSIX DOM/DOW 匹配与跨闰年 `nextAfter` 计算。\n- **新增文档与测试**：`doc/lib/crontab.md` 扁平文档与 `cap/test/test_crontab_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:json_patch` 纯 CP 工业级 RFC 6902 JSON Patch (`add`/`remove`/`replace`/`move`/`copy`/`test`)、RFC 7396 Merge Patch 与 RFC 6901 JSON Pointer 标准库（支持 `cap.json_patch` 自动动态挂载，详见 `doc/lib/json_patch.md`）（5/5 PASS，自动动态挂载 `cap.json_patch`）
 - **新增标准库**：`lib/json_patch/{json_patch,index}.cp`，实现 RFC 6901 JSON Pointer `~0`/`~1` 与 `-` 追加、RFC 6902 全 6 种原子操作与回滚、RFC 7396 Merge Patch 及 `diff` 自动补丁生成。\n- **新增文档与测试**：`doc/lib/json_patch.md` 扁平文档与 `cap/test/test_json_patch_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 
