@@ -109,3 +109,6 @@
 
 ### 2026-11-21（`cap:aho_corasick` 验收，主控完成 `cap:aho_corasick` 研发验收提交）
 - **执行成果**：`lib/aho_corasick/`（5/5 PASS，`doc/lib/aho_corasick.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:aho_corasick` 研发验收提交
+
+### 2026-11-21（`cap:aes_gcm` 验收，验收提交 `cap:aes_gcm`）
+- **执行成果**：`lib/aes_gcm/`（5/5 PASS，`doc/lib/aes_gcm.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:aes_gcm`

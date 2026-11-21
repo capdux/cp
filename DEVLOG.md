@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:aes_gcm` 纯 CP NIST SP 800-38D AES-128/256-GCM 与 RFC 8452 AES-256-GCM-SIV 抗 Nonce 重用 AEAD 认证加密引擎（支持 `cap.aes_gcm` 自动动态挂载，详见 `doc/lib/aes_gcm.md`）（5/5 PASS，文档直写 `doc/lib/aes_gcm.md`）
+- **核心设计**：基于 Zig 0.17 `std.crypto.aead` 与 `std.Io.Threaded` 实现零泄漏 AEAD 封装，通过 NIST CAVP 与 RFC 8452 官方向量及篡改拦截测试。
+
 ## 2026-11-21: 新建 `cap:aho_corasick` 纯 CP Aho-Corasick $O(N+Z)$ 多模式字符串匹配自动机（BFS 失败指针/输出链、全重叠匹配与零堆 `containsAny`，支持 `cap.aho_corasick` 自动动态挂载，详见 `doc/lib/aho_corasick.md`）（5/5 PASS，文档直写 `doc/lib/aho_corasick.md`）
 - **核心设计**：采用 BFS 构建 `fail` 与 `out_link` 压缩输出链，通过经典 `ushers`、嵌套后缀与 `std.testing.allocator` 零泄漏验证。
 
