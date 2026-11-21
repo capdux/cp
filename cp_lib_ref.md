@@ -810,3 +810,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:earcut` | Point2D, TriangleIdx, signedArea, polygonArea, isCounterClockwise, isConvex, pointInTriangle, pointInPolygon, triangulate, triangulationTotalArea | 2D simple polygon ear-clipping triangulation, signed area & point-in-polygon |
 | `cap:astar` | COST_CARDINAL, COST_DIAGONAL, GridPos, AstarResult, AstarWorkspace, manhattanHeuristic, octileHeuristic, astarFindPath, hasLineOfSight | Zero-alloc 2D grid A* pathfinding (4/8-way, anti-corner-cut min-heap) & Bresenham LOS |
 | `cap:quat` | Vec3, EulerAngles, Mat3, Quat | 3D unit quaternions: Hamilton mul, Euler ZYX, Shepperd Mat3, SLERP & fromToRotation |
+| `cap:cholesky` | choleskyDecompose, forwardSubstitute, backwardSubstituteT, choleskySolve, choleskyLogDet, choleskyDet, choleskyInvert, ldltDecompose, ldltSolve | SPD Cholesky (LL^T) & square-root-free LDL^T decomposition, solver, logDet & inverse |

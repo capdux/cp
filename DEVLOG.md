@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:cholesky` SPD Cholesky (LL^T) & square-root-free LDL^T decomposition, solver, logDet & inverse（5/5 PASS，文档直写 `doc/lib/cholesky.md`）
+新增 cap:cholesky 纯 CP 零分配对称矩阵分解库（L L^T / L D L^T 求解残差 < 1e-12 与对称正定求逆），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:quat` 3D unit quaternions: Hamilton mul, Euler ZYX, Shepperd Mat3, SLERP & fromToRotation（5/5 PASS，文档直写 `doc/lib/quat.md`）
 新增 cap:quat 纯 CP 零分配 3D 姿态与旋转库（全 4 分支 Shepperd 矩阵转换、万向锁处理与最短弧 SLERP），通过 cpc check 与 5/5 cap test
 
