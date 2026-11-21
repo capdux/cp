@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - Node.js / Bun 内置模块全量注册表与解析器（5/5 PASS，自动动态挂载 `cap.builtin_modules`）
+新增 cap:builtin_modules 标准库（lib/builtin_modules/、doc/lib/builtin_modules.md、cap/test/test_builtin_modules_production_deep.cp），5/5 回归通过。
+
+## [2026-11-21] - PostgreSQL v3 零拷贝大端消息帧读取器（5/5 PASS，自动动态挂载 `cap.pg_reader`）
+新增 cap:pg_reader 标准库（lib/pg_reader/、doc/lib/pg_reader.md、cap/test/test_pg_reader_production_deep.cp），3/3 回归通过。
+
 ## [2026-11-21] - 侵入式单链表对象复用池 ObjectPool（5/5 PASS，自动动态挂载 `cap.object_pool`）
 新增 cap:object_pool 标准库（lib/object_pool/、doc/lib/object_pool.md、cap/test/test_object_pool_production_deep.cp），6/6 回归通过（零泄漏）。
 

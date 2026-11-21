@@ -458,3 +458,5 @@ const h = cap.hash.wyhash("hello");
 | `cap:mysql_packet` | PACKET_HEADER_SIZE, MAX_PACKET_PAYLOAD, MySqlPacketError, PacketHeader, DecodedLenInt, decodeLenInt, MySqlPacketReader, PacketHandle, MySqlPacketWriter | MySQL 4 字节小端帧头、自动回填负载长度的 RAII 写入器与零拷贝流式读取器（源自 Bun sql/mysql/protocol/{NewWriter,NewReader}.cp） |
 | `cap:css_easing` | CssEasingError, StepPosition, EasingKind, CubicBezier, EasingSteps, EasingFunction | 纯 CP 零依赖 CSS 缓动函数解析、规范化化简与 Newton-Raphson 贝塞尔/阶梯曲线高精度求值（源自 Bun css/values/easing.cp） |
 | `cap:object_pool` | PoolNode, ObjectPool | 实例级侵入式单链表对象复用池，支持上限控制、自动 reset 与 ~init() 确定性零泄漏释放（源自 Bun collections/pool.cp） |
+| `cap:pg_reader` | FRAME_HEADER_SIZE, PgReaderError, PgBackendTag, PgFrame, PgMessageReader | 纯 CP 零堆分配 PostgreSQL v3 后端消息帧解析、大端整型、C 字符串与可空字段读取器（源自 Bun sql/postgres/protocol/NewReader.cp） |
+| `cap:builtin_modules` | RuntimeTarget, BuiltinKind, ResolveConfig, ResolvedBuiltin, resolveBuiltin, isBuiltin, isNodeBuiltin, hasNodePrefix, hasBunPrefix, stripNodePrefix, ensureNodePrefix | 纯 CP 零依赖 66 项 Node.js 核心内置模块与 22 项 Bun 扩展模块注册表、前缀规范化与目标运行时解析器（源自 Bun resolve_builtins/HardcodedModule.cp） |

@@ -196,3 +196,9 @@
 
 ### 2026-11-21（`cap:object_pool` 验收，吸收 Bun collections/pool.cp -> cap:object_pool，测试 6/6 通过。）
 - **执行成果**：`lib/object_pool/`（5/5 PASS，`doc/lib/object_pool.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun collections/pool.cp -> cap:object_pool，测试 6/6 通过。
+
+### 2026-11-21（`cap:pg_reader` 验收，吸收 Bun sql/postgres/protocol/NewReader.cp -> cap:pg_reader，测试 3/3 通过。）
+- **执行成果**：`lib/pg_reader/`（5/5 PASS，`doc/lib/pg_reader.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun sql/postgres/protocol/NewReader.cp -> cap:pg_reader，测试 3/3 通过。
+
+### 2026-11-21（`cap:builtin_modules` 验收，吸收 Bun resolve_builtins/HardcodedModule.cp -> cap:builtin_modules，测试 5/5 通过。）
+- **执行成果**：`lib/builtin_modules/`（5/5 PASS，`doc/lib/builtin_modules.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun resolve_builtins/HardcodedModule.cp -> cap:builtin_modules，测试 5/5 通过。

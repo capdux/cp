@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: Node.js / Bun 内置模块全量注册表与解析器（5/5 PASS，文档直写 `doc/lib/builtin_modules.md`）
+从 Bun resolve_builtins/HardcodedModule.cp 吸收全量 Node/Bun 内置模块注册表与目标运行时差异解析，支持 node: 强制前缀与 Jest 重写开关。
+
+## 2026-11-21: PostgreSQL v3 零拷贝大端消息帧读取器（5/5 PASS，文档直写 `doc/lib/pg_reader.md`）
+从 Bun sql/postgres/protocol/NewReader.cp 吸收零拷贝大端消息帧读取器，支持 markMessageStart/rewind、-1 可空字段与短帧截断防护。
+
 ## 2026-11-21: 侵入式单链表对象复用池 ObjectPool（5/5 PASS，文档直写 `doc/lib/object_pool.md`）
 从 Bun collections/pool.cp 吸收侵入式对象复用池，重构为实例级 ObjectPool<T> 并实现幂等 ~init() 确定性全量回收与命中率统计。
 
