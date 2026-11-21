@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:json5` 零分配 JSON5 1.0 词法扫描、语法校验与标准 RFC 8259 JSON 转换器（5/5 PASS，文档直写 `doc/lib/json5.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:json5`，首行带精确上游 `Synced:` 时间戳；`toStandardJson` 零分配转换并防护嵌套深度与缓冲溢出。
+
 ## 2026-11-22: 新建 `cap:opml` 零分配 OPML 2.0 订阅大纲 XML 解析、层级迭代与属性转义序列化器（5/5 PASS，文档直写 `doc/lib/opml.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:opml`；`OpmlOutlineIter` 零分配维护嵌套与自闭合 `<outline>` 层级并防护多余闭合标签下溢。
 

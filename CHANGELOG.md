@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:json5` 零分配 JSON5 1.0 词法扫描、语法校验与标准 RFC 8259 JSON 转换器（5/5 PASS，自动动态挂载 `cap.json5`）
+- 新增 `lib/json5/{json5,index}.cp`、`doc/lib/json5.md`、`cap/test/test_json5_production_deep.cp`：纯 CP 零分配实现 JSON5 1.0 词法器与标准 JSON 转换（支持单引号、未加引号键、十六进制、前导/尾随小数点、`+` 号、`Infinity`/`NaN`、续行字符串、注释与尾随逗号及 64 层深度防护）（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:opml` 零分配 OPML 2.0 订阅大纲 XML 解析、层级迭代与属性转义序列化器（5/5 PASS，自动动态挂载 `cap.opml`）
 - 新增 `lib/opml/{opml,index}.cp`、`doc/lib/opml.md`、`cap/test/test_opml_production_deep.cp`：纯 CP 零分配实现 OPML 2.0 解析与序列化（BOM/注释跳过、嵌套深度追踪、单双引号属性与防下溢），与 `cap:rss`/`cap:atom` 组成完整聚合订阅三件套（5/5 PASS）。
 

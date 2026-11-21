@@ -79,3 +79,6 @@
 
 ### 2026-11-22（`cap:opml` 验收，新增简洁单单词包 `cap:opml`（5/5 PASS），聚合订阅三件套 `rss`/`atom`/`opml` 集齐）
 - **执行成果**：`lib/opml/`（5/5 PASS，`doc/lib/opml.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:opml`（5/5 PASS），聚合订阅三件套 `rss`/`atom`/`opml` 集齐
+
+### 2026-11-22（`cap:json5` 验收，新增简洁单单词包 `cap:json5`（5/5 PASS））
+- **执行成果**：`lib/json5/`（5/5 PASS，`doc/lib/json5.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:json5`（5/5 PASS）
