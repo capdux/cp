@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:html_escape` 零分配 HTML 实体转义与命名/十进制/十六进制数字字符引用 UTF-8 反转义器（5/5 PASS，自动动态挂载 `cap.html_escape`）
+新增 `cap:html_escape`（`lib/html_escape/{escape,index}.cp`、`doc/lib/html_escape.md`、`cap/test/test_html_escape_production_deep.cp`），支持 4 字节 UTF-8 码点还原与代理项/NUL 安全替换 U+FFFD。
+
+## [2026-11-22] - 新建 `cap:uri_normalize` RFC 3986 URI 路径点段归约（§5.2.4）、百分号编码规范化与协议默认端口剥离工具（5/5 PASS，自动动态挂载 `cap.uri_normalize`）
+新增 `cap:uri_normalize`（`lib/uri_normalize/{normalize,index}.cp`、`doc/lib/uri_normalize.md`、`cap/test/test_uri_normalize_production_deep.cp`），完整实现 RFC 3986 §5.2.4 规则 A-E 与 Origin 规范化。
+
+## [2026-11-22] - 新建 `cap:logfmt` 结构化 logfmt（key=value）日志行零分配流式解析器、键值查询与规范化转义编码器（5/5 PASS，自动动态挂载 `cap.logfmt`）
+新增 `cap:logfmt`（`lib/logfmt/{logfmt,index}.cp`、`doc/lib/logfmt.md`、`cap/test/test_logfmt_production_deep.cp`），支持引号转义、无值布尔标记与自动引号编码往返。
+
+## [2026-11-22] - 新建 `cap:npm_package_name` npm / Node.js 包名与模块说明符零分配解析器（作用域/子路径拆分与 validate-npm-package-name 校验）（5/5 PASS，自动动态挂载 `cap.npm_package_name`）
+新增 `cap:npm_package_name`（`lib/npm_package_name/{pkg_name,index}.cp`、`doc/lib/npm_package_name.md`、`cap/test/test_npm_package_name_production_deep.cp`），实现 `@scope/pkg/subpath` 解析、裸说明符判定与合法性校验。
+
 ## [2026-11-22] - 新建 `cap:editorconfig` .editorconfig 零分配解析器、花括号/通配符段匹配与级联属性求值器（5/5 PASS，自动动态挂载 `cap.editorconfig`）
 新增 `cap:editorconfig`（`lib/editorconfig/{editorconfig,index}.cp`、`doc/lib/editorconfig.md`、`cap/test/test_editorconfig_production_deep.cp`），支持 `root=true`、`{a,b}` 段匹配与 8 项核心编辑器属性级联。
 

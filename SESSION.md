@@ -367,3 +367,15 @@
 
 ### 2026-11-22（`cap:editorconfig` 验收，Batch 52 注册 `cap:editorconfig` 并提交。）
 - **执行成果**：`lib/editorconfig/`（5/5 PASS，`doc/lib/editorconfig.md`）经 `verify_module.sh` 一次性验收回收；Batch 52 注册 `cap:editorconfig` 并提交。
+
+### 2026-11-22（`cap:npm_package_name` 验收，Batch 53 完成 `cap:npm_package_name`、`cap:logfmt`、`cap:uri_normalize`、`cap:html_escape` 4 模块吸收与全量验收。）
+- **执行成果**：`lib/npm_package_name/`（5/5 PASS，`doc/lib/npm_package_name.md`）经 `verify_module.sh` 一次性验收回收；Batch 53 完成 `cap:npm_package_name`、`cap:logfmt`、`cap:uri_normalize`、`cap:html_escape` 4 模块吸收与全量验收。
+
+### 2026-11-22（`cap:logfmt` 验收，Batch 53 注册 `cap:logfmt`。）
+- **执行成果**：`lib/logfmt/`（5/5 PASS，`doc/lib/logfmt.md`）经 `verify_module.sh` 一次性验收回收；Batch 53 注册 `cap:logfmt`。
+
+### 2026-11-22（`cap:uri_normalize` 验收，Batch 53 注册 `cap:uri_normalize`。）
+- **执行成果**：`lib/uri_normalize/`（5/5 PASS，`doc/lib/uri_normalize.md`）经 `verify_module.sh` 一次性验收回收；Batch 53 注册 `cap:uri_normalize`。
+
+### 2026-11-22（`cap:html_escape` 验收，Batch 53 注册 `cap:html_escape` 并提交（突破 160 模块里程碑）。）
+- **执行成果**：`lib/html_escape/`（5/5 PASS，`doc/lib/html_escape.md`）经 `verify_module.sh` 一次性验收回收；Batch 53 注册 `cap:html_escape` 并提交（突破 160 模块里程碑）。

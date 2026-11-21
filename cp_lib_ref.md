@@ -581,3 +581,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_digest` | DigestEntry, DigestIter, findDigest, formatDigest, WantDigestPref, WantDigestIter, negotiateDigestAlg | RFC 9530 Content-Digest / Repr-Digest 与 Want-Content-Digest 结构化字段零分配解析与算法协商 |
 | `cap:env_expand` | EnvPair, lookupEnv, expandEnv, hasEnvRefs | POSIX Shell 风格环境变量模板零分配展开器（支持 $VAR/${VAR:-def}/${VAR:+alt}/嵌套展开与转义） |
 | `cap:editorconfig` | matchSectionPattern, IndentStyle, EndOfLine, Charset, EditorConfigProps, resolveEditorConfig | .editorconfig 零分配解析器、花括号/通配符段匹配与级联属性求值器 |
+| `cap:npm_package_name` | PackageSpecifier, parsePackageSpecifier, isValidPackageName, isRelativeSpecifier, isBareSpecifier | npm / Node.js 包名与模块说明符零分配解析器（作用域/子路径拆分与 validate-npm-package-name 校验） |
+| `cap:logfmt` | LogfmtField, LogfmtIter, getLogfmtValue, appendLogfmtPair | 结构化 logfmt（key=value）日志行零分配流式解析器、键值查询与规范化转义编码器 |
+| `cap:uri_normalize` | isUnreserved, defaultPortForScheme, normalizePercentEncoding, removeDotSegments, normalizeOrigin | RFC 3986 URI 路径点段归约（§5.2.4）、百分号编码规范化与协议默认端口剥离工具 |
+| `cap:html_escape` | needsHtmlEscape, escapeHtml, unescapeHtml | 零分配 HTML 实体转义与命名/十进制/十六进制数字字符引用 UTF-8 反转义器 |

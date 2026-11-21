@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:html_escape` 零分配 HTML 实体转义与命名/十进制/十六进制数字字符引用 UTF-8 反转义器（5/5 PASS，文档直写 `doc/lib/html_escape.md`）
+主智能体吸收 `cap:html_escape`，未知或未闭合 `&...` 原样保留，防止 XSS 注入与非法 UTF-8 输出。
+
+## 2026-11-22: 新建 `cap:uri_normalize` RFC 3986 URI 路径点段归约（§5.2.4）、百分号编码规范化与协议默认端口剥离工具（5/5 PASS，文档直写 `doc/lib/uri_normalize.md`）
+Subagent 2 吸收 `cap:uri_normalize`，零堆分配规范化非保留字符百分号编码与默认端口。
+
+## 2026-11-22: 新建 `cap:logfmt` 结构化 logfmt（key=value）日志行零分配流式解析器、键值查询与规范化转义编码器（5/5 PASS，文档直写 `doc/lib/logfmt.md`）
+主智能体吸收 `cap:logfmt`，支持未闭合引号错误标志与 `\"`/`\\`/`\n`/`\r`/`\t` 编解码往返。
+
+## 2026-11-22: 新建 `cap:npm_package_name` npm / Node.js 包名与模块说明符零分配解析器（作用域/子路径拆分与 validate-npm-package-name 校验）（5/5 PASS，文档直写 `doc/lib/npm_package_name.md`）
+Subagent 1 吸收 `cap:npm_package_name`，拒绝相对/绝对路径、协议前缀与非法包名字符。
+
 ## 2026-11-22: 新建 `cap:editorconfig` .editorconfig 零分配解析器、花括号/通配符段匹配与级联属性求值器（5/5 PASS，文档直写 `doc/lib/editorconfig.md`）
 主智能体吸收 `cap:editorconfig`，支持 `unset`/`off` 清除属性与 `effectiveTabWidth()` 推导。
 
