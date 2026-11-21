@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:kmp` 纯 CP 零分配线性时间字符串匹配与回文算法库：KMP 前缀表/重叠匹配/最小周期、Z-Algorithm 与无哨兵 Manacher 最长回文子串（支持任意二进制字节串）（5/5 PASS，自动动态挂载 `cap.kmp`）
+新增纯 CP 零分配线性时间字符串与回文算法库 cap:kmp（KMP、Z-Algorithm、无哨兵 Manacher），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:hmm` 纯 CP 零分配离散隐马尔可夫模型（HMM）库：对数域 Viterbi 最优路径解码、Rabiner 缩放 Forward-Backward 对数似然与后验分布及 Baum-Welch EM 参数重估（5/5 PASS，自动动态挂载 `cap.hmm`）
 新增纯 CP 零分配隐马尔可夫模型库 cap:hmm（对数 Viterbi、缩放 Forward-Backward、Baum-Welch EM），含文档与 6 项深度生产测试
 

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:kmp` 纯 CP 零分配线性时间字符串匹配与回文算法库：KMP 前缀表/重叠匹配/最小周期、Z-Algorithm 与无哨兵 Manacher 最长回文子串（支持任意二进制字节串）（5/5 PASS，文档直写 `doc/lib/kmp.md`）
+新增 cap:kmp（lib/kmp/{kmp,index}.cp）：零分配 O(n) KMP 前缀表与重叠匹配、Z 函数及无哨兵 Manacher 回文算法，支持任意二进制字节串，cpc check 0 错误，cap test 6/6 PASS (706ms)
+
 ## 2026-11-22: 新建 `cap:hmm` 纯 CP 零分配离散隐马尔可夫模型（HMM）库：对数域 Viterbi 最优路径解码、Rabiner 缩放 Forward-Backward 对数似然与后验分布及 Baum-Welch EM 参数重估（5/5 PASS，文档直写 `doc/lib/hmm.md`）
 新增 cap:hmm（lib/hmm/{hmm,index}.cp）：零分配对数域 Viterbi 解码、Rabiner 缩放前向后向与 Baum-Welch EM，200 步长序列零下溢，cpc check 0 错误，cap test 6/6 PASS (761ms)
 

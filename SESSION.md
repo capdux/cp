@@ -136,3 +136,6 @@
 
 ### 2026-11-22（`cap:hmm` 验收，子智能体交付 cap:hmm（隐马尔可夫模型 Viterbi / Forward-Backward / Baum-Welch，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/hmm/`（5/5 PASS，`doc/lib/hmm.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:hmm（隐马尔可夫模型 Viterbi / Forward-Backward / Baum-Welch，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:kmp` 验收，子智能体交付 cap:kmp（KMP / Z-Algorithm / Manacher 线性字符串算法，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/kmp/`（5/5 PASS，`doc/lib/kmp.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:kmp（KMP / Z-Algorithm / Manacher 线性字符串算法，6/6 PASS），主协调器统一登记并提交
