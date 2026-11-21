@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:bfgs` 纯 CP 零分配拟牛顿法与梯度优化库：完整逆 Hessian BFGS、双循环有限内存 L-BFGS（O(mn) 内存）、Armijo/Wolfe 线搜索与中心差分梯度（5/5 PASS，文档直写 `doc/lib/bfgs.md`）
+新增 cap:bfgs（lib/bfgs/{bfgs,index}.cp）：零分配完整 BFGS 与双循环 L-BFGS，40 步内收敛 Rosenbrock 与 16D 耦合二次/L2 逻辑回归目标，cpc check 0 错误，cap test 6/6 PASS (766ms)
+
 ## 2026-11-22: 新建 `cap:gamma` 纯 CP 零分配特殊数学函数库：Lanczos lgamma/tgamma、digamma、级数/Lentz 连分式正则化不完全 Gamma/Beta、无灾难抵消 erf/erfc 与对数阶乘/组合数（5/5 PASS，文档直写 `doc/lib/gamma.md`）
 新增 cap:gamma（lib/gamma/{gamma,index}.cp）：9 项 Lanczos g=7、Bernoulli digamma、Lentz 连分式不完全 Gamma/Beta 与远尾高精度 erfc（相对误差 < 1e-13），cpc check 0 错误，cap test 6/6 PASS (716ms)
 
