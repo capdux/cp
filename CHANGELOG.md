@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:s3m` 零分配 Scream Tracker 3 (.s3m) 跟踪器音乐头、Parapointer 与采样解析器（5/5 PASS，自动动态挂载 `cap.s3m`）
+新增 `lib/s3m/{s3m,index}.cp`、`doc/lib/s3m.md` 与 `cap/test/test_s3m_production_deep.cp`（5/5 PASS），支持 96B SCRM 头、Parapointer 段寻址、80B PCM 乐器头与压缩 Pattern 切片。
+
 ## [2026-11-22] - 新建 `cap:xm` 零分配 FastTracker II (.xm) 跟踪器音乐头、Pattern 与 Instrument 解析器（5/5 PASS，自动动态挂载 `cap.xm`）
 新增 `lib/xm/{xm,index}.cp`、`doc/lib/xm.md` 与 `cap/test/test_xm_production_deep.cp`（5/5 PASS），支持 XM v1.04 头、256B Order 表、Pattern 零拷贝迭代与含多采样 PCM 跳过的 Instrument 迭代。
 

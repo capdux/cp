@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:s3m` 零分配 Scream Tracker 3 (.s3m) 跟踪器音乐头、Parapointer 与采样解析器（5/5 PASS，文档直写 `doc/lib/s3m.md`）
+实现零分配 Scream Tracker 3 S3M 解析器，支持 24-bit memseg 偏移、SCRS 签名与立体声/16-bit 标志。
+
 ## 2026-11-22: 新建 `cap:xm` 零分配 FastTracker II (.xm) 跟踪器音乐头、Pattern 与 Instrument 解析器（5/5 PASS，文档直写 `doc/lib/xm.md`）
 实现零分配 FastTracker II XM 解析器，完整支持 Linear/Amiga 频率表标志与严格边界防溢出。
 
