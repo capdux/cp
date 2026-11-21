@@ -70,3 +70,6 @@
 
 ### 2026-11-21（`cap:totp_hotp` 验收，验收提交 `cap:totp_hotp` 并新开 `cap:cbor_diag` 并发子智能体）
 - **执行成果**：`lib/totp_hotp/`（5/5 PASS，`doc/lib/totp_hotp.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:totp_hotp` 并新开 `cap:cbor_diag` 并发子智能体
+
+### 2026-11-21（`cap:cuid2` 验收，主控完成 `cap:cuid2` 研发验收提交，继续与 `cap:openmetrics` 及 `cap:cbor_diag` 并行）
+- **执行成果**：`lib/cuid2/`（5/5 PASS，`doc/lib/cuid2.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:cuid2` 研发验收提交，继续与 `cap:openmetrics` 及 `cap:cbor_diag` 并行

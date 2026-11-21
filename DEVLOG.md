@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:cuid2` 纯 CP 抗碰撞 CUID2 Base36 唯一 ID 生成与格式校验引擎（SHA3-512 混合时间戳/原子计数/节点指纹，支持 `cap.cuid2` 自动动态挂载，详见 `doc/lib/cuid2.md`）（5/5 PASS，文档直写 `doc/lib/cuid2.md`）
+- **核心设计**：采用 `std.crypto.hash.sha3.Sha3_512` 与 `std.Io.Threaded` 随机源，确保小写字母首字符与高并发无碰撞唯一性。
+
 ## 2026-11-21: 新建 `cap:totp_hotp` 纯 CP 工业级 RFC 4226 HOTP / RFC 6238 TOTP 动态口令、RFC 4648 Base32 编解码与 `otpauth://` URI 解析构建标准库（支持 `cap.totp_hotp` 自动动态挂载，详见 `doc/lib/totp_hotp.md`）（5/5 PASS，文档直写 `doc/lib/totp_hotp.md`）
 - **核心设计**：使用 `std.crypto.auth.hmac` 与 `std.crypto.timing_safe.eql` 实现零漏洞动态截断与常量时间校验，通过 RFC 4226 Appendix D 与 RFC 6238 Appendix B 官方向量全匹配。
 
