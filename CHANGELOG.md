@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:macho` 零分配 Apple Mach-O 32/64-bit 及 Fat Universal 二进制头与 Load Command 解析器（5/5 PASS，自动动态挂载 `cap.macho`）
+- 新增 `lib/macho/{macho,index}.cp`、`doc/lib/macho.md`、`cap/test/test_macho_production_deep.cp`：纯 CP 零分配实现 Apple Mach-O 32/64-bit 与 Fat Universal 二进制头、8 种魔数识别、Load Command 与架构切片边界安全迭代（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:haproxy` 零分配 HAProxy `.cfg` 负载均衡配置段与指令解析器（5/5 PASS，自动动态挂载 `cap.haproxy`）
 - 新增 `lib/haproxy/{haproxy,index}.cp`、`doc/lib/haproxy.md`、`cap/test/test_haproxy_production_deep.cp`：纯 CP 零分配实现 HAProxy `.cfg` 段切分与指令迭代（兼容 CRLF、保护引号内 `#` 与 `\#` 转义），与 `cap:nginx`/`cap:caddy` 集齐反向代理配置三件套（5/5 PASS）。
 

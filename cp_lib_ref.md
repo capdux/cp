@@ -521,3 +521,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:caddy` | `CaddyTokenKind`, `CaddyToken`, `CaddyIter`, `CaddySiteBlock`, `CaddySiteIter`, `validateCaddyfile` | 零分配 Caddyfile 反向代理/TLS 站点配置词法扫描、站点块迭代与 64 层结构校验器 |
 | `cap:nix` | `NIX_MAX_DEPTH`, `NixTokenKind`, `NixToken`, `NixAttrBinding`, `NixIter`, `NixAttrIter`, `validateNixDelimiters` | 零分配 Nix / `flake.nix` 表达式词法扫描、属性集顶层绑定提取与 64 层定界符校验器 |
 | `cap:haproxy` | `HaSectionKind`, `HaSection`, `HaDirective`, `HaSectionIter`, `HaDirectiveIter`, `findHaSection`, `findHaDirective` | 零分配 HAProxy `.cfg` 负载均衡配置段与指令解析器 |
+| `cap:macho` | `MachoKind`, `CPU_TYPE_X86_64`, `CPU_TYPE_ARM64`, `MH_EXECUTE`, `MH_DYLIB`, `MachoHeader`, `MachoLoadCmd`, `FatArchEntry`, `detectMachoKind`, `parseMachoHeader`, `MachoLoadCmdIter`, `FatArchIter` | 零分配 Apple Mach-O 32/64-bit 及 Fat Universal 二进制头与 Load Command 解析器 |

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:macho` 零分配 Apple Mach-O 32/64-bit 及 Fat Universal 二进制头与 Load Command 解析器（5/5 PASS，文档直写 `doc/lib/macho.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:macho`，补齐跨平台二进制检查生态；严格校验 `cmdsize >= 8` 与边界偏移防畸形二进制越界。
+
 ## 2026-11-22: 新建 `cap:haproxy` 零分配 HAProxy `.cfg` 负载均衡配置段与指令解析器（5/5 PASS，文档直写 `doc/lib/haproxy.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:haproxy`；`HaSectionIter` 零拷贝切分 9 类段，`HaDirectiveIter` 精确剥离引号外行尾注释。
 

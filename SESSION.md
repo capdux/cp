@@ -151,3 +151,6 @@
 
 ### 2026-11-22（`cap:haproxy` 验收，新增简洁单单词包 `cap:haproxy`（5/5 PASS），反向代理配置三件套 `nginx`/`caddy`/`haproxy` 集齐）
 - **执行成果**：`lib/haproxy/`（5/5 PASS，`doc/lib/haproxy.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:haproxy`（5/5 PASS），反向代理配置三件套 `nginx`/`caddy`/`haproxy` 集齐
+
+### 2026-11-22（`cap:macho` 验收，新增简洁单单词包 `cap:macho`（5/5 PASS））
+- **执行成果**：`lib/macho/`（5/5 PASS，`doc/lib/macho.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:macho`（5/5 PASS）
