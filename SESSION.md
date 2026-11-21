@@ -94,3 +94,15 @@
 
 ### 2026-11-21（`cap:mysql_proto` 验收，Batch 1 验收提交 cap:mysql_proto（6/6 PASS，子智能体交付））
 - **执行成果**：`lib/mysql_proto/`（5/5 PASS，`doc/lib/mysql_proto.md`）经 `verify_module.sh` 一次性验收回收；Batch 1 验收提交 cap:mysql_proto（6/6 PASS，子智能体交付）
+
+### 2026-11-21（`cap:padding_checker` 验收，吸收 Bun `install/padding_checker.cp` -> `cap:padding_checker`，测试 5/5 通过。）
+- **执行成果**：`lib/padding_checker/`（5/5 PASS，`doc/lib/padding_checker.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun `install/padding_checker.cp` -> `cap:padding_checker`，测试 5/5 通过。
+
+### 2026-11-21（`cap:js_op` 验收，吸收 Bun `js_parser/ast/Op.cp` -> `cap:js_op`，测试 5/5 通过。）
+- **执行成果**：`lib/js_op/`（5/5 PASS，`doc/lib/js_op.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun `js_parser/ast/Op.cp` -> `cap:js_op`，测试 5/5 通过。
+
+### 2026-11-21（`cap:css_geometry` 验收，吸收 Bun CSS 几何与溢出模块 -> `cap:css_geometry`，测试 6/6 通过。）
+- **执行成果**：`lib/css_geometry/`（5/5 PASS，`doc/lib/css_geometry.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun CSS 几何与溢出模块 -> `cap:css_geometry`，测试 6/6 通过。
+
+### 2026-11-21（`cap:pg_wire_types` 验收，吸收 Bun PostgreSQL v3 线协议类型 -> `cap:pg_wire_types`，测试 5/5 通过。）
+- **执行成果**：`lib/pg_wire_types/`（5/5 PASS，`doc/lib/pg_wire_types.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun PostgreSQL v3 线协议类型 -> `cap:pg_wire_types`，测试 5/5 通过。

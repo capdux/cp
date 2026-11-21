@@ -2,6 +2,18 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: PostgreSQL v3 线协议字段描述与启动报文（5/5 PASS，文档直写 `doc/lib/pg_wire_types.md`）
+从 Bun `sql/postgres/protocol/{FieldDescription,StartupMessage}.cp` 吸收 PG v3 启动报文与列元数据编解码器，采用 CP `~init()` RAII 析构与显式借用，零泄漏通过全量边界测试。
+
+## 2026-11-21: CSS 几何与溢出布局值类型（5/5 PASS，文档直写 `doc/lib/css_geometry.md`）
+从 Bun `css/values/{ratio,rect}.cp` 与 `css/properties/overflow.cp` 吸收 CSS 几何与溢出值类型，完整覆盖四向简写展开、宽高比归约与 CSS 格式化输出。
+
+## 2026-11-21: JS/TS AST 运算符与优先级表（5/5 PASS，文档直写 `doc/lib/js_op.md`）
+从 Bun `js_parser/ast/Op.cp` 吸收完整 JS/TS 运算符集合（50+ 运算符）、Pratt 解析优先级表及属性判定方法，100% 纯 CP 零依赖。
+
+## 2026-11-21: 结构体零填充校验器（5/5 PASS，文档直写 `doc/lib/padding_checker.md`）
+从 Bun `install/padding_checker.cp` 吸收并升级为 CP 新语法（`comptime for (field of s.fields)`），提供编译期结构体 padding 检测与断言，保障二进制协议与持久化布局零未初始化间隙。
+
 ## 2026-11-21: 新建 `cap:mysql_proto` 纯 CP MySQL Wire Protocol 能力位、服务端状态标志与 226 项 Collation/字符集查找表（5/5 PASS，文档直写 `doc/lib/mysql_proto.md`）
 子智能体吸收自 bun/src/sql/mysql/{Capabilities,StatusFlags,protocol/CharacterSet}.cp。
 

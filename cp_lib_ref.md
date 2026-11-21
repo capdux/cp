@@ -424,3 +424,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:intrusive_heap` | IntrusiveField, IntrusiveHeap | 纯 CP 零堆分配侵入式配对最小堆（均摊 O(1) 插入/合并，O(log N) 弹出/任意删除） |
 | `cap:http_status` | StatusClass, statusLine, statusText, statusTextOrEmpty, classify, isInformational, isSuccess, isRedirect, isClientError, isServerError, isError, canHaveBody, isCacheableByDefault, isRetryable | 纯 CP 零分配 HTTP 状态码 100-599 全量短语表与 RFC 9110 语义分类器 |
 | `cap:mysql_proto` | Capabilities, CAP_*, StatusFlag, StatusFlags, CharacterSet | 纯 CP MySQL Wire Protocol 能力位、服务端状态标志与 226 项 Collation/字符集查找表 |
+| `cap:padding_checker` | hasPadding, assertNoPadding, totalPaddingBytes, fieldSumSize | 编译期结构体内存布局零填充断言与字节统计（源自 Bun install/padding_checker.cp） |
+| `cap:js_op` | OpCode, Level, precedence, isRightAssociative, isAssign, isBinary, isUnary, isPrefix, isPostfix, unparse, toString | 完整 JavaScript/TypeScript AST 运算符枚举、Pratt 优先级表与分类查询（源自 Bun js_parser/ast/Op.cp） |
+| `cap:css_geometry` | Ratio, Rect, OverflowKeyword, Overflow, TextOverflow, ScrollbarGutter | CSS 宽高比 Ratio、四向 Rect<T> 与 Overflow/TextOverflow/ScrollbarGutter 布局模型（源自 Bun css/values/{ratio,rect}.cp + properties/overflow.cp） |
+| `cap:pg_wire_types` | FormatCode, FieldDescription, StartupParam, StartupMessage, decodeFieldDescription, encodeStartupMessage | PostgreSQL v3 协议 RowDescription 字段元数据与 StartupMessage 零拷贝编解码（源自 Bun sql/postgres/protocol/{FieldDescription,StartupMessage}.cp） |

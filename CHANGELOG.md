@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - PostgreSQL v3 线协议字段描述与启动报文（5/5 PASS，自动动态挂载 `cap.pg_wire_types`）
+新增 `cap:pg_wire_types` 标准库（`lib/pg_wire_types/`、、），5/5 回归通过（零泄漏）。
+
+## [2026-11-21] - CSS 几何与溢出布局值类型（5/5 PASS，自动动态挂载 `cap.css_geometry`）
+新增 `cap:css_geometry` 标准库（`lib/css_geometry/`、、），6/6 回归通过。
+
+## [2026-11-21] - JS/TS AST 运算符与优先级表（5/5 PASS，自动动态挂载 `cap.js_op`）
+新增 `cap:js_op` 标准库（`lib/js_op/`、、），5/5 回归通过。
+
+## [2026-11-21] - 结构体零填充校验器（5/5 PASS，自动动态挂载 `cap.padding_checker`）
+新增 `cap:padding_checker` 标准库（`lib/padding_checker/`、、），5/5 回归通过。
+
 ## [2026-11-21] - 新建 `cap:mysql_proto` 纯 CP MySQL Wire Protocol 能力位、服务端状态标志与 226 项 Collation/字符集查找表（5/5 PASS，自动动态挂载 `cap.mysql_proto`）
 新增 lib/mysql_proto/{protocol,index}.cp、doc/lib/mysql_proto.md 与 6 组深度测试（100% PASS）。
 
