@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:treap` 纯 CP 零分配随机平衡树与顺序统计 Treap 库：固定节点池与空闲链表复用、SplitMix64 优先级、O(log n) kth/rank/lowerBound/upperBound/rangeCount 与不变量校验（5/5 PASS，自动动态挂载 `cap.treap`）
+新增纯 CP 零分配随机平衡树/顺序统计库 cap:treap（固定池 Treap、空闲链表复用、O(log n) 顺序统计与范围计数），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:knn` 纯 CP 零分配 K-最近邻（KNN）分类与回归库：欧氏/曼哈顿/切比雪夫/余弦四种距离、原地大顶堆 Top-K 搜索、均匀/反距离加权分类与回归及留一法交叉验证（5/5 PASS，自动动态挂载 `cap.knn`）
 新增纯 CP 零分配 KNN 分类与回归库 cap:knn（四种距离、Top-K 堆搜索、分类/回归、留一法 LOO-CV），含文档与 6 项深度生产测试
 

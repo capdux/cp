@@ -118,3 +118,6 @@
 
 ### 2026-11-22（`cap:knn` 验收，子智能体交付 cap:knn（KNN 分类/回归与留一法交叉验证，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/knn/`（5/5 PASS，`doc/lib/knn.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:knn（KNN 分类/回归与留一法交叉验证，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:treap` 验收，子智能体交付 cap:treap（零分配顺序统计 Treap，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/treap/`（5/5 PASS，`doc/lib/treap.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:treap（零分配顺序统计 Treap，6/6 PASS），主协调器统一登记并提交

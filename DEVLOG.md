@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:treap` 纯 CP 零分配随机平衡树与顺序统计 Treap 库：固定节点池与空闲链表复用、SplitMix64 优先级、O(log n) kth/rank/lowerBound/upperBound/rangeCount 与不变量校验（5/5 PASS，文档直写 `doc/lib/treap.md`）
+新增 cap:treap（lib/treap/{treap,index}.cp）：零分配固定节点池与空闲链表实现 SplitMix64 随机平衡 Treap，支持 O(log n) kth/rank/rangeCount 与 BST+堆序不变量校验，cpc check 0 错误，cap test 6/6 PASS (852ms)
+
 ## 2026-11-22: 新建 `cap:knn` 纯 CP 零分配 K-最近邻（KNN）分类与回归库：欧氏/曼哈顿/切比雪夫/余弦四种距离、原地大顶堆 Top-K 搜索、均匀/反距离加权分类与回归及留一法交叉验证（5/5 PASS，文档直写 `doc/lib/knn.md`）
 新增 cap:knn（lib/knn/{knn,index}.cp）：零分配大顶堆 Top-K 最近邻搜索、均匀/反距离加权分类与回归及留一法交叉验证，cpc check 0 错误，cap test 6/6 PASS (691ms)
 
