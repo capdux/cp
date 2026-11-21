@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:eot` 零分配 Microsoft Embedded OpenType (.eot) Web 字体容器与 UTF-16LE 名称解析器（5/5 PASS，自动动态挂载 `cap.eot`）
+新增 `lib/eot/{eot,index}.cp`、`doc/lib/eot.md` 与 `cap/test/test_eot_production_deep.cp`（5/5 PASS），支持 EOT v1.0/v2.1/v2.2 头、root_string 白名单、代理对 UTF-16LE 转 UTF-8 与内嵌字体切片。
+
 ## [2026-11-22] - 新建 `cap:nsf` 零分配 NES Sound Format (.nsf/.nsfe) 芯片音乐头与分块容器解析器（5/5 PASS，自动动态挂载 `cap.nsf`）
 新增 `lib/nsf/{nsf,index}.cp`、`doc/lib/nsf.md` 与 `cap/test/test_nsf_production_deep.cp`（5/5 PASS），支持 128B NSF1/2 头、6 种扩展芯片位掩码、Bankswitching 检测与 NSFe 分块迭代。
 

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:eot` 零分配 Microsoft Embedded OpenType (.eot) Web 字体容器与 UTF-16LE 名称解析器（5/5 PASS，文档直写 `doc/lib/eot.md`）
+实现零分配 Microsoft EOT 容器解析器，严格校验 0x504C 魔数、Reserved/Padding 全零与字体边界。
+
 ## 2026-11-22: 新建 `cap:nsf` 零分配 NES Sound Format (.nsf/.nsfe) 芯片音乐头与分块容器解析器（5/5 PASS，文档直写 `doc/lib/nsf.md`）
 实现零分配 NES Sound Format (.nsf/.nsfe) 解析器，支持 NTSC/PAL 帧率计算与 NSFe INFO 块解析。
 
