@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:pagerank` CSR directed graph PageRank (dangling-node), Personalized PageRank & Kleinberg HITS（5/5 PASS，自动动态挂载 `cap.pagerank`）
+新增纯 CP 零分配标准库 cap:pagerank（CSR 有向图 PageRank、Personalized PageRank 与 Kleinberg HITS）与 6/6 深度测试
+
 ## [2026-11-22] - 新建 `cap:kmeans` Deterministic K-Means++ clustering (arbitrary D), empty-cluster recovery & Silhouette（5/5 PASS，自动动态挂载 `cap.kmeans`）
 新增纯 CP 零分配标准库 cap:kmeans（任意维度确定性 K-Means++ 聚类、空簇恢复与 Silhouette 轮廓系数）与 6/6 深度测试
 

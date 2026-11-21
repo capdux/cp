@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:pagerank` CSR directed graph PageRank (dangling-node), Personalized PageRank & Kleinberg HITS（5/5 PASS，文档直写 `doc/lib/pagerank.md`）
+新增 cap:pagerank 纯 CP 零分配图中心性算法库（悬挂节点重分配、Kahan 求和与 L2 归一化 HITS），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:kmeans` Deterministic K-Means++ clustering (arbitrary D), empty-cluster recovery & Silhouette（5/5 PASS，文档直写 `doc/lib/kmeans.md`）
 新增 cap:kmeans 纯 CP 零分配聚类分析库（SplitMix64 + D^2 加权初始化、64 维分块任意高维 Lloyd 迭代与轮廓系数），通过 cpc check 与 6/6 cap test
 
