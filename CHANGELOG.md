@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:scale` 零分配 Parity SCALE 确定性小端编解码器与 Compact<u64> 规范校验（5/5 PASS，自动动态挂载 `cap.scale`）
+新增 `lib/scale/{scale,index}.cp`、`doc/lib/scale.md` 与 `cap/test/test_scale_production_deep.cp`（5/5 PASS），支持 Compact<u64> 全 4 模式规范校验、单字节三态 Option<bool> 与全套 LE 标量/容器编解码。
+
 ## [2026-11-22] - 新建 `cap:borsh` 零分配 Borsh 确定性二进制小端编解码器（拒绝 NaN 与非 0/1 布尔）（5/5 PASS，自动动态挂载 `cap.borsh`）
 新增 `lib/borsh/{borsh,index}.cp`、`doc/lib/borsh.md` 与 `cap/test/test_borsh_production_deep.cp`（5/5 PASS），支持全套小端整数/浮点、Option/Enum/Seq 与原子溢出保护。
 

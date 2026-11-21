@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:scale` 零分配 Parity SCALE 确定性小端编解码器与 Compact<u64> 规范校验（5/5 PASS，文档直写 `doc/lib/scale.md`）
+实现零分配 Parity SCALE 编解码器，严格拒绝非最小 Compact 编码与大整数尾零。
+
 ## 2026-11-22: 新建 `cap:borsh` 零分配 Borsh 确定性二进制小端编解码器（拒绝 NaN 与非 0/1 布尔）（5/5 PASS，文档直写 `doc/lib/borsh.md`）
 实现零分配 Borsh 编解码器，严格执行 NaN 拒绝与 0/1 布尔合法性检查。
 
