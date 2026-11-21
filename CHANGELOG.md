@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:coap` CoAP (RFC 7252) Delta-encoded Option TLV, CoapWriter & payload zero-alloc codec（5/5 PASS，自动动态挂载 `cap.coap`）
+新增纯 CP 零分配标准库 cap:coap（RFC 7252 CoAP 报文解析、Delta Option 迭代与 CoapWriter 编码器）与 6/6 深度测试
+
 ## [2026-11-22] - 新建 `cap:ptp` PTPv2/v2.1 (IEEE 1588) 34B header, 48-bit timestamp, Announce & Delay_Resp zero-alloc codec（5/5 PASS，自动动态挂载 `cap.ptp`）
 新增纯 CP 零分配标准库 cap:ptp（IEEE 1588 PTPv2/v2.1 报头、48-bit 秒时间戳、Announce/Delay_Resp 解析与编码）与 5/5 深度测试
 

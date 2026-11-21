@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:coap` CoAP (RFC 7252) Delta-encoded Option TLV, CoapWriter & payload zero-alloc codec（5/5 PASS，文档直写 `doc/lib/coap.md`）
+新增 cap:coap 纯 CP 零分配物联网轻量 REST 协议库（4B 报头/Token/Delta 0..12/13/14 扩展编码与 CoapWriter 往返），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:ptp` PTPv2/v2.1 (IEEE 1588) 34B header, 48-bit timestamp, Announce & Delay_Resp zero-alloc codec（5/5 PASS，文档直写 `doc/lib/ptp.md`）
 新增 cap:ptp 纯 CP 零分配精密时间协议库（34B 报头、带符号缩放纳秒 correction_field、10B 时间戳、Announce/Delay_Resp 与编码往返），通过 cpc check 与 5/5 cap test
 
