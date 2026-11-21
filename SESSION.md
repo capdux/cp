@@ -106,3 +106,6 @@
 
 ### 2026-11-22（`cap:lucene` 验收，完成 `cap:lucene` 交付验收并登记入库（5/5 PASS）；派发 `cap:las`。）
 - **执行成果**：`lib/lucene/`（5/5 PASS，`doc/lib/lucene.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:lucene` 交付验收并登记入库（5/5 PASS）；派发 `cap:las`。
+
+### 2026-11-22（`cap:wkb` 验收，完成 `cap:wkb` 交付验收并登记入库（5/5 PASS）；派发 `cap:psd`。）
+- **执行成果**：`lib/wkb/`（5/5 PASS，`doc/lib/wkb.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:wkb` 交付验收并登记入库（5/5 PASS）；派发 `cap:psd`。

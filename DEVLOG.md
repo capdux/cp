@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:wkb` 零分配 OGC WKB / PostGIS EWKB 空间几何二进制编解码器（5/5 PASS，文档直写 `doc/lib/wkb.md`）
+实现零分配 WKB/EWKB 空间几何编解码器，严控 32 层嵌套深度与点数乘法溢出边界。
+
 ## 2026-11-22: 新建 `cap:lucene` 零分配 Apache Lucene CodecUtil 索引头/尾帧与 VInt/VLong 解析器（5/5 PASS，文档直写 `doc/lib/lucene.md`）
 实现零分配 Apache Lucene CodecUtil 解析器，严格校验魔数、algorithm_id==0 与高 32 位零校验和。
 
