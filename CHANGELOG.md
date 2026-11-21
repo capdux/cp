@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:snowflake` 纯 CP 线程安全分布式 64-bit Snowflake ID 生成器、时钟回拨保护、字段反解与零堆 Base62 编解码引擎（支持 `cap.snowflake` 自动动态挂载，详见 `doc/lib/snowflake.md`）（5/5 PASS，自动动态挂载 `cap.snowflake`）
+- **新增标准库**：`lib/snowflake/{snowflake,index}.cp`，实现 Mutex 保护 `SnowflakeGenerator`、4096 毫秒内序列翻转、时钟回拨拦截、`decomposeId` 与零堆 `encodeBase62`/`decodeBase62`。
+- **新增文档与测试**：`doc/lib/snowflake.md` 扁平文档与 `cap/test/test_snowflake_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:blake3` 纯 CP 零堆 BLAKE3 Merkle 树 256-bit 密码学哈希、Keyed MAC、KDF 与 XOF 可扩展输出引擎（支持 `cap.blake3` 自动动态挂载，详见 `doc/lib/blake3.md`）（5/5 PASS，自动动态挂载 `cap.blake3`）
 - **新增标准库**：`lib/blake3/{compress,hasher,index}.cp`，实现固定 `[54][8]u32` CV 栈零堆流式 `Blake3Hasher`、Keyed MAC、上下文 `deriveKey` 及任意偏移 `finalSeek` XOF 输出，全量对齐 BLAKE3 官方向量。
 - **新增文档与测试**：`doc/lib/blake3.md` 扁平文档与 `cap/test/test_blake3_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

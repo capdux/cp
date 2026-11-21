@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:snowflake` 纯 CP 线程安全分布式 64-bit Snowflake ID 生成器、时钟回拨保护、字段反解与零堆 Base62 编解码引擎（支持 `cap.snowflake` 自动动态挂载，详见 `doc/lib/snowflake.md`）（5/5 PASS，文档直写 `doc/lib/snowflake.md`）
+- **核心设计**：41-bit 时间戳 + 5-bit DC + 5-bit Worker + 12-bit 序列位布局，通过 4 线程并发 2000 ID 排序唯一性压测，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:blake3` 纯 CP 零堆 BLAKE3 Merkle 树 256-bit 密码学哈希、Keyed MAC、KDF 与 XOF 可扩展输出引擎（支持 `cap.blake3` 自动动态挂载，详见 `doc/lib/blake3.md`）（5/5 PASS，文档直写 `doc/lib/blake3.md`）
 - **核心设计**：采用固定 54 层 CV 栈实现高达 `2^54` 块的零堆流式 Merkle 树归约，常量时间 `verifyKeyedMac` 消除侧信道，全路径零堆分配。
 

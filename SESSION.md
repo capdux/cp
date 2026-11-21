@@ -49,3 +49,6 @@
 
 ### 2026-11-21（`cap:blake3` 验收，验收提交 `cap:blake3`，顶替拉起 `cap:argon2` 维持 2 路常规并行）
 - **执行成果**：`lib/blake3/`（5/5 PASS，`doc/lib/blake3.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:blake3`，顶替拉起 `cap:argon2` 维持 2 路常规并行
+
+### 2026-11-21（`cap:snowflake` 验收，主控亲自完成第 10 路 `cap:snowflake` 验收提交，维持 `cap:lockfree_queue` 与 `cap:argon2` 并发）
+- **执行成果**：`lib/snowflake/`（5/5 PASS，`doc/lib/snowflake.md`）经 `verify_module.sh` 一次性验收回收；主控亲自完成第 10 路 `cap:snowflake` 验收提交，维持 `cap:lockfree_queue` 与 `cap:argon2` 并发
