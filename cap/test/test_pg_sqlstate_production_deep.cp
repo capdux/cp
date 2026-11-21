@@ -1,6 +1,6 @@
 import std from "std";
 import { test, expect_eq } from "cap:test";
-import { SqlStateClass, SqlStateCode } from "cap:pg_sqlstate";
+import { SqlStateClass, SqlStateCode } from "cap:pg";
 
 test("1. SqlStateCode.class classifies all 15 SQLSTATE classes and prefixes", () => {
     const c00 = SqlStateCode.parse("00000") ?? unreachable;

@@ -45,7 +45,7 @@ pub enum FieldType: u8 {
 }
 
 /// PostgreSQL 5 字符 SQLSTATE 大类（前 2 位分类码）
-pub enum SqlStateClass: u8 {
+pub enum DiagSqlStateClass: u8 {
     Success = 0,
     Warning = 1,
     NoData = 2,
@@ -63,25 +63,25 @@ pub enum SqlStateClass: u8 {
 }
 
 /// 按 SQLSTATE 前两位代码归类错误类别（如 `"23505"` -> `IntegrityConstraintViolation`）
-pub fn classifySqlState(code: string): SqlStateClass {
+pub fn classifySqlState(code: string): DiagSqlStateClass {
     if (code.len < 2) {
-        return SqlStateClass.Other;
+        return DiagSqlStateClass.Other;
     }
     const prefix = code[0..2];
-    if (std.mem.eql(u8, prefix, "00")) { return SqlStateClass.Success; }
-    if (std.mem.eql(u8, prefix, "01")) { return SqlStateClass.Warning; }
-    if (std.mem.eql(u8, prefix, "02")) { return SqlStateClass.NoData; }
-    if (std.mem.eql(u8, prefix, "08")) { return SqlStateClass.ConnectionException; }
-    if (std.mem.eql(u8, prefix, "22")) { return SqlStateClass.DataException; }
-    if (std.mem.eql(u8, prefix, "23")) { return SqlStateClass.IntegrityConstraintViolation; }
-    if (std.mem.eql(u8, prefix, "25")) { return SqlStateClass.InvalidTransactionState; }
-    if (std.mem.eql(u8, prefix, "28")) { return SqlStateClass.InvalidAuthorization; }
-    if (std.mem.eql(u8, prefix, "42")) { return SqlStateClass.SyntaxOrAccessError; }
-    if (std.mem.eql(u8, prefix, "53")) { return SqlStateClass.InsufficientResources; }
-    if (std.mem.eql(u8, prefix, "57")) { return SqlStateClass.OperatorIntervention; }
-    if (std.mem.eql(u8, prefix, "58")) { return SqlStateClass.SystemError; }
-    if (std.mem.eql(u8, prefix, "XX")) { return SqlStateClass.InternalError; }
-    return SqlStateClass.Other;
+    if (std.mem.eql(u8, prefix, "00")) { return DiagSqlStateClass.Success; }
+    if (std.mem.eql(u8, prefix, "01")) { return DiagSqlStateClass.Warning; }
+    if (std.mem.eql(u8, prefix, "02")) { return DiagSqlStateClass.NoData; }
+    if (std.mem.eql(u8, prefix, "08")) { return DiagSqlStateClass.ConnectionException; }
+    if (std.mem.eql(u8, prefix, "22")) { return DiagSqlStateClass.DataException; }
+    if (std.mem.eql(u8, prefix, "23")) { return DiagSqlStateClass.IntegrityConstraintViolation; }
+    if (std.mem.eql(u8, prefix, "25")) { return DiagSqlStateClass.InvalidTransactionState; }
+    if (std.mem.eql(u8, prefix, "28")) { return DiagSqlStateClass.InvalidAuthorization; }
+    if (std.mem.eql(u8, prefix, "42")) { return DiagSqlStateClass.SyntaxOrAccessError; }
+    if (std.mem.eql(u8, prefix, "53")) { return DiagSqlStateClass.InsufficientResources; }
+    if (std.mem.eql(u8, prefix, "57")) { return DiagSqlStateClass.OperatorIntervention; }
+    if (std.mem.eql(u8, prefix, "58")) { return DiagSqlStateClass.SystemError; }
+    if (std.mem.eql(u8, prefix, "XX")) { return DiagSqlStateClass.InternalError; }
+    return DiagSqlStateClass.Other;
 }
 
 /// 零拷贝诊断消息结构（同时承载 `ErrorResponse` `'E'` 与 `NoticeResponse` `'N'` 全 18 字段）
@@ -107,11 +107,11 @@ pub struct DiagnosticMessage {
     routine: string? = null,
     bytes_read: usize = 0,
 
-    fn sqlStateClass(): SqlStateClass {
+    fn sqlStateClass(): DiagSqlStateClass {
         if (c := _.code) {
             return classifySqlState(c);
         }
-        return SqlStateClass.Other;
+        return DiagSqlStateClass.Other;
     }
 
     fn isFatal(): bool {

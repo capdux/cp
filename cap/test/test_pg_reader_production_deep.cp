@@ -1,5 +1,5 @@
 import { test, expect } from "cap:test";
-import { PgBackendTag, PgFrame, PgMessageReader } from "cap:pg_reader";
+import { PgBackendTag, PgFrame, PgMessageReader } from "cap:pg";
 
 test("pg_reader: nextFrame decodes CommandComplete and ReadyForQuery", () => {
     // Frame 1: 'C' + len=13 (4 + "SELECT 1\0"(9))

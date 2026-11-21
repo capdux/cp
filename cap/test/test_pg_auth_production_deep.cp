@@ -6,7 +6,7 @@ import {
     authTypeFromInt,
     decodeAuthMessage,
     PgWireWriter,
-} from "cap:pg_auth";
+} from "cap:pg";
 
 test("1. AuthType decoding for Ok, CleartextPassword & MD5Password 4-byte salt (zero leak)", () => {
     const alloc = std.testing.allocator;

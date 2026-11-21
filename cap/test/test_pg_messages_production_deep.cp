@@ -8,7 +8,7 @@ import {
     TAG_NOTIFICATION_RESPONSE,
     TAG_COMMAND_COMPLETE,
     PgMessageError,
-    SqlStateClass,
+    DiagSqlStateClass,
     classifySqlState,
     TransactionStatus,
     decodeErrorResponse,
@@ -18,7 +18,7 @@ import {
     decodeReadyForQuery,
     decodeNotificationResponse,
     decodeCommandComplete,
-} from "cap:pg_messages";
+} from "cap:pg";
 
 fn writeFrameHeader(buf: []u8, tag: u8, body_len: usize): usize {
     const total_len: u32 = (body_len + 4) as u32;
@@ -61,7 +61,7 @@ test("1. ErrorResponse & NoticeResponse full diagnostic fields + SQLSTATE classi
     expect_eq(err_msg.bytes_read, pos);
     expect_eq(std.mem.eql(u8, err_msg.severity.?, "ERROR"), true);
     expect_eq(std.mem.eql(u8, err_msg.code.?, "23505"), true);
-    expect_eq(err_msg.sqlStateClass() == SqlStateClass.IntegrityConstraintViolation, true);
+    expect_eq(err_msg.sqlStateClass() == DiagSqlStateClass.IntegrityConstraintViolation, true);
     expect_eq(std.mem.eql(u8, err_msg.schema.?, "public"), true);
     expect_eq(std.mem.eql(u8, err_msg.table.?, "users"), true);
     expect_eq(std.mem.eql(u8, err_msg.column.?, "email"), true);
@@ -80,9 +80,9 @@ test("1. ErrorResponse & NoticeResponse full diagnostic fields + SQLSTATE classi
 
     const notice = decodeNoticeResponse(nbuf[0..npos]) catch unreachable;
     expect_eq(notice.is_error, false);
-    expect_eq(notice.sqlStateClass() == SqlStateClass.Success, true);
-    expect_eq(classifySqlState("42601") == SqlStateClass.SyntaxOrAccessError, true);
-    expect_eq(classifySqlState("08006") == SqlStateClass.ConnectionException, true);
+    expect_eq(notice.sqlStateClass() == DiagSqlStateClass.Success, true);
+    expect_eq(classifySqlState("42601") == DiagSqlStateClass.SyntaxOrAccessError, true);
+    expect_eq(classifySqlState("08006") == DiagSqlStateClass.ConnectionException, true);
 });
 
 test("2. BackendKeyData (pid + secret_key) & ParameterStatus (name + value)", () => {

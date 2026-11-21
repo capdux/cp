@@ -1,10 +1,10 @@
-// Source: cp/cap/test/test_pg_oids_production_deep.cp (Production deep tests for cap:pg_oids)
+// Source: cp/cap/test/test_pg_oids_production_deep.cp (Production deep tests for cap:pg oids)
 
 import { test, expect_eq } from "cap:test";
 import {
     PgOid,
     PgTypeCategory,
-} from "cap:pg_oids";
+} from "cap:pg";
 
 test("pg_oids: bidirectional scalar <-> array OID round-trip across all 15 array pairs") {
     const pairs_scalar: [15]PgOid = [

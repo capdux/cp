@@ -16,7 +16,7 @@ import {
     StartupMessage,
     encodeStartupMessage,
     decodeStartupMessage,
-} from "cap:pg_wire_types";
+} from "cap:pg";
 
 test("1. FormatCode & MessageTag round-trip and invalid byte protection", () => {
     const text_fmt = formatCodeFromInt(0) catch unreachable;

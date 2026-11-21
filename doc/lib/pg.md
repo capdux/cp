@@ -1,0 +1,52 @@
+# `cap:pg` — 纯 CP PostgreSQL Wire Protocol v3 全栈协议与类型工具库
+
+## 概述
+
+`cap:pg` 吸收自 Bun `src/sql/postgres/` 系列核心模块，将 PostgreSQL Wire Protocol v3 线协议基础类型、认证握手、COPY/SASL/协议协商、扩展查询构建器、后端控制与诊断消息、零拷贝帧读取器、内置 OID 类型目录与 SQLSTATE 错误码统一收敛至单一领域主包 `cap:pg`。纯 CP 零外部依赖，堆分配缓冲类型均内置 RAII `~init()` 零泄漏释放。
+
+## 子模块拓扑
+
+| 文件 | 职责 |
+| :--- | :--- |
+| `lib/pg/auth.cp` | 后端认证握手报文解码（`Ok`/`Cleartext`/`MD5`/`SASL`/`SASLContinue`/`SASLFinal`）与大端长度回填写入器 `PgWireWriter` |
+| `lib/pg/copysasl.cp` | COPY 协议（`CopyInResponse`/`CopyOutResponse`/`CopyData`/`CopyDone`/`CopyFail`）、前端认证报文（`PasswordMessage`/`SASLInitialResponse`/`SASLResponse`）与 `NegotiateProtocolVersion` |
+| `lib/pg/extquery.cp` | 扩展查询协议前端消息编码器 `ExtendedQueryBuilder`（`Parse`/`Bind`/`Describe`/`Execute`/`Close`/`Sync`/`Flush`） |
+| `lib/pg/messages.cp` | 后端控制与诊断消息零拷贝解码（`ErrorResponse`/`NoticeResponse` 18 字段、`BackendKeyData`、`ParameterStatus`、`ReadyForQuery`、`NotificationResponse`、`CommandComplete`） |
+| `lib/pg/oids.cp` | PostgreSQL 内置 45 项标量/数组 OID 目录（`PgOid`）、大类分类（`PgTypeCategory`）、标量↔数组映射与二进制编码偏好查询 |
+| `lib/pg/reader.cp` | 零拷贝大端消息帧流式读取器 `PgMessageReader`、`PgFrame` 与 `PgBackendTag` |
+| `lib/pg/sqlstate.cp` | 5 字符 `SqlStateCode` 严格解析/分类与 15 类 `SqlStateClass` |
+| `lib/pg/wiretypes.cp` | 线协议 v3.0 常量、大端整数编解码、`MessageHeader`、`FieldDescription` 与 `StartupMessage` |
+
+## 核心 API 摘要
+
+- **线协议基础 (`wiretypes.cp`)**：`PROTOCOL_VERSION_3_0`, `SSL_REQUEST_CODE`, `CANCEL_REQUEST_CODE`, `PgWireError`, `FormatCode`, `MessageTag`, `WireBuffer`, `readU16BE`/`readI16BE`/`readU32BE`/`readI32BE`, `writeU16BE`/`writeI16BE`/`writeU32BE`/`writeI32BE`, `MessageHeader`, `encodeMessageHeader`/`decodeMessageHeader`, `FieldDescription`, `encodeFieldDescription`/`decodeFieldDescription`, `StartupParam`, `StartupMessage`, `encodeStartupMessage`/`decodeStartupMessage`
+- **认证与写入器 (`auth.cp`)**：`AUTH_MESSAGE_TAG`, `PgAuthError`, `AuthType`, `authTypeFromInt`, `SASLContinueInfo`, `DecodedAuthMessage`, `decodeAuthMessage`, `PgWireWriter`
+- **COPY / SASL / 协商 (`copysasl.cp`)**：`TAG_COPY_*`, `TAG_PASSWORD_OR_SASL`, `TAG_NEGOTIATE_PROTOCOL_VERSION`, `PgCopySaslError`, `PgFrameBuffer`, `CopyFormat`, `CopyDirection`, `CopyResponse`, `CopyData`, `CopyFail`, `DecodedPasswordMessage`, `DecodedSaslInitialResponse`, `DecodedSaslResponse`, `NegotiateProtocolVersion` 及对应 `encode*`/`decode*` 函数
+- **扩展查询 (`extquery.cp`)**：`PgExtendedQueryError`, `TargetKind`, `ParamFormat`, `BindParam`, `ExtendedQueryBuilder`
+- **后端消息与诊断 (`messages.cp`)**：`TAG_ERROR_RESPONSE`, `TAG_NOTICE_RESPONSE`, `TAG_BACKEND_KEY_DATA`, `TAG_PARAMETER_STATUS`, `TAG_READY_FOR_QUERY`, `TAG_NOTIFICATION_RESPONSE`, `TAG_COMMAND_COMPLETE`, `PgMessageError`, `FieldType`, `DiagSqlStateClass`, `classifySqlState`, `DiagnosticMessage`, `BackendKeyData`, `ParameterStatus`, `TransactionStatus`, `ReadyForQuery`, `NotificationResponse`, `CommandComplete`, `decodeErrorResponse`/`decodeNoticeResponse`/`decodeBackendKeyData`/`decodeParameterStatus`/`decodeReadyForQuery`/`decodeNotificationResponse`/`decodeCommandComplete`
+- **帧读取器 (`reader.cp`)**：`FRAME_HEADER_SIZE`, `PgReaderError`, `PgBackendTag`, `PgFrame`, `PgMessageReader`
+- **OID 类型目录 (`oids.cp`)**：`PgOid`, `PgTypeCategory`
+- **SQLSTATE 错误码 (`sqlstate.cp`)**：`SqlStateClass`, `SqlStateCode`
+
+## 示例
+
+```cp
+import {
+    PgOid,
+    SqlStateCode,
+    SqlStateClass,
+    PgWireWriter,
+    decodeAuthMessage,
+    ExtendedQueryBuilder,
+    decodeReadyForQuery,
+} from "cap:pg";
+
+fn example(): bool {
+    const oid = PgOid.fromU32(23) ?? PgOid.TEXT;
+    const is_int = oid == PgOid.INT4;
+    if (st := SqlStateCode.parse("23505")) {
+        return is_int && st.class() == SqlStateClass.integrity_constraint_violation;
+    }
+    return false;
+}
+```

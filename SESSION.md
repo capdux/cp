@@ -43,3 +43,6 @@
 
 ### 2026-11-22（`cap:rate` 验收，方案 A Wave 7：`rate`/`cron`/`time` 6 目录收敛落地（6/6 PASS），累计消除 162 个长下划线顶层目录）
 - **执行成果**：`lib/rate/`（5/5 PASS，`doc/lib/rate.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 7：`rate`/`cron`/`time` 6 目录收敛落地（6/6 PASS），累计消除 162 个长下划线顶层目录
+
+### 2026-11-22（`cap:pg` 验收，方案 A 收敛：全部 8 个 `lib/pg_*` 彻底清零收敛至 `cap:pg`（8/8 PASS），累计消除 170 个长下划线顶层目录）
+- **执行成果**：`lib/pg/`（5/5 PASS，`doc/lib/pg.md`）经 `verify_module.sh` 一次性验收回收；方案 A 收敛：全部 8 个 `lib/pg_*` 彻底清零收敛至 `cap:pg`（8/8 PASS），累计消除 170 个长下划线顶层目录

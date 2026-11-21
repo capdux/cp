@@ -20,7 +20,7 @@ import {
     decodeSaslResponse,
     encodeNegotiateProtocolVersion,
     decodeNegotiateProtocolVersion,
-} from "cap:pg_copy_sasl";
+} from "cap:pg";
 
 test("1. CopyInResponse & CopyOutResponse column format round-trip (zero leak)", () => {
     const alloc = std.testing.allocator;

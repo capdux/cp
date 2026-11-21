@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:pg` PostgreSQL 线协议全套认证、SASL/COPY、扩展查询、OID、SQLSTATE 与二进制流解析统一主包（`lib/pg_*` 全仓清零）（5/5 PASS，自动动态挂载 `cap.pg`）
+- **方案 A 收敛 (`pg_*` 8 目录 -> `cap:pg`)**：新建 `lib/pg/{auth,copysasl,extquery,messages,oids,reader,sqlstate,wiretypes,index}.cp` 与 `doc/lib/pg.md`，全部 8 套深度测试 100% PASS，全仓 `lib/pg_*` 与 `cap:pg_*` 彻底清零（累计消除 170 个长下划线顶层目录）。
+
 ## [2026-11-22] - 新建 `cap:rate` 令牌桶/GCRA/滑动窗口限流统一主包（同步收敛 `cap:cron`/`cap:time`）（5/5 PASS，自动动态挂载 `cap.rate`）
 - **方案 A 收敛 Wave 7 (6 限流/Cron/时间目录 -> `cap:rate`/`cap:cron`/`cap:time`)**：新建 `cap:rate` 合入 `rate_sliding_window`/`rate_token_bucket`/`token_bucket`，合入 `cron_preset` 至 `cap:cron`、`duration_parse`/`rfc3339_time` 至 `cap:time`（6/6 PASS），删除 6 个旧目录与文档，累计消除 162 个长下划线顶层目录；同步轮换 `CLI & Format Absorber`。
 

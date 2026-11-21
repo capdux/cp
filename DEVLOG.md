@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:pg` PostgreSQL 线协议全套认证、SASL/COPY、扩展查询、OID、SQLSTATE 与二进制流解析统一主包（`lib/pg_*` 全仓清零）（5/5 PASS，文档直写 `doc/lib/pg.md`）
+- **收敛要点**：`messages.cp` 诊断枚举最小重命名为 `DiagSqlStateClass` 保留 `sqlstate.cp` 完整 `SqlStateClass`；8/8 PASS，累计消除 170 个散装目录。
+
 ## 2026-11-22: 新建 `cap:rate` 令牌桶/GCRA/滑动窗口限流统一主包（同步收敛 `cap:cron`/`cap:time`）（5/5 PASS，文档直写 `doc/lib/rate.md`）
 - **收敛要点**：`lib/rate/` 最小重命名 `SlidingGcraLimiter`/`SimpleTokenBucket` 消除冲突，3 主包均 0 errors，6/6 PASS；全部 3 路子智能体均已轮换至全新低上下文实例。
 

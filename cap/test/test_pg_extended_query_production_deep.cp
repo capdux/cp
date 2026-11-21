@@ -5,7 +5,7 @@ import {
     ParamFormat,
     BindParam,
     ExtendedQueryBuilder,
-} from "cap:pg_extended_query";
+} from "cap:pg";
 
 fn readU32Be(b: []const u8, off: usize): u32 {
     return (@as(u32, b[off]) << 24)
