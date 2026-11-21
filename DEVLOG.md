@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:merkle_tree` 纯 CP 密码学 SHA-256 Merkle Tree 引擎（`0x00`/`0x01` 域分离防第二原像碰撞、奇数叶支持与无状态包容性证明 `generateProof`/`verifyProof`，支持 `cap.merkle_tree` 自动动态挂载，详见 `doc/lib/merkle_tree.md`）（5/5 PASS，文档直写 `doc/lib/merkle_tree.md`）
+- **核心设计**：采用 `0x00` 叶子与 `0x01` 内部节点域分离哈希，覆盖空树/单叶/奇数叶/篡改拦截与 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:bimap` 纯 CP 双向一对一映射容器（$O(1)$ 双向查找、冲突拦截 `insert`、强制覆盖 `forceInsert` 与深拷贝字符串专用 `StringBiMap`，支持 `cap.bimap` 自动动态挂载，详见 `doc/lib/bimap.md`）（5/5 PASS，文档直写 `doc/lib/bimap.md`）
 - **核心设计**：双哈希表维护严格 1-to-1 双射关系，支持 `forceInsert` 自动清理冲突旧映射与 `std.testing.allocator` 零泄漏验证。
 

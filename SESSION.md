@@ -40,3 +40,6 @@
 
 ### 2026-11-21（`cap:bimap` 验收，验收提交 `cap:bimap` 并新开 `cap:diff_myers` 并发子智能体，主控同步开发 `cap:tdigest`）
 - **执行成果**：`lib/bimap/`（5/5 PASS，`doc/lib/bimap.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:bimap` 并新开 `cap:diff_myers` 并发子智能体，主控同步开发 `cap:tdigest`
+
+### 2026-11-21（`cap:merkle_tree` 验收，验收提交 `cap:merkle_tree` 并新开 `cap:rope_text` 并发子智能体）
+- **执行成果**：`lib/merkle_tree/`（5/5 PASS，`doc/lib/merkle_tree.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:merkle_tree` 并新开 `cap:rope_text` 并发子智能体
