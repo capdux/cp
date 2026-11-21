@@ -812,3 +812,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:quat` | Vec3, EulerAngles, Mat3, Quat | 3D unit quaternions: Hamilton mul, Euler ZYX, Shepperd Mat3, SLERP & fromToRotation |
 | `cap:cholesky` | choleskyDecompose, forwardSubstitute, backwardSubstituteT, choleskySolve, choleskyLogDet, choleskyDet, choleskyInvert, ldltDecompose, ldltSolve | SPD Cholesky (LL^T) & square-root-free LDL^T decomposition, solver, logDet & inverse |
 | `cap:perlin` | PerlinNoise, fade, lerp | Ken Perlin (2002) 1D/2D/3D gradient noise, fBm, Ridged multifractal & Turbulence |
+| `cap:ode` | OdeRhsFn, AccelFn, Rk45Result, rk2MidpointStep, rk4Step, rk4Integrate, rk45Step, rk45Integrate, verletStep | Numerical ODE solvers: RK2, RK4, adaptive Dormand-Prince RK4(5) & Velocity Verlet |

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ode` Numerical ODE solvers: RK2, RK4, adaptive Dormand-Prince RK4(5) & Velocity Verlet（5/5 PASS，文档直写 `doc/lib/ode.md`）
+新增 cap:ode 纯 CP 零分配常微分方程求解库（完整 7 级 Dormand-Prince Butcher 表自适应步长与能量守恒辛积分），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:perlin` Ken Perlin (2002) 1D/2D/3D gradient noise, fBm, Ridged multifractal & Turbulence（5/5 PASS，文档直写 `doc/lib/perlin.md`）
 新增 cap:perlin 纯 CP 零分配程序化噪声库（quintic 平滑、classic/seeded 512B 置换表与多倍频分形叠加），通过 cpc check 与 6/6 cap test
 

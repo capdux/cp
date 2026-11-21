@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ode` Numerical ODE solvers: RK2, RK4, adaptive Dormand-Prince RK4(5) & Velocity Verlet（5/5 PASS，自动动态挂载 `cap.ode`）
+新增纯 CP 零分配标准库 cap:ode（经典 RK4、自适应 Dormand-Prince RK4(5) 与能量守恒 Velocity Verlet 辛积分器）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:perlin` Ken Perlin (2002) 1D/2D/3D gradient noise, fBm, Ridged multifractal & Turbulence（5/5 PASS，自动动态挂载 `cap.perlin`）
 新增纯 CP 零分配标准库 cap:perlin（Ken Perlin 2002 1D/2D/3D 梯度噪声、fBm、Ridged 与 Turbulence）与 6/6 深度测试
 
