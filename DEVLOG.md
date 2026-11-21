@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:fasta` 零分配生物信息学 FASTA 序列流解析、GC 含量与 IUPAC 反向互补库（5/5 PASS，文档直写 `doc/lib/fasta.md`）
+实现零分配 FASTA 序列解析器，支持 ; 注释跳过、CRLF 兼容与零堆 copyCleanSeq。
+
 ## 2026-11-22: 新建 `cap:x3d` 零分配 Web3D X3D 3.x/4.0 XML 3D 场景树与坐标/索引数组解析器（5/5 PASS，文档直写 `doc/lib/x3d.md`）
 实现零分配 ISO/IEC 19776-1 X3D XML 解析器，支持 DEF/USE 提取与 -1 面分隔符索引解码。
 

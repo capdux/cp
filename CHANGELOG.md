@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:fasta` 零分配生物信息学 FASTA 序列流解析、GC 含量与 IUPAC 反向互补库（5/5 PASS，自动动态挂载 `cap.fasta`）
+新增 `lib/fasta/{fasta,index}.cp`、`doc/lib/fasta.md` 与 `cap/test/test_fasta_production_deep.cp`（5/5 PASS），支持多行折行序列迭代、GC 含量、全 IUPAC 简并碱基反向互补与单遍汇总。
+
 ## [2026-11-22] - 新建 `cap:x3d` 零分配 Web3D X3D 3.x/4.0 XML 3D 场景树与坐标/索引数组解析器（5/5 PASS，自动动态挂载 `cap.x3d`）
 新增 `lib/x3d/{x3d,index}.cp`、`doc/lib/x3d.md` 与 `cap/test/test_x3d_production_deep.cp`（5/5 PASS），支持 <X3D>/<head>/<meta>、<Scene> 前序节点遍历、MFVec3f/MFInt32 属性解码与深度汇总。
 

@@ -232,3 +232,6 @@
 
 ### 2026-11-22（`cap:x3d` 验收，完成 `cap:x3d` 交付验收并登记入库（5/5 PASS）；派发 `cap:fastq`。）
 - **执行成果**：`lib/x3d/`（5/5 PASS，`doc/lib/x3d.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:x3d` 交付验收并登记入库（5/5 PASS）；派发 `cap:fastq`。
+
+### 2026-11-22（`cap:fasta` 验收，完成 `cap:fasta` 交付验收并登记入库（5/5 PASS）；派发 `cap:bed`。）
+- **执行成果**：`lib/fasta/`（5/5 PASS，`doc/lib/fasta.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:fasta` 交付验收并登记入库（5/5 PASS）；派发 `cap:bed`。
