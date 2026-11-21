@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:fnv` IETF FNV-1/FNV-1a (32/64/128-bit) streaming hashers + DJB2/SDBM/Jenkins OAAT（5/5 PASS，文档直写 `doc/lib/fnv.md`）
+新增 cap:fnv 纯 CP 零分配经典非加密哈希套件（覆盖 IETF 32/64/128-bit 官方测试向量与流式分块增量更新），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:roman` Strict canonical Roman numerals (1..3999) & Bijective Base-26 spreadsheet column codec（5/5 PASS，文档直写 `doc/lib/roman.md`）
 新增 cap:roman 纯 CP 零分配数字与列号转换库（1..3999 穷举双射、严格/宽松模式与 Bijective Base-26 A..XFD），通过 cpc check 与 6/6 cap test
 
