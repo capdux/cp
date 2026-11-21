@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:qr` 纯 CP 零分配 Householder QR 分解与线性最小二乘库：原地 Householder 反射分解、Q^T 乘法、经济型 Q/R 构造、超定最小二乘求解与极端量级数值稳定防护（5/5 PASS，自动动态挂载 `cap.qr`）
+新增纯 CP 零分配 Householder QR 分解与最小二乘库 cap:qr（原地 QR、Q^T 应用、经济型 Q/R、超定最小二乘），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:lu` 纯 CP 零分配部分选主元 LU 分解与三对角求解库：Doolittle PA=LU 分解、多右端项求解、行列式、矩阵求逆、残差检验与 O(n) Thomas 三对角追赶法（5/5 PASS，自动动态挂载 `cap.lu`）
 新增纯 CP 零分配 LU 分解与三对角求解库 cap:lu（PA=LU、线性求解、行列式、矩阵求逆、Thomas 三对角法），含文档与 6 项深度生产测试
 

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:qr` 纯 CP 零分配 Householder QR 分解与线性最小二乘库：原地 Householder 反射分解、Q^T 乘法、经济型 Q/R 构造、超定最小二乘求解与极端量级数值稳定防护（5/5 PASS，文档直写 `doc/lib/qr.md`）
+新增 cap:qr（lib/qr/{qr,index}.cp）：基于 Householder 反射实现高数值稳定性 QR 分解与超定线性最小二乘，通过 Hilbert 病态矩阵与 1e±100 量级缩放测试，cpc check 0 错误，cap test 6/6 PASS (842ms)
+
 ## 2026-11-22: 新建 `cap:lu` 纯 CP 零分配部分选主元 LU 分解与三对角求解库：Doolittle PA=LU 分解、多右端项求解、行列式、矩阵求逆、残差检验与 O(n) Thomas 三对角追赶法（5/5 PASS，文档直写 `doc/lib/lu.md`）
 新增 cap:lu（lib/lu/{lu,index}.cp）：原地部分选主元 Doolittle LU 分解、多右端项复用求解、行列式与逆矩阵计算及 100 维 Thomas 三对角求解，cpc check 0 错误，cap test 6/6 PASS (624ms)
 
