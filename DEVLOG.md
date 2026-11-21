@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:pso` 纯 CP 零分配全局启发式优化库：线性衰减惯性权重粒子群优化（PSO）与经典 DE/rand/1/bin 差分进化，内置确定性 SplitMix64 与盒约束边界保护（5/5 PASS，文档直写 `doc/lib/pso.md`）
+新增 cap:pso（lib/pso/{pso,index}.cp）：零分配确定性 SplitMix64 粒子群 PSO 与 DE/rand/1/bin 差分进化，通过 Sphere/Rastrigin/Ackley/Himmelblau 多峰基准，cpc check 0 错误，cap test 6/6 PASS (800ms)
+
 ## 2026-11-22: 新建 `cap:svm` 纯 CP 零分配支持向量机（SVM）分类库：Linear/Poly/RBF 核函数、Platt 启发式 SMO 对偶二次规划求解器与 Pegasos 高速线性 SVM（5/5 PASS，文档直写 `doc/lib/svm.md`）
 新增 cap:svm（lib/svm/{svm,index}.cp）：零分配 Platt SMO 核 SVM（通过 XOR/同心圆 RBF 分离与 KKT 校验）及 Pegasos 线性 SVM，cpc check 0 错误，cap test 6/6 PASS (652ms)
 

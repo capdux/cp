@@ -181,3 +181,6 @@
 
 ### 2026-11-22（`cap:svm` 验收，子智能体交付 cap:svm（Platt SMO 核 SVM 与 Pegasos 线性 SVM，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/svm/`（5/5 PASS，`doc/lib/svm.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:svm（Platt SMO 核 SVM 与 Pegasos 线性 SVM，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:pso` 验收，子智能体交付 cap:pso（PSO & DE 全局启发式优化，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/pso/`（5/5 PASS，`doc/lib/pso.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:pso（PSO & DE 全局启发式优化，6/6 PASS），主协调器统一登记并提交

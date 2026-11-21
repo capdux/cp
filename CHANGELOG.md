@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:pso` 纯 CP 零分配全局启发式优化库：线性衰减惯性权重粒子群优化（PSO）与经典 DE/rand/1/bin 差分进化，内置确定性 SplitMix64 与盒约束边界保护（5/5 PASS，自动动态挂载 `cap.pso`）
+新增纯 CP 零分配全局启发式优化库 cap:pso（粒子群优化 PSO 与差分进化 DE），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:svm` 纯 CP 零分配支持向量机（SVM）分类库：Linear/Poly/RBF 核函数、Platt 启发式 SMO 对偶二次规划求解器与 Pegasos 高速线性 SVM（5/5 PASS，自动动态挂载 `cap.svm`）
 新增纯 CP 零分配支持向量机库 cap:svm（Platt SMO 核 SVM、Linear/Poly/RBF 核、Pegasos 线性 SVM），含文档与 6 项深度生产测试
 
