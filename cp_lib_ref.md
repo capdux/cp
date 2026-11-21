@@ -614,3 +614,8 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_retry_after` | RetryAfterKind, RetryAfter, formatRetryAfterSeconds | RFC 9110 §10.2.3 Retry-After 响应头解析器（delta-seconds 与 IMF-fixdate）与限幅等待时长计算 |
 | `cap:http_security_headers` | HstsPolicy, ReferrerPolicy, parseReferrerPolicy, FrameOptions, parseFrameOptions, CoopPolicy, CoepPolicy, CorpPolicy, parseCoopPolicy, parseCoepPolicy, parseCorpPolicy, isCrossOriginIsolated | Web 安全响应头解析与构造器（HSTS RFC 6797、Referrer-Policy 回退链、X-Frame-Options、COOP/COEP/CORP 跨域隔离） |
 | `cap:conventional_commit` | ReleaseBump, ConventionalCommit | Conventional Commits 1.0.0 提交信息零分配解析器、破坏性变更检测与 SemVer 升级建议器 |
+| `cap:codeowners` | CodeownersRule, OwnerIter, CodeownersIter, resolveOwners, isOwnedBy | GitHub / GitLab CODEOWNERS 文件零分配规则解析与后匹配代码归属求值引擎 |
+| `cap:http_content_type` | ContentTypeParam, ContentTypeParamIter, ContentType | RFC 9110 §8.3.1 Content-Type 零分配解析器、参数提取器（charset/boundary）与媒体类型分类器 |
+| `cap:http_permissions_policy` | PermissionDirective, PermissionsPolicyIter, findPermission | W3C Permissions-Policy 响应头零分配解析器与特性权限（disabled/self/*/origin）查询器 |
+| `cap:json_escape` | needsJsonEscape, escapeJsonContent, quoteJsonString, unescapeJsonContent | RFC 8259 JSON 字符串零分配转义器、加引号器与支持 UTF-16 代理对解码的严格反转义器 |
+| `cap:git_ref_check` | isValidGitRefName, isValidBranchName, GitRefKind, ParsedGitRef, parseFullGitRef, isValidGitOidHex, isValidShortOidHex | Git 引用名格式校验器（git-check-ref-format 10 条规则）、refs/* 拆解与 SHA-1/SHA-256 OID 校验 |

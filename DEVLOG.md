@@ -1,3 +1,18 @@
+## 2026-11-22: 新建 `cap:git_ref_check` Git 引用名格式校验器（git-check-ref-format 10 条规则）、refs/* 拆解与 SHA-1/SHA-256 OID 校验（5/5 PASS，文档直写 `doc/lib/git_ref_check.md`）
+Subagent 1 吸收 `cap:git_ref_check`，零堆分配校验分支/标签/远程引用与 40/64 位十六进制 OID。
+
+## 2026-11-22: 新建 `cap:json_escape` RFC 8259 JSON 字符串零分配转义器、加引号器与支持 UTF-16 代理对解码的严格反转义器（5/5 PASS，文档直写 `doc/lib/json_escape.md`）
+主智能体吸收 `cap:json_escape`，严格实现 RFC 8259 字符串编解码安全边界。
+
+## 2026-11-22: 新建 `cap:http_permissions_policy` W3C Permissions-Policy 响应头零分配解析器与特性权限（disabled/self/*/origin）查询器（5/5 PASS，文档直写 `doc/lib/http_permissions_policy.md`）
+Subagent 2 吸收 `cap:http_permissions_policy`，安全处理引号内逗号与括号内列表。
+
+## 2026-11-22: 新建 `cap:http_content_type` RFC 9110 §8.3.1 Content-Type 零分配解析器、参数提取器（charset/boundary）与媒体类型分类器（5/5 PASS，文档直写 `doc/lib/http_content_type.md`）
+主智能体吸收 `cap:http_content_type`，遵循 WHATWG 首现优先参数提取规则。
+
+## 2026-11-22: 新建 `cap:codeowners` GitHub / GitLab CODEOWNERS 文件零分配规则解析与后匹配代码归属求值引擎（5/5 PASS，文档直写 `doc/lib/codeowners.md`）
+Subagent 1 吸收 `cap:codeowners`，实现 `*`/`*.cp`/`/docs/`/`apps/**` 匹配与大小写无关 `isOwnedBy` 查询。
+
 ## 2026-11-22: 新建 `cap:conventional_commit` Conventional Commits 1.0.0 提交信息零分配解析器、破坏性变更检测与 SemVer 升级建议器（5/5 PASS，文档直写 `doc/lib/conventional_commit.md`）
 主智能体吸收 `cap:conventional_commit`，与 `cap:semver_bump` 协同支持自动化发版工具链。
 

@@ -2,6 +2,21 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:git_ref_check` Git 引用名格式校验器（git-check-ref-format 10 条规则）、refs/* 拆解与 SHA-1/SHA-256 OID 校验（5/5 PASS，自动动态挂载 `cap.git_ref_check`）
+新增 `cap:git_ref_check`（`lib/git_ref_check/{git_ref,index}.cp`、`doc/lib/git_ref_check.md`、`cap/test/test_git_ref_check_production_deep.cp`），完整覆盖 `git-check-ref-format` 全部规则与 `refs/heads|tags|remotes` 分类。
+
+## [2026-11-22] - 新建 `cap:json_escape` RFC 8259 JSON 字符串零分配转义器、加引号器与支持 UTF-16 代理对解码的严格反转义器（5/5 PASS，自动动态挂载 `cap.json_escape`）
+新增 `cap:json_escape`（`lib/json_escape/{json_escape,index}.cp`、`doc/lib/json_escape.md`、`cap/test/test_json_escape_production_deep.cp`），完整支持 `\uD83D\uDE00` 代理对转 4 字节 UTF-8 并拒绝孤立代理项与裸控制字符。
+
+## [2026-11-22] - 新建 `cap:http_permissions_policy` W3C Permissions-Policy 响应头零分配解析器与特性权限（disabled/self/*/origin）查询器（5/5 PASS，自动动态挂载 `cap.http_permissions_policy`）
+新增 `cap:http_permissions_policy`（`lib/http_permissions_policy/{permissions_policy,index}.cp`、`doc/lib/http_permissions_policy.md`、`cap/test/test_http_permissions_policy_production_deep.cp`），严格区分未引号 `self`/`*` 与引号 origin。
+
+## [2026-11-22] - 新建 `cap:http_content_type` RFC 9110 §8.3.1 Content-Type 零分配解析器、参数提取器（charset/boundary）与媒体类型分类器（5/5 PASS，自动动态挂载 `cap.http_content_type`）
+新增 `cap:http_content_type`（`lib/http_content_type/{content_type,index}.cp`、`doc/lib/http_content_type.md`、`cap/test/test_http_content_type_production_deep.cp`），支持 `+json`/`+xml`/multipart/form/SSE 分类与引号参数提取。
+
+## [2026-11-22] - 新建 `cap:codeowners` GitHub / GitLab CODEOWNERS 文件零分配规则解析与后匹配代码归属求值引擎（5/5 PASS，自动动态挂载 `cap.codeowners`）
+新增 `cap:codeowners`（`lib/codeowners/{codeowners,index}.cp`、`doc/lib/codeowners.md`、`cap/test/test_codeowners_production_deep.cp`），支持 GitLab 段头跳过、转义空格与 GitHub 后匹配覆盖语义。
+
 ## [2026-11-22] - 新建 `cap:conventional_commit` Conventional Commits 1.0.0 提交信息零分配解析器、破坏性变更检测与 SemVer 升级建议器（5/5 PASS，自动动态挂载 `cap.conventional_commit`）
 新增 `cap:conventional_commit`（`lib/conventional_commit/{commit,index}.cp`、`doc/lib/conventional_commit.md`、`cap/test/test_conventional_commit_production_deep.cp`），支持 `type(scope)!: desc`、`BREAKING CHANGE:` 页脚检测与自动版本升级建议。
 

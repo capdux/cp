@@ -466,3 +466,18 @@
 
 ### 2026-11-22（`cap:conventional_commit` 验收，Batch 61 注册 `cap:conventional_commit` 并提交。）
 - **执行成果**：`lib/conventional_commit/`（5/5 PASS，`doc/lib/conventional_commit.md`）经 `verify_module.sh` 一次性验收回收；Batch 61 注册 `cap:conventional_commit` 并提交。
+
+### 2026-11-22（`cap:codeowners` 验收，Batch 62 完成 `cap:codeowners`、`cap:http_content_type`、`cap:http_permissions_policy`、`cap:json_escape`、`cap:git_ref_check` 5 模块吸收与全量验收。）
+- **执行成果**：`lib/codeowners/`（5/5 PASS，`doc/lib/codeowners.md`）经 `verify_module.sh` 一次性验收回收；Batch 62 完成 `cap:codeowners`、`cap:http_content_type`、`cap:http_permissions_policy`、`cap:json_escape`、`cap:git_ref_check` 5 模块吸收与全量验收。
+
+### 2026-11-22（`cap:http_content_type` 验收，Batch 62 注册 `cap:http_content_type`。）
+- **执行成果**：`lib/http_content_type/`（5/5 PASS，`doc/lib/http_content_type.md`）经 `verify_module.sh` 一次性验收回收；Batch 62 注册 `cap:http_content_type`。
+
+### 2026-11-22（`cap:http_permissions_policy` 验收，Batch 62 注册 `cap:http_permissions_policy`。）
+- **执行成果**：`lib/http_permissions_policy/`（5/5 PASS，`doc/lib/http_permissions_policy.md`）经 `verify_module.sh` 一次性验收回收；Batch 62 注册 `cap:http_permissions_policy`。
+
+### 2026-11-22（`cap:json_escape` 验收，Batch 62 注册 `cap:json_escape`。）
+- **执行成果**：`lib/json_escape/`（5/5 PASS，`doc/lib/json_escape.md`）经 `verify_module.sh` 一次性验收回收；Batch 62 注册 `cap:json_escape`。
+
+### 2026-11-22（`cap:git_ref_check` 验收，Batch 62 注册 `cap:git_ref_check` 并提交（累计 194 模块）。）
+- **执行成果**：`lib/git_ref_check/`（5/5 PASS，`doc/lib/git_ref_check.md`）经 `verify_module.sh` 一次性验收回收；Batch 62 注册 `cap:git_ref_check` 并提交（累计 194 模块）。
