@@ -178,3 +178,6 @@
 
 ### 2026-11-22（`cap:proc_net_dev` 验收，Batch 89 落地，标准库总量达 256 模块；已派发 `cap:proc_cpuinfo` 给 Sys Config Absorber）
 - **执行成果**：`lib/proc_net_dev/`（5/5 PASS，`doc/lib/proc_net_dev.md`）经 `verify_module.sh` 一次性验收回收；Batch 89 落地，标准库总量达 256 模块；已派发 `cap:proc_cpuinfo` 给 Sys Config Absorber
+
+### 2026-11-22（`cap:dns_caa_record` 验收，Batch 90 落地，标准库总量达 257 模块）
+- **执行成果**：`lib/dns_caa_record/`（5/5 PASS，`doc/lib/dns_caa_record.md`）经 `verify_module.sh` 一次性验收回收；Batch 90 落地，标准库总量达 257 模块

@@ -681,3 +681,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:cron_preset` | CronPreset, parseCronPreset, presetToCron5, normalizeCron5 | Vixie Cron @macro 预设（@hourly/@daily/@weekly/@monthly/@yearly/@reboot）零分配展开与 5 段表达式校验器 |
 | `cap:dns_txt_parse` | TxtTag, TxtTagIter, findTxtTag, DmarcPolicy, DmarcRecord, SpfQualifier, SpfTerm, SpfIter | DNS TXT 分号键值标签、DMARC (v=DMARC1) 与 SPF (v=spf1) 策略记录零分配解析器 |
 | `cap:proc_net_dev` | `NetDevStats`, `ProcNetDevIter`, `findNetDev`, `sumNonLoopbackBytes` | Linux `/proc/net/dev` 网络接口收发字节/包/错误/丢包零分配解析器 |
+| `cap:dns_caa_record` | `CaaTag`, `CaaRecord`, `isCaAuthorized` | RFC 8659 DNS CAA 证书颁发机构授权记录文本/线缆格式零分配解析与签发策略判定器 |

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:dns_caa_record` RFC 8659 DNS CAA 证书颁发机构授权记录文本/线缆格式零分配解析与签发策略判定器（5/5 PASS，文档直写 `doc/lib/dns_caa_record.md`）
+- **设计要点**：实现 `CaaRecord.parseText` 与 `CaaRecord.parseWire` 双路径解析，`isCaAuthorized` 严格遵循 RFC 8659 未知 critical 拒签与通配符优先 `issuewild` 回退 `issue` 规则。
+
 ## 2026-11-22: 新建 `cap:proc_net_dev` Linux `/proc/net/dev` 网络接口收发字节/包/错误/丢包零分配解析器（5/5 PASS，文档直写 `doc/lib/proc_net_dev.md`）
 - **设计要点**：跳过前两行表头，按 `:` 切分接口名与 16 列无符号整数，零分配切片迭代 `ProcNetDevIter`；提供 `findNetDev` 与 `sumNonLoopbackBytes`（自动排除 `lo`）。
 
