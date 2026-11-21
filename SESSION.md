@@ -52,3 +52,6 @@
 
 ### 2026-11-21（`cap:snowflake` 验收，主控亲自完成第 10 路 `cap:snowflake` 验收提交，维持 `cap:lockfree_queue` 与 `cap:argon2` 并发）
 - **执行成果**：`lib/snowflake/`（5/5 PASS，`doc/lib/snowflake.md`）经 `verify_module.sh` 一次性验收回收；主控亲自完成第 10 路 `cap:snowflake` 验收提交，维持 `cap:lockfree_queue` 与 `cap:argon2` 并发
+
+### 2026-11-21（`cap:argon2` 验收，验收提交 `cap:argon2` 并新开 `cap:totp_hotp` 并发子智能体，主控继续修复提交 `cap:ksuid`）
+- **执行成果**：`lib/argon2/`（5/5 PASS，`doc/lib/argon2.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:argon2` 并新开 `cap:totp_hotp` 并发子智能体，主控继续修复提交 `cap:ksuid`

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:argon2` 纯 CP 工业级 RFC 9106 Argon2 (`Argon2id` / `Argon2i` / `Argon2d`) 内存硬化口令派生与 PHC 字符串编解码校验标准库（支持 `cap.argon2` 自动动态挂载，详见 `doc/lib/argon2.md`）（5/5 PASS，自动动态挂载 `cap.argon2`）
+- **新增标准库**：`lib/argon2/{types,engine,index}.cp`，实现 RFC 9106 `Argon2id`/`Argon2i`/`Argon2d`、PHC 格式解析/生成、随机盐派生、常量时间摘要校验与内存上限防护。\n- **新增文档与测试**：`doc/lib/argon2.md` 扁平文档与 `cap/test/test_argon2_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:snowflake` 纯 CP 线程安全分布式 64-bit Snowflake ID 生成器、时钟回拨保护、字段反解与零堆 Base62 编解码引擎（支持 `cap.snowflake` 自动动态挂载，详见 `doc/lib/snowflake.md`）（5/5 PASS，自动动态挂载 `cap.snowflake`）
 - **新增标准库**：`lib/snowflake/{snowflake,index}.cp`，实现 Mutex 保护 `SnowflakeGenerator`、4096 毫秒内序列翻转、时钟回拨拦截、`decomposeId` 与零堆 `encodeBase62`/`decodeBase62`。
 - **新增文档与测试**：`doc/lib/snowflake.md` 扁平文档与 `cap/test/test_snowflake_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

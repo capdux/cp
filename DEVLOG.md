@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:argon2` 纯 CP 工业级 RFC 9106 Argon2 (`Argon2id` / `Argon2i` / `Argon2d`) 内存硬化口令派生与 PHC 字符串编解码校验标准库（支持 `cap.argon2` 自动动态挂载，详见 `doc/lib/argon2.md`）（5/5 PASS，文档直写 `doc/lib/argon2.md`）
+- **核心设计**：基于 Zig 0.17 `std.crypto.argon2.kdf` 与 `std.Io.Threaded` 实现零泄漏口令哈希与 PHC 校验，通过 RFC 9106 官方向量与 `std.testing.allocator` 内存校验。
+
 ## 2026-11-21: 新建 `cap:snowflake` 纯 CP 线程安全分布式 64-bit Snowflake ID 生成器、时钟回拨保护、字段反解与零堆 Base62 编解码引擎（支持 `cap.snowflake` 自动动态挂载，详见 `doc/lib/snowflake.md`）（5/5 PASS，文档直写 `doc/lib/snowflake.md`）
 - **核心设计**：41-bit 时间戳 + 5-bit DC + 5-bit Worker + 12-bit 序列位布局，通过 4 线程并发 2000 ID 排序唯一性压测，全路径零泄漏。
 
