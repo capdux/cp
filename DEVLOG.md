@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:consistent_jump` 纯 CP Google Jump Consistent Hash 零内存分片与 Rendezvous HRW 等权/加权无状态路由引擎（支持 `cap.consistent_jump` 自动动态挂载，详见 `doc/lib/consistent_jump.md`）（5/5 PASS，文档直写 `doc/lib/consistent_jump.md`）
+- **核心设计**：零堆分配实现单调分片与加权 HRW 最小扰动路由，通过 10->11 桶单调迁移与 3:1 权重分布校验。
+
 ## 2026-11-21: 新建 `cap:kmp_z_algo` 纯 CP 线性时间 $O(N)$ 字符串算法库（KMP 前缀表与全重叠匹配、Z-Algorithm `zArray` 与 Manacher 最长回文子串，支持 `cap.kmp_z_algo` 自动动态挂载，详见 `doc/lib/kmp_z_algo.md`）（5/5 PASS，文档直写 `doc/lib/kmp_z_algo.md`）
 - **核心设计**：全部算法保持线性时间与最小堆内存分配，通过 `ABABCABAB` LPS、`aabxaabxcaabxaabxay` Z 数组与 `std.testing.allocator` 零泄漏验证。
 

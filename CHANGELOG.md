@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:consistent_jump` 纯 CP Google Jump Consistent Hash 零内存分片与 Rendezvous HRW 等权/加权无状态路由引擎（支持 `cap.consistent_jump` 自动动态挂载，详见 `doc/lib/consistent_jump.md`）（5/5 PASS，自动动态挂载 `cap.consistent_jump`）
+- **新增标准库**：`lib/consistent_jump/{consistent_jump,index}.cp`，实现 Jump Consistent Hash 与 Rendezvous HRW 等权/加权路由。\n- **新增文档与测试**：`doc/lib/consistent_jump.md` 扁平文档与 `cap/test/test_consistent_jump_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:kmp_z_algo` 纯 CP 线性时间 $O(N)$ 字符串算法库（KMP 前缀表与全重叠匹配、Z-Algorithm `zArray` 与 Manacher 最长回文子串，支持 `cap.kmp_z_algo` 自动动态挂载，详见 `doc/lib/kmp_z_algo.md`）（5/5 PASS，自动动态挂载 `cap.kmp_z_algo`）
 - **新增标准库**：`lib/kmp_z_algo/{kmp_z_algo,index}.cp`，实现 KMP、Z-Algorithm 与 Manacher 最长回文。\n- **新增文档与测试**：`doc/lib/kmp_z_algo.md` 扁平文档与 `cap/test/test_kmp_z_algo_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

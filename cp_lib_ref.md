@@ -394,3 +394,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:rope_text` | `RopeError`, `Rope` | 纯 CP 大文本编辑器平衡二叉树 Rope 引擎（分块叶子、缓存行/字节权重、$O(\log N)$ 插入/删除/`lineAt` 行定位与零泄漏切片拼接，支持 `cap.rope_text` 自动动态挂载，详见 `doc/lib/rope_text.md`） |
 | `cap:bptree` | `BPTREE_ORDER`, `BPlusTree` | 纯 CP 内存有序索引 B+ 树引擎（多层节点分裂、叶子链表 `rangeScan` 范围扫描与动态删除重平衡，支持 `cap.bptree` 自动动态挂载，详见 `doc/lib/bptree.md`） |
 | `cap:kmp_z_algo` | `PalindromeSpan`, `computeLps`, `kmpFindFirst`, `kmpFindAll`, `zArray`, `longestPalindrome` | 纯 CP 线性时间 $O(N)$ 字符串算法库（KMP 前缀表与全重叠匹配、Z-Algorithm `zArray` 与 Manacher 最长回文子串，支持 `cap.kmp_z_algo` 自动动态挂载，详见 `doc/lib/kmp_z_algo.md`） |
+| `cap:consistent_jump` | `JumpError`, `WeightedNode`, `jumpConsistentHash`, `jumpConsistentHashBytes`, `hrwSelect`, `hrwSelectWeighted` | 纯 CP Google Jump Consistent Hash 零内存分片与 Rendezvous HRW 等权/加权无状态路由引擎（支持 `cap.consistent_jump` 自动动态挂载，详见 `doc/lib/consistent_jump.md`） |
