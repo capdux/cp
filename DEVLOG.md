@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:isotonic` 纯 CP 零分配保序回归（Isotonic Regression / PAVA）与概率校准库：O(n) 加权非降/非增 PAVA、重复 x 合并分段线性插值与 Brier / ECE 校准评估（5/5 PASS，文档直写 `doc/lib/isotonic.md`）
+新增 cap:isotonic（lib/isotonic/{isotonic,index}.cp）：零分配 O(n) 加权 PAVA、O(log m) 二分插值预测与 Brier/ECE 校准评估，通过 KKT 最优性检验，cpc check 0 错误，cap test 5/5 PASS (778ms)
+
 ## 2026-11-22: 新建 `cap:biquad` 纯 CP 零分配音频/DSP Biquad IIR 滤波器与 Goertzel 单频检测库：RBJ Cookbook 8 种二阶节、Transposed Direct Form II、级联 SOS、解析频响与 O(n) Goertzel 检测（5/5 PASS，文档直写 `doc/lib/biquad.md`）
 新增 cap:biquad（lib/biquad/{biquad,index}.cp）：零分配 RBJ Audio EQ Cookbook 8 种 Biquad、Transposed Direct Form II、4 阶 SOS 级联与 Goertzel 单频检测，cpc check 0 错误，cap test 7/7 PASS (765ms)
 

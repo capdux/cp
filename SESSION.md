@@ -217,3 +217,6 @@
 
 ### 2026-11-22（`cap:biquad` 验收，子智能体交付 cap:biquad（RBJ Biquad IIR 滤波与 Goertzel 单频检测，7/7 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/biquad/`（5/5 PASS，`doc/lib/biquad.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:biquad（RBJ Biquad IIR 滤波与 Goertzel 单频检测，7/7 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:isotonic` 验收，子智能体交付 cap:isotonic（保序回归 PAVA 与概率校准，5/5 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/isotonic/`（5/5 PASS，`doc/lib/isotonic.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:isotonic（保序回归 PAVA 与概率校准，5/5 PASS），主协调器统一登记并提交

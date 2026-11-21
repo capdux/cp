@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:isotonic` 纯 CP 零分配保序回归（Isotonic Regression / PAVA）与概率校准库：O(n) 加权非降/非增 PAVA、重复 x 合并分段线性插值与 Brier / ECE 校准评估（5/5 PASS，自动动态挂载 `cap.isotonic`）
+新增纯 CP 零分配保序回归与概率校准库 cap:isotonic（PAVA、分段线性插值、Brier Score 与 ECE），含文档与 5 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:biquad` 纯 CP 零分配音频/DSP Biquad IIR 滤波器与 Goertzel 单频检测库：RBJ Cookbook 8 种二阶节、Transposed Direct Form II、级联 SOS、解析频响与 O(n) Goertzel 检测（5/5 PASS，自动动态挂载 `cap.biquad`）
 新增纯 CP 零分配 Biquad IIR 滤波与 Goertzel 检测库 cap:biquad（RBJ 8 种二阶节、SOS 级联、解析频响、Goertzel），含文档与 7 项深度生产测试
 
