@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:hamming` Pure-CP zero-alloc ECC: Hamming(7,4), SECDED(8,4) & ECC DRAM SECDED(72,64)（5/5 PASS，文档直写 `doc/lib/hamming.md`）
+新增 cap:hamming 纯 CP 零分配纠错码库（常量时间 64-bit SECDED 掩码、全 72 单错纠正与 C(72,2)=2556 双错全检），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:morse` ITU-R M.1677-1 International Morse Code codec & CW pulse timing generator（5/5 PASS，文档直写 `doc/lib/morse.md`）
 新增 cap:morse 纯 CP 零分配电码与键控时序库（54 字符 O(1) 堆逆查、PARIS 拍点计算与脉冲序列生成），通过 cpc check 与 6/6 cap test
 
