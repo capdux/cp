@@ -205,3 +205,6 @@
 
 ### 2026-11-22（`cap:vgm` 验收，完成 `cap:vgm` 交付验收并登记入库（5/5 PASS）；派发 `cap:nsf`。）
 - **执行成果**：`lib/vgm/`（5/5 PASS，`doc/lib/vgm.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:vgm` 交付验收并登记入库（5/5 PASS）；派发 `cap:nsf`。
+
+### 2026-11-22（`cap:pcf` 验收，完成 `cap:pcf` 交付验收并登记入库（5/5 PASS）；派发 `cap:eot`。）
+- **执行成果**：`lib/pcf/`（5/5 PASS，`doc/lib/pcf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:pcf` 交付验收并登记入库（5/5 PASS）；派发 `cap:eot`。

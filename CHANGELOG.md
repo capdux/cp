@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:pcf` 零分配 X11 PCF 二进制点阵字体 TOC、度量、编码矩阵与属性解析器（5/5 PASS，自动动态挂载 `cap.pcf`）
+新增 `lib/pcf/{pcf,index}.cp`、`doc/lib/pcf.md` 与 `cap/test/test_pcf_production_deep.cp`（5/5 PASS），支持 9 类表 TOC 迭代、5B 压缩/12B LE/BE 度量、2D 编码矩阵 O(1) 查表与属性迭代。
+
 ## [2026-11-22] - 新建 `cap:vgm` 零分配 Video Game Music (.vgm) 芯片音乐头、GD3 UTF-16LE 标签与命令流解析器（5/5 PASS，自动动态挂载 `cap.vgm`）
 新增 `lib/vgm/{vgm,index}.cp`、`doc/lib/vgm.md` 与 `cap/test/test_vgm_production_deep.cp`（5/5 PASS），支持 v1.00-v1.71 BCD 版本头、GD3 11 字段 UTF-16LE 转 UTF-8 与命令流采样累计。
 

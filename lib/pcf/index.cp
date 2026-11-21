@@ -1,0 +1,33 @@
+// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc X11 Portable Compiled Format .pcf Font Parser)
+// Unified exports for cap:pcf.
+
+export {
+    PCF_MAGIC,
+    PCF_TOC_ENTRY_SIZE,
+    PCF_PROPERTIES,
+    PCF_ACCELERATORS,
+    PCF_METRICS,
+    PCF_BITMAPS,
+    PCF_INK_METRICS,
+    PCF_BDF_ENCODINGS,
+    PCF_SWIDTHS,
+    PCF_GLYPH_NAMES,
+    PCF_BDF_ACCELERATORS,
+    PCF_DEFAULT_FORMAT,
+    PCF_COMPRESSED_METRICS,
+    PCF_BYTE_MASK,
+    PCF_BIT_MASK,
+    PCF_GLYPH_PAD_MASK,
+    PcfTocEntry,
+    PcfMetrics,
+    PcfEncodingsHeader,
+    PcfProperty,
+    PcfTocIter,
+    PcfPropIter,
+    isPcf,
+    findPcfTable,
+    parsePcfMetricsCount,
+    readPcfMetric,
+    parsePcfEncodings,
+    lookupPcfGlyphIndex,
+} from "./pcf.cp";

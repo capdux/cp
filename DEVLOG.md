@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:pcf` 零分配 X11 PCF 二进制点阵字体 TOC、度量、编码矩阵与属性解析器（5/5 PASS，文档直写 `doc/lib/pcf.md`）
+实现零分配 X11 PCF 点阵字体解析器，支持表级大小端自适应与 4B 对齐字符串池切片。
+
 ## 2026-11-22: 新建 `cap:vgm` 零分配 Video Game Music (.vgm) 芯片音乐头、GD3 UTF-16LE 标签与命令流解析器（5/5 PASS，文档直写 `doc/lib/vgm.md`）
 实现零分配 VGM 芯片音乐解析器，严格校验相对偏移、0x67 Data Block 跳过与 0x66 结束帧。
 
