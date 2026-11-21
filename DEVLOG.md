@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:sarif` 零分配 OASIS SARIF 2.1.0 静态代码分析结果 JSON 解析与汇总器（5/5 PASS，文档直写 `doc/lib/sarif.md`）
+实现零分配 SARIF 2.1.0 解析器，采用无递归 JSON 扫描内核安全跳过深嵌套 codeFlows。
+
 ## 2026-11-22: 新建 `cap:junit` 零分配 JUnit XML CI 测试报告套件/用例解析与汇总器（5/5 PASS，文档直写 `doc/lib/junit.md`）
 实现零分配 JUnit XML 解析器，兼容 Maven/pytest/Jest/Cargo 报告格式与自闭合用例。
 

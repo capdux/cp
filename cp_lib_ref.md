@@ -664,3 +664,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:tap` | TapEventKind, TapDirective, TapEvent, TapIter, TapSummary, summarizeTap | 零分配 Test Anything Protocol (TAP v12/13/14) 测试流解析与汇总器 |
 | `cap:csr` | OID_CN, OID_O, OID_OU, OID_C, OID_EXTENSION_REQUEST, OID_SAN, CsrParsed, CsrRdnAttr, CsrSubjectIter, CsrSanEntry, CsrSanIter, isCsrDer, parseCsrDer | 零分配 RFC 2986 / PKCS#10 证书签发请求 (CSR) ASN.1 DER 解析器 |
 | `cap:junit` | JunitOutcome, JunitSuite, JunitSuiteIter, JunitCase, JunitCaseIter, JunitSummary, isJunitXml, summarizeJunit | 零分配 JUnit XML CI 测试报告套件/用例解析与汇总器 |
+| `cap:sarif` | SarifLevel, SarifHeader, SarifRun, SarifRunIter, SarifResult, SarifResultIter, SarifStats, isSarif, parseSarifHeader, summarizeSarif | 零分配 OASIS SARIF 2.1.0 静态代码分析结果 JSON 解析与汇总器 |
