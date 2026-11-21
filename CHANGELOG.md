@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:crl` 零分配 RFC 5280 X.509 CRL 证书吊销列表 ASN.1 DER 解析器（5/5 PASS，自动动态挂载 `cap.crl`）
+新增 `lib/crl/{crl,index}.cp`、`doc/lib/crl.md` 与 `cap/test/test_crl_production_deep.cp`（5/5 PASS），支持 v1/v2 CRL DER 解析、吊销序列号规范化查验与 CRLReason 枚举提取。
+
 ## [2026-11-22] - 新建 `cap:sarif` 零分配 OASIS SARIF 2.1.0 静态代码分析结果 JSON 解析与汇总器（5/5 PASS，自动动态挂载 `cap.sarif`）
 新增 `lib/sarif/{sarif,index}.cp`、`doc/lib/sarif.md` 与 `cap/test/test_sarif_production_deep.cp`（5/5 PASS），支持多 runs/results 零拷贝迭代、位置行列提取与单遍汇总。
 

@@ -94,3 +94,6 @@
 
 ### 2026-11-22（`cap:sarif` 验收，完成 `cap:sarif` 交付验收并登记入库（5/5 PASS）；派发 `cap:trx`。）
 - **执行成果**：`lib/sarif/`（5/5 PASS，`doc/lib/sarif.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:sarif` 交付验收并登记入库（5/5 PASS）；派发 `cap:trx`。
+
+### 2026-11-22（`cap:crl` 验收，完成 `cap:crl` 交付验收并登记入库（5/5 PASS）；派发 `cap:ocsp`。）
+- **执行成果**：`lib/crl/`（5/5 PASS，`doc/lib/crl.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:crl` 交付验收并登记入库（5/5 PASS）；派发 `cap:ocsp`。

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:crl` 零分配 RFC 5280 X.509 CRL 证书吊销列表 ASN.1 DER 解析器（5/5 PASS，文档直写 `doc/lib/crl.md`）
+实现零分配 X.509 CRL 解析器，零拷贝暴露 tbs_raw_der 并兼容 UTCTime/GeneralizedTime。
+
 ## 2026-11-22: 新建 `cap:sarif` 零分配 OASIS SARIF 2.1.0 静态代码分析结果 JSON 解析与汇总器（5/5 PASS，文档直写 `doc/lib/sarif.md`）
 实现零分配 SARIF 2.1.0 解析器，采用无递归 JSON 扫描内核安全跳过深嵌套 codeFlows。
 
