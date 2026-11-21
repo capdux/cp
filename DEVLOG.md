@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:jks` 零分配 Java KeyStore (.jks v1/v2) 密钥库与证书链解析器（5/5 PASS，文档直写 `doc/lib/jks.md`）
+实现零分配 Java KeyStore 解析器，严格不越过尾部 20B SHA-1 摘要边界并支持按别名查找。
+
 ## 2026-11-22: 新建 `cap:ocsp` 零分配 RFC 6960 OCSP 请求与响应 ASN.1 DER 解析器（5/5 PASS，文档直写 `doc/lib/ocsp.md`）
 实现零分配 RFC 6960 OCSP 解析器，兼容 byName/byKey ResponderID 并零拷贝暴露 tbs_raw_der。
 

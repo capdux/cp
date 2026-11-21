@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:jks` 零分配 Java KeyStore (.jks v1/v2) 密钥库与证书链解析器（5/5 PASS，自动动态挂载 `cap.jks`）
+新增 `lib/jks/{jks,index}.cp`、`doc/lib/jks.md` 与 `cap/test/test_jks_production_deep.cp`（5/5 PASS），支持 0xFEEDFEED v1/v2 头、PrivateKey/TrustedCert 迭代、证书链遍历与 20B 尾摘要校验。
+
 ## [2026-11-22] - 新建 `cap:ocsp` 零分配 RFC 6960 OCSP 请求与响应 ASN.1 DER 解析器（5/5 PASS，自动动态挂载 `cap.ocsp`）
 新增 `lib/ocsp/{ocsp,index}.cp`、`doc/lib/ocsp.md` 与 `cap/test/test_ocsp_production_deep.cp`（5/5 PASS），支持 BasicOCSPResponse、good/revoked/unknown 三态 SingleResponse 与 OCSPRequest 解析。
 

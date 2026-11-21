@@ -669,3 +669,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:clf` | ClfEntry, ClfIter, ClfStats, isClf, parseClfLine, summarizeClf | 零分配 NCSA Common & Apache/Nginx Combined HTTP 访问日志解析与统计器 |
 | `cap:trx` | TrxOutcome, TrxRunHeader, TrxResult, TrxResultIter, TrxSummary, isTrx, parseTrxHeader, parseTrxSummary | 零分配 Visual Studio / .NET (.trx) 测试结果 XML 解析与汇总器 |
 | `cap:ocsp` | OID_OCSP_BASIC, OcspResponseStatus, OcspCertStatus, OcspCertId, OcspResponse, OcspSingleResponse, OcspSingleIter, OcspRequest, OcspReqIter, ocspResponseStatusFromU8, parseOcspResponseDer, parseOcspRequestDer | 零分配 RFC 6960 OCSP 请求与响应 ASN.1 DER 解析器 |
+| `cap:jks` | JKS_MAGIC, JKS_VERSION_1, JKS_VERSION_2, JKS_TAG_PRIVATE_KEY, JKS_TAG_TRUSTED_CERT, JksHeader, JksCert, JksCertIter, JksEntry, JksEntryIter, JksStats, isJks, parseJksHeader, findJksEntry, summarizeJks | 零分配 Java KeyStore (.jks v1/v2) 密钥库与证书链解析器 |

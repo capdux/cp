@@ -106,3 +106,6 @@
 
 ### 2026-11-22（`cap:ocsp` 验收，完成 `cap:ocsp` 交付验收并登记入库（5/5 PASS）；轮换 `Med & Sci Absorber`（12 库）并派发 `cap:pkcs12`。）
 - **执行成果**：`lib/ocsp/`（5/5 PASS，`doc/lib/ocsp.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:ocsp` 交付验收并登记入库（5/5 PASS）；轮换 `Med & Sci Absorber`（12 库）并派发 `cap:pkcs12`。
+
+### 2026-11-22（`cap:jks` 验收，完成 `cap:jks` 交付验收并登记入库（5/5 PASS）；派发 `cap:radius`。）
+- **执行成果**：`lib/jks/`（5/5 PASS，`doc/lib/jks.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:jks` 交付验收并登记入库（5/5 PASS）；派发 `cap:radius`。
