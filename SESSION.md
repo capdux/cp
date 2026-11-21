@@ -235,3 +235,6 @@
 
 ### 2026-11-22（`cap:ar` 验收，完成 `cap:ar` 交付验收并登记入库（5/5 PASS）；派发 `cap:rpm`。）
 - **执行成果**：`lib/ar/`（5/5 PASS，`doc/lib/ar.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:ar` 交付验收并登记入库（5/5 PASS）；派发 `cap:rpm`。
+
+### 2026-11-22（`cap:dex` 验收，完成 `cap:dex` 交付验收并登记入库（5/5 PASS）；派发 `cap:flv`。）
+- **执行成果**：`lib/dex/`（5/5 PASS，`doc/lib/dex.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:dex` 交付验收并登记入库（5/5 PASS）；派发 `cap:flv`。

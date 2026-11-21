@@ -549,3 +549,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:orc` | ORC_MAGIC, OrcCompression, orcCompressionFromU64, VarintResult, readVarint, skipField, OrcPostScript, parseOrcPostScript, isOrc, OrcLayout, parseOrcLayout, OrcCompressionBlock, OrcBlockIter | 零分配 Apache ORC 列式存储 PostScript、分区视图与 3B 压缩块解析器 |
 | `cap:spv` | SPV_MAGIC, SPV_HEADER_BYTES, SpvHeader, SpvInst, SpvInstIter, SpvExecutionModel, SpvEntryPoint, SpvStats, isSpv, parseSpvHeader, parseSpvEntryPoint, summarizeSpv | 零分配 Khronos SPIR-V GPU 着色器头与指令流解析器 |
 | `cap:ar` | AR_MAGIC, AR_HEADER_SIZE, AR_END_MAGIC, ArMemberKind, ArMember, isAr, ArIter, findArMember, countArMembers | 零分配 Unix ar / .a / .deb 归档容器与 GNU/BSD 长文件名解析器 |
+| `cap:dex` | DEX_HEADER_SIZE, DEX_ENDIAN_CONSTANT, DEX_REVERSE_ENDIAN_CONSTANT, DexHeader, Uleb128Result, DexMapItem, DexMapIter, isDex, parseDexHeader, readUleb128, readDexString | 零分配 Android DEX 112B 头、ULEB128、字符串表与 Map List 解析器 |
