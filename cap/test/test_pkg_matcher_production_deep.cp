@@ -1,5 +1,5 @@
 import { test, expect } from "cap:test";
-import { MatcherBehavior, PackageMatcher, wildcardMatch } from "cap:pkg_matcher";
+import { MatcherBehavior, PackageMatcher, wildcardMatch } from "cap:pkg";
 
 test("pkg_matcher: all_include, all_exclude, and mixed semantics", () => {
     const inc_pats: [2][]const u8 = ["@babel/*", "eslint-plugin-*"];

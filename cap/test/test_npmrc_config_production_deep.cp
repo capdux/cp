@@ -9,7 +9,7 @@ import {
     getNpmrcBool,
     resolveRegistryForScope,
     findRegistrySetting,
-} from "cap:npmrc_config";
+} from "cap:pkg";
 
 test("1. NpmrcIter parses key=value, strips outer quotes, skips comments (# and ;), and tracks line_no", () => {
     const src =

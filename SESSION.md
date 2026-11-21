@@ -31,3 +31,6 @@
 
 ### 2026-11-22（`cap:mail` 验收，热修 `#86` 结单提交并回收 + 方案 A Wave 6：`mime`/`mail` 7 目录收敛落地（7/7 PASS），累计消除 130 个长下划线顶层目录）
 - **执行成果**：`lib/mail/`（5/5 PASS，`doc/lib/mail.md`）经 `verify_module.sh` 一次性验收回收；热修 `#86` 结单提交并回收 + 方案 A Wave 6：`mime`/`mail` 7 目录收敛落地（7/7 PASS），累计消除 130 个长下划线顶层目录
+
+### 2026-11-22（`cap:pkg` 验收，方案 A Wave 7：`shell`/`pkg` 7 目录收敛落地（7/7 PASS），累计消除 137 个长下划线顶层目录）
+- **执行成果**：`lib/pkg/`（5/5 PASS，`doc/lib/pkg.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 7：`shell`/`pkg` 7 目录收敛落地（7/7 PASS），累计消除 137 个长下划线顶层目录

@@ -498,7 +498,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:shell_util` | EnvAssignment, isSafeUnquoted, quotePosix, escapeDoubleQuoted, joinCommand, posixBasename, posixDirname, isValidEnvVarName, splitEnvAssignment | 零堆分配 POSIX Shell 安全引用/双引号转义、命令行拼接、basename/dirname 路径运算与环境变量解析库（吸收自 bun/src/shell/util.cp 与 builtin/{basename,dirname}.cp） |
 | `cap:css_border_image` | BorderImageRepeatKeyword, BorderImageRepeat, SliceOffset, BorderImageSlice, BorderImageSideWidth, BorderImageWidth, BorderImageOutsetValue, BorderImageOutset, BorderImage | CSS Backgrounds 3 border-image 属性族与双斜杠简写（slice/width/outset/repeat/fill）解析与序列化库（吸收自 bun/src/css/properties/border_image.cp） |
 | `cap:clap_stream` | TakesValue, ParamSpec, ParseError, ParsedArg, StreamingClap | 零堆分配流式命令行参数解析器（支持 --long/--long=val/-abc 串联/-oval/-- 位置参数分隔与精确错误码，吸收自 bun/src/clap/streaming.cp） |
-| `cap:pkg_matcher` | MatcherBehavior, PackagePattern, PackageMatcher, wildcardMatch | PNPM 兼容三态包名匹配器（全包含/全排除/混合排除优先）与线性时间 */? 通配符引擎（吸收自 bun/src/install/PnpmMatcher.cp） |
 | `cap:css_transition` | CssTransitionError, TransitionBehavior, TransitionPropertyKind, TransitionProperty, TransitionTime, TransitionEasingKind, TransitionEasing, Transition, TransitionList | CSS Transitions 1/2 过渡属性族与多过渡简写列表解析/序列化库（吸收自 bun/src/css/properties/transition.cp） |
 | `cap:css_svg` | SVGPaintKind, SVGPaintFallbackKind, SVGPaint, StrokeLinecap, StrokeLinejoin, StrokeDasharray, PaintOrderItem, PaintOrder, ColorInterpolation, ColorRendering, ShapeRendering, TextRendering, ImageRendering | SVG CSS 渲染属性族（SVGPaint/StrokeLinecap/StrokeLinejoin/StrokeDasharray/PaintOrder 与 5 大渲染提示枚举，吸收自 bun/src/css/properties/svg.cp） |
 | `cap:css_position` | HorizontalSide, VerticalSide, PosUnit, PosLength, AxisPosKind, HorizontalPosition, VerticalPosition, CssPosition | CSS <position> 1/2/3/4 值二维坐标解析与最短规范化序列化库（吸收自 bun/src/css/values/position.cp） |
@@ -512,7 +511,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:css_image_set` | ResolutionUnit, Resolution, ImageSetOption, ImageSet, CssImageKind, CssImage | CSS Images 4 <image> 与 image-set() 分辨率换算、MIME 过滤 DPR 选图与序列化库（吸收自 bun/src/css/values/image.cp） |
 | `cap:etag` | ParsedETag, ifNoneMatch, ifMatch, generateStrong, generateWeak | RFC 9110 / RFC 7232 HTTP ETag 解析、强/弱比较、If-None-Match/If-Match 求值与 FNV-1a 内容 ETag 生成库（吸收自 bun/src/http_types/ETag.cp） |
 | `cap:json5_lexer` | Json5TokenKind, Json5Token, Json5Lexer, toStandardJson | JSON5 零堆分配词法扫描器（注释/单引号/无引号键/十六进制/Infinity/NaN）与 RFC 8259 标准 JSON 转译器（吸收自 bun/src/interchange/json5.cp） |
-| `cap:pkg_exports` | ExportTargetKind, ExportConditionRule, ExportSubpathEntry, ResolveStatus, ResolveResult, ExportsMap | Node.js / Bun package.json exports 条件子路径解析引擎（精确优先/PATTERN_KEY_COMPARE/null 阻断/.. 防穿越，吸收自 bun/src/resolver/package_json.cp） |
 | `cap:path_resolve` | ParentRelation, isParentOrEqual, isPathInside, longestCommonPath, normalizePosix, joinNormalized, relativePosix | POSIX 路径零堆分配规范化、拼接、相对路径、最长公共目录前缀与防目录穿越校验库（吸收自 bun/src/paths/resolve_path.cp） |
 | `cap:bit_ops` | testBit64, setBit64, clearBit64, toggleBit64, intersects64, containsAll64, maskOut64, extractBits64, insertBits64, popcount64, clz64, ctz64, isPowerOfTwo, nextPowerOfTwo, alignUp, alignDown, clearLowestSetBit, isolateLowestSetBit, BitSetIter64 | 零开销 u64 位掩码、位域提取/插入、2 的幂对齐、popcount/clz/ctz 与置位迭代器库（吸收自 bun/src/meta/bits.cp） |
 | `cap:compile_target` | TargetOs, TargetArch, TargetLibc, CompileTarget | 跨平台二进制分发与交叉编译目标三元组解析、支持矩阵校验与 Zig 三元组映射库（吸收自 bun/src/options_types/CompileTarget.cp） |
@@ -541,12 +539,10 @@ const h = cap.hash.wyhash("hello");
 | `cap:netrc` | NetrcEntry, NetrcIter, lookupNetrc | .netrc / _netrc 认证凭据文件零分配流式解析器（支持引号、注释、macdef 与 default 回退） |
 | `cap:robots_txt` | matchRobotsPattern, isAllowed, crawlDelaySec, SitemapIter | RFC 9309 robots.txt 解析、通配符匹配、Crawl-delay 提取与 Sitemap 迭代器 |
 | `cap:jwt_claims` | decodeBase64Url, JwtParts, splitJwt, extractStringClaim, extractIntClaim, JwtHeader, ClaimStatus, JwtClaims | RFC 7519 JWT 分段器、Base64URL 解码器、Header/Payload 声明提取与 exp/nbf/iss/sub/aud 校验器 |
-| `cap:shell_quote` | needsQuoting, quotePosix, joinArgs, ShellArgIter | POSIX Shell 安全单引号转义、参数拼接与支持单双引号/反斜杠/相邻拼接的命令行拆分器 |
 | `cap:hex_dump` | encodeHexLower, encodeHexUpper, decodeHexStrict, decodeHex, formatHexDumpLine, formatHexDump | 零分配十六进制编解码与规范化 hexdump -C 多行诊断格式化器 |
 | `cap:http_vary` | VaryIter, isVaryWildcard, varyContains, appendVary, mergeVary | RFC 9110 §12.5.5 Vary 响应头零分配迭代、通配符检测与大小写不敏感去重合并器 |
 | `cap:glob_escape` | isGlobMagic, hasGlobMagic, escapeGlob, unescapeGlob, staticBaseDir, isNegatedPattern, stripNegation | Glob 通配符元字符转义/反转义、静态目录前缀提取（遍历剪枝）与否定模式解析 |
 | `cap:editorconfig` | matchSectionPattern, IndentStyle, EndOfLine, Charset, EditorConfigProps, resolveEditorConfig | .editorconfig 零分配解析器、花括号/通配符段匹配与级联属性求值器 |
-| `cap:npm_package_name` | PackageSpecifier, parsePackageSpecifier, isValidPackageName, isRelativeSpecifier, isBareSpecifier | npm / Node.js 包名与模块说明符零分配解析器（作用域/子路径拆分与 validate-npm-package-name 校验） |
 | `cap:logfmt` | LogfmtField, LogfmtIter, getLogfmtValue, appendLogfmtPair | 结构化 logfmt（key=value）日志行零分配流式解析器、键值查询与规范化转义编码器 |
 | `cap:uri_normalize` | isUnreserved, defaultPortForScheme, normalizePercentEncoding, removeDotSegments, normalizeOrigin | RFC 3986 URI 路径点段归约（§5.2.4）、百分号编码规范化与协议默认端口剥离工具 |
 | `cap:w3c_traceparent` | TraceParent, TraceStateEntry, TraceStateIter, findTraceState | W3C Trace Context Level 1 traceparent / tracestate 分布式追踪头零分配解析与格式化器 |
@@ -570,7 +566,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:rfc7807_problem` | PROBLEM_JSON_CONTENT_TYPE, defaultTitleForStatus, ProblemDetails | RFC 9457 / RFC 7807 HTTP Problem Details (application/problem+json) 零分配构造与转义序列化器 |
 | `cap:http_upgrade` | UpgradeProtocol, UpgradeIter, ConnectionTokenIter, connectionHasToken, upgradeHasProtocol, isHopByHopHeader, isWebSocketUpgrade | RFC 9110 §7.8 Upgrade / Connection 协议升级与逐跳头零分配解析器及 WebSocket 握手判定器 |
 | `cap:ssh_config` | matchHostPatterns, SshHostConfig, resolveSshConfig, getSshOption | OpenSSH ~/.ssh/config 零分配解析器与主机参数匹配引擎（首现优先、* 与 ! 否定模式） |
-| `cap:brace_expand` | BraceExpandIter | 零分配 Bash 风格花括号展开迭代器（逗号列表、步进/补零整数序列与字母序列） |
 | `cap:charset_label` | CharsetKind, resolveCharsetLabel, canonicalCharsetName, isUtf8Compatible, isAsciiSuperset, sniffBomCharset | WHATWG Encoding Standard 字符集标签规范化器（14 种编码别名映射与 UTF-8/UTF-16 BOM 嗅探） |
 | `cap:http_sec_fetch` | FetchSite, FetchMode, FetchDest, parseFetchSite, parseFetchMode, parseFetchDest, FetchMetadata | W3C Fetch Metadata（Sec-Fetch-Site/Mode/Dest/User）零分配解析与资源隔离防护策略求值器 |
 | `cap:makefile_parse` | MakeAssignOp, MakeVar, MakeRule, MakeRuleIter, MakeVarIter, isPhonyTarget | GNU Makefile 目标、依赖、.PHONY 伪目标与变量赋值（=/ :=/ ?=/ +=）零分配解析器 |
@@ -580,8 +575,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:number_format` | formatGroupedU64, formatGroupedI64, ordinalSuffix, formatOrdinal, formatRadixU64, formatFixedPoint | 零分配人类可读数字格式化器（千分位分组、英文序数词、2..36 进制与定点小数） |
 | `cap:http_warning` | WarningItem, WarningIter, isStaleWarning, formatWarning | RFC 7234 §5.5 HTTP Warning 头零分配解析器（引号逗号/转义/日期感知）与格式化器 |
 | `cap:http_signature_input` | SignatureInput, SignatureInputIter, findSignatureInput, ComponentIter, findSignatureValue | RFC 9421 HTTP Message Signatures (Signature-Input / Signature) 零分配解析器与时间窗校验器 |
-| `cap:shell_env_parse` | ShellEnvEntry, ShellEnvIter, getShellEnv | POSIX Shell export KEY=VAL / .profile 风格环境变量赋值行零分配解析器（支持单双引号与 unset 清空） |
-| `cap:npmrc_config` | DEFAULT_NPM_REGISTRY, NpmrcEntry, NpmrcIter, getNpmrcValue, getNpmrcBool, resolveRegistryForScope, findRegistrySetting | .npmrc 配置文件零分配键值解析器、布尔配置查询与 @scope:registry 仓库路由解析器 |
 | `cap:cron_preset` | CronPreset, parseCronPreset, presetToCron5, normalizeCron5 | Vixie Cron @macro 预设（@hourly/@daily/@weekly/@monthly/@yearly/@reboot）零分配展开与 5 段表达式校验器 |
 | `cap:http_trailer` | `isForbiddenTrailerField`, `isValidTrailerFieldName`, `TrailerFieldIter`, `validateTrailerHeader`, `hasTrailerField` | RFC 9110 §6.5.1 HTTP `Trailer` 尾部字段声明零分配解析与 25 项禁传字段安全校验器 |
 | `cap:jsonl` | `JsonlChunkResult`, `JsonlIter`, `scanCompleteJsonlChunk`, `isBalancedJsonRecord`, `appendJsonlRecord` | JSON Lines / NDJSON 流式行迭代、增量分块扫描与记录平衡零分配校验器 |
@@ -590,3 +583,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:ansi` | `Osc8Link`, `formatOsc8`, `parseOsc8`, `stripOsc8`, `SgrColor`, `SgrStyle`, `formatStyled`, `applySgrSequence`, `stripAnsi`, `hasAnsi`, `visibleLen` | ANSI 终端控制序列统一主包（OSC 8 超链接、SGR 16/256/TrueColor 样式、转义剥离与可见宽度） |
 | `cap:docker` | `DockerImageRef`, `DockerfileIter`, ... | Docker 镜像引用与 Dockerfile 解析统一主包（同步收敛 `cap:dotenv`/`cap:ini`/`cap:csv`） |
 | `cap:mail` | `Mailbox`, `decodeRfc2047`, `decodeQuotedPrintable`, ... | RFC 5322 邮件地址、RFC 2047 编码字与 Quoted-Printable 统一主包（同步收敛 `cap:mime`） |
+| `cap:pkg` | `NpmPackageName`, `NpmrcIter`, `PkgExports`, `PkgMatcher`, ... | 包管理/NPM 名称/npmrc/exports/matcher 统一主包（同步收敛 `cap:shell`） |

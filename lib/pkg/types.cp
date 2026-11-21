@@ -257,8 +257,8 @@ pub struct SlicedString {
         if (SemverString.canInline(_.str)) {
             return SemverString.initInline(_.str);
         }
-        const buf_addr = @intFromPtr(_.buf.ptr);
-        const sub_addr = @intFromPtr(_.str.ptr);
+        const buf_addr = unsafe { @intFromPtr(_.buf.ptr) };
+        const sub_addr = unsafe { @intFromPtr(_.str.ptr) };
         if (sub_addr >= buf_addr && (sub_addr + _.str.len) <= (buf_addr + _.buf.len)) {
             const off = (sub_addr - buf_addr) as u32;
             return SemverString.initExternal(off, _.str.len as u32);

@@ -16,3 +16,37 @@ export * from "./workspace.cp";
 export * from "./registry_client.cp";
 export * from "./lifecycle.cp";
 export * from "./migration.cp";
+
+export {
+    PackageSpecifier,
+    isRelativeSpecifier,
+    isBareSpecifier,
+    isValidPackageName,
+    parsePackageSpecifier,
+} from "./name.cp";
+
+export {
+    DEFAULT_NPM_REGISTRY,
+    NpmrcEntry,
+    NpmrcIter,
+    getNpmrcValue,
+    getNpmrcBool,
+    resolveRegistryForScope,
+    findRegistrySetting,
+} from "./npmrc.cp";
+
+export {
+    ExportTargetKind,
+    ExportConditionRule,
+    ExportSubpathEntry,
+    ResolveStatus,
+    ResolveResult,
+    ExportsMap,
+} from "./exports.cp";
+
+export {
+    MatcherBehavior,
+    PackagePattern,
+    PackageMatcher,
+    wildcardMatch,
+} from "./matcher.cp";

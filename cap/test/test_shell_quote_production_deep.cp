@@ -1,6 +1,6 @@
 import std from "std";
 import { test, expect_eq } from "cap:test";
-import { needsQuoting, quotePosix, joinArgs, ShellArgIter } from "cap:shell_quote";
+import { needsQuoting, quotePosix, joinArgs, ShellArgIter } from "cap:shell";
 
 test("1. needsQuoting and quotePosix handle safe strings, empty string, spaces, and single quotes", () => {
     expect_eq(needsQuoting("hello-world_1.2/a:b@c%d+e=f,g"), false);

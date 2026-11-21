@@ -195,7 +195,7 @@ fn walkDir(
     }
     dir_buf[dir_len] = 0;
 
-    const c_dir_path: [*:0]const u8 = @ptrCast(&dir_buf);
+    const c_dir_path: [*:0]const u8 = unsafe { @ptrCast(&dir_buf) };
     const dir = std.c.opendir(c_dir_path);
     if (dir == null) return;
     defer * = std.c.closedir(dir.?);
@@ -247,7 +247,7 @@ fn walkDir(
                 child_full[dir_len] = '/';
                 @memcpy(child_full[dir_len + 1 .. dir_len + 1 + name.len], name);
                 child_full[dir_len + 1 + name.len] = 0;
-                const c_child: [*:0]const u8 = @ptrCast(&child_full);
+                const c_child: [*:0]const u8 = unsafe { @ptrCast(&child_full) };
                 const test_d = std.c.opendir(c_child);
                 if (test_d != null) {
                     is_dir = true;

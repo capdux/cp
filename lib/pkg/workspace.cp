@@ -8,7 +8,7 @@ const std = @import("std");
 import { JSON, JsonValue, JsonTag } from "cap:json";
 import { Matcher, GlobMatchOptions, GlobWalker, GlobWalkerOptions } from "cap:glob";
 import { SemverRange } from "cap:semver";
-import { DirIterator, DirEntryKind, exists, readFile } from "cap:sys";
+import { DirEntry, DirIterator, DirEntryKind, exists, readFile } from "cap:sys";
 import {
     Behavior,
     InstallFeatures,

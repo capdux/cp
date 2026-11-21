@@ -3,7 +3,7 @@ import {
     ExportConditionRule,
     ResolveStatus,
     ExportsMap,
-} from "cap:pkg_exports";
+} from "cap:pkg";
 
 test("1. Root entry '.' conditional priority (bun / import / require / default)", () => {
     let map = ExportsMap.init();

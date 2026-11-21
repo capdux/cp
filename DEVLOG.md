@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:pkg` 包管理/NPM 名称/npmrc/exports/matcher 统一主包（同步收敛 `cap:shell`）（5/5 PASS，文档直写 `doc/lib/pkg.md`）
+- **收敛要点**：`lib/shell/envparse.cp` 避开既有 `env.cp`；顺手修复 `cap:shell`/`cap:pkg` 既有 `E0209` 与 `DirEntry` 导入；累计已消除 137 个长下划线顶层目录。
+
 ## 2026-11-22: 新建 `cap:mail` RFC 5322 邮件地址、RFC 2047 编码字与 Quoted-Printable 统一主包（同步收敛 `cap:mime`）（5/5 PASS，文档直写 `doc/lib/mail.md`）
 - **收敛要点**：`lib/mime/` 与新建 `lib/mail/` 零冲突通过 `cpc check` 与 7/7 深度测试；累计已消除 130 个长下划线顶层目录。
 

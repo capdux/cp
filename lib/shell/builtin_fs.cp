@@ -12,6 +12,7 @@ const std = @import("std");
 import { StringJoiner, PathString } from "cap:string";
 import {
     FD,
+    DirEntry,
     DirIterator,
     DirEntryKind,
     Stat,

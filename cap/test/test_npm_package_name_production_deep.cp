@@ -7,7 +7,7 @@ import {
     isValidPackageName,
     isRelativeSpecifier,
     isBareSpecifier,
-} from "cap:npm_package_name";
+} from "cap:pkg";
 
 test("npm_package_name: parsePackageSpecifier scoped and unscoped with subpaths") {
     const p1 = parsePackageSpecifier("@types/node/fs/promises").?;

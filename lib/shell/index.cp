@@ -20,6 +20,23 @@ export * from "./builtin_text.cp";
 export * from "./builtin.cp";
 export * from "./exec.cp";
 
+export {
+    ShellEnvEntry,
+    ShellEnvIter,
+    getShellEnv,
+} from "./envparse.cp";
+
+export {
+    needsQuoting,
+    quotePosix,
+    joinArgs,
+    ShellArgIter,
+} from "./quote.cp";
+
+export {
+    BraceExpandIter,
+} from "./brace.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);

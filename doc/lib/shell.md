@@ -98,3 +98,11 @@ fn demoMixedPipeline(): void {
     // code == 0, out.slice() => "APPLE\n"
 }
 ```
+
+---
+
+## 附加零分配子模块
+
+- **`lib/shell/envparse.cp`**（POSIX Shell 环境变量赋值解析）：`ShellEnvEntry`、`ShellEnvIter`、`getShellEnv`
+- **`lib/shell/quote.cp`**（POSIX Shell 引用转义与参数切分）：`needsQuoting`、`quotePosix`、`joinArgs`、`ShellArgIter`
+- **`lib/shell/brace.cp`**（Bash 风格花括号展开零分配迭代器）：`BraceExpandIter`

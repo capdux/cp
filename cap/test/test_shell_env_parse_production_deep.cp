@@ -5,7 +5,7 @@ import {
     ShellEnvEntry,
     ShellEnvIter,
     getShellEnv,
-} from "cap:shell_env_parse";
+} from "cap:shell";
 
 test("1. ShellEnvIter parses export prefix, plain assignments, comments, blank lines, and line numbers", () => {
     const src =

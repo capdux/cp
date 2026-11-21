@@ -8,6 +8,7 @@ const std = @import("std");
 import { Hash } from "cap:hash";
 import { UnifiedDiff, PatchApplyOptions } from "cap:patch";
 import {
+    DirEntry,
     DirIterator,
     mkdirAll,
     copyFile,
