@@ -613,3 +613,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:bvh` | BvhChannel, BvhJoint, BvhJointIter, BvhHeader, BvhFrameIter, BvhFloatIter, parseBvhChannel, isBvh, parseBvhHeader | 零分配 Biovision Hierarchy (.bvh) 3D 骨骼动作捕捉与帧数据解析器 |
 | `cap:fbx` | FBX_MAGIC, FBX_HEADER_SIZE, FBX_V7500_THRESHOLD, FbxHeader, FbxNode, FbxNodeIter, FbxProp, FbxPropIter, isFbxBinary, parseFbxHeader | 零分配 Autodesk FBX Binary (7100-7700) 3D 场景树与属性解析器 |
 | `cap:ais` | AisSentence, AisBitReader, AisPositionReport, AisClassBPosition, parseAisSentence, aisUnarmorChar, aisMessageType, parseAisPositionReport, parseAisClassBPosition | 零分配 ITU-R M.1371 海事船舶 AIS 6-bit 装甲比特流与位置报文解码器 |
+| `cap:igc` | IgcHeader, IgcFix, IgcFixIter, IgcStats, isIgc, parseIgcHeader, parseIgcBRecord, summarizeIgc | 零分配 FAI IGC 滑翔机/航空飞行记录仪 A/H/B 记录解析器 |

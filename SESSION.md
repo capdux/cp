@@ -181,3 +181,6 @@
 
 ### 2026-11-22（`cap:ais` 验收，完成 `cap:ais` 交付验收并登记入库（5/5 PASS）；派发 `cap:dae`。）
 - **执行成果**：`lib/ais/`（5/5 PASS，`doc/lib/ais.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:ais` 交付验收并登记入库（5/5 PASS）；派发 `cap:dae`。
+
+### 2026-11-22（`cap:igc` 验收，完成 `cap:igc` 交付验收并登记入库（5/5 PASS）；派发 `cap:vrml`。）
+- **执行成果**：`lib/igc/`（5/5 PASS，`doc/lib/igc.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:igc` 交付验收并登记入库（5/5 PASS）；派发 `cap:vrml`。
