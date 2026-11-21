@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_max_forwards` RFC 9110 §7.6.2 HTTP `Max-Forwards` 代理跳数限制零分配解析与递减裁定器（5/5 PASS，自动动态挂载 `cap.http_max_forwards`）
+- 新增 `lib/http_max_forwards/{max_forwards,index}.cp`、`doc/lib/http_max_forwards.md`、`cap/test/test_http_max_forwards_production_deep.cp`：纯 CP 零分配解析 RFC 9110 `Max-Forwards` 头并实现 `TRACE`/`OPTIONS` 跳数递减裁定与十进制格式化（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:etc_group` Linux `/etc/group` 系统用户组数据库零分配解析与精确成员查询器（5/5 PASS，自动动态挂载 `cap.etc_group`）
 - 新增 `lib/etc_group/{group,index}.cp`、`doc/lib/etc_group.md`、`cap/test/test_etc_group_production_deep.cp`：纯 CP 零分配解析 Linux `/etc/group`（兼容 `\n`/`\r\n`、跳过注释与畸形行、精确逗号分隔成员匹配防止子串误判、按组名/GID 检索）（5/5 PASS）。
 

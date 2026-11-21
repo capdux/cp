@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:http_max_forwards` RFC 9110 §7.6.2 HTTP `Max-Forwards` 代理跳数限制零分配解析与递减裁定器（5/5 PASS，文档直写 `doc/lib/http_max_forwards.md`）
+- **设计要点**：`parseMaxForwards` 严格限定 `1*DIGIT` + 首尾 OWS 并拦截溢出/符号/CRLF；`evaluateMaxForwards` 按 RFC 9110 仅对 `TRACE`/`OPTIONS` 生效。
+
 ## 2026-11-22: 新建 `cap:etc_group` Linux `/etc/group` 系统用户组数据库零分配解析与精确成员查询器（5/5 PASS，文档直写 `doc/lib/etc_group.md`）
 - **设计要点**：`GroupMemberIter` 零分配跳过空段与连续逗号；`hasMember` 精确比对整段防 `"dev"` 误匹配 `"devops"`；与 `cap:passwd_parse` 配套补全 Unix 账号/组解析生态。
 

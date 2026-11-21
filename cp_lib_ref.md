@@ -700,3 +700,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:ansi_sgr` | `SgrColorKind`, `SgrColor`, `SgrStyle`, `formatStyled`, `applySgrSequence` | ANSI SGR 终端样式与 16 色/256 色/24-bit TrueColor RGB 转义序列零分配编解码器 |
 | `cap:http_trailer` | `isForbiddenTrailerField`, `isValidTrailerFieldName`, `TrailerFieldIter`, `validateTrailerHeader`, `hasTrailerField` | RFC 9110 §6.5.1 HTTP `Trailer` 尾部字段声明零分配解析与 25 项禁传字段安全校验器 |
 | `cap:etc_group` | `GroupEntry`, `GroupMemberIter`, `EtcGroupIter`, `findGroupByName`, `findGroupByGid`, `isUserInGroup` | Linux `/etc/group` 系统用户组数据库零分配解析与精确成员查询器 |
+| `cap:http_max_forwards` | `MaxForwardsAction`, `MaxForwardsResult`, `parseMaxForwards`, `evaluateMaxForwards`, `formatMaxForwards` | RFC 9110 §7.6.2 HTTP `Max-Forwards` 代理跳数限制零分配解析与递减裁定器 |

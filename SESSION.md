@@ -235,3 +235,6 @@
 
 ### 2026-11-22（`cap:etc_group` 验收，Batch 108 落地，标准库总量达 275 模块（新轮换 Sys Config Absorber 首单交付））
 - **执行成果**：`lib/etc_group/`（5/5 PASS，`doc/lib/etc_group.md`）经 `verify_module.sh` 一次性验收回收；Batch 108 落地，标准库总量达 275 模块（新轮换 Sys Config Absorber 首单交付）
+
+### 2026-11-22（`cap:http_max_forwards` 验收，Batch 109 落地，标准库总量达 276 模块）
+- **执行成果**：`lib/http_max_forwards/`（5/5 PASS，`doc/lib/http_max_forwards.md`）经 `verify_module.sh` 一次性验收回收；Batch 109 落地，标准库总量达 276 模块
