@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:vcf` 零分配生物信息学 VCF 4.2/4.3 基因变异记录、INFO 与 Ti/Tv 解析器（5/5 PASS，自动动态挂载 `cap.vcf`）
+新增 `lib/vcf/{vcf,index}.cp`、`doc/lib/vcf.md` 与 `cap/test/test_vcf_production_deep.cp`（5/5 PASS），支持 VCFv4.x 头、8 必选列与样本切片、INFO 查找及 Ti/Tv 转换颠换比统计。
+
 ## [2026-11-22] - 新建 `cap:bed` 零分配 UCSC BED3-BED12 基因组区间注释解析与重叠计算器（5/5 PASS，自动动态挂载 `cap.bed`）
 新增 `lib/bed/{bed,index}.cp`、`doc/lib/bed.md` 与 `cap/test/test_bed_production_deep.cp`（5/5 PASS），支持 BED3/6/12 全列解析、UCSC 头行跳过、区间重叠长度计算与单遍统计。
 
