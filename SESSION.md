@@ -79,3 +79,6 @@
 
 ### 2026-11-22（`cap:hprof` 验收，完成 `cap:hprof` 交付验收并登记入库（5/5 PASS）；收到新工单 `task-bun-20261122-unpack-prelude-shadow-end` 并并入热修通道；派发 `cap:jfr`。）
 - **执行成果**：`lib/hprof/`（5/5 PASS，`doc/lib/hprof.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:hprof` 交付验收并登记入库（5/5 PASS）；收到新工单 `task-bun-20261122-unpack-prelude-shadow-end` 并并入热修通道；派发 `cap:jfr`。
+
+### 2026-11-22（`cap:bincode` 验收，完成 `cap:bincode` 交付验收并登记入库（5/5 PASS）；派发 `cap:pickle`。）
+- **执行成果**：`lib/bincode/`（5/5 PASS，`doc/lib/bincode.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:bincode` 交付验收并登记入库（5/5 PASS）；派发 `cap:pickle`。

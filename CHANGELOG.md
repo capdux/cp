@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:bincode` 零分配 Rust bincode v1 (FixedInt) / v2 (Varint + ZigZag) 二进制编解码器（5/5 PASS，自动动态挂载 `cap.bincode`）
+新增 `lib/bincode/{bincode,index}.cp`、`doc/lib/bincode.md` 与 `cap/test/test_bincode_production_deep.cp`（5/5 PASS），支持 Legacy 定宽 LE/BE 与 Standard Varint/ZigZag 双向编解码。
+
 ## [2026-11-22] - 新建 `cap:hprof` 零分配 JVM HPROF 1.0.1/1.0.2 二进制堆转储头与记录流解析器（5/5 PASS，自动动态挂载 `cap.hprof`）
 新增 `lib/hprof/{hprof,index}.cp`、`doc/lib/hprof.md` 与 `cap/test/test_hprof_production_deep.cp`（5/5 PASS），支持 32/64-bit id_size、UTF8/LOAD_CLASS/HEAP_SUMMARY 解析与单遍统计。
 

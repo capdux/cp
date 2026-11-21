@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:bincode` 零分配 Rust bincode v1 (FixedInt) / v2 (Varint + ZigZag) 二进制编解码器（5/5 PASS，文档直写 `doc/lib/bincode.md`）
+实现零分配 Rust bincode v1/v2 编解码器，严格校验非法 varint 标记与目标整数位宽上界。
+
 ## 2026-11-22: 新建 `cap:hprof` 零分配 JVM HPROF 1.0.1/1.0.2 二进制堆转储头与记录流解析器（5/5 PASS，文档直写 `doc/lib/hprof.md`）
 实现零分配 JVM HPROF 堆转储解析器，覆盖全部 14 个顶层 Record Tag 与 10 个 Heap Dump 子记录常量。
 
