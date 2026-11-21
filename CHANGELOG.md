@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:bacnet` BACnet/IP (ASHRAE 135) BVLC, NPDU, APDU, Object ID & Tag TLV zero-alloc parser（5/5 PASS，自动动态挂载 `cap.bacnet`）
+新增纯 CP 零分配标准库 cap:bacnet（ASHRAE 135 BACnet/IP BVLC/NPDU/APDU、Object ID 与 Tag TLV 解析）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:dnp3` DNP3 (IEEE 1815) SCADA link/transport/app codec & 16B chunked CRC-16 (0xA6BC)（5/5 PASS，自动动态挂载 `cap.dnp3`）
 新增纯 CP 零分配标准库 cap:dnp3（IEEE 1815 DNP3 链路/传输/应用层与 16B 分块 CRC-16 编解码）与 5/5 深度测试
 

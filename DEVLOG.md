@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:bacnet` BACnet/IP (ASHRAE 135) BVLC, NPDU, APDU, Object ID & Tag TLV zero-alloc parser（5/5 PASS，文档直写 `doc/lib/bacnet.md`）
+新增 cap:bacnet 纯 CP 零分配楼宇自动化协议库（BVLC/NPDU/APDU 分层解包、32-bit Object ID 与扩展 Context/Application Tag TLV 零拷贝迭代），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:dnp3` DNP3 (IEEE 1815) SCADA link/transport/app codec & 16B chunked CRC-16 (0xA6BC)（5/5 PASS，文档直写 `doc/lib/dnp3.md`）
 新增 cap:dnp3 纯 CP 零分配电力与 SCADA 协议库（0x0564 帧头、0xA6BC 分块 CRC-16 编解码往返、Transport 与含 IIN 的 Application 层解析），通过 cpc check 与 5/5 cap test
 
