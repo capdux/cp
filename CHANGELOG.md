@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ihex` 零分配 Intel HEX (I8HEX/I16HEX/I32HEX) 嵌入式固件编解码与 32-bit 扩展地址解析器（5/5 PASS，自动动态挂载 `cap.ihex`）
+新增 `lib/ihex/{ihex,index}.cp`、`doc/lib/ihex.md` 与 `cap/test/test_ihex_production_deep.cp`（5/5 PASS），支持二补码校验和、02/04 扩展地址换算、05 入口点与零分配行编码。
+
 ## [2026-11-22] - 新建 `cap:uf2` 零分配 Microsoft UF2 512B 微控制器固件块编解码与连续性校验器（5/5 PASS，自动动态挂载 `cap.uf2`）
 新增 `lib/uf2/{uf2,index}.cp`、`doc/lib/uf2.md` 与 `cap/test/test_uf2_production_deep.cp`（5/5 PASS），支持三重魔数校验、RP2040/ESP32-S3/STM32 Family ID、512B 编解码与 Flash 地址连续性汇总。
 

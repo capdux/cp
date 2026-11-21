@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ihex` 零分配 Intel HEX (I8HEX/I16HEX/I32HEX) 嵌入式固件编解码与 32-bit 扩展地址解析器（5/5 PASS，文档直写 `doc/lib/ihex.md`）
+实现零分配 Intel HEX 固件编解码器，覆盖 STM32/ARM 32-bit 线性基址与地址范围汇总。
+
 ## 2026-11-22: 新建 `cap:uf2` 零分配 Microsoft UF2 512B 微控制器固件块编解码与连续性校验器（5/5 PASS，文档直写 `doc/lib/uf2.md`）
 实现零分配 Microsoft UF2 固件块编解码器，严格校验 block_no < num_blocks 与 payload_size <= 476。
 
