@@ -31,3 +31,6 @@
 
 ### 2026-11-22（`cap:s7` 验收，完成并注册纯 CP 零分配标准库 cap:s7（5/5 cap test PASS））
 - **执行成果**：`lib/s7/`（5/5 PASS，`doc/lib/s7.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:s7（5/5 cap test PASS）
+
+### 2026-11-22（`cap:ssdp` 验收，完成并注册纯 CP 零分配标准库 cap:ssdp（5/5 cap test PASS））
+- **执行成果**：`lib/ssdp/`（5/5 PASS，`doc/lib/ssdp.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:ssdp（5/5 cap test PASS）

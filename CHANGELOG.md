@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ssdp` SSDP (UPnP/DLNA) M-SEARCH/NOTIFY/200 OK header parser & encoder（5/5 PASS，自动动态挂载 `cap.ssdp`）
+新增纯 CP 零分配标准库 cap:ssdp（UPnP/DLNA SSDP M-SEARCH/NOTIFY/200 OK 编解码与头部迭代）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:s7` Siemens S7comm / TPKT (RFC 1006) / COTP (ISO 8073) & S7-Any PLC zero-alloc parser（5/5 PASS，自动动态挂载 `cap.s7`）
 新增纯 CP 零分配标准库 cap:s7（Siemens S7comm / TPKT / COTP 与 S7-Any 地址解析）与 5/5 深度测试
 

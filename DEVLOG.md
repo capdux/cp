@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ssdp` SSDP (UPnP/DLNA) M-SEARCH/NOTIFY/200 OK header parser & encoder（5/5 PASS，文档直写 `doc/lib/ssdp.md`）
+新增 cap:ssdp 纯 CP 零分配局域网服务发现库（M-SEARCH/NOTIFY/HTTP 200 解析、max-age 提取与防 CRLF 注入编码），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:s7` Siemens S7comm / TPKT (RFC 1006) / COTP (ISO 8073) & S7-Any PLC zero-alloc parser（5/5 PASS，文档直写 `doc/lib/s7.md`）
 新增 cap:s7 纯 CP 零分配工业 PLC 通信协议库（TPKT/COTP DT 解封、S7 10B/12B 报头与 12B S7-Any 变量项零拷贝迭代），通过 cpc check 与 5/5 cap test
 
