@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:spc` 零分配 SNES SPC700 (.spc) 芯片音乐头、ID666 与 xid6 扩展块解析器（5/5 PASS，自动动态挂载 `cap.spc`）
+新增 `lib/spc/{spc,index}.cp`、`doc/lib/spc.md` 与 `cap/test/test_spc_production_deep.cp`（5/5 PASS），支持 256B 头、Text/Binary ID666 自动区分、64KB RAM/DSP 切片与 xid6 4B 对齐迭代。
+
 ## [2026-11-22] - 新建 `cap:s3m` 零分配 Scream Tracker 3 (.s3m) 跟踪器音乐头、Parapointer 与采样解析器（5/5 PASS，自动动态挂载 `cap.s3m`）
 新增 `lib/s3m/{s3m,index}.cp`、`doc/lib/s3m.md` 与 `cap/test/test_s3m_production_deep.cp`（5/5 PASS），支持 96B SCRM 头、Parapointer 段寻址、80B PCM 乐器头与压缩 Pattern 切片。
 

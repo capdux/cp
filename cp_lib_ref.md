@@ -627,3 +627,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:eot` | EOT_MAGIC, EOT_FIXED_HEADER_SIZE, EOT_VERSION_1, EOT_VERSION_2_1, EOT_VERSION_2_2, EotHeader, isEot, parseEotHeader, decodeUtf16LeName | 零分配 Microsoft Embedded OpenType (.eot) Web 字体容器与 UTF-16LE 名称解析器 |
 | `cap:xm` | XM_MAGIC, XM_SUB_BYTE, XM_MIN_HEADER_SIZE, XmHeader, XmPattern, XmPatternIter, XmInstrument, XmInstrumentIter, isXm, parseXmHeader | 零分配 FastTracker II (.xm) 跟踪器音乐头、Pattern 与 Instrument 解析器 |
 | `cap:s3m` | S3M_MAGIC, S3M_HEADER_SIZE, S3M_INST_SIZE, S3mHeader, S3mInstrument, S3mPattern, isS3m, parseS3mHeader, parseS3mInstrument, parseS3mPattern | 零分配 Scream Tracker 3 (.s3m) 跟踪器音乐头、Parapointer 与采样解析器 |
+| `cap:spc` | SPC_MAGIC, SPC_HEADER_SIZE, SPC_MIN_FILE_SIZE, SPC_XID6_MAGIC, SpcId666Format, SpcRegs, SpcHeader, SpcXid6Item, SpcXid6Iter, isSpc, parseSpcHeader | 零分配 SNES SPC700 (.spc) 芯片音乐头、ID666 与 xid6 扩展块解析器 |

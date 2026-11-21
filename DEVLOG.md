@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:spc` 零分配 SNES SPC700 (.spc) 芯片音乐头、ID666 与 xid6 扩展块解析器（5/5 PASS，文档直写 `doc/lib/spc.md`）
+实现零分配 SNES SPC700 芯片音乐解析器，覆盖 CPU 寄存器快照与 xid6 扩展标签。
+
 ## 2026-11-22: 新建 `cap:s3m` 零分配 Scream Tracker 3 (.s3m) 跟踪器音乐头、Parapointer 与采样解析器（5/5 PASS，文档直写 `doc/lib/s3m.md`）
 实现零分配 Scream Tracker 3 S3M 解析器，支持 24-bit memseg 偏移、SCRS 签名与立体声/16-bit 标志。
 

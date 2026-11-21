@@ -223,3 +223,6 @@
 
 ### 2026-11-22（`cap:s3m` 验收，完成 `cap:s3m` 交付验收并登记入库（5/5 PASS）；派发 `cap:x3d`。）
 - **执行成果**：`lib/s3m/`（5/5 PASS，`doc/lib/s3m.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:s3m` 交付验收并登记入库（5/5 PASS）；派发 `cap:x3d`。
+
+### 2026-11-22（`cap:spc` 验收，完成 `cap:spc` 交付验收并登记入库（5/5 PASS）；派发 `cap:dls`。）
+- **执行成果**：`lib/spc/`（5/5 PASS，`doc/lib/spc.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:spc` 交付验收并登记入库（5/5 PASS）；派发 `cap:dls`。
