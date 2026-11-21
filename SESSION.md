@@ -58,3 +58,6 @@
 
 ### 2026-11-22（`cap:leef` 验收，完成 `cap:leef` 交付验收并登记入库（5/5 PASS）；派发 `cap:sshsig`。）
 - **执行成果**：`lib/leef/`（5/5 PASS，`doc/lib/leef.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:leef` 交付验收并登记入库（5/5 PASS）；派发 `cap:sshsig`。
+
+### 2026-11-22（`cap:ris` 验收，完成 `cap:ris` 交付验收并登记入库（5/5 PASS）；派发 `cap:gedcom`。）
+- **执行成果**：`lib/ris/`（5/5 PASS，`doc/lib/ris.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:ris` 交付验收并登记入库（5/5 PASS）；派发 `cap:gedcom`。

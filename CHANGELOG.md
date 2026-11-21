@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ris` 零分配 Research Information Systems (.ris) 学术文献引文解析与统计器（5/5 PASS，自动动态挂载 `cap.ris`）
+新增 `lib/ris/{ris,index}.cp`、`doc/lib/ris.md` 与 `cap/test/test_ris_production_deep.cp`（5/5 PASS），支持 TY/ER 文献流、多行续行摘要、多作者/关键词与单遍汇总。
+
 ## [2026-11-22] - 新建 `cap:leef` 零分配 IBM QRadar LEEF 1.0/2.0 SIEM 日志解析与格式化器（5/5 PASS，自动动态挂载 `cap.leef`）
 新增 `lib/leef/{leef,index}.cp`、`doc/lib/leef.md` 与 `cap/test/test_leef_production_deep.cp`（5/5 PASS），支持 LEEF 1.0 Tab 与 2.0 自定义/十六进制分隔符、属性查找与零分配头部编码。
 

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ris` 零分配 Research Information Systems (.ris) 学术文献引文解析与统计器（5/5 PASS，文档直写 `doc/lib/ris.md`）
+实现零分配 RIS 学术引文解析器，兼容 UTF-8 BOM、CRLF 与自定义标签查询。
+
 ## 2026-11-22: 新建 `cap:leef` 零分配 IBM QRadar LEEF 1.0/2.0 SIEM 日志解析与格式化器（5/5 PASS，文档直写 `doc/lib/leef.md`）
 实现零分配 IBM QRadar LEEF 1.0/2.0 解析器，兼容 Syslog 前缀与值内嵌等号。
 
