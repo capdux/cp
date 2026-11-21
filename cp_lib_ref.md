@@ -796,3 +796,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:lfu` | TINYLFU_ROWS, TINYLFU_MAX_COUNT, TinyLfuSketch, LfuSlot, LfuCache | Zero-alloc LFU cache (LRU tie-break) & 4-bit W-TinyLFU Count-Min Sketch admission filter |
 | `cap:olc` | OLC_ALPHABET, OLC_SEPARATOR, OLC_SEPARATOR_POS, OLC_PADDING, OLC_DEFAULT_LEN, OLC_MAX_LEN, OlcArea, isValidOlc, isShortOlc, isFullOlc, olcEncode, olcDecode, olcShorten, olcRecoverNearest | Google Open Location Code / Plus Codes Base-20 geo-grid encoder, decoder & recovery |
 | `cap:porter` | PORTER_MAX_WORD_LEN, porterMeasure, porterStem, porterStemEquals | Martin Porter (1980) English stemming algorithm (Steps 1a-5b) zero-alloc implementation |
+| `cap:simhash` | SIMHASH_BITS, SIMHASH_DEFAULT_THRESHOLD, SimHasher, fnv1a64, simhashText, simhashShingles, hammingDistance, simhashSimilarity, isNearDuplicate, simhashBands4, sharesAnyBand4 | Charikar 64-bit SimHash near-duplicate fingerprinting, shingles & 4x16-bit LSH |
