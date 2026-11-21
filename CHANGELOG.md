@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:bfd` BFD (RFC 5880) 24B control packet & Simple/MD5/SHA1 Auth TLV zero-alloc parser（5/5 PASS，自动动态挂载 `cap.bfd`）
+新增纯 CP 零分配标准库 cap:bfd（RFC 5880 BFD 控制包与 Simple/MD5/SHA1 认证 TLV 解析）与 6/6 深度测试
+
 ## [2026-11-22] - 新建 `cap:ipsec` IPsec (RFC 4302 AH / RFC 4303 ESP / RFC 7296 IKEv2) zero-alloc wire parser（5/5 PASS，自动动态挂载 `cap.ipsec`）
 新增纯 CP 零分配标准库 cap:ipsec（RFC 4302 AH / RFC 4303 ESP / RFC 7296 IKEv2 报头与 Payload TLV 解析）与 6/6 深度测试
 

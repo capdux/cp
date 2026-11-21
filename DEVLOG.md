@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:bfd` BFD (RFC 5880) 24B control packet & Simple/MD5/SHA1 Auth TLV zero-alloc parser（5/5 PASS，文档直写 `doc/lib/bfd.md`）
+新增 cap:bfd 纯 CP 零分配双向转发检测协议解析库（24B 报头/标志位/诊断码/状态机与 3 类认证 TLV 零拷贝解析），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:ipsec` IPsec (RFC 4302 AH / RFC 4303 ESP / RFC 7296 IKEv2) zero-alloc wire parser（5/5 PASS，文档直写 `doc/lib/ipsec.md`）
 新增 cap:ipsec 纯 CP 零分配安全隧道协议解析库（ESP/Trailer、AH ICV、IKEv2 28B 报头与链式 Payload 零拷贝迭代），通过 cpc check 与 6/6 cap test
 
