@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:kmeans` Deterministic K-Means++ clustering (arbitrary D), empty-cluster recovery & Silhouette（5/5 PASS，文档直写 `doc/lib/kmeans.md`）
+新增 cap:kmeans 纯 CP 零分配聚类分析库（SplitMix64 + D^2 加权初始化、64 维分块任意高维 Lloyd 迭代与轮廓系数），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:polyfit` OLS/Ridge polynomial regression (streaming Givens QR), Horner calculus & root-finding（5/5 PASS，文档直写 `doc/lib/polyfit.md`）
 新增 cap:polyfit 纯 CP 零分配数值拟合库（坐标归一化 + 栈上流式 Givens QR、L2 岭回归与二分/牛顿求根），通过 cpc check 与 5/5 cap test
 
