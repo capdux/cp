@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:promql` 纯 CP Prometheus PromQL 词法与递归下降 AST 解析器（支持即时/区间向量选择器、`=~`/`!~` 标签匹配、聚合 `by`/`without`、`on`/`ignoring`/`group_left` 二元修饰符，支持 `cap.promql` 自动动态挂载，详见 `doc/lib/promql.md`）（5/5 PASS，文档直写 `doc/lib/promql.md`）
+- **核心设计**：支持 `histogram_quantile` 嵌套函数、二元算术优先级及 `std.testing.allocator` 递归释放零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:disjoint_set` 纯 CP 并查集 Union-Find 引擎（路径减半压缩 + 按秩合并 + 连通分量/规模实时追踪，支持 `cap.disjoint_set` 自动动态挂载，详见 `doc/lib/disjoint_set.md`）（5/5 PASS，文档直写 `doc/lib/disjoint_set.md`）
 - **核心设计**：路径减半压缩 + 按秩合并保证 $O(\\alpha(N))$ 均摊复杂度，通过 500 节点链式合并与 `std.testing.allocator` 零泄漏验证。
 
