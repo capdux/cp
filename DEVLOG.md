@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:atom` RFC 4287 Atom 1.0 XML Feed 零分配解析、条目迭代与 XML 序列化器（5/5 PASS，文档直写 `doc/lib/atom.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:atom`；与 `cap:rss` 配套补齐聚合订阅生态，`AtomEntryIter` 零分配处理嵌套 `<author><name>` 与自闭合 `<link/>`。
+
 ## 2026-11-22: 新建 `cap:rss` 零分配 RSS 2.0 XML Feed 解析、频道元数据提取、条目迭代与 XML 序列化器（5/5 PASS，文档直写 `doc/lib/rss.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:rss`；`parseRssChannel` 自动跳过 `<item>`/`<image>` 子树同名标签；`formatRssItem` 零分配实体转义并校验缓冲容量。
 
