@@ -58,3 +58,6 @@
 
 ### 2026-11-22（`cap:cholesky` 验收，完成并注册纯 CP 零分配标准库 cap:cholesky（5/5 cap test PASS））
 - **执行成果**：`lib/cholesky/`（5/5 PASS，`doc/lib/cholesky.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:cholesky（5/5 cap test PASS）
+
+### 2026-11-22（`cap:perlin` 验收，完成并注册纯 CP 零分配标准库 cap:perlin（6/6 cap test PASS））
+- **执行成果**：`lib/perlin/`（5/5 PASS，`doc/lib/perlin.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:perlin（6/6 cap test PASS）

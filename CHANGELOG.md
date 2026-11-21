@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:perlin` Ken Perlin (2002) 1D/2D/3D gradient noise, fBm, Ridged multifractal & Turbulence（5/5 PASS，自动动态挂载 `cap.perlin`）
+新增纯 CP 零分配标准库 cap:perlin（Ken Perlin 2002 1D/2D/3D 梯度噪声、fBm、Ridged 与 Turbulence）与 6/6 深度测试
+
 ## [2026-11-22] - 新建 `cap:cholesky` SPD Cholesky (LL^T) & square-root-free LDL^T decomposition, solver, logDet & inverse（5/5 PASS，自动动态挂载 `cap.cholesky`）
 新增纯 CP 零分配标准库 cap:cholesky（SPD Cholesky LL^T 与无开方 LDL^T 分解、求解、对数行列式与求逆）与 5/5 深度测试
 

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:perlin` Ken Perlin (2002) 1D/2D/3D gradient noise, fBm, Ridged multifractal & Turbulence（5/5 PASS，文档直写 `doc/lib/perlin.md`）
+新增 cap:perlin 纯 CP 零分配程序化噪声库（quintic 平滑、classic/seeded 512B 置换表与多倍频分形叠加），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:cholesky` SPD Cholesky (LL^T) & square-root-free LDL^T decomposition, solver, logDet & inverse（5/5 PASS，文档直写 `doc/lib/cholesky.md`）
 新增 cap:cholesky 纯 CP 零分配对称矩阵分解库（L L^T / L D L^T 求解残差 < 1e-12 与对称正定求逆），通过 cpc check 与 5/5 cap test
 
