@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:l2tp` L2TPv2/v3 (RFC 2661/3931) Control/Data header & AVP TLV zero-alloc parser（5/5 PASS，文档直写 `doc/lib/l2tp.md`）
+新增 cap:l2tp 纯 CP 零分配二层隧道协议解析库（L2TPv2 Control/Data 可选字段与 AVP 零拷贝迭代、L2TPv3 Control 报头），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:rip` RIPv1/v2 (RFC 2453) & RIPng (RFC 2080) RTE/Auth zero-alloc parser & encoder（5/5 PASS，文档直写 `doc/lib/rip.md`）
 新增 cap:rip 纯 CP 零分配距离矢量路由协议库（RIPv1/v2 RTE/Simple Auth 与 RIPng IPv6 RTE 零拷贝迭代及编码往返），通过 cpc check 与 5/5 cap test
 

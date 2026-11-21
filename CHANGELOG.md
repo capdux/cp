@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:l2tp` L2TPv2/v3 (RFC 2661/3931) Control/Data header & AVP TLV zero-alloc parser（5/5 PASS，自动动态挂载 `cap.l2tp`）
+新增纯 CP 零分配标准库 cap:l2tp（RFC 2661/3931 L2TPv2/v3 报头与 AVP TLV 解析）与 6/6 深度测试
+
 ## [2026-11-22] - 新建 `cap:rip` RIPv1/v2 (RFC 2453) & RIPng (RFC 2080) RTE/Auth zero-alloc parser & encoder（5/5 PASS，自动动态挂载 `cap.rip`）
 新增纯 CP 零分配标准库 cap:rip（RFC 2453 RIPv1/v2 与 RFC 2080 RIPng 路由条目解析与编码）与 5/5 深度测试
 
