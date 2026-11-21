@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:pcapng` 零分配 PCAPng 下一代网络抓包 Block/SHB/IDB/EPB/TLV 解析器（5/5 PASS，文档直写 `doc/lib/pcapng.md`）
+实现零分配 PCAPng 抓包容器解析器，校验首尾 block_total_length 一致性与 4B 对齐边界，支持 64-bit 时间戳组合。
+
 ## 2026-11-22: 新建 `cap:fits` 零分配 NASA FITS 科学图像 2880B HDU 头与 80B Card 解析器（5/5 PASS，文档直写 `doc/lib/fits.md`）
 实现零分配 NASA FITS 容器解析器，支持 Primary HDU 关键字解析、BITPIX 浮点/整数位宽映射与防溢出像素字节计算。
 

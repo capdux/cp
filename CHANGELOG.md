@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:pcapng` 零分配 PCAPng 下一代网络抓包 Block/SHB/IDB/EPB/TLV 解析器（5/5 PASS，自动动态挂载 `cap.pcapng`）
+新增 `lib/pcapng/{pcapng,index}.cp`、`doc/lib/pcapng.md` 与 `cap/test/test_pcapng_production_deep.cp`（5/5 PASS），支持 LE/BE 自适应 SHB/IDB/EPB 块解析与 4B 对齐 TLV Options 迭代。
+
 ## [2026-11-22] - 新建 `cap:fits` 零分配 NASA FITS 科学图像 2880B HDU 头与 80B Card 解析器（5/5 PASS，自动动态挂载 `cap.fits`）
 新增 `lib/fits/{fits,index}.cp`、`doc/lib/fits.md` 与 `cap/test/test_fits_production_deep.cp`（5/5 PASS），支持 2880B 对齐 HDU 头、80B Keyword Card 迭代与单引号注释剥离。
 
