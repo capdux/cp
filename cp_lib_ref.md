@@ -687,3 +687,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:proc_mounts` | `MountEntry`, `ProcMountsIter`, `unescapeMountPath`, `findMountForPath` | Linux `/proc/mounts` 挂载表、八进制路径转义解码与最长边界前缀挂载点匹配器 |
 | `cap:http_expect` | `ExpectItem`, `ExpectIter`, `ExpectDecision`, `evaluateExpectHeader`, `hasContinueExpectation`, `hasUnknownExpectation` | RFC 9110 §10.1.1 HTTP `Expect` 请求头解析与 `100-continue` / 417 协商判定器 |
 | `cap:proc_uptime` | `ProcUptime`, `parseProcUptime` | Linux `/proc/uptime` 系统运行时间与全核空闲占比零分配整数解析与人类可读格式化器 |
+| `cap:http_early_hints` | `EarlyHintRel`, `EarlyHintLink`, `EarlyHintIter`, `formatEarlyHintLink`, `formatEarlyHints103Block` | RFC 8297 HTTP `103 Early Hints` / RFC 8288 `Link` 预加载头零分配解析与报文格式化器 |

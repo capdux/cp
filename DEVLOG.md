@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:http_early_hints` RFC 8297 HTTP `103 Early Hints` / RFC 8288 `Link` 预加载头零分配解析与报文格式化器（5/5 PASS，文档直写 `doc/lib/http_early_hints.md`）
+- **设计要点**：`EarlyHintIter` 零分配尖括号与引号感知解析多条目；`formatEarlyHintLink` 与 `formatEarlyHints103Block` 拦截 CRLF 注入并在缓冲区不足时返回 `null`。
+
 ## 2026-11-22: 新建 `cap:proc_uptime` Linux `/proc/uptime` 系统运行时间与全核空闲占比零分配整数解析与人类可读格式化器（5/5 PASS，文档直写 `doc/lib/proc_uptime.md`）
 - **设计要点**：全整数毫秒解析小数位自动补零/截断，`idleRatioPermille` 使用 `u128` 消除溢出并钳位 `0..=1000`，严格拦截缺失/多余字段与溢出。
 

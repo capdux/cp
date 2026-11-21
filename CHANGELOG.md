@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_early_hints` RFC 8297 HTTP `103 Early Hints` / RFC 8288 `Link` 预加载头零分配解析与报文格式化器（5/5 PASS，自动动态挂载 `cap.http_early_hints`）
+- 新增 `lib/http_early_hints/{early_hints,index}.cp`、`doc/lib/http_early_hints.md`、`cap/test/test_http_early_hints_production_deep.cp`：纯 CP 零分配解析 RFC 8288 `Link` 预加载头（`preload`/`preconnect`/`modulepreload`/`dns-prefetch`），支持 CRLF 防护与 `HTTP/1.1 103 Early Hints` 报文块序列化（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:proc_uptime` Linux `/proc/uptime` 系统运行时间与全核空闲占比零分配整数解析与人类可读格式化器（5/5 PASS，自动动态挂载 `cap.proc_uptime`）
 - 新增 `lib/proc_uptime/{uptime,index}.cp`、`doc/lib/proc_uptime.md`、`cap/test/test_proc_uptime_production_deep.cp`：纯 CP 零分配解析 Linux `/proc/uptime`，采用整数毫秒与 `u128` 计算全核空闲千分比并支持 `3d 04h 12m 05s` 人类可读格式化（5/5 PASS）。
 
