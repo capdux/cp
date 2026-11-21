@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:lasso` 纯 CP 零分配稀疏正则化回归库：增量残差循环坐标下降 + 软阈值统一求解 Lasso（L1）、Ridge（L2）与 ElasticNet（L1+L2）及 R²/MSE 评估（5/5 PASS，自动动态挂载 `cap.lasso`）
+新增纯 CP 零分配稀疏正则化回归库 cap:lasso（Lasso / Ridge / ElasticNet 坐标下降求解器），含文档与 5 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:louvain` 纯 CP 零分配 Louvain 模块度社区发现与标签传播库：带权无向 CSR 图、Newman-Girvan 模块度计算、精确 ΔQ 贪心局部移动、高分辨率细分与零分配 LPA（5/5 PASS，自动动态挂载 `cap.louvain`）
 新增纯 CP 零分配社区发现库 cap:louvain（Louvain 模块度优化、Newman-Girvan 模块度、标签传播 LPA），含文档与 5 项深度生产测试
 

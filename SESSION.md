@@ -211,3 +211,6 @@
 
 ### 2026-11-22（`cap:louvain` 验收，子智能体交付 cap:louvain（Louvain 模块度社区发现与 LPA，5/5 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/louvain/`（5/5 PASS，`doc/lib/louvain.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:louvain（Louvain 模块度社区发现与 LPA，5/5 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:lasso` 验收，子智能体交付 cap:lasso（Lasso / Ridge / ElasticNet 稀疏正则回归，5/5 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/lasso/`（5/5 PASS，`doc/lib/lasso.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:lasso（Lasso / Ridge / ElasticNet 稀疏正则回归，5/5 PASS），主协调器统一登记并提交

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:lasso` 纯 CP 零分配稀疏正则化回归库：增量残差循环坐标下降 + 软阈值统一求解 Lasso（L1）、Ridge（L2）与 ElasticNet（L1+L2）及 R²/MSE 评估（5/5 PASS，文档直写 `doc/lib/lasso.md`）
+新增 cap:lasso（lib/lasso/{lasso,index}.cp）：零分配增量残差 O(n) 循环坐标下降 + 软阈值统一求解 Lasso/Ridge/ElasticNet，10 维稀疏真值精确归零噪声特征，cpc check 0 错误，cap test 5/5 PASS (752ms)
+
 ## 2026-11-22: 新建 `cap:louvain` 纯 CP 零分配 Louvain 模块度社区发现与标签传播库：带权无向 CSR 图、Newman-Girvan 模块度计算、精确 ΔQ 贪心局部移动、高分辨率细分与零分配 LPA（5/5 PASS，文档直写 `doc/lib/louvain.md`）
 新增 cap:louvain（lib/louvain/{louvain,index}.cp）：零分配带权 CSR 图 Louvain 模块度优化与 LPA，通过双团桥接图与三社区模块图校验，cpc check 0 错误，cap test 5/5 PASS (804ms)
 
