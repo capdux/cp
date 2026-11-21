@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:jxl` 零分配 JPEG XL 裸码流 SizeHeader 与 ISOBMFF 容器解析器（5/5 PASS，自动动态挂载 `cap.jxl`）
+新增 `lib/jxl/{jxl,index}.cp`、`doc/lib/jxl.md` 与 `cap/test/test_jxl_production_deep.cp`（5/5 PASS），支持 LSB-first BitReader 解码 SizeHeader、jxlc/jxlp 与 Exif/XMP 容器识别。
+
 ## [2026-11-22] - 新建 `cap:pcapng` 零分配 PCAPng 下一代网络抓包 Block/SHB/IDB/EPB/TLV 解析器（5/5 PASS，自动动态挂载 `cap.pcapng`）
 新增 `lib/pcapng/{pcapng,index}.cp`、`doc/lib/pcapng.md` 与 `cap/test/test_pcapng_production_deep.cp`（5/5 PASS），支持 LE/BE 自适应 SHB/IDB/EPB 块解析与 4B 对齐 TLV Options 迭代。
 

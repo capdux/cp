@@ -544,3 +544,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:exr` | EXR_MAGIC, ExrCompression, ExrBox2i, ExrAttr, ExrHeader, isExr, compressionFromByte, parseExrBox2i, ExrAttrIter, parseExrHeader | 零分配 OpenEXR HDR 图像容器头与 Attribute 解析器 |
 | `cap:fits` | FITS_BLOCK_SIZE, FITS_CARD_SIZE, FITS_CARDS_PER_BLOCK, FitsCard, FitsCardIter, FitsHeader, isFits, parseFitsHeader, fitsBytesPerPixel, findFitsCard, parseFitsInt, parseFitsBool | 零分配 NASA FITS 科学图像 2880B HDU 头与 80B Card 解析器 |
 | `cap:pcapng` | BLOCK_SHB, BLOCK_IDB, BLOCK_EPB, BYTE_ORDER_MAGIC, PcapngBlock, ShbInfo, IdbInfo, EpbPacket, PcapngOption, isPcapng, PcapngBlockIter, parseShb, parseIdb, parseEpb, PcapngOptionIter | 零分配 PCAPng 下一代网络抓包 Block/SHB/IDB/EPB/TLV 解析器 |
+| `cap:jxl` | JxlContainerKind, JxlSizeHeader, JxlBox, JxlBoxIter, JxlInfo, isJxlCodestream, isJxlContainer, isJxl, detectJxlKind, parseJxlSizeHeader, parseJxlInfo | 零分配 JPEG XL 裸码流 SizeHeader 与 ISOBMFF 容器解析器 |

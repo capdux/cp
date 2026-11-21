@@ -220,3 +220,6 @@
 
 ### 2026-11-22（`cap:pcapng` 验收，完成 `cap:pcapng` 交付验收并登记入库（5/5 PASS）；派发 `cap:orc`。）
 - **执行成果**：`lib/pcapng/`（5/5 PASS，`doc/lib/pcapng.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:pcapng` 交付验收并登记入库（5/5 PASS）；派发 `cap:orc`。
+
+### 2026-11-22（`cap:jxl` 验收，完成 `cap:jxl` 交付验收并登记入库（5/5 PASS）；派发 `cap:spv`。）
+- **执行成果**：`lib/jxl/`（5/5 PASS，`doc/lib/jxl.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:jxl` 交付验收并登记入库（5/5 PASS）；派发 `cap:spv`。

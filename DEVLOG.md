@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:jxl` 零分配 JPEG XL 裸码流 SizeHeader 与 ISOBMFF 容器解析器（5/5 PASS，文档直写 `doc/lib/jxl.md`）
+实现零分配 JPEG XL 裸码流与 ISOBMFF 容器解析器，完整支持 ISO/IEC 18181-1 small/large 尺寸编码与 0..7 宽高比。
+
 ## 2026-11-22: 新建 `cap:pcapng` 零分配 PCAPng 下一代网络抓包 Block/SHB/IDB/EPB/TLV 解析器（5/5 PASS，文档直写 `doc/lib/pcapng.md`）
 实现零分配 PCAPng 抓包容器解析器，校验首尾 block_total_length 一致性与 4B 对齐边界，支持 64-bit 时间戳组合。
 
