@@ -259,3 +259,6 @@
 
 ### 2026-11-22（`cap:dicom` 验收，完成 `cap:dicom` 交付验收并登记入库（5/5 PASS）；派发 `cap:mseed`。）
 - **执行成果**：`lib/dicom/`（5/5 PASS，`doc/lib/dicom.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:dicom` 交付验收并登记入库（5/5 PASS）；派发 `cap:mseed`。
+
+### 2026-11-22（`cap:edf` 验收，完成 `cap:edf` 交付验收并登记入库（6/6 PASS）；派发 `cap:segy`。）
+- **执行成果**：`lib/edf/`（5/5 PASS，`doc/lib/edf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:edf` 交付验收并登记入库（6/6 PASS）；派发 `cap:segy`。
