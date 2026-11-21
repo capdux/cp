@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:morse` ITU-R M.1677-1 International Morse Code codec & CW pulse timing generator（5/5 PASS，文档直写 `doc/lib/morse.md`）
+新增 cap:morse 纯 CP 零分配电码与键控时序库（54 字符 O(1) 堆逆查、PARIS 拍点计算与脉冲序列生成），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:braille` Unicode Braille (U+2800..U+28FF) 8-dot UTF-8 codec, Grade-1 text & 2x4 terminal canvas（5/5 PASS，文档直写 `doc/lib/braille.md`）
 新增 cap:braille 纯 CP 零分配盲文与终端点阵渲染库（256 掩码 3B UTF-8、Grade-1 大小写/数字前缀与 2x4 BrailleCanvas），通过 cpc check 与 5/5 cap test
 

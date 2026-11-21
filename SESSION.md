@@ -205,3 +205,6 @@
 
 ### 2026-11-22（`cap:braille` 验收，完成并注册纯 CP 零分配标准库 cap:braille（5/5 cap test PASS））
 - **执行成果**：`lib/braille/`（5/5 PASS，`doc/lib/braille.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:braille（5/5 cap test PASS）
+
+### 2026-11-22（`cap:morse` 验收，完成并注册纯 CP 零分配标准库 cap:morse（6/6 cap test PASS））
+- **执行成果**：`lib/morse/`（5/5 PASS，`doc/lib/morse.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:morse（6/6 cap test PASS）
