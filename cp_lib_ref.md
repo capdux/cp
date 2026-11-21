@@ -406,3 +406,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:circ_buf` | `RingError`, `RingBuffer` | 纯 CP 泛型定容环形缓冲区引擎（支持阻塞 `push`、覆盖最旧元素 `pushOverwrite`、双端弹出与随机下标访问，支持 `cap.circ_buf` 自动动态挂载，详见 `doc/lib/circ_buf.md`） |
 | `cap:slab_pool` | `SlabError`, `Handle`, `SlabPool` | 纯 CP 固定块代际 $O(1)$ Slab 对象池引擎（侵入式空闲链表、代际防悬垂 ABA 句柄 `Handle` 与零碎片复用，支持 `cap.slab_pool` 自动动态挂载，详见 `doc/lib/slab_pool.md`） |
 | `cap:uuid_v7` | `UuidError`, `Uuid`, `NAMESPACE_DNS`, `NAMESPACE_URL` | 纯 CP 零堆 RFC 9562 UUID v4 / v5 / 时间有序 v7 生成与解析引擎（支持 `cap.uuid_v7` 自动动态挂载，详见 `doc/lib/uuid_v7.md`） |
+| `cap:bitset_simd` | `BitSetError`, `BitSet` | 纯 CP 按字向量化加速动态位集合引擎（基于 `u64` 字块 `@popCount`/`@ctz` 批量位运算、`setRange`/`nextSetBit` 及集合并交差，支持 `cap.bitset_simd` 自动动态挂载，详见 `doc/lib/bitset_simd.md`） |

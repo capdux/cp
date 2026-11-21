@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:bitset_simd` 纯 CP 按字向量化加速动态位集合引擎（基于 `u64` 字块 `@popCount`/`@ctz` 批量位运算、`setRange`/`nextSetBit` 及集合并交差，支持 `cap.bitset_simd` 自动动态挂载，详见 `doc/lib/bitset_simd.md`）（5/5 PASS，自动动态挂载 `cap.bitset_simd`）
+- **新增标准库**：`lib/bitset_simd/{bitset,index}.cp`，实现字块加速 `BitSet` 位集与稀疏迭代器。\n- **新增文档与测试**：`doc/lib/bitset_simd.md` 扁平文档与 `cap/test/test_bitset_simd_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:uuid_v7` 纯 CP 零堆 RFC 9562 UUID v4 / v5 / 时间有序 v7 生成与解析引擎（支持 `cap.uuid_v7` 自动动态挂载，详见 `doc/lib/uuid_v7.md`）（5/5 PASS，自动动态挂载 `cap.uuid_v7`）
 - **新增标准库**：`lib/uuid_v7/{uuid_v7,index}.cp`，实现 RFC 9562 UUID v4/v5/v7 生成、格式化与校验解析。\n- **新增文档与测试**：`doc/lib/uuid_v7.md` 扁平文档与 `cap/test/test_uuid_v7_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

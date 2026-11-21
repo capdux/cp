@@ -97,3 +97,6 @@
 
 ### 2026-11-21（`cap:uuid_v7` 验收，主控完成 `cap:uuid_v7` 研发验收提交，继续与 `cap:bitset_simd` 及 `cap:decimal_fp` 并行）
 - **执行成果**：`lib/uuid_v7/`（5/5 PASS，`doc/lib/uuid_v7.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:uuid_v7` 研发验收提交，继续与 `cap:bitset_simd` 及 `cap:decimal_fp` 并行
+
+### 2026-11-21（`cap:bitset_simd` 验收，收回全部子智能体，主控单兵验收提交 `cap:bitset_simd` 与 `cap:base64url`）
+- **执行成果**：`lib/bitset_simd/`（5/5 PASS，`doc/lib/bitset_simd.md`）经 `verify_module.sh` 一次性验收回收；收回全部子智能体，主控单兵验收提交 `cap:bitset_simd` 与 `cap:base64url`
