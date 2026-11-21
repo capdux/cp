@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ptp` PTPv2/v2.1 (IEEE 1588) 34B header, 48-bit timestamp, Announce & Delay_Resp zero-alloc codec（5/5 PASS，自动动态挂载 `cap.ptp`）
+新增纯 CP 零分配标准库 cap:ptp（IEEE 1588 PTPv2/v2.1 报头、48-bit 秒时间戳、Announce/Delay_Resp 解析与编码）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:ntp` NTPv4/SNTP (RFC 5905) 48B codec, Unix/NTP epoch conversion & offset/RTT calculator（5/5 PASS，自动动态挂载 `cap.ntp`）
 新增纯 CP 零分配标准库 cap:ntp（RFC 5905 NTPv4/SNTP 48B 报文编解码、纪元换算与时钟偏移/RTT 算法）与 5/5 深度测试
 

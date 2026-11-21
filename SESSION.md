@@ -202,3 +202,6 @@
 
 ### 2026-11-22（`cap:ntp` 验收，完成并注册纯 CP 零分配标准库 cap:ntp（5/5 cap test PASS））
 - **执行成果**：`lib/ntp/`（5/5 PASS，`doc/lib/ntp.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:ntp（5/5 cap test PASS）
+
+### 2026-11-22（`cap:ptp` 验收，完成并注册纯 CP 零分配标准库 cap:ptp（5/5 cap test PASS））
+- **执行成果**：`lib/ptp/`（5/5 PASS，`doc/lib/ptp.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:ptp（5/5 cap test PASS）
