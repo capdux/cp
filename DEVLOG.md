@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:bptree` 纯 CP 内存有序索引 B+ 树引擎（多层节点分裂、叶子链表 `rangeScan` 范围扫描与动态删除重平衡，支持 `cap.bptree` 自动动态挂载，详见 `doc/lib/bptree.md`）（5/5 PASS，文档直写 `doc/lib/bptree.md`）
+- **核心设计**：采用叶子双向/单向链表与固定阶数节点分裂，通过 300 乱序插删与 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:rope_text` 纯 CP 大文本编辑器平衡二叉树 Rope 引擎（分块叶子、缓存行/字节权重、$O(\log N)$ 插入/删除/`lineAt` 行定位与零泄漏切片拼接，支持 `cap.rope_text` 自动动态挂载，详见 `doc/lib/rope_text.md`）（5/5 PASS，文档直写 `doc/lib/rope_text.md`）
 - **核心设计**：叶子节点紧凑分块，内部节点缓存 `left_weight` 与 `left_newlines`，通过 `std.testing.allocator` 零泄漏验证。
 

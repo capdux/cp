@@ -55,3 +55,6 @@
 
 ### 2026-11-21（`cap:rope_text` 验收，验收提交 `cap:rope_text`，主控同步定位 `task-bun-20261121-deref-assign-drop`）
 - **执行成果**：`lib/rope_text/`（5/5 PASS，`doc/lib/rope_text.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:rope_text`，主控同步定位 `task-bun-20261121-deref-assign-drop`
+
+### 2026-11-21（`cap:bptree` 验收，验收提交 `cap:bptree` 内存有序索引 B+ 树标准库）
+- **执行成果**：`lib/bptree/`（5/5 PASS，`doc/lib/bptree.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:bptree` 内存有序索引 B+ 树标准库

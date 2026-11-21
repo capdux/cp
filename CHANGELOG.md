@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:bptree` 纯 CP 内存有序索引 B+ 树引擎（多层节点分裂、叶子链表 `rangeScan` 范围扫描与动态删除重平衡，支持 `cap.bptree` 自动动态挂载，详见 `doc/lib/bptree.md`）（5/5 PASS，自动动态挂载 `cap.bptree`）
+- **新增标准库**：`lib/bptree/{bptree,index}.cp`，实现泛型有序 `BPlusTree(K, V)` 插入分裂、`rangeScan` 与删除。\n- **新增文档与测试**：`doc/lib/bptree.md` 扁平文档与 `cap/test/test_bptree_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:rope_text` 纯 CP 大文本编辑器平衡二叉树 Rope 引擎（分块叶子、缓存行/字节权重、$O(\log N)$ 插入/删除/`lineAt` 行定位与零泄漏切片拼接，支持 `cap.rope_text` 自动动态挂载，详见 `doc/lib/rope_text.md`）（5/5 PASS，自动动态挂载 `cap.rope_text`）
 - **新增标准库**：`lib/rope_text/{rope,index}.cp`，实现平衡二叉树 `Rope` 文本缓冲区与行索引。\n- **新增文档与测试**：`doc/lib/rope_text.md` 扁平文档与 `cap/test/test_rope_text_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

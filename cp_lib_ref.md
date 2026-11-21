@@ -392,3 +392,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:diff_myers` | `DiffOpKind`, `DiffOp`, `DiffResult`, `diffLines`, `reconstructNew`, `formatUnifiedDiff` | 纯 CP Myers 最短编辑脚本 (SES) 行级 Diff、Unified Diff 格式化与补丁还原引擎（支持 `cap.diff_myers` 自动动态挂载，详见 `doc/lib/diff_myers.md`） |
 | `cap:base58_check` | `Base58Error`, `encode`, `decode`, `encodeCheck`, `CheckDecoded`, `decodeCheck` | 纯 CP Bitcoin Base58 & Base58Check 双重 SHA-256 校验和编解码引擎（支持前导零映射、版本号与防篡改校验，支持 `cap.base58_check` 自动动态挂载，详见 `doc/lib/base58_check.md`） |
 | `cap:rope_text` | `RopeError`, `Rope` | 纯 CP 大文本编辑器平衡二叉树 Rope 引擎（分块叶子、缓存行/字节权重、$O(\log N)$ 插入/删除/`lineAt` 行定位与零泄漏切片拼接，支持 `cap.rope_text` 自动动态挂载，详见 `doc/lib/rope_text.md`） |
+| `cap:bptree` | `BPTREE_ORDER`, `BPlusTree` | 纯 CP 内存有序索引 B+ 树引擎（多层节点分裂、叶子链表 `rangeScan` 范围扫描与动态删除重平衡，支持 `cap.bptree` 自动动态挂载，详见 `doc/lib/bptree.md`） |
