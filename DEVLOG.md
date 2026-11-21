@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:dijkstra` 纯 CP 零分配图最短路径算法库：索引二叉最小堆 Dijkstra、路径还原、Bellman-Ford 负权边与负环检测及 Floyd-Warshall 全源最短路径（5/5 PASS，文档直写 `doc/lib/dijkstra.md`）
+新增 cap:dijkstra（lib/dijkstra/{dijkstra,index}.cp）：内置零分配索引二叉最小堆实现 O((V+E)logV) Dijkstra、防环路径还原、Bellman-Ford 负环检测与 Floyd-Warshall 全源最短路，cpc check 0 错误，cap test 6/6 PASS (929ms)
+
 ## 2026-11-22: 新建 `cap:hungarian` 纯 CP 零分配 O(n³) 势能对偶匈牙利线性指派库：支持 i64/f64 最小权与最大权二分图最优匹配及任意矩形矩阵零拷贝自动转置（5/5 PASS，文档直写 `doc/lib/hungarian.md`）
 新增 cap:hungarian（lib/hungarian/{hungarian,index}.cp）：基于 Jonker-Volgenant/Kuhn-Munkres u/v 势能对偶实现零分配 O(n³) 线性指派与强对偶互补松弛验证，cpc check 0 错误，cap test 6/6 PASS (769ms)
 
