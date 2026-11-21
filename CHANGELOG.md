@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ebml` 零分配 RFC 8794 EBML / WebM / MKV 变长 VINT 整数与二进制元素流式解析器（5/5 PASS，自动动态挂载 `cap.ebml`）
+- 新增 `lib/ebml/{ebml,index}.cp`、`doc/lib/ebml.md`、`cap/test/test_ebml_production_deep.cp`：纯 CP 零分配实现 RFC 8794 EBML 1–4B Element ID、1–8B VINT 长度（含全 1 未知长度）与递归 Master Element 流式迭代（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:tga` 零分配 Truevision TGA 18 字节头、未压缩/RLE 像素解码与 24/32-bit 编码器（5/5 PASS，自动动态挂载 `cap.tga`）
 - 新增 `lib/tga/{tga,index}.cp`、`doc/lib/tga.md`、`cap/test/test_tga_production_deep.cp`：纯 CP 零分配实现 TGA 18 字节头解析、未压缩/RLE 24/32-bit 与 8-bit 灰度解码（含 bottom-origin 自动翻转与越界防护）及 TrueColor 编码（5/5 PASS）。
 

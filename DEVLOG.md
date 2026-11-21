@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ebml` 零分配 RFC 8794 EBML / WebM / MKV 变长 VINT 整数与二进制元素流式解析器（5/5 PASS，文档直写 `doc/lib/ebml.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:ebml`；严格遵循 RFC 8794 §5/§6/§7.2 拦截保留全 0/全 1 ID 与越界负载。
+
 ## 2026-11-22: 新建 `cap:tga` 零分配 Truevision TGA 18 字节头、未压缩/RLE 像素解码与 24/32-bit 编码器（5/5 PASS，文档直写 `doc/lib/tga.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:tga`，与 `cap:qoi`/`cap:pnm` 构成完整轻量图像编解码套件。
 

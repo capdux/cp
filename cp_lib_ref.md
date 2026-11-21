@@ -532,3 +532,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:flac` | `FlacBlockType`, `FlacMetadataBlock`, `FlacStreamInfo`, `isFlac`, `FlacBlockIter`, `parseStreamInfoPayload`, `parseFlacStreamInfo` | 零分配 FLAC 无损音频流 `"fLaC"` 头、`STREAMINFO` 34 字节位字段与元数据块迭代器 |
 | `cap:ogg` | `OGG_FLAG_CONTINUATION`, `OGG_FLAG_BOS`, `OGG_FLAG_EOS`, `OggPage`, `oggCrc32`, `isOgg`, `OggPageIter` | 零分配 RFC 3533 Ogg 容器页头 `"OggS"`、非反射 CRC-32 校验与分页迭代器 |
 | `cap:tga` | `TgaImageType`, `TgaHeader`, `parseTgaHeader`, `encodeTgaTrueColor`, `decodeTgaToRgba` | 零分配 Truevision TGA 18 字节头、未压缩/RLE 像素解码与 24/32-bit 编码器 |
+| `cap:ebml` | `EBML_ID_HEADER`, `EbmlVint`, `EbmlElement`, `decodeEbmlId`, `decodeEbmlSize`, `isEbmlHeader`, `EbmlElementIter`, `decodeEbmlUint` | 零分配 RFC 8794 EBML / WebM / MKV 变长 VINT 整数与二进制元素流式解析器 |
