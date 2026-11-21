@@ -371,3 +371,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:crontab` | `CronError`, `DateTime`, `OptDateTime`, `CronExpr` | 纯 CP 零堆 5 段式与宏 Cron 表达式位掩码解析、POSIX 匹配及 `nextAfter` 下次触发计算引擎（支持 `cap.crontab` 自动动态挂载，详见 `doc/lib/crontab.md`） |
 | `cap:hyperloglog` | `HllError`, `DEFAULT_PRECISION`, `HyperLogLog` | 纯 CP HyperLogLog 64 位基数估算引擎（支持 4..18 位精度、小规模 LinearCounting 线性修正、无损 `merge` 与序列化，支持 `cap.hyperloglog` 自动动态挂载，详见 `doc/lib/hyperloglog.md`） |
 | `cap:bloom_cuckoo` | `FilterError`, `MAX_KICKS`, `BloomFilter`, `CountingBloomFilter`, `Bucket`, `CuckooFilter` | 纯 CP 工业级概率集合引擎（`BloomFilter`、`CountingBloomFilter` 8-bit 饱和计数删除、`CuckooFilter` 4-slot 16-bit 指纹与踢出重哈希，支持 `cap.bloom_cuckoo` 自动动态挂载，详见 `doc/lib/bloom_cuckoo.md`） |
+| `cap:x25519` | `X25519_KEY_LEN`, `X25519Error`, `KeyPair`, `scalarmult`, `scalarmultBase`, `isAllZero` | 纯 CP RFC 7748 X25519 椭圆曲线 Diffie-Hellman 密钥协商引擎（含全零弱公钥与单位元拦截，支持 `cap.x25519` 自动动态挂载，详见 `doc/lib/x25519.md`） |

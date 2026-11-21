@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:x25519` 纯 CP RFC 7748 X25519 椭圆曲线 Diffie-Hellman 密钥协商引擎（含全零弱公钥与单位元拦截，支持 `cap.x25519` 自动动态挂载，详见 `doc/lib/x25519.md`）（5/5 PASS，文档直写 `doc/lib/x25519.md`）
+- **核心设计**：基于 Zig 0.17 `std.crypto.dh.X25519` 与 `std.Io.Threaded` 实现常数时间密钥协商，通过 RFC 7748 Section 6.1 官方向量与全零公钥拦截测试。
+
 ## 2026-11-21: 新建 `cap:bloom_cuckoo` 纯 CP 工业级概率集合引擎（`BloomFilter`、`CountingBloomFilter` 8-bit 饱和计数删除、`CuckooFilter` 4-slot 16-bit 指纹与踢出重哈希，支持 `cap.bloom_cuckoo` 自动动态挂载，详见 `doc/lib/bloom_cuckoo.md`）（5/5 PASS，文档直写 `doc/lib/bloom_cuckoo.md`）
 - **核心设计**：采用双哈希位数组与最大 500 次踢出的 Cuckoo 桶映射，5000 键零假阴性且假阳性率 < 2%，通过 `std.testing.allocator` 零泄漏验证。
 

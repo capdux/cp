@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:x25519` 纯 CP RFC 7748 X25519 椭圆曲线 Diffie-Hellman 密钥协商引擎（含全零弱公钥与单位元拦截，支持 `cap.x25519` 自动动态挂载，详见 `doc/lib/x25519.md`）（5/5 PASS，自动动态挂载 `cap.x25519`）
+- **新增标准库**：`lib/x25519/{x25519,index}.cp`，实现 RFC 7748 X25519 密钥生成、`scalarmult`、`scalarmultBase` 与弱公钥/单位元拦截。\n- **新增文档与测试**：`doc/lib/x25519.md` 扁平文档与 `cap/test/test_x25519_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:bloom_cuckoo` 纯 CP 工业级概率集合引擎（`BloomFilter`、`CountingBloomFilter` 8-bit 饱和计数删除、`CuckooFilter` 4-slot 16-bit 指纹与踢出重哈希，支持 `cap.bloom_cuckoo` 自动动态挂载，详见 `doc/lib/bloom_cuckoo.md`）（5/5 PASS，自动动态挂载 `cap.bloom_cuckoo`）
 - **新增标准库**：`lib/bloom_cuckoo/{bloom_cuckoo,index}.cp`，实现 BloomFilter、8-bit 饱和计数 CountingBloomFilter 与 4-slot 16-bit 指纹 CuckooFilter。\n- **新增文档与测试**：`doc/lib/bloom_cuckoo.md` 扁平文档与 `cap/test/test_bloom_cuckoo_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 
