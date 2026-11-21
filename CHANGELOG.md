@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:plist` 零分配 Apple XML Property List `.plist` 顶层字典解析与 XML 转义序列化器（5/5 PASS，自动动态挂载 `cap.plist`）
+- 新增 `lib/plist/{plist,index}.cp`、`doc/lib/plist.md`、`cap/test/test_plist_production_deep.cp`：纯 CP 零分配实现 Apple XML Plist 顶层字典迭代与类型查询（深度平衡跳过嵌套 `<dict>`/`<array>` 子树，支持负数/溢出拦截与 XML 实体转义）（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:kdl` 零分配 KDL 配置文档语言词法扫描、节点头迭代与嵌套结构校验器（5/5 PASS，自动动态挂载 `cap.kdl`）
 - 新增 `lib/kdl/{kdl,index}.cp`、`doc/lib/kdl.md`、`cap/test/test_kdl_production_deep.cp`：纯 CP 零分配实现 KDL 词法扫描与节点校验（嵌套 `/* */` 注释、`/-` slashdash、原始字符串 `r#"..."#`、多进制下划线数字与 64 层深度防护）（5/5 PASS）。
 

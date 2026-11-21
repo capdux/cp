@@ -501,3 +501,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:vtt` | `VttCue`, `isWebVttHeader`, `parseVttTimestampMs`, `formatVttTimestampMs`, `VttCueIter`, `formatVttCue` | W3C WebVTT 字幕/时间轴零分配解析、时间戳编解码与格式化器 |
 | `cap:srt` | `SrtCue`, `parseSrtTimestampMs`, `formatSrtTimestampMs`, `SrtCueIter`, `formatSrtCue`, `shiftSrtCue` | 零分配 SubRip `.srt` 字幕解析、时间戳编解码、饱和平移与格式化器 |
 | `cap:kdl` | `KdlTokenKind`, `KdlToken`, `KdlIter`, `KdlNodeSummary`, `KdlNodeIter`, `validateKdl` | 零分配 KDL 配置文档语言词法扫描、节点头迭代与嵌套结构校验器 |
+| `cap:plist` | `PlistValueKind`, `PlistDictEntry`, `isXmlPlist`, `PlistDictIter`, `findPlistString`, `findPlistInt`, `findPlistBool`, `formatPlistStringEntry` | 零分配 Apple XML Property List `.plist` 顶层字典解析与 XML 转义序列化器 |

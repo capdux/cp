@@ -91,3 +91,6 @@
 
 ### 2026-11-22（`cap:kdl` 验收，新增简洁单单词包 `cap:kdl`（5/5 PASS））
 - **执行成果**：`lib/kdl/`（5/5 PASS，`doc/lib/kdl.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:kdl`（5/5 PASS）
+
+### 2026-11-22（`cap:plist` 验收，新增简洁单单词包 `cap:plist`（5/5 PASS））
+- **执行成果**：`lib/plist/`（5/5 PASS，`doc/lib/plist.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:plist`（5/5 PASS）

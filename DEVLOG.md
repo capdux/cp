@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:plist` 零分配 Apple XML Property List `.plist` 顶层字典解析与 XML 转义序列化器（5/5 PASS，文档直写 `doc/lib/plist.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:plist`；`PlistDictIter` 零分配追踪嵌套深度防止子树键泄露至顶层。
+
 ## 2026-11-22: 新建 `cap:kdl` 零分配 KDL 配置文档语言词法扫描、节点头迭代与嵌套结构校验器（5/5 PASS，文档直写 `doc/lib/kdl.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:kdl`；`KdlNodeIter` 零分配追踪 `{}` 嵌套深度并自动跳过 `/-` 注释节点/属性。
 
