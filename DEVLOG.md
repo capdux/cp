@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:cgroup_v2_limits` Linux cgroup v2 容器资源限额（`cpu.max`/`memory.max`/`pids.max`/`io.max`）零分配解析器（5/5 PASS，文档直写 `doc/lib/cgroup_v2_limits.md`）
+- **设计要点**：`parseCpuMax` 严格拒绝 `period_us == 0` 并用 `u128` 计算 `effectiveMilliCpus` 消除溢出；`parseCgroupMax` 统一处理 `"max"` 与无符号整数并拦截负数与溢出。
+
 ## 2026-11-22: 新建 `cap:http_alt_svc` RFC 7838 HTTP `Alt-Svc` 备选服务 / HTTP/3 QUIC 发现头零分配解析与格式化器（5/5 PASS，文档直写 `doc/lib/http_alt_svc.md`）
 - **设计要点**：`AltSvcIter` 零分配解析多条目并严格校验端口 `1..=65535`；`isHttp3()` 识别 `h3` 与 `h3-*` 协议标识；`formatAltSvcEntry` 防止缓冲溢出与非法字符注入。
 

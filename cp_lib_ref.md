@@ -691,3 +691,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:ansi_link` | `Osc8Link`, `formatOsc8`, `formatOsc8Bel`, `parseOsc8`, `stripOsc8`, `hasOsc8`, `osc8EncodedLen`, `osc8BelEncodedLen` | OSC 8 终端超链接（ST/BEL）零分配编码、解析与剥离器 |
 | `cap:proc_self_status` | `ProcStatus`, `parseProcStatus`, `findProcStatusField` | Linux `/proc/<pid>/status` 进程状态、内存/线程/UID/GID 零分配键值解析器 |
 | `cap:http_alt_svc` | `AltSvcEntry`, `isAltSvcClear`, `AltSvcIter`, `formatAltSvcEntry` | RFC 7838 HTTP `Alt-Svc` 备选服务 / HTTP/3 QUIC 发现头零分配解析与格式化器 |
+| `cap:cgroup_v2_limits` | `CgroupLimit`, `CpuMaxQuota`, `IoMaxEntry`, `parseCgroupMax`, `parseCpuMax`, `parseIoMaxLine`, `effectiveMemoryLimit` | Linux cgroup v2 容器资源限额（`cpu.max`/`memory.max`/`pids.max`/`io.max`）零分配解析器 |

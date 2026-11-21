@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:cgroup_v2_limits` Linux cgroup v2 容器资源限额（`cpu.max`/`memory.max`/`pids.max`/`io.max`）零分配解析器（5/5 PASS，自动动态挂载 `cap.cgroup_v2_limits`）
+- 新增 `lib/cgroup_v2_limits/{cgroup,index}.cp`、`doc/lib/cgroup_v2_limits.md`、`cap/test/test_cgroup_v2_limits_production_deep.cp`：纯 CP 零分配解析 Linux cgroup v2 `cpu.max`/`memory.max`/`pids.max`/`io.max`，支持有效核数/毫核换算与容器-宿主机内存上限裁定（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:http_alt_svc` RFC 7838 HTTP `Alt-Svc` 备选服务 / HTTP/3 QUIC 发现头零分配解析与格式化器（5/5 PASS，自动动态挂载 `cap.http_alt_svc`）
 - 新增 `lib/http_alt_svc/{alt_svc,index}.cp`、`doc/lib/http_alt_svc.md`、`cap/test/test_http_alt_svc_production_deep.cp`：纯 CP 零分配解析 RFC 7838 `Alt-Svc` 头（支持 IPv6 `[::1]:443`、引号转义、`ma`/`persist=1`、`clear` 与 HTTP/3 判定）并提供规范化格式化（5/5 PASS）。
 
