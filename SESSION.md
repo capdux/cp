@@ -79,3 +79,18 @@
   - 全面更新 `cpc/src/` 所有过时编译报错提示（清除残留 `mut _` / `&mut` / `mut x` / `: void` / 旧借用提示）；发布 Release 优化版 `cpc`；
   - 编写可复用、严格跳过 `zig {}` 块的一键批量迁移脚本 [scripts/migrate_cp_syntax.py](file:///data/dev/cp/scripts/migrate_cp_syntax.py) 并对全仓库 `lib/` 与 `cap/test/` 1982 个 `.cp` 文件执行迁移（更新 78 个文件，含 Bun 吸收的 `cap:string`/`cap:mem`/`cap:col`/`cap:blob`/`cap:net`/`cap:http`/`cap:sql`/`cap:shell`/`cap:sync`/`cap:event` 资产与测试），11 大核心套件与 `cpc fix` 实测全部 100% PASS；
   - 提交 Git 并交付面向 `bun_agy` / `capsurf_agy` 的复制即用通知文案。
+
+### 2026-11-21（`cap:myers_diff` 验收，Batch 1 验收提交 cap:myers_diff（5/5 PASS））
+- **执行成果**：`lib/myers_diff/`（5/5 PASS，`doc/lib/myers_diff.md`）经 `verify_module.sh` 一次性验收回收；Batch 1 验收提交 cap:myers_diff（5/5 PASS）
+
+### 2026-11-21（`cap:exact_matcher` 验收，Batch 1 验收提交 cap:exact_matcher（5/5 PASS））
+- **执行成果**：`lib/exact_matcher/`（5/5 PASS，`doc/lib/exact_matcher.md`）经 `verify_module.sh` 一次性验收回收；Batch 1 验收提交 cap:exact_matcher（5/5 PASS）
+
+### 2026-11-21（`cap:intrusive_heap` 验收，Batch 1 验收提交 cap:intrusive_heap（5/5 PASS））
+- **执行成果**：`lib/intrusive_heap/`（5/5 PASS，`doc/lib/intrusive_heap.md`）经 `verify_module.sh` 一次性验收回收；Batch 1 验收提交 cap:intrusive_heap（5/5 PASS）
+
+### 2026-11-21（`cap:http_status` 验收，Batch 1 验收提交 cap:http_status（5/5 PASS，子智能体交付））
+- **执行成果**：`lib/http_status/`（5/5 PASS，`doc/lib/http_status.md`）经 `verify_module.sh` 一次性验收回收；Batch 1 验收提交 cap:http_status（5/5 PASS，子智能体交付）
+
+### 2026-11-21（`cap:mysql_proto` 验收，Batch 1 验收提交 cap:mysql_proto（6/6 PASS，子智能体交付））
+- **执行成果**：`lib/mysql_proto/`（5/5 PASS，`doc/lib/mysql_proto.md`）经 `verify_module.sh` 一次性验收回收；Batch 1 验收提交 cap:mysql_proto（6/6 PASS，子智能体交付）

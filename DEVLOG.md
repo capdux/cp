@@ -2,6 +2,21 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:mysql_proto` 纯 CP MySQL Wire Protocol 能力位、服务端状态标志与 226 项 Collation/字符集查找表（5/5 PASS，文档直写 `doc/lib/mysql_proto.md`）
+子智能体吸收自 bun/src/sql/mysql/{Capabilities,StatusFlags,protocol/CharacterSet}.cp。
+
+## 2026-11-21: 新建 `cap:http_status` 纯 CP 零分配 HTTP 状态码 100-599 全量短语表与 RFC 9110 语义分类器（5/5 PASS，文档直写 `doc/lib/http_status.md`）
+子智能体吸收自 bun/src/runtime/server/HTTPStatusText.cp，补齐 RFC 9110 缓存/重试/Body 判定。
+
+## 2026-11-21: 新建 `cap:intrusive_heap` 纯 CP 零堆分配侵入式配对最小堆（均摊 O(1) 插入/合并，O(log N) 弹出/任意删除）（5/5 PASS，文档直写 `doc/lib/intrusive_heap.md`）
+吸收自 bun/src/io/heap.cp，采用新 CP 裸指针 *T! 与严格无别名借用风格重构。
+
+## 2026-11-21: 新建 `cap:exact_matcher` 纯 CP 定长整型打包（1/2/4/8/12/16 字节）O(1) 无分支字符串快速匹配器（5/5 PASS，文档直写 `doc/lib/exact_matcher.md`）
+吸收自 bun/src/string/immutable/exact_size_matcher.cp，修正 str.len == max_bytes 时 matchLower 漏转小写问题。
+
+## 2026-11-21: 新建 `cap:myers_diff` 纯 CP Myers O(ND) 最短编辑脚本行级/字节级 Diff 引擎（含尾随逗号容错与 ~init() 自动释放）（5/5 PASS，文档直写 `doc/lib/myers_diff.md`）
+吸收自 bun/src/runtime/node/assert/myers_diff.cp，改写为 Zig 0.17 原生与 CP ~init() RAII 风格。
+
 ## 2026-11-21: 新建 `cap:feature_flags` 纯 CP 特性开关与环境变量强类型容错解析引擎（吸收自 Bun `src/bun_core/{feature_flags,env_var}.cp`，支持 `cap.feature_flags` 自动动态挂载，详见 `doc/lib/feature_flags.md`）（5/5 PASS，文档直写 `doc/lib/feature_flags.md`）
 - **吸收改造**：剥离进程全局环境依赖，提供纯函数式大小写不敏感布尔/整数解析与默认值回退。
 
