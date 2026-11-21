@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:id3` 零分配 MP3 ID3v1 / ID3v2.3 / ID3v2.4 音频元数据标签、Syncsafe 整数与帧迭代器（5/5 PASS，文档直写 `doc/lib/id3.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:id3`；`Id3v2FrameIter` 自动区分 v2.3 普通大端与 v2.4 syncsafe 帧长并防越界。
+
 ## 2026-11-22: 新建 `cap:riff` 零分配 RIFF / RIFX 二进制块容器与嵌套 LIST 子块解析器（适配 WAV/WebP/AVI）（5/5 PASS，文档直写 `doc/lib/riff.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:riff`；`RiffChunkIter` 自动处理奇数块长偶数对齐及末尾无 pad 容错。
 

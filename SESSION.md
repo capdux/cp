@@ -169,3 +169,6 @@
 
 ### 2026-11-22（`cap:riff` 验收，新增简洁单单词包 `cap:riff`（5/5 PASS））
 - **执行成果**：`lib/riff/`（5/5 PASS，`doc/lib/riff.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:riff`（5/5 PASS）
+
+### 2026-11-22（`cap:id3` 验收，新增简洁单单词包 `cap:id3`（5/5 PASS））
+- **执行成果**：`lib/id3/`（5/5 PASS，`doc/lib/id3.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:id3`（5/5 PASS）

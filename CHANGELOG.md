@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:id3` 零分配 MP3 ID3v1 / ID3v2.3 / ID3v2.4 音频元数据标签、Syncsafe 整数与帧迭代器（5/5 PASS，自动动态挂载 `cap.id3`）
+- 新增 `lib/id3/{id3,index}.cp`、`doc/lib/id3.md`、`cap/test/test_id3_production_deep.cp`：纯 CP 零分配实现 ID3v1/v1.1 与 ID3v2.3/v2.4 解析（Syncsafe 解码、扩展头跳过、零填充停止与文本帧编码提取）（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:riff` 零分配 RIFF / RIFX 二进制块容器与嵌套 LIST 子块解析器（适配 WAV/WebP/AVI）（5/5 PASS，自动动态挂载 `cap.riff`）
 - 新增 `lib/riff/{riff,index}.cp`、`doc/lib/riff.md`、`cap/test/test_riff_production_deep.cp`：纯 CP 零分配实现 RIFF/RIFX 容器头、FourCC 检索、嵌套 `LIST` 子块迭代与奇数长度 1 字节对齐填充处理（5/5 PASS）。
 

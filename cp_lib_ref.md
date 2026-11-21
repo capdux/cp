@@ -527,3 +527,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:ttf` | `SfntFlavor`, `SfntOffsetTable`, `SfntTableRecord`, `TtfHeadMetrics`, `parseSfntHeader`, `SfntTableIter`, `findSfntTable`, `parseTtfHead`, `parseTtfNumGlyphs`, `calcSfntChecksum` | 零分配 TrueType / OpenType SFNT `.ttf`/`.otf` 字体表目录、`head`/`maxp` 与校验和解析器 |
 | `cap:qoi` | `QoiHeader`, `isQoi`, `parseQoiHeader`, `encodeQoi`, `decodeQoi` | 零分配 Quite OK Image Format (QOI v1.0) 无损图像完整编解码器 |
 | `cap:riff` | `RIFF_HEADER_SIZE`, `RIFF_CHUNK_HEADER_SIZE`, `RiffHeader`, `RiffChunk`, `fourccEquals`, `parseRiffHeader`, `parseListType`, `RiffChunkIter`, `findRiffChunk` | 零分配 RIFF / RIFX 二进制块容器与嵌套 LIST 子块解析器（适配 WAV/WebP/AVI） |
+| `cap:id3` | `Id3v2Header`, `Id3v2Frame`, `Id3v1Tag`, `decodeSyncsafeU32`, `parseId3v2Header`, `Id3v2FrameIter`, `parseId3v1Tail` | 零分配 MP3 ID3v1 / ID3v2.3 / ID3v2.4 音频元数据标签、Syncsafe 整数与帧迭代器 |
