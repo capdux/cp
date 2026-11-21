@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:deb` 零分配 Debian (.deb) 软件包容器与 RFC 822 DEBIAN/control 解析器（5/5 PASS，文档直写 `doc/lib/deb.md`）
+实现零分配 Debian .deb 容器与 RFC 822 control 解析器，严格校验 ar 60B 头、2B 偶对齐与多行续行。
+
 ## 2026-11-22: 新建 `cap:mkv` 零分配 Matroska / WebM EBML 视频容器 Info 与多轨道解析器（5/5 PASS，文档直写 `doc/lib/mkv.md`）
 实现零分配 Matroska/WebM EBML 容器解析器，支持视频宽高、音频采样率/声道数与流式无界 Segment 解析。
 

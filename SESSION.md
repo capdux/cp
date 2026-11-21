@@ -31,3 +31,6 @@
 
 ### 2026-11-22（`cap:mkv` 验收，完成 `cap:mkv` 交付验收并登记入库（5/5 PASS）；派发 `cap:nbt`。）
 - **执行成果**：`lib/mkv/`（5/5 PASS，`doc/lib/mkv.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:mkv` 交付验收并登记入库（5/5 PASS）；派发 `cap:nbt`。
+
+### 2026-11-22（`cap:deb` 验收，完成 `cap:deb` 交付验收并登记入库（5/5 PASS）；派发 `cap:rlp`。）
+- **执行成果**：`lib/deb/`（5/5 PASS，`doc/lib/deb.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:deb` 交付验收并登记入库（5/5 PASS）；派发 `cap:rlp`。

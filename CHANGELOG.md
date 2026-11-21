@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:deb` 零分配 Debian (.deb) 软件包容器与 RFC 822 DEBIAN/control 解析器（5/5 PASS，自动动态挂载 `cap.deb`）
+新增 `lib/deb/{deb,index}.cp`、`doc/lib/deb.md` 与 `cap/test/test_deb_production_deep.cp`（5/5 PASS），支持 debian-binary/control.tar.*/data.tar.* 零拷贝提取与大小写不敏感 control 元数据解析。
+
 ## [2026-11-22] - 新建 `cap:mkv` 零分配 Matroska / WebM EBML 视频容器 Info 与多轨道解析器（5/5 PASS，自动动态挂载 `cap.mkv`）
 新增 `lib/mkv/{mkv,index}.cp`、`doc/lib/mkv.md` 与 `cap/test/test_mkv_production_deep.cp`（5/5 PASS），支持 Matroska/WebM DocType、未知尺寸流式 Segment、32/64-bit 浮点 Duration 与多轨道迭代。
 
