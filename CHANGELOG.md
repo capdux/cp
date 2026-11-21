@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:shamir` 纯 CP GF(2^8) 信息论安全 Shamir (k, n) 门限密钥分片与拉格朗日插值恢复引擎（支持 `cap.shamir` 自动动态挂载，详见 `doc/lib/shamir.md`）（5/5 PASS，自动动态挂载 `cap.shamir`）
+- **新增标准库**：`lib/shamir/{shamir,index}.cp`，实现 CSPRNG 随机多项式 `splitSecret`、GF(2^8) 拉格朗日插值 `combineShares` 与 `CPSS1` `Share.encode`/`decode` 格式化，严格拦截不足门限、重复索引与非法格式。
+- **新增文档与测试**：`doc/lib/shamir.md` 扁平文档与 `cap/test/test_shamir_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:rope` 纯 CP Piece Table 大文本编辑、碎片合并、行号/列号互转与 Undo/Redo 事务栈引擎（支持 `cap.rope` 自动动态挂载，详见 `doc/lib/rope.md`）（5/5 PASS，自动动态挂载 `cap.rope`）
 - **新增标准库**：`lib/rope/{piece_table,index}.cp`，实现连续尾部追加碎片合并 `RopeText`、`offsetToLineCol`/`lineColToOffset`/`getLine`（兼容 `\r\n`）及分叉自动清空 Redo 栈的 `undo`/`redo`。
 - **新增文档与测试**：`doc/lib/rope.md` 扁平文档与 `cap/test/test_rope_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

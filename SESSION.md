@@ -37,3 +37,6 @@
 
 ### 2026-11-21（`cap:rope` 验收，验收提交 `cap:rope`，顶替拉起 `cap:blake3` 维持 2 路常规并行）
 - **执行成果**：`lib/rope/`（5/5 PASS，`doc/lib/rope.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:rope`，顶替拉起 `cap:blake3` 维持 2 路常规并行
+
+### 2026-11-21（`cap:shamir` 验收，主控亲自完成第 7 路 `cap:shamir` 验收提交，维持 `cap:lockfree_queue` 与 `cap:blake3` 并发）
+- **执行成果**：`lib/shamir/`（5/5 PASS，`doc/lib/shamir.md`）经 `verify_module.sh` 一次性验收回收；主控亲自完成第 7 路 `cap:shamir` 验收提交，维持 `cap:lockfree_queue` 与 `cap:blake3` 并发

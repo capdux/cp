@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:shamir` 纯 CP GF(2^8) 信息论安全 Shamir (k, n) 门限密钥分片与拉格朗日插值恢复引擎（支持 `cap.shamir` 自动动态挂载，详见 `doc/lib/shamir.md`）（5/5 PASS，文档直写 `doc/lib/shamir.md`）
+- **核心设计**：基于 `std.crypto.random` 生成随机多项式系数并逐字节在 GF(2^8) 上求值与插值，任意 `< k` 份均拦截并返回 `InsufficientShares`，全路径零泄漏。
+
 ## 2026-11-21: 新建 `cap:rope` 纯 CP Piece Table 大文本编辑、碎片合并、行号/列号互转与 Undo/Redo 事务栈引擎（支持 `cap.rope` 自动动态挂载，详见 `doc/lib/rope.md`）（5/5 PASS，文档直写 `doc/lib/rope.md`）
 - **核心设计**：250 步随机编辑与朴素 `ArrayList(u8)` 参考模型 100% 等价，连续尾部插入自动合并为单个 Piece 抑制碎片膨胀，全路径零泄漏。
 
