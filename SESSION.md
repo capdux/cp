@@ -85,3 +85,6 @@
 
 ### 2026-11-22（`cap:tap` 验收，完成 `cap:tap` 交付验收并登记入库（5/5 PASS）；派发 `cap:sarif`。）
 - **执行成果**：`lib/tap/`（5/5 PASS，`doc/lib/tap.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:tap` 交付验收并登记入库（5/5 PASS）；派发 `cap:sarif`。
+
+### 2026-11-22（`cap:csr` 验收，完成 `cap:csr` 交付验收并登记入库（5/5 PASS）；派发 `cap:crl`。）
+- **执行成果**：`lib/csr/`（5/5 PASS，`doc/lib/csr.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:csr` 交付验收并登记入库（5/5 PASS）；派发 `cap:crl`。

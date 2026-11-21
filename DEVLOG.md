@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:csr` 零分配 RFC 2986 / PKCS#10 证书签发请求 (CSR) ASN.1 DER 解析器（5/5 PASS，文档直写 `doc/lib/csr.md`）
+实现零分配 PKCS#10 CSR 解析器，严格校验 version==0、unused_bits==0 并零拷贝暴露 cri_raw_der。
+
 ## 2026-11-22: 新建 `cap:tap` 零分配 Test Anything Protocol (TAP v12/13/14) 测试流解析与汇总器（5/5 PASS，文档直写 `doc/lib/tap.md`）
 实现零分配 TAP 测试结果流解析器，支持 \# 转义区分、尾部计划与 1..0 全跳过计划。
 
