@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:ed25519` 纯 CP 原生 RFC 8032 Ed25519 数字签名、密钥对生成、批量验签与 Hex 编解码引擎（支持 `cap.ed25519` 自动动态挂载，详见 `doc/lib/ed25519.md`）（5/5 PASS，自动动态挂载 `cap.ed25519`）
+- **新增标准库**：`lib/ed25519/{ed25519,index}.cp`，实现 RFC 8032 Ed25519 密钥对、`sign`/`signRandomized`、`verify`、`verifyBatch` 与 Hex 编解码。\n- **新增文档与测试**：`doc/lib/ed25519.md` 扁平文档与 `cap/test/test_ed25519_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:roaring_bitmap` 纯 CP 工业级 Roaring Bitmap 压缩位图集合引擎（Array/Bitset 自适应升降级、`unionWith`/`intersectWith`/`differenceWith`、`rank`/极值及零泄漏序列化，支持 `cap.roaring_bitmap` 自动动态挂载，详见 `doc/lib/roaring_bitmap.md`）（5/5 PASS，自动动态挂载 `cap.roaring_bitmap`）
 - **新增标准库**：`lib/roaring_bitmap/{roaring,index}.cp`，实现高 16 位分桶与 Array/Bitset 容器自适应转换（4096 阈值）及全套集合运算。\n- **新增文档与测试**：`doc/lib/roaring_bitmap.md` 扁平文档与 `cap/test/test_roaring_bitmap_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

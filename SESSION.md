@@ -100,3 +100,6 @@
 
 ### 2026-11-21（`cap:roaring_bitmap` 验收，验收提交 `cap:roaring_bitmap` 并新开 `cap:aes_gcm` 并发子智能体）
 - **执行成果**：`lib/roaring_bitmap/`（5/5 PASS，`doc/lib/roaring_bitmap.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:roaring_bitmap` 并新开 `cap:aes_gcm` 并发子智能体
+
+### 2026-11-21（`cap:ed25519` 验收，验收提交 `cap:ed25519` 并新开 `cap:promql` 并发子智能体，主控同步验收 `cap:base32`）
+- **执行成果**：`lib/ed25519/`（5/5 PASS，`doc/lib/ed25519.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:ed25519` 并新开 `cap:promql` 并发子智能体，主控同步验收 `cap:base32`

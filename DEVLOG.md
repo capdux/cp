@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:ed25519` 纯 CP 原生 RFC 8032 Ed25519 数字签名、密钥对生成、批量验签与 Hex 编解码引擎（支持 `cap.ed25519` 自动动态挂载，详见 `doc/lib/ed25519.md`）（5/5 PASS，文档直写 `doc/lib/ed25519.md`）
+- **核心设计**：基于 Zig 0.17 `std.crypto.sign.Ed25519` 与 `std.Io.Threaded` 实现零堆签名与批量校验，通过 RFC 8032 Section 7.1 TEST 1/2/3 官方向量与篡改拦截测试。
+
 ## 2026-11-21: 新建 `cap:roaring_bitmap` 纯 CP 工业级 Roaring Bitmap 压缩位图集合引擎（Array/Bitset 自适应升降级、`unionWith`/`intersectWith`/`differenceWith`、`rank`/极值及零泄漏序列化，支持 `cap.roaring_bitmap` 自动动态挂载，详见 `doc/lib/roaring_bitmap.md`）（5/5 PASS，文档直写 `doc/lib/roaring_bitmap.md`）
 - **核心设计**：支持跨容器类型（Array/Bitset）集合交并差、`rank` 计数及 `std.testing.allocator` 零泄漏验证。
 
