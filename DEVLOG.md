@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:http_signature_input` RFC 9421 HTTP Message Signatures (Signature-Input / Signature) 零分配解析器与时间窗校验器（5/5 PASS，文档直写 `doc/lib/http_signature_input.md`）
+轮换后的轻上下文子智能体 `HTTP RFC Absorber` 仅用 2 分 19 秒交付 `cap:http_signature_input`（6 组深度用例 100% PASS），验证了定期轮换策略显著提速。
+
 ## 2026-11-22: 新建 `cap:http_digest_auth` RFC 7616 HTTP Digest Authentication (WWW-Authenticate / Authorization) 零分配解析与构造器（5/5 PASS，文档直写 `doc/lib/http_digest_auth.md`）
 Subagent 1 吸收 `cap:http_digest_auth`，完工后已按轮换策略重建轻上下文子智能体 `Sys Config Absorber`。
 

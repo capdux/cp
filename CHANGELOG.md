@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_signature_input` RFC 9421 HTTP Message Signatures (Signature-Input / Signature) 零分配解析器与时间窗校验器（5/5 PASS，自动动态挂载 `cap.http_signature_input`）
+新增 `cap:http_signature_input`（`lib/http_signature_input/{sig_input,index}.cp`、`doc/lib/http_signature_input.md`、`cap/test/test_http_signature_input_production_deep.cp`），实现多签名迭代、组件提取、时间窗 `leeway` 校验与 Base64 签名值查找。
+
 ## [2026-11-22] - 新建 `cap:http_digest_auth` RFC 7616 HTTP Digest Authentication (WWW-Authenticate / Authorization) 零分配解析与构造器（5/5 PASS，自动动态挂载 `cap.http_digest_auth`）
 新增 `cap:http_digest_auth`（`lib/http_digest_auth/{digest_auth,index}.cp`、`doc/lib/http_digest_auth.md`、`cap/test/test_http_digest_auth_production_deep.cp`），支持 `realm`/`nonce`/`qop`/`nc`/`cnonce`/`userhash` 解析与规范化往返。
 

@@ -133,3 +133,6 @@
 ### 2026-11-22（`cap:http_digest_auth` 验收，Batch 75 注册 `cap:http_digest_auth` 并提交（累计 241 模块）。）
 - **执行成果**：`lib/http_digest_auth/`（5/5 PASS，`doc/lib/http_digest_auth.md`）经 `verify_module.sh` 一次性验收回收；Batch 75 注册 `cap:http_digest_auth` 并提交（累计 241 模块）。
 - **CapSurf 标准库 E0209 批量热修结单（#80）**：热修子智能体 3 分钟内修复 12 个标准库文件（`pack/{zstd,tar_pax,zip_writer}`、`ws/permessage_deflate`、`event/{concurrent_task,timer}`、`crypto/{cipher,kdf}`、`sys/{fs_ops,process}`、`blob/{blob,store}`）共 72 处 E0209，全部 `cpc check` 0 errors，已结单并回收热修子智能体。
+
+### 2026-11-22（`cap:http_signature_input` 验收，Batch 76 提交 `cap:http_signature_input`（累计 242 模块），验证新轮换子智能体 2 分 19 秒高效交付。）
+- **执行成果**：`lib/http_signature_input/`（5/5 PASS，`doc/lib/http_signature_input.md`）经 `verify_module.sh` 一次性验收回收；Batch 76 提交 `cap:http_signature_input`（累计 242 模块），验证新轮换子智能体 2 分 19 秒高效交付。
