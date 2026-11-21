@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:polyfit` OLS/Ridge polynomial regression (streaming Givens QR), Horner calculus & root-finding（5/5 PASS，自动动态挂载 `cap.polyfit`）
+新增纯 CP 零分配标准库 cap:polyfit（流式 Givens QR 多项式拟合、岭回归、Horner 微积分与实根求解）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:gjk` 2D GJK convex collision, Minkowski support, SAT minimum translation vector & circle-poly（5/5 PASS，自动动态挂载 `cap.gjk`）
 新增纯 CP 零分配标准库 cap:gjk（2D GJK 凸多边形碰撞检测、SAT 最小穿透向量 MTV 与圆-多边形碰撞）与 6/6 深度测试
 

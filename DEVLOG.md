@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:polyfit` OLS/Ridge polynomial regression (streaming Givens QR), Horner calculus & root-finding（5/5 PASS，文档直写 `doc/lib/polyfit.md`）
+新增 cap:polyfit 纯 CP 零分配数值拟合库（坐标归一化 + 栈上流式 Givens QR、L2 岭回归与二分/牛顿求根），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:gjk` 2D GJK convex collision, Minkowski support, SAT minimum translation vector & circle-poly（5/5 PASS，文档直写 `doc/lib/gjk.md`）
 新增 cap:gjk 纯 CP 零分配物理碰撞检测库（2D 单纯形演化、SAT 分离轴 MTV 推离验证与 Voronoi 最近顶点圆碰撞），通过 cpc check 与 6/6 cap test
 
