@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:sshsig` 零分配 OpenSSH SSHSIG 二进制与 PEM Armor 签名解析与待签载荷构造器（5/5 PASS，文档直写 `doc/lib/sshsig.md`）
+实现零分配 OpenSSH PROTOCOL.sshsig 解析器，严格校验非空 namespace 与无尾随垃圾字节。
+
 ## 2026-11-22: 新建 `cap:minisign` 零分配 Minisign & OpenBSD Signify Ed25519 签名与公钥编解码器（5/5 PASS，文档直写 `doc/lib/minisign.md`）
 实现零分配 Minisign/Signify 编解码器，内置严格 RFC 4648 Base64 校验与 ED/Ed 预哈希区分。
 

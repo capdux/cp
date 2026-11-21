@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:sshsig` 零分配 OpenSSH SSHSIG 二进制与 PEM Armor 签名解析与待签载荷构造器（5/5 PASS，自动动态挂载 `cap.sshsig`）
+新增 `lib/sshsig/{sshsig,index}.cp`、`doc/lib/sshsig.md` 与 `cap/test/test_sshsig_production_deep.cp`（5/5 PASS），支持 SSHSIG v1 魔数、PEM Armor Base64 解码、嵌套 key_type/sig_type 提取与 SignedData 构造。
+
 ## [2026-11-22] - 新建 `cap:minisign` 零分配 Minisign & OpenBSD Signify Ed25519 签名与公钥编解码器（5/5 PASS，自动动态挂载 `cap.minisign`）
 新增 `lib/minisign/{minisign,index}.cp`、`doc/lib/minisign.md` 与 `cap/test/test_minisign_production_deep.cp`（5/5 PASS），支持 2 行 .pub / 单行 RW 公钥、4 行 .minisig / 2 行 Signify 签名编解码与 Key ID 匹配。
 
