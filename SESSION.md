@@ -121,3 +121,15 @@
 
 ### 2026-11-22（`cap:md_links` 验收，Batch 26: 吸收并验证 cap:md_links (6/6 PASSED)）
 - **执行成果**：`lib/md_links/`（5/5 PASS，`doc/lib/md_links.md`）经 `verify_module.sh` 一次性验收回收；Batch 26: 吸收并验证 cap:md_links (6/6 PASSED)
+
+### 2026-11-22（`cap:css_effects` 验收，Batch 27: 吸收并验证 cap:css_effects (PASSED)）
+- **执行成果**：`lib/css_effects/`（5/5 PASS，`doc/lib/css_effects.md`）经 `verify_module.sh` 一次性验收回收；Batch 27: 吸收并验证 cap:css_effects (PASSED)
+
+### 2026-11-22（`cap:css_layout_ctrl` 验收，Batch 27: 吸收并验证 cap:css_layout_ctrl (PASSED)）
+- **执行成果**：`lib/css_layout_ctrl/`（5/5 PASS，`doc/lib/css_layout_ctrl.md`）经 `verify_module.sh` 一次性验收回收；Batch 27: 吸收并验证 cap:css_layout_ctrl (PASSED)
+
+### 2026-11-22（`cap:shell_util` 验收，Batch 27: 吸收并验证 cap:shell_util (5/5 PASSED)）
+- **执行成果**：`lib/shell_util/`（5/5 PASS，`doc/lib/shell_util.md`）经 `verify_module.sh` 一次性验收回收；Batch 27: 吸收并验证 cap:shell_util (5/5 PASSED)
+
+### 2026-11-22（`cap:css_border_image` 验收，Batch 27: 吸收并验证 cap:css_border_image (6/6 PASSED)）
+- **执行成果**：`lib/css_border_image/`（5/5 PASS，`doc/lib/css_border_image.md`）经 `verify_module.sh` 一次性验收回收；Batch 27: 吸收并验证 cap:css_border_image (6/6 PASSED)

@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:css_border_image` CSS Backgrounds 3 border-image 属性族与双斜杠简写（slice/width/outset/repeat/fill）解析与序列化库（吸收自 bun/src/css/properties/border_image.cp）（5/5 PASS，自动动态挂载 `cap.css_border_image`）
+新增 cap:css_border_image 标准库模块（lib/css_border_image/{border_image,index}.cp, doc/lib/css_border_image.md, cap/test/test_css_border_image_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:shell_util` 零堆分配 POSIX Shell 安全引用/双引号转义、命令行拼接、basename/dirname 路径运算与环境变量解析库（吸收自 bun/src/shell/util.cp 与 builtin/{basename,dirname}.cp）（5/5 PASS，自动动态挂载 `cap.shell_util`）
+新增 cap:shell_util 标准库模块（lib/shell_util/{util,index}.cp, doc/lib/shell_util.md, cap/test/test_shell_util_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:css_layout_ctrl` CSS 布局控制属性库（overflow/text-overflow/position/container-type/contain/z-index，吸收自 bun/src/css/properties/{overflow,position,contain}.cp）（5/5 PASS，自动动态挂载 `cap.css_layout_ctrl`）
+新增 cap:css_layout_ctrl 标准库模块（lib/css_layout_ctrl/{layout_ctrl,index}.cp, doc/lib/css_layout_ctrl.md, cap/test/test_css_layout_ctrl_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:css_effects` CSS Filter Effects 11 种标准滤镜函数链（blur/brightness/contrast/grayscale/hue-rotate/invert/opacity/saturate/sepia/drop-shadow/url）零堆分配解析与序列化（吸收自 bun/src/css/properties/effects.cp）（5/5 PASS，自动动态挂载 `cap.css_effects`）
+新增 cap:css_effects 标准库模块（lib/css_effects/{effects,index}.cp, doc/lib/css_effects.md, cap/test/test_css_effects_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:md_links` CommonMark §6.3-6.5 内联链接、图片、引用链接与 URI/Email 自动链接零堆分配解析器及 URL 百分号编码（吸收自 bun/src/md/links.cp）（5/5 PASS，自动动态挂载 `cap.md_links`）
 新增 cap:md_links 标准库模块（lib/md_links/{links,index}.cp, doc/lib/md_links.md, cap/test/test_md_links_production_deep.cp）
 

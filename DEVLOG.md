@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:css_border_image` CSS Backgrounds 3 border-image 属性族与双斜杠简写（slice/width/outset/repeat/fill）解析与序列化库（吸收自 bun/src/css/properties/border_image.cp）（5/5 PASS，文档直写 `doc/lib/css_border_image.md`）
+子智能体 1 吸收 bun/src/css/properties/border_image.cp，实现完整 border-image 子属性与双斜杠简写，6/6 单测通过
+
+## 2026-11-22: 新建 `cap:shell_util` 零堆分配 POSIX Shell 安全引用/双引号转义、命令行拼接、basename/dirname 路径运算与环境变量解析库（吸收自 bun/src/shell/util.cp 与 builtin/{basename,dirname}.cp）（5/5 PASS，文档直写 `doc/lib/shell_util.md`）
+子智能体 2 吸收 bun/src/shell/util.cp 与 basename/dirname，实现全套 POSIX shell 转义与路径/环境变量工具，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:css_layout_ctrl` CSS 布局控制属性库（overflow/text-overflow/position/container-type/contain/z-index，吸收自 bun/src/css/properties/{overflow,position,contain}.cp）（5/5 PASS，文档直写 `doc/lib/css_layout_ctrl.md`）
+吸收 bun/src/css/properties/{overflow,position,contain}.cp，实现完整布局控制属性与 contain strict/content 合并规范化，通过 cpc check 与 cap test
+
+## 2026-11-22: 新建 `cap:css_effects` CSS Filter Effects 11 种标准滤镜函数链（blur/brightness/contrast/grayscale/hue-rotate/invert/opacity/saturate/sepia/drop-shadow/url）零堆分配解析与序列化（吸收自 bun/src/css/properties/effects.cp）（5/5 PASS，文档直写 `doc/lib/css_effects.md`）
+吸收 bun/src/css/properties/effects.cp，实现 11 种 CSS 滤镜解析、范围裁剪与规范化序列化，通过 cpc check 与 cap test
+
 ## 2026-11-22: 新建 `cap:md_links` CommonMark §6.3-6.5 内联链接、图片、引用链接与 URI/Email 自动链接零堆分配解析器及 URL 百分号编码（吸收自 bun/src/md/links.cp）（5/5 PASS，文档直写 `doc/lib/md_links.md`）
 子智能体 1 吸收 bun/src/md/links.cp，实现 CommonMark 全类型链接/图片/自动链接解析与 percentEncodeUrl，6/6 单测通过
 
