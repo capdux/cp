@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:dct` Orthonormal 1D & 2D 8x8 DCT-II/IDCT-III, JPEG ZigZag scan & IJG quantization（5/5 PASS，文档直写 `doc/lib/dct.md`）
+新增 cap:dct 纯 CP 零分配图像与信号变换库（能量守恒 1D DCT、可分离 8×8 块变换与 IJG 质量缩放量化），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:kalman` Discrete 1D & 2D constant-velocity Kalman filter (Joseph form) & Alpha-Beta tracker（5/5 PASS，文档直写 `doc/lib/kalman.md`）
 新增 cap:kalman 纯 CP 零分配传感器融合与状态估计库（1D/2D 恒速模型、Joseph 正定协方差更新与 Mahalanobis 野值门控），通过 cpc check 与 5/5 cap test
 

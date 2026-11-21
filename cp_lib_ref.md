@@ -803,3 +803,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:gf256` | GF256_POLY_AES, GF256_POLY_RS, Gf256Field, gf256MulConstTime | Galois Field GF(2^8) (AES/RS) arithmetic, const-time mul, Lagrange & Gauss-Jordan |
 | `cap:pid` | PidConfig, PidTerms, PidController, zieglerNicholsPid, rateLimit | Discrete PID controller with derivative-on-measurement, anti-windup, LPF & bumpless transfer |
 | `cap:kalman` | Kalman1D, Kalman2D, AlphaBetaFilter | Discrete 1D & 2D constant-velocity Kalman filter (Joseph form) & Alpha-Beta tracker |
+| `cap:dct` | DCT_BLOCK_DIM, DCT_BLOCK_SIZE, JPEG_ZIGZAG_8X8, JPEG_LUMA_QUANT_50, JPEG_CHROMA_QUANT_50, dct1d, idct1d, dct8x8, idct8x8, zigzagReorder8x8, unzigzagReorder8x8, quantize8x8, dequantize8x8, scaleQuantTable | Orthonormal 1D & 2D 8x8 DCT-II/IDCT-III, JPEG ZigZag scan & IJG quantization |
