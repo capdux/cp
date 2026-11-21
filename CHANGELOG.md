@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:smile` 零分配 FasterXML Jackson Smile 1.0 二进制 JSON 编解码与 Token 流解析器（5/5 PASS，自动动态挂载 `cap.smile`）
+新增 `lib/smile/{smile,index}.cp`、`doc/lib/smile.md` 与 `cap/test/test_smile_production_deep.cp`（5/5 PASS），支持 4B Smile 头、7+6-bit VInt/ZigZag、Tiny/Small/Long 字符串、共享引用与对象键解析。
+
 ## [2026-11-22] - 新建 `cap:ion` 零分配 Amazon Ion 1.0 二进制格式 IVM、VarUInt/VarInt 与结构化值解析器（5/5 PASS，自动动态挂载 `cap.ion`）
 新增 `lib/ion/{ion,index}.cp`、`doc/lib/ion.md` 与 `cap/test/test_ion_production_deep.cp`（5/5 PASS），支持 IVM 1.0、大端 7-bit VarUInt/VarInt、NOP Pad 跳过、List 与 Struct 迭代。
 

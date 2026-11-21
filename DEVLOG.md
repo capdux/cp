@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:smile` 零分配 FasterXML Jackson Smile 1.0 二进制 JSON 编解码与 Token 流解析器（5/5 PASS，文档直写 `doc/lib/smile.md`）
+实现零分配 Jackson Smile 1.0 流式 Token 解析器，覆盖 5B/10B 7-bit 浮点编码与完整对象键状态机。
+
 ## 2026-11-22: 新建 `cap:ion` 零分配 Amazon Ion 1.0 二进制格式 IVM、VarUInt/VarInt 与结构化值解析器（5/5 PASS，文档直写 `doc/lib/ion.md`）
 实现零分配 Amazon Ion 1.0 二进制解析器，支持全部 16 种 Type Code、typed null、内联 bool 与扩展长度编码。
 

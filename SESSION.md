@@ -94,3 +94,6 @@
 
 ### 2026-11-22（`cap:ion` 验收，完成 `cap:ion` 交付验收并登记入库（5/5 PASS）；派发 `cap:flatbuf`。）
 - **执行成果**：`lib/ion/`（5/5 PASS，`doc/lib/ion.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:ion` 交付验收并登记入库（5/5 PASS）；派发 `cap:flatbuf`。
+
+### 2026-11-22（`cap:smile` 验收，完成 `cap:smile` 交付验收并登记入库（5/5 PASS）；派发 `cap:lucene`。）
+- **执行成果**：`lib/smile/`（5/5 PASS，`doc/lib/smile.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:smile` 交付验收并登记入库（5/5 PASS）；派发 `cap:lucene`。
