@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:minisign` 零分配 Minisign & OpenBSD Signify Ed25519 签名与公钥编解码器（5/5 PASS，自动动态挂载 `cap.minisign`）
+新增 `lib/minisign/{minisign,index}.cp`、`doc/lib/minisign.md` 与 `cap/test/test_minisign_production_deep.cp`（5/5 PASS），支持 2 行 .pub / 单行 RW 公钥、4 行 .minisig / 2 行 Signify 签名编解码与 Key ID 匹配。
+
 ## [2026-11-22] - 新建 `cap:ris` 零分配 Research Information Systems (.ris) 学术文献引文解析与统计器（5/5 PASS，自动动态挂载 `cap.ris`）
 新增 `lib/ris/{ris,index}.cp`、`doc/lib/ris.md` 与 `cap/test/test_ris_production_deep.cp`（5/5 PASS），支持 TY/ER 文献流、多行续行摘要、多作者/关键词与单遍汇总。
 

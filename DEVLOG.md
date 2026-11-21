@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:minisign` 零分配 Minisign & OpenBSD Signify Ed25519 签名与公钥编解码器（5/5 PASS，文档直写 `doc/lib/minisign.md`）
+实现零分配 Minisign/Signify 编解码器，内置严格 RFC 4648 Base64 校验与 ED/Ed 预哈希区分。
+
 ## 2026-11-22: 新建 `cap:ris` 零分配 Research Information Systems (.ris) 学术文献引文解析与统计器（5/5 PASS，文档直写 `doc/lib/ris.md`）
 实现零分配 RIS 学术引文解析器，兼容 UTF-8 BOM、CRLF 与自定义标签查询。
 
