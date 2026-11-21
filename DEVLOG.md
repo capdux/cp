@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:gamma` 纯 CP 零分配特殊数学函数库：Lanczos lgamma/tgamma、digamma、级数/Lentz 连分式正则化不完全 Gamma/Beta、无灾难抵消 erf/erfc 与对数阶乘/组合数（5/5 PASS，文档直写 `doc/lib/gamma.md`）
+新增 cap:gamma（lib/gamma/{gamma,index}.cp）：9 项 Lanczos g=7、Bernoulli digamma、Lentz 连分式不完全 Gamma/Beta 与远尾高精度 erfc（相对误差 < 1e-13），cpc check 0 错误，cap test 6/6 PASS (716ms)
+
 ## 2026-11-22: 新建 `cap:ransac` 纯 CP 零分配确定性 RANSAC 鲁棒模型估计库：SplitMix64 采样与内点精修，支持 2D 直线（TLS）、2D 圆（Kåsa）、3D 平面（协方差最小特征向量）与 1D 线性回归（OLS）（5/5 PASS，文档直写 `doc/lib/ransac.md`）
 新增 cap:ransac（lib/ransac/{ransac,index}.cp）：零分配 SplitMix64 确定性 RANSAC 鲁棒拟合，35%-40% 离群点下精确恢复 2D 线/圆、3D 平面与 1D 回归模型，cpc check 0 错误，cap test 6/6 PASS (812ms)
 

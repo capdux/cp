@@ -148,3 +148,6 @@
 
 ### 2026-11-22（`cap:ransac` 验收，子智能体交付 cap:ransac（RANSAC 2D/3D 鲁棒拟合，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/ransac/`（5/5 PASS，`doc/lib/ransac.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:ransac（RANSAC 2D/3D 鲁棒拟合，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:gamma` 验收，子智能体交付 cap:gamma（特殊数学函数库，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/gamma/`（5/5 PASS，`doc/lib/gamma.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:gamma（特殊数学函数库，6/6 PASS），主协调器统一登记并提交
