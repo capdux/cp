@@ -166,3 +166,6 @@
 
 ### 2026-11-22（`cap:mpls` 验收，完成并注册纯 CP 零分配标准库 cap:mpls（5/5 cap test PASS））
 - **执行成果**：`lib/mpls/`（5/5 PASS，`doc/lib/mpls.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:mpls（5/5 cap test PASS）
+
+### 2026-11-22（`cap:vrrp` 验收，完成并注册纯 CP 零分配标准库 cap:vrrp（5/5 cap test PASS））
+- **执行成果**：`lib/vrrp/`（5/5 PASS，`doc/lib/vrrp.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:vrrp（5/5 cap test PASS）

@@ -1,0 +1,25 @@
+// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 3768/5798 VRRPv2 & VRRPv3 Parser)
+
+export {
+    VRRP_IP_PROTO,
+    VRRP_V2,
+    VRRP_V3,
+    VRRP_TYPE_ADVERTISEMENT,
+    VRRP_HEADER_SIZE,
+    VRRP_V2_AUTH_SIZE,
+    VRRP_AUTH_NONE,
+    VRRP_AUTH_SIMPLE,
+    VRRP_AUTH_AH,
+    VrrpHeader,
+    VrrpIpv4Iter,
+    VrrpIpv6Iter,
+    VrrpPacket,
+    isVrrp,
+    parseVrrp,
+    vrrp2Checksum,
+    verifyVrrp2Checksum,
+    vrrp3ChecksumIpv4,
+    verifyVrrp3ChecksumIpv4,
+    vrrp3ChecksumIpv6,
+    verifyVrrp3ChecksumIpv6,
+} from "./vrrp.cp";
