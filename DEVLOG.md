@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:newton` 纯 CP 零分配非线性方程组求解与非线性最小二乘库：中心差分雅可比阻尼 Newton-Raphson、自适应 Levenberg-Marquardt 非线性最小二乘与 1D Newton/割线求根（5/5 PASS，文档直写 `doc/lib/newton.md`）
+新增 cap:newton（lib/newton/{newton,index}.cp）：零分配阻尼多维 Newton-Raphson 与自适应 Levenberg-Marquardt，通过 3D 耦合方程组与指数衰减拟合校验，cpc check 0 错误，cap test 6/6 PASS (819ms)
+
 ## 2026-11-22: 新建 `cap:ga` 纯 CP 零分配遗传算法与演化计算库：双缓冲种群、实数编码 GA（锦标赛/BLX-α/高斯变异/精英保留）与排列编码 GA（Order Crossover OX/反转变异，专用于 TSP 与调度）（5/5 PASS，文档直写 `doc/lib/ga.md`）
 新增 cap:ga（lib/ga/{ga,index}.cp）：零分配双缓冲种群 SplitMix64 实数 GA 与排列编码 OX GA，10 城市圆周 TSP 精确收敛至理论最优周长，cpc check 0 错误，cap test 5/5 PASS (756ms)
 

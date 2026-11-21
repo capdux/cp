@@ -205,3 +205,6 @@
 
 ### 2026-11-22（`cap:ga` 验收，子智能体交付 cap:ga（实数与排列编码遗传算法，5/5 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/ga/`（5/5 PASS，`doc/lib/ga.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:ga（实数与排列编码遗传算法，5/5 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:newton` 验收，子智能体交付 cap:newton（阻尼 Newton-Raphson 与 Levenberg-Marquardt，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/newton/`（5/5 PASS，`doc/lib/newton.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:newton（阻尼 Newton-Raphson 与 Levenberg-Marquardt，6/6 PASS），主协调器统一登记并提交

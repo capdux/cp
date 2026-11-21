@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:newton` 纯 CP 零分配非线性方程组求解与非线性最小二乘库：中心差分雅可比阻尼 Newton-Raphson、自适应 Levenberg-Marquardt 非线性最小二乘与 1D Newton/割线求根（5/5 PASS，自动动态挂载 `cap.newton`）
+新增纯 CP 零分配非线性方程组与 LM 最小二乘库 cap:newton（阻尼 Newton-Raphson、Levenberg-Marquardt、1D Newton/割线法），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:ga` 纯 CP 零分配遗传算法与演化计算库：双缓冲种群、实数编码 GA（锦标赛/BLX-α/高斯变异/精英保留）与排列编码 GA（Order Crossover OX/反转变异，专用于 TSP 与调度）（5/5 PASS，自动动态挂载 `cap.ga`）
 新增纯 CP 零分配遗传算法库 cap:ga（实数编码 GA 与排列编码 OX/TSP GA），含文档与 5 项深度生产测试
 
