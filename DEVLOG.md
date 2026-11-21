@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:octree` 纯 CP 零分配 3D 空间八叉树索引库：固定池八叉树、AABB/球体范围查询、下界剪枝最近邻搜索与 Slab 法射线-AABB 相交查询（5/5 PASS，文档直写 `doc/lib/octree.md`）
+新增 cap:octree（lib/octree/{octree,index}.cp）：基于静态节点/条目池实现 3D 八叉树自动分裂、盒/球范围查询、下界剪枝最近邻与 Slab 射线相交，cpc check 0 错误，cap test 6/6 PASS (758ms)
+
 ## 2026-11-22: 新建 `cap:rmq` 纯 CP 零分配区间查询与滑动窗口算法库：O(1) Sparse Table（Min/Max/ArgMin/GCD）、O(1) 欧拉序树上 LCA 与 O(n) 单调队列滑动窗口极值（5/5 PASS，文档直写 `doc/lib/rmq.md`）
 新增 cap:rmq（lib/rmq/{rmq,index}.cp）：基于调用方缓冲实现 O(1) Sparse Table 区间最值/首次下标/GCD、O(1) 欧拉序 LCA 与 O(n) 单调队列滑动窗口，cpc check 0 错误，cap test 6/6 PASS (717ms)
 

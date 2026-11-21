@@ -88,3 +88,6 @@
 
 ### 2026-11-22（`cap:rmq` 验收，子智能体交付 cap:rmq（Sparse Table RMQ/GCD/LCA 与滑动窗口，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/rmq/`（5/5 PASS，`doc/lib/rmq.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:rmq（Sparse Table RMQ/GCD/LCA 与滑动窗口，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:octree` 验收，子智能体交付 cap:octree（3D 零分配八叉树与射线/最近邻查询，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/octree/`（5/5 PASS，`doc/lib/octree.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:octree（3D 零分配八叉树与射线/最近邻查询，6/6 PASS），主协调器统一登记并提交

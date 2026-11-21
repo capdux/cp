@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:octree` 纯 CP 零分配 3D 空间八叉树索引库：固定池八叉树、AABB/球体范围查询、下界剪枝最近邻搜索与 Slab 法射线-AABB 相交查询（5/5 PASS，自动动态挂载 `cap.octree`）
+新增纯 CP 零分配 3D 空间八叉树索引库 cap:octree（固定池八叉树、AABB/球体查询、最近邻剪枝、Slab 射线查询），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:rmq` 纯 CP 零分配区间查询与滑动窗口算法库：O(1) Sparse Table（Min/Max/ArgMin/GCD）、O(1) 欧拉序树上 LCA 与 O(n) 单调队列滑动窗口极值（5/5 PASS，自动动态挂载 `cap.rmq`）
 新增纯 CP 零分配区间查询与滑动窗口库 cap:rmq（Sparse Table RMQ/ArgMin/GCD、欧拉序 LCA、单调队列滑动窗口），含文档与 6 项深度生产测试
 
