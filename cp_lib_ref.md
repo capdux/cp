@@ -692,3 +692,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:proc_self_status` | `ProcStatus`, `parseProcStatus`, `findProcStatusField` | Linux `/proc/<pid>/status` 进程状态、内存/线程/UID/GID 零分配键值解析器 |
 | `cap:http_alt_svc` | `AltSvcEntry`, `isAltSvcClear`, `AltSvcIter`, `formatAltSvcEntry` | RFC 7838 HTTP `Alt-Svc` 备选服务 / HTTP/3 QUIC 发现头零分配解析与格式化器 |
 | `cap:cgroup_v2_limits` | `CgroupLimit`, `CpuMaxQuota`, `IoMaxEntry`, `parseCgroupMax`, `parseCpuMax`, `parseIoMaxLine`, `effectiveMemoryLimit` | Linux cgroup v2 容器资源限额（`cpu.max`/`memory.max`/`pids.max`/`io.max`）零分配解析器 |
+| `cap:http_content_range` | `ContentRangeKind`, `ContentRange`, `parseContentRange`, `formatContentRange` | RFC 9110 §14.4 HTTP `Content-Range` 断点续传响应头零分配解析与格式化器 |

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:http_content_range` RFC 9110 §14.4 HTTP `Content-Range` 断点续传响应头零分配解析与格式化器（5/5 PASS，文档直写 `doc/lib/http_content_range.md`）
+- **设计要点**：`parseContentRange` 零分配解析并校验 `start <= end < complete_length`；`sliceLength` 防溢出；`formatContentRange` 同步拦截非法语义状态与缓冲不足。
+
 ## 2026-11-22: 新建 `cap:cgroup_v2_limits` Linux cgroup v2 容器资源限额（`cpu.max`/`memory.max`/`pids.max`/`io.max`）零分配解析器（5/5 PASS，文档直写 `doc/lib/cgroup_v2_limits.md`）
 - **设计要点**：`parseCpuMax` 严格拒绝 `period_us == 0` 并用 `u128` 计算 `effectiveMilliCpus` 消除溢出；`parseCgroupMax` 统一处理 `"max"` 与无符号整数并拦截负数与溢出。
 

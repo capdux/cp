@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_content_range` RFC 9110 §14.4 HTTP `Content-Range` 断点续传响应头零分配解析与格式化器（5/5 PASS，自动动态挂载 `cap.http_content_range`）
+- 新增 `lib/http_content_range/{content_range,index}.cp`、`doc/lib/http_content_range.md`、`cap/test/test_http_content_range_production_deep.cp`：纯 CP 零分配解析与格式化 RFC 9110 §14.4 `Content-Range` 头，支持 `bytes 0-499/1234`、`bytes 0-499/*`、`bytes */1234`，严格拦截 `bytes */*`、`start > end` 与溢出（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:cgroup_v2_limits` Linux cgroup v2 容器资源限额（`cpu.max`/`memory.max`/`pids.max`/`io.max`）零分配解析器（5/5 PASS，自动动态挂载 `cap.cgroup_v2_limits`）
 - 新增 `lib/cgroup_v2_limits/{cgroup,index}.cp`、`doc/lib/cgroup_v2_limits.md`、`cap/test/test_cgroup_v2_limits_production_deep.cp`：纯 CP 零分配解析 Linux cgroup v2 `cpu.max`/`memory.max`/`pids.max`/`io.max`，支持有效核数/毫核换算与容器-宿主机内存上限裁定（5/5 PASS）。
 
