@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:coverage_options` 纯 CP 代码覆盖率配置、阈值判定与 LCOV 格式化引擎（吸收自 Bun `src/options_types/CodeCoverageOptions.cp`，支持 `cap.coverage_options` 自动动态挂载，详见 `doc/lib/coverage_options.md`）（5/5 PASS，自动动态挂载 `cap.coverage_options`）
+- **新增标准库**：`lib/coverage_options/{coverage_options,index}.cp`，从 Bun `CodeCoverageOptions.cp` 吸收覆盖率阈值判定与 LCOV 格式化。\n- **新增文档与测试**：`doc/lib/coverage_options.md` 扁平文档与 `cap/test/test_coverage_options_production_deep.cp`（4/4 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:small_string` 纯 CP 8 字节短串内联 (SSO) 与 Wyhash 去重驻留池引擎（吸收自 Bun `src/install_types/{SemverString,ExternalString,SlicedString}.cp`，支持 `cap.small_string` 自动动态挂载，详见 `doc/lib/small_string.md`）（5/5 PASS，自动动态挂载 `cap.small_string`）
 - **新增标准库**：`lib/small_string/{small_string,index}.cp`，从 Bun `install_types` 吸收 8 字节 SSO `SmallString`、`ExternalString` 与去重驻留池 `StringInternPool`。\n- **新增文档与测试**：`doc/lib/small_string.md` 扁平文档与 `cap/test/test_small_string_production_deep.cp`（4/4 PASS，经 `verify_module.sh` 校验通过）。
 

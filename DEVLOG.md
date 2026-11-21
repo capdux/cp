@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:coverage_options` 纯 CP 代码覆盖率配置、阈值判定与 LCOV 格式化引擎（吸收自 Bun `src/options_types/CodeCoverageOptions.cp`，支持 `cap.coverage_options` 自动动态挂载，详见 `doc/lib/coverage_options.md`）（5/5 PASS，文档直写 `doc/lib/coverage_options.md`）
+- **吸收改造**：补充 `CoverageMetrics` 比例计算与 `formatLcovRecord` 标准 LCOV 输出，通过零泄漏测试。
+
 ## 2026-11-21: 新建 `cap:small_string` 纯 CP 8 字节短串内联 (SSO) 与 Wyhash 去重驻留池引擎（吸收自 Bun `src/install_types/{SemverString,ExternalString,SlicedString}.cp`，支持 `cap.small_string` 自动动态挂载，详见 `doc/lib/small_string.md`）（5/5 PASS，文档直写 `doc/lib/small_string.md`）
 - **吸收改造**：去除 `Lockfile`/`bun` 耦合，保留 8 字节 `extern struct` 小串零堆内联布局与 `std.testing.allocator` 零泄漏验证。
 

@@ -34,3 +34,6 @@
 
 ### 2026-11-21（`cap:small_string` 验收，主控单兵批量吸收提交 `cap:small_string`）
 - **执行成果**：`lib/small_string/`（5/5 PASS，`doc/lib/small_string.md`）经 `verify_module.sh` 一次性验收回收；主控单兵批量吸收提交 `cap:small_string`
+
+### 2026-11-21（`cap:coverage_options` 验收，主控单兵批量吸收提交 `cap:coverage_options`）
+- **执行成果**：`lib/coverage_options/`（5/5 PASS，`doc/lib/coverage_options.md`）经 `verify_module.sh` 一次性验收回收；主控单兵批量吸收提交 `cap:coverage_options`
