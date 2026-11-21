@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:nfs` ONC RPC v2 (RFC 5531) & NFSv3 (RFC 1813) Record Mark, Call/Reply & fattr3 zero-alloc parser（5/5 PASS，文档直写 `doc/lib/nfs.md`）
+新增 cap:nfs 纯 CP 零分配网络文件系统协议库（TCP Record Mark、ONC RPC v2 Call/Reply、AUTH_SYS 与 NFSv3 filehandle/84B fattr3），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:edid` VESA EDID 1.3/1.4 128B display block, PNP ID, Detailed/Standard Timing zero-alloc parser（5/5 PASS，文档直写 `doc/lib/edid.md`）
 新增 cap:edid 纯 CP 零分配显示硬件元数据库（128B 块校验和、5-bit PNP ID 编解码、Preferred Timing 刷新率与 Monitor Name/Serial 描述符提取），通过 cpc check 与 5/5 cap test
 
