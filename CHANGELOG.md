@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:rfc7807_problem` RFC 9457 / RFC 7807 HTTP Problem Details (application/problem+json) 零分配构造与转义序列化器（5/5 PASS，自动动态挂载 `cap.rfc7807_problem`）
+新增 `cap:rfc7807_problem`（`lib/rfc7807_problem/{problem,index}.cp`、`doc/lib/rfc7807_problem.md`、`cap/test/test_rfc7807_problem_production_deep.cp`），支持标准状态码标题推导与 RFC 8259 安全 JSON 输出。
+
+## [2026-11-22] - 新建 `cap:http_cookie_match` RFC 6265 §5.1.3/§5.1.4 Cookie 域名匹配、路径匹配、默认路径计算与 __Secure-/__Host- 发送策略判定器（5/5 PASS，自动动态挂载 `cap.http_cookie_match`）
+新增 `cap:http_cookie_match`（`lib/http_cookie_match/{cookie_match,index}.cp`、`doc/lib/http_cookie_match.md`、`cap/test/test_http_cookie_match_production_deep.cp`），实现严格点边界与 `/` 边界匹配及 RFC 6265bis 前缀约束校验。
+
 ## [2026-11-22] - 新建 `cap:http_user_agent` RFC 9110 §10.1.5 User-Agent 产品令牌零分配迭代器与浏览器/OS/移动端/爬虫分类器（5/5 PASS，自动动态挂载 `cap.http_user_agent`）
 新增 `cap:http_user_agent`（`lib/http_user_agent/{user_agent,index}.cp`、`doc/lib/http_user_agent.md`、`cap/test/test_http_user_agent_production_deep.cp`），自动跳过嵌套括号注释并精准识别 Chrome/Edge/Firefox/Safari/Bun/Node/curl/Bot。
 

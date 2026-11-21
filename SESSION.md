@@ -493,3 +493,9 @@
 
 ### 2026-11-22（`cap:http_user_agent` 验收，Batch 63 注册 `cap:http_user_agent` 并提交（累计 198 模块）。）
 - **执行成果**：`lib/http_user_agent/`（5/5 PASS，`doc/lib/http_user_agent.md`）经 `verify_module.sh` 一次性验收回收；Batch 63 注册 `cap:http_user_agent` 并提交（累计 198 模块）。
+
+### 2026-11-22（`cap:http_cookie_match` 验收，Batch 64 完成 `cap:http_cookie_match` 与 `cap:rfc7807_problem`，正式突破 200 个纯 CP 标准库模块里程碑！）
+- **执行成果**：`lib/http_cookie_match/`（5/5 PASS，`doc/lib/http_cookie_match.md`）经 `verify_module.sh` 一次性验收回收；Batch 64 完成 `cap:http_cookie_match` 与 `cap:rfc7807_problem`，正式突破 200 个纯 CP 标准库模块里程碑！
+
+### 2026-11-22（`cap:rfc7807_problem` 验收，Batch 64 注册 `cap:rfc7807_problem` 并提交（200 模块里程碑达成）。）
+- **执行成果**：`lib/rfc7807_problem/`（5/5 PASS，`doc/lib/rfc7807_problem.md`）经 `verify_module.sh` 一次性验收回收；Batch 64 注册 `cap:rfc7807_problem` 并提交（200 模块里程碑达成）。

@@ -1,3 +1,9 @@
+## 2026-11-22: 新建 `cap:rfc7807_problem` RFC 9457 / RFC 7807 HTTP Problem Details (application/problem+json) 零分配构造与转义序列化器（5/5 PASS，文档直写 `doc/lib/rfc7807_problem.md`）
+主智能体吸收 `cap:rfc7807_problem`，零堆分配生成符合 RFC 9457 的标准 API 错误响应体。
+
+## 2026-11-22: 新建 `cap:http_cookie_match` RFC 6265 §5.1.3/§5.1.4 Cookie 域名匹配、路径匹配、默认路径计算与 __Secure-/__Host- 发送策略判定器（5/5 PASS，文档直写 `doc/lib/http_cookie_match.md`）
+Subagent 2 吸收 `cap:http_cookie_match`，对 IPv4/IPv6 字面量强制仅精确匹配，与 `cap:http_cookie` 形成完整客户端 Cookie 引擎。
+
 ## 2026-11-22: 新建 `cap:http_user_agent` RFC 9110 §10.1.5 User-Agent 产品令牌零分配迭代器与浏览器/OS/移动端/爬虫分类器（5/5 PASS，文档直写 `doc/lib/http_user_agent.md`）
 主智能体吸收 `cap:http_user_agent`，零堆分配提取产品版本号与客户端画像。
 
