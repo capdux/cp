@@ -280,3 +280,9 @@
 
 ### 2026-11-22（`cap:http_forwarded` 验收，Batch 43: 吸收并验证 cap:http_forwarded (5/5 PASSED)）
 - **执行成果**：`lib/http_forwarded/`（5/5 PASS，`doc/lib/http_forwarded.md`）经 `verify_module.sh` 一次性验收回收；Batch 43: 吸收并验证 cap:http_forwarded (5/5 PASSED)
+
+### 2026-11-22（`cap:csv_stream` 验收，Batch 44: 吸收并验证 cap:csv_stream (5/5 PASSED)）
+- **执行成果**：`lib/csv_stream/`（5/5 PASS，`doc/lib/csv_stream.md`）经 `verify_module.sh` 一次性验收回收；Batch 44: 吸收并验证 cap:csv_stream (5/5 PASSED)
+
+### 2026-11-22（`cap:cors_policy` 验收，Batch 44: 吸收并验证 cap:cors_policy (5/5 PASSED)）
+- **执行成果**：`lib/cors_policy/`（5/5 PASS，`doc/lib/cors_policy.md`）经 `verify_module.sh` 一次性验收回收；Batch 44: 吸收并验证 cap:cors_policy (5/5 PASSED)

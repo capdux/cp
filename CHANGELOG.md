@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:cors_policy` WHATWG Fetch CORS 策略配置、Simple/Preflight 预检评估与凭证回显/Vary: Origin 决策引擎（吸收自 bun/src/http_types/FetchRequestMode.cp）（5/5 PASS，自动动态挂载 `cap.cors_policy`）
+新增 cap:cors_policy 标准库模块（lib/cors_policy/{cors,index}.cp, doc/lib/cors_policy.md, cap/test/test_cors_policy_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:csv_stream` RFC 4180 CSV / TSV 零堆分配流式字段/行解析器（自定义分隔符/引号内换行/"" 转义还原）与编码器（吸收自 bun/src/bun_core/fmt.cp）（5/5 PASS，自动动态挂载 `cap.csv_stream`）
+新增 cap:csv_stream 标准库模块（lib/csv_stream/{csv,index}.cp, doc/lib/csv_stream.md, cap/test/test_csv_stream_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:http_forwarded` RFC 7239 Forwarded 与 X-Forwarded-For 反向代理链路零堆分配解析器及客户端真实 IP 提取库（吸收自 bun/src/http/HeaderValueIterator.cp）（5/5 PASS，自动动态挂载 `cap.http_forwarded`）
 新增 cap:http_forwarded 标准库模块（lib/http_forwarded/{forwarded,index}.cp, doc/lib/http_forwarded.md, cap/test/test_http_forwarded_production_deep.cp）
 

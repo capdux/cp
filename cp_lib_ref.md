@@ -552,3 +552,5 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_auth` | AuthScheme, AuthHeader, BasicCredentials, decodeBasicAuth, encodeBasicAuth, encodeBearerAuth | RFC 9110 §11 / RFC 7617 Basic / RFC 6750 Bearer HTTP Authorization 认证头零堆分配解析与编解码库（吸收自 bun/src/http/Headers.cp） |
 | `cap:js_ident` | KeywordKind, classifyKeyword, isReservedWord, isValidAsciiIdent, isValidPrivateIdent, needsPropertyQuoting, escapeJsString | ECMAScript/TS 56 关键字分类、ASCII/私有字段标识符校验、属性加引号判定与 JS 字符串转义库（吸收自 bun/src/js_parser/lexer/） |
 | `cap:http_forwarded` | ForwardedHop, ForwardedIterator, parseFirstHop, extractClientIpFromXff, stripPortFromForwardedFor | RFC 7239 Forwarded 与 X-Forwarded-For 反向代理链路零堆分配解析器及客户端真实 IP 提取库（吸收自 bun/src/http/HeaderValueIterator.cp） |
+| `cap:csv_stream` | CsvField, CsvRow, CsvReader, needsCsvQuoting, formatCsvField, formatCsvRow, unescapeField | RFC 4180 CSV / TSV 零堆分配流式字段/行解析器（自定义分隔符/引号内换行/"" 转义还原）与编码器（吸收自 bun/src/bun_core/fmt.cp） |
+| `cap:cors_policy` | CorsConfig, CorsDecision, CorsPolicy | WHATWG Fetch CORS 策略配置、Simple/Preflight 预检评估与凭证回显/Vary: Origin 决策引擎（吸收自 bun/src/http_types/FetchRequestMode.cp） |

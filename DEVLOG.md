@@ -1,3 +1,9 @@
+## 2026-11-22: 新建 `cap:cors_policy` WHATWG Fetch CORS 策略配置、Simple/Preflight 预检评估与凭证回显/Vary: Origin 决策引擎（吸收自 bun/src/http_types/FetchRequestMode.cp）（5/5 PASS，文档直写 `doc/lib/cors_policy.md`）
+子智能体 1 实现零堆分配 WHATWG Fetch CORS 预检评估引擎，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:csv_stream` RFC 4180 CSV / TSV 零堆分配流式字段/行解析器（自定义分隔符/引号内换行/"" 转义还原）与编码器（吸收自 bun/src/bun_core/fmt.cp）（5/5 PASS，文档直写 `doc/lib/csv_stream.md`）
+子智能体 2 实现完整 RFC 4180 CSV/TSV 流式解析与编码器，5/5 单测通过
+
 ## 2026-11-22: 新建 `cap:http_forwarded` RFC 7239 Forwarded 与 X-Forwarded-For 反向代理链路零堆分配解析器及客户端真实 IP 提取库（吸收自 bun/src/http/HeaderValueIterator.cp）（5/5 PASS，文档直写 `doc/lib/http_forwarded.md`）
 子智能体 1 吸收 HTTP 多值头迭代模式，实现 RFC 7239 Forwarded 与 XFF 可信代理 IP 提取，5/5 单测通过
 
