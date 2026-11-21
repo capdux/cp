@@ -544,7 +544,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:content_range` | ByteRange, RangeStatus, ParsedRangeHeader, parseRangeHeader, formatContentRange, formatUnsatisfiedRange, ParsedContentRange, parseContentRange | RFC 9110 §14 HTTP Range 请求头与 Content-Range 响应头零堆分配解析与格式化库（206/416 分片传输，吸收自 bun/src/http/SendFile.cp） |
 | `cap:diff_unified` | DiffOpKind, DiffLine, DiffSummary, diffLines, summarize, formatUnified | 基于栈上 LCS 动态规划的行级 Unified Diff 计算与相邻上下文 Hunk 自动合并格式化库（吸收自 bun/src/test_runner/diff/printDiff.cp 与 diff_format.cp） |
 | `cap:http_date` | HttpDateTime, formatHttpDate, parseHttpDate | RFC 9110 §5.6.7 HTTP-date（IMF-fixdate）零堆分配解析、格式化与 Howard Hinnant 历法 Unix 时间戳互转库（吸收自 bun/src/http/Headers.cp） |
-| `cap:ansi_style` | AnsiColor, AnsiStyle, stripAnsi, visibleLen, hasAnsi | ANSI 终端 16 色/样式/24-bit TrueColor 格式化、CSI & OSC 8 超链接剥离与可见宽度计算库（吸收自 bun/src/bun_core/output.cp） |
 | `cap:lcov_report` | LineHit, CoverageThresholds, FileCoverage, parseLcovRecord | LCOV 代码覆盖率报告零堆分配记录、百分比统计、阈值校验与双向解析/序列化库（吸收自 bun/src/options_types/CodeCoverageOptions.cp） |
 | `cap:http_link_header` | WebLink, LinkHeaderIterator, findLinkByRel, formatWebLink | RFC 8288 Web Linking HTTP Link 头部零堆分配解析、rel 查找与格式化库（分页/Preload/Early Hints，吸收自 bun/src/http/HeaderValueIterator.cp） |
 | `cap:mime_lookup` | MimeCategory, ContentType, mimeFromExtension, categoryFromMime | 65+ Web/系统高频扩展名 MIME 查表、Content-Type 头部（charset/boundary）解析与可压缩性判定库（吸收自 bun/src/http_types/{MimeType,mime_type_list_enum}.cp） |
@@ -568,7 +567,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:robots_txt` | matchRobotsPattern, isAllowed, crawlDelaySec, SitemapIter | RFC 9309 robots.txt 解析、通配符匹配、Crawl-delay 提取与 Sitemap 迭代器 |
 | `cap:jwt_claims` | decodeBase64Url, JwtParts, splitJwt, extractStringClaim, extractIntClaim, JwtHeader, ClaimStatus, JwtClaims | RFC 7519 JWT 分段器、Base64URL 解码器、Header/Payload 声明提取与 exp/nbf/iss/sub/aud 校验器 |
 | `cap:shell_quote` | needsQuoting, quotePosix, joinArgs, ShellArgIter | POSIX Shell 安全单引号转义、参数拼接与支持单双引号/反斜杠/相邻拼接的命令行拆分器 |
-| `cap:ansi_strip` | hasAnsi, stripAnsi, strippedByteLen, visibleCodepointCount | 零分配 ANSI/VT100 转义序列（CSI/OSC8 超链接/DCS/2 字节 ESC）剥离与可见 UTF-8 字符计数 |
 | `cap:mime_sniff` | isBinaryDataByte, isTextData, sniffImageMime, sniffArchiveOrExecMime, sniffAudioVideoMime, sniffMime | WHATWG MIME Sniffing 魔数嗅探引擎（图像/音视频/归档可执行/HTML-XML-JSON/UTF-8 文本与二进制判定） |
 | `cap:http_prefer` | Preference, PreferIter, ReturnPref, HandlingPref, PreferHeader | RFC 7240 Prefer 与 Preference-Applied HTTP 头零分配解析器与格式化器 |
 | `cap:hex_dump` | encodeHexLower, encodeHexUpper, decodeHexStrict, decodeHex, formatHexDumpLine, formatHexDump | 零分配十六进制编解码与规范化 hexdump -C 多行诊断格式化器 |
@@ -688,7 +686,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_expect` | `ExpectItem`, `ExpectIter`, `ExpectDecision`, `evaluateExpectHeader`, `hasContinueExpectation`, `hasUnknownExpectation` | RFC 9110 §10.1.1 HTTP `Expect` 请求头解析与 `100-continue` / 417 协商判定器 |
 | `cap:proc_uptime` | `ProcUptime`, `parseProcUptime` | Linux `/proc/uptime` 系统运行时间与全核空闲占比零分配整数解析与人类可读格式化器 |
 | `cap:http_early_hints` | `EarlyHintRel`, `EarlyHintLink`, `EarlyHintIter`, `formatEarlyHintLink`, `formatEarlyHints103Block` | RFC 8297 HTTP `103 Early Hints` / RFC 8288 `Link` 预加载头零分配解析与报文格式化器 |
-| `cap:ansi_link` | `Osc8Link`, `formatOsc8`, `formatOsc8Bel`, `parseOsc8`, `stripOsc8`, `hasOsc8`, `osc8EncodedLen`, `osc8BelEncodedLen` | OSC 8 终端超链接（ST/BEL）零分配编码、解析与剥离器 |
 | `cap:proc_self_status` | `ProcStatus`, `parseProcStatus`, `findProcStatusField` | Linux `/proc/<pid>/status` 进程状态、内存/线程/UID/GID 零分配键值解析器 |
 | `cap:http_alt_svc` | `AltSvcEntry`, `isAltSvcClear`, `AltSvcIter`, `formatAltSvcEntry` | RFC 7838 HTTP `Alt-Svc` 备选服务 / HTTP/3 QUIC 发现头零分配解析与格式化器 |
 | `cap:cgroup_v2_limits` | `CgroupLimit`, `CpuMaxQuota`, `IoMaxEntry`, `parseCgroupMax`, `parseCpuMax`, `parseIoMaxLine`, `effectiveMemoryLimit` | Linux cgroup v2 容器资源限额（`cpu.max`/`memory.max`/`pids.max`/`io.max`）零分配解析器 |
@@ -697,7 +694,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:semver_satisfies` | `SemverVersion`, `satisfiesRange`, `satisfiesVersion`, `isValidSemverRange` | NPM / Bun 风格 SemVer 2.0.0 版本解析、比较与范围表达式零分配匹配器 |
 | `cap:http_allow` | `HttpMethodBit`, `AllowMethodSet`, `parseAllowHeader`, `AllowIter`, `isMethodAllowed`, `isSafeMethod`, `isIdempotentMethod` | RFC 9110 §10.2.1 HTTP `Allow` 方法集位掩码解析、格式化与安全/幂等判定器 |
 | `cap:proc_limits` | `LimitValue`, `parseLimitValue`, `ProcLimitEntry`, `ProcLimitsIter`, `findProcLimit`, `maxOpenFiles` | Linux `/proc/<pid>/limits` 进程软/硬资源限额表零分配解析器 |
-| `cap:ansi_sgr` | `SgrColorKind`, `SgrColor`, `SgrStyle`, `formatStyled`, `applySgrSequence` | ANSI SGR 终端样式与 16 色/256 色/24-bit TrueColor RGB 转义序列零分配编解码器 |
 | `cap:http_trailer` | `isForbiddenTrailerField`, `isValidTrailerFieldName`, `TrailerFieldIter`, `validateTrailerHeader`, `hasTrailerField` | RFC 9110 §6.5.1 HTTP `Trailer` 尾部字段声明零分配解析与 25 项禁传字段安全校验器 |
 | `cap:etc_group` | `GroupEntry`, `GroupMemberIter`, `EtcGroupIter`, `findGroupByName`, `findGroupByGid`, `isUserInGroup` | Linux `/etc/group` 系统用户组数据库零分配解析与精确成员查询器 |
 | `cap:http_max_forwards` | `MaxForwardsAction`, `MaxForwardsResult`, `parseMaxForwards`, `evaluateMaxForwards`, `formatMaxForwards` | RFC 9110 §7.6.2 HTTP `Max-Forwards` 代理跳数限制零分配解析与递减裁定器 |
@@ -715,3 +711,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:jsonl` | `JsonlChunkResult`, `JsonlIter`, `scanCompleteJsonlChunk`, `isBalancedJsonRecord`, `appendJsonlRecord` | JSON Lines / NDJSON 流式行迭代、增量分块扫描与记录平衡零分配校验器 |
 | `cap:jsonc` | `stripJsonc`, `stripJsoncPreserveLines`, `hasJsoncComments`, `countJsoncTrailingCommas` | JSON with Comments & Trailing Commas 零分配注释/尾逗号剥离器与行号保留格式化器 |
 | `cap:mustache` | `MustacheTokenKind`, `MustacheToken`, `MustacheVar`, `MustacheIter`, `validateMustache`, `renderMustache` | 零分配 Mustache 模板词法解析、语法校验与 HTML 转义渲染引擎 |
+| `cap:ansi` | `Osc8Link`, `formatOsc8`, `parseOsc8`, `stripOsc8`, `SgrColor`, `SgrStyle`, `formatStyled`, `applySgrSequence`, `stripAnsi`, `hasAnsi`, `visibleLen` | ANSI 终端控制序列统一主包（OSC 8 超链接、SGR 16/256/TrueColor 样式、转义剥离与可见宽度） |

@@ -280,3 +280,6 @@
 
 ### 2026-11-22（`cap:mustache` 验收，Batch 123 落地（`cap:mustache`）；Wave 1 三路并行收敛 `dns`/`ansi`/`sys(etc)` 主包全面启动）
 - **执行成果**：`lib/mustache/`（5/5 PASS，`doc/lib/mustache.md`）经 `verify_module.sh` 一次性验收回收；Batch 123 落地（`cap:mustache`）；Wave 1 三路并行收敛 `dns`/`ansi`/`sys(etc)` 主包全面启动
+
+### 2026-11-22（`cap:ansi` 验收，方案 A Wave 1：`cap:ansi` 4 合 1 收敛落地（4/4 PASS），消除 4 个长下划线顶层目录）
+- **执行成果**：`lib/ansi/`（5/5 PASS，`doc/lib/ansi.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 1：`cap:ansi` 4 合 1 收敛落地（4/4 PASS），消除 4 个长下划线顶层目录

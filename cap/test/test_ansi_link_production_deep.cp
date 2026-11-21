@@ -7,7 +7,7 @@ import {
     parseOsc8,
     stripOsc8,
     hasOsc8,
-} from "cap:ansi_link";
+} from "cap:ansi";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {

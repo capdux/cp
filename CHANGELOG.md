@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ansi` ANSI 终端控制序列统一主包（OSC 8 超链接、SGR 16/256/TrueColor 样式、转义剥离与可见宽度）（5/5 PASS，自动动态挂载 `cap.ansi`）
+- **方案 A 收敛 Wave 1 (`cap:ansi`)**：将 `ansi_link`、`ansi_sgr`、`ansi_strip`、`ansi_style` 4 个散装目录合并收敛至 `lib/ansi/{link,sgr,strip,style,index}.cp` 与 `doc/lib/ansi.md`，消除重复导出并更新全部 4 个深度测试（4/4 PASS），删除 4 个旧目录与旧文档。
+
 ## [2026-11-22] - 新建 `cap:mustache` 零分配 Mustache 模板词法解析、语法校验与 HTML 转义渲染引擎（5/5 PASS，自动动态挂载 `cap.mustache`）
 - 新增 `lib/mustache/{mustache,index}.cp`、`doc/lib/mustache.md`、`cap/test/test_mustache_production_deep.cp`：纯 CP 零分配实现 Mustache `{{var}}`/`{{{raw}}}`/`{{& raw}}`/`{{!comment}}` 解析校验与 HTML 转义渲染（5/5 PASS）。
 

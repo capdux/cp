@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bun_core/output.cp
+// Source: Absorbed from /data/dev/bun/src/bun_core/output.cp (ANSI 16-Color Style & Visible Length)
 
 const ESC: u8 = 0x1B;
 const BEL: u8 = 0x07;
@@ -201,7 +201,6 @@ fn ansiSeqLen(input: []const u8, start: usize): usize {
     }
     const next = input[start + 1];
 
-    // 1. CSI 序列：\x1b[ [params 0x30..0x3F]* [intermediates 0x20..0x2F]* [final 0x40..0x7E]
     if (next == '[') {
         let i = start + 2;
         while (i < input.len && input[i] >= 0x30 && input[i] <= 0x3F) {
@@ -216,7 +215,6 @@ fn ansiSeqLen(input: []const u8, start: usize): usize {
         return i - start;
     }
 
-    // 2. OSC 序列：\x1b] ... (\x07 | \x1b\\)（例如 OSC 8 终端超链接）
     if (next == ']') {
         let i = start + 2;
         while (i < input.len) {
@@ -231,31 +229,10 @@ fn ansiSeqLen(input: []const u8, start: usize): usize {
         return input.len - start;
     }
 
-    // 3. 简单 2 字节 Fe/Fp/Fs 转义序列（如 \x1b7, \x1b8, \x1bc）
     if (next >= 0x30 && next <= 0x7E) {
         return 2;
     }
     return 0;
-}
-
-/// 剥离所有 CSI 与 OSC ANSI 控制序列并写入 out（零堆分配）
-export fn stripAnsi(input: []const u8, out: []u8): ([]const u8)? {
-    let i: usize = 0;
-    let pos: usize = 0;
-    while (i < input.len) {
-        const seq_len = ansiSeqLen(input, i);
-        if (seq_len > 0) {
-            i += seq_len;
-            continue;
-        }
-        if (pos >= out.len) {
-            return null;
-        }
-        out[pos] = input[i];
-        pos += 1;
-        i += 1;
-    }
-    return out[0..pos];
 }
 
 /// 统计忽略所有 ANSI 转义序列后的纯可见字节/ASCII 字符长度
@@ -272,16 +249,4 @@ export fn visibleLen(input: []const u8): usize {
         i += 1;
     }
     return count;
-}
-
-/// 判断输入中是否包含 ANSI 转义序列
-export fn hasAnsi(input: []const u8): bool {
-    let i: usize = 0;
-    while (i < input.len) {
-        if (ansiSeqLen(input, i) > 0) {
-            return true;
-        }
-        i += 1;
-    }
-    return false;
 }

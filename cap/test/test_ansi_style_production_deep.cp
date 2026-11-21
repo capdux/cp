@@ -1,6 +1,6 @@
 import std from "std";
 import { test, expect_eq } from "cap:test";
-import { AnsiColor, AnsiStyle, stripAnsi, visibleLen, hasAnsi } from "cap:ansi_style";
+import { AnsiColor, AnsiStyle, stripAnsi, visibleLen, hasAnsi } from "cap:ansi";
 
 test("1. AnsiColor 16-color fg/bg SGR codes", () => {
     expect_eq(AnsiColor.black.fgCode(), u8(30));

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ansi` ANSI 终端控制序列统一主包（OSC 8 超链接、SGR 16/256/TrueColor 样式、转义剥离与可见宽度）（5/5 PASS，文档直写 `doc/lib/ansi.md`）
+- **收敛要点**：消除 `ansi_strip` 与 `ansi_style` 重复导出的 `stripAnsi`/`hasAnsi`，统一由 `lib/ansi/strip.cp` 提供完整实现；全库 `cap:ansi_` 引用清零。
+
 ## 2026-11-22: 新建 `cap:mustache` 零分配 Mustache 模板词法解析、语法校验与 HTML 转义渲染引擎（5/5 PASS，文档直写 `doc/lib/mustache.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:mustache`；`MustacheIter` 单遍区分四类 Token 并记录语法错位标志，`renderMustache` 零分配完成 HTML 实体转义与缓冲边界检查。
 
