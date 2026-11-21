@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:btrfs` Linux Btrfs 4KB superblock, CRC32C, B-Tree 101B header & sys_chunk_array zero-alloc parser（5/5 PASS，文档直写 `doc/lib/btrfs.md`）
+新增 cap:btrfs 纯 CP 零分配现代写时复制文件系统库（4KB 超级块 CRC32C、sys_chunk_array 多 Stripe 零拷贝迭代与 101B B-Tree 头），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:vmdk` VMware VMDK SparseExtentHeader 512B binary & text Descriptor/Extent zero-alloc parser（5/5 PASS，文档直写 `doc/lib/vmdk.md`）
 新增 cap:vmdk 纯 CP 零分配虚拟磁盘镜像库（KDMV 稀疏头换行检测、streamOptimized 标志、文本 Descriptor DDB 与 Extent 零拷贝迭代），通过 cpc check 与 6/6 cap test
 
