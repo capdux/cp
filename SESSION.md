@@ -145,3 +145,6 @@
 
 ### 2026-11-22（`cap:caddy` 验收，新增简洁单单词包 `cap:caddy`（5/5 PASS））
 - **执行成果**：`lib/caddy/`（5/5 PASS，`doc/lib/caddy.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:caddy`（5/5 PASS）
+
+### 2026-11-22（`cap:nix` 验收，新增简洁单单词包 `cap:nix`（5/5 PASS））
+- **执行成果**：`lib/nix/`（5/5 PASS，`doc/lib/nix.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:nix`（5/5 PASS）

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:nix` 零分配 Nix / `flake.nix` 表达式词法扫描、属性集顶层绑定提取与 64 层定界符校验器（5/5 PASS，自动动态挂载 `cap.nix`）
+- 新增 `lib/nix/{nix,index}.cp`、`doc/lib/nix.md`、`cap/test/test_nix_production_deep.cp`：纯 CP 零分配实现 Nix 词法扫描（`${...}` 嵌套插值、`...` 缩进串、路径/URI）、属性集顶层 `key = value;` 提取与 64 层平衡校验（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:caddy` 零分配 Caddyfile 反向代理/TLS 站点配置词法扫描、站点块迭代与 64 层结构校验器（5/5 PASS，自动动态挂载 `cap.caddy`）
 - 新增 `lib/caddy/{caddy,index}.cp`、`doc/lib/caddy.md`、`cap/test/test_caddy_production_deep.cp`：纯 CP 零分配实现 Caddyfile 词法扫描（`@matcher`、反引号原始串、`{placeholder}` 与块大括号区分）、全局块/Snippet/站点块迭代与 64 层校验（5/5 PASS）。
 

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:nix` 零分配 Nix / `flake.nix` 表达式词法扫描、属性集顶层绑定提取与 64 层定界符校验器（5/5 PASS，文档直写 `doc/lib/nix.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:nix`；`NixAttrIter` 兼容 `rec { ... }` 与裸属性集主体并自动跳过嵌套分号与 `inherit`。
+
 ## 2026-11-22: 新建 `cap:caddy` 零分配 Caddyfile 反向代理/TLS 站点配置词法扫描、站点块迭代与 64 层结构校验器（5/5 PASS，文档直写 `doc/lib/caddy.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:caddy`，与 `cap:nginx` 配套；精准区分行内 `{http.request.uri}` 占位符与块定界符 `{`。
 
