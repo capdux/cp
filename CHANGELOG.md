@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:proc_stat` Linux /proc/<pid>/stat 零分配解析器（末右括号定位，安全兼容含空格/括号的 comm 进程名）（5/5 PASS，自动动态挂载 `cap.proc_stat`）
+新增 `cap:proc_stat`（`lib/proc_stat/{proc_stat,index}.cp`、`doc/lib/proc_stat.md`、`cap/test/test_proc_stat_production_deep.cp`），提取 PID/PPID/状态/CPU 滴答/线程数/VSize/RSS 并防进程名注入。
+
+## [2026-11-22] - 新建 `cap:http_upgrade` RFC 9110 §7.8 Upgrade / Connection 协议升级与逐跳头零分配解析器及 WebSocket 握手判定器（5/5 PASS，自动动态挂载 `cap.http_upgrade`）
+新增 `cap:http_upgrade`（`lib/http_upgrade/{upgrade,index}.cp`、`doc/lib/http_upgrade.md`、`cap/test/test_http_upgrade_production_deep.cp`），覆盖 8 类标准及动态逐跳头与 WebSocket 13 握手校验。
+
+## [2026-11-22] - 新建 `cap:json_minify` 零分配 JSON / JSONC（去 // 与 /* */ 注释、去尾随逗号、去 BOM 与空白）压缩器（5/5 PASS，自动动态挂载 `cap.json_minify`）
+新增 `cap:json_minify`（`lib/json_minify/{minify,index}.cp`、`doc/lib/json_minify.md`、`cap/test/test_json_minify_production_deep.cp`），完整保留字符串字面量与转义并拦截未闭合字符串/块注释。
+
+## [2026-11-22] - 新建 `cap:http_host_header` RFC 9110 §7.2 HTTP Host / :authority 请求头安全解析、校验、回环识别与规范化格式化器（5/5 PASS，自动动态挂载 `cap.http_host_header`）
+新增 `cap:http_host_header`（`lib/http_host_header/{host_header,index}.cp`、`doc/lib/http_host_header.md`、`cap/test/test_http_host_header_production_deep.cp`），严格拦截 userinfo/路径/非法端口与畸形 IPv6 方括号。
+
 ## [2026-11-22] - 新建 `cap:rfc7807_problem` RFC 9457 / RFC 7807 HTTP Problem Details (application/problem+json) 零分配构造与转义序列化器（5/5 PASS，自动动态挂载 `cap.rfc7807_problem`）
 新增 `cap:rfc7807_problem`（`lib/rfc7807_problem/{problem,index}.cp`、`doc/lib/rfc7807_problem.md`、`cap/test/test_rfc7807_problem_production_deep.cp`），支持标准状态码标题推导与 RFC 8259 安全 JSON 输出。
 

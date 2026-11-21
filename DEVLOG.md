@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:proc_stat` Linux /proc/<pid>/stat 零分配解析器（末右括号定位，安全兼容含空格/括号的 comm 进程名）（5/5 PASS，文档直写 `doc/lib/proc_stat.md`）
+主智能体吸收 `cap:proc_stat`，按内核规范以最后一个 `)` 切分 `comm`，彻底避免含空格或括号进程名解析错位。
+
+## 2026-11-22: 新建 `cap:http_upgrade` RFC 9110 §7.8 Upgrade / Connection 协议升级与逐跳头零分配解析器及 WebSocket 握手判定器（5/5 PASS，文档直写 `doc/lib/http_upgrade.md`）
+Subagent 2 吸收 `cap:http_upgrade`，零堆分配解析多协议升级列表与 `Connection` 令牌。
+
+## 2026-11-22: 新建 `cap:json_minify` 零分配 JSON / JSONC（去 // 与 /* */ 注释、去尾随逗号、去 BOM 与空白）压缩器（5/5 PASS，文档直写 `doc/lib/json_minify.md`）
+主智能体吸收 `cap:json_minify`，适用于 `tsconfig.json`/`cap.json` 等 JSONC 配置预处理。
+
+## 2026-11-22: 新建 `cap:http_host_header` RFC 9110 §7.2 HTTP Host / :authority 请求头安全解析、校验、回环识别与规范化格式化器（5/5 PASS，文档直写 `doc/lib/http_host_header.md`）
+Subagent 1 吸收 `cap:http_host_header`，支持 `unbracketedHost`/`effectivePort`/`formatCanonical`。
+
 ## 2026-11-22: 新建 `cap:rfc7807_problem` RFC 9457 / RFC 7807 HTTP Problem Details (application/problem+json) 零分配构造与转义序列化器（5/5 PASS，文档直写 `doc/lib/rfc7807_problem.md`）
 主智能体吸收 `cap:rfc7807_problem`，零堆分配生成符合 RFC 9457 的标准 API 错误响应体。
 

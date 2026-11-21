@@ -499,3 +499,15 @@
 
 ### 2026-11-22（`cap:rfc7807_problem` 验收，Batch 64 注册 `cap:rfc7807_problem` 并提交（200 模块里程碑达成）。）
 - **执行成果**：`lib/rfc7807_problem/`（5/5 PASS，`doc/lib/rfc7807_problem.md`）经 `verify_module.sh` 一次性验收回收；Batch 64 注册 `cap:rfc7807_problem` 并提交（200 模块里程碑达成）。
+
+### 2026-11-22（`cap:http_host_header` 验收，Batch 65 完成 `cap:http_host_header`、`cap:json_minify`、`cap:http_upgrade`、`cap:proc_stat` 4 模块吸收与全量验收。）
+- **执行成果**：`lib/http_host_header/`（5/5 PASS，`doc/lib/http_host_header.md`）经 `verify_module.sh` 一次性验收回收；Batch 65 完成 `cap:http_host_header`、`cap:json_minify`、`cap:http_upgrade`、`cap:proc_stat` 4 模块吸收与全量验收。
+
+### 2026-11-22（`cap:json_minify` 验收，Batch 65 注册 `cap:json_minify`。）
+- **执行成果**：`lib/json_minify/`（5/5 PASS，`doc/lib/json_minify.md`）经 `verify_module.sh` 一次性验收回收；Batch 65 注册 `cap:json_minify`。
+
+### 2026-11-22（`cap:http_upgrade` 验收，Batch 65 注册 `cap:http_upgrade`。）
+- **执行成果**：`lib/http_upgrade/`（5/5 PASS，`doc/lib/http_upgrade.md`）经 `verify_module.sh` 一次性验收回收；Batch 65 注册 `cap:http_upgrade`。
+
+### 2026-11-22（`cap:proc_stat` 验收，Batch 65 注册 `cap:proc_stat` 并提交（累计 204 模块）。）
+- **执行成果**：`lib/proc_stat/`（5/5 PASS，`doc/lib/proc_stat.md`）经 `verify_module.sh` 一次性验收回收；Batch 65 注册 `cap:proc_stat` 并提交（累计 204 模块）。
