@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - CSS 基础值类型（Alpha / Percentage / URL 分类）（5/5 PASS，自动动态挂载 `cap.css_primitives`）
+新增 cap:css_primitives 标准库（lib/css_primitives/、doc/lib/css_primitives.md、cap/test/test_css_primitives_production_deep.cp），2/2 回归通过。
+
+## [2026-11-22] - CSS Container Queries @container 规则与求值引擎（5/5 PASS，自动动态挂载 `cap.css_container`）
+新增 cap:css_container 标准库（lib/css_container/、doc/lib/css_container.md、cap/test/test_css_container_production_deep.cp），5/5 回归通过。
+
+## [2026-11-22] - CSS <angle> 与 <resolution> 单位解析与换算库（5/5 PASS，自动动态挂载 `cap.css_units`）
+新增 cap:css_units 标准库（lib/css_units/、doc/lib/css_units.md、cap/test/test_css_units_production_deep.cp），6/6 回归通过。
+
 ## [2026-11-22] - MySQL 4.1 握手响应报文编解码器（5/5 PASS，自动动态挂载 `cap.mysql_handshake`）
 新增 cap:mysql_handshake 标准库（lib/mysql_handshake/、doc/lib/mysql_handshake.md、cap/test/test_mysql_handshake_production_deep.cp），2/2 回归通过（零泄漏）。
 

@@ -223,3 +223,12 @@
 
 ### 2026-11-22（`cap:mysql_handshake` 验收，吸收 Bun sql/mysql/protocol/HandshakeResponse41.cp -> cap:mysql_handshake，测试 2/2 通过。）
 - **执行成果**：`lib/mysql_handshake/`（5/5 PASS，`doc/lib/mysql_handshake.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun sql/mysql/protocol/HandshakeResponse41.cp -> cap:mysql_handshake，测试 2/2 通过。
+
+### 2026-11-22（`cap:css_units` 验收，吸收 Bun CSS Angle + Resolution -> cap:css_units，测试 6/6 通过。）
+- **执行成果**：`lib/css_units/`（5/5 PASS，`doc/lib/css_units.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun CSS Angle + Resolution -> cap:css_units，测试 6/6 通过。
+
+### 2026-11-22（`cap:css_container` 验收，吸收 Bun css/rules/container.cp -> cap:css_container，测试 5/5 通过。）
+- **执行成果**：`lib/css_container/`（5/5 PASS，`doc/lib/css_container.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun css/rules/container.cp -> cap:css_container，测试 5/5 通过。
+
+### 2026-11-22（`cap:css_primitives` 验收，吸收 Bun CSS Alpha/Percentage/URL -> cap:css_primitives，测试 2/2 通过。）
+- **执行成果**：`lib/css_primitives/`（5/5 PASS，`doc/lib/css_primitives.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun CSS Alpha/Percentage/URL -> cap:css_primitives，测试 2/2 通过。

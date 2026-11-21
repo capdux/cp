@@ -2,6 +2,15 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-22: CSS 基础值类型（Alpha / Percentage / URL 分类）（5/5 PASS，文档直写 `doc/lib/css_primitives.md`）
+从 Bun css/values/{alpha,percentage,url}.cp 吸收 CSS 基础值类型与 URL 绝对/相对/Data URI 分类器，纯 CP 零堆分配。
+
+## 2026-11-22: CSS Container Queries @container 规则与求值引擎（5/5 PASS，文档直写 `doc/lib/css_container.md`）
+从 Bun css/rules/container.cp 吸收 CSS Container Queries Level 3 解析与求值引擎，支持传统与现代范围语法及混合逻辑歧义拦截。
+
+## 2026-11-22: CSS <angle> 与 <resolution> 单位解析与换算库（5/5 PASS，文档直写 `doc/lib/css_units.md`）
+从 Bun css/values/angle.cp 与 resolution.cp 吸收 CSS 角度与分辨率单位库，支持无单位 0 角度、0..360 归一化、x 别名与负分辨率拦截。
+
 ## 2026-11-22: MySQL 4.1 握手响应报文编解码器（5/5 PASS，文档直写 `doc/lib/mysql_handshake.md`）
 从 Bun sql/mysql/protocol/HandshakeResponse41.cp 吸收 MySQL 4.1 客户端握手响应编解码器，支持能力位自动切换与 ~init() 零泄漏释放。
 
