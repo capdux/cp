@@ -181,3 +181,6 @@
 
 ### 2026-11-22（`cap:dns_caa_record` 验收，Batch 90 落地，标准库总量达 257 模块）
 - **执行成果**：`lib/dns_caa_record/`（5/5 PASS，`doc/lib/dns_caa_record.md`）经 `verify_module.sh` 一次性验收回收；Batch 90 落地，标准库总量达 257 模块
+
+### 2026-11-22（`cap:proc_cpuinfo` 验收，Batch 91 落地，标准库总量达 258 模块）
+- **执行成果**：`lib/proc_cpuinfo/`（5/5 PASS，`doc/lib/proc_cpuinfo.md`）经 `verify_module.sh` 一次性验收回收；Batch 91 落地，标准库总量达 258 模块

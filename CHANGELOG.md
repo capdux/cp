@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:proc_cpuinfo` Linux `/proc/cpuinfo`（x86_64/ARM64）逻辑/物理核心与指令集标志零分配解析器（5/5 PASS，自动动态挂载 `cap.proc_cpuinfo`）
+- 新增 `lib/proc_cpuinfo/{cpuinfo,index}.cp`、`doc/lib/proc_cpuinfo.md`、`cap/test/test_proc_cpuinfo_production_deep.cp`：纯 CP 零分配解析 Linux `/proc/cpuinfo`（兼容 x86_64 `flags` 与 ARM64 `Features`），支持按 `physical_id` 去重统计物理核、整数毫赫兹与精确空白分隔指令集标志匹配（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:dns_caa_record` RFC 8659 DNS CAA 证书颁发机构授权记录文本/线缆格式零分配解析与签发策略判定器（5/5 PASS，自动动态挂载 `cap.dns_caa_record`）
 - 新增 `lib/dns_caa_record/{caa,index}.cp`、`doc/lib/dns_caa_record.md`、`cap/test/test_dns_caa_record_production_deep.cp`：纯 CP 零分配解析 RFC 8659 CAA 文本与线缆格式，支持 `critical` 标志、禁止签发（`;`）、参数剥离与通配符 `issuewild`/`issue` 策略判定（5/5 PASS）。
 

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:proc_cpuinfo` Linux `/proc/cpuinfo`（x86_64/ARM64）逻辑/物理核心与指令集标志零分配解析器（5/5 PASS，文档直写 `doc/lib/proc_cpuinfo.md`）
+- **设计要点**：`ProcCpuInfoIter` 零分配按 `processor` 块迭代并跳过尾部非处理器元数据；`summarizeCpuInfo` 零分配按 `physical_id` 去重汇总物理核心；`hasCpuFlag` 精确 token 匹配防止 `avx`/`avx2` 子串误判。
+
 ## 2026-11-22: 新建 `cap:dns_caa_record` RFC 8659 DNS CAA 证书颁发机构授权记录文本/线缆格式零分配解析与签发策略判定器（5/5 PASS，文档直写 `doc/lib/dns_caa_record.md`）
 - **设计要点**：实现 `CaaRecord.parseText` 与 `CaaRecord.parseWire` 双路径解析，`isCaAuthorized` 严格遵循 RFC 8659 未知 critical 拒签与通配符优先 `issuewild` 回退 `issue` 规则。
 
