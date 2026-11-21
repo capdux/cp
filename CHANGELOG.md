@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ar` 零分配 Unix ar / .a / .deb 归档容器与 GNU/BSD 长文件名解析器（5/5 PASS，自动动态挂载 `cap.ar`）
+新增 `lib/ar/{ar,index}.cp`、`doc/lib/ar.md` 与 `cap/test/test_ar_production_deep.cp`（5/5 PASS），支持 60B ASCII 头、2B 偶对齐填充、GNU `//` 长文件名表与 BSD `#1/<len>` 文件名解引用。
+
 ## [2026-11-22] - 新建 `cap:spv` 零分配 Khronos SPIR-V GPU 着色器头与指令流解析器（5/5 PASS，自动动态挂载 `cap.spv`）
 新增 `lib/spv/{spv,index}.cp`、`doc/lib/spv.md` 与 `cap/test/test_spv_production_deep.cp`（5/5 PASS），支持 LE/BE 双端 SPIR-V 魔数、指令流迭代、OpEntryPoint 提取与单遍统计。
 

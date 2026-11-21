@@ -232,3 +232,6 @@
 
 ### 2026-11-22（`cap:spv` 验收，完成 `cap:spv` 交付验收并登记入库（5/5 PASS）；派发 `cap:cpio`。）
 - **执行成果**：`lib/spv/`（5/5 PASS，`doc/lib/spv.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:spv` 交付验收并登记入库（5/5 PASS）；派发 `cap:cpio`。
+
+### 2026-11-22（`cap:ar` 验收，完成 `cap:ar` 交付验收并登记入库（5/5 PASS）；派发 `cap:rpm`。）
+- **执行成果**：`lib/ar/`（5/5 PASS，`doc/lib/ar.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:ar` 交付验收并登记入库（5/5 PASS）；派发 `cap:rpm`。

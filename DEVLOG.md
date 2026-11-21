@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ar` 零分配 Unix ar / .a / .deb 归档容器与 GNU/BSD 长文件名解析器（5/5 PASS，文档直写 `doc/lib/ar.md`）
+实现零分配 Unix ar 归档解析器，覆盖 .a 静态库与 .deb 包头结构并严格防护越界尺寸。
+
 ## 2026-11-22: 新建 `cap:spv` 零分配 Khronos SPIR-V GPU 着色器头与指令流解析器（5/5 PASS，文档直写 `doc/lib/spv.md`）
 实现零分配 SPIR-V 二进制解析器，严格校验 4B 对齐、word_count 边界及 UTF-8 入口点名称。
 
