@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:fat` FAT12/16/32 BPB, 32B directory entry, 8.3 name, DOS time & LFN checksum zero-alloc parser（5/5 PASS，文档直写 `doc/lib/fat.md`）
+新增 cap:fat 纯 CP 零分配文件系统解析库（FAT12/16/32 精确簇数分类、clusterToLba、8.3 文件名格式化与 LFN 校验和），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:hid` USB HID 1.11 Report Descriptor short/long item stream & layout summary zero-alloc parser（5/5 PASS，文档直写 `doc/lib/hid.md`）
 新增 cap:hid 纯 CP 零分配外设协议库（Short/Long Item 解码、有符号值扩展、16 层 Push/Pop 栈与 Collection 嵌套平衡校验），通过 cpc check 与 5/5 cap test
 
