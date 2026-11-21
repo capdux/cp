@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:hcl` 零分配 HashiCorp HCL / Terraform `.tf` 词法扫描、顶层块头迭代与结构校验器（5/5 PASS，文档直写 `doc/lib/hcl.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:hcl`；`HclBlockIter` 零分配跳过嵌套块与顶层属性赋值。
+
 ## 2026-11-22: 新建 `cap:dot` 零分配 Graphviz DOT 有向/无向图描述语言词法扫描、链式边解析与序列化器（5/5 PASS，文档直写 `doc/lib/dot.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:dot`；`DotEdgeIter` 支持 `a -> b -> c` 链式展开、`subgraph` 穿透与双引号节点名。
 

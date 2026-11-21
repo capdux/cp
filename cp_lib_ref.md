@@ -506,3 +506,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:ron` | `RonTokenKind`, `RonToken`, `RonIter`, `validateRon`, `extractRonField` | 零分配 Rusty Object Notation `.ron` 词法扫描、括号平衡校验与顶层字段提取器 |
 | `cap:hjson` | `HjsonTokenKind`, `HjsonToken`, `hjsonToJson`, `isValidHjson`, `stripHjsonComments` | 零分配 Hjson Human JSON 词法扫描、注释剥离与标准 RFC 8259 JSON 转换器 |
 | `cap:dot` | `DotGraphKind`, `DotHeader`, `DotEdge`, `parseDotHeader`, `DotEdgeIter`, `validateDotBraces`, `formatDotEdge` | 零分配 Graphviz DOT 有向/无向图描述语言词法扫描、链式边解析与序列化器 |
+| `cap:hcl` | `HclTokenKind`, `HclToken`, `HclIter`, `HclBlockHeader`, `HclBlockIter`, `validateHcl` | 零分配 HashiCorp HCL / Terraform `.tf` 词法扫描、顶层块头迭代与结构校验器 |

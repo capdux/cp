@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:hcl` 零分配 HashiCorp HCL / Terraform `.tf` 词法扫描、顶层块头迭代与结构校验器（5/5 PASS，自动动态挂载 `cap.hcl`）
+- 新增 `lib/hcl/{hcl,index}.cp`、`doc/lib/hcl.md`、`cap/test/test_hcl_production_deep.cp`：纯 CP 零分配实现 HCL/Terraform 词法扫描（`#`/`//`/`/* */`、`${...}`/`%{...}` 插值、`<<EOF`/`<<-EOF` Heredoc）、顶层块头迭代与 64 层深度平衡校验（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:dot` 零分配 Graphviz DOT 有向/无向图描述语言词法扫描、链式边解析与序列化器（5/5 PASS，自动动态挂载 `cap.dot`）
 - 新增 `lib/dot/{dot,index}.cp`、`doc/lib/dot.md`、`cap/test/test_dot_production_deep.cp`：纯 CP 零分配实现 Graphviz DOT 图头解析、有向/无向/链式边迭代、字符串注释感知括号平衡校验与自动引号转义序列化（5/5 PASS）。
 

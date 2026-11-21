@@ -106,3 +106,6 @@
 
 ### 2026-11-22（`cap:dot` 验收，新增简洁单单词包 `cap:dot`（5/5 PASS））
 - **执行成果**：`lib/dot/`（5/5 PASS，`doc/lib/dot.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:dot`（5/5 PASS）
+
+### 2026-11-22（`cap:hcl` 验收，新增简洁单单词包 `cap:hcl`（5/5 PASS），同时发现并实时通知热修子智能体 `567b0f0a` 顺手修复 `cp_unpack_elem` 冗余 `comptime` 关键字）
+- **执行成果**：`lib/hcl/`（5/5 PASS，`doc/lib/hcl.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:hcl`（5/5 PASS），同时发现并实时通知热修子智能体 `567b0f0a` 顺手修复 `cp_unpack_elem` 冗余 `comptime` 关键字
