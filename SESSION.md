@@ -232,3 +232,6 @@
 
 ### 2026-11-22（`cap:pop3` 验收，完成并注册纯 CP 零分配标准库 cap:pop3（6/6 cap test PASS））
 - **执行成果**：`lib/pop3/`（5/5 PASS，`doc/lib/pop3.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:pop3（6/6 cap test PASS）
+
+### 2026-11-22（`cap:whois` 验收，完成并注册纯 CP 零分配标准库 cap:whois（5/5 cap test PASS））
+- **执行成果**：`lib/whois/`（5/5 PASS，`doc/lib/whois.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:whois（5/5 cap test PASS）

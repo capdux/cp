@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:whois` WHOIS (RFC 3912) query encoder, key/value field iter & multi-registry summary parser（5/5 PASS，自动动态挂载 `cap.whois`）
+新增纯 CP 零分配标准库 cap:whois（RFC 3912 WHOIS 查询编码、键值字段迭代与多注册局摘要归一）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:pop3` POP3 (RFC 1939/2449) +OK/-ERR, [RESP-CODE], STAT/LIST/UIDL & dot-unstuffing codec（5/5 PASS，自动动态挂载 `cap.pop3`）
 新增纯 CP 零分配标准库 cap:pop3（RFC 1939/2449 POP3 响应码、STAT/LIST/UIDL 与多行 dot-unstuffing 编解码）与 6/6 深度测试
 

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:whois` WHOIS (RFC 3912) query encoder, key/value field iter & multi-registry summary parser（5/5 PASS，文档直写 `doc/lib/whois.md`）
+新增 cap:whois 纯 CP 零分配域名注册信息查询协议库（查询防注入编码、IANA refer 提取、ICANN/RIPE/ARIN 字段归一），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:pop3` POP3 (RFC 1939/2449) +OK/-ERR, [RESP-CODE], STAT/LIST/UIDL & dot-unstuffing codec（5/5 PASS，文档直写 `doc/lib/pop3.md`）
 新增 cap:pop3 纯 CP 零分配邮局协议库（+OK/-ERR、[RESP-CODE]、STAT/LIST/UIDL、Pop3MultiLineIter 解填充与 dot-stuffing），通过 cpc check 与 6/6 cap test
 
