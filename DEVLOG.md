@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:multiboot` GNU Multiboot1 & Multiboot2 kernel headers, Boot Info Tags & Mmap zero-alloc parser（5/5 PASS，文档直写 `doc/lib/multiboot.md`）
+新增 cap:multiboot 纯 CP 零分配引导协议库（MB1/MB2 32-bit 环绕校验和、8B 对齐 Boot Info Tag 迭代与 Mmap/Framebuffer/Module 视图），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:bpf` eBPF (RFC 9669) 64/128-bit LD_IMM64 bytecode codec, iterator & validator（5/5 PASS，文档直写 `doc/lib/bpf.md`）
 新增 cap:bpf 纯 CP 零分配内核虚拟机指令集库（8B 指令、16B LD_IMM64 自动合并、程序构造器与校验），通过 cpc check 与 5/5 cap test
 
