@@ -157,3 +157,6 @@
 
 ### 2026-11-22（`cap:nmea` 验收，完成 `cap:nmea` 交付验收并登记入库（5/5 PASS）；派发 `cap:srec`。）
 - **执行成果**：`lib/nmea/`（5/5 PASS，`doc/lib/nmea.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:nmea` 交付验收并登记入库（5/5 PASS）；派发 `cap:srec`。
+
+### 2026-11-22（`cap:uf2` 验收，完成 `cap:uf2` 交付验收并登记入库（5/5 PASS）；派发 `cap:gcode`。）
+- **执行成果**：`lib/uf2/`（5/5 PASS，`doc/lib/uf2.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:uf2` 交付验收并登记入库（5/5 PASS）；派发 `cap:gcode`。

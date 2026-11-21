@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:uf2` 零分配 Microsoft UF2 512B 微控制器固件块编解码与连续性校验器（5/5 PASS，自动动态挂载 `cap.uf2`）
+新增 `lib/uf2/{uf2,index}.cp`、`doc/lib/uf2.md` 与 `cap/test/test_uf2_production_deep.cp`（5/5 PASS），支持三重魔数校验、RP2040/ESP32-S3/STM32 Family ID、512B 编解码与 Flash 地址连续性汇总。
+
 ## [2026-11-22] - 新建 `cap:nmea` 零分配 NMEA 0183 GPS/GNSS 语句校验与 GGA/RMC/VTG 解析器（5/5 PASS，自动动态挂载 `cap.nmea`）
 新增 `lib/nmea/{nmea,index}.cp`、`doc/lib/nmea.md` 与 `cap/test/test_nmea_production_deep.cp`（5/5 PASS），支持 XOR 校验和、ddmm.mmmm 经纬度换算、GGA/RMC/VTG 解码与多行串口流过滤。
 

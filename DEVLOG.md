@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:uf2` 零分配 Microsoft UF2 512B 微控制器固件块编解码与连续性校验器（5/5 PASS，文档直写 `doc/lib/uf2.md`）
+实现零分配 Microsoft UF2 固件块编解码器，严格校验 block_no < num_blocks 与 payload_size <= 476。
+
 ## 2026-11-22: 新建 `cap:nmea` 零分配 NMEA 0183 GPS/GNSS 语句校验与 GGA/RMC/VTG 解析器（5/5 PASS，文档直写 `doc/lib/nmea.md`）
 实现零分配 NMEA 0183 解析器，严格保留空字段并支持 $GP/$GN 与 !AIVDM 帧流。
 

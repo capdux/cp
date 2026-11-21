@@ -1,0 +1,28 @@
+// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Microsoft UF2 Microcontroller Firmware Codec)
+
+export {
+    UF2_BLOCK_SIZE,
+    UF2_MAX_PAYLOAD,
+    UF2_MAGIC_START0,
+    UF2_MAGIC_START1,
+    UF2_MAGIC_END,
+    UF2_FLAG_NOT_MAIN_FLASH,
+    UF2_FLAG_FILE_CONTAINER,
+    UF2_FLAG_FAMILY_ID_PRESENT,
+    UF2_FLAG_MD5_PRESENT,
+    UF2_FLAG_EXTENSION_TAGS,
+    UF2_FAMILY_RP2040,
+    UF2_FAMILY_RP2350_ARM_S,
+    UF2_FAMILY_RP2350_RISCV,
+    UF2_FAMILY_ESP32S2,
+    UF2_FAMILY_ESP32S3,
+    UF2_FAMILY_STM32F4,
+    UF2_FAMILY_NRF52840,
+    Uf2Block,
+    Uf2Summary,
+    isUf2,
+    parseUf2Block,
+    Uf2Iter,
+    encodeUf2Block,
+    summarizeUf2,
+} from "./uf2.cp";
