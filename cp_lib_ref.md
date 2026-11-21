@@ -595,3 +595,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:structured_headers` | SfItemKind, SfItem, parseSfItem, SfParam, SfParamIter, formatSfString, formatSfByteSeq | RFC 8941 HTTP Structured Field Values 标量项（整数/小数/字符串/Token/字节序列/布尔）与参数列表零分配解析器 |
 | `cap:http_if_match` | EntityTag, etagListMatches, PreconditionResult, ConditionalRequest, evaluatePreconditions | RFC 9110 §13.1/§13.2.2 HTTP 条件请求求值器（If-Match / If-None-Match / If-Modified-Since / If-Unmodified-Since） |
 | `cap:rate_sliding_window` | SlidingWindowCounter, GcraLimiter | 加权滑动窗口计数器与 GCRA（通用信元速率算法）零分配纯整数平滑限流器 |
+| `cap:semver_bump` | BumpKind, bumpMajor, bumpMinor, bumpPatch, bumpPrerelease, stripPrereleaseAndBuild, bumpVersion | SemVer 2.0.0 版本号递增器（major/minor/patch/prerelease/release）与预发布标签剥离器 |
+| `cap:quoted_printable` | encodeQuotedPrintable, decodeQuotedPrintable | RFC 2045 §6.7 MIME Quoted-Printable 零分配编解码器（76 列软换行与行尾空白转义） |
+| `cap:punycode` | isAsciiOnly, encodePunycode, decodePunycode, encodeIdnLabel, decodeIdnLabel | RFC 3492 Punycode / Bootstring 零分配编解码器与 xn-- 国际化域名标签转换器 |
+| `cap:ssh_pubkey` | SshKeyType, parseKeyType, SshPubKey, AuthorizedKeysIter | OpenSSH 公钥与 authorized_keys 文件零分配解析器（含选项字段、Base64 校验与 FIDO2 SK 识别） |

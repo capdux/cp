@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:ssh_pubkey` OpenSSH 公钥与 authorized_keys 文件零分配解析器（含选项字段、Base64 校验与 FIDO2 SK 识别）（5/5 PASS，文档直写 `doc/lib/ssh_pubkey.md`）
+主智能体吸收 `cap:ssh_pubkey`，零拷贝拆解 `authorized_keys` 行并严格验证 Base64 密钥体。
+
+## 2026-11-22: 新建 `cap:punycode` RFC 3492 Punycode / Bootstring 零分配编解码器与 xn-- 国际化域名标签转换器（5/5 PASS，文档直写 `doc/lib/punycode.md`）
+Subagent 2 吸收 `cap:punycode`，严格实现 RFC 3492 §6.2/§6.3 与大小写无关 `xn--` 标签互转。
+
+## 2026-11-22: 新建 `cap:quoted_printable` RFC 2045 §6.7 MIME Quoted-Printable 零分配编解码器（76 列软换行与行尾空白转义）（5/5 PASS，文档直写 `doc/lib/quoted_printable.md`）
+主智能体吸收 `cap:quoted_printable`，严格处理 `=\r\n`/`=\n` 软折行与 UTF-8 字节编码往返。
+
+## 2026-11-22: 新建 `cap:semver_bump` SemVer 2.0.0 版本号递增器（major/minor/patch/prerelease/release）与预发布标签剥离器（5/5 PASS，文档直写 `doc/lib/semver_bump.md`）
+Subagent 1 吸收 `cap:semver_bump`，零堆分配处理 `1.2.4-alpha.0` → `1.2.4-alpha.1` / `beta.0` 等全场景。
+
 ## 2026-11-22: 新建 `cap:rate_sliding_window` 加权滑动窗口计数器与 GCRA（通用信元速率算法）零分配纯整数平滑限流器（5/5 PASS，文档直写 `doc/lib/rate_sliding_window.md`）
 主智能体吸收 `cap:rate_sliding_window`，使用 `u128` 防溢出加权计算前窗口重叠比例并防时钟回拨。
 

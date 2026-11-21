@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ssh_pubkey` OpenSSH 公钥与 authorized_keys 文件零分配解析器（含选项字段、Base64 校验与 FIDO2 SK 识别）（5/5 PASS，自动动态挂载 `cap.ssh_pubkey`）
+新增 `cap:ssh_pubkey`（`lib/ssh_pubkey/{pubkey,index}.cp`、`doc/lib/ssh_pubkey.md`、`cap/test/test_ssh_pubkey_production_deep.cp`），支持 `ssh-ed25519`/`ssh-rsa`/`ecdsa`/`sk-*` 与带引号选项解析。
+
+## [2026-11-22] - 新建 `cap:punycode` RFC 3492 Punycode / Bootstring 零分配编解码器与 xn-- 国际化域名标签转换器（5/5 PASS，自动动态挂载 `cap.punycode`）
+新增 `cap:punycode`（`lib/punycode/{punycode,index}.cp`、`doc/lib/punycode.md`、`cap/test/test_punycode_production_deep.cp`），完整通过中/日/韩/德语/Emoji 测试向量与溢出/代理项防护。
+
+## [2026-11-22] - 新建 `cap:quoted_printable` RFC 2045 §6.7 MIME Quoted-Printable 零分配编解码器（76 列软换行与行尾空白转义）（5/5 PASS，自动动态挂载 `cap.quoted_printable`）
+新增 `cap:quoted_printable`（`lib/quoted_printable/{qp,index}.cp`、`doc/lib/quoted_printable.md`、`cap/test/test_quoted_printable_production_deep.cp`），支持 76 列软换行、尾空格转义及严格/宽松解码。
+
+## [2026-11-22] - 新建 `cap:semver_bump` SemVer 2.0.0 版本号递增器（major/minor/patch/prerelease/release）与预发布标签剥离器（5/5 PASS，自动动态挂载 `cap.semver_bump`）
+新增 `cap:semver_bump`（`lib/semver_bump/{bump,index}.cp`、`doc/lib/semver_bump.md`、`cap/test/test_semver_bump_production_deep.cp`），支持全套 SemVer 递增语义与 `preid` 切换。
+
 ## [2026-11-22] - 新建 `cap:rate_sliding_window` 加权滑动窗口计数器与 GCRA（通用信元速率算法）零分配纯整数平滑限流器（5/5 PASS，自动动态挂载 `cap.rate_sliding_window`）
 新增 `cap:rate_sliding_window`（`lib/rate_sliding_window/{sliding_window,index}.cp`、`doc/lib/rate_sliding_window.md`、`cap/test/test_rate_sliding_window_production_deep.cp`），提供平滑跨窗口限流与 GCRA 精确 retry-after 毫秒计算。
 

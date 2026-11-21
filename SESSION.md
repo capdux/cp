@@ -409,3 +409,15 @@
 
 ### 2026-11-22（`cap:rate_sliding_window` 验收，Batch 56 注册 `cap:rate_sliding_window` 并提交（突破 170 模块里程碑）。）
 - **执行成果**：`lib/rate_sliding_window/`（5/5 PASS，`doc/lib/rate_sliding_window.md`）经 `verify_module.sh` 一次性验收回收；Batch 56 注册 `cap:rate_sliding_window` 并提交（突破 170 模块里程碑）。
+
+### 2026-11-22（`cap:semver_bump` 验收，Batch 57 完成 `cap:semver_bump`、`cap:quoted_printable`、`cap:punycode`、`cap:ssh_pubkey` 4 模块吸收与全量验收。）
+- **执行成果**：`lib/semver_bump/`（5/5 PASS，`doc/lib/semver_bump.md`）经 `verify_module.sh` 一次性验收回收；Batch 57 完成 `cap:semver_bump`、`cap:quoted_printable`、`cap:punycode`、`cap:ssh_pubkey` 4 模块吸收与全量验收。
+
+### 2026-11-22（`cap:quoted_printable` 验收，Batch 57 注册 `cap:quoted_printable`。）
+- **执行成果**：`lib/quoted_printable/`（5/5 PASS，`doc/lib/quoted_printable.md`）经 `verify_module.sh` 一次性验收回收；Batch 57 注册 `cap:quoted_printable`。
+
+### 2026-11-22（`cap:punycode` 验收，Batch 57 注册 `cap:punycode`。）
+- **执行成果**：`lib/punycode/`（5/5 PASS，`doc/lib/punycode.md`）经 `verify_module.sh` 一次性验收回收；Batch 57 注册 `cap:punycode`。
+
+### 2026-11-22（`cap:ssh_pubkey` 验收，Batch 57 注册 `cap:ssh_pubkey` 并提交。）
+- **执行成果**：`lib/ssh_pubkey/`（5/5 PASS，`doc/lib/ssh_pubkey.md`）经 `verify_module.sh` 一次性验收回收；Batch 57 注册 `cap:ssh_pubkey` 并提交。
