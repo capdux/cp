@@ -526,3 +526,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_fetch_meta` | ContentEncoding, ENC_MASK_IDENTITY, ENC_MASK_GZIP, ENC_MASK_DEFLATE, ENC_MASK_BR, ENC_MASK_ZSTD, negotiateEncoding, FetchCacheMode, FetchRedirect, FetchRequestMode, UrlPath | WHATWG Fetch 请求元数据枚举、RFC 9110 Accept-Encoding q 权重内容协商与零拷贝 URLPath 拆分库（吸收自 bun/src/http_types/{Encoding,Fetch*,URLPath}.cp） |
 | `cap:http_method` | HttpMethod, MethodSet | HTTP / WebDAV / QUERY 全 36 种方法枚举、RFC 9110 安全/幂等/可缓存/CORS 谓词与 64-bit MethodSet（吸收自 bun/src/http_types/Method.cp） |
 | `cap:fs_router` | RouteKind, SegmentKind, RouteParam, RouteMatch, RoutePattern, FsRouter | Next.js / Bun FileSystemRouter 风格文件路由解析、静态>动态>捕获优先级排序与零拷贝参数匹配引擎（吸收自 bun/src/router/{Route,route_types}.cp） |
+| `cap:alt_svc` | DEFAULT_MAX_AGE, AltSvcEntry, AltSvcHeader, AltSvcCache | RFC 7838 HTTP Alt-Svc 头部解析器与零堆分配 64 源 TTL 缓存（HTTP/3 升级发现，吸收自 bun/src/http/h3_client/AltSvc.cp） |
+| `cap:linear_fifo` | StaticLinearFifo | 零堆分配泛型环形缓冲区 FIFO（支持 item/slice 读写、peek、unget、discard 与环形回绕，吸收自 bun/src/collections/linear_fifo.cp） |
+| `cap:toml_lexer` | TomlTokenKind, TomlToken, TomlLexer, unescapeBasicString | TOML v1.0 零堆分配流式词法扫描器（21 种记号/4 种字符串/4 进制整数/ISO 8601 日期时间与 Unicode 解转义，吸收自 bun/src/interchange/toml/lexer.cp） |
+| `cap:yaml_scalar` | YamlScalarKind, YamlScalar, parseCoreScalar, unescapeDoubleQuoted, unescapeSingleQuoted, needsQuoting, formatSafeScalar | YAML 1.2 Core Schema 零堆分配标量类型推断、单/双引号解转义与安全引用序列化库（吸收自 bun/src/interchange/yaml.cp） |

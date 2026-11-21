@@ -202,3 +202,15 @@
 
 ### 2026-11-22（`cap:fs_router` 验收，Batch 34 (百模块里程碑): 吸收并验证 cap:fs_router (5/5 PASSED)）
 - **执行成果**：`lib/fs_router/`（5/5 PASS，`doc/lib/fs_router.md`）经 `verify_module.sh` 一次性验收回收；Batch 34 (百模块里程碑): 吸收并验证 cap:fs_router (5/5 PASSED)
+
+### 2026-11-22（`cap:alt_svc` 验收，Batch 35: 吸收并验证 cap:alt_svc (PASSED)）
+- **执行成果**：`lib/alt_svc/`（5/5 PASS，`doc/lib/alt_svc.md`）经 `verify_module.sh` 一次性验收回收；Batch 35: 吸收并验证 cap:alt_svc (PASSED)
+
+### 2026-11-22（`cap:linear_fifo` 验收，Batch 35: 吸收并验证 cap:linear_fifo (PASSED)）
+- **执行成果**：`lib/linear_fifo/`（5/5 PASS，`doc/lib/linear_fifo.md`）经 `verify_module.sh` 一次性验收回收；Batch 35: 吸收并验证 cap:linear_fifo (PASSED)
+
+### 2026-11-22（`cap:toml_lexer` 验收，Batch 35: 吸收并验证 cap:toml_lexer (5/5 PASSED)）
+- **执行成果**：`lib/toml_lexer/`（5/5 PASS，`doc/lib/toml_lexer.md`）经 `verify_module.sh` 一次性验收回收；Batch 35: 吸收并验证 cap:toml_lexer (5/5 PASSED)
+
+### 2026-11-22（`cap:yaml_scalar` 验收，Batch 35: 吸收并验证 cap:yaml_scalar (5/5 PASSED)）
+- **执行成果**：`lib/yaml_scalar/`（5/5 PASS，`doc/lib/yaml_scalar.md`）经 `verify_module.sh` 一次性验收回收；Batch 35: 吸收并验证 cap:yaml_scalar (5/5 PASSED)

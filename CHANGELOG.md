@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:yaml_scalar` YAML 1.2 Core Schema 零堆分配标量类型推断、单/双引号解转义与安全引用序列化库（吸收自 bun/src/interchange/yaml.cp）（5/5 PASS，自动动态挂载 `cap.yaml_scalar`）
+新增 cap:yaml_scalar 标准库模块（lib/yaml_scalar/{scalar,index}.cp, doc/lib/yaml_scalar.md, cap/test/test_yaml_scalar_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:toml_lexer` TOML v1.0 零堆分配流式词法扫描器（21 种记号/4 种字符串/4 进制整数/ISO 8601 日期时间与 Unicode 解转义，吸收自 bun/src/interchange/toml/lexer.cp）（5/5 PASS，自动动态挂载 `cap.toml_lexer`）
+新增 cap:toml_lexer 标准库模块（lib/toml_lexer/{lexer,index}.cp, doc/lib/toml_lexer.md, cap/test/test_toml_lexer_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:linear_fifo` 零堆分配泛型环形缓冲区 FIFO（支持 item/slice 读写、peek、unget、discard 与环形回绕，吸收自 bun/src/collections/linear_fifo.cp）（5/5 PASS，自动动态挂载 `cap.linear_fifo`）
+新增 cap:linear_fifo 标准库模块（lib/linear_fifo/{fifo,index}.cp, doc/lib/linear_fifo.md, cap/test/test_linear_fifo_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:alt_svc` RFC 7838 HTTP Alt-Svc 头部解析器与零堆分配 64 源 TTL 缓存（HTTP/3 升级发现，吸收自 bun/src/http/h3_client/AltSvc.cp）（5/5 PASS，自动动态挂载 `cap.alt_svc`）
+新增 cap:alt_svc 标准库模块（lib/alt_svc/{alt_svc,index}.cp, doc/lib/alt_svc.md, cap/test/test_alt_svc_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:fs_router` Next.js / Bun FileSystemRouter 风格文件路由解析、静态>动态>捕获优先级排序与零拷贝参数匹配引擎（吸收自 bun/src/router/{Route,route_types}.cp）（5/5 PASS，自动动态挂载 `cap.fs_router`）
 新增 cap:fs_router 标准库模块（lib/fs_router/{router,index}.cp, doc/lib/fs_router.md, cap/test/test_fs_router_production_deep.cp）
 

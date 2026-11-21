@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:yaml_scalar` YAML 1.2 Core Schema 零堆分配标量类型推断、单/双引号解转义与安全引用序列化库（吸收自 bun/src/interchange/yaml.cp）（5/5 PASS，文档直写 `doc/lib/yaml_scalar.md`）
+子智能体 1 吸收 bun/src/interchange/yaml.cp，实现 YAML 1.2 Core Schema 标量解析与安全序列化，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:toml_lexer` TOML v1.0 零堆分配流式词法扫描器（21 种记号/4 种字符串/4 进制整数/ISO 8601 日期时间与 Unicode 解转义，吸收自 bun/src/interchange/toml/lexer.cp）（5/5 PASS，文档直写 `doc/lib/toml_lexer.md`）
+子智能体 2 吸收 bun/src/interchange/toml/lexer.cp，实现完整 TOML v1.0 词法扫描与转义解码器，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:linear_fifo` 零堆分配泛型环形缓冲区 FIFO（支持 item/slice 读写、peek、unget、discard 与环形回绕，吸收自 bun/src/collections/linear_fifo.cp）（5/5 PASS，文档直写 `doc/lib/linear_fifo.md`）
+吸收 bun/src/collections/linear_fifo.cp，实现泛型 StaticLinearFifo(T, capacity) 环形缓冲区，通过 cpc check 与 cap test
+
+## 2026-11-22: 新建 `cap:alt_svc` RFC 7838 HTTP Alt-Svc 头部解析器与零堆分配 64 源 TTL 缓存（HTTP/3 升级发现，吸收自 bun/src/http/h3_client/AltSvc.cp）（5/5 PASS，文档直写 `doc/lib/alt_svc.md`）
+吸收 bun/src/http/h3_client/AltSvc.cp，实现 RFC 7838 Alt-Svc 解析、clear 驱逐与 64 源 TTL 缓存，通过 cpc check 与 cap test
+
 ## 2026-11-22: 新建 `cap:fs_router` Next.js / Bun FileSystemRouter 风格文件路由解析、静态>动态>捕获优先级排序与零拷贝参数匹配引擎（吸收自 bun/src/router/{Route,route_types}.cp）（5/5 PASS，文档直写 `doc/lib/fs_router.md`）
 子智能体 1 吸收 bun/src/router/{Route,route_types}.cp，实现支持静态/动态/catch-all/optional-catch-all 的零堆分配文件路由器，5/5 单测通过
 
