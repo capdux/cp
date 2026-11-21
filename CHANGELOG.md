@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:dot` 零分配 Graphviz DOT 有向/无向图描述语言词法扫描、链式边解析与序列化器（5/5 PASS，自动动态挂载 `cap.dot`）
+- 新增 `lib/dot/{dot,index}.cp`、`doc/lib/dot.md`、`cap/test/test_dot_production_deep.cp`：纯 CP 零分配实现 Graphviz DOT 图头解析、有向/无向/链式边迭代、字符串注释感知括号平衡校验与自动引号转义序列化（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:hjson` 零分配 Hjson Human JSON 词法扫描、注释剥离与标准 RFC 8259 JSON 转换器（5/5 PASS，自动动态挂载 `cap.hjson`）
 - 新增 `lib/hjson/{hjson,index}.cp`、`doc/lib/hjson.md`、`cap/test/test_hjson_production_deep.cp`：纯 CP 零分配实现 Hjson 注释剥离与标准 JSON 转换（`#`/`//`/`/* */`、可选逗号、无引号键值、`...` 自动去缩进多行字面量与 64 层深度防护）（5/5 PASS）。
 

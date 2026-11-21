@@ -103,3 +103,6 @@
 
 ### 2026-11-22（`cap:hjson` 验收，新增简洁单单词包 `cap:hjson`（5/5 PASS））
 - **执行成果**：`lib/hjson/`（5/5 PASS，`doc/lib/hjson.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:hjson`（5/5 PASS）
+
+### 2026-11-22（`cap:dot` 验收，新增简洁单单词包 `cap:dot`（5/5 PASS））
+- **执行成果**：`lib/dot/`（5/5 PASS，`doc/lib/dot.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:dot`（5/5 PASS）

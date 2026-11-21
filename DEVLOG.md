@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:dot` 零分配 Graphviz DOT 有向/无向图描述语言词法扫描、链式边解析与序列化器（5/5 PASS，文档直写 `doc/lib/dot.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:dot`；`DotEdgeIter` 支持 `a -> b -> c` 链式展开、`subgraph` 穿透与双引号节点名。
+
 ## 2026-11-22: 新建 `cap:hjson` 零分配 Hjson Human JSON 词法扫描、注释剥离与标准 RFC 8259 JSON 转换器（5/5 PASS，文档直写 `doc/lib/hjson.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:hjson`；`hjsonToJson` 与 `stripHjsonComments` 均完整保护单/双/三引号内部文本。
 
