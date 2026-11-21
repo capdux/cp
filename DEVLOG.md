@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:shp` 零分配 ESRI Shapefile (.shp) 混合端序头、Bounding Box 与几何记录解析器（5/5 PASS，文档直写 `doc/lib/shp.md`）
+实现零分配 ESRI Shapefile 解析器，完整覆盖 15 种 ShpType、NullShape 与 64B BBox。
+
 ## 2026-11-22: 新建 `cap:wkb` 零分配 OGC WKB / PostGIS EWKB 空间几何二进制编解码器（5/5 PASS，文档直写 `doc/lib/wkb.md`）
 实现零分配 WKB/EWKB 空间几何编解码器，严控 32 层嵌套深度与点数乘法溢出边界。
 

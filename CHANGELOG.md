@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:shp` 零分配 ESRI Shapefile (.shp) 混合端序头、Bounding Box 与几何记录解析器（5/5 PASS，自动动态挂载 `cap.shp`）
+新增 `lib/shp/{shp,index}.cp`、`doc/lib/shp.md` 与 `cap/test/test_shp_production_deep.cp`（5/5 PASS），支持 BE/LE 混合 100B 头、16-bit word 长度校验、Point/PolyLine/Polygon 零拷贝随机访问。
+
 ## [2026-11-22] - 新建 `cap:wkb` 零分配 OGC WKB / PostGIS EWKB 空间几何二进制编解码器（5/5 PASS，自动动态挂载 `cap.wkb`）
 新增 `lib/wkb/{wkb,index}.cp`、`doc/lib/wkb.md` 与 `cap/test/test_wkb_production_deep.cp`（5/5 PASS），支持 XDR/NDR 双端序、ISO WKB Z/M/ZM 与 PostGIS EWKB SRID 编解码及多级嵌套迭代。
 
