@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:lucene` 零分配 Apache Lucene CodecUtil 索引头/尾帧与 VInt/VLong 解析器（5/5 PASS，文档直写 `doc/lib/lucene.md`）
+实现零分配 Apache Lucene CodecUtil 解析器，严格校验魔数、algorithm_id==0 与高 32 位零校验和。
+
 ## 2026-11-22: 新建 `cap:flatbuf` 零分配 Google FlatBuffers 二进制根表、VTable 字段与向量解析器（5/5 PASS，文档直写 `doc/lib/flatbuf.md`）
 实现零分配 Google FlatBuffers 解析器，全程严控 VTable 与字符串/向量下标越界。
 

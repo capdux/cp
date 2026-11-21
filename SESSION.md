@@ -103,3 +103,6 @@
 
 ### 2026-11-22（`cap:flatbuf` 验收，完成 `cap:flatbuf` 交付验收并登记入库（5/5 PASS）；派发 `cap:shp`。）
 - **执行成果**：`lib/flatbuf/`（5/5 PASS，`doc/lib/flatbuf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:flatbuf` 交付验收并登记入库（5/5 PASS）；派发 `cap:shp`。
+
+### 2026-11-22（`cap:lucene` 验收，完成 `cap:lucene` 交付验收并登记入库（5/5 PASS）；派发 `cap:las`。）
+- **执行成果**：`lib/lucene/`（5/5 PASS，`doc/lib/lucene.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:lucene` 交付验收并登记入库（5/5 PASS）；派发 `cap:las`。
