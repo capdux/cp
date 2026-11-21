@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:hdf5` 零分配 HDF5 科学数据容器 Superblock v0-v3 与 OHDR v2 对象头解析器（5/5 PASS，自动动态挂载 `cap.hdf5`）
+新增 `lib/hdf5/{hdf5,index}.cp`、`doc/lib/hdf5.md` 与 `cap/test/test_hdf5_production_deep.cp`（5/5 PASS），支持 2^n*512 User Block 跳搜、Superblock v0/v1/v2/v3 与 OHDR v2 对象头零拷贝解析。
+
 ## [2026-11-22] - 新建 `cap:deb` 零分配 Debian (.deb) 软件包容器与 RFC 822 DEBIAN/control 解析器（5/5 PASS，自动动态挂载 `cap.deb`）
 新增 `lib/deb/{deb,index}.cp`、`doc/lib/deb.md` 与 `cap/test/test_deb_production_deep.cp`（5/5 PASS），支持 debian-binary/control.tar.*/data.tar.* 零拷贝提取与大小写不敏感 control 元数据解析。
 

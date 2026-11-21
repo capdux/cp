@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:hdf5` 零分配 HDF5 科学数据容器 Superblock v0-v3 与 OHDR v2 对象头解析器（5/5 PASS，文档直写 `doc/lib/hdf5.md`）
+实现零分配 HDF5 容器头解析器，严格校验 2/4/8B 地址/长度宽度、Root Group 地址与 chunk0 边界。
+
 ## 2026-11-22: 新建 `cap:deb` 零分配 Debian (.deb) 软件包容器与 RFC 822 DEBIAN/control 解析器（5/5 PASS，文档直写 `doc/lib/deb.md`）
 实现零分配 Debian .deb 容器与 RFC 822 control 解析器，严格校验 ar 60B 头、2B 偶对齐与多行续行。
 

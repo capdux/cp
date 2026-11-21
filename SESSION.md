@@ -34,3 +34,6 @@
 
 ### 2026-11-22（`cap:deb` 验收，完成 `cap:deb` 交付验收并登记入库（5/5 PASS）；派发 `cap:rlp`。）
 - **执行成果**：`lib/deb/`（5/5 PASS，`doc/lib/deb.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:deb` 交付验收并登记入库（5/5 PASS）；派发 `cap:rlp`。
+
+### 2026-11-22（`cap:hdf5` 验收，完成 `cap:hdf5` 交付验收并登记入库（5/5 PASS）；派发 `cap:netcdf`。）
+- **执行成果**：`lib/hdf5/`（5/5 PASS，`doc/lib/hdf5.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:hdf5` 交付验收并登记入库（5/5 PASS）；派发 `cap:netcdf`。

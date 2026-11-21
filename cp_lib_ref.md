@@ -564,3 +564,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:dmg` | DMG_KOLY_MAGIC, DMG_KOLY_SIZE, DMG_MISH_MAGIC, DmgKolyHeader, DmgMishHeader, DmgBlkStripe, DmgStripeIter, isDmg, parseDmgKoly, parseDmgMish | 零分配 Apple UDIF (.dmg) 512B koly 尾部块与 mish/BLKX 条带解析器 |
 | `cap:mkv` | ID_EBML, ID_SEGMENT, ID_INFO, ID_TRACKS, MkvTrackType, MkvInfo, MkvTrack, MkvTrackIter, MkvHeader, isMkv, isWebm, parseMkvHeader | 零分配 Matroska / WebM EBML 视频容器 Info 与多轨道解析器 |
 | `cap:deb` | DEB_AR_MAGIC, DEB_BINARY_MEMBER, DebCompression, DebPackage, DebControlField, DebControlIter, DebControlMeta, detectDebCompression, isDeb, parseDebPackage, parseDebControl | 零分配 Debian (.deb) 软件包容器与 RFC 822 DEBIAN/control 解析器 |
+| `cap:hdf5` | HDF5_SIGNATURE, HDF5_UNDEF_ADDR_64, HDF5_OHDR_MAGIC, Hdf5Superblock, Hdf5ObjHeaderV2, findHdf5Signature, isHdf5, parseHdf5Superblock, parseHdf5ObjHeaderV2 | 零分配 HDF5 科学数据容器 Superblock v0-v3 与 OHDR v2 对象头解析器 |
