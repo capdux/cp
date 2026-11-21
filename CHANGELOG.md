@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:charset_label` WHATWG Encoding Standard 字符集标签规范化器（14 种编码别名映射与 UTF-8/UTF-16 BOM 嗅探）（5/5 PASS，自动动态挂载 `cap.charset_label`）
+新增 `cap:charset_label`（`lib/charset_label/{charset,index}.cp`、`doc/lib/charset_label.md`、`cap/test/test_charset_label_production_deep.cp`），严格遵循 WHATWG Encoding §4.2 映射全部主流别名。
+
+## [2026-11-22] - 新建 `cap:toml_escape` TOML 1.0 裸键校验、基本字符串字面量转义与严格 Unicode 标量值（\uXXXX/\UXXXXXXXX）反转义器（5/5 PASS，自动动态挂载 `cap.toml_escape`）
+新增 `cap:toml_escape`（`lib/toml_escape/{toml_escape,index}.cp`、`doc/lib/toml_escape.md`、`cap/test/test_toml_escape_production_deep.cp`），完整支持 TOML 1.0 键与基本字符串转义/还原并拒绝代理项标量。
+
+## [2026-11-22] - 新建 `cap:git_url_parse` Git 远程地址零分配解析器与协议互转工具（支持 SCP git@host:org/repo.git、ssh://、https://、git://、file://）（5/5 PASS，自动动态挂载 `cap.git_url_parse`）
+新增 `cap:git_url_parse`（`lib/git_url_parse/{git_url,index}.cp`、`doc/lib/git_url_parse.md`、`cap/test/test_git_url_parse_production_deep.cp`），实现多协议解析、`owner`/`repo` 提取及 `formatHttps`/`formatScp` 互转。
+
 ## [2026-11-22] - 新建 `cap:mac_addr` IEEE 802 MAC-48 / EUI-48 硬件地址零分配解析器（4 种格式）、位分类器与 RFC 4291 EUI-64 派生器（5/5 PASS，自动动态挂载 `cap.mac_addr`）
 新增 `cap:mac_addr`（`lib/mac_addr/{mac,index}.cp`、`doc/lib/mac_addr.md`、`cap/test/test_mac_addr_production_deep.cp`），支持冒号/连字符/Cisco 点分/裸十六进制、单播/组播/LAA 分类与 EUI-64 生成。
 

@@ -67,3 +67,12 @@
 
 ### 2026-11-22（`cap:mac_addr` 验收，Batch 69 注册 `cap:mac_addr` 并提交（累计 220 模块）。）
 - **执行成果**：`lib/mac_addr/`（5/5 PASS，`doc/lib/mac_addr.md`）经 `verify_module.sh` 一次性验收回收；Batch 69 注册 `cap:mac_addr` 并提交（累计 220 模块）。
+
+### 2026-11-22（`cap:git_url_parse` 验收，Batch 70 完成 `cap:git_url_parse`、`cap:toml_escape`、`cap:charset_label` 3 模块吸收与全量验收。）
+- **执行成果**：`lib/git_url_parse/`（5/5 PASS，`doc/lib/git_url_parse.md`）经 `verify_module.sh` 一次性验收回收；Batch 70 完成 `cap:git_url_parse`、`cap:toml_escape`、`cap:charset_label` 3 模块吸收与全量验收。
+
+### 2026-11-22（`cap:toml_escape` 验收，Batch 70 注册 `cap:toml_escape`。）
+- **执行成果**：`lib/toml_escape/`（5/5 PASS，`doc/lib/toml_escape.md`）经 `verify_module.sh` 一次性验收回收；Batch 70 注册 `cap:toml_escape`。
+
+### 2026-11-22（`cap:charset_label` 验收，Batch 70 注册 `cap:charset_label` 并提交（突破 70 批次 / 223 模块里程碑）。）
+- **执行成果**：`lib/charset_label/`（5/5 PASS，`doc/lib/charset_label.md`）经 `verify_module.sh` 一次性验收回收；Batch 70 注册 `cap:charset_label` 并提交（突破 70 批次 / 223 模块里程碑）。

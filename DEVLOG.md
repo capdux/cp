@@ -1,3 +1,12 @@
+## 2026-11-22: 新建 `cap:charset_label` WHATWG Encoding Standard 字符集标签规范化器（14 种编码别名映射与 UTF-8/UTF-16 BOM 嗅探）（5/5 PASS，文档直写 `doc/lib/charset_label.md`）
+Subagent 2 吸收 `cap:charset_label`，零堆分配提供规范 IANA 名称、ASCII 超集判定与 BOM 嗅探。
+
+## 2026-11-22: 新建 `cap:toml_escape` TOML 1.0 裸键校验、基本字符串字面量转义与严格 Unicode 标量值（\uXXXX/\UXXXXXXXX）反转义器（5/5 PASS，文档直写 `doc/lib/toml_escape.md`）
+主智能体吸收 `cap:toml_escape`，与 `cap:json_escape`/`cap:xml_escape`/`cap:html_escape` 形成统一序列化转义工具链。
+
+## 2026-11-22: 新建 `cap:git_url_parse` Git 远程地址零分配解析器与协议互转工具（支持 SCP git@host:org/repo.git、ssh://、https://、git://、file://）（5/5 PASS，文档直写 `doc/lib/git_url_parse.md`）
+Subagent 1 吸收 `cap:git_url_parse`，规范化互转时防范 HTTPS token 泄露为 SCP 用户名。
+
 ## 2026-11-22: 新建 `cap:mac_addr` IEEE 802 MAC-48 / EUI-48 硬件地址零分配解析器（4 种格式）、位分类器与 RFC 4291 EUI-64 派生器（5/5 PASS，文档直写 `doc/lib/mac_addr.md`）
 主智能体吸收 `cap:mac_addr`，拒绝混用分隔符并实现规范化冒号/连字符输出。
 

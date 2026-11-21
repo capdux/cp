@@ -645,3 +645,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:brace_expand` | BraceExpandIter | 零分配 Bash 风格花括号展开迭代器（逗号列表、步进/补零整数序列与字母序列） |
 | `cap:mime_headers` | MimeMessageSplit, splitHeadersAndBody, MimeHeader, MimeHeaderIter, findMimeHeader, countMimeHeader | RFC 5322 / MIME 头块零分配解析器（头体分离、obs-fold 折行展开、大小写不敏感查询与重复头计数） |
 | `cap:mac_addr` | MacAddr | IEEE 802 MAC-48 / EUI-48 硬件地址零分配解析器（4 种格式）、位分类器与 RFC 4291 EUI-64 派生器 |
+| `cap:git_url_parse` | GitProtocol, GitRemoteUrl | Git 远程地址零分配解析器与协议互转工具（支持 SCP git@host:org/repo.git、ssh://、https://、git://、file://） |
+| `cap:toml_escape` | isBareTomlKey, formatTomlBasicString, formatTomlKey, unescapeTomlBasic | TOML 1.0 裸键校验、基本字符串字面量转义与严格 Unicode 标量值（\uXXXX/\UXXXXXXXX）反转义器 |
+| `cap:charset_label` | CharsetKind, resolveCharsetLabel, canonicalCharsetName, isUtf8Compatible, isAsciiSuperset, sniffBomCharset | WHATWG Encoding Standard 字符集标签规范化器（14 种编码别名映射与 UTF-8/UTF-16 BOM 嗅探） |
