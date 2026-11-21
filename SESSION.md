@@ -235,3 +235,9 @@
 
 ### 2026-11-22（`cap:fasta` 验收，完成 `cap:fasta` 交付验收并登记入库（5/5 PASS）；派发 `cap:bed`。）
 - **执行成果**：`lib/fasta/`（5/5 PASS，`doc/lib/fasta.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:fasta` 交付验收并登记入库（5/5 PASS）；派发 `cap:bed`。
+
+### 2026-11-22（`cap:fastq` 验收，完成 `cap:fastq` 交付验收并登记入库（5/5 PASS）；派发 `cap:vcf`。）
+- **执行成果**：`lib/fastq/`（5/5 PASS，`doc/lib/fastq.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:fastq` 交付验收并登记入库（5/5 PASS）；派发 `cap:vcf`。
+
+### 2026-11-22（`cap:dls` 验收，完成 `cap:dls` 交付验收并登记入库（5/5 PASS）；派发 `cap:sam`。）
+- **执行成果**：`lib/dls/`（5/5 PASS，`doc/lib/dls.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:dls` 交付验收并登记入库（5/5 PASS）；派发 `cap:sam`。

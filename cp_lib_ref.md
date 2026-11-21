@@ -631,3 +631,5 @@ const h = cap.hash.wyhash("hello");
 | `cap:it` | IT_MAGIC, IT_INST_MAGIC, IT_SAMPLE_MAGIC, IT_HEADER_SIZE, ItHeader, ItSample, ItInstrument, ItPattern, isIt, parseItHeader, parseItSample, parseItInstrument, parseItPattern | 零分配 Impulse Tracker 2.14 (.it) 跟踪器音乐头、采样与 Pattern 解析器 |
 | `cap:x3d` | X3dHeader, X3dMeta, X3dMetaIter, X3dNode, X3dNodeIter, X3dFloatIter, X3dIntIter, X3dStats, isX3d, parseX3dHeader, findX3dMeta, summarizeX3d | 零分配 Web3D X3D 3.x/4.0 XML 3D 场景树与坐标/索引数组解析器 |
 | `cap:fasta` | FastaRecord, FastaIter, FastaStats, isFasta, dnaComplement, reverseComplementDna, summarizeFasta | 零分配生物信息学 FASTA 序列流解析、GC 含量与 IUPAC 反向互补库 |
+| `cap:fastq` | PHRED_OFFSET_33, PHRED_OFFSET_64, FastqRecord, FastqIter, FastqStats, isFastq, summarizeFastq | 零分配基因测序 FASTQ 4 行读段、Phred+33/64 评分与 Q20/Q30 质控器 |
+| `cap:dls` | DLS_RIFF_MAGIC, DLS_FORM_TYPE, DLS_BANK_DRUM_FLAG, DlsVersion, DlsInfo, DlsHeader, DlsInstrument, DlsInstIter, DlsWave, DlsWaveIter, isDls, parseDls | 零分配 MMA Downloadable Sounds (.dls) RIFF 合成器音色库解析器 |

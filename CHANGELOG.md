@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:dls` 零分配 MMA Downloadable Sounds (.dls) RIFF 合成器音色库解析器（5/5 PASS，自动动态挂载 `cap.dls`）
+新增 `lib/dls/{dls,index}.cp`、`doc/lib/dls.md` 与 `cap/test/test_dls_production_deep.cp`（5/5 PASS），支持 colh/vers/INFO/lins/ptbl/wvpl 解析、鼓组标志与 PCM 零拷贝波形迭代。
+
+## [2026-11-22] - 新建 `cap:fastq` 零分配基因测序 FASTQ 4 行读段、Phred+33/64 评分与 Q20/Q30 质控器（5/5 PASS，自动动态挂载 `cap.fastq`）
+新增 `lib/fastq/{fastq,index}.cp`、`doc/lib/fastq.md` 与 `cap/test/test_fastq_production_deep.cp`（5/5 PASS），支持 Phred+33/64 质量分、3' 端低质量修剪与 Q20/Q30/GC 统计。
+
 ## [2026-11-22] - 新建 `cap:fasta` 零分配生物信息学 FASTA 序列流解析、GC 含量与 IUPAC 反向互补库（5/5 PASS，自动动态挂载 `cap.fasta`）
 新增 `lib/fasta/{fasta,index}.cp`、`doc/lib/fasta.md` 与 `cap/test/test_fasta_production_deep.cp`（5/5 PASS），支持多行折行序列迭代、GC 含量、全 IUPAC 简并碱基反向互补与单遍汇总。
 

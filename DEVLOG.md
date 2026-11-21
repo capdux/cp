@@ -1,3 +1,9 @@
+## 2026-11-22: 新建 `cap:dls` 零分配 MMA Downloadable Sounds (.dls) RIFF 合成器音色库解析器（5/5 PASS，文档直写 `doc/lib/dls.md`）
+实现零分配 MMA DLS Level 1/2 音色库解析器，严格遵循 2B RIFF 偶对齐填充规范。
+
+## 2026-11-22: 新建 `cap:fastq` 零分配基因测序 FASTQ 4 行读段、Phred+33/64 评分与 Q20/Q30 质控器（5/5 PASS，文档直写 `doc/lib/fastq.md`）
+实现零分配 FASTQ 测序读段解析器，严格校验 seq/qual 等长与 4 行结构边界。
+
 ## 2026-11-22: 新建 `cap:fasta` 零分配生物信息学 FASTA 序列流解析、GC 含量与 IUPAC 反向互补库（5/5 PASS，文档直写 `doc/lib/fasta.md`）
 实现零分配 FASTA 序列解析器，支持 ; 注释跳过、CRLF 兼容与零堆 copyCleanSeq。
 
