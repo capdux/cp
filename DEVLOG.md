@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:nbns` NBNS (RFC 1001/1002) NetBIOS 32B first-level name codec, NB & NBSTAT zero-alloc parser（5/5 PASS，文档直写 `doc/lib/nbns.md`）
+新增 cap:nbns 纯 CP 零分配局域网名称服务库（RFC 1001 半字节编解码、NB 多 IP 与 NBSTAT 节点表/MAC 零拷贝迭代），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:gopher` Gopher (RFC 1436) selector/search request & Menu item zero-alloc codec（5/5 PASS，文档直写 `doc/lib/gopher.md`）
 新增 cap:gopher 纯 CP 零分配经典信息检索协议库（根目录/搜索请求往返、GopherMenuIter 零拷贝迭代与防注入编码），通过 cpc check 与 5/5 cap test
 

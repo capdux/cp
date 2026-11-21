@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:nbns` NBNS (RFC 1001/1002) NetBIOS 32B first-level name codec, NB & NBSTAT zero-alloc parser（5/5 PASS，自动动态挂载 `cap.nbns`）
+新增纯 CP 零分配标准库 cap:nbns（RFC 1001/1002 NetBIOS 32B 一级编码与 NB/NBSTAT 解析）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:gopher` Gopher (RFC 1436) selector/search request & Menu item zero-alloc codec（5/5 PASS，自动动态挂载 `cap.gopher`）
 新增纯 CP 零分配标准库 cap:gopher（RFC 1436 Gopher 请求与 Menu 目录条目编解码）与 5/5 深度测试
 
