@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:tga` 零分配 Truevision TGA 18 字节头、未压缩/RLE 像素解码与 24/32-bit 编码器（5/5 PASS，自动动态挂载 `cap.tga`）
+- 新增 `lib/tga/{tga,index}.cp`、`doc/lib/tga.md`、`cap/test/test_tga_production_deep.cp`：纯 CP 零分配实现 TGA 18 字节头解析、未压缩/RLE 24/32-bit 与 8-bit 灰度解码（含 bottom-origin 自动翻转与越界防护）及 TrueColor 编码（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:ogg` 零分配 RFC 3533 Ogg 容器页头 `"OggS"`、非反射 CRC-32 校验与分页迭代器（5/5 PASS，自动动态挂载 `cap.ogg`）
 - 新增 `lib/ogg/{ogg,index}.cp`、`doc/lib/ogg.md`、`cap/test/test_ogg_production_deep.cp`：纯 CP 零分配实现 RFC 3533 Ogg 分页头解析、段表 lacing 求和与多项式 `0x04C11DB7` 非反射 CRC-32 校验，集齐 `riff`/`id3`/`flac`/`ogg` 音频容器四件套（5/5 PASS）。
 

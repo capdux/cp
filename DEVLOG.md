@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:tga` 零分配 Truevision TGA 18 字节头、未压缩/RLE 像素解码与 24/32-bit 编码器（5/5 PASS，文档直写 `doc/lib/tga.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:tga`，与 `cap:qoi`/`cap:pnm` 构成完整轻量图像编解码套件。
+
 ## 2026-11-22: 新建 `cap:ogg` 零分配 RFC 3533 Ogg 容器页头 `"OggS"`、非反射 CRC-32 校验与分页迭代器（5/5 PASS，文档直写 `doc/lib/ogg.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:ogg`；`oggCrc32` 自动将偏移 `22..26` 按 0 处理实现标准分页完整性校验。
 

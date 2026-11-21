@@ -531,3 +531,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:pnm` | `PnmFormat`, `PnmHeader`, `parsePnmHeader`, `pnmRawPixels`, `encodePpmP6`, `encodePgmP5` | 零分配 Netpbm P1–P6 PBM/PGM/PPM 图像头解析、像素切片提取与 P5/P6 编码器 |
 | `cap:flac` | `FlacBlockType`, `FlacMetadataBlock`, `FlacStreamInfo`, `isFlac`, `FlacBlockIter`, `parseStreamInfoPayload`, `parseFlacStreamInfo` | 零分配 FLAC 无损音频流 `"fLaC"` 头、`STREAMINFO` 34 字节位字段与元数据块迭代器 |
 | `cap:ogg` | `OGG_FLAG_CONTINUATION`, `OGG_FLAG_BOS`, `OGG_FLAG_EOS`, `OggPage`, `oggCrc32`, `isOgg`, `OggPageIter` | 零分配 RFC 3533 Ogg 容器页头 `"OggS"`、非反射 CRC-32 校验与分页迭代器 |
+| `cap:tga` | `TgaImageType`, `TgaHeader`, `parseTgaHeader`, `encodeTgaTrueColor`, `decodeTgaToRgba` | 零分配 Truevision TGA 18 字节头、未压缩/RLE 像素解码与 24/32-bit 编码器 |
