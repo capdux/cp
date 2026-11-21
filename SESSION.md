@@ -76,3 +76,6 @@
 
 ### 2026-11-21（`cap:crdt_pn` 验收，验收提交 `cap:crdt_pn` 并新开 `cap:raft_log` 并发子智能体）
 - **执行成果**：`lib/crdt_pn/`（5/5 PASS，`doc/lib/crdt_pn.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:crdt_pn` 并新开 `cap:raft_log` 并发子智能体
+
+### 2026-11-21（`cap:geo_quadtree` 验收，主控完成 `cap:geo_quadtree` 研发验收提交，继续与 `cap:lru_k`、`cap:raft_log` 及独立热修子智能体并行）
+- **执行成果**：`lib/geo_quadtree/`（5/5 PASS，`doc/lib/geo_quadtree.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:geo_quadtree` 研发验收提交，继续与 `cap:lru_k`、`cap:raft_log` 及独立热修子智能体并行

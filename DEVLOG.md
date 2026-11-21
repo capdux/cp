@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:geo_quadtree` 纯 CP 2D 平面空间四叉树索引引擎（矩形包围盒 `queryRect` 与欧氏圆半径 `queryRadius` 检索，支持 `cap.geo_quadtree` 自动动态挂载，详见 `doc/lib/geo_quadtree.md`）（5/5 PASS，文档直写 `doc/lib/geo_quadtree.md`）
+- **核心设计**：采用 4 象限自动分裂与深度上限 24 防重合点死循环，通过 50 点分裂检索与 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:crdt_pn` 纯 CP 分布式状态型无冲突复制数据类型 (State-Based CRDTs) 套件（`GCounter`、`PNCounter`、`LWWRegister` 与 `GSet`，满足半格幂等/交换/结合律 `merge`，支持 `cap.crdt_pn` 自动动态挂载，详见 `doc/lib/crdt_pn.md`）（5/5 PASS，文档直写 `doc/lib/crdt_pn.md`）
 - **核心设计**：采用 `(timestamp, node_id)` 全序决胜与幂等半格合并，通过跨分区并发收敛与 `std.testing.allocator` 零泄漏验证。
 
