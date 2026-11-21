@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:sstable` 零分配 LevelDB / RocksDB SSTable Footer、BlockHandle 与前缀压缩块解析器（5/5 PASS，文档直写 `doc/lib/sstable.md`）
+实现零分配 LevelDB/RocksDB SSTable 解析器，严格校验 handle 偏移与 restarts_offset 边界。
+
 ## 2026-11-22: 新建 `cap:ssz` 零分配 Ethereum SSZ 确定性小端编解码、Bitlist/Bitvector 与 Offset 校验器（5/5 PASS，文档直写 `doc/lib/ssz.md`）
 实现零分配 Ethereum SSZ 编解码器，严格校验非递减 Offset 表、哨兵比特与 32B Chunk 叶子数计算。
 
