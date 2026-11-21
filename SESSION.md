@@ -124,3 +124,6 @@
 
 ### 2026-11-22（`cap:rtf` 验收，完成 `cap:rtf` 交付验收并登记入库（5/5 PASS）；派发 `cap:mobi`。）
 - **执行成果**：`lib/rtf/`（5/5 PASS，`doc/lib/rtf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:rtf` 交付验收并登记入库（5/5 PASS）；派发 `cap:mobi`。
+
+### 2026-11-22（`cap:kml` 验收，完成 `cap:kml` 交付验收并登记入库（5/5 PASS）；派发 `e1dcf2e4` 同步 6 处 Bun 上游最新增量。）
+- **执行成果**：`lib/kml/`（5/5 PASS，`doc/lib/kml.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:kml` 交付验收并登记入库（5/5 PASS）；派发 `e1dcf2e4` 同步 6 处 Bun 上游最新增量。

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:kml` 零分配 OGC KML 2.2 地理标记 Placemark 与 coordinates 解析器（5/5 PASS，文档直写 `doc/lib/kml.md`）
+实现零分配 OGC KML 2.2 解析器，完整支持嵌套 Folder/Document、Point/LineString/Polygon 与经纬度范围校验。
+
 ## 2026-11-22: 新建 `cap:rtf` 零分配 Rich Text Format (RTF 1.9) 词法流、Unicode 转义与纯文本提取器（5/5 PASS，文档直写 `doc/lib/rtf.md`）
 实现零分配 RTF 1.9 词法与文本提取器，完整遵循控制字单空格消费与 \ucN 替换跳过规范。
 
