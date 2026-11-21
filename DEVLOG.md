@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:soundex` Phonetic indexing & fuzzy name matching: NARA Soundex, Metaphone, NYSIIS & Cologne（5/5 PASS，文档直写 `doc/lib/soundex.md`）
+新增 cap:soundex 纯 CP 零分配语音编码与模糊姓名匹配库（覆盖全部 4 种经典标准向量），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:verhoeff` Verhoeff (D5), Damm quasigroup & ISO/IEC 7064 Mod-11-2/37-2 check-digit suite（5/5 PASS，文档直写 `doc/lib/verhoeff.md`）
 新增 cap:verhoeff 纯 CP 零分配高可靠校验位算法库（单错与相邻换位 100% 检出 + ORCID Mod-11-2 / Mod-37-2），通过 cpc check 与 5/5 cap test
 
