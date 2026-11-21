@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:vhd` Microsoft VHD 1.0 Footer, Dynamic Header, BAT lookup & one's-complement checksum parser（5/5 PASS，文档直写 `doc/lib/vhd.md`）
+新增 cap:vhd 纯 CP 零分配虚拟硬盘镜像库（512B Footer、1024B Dynamic Header、一补码校验和与大端 BAT 查表），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:xfs` Linux XFS v4/v5 superblock, CRC32C, Inode Core & 128-bit BMBT Extent zero-alloc codec（5/5 PASS，文档直写 `doc/lib/xfs.md`）
 新增 cap:xfs 纯 CP 零分配高性能日志文件系统库（v4/v5 大端超级块 CRC32C、v2/v3 Inode Core 与 128-bit BMBT Extent 跨 64-bit 位域编解码），通过 cpc check 与 5/5 cap test
 

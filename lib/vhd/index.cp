@@ -1,0 +1,25 @@
+// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:vhd & cap.vhd)
+
+export {
+    VHD_FOOTER_COOKIE,
+    VHD_DYNAMIC_COOKIE,
+    VHD_FOOTER_SIZE,
+    VHD_DYNAMIC_HEADER_SIZE,
+    VHD_FORMAT_VERSION,
+    VHD_FIXED_DATA_OFFSET,
+    VHD_EPOCH_UNIX_DELTA,
+    VHD_BAT_UNUSED,
+    DISK_TYPE_FIXED,
+    DISK_TYPE_DYNAMIC,
+    DISK_TYPE_DIFFERENCING,
+    FEATURE_TEMPORARY,
+    FEATURE_RESERVED,
+    vhdChecksum,
+    VhdGeometry,
+    VhdFooter,
+    VhdDynamicHeader,
+    isVhdFooter,
+    parseVhdFooter,
+    parseVhdDynamicHeader,
+    lookupVhdBatEntry,
+} from "./vhd.cp";
