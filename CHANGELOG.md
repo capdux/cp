@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:dhcp` DHCPv4 (RFC 2131/2132) 240B header, Option TLV iter & DhcpWriter zero-alloc codec（5/5 PASS，自动动态挂载 `cap.dhcp`）
+新增纯 CP 零分配标准库 cap:dhcp（RFC 2131/2132 DHCPv4 报头、Option TLV 迭代与 DhcpWriter 编码器）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:isis` IS-IS (ISO 10589 / RFC 1195) common/LSP header, TLV iter & Fletcher-16 checksum parser（5/5 PASS，自动动态挂载 `cap.isis`）
 新增纯 CP 零分配标准库 cap:isis（ISO 10589/RFC 1195 IS-IS 报头、LSP、TLV 零拷贝迭代与 Fletcher-16 校验和）与 5/5 深度测试
 

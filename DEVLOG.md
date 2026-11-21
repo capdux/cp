@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:dhcp` DHCPv4 (RFC 2131/2132) 240B header, Option TLV iter & DhcpWriter zero-alloc codec（5/5 PASS，文档直写 `doc/lib/dhcp.md`）
+新增 cap:dhcp 纯 CP 零分配动态主机配置协议库（Magic Cookie 校验、PAD/END Option 零拷贝迭代与 DhcpWriter 编码往返），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:isis` IS-IS (ISO 10589 / RFC 1195) common/LSP header, TLV iter & Fletcher-16 checksum parser（5/5 PASS，文档直写 `doc/lib/isis.md`）
 新增 cap:isis 纯 CP 零分配链路状态路由协议库（8B 通用头、27B LSP 报头、2B+len TLV 零拷贝迭代与 ISO 8473 Fletcher-16 校验和），通过 cpc check 与 5/5 cap test
 
