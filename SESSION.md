@@ -40,3 +40,6 @@
 
 ### 2026-11-22（`cap:inchi` 验收，完成 `cap:inchi` 交付验收并登记入库（5/5 PASS）；派发 `cap:ldif`。）
 - **执行成果**：`lib/inchi/`（5/5 PASS，`doc/lib/inchi.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:inchi` 交付验收并登记入库（5/5 PASS）；派发 `cap:ldif`。
+
+### 2026-11-22（`cap:warc` 验收，完成 `cap:warc` 交付验收并登记入库（5/5 PASS）；派发 `cap:cef`。）
+- **执行成果**：`lib/warc/`（5/5 PASS，`doc/lib/warc.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:warc` 交付验收并登记入库（5/5 PASS）；派发 `cap:cef`。

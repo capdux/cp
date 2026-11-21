@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:warc` 零分配 ISO 28500 WARC 1.0/1.1 网页归档与 Common Crawl 语料解析器（5/5 PASS，自动动态挂载 `cap.warc`）
+新增 `lib/warc/{warc,index}.cp`、`doc/lib/warc.md` 与 `cap/test/test_warc_production_deep.cp`（5/5 PASS），支持 WARC/1.0-1.1 头、Content-Length 精确二进制负载切片与多记录流统计。
+
 ## [2026-11-22] - 新建 `cap:inchi` 零分配 IUPAC InChI v1.06 分层结构、Hill 分子式与 27 字符 InChIKey 解析器（5/5 PASS，自动动态挂载 `cap.inchi`）
 新增 `lib/inchi/{inchi,index}.cp`、`doc/lib/inchi.md` 与 `cap/test/test_inchi_production_deep.cp`（5/5 PASS），支持 1S/1 分层解析、Hill 多组分分子式迭代与 InChIKey 质子化偏移校验。
 
