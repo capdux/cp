@@ -32,11 +32,7 @@ impl Codegen {
                         }
                         let is_fn_native = match &self.current_fn_ret_ty {
                             Some(Type::ResultType { err: fn_err, .. }) => {
-                                let s = self.map_error_type(fn_err);
-                                self.is_lib_mode
-                                    || s.contains('.')
-                                    || s == "anyerror"
-                                    || self.error_sets.contains_key(&s)
+                                self.is_native_error_union_err(fn_err)
                             }
                             Some(Type::ErrorUnion(_)) => true,
                             _ => false,
@@ -75,9 +71,15 @@ impl Codegen {
                                 Some(Type::ResultType { ok: fn_ok, .. })
                                     if matches!(&**fn_ok, Type::Optional(_)) =>
                                 {
-                                    format!(
-                                        "const __v_{id} = cp_unwrap_ok_val(__r_{id}); if (__v_{id} == null) return .{{ .ok = null }}; break :blk_q_{id} __v_{id}.?;"
-                                    )
+                                    if is_fn_native {
+                                        format!(
+                                            "const __v_{id} = cp_unwrap_ok_val(__r_{id}); if (__v_{id} == null) return null; break :blk_q_{id} __v_{id}.?;"
+                                        )
+                                    } else {
+                                        format!(
+                                            "const __v_{id} = cp_unwrap_ok_val(__r_{id}); if (__v_{id} == null) return .{{ .ok = null }}; break :blk_q_{id} __v_{id}.?;"
+                                        )
+                                    }
                                 }
                                 Some(Type::Optional(_)) => {
                                     format!(
@@ -96,10 +98,15 @@ impl Codegen {
                     }
                     Some(Type::Optional(_)) => {
                         let null_ret = match &self.current_fn_ret_ty {
-                            Some(Type::ResultType { ok: fn_ok, .. })
-                                if matches!(&**fn_ok, Type::Optional(_)) =>
-                            {
-                                "return .{ .ok = null };"
+                            Some(Type::ResultType {
+                                ok: fn_ok,
+                                err: fn_err,
+                            }) if matches!(&**fn_ok, Type::Optional(_)) => {
+                                if self.is_native_error_union_err(fn_err) {
+                                    "return null;"
+                                } else {
+                                    "return .{ .ok = null };"
+                                }
                             }
                             Some(Type::Optional(_)) => "return null;",
                             _ => panic!(
@@ -860,6 +867,15 @@ impl Codegen {
         }
     }
 
+    pub(crate) fn is_native_error_union_err(&self, err: &ErrorType) -> bool {
+        let err_str = self.map_error_type(err);
+        self.is_lib_mode
+            || err_str.contains('.')
+            || err_str == "anyerror"
+            || self.error_sets.contains_key(&err_str)
+            || err_str.starts_with('(')
+    }
+
     pub(crate) fn build_ret_stmt_for_fallback(&mut self, fallback_expr: Option<&Expr>) -> String {
         let is_null_fb = match fallback_expr {
             Some(Expr::Lit(Lit::Null)) => true,
@@ -869,7 +885,45 @@ impl Codegen {
         };
 
         if let Some(Type::ResultType { ok, err: fn_err }) = self.current_fn_ret_ty.clone() {
-            if let Some(Expr::ErrWrap(err_inner)) = fallback_expr {
+            let is_native_err_union = self.is_native_error_union_err(&fn_err);
+            if is_native_err_union {
+                if let Some(Expr::ErrWrap(err_inner)) = fallback_expr {
+                    let ev = self.generate_err_value(err_inner, Some(&fn_err));
+                    return format!("return {};", ev);
+                }
+                if let Some(Expr::Member(mem)) = fallback_expr {
+                    if let Expr::Ident(obj_id) = &*mem.obj {
+                        if self.error_sets.contains_key(&obj_id.sym) {
+                            return format!("return error.{};", mem.prop.sym);
+                        }
+                    }
+                }
+                if let Some(Expr::EnumInit(ei)) = fallback_expr {
+                    if ei.enum_name.sym.is_empty()
+                        && !ei.variant_name.sym.is_empty()
+                        && ei.fields.is_none()
+                        && ei.tuple_args.is_none()
+                        && self.should_lower_bare_dot_return_as_error(
+                            &ei.variant_name.sym,
+                            &ok,
+                            &fn_err,
+                        )
+                    {
+                        return format!("return error.{};", ei.variant_name.sym);
+                    }
+                }
+                if is_null_fb || (fallback_expr.is_none() && matches!(&*ok, Type::Optional(_))) {
+                    if !matches!(&*ok, Type::Optional(_)) {
+                        panic!("CP Compile Error: Cannot return 'null' from function '{}' whose return type is not optional '?T' (actual ret ty: {:?})", self.current_fn_zig_name, self.current_fn_ret_ty);
+                    }
+                    "return null;".to_string()
+                } else if let Some(fb) = fallback_expr {
+                    let fb_c = self.generate_expr(fb);
+                    format!("return {};", fb_c)
+                } else {
+                    "return;".to_string()
+                }
+            } else if let Some(Expr::ErrWrap(err_inner)) = fallback_expr {
                 let ev = self.generate_err_value(err_inner, Some(&fn_err));
                 format!("return .{{ .err = {} }};", ev)
             } else if is_null_fb || (fallback_expr.is_none() && matches!(&*ok, Type::Optional(_))) {

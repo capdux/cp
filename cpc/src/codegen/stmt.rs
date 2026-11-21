@@ -112,7 +112,13 @@ impl Codegen {
                     }
                     let expr_code =
                         if let Some(Type::ResultType { err: var_err, .. }) = var.ty.clone() {
-                            if let Expr::ErrWrap(err_inner) = init {
+                            if self.is_native_error_union_err(&var_err) {
+                                if let Expr::ErrWrap(err_inner) = init {
+                                    self.generate_err_value(err_inner, Some(&var_err))
+                                } else {
+                                    self.generate_expr(init)
+                                }
+                            } else if let Expr::ErrWrap(err_inner) = init {
                                 let ev = self.generate_err_value(err_inner, Some(&var_err));
                                 format!(".{{ .err = {} }}", ev)
                             } else if is_null_lit {
@@ -2422,9 +2428,7 @@ impl Codegen {
                     }
                 } else {
                     if let Some(Type::ResultType { ok, err }) = &self.current_fn_ret_ty {
-                        let err_str = self.map_error_type(err);
-                        let is_native_err_union =
-                            self.is_lib_mode || err_str.contains('.') || err_str == "anyerror";
+                        let is_native_err_union = self.is_native_error_union_err(err);
                         if !is_native_err_union && **ok == Type::Void {
                             self.write_to_case("return .{ .ok = {} };");
                             return;
@@ -2660,7 +2664,7 @@ impl Codegen {
         }
     }
 
-    fn should_lower_bare_dot_return_as_error(
+    pub(crate) fn should_lower_bare_dot_return_as_error(
         &self,
         variant: &str,
         fn_ok: &Type,
