@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:smi` 零分配 Daylight SMILES / OpenSMILES 分子词法与环配平校验器（5/5 PASS，自动动态挂载 `cap.smi`）
+新增 `lib/smi/{smi,index}.cp`、`doc/lib/smi.md` 与 `cap/test/test_smi_production_deep.cp`（5/5 PASS），支持双字母卤素区分、括号原子全字段解析、%NN 双位环闭合配平与单遍图统计。
+
 ## [2026-11-22] - 新建 `cap:cif` 零分配 IUCr CIF / mmCIF 晶体学与生物大分子结构词法与 loop_ 表解析器（5/5 PASS，自动动态挂载 `cap.cif`）
 新增 `lib/cif/{cif,index}.cp`、`doc/lib/cif.md` 与 `cap/test/test_cif_production_deep.cp`（5/5 PASS），支持 data_/save_/loop_ 词法、行首 ;...; 多行文本、顶层标签查询与 loop_ 表格按行迭代。
 

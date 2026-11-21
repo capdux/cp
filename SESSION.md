@@ -34,3 +34,6 @@
 
 ### 2026-11-22（`cap:cif` 验收，完成 `cap:cif` 交付验收并登记入库（5/5 PASS）。）
 - **执行成果**：`lib/cif/`（5/5 PASS，`doc/lib/cif.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:cif` 交付验收并登记入库（5/5 PASS）。
+
+### 2026-11-22（`cap:smi` 验收，完成 `cap:smi` 交付验收并登记入库（5/5 PASS）；派发 `cap:der`。）
+- **执行成果**：`lib/smi/`（5/5 PASS，`doc/lib/smi.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:smi` 交付验收并登记入库（5/5 PASS）；派发 `cap:der`。
