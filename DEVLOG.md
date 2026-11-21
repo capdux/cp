@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:voronoi` 纯 CP 零分配 2D 有界 Voronoi 图与 Lloyd 松弛几何库：Sutherland-Hodgman 半平面裁剪、双缓冲 Voronoi 单元构建、面积/质心度量与 Lloyd 松弛迭代（5/5 PASS，文档直写 `doc/lib/voronoi.md`）
+新增 cap:voronoi（lib/voronoi/{voronoi,index}.cp）：基于 ping-pong 双缓冲 Sutherland-Hodgman 半平面裁剪构建有界 Voronoi 单元与 Lloyd 松弛，12 点云面积守恒误差 < 1e-9，cpc check 0 错误，cap test 6/6 PASS (746ms)
+
 ## 2026-11-22: 新建 `cap:bipartite` 纯 CP 零分配二分图算法库：BFS 二染色二分性判定、Hopcroft-Karp O(E√V) 最大基数匹配与 Kőnig 定理最小点覆盖/最大独立集提取（5/5 PASS，文档直写 `doc/lib/bipartite.md`）
 新增 cap:bipartite（lib/bipartite/{bipartite,index}.cp）：零分配 BFS 二染色、Hopcroft-Karp O(E√V) 最大基数匹配与 Kőnig 最小点覆盖，通过 50x50 稀疏图联合校验，cpc check 0 错误，cap test 6/6 PASS (824ms)
 

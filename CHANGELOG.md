@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:voronoi` 纯 CP 零分配 2D 有界 Voronoi 图与 Lloyd 松弛几何库：Sutherland-Hodgman 半平面裁剪、双缓冲 Voronoi 单元构建、面积/质心度量与 Lloyd 松弛迭代（5/5 PASS，自动动态挂载 `cap.voronoi`）
+新增纯 CP 零分配 2D 有界 Voronoi 图与 Lloyd 松弛库 cap:voronoi（半平面裁剪、Voronoi 单元、Lloyd 松弛、最近站点），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:bipartite` 纯 CP 零分配二分图算法库：BFS 二染色二分性判定、Hopcroft-Karp O(E√V) 最大基数匹配与 Kőnig 定理最小点覆盖/最大独立集提取（5/5 PASS，自动动态挂载 `cap.bipartite`）
 新增纯 CP 零分配二分图与最大匹配库 cap:bipartite（BFS 二染色、Hopcroft-Karp 最大匹配、Kőnig 最小点覆盖），含文档与 6 项深度生产测试
 

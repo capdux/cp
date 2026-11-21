@@ -834,3 +834,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:treap` | TREAP_NIL, TreapNode, TreapEntry, Treap | 纯 CP 零分配随机平衡树与顺序统计 Treap 库：固定节点池与空闲链表复用、SplitMix64 优先级、O(log n) kth/rank/lowerBound/upperBound/rangeCount 与不变量校验 |
 | `cap:delaunay` | Point2, Triangle, Edge2, Circumcircle, DelaunayWorkspace, delaunayMinTriPool, delaunayMinEdgePool, orient2d, circumcircle, inCircumcircle, pointInTriangle, triangulate, verifyDelaunayEmptyCircle, locateTriangle | 纯 CP 零分配 2D Delaunay 三角剖分库：Bowyer-Watson 增量剖分、无除法外接圆行列式谓词、CCW 绕序保证、空外接圆准则检验与三角形点定位 |
 | `cap:bipartite` | UNMATCHED, BipartiteGraph, isBipartite, hopcroftKarp, konigMinVertexCover | 纯 CP 零分配二分图算法库：BFS 二染色二分性判定、Hopcroft-Karp O(E√V) 最大基数匹配与 Kőnig 定理最小点覆盖/最大独立集提取 |
+| `cap:voronoi` | Point2, Bounds2, CellMetrics, clipPolygonHalfPlane, polygonArea, polygonCentroid, computeVoronoiCell, lloydRelaxationStep, nearestSite | 纯 CP 零分配 2D 有界 Voronoi 图与 Lloyd 松弛几何库：Sutherland-Hodgman 半平面裁剪、双缓冲 Voronoi 单元构建、面积/质心度量与 Lloyd 松弛迭代 |

@@ -127,3 +127,6 @@
 
 ### 2026-11-22（`cap:bipartite` 验收，子智能体交付 cap:bipartite（BFS 二染色 / Hopcroft-Karp / Kőnig 最小点覆盖，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/bipartite/`（5/5 PASS，`doc/lib/bipartite.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:bipartite（BFS 二染色 / Hopcroft-Karp / Kőnig 最小点覆盖，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:voronoi` 验收，子智能体交付 cap:voronoi（2D 有界 Voronoi 图与 Lloyd 松弛，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/voronoi/`（5/5 PASS，`doc/lib/voronoi.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:voronoi（2D 有界 Voronoi 图与 Lloyd 松弛，6/6 PASS），主协调器统一登记并提交
