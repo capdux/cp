@@ -132,3 +132,50 @@ export {
     PoolStats,
     ConnectionPool
 } from "./pool";
+
+export {
+    Ipv4Addr as RfcIpv4Addr,
+    Ipv6Addr as RfcIpv6Addr,
+    IpVersion,
+    IpAddr as RfcIpAddr,
+} from "./ipaddr";
+
+export {
+    MacAddr,
+} from "./mac";
+
+export {
+    HostKind,
+    SocketAddr,
+} from "./sockaddr";
+
+export {
+    ProxyProtoFamily,
+    ProxyV1Header,
+} from "./proxyv1";
+
+export {
+    PROXY_V2_SIGNATURE,
+    hasProxyV2Signature,
+    ProxyV2Command,
+    ProxyV2Family,
+    ProxyV2Transport,
+    ProxyV2Tlv,
+    ProxyV2TlvIter,
+    ProxyV2Header,
+} from "./proxyv2";
+
+export {
+    HostsLine,
+    HostsIter,
+    lookupHost,
+    lookupHostV4,
+    lookupHostV6,
+    reverseLookup,
+} from "./hosts";
+
+export {
+    Ipv4Addr as NoProxyIpv4Addr,
+    Ipv4Cidr as NoProxyIpv4Cidr,
+    shouldBypassProxy,
+} from "./noproxy";

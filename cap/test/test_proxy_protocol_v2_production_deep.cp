@@ -8,7 +8,7 @@ import {
     ProxyV2Transport,
     ProxyV2TlvIter,
     ProxyV2Header,
-} from "cap:proxy_protocol_v2";
+} from "cap:net";
 
 test("1. encodeIpv4 and parse round-trip with trailing payload and signature check", () => {
     let buf: [64]u8 = std.mem.zeroes([64]u8);

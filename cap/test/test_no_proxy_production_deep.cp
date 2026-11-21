@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { Ipv4Addr, Ipv4Cidr, shouldBypassProxy } from "cap:no_proxy";
+import { NoProxyIpv4Addr as Ipv4Addr, NoProxyIpv4Cidr as Ipv4Cidr, shouldBypassProxy } from "cap:net";
 
 test("1. Ipv4Addr parsing, toU32, loopback, private, and malformed rejection", () => {
     const lo = Ipv4Addr.parse("127.0.0.1") ?? unreachable;

@@ -4,7 +4,7 @@ import {
     lookupHostV4,
     lookupHostV6,
     reverseLookup,
-} from "cap:hosts_file";
+} from "cap:net";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {

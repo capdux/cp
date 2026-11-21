@@ -1,6 +1,6 @@
 import std from "std";
 import { test, expect_eq } from "cap:test";
-import { ProxyProtoFamily, ProxyV1Header } from "cap:proxy_protocol_v1";
+import { ProxyProtoFamily, ProxyV1Header } from "cap:net";
 
 test("1. ProxyV1Header.parse parses TCP4 with trailing HTTP payload and exact header_len", () => {
     const packet = "PROXY TCP4 203.0.113.19 198.51.100.2 56324 443\r\nGET / HTTP/1.1\r\n";

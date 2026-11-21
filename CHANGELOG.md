@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:net` 网络 Socket、IP/MAC/SocketAddr、PROXY Protocol v1/v2、Hosts 与 NoProxy 统一主包（5/5 PASS，自动动态挂载 `cap.net`）
+- **方案 A 收敛 Wave 5 (7 网络目录 -> `cap:net`)**：将 `ip_addr`/`mac_addr`/`socket_addr`/`proxy_protocol_v1`/`proxy_protocol_v2`/`hosts_file`/`no_proxy` 7 个散装目录合并收敛至 `lib/net/{ipaddr,mac,sockaddr,proxyv1,proxyv2,hosts,noproxy}.cp` 并由 `lib/net/index.cp` 零破坏聚合导出（7/7 PASS），删除 7 个旧目录与旧文档。
+
 ## [2026-11-22] - 新建 `cap:json` JSON 解析、转义、压缩与 RFC 6901 JSON Pointer 统一主包（同步收敛 `cap:text`）（5/5 PASS，自动动态挂载 `cap.json`）
 - **方案 A 收敛 Wave 4 (`json_*` -> `cap:json` & `text_*` -> `cap:text`)**：将 `json_escape`/`json_minify`/`json_pointer` 合入 `lib/json/{escape,minify,ptr}.cp`，将 `text_indent`/`text_wrap` 合入 `lib/text/{indent,wrap}.cp`（5/5 PASS），删除 5 个旧目录与旧文档。
 

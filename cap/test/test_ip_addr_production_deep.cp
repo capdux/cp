@@ -1,4 +1,4 @@
-import { Ipv4Addr, Ipv6Addr, IpAddr, IpVersion } from "cap:ip_addr";
+import { RfcIpv4Addr as Ipv4Addr, RfcIpv6Addr as Ipv6Addr, RfcIpAddr as IpAddr, IpVersion } from "cap:net";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {

@@ -313,3 +313,6 @@
 
 ### 2026-11-22（`cap:json` 验收，方案 A Wave 4：`json_*`(3) + `text_*`(2) 收敛落地（5/5 PASS），累计消除 75 个长下划线顶层目录）
 - **执行成果**：`lib/json/`（5/5 PASS，`doc/lib/json.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 4：`json_*`(3) + `text_*`(2) 收敛落地（5/5 PASS），累计消除 75 个长下划线顶层目录
+
+### 2026-11-22（`cap:net` 验收，方案 A Wave 5：7 个网络/代理目录收敛至 `cap:net`（7/7 PASS），累计消除 82 个长下划线顶层目录）
+- **执行成果**：`lib/net/`（5/5 PASS，`doc/lib/net.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 5：7 个网络/代理目录收敛至 `cap:net`（7/7 PASS），累计消除 82 个长下划线顶层目录
