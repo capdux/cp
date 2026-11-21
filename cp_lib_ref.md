@@ -648,3 +648,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:git_url_parse` | GitProtocol, GitRemoteUrl | Git 远程地址零分配解析器与协议互转工具（支持 SCP git@host:org/repo.git、ssh://、https://、git://、file://） |
 | `cap:toml_escape` | isBareTomlKey, formatTomlBasicString, formatTomlKey, unescapeTomlBasic | TOML 1.0 裸键校验、基本字符串字面量转义与严格 Unicode 标量值（\uXXXX/\UXXXXXXXX）反转义器 |
 | `cap:charset_label` | CharsetKind, resolveCharsetLabel, canonicalCharsetName, isUtf8Compatible, isAsciiSuperset, sniffBomCharset | WHATWG Encoding Standard 字符集标签规范化器（14 种编码别名映射与 UTF-8/UTF-16 BOM 嗅探） |
+| `cap:http_sec_fetch` | FetchSite, FetchMode, FetchDest, parseFetchSite, parseFetchMode, parseFetchDest, FetchMetadata | W3C Fetch Metadata（Sec-Fetch-Site/Mode/Dest/User）零分配解析与资源隔离防护策略求值器 |
+| `cap:git_diff_stat` | FileChangeKind, FileDiffStat, GitDiffIter, DiffSummary, summarizeGitDiff | Git Unified Diff (diff --git) 零分配文件变更统计提取器（增删行数、重命名、新增/删除与二进制识别） |
+| `cap:yaml_escape` | needsYamlQuotes, quoteYamlSingle, quoteYamlDouble, formatYamlScalar, unescapeYamlDouble | YAML 1.2 标量引号安全判定、单/双引号转义与 Unicode（\xHH/\uXXXX/\UXXXXXXXX）反转义器 |
+| `cap:http_client_hints` | BrandVersion, BrandListIter, findBrandVersion, parseMobileHint, parsePlatformHint | W3C Sec-CH-UA / Sec-CH-UA-Mobile / Sec-CH-UA-Platform 客户端提示零分配解析器与 GREASE 识别 |

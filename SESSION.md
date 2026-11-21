@@ -77,3 +77,15 @@
 ### 2026-11-22（`cap:charset_label` 验收，Batch 70 注册 `cap:charset_label` 并提交（突破 70 批次 / 223 模块里程碑）。）
 - **执行成果**：`lib/charset_label/`（5/5 PASS，`doc/lib/charset_label.md`）经 `verify_module.sh` 一次性验收回收；Batch 70 注册 `cap:charset_label` 并提交（突破 70 批次 / 223 模块里程碑）。
 - **CPC 热修里程碑（11 条工单全清零）**：热修子智能体完成并结单 `delivery_id` 54, 55, 56, 57, 58, 59, 60, 67, 68, 70, 71 共 11 条 `bun_agy` 编译器工单，`sync_cpc.sh release` 发布并回收热修子智能体。
+
+### 2026-11-22（`cap:http_sec_fetch` 验收，Batch 71 完成 `cap:http_sec_fetch`、`cap:git_diff_stat`、`cap:yaml_escape`、`cap:http_client_hints` 4 模块吸收与全量验收。）
+- **执行成果**：`lib/http_sec_fetch/`（5/5 PASS，`doc/lib/http_sec_fetch.md`）经 `verify_module.sh` 一次性验收回收；Batch 71 完成 `cap:http_sec_fetch`、`cap:git_diff_stat`、`cap:yaml_escape`、`cap:http_client_hints` 4 模块吸收与全量验收。
+
+### 2026-11-22（`cap:git_diff_stat` 验收，Batch 71 注册 `cap:git_diff_stat`。）
+- **执行成果**：`lib/git_diff_stat/`（5/5 PASS，`doc/lib/git_diff_stat.md`）经 `verify_module.sh` 一次性验收回收；Batch 71 注册 `cap:git_diff_stat`。
+
+### 2026-11-22（`cap:yaml_escape` 验收，Batch 71 注册 `cap:yaml_escape`。）
+- **执行成果**：`lib/yaml_escape/`（5/5 PASS，`doc/lib/yaml_escape.md`）经 `verify_module.sh` 一次性验收回收；Batch 71 注册 `cap:yaml_escape`。
+
+### 2026-11-22（`cap:http_client_hints` 验收，Batch 71 注册 `cap:http_client_hints` 并提交（累计 227 模块）。）
+- **执行成果**：`lib/http_client_hints/`（5/5 PASS，`doc/lib/http_client_hints.md`）经 `verify_module.sh` 一次性验收回收；Batch 71 注册 `cap:http_client_hints` 并提交（累计 227 模块）。

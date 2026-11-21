@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:http_client_hints` W3C Sec-CH-UA / Sec-CH-UA-Mobile / Sec-CH-UA-Platform 客户端提示零分配解析器与 GREASE 识别（5/5 PASS，文档直写 `doc/lib/http_client_hints.md`）
+主智能体吸收 `cap:http_client_hints`，与 `cap:http_user_agent` 互补覆盖现代浏览器客户端提示。
+
+## 2026-11-22: 新建 `cap:yaml_escape` YAML 1.2 标量引号安全判定、单/双引号转义与 Unicode（\xHH/\uXXXX/\UXXXXXXXX）反转义器（5/5 PASS，文档直写 `doc/lib/yaml_escape.md`）
+Subagent 2 吸收 `cap:yaml_escape`，覆盖全部 YAML 保留字、数字外观与控制字符转义。
+
+## 2026-11-22: 新建 `cap:git_diff_stat` Git Unified Diff (diff --git) 零分配文件变更统计提取器（增删行数、重命名、新增/删除与二进制识别）（5/5 PASS，文档直写 `doc/lib/git_diff_stat.md`）
+Subagent 1 吸收 `cap:git_diff_stat`，零堆分配汇总多文件 diff 统计指标。
+
+## 2026-11-22: 新建 `cap:http_sec_fetch` W3C Fetch Metadata（Sec-Fetch-Site/Mode/Dest/User）零分配解析与资源隔离防护策略求值器（5/5 PASS，文档直写 `doc/lib/http_sec_fetch.md`）
+主智能体吸收 `cap:http_sec_fetch`，阻断跨站 POST/XHR/`<object>`/`<embed>` 并兼容遗留客户端。
+
 ## 2026-11-22: 新建 `cap:charset_label` WHATWG Encoding Standard 字符集标签规范化器（14 种编码别名映射与 UTF-8/UTF-16 BOM 嗅探）（5/5 PASS，文档直写 `doc/lib/charset_label.md`）
 Subagent 2 吸收 `cap:charset_label`，零堆分配提供规范 IANA 名称、ASCII 超集判定与 BOM 嗅探。
 

@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_client_hints` W3C Sec-CH-UA / Sec-CH-UA-Mobile / Sec-CH-UA-Platform 客户端提示零分配解析器与 GREASE 识别（5/5 PASS，自动动态挂载 `cap.http_client_hints`）
+新增 `cap:http_client_hints`（`lib/http_client_hints/{client_hints,index}.cp`、`doc/lib/http_client_hints.md`、`cap/test/test_http_client_hints_production_deep.cp`），支持品牌版本迭代、GREASE 占位过滤与移动/平台提示解析。
+
+## [2026-11-22] - 新建 `cap:yaml_escape` YAML 1.2 标量引号安全判定、单/双引号转义与 Unicode（\xHH/\uXXXX/\UXXXXXXXX）反转义器（5/5 PASS，自动动态挂载 `cap.yaml_escape`）
+新增 `cap:yaml_escape`（`lib/yaml_escape/{yaml_escape,index}.cp`、`doc/lib/yaml_escape.md`、`cap/test/test_yaml_escape_production_deep.cp`），补全 JSON/TOML/XML/HTML/YAML 五大格式转义矩阵。
+
+## [2026-11-22] - 新建 `cap:git_diff_stat` Git Unified Diff (diff --git) 零分配文件变更统计提取器（增删行数、重命名、新增/删除与二进制识别）（5/5 PASS，自动动态挂载 `cap.git_diff_stat`）
+新增 `cap:git_diff_stat`（`lib/git_diff_stat/{diff_stat,index}.cp`、`doc/lib/git_diff_stat.md`、`cap/test/test_git_diff_stat_production_deep.cp`），仅在 hunk 内统计 `+`/`-` 行并排除 `+++`/`---` 文件头。
+
+## [2026-11-22] - 新建 `cap:http_sec_fetch` W3C Fetch Metadata（Sec-Fetch-Site/Mode/Dest/User）零分配解析与资源隔离防护策略求值器（5/5 PASS，自动动态挂载 `cap.http_sec_fetch`）
+新增 `cap:http_sec_fetch`（`lib/http_sec_fetch/{sec_fetch,index}.cp`、`doc/lib/http_sec_fetch.md`、`cap/test/test_http_sec_fetch_production_deep.cp`），实现 W3C Resource Isolation Policy 与同源 API 守卫。
+
 ## [2026-11-22] - 新建 `cap:charset_label` WHATWG Encoding Standard 字符集标签规范化器（14 种编码别名映射与 UTF-8/UTF-16 BOM 嗅探）（5/5 PASS，自动动态挂载 `cap.charset_label`）
 新增 `cap:charset_label`（`lib/charset_label/{charset,index}.cp`、`doc/lib/charset_label.md`、`cap/test/test_charset_label_production_deep.cp`），严格遵循 WHATWG Encoding §4.2 映射全部主流别名。
 
