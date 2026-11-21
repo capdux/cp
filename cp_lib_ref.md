@@ -836,3 +836,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:bipartite` | UNMATCHED, BipartiteGraph, isBipartite, hopcroftKarp, konigMinVertexCover | 纯 CP 零分配二分图算法库：BFS 二染色二分性判定、Hopcroft-Karp O(E√V) 最大基数匹配与 Kőnig 定理最小点覆盖/最大独立集提取 |
 | `cap:voronoi` | Point2, Bounds2, CellMetrics, clipPolygonHalfPlane, polygonArea, polygonCentroid, computeVoronoiCell, lloydRelaxationStep, nearestSite | 纯 CP 零分配 2D 有界 Voronoi 图与 Lloyd 松弛几何库：Sutherland-Hodgman 半平面裁剪、双缓冲 Voronoi 单元构建、面积/质心度量与 Lloyd 松弛迭代 |
 | `cap:suffix` | SuffixWorkspace, OccurrenceRange, LongestRepeat, buildSuffixArray, buildLcpArray, findPatternRange, countDistinctSubstrings, longestRepeatedSubstring | 纯 CP 零分配后缀数组（Suffix Array）与 Kasai LCP 字符串索引库：倍增基数排序 O(n log n) SA、Kasai O(n) LCP、二分模式区间定位、不同子串计数与最长重复子串 |
+| `cap:hmm` | HmmModel, ViterbiResult, viterbiDecode, forwardScaled, backwardScaled, posteriorStates, baumWelchStep | 纯 CP 零分配离散隐马尔可夫模型（HMM）库：对数域 Viterbi 最优路径解码、Rabiner 缩放 Forward-Backward 对数似然与后验分布及 Baum-Welch EM 参数重估 |

@@ -133,3 +133,6 @@
 
 ### 2026-11-22（`cap:suffix` 验收，子智能体交付 cap:suffix（后缀数组 SA 与 Kasai LCP 索引，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/suffix/`（5/5 PASS，`doc/lib/suffix.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:suffix（后缀数组 SA 与 Kasai LCP 索引，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:hmm` 验收，子智能体交付 cap:hmm（隐马尔可夫模型 Viterbi / Forward-Backward / Baum-Welch，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/hmm/`（5/5 PASS，`doc/lib/hmm.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:hmm（隐马尔可夫模型 Viterbi / Forward-Backward / Baum-Welch，6/6 PASS），主协调器统一登记并提交
