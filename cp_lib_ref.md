@@ -619,3 +619,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_permissions_policy` | PermissionDirective, PermissionsPolicyIter, findPermission | W3C Permissions-Policy 响应头零分配解析器与特性权限（disabled/self/*/origin）查询器 |
 | `cap:json_escape` | needsJsonEscape, escapeJsonContent, quoteJsonString, unescapeJsonContent | RFC 8259 JSON 字符串零分配转义器、加引号器与支持 UTF-16 代理对解码的严格反转义器 |
 | `cap:git_ref_check` | isValidGitRefName, isValidBranchName, GitRefKind, ParsedGitRef, parseFullGitRef, isValidGitOidHex, isValidShortOidHex | Git 引用名格式校验器（git-check-ref-format 10 条规则）、refs/* 拆解与 SHA-1/SHA-256 OID 校验 |
+| `cap:xml_escape` | isValidXmlChar, escapeXmlText, escapeXmlAttr, wrapXmlCdata, unescapeXml | XML 1.0 文本/属性转义器、CDATA ]]> 自动安全拆分器与数字/命名实体反转义器 |
+| `cap:http_proxy_url` | ProxyScheme, parseProxyScheme, defaultProxyPort, ProxyUrl, ProxyEnv, selectProxy | HTTP/HTTPS/SOCKS4/SOCKS5/SOCKS5H 代理 URL 解析器与 HTTP_PROXY/HTTPS_PROXY/ALL_PROXY/NO_PROXY 路由选择器 |
+| `cap:proc_cmdline` | NulArgIter, countArgs, argAt, ProcEnvEntry, ProcEnvIter, findProcEnv, formatCmdlineDisplay | POSIX /proc/<pid>/cmdline 与 environ NUL (\0) 分隔缓冲区零分配解析、环境变量查询与可读命令行渲染器 |
+| `cap:http_user_agent` | ProductToken, UserAgentIter, BrowserFamily, OsFamily, isBotUserAgent, isMobileUserAgent, detectBrowser, detectOs, findProductVersion | RFC 9110 §10.1.5 User-Agent 产品令牌零分配迭代器与浏览器/OS/移动端/爬虫分类器 |

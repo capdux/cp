@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:http_user_agent` RFC 9110 §10.1.5 User-Agent 产品令牌零分配迭代器与浏览器/OS/移动端/爬虫分类器（5/5 PASS，文档直写 `doc/lib/http_user_agent.md`）
+主智能体吸收 `cap:http_user_agent`，零堆分配提取产品版本号与客户端画像。
+
+## 2026-11-22: 新建 `cap:proc_cmdline` POSIX /proc/<pid>/cmdline 与 environ NUL (\0) 分隔缓冲区零分配解析、环境变量查询与可读命令行渲染器（5/5 PASS，文档直写 `doc/lib/proc_cmdline.md`）
+Subagent 1 吸收 `cap:proc_cmdline`，遵循 POSIX `getenv` 首次匹配语义并保留中间空参数。
+
+## 2026-11-22: 新建 `cap:http_proxy_url` HTTP/HTTPS/SOCKS4/SOCKS5/SOCKS5H 代理 URL 解析器与 HTTP_PROXY/HTTPS_PROXY/ALL_PROXY/NO_PROXY 路由选择器（5/5 PASS，文档直写 `doc/lib/http_proxy_url.md`）
+主智能体吸收 `cap:http_proxy_url`，统一处理 5 种代理协议与 `socks5h` 远程 DNS 解析标记。
+
+## 2026-11-22: 新建 `cap:xml_escape` XML 1.0 文本/属性转义器、CDATA ]]> 自动安全拆分器与数字/命名实体反转义器（5/5 PASS，文档直写 `doc/lib/xml_escape.md`）
+Subagent 2 吸收 `cap:xml_escape`，零堆分配实现文本/属性/CDATA 全场景安全转义与还原。
+
 ## 2026-11-22: 新建 `cap:git_ref_check` Git 引用名格式校验器（git-check-ref-format 10 条规则）、refs/* 拆解与 SHA-1/SHA-256 OID 校验（5/5 PASS，文档直写 `doc/lib/git_ref_check.md`）
 Subagent 1 吸收 `cap:git_ref_check`，零堆分配校验分支/标签/远程引用与 40/64 位十六进制 OID。
 

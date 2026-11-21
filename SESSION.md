@@ -481,3 +481,15 @@
 
 ### 2026-11-22（`cap:git_ref_check` 验收，Batch 62 注册 `cap:git_ref_check` 并提交（累计 194 模块）。）
 - **执行成果**：`lib/git_ref_check/`（5/5 PASS，`doc/lib/git_ref_check.md`）经 `verify_module.sh` 一次性验收回收；Batch 62 注册 `cap:git_ref_check` 并提交（累计 194 模块）。
+
+### 2026-11-22（`cap:xml_escape` 验收，Batch 63 完成 `cap:xml_escape`、`cap:http_proxy_url`、`cap:proc_cmdline`、`cap:http_user_agent` 4 模块吸收与全量验收。）
+- **执行成果**：`lib/xml_escape/`（5/5 PASS，`doc/lib/xml_escape.md`）经 `verify_module.sh` 一次性验收回收；Batch 63 完成 `cap:xml_escape`、`cap:http_proxy_url`、`cap:proc_cmdline`、`cap:http_user_agent` 4 模块吸收与全量验收。
+
+### 2026-11-22（`cap:http_proxy_url` 验收，Batch 63 注册 `cap:http_proxy_url`。）
+- **执行成果**：`lib/http_proxy_url/`（5/5 PASS，`doc/lib/http_proxy_url.md`）经 `verify_module.sh` 一次性验收回收；Batch 63 注册 `cap:http_proxy_url`。
+
+### 2026-11-22（`cap:proc_cmdline` 验收，Batch 63 注册 `cap:proc_cmdline`。）
+- **执行成果**：`lib/proc_cmdline/`（5/5 PASS，`doc/lib/proc_cmdline.md`）经 `verify_module.sh` 一次性验收回收；Batch 63 注册 `cap:proc_cmdline`。
+
+### 2026-11-22（`cap:http_user_agent` 验收，Batch 63 注册 `cap:http_user_agent` 并提交（累计 198 模块）。）
+- **执行成果**：`lib/http_user_agent/`（5/5 PASS，`doc/lib/http_user_agent.md`）经 `verify_module.sh` 一次性验收回收；Batch 63 注册 `cap:http_user_agent` 并提交（累计 198 模块）。

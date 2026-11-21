@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_user_agent` RFC 9110 §10.1.5 User-Agent 产品令牌零分配迭代器与浏览器/OS/移动端/爬虫分类器（5/5 PASS，自动动态挂载 `cap.http_user_agent`）
+新增 `cap:http_user_agent`（`lib/http_user_agent/{user_agent,index}.cp`、`doc/lib/http_user_agent.md`、`cap/test/test_http_user_agent_production_deep.cp`），自动跳过嵌套括号注释并精准识别 Chrome/Edge/Firefox/Safari/Bun/Node/curl/Bot。
+
+## [2026-11-22] - 新建 `cap:proc_cmdline` POSIX /proc/<pid>/cmdline 与 environ NUL (\0) 分隔缓冲区零分配解析、环境变量查询与可读命令行渲染器（5/5 PASS，自动动态挂载 `cap.proc_cmdline`）
+新增 `cap:proc_cmdline`（`lib/proc_cmdline/{proc_cmdline,index}.cp`、`doc/lib/proc_cmdline.md`、`cap/test/test_proc_cmdline_production_deep.cp`），实现 NUL 分隔 argv/environ 迭代与 POSIX 单引号安全展示。
+
+## [2026-11-22] - 新建 `cap:http_proxy_url` HTTP/HTTPS/SOCKS4/SOCKS5/SOCKS5H 代理 URL 解析器与 HTTP_PROXY/HTTPS_PROXY/ALL_PROXY/NO_PROXY 路由选择器（5/5 PASS，自动动态挂载 `cap.http_proxy_url`）
+新增 `cap:http_proxy_url`（`lib/http_proxy_url/{proxy_url,index}.cp`、`doc/lib/http_proxy_url.md`、`cap/test/test_http_proxy_url_production_deep.cp`），支持认证凭据、IPv6 `[::1]`、默认端口与 `NO_PROXY` 绕过判定。
+
+## [2026-11-22] - 新建 `cap:xml_escape` XML 1.0 文本/属性转义器、CDATA ]]> 自动安全拆分器与数字/命名实体反转义器（5/5 PASS，自动动态挂载 `cap.xml_escape`）
+新增 `cap:xml_escape`（`lib/xml_escape/{xml_escape,index}.cp`、`doc/lib/xml_escape.md`、`cap/test/test_xml_escape_production_deep.cp`），遵循 XML 1.0 §2.2 合法字符校验并自动拆分 CDATA `]]>`。
+
 ## [2026-11-22] - 新建 `cap:git_ref_check` Git 引用名格式校验器（git-check-ref-format 10 条规则）、refs/* 拆解与 SHA-1/SHA-256 OID 校验（5/5 PASS，自动动态挂载 `cap.git_ref_check`）
 新增 `cap:git_ref_check`（`lib/git_ref_check/{git_ref,index}.cp`、`doc/lib/git_ref_check.md`、`cap/test/test_git_ref_check_production_deep.cp`），完整覆盖 `git-check-ref-format` 全部规则与 `refs/heads|tags|remotes` 分类。
 
