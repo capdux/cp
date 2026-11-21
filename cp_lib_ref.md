@@ -802,3 +802,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:fnv` | FNV32_OFFSET_BASIS, FNV32_PRIME, FNV64_OFFSET_BASIS, FNV64_PRIME, FNV128_OFFSET_BASIS, FNV128_PRIME, Fnv1a32, Fnv1a64, Fnv1a128, Fnv1_32, Fnv1_64, Fnv1_128, fnv1a32, fnv1a64, fnv1a128, fnv1_32, fnv1_64, fnv1_128, fnvXorFold32, djb2, djb2Xor, sdbm, jenkinsOaat | IETF FNV-1/FNV-1a (32/64/128-bit) streaming hashers + DJB2/SDBM/Jenkins OAAT |
 | `cap:gf256` | GF256_POLY_AES, GF256_POLY_RS, Gf256Field, gf256MulConstTime | Galois Field GF(2^8) (AES/RS) arithmetic, const-time mul, Lagrange & Gauss-Jordan |
 | `cap:pid` | PidConfig, PidTerms, PidController, zieglerNicholsPid, rateLimit | Discrete PID controller with derivative-on-measurement, anti-windup, LPF & bumpless transfer |
+| `cap:kalman` | Kalman1D, Kalman2D, AlphaBetaFilter | Discrete 1D & 2D constant-velocity Kalman filter (Joseph form) & Alpha-Beta tracker |
