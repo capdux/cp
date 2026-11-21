@@ -1,0 +1,26 @@
+// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Linux Kernel romfs Big-Endian Read-Only Filesystem Parser)
+
+export {
+    ROMFS_MAGIC,
+    ROMFS_ALIGN,
+    ROMFS_MAX_CHECKSUM_LEN,
+    ROMFS_TYPE_MASK,
+    ROMFS_EXEC_BIT,
+    ROMFS_NEXT_MASK,
+    ROMFS_MAX_DIR_STEPS,
+    TYPE_HARD_LINK,
+    TYPE_DIRECTORY,
+    TYPE_REGULAR,
+    TYPE_SYMLINK,
+    TYPE_BLOCK_DEV,
+    TYPE_CHAR_DEV,
+    TYPE_SOCKET,
+    TYPE_FIFO,
+    romfsChecksum,
+    RomfsSuperblock,
+    RomfsEntry,
+    RomfsDirIter,
+    RomfsImage,
+    isRomfs,
+    parseRomfs,
+} from "./romfs.cp";

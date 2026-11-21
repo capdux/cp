@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:romfs` Linux romfs big-endian superblock, 32-bit checksum & 16B-aligned directory tree parser（5/5 PASS，文档直写 `doc/lib/romfs.md`）
+新增 cap:romfs 纯 CP 零分配极简内核只读文件系统库（大端 32-bit 校验和、16B 对齐文件头与递增防环目录迭代），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:coff` Microsoft COFF/PE-COFF (.obj) 20B header, 40B sections, 18B symbols & 10B relocs parser（5/5 PASS，文档直写 `doc/lib/coff.md`）
 新增 cap:coff 纯 CP 零分配目标文件解析库（20B 头、40B 节表含 /<offset> 长节名、18B 符号与 10B 重定位项），通过 cpc check 与 5/5 cap test
 
