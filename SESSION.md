@@ -109,3 +109,6 @@
 
 ### 2026-11-22（`cap:exfat` 验收，完成并注册纯 CP 零分配标准库 cap:exfat（6/6 cap test PASS））
 - **执行成果**：`lib/exfat/`（5/5 PASS，`doc/lib/exfat.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:exfat（6/6 cap test PASS）
+
+### 2026-11-22（`cap:xfs` 验收，完成并注册纯 CP 零分配标准库 cap:xfs（5/5 cap test PASS））
+- **执行成果**：`lib/xfs/`（5/5 PASS，`doc/lib/xfs.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:xfs（5/5 cap test PASS）

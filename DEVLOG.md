@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:xfs` Linux XFS v4/v5 superblock, CRC32C, Inode Core & 128-bit BMBT Extent zero-alloc codec（5/5 PASS，文档直写 `doc/lib/xfs.md`）
+新增 cap:xfs 纯 CP 零分配高性能日志文件系统库（v4/v5 大端超级块 CRC32C、v2/v3 Inode Core 与 128-bit BMBT Extent 跨 64-bit 位域编解码），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:exfat` Microsoft exFAT boot sector, 11-sector Boot Checksum & 32B directory entry set parser（5/5 PASS，文档直写 `doc/lib/exfat.md`）
 新增 cap:exfat 纯 CP 零分配大闪存文件系统库（512B 引导扇区、右旋 Boot/EntrySet Checksum 与 32B 目录项零拷贝迭代），通过 cpc check 与 6/6 cap test
 

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:xfs` Linux XFS v4/v5 superblock, CRC32C, Inode Core & 128-bit BMBT Extent zero-alloc codec（5/5 PASS，自动动态挂载 `cap.xfs`）
+新增纯 CP 零分配标准库 cap:xfs（Linux XFS v4/v5 超级块、CRC32C、Inode Core 与 128-bit BMBT Extent 编解码）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:exfat` Microsoft exFAT boot sector, 11-sector Boot Checksum & 32B directory entry set parser（5/5 PASS，自动动态挂载 `cap.exfat`）
 新增纯 CP 零分配标准库 cap:exfat（Microsoft exFAT 引导扇区、Boot Checksum 与 32B 目录项集合解析）与 6/6 深度测试
 
