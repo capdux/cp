@@ -265,3 +265,12 @@
 
 ### 2026-11-22（`cap:css_box_shadow` 验收，吸收 Bun CSS box-shadow + outline -> cap:css_box_shadow，测试 2/2 通过。）
 - **执行成果**：`lib/css_box_shadow/`（5/5 PASS，`doc/lib/css_box_shadow.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun CSS box-shadow + outline -> cap:css_box_shadow，测试 2/2 通过。
+
+### 2026-11-22（`cap:css_border_radius` 验收，Batch 22: 吸收并验证 cap:css_border_radius (PASSED)）
+- **执行成果**：`lib/css_border_radius/`（5/5 PASS，`doc/lib/css_border_radius.md`）经 `verify_module.sh` 一次性验收回收；Batch 22: 吸收并验证 cap:css_border_radius (PASSED)
+
+### 2026-11-22（`cap:css_flex_grid` 验收，Batch 22: 吸收并验证 cap:css_flex_grid (5/5 PASSED)）
+- **执行成果**：`lib/css_flex_grid/`（5/5 PASS，`doc/lib/css_flex_grid.md`）经 `verify_module.sh` 一次性验收回收；Batch 22: 吸收并验证 cap:css_flex_grid (5/5 PASSED)
+
+### 2026-11-22（`cap:semver_range` 验收，Batch 22: 吸收并验证 cap:semver_range (6/6 PASSED)）
+- **执行成果**：`lib/semver_range/`（5/5 PASS，`doc/lib/semver_range.md`）经 `verify_module.sh` 一次性验收回收；Batch 22: 吸收并验证 cap:semver_range (6/6 PASSED)

@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:semver_range` SemVer 版本比较器与范围匹配引擎（吸收自 bun/src/semver/{SemverRange,Version}.cp）（5/5 PASS，自动动态挂载 `cap.semver_range`）
+新增 cap:semver_range 标准库模块（lib/semver_range/{range,index}.cp, doc/lib/semver_range.md, cap/test/test_semver_range_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:css_flex_grid` CSS Flexbox / Box Alignment / Grid 布局属性解析与序列化（吸收自 bun/src/css/properties/{flex,align,grid}.cp）（5/5 PASS，自动动态挂载 `cap.css_flex_grid`）
+新增 cap:css_flex_grid 标准库模块（lib/css_flex_grid/{layout,index}.cp, doc/lib/css_flex_grid.md, cap/test/test_css_flex_grid_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:css_border_radius` CSS border-radius 椭圆/四值简写解析与规范化压缩序列化（吸收自 bun/src/css/properties/border_radius.cp）（5/5 PASS，自动动态挂载 `cap.css_border_radius`）
+新增 cap:css_border_radius 标准库模块（lib/css_border_radius/{radius,index}.cp, doc/lib/css_border_radius.md, cap/test/test_css_border_radius_production_deep.cp）
+
 ## [2026-11-22] - CSS box-shadow 与 border/outline 线型属性（5/5 PASS，自动动态挂载 `cap.css_box_shadow`）
 新增 cap:css_box_shadow 标准库（lib/css_box_shadow/、doc/lib/css_box_shadow.md、cap/test/test_css_box_shadow_production_deep.cp），2/2 回归通过。
 

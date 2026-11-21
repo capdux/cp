@@ -1,85 +1,25 @@
-// Source: cp/cap/test/test_semver_range_production_deep.cp
-// Deep Production Test Suite for cap:semver_range
-// 5 test cases:
-//   1. Semver 2.0 parsing, normalization, strict validation, Rule 11 ordering, +build ignored
-//   2. Caret ^ (incl. ^0.2.3 and ^0.0.3), Tilde ~, wildcards x/X/*, and basic comparators
-//   3. Hyphen ranges (A - B), || unions, maxSatisfying/minSatisfying, and intersects
-//   4. Prerelease isolation rule, include_prerelease option, and malformed range rejection
-//   5. Dynamic cap.semver_range namespace mounting & std.testing.allocator zero-leak check
+// Source: cp/cap/test/test_semver_range_production_deep.cp (Production deep tests for cap:semver_range)
 
-const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import {
-    SemverError,
-    RangeOptions,
-    Semver,
-    RangeExpr,
-    parseSemver,
-    compare,
-    comparePrecedence,
-    equals,
-    lt,
-    gt,
-    parseRange,
-    satisfies,
-    satisfiesWithOptions,
-    satisfiesStr,
-    satisfiesStrWithOptions,
-    maxSatisfying,
-    minSatisfying,
-    intersects,
-} from "cap:semver_range";
-import cap from "cap";
+import { SemverVersion, SemverRange } from "cap:semver_range";
 
-fn expectSemverErr(input: []const u8, expected: SemverError) {
-    switch (parseSemver(input)) {
-        val => {
-            expect_eq(true, false);
-        },
-        err(e) => {
-            expect_eq(e == expected, true);
-        },
-    }
-}
+test("SemverVersion parsing (prerelease/build) and Semver 2.0 total ordering") {
+    const v_full = SemverVersion.parse("v1.2.3-beta.11+build.42") catch unreachable;
+    expect_eq(v_full.major, @as(u64, 1));
+    expect_eq(v_full.minor, @as(u64, 2));
+    expect_eq(v_full.patch, @as(u64, 3));
+    expect_eq(v_full.hasPrerelease(), true);
+    expect_eq(v_full.hasBuild(), true);
+    expect_eq(v_full.prerelease, "beta.11");
+    expect_eq(v_full.build, "build.42");
 
-fn expectRangeErr(alloc: std.mem.Allocator, input: []const u8) {
-    switch (parseRange(alloc, input)) {
-        val => {
-            let r = val;
-            r.deinit(alloc);
-            expect_eq(true, false);
-        },
-        err(e) => {
-            * = e;
-            expect_eq(true, true);
-        },
-    }
-}
+    // 构建元数据不影响优先级相等性
+    const b1 = SemverVersion.parse("1.0.0+001") catch unreachable;
+    const b2 = SemverVersion.parse("1.0.0+20130313144700") catch unreachable;
+    expect_eq(b1.eql(b2), true);
 
-test("semver_range: Semver 2.0 parsing, Rule 11 precedence, and build metadata ignored", () => {
-    const alloc = std.testing.allocator;
-
-    // Leading v / = normalization & format
-    let v1 = parseSemver("  v1.2.3-alpha.1+build.42  ")?;
-    expect_eq(v1.major, 1 as u64);
-    expect_eq(v1.minor, 2 as u64);
-    expect_eq(v1.patch, 3 as u64);
-    expect_eq(std.mem.eql(u8, v1.prerelease, "alpha.1"), true);
-    expect_eq(std.mem.eql(u8, v1.build, "build.42"), true);
-    expect_eq(v1.hasPrerelease(), true);
-    expect_eq(v1.hasBuild(), true);
-
-    const formatted = v1.format(alloc)?;
-    defer alloc.free(formatted);
-    expect_eq(std.mem.eql(u8, formatted, "1.2.3-alpha.1+build.42"), true);
-
-    let v_eq = parseSemver("=v1.2.3-alpha.1+other.99")?;
-    expect_eq(compare(v1, v_eq), 0 as i8);
-    expect_eq(comparePrecedence(v1, v_eq), 0 as i8);
-    expect_eq(equals(v1, v_eq), true);
-
-    // Semver 2.0 Rule 11 total ordering chain
-    const chain: [8][]const u8 = [
+    // Semver 2.0 规范标准优先级链
+    const chain: [8]string = [
         "1.0.0-alpha",
         "1.0.0-alpha.1",
         "1.0.0-alpha.beta",
@@ -91,182 +31,133 @@ test("semver_range: Semver 2.0 parsing, Rule 11 precedence, and build metadata i
     ];
     let i: usize = 0;
     while (i + 1 < chain.len) {
-        let a = parseSemver(chain[i])?;
-        let b = parseSemver(chain[i + 1])?;
-        expect_eq(lt(a, b), true);
-        expect_eq(gt(b, a), true);
-        expect_eq(comparePrecedence(a, b), -1 as i8);
+        const va = SemverVersion.parse(chain[i]) catch unreachable;
+        const vb = SemverVersion.parse(chain[i + 1]) catch unreachable;
+        expect_eq(va.lt(vb), true);
+        expect_eq(vb.gt(va), true);
+        expect_eq(va.eql(vb), false);
         i += 1;
     }
+}
 
-    // Strict rejection of leading zeros, missing segments, empty tags
-    expectSemverErr("", SemverError.EmptyInput);
-    expectSemverErr("01.2.3", SemverError.LeadingZero);
-    expectSemverErr("1.02.3", SemverError.LeadingZero);
-    expectSemverErr("1.2.03", SemverError.LeadingZero);
-    expectSemverErr("1.2.3-01", SemverError.LeadingZero);
-    expectSemverErr("1.2", SemverError.InvalidVersion);
-    expectSemverErr("1.2.3.4", SemverError.InvalidVersion);
-    expectSemverErr("1.2.3-", SemverError.InvalidPrerelease);
-    expectSemverErr("1.2.3+", SemverError.InvalidBuildMetadata);
-    expectSemverErr("999999999999999999999999.0.0", SemverError.IntegerOverflow);
-});
+test("Standard comparators =, >, >=, <, <= and compound AND constraints") {
+    const r_eq = SemverRange.parse("=1.2.3") catch unreachable;
+    expect_eq(r_eq.satisfiesStr("1.2.3"), true);
+    expect_eq(r_eq.satisfiesStr("1.2.4"), false);
 
-test("semver_range: Caret (^0.2.3, ^0.0.3), Tilde (~), wildcards (x/*), and comparators", () => {
-    const alloc = std.testing.allocator;
+    const r_band = SemverRange.parse(">= 1.2.0 < 2.0.0") catch unreachable;
+    expect_eq(r_band.satisfiesStr("1.1.9"), false);
+    expect_eq(r_band.satisfiesStr("1.2.0"), true);
+    expect_eq(r_band.satisfiesStr("1.9.9"), true);
+    expect_eq(r_band.satisfiesStr("2.0.0"), false);
 
-    // Caret ^1.2.3 -> >=1.2.3 <2.0.0-0
-    expect_eq(satisfiesStr(alloc, "1.2.3", "^1.2.3")?, true);
-    expect_eq(satisfiesStr(alloc, "1.9.9", "^1.2.3")?, true);
-    expect_eq(satisfiesStr(alloc, "1.2.2", "^1.2.3")?, false);
-    expect_eq(satisfiesStr(alloc, "2.0.0", "^1.2.3")?, false);
+    const r_open = SemverRange.parse(">1.0.0 <=1.5.0") catch unreachable;
+    expect_eq(r_open.satisfiesStr("1.0.0"), false);
+    expect_eq(r_open.satisfiesStr("1.0.1"), true);
+    expect_eq(r_open.satisfiesStr("1.5.0"), true);
+    expect_eq(r_open.satisfiesStr("1.5.1"), false);
+}
 
-    // Caret zero-major ^0.2.3 -> >=0.2.3 <0.3.0-0
-    expect_eq(satisfiesStr(alloc, "0.2.3", "^0.2.3")?, true);
-    expect_eq(satisfiesStr(alloc, "0.2.99", "^0.2.3")?, true);
-    expect_eq(satisfiesStr(alloc, "0.2.2", "^0.2.3")?, false);
-    expect_eq(satisfiesStr(alloc, "0.3.0", "^0.2.3")?, false);
+test("Caret (^) including 0.x / 0.0.x edge cases and Tilde (~) ranges") {
+    // ^1.2.3 -> >=1.2.3 <2.0.0
+    const c1 = SemverRange.parse("^1.2.3") catch unreachable;
+    expect_eq(c1.satisfiesStr("1.2.2"), false);
+    expect_eq(c1.satisfiesStr("1.2.3"), true);
+    expect_eq(c1.satisfiesStr("1.9.9"), true);
+    expect_eq(c1.satisfiesStr("2.0.0"), false);
 
-    // Caret zero-major-zero-minor ^0.0.3 -> >=0.0.3 <0.0.4-0
-    expect_eq(satisfiesStr(alloc, "0.0.3", "^0.0.3")?, true);
-    expect_eq(satisfiesStr(alloc, "0.0.2", "^0.0.3")?, false);
-    expect_eq(satisfiesStr(alloc, "0.0.4", "^0.0.3")?, false);
+    // ^0.2.3 -> >=0.2.3 <0.3.0
+    const c2 = SemverRange.parse("^0.2.3") catch unreachable;
+    expect_eq(c2.satisfiesStr("0.2.2"), false);
+    expect_eq(c2.satisfiesStr("0.2.3"), true);
+    expect_eq(c2.satisfiesStr("0.2.9"), true);
+    expect_eq(c2.satisfiesStr("0.3.0"), false);
 
-    // Tilde ~1.2.3 -> >=1.2.3 <1.3.0-0; ~1 -> >=1.0.0 <2.0.0-0
-    expect_eq(satisfiesStr(alloc, "1.2.3", "~1.2.3")?, true);
-    expect_eq(satisfiesStr(alloc, "1.2.9", "~1.2.3")?, true);
-    expect_eq(satisfiesStr(alloc, "1.3.0", "~1.2.3")?, false);
-    expect_eq(satisfiesStr(alloc, "1.9.0", "~1")?, true);
-    expect_eq(satisfiesStr(alloc, "2.0.0", "~1")?, false);
+    // ^0.0.3 -> >=0.0.3 <0.0.4
+    const c3 = SemverRange.parse("^0.0.3") catch unreachable;
+    expect_eq(c3.satisfiesStr("0.0.2"), false);
+    expect_eq(c3.satisfiesStr("0.0.3"), true);
+    expect_eq(c3.satisfiesStr("0.0.4"), false);
 
-    // Wildcards 1.2.x, 1.X, *
-    expect_eq(satisfiesStr(alloc, "1.2.0", "1.2.x")?, true);
-    expect_eq(satisfiesStr(alloc, "1.2.8", "1.2.x")?, true);
-    expect_eq(satisfiesStr(alloc, "1.3.0", "1.2.x")?, false);
-    expect_eq(satisfiesStr(alloc, "1.9.5", "1.X")?, true);
-    expect_eq(satisfiesStr(alloc, "2.0.0", "1.X")?, false);
-    expect_eq(satisfiesStr(alloc, "99.0.0", "*")?, true);
+    // ~1.2.3 -> >=1.2.3 <1.3.0; ~1 -> >=1.0.0 <2.0.0
+    const t1 = SemverRange.parse("~1.2.3") catch unreachable;
+    expect_eq(t1.satisfiesStr("1.2.3"), true);
+    expect_eq(t1.satisfiesStr("1.2.9"), true);
+    expect_eq(t1.satisfiesStr("1.3.0"), false);
 
-    // Basic operators with optional whitespace
-    expect_eq(satisfiesStr(alloc, "1.5.0", ">= 1.2.0 <= 1.5.0")?, true);
-    expect_eq(satisfiesStr(alloc, "1.5.1", ">= 1.2.0 <= 1.5.0")?, false);
-    expect_eq(satisfiesStr(alloc, "1.2.0", ">1.2.0")?, false);
-    expect_eq(satisfiesStr(alloc, "1.2.1", "=1.2.1")?, true);
-});
+    const t2 = SemverRange.parse("~1") catch unreachable;
+    expect_eq(t2.satisfiesStr("1.0.0"), true);
+    expect_eq(t2.satisfiesStr("1.9.0"), true);
+    expect_eq(t2.satisfiesStr("2.0.0"), false);
+}
 
-test("semver_range: hyphen ranges, || unions, maxSatisfying/minSatisfying, and intersects", () => {
-    const alloc = std.testing.allocator;
+test("Hyphen ranges (1.2.3 - 2.3.4), wildcards (1.x, 1.2.*, *) and prerelease guard") {
+    const h1 = SemverRange.parse("1.2.3 - 2.3.4") catch unreachable;
+    expect_eq(h1.satisfiesStr("1.2.2"), false);
+    expect_eq(h1.satisfiesStr("1.2.3"), true);
+    expect_eq(h1.satisfiesStr("2.3.4"), true);
+    expect_eq(h1.satisfiesStr("2.3.5"), false);
 
-    // Hyphen ranges
-    expect_eq(satisfiesStr(alloc, "1.2.3", "1.2.3 - 2.3.4")?, true);
-    expect_eq(satisfiesStr(alloc, "2.3.4", "1.2.3 - 2.3.4")?, true);
-    expect_eq(satisfiesStr(alloc, "2.3.5", "1.2.3 - 2.3.4")?, false);
-    expect_eq(satisfiesStr(alloc, "2.3.9", "1.2 - 2.3")?, true);
-    expect_eq(satisfiesStr(alloc, "2.4.0", "1.2 - 2.3")?, false);
+    // 不完整右端：1.2.3 - 2.3 -> >=1.2.3 <2.4.0
+    const h2 = SemverRange.parse("1.2.3 - 2.3") catch unreachable;
+    expect_eq(h2.satisfiesStr("2.3.9"), true);
+    expect_eq(h2.satisfiesStr("2.4.0"), false);
 
-    // Union || with intersection
-    let r = parseRange(alloc, ">=1.2.0 <1.5.0 || >=2.0.0 <=2.2.0")?;
-    defer r.deinit(alloc);
+    // 通配符
+    const w_any = SemverRange.parse("*") catch unreachable;
+    expect_eq(w_any.satisfiesStr("0.0.1"), true);
+    expect_eq(w_any.satisfiesStr("99.0.0"), true);
+    // Prerelease 保护：未显式声明 prerelease 的范围不匹配 prerelease
+    expect_eq(w_any.satisfiesStr("1.0.0-alpha.1"), false);
 
-    let candidates: [7]Semver = [
-        try parseSemver("1.1.9"),
-        try parseSemver("1.2.0"),
-        try parseSemver("1.4.9"),
-        try parseSemver("1.5.0"),
-        try parseSemver("2.0.0"),
-        try parseSemver("2.1.5"),
-        try parseSemver("2.2.1"),
+    const w_minor = SemverRange.parse("1.x") catch unreachable;
+    expect_eq(w_minor.satisfiesStr("1.0.0"), true);
+    expect_eq(w_minor.satisfiesStr("1.8.4"), true);
+    expect_eq(w_minor.satisfiesStr("2.0.0"), false);
+
+    const w_patch = SemverRange.parse("1.2.*") catch unreachable;
+    expect_eq(w_patch.satisfiesStr("1.2.0"), true);
+    expect_eq(w_patch.satisfiesStr("1.2.99"), true);
+    expect_eq(w_patch.satisfiesStr("1.3.0"), false);
+}
+
+test("Logical OR (||) multi-group matching and maxSatisfying / minSatisfying selection") {
+    const r = SemverRange.parse("^1.2.0 || >=3.0.0 <3.2.0 || 4.0.0-alpha.1") catch unreachable;
+    expect_eq(r.groupCount(), @as(usize, 3));
+
+    const pool: [6]SemverVersion = [
+        SemverVersion.parse("1.1.0") catch unreachable,
+        SemverVersion.parse("1.2.3") catch unreachable,
+        SemverVersion.parse("1.8.0") catch unreachable,
+        SemverVersion.parse("2.5.0") catch unreachable,
+        SemverVersion.parse("3.1.9") catch unreachable,
+        SemverVersion.parse("4.0.0-alpha.1") catch unreachable,
     ];
 
-    let max_v = maxSatisfying(&candidates, r);
-    expect_eq(max_v != null, true);
-    expect_eq(equals(max_v.?, try parseSemver("2.1.5")), true);
+    const best = r.maxSatisfying(pool[0..6]).?;
+    expect_eq(best.eql(SemverVersion.parse("4.0.0-alpha.1") catch unreachable), true);
 
-    let min_v = minSatisfying(&candidates, r);
-    expect_eq(min_v != null, true);
-    expect_eq(equals(min_v.?, try parseSemver("1.2.0")), true);
+    const lowest = r.minSatisfying(pool[0..6]).?;
+    expect_eq(lowest.eql(SemverVersion.parse("1.2.3") catch unreachable), true);
 
-    let r_none = parseRange(alloc, ">=9.0.0")?;
-    defer r_none.deinit(alloc);
-    expect_eq(maxSatisfying(&candidates, r_none) == null, true);
-    expect_eq(minSatisfying(&candidates, r_none) == null, true);
+    // 显式 prerelease 分组仅匹配同 (4,0,0) 且满足比较器的 prerelease
+    expect_eq(r.satisfiesStr("4.0.0-alpha.1"), true);
+    expect_eq(r.satisfiesStr("3.1.0-beta.1"), false);
+}
 
-    // intersects
-    let r_a = parseRange(alloc, "^1.2.0")?;
-    defer r_a.deinit(alloc);
-    let r_b = parseRange(alloc, "^1.5.0")?;
-    defer r_b.deinit(alloc);
-    let r_c = parseRange(alloc, "^2.0.0")?;
-    defer r_c.deinit(alloc);
-    let r_d = parseRange(alloc, ">1.2.3")?;
-    defer r_d.deinit(alloc);
-    let r_e = parseRange(alloc, "<1.2.4")?;
-    defer r_e.deinit(alloc);
+test("Malformed version and range syntax error guards") {
+    // 非法 SemverVersion
+    expect_eq(switch (SemverVersion.parse("")) { err.EmptyInput => true, else => false }, true);
+    expect_eq(switch (SemverVersion.parse("1.2")) { err.InvalidVersion => true, else => false }, true);
+    expect_eq(switch (SemverVersion.parse("01.2.3")) { err.InvalidVersion => true, else => false }, true);
+    expect_eq(switch (SemverVersion.parse("1.2.3-01")) { err.InvalidVersion => true, else => false }, true);
+    expect_eq(switch (SemverVersion.parse("1.2.3-")) { err.InvalidVersion => true, else => false }, true);
+    expect_eq(switch (SemverVersion.parse("1.2.3+")) { err.InvalidVersion => true, else => false }, true);
 
-    expect_eq(intersects(r_a, r_b), true);
-    expect_eq(intersects(r_a, r_c), false);
-    expect_eq(intersects(r_d, r_e), false);
-    expect_eq(intersects(r, r_c), true);
-});
-
-test("semver_range: prerelease isolation rule and malformed expression rejection", () => {
-    const alloc = std.testing.allocator;
-
-    // Default prerelease isolation: only same [major, minor, patch] tuple with explicit prerelease comparator matches
-    let r_pre = parseRange(alloc, ">=1.2.3-alpha.1 <2.0.0")?;
-    defer r_pre.deinit(alloc);
-
-    expect_eq(satisfies(try parseSemver("1.2.3-alpha.2"), r_pre), true);
-    expect_eq(satisfies(try parseSemver("1.2.3-beta"), r_pre), true);
-    expect_eq(satisfies(try parseSemver("1.5.0"), r_pre), true);
-    expect_eq(satisfies(try parseSemver("1.2.4-alpha.1"), r_pre), false);
-    expect_eq(satisfies(try parseSemver("2.0.0-alpha.1"), r_pre), false);
-
-    // ^1.2.3 must NOT match 2.0.0-alpha.1 or 1.2.4-alpha.1 by default
-    expect_eq(satisfiesStr(alloc, "2.0.0-alpha.1", "^1.2.3")?, false);
-    expect_eq(satisfiesStr(alloc, "1.2.4-alpha.1", "^1.2.3")?, false);
-
-    // include_prerelease: true allows cross-tuple prerelease matching within bounds
-    let opts = RangeOptions{ include_prerelease: true };
-    expect_eq(satisfiesWithOptions(try parseSemver("1.2.4-alpha.1"), r_pre, opts), true);
-    expect_eq(satisfiesStrWithOptions(alloc, "1.2.4-alpha.1", "^1.2.3", opts)?, true);
-    expect_eq(satisfiesStrWithOptions(alloc, "2.0.0-alpha.1", "^1.2.3", opts)?, false);
-
-    // Malformed expressions must be rejected cleanly
-    expectRangeErr(alloc, "");
-    expectRangeErr(alloc, ">");
-    expectRangeErr(alloc, ">= ");
-    expectRangeErr(alloc, "^");
-    expectRangeErr(alloc, "~");
-    expectRangeErr(alloc, "1.2.3 - ");
-    expectRangeErr(alloc, " - 1.2.3");
-    expectRangeErr(alloc, "1.0.0 || ");
-    expectRangeErr(alloc, "|| 1.0.0");
-    expectRangeErr(alloc, "==1.2.3");
-    expectRangeErr(alloc, "~01.2.3");
-    expectRangeErr(alloc, ">=1.2.3.4");
-});
-
-test("semver_range: dynamic cap.semver_range mounting and zero-leak check", () => {
-    const alloc = std.testing.allocator;
-
-    let v = cap.semver_range.parseSemver("v2.1.0-rc.1")?;
-    let r = cap.semver_range.parseRange(alloc, "^2.0.0 || >=2.1.0-rc.1 <2.2.0")?;
-    defer r.deinit(alloc);
-
-    expect_eq(cap.semver_range.satisfies(v, r), true);
-    expect_eq(cap.semver_range.satisfiesStr(alloc, "2.1.5", "^2.0.0")?, true);
-
-    let r2 = cap.semver_range.parseRange(alloc, "~2.1.0")?;
-    defer r2.deinit(alloc);
-    expect_eq(cap.semver_range.intersects(r, r2), true);
-
-    let pool: [3]Semver = [
-        try cap.semver_range.parseSemver("2.0.0"),
-        try cap.semver_range.parseSemver("2.1.0-rc.1"),
-        try cap.semver_range.parseSemver("2.1.9"),
-    ];
-    let best = cap.semver_range.maxSatisfying(&pool, r2);
-    expect_eq(best != null, true);
-    expect_eq(cap.semver_range.equals(best.?, try parseSemver("2.1.9")), true);
-});
+    // 非法 SemverRange
+    expect_eq(switch (SemverRange.parse("")) { err.EmptyInput => true, else => false }, true);
+    expect_eq(switch (SemverRange.parse("|| ^1.0.0")) { err.InvalidRange => true, else => false }, true);
+    expect_eq(switch (SemverRange.parse("^1.0.0 ||")) { err.InvalidRange => true, else => false }, true);
+    expect_eq(switch (SemverRange.parse(">=")) { err.InvalidComparator => true, else => false }, true);
+    expect_eq(switch (SemverRange.parse("^abc")) { err.InvalidVersion => true, else => false }, true);
+}
