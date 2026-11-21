@@ -430,9 +430,9 @@ fn testStandaloneModuleGraph(): !void {
     expect_eq(loaded.find("/$cpfs/missing.cp") == null, true);
 
     // Zero-copy check: deserialized slice pointer falls strictly within `blob` address range
-    const blob_start = @intFromPtr(blob.ptr);
+    const blob_start = unsafe { @intFromPtr(blob.ptr) };
     const blob_end = blob_start + blob.len;
-    const content_ptr = @intFromPtr(entry.contents.ptr);
+    const content_ptr = unsafe { @intFromPtr(entry.contents.ptr) };
     expect_eq(content_ptr >= blob_start && content_ptr < blob_end, true);
 
     // Corrupt magic & truncated bounds protection

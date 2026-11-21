@@ -50,7 +50,7 @@ fn sysGetcwd(buf: []u8): ![]const u8 {
     if (buf.len == 0) return error.BufferTooSmall;
     const ptr = std.c.getcwd(buf.ptr, buf.len);
     if (ptr == null) return error.IoError;
-    const c_ptr: [*:0]const u8 = @ptrCast(buf.ptr);
+    const c_ptr: [*:0]const u8 = unsafe { @ptrCast(buf.ptr) };
     return std.mem.span(c_ptr);
 }
 

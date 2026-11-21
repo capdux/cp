@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/install/lockfile.cp
+// Source: Absorbed from /data/dev/bun/src/install/lockfile.cp | Synced: 2026-11-20T19:42:07Z
 // ============================================================================
 // lib/pkg/lockfile.cp — Dependency Graph, Cycle/Topo Engine & Dual Lockfile Persistence
 // Absorbed from Bun src/install/{lockfile.cp,lockfile/bun.lock.cp,lockfile/bun.lockb.cp}
@@ -266,25 +266,24 @@ pub struct Lockfile {
 
     /// Computes a deterministic 256-bit hash fingerprint over the lockfile graph.
     pub fn computeMetaHash(*_) {
-        zig {
-            var h1: u64 = 0x517cc1b727220a95;
-            var h2: u64 = 0x9e3779b97f4a7c15;
-            var h3: u64 = 0xbf58476d1ce4e5b9;
-            var h4: u64 = 0x94d049bb133111eb;
+        const k_mul: u64 = (@as(u64, 0x9e3779b9) << 32) | 0x7f4a7c15;
+        let h1: u64 = (@as(u64, 0x517cc1b7) << 32) | 0x27220a95;
+        let h2: u64 = k_mul;
+        let h3: u64 = (@as(u64, 0xbf58476d) << 32) | 0x1ce4e5b9;
+        let h4: u64 = (@as(u64, 0x94d049bb) << 32) | 0x133111eb;
 
-            for (self.packages.items) |pkg| {
-                h1 = Hash.wyhash(pkg.name, h1);
-                h2 = Hash.wyhash(pkg.version, h2);
-                h3 ^= @as(u64, pkg.id) *% 0x9e3779b97f4a7c15;
-                for (pkg.dependencies.items) |edge| {
-                    h4 = Hash.wyhash(edge.name, h4 ^ @as(u64, edge.resolved_pkg_id));
-                }
+        for (pkg of _.packages.items) {
+            h1 = Hash.wyhash(pkg.name, h1);
+            h2 = Hash.wyhash(pkg.version, h2);
+            h3 ^= @as(u64, pkg.id) *% k_mul;
+            for (edge of pkg.dependencies.items) {
+                h4 = Hash.wyhash(edge.name, h4 ^ @as(u64, edge.resolved_pkg_id));
             }
-            std.mem.writeInt(u64, self.meta_hash[0..8], h1, .little);
-            std.mem.writeInt(u64, self.meta_hash[8..16], h2, .little);
-            std.mem.writeInt(u64, self.meta_hash[16..24], h3, .little);
-            std.mem.writeInt(u64, self.meta_hash[24..32], h4, .little);
         }
+        std.mem.writeInt(u64, _.meta_hash[0..8], h1, .little);
+        std.mem.writeInt(u64, _.meta_hash[8..16], h2, .little);
+        std.mem.writeInt(u64, _.meta_hash[16..24], h3, .little);
+        std.mem.writeInt(u64, _.meta_hash[24..32], h4, .little);
     }
 
     fn dfsCycleCheck(

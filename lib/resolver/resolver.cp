@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/resolver/resolver.zig
+// Source: Absorbed from /data/dev/bun/src/resolver/resolver.zig | Synced: 2026-11-21T13:21:38Z
 // ============================================================================
 // lib/resolver/resolver.cp — Module Resolver, Conditions & StatHash Cache Key
 // ============================================================================

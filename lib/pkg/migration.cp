@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/install/migration.cp
+// Source: Absorbed from /data/dev/bun/src/install/migration.cp | Synced: 2026-11-20T17:13:21Z
 // ============================================================================
 // lib/pkg/migration.cp — Multi-Ecosystem Lockfile Migrator & Dependency Analyzer
 // Absorbed from Bun src/install/{migration.cp,yarn.cp,pnpm.cp}

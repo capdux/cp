@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/resolver/package_json.zig
+// Source: Absorbed from /data/dev/bun/src/resolver/package_json.zig | Synced: 2026-11-21T11:53:48Z
 // ============================================================================
 // lib/resolver/package_json.cp — package.json Structured Parser & Exports/Imports Router
 // ============================================================================

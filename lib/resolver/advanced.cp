@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/resolver/tsconfig_json.cp & /data/dev/bun/src/resolver/package_json.cp
+// Source: Absorbed from /data/dev/bun/src/resolver/tsconfig_json.cp | Synced: 2026-11-21T12:28:09Z
 // ============================================================================
 // lib/resolver/advanced.cp — TsConfig Inheritance, Browser Map, SideEffects & Self-Ref
 // ============================================================================
@@ -45,11 +45,11 @@ fn relativePosixOwned(allocator: std.mem.Allocator, from_dir: []const u8, to_pat
 }
 
 fn stripLeadingDotSlash(p: []const u8): []const u8 {
-    let s = p;
-    while (std.mem.startsWith(u8, s, "./")) {
-        s = s[2..];
+    let start: usize = 0;
+    while (start + 2 <= p.len && p[start] == '.' && p[start + 1] == '/') {
+        start += 2;
     }
-    return s;
+    return p[start..];
 }
 
 fn normalizeForwardSlashesAlloc(allocator: std.mem.Allocator, p: []const u8): ([]u8)! {
@@ -594,7 +594,7 @@ pub struct SideEffectsMatcher {
             buf[len] = if (ch == '\\') '/' else ch;
             len += 1;
         }
-        let s = buf[0..len];
+        let start: usize = 0;
         if (_.package_dir.len > 0) {
             let pkg_buf: [2048]u8 = undefined;
             let plen: usize = 0;
@@ -603,18 +603,17 @@ pub struct SideEffectsMatcher {
                 pkg_buf[plen] = if (ch == '\\') '/' else ch;
                 plen += 1;
             }
-            let pkg_dir = pkg_buf[0..plen];
-            while (pkg_dir.len > 1 && pkg_dir[pkg_dir.len - 1] == '/') {
-                pkg_dir = pkg_dir[0 .. pkg_dir.len - 1];
+            let pkg_len = plen;
+            while (pkg_len > 1 && pkg_buf[pkg_len - 1] == '/') {
+                pkg_len -= 1;
             }
-            if (std.mem.startsWith(u8, s, pkg_dir)) {
-                let rest = s[pkg_dir.len..];
-                if (rest.len > 0 && rest[0] == '/') {
-                    s = rest[1..];
+            if (std.mem.startsWith(u8, buf[0..len], pkg_buf[0..pkg_len])) {
+                if (len > pkg_len && buf[pkg_len] == '/') {
+                    start = pkg_len + 1;
                 }
             }
         }
-        return stripLeadingDotSlash(s);
+        return stripLeadingDotSlash(buf[start..len]);
     }
 
     pub fn hasSideEffects(file_path: []const u8): bool {

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/resolver/tsconfig_json.zig
+// Source: Absorbed from /data/dev/bun/src/resolver/tsconfig_json.cp | Synced: 2026-11-21T12:28:09Z
 // ============================================================================
 // lib/resolver/tsconfig.cp — JSONC tsconfig.json Parser & Path Alias Rewriter
 // ============================================================================

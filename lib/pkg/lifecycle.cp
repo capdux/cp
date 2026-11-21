@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/install/lifecycle_script_runner.cp
+// Source: Absorbed from /data/dev/bun/src/install/lifecycle_script_runner.cp | Synced: 2026-11-20T20:32:06Z
 // ============================================================================
 // lib/pkg/lifecycle.cp — Zero-Trust Lifecycle Script Runner & Postinstall Optimizer
 // Absorbed from Bun src/install/{lifecycle_script_runner.cp,postinstall_optimizer.cp}

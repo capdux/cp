@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/install/PackageManager.cp
+// Source: Absorbed from /data/dev/bun/src/install/PackageManager.cp | Synced: 2026-11-20T20:25:30Z
 // ============================================================================
 // lib/pkg/manager.cp — End-to-End Package Manager Engine
 // Absorbed from Bun src/install/PackageManager.cp

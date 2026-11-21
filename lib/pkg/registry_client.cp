@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/install/NetworkTask.cp
+// Source: Absorbed from /data/dev/bun/src/install/NetworkTask.cp | Synced: 2026-11-20T12:48:53Z
 // ============================================================================
 // lib/pkg/registry_client.cp — Industrial NPM/Cap Registry HTTP Client & Disk Cache
 // Absorbed from Bun src/install/{NetworkTask.cp,PackageManifestMap.cp}
