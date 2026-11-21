@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:xdr` XDR (RFC 4506) 4B-aligned big-endian scalar, opaque & string zero-alloc codec（5/5 PASS，文档直写 `doc/lib/xdr.md`）
+新增 cap:xdr 纯 CP 零分配外部数据表示标准库（全标量、定/变长 Opaque 零填充校验与 XdrWriter 自动对齐），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:nbns` NBNS (RFC 1001/1002) NetBIOS 32B first-level name codec, NB & NBSTAT zero-alloc parser（5/5 PASS，文档直写 `doc/lib/nbns.md`）
 新增 cap:nbns 纯 CP 零分配局域网名称服务库（RFC 1001 半字节编解码、NB 多 IP 与 NBSTAT 节点表/MAC 零拷贝迭代），通过 cpc check 与 5/5 cap test
 

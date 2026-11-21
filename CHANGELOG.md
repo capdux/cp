@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:xdr` XDR (RFC 4506) 4B-aligned big-endian scalar, opaque & string zero-alloc codec（5/5 PASS，自动动态挂载 `cap.xdr`）
+新增纯 CP 零分配标准库 cap:xdr（RFC 4506 XDR 4 字节对齐大端编解码器 XdrReader/XdrWriter）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:nbns` NBNS (RFC 1001/1002) NetBIOS 32B first-level name codec, NB & NBSTAT zero-alloc parser（5/5 PASS，自动动态挂载 `cap.nbns`）
 新增纯 CP 零分配标准库 cap:nbns（RFC 1001/1002 NetBIOS 32B 一级编码与 NB/NBSTAT 解析）与 5/5 深度测试
 
