@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:os_release` freedesktop.org /etc/os-release 零分配解析器（Shell 引号反转义与 ID/ID_LIKE 发行版家族匹配）（5/5 PASS，文档直写 `doc/lib/os_release.md`）
+主智能体吸收 `cap:os_release`，补齐 Linux `/etc` 与 `/proc` 系统信息解析矩阵。
+
+## 2026-11-22: 新建 `cap:fstab_parse` POSIX /etc/fstab 与 /proc/mounts 零分配 6 字段解析器、八进制路径反转义与最长前缀挂载点查找（5/5 PASS，文档直写 `doc/lib/fstab_parse.md`）
+Subagent 2 吸收 `cap:fstab_parse`，防 `/database` 误匹配 `/data` 且支持 `ro`/`rw` 后现优先判定。
+
+## 2026-11-22: 新建 `cap:resolv_conf` POSIX /etc/resolv.conf 零分配解析器（nameserver/search/domain 末现优先与 glibc 上限夹紧 options）（5/5 PASS，文档直写 `doc/lib/resolv_conf.md`）
+主智能体吸收 `cap:resolv_conf`，完整遵循 `resolv.conf(5)` 与 glibc 解析语义。
+
+## 2026-11-22: 新建 `cap:sql_splitter` 多语句 SQL 脚本零分配分号切分器（跳过引号/注释/$$ 块）与 CTE 穿透语句类型识别器（5/5 PASS，文档直写 `doc/lib/sql_splitter.md`）
+Subagent 1 吸收 `cap:sql_splitter`，与 `cap:sql_params`/`cap:sql_escape` 组成完整 SQL 预处理工具链。
+
 ## 2026-11-22: 新建 `cap:proc_loadavg` Linux /proc/loadavg 与 /proc/uptime 纯整数零分配解析器（百分位负载与毫秒运行时间）（5/5 PASS，文档直写 `doc/lib/proc_loadavg.md`）
 主智能体吸收 `cap:proc_loadavg`，避免浮点解析误差并提供 `isOverloaded(num_cpus)` 过载判定。
 

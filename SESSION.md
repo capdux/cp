@@ -523,3 +523,15 @@
 
 ### 2026-11-22（`cap:proc_loadavg` 验收，Batch 66 注册 `cap:proc_loadavg` 并提交（累计 208 模块）。）
 - **执行成果**：`lib/proc_loadavg/`（5/5 PASS，`doc/lib/proc_loadavg.md`）经 `verify_module.sh` 一次性验收回收；Batch 66 注册 `cap:proc_loadavg` 并提交（累计 208 模块）。
+
+### 2026-11-22（`cap:sql_splitter` 验收，Batch 67 完成 `cap:sql_splitter`、`cap:resolv_conf`、`cap:fstab_parse`、`cap:os_release` 4 模块吸收与全量验收。）
+- **执行成果**：`lib/sql_splitter/`（5/5 PASS，`doc/lib/sql_splitter.md`）经 `verify_module.sh` 一次性验收回收；Batch 67 完成 `cap:sql_splitter`、`cap:resolv_conf`、`cap:fstab_parse`、`cap:os_release` 4 模块吸收与全量验收。
+
+### 2026-11-22（`cap:resolv_conf` 验收，Batch 67 注册 `cap:resolv_conf`。）
+- **执行成果**：`lib/resolv_conf/`（5/5 PASS，`doc/lib/resolv_conf.md`）经 `verify_module.sh` 一次性验收回收；Batch 67 注册 `cap:resolv_conf`。
+
+### 2026-11-22（`cap:fstab_parse` 验收，Batch 67 注册 `cap:fstab_parse`。）
+- **执行成果**：`lib/fstab_parse/`（5/5 PASS，`doc/lib/fstab_parse.md`）经 `verify_module.sh` 一次性验收回收；Batch 67 注册 `cap:fstab_parse`。
+
+### 2026-11-22（`cap:os_release` 验收，Batch 67 注册 `cap:os_release` 并提交（累计 212 模块）。）
+- **执行成果**：`lib/os_release/`（5/5 PASS，`doc/lib/os_release.md`）经 `verify_module.sh` 一次性验收回收；Batch 67 注册 `cap:os_release` 并提交（累计 212 模块）。

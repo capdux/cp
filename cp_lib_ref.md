@@ -633,3 +633,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:proc_meminfo` | MemInfoField, MemInfoIter, MemInfo | Linux /proc/meminfo 零分配流式解析器与内存/Swap 使用率计算器（kB 自动转精确字节） |
 | `cap:http_ratelimit_header` | RateLimitHeader, RateLimitPolicy | IETF Draft RateLimit / RateLimit-Policy 限流响应头零分配解析与规范化构造器 |
 | `cap:proc_loadavg` | LoadAvg, SystemUptime | Linux /proc/loadavg 与 /proc/uptime 纯整数零分配解析器（百分位负载与毫秒运行时间） |
+| `cap:sql_splitter` | SqlStmtKind, SqlStmtIter, classifySqlStmt, isReadOnlySql, countSqlStatements | 多语句 SQL 脚本零分配分号切分器（跳过引号/注释/$$ 块）与 CTE 穿透语句类型识别器 |
+| `cap:resolv_conf` | NameserverIter, ResolvOptions, effectiveSearchRaw, firstNameserver | POSIX /etc/resolv.conf 零分配解析器（nameserver/search/domain 末现优先与 glibc 上限夹紧 options） |
+| `cap:fstab_parse` | MountEntry, MountIter, unescapeMountPath, findMountForPath | POSIX /etc/fstab 与 /proc/mounts 零分配 6 字段解析器、八进制路径反转义与最长前缀挂载点查找 |
+| `cap:os_release` | OsReleaseField, OsReleaseIter, getOsReleaseField, isOsLike | freedesktop.org /etc/os-release 零分配解析器（Shell 引号反转义与 ID/ID_LIKE 发行版家族匹配） |

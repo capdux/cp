@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:os_release` freedesktop.org /etc/os-release 零分配解析器（Shell 引号反转义与 ID/ID_LIKE 发行版家族匹配）（5/5 PASS，自动动态挂载 `cap.os_release`）
+新增 `cap:os_release`（`lib/os_release/{os_release,index}.cp`、`doc/lib/os_release.md`、`cap/test/test_os_release_production_deep.cp`），支持单/双引号转义、同名后置覆盖与 `isOsLike` 家族判定。
+
+## [2026-11-22] - 新建 `cap:fstab_parse` POSIX /etc/fstab 与 /proc/mounts 零分配 6 字段解析器、八进制路径反转义与最长前缀挂载点查找（5/5 PASS，自动动态挂载 `cap.fstab_parse`）
+新增 `cap:fstab_parse`（`lib/fstab_parse/{fstab,index}.cp`、`doc/lib/fstab_parse.md`、`cap/test/test_fstab_parse_production_deep.cp`），支持 `\040` 等八进制转义还原、选项键值查询与 `/` 边界最长前缀挂载点匹配。
+
+## [2026-11-22] - 新建 `cap:resolv_conf` POSIX /etc/resolv.conf 零分配解析器（nameserver/search/domain 末现优先与 glibc 上限夹紧 options）（5/5 PASS，自动动态挂载 `cap.resolv_conf`）
+新增 `cap:resolv_conf`（`lib/resolv_conf/{resolv,index}.cp`、`doc/lib/resolv_conf.md`、`cap/test/test_resolv_conf_production_deep.cp`），支持 `#`/`;` 注释、IPv4/IPv6 nameserver 迭代与 `ndots`/`timeout`/`attempts` 夹紧。
+
+## [2026-11-22] - 新建 `cap:sql_splitter` 多语句 SQL 脚本零分配分号切分器（跳过引号/注释/$$ 块）与 CTE 穿透语句类型识别器（5/5 PASS，自动动态挂载 `cap.sql_splitter`）
+新增 `cap:sql_splitter`（`lib/sql_splitter/{splitter,index}.cp`、`doc/lib/sql_splitter.md`、`cap/test/test_sql_splitter_production_deep.cp`），实现顶层 `;` 切分、`WITH` CTE 穿透分类与 `isReadOnlySql` 判定。
+
 ## [2026-11-22] - 新建 `cap:proc_loadavg` Linux /proc/loadavg 与 /proc/uptime 纯整数零分配解析器（百分位负载与毫秒运行时间）（5/5 PASS，自动动态挂载 `cap.proc_loadavg`）
 新增 `cap:proc_loadavg`（`lib/proc_loadavg/{loadavg,index}.cp`、`doc/lib/proc_loadavg.md`、`cap/test/test_proc_loadavg_production_deep.cp`），纯整数解析 1/5/15 分钟负载、进程数与系统运行毫秒。
 
