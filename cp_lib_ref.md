@@ -398,3 +398,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:suffix_array` | `SuffixArray` | 纯 CP 后缀数组与 Kasai $O(N)$ LCP 数组引擎（$O(M \log N)$ 二分子串检索、`countOccurrences`、`searchAll` 与最长重复子串，支持 `cap.suffix_array` 自动动态挂载，详见 `doc/lib/suffix_array.md`） |
 | `cap:consistent_maglev` | `DEFAULT_TABLE_SIZE`, `MaglevError`, `Backend`, `MaglevRouter` | 纯 CP Google Maglev $O(1)$ 一致性哈希查表路由引擎（置换表均匀分布、加权后端比例路由与最小迁移扰动，支持 `cap.consistent_maglev` 自动动态挂载，详见 `doc/lib/consistent_maglev.md`） |
 | `cap:geohash_3d` | `MortonError`, `Point3D`, `mortonEncode3D`, `mortonDecode3D`, `quantizeEncode3D`, `haversineMeters` | 纯 CP 3D Morton Z-Order 21-bit 空间填充曲线编码与 WGS84 Haversine 球面大圆测距引擎（支持 `cap.geohash_3d` 自动动态挂载，详见 `doc/lib/geohash_3d.md`） |
+| `cap:crdt_pn` | `CounterEntry`, `GCounter`, `PNCounter`, `LWWRegister`, `GSet` | 纯 CP 分布式状态型无冲突复制数据类型 (State-Based CRDTs) 套件（`GCounter`、`PNCounter`、`LWWRegister` 与 `GSet`，满足半格幂等/交换/结合律 `merge`，支持 `cap.crdt_pn` 自动动态挂载，详见 `doc/lib/crdt_pn.md`） |

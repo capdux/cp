@@ -73,3 +73,6 @@
 
 ### 2026-11-21（`cap:geohash_3d` 验收，主控完成 `cap:geohash_3d` 研发验收提交，继续与 `cap:lru_k` 及 `cap:crdt_pn` 并行）
 - **执行成果**：`lib/geohash_3d/`（5/5 PASS，`doc/lib/geohash_3d.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:geohash_3d` 研发验收提交，继续与 `cap:lru_k` 及 `cap:crdt_pn` 并行
+
+### 2026-11-21（`cap:crdt_pn` 验收，验收提交 `cap:crdt_pn` 并新开 `cap:raft_log` 并发子智能体）
+- **执行成果**：`lib/crdt_pn/`（5/5 PASS，`doc/lib/crdt_pn.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:crdt_pn` 并新开 `cap:raft_log` 并发子智能体

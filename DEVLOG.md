@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:crdt_pn` 纯 CP 分布式状态型无冲突复制数据类型 (State-Based CRDTs) 套件（`GCounter`、`PNCounter`、`LWWRegister` 与 `GSet`，满足半格幂等/交换/结合律 `merge`，支持 `cap.crdt_pn` 自动动态挂载，详见 `doc/lib/crdt_pn.md`）（5/5 PASS，文档直写 `doc/lib/crdt_pn.md`）
+- **核心设计**：采用 `(timestamp, node_id)` 全序决胜与幂等半格合并，通过跨分区并发收敛与 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:geohash_3d` 纯 CP 3D Morton Z-Order 21-bit 空间填充曲线编码与 WGS84 Haversine 球面大圆测距引擎（支持 `cap.geohash_3d` 自动动态挂载，详见 `doc/lib/geohash_3d.md`）（5/5 PASS，文档直写 `doc/lib/geohash_3d.md`）
 - **核心设计**：采用魔数位扩张/压缩实现零堆 $O(1)$ 3D Morton 交错编码，通过 21-bit 极值往返与 NYC-London 大圆距离校验。
 
