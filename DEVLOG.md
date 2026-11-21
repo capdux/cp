@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:las` 零分配 ASPRS LAS 1.2-1.4 LiDAR 3D 点云头、VLR 与点记录解析器（5/5 PASS，文档直写 `doc/lib/las.md`）
+实现零分配 ASPRS LAS LiDAR 点云解析器，兼容 32/64-bit 点数并严控 VLR 与点数据边界。
+
 ## 2026-11-22: 新建 `cap:shp` 零分配 ESRI Shapefile (.shp) 混合端序头、Bounding Box 与几何记录解析器（5/5 PASS，文档直写 `doc/lib/shp.md`）
 实现零分配 ESRI Shapefile 解析器，完整覆盖 15 种 ShpType、NullShape 与 64B BBox。
 

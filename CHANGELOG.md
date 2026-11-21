@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:las` 零分配 ASPRS LAS 1.2-1.4 LiDAR 3D 点云头、VLR 与点记录解析器（5/5 PASS，自动动态挂载 `cap.las`）
+新增 `lib/las/{las,index}.cp`、`doc/lib/las.md` 与 `cap/test/test_las_production_deep.cp`（5/5 PASS），支持 LAS 1.2/1.3/1.4 头解析、LAZ 压缩标志识别、VLR 迭代与 Format 0-10 点坐标缩放换算。
+
 ## [2026-11-22] - 新建 `cap:shp` 零分配 ESRI Shapefile (.shp) 混合端序头、Bounding Box 与几何记录解析器（5/5 PASS，自动动态挂载 `cap.shp`）
 新增 `lib/shp/{shp,index}.cp`、`doc/lib/shp.md` 与 `cap/test/test_shp_production_deep.cp`（5/5 PASS），支持 BE/LE 混合 100B 头、16-bit word 长度校验、Point/PolyLine/Polygon 零拷贝随机访问。
 
