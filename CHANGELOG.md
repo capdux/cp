@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:nginx` 零分配 Nginx `.conf` 配置词法扫描、层级指令块迭代与 64 层结构校验器（5/5 PASS，自动动态挂载 `cap.nginx`）
+- 新增 `lib/nginx/{nginx,index}.cp`、`doc/lib/nginx.md`、`cap/test/test_nginx_production_deep.cp`：纯 CP 零分配实现 Nginx `.conf` 词法扫描、`http`/`upstream`/`server`/`location` 递归块迭代与 `${var}` 感知括号校验（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:rego` 零分配 Open Policy Agent OPA Rego 策略语言词法扫描、包名/规则提取与 64 层定界符校验器（5/5 PASS，自动动态挂载 `cap.rego`）
 - 新增 `lib/rego/{rego,index}.cp`、`doc/lib/rego.md`、`cap/test/test_rego_production_deep.cp`：纯 CP 零分配实现 OPA Rego 词法扫描、`package`/`import` 与全形态顶层规则名提取及 64 层定界符校验（5/5 PASS）。
 

@@ -517,3 +517,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:idl` | `WebIdlDeclKind`, `WebIdlDecl`, `WebIdlTokenKind`, `WebIdlToken`, `WebIdlIter`, `WebIdlDeclIter`, `validateWebIdlBraces` | 零分配 W3C WebIDL 接口/字典/枚举/扩展属性词法扫描与顶层声明提取器 |
 | `cap:xpath` | `XPathTokenKind`, `XPathToken`, `XPathIter`, `XPathStep`, `XPathStepIter`, `validateXPathDelimiters` | 零分配 W3C XPath 表达式词法扫描、位置路径步进迭代与括号平衡校验器 |
 | `cap:rego` | `REGO_MAX_DEPTH`, `RegoTokenKind`, `RegoToken`, `RegoIter`, `extractRegoPackage`, `RegoImportIter`, `RegoRuleIter`, `validateRegoDelimiters` | 零分配 Open Policy Agent OPA Rego 策略语言词法扫描、包名/规则提取与 64 层定界符校验器 |
+| `cap:nginx` | `NginxTokenKind`, `NginxToken`, `NginxIter`, `NginxDirective`, `NginxBlockIter`, `findNginxDirective`, `validateNginxConfig` | 零分配 Nginx `.conf` 配置词法扫描、层级指令块迭代与 64 层结构校验器 |

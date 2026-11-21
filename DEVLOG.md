@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:nginx` 零分配 Nginx `.conf` 配置词法扫描、层级指令块迭代与 64 层结构校验器（5/5 PASS，文档直写 `doc/lib/nginx.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:nginx`；`NginxBlockIter` 支持 `initWithDepth` 零拷贝递归解析嵌套块。
+
 ## 2026-11-22: 新建 `cap:rego` 零分配 Open Policy Agent OPA Rego 策略语言词法扫描、包名/规则提取与 64 层定界符校验器（5/5 PASS，文档直写 `doc/lib/rego.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:rego`；`RegoRuleIter` 兼容 `default`、`if`、`:=`、`contains`、索引规则与函数规则并跳过 `else`。
 

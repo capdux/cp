@@ -139,3 +139,6 @@
 
 ### 2026-11-22（`cap:rego` 验收，新增简洁单单词包 `cap:rego`（5/5 PASS））
 - **执行成果**：`lib/rego/`（5/5 PASS，`doc/lib/rego.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:rego`（5/5 PASS）
+
+### 2026-11-22（`cap:nginx` 验收，新增简洁单单词包 `cap:nginx`（5/5 PASS））
+- **执行成果**：`lib/nginx/`（5/5 PASS，`doc/lib/nginx.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:nginx`（5/5 PASS）
