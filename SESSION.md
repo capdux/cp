@@ -130,3 +130,6 @@
 
 ### 2026-11-22（`cap:f2fs` 验收，完成并注册纯 CP 零分配标准库 cap:f2fs（5/5 cap test PASS））
 - **执行成果**：`lib/f2fs/`（5/5 PASS，`doc/lib/f2fs.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:f2fs（5/5 cap test PASS）
+
+### 2026-11-22（`cap:zfs` 验收，完成并注册纯 CP 零分配标准库 cap:zfs（5/5 cap test PASS））
+- **执行成果**：`lib/zfs/`（5/5 PASS，`doc/lib/zfs.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:zfs（5/5 cap test PASS）

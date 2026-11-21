@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:zfs` OpenZFS Uberblock (LE/BE), 128B blkptr_t/DVA & Fletcher-4 256-bit zero-alloc parser（5/5 PASS，文档直写 `doc/lib/zfs.md`）
+新增 cap:zfs 纯 CP 零分配企业级文件系统库（自动 LE/BE 字节序识别、Uberblock txg 选主、3x DVA 偏移换算与 Fletcher-4 256-bit），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:f2fs` Linux F2FS superblock, dual Checkpoint selection & f2fs_crc32 zero-alloc parser（5/5 PASS，文档直写 `doc/lib/f2fs.md`）
 新增 cap:f2fs 纯 CP 零分配闪存文件系统库（超级块 UTF-16LE 卷名与 FEAT_SB_CHKSUM CRC32、双 Checkpoint 选主），通过 cpc check 与 5/5 cap test
 
