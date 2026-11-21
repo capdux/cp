@@ -454,3 +454,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:css_page_rule` | CssPageError, PagePseudoClass, PageMarginEdge, PageMarginBox, PageSelector, Position | 纯 CP 零依赖 CSS Paged Media 16 种页边盒、页伪类选择器与 Position 定位属性模型（源自 Bun css/rules/page.cp + properties/position.cp） |
 | `cap:tagged_ptr` | PTR_BITS, TAG_BITS, PTR_MASK, MAX_TAG, Tag, Address, TaggedPointer, TaggedPtr2, TaggedPtr4 | 严格 8 字节 49 位指针地址 + 15 位标签编解码与强类型 TaggedPtr2/TaggedPtr4 紧凑联合体（源自 Bun ptr/tagged_pointer.cp） |
 | `cap:env_path` | DEFAULT_DELIMITER, EnvPathIterator, EnvPath | 带 ~init() RAII 释放的 PATH 环境变量构建器（去重/规范化/prepend/append）与零分配迭代器（源自 Bun paths/EnvPath.cp） |
+| `cap:cow_str` | CowStrKind, CowStr | 统一空串、零拷贝借用切片与原子引用计数堆字符串，支持 O(1) clone 与 ~init() RAII（源自 Bun shell/EnvStr.cp） |
+| `cap:mysql_packet` | PACKET_HEADER_SIZE, MAX_PACKET_PAYLOAD, MySqlPacketError, PacketHeader, DecodedLenInt, decodeLenInt, MySqlPacketReader, PacketHandle, MySqlPacketWriter | MySQL 4 字节小端帧头、自动回填负载长度的 RAII 写入器与零拷贝流式读取器（源自 Bun sql/mysql/protocol/{NewWriter,NewReader}.cp） |
+| `cap:css_easing` | CssEasingError, StepPosition, EasingKind, CubicBezier, EasingSteps, EasingFunction | 纯 CP 零依赖 CSS 缓动函数解析、规范化化简与 Newton-Raphson 贝塞尔/阶梯曲线高精度求值（源自 Bun css/values/easing.cp） |
+| `cap:object_pool` | PoolNode, ObjectPool | 实例级侵入式单链表对象复用池，支持上限控制、自动 reset 与 ~init() 确定性零泄漏释放（源自 Bun collections/pool.cp） |

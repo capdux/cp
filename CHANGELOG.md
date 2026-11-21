@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 侵入式单链表对象复用池 ObjectPool（5/5 PASS，自动动态挂载 `cap.object_pool`）
+新增 cap:object_pool 标准库（lib/object_pool/、doc/lib/object_pool.md、cap/test/test_object_pool_production_deep.cp），6/6 回归通过（零泄漏）。
+
+## [2026-11-21] - CSS Easing Level 1 缓动函数与曲线求值器（5/5 PASS，自动动态挂载 `cap.css_easing`）
+新增 cap:css_easing 标准库（lib/css_easing/、doc/lib/css_easing.md、cap/test/test_css_easing_production_deep.cp），5/5 回归通过。
+
+## [2026-11-21] - MySQL 4 字节报文帧编解码与流式读写器（5/5 PASS，自动动态挂载 `cap.mysql_packet`）
+新增 cap:mysql_packet 标准库（lib/mysql_packet/、doc/lib/mysql_packet.md、cap/test/test_mysql_packet_production_deep.cp），2/2 回归通过（零泄漏）。
+
+## [2026-11-21] - 零拷贝借用/原子引用计数字符串 CowStr（5/5 PASS，自动动态挂载 `cap.cow_str`）
+新增 cap:cow_str 标准库（lib/cow_str/、doc/lib/cow_str.md、cap/test/test_cow_str_production_deep.cp），2/2 回归通过（零泄漏）。
+
 ## [2026-11-21] - 跨平台 PATH 环境变量构建器与迭代器（5/5 PASS，自动动态挂载 `cap.env_path`）
 新增 cap:env_path 标准库（lib/env_path/、doc/lib/env_path.md、cap/test/test_env_path_production_deep.cp），2/2 回归通过（零泄漏）。
 

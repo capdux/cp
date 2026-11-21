@@ -184,3 +184,15 @@
 
 ### 2026-11-21（`cap:env_path` 验收，吸收 Bun paths/EnvPath.cp -> cap:env_path，测试 2/2 通过。）
 - **执行成果**：`lib/env_path/`（5/5 PASS，`doc/lib/env_path.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun paths/EnvPath.cp -> cap:env_path，测试 2/2 通过。
+
+### 2026-11-21（`cap:cow_str` 验收，吸收 Bun shell/EnvStr.cp -> cap:cow_str，测试 2/2 通过。）
+- **执行成果**：`lib/cow_str/`（5/5 PASS，`doc/lib/cow_str.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun shell/EnvStr.cp -> cap:cow_str，测试 2/2 通过。
+
+### 2026-11-21（`cap:mysql_packet` 验收，吸收 Bun MySQL NewWriter + NewReader -> cap:mysql_packet，测试 2/2 通过。）
+- **执行成果**：`lib/mysql_packet/`（5/5 PASS，`doc/lib/mysql_packet.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun MySQL NewWriter + NewReader -> cap:mysql_packet，测试 2/2 通过。
+
+### 2026-11-21（`cap:css_easing` 验收，吸收 Bun css/values/easing.cp -> cap:css_easing，测试 5/5 通过。）
+- **执行成果**：`lib/css_easing/`（5/5 PASS，`doc/lib/css_easing.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun css/values/easing.cp -> cap:css_easing，测试 5/5 通过。
+
+### 2026-11-21（`cap:object_pool` 验收，吸收 Bun collections/pool.cp -> cap:object_pool，测试 6/6 通过。）
+- **执行成果**：`lib/object_pool/`（5/5 PASS，`doc/lib/object_pool.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun collections/pool.cp -> cap:object_pool，测试 6/6 通过。

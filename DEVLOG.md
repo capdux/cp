@@ -2,6 +2,18 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 侵入式单链表对象复用池 ObjectPool（5/5 PASS，文档直写 `doc/lib/object_pool.md`）
+从 Bun collections/pool.cp 吸收侵入式对象复用池，重构为实例级 ObjectPool<T> 并实现幂等 ~init() 确定性全量回收与命中率统计。
+
+## 2026-11-21: CSS Easing Level 1 缓动函数与曲线求值器（5/5 PASS，文档直写 `doc/lib/css_easing.md`）
+从 Bun css/values/easing.cp 吸收 CSS Easing Functions Level 1 解析与序列化，并增强高精度 Newton-Raphson + 二分法贝塞尔与阶梯曲线求值。
+
+## 2026-11-21: MySQL 4 字节报文帧编解码与流式读写器（5/5 PASS，文档直写 `doc/lib/mysql_packet.md`）
+从 Bun sql/mysql/protocol/NewWriter.cp 与 NewReader.cp 吸收 MySQL 帧编解码读写器，支持 startPacket/endPacket 自动回填 24 位长度头与 ~init() 零泄漏。
+
+## 2026-11-21: 零拷贝借用/原子引用计数字符串 CowStr（5/5 PASS，文档直写 `doc/lib/cow_str.md`）
+从 Bun shell/EnvStr.cp 吸收 CowStr 写时复制/引用计数字符串，使用原子引用计数与 ~init() 确定性 RAII 释放，零泄漏通过测试。
+
 ## 2026-11-21: 跨平台 PATH 环境变量构建器与迭代器（5/5 PASS，文档直写 `doc/lib/env_path.md`）
 从 Bun paths/EnvPath.cp 吸收跨平台 PATH 构建器与零分配 EnvPathIterator，采用 ~init() 确定性 RAII 释放，零泄漏通过测试。
 
