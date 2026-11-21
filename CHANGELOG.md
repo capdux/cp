@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:fenwick` 纯 CP 树状数组 Binary Indexed Tree 引擎（$O(\log N)$ 单点增减/赋值、前缀/区间和与 `lowerBound` 二进制提升，支持 `cap.fenwick` 自动动态挂载，详见 `doc/lib/fenwick.md`）（5/5 PASS，自动动态挂载 `cap.fenwick`）
+- **新增标准库**：`lib/fenwick/{fenwick,index}.cp`，实现泛型 `FenwickTree(T)` 区间和与 `lowerBound`。\n- **新增文档与测试**：`doc/lib/fenwick.md` 扁平文档与 `cap/test/test_fenwick_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:interval_tree` 纯 CP 增强区间树引擎（带 `max_high` 子树剪枝、`queryOverlap`/`queryPoint`/`hasOverlap`，支持 `cap.interval_tree` 自动动态挂载，详见 `doc/lib/interval_tree.md`）（5/5 PASS，自动动态挂载 `cap.interval_tree`）
 - **新增标准库**：`lib/interval_tree/{interval_tree,index}.cp`，实现泛型 `IntervalTree(T, V)` 区间插入与重叠查询。\n- **新增文档与测试**：`doc/lib/interval_tree.md` 扁平文档与 `cap/test/test_interval_tree_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

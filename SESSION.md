@@ -31,3 +31,6 @@
 
 ### 2026-11-21（`cap:interval_tree` 验收，主控完成 `cap:interval_tree` 研发验收提交）
 - **执行成果**：`lib/interval_tree/`（5/5 PASS，`doc/lib/interval_tree.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:interval_tree` 研发验收提交
+
+### 2026-11-21（`cap:fenwick` 验收，主控完成 `cap:fenwick` 研发验收提交，继续与 `cap:bimap` 及 `cap:merkle_tree` 并行）
+- **执行成果**：`lib/fenwick/`（5/5 PASS，`doc/lib/fenwick.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:fenwick` 研发验收提交，继续与 `cap:bimap` 及 `cap:merkle_tree` 并行
