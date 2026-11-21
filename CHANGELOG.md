@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:sf2` 零分配 SoundFont 2.0 (.sf2) RIFF sfbk 音色库与 Hydra 表解析器（5/5 PASS，自动动态挂载 `cap.sf2`）
+新增 `lib/sf2/{sf2,index}.cp`、`doc/lib/sf2.md` 与 `cap/test/test_sf2_production_deep.cp`（5/5 PASS），支持 INFO/sdta/pdta 解析、Preset/Instrument/Sample 迭代与 16-bit PCM 零拷贝切片。
+
 ## [2026-11-22] - 新建 `cap:psf` 零分配 Linux 控制台 PSF1/PSF2 点阵字体、像素与 Unicode 映射表解析器（5/5 PASS，自动动态挂载 `cap.psf`）
 新增 `lib/psf/{psf,index}.cp`、`doc/lib/psf.md` 与 `cap/test/test_psf_production_deep.cp`（5/5 PASS），支持 PSF1/PSF2 统一头解析、MSB-first 像素解码及 UCS-2/UTF-8 Unicode 表查找。
 

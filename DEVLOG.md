@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:sf2` 零分配 SoundFont 2.0 (.sf2) RIFF sfbk 音色库与 Hydra 表解析器（5/5 PASS，文档直写 `doc/lib/sf2.md`）
+实现零分配 SoundFont 2.0 解析器，自动剥离末尾 EOP/EOI/EOS 哨兵并防越界样本访问。
+
 ## 2026-11-22: 新建 `cap:psf` 零分配 Linux 控制台 PSF1/PSF2 点阵字体、像素与 Unicode 映射表解析器（5/5 PASS，文档直写 `doc/lib/psf.md`）
 实现零分配 Linux PSF1/PSF2 控制台字体解析器，支持 STARTSEQ 组合序列跳过与防溢出校验。
 
