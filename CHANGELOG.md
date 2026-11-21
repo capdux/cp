@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:lcov` 零分配 LCOV (.info) 代码覆盖率报告流式解析与聚合统计器（5/5 PASS，自动动态挂载 `cap.lcov`）
+新增 `lib/lcov/{lcov,index}.cp`、`doc/lib/lcov.md` 与 `cap/test/test_lcov_production_deep.cp`（5/5 PASS），支持 14 种 LCOV 记录、BRDA 未执行分支、缺失 LF/LH 自动回退实算与全局覆盖率汇总。
+
 ## [2026-11-22] - 新建 `cap:postcard` 零分配 Postcard 嵌入式紧凑二进制（LEB128/ZigZag + COBS）编解码器（5/5 PASS，自动动态挂载 `cap.postcard`）
 新增 `lib/postcard/{postcard,index}.cp`、`doc/lib/postcard.md` 与 `cap/test/test_postcard_production_deep.cp`（5/5 PASS），支持全套 LEB128/ZigZag 变长整数、IEEE-754 浮点与 COBS 帧定界编解码。
 

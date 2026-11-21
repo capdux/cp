@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:lcov` 零分配 LCOV (.info) 代码覆盖率报告流式解析与聚合统计器（5/5 PASS，文档直写 `doc/lib/lcov.md`）
+实现零分配 LCOV 覆盖率解析器，兼容 CRLF 与含逗号函数名，提供按文件与全局统计视图。
+
 ## 2026-11-22: 新建 `cap:postcard` 零分配 Postcard 嵌入式紧凑二进制（LEB128/ZigZag + COBS）编解码器（5/5 PASS，文档直写 `doc/lib/postcard.md`）
 实现零分配 Postcard 编解码器，严格校验 VarU16/32/64 位宽上限与 COBS 非法零字节。
 
