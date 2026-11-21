@@ -187,3 +187,6 @@
 
 ### 2026-11-22（`cap:usd` 验收，完成 `cap:usd` 交付验收并登记入库（5/5 PASS）；派发 `cap:bdf`。）
 - **执行成果**：`lib/usd/`（5/5 PASS，`doc/lib/usd.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:usd` 交付验收并登记入库（5/5 PASS）；派发 `cap:bdf`。
+
+### 2026-11-22（`cap:vrml` 验收，完成 `cap:vrml` 交付验收并登记入库（5/5 PASS）；派发 `cap:psf`。）
+- **执行成果**：`lib/vrml/`（5/5 PASS，`doc/lib/vrml.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:vrml` 交付验收并登记入库（5/5 PASS）；派发 `cap:psf`。

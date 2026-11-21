@@ -615,3 +615,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:ais` | AisSentence, AisBitReader, AisPositionReport, AisClassBPosition, parseAisSentence, aisUnarmorChar, aisMessageType, parseAisPositionReport, parseAisClassBPosition | 零分配 ITU-R M.1371 海事船舶 AIS 6-bit 装甲比特流与位置报文解码器 |
 | `cap:igc` | IgcHeader, IgcFix, IgcFixIter, IgcStats, isIgc, parseIgcHeader, parseIgcBRecord, summarizeIgc | 零分配 FAI IGC 滑翔机/航空飞行记录仪 A/H/B 记录解析器 |
 | `cap:usd` | USDC_MAGIC, USDC_BOOTSTRAP_SIZE, USDA_MAGIC, UsdFormat, UsdcBootstrap, UsdcSection, UsdcSectionIter, UsdaHeader, detectUsdFormat, isUsdc, isUsda, isUsdz, parseUsdcBootstrap, findUsdcSection, parseUsdaHeader | 零分配 Pixar OpenUSD (.usdc/.usda/.usdz) Crate TOC 与阶段元数据解析器 |
+| `cap:vrml` | VrmlFlavor, VrmlTokenKind, VrmlHeader, VrmlToken, VrmlLexer, VrmlNode, VrmlNodeIter, VrmlStats, isVrml, parseVrmlHeader, findVrmlField, summarizeVrml | 零分配 VRML97 / Classic X3D 3D 场景词法、节点树与字段解析器 |

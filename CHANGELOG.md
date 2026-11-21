@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:vrml` 零分配 VRML97 / Classic X3D 3D 场景词法、节点树与字段解析器（5/5 PASS，自动动态挂载 `cap.vrml`）
+新增 `lib/vrml/{vrml,index}.cp`、`doc/lib/vrml.md` 与 `cap/test/test_vrml_production_deep.cp`（5/5 PASS），支持 VRML97/X3D 头解析、逗号空白词法、DEF/USE/ROUTE 迭代与括号平衡统计。
+
 ## [2026-11-22] - 新建 `cap:usd` 零分配 Pixar OpenUSD (.usdc/.usda/.usdz) Crate TOC 与阶段元数据解析器（5/5 PASS，自动动态挂载 `cap.usd`）
 新增 `lib/usd/{usd,index}.cp`、`doc/lib/usd.md` 与 `cap/test/test_usd_production_deep.cp`（5/5 PASS），支持 88B Crate Bootstrap、32B TOC 区段零拷贝迭代、.usda 阶段元数据与 .usdz 未压缩首资产探测。
 

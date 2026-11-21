@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:vrml` 零分配 VRML97 / Classic X3D 3D 场景词法、节点树与字段解析器（5/5 PASS，文档直写 `doc/lib/vrml.md`）
+实现零分配 VRML97/Classic X3D 场景解析器，支持嵌套 body_slice 递归查找与字符串闭合校验。
+
 ## 2026-11-22: 新建 `cap:usd` 零分配 Pixar OpenUSD (.usdc/.usda/.usdz) Crate TOC 与阶段元数据解析器（5/5 PASS，文档直写 `doc/lib/usd.md`）
 实现零分配 Pixar OpenUSD 解析器，覆盖 usdc/usda/usdz 三形态与 TOC 防溢出校验。
 
