@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:opml` 零分配 OPML 2.0 订阅大纲 XML 解析、层级迭代与属性转义序列化器（5/5 PASS，自动动态挂载 `cap.opml`）
+- 新增 `lib/opml/{opml,index}.cp`、`doc/lib/opml.md`、`cap/test/test_opml_production_deep.cp`：纯 CP 零分配实现 OPML 2.0 解析与序列化（BOM/注释跳过、嵌套深度追踪、单双引号属性与防下溢），与 `cap:rss`/`cap:atom` 组成完整聚合订阅三件套（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:atom` RFC 4287 Atom 1.0 XML Feed 零分配解析、条目迭代与 XML 序列化器（5/5 PASS，自动动态挂载 `cap.atom`）
 - 新增 `lib/atom/{atom,index}.cp`、`doc/lib/atom.md`、`cap/test/test_atom_production_deep.cp`：纯 CP 零分配实现 RFC 4287 Atom 1.0 解析与序列化（跳过 `<entry>` 子树与 XML 注释、CDATA 剥离、`<link rel="alternate">` 属性解析与 XML 实体转义）（5/5 PASS）。
 

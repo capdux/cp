@@ -76,3 +76,6 @@
 
 ### 2026-11-22（`cap:atom` 验收，新增简洁单单词包 `cap:atom`（5/5 PASS）；热修 `#99` 合单派发至 `d0a3d659`）
 - **执行成果**：`lib/atom/`（5/5 PASS，`doc/lib/atom.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:atom`（5/5 PASS）；热修 `#99` 合单派发至 `d0a3d659`
+
+### 2026-11-22（`cap:opml` 验收，新增简洁单单词包 `cap:opml`（5/5 PASS），聚合订阅三件套 `rss`/`atom`/`opml` 集齐）
+- **执行成果**：`lib/opml/`（5/5 PASS，`doc/lib/opml.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:opml`（5/5 PASS），聚合订阅三件套 `rss`/`atom`/`opml` 集齐

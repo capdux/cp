@@ -496,3 +496,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:cuid` | `CuidVersion`, `isValidCuid1`, `isValidCuid2`, `detectCuidVersion`, `encodeBase36`, `decodeBase36`, `formatCuid1`, `parseCuid1Timestamp` | 零分配 CUID / CUID2 碰撞安全 ID 校验、分类、Base36 与确定性编码器 |
 | `cap:rss` | `RssChannel`, `RssItem`, `isRss2Feed`, `parseRssChannel`, `RssItemIter`, `formatRssItem` | 零分配 RSS 2.0 XML Feed 解析、频道元数据提取、条目迭代与 XML 序列化器 |
 | `cap:atom` | `AtomFeed`, `AtomEntry`, `isAtomFeed`, `parseAtomFeed`, `AtomEntryIter`, `formatAtomEntry` | RFC 4287 Atom 1.0 XML Feed 零分配解析、条目迭代与 XML 序列化器 |
+| `cap:opml` | `OpmlHead`, `OpmlOutline`, `isOpmlDocument`, `parseOpmlHead`, `OpmlOutlineIter`, `formatOpmlFeedOutline` | 零分配 OPML 2.0 订阅大纲 XML 解析、层级迭代与属性转义序列化器 |

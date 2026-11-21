@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:opml` 零分配 OPML 2.0 订阅大纲 XML 解析、层级迭代与属性转义序列化器（5/5 PASS，文档直写 `doc/lib/opml.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:opml`；`OpmlOutlineIter` 零分配维护嵌套与自闭合 `<outline>` 层级并防护多余闭合标签下溢。
+
 ## 2026-11-22: 新建 `cap:atom` RFC 4287 Atom 1.0 XML Feed 零分配解析、条目迭代与 XML 序列化器（5/5 PASS，文档直写 `doc/lib/atom.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:atom`；与 `cap:rss` 配套补齐聚合订阅生态，`AtomEntryIter` 零分配处理嵌套 `<author><name>` 与自闭合 `<link/>`。
 
