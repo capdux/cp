@@ -157,3 +157,6 @@
 
 ### 2026-11-22（`cap:ospf` 验收，完成并注册纯 CP 零分配标准库 cap:ospf（5/5 cap test PASS））
 - **执行成果**：`lib/ospf/`（5/5 PASS，`doc/lib/ospf.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:ospf（5/5 cap test PASS）
+
+### 2026-11-22（`cap:ipsec` 验收，完成并注册纯 CP 零分配标准库 cap:ipsec（6/6 cap test PASS））
+- **执行成果**：`lib/ipsec/`（5/5 PASS，`doc/lib/ipsec.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:ipsec（6/6 cap test PASS）

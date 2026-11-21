@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ipsec` IPsec (RFC 4302 AH / RFC 4303 ESP / RFC 7296 IKEv2) zero-alloc wire parser（5/5 PASS，文档直写 `doc/lib/ipsec.md`）
+新增 cap:ipsec 纯 CP 零分配安全隧道协议解析库（ESP/Trailer、AH ICV、IKEv2 28B 报头与链式 Payload 零拷贝迭代），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:ospf` OSPFv2 (RFC 2328) 24B header/checksum/Hello/LSA/LSU/LSAck zero-alloc parser（5/5 PASS，文档直写 `doc/lib/ospf.md`）
 新增 cap:ospf 纯 CP 零分配网络路由协议解析库（OSPFv2 24B 报头、跳过 AuType/Auth 校验和、Hello/LSA/LSU/LSAck 零拷贝迭代），通过 cpc check 与 5/5 cap test
 
