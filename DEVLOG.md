@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:cli_tree` 零分配 CLI 树形结构/依赖树（Unicode/ASCII/圆角，64 层位掩码）渲染器（5/5 PASS，文档直写 `doc/lib/cli_tree.md`）
+- **设计要点**：`TreePrefix` 使用 `u64` 位掩码栈上零分配记录 64 层祖先 `is_last` 状态；`renderFlatTree` 向前探测同级末尾兄弟实现零堆分配整树渲染。
+
 ## 2026-11-22: 新建 `cap:etc_shells` Linux `/etc/shells` 合法登录 Shell 路径清单零分配解析与安全校验器（5/5 PASS，文档直写 `doc/lib/etc_shells.md`）
 - **设计要点**：`parseShellLine` 严格拦截 `/`、尾斜杠及控制字符；`findShellByBasename` 拒绝含 `/` 查询并避免子串误判；`isNologinShell` 识别常见禁登 Shell。
 

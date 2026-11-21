@@ -705,3 +705,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:cli_table` | `TableBorderStyle`, `CellAlign`, `computeColumnWidths`, `renderBorderLine`, `renderTableRow`, `renderTable` | 零分配 CLI 终端表格（ASCII/Compact/Unicode 细线、ANSI/宽字符感知）渲染器 |
 | `cap:http_accept_ranges` | `AcceptRangesKind`, `AcceptRanges`, `AcceptRangesIter`, `parseAcceptRanges`, `supportsByteRanges`, `supportsRangeUnit` | RFC 9110 §14.3 HTTP `Accept-Ranges` 响应头零分配解析与分片能力判定器 |
 | `cap:etc_shells` | `parseShellLine`, `EtcShellsIter`, `isAllowedShell`, `findShellByBasename`, `countShells`, `isNologinShell` | Linux `/etc/shells` 合法登录 Shell 路径清单零分配解析与安全校验器 |
+| `cap:cli_tree` | `TreeStyle`, `TreePrefix`, `TreeNode`, `renderFlatTree` | 零分配 CLI 树形结构/依赖树（Unicode/ASCII/圆角，64 层位掩码）渲染器 |

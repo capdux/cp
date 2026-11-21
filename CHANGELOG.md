@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:cli_tree` 零分配 CLI 树形结构/依赖树（Unicode/ASCII/圆角，64 层位掩码）渲染器（5/5 PASS，自动动态挂载 `cap.cli_tree`）
+- 新增 `lib/cli_tree/{tree,index}.cp`、`doc/lib/cli_tree.md`、`cap/test/test_cli_tree_production_deep.cp`：纯 CP 零分配渲染 CLI 依赖树与目录树（`unicode`/`ascii`/`rounded` 三种风格、64 层 `u64` 位掩码祖先追踪、多根森林支持）（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:etc_shells` Linux `/etc/shells` 合法登录 Shell 路径清单零分配解析与安全校验器（5/5 PASS，自动动态挂载 `cap.etc_shells`）
 - 新增 `lib/etc_shells/{shells,index}.cp`、`doc/lib/etc_shells.md`、`cap/test/test_etc_shells_production_deep.cp`：纯 CP 零分配解析 Linux `/etc/shells`（拦截非绝对路径/目录路径/控制字符，提供精确路径白名单、基名检索与 `nologin`/`false` 识别）（5/5 PASS）。
 
