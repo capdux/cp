@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/io/openForWriting.cp & /data/dev/bun/src/sys/File.cp
+// Source: Absorbed from /data/dev/bun/src/io/openForWriting.cp | Synced: 2026-11-20T11:41:00Z
 /**
  * CP Streaming File Reader / Writer (cap:io)
  * 支持偏移 pread/pwrite、零拷贝 copy_file_range/sendfile 直通、openForWriting 策略

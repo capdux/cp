@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/io/pipes.cp
+// Source: Absorbed from /data/dev/bun/src/io/pipes.cp | Synced: 2026-11-20T09:23:15Z
 /**
  * CP Standard I/O Traits (cap:io)
  * 统一流式 Trait 契约与错误集
