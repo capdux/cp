@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:irc` IRC (RFC 1459/2812/IRCv3) Message Tags, prefix/param zero-alloc parser & IrcWriter（5/5 PASS，自动动态挂载 `cap.irc`）
+新增纯 CP 零分配标准库 cap:irc（RFC 1459/2812/IRCv3 线协议、Message Tags 转义与 IrcWriter 编码器）与 6/6 深度测试
+
 ## [2026-11-22] - 新建 `cap:ftp` FTP (RFC 959/2428/3659) control commands, replies, PASV/EPSV & MLSD zero-alloc codec（5/5 PASS，自动动态挂载 `cap.ftp`）
 新增纯 CP 零分配标准库 cap:ftp（RFC 959/2428/3659 FTP 控制通道命令/回复、PASV/EPSV 与 MLSD Fact 编解码）与 5/5 深度测试
 

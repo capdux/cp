@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:irc` IRC (RFC 1459/2812/IRCv3) Message Tags, prefix/param zero-alloc parser & IrcWriter（5/5 PASS，文档直写 `doc/lib/irc.md`）
+新增 cap:irc 纯 CP 零分配实时聊天协议库（IRCv3 @tags 零拷贝迭代与转义、nick!user@host 前缀、3 位数字回复与 IrcWriter），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:ftp` FTP (RFC 959/2428/3659) control commands, replies, PASV/EPSV & MLSD zero-alloc codec（5/5 PASS，文档直写 `doc/lib/ftp.md`）
 新增 cap:ftp 纯 CP 零分配文件传输控制协议库（单/多行回复、PASV/EPSV 解析、MLSD Fact 零拷贝迭代与 PORT/EPRT 编码），通过 cpc check 与 5/5 cap test
 
