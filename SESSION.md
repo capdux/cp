@@ -109,3 +109,6 @@
 
 ### 2026-11-22（`cap:jks` 验收，完成 `cap:jks` 交付验收并登记入库（5/5 PASS）；派发 `cap:radius`。）
 - **执行成果**：`lib/jks/`（5/5 PASS，`doc/lib/jks.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:jks` 交付验收并登记入库（5/5 PASS）；派发 `cap:radius`。
+
+### 2026-11-22（`cap:pkcs8` 验收，完成 `cap:pkcs8` 交付验收并登记入库（5/5 PASS）；派发 `cap:bgp`。）
+- **执行成果**：`lib/pkcs8/`（5/5 PASS，`doc/lib/pkcs8.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:pkcs8` 交付验收并登记入库（5/5 PASS）；派发 `cap:bgp`。

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:pkcs8` 零分配 RFC 5958 PKCS#8 私钥/加密私钥与 RFC 5280 SPKI 公钥 DER 解析器（5/5 PASS，文档直写 `doc/lib/pkcs8.md`）
+实现零分配 PKCS#8/SPKI 容器解析器，支持剥离 Ed25519/X25519 内嵌 OCTET STRING 裸种子。
+
 ## 2026-11-22: 新建 `cap:jks` 零分配 Java KeyStore (.jks v1/v2) 密钥库与证书链解析器（5/5 PASS，文档直写 `doc/lib/jks.md`）
 实现零分配 Java KeyStore 解析器，严格不越过尾部 20B SHA-1 摘要边界并支持按别名查找。
 

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:pkcs8` 零分配 RFC 5958 PKCS#8 私钥/加密私钥与 RFC 5280 SPKI 公钥 DER 解析器（5/5 PASS，自动动态挂载 `cap.pkcs8`）
+新增 `lib/pkcs8/{pkcs8,index}.cp`、`doc/lib/pkcs8.md` 与 `cap/test/test_pkcs8_production_deep.cp`（5/5 PASS），支持 RSA/ECDSA/Ed25519/X25519 PKCS#8 v1/v2、PBES2 加密私钥与 SPKI 公钥解析。
+
 ## [2026-11-22] - 新建 `cap:jks` 零分配 Java KeyStore (.jks v1/v2) 密钥库与证书链解析器（5/5 PASS，自动动态挂载 `cap.jks`）
 新增 `lib/jks/{jks,index}.cp`、`doc/lib/jks.md` 与 `cap/test/test_jks_production_deep.cp`（5/5 PASS），支持 0xFEEDFEED v1/v2 头、PrivateKey/TrustedCert 迭代、证书链遍历与 20B 尾摘要校验。
 
