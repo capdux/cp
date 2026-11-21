@@ -6,7 +6,7 @@ import {
     quoteYamlDouble,
     formatYamlScalar,
     unescapeYamlDouble,
-} from "cap:yaml_escape";
+} from "cap:yaml";
 
 test("1. needsYamlQuotes catches keywords, numbers, indicators, whitespace, and control chars", () => {
     expect_eq(needsYamlQuotes("hello-world"), false);

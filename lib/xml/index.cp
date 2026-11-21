@@ -14,3 +14,11 @@ export {
     XmlWriter,
     XmlSerializer,
 } from "./writer.cp";
+
+export {
+    isValidXmlChar,
+    escapeXmlText,
+    escapeXmlAttr,
+    wrapXmlCdata,
+    unescapeXml,
+} from "./escape.cp";

@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { TomlTokenKind, TomlLexer } from "cap:toml_lexer";
+import { TomlTokenKind, TomlLexer } from "cap:toml";
 
 test("1. [package], [[bin]], dotted keys, inline table, comments & line/col tracking", () => {
     const src =

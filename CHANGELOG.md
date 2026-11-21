@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:yaml` YAML/TOML/HTML/XML 统一主包同步收敛（突破 100 目录收敛里程碑！）（5/5 PASS，自动动态挂载 `cap.yaml`）
+- **方案 A 收敛 Wave 5 (6 标记/配置目录 -> `cap:html`/`cap:xml`/`cap:yaml`/`cap:toml`)**：将 `html_escape`、`xml_escape`、`yaml_escape`/`yaml_scalar`、`toml_escape`/`toml_lexer` 6 个散装目录零冲突合并至各自单单词领域主包（6/6 PASS），删除 6 个旧目录与旧文档，累计已消除 103 个长下划线顶层目录（突破百目录里程碑）！
+
 ## [2026-11-22] - 新建 `cap:http` HTTP/1.1/2/3 协议与全套 RFC 头部协商、Cookie、CSP、Digest、EarlyHints 与转发统一主包（5/5 PASS，自动动态挂载 `cap.http`）
 - **方案 A 收敛 Wave 4 (`http_*` 第 2 批 15 目录 -> `cap:http`)**：将 `http_content_type` 至 `http_host_header` 共 15 个散装目录合并收敛至 `lib/http/{contenttype,cookiejar,cookiematch,csp,date,digest,digestauth,earlyhints,etaggen,expect,fetchmeta,form,forwarded,freshness,host}.cp` 并由 `lib/http/index.cp` 零破坏聚合导出（15/15 PASS），删除 15 个旧目录与旧文档。
 

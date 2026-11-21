@@ -16,3 +16,16 @@ export {
     TomlParser,
     TomlSerializer,
 } from "./codec.cp";
+
+export {
+    isBareTomlKey,
+    formatTomlBasicString,
+    formatTomlKey,
+    unescapeTomlBasic,
+} from "./escape.cp";
+
+export {
+    TomlTokenKind,
+    TomlToken,
+    TomlLexer,
+} from "./lexer.cp";

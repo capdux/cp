@@ -15,3 +15,13 @@ export {
     YamlParser,
     YamlSerializer,
 } from "./codec.cp";
+
+export {
+    needsYamlQuotes,
+    quoteYamlSingle,
+    quoteYamlDouble,
+    formatYamlScalar,
+    unescapeYamlDouble,
+} from "./escape.cp";
+
+export * from "./scalar.cp";

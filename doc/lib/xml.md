@@ -105,3 +105,13 @@ pub fn demoXmlPipeline(): ! {
     * = title_text;
 }
 ```
+
+---
+
+## 零分配 XML 1.0 文本/属性/CDATA 转义子模块（`escape.cp`，收敛自 `xml_escape`）
+
+- `isValidXmlChar(cp: u32): bool`
+- `escapeXmlText(src: []const u8, out: []u8): ([]const u8)?`
+- `escapeXmlAttr(src: []const u8, out: []u8): ([]const u8)?`
+- `wrapXmlCdata(src: []const u8, out: []u8): ([]const u8)?`
+- `unescapeXml(src: []const u8, out: []u8): ([]const u8)?`

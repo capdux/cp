@@ -6,7 +6,7 @@ import {
     escapeXmlAttr,
     wrapXmlCdata,
     unescapeXml,
-} from "cap:xml_escape";
+} from "cap:xml";
 
 test("1. isValidXmlChar enforces XML 1.0 Fifth Edition section 2.2", () => {
     expect_eq(isValidXmlChar(0x09), true);

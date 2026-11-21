@@ -81,3 +81,10 @@ pub fn demoYaml(): ! {
     * = runner;
 }
 ```
+
+---
+
+## 零分配 YAML 1.2 标量解析与转义子模块（收敛自 `yaml_escape` / `yaml_scalar`）
+
+- **标量引号与转义 (`escape.cp`)**：`needsYamlQuotes`、`quoteYamlSingle`、`quoteYamlDouble`、`formatYamlScalar`、`unescapeYamlDouble`。
+- **Core Schema 标量解析 (`scalar.cp`)**：`YamlScalarKind`、`YamlScalar`、`parseCoreScalar`、`unescapeDoubleQuoted`、`unescapeSingleQuoted`、`needsQuoting`、`formatSafeScalar`。

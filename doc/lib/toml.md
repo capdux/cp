@@ -93,3 +93,10 @@ pub fn demoTomlConfig(): ! {
     defer doc2.deinit();
 }
 ```
+
+---
+
+## 零分配 TOML 1.0 转义与词法子模块（收敛自 `toml_escape` / `toml_lexer`）
+
+- **字符串与键名转义 (`escape.cp`)**：`isBareTomlKey`、`formatTomlBasicString`、`formatTomlKey`、`unescapeTomlBasic`。
+- **词法扫描器 (`lexer.cp`)**：`TomlTokenKind`、`TomlToken`、`TomlLexer`。

@@ -9,7 +9,7 @@ import {
     unescapeSingleQuoted,
     needsQuoting,
     formatSafeScalar,
-} from "cap:yaml_scalar";
+} from "cap:yaml";
 
 fn approxEq(a: f64, b: f64, eps: f64): bool {
     const diff = if (a >= b) a - b else b - a;

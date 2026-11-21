@@ -3,7 +3,7 @@ import {
     formatTomlBasicString,
     formatTomlKey,
     unescapeTomlBasic,
-} from "cap:toml_escape";
+} from "cap:toml";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {

@@ -100,3 +100,11 @@ pub fn demoHtmlSecurityAndExtract(): !void {
     * = summary.plain_text;
 }
 ```
+
+---
+
+## 零分配实体转义快捷函数（`esc.cp`，收敛自 `html_escape`）
+
+- `needsHtmlEscape(src: []const u8): bool`
+- `escapeHtml(src: []const u8, out: []u8): ([]const u8)?`
+- `unescapeHtml(src: []const u8, out: []u8): ([]const u8)?`

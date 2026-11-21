@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:yaml` YAML/TOML/HTML/XML 统一主包同步收敛（突破 100 目录收敛里程碑！）（5/5 PASS，文档直写 `doc/lib/yaml.md`）
+- **收敛要点**：`lib/html/esc.cp` 避开既有 `escape.cp`，4 个主包 `cpc check` 全 0 errors，6/6 深度测试通过；累计消除 103 个长下划线顶层目录。
+
 ## 2026-11-22: 新建 `cap:http` HTTP/1.1/2/3 协议与全套 RFC 头部协商、Cookie、CSP、Digest、EarlyHints 与转发统一主包（5/5 PASS，文档直写 `doc/lib/http.md`）
 - **收敛要点**：15 个 HTTP Cookie/CSP/Digest/EarlyHints/Forwarded 子模块零破坏合入 `lib/http/`；累计已消除 97 个长下划线顶层目录！
 

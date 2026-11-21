@@ -319,3 +319,6 @@
 
 ### 2026-11-22（`cap:http` 验收，方案 A Wave 4 全部收官：`http_* 第2批`(15) 收敛至 `cap:http`（15/15 PASS），累计消除 97 个长下划线顶层目录！）
 - **执行成果**：`lib/http/`（5/5 PASS，`doc/lib/http.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 4 全部收官：`http_* 第2批`(15) 收敛至 `cap:http`（15/15 PASS），累计消除 97 个长下划线顶层目录！
+
+### 2026-11-22（`cap:yaml` 验收，方案 A Wave 5：`html`/`xml`/`yaml`/`toml` 6 目录收敛落地（6/6 PASS），突破 **100 目录收敛里程碑**（累计 103 个）！）
+- **执行成果**：`lib/yaml/`（5/5 PASS，`doc/lib/yaml.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 5：`html`/`xml`/`yaml`/`toml` 6 目录收敛落地（6/6 PASS），突破 **100 目录收敛里程碑**（累计 103 个）！

@@ -521,8 +521,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:fs_router` | RouteKind, SegmentKind, RouteParam, RouteMatch, RoutePattern, FsRouter | Next.js / Bun FileSystemRouter 风格文件路由解析、静态>动态>捕获优先级排序与零拷贝参数匹配引擎（吸收自 bun/src/router/{Route,route_types}.cp） |
 | `cap:alt_svc` | DEFAULT_MAX_AGE, AltSvcEntry, AltSvcHeader, AltSvcCache | RFC 7838 HTTP Alt-Svc 头部解析器与零堆分配 64 源 TTL 缓存（HTTP/3 升级发现，吸收自 bun/src/http/h3_client/AltSvc.cp） |
 | `cap:linear_fifo` | StaticLinearFifo | 零堆分配泛型环形缓冲区 FIFO（支持 item/slice 读写、peek、unget、discard 与环形回绕，吸收自 bun/src/collections/linear_fifo.cp） |
-| `cap:toml_lexer` | TomlTokenKind, TomlToken, TomlLexer, unescapeBasicString | TOML v1.0 零堆分配流式词法扫描器（21 种记号/4 种字符串/4 进制整数/ISO 8601 日期时间与 Unicode 解转义，吸收自 bun/src/interchange/toml/lexer.cp） |
-| `cap:yaml_scalar` | YamlScalarKind, YamlScalar, parseCoreScalar, unescapeDoubleQuoted, unescapeSingleQuoted, needsQuoting, formatSafeScalar | YAML 1.2 Core Schema 零堆分配标量类型推断、单/双引号解转义与安全引用序列化库（吸收自 bun/src/interchange/yaml.cp） |
 | `cap:hive_array` | HiveArray | 基于 64-bit 分块位图的零堆分配固定容量 Slab 槽池（O(1) 分配/防重复释放/稀疏 @ctz 跳跃迭代，吸收自 bun/src/collections/hive_array.cp） |
 | `cap:header_value_iter` | HeaderValueIterator, HeaderParam, HeaderParamIterator, CacheControl | RFC 9110 HTTP 逗号/分号多值头部零堆分配迭代器（保护引号逗号）与 Cache-Control 指令解析器（吸收自 bun/src/http/HeaderValueIterator.cp） |
 | `cap:mysql_caps` | CapabilityFlag, Capabilities, StatusFlag, StatusFlags | MySQL 4.1-8.4 协议 32-bit 客户端/服务端能力位协商与 16-bit StatusFlags 事务/多结果集状态解析库（吸收自 bun/src/sql/mysql/{Capabilities,StatusFlags}.cp） |
@@ -560,7 +558,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:npm_package_name` | PackageSpecifier, parsePackageSpecifier, isValidPackageName, isRelativeSpecifier, isBareSpecifier | npm / Node.js 包名与模块说明符零分配解析器（作用域/子路径拆分与 validate-npm-package-name 校验） |
 | `cap:logfmt` | LogfmtField, LogfmtIter, getLogfmtValue, appendLogfmtPair | 结构化 logfmt（key=value）日志行零分配流式解析器、键值查询与规范化转义编码器 |
 | `cap:uri_normalize` | isUnreserved, defaultPortForScheme, normalizePercentEncoding, removeDotSegments, normalizeOrigin | RFC 3986 URI 路径点段归约（§5.2.4）、百分号编码规范化与协议默认端口剥离工具 |
-| `cap:html_escape` | needsHtmlEscape, escapeHtml, unescapeHtml | 零分配 HTML 实体转义与命名/十进制/十六进制数字字符引用 UTF-8 反转义器 |
 | `cap:w3c_traceparent` | TraceParent, TraceStateEntry, TraceStateIter, findTraceState | W3C Trace Context Level 1 traceparent / tracestate 分布式追踪头零分配解析与格式化器 |
 | `cap:byte_size` | parseByteSize, formatBytesIec, formatBytesSi | 纯整数人类可读字节大小解析器（SI/IEC 小数支持与溢出防护）及 SI/IEC 格式化器 |
 | `cap:case_convert` | WordIter, toSnakeCase, toScreamingSnakeCase, toKebabCase, toCamelCase, toPascalCase | 零分配缩写感知标识符命名风格转换器（snake_case / SCREAMING_SNAKE_CASE / kebab-case / camelCase / PascalCase） |
@@ -584,7 +581,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:conventional_commit` | ReleaseBump, ConventionalCommit | Conventional Commits 1.0.0 提交信息零分配解析器、破坏性变更检测与 SemVer 升级建议器 |
 | `cap:codeowners` | CodeownersRule, OwnerIter, CodeownersIter, resolveOwners, isOwnedBy | GitHub / GitLab CODEOWNERS 文件零分配规则解析与后匹配代码归属求值引擎 |
 | `cap:http_permissions_policy` | PermissionDirective, PermissionsPolicyIter, findPermission | W3C Permissions-Policy 响应头零分配解析器与特性权限（disabled/self/*/origin）查询器 |
-| `cap:xml_escape` | isValidXmlChar, escapeXmlText, escapeXmlAttr, wrapXmlCdata, unescapeXml | XML 1.0 文本/属性转义器、CDATA ]]> 自动安全拆分器与数字/命名实体反转义器 |
 | `cap:http_proxy_url` | ProxyScheme, parseProxyScheme, defaultProxyPort, ProxyUrl, ProxyEnv, selectProxy | HTTP/HTTPS/SOCKS4/SOCKS5/SOCKS5H 代理 URL 解析器与 HTTP_PROXY/HTTPS_PROXY/ALL_PROXY/NO_PROXY 路由选择器 |
 | `cap:http_user_agent` | ProductToken, UserAgentIter, BrowserFamily, OsFamily, isBotUserAgent, isMobileUserAgent, detectBrowser, detectOs, findProductVersion | RFC 9110 §10.1.5 User-Agent 产品令牌零分配迭代器与浏览器/OS/移动端/爬虫分类器 |
 | `cap:rfc7807_problem` | PROBLEM_JSON_CONTENT_TYPE, defaultTitleForStatus, ProblemDetails | RFC 9457 / RFC 7807 HTTP Problem Details (application/problem+json) 零分配构造与转义序列化器 |
@@ -596,10 +592,8 @@ const h = cap.hash.wyhash("hello");
 | `cap:ssh_config` | matchHostPatterns, SshHostConfig, resolveSshConfig, getSshOption | OpenSSH ~/.ssh/config 零分配解析器与主机参数匹配引擎（首现优先、* 与 ! 否定模式） |
 | `cap:brace_expand` | BraceExpandIter | 零分配 Bash 风格花括号展开迭代器（逗号列表、步进/补零整数序列与字母序列） |
 | `cap:mime_headers` | MimeMessageSplit, splitHeadersAndBody, MimeHeader, MimeHeaderIter, findMimeHeader, countMimeHeader | RFC 5322 / MIME 头块零分配解析器（头体分离、obs-fold 折行展开、大小写不敏感查询与重复头计数） |
-| `cap:toml_escape` | isBareTomlKey, formatTomlBasicString, formatTomlKey, unescapeTomlBasic | TOML 1.0 裸键校验、基本字符串字面量转义与严格 Unicode 标量值（\uXXXX/\UXXXXXXXX）反转义器 |
 | `cap:charset_label` | CharsetKind, resolveCharsetLabel, canonicalCharsetName, isUtf8Compatible, isAsciiSuperset, sniffBomCharset | WHATWG Encoding Standard 字符集标签规范化器（14 种编码别名映射与 UTF-8/UTF-16 BOM 嗅探） |
 | `cap:http_sec_fetch` | FetchSite, FetchMode, FetchDest, parseFetchSite, parseFetchMode, parseFetchDest, FetchMetadata | W3C Fetch Metadata（Sec-Fetch-Site/Mode/Dest/User）零分配解析与资源隔离防护策略求值器 |
-| `cap:yaml_escape` | needsYamlQuotes, quoteYamlSingle, quoteYamlDouble, formatYamlScalar, unescapeYamlDouble | YAML 1.2 标量引号安全判定、单/双引号转义与 Unicode（\xHH/\uXXXX/\UXXXXXXXX）反转义器 |
 | `cap:makefile_parse` | MakeAssignOp, MakeVar, MakeRule, MakeRuleIter, MakeVarIter, isPhonyTarget | GNU Makefile 目标、依赖、.PHONY 伪目标与变量赋值（=/ :=/ ?=/ +=）零分配解析器 |
 | `cap:csv_escape` | needsCsvQuotes, escapeCsvField, unescapeCsvField, formatCsvRow, isFormulaInjectionRisk | RFC 4180 CSV / TSV 字段转义器、单行构造器、严格引号反转义器与电子表格公式前缀风险检测 |
 | `cap:http_keep_alive` | KeepAliveParams, shouldKeepAlive | HTTP Keep-Alive 参数（timeout/max）零分配解析格式化器与 RFC 9112 §9.3 持久连接判定器 |
