@@ -514,3 +514,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:thrift` | `ThriftDeclKind`, `ThriftDecl`, `ThriftField`, `ThriftDeclIter`, `ThriftFieldIter`, `validateThriftBraces` | 零分配 Apache Thrift `.thrift` IDL 顶层声明/嵌套泛型字段提取与括号平衡校验器 |
 | `cap:cypher` | `CYPHER_MAX_DEPTH`, `CypherTokenKind`, `CypherClauseKind`, `CypherToken`, `CypherIter`, `CypherParamIter`, `classifyCypherKeyword`, `validateCypherDelimiters`, `isReadOnlyCypher` | 零分配 openCypher / Neo4j 图查询语言词法扫描、参数提取与只读安全判定器 |
 | `cap:sparql` | `SparqlQueryForm`, `SparqlPrefix`, `SparqlTokenKind`, `SparqlToken`, `SparqlIter`, `SparqlPrefixIter`, `detectSparqlQueryForm`, `isReadOnlySparql`, `validateSparqlDelimiters` | 零分配 W3C SPARQL 1.1 知识图谱查询词法扫描、前缀提取与只读安全判定器 |
+| `cap:idl` | `WebIdlDeclKind`, `WebIdlDecl`, `WebIdlTokenKind`, `WebIdlToken`, `WebIdlIter`, `WebIdlDeclIter`, `validateWebIdlBraces` | 零分配 W3C WebIDL 接口/字典/枚举/扩展属性词法扫描与顶层声明提取器 |

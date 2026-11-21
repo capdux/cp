@@ -130,3 +130,6 @@
 
 ### 2026-11-22（`cap:sparql` 验收，新增简洁单单词包 `cap:sparql`（5/5 PASS）；主动捕获并派发热修 `#108`）
 - **执行成果**：`lib/sparql/`（5/5 PASS，`doc/lib/sparql.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:sparql`（5/5 PASS）；主动捕获并派发热修 `#108`
+
+### 2026-11-22（`cap:idl` 验收，新增简洁单单词包 `cap:idl`（5/5 PASS））
+- **执行成果**：`lib/idl/`（5/5 PASS，`doc/lib/idl.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:idl`（5/5 PASS）

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:idl` 零分配 W3C WebIDL 接口/字典/枚举/扩展属性词法扫描与顶层声明提取器（5/5 PASS，自动动态挂载 `cap.idl`）
+- 新增 `lib/idl/{idl,index}.cp`、`doc/lib/idl.md`、`cap/test/test_idl_production_deep.cp`：纯 CP 零分配实现 W3C WebIDL 词法扫描、8 类顶层声明（含 `[ExtAttr]` 与 `partial` 修饰）提取与 64 层括号平衡校验（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:sparql` 零分配 W3C SPARQL 1.1 知识图谱查询词法扫描、前缀提取与只读安全判定器（5/5 PASS，自动动态挂载 `cap.sparql`）
 - 新增 `lib/sparql/{sparql,index}.cp`、`doc/lib/sparql.md`、`cap/test/test_sparql_production_deep.cp`：纯 CP 零分配实现 SPARQL 1.1 词法扫描、`PREFIX` 提取、查询形态识别与严格只读判定（拦截多语句写拼接与非法词法）（5/5 PASS）。
 

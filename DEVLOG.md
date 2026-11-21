@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:idl` 零分配 W3C WebIDL 接口/字典/枚举/扩展属性词法扫描与顶层声明提取器（5/5 PASS，文档直写 `doc/lib/idl.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:idl`；`WebIdlDeclIter` 零分配支持 `interface mixin`、`partial dictionary`、`A includes B;` 等 WebIDL 规范语法。
+
 ## 2026-11-22: 新建 `cap:sparql` 零分配 W3C SPARQL 1.1 知识图谱查询词法扫描、前缀提取与只读安全判定器（5/5 PASS，文档直写 `doc/lib/sparql.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:sparql`，与 `cap:cypher` 构成图查询安全分析双件套；精准区分 `<iri>` 与 `<`/`<=` 比较运算符。
 
