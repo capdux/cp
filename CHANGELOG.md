@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:coff` Microsoft COFF/PE-COFF (.obj) 20B header, 40B sections, 18B symbols & 10B relocs parser（5/5 PASS，自动动态挂载 `cap.coff`）
+新增纯 CP 零分配标准库 cap:coff（Microsoft COFF/PE-COFF .obj 报头、节表、符号表、重定位与字符串表解析）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:multiboot` GNU Multiboot1 & Multiboot2 kernel headers, Boot Info Tags & Mmap zero-alloc parser（5/5 PASS，自动动态挂载 `cap.multiboot`）
 新增纯 CP 零分配标准库 cap:multiboot（GNU Multiboot1 & Multiboot2 内核头、Boot Info Tag 与内存映射表解析）与 5/5 深度测试
 

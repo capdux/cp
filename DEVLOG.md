@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:coff` Microsoft COFF/PE-COFF (.obj) 20B header, 40B sections, 18B symbols & 10B relocs parser（5/5 PASS，文档直写 `doc/lib/coff.md`）
+新增 cap:coff 纯 CP 零分配目标文件解析库（20B 头、40B 节表含 /<offset> 长节名、18B 符号与 10B 重定位项），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:multiboot` GNU Multiboot1 & Multiboot2 kernel headers, Boot Info Tags & Mmap zero-alloc parser（5/5 PASS，文档直写 `doc/lib/multiboot.md`）
 新增 cap:multiboot 纯 CP 零分配引导协议库（MB1/MB2 32-bit 环绕校验和、8B 对齐 Boot Info Tag 迭代与 Mmap/Framebuffer/Module 视图），通过 cpc check 与 5/5 cap test
 
