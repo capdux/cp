@@ -446,3 +446,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:static_hashmap` | fnv1a64, fnv1a64AsciiLower, splitmix64, StringContext, AsciiIgnoreCaseContext, IntContext, EMPTY_HASH, Error, KeyValue, Slot, StaticHashMap | 编译期可构建、运行期零堆分配 O(1) 开放寻址静态哈希表（源自 Bun collections/StaticHashMap.cp） |
 | `cap:char_freq` | CHAR_FREQ_COUNT, HEAD_CHAR_COUNT, TAIL_CHAR_COUNT, CharAndCount, NameMinifier, CharFreq | 纯 CP 零堆分配 64 桶标识符字符频次直方图与按频次排序 Base-54/64 短名生成器（源自 Bun js_parser/ast/CharFreq.cp） |
 | `cap:bounded_array` | BoundedArrayError, BoundedArray | 零堆分配栈上固定容量动态数组，支持 append/insert/orderedRemove/swapRemove/fromSlice（源自 Bun collections/bounded_array.cp） |
+| `cap:route_params` | Param, ParamMap, URLPath, parseURLPath | 带 ~init() RAII 释放的动态路由参数表 ParamMap 与零堆分配 URLPath 解析器（源自 Bun router/ParamMap.cp + http_types/URLPath.cp） |

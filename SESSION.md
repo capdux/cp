@@ -160,3 +160,6 @@
 
 ### 2026-11-21（`cap:bounded_array` 验收，吸收 Bun collections/bounded_array.cp -> cap:bounded_array，测试 2/2 通过。）
 - **执行成果**：`lib/bounded_array/`（5/5 PASS，`doc/lib/bounded_array.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun collections/bounded_array.cp -> cap:bounded_array，测试 2/2 通过。
+
+### 2026-11-21（`cap:route_params` 验收，吸收 cap:route_params（3/3）并升级 cap:lockfree_queue 合入 UnboundedQueue（10/10）。）
+- **执行成果**：`lib/route_params/`（5/5 PASS，`doc/lib/route_params.md`）经 `verify_module.sh` 一次性验收回收；吸收 cap:route_params（3/3）并升级 cap:lockfree_queue 合入 UnboundedQueue（10/10）。

@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: HTTP 路由参数映射表与 URLPath 解析器（5/5 PASS，文档直写 `doc/lib/route_params.md`）
+从 Bun router/ParamMap.cp 与 http_types/URLPath.cp 吸收路由参数表与 URL 路径解析器（~init() 零泄漏），并将 Bun threading/unbounded_queue.cp 无损合入 cap:lockfree_queue 新增缓存行防伪共享 UnboundedQueue。
+
 ## 2026-11-21: 栈上定容动态数组 BoundedArray（5/5 PASS，文档直写 `doc/lib/bounded_array.md`）
 从 Bun collections/bounded_array.cp 吸收零堆分配 BoundedArray<T, capacity>，提供完整增删改查与安全溢出/越界错误返回。
 

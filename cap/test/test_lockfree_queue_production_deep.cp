@@ -1,7 +1,15 @@
 // Source: cp/cap/test/test_lockfree_queue_production_deep.cp
 
 import { test, expect_eq } from "cap:test";
-import { SpscQueue, MpmcQueue, BoundedChannel, ChannelError } from "cap:lockfree_queue";
+import {
+    SpscQueue,
+    MpmcQueue,
+    BoundedChannel,
+    ChannelError,
+    CACHE_LINE_LENGTH,
+    QUEUE_PADDING_LENGTH,
+    UnboundedQueue,
+} from "cap:lockfree_queue";
 import cap from "cap";
 
 const std = @import("std");
@@ -289,6 +297,189 @@ fn runTest5(): bool {
     return true;
 }
 
+struct IntNode {
+    value: u32 = 0,
+    next: (*IntNode!)? = null,
+}
+
+struct JobNode {
+    worker_id: u32 = 0,
+    seq: u32 = 0,
+    link: (*JobNode!)? = null,
+}
+
+const IntQueue = UnboundedQueue(IntNode, .next);
+const JobQueue = UnboundedQueue(JobNode, .link);
+
+struct UqProducerCtx {
+    queue: *JobQueue!,
+    nodes: []JobNode,
+    worker_id: u32,
+}
+
+fn uqProducerWorker(ctx: UqProducerCtx) {
+    let nodes = ctx.nodes;
+    let i: usize = 0;
+    while (i < nodes.len) {
+        nodes[i].worker_id = ctx.worker_id;
+        nodes[i].seq = i as u32;
+        nodes[i].link = null;
+        ctx.queue.push(&nodes[i]);
+        i += 1;
+    }
+}
+
+fn runTest6(): bool {
+    if (CACHE_LINE_LENGTH < usize(32) || QUEUE_PADDING_LENGTH < usize(64)) return false;
+    let q = IntQueue.init();
+    if (!q.isEmpty()) return false;
+    if (q.pop() != null) return false;
+    let empty_batch = q.popBatch();
+    if (!empty_batch.isEmpty() || empty_batch.len() != usize(0)) return false;
+    let it = empty_batch.iterator();
+    if (it.next() != null) return false;
+    return true;
+}
+
+fn runTest7(): bool {
+    let q = IntQueue.init();
+    let nodes: [16]IntNode = std.mem.zeroes([16]IntNode);
+    let i: usize = 0;
+    while (i < 16) {
+        nodes[i].value = (i + 1) as u32;
+        q.push(&nodes[i]);
+        i += 1;
+    }
+    if (q.isEmpty()) return false;
+    let j: usize = 0;
+    while (j < 16) {
+        if (popped := q.pop()) {
+            if (popped.value != (j + 1) as u32) return false;
+        } else {
+            return false;
+        }
+        j += 1;
+    }
+    return q.isEmpty() && q.pop() == null;
+}
+
+fn runTest8(): bool {
+    let q = IntQueue.init();
+    let nodes: [10]IntNode = std.mem.zeroes([10]IntNode);
+    let i: usize = 0;
+    while (i < 10) {
+        nodes[i].value = (i * 10) as u32;
+        i += 1;
+    }
+    nodes[0].next = &nodes[1];
+    nodes[1].next = &nodes[2];
+    nodes[2].next = &nodes[3];
+    nodes[3].next = &nodes[4];
+    nodes[4].next = null;
+    nodes[5].next = &nodes[6];
+    nodes[6].next = &nodes[7];
+    nodes[7].next = &nodes[8];
+    nodes[8].next = &nodes[9];
+    nodes[9].next = null;
+
+    q.pushBatch(&nodes[0], &nodes[4]);
+    q.pushBatch(&nodes[5], &nodes[9]);
+    const batch = q.popBatch();
+    if (!q.isEmpty() || batch.len() != usize(10)) return false;
+
+    let it = batch.iterator();
+    let idx: usize = 0;
+    while (node := it.next()) {
+        if (node.value != (idx * 10) as u32) return false;
+        idx += 1;
+    }
+    return idx == usize(10) && it.next() == null;
+}
+
+fn runTest9(): bool {
+    let q = JobQueue.init();
+    let jobs: [4]JobNode = std.mem.zeroes([4]JobNode);
+    let round: u32 = 0;
+    while (round < 5) {
+        let i: usize = 0;
+        while (i < 4) {
+            jobs[i].worker_id = round;
+            jobs[i].seq = i as u32;
+            q.push(&jobs[i]);
+            i += 1;
+        }
+        if (first := q.pop()) {
+            if (first.worker_id != round || first.seq != u32(0)) return false;
+        } else {
+            return false;
+        }
+        const rest = q.popBatch();
+        if (rest.len() != usize(3)) return false;
+        let it = rest.iterator();
+        let expected_seq: u32 = 1;
+        while (job := it.next()) {
+            if (job.worker_id != round || job.seq != expected_seq) return false;
+            expected_seq += 1;
+        }
+        if (expected_seq != u32(4) || !q.isEmpty()) return false;
+        round += 1;
+    }
+    return true;
+}
+
+fn runTest10(): bool {
+    let gpa = std.heap.DebugAllocator(.{}).init;
+    const alloc = if (builtin.is_test) std.testing.allocator else gpa.allocator();
+    const per_worker: usize = 250;
+    const num_workers: usize = 4;
+    const total_nodes: usize = per_worker * num_workers;
+
+    {
+        let pool = alloc.alloc(JobNode, total_nodes) catch return false;
+        defer alloc.free(pool);
+
+        let q = JobQueue.init();
+        let threads: [4]std.Thread = undefined;
+        let w: usize = 0;
+        while (w < num_workers) {
+            const start = w * per_worker;
+            const ctx = UqProducerCtx{
+                queue: &q,
+                nodes: pool[start .. start + per_worker],
+                worker_id: w as u32,
+            };
+            threads[w] = std.Thread.spawn(.{}, uqProducerWorker, .{ctx}) catch return false;
+            w += 1;
+        }
+
+        let consumed: usize = 0;
+        let seq_sum: u64 = 0;
+        while (consumed < total_nodes) {
+            const batch = q.popBatch();
+            let it = batch.iterator();
+            while (node := it.next()) {
+                consumed += 1;
+                seq_sum += node.seq as u64;
+            }
+            if (consumed < total_nodes) {
+                std.atomic.spinLoopHint();
+            }
+        }
+
+        let t: usize = 0;
+        while (t < num_workers) {
+            threads[t].join();
+            t += 1;
+        }
+        if (consumed != total_nodes || !q.isEmpty() || seq_sum != u64(124500)) return false;
+    }
+
+    if (!builtin.is_test) {
+        if (gpa.deinit() == .leak) return false;
+    }
+    return true;
+}
+
 fn main() {
     test("1. SpscQueue 100k ordered wait-free transfer", () => {
         expect_eq(runTest1(), true);
@@ -304,5 +495,20 @@ fn main() {
     });
     test("5. cap.lockfree_queue dynamic mount and zero-leak allocator verification", () => {
         expect_eq(runTest5(), true);
+    });
+    test("6. UnboundedQueue empty invariants, cache-line padding & null pop", () => {
+        expect_eq(runTest6(), true);
+    });
+    test("7. UnboundedQueue single-threaded strict FIFO push/pop ordering", () => {
+        expect_eq(runTest7(), true);
+    });
+    test("8. UnboundedQueue pushBatch & popBatch with Batch.Iterator traversal", () => {
+        expect_eq(runTest8(), true);
+    });
+    test("9. UnboundedQueue custom node multi-round reuse", () => {
+        expect_eq(runTest9(), true);
+    });
+    test("10. UnboundedQueue 4-producer MPSC 1000-node concurrent stress test", () => {
+        expect_eq(runTest10(), true);
     });
 }
