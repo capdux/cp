@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:exr` 零分配 OpenEXR HDR 图像容器头与 Attribute 解析器（5/5 PASS，自动动态挂载 `cap.exr`）
+新增 `lib/exr/{exr,index}.cp`、`doc/lib/exr.md` 与 `cap/test/test_exr_production_deep.cp`（5/5 PASS），支持 EXR 魔数与 Flags 解析、零分配 Attribute 迭代、box2i 宽高计算与压缩算法映射。
+
 ## [2026-11-22] - 新建 `cap:mp4` 零分配 ISO BMFF / MP4 容器 Box/Atom 与媒体头解析器（5/5 PASS，自动动态挂载 `cap.mp4`）
 新增 `lib/mp4/{mp4,index}.cp`、`doc/lib/mp4.md` 与 `cap/test/test_mp4_production_deep.cp`（5/5 PASS），支持 64B largesize/size=0/UUID Box、ftyp/mvhd/mdhd/tkhd 解析与嵌套路径零拷贝查找。
 

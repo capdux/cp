@@ -211,3 +211,6 @@
 
 ### 2026-11-22（`cap:mp4` 验收，完成 `cap:mp4` 交付验收并登记入库（5/5 PASS）；派发 `a83c7e75` 执行 11 处 Bun 上游最新增量同步。）
 - **执行成果**：`lib/mp4/`（5/5 PASS，`doc/lib/mp4.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:mp4` 交付验收并登记入库（5/5 PASS）；派发 `a83c7e75` 执行 11 处 Bun 上游最新增量同步。
+
+### 2026-11-22（`cap:exr` 验收，完成 `cap:exr` 交付验收并登记入库（5/5 PASS）；派发 `cap:pcapng`。）
+- **执行成果**：`lib/exr/`（5/5 PASS，`doc/lib/exr.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:exr` 交付验收并登记入库（5/5 PASS）；派发 `cap:pcapng`。

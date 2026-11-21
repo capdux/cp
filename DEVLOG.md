@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:exr` 零分配 OpenEXR HDR 图像容器头与 Attribute 解析器（5/5 PASS，文档直写 `doc/lib/exr.md`）
+实现零分配 OpenEXR 容器解析器，严格校验 8B 头、空名结束符与属性长度边界，防截断和越界。
+
 ## 2026-11-22: 新建 `cap:mp4` 零分配 ISO BMFF / MP4 容器 Box/Atom 与媒体头解析器（5/5 PASS，文档直写 `doc/lib/mp4.md`）
 实现零分配 ISO BMFF / MP4 解析器，支持 v0/v1 mvhd/mdhd/tkhd、meta FullBox 4B 头跳过与防溢出时长换算。
 
