@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ean` ISO/IEC 15420 EAN-13 (95-mod), EAN-8 (67-mod) & UPC-A bidirectional barcode codec（5/5 PASS，自动动态挂载 `cap.ean`）
+新增纯 CP 零分配标准库 cap:ean（ISO/IEC 15420 EAN-13/EAN-8/UPC-A L/G/R 正反向模块流编解码）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:code39` ISO/IEC 16388 Code 39 3-of-9 barcode pattern, Mod-43 & adaptive module codec（5/5 PASS，自动动态挂载 `cap.code39`）
 新增纯 CP 零分配标准库 cap:code39（ISO/IEC 16388 Code 39 3-of-9 图案、Mod-43 与自适应模块流编解码）与 6/6 深度测试
 

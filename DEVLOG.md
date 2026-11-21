@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ean` ISO/IEC 15420 EAN-13 (95-mod), EAN-8 (67-mod) & UPC-A bidirectional barcode codec（5/5 PASS，文档直写 `doc/lib/ean.md`）
+新增 cap:ean 纯 CP 零分配商品条码库（全 10 种首位 L/G 奇偶编码、95/67 模块正向与倒置扫描自动识别），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:code39` ISO/IEC 16388 Code 39 3-of-9 barcode pattern, Mod-43 & adaptive module codec（5/5 PASS，文档直写 `doc/lib/code39.md`）
 新增 cap:code39 纯 CP 零分配一维条码库（44 项 3-of-9 图案表、Mod-43 校验与自适应阈值游程解码），通过 cpc check 与 6/6 cap test
 
