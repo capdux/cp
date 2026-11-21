@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:fir` DSP Windowed-Sinc FIR filter, Hann/Hamming/Blackman windows & RBJ Biquad IIR（5/5 PASS，文档直写 `doc/lib/fir.md`）
+新增 cap:fir 纯 CP 零分配数字信号处理库（环形延迟线 FIR、低通系数设计与 Direct Form II Transposed Biquad 解析频响），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:dct` Orthonormal 1D & 2D 8x8 DCT-II/IDCT-III, JPEG ZigZag scan & IJG quantization（5/5 PASS，文档直写 `doc/lib/dct.md`）
 新增 cap:dct 纯 CP 零分配图像与信号变换库（能量守恒 1D DCT、可分离 8×8 块变换与 IJG 质量缩放量化），通过 cpc check 与 5/5 cap test
 
