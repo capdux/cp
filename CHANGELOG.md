@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:json_patch` 纯 CP 工业级 RFC 6902 JSON Patch (`add`/`remove`/`replace`/`move`/`copy`/`test`)、RFC 7396 Merge Patch 与 RFC 6901 JSON Pointer 标准库（支持 `cap.json_patch` 自动动态挂载，详见 `doc/lib/json_patch.md`）（5/5 PASS，自动动态挂载 `cap.json_patch`）
+- **新增标准库**：`lib/json_patch/{json_patch,index}.cp`，实现 RFC 6901 JSON Pointer `~0`/`~1` 与 `-` 追加、RFC 6902 全 6 种原子操作与回滚、RFC 7396 Merge Patch 及 `diff` 自动补丁生成。\n- **新增文档与测试**：`doc/lib/json_patch.md` 扁平文档与 `cap/test/test_json_patch_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:cbor_diag` 纯 CP 工业级 RFC 8949 CBOR 确定性编解码（含不定长编码与 Section 4.2 规范排序）与诊断表示法 `toDiag` 标准库（支持 `cap.cbor_diag` 自动动态挂载，详见 `doc/lib/cbor_diag.md`）（5/5 PASS，自动动态挂载 `cap.cbor_diag`）
 - **编译器热修**：修复 `cpc/src/parser/primary.rs` 函数调用实参传入 `[]const u8` / `[]u16` 切片类型表达式被误判为空数组的问题，完成 `task-bun-20261121-slice-type-arg` 结单。\n- **新增标准库**：`lib/cbor_diag/{cbor,index}.cp`，实现 RFC 8949 CBOR 定长/不定长编解码、Section 4.2 确定性规范编码与诊断表示法 `toDiag`。\n- **新增文档与测试**：`doc/lib/cbor_diag.md` 扁平文档与 `cap/test/test_cbor_diag_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

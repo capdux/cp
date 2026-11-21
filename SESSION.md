@@ -79,3 +79,6 @@
 
 ### 2026-11-21（`cap:cbor_diag` 验收，完成 `task-bun-20261121-slice-type-arg` 编译器热修结单并验收提交 `cap:cbor_diag`）
 - **执行成果**：`lib/cbor_diag/`（5/5 PASS，`doc/lib/cbor_diag.md`）经 `verify_module.sh` 一次性验收回收；完成 `task-bun-20261121-slice-type-arg` 编译器热修结单并验收提交 `cap:cbor_diag`
+
+### 2026-11-21（`cap:json_patch` 验收，验收提交 `cap:json_patch`）
+- **执行成果**：`lib/json_patch/`（5/5 PASS，`doc/lib/json_patch.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:json_patch`
