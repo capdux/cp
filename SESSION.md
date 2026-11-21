@@ -238,3 +238,6 @@
 
 ### 2026-11-22（`cap:cusum` 验收，子智能体交付 cap:cusum（CUSUM / Page-Hinkley / EWMA / 流式 Z-Score，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/cusum/`（5/5 PASS，`doc/lib/cusum.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:cusum（CUSUM / Page-Hinkley / EWMA / 流式 Z-Score，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:spectral` 验收，子智能体交付 cap:spectral（谱图聚类与拉普拉斯分析，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/spectral/`（5/5 PASS，`doc/lib/spectral.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:spectral（谱图聚类与拉普拉斯分析，6/6 PASS），主协调器统一登记并提交

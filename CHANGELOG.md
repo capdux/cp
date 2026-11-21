@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:spectral` 纯 CP 零分配谱图聚类与图拉普拉斯分析库：非归一化/对称归一化拉普拉斯、Fiedler 代数连通度与谱二分、NJW k-路谱嵌入、NCut 图割度量与高斯 RBF 亲和矩阵（5/5 PASS，自动动态挂载 `cap.spectral`）
+新增纯 CP 零分配谱图聚类与拉普拉斯库 cap:spectral（Fiedler 谱二分、NJW 谱嵌入、NCut、RBF 亲和矩阵），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:cusum` 纯 CP 零分配在线变点与流式异常检测库：双边 Page CUSUM、无先验 Page-Hinkley 漂移检测、Roberts 时变控制限 EWMA 控制图与 Welford 流式 Z-Score（5/5 PASS，自动动态挂载 `cap.cusum`）
 新增纯 CP 零分配在线变点与异常检测库 cap:cusum（CUSUM、Page-Hinkley、EWMA 控制图、流式 Z-Score），含文档与 6 项深度生产测试
 

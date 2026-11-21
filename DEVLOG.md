@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:spectral` 纯 CP 零分配谱图聚类与图拉普拉斯分析库：非归一化/对称归一化拉普拉斯、Fiedler 代数连通度与谱二分、NJW k-路谱嵌入、NCut 图割度量与高斯 RBF 亲和矩阵（5/5 PASS，文档直写 `doc/lib/spectral.md`）
+新增 cap:spectral（lib/spectral/{spectral,index}.cp）：零分配图拉普拉斯、Fiedler 谱二分与 NJW 谱嵌入，通过双团桥接图与双同心圆非凸分离校验，cpc check 0 错误，cap test 6/6 PASS (857ms)
+
 ## 2026-11-22: 新建 `cap:cusum` 纯 CP 零分配在线变点与流式异常检测库：双边 Page CUSUM、无先验 Page-Hinkley 漂移检测、Roberts 时变控制限 EWMA 控制图与 Welford 流式 Z-Score（5/5 PASS，文档直写 `doc/lib/cusum.md`）
 新增 cap:cusum（lib/cusum/{cusum,index}.cp）：零分配双边 CUSUM、Page-Hinkley、EWMA 控制图与 Welford 流式 Z-Score（1e9 大偏移零抵消），cpc check 0 错误，cap test 6/6 PASS (756ms)
 
