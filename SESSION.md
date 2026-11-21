@@ -70,3 +70,6 @@
 
 ### 2026-11-22（`cap:cuid` 验收，新增简洁单单词包 `cap:cuid`（5/5 PASS）；热修 `#98` 合单派发至 `d0a3d659`）
 - **执行成果**：`lib/cuid/`（5/5 PASS，`doc/lib/cuid.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:cuid`（5/5 PASS）；热修 `#98` 合单派发至 `d0a3d659`
+
+### 2026-11-22（`cap:rss` 验收，新增简洁单单词包 `cap:rss`（6/6 PASS））
+- **执行成果**：`lib/rss/`（5/5 PASS，`doc/lib/rss.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:rss`（6/6 PASS）

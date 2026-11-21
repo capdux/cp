@@ -494,3 +494,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:js` | `JsIdent`, `JsOp`, ... | JS 标识符与运算符解析统一主包（同步收敛 `cap:hash`/`cap:text`/`cap:diff`/`cap:mime`） |
 | `cap:sexp` | `SexpTokenKind`, `SexpToken`, `SexpIter`, `validateSexp`, `maxSexpDepth`, `formatSexpCompact` | 零分配 S-Expression 词法扫描、括号平衡校验、最大深度统计与紧凑格式化器 |
 | `cap:cuid` | `CuidVersion`, `isValidCuid1`, `isValidCuid2`, `detectCuidVersion`, `encodeBase36`, `decodeBase36`, `formatCuid1`, `parseCuid1Timestamp` | 零分配 CUID / CUID2 碰撞安全 ID 校验、分类、Base36 与确定性编码器 |
+| `cap:rss` | `RssChannel`, `RssItem`, `isRss2Feed`, `parseRssChannel`, `RssItemIter`, `formatRssItem` | 零分配 RSS 2.0 XML Feed 解析、频道元数据提取、条目迭代与 XML 序列化器 |

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:rss` 零分配 RSS 2.0 XML Feed 解析、频道元数据提取、条目迭代与 XML 序列化器（5/5 PASS，文档直写 `doc/lib/rss.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:rss`；`parseRssChannel` 自动跳过 `<item>`/`<image>` 子树同名标签；`formatRssItem` 零分配实体转义并校验缓冲容量。
+
 ## 2026-11-22: 新建 `cap:cuid` 零分配 CUID / CUID2 碰撞安全 ID 校验、分类、Base36 与确定性编码器（5/5 PASS，文档直写 `doc/lib/cuid.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:cuid`；`formatCuid1` 支持 base36 指纹直写及任意主机名 FNV-1a 确定性映射；`decodeBase36` 拦截溢出与非法字符。
 

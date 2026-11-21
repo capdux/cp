@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:rss` 零分配 RSS 2.0 XML Feed 解析、频道元数据提取、条目迭代与 XML 序列化器（5/5 PASS，自动动态挂载 `cap.rss`）
+- 新增 `lib/rss/{rss,index}.cp`、`doc/lib/rss.md`、`cap/test/test_rss_production_deep.cp`：纯 CP 零分配实现 RSS 2.0 解析与序列化（UTF-8 BOM、CDATA 剥离与伪闭合防护、属性引号内 `>` 保护、XML 实体转义）（6/6 PASS）。
+
 ## [2026-11-22] - 新建 `cap:cuid` 零分配 CUID / CUID2 碰撞安全 ID 校验、分类、Base36 与确定性编码器（5/5 PASS，自动动态挂载 `cap.cuid`）
 - 新增 `lib/cuid/{cuid,index}.cp`、`doc/lib/cuid.md`、`cap/test/test_cuid_production_deep.cp`：纯 CP 零分配实现 CUID v1/v2 校验、版本检测、64 位 Base36 编解码与 25 字节定长 CUID v1 确定性编码及时间戳提取（5/5 PASS）。
 

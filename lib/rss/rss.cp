@@ -467,6 +467,15 @@ fn appendRaw(out: []u8, pos: *usize, s: []const u8): bool {
     return true;
 }
 
+fn appendByte(out: []u8, pos: *usize, c: u8): bool {
+    if (pos.* >= out.len) {
+        return false;
+    }
+    out[pos.*] = c;
+    pos.* += 1;
+    return true;
+}
+
 fn appendXmlEscaped(out: []u8, pos: *usize, s: []const u8): bool {
     let i: usize = 0;
     while (i < s.len) {
@@ -477,14 +486,7 @@ fn appendXmlEscaped(out: []u8, pos: *usize, s: []const u8): bool {
             '>' => appendRaw(out, pos, "&gt;"),
             '"' => appendRaw(out, pos, "&quot;"),
             '\'' => appendRaw(out, pos, "&apos;"),
-            else => {
-                if (pos.* >= out.len) {
-                    return false;
-                }
-                out[pos.*] = c;
-                pos.* += 1;
-                true
-            },
+            else => appendByte(out, pos, c),
         };
         if (!ok) {
             return false;
