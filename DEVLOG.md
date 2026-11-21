@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:tpm` TCG TPM 2.0 command/response header, TPMS_ATTEST/Quote, PCR Selection & TPMT_PUBLIC codec（5/5 PASS，文档直写 `doc/lib/tpm.md`）
+新增 cap:tpm 纯 CP 零分配硬件可信计算库（10B 命令头编解码、0xFF544347 远程证明、PCR 位图迭代与公钥属性解析），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:apfs` Apple APFS Fletcher-64 checksum, Object Header, Container (NXSB) & Volume (APSB) parser（5/5 PASS，文档直写 `doc/lib/apfs.md`）
 新增 cap:apfs 纯 CP 零分配 macOS/iOS 文件系统库（Fletcher-64 校验和、32B Object Header、4KB NXSB/APSB 超级块解析），通过 cpc check 与 5/5 cap test
 
