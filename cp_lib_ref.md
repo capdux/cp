@@ -540,3 +540,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:ply` | PlyFormat, PlyHeader, PlyElement, isPly, parsePlyHeader, PlyElementIter, plyScalarSize | 零分配 Stanford PLY 3D 点云与网格头解析器 |
 | `cap:gltf` | GlbHeader, GlbChunk, GlbDocument, ChunkType, AccessorType, isGlb, parseGlbHeader, GlbChunkIter, extractJsonChunk, extractBinChunk, parseGlb, componentByteSize, accessorComponentCount, parseAccessorType, accessorElementStride | 零分配 glTF 2.0 Binary (GLB) 容器与 Chunk 解析器 |
 | `cap:ktx` | KtxVersion, Ktx1Header, Ktx2Header, Ktx2Level, isKtx1, isKtx2, detectKtxVersion, parseKtx1Header, parseKtx2Header, readKtx2Level | 零分配 Khronos KTX 1.1 & KTX2 GPU 纹理容器与 Mipmap 索引解析器 |
+| `cap:mp4` | Mp4Box, BoxCursor, FtypBox, MvhdBox, MdhdBox, TkhdBox, isMp4, parseFtyp, parseMvhd, parseMdhd, parseTkhd, findBox, findBoxPath, fourccEquals | 零分配 ISO BMFF / MP4 容器 Box/Atom 与媒体头解析器 |

@@ -208,3 +208,6 @@
 
 ### 2026-11-22（`cap:ktx` 验收，完成 `cap:ktx` 交付验收并登记入库（5/5 PASS）；派发 `cap:fits`。）
 - **执行成果**：`lib/ktx/`（5/5 PASS，`doc/lib/ktx.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:ktx` 交付验收并登记入库（5/5 PASS）；派发 `cap:fits`。
+
+### 2026-11-22（`cap:mp4` 验收，完成 `cap:mp4` 交付验收并登记入库（5/5 PASS）；派发 `a83c7e75` 执行 11 处 Bun 上游最新增量同步。）
+- **执行成果**：`lib/mp4/`（5/5 PASS，`doc/lib/mp4.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:mp4` 交付验收并登记入库（5/5 PASS）；派发 `a83c7e75` 执行 11 处 Bun 上游最新增量同步。
