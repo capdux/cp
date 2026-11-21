@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:aof` 零分配 Redis AOF 命令日志、#TS: 时间戳与混合 RDB 前导解析器（5/5 PASS，自动动态挂载 `cap.aof`）
+新增 `lib/aof/{aof,index}.cp`、`doc/lib/aof.md` 与 `cap/test/test_aof_production_deep.cp`（5/5 PASS），支持二进制安全 RESP Multi-Bulk 流迭代、Redis 7.0 #TS: 时间戳关联与截断尾安全 consumedBytes。
+
 ## [2026-11-22] - 新建 `cap:ubjson` 零分配 Universal Binary JSON (UBJSON Draft 12) 编解码器（5/5 PASS，自动动态挂载 `cap.ubjson`）
 新增 `lib/ubjson/{ubjson,index}.cp`、`doc/lib/ubjson.md` 与 `cap/test/test_ubjson_production_deep.cp`（5/5 PASS），支持全套 Draft 12 标记、No-Op 跳过、$type#count 优化容器与深度防护 skipValue。
 

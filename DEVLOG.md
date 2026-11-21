@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:aof` 零分配 Redis AOF 命令日志、#TS: 时间戳与混合 RDB 前导解析器（5/5 PASS，文档直写 `doc/lib/aof.md`）
+实现零分配 Redis AOF 流式解析器，支持混合 RDB 前导探测与断点续读/截断尾部恢复。
+
 ## 2026-11-22: 新建 `cap:ubjson` 零分配 Universal Binary JSON (UBJSON Draft 12) 编解码器（5/5 PASS，文档直写 `doc/lib/ubjson.md`）
 实现零分配 UBJSON 编解码器，支持 writeCompactInt 自动最小编码与定宽强类型数组 O(1) 跳过。
 

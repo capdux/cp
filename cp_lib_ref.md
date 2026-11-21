@@ -577,3 +577,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:lcov` | LcovRecordKind, LcovLineHit, LcovBranchHit, LcovFnDef, LcovFnHit, LcovRecord, LcovRecordIter, LcovFileSummary, LcovFileIter, LcovTotals, summarizeLcov | 零分配 LCOV (.info) 代码覆盖率报告流式解析与聚合统计器 |
 | `cap:vcd` | VcdTimeUnit, VcdVarType, VcdEventKind, VcdTimescale, VcdVarDef, VcdHeader, VcdVarIter, VcdEvent, VcdValueIter, parseVcdTimescale, parseVcdHeader | 零分配 IEEE 1364 VCD 硬件/RTL 仿真波形头与值变流解析器 |
 | `cap:ubjson` | MAX_UBJ_DEPTH, UbjsonContainerHeader, UbjsonWriter, UbjsonReader | 零分配 Universal Binary JSON (UBJSON Draft 12) 编解码器 |
+| `cap:aof` | AofArgIter, AofCommand, AofIter, AofStats, isAofMixedRdb, isAofResp, summarizeAof | 零分配 Redis AOF 命令日志、#TS: 时间戳与混合 RDB 前导解析器 |
