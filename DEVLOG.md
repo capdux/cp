@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:udf` UDF (ECMA-167/ISO 13346) VRS, 16B Tag CRC-16, AVDP/PVD & OSTA CS0 zero-alloc parser（5/5 PASS，文档直写 `doc/lib/udf.md`）
+新增 cap:udf 纯 CP 零分配光盘与通用磁盘格式库（VRS BEA01/NSR03/TEA01、16B Tag 校验和与 CRC-ITU-T 0x1021、OSTA CS0 8/16-bit 字符串解码），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:zfs` OpenZFS Uberblock (LE/BE), 128B blkptr_t/DVA & Fletcher-4 256-bit zero-alloc parser（5/5 PASS，文档直写 `doc/lib/zfs.md`）
 新增 cap:zfs 纯 CP 零分配企业级文件系统库（自动 LE/BE 字节序识别、Uberblock txg 选主、3x DVA 偏移换算与 Fletcher-4 256-bit），通过 cpc check 与 5/5 cap test
 
