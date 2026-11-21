@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:scsi` SCSI (SPC-5/SBC-4) CDB codec, INQUIRY, READ CAPACITY(10/16) & Sense Data zero-alloc parser（5/5 PASS，文档直写 `doc/lib/scsi.md`）
+新增 cap:scsi 纯 CP 零分配存储协议库（6/10/12/16B CDB 查表与编码、36B INQUIRY、128-bit 容量计算与双格式 Sense Data），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:ntfs` NTFS VBR, MFT FILE record, Resident/Non-Resident attributes & Data Runlist parser（5/5 PASS，文档直写 `doc/lib/ntfs.md`）
 新增 cap:ntfs 纯 CP 零分配 Windows 文件系统库（VBR 负 MFT 簇数换算、常驻/非常驻属性与变长有符号增量 LCN Runlist 迭代），通过 cpc check 与 5/5 cap test
 

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:scsi` SCSI (SPC-5/SBC-4) CDB codec, INQUIRY, READ CAPACITY(10/16) & Sense Data zero-alloc parser（5/5 PASS，自动动态挂载 `cap.scsi`）
+新增纯 CP 零分配标准库 cap:scsi（SCSI SPC-5/SBC-4 CDB 编码、INQUIRY、READ CAPACITY 与 Fixed/Descriptor Sense 解析）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:ntfs` NTFS VBR, MFT FILE record, Resident/Non-Resident attributes & Data Runlist parser（5/5 PASS，自动动态挂载 `cap.ntfs`）
 新增纯 CP 零分配标准库 cap:ntfs（Microsoft NTFS VBR、MFT FILE 记录、属性与 Data Runlist 解析）与 5/5 深度测试
 
