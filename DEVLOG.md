@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:porter` Martin Porter (1980) English stemming algorithm (Steps 1a-5b) zero-alloc implementation（5/5 PASS，文档直写 `doc/lib/porter.md`）
+新增 cap:porter 纯 CP 零分配自然语言处理词干库（完整实现 1980 论文全部 5 步规则并通过 60+ 向量验证），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:olc` Google Open Location Code / Plus Codes Base-20 geo-grid encoder, decoder & recovery（5/5 PASS，文档直写 `doc/lib/olc.md`）
 新增 cap:olc 纯 CP 零分配全球网格地理编码库（高精度整数网格防浮点漂移、2..15 位编码与跨象限近邻恢复），通过 cpc check 与 5/5 cap test
 
