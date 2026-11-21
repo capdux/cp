@@ -151,3 +151,6 @@
 
 ### 2026-11-22（`cap:pptx` 验收，完成 `cap:pptx` 交付验收并登记入库（6/6 PASS）；派发 `cap:ihex`。）
 - **执行成果**：`lib/pptx/`（5/5 PASS，`doc/lib/pptx.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:pptx` 交付验收并登记入库（6/6 PASS）；派发 `cap:ihex`。
+
+### 2026-11-22（`cap:apk` 验收，完成 `cap:apk` 交付验收并登记入库（5/5 PASS）；派发 `cap:uf2`。）
+- **执行成果**：`lib/apk/`（5/5 PASS，`doc/lib/apk.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:apk` 交付验收并登记入库（5/5 PASS）；派发 `cap:uf2`。

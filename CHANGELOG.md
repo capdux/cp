@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:apk` 零分配 Android APK ZIP EOCD 与 APK Signing Block v2/v3 签名块解析器（5/5 PASS，自动动态挂载 `cap.apk`）
+新增 `lib/apk/{apk,index}.cp`、`doc/lib/apk.md` 与 `cap/test/test_apk_production_deep.cp`（5/5 PASS），支持 EOCD 反向定位、APK Sig Block 42 顶底长度一致性校验与 v2/v3/v3.1 Pair 迭代。
+
 ## [2026-11-22] - 新建 `cap:pptx` 零分配 OOXML PresentationML (.pptx) 幻灯片清单、EMU 尺寸与文本提取器（5/5 PASS，自动动态挂载 `cap.pptx`）
 新增 `lib/pptx/{pptx,index}.cp`、`doc/lib/pptx.md` 与 `cap/test/test_pptx_production_deep.cp`（6/6 PASS），支持 16:9 EMU 尺寸换算、幻灯片/备注纯文本提取与 Shape/Table/Pic 统计。
 

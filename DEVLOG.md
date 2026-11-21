@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:apk` 零分配 Android APK ZIP EOCD 与 APK Signing Block v2/v3 签名块解析器（5/5 PASS，文档直写 `doc/lib/apk.md`）
+实现零分配 Android APK 签名块解析器，严格防下溢/越界并汇总 v2/v3/Verity Padding 存在性。
+
 ## 2026-11-22: 新建 `cap:pptx` 零分配 OOXML PresentationML (.pptx) 幻灯片清单、EMU 尺寸与文本提取器（5/5 PASS，文档直写 `doc/lib/pptx.md`）
 实现零分配 OOXML PPTX 解析器，精准区分 <a:p> 与 <a:pPr> 及 id 与 r:id 属性。
 
