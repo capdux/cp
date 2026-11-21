@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:svd` 纯 CP 零分配单边 Jacobi 奇异值分解与广义逆库：经济型 SVD（含零奇异值正交补全）、截断奇异值最小范数最小二乘与 Moore-Penrose 伪逆（5/5 PASS，文档直写 `doc/lib/svd.md`）
+新增 cap:svd（lib/svd/{svd,index}.cp）：零分配单边 Jacobi SVD 含二次 MGS 零奇异值正交补全与 Penrose 四大公理验证，cpc check 0 错误，cap test 6/6 PASS (790ms)
+
 ## 2026-11-22: 新建 `cap:qr` 纯 CP 零分配 Householder QR 分解与线性最小二乘库：原地 Householder 反射分解、Q^T 乘法、经济型 Q/R 构造、超定最小二乘求解与极端量级数值稳定防护（5/5 PASS，文档直写 `doc/lib/qr.md`）
 新增 cap:qr（lib/qr/{qr,index}.cp）：基于 Householder 反射实现高数值稳定性 QR 分解与超定线性最小二乘，通过 Hilbert 病态矩阵与 1e±100 量级缩放测试，cpc check 0 错误，cap test 6/6 PASS (842ms)
 

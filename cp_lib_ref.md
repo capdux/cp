@@ -828,3 +828,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:simplex` | ConstraintKind, SimplexStatus, SimplexResult, SimplexWorkspace, simplexRequiredTableauLen, solveGeneral, solveMaxLe, solveMinLe | 纯 CP 零分配两阶段线性规划单纯形求解器库：Bland 防退化循环规则、混合 <=/>=/= 约束、Phase-I 人工变量、无界/不可行检出与原/对偶影子价格提取 |
 | `cap:lu` | LuInfo, luFactorize, luSolve, luDeterminant, luInverse, matVecResidualInf, solveTridiagonal | 纯 CP 零分配部分选主元 LU 分解与三对角求解库：Doolittle PA=LU 分解、多右端项求解、行列式、矩阵求逆、残差检验与 O(n) Thomas 三对角追赶法 |
 | `cap:qr` | QR_DEFAULT_TOL, qrFactorize, qrApplyQt, qrFormQ, qrExtractR, qrSolveLeastSquares, qrOrthogonalityError, qrReconstructionError | 纯 CP 零分配 Householder QR 分解与线性最小二乘库：原地 Householder 反射分解、Q^T 乘法、经济型 Q/R 构造、超定最小二乘求解与极端量级数值稳定防护 |
+| `cap:svd` | SvdResult, svdJacobi, svdSolve, svdPseudoinverse, svdReconstructionError | 纯 CP 零分配单边 Jacobi 奇异值分解与广义逆库：经济型 SVD（含零奇异值正交补全）、截断奇异值最小范数最小二乘与 Moore-Penrose 伪逆 |

@@ -109,3 +109,6 @@
 
 ### 2026-11-22（`cap:qr` 验收，子智能体交付 cap:qr（Householder QR 分解与线性最小二乘，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/qr/`（5/5 PASS，`doc/lib/qr.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:qr（Householder QR 分解与线性最小二乘，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:svd` 验收，子智能体交付 cap:svd（单边 Jacobi SVD 与 Moore-Penrose 伪逆，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/svd/`（5/5 PASS，`doc/lib/svd.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:svd（单边 Jacobi SVD 与 Moore-Penrose 伪逆，6/6 PASS），主协调器统一登记并提交
