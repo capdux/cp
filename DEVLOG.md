@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:bpf` eBPF (RFC 9669) 64/128-bit LD_IMM64 bytecode codec, iterator & validator（5/5 PASS，文档直写 `doc/lib/bpf.md`）
+新增 cap:bpf 纯 CP 零分配内核虚拟机指令集库（8B 指令、16B LD_IMM64 自动合并、程序构造器与校验），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:btf` Linux BPF Type Format (.BTF) 19-kind type graph, bitfields & string table parser（5/5 PASS，文档直写 `doc/lib/btf.md`）
 新增 cap:btf 纯 CP 零分配 eBPF 类型元数据库（24B Header、19 种 Kind 变长载荷零拷贝遍历与位域解码），通过 cpc check 与 5/5 cap test
 
