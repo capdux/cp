@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:sctp` 零分配 RFC 4960 SCTP 报头、Castagnoli CRC32C 与 4B 对齐 Chunk 编解码器（5/5 PASS，自动动态挂载 `cap.sctp`）
+新增 `lib/sctp/{sctp,index}.cp`、`doc/lib/sctp.md` 与 `cap/test/test_sctp_production_deep.cp`（5/5 PASS），支持 12B 公共头、Castagnoli CRC32C 校验、DATA/INIT/SACK Chunk 解析与 SctpWriter。
+
 ## [2026-11-22] - 新建 `cap:diameter` 零分配 RFC 6733 Diameter AAA 协议报头与 4B 对齐 AVP 编解码器（5/5 PASS，自动动态挂载 `cap.diameter`）
 新增 `lib/diameter/{diameter,index}.cp`、`doc/lib/diameter.md` 与 `cap/test/test_diameter_production_deep.cp`（6/6 PASS），支持 24-bit Command-Code、8B/12B Vendor AVP、4B 对齐迭代与 DiameterWriter。
 

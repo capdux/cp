@@ -124,3 +124,6 @@
 
 ### 2026-11-22（`cap:diameter` 验收，完成 `cap:diameter` 交付验收并登记入库（6/6 PASS）；派发 `cap:lldp`。）
 - **执行成果**：`lib/diameter/`（5/5 PASS，`doc/lib/diameter.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:diameter` 交付验收并登记入库（6/6 PASS）；派发 `cap:lldp`。
+
+### 2026-11-22（`cap:sctp` 验收，完成 `cap:sctp` 交付验收并登记入库（5/5 PASS）；派发 `cap:vxlan`。）
+- **执行成果**：`lib/sctp/`（5/5 PASS，`doc/lib/sctp.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:sctp` 交付验收并登记入库（5/5 PASS）；派发 `cap:vxlan`。
