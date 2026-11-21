@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/ProxyTunnel.cp | Synced: 2026-11-20T05:01:43Z
+// Source: Absorbed from /data/dev/bun/src/http/ProxyTunnel.cp | Synced: 2026-11-21T22:18:01Z
 // lib/http/proxy.cp
 // CP HTTP Proxy Tunnel (cap:http)
 // RFC 7231 HTTP CONNECT Tunneling

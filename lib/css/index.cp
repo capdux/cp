@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/css_parser.cp | Synced: 2026-11-21T17:10:52Z
+// Source: Absorbed from /data/dev/bun/src/css/css_parser.cp | Synced: 2026-11-21T22:48:38Z
 // lib/css/index.cp
 // Unified Public Exports for cap:css
 // Zero-Bun, Pure CP Industrial CSS Engine

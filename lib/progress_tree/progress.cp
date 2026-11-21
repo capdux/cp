@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bun_core/Progress.cp | Synced: 2026-11-21T13:33:00Z
+// Source: Absorbed from /data/dev/bun/src/bun_core/Progress.cp | Synced: 2026-11-21T22:51:51Z
 // Pure-CP zero-allocation hierarchical ProgressTree with rate-limiting and
 // deterministic status-line formatting (no OS terminal syscall dependency).
 

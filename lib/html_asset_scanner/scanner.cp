@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/HTMLScanner.cp | Synced: 2026-11-21T13:47:55Z
+// Source: Absorbed from /data/dev/bun/src/bundler/HTMLScanner.cp | Synced: 2026-11-21T22:51:57Z
 
 /// HTML 资源引用类型枚举
 pub enum AssetKind: u8 {

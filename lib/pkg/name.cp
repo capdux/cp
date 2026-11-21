@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/PackageManager.zig | Synced: 2026-11-21T14:45:57Z (npm Package Name & Module Specifier Parser)
+// Source: Absorbed from /data/dev/bun/src/install/PackageManager.zig | Synced: 2026-11-21T22:49:36Z (npm Package Name & Module Specifier Parser)
 
 /// 解析后的 npm / Node.js 模块说明符（零拷贝切片）
 pub struct PackageSpecifier {
