@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:fdt` Devicetree v0.4 Flattened Device Tree (.dtb) header, MemRsv & token stream zero-alloc parser（5/5 PASS，文档直写 `doc/lib/fdt.md`）
+新增 cap:fdt 纯 CP 零分配嵌入式设备树解析库（40B 大端头、Memory Reservation Map、4B 对齐结构块遍历与字符串表查找），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:udf` UDF (ECMA-167/ISO 13346) VRS, 16B Tag CRC-16, AVDP/PVD & OSTA CS0 zero-alloc parser（5/5 PASS，文档直写 `doc/lib/udf.md`）
 新增 cap:udf 纯 CP 零分配光盘与通用磁盘格式库（VRS BEA01/NSR03/TEA01、16B Tag 校验和与 CRC-ITU-T 0x1021、OSTA CS0 8/16-bit 字符串解码），通过 cpc check 与 5/5 cap test
 

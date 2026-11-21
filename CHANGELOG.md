@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:fdt` Devicetree v0.4 Flattened Device Tree (.dtb) header, MemRsv & token stream zero-alloc parser（5/5 PASS，自动动态挂载 `cap.fdt`）
+新增纯 CP 零分配标准库 cap:fdt（Devicetree v0.4 .dtb 设备树 40B 头、MemRsv 与 Token 流解析）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:udf` UDF (ECMA-167/ISO 13346) VRS, 16B Tag CRC-16, AVDP/PVD & OSTA CS0 zero-alloc parser（5/5 PASS，自动动态挂载 `cap.udf`）
 新增纯 CP 零分配标准库 cap:udf（ECMA-167/ISO 13346 UDF 卷识别序列、Tag CRC-16、AVDP/PVD 与 OSTA CS0 解码）与 5/5 深度测试
 

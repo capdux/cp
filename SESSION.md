@@ -136,3 +136,6 @@
 
 ### 2026-11-22（`cap:udf` 验收，完成并注册纯 CP 零分配标准库 cap:udf（5/5 cap test PASS））
 - **执行成果**：`lib/udf/`（5/5 PASS，`doc/lib/udf.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:udf（5/5 cap test PASS）
+
+### 2026-11-22（`cap:fdt` 验收，完成并注册纯 CP 零分配标准库 cap:fdt（5/5 cap test PASS））
+- **执行成果**：`lib/fdt/`（5/5 PASS，`doc/lib/fdt.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:fdt（5/5 cap test PASS）
