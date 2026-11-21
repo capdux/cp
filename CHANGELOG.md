@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:rate_token_bucket` 纯 CP 零堆分配令牌桶 (`TokenBucket`) 与 GCRA 漏桶 (`GcraLimiter`) 纳秒级精确限流引擎（支持 `cap.rate_token_bucket` 自动动态挂载，详见 `doc/lib/rate_token_bucket.md`）（5/5 PASS，自动动态挂载 `cap.rate_token_bucket`）
+- **新增标准库**：`lib/rate_token_bucket/{rate_limiter,index}.cp`，实现纳秒级时间注入 `TokenBucket` 与零漂移 `GcraLimiter`。\n- **新增文档与测试**：`doc/lib/rate_token_bucket.md` 扁平文档与 `cap/test/test_rate_token_bucket_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:lru_k` 纯 CP 抗扫描污染 LRU-K 双队列缓存替换引擎（历史访问队列 + 热键晋升缓存队列，防全表扫描击穿热缓存，支持 `cap.lru_k` 自动动态挂载，详见 `doc/lib/lru_k.md`）（5/5 PASS，自动动态挂载 `cap.lru_k`）
 - **新增标准库**：`lib/lru_k/{lru_k,index}.cp`，实现泛型抗扫描污染 `LruKCache(K, V)` 与命中率统计。\n- **新增文档与测试**：`doc/lib/lru_k.md` 扁平文档与 `cap/test/test_lru_k_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

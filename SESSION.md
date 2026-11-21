@@ -82,3 +82,6 @@
 
 ### 2026-11-21（`cap:lru_k` 验收，验收提交 `cap:lru_k` 并新开 `cap:slab_pool` 并发子智能体）
 - **执行成果**：`lib/lru_k/`（5/5 PASS，`doc/lib/lru_k.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:lru_k` 并新开 `cap:slab_pool` 并发子智能体
+
+### 2026-11-21（`cap:rate_token_bucket` 验收，主控完成 `cap:rate_token_bucket` 研发验收提交，继续与 `cap:raft_log`、`cap:slab_pool` 及热修子智能体并行）
+- **执行成果**：`lib/rate_token_bucket/`（5/5 PASS，`doc/lib/rate_token_bucket.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:rate_token_bucket` 研发验收提交，继续与 `cap:raft_log`、`cap:slab_pool` 及热修子智能体并行

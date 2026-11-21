@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:rate_token_bucket` 纯 CP 零堆分配令牌桶 (`TokenBucket`) 与 GCRA 漏桶 (`GcraLimiter`) 纳秒级精确限流引擎（支持 `cap.rate_token_bucket` 自动动态挂载，详见 `doc/lib/rate_token_bucket.md`）（5/5 PASS，文档直写 `doc/lib/rate_token_bucket.md`）
+- **核心设计**：零堆分配实现突发容量控制与 `retryAfterNs` 退避计算，通过突发/稳态配额与边界校验。
+
 ## 2026-11-21: 新建 `cap:lru_k` 纯 CP 抗扫描污染 LRU-K 双队列缓存替换引擎（历史访问队列 + 热键晋升缓存队列，防全表扫描击穿热缓存，支持 `cap.lru_k` 自动动态挂载，详见 `doc/lib/lru_k.md`）（5/5 PASS，文档直写 `doc/lib/lru_k.md`）
 - **核心设计**：采用历史访问队列与主缓存队列分离，访问达 K 次晋升主缓存，通过冷扫描抗污染与 `std.testing.allocator` 零泄漏验证。
 
