@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ron` 零分配 Rusty Object Notation `.ron` 词法扫描、括号平衡校验与顶层字段提取器（5/5 PASS，文档直写 `doc/lib/ron.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:ron`；`extractRonField` 零分配跳过嵌套结构与字符串内冒号/逗号。
+
 ## 2026-11-22: 新建 `cap:bibtex` 零分配 BibTeX `.bib` 学术文献条目解析、嵌套花括号字段迭代与格式化器（5/5 PASS，文档直写 `doc/lib/bibtex.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:bibtex`；`BibEntryIter`/`BibFieldIter` 零拷贝切分并防护未闭合条目。
 

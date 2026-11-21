@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ron` 零分配 Rusty Object Notation `.ron` 词法扫描、括号平衡校验与顶层字段提取器（5/5 PASS，自动动态挂载 `cap.ron`）
+- 新增 `lib/ron/{ron,index}.cp`、`doc/lib/ron.md`、`cap/test/test_ron_production_deep.cp`：纯 CP 零分配实现 RON 词法扫描（嵌套 `/* */`、原始字符串 `r#"..."#`、字符字面量、多进制下划线数字）、64 层平衡校验与顶层字段切片提取（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:bibtex` 零分配 BibTeX `.bib` 学术文献条目解析、嵌套花括号字段迭代与格式化器（5/5 PASS，自动动态挂载 `cap.bibtex`）
 - 新增 `lib/bibtex/{bibtex,index}.cp`、`doc/lib/bibtex.md`、`cap/test/test_bibtex_production_deep.cp`：纯 CP 零分配实现 BibTeX `.bib` 解析与格式化（跳过 `%` 注释与 `@comment`/`@preamble`/`@string`，支持 `{}`/`()` 两种条目定界、嵌套花括号平衡与大小写不敏感字段检索）（5/5 PASS）。
 

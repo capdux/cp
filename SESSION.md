@@ -97,3 +97,6 @@
 
 ### 2026-11-22（`cap:bibtex` 验收，新增简洁单单词包 `cap:bibtex`（5/5 PASS））
 - **执行成果**：`lib/bibtex/`（5/5 PASS，`doc/lib/bibtex.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:bibtex`（5/5 PASS）
+
+### 2026-11-22（`cap:ron` 验收，新增简洁单单词包 `cap:ron`（5/5 PASS））
+- **执行成果**：`lib/ron/`（5/5 PASS，`doc/lib/ron.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:ron`（5/5 PASS）
