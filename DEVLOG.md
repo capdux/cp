@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:cue` 零分配 CUE 配置与数据约束语言词法扫描、包声明提取与 64 层平衡校验器（5/5 PASS，文档直写 `doc/lib/cue.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:cue`；`CueIter` 零拷贝切分 22 类 token 并防护未闭合字符串与嵌套深度。
+
 ## 2026-11-22: 新建 `cap:wat` 零分配 WebAssembly Text Format `.wat` 词法扫描、导出声明提取与模块结构校验器（5/5 PASS，文档直写 `doc/lib/wat.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:wat`；`WatExportIter` 统一支持显式 `(export ...)` 与内联 `(func $id (export ...))` 声明。
 

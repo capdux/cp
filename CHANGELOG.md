@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:cue` 零分配 CUE 配置与数据约束语言词法扫描、包声明提取与 64 层平衡校验器（5/5 PASS，自动动态挂载 `cap.cue`）
+- 新增 `lib/cue/{cue,index}.cp`、`doc/lib/cue.md`、`cap/test/test_cue_production_deep.cp`：纯 CP 零分配实现 CUE 词法扫描（`#Def`/`_hidden`/`_|_`/`...`/`@attr(...)`/SI-IEC 后缀数字/多行字面量）、`package` 提取与 64 层平衡校验（5/5 PASS）；同步轻量化轮换 `DB & Protocol Absorber`。
+
 ## [2026-11-22] - 新建 `cap:wat` 零分配 WebAssembly Text Format `.wat` 词法扫描、导出声明提取与模块结构校验器（5/5 PASS，自动动态挂载 `cap.wat`）
 - 新增 `lib/wat/{wat,index}.cp`、`doc/lib/wat.md`、`cap/test/test_wat_production_deep.cp`：纯 CP 零分配实现 WebAssembly `.wat` 词法扫描（嵌套 `(; ... ;)` 注释、`$id`、`nan:0x...`）、顶层/内联导出提取与 64 层 `(module ...)` 结构校验（5/5 PASS）。
 

@@ -115,3 +115,6 @@
 
 ### 2026-11-22（`cap:wat` 验收，新增简洁单单词包 `cap:wat`（5/5 PASS））
 - **执行成果**：`lib/wat/`（5/5 PASS，`doc/lib/wat.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:wat`（5/5 PASS）
+
+### 2026-11-22（`cap:cue` 验收，新增简洁单单词包 `cap:cue`（5/5 PASS），完成 `DB & Protocol Absorber` 14 任务轻量化轮换）
+- **执行成果**：`lib/cue/`（5/5 PASS，`doc/lib/cue.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:cue`（5/5 PASS），完成 `DB & Protocol Absorber` 14 任务轻量化轮换
