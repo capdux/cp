@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:circ_buf` 纯 CP 泛型定容环形缓冲区引擎（支持阻塞 `push`、覆盖最旧元素 `pushOverwrite`、双端弹出与随机下标访问，支持 `cap.circ_buf` 自动动态挂载，详见 `doc/lib/circ_buf.md`）（5/5 PASS，文档直写 `doc/lib/circ_buf.md`）
+- **核心设计**：模运算循环索引支持覆盖与非覆盖双模式，通过回绕读写与 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:raft_log` 纯 CP Raft 共识复制日志与快照压缩引擎（1-based 索引、`appendIfMatch` 冲突截断、安全提交推进与 `compactTo` 快照截断，支持 `cap.raft_log` 自动动态挂载，详见 `doc/lib/raft_log.md`）（5/5 PASS，文档直写 `doc/lib/raft_log.md`）
 - **核心设计**：深拷贝条目载荷并维护 `snapshot_index`/`snapshot_term` 基线，通过冲突覆盖与 `std.testing.allocator` 零泄漏验证。
 
