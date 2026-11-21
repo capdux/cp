@@ -1,5 +1,5 @@
-// Source: Absorbed from /data/dev/bun/src/cli.zig (CLI Progress Bar & Spinner Renderer)
-// Pure-CP zero-allocation deterministic CLI progress bar, percentage, rate/ETA estimator, and spinner renderer.
+// Source: Absorbed from /data/dev/bun/src/cli.zig (Deterministic CLI Progress Meter & Spinner Frame)
+// Pure-CP zero-allocation deterministic CLI progress meter, percentage, rate/ETA estimator, and spinner frame renderer.
 
 fn writeByte(out: []u8, pos: *usize, b: u8): bool {
     if (pos.* >= out.len) return false;
@@ -39,22 +39,22 @@ fn writeU64(out: []u8, pos: *usize, val: u64): bool {
     return true;
 }
 
-export enum SpinnerStyle {
+export enum ProgressSpinnerStyle {
     ascii,   // | / - \
     dots,    // ⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏
     line,    // - \ | /
 }
 
 /// Return the spinner frame string for a given `tick` counter (wraps automatically).
-export fn spinnerFrame(style: SpinnerStyle, tick: usize): []const u8 {
-    if (style == SpinnerStyle.ascii) {
+export fn spinnerFrame(style: ProgressSpinnerStyle, tick: usize): []const u8 {
+    if (style == ProgressSpinnerStyle.ascii) {
         const idx = tick % 4;
         if (idx == 0) return "|";
         if (idx == 1) return "/";
         if (idx == 2) return "-";
         return "\\";
     }
-    if (style == SpinnerStyle.line) {
+    if (style == ProgressSpinnerStyle.line) {
         const idx = tick % 4;
         if (idx == 0) return "-";
         if (idx == 1) return "\\";
@@ -74,15 +74,15 @@ export fn spinnerFrame(style: SpinnerStyle, tick: usize): []const u8 {
     return "⠏";
 }
 
-export struct ProgressBar {
+export struct ProgressMeter {
     current: u64,
     total: u64,
     width: usize,
     fill_char: u8,
     empty_char: u8,
 
-    pub fn init(total: u64, width: usize): ProgressBar {
-        return ProgressBar {
+    static fn init(total: u64, width: usize): ProgressMeter {
+        return ProgressMeter {
             current: 0,
             total: total,
             width: if (width == 0) @as(usize, 20) else width,
@@ -91,11 +91,11 @@ export struct ProgressBar {
         };
     }
 
-    pub fn set(*_, value: u64) {
+    fn set(*_, value: u64) {
         _.current = if (value > _.total) _.total else value;
     }
 
-    pub fn inc(*_, delta: u64) {
+    fn inc(*_, delta: u64) {
         if (delta > _.total - _.current) {
             _.current = _.total;
         } else {
@@ -104,19 +104,19 @@ export struct ProgressBar {
     }
 
     /// Completion percentage in `0..=100` (pure integer, returns 100 when `total == 0`).
-    pub fn percent(): u8 {
+    fn percent(): u8 {
         if (_.total == 0) return 100;
         const pct: u64 = @as(u64, (@as(u128, _.current) * 100) / @as(u128, _.total));
         if (pct > 100) return 100;
         return @as(u8, pct);
     }
 
-    pub fn isComplete(): bool {
+    fn isComplete(): bool {
         return _.current >= _.total;
     }
 
     /// Estimate remaining milliseconds given `elapsed_ms`. Returns null if `current == 0` or `elapsed_ms == 0`.
-    pub fn etaMs(elapsed_ms: u64): u64? {
+    fn etaMs(elapsed_ms: u64): u64? {
         if (_.current >= _.total) return 0;
         if (_.current == 0 || elapsed_ms == 0) return null;
         const rem = _.total - _.current;
@@ -126,7 +126,7 @@ export struct ProgressBar {
     }
 
     /// Render `[#####-----] 50% (50/100)` into `out`.
-    pub fn render(out: []u8): ([]const u8)? {
+    fn render(out: []u8): ([]const u8)? {
         let pos: usize = 0;
         if (!writeByte(out, &pos, '[')) return null;
 

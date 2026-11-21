@@ -5,7 +5,7 @@ import {
     renderBorderLine,
     renderTableRow,
     renderTable,
-} from "cap:cli_table";
+} from "cap:cli";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {

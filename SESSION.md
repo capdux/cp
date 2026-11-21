@@ -289,3 +289,6 @@
 
 ### 2026-11-22（`cap:dns` 验收，方案 A Wave 1 全部完工：`ansi_*`(4) + `etc_*`(4) + `dns_*`(6) 共消除 14 个长下划线顶层目录！Wave 2 三路并行（`cli_*`/`proc_*`/`semver_*`）全面推进）
 - **执行成果**：`lib/dns/`（5/5 PASS，`doc/lib/dns.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 1 全部完工：`ansi_*`(4) + `etc_*`(4) + `dns_*`(6) 共消除 14 个长下划线顶层目录！Wave 2 三路并行（`cli_*`/`proc_*`/`semver_*`）全面推进
+
+### 2026-11-22（`cap:cli` 验收，方案 A Wave 2：`cli_*` 5 目录收敛至 `cap:cli`（5/5 PASS），累计消除 19 个长下划线顶层目录）
+- **执行成果**：`lib/cli/`（5/5 PASS，`doc/lib/cli.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 2：`cli_*` 5 目录收敛至 `cap:cli`（5/5 PASS），累计消除 19 个长下划线顶层目录

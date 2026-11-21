@@ -571,7 +571,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:hex_dump` | encodeHexLower, encodeHexUpper, decodeHexStrict, decodeHex, formatHexDumpLine, formatHexDump | 零分配十六进制编解码与规范化 hexdump -C 多行诊断格式化器 |
 | `cap:http_vary` | VaryIter, isVaryWildcard, varyContains, appendVary, mergeVary | RFC 9110 §12.5.5 Vary 响应头零分配迭代、通配符检测与大小写不敏感去重合并器 |
 | `cap:glob_escape` | isGlobMagic, hasGlobMagic, escapeGlob, unescapeGlob, staticBaseDir, isNegatedPattern, stripNegation | Glob 通配符元字符转义/反转义、静态目录前缀提取（遍历剪枝）与否定模式解析 |
-| `cap:cli_color_detect` | ColorLevel, ColorEnv, parseForceColor, detectColorLevel, supportsColor, supportsTruecolor | 终端 ANSI 色彩能力探测（遵循 NO_COLOR / FORCE_COLOR / CLICOLOR / COLORTERM / TERM / CI 规范） |
 | `cap:semver_sort` | SemverOrder, ParsedSemver, parseSemverStrict, parseSemverLoose, compareSemver, compareSemverStr, sortSemverAsc, sortSemverDesc, maxSemverIndex, minSemverIndex | SemVer 2.0.0 §11 严格优先级比较、预发布标签无溢出比较与原地升降序排序/极值选择 |
 | `cap:http_range` | RangeSpecKind, ByteRangeSpec, ResolvedByteRange, ByteRangeIter, resolveSingleByteRange | RFC 9110 §14.1.2 HTTP Range 请求头（bytes=start-end / start- / -suffix）零分配解析与实体区间求值器 |
 | `cap:gitignore_match` | GitignoreRule, parseGitignoreLine, ruleMatchesPath, isIgnored | Git .gitignore 规则集零分配解析与路径匹配引擎（支持 **/! 反忽略/目录锚定与字符类） |
@@ -605,7 +604,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_origin` | Origin, isSameOriginUrl | WHATWG URL Origin 元组解析器、默认端口规范化、Same-Origin 比较与安全上下文判定 |
 | `cap:dockerfile_parse` | DockerInstruction, DockerfileIter, FromSpec, parseFromArgs, ExposePort, parseExposeToken | Dockerfile 指令零分配流式解析器（支持 # escape 续行折叠、注释跳过、FROM 阶段与 EXPOSE 端口拆解） |
 | `cap:markdown_table` | ColAlign, parseDelimiterCell, TableRowIter, parseDelimiterRow, unescapeTableCell, escapeTableCell | GFM Markdown 管道表格行零分配单元格迭代器、对齐分隔行检测与单元格管道符转义器 |
-| `cap:cli_progress` | SpinnerStyle, spinnerFrame, ProgressBar | 零分配 CLI 进度条渲染器、百分比/纯整数 ETA 估算器与 ASCII/盲文点阵旋转动画帧生成器 |
 | `cap:frontmatter` | FrontmatterKind, FrontmatterSplit, splitFrontmatter, getFrontmatterField | Markdown 文档 YAML (---) / TOML (+++) Frontmatter 零分配提取器与键值查询 |
 | `cap:http_retry_after` | RetryAfterKind, RetryAfter, formatRetryAfterSeconds | RFC 9110 §10.2.3 Retry-After 响应头解析器（delta-seconds 与 IMF-fixdate）与限幅等待时长计算 |
 | `cap:http_security_headers` | HstsPolicy, ReferrerPolicy, parseReferrerPolicy, FrameOptions, parseFrameOptions, CoopPolicy, CoepPolicy, CorpPolicy, parseCoopPolicy, parseCoepPolicy, parseCorpPolicy, isCrossOriginIsolated | Web 安全响应头解析与构造器（HSTS RFC 6797、Referrer-Policy 回退链、X-Frame-Options、COOP/COEP/CORP 跨域隔离） |
@@ -690,15 +688,12 @@ const h = cap.hash.wyhash("hello");
 | `cap:proc_limits` | `LimitValue`, `parseLimitValue`, `ProcLimitEntry`, `ProcLimitsIter`, `findProcLimit`, `maxOpenFiles` | Linux `/proc/<pid>/limits` 进程软/硬资源限额表零分配解析器 |
 | `cap:http_trailer` | `isForbiddenTrailerField`, `isValidTrailerFieldName`, `TrailerFieldIter`, `validateTrailerHeader`, `hasTrailerField` | RFC 9110 §6.5.1 HTTP `Trailer` 尾部字段声明零分配解析与 25 项禁传字段安全校验器 |
 | `cap:http_max_forwards` | `MaxForwardsAction`, `MaxForwardsResult`, `parseMaxForwards`, `evaluateMaxForwards`, `formatMaxForwards` | RFC 9110 §7.6.2 HTTP `Max-Forwards` 代理跳数限制零分配解析与递减裁定器 |
-| `cap:cli_table` | `TableBorderStyle`, `CellAlign`, `computeColumnWidths`, `renderBorderLine`, `renderTableRow`, `renderTable` | 零分配 CLI 终端表格（ASCII/Compact/Unicode 细线、ANSI/宽字符感知）渲染器 |
 | `cap:http_accept_ranges` | `AcceptRangesKind`, `AcceptRanges`, `AcceptRangesIter`, `parseAcceptRanges`, `supportsByteRanges`, `supportsRangeUnit` | RFC 9110 §14.3 HTTP `Accept-Ranges` 响应头零分配解析与分片能力判定器 |
-| `cap:cli_tree` | `TreeStyle`, `TreePrefix`, `TreeNode`, `renderFlatTree` | 零分配 CLI 树形结构/依赖树（Unicode/ASCII/圆角，64 层位掩码）渲染器 |
 | `cap:http_accept_language` | `LanguageRange`, `AcceptLanguageIter`, `negotiateLanguage` | RFC 9110 §12.5.4 + RFC 4647 HTTP `Accept-Language` BCP 47 语言权重零分配协商器 |
 | `cap:proc_statm` | `ProcStatm`, `parseProcStatm` | Linux `/proc/<pid>/statm` 7 列内存页计数零分配解析与饱和字节换算器 |
 | `cap:text_indent` | `minCommonIndent`, `dedent`, `indentLines`, `stripCommonPrefix` | 零分配多行文本最小公共缩进检测、`dedent` 剥离与 `indentLines` 统一缩进格式化器 |
 | `cap:http_content_language` | `LanguageTagParts`, `isValidBcp47Tag`, `parseLanguageTagParts`, `ContentLanguageIter`, `canonicalizeLanguageTag`, `hasContentLanguage` | RFC 9110 §8.5 + RFC 5646 HTTP `Content-Language` 解析与 BCP 47 标签规范化器 |
 | `cap:proc_io` | `ProcIoStats`, `parseProcIo` | Linux `/proc/<pid>/io` 进程读写字节、系统调用计数与采样窗口增量零分配解析器 |
-| `cap:cli_spinner` | `SpinnerPreset`, `SpinnerSpec`, `formatSpinnerFrame`, `formatSpinnerDone` | 零分配 CLI 终端加载动画帧序列预设（dots/line/arc/arrows/bouncing_bar）与 TTY 状态行渲染器 |
 | `cap:jsonl` | `JsonlChunkResult`, `JsonlIter`, `scanCompleteJsonlChunk`, `isBalancedJsonRecord`, `appendJsonlRecord` | JSON Lines / NDJSON 流式行迭代、增量分块扫描与记录平衡零分配校验器 |
 | `cap:jsonc` | `stripJsonc`, `stripJsoncPreserveLines`, `hasJsoncComments`, `countJsoncTrailingCommas` | JSON with Comments & Trailing Commas 零分配注释/尾逗号剥离器与行号保留格式化器 |
 | `cap:mustache` | `MustacheTokenKind`, `MustacheToken`, `MustacheVar`, `MustacheIter`, `validateMustache`, `renderMustache` | 零分配 Mustache 模板词法解析、语法校验与 HTML 转义渲染引擎 |

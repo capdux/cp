@@ -88,3 +88,18 @@ pub fn demoWidgets() {
   - `formatHelp()` 自动计算对齐列宽并生成彩色 `--help` 文本。
 - **`MultiProgress`** (`lib/cli/subcommand.cp`)：
   - 基于原子自旋锁的线程安全多任务进度树，支持父子任务层级、帧动画 `Spinner`、吞吐格式化（`MB/s`、`files/s`）、`ETA` 计算与树状渲染（`renderTree`）。
+
+---
+
+### 4. 零分配扩展渲染与探测子模块（收敛自原 `cli_*` 系列）
+
+- **色彩能力探测 (`lib/cli/color.cp`)**：
+  - `ColorLevel`、`ColorEnv`、`parseForceColor`、`detectColorLevel`、`supportsColor`、`supportsTruecolor`（尊重 `NO_COLOR`、`FORCE_COLOR`、`COLORTERM`、`TERM`、`CI` 等环境信号）。
+- **确定性进度计量器 (`lib/cli/progress.cp`)**：
+  - `ProgressMeter`（`init`/`set`/`inc`/`percent`/`isComplete`/`etaMs`/`render`）、`ProgressSpinnerStyle`、`spinnerFrame`。
+- **加载动画帧序列渲染器 (`lib/cli/spinner.cp`)**：
+  - `SpinnerPreset`（`dots`/`line`/`arc`/`arrows`/`bouncing_bar`）、`SpinnerSpec`（`forPreset`/`frameAt`/`frameAtMs`）、`formatSpinnerFrame`、`formatSpinnerDone`。
+- **零分配表格边框与列宽渲染器 (`lib/cli/table_render.cp`)**：
+  - `TableBorderStyle`（`ascii`/`compact`/`unicode_light`）、`CellAlign`（`left`/`right`/`center`）、`computeColumnWidths`、`renderBorderLine`、`renderTableRow`、`renderTable`。
+- **零分配树形 / 依赖树渲染器 (`lib/cli/tree.cp`)**：
+  - `TreeStyle`（`unicode`/`ascii`/`rounded`）、`TreePrefix`（64 层祖先位掩码）、`TreeNode`、`renderFlatTree`。

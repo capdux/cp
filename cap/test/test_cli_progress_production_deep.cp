@@ -1,8 +1,8 @@
 import {
-    SpinnerStyle,
+    ProgressSpinnerStyle,
     spinnerFrame,
-    ProgressBar,
-} from "cap:cli_progress";
+    ProgressMeter,
+} from "cap:cli";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {
@@ -15,8 +15,8 @@ fn strEq(a: []const u8, b: []const u8): bool {
     return true;
 }
 
-test("ProgressBar rendering, clamping, percentage, and ETA", () => {
-    let pb = ProgressBar.init(100, 10);
+test("ProgressMeter rendering, clamping, percentage, and ETA", () => {
+    let pb = ProgressMeter.init(100, 10);
     let buf: [64]u8 = [0; 64];
 
     expect(pb.percent() == 0);
@@ -38,9 +38,9 @@ test("ProgressBar rendering, clamping, percentage, and ETA", () => {
 });
 
 test("spinnerFrame cycles through ASCII and Braille dot styles", () => {
-    expect(strEq(spinnerFrame(SpinnerStyle.ascii, 0), "|"));
-    expect(strEq(spinnerFrame(SpinnerStyle.ascii, 1), "/"));
-    expect(strEq(spinnerFrame(SpinnerStyle.ascii, 4), "|"));
-    expect(strEq(spinnerFrame(SpinnerStyle.dots, 0), "⠋"));
-    expect(strEq(spinnerFrame(SpinnerStyle.dots, 10), "⠋"));
+    expect(strEq(spinnerFrame(ProgressSpinnerStyle.ascii, 0), "|"));
+    expect(strEq(spinnerFrame(ProgressSpinnerStyle.ascii, 1), "/"));
+    expect(strEq(spinnerFrame(ProgressSpinnerStyle.ascii, 4), "|"));
+    expect(strEq(spinnerFrame(ProgressSpinnerStyle.dots, 0), "⠋"));
+    expect(strEq(spinnerFrame(ProgressSpinnerStyle.dots, 10), "⠋"));
 });

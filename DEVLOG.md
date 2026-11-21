@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:cli` CLI 终端交互、色彩检测、进度条、加载动画、表格与树形渲染统一主包（5/5 PASS，文档直写 `doc/lib/cli.md`）
+- **收敛要点**：保留既有 `lib/cli/tty.cp` 的 `SpinnerStyle`/`ProgressBar` 导出零破坏，新迁入的进度条结构最小重命名为 `ProgressSpinnerStyle`/`ProgressMeter`；全库 `cap:cli_` 引用清零。
+
 ## 2026-11-22: 新建 `cap:dns` DNS 协议解析与策略判定统一主包（含 `caa`/`name`/`rtype`/`srv`/`txt`/`wire`/`doh`/`packet`/`records`）（5/5 PASS，文档直写 `doc/lib/dns.md`）
 - **收敛要点**：消除 `CaaRecord`/`SrvRecord`/wire 类型重名冲突（聚合别名为 `CaaPolicyRecord`/`SrvEntry`/`RrSrvRecord`/`WireDns*`），全库 `cap:dns_` 引用清零。
 

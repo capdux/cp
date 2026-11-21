@@ -5,7 +5,7 @@ import {
     detectColorLevel,
     supportsColor,
     supportsTruecolor,
-} from "cap:cli_color_detect";
+} from "cap:cli";
 import { test, expect } from "cap:test";
 
 test("FORCE_COLOR and NO_COLOR precedence", () => {

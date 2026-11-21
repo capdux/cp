@@ -7,3 +7,41 @@ export * from "./tty.cp";
 export * from "./table.cp";
 export * from "./ci_info.cp";
 export * from "./subcommand.cp";
+
+export {
+    ColorLevel,
+    ColorEnv,
+    parseForceColor,
+    detectColorLevel,
+    supportsColor,
+    supportsTruecolor,
+} from "./color.cp";
+
+export {
+    ProgressSpinnerStyle,
+    spinnerFrame,
+    ProgressMeter,
+} from "./progress.cp";
+
+export {
+    SpinnerPreset,
+    SpinnerSpec,
+    formatSpinnerFrame,
+    formatSpinnerDone,
+} from "./spinner.cp";
+
+export {
+    TableBorderStyle,
+    CellAlign,
+    computeColumnWidths,
+    renderBorderLine,
+    renderTableRow,
+    renderTable,
+} from "./table_render.cp";
+
+export {
+    TreeStyle,
+    TreePrefix,
+    TreeNode,
+    renderFlatTree,
+} from "./tree.cp";
