@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ga` 纯 CP 零分配遗传算法与演化计算库：双缓冲种群、实数编码 GA（锦标赛/BLX-α/高斯变异/精英保留）与排列编码 GA（Order Crossover OX/反转变异，专用于 TSP 与调度）（5/5 PASS，文档直写 `doc/lib/ga.md`）
+新增 cap:ga（lib/ga/{ga,index}.cp）：零分配双缓冲种群 SplitMix64 实数 GA 与排列编码 OX GA，10 城市圆周 TSP 精确收敛至理论最优周长，cpc check 0 错误，cap test 5/5 PASS (756ms)
+
 ## 2026-11-22: 新建 `cap:lsh` 纯 CP 零分配局部敏感哈希（LSH）近似最近邻检索库：随机超平面余弦 LSH、p-稳定分布欧氏 E2LSH、多表固定池桶索引与 O(1) 位图去重候选查询（5/5 PASS，文档直写 `doc/lib/lsh.md`）
 新增 cap:lsh（lib/lsh/{lsh,index}.cp）：零分配确定性 SplitMix64 + Box-Muller 多表余弦 LSH 与 E2LSH，支持 O(1) 位图去重候选检索，cpc check 0 错误，cap test 6/6 PASS (705ms)
 
