@@ -100,3 +100,6 @@
 
 ### 2026-11-22（`cap:mst` 验收，子智能体交付 cap:mst（Kruskal / Prim 最小最大生成树与生成森林，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/mst/`（5/5 PASS，`doc/lib/mst.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:mst（Kruskal / Prim 最小最大生成树与生成森林，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:simplex` 验收，子智能体交付 cap:simplex（两阶段单纯形线性规划求解器，7/7 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/simplex/`（5/5 PASS，`doc/lib/simplex.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:simplex（两阶段单纯形线性规划求解器，7/7 PASS），主协调器统一登记并提交

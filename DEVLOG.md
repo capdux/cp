@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:simplex` 纯 CP 零分配两阶段线性规划单纯形求解器库：Bland 防退化循环规则、混合 <=/>=/= 约束、Phase-I 人工变量、无界/不可行检出与原/对偶影子价格提取（5/5 PASS，文档直写 `doc/lib/simplex.md`）
+新增 cap:simplex（lib/simplex/{simplex,index}.cp）：基于调用方 tableau/basis 缓冲实现两阶段单纯形法与 Bland 防退化规则，通过 Beale 1955 退化基准与强对偶验证，cpc check 0 错误，cap test 7/7 PASS (761ms)
+
 ## 2026-11-22: 新建 `cap:mst` 纯 CP 零分配最小生成树与生成森林算法库：路径压缩并查集、Kruskal 最小/最大生成树、稠密图 O(V²) Prim 生成森林与生成树无环连通校验（5/5 PASS，文档直写 `doc/lib/mst.md`）
 新增 cap:mst（lib/mst/{mst,index}.cp）：基于零分配路径压缩并查集实现 Kruskal 最小/最大生成树、稠密矩阵 Prim 最小生成森林与无环连通校验，cpc check 0 错误，cap test 6/6 PASS (699ms)
 
