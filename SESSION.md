@@ -193,3 +193,6 @@
 
 ### 2026-11-22（`cap:rrt` 验收，子智能体交付 cap:rrt（2D RRT / RRT* 采样运动规划与平滑，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/rrt/`（5/5 PASS，`doc/lib/rrt.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:rrt（2D RRT / RRT* 采样运动规划与平滑，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:naivebayes` 验收，子智能体交付 cap:naivebayes（Gaussian / Multinomial / Bernoulli 朴素贝叶斯，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/naivebayes/`（5/5 PASS，`doc/lib/naivebayes.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:naivebayes（Gaussian / Multinomial / Bernoulli 朴素贝叶斯，6/6 PASS），主协调器统一登记并提交

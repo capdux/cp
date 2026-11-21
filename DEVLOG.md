@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:naivebayes` 纯 CP 零分配朴素贝叶斯（Naive Bayes）分类库：Gaussian（方差平滑）、Multinomial（Laplace/Lidstone 平滑）与 Bernoulli（阈值二值化）全对数域 log-sum-exp 防下溢分类器（5/5 PASS，文档直写 `doc/lib/naivebayes.md`）
+新增 cap:naivebayes（lib/naivebayes/{naivebayes,index}.cp）：零分配全对数域 log-sum-exp 实现 Gaussian/Multinomial/Bernoulli 朴素贝叶斯，100 维特征无下溢，cpc check 0 错误，cap test 6/6 PASS (792ms)
+
 ## 2026-11-22: 新建 `cap:rrt` 纯 CP 零分配 2D 采样运动规划库（RRT & RRT*）：固定节点池、圆/矩形障碍物精确碰撞检测、RRT* 邻域最优父节点选择与子树重连及视线路径平滑（5/5 PASS，文档直写 `doc/lib/rrt.md`）
 新增 cap:rrt（lib/rrt/{rrt,index}.cp）：零分配固定节点池 RRT/RRT* 运动规划、Liang-Barsky 线段碰撞检测与贪心视线平滑，cpc check 0 错误，cap test 6/6 PASS (784ms)
 

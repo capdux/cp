@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:naivebayes` 纯 CP 零分配朴素贝叶斯（Naive Bayes）分类库：Gaussian（方差平滑）、Multinomial（Laplace/Lidstone 平滑）与 Bernoulli（阈值二值化）全对数域 log-sum-exp 防下溢分类器（5/5 PASS，自动动态挂载 `cap.naivebayes`）
+新增纯 CP 零分配朴素贝叶斯分类库 cap:naivebayes（Gaussian / Multinomial / Bernoulli 全对数域分类器），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:rrt` 纯 CP 零分配 2D 采样运动规划库（RRT & RRT*）：固定节点池、圆/矩形障碍物精确碰撞检测、RRT* 邻域最优父节点选择与子树重连及视线路径平滑（5/5 PASS，自动动态挂载 `cap.rrt`）
 新增纯 CP 零分配 2D 采样运动规划库 cap:rrt（RRT / RRT*、障碍物碰撞检测、视线路径平滑），含文档与 6 项深度生产测试
 
