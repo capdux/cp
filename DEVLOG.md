@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:nntp` NNTP (RFC 3977) status/GROUP/STAT/OVER parser, dot-unstuffing iter & cmd encoder（5/5 PASS，文档直写 `doc/lib/nntp.md`）
+新增 cap:nntp 纯 CP 零分配网络新闻传输协议库（3 位状态码分类、GROUP/STAT/8 字段 OVER 概览、NntpMultiLineIter 解填充与命令防注入编码），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:whois` WHOIS (RFC 3912) query encoder, key/value field iter & multi-registry summary parser（5/5 PASS，文档直写 `doc/lib/whois.md`）
 新增 cap:whois 纯 CP 零分配域名注册信息查询协议库（查询防注入编码、IANA refer 提取、ICANN/RIPE/ARIN 字段归一），通过 cpc check 与 5/5 cap test
 

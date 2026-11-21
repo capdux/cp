@@ -235,3 +235,6 @@
 
 ### 2026-11-22（`cap:whois` 验收，完成并注册纯 CP 零分配标准库 cap:whois（5/5 cap test PASS））
 - **执行成果**：`lib/whois/`（5/5 PASS，`doc/lib/whois.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:whois（5/5 cap test PASS）
+
+### 2026-11-22（`cap:nntp` 验收，完成并注册纯 CP 零分配标准库 cap:nntp（6/6 cap test PASS））
+- **执行成果**：`lib/nntp/`（5/5 PASS，`doc/lib/nntp.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:nntp（6/6 cap test PASS）
