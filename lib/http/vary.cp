@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T16:52:35Z (RFC 9110 Vary Header Parser & Cache-Key Normalizer)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T20:23:41Z (RFC 9110 Vary Header Parser & Cache-Key Normalizer)
 // Pure-CP zero-allocation RFC 9110 §12.5.5 Vary header iterator, membership check, and canonical merger.
 
 fn isWs(b: u8): bool {

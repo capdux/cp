@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T14:39:13Z
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T20:23:41Z
 // lib/http/chunked.cp
 // RFC 9112 §7.1 Chunked Transfer-Encoding Streaming Decoder & Encoder (cap:http)
 

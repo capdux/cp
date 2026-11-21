@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T14:39:13Z
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T20:23:41Z
 // lib/http/wire_http.cp
 // Industrial HTTP/1.1 HttpRequestBuilder & HttpResponseParser:
 // - Multi-line (obs-fold) & multi-value header parsing

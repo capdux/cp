@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/valkey/valkey_protocol.cp | Synced: 2026-11-20T11:08:26Z
+// Source: Absorbed from /data/dev/bun/src/valkey/valkey_protocol.cp | Synced: 2026-11-21T19:43:25Z
 // lib/redis/resp.cp
 // RESP2 / RESP3 (Redis / Valkey Serialization Protocol) Frame Parser, Stream Reader & Encoder
 // Absorbed from Bun src/valkey/valkey_protocol.cp

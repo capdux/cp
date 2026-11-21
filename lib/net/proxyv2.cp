@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T16:01:44Z (HAProxy PROXY Protocol v2 Binary Codec)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T20:23:41Z (HAProxy PROXY Protocol v2 Binary Codec)
 
 /// HAProxy PROXY Protocol v2 固定 12 字节二进制签名：`\r\n\r\n\0\r\nQUIT\n`
 export const PROXY_V2_SIGNATURE: [12]u8 = [

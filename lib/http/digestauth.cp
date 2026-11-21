@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T16:45:50Z (RFC 7616 HTTP Digest Auth Header Parser)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T20:23:41Z (RFC 7616 HTTP Digest Auth Header Parser)
 
 fn isOws(c: u8): bool {
     return c == ' ' || c == '\t';

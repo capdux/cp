@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T16:42:30Z (W3C Sec-CH-UA Client Hints Parser)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T20:23:41Z (W3C Sec-CH-UA Client Hints Parser)
 // Pure-CP zero-allocation W3C User-Agent Client Hints parser (`Sec-CH-UA`, `Sec-CH-UA-Mobile`, `Sec-CH-UA-Platform`).
 
 fn isWs(b: u8): bool {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/patch/patch.cp | Synced: 2026-11-20T19:26:19Z
+// Source: Absorbed from /data/dev/bun/src/patch/patch.cp | Synced: 2026-11-21T19:40:57Z
 // lib/patch/myers.cp
 // Line-Level Myers O(ND) Text Differ, DiffOp Sequence & Standard Unified Diff Generator
 // Absorbed from Bun src/patch/

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T14:52:23Z (RFC 8941 HTTP Structured Field Values)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T20:23:41Z (RFC 8941 HTTP Structured Field Values)
 
 /// RFC 8941 HTTP Structured Field Values 标量项类型
 export enum SfItemKind {

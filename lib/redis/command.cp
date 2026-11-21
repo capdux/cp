@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/valkey/valkey_protocol.cp | Synced: 2026-11-20T07:11:10Z
+// Source: Absorbed from /data/dev/bun/src/valkey/valkey_protocol.cp | Synced: 2026-11-21T19:43:25Z
 // lib/redis/command.cp
 // Redis / Valkey Command Builders & Pipelined Batch Buffer
 // Absorbed from Bun src/valkey/valkey_protocol.cp
