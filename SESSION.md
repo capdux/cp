@@ -391,3 +391,12 @@
 
 ### 2026-11-22（`cap:byte_size` 验收，Batch 54 注册 `cap:byte_size` 并提交。）
 - **执行成果**：`lib/byte_size/`（5/5 PASS，`doc/lib/byte_size.md`）经 `verify_module.sh` 一次性验收回收；Batch 54 注册 `cap:byte_size` 并提交。
+
+### 2026-11-22（`cap:case_convert` 验收，Batch 55 完成 `cap:case_convert`、`cap:http_form`、`cap:duration_parse` 3 模块吸收与全量验收。）
+- **执行成果**：`lib/case_convert/`（5/5 PASS，`doc/lib/case_convert.md`）经 `verify_module.sh` 一次性验收回收；Batch 55 完成 `cap:case_convert`、`cap:http_form`、`cap:duration_parse` 3 模块吸收与全量验收。
+
+### 2026-11-22（`cap:http_form` 验收，Batch 55 注册 `cap:http_form`。）
+- **执行成果**：`lib/http_form/`（5/5 PASS，`doc/lib/http_form.md`）经 `verify_module.sh` 一次性验收回收；Batch 55 注册 `cap:http_form`。
+
+### 2026-11-22（`cap:duration_parse` 验收，Batch 55 注册 `cap:duration_parse` 并提交。）
+- **执行成果**：`lib/duration_parse/`（5/5 PASS，`doc/lib/duration_parse.md`）经 `verify_module.sh` 一次性验收回收；Batch 55 注册 `cap:duration_parse` 并提交。

@@ -1,3 +1,12 @@
+## 2026-11-22: 新建 `cap:duration_parse` 纯整数人类可读时长解析器（ns/us/µs/ms/s/m/h/d/w 复合与小数）及规范/紧凑格式化器（5/5 PASS，文档直写 `doc/lib/duration_parse.md`）
+Subagent 1 吸收 `cap:duration_parse`，支持 `"1h30m15s"`、`"1.5s"`、`"250µs"` 等多单位解析与紧凑输出。
+
+## 2026-11-22: 新建 `cap:http_form` WHATWG application/x-www-form-urlencoded 零分配编解码器（+ 与空格互转）、迭代器与构造器（5/5 PASS，文档直写 `doc/lib/http_form.md`）
+主智能体吸收 `cap:http_form`，支持前导 `?` 剥离与无值键解析。
+
+## 2026-11-22: 新建 `cap:case_convert` 零分配缩写感知标识符命名风格转换器（snake_case / SCREAMING_SNAKE_CASE / kebab-case / camelCase / PascalCase）（5/5 PASS，文档直写 `doc/lib/case_convert.md`）
+主智能体吸收 `cap:case_convert`，零堆分配提供 `WordIter` 与 5 种常用风格转换器。
+
 ## 2026-11-22: 新建 `cap:byte_size` 纯整数人类可读字节大小解析器（SI/IEC 小数支持与溢出防护）及 SI/IEC 格式化器（5/5 PASS，文档直写 `doc/lib/byte_size.md`）
 主智能体吸收 `cap:byte_size`，避免浮点误差并防 `u64` 乘法/加法溢出。
 

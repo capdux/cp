@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:duration_parse` 纯整数人类可读时长解析器（ns/us/µs/ms/s/m/h/d/w 复合与小数）及规范/紧凑格式化器（5/5 PASS，自动动态挂载 `cap.duration_parse`）
+新增 `cap:duration_parse`（`lib/duration_parse/{duration,index}.cp`、`doc/lib/duration_parse.md`、`cap/test/test_duration_parse_production_deep.cp`），纯整数防浮点误差与溢出，支持无损复合格式化往返。
+
+## [2026-11-22] - 新建 `cap:http_form` WHATWG application/x-www-form-urlencoded 零分配编解码器（+ 与空格互转）、迭代器与构造器（5/5 PASS，自动动态挂载 `cap.http_form`）
+新增 `cap:http_form`（`lib/http_form/{form,index}.cp`、`doc/lib/http_form.md`、`cap/test/test_http_form_production_deep.cp`），完整实现 WHATWG 表单编解码、畸形 `%` 保留与 `appendFormParam`/`getFormParam` 往返。
+
+## [2026-11-22] - 新建 `cap:case_convert` 零分配缩写感知标识符命名风格转换器（snake_case / SCREAMING_SNAKE_CASE / kebab-case / camelCase / PascalCase）（5/5 PASS，自动动态挂载 `cap.case_convert`）
+新增 `cap:case_convert`（`lib/case_convert/{case_convert,index}.cp`、`doc/lib/case_convert.md`、`cap/test/test_case_convert_production_deep.cp`），支持 `HTTPServer` 等缩写边界拆词与 5 种命名风格转换。
+
 ## [2026-11-22] - 新建 `cap:byte_size` 纯整数人类可读字节大小解析器（SI/IEC 小数支持与溢出防护）及 SI/IEC 格式化器（5/5 PASS，自动动态挂载 `cap.byte_size`）
 新增 `cap:byte_size`（`lib/byte_size/{byte_size,index}.cp`、`doc/lib/byte_size.md`、`cap/test/test_byte_size_production_deep.cp`），纯整数算术解析 `KB`/`KiB`/`MB`/`MiB`/`GB`/`GiB` 等单位并提供双制式格式化。
 

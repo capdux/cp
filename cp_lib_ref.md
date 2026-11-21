@@ -589,3 +589,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:text_wrap` | wrapText, indentLines, commonIndent, dedentLines, truncateEllipsis | 零分配 CLI 贪心自动换行、缩进/公共反缩进与 UTF-8 安全省略号截断工具 |
 | `cap:w3c_traceparent` | TraceParent, TraceStateEntry, TraceStateIter, findTraceState | W3C Trace Context Level 1 traceparent / tracestate 分布式追踪头零分配解析与格式化器 |
 | `cap:byte_size` | parseByteSize, formatBytesIec, formatBytesSi | 纯整数人类可读字节大小解析器（SI/IEC 小数支持与溢出防护）及 SI/IEC 格式化器 |
+| `cap:case_convert` | WordIter, toSnakeCase, toScreamingSnakeCase, toKebabCase, toCamelCase, toPascalCase | 零分配缩写感知标识符命名风格转换器（snake_case / SCREAMING_SNAKE_CASE / kebab-case / camelCase / PascalCase） |
+| `cap:http_form` | encodeFormComponent, decodeFormComponent, FormPairRaw, FormIter, getFormParam, appendFormParam | WHATWG application/x-www-form-urlencoded 零分配编解码器（+ 与空格互转）、迭代器与构造器 |
+| `cap:duration_parse` | NS_PER_US, NS_PER_MS, NS_PER_SEC, NS_PER_MIN, NS_PER_HOUR, NS_PER_DAY, NS_PER_WEEK, parseDurationNs, parseDurationMs, formatDurationNs, formatDurationCompact | 纯整数人类可读时长解析器（ns/us/µs/ms/s/m/h/d/w 复合与小数）及规范/紧凑格式化器 |
