@@ -1212,7 +1212,14 @@ impl Codegen {
         }
 
         if !is_result_disc && Self::is_simple_literal_switch(m) {
-            let disc_code = self.generate_expr(&m.disc);
+            let disc_code = {
+                let raw = self.generate_expr(&m.disc);
+                if self.is_self_ptr_receiver() && Self::is_self_receiver_ident(&m.disc) {
+                    format!("{}.*", raw)
+                } else {
+                    raw
+                }
+            };
             let mut arms_code = String::new();
             let mut has_else = false;
 
@@ -1414,7 +1421,14 @@ impl Codegen {
 
         let sw_id = self.tmp_counter;
         self.tmp_counter += 1;
-        let disc_code = self.generate_expr(&m.disc);
+        let disc_code = {
+            let raw = self.generate_expr(&m.disc);
+            if self.is_self_ptr_receiver() && Self::is_self_receiver_ident(&m.disc) {
+                format!("{}.*", raw)
+            } else {
+                raw
+            }
+        };
         let blk_label = format!("__sw_blk_{}", sw_id);
         let disc_var = format!("__disc_{}", sw_id);
 

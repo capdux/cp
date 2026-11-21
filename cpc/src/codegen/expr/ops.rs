@@ -5,6 +5,20 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 
 impl Codegen {
+    pub(crate) fn is_self_ptr_receiver(&self) -> bool {
+        self.locals
+            .get("self")
+            .map(|ty| {
+                let t = ty.trim();
+                t.starts_with('*') && !t.starts_with("[*")
+            })
+            .unwrap_or(false)
+    }
+
+    pub(crate) fn is_self_receiver_ident(expr: &Expr) -> bool {
+        matches!(expr, Expr::Ident(id) if id.sym == "_" || id.sym == "this" || id.sym == "self")
+    }
+
     pub(crate) fn generate_expr_ops(&mut self, expr: &Expr) -> String {
         match expr {
             Expr::Ident(i) => {
@@ -436,6 +450,24 @@ impl Codegen {
                     false
                 };
                 let is_vec_cmp = is_vec_ty(&l_ty) || is_vec_ty(&r_ty);
+                let (l, r) = if matches!(bin.op, BinaryOp::Eq | BinaryOp::NotEq)
+                    && is_enum_cmp
+                    && self.is_self_ptr_receiver()
+                {
+                    let l_eff = if Self::is_self_receiver_ident(&bin.left) {
+                        format!("{}.*", l)
+                    } else {
+                        l
+                    };
+                    let r_eff = if Self::is_self_receiver_ident(&bin.right) {
+                        format!("{}.*", r)
+                    } else {
+                        r
+                    };
+                    (l_eff, r_eff)
+                } else {
+                    (l, r)
+                };
                 match bin.op {
                     BinaryOp::Eq => {
                         let has_num = are_both_numeric

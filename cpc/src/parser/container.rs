@@ -148,6 +148,14 @@ impl<'a> Parser<'a> {
                 nested_classes.push(nested);
                 continue;
             }
+            let is_test_decl = matches!(self.peek(), Some(Token::Ident(id)) if id == "test")
+                && matches!(
+                    self.peek_next(),
+                    Some(Token::LBrace) | Some(Token::StringLiteral(_)) | Some(Token::Ident(_))
+                );
+            let is_comptime_block = matches!(self.peek(), Some(Token::Ident(id)) if id == "comptime")
+                && self.peek_next() == Some(&Token::LBrace);
+            let is_brace_terminated_decl = is_test_decl || is_comptime_block;
             if self.peek_next() != Some(&Token::Colon)
                 && (self.peek() == Some(&Token::Const)
                     || self.peek() == Some(&Token::Var)
@@ -156,8 +164,8 @@ impl<'a> Parser<'a> {
                     || self.peek() == Some(&Token::Enum)
                     || self.peek() == Some(&Token::Interface)
                     || self.peek() == Some(&Token::Trait)
-                    || (matches!(self.peek(), Some(Token::Ident(id)) if id == "comptime")
-                        && self.peek_next() == Some(&Token::LBrace))
+                    || is_comptime_block
+                    || is_test_decl
                     || matches!(self.peek(), Some(Token::Ident(id)) if id == "usingnamespace"))
             {
                 let start_idx = self.peek_span().start;
@@ -184,6 +192,13 @@ impl<'a> Parser<'a> {
                             {
                                 let span = self.bump()?.1;
                                 end_idx = span.end;
+                                if is_brace_terminated_decl {
+                                    if self.peek() == Some(&Token::Semicolon) {
+                                        let s_span = self.bump()?.1;
+                                        end_idx = s_span.end;
+                                    }
+                                    break;
+                                }
                                 while let Some(tok) = self.peek() {
                                     if *tok == Token::Semicolon {
                                         let s_span = self.bump()?.1;
@@ -224,7 +239,7 @@ impl<'a> Parser<'a> {
                     end_idx = span.end;
                 }
                 let raw_code = &self.input[start_idx..end_idx];
-                let pub_prefix = if member_is_pub && has_pub_or_priv {
+                let pub_prefix = if member_is_pub && has_pub_or_priv && !is_brace_terminated_decl {
                     "pub "
                 } else {
                     ""
@@ -546,6 +561,14 @@ impl<'a> Parser<'a> {
                 }
                 self.bump()?;
             }
+            let is_test_decl = matches!(self.peek(), Some(Token::Ident(id)) if id == "test")
+                && matches!(
+                    self.peek_next(),
+                    Some(Token::LBrace) | Some(Token::StringLiteral(_)) | Some(Token::Ident(_))
+                );
+            let is_comptime_block = matches!(self.peek(), Some(Token::Ident(id)) if id == "comptime")
+                && self.peek_next() == Some(&Token::LBrace);
+            let is_brace_terminated_decl = is_test_decl || is_comptime_block;
             if self.peek_next() != Some(&Token::Colon)
                 && (self.peek() == Some(&Token::Const)
                     || self.peek() == Some(&Token::Var)
@@ -557,8 +580,8 @@ impl<'a> Parser<'a> {
                     || self.peek() == Some(&Token::Class)
                     || self.peek() == Some(&Token::Interface)
                     || self.peek() == Some(&Token::Trait)
-                    || (matches!(self.peek(), Some(Token::Ident(id)) if id == "comptime")
-                        && self.peek_next() == Some(&Token::LBrace))
+                    || is_comptime_block
+                    || is_test_decl
                     || matches!(self.peek(), Some(Token::Ident(id)) if id == "usingnamespace"))
             {
                 let start_idx = self.peek_span().start;
@@ -585,6 +608,13 @@ impl<'a> Parser<'a> {
                             {
                                 let span = self.bump()?.1;
                                 end_idx = span.end;
+                                if is_brace_terminated_decl {
+                                    if self.peek() == Some(&Token::Semicolon) {
+                                        let s_span = self.bump()?.1;
+                                        end_idx = s_span.end;
+                                    }
+                                    break;
+                                }
                                 while let Some(tok) = self.peek() {
                                     if *tok == Token::Semicolon {
                                         let s_span = self.bump()?.1;
@@ -625,7 +655,11 @@ impl<'a> Parser<'a> {
                     end_idx = span.end;
                 }
                 let raw_code = &self.input[start_idx..end_idx];
-                let pub_prefix = if method_is_pub { "pub " } else { "" };
+                let pub_prefix = if method_is_pub && !is_brace_terminated_decl {
+                    "pub "
+                } else {
+                    ""
+                };
                 extra_zig.push(format!("{}{}", pub_prefix, raw_code.trim()));
                 continue;
             }
