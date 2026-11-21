@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ini_writer` INI / gitconfig 配置文件零分配安全序列化写入器（自动引号转义、子段输出与原子回滚）（5/5 PASS，文档直写 `doc/lib/ini_writer.md`）
+轮换后的 `Sys Config Absorber` 仅用 1 分 17 秒交付 `cap:ini_writer`（5 组深度用例 100% PASS）。
+
 ## 2026-11-22: 新建 `cap:http_cache_key` HTTP 缓存键零分配规范化构造器（大小写/默认端口归一化、utm_*/fbclid/gclid 追踪参数剥离与 Vary 维度追加）（5/5 PASS，文档直写 `doc/lib/http_cache_key.md`）
 轮换后的 `HTTP RFC Absorber` 仅用 1 分 39 秒完成 `cap:http_cache_key` 交付与全量验收（5 组深度用例 100% PASS）。
 

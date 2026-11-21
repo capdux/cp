@@ -669,3 +669,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_signature_input` | SignatureInput, SignatureInputIter, findSignatureInput, ComponentIter, findSignatureValue | RFC 9421 HTTP Message Signatures (Signature-Input / Signature) 零分配解析器与时间窗校验器 |
 | `cap:shell_env_parse` | ShellEnvEntry, ShellEnvIter, getShellEnv | POSIX Shell export KEY=VAL / .profile 风格环境变量赋值行零分配解析器（支持单双引号与 unset 清空） |
 | `cap:http_cache_key` | isTrackingQueryParam, normalizeQueryWithoutTracking, buildCacheKey, appendVaryDimension | HTTP 缓存键零分配规范化构造器（大小写/默认端口归一化、utm_*/fbclid/gclid 追踪参数剥离与 Vary 维度追加） |
+| `cap:ini_writer` | isValidIniKey, needsIniQuotes, appendIniSection, appendIniSubsection, appendIniPair, appendIniComment | INI / gitconfig 配置文件零分配安全序列化写入器（自动引号转义、子段输出与原子回滚） |

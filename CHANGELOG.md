@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ini_writer` INI / gitconfig 配置文件零分配安全序列化写入器（自动引号转义、子段输出与原子回滚）（5/5 PASS，自动动态挂载 `cap.ini_writer`）
+新增 `cap:ini_writer`（`lib/ini_writer/{ini_writer,index}.cp`、`doc/lib/ini_writer.md`、`cap/test/test_ini_writer_production_deep.cp`），支持 `[section "subsection"]`、多行注释与缓冲不足原子回滚 `pos`。
+
 ## [2026-11-22] - 新建 `cap:http_cache_key` HTTP 缓存键零分配规范化构造器（大小写/默认端口归一化、utm_*/fbclid/gclid 追踪参数剥离与 Vary 维度追加）（5/5 PASS，自动动态挂载 `cap.http_cache_key`）
 新增 `cap:http_cache_key`（`lib/http_cache_key/{cache_key,index}.cp`、`doc/lib/http_cache_key.md`、`cap/test/test_http_cache_key_production_deep.cp`），实现确定性缓存键生成、IPv6 默认端口剥离与防换行注入 Vary 维度追加。
 
