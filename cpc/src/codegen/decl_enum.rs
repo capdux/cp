@@ -162,6 +162,10 @@ impl Codegen {
                     self.writeln(line);
                 }
             }
+            for tb in &e.test_blocks {
+                self.writeln("");
+                self.generate_container_test(tb);
+            }
             self.dedent();
             self.writeln("};\n");
             return;
@@ -247,6 +251,10 @@ impl Codegen {
             for line in lowered.lines() {
                 self.writeln(line);
             }
+        }
+        for tb in &e.test_blocks {
+            self.writeln("");
+            self.generate_container_test(tb);
         }
         self.dedent();
         self.writeln("};\n");

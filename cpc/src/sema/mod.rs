@@ -721,6 +721,7 @@ impl Analyzer {
             is_union: false,
             nested_classes: vec![],
             generic_params: vec![],
+            test_blocks: vec![],
         };
         self.classes
             .insert("RegExp".to_string(), regex_class.clone());
@@ -743,6 +744,7 @@ impl Analyzer {
             is_union: false,
             nested_classes: vec![],
             generic_params: vec![],
+            test_blocks: vec![],
         };
         self.classes.insert("Set".to_string(), set_class.clone());
         self.scopes[0].insert("Set".to_string(), SymbolKind::Class(set_class));
@@ -765,6 +767,7 @@ impl Analyzer {
             is_union: false,
             nested_classes: vec![],
             generic_params: vec![],
+            test_blocks: vec![],
         };
         self.classes.insert("Map".to_string(), map_class.clone());
         self.scopes[0].insert("Map".to_string(), SymbolKind::Class(map_class));
@@ -787,6 +790,7 @@ impl Analyzer {
             is_union: false,
             nested_classes: vec![],
             generic_params: vec![],
+            test_blocks: vec![],
         };
         self.classes.insert("Dict".to_string(), dict_class.clone());
         self.scopes[0].insert("Dict".to_string(), SymbolKind::Class(dict_class));
@@ -834,6 +838,7 @@ impl Analyzer {
             is_union: false,
             nested_classes: vec![],
             generic_params: vec![],
+            test_blocks: vec![],
         };
         self.classes
             .insert("Error".to_string(), error_class.clone());
@@ -859,6 +864,7 @@ impl Analyzer {
             is_union: false,
             nested_classes: vec![],
             generic_params: vec![],
+            test_blocks: vec![],
         };
         self.classes.insert("Box".to_string(), box_class.clone());
         self.scopes[0].insert("Box".to_string(), SymbolKind::Class(box_class));
@@ -881,6 +887,7 @@ impl Analyzer {
             is_union: false,
             nested_classes: vec![],
             generic_params: vec![],
+            test_blocks: vec![],
         };
         self.classes.insert("JSON".to_string(), json_class.clone());
         self.scopes[0].insert("JSON".to_string(), SymbolKind::Class(json_class));
@@ -925,6 +932,7 @@ impl Analyzer {
                 is_union: false,
                 nested_classes: vec![],
                 generic_params: vec![],
+                test_blocks: vec![],
             };
             self.classes.insert(reflect_name.to_string(), cls.clone());
             self.scopes[0].insert(reflect_name.to_string(), SymbolKind::Class(cls));
@@ -960,6 +968,7 @@ impl Analyzer {
                 is_union: false,
                 nested_classes: vec![],
                 generic_params: vec![],
+                test_blocks: vec![],
             };
             self.classes.insert(name.to_string(), cls.clone());
             self.scopes[0].insert(name.to_string(), SymbolKind::Class(cls));

@@ -1157,24 +1157,38 @@ impl Codegen {
                             } else {
                                 self.write_to_case(&format!("{} = {};", l, r));
                             }
+                        } else if l == "_"
+                            && matches!(
+                                &*bin.right,
+                                Expr::Ident(id)
+                                    if self.drop_flag_vars.contains(&id.sym)
+                                        || self.locals.contains_key(&id.sym)
+                            )
+                        {
+                            self.write_to_case(&format!("_ = &{};", r));
                         } else {
                             self.write_to_case(&format!("{} = {};", l, r));
                         }
                     }
 
-                    if let Expr::Ident(id) = &*bin.right {
-                        let is_id_borrow = self.var_borrow_sources.contains_key(&id.sym)
-                            || (self.current_fn_params.contains(&id.sym)
-                                && !self.move_fn_params.contains(&id.sym));
-                        if !is_id_borrow && self.locals.contains_key(&id.sym) {
-                            let ty_str = &self.locals[&id.sym];
-                            let is_owned_type = (ty_str.starts_with('*') && ty_str != "*anyopaque")
-                                || self.trait_defs.contains_key(ty_str.as_str());
-                            if is_owned_type {
-                                self.check_active_borrows_before_move(&id.sym);
-                                self.moved_vars.insert(id.sym.clone());
-                                if !self.is_state_machine && self.drop_flag_vars.contains(&id.sym) {
-                                    self.write_to_case(&format!("__{}_moved = true;", id.sym));
+                    if !matches!(&*bin.left, Expr::Ident(lid) if lid.sym == "_") {
+                        if let Expr::Ident(id) = &*bin.right {
+                            let is_id_borrow = self.var_borrow_sources.contains_key(&id.sym)
+                                || (self.current_fn_params.contains(&id.sym)
+                                    && !self.move_fn_params.contains(&id.sym));
+                            if !is_id_borrow && self.locals.contains_key(&id.sym) {
+                                let ty_str = &self.locals[&id.sym];
+                                let is_owned_type = (ty_str.starts_with('*')
+                                    && ty_str != "*anyopaque")
+                                    || self.trait_defs.contains_key(ty_str.as_str());
+                                if is_owned_type {
+                                    self.check_active_borrows_before_move(&id.sym);
+                                    self.moved_vars.insert(id.sym.clone());
+                                    if !self.is_state_machine
+                                        && self.drop_flag_vars.contains(&id.sym)
+                                    {
+                                        self.write_to_case(&format!("__{}_moved = true;", id.sym));
+                                    }
                                 }
                             }
                         }

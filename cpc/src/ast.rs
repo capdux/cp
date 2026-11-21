@@ -145,6 +145,13 @@ pub struct ImplDecl {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ContainerTest {
+    pub span: Span,
+    pub header: String,
+    pub body: BlockStmt,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct EnumDecl {
     pub span: Span,
     pub ident: Ident,
@@ -157,6 +164,8 @@ pub struct EnumDecl {
     pub tag_type: Option<Type>,
     #[serde(default)]
     pub extra_zig: Vec<String>,
+    #[serde(default)]
+    pub test_blocks: Vec<ContainerTest>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -225,6 +234,8 @@ pub struct Class {
     pub is_union: bool,
     #[serde(default)]
     pub nested_classes: Vec<Class>,
+    #[serde(default)]
+    pub test_blocks: Vec<ContainerTest>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

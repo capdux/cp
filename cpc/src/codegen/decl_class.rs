@@ -68,6 +68,28 @@ impl Codegen {
         sub
     }
 
+    pub(crate) fn generate_container_test(&mut self, tb: &ContainerTest) {
+        let mut sub = self.spawn_sub_codegen();
+        sub.is_state_machine = false;
+        sub.current_scope_depth = 1;
+        sub.current_stmt_idx = 0;
+        sub.current_fn_ret_ty = Some(Type::ErrorUnion(Box::new(Type::Void)));
+        let mut stmt_counter = 0;
+        sub.compute_last_uses_block(&tb.body, &mut stmt_counter);
+        sub.current_case_content.clear();
+        for stmt in &tb.body.body {
+            sub.generate_stmt(stmt);
+        }
+        let body_str = sub.current_case_content;
+        self.writeln(&format!("{} {{", tb.header));
+        self.indent();
+        for line in body_str.lines() {
+            self.writeln(line);
+        }
+        self.dedent();
+        self.writeln("}");
+    }
+
     pub(crate) fn lower_extra_zig_member(&mut self, code: &str) -> String {
         let mut parser = crate::parser::Parser::new(code);
         let (module, diags) = parser.parse_module_with_recovery();
@@ -265,6 +287,9 @@ impl Codegen {
                 for line in lowered.lines() {
                     self.writeln(line);
                 }
+            }
+            for tb in &class.test_blocks {
+                self.generate_container_test(tb);
             }
             if let Some(rc_meta) = class
                 .meta
@@ -546,6 +571,9 @@ impl Codegen {
             for line in lowered.lines() {
                 self.writeln(line);
             }
+        }
+        for tb in &class.test_blocks {
+            self.generate_container_test(tb);
         }
         if let Some(rc_meta) = class
             .meta

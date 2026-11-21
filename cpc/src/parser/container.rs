@@ -99,6 +99,7 @@ impl<'a> Parser<'a> {
         let mut methods = Vec::new();
         let mut extra_zig = Vec::new();
         let mut nested_classes = Vec::new();
+        let mut test_blocks = Vec::new();
         self.expect(Token::LBrace)?;
         while self.peek() != Some(&Token::RBrace) && self.peek().is_some() {
             if self.peek() == Some(&Token::ZigEscape) {
@@ -153,9 +154,13 @@ impl<'a> Parser<'a> {
                     self.peek_next(),
                     Some(Token::LBrace) | Some(Token::StringLiteral(_)) | Some(Token::Ident(_))
                 );
+            if is_test_decl {
+                test_blocks.push(self.parse_container_test_decl()?);
+                continue;
+            }
             let is_comptime_block = matches!(self.peek(), Some(Token::Ident(id)) if id == "comptime")
                 && self.peek_next() == Some(&Token::LBrace);
-            let is_brace_terminated_decl = is_test_decl || is_comptime_block;
+            let is_brace_terminated_decl = is_comptime_block;
             if self.peek_next() != Some(&Token::Colon)
                 && (self.peek() == Some(&Token::Const)
                     || self.peek() == Some(&Token::Var)
@@ -165,7 +170,6 @@ impl<'a> Parser<'a> {
                     || self.peek() == Some(&Token::Interface)
                     || self.peek() == Some(&Token::Trait)
                     || is_comptime_block
-                    || is_test_decl
                     || matches!(self.peek(), Some(Token::Ident(id)) if id == "usingnamespace"))
             {
                 let start_idx = self.peek_span().start;
@@ -422,6 +426,39 @@ impl<'a> Parser<'a> {
             is_union,
             nested_classes,
             generic_params,
+            test_blocks,
+        })
+    }
+
+    pub(super) fn parse_container_test_decl(&mut self) -> ParseResult<ContainerTest> {
+        let start_idx = self.peek_span().start;
+        self.bump()?; // consume `test`
+        if matches!(
+            self.peek(),
+            Some(Token::StringLiteral(_)) | Some(Token::Ident(_))
+        ) {
+            self.bump()?;
+            while self.peek() == Some(&Token::Dot) {
+                self.bump()?;
+                if matches!(self.peek(), Some(Token::Ident(_))) {
+                    self.bump()?;
+                }
+            }
+        }
+        let header_end = self.peek_span().start;
+        let header = self.input[start_idx..header_end].trim().to_string();
+        let body = self.parse_block_stmt()?;
+        let mut end = body.span.end;
+        if self.peek() == Some(&Token::Semicolon) {
+            end = self.bump()?.1.end;
+        }
+        Ok(ContainerTest {
+            span: Span {
+                start: start_idx,
+                end,
+            },
+            header,
+            body,
         })
     }
 
@@ -542,6 +579,7 @@ impl<'a> Parser<'a> {
         let mut variants = Vec::new();
         let mut methods = Vec::new();
         let mut extra_zig = Vec::new();
+        let mut test_blocks = Vec::new();
         while self.peek() != Some(&Token::RBrace) && self.peek().is_some() {
             if self.peek() == Some(&Token::ZigEscape) {
                 let (_, code) = self.parse_raw_zig_block()?;
@@ -566,9 +604,13 @@ impl<'a> Parser<'a> {
                     self.peek_next(),
                     Some(Token::LBrace) | Some(Token::StringLiteral(_)) | Some(Token::Ident(_))
                 );
+            if is_test_decl {
+                test_blocks.push(self.parse_container_test_decl()?);
+                continue;
+            }
             let is_comptime_block = matches!(self.peek(), Some(Token::Ident(id)) if id == "comptime")
                 && self.peek_next() == Some(&Token::LBrace);
-            let is_brace_terminated_decl = is_test_decl || is_comptime_block;
+            let is_brace_terminated_decl = is_comptime_block;
             if self.peek_next() != Some(&Token::Colon)
                 && (self.peek() == Some(&Token::Const)
                     || self.peek() == Some(&Token::Var)
@@ -581,7 +623,6 @@ impl<'a> Parser<'a> {
                     || self.peek() == Some(&Token::Interface)
                     || self.peek() == Some(&Token::Trait)
                     || is_comptime_block
-                    || is_test_decl
                     || matches!(self.peek(), Some(Token::Ident(id)) if id == "usingnamespace"))
             {
                 let start_idx = self.peek_span().start;
@@ -763,6 +804,7 @@ impl<'a> Parser<'a> {
             methods,
             tag_type,
             extra_zig,
+            test_blocks,
         })
     }
 

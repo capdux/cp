@@ -217,6 +217,9 @@ impl ModuleFeatures {
                 for nc in &c.nested_classes {
                     self.scan_decl(&Decl::Class(nc.clone()));
                 }
+                for tb in &c.test_blocks {
+                    self.scan_block(&tb.body);
+                }
                 for code in &c.extra_zig {
                     if code.contains("<<") || code.contains(">>") {
                         self.needs_shift = true;
@@ -245,6 +248,9 @@ impl ModuleFeatures {
                         self.scan_type(&p.ty);
                     }
                     self.scan_block(&m.body);
+                }
+                for tb in &e.test_blocks {
+                    self.scan_block(&tb.body);
                 }
             }
             Decl::Impl(i) => {
