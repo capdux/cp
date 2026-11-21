@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:gmm` 纯 CP 零分配高斯混合模型（GMM / EM）聚类与密度估计库：对角协方差多维高斯混合、k-means++ 初始化、log-sum-exp 稳定 EM、AIC/BIC 与后验责任度预测（5/5 PASS，文档直写 `doc/lib/gmm.md`）
+新增 cap:gmm（lib/gmm/{gmm,index}.cp）：零分配对角协方差 GMM / EM 含方差正则防塌缩与 AIC/BIC 选择，1D/2D 分离混合 100% 聚类准确，cpc check 0 错误，cap test 6/6 PASS (834ms)
+
 ## 2026-11-22: 新建 `cap:dbscan` 纯 CP 零分配基于密度的空间聚类库（DBSCAN）：Ester 1996 核心/边界/噪声点语义、四种距离度量、预计算距离矩阵聚类与轮廓系数评估（5/5 PASS，文档直写 `doc/lib/dbscan.md`）
 新增 cap:dbscan（lib/dbscan/{dbscan,index}.cp）：零分配 Ester 1996 DBSCAN 密度聚类与轮廓系数，通过双同心圆环非凸聚类与四度量验证，cpc check 0 错误，cap test 6/6 PASS (853ms)
 

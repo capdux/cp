@@ -850,3 +850,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:dtw` | DTW_INF, WarpPair, DtwPathResult, dtwDistance1D, dtwAlign1D, dtwDistanceMulti, computeKeoghEnvelope, lbKeogh, zNormalize | 纯 CP 零分配动态时间规整（DTW）与时间序列对齐库：1D 滚动双行 O(m) DTW、Sakoe-Chiba 带宽约束、最优路径回溯、多维 DTW、LB_Keogh 下界包络与 Z-归一化 |
 | `cap:bandit` | Ucb1Bandit, EpsilonGreedyBandit, ThompsonBandit, Exp3Bandit, cumulativeRegret | 纯 CP 零分配多臂老虎机在线决策库：UCB1、Epsilon-Greedy（含衰减）、Marsaglia-Tsang Beta-Bernoulli Thompson Sampling、对数权重防溢出 EXP3 与累积遗憾计算 |
 | `cap:dbscan` | DBSCAN_NOISE, DBSCAN_UNVISITED, DbscanMetric, DbscanResult, DbscanWorkspace, dbscanCluster, dbscanFromDistanceMatrix, silhouetteScore | 纯 CP 零分配基于密度的空间聚类库（DBSCAN）：Ester 1996 核心/边界/噪声点语义、四种距离度量、预计算距离矩阵聚类与轮廓系数评估 |
+| `cap:gmm` | GmmConfig, GmmFitResult, gmmFit, gmmLogProbSample, gmmPredictProba, gmmPredict, gmmScoreSamples | 纯 CP 零分配高斯混合模型（GMM / EM）聚类与密度估计库：对角协方差多维高斯混合、k-means++ 初始化、log-sum-exp 稳定 EM、AIC/BIC 与后验责任度预测 |

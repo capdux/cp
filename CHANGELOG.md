@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:gmm` 纯 CP 零分配高斯混合模型（GMM / EM）聚类与密度估计库：对角协方差多维高斯混合、k-means++ 初始化、log-sum-exp 稳定 EM、AIC/BIC 与后验责任度预测（5/5 PASS，自动动态挂载 `cap.gmm`）
+新增纯 CP 零分配高斯混合模型库 cap:gmm（对角协方差 GMM / EM、AIC/BIC、对数密度与后验预测），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:dbscan` 纯 CP 零分配基于密度的空间聚类库（DBSCAN）：Ester 1996 核心/边界/噪声点语义、四种距离度量、预计算距离矩阵聚类与轮廓系数评估（5/5 PASS，自动动态挂载 `cap.dbscan`）
 新增纯 CP 零分配密度聚类库 cap:dbscan（DBSCAN 聚类、距离矩阵聚类、轮廓系数），含文档与 6 项深度生产测试
 
