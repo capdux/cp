@@ -689,3 +689,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:proc_uptime` | `ProcUptime`, `parseProcUptime` | Linux `/proc/uptime` 系统运行时间与全核空闲占比零分配整数解析与人类可读格式化器 |
 | `cap:http_early_hints` | `EarlyHintRel`, `EarlyHintLink`, `EarlyHintIter`, `formatEarlyHintLink`, `formatEarlyHints103Block` | RFC 8297 HTTP `103 Early Hints` / RFC 8288 `Link` 预加载头零分配解析与报文格式化器 |
 | `cap:ansi_link` | `Osc8Link`, `formatOsc8`, `formatOsc8Bel`, `parseOsc8`, `stripOsc8`, `hasOsc8`, `osc8EncodedLen`, `osc8BelEncodedLen` | OSC 8 终端超链接（ST/BEL）零分配编码、解析与剥离器 |
+| `cap:proc_self_status` | `ProcStatus`, `parseProcStatus`, `findProcStatusField` | Linux `/proc/<pid>/status` 进程状态、内存/线程/UID/GID 零分配键值解析器 |

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:proc_self_status` Linux `/proc/<pid>/status` 进程状态、内存/线程/UID/GID 零分配键值解析器（5/5 PASS，文档直写 `doc/lib/proc_self_status.md`）
+- **设计要点**：单遍扫描 `Key:\tValue` 兼容 `kB`/`MB`/`GB` 单位；`rssBytes()` 使用饱和乘法防止 `u64` 溢出；`findProcStatusField` 零拷贝提取任意扩展字段。
+
 ## 2026-11-22: 新建 `cap:ansi_link` OSC 8 终端超链接（ST/BEL）零分配编码、解析与剥离器（5/5 PASS，文档直写 `doc/lib/ansi_link.md`）
 - **设计要点**：兼容 ST (`\x1b\\`) 与 BEL (`\x07`) 终止符及内嵌样式码，拒绝未闭合、嵌套开启与控制字符注入；提供 `osc8EncodedLen` 便于调用方精准预留缓冲。
 

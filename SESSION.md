@@ -202,3 +202,6 @@
 
 ### 2026-11-22（`cap:ansi_link` 验收，Batch 97 落地，标准库总量达 264 模块（第 3 路迁移子智能体首单交付））
 - **执行成果**：`lib/ansi_link/`（5/5 PASS，`doc/lib/ansi_link.md`）经 `verify_module.sh` 一次性验收回收；Batch 97 落地，标准库总量达 264 模块（第 3 路迁移子智能体首单交付）
+
+### 2026-11-22（`cap:proc_self_status` 验收，Batch 98 落地，标准库总量达 265 模块）
+- **执行成果**：`lib/proc_self_status/`（5/5 PASS，`doc/lib/proc_self_status.md`）经 `verify_module.sh` 一次性验收回收；Batch 98 落地，标准库总量达 265 模块
