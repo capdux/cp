@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:kerberos` Kerberos v5 (RFC 4120) ASN.1 DER Ticket, KRB-ERROR, PrincipalName & TCP record parser（5/5 PASS，自动动态挂载 `cap.kerberos`）
+新增纯 CP 零分配标准库 cap:kerberos（RFC 4120 Kerberos v5 ASN.1 DER Ticket/KRB-ERROR/PrincipalName 解析）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:ssdp` SSDP (UPnP/DLNA) M-SEARCH/NOTIFY/200 OK header parser & encoder（5/5 PASS，自动动态挂载 `cap.ssdp`）
 新增纯 CP 零分配标准库 cap:ssdp（UPnP/DLNA SSDP M-SEARCH/NOTIFY/200 OK 编解码与头部迭代）与 5/5 深度测试
 

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:kerberos` Kerberos v5 (RFC 4120) ASN.1 DER Ticket, KRB-ERROR, PrincipalName & TCP record parser（5/5 PASS，文档直写 `doc/lib/kerberos.md`）
+新增 cap:kerberos 纯 CP 零分配企业认证协议库（TCP 4B Record Mark 解封、APPLICATION [1] Ticket 与 [30] KRB-ERROR 零拷贝 DER 解析），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:ssdp` SSDP (UPnP/DLNA) M-SEARCH/NOTIFY/200 OK header parser & encoder（5/5 PASS，文档直写 `doc/lib/ssdp.md`）
 新增 cap:ssdp 纯 CP 零分配局域网服务发现库（M-SEARCH/NOTIFY/HTTP 200 解析、max-age 提取与防 CRLF 注入编码），通过 cpc check 与 5/5 cap test
 
