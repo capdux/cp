@@ -807,3 +807,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:fir` | windowHann, windowHamming, windowBlackman, designLowpassFir, FirFilter, Biquad | DSP Windowed-Sinc FIR filter, Hann/Hamming/Blackman windows & RBJ Biquad IIR |
 | `cap:bezier` | Vec2, BBox2, QuadPair, CubicPair, QuadBezier, CubicBezier, tAtArcLength | 2D Quadratic/Cubic Bezier: De Casteljau, curvature, Gauss-Legendre arc length & tight AABB |
 | `cap:spline` | CubicSegment, CubicSpline, buildNaturalCubicSpline, buildClampedCubicSpline, buildPchipSpline, catmullRom1d, catmullRom1dDeriv | Natural/Clamped cubic splines (Thomas O(n)), monotone PCHIP & Catmull-Rom interpolation |
+| `cap:earcut` | Point2D, TriangleIdx, signedArea, polygonArea, isCounterClockwise, isConvex, pointInTriangle, pointInPolygon, triangulate, triangulationTotalArea | 2D simple polygon ear-clipping triangulation, signed area & point-in-polygon |

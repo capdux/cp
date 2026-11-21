@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:earcut` 2D simple polygon ear-clipping triangulation, signed area & point-in-polygon（5/5 PASS，文档直写 `doc/lib/earcut.md`）
+新增 cap:earcut 纯 CP 零分配计算几何剖分库（CCW/CW 自动归一化、凹多边形/五角星耳切剖分面积守恒与射线法），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:spline` Natural/Clamped cubic splines (Thomas O(n)), monotone PCHIP & Catmull-Rom interpolation（5/5 PASS，文档直写 `doc/lib/spline.md`）
 新增 cap:spline 纯 CP 零分配数值插值库（O(n) Thomas 三对角求解、精确解析积分与单调保形无过冲 PCHIP），通过 cpc check 与 5/5 cap test
 

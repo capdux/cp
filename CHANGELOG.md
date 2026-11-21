@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:earcut` 2D simple polygon ear-clipping triangulation, signed area & point-in-polygon（5/5 PASS，自动动态挂载 `cap.earcut`）
+新增纯 CP 零分配标准库 cap:earcut（2D 简单多边形耳切法三角剖分、有向面积与点在多边形内判定）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:spline` Natural/Clamped cubic splines (Thomas O(n)), monotone PCHIP & Catmull-Rom interpolation（5/5 PASS，自动动态挂载 `cap.spline`）
 新增纯 CP 零分配标准库 cap:spline（Natural/Clamped 三次样条、Fritsch-Carlson 单调保形 PCHIP 与 Catmull-Rom）与 5/5 深度测试
 

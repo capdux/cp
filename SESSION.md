@@ -46,3 +46,6 @@
 
 ### 2026-11-22（`cap:spline` 验收，完成并注册纯 CP 零分配标准库 cap:spline（5/5 cap test PASS））
 - **执行成果**：`lib/spline/`（5/5 PASS，`doc/lib/spline.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:spline（5/5 cap test PASS）
+
+### 2026-11-22（`cap:earcut` 验收，完成并注册纯 CP 零分配标准库 cap:earcut（5/5 cap test PASS））
+- **执行成果**：`lib/earcut/`（5/5 PASS，`doc/lib/earcut.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:earcut（5/5 cap test PASS）
