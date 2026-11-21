@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:js` JS 标识符与运算符解析统一主包（同步收敛 `cap:hash`/`cap:text`/`cap:diff`/`cap:mime`）（5/5 PASS，自动动态挂载 `cap.js`）
+- **方案 A 收敛终章 (11 小簇目录 -> `cap:hash`/`cap:text`/`cap:diff`/`cap:js`/`cap:mime`)**：合入 `consistent_*`(3) 至 `cap:hash`、`case_*`(2) 至 `cap:text`、`diff_*`(2) 至 `cap:diff`、`mime_*`(2) 至 `cap:mime`，新建 `cap:js` 合入 `js_*`(2)（11/11 PASS），非 CSS 同域碎片 100% 清零，累计消除 223 个长下划线顶层目录！
+
 ## [2026-11-22] - 新建 `cap:markdown` Markdown 行分析、链接与引用定义统一主包（同步收敛 `cap:unicode`/`cap:s3`/`cap:shell`）（5/5 PASS，自动动态挂载 `cap.markdown`）
 - **方案 A 收敛 (10 小簇目录 -> `cap:markdown`/`cap:unicode`/`cap:s3`/`cap:shell`)**：新建 `cap:markdown` 并合入 `md_*`(3)，同时合入 `unicode_*`(3) 至 `cap:unicode`、`s3_*`(2) 至 `cap:s3`、`shell_*`(2) 至 `cap:shell`（10/10 PASS），删除 10 个旧目录与文档，累计消除 212 个长下划线顶层目录。
 

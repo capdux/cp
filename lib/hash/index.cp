@@ -194,3 +194,25 @@ pub struct XxHash3Stream {
         return res;
     }
 }
+
+// --- Consistent Hashing Algorithms (Ring, Jump/HRW, Maglev) ---
+export {
+    ConsistentHashError,
+    HashRing,
+} from "./conshash.cp";
+
+export {
+    JumpError,
+    jumpConsistentHash,
+    jumpConsistentHashBytes,
+    WeightedNode,
+    hrwSelect,
+    hrwSelectWeighted,
+} from "./jump.cp";
+
+export {
+    DEFAULT_TABLE_SIZE,
+    MaglevError,
+    Backend,
+    MaglevRouter,
+} from "./maglev.cp";

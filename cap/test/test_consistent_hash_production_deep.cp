@@ -3,7 +3,7 @@ const std = @import("std");
 type StrSlice = []const u8;
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { ConsistentHashError, HashRing } from "cap:consistent_hash";
+import { ConsistentHashError, HashRing } from "cap:hash";
 
 test "consistent_hash: deterministic routing & load balance across 3 nodes" {
     const alloc = std.testing.allocator;

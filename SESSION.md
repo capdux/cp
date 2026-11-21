@@ -58,3 +58,6 @@
 
 ### 2026-11-22（`cap:markdown` 验收，方案 A 收敛：`markdown`/`unicode`/`s3`/`shell` 10 目录收敛落地（10/10 PASS），累计消除 212 个长下划线顶层目录；率先派发 `bun_agy` 上游增量同步 Wave 1 (`cap:col`)）
 - **执行成果**：`lib/markdown/`（5/5 PASS，`doc/lib/markdown.md`）经 `verify_module.sh` 一次性验收回收；方案 A 收敛：`markdown`/`unicode`/`s3`/`shell` 10 目录收敛落地（10/10 PASS），累计消除 212 个长下划线顶层目录；率先派发 `bun_agy` 上游增量同步 Wave 1 (`cap:col`)
+
+### 2026-11-22（`cap:js` 验收，方案 A 收敛：最后 11 个非 CSS 小簇清零（11/11 PASS，累计消除 223 目录）；热修 `#89` 合单派发至 `78f2c08d`；启动 `bun_agy` 增量同步 Wave 2 (`sourcemap` + `io`)）
+- **执行成果**：`lib/js/`（5/5 PASS，`doc/lib/js.md`）经 `verify_module.sh` 一次性验收回收；方案 A 收敛：最后 11 个非 CSS 小簇清零（11/11 PASS，累计消除 223 目录）；热修 `#89` 合单派发至 `78f2c08d`；启动 `bun_agy` 增量同步 Wave 2 (`sourcemap` + `io`)

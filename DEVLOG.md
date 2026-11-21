@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:js` JS 标识符与运算符解析统一主包（同步收敛 `cap:hash`/`cap:text`/`cap:diff`/`cap:mime`）（5/5 PASS，文档直写 `doc/lib/js.md`）
+- **收敛要点**：全部 5 主包 `cpc check` 0 errors，11/11 PASS；除在途最后 12 个 `css_*` 外，全仓同域碎片已彻底清零；同步派发 `bun_agy` 增量同步 Wave 2 (`cap:sourcemap` + `cap:io`)。
+
 ## 2026-11-22: 新建 `cap:markdown` Markdown 行分析、链接与引用定义统一主包（同步收敛 `cap:unicode`/`cap:s3`/`cap:shell`）（5/5 PASS，文档直写 `doc/lib/markdown.md`）
 - **收敛要点**：全部 4 个主包保留原导出零破坏，冲突符号以最小别名（`wcwidth`/`S3MetaAcl`/`SigV4Credentials`/`Posix*`/`quotePosixBuf`）消解；10/10 PASS，累计消除 212 个散装目录。
 

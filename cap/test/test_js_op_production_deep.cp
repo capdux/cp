@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { AssignTarget, Code, Level, opInfo } from "cap:js_op";
+import { AssignTarget, Code, Level, opInfo } from "cap:js";
 
 test("1. Prefix, postfix, and unary classification", () => {
     expect_eq(Code.un_pos.isPrefix(), true);

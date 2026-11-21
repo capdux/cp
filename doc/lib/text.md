@@ -88,3 +88,11 @@ pub fn demoTextEngine(alloc: std.mem.Allocator): ! {
   - `minCommonIndent`、`dedent`、`indentLines(text, prefix, indent_empty, out)`、`stripCommonPrefix`（保留 `\n`/`\r\n`）。
 - **自动换行与 UTF-8 安全省略 (`wrap.cp`)**：
   - `wrapText`、`indentNonEmptyLines(text, prefix, out)`、`commonIndent`、`dedentLines`、`truncateEllipsis`。
+
+
+---
+
+## 命名风格转换与 Unicode Case Folding（已收敛至 `cap:text`）
+
+- **`lib/text/caseconv.cp`**：`WordIter`, `toSnakeCase`, `toScreamingSnakeCase`, `toKebabCase`, `toCamelCase`, `toPascalCase`
+- **`lib/text/casefold.cp`**：`FoldInfo`, `caseFold`, `caseFoldEqual`

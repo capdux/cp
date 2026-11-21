@@ -8,7 +8,7 @@ import {
     isValidPrivateIdent,
     needsPropertyQuoting,
     escapeJsString,
-} from "cap:js_ident";
+} from "cap:js";
 
 test("1. classifyKeyword covers all 36 ES2024 reserved words, 10 strict reserved, and 10 contextual keywords", () => {
     const reserved_list: [36][]const u8 = [

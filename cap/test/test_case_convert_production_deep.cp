@@ -5,7 +5,7 @@ import {
     toKebabCase,
     toCamelCase,
     toPascalCase,
-} from "cap:case_convert";
+} from "cap:text";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {

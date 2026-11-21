@@ -3,11 +3,13 @@ import std from "std";
 import cap from "cap";
 import { test, expect_eq } from "cap:test";
 import {
-    DiffOpKind,
+    MyersOpKind,
     diffLines,
     reconstructNew,
     formatUnifiedDiff,
-} from "cap:diff_myers";
+} from "cap:diff";
+
+const DiffOpKind = MyersOpKind;
 
 test "diffLines produces exact SES operations for insert, delete, and replace" {
     const alloc = std.testing.allocator;

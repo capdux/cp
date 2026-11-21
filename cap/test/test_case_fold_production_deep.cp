@@ -1,5 +1,5 @@
 import { test, expect } from "cap:test";
-import { FoldInfo, caseFold, caseFoldEqual } from "cap:case_fold";
+import { FoldInfo, caseFold, caseFoldEqual } from "cap:text";
 
 test("case_fold: ASCII, Latin, Greek, Cyrillic, Fullwidth, Deseret 1-to-1 folds", () => {
     expect(caseFold('A').codepoints[0]).toBe('a');

@@ -1,6 +1,6 @@
 import std from "std";
 import { test, expect_eq } from "cap:test";
-import { MimeCategory, ContentType, mimeFromExtension, categoryFromMime } from "cap:mime_lookup";
+import { MimeCategory, ContentType, mimeFromExtension, categoryFromMime } from "cap:mime";
 
 test("1. mimeFromExtension handles bare extensions, full paths, query strings, and case-insensitivity", () => {
     expect_eq(std.mem.eql(u8, mimeFromExtension("html"), "text/html; charset=utf-8"), true);

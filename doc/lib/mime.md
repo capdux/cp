@@ -101,3 +101,11 @@ pub fn demoMime(): ! {
 - **WHATWG MIME 内容嗅探 (`sniff.cp`)**：`isBinaryDataByte`、`isTextData`、`sniffImageMime`、`sniffArchiveOrExecMime`、`sniffAudioVideoMime`、`sniffMime`。
 - **RFC 7578 Multipart 边界解析 (`multipart.cp`)**：`isValidBoundary`、`MultipartPart`、`MultipartParser`。
 - **RFC 6266 / RFC 5987 Content-Disposition (`disposition.cp`)**：`DispositionType`、`ContentDisposition`、`decodeRfc5987`、`sanitizeFilename`、`formatAttachment`。
+
+
+---
+
+## 扩展 MIME 查表与路径分类（已收敛至 `cap:mime`）
+
+- **`lib/mime/lookup.cp`**：`MimeCategory`, `ContentType`, `mimeFromExtension`, `categoryFromMime`
+- **`lib/mime/type.cp`**：`Category`, `classifyMime`, `byExtension`, `byPath`

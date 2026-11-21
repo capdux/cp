@@ -1,14 +1,17 @@
-// Source: cp/cap/test/test_diff_unified_production_deep.cp (Production deep tests for cap:diff_unified)
+// Source: cp/cap/test/test_diff_unified_production_deep.cp (Production deep tests for cap:diff unified)
 
 import { test, expect_eq } from "cap:test";
 import {
-    DiffOpKind,
+    UnifiedOpKind,
     DiffLine,
     DiffSummary,
-    diffLines,
+    unifiedDiffLines,
     summarize,
     formatUnified,
-} from "cap:diff_unified";
+} from "cap:diff";
+
+const DiffOpKind = UnifiedOpKind;
+const diffLines = unifiedDiffLines;
 
 test("diff_unified: identical texts produce empty unified diff and isIdentical summary") {
     const txt = "alpha\nbeta\ngamma\n";

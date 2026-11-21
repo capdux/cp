@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { Category, classifyMime, byExtension, byPath } from "cap:mime_type";
+import { Category, classifyMime, byExtension, byPath } from "cap:mime";
 
 test "mime_type: classifyMime with charset parameters & case insensitivity" {
     try expect_eq(classifyMime("application/json; charset=utf-8") == .json, true);

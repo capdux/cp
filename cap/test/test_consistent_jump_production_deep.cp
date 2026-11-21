@@ -9,7 +9,7 @@ import {
     jumpConsistentHashBytes,
     hrwSelect,
     hrwSelectWeighted,
-} from "cap:consistent_jump";
+} from "cap:hash";
 
 test "consistent_jump: Google Jump Hash monotonicity & minimal movement (10->11 buckets)" {
     let moved: usize = 0;

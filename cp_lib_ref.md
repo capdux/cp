@@ -372,7 +372,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:aes_gcm` | `AesGcmError`, `encrypt128`, `decrypt128`, `encrypt256`, `decrypt256`, `encrypt256Siv`, `decrypt256Siv`, `seal256Alloc`, `open256Alloc` | 纯 CP NIST SP 800-38D AES-128/256-GCM 与 RFC 8452 AES-256-GCM-SIV 抗 Nonce 重用 AEAD 认证加密引擎（支持 `cap.aes_gcm` 自动动态挂载，详见 `doc/lib/aes_gcm.md`） |
 | `cap:disjoint_set` | `DsuError`, `DisjointSet` | 纯 CP 并查集 Union-Find 引擎（路径减半压缩 + 按秩合并 + 连通分量/规模实时追踪，支持 `cap.disjoint_set` 自动动态挂载，详见 `doc/lib/disjoint_set.md`） |
 | `cap:promql` | `PromqlError`, `MatchOp`, `LabelMatcher`, `DurationUnit`, `VectorSelector`, `MatrixSelector`, `AggregationOp`, `BinaryOp`, `VectorMatchCardinality`, `VectorMatching`, `Expr`, `parse` | 纯 CP Prometheus PromQL 词法与递归下降 AST 解析器（支持即时/区间向量选择器、`=~`/`!~` 标签匹配、聚合 `by`/`without`、`on`/`ignoring`/`group_left` 二元修饰符，支持 `cap.promql` 自动动态挂载，详见 `doc/lib/promql.md`） |
-| `cap:consistent_hash` | `ConsistentHashError`, `HashRing` | 纯 CP 虚拟节点一致性哈希环引擎（Wyhash 均匀分布、动态增删物理节点最小迁移与顺时针去重 N 副本路由 `getReplicas`，支持 `cap.consistent_hash` 自动动态挂载，详见 `doc/lib/consistent_hash.md`） |
 | `cap:trie_radix` | `StrSlice`, `PrefixMatch`, `RadixTree` | 纯 CP 路径压缩基数树 / Patricia Trie 引擎（支持边分裂插入、最长前缀路由 `longestPrefixMatch`、前缀遍历及删除自动边合并，支持 `cap.trie_radix` 自动动态挂载，详见 `doc/lib/trie_radix.md`） |
 | `cap:skip_list` | `MAX_LEVEL`, `SkipList` | 纯 CP 有序跳表键值引擎（$O(\log N)$ 插入/覆盖/删除、`lowerBound`/`floor`/`ceiling` 边界查找与 `rangeQuery` 区间扫描，支持 `cap.skip_list` 自动动态挂载，详见 `doc/lib/skip_list.md`） |
 | `cap:interval_tree` | `IntervalError`, `Interval`, `IntervalTree` | 纯 CP 增强区间树引擎（带 `max_high` 子树剪枝、`queryOverlap`/`queryPoint`/`hasOverlap`，支持 `cap.interval_tree` 自动动态挂载，详见 `doc/lib/interval_tree.md`） |
@@ -381,14 +380,11 @@ const h = cap.hash.wyhash("hello");
 | `cap:bimap` | `BiMapError`, `BiMap`, `StringBiMap` | 纯 CP 双向一对一映射容器（$O(1)$ 双向查找、冲突拦截 `insert`、强制覆盖 `forceInsert` 与深拷贝字符串专用 `StringBiMap`，支持 `cap.bimap` 自动动态挂载，详见 `doc/lib/bimap.md`） |
 | `cap:merkle_tree` | `MerkleError`, `ProofStep`, `MerkleProof`, `hashLeaf`, `hashInternal`, `MerkleTree`, `verifyProof` | 纯 CP 密码学 SHA-256 Merkle Tree 引擎（`0x00`/`0x01` 域分离防第二原像碰撞、奇数叶支持与无状态包容性证明 `generateProof`/`verifyProof`，支持 `cap.merkle_tree` 自动动态挂载，详见 `doc/lib/merkle_tree.md`） |
 | `cap:tdigest` | `TDigestError`, `Centroid`, `TDigest` | 纯 CP 流式 Dunning T-Digest 分位数估算引擎（高精度 p50/p95/p99 尾部估计与分布式 `merge` 聚合，支持 `cap.tdigest` 自动动态挂载，详见 `doc/lib/tdigest.md`） |
-| `cap:diff_myers` | `DiffOpKind`, `DiffOp`, `DiffResult`, `diffLines`, `reconstructNew`, `formatUnifiedDiff` | 纯 CP Myers 最短编辑脚本 (SES) 行级 Diff、Unified Diff 格式化与补丁还原引擎（支持 `cap.diff_myers` 自动动态挂载，详见 `doc/lib/diff_myers.md`） |
 | `cap:base58_check` | `Base58Error`, `encode`, `decode`, `encodeCheck`, `CheckDecoded`, `decodeCheck` | 纯 CP Bitcoin Base58 & Base58Check 双重 SHA-256 校验和编解码引擎（支持前导零映射、版本号与防篡改校验，支持 `cap.base58_check` 自动动态挂载，详见 `doc/lib/base58_check.md`） |
 | `cap:rope_text` | `RopeError`, `Rope` | 纯 CP 大文本编辑器平衡二叉树 Rope 引擎（分块叶子、缓存行/字节权重、$O(\log N)$ 插入/删除/`lineAt` 行定位与零泄漏切片拼接，支持 `cap.rope_text` 自动动态挂载，详见 `doc/lib/rope_text.md`） |
 | `cap:bptree` | `BPTREE_ORDER`, `BPlusTree` | 纯 CP 内存有序索引 B+ 树引擎（多层节点分裂、叶子链表 `rangeScan` 范围扫描与动态删除重平衡，支持 `cap.bptree` 自动动态挂载，详见 `doc/lib/bptree.md`） |
 | `cap:kmp_z_algo` | `PalindromeSpan`, `computeLps`, `kmpFindFirst`, `kmpFindAll`, `zArray`, `longestPalindrome` | 纯 CP 线性时间 $O(N)$ 字符串算法库（KMP 前缀表与全重叠匹配、Z-Algorithm `zArray` 与 Manacher 最长回文子串，支持 `cap.kmp_z_algo` 自动动态挂载，详见 `doc/lib/kmp_z_algo.md`） |
-| `cap:consistent_jump` | `JumpError`, `WeightedNode`, `jumpConsistentHash`, `jumpConsistentHashBytes`, `hrwSelect`, `hrwSelectWeighted` | 纯 CP Google Jump Consistent Hash 零内存分片与 Rendezvous HRW 等权/加权无状态路由引擎（支持 `cap.consistent_jump` 自动动态挂载，详见 `doc/lib/consistent_jump.md`） |
 | `cap:suffix_array` | `SuffixArray` | 纯 CP 后缀数组与 Kasai $O(N)$ LCP 数组引擎（$O(M \log N)$ 二分子串检索、`countOccurrences`、`searchAll` 与最长重复子串，支持 `cap.suffix_array` 自动动态挂载，详见 `doc/lib/suffix_array.md`） |
-| `cap:consistent_maglev` | `DEFAULT_TABLE_SIZE`, `MaglevError`, `Backend`, `MaglevRouter` | 纯 CP Google Maglev $O(1)$ 一致性哈希查表路由引擎（置换表均匀分布、加权后端比例路由与最小迁移扰动，支持 `cap.consistent_maglev` 自动动态挂载，详见 `doc/lib/consistent_maglev.md`） |
 | `cap:geohash_3d` | `MortonError`, `Point3D`, `mortonEncode3D`, `mortonDecode3D`, `quantizeEncode3D`, `haversineMeters` | 纯 CP 3D Morton Z-Order 21-bit 空间填充曲线编码与 WGS84 Haversine 球面大圆测距引擎（支持 `cap.geohash_3d` 自动动态挂载，详见 `doc/lib/geohash_3d.md`） |
 | `cap:crdt_pn` | `CounterEntry`, `GCounter`, `PNCounter`, `LWWRegister`, `GSet` | 纯 CP 分布式状态型无冲突复制数据类型 (State-Based CRDTs) 套件（`GCounter`、`PNCounter`、`LWWRegister` 与 `GSet`，满足半格幂等/交换/结合律 `merge`，支持 `cap.crdt_pn` 自动动态挂载，详见 `doc/lib/crdt_pn.md`） |
 | `cap:geo_quadtree` | `QuadError`, `Rect`, `PointItem`, `QuadTree` | 纯 CP 2D 平面空间四叉树索引引擎（矩形包围盒 `queryRect` 与欧氏圆半径 `queryRadius` 检索，支持 `cap.geo_quadtree` 自动动态挂载，详见 `doc/lib/geo_quadtree.md`） |
@@ -405,7 +401,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:node_builtins` | `RuntimeTarget`, `ModuleTag`, `BuiltinAlias`, `resolveAlias`, `isBuiltin`, `canonicalizeNode` | 纯 CP Node.js & Bun 内建模块映射与规范化注册表（吸收自 Bun `src/resolve_builtins/HardcodedModule.cp`，支持 `cap.node_builtins` 自动动态挂载，详见 `doc/lib/node_builtins.md`） |
 | `cap:bundle_options` | `Format`, `parseFormat`, `BundlePackage`, `GlobalCache`, `parseGlobalCache`, `OfflineMode`, `parseOfflineMode`, `NodeLinker`, `parseNodeLinker`, `WindowsOptions` | 纯 CP 打包输出格式、全局缓存策略、离线模式与包链接模式枚举引擎（吸收自 Bun `src/options_types/` 与 `src/install_types/`，支持 `cap.bundle_options` 自动动态挂载，详见 `doc/lib/bundle_options.md`） |
 | `cap:command_tag` | `Tag`, `fromSubcommand` | 纯 CP CLI 32 种子命令判别、遥测码、NPM 判定与配置加载策略引擎（吸收自 Bun `src/options_types/CommandTag.cp`，支持 `cap.command_tag` 自动动态挂载，详见 `doc/lib/command_tag.md`） |
-| `cap:mime_type` | `Category`, `classifyMime`, `byExtension`, `byPath` | 纯 CP MIME 类型语义分类与零堆扩展名/路径反查引擎（吸收自 Bun `src/http_types/MimeType.cp`，支持 `cap.mime_type` 自动动态挂载，详见 `doc/lib/mime_type.md`） |
 | `cap:small_string` | `MAX_INLINE_LEN`, `SmallString`, `ExternalString`, `StringInternPool` | 纯 CP 8 字节短串内联 (SSO) 与 Wyhash 去重驻留池引擎（吸收自 Bun `src/install_types/{SemverString,ExternalString,SlicedString}.cp`，支持 `cap.small_string` 自动动态挂载，详见 `doc/lib/small_string.md`） |
 | `cap:coverage_options` | `Reporter`, `Reporters`, `CoverageFraction`, `CoverageMetrics`, `CodeCoverageOptions`, `formatLcovRecord` | 纯 CP 代码覆盖率配置、阈值判定与 LCOV 格式化引擎（吸收自 Bun `src/options_types/CodeCoverageOptions.cp`，支持 `cap.coverage_options` 自动动态挂载，详见 `doc/lib/coverage_options.md`） |
 | `cap:feature_flags` | `FeatureFlags`, `parseBoolEnv`, `parseUintEnv`, `parseBoolOr`, `parseUintOr` | 纯 CP 特性开关与环境变量强类型容错解析引擎（吸收自 Bun `src/bun_core/{feature_flags,env_var}.cp`，支持 `cap.feature_flags` 自动动态挂载，详见 `doc/lib/feature_flags.md`） |
@@ -413,7 +408,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:exact_matcher` | ExactSizeMatcher, Matcher4, Matcher8, Matcher16, packU32, packU32Lower, packU64, packU64Lower, packU128, packU128Lower | 纯 CP 定长整型打包（1/2/4/8/12/16 字节）O(1) 无分支字符串快速匹配器 |
 | `cap:intrusive_heap` | IntrusiveField, IntrusiveHeap | 纯 CP 零堆分配侵入式配对最小堆（均摊 O(1) 插入/合并，O(log N) 弹出/任意删除） |
 | `cap:padding_checker` | hasPadding, assertNoPadding, totalPaddingBytes, fieldSumSize | 编译期结构体内存布局零填充断言与字节统计（源自 Bun install/padding_checker.cp） |
-| `cap:js_op` | OpCode, Level, precedence, isRightAssociative, isAssign, isBinary, isUnary, isPrefix, isPostfix, unparse, toString | 完整 JavaScript/TypeScript AST 运算符枚举、Pratt 优先级表与分类查询（源自 Bun js_parser/ast/Op.cp） |
 | `cap:css_text_list` | TextTransformCase, TextTransformOther, WhiteSpace, WordBreak, OverflowWrap, TextAlign, TextDecorationLine, Direction, ListStyleType, ListStylePosition, FilterKind, BlendMode, BoxShadowFlags | CSS 文本排版、列表标记与滤镜/混合模式枚举及位标志集合（源自 Bun css/properties/{text,list,effects}.cp） |
 | `cap:quic_header` | QUIC_VERSION_1, QUIC_VERSION_2, QuicHeaderError, DecodedVarInt, varIntEncodedLen, encodeVarInt, decodeVarInt, QuicPacketKind, QuicHeader, encodeQuicHeader, decodeQuicHeader, QpackHeaderClass, QpackIndex, classifyQpackHeader, SocketKind, socketKindFromByte | RFC 9000 QUIC 长/短头与变长整数编解码、HTTP/3 QPACK 静态表分类及 SocketKind 枚举（源自 Bun uws_sys/quic/Header.cp + SocketKind.cp） |
 | `cap:exif` | Transform, Orientation, parseTiff, readJpeg | 纯 CP 零依赖 JPEG APP1/Exif 与大小端 TIFF IFD0 Orientation 标签解析与像素校正变换（源自 Bun runtime/image/exif.cp） |
@@ -424,7 +418,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:type_traits` | isByteString, isSlice, isSingleItemPtr, isConstPtr, isOptional, isInteger, isFloat, isNumber, isStruct, isEnum, isUnion, isContainer, isExternContainer, isPackedContainer, isIndexable, PointerKind, PointerParseOptions, PointerMeta | 零运行期开销的编译期类型特征谓词与 PointerMeta 指针规范解析器（源自 Bun meta/traits.cp + ptr/meta.cp） |
 | `cap:h2_frame` | CLIENT_PREFACE, FRAME_HEADER_SIZE, SETTINGS_UNIT_SIZE, STREAM_PRIORITY_SIZE, H2FrameError, FrameType, ErrorCode, SettingsType, UInt31WithReserved, FrameHeader, StreamPriority, SettingsUnit, hasClientPreface | 纯 CP 零依赖 HTTP/2 9 字节大端帧头、SETTINGS 单元、流优先级与客户端连接前言编解码（源自 Bun http/H2FrameParser.cp） |
 | `cap:autolink` | AutolinkKind, AutolinkSpan, ScanUrlResult, isListBullet, isListItemMark, isInSet, checkLeftBoundary, checkRightBoundary, scanUrlComponent, postProcessAutolinkEnd, findPermissiveAutolink, findNextAutolink | 纯 CP 零依赖 GFM 宽松 URL/WWW/Email 自动链接检测与尾部不配对括号/HTML 实体裁剪（源自 Bun md/autolinks.cp） |
-| `cap:case_fold` | FoldInfo, caseFold, caseFoldEqual | 纯 CP 零堆分配全量 Unicode 1→1/1→2/1→3 码点大小写折叠与零分配序列比较（源自 Bun md/unicode.cp） |
 | `cap:vlq` | MAX_VLQ_BYTES, BASE64_ALPHABET, ZERO, Error, VLQ, VLQResult, encode, encodeSlowPath, encodeInto, encodeSliceInto, decodeChecked, decode, decodeSegment | 编译期 0..255 查表加速的 Base64-VLQ 编解码器，支持全量 i32 边界与流式段解码（源自 Bun sourcemap/VLQ.cp） |
 | `cap:static_hashmap` | fnv1a64, fnv1a64AsciiLower, splitmix64, StringContext, AsciiIgnoreCaseContext, IntContext, EMPTY_HASH, Error, KeyValue, Slot, StaticHashMap | 编译期可构建、运行期零堆分配 O(1) 开放寻址静态哈希表（源自 Bun collections/StaticHashMap.cp） |
 | `cap:char_freq` | CHAR_FREQ_COUNT, HEAD_CHAR_COUNT, TAIL_CHAR_COUNT, CharAndCount, NameMinifier, CharFreq | 纯 CP 零堆分配 64 桶标识符字符频次直方图与按频次排序 Base-54/64 短名生成器（源自 Bun js_parser/ast/CharFreq.cp） |
@@ -474,11 +467,8 @@ const h = cap.hash.wyhash("hello");
 | `cap:sourcemap_index` | MappingEntry, SourceMapIndex | SourceMap v3 Base64-VLQ mappings 零堆分配解码器与 O(log N) 二分查找原始源码定位器（吸收自 bun/src/sourcemap/Mapping.cp） |
 | `cap:human_fmt` | TableStyle, formatBytes, formatDurationNs, redactUrl, formatTableBorder, formatTableRow | 零堆分配人类可读格式化工具库（字节大小/纳秒耗时/URL 密码与 UUID/npm 令牌脱敏/Unicode&ASCII 终端表格渲染，吸收自 bun/src/bun_core/fmt.cp） |
 | `cap:content_range` | ByteRange, RangeStatus, ParsedRangeHeader, parseRangeHeader, formatContentRange, formatUnsatisfiedRange, ParsedContentRange, parseContentRange | RFC 9110 §14 HTTP Range 请求头与 Content-Range 响应头零堆分配解析与格式化库（206/416 分片传输，吸收自 bun/src/http/SendFile.cp） |
-| `cap:diff_unified` | DiffOpKind, DiffLine, DiffSummary, diffLines, summarize, formatUnified | 基于栈上 LCS 动态规划的行级 Unified Diff 计算与相邻上下文 Hunk 自动合并格式化库（吸收自 bun/src/test_runner/diff/printDiff.cp 与 diff_format.cp） |
 | `cap:lcov_report` | LineHit, CoverageThresholds, FileCoverage, parseLcovRecord | LCOV 代码覆盖率报告零堆分配记录、百分比统计、阈值校验与双向解析/序列化库（吸收自 bun/src/options_types/CodeCoverageOptions.cp） |
-| `cap:mime_lookup` | MimeCategory, ContentType, mimeFromExtension, categoryFromMime | 65+ Web/系统高频扩展名 MIME 查表、Content-Type 头部（charset/boundary）解析与可压缩性判定库（吸收自 bun/src/http_types/{MimeType,mime_type_list_enum}.cp） |
 | `cap:dotenv_parse` | DotEnvQuote, DotEnvEntry, DotEnvIterator, unescapeDoubleQuoted, expandVars | 零堆分配 .env 配置文件解析器（BOM/export/4 种引号/多行/行尾注释）与 ${VAR:-default} 变量展开器（吸收自 bun/src/bun_core/env.cp） |
-| `cap:js_ident` | KeywordKind, classifyKeyword, isReservedWord, isValidAsciiIdent, isValidPrivateIdent, needsPropertyQuoting, escapeJsString | ECMAScript/TS 56 关键字分类、ASCII/私有字段标识符校验、属性加引号判定与 JS 字符串转义库（吸收自 bun/src/js_parser/lexer/） |
 | `cap:csv_stream` | CsvField, CsvRow, CsvReader, needsCsvQuoting, formatCsvField, formatCsvRow, unescapeField | RFC 4180 CSV / TSV 零堆分配流式字段/行解析器（自定义分隔符/引号内换行/"" 转义还原）与编码器（吸收自 bun/src/bun_core/fmt.cp） |
 | `cap:cors_policy` | CorsConfig, CorsDecision, CorsPolicy | WHATWG Fetch CORS 策略配置、Simple/Preflight 预检评估与凭证回显/Vary: Origin 决策引擎（吸收自 bun/src/http_types/FetchRequestMode.cp） |
 | `cap:retry_backoff` | JitterMode, BackoffConfig, BackoffState, RetryAfter, parseRetryAfter, isRetryableHttpStatus | 零堆分配指数退避重试调度器（Full/Equal Jitter + SplitMix64 确定性种子）与 RFC 9110 Retry-After 解析库（吸收自 bun/src/http/HTTPContext.cp） |
@@ -492,7 +482,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:uri_normalize` | isUnreserved, defaultPortForScheme, normalizePercentEncoding, removeDotSegments, normalizeOrigin | RFC 3986 URI 路径点段归约（§5.2.4）、百分号编码规范化与协议默认端口剥离工具 |
 | `cap:w3c_traceparent` | TraceParent, TraceStateEntry, TraceStateIter, findTraceState | W3C Trace Context Level 1 traceparent / tracestate 分布式追踪头零分配解析与格式化器 |
 | `cap:byte_size` | parseByteSize, formatBytesIec, formatBytesSi | 纯整数人类可读字节大小解析器（SI/IEC 小数支持与溢出防护）及 SI/IEC 格式化器 |
-| `cap:case_convert` | WordIter, toSnakeCase, toScreamingSnakeCase, toKebabCase, toCamelCase, toPascalCase | 零分配缩写感知标识符命名风格转换器（snake_case / SCREAMING_SNAKE_CASE / kebab-case / camelCase / PascalCase） |
 | `cap:structured_headers` | SfItemKind, SfItem, parseSfItem, SfParam, SfParamIter, formatSfString, formatSfByteSeq | RFC 8941 HTTP Structured Field Values 标量项（整数/小数/字符串/Token/字节序列/布尔）与参数列表零分配解析器 |
 | `cap:punycode` | isAsciiOnly, encodePunycode, decodePunycode, encodeIdnLabel, decodeIdnLabel | RFC 3492 Punycode / Bootstring 零分配编解码器与 xn-- 国际化域名标签转换器 |
 | `cap:slugify` | slugifyWithSep, slugify, slugifyBounded, isValidSlug | 零分配 URL 安全 Slug 生成器（标点折叠、撇号省略、词边界截断与规范校验） |
@@ -514,3 +503,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:pg` | `PgAuth`, `PgCopySasl`, `PgExtendedQuery`, `DiagSqlStateClass`, `PgOid`, `PgReader`, `SqlStateClass`, `PgWireType` | PostgreSQL 线协议全套认证、SASL/COPY、扩展查询、OID、SQLSTATE 与二进制流解析统一主包（`lib/pg_*` 全仓清零） |
 | `cap:mysql` | `AuthError`, `CapsCapabilities`, `ControlError`, `HandshakeV10`, `HandshakeResponse41`, `StatusFlag`, `WireHandshakeV10`, ... | MySQL 线协议全套认证、能力位、握手、字段类型、控制报文与二进制帧解析统一主包（`lib/mysql_*` 全仓清零） |
 | `cap:markdown` | `LineAnalysis`, `MarkdownLink`, `RefDef`, ... | Markdown 行分析、链接与引用定义统一主包（同步收敛 `cap:unicode`/`cap:s3`/`cap:shell`） |
+| `cap:js` | `JsIdent`, `JsOp`, ... | JS 标识符与运算符解析统一主包（同步收敛 `cap:hash`/`cap:text`/`cap:diff`/`cap:mime`） |

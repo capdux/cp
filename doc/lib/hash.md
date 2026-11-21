@@ -115,3 +115,12 @@ pub fn demoStreamingHashes() {
 | **CityHash64** | `Bun.hash.cityHash64(input)` | `std.hash.CityHash64` | `Hash.cityhash64(input)` |
 | **CRC32 / Adler32** | `Bun.hash.crc32` / `adler32` | `std.hash.Crc32` / `Adler32` | `Hash.crc32(input)` / `Hash.adler32(input)` |
 | **FNV-1a / djb2 / SipHash**| 内部使用 | `std.hash.Fnv1a_64` / `SipHash`| `Hash.fnv1a` / `Hash.fnv1a32` / `Hash.djb2` / `Hash.siphash` |
+
+
+---
+
+## 一致性哈希子模块（已收敛至 `cap:hash`）
+
+- **`lib/hash/conshash.cp`（虚拟节点哈希环）**：`ConsistentHashError`, `HashRing`
+- **`lib/hash/jump.cp`（Jump Consistent Hash & HRW 最高随机权重）**：`JumpError`, `jumpConsistentHash`, `jumpConsistentHashBytes`, `WeightedNode`, `hrwSelect`, `hrwSelectWeighted`
+- **`lib/hash/maglev.cp`（Google Maglev 查表路由）**：`DEFAULT_TABLE_SIZE`, `MaglevError`, `Backend`, `MaglevRouter`

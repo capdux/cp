@@ -8,7 +8,7 @@ import {
     MaglevError,
     Backend,
     MaglevRouter,
-} from "cap:consistent_maglev";
+} from "cap:hash";
 
 test "maglev 3-backend O(1) lookup balance (>25% each)" {
     let router = try MaglevRouter.init(std.testing.allocator, 997);

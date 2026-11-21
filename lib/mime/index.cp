@@ -31,3 +31,17 @@ export {
     sanitizeFilename,
     formatAttachment,
 } from "./disposition.cp";
+
+export {
+    MimeCategory,
+    ContentType,
+    mimeFromExtension,
+    categoryFromMime,
+} from "./lookup.cp";
+
+export {
+    Category,
+    classifyMime,
+    byExtension,
+    byPath,
+} from "./type.cp";

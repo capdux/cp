@@ -12,7 +12,28 @@ export {
     tokenizeWordsAlloc,
 } from "./myers.cp";
 
+import linediffMod from "./linediff.cp";
+import unifiedMod from "./unified.cp";
+
 export {
     MergeResult,
     UnifiedDiff,
 } from "./patch.cp";
+
+export {
+    DiffOp,
+    DiffResult,
+    diffLines,
+    reconstructNew,
+    formatUnifiedDiff,
+} from "./linediff.cp";
+export const MyersOpKind = linediffMod.DiffOpKind;
+
+export {
+    DiffLine,
+    DiffSummary,
+    summarize,
+    formatUnified,
+} from "./unified.cp";
+export const UnifiedOpKind = unifiedMod.DiffOpKind;
+export const unifiedDiffLines = unifiedMod.diffLines;

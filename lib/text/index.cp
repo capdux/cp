@@ -36,3 +36,18 @@ export {
     dedentLines,
     truncateEllipsis,
 } from "./wrap.cp";
+
+export {
+    WordIter,
+    toSnakeCase,
+    toScreamingSnakeCase,
+    toKebabCase,
+    toCamelCase,
+    toPascalCase,
+} from "./caseconv.cp";
+
+export {
+    FoldInfo,
+    caseFold,
+    caseFoldEqual,
+} from "./casefold.cp";

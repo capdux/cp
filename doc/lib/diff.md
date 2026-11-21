@@ -74,3 +74,11 @@ pub fn demoDiff(): ! {
     * = restored;
 }
 ```
+
+
+---
+
+## 扩展行级 Myers 与轻量 Unified Diff（已收敛至 `cap:diff`）
+
+- **`lib/diff/linediff.cp`**：`MyersOpKind`, `DiffOp`, `DiffResult`, `diffLines`, `reconstructNew`, `formatUnifiedDiff`
+- **`lib/diff/unified.cp`**：`UnifiedOpKind`, `DiffLine`, `DiffSummary`, `unifiedDiffLines`, `summarize`, `formatUnified`

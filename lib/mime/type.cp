@@ -1,4 +1,4 @@
-// Source: absorbed from bun/src/http_types/MimeType.cp (cap:mime_type)
+// Source: absorbed from bun/src/http_types/MimeType.cp (cap:mime)
 const std = @import("std");
 
 pub const Category = enum {
