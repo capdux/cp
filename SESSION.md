@@ -208,3 +208,9 @@
 
 ### 2026-11-22（`cap:thumbhash` 验收，吸收 Bun runtime/image/thumbhash.cp -> cap:thumbhash，测试 3/3 通过。）
 - **执行成果**：`lib/thumbhash/`（5/5 PASS，`doc/lib/thumbhash.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun runtime/image/thumbhash.cp -> cap:thumbhash，测试 3/3 通过。
+
+### 2026-11-22（`cap:css_time` 验收，吸收 Bun css/values/time.cp -> cap:css_time，测试 2/2 通过。）
+- **执行成果**：`lib/css_time/`（5/5 PASS，`doc/lib/css_time.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun css/values/time.cp -> cap:css_time，测试 2/2 通过。
+
+### 2026-11-22（`cap:css_at_rules` 验收，吸收 Bun CSS @keyframes/@layer/@counter-style/@property -> cap:css_at_rules，测试 5/5 通过。）
+- **执行成果**：`lib/css_at_rules/`（5/5 PASS，`doc/lib/css_at_rules.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun CSS @keyframes/@layer/@counter-style/@property -> cap:css_at_rules，测试 5/5 通过。

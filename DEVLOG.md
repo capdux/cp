@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-22: CSS @keyframes/@layer/@counter-style/@property 规则集（5/5 PASS，文档直写 `doc/lib/css_at_rules.md`）
+从 Bun css/rules/{keyframes,layer,counter_style,property}.cp 吸收四大 CSS @ 规则元数据与校验模型，零堆分配内联实现。
+
+## 2026-11-22: CSS <time> 时间值解析、运算与规范序列化（5/5 PASS，文档直写 `doc/lib/css_time.md`）
+从 Bun css/values/time.cp 吸收 CSS <time> 单位解析与最短规范序列化（0.05s→50ms、500ms→0.5s、0ms→0s），纯 CP 零堆分配。
+
 ## 2026-11-22: ThumbHash 超紧凑图片占位符编解码器（5/5 PASS，文档直写 `doc/lib/thumbhash.md`）
 从 Bun runtime/image/thumbhash.cp 吸收完整 ThumbHash DCT/IDCT 编解码引擎，补充 approxAspectRatio/averageRGBA 零分配查询与 ~init() 确定性释放。
 

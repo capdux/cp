@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - CSS @keyframes/@layer/@counter-style/@property 规则集（5/5 PASS，自动动态挂载 `cap.css_at_rules`）
+新增 cap:css_at_rules 标准库（lib/css_at_rules/、doc/lib/css_at_rules.md、cap/test/test_css_at_rules_production_deep.cp），5/5 回归通过。
+
+## [2026-11-22] - CSS <time> 时间值解析、运算与规范序列化（5/5 PASS，自动动态挂载 `cap.css_time`）
+新增 cap:css_time 标准库（lib/css_time/、doc/lib/css_time.md、cap/test/test_css_time_production_deep.cp），2/2 回归通过。
+
 ## [2026-11-22] - ThumbHash 超紧凑图片占位符编解码器（5/5 PASS，自动动态挂载 `cap.thumbhash`）
 新增 cap:thumbhash 标准库（lib/thumbhash/、doc/lib/thumbhash.md、cap/test/test_thumbhash_production_deep.cp），3/3 回归通过（零泄漏）。
 
