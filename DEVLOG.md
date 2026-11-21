@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:stp` 零分配 IEEE 802.1D/802.1w/802.1t STP & RSTP BPDU 编解码器（5/5 PASS，文档直写 `doc/lib/stp.md`）
+实现零分配 STP/RSTP BPDU 编解码器，支持 Port Role 判定与 Proposal/Agreement/Forwarding 标志。
+
 ## 2026-11-22: 新建 `cap:igmp` 零分配 RFC 1112/2236/3376 IGMP v1/v2/v3 组播协议与校验和编解码器（5/5 PASS，文档直写 `doc/lib/igmp.md`）
 实现零分配 IGMP v1/v2/v3 组播成员管理编解码器，支持源地址列表与 Aux Data 跳过。
 

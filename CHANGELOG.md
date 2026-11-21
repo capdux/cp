@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:stp` 零分配 IEEE 802.1D/802.1w/802.1t STP & RSTP BPDU 编解码器（5/5 PASS，自动动态挂载 `cap.stp`）
+新增 `lib/stp/{stp,index}.cp`、`doc/lib/stp.md` 与 `cap/test/test_stp_production_deep.cp`（5/5 PASS），支持 802.1t Bridge ID、Config/RSTP/TCN BPDU 编解码与 1/256s 定时器换算。
+
 ## [2026-11-22] - 新建 `cap:igmp` 零分配 RFC 1112/2236/3376 IGMP v1/v2/v3 组播协议与校验和编解码器（5/5 PASS，自动动态挂载 `cap.igmp`）
 新增 `lib/igmp/{igmp,index}.cp`、`doc/lib/igmp.md` 与 `cap/test/test_igmp_production_deep.cp`（6/6 PASS），支持 IGMPv1/v2/v3 Query/Report、v3 Group Record 迭代、浮点时间码与 RFC 1071 校验和。
 
