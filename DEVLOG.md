@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:dds` 零分配 DirectDraw Surface `.dds` GPU 纹理 128/148 字节头、DX10 扩展与 BCn Mip 尺寸计算器（5/5 PASS，文档直写 `doc/lib/dds.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:dds`，与 `cap:wgsl`/`cap:glsl` 配套补齐 GPU 渲染资产解析生态。
+
 ## 2026-11-22: 新建 `cap:stl` 零分配 3D STL 二进制与 ASCII 三角网格解析、包围盒统计与二进制编码器（5/5 PASS，文档直写 `doc/lib/stl.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:stl`；`detectStlFormat` 优先校验 `84 + 50*N` 精确长度防止头含 `"solid "` 的二进制文件误判。
 

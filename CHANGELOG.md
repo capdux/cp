@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:dds` 零分配 DirectDraw Surface `.dds` GPU 纹理 128/148 字节头、DX10 扩展与 BCn Mip 尺寸计算器（5/5 PASS，自动动态挂载 `cap.dds`）
+- 新增 `lib/dds/{dds,index}.cp`、`doc/lib/dds.md`、`cap/test/test_dds_production_deep.cp`：纯 CP 零分配实现 DDS 128B/DX10 148B GPU 纹理头解析、Cubemap/Volume 判定与防溢出 BCn Mip 层字节计算（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:stl` 零分配 3D STL 二进制与 ASCII 三角网格解析、包围盒统计与二进制编码器（5/5 PASS，自动动态挂载 `cap.stl`）
 - 新增 `lib/stl/{stl,index}.cp`、`doc/lib/stl.md`、`cap/test/test_stl_production_deep.cp`：纯 CP 零分配实现 3D STL 二进制/ASCII 格式判别、小端 IEEE 754 面片迭代、包围盒统计与二进制编码（5/5 PASS）。
 

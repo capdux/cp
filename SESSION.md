@@ -190,3 +190,6 @@
 
 ### 2026-11-22（`cap:stl` 验收，新增简洁单单词包 `cap:stl`（5/5 PASS））
 - **执行成果**：`lib/stl/`（5/5 PASS，`doc/lib/stl.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:stl`（5/5 PASS）
+
+### 2026-11-22（`cap:dds` 验收，新增简洁单单词包 `cap:dds`（5/5 PASS））
+- **执行成果**：`lib/dds/`（5/5 PASS，`doc/lib/dds.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:dds`（5/5 PASS）
