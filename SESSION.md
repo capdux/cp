@@ -109,3 +109,6 @@
 
 ### 2026-11-22（`cap:hcl` 验收，新增简洁单单词包 `cap:hcl`（5/5 PASS），同时发现并实时通知热修子智能体 `567b0f0a` 顺手修复 `cp_unpack_elem` 冗余 `comptime` 关键字）
 - **执行成果**：`lib/hcl/`（5/5 PASS，`doc/lib/hcl.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:hcl`（5/5 PASS），同时发现并实时通知热修子智能体 `567b0f0a` 顺手修复 `cp_unpack_elem` 冗余 `comptime` 关键字
+
+### 2026-11-22（`cap:wgsl` 验收，新增简洁单单词包 `cap:wgsl`（5/5 PASS）；`capsurf_agy` 热修 `#105`（`cp_unpack_elem` 冗余 `comptime`）已合单派发至 `567b0f0a`）
+- **执行成果**：`lib/wgsl/`（5/5 PASS，`doc/lib/wgsl.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:wgsl`（5/5 PASS）；`capsurf_agy` 热修 `#105`（`cp_unpack_elem` 冗余 `comptime`）已合单派发至 `567b0f0a`
