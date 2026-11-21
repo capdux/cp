@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:lacp` LACP (IEEE 802.1AX/802.3ad) 110B/124B LACPDU zero-alloc parser & encoder（5/5 PASS，自动动态挂载 `cap.lacp`）
+新增纯 CP 零分配标准库 cap:lacp（IEEE 802.1AX/802.3ad LACPDU 解析与编码器）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:cdp` CDP v1/v2 (Cisco Discovery Protocol) TLV parser, writer & RFC 1071 checksum（5/5 PASS，自动动态挂载 `cap.cdp`）
 新增纯 CP 零分配标准库 cap:cdp（Cisco Discovery Protocol v1/v2 TLV 解析/编码器与 RFC 1071 校验和）与 5/5 深度测试
 

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:lacp` LACP (IEEE 802.1AX/802.3ad) 110B/124B LACPDU zero-alloc parser & encoder（5/5 PASS，文档直写 `doc/lib/lacp.md`）
+新增 cap:lacp 纯 CP 零分配链路聚合控制协议库（Actor/Partner/Collector/Terminator TLV 解析、8 位状态判定与标准 110B/124B 编码往返），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:cdp` CDP v1/v2 (Cisco Discovery Protocol) TLV parser, writer & RFC 1071 checksum（5/5 PASS，文档直写 `doc/lib/cdp.md`）
 新增 cap:cdp 纯 CP 零分配网络拓扑发现协议库（CDPv1/v2 报头、奇偶字节校验和、TLV 零拷贝迭代与 CdpWriter 编码），通过 cpc check 与 5/5 cap test
 
