@@ -256,3 +256,6 @@
 
 ### 2026-11-22（`cap:pdb` 验收，完成 `cap:pdb` 交付验收并登记入库（6/6 PASS）；派发 `cap:sdf`。）
 - **执行成果**：`lib/pdb/`（5/5 PASS，`doc/lib/pdb.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:pdb` 交付验收并登记入库（6/6 PASS）；派发 `cap:sdf`。
+
+### 2026-11-22（`cap:dicom` 验收，完成 `cap:dicom` 交付验收并登记入库（5/5 PASS）；派发 `cap:mseed`。）
+- **执行成果**：`lib/dicom/`（5/5 PASS，`doc/lib/dicom.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:dicom` 交付验收并登记入库（5/5 PASS）；派发 `cap:mseed`。

@@ -638,3 +638,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:sam` | SAM_FLAG_PAIRED, SAM_FLAG_UNMAPPED, CigarOp, CigarIter, SamHeaderLine, SamHeaderIter, SamRecord, SamRecordIter, SamStats, cigarRefLen, cigarQueryLen, findSamHeaderTag, parseSamLine, summarizeSam | 零分配生物信息学 SAM v1.6 序列比对 FLAG 与 CIGAR 解析器 |
 | `cap:gff` | GFF_PHASE_NONE, GffRecord, GffIter, GffStats, isGff3, parseGffLine, summarizeGff | 零分配生物信息学 GFF3 / GTF2 基因特征注释与属性键值解析器 |
 | `cap:pdb` | PdbHeader, PdbAtom, PdbConect, PdbAtomIter, PdbConectIter, PdbStats, isPdb, parsePdbHeader, parsePdbAtomLine, parsePdbConectLine, summarizePdb | 零分配 RCSB Protein Data Bank (.pdb) v3.3 生物大分子 3D 结构解析器 |
+| `cap:dicom` | DICOM_PREAMBLE_SIZE, DICOM_MAGIC, DICOM_DATA_OFFSET, DICOM_UNDEFINED_LEN, DicomTag, DicomElement, DicomIter, DicomSummary, isDicom, parseDicomSummary | 零分配医学影像 DICOM PS3.10 Explicit/Implicit VR 数据元素解析器 |

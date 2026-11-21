@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:dicom` 零分配医学影像 DICOM PS3.10 Explicit/Implicit VR 数据元素解析器（5/5 PASS，自动动态挂载 `cap.dicom`）
+新增 `lib/dicom/{dicom,index}.cp`、`doc/lib/dicom.md` 与 `cap/test/test_dicom_production_deep.cp`（5/5 PASS），支持 Group 0002 Transfer Syntax 自动切换 Explicit/Implicit LE/BE、13 种长 VR 与未定义长度 SQ 跳过。
+
 ## [2026-11-22] - 新建 `cap:pdb` 零分配 RCSB Protein Data Bank (.pdb) v3.3 生物大分子 3D 结构解析器（5/5 PASS，自动动态挂载 `cap.pdb`）
 新增 `lib/pdb/{pdb,index}.cp`、`doc/lib/pdb.md` 与 `cap/test/test_pdb_production_deep.cp`（6/6 PASS），支持 80 列 HEADER/ATOM/HETATM/MODEL/CONECT 解析、3D 欧氏距离与质心统计。
 
