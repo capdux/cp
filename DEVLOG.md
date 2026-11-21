@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:rle` Pure-CP zero-alloc RLE codec suite: PackBits (TIFF/PSD), PCX, TGA pixels & RLE0（5/5 PASS，文档直写 `doc/lib/rle.md`）
+新增 cap:rle 纯 CP 零分配多标准游程编码库（PackBits/PCX/TGA/RLE0 双向编解码与溢出防护），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:lzss` Pure-CP zero-alloc LZSS (4KB window, 3..18B match, overlapping RLE) codec（5/5 PASS，文档直写 `doc/lib/lzss.md`）
 新增 cap:lzss 纯 CP 零分配滑动窗口压缩库（Flag Byte 分组、3..18B 匹配与 4B Framed 封装），通过 cpc check 与 5/5 cap test
 
