@@ -55,3 +55,15 @@
 
 ### 2026-11-22（`cap:docker_image_ref` 验收，Batch 68 注册 `cap:docker_image_ref` 并提交（累计 216 模块）。）
 - **执行成果**：`lib/docker_image_ref/`（5/5 PASS，`doc/lib/docker_image_ref.md`）经 `verify_module.sh` 一次性验收回收；Batch 68 注册 `cap:docker_image_ref` 并提交（累计 216 模块）。
+
+### 2026-11-22（`cap:ssh_config` 验收，Batch 69 完成 `cap:ssh_config`、`cap:brace_expand`、`cap:mime_headers`、`cap:mac_addr` 4 模块吸收与全量验收。）
+- **执行成果**：`lib/ssh_config/`（5/5 PASS，`doc/lib/ssh_config.md`）经 `verify_module.sh` 一次性验收回收；Batch 69 完成 `cap:ssh_config`、`cap:brace_expand`、`cap:mime_headers`、`cap:mac_addr` 4 模块吸收与全量验收。
+
+### 2026-11-22（`cap:brace_expand` 验收，Batch 69 注册 `cap:brace_expand`。）
+- **执行成果**：`lib/brace_expand/`（5/5 PASS，`doc/lib/brace_expand.md`）经 `verify_module.sh` 一次性验收回收；Batch 69 注册 `cap:brace_expand`。
+
+### 2026-11-22（`cap:mime_headers` 验收，Batch 69 注册 `cap:mime_headers`。）
+- **执行成果**：`lib/mime_headers/`（5/5 PASS，`doc/lib/mime_headers.md`）经 `verify_module.sh` 一次性验收回收；Batch 69 注册 `cap:mime_headers`。
+
+### 2026-11-22（`cap:mac_addr` 验收，Batch 69 注册 `cap:mac_addr` 并提交（累计 220 模块）。）
+- **执行成果**：`lib/mac_addr/`（5/5 PASS，`doc/lib/mac_addr.md`）经 `verify_module.sh` 一次性验收回收；Batch 69 注册 `cap:mac_addr` 并提交（累计 220 模块）。

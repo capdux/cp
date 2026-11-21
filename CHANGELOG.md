@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:mac_addr` IEEE 802 MAC-48 / EUI-48 硬件地址零分配解析器（4 种格式）、位分类器与 RFC 4291 EUI-64 派生器（5/5 PASS，自动动态挂载 `cap.mac_addr`）
+新增 `cap:mac_addr`（`lib/mac_addr/{mac,index}.cp`、`doc/lib/mac_addr.md`、`cap/test/test_mac_addr_production_deep.cp`），支持冒号/连字符/Cisco 点分/裸十六进制、单播/组播/LAA 分类与 EUI-64 生成。
+
+## [2026-11-22] - 新建 `cap:mime_headers` RFC 5322 / MIME 头块零分配解析器（头体分离、obs-fold 折行展开、大小写不敏感查询与重复头计数）（5/5 PASS，自动动态挂载 `cap.mime_headers`）
+新增 `cap:mime_headers`（`lib/mime_headers/{headers,index}.cp`、`doc/lib/mime_headers.md`、`cap/test/test_mime_headers_production_deep.cp`），遵循 RFC 5322 §2.2.3 将续行折叠为单空格并兼容 CRLF/LF。
+
+## [2026-11-22] - 新建 `cap:brace_expand` 零分配 Bash 风格花括号展开迭代器（逗号列表、步进/补零整数序列与字母序列）（5/5 PASS，自动动态挂载 `cap.brace_expand`）
+新增 `cap:brace_expand`（`lib/brace_expand/{brace_expand,index}.cp`、`doc/lib/brace_expand.md`、`cap/test/test_brace_expand_production_deep.cp`），支持 `{a,b,c}`、`{01..05}`、`{6..2..2}` 与 `{a..z}` 零堆分配流式展开。
+
+## [2026-11-22] - 新建 `cap:ssh_config` OpenSSH ~/.ssh/config 零分配解析器与主机参数匹配引擎（首现优先、* 与 ! 否定模式）（5/5 PASS，自动动态挂载 `cap.ssh_config`）
+新增 `cap:ssh_config`（`lib/ssh_config/{ssh_config,index}.cp`、`doc/lib/ssh_config.md`、`cap/test/test_ssh_config_production_deep.cp`），严格遵循 `ssh_config(5)` 首现优先生效、`!pattern` 一票否决与 `Host *` 全局回退。
+
 ## [2026-11-22] - 新建 `cap:docker_image_ref` OCI / Docker 镜像引用零分配解析器（[registry[:port]/]repository[:tag][@digest] 与 sha256/sha512 摘要校验）（5/5 PASS，自动动态挂载 `cap.docker_image_ref`）
 新增 `cap:docker_image_ref`（`lib/docker_image_ref/{image_ref,index}.cp`、`doc/lib/docker_image_ref.md`、`cap/test/test_docker_image_ref_production_deep.cp`），精准区分 `registry:port` 与 `:tag` 并推导默认 `docker.io`/`latest`。
 

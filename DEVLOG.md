@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:mac_addr` IEEE 802 MAC-48 / EUI-48 硬件地址零分配解析器（4 种格式）、位分类器与 RFC 4291 EUI-64 派生器（5/5 PASS，文档直写 `doc/lib/mac_addr.md`）
+主智能体吸收 `cap:mac_addr`，拒绝混用分隔符并实现规范化冒号/连字符输出。
+
+## 2026-11-22: 新建 `cap:mime_headers` RFC 5322 / MIME 头块零分配解析器（头体分离、obs-fold 折行展开、大小写不敏感查询与重复头计数）（5/5 PASS，文档直写 `doc/lib/mime_headers.md`）
+Subagent 2 吸收 `cap:mime_headers`，不匹配头不消耗缓冲并支持多条 `Received:` 零缓冲计数。
+
+## 2026-11-22: 新建 `cap:brace_expand` 零分配 Bash 风格花括号展开迭代器（逗号列表、步进/补零整数序列与字母序列）（5/5 PASS，文档直写 `doc/lib/brace_expand.md`）
+主智能体吸收 `cap:brace_expand`，无有效花括号组时原样产出一次。
+
+## 2026-11-22: 新建 `cap:ssh_config` OpenSSH ~/.ssh/config 零分配解析器与主机参数匹配引擎（首现优先、* 与 ! 否定模式）（5/5 PASS，文档直写 `doc/lib/ssh_config.md`）
+Subagent 1 吸收 `cap:ssh_config`，支持 `Key Value`/`Key=Value` 与自定义配置项首次生效查询。
+
 ## 2026-11-22: 新建 `cap:docker_image_ref` OCI / Docker 镜像引用零分配解析器（[registry[:port]/]repository[:tag][@digest] 与 sha256/sha512 摘要校验）（5/5 PASS，文档直写 `doc/lib/docker_image_ref.md`）
 主智能体吸收 `cap:docker_image_ref`，与 `cap:dockerfile_parse` 协同服务容器工具链。
 
