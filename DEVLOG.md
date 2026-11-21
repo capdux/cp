@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ttf` 零分配 TrueType / OpenType SFNT `.ttf`/`.otf` 字体表目录、`head`/`maxp` 与校验和解析器（5/5 PASS，文档直写 `doc/lib/ttf.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:ttf`，与 `cap:woff2` 构成完整网页/桌面字体检查套件。
+
 ## 2026-11-22: 新建 `cap:woff2` 零分配 W3C WOFF2 网页字体 48 字节头、UIntBase128 变长整数与 63 项已知表目录解析器（5/5 PASS，文档直写 `doc/lib/woff2.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:woff2`；严格按 W3C WOFF2 §4.1/§5 校验保留位、metadata/private 偏移与 `glyf`/`loca` 变换长度。
 
