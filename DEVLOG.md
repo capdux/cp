@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:proc_limits` Linux `/proc/<pid>/limits` 进程软/硬资源限额表零分配解析器（5/5 PASS，文档直写 `doc/lib/proc_limits.md`）
+- **设计要点**：`ProcLimitsIter` 按 `>= 2` 空格或 Tab 切分多列，精准保留如 `"Max open files"` 的单空格名称并兼容无 Units 列行。
+
 ## 2026-11-22: 新建 `cap:http_allow` RFC 9110 §10.2.1 HTTP `Allow` 方法集位掩码解析、格式化与安全/幂等判定器（5/5 PASS，文档直写 `doc/lib/http_allow.md`）
 - **设计要点**：严格区分大小写解析 RFC 9110 方法 token，使用 `u16` 位掩码零分配表示标准方法集合并支持 `PROPFIND`/`MKCOL` 等扩展方法。
 

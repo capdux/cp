@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:proc_limits` Linux `/proc/<pid>/limits` 进程软/硬资源限额表零分配解析器（5/5 PASS，自动动态挂载 `cap.proc_limits`）
+- 新增 `lib/proc_limits/{limits,index}.cp`、`doc/lib/proc_limits.md`、`cap/test/test_proc_limits_production_deep.cp`：纯 CP 零分配解析 Linux `/proc/<pid>/limits` 软/硬上限与单位列，支持含单空格限额名切分、`unlimited` 解析与 `maxOpenFiles` 快捷提取（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:http_allow` RFC 9110 §10.2.1 HTTP `Allow` 方法集位掩码解析、格式化与安全/幂等判定器（5/5 PASS，自动动态挂载 `cap.http_allow`）
 - 新增 `lib/http_allow/{allow,index}.cp`、`doc/lib/http_allow.md`、`cap/test/test_http_allow_production_deep.cp`：纯 CP 零分配解析 RFC 9110 `Allow` 方法集（9 标准方法位掩码 + 扩展方法迭代、安全/幂等方法判定、规范顺序格式化）（5/5 PASS）。
 
