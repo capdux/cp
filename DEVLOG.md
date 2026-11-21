@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:sysctl_conf` Linux `/etc/sysctl.conf` / `sysctl.d/*.conf` 内核参数配置零分配解析与键等价查询器（5/5 PASS，文档直写 `doc/lib/sysctl_conf.md`）
+- **设计要点**：`SysctlIter` 零分配跳过注释与非法键行；`sysctlKeysEqual` 无缓冲等价比较 `.` 与 `/`；`getSysctlValue` 严格遵循后定义覆盖前定义语义。
+
 ## 2026-11-22: 新建 `cap:http_content_range` RFC 9110 §14.4 HTTP `Content-Range` 断点续传响应头零分配解析与格式化器（5/5 PASS，文档直写 `doc/lib/http_content_range.md`）
 - **设计要点**：`parseContentRange` 零分配解析并校验 `start <= end < complete_length`；`sliceLength` 防溢出；`formatContentRange` 同步拦截非法语义状态与缓冲不足。
 
