@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:hlc` Kulkarni Hybrid Logical Clock (HLC) 64-bit causal timestamps, drift guard & 26B codec（5/5 PASS，文档直写 `doc/lib/hlc.md`）
+新增 cap:hlc 纯 CP 零分配分布式因果时钟库（48+16-bit 紧凑打包、receive 4 分支保序与 26B 十六进制字典序一致编码），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:hilbert` 2D Hilbert (orders 1..32, 64-bit) & 2D/3D SWAR Morton Z-Order spatial indexing（5/5 PASS，文档直写 `doc/lib/hilbert.md`）
 新增 cap:hilbert 纯 CP 零分配空间索引库（order=1..32 无溢出 64-bit Hilbert 与无分支 O(1) SWAR 2D/3D Morton 编解码），通过 cpc check 与 6/6 cap test
 
