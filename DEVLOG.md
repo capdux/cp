@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:pci` PCI/PCIe 256B/4096B config space, 32/64-bit BAR & Capability list zero-alloc parser（5/5 PASS，文档直写 `doc/lib/pci.md`）
+新增 cap:pci 纯 CP 零分配总线硬件配置库（Endpoint/Bridge 配置头、BAR 解码与 48/96 跳防环 Capability 遍历），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:iscsi` iSCSI (RFC 7143) 48B BHS, SCSI/Login PDU, Key=Value iter & CRC32C zero-alloc parser（5/5 PASS，文档直写 `doc/lib/iscsi.md`）
 新增 cap:iscsi 纯 CP 零分配存储网络协议库（Castagnoli CRC32C 双摘要校验、48B BHS/AHS/4B 对齐 Data Segment 与 Login 键值零拷贝迭代），通过 cpc check 与 5/5 cap test
 

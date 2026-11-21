@@ -70,3 +70,6 @@
 
 ### 2026-11-22（`cap:iscsi` 验收，完成并注册纯 CP 零分配标准库 cap:iscsi（5/5 cap test PASS））
 - **执行成果**：`lib/iscsi/`（5/5 PASS，`doc/lib/iscsi.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:iscsi（5/5 cap test PASS）
+
+### 2026-11-22（`cap:pci` 验收，完成并注册纯 CP 零分配标准库 cap:pci（5/5 cap test PASS））
+- **执行成果**：`lib/pci/`（5/5 PASS，`doc/lib/pci.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:pci（5/5 cap test PASS）
