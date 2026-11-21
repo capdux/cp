@@ -37,3 +37,6 @@
 
 ### 2026-11-22（`cap:kerberos` 验收，完成并注册纯 CP 零分配标准库 cap:kerberos（5/5 cap test PASS））
 - **执行成果**：`lib/kerberos/`（5/5 PASS，`doc/lib/kerberos.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:kerberos（5/5 cap test PASS）
+
+### 2026-11-22（`cap:mdns` 验收，完成并注册纯 CP 零分配标准库 cap:mdns（5/5 cap test PASS））
+- **执行成果**：`lib/mdns/`（5/5 PASS，`doc/lib/mdns.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:mdns（5/5 cap test PASS）

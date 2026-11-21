@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:mdns` mDNS (RFC 6762) & DNS-SD (RFC 6763) QU/Cache-Flush, SRV/TXT & name-compression codec（5/5 PASS，文档直写 `doc/lib/mdns.md`）
+新增 cap:mdns 纯 CP 零分配零配置服务发现协议库（QU/Cache-Flush 位、PTR/SRV/TXT/A/AAAA 解析、<=16 跳防环 0xC0 压缩解码与 Query 编码），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:kerberos` Kerberos v5 (RFC 4120) ASN.1 DER Ticket, KRB-ERROR, PrincipalName & TCP record parser（5/5 PASS，文档直写 `doc/lib/kerberos.md`）
 新增 cap:kerberos 纯 CP 零分配企业认证协议库（TCP 4B Record Mark 解封、APPLICATION [1] Ticket 与 [30] KRB-ERROR 零拷贝 DER 解析），通过 cpc check 与 5/5 cap test
 
