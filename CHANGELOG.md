@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_expect` RFC 9110 §10.1.1 HTTP `Expect` 请求头解析与 `100-continue` / 417 协商判定器（5/5 PASS，自动动态挂载 `cap.http_expect`）
+- 新增 `lib/http_expect/{expect,index}.cp`、`doc/lib/http_expect.md`、`cap/test/test_http_expect_production_deep.cp`：纯 CP 零分配解析 RFC 9110 `Expect` 请求头（引号感知、空项过滤、未闭合引号 Fail-Closed），提供 `100-continue` / `417 Expectation Failed` 协商决策（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:proc_mounts` Linux `/proc/mounts` 挂载表、八进制路径转义解码与最长边界前缀挂载点匹配器（5/5 PASS，自动动态挂载 `cap.proc_mounts`）
 - 新增 `lib/proc_mounts/{mounts,index}.cp`、`doc/lib/proc_mounts.md`、`cap/test/test_proc_mounts_production_deep.cp`：纯 CP 零分配解析 Linux `/proc/mounts` 6 列挂载表，支持选项键值查询、八进制路径转义解码与最长路径边界前缀挂载点匹配（5/5 PASS）。
 

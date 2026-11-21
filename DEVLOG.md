@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:http_expect` RFC 9110 §10.1.1 HTTP `Expect` 请求头解析与 `100-continue` / 417 协商判定器（5/5 PASS，文档直写 `doc/lib/http_expect.md`）
+- **设计要点**：`ExpectIter` 零分配引号感知遍历；`evaluateExpectHeader` 严格遵循 RFC 9110 §10.1.1 规则处理未知期望、HTTP/1.0 回退与 `has_body` 条件。
+
 ## 2026-11-22: 新建 `cap:proc_mounts` Linux `/proc/mounts` 挂载表、八进制路径转义解码与最长边界前缀挂载点匹配器（5/5 PASS，文档直写 `doc/lib/proc_mounts.md`）
 - **设计要点**：`unescapeMountPath` 解码 `\040`/`\011`/`\012`/`\134` 等内核八进制转义；`findMountForPath` 严格区分 `/var` 与 `/var2` 边界并支持叠层挂载后覆盖语义。
 

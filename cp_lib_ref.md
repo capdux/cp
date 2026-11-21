@@ -685,3 +685,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:proc_cpuinfo` | `CpuBlock`, `CpuSummary`, `ProcCpuInfoIter`, `summarizeCpuInfo`, `hasCpuFlag` | Linux `/proc/cpuinfo`（x86_64/ARM64）逻辑/物理核心与指令集标志零分配解析器 |
 | `cap:dns_srv_record` | `SrvWireHeader`, `SrvRecord`, `SrvServiceName`, `compareSrvOrder`, `selectSrvByRoll` | RFC 2782 DNS SRV 服务发现记录文本/线缆头零分配解析与优先级权重选择器 |
 | `cap:proc_mounts` | `MountEntry`, `ProcMountsIter`, `unescapeMountPath`, `findMountForPath` | Linux `/proc/mounts` 挂载表、八进制路径转义解码与最长边界前缀挂载点匹配器 |
+| `cap:http_expect` | `ExpectItem`, `ExpectIter`, `ExpectDecision`, `evaluateExpectHeader`, `hasContinueExpectation`, `hasUnknownExpectation` | RFC 9110 §10.1.1 HTTP `Expect` 请求头解析与 `100-continue` / 417 协商判定器 |

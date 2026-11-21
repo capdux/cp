@@ -190,3 +190,6 @@
 
 ### 2026-11-22（`cap:proc_mounts` 验收，Batch 93 落地，标准库总量突破 260 模块里程碑！同时扩容至 3 路并行迁移子智能体）
 - **执行成果**：`lib/proc_mounts/`（5/5 PASS，`doc/lib/proc_mounts.md`）经 `verify_module.sh` 一次性验收回收；Batch 93 落地，标准库总量突破 260 模块里程碑！同时扩容至 3 路并行迁移子智能体
+
+### 2026-11-22（`cap:http_expect` 验收，Batch 94 落地，标准库总量达 261 模块）
+- **执行成果**：`lib/http_expect/`（5/5 PASS，`doc/lib/http_expect.md`）经 `verify_module.sh` 一次性验收回收；Batch 94 落地，标准库总量达 261 模块
