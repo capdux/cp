@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:turn` TURN (RFC 8656) attributes, IPv4/IPv6 XOR-ADDRESS & ChannelData zero-alloc codec（5/5 PASS，自动动态挂载 `cap.turn`）
+新增纯 CP 零分配标准库 cap:turn（RFC 8656 TURN 属性、IPv4/IPv6 XOR-ADDRESS 与 ChannelData 编解码）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:gemini` Gemini v0.16.1 request/response & text/gemini Gemtext zero-alloc parser & encoder（5/5 PASS，自动动态挂载 `cap.gemini`）
 新增纯 CP 零分配标准库 cap:gemini（Gemini v0.16.1 请求/响应头与 Gemtext 零拷贝迭代解析）与 6/6 深度测试
 
