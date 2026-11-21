@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:rlp` 零分配 Ethereum RLP 确定性二进制规范编解码器（5/5 PASS，文档直写 `doc/lib/rlp.md`）
+实现零分配 Ethereum RLP 编解码器，严格遵循 Yellow Paper 规范性规则与原子缓冲区溢出保护。
+
 ## 2026-11-22: 新建 `cap:nbt` 零分配 Named Binary Tag (NBT) Java BE / Bedrock LE 解析器（5/5 PASS，文档直写 `doc/lib/nbt.md`）
 实现零分配 NBT 二进制格式解析器，完整覆盖 13 种 Tag 类型与数组乘法溢出防护。
 

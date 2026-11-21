@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:rlp` 零分配 Ethereum RLP 确定性二进制规范编解码器（5/5 PASS，自动动态挂载 `cap.rlp`）
+新增 `lib/rlp/{rlp,index}.cp`、`doc/lib/rlp.md` 与 `cap/test/test_rlp_production_deep.cp`（5/5 PASS），支持严格规范 RLP 解码（拒绝非规范单字节/前导零/短长前缀）、列表迭代与零分配编码。
+
 ## [2026-11-22] - 新建 `cap:nbt` 零分配 Named Binary Tag (NBT) Java BE / Bedrock LE 解析器（5/5 PASS，自动动态挂载 `cap.nbt`）
 新增 `lib/nbt/{nbt,index}.cp`、`doc/lib/nbt.md` 与 `cap/test/test_nbt_production_deep.cp`（5/5 PASS），支持双端序流式读取、64 层深度防护 skipPayload 与根 Compound 字段零拷贝定位。
 

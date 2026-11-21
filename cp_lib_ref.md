@@ -566,3 +566,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:deb` | DEB_AR_MAGIC, DEB_BINARY_MEMBER, DebCompression, DebPackage, DebControlField, DebControlIter, DebControlMeta, detectDebCompression, isDeb, parseDebPackage, parseDebControl | 零分配 Debian (.deb) 软件包容器与 RFC 822 DEBIAN/control 解析器 |
 | `cap:hdf5` | HDF5_SIGNATURE, HDF5_UNDEF_ADDR_64, HDF5_OHDR_MAGIC, Hdf5Superblock, Hdf5ObjHeaderV2, findHdf5Signature, isHdf5, parseHdf5Superblock, parseHdf5ObjHeaderV2 | 零分配 HDF5 科学数据容器 Superblock v0-v3 与 OHDR v2 对象头解析器 |
 | `cap:nbt` | MAX_NBT_DEPTH, NbtTagType, NbtEndian, NbtTagHeader, NbtListHeader, NbtFieldRef, NbtReader, nbtTagTypeFromByte, isNbtCompound, findNbtField, findNbtFieldEndian | 零分配 Named Binary Tag (NBT) Java BE / Bedrock LE 解析器 |
+| `cap:rlp` | RlpKind, RlpItem, RlpListIter, RlpWriter, decodeRlpItem, decodeRlpU64, encodedBytesLen, encodedU64Len, encodedListHeaderLen | 零分配 Ethereum RLP 确定性二进制规范编解码器 |
