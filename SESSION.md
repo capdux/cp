@@ -190,3 +190,6 @@
 
 ### 2026-11-22（`cap:rle` 验收，完成并注册纯 CP 零分配标准库 cap:rle（5/5 cap test PASS））
 - **执行成果**：`lib/rle/`（5/5 PASS，`doc/lib/rle.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:rle（5/5 cap test PASS）
+
+### 2026-11-22（`cap:bwt` 验收，完成并注册纯 CP 零分配标准库 cap:bwt（5/5 cap test PASS））
+- **执行成果**：`lib/bwt/`（5/5 PASS，`doc/lib/bwt.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:bwt（5/5 cap test PASS）

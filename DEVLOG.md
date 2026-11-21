@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:bwt` Pure-CP zero-alloc Burrows-Wheeler Transform, O(n) LF-Mapping & Move-To-Front codec（5/5 PASS，文档直写 `doc/lib/bwt.md`）
+新增 cap:bwt 纯 CP 零分配压缩变换前端库（原地堆排序 BWT、O(n) LF-Mapping 还原与 256B MTF 管道），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:rle` Pure-CP zero-alloc RLE codec suite: PackBits (TIFF/PSD), PCX, TGA pixels & RLE0（5/5 PASS，文档直写 `doc/lib/rle.md`）
 新增 cap:rle 纯 CP 零分配多标准游程编码库（PackBits/PCX/TGA/RLE0 双向编解码与溢出防护），通过 cpc check 与 5/5 cap test
 
