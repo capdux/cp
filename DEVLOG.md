@@ -2,6 +2,18 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-22: PostgreSQL v3 后端控制与诊断消息解码器（5/5 PASS，文档直写 `doc/lib/pg_messages.md`）
+从 Bun sql/postgres/protocol 吸收完整 PG v3 后端控制与 18 字段诊断消息零拷贝解码器，支持 SQLSTATE 分类与 CommandComplete 影响行数解析。
+
+## 2026-11-22: MySQL 协议服务端握手与控制报文解码器（5/5 PASS，文档直写 `doc/lib/mysql_control.md`）
+从 Bun sql/mysql/protocol/{HandshakeV10,OKPacket,ErrorPacket,EOFPacket,AuthSwitchRequest,CommandType}.cp 吸收 MySQL 服务端控制报文零拷贝解码器。
+
+## 2026-11-22: PostgreSQL v3 扩展查询协议前端编码器（5/5 PASS，文档直写 `doc/lib/pg_extended_query.md`）
+从 Bun sql/postgres/protocol/{Parse,Describe,Execute,Close,PortalOrPreparedStatement}.cp 吸收 PG v3 扩展查询协议前端流水线编码器，支持 ~init() 确定性零泄漏释放。
+
+## 2026-11-22: CSS Basic UI Level 4 属性集（5/5 PASS，文档直写 `doc/lib/css_ui.md`）
+从 Bun css/properties/ui.cp 吸收 CSS UI Level 4 六大交互属性模型，纯 CP 零堆分配实现规范化解析与输出。
+
 ## 2026-11-22: CSS Media Queries Level 4 媒体查询解析与求值引擎（5/5 PASS，文档直写 `doc/lib/css_media.md`）
 从 Bun css/rules/media.cp 吸收 CSS Media Queries Level 4 解析与视口/用户偏好求值引擎，纯 CP 零堆分配内联存储。
 

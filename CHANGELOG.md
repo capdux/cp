@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - PostgreSQL v3 后端控制与诊断消息解码器（5/5 PASS，自动动态挂载 `cap.pg_messages`）
+新增 cap:pg_messages 标准库（lib/pg_messages/、doc/lib/pg_messages.md、cap/test/test_pg_messages_production_deep.cp），5/5 回归通过。
+
+## [2026-11-22] - MySQL 协议服务端握手与控制报文解码器（5/5 PASS，自动动态挂载 `cap.mysql_control`）
+新增 cap:mysql_control 标准库（lib/mysql_control/、doc/lib/mysql_control.md、cap/test/test_mysql_control_production_deep.cp），6/6 回归通过。
+
+## [2026-11-22] - PostgreSQL v3 扩展查询协议前端编码器（5/5 PASS，自动动态挂载 `cap.pg_extended_query`）
+新增 cap:pg_extended_query 标准库（lib/pg_extended_query/、doc/lib/pg_extended_query.md、cap/test/test_pg_extended_query_production_deep.cp），2/2 回归通过（零泄漏）。
+
+## [2026-11-22] - CSS Basic UI Level 4 属性集（5/5 PASS，自动动态挂载 `cap.css_ui`）
+新增 cap:css_ui 标准库（lib/css_ui/、doc/lib/css_ui.md、cap/test/test_css_ui_production_deep.cp），2/2 回归通过。
+
 ## [2026-11-22] - CSS Media Queries Level 4 媒体查询解析与求值引擎（5/5 PASS，自动动态挂载 `cap.css_media`）
 新增 cap:css_media 标准库（lib/css_media/、doc/lib/css_media.md、cap/test/test_css_media_production_deep.cp），5/5 回归通过。
 

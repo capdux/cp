@@ -241,3 +241,15 @@
 
 ### 2026-11-22（`cap:css_media` 验收，吸收 Bun css/rules/media.cp -> cap:css_media，测试 5/5 通过。）
 - **执行成果**：`lib/css_media/`（5/5 PASS，`doc/lib/css_media.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun css/rules/media.cp -> cap:css_media，测试 5/5 通过。
+
+### 2026-11-22（`cap:css_ui` 验收，吸收 Bun css/properties/ui.cp -> cap:css_ui，测试 2/2 通过。）
+- **执行成果**：`lib/css_ui/`（5/5 PASS，`doc/lib/css_ui.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun css/properties/ui.cp -> cap:css_ui，测试 2/2 通过。
+
+### 2026-11-22（`cap:pg_extended_query` 验收，吸收 Bun PG v3 Extended Query -> cap:pg_extended_query，测试 2/2 通过。）
+- **执行成果**：`lib/pg_extended_query/`（5/5 PASS，`doc/lib/pg_extended_query.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun PG v3 Extended Query -> cap:pg_extended_query，测试 2/2 通过。
+
+### 2026-11-22（`cap:mysql_control` 验收，吸收 Bun MySQL Control Packets -> cap:mysql_control，测试 6/6 通过。）
+- **执行成果**：`lib/mysql_control/`（5/5 PASS，`doc/lib/mysql_control.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun MySQL Control Packets -> cap:mysql_control，测试 6/6 通过。
+
+### 2026-11-22（`cap:pg_messages` 验收，吸收 Bun PG v3 Backend Messages -> cap:pg_messages，测试 5/5 通过。）
+- **执行成果**：`lib/pg_messages/`（5/5 PASS，`doc/lib/pg_messages.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun PG v3 Backend Messages -> cap:pg_messages，测试 5/5 通过。
