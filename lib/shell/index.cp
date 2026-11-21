@@ -37,6 +37,48 @@ export {
     BraceExpandIter,
 } from "./brace.cp";
 
+export {
+    ShellError,
+    ShellToken,
+    deinitTokens,
+    tokenize,
+} from "./posixlexer.cp";
+import plex from "./posixlexer.cp";
+export const PosixTokenKind = plex.TokenKind;
+
+export {
+    RedirectKind,
+    Assignment,
+    SimpleCommand,
+    ListOp,
+    ListItem,
+    ShellScript,
+    parseScript,
+} from "./posixast.cp";
+import past from "./posixast.cp";
+export const PosixRedirect = past.Redirect;
+export const PosixPipeline = past.Pipeline;
+
+export {
+    quoteArg,
+    joinCommand,
+} from "./posixquote.cp";
+import pquote from "./posixquote.cp";
+export const posixNeedsQuoting = pquote.needsQuoting;
+
+export {
+    EnvAssignment,
+    isSafeUnquoted,
+    escapeDoubleQuoted,
+    posixBasename,
+    posixDirname,
+    isValidEnvVarName,
+    splitEnvAssignment,
+} from "./util.cp";
+import sutil from "./util.cp";
+export const quotePosixBuf = sutil.quotePosix;
+export const joinCommandBuf = sutil.joinCommand;
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);

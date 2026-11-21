@@ -55,3 +55,6 @@
 
 ### 2026-11-22（`cap:css` 验收，方案 A 收敛突破 **200 目录里程碑**：`css_* 第2批`(12) 收敛至 `cap:css`（13/13 PASS），累计消除 202 个长下划线顶层目录）
 - **执行成果**：`lib/css/`（5/5 PASS，`doc/lib/css.md`）经 `verify_module.sh` 一次性验收回收；方案 A 收敛突破 **200 目录里程碑**：`css_* 第2批`(12) 收敛至 `cap:css`（13/13 PASS），累计消除 202 个长下划线顶层目录
+
+### 2026-11-22（`cap:markdown` 验收，方案 A 收敛：`markdown`/`unicode`/`s3`/`shell` 10 目录收敛落地（10/10 PASS），累计消除 212 个长下划线顶层目录；率先派发 `bun_agy` 上游增量同步 Wave 1 (`cap:col`)）
+- **执行成果**：`lib/markdown/`（5/5 PASS，`doc/lib/markdown.md`）经 `verify_module.sh` 一次性验收回收；方案 A 收敛：`markdown`/`unicode`/`s3`/`shell` 10 目录收敛落地（10/10 PASS），累计消除 212 个长下划线顶层目录；率先派发 `bun_agy` 上游增量同步 Wave 1 (`cap:col`)

@@ -1,8 +1,8 @@
 import {
-    codepointWidth,
+    wcwidth,
     strDisplayWidth,
     sliceToDisplayWidth,
-} from "cap:unicode_width";
+} from "cap:unicode";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {
@@ -15,11 +15,11 @@ fn strEq(a: []const u8, b: []const u8): bool {
     return true;
 }
 
-test("codepointWidth and strDisplayWidth for ASCII, CJK, combining marks, and Emoji", () => {
-    expect(codepointWidth('A') == 1);
-    expect(codepointWidth(0x0301) == 0); // combining acute accent
-    expect(codepointWidth(0x4E2D) == 2); // '中'
-    expect(codepointWidth(0x1F600) == 2); // '😀'
+test("wcwidth and strDisplayWidth for ASCII, CJK, combining marks, and Emoji", () => {
+    expect(wcwidth('A') == 1);
+    expect(wcwidth(0x0301) == 0); // combining acute accent
+    expect(wcwidth(0x4E2D) == 2); // '中'
+    expect(wcwidth(0x1F600) == 2); // '😀'
 
     expect(strDisplayWidth("hello") == 5);
     expect(strDisplayWidth("中文") == 4);

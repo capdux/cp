@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:markdown` Markdown 行分析、链接与引用定义统一主包（同步收敛 `cap:unicode`/`cap:s3`/`cap:shell`）（5/5 PASS，自动动态挂载 `cap.markdown`）
+- **方案 A 收敛 (10 小簇目录 -> `cap:markdown`/`cap:unicode`/`cap:s3`/`cap:shell`)**：新建 `cap:markdown` 并合入 `md_*`(3)，同时合入 `unicode_*`(3) 至 `cap:unicode`、`s3_*`(2) 至 `cap:s3`、`shell_*`(2) 至 `cap:shell`（10/10 PASS），删除 10 个旧目录与文档，累计消除 212 个长下划线顶层目录。
+
 ## [2026-11-22] - 新建 `cap:css` CSS 引擎与全套样式/布局/渐变/媒体查询统一主包（`css_*` 第 2 批 12 目录收敛，突破 200 目录里程碑！）（5/5 PASS，自动动态挂载 `cap.css`）
 - **方案 A 收敛里程碑 (`css_*` 第 2 批 12 目录 -> `cap:css`)**：将 `css_flex_grid` 至 `css_primitives` 12 个散装目录零破坏合入 `lib/css/`（13/13 PASS），删除 12 个旧目录与文档，**累计消除 202 个长下划线顶层目录（突破 200 目录里程碑）**！
 

@@ -6,7 +6,7 @@ import {
     parseRefDefTitle,
     parseRefDef,
     RefDefTable,
-} from "cap:md_ref_defs";
+} from "cap:markdown";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

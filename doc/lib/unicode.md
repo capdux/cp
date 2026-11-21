@@ -80,3 +80,12 @@ import cap from "cap";
 - `codepointWidth(cp: u32): u8`：返回单码点显示宽度（`0`、`1` 或 `2`）
 - `displayWidth(s: []const u8): usize`：计算终端等宽显示列数（自动跳过 ANSI CSI/OSC 转义序列，按 Grapheme 簇计宽）
 - `truncateByWidth(alloc, s: []const u8, max_width: usize, ellipsis: []const u8): ([]u8) ! UnicodeError`：按显示宽度安全截断并追加省略号，绝不切碎多字节或 Grapheme 簇
+
+
+---
+
+## 收敛扩展子模块（`lut.cp` / `range.cp` / `wcwidth.cp`）
+
+- **三级压缩查找表 (`lut.cp`)**：`BLOCK_SIZE`, `MAX_UNICODE_CODEPOINT`, `MAX_UNIQUE_ELEMENTS`, `Error`, `Tables<Elem>`, `Generator<Elem, Context>`，实现 O(1) Stage 1 -> Stage 2 -> Stage 3 Unicode 属性压缩表生成与查询。
+- **CSS `@font-face` Unicode 区间 (`range.cp`)**：`MAX_CODEPOINT`, `UnicodeRangeError`, `UnicodeRange`（`U+XXXX` / `U+XXXX-YYYY` / `U+??` 通配符区间解析、规范化与格式化）。
+- **终端列宽扩展 (`wcwidth.cp`)**：`wcwidth`（原 `codepointWidth` 别名）、`isZeroWidth`、`isWideChar`、`strDisplayWidth`、`sliceToDisplayWidth`。

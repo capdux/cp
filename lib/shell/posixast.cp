@@ -1,7 +1,7 @@
 // Source: cp/lib/shell_parser/ast.cp (pure CP POSIX shell command & pipeline AST parser)
 const std = @import("std");
 const Allocator = std.mem.Allocator;
-const lexer = @import("./lexer.cp");
+const lexer = @import("./posixlexer.cp");
 const ShellError = lexer.ShellError;
 const TokenKind = lexer.TokenKind;
 const ShellToken = lexer.ShellToken;

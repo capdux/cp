@@ -4,16 +4,16 @@ import { test, expect_eq } from "cap:test";
 import cap from "cap";
 import {
     ShellError,
-    TokenKind,
+    PosixTokenKind,
     deinitTokens,
     tokenize,
     RedirectKind,
     ListOp,
     parseScript,
-    needsQuoting,
+    posixNeedsQuoting,
     quoteArg,
     joinCommand,
-} from "cap:shell_parser";
+} from "cap:shell";
 
 test("shell_parser: lexer quotes, escapes, vars and assignments") {
     const alloc = std.testing.allocator;
@@ -22,7 +22,7 @@ test("shell_parser: lexer quotes, escapes, vars and assignments") {
     defer deinitTokens(alloc, tokens);
 
     try expect_eq(tokens.len, 4);
-    try expect_eq(tokens[0].kind, TokenKind.Word);
+    try expect_eq(tokens[0].kind, PosixTokenKind.Word);
     try expect_eq(std.mem.eql(u8, tokens[0].value, "FOO=bar"), true);
     try expect_eq(tokens[0].quoted, false);
     try expect_eq(tokens[0].has_var, false);
@@ -104,9 +104,9 @@ test("shell_parser: error handling for quotes, trailing escape and invalid synta
 test("shell_parser: quoteArg and joinCommand roundtrip") {
     const alloc = std.testing.allocator;
 
-    try expect_eq(needsQuoting("safe_arg-1.txt"), false);
-    try expect_eq(needsQuoting("a b"), true);
-    try expect_eq(needsQuoting(""), true);
+    try expect_eq(posixNeedsQuoting("safe_arg-1.txt"), false);
+    try expect_eq(posixNeedsQuoting("a b"), true);
+    try expect_eq(posixNeedsQuoting(""), true);
 
     const q_empty = try quoteArg(alloc, "");
     defer alloc.free(q_empty);
@@ -132,7 +132,7 @@ test("shell_parser: quoteArg and joinCommand roundtrip") {
 
 test("shell_parser: cap.shell_parser dynamic mount and zero-leak check") {
     const alloc = std.testing.allocator;
-    let script = try cap.shell_parser.parseScript(alloc, "cat < in.txt >> out.log 2>> err.log &> all.log");
+    let script = try cap.shell.parseScript(alloc, "cat < in.txt >> out.log 2>> err.log &> all.log");
     defer script.deinit(alloc);
 
     try expect_eq(script.items.len, 1);
@@ -143,7 +143,7 @@ test("shell_parser: cap.shell_parser dynamic mount and zero-leak check") {
     try expect_eq(cmd.redirects[2].kind, RedirectKind.ErrAppend);
     try expect_eq(cmd.redirects[3].kind, RedirectKind.BothOut);
 
-    const q = try cap.shell_parser.quoteArg(alloc, "a b");
+    const q = try cap.shell.quoteArg(alloc, "a b");
     defer alloc.free(q);
     try expect_eq(std.mem.eql(u8, q, "'a b'"), true);
 }

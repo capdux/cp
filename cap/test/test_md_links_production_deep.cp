@@ -1,4 +1,4 @@
-// Source: cp/cap/test/test_md_links_production_deep.cp (Production deep tests for cap:md_links)
+// Source: cp/cap/test/test_md_links_production_deep.cp (Production deep tests for cap:markdown links)
 
 import { test, expect_eq } from "cap:test";
 import {
@@ -7,7 +7,7 @@ import {
     parseAutolink,
     parseInlineLinkOrImage,
     percentEncodeUrl,
-} from "cap:md_links";
+} from "cap:markdown";
 
 test("Inline link, image, nested image-in-link, escaped brackets and code span skip") {
     const s1 = "Check [CP Lang](https://cp-lang.org)!";

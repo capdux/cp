@@ -11,3 +11,24 @@ export * from "./list_objects";
 export * from "./multipart";
 export * from "./download_stream";
 export * from "./client";
+
+export {
+    isValidBucketName,
+    S3Uri,
+} from "./meta.cp";
+import s3meta from "./meta.cp";
+export const S3MetaAcl = s3meta.S3Acl;
+export const S3MetaStorageClass = s3meta.S3StorageClass;
+
+export {
+    S3SignError,
+    SigV4Header,
+    SigV4QueryParam,
+    SigV4SignedResult,
+    awsUriEncode,
+    deriveSigningKey,
+    signRequest,
+    presignUrl,
+} from "./sigv4.cp";
+import sigv4 from "./sigv4.cp";
+export const SigV4Credentials = sigv4.S3Credentials;

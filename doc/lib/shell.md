@@ -106,3 +106,11 @@ fn demoMixedPipeline(): void {
 - **`lib/shell/envparse.cp`**（POSIX Shell 环境变量赋值解析）：`ShellEnvEntry`、`ShellEnvIter`、`getShellEnv`
 - **`lib/shell/quote.cp`**（POSIX Shell 引用转义与参数切分）：`needsQuoting`、`quotePosix`、`joinArgs`、`ShellArgIter`
 - **`lib/shell/brace.cp`**（Bash 风格花括号展开零分配迭代器）：`BraceExpandIter`
+
+
+---
+
+## 收敛扩展子模块（`posixlexer.cp` / `posixast.cp` / `posixquote.cp` / `util.cp`）
+
+- **独立 POSIX Shell 词法/AST 解析与转义 (`posixlexer.cp` / `posixast.cp` / `posixquote.cp`)**：`ShellError`, `PosixTokenKind`, `ShellToken`, `deinitTokens`, `tokenize`, `RedirectKind`, `PosixRedirect`, `Assignment`, `SimpleCommand`, `PosixPipeline`, `ListOp`, `ListItem`, `ShellScript`, `parseScript`, `posixNeedsQuoting`, `quoteArg`, `joinCommand`（支持 `cap.shell.*` 动态挂载）。
+- **零堆分配 POSIX 转义与路径工具 (`util.cp`)**：`EnvAssignment`, `isSafeUnquoted`, `quotePosixBuf`, `escapeDoubleQuoted`, `joinCommandBuf`, `posixBasename`, `posixDirname`, `isValidEnvVarName`, `splitEnvAssignment`。

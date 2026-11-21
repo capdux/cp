@@ -1,4 +1,4 @@
-// Source: cp/cap/test/test_unicode_lut_production_deep.cp (Production deep tests for cap:unicode_lut)
+// Source: cp/cap/test/test_unicode_lut_production_deep.cp (Production deep tests for cap:unicode lut)
 
 import { test, expect_eq } from "cap:test";
 import {
@@ -7,7 +7,7 @@ import {
     BLOCK_SIZE,
     MAX_UNICODE_CODEPOINT,
     MAX_UNIQUE_ELEMENTS,
-} from "cap:unicode_lut";
+} from "cap:unicode";
 
 struct ModPropCtx {
     fn get(cp: u21): u8 {

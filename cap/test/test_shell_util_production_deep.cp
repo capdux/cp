@@ -1,16 +1,16 @@
 import { test, expect_eq } from "cap:test";
 import {
     isSafeUnquoted,
-    quotePosix,
+    quotePosixBuf,
     escapeDoubleQuoted,
-    joinCommand,
+    joinCommandBuf,
     posixBasename,
     posixDirname,
     isValidEnvVarName,
     splitEnvAssignment,
-} from "cap:shell_util";
+} from "cap:shell";
 
-test("1. isSafeUnquoted & quotePosix (empty, safe, spaces, single quotes, subshell chars)", () => {
+test("1. isSafeUnquoted & quotePosixBuf (empty, safe, spaces, single quotes, subshell chars)", () => {
     let buf: [128]u8 = std.mem.zeroes([128]u8);
 
     expect_eq(isSafeUnquoted("hello_world-1.2/foo@bar:80"), true);
@@ -19,18 +19,18 @@ test("1. isSafeUnquoted & quotePosix (empty, safe, spaces, single quotes, subshe
     expect_eq(isSafeUnquoted("$(id)"), false);
 
     // Empty string -> ''
-    expect_eq(std.mem.eql(u8, quotePosix("", buf[0..]).?, "''"), true);
+    expect_eq(std.mem.eql(u8, quotePosixBuf("", buf[0..]).?, "''"), true);
     // Safe unquoted -> verbatim
-    expect_eq(std.mem.eql(u8, quotePosix("/usr/bin/env", buf[0..]).?, "/usr/bin/env"), true);
+    expect_eq(std.mem.eql(u8, quotePosixBuf("/usr/bin/env", buf[0..]).?, "/usr/bin/env"), true);
     // Spaces & shell metachars -> single quoted
-    expect_eq(std.mem.eql(u8, quotePosix("hello $(world)", buf[0..]).?, "'hello $(world)'"), true);
+    expect_eq(std.mem.eql(u8, quotePosixBuf("hello $(world)", buf[0..]).?, "'hello $(world)'"), true);
     // Embedded single quote -> '\''
-    expect_eq(std.mem.eql(u8, quotePosix("it's", buf[0..]).?, "'it'\\''s'"), true);
+    expect_eq(std.mem.eql(u8, quotePosixBuf("it's", buf[0..]).?, "'it'\\''s'"), true);
     // Buffer too small -> null
-    expect_eq(quotePosix("hello world", buf[0..5]) == null, true);
+    expect_eq(quotePosixBuf("hello world", buf[0..5]) == null, true);
 });
 
-test("2. escapeDoubleQuoted & joinCommand", () => {
+test("2. escapeDoubleQuoted & joinCommandBuf", () => {
     let buf: [128]u8 = std.mem.zeroes([128]u8);
 
     const esc = escapeDoubleQuoted("a$b`c\"d\\e", buf[0..]).?;
@@ -38,11 +38,11 @@ test("2. escapeDoubleQuoted & joinCommand", () => {
     expect_eq(escapeDoubleQuoted("$HOME", buf[0..3]) == null, true);
 
     const args: [4][]const u8 = ["echo", "hello world", "", "a'b"];
-    const cmd = joinCommand(args[0..], buf[0..]).?;
+    const cmd = joinCommandBuf(args[0..], buf[0..]).?;
     expect_eq(std.mem.eql(u8, cmd, "echo 'hello world' '' 'a'\\''b'"), true);
 
     const empty_args: [0][]const u8 = [];
-    expect_eq(std.mem.eql(u8, joinCommand(empty_args[0..], buf[0..]).?, ""), true);
+    expect_eq(std.mem.eql(u8, joinCommandBuf(empty_args[0..], buf[0..]).?, ""), true);
 });
 
 test("3. posixBasename full POSIX edge cases & suffix stripping", () => {

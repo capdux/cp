@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:markdown` Markdown 行分析、链接与引用定义统一主包（同步收敛 `cap:unicode`/`cap:s3`/`cap:shell`）（5/5 PASS，文档直写 `doc/lib/markdown.md`）
+- **收敛要点**：全部 4 个主包保留原导出零破坏，冲突符号以最小别名（`wcwidth`/`S3MetaAcl`/`SigV4Credentials`/`Posix*`/`quotePosixBuf`）消解；10/10 PASS，累计消除 212 个散装目录。
+
 ## 2026-11-22: 新建 `cap:css` CSS 引擎与全套样式/布局/渐变/媒体查询统一主包（`css_*` 第 2 批 12 目录收敛，突破 200 目录里程碑！）（5/5 PASS，文档直写 `doc/lib/css.md`）
 - **收敛要点**：12 个布局/字体/渐变/媒体查询子模块通过 `Css*`/`Layout*`/`Media*` 聚合别名零破坏合入 `lib/css/`，13/13 PASS；已派发最后 12 个 `css_*` 清零批次。
 

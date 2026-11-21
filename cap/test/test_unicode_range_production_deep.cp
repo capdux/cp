@@ -1,5 +1,5 @@
 import { test, expect } from "cap:test";
-import { UnicodeRange } from "cap:unicode_range";
+import { UnicodeRange } from "cap:unicode";
 
 test("unicode_range: parse single, range, and wildcard forms", () => {
     const r1 = UnicodeRange.parse("U+0041") catch unreachable;

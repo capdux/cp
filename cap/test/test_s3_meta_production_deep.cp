@@ -1,8 +1,8 @@
 import std from "std";
 import { test, expect_eq } from "cap:test";
-import { S3Acl, S3StorageClass, isValidBucketName, S3Uri } from "cap:s3_meta";
+import { S3MetaAcl, S3MetaStorageClass, isValidBucketName, S3Uri } from "cap:s3";
 
-test("1. S3Acl round-trips all 8 canned ACL policies and rejects unknown values", () => {
+test("1. S3MetaAcl round-trips all 8 canned ACL policies and rejects unknown values", () => {
     const names: [8][]const u8 = [
         "private",
         "public-read",
@@ -14,15 +14,15 @@ test("1. S3Acl round-trips all 8 canned ACL policies and rejects unknown values"
         "log-delivery-write",
     ];
     for (name of names) {
-        const parsed = S3Acl.parse(name) ?? unreachable;
+        const parsed = S3MetaAcl.parse(name) ?? unreachable;
         expect_eq(std.mem.eql(u8, parsed.asStr(), name), true);
     }
-    expect_eq(S3Acl.parse("PRIVATE") == null, true);
-    expect_eq(S3Acl.parse("public") == null, true);
-    expect_eq(S3Acl.parse("") == null, true);
+    expect_eq(S3MetaAcl.parse("PRIVATE") == null, true);
+    expect_eq(S3MetaAcl.parse("public") == null, true);
+    expect_eq(S3MetaAcl.parse("") == null, true);
 });
 
-test("2. S3StorageClass round-trips all 11 tiers and identifies archive tiers", () => {
+test("2. S3MetaStorageClass round-trips all 11 tiers and identifies archive tiers", () => {
     const tiers: [11][]const u8 = [
         "STANDARD",
         "STANDARD_IA",
@@ -37,20 +37,20 @@ test("2. S3StorageClass round-trips all 11 tiers and identifies archive tiers", 
         "SNOW",
     ];
     for (tier of tiers) {
-        const parsed = S3StorageClass.parse(tier) ?? unreachable;
+        const parsed = S3MetaStorageClass.parse(tier) ?? unreachable;
         expect_eq(std.mem.eql(u8, parsed.asStr(), tier), true);
     }
 
-    expect_eq(S3StorageClass.GLACIER.isArchiveTier(), true);
-    expect_eq(S3StorageClass.GLACIER_IR.isArchiveTier(), true);
-    expect_eq(S3StorageClass.DEEP_ARCHIVE.isArchiveTier(), true);
-    expect_eq(S3StorageClass.STANDARD.isArchiveTier(), false);
-    expect_eq(S3StorageClass.STANDARD_IA.isArchiveTier(), false);
-    expect_eq(S3StorageClass.EXPRESS_ONEZONE.isArchiveTier(), false);
-    expect_eq(S3StorageClass.SNOW.isArchiveTier(), false);
+    expect_eq(S3MetaStorageClass.GLACIER.isArchiveTier(), true);
+    expect_eq(S3MetaStorageClass.GLACIER_IR.isArchiveTier(), true);
+    expect_eq(S3MetaStorageClass.DEEP_ARCHIVE.isArchiveTier(), true);
+    expect_eq(S3MetaStorageClass.STANDARD.isArchiveTier(), false);
+    expect_eq(S3MetaStorageClass.STANDARD_IA.isArchiveTier(), false);
+    expect_eq(S3MetaStorageClass.EXPRESS_ONEZONE.isArchiveTier(), false);
+    expect_eq(S3MetaStorageClass.SNOW.isArchiveTier(), false);
 
-    expect_eq(S3StorageClass.parse("standard") == null, true);
-    expect_eq(S3StorageClass.parse("UNKNOWN") == null, true);
+    expect_eq(S3MetaStorageClass.parse("standard") == null, true);
+    expect_eq(S3MetaStorageClass.parse("UNKNOWN") == null, true);
 });
 
 test("3. isValidBucketName enforces AWS length, charset, boundary, double-dot, and IPv4 rules", () => {

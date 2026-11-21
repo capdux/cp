@@ -1,12 +1,12 @@
 // Source: cp/cap/test/test_s3_signing_production_deep.cp
-// Comprehensive Production-Grade Verification Suite for cap:s3_signing & cap.s3_signing
+// Comprehensive Production-Grade Verification Suite for cap:s3 (sigv4) & cap.s3
 
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
 import {
     S3SignError,
-    S3Credentials,
+    SigV4Credentials,
     SigV4Header,
     SigV4QueryParam,
     SigV4SignedResult,
@@ -14,7 +14,7 @@ import {
     deriveSigningKey,
     signRequest,
     presignUrl,
-} from "cap:s3_signing";
+} from "cap:s3";
 
 fn emptyMutSlice(): []u8 {
     return std.heap.page_allocator.alloc(u8, 0) catch unreachable;
@@ -28,7 +28,7 @@ fn emptySignedResult(): SigV4SignedResult {
 fn runTest1(): !void {
     const alloc = std.testing.allocator;
 
-    const creds = S3Credentials{
+    const creds = SigV4Credentials{
         .access_key_id = "AKIDEXAMPLE",
         .secret_access_key = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
     };
@@ -85,7 +85,7 @@ fn runTest2(): !void {
     defer alloc.free(enc_slash);
     expect_eq(std.mem.eql(u8, enc_slash, "a%2Fb%20c%2Bd"), true);
 
-    const creds = S3Credentials{
+    const creds = SigV4Credentials{
         .access_key_id = "AKIATEST123",
         .secret_access_key = "secretkey123",
         .session_token = "tok+abc/def==",
@@ -126,7 +126,7 @@ fn runTest2(): !void {
 fn runTest3(): !void {
     const alloc = std.testing.allocator;
 
-    const creds = S3Credentials{
+    const creds = SigV4Credentials{
         .access_key_id = "AKIDEXAMPLE",
         .secret_access_key = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
         .session_token = "FwoGZXIvYXdzEBYa",
@@ -169,7 +169,7 @@ fn runTest4(): !void {
     const empty_qry: []const SigV4QueryParam = [];
 
     // Empty credentials -> InvalidCredentials
-    const bad_creds = S3Credentials{ .access_key_id = "", .secret_access_key = "secret" };
+    const bad_creds = SigV4Credentials{ .access_key_id = "", .secret_access_key = "secret" };
     let got_bad_creds = false;
     * = signRequest(alloc, "GET", "/", &empty_qry, &empty_hdrs, "", bad_creds, "us-east-1", "s3", "20150830T123600Z") catch e => err1: {
         got_bad_creds = (e == S3SignError.InvalidCredentials);
@@ -177,7 +177,7 @@ fn runTest4(): !void {
     };
     expect_eq(got_bad_creds, true);
 
-    const valid_creds = S3Credentials{ .access_key_id = "AKID", .secret_access_key = "SECRET" };
+    const valid_creds = SigV4Credentials{ .access_key_id = "AKID", .secret_access_key = "SECRET" };
 
     // Bad timestamp -> InvalidTimestamp
     let got_bad_ts = false;
@@ -216,16 +216,16 @@ fn runTest4(): !void {
 fn runTest5(): !void {
     const alloc = std.testing.allocator;
 
-    const encoded = cap.s3_signing.awsUriEncode(alloc, "dir/sub dir/file.bin", false)?;
+    const encoded = cap.s3.awsUriEncode(alloc, "dir/sub dir/file.bin", false)?;
     defer alloc.free(encoded);
     expect_eq(std.mem.eql(u8, encoded, "dir/sub%20dir/file.bin"), true);
 
-    const creds = cap.s3_signing.S3Credentials{
+    const creds = cap.s3.SigV4Credentials{
         .access_key_id = "AKIDHUB",
         .secret_access_key = "SECRETHUB",
     };
-    const empty_qry: []const cap.s3_signing.SigV4QueryParam = [];
-    const url = cap.s3_signing.presignUrl(
+    const empty_qry: []const cap.s3.SigV4QueryParam = [];
+    const url = cap.s3.presignUrl(
         alloc,
         "https",
         "hub.s3.us-east-1.amazonaws.com",
