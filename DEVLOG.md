@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:pid` Discrete PID controller with derivative-on-measurement, anti-windup, LPF & bumpless transfer（5/5 PASS，文档直写 `doc/lib/pid.md`）
+新增 cap:pid 纯 CP 零分配闭环控制库（含 Ziegler-Nichols 整定、斜率限幅与条件积分 Anti-Windup），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:gf256` Galois Field GF(2^8) (AES/RS) arithmetic, const-time mul, Lagrange & Gauss-Jordan（5/5 PASS，文档直写 `doc/lib/gf256.md`）
 新增 cap:gf256 纯 CP 零分配有限域库（全 256×256 查表与无分支常量时间一致、RAID-6 矩阵求逆恢复与 Shamir 门限插值），通过 cpc check 与 5/5 cap test
 

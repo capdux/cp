@@ -28,3 +28,6 @@
 
 ### 2026-11-22（`cap:gf256` 验收，完成并注册纯 CP 零分配标准库 cap:gf256（5/5 cap test PASS））
 - **执行成果**：`lib/gf256/`（5/5 PASS，`doc/lib/gf256.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:gf256（5/5 cap test PASS）
+
+### 2026-11-22（`cap:pid` 验收，完成并注册纯 CP 零分配标准库 cap:pid（6/6 cap test PASS））
+- **执行成果**：`lib/pid/`（5/5 PASS，`doc/lib/pid.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:pid（6/6 cap test PASS）
