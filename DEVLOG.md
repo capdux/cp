@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:chacha20` 纯 CP RFC 8439 ChaCha20-Poly1305 与 24 字节 Nonce XChaCha20-Poly1305 AEAD 认证加密引擎（支持 `cap.chacha20` 自动动态挂载，详见 `doc/lib/chacha20.md`）（5/5 PASS，文档直写 `doc/lib/chacha20.md`）
+- **核心设计**：基于 Zig 0.17 `std.crypto.aead.chacha_poly` 与 `std.Io.Threaded` 实现零泄漏 AEAD 封装，通过 RFC 8439 Section 2.8.2 官方向量与篡改拦截测试。
+
 ## 2026-11-21: 新建 `cap:x25519` 纯 CP RFC 7748 X25519 椭圆曲线 Diffie-Hellman 密钥协商引擎（含全零弱公钥与单位元拦截，支持 `cap.x25519` 自动动态挂载，详见 `doc/lib/x25519.md`）（5/5 PASS，文档直写 `doc/lib/x25519.md`）
 - **核心设计**：基于 Zig 0.17 `std.crypto.dh.X25519` 与 `std.Io.Threaded` 实现常数时间密钥协商，通过 RFC 7748 Section 6.1 官方向量与全零公钥拦截测试。
 

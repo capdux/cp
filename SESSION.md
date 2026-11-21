@@ -94,3 +94,6 @@
 
 ### 2026-11-21（`cap:x25519` 验收，主控完成 `cap:x25519` 研发验收提交，继续与 `cap:roaring_bitmap` 及 `cap:ed25519` 并行）
 - **执行成果**：`lib/x25519/`（5/5 PASS，`doc/lib/x25519.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:x25519` 研发验收提交，继续与 `cap:roaring_bitmap` 及 `cap:ed25519` 并行
+
+### 2026-11-21（`cap:chacha20` 验收，主控完成 `cap:chacha20` 研发验收提交）
+- **执行成果**：`lib/chacha20/`（5/5 PASS，`doc/lib/chacha20.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:chacha20` 研发验收提交
