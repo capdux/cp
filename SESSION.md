@@ -322,3 +322,12 @@
 
 ### 2026-11-22（`cap:robots_txt` 验收，Batch 48 注册 `cap:robots_txt` 并提交。）
 - **执行成果**：`lib/robots_txt/`（5/5 PASS，`doc/lib/robots_txt.md`）经 `verify_module.sh` 一次性验收回收；Batch 48 注册 `cap:robots_txt` 并提交。
+
+### 2026-11-22（`cap:jwt_claims` 验收，Batch 49 完成 `cap:jwt_claims`、`cap:shell_quote`、`cap:ansi_strip` 3 模块吸收与全量验收。）
+- **执行成果**：`lib/jwt_claims/`（5/5 PASS，`doc/lib/jwt_claims.md`）经 `verify_module.sh` 一次性验收回收；Batch 49 完成 `cap:jwt_claims`、`cap:shell_quote`、`cap:ansi_strip` 3 模块吸收与全量验收。
+
+### 2026-11-22（`cap:shell_quote` 验收，Batch 49 注册 `cap:shell_quote`。）
+- **执行成果**：`lib/shell_quote/`（5/5 PASS，`doc/lib/shell_quote.md`）经 `verify_module.sh` 一次性验收回收；Batch 49 注册 `cap:shell_quote`。
+
+### 2026-11-22（`cap:ansi_strip` 验收，Batch 49 注册 `cap:ansi_strip` 并提交。）
+- **执行成果**：`lib/ansi_strip/`（5/5 PASS，`doc/lib/ansi_strip.md`）经 `verify_module.sh` 一次性验收回收；Batch 49 注册 `cap:ansi_strip` 并提交。

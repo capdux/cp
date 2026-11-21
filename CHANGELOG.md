@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ansi_strip` 零分配 ANSI/VT100 转义序列（CSI/OSC8 超链接/DCS/2 字节 ESC）剥离与可见 UTF-8 字符计数（5/5 PASS，自动动态挂载 `cap.ansi_strip`）
+新增 `cap:ansi_strip`（`lib/ansi_strip/{strip,index}.cp`、`doc/lib/ansi_strip.md`、`cap/test/test_ansi_strip_production_deep.cp`），完整覆盖 CSI、OSC 8（BEL/ST）、字符集切换与 C1 CSI。
+
+## [2026-11-22] - 新建 `cap:shell_quote` POSIX Shell 安全单引号转义、参数拼接与支持单双引号/反斜杠/相邻拼接的命令行拆分器（5/5 PASS，自动动态挂载 `cap.shell_quote`）
+新增 `cap:shell_quote`（`lib/shell_quote/{quote,index}.cp`、`doc/lib/shell_quote.md`、`cap/test/test_shell_quote_production_deep.cp`），实现零分配 POSIX 引号转义与命令行参数迭代解析。
+
+## [2026-11-22] - 新建 `cap:jwt_claims` RFC 7519 JWT 分段器、Base64URL 解码器、Header/Payload 声明提取与 exp/nbf/iss/sub/aud 校验器（5/5 PASS，自动动态挂载 `cap.jwt_claims`）
+新增 `cap:jwt_claims`（`lib/jwt_claims/{jwt,index}.cp`、`doc/lib/jwt_claims.md`、`cap/test/test_jwt_claims_production_deep.cp`），实现零分配 JWT 拆段、Base64URL 解码、`alg=none` 检测与时间窗/身份校验。
+
 ## [2026-11-22] - 新建 `cap:robots_txt` RFC 9309 robots.txt 解析、通配符匹配、Crawl-delay 提取与 Sitemap 迭代器（5/5 PASS，自动动态挂载 `cap.robots_txt`）
 新增 `cap:robots_txt`（`lib/robots_txt/{robots,index}.cp`、`doc/lib/robots_txt.md`、`cap/test/test_robots_txt_production_deep.cp`），实现 RFC 9309 最具体组匹配、最长规则优先与同长度 Allow 优先。
 

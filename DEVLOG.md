@@ -1,3 +1,12 @@
+## 2026-11-22: 新建 `cap:ansi_strip` 零分配 ANSI/VT100 转义序列（CSI/OSC8 超链接/DCS/2 字节 ESC）剥离与可见 UTF-8 字符计数（5/5 PASS，文档直写 `doc/lib/ansi_strip.md`）
+主智能体吸收 `cap:ansi_strip`，零堆分配剥离全部常见终端转义序列并精确计算剥离后字节长与可见 UTF-8 码点数。
+
+## 2026-11-22: 新建 `cap:shell_quote` POSIX Shell 安全单引号转义、参数拼接与支持单双引号/反斜杠/相邻拼接的命令行拆分器（5/5 PASS，文档直写 `doc/lib/shell_quote.md`）
+Subagent 2 吸收 `cap:shell_quote`，支持 `joinArgs` -> `ShellArgIter` 精确往返与未闭合引号/尾部孤立反斜杠检测。
+
+## 2026-11-22: 新建 `cap:jwt_claims` RFC 7519 JWT 分段器、Base64URL 解码器、Header/Payload 声明提取与 exp/nbf/iss/sub/aud 校验器（5/5 PASS，文档直写 `doc/lib/jwt_claims.md`）
+主智能体吸收 `cap:jwt_claims`，安全跳过嵌套 JSON 对象/数组提取顶层声明，支持 `leeway_sec` 时钟漂移容差。
+
 ## 2026-11-22: 新建 `cap:robots_txt` RFC 9309 robots.txt 解析、通配符匹配、Crawl-delay 提取与 Sitemap 迭代器（5/5 PASS，文档直写 `doc/lib/robots_txt.md`）
 Subagent 1 吸收 `cap:robots_txt`，采用线性双指针回溯实现 `*`/`$` 通配符匹配，支持 UTF-8 BOM、注释忽略、`Crawl-delay` 与 `SitemapIter`。
 
