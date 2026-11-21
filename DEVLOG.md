@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:skip_list` 纯 CP 有序跳表键值引擎（$O(\log N)$ 插入/覆盖/删除、`lowerBound`/`floor`/`ceiling` 边界查找与 `rangeQuery` 区间扫描，支持 `cap.skip_list` 自动动态挂载，详见 `doc/lib/skip_list.md`）（5/5 PASS，文档直写 `doc/lib/skip_list.md`）
+- **核心设计**：采用 `std.Random.DefaultPrng` 确定性层高随机化与 16 层前向指针数组，通过 200 节点乱序插删与 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:trie_radix` 纯 CP 路径压缩基数树 / Patricia Trie 引擎（支持边分裂插入、最长前缀路由 `longestPrefixMatch`、前缀遍历及删除自动边合并，支持 `cap.trie_radix` 自动动态挂载，详见 `doc/lib/trie_radix.md`）（5/5 PASS，文档直写 `doc/lib/trie_radix.md`）
 - **核心设计**：支持边分裂插入、删除后单子节点自动合并、`longestPrefixMatch` 与 `std.testing.allocator` 零泄漏验证。
 

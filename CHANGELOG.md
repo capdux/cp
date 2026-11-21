@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:skip_list` 纯 CP 有序跳表键值引擎（$O(\log N)$ 插入/覆盖/删除、`lowerBound`/`floor`/`ceiling` 边界查找与 `rangeQuery` 区间扫描，支持 `cap.skip_list` 自动动态挂载，详见 `doc/lib/skip_list.md`）（5/5 PASS，自动动态挂载 `cap.skip_list`）
+- **新增标准库**：`lib/skip_list/{skip_list,index}.cp`，实现泛型有序跳表 `SkipList(K, V)` 与边界/区间检索。\n- **新增文档与测试**：`doc/lib/skip_list.md` 扁平文档与 `cap/test/test_skip_list_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:trie_radix` 纯 CP 路径压缩基数树 / Patricia Trie 引擎（支持边分裂插入、最长前缀路由 `longestPrefixMatch`、前缀遍历及删除自动边合并，支持 `cap.trie_radix` 自动动态挂载，详见 `doc/lib/trie_radix.md`）（5/5 PASS，自动动态挂载 `cap.trie_radix`）
 - **新增标准库**：`lib/trie_radix/{radix,index}.cp`，实现路径压缩基数树 `RadixTree(V)`。\n- **新增文档与测试**：`doc/lib/trie_radix.md` 扁平文档与 `cap/test/test_trie_radix_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 
