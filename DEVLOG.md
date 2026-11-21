@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:exfat` Microsoft exFAT boot sector, 11-sector Boot Checksum & 32B directory entry set parser（5/5 PASS，文档直写 `doc/lib/exfat.md`）
+新增 cap:exfat 纯 CP 零分配大闪存文件系统库（512B 引导扇区、右旋 Boot/EntrySet Checksum 与 32B 目录项零拷贝迭代），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:vdi` VirtualBox VDI 1.1 virtual disk header & Block Allocation Map zero-alloc parser（5/5 PASS，文档直写 `doc/lib/vdi.md`）
 新增 cap:vdi 纯 CP 零分配虚拟磁盘镜像库（512B VDI 1.1 报头、Comment/UUID 与 >4GiB 块映射查表），通过 cpc check 与 5/5 cap test
 
