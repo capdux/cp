@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:css_gradient` CSS Images 4 线性/径向/锥形渐变（含 repeating-* 与双位置色标）零堆分配解析与规范化序列化库（吸收自 bun/src/css/values/gradient.cp）（5/5 PASS，自动动态挂载 `cap.css_gradient`）
+新增 cap:css_gradient 标准库模块（lib/css_gradient/{gradient,index}.cp, doc/lib/css_gradient.md, cap/test/test_css_gradient_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:errno_map` 跨平台 POSIX/OS Errno 69 项核心错误码双射映射、OS 特定错误消息与瞬态重试判定（吸收自 bun/src/sys/coreutils_error_map.cp 与 errno/{linux,darwin}_errno.cp）（5/5 PASS，自动动态挂载 `cap.errno_map`）
+新增 cap:errno_map 标准库模块（lib/errno_map/{errno,index}.cp, doc/lib/errno_map.md, cap/test/test_errno_map_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:progress_tree` 零堆分配层级进度树、节流刷新判定与终端状态行格式化引擎（吸收自 bun/src/bun_core/Progress.cp）（5/5 PASS，自动动态挂载 `cap.progress_tree`）
+新增 cap:progress_tree 标准库模块（lib/progress_tree/{progress,index}.cp, doc/lib/progress_tree.md, cap/test/test_progress_tree_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:md_line_analysis` CommonMark / GFM 块级行分析器（Setext/ATX 标题、HR、围栏代码块、HTML 块 Type 1-7、62 块级标签与 GFM 表格分隔行，吸收自 bun/src/md/line_analysis.cp）（5/5 PASS，自动动态挂载 `cap.md_line_analysis`）
+新增 cap:md_line_analysis 标准库模块（lib/md_line_analysis/{line_analysis,index}.cp, doc/lib/md_line_analysis.md, cap/test/test_md_line_analysis_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:grapheme_cluster` Unicode UAX #29 扩展字素簇边界判定（GB3-GB13/Hangul/ZWJ Emoji/国旗）与零分配 UTF-8 迭代器（吸收自 bun/src/string/immutable/grapheme.cp）（5/5 PASS，自动动态挂载 `cap.grapheme_cluster`）
 新增 cap:grapheme_cluster 标准库模块（lib/grapheme_cluster/{grapheme,index}.cp, doc/lib/grapheme_cluster.md, cap/test/test_grapheme_cluster_production_deep.cp）
 

@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:css_gradient` CSS Images 4 线性/径向/锥形渐变（含 repeating-* 与双位置色标）零堆分配解析与规范化序列化库（吸收自 bun/src/css/values/gradient.cp）（5/5 PASS，文档直写 `doc/lib/css_gradient.md`）
+子智能体 1 吸收 bun/src/css/values/gradient.cp，实现 6 种 CSS 渐变解析与默认值省略规范化序列化，6/6 单测通过
+
+## 2026-11-22: 新建 `cap:errno_map` 跨平台 POSIX/OS Errno 69 项核心错误码双射映射、OS 特定错误消息与瞬态重试判定（吸收自 bun/src/sys/coreutils_error_map.cp 与 errno/{linux,darwin}_errno.cp）（5/5 PASS，文档直写 `doc/lib/errno_map.md`）
+子智能体 2 吸收 coreutils_error_map 与 linux/darwin errno，实现 69 变体跨平台双射映射与零 std.posix 依赖查表，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:progress_tree` 零堆分配层级进度树、节流刷新判定与终端状态行格式化引擎（吸收自 bun/src/bun_core/Progress.cp）（5/5 PASS，文档直写 `doc/lib/progress_tree.md`）
+吸收 bun/src/bun_core/Progress.cp，实现 32 节点层级进度树、initial_delay/refresh_rate 节流与字节/文件进度行渲染，通过 cpc check 与 cap test
+
+## 2026-11-22: 新建 `cap:md_line_analysis` CommonMark / GFM 块级行分析器（Setext/ATX 标题、HR、围栏代码块、HTML 块 Type 1-7、62 块级标签与 GFM 表格分隔行，吸收自 bun/src/md/line_analysis.cp）（5/5 PASS，文档直写 `doc/lib/md_line_analysis.md`）
+吸收 bun/src/md/line_analysis.cp，实现零堆分配 CommonMark/GFM 块级行分析器，通过 cpc check 与 cap test
+
 ## 2026-11-22: 新建 `cap:grapheme_cluster` Unicode UAX #29 扩展字素簇边界判定（GB3-GB13/Hangul/ZWJ Emoji/国旗）与零分配 UTF-8 迭代器（吸收自 bun/src/string/immutable/grapheme.cp）（5/5 PASS，文档直写 `doc/lib/grapheme_cluster.md`）
 子智能体 1 吸收 bun/src/string/immutable/grapheme.cp，实现完整 UAX #29 15 类码点分类、状态机与容错 UTF-8 字素迭代器，6/6 单测通过
 
