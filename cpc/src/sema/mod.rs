@@ -566,7 +566,7 @@ pub struct Analyzer {
     pub errors: Vec<SemaError>,
 }
 
-pub const RESERVED_WORDS: &[&str] = &["in", "as", "type", "arena", "macro"];
+pub const RESERVED_WORDS: &[&str] = &["in", "as", "type", "macro"];
 
 impl Analyzer {
     pub fn get_diagnostics(&self) -> Vec<Diagnostic> {

@@ -321,8 +321,15 @@ impl<'a> Parser<'a> {
                 Ok(Expr::Unsafe(block))
             }
             Token::Arena => {
-                let block = self.parse_block_stmt()?;
-                Ok(Expr::Arena(block))
+                if self.peek() == Some(&Token::LBrace) {
+                    let block = self.parse_block_stmt()?;
+                    Ok(Expr::Arena(block))
+                } else {
+                    Ok(Expr::Ident(Ident {
+                        span,
+                        sym: "arena".to_string(),
+                    }))
+                }
             }
             Token::Question => {
                 let start_idx = span.start;

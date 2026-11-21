@@ -395,8 +395,16 @@ impl<'a> Parser<'a> {
                 Ok(Stmt::UnsafeBlock(self.parse_block_stmt()?))
             }
             Some(Token::Arena) => {
-                self.bump()?;
-                Ok(Stmt::ArenaBlock(self.parse_block_stmt()?))
+                if self.peek_next() == Some(&Token::LBrace) {
+                    self.bump()?;
+                    Ok(Stmt::ArenaBlock(self.parse_block_stmt()?))
+                } else {
+                    let expr = self.parse_expr()?;
+                    if self.peek() == Some(&Token::Semicolon) {
+                        self.bump()?;
+                    }
+                    Ok(Stmt::Expr(expr))
+                }
             }
             Some(Token::Fuzz) => {
                 let f = self.parse_fuzz_decl()?;

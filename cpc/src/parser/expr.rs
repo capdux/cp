@@ -1632,6 +1632,7 @@ impl<'a> Parser<'a> {
             Token::Dec => "dec".to_string(),
             Token::Macro => "macro".to_string(),
             Token::Unsafe => "unsafe".to_string(),
+            Token::Arena => "arena".to_string(),
             Token::Of => "of".to_string(),
             Token::In => "in".to_string(),
             Token::TypeKw => "type".to_string(),

@@ -70,6 +70,7 @@ impl<'a> Parser<'a> {
                 | Some(Token::As)
                 | Some(Token::From)
                 | Some(Token::Unsafe)
+                | Some(Token::Arena)
         );
         if is_ident_like && self.peek_next() == Some(&Token::Colon) {
             let ident = self.parse_meta_ident()?;
