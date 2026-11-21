@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:s7` Siemens S7comm / TPKT (RFC 1006) / COTP (ISO 8073) & S7-Any PLC zero-alloc parser（5/5 PASS，自动动态挂载 `cap.s7`）
+新增纯 CP 零分配标准库 cap:s7（Siemens S7comm / TPKT / COTP 与 S7-Any 地址解析）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:knx` KNXnet/IP (ISO 14543-3-2) HPAI, cEMI frame, address & DPT9 float zero-alloc codec（5/5 PASS，自动动态挂载 `cap.knx`）
 新增纯 CP 零分配标准库 cap:knx（ISO 14543-3-2 KNXnet/IP、HPAI、cEMI 帧与 DPT9 浮点解码）与 5/5 深度测试
 
