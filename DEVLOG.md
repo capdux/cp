@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:clf` 零分配 NCSA Common & Apache/Nginx Combined HTTP 访问日志解析与统计器（5/5 PASS，文档直写 `doc/lib/clf.md`）
+实现零分配 HTTP 访问日志解析器，支持转义引号、缺失字节数 - 与畸形行安全跳过计数。
+
 ## 2026-11-22: 新建 `cap:crl` 零分配 RFC 5280 X.509 CRL 证书吊销列表 ASN.1 DER 解析器（5/5 PASS，文档直写 `doc/lib/crl.md`）
 实现零分配 X.509 CRL 解析器，零拷贝暴露 tbs_raw_der 并兼容 UTCTime/GeneralizedTime。
 

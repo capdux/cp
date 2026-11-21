@@ -97,3 +97,6 @@
 
 ### 2026-11-22（`cap:crl` 验收，完成 `cap:crl` 交付验收并登记入库（5/5 PASS）；派发 `cap:ocsp`。）
 - **执行成果**：`lib/crl/`（5/5 PASS，`doc/lib/crl.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:crl` 交付验收并登记入库（5/5 PASS）；派发 `cap:ocsp`。
+
+### 2026-11-22（`cap:clf` 验收，完成 `cap:clf` 交付验收并登记入库（5/5 PASS）；派发 `cap:jks`。）
+- **执行成果**：`lib/clf/`（5/5 PASS，`doc/lib/clf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:clf` 交付验收并登记入库（5/5 PASS）；派发 `cap:jks`。
