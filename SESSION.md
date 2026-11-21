@@ -58,3 +58,6 @@
 
 ### 2026-11-21（`cap:lockfree_queue` 验收，验收提交 `cap:lockfree_queue` 并新开 `cap:scrypt` 并发子智能体）
 - **执行成果**：`lib/lockfree_queue/`（5/5 PASS，`doc/lib/lockfree_queue.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:lockfree_queue` 并新开 `cap:scrypt` 并发子智能体
+
+### 2026-11-21（`cap:ksuid` 验收，主控完成第 11 路 `cap:ksuid` 验收提交，继续与 `cap:totp_hotp` 及 `cap:scrypt` 并行）
+- **执行成果**：`lib/ksuid/`（5/5 PASS，`doc/lib/ksuid.md`）经 `verify_module.sh` 一次性验收回收；主控完成第 11 路 `cap:ksuid` 验收提交，继续与 `cap:totp_hotp` 及 `cap:scrypt` 并行

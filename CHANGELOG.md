@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:ksuid` 纯 CP Segment KSUID 20 字节 / 27 字符 Base62 字典序唯一 ID 与零堆编解码引擎（支持 `cap.ksuid` 自动动态挂载，详见 `doc/lib/ksuid.md`）（5/5 PASS，自动动态挂载 `cap.ksuid`）
+- **新增标准库**：`lib/ksuid/{ksuid,index}.cp`，实现 Segment KSUID 官方向量全匹配的 20B/27-char Base62 零堆编解码与字典序比较。\n- **新增文档与测试**：`doc/lib/ksuid.md` 扁平文档与 `cap/test/test_ksuid_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:lockfree_queue` 纯 CP 工业级无锁并发环形队列与有界多线程通道标准库（缓存行隔离 SPSC、Vyukov MPMC、可关闭 `BoundedChannel`，支持 `cap.lockfree_queue` 自动动态挂载，详见 `doc/lib/lockfree_queue.md`）（5/5 PASS，自动动态挂载 `cap.lockfree_queue`）
 - **新增标准库**：`lib/lockfree_queue/{spsc,mpmc,channel,index}.cp`，实现缓存行对齐 `SpscQueue`、Vyukov `MpmcQueue` 及动态有界阻塞 `BoundedChannel`。\n- **新增文档与测试**：`doc/lib/lockfree_queue.md` 扁平文档与 `cap/test/test_lockfree_queue_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

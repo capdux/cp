@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:ksuid` 纯 CP Segment KSUID 20 字节 / 27 字符 Base62 字典序唯一 ID 与零堆编解码引擎（支持 `cap.ksuid` 自动动态挂载，详见 `doc/lib/ksuid.md`）（5/5 PASS，文档直写 `doc/lib/ksuid.md`）
+- **核心设计**：采用 `5 x u32` 大端字数组除法与乘法完成零堆 160-bit Base62 编码解码，通过官方已知向量与 27 个 `z` 溢出测试验证。
+
 ## 2026-11-21: 新建 `cap:lockfree_queue` 纯 CP 工业级无锁并发环形队列与有界多线程通道标准库（缓存行隔离 SPSC、Vyukov MPMC、可关闭 `BoundedChannel`，支持 `cap.lockfree_queue` 自动动态挂载，详见 `doc/lib/lockfree_queue.md`）（5/5 PASS，文档直写 `doc/lib/lockfree_queue.md`）
 - **核心设计**：采用 `align(64)` 缓存行隔离消除伪共享，Vyukov 槽位序列号免疫 ABA 问题，`BoundedChannel` 基于 `std.atomic.Mutex` 支持优雅关闭与剩余元素排空。
 
