@@ -1,5 +1,5 @@
 import { test, expect } from "cap:test";
-import { FilterKind, Filter, FilterList } from "cap:css_effects";
+import { CssFilterKind as FilterKind, Filter, CssFilterList as FilterList } from "cap:css";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

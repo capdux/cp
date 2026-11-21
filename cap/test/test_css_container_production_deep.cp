@@ -6,8 +6,8 @@ import {
     ContainerSizeFeatureId,
     Orientation,
     ContainerSizeFeature,
-    ContainerQuery,
-} from "cap:css_container";
+    CssContainerQuery as ContainerQuery,
+} from "cap:css";
 
 test("1. ContainerType (normal/size/inline-size) parse, serialize & containment predicates", () => {
     const t_norm = ContainerType.parse("normal").?;

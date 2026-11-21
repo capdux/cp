@@ -49,6 +49,14 @@ pub enum LineStyle: u8 {
         };
     }
 
+    pub fn toCss(): []const u8 {
+        return _.asStr();
+    }
+
+    pub fn isVisible(): bool {
+        return _ != .none && _ != .hidden;
+    }
+
     pub fn eql(other: LineStyle): bool {
         return _ == other;
     }

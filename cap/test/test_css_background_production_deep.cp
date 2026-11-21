@@ -11,7 +11,7 @@ import {
     BackgroundPosition,
     BackgroundLayer,
     Background,
-} from "cap:css_background";
+} from "cap:css";
 
 test("1. BackgroundRepeat (repeat-x/repeat-y/dual-axis) & BackgroundSize (cover/contain/explicit)", () => {
     let buf: [64]u8 = std.mem.zeroes([64]u8);

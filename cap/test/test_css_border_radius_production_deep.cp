@@ -1,5 +1,5 @@
 import { test, expect } from "cap:test";
-import { BorderRadius } from "cap:css_border_radius";
+import { CssBorderRadius as BorderRadius } from "cap:css";
 
 test("css_border_radius: 1-4 value expansion and shortest canonical toCss", () => {
     let buf: [128]u8 = undefined;

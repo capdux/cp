@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:css` CSS 引擎与样式/动画/边框/阴影/容器查询统一主包（`css_*` 第 1 批 12 目录收敛）（5/5 PASS，文档直写 `doc/lib/css.md`）
+- **收敛要点**：9 个与 `lib/css/engine/` 重名符号以 `Css*` 聚合别名导出，13/13 PASS（含原 `test_phase_d_css_lightning_port.cp`）。
+
 ## 2026-11-22: 新建 `cap:pg` PostgreSQL 线协议全套认证、SASL/COPY、扩展查询、OID、SQLSTATE 与二进制流解析统一主包（`lib/pg_*` 全仓清零）（5/5 PASS，文档直写 `doc/lib/pg.md`）
 - **收敛要点**：`messages.cp` 诊断枚举最小重命名为 `DiagSqlStateClass` 保留 `sqlstate.cp` 完整 `SqlStateClass`；8/8 PASS，累计消除 170 个散装目录。
 

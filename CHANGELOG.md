@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:css` CSS 引擎与样式/动画/边框/阴影/容器查询统一主包（`css_*` 第 1 批 12 目录收敛）（5/5 PASS，自动动态挂载 `cap.css`）
+- **方案 A 收敛 (`css_*` 第 1 批 12 目录 -> `cap:css`)**：将 `css_animation` 至 `css_effects` 12 个散装目录零破坏合入 `lib/css/` 并保留原 `lib/css/engine/` 全部导出（13/13 PASS），删除 12 个旧目录与文档，累计消除 182 个长下划线顶层目录。
+
 ## [2026-11-22] - 新建 `cap:pg` PostgreSQL 线协议全套认证、SASL/COPY、扩展查询、OID、SQLSTATE 与二进制流解析统一主包（`lib/pg_*` 全仓清零）（5/5 PASS，自动动态挂载 `cap.pg`）
 - **方案 A 收敛 (`pg_*` 8 目录 -> `cap:pg`)**：新建 `lib/pg/{auth,copysasl,extquery,messages,oids,reader,sqlstate,wiretypes,index}.cp` 与 `doc/lib/pg.md`，全部 8 套深度测试 100% PASS，全仓 `lib/pg_*` 与 `cap:pg_*` 彻底清零（累计消除 170 个长下划线顶层目录）。
 

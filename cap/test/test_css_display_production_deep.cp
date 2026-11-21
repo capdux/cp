@@ -6,7 +6,7 @@ import {
     DisplayInside,
     DisplayPair,
     Display,
-} from "cap:css_display";
+} from "cap:css";
 
 test("css_display: Visibility and DisplayKeyword parse/toCss", () => {
     expect(Visibility.parse("HIDDEN").? == .hidden).toBeTrue();

@@ -4,7 +4,7 @@ import {
     ImportRule,
     ScopePrelude,
     LayerStatement,
-} from "cap:css_cascade_rules";
+} from "cap:css";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

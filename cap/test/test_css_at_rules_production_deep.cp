@@ -10,7 +10,7 @@ import {
     PropertySyntaxKind,
     isValidCustomPropertyName,
     PropertyDescriptor,
-} from "cap:css_at_rules";
+} from "cap:css";
 
 test("1. KeyframeSelector (from/to/0%..100%/timeline-range) parse, normalize & minify serialization", () => {
     let buf: [64]u8 = std.mem.zeroes([64]u8);

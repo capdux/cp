@@ -2,53 +2,7 @@
 //! CSS `box-shadow` shorthand parser/serializer and `border-style`/`outline-style` `LineStyle` model.
 
 import std from "std";
-
-export enum LineStyle: u8 {
-    none = 0,
-    hidden = 1,
-    inset = 2,
-    groove = 3,
-    outset = 4,
-    ridge = 5,
-    dotted = 6,
-    dashed = 7,
-    solid = 8,
-    double = 9,
-
-    pub fn toCss(): []const u8 {
-        return switch (_) {
-            .none => "none",
-            .hidden => "hidden",
-            .inset => "inset",
-            .groove => "groove",
-            .outset => "outset",
-            .ridge => "ridge",
-            .dotted => "dotted",
-            .dashed => "dashed",
-            .solid => "solid",
-            .double => "double",
-        };
-    }
-
-    pub static fn parse(input: []const u8): LineStyle? {
-        const s = trimAscii(input);
-        if (asciiCaseEql(s, "none")) return .none;
-        if (asciiCaseEql(s, "hidden")) return .hidden;
-        if (asciiCaseEql(s, "inset")) return .inset;
-        if (asciiCaseEql(s, "groove")) return .groove;
-        if (asciiCaseEql(s, "outset")) return .outset;
-        if (asciiCaseEql(s, "ridge")) return .ridge;
-        if (asciiCaseEql(s, "dotted")) return .dotted;
-        if (asciiCaseEql(s, "dashed")) return .dashed;
-        if (asciiCaseEql(s, "solid")) return .solid;
-        if (asciiCaseEql(s, "double")) return .double;
-        return null;
-    }
-
-    pub fn isVisible(): bool {
-        return _ != .none && _ != .hidden;
-    }
-}
+import { LineStyle } from "./border.cp";
 
 export enum OutlineStyle: u8 {
     auto = 0,

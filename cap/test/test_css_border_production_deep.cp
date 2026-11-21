@@ -5,10 +5,10 @@ import {
     BorderColorValue,
     Border,
     BorderWidth,
-    BorderStyle,
+    CssBorderStyle as BorderStyle,
     BorderColor,
     BorderLogicalWidth,
-} from "cap:css_border";
+} from "cap:css";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

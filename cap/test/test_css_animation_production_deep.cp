@@ -6,7 +6,7 @@ import {
     IterationCount,
     Animation,
     Transition,
-} from "cap:css_animation";
+} from "cap:css";
 
 test("css_animation: Animation shorthand parse and canonical shortest toCss", () => {
     const a = Animation.parse("300ms ease-in 50ms infinite alternate forwards paused fadeIn").?;

@@ -1,5 +1,5 @@
 import { test, expect } from "cap:test";
-import { LineStyle, OutlineStyle, BoxShadow } from "cap:css_box_shadow";
+import { LineStyle, OutlineStyle, CssBoxShadow as BoxShadow } from "cap:css";
 
 test("css_box_shadow: BoxShadow parse, canonical shortest toCss, and validation", () => {
     let buf: [128]u8 = undefined;

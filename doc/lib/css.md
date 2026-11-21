@@ -176,3 +176,43 @@ pub fn demoCssEngine() {
 | `lib/css/engine/rules.cp` | `/data/dev/bun/src/css/rules/rules.cp` | `SupportsAst`（`@supports` 递归 `not`/`and`/`or`/`selector()` AST 解析与求值）、`MediaRangeQuery`（Media Queries Level 4 `(400px <= width < 900px)` → `(min-width: 400px) and (max-width: 899.98px)` 降级）、`ContainerQuery`、`LayerManager`（`@layer` 级联权重）、`FontFaceRule`、`PropertyRule`、`ScopeRule` |
 | `lib/css/engine/compiler.cp` | `/data/dev/bun/src/css/printer.cp` | `CssCompileOptions`、`CssCompileStats`、`CssModulesHasher`（确定性类名作用域哈希与 `:global(...)` 保留）与 `CssCompiler.compile()`（Nesting 展平 + 未使用符号裁剪 + Media Range L4 降级 + 逻辑属性展开 + 简写压缩 + 靶向厂商前缀 + Minify/Pretty 输出） |
 | `lib/css/engine/index.cp` | `/data/dev/bun/src/css/css_parser.cp` | 引擎子模块统一重导出出口 |
+
+
+## 合并收敛子模块（第 1 批：12 个 CSS 属性与规则子模块）
+
+为统一 CSS 领域出口，`cap:css` 已聚合吸收以下 12 个纯 CP 子模块（保留原有 `engine/` 全部导出零破坏；与 `engine/` 同名的独立子模块类型通过 `Css*` 聚合别名导出）：
+
+| 子文件 | 原始来源 | 核心导出符号 |
+| --- | --- | --- |
+| `lib/css/animation.cp` | `bun/src/css/properties/{animation,transition}.cp` | `AnimationDirection`, `AnimationPlayState`, `AnimationFillMode`, `IterationCount`, `Animation`, `Transition` |
+| `lib/css/atrules.cp` | `bun/src/css/rules/{keyframes,layer,counter_style,property}.cp` | `CssAtRuleError`, `isValidKeyframesIdent`, `TimelineRangeName`, `KeyframeSelectorKind`, `KeyframeSelector`, `LayerName`, `CounterSystem`, `PropertySyntaxKind`, `isValidCustomPropertyName`, `PropertyDescriptor` |
+| `lib/css/background.cp` | `bun/src/css/properties/background.cp` | `CssBackgroundError`, `BackgroundRepeatKeyword`, `BackgroundRepeat`, `LengthPercentageAutoKind`, `LengthPercentageAuto`, `BackgroundSizeKind`, `BackgroundSize`, `BackgroundAttachment`, `BackgroundOrigin`, `BackgroundClip`, `BackgroundPosition`, `BackgroundLayer`, `Background` |
+| `lib/css/border.cp` | `bun/src/css/properties/border.cp` | `LineStyle`, `BorderLengthUnit`, `BorderSideWidthKind`, `BorderSideWidth`, `BorderColorKind`, `BorderColorValue`, `Border`, `BorderWidth`, `CssBorderStyle`, `BorderColor`, `BorderLogicalWidth` |
+| `lib/css/borderimage.cp` | `bun/src/css/properties/border_image.cp` | `BorderImageRepeatKeyword`, `BorderImageRepeat`, `SliceOffset`, `BorderImageSlice`, `WidthKind`, `BorderImageSideWidth`, `BorderImageWidth`, `OutsetKind`, `BorderImageOutsetValue`, `BorderImageOutset`, `BorderImage` |
+| `lib/css/borderradius.cp` | `bun/src/css/properties/border_radius.cp` | `RadiusValue`, `CornerRadius`, `CssBorderRadius` |
+| `lib/css/boxshadow.cp` | `bun/src/css/properties/{box_shadow,outline}.cp` | `OutlineStyle`, `ShadowLength`, `CssBoxShadow`（共享 `LineStyle`） |
+| `lib/css/cascade.cp` | `bun/src/css/rules/{import,scope,viewport}.cp` | `ImportLayerKind`, `ImportRule`, `ScopePrelude`, `LayerStatement` |
+| `lib/css/container.cp` | `bun/src/css/rules/container.cp` | `CssContainerError`, `ContainerType`, `ContainerName`, `ContainerSizeFeatureId`, `Orientation`, `CompareOp`, `ContainerSizeFeature`, `LogicOp`, `CssContainerQuery` |
+| `lib/css/display.cp` | `bun/src/css/properties/display.cp` | `Visibility`, `DisplayKeyword`, `DisplayOutside`, `DisplayInside`, `DisplayPair`, `DisplayKind`, `Display` |
+| `lib/css/easing.cp` | `bun/src/css/values/easing.cp` | `CssEasingError`, `CssStepPosition`, `CssEasingKind`, `CubicBezier`, `EasingSteps`, `CssEasingFunction` |
+| `lib/css/effects.cp` | `bun/src/css/properties/effects.cp` | `CssFilterKind`, `FilterLengthUnit`, `FilterAngleUnit`, `DropShadow`, `Filter`, `CssFilterList` |
+
+### 使用示例
+
+```cp
+import {
+    Animation,
+    Background,
+    Border,
+    CssBorderRadius,
+    CssBoxShadow,
+    Display,
+    CssEasingFunction,
+    CssFilterList,
+} from "cap:css";
+
+const anim = Animation.parse("300ms ease-in 50ms infinite alternate fadeIn").?;
+const radius = CssBorderRadius.parse("8px 12px").?;
+const shadow = CssBoxShadow.parse("inset 0 2px 6px rgba(0,0,0,0.2)").?;
+const disp = Display.parse("inline flex").?;
+```

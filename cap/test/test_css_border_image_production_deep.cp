@@ -10,7 +10,7 @@ import {
     BorderImageOutset,
     BorderImageRepeat,
     BorderImageRepeatKeyword,
-} from "cap:css_border_image";
+} from "cap:css";
 
 test("BorderImageSlice fill before/after and 1..4 value compression") {
     let buf: [64]u8 = [0; 64];

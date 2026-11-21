@@ -1,10 +1,10 @@
 import { test, expect_eq } from "cap:test";
 import {
     CssEasingError,
-    StepPosition,
-    EasingKind,
-    EasingFunction,
-} from "cap:css_easing";
+    CssStepPosition as StepPosition,
+    CssEasingKind as EasingKind,
+    CssEasingFunction as EasingFunction,
+} from "cap:css";
 
 fn approxClose(a: f64, b: f64, eps: f64): bool {
     const diff = if (a > b) (a - b) else (b - a);
