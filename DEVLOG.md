@@ -1,3 +1,12 @@
+## 2026-11-22: 新建 `cap:ply` 零分配 Stanford PLY 3D 点云与网格头解析器（5/5 PASS，文档直写 `doc/lib/ply.md`）
+实现零分配 Stanford PLY 头解析器，严格校验 ply 魔数、format、element/property 归属与 end_header 边界。
+
+## 2026-11-22: 新建 `cap:obj` 零分配 Wavefront 3D OBJ 网格与顶点/面解析器（5/5 PASS，文档直写 `doc/lib/obj.md`）
+实现零分配 Wavefront OBJ 流式行解析器，支持 v/vt/vn/f/g/o/mtllib/usemtl 与负索引面元组。
+
+## 2026-11-22: 新建 `cap:icc` 零分配 ICC 色彩配置文件（128B 头与 Tag 表）解析器（5/5 PASS，文档直写 `doc/lib/icc.md`）
+实现零分配 ICC Profile 二进制解析器，严格校验 acsp 魔数、版本、色彩空间及 Tag 边界偏移。
+
 ## 2026-11-22: 新建 `cap:dds` 零分配 DirectDraw Surface `.dds` GPU 纹理 128/148 字节头、DX10 扩展与 BCn Mip 尺寸计算器（5/5 PASS，文档直写 `doc/lib/dds.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:dds`，与 `cap:wgsl`/`cap:glsl` 配套补齐 GPU 渲染资产解析生态。
 

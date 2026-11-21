@@ -193,3 +193,12 @@
 
 ### 2026-11-22（`cap:dds` 验收，新增简洁单单词包 `cap:dds`（5/5 PASS））
 - **执行成果**：`lib/dds/`（5/5 PASS，`doc/lib/dds.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:dds`（5/5 PASS）
+
+### 2026-11-22（`cap:icc` 验收，完成 `cap:icc` 交付验收并登记入库（5/5 PASS）。）
+- **执行成果**：`lib/icc/`（5/5 PASS，`doc/lib/icc.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:icc` 交付验收并登记入库（5/5 PASS）。
+
+### 2026-11-22（`cap:obj` 验收，完成 `cap:obj` 交付验收并登记入库（5/5 PASS）。）
+- **执行成果**：`lib/obj/`（5/5 PASS，`doc/lib/obj.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:obj` 交付验收并登记入库（5/5 PASS）。
+
+### 2026-11-22（`cap:ply` 验收，完成 `cap:ply` 交付验收并登记入库（5/5 PASS）；并行派发 `cap:mp4`、`cap:gltf`、`cap:ktx`。）
+- **执行成果**：`lib/ply/`（5/5 PASS，`doc/lib/ply.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:ply` 交付验收并登记入库（5/5 PASS）；并行派发 `cap:mp4`、`cap:gltf`、`cap:ktx`。

@@ -535,3 +535,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:ebml` | `EBML_ID_HEADER`, `EbmlVint`, `EbmlElement`, `decodeEbmlId`, `decodeEbmlSize`, `isEbmlHeader`, `EbmlElementIter`, `decodeEbmlUint` | 零分配 RFC 8794 EBML / WebM / MKV 变长 VINT 整数与二进制元素流式解析器 |
 | `cap:stl` | `StlFormat`, `StlVec3`, `StlTriangle`, `StlBinaryHeader`, `StlBounds`, `detectStlFormat`, `parseStlBinaryHeader`, `StlBinaryIter`, `writeStlBinary`, `computeStlBinaryBounds`, `countAsciiStlFacets` | 零分配 3D STL 二进制与 ASCII 三角网格解析、包围盒统计与二进制编码器 |
 | `cap:dds` | `DdsPixelFormat`, `DdsDx10Header`, `DdsHeader`, `isDds`, `parseDdsHeader`, `calcDdsMipSize` | 零分配 DirectDraw Surface `.dds` GPU 纹理 128/148 字节头、DX10 扩展与 BCn Mip 尺寸计算器 |
+| `cap:icc` | IccHeader, IccTagEntry, isIccProfile, parseIccHeader, IccTagIter, findIccTag | 零分配 ICC 色彩配置文件（128B 头与 Tag 表）解析器 |
+| `cap:obj` | ObjRecordKind, ObjVec3, ObjFaceVertex, ObjStats, ObjRecord, ObjLineIter, parseObjVec3, parseObjFaceVertex, summarizeObj | 零分配 Wavefront 3D OBJ 网格与顶点/面解析器 |
+| `cap:ply` | PlyFormat, PlyHeader, PlyElement, isPly, parsePlyHeader, PlyElementIter, plyScalarSize | 零分配 Stanford PLY 3D 点云与网格头解析器 |

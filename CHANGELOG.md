@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ply` 零分配 Stanford PLY 3D 点云与网格头解析器（5/5 PASS，自动动态挂载 `cap.ply`）
+新增 `lib/ply/{ply,index}.cp`、`doc/lib/ply.md` 与 `cap/test/test_ply_production_deep.cp`（5/5 PASS），支持 ASCII/Binary LE/BE 头解析、Element 迭代与标量位宽查询。
+
+## [2026-11-22] - 新建 `cap:obj` 零分配 Wavefront 3D OBJ 网格与顶点/面解析器（5/5 PASS，自动动态挂载 `cap.obj`）
+新增 `lib/obj/{obj,index}.cp`、`doc/lib/obj.md` 与 `cap/test/test_obj_production_deep.cp`（5/5 PASS），支持 OBJ 行迭代、向量/面索引解析与网格统计。
+
+## [2026-11-22] - 新建 `cap:icc` 零分配 ICC 色彩配置文件（128B 头与 Tag 表）解析器（5/5 PASS，自动动态挂载 `cap.icc`）
+新增 `lib/icc/{icc,index}.cp`、`doc/lib/icc.md` 与 `cap/test/test_icc_production_deep.cp`（5/5 PASS），支持 ICC 128B 头校验、Tag 表迭代与按签名查找。
+
 ## [2026-11-22] - 新建 `cap:dds` 零分配 DirectDraw Surface `.dds` GPU 纹理 128/148 字节头、DX10 扩展与 BCn Mip 尺寸计算器（5/5 PASS，自动动态挂载 `cap.dds`）
 - 新增 `lib/dds/{dds,index}.cp`、`doc/lib/dds.md`、`cap/test/test_dds_production_deep.cp`：纯 CP 零分配实现 DDS 128B/DX10 148B GPU 纹理头解析、Cubemap/Volume 判定与防溢出 BCn Mip 层字节计算（5/5 PASS）。
 
