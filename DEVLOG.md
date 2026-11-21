@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:orc` 零分配 Apache ORC 列式存储 PostScript、分区视图与 3B 压缩块解析器（5/5 PASS，文档直写 `doc/lib/orc.md`）
+实现零分配 Apache ORC 容器解析器，严格校验尾部 PostScript 长度、ORC 魔数与分区下溢边界。
+
 ## 2026-11-22: 新建 `cap:arrow` 零分配 Apache Arrow IPC Stream/File 容器帧、Footer 与 FlatBuffers 解析器（5/5 PASS，文档直写 `doc/lib/arrow.md`）
 实现零分配 Apache Arrow IPC 解析器，兼容新旧封装格式与 V4/V5 FlatBuffers MessageHeader/bodyLength 安全读取。
 

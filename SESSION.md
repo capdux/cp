@@ -226,3 +226,6 @@
 
 ### 2026-11-22（`cap:arrow` 验收，完成 `cap:arrow` 交付验收并登记入库（5/5 PASS）；派发 `cap:dex`。）
 - **执行成果**：`lib/arrow/`（5/5 PASS，`doc/lib/arrow.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:arrow` 交付验收并登记入库（5/5 PASS）；派发 `cap:dex`。
+
+### 2026-11-22（`cap:orc` 验收，完成 `cap:orc` 交付验收并登记入库（5/5 PASS）；派发 `cap:ar`。）
+- **执行成果**：`lib/orc/`（5/5 PASS，`doc/lib/orc.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:orc` 交付验收并登记入库（5/5 PASS）；派发 `cap:ar`。

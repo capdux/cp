@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:orc` 零分配 Apache ORC 列式存储 PostScript、分区视图与 3B 压缩块解析器（5/5 PASS，自动动态挂载 `cap.orc`）
+新增 `lib/orc/{orc,index}.cp`、`doc/lib/orc.md` 与 `cap/test/test_orc_production_deep.cp`（5/5 PASS），支持 Protobuf Varint/PostScript 解析、Stripes/Metadata/Footer 边界切分与 3B 压缩块流式迭代。
+
 ## [2026-11-22] - 新建 `cap:arrow` 零分配 Apache Arrow IPC Stream/File 容器帧、Footer 与 FlatBuffers 解析器（5/5 PASS，自动动态挂载 `cap.arrow`）
 新增 `lib/arrow/{arrow,index}.cp`、`doc/lib/arrow.md` 与 `cap/test/test_arrow_production_deep.cp`（5/5 PASS），支持 0xFFFFFFFF 续帧/EOS 迭代、8B 对齐跳过、File Footer 提取与 FlatBuffers 根表元数据读取。
 
