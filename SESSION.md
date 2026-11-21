@@ -226,3 +226,6 @@
 
 ### 2026-11-22（`cap:proc_limits` 验收，Batch 105 落地，标准库总量达 272 模块；完成 Sys Config Absorber 13 模块轻量化轮换）
 - **执行成果**：`lib/proc_limits/`（5/5 PASS，`doc/lib/proc_limits.md`）经 `verify_module.sh` 一次性验收回收；Batch 105 落地，标准库总量达 272 模块；完成 Sys Config Absorber 13 模块轻量化轮换
+
+### 2026-11-22（`cap:ansi_sgr` 验收，Batch 106 落地，标准库总量达 273 模块）
+- **执行成果**：`lib/ansi_sgr/`（5/5 PASS，`doc/lib/ansi_sgr.md`）经 `verify_module.sh` 一次性验收回收；Batch 106 落地，标准库总量达 273 模块

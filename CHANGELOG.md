@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ansi_sgr` ANSI SGR 终端样式与 16 色/256 色/24-bit TrueColor RGB 转义序列零分配编解码器（5/5 PASS，自动动态挂载 `cap.ansi_sgr`）
+- 新增 `lib/ansi_sgr/{sgr,index}.cp`、`doc/lib/ansi_sgr.md`、`cap/test/test_ansi_sgr_production_deep.cp`：纯 CP 零分配实现 ANSI SGR 样式/16色/256色/TrueColor RGB 格式化与原子增量解析（非法序列不污染原状态）（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:proc_limits` Linux `/proc/<pid>/limits` 进程软/硬资源限额表零分配解析器（5/5 PASS，自动动态挂载 `cap.proc_limits`）
 - 新增 `lib/proc_limits/{limits,index}.cp`、`doc/lib/proc_limits.md`、`cap/test/test_proc_limits_production_deep.cp`：纯 CP 零分配解析 Linux `/proc/<pid>/limits` 软/硬上限与单位列，支持含单空格限额名切分、`unlimited` 解析与 `maxOpenFiles` 快捷提取（5/5 PASS）。
 
