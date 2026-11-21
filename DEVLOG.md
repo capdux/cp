@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: CSS @page 分页规则与 Position 定位属性（5/5 PASS，文档直写 `doc/lib/css_page_rule.md`）
+从 Bun css/rules/page.cp 与 properties/position.cp 吸收 16 种 PageMarginBox、PageSelector 与 Position 属性，零堆分配内联存储。
+
+## 2026-11-21: W3C Subresource Integrity (SRI) 解析与流式校验器（5/5 PASS，文档直写 `doc/lib/sri.md`）
+从 Bun install/integrity.cp 吸收 W3C SRI 解析、40 位 Hex SHA-1 与流式分块校验引擎，采用恒定时间摘要比对与零堆分配设计。
+
 ## 2026-11-21: CSS Display Level 3 与 Visibility 属性模型（5/5 PASS，文档直写 `doc/lib/css_display.md`）
 从 Bun css/properties/display.cp 吸收 CSS Display Level 3 内外流模型与 Visibility 属性，纯 CP 零依赖实现解析、合法性校验与最短规范输出。
 

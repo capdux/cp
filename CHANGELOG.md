@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - CSS @page 分页规则与 Position 定位属性（5/5 PASS，自动动态挂载 `cap.css_page_rule`）
+新增 cap:css_page_rule 标准库（lib/css_page_rule/、doc/lib/css_page_rule.md、cap/test/test_css_page_rule_production_deep.cp），5/5 回归通过。
+
+## [2026-11-21] - W3C Subresource Integrity (SRI) 解析与流式校验器（5/5 PASS，自动动态挂载 `cap.sri`）
+新增 cap:sri 标准库（lib/sri/、doc/lib/sri.md、cap/test/test_sri_production_deep.cp），3/3 回归通过。
+
 ## [2026-11-21] - CSS Display Level 3 与 Visibility 属性模型（5/5 PASS，自动动态挂载 `cap.css_display`）
 新增 cap:css_display 标准库（lib/css_display/、doc/lib/css_display.md、cap/test/test_css_display_production_deep.cp），3/3 回归通过。
 

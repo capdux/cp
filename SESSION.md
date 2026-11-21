@@ -172,3 +172,9 @@
 
 ### 2026-11-21（`cap:css_display` 验收，吸收 Bun css/properties/display.cp -> cap:css_display，测试 3/3 通过。）
 - **执行成果**：`lib/css_display/`（5/5 PASS，`doc/lib/css_display.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun css/properties/display.cp -> cap:css_display，测试 3/3 通过。
+
+### 2026-11-21（`cap:sri` 验收，吸收 Bun install/integrity.cp -> cap:sri，测试 3/3 通过。）
+- **执行成果**：`lib/sri/`（5/5 PASS，`doc/lib/sri.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun install/integrity.cp -> cap:sri，测试 3/3 通过。
+
+### 2026-11-21（`cap:css_page_rule` 验收，吸收 Bun CSS @page + Position -> cap:css_page_rule，测试 5/5 通过。）
+- **执行成果**：`lib/css_page_rule/`（5/5 PASS，`doc/lib/css_page_rule.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun CSS @page + Position -> cap:css_page_rule，测试 5/5 通过。

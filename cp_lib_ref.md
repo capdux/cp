@@ -450,3 +450,5 @@ const h = cap.hash.wyhash("hello");
 | `cap:smol_str` | INLINE_MAX_LEN, Error, SmolStr | 15 字节内零堆分配内联、超长透明堆扩容的 Compact String（~init() 零泄漏，源自 Bun string/SmolStr.cp） |
 | `cap:pg_auth` | AUTH_MESSAGE_TAG, PgAuthError, AuthType, authTypeFromInt, SASLContinueInfo, DecodedAuthMessage, decodeAuthMessage, PgWireWriter | PostgreSQL v3 全量认证子类型/MD5 Salt/SCRAM-SHA-256 SASL 解码与大端自动回填长度写入器（源自 Bun sql/postgres/protocol/{Authentication,NewWriter}.cp） |
 | `cap:css_display` | Visibility, DisplayKeyword, DisplayOutside, DisplayInside, DisplayPair, DisplayKind, Display | 纯 CP 零依赖 CSS Display Level 3 单值/多关键字组合、旧版简写与规范化 CSS 序列化（源自 Bun css/properties/display.cp） |
+| `cap:sri` | MAX_DIGEST_LEN, SriError, IntegrityTag, Integrity, IntegrityVerifier | 零堆分配 W3C SRI (sha1/sha256/sha384/sha512) 解析、最强算法选择、格式化与恒定时间流式校验（源自 Bun install/integrity.cp） |
+| `cap:css_page_rule` | CssPageError, PagePseudoClass, PageMarginEdge, PageMarginBox, PageSelector, Position | 纯 CP 零依赖 CSS Paged Media 16 种页边盒、页伪类选择器与 Position 定位属性模型（源自 Bun css/rules/page.cp + properties/position.cp） |
