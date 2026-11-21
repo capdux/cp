@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:rate` 令牌桶/GCRA/滑动窗口限流统一主包（同步收敛 `cap:cron`/`cap:time`）（5/5 PASS，文档直写 `doc/lib/rate.md`）
+- **收敛要点**：`lib/rate/` 最小重命名 `SlidingGcraLimiter`/`SimpleTokenBucket` 消除冲突，3 主包均 0 errors，6/6 PASS；全部 3 路子智能体均已轮换至全新低上下文实例。
+
 ## 2026-11-22: 新建 `cap:jwt` JWT 声明解析统一主包（同步收敛 `cap:ssh`/`cap:git`/`cap:pkg`）（5/5 PASS，文档直写 `doc/lib/jwt.md`）
 - **收敛要点**：`lib/ssh/pubkey.cp` 的 `SshKeyType` 重导出为 `PubKeyType` 保留既有 `keys.cp` 零破坏；4 主包均 0 errors，6/6 PASS；同步轮换 `Sys Config Absorber` 为全新低上下文实例。
 

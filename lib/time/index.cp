@@ -23,3 +23,6 @@ export {
     SlidingWindowLimiter,
     ExponentialBackoff,
 } from "./ratelimit.cp";
+
+export * from "./duration.cp";
+export * from "./rfc3339.cp";

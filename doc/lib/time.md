@@ -117,3 +117,10 @@ pub fn demoTimeSuite() {
     * = wait_ms;
 }
 ```
+
+---
+
+## 零分配时长与 RFC 3339 子模块（收敛自 `duration_parse` / `rfc3339_time`）
+
+- **人类可读时长解析与格式化 (`duration.cp`)**：`NS_PER_US`..`NS_PER_WEEK`、`parseDurationNs`、`parseDurationMs`、`formatDurationNs`、`formatDurationCompact`。
+- **RFC 3339 / ISO 8601 时间戳编解码 (`rfc3339.cp`)**：`isLeapYear`、`daysInMonth`、`Rfc3339Time`。

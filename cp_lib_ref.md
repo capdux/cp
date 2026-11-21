@@ -396,7 +396,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:crdt_pn` | `CounterEntry`, `GCounter`, `PNCounter`, `LWWRegister`, `GSet` | 纯 CP 分布式状态型无冲突复制数据类型 (State-Based CRDTs) 套件（`GCounter`、`PNCounter`、`LWWRegister` 与 `GSet`，满足半格幂等/交换/结合律 `merge`，支持 `cap.crdt_pn` 自动动态挂载，详见 `doc/lib/crdt_pn.md`） |
 | `cap:geo_quadtree` | `QuadError`, `Rect`, `PointItem`, `QuadTree` | 纯 CP 2D 平面空间四叉树索引引擎（矩形包围盒 `queryRect` 与欧氏圆半径 `queryRadius` 检索，支持 `cap.geo_quadtree` 自动动态挂载，详见 `doc/lib/geo_quadtree.md`） |
 | `cap:lru_k` | `LruKError`, `LruKCache` | 纯 CP 抗扫描污染 LRU-K 双队列缓存替换引擎（历史访问队列 + 热键晋升缓存队列，防全表扫描击穿热缓存，支持 `cap.lru_k` 自动动态挂载，详见 `doc/lib/lru_k.md`） |
-| `cap:rate_token_bucket` | `RateLimitError`, `TokenBucket`, `GcraLimiter` | 纯 CP 零堆分配令牌桶 (`TokenBucket`) 与 GCRA 漏桶 (`GcraLimiter`) 纳秒级精确限流引擎（支持 `cap.rate_token_bucket` 自动动态挂载，详见 `doc/lib/rate_token_bucket.md`） |
 | `cap:raft_log` | `RaftLogError`, `LogEntry`, `LogEntryInput`, `RaftLog` | 纯 CP Raft 共识复制日志与快照压缩引擎（1-based 索引、`appendIfMatch` 冲突截断、安全提交推进与 `compactTo` 快照截断，支持 `cap.raft_log` 自动动态挂载，详见 `doc/lib/raft_log.md`） |
 | `cap:circ_buf` | `RingError`, `RingBuffer` | 纯 CP 泛型定容环形缓冲区引擎（支持阻塞 `push`、覆盖最旧元素 `pushOverwrite`、双端弹出与随机下标访问，支持 `cap.circ_buf` 自动动态挂载，详见 `doc/lib/circ_buf.md`） |
 | `cap:slab_pool` | `SlabError`, `Handle`, `SlabPool` | 纯 CP 固定块代际 $O(1)$ Slab 对象池引擎（侵入式空闲链表、代际防悬垂 ABA 句柄 `Handle` 与零碎片复用，支持 `cap.slab_pool` 自动动态挂载，详见 `doc/lib/slab_pool.md`） |
@@ -533,7 +532,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:cors_policy` | CorsConfig, CorsDecision, CorsPolicy | WHATWG Fetch CORS 策略配置、Simple/Preflight 预检评估与凭证回显/Vary: Origin 决策引擎（吸收自 bun/src/http_types/FetchRequestMode.cp） |
 | `cap:retry_backoff` | JitterMode, BackoffConfig, BackoffState, RetryAfter, parseRetryAfter, isRetryableHttpStatus | 零堆分配指数退避重试调度器（Full/Equal Jitter + SplitMix64 确定性种子）与 RFC 9110 Retry-After 解析库（吸收自 bun/src/http/HTTPContext.cp） |
 | `cap:sse_parser` | SseEvent, SseParser, formatSseEvent | WHATWG Server-Sent Events (text/event-stream) 零分配流式解析器与格式化器 |
-| `cap:token_bucket` | TokenBucket, FixedWindowLimiter | 纯整数毫令牌确定性令牌桶与固定时间窗口限流器（防时钟回拨与溢出） |
 | `cap:netrc` | NetrcEntry, NetrcIter, lookupNetrc | .netrc / _netrc 认证凭据文件零分配流式解析器（支持引号、注释、macdef 与 default 回退） |
 | `cap:robots_txt` | matchRobotsPattern, isAllowed, crawlDelaySec, SitemapIter | RFC 9309 robots.txt 解析、通配符匹配、Crawl-delay 提取与 Sitemap 迭代器 |
 | `cap:hex_dump` | encodeHexLower, encodeHexUpper, decodeHexStrict, decodeHex, formatHexDumpLine, formatHexDump | 零分配十六进制编解码与规范化 hexdump -C 多行诊断格式化器 |
@@ -544,12 +542,9 @@ const h = cap.hash.wyhash("hello");
 | `cap:w3c_traceparent` | TraceParent, TraceStateEntry, TraceStateIter, findTraceState | W3C Trace Context Level 1 traceparent / tracestate 分布式追踪头零分配解析与格式化器 |
 | `cap:byte_size` | parseByteSize, formatBytesIec, formatBytesSi | 纯整数人类可读字节大小解析器（SI/IEC 小数支持与溢出防护）及 SI/IEC 格式化器 |
 | `cap:case_convert` | WordIter, toSnakeCase, toScreamingSnakeCase, toKebabCase, toCamelCase, toPascalCase | 零分配缩写感知标识符命名风格转换器（snake_case / SCREAMING_SNAKE_CASE / kebab-case / camelCase / PascalCase） |
-| `cap:duration_parse` | NS_PER_US, NS_PER_MS, NS_PER_SEC, NS_PER_MIN, NS_PER_HOUR, NS_PER_DAY, NS_PER_WEEK, parseDurationNs, parseDurationMs, formatDurationNs, formatDurationCompact | 纯整数人类可读时长解析器（ns/us/µs/ms/s/m/h/d/w 复合与小数）及规范/紧凑格式化器 |
 | `cap:structured_headers` | SfItemKind, SfItem, parseSfItem, SfParam, SfParamIter, formatSfString, formatSfByteSeq | RFC 8941 HTTP Structured Field Values 标量项（整数/小数/字符串/Token/字节序列/布尔）与参数列表零分配解析器 |
-| `cap:rate_sliding_window` | SlidingWindowCounter, GcraLimiter | 加权滑动窗口计数器与 GCRA（通用信元速率算法）零分配纯整数平滑限流器 |
 | `cap:punycode` | isAsciiOnly, encodePunycode, decodePunycode, encodeIdnLabel, decodeIdnLabel | RFC 3492 Punycode / Bootstring 零分配编解码器与 xn-- 国际化域名标签转换器 |
 | `cap:slugify` | slugifyWithSep, slugify, slugifyBounded, isValidSlug | 零分配 URL 安全 Slug 生成器（标点折叠、撇号省略、词边界截断与规范校验） |
-| `cap:rfc3339_time` | isLeapYear, daysInMonth, Rfc3339Time | RFC 3339 / ISO 8601 时间戳零分配解析器、闰年/时区校验、Unix 纪元秒互转与规范化格式化器 |
 | `cap:markdown_table` | ColAlign, parseDelimiterCell, TableRowIter, parseDelimiterRow, unescapeTableCell, escapeTableCell | GFM Markdown 管道表格行零分配单元格迭代器、对齐分隔行检测与单元格管道符转义器 |
 | `cap:frontmatter` | FrontmatterKind, FrontmatterSplit, splitFrontmatter, getFrontmatterField | Markdown 文档 YAML (---) / TOML (+++) Frontmatter 零分配提取器与键值查询 |
 | `cap:rfc7807_problem` | PROBLEM_JSON_CONTENT_TYPE, defaultTitleForStatus, ProblemDetails | RFC 9457 / RFC 7807 HTTP Problem Details (application/problem+json) 零分配构造与转义序列化器 |
@@ -557,7 +552,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:makefile_parse` | MakeAssignOp, MakeVar, MakeRule, MakeRuleIter, MakeVarIter, isPhonyTarget | GNU Makefile 目标、依赖、.PHONY 伪目标与变量赋值（=/ :=/ ?=/ +=）零分配解析器 |
 | `cap:unicode_width` | isZeroWidth, isWideChar, codepointWidth, strDisplayWidth, sliceToDisplayWidth | Unicode 东亚宽度 / 终端显示列宽（wcwidth）零分配计算器（组合符=0、ASCII=1、CJK/Emoji=2） |
 | `cap:number_format` | formatGroupedU64, formatGroupedI64, ordinalSuffix, formatOrdinal, formatRadixU64, formatFixedPoint | 零分配人类可读数字格式化器（千分位分组、英文序数词、2..36 进制与定点小数） |
-| `cap:cron_preset` | CronPreset, parseCronPreset, presetToCron5, normalizeCron5 | Vixie Cron @macro 预设（@hourly/@daily/@weekly/@monthly/@yearly/@reboot）零分配展开与 5 段表达式校验器 |
 | `cap:jsonl` | `JsonlChunkResult`, `JsonlIter`, `scanCompleteJsonlChunk`, `isBalancedJsonRecord`, `appendJsonlRecord` | JSON Lines / NDJSON 流式行迭代、增量分块扫描与记录平衡零分配校验器 |
 | `cap:jsonc` | `stripJsonc`, `stripJsoncPreserveLines`, `hasJsoncComments`, `countJsoncTrailingCommas` | JSON with Comments & Trailing Commas 零分配注释/尾逗号剥离器与行号保留格式化器 |
 | `cap:mustache` | `MustacheTokenKind`, `MustacheToken`, `MustacheVar`, `MustacheIter`, `validateMustache`, `renderMustache` | 零分配 Mustache 模板词法解析、语法校验与 HTML 转义渲染引擎 |
@@ -566,3 +560,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:mail` | `Mailbox`, `decodeRfc2047`, `decodeQuotedPrintable`, ... | RFC 5322 邮件地址、RFC 2047 编码字与 Quoted-Printable 统一主包（同步收敛 `cap:mime`） |
 | `cap:pkg` | `NpmPackageName`, `NpmrcIter`, `PkgExports`, `PkgMatcher`, ... | 包管理/NPM 名称/npmrc/exports/matcher 统一主包（同步收敛 `cap:shell`） |
 | `cap:jwt` | `JwtClaims`, `parseJwtClaims`, ... | JWT 声明解析统一主包（同步收敛 `cap:ssh`/`cap:git`/`cap:pkg`） |
+| `cap:rate` | `TokenBucket`, `GcraLimiter`, `SlidingGcraLimiter`, `SimpleTokenBucket`, `FixedWindowLimiter` | 令牌桶/GCRA/滑动窗口限流统一主包（同步收敛 `cap:cron`/`cap:time`） |

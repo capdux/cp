@@ -3,7 +3,7 @@ import {
     parseCronPreset,
     presetToCron5,
     normalizeCron5,
-} from "cap:cron_preset";
+} from "cap:cron";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {

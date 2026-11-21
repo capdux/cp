@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { RateLimitError, TokenBucket, GcraLimiter } from "cap:rate_token_bucket";
+import { RateLimitError, TokenBucket, GcraLimiter } from "cap:rate";
 
 test "rate_token_bucket: burst consumption, refill, and retryAfterNs" {
     let tb = try TokenBucket.init(10.0, 5.0, 0); // 10 req/s => 1 token per 100ms, burst=5

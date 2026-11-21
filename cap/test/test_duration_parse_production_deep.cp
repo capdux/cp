@@ -13,7 +13,7 @@ import {
     parseDurationMs,
     formatDurationNs,
     formatDurationCompact,
-} from "cap:duration_parse";
+} from "cap:time";
 
 test("duration_parse: single units including us/µs, decimals and zero") {
     expect_eq(parseDurationNs("0").?, 0);

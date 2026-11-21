@@ -66,15 +66,15 @@ export struct SlidingWindowCounter {
 
 /// Generic Cell Rate Algorithm (GCRA) virtual scheduling rate limiter.
 /// Enforces smooth emission interval `emission_interval_ms` with burst tolerance `burst_tolerance_ms`.
-export struct GcraLimiter {
+export struct SlidingGcraLimiter {
     emission_interval_ms: u64,
     burst_tolerance_ms: u64,
     tat_ms: u64, // Theoretical Arrival Time
 
-    pub fn init(emission_interval_ms: u64, burst_capacity: u64, now_ms: u64): GcraLimiter {
+    pub fn init(emission_interval_ms: u64, burst_capacity: u64, now_ms: u64): SlidingGcraLimiter {
         const ei = if (emission_interval_ms == 0) @as(u64, 1) else emission_interval_ms;
         const burst = if (burst_capacity > 1) (burst_capacity - 1) * ei else @as(u64, 0);
-        return GcraLimiter {
+        return SlidingGcraLimiter {
             emission_interval_ms: ei,
             burst_tolerance_ms: burst,
             tat_ms: now_ms,

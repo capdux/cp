@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:rate` 令牌桶/GCRA/滑动窗口限流统一主包（同步收敛 `cap:cron`/`cap:time`）（5/5 PASS，自动动态挂载 `cap.rate`）
+- **方案 A 收敛 Wave 7 (6 限流/Cron/时间目录 -> `cap:rate`/`cap:cron`/`cap:time`)**：新建 `cap:rate` 合入 `rate_sliding_window`/`rate_token_bucket`/`token_bucket`，合入 `cron_preset` 至 `cap:cron`、`duration_parse`/`rfc3339_time` 至 `cap:time`（6/6 PASS），删除 6 个旧目录与文档，累计消除 162 个长下划线顶层目录；同步轮换 `CLI & Format Absorber`。
+
 ## [2026-11-22] - 新建 `cap:jwt` JWT 声明解析统一主包（同步收敛 `cap:ssh`/`cap:git`/`cap:pkg`）（5/5 PASS，自动动态挂载 `cap.jwt`）
 - **方案 A 收敛 Wave 8 (6 开发工具/SSH/认证目录 -> `cap:ssh`/`cap:git`/`cap:pkg`/`cap:jwt`)**：合入 `ssh_config`/`ssh_pubkey` 至 `cap:ssh`、`conventional_commit`/`codeowners` 至 `cap:git`、`spdx_license` 至 `cap:pkg`，新建 `cap:jwt` 合入 `jwt_claims`（6/6 PASS），删除 6 个旧目录与文档，累计消除 156 个长下划线顶层目录。
 

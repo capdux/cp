@@ -40,3 +40,6 @@
 
 ### 2026-11-22（`cap:jwt` 验收，方案 A Wave 8：`ssh`/`git`/`pkg`/`jwt` 6 目录收敛落地（6/6 PASS），累计消除 156 个长下划线顶层目录；完成 Sys Config Absorber 轻量化轮换）
 - **执行成果**：`lib/jwt/`（5/5 PASS，`doc/lib/jwt.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 8：`ssh`/`git`/`pkg`/`jwt` 6 目录收敛落地（6/6 PASS），累计消除 156 个长下划线顶层目录；完成 Sys Config Absorber 轻量化轮换
+
+### 2026-11-22（`cap:rate` 验收，方案 A Wave 7：`rate`/`cron`/`time` 6 目录收敛落地（6/6 PASS），累计消除 162 个长下划线顶层目录）
+- **执行成果**：`lib/rate/`（5/5 PASS，`doc/lib/rate.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 7：`rate`/`cron`/`time` 6 目录收敛落地（6/6 PASS），累计消除 162 个长下划线顶层目录

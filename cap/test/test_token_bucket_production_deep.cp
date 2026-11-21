@@ -1,9 +1,9 @@
 import { test, expect_eq } from "cap:test";
-import { TokenBucket, FixedWindowLimiter } from "cap:token_bucket";
+import { SimpleTokenBucket, FixedWindowLimiter } from "cap:rate";
 
-test("1. TokenBucket burst consumption, sub-second zero-loss refill, and capacity cap", () => {
+test("1. SimpleTokenBucket burst consumption, sub-second zero-loss refill, and capacity cap", () => {
     // 容量 10，每秒补充 5 个令牌（即每 200ms 补充 1 个）
-    let b = TokenBucket.init(10, 5, 1000);
+    let b = SimpleTokenBucket.init(10, 5, 1000);
     expect_eq(b.available(1000), u64(10));
 
     // 突发消费全部 10 个
@@ -20,8 +20,8 @@ test("1. TokenBucket burst consumption, sub-second zero-loss refill, and capacit
     expect_eq(b.available(100_000), u64(10));
 });
 
-test("2. TokenBucket clock rollback protection and overflow safety", () => {
-    let b = TokenBucket.initWithTokens(20, 5, 10, 5000);
+test("2. SimpleTokenBucket clock rollback protection and overflow safety", () => {
+    let b = SimpleTokenBucket.initWithTokens(20, 5, 10, 5000);
     expect_eq(b.available(5000), u64(5));
 
     // 时钟回拨（4000 < 5000）绝不产生负数或异常补充
@@ -33,9 +33,9 @@ test("2. TokenBucket clock rollback protection and overflow safety", () => {
     expect_eq(b.available(0x7FFF_FFFF_FFFF_FFFF), u64(20));
 });
 
-test("3. TokenBucket timeUntilReadyMs exact math and impossible requests return null", () => {
+test("3. SimpleTokenBucket timeUntilReadyMs exact math and impossible requests return null", () => {
     // 容量 10，初始 2，每秒补充 3 个（每 ms 补 3 毫令牌）
-    let b = TokenBucket.initWithTokens(10, 2, 3, 0);
+    let b = SimpleTokenBucket.initWithTokens(10, 2, 3, 0);
 
     // 已有 2 个 -> 立即就绪
     expect_eq(b.timeUntilReadyMs(0, 0) ?? unreachable, u64(0));
@@ -50,7 +50,7 @@ test("3. TokenBucket timeUntilReadyMs exact math and impossible requests return 
     expect_eq(b.timeUntilReadyMs(11, 334) == null, true);
 
     // refill_per_sec == 0 且令牌不足 -> null；令牌足够 -> 0
-    let static_b = TokenBucket.initWithTokens(5, 2, 0, 100);
+    let static_b = SimpleTokenBucket.initWithTokens(5, 2, 0, 100);
     expect_eq(static_b.timeUntilReadyMs(2, 100) ?? unreachable, u64(0));
     expect_eq(static_b.timeUntilReadyMs(3, 100) == null, true);
 });

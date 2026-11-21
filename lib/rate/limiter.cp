@@ -21,16 +21,16 @@ fn satMulU64(a: u64, b: u64): u64 {
 
 /// 纯整数毫令牌确定性令牌桶限流器（零外部依赖、零堆分配、亚秒级零精度损失）
 /// 内部以 1 token = 1000 milli-tokens 表示，因此每经过 1 ms 恰好补充 refill_per_sec 个毫令牌
-export struct TokenBucket {
+export struct SimpleTokenBucket {
     capacity_milli: u64;
     tokens_milli: u64;
     refill_per_sec: u64;
     last_refill_ms: u64;
 
     /// 创建初始满桶的令牌桶限流器
-    fn init(capacity: u64, refill_per_sec: u64, now_ms: u64): TokenBucket {
+    fn init(capacity: u64, refill_per_sec: u64, now_ms: u64): SimpleTokenBucket {
         const cap_milli = satMulU64(capacity, 1000);
-        return TokenBucket{
+        return SimpleTokenBucket{
             capacity_milli: cap_milli,
             tokens_milli: cap_milli,
             refill_per_sec: refill_per_sec,
@@ -39,10 +39,10 @@ export struct TokenBucket {
     }
 
     /// 创建指定初始令牌数的令牌桶限流器（initial_tokens 自动钳制至 <= capacity）
-    fn initWithTokens(capacity: u64, initial_tokens: u64, refill_per_sec: u64, now_ms: u64): TokenBucket {
+    fn initWithTokens(capacity: u64, initial_tokens: u64, refill_per_sec: u64, now_ms: u64): SimpleTokenBucket {
         const cap_milli = satMulU64(capacity, 1000);
         const clamped = if (initial_tokens > capacity) capacity else initial_tokens;
-        return TokenBucket{
+        return SimpleTokenBucket{
             capacity_milli: cap_milli,
             tokens_milli: satMulU64(clamped, 1000),
             refill_per_sec: refill_per_sec,

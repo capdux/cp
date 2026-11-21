@@ -5,7 +5,7 @@ import {
     isLeapYear,
     daysInMonth,
     Rfc3339Time,
-} from "cap:rfc3339_time";
+} from "cap:time";
 
 test("rfc3339_time: isLeapYear and daysInMonth calendar rules") {
     expect_eq(isLeapYear(2000), true);

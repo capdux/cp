@@ -60,3 +60,9 @@ pub fn demoCron(): ! {
     * = next_ts;
 }
 ```
+
+---
+
+## Vixie Cron 快捷预设子模块（`preset.cp`，收敛自 `cron_preset`）
+
+- `CronPreset`、`parseCronPreset`、`presetToCron5`、`normalizeCron5`。

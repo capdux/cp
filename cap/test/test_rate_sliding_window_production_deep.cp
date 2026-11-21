@@ -1,7 +1,7 @@
 import {
     SlidingWindowCounter,
-    GcraLimiter,
-} from "cap:rate_sliding_window";
+    SlidingGcraLimiter,
+} from "cap:rate";
 import { test, expect } from "cap:test";
 
 test("SlidingWindowCounter smooth boundary transition and rollback safety", () => {
@@ -24,9 +24,9 @@ test("SlidingWindowCounter smooth boundary transition and rollback safety", () =
     expect(sw.remaining(5000) == 10);
 });
 
-test("GcraLimiter burst tolerance and exact retry-after ms", () => {
+test("SlidingGcraLimiter burst tolerance and exact retry-after ms", () => {
     // 1 req / 100ms, burst capacity 3
-    let gcra = GcraLimiter.init(100, 3, 1000);
+    let gcra = SlidingGcraLimiter.init(100, 3, 1000);
     expect(gcra.checkAndAcquire(1000) == 0); // tat=1100
     expect(gcra.checkAndAcquire(1000) == 0); // tat=1200
     expect(gcra.checkAndAcquire(1000) == 0); // tat=1300
