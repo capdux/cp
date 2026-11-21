@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:srt` 零分配 SubRip `.srt` 字幕解析、时间戳编解码、饱和平移与格式化器（5/5 PASS，文档直写 `doc/lib/srt.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:srt`，与 `cap:vtt` 构成完整字幕生态；`shiftSrtCue` 负偏移饱和钳位至 0、正偏移防 `u64` 上溢。
+
 ## 2026-11-22: 新建 `cap:vtt` W3C WebVTT 字幕/时间轴零分配解析、时间戳编解码与格式化器（5/5 PASS，文档直写 `doc/lib/vtt.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:vtt`；`VttCue.durationMs()` 饱和减法防下溢；支持 CRLF 与多行字幕正文切片。
 
