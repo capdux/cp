@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:proc_io` Linux `/proc/<pid>/io` 进程读写字节、系统调用计数与采样窗口增量零分配解析器（5/5 PASS，自动动态挂载 `cap.proc_io`）
+- 新增 `lib/proc_io/{io,index}.cp`、`doc/lib/proc_io.md`、`cap/test/test_proc_io_production_deep.cp`：纯 CP 零分配解析 Linux `/proc/<pid>/io` 7 项核心指标，支持饱和 `netWriteBytes`/`totalStorageBytes`/`diff` 增量计算与未知扩展键兼容（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:http_content_language` RFC 9110 §8.5 + RFC 5646 HTTP `Content-Language` 解析与 BCP 47 标签规范化器（5/5 PASS，自动动态挂载 `cap.http_content_language`）
 - 新增 `lib/http_content_language/{content_language,index}.cp`、`doc/lib/http_content_language.md`、`cap/test/test_http_content_language_production_deep.cp`：纯 CP 零分配解析 RFC 9110 `Content-Language` 头、提取 `primary`/`script`/`region` 与 RFC 5646 大小写规范化（5/5 PASS）。
 

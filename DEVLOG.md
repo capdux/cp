@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:proc_io` Linux `/proc/<pid>/io` 进程读写字节、系统调用计数与采样窗口增量零分配解析器（5/5 PASS，文档直写 `doc/lib/proc_io.md`）
+- **设计要点**：单遍解析 `key: value` 拦截负数与 `u64` 溢出；`diff(earlier)` 逐字段饱和相减便于采样窗口吞吐统计。
+
 ## 2026-11-22: 新建 `cap:http_content_language` RFC 9110 §8.5 + RFC 5646 HTTP `Content-Language` 解析与 BCP 47 标签规范化器（5/5 PASS，文档直写 `doc/lib/http_content_language.md`）
 - **设计要点**：`parseLanguageTagParts` 在单字符扩展前缀处安全停止避免误将 `-x-us` 识别为 region；`canonicalizeLanguageTag` 严格遵循 RFC 5646 §2.1.1 大小写约定。
 
