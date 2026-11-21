@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - CSS Animations & Transitions 简写解析与序列化（5/5 PASS，自动动态挂载 `cap.css_animation`）
+新增 cap:css_animation 标准库（lib/css_animation/、doc/lib/css_animation.md、cap/test/test_css_animation_production_deep.cp），2/2 回归通过。
+
+## [2026-11-22] - MySQL 认证密码学原语与 SSLRequest 编解码（5/5 PASS，自动动态挂载 `cap.mysql_auth`）
+新增 cap:mysql_auth 标准库（lib/mysql_auth/、doc/lib/mysql_auth.md、cap/test/test_mysql_auth_production_deep.cp），6/6 回归通过。
+
 ## [2026-11-22] - PostgreSQL v3 后端控制与诊断消息解码器（5/5 PASS，自动动态挂载 `cap.pg_messages`）
 新增 cap:pg_messages 标准库（lib/pg_messages/、doc/lib/pg_messages.md、cap/test/test_pg_messages_production_deep.cp），5/5 回归通过。
 

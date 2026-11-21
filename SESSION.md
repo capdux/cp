@@ -253,3 +253,9 @@
 
 ### 2026-11-22（`cap:pg_messages` 验收，吸收 Bun PG v3 Backend Messages -> cap:pg_messages，测试 5/5 通过。）
 - **执行成果**：`lib/pg_messages/`（5/5 PASS，`doc/lib/pg_messages.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun PG v3 Backend Messages -> cap:pg_messages，测试 5/5 通过。
+
+### 2026-11-22（`cap:mysql_auth` 验收，吸收 Bun MySQL Auth + SSLRequest -> cap:mysql_auth，测试 6/6 通过。）
+- **执行成果**：`lib/mysql_auth/`（5/5 PASS，`doc/lib/mysql_auth.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun MySQL Auth + SSLRequest -> cap:mysql_auth，测试 6/6 通过。
+
+### 2026-11-22（`cap:css_animation` 验收，吸收 Bun CSS Animation + Transition -> cap:css_animation，测试 2/2 通过。）
+- **执行成果**：`lib/css_animation/`（5/5 PASS，`doc/lib/css_animation.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun CSS Animation + Transition -> cap:css_animation，测试 2/2 通过。

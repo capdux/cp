@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-22: CSS Animations & Transitions 简写解析与序列化（5/5 PASS，文档直写 `doc/lib/css_animation.md`）
+从 Bun css/properties/animation.cp 与 transition.cp 吸收 CSS 动画与过渡简写解析器，跨模块复用 cap:css_time 与 cap:css_easing。
+
+## 2026-11-22: MySQL 认证密码学原语与 SSLRequest 编解码（5/5 PASS，文档直写 `doc/lib/mysql_auth.md`）
+从 Bun sql/mysql/protocol/Auth.cp 与 SSLRequest.cp 吸收 MySQL 认证密码学原语，补齐 MySQL 线协议全栈。
+
 ## 2026-11-22: PostgreSQL v3 后端控制与诊断消息解码器（5/5 PASS，文档直写 `doc/lib/pg_messages.md`）
 从 Bun sql/postgres/protocol 吸收完整 PG v3 后端控制与 18 字段诊断消息零拷贝解码器，支持 SQLSTATE 分类与 CommandComplete 影响行数解析。
 
