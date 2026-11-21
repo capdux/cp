@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ekf` 纯 CP 零分配非线性状态估计库（EKF & UKF）：中心差分雅可比、Joseph 形式对称正定扩展卡尔曼滤波、新息 NIS 计算与 Merwe Sigma 点无迹卡尔曼滤波预测（5/5 PASS，文档直写 `doc/lib/ekf.md`）
+新增 cap:ekf（lib/ekf/{ekf,index}.cp）：零分配 Joseph 形式 EKF 与 Merwe Sigma 点 UKF 预测，通过极坐标雷达 30 步闭环追踪与低噪正定性保持校验，cpc check 0 错误，cap test 6/6 PASS (805ms)
+
 ## 2026-11-22: 新建 `cap:markov` 纯 CP 零分配离散时间马尔可夫链（DTMC）分析与采样库：随机矩阵校验、快速幂、平稳分布幂迭代、吸收链基本矩阵 N=(I-Q)^-1、熵率与确定性轨迹采样（5/5 PASS，文档直写 `doc/lib/markov.md`）
 新增 cap:markov（lib/markov/{markov,index}.cp）：零分配 DTMC 快速幂、平稳分布、赌徒破产吸收链 N=(I-Q)^-1 精确验证与 SplitMix64 轨迹采样，cpc check 0 错误，cap test 6/6 PASS (715ms)
 
