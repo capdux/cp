@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ais` 零分配 ITU-R M.1371 海事船舶 AIS 6-bit 装甲比特流与位置报文解码器（5/5 PASS，自动动态挂载 `cap.ais`）
+新增 `lib/ais/{ais,index}.cp`、`doc/lib/ais.md` 与 `cap/test/test_ais_production_deep.cp`（5/5 PASS），支持 !AIVDM/!AIVDO XOR 校验、6-bit 比特流读取、Class A (1/2/3) 与 Class B (18) 报文解码。
+
 ## [2026-11-22] - 新建 `cap:fbx` 零分配 Autodesk FBX Binary (7100-7700) 3D 场景树与属性解析器（5/5 PASS，自动动态挂载 `cap.fbx`）
 新增 `lib/fbx/{fbx,index}.cp`、`doc/lib/fbx.md` 与 `cap/test/test_fbx_production_deep.cp`（5/5 PASS），支持 32/64-bit 节点头、NULL sentinel 终止与全标量/字符串/数组属性零拷贝解码。
 

@@ -178,3 +178,6 @@
 
 ### 2026-11-22（`cap:fbx` 验收，完成 `cap:fbx` 交付验收并登记入库（5/5 PASS）；派发 `cap:usd`。）
 - **执行成果**：`lib/fbx/`（5/5 PASS，`doc/lib/fbx.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:fbx` 交付验收并登记入库（5/5 PASS）；派发 `cap:usd`。
+
+### 2026-11-22（`cap:ais` 验收，完成 `cap:ais` 交付验收并登记入库（5/5 PASS）；派发 `cap:dae`。）
+- **执行成果**：`lib/ais/`（5/5 PASS，`doc/lib/ais.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:ais` 交付验收并登记入库（5/5 PASS）；派发 `cap:dae`。

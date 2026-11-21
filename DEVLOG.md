@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ais` 零分配 ITU-R M.1371 海事船舶 AIS 6-bit 装甲比特流与位置报文解码器（5/5 PASS，文档直写 `doc/lib/ais.md`）
+实现零分配海事 AIS 报文解码器，支持二补码经纬度符号扩展与 6-bit 船名字符串解码。
+
 ## 2026-11-22: 新建 `cap:fbx` 零分配 Autodesk FBX Binary (7100-7700) 3D 场景树与属性解析器（5/5 PASS，文档直写 `doc/lib/fbx.md`）
 实现零分配 Autodesk FBX Binary 解析器，严格校验 23B 魔数、end_offset 与 props_end 边界。
 

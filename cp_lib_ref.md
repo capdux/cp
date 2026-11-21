@@ -612,3 +612,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:fit` | FIT_MAGIC, FIT_HEADER_SIZE_12, FIT_HEADER_SIZE_14, FitFieldDef, FitRecordKind, FitRecord, FitRecordIter, FitStats, fitCrc16, isFit, parseFitHeader, verifyFileCrc, summarizeFit | 零分配 Garmin / ANT+ FIT 1.0/2.0 二进制遥测文件与 CRC-16 解析器 |
 | `cap:bvh` | BvhChannel, BvhJoint, BvhJointIter, BvhHeader, BvhFrameIter, BvhFloatIter, parseBvhChannel, isBvh, parseBvhHeader | 零分配 Biovision Hierarchy (.bvh) 3D 骨骼动作捕捉与帧数据解析器 |
 | `cap:fbx` | FBX_MAGIC, FBX_HEADER_SIZE, FBX_V7500_THRESHOLD, FbxHeader, FbxNode, FbxNodeIter, FbxProp, FbxPropIter, isFbxBinary, parseFbxHeader | 零分配 Autodesk FBX Binary (7100-7700) 3D 场景树与属性解析器 |
+| `cap:ais` | AisSentence, AisBitReader, AisPositionReport, AisClassBPosition, parseAisSentence, aisUnarmorChar, aisMessageType, parseAisPositionReport, parseAisClassBPosition | 零分配 ITU-R M.1371 海事船舶 AIS 6-bit 装甲比特流与位置报文解码器 |
