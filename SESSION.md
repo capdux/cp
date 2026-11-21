@@ -232,3 +232,6 @@
 
 ### 2026-11-22（`cap:iir` 验收，子智能体交付 cap:iir（Butterworth / Chebyshev-I IIR 滤波器设计与零相位 filtfilt，5/5 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/iir/`（5/5 PASS，`doc/lib/iir.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:iir（Butterworth / Chebyshev-I IIR 滤波器设计与零相位 filtfilt，5/5 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:holt` 验收，子智能体交付 cap:holt（SES / Holt / Holt-Winters 指数平滑预测，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/holt/`（5/5 PASS，`doc/lib/holt.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:holt（SES / Holt / Holt-Winters 指数平滑预测，6/6 PASS），主协调器统一登记并提交

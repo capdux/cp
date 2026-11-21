@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:holt` 纯 CP 零分配时间序列指数平滑与预测库：单指数平滑 SES、Holt 阻尼线性趋势、Holt-Winters 加法/乘法三指数季节预测与 MAE/RMSE/MAPE/sMAPE 评估（5/5 PASS，自动动态挂载 `cap.holt`）
+新增纯 CP 零分配时间序列指数平滑与预测库 cap:holt（SES / Holt / Holt-Winters 与预测误差评估），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:iir` 纯 CP 零分配经典 IIR 滤波器设计库：频率预畸变双线性变换 Butterworth 低/高通与 Chebyshev-I 低通 SOS 级联、TDF-II 滤波、零相位 sosFiltFilt 与幅频 dB 响应（5/5 PASS，自动动态挂载 `cap.iir`）
 新增纯 CP 零分配经典 IIR 滤波器设计库 cap:iir（Butterworth/Chebyshev-I 双线性 SOS 设计与零相位 filtfilt），含文档与 5 项深度生产测试
 
