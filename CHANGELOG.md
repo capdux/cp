@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:odt` 零分配 OASIS OpenDocument (.odt/.ods/.odp) 元数据与文本提取器（5/5 PASS，自动动态挂载 `cap.odt`）
+新增 `lib/odt/{odt,index}.cp`、`doc/lib/odt.md` 与 `cap/test/test_odt_production_deep.cp`（5/5 PASS），支持 OCF mimetype 校验、meta.xml 统计、manifest.xml 与 content.xml 文本提取。
+
 ## [2026-11-22] - 新建 `cap:docx` 零分配 OOXML DOCX WordprocessingML 段落文本提取与 CoreProps 解析器（5/5 PASS，自动动态挂载 `cap.docx`）
 新增 `lib/docx/{docx,index}.cp`、`doc/lib/docx.md` 与 `cap/test/test_docx_production_deep.cp`（6/6 PASS），支持 Heading/段落迭代、实体与数字实体 UTF-8 解码、tab/br 换行及 core.xml 元数据解析。
 

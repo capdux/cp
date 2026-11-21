@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:odt` 零分配 OASIS OpenDocument (.odt/.ods/.odp) 元数据与文本提取器（5/5 PASS，文档直写 `doc/lib/odt.md`）
+实现零分配 OASIS OpenDocument 解析器，支持 <text:s text:c=N/> 展开、tab/line-break 与 XML 实体反转义。
+
 ## 2026-11-22: 新建 `cap:docx` 零分配 OOXML DOCX WordprocessingML 段落文本提取与 CoreProps 解析器（5/5 PASS，文档直写 `doc/lib/docx.md`）
 实现零分配 OOXML DOCX 解析器，精准区分 <w:p> 与 <w:pPr>/<w:pStyle> 并支持嵌套段落深度匹配。
 
