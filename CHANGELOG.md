@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:rip` RIPv1/v2 (RFC 2453) & RIPng (RFC 2080) RTE/Auth zero-alloc parser & encoder（5/5 PASS，自动动态挂载 `cap.rip`）
+新增纯 CP 零分配标准库 cap:rip（RFC 2453 RIPv1/v2 与 RFC 2080 RIPng 路由条目解析与编码）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:pppoe` PPPoE (RFC 2516) Discovery TLV & Session framing zero-alloc parser & writer（5/5 PASS，自动动态挂载 `cap.pppoe`）
 新增纯 CP 零分配标准库 cap:pppoe（RFC 2516 PPPoE Discovery TLV 与 Session 编解码）与 5/5 深度测试
 
