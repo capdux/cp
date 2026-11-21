@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:braille` Unicode Braille (U+2800..U+28FF) 8-dot UTF-8 codec, Grade-1 text & 2x4 terminal canvas（5/5 PASS，自动动态挂载 `cap.braille`）
+新增纯 CP 零分配标准库 cap:braille（Unicode Braille 8 点 UTF-8 编解码、Grade-1 盲文与 2x4 终端画布）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:uuencode` POSIX uuencode/uudecode & xxencode classic binary-to-text zero-alloc codec（5/5 PASS，自动动态挂载 `cap.uuencode`）
 新增纯 CP 零分配标准库 cap:uuencode（POSIX uuencode/uudecode 与 xxencode 二进制转文本编解码）与 5/5 深度测试
 

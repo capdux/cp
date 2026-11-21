@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:braille` Unicode Braille (U+2800..U+28FF) 8-dot UTF-8 codec, Grade-1 text & 2x4 terminal canvas（5/5 PASS，文档直写 `doc/lib/braille.md`）
+新增 cap:braille 纯 CP 零分配盲文与终端点阵渲染库（256 掩码 3B UTF-8、Grade-1 大小写/数字前缀与 2x4 BrailleCanvas），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:uuencode` POSIX uuencode/uudecode & xxencode classic binary-to-text zero-alloc codec（5/5 PASS，文档直写 `doc/lib/uuencode.md`）
 新增 cap:uuencode 纯 CP 零分配经典文本编码库（begin/end 包装、45B 行宽、历史空格/反引号兼容与 xxencode 字母表），通过 cpc check 与 5/5 cap test
 
