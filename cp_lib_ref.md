@@ -637,3 +637,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:resolv_conf` | NameserverIter, ResolvOptions, effectiveSearchRaw, firstNameserver | POSIX /etc/resolv.conf 零分配解析器（nameserver/search/domain 末现优先与 glibc 上限夹紧 options） |
 | `cap:fstab_parse` | MountEntry, MountIter, unescapeMountPath, findMountForPath | POSIX /etc/fstab 与 /proc/mounts 零分配 6 字段解析器、八进制路径反转义与最长前缀挂载点查找 |
 | `cap:os_release` | OsReleaseField, OsReleaseIter, getOsReleaseField, isOsLike | freedesktop.org /etc/os-release 零分配解析器（Shell 引号反转义与 ID/ID_LIKE 发行版家族匹配） |
+| `cap:systemd_unit` | UnitEntry, UnitIter, getUnitValue, countSectionKey | Linux systemd 单元文件（.service/.timer/.socket）零分配解析器（支持重复键、反斜杠续行与空值清空） |
+| `cap:mail_address` | isValidAddrSpec, Mailbox, MailboxListIter | RFC 5322 电子邮件地址校验、"Display Name" <local@domain> 解析与引号逗号感知收件人列表迭代器 |
+| `cap:rfc2047_word` | EncodedWordEncoding, EncodedWord, parseEncodedWord, decodeEncodedWord, decodeHeaderValue, encodeUtf8Base64Word | RFC 2047 MIME Encoded-Word (=?charset?B|Q?text?=) 国际化头零分配编解码器（含相邻空白折叠） |
+| `cap:docker_image_ref` | isValidOciDigest, DockerImageRef | OCI / Docker 镜像引用零分配解析器（[registry[:port]/]repository[:tag][@digest] 与 sha256/sha512 摘要校验） |
