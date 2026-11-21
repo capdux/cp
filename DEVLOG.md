@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:xm` 零分配 FastTracker II (.xm) 跟踪器音乐头、Pattern 与 Instrument 解析器（5/5 PASS，文档直写 `doc/lib/xm.md`）
+实现零分配 FastTracker II XM 解析器，完整支持 Linear/Amiga 频率表标志与严格边界防溢出。
+
 ## 2026-11-22: 新建 `cap:eot` 零分配 Microsoft Embedded OpenType (.eot) Web 字体容器与 UTF-16LE 名称解析器（5/5 PASS，文档直写 `doc/lib/eot.md`）
 实现零分配 Microsoft EOT 容器解析器，严格校验 0x504C 魔数、Reserved/Padding 全零与字体边界。
 

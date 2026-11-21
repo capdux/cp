@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:xm` 零分配 FastTracker II (.xm) 跟踪器音乐头、Pattern 与 Instrument 解析器（5/5 PASS，自动动态挂载 `cap.xm`）
+新增 `lib/xm/{xm,index}.cp`、`doc/lib/xm.md` 与 `cap/test/test_xm_production_deep.cp`（5/5 PASS），支持 XM v1.04 头、256B Order 表、Pattern 零拷贝迭代与含多采样 PCM 跳过的 Instrument 迭代。
+
 ## [2026-11-22] - 新建 `cap:eot` 零分配 Microsoft Embedded OpenType (.eot) Web 字体容器与 UTF-16LE 名称解析器（5/5 PASS，自动动态挂载 `cap.eot`）
 新增 `lib/eot/{eot,index}.cp`、`doc/lib/eot.md` 与 `cap/test/test_eot_production_deep.cp`（5/5 PASS），支持 EOT v1.0/v2.1/v2.2 头、root_string 白名单、代理对 UTF-16LE 转 UTF-8 与内嵌字体切片。
 

@@ -625,3 +625,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:abc` | AbcFraction, AbcHeader, AbcEventKind, AbcEvent, AbcEventIter, AbcStats, isAbc, parseAbcHeader, summarizeAbc | 零分配 ABC Music Notation v2.1 乐谱头与 MIDI 音符/和弦流解析器 |
 | `cap:nsf` | NSF_MAGIC, NSF_HEADER_SIZE, NSFE_MAGIC, NsfRegion, NsfFormat, NsfHeader, NsfeChunk, NsfeChunkIter, NsfeInfo, detectNsfFormat, isNsf, isNsfe, parseNsfHeader, findNsfeChunk, parseNsfeInfo | 零分配 NES Sound Format (.nsf/.nsfe) 芯片音乐头与分块容器解析器 |
 | `cap:eot` | EOT_MAGIC, EOT_FIXED_HEADER_SIZE, EOT_VERSION_1, EOT_VERSION_2_1, EOT_VERSION_2_2, EotHeader, isEot, parseEotHeader, decodeUtf16LeName | 零分配 Microsoft Embedded OpenType (.eot) Web 字体容器与 UTF-16LE 名称解析器 |
+| `cap:xm` | XM_MAGIC, XM_SUB_BYTE, XM_MIN_HEADER_SIZE, XmHeader, XmPattern, XmPatternIter, XmInstrument, XmInstrumentIter, isXm, parseXmHeader | 零分配 FastTracker II (.xm) 跟踪器音乐头、Pattern 与 Instrument 解析器 |
