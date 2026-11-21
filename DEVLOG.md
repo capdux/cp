@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:cli_table` 零分配 CLI 终端表格（ASCII/Compact/Unicode 细线、ANSI/宽字符感知）渲染器（5/5 PASS，文档直写 `doc/lib/cli_table.md`）
+- **设计要点**：`computeColumnWidths` 跳过 ANSI CSI/OSC 序列并按东亚宽字符 2 列计宽；`renderTable` 栈上零分配支持最多 64 列并拦截缓冲区溢出。
+
 ## 2026-11-22: 新建 `cap:etc_services` Linux `/etc/services` 网络服务名与端口/协议映射表零分配双向解析器（5/5 PASS，文档直写 `doc/lib/etc_services.md`）
 - **设计要点**：`ServiceEntry.hasNameOrAlias` 精确空白切分防子串误判；`findServicePort` 与 `findServiceByPort` 协议大小写不敏感匹配。
 
