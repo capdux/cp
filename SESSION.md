@@ -103,3 +103,6 @@
 
 ### 2026-11-22（`cap:btrfs` 验收，完成并注册纯 CP 零分配标准库 cap:btrfs（5/5 cap test PASS））
 - **执行成果**：`lib/btrfs/`（5/5 PASS，`doc/lib/btrfs.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:btrfs（5/5 cap test PASS）
+
+### 2026-11-22（`cap:vdi` 验收，完成并注册纯 CP 零分配标准库 cap:vdi（5/5 cap test PASS））
+- **执行成果**：`lib/vdi/`（5/5 PASS，`doc/lib/vdi.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:vdi（5/5 cap test PASS）

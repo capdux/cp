@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:vdi` VirtualBox VDI 1.1 virtual disk header & Block Allocation Map zero-alloc parser（5/5 PASS，自动动态挂载 `cap.vdi`）
+新增纯 CP 零分配标准库 cap:vdi（VirtualBox VDI 1.1 虚拟磁盘报头与 Block Allocation Map 查表解析）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:btrfs` Linux Btrfs 4KB superblock, CRC32C, B-Tree 101B header & sys_chunk_array zero-alloc parser（5/5 PASS，自动动态挂载 `cap.btrfs`）
 新增纯 CP 零分配标准库 cap:btrfs（Linux Btrfs 4KB 超级块、CRC32C、B-Tree 节点头与 sys_chunk_array 解析）与 5/5 深度测试
 
