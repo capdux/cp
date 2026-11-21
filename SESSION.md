@@ -22,3 +22,6 @@
 
 ### 2026-11-21（`cap:consistent_hash` 验收，主控完成 `cap:consistent_hash` 研发验收提交）
 - **执行成果**：`lib/consistent_hash/`（5/5 PASS，`doc/lib/consistent_hash.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:consistent_hash` 研发验收提交
+
+### 2026-11-21（`cap:trie_radix` 验收，验收提交 `cap:trie_radix` 并新开 `cap:bimap` 并发子智能体，主控继续验收 `cap:interval_tree`）
+- **执行成果**：`lib/trie_radix/`（5/5 PASS，`doc/lib/trie_radix.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:trie_radix` 并新开 `cap:bimap` 并发子智能体，主控继续验收 `cap:interval_tree`

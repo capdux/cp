@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:trie_radix` 纯 CP 路径压缩基数树 / Patricia Trie 引擎（支持边分裂插入、最长前缀路由 `longestPrefixMatch`、前缀遍历及删除自动边合并，支持 `cap.trie_radix` 自动动态挂载，详见 `doc/lib/trie_radix.md`）（5/5 PASS，文档直写 `doc/lib/trie_radix.md`）
+- **核心设计**：支持边分裂插入、删除后单子节点自动合并、`longestPrefixMatch` 与 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:consistent_hash` 纯 CP 虚拟节点一致性哈希环引擎（Wyhash 均匀分布、动态增删物理节点最小迁移与顺时针去重 N 副本路由 `getReplicas`，支持 `cap.consistent_hash` 自动动态挂载，详见 `doc/lib/consistent_hash.md`）（5/5 PASS，文档直写 `doc/lib/consistent_hash.md`）
 - **核心设计**：采用 Wyhash 虚拟节点二分查找与去重副本遍历，通过 3 节点 600 键负载均衡与扩容迁移率 < 45% 校验。
 

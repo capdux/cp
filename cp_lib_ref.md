@@ -381,3 +381,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:disjoint_set` | `DsuError`, `DisjointSet` | 纯 CP 并查集 Union-Find 引擎（路径减半压缩 + 按秩合并 + 连通分量/规模实时追踪，支持 `cap.disjoint_set` 自动动态挂载，详见 `doc/lib/disjoint_set.md`） |
 | `cap:promql` | `PromqlError`, `MatchOp`, `LabelMatcher`, `DurationUnit`, `VectorSelector`, `MatrixSelector`, `AggregationOp`, `BinaryOp`, `VectorMatchCardinality`, `VectorMatching`, `Expr`, `parse` | 纯 CP Prometheus PromQL 词法与递归下降 AST 解析器（支持即时/区间向量选择器、`=~`/`!~` 标签匹配、聚合 `by`/`without`、`on`/`ignoring`/`group_left` 二元修饰符，支持 `cap.promql` 自动动态挂载，详见 `doc/lib/promql.md`） |
 | `cap:consistent_hash` | `ConsistentHashError`, `HashRing` | 纯 CP 虚拟节点一致性哈希环引擎（Wyhash 均匀分布、动态增删物理节点最小迁移与顺时针去重 N 副本路由 `getReplicas`，支持 `cap.consistent_hash` 自动动态挂载，详见 `doc/lib/consistent_hash.md`） |
+| `cap:trie_radix` | `StrSlice`, `PrefixMatch`, `RadixTree` | 纯 CP 路径压缩基数树 / Patricia Trie 引擎（支持边分裂插入、最长前缀路由 `longestPrefixMatch`、前缀遍历及删除自动边合并，支持 `cap.trie_radix` 自动动态挂载，详见 `doc/lib/trie_radix.md`） |

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:trie_radix` 纯 CP 路径压缩基数树 / Patricia Trie 引擎（支持边分裂插入、最长前缀路由 `longestPrefixMatch`、前缀遍历及删除自动边合并，支持 `cap.trie_radix` 自动动态挂载，详见 `doc/lib/trie_radix.md`）（5/5 PASS，自动动态挂载 `cap.trie_radix`）
+- **新增标准库**：`lib/trie_radix/{radix,index}.cp`，实现路径压缩基数树 `RadixTree(V)`。\n- **新增文档与测试**：`doc/lib/trie_radix.md` 扁平文档与 `cap/test/test_trie_radix_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:consistent_hash` 纯 CP 虚拟节点一致性哈希环引擎（Wyhash 均匀分布、动态增删物理节点最小迁移与顺时针去重 N 副本路由 `getReplicas`，支持 `cap.consistent_hash` 自动动态挂载，详见 `doc/lib/consistent_hash.md`）（5/5 PASS，自动动态挂载 `cap.consistent_hash`）
 - **新增标准库**：`lib/consistent_hash/{consistent_hash,index}.cp`，实现 `HashRing` 虚拟节点环、增删节点与 `getReplicas`。\n- **新增文档与测试**：`doc/lib/consistent_hash.md` 扁平文档与 `cap/test/test_consistent_hash_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 
