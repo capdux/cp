@@ -635,3 +635,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:dls` | DLS_RIFF_MAGIC, DLS_FORM_TYPE, DLS_BANK_DRUM_FLAG, DlsVersion, DlsInfo, DlsHeader, DlsInstrument, DlsInstIter, DlsWave, DlsWaveIter, isDls, parseDls | 零分配 MMA Downloadable Sounds (.dls) RIFF 合成器音色库解析器 |
 | `cap:bed` | BedStrand, BedRecord, BedIter, BedStats, parseBedLine, summarizeBed | 零分配 UCSC BED3-BED12 基因组区间注释解析与重叠计算器 |
 | `cap:vcf` | VcfHeader, VcfRecord, VcfRecordIter, VcfStats, isVcf, parseVcfHeader, summarizeVcf | 零分配生物信息学 VCF 4.2/4.3 基因变异记录、INFO 与 Ti/Tv 解析器 |
+| `cap:sam` | SAM_FLAG_PAIRED, SAM_FLAG_UNMAPPED, CigarOp, CigarIter, SamHeaderLine, SamHeaderIter, SamRecord, SamRecordIter, SamStats, cigarRefLen, cigarQueryLen, findSamHeaderTag, parseSamLine, summarizeSam | 零分配生物信息学 SAM v1.6 序列比对 FLAG 与 CIGAR 解析器 |

@@ -247,3 +247,6 @@
 
 ### 2026-11-22（`cap:vcf` 验收，完成 `cap:vcf` 交付验收并登记入库（5/5 PASS）；轮换 `Office & Ebook Absorber`（15 库满载）并派发 `cap:pdb`。）
 - **执行成果**：`lib/vcf/`（5/5 PASS，`doc/lib/vcf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:vcf` 交付验收并登记入库（5/5 PASS）；轮换 `Office & Ebook Absorber`（15 库满载）并派发 `cap:pdb`。
+
+### 2026-11-22（`cap:sam` 验收，完成 `cap:sam` 交付验收并登记入库（5/5 PASS）；轮换 `Geo & Doc Absorber`（12 库）并派发 `cap:dicom`。）
+- **执行成果**：`lib/sam/`（5/5 PASS，`doc/lib/sam.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:sam` 交付验收并登记入库（5/5 PASS）；轮换 `Geo & Doc Absorber`（12 库）并派发 `cap:dicom`。
