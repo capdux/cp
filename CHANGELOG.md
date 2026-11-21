@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:pca` 纯 CP 零分配主成分分析（PCA）与实对称矩阵 Jacobi 特征分解库：循环 Jacobi 特征分解、无偏协方差 PCA 拟合、降维投影、逆变换重构与均方误差检验（5/5 PASS，自动动态挂载 `cap.pca`）
+新增纯 CP 零分配主成分分析与对称特征分解库 cap:pca（Jacobi 对称特征分解、PCA 拟合/投影/重构），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:svd` 纯 CP 零分配单边 Jacobi 奇异值分解与广义逆库：经济型 SVD（含零奇异值正交补全）、截断奇异值最小范数最小二乘与 Moore-Penrose 伪逆（5/5 PASS，自动动态挂载 `cap.svd`）
 新增纯 CP 零分配单边 Jacobi SVD 与广义逆库 cap:svd（Jacobi SVD、最小范数最小二乘、Moore-Penrose 伪逆），含文档与 6 项深度生产测试
 

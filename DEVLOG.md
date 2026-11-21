@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:pca` 纯 CP 零分配主成分分析（PCA）与实对称矩阵 Jacobi 特征分解库：循环 Jacobi 特征分解、无偏协方差 PCA 拟合、降维投影、逆变换重构与均方误差检验（5/5 PASS，文档直写 `doc/lib/pca.md`）
+新增 cap:pca（lib/pca/{pca,index}.cp）：基于零分配循环 Jacobi 特征分解实现 PCA 拟合/投影/重构与丢弃特征值重构误差恒等式验证，cpc check 0 错误，cap test 6/6 PASS (634ms)
+
 ## 2026-11-22: 新建 `cap:svd` 纯 CP 零分配单边 Jacobi 奇异值分解与广义逆库：经济型 SVD（含零奇异值正交补全）、截断奇异值最小范数最小二乘与 Moore-Penrose 伪逆（5/5 PASS，文档直写 `doc/lib/svd.md`）
 新增 cap:svd（lib/svd/{svd,index}.cp）：零分配单边 Jacobi SVD 含二次 MGS 零奇异值正交补全与 Penrose 四大公理验证，cpc check 0 错误，cap test 6/6 PASS (790ms)
 
