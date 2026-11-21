@@ -220,3 +220,6 @@
 
 ### 2026-11-22（`cap:semver_satisfies` 验收，Batch 103 落地，标准库总量突破 270 模块里程碑！）
 - **执行成果**：`lib/semver_satisfies/`（5/5 PASS，`doc/lib/semver_satisfies.md`）经 `verify_module.sh` 一次性验收回收；Batch 103 落地，标准库总量突破 270 模块里程碑！
+
+### 2026-11-22（`cap:http_allow` 验收，Batch 104 落地，标准库总量达 271 模块；完成 HTTP RFC Absorber 12 模块轻量化轮换）
+- **执行成果**：`lib/http_allow/`（5/5 PASS，`doc/lib/http_allow.md`）经 `verify_module.sh` 一次性验收回收；Batch 104 落地，标准库总量达 271 模块；完成 HTTP RFC Absorber 12 模块轻量化轮换

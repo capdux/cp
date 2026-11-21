@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_allow` RFC 9110 §10.2.1 HTTP `Allow` 方法集位掩码解析、格式化与安全/幂等判定器（5/5 PASS，自动动态挂载 `cap.http_allow`）
+- 新增 `lib/http_allow/{allow,index}.cp`、`doc/lib/http_allow.md`、`cap/test/test_http_allow_production_deep.cp`：纯 CP 零分配解析 RFC 9110 `Allow` 方法集（9 标准方法位掩码 + 扩展方法迭代、安全/幂等方法判定、规范顺序格式化）（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:semver_satisfies` NPM / Bun 风格 SemVer 2.0.0 版本解析、比较与范围表达式零分配匹配器（5/5 PASS，自动动态挂载 `cap.semver_satisfies`）
 - 新增 `lib/semver_satisfies/{satisfies,index}.cp`、`doc/lib/semver_satisfies.md`、`cap/test/test_semver_satisfies_production_deep.cp`：纯 CP 零分配单遍评估 NPM/Bun Semver 范围（`||`/逻辑与/`=`/`>`/`>=`/`<`/`<=`/`^`/`~`/`*`/`x`/连字符区间/预发布保护）（5/5 PASS）。
 

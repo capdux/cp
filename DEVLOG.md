@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:http_allow` RFC 9110 §10.2.1 HTTP `Allow` 方法集位掩码解析、格式化与安全/幂等判定器（5/5 PASS，文档直写 `doc/lib/http_allow.md`）
+- **设计要点**：严格区分大小写解析 RFC 9110 方法 token，使用 `u16` 位掩码零分配表示标准方法集合并支持 `PROPFIND`/`MKCOL` 等扩展方法。
+
 ## 2026-11-22: 新建 `cap:semver_satisfies` NPM / Bun 风格 SemVer 2.0.0 版本解析、比较与范围表达式零分配匹配器（5/5 PASS，文档直写 `doc/lib/semver_satisfies.md`）
 - **设计要点**：全状态零堆分配单遍评估 `||` 与空白逻辑与；严格实现 SemVer 2.0.0 预发布优先级与同 `[major, minor, patch]` 预发布比较器放行规则。
 
