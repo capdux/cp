@@ -133,3 +133,6 @@
 
 ### 2026-11-22（`cap:idl` 验收，新增简洁单单词包 `cap:idl`（5/5 PASS））
 - **执行成果**：`lib/idl/`（5/5 PASS，`doc/lib/idl.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:idl`（5/5 PASS）
+
+### 2026-11-22（`cap:xpath` 验收，新增简洁单单词包 `cap:xpath`（5/5 PASS））
+- **执行成果**：`lib/xpath/`（5/5 PASS，`doc/lib/xpath.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:xpath`（5/5 PASS）

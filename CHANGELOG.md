@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:xpath` 零分配 W3C XPath 表达式词法扫描、位置路径步进迭代与括号平衡校验器（5/5 PASS，自动动态挂载 `cap.xpath`）
+- 新增 `lib/xpath/{xpath,index}.cp`、`doc/lib/xpath.md`、`cap/test/test_xpath_production_deep.cp`：纯 CP 零分配实现 XPath 词法扫描、位置路径步进迭代（支持 `//`、`axis::`、`@attr`、`text()`、命名空间 QName 与嵌套谓词）与 64 层括号校验（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:idl` 零分配 W3C WebIDL 接口/字典/枚举/扩展属性词法扫描与顶层声明提取器（5/5 PASS，自动动态挂载 `cap.idl`）
 - 新增 `lib/idl/{idl,index}.cp`、`doc/lib/idl.md`、`cap/test/test_idl_production_deep.cp`：纯 CP 零分配实现 W3C WebIDL 词法扫描、8 类顶层声明（含 `[ExtAttr]` 与 `partial` 修饰）提取与 64 层括号平衡校验（5/5 PASS）。
 

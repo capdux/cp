@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:xpath` 零分配 W3C XPath 表达式词法扫描、位置路径步进迭代与括号平衡校验器（5/5 PASS，文档直写 `doc/lib/xpath.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:xpath`；`XPathStepIter` 零分配跳过谓词内部 `/` 与字符串。
+
 ## 2026-11-22: 新建 `cap:idl` 零分配 W3C WebIDL 接口/字典/枚举/扩展属性词法扫描与顶层声明提取器（5/5 PASS，文档直写 `doc/lib/idl.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:idl`；`WebIdlDeclIter` 零分配支持 `interface mixin`、`partial dictionary`、`A includes B;` 等 WebIDL 规范语法。
 
