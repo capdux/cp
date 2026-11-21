@@ -1,0 +1,31 @@
+// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Cisco NetFlow v5 & RFC 3954 v9 Parser)
+// Unified exports for cap:netflow.
+
+export {
+    NETFLOW_UDP_PORT,
+    NETFLOW_V5,
+    NETFLOW_V9,
+    NF5_HEADER_SIZE,
+    NF5_RECORD_SIZE,
+    NF9_HEADER_SIZE,
+    NF9_FLOWSET_HEADER_SIZE,
+    NF9_FLOWSET_TEMPLATE,
+    NF9_FLOWSET_OPTIONS_TEMPLATE,
+    NF9_FLOWSET_DATA_MIN,
+    Nf5Header,
+    Nf5Record,
+    Nf5RecordIter,
+    Nf5Packet,
+    Nf9Header,
+    Nf9FieldSpec,
+    Nf9FieldSpecIter,
+    Nf9TemplateRecord,
+    Nf9TemplateIter,
+    Nf9FlowSet,
+    Nf9FlowSetIter,
+    Nf9Packet,
+    peekNetflowVersion,
+    parseNetflowV5,
+    parseNetflowV9,
+    isNetflow,
+} from "./netflow.cp";

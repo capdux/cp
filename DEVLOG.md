@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:netflow` NetFlow v5 & v9 (RFC 3954) flow records, FlowSets & Template zero-alloc parser（5/5 PASS，文档直写 `doc/lib/netflow.md`）
+新增 cap:netflow 纯 CP 零分配网络流遥测协议库（v5 48B 固定流记录与 v9 Template/Options/Data FlowSet 零拷贝迭代），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:rtcp` RTCP (RFC 3550) compound packet, SR/RR/SDES/BYE/APP & 24-bit signed loss zero-alloc parser（5/5 PASS，文档直写 `doc/lib/rtcp.md`）
 新增 cap:rtcp 纯 CP 零分配实时传输控制协议库（复合包零拷贝迭代、24B ReportBlock 与 24-bit 有符号丢包数扩展、Padding 剥离），通过 cpc check 与 5/5 cap test
 
