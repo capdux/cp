@@ -451,7 +451,7 @@ cpc 源代码几万行，修改、编译、测试非常耗时，需要修改、�
 - **后台守护通信**：跨 AGY 通信由 `systemd` 服务 `agy-comm.service` 常驻托管（详见 `/root/.agy/comm/COMM.md`），主控不再自建死循环轮询；收到热修工单后立即派单修复、`sync_cpc.sh release` 原子部署、`resolve` + `ack` 结单；
 - **即用即收**：子智能体完成任务后立即回收释放，避免累积上下文浪费 Token。
 
-### 2. 并行开发编译器与合并标准执行步骤
+### 4. 并行开发编译器与合并标准执行步骤
 
 1. **使用 `env` 至调试沙盒**：
 
@@ -486,7 +486,7 @@ git status --porcelain cpc_dev/src
 
 以上并发工作方案，目的是多子智能体并行工作，同时互不干扰，提高工作效率，缩短工作时间。
 
-### 4. 编译器核心超大文件模块化分拆规范（Modular Architecture）
+### 5. 编译器核心超大文件模块化分拆规范（Modular Architecture）
 
 鉴于当前编译器核心源文件代码量庞大（`codegen.rs` 约 1.7 万行，`parser.rs` 约 7,000 行，`sema.rs` 约 6,000 行），极大增加了跨 800 行分段读取与多点联动的摩擦。后续按以下架构方案逐步进行功能模块解耦与拆分：
 
@@ -546,6 +546,9 @@ git status --porcelain cpc_dev/src
 4. **Bun 吸收强制“大纲索引 + 局部切片读取”**：子智能体读取 `/data/dev/bun/src/` 大文件时，先用 `rg -n "^(pub )?(fn|struct|enum|const)"` 提取符号行号再分段精读，彻底剔除 JSValue/Bun 内部耦合，禁止整文件吞入上下文。
 5. **主控空隙巡检与日志驱动持续调优（不闲着铁律）**：在等待 2 路并发子智能体推进的间隙（或收到用户巡检指令时），主控主动执行全库 `lib/` 合规扫描（`std.posix` / `@import("bun")` / `// Source:` / `doc/lib/*.md` / `cp_lib_ref.md` 完整性）、盘点 `/data/dev/bun/src/` 剩余待吸收清单，并统计分析近期子智能体 `transcript.jsonl`（步数、工具分布、报错重试点），持续把新发现的卡点反哺固化到本规范与派发模板中。
 
+6. 主智能体不可陷入长回合连续编码循环，需负责开启两个子智能体做常规任务（如lib资产迁移）, 一个热修子智能体。
+   主要负责巡检/审核/验收 子智能体工作成果, 及时回应我的指令/及时接收工单避免消息积压/及时安排子智能体处理/及时汇报阶段性成果,更新文档和git提交固化成果。并通过监控子智能体执行效率, 分析执行数据, 拿出改进方式方法, 检验有效, 写入 GEMINI.md固化, 实现自我成长进化。
+
 ### 6. 配额超限安全冷却缓冲协议 (Quota Cooldown via Built-in schedule)
 
 当开发过程中遇到平台配额限制报错时（例如：`⚠ Individual quota reached. Please upgrade your subscription to increase your limits. Resets in XhYmZs`）：
@@ -596,9 +599,27 @@ git status --porcelain cpc_dev/src
 
 ## 八、工程提速脚本指南 (Scripts Reference)
 
-| 脚本 / 配置文件            | 核心作用                                                                                                           | 适用场景与时机                                                                 | 调用命令示例                                                                       |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| `scripts/sync_cpc.sh`      | **原子构建并部署 `cpc`**（临时文件 + `mv -f` 零并发窗口）                                                          | 修改 `cpc/src` 后**必须且只能**调用此脚本（日常 `debug`，发布/热修 `release`） | `bash scripts/sync_cpc.sh` / `bash scripts/sync_cpc.sh release`                    |
-| `scripts/verify_module.sh` | **一键标准库合规与模块化测试验收**（0 `std.posix`/0 `@import("bun")`/首行 `// Source:`/`cpc check`/`cap test -m`） | 子智能体交付前与主控验收时单条命令完成全部检查                                 | `bash scripts/verify_module.sh lib/json cap/test/test_json_rfc_production_deep.cp` |
-| `scripts/archive_hot_logs.py` | **热日志无损滚动归档**（保留最近 N 条于热文件，旧条目无损追加至 `*_H.md` 末尾） | 热文档超过 ~150 行时执行瘦身                                                   | `python3 scripts/archive_hot_logs.py --keep 5` |
-| `scripts/register_stdlib.py` | **标准库验收一键登记与提交**（自动更新 4 线文档并可选 `git add/commit`） | 主控回收子智能体时单命令收尾                                                   | `python3 scripts/register_stdlib.py --mod <mod> ...` |
+| 脚本 / 配置文件               | 核心作用                                                                                                           | 适用场景与时机                                                                 | 调用命令示例                                                                       |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| `scripts/sync_cpc.sh`         | **原子构建并部署 `cpc`**（临时文件 + `mv -f` 零并发窗口）                                                          | 修改 `cpc/src` 后**必须且只能**调用此脚本（日常 `debug`，发布/热修 `release`） | `bash scripts/sync_cpc.sh` / `bash scripts/sync_cpc.sh release`                    |
+| `scripts/verify_module.sh`    | **一键标准库合规与模块化测试验收**（0 `std.posix`/0 `@import("bun")`/首行 `// Source:`/`cpc check`/`cap test -m`） | 子智能体交付前与主控验收时单条命令完成全部检查                                 | `bash scripts/verify_module.sh lib/json cap/test/test_json_rfc_production_deep.cp` |
+| `scripts/archive_hot_logs.py` | **热日志无损滚动归档**（保留最近 N 条于热文件，旧条目无损追加至 `*_H.md` 末尾）                                    | 热文档超过 ~150 行时执行瘦身                                                   | `python3 scripts/archive_hot_logs.py --keep 5`                                     |
+| `scripts/register_stdlib.py`  | **标准库验收一键登记与提交**（自动更新 4 线文档并可选 `git add/commit`）                                           | 主控回收子智能体时单命令收尾                                                   | `python3 scripts/register_stdlib.py --mod <mod> ...`                               |
+
+---
+
+## 九、主/子智能体轻量协调、定期轮换与自我进化铁律
+
+为防止主智能体陷入长耗时编码死循环、阻塞用户指令与下游工单响应，并消除长生命周期子智能体上下文膨胀导致的效率衰减，经实测验证（单模块稳定 1.2–2.8 分钟一次零错误交付、下游工单 0 积压），确立以下硬性规范：
+
+1. **主智能体轻量短回合原则（严禁卡死在长任务中）**：
+   - 主智能体职责聚焦于：**巡检 / 审核 / 验收子智能体成果、及时回应用户指令、及时接收并分派下游工单、及时登记四线文档与 `git commit` 固化成果、持续监控与优化子智能体效率**。
+   - 每个唤醒回合严格控制在 **1–3 个轻量步骤**（验收/提交 → 派发下一任务 → 检查工单队列），**完成后立即结束回合向用户做阶段性汇报**，依靠系统事件驱动响应，绝不在单回合内连续无限循环编写多个模块。
+2. **三通道并行分工（2 迁移 + 1 专用热修）**：
+   - 保持 **2 个标准库迁移子智能体**（`bun-absorber`）并行吸收资产。
+   - 一旦 `task_queue.py unacked` 出现下游工单，**立即派发专用热修子智能体**紧急处理（不阻塞迁移通道），验证、发布、结单后**立即 `kill` 回收**该热修子智能体，并由主智能体单次 `git commit` 固化。
+3. **长生命周期迁移子智能体定期轮换（反上下文膨胀）**：
+   - 迁移子智能体每连续完成 **10–15 个模块**（或单模块耗时明显升高）时，主智能体主动 `kill` 旧会话并 `invoke_subagent` 重建全新低上下文实例，保持 1–3 分钟/模块的高吞吐与 0 返工率。
+4. **单次原子提交与热日志瘦身**：
+   - 子智能体禁止修改共享四线文档（`cp_lib_ref.md` / `SESSION.md` / `CHANGELOG.md` / `DEVLOG.md`）或执行 `git commit`，全部由主智能体验收后通过 `scripts/register_stdlib.py` 统一登记并原子提交；热日志超 ~150–300 行时及时滚动归档至 `*_H.md`。
+

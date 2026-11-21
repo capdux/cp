@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:properties_parse` Java .properties 配置文件零分配流式解析器（支持 =/:/空白分隔、奇偶反斜杠续行与 \uXXXX 代理对反转义）（5/5 PASS，自动动态挂载 `cap.properties_parse`）
+新增 `cap:properties_parse`（`lib/properties_parse/{properties,index}.cp`、`doc/lib/properties_parse.md`、`cap/test/test_properties_parse_production_deep.cp`），完整支持 `#`/`!` 注释、逻辑续行与 UTF-16 代理对转 UTF-8；同步将经验证的主/子智能体轻量协调与定期轮换铁律写入 `GEMINI.md` 第九章固化。
+
 ## [2026-11-22] - 新建 `cap:http_etag_gen` 零分配 HTTP 强/弱 ETag 生成器（FNV-1a 64-bit 内容哈希与 size/mtime 静态文件弱 ETag）及 RFC 9110 语法校验（5/5 PASS，自动动态挂载 `cap.http_etag_gen`）
 新增 `cap:http_etag_gen`（`lib/http_etag_gen/{etag_gen,index}.cp`、`doc/lib/http_etag_gen.md`、`cap/test/test_http_etag_gen_production_deep.cp`），实现强/弱 ETag 生成与 RFC 9110 §8.8.3 严格语法校验。
 
