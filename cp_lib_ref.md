@@ -832,3 +832,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:pca` | PcaFitResult, jacobiEigenSymmetric, pcaFit, pcaTransform, pcaInverseTransform, pcaReconstructionMse | 纯 CP 零分配主成分分析（PCA）与实对称矩阵 Jacobi 特征分解库：循环 Jacobi 特征分解、无偏协方差 PCA 拟合、降维投影、逆变换重构与均方误差检验 |
 | `cap:knn` | DistanceMetric, WeightMode, Neighbor, distanceMetric, findKNearest, knnClassify, knnRegress, knnLeaveOneOutAccuracy | 纯 CP 零分配 K-最近邻（KNN）分类与回归库：欧氏/曼哈顿/切比雪夫/余弦四种距离、原地大顶堆 Top-K 搜索、均匀/反距离加权分类与回归及留一法交叉验证 |
 | `cap:treap` | TREAP_NIL, TreapNode, TreapEntry, Treap | 纯 CP 零分配随机平衡树与顺序统计 Treap 库：固定节点池与空闲链表复用、SplitMix64 优先级、O(log n) kth/rank/lowerBound/upperBound/rangeCount 与不变量校验 |
+| `cap:delaunay` | Point2, Triangle, Edge2, Circumcircle, DelaunayWorkspace, delaunayMinTriPool, delaunayMinEdgePool, orient2d, circumcircle, inCircumcircle, pointInTriangle, triangulate, verifyDelaunayEmptyCircle, locateTriangle | 纯 CP 零分配 2D Delaunay 三角剖分库：Bowyer-Watson 增量剖分、无除法外接圆行列式谓词、CCW 绕序保证、空外接圆准则检验与三角形点定位 |

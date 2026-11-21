@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:delaunay` 纯 CP 零分配 2D Delaunay 三角剖分库：Bowyer-Watson 增量剖分、无除法外接圆行列式谓词、CCW 绕序保证、空外接圆准则检验与三角形点定位（5/5 PASS，文档直写 `doc/lib/delaunay.md`）
+新增 cap:delaunay（lib/delaunay/{delaunay,index}.cp）：零分配 Bowyer-Watson 增量三角剖分含 3x3 无除法外接圆行列式与空外接圆准则校验，cpc check 0 错误，cap test 6/6 PASS (700ms)
+
 ## 2026-11-22: 新建 `cap:treap` 纯 CP 零分配随机平衡树与顺序统计 Treap 库：固定节点池与空闲链表复用、SplitMix64 优先级、O(log n) kth/rank/lowerBound/upperBound/rangeCount 与不变量校验（5/5 PASS，文档直写 `doc/lib/treap.md`）
 新增 cap:treap（lib/treap/{treap,index}.cp）：零分配固定节点池与空闲链表实现 SplitMix64 随机平衡 Treap，支持 O(log n) kth/rank/rangeCount 与 BST+堆序不变量校验，cpc check 0 错误，cap test 6/6 PASS (852ms)
 

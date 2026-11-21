@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:delaunay` 纯 CP 零分配 2D Delaunay 三角剖分库：Bowyer-Watson 增量剖分、无除法外接圆行列式谓词、CCW 绕序保证、空外接圆准则检验与三角形点定位（5/5 PASS，自动动态挂载 `cap.delaunay`）
+新增纯 CP 零分配 2D Delaunay 三角剖分库 cap:delaunay（Bowyer-Watson 剖分、几何谓词、空外接圆检验、点定位），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:treap` 纯 CP 零分配随机平衡树与顺序统计 Treap 库：固定节点池与空闲链表复用、SplitMix64 优先级、O(log n) kth/rank/lowerBound/upperBound/rangeCount 与不变量校验（5/5 PASS，自动动态挂载 `cap.treap`）
 新增纯 CP 零分配随机平衡树/顺序统计库 cap:treap（固定池 Treap、空闲链表复用、O(log n) 顺序统计与范围计数），含文档与 6 项深度生产测试
 
