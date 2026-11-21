@@ -28,3 +28,6 @@
 
 ### 2026-11-21（`cap:skip_list` 验收，验收提交 `cap:skip_list` 并新开 `cap:merkle_tree` 并发子智能体，主控继续验收 `cap:interval_tree` 与 `cap:fenwick`）
 - **执行成果**：`lib/skip_list/`（5/5 PASS，`doc/lib/skip_list.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:skip_list` 并新开 `cap:merkle_tree` 并发子智能体，主控继续验收 `cap:interval_tree` 与 `cap:fenwick`
+
+### 2026-11-21（`cap:interval_tree` 验收，主控完成 `cap:interval_tree` 研发验收提交）
+- **执行成果**：`lib/interval_tree/`（5/5 PASS，`doc/lib/interval_tree.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:interval_tree` 研发验收提交
