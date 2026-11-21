@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:dae` 零分配 Khronos COLLADA 1.4/1.5 (.dae) 3D 资产与顶点数组解析器（5/5 PASS，文档直写 `doc/lib/dae.md`）
+实现零分配 COLLADA 1.4/1.5 XML 解析器，支持前序嵌套场景节点遍历与资产汇总。
+
 ## 2026-11-22: 新建 `cap:vrml` 零分配 VRML97 / Classic X3D 3D 场景词法、节点树与字段解析器（5/5 PASS，文档直写 `doc/lib/vrml.md`）
 实现零分配 VRML97/Classic X3D 场景解析器，支持嵌套 body_slice 递归查找与字符串闭合校验。
 

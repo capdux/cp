@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:dae` 零分配 Khronos COLLADA 1.4/1.5 (.dae) 3D 资产与顶点数组解析器（5/5 PASS，自动动态挂载 `cap.dae`）
+新增 `lib/dae/{dae,index}.cp`、`doc/lib/dae.md` 与 `cap/test/test_dae_production_deep.cp`（5/5 PASS），支持 <asset> 元数据、几何体与科学计数法 <float_array> 迭代及场景节点引用提取。
+
 ## [2026-11-22] - 新建 `cap:vrml` 零分配 VRML97 / Classic X3D 3D 场景词法、节点树与字段解析器（5/5 PASS，自动动态挂载 `cap.vrml`）
 新增 `lib/vrml/{vrml,index}.cp`、`doc/lib/vrml.md` 与 `cap/test/test_vrml_production_deep.cp`（5/5 PASS），支持 VRML97/X3D 头解析、逗号空白词法、DEF/USE/ROUTE 迭代与括号平衡统计。
 

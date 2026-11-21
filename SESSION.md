@@ -190,3 +190,6 @@
 
 ### 2026-11-22（`cap:vrml` 验收，完成 `cap:vrml` 交付验收并登记入库（5/5 PASS）；派发 `cap:psf`。）
 - **执行成果**：`lib/vrml/`（5/5 PASS，`doc/lib/vrml.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:vrml` 交付验收并登记入库（5/5 PASS）；派发 `cap:psf`。
+
+### 2026-11-22（`cap:dae` 验收，完成 `cap:dae` 交付验收并登记入库（5/5 PASS）；派发 `cap:sf2`。）
+- **执行成果**：`lib/dae/`（5/5 PASS，`doc/lib/dae.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:dae` 交付验收并登记入库（5/5 PASS）；派发 `cap:sf2`。

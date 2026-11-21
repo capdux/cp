@@ -616,3 +616,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:igc` | IgcHeader, IgcFix, IgcFixIter, IgcStats, isIgc, parseIgcHeader, parseIgcBRecord, summarizeIgc | 零分配 FAI IGC 滑翔机/航空飞行记录仪 A/H/B 记录解析器 |
 | `cap:usd` | USDC_MAGIC, USDC_BOOTSTRAP_SIZE, USDA_MAGIC, UsdFormat, UsdcBootstrap, UsdcSection, UsdcSectionIter, UsdaHeader, detectUsdFormat, isUsdc, isUsda, isUsdz, parseUsdcBootstrap, findUsdcSection, parseUsdaHeader | 零分配 Pixar OpenUSD (.usdc/.usda/.usdz) Crate TOC 与阶段元数据解析器 |
 | `cap:vrml` | VrmlFlavor, VrmlTokenKind, VrmlHeader, VrmlToken, VrmlLexer, VrmlNode, VrmlNodeIter, VrmlStats, isVrml, parseVrmlHeader, findVrmlField, summarizeVrml | 零分配 VRML97 / Classic X3D 3D 场景词法、节点树与字段解析器 |
+| `cap:dae` | DaeAsset, DaeGeometry, DaeGeometryIter, DaeFloatArray, DaeFloatArrayIter, DaeFloatIter, DaeSceneNode, DaeSceneNodeIter, DaeStats, isCollada, parseDaeAsset, summarizeDae | 零分配 Khronos COLLADA 1.4/1.5 (.dae) 3D 资产与顶点数组解析器 |
