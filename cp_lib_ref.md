@@ -680,3 +680,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:proc_net_route` | RTF_UP, RTF_GATEWAY, RTF_HOST, parseHexIpv4Le, RouteEntry, ProcRouteIter, findDefaultGateway | Linux /proc/net/route 内核路由表零分配解析器、小端十六进制 IPv4 解码与最小 metric 默认网关查找器 |
 | `cap:cron_preset` | CronPreset, parseCronPreset, presetToCron5, normalizeCron5 | Vixie Cron @macro 预设（@hourly/@daily/@weekly/@monthly/@yearly/@reboot）零分配展开与 5 段表达式校验器 |
 | `cap:dns_txt_parse` | TxtTag, TxtTagIter, findTxtTag, DmarcPolicy, DmarcRecord, SpfQualifier, SpfTerm, SpfIter | DNS TXT 分号键值标签、DMARC (v=DMARC1) 与 SPF (v=spf1) 策略记录零分配解析器 |
+| `cap:proc_net_dev` | `NetDevStats`, `ProcNetDevIter`, `findNetDev`, `sumNonLoopbackBytes` | Linux `/proc/net/dev` 网络接口收发字节/包/错误/丢包零分配解析器 |

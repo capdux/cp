@@ -175,3 +175,6 @@
 
 ### 2026-11-22（`cap:dns_txt_parse` 验收，Batch 88 注册 `cap:dns_txt_parse` 并提交（累计 255 模块）。）
 - **执行成果**：`lib/dns_txt_parse/`（5/5 PASS，`doc/lib/dns_txt_parse.md`）经 `verify_module.sh` 一次性验收回收；Batch 88 注册 `cap:dns_txt_parse` 并提交（累计 255 模块）。
+
+### 2026-11-22（`cap:proc_net_dev` 验收，Batch 89 落地，标准库总量达 256 模块；已派发 `cap:proc_cpuinfo` 给 Sys Config Absorber）
+- **执行成果**：`lib/proc_net_dev/`（5/5 PASS，`doc/lib/proc_net_dev.md`）经 `verify_module.sh` 一次性验收回收；Batch 89 落地，标准库总量达 256 模块；已派发 `cap:proc_cpuinfo` 给 Sys Config Absorber

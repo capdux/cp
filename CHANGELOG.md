@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:proc_net_dev` Linux `/proc/net/dev` 网络接口收发字节/包/错误/丢包零分配解析器（5/5 PASS，自动动态挂载 `cap.proc_net_dev`）
+- 新增 `lib/proc_net_dev/{net_dev,index}.cp`、`doc/lib/proc_net_dev.md`、`cap/test/test_proc_net_dev_production_deep.cp`：纯 CP 零分配解析 Linux `/proc/net/dev` 16 列 RX/TX 统计（bytes/packets/errs/drop 等），支持按接口名检索与非回环流量汇总（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:dns_txt_parse` DNS TXT 分号键值标签、DMARC (v=DMARC1) 与 SPF (v=spf1) 策略记录零分配解析器（5/5 PASS，自动动态挂载 `cap.dns_txt_parse`）
 新增 `cap:dns_txt_parse`（`lib/dns_txt_parse/{dns_txt,index}.cp`、`doc/lib/dns_txt_parse.md`、`cap/test/test_dns_txt_parse_production_deep.cp`），实现 DMARC `pct`/策略校验与 SPF 机制流式迭代。
 

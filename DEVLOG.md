@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:proc_net_dev` Linux `/proc/net/dev` 网络接口收发字节/包/错误/丢包零分配解析器（5/5 PASS，文档直写 `doc/lib/proc_net_dev.md`）
+- **设计要点**：跳过前两行表头，按 `:` 切分接口名与 16 列无符号整数，零分配切片迭代 `ProcNetDevIter`；提供 `findNetDev` 与 `sumNonLoopbackBytes`（自动排除 `lo`）。
+
 ## 2026-11-22: 新建 `cap:dns_txt_parse` DNS TXT 分号键值标签、DMARC (v=DMARC1) 与 SPF (v=spf1) 策略记录零分配解析器（5/5 PASS，文档直写 `doc/lib/dns_txt_parse.md`）
 轮换后的 `HTTP RFC Absorber` 仅用 1 分 24 秒交付 `cap:dns_txt_parse`（5 组深度用例 100% PASS）。
 
