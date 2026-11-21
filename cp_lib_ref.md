@@ -556,3 +556,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:aac` | ADTS_HEADER_SIZE, ADTS_HEADER_CRC_SIZE, AAC_SAMPLE_RATES, AacProfile, AdtsFrame, AdtsIter, AudioSpecificConfig, AdtsStats, aacSampleRate, aacChannelCount, aacProfileFromObjectType, isAdts, parseAudioSpecificConfig, summarizeAdts | 零分配 MPEG-2/4 AAC ADTS 音频帧流与 AudioSpecificConfig 解析器 |
 | `cap:opus` | OPUS_HEAD_MAGIC, OPUS_TAGS_MAGIC, OPUS_SAMPLE_RATE, OpusHead, OpusTag, OpusTagsInfo, OpusCommentIter, OpusMode, OpusBandwidth, OpusToc, isOpusHead, isOpusTags, parseOpusHead, parseOpusTags, parseOpusToc | 零分配 RFC 7845 OpusHead/OpusTags 与 RFC 6716 Opus TOC 解析器 |
 | `cap:iso` | ISO_SECTOR_SIZE, ISO_PVD_OFFSET, ISO_MAGIC, IsoPrimaryVolume, IsoDirEntry, IsoDirIter, isIso9660, parseIsoPvd, findIsoEntry, readIsoFileData | 零分配 ISO 9660 光盘镜像 PVD 卷描述符与目录记录解析器 |
+| `cap:avif` | AvifBrandInfo, Av1Config, AvifColr, AvifInfo, isAvif, parseAvifBrand, parseAv1C, parseAvifInfo | 零分配 AVIF / MIAF ISO BMFF 图像容器与 av1C/ispe/colr 元数据解析器 |
