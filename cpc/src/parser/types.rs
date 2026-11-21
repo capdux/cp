@@ -555,6 +555,7 @@ impl<'a> Parser<'a> {
                 self.bump()?;
                 sym.push('(');
                 let mut paren_depth = 1;
+                let mut prev_end: Option<usize> = None;
                 while paren_depth > 0 && self.peek().is_some() {
                     let (tok, t_span) = self.bump()?;
                     match tok {
@@ -566,7 +567,13 @@ impl<'a> Parser<'a> {
                         sym.push(')');
                         break;
                     }
+                    if let Some(pe) = prev_end {
+                        if t_span.start > pe {
+                            sym.push(' ');
+                        }
+                    }
                     sym.push_str(&self.input[t_span.start..t_span.end]);
+                    prev_end = Some(t_span.end);
                 }
             }
             while self.peek() == Some(&Token::Dot) {
@@ -1328,6 +1335,7 @@ impl<'a> Parser<'a> {
                         self.bump()?;
                         sym.push('(');
                         let mut paren_depth = 1;
+                        let mut prev_end: Option<usize> = None;
                         while paren_depth > 0 && self.peek().is_some() {
                             let (tok, t_span) = self.bump()?;
                             match tok {
@@ -1339,12 +1347,19 @@ impl<'a> Parser<'a> {
                                 sym.push(')');
                                 break;
                             }
+                            if let Some(pe) = prev_end {
+                                if t_span.start > pe {
+                                    sym.push(' ');
+                                }
+                            }
                             sym.push_str(&self.input[t_span.start..t_span.end]);
+                            prev_end = Some(t_span.end);
                         }
                     } else if self.peek() == Some(&Token::Less) {
                         self.bump()?;
                         sym.push('<');
                         let mut angle_depth = 1;
+                        let mut prev_end: Option<usize> = None;
                         while angle_depth > 0 && self.peek().is_some() {
                             let (tok, t_span) = self.bump()?;
                             match tok {
@@ -1356,7 +1371,13 @@ impl<'a> Parser<'a> {
                                 sym.push('>');
                                 break;
                             }
+                            if let Some(pe) = prev_end {
+                                if t_span.start > pe {
+                                    sym.push(' ');
+                                }
+                            }
                             sym.push_str(&self.input[t_span.start..t_span.end]);
+                            prev_end = Some(t_span.end);
                         }
                     } else {
                         break;
@@ -1437,6 +1458,7 @@ impl<'a> Parser<'a> {
                             self.bump()?;
                             sym.push('(');
                             let mut paren_depth = 1;
+                            let mut prev_end: Option<usize> = None;
                             while paren_depth > 0 && self.peek().is_some() {
                                 let (tok, t_span) = self.bump()?;
                                 match tok {
@@ -1448,12 +1470,19 @@ impl<'a> Parser<'a> {
                                     sym.push(')');
                                     break;
                                 }
+                                if let Some(pe) = prev_end {
+                                    if t_span.start > pe {
+                                        sym.push(' ');
+                                    }
+                                }
                                 sym.push_str(&self.input[t_span.start..t_span.end]);
+                                prev_end = Some(t_span.end);
                             }
                         } else if self.peek() == Some(&Token::Less) {
                             self.bump()?;
                             sym.push('<');
                             let mut angle_depth = 1;
+                            let mut prev_end: Option<usize> = None;
                             while angle_depth > 0 && self.peek().is_some() {
                                 let (tok, t_span) = self.bump()?;
                                 match tok {
@@ -1465,7 +1494,13 @@ impl<'a> Parser<'a> {
                                     sym.push('>');
                                     break;
                                 }
+                                if let Some(pe) = prev_end {
+                                    if t_span.start > pe {
+                                        sym.push(' ');
+                                    }
+                                }
                                 sym.push_str(&self.input[t_span.start..t_span.end]);
+                                prev_end = Some(t_span.end);
                             }
                         } else {
                             break;
@@ -1617,7 +1652,13 @@ impl<'a> Parser<'a> {
             Type::ManyRawPtr(inner) => format!("[*]{}", Self::type_to_str(inner)),
             Type::CPtr(inner) => format!("[*c]{}", Self::type_to_str(inner)),
             Type::SentinelPtr(inner, n) => format!("[*:{n}]{}", Self::type_to_str(inner)),
-            Type::SentinelSlice(inner, n) => format!("[:{n}]{}", Self::type_to_str(inner)),
+            Type::SentinelSlice(inner, n) => {
+                if let Some(s) = n.strip_suffix(":const") {
+                    format!("[:{s}]const {}", Self::type_to_str(inner))
+                } else {
+                    format!("[:{n}]{}", Self::type_to_str(inner))
+                }
+            }
             Type::Optional(inner) => format!("{}?", Self::type_to_str(inner)),
             Type::Shared(inner) => format!("Shared<{}>", Self::type_to_str(inner)),
             Type::Aligned { qual, inner } => format!("{}{}", qual, Self::type_to_str(inner)),

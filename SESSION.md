@@ -101,3 +101,4 @@
 
 ### 2026-11-22（`cap:http_clear_site_data` 验收，Batch 72 注册 `cap:http_clear_site_data` 并提交（累计 231 模块）。）
 - **执行成果**：`lib/http_clear_site_data/`（5/5 PASS，`doc/lib/http_clear_site_data.md`）经 `verify_module.sh` 一次性验收回收；Batch 72 注册 `cap:http_clear_site_data` 并提交（累计 231 模块）。
+- **CPC + 标准库热修（2 条工单清零）**：修复 `task-bun-20261122-sentinel-const-space`（泛型类型实参保留 `const` 空格）与 `task-capsurf-20261122-lib-pack-gzip-e0209`（`lib/pack/gzip.cp` 17 处裸指针操作包裹 `unsafe`），已 release 部署、双结单并回收热修子智能体。

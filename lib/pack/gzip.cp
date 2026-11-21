@@ -157,7 +157,7 @@ fn compressWithWindowBits(src: []const u8, window_bits: i32, level: i32): []u8 {
         * = NativeZlib.deflate(&strm, 4); // Z_FINISH
         let out_len: usize = strm.total_out;
         * = NativeZlib.deflateEnd(&strm);
-        return buf[0..out_len];
+        return unsafe { buf[0..out_len] };
     }
 
     let strm = ZStream{
@@ -202,7 +202,7 @@ fn compressWithWindowBits(src: []const u8, window_bits: i32, level: i32): []u8 {
 
     let comp_len: usize = strm.total_out;
     * = NativeZlib.deflateEnd(&strm);
-    return out_buf[0..comp_len];
+    return unsafe { out_buf[0..comp_len] };
 }
 
 fn decompressWithWindowBits(src: []const u8, window_bits: i32): ([]u8)? {
@@ -260,7 +260,7 @@ fn decompressWithWindowBits(src: []const u8, window_bits: i32): ([]u8)? {
         if (ret == 1) { // 1 = Z_STREAM_END
             let final_len: usize = strm.total_out;
             * = NativeZlib.inflateEnd(&strm);
-            return out_buf[0..final_len];
+            return unsafe { out_buf[0..final_len] };
         }
         if (ret != 0 && ret != 1) {
             * = NativeZlib.inflateEnd(&strm);
@@ -272,10 +272,10 @@ fn decompressWithWindowBits(src: []const u8, window_bits: i32): ([]u8)? {
             let used: usize = strm.total_out;
             let next_cap: usize = cur_cap * 2;
             let new_buf: [*]u8 = @alloc(next_cap);
-            @memcpy(new_buf[0..used], out_buf[0..used]);
+            unsafe { @memcpy(new_buf[0..used], out_buf[0..used]); }
             out_buf = new_buf;
             cur_cap = next_cap;
-            strm.next_out = &out_buf[used];
+            strm.next_out = unsafe { &out_buf[used] };
             strm.avail_out = (next_cap - used) as u32;
         }
     }
@@ -381,7 +381,7 @@ pub class ZlibStreamCompressor {
 
     pub static fn create(window_bits: i32 = WINDOW_BITS_GZIP, level: i32 = 6): (*ZlibStreamCompressor)? {
         let raw: [*]u8 = @alloc(@sizeOf(ZlibStreamCompressor));
-        let comp: *ZlibStreamCompressor = @ptrCast(@alignCast(raw));
+        let comp: *ZlibStreamCompressor = unsafe { @ptrCast(@alignCast(raw)) };
         comp.strm = ZStream{
             next_in: null,
             avail_in: 0,
@@ -436,7 +436,7 @@ pub class ZlibStreamCompressor {
         * = NativeZlib.deflate(&_.strm, 2); // 2 = Z_SYNC_FLUSH
         let produced: usize = _.strm.total_out - initial_total;
 
-        return out_buf[0..produced];
+        return unsafe { out_buf[0..produced] };
     }
 
     pub fn finish(*_): []u8 {
@@ -459,7 +459,7 @@ pub class ZlibStreamCompressor {
         * = NativeZlib.deflateEnd(&_.strm);
         _.is_active = false;
 
-        return out_buf[0..produced];
+        return unsafe { out_buf[0..produced] };
     }
 }
 
@@ -470,7 +470,7 @@ pub class ZlibStreamDecompressor {
 
     pub static fn create(window_bits: i32 = WINDOW_BITS_AUTO): (*ZlibStreamDecompressor)? {
         let raw: [*]u8 = @alloc(@sizeOf(ZlibStreamDecompressor));
-        let decomp: *ZlibStreamDecompressor = @ptrCast(@alignCast(raw));
+        let decomp: *ZlibStreamDecompressor = unsafe { @ptrCast(@alignCast(raw)) };
         decomp.strm = ZStream{
             next_in: null,
             avail_in: 0,
@@ -527,16 +527,16 @@ pub class ZlibStreamDecompressor {
                 let used: usize = _.strm.total_out - initial_total;
                 let next_cap: usize = out_cap * 2;
                 let new_buf: [*]u8 = @alloc(next_cap);
-                @memcpy(new_buf[0..used], out_buf[0..used]);
+                unsafe { @memcpy(new_buf[0..used], out_buf[0..used]); }
                 out_buf = new_buf;
                 out_cap = next_cap;
-                _.strm.next_out = &out_buf[used];
+                _.strm.next_out = unsafe { &out_buf[used] };
                 _.strm.avail_out = (next_cap - used) as u32;
             }
         }
 
         let produced: usize = _.strm.total_out - initial_total;
-        return out_buf[0..produced];
+        return unsafe { out_buf[0..produced] };
     }
 
     pub fn finish(*_): []u8 {
@@ -559,7 +559,7 @@ pub class ZlibStreamDecompressor {
         * = NativeZlib.inflateEnd(&_.strm);
         _.is_active = false;
 
-        return out_buf[0..produced];
+        return unsafe { out_buf[0..produced] };
     }
 }
 

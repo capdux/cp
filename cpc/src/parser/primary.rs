@@ -796,6 +796,7 @@ impl<'a> Parser<'a> {
                                 self.bump()?;
                                 sym.push('<');
                                 let mut angle_depth = 1;
+                                let mut prev_end: Option<usize> = None;
                                 while angle_depth > 0 && self.peek().is_some() {
                                     let (tok, t_span) = self.bump()?;
                                     match tok {
@@ -807,7 +808,13 @@ impl<'a> Parser<'a> {
                                         sym.push('>');
                                         break;
                                     }
+                                    if let Some(pe) = prev_end {
+                                        if t_span.start > pe {
+                                            sym.push(' ');
+                                        }
+                                    }
                                     sym.push_str(&self.input[t_span.start..t_span.end]);
+                                    prev_end = Some(t_span.end);
                                 }
                             }
                         }
@@ -1479,6 +1486,7 @@ impl<'a> Parser<'a> {
                         self.bump()?;
                         ident.sym.push('<');
                         let mut depth = 1;
+                        let mut prev_end: Option<usize> = None;
                         while depth > 0 && self.peek().is_some() {
                             let (tok, t_span) = self.bump()?;
                             match tok {
@@ -1490,7 +1498,13 @@ impl<'a> Parser<'a> {
                                 ident.sym.push('>');
                                 break;
                             }
+                            if let Some(pe) = prev_end {
+                                if t_span.start > pe {
+                                    ident.sym.push(' ');
+                                }
+                            }
                             ident.sym.push_str(&self.input[t_span.start..t_span.end]);
+                            prev_end = Some(t_span.end);
                         }
                     }
                     self.expect(Token::LParen)?;
