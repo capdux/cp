@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:cpio` 零分配 Unix CPIO newc/crc/odc initramfs 与 RPM 归档解析器（5/5 PASS，文档直写 `doc/lib/cpio.md`）
+实现零分配 Unix CPIO 归档解析器，覆盖 SVR4 newc/crc 与 POSIX odc 头部解析与越界防溢出检查。
+
 ## 2026-11-22: 新建 `cap:dex` 零分配 Android DEX 112B 头、ULEB128、字符串表与 Map List 解析器（5/5 PASS，文档直写 `doc/lib/dex.md`）
 实现零分配 Android DEX 容器解析器，严格校验 header_size==112、file_size 与全部区域表防溢出边界。
 

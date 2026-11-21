@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:cpio` 零分配 Unix CPIO newc/crc/odc initramfs 与 RPM 归档解析器（5/5 PASS，自动动态挂载 `cap.cpio`）
+新增 `lib/cpio/{cpio,index}.cp`、`doc/lib/cpio.md` 与 `cap/test/test_cpio_production_deep.cp`（5/5 PASS），支持 newc/crc 4B 对齐、odc 八进制格式、TRAILER!!! 终止与类型辅助判定。
+
 ## [2026-11-22] - 新建 `cap:dex` 零分配 Android DEX 112B 头、ULEB128、字符串表与 Map List 解析器（5/5 PASS，自动动态挂载 `cap.dex`）
 新增 `lib/dex/{dex,index}.cp`、`doc/lib/dex.md` 与 `cap/test/test_dex_production_deep.cp`（5/5 PASS），支持 DEX 035-041 双端序头解析、1-5B ULEB128、MUTF-8 字符串零拷贝索引与 Map List 迭代。
 
