@@ -16,3 +16,54 @@ export * from "./pg_types.cp";
 export * from "./pg_protocol.cp";
 export * from "./mysql_types.cp";
 export * from "./mysql_protocol.cp";
+
+// Converged SQL AST, URI, Escape, Params, and Splitter sub-modules
+export {
+    SqlError,
+    SqlTokenKind,
+    SqlToken,
+    eqIgnoreCase,
+    isSqlKeyword,
+    tokenizeSql,
+} from "./lexer.cp";
+
+export {
+    SqlExprKind,
+    SqlExpr,
+    SelectItem,
+    JoinClause,
+    OrderByItem,
+    SelectStmt,
+    ValueRow,
+    InsertStmt,
+    AssignItem,
+    UpdateStmt,
+    DeleteStmt,
+    ColumnDef,
+    CreateTableStmt,
+    SqlStmtKind,
+    SqlStmt,
+} from "./ast.cp";
+
+export {
+    parseSql,
+    parseSqlWithMaxDepth,
+} from "./parser.cp";
+
+export {
+    normalizeSqlFingerprint,
+    extractTableNames,
+    isReadOnlyQuery,
+} from "./analyzer.cp";
+
+export {
+    SqlUriDialect,
+    SslMode,
+    UriPgCommandKind,
+    UriPgCommandTag,
+    SqlConnUri,
+} from "./uri.cp";
+
+export * from "./escape.cp";
+export * from "./params.cp";
+export * from "./splitter.cp";

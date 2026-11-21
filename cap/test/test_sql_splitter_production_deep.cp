@@ -2,12 +2,12 @@
 
 import { test, expect_eq } from "cap:test";
 import {
-    SqlStmtKind,
+    SqlSplitStmtKind,
     SqlStmtIter,
     classifySqlStmt,
     isReadOnlySql,
     countSqlStatements,
-} from "cap:sql_splitter";
+} from "cap:sql";
 
 test("sql_splitter: splits multi-statement script while protecting semicolons in literals/comments/dollar-quotes") {
     const script =
@@ -48,7 +48,7 @@ test("sql_splitter: classifySqlStmt covers all statement kinds and leading comme
     expect_eq(classifySqlStmt("ROLLBACK") == .rollback, true);
     expect_eq(classifySqlStmt("PRAGMA journal_mode=WAL") == .pragma, true);
     expect_eq(classifySqlStmt("VACUUM") == .other, true);
-    expect_eq(std.mem.eql(u8, SqlStmtKind.pragma.asStr(), "pragma"), true);
+    expect_eq(std.mem.eql(u8, SqlSplitStmtKind.pragma.asStr(), "pragma"), true);
 }
 
 test("sql_splitter: WITH CTE classification distinguishes read-only SELECT vs mutating DELETE/INSERT") {

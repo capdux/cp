@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:sql` SQL 词法/语法 AST、连接 URI、转义、参数占位符与多语句切分统一主包（5/5 PASS，文档直写 `doc/lib/sql.md`）
+- **收敛要点**：保留原 `lib/sql/{protocol,pg_types}.cp` 零破坏，`uri.cp` 与 `splitter.cp` 重名符号最小重命名；累计已消除 50 个长下划线顶层目录！
+
 ## 2026-11-22: 新建 `cap:sys` 系统底层信息、Linux `/etc/*`、`/proc/*` 与容器/系统配置解析统一主包（5/5 PASS，文档直写 `doc/lib/sys.md`）
 - **收敛要点**：`fstab.cp` 与 `mounts.cp` 重名符号最小调整为 `FstabEntry`/`unescapeFstabPath`/`findFstabForPath`，`passwd.cp` 的 `GroupEntry` 别名为 `PasswdGroupEntry`；累计已消除 45 个长下划线顶层目录。
 

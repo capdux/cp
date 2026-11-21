@@ -301,3 +301,6 @@
 
 ### 2026-11-22（`cap:sys` 验收，方案 A Wave 3：8 个系统配置目录收敛至 `cap:sys`（8/8 PASS），累计消除 45 个长下划线顶层目录）
 - **执行成果**：`lib/sys/`（5/5 PASS，`doc/lib/sys.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 3：8 个系统配置目录收敛至 `cap:sys`（8/8 PASS），累计消除 45 个长下划线顶层目录
+
+### 2026-11-22（`cap:sql` 验收，方案 A Wave 3：`sql_*` 5 目录收敛至 `cap:sql`（5/5 PASS），累计消除 50 个长下划线顶层目录里程碑达成！）
+- **执行成果**：`lib/sql/`（5/5 PASS，`doc/lib/sql.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 3：`sql_*` 5 目录收敛至 `cap:sql`（5/5 PASS），累计消除 50 个长下划线顶层目录里程碑达成！

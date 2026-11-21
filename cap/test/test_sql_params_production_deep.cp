@@ -6,7 +6,7 @@ import {
     maxDollarParam,
     rewriteQuestionToDollar,
     NamedParamIter,
-} from "cap:sql_params";
+} from "cap:sql";
 
 test("sql_params: countQuestionMarks ignores strings, identifiers, dollar-quotes and comments") {
     const sql =

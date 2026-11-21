@@ -336,7 +336,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:onnx` | `OnnxError`, `PbWireReader`, `PbWireWriter`, `OnnxDataType`, `OnnxDim`, `OnnxValueInfo`, `OnnxAttrValue`, `OnnxAttribute`, `OnnxNode`, `OnnxTensor`, `OnnxOpsetImport`, `OnnxGraph`, `OnnxModel`, `encodeOnnxModel`, `decodeOnnxModel`, `validateGraphAcyclic` | 纯 CP ONNX ModelProto/GraphProto/TensorProto 二进制编解码、权重提取与三色 DFS 拓扑无环校验引擎（支持 `cap.onnx` 自动动态挂载，详见 `doc/lib/onnx.md`） |
 | `cap:wasm_fmt` | `WASM_MAGIC`, `WASM_VERSION`, `WasmError`, `ValType`, `SectionId`, `ExternalKind`, `FuncType`, `WasmModule`, `readUleb128`/`writeUleb128`/`readSleb128`/`writeSleb128`, `parseWasm`/`encodeWasm`, `findExport`/`findCustomSection`/`addCustomSection` | 纯 CP WebAssembly `.wasm` 二进制解析、LEB128 5 字节溢出防护与 Custom Section 构建引擎（支持 `cap.wasm_fmt` 自动动态挂载，详见 `doc/lib/wasm_fmt.md`） |
 | `cap:dwarf` | `DwarfError`, `DwTag`, `DwAt`, `DwForm`, `Cursor`, `LineProgramHeader`, `LineRow`, `LineLocation`, `LineTable`, `parseDebugLine`, `lookupAddress`, `encodeDebugLineV4`, `AbbrevTable`, `CompileUnit`, `parseAbbrevTable`, `parseDebugInfoCu` | 纯 CP DWARF v4/v5 `.debug_line` 行号表状态机与 `.debug_abbrev`/`.debug_info`/`.debug_str` DIE 调试信息解析引擎（支持 `cap.dwarf` 自动动态挂载，详见 `doc/lib/dwarf.md`） |
-| `cap:sql_ast` | `SqlError`, `SqlTokenKind`, `SqlToken`, `tokenizeSql`, `SqlExpr`, `SqlStmt`, `SelectStmt`, `InsertStmt`, `UpdateStmt`, `DeleteStmt`, `CreateTableStmt`, `parseSql`/`parseSqlWithMaxDepth`, `normalizeSqlFingerprint`, `extractTableNames`, `isReadOnlyQuery` | 纯 CP SQL 词法分词、递归下降 DML/DDL/SELECT AST 解析、指纹脱敏与堆叠注入拦截引擎（支持 `cap.sql_ast` 自动动态挂载，详见 `doc/lib/sql_ast.md`） |
 | `cap:cel` | `CelError`, `CelMapEntry`, `CelValue`, `CelEnv`, `CelExpr`, `compileCel`/`compileCelWithMaxDepth`, `evalCel`/`evalCelWithOptions`, `evalBool`/`evalBoolWithOptions` | 纯 CP Common Expression Language (CEL) 安全策略表达式编译、宏推导与有界沙盒求值引擎（支持 `cap.cel` 自动动态挂载，详见 `doc/lib/cel.md`） |
 | `cap:jq` | `JqError`, `JqTag`, `JqObjEntry`, `JqValue`, `parseJson`/`stringifyJson`, `JqExpr`, `compileJq`, `runJq`, `runJqJson` | 纯 CP `jq` JSON 结构化查询、多结果流展开、管道组合与有界防 DoS 转换引擎（支持 `cap.jq` 自动动态挂载，详见 `doc/lib/jq.md`） |
 | `cap:otlp` | `OtlpError`, `TraceParent`, `BaggageEntry`, `parseTraceParent`/`formatTraceParent`/`newChildSpan`, `parseBaggage`/`formatBaggage`, `AnyValue`, `KeyValue`, `ResourceInfo`, `OtlpSpan`, `OtlpMetric`, `OtlpLogRecord`, `encodeExportTraceRequestJson`, `encodeExportMetricsRequestJson`, `encodeExportLogsRequestJson` | 纯 CP OpenTelemetry OTLP (Traces/Metrics/Logs) JSON 导出与 W3C TraceContext/Baggage 传播引擎（支持 `cap.otlp` 自动动态挂载，详见 `doc/lib/otlp.md`） |
@@ -530,7 +529,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_cookie` | SameSite, Cookie, CookiePair, CookieRequestIterator, getCookie | RFC 6265 / 6265bis HTTP Cookie & Set-Cookie 零堆分配解析、域/路径匹配与序列化库（吸收自 bun/src/jsc/bindings/Cookie.cpp 与 CookieMap.cpp） |
 | `cap:hive_array` | HiveArray | 基于 64-bit 分块位图的零堆分配固定容量 Slab 槽池（O(1) 分配/防重复释放/稀疏 @ctz 跳跃迭代，吸收自 bun/src/collections/hive_array.cp） |
 | `cap:header_value_iter` | HeaderValueIterator, HeaderParam, HeaderParamIterator, CacheControl | RFC 9110 HTTP 逗号/分号多值头部零堆分配迭代器（保护引号逗号）与 Cache-Control 指令解析器（吸收自 bun/src/http/HeaderValueIterator.cp） |
-| `cap:sql_conn_uri` | SqlDialect, SslMode, PgCommandKind, PgCommandTag, SqlConnUri | PostgreSQL / MySQL / SQLite 连接串零堆分配解析器、SSLMode 策略与 PostgreSQL CommandTag 解析库（吸收自 bun/src/sql/postgres/{CommandTag,SSLMode}.cp 与 mysql/SSLMode.cp） |
 | `cap:mysql_caps` | CapabilityFlag, Capabilities, StatusFlag, StatusFlags | MySQL 4.1-8.4 协议 32-bit 客户端/服务端能力位协商与 16-bit StatusFlags 事务/多结果集状态解析库（吸收自 bun/src/sql/mysql/{Capabilities,StatusFlags}.cp） |
 | `cap:no_proxy` | Ipv4Addr, Ipv4Cidr, shouldBypassProxy | HTTP NO_PROXY 零堆分配代理绕过匹配器与 IPv4 CIDR 网段引擎（吸收自 bun/src/http/ProxyTunnel.cp） |
 | `cap:sourcemap_index` | MappingEntry, SourceMapIndex | SourceMap v3 Base64-VLQ mappings 零堆分配解码器与 O(log N) 二分查找原始源码定位器（吸收自 bun/src/sourcemap/Mapping.cp） |
@@ -578,7 +576,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:logfmt` | LogfmtField, LogfmtIter, getLogfmtValue, appendLogfmtPair | 结构化 logfmt（key=value）日志行零分配流式解析器、键值查询与规范化转义编码器 |
 | `cap:uri_normalize` | isUnreserved, defaultPortForScheme, normalizePercentEncoding, removeDotSegments, normalizeOrigin | RFC 3986 URI 路径点段归约（§5.2.4）、百分号编码规范化与协议默认端口剥离工具 |
 | `cap:html_escape` | needsHtmlEscape, escapeHtml, unescapeHtml | 零分配 HTML 实体转义与命名/十进制/十六进制数字字符引用 UTF-8 反转义器 |
-| `cap:sql_escape` | escapeAnsiIdent, escapeMysqlIdent, escapeQualifiedAnsiIdent, escapeSqlStringAnsi, escapeSqlStringMysql, escapeLikePattern | SQL 标识符引用、字面量转义与 LIKE 通配符安全转义器（覆盖 PostgreSQL/ANSI 与 MySQL 方言） |
 | `cap:text_wrap` | wrapText, indentLines, commonIndent, dedentLines, truncateEllipsis | 零分配 CLI 贪心自动换行、缩进/公共反缩进与 UTF-8 安全省略号截断工具 |
 | `cap:w3c_traceparent` | TraceParent, TraceStateEntry, TraceStateIter, findTraceState | W3C Trace Context Level 1 traceparent / tracestate 分布式追踪头零分配解析与格式化器 |
 | `cap:byte_size` | parseByteSize, formatBytesIec, formatBytesSi | 纯整数人类可读字节大小解析器（SI/IEC 小数支持与溢出防护）及 SI/IEC 格式化器 |
@@ -616,9 +613,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_host_header` | HostHeader | RFC 9110 §7.2 HTTP Host / :authority 请求头安全解析、校验、回环识别与规范化格式化器 |
 | `cap:json_minify` | minifyJson, minifyJsonc, minifyJsoncWithOptions | 零分配 JSON / JSONC（去 // 与 /* */ 注释、去尾随逗号、去 BOM 与空白）压缩器 |
 | `cap:http_upgrade` | UpgradeProtocol, UpgradeIter, ConnectionTokenIter, connectionHasToken, upgradeHasProtocol, isHopByHopHeader, isWebSocketUpgrade | RFC 9110 §7.8 Upgrade / Connection 协议升级与逐跳头零分配解析器及 WebSocket 握手判定器 |
-| `cap:sql_params` | countQuestionMarks, maxDollarParam, rewriteQuestionToDollar, NamedParamIter | SQL 占位符词法安全扫描器与方言重写器（跳过字符串/注释/$$ 块，支持 ?→$N 重写与 :name 提取） |
 | `cap:http_ratelimit_header` | RateLimitHeader, RateLimitPolicy | IETF Draft RateLimit / RateLimit-Policy 限流响应头零分配解析与规范化构造器 |
-| `cap:sql_splitter` | SqlStmtKind, SqlStmtIter, classifySqlStmt, isReadOnlySql, countSqlStatements | 多语句 SQL 脚本零分配分号切分器（跳过引号/注释/$$ 块）与 CTE 穿透语句类型识别器 |
 | `cap:mail_address` | isValidAddrSpec, Mailbox, MailboxListIter | RFC 5322 电子邮件地址校验、"Display Name" <local@domain> 解析与引号逗号感知收件人列表迭代器 |
 | `cap:rfc2047_word` | EncodedWordEncoding, EncodedWord, parseEncodedWord, decodeEncodedWord, decodeHeaderValue, encodeUtf8Base64Word | RFC 2047 MIME Encoded-Word (=?charset?B|Q?text?=) 国际化头零分配编解码器（含相邻空白折叠） |
 | `cap:docker_image_ref` | isValidOciDigest, DockerImageRef | OCI / Docker 镜像引用零分配解析器（[registry[:port]/]repository[:tag][@digest] 与 sha256/sha512 摘要校验） |

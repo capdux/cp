@@ -1,7 +1,7 @@
 // Source: Absorbed from /data/dev/bun/src/sql/postgres/PostgresSQLQuery.zig (Multi-Statement SQL Script Splitter)
 
 /// SQL 语句顶层类型枚举
-pub enum SqlStmtKind: u8 {
+pub enum SqlSplitStmtKind: u8 {
     select = 0,
     insert = 1,
     update = 2,
@@ -224,7 +224,7 @@ pub struct SqlStmtIter {
     }
 }
 
-fn keywordToKind(kw: []const u8): SqlStmtKind {
+fn keywordToKind(kw: []const u8): SqlSplitStmtKind {
     if (eqlIgnoreCaseAscii(kw, "select") || eqlIgnoreCaseAscii(kw, "values")) { return .select; }
     if (eqlIgnoreCaseAscii(kw, "insert") || eqlIgnoreCaseAscii(kw, "replace")) { return .insert; }
     if (eqlIgnoreCaseAscii(kw, "update")) { return .update; }
@@ -240,7 +240,7 @@ fn keywordToKind(kw: []const u8): SqlStmtKind {
 }
 
 /// 跳过 `WITH ...` CTE 定义体，定位其后的主语句关键字（如 `SELECT`/`INSERT`/`UPDATE`/`DELETE`）
-fn classifyWithCte(stmt: []const u8, after_with: usize): SqlStmtKind {
+fn classifyWithCte(stmt: []const u8, after_with: usize): SqlSplitStmtKind {
     let i = after_with;
     let paren_depth: usize = 0;
     let saw_paren = false;
@@ -285,7 +285,7 @@ fn classifyWithCte(stmt: []const u8, after_with: usize): SqlStmtKind {
 }
 
 /// 跳过前导空白与注释后大小写不敏感识别 SQL 语句类型（支持 `WITH` CTE 主语句识别）
-pub fn classifySqlStmt(stmt: []const u8): SqlStmtKind {
+pub fn classifySqlStmt(stmt: []const u8): SqlSplitStmtKind {
     const start = skipSpaceAndComments(stmt, 0);
     if (start >= stmt.len || !isAlpha(stmt[start])) {
         return .other;

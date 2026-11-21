@@ -8,7 +8,7 @@ import {
     escapeSqlStringAnsi,
     escapeSqlStringMysql,
     escapeLikePattern,
-} from "cap:sql_escape";
+} from "cap:sql";
 
 test("sql_escape: ANSI and MySQL identifier quoting with internal quote doubling and NUL rejection") {
     let buf: [128]u8 = [0; 128];

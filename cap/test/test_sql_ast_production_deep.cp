@@ -14,7 +14,7 @@ import {
     normalizeSqlFingerprint,
     extractTableNames,
     isReadOnlyQuery,
-} from "cap:sql_ast";
+} from "cap:sql";
 
 test("sql_ast: lexer tokens, comments, escaped strings, placeholders and error guards") {
     const alloc = std.testing.allocator;

@@ -105,3 +105,18 @@ pub fn demoSqlCodecs(): ! {
     db.commit()?;
 }
 ```
+
+---
+
+## 扩展 SQL 工具链子模块（收敛自原 `sql_*` 系列）
+
+- **SQL 词法 / AST 解析与静态分析 (`lexer.cp`, `ast.cp`, `parser.cp`, `analyzer.cp`)**：
+  - `tokenizeSql`、`parseSql`、`parseSqlWithMaxDepth`、`normalizeSqlFingerprint`、`extractTableNames`、`isReadOnlyQuery` 及完整 AST 节点（`SelectStmt` / `InsertStmt` / `UpdateStmt` / `DeleteStmt` / `CreateTableStmt` / `SqlStmt` / `SqlExpr`）。
+- **数据库连接 URI 与命令标签解析 (`uri.cp`)**：
+  - `SqlConnUri`、`SqlUriDialect`、`SslMode`、`UriPgCommandKind`、`UriPgCommandTag`。
+- **标识符 / 字面量 / LIKE 转义 (`escape.cp`)**：
+  - `escapeAnsiIdent`、`escapeMysqlIdent`、`escapeQualifiedAnsiIdent`、`escapeSqlStringAnsi`、`escapeSqlStringMysql`、`escapeLikePattern`。
+- **参数占位符扫描与方言重写 (`params.cp`)**：
+  - `countQuestionMarks`、`maxDollarParam`、`rewriteQuestionToDollar`、`NamedParamIter`。
+- **多语句脚本切分与分类 (`splitter.cp`)**：
+  - `SqlSplitStmtKind`、`SqlStmtIter`、`classifySqlStmt`、`isReadOnlySql`、`countSqlStatements`。

@@ -2,7 +2,7 @@
 // Pure-CP zero-allocation SQL Connection URI parser (PostgreSQL / MySQL / SQLite),
 // SSLMode negotiation flags, and PostgreSQL CommandTag parser.
 
-pub enum SqlDialect: u8 {
+pub enum SqlUriDialect: u8 {
     postgres = 0,
     mysql = 1,
     sqlite = 2,
@@ -66,7 +66,7 @@ pub enum SslMode: u8 {
     }
 }
 
-pub enum PgCommandKind: u8 {
+pub enum UriPgCommandKind: u8 {
     insert = 0,
     delete = 1,
     update = 2,
@@ -79,15 +79,15 @@ pub enum PgCommandKind: u8 {
 }
 
 /// Parsed PostgreSQL `CommandComplete` tag (e.g. `INSERT 0 42`, `UPDATE 7`, `CREATE TABLE`).
-pub struct PgCommandTag {
-    kind: PgCommandKind,
+pub struct UriPgCommandTag {
+    kind: UriPgCommandKind,
     rows_affected: u64,
     raw: []const u8,
 
-    pub static fn parse(tag: []const u8): PgCommandTag {
+    pub static fn parse(tag: []const u8): UriPgCommandTag {
         const sp = findChar(tag, ' ');
         if (sp == null) {
-            return PgCommandTag{ kind: .other, rows_affected: 0, raw: tag };
+            return UriPgCommandTag{ kind: .other, rows_affected: 0, raw: tag };
         }
         const sp_idx = sp.?;
         const cmd = tag[0..sp_idx];
@@ -95,12 +95,12 @@ pub struct PgCommandTag {
 
         if (strEq(cmd, "INSERT")) {
             // Format: `INSERT <oid> <rows>`
-            const sp2 = findChar(rest, ' ') ?? return PgCommandTag{ kind: .other, rows_affected: 0, raw: tag };
-            const rows = parseU64(rest[sp2 + 1 ..]) ?? return PgCommandTag{ kind: .other, rows_affected: 0, raw: tag };
-            return PgCommandTag{ kind: .insert, rows_affected: rows, raw: tag };
+            const sp2 = findChar(rest, ' ') ?? return UriPgCommandTag{ kind: .other, rows_affected: 0, raw: tag };
+            const rows = parseU64(rest[sp2 + 1 ..]) ?? return UriPgCommandTag{ kind: .other, rows_affected: 0, raw: tag };
+            return UriPgCommandTag{ kind: .insert, rows_affected: rows, raw: tag };
         }
 
-        let k: PgCommandKind = .other;
+        let k: UriPgCommandKind = .other;
         if (strEq(cmd, "DELETE")) {
             k = .delete;
         } else if (strEq(cmd, "UPDATE")) {
@@ -116,17 +116,17 @@ pub struct PgCommandTag {
         } else if (strEq(cmd, "COPY")) {
             k = .copy;
         } else {
-            return PgCommandTag{ kind: .other, rows_affected: 0, raw: tag };
+            return UriPgCommandTag{ kind: .other, rows_affected: 0, raw: tag };
         }
 
-        const rows = parseU64(rest) ?? return PgCommandTag{ kind: .other, rows_affected: 0, raw: tag };
-        return PgCommandTag{ kind: k, rows_affected: rows, raw: tag };
+        const rows = parseU64(rest) ?? return UriPgCommandTag{ kind: .other, rows_affected: 0, raw: tag };
+        return UriPgCommandTag{ kind: k, rows_affected: rows, raw: tag };
     }
 }
 
 /// Parsed SQL database connection URI (`postgres://`, `mysql://`, `sqlite://`).
 pub struct SqlConnUri {
-    dialect: SqlDialect,
+    dialect: SqlUriDialect,
     username: []const u8,
     password: []const u8,
     host: []const u8,
@@ -136,7 +136,7 @@ pub struct SqlConnUri {
     application_name: []const u8,
 
     pub static fn parse(uri: []const u8): SqlConnUri? {
-        let dialect: SqlDialect = .postgres;
+        let dialect: SqlUriDialect = .postgres;
         let rest: []const u8 = uri;
 
         if (startsWithIgnoreCase(uri, "postgres://")) {
