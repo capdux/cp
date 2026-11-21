@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:nbt` 零分配 Named Binary Tag (NBT) Java BE / Bedrock LE 解析器（5/5 PASS，文档直写 `doc/lib/nbt.md`）
+实现零分配 NBT 二进制格式解析器，完整覆盖 13 种 Tag 类型与数组乘法溢出防护。
+
 ## 2026-11-22: 新建 `cap:hdf5` 零分配 HDF5 科学数据容器 Superblock v0-v3 与 OHDR v2 对象头解析器（5/5 PASS，文档直写 `doc/lib/hdf5.md`）
 实现零分配 HDF5 容器头解析器，严格校验 2/4/8B 地址/长度宽度、Root Group 地址与 chunk0 边界。
 

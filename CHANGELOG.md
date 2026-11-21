@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:nbt` 零分配 Named Binary Tag (NBT) Java BE / Bedrock LE 解析器（5/5 PASS，自动动态挂载 `cap.nbt`）
+新增 `lib/nbt/{nbt,index}.cp`、`doc/lib/nbt.md` 与 `cap/test/test_nbt_production_deep.cp`（5/5 PASS），支持双端序流式读取、64 层深度防护 skipPayload 与根 Compound 字段零拷贝定位。
+
 ## [2026-11-22] - 新建 `cap:hdf5` 零分配 HDF5 科学数据容器 Superblock v0-v3 与 OHDR v2 对象头解析器（5/5 PASS，自动动态挂载 `cap.hdf5`）
 新增 `lib/hdf5/{hdf5,index}.cp`、`doc/lib/hdf5.md` 与 `cap/test/test_hdf5_production_deep.cp`（5/5 PASS），支持 2^n*512 User Block 跳搜、Superblock v0/v1/v2/v3 与 OHDR v2 对象头零拷贝解析。
 

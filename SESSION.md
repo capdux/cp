@@ -37,3 +37,6 @@
 
 ### 2026-11-22（`cap:hdf5` 验收，完成 `cap:hdf5` 交付验收并登记入库（5/5 PASS）；派发 `cap:netcdf`。）
 - **执行成果**：`lib/hdf5/`（5/5 PASS，`doc/lib/hdf5.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:hdf5` 交付验收并登记入库（5/5 PASS）；派发 `cap:netcdf`。
+
+### 2026-11-22（`cap:nbt` 验收，完成 `cap:nbt` 交付验收并登记入库（5/5 PASS）；派发 `cap:borsh`。）
+- **执行成果**：`lib/nbt/`（5/5 PASS，`doc/lib/nbt.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:nbt` 交付验收并登记入库（5/5 PASS）；派发 `cap:borsh`。
