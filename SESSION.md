@@ -247,3 +247,6 @@
 
 ### 2026-11-22（`cap:http_accept_ranges` 验收，Batch 112 落地，标准库总量达 279 模块）
 - **执行成果**：`lib/http_accept_ranges/`（5/5 PASS，`doc/lib/http_accept_ranges.md`）经 `verify_module.sh` 一次性验收回收；Batch 112 落地，标准库总量达 279 模块
+
+### 2026-11-22（`cap:etc_shells` 验收，Batch 113 落地，标准库总量突破 280 模块里程碑！）
+- **执行成果**：`lib/etc_shells/`（5/5 PASS，`doc/lib/etc_shells.md`）经 `verify_module.sh` 一次性验收回收；Batch 113 落地，标准库总量突破 280 模块里程碑！

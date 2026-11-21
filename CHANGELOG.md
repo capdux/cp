@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:etc_shells` Linux `/etc/shells` 合法登录 Shell 路径清单零分配解析与安全校验器（5/5 PASS，自动动态挂载 `cap.etc_shells`）
+- 新增 `lib/etc_shells/{shells,index}.cp`、`doc/lib/etc_shells.md`、`cap/test/test_etc_shells_production_deep.cp`：纯 CP 零分配解析 Linux `/etc/shells`（拦截非绝对路径/目录路径/控制字符，提供精确路径白名单、基名检索与 `nologin`/`false` 识别）（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:http_accept_ranges` RFC 9110 §14.3 HTTP `Accept-Ranges` 响应头零分配解析与分片能力判定器（5/5 PASS，自动动态挂载 `cap.http_accept_ranges`）
 - 新增 `lib/http_accept_ranges/{accept_ranges,index}.cp`、`doc/lib/http_accept_ranges.md`、`cap/test/test_http_accept_ranges_production_deep.cp`：纯 CP 零分配解析 RFC 9110 `Accept-Ranges` 头，严格拦截 `none` 与其他单位混用及非法 token，提供 `supportsByteRanges`/`supportsRangeUnit`（5/5 PASS）。
 

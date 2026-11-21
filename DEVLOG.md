@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:etc_shells` Linux `/etc/shells` 合法登录 Shell 路径清单零分配解析与安全校验器（5/5 PASS，文档直写 `doc/lib/etc_shells.md`）
+- **设计要点**：`parseShellLine` 严格拦截 `/`、尾斜杠及控制字符；`findShellByBasename` 拒绝含 `/` 查询并避免子串误判；`isNologinShell` 识别常见禁登 Shell。
+
 ## 2026-11-22: 新建 `cap:http_accept_ranges` RFC 9110 §14.3 HTTP `Accept-Ranges` 响应头零分配解析与分片能力判定器（5/5 PASS，文档直写 `doc/lib/http_accept_ranges.md`）
 - **设计要点**：`parseAcceptRanges` 零分配单遍扫描，遵循 RFC 9110 §14.3 拦截 `none` 混用/重复及空头；`supportsRangeUnit` 大小写不敏感匹配自定义分片单位。
 
