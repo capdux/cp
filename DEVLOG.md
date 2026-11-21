@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:luks` Linux LUKS1 (592B/8 keyslots) & LUKS2 (4096B dual header & JSON area) zero-alloc parser（5/5 PASS，文档直写 `doc/lib/luks.md`）
+新增 cap:luks 纯 CP 零分配磁盘加密元数据库（LUKS1 密钥槽统计、LUKS2 主备头 seqid 选主与零拷贝 JSON 提取），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:vhd` Microsoft VHD 1.0 Footer, Dynamic Header, BAT lookup & one's-complement checksum parser（5/5 PASS，文档直写 `doc/lib/vhd.md`）
 新增 cap:vhd 纯 CP 零分配虚拟硬盘镜像库（512B Footer、1024B Dynamic Header、一补码校验和与大端 BAT 查表），通过 cpc check 与 5/5 cap test
 
