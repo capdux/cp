@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:code128` ISO/IEC 15417 Code 128 (A/B/C/Auto) Mod-103 & 11-module barcode zero-alloc codec（5/5 PASS，文档直写 `doc/lib/code128.md`）
+新增 cap:code128 纯 CP 零分配一维条码库（107 项标准图案、B/C 自动压缩切换与 O(1) 栈空间流式模块解码），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:iban` ISO 13616 IBAN & ISO 7064 Mod-97-10 validator, 52-country table & formatter（5/5 PASS，文档直写 `doc/lib/iban.md`）
 新增 cap:iban 纯 CP 零分配金融账号校验库（无大整数流式 Mod-97、52 国注册表、校验位反算与电子/打印格式化），通过 cpc check 与 5/5 cap test
 

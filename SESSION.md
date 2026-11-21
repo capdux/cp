@@ -226,3 +226,6 @@
 
 ### 2026-11-22（`cap:iban` 验收，完成并注册纯 CP 零分配标准库 cap:iban（5/5 cap test PASS））
 - **执行成果**：`lib/iban/`（5/5 PASS，`doc/lib/iban.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:iban（5/5 cap test PASS）
+
+### 2026-11-22（`cap:code128` 验收，完成并注册纯 CP 零分配标准库 cap:code128（5/5 cap test PASS））
+- **执行成果**：`lib/code128/`（5/5 PASS，`doc/lib/code128.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:code128（5/5 cap test PASS）

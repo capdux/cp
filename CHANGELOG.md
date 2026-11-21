@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:code128` ISO/IEC 15417 Code 128 (A/B/C/Auto) Mod-103 & 11-module barcode zero-alloc codec（5/5 PASS，自动动态挂载 `cap.code128`）
+新增纯 CP 零分配标准库 cap:code128（ISO/IEC 15417 Code 128 A/B/C/Auto 编解码、Mod-103 与 11 模块流）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:iban` ISO 13616 IBAN & ISO 7064 Mod-97-10 validator, 52-country table & formatter（5/5 PASS，自动动态挂载 `cap.iban`）
 新增纯 CP 零分配标准库 cap:iban（ISO 13616 IBAN 52 国长度表、流式 Mod-97-10 校验与格式化）与 5/5 深度测试
 
