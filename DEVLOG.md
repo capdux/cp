@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:riff` 零分配 RIFF / RIFX 二进制块容器与嵌套 LIST 子块解析器（适配 WAV/WebP/AVI）（5/5 PASS，文档直写 `doc/lib/riff.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:riff`；`RiffChunkIter` 自动处理奇数块长偶数对齐及末尾无 pad 容错。
+
 ## 2026-11-22: 新建 `cap:qoi` 零分配 Quite OK Image Format (QOI v1.0) 无损图像完整编解码器（5/5 PASS，文档直写 `doc/lib/qoi.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:qoi`；全栈零堆分配实现全部 6 类 QOI Chunk 与 8-bit 环绕差值。
 

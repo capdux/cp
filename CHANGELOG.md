@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:riff` 零分配 RIFF / RIFX 二进制块容器与嵌套 LIST 子块解析器（适配 WAV/WebP/AVI）（5/5 PASS，自动动态挂载 `cap.riff`）
+- 新增 `lib/riff/{riff,index}.cp`、`doc/lib/riff.md`、`cap/test/test_riff_production_deep.cp`：纯 CP 零分配实现 RIFF/RIFX 容器头、FourCC 检索、嵌套 `LIST` 子块迭代与奇数长度 1 字节对齐填充处理（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:qoi` 零分配 Quite OK Image Format (QOI v1.0) 无损图像完整编解码器（5/5 PASS，自动动态挂载 `cap.qoi`）
 - 新增 `lib/qoi/{qoi,index}.cp`、`doc/lib/qoi.md`、`cap/test/test_qoi_production_deep.cp`：纯 CP 零分配完整实现 QOI v1.0 无损图像编码与解码（64 槽颜色哈希、RUN/INDEX/DIFF/LUMA/RGB/RGBA 与 8 字节尾标记校验，逐字节往返无损）（5/5 PASS）。
 
