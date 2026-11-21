@@ -539,3 +539,5 @@ const h = cap.hash.wyhash("hello");
 | `cap:sourcemap_index` | MappingEntry, SourceMapIndex | SourceMap v3 Base64-VLQ mappings 零堆分配解码器与 O(log N) 二分查找原始源码定位器（吸收自 bun/src/sourcemap/Mapping.cp） |
 | `cap:pg_oids` | PgTypeCategory, PgOid | PostgreSQL 45 项高频标量与数组 OID 类型目录、双向数组映射与二进制编码偏好查询库（吸收自 bun/src/sql/postgres/types/Tag.cp 与 PostgresTypes.cp） |
 | `cap:pg_sqlstate` | SqlStateClass, SqlStateCode | PostgreSQL 5 字符 SQLSTATE 错误码 15 类划分、43 项官方条件名与可重试/约束/连接错误判定库（吸收自 bun/src/sql/postgres/AnyPostgresError.cp） |
+| `cap:human_fmt` | TableStyle, formatBytes, formatDurationNs, redactUrl, formatTableBorder, formatTableRow | 零堆分配人类可读格式化工具库（字节大小/纳秒耗时/URL 密码与 UUID/npm 令牌脱敏/Unicode&ASCII 终端表格渲染，吸收自 bun/src/bun_core/fmt.cp） |
+| `cap:s3_meta` | S3Acl, S3StorageClass, isValidBucketName, S3Uri | AWS S3 / R2 / MinIO 8 种 ACL、11 种存储类、Bucket 命名校验与 3 种 S3 URI 格式解析库（吸收自 bun/src/s3_signing/{acl,storage_class,credentials}.cp） |

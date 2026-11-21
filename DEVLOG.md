@@ -1,3 +1,9 @@
+## 2026-11-22: 新建 `cap:s3_meta` AWS S3 / R2 / MinIO 8 种 ACL、11 种存储类、Bucket 命名校验与 3 种 S3 URI 格式解析库（吸收自 bun/src/s3_signing/{acl,storage_class,credentials}.cp）（5/5 PASS，文档直写 `doc/lib/s3_meta.md`）
+子智能体 2 吸收 Bun s3_signing 元数据，实现 ACL/StorageClass/Bucket 校验与 s3:// / Virtual-Hosted / Path-Style URI 解析，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:human_fmt` 零堆分配人类可读格式化工具库（字节大小/纳秒耗时/URL 密码与 UUID/npm 令牌脱敏/Unicode&ASCII 终端表格渲染，吸收自 bun/src/bun_core/fmt.cp）（5/5 PASS，文档直写 `doc/lib/human_fmt.md`）
+吸收 bun/src/bun_core/fmt.cp，实现字节/时间/URL 脱敏与 CLI 表格边框渲染，通过 cpc check 与 cap test
+
 ## 2026-11-22: 新建 `cap:pg_sqlstate` PostgreSQL 5 字符 SQLSTATE 错误码 15 类划分、43 项官方条件名与可重试/约束/连接错误判定库（吸收自 bun/src/sql/postgres/AnyPostgresError.cp）（5/5 PASS，文档直写 `doc/lib/pg_sqlstate.md`）
 子智能体 2 吸收 AnyPostgresError，实现 15 大类与 43 项官方 SQLSTATE 条件名及可重试判定，5/5 单测通过
 

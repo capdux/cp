@@ -241,3 +241,9 @@
 
 ### 2026-11-22（`cap:pg_sqlstate` 验收，Batch 38: 吸收并验证 cap:pg_sqlstate (5/5 PASSED)）
 - **执行成果**：`lib/pg_sqlstate/`（5/5 PASS，`doc/lib/pg_sqlstate.md`）经 `verify_module.sh` 一次性验收回收；Batch 38: 吸收并验证 cap:pg_sqlstate (5/5 PASSED)
+
+### 2026-11-22（`cap:human_fmt` 验收，Batch 39: 吸收并验证 cap:human_fmt (PASSED)）
+- **执行成果**：`lib/human_fmt/`（5/5 PASS，`doc/lib/human_fmt.md`）经 `verify_module.sh` 一次性验收回收；Batch 39: 吸收并验证 cap:human_fmt (PASSED)
+
+### 2026-11-22（`cap:s3_meta` 验收，Batch 39: 吸收并验证 cap:s3_meta (5/5 PASSED)）
+- **执行成果**：`lib/s3_meta/`（5/5 PASS，`doc/lib/s3_meta.md`）经 `verify_module.sh` 一次性验收回收；Batch 39: 吸收并验证 cap:s3_meta (5/5 PASSED)

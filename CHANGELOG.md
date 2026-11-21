@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:s3_meta` AWS S3 / R2 / MinIO 8 种 ACL、11 种存储类、Bucket 命名校验与 3 种 S3 URI 格式解析库（吸收自 bun/src/s3_signing/{acl,storage_class,credentials}.cp）（5/5 PASS，自动动态挂载 `cap.s3_meta`）
+新增 cap:s3_meta 标准库模块（lib/s3_meta/{s3_meta,index}.cp, doc/lib/s3_meta.md, cap/test/test_s3_meta_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:human_fmt` 零堆分配人类可读格式化工具库（字节大小/纳秒耗时/URL 密码与 UUID/npm 令牌脱敏/Unicode&ASCII 终端表格渲染，吸收自 bun/src/bun_core/fmt.cp）（5/5 PASS，自动动态挂载 `cap.human_fmt`）
+新增 cap:human_fmt 标准库模块（lib/human_fmt/{fmt,index}.cp, doc/lib/human_fmt.md, cap/test/test_human_fmt_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:pg_sqlstate` PostgreSQL 5 字符 SQLSTATE 错误码 15 类划分、43 项官方条件名与可重试/约束/连接错误判定库（吸收自 bun/src/sql/postgres/AnyPostgresError.cp）（5/5 PASS，自动动态挂载 `cap.pg_sqlstate`）
 新增 cap:pg_sqlstate 标准库模块（lib/pg_sqlstate/{sqlstate,index}.cp, doc/lib/pg_sqlstate.md, cap/test/test_pg_sqlstate_production_deep.cp）
 
