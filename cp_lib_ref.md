@@ -408,3 +408,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:uuid_v7` | `UuidError`, `Uuid`, `NAMESPACE_DNS`, `NAMESPACE_URL` | 纯 CP 零堆 RFC 9562 UUID v4 / v5 / 时间有序 v7 生成与解析引擎（支持 `cap.uuid_v7` 自动动态挂载，详见 `doc/lib/uuid_v7.md`） |
 | `cap:bitset_simd` | `BitSetError`, `BitSet` | 纯 CP 按字向量化加速动态位集合引擎（基于 `u64` 字块 `@popCount`/`@ctz` 批量位运算、`setRange`/`nextSetBit` 及集合并交差，支持 `cap.bitset_simd` 自动动态挂载，详见 `doc/lib/bitset_simd.md`） |
 | `cap:base64url` | `Base64UrlError`, `encodeStandard`, `decodeStandard`, `encodeUrlNoPad`, `decodeUrlNoPad`, `encodeUrlPadded`, `decodeUrlAuto` | 纯 CP RFC 4648 Base64 与 JWT/JWK 专用无填充/自适应 Base64URL 编解码引擎（支持 `cap.base64url` 自动动态挂载，详见 `doc/lib/base64url.md`） |
+| `cap:decimal_fp` | `MAX_SCALE`, `DecimalError`, `RoundingMode`, `Decimal` | 纯 CP 金融定点数 Decimal 精确算术引擎（`i128` 尾数 + `0..18` 标度，零浮点漂移、4 种舍入模式与字符串往返，支持 `cap.decimal_fp` 自动动态挂载，详见 `doc/lib/decimal_fp.md`） |

@@ -103,3 +103,6 @@
 
 ### 2026-11-21（`cap:base64url` 验收，主控单兵完成 `cap:base64url` 研发验收提交）
 - **执行成果**：`lib/base64url/`（5/5 PASS，`doc/lib/base64url.md`）经 `verify_module.sh` 一次性验收回收；主控单兵完成 `cap:base64url` 研发验收提交
+
+### 2026-11-21（`cap:decimal_fp` 验收，主控单兵完成 `cap:decimal_fp` 验收提交）
+- **执行成果**：`lib/decimal_fp/`（5/5 PASS，`doc/lib/decimal_fp.md`）经 `verify_module.sh` 一次性验收回收；主控单兵完成 `cap:decimal_fp` 验收提交
