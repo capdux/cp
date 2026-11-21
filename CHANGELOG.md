@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:smbios` SMBIOS 2.1/3.0+ (DMTF) Entry Point, structure table & BIOS/System/Memory zero-alloc parser（5/5 PASS，自动动态挂载 `cap.smbios`）
+新增纯 CP 零分配标准库 cap:smbios（DMTF SMBIOS 2.1/3.0+ Entry Point、结构表迭代与 BIOS/System/Memory 视图）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:nfs` ONC RPC v2 (RFC 5531) & NFSv3 (RFC 1813) Record Mark, Call/Reply & fattr3 zero-alloc parser（5/5 PASS，自动动态挂载 `cap.nfs`）
 新增纯 CP 零分配标准库 cap:nfs（RFC 5531 ONC RPC v2 与 RFC 1813 NFSv3 Record Mark/Call/Reply/fattr3 解析）与 5/5 深度测试
 

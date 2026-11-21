@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:smbios` SMBIOS 2.1/3.0+ (DMTF) Entry Point, structure table & BIOS/System/Memory zero-alloc parser（5/5 PASS，文档直写 `doc/lib/smbios.md`）
+新增 cap:smbios 纯 CP 零分配系统管理固件表库（双锚点双校验和、1-based 字符串区迭代与 Type 0/1/17 视图解析），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:nfs` ONC RPC v2 (RFC 5531) & NFSv3 (RFC 1813) Record Mark, Call/Reply & fattr3 zero-alloc parser（5/5 PASS，文档直写 `doc/lib/nfs.md`）
 新增 cap:nfs 纯 CP 零分配网络文件系统协议库（TCP Record Mark、ONC RPC v2 Call/Reply、AUTH_SYS 与 NFSv3 filehandle/84B fattr3），通过 cpc check 与 5/5 cap test
 
