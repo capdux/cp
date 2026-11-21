@@ -121,3 +121,6 @@
 
 ### 2026-11-22（`cap:bgp` 验收，完成 `cap:bgp` 交付验收并登记入库（5/5 PASS）；轮换 `Signal & Geo Absorber`（12 库）并派发 `cap:sctp`。）
 - **执行成果**：`lib/bgp/`（5/5 PASS，`doc/lib/bgp.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:bgp` 交付验收并登记入库（5/5 PASS）；轮换 `Signal & Geo Absorber`（12 库）并派发 `cap:sctp`。
+
+### 2026-11-22（`cap:diameter` 验收，完成 `cap:diameter` 交付验收并登记入库（6/6 PASS）；派发 `cap:lldp`。）
+- **执行成果**：`lib/diameter/`（5/5 PASS，`doc/lib/diameter.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:diameter` 交付验收并登记入库（6/6 PASS）；派发 `cap:lldp`。

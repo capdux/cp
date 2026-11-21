@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:diameter` 零分配 RFC 6733 Diameter AAA 协议报头与 4B 对齐 AVP 编解码器（5/5 PASS，文档直写 `doc/lib/diameter.md`）
+实现零分配 RFC 6733 Diameter AAA 编解码器，严格校验版本、保留位与 4B 对齐边界。
+
 ## 2026-11-22: 新建 `cap:bgp` 零分配 RFC 4271 BGP-4 边界网关路由协议报头、NLRI 与路径属性解析器（5/5 PASS，文档直写 `doc/lib/bgp.md`）
 实现零分配 BGP-4 路由协议解析器，严格校验 16B 全 0xFF Marker 与 /0..32 前缀压缩编码。
 

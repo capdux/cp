@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:diameter` 零分配 RFC 6733 Diameter AAA 协议报头与 4B 对齐 AVP 编解码器（5/5 PASS，自动动态挂载 `cap.diameter`）
+新增 `lib/diameter/{diameter,index}.cp`、`doc/lib/diameter.md` 与 `cap/test/test_diameter_production_deep.cp`（6/6 PASS），支持 24-bit Command-Code、8B/12B Vendor AVP、4B 对齐迭代与 DiameterWriter。
+
 ## [2026-11-22] - 新建 `cap:bgp` 零分配 RFC 4271 BGP-4 边界网关路由协议报头、NLRI 与路径属性解析器（5/5 PASS，自动动态挂载 `cap.bgp`）
 新增 `lib/bgp/{bgp,index}.cp`、`doc/lib/bgp.md` 与 `cap/test/test_bgp_production_deep.cp`（5/5 PASS），支持 OPEN/UPDATE/NOTIFICATION/KEEPALIVE 流解析、压缩 IPv4 前缀与扩展长度路径属性。
 
