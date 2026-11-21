@@ -64,3 +64,6 @@
 
 ### 2026-11-22（`cap:smbios` 验收，完成并注册纯 CP 零分配标准库 cap:smbios（5/5 cap test PASS））
 - **执行成果**：`lib/smbios/`（5/5 PASS，`doc/lib/smbios.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:smbios（5/5 cap test PASS）
+
+### 2026-11-22（`cap:acpi` 验收，完成并注册纯 CP 零分配标准库 cap:acpi（5/5 cap test PASS））
+- **执行成果**：`lib/acpi/`（5/5 PASS，`doc/lib/acpi.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:acpi（5/5 cap test PASS）

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:acpi` ACPI 6.5 RSDP/SDT/RSDT/XSDT/MADT/MCFG firmware tables zero-alloc parser（5/5 PASS，文档直写 `doc/lib/acpi.md`）
+新增 cap:acpi 纯 CP 零分配固件描述表库（RSDP v1/v2 双校验和、36B SDT 通用表、MADT/MCFG 零拷贝条目迭代），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:smbios` SMBIOS 2.1/3.0+ (DMTF) Entry Point, structure table & BIOS/System/Memory zero-alloc parser（5/5 PASS，文档直写 `doc/lib/smbios.md`）
 新增 cap:smbios 纯 CP 零分配系统管理固件表库（双锚点双校验和、1-based 字符串区迭代与 Type 0/1/17 视图解析），通过 cpc check 与 5/5 cap test
 
