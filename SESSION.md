@@ -154,3 +154,6 @@
 
 ### 2026-11-22（`cap:stp` 验收，完成 `cap:stp` 交付验收并登记入库（5/5 PASS）；派发 `fd034f3e` 执行 Bun 上游增量同步。）
 - **执行成果**：`lib/stp/`（5/5 PASS，`doc/lib/stp.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:stp` 交付验收并登记入库（5/5 PASS）；派发 `fd034f3e` 执行 Bun 上游增量同步。
+
+### 2026-11-22（`cap:ospf` 验收，完成并注册纯 CP 零分配标准库 cap:ospf（5/5 cap test PASS））
+- **执行成果**：`lib/ospf/`（5/5 PASS，`doc/lib/ospf.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:ospf（5/5 cap test PASS）

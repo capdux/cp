@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ospf` OSPFv2 (RFC 2328) 24B header/checksum/Hello/LSA/LSU/LSAck zero-alloc parser（5/5 PASS，文档直写 `doc/lib/ospf.md`）
+新增 cap:ospf 纯 CP 零分配网络路由协议解析库（OSPFv2 24B 报头、跳过 AuType/Auth 校验和、Hello/LSA/LSU/LSAck 零拷贝迭代），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:stp` 零分配 IEEE 802.1D/802.1w/802.1t STP & RSTP BPDU 编解码器（5/5 PASS，文档直写 `doc/lib/stp.md`）
 实现零分配 STP/RSTP BPDU 编解码器，支持 Port Role 判定与 Proposal/Agreement/Forwarding 标志。
 

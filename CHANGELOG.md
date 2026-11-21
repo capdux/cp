@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ospf` OSPFv2 (RFC 2328) 24B header/checksum/Hello/LSA/LSU/LSAck zero-alloc parser（5/5 PASS，自动动态挂载 `cap.ospf`）
+新增纯 CP 零分配标准库 cap:ospf（RFC 2328 OSPFv2 报头/校验和/Hello/LSA/LSU/LSAck 解析）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:stp` 零分配 IEEE 802.1D/802.1w/802.1t STP & RSTP BPDU 编解码器（5/5 PASS，自动动态挂载 `cap.stp`）
 新增 `lib/stp/{stp,index}.cp`、`doc/lib/stp.md` 与 `cap/test/test_stp_production_deep.cp`（5/5 PASS），支持 802.1t Bridge ID、Config/RSTP/TCN BPDU 编解码与 1/256s 定时器换算。
 
