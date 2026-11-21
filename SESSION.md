@@ -100,3 +100,6 @@
 
 ### 2026-11-22（`cap:clf` 验收，完成 `cap:clf` 交付验收并登记入库（5/5 PASS）；派发 `cap:jks`。）
 - **执行成果**：`lib/clf/`（5/5 PASS，`doc/lib/clf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:clf` 交付验收并登记入库（5/5 PASS）；派发 `cap:jks`。
+
+### 2026-11-22（`cap:trx` 验收，完成 `cap:trx` 交付验收并登记入库（5/5 PASS）；派发 `cap:pkcs8`。）
+- **执行成果**：`lib/trx/`（5/5 PASS，`doc/lib/trx.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:trx` 交付验收并登记入库（5/5 PASS）；派发 `cap:pkcs8`。

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:trx` 零分配 Visual Studio / .NET (.trx) 测试结果 XML 解析与汇总器（5/5 PASS，文档直写 `doc/lib/trx.md`）
+实现零分配 Visual Studio .trx 测试报告解析器，缺失 Counters 时自动回退单遍实算。
+
 ## 2026-11-22: 新建 `cap:clf` 零分配 NCSA Common & Apache/Nginx Combined HTTP 访问日志解析与统计器（5/5 PASS，文档直写 `doc/lib/clf.md`）
 实现零分配 HTTP 访问日志解析器，支持转义引号、缺失字节数 - 与畸形行安全跳过计数。
 

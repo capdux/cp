@@ -667,3 +667,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:sarif` | SarifLevel, SarifHeader, SarifRun, SarifRunIter, SarifResult, SarifResultIter, SarifStats, isSarif, parseSarifHeader, summarizeSarif | 零分配 OASIS SARIF 2.1.0 静态代码分析结果 JSON 解析与汇总器 |
 | `cap:crl` | OID_CRL_NUMBER, OID_CRL_REASON, CrlReason, CrlParsed, CrlRevokedEntry, CrlRevokedIter, CrlStats, crlReasonFromU8, isCrlDer, parseCrlDer, summarizeCrl | 零分配 RFC 5280 X.509 CRL 证书吊销列表 ASN.1 DER 解析器 |
 | `cap:clf` | ClfEntry, ClfIter, ClfStats, isClf, parseClfLine, summarizeClf | 零分配 NCSA Common & Apache/Nginx Combined HTTP 访问日志解析与统计器 |
+| `cap:trx` | TrxOutcome, TrxRunHeader, TrxResult, TrxResultIter, TrxSummary, isTrx, parseTrxHeader, parseTrxSummary | 零分配 Visual Studio / .NET (.trx) 测试结果 XML 解析与汇总器 |
