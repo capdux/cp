@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:dmg` 零分配 Apple UDIF (.dmg) 512B koly 尾部块与 mish/BLKX 条带解析器（5/5 PASS，自动动态挂载 `cap.dmg`）
+新增 `lib/dmg/{dmg,index}.cp`、`doc/lib/dmg.md` 与 `cap/test/test_dmg_production_deep.cp`（6/6 PASS），支持 512B koly 尾部校验、xmlSlice/dataForkSlice 零拷贝提取与 204B mish/40B BLKX 条带迭代。
+
 ## [2026-11-22] - 新建 `cap:ts` 零分配 ISO/IEC 13818-1 MPEG-TS 188B/M2TS 传输流、PCR、PAT 与 PMT 解析器（5/5 PASS，自动动态挂载 `cap.ts`）
 新增 `lib/ts/{ts,index}.cp`、`doc/lib/ts.md` 与 `cap/test/test_ts_production_deep.cp`（5/5 PASS），支持 188B TS/192B M2TS 同步、Adaptation Field 33-bit PCR 解码与 PAT/PMT 表迭代。
 

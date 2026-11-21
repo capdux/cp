@@ -1,0 +1,26 @@
+// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Apple UDIF .dmg koly & BLKX mish Parser)
+
+export {
+    DMG_KOLY_MAGIC,
+    DMG_KOLY_SIZE,
+    DMG_MISH_MAGIC,
+    DMG_MISH_HEADER_SIZE,
+    DMG_STRIPE_SIZE,
+    BLKX_ZERO,
+    BLKX_RAW,
+    BLKX_IGNORE,
+    BLKX_ADC,
+    BLKX_ZLIB,
+    BLKX_BZ2,
+    BLKX_LZFSE,
+    BLKX_LZMA,
+    BLKX_COMMENT,
+    BLKX_LAST,
+    DmgKolyHeader,
+    DmgMishHeader,
+    DmgBlkStripe,
+    isDmg,
+    parseDmgKoly,
+    parseDmgMish,
+    DmgStripeIter,
+} from "./dmg.cp";

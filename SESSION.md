@@ -25,3 +25,6 @@
 
 ### 2026-11-22（`cap:ts` 验收，完成 `cap:ts` 交付验收并登记入库（5/5 PASS）；滚动归档热日志并派发 `cap:deb`。）
 - **执行成果**：`lib/ts/`（5/5 PASS，`doc/lib/ts.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:ts` 交付验收并登记入库（5/5 PASS）；滚动归档热日志并派发 `cap:deb`。
+
+### 2026-11-22（`cap:dmg` 验收，完成 `cap:dmg` 交付验收并登记入库（6/6 PASS）；派发 `cap:hdf5`。）
+- **执行成果**：`lib/dmg/`（5/5 PASS，`doc/lib/dmg.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:dmg` 交付验收并登记入库（6/6 PASS）；派发 `cap:hdf5`。

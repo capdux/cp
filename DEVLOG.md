@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:dmg` 零分配 Apple UDIF (.dmg) 512B koly 尾部块与 mish/BLKX 条带解析器（5/5 PASS，文档直写 `doc/lib/dmg.md`）
+实现零分配 Apple UDIF DMG 解析器，严格校验 koly/mish 魔数、版本号与防溢出 sector_count 字节换算。
+
 
 
 ## 2026-11-22: 新建 `cap:ts` 零分配 ISO/IEC 13818-1 MPEG-TS 188B/M2TS 传输流、PCR、PAT 与 PMT 解析器（5/5 PASS，文档直写 `doc/lib/ts.md`）
