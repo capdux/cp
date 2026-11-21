@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:socks` SOCKS5 (RFC 1928/1929) & SOCKS4/4a proxy handshake, UDP & address zero-alloc codec（5/5 PASS，文档直写 `doc/lib/socks.md`）
+新增 cap:socks 纯 CP 零分配代理协议库（SOCKS5 Greeting/UserPass/Request/Reply/UDP 与 SOCKS4/4a 双向编解码），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:turn` TURN (RFC 8656) attributes, IPv4/IPv6 XOR-ADDRESS & ChannelData zero-alloc codec（5/5 PASS，文档直写 `doc/lib/turn.md`）
 新增 cap:turn 纯 CP 零分配 NAT 中继协议库（20B 报头、4B 对齐属性迭代、XOR-ADDRESS 双向编解码与 4B ChannelData 帧），通过 cpc check 与 5/5 cap test
 
