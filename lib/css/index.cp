@@ -168,3 +168,71 @@ pub const NumberOrPercentage = _primitives.NumberOrPercentage;
 pub const CssAlphaValue = _primitives.AlphaValue;
 pub const isAbsoluteCssUrl = _primitives.isAbsoluteCssUrl;
 pub const isDataCssUrl = _primitives.isDataCssUrl;
+
+
+// --- Merged CSS Submodules (Batch 3 — Final) ---
+
+export * from "./selectorbuilder.cp";
+export * from "./sizing.cp";
+export * from "./svg.cp";
+export * from "./syntax.cp";
+export * from "./text.cp";
+
+import _supports from "./supports.cp";
+pub const SupportsKind = _supports.SupportsKind;
+pub const CssSupportsNode = _supports.SupportsNode;
+pub const SupportsTree = _supports.SupportsTree;
+
+import _textlist from "./textlist.cp";
+pub const TextListTransformCase = _textlist.TextTransformCase;
+pub const TextTransformOther = _textlist.TextTransformOther;
+pub const TextListWhiteSpace = _textlist.WhiteSpace;
+pub const TextListWordBreak = _textlist.WordBreak;
+pub const TextListOverflowWrap = _textlist.OverflowWrap;
+pub const TextListTextAlign = _textlist.TextAlign;
+pub const Direction = _textlist.Direction;
+pub const TextListDecorationLine = _textlist.TextDecorationLine;
+pub const TextListStyleType = _textlist.ListStyleType;
+pub const TextListStylePosition = _textlist.ListStylePosition;
+pub const TextListFilterKind = _textlist.FilterKind;
+pub const BlendMode = _textlist.BlendMode;
+pub const BoxShadowFlags = _textlist.BoxShadowFlags;
+
+import _time from "./time.cp";
+pub const CssTimeUnit = _time.TimeUnit;
+pub const CssTime = _time.CssTime;
+
+import _transform from "./transform.cp";
+pub const Matrix2d = _transform.Matrix2d;
+pub const Matrix3d = _transform.Matrix3d;
+pub const TransformStyle = _transform.TransformStyle;
+pub const BackfaceVisibility = _transform.BackfaceVisibility;
+pub const TransformOrigin = _transform.TransformOrigin;
+pub const CssTransformKind = _transform.TransformKind;
+pub const Transform = _transform.Transform;
+pub const CssTransformList = _transform.TransformList;
+
+import _transition from "./transition.cp";
+pub const CssTransitionError = _transition.CssTransitionError;
+pub const TransitionBehavior = _transition.TransitionBehavior;
+pub const TransitionPropertyKind = _transition.TransitionPropertyKind;
+pub const TransitionProperty = _transition.TransitionProperty;
+pub const TransitionTime = _transition.TransitionTime;
+pub const TransitionEasingKind = _transition.TransitionEasingKind;
+pub const TransitionEasing = _transition.TransitionEasing;
+pub const CssTransition = _transition.Transition;
+pub const TransitionList = _transition.TransitionList;
+
+import _ui from "./ui.cp";
+pub const UiColorScheme = _ui.ColorScheme;
+pub const Resize = _ui.Resize;
+pub const UserSelect = _ui.UserSelect;
+pub const CaretShape = _ui.CaretShape;
+pub const Appearance = _ui.Appearance;
+pub const CursorKeyword = _ui.CursorKeyword;
+
+import _units from "./units.cp";
+pub const UnitAngleUnit = _units.AngleUnit;
+pub const UnitAngle = _units.Angle;
+pub const UnitResolutionUnit = _units.ResolutionUnit;
+pub const UnitResolution = _units.Resolution;

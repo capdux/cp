@@ -1,5 +1,5 @@
 import { test, expect } from "cap:test";
-import { TimeUnit, CssTime } from "cap:css_time";
+import { CssTimeUnit as TimeUnit, CssTime } from "cap:css";
 
 test("css_time: parse s/ms (case-insensitive) and unit conversions", () => {
     const t1 = CssTime.parse("250ms").?;

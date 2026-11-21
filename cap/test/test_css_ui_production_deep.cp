@@ -1,12 +1,12 @@
 import { test, expect } from "cap:test";
 import {
-    ColorScheme,
+    UiColorScheme as ColorScheme,
     Resize,
     UserSelect,
     CaretShape,
     Appearance,
     CursorKeyword,
-} from "cap:css_ui";
+} from "cap:css";
 
 test("css_ui: ColorScheme parse, canonical toCss, and invalid syntax rejection", () => {
     let buf: [32]u8 = undefined;

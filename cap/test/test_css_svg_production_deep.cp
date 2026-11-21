@@ -15,7 +15,7 @@ import {
     ShapeRendering,
     TextRendering,
     ImageRendering,
-} from "cap:css_svg";
+} from "cap:css";
 
 test("SVGPaint all 5 kinds including url(#id) fallback and context-fill/stroke") {
     let buf: [64]u8 = [0; 64];

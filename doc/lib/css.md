@@ -236,3 +236,23 @@ const disp = Display.parse("inline flex").?;
 | `lib/css/pagerule.cp` | `bun/src/css/rules/page.cp`, `properties/position.cp` | `CssPageError`, `PagePseudoClass`, `PageMarginEdge`, `PageMarginBox`, `PageSelector`, `PagePosition` |
 | `lib/css/position.cp` | `bun/src/css/values/position.cp` | `HorizontalSide`, `VerticalSide`, `PosUnit`, `PosLength`, `AxisPosKind`, `HorizontalPosition`, `VerticalPosition`, `CssPosition` |
 | `lib/css/primitives.cp` | `bun/src/css/values/{alpha,percentage,url}.cp` | `Percentage`, `NumOrPctKind`, `NumberOrPercentage`, `CssAlphaValue`, `isAbsoluteCssUrl`, `isDataCssUrl` |
+
+
+## 合并收敛子模块（第 3 批：最终清零 12 个 CSS 选择器、尺寸、SVG、文本、变换与单位子模块）
+
+第 3 批完成全仓库 `lib/css_*` 清零，统一吸收至 `cap:css`（保留 `engine/` 与前两批既有导出零破坏，冲突符号通过聚合别名导出）：
+
+| 子文件 | 原始来源 | 核心导出符号 |
+| --- | --- | --- |
+| `lib/css/selectorbuilder.cp` | `bun/src/css/selectors/builder.cp` | `Combinator`, `ComponentKind`, `SelectorComponent`, `Specificity`, `CombinatorEntry`, `BuiltSelector`, `SelectorBuilder` |
+| `lib/css/sizing.cp` | `bun/src/css/properties/{size,margin_padding}.cp` | `BoxSizing`, `SizeVendorPrefix`, `SizeUnit`, `SizeLength`, `SizeKind`, `Size`, `MaxSizeKind`, `MaxSize`, `AspectRatio`, `InsetValue`, `BoxInsets`, `LogicalInsets` |
+| `lib/css/supports.cp` | `bun/src/css/rules/supports.cp` | `SupportsKind`, `CssSupportsNode`, `SupportsTree` |
+| `lib/css/svg.cp` | `bun/src/css/properties/svg.cp` | `MAX_DASH_ENTRIES`, `SVGPaintKind`, `SVGPaintFallbackKind`, `SVGPaint`, `StrokeLinecap`, `StrokeLinejoin`, `DashUnit`, `DashEntry`, `StrokeDasharray`, `PaintOrderItem`, `PaintOrder`, `ColorInterpolation`, `ColorRendering`, `ShapeRendering`, `TextRendering`, `ImageRendering` |
+| `lib/css/syntax.cp` | `bun/src/css/values/syntax.cp` | `Multiplier`, `SyntaxType`, `SyntaxComponent`, `SyntaxString` |
+| `lib/css/text.cp` | `bun/src/css/properties/text.cp` | `CssTextError`, `TextTransformCase`, `TEXT_TRANSFORM_*`, `TextTransform`, `WhiteSpace`, `WordBreak`, `LineBreak`, `Hyphens`, `OverflowWrap`, `TextAlign`, `DECO_LINE_*`, `TextDecorationLine`, `TextDecorationStyle`, `TextDecorationThicknessKind`, `TextDecorationThickness`, `TextDecoration` |
+| `lib/css/textlist.cp` | `bun/src/css/properties/{text,list,effects}.cp` | `TextListTransformCase`, `TextTransformOther`, `TextListWhiteSpace`, `TextListWordBreak`, `TextListOverflowWrap`, `TextListTextAlign`, `Direction`, `TextListDecorationLine`, `TextListStyleType`, `TextListStylePosition`, `TextListFilterKind`, `BlendMode`, `BoxShadowFlags` |
+| `lib/css/time.cp` | `bun/src/css/values/time.cp` | `CssTimeUnit`, `CssTime` |
+| `lib/css/transform.cp` | `bun/src/css/properties/transform.cp` | `Matrix2d`, `Matrix3d`, `TransformStyle`, `BackfaceVisibility`, `TransformOrigin`, `CssTransformKind`, `Transform`, `CssTransformList` |
+| `lib/css/transition.cp` | `bun/src/css/properties/transition.cp` | `CssTransitionError`, `TransitionBehavior`, `TransitionPropertyKind`, `TransitionProperty`, `TransitionTime`, `TransitionEasingKind`, `TransitionEasing`, `CssTransition`, `TransitionList` |
+| `lib/css/ui.cp` | `bun/src/css/properties/ui.cp` | `UiColorScheme`, `Resize`, `UserSelect`, `CaretShape`, `Appearance`, `CursorKeyword` |
+| `lib/css/units.cp` | `bun/src/css/values/{angle,resolution}.cp` | `UnitAngleUnit`, `UnitAngle`, `UnitResolutionUnit`, `UnitResolution` |

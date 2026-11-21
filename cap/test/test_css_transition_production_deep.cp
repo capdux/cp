@@ -6,9 +6,9 @@ import {
     TransitionTime,
     TransitionEasingKind,
     TransitionEasing,
-    Transition,
+    CssTransition as Transition,
     TransitionList,
-} from "cap:css_transition";
+} from "cap:css";
 
 test("1. TransitionTime (s/ms) canonical shortest serialization & TransitionBehavior", () => {
     let buf: [64]u8 = std.mem.zeroes([64]u8);

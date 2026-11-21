@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:css` CSS 引擎与全套 36 项样式/布局/选择器/动画/变换/单位大一统主包（`lib/css_*` 全仓清零！）（5/5 PASS，自动动态挂载 `cap.css`）
+- **方案 A 领域主包收敛全面收官 (`css_*` 最终第 3 批 12 目录 -> `cap:css`)**：将最后 12 个 `css_selector_builder` 至 `css_units` 合入 `lib/css/`（14/14 PASS），**全仓 36 个 `lib/css_*` 彻底清零**！至此全部 **235 个**同域长下划线散装目录 100% 收敛完毕，全面转入 3 路 `bun_agy` 上游增量同步！
+
 ## [2026-11-22] - 新建 `cap:js` JS 标识符与运算符解析统一主包（同步收敛 `cap:hash`/`cap:text`/`cap:diff`/`cap:mime`）（5/5 PASS，自动动态挂载 `cap.js`）
 - **方案 A 收敛终章 (11 小簇目录 -> `cap:hash`/`cap:text`/`cap:diff`/`cap:js`/`cap:mime`)**：合入 `consistent_*`(3) 至 `cap:hash`、`case_*`(2) 至 `cap:text`、`diff_*`(2) 至 `cap:diff`、`mime_*`(2) 至 `cap:mime`，新建 `cap:js` 合入 `js_*`(2)（11/11 PASS），非 CSS 同域碎片 100% 清零，累计消除 223 个长下划线顶层目录！
 

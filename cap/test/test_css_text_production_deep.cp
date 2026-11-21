@@ -13,7 +13,7 @@ import {
     TextDecorationStyle,
     TextDecorationThicknessKind,
     TextDecoration,
-} from "cap:css_text";
+} from "cap:css";
 
 test("1. TextTransform combined case + full-width + full-size-kana parse & serialize", () => {
     let buf: [64]u8 = std.mem.zeroes([64]u8);

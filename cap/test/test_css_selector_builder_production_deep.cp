@@ -5,7 +5,7 @@ import {
     SelectorComponent,
     Specificity,
     SelectorBuilder,
-} from "cap:css_selector_builder";
+} from "cap:css";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

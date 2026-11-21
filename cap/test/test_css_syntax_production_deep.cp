@@ -6,7 +6,7 @@ import {
     SyntaxComponent,
     SyntaxType,
     Multiplier,
-} from "cap:css_syntax";
+} from "cap:css";
 
 test("Universal '*' syntax parsing and serialization") {
     const alloc = std.testing.allocator;

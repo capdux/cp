@@ -2,11 +2,11 @@
 
 import { test, expect_eq } from "cap:test";
 import {
-    Angle,
-    AngleUnit,
-    Resolution,
-    ResolutionUnit,
-} from "cap:css_units";
+    UnitAngle as Angle,
+    UnitAngleUnit as AngleUnit,
+    UnitResolution as Resolution,
+    UnitResolutionUnit as ResolutionUnit,
+} from "cap:css";
 
 fn approxEq(a: f64, b: f64): bool {
     return @abs(a - b) <= 0.0001;

@@ -3,14 +3,14 @@
 import { test, expect_eq } from "cap:test";
 import {
     Transform,
-    TransformKind,
-    TransformList,
+    CssTransformKind as TransformKind,
+    CssTransformList as TransformList,
     Matrix2d,
     Matrix3d,
     TransformOrigin,
     TransformStyle,
     BackfaceVisibility,
-} from "cap:css_transform";
+} from "cap:css";
 
 test("Matrix2d and Matrix3d identity, multiplication, determinant and invertibility") {
     const id2 = Matrix2d.identity();

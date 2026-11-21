@@ -1,9 +1,9 @@
 // Source: Absorbed from /data/dev/bun/src/css/properties/animation.cp, /data/dev/bun/src/css/properties/transition.cp
 //! CSS Animations Level 1 & Transitions Level 1 shorthand parsers and serializers,
-//! composing `cap:css_time` and `./easing.cp`.
+//! composing `./time.cp` and `./easing.cp`.
 
 import std from "std";
-import { CssTime } from "cap:css_time";
+import { CssTime } from "./time.cp";
 import { EasingFunction } from "./easing.cp";
 
 export enum AnimationDirection: u8 {

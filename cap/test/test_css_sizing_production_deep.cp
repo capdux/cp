@@ -6,7 +6,7 @@ import {
     AspectRatio,
     BoxInsets,
     LogicalInsets,
-} from "cap:css_sizing";
+} from "cap:css";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

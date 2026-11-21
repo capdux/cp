@@ -1,5 +1,5 @@
 import { test, expect } from "cap:test";
-import { SupportsTree } from "cap:css_supports";
+import { SupportsTree } from "cap:css";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
