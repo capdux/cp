@@ -163,3 +163,6 @@
 
 ### 2026-11-22（`cap:ttf` 验收，新增简洁单单词包 `cap:ttf`（5/5 PASS））
 - **执行成果**：`lib/ttf/`（5/5 PASS，`doc/lib/ttf.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:ttf`（5/5 PASS）
+
+### 2026-11-22（`cap:qoi` 验收，新增简洁单单词包 `cap:qoi`（5/5 PASS））
+- **执行成果**：`lib/qoi/`（5/5 PASS，`doc/lib/qoi.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:qoi`（5/5 PASS）

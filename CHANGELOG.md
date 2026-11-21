@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:qoi` 零分配 Quite OK Image Format (QOI v1.0) 无损图像完整编解码器（5/5 PASS，自动动态挂载 `cap.qoi`）
+- 新增 `lib/qoi/{qoi,index}.cp`、`doc/lib/qoi.md`、`cap/test/test_qoi_production_deep.cp`：纯 CP 零分配完整实现 QOI v1.0 无损图像编码与解码（64 槽颜色哈希、RUN/INDEX/DIFF/LUMA/RGB/RGBA 与 8 字节尾标记校验，逐字节往返无损）（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:ttf` 零分配 TrueType / OpenType SFNT `.ttf`/`.otf` 字体表目录、`head`/`maxp` 与校验和解析器（5/5 PASS，自动动态挂载 `cap.ttf`）
 - 新增 `lib/ttf/{ttf,index}.cp`、`doc/lib/ttf.md`、`cap/test/test_ttf_production_deep.cp`：纯 CP 零分配实现 TrueType/OpenType SFNT 12 字节偏移表、16 字节表目录、`head`/`maxp` 元数据解析与大端回绕校验和（5/5 PASS）。
 

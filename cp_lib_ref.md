@@ -525,3 +525,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:ico` | `IcoKind`, `IcoHeader`, `IcoEntry`, `isIcoOrCur`, `parseIcoHeader`, `IcoEntryIter`, `findBestIcoEntry` | 零分配 Windows ICO / CUR 图标容器二进制目录解析、PNG/BMP 负载提取与最佳尺寸选择器 |
 | `cap:woff2` | `WOFF2_HEADER_SIZE`, `WOFF2_SIGNATURE`, `Woff2Header`, `UIntBase128Result`, `decodeUIntBase128`, `Woff2TableEntry`, `isWoff2`, `parseWoff2Header`, `Woff2TableIter` | 零分配 W3C WOFF2 网页字体 48 字节头、UIntBase128 变长整数与 63 项已知表目录解析器 |
 | `cap:ttf` | `SfntFlavor`, `SfntOffsetTable`, `SfntTableRecord`, `TtfHeadMetrics`, `parseSfntHeader`, `SfntTableIter`, `findSfntTable`, `parseTtfHead`, `parseTtfNumGlyphs`, `calcSfntChecksum` | 零分配 TrueType / OpenType SFNT `.ttf`/`.otf` 字体表目录、`head`/`maxp` 与校验和解析器 |
+| `cap:qoi` | `QoiHeader`, `isQoi`, `parseQoiHeader`, `encodeQoi`, `decodeQoi` | 零分配 Quite OK Image Format (QOI v1.0) 无损图像完整编解码器 |
