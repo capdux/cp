@@ -1,0 +1,31 @@
+// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 3748 EAP + IEEE 802.1X EAPOL Parser)
+// Unified exports for cap:eap.
+
+export {
+    EAPOL_ETHERTYPE,
+    EAPOL_HEADER_SIZE,
+    EAP_HEADER_SIZE,
+    EAP_EXPANDED_HEADER_SIZE,
+    EAP_TYPE_IDENTITY,
+    EAP_TYPE_NOTIFICATION,
+    EAP_TYPE_NAK,
+    EAP_TYPE_MD5_CHALLENGE,
+    EAP_TYPE_OTP,
+    EAP_TYPE_GTC,
+    EAP_TYPE_TLS,
+    EAP_TYPE_TTLS,
+    EAP_TYPE_AKA,
+    EAP_TYPE_PEAP,
+    EAP_TYPE_MSCHAPV2,
+    EAP_TYPE_EXPANDED,
+    EapolType,
+    EapCode,
+    EapolFrame,
+    EapPacket,
+    EapExpanded,
+    parseEapol,
+    isEapol,
+    parseEap,
+    isEap,
+    parseEapExpanded,
+} from "./eap.cp";

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:eap` EAP (RFC 3748) & IEEE 802.1X EAPOL framing + Expanded Vendor TLV zero-alloc parser（5/5 PASS，文档直写 `doc/lib/eap.md`）
+新增 cap:eap 纯 CP 零分配扩展认证协议解析库（EAPOL 帧、EAP Request/Response/Success/Failure 与 24-bit Vendor Expanded TLV），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:lacp` LACP (IEEE 802.1AX/802.3ad) 110B/124B LACPDU zero-alloc parser & encoder（5/5 PASS，文档直写 `doc/lib/lacp.md`）
 新增 cap:lacp 纯 CP 零分配链路聚合控制协议库（Actor/Partner/Collector/Terminator TLV 解析、8 位状态判定与标准 110B/124B 编码往返），通过 cpc check 与 5/5 cap test
 

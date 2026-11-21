@@ -178,3 +178,6 @@
 
 ### 2026-11-22（`cap:lacp` 验收，完成并注册纯 CP 零分配标准库 cap:lacp（5/5 cap test PASS））
 - **执行成果**：`lib/lacp/`（5/5 PASS，`doc/lib/lacp.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:lacp（5/5 cap test PASS）
+
+### 2026-11-22（`cap:eap` 验收，完成并注册纯 CP 零分配标准库 cap:eap（6/6 cap test PASS））
+- **执行成果**：`lib/eap/`（5/5 PASS，`doc/lib/eap.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:eap（6/6 cap test PASS）

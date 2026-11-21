@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:eap` EAP (RFC 3748) & IEEE 802.1X EAPOL framing + Expanded Vendor TLV zero-alloc parser（5/5 PASS，自动动态挂载 `cap.eap`）
+新增纯 CP 零分配标准库 cap:eap（RFC 3748 EAP + IEEE 802.1X EAPOL 与 Expanded Vendor TLV 解析）与 6/6 深度测试
+
 ## [2026-11-22] - 新建 `cap:lacp` LACP (IEEE 802.1AX/802.3ad) 110B/124B LACPDU zero-alloc parser & encoder（5/5 PASS，自动动态挂载 `cap.lacp`）
 新增纯 CP 零分配标准库 cap:lacp（IEEE 802.1AX/802.3ad LACPDU 解析与编码器）与 5/5 深度测试
 
