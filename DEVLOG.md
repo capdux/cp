@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:cli_spinner` 零分配 CLI 终端加载动画帧序列预设（dots/line/arc/arrows/bouncing_bar）与 TTY 状态行渲染器（5/5 PASS，文档直写 `doc/lib/cli_spinner.md`）
+- **设计要点**：`SpinnerSpec.frameAt`/`frameAtMs` 自动取模防越界；`formatSpinnerFrame`/`formatSpinnerDone` 根据 `is_tty` 自动切换 `\r\x1b[2K` 覆写前缀并检查缓冲容量。
+
 ## 2026-11-22: 新建 `cap:proc_io` Linux `/proc/<pid>/io` 进程读写字节、系统调用计数与采样窗口增量零分配解析器（5/5 PASS，文档直写 `doc/lib/proc_io.md`）
 - **设计要点**：单遍解析 `key: value` 拦截负数与 `u64` 溢出；`diff(earlier)` 逐字段饱和相减便于采样窗口吞吐统计。
 

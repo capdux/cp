@@ -268,3 +268,6 @@
 
 ### 2026-11-22（`cap:proc_io` 验收，Batch 119 落地，标准库总量达 286 模块）
 - **执行成果**：`lib/proc_io/`（5/5 PASS，`doc/lib/proc_io.md`）经 `verify_module.sh` 一次性验收回收；Batch 119 落地，标准库总量达 286 模块
+
+### 2026-11-22（`cap:cli_spinner` 验收，Batch 120 落地，标准库总量达 287 模块）
+- **执行成果**：`lib/cli_spinner/`（5/5 PASS，`doc/lib/cli_spinner.md`）经 `verify_module.sh` 一次性验收回收；Batch 120 落地，标准库总量达 287 模块

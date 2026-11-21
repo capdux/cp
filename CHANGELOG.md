@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:cli_spinner` 零分配 CLI 终端加载动画帧序列预设（dots/line/arc/arrows/bouncing_bar）与 TTY 状态行渲染器（5/5 PASS，自动动态挂载 `cap.cli_spinner`）
+- 新增 `lib/cli_spinner/{spinner,index}.cp`、`doc/lib/cli_spinner.md`、`cap/test/test_cli_spinner_production_deep.cp`：纯 CP 零分配提供 5 套终端 Spinner 动画预设、时间戳帧计算与 TTY/非 TTY 状态行渲染（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:proc_io` Linux `/proc/<pid>/io` 进程读写字节、系统调用计数与采样窗口增量零分配解析器（5/5 PASS，自动动态挂载 `cap.proc_io`）
 - 新增 `lib/proc_io/{io,index}.cp`、`doc/lib/proc_io.md`、`cap/test/test_proc_io_production_deep.cp`：纯 CP 零分配解析 Linux `/proc/<pid>/io` 7 项核心指标，支持饱和 `netWriteBytes`/`totalStorageBytes`/`diff` 增量计算与未知扩展键兼容（5/5 PASS）。
 
