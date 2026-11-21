@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:cli_progress` 零分配 CLI 进度条渲染器、百分比/纯整数 ETA 估算器与 ASCII/盲文点阵旋转动画帧生成器（5/5 PASS，自动动态挂载 `cap.cli_progress`）
+新增 `cap:cli_progress`（`lib/cli_progress/{progress,index}.cp`、`doc/lib/cli_progress.md`、`cap/test/test_cli_progress_production_deep.cp`），提供进度夹紧、`u128` 防溢出百分比与 ETA 计算。
+
+## [2026-11-22] - 新建 `cap:dns_name` RFC 1035 / RFC 1123 DNS 域名与标签合法性校验、线缆格式编解码与严格点边界子域匹配器（5/5 PASS，自动动态挂载 `cap.dns_name`）
+新增 `cap:dns_name`（`lib/dns_name/{dns_name,index}.cp`、`doc/lib/dns_name.md`、`cap/test/test_dns_name_production_deep.cp`），支持 RFC 1035 线缆格式往返、压缩指针拒绝与大小写无关子域匹配。
+
+## [2026-11-22] - 新建 `cap:markdown_table` GFM Markdown 管道表格行零分配单元格迭代器、对齐分隔行检测与单元格管道符转义器（5/5 PASS，自动动态挂载 `cap.markdown_table`）
+新增 `cap:markdown_table`（`lib/markdown_table/{table,index}.cp`、`doc/lib/markdown_table.md`、`cap/test/test_markdown_table_production_deep.cp`），支持转义 `\|` 切分、`:---`/`:---:`/`---:` 对齐识别与单元格转义。
+
+## [2026-11-22] - 新建 `cap:dockerfile_parse` Dockerfile 指令零分配流式解析器（支持 # escape 续行折叠、注释跳过、FROM 阶段与 EXPOSE 端口拆解）（5/5 PASS，自动动态挂载 `cap.dockerfile_parse`）
+新增 `cap:dockerfile_parse`（`lib/dockerfile_parse/{dockerfile,index}.cp`、`doc/lib/dockerfile_parse.md`、`cap/test/test_dockerfile_parse_production_deep.cp`），实现多行续行折叠、行号追踪、`FROM --platform=... AS stage` 与 `EXPOSE` 端口解析。
+
 ## [2026-11-22] - 新建 `cap:http_origin` WHATWG URL Origin 元组解析器、默认端口规范化、Same-Origin 比较与安全上下文判定（5/5 PASS，自动动态挂载 `cap.http_origin`）
 新增 `cap:http_origin`（`lib/http_origin/{origin,index}.cp`、`doc/lib/http_origin.md`、`cap/test/test_http_origin_production_deep.cp`），支持 IPv6 `[::1]`、userinfo 剥离、默认端口归约与 `*.localhost` 可信上下文判定。
 

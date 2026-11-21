@@ -606,3 +606,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:passwd_parse` | PasswdEntry, PasswdIter, lookupUserByName, lookupUserByUid, GroupEntry, GroupIter, lookupGroupByName, lookupGroupByGid | POSIX /etc/passwd 与 /etc/group 零分配流式解析器、UID/GID/名称查询与组成员判定 |
 | `cap:spdx_license` | SpdxTokenKind, SpdxToken, SpdxLexer, isValidSpdxExpression, SpdxIdIter, isCommonPermissive | SPDX 2.3 开源许可证表达式词法/递归下降语法校验器、ID 提取器与常见宽松许可证判定 |
 | `cap:http_origin` | Origin, isSameOriginUrl | WHATWG URL Origin 元组解析器、默认端口规范化、Same-Origin 比较与安全上下文判定 |
+| `cap:dockerfile_parse` | DockerInstruction, DockerfileIter, FromSpec, parseFromArgs, ExposePort, parseExposeToken | Dockerfile 指令零分配流式解析器（支持 # escape 续行折叠、注释跳过、FROM 阶段与 EXPOSE 端口拆解） |
+| `cap:markdown_table` | ColAlign, parseDelimiterCell, TableRowIter, parseDelimiterRow, unescapeTableCell, escapeTableCell | GFM Markdown 管道表格行零分配单元格迭代器、对齐分隔行检测与单元格管道符转义器 |
+| `cap:dns_name` | isValidDnsLabel, isValidHostname, encodeWireName, decodeWireName, isSubdomainOf, normalizeHostname | RFC 1035 / RFC 1123 DNS 域名与标签合法性校验、线缆格式编解码与严格点边界子域匹配器 |
+| `cap:cli_progress` | SpinnerStyle, spinnerFrame, ProgressBar | 零分配 CLI 进度条渲染器、百分比/纯整数 ETA 估算器与 ASCII/盲文点阵旋转动画帧生成器 |

@@ -442,3 +442,15 @@
 
 ### 2026-11-22（`cap:http_origin` 验收，Batch 59 注册 `cap:http_origin` 并提交（突破 180 模块里程碑）。）
 - **执行成果**：`lib/http_origin/`（5/5 PASS，`doc/lib/http_origin.md`）经 `verify_module.sh` 一次性验收回收；Batch 59 注册 `cap:http_origin` 并提交（突破 180 模块里程碑）。
+
+### 2026-11-22（`cap:dockerfile_parse` 验收，Batch 60 完成 `cap:dockerfile_parse`、`cap:markdown_table`、`cap:dns_name`、`cap:cli_progress` 4 模块吸收与全量验收。）
+- **执行成果**：`lib/dockerfile_parse/`（5/5 PASS，`doc/lib/dockerfile_parse.md`）经 `verify_module.sh` 一次性验收回收；Batch 60 完成 `cap:dockerfile_parse`、`cap:markdown_table`、`cap:dns_name`、`cap:cli_progress` 4 模块吸收与全量验收。
+
+### 2026-11-22（`cap:markdown_table` 验收，Batch 60 注册 `cap:markdown_table`。）
+- **执行成果**：`lib/markdown_table/`（5/5 PASS，`doc/lib/markdown_table.md`）经 `verify_module.sh` 一次性验收回收；Batch 60 注册 `cap:markdown_table`。
+
+### 2026-11-22（`cap:dns_name` 验收，Batch 60 注册 `cap:dns_name`。）
+- **执行成果**：`lib/dns_name/`（5/5 PASS，`doc/lib/dns_name.md`）经 `verify_module.sh` 一次性验收回收；Batch 60 注册 `cap:dns_name`。
+
+### 2026-11-22（`cap:cli_progress` 验收，Batch 60 注册 `cap:cli_progress` 并提交（突破 60 批次 / 185 模块里程碑）。）
+- **执行成果**：`lib/cli_progress/`（5/5 PASS，`doc/lib/cli_progress.md`）经 `verify_module.sh` 一次性验收回收；Batch 60 注册 `cap:cli_progress` 并提交（突破 60 批次 / 185 模块里程碑）。

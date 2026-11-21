@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:cli_progress` 零分配 CLI 进度条渲染器、百分比/纯整数 ETA 估算器与 ASCII/盲文点阵旋转动画帧生成器（5/5 PASS，文档直写 `doc/lib/cli_progress.md`）
+主智能体吸收 `cap:cli_progress`，零堆分配渲染 `[#####-----] 50% (50/100)` 与 3 种旋转器样式。
+
+## 2026-11-22: 新建 `cap:dns_name` RFC 1035 / RFC 1123 DNS 域名与标签合法性校验、线缆格式编解码与严格点边界子域匹配器（5/5 PASS，文档直写 `doc/lib/dns_name.md`）
+Subagent 2 吸收 `cap:dns_name`，严格校验标签长度 1..=63 与主机名总长 <=253。
+
+## 2026-11-22: 新建 `cap:markdown_table` GFM Markdown 管道表格行零分配单元格迭代器、对齐分隔行检测与单元格管道符转义器（5/5 PASS，文档直写 `doc/lib/markdown_table.md`）
+主智能体吸收 `cap:markdown_table`，精准处理可选外侧 `|` 与转义反斜杠奇偶判定。
+
+## 2026-11-22: 新建 `cap:dockerfile_parse` Dockerfile 指令零分配流式解析器（支持 # escape 续行折叠、注释跳过、FROM 阶段与 EXPOSE 端口拆解）（5/5 PASS，文档直写 `doc/lib/dockerfile_parse.md`）
+Subagent 1 吸收 `cap:dockerfile_parse`，零堆分配解析 Dockerfile 指令并正确跳过续行间注释。
+
 ## 2026-11-22: 新建 `cap:http_origin` WHATWG URL Origin 元组解析器、默认端口规范化、Same-Origin 比较与安全上下文判定（5/5 PASS，文档直写 `doc/lib/http_origin.md`）
 主智能体吸收 `cap:http_origin`，与 `cap:cors_policy`、`cap:uri_normalize` 协同构建完整 Web 安全原语。
 
