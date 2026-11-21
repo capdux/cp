@@ -848,3 +848,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:bessel` | j0, j1, jn, y0, y1, yn, besselI0, besselI1, i0e, i1e, k0, k1, k0e, k1e | 纯 CP 零分配柱贝塞尔与修正贝塞尔特殊函数库：Double-Double 106-bit 无损幂级数 + Hankel 渐近 + Miller 向下递推 + 指数缩放防溢出/下溢 |
 | `cap:mcts` | MCTS_NO_NODE, MctsNode, MctsConfig, MctsTree | 纯 CP 零分配蒙特卡洛树搜索（MCTS / UCT & PUCT）决策规划库：左孩子右兄弟固定节点池、UCB1/PUCT 下探选择、先验展开、单人/双人零和回传与根节点策略统计 |
 | `cap:dtw` | DTW_INF, WarpPair, DtwPathResult, dtwDistance1D, dtwAlign1D, dtwDistanceMulti, computeKeoghEnvelope, lbKeogh, zNormalize | 纯 CP 零分配动态时间规整（DTW）与时间序列对齐库：1D 滚动双行 O(m) DTW、Sakoe-Chiba 带宽约束、最优路径回溯、多维 DTW、LB_Keogh 下界包络与 Z-归一化 |
+| `cap:bandit` | Ucb1Bandit, EpsilonGreedyBandit, ThompsonBandit, Exp3Bandit, cumulativeRegret | 纯 CP 零分配多臂老虎机在线决策库：UCB1、Epsilon-Greedy（含衰减）、Marsaglia-Tsang Beta-Bernoulli Thompson Sampling、对数权重防溢出 EXP3 与累积遗憾计算 |

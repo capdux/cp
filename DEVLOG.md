@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:bandit` 纯 CP 零分配多臂老虎机在线决策库：UCB1、Epsilon-Greedy（含衰减）、Marsaglia-Tsang Beta-Bernoulli Thompson Sampling、对数权重防溢出 EXP3 与累积遗憾计算（5/5 PASS，文档直写 `doc/lib/bandit.md`）
+新增 cap:bandit（lib/bandit/{bandit,index}.cp）：零分配确定性 SplitMix64 + Marsaglia-Tsang Beta 采样器实现 UCB1/EpsGreedy/Thompson/EXP3，2000 轮收敛且 5000 步零溢出，cpc check 0 错误，cap test 6/6 PASS (674ms)
+
 ## 2026-11-22: 新建 `cap:dtw` 纯 CP 零分配动态时间规整（DTW）与时间序列对齐库：1D 滚动双行 O(m) DTW、Sakoe-Chiba 带宽约束、最优路径回溯、多维 DTW、LB_Keogh 下界包络与 Z-归一化（5/5 PASS，文档直写 `doc/lib/dtw.md`）
 新增 cap:dtw（lib/dtw/{dtw,index}.cp）：零分配 O(m) 滚动双行与完整回溯 DTW、多维轨迹对齐及 48 组 LB_Keogh 严格下界校验，cpc check 0 错误，cap test 6/6 PASS (771ms)
 
