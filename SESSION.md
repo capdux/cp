@@ -109,3 +109,6 @@
 
 ### 2026-11-21（`cap:varint_leb128` 验收，主控单兵完成 `cap:varint_leb128` 研发验收提交）
 - **执行成果**：`lib/varint_leb128/`（5/5 PASS，`doc/lib/varint_leb128.md`）经 `verify_module.sh` 一次性验收回收；主控单兵完成 `cap:varint_leb128` 研发验收提交
+
+### 2026-11-21（`cap:union_interval` 验收，主控单兵完成 `cap:union_interval` 研发验收提交，并执行热日志滚动归档）
+- **执行成果**：`lib/union_interval/`（5/5 PASS，`doc/lib/union_interval.md`）经 `verify_module.sh` 一次性验收回收；主控单兵完成 `cap:union_interval` 研发验收提交，并执行热日志滚动归档
