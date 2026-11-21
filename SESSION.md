@@ -106,3 +106,12 @@
 
 ### 2026-11-21（`cap:pg_wire_types` 验收，吸收 Bun PostgreSQL v3 线协议类型 -> `cap:pg_wire_types`，测试 5/5 通过。）
 - **执行成果**：`lib/pg_wire_types/`（5/5 PASS，`doc/lib/pg_wire_types.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun PostgreSQL v3 线协议类型 -> `cap:pg_wire_types`，测试 5/5 通过。
+
+### 2026-11-21（`cap:css_text_list` 验收，吸收 Bun CSS 文本/列表/效果属性 -> cap:css_text_list，测试 6/6 通过。）
+- **执行成果**：`lib/css_text_list/`（5/5 PASS，`doc/lib/css_text_list.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun CSS 文本/列表/效果属性 -> cap:css_text_list，测试 6/6 通过。
+
+### 2026-11-21（`cap:quic_header` 验收，吸收 Bun QUIC Header + SocketKind -> cap:quic_header，测试 5/5 通过。）
+- **执行成果**：`lib/quic_header/`（5/5 PASS，`doc/lib/quic_header.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun QUIC Header + SocketKind -> cap:quic_header，测试 5/5 通过。
+
+### 2026-11-21（`cap:exif` 验收，吸收 Bun runtime/image/exif.cp -> cap:exif，测试 4/4 通过。）
+- **执行成果**：`lib/exif/`（5/5 PASS，`doc/lib/exif.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun runtime/image/exif.cp -> cap:exif，测试 4/4 通过。

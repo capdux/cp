@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - JPEG/TIFF EXIF 方向元数据读取器（5/5 PASS，自动动态挂载 `cap.exif`）
+新增 cap:exif 标准库（lib/exif/、doc/lib/exif.md、cap/test/test_exif_production_deep.cp），4/4 回归通过。
+
+## [2026-11-21] - QUIC 报文头、VarInt 与 QPACK/SocketKind 协议集（5/5 PASS，自动动态挂载 `cap.quic_header`）
+新增 cap:quic_header 标准库（lib/quic_header/、doc/lib/quic_header.md、cap/test/test_quic_header_production_deep.cp），5/5 回归通过。
+
+## [2026-11-21] - CSS 文本、列表与滤镜混合属性（5/5 PASS，自动动态挂载 `cap.css_text_list`）
+新增 cap:css_text_list 标准库（lib/css_text_list/、doc/lib/css_text_list.md、cap/test/test_css_text_list_production_deep.cp），6/6 回归通过。
+
 ## [2026-11-21] - PostgreSQL v3 线协议字段描述与启动报文（5/5 PASS，自动动态挂载 `cap.pg_wire_types`）
 新增 `cap:pg_wire_types` 标准库（`lib/pg_wire_types/`、、），5/5 回归通过（零泄漏）。
 

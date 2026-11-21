@@ -2,6 +2,15 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: JPEG/TIFF EXIF 方向元数据读取器（5/5 PASS，文档直写 `doc/lib/exif.md`）
+从 Bun runtime/image/exif.cp 吸收 JPEG APP1/Exif 与大小端 TIFF IFD0 0x0112 标签读取器，纯 CP 零依赖实现宽容解析与旋转/翻转变换计算。
+
+## 2026-11-21: QUIC 报文头、VarInt 与 QPACK/SocketKind 协议集（5/5 PASS，文档直写 `doc/lib/quic_header.md`）
+从 Bun uws_sys/quic/Header.cp 与 SocketKind.cp 吸收 QUIC v1/v2 长短头、RFC 9000 VarInt、QPACK 静态表分类器与 23 种 SocketKind 枚举。
+
+## 2026-11-21: CSS 文本、列表与滤镜混合属性（5/5 PASS，文档直写 `doc/lib/css_text_list.md`）
+从 Bun css/properties/{text,list,effects}.cp 吸收文本排版、14 种列表标记、11 种滤镜与 16 种混合模式枚举及位标志，100% 纯 CP 零依赖。
+
 ## 2026-11-21: PostgreSQL v3 线协议字段描述与启动报文（5/5 PASS，文档直写 `doc/lib/pg_wire_types.md`）
 从 Bun `sql/postgres/protocol/{FieldDescription,StartupMessage}.cp` 吸收 PG v3 启动报文与列元数据编解码器，采用 CP `~init()` RAII 析构与显式借用，零泄漏通过全量边界测试。
 
