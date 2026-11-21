@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:pppoe` PPPoE (RFC 2516) Discovery TLV & Session framing zero-alloc parser & writer（5/5 PASS，文档直写 `doc/lib/pppoe.md`）
+新增 cap:pppoe 纯 CP 零分配以太网点对点隧道协议库（PADI/PADO/PADR/PADS/PADT TLV 零拷贝迭代、Session 封装与 PppoeWriter），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:eap` EAP (RFC 3748) & IEEE 802.1X EAPOL framing + Expanded Vendor TLV zero-alloc parser（5/5 PASS，文档直写 `doc/lib/eap.md`）
 新增 cap:eap 纯 CP 零分配扩展认证协议解析库（EAPOL 帧、EAP Request/Response/Success/Failure 与 24-bit Vendor Expanded TLV），通过 cpc check 与 6/6 cap test
 

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:pppoe` PPPoE (RFC 2516) Discovery TLV & Session framing zero-alloc parser & writer（5/5 PASS，自动动态挂载 `cap.pppoe`）
+新增纯 CP 零分配标准库 cap:pppoe（RFC 2516 PPPoE Discovery TLV 与 Session 编解码）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:eap` EAP (RFC 3748) & IEEE 802.1X EAPOL framing + Expanded Vendor TLV zero-alloc parser（5/5 PASS，自动动态挂载 `cap.eap`）
 新增纯 CP 零分配标准库 cap:eap（RFC 3748 EAP + IEEE 802.1X EAPOL 与 Expanded Vendor TLV 解析）与 6/6 深度测试
 
