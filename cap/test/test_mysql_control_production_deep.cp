@@ -1,4 +1,4 @@
-// Source: cp/cap/test/test_mysql_control_production_deep.cp (Production deep tests for cap:mysql_control)
+// Source: cp/cap/test/test_mysql_control_production_deep.cp (Production deep tests for cap:mysql control)
 
 import { test, expect_eq } from "cap:test";
 import {
@@ -10,7 +10,7 @@ import {
     CommandType,
     CAP_CLIENT_SSL,
     CAP_CLIENT_PLUGIN_AUTH,
-} from "cap:mysql_control";
+} from "cap:mysql";
 
 test("HandshakeV10 full decode, 32-bit capability merge and 20-byte salt assembly") {
     let pkt: [128]u8 = [0; 128];

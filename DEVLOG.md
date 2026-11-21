@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:mysql` MySQL 线协议全套认证、能力位、握手、字段类型、控制报文与二进制帧解析统一主包（`lib/mysql_*` 全仓清零）（5/5 PASS，文档直写 `doc/lib/mysql.md`）
+- **收敛要点**：`proto.cp` 复用 `caps.cp` 的 `StatusFlag`，冲突符号以最小别名 `AuthError`/`ControlError`/`CapsCapabilities`/`WireHandshakeV10` 消解；8/8 PASS。
+
 ## 2026-11-22: 新建 `cap:css` CSS 引擎与样式/动画/边框/阴影/容器查询统一主包（`css_*` 第 1 批 12 目录收敛）（5/5 PASS，文档直写 `doc/lib/css.md`）
 - **收敛要点**：9 个与 `lib/css/engine/` 重名符号以 `Css*` 聚合别名导出，13/13 PASS（含原 `test_phase_d_css_lightning_port.cp`）。
 

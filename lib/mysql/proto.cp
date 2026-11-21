@@ -1,4 +1,5 @@
 // Source: Absorbed from /data/dev/bun/src/sql/mysql/Capabilities.cp, StatusFlags.cp, protocol/CharacterSet.cp
+import { StatusFlag } from "./caps.cp";
 
 /// MySQL 协议客户端/服务端能力位掩码常量 (32-bit)
 pub const CAP_CLIENT_LONG_PASSWORD: u32 = 1 << 0;
@@ -193,24 +194,6 @@ pub struct Capabilities {
         _.CLIENT_OPTIONAL_RESULTSET_METADATA = false;
         _.CLIENT_QUERY_ATTRIBUTES = false;
     }
-}
-
-/// MySQL 服务端状态标志枚举 (16-bit)
-pub enum StatusFlag: u16 {
-    SERVER_STATUS_IN_TRANS = 1,
-    SERVER_STATUS_AUTOCOMMIT = 2,
-    SERVER_MORE_RESULTS_EXISTS = 8,
-    SERVER_STATUS_NO_GOOD_INDEX_USED = 16,
-    SERVER_STATUS_NO_INDEX_USED = 32,
-    SERVER_STATUS_CURSOR_EXISTS = 64,
-    SERVER_STATUS_LAST_ROW_SENT = 128,
-    SERVER_STATUS_DB_DROPPED = 256,
-    SERVER_STATUS_NO_BACKSLASH_ESCAPES = 512,
-    SERVER_STATUS_METADATA_CHANGED = 1024,
-    SERVER_QUERY_WAS_SLOW = 2048,
-    SERVER_PS_OUT_PARAMS = 4096,
-    SERVER_STATUS_IN_TRANS_READONLY = 8192,
-    SERVER_SESSION_STATE_CHANGED = 16384,
 }
 
 /// MySQL 服务端状态标志位集合 (16-bit)

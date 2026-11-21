@@ -1,12 +1,15 @@
-// Source: cp/cap/test/test_mysql_caps_production_deep.cp (Production deep tests for cap:mysql_caps)
+// Source: cp/cap/test/test_mysql_caps_production_deep.cp (Production deep tests for cap:mysql caps)
 
 import { test, expect_eq } from "cap:test";
 import {
     CapabilityFlag,
-    Capabilities,
+    CapsCapabilities,
     StatusFlag,
-    StatusFlags,
-} from "cap:mysql_caps";
+    CapsStatusFlags,
+} from "cap:mysql";
+
+const Capabilities = CapsCapabilities;
+const StatusFlags = CapsStatusFlags;
 
 test("mysql_caps: all 32 capability bit positions round-trip and set/clear/has") {
     let caps = Capabilities.fromInt(0);

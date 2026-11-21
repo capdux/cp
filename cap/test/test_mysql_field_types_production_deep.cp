@@ -13,7 +13,7 @@ import {
     ColumnDefinition41,
     encodeColumnDefinition41,
     decodeColumnDefinition41,
-} from "cap:mysql_field_types";
+} from "cap:mysql";
 
 test("1. FieldType all 31 variants round-trip, classification predicates & invalid byte rejection", () => {
     const valid_bytes: [31]u8 = [

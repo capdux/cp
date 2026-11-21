@@ -5,7 +5,7 @@ import {
     PacketHeader,
     MySqlPacketWriter,
     MySqlPacketReader,
-} from "cap:mysql_packet";
+} from "cap:mysql";
 
 test("mysql_packet: framed packet write/backfill and zero-copy read roundtrip", () => {
     let w = MySqlPacketWriter.init(std.testing.allocator);

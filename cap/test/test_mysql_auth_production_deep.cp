@@ -1,4 +1,4 @@
-// Source: cp/cap/test/test_mysql_auth_production_deep.cp (Production deep tests for cap:mysql_auth)
+// Source: cp/cap/test/test_mysql_auth_production_deep.cp (Production deep tests for cap:mysql auth)
 
 import { test, expect_eq } from "cap:test";
 import {
@@ -13,7 +13,7 @@ import {
     scrambleCachingSha2Password,
     encodeCleartextPassword,
     xorPasswordWithNonce,
-} from "cap:mysql_auth";
+} from "cap:mysql";
 
 test("AuthMethod plugin name recognition and AuthFastStatus mapping") {
     const names: [4]string = [

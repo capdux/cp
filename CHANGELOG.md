@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:mysql` MySQL 线协议全套认证、能力位、握手、字段类型、控制报文与二进制帧解析统一主包（`lib/mysql_*` 全仓清零）（5/5 PASS，自动动态挂载 `cap.mysql`）
+- **方案 A 收敛 (`mysql_*` 8 目录 -> `cap:mysql`)**：新建 `lib/mysql/{auth,caps,control,fieldtypes,handshake,packet,proto,wire,index}.cp` 与 `doc/lib/mysql.md`，全部 8 套深度测试 100% PASS，全仓 `lib/mysql_*` 与 `cap:mysql_*` 彻底清零（累计消除 190 个长下划线顶层目录）。
+
 ## [2026-11-22] - 新建 `cap:css` CSS 引擎与样式/动画/边框/阴影/容器查询统一主包（`css_*` 第 1 批 12 目录收敛）（5/5 PASS，自动动态挂载 `cap.css`）
 - **方案 A 收敛 (`css_*` 第 1 批 12 目录 -> `cap:css`)**：将 `css_animation` 至 `css_effects` 12 个散装目录零破坏合入 `lib/css/` 并保留原 `lib/css/engine/` 全部导出（13/13 PASS），删除 12 个旧目录与文档，累计消除 182 个长下划线顶层目录。
 

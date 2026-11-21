@@ -10,8 +10,8 @@ import {
     writeLenEncNull,
     readLenEncStr,
     writeLenEncStr,
-    HandshakeV10,
-    HandshakeResponse41,
+    WireHandshakeV10,
+    WireHandshakeResponse41,
     computeNativePasswordAuth,
     DEFAULT_CLIENT_CAPABILITIES,
     OkPacket,
@@ -24,7 +24,10 @@ import {
     ColumnDef41,
     CellValue,
     TextResultRow,
-} from "cap:mysql_wire";
+} from "cap:mysql";
+
+const HandshakeV10 = WireHandshakeV10;
+const HandshakeResponse41 = WireHandshakeResponse41;
 
 test("mysql_wire length-encoded int and string round-trip + truncation") {
     const alloc = std.testing.allocator;

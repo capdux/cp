@@ -11,7 +11,7 @@ import {
     HandshakeResponse41,
     encodeHandshakeResponse41,
     decodeHandshakeResponse41,
-} from "cap:mysql_handshake";
+} from "cap:mysql";
 
 test("mysql_handshake: full HandshakeResponse41 encode/decode roundtrip with attrs", () => {
     const attrs: [2]ConnectAttr = [

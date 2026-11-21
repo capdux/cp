@@ -1,4 +1,4 @@
-// Source: cp/cap/test/test_mysql_proto_production_deep.cp (Production deep tests for cap:mysql_proto)
+// Source: cp/cap/test/test_mysql_proto_production_deep.cp (Production deep tests for cap:mysql proto)
 
 import { test, expect_eq } from "cap:test";
 import {
@@ -20,7 +20,7 @@ import {
     StatusFlag,
     StatusFlags,
     CharacterSet,
-} from "cap:mysql_proto";
+} from "cap:mysql";
 
 test("Capabilities 32-bit mask roundtrip and hasFlag") {
     // 零值与全置位边界
