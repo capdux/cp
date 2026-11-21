@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:proc_mounts` Linux `/proc/mounts` 挂载表、八进制路径转义解码与最长边界前缀挂载点匹配器（5/5 PASS，文档直写 `doc/lib/proc_mounts.md`）
+- **设计要点**：`unescapeMountPath` 解码 `\040`/`\011`/`\012`/`\134` 等内核八进制转义；`findMountForPath` 严格区分 `/var` 与 `/var2` 边界并支持叠层挂载后覆盖语义。
+
 ## 2026-11-22: 新建 `cap:dns_srv_record` RFC 2782 DNS SRV 服务发现记录文本/线缆头零分配解析与优先级权重选择器（5/5 PASS，文档直写 `doc/lib/dns_srv_record.md`）
 - **设计要点**：`SrvRecord.parseText` 与 `parseWireHeader` 零分配解码，识别 `target == "."` 服务不可用语义；`selectSrvByRoll` 支持权重累积落点与全零权重均匀轮询。
 

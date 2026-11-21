@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:proc_mounts` Linux `/proc/mounts` 挂载表、八进制路径转义解码与最长边界前缀挂载点匹配器（5/5 PASS，自动动态挂载 `cap.proc_mounts`）
+- 新增 `lib/proc_mounts/{mounts,index}.cp`、`doc/lib/proc_mounts.md`、`cap/test/test_proc_mounts_production_deep.cp`：纯 CP 零分配解析 Linux `/proc/mounts` 6 列挂载表，支持选项键值查询、八进制路径转义解码与最长路径边界前缀挂载点匹配（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:dns_srv_record` RFC 2782 DNS SRV 服务发现记录文本/线缆头零分配解析与优先级权重选择器（5/5 PASS，自动动态挂载 `cap.dns_srv_record`）
 - 新增 `lib/dns_srv_record/{srv,index}.cp`、`doc/lib/dns_srv_record.md`、`cap/test/test_dns_srv_record_production_deep.cp`：纯 CP 零分配解析 RFC 2782 SRV 记录文本与 6 字节线缆头、`_service._proto.domain` 服务名，支持优先级/权重排序与确定性权重落点选择（5/5 PASS）。
 
