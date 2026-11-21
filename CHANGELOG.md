@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:docx` 零分配 OOXML DOCX WordprocessingML 段落文本提取与 CoreProps 解析器（5/5 PASS，自动动态挂载 `cap.docx`）
+新增 `lib/docx/{docx,index}.cp`、`doc/lib/docx.md` 与 `cap/test/test_docx_production_deep.cp`（6/6 PASS），支持 Heading/段落迭代、实体与数字实体 UTF-8 解码、tab/br 换行及 core.xml 元数据解析。
+
 ## [2026-11-22] - 新建 `cap:epub` 零分配 EPUB 2/3 电子书 OCF 校验、container.xml 与 OPF 元数据/书脊解析器（5/5 PASS，自动动态挂载 `cap.epub`）
 新增 `lib/epub/{epub,index}.cp`、`doc/lib/epub.md` 与 `cap/test/test_epub_production_deep.cp`（5/5 PASS），支持未压缩 mimetype OCF 校验、container.xml 与 OPF metadata/manifest/spine 解析。
 

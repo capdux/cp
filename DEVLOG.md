@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:docx` 零分配 OOXML DOCX WordprocessingML 段落文本提取与 CoreProps 解析器（5/5 PASS，文档直写 `doc/lib/docx.md`）
+实现零分配 OOXML DOCX 解析器，精准区分 <w:p> 与 <w:pPr>/<w:pStyle> 并支持嵌套段落深度匹配。
+
 ## 2026-11-22: 新建 `cap:epub` 零分配 EPUB 2/3 电子书 OCF 校验、container.xml 与 OPF 元数据/书脊解析器（5/5 PASS，文档直写 `doc/lib/epub.md`）
 实现零分配 EPUB 2/3 解析器，兼容 dc:/opf: 命名空间、CDATA 与 unique-identifier 精确匹配。
 
