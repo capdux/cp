@@ -513,3 +513,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:glsl` | `GlslVersion`, `GlslQualifier`, `GlslDecl`, `GlslTokenKind`, `GlslToken`, `GlslIter`, `parseGlslVersion`, `GlslDeclIter`, `validateGlslBraces` | 零分配 OpenGL / Vulkan GLSL 着色器词法扫描、`#version` 与 `uniform`/`in`/`out` 声明提取器 |
 | `cap:thrift` | `ThriftDeclKind`, `ThriftDecl`, `ThriftField`, `ThriftDeclIter`, `ThriftFieldIter`, `validateThriftBraces` | 零分配 Apache Thrift `.thrift` IDL 顶层声明/嵌套泛型字段提取与括号平衡校验器 |
 | `cap:cypher` | `CYPHER_MAX_DEPTH`, `CypherTokenKind`, `CypherClauseKind`, `CypherToken`, `CypherIter`, `CypherParamIter`, `classifyCypherKeyword`, `validateCypherDelimiters`, `isReadOnlyCypher` | 零分配 openCypher / Neo4j 图查询语言词法扫描、参数提取与只读安全判定器 |
+| `cap:sparql` | `SparqlQueryForm`, `SparqlPrefix`, `SparqlTokenKind`, `SparqlToken`, `SparqlIter`, `SparqlPrefixIter`, `detectSparqlQueryForm`, `isReadOnlySparql`, `validateSparqlDelimiters` | 零分配 W3C SPARQL 1.1 知识图谱查询词法扫描、前缀提取与只读安全判定器 |

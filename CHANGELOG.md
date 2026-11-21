@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:sparql` 零分配 W3C SPARQL 1.1 知识图谱查询词法扫描、前缀提取与只读安全判定器（5/5 PASS，自动动态挂载 `cap.sparql`）
+- 新增 `lib/sparql/{sparql,index}.cp`、`doc/lib/sparql.md`、`cap/test/test_sparql_production_deep.cp`：纯 CP 零分配实现 SPARQL 1.1 词法扫描、`PREFIX` 提取、查询形态识别与严格只读判定（拦截多语句写拼接与非法词法）（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:cypher` 零分配 openCypher / Neo4j 图查询语言词法扫描、参数提取与只读安全判定器（5/5 PASS，自动动态挂载 `cap.cypher`）
 - 新增 `lib/cypher/{cypher,index}.cp`、`doc/lib/cypher.md`、`cap/test/test_cypher_production_deep.cp`：纯 CP 零分配实现 openCypher 词法扫描、`$param` 提取、64 层括号校验与只读查询判定（精准区分属性 `n.delete`/标签 `:CREATE`/Map 键 `{ set: 1 }` 与真实写子句）（6/6 PASS）。
 

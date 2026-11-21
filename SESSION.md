@@ -127,3 +127,6 @@
 
 ### 2026-11-22（`cap:cypher` 验收，新增简洁单单词包 `cap:cypher`（6/6 PASS））
 - **执行成果**：`lib/cypher/`（5/5 PASS，`doc/lib/cypher.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:cypher`（6/6 PASS）
+
+### 2026-11-22（`cap:sparql` 验收，新增简洁单单词包 `cap:sparql`（5/5 PASS）；主动捕获并派发热修 `#108`）
+- **执行成果**：`lib/sparql/`（5/5 PASS，`doc/lib/sparql.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:sparql`（5/5 PASS）；主动捕获并派发热修 `#108`

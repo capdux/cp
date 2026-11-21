@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:sparql` 零分配 W3C SPARQL 1.1 知识图谱查询词法扫描、前缀提取与只读安全判定器（5/5 PASS，文档直写 `doc/lib/sparql.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:sparql`，与 `cap:cypher` 构成图查询安全分析双件套；精准区分 `<iri>` 与 `<`/`<=` 比较运算符。
+
 ## 2026-11-22: 新建 `cap:cypher` 零分配 openCypher / Neo4j 图查询语言词法扫描、参数提取与只读安全判定器（5/5 PASS，文档直写 `doc/lib/cypher.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:cypher`；`isReadOnlyCypher` 覆盖顶层与 `CALL { ... }` 子查询写关键字拦截并避免属性/标签/字面量误判。
 
