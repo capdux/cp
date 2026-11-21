@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:bezier` 2D Quadratic/Cubic Bezier: De Casteljau, curvature, Gauss-Legendre arc length & tight AABB（5/5 PASS，文档直写 `doc/lib/bezier.md`）
+新增 cap:bezier 纯 CP 零分配计算几何曲线库（升阶、细分、复合 5 点 Gauss-Legendre 弧长与精确极值包围盒），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:fir` DSP Windowed-Sinc FIR filter, Hann/Hamming/Blackman windows & RBJ Biquad IIR（5/5 PASS，文档直写 `doc/lib/fir.md`）
 新增 cap:fir 纯 CP 零分配数字信号处理库（环形延迟线 FIR、低通系数设计与 Direct Form II Transposed Biquad 解析频响），通过 cpc check 与 5/5 cap test
 
