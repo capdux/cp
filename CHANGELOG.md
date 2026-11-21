@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:pkcs7` 零分配 RFC 5652 CMS / PKCS#7 ASN.1 DER 签名容器解析器（5/5 PASS，自动动态挂载 `cap.pkcs7`）
+新增 `lib/pkcs7/{pkcs7,index}.cp`、`doc/lib/pkcs7.md` 与 `cap/test/test_pkcs7_production_deep.cp`（5/5 PASS），支持 ContentInfo/SignedData（含 detached）、证书集与 SignerInfo 零拷贝迭代。
+
 ## [2026-11-22] - 新建 `cap:har` 零分配 W3C HTTP Archive (.har 1.2) 浏览器抓包日志与性能统计器（5/5 PASS，自动动态挂载 `cap.har`）
 新增 `lib/har/{har,index}.cp`、`doc/lib/har.md` 与 `cap/test/test_har_production_deep.cp`（5/5 PASS），支持 HAR 1.2 头/请求条目零拷贝迭代、HarTimings 与平均 TTFB 统计。
 

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:pkcs7` 零分配 RFC 5652 CMS / PKCS#7 ASN.1 DER 签名容器解析器（5/5 PASS，文档直写 `doc/lib/pkcs7.md`）
+实现零分配 CMS/PKCS#7 解析器，严格拒绝非最小 DER 长度与尾随垃圾字节。
+
 ## 2026-11-22: 新建 `cap:har` 零分配 W3C HTTP Archive (.har 1.2) 浏览器抓包日志与性能统计器（5/5 PASS，文档直写 `doc/lib/har.md`）
 实现零分配 HAR 1.2 解析器，采用迭代式 JSON 值跳过安全处理嵌套 headers 与转义字符串。
 

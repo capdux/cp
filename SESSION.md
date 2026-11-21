@@ -79,3 +79,6 @@
 
 ### 2026-11-22（`cap:har` 验收，完成 `cap:har` 交付验收并登记入库（5/5 PASS）；派发 `cap:junit`。）
 - **执行成果**：`lib/har/`（5/5 PASS，`doc/lib/har.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:har` 交付验收并登记入库（5/5 PASS）；派发 `cap:junit`。
+
+### 2026-11-22（`cap:pkcs7` 验收，完成 `cap:pkcs7` 交付验收并登记入库（5/5 PASS）；派发 `cap:csr`。）
+- **执行成果**：`lib/pkcs7/`（5/5 PASS，`doc/lib/pkcs7.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:pkcs7` 交付验收并登记入库（5/5 PASS）；派发 `cap:csr`。
