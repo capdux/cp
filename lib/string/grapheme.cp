@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/unicode/uucode_lib/src/grapheme.zig
+// Source: Absorbed from /data/dev/bun/src/unicode/uucode_lib/src/grapheme.zig | Synced: 2026-11-21T04:56:55Z
 // lib/string/grapheme.cp
 // High-Speed UTF-8 Validator, Codepoint Counter & UAX #29 Extended Grapheme Cluster Analyzer
 // Absorbed from Bun src/unicode/uucode_lib/src/grapheme.zig & src/simdutf_sys/

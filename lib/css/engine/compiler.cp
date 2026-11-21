@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/css/printer.cp
+// Source: Absorbed from /data/dev/bun/src/css/printer.cp | Synced: 2026-11-20T17:03:19Z
 // lib/css/engine/compiler.cp
 // LightningCSS Full Compilation Pipeline:
 // CssCompileOptions, CssCompileStats, CssModulesHasher & CssCompiler (Nesting + Media Ranges + Prefixing + Logical + Minify/Pretty + CSS Modules)

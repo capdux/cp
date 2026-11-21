@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/css/targets.cp
+// Source: Absorbed from /data/dev/bun/src/css/targets.cp | Synced: 2026-11-20T13:29:47Z
 // lib/css/engine/targets.cp
 // LightningCSS Browser Targets, Feature Compatibility Matrix, and Vendor Prefix Bitmasks
 

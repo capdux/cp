@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/css/css_parser.cp
+// Source: Absorbed from /data/dev/bun/src/css/css_parser.cp | Synced: 2026-11-21T12:33:22Z
 // lib/css/engine/index.cp
 // Unified Public Exports for LightningCSS Industrial Engine (cap:css)
 

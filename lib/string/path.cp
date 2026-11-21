@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/string/PathString.cp
+// Source: Absorbed from /data/dev/bun/src/string/PathString.cp | Synced: 2026-11-20T04:56:52Z
 // ============================================================================
 // Absorbed from Bun: /data/dev/bun/src/string/PathString.cp
 // Upstream Sync: Refer to /data/dev/bun/src/string/PathString.zig for future upstream updates.
