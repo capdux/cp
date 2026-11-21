@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:savitzky` 纯 CP 零分配 Savitzky-Golay 多项式平滑/求导与 LOESS 局部加权回归库：动态 Vandermonde 卷积核、保峰 1/2 阶数值微分与 Cleveland Tricube 鲁棒 LOESS 平滑（5/5 PASS，文档直写 `doc/lib/savitzky.md`）
+新增 cap:savitzky（lib/savitzky/{savitzky,index}.cp）：零分配 Savitzky-Golay 卷积核与 1/2 阶精确数值微分（< 1e-10）及 Cleveland Tricube 鲁棒 LOESS，cpc check 0 错误，cap test 6/6 PASS (748ms)
+
 ## 2026-11-22: 新建 `cap:huber` 纯 CP 零分配鲁棒统计与 M-估计回归库：median/MAD/trimmedMean/Huber 位置估计、Huber/Tukey Biweight IRLS 多元鲁棒回归与 Theil-Sen 1D 中位数斜率回归（5/5 PASS，文档直写 `doc/lib/huber.md`）
 新增 cap:huber（lib/huber/{huber,index}.cp）：零分配 Huber/Tukey IRLS 多元鲁棒回归（20% 离群点精准恢复）与 Theil-Sen 1D 回归，cpc check 0 错误，cap test 5/5 PASS (716ms)
 

@@ -223,3 +223,6 @@
 
 ### 2026-11-22（`cap:huber` 验收，子智能体交付 cap:huber（Huber/Tukey IRLS 鲁棒回归与 Theil-Sen，5/5 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/huber/`（5/5 PASS，`doc/lib/huber.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:huber（Huber/Tukey IRLS 鲁棒回归与 Theil-Sen，5/5 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:savitzky` 验收，子智能体交付 cap:savitzky（Savitzky-Golay 平滑/微分与 LOESS，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/savitzky/`（5/5 PASS，`doc/lib/savitzky.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:savitzky（Savitzky-Golay 平滑/微分与 LOESS，6/6 PASS），主协调器统一登记并提交

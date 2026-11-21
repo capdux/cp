@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:savitzky` 纯 CP 零分配 Savitzky-Golay 多项式平滑/求导与 LOESS 局部加权回归库：动态 Vandermonde 卷积核、保峰 1/2 阶数值微分与 Cleveland Tricube 鲁棒 LOESS 平滑（5/5 PASS，自动动态挂载 `cap.savitzky`）
+新增纯 CP 零分配 Savitzky-Golay 与 LOESS 平滑库 cap:savitzky（动态卷积核、数值微分、鲁棒 LOESS），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:huber` 纯 CP 零分配鲁棒统计与 M-估计回归库：median/MAD/trimmedMean/Huber 位置估计、Huber/Tukey Biweight IRLS 多元鲁棒回归与 Theil-Sen 1D 中位数斜率回归（5/5 PASS，自动动态挂载 `cap.huber`）
 新增纯 CP 零分配鲁棒统计与 M-估计回归库 cap:huber（MAD/Trimmed/Huber/Tukey IRLS 与 Theil-Sen），含文档与 5 项深度生产测试
 
