@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ransac` 纯 CP 零分配确定性 RANSAC 鲁棒模型估计库：SplitMix64 采样与内点精修，支持 2D 直线（TLS）、2D 圆（Kåsa）、3D 平面（协方差最小特征向量）与 1D 线性回归（OLS）（5/5 PASS，自动动态挂载 `cap.ransac`）
+新增纯 CP 零分配 RANSAC 鲁棒模型估计库 cap:ransac（2D 直线/圆、3D 平面、1D 线性回归 + 内点精修），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:nelder` 纯 CP 零分配无导数优化与一维求极值/求根库：Nelder-Mead 单纯形优化、一维黄金分割极小化与 Brent 超线性求根法（5/5 PASS，自动动态挂载 `cap.nelder`）
 新增纯 CP 零分配无导数优化与一维求根库 cap:nelder（Nelder-Mead、黄金分割、Brent 求根），含文档与 6 项深度生产测试
 

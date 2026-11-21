@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ransac` 纯 CP 零分配确定性 RANSAC 鲁棒模型估计库：SplitMix64 采样与内点精修，支持 2D 直线（TLS）、2D 圆（Kåsa）、3D 平面（协方差最小特征向量）与 1D 线性回归（OLS）（5/5 PASS，文档直写 `doc/lib/ransac.md`）
+新增 cap:ransac（lib/ransac/{ransac,index}.cp）：零分配 SplitMix64 确定性 RANSAC 鲁棒拟合，35%-40% 离群点下精确恢复 2D 线/圆、3D 平面与 1D 回归模型，cpc check 0 错误，cap test 6/6 PASS (812ms)
+
 ## 2026-11-22: 新建 `cap:nelder` 纯 CP 零分配无导数优化与一维求极值/求根库：Nelder-Mead 单纯形优化、一维黄金分割极小化与 Brent 超线性求根法（5/5 PASS，文档直写 `doc/lib/nelder.md`）
 新增 cap:nelder（lib/nelder/{nelder,index}.cp）：零分配 Nelder-Mead 单纯形法（通过 Rosenbrock 与 4D 二次碗）、黄金分割极小化与 Brent 求根，cpc check 0 错误，cap test 6/6 PASS (750ms)
 
