@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/sha_hmac/hmac.cp & Zig std.crypto
+// Source: Absorbed from /data/dev/bun/src/sha_hmac/hmac.cp | Synced: 2026-11-20T11:43:49Z
 // lib/crypto/kdf.cp
 // Key Derivation (HKDF, Scrypt, Argon2id), Modern Hashing (BLAKE3, SHA-384, SHA3-256/512), HMAC-SHA384/512 & AEAD (XChaCha20-Poly1305, AES-128-GCM)
 

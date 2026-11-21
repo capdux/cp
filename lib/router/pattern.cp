@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/router/Router.cp
+// Source: Absorbed from /data/dev/bun/src/router/Router.cp | Synced: 2026-11-20T05:04:52Z
 // lib/router/pattern.cp
 // Reverse Route Path Formatter & Parameter Placeholder Extractor
 // Absorbed from Bun src/router/

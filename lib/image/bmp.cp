@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/runtime/image/codec_bmp.cp
+// Source: Absorbed from /data/dev/bun/src/runtime/image/codec_bmp.cp | Synced: 2026-11-20T07:01:07Z
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/codec_bmp.cp
 // Upstream Sync: Refer to bun/src/runtime/image/codec_bmp.zig for future upstream updates.
@@ -85,7 +85,7 @@ pub class Bmp {
         let h = hdr.height;
         let out_len = (w as usize) * (h as usize) * 4;
         let out_rgba_ptr: [*]u8 = @alloc(out_len);
-        let out_rgba = out_rgba_ptr[0..out_len];
+        let out_rgba = unsafe { out_rgba_ptr[0..out_len] };
 
         let is_32 = hdr.bpp == 32;
         let bytes_per_pixel: usize = if (is_32) (4 as usize) else (3 as usize);
@@ -163,7 +163,7 @@ pub class Bmp {
         let image_size = row_stride * h;
         let total_file_size = 54 + image_size;
         let out_ptr: [*]u8 = @alloc(total_file_size);
-        let out = out_ptr[0..total_file_size];
+        let out = unsafe { out_ptr[0..total_file_size] };
 
         // 1. BITMAPFILEHEADER (14 字节)
         out[0] = 0x42; // 'B'

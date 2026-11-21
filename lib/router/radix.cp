@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/router/Router.cp
+// Source: Absorbed from /data/dev/bun/src/router/Router.cp | Synced: 2026-11-20T05:04:52Z
 // lib/router/radix.cp
 // High-performance 5-tier Radix-Tree / Trie router for CP Web applications
 import { ParamMap } from "./param_map";

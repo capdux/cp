@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/watcher/Watcher.cp
+// Source: Absorbed from /data/dev/bun/src/watcher/Watcher.cp | Synced: 2026-11-20T11:19:58Z
 import std from "std";
 
 pub enum WatchAction {

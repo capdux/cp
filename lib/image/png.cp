@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/runtime/image/codec_png.cp
+// Source: Absorbed from /data/dev/bun/src/runtime/image/codec_png.cp | Synced: 2026-11-20T11:18:32Z
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/codec_png.cp
 // Upstream Sync: Refer to bun/src/runtime/image/codec_png.zig for future upstream updates.
@@ -132,7 +132,7 @@ pub class Png {
         let filtered_row_len = row_stride + 1;
         let raw_scanlines_len = (height as usize) * filtered_row_len;
         let scanlines_ptr: [*]u8 = @alloc(raw_scanlines_len);
-        let scanlines = scanlines_ptr[0..raw_scanlines_len];
+        let scanlines = unsafe { scanlines_ptr[0..raw_scanlines_len] };
 
         let y: usize = 0;
         while (y < height as usize) {
@@ -164,7 +164,7 @@ pub class Png {
         // - IEND Chunk: 4 len + 4 type + 0 data + 4 crc = 12 字节
         let total_png_size = 8 + 25 + (12 + comp_len) + 12;
         let out_png_ptr: [*]u8 = @alloc(total_png_size);
-        let out_png = out_png_ptr[0..total_png_size];
+        let out_png = unsafe { out_png_ptr[0..total_png_size] };
 
         let mut_pos: usize = 0;
 
@@ -208,7 +208,7 @@ pub class Png {
         // 拷贝压缩数据
         let ci: usize = 0;
         while (ci < comp_len) {
-            out_png[mut_pos + 8 + ci] = comp_buffer[ci];
+            out_png[mut_pos + 8 + ci] = unsafe { comp_buffer[ci] };
             ci += 1;
         }
 
@@ -296,7 +296,7 @@ pub class Png {
 
         // 3. 聚合所有 IDAT 压缩块
         let combined_ptr: [*]u8 = @alloc(total_idat_bytes);
-        let combined_idat = combined_ptr[0..total_idat_bytes];
+        let combined_idat = unsafe { combined_ptr[0..total_idat_bytes] };
 
         offset = 8;
         let idat_write_pos: usize = 0;
@@ -337,7 +337,7 @@ pub class Png {
         let decompressed_scanlines_len = (height as usize) * (row_bytes + 1);
 
         let uncomp_ptr: [*]u8 = @alloc(decompressed_scanlines_len);
-        let uncomp_buf = uncomp_ptr[0..decompressed_scanlines_len];
+        let uncomp_buf = unsafe { uncomp_ptr[0..decompressed_scanlines_len] };
 
         let actual_decomp_len: usize = decompressed_scanlines_len;
         let u_res = uncompress(uncomp_buf.ptr, &actual_decomp_len, combined_idat.ptr, total_idat_bytes);
@@ -349,14 +349,14 @@ pub class Png {
         // 5. 逆滤波（Reverse Filtering）并输出为统一直觉的 RGBA8 像素矩阵
         let out_rgba_len = (width as usize) * (height as usize) * 4;
         let out_rgba_ptr: [*]u8 = @alloc(out_rgba_len);
-        let out_rgba = out_rgba_ptr[0..out_rgba_len];
+        let out_rgba = unsafe { out_rgba_ptr[0..out_rgba_len] };
 
         let prev_recon_ptr: [*]u8 = @alloc(row_bytes);
-        let prev_recon = prev_recon_ptr[0..row_bytes];
+        let prev_recon = unsafe { prev_recon_ptr[0..row_bytes] };
         @memset(prev_recon, 0);
 
         let curr_recon_ptr: [*]u8 = @alloc(row_bytes);
-        let curr_recon = curr_recon_ptr[0..row_bytes];
+        let curr_recon = unsafe { curr_recon_ptr[0..row_bytes] };
 
         let y: usize = 0;
         let scan_src_offset: usize = 0;

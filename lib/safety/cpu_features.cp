@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/crash_handler/CPUFeatures.zig
+// Source: Absorbed from /data/dev/bun/src/crash_handler/CPUFeatures.zig | Synced: 2026-11-21T04:56:56Z
 // lib/safety/cpu_features.cp
 // Hardware CPU Feature Detection (x86_64 CPUID + Target Features / aarch64 Target Features)
 

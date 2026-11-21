@@ -10,7 +10,9 @@ import {
     Codecs, 
     ImageFormat, 
     Bmp, 
-    Quantizer 
+    RgbaColor,
+    Quantizer,
+    QuantizeResult,
 } from "cap:image";
 
 fn main() {
@@ -51,7 +53,7 @@ fn main() {
         const height: u32 = 8;
         const total_len = (width * height * 4) as usize;
         let ptr: [*]u8 = @alloc(total_len);
-        let rgba = ptr[0..total_len];
+        let rgba = unsafe { ptr[0..total_len] };
 
         // Fill with 4 distinct colored 4x4 quadrants:
         // Top-Left: Red (255, 0, 0, 255)
@@ -108,7 +110,7 @@ fn main() {
         const height: u32 = 4;
         const total_len = (width * height * 4) as usize;
         let ptr: [*]u8 = @alloc(total_len);
-        let original_rgba = ptr[0..total_len];
+        let original_rgba = unsafe { ptr[0..total_len] };
         @memset(original_rgba, 0);
 
         // Set pixel (1, 1) = [120, 150, 200, 255]
@@ -159,7 +161,7 @@ fn main() {
         const h: u32 = 10;
         const total_len = (w * h * 4) as usize;
         let ptr: [*]u8 = @alloc(total_len);
-        let pixels = ptr[0..total_len];
+        let pixels = unsafe { ptr[0..total_len] };
         @memset(pixels, 0);
 
         // Draw a cyan diagonal line
@@ -204,7 +206,7 @@ fn main() {
         const h: u32 = 4;
         const total_len = (w * h * 4) as usize;
         let ptr: [*]u8 = @alloc(total_len);
-        let buf = ptr[0..total_len];
+        let buf = unsafe { ptr[0..total_len] };
         @memset(buf, 0);
 
         // Set purple pixel at (2, 2)
@@ -238,7 +240,7 @@ fn main() {
         const h: u32 = 2;
         const total_len = (w * h * 4) as usize;
         let ptr: [*]u8 = @alloc(total_len);
-        let buf = ptr[0..total_len];
+        let buf = unsafe { ptr[0..total_len] };
         // Pixel 0: Red
         buf[0] = 255; buf[1] = 0; buf[2] = 0; buf[3] = 255;
         // Pixel 1: Green

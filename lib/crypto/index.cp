@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/boringssl/boringssl.cp
+// Source: Absorbed from /data/dev/bun/src/boringssl/boringssl.cp | Synced: 2026-11-20T17:39:25Z
 // lib/crypto/index.cp
 // Unified Entry Point for Industrial Cryptography Subsystem (cap:crypto)
 

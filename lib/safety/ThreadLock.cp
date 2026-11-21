@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/safety/ThreadLock.cp
+// Source: Absorbed from /data/dev/bun/src/safety/ThreadLock.cp | Synced: 2026-11-20T05:03:43Z
 import std from "std";
 import { invalid } from "./thread_id.cp";
 

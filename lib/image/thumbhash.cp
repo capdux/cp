@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/runtime/image/thumbhash.cp
+// Source: Absorbed from /data/dev/bun/src/runtime/image/thumbhash.cp | Synced: 2026-11-20T11:42:22Z
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/thumbhash.cp
 // Upstream Sync: Refer to bun/src/runtime/image/thumbhash.zig for future upstream updates.
@@ -19,7 +19,7 @@ fn encodeBase64Alloc(raw: []const u8): []u8 {
     }
     const out_len = ((raw.len + 2) / 3) * 4;
     let out_ptr: [*]u8 = @alloc(out_len);
-    let out = out_ptr[0..out_len];
+    let out = unsafe { out_ptr[0..out_len] };
 
     let i: usize = 0;
     let o: usize = 0;
@@ -110,7 +110,7 @@ pub class ThumbHash {
         const avg_a = (sum_a / (npix as u64)) as u8;
 
         let out_ptr: [*]u8 = @alloc(ThumbHash.MAX_LEN);
-        let out = out_ptr[0..ThumbHash.MAX_LEN];
+        let out = unsafe { out_ptr[0..ThumbHash.MAX_LEN] };
 
         // Bytes 0..5: average RGB, width, height, alpha flag
         out[0] = avg_r;
@@ -160,7 +160,7 @@ pub class ThumbHash {
         let npix = out_w * out_h;
         let rgba_len = npix * 4;
         let rgba_ptr: [*]u8 = @alloc(rgba_len);
-        let rgba = rgba_ptr[0..rgba_len];
+        let rgba = unsafe { rgba_ptr[0..rgba_len] };
 
         const has_quads = (hash.len >= 20 && hash[7] == 1);
         const alpha_val: u8 = if (has_alpha) (if (hash.len >= 7 && hash[6] > 0) hash[6] else 200) else 255;
@@ -219,7 +219,7 @@ pub class ThumbHash {
         const prefix = "data:image/png;base64,";
         const total_len = prefix.len + b64.len;
         let out_ptr: [*]u8 = @alloc(total_len);
-        let out = out_ptr[0..total_len];
+        let out = unsafe { out_ptr[0..total_len] };
         zig {
             @memcpy(out[0..prefix.len], prefix);
             @memcpy(out[prefix.len..total_len], b64);

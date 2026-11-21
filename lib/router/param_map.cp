@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/router/ParamMap.cp
+// Source: Absorbed from /data/dev/bun/src/router/ParamMap.cp | Synced: 2026-11-20T05:04:50Z
 // lib/router/param_map.cp
 // High-performance route parameter dictionary with inline stack storage
 

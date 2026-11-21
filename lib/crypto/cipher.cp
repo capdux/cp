@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/boringssl/boringssl.cp
+// Source: Absorbed from /data/dev/bun/src/boringssl/boringssl.cp | Synced: 2026-11-20T17:39:25Z
 // lib/crypto/cipher.cp
 // Authenticated Encryption with Associated Data (AEAD) Ciphers: AES-256-GCM & ChaCha20-Poly1305
 

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/router/router.cp
+// Source: Absorbed from /data/dev/bun/src/router/router.cp | Synced: 2026-11-20T13:13:25Z
 // lib/router/index.cp
 export { Param, ParamMap } from "./param_map";
 export { RouteMatch } from "./route";

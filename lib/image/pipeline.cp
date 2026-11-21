@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/runtime/image/Image.cp
+// Source: Absorbed from /data/dev/bun/src/runtime/image/Image.cp | Synced: 2026-11-21T12:25:10Z
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/Image.cp
 // Upstream Sync: Refer to bun/src/runtime/image/Image.zig for future upstream updates.
@@ -30,7 +30,7 @@ fn readImageFileC(path: string): ([]const u8)? {
     }
     const sz = stx.size as usize;
     let ptr: [*]u8 = @alloc(sz);
-    let buf = ptr[0..sz];
+    let buf = unsafe { ptr[0..sz] };
     let total: usize = 0;
     while (total < sz) {
         let n = std.c.read(fd, buf[total..sz].ptr, sz - total);
@@ -122,7 +122,7 @@ pub struct Image {
         let len = w * h * 4;
         if (len == 0) { return Image.init(0, 0, ""); }
         let out_ptr: [*]u8 = @alloc(len);
-        let out = out_ptr[0..len];
+        let out = unsafe { out_ptr[0..len] };
 
         for (let y in 0..h) {
             let uy = y as usize;
@@ -146,7 +146,7 @@ pub struct Image {
         let len = w * h * 4;
         if (len == 0) { return Image.init(0, 0, ""); }
         let out_ptr: [*]u8 = @alloc(len);
-        let out = out_ptr[0..len];
+        let out = unsafe { out_ptr[0..len] };
 
         for (let y in 0..h) {
             let uy = y as usize;
@@ -178,7 +178,7 @@ pub struct Image {
             let len = new_w * new_h * 4;
             if (len == 0) { return Image.init(0, 0, ""); }
             let out_ptr: [*]u8 = @alloc(len);
-            let out = out_ptr[0..len];
+            let out = unsafe { out_ptr[0..len] };
 
             for (let y in 0..old_h) {
                 let uy = y as usize;
@@ -204,7 +204,7 @@ pub struct Image {
             let len = new_w * new_h * 4;
             if (len == 0) { return Image.init(0, 0, ""); }
             let out_ptr: [*]u8 = @alloc(len);
-            let out = out_ptr[0..len];
+            let out = unsafe { out_ptr[0..len] };
 
             for (let y in 0..old_h) {
                 let uy = y as usize;
@@ -251,7 +251,7 @@ pub struct Image {
 
         let len = actual_w * actual_h * 4;
         let out_ptr: [*]u8 = @alloc(len);
-        let out = out_ptr[0..len];
+        let out = unsafe { out_ptr[0..len] };
 
         for (let row in 0..actual_h) {
             let urow = row as usize;
@@ -277,7 +277,7 @@ pub struct Image {
         }
         let len = target_w * target_h * 4;
         let out_ptr: [*]u8 = @alloc(len);
-        let out = out_ptr[0..len];
+        let out = unsafe { out_ptr[0..len] };
 
         for (let dy in 0..target_h) {
             let udy = dy as usize;
@@ -306,7 +306,7 @@ pub struct Image {
         }
         let len = target_w * target_h * 4;
         let out_ptr: [*]u8 = @alloc(len);
-        let out = out_ptr[0..len];
+        let out = unsafe { out_ptr[0..len] };
 
         const src_w_f = (_.width - 1) as f32;
         const src_h_f = (_.height - 1) as f32;
@@ -378,7 +378,7 @@ pub struct Image {
         const len = npix * 4;
         if (len == 0 || _.rgba.len < len) { return Image.init(0, 0, ""); }
         let out_ptr: [*]u8 = @alloc(len);
-        let out = out_ptr[0..len];
+        let out = unsafe { out_ptr[0..len] };
 
         let p: usize = 0;
         while (p < npix) {
@@ -402,7 +402,7 @@ pub struct Image {
         const len = npix * 4;
         if (len == 0 || _.rgba.len < len) { return Image.init(0, 0, ""); }
         let out_ptr: [*]u8 = @alloc(len);
-        let out = out_ptr[0..len];
+        let out = unsafe { out_ptr[0..len] };
 
         let p: usize = 0;
         while (p < npix) {
@@ -422,7 +422,7 @@ pub struct Image {
         const len = npix * 4;
         if (len == 0 || _.rgba.len < len) { return Image.init(0, 0, ""); }
         let out_ptr: [*]u8 = @alloc(len);
-        let out = out_ptr[0..len];
+        let out = unsafe { out_ptr[0..len] };
         const d = delta as i32;
 
         let p: usize = 0;
@@ -443,7 +443,7 @@ pub struct Image {
         const len = npix * 4;
         if (len == 0 || _.rgba.len < len) { return Image.init(0, 0, ""); }
         let out_ptr: [*]u8 = @alloc(len);
-        let out = out_ptr[0..len];
+        let out = unsafe { out_ptr[0..len] };
 
         let p: usize = 0;
         while (p < npix) {
@@ -470,7 +470,7 @@ pub struct Image {
         const len = w * h * 4;
         if (len == 0 || _.rgba.len < len) { return Image.init(0, 0, ""); }
         let out_ptr: [*]u8 = @alloc(len);
-        let out = out_ptr[0..len];
+        let out = unsafe { out_ptr[0..len] };
 
         let y: usize = 0;
         while (y < h) {

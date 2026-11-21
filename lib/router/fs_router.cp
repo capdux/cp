@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/router/router.cp
+// Source: Absorbed from /data/dev/bun/src/router/router.cp | Synced: 2026-11-20T13:13:25Z
 // lib/router/fs_router.cp
 // Next.js / Bun-compatible FileSystemRouter for CP (cap:router)
 // Supports [slug].cp, [...catchall].cp, [[...optional]].cp, (group) route groups, and priority sorting.

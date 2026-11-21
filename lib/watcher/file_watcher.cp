@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/watcher/INotifyWatcher.cp
+// Source: Absorbed from /data/dev/bun/src/watcher/INotifyWatcher.cp | Synced: 2026-11-20T13:00:46Z
 // lib/watcher/file_watcher.cp
 // Cross-Platform Filesystem Watcher & Linux inotify / macOS kqueue Event Abstraction
 // Absorbed from Bun src/watcher/INotifyWatcher.cp, KEventWatcher.cp & Watcher.cp

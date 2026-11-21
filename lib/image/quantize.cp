@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/runtime/image/quantize.cp
+// Source: Absorbed from /data/dev/bun/src/runtime/image/quantize.cp | Synced: 2026-11-20T11:43:14Z
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/quantize.cp
 // Upstream Sync: Refer to bun/src/runtime/image/quantize.zig for future upstream updates.
@@ -27,11 +27,11 @@ pub class Quantizer {
 
         // 1. 扫描像素并构建简单直方图 / 颜色提取
         let pal_ptr: [*]u8 = @alloc(256 * 4);
-        let pal_buf = pal_ptr[0 .. 256 * 4];
+        let pal_buf = unsafe { pal_ptr[0 .. 256 * 4] };
         @memset(pal_buf, 0);
 
         let idx_ptr: [*]u8 = @alloc(total_pixels);
-        let idx_buf = idx_ptr[0 .. total_pixels];
+        let idx_buf = unsafe { idx_ptr[0 .. total_pixels] };
 
         let num_colors: usize = 0;
         let has_alpha = false;

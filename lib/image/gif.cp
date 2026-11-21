@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/runtime/image/codec_gif.cp
+// Source: Absorbed from /data/dev/bun/src/runtime/image/codec_gif.cp | Synced: 2026-11-20T11:56:45Z
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/codec_gif.cp
 // Upstream Sync: Refer to bun/src/runtime/image/codec_gif.zig for future upstream updates.
@@ -262,12 +262,12 @@ pub class Gif {
             }
         }
         let suffix_ptr: [*]u8 = @alloc(4096);
-        let suffix = suffix_ptr[0..4096];
+        let suffix = unsafe { suffix_ptr[0..4096] };
         let scratch_ptr: [*]u8 = @alloc(4096);
-        let scratch = scratch_ptr[0..4096];
+        let scratch = unsafe { scratch_ptr[0..4096] };
 
         let idx_ptr: [*]u8 = @alloc(npix);
-        let idx_buf = idx_ptr[0..npix];
+        let idx_buf = unsafe { idx_ptr[0..npix] };
         let written: usize = 0;
 
         let bits = BitReader.init(bytes, lzw_offset);
@@ -355,7 +355,7 @@ pub class Gif {
         // 索引颜色映射至 RGBA 像素矩阵
         let rgba_len = npix * 4;
         let rgba_ptr: [*]u8 = @alloc(rgba_len);
-        let rgba = rgba_ptr[0..rgba_len];
+        let rgba = unsafe { rgba_ptr[0..rgba_len] };
 
         if (!interlace) {
             let p: usize = 0;

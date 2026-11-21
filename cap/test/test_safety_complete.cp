@@ -124,7 +124,7 @@ fn test_checked_allocator(): !void {
 
 fn test_asan_stubs_and_safety_assertions(): !void {
     let dummy_byte: u8 = 42;
-    const ptr: *const anyopaque = @ptrCast(&dummy_byte);
+    const ptr: *const anyopaque = unsafe { @ptrCast(&dummy_byte) };
 
     // ASAN operations should execute seamlessly
     poison(ptr, 1);

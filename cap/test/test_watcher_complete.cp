@@ -26,7 +26,7 @@ struct CallbackTracker {
 }
 
 fn onWatchEvent(event: WatchEvent, ctx_ptr: *anyopaque) {
-    let tracker: *CallbackTracker = @ptrCast(@alignCast(ctx_ptr));
+    let tracker: *CallbackTracker = unsafe { @ptrCast(@alignCast(ctx_ptr)) };
     tracker.count += 1;
     tracker.last_action = event.action;
     tracker.last_is_dir = event.is_dir;

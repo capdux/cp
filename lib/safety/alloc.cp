@@ -1,12 +1,12 @@
-// Source: /data/dev/bun/src/safety/alloc.cp
+// Source: Absorbed from /data/dev/bun/src/safety/alloc.cp | Synced: 2026-11-20T07:55:15Z
 import std from "std";
 
 const alloc_safety_enabled: bool = true;
 
 /// Asserts that two allocators are identical.
 pub fn assertEq(alloc1: std.mem.Allocator, alloc2: std.mem.Allocator) {
-    const vt1: *const anyopaque = @ptrCast(alloc1.vtable);
-    const vt2: *const anyopaque = @ptrCast(alloc2.vtable);
+    const vt1: *const anyopaque = unsafe { @ptrCast(alloc1.vtable) };
+    const vt2: *const anyopaque = unsafe { @ptrCast(alloc2.vtable) };
     if (vt1 != vt2) {
         @panic("allocator mismatch: vtables differ");
     }
@@ -33,14 +33,14 @@ pub struct CheckedAllocator {
 
     pub static fn init(allocator: std.mem.Allocator): CheckedAllocator {
         return CheckedAllocator{
-            vtable: @ptrCast(allocator.vtable),
+            vtable: unsafe { @ptrCast(allocator.vtable) },
             ptr: allocator.ptr,
         };
     }
 
     pub fn set(*_, allocator: std.mem.Allocator) {
         if (_.vtable == null) {
-            _.vtable = @ptrCast(allocator.vtable);
+            _.vtable = unsafe { @ptrCast(allocator.vtable) };
             _.ptr = allocator.ptr;
         } else {
             _.assertEq(allocator);
@@ -49,7 +49,7 @@ pub struct CheckedAllocator {
 
     pub fn assertEq(allocator: std.mem.Allocator) {
         if (vt := _.vtable) {
-            const cur_vt: *const anyopaque = @ptrCast(allocator.vtable);
+            const cur_vt: *const anyopaque = unsafe { @ptrCast(allocator.vtable) };
             if (vt != cur_vt) {
                 @panic("allocator mismatch: container vtable != incoming");
             }
