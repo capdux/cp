@@ -542,3 +542,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:ktx` | KtxVersion, Ktx1Header, Ktx2Header, Ktx2Level, isKtx1, isKtx2, detectKtxVersion, parseKtx1Header, parseKtx2Header, readKtx2Level | 零分配 Khronos KTX 1.1 & KTX2 GPU 纹理容器与 Mipmap 索引解析器 |
 | `cap:mp4` | Mp4Box, BoxCursor, FtypBox, MvhdBox, MdhdBox, TkhdBox, isMp4, parseFtyp, parseMvhd, parseMdhd, parseTkhd, findBox, findBoxPath, fourccEquals | 零分配 ISO BMFF / MP4 容器 Box/Atom 与媒体头解析器 |
 | `cap:exr` | EXR_MAGIC, ExrCompression, ExrBox2i, ExrAttr, ExrHeader, isExr, compressionFromByte, parseExrBox2i, ExrAttrIter, parseExrHeader | 零分配 OpenEXR HDR 图像容器头与 Attribute 解析器 |
+| `cap:fits` | FITS_BLOCK_SIZE, FITS_CARD_SIZE, FITS_CARDS_PER_BLOCK, FitsCard, FitsCardIter, FitsHeader, isFits, parseFitsHeader, fitsBytesPerPixel, findFitsCard, parseFitsInt, parseFitsBool | 零分配 NASA FITS 科学图像 2880B HDU 头与 80B Card 解析器 |

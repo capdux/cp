@@ -214,3 +214,6 @@
 
 ### 2026-11-22（`cap:exr` 验收，完成 `cap:exr` 交付验收并登记入库（5/5 PASS）；派发 `cap:pcapng`。）
 - **执行成果**：`lib/exr/`（5/5 PASS，`doc/lib/exr.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:exr` 交付验收并登记入库（5/5 PASS）；派发 `cap:pcapng`。
+
+### 2026-11-22（`cap:fits` 验收，完成 `cap:fits` 交付验收并登记入库（5/5 PASS）；派发 `cap:jxl`。）
+- **执行成果**：`lib/fits/`（5/5 PASS，`doc/lib/fits.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:fits` 交付验收并登记入库（5/5 PASS）；派发 `cap:jxl`。

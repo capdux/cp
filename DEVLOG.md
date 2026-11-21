@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:fits` 零分配 NASA FITS 科学图像 2880B HDU 头与 80B Card 解析器（5/5 PASS，文档直写 `doc/lib/fits.md`）
+实现零分配 NASA FITS 容器解析器，支持 Primary HDU 关键字解析、BITPIX 浮点/整数位宽映射与防溢出像素字节计算。
+
 ## 2026-11-22: 新建 `cap:exr` 零分配 OpenEXR HDR 图像容器头与 Attribute 解析器（5/5 PASS，文档直写 `doc/lib/exr.md`）
 实现零分配 OpenEXR 容器解析器，严格校验 8B 头、空名结束符与属性长度边界，防截断和越界。
 
