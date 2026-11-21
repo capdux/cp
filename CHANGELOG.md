@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:scrypt` 纯 CP 工业级 RFC 7914 `scrypt` 内存硬化口令派生与 PHC 字符串编解码校验标准库（支持 `cap.scrypt` 自动动态挂载，详见 `doc/lib/scrypt.md`）（5/5 PASS，自动动态挂载 `cap.scrypt`）
+- **新增标准库**：`lib/scrypt/{scrypt,index}.cp`，实现 RFC 7914 `scrypt` KDF、PHC `$scrypt$ln=...,r=...,p=...$salt$hash` 格式编解码、随机盐派生、常量时间校验与防 DoS 内存上限拦截。\n- **新增文档与测试**：`doc/lib/scrypt.md` 扁平文档与 `cap/test/test_scrypt_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:ksuid` 纯 CP Segment KSUID 20 字节 / 27 字符 Base62 字典序唯一 ID 与零堆编解码引擎（支持 `cap.ksuid` 自动动态挂载，详见 `doc/lib/ksuid.md`）（5/5 PASS，自动动态挂载 `cap.ksuid`）
 - **新增标准库**：`lib/ksuid/{ksuid,index}.cp`，实现 Segment KSUID 官方向量全匹配的 20B/27-char Base62 零堆编解码与字典序比较。\n- **新增文档与测试**：`doc/lib/ksuid.md` 扁平文档与 `cap/test/test_ksuid_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

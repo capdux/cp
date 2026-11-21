@@ -61,3 +61,6 @@
 
 ### 2026-11-21（`cap:ksuid` 验收，主控完成第 11 路 `cap:ksuid` 验收提交，继续与 `cap:totp_hotp` 及 `cap:scrypt` 并行）
 - **执行成果**：`lib/ksuid/`（5/5 PASS，`doc/lib/ksuid.md`）经 `verify_module.sh` 一次性验收回收；主控完成第 11 路 `cap:ksuid` 验收提交，继续与 `cap:totp_hotp` 及 `cap:scrypt` 并行
+
+### 2026-11-21（`cap:scrypt` 验收，验收提交 `cap:scrypt` 并新开 `cap:openmetrics` 并发子智能体，主控继续验收 `cap:hkdf_kdf` 与 `cap:crontab`）
+- **执行成果**：`lib/scrypt/`（5/5 PASS，`doc/lib/scrypt.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:scrypt` 并新开 `cap:openmetrics` 并发子智能体，主控继续验收 `cap:hkdf_kdf` 与 `cap:crontab`

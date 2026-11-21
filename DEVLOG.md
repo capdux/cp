@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:scrypt` 纯 CP 工业级 RFC 7914 `scrypt` 内存硬化口令派生与 PHC 字符串编解码校验标准库（支持 `cap.scrypt` 自动动态挂载，详见 `doc/lib/scrypt.md`）（5/5 PASS，文档直写 `doc/lib/scrypt.md`）
+- **核心设计**：基于 Zig 0.17 `std.crypto.pwhash.scrypt.kdf` 与 `std.crypto.timing_safe.eql` 实现，通过 RFC 7914 Section 12 官方向量与 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:ksuid` 纯 CP Segment KSUID 20 字节 / 27 字符 Base62 字典序唯一 ID 与零堆编解码引擎（支持 `cap.ksuid` 自动动态挂载，详见 `doc/lib/ksuid.md`）（5/5 PASS，文档直写 `doc/lib/ksuid.md`）
 - **核心设计**：采用 `5 x u32` 大端字数组除法与乘法完成零堆 160-bit Base62 编码解码，通过官方已知向量与 27 个 `z` 溢出测试验证。
 
