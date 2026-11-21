@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:uuencode` POSIX uuencode/uudecode & xxencode classic binary-to-text zero-alloc codec（5/5 PASS，文档直写 `doc/lib/uuencode.md`）
+新增 cap:uuencode 纯 CP 零分配经典文本编码库（begin/end 包装、45B 行宽、历史空格/反引号兼容与 xxencode 字母表），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:elias` Universal bit-level integer codes: Elias Gamma/Delta/Omega, Exp-Golomb, Rice & Fibonacci（5/5 PASS，文档直写 `doc/lib/elias.md`）
 新增 cap:elias 纯 CP 零分配通用前缀整数编码库（MSB-first BitWriter/BitReader 与 6 种经典位级编码），通过 cpc check 与 5/5 cap test
 

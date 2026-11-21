@@ -199,3 +199,6 @@
 
 ### 2026-11-22（`cap:elias` 验收，完成并注册纯 CP 零分配标准库 cap:elias（5/5 cap test PASS））
 - **执行成果**：`lib/elias/`（5/5 PASS，`doc/lib/elias.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:elias（5/5 cap test PASS）
+
+### 2026-11-22（`cap:uuencode` 验收，完成并注册纯 CP 零分配标准库 cap:uuencode（5/5 cap test PASS））
+- **执行成果**：`lib/uuencode/`（5/5 PASS，`doc/lib/uuencode.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:uuencode（5/5 cap test PASS）
