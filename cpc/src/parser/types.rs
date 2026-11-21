@@ -38,6 +38,9 @@ impl<'a> Parser<'a> {
                 | Token::At
                 | Token::ErrorKw
                 | Token::Bang
+                | Token::Struct
+                | Token::Union
+                | Token::Enum
         )
     }
 
@@ -425,7 +428,17 @@ impl<'a> Parser<'a> {
     }
 
     pub(super) fn parse_base_type(&mut self) -> ParseResult<Type> {
-        if self.peek() == Some(&Token::Switch) {
+        let is_inline_container = matches!(
+            self.peek(),
+            Some(Token::Switch | Token::Struct | Token::Union | Token::Enum)
+        ) || (matches!(
+            self.peek(),
+            Some(Token::Ident(s)) if s == "packed" || s == "extern"
+        ) && matches!(
+            self.peek_next(),
+            Some(Token::Struct | Token::Union | Token::Enum)
+        ));
+        if is_inline_container {
             let start = self.peek_span().start;
             let mut brace_depth: i32 = 0;
             let mut paren_depth: i32 = 0;
@@ -729,6 +742,7 @@ impl<'a> Parser<'a> {
                     }
                 }
             }
+            let inner_is_paren = self.peek() == Some(&Token::LParen);
             let inner = self.parse_base_type()?;
             if self.peek() == Some(&Token::Bang) {
                 let is_raw_ptr_bang = match self.peek_next() {
@@ -749,6 +763,14 @@ impl<'a> Parser<'a> {
                 };
                 if is_raw_ptr_bang {
                     self.bump()?; // consume '!'
+                    let (inner, has_unparen_opt) = if !inner_is_paren {
+                        match inner {
+                            Type::Optional(opt_inner) => (*opt_inner, true),
+                            other => (other, false),
+                        }
+                    } else {
+                        (inner, false)
+                    };
                     let wrapped = if !ptr_qual.is_empty() {
                         Self::apply_ptr_qualifiers(inner, ptr_qual, !is_mut)
                     } else if !is_mut {
@@ -760,10 +782,13 @@ impl<'a> Parser<'a> {
                     } else {
                         inner
                     };
-                    let ty = Type::RawPtr {
+                    let mut ty = Type::RawPtr {
                         inner: Box::new(wrapped),
                         depth,
                     };
+                    if has_unparen_opt {
+                        ty = Type::Optional(Box::new(ty));
+                    }
                     return self.parse_postfix_type_modifiers(ty);
                 }
             }
@@ -1711,7 +1736,23 @@ impl<'a> Parser<'a> {
             Type::Array(inner) => format!("[{}]", Self::type_to_str(inner)),
             Type::FixedArray(inner, n) => format!("[{}; {}]", Self::type_to_str(inner), n),
             Type::RawPtr { inner, depth } => {
-                format!("{}{}!", "*".repeat(*depth), Self::type_to_str(inner))
+                let inner_str = match inner.as_ref() {
+                    Type::Optional(_) => format!("({})", Self::type_to_str(inner)),
+                    Type::BorrowType {
+                        inner: b_in,
+                        is_mut: false,
+                        ..
+                    } if matches!(b_in.as_ref(), Type::Optional(_)) => {
+                        format!("const ({})", Self::type_to_str(b_in))
+                    }
+                    Type::Aligned { qual, inner: a_in }
+                        if matches!(a_in.as_ref(), Type::Optional(_)) =>
+                    {
+                        format!("{}({})", qual, Self::type_to_str(a_in))
+                    }
+                    _ => Self::type_to_str(inner),
+                };
+                format!("{}{}!", "*".repeat(*depth), inner_str)
             }
             Type::BorrowType { inner, is_mut, .. } => {
                 if *is_mut {
@@ -1730,7 +1771,10 @@ impl<'a> Parser<'a> {
                     format!("[:{n}]{}", Self::type_to_str(inner))
                 }
             }
-            Type::Optional(inner) => format!("{}?", Self::type_to_str(inner)),
+            Type::Optional(inner) => match inner.as_ref() {
+                Type::BorrowType { .. } => format!("({})?", Self::type_to_str(inner)),
+                _ => format!("{}?", Self::type_to_str(inner)),
+            },
             Type::Shared(inner) => format!("Shared<{}>", Self::type_to_str(inner)),
             Type::Aligned { qual, inner } => format!("{}{}", qual, Self::type_to_str(inner)),
             Type::Ref(id) => id.sym.clone(),

@@ -166,10 +166,7 @@ impl Codegen {
                 if ident.sym.starts_with('[') {
                     return ident.sym.clone();
                 }
-                if ident.sym.starts_with("struct")
-                    || ident.sym.starts_with("?struct")
-                    || ident.sym.starts_with("union")
-                {
+                if Self::is_inline_container_type_sym(&ident.sym) {
                     return super::lower_struct_body(&ident.sym);
                 }
                 let is_custom_int = (ident.sym.starts_with('u') || ident.sym.starts_with('i'))
@@ -371,25 +368,8 @@ impl Codegen {
                 name
             }
             Type::RawPtr { inner, depth } => {
-                if let Type::Optional(opt_inner) = &**inner {
-                    let base = self.map_raw_ptr_base(opt_inner);
-                    format!("?{}{}", "*".repeat(*depth), base)
-                } else if let Type::BorrowType {
-                    inner: b_in,
-                    is_mut: false,
-                    ..
-                } = &**inner
-                {
-                    if let Type::Optional(opt_inner) = &**b_in {
-                        let base = self.map_raw_ptr_base(opt_inner);
-                        return format!("?{}const {}", "*".repeat(*depth), base);
-                    }
-                    let base = self.map_raw_ptr_base(inner);
-                    format!("{}{}", "*".repeat(*depth), base)
-                } else {
-                    let base = self.map_raw_ptr_base(inner);
-                    format!("{}{}", "*".repeat(*depth), base)
-                }
+                let base = self.map_raw_ptr_base(inner);
+                format!("{}{}", "*".repeat(*depth), base)
             }
             Type::ManyRawPtr(inner) => {
                 let base = self.map_raw_ptr_base(inner);
@@ -543,6 +523,8 @@ impl Codegen {
             Type::Ref(id) => {
                 if id.sym == "anyopaque" || id.sym == "any" {
                     "anyopaque".to_string()
+                } else if Self::is_inline_container_type_sym(&id.sym) {
+                    super::lower_struct_body(&id.sym)
                 } else {
                     id.sym.clone()
                 }
@@ -552,5 +534,27 @@ impl Codegen {
             }
             _ => self.map_type(ty),
         }
+    }
+
+    pub(crate) fn is_inline_container_type_sym(sym: &str) -> bool {
+        let s = sym.trim_start_matches('?').trim_start();
+        let s = s
+            .strip_prefix("packed")
+            .or_else(|| s.strip_prefix("extern"))
+            .filter(|rest| rest.starts_with(char::is_whitespace))
+            .map(str::trim_start)
+            .unwrap_or(s);
+        for kw in ["struct", "union", "enum"] {
+            if let Some(rest) = s.strip_prefix(kw) {
+                if rest.is_empty()
+                    || rest.starts_with('{')
+                    || rest.starts_with('(')
+                    || rest.starts_with(char::is_whitespace)
+                {
+                    return true;
+                }
+            }
+        }
+        false
     }
 }

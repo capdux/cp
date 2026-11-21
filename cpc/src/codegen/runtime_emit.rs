@@ -1213,7 +1213,7 @@ impl Codegen {
         }
         if features.needs_unpack {
             if !features.needs_collections && !features.needs_actors {
-                self.writeln("const Message = anyopaque;");
+                self.writeln("const Message = struct { __cp_no_message_sentinel: void = {} };");
                 self.writeln("fn cp_msg_to_val(_: anytype) []const u8 { return \"\"; }");
             }
             self.writeln("pub fn CpUnpackElemType(comptime __T: type, comptime idx: usize) type { if (__T == ?Message or __T == Message) return []const u8; if (@typeInfo(__T) == .pointer and @typeInfo(__T).pointer.size == .slice) return @typeInfo(__T).pointer.child; if (@typeInfo(__T) == .pointer and @typeInfo(__T).pointer.size == .one and @typeInfo(@typeInfo(__T).pointer.child) == .pointer and @typeInfo(@typeInfo(__T).pointer.child).pointer.size == .slice) return @typeInfo(@typeInfo(__T).pointer.child).pointer.child; if (@typeInfo(__T) == .pointer and @typeInfo(@typeInfo(__T).pointer.child) == .array) return @typeInfo(@typeInfo(__T).pointer.child).array.child; if (@typeInfo(__T) == .array) return @typeInfo(__T).array.child; const ti = @typeInfo(__T); if (ti == .@\"struct\") return ti.@\"struct\".field_types[idx]; return @FieldType(__T, std.fmt.comptimePrint(\"{d}\", .{idx})); }");

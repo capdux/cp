@@ -341,18 +341,17 @@ impl Codegen {
 
                     let is_sync_type = matches!(&raw_obj_ty, Some(Type::Ref(id)) if id.sym == "Mutex" || id.sym.starts_with("Mutex<") || id.sym == "RwLock" || id.sym.starts_with("RwLock<") || id.sym == "Atomic" || id.sym.starts_with("Atomic<") || id.sym.starts_with("LockGuard<") || id.sym.starts_with("ReadGuard<") || id.sym.starts_with("WriteGuard<"));
                     if is_sync_type
-                        || matches!(
+                        || (matches!(prop, "cas" | "compareAndSwap") && call.args.len() == 2)
+                        || (prop == "testAndSet" && call.args.len() <= 1)
+                        || (matches!(
                             prop,
-                            "cas"
-                                | "compareAndSwap"
-                                | "testAndSet"
-                                | "tryLock"
+                            "tryLock"
                                 | "isLocked"
                                 | "tryRead"
                                 | "tryWrite"
                                 | "isReadLocked"
                                 | "isWriteLocked"
-                        )
+                        ) && call.args.is_empty())
                         || (prop == "release"
                             && call.args.is_empty()
                             && self.is_builtin_raii_type(raw_obj_ty.as_ref()))
@@ -404,7 +403,8 @@ impl Codegen {
                                 | "isReadLocked"
                                 | "isWriteLocked"
                                 | "release"
-                        ) {
+                        ) && call.args.is_empty()
+                        {
                             let raw_call = format!(
                                 "(if (comptime @typeInfo(@TypeOf({0})) == .pointer) ({0}) else &({0})).{1}()",
                                 obj, prop
