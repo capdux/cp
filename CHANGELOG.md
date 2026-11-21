@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:flac` 零分配 FLAC 无损音频流 `"fLaC"` 头、`STREAMINFO` 34 字节位字段与元数据块迭代器（5/5 PASS，自动动态挂载 `cap.flac`）
+- 新增 `lib/flac/{flac,index}.cp`、`doc/lib/flac.md`、`cap/test/test_flac_production_deep.cp`：纯 CP 零分配实现 FLAC 魔数校验、34 字节 `STREAMINFO` 20/36-bit 位字段解码、防溢出时长计算与 RFC 9639 元数据块迭代（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:pnm` 零分配 Netpbm P1–P6 PBM/PGM/PPM 图像头解析、像素切片提取与 P5/P6 编码器（5/5 PASS，自动动态挂载 `cap.pnm`）
 - 新增 `lib/pnm/{pnm,index}.cp`、`doc/lib/pnm.md`、`cap/test/test_pnm_production_deep.cp`：纯 CP 零分配实现 Netpbm P1–P6 头解析（末字段单空白精确截断保护像素首字节、16-bit 双字节样本防溢出计算）与 P5/P6 编码（5/5 PASS）。
 

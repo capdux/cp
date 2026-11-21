@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:flac` 零分配 FLAC 无损音频流 `"fLaC"` 头、`STREAMINFO` 34 字节位字段与元数据块迭代器（5/5 PASS，文档直写 `doc/lib/flac.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:flac`；拦截 RFC 9639 禁止块类型 `127` 并在 `is_last == true` 后自动停止。
+
 ## 2026-11-22: 新建 `cap:pnm` 零分配 Netpbm P1–P6 PBM/PGM/PPM 图像头解析、像素切片提取与 P5/P6 编码器（5/5 PASS，文档直写 `doc/lib/pnm.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:pnm`，与 `cap:qoi` 配套补齐轻量无损图像编解码生态。
 
