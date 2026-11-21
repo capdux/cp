@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:cramfs` Linux CramFS 76B superblock, IEEE CRC32, 12B bitfield Inode & dir zero-alloc parser（5/5 PASS，文档直写 `doc/lib/cramfs.md`）
+新增 cap:cramfs 纯 CP 零分配压缩只读文件系统库（76B 超级块 CRC32、24/6/26-bit 紧缩 Inode 解码与目录零拷贝迭代），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:romfs` Linux romfs big-endian superblock, 32-bit checksum & 16B-aligned directory tree parser（5/5 PASS，文档直写 `doc/lib/romfs.md`）
 新增 cap:romfs 纯 CP 零分配极简内核只读文件系统库（大端 32-bit 校验和、16B 对齐文件头与递增防环目录迭代），通过 cpc check 与 5/5 cap test
 

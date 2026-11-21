@@ -1,0 +1,28 @@
+// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:cramfs & cap.cramfs)
+
+export {
+    CRAMFS_MAGIC,
+    CRAMFS_SIGNATURE,
+    CRAMFS_SUPER_SIZE,
+    CRAMFS_INODE_SIZE,
+    CRAMFS_CRC_OFFSET,
+    FLAG_FSID_VERSION_2,
+    FLAG_SORTED_DIRS,
+    FLAG_HOLES,
+    FLAG_WRONG_SIGNATURE,
+    FLAG_SHIFTED_ROOT_OFFSET,
+    FLAG_EXT_BLOCK_POINTERS,
+    S_IFMT,
+    S_IFDIR,
+    S_IFREG,
+    S_IFLNK,
+    cramfsCrc32,
+    CramfsInode,
+    CramfsSuperblock,
+    CramfsDirEntry,
+    CramfsDirIter,
+    isCramfs,
+    parseCramfsInode,
+    parseCramfsSuperblock,
+    iterCramfsDir,
+} from "./cramfs.cp";

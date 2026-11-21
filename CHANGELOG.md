@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:cramfs` Linux CramFS 76B superblock, IEEE CRC32, 12B bitfield Inode & dir zero-alloc parser（5/5 PASS，自动动态挂载 `cap.cramfs`）
+新增纯 CP 零分配标准库 cap:cramfs（Linux CramFS 超级块、IEEE CRC32、12B 位域 Inode 与目录迭代解析）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:romfs` Linux romfs big-endian superblock, 32-bit checksum & 16B-aligned directory tree parser（5/5 PASS，自动动态挂载 `cap.romfs`）
 新增纯 CP 零分配标准库 cap:romfs（Linux romfs 只读文件系统超级块、32-bit 校验和与 16B 对齐目录树解析）与 5/5 深度测试
 
