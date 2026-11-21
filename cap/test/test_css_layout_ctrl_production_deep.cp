@@ -1,13 +1,13 @@
 import { test, expect } from "cap:test";
 import {
-    OverflowKeyword,
-    Overflow,
-    TextOverflow,
-    Position,
-    ContainerType,
+    LayoutOverflowKeyword as OverflowKeyword,
+    LayoutOverflow as Overflow,
+    LayoutTextOverflow as TextOverflow,
+    LayoutPosition as Position,
+    LayoutContainerType as ContainerType,
     ContainFlags,
     ZIndex,
-} from "cap:css_layout_ctrl";
+} from "cap:css";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

@@ -11,7 +11,7 @@ import {
     MediaFeature,
     MediaQuery,
     MediaQueryList,
-} from "cap:css_media";
+} from "cap:css";
 
 test("1. MediaType (all/screen/print) & MediaQualifier (only/not) with alwaysMatches/neverMatches", () => {
     const q_all = MediaQuery.parse("all") catch unreachable;

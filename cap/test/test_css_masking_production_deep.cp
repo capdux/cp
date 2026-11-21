@@ -18,7 +18,7 @@ import {
     MaskConfig,
     MaskBorderConfig,
     getWebKitMaskPropertyName,
-} from "cap:css_masking";
+} from "cap:css";
 
 test("1. GeometryBox, MaskOrigin & MaskClip parsing, CSS serialization and SVG/CSS box classification", () => {
     const vb = GeometryBox.parse("VIEW-BOX").?;

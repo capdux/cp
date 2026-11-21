@@ -5,8 +5,8 @@ import {
     PageMarginEdge,
     PageMarginBox,
     PageSelector,
-    Position,
-} from "cap:css_page_rule";
+    PagePosition as Position,
+} from "cap:css";
 
 test("1. All 16 PageMarginBox variants parse, CSS serialize & edge/corner classification", () => {
     const names: [16]string = [

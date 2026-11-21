@@ -5,7 +5,7 @@ import {
     FlexWrap,
     FlexFlow,
     FlexBasisKind,
-    FlexShorthand,
+    CssFlexShorthand as FlexShorthand,
     JustifyContent,
     AlignItems,
     AlignSelf,
@@ -13,7 +13,7 @@ import {
     GridAutoFlow,
     TrackBreadthKind,
     TrackBreadth,
-} from "cap:css_flex_grid";
+} from "cap:css";
 
 test("1. FlexDirection (4 variants), FlexWrap (3 variants) & FlexFlow shorthand parse/normalize", () => {
     let buf: [64]u8 = std.mem.zeroes([64]u8);

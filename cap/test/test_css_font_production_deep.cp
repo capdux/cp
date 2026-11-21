@@ -14,7 +14,7 @@ import {
     FontVariantCaps,
     GenericFontFamily,
     Font,
-} from "cap:css_font";
+} from "cap:css";
 
 test("1. FontWeight (normal/bold/bolder/lighter/1..1000) & FontStyle (normal/italic/oblique deg)", () => {
     let buf: [64]u8 = std.mem.zeroes([64]u8);

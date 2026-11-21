@@ -2,13 +2,13 @@
 
 import { test, expect_eq } from "cap:test";
 import {
-    ResolutionUnit,
-    Resolution,
+    CssResolutionUnit as ResolutionUnit,
+    CssResolution as Resolution,
     ImageSetOption,
     ImageSet,
     CssImageKind,
     CssImage,
-} from "cap:css_image_set";
+} from "cap:css";
 
 fn approxEq(a: f32, b: f32, eps: f32): bool {
     const diff = if (a >= b) a - b else b - a;

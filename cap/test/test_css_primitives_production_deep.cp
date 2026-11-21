@@ -2,10 +2,10 @@ import { test, expect } from "cap:test";
 import {
     Percentage,
     NumberOrPercentage,
-    AlphaValue,
+    CssAlphaValue as AlphaValue,
     isAbsoluteCssUrl,
     isDataCssUrl,
-} from "cap:css_primitives";
+} from "cap:css";
 
 test("css_primitives: Percentage and NumberOrPercentage parse, math, and toCss", () => {
     const p = Percentage.parse("75%").?;

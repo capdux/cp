@@ -2,13 +2,13 @@
 
 import { test, expect_eq } from "cap:test";
 import {
-    Gradient,
-    GradientKind,
+    CssGradient as Gradient,
+    CssGradientKind as GradientKind,
     DirectionSide,
     LineDirection,
     RadialShape,
     RadialExtent,
-} from "cap:css_gradient";
+} from "cap:css";
 
 test("Linear and repeating-linear gradients, directions and default omission") {
     let buf: [128]u8 = [0; 128];

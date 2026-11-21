@@ -2,12 +2,12 @@
 
 import { test, expect_eq } from "cap:test";
 import {
-    Ratio,
+    CssRatio as Ratio,
     Rect,
     OverflowKeyword,
     Overflow,
     TextOverflow,
-} from "cap:css_geometry";
+} from "cap:css";
 
 test("Ratio simplify, asF64, invert, eql and equivalent") {
     const hd = Ratio.new(1920.0, 1080.0);

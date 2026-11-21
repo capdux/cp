@@ -216,3 +216,23 @@ const radius = CssBorderRadius.parse("8px 12px").?;
 const shadow = CssBoxShadow.parse("inset 0 2px 6px rgba(0,0,0,0.2)").?;
 const disp = Display.parse("inline flex").?;
 ```
+
+
+## 合并收敛子模块（第 2 批：12 个 CSS 布局、字体、渐变、媒体与原语子模块）
+
+第 2 批吸收以下 12 个纯 CP 子模块进入 `cap:css`（保留 `engine/` 与第 1 批既有导出零破坏，冲突符号通过聚合别名导出）：
+
+| 子文件 | 原始来源 | 核心导出符号 |
+| --- | --- | --- |
+| `lib/css/flexgrid.cp` | `bun/src/css/properties/{flex,align,grid}.cp` | `CssLayoutError`, `FlexDirection`, `FlexWrap`, `FlexFlow`, `FlexBasisKind`, `FlexBasis`, `CssFlexShorthand`, `JustifyContent`, `AlignItems`, `AlignSelf`, `AlignContent`, `GridAutoFlow`, `TrackBreadthKind`, `TrackBreadth` |
+| `lib/css/font.cp` | `bun/src/css/properties/font.cp` | `CssFontError`, `FontWeightKind`, `FontWeight`, `FontStyleKind`, `FontStyle`, `FontStretch`, `AbsoluteFontSize`, `RelativeFontSize`, `FontSizeKind`, `FontSize`, `LineHeightKind`, `LineHeight`, `FontVariantCaps`, `GenericFontFamily`, `FontFamilyItem`, `Font` |
+| `lib/css/geometry.cp` | `bun/src/css/values/{ratio,rect}.cp`, `properties/overflow.cp` | `CssRatio`, `Rect`, `OverflowKeyword`, `Overflow`, `TextOverflow` |
+| `lib/css/gradient.cp` | `bun/src/css/values/gradient.cp` | `MAX_STOPS`, `DirectionSide`, `LineDirection`, `RadialShape`, `RadialExtent`, `CssColorStop`, `LinearGradient`, `RadialGradient`, `ConicGradient`, `CssGradientKind`, `CssGradient` |
+| `lib/css/imageset.cp` | `bun/src/css/values/image.cp` | `CssResolutionUnit`, `CssResolution`, `ImageSetOption`, `MimeSupportFn`, `ImageSet`, `CssImageKind`, `CssImage` |
+| `lib/css/layoutctrl.cp` | `bun/src/css/properties/{overflow,position,contain}.cp` | `LayoutOverflowKeyword`, `LayoutOverflow`, `LayoutTextOverflow`, `LayoutPosition`, `LayoutContainerType`, `ContainFlags`, `ZIndex` |
+| `lib/css/liststyle.cp` | `bun/src/css/properties/list.cp` | `PredefinedCounterStyle`, `ListStylePosition`, `MarkerSide`, `ListStyleTypeKind`, `ListStyleType`, `ListStyle` |
+| `lib/css/masking.cp` | `bun/src/css/properties/masking.cp` | `GeometryBox`, `MaskOrigin`, `MaskClip`, `MaskMode`, `MaskType`, `MaskComposite`, `WebKitMaskComposite`, `WebKitMaskSourceType`, `MaskBorderMode`, `MaskBorderRepeat`, `FillRule`, `MASK_FLAG_*`, `MaskFeatureFlags`, `MaskConfig`, `MaskBorderConfig`, `getWebKitMaskPropertyName` |
+| `lib/css/media.cp` | `bun/src/css/rules/media.cp` | `CssMediaError`, `MediaType`, `MediaQualifier`, `ColorScheme`, `ReducedMotion`, `HoverCapability`, `PointerCapability`, `MediaOrientation`, `MediaFeatureId`, `MediaCompareOp`, `MediaEnv`, `MediaFeature`, `MediaQuery`, `MediaQueryList` |
+| `lib/css/pagerule.cp` | `bun/src/css/rules/page.cp`, `properties/position.cp` | `CssPageError`, `PagePseudoClass`, `PageMarginEdge`, `PageMarginBox`, `PageSelector`, `PagePosition` |
+| `lib/css/position.cp` | `bun/src/css/values/position.cp` | `HorizontalSide`, `VerticalSide`, `PosUnit`, `PosLength`, `AxisPosKind`, `HorizontalPosition`, `VerticalPosition`, `CssPosition` |
+| `lib/css/primitives.cp` | `bun/src/css/values/{alpha,percentage,url}.cp` | `Percentage`, `NumOrPctKind`, `NumberOrPercentage`, `CssAlphaValue`, `isAbsoluteCssUrl`, `isDataCssUrl` |
