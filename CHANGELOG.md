@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ntp` NTPv4/SNTP (RFC 5905) 48B codec, Unix/NTP epoch conversion & offset/RTT calculator（5/5 PASS，自动动态挂载 `cap.ntp`）
+新增纯 CP 零分配标准库 cap:ntp（RFC 5905 NTPv4/SNTP 48B 报文编解码、纪元换算与时钟偏移/RTT 算法）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:dhcp` DHCPv4 (RFC 2131/2132) 240B header, Option TLV iter & DhcpWriter zero-alloc codec（5/5 PASS，自动动态挂载 `cap.dhcp`）
 新增纯 CP 零分配标准库 cap:dhcp（RFC 2131/2132 DHCPv4 报头、Option TLV 迭代与 DhcpWriter 编码器）与 5/5 深度测试
 

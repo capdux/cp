@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ntp` NTPv4/SNTP (RFC 5905) 48B codec, Unix/NTP epoch conversion & offset/RTT calculator（5/5 PASS，文档直写 `doc/lib/ntp.md`）
+新增 cap:ntp 纯 CP 零分配网络时间协议库（48B 报文解析/编码往返、64-bit 固定点时间戳与 RFC 5905 时钟偏移/RTT 计算），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:dhcp` DHCPv4 (RFC 2131/2132) 240B header, Option TLV iter & DhcpWriter zero-alloc codec（5/5 PASS，文档直写 `doc/lib/dhcp.md`）
 新增 cap:dhcp 纯 CP 零分配动态主机配置协议库（Magic Cookie 校验、PAD/END Option 零拷贝迭代与 DhcpWriter 编码往返），通过 cpc check 与 5/5 cap test
 
