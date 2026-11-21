@@ -528,3 +528,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:qoi` | `QoiHeader`, `isQoi`, `parseQoiHeader`, `encodeQoi`, `decodeQoi` | 零分配 Quite OK Image Format (QOI v1.0) 无损图像完整编解码器 |
 | `cap:riff` | `RIFF_HEADER_SIZE`, `RIFF_CHUNK_HEADER_SIZE`, `RiffHeader`, `RiffChunk`, `fourccEquals`, `parseRiffHeader`, `parseListType`, `RiffChunkIter`, `findRiffChunk` | 零分配 RIFF / RIFX 二进制块容器与嵌套 LIST 子块解析器（适配 WAV/WebP/AVI） |
 | `cap:id3` | `Id3v2Header`, `Id3v2Frame`, `Id3v1Tag`, `decodeSyncsafeU32`, `parseId3v2Header`, `Id3v2FrameIter`, `parseId3v1Tail` | 零分配 MP3 ID3v1 / ID3v2.3 / ID3v2.4 音频元数据标签、Syncsafe 整数与帧迭代器 |
+| `cap:pnm` | `PnmFormat`, `PnmHeader`, `parsePnmHeader`, `pnmRawPixels`, `encodePpmP6`, `encodePgmP5` | 零分配 Netpbm P1–P6 PBM/PGM/PPM 图像头解析、像素切片提取与 P5/P6 编码器 |

@@ -172,3 +172,6 @@
 
 ### 2026-11-22（`cap:id3` 验收，新增简洁单单词包 `cap:id3`（5/5 PASS））
 - **执行成果**：`lib/id3/`（5/5 PASS，`doc/lib/id3.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:id3`（5/5 PASS）
+
+### 2026-11-22（`cap:pnm` 验收，新增简洁单单词包 `cap:pnm`（5/5 PASS））
+- **执行成果**：`lib/pnm/`（5/5 PASS，`doc/lib/pnm.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:pnm`（5/5 PASS）

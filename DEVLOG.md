@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:pnm` 零分配 Netpbm P1–P6 PBM/PGM/PPM 图像头解析、像素切片提取与 P5/P6 编码器（5/5 PASS，文档直写 `doc/lib/pnm.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:pnm`，与 `cap:qoi` 配套补齐轻量无损图像编解码生态。
+
 ## 2026-11-22: 新建 `cap:id3` 零分配 MP3 ID3v1 / ID3v2.3 / ID3v2.4 音频元数据标签、Syncsafe 整数与帧迭代器（5/5 PASS，文档直写 `doc/lib/id3.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:id3`；`Id3v2FrameIter` 自动区分 v2.3 普通大端与 v2.4 syncsafe 帧长并防越界。
 
