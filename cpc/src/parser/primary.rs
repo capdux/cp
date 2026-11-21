@@ -849,7 +849,7 @@ impl<'a> Parser<'a> {
                         }));
                     }
                 }
-                if sym.starts_with('@') {
+                if sym.starts_with('@') && !sym.starts_with("@\"") {
                     if sym == "@is_beam" || sym == "@is_nest" {
                         return Ok(Expr::Ident(Ident { span, sym }));
                     }

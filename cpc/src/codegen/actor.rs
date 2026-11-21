@@ -639,7 +639,8 @@ impl Codegen {
                 } else if p.ident.sym == "_"
                     && !self.locals.contains_key("self")
                     && (Self::block_contains_ident(&func.body, "this")
-                        || Self::block_contains_ident(&func.body, "self"))
+                        || Self::block_contains_ident(&func.body, "self")
+                        || Self::block_contains_ident(&func.body, "_"))
                 {
                     self.locals.insert("self".to_string(), mapped_ty.clone());
                     "self".to_string()
