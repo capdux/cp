@@ -678,3 +678,5 @@ const h = cap.hash.wyhash("hello");
 | `cap:npmrc_config` | DEFAULT_NPM_REGISTRY, NpmrcEntry, NpmrcIter, getNpmrcValue, getNpmrcBool, resolveRegistryForScope, findRegistrySetting | .npmrc 配置文件零分配键值解析器、布尔配置查询与 @scope:registry 仓库路由解析器 |
 | `cap:dns_record_type` | DnsRrType, DnsRcode, DnsClass, SrvRecord, MxRecord | IANA DNS 记录类型（18 种 RRType）、Class、RCODE 编解码与 SRV/MX 文本记录解析器 |
 | `cap:proc_net_route` | RTF_UP, RTF_GATEWAY, RTF_HOST, parseHexIpv4Le, RouteEntry, ProcRouteIter, findDefaultGateway | Linux /proc/net/route 内核路由表零分配解析器、小端十六进制 IPv4 解码与最小 metric 默认网关查找器 |
+| `cap:cron_preset` | CronPreset, parseCronPreset, presetToCron5, normalizeCron5 | Vixie Cron @macro 预设（@hourly/@daily/@weekly/@monthly/@yearly/@reboot）零分配展开与 5 段表达式校验器 |
+| `cap:dns_txt_parse` | TxtTag, TxtTagIter, findTxtTag, DmarcPolicy, DmarcRecord, SpfQualifier, SpfTerm, SpfIter | DNS TXT 分号键值标签、DMARC (v=DMARC1) 与 SPF (v=spf1) 策略记录零分配解析器 |

@@ -169,3 +169,9 @@
 
 ### 2026-11-22（`cap:proc_net_route` 验收，Batch 87 提交 `cap:proc_net_route`（累计 253 模块，耗时 1 分 59 秒）。）
 - **执行成果**：`lib/proc_net_route/`（5/5 PASS，`doc/lib/proc_net_route.md`）经 `verify_module.sh` 一次性验收回收；Batch 87 提交 `cap:proc_net_route`（累计 253 模块，耗时 1 分 59 秒）。
+
+### 2026-11-22（`cap:cron_preset` 验收，Batch 88 提交 `cap:cron_preset` 与 `cap:dns_txt_parse`（累计 255 模块），同步更新 `GEMINI.md` 主控短平快单任务平衡规范。）
+- **执行成果**：`lib/cron_preset/`（5/5 PASS，`doc/lib/cron_preset.md`）经 `verify_module.sh` 一次性验收回收；Batch 88 提交 `cap:cron_preset` 与 `cap:dns_txt_parse`（累计 255 模块），同步更新 `GEMINI.md` 主控短平快单任务平衡规范。
+
+### 2026-11-22（`cap:dns_txt_parse` 验收，Batch 88 注册 `cap:dns_txt_parse` 并提交（累计 255 模块）。）
+- **执行成果**：`lib/dns_txt_parse/`（5/5 PASS，`doc/lib/dns_txt_parse.md`）经 `verify_module.sh` 一次性验收回收；Batch 88 注册 `cap:dns_txt_parse` 并提交（累计 255 模块）。

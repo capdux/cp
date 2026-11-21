@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:dns_txt_parse` DNS TXT 分号键值标签、DMARC (v=DMARC1) 与 SPF (v=spf1) 策略记录零分配解析器（5/5 PASS，自动动态挂载 `cap.dns_txt_parse`）
+新增 `cap:dns_txt_parse`（`lib/dns_txt_parse/{dns_txt,index}.cp`、`doc/lib/dns_txt_parse.md`、`cap/test/test_dns_txt_parse_production_deep.cp`），实现 DMARC `pct`/策略校验与 SPF 机制流式迭代。
+
+## [2026-11-22] - 新建 `cap:cron_preset` Vixie Cron @macro 预设（@hourly/@daily/@weekly/@monthly/@yearly/@reboot）零分配展开与 5 段表达式校验器（5/5 PASS，自动动态挂载 `cap.cron_preset`）
+新增 `cap:cron_preset`（`lib/cron_preset/{preset,index}.cp`、`doc/lib/cron_preset.md`、`cap/test/test_cron_preset_production_deep.cp`），同步更新 `GEMINI.md` 第九章固化主控“短平快单任务”平衡节奏。
+
 ## [2026-11-22] - 新建 `cap:proc_net_route` Linux /proc/net/route 内核路由表零分配解析器、小端十六进制 IPv4 解码与最小 metric 默认网关查找器（5/5 PASS，自动动态挂载 `cap.proc_net_route`）
 新增 `cap:proc_net_route`（`lib/proc_net_route/{route,index}.cp`、`doc/lib/proc_net_route.md`、`cap/test/test_proc_net_route_production_deep.cp`），实现 11 列路由表迭代、前缀长度计算与默认网关查找。
 

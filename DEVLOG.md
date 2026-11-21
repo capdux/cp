@@ -1,3 +1,9 @@
+## 2026-11-22: 新建 `cap:dns_txt_parse` DNS TXT 分号键值标签、DMARC (v=DMARC1) 与 SPF (v=spf1) 策略记录零分配解析器（5/5 PASS，文档直写 `doc/lib/dns_txt_parse.md`）
+轮换后的 `HTTP RFC Absorber` 仅用 1 分 24 秒交付 `cap:dns_txt_parse`（5 组深度用例 100% PASS）。
+
+## 2026-11-22: 新建 `cap:cron_preset` Vixie Cron @macro 预设（@hourly/@daily/@weekly/@monthly/@yearly/@reboot）零分配展开与 5 段表达式校验器（5/5 PASS，文档直写 `doc/lib/cron_preset.md`）
+主智能体按“单回合 1 个短任务”平衡节奏完成 `cap:cron_preset` 并与子智能体交付的 `cap:dns_txt_parse` 合批提交。
+
 ## 2026-11-22: 新建 `cap:proc_net_route` Linux /proc/net/route 内核路由表零分配解析器、小端十六进制 IPv4 解码与最小 metric 默认网关查找器（5/5 PASS，文档直写 `doc/lib/proc_net_route.md`）
 轮换后的 `Sys Config Absorber` 仅用 1 分 59 秒交付 `cap:proc_net_route`（5 组深度用例 100% PASS）。
 
