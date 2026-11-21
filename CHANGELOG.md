@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:npmrc_config` .npmrc 配置文件零分配键值解析器、布尔配置查询与 @scope:registry 仓库路由解析器（5/5 PASS，自动动态挂载 `cap.npmrc_config`）
+新增 `cap:npmrc_config`（`lib/npmrc_config/{npmrc,index}.cp`、`doc/lib/npmrc_config.md`、`cap/test/test_npmrc_config_production_deep.cp`），支持 BOM、单双引号剥离、作用域仓库回退与仓库级后缀配置匹配。
+
 ## [2026-11-22] - 新建 `cap:proxy_protocol_v2` HAProxy PROXY Protocol v2 二进制头零分配解析、IPv4/LOCAL 编码与 TLV 扩展迭代器（5/5 PASS，自动动态挂载 `cap.proxy_protocol_v2`）
 新增 `cap:proxy_protocol_v2`（`lib/proxy_protocol_v2/{proxy_v2,index}.cp`、`doc/lib/proxy_protocol_v2.md`、`cap/test/test_proxy_protocol_v2_production_deep.cp`），完整实现 12 字节签名校验、IPv4/IPv6/UNIX 地址解码与 TLV 扩展迭代，正式突破 250 个纯 CP 标准库模块里程碑！
 

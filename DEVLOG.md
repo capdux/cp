@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:npmrc_config` .npmrc 配置文件零分配键值解析器、布尔配置查询与 @scope:registry 仓库路由解析器（5/5 PASS，文档直写 `doc/lib/npmrc_config.md`）
+轮换后的 `Sys Config Absorber` 仅用 1 分 19 秒交付 `cap:npmrc_config`（5 组深度用例 100% PASS）。
+
 ## 2026-11-22: 新建 `cap:proxy_protocol_v2` HAProxy PROXY Protocol v2 二进制头零分配解析、IPv4/LOCAL 编码与 TLV 扩展迭代器（5/5 PASS，文档直写 `doc/lib/proxy_protocol_v2.md`）
 轮换后的 `HTTP RFC Absorber` 仅用 1 分 49 秒交付 `cap:proxy_protocol_v2`（5 组深度用例 100% PASS），与 `cap:proxy_protocol_v1` 组成完整代理协议双雄。
 

@@ -160,3 +160,6 @@
 
 ### 2026-11-22（`cap:proxy_protocol_v2` 验收，Batch 84 提交 `cap:proxy_protocol_v2`，正式达成 250 个纯 CP 标准库模块里程碑！）
 - **执行成果**：`lib/proxy_protocol_v2/`（5/5 PASS，`doc/lib/proxy_protocol_v2.md`）经 `verify_module.sh` 一次性验收回收；Batch 84 提交 `cap:proxy_protocol_v2`，正式达成 250 个纯 CP 标准库模块里程碑！
+
+### 2026-11-22（`cap:npmrc_config` 验收，Batch 85 提交 `cap:npmrc_config`（累计 251 模块，耗时 1 分 19 秒）。）
+- **执行成果**：`lib/npmrc_config/`（5/5 PASS，`doc/lib/npmrc_config.md`）经 `verify_module.sh` 一次性验收回收；Batch 85 提交 `cap:npmrc_config`（累计 251 模块，耗时 1 分 19 秒）。
