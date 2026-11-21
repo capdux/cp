@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:spv` 零分配 Khronos SPIR-V GPU 着色器头与指令流解析器（5/5 PASS，文档直写 `doc/lib/spv.md`）
+实现零分配 SPIR-V 二进制解析器，严格校验 4B 对齐、word_count 边界及 UTF-8 入口点名称。
+
 ## 2026-11-22: 新建 `cap:orc` 零分配 Apache ORC 列式存储 PostScript、分区视图与 3B 压缩块解析器（5/5 PASS，文档直写 `doc/lib/orc.md`）
 实现零分配 Apache ORC 容器解析器，严格校验尾部 PostScript 长度、ORC 魔数与分区下溢边界。
 

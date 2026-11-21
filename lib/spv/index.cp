@@ -1,0 +1,27 @@
+// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Khronos SPIR-V Binary Shader Parser)
+
+export {
+    SPV_MAGIC,
+    SPV_HEADER_BYTES,
+    OP_NOP,
+    OP_SOURCE,
+    OP_NAME,
+    OP_EXT_INST_IMPORT,
+    OP_MEMORY_MODEL,
+    OP_ENTRY_POINT,
+    OP_EXECUTION_MODE,
+    OP_CAPABILITY,
+    OP_TYPE_VOID,
+    OP_FUNCTION,
+    OP_FUNCTION_END,
+    SpvHeader,
+    SpvInst,
+    SpvExecutionModel,
+    SpvEntryPoint,
+    SpvStats,
+    isSpv,
+    parseSpvHeader,
+    SpvInstIter,
+    parseSpvEntryPoint,
+    summarizeSpv,
+} from "./spv.cp";
