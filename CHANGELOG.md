@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:blake3` 纯 CP 零堆 BLAKE3 Merkle 树 256-bit 密码学哈希、Keyed MAC、KDF 与 XOF 可扩展输出引擎（支持 `cap.blake3` 自动动态挂载，详见 `doc/lib/blake3.md`）（5/5 PASS，自动动态挂载 `cap.blake3`）
+- **新增标准库**：`lib/blake3/{compress,hasher,index}.cp`，实现固定 `[54][8]u32` CV 栈零堆流式 `Blake3Hasher`、Keyed MAC、上下文 `deriveKey` 及任意偏移 `finalSeek` XOF 输出，全量对齐 BLAKE3 官方向量。
+- **新增文档与测试**：`doc/lib/blake3.md` 扁平文档与 `cap/test/test_blake3_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:crc` 纯 CP 零堆全谱系 CRC-8/16/32/32C/64 查表校验和与 O(log N) `crc32Combine` 合并引擎（支持 `cap.crc` 自动动态挂载，详见 `doc/lib/crc.md`）（5/5 PASS，自动动态挂载 `cap.crc`）
 - **新增标准库**：`lib/crc/{crc,index}.cp`，实现 CRC-8/SMBUS、CRC-16/CCITT-FALSE/XMODEM/MODBUS、CRC-32 IEEE/Castagnoli 与 `crc32Combine`、CRC-64 XZ/ECMA-182 及零堆流式接口。
 - **新增文档与测试**：`doc/lib/crc.md` 扁平文档与 `cap/test/test_crc_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

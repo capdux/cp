@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:blake3` 纯 CP 零堆 BLAKE3 Merkle 树 256-bit 密码学哈希、Keyed MAC、KDF 与 XOF 可扩展输出引擎（支持 `cap.blake3` 自动动态挂载，详见 `doc/lib/blake3.md`）（5/5 PASS，文档直写 `doc/lib/blake3.md`）
+- **核心设计**：采用固定 54 层 CV 栈实现高达 `2^54` 块的零堆流式 Merkle 树归约，常量时间 `verifyKeyedMac` 消除侧信道，全路径零堆分配。
+
 ## 2026-11-21: 新建 `cap:crc` 纯 CP 零堆全谱系 CRC-8/16/32/32C/64 查表校验和与 O(log N) `crc32Combine` 合并引擎（支持 `cap.crc` 自动动态挂载，详见 `doc/lib/crc.md`）（5/5 PASS，文档直写 `doc/lib/crc.md`）
 - **核心设计**：全路径零堆分配与编译期表生成，精准匹配标准 `"123456789"` 全部测试向量，并基于 GF(2) 矩阵平方实现 O(log N) `crc32Combine`。
 

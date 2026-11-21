@@ -46,3 +46,6 @@
 
 ### 2026-11-21（`cap:crc` 验收，主控亲自完成第 9 路 `cap:crc` 一次过验收提交，维持 `cap:lockfree_queue` 与 `cap:blake3` 并发）
 - **执行成果**：`lib/crc/`（5/5 PASS，`doc/lib/crc.md`）经 `verify_module.sh` 一次性验收回收；主控亲自完成第 9 路 `cap:crc` 一次过验收提交，维持 `cap:lockfree_queue` 与 `cap:blake3` 并发
+
+### 2026-11-21（`cap:blake3` 验收，验收提交 `cap:blake3`，顶替拉起 `cap:argon2` 维持 2 路常规并行）
+- **执行成果**：`lib/blake3/`（5/5 PASS，`doc/lib/blake3.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:blake3`，顶替拉起 `cap:argon2` 维持 2 路常规并行
