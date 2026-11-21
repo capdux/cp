@@ -151,3 +151,6 @@
 
 ### 2026-11-22（`cap:properties_parse` 验收，Batch 81 提交 `cap:properties_parse`（累计 247 模块），并将经实测验证的主/子智能体轻量协调与定期轮换规范写入 `GEMINI.md` 第九章固化。）
 - **执行成果**：`lib/properties_parse/`（5/5 PASS，`doc/lib/properties_parse.md`）经 `verify_module.sh` 一次性验收回收；Batch 81 提交 `cap:properties_parse`（累计 247 模块），并将经实测验证的主/子智能体轻量协调与定期轮换规范写入 `GEMINI.md` 第九章固化。
+
+### 2026-11-22（`cap:proxy_protocol_v1` 验收，Batch 82 提交 `cap:proxy_protocol_v1`（累计 248 模块，耗时 1 分 35 秒）。）
+- **执行成果**：`lib/proxy_protocol_v1/`（5/5 PASS，`doc/lib/proxy_protocol_v1.md`）经 `verify_module.sh` 一次性验收回收；Batch 82 提交 `cap:proxy_protocol_v1`（累计 248 模块，耗时 1 分 35 秒）。

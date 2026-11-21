@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:proxy_protocol_v1` HAProxy PROXY Protocol v1 文本头零分配解析与规范化格式化器（支持 TCP4/TCP6/UNKNOWN）（5/5 PASS，自动动态挂载 `cap.proxy_protocol_v1`）
+新增 `cap:proxy_protocol_v1`（`lib/proxy_protocol_v1/{proxy_v1,index}.cp`、`doc/lib/proxy_protocol_v1.md`、`cap/test/test_proxy_protocol_v1_production_deep.cp`），严格校验 107 字节上限、IPv4/IPv6 地址与端口边界。
+
 ## [2026-11-22] - 新建 `cap:properties_parse` Java .properties 配置文件零分配流式解析器（支持 =/:/空白分隔、奇偶反斜杠续行与 \uXXXX 代理对反转义）（5/5 PASS，自动动态挂载 `cap.properties_parse`）
 新增 `cap:properties_parse`（`lib/properties_parse/{properties,index}.cp`、`doc/lib/properties_parse.md`、`cap/test/test_properties_parse_production_deep.cp`），完整支持 `#`/`!` 注释、逻辑续行与 UTF-16 代理对转 UTF-8；同步将经验证的主/子智能体轻量协调与定期轮换铁律写入 `GEMINI.md` 第九章固化。
 

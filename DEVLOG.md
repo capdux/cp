@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:proxy_protocol_v1` HAProxy PROXY Protocol v1 文本头零分配解析与规范化格式化器（支持 TCP4/TCP6/UNKNOWN）（5/5 PASS，文档直写 `doc/lib/proxy_protocol_v1.md`）
+轮换后的 `HTTP RFC Absorber` 仅用 1 分 35 秒交付 `cap:proxy_protocol_v1`（5 组深度用例 100% PASS）。
+
 ## 2026-11-22: 新建 `cap:properties_parse` Java .properties 配置文件零分配流式解析器（支持 =/:/空白分隔、奇偶反斜杠续行与 \uXXXX 代理对反转义）（5/5 PASS，文档直写 `doc/lib/properties_parse.md`）
 轮换后的 `Sys Config Absorber` 仅用 1 分 49 秒交付 `cap:properties_parse`（5 组深度用例 100% PASS）；连续 6 个模块验证新协作与轮换策略显著提速，已正式固化至 `GEMINI.md` 第九章实现自我进化。
 
