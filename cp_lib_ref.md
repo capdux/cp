@@ -701,3 +701,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_trailer` | `isForbiddenTrailerField`, `isValidTrailerFieldName`, `TrailerFieldIter`, `validateTrailerHeader`, `hasTrailerField` | RFC 9110 §6.5.1 HTTP `Trailer` 尾部字段声明零分配解析与 25 项禁传字段安全校验器 |
 | `cap:etc_group` | `GroupEntry`, `GroupMemberIter`, `EtcGroupIter`, `findGroupByName`, `findGroupByGid`, `isUserInGroup` | Linux `/etc/group` 系统用户组数据库零分配解析与精确成员查询器 |
 | `cap:http_max_forwards` | `MaxForwardsAction`, `MaxForwardsResult`, `parseMaxForwards`, `evaluateMaxForwards`, `formatMaxForwards` | RFC 9110 §7.6.2 HTTP `Max-Forwards` 代理跳数限制零分配解析与递减裁定器 |
+| `cap:etc_services` | `ServiceEntry`, `EtcServicesIter`, `findServicePort`, `findServiceByPort` | Linux `/etc/services` 网络服务名与端口/协议映射表零分配双向解析器 |

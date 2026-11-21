@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:etc_services` Linux `/etc/services` 网络服务名与端口/协议映射表零分配双向解析器（5/5 PASS，文档直写 `doc/lib/etc_services.md`）
+- **设计要点**：`ServiceEntry.hasNameOrAlias` 精确空白切分防子串误判；`findServicePort` 与 `findServiceByPort` 协议大小写不敏感匹配。
+
 ## 2026-11-22: 新建 `cap:http_max_forwards` RFC 9110 §7.6.2 HTTP `Max-Forwards` 代理跳数限制零分配解析与递减裁定器（5/5 PASS，文档直写 `doc/lib/http_max_forwards.md`）
 - **设计要点**：`parseMaxForwards` 严格限定 `1*DIGIT` + 首尾 OWS 并拦截溢出/符号/CRLF；`evaluateMaxForwards` 按 RFC 9110 仅对 `TRACE`/`OPTIONS` 生效。
 
