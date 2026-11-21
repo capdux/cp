@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:lzh` LZH/LHA archive Level 0/1/2 headers, chained extended headers & CRC-16/ARC parser（5/5 PASS，文档直写 `doc/lib/lzh.md`）
+新增 cap:lzh 纯 CP 零分配经典归档容器库（Level 0/1/2 统一解析、2B 链式扩展头迭代与 CRC-16/ARC 0xA001 校验），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:bzip2` bzip2 (.bz2) MSB-first bitstream, pi/sqrt(pi) block/EOS headers & CRC32 zero-alloc parser（5/5 PASS，文档直写 `doc/lib/bzip2.md`）
 新增 cap:bzip2 纯 CP 零分配压缩流解析库（MSB-first 0x04C11DB7 CRC32、Bzip2BitReader、48-bit 魔数块头与空流探测），通过 cpc check 与 5/5 cap test
 

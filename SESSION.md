@@ -169,3 +169,6 @@
 
 ### 2026-11-22（`cap:bzip2` 验收，完成并注册纯 CP 零分配标准库 cap:bzip2（5/5 cap test PASS））
 - **执行成果**：`lib/bzip2/`（5/5 PASS，`doc/lib/bzip2.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:bzip2（5/5 cap test PASS）
+
+### 2026-11-22（`cap:lzh` 验收，完成并注册纯 CP 零分配标准库 cap:lzh（5/5 cap test PASS））
+- **执行成果**：`lib/lzh/`（5/5 PASS，`doc/lib/lzh.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:lzh（5/5 cap test PASS）
