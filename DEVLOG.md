@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:crc` 纯 CP 零堆全谱系 CRC-8/16/32/32C/64 查表校验和与 O(log N) `crc32Combine` 合并引擎（支持 `cap.crc` 自动动态挂载，详见 `doc/lib/crc.md`）（5/5 PASS，文档直写 `doc/lib/crc.md`）
+- **核心设计**：全路径零堆分配与编译期表生成，精准匹配标准 `"123456789"` 全部测试向量，并基于 GF(2) 矩阵平方实现 O(log N) `crc32Combine`。
+
 ## 2026-11-21: 新建 `cap:bech32` 纯 CP BIP-173 Bech32 & BIP-350 Bech32m 纠错码、5/8-bit 转换与 SegWit 地址编码引擎（支持 `cap.bech32` 自动动态挂载，详见 `doc/lib/bech32.md`）（5/5 PASS，文档直写 `doc/lib/bech32.md`）
 - **核心设计**：全路径严格校验 HRP ASCII 范围、混合大小写与 BCH 校验和，支持任意字节载荷与 SegWit 规范，全路径 `std.testing.allocator` 零泄漏。
 

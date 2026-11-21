@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:crc` 纯 CP 零堆全谱系 CRC-8/16/32/32C/64 查表校验和与 O(log N) `crc32Combine` 合并引擎（支持 `cap.crc` 自动动态挂载，详见 `doc/lib/crc.md`）（5/5 PASS，自动动态挂载 `cap.crc`）
+- **新增标准库**：`lib/crc/{crc,index}.cp`，实现 CRC-8/SMBUS、CRC-16/CCITT-FALSE/XMODEM/MODBUS、CRC-32 IEEE/Castagnoli 与 `crc32Combine`、CRC-64 XZ/ECMA-182 及零堆流式接口。
+- **新增文档与测试**：`doc/lib/crc.md` 扁平文档与 `cap/test/test_crc_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:bech32` 纯 CP BIP-173 Bech32 & BIP-350 Bech32m 纠错码、5/8-bit 转换与 SegWit 地址编码引擎（支持 `cap.bech32` 自动动态挂载，详见 `doc/lib/bech32.md`）（5/5 PASS，自动动态挂载 `cap.bech32`）
 - **新增标准库**：`lib/bech32/{bech32,index}.cp`，实现 BIP-173/350 官方向量全匹配的 `encode`/`decode`、`convertBits`、`encodeBytes`/`decodeBytes` 与 `encodeSegwitAddr` (v0/v1 Taproot)，严格拦截混合大小写与校验和错误。
 - **新增文档与测试**：`doc/lib/bech32.md` 扁平文档与 `cap/test/test_bech32_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
