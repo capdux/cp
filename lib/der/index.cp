@@ -1,0 +1,25 @@
+// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ITU-T X.690 ASN.1 DER Strict Codec)
+
+export {
+    TAG_BOOLEAN,
+    TAG_INTEGER,
+    TAG_BIT_STRING,
+    TAG_OCTET_STRING,
+    TAG_NULL,
+    TAG_OID,
+    TAG_UTF8_STRING,
+    TAG_PRINTABLE_STRING,
+    TAG_IA5_STRING,
+    TAG_UTC_TIME,
+    TAG_GENERALIZED_TIME,
+    TAG_SEQUENCE,
+    TAG_SET,
+    CLASS_MASK,
+    CONSTRUCTED_MASK,
+    DerTlv,
+    DerBitString,
+    DerReader,
+    DerWriter,
+    parseDerTlv,
+    formatDerOid,
+} from "./der.cp";

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:der` 零分配 ITU-T X.690 ASN.1 DER 严格规范 TLV/OID 编解码器（5/5 PASS，文档直写 `doc/lib/der.md`）
+实现零分配 ASN.1 DER 规范编解码器，拒绝不定长 0x80、非最小长度、冗余整型填充与非法布尔。
+
 ## 2026-11-22: 新建 `cap:warc` 零分配 ISO 28500 WARC 1.0/1.1 网页归档与 Common Crawl 语料解析器（5/5 PASS，文档直写 `doc/lib/warc.md`）
 实现零分配 ISO 28500 WARC 归档解析器，严格校验双空行分隔符与大小写不敏感头查找。
 

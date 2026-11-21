@@ -648,3 +648,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:smi` | SmiTokenKind, SmiBracketAtom, SmiToken, SmiLexer, SmiStats, parseBracketAtom, analyzeSmiles, isValidSmiles | 零分配 Daylight SMILES / OpenSMILES 分子词法与环配平校验器 |
 | `cap:inchi` | INCHI_PREFIX, INCHI_KEY_LEN, InchiLayerKind, InchiParsed, InchiLayer, InchiLayerIter, FormulaElement, FormulaIter, InchiKey, isInchi, parseInchi, parseInchiKey, isValidInchiKey | 零分配 IUPAC InChI v1.06 分层结构、Hill 分子式与 27 字符 InChIKey 解析器 |
 | `cap:warc` | WARC_VERSION_1_0, WARC_VERSION_1_1, WarcRecordType, WarcField, WarcFieldIter, WarcRecord, WarcIter, WarcStats, warcRecordTypeFromSlice, isWarc, findWarcHeader, summarizeWarc | 零分配 ISO 28500 WARC 1.0/1.1 网页归档与 Common Crawl 语料解析器 |
+| `cap:der` | TAG_BOOLEAN, TAG_INTEGER, TAG_BIT_STRING, TAG_OCTET_STRING, TAG_NULL, TAG_OID, TAG_SEQUENCE, DerTlv, DerBitString, DerReader, DerWriter, parseDerTlv, formatDerOid | 零分配 ITU-T X.690 ASN.1 DER 严格规范 TLV/OID 编解码器 |

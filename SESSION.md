@@ -43,3 +43,6 @@
 
 ### 2026-11-22（`cap:warc` 验收，完成 `cap:warc` 交付验收并登记入库（5/5 PASS）；派发 `cap:cef`。）
 - **执行成果**：`lib/warc/`（5/5 PASS，`doc/lib/warc.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:warc` 交付验收并登记入库（5/5 PASS）；派发 `cap:cef`。
+
+### 2026-11-22（`cap:der` 验收，完成 `cap:der` 交付验收并登记入库（5/5 PASS）；派发 `cap:age`。）
+- **执行成果**：`lib/der/`（5/5 PASS，`doc/lib/der.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:der` 交付验收并登记入库（5/5 PASS）；派发 `cap:age`。

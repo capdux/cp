@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:der` 零分配 ITU-T X.690 ASN.1 DER 严格规范 TLV/OID 编解码器（5/5 PASS，自动动态挂载 `cap.der`）
+新增 `lib/der/{der,index}.cp`、`doc/lib/der.md` 与 `cap/test/test_der_production_deep.cp`（5/5 PASS），支持严格 DER TLV、OID 格式化、BitString 未用位零校验与原子 DerWriter。
+
 ## [2026-11-22] - 新建 `cap:warc` 零分配 ISO 28500 WARC 1.0/1.1 网页归档与 Common Crawl 语料解析器（5/5 PASS，自动动态挂载 `cap.warc`）
 新增 `lib/warc/{warc,index}.cp`、`doc/lib/warc.md` 与 `cap/test/test_warc_production_deep.cp`（5/5 PASS），支持 WARC/1.0-1.1 头、Content-Length 精确二进制负载切片与多记录流统计。
 
