@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:elias` Universal bit-level integer codes: Elias Gamma/Delta/Omega, Exp-Golomb, Rice & Fibonacci（5/5 PASS，文档直写 `doc/lib/elias.md`）
+新增 cap:elias 纯 CP 零分配通用前缀整数编码库（MSB-first BitWriter/BitReader 与 6 种经典位级编码），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:yenc` yEnc v1.3 binary-to-text codec, =ybegin/=ypart/=yend headers & IEEE CRC32（5/5 PASS，文档直写 `doc/lib/yenc.md`）
 新增 cap:yenc 纯 CP 零分配高效二进制文本编码库（全临界字节转义、=ybegin/=ypart/=yend 解析与 CRC32 验证），通过 cpc check 与 5/5 cap test
 

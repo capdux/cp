@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:elias` Universal bit-level integer codes: Elias Gamma/Delta/Omega, Exp-Golomb, Rice & Fibonacci（5/5 PASS，自动动态挂载 `cap.elias`）
+新增纯 CP 零分配标准库 cap:elias（Elias Gamma/Delta/Omega、H.264 Exp-Golomb、Golomb-Rice 与 Fibonacci 位级编解码）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:yenc` yEnc v1.3 binary-to-text codec, =ybegin/=ypart/=yend headers & IEEE CRC32（5/5 PASS，自动动态挂载 `cap.yenc`）
 新增纯 CP 零分配标准库 cap:yenc（yEnc v1.3 二进制转文本编解码、单多段头尾与 IEEE CRC32）与 5/5 深度测试
 
