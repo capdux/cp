@@ -259,3 +259,9 @@
 
 ### 2026-11-22（`cap:css_animation` 验收，吸收 Bun CSS Animation + Transition -> cap:css_animation，测试 2/2 通过。）
 - **执行成果**：`lib/css_animation/`（5/5 PASS，`doc/lib/css_animation.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun CSS Animation + Transition -> cap:css_animation，测试 2/2 通过。
+
+### 2026-11-22（`cap:pg_copy_sasl` 验收，吸收 Bun PG v3 COPY + SASL -> cap:pg_copy_sasl，测试 5/5 通过。）
+- **执行成果**：`lib/pg_copy_sasl/`（5/5 PASS，`doc/lib/pg_copy_sasl.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun PG v3 COPY + SASL -> cap:pg_copy_sasl，测试 5/5 通过。
+
+### 2026-11-22（`cap:css_box_shadow` 验收，吸收 Bun CSS box-shadow + outline -> cap:css_box_shadow，测试 2/2 通过。）
+- **执行成果**：`lib/css_box_shadow/`（5/5 PASS，`doc/lib/css_box_shadow.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun CSS box-shadow + outline -> cap:css_box_shadow，测试 2/2 通过。

@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-22: CSS box-shadow 与 border/outline 线型属性（5/5 PASS，文档直写 `doc/lib/css_box_shadow.md`）
+从 Bun css/properties/box_shadow.cp 与 outline.cp 吸收 box-shadow 简写与线型枚举，自动化简零 blur/spread 与 currentcolor 并拦截负模糊半径。
+
+## 2026-11-22: PostgreSQL v3 COPY 协议与 SASL/Password 前端报文编解码（5/5 PASS，文档直写 `doc/lib/pg_copy_sasl.md`）
+从 Bun sql/postgres/protocol 吸收 COPY/SASL/Password/NegotiateProtocolVersion 全套编解码器，采用 ~init() 确定性 RAII 零泄漏释放，补齐 PG v3 协议全栈。
+
 ## 2026-11-22: CSS Animations & Transitions 简写解析与序列化（5/5 PASS，文档直写 `doc/lib/css_animation.md`）
 从 Bun css/properties/animation.cp 与 transition.cp 吸收 CSS 动画与过渡简写解析器，跨模块复用 cap:css_time 与 cap:css_easing。
 

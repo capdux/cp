@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - CSS box-shadow 与 border/outline 线型属性（5/5 PASS，自动动态挂载 `cap.css_box_shadow`）
+新增 cap:css_box_shadow 标准库（lib/css_box_shadow/、doc/lib/css_box_shadow.md、cap/test/test_css_box_shadow_production_deep.cp），2/2 回归通过。
+
+## [2026-11-22] - PostgreSQL v3 COPY 协议与 SASL/Password 前端报文编解码（5/5 PASS，自动动态挂载 `cap.pg_copy_sasl`）
+新增 cap:pg_copy_sasl 标准库（lib/pg_copy_sasl/、doc/lib/pg_copy_sasl.md、cap/test/test_pg_copy_sasl_production_deep.cp），5/5 回归通过（零泄漏），PostgreSQL v3 线协议全栈齐备。
+
 ## [2026-11-22] - CSS Animations & Transitions 简写解析与序列化（5/5 PASS，自动动态挂载 `cap.css_animation`）
 新增 cap:css_animation 标准库（lib/css_animation/、doc/lib/css_animation.md、cap/test/test_css_animation_production_deep.cp），2/2 回归通过。
 
