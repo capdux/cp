@@ -118,3 +118,6 @@
 
 ### 2026-11-22（`cap:psd` 验收，完成 `cap:psd` 交付验收并登记入库（5/5 PASS）；派发 `cap:gpx`。）
 - **执行成果**：`lib/psd/`（5/5 PASS，`doc/lib/psd.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:psd` 交付验收并登记入库（5/5 PASS）；派发 `cap:gpx`。
+
+### 2026-11-22（`cap:xcf` 验收，完成 `cap:xcf` 交付验收并登记入库（5/5 PASS）；派发 `cap:kml`。）
+- **执行成果**：`lib/xcf/`（5/5 PASS，`doc/lib/xcf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:xcf` 交付验收并登记入库（5/5 PASS）；派发 `cap:kml`。

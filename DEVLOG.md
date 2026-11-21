@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:xcf` 零分配 GIMP XCF v000-v014 分层图像头、属性表与图层偏移解析器（5/5 PASS，文档直写 `doc/lib/xcf.md`）
+实现零分配 GIMP XCF 图像解析器，完整支持 32/64-bit 指针表防越界迭代与属性表解析。
+
 ## 2026-11-22: 新建 `cap:psd` 零分配 Adobe Photoshop (.psd/.psb) 文件头、区段与 8BIM 资源块解析器（5/5 PASS，文档直写 `doc/lib/psd.md`）
 实现零分配 Photoshop PSD/PSB 容器解析器，覆盖全部 8 种色彩模式、4 种压缩与 ICC/XMP 资源定位。
 

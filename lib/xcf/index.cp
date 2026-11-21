@@ -1,0 +1,27 @@
+// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc GIMP XCF Layered Image Parser)
+
+export {
+    XCF_MAGIC,
+    PROP_END,
+    PROP_COLORMAP,
+    PROP_ACTIVE_LAYER,
+    PROP_OPACITY,
+    PROP_VISIBLE,
+    PROP_COMPRESSION,
+    PROP_RESOLUTION,
+    PROP_PARASITES,
+    PROP_UNIT,
+    PROP_PATHS,
+    XcfBaseType,
+    XcfCompression,
+    XcfPrecision,
+    XcfHeader,
+    XcfProperty,
+    XcfPropIter,
+    XcfPointerIter,
+    XcfLayerInfo,
+    parseXcfCompression,
+    isXcf,
+    parseXcfHeader,
+    parseXcfLayerHeader,
+} from "./xcf.cp";

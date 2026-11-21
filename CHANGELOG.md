@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:xcf` 零分配 GIMP XCF v000-v014 分层图像头、属性表与图层偏移解析器（5/5 PASS，自动动态挂载 `cap.xcf`）
+新增 `lib/xcf/{xcf,index}.cp`、`doc/lib/xcf.md` 与 `cap/test/test_xcf_production_deep.cp`（5/5 PASS），支持 v0-v14 版本头、v4+ 精度、v11+ 64-bit 偏移表与图层名提取。
+
 ## [2026-11-22] - 新建 `cap:psd` 零分配 Adobe Photoshop (.psd/.psb) 文件头、区段与 8BIM 资源块解析器（5/5 PASS，自动动态挂载 `cap.psd`）
 新增 `lib/psd/{psd,index}.cp`、`doc/lib/psd.md` 与 `cap/test/test_psd_production_deep.cp`（5/5 PASS），支持 PSD 32-bit 与 PSB 64-bit Layer/Mask 区段、8BIM 2B 对齐资源块迭代与按 ID 查找。
 
