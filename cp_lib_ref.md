@@ -460,3 +460,5 @@ const h = cap.hash.wyhash("hello");
 | `cap:object_pool` | PoolNode, ObjectPool | 实例级侵入式单链表对象复用池，支持上限控制、自动 reset 与 ~init() 确定性零泄漏释放（源自 Bun collections/pool.cp） |
 | `cap:pg_reader` | FRAME_HEADER_SIZE, PgReaderError, PgBackendTag, PgFrame, PgMessageReader | 纯 CP 零堆分配 PostgreSQL v3 后端消息帧解析、大端整型、C 字符串与可空字段读取器（源自 Bun sql/postgres/protocol/NewReader.cp） |
 | `cap:builtin_modules` | RuntimeTarget, BuiltinKind, ResolveConfig, ResolvedBuiltin, resolveBuiltin, isBuiltin, isNodeBuiltin, hasNodePrefix, hasBunPrefix, stripNodePrefix, ensureNodePrefix | 纯 CP 零依赖 66 项 Node.js 核心内置模块与 22 项 Bun 扩展模块注册表、前缀规范化与目标运行时解析器（源自 Bun resolve_builtins/HardcodedModule.cp） |
+| `cap:image_probe` | Error, ImageFormat, WebpKind, ImageInfo, detectFormat, probe, probePng, probeJpeg, probeWebp, probeBmp, probeGif | 纯 CP 零堆分配 PNG/JPEG/WebP/BMP/GIF 魔数识别与宽高/色深/Alpha/动画头信息探测器（源自 Bun runtime/image/codec_*.cp） |
+| `cap:thumbhash` | MAX_LEN, ThumbhashError, DecodedImage, encode, decode, approxAspectRatio, averageRGBA | Evan Wallace ThumbHash 21–25 字节低频 DCT 占位符编解码、宽高比/主色提取与 ~init() RAII（源自 Bun runtime/image/thumbhash.cp） |

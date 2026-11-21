@@ -202,3 +202,9 @@
 
 ### 2026-11-21（`cap:builtin_modules` 验收，吸收 Bun resolve_builtins/HardcodedModule.cp -> cap:builtin_modules，测试 5/5 通过。）
 - **执行成果**：`lib/builtin_modules/`（5/5 PASS，`doc/lib/builtin_modules.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun resolve_builtins/HardcodedModule.cp -> cap:builtin_modules，测试 5/5 通过。
+
+### 2026-11-22（`cap:image_probe` 验收，吸收 Bun 五格式图片头探测器 -> cap:image_probe，测试 6/6 通过。）
+- **执行成果**：`lib/image_probe/`（5/5 PASS，`doc/lib/image_probe.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun 五格式图片头探测器 -> cap:image_probe，测试 6/6 通过。
+
+### 2026-11-22（`cap:thumbhash` 验收，吸收 Bun runtime/image/thumbhash.cp -> cap:thumbhash，测试 3/3 通过。）
+- **执行成果**：`lib/thumbhash/`（5/5 PASS，`doc/lib/thumbhash.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun runtime/image/thumbhash.cp -> cap:thumbhash，测试 3/3 通过。

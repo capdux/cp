@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-22: ThumbHash 超紧凑图片占位符编解码器（5/5 PASS，文档直写 `doc/lib/thumbhash.md`）
+从 Bun runtime/image/thumbhash.cp 吸收完整 ThumbHash DCT/IDCT 编解码引擎，补充 approxAspectRatio/averageRGBA 零分配查询与 ~init() 确定性释放。
+
+## 2026-11-22: 零解码极速图片头格式与尺寸探测器（5/5 PASS，文档直写 `doc/lib/image_probe.md`）
+从 Bun runtime/image/{codec_png,codec_jpeg,codec_webp,codec_bmp}.cp 吸收零解码五格式图片头探测器，纯 CP 零堆分配且内置严密畸形头边界防护。
+
 ## 2026-11-21: Node.js / Bun 内置模块全量注册表与解析器（5/5 PASS，文档直写 `doc/lib/builtin_modules.md`）
 从 Bun resolve_builtins/HardcodedModule.cp 吸收全量 Node/Bun 内置模块注册表与目标运行时差异解析，支持 node: 强制前缀与 Jest 重写开关。
 

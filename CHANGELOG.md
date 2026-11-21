@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - ThumbHash 超紧凑图片占位符编解码器（5/5 PASS，自动动态挂载 `cap.thumbhash`）
+新增 cap:thumbhash 标准库（lib/thumbhash/、doc/lib/thumbhash.md、cap/test/test_thumbhash_production_deep.cp），3/3 回归通过（零泄漏）。
+
+## [2026-11-22] - 零解码极速图片头格式与尺寸探测器（5/5 PASS，自动动态挂载 `cap.image_probe`）
+新增 cap:image_probe 标准库（lib/image_probe/、doc/lib/image_probe.md、cap/test/test_image_probe_production_deep.cp），6/6 回归通过。
+
 ## [2026-11-21] - Node.js / Bun 内置模块全量注册表与解析器（5/5 PASS，自动动态挂载 `cap.builtin_modules`）
 新增 cap:builtin_modules 标准库（lib/builtin_modules/、doc/lib/builtin_modules.md、cap/test/test_builtin_modules_production_deep.cp），5/5 回归通过。
 
