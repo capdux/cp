@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:mime_type` 纯 CP MIME 类型语义分类与零堆扩展名/路径反查引擎（吸收自 Bun `src/http_types/MimeType.cp`，支持 `cap.mime_type` 自动动态挂载，详见 `doc/lib/mime_type.md`）（5/5 PASS，文档直写 `doc/lib/mime_type.md`）
+- **吸收改造**：剥离 `bun.strings` 耦合，支持 `; charset=` 剥离、前缀 `.` 归一化与大小写不敏感扩展名查表。
+
 ## 2026-11-21: 新建 `cap:command_tag` 纯 CP CLI 32 种子命令判别、遥测码、NPM 判定与配置加载策略引擎（吸收自 Bun `src/options_types/CommandTag.cp`，支持 `cap.command_tag` 自动动态挂载，详见 `doc/lib/command_tag.md`）（5/5 PASS，文档直写 `doc/lib/command_tag.md`）
 - **吸收改造**：去除 `cli.zig` 依赖，补充 `StaticStringMap` 反查表，实现零堆 CLI 子命令策略判定。
 

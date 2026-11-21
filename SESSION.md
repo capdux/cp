@@ -28,3 +28,6 @@
 
 ### 2026-11-21（`cap:command_tag` 验收，主控单兵从 Bun `options_types/CommandTag.cp` 吸收并验收提交 `cap:command_tag`）
 - **执行成果**：`lib/command_tag/`（5/5 PASS，`doc/lib/command_tag.md`）经 `verify_module.sh` 一次性验收回收；主控单兵从 Bun `options_types/CommandTag.cp` 吸收并验收提交 `cap:command_tag`
+
+### 2026-11-21（`cap:mime_type` 验收，主控单兵从 Bun `http_types/MimeType.cp` 吸收并验收提交 `cap:mime_type`）
+- **执行成果**：`lib/mime_type/`（5/5 PASS，`doc/lib/mime_type.md`）经 `verify_module.sh` 一次性验收回收；主控单兵从 Bun `http_types/MimeType.cp` 吸收并验收提交 `cap:mime_type`
