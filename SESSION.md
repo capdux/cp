@@ -145,3 +145,6 @@
 
 ### 2026-11-22（`cap:ini_writer` 验收，Batch 79 提交 `cap:ini_writer`（累计 245 模块，耗时 1 分 17 秒）。）
 - **执行成果**：`lib/ini_writer/`（5/5 PASS，`doc/lib/ini_writer.md`）经 `verify_module.sh` 一次性验收回收；Batch 79 提交 `cap:ini_writer`（累计 245 模块，耗时 1 分 17 秒）。
+
+### 2026-11-22（`cap:http_etag_gen` 验收，Batch 80 提交 `cap:http_etag_gen`（突破 80 批次 / 246 模块里程碑，耗时 1 分 16 秒）。）
+- **执行成果**：`lib/http_etag_gen/`（5/5 PASS，`doc/lib/http_etag_gen.md`）经 `verify_module.sh` 一次性验收回收；Batch 80 提交 `cap:http_etag_gen`（突破 80 批次 / 246 模块里程碑，耗时 1 分 16 秒）。

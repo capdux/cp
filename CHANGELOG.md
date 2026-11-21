@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_etag_gen` 零分配 HTTP 强/弱 ETag 生成器（FNV-1a 64-bit 内容哈希与 size/mtime 静态文件弱 ETag）及 RFC 9110 语法校验（5/5 PASS，自动动态挂载 `cap.http_etag_gen`）
+新增 `cap:http_etag_gen`（`lib/http_etag_gen/{etag_gen,index}.cp`、`doc/lib/http_etag_gen.md`、`cap/test/test_http_etag_gen_production_deep.cp`），实现强/弱 ETag 生成与 RFC 9110 §8.8.3 严格语法校验。
+
 ## [2026-11-22] - 新建 `cap:ini_writer` INI / gitconfig 配置文件零分配安全序列化写入器（自动引号转义、子段输出与原子回滚）（5/5 PASS，自动动态挂载 `cap.ini_writer`）
 新增 `cap:ini_writer`（`lib/ini_writer/{ini_writer,index}.cp`、`doc/lib/ini_writer.md`、`cap/test/test_ini_writer_production_deep.cp`），支持 `[section "subsection"]`、多行注释与缓冲不足原子回滚 `pos`。
 

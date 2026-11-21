@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:http_etag_gen` 零分配 HTTP 强/弱 ETag 生成器（FNV-1a 64-bit 内容哈希与 size/mtime 静态文件弱 ETag）及 RFC 9110 语法校验（5/5 PASS，文档直写 `doc/lib/http_etag_gen.md`）
+轮换后的 `HTTP RFC Absorber` 仅用 1 分 16 秒交付 `cap:http_etag_gen`（5 组深度用例 100% PASS）。
+
 ## 2026-11-22: 新建 `cap:ini_writer` INI / gitconfig 配置文件零分配安全序列化写入器（自动引号转义、子段输出与原子回滚）（5/5 PASS，文档直写 `doc/lib/ini_writer.md`）
 轮换后的 `Sys Config Absorber` 仅用 1 分 17 秒交付 `cap:ini_writer`（5 组深度用例 100% PASS）。
 
