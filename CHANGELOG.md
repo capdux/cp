@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:dotenv_parse` 零堆分配 .env 配置文件解析器（BOM/export/4 种引号/多行/行尾注释）与 ${VAR:-default} 变量展开器（吸收自 bun/src/bun_core/env.cp）（5/5 PASS，自动动态挂载 `cap.dotenv_parse`）
+新增 cap:dotenv_parse 标准库模块（lib/dotenv_parse/{dotenv,index}.cp, doc/lib/dotenv_parse.md, cap/test/test_dotenv_parse_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:mime_lookup` 65+ Web/系统高频扩展名 MIME 查表、Content-Type 头部（charset/boundary）解析与可压缩性判定库（吸收自 bun/src/http_types/{MimeType,mime_type_list_enum}.cp）（5/5 PASS，自动动态挂载 `cap.mime_lookup`）
+新增 cap:mime_lookup 标准库模块（lib/mime_lookup/{mime,index}.cp, doc/lib/mime_lookup.md, cap/test/test_mime_lookup_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:http_link_header` RFC 8288 Web Linking HTTP Link 头部零堆分配解析、rel 查找与格式化库（分页/Preload/Early Hints，吸收自 bun/src/http/HeaderValueIterator.cp）（5/5 PASS，自动动态挂载 `cap.http_link_header`）
+新增 cap:http_link_header 标准库模块（lib/http_link_header/{link,index}.cp, doc/lib/http_link_header.md, cap/test/test_http_link_header_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:lcov_report` LCOV 代码覆盖率报告零堆分配记录、百分比统计、阈值校验与双向解析/序列化库（吸收自 bun/src/options_types/CodeCoverageOptions.cp）（5/5 PASS，自动动态挂载 `cap.lcov_report`）
 新增 cap:lcov_report 标准库模块（lib/lcov_report/{lcov,index}.cp, doc/lib/lcov_report.md, cap/test/test_lcov_report_production_deep.cp）
 

@@ -262,3 +262,12 @@
 
 ### 2026-11-22（`cap:lcov_report` 验收，Batch 41: 吸收并验证 cap:lcov_report (5/5 PASSED)）
 - **执行成果**：`lib/lcov_report/`（5/5 PASS，`doc/lib/lcov_report.md`）经 `verify_module.sh` 一次性验收回收；Batch 41: 吸收并验证 cap:lcov_report (5/5 PASSED)
+
+### 2026-11-22（`cap:http_link_header` 验收，Batch 42: 吸收并验证 cap:http_link_header (PASSED)）
+- **执行成果**：`lib/http_link_header/`（5/5 PASS，`doc/lib/http_link_header.md`）经 `verify_module.sh` 一次性验收回收；Batch 42: 吸收并验证 cap:http_link_header (PASSED)
+
+### 2026-11-22（`cap:mime_lookup` 验收，Batch 42: 吸收并验证 cap:mime_lookup (5/5 PASSED)）
+- **执行成果**：`lib/mime_lookup/`（5/5 PASS，`doc/lib/mime_lookup.md`）经 `verify_module.sh` 一次性验收回收；Batch 42: 吸收并验证 cap:mime_lookup (5/5 PASSED)
+
+### 2026-11-22（`cap:dotenv_parse` 验收，Batch 42: 吸收并验证 cap:dotenv_parse (5/5 PASSED)）
+- **执行成果**：`lib/dotenv_parse/`（5/5 PASS，`doc/lib/dotenv_parse.md`）经 `verify_module.sh` 一次性验收回收；Batch 42: 吸收并验证 cap:dotenv_parse (5/5 PASSED)
