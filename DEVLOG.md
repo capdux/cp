@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:yenc` yEnc v1.3 binary-to-text codec, =ybegin/=ypart/=yend headers & IEEE CRC32（5/5 PASS，文档直写 `doc/lib/yenc.md`）
+新增 cap:yenc 纯 CP 零分配高效二进制文本编码库（全临界字节转义、=ybegin/=ypart/=yend 解析与 CRC32 验证），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:bwt` Pure-CP zero-alloc Burrows-Wheeler Transform, O(n) LF-Mapping & Move-To-Front codec（5/5 PASS，文档直写 `doc/lib/bwt.md`）
 新增 cap:bwt 纯 CP 零分配压缩变换前端库（原地堆排序 BWT、O(n) LF-Mapping 还原与 256B MTF 管道），通过 cpc check 与 5/5 cap test
 

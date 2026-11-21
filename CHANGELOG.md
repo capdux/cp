@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:yenc` yEnc v1.3 binary-to-text codec, =ybegin/=ypart/=yend headers & IEEE CRC32（5/5 PASS，自动动态挂载 `cap.yenc`）
+新增纯 CP 零分配标准库 cap:yenc（yEnc v1.3 二进制转文本编解码、单多段头尾与 IEEE CRC32）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:bwt` Pure-CP zero-alloc Burrows-Wheeler Transform, O(n) LF-Mapping & Move-To-Front codec（5/5 PASS，自动动态挂载 `cap.bwt`）
 新增纯 CP 零分配标准库 cap:bwt（Burrows-Wheeler 块排序变换、O(n) LF-Mapping 逆变换与 Move-To-Front 前端）与 5/5 深度测试
 
