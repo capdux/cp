@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:psd` 零分配 Adobe Photoshop (.psd/.psb) 文件头、区段与 8BIM 资源块解析器（5/5 PASS，文档直写 `doc/lib/psd.md`）
+实现零分配 Photoshop PSD/PSB 容器解析器，覆盖全部 8 种色彩模式、4 种压缩与 ICC/XMP 资源定位。
+
 ## 2026-11-22: 新建 `cap:las` 零分配 ASPRS LAS 1.2-1.4 LiDAR 3D 点云头、VLR 与点记录解析器（5/5 PASS，文档直写 `doc/lib/las.md`）
 实现零分配 ASPRS LAS LiDAR 点云解析器，兼容 32/64-bit 点数并严控 VLR 与点数据边界。
 

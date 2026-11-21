@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:psd` 零分配 Adobe Photoshop (.psd/.psb) 文件头、区段与 8BIM 资源块解析器（5/5 PASS，自动动态挂载 `cap.psd`）
+新增 `lib/psd/{psd,index}.cp`、`doc/lib/psd.md` 与 `cap/test/test_psd_production_deep.cp`（5/5 PASS），支持 PSD 32-bit 与 PSB 64-bit Layer/Mask 区段、8BIM 2B 对齐资源块迭代与按 ID 查找。
+
 ## [2026-11-22] - 新建 `cap:las` 零分配 ASPRS LAS 1.2-1.4 LiDAR 3D 点云头、VLR 与点记录解析器（5/5 PASS，自动动态挂载 `cap.las`）
 新增 `lib/las/{las,index}.cp`、`doc/lib/las.md` 与 `cap/test/test_las_production_deep.cp`（5/5 PASS），支持 LAS 1.2/1.3/1.4 头解析、LAZ 压缩标志识别、VLR 迭代与 Format 0-10 点坐标缩放换算。
 

@@ -115,3 +115,6 @@
 
 ### 2026-11-22（`cap:las` 验收，完成 `cap:las` 交付验收并登记入库（5/5 PASS）；派发 `cap:rtf`。）
 - **执行成果**：`lib/las/`（5/5 PASS，`doc/lib/las.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:las` 交付验收并登记入库（5/5 PASS）；派发 `cap:rtf`。
+
+### 2026-11-22（`cap:psd` 验收，完成 `cap:psd` 交付验收并登记入库（5/5 PASS）；派发 `cap:gpx`。）
+- **执行成果**：`lib/psd/`（5/5 PASS，`doc/lib/psd.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:psd` 交付验收并登记入库（5/5 PASS）；派发 `cap:gpx`。
