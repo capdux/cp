@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:lldp` 零分配 IEEE 802.1AB LLDP 链路层发现协议 TLV 编解码器（5/5 PASS，文档直写 `doc/lib/lldp.md`）
+实现零分配 IEEE 802.1AB LLDP 编解码器，支持最长 511B TLV 与 End-of-LLDPDU 严格校验。
+
 ## 2026-11-22: 新建 `cap:snmp` 零分配 RFC 1157/3416 SNMP v1/v2c PDU 与 VarBind ASN.1 解析器（5/5 PASS，文档直写 `doc/lib/snmp.md`）
 实现零分配 SNMP v1/v2c 解析器，严格拒绝不定长 BER、非最小 OID VLQ 与尾随垃圾。
 
