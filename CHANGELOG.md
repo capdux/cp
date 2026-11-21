@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:lcov_report` LCOV 代码覆盖率报告零堆分配记录、百分比统计、阈值校验与双向解析/序列化库（吸收自 bun/src/options_types/CodeCoverageOptions.cp）（5/5 PASS，自动动态挂载 `cap.lcov_report`）
+新增 cap:lcov_report 标准库模块（lib/lcov_report/{lcov,index}.cp, doc/lib/lcov_report.md, cap/test/test_lcov_report_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:ansi_style` ANSI 终端 16 色/样式/24-bit TrueColor 格式化、CSI & OSC 8 超链接剥离与可见宽度计算库（吸收自 bun/src/bun_core/output.cp）（5/5 PASS，自动动态挂载 `cap.ansi_style`）
+新增 cap:ansi_style 标准库模块（lib/ansi_style/{ansi,index}.cp, doc/lib/ansi_style.md, cap/test/test_ansi_style_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:http_date` RFC 9110 §5.6.7 HTTP-date（IMF-fixdate）零堆分配解析、格式化与 Howard Hinnant 历法 Unix 时间戳互转库（吸收自 bun/src/http/Headers.cp）（5/5 PASS，自动动态挂载 `cap.http_date`）
+新增 cap:http_date 标准库模块（lib/http_date/{http_date,index}.cp, doc/lib/http_date.md, cap/test/test_http_date_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:diff_unified` 基于栈上 LCS 动态规划的行级 Unified Diff 计算与相邻上下文 Hunk 自动合并格式化库（吸收自 bun/src/test_runner/diff/printDiff.cp 与 diff_format.cp）（5/5 PASS，自动动态挂载 `cap.diff_unified`）
 新增 cap:diff_unified 标准库模块（lib/diff_unified/{unified,index}.cp, doc/lib/diff_unified.md, cap/test/test_diff_unified_production_deep.cp）
 

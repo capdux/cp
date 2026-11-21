@@ -253,3 +253,12 @@
 
 ### 2026-11-22（`cap:diff_unified` 验收，Batch 40: 吸收并验证 cap:diff_unified (5/5 PASSED)）
 - **执行成果**：`lib/diff_unified/`（5/5 PASS，`doc/lib/diff_unified.md`）经 `verify_module.sh` 一次性验收回收；Batch 40: 吸收并验证 cap:diff_unified (5/5 PASSED)
+
+### 2026-11-22（`cap:http_date` 验收，Batch 41: 吸收并验证 cap:http_date (PASSED)）
+- **执行成果**：`lib/http_date/`（5/5 PASS，`doc/lib/http_date.md`）经 `verify_module.sh` 一次性验收回收；Batch 41: 吸收并验证 cap:http_date (PASSED)
+
+### 2026-11-22（`cap:ansi_style` 验收，Batch 41: 吸收并验证 cap:ansi_style (5/5 PASSED)）
+- **执行成果**：`lib/ansi_style/`（5/5 PASS，`doc/lib/ansi_style.md`）经 `verify_module.sh` 一次性验收回收；Batch 41: 吸收并验证 cap:ansi_style (5/5 PASSED)
+
+### 2026-11-22（`cap:lcov_report` 验收，Batch 41: 吸收并验证 cap:lcov_report (5/5 PASSED)）
+- **执行成果**：`lib/lcov_report/`（5/5 PASS，`doc/lib/lcov_report.md`）经 `verify_module.sh` 一次性验收回收；Batch 41: 吸收并验证 cap:lcov_report (5/5 PASSED)

@@ -1,3 +1,12 @@
+## 2026-11-22: 新建 `cap:lcov_report` LCOV 代码覆盖率报告零堆分配记录、百分比统计、阈值校验与双向解析/序列化库（吸收自 bun/src/options_types/CodeCoverageOptions.cp）（5/5 PASS，文档直写 `doc/lib/lcov_report.md`）
+子智能体 1 吸收 CodeCoverageOptions LCOV 规范，实现零堆分配覆盖率记录/阈值判定与 LCOV 双向编解码，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:ansi_style` ANSI 终端 16 色/样式/24-bit TrueColor 格式化、CSI & OSC 8 超链接剥离与可见宽度计算库（吸收自 bun/src/bun_core/output.cp）（5/5 PASS，文档直写 `doc/lib/ansi_style.md`）
+子智能体 2 吸收 bun/src/bun_core/output.cp，实现 16 色/TrueColor 样式渲染与 CSI/OSC 剥离，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:http_date` RFC 9110 §5.6.7 HTTP-date（IMF-fixdate）零堆分配解析、格式化与 Howard Hinnant 历法 Unix 时间戳互转库（吸收自 bun/src/http/Headers.cp）（5/5 PASS，文档直写 `doc/lib/http_date.md`）
+实现零堆分配 RFC 9110 IMF-fixdate 解析/格式化与 Unix 纪元秒双向互转（含闰年校验），通过 cpc check 与 cap test
+
 ## 2026-11-22: 新建 `cap:diff_unified` 基于栈上 LCS 动态规划的行级 Unified Diff 计算与相邻上下文 Hunk 自动合并格式化库（吸收自 bun/src/test_runner/diff/printDiff.cp 与 diff_format.cp）（5/5 PASS，文档直写 `doc/lib/diff_unified.md`）
 子智能体 1 吸收 Bun test_runner diff，实现零堆分配 LCS 行级 diff 与标准 Unified Diff Hunk 格式化，5/5 单测通过
 

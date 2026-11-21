@@ -543,3 +543,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:s3_meta` | S3Acl, S3StorageClass, isValidBucketName, S3Uri | AWS S3 / R2 / MinIO 8 种 ACL、11 种存储类、Bucket 命名校验与 3 种 S3 URI 格式解析库（吸收自 bun/src/s3_signing/{acl,storage_class,credentials}.cp） |
 | `cap:content_range` | ByteRange, RangeStatus, ParsedRangeHeader, parseRangeHeader, formatContentRange, formatUnsatisfiedRange, ParsedContentRange, parseContentRange | RFC 9110 §14 HTTP Range 请求头与 Content-Range 响应头零堆分配解析与格式化库（206/416 分片传输，吸收自 bun/src/http/SendFile.cp） |
 | `cap:diff_unified` | DiffOpKind, DiffLine, DiffSummary, diffLines, summarize, formatUnified | 基于栈上 LCS 动态规划的行级 Unified Diff 计算与相邻上下文 Hunk 自动合并格式化库（吸收自 bun/src/test_runner/diff/printDiff.cp 与 diff_format.cp） |
+| `cap:http_date` | HttpDateTime, formatHttpDate, parseHttpDate | RFC 9110 §5.6.7 HTTP-date（IMF-fixdate）零堆分配解析、格式化与 Howard Hinnant 历法 Unix 时间戳互转库（吸收自 bun/src/http/Headers.cp） |
+| `cap:ansi_style` | AnsiColor, AnsiStyle, stripAnsi, visibleLen, hasAnsi | ANSI 终端 16 色/样式/24-bit TrueColor 格式化、CSI & OSC 8 超链接剥离与可见宽度计算库（吸收自 bun/src/bun_core/output.cp） |
+| `cap:lcov_report` | LineHit, CoverageThresholds, FileCoverage, parseLcovRecord | LCOV 代码覆盖率报告零堆分配记录、百分比统计、阈值校验与双向解析/序列化库（吸收自 bun/src/options_types/CodeCoverageOptions.cp） |
