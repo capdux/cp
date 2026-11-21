@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:css_svg` SVG CSS 渲染属性族（SVGPaint/StrokeLinecap/StrokeLinejoin/StrokeDasharray/PaintOrder 与 5 大渲染提示枚举，吸收自 bun/src/css/properties/svg.cp）（5/5 PASS，文档直写 `doc/lib/css_svg.md`）
+子智能体 1 吸收 bun/src/css/properties/svg.cp，实现完整 SVG 描边/绘制顺序/渲染提示属性解析与规范化序列化，6/6 单测通过
+
+## 2026-11-22: 新建 `cap:css_transition` CSS Transitions 1/2 过渡属性族与多过渡简写列表解析/序列化库（吸收自 bun/src/css/properties/transition.cp）（5/5 PASS，文档直写 `doc/lib/css_transition.md`）
+子智能体 2 吸收 bun/src/css/properties/transition.cp，实现单/多过渡简写、cubic-bezier/steps 与默认值省略序列化，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:pkg_matcher` PNPM 兼容三态包名匹配器（全包含/全排除/混合排除优先）与线性时间 */? 通配符引擎（吸收自 bun/src/install/PnpmMatcher.cp）（5/5 PASS，文档直写 `doc/lib/pkg_matcher.md`）
+吸收 bun/src/install/PnpmMatcher.cp，实现零堆分配三态包名过滤与线性通配符匹配，通过 cpc check 与 cap test
+
+## 2026-11-22: 新建 `cap:clap_stream` 零堆分配流式命令行参数解析器（支持 --long/--long=val/-abc 串联/-oval/-- 位置参数分隔与精确错误码，吸收自 bun/src/clap/streaming.cp）（5/5 PASS，文档直写 `doc/lib/clap_stream.md`）
+吸收 bun/src/clap/streaming.cp，实现零堆分配流式 CLI 参数解析器，通过 cpc check 与 cap test
+
 ## 2026-11-22: 新建 `cap:css_border_image` CSS Backgrounds 3 border-image 属性族与双斜杠简写（slice/width/outset/repeat/fill）解析与序列化库（吸收自 bun/src/css/properties/border_image.cp）（5/5 PASS，文档直写 `doc/lib/css_border_image.md`）
 子智能体 1 吸收 bun/src/css/properties/border_image.cp，实现完整 border-image 子属性与双斜杠简写，6/6 单测通过
 

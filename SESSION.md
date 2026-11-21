@@ -133,3 +133,15 @@
 
 ### 2026-11-22（`cap:css_border_image` 验收，Batch 27: 吸收并验证 cap:css_border_image (6/6 PASSED)）
 - **执行成果**：`lib/css_border_image/`（5/5 PASS，`doc/lib/css_border_image.md`）经 `verify_module.sh` 一次性验收回收；Batch 27: 吸收并验证 cap:css_border_image (6/6 PASSED)
+
+### 2026-11-22（`cap:clap_stream` 验收，Batch 28: 吸收并验证 cap:clap_stream (PASSED)）
+- **执行成果**：`lib/clap_stream/`（5/5 PASS，`doc/lib/clap_stream.md`）经 `verify_module.sh` 一次性验收回收；Batch 28: 吸收并验证 cap:clap_stream (PASSED)
+
+### 2026-11-22（`cap:pkg_matcher` 验收，Batch 28: 吸收并验证 cap:pkg_matcher (PASSED)）
+- **执行成果**：`lib/pkg_matcher/`（5/5 PASS，`doc/lib/pkg_matcher.md`）经 `verify_module.sh` 一次性验收回收；Batch 28: 吸收并验证 cap:pkg_matcher (PASSED)
+
+### 2026-11-22（`cap:css_transition` 验收，Batch 28: 吸收并验证 cap:css_transition (5/5 PASSED)）
+- **执行成果**：`lib/css_transition/`（5/5 PASS，`doc/lib/css_transition.md`）经 `verify_module.sh` 一次性验收回收；Batch 28: 吸收并验证 cap:css_transition (5/5 PASSED)
+
+### 2026-11-22（`cap:css_svg` 验收，Batch 28: 吸收并验证 cap:css_svg (6/6 PASSED)）
+- **执行成果**：`lib/css_svg/`（5/5 PASS，`doc/lib/css_svg.md`）经 `verify_module.sh` 一次性验收回收；Batch 28: 吸收并验证 cap:css_svg (6/6 PASSED)

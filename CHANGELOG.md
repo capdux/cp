@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:css_svg` SVG CSS 渲染属性族（SVGPaint/StrokeLinecap/StrokeLinejoin/StrokeDasharray/PaintOrder 与 5 大渲染提示枚举，吸收自 bun/src/css/properties/svg.cp）（5/5 PASS，自动动态挂载 `cap.css_svg`）
+新增 cap:css_svg 标准库模块（lib/css_svg/{svg,index}.cp, doc/lib/css_svg.md, cap/test/test_css_svg_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:css_transition` CSS Transitions 1/2 过渡属性族与多过渡简写列表解析/序列化库（吸收自 bun/src/css/properties/transition.cp）（5/5 PASS，自动动态挂载 `cap.css_transition`）
+新增 cap:css_transition 标准库模块（lib/css_transition/{transition,index}.cp, doc/lib/css_transition.md, cap/test/test_css_transition_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:pkg_matcher` PNPM 兼容三态包名匹配器（全包含/全排除/混合排除优先）与线性时间 */? 通配符引擎（吸收自 bun/src/install/PnpmMatcher.cp）（5/5 PASS，自动动态挂载 `cap.pkg_matcher`）
+新增 cap:pkg_matcher 标准库模块（lib/pkg_matcher/{matcher,index}.cp, doc/lib/pkg_matcher.md, cap/test/test_pkg_matcher_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:clap_stream` 零堆分配流式命令行参数解析器（支持 --long/--long=val/-abc 串联/-oval/-- 位置参数分隔与精确错误码，吸收自 bun/src/clap/streaming.cp）（5/5 PASS，自动动态挂载 `cap.clap_stream`）
+新增 cap:clap_stream 标准库模块（lib/clap_stream/{clap,index}.cp, doc/lib/clap_stream.md, cap/test/test_clap_stream_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:css_border_image` CSS Backgrounds 3 border-image 属性族与双斜杠简写（slice/width/outset/repeat/fill）解析与序列化库（吸收自 bun/src/css/properties/border_image.cp）（5/5 PASS，自动动态挂载 `cap.css_border_image`）
 新增 cap:css_border_image 标准库模块（lib/css_border_image/{border_image,index}.cp, doc/lib/css_border_image.md, cap/test/test_css_border_image_production_deep.cp）
 
