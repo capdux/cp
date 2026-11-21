@@ -109,3 +109,15 @@
 
 ### 2026-11-22（`cap:css_gradient` 验收，Batch 25: 吸收并验证 cap:css_gradient (6/6 PASSED)）
 - **执行成果**：`lib/css_gradient/`（5/5 PASS，`doc/lib/css_gradient.md`）经 `verify_module.sh` 一次性验收回收；Batch 25: 吸收并验证 cap:css_gradient (6/6 PASSED)
+
+### 2026-11-22（`cap:ci_info` 验收，Batch 26: 吸收并验证 cap:ci_info (PASSED)）
+- **执行成果**：`lib/ci_info/`（5/5 PASS，`doc/lib/ci_info.md`）经 `verify_module.sh` 一次性验收回收；Batch 26: 吸收并验证 cap:ci_info (PASSED)
+
+### 2026-11-22（`cap:css_selector_builder` 验收，Batch 26: 吸收并验证 cap:css_selector_builder (PASSED)）
+- **执行成果**：`lib/css_selector_builder/`（5/5 PASS，`doc/lib/css_selector_builder.md`）经 `verify_module.sh` 一次性验收回收；Batch 26: 吸收并验证 cap:css_selector_builder (PASSED)
+
+### 2026-11-22（`cap:semver_query` 验收，Batch 26: 吸收并验证 cap:semver_query (5/5 PASSED)）
+- **执行成果**：`lib/semver_query/`（5/5 PASS，`doc/lib/semver_query.md`）经 `verify_module.sh` 一次性验收回收；Batch 26: 吸收并验证 cap:semver_query (5/5 PASSED)
+
+### 2026-11-22（`cap:md_links` 验收，Batch 26: 吸收并验证 cap:md_links (6/6 PASSED)）
+- **执行成果**：`lib/md_links/`（5/5 PASS，`doc/lib/md_links.md`）经 `verify_module.sh` 一次性验收回收；Batch 26: 吸收并验证 cap:md_links (6/6 PASSED)

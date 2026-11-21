@@ -495,3 +495,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:progress_tree` | ProgressUnit, INVALID_NODE, ProgressNode, ProgressTree | 零堆分配层级进度树、节流刷新判定与终端状态行格式化引擎（吸收自 bun/src/bun_core/Progress.cp） |
 | `cap:errno_map` | ErrnoOs, SystemErrno | 跨平台 POSIX/OS Errno 69 项核心错误码双射映射、OS 特定错误消息与瞬态重试判定（吸收自 bun/src/sys/coreutils_error_map.cp 与 errno/{linux,darwin}_errno.cp） |
 | `cap:css_gradient` | GradientKind, DirectionSide, LineDirection, RadialShape, RadialExtent, ColorStop, LinearGradient, RadialGradient, ConicGradient, Gradient | CSS Images 4 线性/径向/锥形渐变（含 repeating-* 与双位置色标）零堆分配解析与规范化序列化库（吸收自 bun/src/css/values/gradient.cp） |
+| `cap:ci_info` | CiVendor, EnvEntry, CiInfo, detectFromEntries | 零堆分配 CI/CD 31 供应商环境与 PR 构建检测器（遵循 ci-info v4，吸收自 bun/src/cli/ci_info.cp 与 codegen/ci_info.ts） |
+| `cap:css_selector_builder` | Combinator, ComponentKind, SelectorComponent, Specificity, CombinatorEntry, BuiltSelector, SelectorBuilder | CSS 选择器构建器（Servo 右向左复合匹配序布局）与 Selectors Level 4 特异度计算库（吸收自 bun/src/css/selectors/builder.cp） |
+| `cap:semver_query` | DependencyKind, WorkspaceSpecKind, WorkspaceSpec, GitSpec, NpmAliasSpec, DependencySpec, PackageName | 包管理器多协议依赖版本描述符解析器（npm/workspace/catalog/github/git/file/link/tarball/npm_alias）与 npm 包名校验器（吸收自 bun/src/semver/SemverQuery.cp） |
+| `cap:md_links` | LinkKind, ParsedLink, parseAutolink, parseInlineLinkOrImage, percentEncodeUrl | CommonMark §6.3-6.5 内联链接、图片、引用链接与 URI/Email 自动链接零堆分配解析器及 URL 百分号编码（吸收自 bun/src/md/links.cp） |
