@@ -49,3 +49,6 @@
 
 ### 2026-11-22（`cap:earcut` 验收，完成并注册纯 CP 零分配标准库 cap:earcut（5/5 cap test PASS））
 - **执行成果**：`lib/earcut/`（5/5 PASS，`doc/lib/earcut.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:earcut（5/5 cap test PASS）
+
+### 2026-11-22（`cap:astar` 验收，完成并注册纯 CP 零分配标准库 cap:astar（6/6 cap test PASS））
+- **执行成果**：`lib/astar/`（5/5 PASS，`doc/lib/astar.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:astar（6/6 cap test PASS）

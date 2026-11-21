@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:astar` Zero-alloc 2D grid A* pathfinding (4/8-way, anti-corner-cut min-heap) & Bresenham LOS（5/5 PASS，文档直写 `doc/lib/astar.md`）
+新增 cap:astar 纯 CP 零分配游戏与机器人寻路库（原地降键二叉最小堆、Manhattan/Octile 启发式与整数视线检测），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:earcut` 2D simple polygon ear-clipping triangulation, signed area & point-in-polygon（5/5 PASS，文档直写 `doc/lib/earcut.md`）
 新增 cap:earcut 纯 CP 零分配计算几何剖分库（CCW/CW 自动归一化、凹多边形/五角星耳切剖分面积守恒与射线法），通过 cpc check 与 5/5 cap test
 
