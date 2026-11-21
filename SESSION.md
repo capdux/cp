@@ -154,3 +154,6 @@
 
 ### 2026-11-22（`cap:proxy_protocol_v1` 验收，Batch 82 提交 `cap:proxy_protocol_v1`（累计 248 模块，耗时 1 分 35 秒）。）
 - **执行成果**：`lib/proxy_protocol_v1/`（5/5 PASS，`doc/lib/proxy_protocol_v1.md`）经 `verify_module.sh` 一次性验收回收；Batch 82 提交 `cap:proxy_protocol_v1`（累计 248 模块，耗时 1 分 35 秒）。
+
+### 2026-11-22（`cap:xdg_basedir` 验收，Batch 83 提交 `cap:xdg_basedir`（累计 249 模块，耗时 1 分 24 秒）。）
+- **执行成果**：`lib/xdg_basedir/`（5/5 PASS，`doc/lib/xdg_basedir.md`）经 `verify_module.sh` 一次性验收回收；Batch 83 提交 `cap:xdg_basedir`（累计 249 模块，耗时 1 分 24 秒）。

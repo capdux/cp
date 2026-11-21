@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:xdg_basedir` freedesktop.org XDG Base Directory Spec 路径零分配推导器（绝对路径校验、默认回退与防穿越 app_name）（5/5 PASS，文档直写 `doc/lib/xdg_basedir.md`）
+轮换后的 `Sys Config Absorber` 仅用 1 分 24 秒交付 `cap:xdg_basedir`（5 组深度用例 100% PASS）。
+
 ## 2026-11-22: 新建 `cap:proxy_protocol_v1` HAProxy PROXY Protocol v1 文本头零分配解析与规范化格式化器（支持 TCP4/TCP6/UNKNOWN）（5/5 PASS，文档直写 `doc/lib/proxy_protocol_v1.md`）
 轮换后的 `HTTP RFC Absorber` 仅用 1 分 35 秒交付 `cap:proxy_protocol_v1`（5 组深度用例 100% PASS）。
 

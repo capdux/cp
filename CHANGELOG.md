@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:xdg_basedir` freedesktop.org XDG Base Directory Spec 路径零分配推导器（绝对路径校验、默认回退与防穿越 app_name）（5/5 PASS，自动动态挂载 `cap.xdg_basedir`）
+新增 `cap:xdg_basedir`（`lib/xdg_basedir/{xdg,index}.cp`、`doc/lib/xdg_basedir.md`、`cap/test/test_xdg_basedir_production_deep.cp`），完整遵循 XDG 规范忽略相对路径并拒绝 `..` 路径穿越。
+
 ## [2026-11-22] - 新建 `cap:proxy_protocol_v1` HAProxy PROXY Protocol v1 文本头零分配解析与规范化格式化器（支持 TCP4/TCP6/UNKNOWN）（5/5 PASS，自动动态挂载 `cap.proxy_protocol_v1`）
 新增 `cap:proxy_protocol_v1`（`lib/proxy_protocol_v1/{proxy_v1,index}.cp`、`doc/lib/proxy_protocol_v1.md`、`cap/test/test_proxy_protocol_v1_production_deep.cp`），严格校验 107 字节上限、IPv4/IPv6 地址与端口边界。
 

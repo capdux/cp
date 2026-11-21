@@ -673,3 +673,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_etag_gen` | fnv1a64, generateWeakStatEtag, generateStrongHashEtag, generateWeakHashEtag, isValidEtagSyntax | 零分配 HTTP 强/弱 ETag 生成器（FNV-1a 64-bit 内容哈希与 size/mtime 静态文件弱 ETag）及 RFC 9110 语法校验 |
 | `cap:properties_parse` | PropertyEntry, PropertiesIter, getProperty | Java .properties 配置文件零分配流式解析器（支持 =/:/空白分隔、奇偶反斜杠续行与 \uXXXX 代理对反转义） |
 | `cap:proxy_protocol_v1` | ProxyProtoFamily, ProxyV1Header | HAProxy PROXY Protocol v1 文本头零分配解析与规范化格式化器（支持 TCP4/TCP6/UNKNOWN） |
+| `cap:xdg_basedir` | DEFAULT_CONFIG_DIRS, DEFAULT_DATA_DIRS, XdgEnv, resolveConfigHome, resolveDataHome, resolveCacheHome, resolveStateHome, resolveRuntimeDir, XdgDirIter | freedesktop.org XDG Base Directory Spec 路径零分配推导器（绝对路径校验、默认回退与防穿越 app_name） |
