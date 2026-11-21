@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:slab_pool` 纯 CP 固定块代际 $O(1)$ Slab 对象池引擎（侵入式空闲链表、代际防悬垂 ABA 句柄 `Handle` 与零碎片复用，支持 `cap.slab_pool` 自动动态挂载，详见 `doc/lib/slab_pool.md`）（5/5 PASS，文档直写 `doc/lib/slab_pool.md`）
+- **核心设计**：采用侵入式空闲链表与 32 位代际号防悬垂 ABA 访问，通过 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:circ_buf` 纯 CP 泛型定容环形缓冲区引擎（支持阻塞 `push`、覆盖最旧元素 `pushOverwrite`、双端弹出与随机下标访问，支持 `cap.circ_buf` 自动动态挂载，详见 `doc/lib/circ_buf.md`）（5/5 PASS，文档直写 `doc/lib/circ_buf.md`）
 - **核心设计**：模运算循环索引支持覆盖与非覆盖双模式，通过回绕读写与 `std.testing.allocator` 零泄漏验证。
 

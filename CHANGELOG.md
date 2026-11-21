@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:slab_pool` 纯 CP 固定块代际 $O(1)$ Slab 对象池引擎（侵入式空闲链表、代际防悬垂 ABA 句柄 `Handle` 与零碎片复用，支持 `cap.slab_pool` 自动动态挂载，详见 `doc/lib/slab_pool.md`）（5/5 PASS，自动动态挂载 `cap.slab_pool`）
+- **新增标准库**：`lib/slab_pool/{slab_pool,index}.cp`，实现泛型代际 `SlabPool(T)` 分配与 `StaleHandle` 校验。\n- **新增文档与测试**：`doc/lib/slab_pool.md` 扁平文档与 `cap/test/test_slab_pool_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:circ_buf` 纯 CP 泛型定容环形缓冲区引擎（支持阻塞 `push`、覆盖最旧元素 `pushOverwrite`、双端弹出与随机下标访问，支持 `cap.circ_buf` 自动动态挂载，详见 `doc/lib/circ_buf.md`）（5/5 PASS，自动动态挂载 `cap.circ_buf`）
 - **新增标准库**：`lib/circ_buf/{circ_buf,index}.cp`，实现泛型 `RingBuffer(T)` 环形队列与线性导出。\n- **新增文档与测试**：`doc/lib/circ_buf.md` 扁平文档与 `cap/test/test_circ_buf_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

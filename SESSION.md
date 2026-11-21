@@ -91,3 +91,6 @@
 
 ### 2026-11-21（`cap:circ_buf` 验收，主控完成 `cap:circ_buf` 研发验收提交，继续与 `cap:slab_pool`、`cap:bitset_simd` 及热修子智能体并行）
 - **执行成果**：`lib/circ_buf/`（5/5 PASS，`doc/lib/circ_buf.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:circ_buf` 研发验收提交，继续与 `cap:slab_pool`、`cap:bitset_simd` 及热修子智能体并行
+
+### 2026-11-21（`cap:slab_pool` 验收，验收提交 `cap:slab_pool` 并回收热修专修子智能体（`6baa2fd3`），新开 `cap:decimal_fp` 并发子智能体）
+- **执行成果**：`lib/slab_pool/`（5/5 PASS，`doc/lib/slab_pool.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:slab_pool` 并回收热修专修子智能体（`6baa2fd3`），新开 `cap:decimal_fp` 并发子智能体
