@@ -193,3 +193,6 @@
 
 ### 2026-11-22（`cap:http_expect` 验收，Batch 94 落地，标准库总量达 261 模块）
 - **执行成果**：`lib/http_expect/`（5/5 PASS，`doc/lib/http_expect.md`）经 `verify_module.sh` 一次性验收回收；Batch 94 落地，标准库总量达 261 模块
+
+### 2026-11-22（`cap:proc_uptime` 验收，Batch 95 落地，标准库总量达 262 模块）
+- **执行成果**：`lib/proc_uptime/`（5/5 PASS，`doc/lib/proc_uptime.md`）经 `verify_module.sh` 一次性验收回收；Batch 95 落地，标准库总量达 262 模块

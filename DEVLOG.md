@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:proc_uptime` Linux `/proc/uptime` 系统运行时间与全核空闲占比零分配整数解析与人类可读格式化器（5/5 PASS，文档直写 `doc/lib/proc_uptime.md`）
+- **设计要点**：全整数毫秒解析小数位自动补零/截断，`idleRatioPermille` 使用 `u128` 消除溢出并钳位 `0..=1000`，严格拦截缺失/多余字段与溢出。
+
 ## 2026-11-22: 新建 `cap:http_expect` RFC 9110 §10.1.1 HTTP `Expect` 请求头解析与 `100-continue` / 417 协商判定器（5/5 PASS，文档直写 `doc/lib/http_expect.md`）
 - **设计要点**：`ExpectIter` 零分配引号感知遍历；`evaluateExpectHeader` 严格遵循 RFC 9110 §10.1.1 规则处理未知期望、HTTP/1.0 回退与 `has_body` 条件。
 
