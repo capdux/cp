@@ -35,6 +35,8 @@ import {
     FastStringMap,
     Soa,
     Leb128,
+    Uleb128Result,
+    Sleb128Result,
 } from "cap:col";
 
 pub struct Vec3Record {

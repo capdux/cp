@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/collections/StaticHashMap.cp
+// Source: Absorbed from /data/dev/bun/src/collections/StaticHashMap.cp | Synced: 2026-11-21T12:28:05Z
 // ============================================================================
 // Absorbed from Bun: bun/src/collections/hash_map.cp
 // Upstream Sync: Refer to bun/src/collections/hash_map.zig for future upstream updates.

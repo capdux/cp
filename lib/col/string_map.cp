@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/collections/comptime_string_map.cp
+// Source: Absorbed from /data/dev/bun/src/collections/comptime_string_map.cp | Synced: 2026-11-21T12:28:05Z
 // lib/col/string_map.cp
 // Length-filtered fast string lookup map
 // Absorbed from Bun src/collections/comptime_string_map.cp & StaticHashMap.cp

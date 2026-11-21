@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/collections/bit_set.cp
+// Source: Absorbed from /data/dev/bun/src/collections/bit_set.cp | Synced: 2026-11-21T12:32:07Z
 // ============================================================================
 // Absorbed from Bun: bun/src/collections/bit_set.cp
 // Upstream Sync: Refer to bun/src/collections/bit_set.zig for future upstream updates.
