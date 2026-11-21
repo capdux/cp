@@ -629,3 +629,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:s3m` | S3M_MAGIC, S3M_HEADER_SIZE, S3M_INST_SIZE, S3mHeader, S3mInstrument, S3mPattern, isS3m, parseS3mHeader, parseS3mInstrument, parseS3mPattern | 零分配 Scream Tracker 3 (.s3m) 跟踪器音乐头、Parapointer 与采样解析器 |
 | `cap:spc` | SPC_MAGIC, SPC_HEADER_SIZE, SPC_MIN_FILE_SIZE, SPC_XID6_MAGIC, SpcId666Format, SpcRegs, SpcHeader, SpcXid6Item, SpcXid6Iter, isSpc, parseSpcHeader | 零分配 SNES SPC700 (.spc) 芯片音乐头、ID666 与 xid6 扩展块解析器 |
 | `cap:it` | IT_MAGIC, IT_INST_MAGIC, IT_SAMPLE_MAGIC, IT_HEADER_SIZE, ItHeader, ItSample, ItInstrument, ItPattern, isIt, parseItHeader, parseItSample, parseItInstrument, parseItPattern | 零分配 Impulse Tracker 2.14 (.it) 跟踪器音乐头、采样与 Pattern 解析器 |
+| `cap:x3d` | X3dHeader, X3dMeta, X3dMetaIter, X3dNode, X3dNodeIter, X3dFloatIter, X3dIntIter, X3dStats, isX3d, parseX3dHeader, findX3dMeta, summarizeX3d | 零分配 Web3D X3D 3.x/4.0 XML 3D 场景树与坐标/索引数组解析器 |

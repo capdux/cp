@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:x3d` 零分配 Web3D X3D 3.x/4.0 XML 3D 场景树与坐标/索引数组解析器（5/5 PASS，自动动态挂载 `cap.x3d`）
+新增 `lib/x3d/{x3d,index}.cp`、`doc/lib/x3d.md` 与 `cap/test/test_x3d_production_deep.cp`（5/5 PASS），支持 <X3D>/<head>/<meta>、<Scene> 前序节点遍历、MFVec3f/MFInt32 属性解码与深度汇总。
+
 ## [2026-11-22] - 新建 `cap:it` 零分配 Impulse Tracker 2.14 (.it) 跟踪器音乐头、采样与 Pattern 解析器（5/5 PASS，自动动态挂载 `cap.it`）
 新增 `lib/it/{it,index}.cp`、`doc/lib/it.md` 与 `cap/test/test_it_production_deep.cp`（5/5 PASS），支持 192B IMPM 头、IMPI/IMPS 解析、songMessage 提取与空/打包 Pattern 读取。
 

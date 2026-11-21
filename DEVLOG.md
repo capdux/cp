@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:x3d` 零分配 Web3D X3D 3.x/4.0 XML 3D 场景树与坐标/索引数组解析器（5/5 PASS，文档直写 `doc/lib/x3d.md`）
+实现零分配 ISO/IEC 19776-1 X3D XML 解析器，支持 DEF/USE 提取与 -1 面分隔符索引解码。
+
 ## 2026-11-22: 新建 `cap:it` 零分配 Impulse Tracker 2.14 (.it) 跟踪器音乐头、采样与 Pattern 解析器（5/5 PASS，文档直写 `doc/lib/it.md`）
 实现零分配 Impulse Tracker IT 解析器，覆盖 4 张偏移表防越界校验与 16-bit/Loop 采样标志。
 
