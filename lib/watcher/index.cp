@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/watcher/Watcher.cp | Synced: 2026-11-20T11:19:58Z
+// Source: Absorbed from /data/dev/bun/src/watcher/Watcher.cp | Synced: 2026-11-21T21:12:37Z
 // CP Standard Library: cap:watcher
 
 export {
