@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:jsonc` JSON with Comments & Trailing Commas 零分配注释/尾逗号剥离器与行号保留格式化器（5/5 PASS，文档直写 `doc/lib/jsonc.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:jsonc`；字符串/转义感知并穿透交错注释剥离尾逗号；固化 `GEMINI.md` 第十章，启动方案 A 领域主包收敛。
+
 ## 2026-11-22: 新建 `cap:jsonl` JSON Lines / NDJSON 流式行迭代、增量分块扫描与记录平衡零分配校验器（5/5 PASS，文档直写 `doc/lib/jsonl.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:jsonl`；`scanCompleteJsonlChunk` 精准识别网络/文件流末尾半行，`isBalancedJsonRecord` 拦截截断与裸换行。
 

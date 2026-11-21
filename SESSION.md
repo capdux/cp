@@ -274,3 +274,6 @@
 
 ### 2026-11-22（`cap:jsonl` 验收，Batch 121 落地（简洁单单词 TS 风格新标准首单 `cap:jsonl`））
 - **执行成果**：`lib/jsonl/`（5/5 PASS，`doc/lib/jsonl.md`）经 `verify_module.sh` 一次性验收回收；Batch 121 落地（简洁单单词 TS 风格新标准首单 `cap:jsonl`）
+
+### 2026-11-22（`cap:jsonc` 验收，Batch 122 落地（`cap:jsonc` + 固化 `GEMINI.md` 第十章命名收敛规范，启动 Wave 1 `dns`/`ansi` 主包收敛））
+- **执行成果**：`lib/jsonc/`（5/5 PASS，`doc/lib/jsonc.md`）经 `verify_module.sh` 一次性验收回收；Batch 122 落地（`cap:jsonc` + 固化 `GEMINI.md` 第十章命名收敛规范，启动 Wave 1 `dns`/`ansi` 主包收敛）
