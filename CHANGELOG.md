@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:gff` 零分配生物信息学 GFF3 / GTF2 基因特征注释与属性键值解析器（5/5 PASS，自动动态挂载 `cap.gff`）
+新增 `lib/gff/{gff,index}.cp`、`doc/lib/gff.md` 与 `cap/test/test_gff_production_deep.cp`（5/5 PASS），支持 9 列记录、GFF3/GTF2 双格式属性查找、##FASTA 截断停止与单遍统计。
+
 ## [2026-11-22] - 新建 `cap:sam` 零分配生物信息学 SAM v1.6 序列比对 FLAG 与 CIGAR 解析器（5/5 PASS，自动动态挂载 `cap.sam`）
 新增 `lib/sam/{sam,index}.cp`、`doc/lib/sam.md` 与 `cap/test/test_sam_production_deep.cp`（5/5 PASS），支持 12 种 FLAG 位掩码、9 种 CIGAR 操作码跨度计算、@HD/@SQ 头与 11 列比对记录迭代。
 

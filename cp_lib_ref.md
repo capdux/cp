@@ -636,3 +636,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:bed` | BedStrand, BedRecord, BedIter, BedStats, parseBedLine, summarizeBed | 零分配 UCSC BED3-BED12 基因组区间注释解析与重叠计算器 |
 | `cap:vcf` | VcfHeader, VcfRecord, VcfRecordIter, VcfStats, isVcf, parseVcfHeader, summarizeVcf | 零分配生物信息学 VCF 4.2/4.3 基因变异记录、INFO 与 Ti/Tv 解析器 |
 | `cap:sam` | SAM_FLAG_PAIRED, SAM_FLAG_UNMAPPED, CigarOp, CigarIter, SamHeaderLine, SamHeaderIter, SamRecord, SamRecordIter, SamStats, cigarRefLen, cigarQueryLen, findSamHeaderTag, parseSamLine, summarizeSam | 零分配生物信息学 SAM v1.6 序列比对 FLAG 与 CIGAR 解析器 |
+| `cap:gff` | GFF_PHASE_NONE, GffRecord, GffIter, GffStats, isGff3, parseGffLine, summarizeGff | 零分配生物信息学 GFF3 / GTF2 基因特征注释与属性键值解析器 |
