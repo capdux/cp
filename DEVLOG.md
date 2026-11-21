@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:rpm` 零分配 Linux RPM v3/v4 Lead、Signature/Header 区段与 Tag 索引解析器（5/5 PASS，文档直写 `doc/lib/rpm.md`）
+实现零分配 Linux RPM 包头解析器，严格校验 Lead/Header 魔数、8B 对齐偏移与 Store 越界防护。
+
 ## 2026-11-22: 新建 `cap:cpio` 零分配 Unix CPIO newc/crc/odc initramfs 与 RPM 归档解析器（5/5 PASS，文档直写 `doc/lib/cpio.md`）
 实现零分配 Unix CPIO 归档解析器，覆盖 SVR4 newc/crc 与 POSIX odc 头部解析与越界防溢出检查。
 

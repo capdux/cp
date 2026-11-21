@@ -241,3 +241,6 @@
 
 ### 2026-11-22（`cap:cpio` 验收，完成 `cap:cpio` 交付验收并登记入库（5/5 PASS）；轮换 `WebIDL & Spec Absorber` 并派发 `cap:aac`。）
 - **执行成果**：`lib/cpio/`（5/5 PASS，`doc/lib/cpio.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:cpio` 交付验收并登记入库（5/5 PASS）；轮换 `WebIDL & Spec Absorber` 并派发 `cap:aac`。
+
+### 2026-11-22（`cap:rpm` 验收，完成 `cap:rpm` 交付验收并登记入库（5/5 PASS）；轮换 `Schema & Graph Absorber` 并派发 `cap:opus`。）
+- **执行成果**：`lib/rpm/`（5/5 PASS，`doc/lib/rpm.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:rpm` 交付验收并登记入库（5/5 PASS）；轮换 `Schema & Graph Absorber` 并派发 `cap:opus`。

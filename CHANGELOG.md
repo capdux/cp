@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:rpm` 零分配 Linux RPM v3/v4 Lead、Signature/Header 区段与 Tag 索引解析器（5/5 PASS，自动动态挂载 `cap.rpm`）
+新增 `lib/rpm/{rpm,index}.cp`、`doc/lib/rpm.md` 与 `cap/test/test_rpm_production_deep.cp`（5/5 PASS），支持 96B Lead、8B 对齐 Signature/Main Header 区段、16B Tag 索引与 String/U32 读取。
+
 ## [2026-11-22] - 新建 `cap:cpio` 零分配 Unix CPIO newc/crc/odc initramfs 与 RPM 归档解析器（5/5 PASS，自动动态挂载 `cap.cpio`）
 新增 `lib/cpio/{cpio,index}.cp`、`doc/lib/cpio.md` 与 `cap/test/test_cpio_production_deep.cp`（5/5 PASS），支持 newc/crc 4B 对齐、odc 八进制格式、TRAILER!!! 终止与类型辅助判定。
 

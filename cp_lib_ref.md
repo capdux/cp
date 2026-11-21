@@ -551,3 +551,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:ar` | AR_MAGIC, AR_HEADER_SIZE, AR_END_MAGIC, ArMemberKind, ArMember, isAr, ArIter, findArMember, countArMembers | 零分配 Unix ar / .a / .deb 归档容器与 GNU/BSD 长文件名解析器 |
 | `cap:dex` | DEX_HEADER_SIZE, DEX_ENDIAN_CONSTANT, DEX_REVERSE_ENDIAN_CONSTANT, DexHeader, Uleb128Result, DexMapItem, DexMapIter, isDex, parseDexHeader, readUleb128, readDexString | 零分配 Android DEX 112B 头、ULEB128、字符串表与 Map List 解析器 |
 | `cap:cpio` | CPIO_MAGIC_NEWC, CPIO_MAGIC_CRC, CPIO_MAGIC_ODC, CPIO_TRAILER, CpioFormat, CpioEntry, CpioIter, detectCpioFormat, isCpio, findCpioEntry, countCpioEntries | 零分配 Unix CPIO newc/crc/odc initramfs 与 RPM 归档解析器 |
+| `cap:rpm` | RPM_LEAD_MAGIC, RPM_HEADER_MAGIC, RpmLead, RpmHeaderSection, RpmTagEntry, RpmPackageInfo, isRpm, parseRpmLead, parseRpmHeaderSection, RpmTagIter, readRpmString, readRpmU32, parseRpmPackage | 零分配 Linux RPM v3/v4 Lead、Signature/Header 区段与 Tag 索引解析器 |
