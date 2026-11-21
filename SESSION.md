@@ -184,3 +184,15 @@
 
 ### 2026-11-22（`cap:pkg_exports` 验收，Batch 32: 吸收并验证 cap:pkg_exports (5/5 PASSED)）
 - **执行成果**：`lib/pkg_exports/`（5/5 PASS，`doc/lib/pkg_exports.md`）经 `verify_module.sh` 一次性验收回收；Batch 32: 吸收并验证 cap:pkg_exports (5/5 PASSED)
+
+### 2026-11-22（`cap:path_resolve` 验收，Batch 33: 吸收并验证 cap:path_resolve (PASSED)）
+- **执行成果**：`lib/path_resolve/`（5/5 PASS，`doc/lib/path_resolve.md`）经 `verify_module.sh` 一次性验收回收；Batch 33: 吸收并验证 cap:path_resolve (PASSED)
+
+### 2026-11-22（`cap:bit_ops` 验收，Batch 33: 吸收并验证 cap:bit_ops (PASSED)）
+- **执行成果**：`lib/bit_ops/`（5/5 PASS，`doc/lib/bit_ops.md`）经 `verify_module.sh` 一次性验收回收；Batch 33: 吸收并验证 cap:bit_ops (PASSED)
+
+### 2026-11-22（`cap:compile_target` 验收，Batch 33: 吸收并验证 cap:compile_target (5/5 PASSED)）
+- **执行成果**：`lib/compile_target/`（5/5 PASS，`doc/lib/compile_target.md`）经 `verify_module.sh` 一次性验收回收；Batch 33: 吸收并验证 cap:compile_target (5/5 PASSED)
+
+### 2026-11-22（`cap:http_fetch_meta` 验收，Batch 33: 吸收并验证 cap:http_fetch_meta (5/5 PASSED)）
+- **执行成果**：`lib/http_fetch_meta/`（5/5 PASS，`doc/lib/http_fetch_meta.md`）经 `verify_module.sh` 一次性验收回收；Batch 33: 吸收并验证 cap:http_fetch_meta (5/5 PASSED)

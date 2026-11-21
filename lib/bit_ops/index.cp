@@ -1,0 +1,22 @@
+// Source: Absorbed from /data/dev/bun/src/meta/bits.cp
+pub import {
+    testBit64,
+    setBit64,
+    clearBit64,
+    toggleBit64,
+    intersects64,
+    containsAll64,
+    maskOut64,
+    extractBits64,
+    insertBits64,
+    popcount64,
+    clz64,
+    ctz64,
+    isPowerOfTwo,
+    nextPowerOfTwo,
+    alignUp,
+    alignDown,
+    clearLowestSetBit,
+    isolateLowestSetBit,
+    BitSetIter64,
+} from "./bits.cp";

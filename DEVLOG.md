@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:http_fetch_meta` WHATWG Fetch 请求元数据枚举、RFC 9110 Accept-Encoding q 权重内容协商与零拷贝 URLPath 拆分库（吸收自 bun/src/http_types/{Encoding,Fetch*,URLPath}.cp）（5/5 PASS，文档直写 `doc/lib/http_fetch_meta.md`）
+子智能体 2 吸收 bun/src/http_types/*，实现 Accept-Encoding 权重协商、Fetch 枚举与 UrlPath 零拷贝拆分，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:compile_target` 跨平台二进制分发与交叉编译目标三元组解析、支持矩阵校验与 Zig 三元组映射库（吸收自 bun/src/options_types/CompileTarget.cp）（5/5 PASS，文档直写 `doc/lib/compile_target.md`）
+子智能体 1 吸收 bun/src/options_types/CompileTarget.cp，实现全平台别名解析、支持矩阵校验与 Zig 三元组输出，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:bit_ops` 零开销 u64 位掩码、位域提取/插入、2 的幂对齐、popcount/clz/ctz 与置位迭代器库（吸收自 bun/src/meta/bits.cp）（5/5 PASS，文档直写 `doc/lib/bit_ops.md`）
+吸收 bun/src/meta/bits.cp，实现全套底层位运算原语与 BitSetIter64 升序迭代器，通过 cpc check 与 cap test
+
+## 2026-11-22: 新建 `cap:path_resolve` POSIX 路径零堆分配规范化、拼接、相对路径、最长公共目录前缀与防目录穿越校验库（吸收自 bun/src/paths/resolve_path.cp）（5/5 PASS，文档直写 `doc/lib/path_resolve.md`）
+吸收 bun/src/paths/resolve_path.cp，实现完整 POSIX 路径规范化/相对路径/最长公共前缀与安全边界校验，通过 cpc check 与 cap test
+
 ## 2026-11-22: 新建 `cap:pkg_exports` Node.js / Bun package.json exports 条件子路径解析引擎（精确优先/PATTERN_KEY_COMPARE/null 阻断/.. 防穿越，吸收自 bun/src/resolver/package_json.cp）（5/5 PASS，文档直写 `doc/lib/pkg_exports.md`）
 子智能体 2 吸收 bun/src/resolver/package_json.cp，实现标准 PACKAGE_EXPORTS_RESOLVE 条件子路径解析引擎，5/5 单测通过
 

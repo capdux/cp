@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_fetch_meta` WHATWG Fetch 请求元数据枚举、RFC 9110 Accept-Encoding q 权重内容协商与零拷贝 URLPath 拆分库（吸收自 bun/src/http_types/{Encoding,Fetch*,URLPath}.cp）（5/5 PASS，自动动态挂载 `cap.http_fetch_meta`）
+新增 cap:http_fetch_meta 标准库模块（lib/http_fetch_meta/{meta,index}.cp, doc/lib/http_fetch_meta.md, cap/test/test_http_fetch_meta_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:compile_target` 跨平台二进制分发与交叉编译目标三元组解析、支持矩阵校验与 Zig 三元组映射库（吸收自 bun/src/options_types/CompileTarget.cp）（5/5 PASS，自动动态挂载 `cap.compile_target`）
+新增 cap:compile_target 标准库模块（lib/compile_target/{target,index}.cp, doc/lib/compile_target.md, cap/test/test_compile_target_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:bit_ops` 零开销 u64 位掩码、位域提取/插入、2 的幂对齐、popcount/clz/ctz 与置位迭代器库（吸收自 bun/src/meta/bits.cp）（5/5 PASS，自动动态挂载 `cap.bit_ops`）
+新增 cap:bit_ops 标准库模块（lib/bit_ops/{bits,index}.cp, doc/lib/bit_ops.md, cap/test/test_bit_ops_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:path_resolve` POSIX 路径零堆分配规范化、拼接、相对路径、最长公共目录前缀与防目录穿越校验库（吸收自 bun/src/paths/resolve_path.cp）（5/5 PASS，自动动态挂载 `cap.path_resolve`）
+新增 cap:path_resolve 标准库模块（lib/path_resolve/{resolve,index}.cp, doc/lib/path_resolve.md, cap/test/test_path_resolve_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:pkg_exports` Node.js / Bun package.json exports 条件子路径解析引擎（精确优先/PATTERN_KEY_COMPARE/null 阻断/.. 防穿越，吸收自 bun/src/resolver/package_json.cp）（5/5 PASS，自动动态挂载 `cap.pkg_exports`）
 新增 cap:pkg_exports 标准库模块（lib/pkg_exports/{exports,index}.cp, doc/lib/pkg_exports.md, cap/test/test_pkg_exports_production_deep.cp）
 
