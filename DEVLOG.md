@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:bloom_cuckoo` 纯 CP 工业级概率集合引擎（`BloomFilter`、`CountingBloomFilter` 8-bit 饱和计数删除、`CuckooFilter` 4-slot 16-bit 指纹与踢出重哈希，支持 `cap.bloom_cuckoo` 自动动态挂载，详见 `doc/lib/bloom_cuckoo.md`）（5/5 PASS，文档直写 `doc/lib/bloom_cuckoo.md`）
+- **核心设计**：采用双哈希位数组与最大 500 次踢出的 Cuckoo 桶映射，5000 键零假阴性且假阳性率 < 2%，通过 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:hyperloglog` 纯 CP HyperLogLog 64 位基数估算引擎（支持 4..18 位精度、小规模 LinearCounting 线性修正、无损 `merge` 与序列化，支持 `cap.hyperloglog` 自动动态挂载，详见 `doc/lib/hyperloglog.md`）（5/5 PASS，文档直写 `doc/lib/hyperloglog.md`）
 - **核心设计**：采用 64 位 Wyhash 均匀哈希与前导零计算，1 万去重样本误差 < 3%，支持 `std.testing.allocator` 零泄漏验证。
 

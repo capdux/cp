@@ -88,3 +88,6 @@
 
 ### 2026-11-21（`cap:hyperloglog` 验收，主控完成 `cap:hyperloglog` 研发验收提交，并顺带归档 `cpc/src/parser/primary.rs` 切片实参热修）
 - **执行成果**：`lib/hyperloglog/`（5/5 PASS，`doc/lib/hyperloglog.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:hyperloglog` 研发验收提交，并顺带归档 `cpc/src/parser/primary.rs` 切片实参热修
+
+### 2026-11-21（`cap:bloom_cuckoo` 验收，验收提交 `cap:bloom_cuckoo` 并新开 `cap:ed25519` 并发子智能体，主控同步开发 `cap:x25519`）
+- **执行成果**：`lib/bloom_cuckoo/`（5/5 PASS，`doc/lib/bloom_cuckoo.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:bloom_cuckoo` 并新开 `cap:ed25519` 并发子智能体，主控同步开发 `cap:x25519`

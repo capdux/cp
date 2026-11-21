@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:bloom_cuckoo` 纯 CP 工业级概率集合引擎（`BloomFilter`、`CountingBloomFilter` 8-bit 饱和计数删除、`CuckooFilter` 4-slot 16-bit 指纹与踢出重哈希，支持 `cap.bloom_cuckoo` 自动动态挂载，详见 `doc/lib/bloom_cuckoo.md`）（5/5 PASS，自动动态挂载 `cap.bloom_cuckoo`）
+- **新增标准库**：`lib/bloom_cuckoo/{bloom_cuckoo,index}.cp`，实现 BloomFilter、8-bit 饱和计数 CountingBloomFilter 与 4-slot 16-bit 指纹 CuckooFilter。\n- **新增文档与测试**：`doc/lib/bloom_cuckoo.md` 扁平文档与 `cap/test/test_bloom_cuckoo_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:hyperloglog` 纯 CP HyperLogLog 64 位基数估算引擎（支持 4..18 位精度、小规模 LinearCounting 线性修正、无损 `merge` 与序列化，支持 `cap.hyperloglog` 自动动态挂载，详见 `doc/lib/hyperloglog.md`）（5/5 PASS，自动动态挂载 `cap.hyperloglog`）
 - **新增标准库**：`lib/hyperloglog/{hll,index}.cp`，实现 64 位 Wyhash HyperLogLog 基数估算、LinearCounting 修正、`merge` 合并与二进制序列化。\n- **新增文档与测试**：`doc/lib/hyperloglog.md` 扁平文档与 `cap/test/test_hyperloglog_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 
