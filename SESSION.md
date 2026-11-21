@@ -52,3 +52,6 @@
 
 ### 2026-11-21（`cap:base58_check` 验收，主控完成 `cap:base58_check` 研发验收提交，继续与 `cap:rope_text` 及 `cap:bptree` 并行）
 - **执行成果**：`lib/base58_check/`（5/5 PASS，`doc/lib/base58_check.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:base58_check` 研发验收提交，继续与 `cap:rope_text` 及 `cap:bptree` 并行
+
+### 2026-11-21（`cap:rope_text` 验收，验收提交 `cap:rope_text`，主控同步定位 `task-bun-20261121-deref-assign-drop`）
+- **执行成果**：`lib/rope_text/`（5/5 PASS，`doc/lib/rope_text.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:rope_text`，主控同步定位 `task-bun-20261121-deref-assign-drop`
