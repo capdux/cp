@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:lsh` 纯 CP 零分配局部敏感哈希（LSH）近似最近邻检索库：随机超平面余弦 LSH、p-稳定分布欧氏 E2LSH、多表固定池桶索引与 O(1) 位图去重候选查询（5/5 PASS，文档直写 `doc/lib/lsh.md`）
+新增 cap:lsh（lib/lsh/{lsh,index}.cp）：零分配确定性 SplitMix64 + Box-Muller 多表余弦 LSH 与 E2LSH，支持 O(1) 位图去重候选检索，cpc check 0 错误，cap test 6/6 PASS (705ms)
+
 ## 2026-11-22: 新建 `cap:nmf` 纯 CP 零分配非负矩阵分解（NMF）库：Lee-Seung Frobenius 与广义 KL 散度乘法更新、确定性初始化、固定基矩阵新样本投影与重构误差评估（5/5 PASS，文档直写 `doc/lib/nmf.md`）
 新增 cap:nmf（lib/nmf/{nmf,index}.cp）：零分配 Lee-Seung 2001 乘法更新非负矩阵分解，支持 Frobenius 与 KL 散度及固定 H 投影，cpc check 0 错误，cap test 6/6 PASS (667ms)
 

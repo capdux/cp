@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:lsh` 纯 CP 零分配局部敏感哈希（LSH）近似最近邻检索库：随机超平面余弦 LSH、p-稳定分布欧氏 E2LSH、多表固定池桶索引与 O(1) 位图去重候选查询（5/5 PASS，自动动态挂载 `cap.lsh`）
+新增纯 CP 零分配局部敏感哈希库 cap:lsh（随机超平面余弦 LSH 与 p-稳定分布欧氏 E2LSH），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:nmf` 纯 CP 零分配非负矩阵分解（NMF）库：Lee-Seung Frobenius 与广义 KL 散度乘法更新、确定性初始化、固定基矩阵新样本投影与重构误差评估（5/5 PASS，自动动态挂载 `cap.nmf`）
 新增纯 CP 零分配非负矩阵分解库 cap:nmf（Lee-Seung Frobenius / KL 散度 NMF 与新样本投影），含文档与 6 项深度生产测试
 
