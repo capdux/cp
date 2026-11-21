@@ -49,3 +49,6 @@
 
 ### 2026-11-21（`cap:diff_myers` 验收，验收提交 `cap:diff_myers` 并新开 `cap:bptree` 并发子智能体）
 - **执行成果**：`lib/diff_myers/`（5/5 PASS，`doc/lib/diff_myers.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:diff_myers` 并新开 `cap:bptree` 并发子智能体
+
+### 2026-11-21（`cap:base58_check` 验收，主控完成 `cap:base58_check` 研发验收提交，继续与 `cap:rope_text` 及 `cap:bptree` 并行）
+- **执行成果**：`lib/base58_check/`（5/5 PASS，`doc/lib/base58_check.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:base58_check` 研发验收提交，继续与 `cap:rope_text` 及 `cap:bptree` 并行

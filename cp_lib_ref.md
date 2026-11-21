@@ -390,3 +390,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:merkle_tree` | `MerkleError`, `ProofStep`, `MerkleProof`, `hashLeaf`, `hashInternal`, `MerkleTree`, `verifyProof` | 纯 CP 密码学 SHA-256 Merkle Tree 引擎（`0x00`/`0x01` 域分离防第二原像碰撞、奇数叶支持与无状态包容性证明 `generateProof`/`verifyProof`，支持 `cap.merkle_tree` 自动动态挂载，详见 `doc/lib/merkle_tree.md`） |
 | `cap:tdigest` | `TDigestError`, `Centroid`, `TDigest` | 纯 CP 流式 Dunning T-Digest 分位数估算引擎（高精度 p50/p95/p99 尾部估计与分布式 `merge` 聚合，支持 `cap.tdigest` 自动动态挂载，详见 `doc/lib/tdigest.md`） |
 | `cap:diff_myers` | `DiffOpKind`, `DiffOp`, `DiffResult`, `diffLines`, `reconstructNew`, `formatUnifiedDiff` | 纯 CP Myers 最短编辑脚本 (SES) 行级 Diff、Unified Diff 格式化与补丁还原引擎（支持 `cap.diff_myers` 自动动态挂载，详见 `doc/lib/diff_myers.md`） |
+| `cap:base58_check` | `Base58Error`, `encode`, `decode`, `encodeCheck`, `CheckDecoded`, `decodeCheck` | 纯 CP Bitcoin Base58 & Base58Check 双重 SHA-256 校验和编解码引擎（支持前导零映射、版本号与防篡改校验，支持 `cap.base58_check` 自动动态挂载，详见 `doc/lib/base58_check.md`） |

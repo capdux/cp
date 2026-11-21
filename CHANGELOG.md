@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:base58_check` 纯 CP Bitcoin Base58 & Base58Check 双重 SHA-256 校验和编解码引擎（支持前导零映射、版本号与防篡改校验，支持 `cap.base58_check` 自动动态挂载，详见 `doc/lib/base58_check.md`）（5/5 PASS，自动动态挂载 `cap.base58_check`）
+- **新增标准库**：`lib/base58_check/{base58_check,index}.cp`，实现 Base58 与 Double-SHA256 Base58Check 编解码。\n- **新增文档与测试**：`doc/lib/base58_check.md` 扁平文档与 `cap/test/test_base58_check_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:diff_myers` 纯 CP Myers 最短编辑脚本 (SES) 行级 Diff、Unified Diff 格式化与补丁还原引擎（支持 `cap.diff_myers` 自动动态挂载，详见 `doc/lib/diff_myers.md`）（5/5 PASS，自动动态挂载 `cap.diff_myers`）
 - **新增标准库**：`lib/diff_myers/{diff,index}.cp`，实现 Myers SES 行级 Diff、`reconstructNew` 与 `formatUnifiedDiff`。\n- **新增文档与测试**：`doc/lib/diff_myers.md` 扁平文档与 `cap/test/test_diff_myers_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

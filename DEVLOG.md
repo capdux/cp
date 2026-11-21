@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:base58_check` 纯 CP Bitcoin Base58 & Base58Check 双重 SHA-256 校验和编解码引擎（支持前导零映射、版本号与防篡改校验，支持 `cap.base58_check` 自动动态挂载，详见 `doc/lib/base58_check.md`）（5/5 PASS，文档直写 `doc/lib/base58_check.md`）
+- **核心设计**：采用精确大整数进位编解码与 Bitcoin 创世块 P2PKH 官方向量验证，通过 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:diff_myers` 纯 CP Myers 最短编辑脚本 (SES) 行级 Diff、Unified Diff 格式化与补丁还原引擎（支持 `cap.diff_myers` 自动动态挂载，详见 `doc/lib/diff_myers.md`）（5/5 PASS，文档直写 `doc/lib/diff_myers.md`）
 - **核心设计**：采用 Myers/LCS SES 计算最小编辑序列，生成标准 `@@ -a,b +c,d @@` Unified Diff 并通过 `std.testing.allocator` 零泄漏验证。
 
