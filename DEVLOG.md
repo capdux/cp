@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:can` CAN 2.0/FD (ISO 11898), SocketCAN, SAE J1939 PGN & DBC bit-signal zero-alloc codec（5/5 PASS，文档直写 `doc/lib/can.md`）
+新增 cap:can 纯 CP 零分配车载与工业总线库（CAN/CAN FD DLC 映射、SocketCAN LE/BE 往返、J1939 PDU1/PDU2 与 Intel/Motorola DBC 信号提取），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:modbus` Modbus TCP (MBAP) & RTU (CRC-16/Modbus) industrial automation zero-alloc codec（5/5 PASS，文档直写 `doc/lib/modbus.md`）
 新增 cap:modbus 纯 CP 零分配工业自动化协议库（MBAP 7B 帧、RTU CRC-16/Modbus 0xA001 校验与编码往返、ModbusRegIter），通过 cpc check 与 5/5 cap test
 

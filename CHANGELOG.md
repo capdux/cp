@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:can` CAN 2.0/FD (ISO 11898), SocketCAN, SAE J1939 PGN & DBC bit-signal zero-alloc codec（5/5 PASS，自动动态挂载 `cap.can`）
+新增纯 CP 零分配标准库 cap:can（ISO 11898 CAN 2.0/FD、SocketCAN 编解码、J1939 PGN 与 DBC 位域信号提取）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:modbus` Modbus TCP (MBAP) & RTU (CRC-16/Modbus) industrial automation zero-alloc codec（5/5 PASS，自动动态挂载 `cap.modbus`）
 新增纯 CP 零分配标准库 cap:modbus（Modbus TCP MBAP、Modbus RTU CRC-16 与寄存器迭代编解码）与 5/5 深度测试
 
