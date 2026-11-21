@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:sdf` 零分配 MDL Molfile V2000 & SDF 多分子原子/键连接表解析器（5/5 PASS，自动动态挂载 `cap.sdf`）
+新增 `lib/sdf/{sdf,index}.cp`、`doc/lib/sdf.md` 与 `cap/test/test_sdf_production_deep.cp`（5/5 PASS），支持 V2000 原子/键连接表、电荷码映射、多行关联属性与 $$$$ 多分子流。
+
 ## [2026-11-22] - 新建 `cap:edf` 零分配 European Data Format (EDF/EDF+) 生物医学脑电/心电信号解析器（5/5 PASS，自动动态挂载 `cap.edf`）
 新增 `lib/edf/{edf,index}.cp`、`doc/lib/edf.md` 与 `cap/test/test_edf_production_deep.cp`（6/6 PASS），支持 256B 定宽主头、列式通道头、物理量线性定标与交错 16-bit 样本随机读取。
 

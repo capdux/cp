@@ -640,3 +640,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:pdb` | PdbHeader, PdbAtom, PdbConect, PdbAtomIter, PdbConectIter, PdbStats, isPdb, parsePdbHeader, parsePdbAtomLine, parsePdbConectLine, summarizePdb | 零分配 RCSB Protein Data Bank (.pdb) v3.3 生物大分子 3D 结构解析器 |
 | `cap:dicom` | DICOM_PREAMBLE_SIZE, DICOM_MAGIC, DICOM_DATA_OFFSET, DICOM_UNDEFINED_LEN, DicomTag, DicomElement, DicomIter, DicomSummary, isDicom, parseDicomSummary | 零分配医学影像 DICOM PS3.10 Explicit/Implicit VR 数据元素解析器 |
 | `cap:edf` | EDF_MAIN_HEADER_SIZE, EDF_SIGNAL_HEADER_SIZE, EdfHeader, EdfSignal, isEdf, parseEdfHeader, parseEdfSignal, edfRecordByteSize, readEdfDigitalSample | 零分配 European Data Format (EDF/EDF+) 生物医学脑电/心电信号解析器 |
+| `cap:sdf` | SdfMolHeader, SdfAtom, SdfAtomIter, SdfBond, SdfBondIter, SdfProperty, SdfPropIter, SdfRecordIter, SdfStats, isSdf, parseMolHeader, findSdfProp, summarizeSdf | 零分配 MDL Molfile V2000 & SDF 多分子原子/键连接表解析器 |

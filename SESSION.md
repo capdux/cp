@@ -262,3 +262,6 @@
 
 ### 2026-11-22（`cap:edf` 验收，完成 `cap:edf` 交付验收并登记入库（6/6 PASS）；派发 `cap:segy`。）
 - **执行成果**：`lib/edf/`（5/5 PASS，`doc/lib/edf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:edf` 交付验收并登记入库（6/6 PASS）；派发 `cap:segy`。
+
+### 2026-11-22（`cap:sdf` 验收，完成 `cap:sdf` 交付验收并登记入库（5/5 PASS）；派发 `cap:mol2`。）
+- **执行成果**：`lib/sdf/`（5/5 PASS，`doc/lib/sdf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:sdf` 交付验收并登记入库（5/5 PASS）；派发 `cap:mol2`。
