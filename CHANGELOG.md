@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_origin` WHATWG URL Origin 元组解析器、默认端口规范化、Same-Origin 比较与安全上下文判定（5/5 PASS，自动动态挂载 `cap.http_origin`）
+新增 `cap:http_origin`（`lib/http_origin/{origin,index}.cp`、`doc/lib/http_origin.md`、`cap/test/test_http_origin_production_deep.cp`），支持 IPv6 `[::1]`、userinfo 剥离、默认端口归约与 `*.localhost` 可信上下文判定。
+
+## [2026-11-22] - 新建 `cap:spdx_license` SPDX 2.3 开源许可证表达式词法/递归下降语法校验器、ID 提取器与常见宽松许可证判定（5/5 PASS，自动动态挂载 `cap.spdx_license`）
+新增 `cap:spdx_license`（`lib/spdx_license/{spdx,index}.cp`、`doc/lib/spdx_license.md`、`cap/test/test_spdx_license_production_deep.cp`），完整支持 `AND`/`OR`/`WITH`、`LicenseRef-`/`DocumentRef-` 与 64 层递归深度防护。
+
+## [2026-11-22] - 新建 `cap:passwd_parse` POSIX /etc/passwd 与 /etc/group 零分配流式解析器、UID/GID/名称查询与组成员判定（5/5 PASS，自动动态挂载 `cap.passwd_parse`）
+新增 `cap:passwd_parse`（`lib/passwd_parse/{passwd,index}.cp`、`doc/lib/passwd_parse.md`、`cap/test/test_passwd_parse_production_deep.cp`），实现 7 字段 passwd 与 4 字段 group 严格解析与 nologin shell 检测。
+
 ## [2026-11-22] - 新建 `cap:http_csp` W3C Content-Security-Policy Level 3 响应头零分配解析器、default-src 回退、nonce 校验与策略构造器（5/5 PASS，自动动态挂载 `cap.http_csp`）
 新增 `cap:http_csp`（`lib/http_csp/{csp,index}.cp`、`doc/lib/http_csp.md`、`cap/test/test_http_csp_production_deep.cp`），遵循 W3C CSP3 §2.2.1 首现优先、大小写敏感 nonce 校验与 fetch 指令回退。
 

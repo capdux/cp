@@ -603,3 +603,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_server_timing` | ServerTimingMetric, ServerTimingIter, findServerTiming, appendServerTiming | W3C Server-Timing 响应头零分配解析器与构造器（纯整数微秒精度与引号转义） |
 | `cap:rfc3339_time` | isLeapYear, daysInMonth, Rfc3339Time | RFC 3339 / ISO 8601 时间戳零分配解析器、闰年/时区校验、Unix 纪元秒互转与规范化格式化器 |
 | `cap:http_csp` | CspDirective, CspSourceIter, CspDirectiveIter, findDirective, effectiveFetchDirective, appendCspDirective | W3C Content-Security-Policy Level 3 响应头零分配解析器、default-src 回退、nonce 校验与策略构造器 |
+| `cap:passwd_parse` | PasswdEntry, PasswdIter, lookupUserByName, lookupUserByUid, GroupEntry, GroupIter, lookupGroupByName, lookupGroupByGid | POSIX /etc/passwd 与 /etc/group 零分配流式解析器、UID/GID/名称查询与组成员判定 |
+| `cap:spdx_license` | SpdxTokenKind, SpdxToken, SpdxLexer, isValidSpdxExpression, SpdxIdIter, isCommonPermissive | SPDX 2.3 开源许可证表达式词法/递归下降语法校验器、ID 提取器与常见宽松许可证判定 |
+| `cap:http_origin` | Origin, isSameOriginUrl | WHATWG URL Origin 元组解析器、默认端口规范化、Same-Origin 比较与安全上下文判定 |

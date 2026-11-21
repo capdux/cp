@@ -1,3 +1,12 @@
+## 2026-11-22: 新建 `cap:http_origin` WHATWG URL Origin 元组解析器、默认端口规范化、Same-Origin 比较与安全上下文判定（5/5 PASS，文档直写 `doc/lib/http_origin.md`）
+主智能体吸收 `cap:http_origin`，与 `cap:cors_policy`、`cap:uri_normalize` 协同构建完整 Web 安全原语。
+
+## 2026-11-22: 新建 `cap:spdx_license` SPDX 2.3 开源许可证表达式词法/递归下降语法校验器、ID 提取器与常见宽松许可证判定（5/5 PASS，文档直写 `doc/lib/spdx_license.md`）
+Subagent 2 吸收 `cap:spdx_license`，严格区分大写运算符与异常 ID，精准提取许可证列表。
+
+## 2026-11-22: 新建 `cap:passwd_parse` POSIX /etc/passwd 与 /etc/group 零分配流式解析器、UID/GID/名称查询与组成员判定（5/5 PASS，文档直写 `doc/lib/passwd_parse.md`）
+主智能体吸收 `cap:passwd_parse`，零堆分配迭代 POSIX 系统账户与组文件并校验字段数与无符号整型边界。
+
 ## 2026-11-22: 新建 `cap:http_csp` W3C Content-Security-Policy Level 3 响应头零分配解析器、default-src 回退、nonce 校验与策略构造器（5/5 PASS，文档直写 `doc/lib/http_csp.md`）
 主智能体吸收 `cap:http_csp`，零堆分配解析并构造规范化 CSP3 策略头。
 

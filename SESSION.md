@@ -433,3 +433,12 @@
 
 ### 2026-11-22（`cap:http_csp` 验收，Batch 58 注册 `cap:http_csp` 并提交。）
 - **执行成果**：`lib/http_csp/`（5/5 PASS，`doc/lib/http_csp.md`）经 `verify_module.sh` 一次性验收回收；Batch 58 注册 `cap:http_csp` 并提交。
+
+### 2026-11-22（`cap:passwd_parse` 验收，Batch 59 完成 `cap:passwd_parse`、`cap:spdx_license`、`cap:http_origin` 3 模块吸收与全量验收。）
+- **执行成果**：`lib/passwd_parse/`（5/5 PASS，`doc/lib/passwd_parse.md`）经 `verify_module.sh` 一次性验收回收；Batch 59 完成 `cap:passwd_parse`、`cap:spdx_license`、`cap:http_origin` 3 模块吸收与全量验收。
+
+### 2026-11-22（`cap:spdx_license` 验收，Batch 59 注册 `cap:spdx_license`。）
+- **执行成果**：`lib/spdx_license/`（5/5 PASS，`doc/lib/spdx_license.md`）经 `verify_module.sh` 一次性验收回收；Batch 59 注册 `cap:spdx_license`。
+
+### 2026-11-22（`cap:http_origin` 验收，Batch 59 注册 `cap:http_origin` 并提交（突破 180 模块里程碑）。）
+- **执行成果**：`lib/http_origin/`（5/5 PASS，`doc/lib/http_origin.md`）经 `verify_module.sh` 一次性验收回收；Batch 59 注册 `cap:http_origin` 并提交（突破 180 模块里程碑）。
