@@ -25,3 +25,6 @@
 
 ### 2026-11-22（`cap:docker` 验收，方案 A Wave 6：`docker`/`dotenv`/`ini`/`csv` 7 目录收敛落地（7/7 PASS），累计消除 110 个长下划线顶层目录）
 - **执行成果**：`lib/docker/`（5/5 PASS，`doc/lib/docker.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 6：`docker`/`dotenv`/`ini`/`csv` 7 目录收敛落地（7/7 PASS），累计消除 110 个长下划线顶层目录
+
+### 2026-11-22（`cap:http` 验收，方案 A Wave 5：`http_* 第3批`(13) 收敛至 `cap:http`（13/13 PASS），累计消除 123 个长下划线顶层目录，已派发最后 13 个 `http_*` 清零批次）
+- **执行成果**：`lib/http/`（5/5 PASS，`doc/lib/http.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 5：`http_* 第3批`(13) 收敛至 `cap:http`（13/13 PASS），累计消除 123 个长下划线顶层目录，已派发最后 13 个 `http_*` 清零批次

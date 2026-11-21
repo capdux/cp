@@ -426,3 +426,96 @@ export {
 export {
     HostHeader,
 } from "./host.cp";
+
+// --- Step 9: Consolidated RFC/W3C HTTP Header Codecs & Router (Wave 5 Batch 3) ---
+export {
+    EntityTag as ConditionalEntityTag,
+    etagListMatches,
+    PreconditionResult,
+    ConditionalRequest,
+    evaluatePreconditions,
+} from "./ifmatch.cp";
+
+export {
+    KeepAliveParams,
+    shouldKeepAlive,
+} from "./keepalive.cp";
+
+export {
+    WebLink,
+    LinkHeaderIterator,
+    findLinkByRel,
+    formatWebLink,
+} from "./link.cp";
+
+export {
+    MaxForwardsAction,
+    MaxForwardsResult,
+    parseMaxForwards,
+    evaluateMaxForwards,
+    formatMaxForwards,
+} from "./maxforwards.cp";
+
+export {
+    HttpMethod,
+    MethodSet,
+} from "./methodparse.cp";
+
+export {
+    Origin,
+    isSameOriginUrl,
+} from "./origin.cp";
+
+export {
+    PermissionDirective,
+    PermissionsPolicyIter,
+    findPermission,
+} from "./permissions.cp";
+
+export {
+    Preference,
+    PreferIter,
+    ReturnPref,
+    HandlingPref,
+    PreferHeader,
+} from "./prefer.cp";
+
+export {
+    ProxyScheme,
+    parseProxyScheme,
+    defaultProxyPort,
+    ProxyUrl,
+    ProxyEnv,
+    selectProxy,
+} from "./proxyurl.cp";
+
+export {
+    RangeSpecKind,
+    ByteRangeSpec as ParsedByteRangeSpec,
+    ResolvedByteRange as ResolvedRangeSlice,
+    ByteRangeIter,
+    resolveSingleByteRange,
+} from "./range.cp";
+
+export {
+    RateLimitHeader,
+    RateLimitPolicy,
+} from "./ratelimit.cp";
+
+export {
+    RetryAfterKind,
+    RetryAfter,
+    formatRetryAfterSeconds,
+} from "./retryafter.cp";
+
+export {
+    MAX_PARAMS,
+    RouterError,
+    RouterMethod,
+    PathParam,
+    RouteMatch,
+    AllowInfo,
+    RouteResult,
+    RouteGroup,
+    HttpRouter,
+} from "./router.cp";

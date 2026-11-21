@@ -5,9 +5,9 @@ import { test, expect_eq } from "cap:test";
 import cap from "cap";
 import {
     HttpRouter,
-    HttpMethod,
+    RouterMethod as HttpMethod,
     RouterError
-} from "cap:http_router";
+} from "cap:http";
 
 test("static, multi-param, catch-all and priority Static > Param > CatchAll") {
     let router = try HttpRouter.init(std.testing.allocator);

@@ -80,6 +80,9 @@
 | `lib/http/csp.cp` / `date.cp` / `digest.cp` / `digestauth.cp` | W3C CSP 指令迭代与查询、RFC 9110 `HTTP-date` 编解码、RFC 9530 `Digest`/`Want-Digest`、RFC 7616 Digest Auth | `src/http/` |
 | `lib/http/earlyhints.cp` / `etaggen.cp` / `expect.cp` | RFC 8297 103 Early Hints、`FNV-1a` 强弱 ETag 生成与校验、RFC 9110 `Expect: 100-continue` 裁定 | `src/http/` |
 | `lib/http/fetchmeta.cp` / `form.cp` / `forwarded.cp` / `freshness.cp` / `host.cp` | Fetch 元数据掩码协商、WHATWG Form URL-Encoded、RFC 7239 `Forwarded`/`XFF`、RFC 9111 新鲜度计算、RFC 9110 `Host` 校验 | `src/http/` |
+| `lib/http/ifmatch.cp` / `keepalive.cp` / `link.cp` / `maxforwards.cp` | RFC 9110 条件请求（`If-Match`/`If-None-Match`）、`Keep-Alive` 参数、RFC 8288 `Link` 头、RFC 9110 `Max-Forwards` 跳数裁定 | `src/http/` |
+| `lib/http/methodparse.cp` / `origin.cp` / `permissions.cp` / `prefer.cp` | RFC 9110 36 种 HTTP 方法与 `MethodSet`、WHATWG `Origin`、W3C `Permissions-Policy`、RFC 7240 `Prefer` 头解析 | `src/http/` |
+| `lib/http/proxyurl.cp` / `range.cp` / `ratelimit.cp` / `retryafter.cp` / `router.cp` | HTTP/SOCKS 代理 URL 选择、RFC 9110 `Range` 字节区间、IETF `RateLimit`、`Retry-After`、Radix Trie `HttpRouter` | `src/http/` |
 
 ---
 

@@ -2,7 +2,7 @@ import {
     RangeSpecKind,
     ByteRangeIter,
     resolveSingleByteRange,
-} from "cap:http_range";
+} from "cap:http";
 import { test, expect } from "cap:test";
 
 test("ByteRangeIter parses bounded, open-ended, and suffix ranges", () => {

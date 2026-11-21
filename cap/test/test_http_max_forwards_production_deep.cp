@@ -5,7 +5,7 @@ import {
     parseMaxForwards,
     evaluateMaxForwards,
     formatMaxForwards,
-} from "cap:http_max_forwards";
+} from "cap:http";
 
 test("1. parseMaxForwards parses valid 1*DIGIT values with optional OWS and u32 bounds", () => {
     expect_eq(parseMaxForwards("0") ?? unreachable, u32(0));

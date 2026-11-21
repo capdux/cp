@@ -4,7 +4,7 @@ import {
     LinkHeaderIterator,
     findLinkByRel,
     formatWebLink,
-} from "cap:http_link_header";
+} from "cap:http";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

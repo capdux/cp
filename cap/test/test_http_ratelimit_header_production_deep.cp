@@ -1,6 +1,6 @@
 import std from "std";
 import { test, expect_eq } from "cap:test";
-import { RateLimitHeader, RateLimitPolicy } from "cap:http_ratelimit_header";
+import { RateLimitHeader, RateLimitPolicy } from "cap:http";
 
 test("1. RateLimitHeader parses and formats IETF structured policy format", () => {
     const rl = RateLimitHeader.parse("\"default\";r=50;t=30") ?? unreachable;

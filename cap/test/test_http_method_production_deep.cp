@@ -1,5 +1,5 @@
 import { test, expect } from "cap:test";
-import { HttpMethod, MethodSet } from "cap:http_method";
+import { HttpMethod, MethodSet } from "cap:http";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

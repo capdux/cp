@@ -1,10 +1,10 @@
 import {
-    EntityTag,
+    ConditionalEntityTag as EntityTag,
     etagListMatches,
     PreconditionResult,
     ConditionalRequest,
     evaluatePreconditions,
-} from "cap:http_if_match";
+} from "cap:http";
 import { test, expect } from "cap:test";
 
 test("EntityTag strong vs weak comparison and etagListMatches", () => {

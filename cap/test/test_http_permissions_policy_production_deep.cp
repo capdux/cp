@@ -1,6 +1,6 @@
 import std from "std";
 import { test, expect_eq } from "cap:test";
-import { PermissionsPolicyIter, findPermission } from "cap:http_permissions_policy";
+import { PermissionsPolicyIter, findPermission } from "cap:http";
 
 test("1. PermissionsPolicyIter parses (), *, self, and multi-origin allowlists", () => {
     const hdr = "camera=(), microphone=*, geolocation=(self \"https://maps.example.com\"), fullscreen=self";
