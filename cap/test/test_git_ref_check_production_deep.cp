@@ -9,7 +9,7 @@ import {
     parseFullGitRef,
     isValidGitOidHex,
     isValidShortOidHex,
-} from "cap:git_ref_check";
+} from "cap:git";
 
 test("git_ref_check: isValidGitRefName enforces all 10 git-check-ref-format rules") {
     // 合法引用名

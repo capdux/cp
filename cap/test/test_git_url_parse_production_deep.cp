@@ -4,7 +4,7 @@ import { test, expect_eq } from "cap:test";
 import {
     GitProtocol,
     GitRemoteUrl,
-} from "cap:git_url_parse";
+} from "cap:git";
 
 test("git_url_parse: SCP shorthand git@github.com:org/repo.git and formatHttps conversion") {
     const u = GitRemoteUrl.parse("git@github.com:org/repo.git").?;

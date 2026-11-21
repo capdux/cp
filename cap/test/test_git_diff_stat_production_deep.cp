@@ -7,7 +7,7 @@ import {
     DiffSummary,
     GitDiffIter,
     summarizeGitDiff,
-} from "cap:git_diff_stat";
+} from "cap:git";
 
 test("git_diff_stat: multi-file patch with modified, added, deleted, renamed and binary files") {
     const patch =

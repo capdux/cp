@@ -307,3 +307,6 @@
 
 ### 2026-11-22（`cap:http` 验收，方案 A Wave 3 全部完工：`sys-config`(8) + `sql_*`(5) + `http_* 第1批`(15) 共再消除 28 个（累计 65 个）长下划线顶层目录！Wave 4 启动）
 - **执行成果**：`lib/http/`（5/5 PASS，`doc/lib/http.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 3 全部完工：`sys-config`(8) + `sql_*`(5) + `http_* 第1批`(15) 共再消除 28 个（累计 65 个）长下划线顶层目录！Wave 4 启动
+
+### 2026-11-22（`cap:git` 验收，方案 A Wave 4：5 个 Git 目录收敛至 `cap:git`（5/5 PASS），累计消除 70 个长下划线顶层目录）
+- **执行成果**：`lib/git/`（5/5 PASS，`doc/lib/git.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 4：5 个 Git 目录收敛至 `cap:git`（5/5 PASS），累计消除 70 个长下划线顶层目录

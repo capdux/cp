@@ -6,7 +6,7 @@ import {
     parseGitignoreLine,
     ruleMatchesPath,
     isIgnored,
-} from "cap:gitignore_match";
+} from "cap:git";
 
 test("gitignore_match: parseGitignoreLine comments, trailing spaces, negation, escapes and anchoring") {
     expect_eq(parseGitignoreLine("") == null, true);

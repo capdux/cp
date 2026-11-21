@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { GitConfig } from "cap:gitconfig_ini";
+import { GitConfig } from "cap:git";
 
 test("1. [section], [section \"subsection\"], case-sensitivity & last-definition-wins override", () => {
     const src =

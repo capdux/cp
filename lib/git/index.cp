@@ -20,3 +20,38 @@ export {
     GitHead,
     GitRepo,
 } from "./repo.cp";
+
+export {
+    FileChangeKind,
+    FileDiffStat,
+    DiffSummary,
+    GitDiffIter,
+    summarizeGitDiff,
+} from "./diffstat.cp";
+
+export {
+    GitRefKind,
+    ParsedGitRef,
+    isValidGitRefName,
+    isValidBranchName,
+    parseFullGitRef,
+    isValidGitOidHex,
+    isValidShortOidHex,
+} from "./refcheck.cp";
+
+export {
+    GitProtocol,
+    GitRemoteUrl,
+} from "./url.cp";
+
+export {
+    GitignoreRule,
+    parseGitignoreLine,
+    ruleMatchesPath,
+    isIgnored,
+} from "./ignorematch.cp";
+
+export {
+    GitConfigEntry,
+    GitConfig,
+} from "./config.cp";

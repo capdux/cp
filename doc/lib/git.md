@@ -11,6 +11,11 @@
 | `lib/git/object.cp` | `// Source: cp/lib/git/object.cp (Git Blob/Tree/Commit SHA-1 Hashing & Object Parser)` | `GitError`、`GitObjectKind`、`GitOid`、`GitObject`、`GitTreeEntry`、`GitTreeCodec`、`GitCommit`、`GitCommitCodec` |
 | `lib/git/ignore.cp` | `// Source: cp/lib/git/ignore.cp (Gitignore Pattern Engine with Negation & Double-Star)` | `GitIgnore`（`#` 注释、`!` 取反、尾部 `/` 目录限定、前导/内部 `/` 锚定、`**` 跨级与 `*`/`?`/`[...]` 通配） |
 | `lib/git/repo.cp` | `// Source: cp/lib/git/repo.cp (Read-Only .git HEAD & Ref Inspector)` | `GitHead`、`GitRepo`（符号引用、松散引用、`packed-refs`、detached HEAD 与 worktree `gitdir:`） |
+| `lib/git/diffstat.cp` | `// Source: Absorbed from /data/dev/bun/src/cli.zig (Git Unified Diff Numstat & File Summary Parser)` | Unified Diff 统计解析：`FileChangeKind`、`FileDiffStat`、`DiffSummary`、`GitDiffIter`、`summarizeGitDiff` |
+| `lib/git/refcheck.cp` | `// Source: Absorbed from /data/dev/bun/src/install/repository.zig (Git Refname Validator & Classifier)` | Git 引用名校验与分类：`GitRefKind`、`ParsedGitRef`、`isValidGitRefName`、`isValidBranchName`、`parseFullGitRef`、`isValidGitOidHex`、`isValidShortOidHex` |
+| `lib/git/url.cp` | `// Source: Absorbed from /data/dev/bun/src/install/repository.zig (Git Remote URL Parser & Formatter)` | Git 远程 URL 解析与格式化：`GitProtocol`、`GitRemoteUrl` |
+| `lib/git/ignorematch.cp` | `// Source: Absorbed from /data/dev/bun/src/glob.zig (.gitignore Rule Parser & Path Matcher)` | 零分配 `.gitignore` 规则解析与匹配：`GitignoreRule`、`parseGitignoreLine`、`ruleMatchesPath`、`isIgnored` |
+| `lib/git/config.cp` | `// Source: Absorbed from /data/dev/bun/src/install/repository.cp` | `.gitconfig` INI 解析器：`GitConfigEntry`、`GitConfig` |
 | `lib/git/index.cp` | `// Source: cp/lib/git/index.cp (Unified Exports for cap:git)` | `cap:git` 与 `cap.git` 统一公开导出入口 |
 
 ---

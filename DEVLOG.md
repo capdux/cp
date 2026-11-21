@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:git` Git 对象/仓库、Diff 统计、Ref 校验、URL 解析、GitIgnore 与 GitConfig 统一主包（5/5 PASS，文档直写 `doc/lib/git.md`）
+- **收敛要点**：保留原 `lib/git/ignore.cp` 零破坏，新迁入规则匹配器命名为 `ignorematch.cp`；累计已消除 70 个长下划线顶层目录。
+
 ## 2026-11-22: 新建 `cap:http` HTTP/1.1/2/3 协议与全套 RFC 9110/7838 头部协商、缓存与分片统一主包（5/5 PASS，文档直写 `doc/lib/http.md`）
 - **收敛要点**：15 个 HTTP 头部协商/缓存/分片子模块通过最小聚合别名零破坏合入 `lib/http/`；Wave 3 圆满收官，累计已消除 65 个长下划线顶层目录！
 

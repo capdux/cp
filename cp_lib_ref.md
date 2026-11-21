@@ -511,7 +511,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:data_url` | DataUrl, percentDecode, encodeBase64DataUrl, encodePercentDataUrl, encodeShortestDataUrl, base64Encode, base64Decode | RFC 2397 Data URL 零堆分配解析、percent/base64 双解码与最短编码择优器（吸收自 bun/src/resolver/data_url.cp） |
 | `cap:tsconfig_paths` | PathMapping, ResolvedCandidate, expandConfigDir, TsConfigPaths | TSConfig compilerOptions.paths 最长前缀通配符路径映射解析器与 ${configDir} 模板展开器（吸收自 bun/src/resolver/tsconfig_json.cp） |
 | `cap:css_image_set` | ResolutionUnit, Resolution, ImageSetOption, ImageSet, CssImageKind, CssImage | CSS Images 4 <image> 与 image-set() 分辨率换算、MIME 过滤 DPR 选图与序列化库（吸收自 bun/src/css/values/image.cp） |
-| `cap:gitconfig_ini` | GitConfigEntry, GitConfig | Git Config / INI 零堆分配解析器（支持 subsection、注释、引号、布尔解析与 url.<base>.insteadOf 重写，吸收自 bun/src/install/repository.cp） |
 | `cap:etag` | ParsedETag, ifNoneMatch, ifMatch, generateStrong, generateWeak | RFC 9110 / RFC 7232 HTTP ETag 解析、强/弱比较、If-None-Match/If-Match 求值与 FNV-1a 内容 ETag 生成库（吸收自 bun/src/http_types/ETag.cp） |
 | `cap:json5_lexer` | Json5TokenKind, Json5Token, Json5Lexer, toStandardJson | JSON5 零堆分配词法扫描器（注释/单引号/无引号键/十六进制/Infinity/NaN）与 RFC 8259 标准 JSON 转译器（吸收自 bun/src/interchange/json5.cp） |
 | `cap:pkg_exports` | ExportTargetKind, ExportConditionRule, ExportSubpathEntry, ResolveStatus, ResolveResult, ExportsMap | Node.js / Bun package.json exports 条件子路径解析引擎（精确优先/PATTERN_KEY_COMPARE/null 阻断/.. 防穿越，吸收自 bun/src/resolver/package_json.cp） |
@@ -564,7 +563,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_vary` | VaryIter, isVaryWildcard, varyContains, appendVary, mergeVary | RFC 9110 §12.5.5 Vary 响应头零分配迭代、通配符检测与大小写不敏感去重合并器 |
 | `cap:glob_escape` | isGlobMagic, hasGlobMagic, escapeGlob, unescapeGlob, staticBaseDir, isNegatedPattern, stripNegation | Glob 通配符元字符转义/反转义、静态目录前缀提取（遍历剪枝）与否定模式解析 |
 | `cap:http_range` | RangeSpecKind, ByteRangeSpec, ResolvedByteRange, ByteRangeIter, resolveSingleByteRange | RFC 9110 §14.1.2 HTTP Range 请求头（bytes=start-end / start- / -suffix）零分配解析与实体区间求值器 |
-| `cap:gitignore_match` | GitignoreRule, parseGitignoreLine, ruleMatchesPath, isIgnored | Git .gitignore 规则集零分配解析与路径匹配引擎（支持 **/! 反忽略/目录锚定与字符类） |
 | `cap:http_digest` | DigestEntry, DigestIter, findDigest, formatDigest, WantDigestPref, WantDigestIter, negotiateDigestAlg | RFC 9530 Content-Digest / Repr-Digest 与 Want-Content-Digest 结构化字段零分配解析与算法协商 |
 | `cap:env_expand` | EnvPair, lookupEnv, expandEnv, hasEnvRefs | POSIX Shell 风格环境变量模板零分配展开器（支持 $VAR/${VAR:-def}/${VAR:+alt}/嵌套展开与转义） |
 | `cap:editorconfig` | matchSectionPattern, IndentStyle, EndOfLine, Charset, EditorConfigProps, resolveEditorConfig | .editorconfig 零分配解析器、花括号/通配符段匹配与级联属性求值器 |
@@ -600,7 +598,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_content_type` | ContentTypeParam, ContentTypeParamIter, ContentType | RFC 9110 §8.3.1 Content-Type 零分配解析器、参数提取器（charset/boundary）与媒体类型分类器 |
 | `cap:http_permissions_policy` | PermissionDirective, PermissionsPolicyIter, findPermission | W3C Permissions-Policy 响应头零分配解析器与特性权限（disabled/self/*/origin）查询器 |
 | `cap:json_escape` | needsJsonEscape, escapeJsonContent, quoteJsonString, unescapeJsonContent | RFC 8259 JSON 字符串零分配转义器、加引号器与支持 UTF-16 代理对解码的严格反转义器 |
-| `cap:git_ref_check` | isValidGitRefName, isValidBranchName, GitRefKind, ParsedGitRef, parseFullGitRef, isValidGitOidHex, isValidShortOidHex | Git 引用名格式校验器（git-check-ref-format 10 条规则）、refs/* 拆解与 SHA-1/SHA-256 OID 校验 |
 | `cap:xml_escape` | isValidXmlChar, escapeXmlText, escapeXmlAttr, wrapXmlCdata, unescapeXml | XML 1.0 文本/属性转义器、CDATA ]]> 自动安全拆分器与数字/命名实体反转义器 |
 | `cap:http_proxy_url` | ProxyScheme, parseProxyScheme, defaultProxyPort, ProxyUrl, ProxyEnv, selectProxy | HTTP/HTTPS/SOCKS4/SOCKS5/SOCKS5H 代理 URL 解析器与 HTTP_PROXY/HTTPS_PROXY/ALL_PROXY/NO_PROXY 路由选择器 |
 | `cap:http_user_agent` | ProductToken, UserAgentIter, BrowserFamily, OsFamily, isBotUserAgent, isMobileUserAgent, detectBrowser, detectOs, findProductVersion | RFC 9110 §10.1.5 User-Agent 产品令牌零分配迭代器与浏览器/OS/移动端/爬虫分类器 |
@@ -617,11 +614,9 @@ const h = cap.hash.wyhash("hello");
 | `cap:brace_expand` | BraceExpandIter | 零分配 Bash 风格花括号展开迭代器（逗号列表、步进/补零整数序列与字母序列） |
 | `cap:mime_headers` | MimeMessageSplit, splitHeadersAndBody, MimeHeader, MimeHeaderIter, findMimeHeader, countMimeHeader | RFC 5322 / MIME 头块零分配解析器（头体分离、obs-fold 折行展开、大小写不敏感查询与重复头计数） |
 | `cap:mac_addr` | MacAddr | IEEE 802 MAC-48 / EUI-48 硬件地址零分配解析器（4 种格式）、位分类器与 RFC 4291 EUI-64 派生器 |
-| `cap:git_url_parse` | GitProtocol, GitRemoteUrl | Git 远程地址零分配解析器与协议互转工具（支持 SCP git@host:org/repo.git、ssh://、https://、git://、file://） |
 | `cap:toml_escape` | isBareTomlKey, formatTomlBasicString, formatTomlKey, unescapeTomlBasic | TOML 1.0 裸键校验、基本字符串字面量转义与严格 Unicode 标量值（\uXXXX/\UXXXXXXXX）反转义器 |
 | `cap:charset_label` | CharsetKind, resolveCharsetLabel, canonicalCharsetName, isUtf8Compatible, isAsciiSuperset, sniffBomCharset | WHATWG Encoding Standard 字符集标签规范化器（14 种编码别名映射与 UTF-8/UTF-16 BOM 嗅探） |
 | `cap:http_sec_fetch` | FetchSite, FetchMode, FetchDest, parseFetchSite, parseFetchMode, parseFetchDest, FetchMetadata | W3C Fetch Metadata（Sec-Fetch-Site/Mode/Dest/User）零分配解析与资源隔离防护策略求值器 |
-| `cap:git_diff_stat` | FileChangeKind, FileDiffStat, GitDiffIter, DiffSummary, summarizeGitDiff | Git Unified Diff (diff --git) 零分配文件变更统计提取器（增删行数、重命名、新增/删除与二进制识别） |
 | `cap:yaml_escape` | needsYamlQuotes, quoteYamlSingle, quoteYamlDouble, formatYamlScalar, unescapeYamlDouble | YAML 1.2 标量引号安全判定、单/双引号转义与 Unicode（\xHH/\uXXXX/\UXXXXXXXX）反转义器 |
 | `cap:socket_addr` | HostKind, SocketAddr | 零分配 host:port / [ipv6]:port 套接字地址解析器（支持严格远端模式与 :8080/:0 服务端绑定模式） |
 | `cap:makefile_parse` | MakeAssignOp, MakeVar, MakeRule, MakeRuleIter, MakeVarIter, isPhonyTarget | GNU Makefile 目标、依赖、.PHONY 伪目标与变量赋值（=/ :=/ ?=/ +=）零分配解析器 |
