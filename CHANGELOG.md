@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:hjson` 零分配 Hjson Human JSON 词法扫描、注释剥离与标准 RFC 8259 JSON 转换器（5/5 PASS，自动动态挂载 `cap.hjson`）
+- 新增 `lib/hjson/{hjson,index}.cp`、`doc/lib/hjson.md`、`cap/test/test_hjson_production_deep.cp`：纯 CP 零分配实现 Hjson 注释剥离与标准 JSON 转换（`#`/`//`/`/* */`、可选逗号、无引号键值、`...` 自动去缩进多行字面量与 64 层深度防护）（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:ron` 零分配 Rusty Object Notation `.ron` 词法扫描、括号平衡校验与顶层字段提取器（5/5 PASS，自动动态挂载 `cap.ron`）
 - 新增 `lib/ron/{ron,index}.cp`、`doc/lib/ron.md`、`cap/test/test_ron_production_deep.cp`：纯 CP 零分配实现 RON 词法扫描（嵌套 `/* */`、原始字符串 `r#"..."#`、字符字面量、多进制下划线数字）、64 层平衡校验与顶层字段切片提取（5/5 PASS）。
 

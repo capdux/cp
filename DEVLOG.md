@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:hjson` 零分配 Hjson Human JSON 词法扫描、注释剥离与标准 RFC 8259 JSON 转换器（5/5 PASS，文档直写 `doc/lib/hjson.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:hjson`；`hjsonToJson` 与 `stripHjsonComments` 均完整保护单/双/三引号内部文本。
+
 ## 2026-11-22: 新建 `cap:ron` 零分配 Rusty Object Notation `.ron` 词法扫描、括号平衡校验与顶层字段提取器（5/5 PASS，文档直写 `doc/lib/ron.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:ron`；`extractRonField` 零分配跳过嵌套结构与字符串内冒号/逗号。
 
