@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:hungarian` 纯 CP 零分配 O(n³) 势能对偶匈牙利线性指派库：支持 i64/f64 最小权与最大权二分图最优匹配及任意矩形矩阵零拷贝自动转置（5/5 PASS，文档直写 `doc/lib/hungarian.md`）
+新增 cap:hungarian（lib/hungarian/{hungarian,index}.cp）：基于 Jonker-Volgenant/Kuhn-Munkres u/v 势能对偶实现零分配 O(n³) 线性指派与强对偶互补松弛验证，cpc check 0 错误，cap test 6/6 PASS (769ms)
+
 ## 2026-11-22: 新建 `cap:octree` 纯 CP 零分配 3D 空间八叉树索引库：固定池八叉树、AABB/球体范围查询、下界剪枝最近邻搜索与 Slab 法射线-AABB 相交查询（5/5 PASS，文档直写 `doc/lib/octree.md`）
 新增 cap:octree（lib/octree/{octree,index}.cp）：基于静态节点/条目池实现 3D 八叉树自动分裂、盒/球范围查询、下界剪枝最近邻与 Slab 射线相交，cpc check 0 错误，cap test 6/6 PASS (758ms)
 

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:hungarian` 纯 CP 零分配 O(n³) 势能对偶匈牙利线性指派库：支持 i64/f64 最小权与最大权二分图最优匹配及任意矩形矩阵零拷贝自动转置（5/5 PASS，自动动态挂载 `cap.hungarian`）
+新增纯 CP 零分配 O(n³) 匈牙利线性指派库 cap:hungarian（i64/f64 最小与最大权匹配、矩形矩阵自动转置），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:octree` 纯 CP 零分配 3D 空间八叉树索引库：固定池八叉树、AABB/球体范围查询、下界剪枝最近邻搜索与 Slab 法射线-AABB 相交查询（5/5 PASS，自动动态挂载 `cap.octree`）
 新增纯 CP 零分配 3D 空间八叉树索引库 cap:octree（固定池八叉树、AABB/球体查询、最近邻剪枝、Slab 射线查询），含文档与 6 项深度生产测试
 
