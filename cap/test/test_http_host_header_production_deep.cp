@@ -1,7 +1,7 @@
 // Source: cp/cap/test/test_http_host_header_production_deep.cp (Production deep tests for cap:http_host_header)
 
 import { test, expect_eq } from "cap:test";
-import { HostHeader } from "cap:http_host_header";
+import { HostHeader } from "cap:http";
 
 test("http_host_header: domain, IPv4 and bracketed IPv6 parsing with ports") {
     const h1 = HostHeader.parse("example.com:443").?;

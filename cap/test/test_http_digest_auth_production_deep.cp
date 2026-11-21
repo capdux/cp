@@ -5,7 +5,7 @@ import {
     DigestChallenge,
     DigestCredentials,
     formatDigestHeader,
-} from "cap:http_digest_auth";
+} from "cap:http";
 
 test("http_digest_auth: DigestChallenge parses full RFC 7616 WWW-Authenticate header") {
     const hdr =

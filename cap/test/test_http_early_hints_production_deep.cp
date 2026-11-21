@@ -6,7 +6,7 @@ import {
     EarlyHintIter,
     formatEarlyHintLink,
     formatEarlyHints103Block,
-} from "cap:http_early_hints";
+} from "cap:http";
 
 test("1. EarlyHintIter parses multi-link headers with quoted params, URI commas, and flags", () => {
     const hdr =

@@ -1,7 +1,7 @@
 import {
     CacheFreshness,
     FreshnessInput,
-} from "cap:http_freshness";
+} from "cap:http";
 import { test, expect } from "cap:test";
 
 test("FreshnessInput RFC 9111 precedence, age correction, and SWR/SIE windows", () => {

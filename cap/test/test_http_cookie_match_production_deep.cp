@@ -8,7 +8,7 @@ import {
     detectCookiePrefix,
     validateCookiePrefix,
     canSendCookie,
-} from "cap:http_cookie_match";
+} from "cap:http";
 
 test("1. defaultCookiePath strictly follows RFC 6265 section 5.1.4", () => {
     expect_eq(std.mem.eql(u8, defaultCookiePath(""), "/"), true);

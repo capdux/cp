@@ -1,10 +1,10 @@
 import { test, expect } from "cap:test";
 import {
-    SameSite,
+    CookieJarSameSite as SameSite,
     Cookie,
     CookieRequestIterator,
     getCookie,
-} from "cap:http_cookie";
+} from "cap:http";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

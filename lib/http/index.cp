@@ -304,3 +304,125 @@ export {
     parseContentRange,
     formatContentRange,
 } from "./contentrange.cp";
+
+// --- Step 8: Consolidated RFC/W3C HTTP Header Codecs (Wave 4 Batch 2) ---
+export {
+    ContentTypeParam,
+    ContentTypeParamIter,
+    ContentType,
+} from "./contenttype.cp";
+
+export {
+    SameSite as CookieJarSameSite,
+    Cookie,
+    CookiePair as CookieJarPair,
+    CookieRequestIterator,
+    getCookie,
+} from "./cookiejar.cp";
+
+export {
+    defaultCookiePath,
+    cookieDomainMatches,
+    cookiePathMatches,
+    CookiePrefixKind,
+    detectCookiePrefix,
+    validateCookiePrefix,
+    canSendCookie,
+} from "./cookiematch.cp";
+
+export {
+    CspDirective,
+    CspSourceIter,
+    CspDirectiveIter,
+    findDirective,
+    effectiveFetchDirective,
+    appendCspDirective,
+} from "./csp.cp";
+
+export {
+    HttpDateTime,
+    formatHttpDate,
+    parseHttpDate,
+} from "./date.cp";
+
+export {
+    DigestEntry,
+    DigestIter,
+    findDigest,
+    formatDigest,
+    WantDigestPref,
+    WantDigestIter,
+    negotiateDigestAlg,
+} from "./digest.cp";
+
+export {
+    DigestChallenge,
+    DigestCredentials,
+    formatDigestHeader,
+} from "./digestauth.cp";
+
+export {
+    EarlyHintRel,
+    EarlyHintLink,
+    EarlyHintIter,
+    formatEarlyHintLink,
+    formatEarlyHints103Block,
+} from "./earlyhints.cp";
+
+export {
+    fnv1a64,
+    generateWeakStatEtag,
+    generateStrongHashEtag,
+    generateWeakHashEtag,
+    isValidEtagSyntax,
+} from "./etaggen.cp";
+
+export {
+    ExpectItem,
+    ExpectIter,
+    ExpectDecision,
+    hasContinueExpectation,
+    hasUnknownExpectation,
+    evaluateExpectHeader,
+} from "./expect.cp";
+
+export {
+    ENC_MASK_IDENTITY,
+    ENC_MASK_GZIP,
+    ENC_MASK_DEFLATE,
+    ENC_MASK_BR,
+    ENC_MASK_ZSTD,
+    ENC_MASK_ALL,
+    ContentEncoding,
+    negotiateEncoding as negotiateEncodingMask,
+    FetchCacheMode as MetaFetchCacheMode,
+    FetchRedirect as MetaFetchRedirect,
+    FetchRequestMode as MetaFetchRequestMode,
+    UrlPath,
+} from "./fetchmeta.cp";
+
+export {
+    encodeFormComponent,
+    decodeFormComponent,
+    FormPairRaw,
+    FormIter,
+    getFormParam,
+    appendFormParam,
+} from "./form.cp";
+
+export {
+    ForwardedHop,
+    ForwardedIterator,
+    parseFirstHop,
+    extractClientIpFromXff,
+    stripPortFromForwardedFor,
+} from "./forwarded.cp";
+
+export {
+    CacheFreshness,
+    FreshnessInput,
+} from "./freshness.cp";
+
+export {
+    HostHeader,
+} from "./host.cp";

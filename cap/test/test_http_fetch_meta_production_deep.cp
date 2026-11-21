@@ -6,12 +6,12 @@ import {
     ENC_MASK_ZSTD,
     ENC_MASK_ALL,
     ContentEncoding,
-    negotiateEncoding,
-    FetchCacheMode,
-    FetchRedirect,
-    FetchRequestMode,
+    negotiateEncodingMask as negotiateEncoding,
+    MetaFetchCacheMode as FetchCacheMode,
+    MetaFetchRedirect as FetchRedirect,
+    MetaFetchRequestMode as FetchRequestMode,
     UrlPath,
-} from "cap:http_fetch_meta";
+} from "cap:http";
 
 test("1. Accept-Encoding q-factor negotiation (zstd/br/gzip/q=0 disable/* fallback)", () => {
     // Highest q wins: br (1.0) > zstd (0.9) > gzip (0.5)

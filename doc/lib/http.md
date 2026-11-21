@@ -76,6 +76,10 @@
 | `lib/http/cache.cp` / `cachectrl.cp` / `cachekey.cp` | RFC 9111 缓存策略与新鲜度评估（`HttpCacheEvaluator`）、`Cache-Control` 指令迭代、缓存键规范化 | `src/http/` |
 | `lib/http/clearsite.cp` / `clienthints.cp` | W3C `Clear-Site-Data` 解析器与 `Sec-CH-UA` Client Hints 解析器 | `src/http/` |
 | `lib/http/contentenc.cp` / `contentlang.cp` / `contentrange.cp` | RFC 9110 `Content-Encoding` 编码栈、BCP 47 `Content-Language` 解析与规范化、`Content-Range` 编解码 | `src/http/` |
+| `lib/http/contenttype.cp` / `cookiejar.cp` / `cookiematch.cp` | RFC 9110 `Content-Type` 参数解析、RFC 6265 Cookie 扩展解析与域/路径/前缀发送策略校验 | `src/http/` |
+| `lib/http/csp.cp` / `date.cp` / `digest.cp` / `digestauth.cp` | W3C CSP 指令迭代与查询、RFC 9110 `HTTP-date` 编解码、RFC 9530 `Digest`/`Want-Digest`、RFC 7616 Digest Auth | `src/http/` |
+| `lib/http/earlyhints.cp` / `etaggen.cp` / `expect.cp` | RFC 8297 103 Early Hints、`FNV-1a` 强弱 ETag 生成与校验、RFC 9110 `Expect: 100-continue` 裁定 | `src/http/` |
+| `lib/http/fetchmeta.cp` / `form.cp` / `forwarded.cp` / `freshness.cp` / `host.cp` | Fetch 元数据掩码协商、WHATWG Form URL-Encoded、RFC 7239 `Forwarded`/`XFF`、RFC 9111 新鲜度计算、RFC 9110 `Host` 校验 | `src/http/` |
 
 ---
 

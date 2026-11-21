@@ -6,7 +6,7 @@ import {
     generateStrongHashEtag,
     generateWeakHashEtag,
     isValidEtagSyntax,
-} from "cap:http_etag_gen";
+} from "cap:http";
 
 test("1. fnv1a64 matches official 64-bit FNV-1a test vectors", () => {
     expect_eq(fnv1a64(""), u64(0xcbf29ce484222325));

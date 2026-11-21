@@ -7,7 +7,7 @@ import {
     parseFirstHop,
     extractClientIpFromXff,
     stripPortFromForwardedFor,
-} from "cap:http_forwarded";
+} from "cap:http";
 
 test("http_forwarded: RFC 7239 multi-hop parsing with quoted IPv6+port and case-insensitive keys") {
     const hdr =

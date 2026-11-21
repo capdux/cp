@@ -6,7 +6,7 @@ import {
     hasContinueExpectation,
     hasUnknownExpectation,
     evaluateExpectHeader,
-} from "cap:http_expect";
+} from "cap:http";
 
 test("1. ExpectIter parses comma-separated items, quoted commas, and empty entries", () => {
     const hdr = " , 100-Continue , ext-a=42 , ext-b=\"hello, \\\"world\\\"\" , ";

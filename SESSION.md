@@ -316,3 +316,6 @@
 
 ### 2026-11-22（`cap:net` 验收，方案 A Wave 5：7 个网络/代理目录收敛至 `cap:net`（7/7 PASS），累计消除 82 个长下划线顶层目录）
 - **执行成果**：`lib/net/`（5/5 PASS，`doc/lib/net.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 5：7 个网络/代理目录收敛至 `cap:net`（7/7 PASS），累计消除 82 个长下划线顶层目录
+
+### 2026-11-22（`cap:http` 验收，方案 A Wave 4 全部收官：`http_* 第2批`(15) 收敛至 `cap:http`（15/15 PASS），累计消除 97 个长下划线顶层目录！）
+- **执行成果**：`lib/http/`（5/5 PASS，`doc/lib/http.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 4 全部收官：`http_* 第2批`(15) 收敛至 `cap:http`（15/15 PASS），累计消除 97 个长下划线顶层目录！

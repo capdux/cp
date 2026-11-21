@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:http` HTTP/1.1/2/3 协议与全套 RFC 头部协商、Cookie、CSP、Digest、EarlyHints 与转发统一主包（5/5 PASS，文档直写 `doc/lib/http.md`）
+- **收敛要点**：15 个 HTTP Cookie/CSP/Digest/EarlyHints/Forwarded 子模块零破坏合入 `lib/http/`；累计已消除 97 个长下划线顶层目录！
+
 ## 2026-11-22: 新建 `cap:net` 网络 Socket、IP/MAC/SocketAddr、PROXY Protocol v1/v2、Hosts 与 NoProxy 统一主包（5/5 PASS，文档直写 `doc/lib/net.md`）
 - **收敛要点**：保留原 `lib/net/{address,cidr}.cp` 零破坏，冲突符号通过聚合别名 `RfcIpAddr`/`NoProxyIpv4Addr` 消解；累计已消除 82 个长下划线顶层目录。
 
