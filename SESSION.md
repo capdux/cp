@@ -91,3 +91,6 @@
 
 ### 2026-11-22（`cap:pickle` 验收，完成 `cap:pickle` 交付验收并登记入库（5/5 PASS）；派发 `cap:marshal`。）
 - **执行成果**：`lib/pickle/`（5/5 PASS，`doc/lib/pickle.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:pickle` 交付验收并登记入库（5/5 PASS）；派发 `cap:marshal`。
+
+### 2026-11-22（`cap:ion` 验收，完成 `cap:ion` 交付验收并登记入库（5/5 PASS）；派发 `cap:flatbuf`。）
+- **执行成果**：`lib/ion/`（5/5 PASS，`doc/lib/ion.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:ion` 交付验收并登记入库（5/5 PASS）；派发 `cap:flatbuf`。

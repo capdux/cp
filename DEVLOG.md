@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ion` 零分配 Amazon Ion 1.0 二进制格式 IVM、VarUInt/VarInt 与结构化值解析器（5/5 PASS，文档直写 `doc/lib/ion.md`）
+实现零分配 Amazon Ion 1.0 二进制解析器，支持全部 16 种 Type Code、typed null、内联 bool 与扩展长度编码。
+
 ## 2026-11-22: 新建 `cap:pickle` 零分配 Python Pickle Protocol 2-5 指令流解析与静态安全审计器（5/5 PASS，文档直写 `doc/lib/pickle.md`）
 实现零分配 Python Pickle 指令流解析与模型权重安全审计器，覆盖 FRAME/LONG1/BINUNICODE8/BINFLOAT 与防越界校验。
 
