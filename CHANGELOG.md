@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:mustache` 零分配 Mustache 模板词法解析、语法校验与 HTML 转义渲染引擎（5/5 PASS，自动动态挂载 `cap.mustache`）
+- 新增 `lib/mustache/{mustache,index}.cp`、`doc/lib/mustache.md`、`cap/test/test_mustache_production_deep.cp`：纯 CP 零分配实现 Mustache `{{var}}`/`{{{raw}}}`/`{{& raw}}`/`{{!comment}}` 解析校验与 HTML 转义渲染（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:jsonc` JSON with Comments & Trailing Commas 零分配注释/尾逗号剥离器与行号保留格式化器（5/5 PASS，自动动态挂载 `cap.jsonc`）
 - 新增 `lib/jsonc/{jsonc,index}.cp`、`doc/lib/jsonc.md`、`cap/test/test_jsonc_production_deep.cp`：纯 CP 零分配剥离 JSONC `//`、`/* */` 注释与尾随逗号并支持行号保留（5/5 PASS）；同步在 `GEMINI.md` 固化第十章「标准库简洁 TS 风格命名与领域主包收敛铁律」。
 

@@ -277,3 +277,6 @@
 
 ### 2026-11-22（`cap:jsonc` 验收，Batch 122 落地（`cap:jsonc` + 固化 `GEMINI.md` 第十章命名收敛规范，启动 Wave 1 `dns`/`ansi` 主包收敛））
 - **执行成果**：`lib/jsonc/`（5/5 PASS，`doc/lib/jsonc.md`）经 `verify_module.sh` 一次性验收回收；Batch 122 落地（`cap:jsonc` + 固化 `GEMINI.md` 第十章命名收敛规范，启动 Wave 1 `dns`/`ansi` 主包收敛）
+
+### 2026-11-22（`cap:mustache` 验收，Batch 123 落地（`cap:mustache`）；Wave 1 三路并行收敛 `dns`/`ansi`/`sys(etc)` 主包全面启动）
+- **执行成果**：`lib/mustache/`（5/5 PASS，`doc/lib/mustache.md`）经 `verify_module.sh` 一次性验收回收；Batch 123 落地（`cap:mustache`）；Wave 1 三路并行收敛 `dns`/`ansi`/`sys(etc)` 主包全面启动

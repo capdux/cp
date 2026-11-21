@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:mustache` 零分配 Mustache 模板词法解析、语法校验与 HTML 转义渲染引擎（5/5 PASS，文档直写 `doc/lib/mustache.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:mustache`；`MustacheIter` 单遍区分四类 Token 并记录语法错位标志，`renderMustache` 零分配完成 HTML 实体转义与缓冲边界检查。
+
 ## 2026-11-22: 新建 `cap:jsonc` JSON with Comments & Trailing Commas 零分配注释/尾逗号剥离器与行号保留格式化器（5/5 PASS，文档直写 `doc/lib/jsonc.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:jsonc`；字符串/转义感知并穿透交错注释剥离尾逗号；固化 `GEMINI.md` 第十章，启动方案 A 领域主包收敛。
 

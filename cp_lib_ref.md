@@ -714,3 +714,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:cli_spinner` | `SpinnerPreset`, `SpinnerSpec`, `formatSpinnerFrame`, `formatSpinnerDone` | 零分配 CLI 终端加载动画帧序列预设（dots/line/arc/arrows/bouncing_bar）与 TTY 状态行渲染器 |
 | `cap:jsonl` | `JsonlChunkResult`, `JsonlIter`, `scanCompleteJsonlChunk`, `isBalancedJsonRecord`, `appendJsonlRecord` | JSON Lines / NDJSON 流式行迭代、增量分块扫描与记录平衡零分配校验器 |
 | `cap:jsonc` | `stripJsonc`, `stripJsoncPreserveLines`, `hasJsoncComments`, `countJsoncTrailingCommas` | JSON with Comments & Trailing Commas 零分配注释/尾逗号剥离器与行号保留格式化器 |
+| `cap:mustache` | `MustacheTokenKind`, `MustacheToken`, `MustacheVar`, `MustacheIter`, `validateMustache`, `renderMustache` | 零分配 Mustache 模板词法解析、语法校验与 HTML 转义渲染引擎 |
