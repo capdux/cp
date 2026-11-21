@@ -151,10 +151,14 @@ impl<'a> Parser<'a> {
             if self.peek_next() != Some(&Token::Colon)
                 && (self.peek() == Some(&Token::Const)
                     || self.peek() == Some(&Token::Var)
+                    || self.peek() == Some(&Token::ThreadLocal)
                     || self.peek() == Some(&Token::TypeKw)
                     || self.peek() == Some(&Token::Enum)
                     || self.peek() == Some(&Token::Interface)
-                    || self.peek() == Some(&Token::Trait))
+                    || self.peek() == Some(&Token::Trait)
+                    || (matches!(self.peek(), Some(Token::Ident(id)) if id == "comptime")
+                        && self.peek_next() == Some(&Token::LBrace))
+                    || matches!(self.peek(), Some(Token::Ident(id)) if id == "usingnamespace"))
             {
                 let start_idx = self.peek_span().start;
                 let mut brace_depth: i32 = 0;
@@ -545,13 +549,17 @@ impl<'a> Parser<'a> {
             if self.peek_next() != Some(&Token::Colon)
                 && (self.peek() == Some(&Token::Const)
                     || self.peek() == Some(&Token::Var)
+                    || self.peek() == Some(&Token::ThreadLocal)
                     || self.peek() == Some(&Token::TypeKw)
                     || self.peek() == Some(&Token::Union)
                     || self.peek() == Some(&Token::Struct)
                     || self.peek() == Some(&Token::Enum)
                     || self.peek() == Some(&Token::Class)
                     || self.peek() == Some(&Token::Interface)
-                    || self.peek() == Some(&Token::Trait))
+                    || self.peek() == Some(&Token::Trait)
+                    || (matches!(self.peek(), Some(Token::Ident(id)) if id == "comptime")
+                        && self.peek_next() == Some(&Token::LBrace))
+                    || matches!(self.peek(), Some(Token::Ident(id)) if id == "usingnamespace"))
             {
                 let start_idx = self.peek_span().start;
                 let mut brace_depth: i32 = 0;

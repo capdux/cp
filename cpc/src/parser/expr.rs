@@ -31,16 +31,62 @@ impl<'a> Parser<'a> {
                             self.bump()?;
                         }
                     }
+                    let call_start = left_span(&left).start;
                     let end = self.expect(Token::RParen)?.end;
                     left = Expr::Call(CallExpr {
                         span: Span {
-                            start: left_span(&left).start,
+                            start: call_start,
                             end,
                         },
                         callee: Box::new(left),
                         args,
                         is_comptime,
                     });
+                    if self.peek() == Some(&Token::LBrace)
+                        && matches!(self.peek_next(), Some(Token::Dot))
+                    {
+                        let full_ty_sym = self.input[call_start..end].trim().to_string();
+                        self.bump()?; // consume '{'
+                        let mut fields = Vec::new();
+                        while self.peek() != Some(&Token::RBrace) && self.peek().is_some() {
+                            if self.peek() == Some(&Token::Dot) {
+                                self.bump()?;
+                            }
+                            let key = self.parse_ident()?;
+                            if self.peek() == Some(&Token::Colon)
+                                || self.peek() == Some(&Token::Assign)
+                            {
+                                self.bump()?;
+                            } else {
+                                self.expect(Token::Colon)?;
+                            }
+                            let val = self.parse_expr()?;
+                            fields.push(EnumInitField { key, val });
+                            if self.peek() == Some(&Token::Comma) {
+                                self.bump()?;
+                            }
+                        }
+                        let init_end = self.expect(Token::RBrace)?.end;
+                        left = Expr::EnumInit(EnumInitExpr {
+                            span: Span {
+                                start: call_start,
+                                end: init_end,
+                            },
+                            enum_name: Ident {
+                                span: Span {
+                                    start: call_start,
+                                    end,
+                                },
+                                sym: full_ty_sym,
+                            },
+                            variant_name: Ident {
+                                span: Span { start: end, end },
+                                sym: String::new(),
+                            },
+                            fields: Some(fields),
+                            tuple_args: None,
+                        });
+                    }
                 }
                 Some(Token::QuestionDot) => {
                     self.bump()?;
@@ -989,16 +1035,62 @@ impl<'a> Parser<'a> {
                             self.bump()?;
                         }
                     }
+                    let call_start = left_span(&left).start;
                     let end = self.expect(Token::RParen)?.end;
                     left = Expr::Call(CallExpr {
                         span: Span {
-                            start: left_span(&left).start,
+                            start: call_start,
                             end,
                         },
                         callee: Box::new(left),
                         args,
                         is_comptime,
                     });
+                    if self.peek() == Some(&Token::LBrace)
+                        && matches!(self.peek_next(), Some(Token::Dot))
+                    {
+                        let full_ty_sym = self.input[call_start..end].trim().to_string();
+                        self.bump()?; // consume '{'
+                        let mut fields = Vec::new();
+                        while self.peek() != Some(&Token::RBrace) && self.peek().is_some() {
+                            if self.peek() == Some(&Token::Dot) {
+                                self.bump()?;
+                            }
+                            let key = self.parse_ident()?;
+                            if self.peek() == Some(&Token::Colon)
+                                || self.peek() == Some(&Token::Assign)
+                            {
+                                self.bump()?;
+                            } else {
+                                self.expect(Token::Colon)?;
+                            }
+                            let val = self.parse_expr()?;
+                            fields.push(EnumInitField { key, val });
+                            if self.peek() == Some(&Token::Comma) {
+                                self.bump()?;
+                            }
+                        }
+                        let init_end = self.expect(Token::RBrace)?.end;
+                        left = Expr::EnumInit(EnumInitExpr {
+                            span: Span {
+                                start: call_start,
+                                end: init_end,
+                            },
+                            enum_name: Ident {
+                                span: Span {
+                                    start: call_start,
+                                    end,
+                                },
+                                sym: full_ty_sym,
+                            },
+                            variant_name: Ident {
+                                span: Span { start: end, end },
+                                sym: String::new(),
+                            },
+                            fields: Some(fields),
+                            tuple_args: None,
+                        });
+                    }
                 }
                 Some(Token::QuestionDot) => {
                     self.bump()?;

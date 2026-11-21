@@ -128,19 +128,42 @@ impl Codegen {
 
     pub(crate) fn generate_zig_or_struct(&mut self, code: &str) -> String {
         if let Some(mut cls) = Self::parse_anon_struct_or_union(code) {
-            let has_fields = !cls.fields.is_empty();
             for m in &mut cls.methods {
+                let is_dtor = m.ident.sym == "__cp_deinit";
                 let has_explicit_self = m.params.first().map_or(false, |p| {
-                    p.ident.sym == "this" || p.ident.sym == "_" || p.ident.sym == "self"
+                    if p.ident.sym == "this" || p.ident.sym == "self" {
+                        true
+                    } else if p.ident.sym == "_" {
+                        fn is_self_like_ty(ty: &Type, cls_name: &str) -> bool {
+                            match ty {
+                                Type::Any => true,
+                                Type::BorrowType { inner, .. } | Type::RawPtr { inner, .. } => {
+                                    is_self_like_ty(inner, cls_name)
+                                }
+                                Type::Ref(id) => {
+                                    id.sym == cls_name
+                                        || id.sym == "@This()"
+                                        || id.sym == "Self"
+                                        || id.sym == "__CpAnonStruct__"
+                                }
+                                _ => false,
+                            }
+                        }
+                        is_self_like_ty(&p.ty, &cls.ident.sym)
+                    } else {
+                        false
+                    }
                 });
+                let declares_local = |name: &str| {
+                    m.body.body.iter().any(|st| match st {
+                        Stmt::Var(v) => matches!(&v.pat, Pattern::Ident(id) if id.sym == name),
+                        _ => false,
+                    })
+                };
                 let uses_implicit_self = Self::block_contains_ident(&m.body, "_")
-                    || Self::block_contains_ident(&m.body, "this")
-                    || Self::block_contains_ident(&m.body, "self");
-                let has_callconv = m.meta.iter().any(|mt| mt.name.sym == "callconv");
-                if !has_explicit_self
-                    && !uses_implicit_self
-                    && (!has_fields || has_callconv || m.ident.sym == "init")
-                {
+                    || (!declares_local("this") && Self::block_contains_ident(&m.body, "this"))
+                    || (!declares_local("self") && Self::block_contains_ident(&m.body, "self"));
+                if !is_dtor && !has_explicit_self && !uses_implicit_self {
                     m.is_static = true;
                 }
             }

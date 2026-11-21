@@ -449,6 +449,9 @@ impl Codegen {
                                 | Expr::Return(_, _) => {
                                     self.generate_stmt(s);
                                 }
+                                Expr::Bin(b) if b.op == BinaryOp::Assign => {
+                                    self.generate_stmt(s);
+                                }
                                 Expr::Builtin(b)
                                     if matches!(
                                         b.name.as_str(),

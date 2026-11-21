@@ -369,7 +369,12 @@ impl Codegen {
                         "(blk_om_{id}: {{ const __o_{id} = {obj_code}; const __R_{id} = CpOptType(@TypeOf(cp_opt_unwrap(__o_{id}).{prop})); if (cp_opt_is_null(__o_{id})) break :blk_om_{id} @as(__R_{id}, null); break :blk_om_{id} @as(__R_{id}, cp_opt_unwrap(__o_{id}).{prop}); }})"
                     );
                 }
-                let obj = self.generate_expr(&member.obj);
+                let raw_obj = self.generate_expr(&member.obj);
+                let obj = if raw_obj.ends_with('}') && !raw_obj.starts_with('(') {
+                    format!("({})", raw_obj)
+                } else {
+                    raw_obj
+                };
                 let cp_ty = self.infer_cp_type(&member.obj);
                 let obj_ty = self.infer_zig_type(None, Some(&member.obj));
 

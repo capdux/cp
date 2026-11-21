@@ -1404,7 +1404,20 @@ impl Codegen {
                         };
                     self.indent();
                     if let Some(cap) = &i.capture {
-                        if cap.sym != "_" {
+                        let already_discarded = if let Stmt::Block(b) = &*i.cons {
+                            b.body.iter().any(|st| {
+                                matches!(
+                                    st,
+                                    Stmt::Expr(Expr::Bin(bin))
+                                        if bin.op == BinaryOp::Assign
+                                            && matches!(&*bin.left, Expr::Ident(l) if l.sym == "_")
+                                            && matches!(&*bin.right, Expr::Ident(r) if r.sym == cap.sym)
+                                )
+                            })
+                        } else {
+                            false
+                        };
+                        if cap.sym != "_" && !already_discarded {
                             self.write_to_case(&format!("_ = &{};", cap.sym));
                         }
                     }

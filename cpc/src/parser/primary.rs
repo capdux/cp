@@ -1838,6 +1838,35 @@ impl<'a> Parser<'a> {
                 }
                 let test = self.parse_expr()?;
                 self.expect(Token::RParen)?;
+                if capture.is_none() && self.peek() == Some(&Token::Pipe) {
+                    let pipe_start = self.bump()?.1;
+                    if self.peek() == Some(&Token::Star) || self.peek() == Some(&Token::Mut) {
+                        self.bump()?;
+                        is_ptr_capture = true;
+                    }
+                    let cap_id = self.parse_ident()?;
+                    let pipe_end = self.expect(Token::Pipe)?;
+                    self.errors.push(
+                        Diagnostic::new(
+                            "E0118",
+                            "Zig-style '|capture|' syntax is abolished in 'if' expression",
+                        )
+                        .with_span(Span {
+                            start: pipe_start.start,
+                            end: pipe_end.end,
+                        })
+                        .with_cause(
+                            "trailing '|v|' capture after parentheses is Zig syntax and is abolished in CP.",
+                        )
+                        .with_help("in CP, optional/error unwrapping uses ':=' inside parentheses.")
+                        .with_suggestion(format!(
+                            "use 'if ({}{} := expr) ...'",
+                            if is_ptr_capture { "*" } else { "" },
+                            cap_id.sym
+                        )),
+                    );
+                    capture = Some(cap_id);
+                }
                 let cons = if self.peek() == Some(&Token::LBrace) {
                     let block = self.parse_block_stmt()?;
                     Expr::LabeledBlock { label: None, block }

@@ -388,6 +388,9 @@ impl Codegen {
                                     if ec == "unreachable"
                                         || ec.starts_with("@panic")
                                         || ec.starts_with("@compileError")
+                                        || ec.starts_with("break")
+                                        || ec.starts_with("return")
+                                        || ec.starts_with("continue")
                                     {
                                         self.write_to_case(&format!("{};", ec));
                                     } else if let Some(ty_str) = &target_payload_ty {

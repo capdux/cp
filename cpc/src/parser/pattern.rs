@@ -18,7 +18,11 @@ impl<'a> Parser<'a> {
                     && self.in_paren_pattern == 0
                     && self.peek() == Some(&Token::Comma))
             {
+                let sep_is_comma = self.peek() == Some(&Token::Comma);
                 self.bump()?;
+                if sep_is_comma && self.peek() == Some(&Token::FatArrow) {
+                    break;
+                }
                 pats.push(self.parse_single_pattern()?);
             }
             return Ok(Pattern::Or(pats));

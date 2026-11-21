@@ -679,6 +679,7 @@ impl Codegen {
                     mutable_copy_params.push(p.ident.sym.clone());
                     format!("_cp_{}", p.ident.sym)
                 } else if p.ident.sym == "_"
+                    && !func.is_static
                     && !self.locals.contains_key("self")
                     && (Self::block_contains_ident(&func.body, "this")
                         || Self::block_contains_ident(&func.body, "self")

@@ -1634,11 +1634,37 @@ impl<'a> Parser<'a> {
                         err: ErrorType::AnyErr,
                     });
                 }
+                let rhs_is_non_error_value_type = matches!(
+                    self.peek(),
+                    Some(
+                        Token::Void
+                            | Token::Bool
+                            | Token::U8
+                            | Token::I8
+                            | Token::U16
+                            | Token::I16
+                            | Token::U32
+                            | Token::I32
+                            | Token::U64
+                            | Token::I64
+                            | Token::U128
+                            | Token::I128
+                            | Token::USize
+                            | Token::ISize
+                            | Token::F32
+                            | Token::F64
+                            | Token::String
+                            | Token::CStr
+                            | Token::Star
+                            | Token::Question
+                            | Token::LBracket
+                    )
+                );
                 if id.sym.ends_with("Error")
                     || id.sym.ends_with("Err")
                     || id.sym.ends_with("OOM")
                     || id.sym.starts_with("error{")
-                    || self.peek() == Some(&Token::Void)
+                    || rhs_is_non_error_value_type
                 {
                     let ok_ty = self.parse_type()?;
                     return Ok(Type::ResultType {

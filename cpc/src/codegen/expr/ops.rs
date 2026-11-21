@@ -46,6 +46,11 @@ impl Codegen {
                 }
                 if i.sym == "c" && !self.c_includes.is_empty() && !self.locals.contains_key("c") {
                     "__c_stdlib".to_string()
+                } else if i.sym == "this"
+                    && self.locals.contains_key("this")
+                    && !self.locals.contains_key("self")
+                {
+                    "this".to_string()
                 } else if i.sym == "this" || i.sym == "_" {
                     if self.is_state_machine {
                         "ctx.self".to_string()
@@ -819,6 +824,8 @@ impl Codegen {
                                 format!("@as({}, @ptrCast(&({})))", target_zig_ty, inner_code)
                             } else if matches!(src_ty, Some(Type::String)) {
                                 format!("@as({}, @ptrCast({}.ptr))", target_zig_ty, inner_code)
+                            } else if inner_code.starts_with("@ptrCast(") {
+                                format!("@as({}, @alignCast({}))", target_zig_ty, inner_code)
                             } else {
                                 format!(
                                     "@as({}, @ptrCast(@alignCast({})))",
