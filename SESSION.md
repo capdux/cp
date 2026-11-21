@@ -154,3 +154,6 @@
 
 ### 2026-11-22（`cap:apk` 验收，完成 `cap:apk` 交付验收并登记入库（5/5 PASS）；派发 `cap:uf2`。）
 - **执行成果**：`lib/apk/`（5/5 PASS，`doc/lib/apk.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:apk` 交付验收并登记入库（5/5 PASS）；派发 `cap:uf2`。
+
+### 2026-11-22（`cap:nmea` 验收，完成 `cap:nmea` 交付验收并登记入库（5/5 PASS）；派发 `cap:srec`。）
+- **执行成果**：`lib/nmea/`（5/5 PASS，`doc/lib/nmea.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:nmea` 交付验收并登记入库（5/5 PASS）；派发 `cap:srec`。

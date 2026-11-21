@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:nmea` 零分配 NMEA 0183 GPS/GNSS 语句校验与 GGA/RMC/VTG 解析器（5/5 PASS，文档直写 `doc/lib/nmea.md`）
+实现零分配 NMEA 0183 解析器，严格保留空字段并支持 $GP/$GN 与 !AIVDM 帧流。
+
 ## 2026-11-22: 新建 `cap:apk` 零分配 Android APK ZIP EOCD 与 APK Signing Block v2/v3 签名块解析器（5/5 PASS，文档直写 `doc/lib/apk.md`）
 实现零分配 Android APK 签名块解析器，严格防下溢/越界并汇总 v2/v3/Verity Padding 存在性。
 

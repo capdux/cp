@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:nmea` 零分配 NMEA 0183 GPS/GNSS 语句校验与 GGA/RMC/VTG 解析器（5/5 PASS，自动动态挂载 `cap.nmea`）
+新增 `lib/nmea/{nmea,index}.cp`、`doc/lib/nmea.md` 与 `cap/test/test_nmea_production_deep.cp`（5/5 PASS），支持 XOR 校验和、ddmm.mmmm 经纬度换算、GGA/RMC/VTG 解码与多行串口流过滤。
+
 ## [2026-11-22] - 新建 `cap:apk` 零分配 Android APK ZIP EOCD 与 APK Signing Block v2/v3 签名块解析器（5/5 PASS，自动动态挂载 `cap.apk`）
 新增 `lib/apk/{apk,index}.cp`、`doc/lib/apk.md` 与 `cap/test/test_apk_production_deep.cp`（5/5 PASS），支持 EOCD 反向定位、APK Sig Block 42 顶底长度一致性校验与 v2/v3/v3.1 Pair 迭代。
 
