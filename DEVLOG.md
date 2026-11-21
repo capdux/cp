@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:knx` KNXnet/IP (ISO 14543-3-2) HPAI, cEMI frame, address & DPT9 float zero-alloc codec（5/5 PASS，文档直写 `doc/lib/knx.md`）
+新增 cap:knx 纯 CP 零分配智能建筑总线协议库（6B 报头、HPAI/ConnHeader/cEMI 分层解包、物理/组地址与 DPT9 2B 浮点解码），通过 cpc check 与 5/5 cap test
+
 
 
 ## 2026-11-22: 新建 `cap:smb` SMB2/SMB3 (MS-SMB2) header, Compound chain, Negotiate & Transform zero-alloc parser（5/5 PASS，文档直写 `doc/lib/smb.md`）
