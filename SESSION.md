@@ -262,3 +262,6 @@
 
 ### 2026-11-22（`cap:text_indent` 验收，Batch 117 落地，标准库总量达 284 模块）
 - **执行成果**：`lib/text_indent/`（5/5 PASS，`doc/lib/text_indent.md`）经 `verify_module.sh` 一次性验收回收；Batch 117 落地，标准库总量达 284 模块
+
+### 2026-11-22（`cap:http_content_language` 验收，Batch 118 落地，标准库总量达 285 模块）
+- **执行成果**：`lib/http_content_language/`（5/5 PASS，`doc/lib/http_content_language.md`）经 `verify_module.sh` 一次性验收回收；Batch 118 落地，标准库总量达 285 模块

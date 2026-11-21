@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_content_language` RFC 9110 §8.5 + RFC 5646 HTTP `Content-Language` 解析与 BCP 47 标签规范化器（5/5 PASS，自动动态挂载 `cap.http_content_language`）
+- 新增 `lib/http_content_language/{content_language,index}.cp`、`doc/lib/http_content_language.md`、`cap/test/test_http_content_language_production_deep.cp`：纯 CP 零分配解析 RFC 9110 `Content-Language` 头、提取 `primary`/`script`/`region` 与 RFC 5646 大小写规范化（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:text_indent` 零分配多行文本最小公共缩进检测、`dedent` 剥离与 `indentLines` 统一缩进格式化器（5/5 PASS，自动动态挂载 `cap.text_indent`）
 - 新增 `lib/text_indent/{indent,index}.cp`、`doc/lib/text_indent.md`、`cap/test/test_text_indent_production_deep.cp`：纯 CP 零分配实现多行文本 `minCommonIndent`、`dedent`、`indentLines` 与 `stripCommonPrefix`，原样保留 `\n`/`\r\n` 换行风格（5/5 PASS）。
 

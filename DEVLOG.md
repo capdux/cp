@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:http_content_language` RFC 9110 §8.5 + RFC 5646 HTTP `Content-Language` 解析与 BCP 47 标签规范化器（5/5 PASS，文档直写 `doc/lib/http_content_language.md`）
+- **设计要点**：`parseLanguageTagParts` 在单字符扩展前缀处安全停止避免误将 `-x-us` 识别为 region；`canonicalizeLanguageTag` 严格遵循 RFC 5646 §2.1.1 大小写约定。
+
 ## 2026-11-22: 新建 `cap:text_indent` 零分配多行文本最小公共缩进检测、`dedent` 剥离与 `indentLines` 统一缩进格式化器（5/5 PASS，文档直写 `doc/lib/text_indent.md`）
 - **设计要点**：单遍计算非纯空白行最小前导空白并零分配流式写出；纯空白行自动规范为空行，保留原始换行符与缓冲区边界安全检查。
 

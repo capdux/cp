@@ -709,3 +709,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_accept_language` | `LanguageRange`, `AcceptLanguageIter`, `negotiateLanguage` | RFC 9110 §12.5.4 + RFC 4647 HTTP `Accept-Language` BCP 47 语言权重零分配协商器 |
 | `cap:proc_statm` | `ProcStatm`, `parseProcStatm` | Linux `/proc/<pid>/statm` 7 列内存页计数零分配解析与饱和字节换算器 |
 | `cap:text_indent` | `minCommonIndent`, `dedent`, `indentLines`, `stripCommonPrefix` | 零分配多行文本最小公共缩进检测、`dedent` 剥离与 `indentLines` 统一缩进格式化器 |
+| `cap:http_content_language` | `LanguageTagParts`, `isValidBcp47Tag`, `parseLanguageTagParts`, `ContentLanguageIter`, `canonicalizeLanguageTag`, `hasContentLanguage` | RFC 9110 §8.5 + RFC 5646 HTTP `Content-Language` 解析与 BCP 47 标签规范化器 |
