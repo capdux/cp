@@ -1117,18 +1117,26 @@ impl Codegen {
         let disc_cp_ty = self.infer_cp_type(&m.disc);
         self.check_switch_exhaustiveness(m, disc_cp_ty.as_ref());
 
-        let is_result_disc = matches!(
-            disc_cp_ty,
-            Some(Type::ResultType { .. }) | Some(Type::ErrorUnion(_))
-        ) || m.arms.iter().any(|a| match &a.pat {
-            Pattern::Err(_) => true,
-            Pattern::Enum(ep) => {
-                ep.enum_name.sym == "err"
-                    || ep.enum_name.sym == "error"
-                    || self.error_sets.contains_key(&ep.enum_name.sym)
-            }
-            _ => false,
-        });
+        let is_pure_error_disc = matches!(
+            &disc_cp_ty,
+            Some(Type::Ref(id)) if id.sym == "anyerror" || self.error_sets.contains_key(&id.sym)
+        );
+        let is_result_disc = if is_pure_error_disc {
+            false
+        } else {
+            matches!(
+                disc_cp_ty,
+                Some(Type::ResultType { .. }) | Some(Type::ErrorUnion(_))
+            ) || m.arms.iter().any(|a| match &a.pat {
+                Pattern::Err(_) => true,
+                Pattern::Enum(ep) => {
+                    ep.enum_name.sym == "err"
+                        || ep.enum_name.sym == "error"
+                        || self.error_sets.contains_key(&ep.enum_name.sym)
+                }
+                _ => false,
+            })
+        };
 
         let is_type_switch = matches!(&disc_cp_ty, Some(Type::Ref(id)) if id.sym == "type")
             || m.arms.iter().any(|a| Self::pattern_contains_type(&a.pat));
@@ -1225,6 +1233,12 @@ impl Codegen {
                     } else {
                         false
                     }
+                } else if let Some(es) = self.error_sets.get(&id.sym) {
+                    let mut covered_variants = std::collections::HashSet::new();
+                    for arm in &m.arms {
+                        Self::collect_pat_variants(&arm.pat, &mut covered_variants);
+                    }
+                    es.iter().all(|v| covered_variants.contains(&v.sym))
                 } else {
                     false
                 }
@@ -1382,7 +1396,8 @@ impl Codegen {
 
                 arms_code.push_str(&format!("{} {},\n", pat_arm_str, body_str));
             }
-            let all_arms_are_enums = !m.arms.is_empty()
+            let all_arms_are_enums = !is_pure_error_disc
+                && !m.arms.is_empty()
                 && m.arms.iter().all(|a| {
                     matches!(a.pat, Pattern::Enum(_))
                         || matches!(&a.pat, Pattern::Or(pats) if pats.iter().all(|p| matches!(p, Pattern::Enum(_))))
