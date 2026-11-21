@@ -1021,7 +1021,7 @@ impl Codegen {
                             if self.is_class_field(&lhs_id.sym) {
                                 if self.current_receiver_mode == ReceiverMode::ReadOnly {
                                     panic!(
-                                        "CP Compile Error: Cannot mutate field '{}' in a read-only method (add 'mut _' as first parameter)",
+                                        "CP Compile Error: Cannot mutate field '{}' in a read-only method (add '*_' as first parameter)",
                                         lhs_id.sym
                                     );
                                 }

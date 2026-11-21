@@ -29,7 +29,7 @@ pub fn sh(command_str: []const u8): ShellResult {
         std.heap.page_allocator.destroy(script_ptr);
     }
     let sess = ShellSession.init();
-    defer sess.release();
+    defer sess.~init();
     return Executor.executeScriptPtrWithSession(script_ptr, &sess);
 }
 

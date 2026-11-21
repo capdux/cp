@@ -266,12 +266,12 @@ pub struct Blob {
     }
 
     /// 释放引用计数与关联资源
-    pub fn release(*_) {
+    ~init() {
         _.store.deref();
     }
 
     pub fn deinit(*_) {
-        _.release();
+        _.~init();
     }
 
     pub static fn guessMime(path: string): string {

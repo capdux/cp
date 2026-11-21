@@ -146,9 +146,9 @@ pub struct Mutex {
         cb();
     }
 
-    pub fn release(*_) {
+    ~init() {
     }
     pub fn deinit(*_) {
-        _.release();
+        _.~init();
     }
 }

@@ -20,7 +20,7 @@ pub fn BoundedDeque(comptime T: type, comptime N: usize): type {
         }
 
         pub fn capacity(this): usize {
-            _ = this;
+            * = this;
             return N;
         }
 
@@ -32,7 +32,7 @@ pub fn BoundedDeque(comptime T: type, comptime N: usize): type {
             return this.count == N;
         }
 
-        pub fn clear(*this): void {
+        pub fn clear(*this) {
             this.head = 0;
             this.tail = 0;
             this.count = 0;
@@ -112,7 +112,7 @@ pub fn RingDeque(comptime T: type): type {
             };
         }
 
-        pub fn deinit(*this): void {
+        pub fn deinit(*this) {
             if (this.buf.len > 0) {
                 this.alloc.free(this.buf);
                 this.buf = [];
@@ -130,7 +130,7 @@ pub fn RingDeque(comptime T: type): type {
             return this.count == 0;
         }
 
-        pub fn clear(*this): void {
+        pub fn clear(*this) {
             this.head = 0;
             this.tail = 0;
             this.count = 0;

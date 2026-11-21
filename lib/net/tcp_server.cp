@@ -112,7 +112,7 @@ pub class TcpServer {
         _.fd = -1;
     }
 
-    pub fn release(*_) {
+    ~init() {
         _.stop();
         std.heap.page_allocator.destroy(_);
     }

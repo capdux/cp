@@ -125,7 +125,7 @@ pub const DnsQuestion = struct {
     qtype: u16,
     qclass: u16 = 1,
 
-    pub fn deinit(self: *const DnsQuestion, alloc: std.mem.Allocator): void {
+    pub fn deinit(self: *const DnsQuestion, alloc: std.mem.Allocator) {
         alloc.free(self.name);
     }
 };
@@ -165,7 +165,7 @@ pub const DnsRdata = union(enum) {
     opt: []const u8,
     raw: []const u8,
 
-    pub fn deinit(self: *const DnsRdata, alloc: std.mem.Allocator): void {
+    pub fn deinit(self: *const DnsRdata, alloc: std.mem.Allocator) {
         switch (self.*) {
             .a, .aaaa => {},
             .cname, .ns, .ptr => |s| alloc.free(s),
@@ -193,7 +193,7 @@ pub const DnsResourceRecord = struct {
     ttl: u32 = 0,
     rdata: DnsRdata,
 
-    pub fn deinit(self: *const DnsResourceRecord, alloc: std.mem.Allocator): void {
+    pub fn deinit(self: *const DnsResourceRecord, alloc: std.mem.Allocator) {
         alloc.free(self.name);
         self.rdata.deinit(alloc);
     }
@@ -206,7 +206,7 @@ pub const DnsPacket = struct {
     authorities: []DnsResourceRecord,
     additionals: []DnsResourceRecord,
 
-    pub fn deinit(self: *DnsPacket, alloc: std.mem.Allocator): void {
+    pub fn deinit(self: *DnsPacket, alloc: std.mem.Allocator) {
         for (q of self.questions) {
             q.deinit(alloc);
         }

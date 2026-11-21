@@ -176,7 +176,7 @@ test("bencode: zero-copy extractRawSection and computeInfoHashSha1", () => {
     expect_eq(std.mem.eql(u8, &hex, &expected_hex), true);
 
     switch (extractRawSection(torrent_bytes, "nonexistent")) {
-        _ => expect_eq(true, false),
+        * => expect_eq(true, false),
         err(e) => expect_eq(e == BencodeError.KeyNotFound, true),
     }
 });

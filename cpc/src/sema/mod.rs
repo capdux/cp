@@ -189,7 +189,7 @@ impl SemaError {
                 trait_name
             ))
             .with_suggestion(format!(
-                "implement method '{}' in class '{}':\n  fn {}(...): void {{ ... }}",
+                "implement method '{}' in class '{}':\n  fn {}(...) {{ ... }}",
                 missing_method, class_name, missing_method
             )),
             SemaError::CannotMutateReadOnlyBorrow(name, span) => {
@@ -289,9 +289,9 @@ impl SemaError {
                 "value of '{}' was moved and its ownership was transferred.",
                 name
             ))
-            .with_help("variables moved via 'own' or 'move' transfer ownership and cannot be accessed afterwards.")
+            .with_help("variables moved via 'move' or 'own' transfer ownership and cannot be accessed afterwards.")
             .with_suggestion(format!(
-                "avoid moving '{}' if you need to use it later, or pass by borrow '&{}'",
+                "omit 'move'/'own' if you only need read-only access to '{}' (unqualified assignment/passing is already a read-only borrow), or use '*{}' for mutable borrow",
                 name, name
             )),
 
@@ -354,15 +354,15 @@ impl SemaError {
                 match (expected, found) {
                     (target, Type::Optional(inner)) if target == inner.as_ref() => {
                         diag.help = Some("the value is an Optional ('T?'). It may be null.".to_string());
-                        diag.suggestion = Some("unwrap the optional using '?? <default_value>' or check for null using 'if (val != null)'".to_string());
+                        diag.suggestion = Some("unwrap the optional using '?? <default_value>' or Walrus binding 'if (v := opt) { ... }'".to_string());
                     }
                     (target, Type::ErrorUnion(inner)) if target == inner.as_ref() => {
                         diag.help = Some("the value is an Error Union ('T ! Error'). It may contain an error.".to_string());
                         diag.suggestion = Some("propagate the error using '?' (e.g. 'expr ?') or handle it using 'catch'".to_string());
                     }
                     (Type::USize, Type::I32) => {
-                        diag.help = Some("CP does not perform implicit integer widening conversions.".to_string());
-                        diag.suggestion = Some("cast explicitly using '@as(usize, val)'".to_string());
+                        diag.help = Some("CP requires explicit numeric conversions between signed and unsigned types.".to_string());
+                        diag.suggestion = Some("convert explicitly using 'usize(val)'".to_string());
                     }
                     (target, Type::Optional(inner)) if matches!(inner.as_ref(), Type::Unknown | Type::Any) => {
                         diag.help = Some(format!("'null' cannot be assigned to non-optional type '{:?}'.", target));
@@ -409,7 +409,7 @@ impl SemaError {
             )
             .with_span(*span)
             .with_cause("attempted to access a private member outside of its defining class.")
-            .with_help("members are private by default in CP. Only members with 'pub' are accessible externally.")
+            .with_help("class members are private by default in CP (struct/enum members are pub by default). Only class members with 'pub' are accessible externally.")
             .with_suggestion("add 'pub' modifier to the member declaration, or provide a public getter/method"),
 
             SemaError::CannotInstantiateStatic(cls_name, span) => Diagnostic::new(

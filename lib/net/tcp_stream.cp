@@ -176,10 +176,10 @@ pub class TcpStream {
         _.sock.close(SocketCloseCode.normal);
     }
 
-    pub fn release(*_) {
+    ~init() {
         _.close();
         _.send_buf.destroy();
-        _.sock.release();
+        _.sock.~init();
         std.heap.page_allocator.destroy(_);
     }
 }

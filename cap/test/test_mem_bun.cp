@@ -73,18 +73,18 @@ fn main() {
 
         ba.reset();
         expect_eq(ba.used(), 0);
-        ba.release();
+        ba.~init();
 
         let borrowed = MaybeOwnedBuf.initBorrowed("static-view");
         expect_eq(borrowed.isOwned(), false);
         expect_eq(borrowed.len(), 11);
-        borrowed.release();
+        borrowed.~init();
 
         let owned = MaybeOwnedBuf.initOwnedCopy("heap-copy");
         expect_eq(owned.isOwned(), true);
         expect_eq(owned.len(), 9);
         expect_eq(owned.slice(), "heap-copy");
-        owned.release();
+        owned.~init();
         expect_eq(owned.isOwned(), false);
     });
 
@@ -128,8 +128,8 @@ fn main() {
         expect_eq(view.slice(), "Hello");
         expect_eq(orig.slice(), "hello");
 
-        view.release();
-        orig.release();
+        view.~init();
+        orig.~init();
     });
 
     test("5. RefCounter, AtomicRefCounter, WeakControlBlock & SharedTensor", () => {

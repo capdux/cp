@@ -7,7 +7,7 @@ class MockTensor {
         this.data = d;
     }
     
-    fn release() {
+    ~init() {
         @print("MockTensor release called!");
     }
 }

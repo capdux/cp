@@ -168,7 +168,7 @@ pub struct BumpArena {
         _.offset = 0;
     }
 
-    pub fn release(*_) {
+    ~init() {
         zig {
             if (self.cap > 0) {
                 std.heap.page_allocator.free(self.ptr[0..self.cap]);
@@ -214,7 +214,7 @@ pub struct MaybeOwnedBuf {
         return _.data.len;
     }
 
-    pub fn release(*_) {
+    ~init() {
         if (_.owned && _.data.len > 0) {
             zig {
                 std.heap.page_allocator.free(self.data);
@@ -295,7 +295,7 @@ pub struct MaxHeapAllocator {
         }
     }
 
-    pub fn release(*_) {
+    ~init() {
         _.deinit();
     }
 }

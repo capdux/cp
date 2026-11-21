@@ -61,7 +61,7 @@ pub const OnnxValueInfo = struct {
     dims: []const OnnxDim = &.{},
     doc_string: []const u8 = "",
 
-    pub fn deinit(self: *OnnxValueInfo, alloc: std.mem.Allocator): void {
+    pub fn deinit(self: *OnnxValueInfo, alloc: std.mem.Allocator) {
         if (self.name.len > 0) {
             alloc.free(self.name);
         }
@@ -121,7 +121,7 @@ pub const OnnxAttribute = struct {
         };
     }
 
-    pub fn deinit(self: *OnnxAttribute, alloc: std.mem.Allocator): void {
+    pub fn deinit(self: *OnnxAttribute, alloc: std.mem.Allocator) {
         if (self.name.len > 0) {
             alloc.free(self.name);
         }
@@ -168,7 +168,7 @@ pub const OnnxNode = struct {
     attributes: []const OnnxAttribute = &.{},
     doc_string: []const u8 = "",
 
-    pub fn deinit(self: *OnnxNode, alloc: std.mem.Allocator): void {
+    pub fn deinit(self: *OnnxNode, alloc: std.mem.Allocator) {
         if (self.name.len > 0) {
             alloc.free(self.name);
         }
@@ -316,7 +316,7 @@ pub const OnnxTensor = struct {
         return out;
     }
 
-    pub fn deinit(self: *OnnxTensor, alloc: std.mem.Allocator): void {
+    pub fn deinit(self: *OnnxTensor, alloc: std.mem.Allocator) {
         if (self.name.len > 0) {
             alloc.free(self.name);
         }
@@ -345,7 +345,7 @@ pub const OnnxOpsetImport = struct {
     domain: []const u8 = "",
     version: i64 = 0,
 
-    pub fn deinit(self: *OnnxOpsetImport, alloc: std.mem.Allocator): void {
+    pub fn deinit(self: *OnnxOpsetImport, alloc: std.mem.Allocator) {
         if (self.domain.len > 0) {
             alloc.free(self.domain);
         }
@@ -371,7 +371,7 @@ pub const OnnxGraph = struct {
         return null;
     }
 
-    pub fn deinit(self: *OnnxGraph, alloc: std.mem.Allocator): void {
+    pub fn deinit(self: *OnnxGraph, alloc: std.mem.Allocator) {
         if (self.name.len > 0) {
             alloc.free(self.name);
         }
@@ -426,7 +426,7 @@ pub const OnnxModel = struct {
         return null;
     }
 
-    pub fn deinit(self: *OnnxModel, alloc: std.mem.Allocator): void {
+    pub fn deinit(self: *OnnxModel, alloc: std.mem.Allocator) {
         for (op of self.opset_import) {
             let item = op;
             item.deinit(alloc);

@@ -146,7 +146,7 @@ pub const Cuid2Generator = struct {
 
     pub fn next24(self: *Cuid2Generator): [24]u8 {
         let buf: [24]u8 = undefined;
-        _ = self.nextInto(&buf) catch unreachable;
+        * = self.nextInto(&buf) catch unreachable;
         return buf;
     }
 };

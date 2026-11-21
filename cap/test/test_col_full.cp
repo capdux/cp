@@ -46,7 +46,7 @@ pub struct Vec3Record {
 fn main() {
     test("1. BabyList<T> & OffsetByteList dynamic u32-indexed list & cursor stream", () => {
         let list = BabyList<i32>.fromSlice([10, 20, 30]);
-        defer list.release();
+        defer list.~init();
 
         expect_eq(list.count(), 3 as usize);
         list.append(40);
@@ -63,7 +63,7 @@ fn main() {
         expect_eq(list.last().?, 20);
 
         let obl = OffsetByteList.init(16);
-        defer obl.release();
+        defer obl.~init();
         obl.write("ABCDEF");
         expect_eq(obl.remainingLen(), 6 as u32);
         expect_eq(obl.consume(2), 2 as u32);
@@ -125,7 +125,7 @@ fn main() {
         expect_eq(ba.pop().?, 4);
 
         let fifo = LinearFifo<i32>.init(4);
-        defer fifo.release();
+        defer fifo.~init();
         fifo.writeSlice([10, 20, 30]);
         fifo.unget([5]); // [5, 10, 20, 30]
         expect_eq(fifo.readableLength(), 4 as usize);
@@ -197,7 +197,7 @@ fn main() {
         expect_eq(b1024.findFirstSet().?, 999 as usize);
 
         let dbs = DynamicBitSet.initEmpty(128);
-        defer dbs.release();
+        defer dbs.~init();
         dbs.set(10);
         dbs.set(120);
         expect_eq(dbs.count(), 2 as usize);

@@ -1234,7 +1234,7 @@ pub class DynamicBitSet {
         }
     }
 
-    pub fn release(*_) {
+    ~init() {
         _.deinit();
         std.heap.page_allocator.destroy(_);
     }

@@ -536,7 +536,7 @@ fn testStep6_CoreClientEngine(): !void {
     const duped = decomp.decompressSlice("raw-bytes", allocator)?;
     defer allocator.free(duped);
     expect_eq(std.mem.eql(u8, duped, "raw-bytes"), true);
-    decomp.release();
+    decomp.~init();
     expect_eq(decomp.is_done, true);
 }
 

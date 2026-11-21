@@ -253,7 +253,7 @@ pub struct JqValue {
         };
     }
 
-    pub fn freeContents(alloc: std.mem.Allocator): void {
+    pub fn freeContents(alloc: std.mem.Allocator) {
         switch (_.tag) {
             .String => {
                 if (_.str_val.len > 0) alloc.free(_.str_val);
@@ -279,13 +279,13 @@ pub struct JqValue {
         }
     }
 
-    pub fn deinit(*_, alloc: std.mem.Allocator): void {
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
         _.freeContents(alloc);
         _.* = JqValue.nullVal();
     }
 }
 
-pub fn freeValues(alloc: std.mem.Allocator, values: *[]JqValue): void {
+pub fn freeValues(alloc: std.mem.Allocator, values: *[]JqValue) {
     let i: usize = 0;
     while (i < values.*.len) {
         values.*[i].deinit(alloc);
@@ -300,7 +300,7 @@ struct JsonParser {
     pos: usize = 0,
     depth: usize = 0,
 
-    fn skipWs(*_): void {
+    fn skipWs(*_) {
         while (_.pos < _.src.len) {
             const c = _.src[_.pos];
             if (c == ' ' or c == '\t' or c == '\n' or c == '\r') {

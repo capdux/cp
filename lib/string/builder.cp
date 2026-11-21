@@ -234,7 +234,7 @@ pub struct StringBuilder {
     pub fn toOwnedSlice(*_, allocator: std.mem.Allocator): ![]u8 {
         const cur = _.slice();
         const duped = try allocator.dupe(u8, cur);
-        _.release();
+        _.~init();
         return duped;
     }
 
@@ -242,7 +242,7 @@ pub struct StringBuilder {
         _.len = 0;
     }
 
-    pub fn release(*_) {
+    ~init() {
         if (_.allocated && _.cap > 0) {
             const alloc = _.alloc_backing;
             zig {

@@ -65,6 +65,10 @@ impl Codegen {
             t.ident.sym
         ));
         self.writeln(&format!(
+            "pub fn __cp_deinit(self: {}) void {{ self.vtable.__drop(self.ptr); }}",
+            t.ident.sym
+        ));
+        self.writeln(&format!(
             "pub fn release(self: {}) void {{ self.vtable.__drop(self.ptr); }}",
             t.ident.sym
         ));

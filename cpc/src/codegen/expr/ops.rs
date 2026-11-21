@@ -124,7 +124,7 @@ impl Codegen {
                     if i.sym == "this" || i.sym == "_" || self.is_class_field(&i.sym) {
                         if *is_mut && self.current_receiver_mode == ReceiverMode::ReadOnly {
                             panic!(
-                                "CP Compile Error: Cannot take mutable borrow '&mut' of '{}' in a read-only method (add 'mut _' as first parameter)",
+                                "CP Compile Error: Cannot take mutable borrow '*' of '{}' in a read-only method (add '*_' as first parameter)",
                                 i.sym
                             );
                         }
@@ -135,7 +135,7 @@ impl Codegen {
                             if let Some((_, is_m)) = self.var_borrow_sources.get(&i.sym) {
                                 if !*is_m {
                                     panic!(
-                                        "CP Compile Error: Cannot take mutable borrow '&mut {}' from read-only borrow",
+                                        "CP Compile Error: Cannot take mutable borrow '*{}' from read-only borrow",
                                         i.sym
                                     );
                                 }
@@ -143,8 +143,8 @@ impl Codegen {
                                 && !self.mutable_fn_params.contains(&i.sym)
                             {
                                 panic!(
-                                    "CP Compile Error: Cannot take mutable borrow '&mut {}' from read-only parameter",
-                                    i.sym
+                                    "CP Compile Error: Cannot take mutable borrow '*{}' from read-only parameter (declare as '{}: *T')",
+                                    i.sym, i.sym
                                 );
                             }
                         }

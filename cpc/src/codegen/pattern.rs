@@ -469,7 +469,7 @@ impl Codegen {
                         bound_types.push((id.sym.clone(), t.clone()));
                     }
                     let defer_drop = if matches!(val_cp_ty, Some(Type::BoxDyn(_))) {
-                        format!("defer {}.release(); ", id.sym)
+                        format!("defer {}.__cp_deinit(); ", id.sym)
                     } else {
                         String::new()
                     };

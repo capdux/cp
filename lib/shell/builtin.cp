@@ -355,7 +355,7 @@ pub fn runBuiltinWithState(
             const ch = fmt[fi];
             if (ch == '\\' && fi + 1 < fmt.len) {
                 let single_esc = StringJoiner.init();
-                defer single_esc.release();
+                defer single_esc.~init();
                 * = appendWithEscapes(&single_esc, fmt[fi .. fi + 2], false);
                 if (fmt[fi + 1] == '0' || fmt[fi + 1] == 'x') {
                     let end_esc = fi + 2;
@@ -366,7 +366,7 @@ pub fn runBuiltinWithState(
                         d += 1;
                     }
                     let multi_esc = StringJoiner.init();
-                    defer multi_esc.release();
+                    defer multi_esc.~init();
                     * = appendWithEscapes(&multi_esc, fmt[fi..end_esc], false);
                     stdout.push(multi_esc.slice());
                     fi = end_esc;
@@ -691,7 +691,7 @@ pub fn runBuiltin(
     stderr: *StringJoiner,
 ): i32 {
     let env = ShellEnv.init();
-    defer env.release();
+    defer env.~init();
     let dirs = DirStack.init();
     let should_exit = false;
     return runBuiltinWithState(argv, stdin, stdout, stderr, &env, &dirs, &should_exit);

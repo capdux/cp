@@ -31,13 +31,13 @@ fn testCapStringSubsystem(): !void {
     expect_eq(smol_in.isInlined(), true);
     expect_eq(smol_in.len(), 15);
     expect_eq(smol_in.eql("cap-sso-15bytes"), true);
-    smol_in.release();
+    smol_in.~init();
 
     let smol_heap = SmolStr.init("cap-heap-allocated-longer-than-15-bytes");
     expect_eq(smol_heap.isInline(), false);
     expect_eq(smol_heap.len(), 39);
     expect_eq(smol_heap.eql("cap-heap-allocated-longer-than-15-bytes"), true);
-    smol_heap.release();
+    smol_heap.~init();
 
     // 2. HashedString (FNV-1a 32-bit pre-hashed O(1) comparison)
     const hs1 = HashedString.init("x-forwarded-for");
@@ -93,14 +93,14 @@ fn testCapStringSubsystem(): !void {
     * = sb.append("cap:");
     * = sb.append("string");
     expect_eq(std.mem.eql(u8, sb.slice(), "cap:string"), true);
-    sb.release();
+    sb.~init();
 
     let joiner = StringJoiner.init();
     joiner.pushDelimited("alpha", ",");
     joiner.pushDelimited("beta", ",");
     joiner.pushDelimited("gamma", ",");
     expect_eq(std.mem.eql(u8, joiner.slice(), "alpha,beta,gamma"), true);
-    joiner.release();
+    joiner.~init();
 
     let ps = PathString.init("/data/dev/cp/lib/string/index.cp");
     expect_eq(ps.isAbsolute(), true);

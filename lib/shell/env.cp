@@ -267,7 +267,7 @@ pub struct ShellEnv {
         allocator.free(envp);
     }
 
-    pub fn release(*_) {
+    ~init() {
         let i: usize = 0;
         while (i < _.len) {
             freeCopyBytes(_.entries[i].key);
@@ -350,7 +350,7 @@ pub struct AliasMap {
         return null;
     }
 
-    pub fn release(*_) {
+    ~init() {
         let i: usize = 0;
         while (i < _.len) {
             freeCopyBytes(_.slots[i].name);
@@ -647,7 +647,7 @@ pub fn expandBraceBody(
             out.push(existing_opt.?);
         } else {
             let sub = StringJoiner.init();
-            defer sub.release();
+            defer sub.~init();
             expandWord(arg, env, last_exit, &sub);
             out.push(sub.slice());
         }
@@ -659,7 +659,7 @@ pub fn expandBraceBody(
             out.push(existing_opt.?);
         } else {
             let sub = StringJoiner.init();
-            defer sub.release();
+            defer sub.~init();
             expandWord(arg, env, last_exit, &sub);
             const expanded = sub.slice();
             * = env.set(var_name, expanded, false);
@@ -671,7 +671,7 @@ pub fn expandBraceBody(
     if (op_ch == '+') {
         if (is_set) {
             let sub = StringJoiner.init();
-            defer sub.release();
+            defer sub.~init();
             expandWord(arg, env, last_exit, &sub);
             out.push(sub.slice());
         }

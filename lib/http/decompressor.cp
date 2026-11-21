@@ -104,7 +104,7 @@ pub struct Decompressor {
         }
     }
 
-    pub fn release(*_) {
+    ~init() {
         _.decompressor_type = .None;
         _.is_done = true;
     }
@@ -157,7 +157,7 @@ pub struct StreamingDecompressor {
         return allocator.dupe(u8, out)?;
     }
 
-    pub fn release(*_) {
+    ~init() {
         _.stream = null;
         _.is_finished = true;
     }

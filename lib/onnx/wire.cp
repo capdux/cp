@@ -175,16 +175,16 @@ pub const PbWireReader = struct {
         }
         switch (wire_type) {
             .varint => {
-                _ = try self.readVarint();
+                * = try self.readVarint();
             },
             .fixed64 => {
-                _ = try self.readFixed64();
+                * = try self.readFixed64();
             },
             .length_delimited => {
-                _ = try self.readBytes();
+                * = try self.readBytes();
             },
             .fixed32 => {
-                _ = try self.readFixed32();
+                * = try self.readFixed32();
             },
             .start_group, .end_group => {
                 return OnnxError.InvalidWireType;

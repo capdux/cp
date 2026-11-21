@@ -320,7 +320,7 @@ fn testHttpProxyAndEncoding(): !void {
 
     // StreamingDecompressor incremental chunks
     let sd = StreamingDecompressor.init(Encoding.Gzip);
-    defer sd.release();
+    defer sd.~init();
     const mid = gz_bytes.len / 2;
     const part1 = try sd.feed(gz_bytes[0..mid], allocator);
     defer allocator.free(part1);

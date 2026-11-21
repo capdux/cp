@@ -85,7 +85,7 @@ pub struct JqExpr {
     obj_fields: []JqObjField = [],
     root: u32 = 0,
 
-    pub fn deinit(*_, alloc: std.mem.Allocator): void {
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
         for (s of _.strings) {
             alloc.free(s);
         }
@@ -147,7 +147,7 @@ struct JqParser {
     obj_fields: std.ArrayList(JqObjField) = std.ArrayList(JqObjField).empty,
     cur: Token = .{},
 
-    fn deinitLists(*_): void {
+    fn deinitLists(*_) {
         for (s of _.strings.items) _.alloc.free(s);
         _.strings.deinit(_.alloc);
         _.nodes.deinit(_.alloc);
@@ -168,7 +168,7 @@ struct JqParser {
         return @as(u32, @intCast(_.nodes.items.len - 1));
     }
 
-    fn skipWsAndComments(*_): void {
+    fn skipWsAndComments(*_) {
         while (_.pos < _.src.len) {
             const c = _.src[_.pos];
             if (c == ' ' or c == '\t' or c == '\n' or c == '\r') {

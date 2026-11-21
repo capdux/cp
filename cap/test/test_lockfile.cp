@@ -7,8 +7,8 @@ import { path } from "cap:path";
 fn testLockfile() !void {
     const test_dir = "/tmp/test_lockfile_dir";
     // Setup directory
-    _ = exec("rm -rf " + test_dir);
-    _ = exec("mkdir -p " + test_dir);
+    * = exec("rm -rf " + test_dir);
+    * = exec("mkdir -p " + test_dir);
 
     // Scenario 2: Verify `cap install` correctly generates/updates `cap.lock`
     const cap_json = '{"name": "test-pkg", "version": "1.0.0", "dependencies": {"pkg-a": "^1.0.0"}, "dev_dependencies": {"pkg-dev": "^1.0.0"}}';

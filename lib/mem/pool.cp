@@ -160,7 +160,7 @@ pub struct SlabPool {
         _.used_count = 0;
     }
 
-    pub fn release(*_) {
+    ~init() {
         if (_.initialized) {
             zig {
                 if (self.data_len > 0) {
@@ -182,6 +182,6 @@ pub struct SlabPool {
     }
 
     pub fn deinit(*_) {
-        _.release();
+        _.~init();
     }
 }

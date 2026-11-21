@@ -1176,10 +1176,20 @@ impl<'a> Parser<'a> {
                 } else {
                     format!("receiver is read-only in '{}'; omit '{}' from parameter list and access members via '_.'", ident.sym, first.ident.sym)
                 };
+                let already_starred = self.input.as_bytes()
+                    [..first.span.start.min(self.input.len())]
+                    .iter()
+                    .rev()
+                    .find(|b| **b != b' ' && **b != b'\t')
+                    == Some(&b'*');
                 let replacement = if first.is_move {
                     "move _"
                 } else if mutates_rec || first.is_mut {
-                    "*_"
+                    if already_starred {
+                        "_"
+                    } else {
+                        "*_"
+                    }
                 } else {
                     "_"
                 };

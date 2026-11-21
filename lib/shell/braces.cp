@@ -268,7 +268,7 @@ fn expandRangeSpec(
                 if (zero_pad && cur >= 0) {
                     const raw_n = std.fmt.bufPrint(num_buf[0..32], "{d}", .{cur}) catch "0";
                     let padded = StringJoiner.init();
-                    defer padded.release();
+                    defer padded.~init();
                     if (raw_n.len < pad_width) {
                         let k: usize = 0;
                         while (k < pad_width - raw_n.len) {
@@ -278,7 +278,7 @@ fn expandRangeSpec(
                     }
                     padded.push(raw_n);
                     let comb = StringJoiner.init();
-                    defer comb.release();
+                    defer comb.~init();
                     comb.push(prefix);
                     comb.push(padded.slice());
                     comb.push(suffix);
@@ -286,7 +286,7 @@ fn expandRangeSpec(
                 } else {
                     num_str = std.fmt.bufPrint(num_buf[0..64], "{d}", .{cur}) catch "0";
                     let comb = StringJoiner.init();
-                    defer comb.release();
+                    defer comb.~init();
                     comb.push(prefix);
                     comb.push(num_str);
                     comb.push(suffix);
@@ -312,7 +312,7 @@ fn expandRangeSpec(
             if (out.items.len >= MAX_BRACE_RESULTS) break;
             let ch_arr: [1]u8 = [cur as u8];
             let comb = StringJoiner.init();
-            defer comb.release();
+            defer comb.~init();
             comb.push(prefix);
             comb.push(ch_arr[0..1]);
             comb.push(suffix);
@@ -378,7 +378,7 @@ fn expandRecursive(
             if (at_split) {
                 const item = inner[seg_start..i];
                 let comb = StringJoiner.init();
-                defer comb.release();
+                defer comb.~init();
                 comb.push(prefix);
                 comb.push(item);
                 comb.push(suffix);

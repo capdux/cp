@@ -26,7 +26,7 @@ pub const PathBufferPool = struct {
         return &pool_buffers[0];
     }
 
-    pub fn put(buf: *const PathBuffer): void {
+    pub fn put(buf: *const PathBuffer) {
         let ptr_val = usize(@intFromPtr(buf));
         let base_val = usize(@intFromPtr(&pool_buffers[0]));
         if (ptr_val >= base_val and ptr_val < base_val + POOL_SIZE * MAX_PATH_BYTES) {

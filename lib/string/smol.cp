@@ -82,7 +82,7 @@ pub struct SmolStr {
         return eq;
     }
 
-    pub fn release(*_) {
+    ~init() {
         if (!_.inlined && _.length > 0) {
             zig {
                 std.heap.page_allocator.free(self.heap_ptr[0..self.length]);

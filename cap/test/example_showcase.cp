@@ -114,7 +114,7 @@ class SafetyFilter implements AgentPlugin {
     fn priority(): i32 {
         return 1;
     }
-    fn release() {
+    ~init() {
         @print(">> SafetyFilter 堆内存由 Box 自动释放");
     }
 }
@@ -130,7 +130,7 @@ class SpeedOptimizer implements AgentPlugin {
     fn priority(): i32 {
         return 2;
     }
-    fn release() {
+    ~init() {
         @print(">> SpeedOptimizer 堆内存由 Box 自动释放");
     }
 }

@@ -2,7 +2,7 @@ import { print } from "cap:io";
 
 const S = struct {
     pub fn testFn(): i32 {
-        let mut x: i32 = 1;
+        let x: i32 = 1;
         x = x + 1;
         return x;
     }

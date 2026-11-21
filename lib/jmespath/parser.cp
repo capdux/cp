@@ -60,7 +60,7 @@ pub const JmesNode = union(enum) {
     Compare: CompareNode,
     FunctionCall: FunctionCallNode,
 
-    pub fn deinit(self: *JmesNode, alloc: std.mem.Allocator): void {
+    pub fn deinit(self: *JmesNode, alloc: std.mem.Allocator) {
         switch (self.*) {
             .Current, .Index, .Slice, .ListWildcard, .ObjectWildcard => {},
             .Field => |s| alloc.free(s),
@@ -146,7 +146,7 @@ pub const JmesNode = union(enum) {
 pub const JmesExpr = struct {
     root: *JmesNode,
 
-    pub fn deinit(self: *JmesExpr, alloc: std.mem.Allocator): void {
+    pub fn deinit(self: *JmesExpr, alloc: std.mem.Allocator) {
         self.root.deinit(alloc);
         alloc.destroy(self.root);
     }
@@ -163,12 +163,12 @@ const ExprParser = struct {
         return ptr;
     }
 
-    fn destroyNode(self: *ExprParser, node: *JmesNode): void {
+    fn destroyNode(self: *ExprParser, node: *JmesNode) {
         node.deinit(self.alloc);
         self.alloc.destroy(node);
     }
 
-    fn skipWs(self: *ExprParser): void {
+    fn skipWs(self: *ExprParser) {
         while (self.pos < self.input.len) {
             const c = self.input[self.pos];
             if (c == ' ' or c == '\t' or c == '\n' or c == '\r') {

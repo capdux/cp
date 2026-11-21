@@ -98,7 +98,7 @@ pub const StringInternPool = struct {
         };
     }
 
-    pub fn deinit(self: *StringInternPool): void {
+    pub fn deinit(self: *StringInternPool) {
         self.arena.deinit(self.alloc);
         self.pool.deinit();
     }

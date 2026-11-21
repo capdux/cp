@@ -14,7 +14,7 @@ pub fn SmallVec(comptime T: type, comptime INLINE_CAP: usize): type {
             return Self{};
         }
 
-        pub fn deinit(*this, alloc: std.mem.Allocator): void {
+        pub fn deinit(*this, alloc: std.mem.Allocator) {
             if (this.is_heap and this.heap_buf.len > 0) {
                 alloc.free(this.heap_buf);
                 this.heap_buf = [];
@@ -35,7 +35,7 @@ pub fn SmallVec(comptime T: type, comptime INLINE_CAP: usize): type {
             return this.is_heap;
         }
 
-        pub fn clear(*this): void {
+        pub fn clear(*this) {
             this.count = 0;
         }
 

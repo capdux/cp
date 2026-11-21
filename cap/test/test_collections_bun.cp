@@ -69,7 +69,7 @@ fn main() {
             expect_eq(1, 0);
         }
         expect_eq(list.count() as i64, 4);
-        list.release();
+        list.~init();
 
         let obl = OffsetByteList.init(16);
         obl.write("HTTP/1.1 ");
@@ -84,7 +84,7 @@ fn main() {
         expect_eq(c2 as i64, 6);
         expect_eq(obl.remainingLen() as i64, 0);
         expect_eq(obl.head as i64, 0);
-        obl.release();
+        obl.~init();
     });
 
     test("3. LinearFifo<T> power-of-two ring buffer FIFO", () => {
@@ -118,7 +118,7 @@ fn main() {
             expect_eq(1, 0);
         }
         expect_eq(fifo.isEmpty(), true);
-        fifo.release();
+        fifo.~init();
     });
 
     test("4. BitSet64 & HiveArray<T, CAP> O(1) hardware @ctz/@popCount slot pool", () => {

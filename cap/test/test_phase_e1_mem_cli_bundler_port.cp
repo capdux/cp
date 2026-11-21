@@ -482,10 +482,10 @@ fn testBackwardCompatExports(): ! {
     defer mha.deinit();
     expect_eq(mha.alloc(128) != null, true);
     let cow = Cow.initBorrowed("compat");
-    defer cow.release();
+    defer cow.~init();
     expect_eq(std.mem.eql(u8, cow.slice(), "compat"), true);
     let pool = SlabPool.init(32, 4);
-    defer pool.release();
+    defer pool.~init();
     const sl = pool.alloc().?;
     expect_eq(pool.free(sl), true);
     const tp = TaggedPointer.pack(0x123400, 7);

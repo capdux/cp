@@ -968,7 +968,7 @@ impl Codegen {
                     }
                     if self.current_receiver_mode == ReceiverMode::ReadOnly {
                         panic!(
-                            "CP Compile Error: Cannot perform mutable operation ({}) on '{}' in a read-only method (add '*_' or 'mut _' as first parameter)",
+                            "CP Compile Error: Cannot perform mutable operation ({}) on '{}' in a read-only method (add '*_' as first parameter)",
                             op_desc, id.sym
                         );
                     }
@@ -1214,7 +1214,7 @@ impl Codegen {
                         if id.sym == "this" || id.sym == "_" || self.is_class_field(&id.sym) {
                             if *is_mut && self.current_receiver_mode == ReceiverMode::ReadOnly {
                                 panic!(
-                                    "CP Compile Error: Cannot take mutable borrow '&mut' of '{}' in a read-only method (add 'mut _' as first parameter)",
+                                    "CP Compile Error: Cannot take mutable borrow '*' of '{}' in a read-only method (add '*_' as first parameter)",
                                     id.sym
                                 );
                             }
@@ -1251,7 +1251,7 @@ impl Codegen {
                             if root == "this" || root == "_" {
                                 if *is_mut && self.current_receiver_mode == ReceiverMode::ReadOnly {
                                     panic!(
-                                        "CP Compile Error: Cannot take mutable borrow '&mut {}.{}' in a read-only method (add 'mut _' as first parameter)",
+                                        "CP Compile Error: Cannot take mutable borrow '*{}.{}' in a read-only method (add '*_' as first parameter)",
                                         root, field_opt.as_deref().unwrap_or("")
                                     );
                                 }

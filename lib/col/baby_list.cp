@@ -321,7 +321,7 @@ pub class BabyList<T> {
         }
     }
 
-    pub fn release(*_) {
+    ~init() {
         _.deinit();
         std.heap.page_allocator.destroy(_);
     }
@@ -393,8 +393,8 @@ pub struct OffsetByteList {
         _.list.deinit();
     }
 
-    pub fn release(*_) {
-        _.list.release();
+    ~init() {
+        _.list.~init();
         std.heap.page_allocator.destroy(_);
     }
 }

@@ -115,7 +115,7 @@ fn main() {
 
         sock.close(SocketCloseCode.normal);
         expect_eq(sock.isClosed(), true);
-        sock.release();
+        sock.~init();
     });
 
     test("4. StreamBuffer & TcpStream corking / uncorking", () => {
@@ -150,7 +150,7 @@ fn main() {
         expect_eq(read_n as i64, 4);
         expect_eq(stream.recv_len as i64, 2);
 
-        stream.release();
+        stream.~init();
     });
 
     test("5. ListenConfig bitmask & TcpServer connection lifecycle", () => {
@@ -174,14 +174,14 @@ fn main() {
             expect_eq(srv.total_accepted as i64, 1);
             let * = client_stream.write("welcome");
             expect_eq(client_stream.sock.stats.bytes_written as i64, 7);
-            client_stream.release();
+            client_stream.~init();
             srv.onClientClosed();
             expect_eq(srv.active_connections as i64, 0);
         } else {
             expect_eq(1, 0);
         }
 
-        srv.release();
+        srv.~init();
     });
 
     test("6. UdpSocket bind, peer connect, TTL/multicast options & datagrams", () => {
@@ -208,6 +208,6 @@ fn main() {
 
         udp.disconnectPeer();
         expect_eq(udp.has_connected_peer, false);
-        udp.release();
+        udp.~init();
     });
 }

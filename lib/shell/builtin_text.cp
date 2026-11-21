@@ -255,7 +255,7 @@ pub fn runBuiltinHead(argv: []const []const u8, stdin: []const u8, stdout: *Stri
     }
     while (idx < argv.len) {
         let fbuf = StringJoiner.init();
-        defer fbuf.release();
+        defer fbuf.~init();
         if (!readFileInto(argv[idx], &fbuf)) {
             stderr.push("head: cannot open '");
             stderr.push(argv[idx]);
@@ -310,7 +310,7 @@ pub fn runBuiltinTail(argv: []const []const u8, stdin: []const u8, stdout: *Stri
     }
     while (idx < argv.len) {
         let fbuf = StringJoiner.init();
-        defer fbuf.release();
+        defer fbuf.~init();
         if (!readFileInto(argv[idx], &fbuf)) {
             stderr.push("tail: cannot open '");
             stderr.push(argv[idx]);
@@ -366,7 +366,7 @@ pub fn runBuiltinWc(argv: []const []const u8, stdin: []const u8, stdout: *String
     let file_count: usize = 0;
     while (idx < argv.len) {
         let fbuf = StringJoiner.init();
-        defer fbuf.release();
+        defer fbuf.~init();
         if (!readFileInto(argv[idx], &fbuf)) {
             stderr.push("wc: ");
             stderr.push(argv[idx]);
@@ -517,7 +517,7 @@ pub fn runBuiltinGrep(argv: []const []const u8, stdin: []const u8, stdout: *Stri
                 }
             } else {
                 let fbuf = StringJoiner.init();
-                defer fbuf.release();
+                defer fbuf.~init();
                 if (!readFileInto(fpath, &fbuf)) {
                     stderr.push("grep: ");
                     stderr.push(fpath);
@@ -616,7 +616,7 @@ pub fn runBuiltinYes(argv: []const []const u8, stdout: *StringJoiner): i32 {
     }
 
     let line = StringJoiner.init();
-    defer line.release();
+    defer line.~init();
     if (idx >= argv.len) {
         line.push("y");
     } else {
@@ -658,7 +658,7 @@ pub fn runBuiltinSort(argv: []const []const u8, stdin: []const u8, stdout: *Stri
     }
 
     let input = StringJoiner.init();
-    defer input.release();
+    defer input.~init();
     if (idx >= argv.len) {
         input.push(stdin);
     } else {
@@ -732,7 +732,7 @@ pub fn runBuiltinUniq(argv: []const []const u8, stdin: []const u8, stdout: *Stri
         idx += 1;
     }
     let fbuf = StringJoiner.init();
-    defer fbuf.release();
+    defer fbuf.~init();
     let data = stdin;
     if (idx < argv.len) {
         if (!readFileInto(argv[idx], &fbuf)) {

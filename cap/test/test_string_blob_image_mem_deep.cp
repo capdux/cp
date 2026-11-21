@@ -247,16 +247,16 @@ fn testBlobAndFileDeep(): !void {
     expect_eq(reloaded.delete(), true);
     expect_eq(reloaded.exists(), false);
 
-    reloaded.release();
-    f_handle.release();
-    expected_blob.release();
-    merged.release();
-    p3.release();
-    p2.release();
-    p1.release();
-    inv_sub.release();
-    neg_sub.release();
-    b.release();
+    reloaded.~init();
+    f_handle.~init();
+    expected_blob.~init();
+    merged.~init();
+    p3.~init();
+    p2.~init();
+    p1.~init();
+    inv_sub.~init();
+    neg_sub.~init();
+    b.~init();
 }
 
 fn testImageDeep(): !void {
@@ -431,7 +431,7 @@ fn testMemDeep(): !void {
 
     // 4. SlabPool: O(1) alloc/free & double-free defense
     let pool = SlabPool.init(32, 3);
-    defer pool.release();
+    defer pool.~init();
     expect_eq(pool.slotSize(), 32 as usize);
     expect_eq(pool.capacity(), 3 as usize);
     expect_eq(pool.available(), 3 as usize);

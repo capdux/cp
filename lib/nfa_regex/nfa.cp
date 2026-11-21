@@ -23,13 +23,13 @@ const CharClass = struct {
     negated: bool = false,
     bits: [4]u64 = [ 0, 0, 0, 0 ],
 
-    fn setBit(self: *CharClass, ch: u8): void {
+    fn setBit(self: *CharClass, ch: u8) {
         const word = @as(usize, ch >> 6);
         const bit: u6 = @truncate(ch & 63);
         self.bits[word] |= (@as(u64, 1) << bit);
     }
 
-    fn setRange(self: *CharClass, lo: u8, hi: u8): void {
+    fn setRange(self: *CharClass, lo: u8, hi: u8) {
         let c: u16 = lo;
         while (c <= hi) : (c += 1) {
             self.setBit(@intCast(c));
@@ -66,7 +66,7 @@ const Frag = struct {
     start: i32,
     outs: std.ArrayList(i32),
 
-    fn deinit(self: *Frag, alloc: std.mem.Allocator): void {
+    fn deinit(self: *Frag, alloc: std.mem.Allocator) {
         self.outs.deinit(alloc);
     }
 };
@@ -77,7 +77,7 @@ pub const NfaRegex = struct {
     start_state: i32,
     anchored_start: bool,
 
-    pub fn deinit(self: *const NfaRegex): void {
+    pub fn deinit(self: *const NfaRegex) {
         self.alloc.free(self.states);
     }
 
@@ -275,7 +275,7 @@ const Builder = struct {
         return id;
     }
 
-    fn patch(self: *Builder, outs: *const std.ArrayList(i32), target: i32): void {
+    fn patch(self: *Builder, outs: *const std.ArrayList(i32), target: i32) {
         for (sid of outs.items) {
             const uid: usize = @intCast(sid);
             if (self.states[uid].out1 == -1) {

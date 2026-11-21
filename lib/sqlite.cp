@@ -77,7 +77,7 @@ pub class Database {
         }
     }
 
-    fn release(*_) {
+    ~init() {
         __zig__ {
             if (self.ptr) |db_ptr| {
                 _ = sqlite3_close(db_ptr);

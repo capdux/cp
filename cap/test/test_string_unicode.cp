@@ -87,13 +87,13 @@ fn main() {
         expect_eq(inline_str.isInlined(), true);
         expect_eq(inline_str.len(), 15);
         expect_eq(inline_str.slice(), "short-stack-str");
-        inline_str.release();
+        inline_str.~init();
 
         let heap_str = SmolStr.init("this-string-exceeds-fifteen-bytes");
         expect_eq(heap_str.isInlined(), false);
         expect_eq(heap_str.len(), 33);
         expect_eq(heap_str.slice(), "this-string-exceeds-fifteen-bytes");
-        heap_str.release();
+        heap_str.~init();
 
         let sb = StringBuilder.init();
         sb.count("https://");
@@ -104,7 +104,7 @@ fn main() {
         * = sb.append("cap.dev");
         * = sb.append("/v1/string");
         expect_eq(sb.slice(), "https://cap.dev/v1/string");
-        sb.release();
+        sb.~init();
     });
 
     test("5. StringEscape HTML entities & RegExp metacharacter escaping", () => {

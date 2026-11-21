@@ -169,9 +169,9 @@ pub struct Condition {
         _.impl.wake(.all);
     }
 
-    pub fn release(*_) {
+    ~init() {
     }
     pub fn deinit(*_) {
-        _.release();
+        _.~init();
     }
 }

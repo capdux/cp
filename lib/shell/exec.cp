@@ -386,7 +386,7 @@ pub struct ShellSession {
         return res.exit_code;
     }
 
-    pub fn release(*_) {
+    ~init() {
         const alloc = std.heap.page_allocator;
         let i: usize = 0;
         while (i < _.pos_args_len) {
@@ -397,8 +397,8 @@ pub struct ShellSession {
             i += 1;
         }
         _.pos_args_len = 0;
-        _.env.release();
-        _.aliases.release();
+        _.env.~init();
+        _.aliases.~init();
     }
 }
 
@@ -407,7 +407,7 @@ fn runCommandSubstitution(cmd_src: []const u8, session: *ShellSession, out: *Str
     const saved_cwd = getcwd(&saved_cwd_buf) catch "/";
     let sub_sess = session.cloneForSubshell();
     defer {
-        sub_sess.release();
+        sub_sess.~init();
         chdir(saved_cwd) catch {};
     }
 
@@ -493,7 +493,7 @@ fn expandDollarWithSession(
 
         // Pre-expand any $VAR or $(cmd) inside arithmetic expression
         let exp_expr = StringJoiner.init();
-        defer exp_expr.release();
+        defer exp_expr.~init();
         let dummy_split = false;
         expandWordWithSession(expr_raw, session, &exp_expr, &dummy_split, false);
         const val = ArithEval.eval(exp_expr.slice(), &session.env);
@@ -626,7 +626,7 @@ fn expandBraceBodyWithSession(inner: []const u8, session: *ShellSession, out: *S
             out.push(existing_opt.?);
         } else {
             let sub = StringJoiner.init();
-            defer sub.release();
+            defer sub.~init();
             let dummy = false;
             expandWordWithSession(arg, session, &sub, &dummy, false);
             out.push(sub.slice());
@@ -639,7 +639,7 @@ fn expandBraceBodyWithSession(inner: []const u8, session: *ShellSession, out: *S
             out.push(existing_opt.?);
         } else {
             let sub = StringJoiner.init();
-            defer sub.release();
+            defer sub.~init();
             let dummy = false;
             expandWordWithSession(arg, session, &sub, &dummy, false);
             const expanded = sub.slice();
@@ -652,7 +652,7 @@ fn expandBraceBodyWithSession(inner: []const u8, session: *ShellSession, out: *S
     if (op_ch == '+') {
         if (is_set) {
             let sub = StringJoiner.init();
-            defer sub.release();
+            defer sub.~init();
             let dummy = false;
             expandWordWithSession(arg, session, &sub, &dummy, false);
             out.push(sub.slice());
@@ -805,7 +805,7 @@ fn expandWordToArgList(
         const glob_magic = hasUnquotedGlobMagic(variant);
 
         let exp = StringJoiner.init();
-        defer exp.release();
+        defer exp.~init();
         let did_unquoted_split = false;
         expandWordWithSession(variant, session, &exp, &did_unquoted_split, true);
         const expanded = exp.slice();
@@ -1148,11 +1148,11 @@ pub struct Executor {
 
         if (cmd.redirect_all.len > 0) {
             let all_path = StringJoiner.init();
-            defer all_path.release();
+            defer all_path.~init();
             let dummy = false;
             expandWordWithSession(cmd.redirect_all, session, &all_path, &dummy, true);
             let combined = StringJoiner.init();
-            defer combined.release();
+            defer combined.~init();
             combined.push(cmd_out.slice());
             combined.push(cmd_err.slice());
             if (!writeRedirectFile(all_path.slice(), combined.slice(), cmd.redirect_all_append)) {
@@ -1164,7 +1164,7 @@ pub struct Executor {
 
         if (cmd.redirect_out.len > 0) {
             let out_path = StringJoiner.init();
-            defer out_path.release();
+            defer out_path.~init();
             let dummy = false;
             expandWordWithSession(cmd.redirect_out, session, &out_path, &dummy, true);
             if (!writeRedirectFile(out_path.slice(), cmd_out.slice(), cmd.redirect_append)) {
@@ -1177,7 +1177,7 @@ pub struct Executor {
 
         if (cmd.redirect_err.len > 0) {
             let err_path = StringJoiner.init();
-            defer err_path.release();
+            defer err_path.~init();
             let dummy = false;
             expandWordWithSession(cmd.redirect_err, session, &err_path, &dummy, true);
             if (!writeRedirectFile(err_path.slice(), cmd_err.slice(), cmd.redirect_err_append)) {
@@ -1242,12 +1242,12 @@ pub struct Executor {
         let pool = pool_opt orelse return 0;
 
         let cmd_out = StringJoiner.init();
-        defer cmd_out.release();
+        defer cmd_out.~init();
         let cmd_err = StringJoiner.init();
-        defer cmd_err.release();
+        defer cmd_err.~init();
 
         let in_buf = StringJoiner.init();
-        defer in_buf.release();
+        defer in_buf.~init();
         let effective_stdin = stdin_data;
         if (cmd.redirect_herestring.len > 0) {
             let dummy = false;
@@ -1256,7 +1256,7 @@ pub struct Executor {
             effective_stdin = in_buf.slice();
         } else if (cmd.redirect_in.len > 0) {
             let redir_in_path = StringJoiner.init();
-            defer redir_in_path.release();
+            defer redir_in_path.~init();
             let dummy = false;
             expandWordWithSession(cmd.redirect_in, session, &redir_in_path, &dummy, true);
             if (!readRedirectFile(redir_in_path.slice(), &in_buf)) {
@@ -1277,7 +1277,7 @@ pub struct Executor {
                         const saved_cwd = getcwd(&saved_cwd_buf) catch "/";
                         let sub_sess = session.cloneForSubshell();
                         defer {
-                            sub_sess.release();
+                            sub_sess.~init();
                             chdir(saved_cwd) catch {};
                         }
                         code = Executor.executeScriptBlockWithPool(sptr, pool, effective_stdin, &cmd_out, &cmd_err, &sub_sess);
@@ -1418,7 +1418,7 @@ pub struct Executor {
             let ai: usize = 0;
             while (ai < cmd.assigns_len) {
                 let val_buf = StringJoiner.init();
-                defer val_buf.release();
+                defer val_buf.~init();
                 let dummy = false;
                 expandWordWithSession(cmd.assigns[ai].raw_value, session, &val_buf, &dummy, true);
                 * = session.env.set(cmd.assigns[ai].name, val_buf.slice(), false);
@@ -1448,7 +1448,7 @@ pub struct Executor {
                 saved_vals[ai] = "";
             }
             let new_val = StringJoiner.init();
-            defer new_val.release();
+            defer new_val.~init();
             let dummy = false;
             expandWordWithSession(cmd.assigns[ai].raw_value, session, &new_val, &dummy, true);
             * = session.env.set(aname, new_val.slice(), true);
@@ -1462,7 +1462,7 @@ pub struct Executor {
                 } else {
                     * = session.env.unset(cmd.assigns[ri].name);
                 }
-                saved_bufs[ri].release();
+                saved_bufs[ri].~init();
                 ri += 1;
             }
         }
@@ -1525,7 +1525,7 @@ pub struct Executor {
 
         // 4. Input redirection (< file or <<< herestring)
         let in_buf = StringJoiner.init();
-        defer in_buf.release();
+        defer in_buf.~init();
         let effective_stdin = stdin_data;
         if (cmd.redirect_herestring.len > 0) {
             let dummy = false;
@@ -1534,7 +1534,7 @@ pub struct Executor {
             effective_stdin = in_buf.slice();
         } else if (cmd.redirect_in.len > 0) {
             let redir_in_path = StringJoiner.init();
-            defer redir_in_path.release();
+            defer redir_in_path.~init();
             let dummy = false;
             expandWordWithSession(cmd.redirect_in, session, &redir_in_path, &dummy, true);
             if (!readRedirectFile(redir_in_path.slice(), &in_buf)) {
@@ -1547,9 +1547,9 @@ pub struct Executor {
         }
 
         let cmd_out = StringJoiner.init();
-        defer cmd_out.release();
+        defer cmd_out.~init();
         let cmd_err = StringJoiner.init();
-        defer cmd_err.release();
+        defer cmd_err.~init();
 
         let exit_code: i32 = 0;
         if (argv.len > 0) {
@@ -1591,7 +1591,7 @@ pub struct Executor {
         stderr_joiner: *StringJoiner,
     ): i32 {
         let sess = ShellSession.init();
-        defer sess.release();
+        defer sess.~init();
         return Executor.executeCommandWithSession(cmd, stdin_data, stdout_joiner, stderr_joiner, &sess);
     }
 
@@ -1611,7 +1611,7 @@ pub struct Executor {
         }
 
         let pipe_holder = StringJoiner.init();
-        defer pipe_holder.release();
+        defer pipe_holder.~init();
         let cur_stdin = initial_stdin;
         let last_code: i32 = 0;
         let pipefail_code: i32 = 0;
@@ -1637,11 +1637,11 @@ pub struct Executor {
             if (i + 1 < cmds.len) {
                 pipe_holder.length = 0;
                 pipe_holder.push(step_slice);
-                step_stdout.release();
+                step_stdout.~init();
                 cur_stdin = pipe_holder.slice();
             } else {
                 final_stdout.push(step_slice);
-                step_stdout.release();
+                step_stdout.~init();
             }
             if (session.should_exit) {
                 break;
@@ -1677,7 +1677,7 @@ pub struct Executor {
 
     pub static fn executePipeline(pipe: Pipeline, initial_stdin: []const u8): ShellResult {
         let sess = ShellSession.init();
-        defer sess.release();
+        defer sess.~init();
         return Executor.executePipelineWithSession(pipe, initial_stdin, &sess);
     }
 
@@ -1743,7 +1743,7 @@ pub struct Executor {
 
     pub static fn executeScript(script: Script): ShellResult {
         let sess = ShellSession.init();
-        defer sess.release();
+        defer sess.~init();
         return Executor.executeScriptWithSession(script, &sess);
     }
 }

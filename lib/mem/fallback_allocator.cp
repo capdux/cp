@@ -330,7 +330,7 @@ pub struct MaybeOwned<T> {
         _.owned = false;
     }
 
-    pub fn release(*_) {
+    ~init() {
         _.deinit();
     }
 }
@@ -560,7 +560,7 @@ pub struct MemFdBuffer {
         }
     }
 
-    pub fn release(*_) {
+    ~init() {
         _.deinit();
     }
 }

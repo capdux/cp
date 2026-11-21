@@ -253,7 +253,7 @@ pub struct AllocationScope {
         }
     }
 
-    pub fn release(*_) {
+    ~init() {
         _.deinit();
     }
 

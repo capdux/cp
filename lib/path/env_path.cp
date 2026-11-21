@@ -23,7 +23,7 @@ pub const EnvPath = struct {
         };
     }
 
-    pub fn deinit(*_): void {
+    pub fn deinit(*_) {
         _.buf.deinit(_.allocator);
     }
 

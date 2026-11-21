@@ -31,7 +31,7 @@ pub const RpcValue = union(enum) {
     array_val: []RpcValue,
     map_val: []RpcMapEntry,
 
-    pub fn deinit(self: *const RpcValue, alloc: std.mem.Allocator): void {
+    pub fn deinit(self: *const RpcValue, alloc: std.mem.Allocator) {
         switch (self.*) {
             .nil, .bool_val, .int_val, .uint_val, .float_val => {},
             .str_val, .bin_val => |s| alloc.free(s),
@@ -103,7 +103,7 @@ pub const RpcMessage = union(enum) {
     response: RpcResponse,
     notification: RpcNotification,
 
-    pub fn deinit(self: *const RpcMessage, alloc: std.mem.Allocator): void {
+    pub fn deinit(self: *const RpcMessage, alloc: std.mem.Allocator) {
         switch (self.*) {
             .request => |r| {
                 alloc.free(r.method);
@@ -523,7 +523,7 @@ pub const RpcStreamDecoder = struct {
         };
     }
 
-    pub fn deinit(self: *RpcStreamDecoder): void {
+    pub fn deinit(self: *RpcStreamDecoder) {
         self.buf.deinit(self.alloc);
     }
 

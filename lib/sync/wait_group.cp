@@ -59,7 +59,7 @@ pub struct WaitGroup {
         }
     }
 
-    pub fn release(*_) {
-        _.cond.release();
+    ~init() {
+        _.cond.~init();
     }
 }

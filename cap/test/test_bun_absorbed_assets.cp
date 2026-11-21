@@ -30,14 +30,14 @@ fn main() {
         expect_eq(s1.isInline(), true);
         expect_eq(s1.eql("hello world"), true);
         expect_eq(s1.eql("other"), false);
-        s1.release();
+        s1.~init();
 
         // Large string (> 15 bytes): heap allocated
         let s2 = SmolStr.init("this is a longer string that exceeds 15 bytes");
         expect_eq(s2.len() as i64, 45);
         expect_eq(s2.isInline(), false);
         expect_eq(s2.eql("this is a longer string that exceeds 15 bytes"), true);
-        s2.release();
+        s2.~init();
     });
 
     test("2. cap:string — HashedString, PathString & StringJoiner", () => {
@@ -65,7 +65,7 @@ fn main() {
         joiner.pushDelimited("beta", ", ");
         joiner.pushDelimited("gamma", ", ");
         expect_eq(joiner.len() as i64, 18);
-        joiner.release();
+        joiner.~init();
     });
 
     test("3. cap:sync — Guarded<T> thread-safe wrapper & WorkPool queue", () => {
@@ -100,7 +100,7 @@ fn main() {
 
         pool.shutdown();
         expect_eq(pool.isRunning(), false);
-        pool.release();
+        pool.~init();
     });
 
     test("4. cap:event — AnyTask & ManagedTask dynamic task execution", () => {

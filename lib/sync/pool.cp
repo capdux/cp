@@ -123,8 +123,8 @@ pub struct WorkPool {
         _.cond.broadcast();
     }
 
-    pub fn release(*_) {
+    ~init() {
         _.shutdown();
-        _.cond.release();
+        _.cond.~init();
     }
 }

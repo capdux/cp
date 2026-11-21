@@ -66,3 +66,16 @@
   - 彻底移除 `cpc` 对用户 `release` 的析构识别与参数截断，仅保留 `~init()` (`__cp_deinit`) 为唯一析构钩子（内置运行时容器/守卫统一暴露 `__cp_deinit`），发布 Release 版 `cpc`；
   - 迁移 `cap/test/` 所有权/生命周期/Trait 核心测试至 `~init()` 并在 `test_raii_deinit_ownership_deep.cp` 实测验证无参与多参 `release` 均按普通方法执行，全部 PASS；
   - 全面对齐更新 `cp_agent_ref.md`、`/data/dev/bun/CP_PITFALLS.md`、`/data/dev/capsurf/CP_PITFALLS.md`，并发送广播 `syntax-raii-20261121-v2` 通知 `bun_agy` 与 `capsurf_agy`。
+
+### 2026-11-21（批量迁移全仓库测试与 Bun 吸收资产至新语法 + 升级 `cpc fix` 与诊断提示 + 提供一键迁移脚本）
+- **用户指令**：
+  1. 编写简洁通知文案供用户发给 `bun_agy` 与 `capsurf_agy`；
+  2. 将之前写的测试案例与所有从 Bun 吸收的 CP 代码全部按新语法迁移；
+  3. 在 `cpc fix`（`cap.fix`）中按新语法修正；
+  4. 所有编译报错提示按新语法更新；
+  5. 提供可复用的一键批量替换脚本。
+- **执行成果**：
+  - 修复并升级 `cpc fix`（[diagnostic.rs](file:///data/dev/cp/cpc/src/diagnostic.rs)、[decl.rs](file:///data/dev/cp/cpc/src/parser/decl.rs)）：彻底修复 `*this`/`*self` 误修为 `**_`、`E0201` 改为生成 `param: *T`、`E0125` 补齐 `param: move/own T -> move/own param: T` 自动修复，并修复 `Box<dyn Trait>` 的 `__cp_deinit` 析构；
+  - 全面更新 `cpc/src/` 所有过时编译报错提示（清除残留 `mut _` / `&mut` / `mut x` / `: void` / 旧借用提示）；发布 Release 优化版 `cpc`；
+  - 编写可复用、严格跳过 `zig {}` 块的一键批量迁移脚本 [scripts/migrate_cp_syntax.py](file:///data/dev/cp/scripts/migrate_cp_syntax.py) 并对全仓库 `lib/` 与 `cap/test/` 1982 个 `.cp` 文件执行迁移（更新 78 个文件，含 Bun 吸收的 `cap:string`/`cap:mem`/`cap:col`/`cap:blob`/`cap:net`/`cap:http`/`cap:sql`/`cap:shell`/`cap:sync`/`cap:event` 资产与测试），11 大核心套件与 `cpc fix` 实测全部 100% PASS；
+  - 提交 Git 并交付面向 `bun_agy` / `capsurf_agy` 的复制即用通知文案。

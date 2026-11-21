@@ -199,7 +199,7 @@ fn invokePlugin(kind: i32): i32 ! Box<dyn PluginError> {
     return 42;
 }
 
-fn main(): void {
+fn main() {
     // --- A. Tri-state switch pattern matching on `string?!FileErr` ---
     let r1 = load("data.txt");
     let out1 = switch r1 {

@@ -15,7 +15,7 @@ pub fn BinaryHeap(comptime T: type, comptime cmp: fn (a: T, b: T) std.math.Order
             };
         }
 
-        pub fn deinit(*this): void {
+        pub fn deinit(*this) {
             this.items.deinit(this.alloc);
         }
 
@@ -27,7 +27,7 @@ pub fn BinaryHeap(comptime T: type, comptime cmp: fn (a: T, b: T) std.math.Order
             return this.items.items.len == 0;
         }
 
-        pub fn clear(*this): void {
+        pub fn clear(*this) {
             this.items.clearRetainingCapacity();
         }
 
@@ -57,7 +57,7 @@ pub fn BinaryHeap(comptime T: type, comptime cmp: fn (a: T, b: T) std.math.Order
             return top;
         }
 
-        fn siftUp(*this, start_idx: usize): void {
+        fn siftUp(*this, start_idx: usize) {
             var idx = start_idx;
             while (idx > 0) {
                 const parent = (idx - 1) / 2;
@@ -72,7 +72,7 @@ pub fn BinaryHeap(comptime T: type, comptime cmp: fn (a: T, b: T) std.math.Order
             }
         }
 
-        fn siftDown(*this, start_idx: usize): void {
+        fn siftDown(*this, start_idx: usize) {
             var idx = start_idx;
             const n = this.items.items.len;
             while (true) {

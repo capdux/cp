@@ -318,9 +318,9 @@ fn main() {
         expect_eq(loaded.type, "application/json");
         expect_eq(loaded.text(), "Media Suite File Data");
 
-        loaded.release();
-        file_obj.release();
-        sub.release();
-        blob_obj.release();
+        loaded.~init();
+        file_obj.~init();
+        sub.~init();
+        blob_obj.~init();
     });
 }

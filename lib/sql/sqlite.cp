@@ -130,7 +130,7 @@ pub struct SqliteRows {
         }
     }
 
-    pub fn release(*_) {
+    ~init() {
         _.close();
     }
 
@@ -314,7 +314,7 @@ pub struct SqliteDatabase {
         }
     }
 
-    pub fn release(*_) {
+    ~init() {
         _.close();
     }
 

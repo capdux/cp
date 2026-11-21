@@ -803,7 +803,7 @@ impl Codegen {
                                     ReceiverMode::Mut => {
                                         if self.current_receiver_mode == ReceiverMode::ReadOnly {
                                             panic!(
-                                                "CP Compile Error: Cannot call mutable parent method 'super.{}()' from a read-only method (add 'mut _' as first parameter)",
+                                                "CP Compile Error: Cannot call mutable parent method 'super.{}()' from a read-only method (add '*_' as first parameter)",
                                                 mem.prop.sym
                                             );
                                         }
@@ -900,7 +900,7 @@ impl Codegen {
                                             if self.current_receiver_mode == ReceiverMode::ReadOnly
                                             {
                                                 panic!(
-                                                    "CP Compile Error: Cannot call mutable method '{}.{}()' inside a read-only method (add 'mut _' as first parameter)",
+                                                    "CP Compile Error: Cannot call mutable method '{}.{}()' inside a read-only method (add '*_' as first parameter)",
                                                     id.sym, mem.prop.sym
                                                 );
                                             }
@@ -967,7 +967,7 @@ impl Codegen {
                                                 && !self.mutable_fn_params.contains(&id.sym)
                                             {
                                                 panic!(
-                                                    "CP Compile Error: Cannot call mutable method '{}()' on read-only parameter '{}' (mark parameter as 'mut {}')",
+                                                    "CP Compile Error: Cannot call mutable method '{}()' on read-only parameter '{}' (mark parameter as '{}: *T')",
                                                     mem.prop.sym, id.sym, id.sym
                                                 );
                                             }
@@ -1261,7 +1261,7 @@ impl Codegen {
                                     ReceiverMode::Mut => {
                                         if self.current_receiver_mode == ReceiverMode::ReadOnly {
                                             panic!(
-                                                "CP Compile Error: Cannot call mutable method '{}()' inside a read-only method (add 'mut _' as first parameter)",
+                                                "CP Compile Error: Cannot call mutable method '{}()' inside a read-only method (add '*_' as first parameter)",
                                                 ident.sym
                                             );
                                         }

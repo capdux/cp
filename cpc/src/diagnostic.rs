@@ -402,10 +402,19 @@ impl Diagnostic {
             }
         }
 
-        // 9. Explicit 'self'/'this' receiver (E0121) -> replace with '*_'
+        // 9. Explicit 'self'/'this' receiver (E0121) -> replace with '*_' (or '_' if already preceded by '*')
         if self.code == "E0121" {
             if let Some(span) = self.span {
-                edits.push(DiagnosticEdit::new(span.start, span.end, "*_"));
+                let already_starred = source_code.map_or(false, |code| {
+                    let bytes = code.as_bytes();
+                    let mut p = span.start.min(bytes.len());
+                    while p > 0 && (bytes[p - 1] == b' ' || bytes[p - 1] == b'\t') {
+                        p -= 1;
+                    }
+                    p > 0 && bytes[p - 1] == b'*'
+                });
+                let repl = if already_starred { "_" } else { "*_" };
+                edits.push(DiagnosticEdit::new(span.start, span.end, repl));
                 return edits;
             }
         }
@@ -460,16 +469,34 @@ impl Diagnostic {
             }
         }
 
-        // 12. Parameter read-only borrow (E0201) -> add '*' for mutable borrow
+        // 12. Parameter read-only borrow (E0201) -> insert '*' after ':' for 'param: *T'
         if self.code == "E0201"
             && self
                 .suggestion
                 .as_ref()
                 .map_or(false, |s| s.contains("Add '*'"))
         {
-            if let Some(span) = self.span {
-                edits.push(DiagnosticEdit::new(span.start, span.start, "*"));
-                return edits;
+            if let (Some(span), Some(code)) = (self.span, source_code) {
+                let bytes = code.as_bytes();
+                let mut p = span.end.min(bytes.len());
+                while p < bytes.len()
+                    && bytes[p] != b':'
+                    && bytes[p] != b','
+                    && bytes[p] != b')'
+                    && bytes[p] != b'\n'
+                {
+                    p += 1;
+                }
+                if p < bytes.len() && bytes[p] == b':' {
+                    p += 1;
+                    while p < bytes.len() && (bytes[p] == b' ' || bytes[p] == b'\t') {
+                        p += 1;
+                    }
+                    if p < bytes.len() && bytes[p] != b'*' {
+                        edits.push(DiagnosticEdit::new(p, p, "*"));
+                        return edits;
+                    }
+                }
             }
         }
 
@@ -551,7 +578,7 @@ impl Diagnostic {
             }
         }
 
-        // 17. Prefix '*' on named parameter (E0125) -> change '*param: T' to 'param: *T'
+        // 17. Prefix '*' on named parameter or misplaced 'move'/'own' after ':' (E0125)
         if self.code == "E0125" {
             if let (Some(span), Some(code)) = (self.span, source_code) {
                 let bytes = code.as_bytes();
@@ -575,6 +602,38 @@ impl Diagnostic {
                         }
                     }
                     return edits;
+                }
+                // Handle 'param: move T' / 'param: own T' -> 'move param: T' / 'own param: T'
+                if span.end <= bytes.len() {
+                    let kw = &code[span.start..span.end];
+                    if kw == "move" || kw == "own" {
+                        let mut p = span.start;
+                        while p > 0 && (bytes[p - 1] == b' ' || bytes[p - 1] == b'\t') {
+                            p -= 1;
+                        }
+                        if p > 0 && bytes[p - 1] == b':' {
+                            p -= 1;
+                            while p > 0 && (bytes[p - 1] == b' ' || bytes[p - 1] == b'\t') {
+                                p -= 1;
+                            }
+                            let name_end = p;
+                            while p > 0
+                                && (bytes[p - 1].is_ascii_alphanumeric() || bytes[p - 1] == b'_')
+                            {
+                                p -= 1;
+                            }
+                            if p < name_end {
+                                let del_end = if bytes.get(span.end) == Some(&b' ') {
+                                    span.end + 1
+                                } else {
+                                    span.end
+                                };
+                                edits.push(DiagnosticEdit::new(p, p, format!("{} ", kw)));
+                                edits.push(DiagnosticEdit::new(span.start, del_end, ""));
+                                return edits;
+                            }
+                        }
+                    }
                 }
             }
         }

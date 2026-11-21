@@ -90,7 +90,7 @@ pub struct ManagedTask {
         }
     }
 
-    pub fn release(*_) {
+    ~init() {
         if (_.is_heap_allocated) {
             _.is_heap_allocated = false;
             zig {

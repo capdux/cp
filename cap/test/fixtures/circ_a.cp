@@ -8,7 +8,7 @@ export class NodeA {
         return this.id;
     }
 
-    fn attach_b(*this, target: *NodeB): void {
+    fn attach_b(*this, target: *NodeB) {
         this.b = target;
     }
 }

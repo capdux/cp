@@ -178,7 +178,7 @@ pub class SafeSocket {
         _.fd = -1;
     }
 
-    pub fn release(*_) {
+    ~init() {
         if (!_.isClosed()) {
             _.close(SocketCloseCode.normal);
         }

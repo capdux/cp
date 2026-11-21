@@ -115,7 +115,7 @@ fn testShellDeep(): !void {
 
     // 2. Session env, variable interpolation, ${VAR:-default}, ${VAR:=val}, ${#VAR}, prefix assignment
     let sess = Shell.session();
-    defer sess.release();
+    defer sess.~init();
 
     const r_interp = sess.run("GREETING=Hello; export TARGET=World; echo '$GREETING' \"$GREETING ${TARGET} ${UNSET:-Fallback} ${#TARGET}\"");
     expect_eq(r_interp.ok(), true);
@@ -143,7 +143,7 @@ fn testShellDeep(): !void {
 
     // 4. Builtins: echo -e/-ne, printf, head, wc, basename suffix, dirname, test/[
     let sess2 = Shell.session();
-    defer sess2.release();
+    defer sess2.~init();
 
     const r_echo_e = sess2.run("echo -ne 'a\\tb\\nline2\\cignored'");
     expect_eq(r_echo_e.ok(), true);
@@ -185,9 +185,9 @@ fn testShellDeep(): !void {
 
     // 6. Redirection to in-memory buffer via ShellSession.runWithMemoryTarget
     let mem_out = StringJoiner.init();
-    defer mem_out.release();
+    defer mem_out.~init();
     let mem_err = StringJoiner.init();
-    defer mem_err.release();
+    defer mem_err.~init();
     const mem_code = sess2.runWithMemoryTarget("echo mem_ok", &mem_out, &mem_err);
     expect_eq(mem_code, 0 as i32);
     expect_eq(std.mem.eql(u8, mem_out.slice(), "mem_ok\n"), true);

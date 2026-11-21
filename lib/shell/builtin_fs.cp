@@ -319,7 +319,7 @@ pub fn runBuiltinCat(argv: []const []const u8, stdin: []const u8, stdout: *Strin
     }
 
     let combined = StringJoiner.init();
-    defer combined.release();
+    defer combined.~init();
 
     if (idx >= argv.len) {
         combined.push(stdin);

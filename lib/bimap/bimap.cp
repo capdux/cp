@@ -43,10 +43,10 @@ export fn BiMap(comptime L: type, comptime R: type): type {
 
         pub fn forceInsert(&self, left: L, right: R): !void {
             if (old_right_kv := self.left_to_right.fetchRemove(left)) {
-                _ = self.right_to_left.remove(old_right_kv.value);
+                * = self.right_to_left.remove(old_right_kv.value);
             }
             if (old_left_kv := self.right_to_left.fetchRemove(right)) {
-                _ = self.left_to_right.remove(old_left_kv.value);
+                * = self.left_to_right.remove(old_left_kv.value);
             }
             try self.left_to_right.put(left, right);
             errdefer _ = self.left_to_right.remove(left);
@@ -63,7 +63,7 @@ export fn BiMap(comptime L: type, comptime R: type): type {
 
         pub fn removeByLeft(&self, left: L): R? {
             if (kv := self.left_to_right.fetchRemove(left)) {
-                _ = self.right_to_left.remove(kv.value);
+                * = self.right_to_left.remove(kv.value);
                 return kv.value;
             }
             return null;
@@ -71,7 +71,7 @@ export fn BiMap(comptime L: type, comptime R: type): type {
 
         pub fn removeByRight(&self, right: R): L? {
             if (kv := self.right_to_left.fetchRemove(right)) {
-                _ = self.left_to_right.remove(kv.value);
+                * = self.left_to_right.remove(kv.value);
                 return kv.value;
             }
             return null;

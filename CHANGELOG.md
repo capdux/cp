@@ -63,3 +63,11 @@
   - `expr/call.rs` 移除对普通对象 `.release(...)` 的无参截断拦截，使无参与多参 `release` 100% 回归普通业务方法；
   - 内置运行时容器/守卫（`Map`/`Set`/`VecDeque`/`BinaryHeap`/`BTreeMap`/`BTreeSet`/`RegExp`/`LockGuard`/`ReadGuard`/`WriteGuard`/`ZigSharedTensor`）统一提供 `__cp_deinit`。
 - **更新测试与文档**：迁移 `cap/test/test_{ownership_pass,ownership_fail,lifetime_pass,lifetime_fail_nll,lifetime_fail_dangling,ref_struct_fail_escape,trait_class_pass,own_keyword,error_box_switch_pass}.cp` 至 `~init()`；扩展 `test_raii_deinit_ownership_deep.cp` 验证 0 参与多参 `release` 为普通方法；全面同步 `cp_agent_ref.md`、`/data/dev/bun/CP_PITFALLS.md` 与 `/data/dev/capsurf/CP_PITFALLS.md` 并广播 `syntax-raii-20261121-v2`。
+
+## [2026-11-21] - 升级 `cpc fix` 与编译诊断提示 + 一键迁移脚本 `scripts/migrate_cp_syntax.py` + 全仓库 `lib/` 与 `cap/test/` 新语法迁移
+- **新增脚本**：`scripts/migrate_cp_syntax.py`（支持 `--dry-run`/`--apply`/`--no-release`/`--rewrite-release-calls`/`--show-audits`，严格跳过 `zig {}` 逃逸块与注释）。
+- **修改 `cpc/src/{diagnostic.rs,parser/decl.rs,sema/mod.rs,codegen/{decl_enum,pattern,stmt,borrow,expr/ops,expr/call}.rs}`**：
+  - `cpc fix` 修复 `E0121`（`*this`/`*self` 不再误生成 `**_`）、`E0201`（改为 `param: *T`）、`E0125`（补齐 `param: move/own T -> move/own param: T`）；
+  - 全量更新编译报错/建议文案，彻底消除旧 `mut _` / `&mut` / `mut x` / `: void` 过时提示；
+  - `Box<dyn Trait>` 补齐 `__cp_deinit` 自动析构支持；发布 Release 版 `cpc`。
+- **批量迁移与验证**：对 `lib/` 与 `cap/test/` 共 78 个 `.cp` 文件完成新语法迁移（含全部 Bun 吸收资产 `~init()` 析构与调用点），11 组核心测试与 3 组 `verify_module.sh` 全量 100% PASS。

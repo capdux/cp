@@ -312,7 +312,7 @@ pub class LinearFifo<T> {
         }
     }
 
-    pub fn release(*_) {
+    ~init() {
         _.deinit();
         std.heap.page_allocator.destroy(_);
     }

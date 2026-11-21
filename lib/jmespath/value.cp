@@ -29,7 +29,7 @@ pub const JmesValue = union(enum) {
     Array: []JmesValue,
     Object: []JmesEntry,
 
-    pub fn deinit(self: *JmesValue, alloc: std.mem.Allocator): void {
+    pub fn deinit(self: *JmesValue, alloc: std.mem.Allocator) {
         switch (self.*) {
             .Null, .Bool, .Int, .Float => {},
             .String => |s| {
@@ -216,7 +216,7 @@ const JsonParser = struct {
     pos: usize,
     alloc: std.mem.Allocator,
 
-    fn skipWs(self: *JsonParser): void {
+    fn skipWs(self: *JsonParser) {
         while (self.pos < self.input.len) {
             const c = self.input[self.pos];
             if (c == ' ' or c == '\t' or c == '\n' or c == '\r') {

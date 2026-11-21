@@ -356,7 +356,7 @@ fn decodeRdata(alloc: std.mem.Allocator, packet: []const u8, rtype: u16, rdata_s
             } };
         },
         .OPT => return DnsRdata{ .opt = try alloc.dupe(u8, slice) },
-        _ => return DnsRdata{ .raw = try alloc.dupe(u8, slice) },
+        * => return DnsRdata{ .raw = try alloc.dupe(u8, slice) },
     }
 }
 

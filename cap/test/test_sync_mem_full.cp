@@ -78,7 +78,7 @@ fn testSyncPrimitivesAndLocks(): !void {
     expect_eq(guarded.get(), 750 as i64);
 
     let wp = WorkPool.init();
-    defer wp.release();
+    defer wp.~init();
     expect_eq(wp.isRunning(), true);
     let dummy_ctx: i32 = 1;
     let t1 = TaskDesc{ func: &dummyTaskFn, ctx: &dummy_ctx, next: null };
@@ -176,9 +176,9 @@ fn testConcurrentMapAndArcSlice(): !void {
     let arc2 = arc.clone();
     expect_eq(arc.refCount(), 2 as usize);
     expect_eq(arc2.get(0).?, 'c' as u8);
-    arc2.release();
+    arc2.~init();
     expect_eq(arc.refCount(), 1 as usize);
-    arc.release();
+    arc.~init();
 
     // 3. Wyhash & WyhashStateless
     const h_full = Wyhash.hash(0, "cap_sync_wyhash_vector");
@@ -204,7 +204,7 @@ fn main() {
     test("4. cap:mem — MaxHeapAllocator, StackFallbackAllocator, BumpArena & MaybeOwnedBuf", () => {
         // MaxHeapAllocator high-water-mark reuse & quota enforcement
         let mha = MaxHeapAllocator.init(512);
-        defer mha.release();
+        defer mha.~init();
         expect_eq(mha.maxQuota(), 512 as usize);
 
         if (b1 := mha.alloc(128)) {
@@ -241,7 +241,7 @@ fn main() {
 
         // BumpArena & MaybeOwnedBuf
         let ba = BumpArena.initCapacity(128);
-        defer ba.release();
+        defer ba.~init();
         expect_eq(ba.allocBytes(10) != null, true);
         expect_eq(ba.allocAligned(16, 8) != null, true);
         expect_eq(ba.used(), 32 as usize);
@@ -249,7 +249,7 @@ fn main() {
         let mob = MaybeOwnedBuf.initOwnedCopy("owned_buffer");
         expect_eq(mob.isOwned(), true);
         expect_eq(mob.slice() == "owned_buffer", true);
-        mob.release();
+        mob.~init();
     });
 
     test("5. cap:mem — Cow / CowSlice / CowBytes, Rc / AtomicRefCounter / WeakControlBlock, TaggedPtr & SharedTensor", () => {
@@ -258,7 +258,7 @@ fn main() {
         expect_eq(c1.setByte(0, 'I' as u8), true);
         expect_eq(c1.isOwned(), true);
         expect_eq(c1.slice() == "Immutable", true);
-        c1.release();
+        c1.~init();
 
         let rc = Rc.init(1);
         expect_eq(rc.increment(), 2 as u32);
@@ -288,7 +288,7 @@ fn main() {
         expect_eq(tensor.get_size(), 256 as usize);
         tensor.retain();
         expect_eq(tensor.get_ref_count(), 2 as usize);
-        tensor.release();
+        tensor.~init();
         expect_eq(tensor.get_ref_count(), 1 as usize);
     });
 }

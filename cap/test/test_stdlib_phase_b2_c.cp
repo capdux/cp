@@ -142,7 +142,7 @@ fn main() {
         const local = SocketAddress.parseIpv4("127.0.0.1", 19000).?;
         const peer = SocketAddress.parseIpv4("127.0.0.1", 19001).?;
         let sock = UdpSocket.bind(local);
-        defer sock.release();
+        defer sock.~init();
 
         expect_eq(sock.boundPort(), 19000 as u16);
         expect_eq(sock.connectPeer(peer), true);
@@ -154,7 +154,7 @@ fn main() {
 
     test("8. cap:mem — CowSlice copy-on-write & TaggedPtr 16-bit tag packing", () => {
         let cow = CowSlice.initBorrowed("hello");
-        defer cow.release();
+        defer cow.~init();
         expect_eq(cow.isOwned(), false);
         expect_eq(cow.len(), 5 as usize);
         expect_eq(cow.setByte(0, 'H' as u8), true);

@@ -415,25 +415,25 @@ fn main() {
         sock.setTimeout(300);
         expect_eq(sock.long_timeout_min as i64, 5);
         sock.close(SocketCloseCode.normal);
-        sock.release();
+        sock.~init();
 
         let stream = TcpStream.init(56, sa4, SocketAddress.loopbackV4(50000));
         stream.cork();
         expect_eq(stream.write("abc") as i64, 3);
         expect_eq(stream.uncork() as i64, 3);
         expect_eq(stream.sock.recordWrite(1) == SendStatus.success, true);
-        stream.release();
+        stream.~init();
 
         let cfg = ListenConfig.defaultForPort(9443);
         expect_eq((cfg.toLibusOptions() & (LIBUS_LISTEN_REUSE_PORT | LIBUS_LISTEN_REUSE_ADDR)) != 0, true);
         let srv = TcpServer.bind(sa4, cfg);
         expect_eq(srv.localPort() as i64, 9443);
-        srv.release();
+        srv.~init();
 
         let udp = UdpSocket.bind(SocketAddress.loopbackV4(5355));
         const pkt: UdpPacket = udp.simulateReceive(12, sa4);
         expect_eq(pkt.payload_len as i64, 12);
-        udp.release();
+        udp.~init();
 
         expect_eq(HttpConnectTunnel.isTunnelEstablished("HTTP/1.1 200 Connection Established\r\n\r\n"), true);
         let s5_buf: [16]u8 = [0; 16];

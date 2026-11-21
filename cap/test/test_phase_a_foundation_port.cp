@@ -443,7 +443,7 @@ fn testStringPhaseA(): !void {
 
     // 3. StringBuilder (Two-pass + appendFmt + append16 + appendZ)
     let sb = StringBuilder.initWithAllocator(gpa);
-    defer sb.release();
+    defer sb.~init();
     sb.count("prefix:");
     sb.count16(&u16_in);
     sb.countZ(":end");

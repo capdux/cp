@@ -14,7 +14,7 @@ fn main() {
         expect_eq(b.bytes().len, 24 as usize);
         expect_eq(b.offset, 0 as usize);
         expect_eq(b.store.ref_count, 1 as usize);
-        b.release();
+        b.~init();
     });
 
     test("2. Blob fromString & default mime type", () => {
@@ -22,7 +22,7 @@ fn main() {
         expect_eq(b.size, 11 as usize);
         expect_eq(b.type, "text/plain;charset=utf-8");
         expect_eq(b.text(), "Binary Data");
-        b.release();
+        b.~init();
     });
 
     test("3. Blob zero-copy slice and reference counting", () => {
@@ -45,9 +45,9 @@ fn main() {
         expect_eq(sub2.type, "text/custom");
         expect_eq(orig.store.ref_count, 3 as usize);
 
-        sub2.release();
-        sub.release();
-        orig.release();
+        sub2.~init();
+        sub.~init();
+        orig.~init();
     });
 
     test("4. Blob arrayBuffer heap allocation", () => {
@@ -56,7 +56,7 @@ fn main() {
         expect_eq(ab.len, 8 as usize);
         expect_eq(ab[0], 68 as u8); // 'D'
         expect_eq(ab[7], 100 as u8); // 'd'
-        b.release();
+        b.~init();
     });
 
     test("5. File abstraction, metadata & slice", () => {
@@ -73,8 +73,8 @@ fn main() {
         expect_eq(f_slice.text(), "Payload");
         expect_eq(f_slice.type, "application/sub");
 
-        f_slice.release();
-        f.release();
+        f_slice.~init();
+        f.~init();
     });
 
     test("6. File writeTo/save disk roundtrip & File.fromPath", () => {
@@ -93,7 +93,7 @@ fn main() {
         expect_eq(loaded_file.size, 41 as usize);
         expect_eq(loaded_file.type, "text/plain");
 
-        loaded_file.release();
-        f.release();
+        loaded_file.~init();
+        f.~init();
     });
 }

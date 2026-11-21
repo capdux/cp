@@ -210,7 +210,7 @@ pub struct File {
         if (!writePathC(_.path, data)) {
             return false;
         }
-        _.blob.release();
+        _.blob.~init();
         _.blob = Blob.fromBytes(data, _.type);
         _.size = data.len;
         if (fmeta := statPathC(_.path)) {
@@ -236,12 +236,12 @@ pub struct File {
         return _.save(dest_path);
     }
 
-    pub fn release(*_) {
-        _.blob.release();
+    ~init() {
+        _.blob.~init();
     }
 
     pub fn deinit(*_) {
-        _.release();
+        _.~init();
     }
 
     static fn extractFilename(path: string): string {

@@ -79,7 +79,7 @@ pub struct CowBytes {
         return true;
     }
 
-    pub fn release(*_) {
+    ~init() {
         zig {
             if (self.is_owned and self.length > 0) {
                 std.heap.page_allocator.free(self.ptr[0..self.length]);
@@ -121,8 +121,8 @@ pub struct CowSlice {
         return _.inner.setByte(index, val);
     }
 
-    pub fn release(*_) {
-        _.inner.release();
+    ~init() {
+        _.inner.~init();
     }
 }
 

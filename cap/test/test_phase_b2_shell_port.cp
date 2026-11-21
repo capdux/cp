@@ -18,7 +18,7 @@ import { Shell, ShellSession, sh } from "cap:shell";
 
 fn testExpansionsAndQuoting(): !void {
     let sess = Shell.session();
-    defer sess.release();
+    defer sess.~init();
 
     // 1. Single quotes, double quotes, ANSI-C quotes, backslash escapes
     const r_quotes = sess.run("X=world; echo 'hello $X' \"hello $X \\$X\" $'line1\\tcol2'");
@@ -79,7 +79,7 @@ fn testExpansionsAndQuoting(): !void {
 
 fn testControlFlowAndSubshell(): !void {
     let sess = Shell.session();
-    defer sess.release();
+    defer sess.~init();
 
     // 1. if / elif / else / fi + ! negation
     const r_if = sess.run(
@@ -136,7 +136,7 @@ fn testControlFlowAndSubshell(): !void {
 
 fn testPipesPosixSpawnAndRedirects(): !void {
     let sess = Shell.session();
-    defer sess.release();
+    defer sess.~init();
 
     // 1. Multi-stage pipeline mixing builtins & PosixSpawn external processes (tr, /bin/cat)
     const r_mix_pipe = sess.run(
@@ -182,7 +182,7 @@ fn testPipesPosixSpawnAndRedirects(): !void {
 
 fn testAllBuiltinsMatrix(): !void {
     let sess = Shell.session();
-    defer sess.release();
+    defer sess.~init();
 
     // 1. Filesystem & path builtins: mktemp, mkdir -p, touch, cp -r, mv, ls, cat -n, basename, dirname, rmdir, rm -rf
     const r_fs = sess.run(

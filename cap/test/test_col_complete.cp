@@ -132,7 +132,7 @@ fn main() {
         expect_eq(out_buf.get(2), 300);
         expect_eq(fifo.readableLength() as i64, 2);
 
-        fifo.release();
+        fifo.~init();
     });
 
     test("3. BabyList & OffsetByteList complete methods: fromSlice, insert, remove, clone, shrink", () => {
@@ -170,14 +170,14 @@ fn main() {
         let cloned = list.clone();
         expect_eq(cloned.count() as i64, 5);
         expect_eq(cloned.at(2), 1700);
-        cloned.release();
+        cloned.~init();
 
         // shrinkRetainingCapacity
         list.shrinkRetainingCapacity(2);
         expect_eq(list.count() as i64, 2);
         expect_eq(list.last() ?? -1, 1500);
 
-        list.release();
+        list.~init();
 
         // OffsetByteList extra methods: slice, remaining, len, clear
         let obl = OffsetByteList.init(32);
@@ -194,7 +194,7 @@ fn main() {
 
         obl.clear();
         expect_eq(obl.len() as i64, 0);
-        obl.release();
+        obl.~init();
     });
 
     test("4. BitSet64, BitSet128, BitSet256, BitSet512: full boolean algebra and iteration", () => {
@@ -316,7 +316,7 @@ fn main() {
         expect_eq(cloned.subsetOf(dbs), true);
         expect_eq(dbs.supersetOf(cloned), true);
 
-        cloned.release();
-        dbs.release();
+        cloned.~init();
+        dbs.~init();
     });
 }

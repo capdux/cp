@@ -52,3 +52,9 @@
 ## 2026-11-21: 彻底取消 `release` 析构语义（`~init()` 唯一化）与 `CP_PITFALLS.md` 全量对齐
 - **设计决策**：用户确认 `release` 无论无参或多参均应作为普通业务方法，不再承担析构职责，以彻底消除与 Bun/业务代码的方法名冲突。编译器后端收口至唯一 `__cp_deinit` 钩子（用户侧对应 `~init()`，提前释放对应 `drop(x)` / `x.~init()`），并同步修复 `call.rs` 历史上对多参 `.release(a, b)` 的截断问题。
 - **验证与广播**：发布 Release 版 `cpc`，`test_raii_deinit_ownership_deep.cp`（8/8 PASS）与核心所有权/生命周期/Trait 回归全通过；同步更新 `cp_agent_ref.md` 与两份下游 `CP_PITFALLS.md` 并向 `bun_agy`/`capsurf_agy` 发出广播 `syntax-raii-20261121-v2`。
+
+## 2026-11-21: `cpc fix` & 诊断全面对齐新语法 + 全仓库一键迁移落地
+- **关键修复**：
+  1. 发现 `parser/decl.rs:1195` 对 `E0121` 注入了 `explicit_edits` 且未检查前导 `*`，导致 `cpc fix` 将 `*this` 误修为 `**_`；同时 `diagnostic.rs:471` 对 `E0201` 仍按旧语法插入前置 `*param`，一并彻底修复并新增 `param: move/own T` 自动前移修复。
+  2. `scripts/migrate_cp_syntax.py` 引入 `zig { ... }` 块深度追踪与 `_ =(?!>)` 负向前瞻，避免误伤 Zig 逃逸块与 `_ =>` 匹配分支；对 `lib/mem/allocator.cp` 区分了引用计数 `SharedTensor.release()` 与 RAII 分配器 `BumpArena`/`MaybeOwnedBuf`/`MaxHeapAllocator` 的 `~init()`。
+- **验证**：Release `cpc` 构建通过，`cpc fix` 6 项自动化断言全通过，`test_bun_absorbed_assets`、`test_string_unicode`、`test_collections_bun`、`test_blob`、`test_col_complete`、`test_mem_bun`、`test_string_simd_sort`、`test_shell_napi_elf_logger_deep`、`test_http_router_sql_deep`、`test_net`、`test_raii_deinit_ownership_deep` 全部 100% PASS。

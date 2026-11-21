@@ -127,7 +127,7 @@ pub class UdpSocket {
         _.fd = -1;
     }
 
-    pub fn release(*_) {
+    ~init() {
         _.close();
         std.heap.page_allocator.destroy(_);
     }

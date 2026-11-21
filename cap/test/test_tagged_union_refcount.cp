@@ -29,12 +29,12 @@ fn main() {
 
         match (t1) {
             Task.Idle => expect_eq(1, 1),
-            _ => expect_eq(0, 1),
+            * => expect_eq(0, 1),
         }
 
         match (t2) {
             Task.Text(s) => expect_eq(s, "hello tagged union"),
-            _ => expect_eq(0, 1),
+            * => expect_eq(0, 1),
         }
 
         match (t3) {
@@ -42,7 +42,7 @@ fn main() {
                 expect_eq(pos[0], 10);
                 expect_eq(pos[1], 20);
             },
-            _ => expect_eq(0, 1),
+            * => expect_eq(0, 1),
         }
     });
 

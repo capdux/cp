@@ -118,7 +118,7 @@ pub struct StringJoiner {
         _.has_allocated = true;
     }
 
-    pub fn release(*_) {
+    ~init() {
         if (_.has_allocated && _.capacity > 0) {
             zig {
                 std.heap.page_allocator.free(self.buf[0..self.capacity]);
