@@ -31,3 +31,6 @@
 
 ### 2026-11-22（`cap:mol2` 验收，完成 `cap:mol2` 交付验收并登记入库（5/5 PASS）；派发 `cap:inchi`。）
 - **执行成果**：`lib/mol2/`（5/5 PASS，`doc/lib/mol2.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:mol2` 交付验收并登记入库（5/5 PASS）；派发 `cap:inchi`。
+
+### 2026-11-22（`cap:cif` 验收，完成 `cap:cif` 交付验收并登记入库（5/5 PASS）。）
+- **执行成果**：`lib/cif/`（5/5 PASS，`doc/lib/cif.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:cif` 交付验收并登记入库（5/5 PASS）。
