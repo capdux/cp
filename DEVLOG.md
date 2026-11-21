@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:dns_srv_record` RFC 2782 DNS SRV 服务发现记录文本/线缆头零分配解析与优先级权重选择器（5/5 PASS，文档直写 `doc/lib/dns_srv_record.md`）
+- **设计要点**：`SrvRecord.parseText` 与 `parseWireHeader` 零分配解码，识别 `target == "."` 服务不可用语义；`selectSrvByRoll` 支持权重累积落点与全零权重均匀轮询。
+
 ## 2026-11-22: 新建 `cap:proc_cpuinfo` Linux `/proc/cpuinfo`（x86_64/ARM64）逻辑/物理核心与指令集标志零分配解析器（5/5 PASS，文档直写 `doc/lib/proc_cpuinfo.md`）
 - **设计要点**：`ProcCpuInfoIter` 零分配按 `processor` 块迭代并跳过尾部非处理器元数据；`summarizeCpuInfo` 零分配按 `physical_id` 去重汇总物理核心；`hasCpuFlag` 精确 token 匹配防止 `avx`/`avx2` 子串误判。
 

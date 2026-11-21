@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:dns_srv_record` RFC 2782 DNS SRV 服务发现记录文本/线缆头零分配解析与优先级权重选择器（5/5 PASS，自动动态挂载 `cap.dns_srv_record`）
+- 新增 `lib/dns_srv_record/{srv,index}.cp`、`doc/lib/dns_srv_record.md`、`cap/test/test_dns_srv_record_production_deep.cp`：纯 CP 零分配解析 RFC 2782 SRV 记录文本与 6 字节线缆头、`_service._proto.domain` 服务名，支持优先级/权重排序与确定性权重落点选择（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:proc_cpuinfo` Linux `/proc/cpuinfo`（x86_64/ARM64）逻辑/物理核心与指令集标志零分配解析器（5/5 PASS，自动动态挂载 `cap.proc_cpuinfo`）
 - 新增 `lib/proc_cpuinfo/{cpuinfo,index}.cp`、`doc/lib/proc_cpuinfo.md`、`cap/test/test_proc_cpuinfo_production_deep.cp`：纯 CP 零分配解析 Linux `/proc/cpuinfo`（兼容 x86_64 `flags` 与 ARM64 `Features`），支持按 `physical_id` 去重统计物理核、整数毫赫兹与精确空白分隔指令集标志匹配（5/5 PASS）。
 

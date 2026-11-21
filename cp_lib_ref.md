@@ -683,3 +683,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:proc_net_dev` | `NetDevStats`, `ProcNetDevIter`, `findNetDev`, `sumNonLoopbackBytes` | Linux `/proc/net/dev` 网络接口收发字节/包/错误/丢包零分配解析器 |
 | `cap:dns_caa_record` | `CaaTag`, `CaaRecord`, `isCaAuthorized` | RFC 8659 DNS CAA 证书颁发机构授权记录文本/线缆格式零分配解析与签发策略判定器 |
 | `cap:proc_cpuinfo` | `CpuBlock`, `CpuSummary`, `ProcCpuInfoIter`, `summarizeCpuInfo`, `hasCpuFlag` | Linux `/proc/cpuinfo`（x86_64/ARM64）逻辑/物理核心与指令集标志零分配解析器 |
+| `cap:dns_srv_record` | `SrvWireHeader`, `SrvRecord`, `SrvServiceName`, `compareSrvOrder`, `selectSrvByRoll` | RFC 2782 DNS SRV 服务发现记录文本/线缆头零分配解析与优先级权重选择器 |
