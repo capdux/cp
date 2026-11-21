@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ubjson` 零分配 Universal Binary JSON (UBJSON Draft 12) 编解码器（5/5 PASS，文档直写 `doc/lib/ubjson.md`）
+实现零分配 UBJSON 编解码器，支持 writeCompactInt 自动最小编码与定宽强类型数组 O(1) 跳过。
+
 ## 2026-11-22: 新建 `cap:vcd` 零分配 IEEE 1364 VCD 硬件/RTL 仿真波形头与值变流解析器（5/5 PASS，文档直写 `doc/lib/vcd.md`）
 实现零分配 IEEE 1364 VCD 波形解析器，支持 1/10/100 全部 6 种时间单位与 Verilator/Icarus 仿真流。
 

@@ -1,0 +1,28 @@
+// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc UBJSON Draft 12 Binary Codec)
+
+export {
+    UBJ_NULL,
+    UBJ_NOOP,
+    UBJ_TRUE,
+    UBJ_FALSE,
+    UBJ_INT8,
+    UBJ_UINT8,
+    UBJ_INT16,
+    UBJ_INT32,
+    UBJ_INT64,
+    UBJ_FLOAT32,
+    UBJ_FLOAT64,
+    UBJ_CHAR,
+    UBJ_STRING,
+    UBJ_HIGH_PREC,
+    UBJ_ARRAY_START,
+    UBJ_ARRAY_END,
+    UBJ_OBJECT_START,
+    UBJ_OBJECT_END,
+    UBJ_OPT_TYPE,
+    UBJ_OPT_COUNT,
+    MAX_UBJ_DEPTH,
+    UbjsonContainerHeader,
+    UbjsonWriter,
+    UbjsonReader,
+} from "./ubjson.cp";

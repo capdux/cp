@@ -70,3 +70,6 @@
 
 ### 2026-11-22（`cap:vcd` 验收，完成 `cap:vcd` 交付验收并登记入库（5/5 PASS）；派发 `cap:hprof`。）
 - **执行成果**：`lib/vcd/`（5/5 PASS，`doc/lib/vcd.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:vcd` 交付验收并登记入库（5/5 PASS）；派发 `cap:hprof`。
+
+### 2026-11-22（`cap:ubjson` 验收，完成 `cap:ubjson` 交付验收并登记入库（5/5 PASS）；派发 `cap:bincode`。）
+- **执行成果**：`lib/ubjson/`（5/5 PASS，`doc/lib/ubjson.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:ubjson` 交付验收并登记入库（5/5 PASS）；派发 `cap:bincode`。

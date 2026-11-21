@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ubjson` 零分配 Universal Binary JSON (UBJSON Draft 12) 编解码器（5/5 PASS，自动动态挂载 `cap.ubjson`）
+新增 `lib/ubjson/{ubjson,index}.cp`、`doc/lib/ubjson.md` 与 `cap/test/test_ubjson_production_deep.cp`（5/5 PASS），支持全套 Draft 12 标记、No-Op 跳过、$type#count 优化容器与深度防护 skipValue。
+
 ## [2026-11-22] - 新建 `cap:vcd` 零分配 IEEE 1364 VCD 硬件/RTL 仿真波形头与值变流解析器（5/5 PASS，自动动态挂载 `cap.vcd`）
 新增 `lib/vcd/{vcd,index}.cp`、`doc/lib/vcd.md` 与 `cap/test/test_vcd_production_deep.cp`（5/5 PASS），支持 $timescale/$scope/$var 头解析及时间戳/标量/向量/实数波形流迭代。
 
