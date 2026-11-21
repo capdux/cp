@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:rtcp` RTCP (RFC 3550) compound packet, SR/RR/SDES/BYE/APP & 24-bit signed loss zero-alloc parser（5/5 PASS，文档直写 `doc/lib/rtcp.md`）
+新增 cap:rtcp 纯 CP 零分配实时传输控制协议库（复合包零拷贝迭代、24B ReportBlock 与 24-bit 有符号丢包数扩展、Padding 剥离），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:tftp` TFTP (RFC 1350/2347-2349) RRQ/WRQ/DATA/ACK/ERROR/OACK & option zero-alloc codec（5/5 PASS，文档直写 `doc/lib/tftp.md`）
 新增 cap:tftp 纯 CP 零分配简单文件传输协议库（RRQ/WRQ/DATA/ACK/ERROR/OACK 解析、NUL 分隔选项零拷贝迭代与 TftpOptWriter），通过 cpc check 与 5/5 cap test
 
