@@ -664,3 +664,5 @@ const h = cap.hash.wyhash("hello");
 | `cap:number_format` | formatGroupedU64, formatGroupedI64, ordinalSuffix, formatOrdinal, formatRadixU64, formatFixedPoint | 零分配人类可读数字格式化器（千分位分组、英文序数词、2..36 进制与定点小数） |
 | `cap:http_content_encoding` | ContentCoding, parseContentCoding, ContentEncodingIter, encodingLayerCount, isCompressed, hasContentEncoding, isValidContentEncoding | RFC 9110 §8.4 Content-Encoding 编码栈零分配解析、别名归一化与最大压缩层数安全防护 |
 | `cap:dotenv_escape` | isValidEnvKey, needsDotenvQuotes, formatDotenvValue, formatDotenvLine, unescapeDotenvDouble | .env 环境变量文件键名校验、防 $VAR 误展开安全引号序列化与反转义器 |
+| `cap:http_warning` | WarningItem, WarningIter, isStaleWarning, formatWarning | RFC 7234 §5.5 HTTP Warning 头零分配解析器（引号逗号/转义/日期感知）与格式化器 |
+| `cap:http_digest_auth` | DigestChallenge, DigestCredentials, formatDigestHeader | RFC 7616 HTTP Digest Authentication (WWW-Authenticate / Authorization) 零分配解析与构造器 |

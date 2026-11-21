@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_digest_auth` RFC 7616 HTTP Digest Authentication (WWW-Authenticate / Authorization) 零分配解析与构造器（5/5 PASS，自动动态挂载 `cap.http_digest_auth`）
+新增 `cap:http_digest_auth`（`lib/http_digest_auth/{digest_auth,index}.cp`、`doc/lib/http_digest_auth.md`、`cap/test/test_http_digest_auth_production_deep.cp`），支持 `realm`/`nonce`/`qop`/`nc`/`cnonce`/`userhash` 解析与规范化往返。
+
+## [2026-11-22] - 新建 `cap:http_warning` RFC 7234 §5.5 HTTP Warning 头零分配解析器（引号逗号/转义/日期感知）与格式化器（5/5 PASS，自动动态挂载 `cap.http_warning`）
+新增 `cap:http_warning`（`lib/http_warning/{warning,index}.cp`、`doc/lib/http_warning.md`、`cap/test/test_http_warning_production_deep.cp`），实现多条 Warning 迭代、过期警告码识别（110–113）与往返格式化。
+
 ## [2026-11-22] - 新建 `cap:dotenv_escape` .env 环境变量文件键名校验、防 $VAR 误展开安全引号序列化与反转义器（5/5 PASS，自动动态挂载 `cap.dotenv_escape`）
 新增 `cap:dotenv_escape`（`lib/dotenv_escape/{dotenv_escape,index}.cp`、`doc/lib/dotenv_escape.md`、`cap/test/test_dotenv_escape_production_deep.cp`），支持双引号转义往返与 `$` 变量展开防护。
 

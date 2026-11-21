@@ -1,3 +1,9 @@
+## 2026-11-22: 新建 `cap:http_digest_auth` RFC 7616 HTTP Digest Authentication (WWW-Authenticate / Authorization) 零分配解析与构造器（5/5 PASS，文档直写 `doc/lib/http_digest_auth.md`）
+Subagent 1 吸收 `cap:http_digest_auth`，完工后已按轮换策略重建轻上下文子智能体 `Sys Config Absorber`。
+
+## 2026-11-22: 新建 `cap:http_warning` RFC 7234 §5.5 HTTP Warning 头零分配解析器（引号逗号/转义/日期感知）与格式化器（5/5 PASS，文档直写 `doc/lib/http_warning.md`）
+Subagent 2 吸收 `cap:http_warning`，完工后已按轮换策略重建轻上下文子智能体 `HTTP RFC Absorber`。
+
 ## 2026-11-22: 新建 `cap:dotenv_escape` .env 环境变量文件键名校验、防 $VAR 误展开安全引号序列化与反转义器（5/5 PASS，文档直写 `doc/lib/dotenv_escape.md`）
 Subagent 1 吸收 `cap:dotenv_escape`，与 `cap:dotenv_parse`/`cap:env_expand` 构成完整 `.env` 工具链。
 

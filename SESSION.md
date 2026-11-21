@@ -126,3 +126,9 @@
 
 ### 2026-11-22（`cap:dotenv_escape` 验收，Batch 74 注册 `cap:dotenv_escape` 并提交（累计 239 模块）。）
 - **执行成果**：`lib/dotenv_escape/`（5/5 PASS，`doc/lib/dotenv_escape.md`）经 `verify_module.sh` 一次性验收回收；Batch 74 注册 `cap:dotenv_escape` 并提交（累计 239 模块）。
+
+### 2026-11-22（`cap:http_warning` 验收，Batch 75 完成 `cap:http_warning` 与 `cap:http_digest_auth` 吸收并提交，同时完成 2 个满载 3+ 小时迁移子智能体的轻量化轮换重建。）
+- **执行成果**：`lib/http_warning/`（5/5 PASS，`doc/lib/http_warning.md`）经 `verify_module.sh` 一次性验收回收；Batch 75 完成 `cap:http_warning` 与 `cap:http_digest_auth` 吸收并提交，同时完成 2 个满载 3+ 小时迁移子智能体的轻量化轮换重建。
+
+### 2026-11-22（`cap:http_digest_auth` 验收，Batch 75 注册 `cap:http_digest_auth` 并提交（累计 241 模块）。）
+- **执行成果**：`lib/http_digest_auth/`（5/5 PASS，`doc/lib/http_digest_auth.md`）经 `verify_module.sh` 一次性验收回收；Batch 75 注册 `cap:http_digest_auth` 并提交（累计 241 模块）。
