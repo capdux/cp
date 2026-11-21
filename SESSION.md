@@ -232,3 +232,12 @@
 
 ### 2026-11-22（`cap:css_primitives` 验收，吸收 Bun CSS Alpha/Percentage/URL -> cap:css_primitives，测试 2/2 通过。）
 - **执行成果**：`lib/css_primitives/`（5/5 PASS，`doc/lib/css_primitives.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun CSS Alpha/Percentage/URL -> cap:css_primitives，测试 2/2 通过。
+
+### 2026-11-22（`cap:unicode_range` 验收，吸收 Bun CSS UnicodeRange -> cap:unicode_range，测试 2/2 通过。）
+- **执行成果**：`lib/unicode_range/`（5/5 PASS，`doc/lib/unicode_range.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun CSS UnicodeRange -> cap:unicode_range，测试 2/2 通过。
+
+### 2026-11-22（`cap:css_syntax` 验收，吸收 Bun css/values/syntax.cp -> cap:css_syntax，测试 6/6 通过。）
+- **执行成果**：`lib/css_syntax/`（5/5 PASS，`doc/lib/css_syntax.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun css/values/syntax.cp -> cap:css_syntax，测试 6/6 通过。
+
+### 2026-11-22（`cap:css_media` 验收，吸收 Bun css/rules/media.cp -> cap:css_media，测试 5/5 通过。）
+- **执行成果**：`lib/css_media/`（5/5 PASS，`doc/lib/css_media.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun css/rules/media.cp -> cap:css_media，测试 5/5 通过。

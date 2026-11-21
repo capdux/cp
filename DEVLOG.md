@@ -2,6 +2,15 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-22: CSS Media Queries Level 4 媒体查询解析与求值引擎（5/5 PASS，文档直写 `doc/lib/css_media.md`）
+从 Bun css/rules/media.cp 吸收 CSS Media Queries Level 4 解析与视口/用户偏好求值引擎，纯 CP 零堆分配内联存储。
+
+## 2026-11-22: CSS Properties & Values API <syntax> 解析引擎（5/5 PASS，文档直写 `doc/lib/css_syntax.md`）
+从 Bun css/values/syntax.cp 吸收 CSS <syntax> 解析器，支持 * 零分配、+/# 乘数与 <transform-list> 约束校验及 ~init() 零泄漏。
+
+## 2026-11-22: CSS @font-face Unicode 码点区间与通配符优化器（5/5 PASS，文档直写 `doc/lib/unicode_range.md`）
+从 Bun css/rules/font_face.cp 吸收 UnicodeRange 解析与十六进制边界 ? 通配符自动压缩算法，纯 CP 零堆分配。
+
 ## 2026-11-22: CSS 基础值类型（Alpha / Percentage / URL 分类）（5/5 PASS，文档直写 `doc/lib/css_primitives.md`）
 从 Bun css/values/{alpha,percentage,url}.cp 吸收 CSS 基础值类型与 URL 绝对/相对/Data URI 分类器，纯 CP 零堆分配。
 

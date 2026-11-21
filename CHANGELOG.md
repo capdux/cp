@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - CSS Media Queries Level 4 媒体查询解析与求值引擎（5/5 PASS，自动动态挂载 `cap.css_media`）
+新增 cap:css_media 标准库（lib/css_media/、doc/lib/css_media.md、cap/test/test_css_media_production_deep.cp），5/5 回归通过。
+
+## [2026-11-22] - CSS Properties & Values API <syntax> 解析引擎（5/5 PASS，自动动态挂载 `cap.css_syntax`）
+新增 cap:css_syntax 标准库（lib/css_syntax/、doc/lib/css_syntax.md、cap/test/test_css_syntax_production_deep.cp），6/6 回归通过（零泄漏）。
+
+## [2026-11-22] - CSS @font-face Unicode 码点区间与通配符优化器（5/5 PASS，自动动态挂载 `cap.unicode_range`）
+新增 cap:unicode_range 标准库（lib/unicode_range/、doc/lib/unicode_range.md、cap/test/test_unicode_range_production_deep.cp），2/2 回归通过。
+
 ## [2026-11-22] - CSS 基础值类型（Alpha / Percentage / URL 分类）（5/5 PASS，自动动态挂载 `cap.css_primitives`）
 新增 cap:css_primitives 标准库（lib/css_primitives/、doc/lib/css_primitives.md、cap/test/test_css_primitives_production_deep.cp），2/2 回归通过。
 
