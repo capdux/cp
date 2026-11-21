@@ -265,3 +265,6 @@
 
 ### 2026-11-22（`cap:sdf` 验收，完成 `cap:sdf` 交付验收并登记入库（5/5 PASS）；派发 `cap:mol2`。）
 - **执行成果**：`lib/sdf/`（5/5 PASS，`doc/lib/sdf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:sdf` 交付验收并登记入库（5/5 PASS）；派发 `cap:mol2`。
+
+### 2026-11-22（`cap:mseed` 验收，完成 `cap:mseed` 交付验收并登记入库（5/5 PASS）；滚动归档热日志并派发 `cap:cif`。）
+- **执行成果**：`lib/mseed/`（5/5 PASS，`doc/lib/mseed.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:mseed` 交付验收并登记入库（5/5 PASS）；滚动归档热日志并派发 `cap:cif`。

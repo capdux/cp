@@ -641,3 +641,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:dicom` | DICOM_PREAMBLE_SIZE, DICOM_MAGIC, DICOM_DATA_OFFSET, DICOM_UNDEFINED_LEN, DicomTag, DicomElement, DicomIter, DicomSummary, isDicom, parseDicomSummary | 零分配医学影像 DICOM PS3.10 Explicit/Implicit VR 数据元素解析器 |
 | `cap:edf` | EDF_MAIN_HEADER_SIZE, EDF_SIGNAL_HEADER_SIZE, EdfHeader, EdfSignal, isEdf, parseEdfHeader, parseEdfSignal, edfRecordByteSize, readEdfDigitalSample | 零分配 European Data Format (EDF/EDF+) 生物医学脑电/心电信号解析器 |
 | `cap:sdf` | SdfMolHeader, SdfAtom, SdfAtomIter, SdfBond, SdfBondIter, SdfProperty, SdfPropIter, SdfRecordIter, SdfStats, isSdf, parseMolHeader, findSdfProp, summarizeSdf | 零分配 MDL Molfile V2000 & SDF 多分子原子/键连接表解析器 |
+| `cap:mseed` | MSEED_FIXED_HEADER_SIZE, MSEED_BLK_1000, MSEED_BLK_1001, MseedEncoding, MseedBtime, MseedRecord, MseedIter, MseedStats, mseedEncodingFromU8, isMseedRecord, parseMseedRecord, summarizeMseed | 零分配 IRIS MiniSEED v2.4 地震学波形头与 Blockette 1000/1001 解析器 |
