@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_alt_svc` RFC 7838 HTTP `Alt-Svc` 备选服务 / HTTP/3 QUIC 发现头零分配解析与格式化器（5/5 PASS，自动动态挂载 `cap.http_alt_svc`）
+- 新增 `lib/http_alt_svc/{alt_svc,index}.cp`、`doc/lib/http_alt_svc.md`、`cap/test/test_http_alt_svc_production_deep.cp`：纯 CP 零分配解析 RFC 7838 `Alt-Svc` 头（支持 IPv6 `[::1]:443`、引号转义、`ma`/`persist=1`、`clear` 与 HTTP/3 判定）并提供规范化格式化（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:proc_self_status` Linux `/proc/<pid>/status` 进程状态、内存/线程/UID/GID 零分配键值解析器（5/5 PASS，自动动态挂载 `cap.proc_self_status`）
 - 新增 `lib/proc_self_status/{status,index}.cp`、`doc/lib/proc_self_status.md`、`cap/test/test_proc_self_status_production_deep.cp`：纯 CP 零分配解析 Linux `/proc/<pid>/status` 核心指标（`Name`/`State`/`Pid`/`PPid`/`Threads`/`Uid`/`Gid`/`Vm*`/上下文切换次数），支持精确字段切片提取与饱和字节换算（5/5 PASS）。
 

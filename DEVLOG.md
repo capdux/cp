@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:http_alt_svc` RFC 7838 HTTP `Alt-Svc` 备选服务 / HTTP/3 QUIC 发现头零分配解析与格式化器（5/5 PASS，文档直写 `doc/lib/http_alt_svc.md`）
+- **设计要点**：`AltSvcIter` 零分配解析多条目并严格校验端口 `1..=65535`；`isHttp3()` 识别 `h3` 与 `h3-*` 协议标识；`formatAltSvcEntry` 防止缓冲溢出与非法字符注入。
+
 ## 2026-11-22: 新建 `cap:proc_self_status` Linux `/proc/<pid>/status` 进程状态、内存/线程/UID/GID 零分配键值解析器（5/5 PASS，文档直写 `doc/lib/proc_self_status.md`）
 - **设计要点**：单遍扫描 `Key:\tValue` 兼容 `kB`/`MB`/`GB` 单位；`rssBytes()` 使用饱和乘法防止 `u64` 溢出；`findProcStatusField` 零拷贝提取任意扩展字段。
 

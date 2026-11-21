@@ -205,3 +205,6 @@
 
 ### 2026-11-22（`cap:proc_self_status` 验收，Batch 98 落地，标准库总量达 265 模块）
 - **执行成果**：`lib/proc_self_status/`（5/5 PASS，`doc/lib/proc_self_status.md`）经 `verify_module.sh` 一次性验收回收；Batch 98 落地，标准库总量达 265 模块
+
+### 2026-11-22（`cap:http_alt_svc` 验收，Batch 99 落地，标准库总量达 266 模块）
+- **执行成果**：`lib/http_alt_svc/`（5/5 PASS，`doc/lib/http_alt_svc.md`）经 `verify_module.sh` 一次性验收回收；Batch 99 落地，标准库总量达 266 模块
