@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/runtime/ffi/FFIObject.cp
+// Source: Absorbed from /data/dev/bun/src/runtime/ffi/FFIObject.cp | Synced: 2026-11-20T11:20:58Z
 // lib/ffi/cstring.cp
 // Zero-Copy C NUL-Terminated String Wrapper (Bun CString Parity)
 

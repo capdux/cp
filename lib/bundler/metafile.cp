@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/bundler/linker_context/MetafileBuilder.cp
+// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/MetafileBuilder.cp | Synced: 2026-11-20T17:10:15Z
 // lib/bundler/metafile.cp
 // esbuild/Bun-compatible Metafile graph builder, JSON serializer & colored bundle size analysis tree
 

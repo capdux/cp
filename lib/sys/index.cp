@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/sys/sys.zig & /data/dev/bun/src/sys/Error.cp
+// Source: Absorbed from /data/dev/bun/src/sys/sys.zig | Synced: 2026-11-21T17:15:50Z
 // ============================================================================
 // lib/sys/index.cp — Cross-platform System Calls, Files, Stat & Process Controls
 // ============================================================================

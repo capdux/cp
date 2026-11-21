@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/event_loop/AutoFlusher.cp
+// Source: Absorbed from /data/dev/bun/src/event_loop/AutoFlusher.cp | Synced: 2026-11-20T10:06:41Z
 // lib/event/auto_flusher.cp
 // Deferred flush coalescer for buffered I/O writers in cap:event
 

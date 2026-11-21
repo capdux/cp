@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/sys/sys.cp & /data/dev/bun/src/sys/copy_file.cp
+// Source: Absorbed from /data/dev/bun/src/sys/sys.cp | Synced: 2026-11-21T17:12:17Z
 // ============================================================================
 // lib/sys/io_ops.cp — Low-level Descriptor Open, Poll & Zero-Copy Syscall Ops
 // (Isolated from high-level fs_ops/copy_file to avoid single-file collisions

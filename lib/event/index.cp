@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/event_loop/MiniEventLoop.cp
+// Source: Absorbed from /data/dev/bun/src/event_loop/MiniEventLoop.cp | Synced: 2026-11-20T10:53:00Z
 // lib/event/index.cp
 // Unified Event & EventLoop Subsystem (cap:event / cap:events / cap:event_loop)
 

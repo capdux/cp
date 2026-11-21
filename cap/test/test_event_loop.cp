@@ -27,27 +27,27 @@ class CounterState {
 
 fn timer_callback(t: *Timer) {
     if (p := t.ctx) {
-        let state: *CounterState = @ptrCast(@alignCast(p));
+        let state: *CounterState = unsafe { @ptrCast(@alignCast(p)) };
         state.count += 1;
     }
 }
 
 fn task_callback(ctx: (*anyopaque)?) {
     if (p := ctx) {
-        let state: *CounterState = @ptrCast(@alignCast(p));
+        let state: *CounterState = unsafe { @ptrCast(@alignCast(p)) };
         state.count += 1;
     }
 }
 
 fn deferred_callback(ctx: *anyopaque): bool {
-    let state: *CounterState = @ptrCast(@alignCast(ctx));
+    let state: *CounterState = unsafe { @ptrCast(@alignCast(ctx)) };
     state.count += 10;
     return false;
 }
 
 fn pipe_poll_callback(_fd: i32, _events: u32, ctx: *!?) {
     if (p := ctx) {
-        let state: *CounterState = @ptrCast(@alignCast(p));
+        let state: *CounterState = unsafe { @ptrCast(@alignCast(p)) };
         state.count += 100;
     }
 }
@@ -57,7 +57,7 @@ fn testTimerHeap(): !void {
     expect_eq(heap.count(), 0 as usize);
 
     const state = CounterState.create();
-    const state_ptr: *anyopaque = @ptrCast(state);
+    const state_ptr: *anyopaque = unsafe { @ptrCast(state) };
 
     let t1 = Timer{ expires_at_ms: 200, callback: timer_callback, ctx: state_ptr };
     let t2 = Timer{ expires_at_ms: 50, callback: timer_callback, ctx: state_ptr };
@@ -90,7 +90,7 @@ fn testConcurrentQueue(): !void {
     expect_eq(q.len(), 0 as usize);
 
     const state = CounterState.create();
-    const state_ptr: *anyopaque = @ptrCast(state);
+    const state_ptr: *anyopaque = unsafe { @ptrCast(state) };
 
     let t1 = ConcurrentTask.init(task_callback, state_ptr, false);
     let t2 = ConcurrentTask.init(task_callback, state_ptr, false);
@@ -107,7 +107,7 @@ fn testConcurrentQueue(): !void {
 fn testDeferredQueue(): !void {
     let q = DeferredTaskQueue.init();
     const state = CounterState.create();
-    const state_ptr: *anyopaque = @ptrCast(state);
+    const state_ptr: *anyopaque = unsafe { @ptrCast(state) };
 
     expect_eq(q.postTask(state_ptr, deferred_callback), true);
     expect_eq(q.postTask(state_ptr, deferred_callback), false); // deduplicated
@@ -135,7 +135,7 @@ fn testPollEngine(): !void {
     defer * = std.os.linux.close(w_fd);
 
     const state = CounterState.create();
-    const state_ptr: *anyopaque = @ptrCast(state);
+    const state_ptr: *anyopaque = unsafe { @ptrCast(state) };
 
     const reg_ok = pe.register(r_fd, PollEvents.Readable, pipe_poll_callback, state_ptr);
     expect_eq(reg_ok, true);
@@ -162,7 +162,7 @@ fn testEventLoopIntegration(): !void {
     expect_eq(loop.hasActiveHandles(), false);
 
     const state = CounterState.create();
-    const state_ptr: *anyopaque = @ptrCast(state);
+    const state_ptr: *anyopaque = unsafe { @ptrCast(state) };
 
     * = loop.deferTask(state_ptr, deferred_callback);
     * = loop.setTimeout(10, timer_callback, state_ptr);

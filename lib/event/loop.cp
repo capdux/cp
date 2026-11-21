@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/event_loop/MiniEventLoop.cp
+// Source: Absorbed from /data/dev/bun/src/event_loop/MiniEventLoop.cp | Synced: 2026-11-20T10:53:00Z
 // lib/event/loop.cp
 // Unified EventLoop integrating intrusive pairing-heap timers, deferred microtasks,
 // cross-thread concurrent tasks, AutoFlusher, and lazy POSIX I/O polling for cap:event
