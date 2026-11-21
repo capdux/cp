@@ -538,3 +538,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:icc` | IccHeader, IccTagEntry, isIccProfile, parseIccHeader, IccTagIter, findIccTag | 零分配 ICC 色彩配置文件（128B 头与 Tag 表）解析器 |
 | `cap:obj` | ObjRecordKind, ObjVec3, ObjFaceVertex, ObjStats, ObjRecord, ObjLineIter, parseObjVec3, parseObjFaceVertex, summarizeObj | 零分配 Wavefront 3D OBJ 网格与顶点/面解析器 |
 | `cap:ply` | PlyFormat, PlyHeader, PlyElement, isPly, parsePlyHeader, PlyElementIter, plyScalarSize | 零分配 Stanford PLY 3D 点云与网格头解析器 |
+| `cap:gltf` | GlbHeader, GlbChunk, GlbDocument, ChunkType, AccessorType, isGlb, parseGlbHeader, GlbChunkIter, extractJsonChunk, extractBinChunk, parseGlb, componentByteSize, accessorComponentCount, parseAccessorType, accessorElementStride | 零分配 glTF 2.0 Binary (GLB) 容器与 Chunk 解析器 |

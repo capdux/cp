@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:gltf` 零分配 glTF 2.0 Binary (GLB) 容器与 Chunk 解析器（5/5 PASS，文档直写 `doc/lib/gltf.md`）
+实现零分配 glTF 2.0 GLB 二进制容器解析器，严格校验 glTF 魔数、版本、总长及 Chunk 4 字节对齐边界。
+
 ## 2026-11-22: 新建 `cap:ply` 零分配 Stanford PLY 3D 点云与网格头解析器（5/5 PASS，文档直写 `doc/lib/ply.md`）
 实现零分配 Stanford PLY 头解析器，严格校验 ply 魔数、format、element/property 归属与 end_header 边界。
 

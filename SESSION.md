@@ -202,3 +202,6 @@
 
 ### 2026-11-22（`cap:ply` 验收，完成 `cap:ply` 交付验收并登记入库（5/5 PASS）；并行派发 `cap:mp4`、`cap:gltf`、`cap:ktx`。）
 - **执行成果**：`lib/ply/`（5/5 PASS，`doc/lib/ply.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:ply` 交付验收并登记入库（5/5 PASS）；并行派发 `cap:mp4`、`cap:gltf`、`cap:ktx`。
+
+### 2026-11-22（`cap:gltf` 验收，完成 `cap:gltf` 交付验收并登记入库（5/5 PASS）；派发 `cap:exr`。）
+- **执行成果**：`lib/gltf/`（5/5 PASS，`doc/lib/gltf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:gltf` 交付验收并登记入库（5/5 PASS）；派发 `cap:exr`。

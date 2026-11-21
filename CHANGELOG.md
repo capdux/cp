@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:gltf` 零分配 glTF 2.0 Binary (GLB) 容器与 Chunk 解析器（5/5 PASS，自动动态挂载 `cap.gltf`）
+新增 `lib/gltf/{gltf,index}.cp`、`doc/lib/gltf.md` 与 `cap/test/test_gltf_production_deep.cp`（5/5 PASS），支持 GLB 12B 头校验、4B 对齐 Chunk 迭代、JSON/BIN 提取与 Accessor 步长计算。
+
 ## [2026-11-22] - 新建 `cap:ply` 零分配 Stanford PLY 3D 点云与网格头解析器（5/5 PASS，自动动态挂载 `cap.ply`）
 新增 `lib/ply/{ply,index}.cp`、`doc/lib/ply.md` 与 `cap/test/test_ply_production_deep.cp`（5/5 PASS），支持 ASCII/Binary LE/BE 头解析、Element 迭代与标量位宽查询。
 
