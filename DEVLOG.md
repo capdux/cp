@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:byte_size` 纯整数人类可读字节大小解析器（SI/IEC 小数支持与溢出防护）及 SI/IEC 格式化器（5/5 PASS，文档直写 `doc/lib/byte_size.md`）
+主智能体吸收 `cap:byte_size`，避免浮点误差并防 `u64` 乘法/加法溢出。
+
+## 2026-11-22: 新建 `cap:w3c_traceparent` W3C Trace Context Level 1 traceparent / tracestate 分布式追踪头零分配解析与格式化器（5/5 PASS，文档直写 `doc/lib/w3c_traceparent.md`）
+Subagent 2 吸收 `cap:w3c_traceparent`，支持 Span 派生（`withParentId`/`withSampled`）与 `version > 0` 向前兼容。
+
+## 2026-11-22: 新建 `cap:text_wrap` 零分配 CLI 贪心自动换行、缩进/公共反缩进与 UTF-8 安全省略号截断工具（5/5 PASS，文档直写 `doc/lib/text_wrap.md`）
+主智能体吸收 `cap:text_wrap`，截断时回退越过 UTF-8 续字节（`10xxxxxx`），绝不产生乱码。
+
+## 2026-11-22: 新建 `cap:sql_escape` SQL 标识符引用、字面量转义与 LIKE 通配符安全转义器（覆盖 PostgreSQL/ANSI 与 MySQL 方言）（5/5 PASS，文档直写 `doc/lib/sql_escape.md`）
+Subagent 1 吸收 `cap:sql_escape`，严格拒绝 NUL 字节与空段，防范 SQL 注入与 LIKE 通配符越权。
+
 ## 2026-11-22: 新建 `cap:html_escape` 零分配 HTML 实体转义与命名/十进制/十六进制数字字符引用 UTF-8 反转义器（5/5 PASS，文档直写 `doc/lib/html_escape.md`）
 主智能体吸收 `cap:html_escape`，未知或未闭合 `&...` 原样保留，防止 XSS 注入与非法 UTF-8 输出。
 

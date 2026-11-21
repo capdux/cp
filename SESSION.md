@@ -379,3 +379,15 @@
 
 ### 2026-11-22（`cap:html_escape` 验收，Batch 53 注册 `cap:html_escape` 并提交（突破 160 模块里程碑）。）
 - **执行成果**：`lib/html_escape/`（5/5 PASS，`doc/lib/html_escape.md`）经 `verify_module.sh` 一次性验收回收；Batch 53 注册 `cap:html_escape` 并提交（突破 160 模块里程碑）。
+
+### 2026-11-22（`cap:sql_escape` 验收，Batch 54 完成 `cap:sql_escape`、`cap:text_wrap`、`cap:w3c_traceparent`、`cap:byte_size` 4 模块吸收与全量验收。）
+- **执行成果**：`lib/sql_escape/`（5/5 PASS，`doc/lib/sql_escape.md`）经 `verify_module.sh` 一次性验收回收；Batch 54 完成 `cap:sql_escape`、`cap:text_wrap`、`cap:w3c_traceparent`、`cap:byte_size` 4 模块吸收与全量验收。
+
+### 2026-11-22（`cap:text_wrap` 验收，Batch 54 注册 `cap:text_wrap`。）
+- **执行成果**：`lib/text_wrap/`（5/5 PASS，`doc/lib/text_wrap.md`）经 `verify_module.sh` 一次性验收回收；Batch 54 注册 `cap:text_wrap`。
+
+### 2026-11-22（`cap:w3c_traceparent` 验收，Batch 54 注册 `cap:w3c_traceparent`。）
+- **执行成果**：`lib/w3c_traceparent/`（5/5 PASS，`doc/lib/w3c_traceparent.md`）经 `verify_module.sh` 一次性验收回收；Batch 54 注册 `cap:w3c_traceparent`。
+
+### 2026-11-22（`cap:byte_size` 验收，Batch 54 注册 `cap:byte_size` 并提交。）
+- **执行成果**：`lib/byte_size/`（5/5 PASS，`doc/lib/byte_size.md`）经 `verify_module.sh` 一次性验收回收；Batch 54 注册 `cap:byte_size` 并提交。

@@ -585,3 +585,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:logfmt` | LogfmtField, LogfmtIter, getLogfmtValue, appendLogfmtPair | 结构化 logfmt（key=value）日志行零分配流式解析器、键值查询与规范化转义编码器 |
 | `cap:uri_normalize` | isUnreserved, defaultPortForScheme, normalizePercentEncoding, removeDotSegments, normalizeOrigin | RFC 3986 URI 路径点段归约（§5.2.4）、百分号编码规范化与协议默认端口剥离工具 |
 | `cap:html_escape` | needsHtmlEscape, escapeHtml, unescapeHtml | 零分配 HTML 实体转义与命名/十进制/十六进制数字字符引用 UTF-8 反转义器 |
+| `cap:sql_escape` | escapeAnsiIdent, escapeMysqlIdent, escapeQualifiedAnsiIdent, escapeSqlStringAnsi, escapeSqlStringMysql, escapeLikePattern | SQL 标识符引用、字面量转义与 LIKE 通配符安全转义器（覆盖 PostgreSQL/ANSI 与 MySQL 方言） |
+| `cap:text_wrap` | wrapText, indentLines, commonIndent, dedentLines, truncateEllipsis | 零分配 CLI 贪心自动换行、缩进/公共反缩进与 UTF-8 安全省略号截断工具 |
+| `cap:w3c_traceparent` | TraceParent, TraceStateEntry, TraceStateIter, findTraceState | W3C Trace Context Level 1 traceparent / tracestate 分布式追踪头零分配解析与格式化器 |
+| `cap:byte_size` | parseByteSize, formatBytesIec, formatBytesSi | 纯整数人类可读字节大小解析器（SI/IEC 小数支持与溢出防护）及 SI/IEC 格式化器 |

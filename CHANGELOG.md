@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:byte_size` 纯整数人类可读字节大小解析器（SI/IEC 小数支持与溢出防护）及 SI/IEC 格式化器（5/5 PASS，自动动态挂载 `cap.byte_size`）
+新增 `cap:byte_size`（`lib/byte_size/{byte_size,index}.cp`、`doc/lib/byte_size.md`、`cap/test/test_byte_size_production_deep.cp`），纯整数算术解析 `KB`/`KiB`/`MB`/`MiB`/`GB`/`GiB` 等单位并提供双制式格式化。
+
+## [2026-11-22] - 新建 `cap:w3c_traceparent` W3C Trace Context Level 1 traceparent / tracestate 分布式追踪头零分配解析与格式化器（5/5 PASS，自动动态挂载 `cap.w3c_traceparent`）
+新增 `cap:w3c_traceparent`（`lib/w3c_traceparent/{trace_context,index}.cp`、`doc/lib/w3c_traceparent.md`、`cap/test/test_w3c_traceparent_production_deep.cp`），严格校验 55 字节小写 hex、拒绝全零 ID 与 `0xff` 版本，支持多租户 `tracestate`。
+
+## [2026-11-22] - 新建 `cap:text_wrap` 零分配 CLI 贪心自动换行、缩进/公共反缩进与 UTF-8 安全省略号截断工具（5/5 PASS，自动动态挂载 `cap.text_wrap`）
+新增 `cap:text_wrap`（`lib/text_wrap/{wrap,index}.cp`、`doc/lib/text_wrap.md`、`cap/test/test_text_wrap_production_deep.cp`），支持段落保留、公共缩进消除与 UTF-8 码点边界安全截断。
+
+## [2026-11-22] - 新建 `cap:sql_escape` SQL 标识符引用、字面量转义与 LIKE 通配符安全转义器（覆盖 PostgreSQL/ANSI 与 MySQL 方言）（5/5 PASS，自动动态挂载 `cap.sql_escape`）
+新增 `cap:sql_escape`（`lib/sql_escape/{escape,index}.cp`、`doc/lib/sql_escape.md`、`cap/test/test_sql_escape_production_deep.cp`），实现双引号/反引号标识符、限定名、单引号字面量与 LIKE 模式转义。
+
 ## [2026-11-22] - 新建 `cap:html_escape` 零分配 HTML 实体转义与命名/十进制/十六进制数字字符引用 UTF-8 反转义器（5/5 PASS，自动动态挂载 `cap.html_escape`）
 新增 `cap:html_escape`（`lib/html_escape/{escape,index}.cp`、`doc/lib/html_escape.md`、`cap/test/test_html_escape_production_deep.cp`），支持 4 字节 UTF-8 码点还原与代理项/NUL 安全替换 U+FFFD。
 
