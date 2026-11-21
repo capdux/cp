@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:mobi` 零分配 Mobipocket / Kindle (.mobi/.azw) PalmDB/MOBI/EXTH 解析器（5/5 PASS，文档直写 `doc/lib/mobi.md`）
+实现零分配 Kindle MOBI 电子书解析器，严格校验记录偏移单调递增与 EXTH 边界。
+
 ## 2026-11-22: 新建 `cap:gpx` 零分配 GPX 1.0/1.1 航点/轨迹 XML 解析与 Haversine 距离统计器（5/5 PASS，文档直写 `doc/lib/gpx.md`）
 实现零分配 GPX 1.0/1.1 解析器，兼容单双引号属性、自闭合标签与严格经纬度校验。
 

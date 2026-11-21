@@ -596,3 +596,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:rtf` | RTF_MAGIC, MAX_RTF_DEPTH, RtfTokenKind, RtfCharset, RtfToken, RtfLexer, RtfHeaderInfo, isRtf, parseRtfHeader, extractRtfText | 零分配 Rich Text Format (RTF 1.9) 词法流、Unicode 转义与纯文本提取器 |
 | `cap:kml` | KmlGeomKind, KmlCoord, KmlCoordIter, KmlPlacemark, KmlPlacemarkIter, KmlStats, isKml, summarizeKml | 零分配 OGC KML 2.2 地理标记 Placemark 与 coordinates 解析器 |
 | `cap:gpx` | GPX_EARTH_RADIUS_M, GpxHeader, GpxPoint, GpxTrackPoint, GpxWaypointIter, GpxTrackPointIter, GpxStats, isGpx, parseGpxHeader, haversineMeters, summarizeGpx | 零分配 GPX 1.0/1.1 航点/轨迹 XML 解析与 Haversine 距离统计器 |
+| `cap:mobi` | PDB_HEADER_SIZE, MOBI_MAGIC, EXTH_MAGIC, MobiCompression, MobiEncoding, PdbHeader, MobiHeader, ExthRecord, ExthIter, isMobi, parsePdbHeader, parseMobiHeader, findExthRecord | 零分配 Mobipocket / Kindle (.mobi/.azw) PalmDB/MOBI/EXTH 解析器 |
