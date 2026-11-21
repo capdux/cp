@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:varint_leb128` 纯 CP 零堆 ULEB128 / SLEB128 / ZigZag 32/64 位变长整数编解码引擎（支持 10 字节溢出与截断防护，支持 `cap.varint_leb128` 自动动态挂载，详见 `doc/lib/varint_leb128.md`）（5/5 PASS，自动动态挂载 `cap.varint_leb128`）
+- **新增标准库**：`lib/varint_leb128/{varint,index}.cp`，实现 ULEB128、SLEB128 与 ZigZag 32/64 编解码。\n- **新增文档与测试**：`doc/lib/varint_leb128.md` 扁平文档与 `cap/test/test_varint_leb128_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:decimal_fp` 纯 CP 金融定点数 Decimal 精确算术引擎（`i128` 尾数 + `0..18` 标度，零浮点漂移、4 种舍入模式与字符串往返，支持 `cap.decimal_fp` 自动动态挂载，详见 `doc/lib/decimal_fp.md`）（5/5 PASS，自动动态挂载 `cap.decimal_fp`）
 - **新增标准库**：`lib/decimal_fp/{decimal,index}.cp`，实现精确金融定点数 `Decimal` 四则运算与舍入。\n- **新增文档与测试**：`doc/lib/decimal_fp.md` 扁平文档与 `cap/test/test_decimal_fp_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 
