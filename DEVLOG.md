@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:mst` 纯 CP 零分配最小生成树与生成森林算法库：路径压缩并查集、Kruskal 最小/最大生成树、稠密图 O(V²) Prim 生成森林与生成树无环连通校验（5/5 PASS，文档直写 `doc/lib/mst.md`）
+新增 cap:mst（lib/mst/{mst,index}.cp）：基于零分配路径压缩并查集实现 Kruskal 最小/最大生成树、稠密矩阵 Prim 最小生成森林与无环连通校验，cpc check 0 错误，cap test 6/6 PASS (699ms)
+
 ## 2026-11-22: 新建 `cap:dijkstra` 纯 CP 零分配图最短路径算法库：索引二叉最小堆 Dijkstra、路径还原、Bellman-Ford 负权边与负环检测及 Floyd-Warshall 全源最短路径（5/5 PASS，文档直写 `doc/lib/dijkstra.md`）
 新增 cap:dijkstra（lib/dijkstra/{dijkstra,index}.cp）：内置零分配索引二叉最小堆实现 O((V+E)logV) Dijkstra、防环路径还原、Bellman-Ford 负环检测与 Floyd-Warshall 全源最短路，cpc check 0 错误，cap test 6/6 PASS (929ms)
 

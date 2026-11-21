@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:mst` 纯 CP 零分配最小生成树与生成森林算法库：路径压缩并查集、Kruskal 最小/最大生成树、稠密图 O(V²) Prim 生成森林与生成树无环连通校验（5/5 PASS，自动动态挂载 `cap.mst`）
+新增纯 CP 零分配最小生成树与生成森林库 cap:mst（并查集、Kruskal、Prim、最大生成树、生成树校验），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:dijkstra` 纯 CP 零分配图最短路径算法库：索引二叉最小堆 Dijkstra、路径还原、Bellman-Ford 负权边与负环检测及 Floyd-Warshall 全源最短路径（5/5 PASS，自动动态挂载 `cap.dijkstra`）
 新增纯 CP 零分配图最短路径算法库 cap:dijkstra（索引堆 Dijkstra、路径还原、Bellman-Ford、Floyd-Warshall），含文档与 6 项深度生产测试
 
