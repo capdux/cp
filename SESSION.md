@@ -94,3 +94,6 @@
 
 ### 2026-11-22（`cap:plist` 验收，新增简洁单单词包 `cap:plist`（5/5 PASS））
 - **执行成果**：`lib/plist/`（5/5 PASS，`doc/lib/plist.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:plist`（5/5 PASS）
+
+### 2026-11-22（`cap:bibtex` 验收，新增简洁单单词包 `cap:bibtex`（5/5 PASS））
+- **执行成果**：`lib/bibtex/`（5/5 PASS，`doc/lib/bibtex.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:bibtex`（5/5 PASS）

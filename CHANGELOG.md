@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:bibtex` 零分配 BibTeX `.bib` 学术文献条目解析、嵌套花括号字段迭代与格式化器（5/5 PASS，自动动态挂载 `cap.bibtex`）
+- 新增 `lib/bibtex/{bibtex,index}.cp`、`doc/lib/bibtex.md`、`cap/test/test_bibtex_production_deep.cp`：纯 CP 零分配实现 BibTeX `.bib` 解析与格式化（跳过 `%` 注释与 `@comment`/`@preamble`/`@string`，支持 `{}`/`()` 两种条目定界、嵌套花括号平衡与大小写不敏感字段检索）（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:plist` 零分配 Apple XML Property List `.plist` 顶层字典解析与 XML 转义序列化器（5/5 PASS，自动动态挂载 `cap.plist`）
 - 新增 `lib/plist/{plist,index}.cp`、`doc/lib/plist.md`、`cap/test/test_plist_production_deep.cp`：纯 CP 零分配实现 Apple XML Plist 顶层字典迭代与类型查询（深度平衡跳过嵌套 `<dict>`/`<array>` 子树，支持负数/溢出拦截与 XML 实体转义）（5/5 PASS）。
 

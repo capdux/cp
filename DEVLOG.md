@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:bibtex` 零分配 BibTeX `.bib` 学术文献条目解析、嵌套花括号字段迭代与格式化器（5/5 PASS，文档直写 `doc/lib/bibtex.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:bibtex`；`BibEntryIter`/`BibFieldIter` 零拷贝切分并防护未闭合条目。
+
 ## 2026-11-22: 新建 `cap:plist` 零分配 Apple XML Property List `.plist` 顶层字典解析与 XML 转义序列化器（5/5 PASS，文档直写 `doc/lib/plist.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:plist`；`PlistDictIter` 零分配追踪嵌套深度防止子树键泄露至顶层。
 
