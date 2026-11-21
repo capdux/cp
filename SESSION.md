@@ -52,3 +52,6 @@
 
 ### 2026-11-22（`cap:netcdf` 验收，完成 `cap:netcdf` 交付验收并登记入库（5/5 PASS）；派发 `cap:rdb`。）
 - **执行成果**：`lib/netcdf/`（5/5 PASS，`doc/lib/netcdf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:netcdf` 交付验收并登记入库（5/5 PASS）；派发 `cap:rdb`。
+
+### 2026-11-22（`cap:ssz` 验收，完成 `cap:ssz` 交付验收并登记入库（5/5 PASS）；派发 `cap:postcard`。）
+- **执行成果**：`lib/ssz/`（5/5 PASS，`doc/lib/ssz.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:ssz` 交付验收并登记入库（5/5 PASS）；派发 `cap:postcard`。

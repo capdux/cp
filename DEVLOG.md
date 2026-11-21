@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ssz` 零分配 Ethereum SSZ 确定性小端编解码、Bitlist/Bitvector 与 Offset 校验器（5/5 PASS，文档直写 `doc/lib/ssz.md`）
+实现零分配 Ethereum SSZ 编解码器，严格校验非递减 Offset 表、哨兵比特与 32B Chunk 叶子数计算。
+
 ## 2026-11-22: 新建 `cap:netcdf` 零分配 Unidata NetCDF CDF-1/CDF-2/CDF-5 科学多维数组容器解析器（5/5 PASS，文档直写 `doc/lib/netcdf.md`）
 实现零分配 NetCDF 容器解析器，兼容 32-bit 与 64-bit 偏移/长度编码及 UNLIMITED 维度。
 

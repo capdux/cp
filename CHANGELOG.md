@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ssz` 零分配 Ethereum SSZ 确定性小端编解码、Bitlist/Bitvector 与 Offset 校验器（5/5 PASS，自动动态挂载 `cap.ssz`）
+新增 `lib/ssz/{ssz,index}.cp`、`doc/lib/ssz.md` 与 `cap/test/test_ssz_production_deep.cp`（5/5 PASS），支持 u8-u128/bool 小端编解码、Bitlist 哨兵位/Bitvector 高零校验与变长列表 Offset 零拷贝迭代。
+
 ## [2026-11-22] - 新建 `cap:netcdf` 零分配 Unidata NetCDF CDF-1/CDF-2/CDF-5 科学多维数组容器解析器（5/5 PASS，自动动态挂载 `cap.netcdf`）
 新增 `lib/netcdf/{netcdf,index}.cp`、`doc/lib/netcdf.md` 与 `cap/test/test_netcdf_production_deep.cp`（5/5 PASS），支持 CDF-1/2/5 4B 对齐头解析与维度/全局属性/变量零分配迭代。
 
