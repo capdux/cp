@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:fit` 零分配 Garmin / ANT+ FIT 1.0/2.0 二进制遥测文件与 CRC-16 解析器（5/5 PASS，自动动态挂载 `cap.fit`）
+新增 `lib/fit/{fit,index}.cp`、`doc/lib/fit.md` 与 `cap/test/test_fit_production_deep.cp`（5/5 PASS），支持 nibble CRC-16、LE/BE Definition/Data 帧、Developer Fields 与压缩时间戳。
+
+## [2026-11-22] - 新建 `cap:srec` 零分配 Motorola S-Record (S0-S9) 嵌入式固件编解码与校验器（5/5 PASS，自动动态挂载 `cap.srec`）
+新增 `lib/srec/{srec,index}.cp`、`doc/lib/srec.md` 与 `cap/test/test_srec_production_deep.cp`（5/5 PASS），支持 S0-S9 编解码、一补码校验和与 S5/S6 计数核验。
+
 ## [2026-11-22] - 新建 `cap:gcode` 零分配 CNC / 3D 打印 G-Code 指令词法、校验和与刀路包围盒解析器（5/5 PASS，自动动态挂载 `cap.gcode`）
 新增 `lib/gcode/{gcode,index}.cp`、`doc/lib/gcode.md` 与 `cap/test/test_gcode_production_deep.cp`（5/5 PASS），支持紧凑参数词法、RepRap XOR 校验和与 G90/G91/M82/M83/G92 状态机刀路统计。
 

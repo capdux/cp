@@ -1,3 +1,9 @@
+## 2026-11-22: 新建 `cap:fit` 零分配 Garmin / ANT+ FIT 1.0/2.0 二进制遥测文件与 CRC-16 解析器（5/5 PASS，文档直写 `doc/lib/fit.md`）
+实现零分配 ANT+ FIT 遥测解析器，维护 16 槽 Local Message 定义表并支持完整头尾 CRC 校验。
+
+## 2026-11-22: 新建 `cap:srec` 零分配 Motorola S-Record (S0-S9) 嵌入式固件编解码与校验器（5/5 PASS，文档直写 `doc/lib/srec.md`）
+实现零分配 Motorola S-Record 固件编解码器，覆盖 16/24/32-bit 地址记录与入口终止帧。
+
 ## 2026-11-22: 新建 `cap:gcode` 零分配 CNC / 3D 打印 G-Code 指令词法、校验和与刀路包围盒解析器（5/5 PASS，文档直写 `doc/lib/gcode.md`）
 实现零分配 G-Code 解析器，支持 ; 与 (...) 注释剥离、3D 包围盒及累计挤出耗材量计算。
 

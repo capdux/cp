@@ -1,0 +1,27 @@
+// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Garmin/ANT+ FIT Protocol 1.0/2.0 Binary Telemetry Parser)
+
+export {
+    FIT_MAGIC,
+    FIT_HEADER_SIZE_12,
+    FIT_HEADER_SIZE_14,
+    FIT_MAX_LOCAL_MESGS,
+    FIT_MAX_FIELDS,
+    FIT_MESG_FILE_ID,
+    FIT_MESG_SESSION,
+    FIT_MESG_LAP,
+    FIT_MESG_RECORD,
+    FIT_MESG_EVENT,
+    FIT_MESG_DEVICE_INFO,
+    FIT_MESG_ACTIVITY,
+    FitHeader,
+    FitFieldDef,
+    FitRecordKind,
+    FitRecord,
+    FitStats,
+    FitRecordIter,
+    fitCrc16,
+    isFit,
+    parseFitHeader,
+    verifyFileCrc,
+    summarizeFit,
+} from "./fit.cp";

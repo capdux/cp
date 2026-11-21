@@ -166,3 +166,9 @@
 
 ### 2026-11-22（`cap:gcode` 验收，完成 `cap:gcode` 交付验收并登记入库（5/5 PASS）；派发 `cap:bvh`。）
 - **执行成果**：`lib/gcode/`（5/5 PASS，`doc/lib/gcode.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:gcode` 交付验收并登记入库（5/5 PASS）；派发 `cap:bvh`。
+
+### 2026-11-22（`cap:srec` 验收，完成 `cap:srec` 交付验收并登记入库（5/5 PASS）；派发 `cap:fbx`。）
+- **执行成果**：`lib/srec/`（5/5 PASS，`doc/lib/srec.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:srec` 交付验收并登记入库（5/5 PASS）；派发 `cap:fbx`。
+
+### 2026-11-22（`cap:fit` 验收，完成 `cap:fit` 交付验收并登记入库（5/5 PASS）；派发 `cap:ais`。）
+- **执行成果**：`lib/fit/`（5/5 PASS，`doc/lib/fit.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:fit` 交付验收并登记入库（5/5 PASS）；派发 `cap:ais`。
