@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:xlsx` 零分配 OOXML SpreadsheetML (.xlsx) 工作簿、共享串与单元格解析器（5/5 PASS，自动动态挂载 `cap.xlsx`）
+新增 `lib/xlsx/{xlsx,index}.cp`、`doc/lib/xlsx.md` 与 `cap/test/test_xlsx_production_deep.cp`（5/5 PASS），支持 A1..XFD1048576 引用编解码、workbook/sharedStrings 与 sheetData 单元格迭代。
+
 ## [2026-11-22] - 新建 `cap:odt` 零分配 OASIS OpenDocument (.odt/.ods/.odp) 元数据与文本提取器（5/5 PASS，自动动态挂载 `cap.odt`）
 新增 `lib/odt/{odt,index}.cp`、`doc/lib/odt.md` 与 `cap/test/test_odt_production_deep.cp`（5/5 PASS），支持 OCF mimetype 校验、meta.xml 统计、manifest.xml 与 content.xml 文本提取。
 

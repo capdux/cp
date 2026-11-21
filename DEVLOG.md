@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:xlsx` 零分配 OOXML SpreadsheetML (.xlsx) 工作簿、共享串与单元格解析器（5/5 PASS，文档直写 `doc/lib/xlsx.md`）
+实现零分配 OOXML XLSX 解析器，支持富文本 <r><t> 合并、<rPh> 拼音跳过与 XML 实体反转义。
+
 ## 2026-11-22: 新建 `cap:odt` 零分配 OASIS OpenDocument (.odt/.ods/.odp) 元数据与文本提取器（5/5 PASS，文档直写 `doc/lib/odt.md`）
 实现零分配 OASIS OpenDocument 解析器，支持 <text:s text:c=N/> 展开、tab/line-break 与 XML 实体反转义。
 
