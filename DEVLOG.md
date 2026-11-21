@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:caddy` 零分配 Caddyfile 反向代理/TLS 站点配置词法扫描、站点块迭代与 64 层结构校验器（5/5 PASS，文档直写 `doc/lib/caddy.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:caddy`，与 `cap:nginx` 配套；精准区分行内 `{http.request.uri}` 占位符与块定界符 `{`。
+
 ## 2026-11-22: 新建 `cap:nginx` 零分配 Nginx `.conf` 配置词法扫描、层级指令块迭代与 64 层结构校验器（5/5 PASS，文档直写 `doc/lib/nginx.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:nginx`；`NginxBlockIter` 支持 `initWithDepth` 零拷贝递归解析嵌套块。
 

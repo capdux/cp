@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:caddy` 零分配 Caddyfile 反向代理/TLS 站点配置词法扫描、站点块迭代与 64 层结构校验器（5/5 PASS，自动动态挂载 `cap.caddy`）
+- 新增 `lib/caddy/{caddy,index}.cp`、`doc/lib/caddy.md`、`cap/test/test_caddy_production_deep.cp`：纯 CP 零分配实现 Caddyfile 词法扫描（`@matcher`、反引号原始串、`{placeholder}` 与块大括号区分）、全局块/Snippet/站点块迭代与 64 层校验（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:nginx` 零分配 Nginx `.conf` 配置词法扫描、层级指令块迭代与 64 层结构校验器（5/5 PASS，自动动态挂载 `cap.nginx`）
 - 新增 `lib/nginx/{nginx,index}.cp`、`doc/lib/nginx.md`、`cap/test/test_nginx_production_deep.cp`：纯 CP 零分配实现 Nginx `.conf` 词法扫描、`http`/`upstream`/`server`/`location` 递归块迭代与 `${var}` 感知括号校验（5/5 PASS）。
 

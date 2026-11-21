@@ -518,3 +518,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:xpath` | `XPathTokenKind`, `XPathToken`, `XPathIter`, `XPathStep`, `XPathStepIter`, `validateXPathDelimiters` | 零分配 W3C XPath 表达式词法扫描、位置路径步进迭代与括号平衡校验器 |
 | `cap:rego` | `REGO_MAX_DEPTH`, `RegoTokenKind`, `RegoToken`, `RegoIter`, `extractRegoPackage`, `RegoImportIter`, `RegoRuleIter`, `validateRegoDelimiters` | 零分配 Open Policy Agent OPA Rego 策略语言词法扫描、包名/规则提取与 64 层定界符校验器 |
 | `cap:nginx` | `NginxTokenKind`, `NginxToken`, `NginxIter`, `NginxDirective`, `NginxBlockIter`, `findNginxDirective`, `validateNginxConfig` | 零分配 Nginx `.conf` 配置词法扫描、层级指令块迭代与 64 层结构校验器 |
+| `cap:caddy` | `CaddyTokenKind`, `CaddyToken`, `CaddyIter`, `CaddySiteBlock`, `CaddySiteIter`, `validateCaddyfile` | 零分配 Caddyfile 反向代理/TLS 站点配置词法扫描、站点块迭代与 64 层结构校验器 |
