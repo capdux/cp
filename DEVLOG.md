@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:stl` 零分配 3D STL 二进制与 ASCII 三角网格解析、包围盒统计与二进制编码器（5/5 PASS，文档直写 `doc/lib/stl.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:stl`；`detectStlFormat` 优先校验 `84 + 50*N` 精确长度防止头含 `"solid "` 的二进制文件误判。
+
 ## 2026-11-22: 新建 `cap:ebml` 零分配 RFC 8794 EBML / WebM / MKV 变长 VINT 整数与二进制元素流式解析器（5/5 PASS，文档直写 `doc/lib/ebml.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:ebml`；严格遵循 RFC 8794 §5/§6/§7.2 拦截保留全 0/全 1 ID 与越界负载。
 

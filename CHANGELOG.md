@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:stl` 零分配 3D STL 二进制与 ASCII 三角网格解析、包围盒统计与二进制编码器（5/5 PASS，自动动态挂载 `cap.stl`）
+- 新增 `lib/stl/{stl,index}.cp`、`doc/lib/stl.md`、`cap/test/test_stl_production_deep.cp`：纯 CP 零分配实现 3D STL 二进制/ASCII 格式判别、小端 IEEE 754 面片迭代、包围盒统计与二进制编码（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:ebml` 零分配 RFC 8794 EBML / WebM / MKV 变长 VINT 整数与二进制元素流式解析器（5/5 PASS，自动动态挂载 `cap.ebml`）
 - 新增 `lib/ebml/{ebml,index}.cp`、`doc/lib/ebml.md`、`cap/test/test_ebml_production_deep.cp`：纯 CP 零分配实现 RFC 8794 EBML 1–4B Element ID、1–8B VINT 长度（含全 1 未知长度）与递归 Master Element 流式迭代（5/5 PASS）。
 

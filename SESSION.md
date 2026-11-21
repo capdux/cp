@@ -187,3 +187,6 @@
 
 ### 2026-11-22（`cap:ebml` 验收，新增简洁单单词包 `cap:ebml`（5/5 PASS））
 - **执行成果**：`lib/ebml/`（5/5 PASS，`doc/lib/ebml.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:ebml`（5/5 PASS）
+
+### 2026-11-22（`cap:stl` 验收，新增简洁单单词包 `cap:stl`（5/5 PASS））
+- **执行成果**：`lib/stl/`（5/5 PASS，`doc/lib/stl.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:stl`（5/5 PASS）
