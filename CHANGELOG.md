@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:har` 零分配 W3C HTTP Archive (.har 1.2) 浏览器抓包日志与性能统计器（5/5 PASS，自动动态挂载 `cap.har`）
+新增 `lib/har/{har,index}.cp`、`doc/lib/har.md` 与 `cap/test/test_har_production_deep.cp`（5/5 PASS），支持 HAR 1.2 头/请求条目零拷贝迭代、HarTimings 与平均 TTFB 统计。
+
 ## [2026-11-22] - 新建 `cap:pgp` 零分配 OpenPGP RFC 4880/9580 Armor CRC-24 与 Old/New Packet 解析器（5/5 PASS，自动动态挂载 `cap.pgp`）
 新增 `lib/pgp/{pgp,index}.cp`、`doc/lib/pgp.md` 与 `cap/test/test_pgp_production_deep.cp`（5/5 PASS），支持 Radix-64 CRC-24 校验、Old/New Packet 迭代与 PublicKey/Signature/LiteralData 解码。
 

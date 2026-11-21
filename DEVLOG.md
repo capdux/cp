@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:har` 零分配 W3C HTTP Archive (.har 1.2) 浏览器抓包日志与性能统计器（5/5 PASS，文档直写 `doc/lib/har.md`）
+实现零分配 HAR 1.2 解析器，采用迭代式 JSON 值跳过安全处理嵌套 headers 与转义字符串。
+
 ## 2026-11-22: 新建 `cap:pgp` 零分配 OpenPGP RFC 4880/9580 Armor CRC-24 与 Old/New Packet 解析器（5/5 PASS，文档直写 `doc/lib/pgp.md`）
 实现零分配 OpenPGP 解析器，内置流式 Base64 解码与 =xxxx CRC-24 强制校验。
 

@@ -76,3 +76,6 @@
 
 ### 2026-11-22（`cap:pgp` 验收，完成 `cap:pgp` 交付验收并登记入库（5/5 PASS）；派发 `cap:tap`。）
 - **执行成果**：`lib/pgp/`（5/5 PASS，`doc/lib/pgp.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:pgp` 交付验收并登记入库（5/5 PASS）；派发 `cap:tap`。
+
+### 2026-11-22（`cap:har` 验收，完成 `cap:har` 交付验收并登记入库（5/5 PASS）；派发 `cap:junit`。）
+- **执行成果**：`lib/har/`（5/5 PASS，`doc/lib/har.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:har` 交付验收并登记入库（5/5 PASS）；派发 `cap:junit`。
