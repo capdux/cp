@@ -676,3 +676,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:xdg_basedir` | DEFAULT_CONFIG_DIRS, DEFAULT_DATA_DIRS, XdgEnv, resolveConfigHome, resolveDataHome, resolveCacheHome, resolveStateHome, resolveRuntimeDir, XdgDirIter | freedesktop.org XDG Base Directory Spec 路径零分配推导器（绝对路径校验、默认回退与防穿越 app_name） |
 | `cap:proxy_protocol_v2` | PROXY_V2_SIGNATURE, hasProxyV2Signature, ProxyV2Command, ProxyV2Family, ProxyV2Transport, ProxyV2Header, ProxyV2Tlv, ProxyV2TlvIter | HAProxy PROXY Protocol v2 二进制头零分配解析、IPv4/LOCAL 编码与 TLV 扩展迭代器 |
 | `cap:npmrc_config` | DEFAULT_NPM_REGISTRY, NpmrcEntry, NpmrcIter, getNpmrcValue, getNpmrcBool, resolveRegistryForScope, findRegistrySetting | .npmrc 配置文件零分配键值解析器、布尔配置查询与 @scope:registry 仓库路由解析器 |
+| `cap:dns_record_type` | DnsRrType, DnsRcode, DnsClass, SrvRecord, MxRecord | IANA DNS 记录类型（18 种 RRType）、Class、RCODE 编解码与 SRV/MX 文本记录解析器 |

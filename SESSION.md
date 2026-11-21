@@ -163,3 +163,6 @@
 
 ### 2026-11-22（`cap:npmrc_config` 验收，Batch 85 提交 `cap:npmrc_config`（累计 251 模块，耗时 1 分 19 秒）。）
 - **执行成果**：`lib/npmrc_config/`（5/5 PASS，`doc/lib/npmrc_config.md`）经 `verify_module.sh` 一次性验收回收；Batch 85 提交 `cap:npmrc_config`（累计 251 模块，耗时 1 分 19 秒）。
+
+### 2026-11-22（`cap:dns_record_type` 验收，Batch 86 提交 `cap:dns_record_type`（累计 252 模块）。）
+- **执行成果**：`lib/dns_record_type/`（5/5 PASS，`doc/lib/dns_record_type.md`）经 `verify_module.sh` 一次性验收回收；Batch 86 提交 `cap:dns_record_type`（累计 252 模块）。

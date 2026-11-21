@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:dns_record_type` IANA DNS 记录类型（18 种 RRType）、Class、RCODE 编解码与 SRV/MX 文本记录解析器（5/5 PASS，自动动态挂载 `cap.dns_record_type`）
+新增 `cap:dns_record_type`（`lib/dns_record_type/{rr_type,index}.cp`、`doc/lib/dns_record_type.md`、`cap/test/test_dns_record_type_production_deep.cp`），覆盖 `A`/`AAAA`/`CNAME`/`MX`/`TXT`/`SRV`/`HTTPS`/`SVCB`/`CAA` 等 18 种 RRType、RCODE 及 RFC 7505 Null MX。
+
 ## [2026-11-22] - 新建 `cap:npmrc_config` .npmrc 配置文件零分配键值解析器、布尔配置查询与 @scope:registry 仓库路由解析器（5/5 PASS，自动动态挂载 `cap.npmrc_config`）
 新增 `cap:npmrc_config`（`lib/npmrc_config/{npmrc,index}.cp`、`doc/lib/npmrc_config.md`、`cap/test/test_npmrc_config_production_deep.cp`），支持 BOM、单双引号剥离、作用域仓库回退与仓库级后缀配置匹配。
 

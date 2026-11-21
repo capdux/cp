@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:dns_record_type` IANA DNS 记录类型（18 种 RRType）、Class、RCODE 编解码与 SRV/MX 文本记录解析器（5/5 PASS，文档直写 `doc/lib/dns_record_type.md`）
+轮换后的 `HTTP RFC Absorber` 仅用 2 分 39 秒交付 `cap:dns_record_type`（5 组深度用例 100% PASS）。
+
 ## 2026-11-22: 新建 `cap:npmrc_config` .npmrc 配置文件零分配键值解析器、布尔配置查询与 @scope:registry 仓库路由解析器（5/5 PASS，文档直写 `doc/lib/npmrc_config.md`）
 轮换后的 `Sys Config Absorber` 仅用 1 分 19 秒交付 `cap:npmrc_config`（5 组深度用例 100% PASS）。
 
