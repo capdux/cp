@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:flexbuf` 零分配 Google FlatBuffers FlexBuffers 无 Schema 零拷贝二进制解析器（5/5 PASS，文档直写 `doc/lib/flexbuf.md`）
+实现零分配 FlexBuffers 解析器，完整支持 1/2/4/8B 多态位宽与相对偏移安全解引用。
+
 ## 2026-11-22: 新建 `cap:bincode` 零分配 Rust bincode v1 (FixedInt) / v2 (Varint + ZigZag) 二进制编解码器（5/5 PASS，文档直写 `doc/lib/bincode.md`）
 实现零分配 Rust bincode v1/v2 编解码器，严格校验非法 varint 标记与目标整数位宽上界。
 

@@ -82,3 +82,6 @@
 
 ### 2026-11-22（`cap:bincode` 验收，完成 `cap:bincode` 交付验收并登记入库（5/5 PASS）；派发 `cap:pickle`。）
 - **执行成果**：`lib/bincode/`（5/5 PASS，`doc/lib/bincode.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:bincode` 交付验收并登记入库（5/5 PASS）；派发 `cap:pickle`。
+
+### 2026-11-22（`cap:flexbuf` 验收，完成 `cap:flexbuf` 交付验收并登记入库（5/5 PASS）；派发 `cap:ion`。）
+- **执行成果**：`lib/flexbuf/`（5/5 PASS，`doc/lib/flexbuf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:flexbuf` 交付验收并登记入库（5/5 PASS）；派发 `cap:ion`。

@@ -580,3 +580,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:aof` | AofArgIter, AofCommand, AofIter, AofStats, isAofMixedRdb, isAofResp, summarizeAof | 零分配 Redis AOF 命令日志、#TS: 时间戳与混合 RDB 前导解析器 |
 | `cap:hprof` | HprofBasicType, HprofHeader, HprofRecord, HprofRecordIter, HprofUtf8, HprofLoadClass, HprofHeapSummary, HprofStats, hprofBasicTypeSize, isHprof, parseHprofHeader, parseHprofUtf8, parseHprofLoadClass, parseHprofHeapSummary, summarizeHprof | 零分配 JVM HPROF 1.0.1/1.0.2 二进制堆转储头与记录流解析器 |
 | `cap:bincode` | BincodeEndian, BincodeIntEncoding, BincodeConfig, BincodeWriter, BincodeReader | 零分配 Rust bincode v1 (FixedInt) / v2 (Varint + ZigZag) 二进制编解码器 |
+| `cap:flexbuf` | FlexType, FlexBitWidth, UnpackedFlexType, FlexRef, unpackFlexType, packFlexType, flexBitWidthBytes, parseFlexRoot | 零分配 Google FlatBuffers FlexBuffers 无 Schema 零拷贝二进制解析器 |

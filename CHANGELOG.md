@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:flexbuf` 零分配 Google FlatBuffers FlexBuffers 无 Schema 零拷贝二进制解析器（5/5 PASS，自动动态挂载 `cap.flexbuf`）
+新增 `lib/flexbuf/{flexbuf,index}.cp`、`doc/lib/flexbuf.md` 与 `cap/test/test_flexbuf_production_deep.cp`（5/5 PASS），支持全 28 种 FlexType、间接标量、定型/多态向量与有序 Map 二分查找。
+
 ## [2026-11-22] - 新建 `cap:bincode` 零分配 Rust bincode v1 (FixedInt) / v2 (Varint + ZigZag) 二进制编解码器（5/5 PASS，自动动态挂载 `cap.bincode`）
 新增 `lib/bincode/{bincode,index}.cp`、`doc/lib/bincode.md` 与 `cap/test/test_bincode_production_deep.cp`（5/5 PASS），支持 Legacy 定宽 LE/BE 与 Standard Varint/ZigZag 双向编解码。
 
