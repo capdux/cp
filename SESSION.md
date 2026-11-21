@@ -241,3 +241,6 @@
 
 ### 2026-11-22（`cap:dls` 验收，完成 `cap:dls` 交付验收并登记入库（5/5 PASS）；派发 `cap:sam`。）
 - **执行成果**：`lib/dls/`（5/5 PASS，`doc/lib/dls.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:dls` 交付验收并登记入库（5/5 PASS）；派发 `cap:sam`。
+
+### 2026-11-22（`cap:bed` 验收，完成 `cap:bed` 交付验收并登记入库（5/5 PASS）；派发 `cap:gff`。）
+- **执行成果**：`lib/bed/`（5/5 PASS，`doc/lib/bed.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:bed` 交付验收并登记入库（5/5 PASS）；派发 `cap:gff`。

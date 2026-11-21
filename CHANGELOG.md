@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:bed` 零分配 UCSC BED3-BED12 基因组区间注释解析与重叠计算器（5/5 PASS，自动动态挂载 `cap.bed`）
+新增 `lib/bed/{bed,index}.cp`、`doc/lib/bed.md` 与 `cap/test/test_bed_production_deep.cp`（5/5 PASS），支持 BED3/6/12 全列解析、UCSC 头行跳过、区间重叠长度计算与单遍统计。
+
 ## [2026-11-22] - 新建 `cap:dls` 零分配 MMA Downloadable Sounds (.dls) RIFF 合成器音色库解析器（5/5 PASS，自动动态挂载 `cap.dls`）
 新增 `lib/dls/{dls,index}.cp`、`doc/lib/dls.md` 与 `cap/test/test_dls_production_deep.cp`（5/5 PASS），支持 colh/vers/INFO/lins/ptbl/wvpl 解析、鼓组标志与 PCM 零拷贝波形迭代。
 

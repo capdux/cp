@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:bed` 零分配 UCSC BED3-BED12 基因组区间注释解析与重叠计算器（5/5 PASS，文档直写 `doc/lib/bed.md`）
+实现零分配 UCSC BED 基因组区间解析器，严格校验 0-based 半开区间 start <= end 与跨染色体隔离。
+
 ## 2026-11-22: 新建 `cap:dls` 零分配 MMA Downloadable Sounds (.dls) RIFF 合成器音色库解析器（5/5 PASS，文档直写 `doc/lib/dls.md`）
 实现零分配 MMA DLS Level 1/2 音色库解析器，严格遵循 2B RIFF 偶对齐填充规范。
 
