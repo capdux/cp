@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:dbscan` 纯 CP 零分配基于密度的空间聚类库（DBSCAN）：Ester 1996 核心/边界/噪声点语义、四种距离度量、预计算距离矩阵聚类与轮廓系数评估（5/5 PASS，文档直写 `doc/lib/dbscan.md`）
+新增 cap:dbscan（lib/dbscan/{dbscan,index}.cp）：零分配 Ester 1996 DBSCAN 密度聚类与轮廓系数，通过双同心圆环非凸聚类与四度量验证，cpc check 0 错误，cap test 6/6 PASS (853ms)
+
 ## 2026-11-22: 新建 `cap:bandit` 纯 CP 零分配多臂老虎机在线决策库：UCB1、Epsilon-Greedy（含衰减）、Marsaglia-Tsang Beta-Bernoulli Thompson Sampling、对数权重防溢出 EXP3 与累积遗憾计算（5/5 PASS，文档直写 `doc/lib/bandit.md`）
 新增 cap:bandit（lib/bandit/{bandit,index}.cp）：零分配确定性 SplitMix64 + Marsaglia-Tsang Beta 采样器实现 UCB1/EpsGreedy/Thompson/EXP3，2000 轮收敛且 5000 步零溢出，cpc check 0 错误，cap test 6/6 PASS (674ms)
 

@@ -172,3 +172,6 @@
 
 ### 2026-11-22（`cap:bandit` 验收，子智能体交付 cap:bandit（多臂老虎机 UCB1 / Thompson / EXP3，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/bandit/`（5/5 PASS，`doc/lib/bandit.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:bandit（多臂老虎机 UCB1 / Thompson / EXP3，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:dbscan` 验收，子智能体交付 cap:dbscan（DBSCAN 密度聚类与轮廓系数，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/dbscan/`（5/5 PASS，`doc/lib/dbscan.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:dbscan（DBSCAN 密度聚类与轮廓系数，6/6 PASS），主协调器统一登记并提交

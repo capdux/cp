@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:dbscan` 纯 CP 零分配基于密度的空间聚类库（DBSCAN）：Ester 1996 核心/边界/噪声点语义、四种距离度量、预计算距离矩阵聚类与轮廓系数评估（5/5 PASS，自动动态挂载 `cap.dbscan`）
+新增纯 CP 零分配密度聚类库 cap:dbscan（DBSCAN 聚类、距离矩阵聚类、轮廓系数），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:bandit` 纯 CP 零分配多臂老虎机在线决策库：UCB1、Epsilon-Greedy（含衰减）、Marsaglia-Tsang Beta-Bernoulli Thompson Sampling、对数权重防溢出 EXP3 与累积遗憾计算（5/5 PASS，自动动态挂载 `cap.bandit`）
 新增纯 CP 零分配多臂老虎机在线决策库 cap:bandit（UCB1、Epsilon-Greedy、Thompson Sampling、EXP3），含文档与 6 项深度生产测试
 
