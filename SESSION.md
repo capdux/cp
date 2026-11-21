@@ -196,3 +196,9 @@
 
 ### 2026-11-22（`cap:http_fetch_meta` 验收，Batch 33: 吸收并验证 cap:http_fetch_meta (5/5 PASSED)）
 - **执行成果**：`lib/http_fetch_meta/`（5/5 PASS，`doc/lib/http_fetch_meta.md`）经 `verify_module.sh` 一次性验收回收；Batch 33: 吸收并验证 cap:http_fetch_meta (5/5 PASSED)
+
+### 2026-11-22（`cap:http_method` 验收，Batch 34 (百模块里程碑): 吸收并验证 cap:http_method (PASSED)）
+- **执行成果**：`lib/http_method/`（5/5 PASS，`doc/lib/http_method.md`）经 `verify_module.sh` 一次性验收回收；Batch 34 (百模块里程碑): 吸收并验证 cap:http_method (PASSED)
+
+### 2026-11-22（`cap:fs_router` 验收，Batch 34 (百模块里程碑): 吸收并验证 cap:fs_router (5/5 PASSED)）
+- **执行成果**：`lib/fs_router/`（5/5 PASS，`doc/lib/fs_router.md`）经 `verify_module.sh` 一次性验收回收；Batch 34 (百模块里程碑): 吸收并验证 cap:fs_router (5/5 PASSED)

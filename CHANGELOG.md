@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:fs_router` Next.js / Bun FileSystemRouter 风格文件路由解析、静态>动态>捕获优先级排序与零拷贝参数匹配引擎（吸收自 bun/src/router/{Route,route_types}.cp）（5/5 PASS，自动动态挂载 `cap.fs_router`）
+新增 cap:fs_router 标准库模块（lib/fs_router/{router,index}.cp, doc/lib/fs_router.md, cap/test/test_fs_router_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:http_method` HTTP / WebDAV / QUERY 全 36 种方法枚举、RFC 9110 安全/幂等/可缓存/CORS 谓词与 64-bit MethodSet（吸收自 bun/src/http_types/Method.cp）（5/5 PASS，自动动态挂载 `cap.http_method`）
+新增 cap:http_method 标准库模块（lib/http_method/{method,index}.cp, doc/lib/http_method.md, cap/test/test_http_method_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:http_fetch_meta` WHATWG Fetch 请求元数据枚举、RFC 9110 Accept-Encoding q 权重内容协商与零拷贝 URLPath 拆分库（吸收自 bun/src/http_types/{Encoding,Fetch*,URLPath}.cp）（5/5 PASS，自动动态挂载 `cap.http_fetch_meta`）
 新增 cap:http_fetch_meta 标准库模块（lib/http_fetch_meta/{meta,index}.cp, doc/lib/http_fetch_meta.md, cap/test/test_http_fetch_meta_production_deep.cp）
 

@@ -1,3 +1,9 @@
+## 2026-11-22: 新建 `cap:fs_router` Next.js / Bun FileSystemRouter 风格文件路由解析、静态>动态>捕获优先级排序与零拷贝参数匹配引擎（吸收自 bun/src/router/{Route,route_types}.cp）（5/5 PASS，文档直写 `doc/lib/fs_router.md`）
+子智能体 1 吸收 bun/src/router/{Route,route_types}.cp，实现支持静态/动态/catch-all/optional-catch-all 的零堆分配文件路由器，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:http_method` HTTP / WebDAV / QUERY 全 36 种方法枚举、RFC 9110 安全/幂等/可缓存/CORS 谓词与 64-bit MethodSet（吸收自 bun/src/http_types/Method.cp）（5/5 PASS，文档直写 `doc/lib/http_method.md`）
+吸收 bun/src/http_types/Method.cp，实现 36 种 HTTP 方法双射解析、RFC 9110 谓词与 Allow 头格式化，通过 cpc check 与 cap test
+
 ## 2026-11-22: 新建 `cap:http_fetch_meta` WHATWG Fetch 请求元数据枚举、RFC 9110 Accept-Encoding q 权重内容协商与零拷贝 URLPath 拆分库（吸收自 bun/src/http_types/{Encoding,Fetch*,URLPath}.cp）（5/5 PASS，文档直写 `doc/lib/http_fetch_meta.md`）
 子智能体 2 吸收 bun/src/http_types/*，实现 Accept-Encoding 权重协商、Fetch 枚举与 UrlPath 零拷贝拆分，5/5 单测通过
 
