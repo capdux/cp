@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:markov` 纯 CP 零分配离散时间马尔可夫链（DTMC）分析与采样库：随机矩阵校验、快速幂、平稳分布幂迭代、吸收链基本矩阵 N=(I-Q)^-1、熵率与确定性轨迹采样（5/5 PASS，文档直写 `doc/lib/markov.md`）
+新增 cap:markov（lib/markov/{markov,index}.cp）：零分配 DTMC 快速幂、平稳分布、赌徒破产吸收链 N=(I-Q)^-1 精确验证与 SplitMix64 轨迹采样，cpc check 0 错误，cap test 6/6 PASS (715ms)
+
 ## 2026-11-22: 新建 `cap:bfgs` 纯 CP 零分配拟牛顿法与梯度优化库：完整逆 Hessian BFGS、双循环有限内存 L-BFGS（O(mn) 内存）、Armijo/Wolfe 线搜索与中心差分梯度（5/5 PASS，文档直写 `doc/lib/bfgs.md`）
 新增 cap:bfgs（lib/bfgs/{bfgs,index}.cp）：零分配完整 BFGS 与双循环 L-BFGS，40 步内收敛 Rosenbrock 与 16D 耦合二次/L2 逻辑回归目标，cpc check 0 错误，cap test 6/6 PASS (766ms)
 

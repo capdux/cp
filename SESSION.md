@@ -154,3 +154,6 @@
 
 ### 2026-11-22（`cap:bfgs` 验收，子智能体交付 cap:bfgs（BFGS / L-BFGS 拟牛顿优化，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/bfgs/`（5/5 PASS，`doc/lib/bfgs.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:bfgs（BFGS / L-BFGS 拟牛顿优化，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:markov` 验收，子智能体交付 cap:markov（离散时间马尔可夫链分析与采样，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/markov/`（5/5 PASS，`doc/lib/markov.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:markov（离散时间马尔可夫链分析与采样，6/6 PASS），主协调器统一登记并提交

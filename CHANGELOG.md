@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:markov` 纯 CP 零分配离散时间马尔可夫链（DTMC）分析与采样库：随机矩阵校验、快速幂、平稳分布幂迭代、吸收链基本矩阵 N=(I-Q)^-1、熵率与确定性轨迹采样（5/5 PASS，自动动态挂载 `cap.markov`）
+新增纯 CP 零分配离散时间马尔可夫链库 cap:markov（快速幂、平稳分布、吸收链基本矩阵、熵率、确定性轨迹采样），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:bfgs` 纯 CP 零分配拟牛顿法与梯度优化库：完整逆 Hessian BFGS、双循环有限内存 L-BFGS（O(mn) 内存）、Armijo/Wolfe 线搜索与中心差分梯度（5/5 PASS，自动动态挂载 `cap.bfgs`）
 新增纯 CP 零分配拟牛顿优化库 cap:bfgs（BFGS、L-BFGS、Armijo/Wolfe 线搜索、中心差分梯度），含文档与 6 项深度生产测试
 
