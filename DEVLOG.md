@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:pop3` POP3 (RFC 1939/2449) +OK/-ERR, [RESP-CODE], STAT/LIST/UIDL & dot-unstuffing codec（5/5 PASS，文档直写 `doc/lib/pop3.md`）
+新增 cap:pop3 纯 CP 零分配邮局协议库（+OK/-ERR、[RESP-CODE]、STAT/LIST/UIDL、Pop3MultiLineIter 解填充与 dot-stuffing），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:irc` IRC (RFC 1459/2812/IRCv3) Message Tags, prefix/param zero-alloc parser & IrcWriter（5/5 PASS，文档直写 `doc/lib/irc.md`）
 新增 cap:irc 纯 CP 零分配实时聊天协议库（IRCv3 @tags 零拷贝迭代与转义、nick!user@host 前缀、3 位数字回复与 IrcWriter），通过 cpc check 与 6/6 cap test
 

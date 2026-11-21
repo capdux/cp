@@ -229,3 +229,6 @@
 
 ### 2026-11-22（`cap:irc` 验收，完成并注册纯 CP 零分配标准库 cap:irc（6/6 cap test PASS））
 - **执行成果**：`lib/irc/`（5/5 PASS，`doc/lib/irc.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:irc（6/6 cap test PASS）
+
+### 2026-11-22（`cap:pop3` 验收，完成并注册纯 CP 零分配标准库 cap:pop3（6/6 cap test PASS））
+- **执行成果**：`lib/pop3/`（5/5 PASS，`doc/lib/pop3.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:pop3（6/6 cap test PASS）
