@@ -163,3 +163,6 @@
 
 ### 2026-11-22（`cap:ihex` 验收，完成 `cap:ihex` 交付验收并登记入库（5/5 PASS）；派发 `cap:fit`。）
 - **执行成果**：`lib/ihex/`（5/5 PASS，`doc/lib/ihex.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:ihex` 交付验收并登记入库（5/5 PASS）；派发 `cap:fit`。
+
+### 2026-11-22（`cap:gcode` 验收，完成 `cap:gcode` 交付验收并登记入库（5/5 PASS）；派发 `cap:bvh`。）
+- **执行成果**：`lib/gcode/`（5/5 PASS，`doc/lib/gcode.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:gcode` 交付验收并登记入库（5/5 PASS）；派发 `cap:bvh`。

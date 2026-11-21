@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:gcode` 零分配 CNC / 3D 打印 G-Code 指令词法、校验和与刀路包围盒解析器（5/5 PASS，文档直写 `doc/lib/gcode.md`）
+实现零分配 G-Code 解析器，支持 ; 与 (...) 注释剥离、3D 包围盒及累计挤出耗材量计算。
+
 ## 2026-11-22: 新建 `cap:ihex` 零分配 Intel HEX (I8HEX/I16HEX/I32HEX) 嵌入式固件编解码与 32-bit 扩展地址解析器（5/5 PASS，文档直写 `doc/lib/ihex.md`）
 实现零分配 Intel HEX 固件编解码器，覆盖 STM32/ARM 32-bit 线性基址与地址范围汇总。
 

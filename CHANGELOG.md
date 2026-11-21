@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:gcode` 零分配 CNC / 3D 打印 G-Code 指令词法、校验和与刀路包围盒解析器（5/5 PASS，自动动态挂载 `cap.gcode`）
+新增 `lib/gcode/{gcode,index}.cp`、`doc/lib/gcode.md` 与 `cap/test/test_gcode_production_deep.cp`（5/5 PASS），支持紧凑参数词法、RepRap XOR 校验和与 G90/G91/M82/M83/G92 状态机刀路统计。
+
 ## [2026-11-22] - 新建 `cap:ihex` 零分配 Intel HEX (I8HEX/I16HEX/I32HEX) 嵌入式固件编解码与 32-bit 扩展地址解析器（5/5 PASS，自动动态挂载 `cap.ihex`）
 新增 `lib/ihex/{ihex,index}.cp`、`doc/lib/ihex.md` 与 `cap/test/test_ihex_production_deep.cp`（5/5 PASS），支持二补码校验和、02/04 扩展地址换算、05 入口点与零分配行编码。
 

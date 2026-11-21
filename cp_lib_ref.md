@@ -607,3 +607,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:nmea` | NmeaSentence, NmeaFieldIter, NmeaGga, NmeaRmc, NmeaVtg, NmeaLineIter, nmeaChecksum, verifyNmeaSentence, parseNmeaSentence, parseNmeaCoord, parseNmeaGga, parseNmeaRmc, parseNmeaVtg | 零分配 NMEA 0183 GPS/GNSS 语句校验与 GGA/RMC/VTG 解析器 |
 | `cap:uf2` | UF2_BLOCK_SIZE, UF2_MAX_PAYLOAD, UF2_MAGIC_START0, UF2_MAGIC_START1, UF2_MAGIC_END, Uf2Block, Uf2Iter, Uf2Summary, isUf2, parseUf2Block, encodeUf2Block, summarizeUf2 | 零分配 Microsoft UF2 512B 微控制器固件块编解码与连续性校验器 |
 | `cap:ihex` | IhexRecordType, IhexRecord, IhexChunk, IhexIter, IhexStats, ihexRecordTypeFromByte, ihexChecksum, parseIhexLine, encodeIhexLine, summarizeIhex | 零分配 Intel HEX (I8HEX/I16HEX/I32HEX) 嵌入式固件编解码与 32-bit 扩展地址解析器 |
+| `cap:gcode` | GcodeWord, GcodeWordIter, GcodeLine, GcodeIter, GcodeStats, gcodeChecksum, verifyGcodeChecksum, parseGcodeLine, summarizeGcode | 零分配 CNC / 3D 打印 G-Code 指令词法、校验和与刀路包围盒解析器 |
