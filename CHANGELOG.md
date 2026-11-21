@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:openmetrics` 纯 CP 工业级 Prometheus / OpenMetrics 0.0.4 & 1.0.0 文本暴露格式解析、校验与序列化引擎（支持 `cap.openmetrics` 自动动态挂载，详见 `doc/lib/openmetrics.md`）（5/5 PASS，自动动态挂载 `cap.openmetrics`）
+- **新增标准库**：`lib/openmetrics/{openmetrics,index}.cp`，实现 Counter/Gauge/Histogram/Summary 多家族 `# TYPE`/`# HELP`/`# UNIT`/`# EOF` 解析、标签转义反转义、NaN/`+Inf`/`-Inf` 处理与往返序列化。\n- **新增文档与测试**：`doc/lib/openmetrics.md` 扁平文档与 `cap/test/test_openmetrics_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:cuid2` 纯 CP 抗碰撞 CUID2 Base36 唯一 ID 生成与格式校验引擎（SHA3-512 混合时间戳/原子计数/节点指纹，支持 `cap.cuid2` 自动动态挂载，详见 `doc/lib/cuid2.md`）（5/5 PASS，自动动态挂载 `cap.cuid2`）
 - **新增标准库**：`lib/cuid2/{cuid2,index}.cp`，实现 CUID2 4..32 字符 Base36 ID 生成与格式校验。\n- **新增文档与测试**：`doc/lib/cuid2.md` 扁平文档与 `cap/test/test_cuid2_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

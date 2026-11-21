@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:openmetrics` 纯 CP 工业级 Prometheus / OpenMetrics 0.0.4 & 1.0.0 文本暴露格式解析、校验与序列化引擎（支持 `cap.openmetrics` 自动动态挂载，详见 `doc/lib/openmetrics.md`）（5/5 PASS，文档直写 `doc/lib/openmetrics.md`）
+- **核心设计**：流式逐行解析指标家族与带转义标签样本，支持 `# EOF` 检测与 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:cuid2` 纯 CP 抗碰撞 CUID2 Base36 唯一 ID 生成与格式校验引擎（SHA3-512 混合时间戳/原子计数/节点指纹，支持 `cap.cuid2` 自动动态挂载，详见 `doc/lib/cuid2.md`）（5/5 PASS，文档直写 `doc/lib/cuid2.md`）
 - **核心设计**：采用 `std.crypto.hash.sha3.Sha3_512` 与 `std.Io.Threaded` 随机源，确保小写字母首字符与高并发无碰撞唯一性。
 

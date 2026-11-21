@@ -73,3 +73,6 @@
 
 ### 2026-11-21（`cap:cuid2` 验收，主控完成 `cap:cuid2` 研发验收提交，继续与 `cap:openmetrics` 及 `cap:cbor_diag` 并行）
 - **执行成果**：`lib/cuid2/`（5/5 PASS，`doc/lib/cuid2.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:cuid2` 研发验收提交，继续与 `cap:openmetrics` 及 `cap:cbor_diag` 并行
+
+### 2026-11-21（`cap:openmetrics` 验收，验收提交 `cap:openmetrics` 并新开 `cap:json_patch` 并发子智能体，主控继续验收 `cap:crontab`）
+- **执行成果**：`lib/openmetrics/`（5/5 PASS，`doc/lib/openmetrics.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:openmetrics` 并新开 `cap:json_patch` 并发子智能体，主控继续验收 `cap:crontab`
