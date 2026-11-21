@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:mpls` MPLS (RFC 3032/4385/5586) label stack, PW Control Word & G-ACh zero-alloc codec（5/5 PASS，自动动态挂载 `cap.mpls`）
+新增纯 CP 零分配标准库 cap:mpls（RFC 3032 MPLS 标签栈 / RFC 4385 PW-CW / RFC 5586 G-ACh 编解码）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:bfd` BFD (RFC 5880) 24B control packet & Simple/MD5/SHA1 Auth TLV zero-alloc parser（5/5 PASS，自动动态挂载 `cap.bfd`）
 新增纯 CP 零分配标准库 cap:bfd（RFC 5880 BFD 控制包与 Simple/MD5/SHA1 认证 TLV 解析）与 6/6 深度测试
 
