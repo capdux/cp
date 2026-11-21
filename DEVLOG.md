@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:bipartite` 纯 CP 零分配二分图算法库：BFS 二染色二分性判定、Hopcroft-Karp O(E√V) 最大基数匹配与 Kőnig 定理最小点覆盖/最大独立集提取（5/5 PASS，文档直写 `doc/lib/bipartite.md`）
+新增 cap:bipartite（lib/bipartite/{bipartite,index}.cp）：零分配 BFS 二染色、Hopcroft-Karp O(E√V) 最大基数匹配与 Kőnig 最小点覆盖，通过 50x50 稀疏图联合校验，cpc check 0 错误，cap test 6/6 PASS (824ms)
+
 ## 2026-11-22: 新建 `cap:delaunay` 纯 CP 零分配 2D Delaunay 三角剖分库：Bowyer-Watson 增量剖分、无除法外接圆行列式谓词、CCW 绕序保证、空外接圆准则检验与三角形点定位（5/5 PASS，文档直写 `doc/lib/delaunay.md`）
 新增 cap:delaunay（lib/delaunay/{delaunay,index}.cp）：零分配 Bowyer-Watson 增量三角剖分含 3x3 无除法外接圆行列式与空外接圆准则校验，cpc check 0 错误，cap test 6/6 PASS (700ms)
 
