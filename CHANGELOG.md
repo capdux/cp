@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:consistent_hash` 纯 CP 虚拟节点一致性哈希环引擎（Wyhash 均匀分布、动态增删物理节点最小迁移与顺时针去重 N 副本路由 `getReplicas`，支持 `cap.consistent_hash` 自动动态挂载，详见 `doc/lib/consistent_hash.md`）（5/5 PASS，自动动态挂载 `cap.consistent_hash`）
+- **新增标准库**：`lib/consistent_hash/{consistent_hash,index}.cp`，实现 `HashRing` 虚拟节点环、增删节点与 `getReplicas`。\n- **新增文档与测试**：`doc/lib/consistent_hash.md` 扁平文档与 `cap/test/test_consistent_hash_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:promql` 纯 CP Prometheus PromQL 词法与递归下降 AST 解析器（支持即时/区间向量选择器、`=~`/`!~` 标签匹配、聚合 `by`/`without`、`on`/`ignoring`/`group_left` 二元修饰符，支持 `cap.promql` 自动动态挂载，详见 `doc/lib/promql.md`）（5/5 PASS，自动动态挂载 `cap.promql`）
 - **新增标准库**：`lib/promql/{promql,index}.cp`，实现 PromQL 词法器、Duration 解析与完整递归下降 AST 解析器。\n- **新增文档与测试**：`doc/lib/promql.md` 扁平文档与 `cap/test/test_promql_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

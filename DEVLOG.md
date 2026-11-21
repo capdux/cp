@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:consistent_hash` 纯 CP 虚拟节点一致性哈希环引擎（Wyhash 均匀分布、动态增删物理节点最小迁移与顺时针去重 N 副本路由 `getReplicas`，支持 `cap.consistent_hash` 自动动态挂载，详见 `doc/lib/consistent_hash.md`）（5/5 PASS，文档直写 `doc/lib/consistent_hash.md`）
+- **核心设计**：采用 Wyhash 虚拟节点二分查找与去重副本遍历，通过 3 节点 600 键负载均衡与扩容迁移率 < 45% 校验。
+
 ## 2026-11-21: 新建 `cap:promql` 纯 CP Prometheus PromQL 词法与递归下降 AST 解析器（支持即时/区间向量选择器、`=~`/`!~` 标签匹配、聚合 `by`/`without`、`on`/`ignoring`/`group_left` 二元修饰符，支持 `cap.promql` 自动动态挂载，详见 `doc/lib/promql.md`）（5/5 PASS，文档直写 `doc/lib/promql.md`）
 - **核心设计**：支持 `histogram_quantile` 嵌套函数、二元算术优先级及 `std.testing.allocator` 递归释放零泄漏验证。
 

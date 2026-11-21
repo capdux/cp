@@ -19,3 +19,6 @@
 
 ### 2026-11-21（`cap:promql` 验收，验收提交 `cap:promql` 并新开 `cap:skip_list` 并发子智能体，主控继续验收 `cap:consistent_hash`）
 - **执行成果**：`lib/promql/`（5/5 PASS，`doc/lib/promql.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:promql` 并新开 `cap:skip_list` 并发子智能体，主控继续验收 `cap:consistent_hash`
+
+### 2026-11-21（`cap:consistent_hash` 验收，主控完成 `cap:consistent_hash` 研发验收提交）
+- **执行成果**：`lib/consistent_hash/`（5/5 PASS，`doc/lib/consistent_hash.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:consistent_hash` 研发验收提交
