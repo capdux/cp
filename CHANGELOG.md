@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:segment_tree` 纯 CP 懒传播线段树引擎（$O(\log N)$ 区间增量 `rangeAdd`、区间和/最小/最大值查询，支持 `cap.segment_tree` 自动动态挂载，详见 `doc/lib/segment_tree.md`）（5/5 PASS，自动动态挂载 `cap.segment_tree`）
+- **新增标准库**：`lib/segment_tree/{segment_tree,index}.cp`，实现泛型懒传播 `SegmentTree(T)` 区间更新与聚合查询。\n- **新增文档与测试**：`doc/lib/segment_tree.md` 扁平文档与 `cap/test/test_segment_tree_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:fenwick` 纯 CP 树状数组 Binary Indexed Tree 引擎（$O(\log N)$ 单点增减/赋值、前缀/区间和与 `lowerBound` 二进制提升，支持 `cap.fenwick` 自动动态挂载，详见 `doc/lib/fenwick.md`）（5/5 PASS，自动动态挂载 `cap.fenwick`）
 - **新增标准库**：`lib/fenwick/{fenwick,index}.cp`，实现泛型 `FenwickTree(T)` 区间和与 `lowerBound`。\n- **新增文档与测试**：`doc/lib/fenwick.md` 扁平文档与 `cap/test/test_fenwick_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

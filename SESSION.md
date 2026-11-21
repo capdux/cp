@@ -34,3 +34,6 @@
 
 ### 2026-11-21（`cap:fenwick` 验收，主控完成 `cap:fenwick` 研发验收提交，继续与 `cap:bimap` 及 `cap:merkle_tree` 并行）
 - **执行成果**：`lib/fenwick/`（5/5 PASS，`doc/lib/fenwick.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:fenwick` 研发验收提交，继续与 `cap:bimap` 及 `cap:merkle_tree` 并行
+
+### 2026-11-21（`cap:segment_tree` 验收，主控完成 `cap:segment_tree` 研发验收提交，继续与 `cap:bimap` 及 `cap:merkle_tree` 并行）
+- **执行成果**：`lib/segment_tree/`（5/5 PASS，`doc/lib/segment_tree.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:segment_tree` 研发验收提交，继续与 `cap:bimap` 及 `cap:merkle_tree` 并行

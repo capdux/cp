@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:segment_tree` 纯 CP 懒传播线段树引擎（$O(\log N)$ 区间增量 `rangeAdd`、区间和/最小/最大值查询，支持 `cap.segment_tree` 自动动态挂载，详见 `doc/lib/segment_tree.md`）（5/5 PASS，文档直写 `doc/lib/segment_tree.md`）
+- **核心设计**：采用 4N 堆数组节点与延迟下推 (`push`)，通过 64 元素暴力对照测试与 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:fenwick` 纯 CP 树状数组 Binary Indexed Tree 引擎（$O(\log N)$ 单点增减/赋值、前缀/区间和与 `lowerBound` 二进制提升，支持 `cap.fenwick` 自动动态挂载，详见 `doc/lib/fenwick.md`）（5/5 PASS，文档直写 `doc/lib/fenwick.md`）
 - **核心设计**：采用经典 LSB 树状数组与二进制提升查找，通过 1000 元素压力累加与 `std.testing.allocator` 零泄漏验证。
 
