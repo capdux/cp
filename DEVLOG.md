@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:opus` 零分配 RFC 7845 OpusHead/OpusTags 与 RFC 6716 Opus TOC 解析器（5/5 PASS，文档直写 `doc/lib/opus.md`）
+实现零分配 Opus 音频头与 TOC 解析器，严格校验 120ms 上限、映射表索引与 VBR/Padding 帧计数。
+
 ## 2026-11-22: 新建 `cap:aac` 零分配 MPEG-2/4 AAC ADTS 音频帧流与 AudioSpecificConfig 解析器（5/5 PASS，文档直写 `doc/lib/aac.md`）
 实现零分配 AAC ADTS 与 AudioSpecificConfig 解析器，支持 5-bit escape 对象类型与 24-bit 显式采样率。
 

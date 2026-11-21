@@ -250,3 +250,6 @@
 
 ### 2026-11-22（`cap:aac` 验收，完成 `cap:aac` 交付验收并登记入库（5/5 PASS）；派发 `cap:avif`。）
 - **执行成果**：`lib/aac/`（5/5 PASS，`doc/lib/aac.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:aac` 交付验收并登记入库（5/5 PASS）；派发 `cap:avif`。
+
+### 2026-11-22（`cap:opus` 验收，完成 `cap:opus` 交付验收并登记入库（5/5 PASS）；派发 `cap:mpeg`。）
+- **执行成果**：`lib/opus/`（5/5 PASS，`doc/lib/opus.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:opus` 交付验收并登记入库（5/5 PASS）；派发 `cap:mpeg`。

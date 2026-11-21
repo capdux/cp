@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:opus` 零分配 RFC 7845 OpusHead/OpusTags 与 RFC 6716 Opus TOC 解析器（5/5 PASS，自动动态挂载 `cap.opus`）
+新增 `lib/opus/{opus,index}.cp`、`doc/lib/opus.md` 与 `cap/test/test_opus_production_deep.cp`（5/5 PASS），支持单/多声道映射 OpusHead、OpusTags 注释迭代与全 0..31 config TOC 模式/带宽/时长解码。
+
 ## [2026-11-22] - 新建 `cap:aac` 零分配 MPEG-2/4 AAC ADTS 音频帧流与 AudioSpecificConfig 解析器（5/5 PASS，自动动态挂载 `cap.aac`）
 新增 `lib/aac/{aac,index}.cp`、`doc/lib/aac.md` 与 `cap/test/test_aac_production_deep.cp`（5/5 PASS），支持 7B/9B ADTS 帧流迭代、13 档采样率/声道查表、AudioSpecificConfig 扩展解析与时长估算。
 
