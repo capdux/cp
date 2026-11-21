@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:f2fs` Linux F2FS superblock, dual Checkpoint selection & f2fs_crc32 zero-alloc parser（5/5 PASS，自动动态挂载 `cap.f2fs`）
+新增纯 CP 零分配标准库 cap:f2fs（Linux F2FS 超级块、双 Checkpoint 选主与 f2fs_crc32 校验）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:tpm` TCG TPM 2.0 command/response header, TPMS_ATTEST/Quote, PCR Selection & TPMT_PUBLIC codec（5/5 PASS，自动动态挂载 `cap.tpm`）
 新增纯 CP 零分配标准库 cap:tpm（TCG TPM 2.0 命令头、TPMS_ATTEST/Quote、PCR Selection 与 TPMT_PUBLIC 解析）与 5/5 深度测试
 

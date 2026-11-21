@@ -127,3 +127,6 @@
 
 ### 2026-11-22（`cap:tpm` 验收，完成并注册纯 CP 零分配标准库 cap:tpm（5/5 cap test PASS））
 - **执行成果**：`lib/tpm/`（5/5 PASS，`doc/lib/tpm.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:tpm（5/5 cap test PASS）
+
+### 2026-11-22（`cap:f2fs` 验收，完成并注册纯 CP 零分配标准库 cap:f2fs（5/5 cap test PASS））
+- **执行成果**：`lib/f2fs/`（5/5 PASS，`doc/lib/f2fs.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:f2fs（5/5 cap test PASS）

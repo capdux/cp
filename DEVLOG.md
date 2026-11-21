@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:f2fs` Linux F2FS superblock, dual Checkpoint selection & f2fs_crc32 zero-alloc parser（5/5 PASS，文档直写 `doc/lib/f2fs.md`）
+新增 cap:f2fs 纯 CP 零分配闪存文件系统库（超级块 UTF-16LE 卷名与 FEAT_SB_CHKSUM CRC32、双 Checkpoint 选主），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:tpm` TCG TPM 2.0 command/response header, TPMS_ATTEST/Quote, PCR Selection & TPMT_PUBLIC codec（5/5 PASS，文档直写 `doc/lib/tpm.md`）
 新增 cap:tpm 纯 CP 零分配硬件可信计算库（10B 命令头编解码、0xFF544347 远程证明、PCR 位图迭代与公钥属性解析），通过 cpc check 与 5/5 cap test
 
