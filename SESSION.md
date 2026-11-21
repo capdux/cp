@@ -25,3 +25,6 @@
 
 ### 2026-11-22（`cap:mseed` 验收，完成 `cap:mseed` 交付验收并登记入库（5/5 PASS）；滚动归档热日志并派发 `cap:cif`。）
 - **执行成果**：`lib/mseed/`（5/5 PASS，`doc/lib/mseed.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:mseed` 交付验收并登记入库（5/5 PASS）；滚动归档热日志并派发 `cap:cif`。
+
+### 2026-11-22（`cap:segy` 验收，完成 `cap:segy` 交付验收并登记入库（5/5 PASS）；派发 `cap:smi`。）
+- **执行成果**：`lib/segy/`（5/5 PASS，`doc/lib/segy.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:segy` 交付验收并登记入库（5/5 PASS）；派发 `cap:smi`。

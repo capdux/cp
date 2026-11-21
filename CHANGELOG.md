@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:segy` 零分配 SEG-Y Rev 1/2 地球物理地震反射与 IBM 浮点转换解析器（5/5 PASS，自动动态挂载 `cap.segy`）
+新增 `lib/segy/{segy,index}.cp`、`doc/lib/segy.md` 与 `cap/test/test_segy_production_deep.cp`（5/5 PASS），支持 3600B 卷头、扩展文本头、IBM S/360 浮点转 IEEE-754 与 240B 道迭代。
+
 ## [2026-11-22] - 新建 `cap:mseed` 零分配 IRIS MiniSEED v2.4 地震学波形头与 Blockette 1000/1001 解析器（5/5 PASS，自动动态挂载 `cap.mseed`）
 新增 `lib/mseed/{mseed,index}.cp`、`doc/lib/mseed.md` 与 `cap/test/test_mseed_production_deep.cp`（5/5 PASS），支持 BTIME 大小端自动识别、Blockette 1000/1001 链式解析与四象限采样率计算。
 
