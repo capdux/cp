@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:text_indent` 零分配多行文本最小公共缩进检测、`dedent` 剥离与 `indentLines` 统一缩进格式化器（5/5 PASS，文档直写 `doc/lib/text_indent.md`）
+- **设计要点**：单遍计算非纯空白行最小前导空白并零分配流式写出；纯空白行自动规范为空行，保留原始换行符与缓冲区边界安全检查。
+
 ## 2026-11-22: 新建 `cap:proc_statm` Linux `/proc/<pid>/statm` 7 列内存页计数零分配解析与饱和字节换算器（5/5 PASS，文档直写 `doc/lib/proc_statm.md`）
 - **设计要点**：`parseProcStatm` 严格校验恰好 7 列十进制 `u64` 并拦截溢出/负数；`vmBytes`/`rssBytes`/`privateRssPages` 全部采用饱和运算防溢出。
 

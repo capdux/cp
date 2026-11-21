@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:text_indent` 零分配多行文本最小公共缩进检测、`dedent` 剥离与 `indentLines` 统一缩进格式化器（5/5 PASS，自动动态挂载 `cap.text_indent`）
+- 新增 `lib/text_indent/{indent,index}.cp`、`doc/lib/text_indent.md`、`cap/test/test_text_indent_production_deep.cp`：纯 CP 零分配实现多行文本 `minCommonIndent`、`dedent`、`indentLines` 与 `stripCommonPrefix`，原样保留 `\n`/`\r\n` 换行风格（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:proc_statm` Linux `/proc/<pid>/statm` 7 列内存页计数零分配解析与饱和字节换算器（5/5 PASS，自动动态挂载 `cap.proc_statm`）
 - 新增 `lib/proc_statm/{statm,index}.cp`、`doc/lib/proc_statm.md`、`cap/test/test_proc_statm_production_deep.cp`：纯 CP 零分配解析 Linux `/proc/<pid>/statm` 7 列内存页计数，提供饱和字节换算与私有 RSS 计算（5/5 PASS）。
 
