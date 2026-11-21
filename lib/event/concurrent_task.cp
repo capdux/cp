@@ -94,11 +94,15 @@ pub struct ConcurrentTaskQueue {
 
         task.next = null;
         if (t := _.tail) {
-            t.next = @ptrCast(task);
-            _.tail = @ptrCast(task);
+            unsafe {
+                t.next = @ptrCast(task);
+                _.tail = @ptrCast(task);
+            }
         } else {
-            _.head = @ptrCast(task);
-            _.tail = @ptrCast(task);
+            unsafe {
+                _.head = @ptrCast(task);
+                _.tail = @ptrCast(task);
+            }
         }
         _.item_count += 1;
     }
@@ -108,7 +112,7 @@ pub struct ConcurrentTaskQueue {
         defer _.lock.unlock();
 
         let h = _.head orelse return null;
-        _.head = @ptrCast(h.next);
+        _.head = unsafe { @ptrCast(h.next) };
         if (_.head == null) {
             _.tail = null;
         }
@@ -134,7 +138,7 @@ pub struct ConcurrentTaskQueue {
         let curr = list;
         while (curr != null) {
             let task = curr.?;
-            curr = @ptrCast(task.next);
+            curr = unsafe { @ptrCast(task.next) };
             task.next = null;
             task.run();
             executed += 1;

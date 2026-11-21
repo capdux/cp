@@ -97,7 +97,7 @@ pub struct PaxTarWriter {
             next_cap = next_cap * 2;
         }
         const raw: [*]u8 = @alloc(next_cap);
-        let new_buf = raw[0..next_cap];
+        let new_buf = unsafe { raw[0..next_cap] };
         if (_.len > 0) {
             @memcpy(new_buf[0.._.len], _.buf[0.._.len]);
         }
@@ -166,7 +166,7 @@ pub struct PaxTarWriter {
             tmp_len += 1;
         }
         const raw: [*]u8 = @alloc(tmp_len);
-        let out = raw[0..tmp_len];
+        let out = unsafe { raw[0..tmp_len] };
         let n = val;
         let idx = tmp_len;
         while (idx > 0) {
@@ -188,7 +188,7 @@ pub struct PaxTarWriter {
         }
 
         const raw: [*]u8 = @alloc(total_len);
-        let out = raw[0..total_len];
+        let out = unsafe { raw[0..total_len] };
         let pos = PaxTarWriter.writeDecimal(out[0..len_digits], total_len);
         out[pos] = ' ';
         pos += 1;
@@ -292,7 +292,7 @@ pub struct PaxTarWriter {
             }
 
             const pax_raw: [*]u8 = @alloc(pax_len);
-            let pax_payload = pax_raw[0..pax_len];
+            let pax_payload = unsafe { pax_raw[0..pax_len] };
             let ppos: usize = 0;
             if (rec_path.len > 0) {
                 @memcpy(pax_payload[ppos .. ppos + rec_path.len], rec_path);
@@ -349,7 +349,7 @@ pub struct PaxTarWriter {
         let dir_name = name;
         if (name[name.len - 1] != '/') {
             const raw: [*]u8 = @alloc(name.len + 1);
-            let tmp = raw[0 .. name.len + 1];
+            let tmp = unsafe { raw[0 .. name.len + 1] };
             @memcpy(tmp[0..name.len], name);
             tmp[name.len] = '/';
             dir_name = tmp;
@@ -523,7 +523,7 @@ pub struct PaxTarReader {
                 if (raw_prefix.len > 0) {
                     const combined_len = raw_prefix.len + 1 + raw_name.len;
                     const raw: [*]u8 = @alloc(combined_len);
-                    let tmp = raw[0..combined_len];
+                    let tmp = unsafe { raw[0..combined_len] };
                     @memcpy(tmp[0..raw_prefix.len], raw_prefix);
                     tmp[raw_prefix.len] = '/';
                     @memcpy(tmp[raw_prefix.len + 1 .. combined_len], raw_name);

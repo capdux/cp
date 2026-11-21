@@ -19,7 +19,7 @@ pub class Aes256Gcm {
         @memcpy(&k, key[0..32]);
         let n: [12]u8 = undefined;
         @memcpy(&n, nonce[0..12]);
-        std.crypto.aead.aes_gcm.Aes256Gcm.encrypt(@constCast(ciphertext), tag, plaintext, ad, n, k);
+        std.crypto.aead.aes_gcm.Aes256Gcm.encrypt(unsafe { @constCast(ciphertext) }, tag, plaintext, ad, n, k);
     }
 
     pub static fn decrypt(
@@ -34,7 +34,7 @@ pub class Aes256Gcm {
         @memcpy(&k, key[0..32]);
         let n: [12]u8 = undefined;
         @memcpy(&n, nonce[0..12]);
-        std.crypto.aead.aes_gcm.Aes256Gcm.decrypt(@constCast(plaintext), ciphertext, tag, ad, n, k) catch return false;
+        std.crypto.aead.aes_gcm.Aes256Gcm.decrypt(unsafe { @constCast(plaintext) }, ciphertext, tag, ad, n, k) catch return false;
         return true;
     }
 }
@@ -56,7 +56,7 @@ pub class ChaCha20Poly1305 {
         @memcpy(&k, key[0..32]);
         let n: [12]u8 = undefined;
         @memcpy(&n, nonce[0..12]);
-        std.crypto.aead.chacha_poly.ChaCha20Poly1305.encrypt(@constCast(ciphertext), tag, plaintext, ad, n, k);
+        std.crypto.aead.chacha_poly.ChaCha20Poly1305.encrypt(unsafe { @constCast(ciphertext) }, tag, plaintext, ad, n, k);
     }
 
     pub static fn decrypt(
@@ -71,7 +71,7 @@ pub class ChaCha20Poly1305 {
         @memcpy(&k, key[0..32]);
         let n: [12]u8 = undefined;
         @memcpy(&n, nonce[0..12]);
-        std.crypto.aead.chacha_poly.ChaCha20Poly1305.decrypt(@constCast(plaintext), ciphertext, tag, ad, n, k) catch return false;
+        std.crypto.aead.chacha_poly.ChaCha20Poly1305.decrypt(unsafe { @constCast(plaintext) }, ciphertext, tag, ad, n, k) catch return false;
         return true;
     }
 }

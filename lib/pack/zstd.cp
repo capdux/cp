@@ -188,7 +188,7 @@ pub struct Zstd {
         const target_size: usize = if (expected_size != null && expected_size.? > 0) (expected_size.? as usize) else 65536;
 
         let raw_buf: [*]u8 = @alloc(target_size);
-        let out_buf = raw_buf[0..target_size];
+        let out_buf = unsafe { raw_buf[0..target_size] };
 
         const actual_size = Zstd.decompress(out_buf, src);
         if (actual_size == null) {

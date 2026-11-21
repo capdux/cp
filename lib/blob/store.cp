@@ -17,7 +17,7 @@ pub struct BlobStore {
 
     pub static fn fromBytes(data: []const u8): *BlobStore {
         let raw: [*]u8 = @alloc(@sizeOf(BlobStore));
-        let ptr: *BlobStore = @ptrCast(@alignCast(raw));
+        let ptr: *BlobStore = unsafe { @ptrCast(@alignCast(raw)) };
         ptr.kind = BlobKind.Bytes;
         ptr.bytes = data;
         ptr.path = "";
@@ -31,7 +31,7 @@ pub struct BlobStore {
 
     pub static fn fromFile(file_path: string, cached_data: []const u8): *BlobStore {
         let raw: [*]u8 = @alloc(@sizeOf(BlobStore));
-        let ptr: *BlobStore = @ptrCast(@alignCast(raw));
+        let ptr: *BlobStore = unsafe { @ptrCast(@alignCast(raw)) };
         ptr.kind = BlobKind.File;
         ptr.bytes = cached_data;
         ptr.path = file_path;

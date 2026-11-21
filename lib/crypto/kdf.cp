@@ -473,7 +473,7 @@ pub class XChaCha20Poly1305 {
         @memcpy(&k, key[0..32]);
         let n: [24]u8 = undefined;
         @memcpy(&n, nonce[0..24]);
-        std.crypto.aead.chacha_poly.XChaCha20Poly1305.encrypt(@constCast(ciphertext), tag, plaintext, ad, n, k);
+        std.crypto.aead.chacha_poly.XChaCha20Poly1305.encrypt(unsafe { @constCast(ciphertext) }, tag, plaintext, ad, n, k);
     }
 
     pub static fn decrypt(
@@ -489,7 +489,7 @@ pub class XChaCha20Poly1305 {
         @memcpy(&k, key[0..32]);
         let n: [24]u8 = undefined;
         @memcpy(&n, nonce[0..24]);
-        std.crypto.aead.chacha_poly.XChaCha20Poly1305.decrypt(@constCast(plaintext), ciphertext, tag, ad, n, k) catch return false;
+        std.crypto.aead.chacha_poly.XChaCha20Poly1305.decrypt(unsafe { @constCast(plaintext) }, ciphertext, tag, ad, n, k) catch return false;
         return true;
     }
 }
@@ -511,7 +511,7 @@ pub class Aes128Gcm {
         @memcpy(&k, key[0..16]);
         let n: [12]u8 = undefined;
         @memcpy(&n, nonce[0..12]);
-        std.crypto.aead.aes_gcm.Aes128Gcm.encrypt(@constCast(ciphertext), tag, plaintext, ad, n, k);
+        std.crypto.aead.aes_gcm.Aes128Gcm.encrypt(unsafe { @constCast(ciphertext) }, tag, plaintext, ad, n, k);
     }
 
     pub static fn decrypt(
@@ -527,7 +527,7 @@ pub class Aes128Gcm {
         @memcpy(&k, key[0..16]);
         let n: [12]u8 = undefined;
         @memcpy(&n, nonce[0..12]);
-        std.crypto.aead.aes_gcm.Aes128Gcm.decrypt(@constCast(plaintext), ciphertext, tag, ad, n, k) catch return false;
+        std.crypto.aead.aes_gcm.Aes128Gcm.decrypt(unsafe { @constCast(plaintext) }, ciphertext, tag, ad, n, k) catch return false;
         return true;
     }
 }

@@ -39,7 +39,7 @@ fn readFileBytesC(path: string): ([]const u8)? {
     }
 
     let buf_ptr: [*]u8 = @alloc(file_size);
-    let buf = buf_ptr[0..file_size];
+    let buf = unsafe { buf_ptr[0..file_size] };
     let total_read: usize = 0;
     while (total_read < file_size) {
         let n = std.c.read(fd, buf[total_read..file_size].ptr, file_size - total_read);
@@ -148,7 +148,7 @@ pub struct Blob {
             return Blob.fromBytes("", mime_type);
         }
         let out_ptr: [*]u8 = @alloc(total_len);
-        let out = out_ptr[0..total_len];
+        let out = unsafe { out_ptr[0..total_len] };
         let pos: usize = 0;
         let p: usize = 0;
         while (p < parts.len) {
@@ -258,7 +258,7 @@ pub struct Blob {
             return "";
         }
         let out_ptr: [*]u8 = @alloc(len);
-        let out = out_ptr[0..len];
+        let out = unsafe { out_ptr[0..len] };
         zig {
             @memcpy(out, raw);
         }

@@ -265,7 +265,7 @@ pub struct PerMessageDeflate {
         if (payload.len == 0) {
             // RFC 7692 §7.2.3.6: empty payload -> single 0x00 octet (after stripping 00 00 FF FF)
             let empty_raw: [*]u8 = @alloc(1);
-            let empty_out = empty_raw[0..1];
+            let empty_out = unsafe { empty_raw[0..1] };
             empty_out[0] = 0x00;
             return empty_out;
         }
@@ -292,7 +292,7 @@ pub struct PerMessageDeflate {
         }
 
         const produced: usize = strm.total_out - base_total;
-        const raw_slice = out_buf[0..produced];
+        const raw_slice = unsafe { out_buf[0..produced] };
         if (PerMessageDeflate.hasSyncTrailer(raw_slice)) {
             return raw_slice[0 .. produced - 4];
         }
@@ -307,7 +307,7 @@ pub struct PerMessageDeflate {
         // RFC 7692 §7.2.2: append 0x00 0x00 0xFF 0xFF to tail before inflate
         const in_len: usize = compressed.len + 4;
         let in_raw: [*]u8 = @alloc(in_len);
-        let in_buf = in_raw[0..in_len];
+        let in_buf = unsafe { in_raw[0..in_len] };
         @memcpy(in_buf[0..compressed.len], compressed);
         in_buf[compressed.len] = 0x00;
         in_buf[compressed.len + 1] = 0x00;
@@ -335,13 +335,13 @@ pub struct PerMessageDeflate {
                 return err.MessageTooBig;
             }
             if (rc == 1) { // Z_STREAM_END
-                return out_buf[0..produced];
+                return unsafe { out_buf[0..produced] };
             }
             if (rc != 0) {
                 return err.InflateFailed;
             }
             if (strm.avail_in == 0 && strm.avail_out > 0) {
-                return out_buf[0..produced];
+                return unsafe { out_buf[0..produced] };
             }
             if (strm.avail_out == 0) {
                 if (cur_cap >= max_bytes) {
@@ -355,10 +355,10 @@ pub struct PerMessageDeflate {
                     return err.MessageTooBig;
                 }
                 let new_buf: [*]u8 = @alloc(next_cap);
-                @memcpy(new_buf[0..produced], out_buf[0..produced]);
+                unsafe { @memcpy(new_buf[0..produced], out_buf[0..produced]); }
                 out_buf = new_buf;
                 cur_cap = next_cap;
-                strm.next_out = &out_buf[produced];
+                strm.next_out = unsafe { &out_buf[produced] };
                 strm.avail_out = (next_cap - produced) as u32;
             }
         }
@@ -369,7 +369,7 @@ pub struct PerMessageDeflate {
     pub static fn compressPayload(payload: []const u8, level: i32 = 6, window_bits: u8 = 15): ([]u8)! {
         if (payload.len == 0) {
             let empty_raw: [*]u8 = @alloc(1);
-            let empty_out = empty_raw[0..1];
+            let empty_out = unsafe { empty_raw[0..1] };
             empty_out[0] = 0x00;
             return empty_out;
         }

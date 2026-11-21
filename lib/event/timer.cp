@@ -209,9 +209,9 @@ pub struct TimerHeap {
         timer.in_heap = true;
 
         if (r := _.root) {
-            _.root = @ptrCast(_.meld(timer, r));
+            _.root = unsafe { @ptrCast(_.meld(timer, r)) };
         } else {
-            _.root = @ptrCast(timer);
+            _.root = unsafe { @ptrCast(timer) };
         }
         _.item_count += 1;
     }
@@ -223,7 +223,7 @@ pub struct TimerHeap {
     pub fn deleteMin(*_): (*Timer)? {
         let r = _.root orelse return null;
         if (child := r.child) {
-            _.root = @ptrCast(_.combineSiblings(child));
+            _.root = unsafe { @ptrCast(_.combineSiblings(child)) };
             if (new_root := _.root) {
                 new_root.prev = null;
             }
@@ -253,13 +253,13 @@ pub struct TimerHeap {
 
         let p_node = timer.prev.?;
         if (p_node.child == timer) {
-            p_node.child = @ptrCast(timer.next);
+            p_node.child = unsafe { @ptrCast(timer.next) };
         } else {
-            p_node.next = @ptrCast(timer.next);
+            p_node.next = unsafe { @ptrCast(timer.next) };
         }
 
         if (n := timer.next) {
-            n.prev = @ptrCast(timer.prev);
+            n.prev = unsafe { @ptrCast(timer.prev) };
         }
 
         let child = timer.child;
@@ -272,9 +272,9 @@ pub struct TimerHeap {
             if (cmb := combined) {
                 cmb.prev = null;
                 if (r := _.root) {
-                    _.root = @ptrCast(_.meld(cmb, r));
+                    _.root = unsafe { @ptrCast(_.meld(cmb, r)) };
                 } else {
-                    _.root = @ptrCast(cmb);
+                    _.root = unsafe { @ptrCast(cmb) };
                 }
             }
         }
@@ -307,20 +307,24 @@ pub struct TimerHeap {
 
     fn meld(*_, a: *Timer, b: *Timer): *Timer {
         if (a.expires_at_ms < b.expires_at_ms) {
-            b.prev = @ptrCast(a);
-            b.next = @ptrCast(a.child);
-            if (c := a.child) {
-                c.prev = @ptrCast(b);
+            unsafe {
+                b.prev = @ptrCast(a);
+                b.next = @ptrCast(a.child);
+                if (c := a.child) {
+                    c.prev = @ptrCast(b);
+                }
+                a.child = @ptrCast(b);
             }
-            a.child = @ptrCast(b);
             return a;
         } else {
-            a.prev = @ptrCast(b);
-            a.next = @ptrCast(b.child);
-            if (c := b.child) {
-                c.prev = @ptrCast(a);
+            unsafe {
+                a.prev = @ptrCast(b);
+                a.next = @ptrCast(b.child);
+                if (c := b.child) {
+                    c.prev = @ptrCast(a);
+                }
+                b.child = @ptrCast(a);
             }
-            b.child = @ptrCast(a);
             return b;
         }
     }
@@ -345,22 +349,30 @@ pub struct TimerHeap {
                 melded.prev = null;
 
                 if (t1 := tail) {
-                    t1.next = @ptrCast(melded);
-                    melded.prev = @ptrCast(t1);
-                    tail = @ptrCast(melded);
+                    unsafe {
+                        t1.next = @ptrCast(melded);
+                        melded.prev = @ptrCast(t1);
+                        tail = @ptrCast(melded);
+                    }
                 } else {
-                    head = @ptrCast(melded);
-                    tail = @ptrCast(melded);
+                    unsafe {
+                        head = @ptrCast(melded);
+                        tail = @ptrCast(melded);
+                    }
                 }
-                curr = @ptrCast(rest);
+                curr = unsafe { @ptrCast(rest) };
             } else {
                 if (t2 := tail) {
-                    t2.next = @ptrCast(a);
-                    a.prev = @ptrCast(t2);
-                    tail = @ptrCast(a);
+                    unsafe {
+                        t2.next = @ptrCast(a);
+                        a.prev = @ptrCast(t2);
+                        tail = @ptrCast(a);
+                    }
                 } else {
-                    head = @ptrCast(a);
-                    tail = @ptrCast(a);
+                    unsafe {
+                        head = @ptrCast(a);
+                        tail = @ptrCast(a);
+                    }
                 }
                 break;
             }
@@ -373,7 +385,7 @@ pub struct TimerHeap {
 
         while (curr_p != null) {
             let prev_node = curr_p.?;
-            curr_p = @ptrCast(prev_node.prev);
+            curr_p = unsafe { @ptrCast(prev_node.prev) };
             prev_node.prev = null;
             prev_node.next = null;
             root_node = _.meld(prev_node, root_node);

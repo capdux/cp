@@ -392,7 +392,7 @@ pub struct PosixSpawn {
             if (cz := custom_env_alloc) {
                 env_ptr = cz.ptr;
             } else {
-                env_ptr = @ptrCast(std.c.environ);
+                env_ptr = unsafe { @ptrCast(std.c.environ) };
             }
 
             const exec_err = execWithOptionalPath(

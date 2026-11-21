@@ -76,7 +76,7 @@ pub struct ZipWriter {
             next_cap = next_cap * 2;
         }
         const raw: [*]u8 = @alloc(next_cap);
-        let new_buf = raw[0..next_cap];
+        let new_buf = unsafe { raw[0..next_cap] };
         if (_.local_len > 0) {
             @memcpy(new_buf[0.._.local_len], _.local_buf[0.._.local_len]);
         }
@@ -93,7 +93,7 @@ pub struct ZipWriter {
             next_cap = next_cap * 2;
         }
         const raw: [*]u8 = @alloc(next_cap);
-        let new_buf = raw[0..next_cap];
+        let new_buf = unsafe { raw[0..next_cap] };
         if (_.cd_len > 0) {
             @memcpy(new_buf[0.._.cd_len], _.cd_buf[0.._.cd_len]);
         }
@@ -132,7 +132,7 @@ pub struct ZipWriter {
         let dir_name = name;
         if (name[name.len - 1] != '/') {
             const raw: [*]u8 = @alloc(name.len + 1);
-            let tmp = raw[0 .. name.len + 1];
+            let tmp = unsafe { raw[0 .. name.len + 1] };
             @memcpy(tmp[0..name.len], name);
             tmp[name.len] = '/';
             dir_name = tmp;
@@ -261,7 +261,7 @@ pub struct ZipWriter {
     pub fn finish(*_): []u8 {
         const total_len = _.local_len + _.cd_len + ZIP_EOCD_SIZE + _.comment.len;
         const raw: [*]u8 = @alloc(total_len);
-        let out = raw[0..total_len];
+        let out = unsafe { raw[0..total_len] };
 
         let pos: usize = 0;
         if (_.local_len > 0) {
@@ -300,7 +300,7 @@ pub struct ZipWriter {
                 return null;
             }
             const raw: [*]u8 = @alloc(entry.data.len);
-            let out = raw[0..entry.data.len];
+            let out = unsafe { raw[0..entry.data.len] };
             if (entry.data.len > 0) {
                 @memcpy(out[0..entry.data.len], entry.data);
             }
