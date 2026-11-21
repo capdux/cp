@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:lzss` Pure-CP zero-alloc LZSS (4KB window, 3..18B match, overlapping RLE) codec（5/5 PASS，文档直写 `doc/lib/lzss.md`）
+新增 cap:lzss 纯 CP 零分配滑动窗口压缩库（Flag Byte 分组、3..18B 匹配与 4B Framed 封装），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:lzw` Pure-CP zero-alloc LZW (GIF LSB / TIFF MSB, 9..12-bit) compressor & decompressor（5/5 PASS，文档直写 `doc/lib/lzw.md`）
 新增 cap:lzw 纯 CP 零分配字典压缩算法库（栈上 4096 字典、KwKwK 特例、自动 9..12-bit 扩展与 Clear 重置），通过 cpc check 与 5/5 cap test
 
