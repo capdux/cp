@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:btf` Linux BPF Type Format (.BTF) 19-kind type graph, bitfields & string table parser（5/5 PASS，文档直写 `doc/lib/btf.md`）
+新增 cap:btf 纯 CP 零分配 eBPF 类型元数据库（24B Header、19 种 Kind 变长载荷零拷贝遍历与位域解码），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:fdt` Devicetree v0.4 Flattened Device Tree (.dtb) header, MemRsv & token stream zero-alloc parser（5/5 PASS，文档直写 `doc/lib/fdt.md`）
 新增 cap:fdt 纯 CP 零分配嵌入式设备树解析库（40B 大端头、Memory Reservation Map、4B 对齐结构块遍历与字符串表查找），通过 cpc check 与 5/5 cap test
 
