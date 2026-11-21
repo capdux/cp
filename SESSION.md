@@ -145,3 +145,12 @@
 
 ### 2026-11-22（`cap:css_svg` 验收，Batch 28: 吸收并验证 cap:css_svg (6/6 PASSED)）
 - **执行成果**：`lib/css_svg/`（5/5 PASS，`doc/lib/css_svg.md`）经 `verify_module.sh` 一次性验收回收；Batch 28: 吸收并验证 cap:css_svg (6/6 PASSED)
+
+### 2026-11-22（`cap:css_position` 验收，Batch 29: 吸收并验证 cap:css_position (PASSED)）
+- **执行成果**：`lib/css_position/`（5/5 PASS，`doc/lib/css_position.md`）经 `verify_module.sh` 一次性验收回收；Batch 29: 吸收并验证 cap:css_position (PASSED)
+
+### 2026-11-22（`cap:css_cascade_rules` 验收，Batch 29: 吸收并验证 cap:css_cascade_rules (PASSED)）
+- **执行成果**：`lib/css_cascade_rules/`（5/5 PASS，`doc/lib/css_cascade_rules.md`）经 `verify_module.sh` 一次性验收回收；Batch 29: 吸收并验证 cap:css_cascade_rules (PASSED)
+
+### 2026-11-22（`cap:hosted_git_info` 验收，Batch 29: 吸收并验证 cap:hosted_git_info (5/5 PASSED)）
+- **执行成果**：`lib/hosted_git_info/`（5/5 PASS，`doc/lib/hosted_git_info.md`）经 `verify_module.sh` 一次性验收回收；Batch 29: 吸收并验证 cap:hosted_git_info (5/5 PASSED)

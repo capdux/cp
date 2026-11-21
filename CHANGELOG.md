@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:hosted_git_info` GitHub/GitLab/Bitbucket/Gist 托管 Git URL 规范化解析与 https/ssh/sshurl/shortcut/tarball/browse/bugs 多格式生成器（吸收自 bun/src/install/hosted_git_info.cp）（5/5 PASS，自动动态挂载 `cap.hosted_git_info`）
+新增 cap:hosted_git_info 标准库模块（lib/hosted_git_info/{git_info,index}.cp, doc/lib/hosted_git_info.md, cap/test/test_hosted_git_info_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:css_cascade_rules` CSS Cascade 5/6 与作用域规则头（@import layer/supports/media、@scope start/to、@layer 列表）零堆分配解析与序列化（吸收自 bun/src/css/rules/{import,scope,viewport}.cp）（5/5 PASS，自动动态挂载 `cap.css_cascade_rules`）
+新增 cap:css_cascade_rules 标准库模块（lib/css_cascade_rules/{cascade_rules,index}.cp, doc/lib/css_cascade_rules.md, cap/test/test_css_cascade_rules_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:css_position` CSS <position> 1/2/3/4 值二维坐标解析与最短规范化序列化库（吸收自 bun/src/css/values/position.cp）（5/5 PASS，自动动态挂载 `cap.css_position`）
+新增 cap:css_position 标准库模块（lib/css_position/{position,index}.cp, doc/lib/css_position.md, cap/test/test_css_position_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:css_svg` SVG CSS 渲染属性族（SVGPaint/StrokeLinecap/StrokeLinejoin/StrokeDasharray/PaintOrder 与 5 大渲染提示枚举，吸收自 bun/src/css/properties/svg.cp）（5/5 PASS，自动动态挂载 `cap.css_svg`）
 新增 cap:css_svg 标准库模块（lib/css_svg/{svg,index}.cp, doc/lib/css_svg.md, cap/test/test_css_svg_production_deep.cp）
 

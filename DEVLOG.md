@@ -1,3 +1,12 @@
+## 2026-11-22: 新建 `cap:hosted_git_info` GitHub/GitLab/Bitbucket/Gist 托管 Git URL 规范化解析与 https/ssh/sshurl/shortcut/tarball/browse/bugs 多格式生成器（吸收自 bun/src/install/hosted_git_info.cp）（5/5 PASS，文档直写 `doc/lib/hosted_git_info.md`）
+子智能体 2 吸收 bun/src/install/hosted_git_info.cp，实现 4 大 Git 平台多协议 URL 解析与 7 种规范输出，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:css_cascade_rules` CSS Cascade 5/6 与作用域规则头（@import layer/supports/media、@scope start/to、@layer 列表）零堆分配解析与序列化（吸收自 bun/src/css/rules/{import,scope,viewport}.cp）（5/5 PASS，文档直写 `doc/lib/css_cascade_rules.md`）
+吸收 bun/src/css/rules/{import,scope,viewport}.cp，实现 @import/@scope/@layer 规则头解析与序列化，通过 cpc check 与 cap test
+
+## 2026-11-22: 新建 `cap:css_position` CSS <position> 1/2/3/4 值二维坐标解析与最短规范化序列化库（吸收自 bun/src/css/values/position.cp）（5/5 PASS，文档直写 `doc/lib/css_position.md`）
+吸收 bun/src/css/values/position.cp，实现完整 1-4 值 CSS 位置语法与反向关键字偏移规范化，通过 cpc check 与 cap test
+
 ## 2026-11-22: 新建 `cap:css_svg` SVG CSS 渲染属性族（SVGPaint/StrokeLinecap/StrokeLinejoin/StrokeDasharray/PaintOrder 与 5 大渲染提示枚举，吸收自 bun/src/css/properties/svg.cp）（5/5 PASS，文档直写 `doc/lib/css_svg.md`）
 子智能体 1 吸收 bun/src/css/properties/svg.cp，实现完整 SVG 描边/绘制顺序/渲染提示属性解析与规范化序列化，6/6 单测通过
 
