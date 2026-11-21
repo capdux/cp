@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:vtt` W3C WebVTT 字幕/时间轴零分配解析、时间戳编解码与格式化器（5/5 PASS，自动动态挂载 `cap.vtt`）
+- 新增 `lib/vtt/{vtt,index}.cp`、`doc/lib/vtt.md`、`cap/test/test_vtt_production_deep.cp`：纯 CP 零分配实现 W3C WebVTT 字幕解析与格式化（BOM、`NOTE`/`STYLE`/`REGION` 跳过、`MM:SS.mmm`/`HH:MM:SS.mmm` 严格校验与往返格式化）（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:json5` 零分配 JSON5 1.0 词法扫描、语法校验与标准 RFC 8259 JSON 转换器（5/5 PASS，自动动态挂载 `cap.json5`）
 - 新增 `lib/json5/{json5,index}.cp`、`doc/lib/json5.md`、`cap/test/test_json5_production_deep.cp`：纯 CP 零分配实现 JSON5 1.0 词法器与标准 JSON 转换（支持单引号、未加引号键、十六进制、前导/尾随小数点、`+` 号、`Infinity`/`NaN`、续行字符串、注释与尾随逗号及 64 层深度防护）（5/5 PASS）。
 

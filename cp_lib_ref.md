@@ -498,3 +498,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:atom` | `AtomFeed`, `AtomEntry`, `isAtomFeed`, `parseAtomFeed`, `AtomEntryIter`, `formatAtomEntry` | RFC 4287 Atom 1.0 XML Feed 零分配解析、条目迭代与 XML 序列化器 |
 | `cap:opml` | `OpmlHead`, `OpmlOutline`, `isOpmlDocument`, `parseOpmlHead`, `OpmlOutlineIter`, `formatOpmlFeedOutline` | 零分配 OPML 2.0 订阅大纲 XML 解析、层级迭代与属性转义序列化器 |
 | `cap:json5` | `Json5TokenKind`, `Json5Token`, `Json5Iter`, `toStandardJson`, `isValidJson5` | 零分配 JSON5 1.0 词法扫描、语法校验与标准 RFC 8259 JSON 转换器 |
+| `cap:vtt` | `VttCue`, `isWebVttHeader`, `parseVttTimestampMs`, `formatVttTimestampMs`, `VttCueIter`, `formatVttCue` | W3C WebVTT 字幕/时间轴零分配解析、时间戳编解码与格式化器 |

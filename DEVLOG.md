@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:vtt` W3C WebVTT 字幕/时间轴零分配解析、时间戳编解码与格式化器（5/5 PASS，文档直写 `doc/lib/vtt.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:vtt`；`VttCue.durationMs()` 饱和减法防下溢；支持 CRLF 与多行字幕正文切片。
+
 ## 2026-11-22: 新建 `cap:json5` 零分配 JSON5 1.0 词法扫描、语法校验与标准 RFC 8259 JSON 转换器（5/5 PASS，文档直写 `doc/lib/json5.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:json5`，首行带精确上游 `Synced:` 时间戳；`toStandardJson` 零分配转换并防护嵌套深度与缓冲溢出。
 

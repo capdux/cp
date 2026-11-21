@@ -82,3 +82,6 @@
 
 ### 2026-11-22（`cap:json5` 验收，新增简洁单单词包 `cap:json5`（5/5 PASS））
 - **执行成果**：`lib/json5/`（5/5 PASS，`doc/lib/json5.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:json5`（5/5 PASS）
+
+### 2026-11-22（`cap:vtt` 验收，新增简洁单单词包 `cap:vtt`（5/5 PASS））
+- **执行成果**：`lib/vtt/`（5/5 PASS，`doc/lib/vtt.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:vtt`（5/5 PASS）
