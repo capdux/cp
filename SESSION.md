@@ -112,3 +112,6 @@
 
 ### 2026-11-21（`cap:aes_gcm` 验收，验收提交 `cap:aes_gcm`）
 - **执行成果**：`lib/aes_gcm/`（5/5 PASS，`doc/lib/aes_gcm.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:aes_gcm`
+
+### 2026-11-21（`cap:disjoint_set` 验收，主控完成 `cap:disjoint_set` 研发验收提交，并执行热日志滚动归档）
+- **执行成果**：`lib/disjoint_set/`（5/5 PASS，`doc/lib/disjoint_set.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:disjoint_set` 研发验收提交，并执行热日志滚动归档

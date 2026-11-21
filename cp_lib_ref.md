@@ -378,3 +378,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:base32` | `Base32Error`, `Variant`, `encodedLen`, `encodeAlloc`, `decodeAlloc` | 纯 CP RFC 4648 Standard Base32 / Base32hex / Crockford Base32 编解码引擎（支持大小写不敏感、可选填充与 Crockford 字符容错，支持 `cap.base32` 自动动态挂载，详见 `doc/lib/base32.md`） |
 | `cap:aho_corasick` | `Match`, `AhoCorasick` | 纯 CP Aho-Corasick $O(N+Z)$ 多模式字符串匹配自动机（BFS 失败指针/输出链、全重叠匹配与零堆 `containsAny`，支持 `cap.aho_corasick` 自动动态挂载，详见 `doc/lib/aho_corasick.md`） |
 | `cap:aes_gcm` | `AesGcmError`, `encrypt128`, `decrypt128`, `encrypt256`, `decrypt256`, `encrypt256Siv`, `decrypt256Siv`, `seal256Alloc`, `open256Alloc` | 纯 CP NIST SP 800-38D AES-128/256-GCM 与 RFC 8452 AES-256-GCM-SIV 抗 Nonce 重用 AEAD 认证加密引擎（支持 `cap.aes_gcm` 自动动态挂载，详见 `doc/lib/aes_gcm.md`） |
+| `cap:disjoint_set` | `DsuError`, `DisjointSet` | 纯 CP 并查集 Union-Find 引擎（路径减半压缩 + 按秩合并 + 连通分量/规模实时追踪，支持 `cap.disjoint_set` 自动动态挂载，详见 `doc/lib/disjoint_set.md`） |
