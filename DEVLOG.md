@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:apfs` Apple APFS Fletcher-64 checksum, Object Header, Container (NXSB) & Volume (APSB) parser（5/5 PASS，文档直写 `doc/lib/apfs.md`）
+新增 cap:apfs 纯 CP 零分配 macOS/iOS 文件系统库（Fletcher-64 校验和、32B Object Header、4KB NXSB/APSB 超级块解析），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:erofs` Linux EROFS 128B superblock, Compact/Extended Inode, Dirent & CRC32C zero-alloc parser（5/5 PASS，文档直写 `doc/lib/erofs.md`）
 新增 cap:erofs 纯 CP 零分配只读文件系统库（128B 超级块 CRC32C、统一 Inode 视图与目录块零拷贝迭代），通过 cpc check 与 5/5 cap test
 

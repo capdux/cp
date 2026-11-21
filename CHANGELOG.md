@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:apfs` Apple APFS Fletcher-64 checksum, Object Header, Container (NXSB) & Volume (APSB) parser（5/5 PASS，自动动态挂载 `cap.apfs`）
+新增纯 CP 零分配标准库 cap:apfs（Apple APFS Fletcher-64 校验和、Container NXSB 与 Volume APSB 超级块解析）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:erofs` Linux EROFS 128B superblock, Compact/Extended Inode, Dirent & CRC32C zero-alloc parser（5/5 PASS，自动动态挂载 `cap.erofs`）
 新增纯 CP 零分配标准库 cap:erofs（Linux EROFS 128B 超级块、Compact/Extended Inode、Dirent 与 CRC32C 解析）与 5/5 深度测试
 
