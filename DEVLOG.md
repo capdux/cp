@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:tacacs` TACACS+ (RFC 8907) 12B header, Authen/Author/Acct body & zero-copy arg iter parser（5/5 PASS，文档直写 `doc/lib/tacacs.md`）
+新增 cap:tacacs 纯 CP 零分配 AAA 协议解析库（12B 报头/标志位与 6 类明文 Body/参数零拷贝迭代），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:vrrp` VRRPv2/v3 (RFC 3768/5798) header, IPv4/IPv6 virtual IP iter & checksum zero-alloc parser（5/5 PASS，文档直写 `doc/lib/vrrp.md`）
 新增 cap:vrrp 纯 CP 零分配虚拟路由冗余协议解析库（VRRPv2/v3 报头、IPv4/IPv6 虚拟地址零拷贝迭代与伪首部校验和），通过 cpc check 与 5/5 cap test
 

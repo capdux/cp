@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:tacacs` TACACS+ (RFC 8907) 12B header, Authen/Author/Acct body & zero-copy arg iter parser（5/5 PASS，自动动态挂载 `cap.tacacs`）
+新增纯 CP 零分配标准库 cap:tacacs（RFC 8907 TACACS+ 12B 报头、Authen/Author/Acct 与零拷贝参数迭代）与 6/6 深度测试
+
 ## [2026-11-22] - 新建 `cap:vrrp` VRRPv2/v3 (RFC 3768/5798) header, IPv4/IPv6 virtual IP iter & checksum zero-alloc parser（5/5 PASS，自动动态挂载 `cap.vrrp`）
 新增纯 CP 零分配标准库 cap:vrrp（RFC 3768/5798 VRRPv2/v3 报头、IPv4/IPv6 虚拟地址迭代与伪首部校验和）与 5/5 深度测试
 

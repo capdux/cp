@@ -1,0 +1,33 @@
+// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 8907 TACACS+ AAA Wire Protocol Parser)
+// Unified exports for cap:tacacs.
+
+export {
+    TACACS_TCP_PORT,
+    TACACS_HEADER_SIZE,
+    TACACS_MAJOR_VER,
+    TACACS_MINOR_VER_DEFAULT,
+    TACACS_MINOR_VER_ONE,
+    TAC_PLUS_UNENCRYPTED_FLAG,
+    TAC_PLUS_SINGLE_CONNECT_FLAG,
+    TacacsType,
+    TacacsAuthenStatus,
+    TacacsAuthorStatus,
+    TacacsAcctStatus,
+    TacacsHeader,
+    TacacsPacket,
+    TacacsArgIter,
+    TacacsAuthenStart,
+    TacacsAuthenReply,
+    TacacsAuthorRequest,
+    TacacsAuthorResponse,
+    TacacsAcctRequest,
+    TacacsAcctReply,
+    parseTacacs,
+    isTacacs,
+    parseAuthenStart,
+    parseAuthenReply,
+    parseAuthorRequest,
+    parseAuthorResponse,
+    parseAcctRequest,
+    parseAcctReply,
+} from "./tacacs.cp";
