@@ -115,3 +115,6 @@
 
 ### 2026-11-22（`cap:pca` 验收，子智能体交付 cap:pca（Jacobi 对称特征分解与 PCA 降维，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/pca/`（5/5 PASS，`doc/lib/pca.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:pca（Jacobi 对称特征分解与 PCA 降维，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:knn` 验收，子智能体交付 cap:knn（KNN 分类/回归与留一法交叉验证，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/knn/`（5/5 PASS，`doc/lib/knn.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:knn（KNN 分类/回归与留一法交叉验证，6/6 PASS），主协调器统一登记并提交

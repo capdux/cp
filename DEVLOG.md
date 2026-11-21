@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:knn` 纯 CP 零分配 K-最近邻（KNN）分类与回归库：欧氏/曼哈顿/切比雪夫/余弦四种距离、原地大顶堆 Top-K 搜索、均匀/反距离加权分类与回归及留一法交叉验证（5/5 PASS，文档直写 `doc/lib/knn.md`）
+新增 cap:knn（lib/knn/{knn,index}.cp）：零分配大顶堆 Top-K 最近邻搜索、均匀/反距离加权分类与回归及留一法交叉验证，cpc check 0 错误，cap test 6/6 PASS (691ms)
+
 ## 2026-11-22: 新建 `cap:pca` 纯 CP 零分配主成分分析（PCA）与实对称矩阵 Jacobi 特征分解库：循环 Jacobi 特征分解、无偏协方差 PCA 拟合、降维投影、逆变换重构与均方误差检验（5/5 PASS，文档直写 `doc/lib/pca.md`）
 新增 cap:pca（lib/pca/{pca,index}.cp）：基于零分配循环 Jacobi 特征分解实现 PCA 拟合/投影/重构与丢弃特征值重构误差恒等式验证，cpc check 0 错误，cap test 6/6 PASS (634ms)
 
