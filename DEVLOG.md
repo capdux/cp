@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:jffs2` Linux JFFS2 flash node stream, Inode/Dirent/Cleanmarker & CRC32 zero-alloc parser（5/5 PASS，文档直写 `doc/lib/jffs2.md`）
+新增 cap:jffs2 纯 CP 零分配嵌入式闪存文件系统库（4B 对齐节点流、0xFFFF 擦除区跳过与多级 CRC32 校验），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:rar` RAR4 & RAR5 archive container, 7-bit Vint, block CRC32 & file entry zero-alloc parser（5/5 PASS，文档直写 `doc/lib/rar.md`）
 新增 cap:rar 纯 CP 零分配归档容器解析库（RAR5 7-bit Vint 与完整 IEEE CRC32、RAR4 低 16 位 CRC32 迭代），通过 cpc check 与 5/5 cap test
 

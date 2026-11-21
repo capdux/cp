@@ -163,3 +163,6 @@
 
 ### 2026-11-22（`cap:rar` 验收，完成并注册纯 CP 零分配标准库 cap:rar（5/5 cap test PASS））
 - **执行成果**：`lib/rar/`（5/5 PASS，`doc/lib/rar.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:rar（5/5 cap test PASS）
+
+### 2026-11-22（`cap:jffs2` 验收，完成并注册纯 CP 零分配标准库 cap:jffs2（5/5 cap test PASS））
+- **执行成果**：`lib/jffs2/`（5/5 PASS，`doc/lib/jffs2.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:jffs2（5/5 cap test PASS）

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:jffs2` Linux JFFS2 flash node stream, Inode/Dirent/Cleanmarker & CRC32 zero-alloc parser（5/5 PASS，自动动态挂载 `cap.jffs2`）
+新增纯 CP 零分配标准库 cap:jffs2（Linux JFFS2 闪存节点流、Inode/Dirent 与 CRC32 解析）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:rar` RAR4 & RAR5 archive container, 7-bit Vint, block CRC32 & file entry zero-alloc parser（5/5 PASS，自动动态挂载 `cap.rar`）
 新增纯 CP 零分配标准库 cap:rar（RAR4/RAR5 归档容器、7-bit Vint、块头 CRC32 与文件条目解析）与 5/5 深度测试
 
