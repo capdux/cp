@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:rtf` 零分配 Rich Text Format (RTF 1.9) 词法流、Unicode 转义与纯文本提取器（5/5 PASS，文档直写 `doc/lib/rtf.md`）
+实现零分配 RTF 1.9 词法与文本提取器，完整遵循控制字单空格消费与 \ucN 替换跳过规范。
+
 ## 2026-11-22: 新建 `cap:xcf` 零分配 GIMP XCF v000-v014 分层图像头、属性表与图层偏移解析器（5/5 PASS，文档直写 `doc/lib/xcf.md`）
 实现零分配 GIMP XCF 图像解析器，完整支持 32/64-bit 指针表防越界迭代与属性表解析。
 

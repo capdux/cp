@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:rtf` 零分配 Rich Text Format (RTF 1.9) 词法流、Unicode 转义与纯文本提取器（5/5 PASS，自动动态挂载 `cap.rtf`）
+新增 `lib/rtf/{rtf,index}.cp`、`doc/lib/rtf.md` 与 `cap/test/test_rtf_production_deep.cp`（5/5 PASS），支持 64 层组栈状态机、忽略目的地跳过、\uN UTF-8 解码与零堆分配纯文本提取。
+
 ## [2026-11-22] - 新建 `cap:xcf` 零分配 GIMP XCF v000-v014 分层图像头、属性表与图层偏移解析器（5/5 PASS，自动动态挂载 `cap.xcf`）
 新增 `lib/xcf/{xcf,index}.cp`、`doc/lib/xcf.md` 与 `cap/test/test_xcf_production_deep.cp`（5/5 PASS），支持 v0-v14 版本头、v4+ 精度、v11+ 64-bit 偏移表与图层名提取。
 

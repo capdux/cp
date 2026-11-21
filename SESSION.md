@@ -121,3 +121,6 @@
 
 ### 2026-11-22（`cap:xcf` 验收，完成 `cap:xcf` 交付验收并登记入库（5/5 PASS）；派发 `cap:kml`。）
 - **执行成果**：`lib/xcf/`（5/5 PASS，`doc/lib/xcf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:xcf` 交付验收并登记入库（5/5 PASS）；派发 `cap:kml`。
+
+### 2026-11-22（`cap:rtf` 验收，完成 `cap:rtf` 交付验收并登记入库（5/5 PASS）；派发 `cap:mobi`。）
+- **执行成果**：`lib/rtf/`（5/5 PASS，`doc/lib/rtf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:rtf` 交付验收并登记入库（5/5 PASS）；派发 `cap:mobi`。
