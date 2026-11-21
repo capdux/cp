@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:lzo` lzop (.lzo) container, Adler32/CRC32 & pure-CP zero-alloc LZO1X decompressor（5/5 PASS，文档直写 `doc/lib/lzo.md`）
+新增 cap:lzo 纯 CP 零分配压缩容器与解压库（9B 头部双校验、LzopBlockIter 与完整 LZO1X M1/M2/M3/M4 解压状态机），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:ubifs` Linux UBI EC/VID 64B headers & UBIFS Superblock/Master/Node CRC32 zero-alloc parser（5/5 PASS，文档直写 `doc/lib/ubifs.md`）
 新增 cap:ubifs 纯 CP 零分配闪存文件系统库（UBI 大端 64B EC/VID、UBIFS 24B 通用头与无取反 CRC32 校验），通过 cpc check 与 5/5 cap test
 

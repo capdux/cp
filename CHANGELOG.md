@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:lzo` lzop (.lzo) container, Adler32/CRC32 & pure-CP zero-alloc LZO1X decompressor（5/5 PASS，自动动态挂载 `cap.lzo`）
+新增纯 CP 零分配标准库 cap:lzo（lzop .lzo 容器、Adler32/CRC32 与纯 CP 零分配 LZO1X 解压器）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:ubifs` Linux UBI EC/VID 64B headers & UBIFS Superblock/Master/Node CRC32 zero-alloc parser（5/5 PASS，自动动态挂载 `cap.ubifs`）
 新增纯 CP 零分配标准库 cap:ubifs（Linux UBI EC/VID 与 UBIFS 超级块/Master 节点及 CRC32 解析）与 5/5 深度测试
 

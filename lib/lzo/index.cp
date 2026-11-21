@@ -1,0 +1,26 @@
+// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:lzo)
+
+export {
+    LZOP_MAGIC,
+    METHOD_LZO1X_1,
+    METHOD_LZO1X_1_15,
+    METHOD_LZO1X_999,
+    F_ADLER32_D,
+    F_ADLER32_C,
+    F_STDIN,
+    F_STDOUT,
+    F_EXTRA_FIELD,
+    F_CRC32_D,
+    F_CRC32_C,
+    F_H_FILTER,
+    F_H_CRC32,
+    lzoAdler32,
+    lzoCrc32,
+    LzopHeader,
+    LzopBlock,
+    LzopBlockIter,
+    isLzop,
+    parseLzopHeader,
+    iterLzopBlocks,
+    lzo1xDecompress,
+} from "./lzo.cp";
