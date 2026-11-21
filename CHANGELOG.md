@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ktx` 零分配 Khronos KTX 1.1 & KTX2 GPU 纹理容器与 Mipmap 索引解析器（5/5 PASS，自动动态挂载 `cap.ktx`）
+新增 `lib/ktx/{ktx,index}.cp`、`doc/lib/ktx.md` 与 `cap/test/test_ktx_production_deep.cp`（5/5 PASS），支持 KTX1 大小端自适应 64B 头、KTX2 80B 头与 Mipmap Level Index 零拷贝读取。
+
 ## [2026-11-22] - 新建 `cap:gltf` 零分配 glTF 2.0 Binary (GLB) 容器与 Chunk 解析器（5/5 PASS，自动动态挂载 `cap.gltf`）
 新增 `lib/gltf/{gltf,index}.cp`、`doc/lib/gltf.md` 与 `cap/test/test_gltf_production_deep.cp`（5/5 PASS），支持 GLB 12B 头校验、4B 对齐 Chunk 迭代、JSON/BIN 提取与 Accessor 步长计算。
 

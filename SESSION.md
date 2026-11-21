@@ -205,3 +205,6 @@
 
 ### 2026-11-22（`cap:gltf` 验收，完成 `cap:gltf` 交付验收并登记入库（5/5 PASS）；派发 `cap:exr`。）
 - **执行成果**：`lib/gltf/`（5/5 PASS，`doc/lib/gltf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:gltf` 交付验收并登记入库（5/5 PASS）；派发 `cap:exr`。
+
+### 2026-11-22（`cap:ktx` 验收，完成 `cap:ktx` 交付验收并登记入库（5/5 PASS）；派发 `cap:fits`。）
+- **执行成果**：`lib/ktx/`（5/5 PASS，`doc/lib/ktx.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:ktx` 交付验收并登记入库（5/5 PASS）；派发 `cap:fits`。

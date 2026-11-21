@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ktx` 零分配 Khronos KTX 1.1 & KTX2 GPU 纹理容器与 Mipmap 索引解析器（5/5 PASS，文档直写 `doc/lib/ktx.md`）
+实现零分配 KTX 1.1 & KTX2 容器解析器，严格校验 12B 官方魔数、DFD/KVD/SGD 边界与 24B Level Index 防溢出切片。
+
 ## 2026-11-22: 新建 `cap:gltf` 零分配 glTF 2.0 Binary (GLB) 容器与 Chunk 解析器（5/5 PASS，文档直写 `doc/lib/gltf.md`）
 实现零分配 glTF 2.0 GLB 二进制容器解析器，严格校验 glTF 魔数、版本、总长及 Chunk 4 字节对齐边界。
 
