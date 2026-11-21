@@ -517,3 +517,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:tsconfig_paths` | PathMapping, ResolvedCandidate, expandConfigDir, TsConfigPaths | TSConfig compilerOptions.paths 最长前缀通配符路径映射解析器与 ${configDir} 模板展开器（吸收自 bun/src/resolver/tsconfig_json.cp） |
 | `cap:css_image_set` | ResolutionUnit, Resolution, ImageSetOption, ImageSet, CssImageKind, CssImage | CSS Images 4 <image> 与 image-set() 分辨率换算、MIME 过滤 DPR 选图与序列化库（吸收自 bun/src/css/values/image.cp） |
 | `cap:gitconfig_ini` | GitConfigEntry, GitConfig | Git Config / INI 零堆分配解析器（支持 subsection、注释、引号、布尔解析与 url.<base>.insteadOf 重写，吸收自 bun/src/install/repository.cp） |
+| `cap:etag` | ParsedETag, ifNoneMatch, ifMatch, generateStrong, generateWeak | RFC 9110 / RFC 7232 HTTP ETag 解析、强/弱比较、If-None-Match/If-Match 求值与 FNV-1a 内容 ETag 生成库（吸收自 bun/src/http_types/ETag.cp） |
+| `cap:json5_lexer` | Json5TokenKind, Json5Token, Json5Lexer, toStandardJson | JSON5 零堆分配词法扫描器（注释/单引号/无引号键/十六进制/Infinity/NaN）与 RFC 8259 标准 JSON 转译器（吸收自 bun/src/interchange/json5.cp） |
+| `cap:pkg_exports` | ExportTargetKind, ExportConditionRule, ExportSubpathEntry, ResolveStatus, ResolveResult, ExportsMap | Node.js / Bun package.json exports 条件子路径解析引擎（精确优先/PATTERN_KEY_COMPARE/null 阻断/.. 防穿越，吸收自 bun/src/resolver/package_json.cp） |

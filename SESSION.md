@@ -175,3 +175,12 @@
 
 ### 2026-11-22（`cap:gitconfig_ini` 验收，Batch 31: 吸收并验证 cap:gitconfig_ini (5/5 PASSED)）
 - **执行成果**：`lib/gitconfig_ini/`（5/5 PASS，`doc/lib/gitconfig_ini.md`）经 `verify_module.sh` 一次性验收回收；Batch 31: 吸收并验证 cap:gitconfig_ini (5/5 PASSED)
+
+### 2026-11-22（`cap:etag` 验收，Batch 32: 吸收并验证 cap:etag (PASSED)）
+- **执行成果**：`lib/etag/`（5/5 PASS，`doc/lib/etag.md`）经 `verify_module.sh` 一次性验收回收；Batch 32: 吸收并验证 cap:etag (PASSED)
+
+### 2026-11-22（`cap:json5_lexer` 验收，Batch 32: 吸收并验证 cap:json5_lexer (5/5 PASSED)）
+- **执行成果**：`lib/json5_lexer/`（5/5 PASS，`doc/lib/json5_lexer.md`）经 `verify_module.sh` 一次性验收回收；Batch 32: 吸收并验证 cap:json5_lexer (5/5 PASSED)
+
+### 2026-11-22（`cap:pkg_exports` 验收，Batch 32: 吸收并验证 cap:pkg_exports (5/5 PASSED)）
+- **执行成果**：`lib/pkg_exports/`（5/5 PASS，`doc/lib/pkg_exports.md`）经 `verify_module.sh` 一次性验收回收；Batch 32: 吸收并验证 cap:pkg_exports (5/5 PASSED)

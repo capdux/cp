@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:pkg_exports` Node.js / Bun package.json exports 条件子路径解析引擎（精确优先/PATTERN_KEY_COMPARE/null 阻断/.. 防穿越，吸收自 bun/src/resolver/package_json.cp）（5/5 PASS，自动动态挂载 `cap.pkg_exports`）
+新增 cap:pkg_exports 标准库模块（lib/pkg_exports/{exports,index}.cp, doc/lib/pkg_exports.md, cap/test/test_pkg_exports_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:json5_lexer` JSON5 零堆分配词法扫描器（注释/单引号/无引号键/十六进制/Infinity/NaN）与 RFC 8259 标准 JSON 转译器（吸收自 bun/src/interchange/json5.cp）（5/5 PASS，自动动态挂载 `cap.json5_lexer`）
+新增 cap:json5_lexer 标准库模块（lib/json5_lexer/{json5,index}.cp, doc/lib/json5_lexer.md, cap/test/test_json5_lexer_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:etag` RFC 9110 / RFC 7232 HTTP ETag 解析、强/弱比较、If-None-Match/If-Match 求值与 FNV-1a 内容 ETag 生成库（吸收自 bun/src/http_types/ETag.cp）（5/5 PASS，自动动态挂载 `cap.etag`）
+新增 cap:etag 标准库模块（lib/etag/{etag,index}.cp, doc/lib/etag.md, cap/test/test_etag_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:gitconfig_ini` Git Config / INI 零堆分配解析器（支持 subsection、注释、引号、布尔解析与 url.<base>.insteadOf 重写，吸收自 bun/src/install/repository.cp）（5/5 PASS，自动动态挂载 `cap.gitconfig_ini`）
 新增 cap:gitconfig_ini 标准库模块（lib/gitconfig_ini/{gitconfig,index}.cp, doc/lib/gitconfig_ini.md, cap/test/test_gitconfig_ini_production_deep.cp）
 

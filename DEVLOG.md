@@ -1,3 +1,12 @@
+## 2026-11-22: 新建 `cap:pkg_exports` Node.js / Bun package.json exports 条件子路径解析引擎（精确优先/PATTERN_KEY_COMPARE/null 阻断/.. 防穿越，吸收自 bun/src/resolver/package_json.cp）（5/5 PASS，文档直写 `doc/lib/pkg_exports.md`）
+子智能体 2 吸收 bun/src/resolver/package_json.cp，实现标准 PACKAGE_EXPORTS_RESOLVE 条件子路径解析引擎，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:json5_lexer` JSON5 零堆分配词法扫描器（注释/单引号/无引号键/十六进制/Infinity/NaN）与 RFC 8259 标准 JSON 转译器（吸收自 bun/src/interchange/json5.cp）（5/5 PASS，文档直写 `doc/lib/json5_lexer.md`）
+子智能体 1 吸收 bun/src/interchange/json5.cp，实现完整 JSON5 词法扫描与零堆分配标准 JSON 规范化转译，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:etag` RFC 9110 / RFC 7232 HTTP ETag 解析、强/弱比较、If-None-Match/If-Match 求值与 FNV-1a 内容 ETag 生成库（吸收自 bun/src/http_types/ETag.cp）（5/5 PASS，文档直写 `doc/lib/etag.md`）
+吸收 bun/src/http_types/ETag.cp，实现 RFC 9110 强/弱 ETag 比较、引号内逗号保护与内容 ETag 生成，通过 cpc check 与 cap test
+
 ## 2026-11-22: 新建 `cap:gitconfig_ini` Git Config / INI 零堆分配解析器（支持 subsection、注释、引号、布尔解析与 url.<base>.insteadOf 重写，吸收自 bun/src/install/repository.cp）（5/5 PASS，文档直写 `doc/lib/gitconfig_ini.md`）
 子智能体 2 吸收 bun/src/install/repository.cp，实现完整 GitConfig/INI 解析与 insteadOf URL 重写，5/5 单测通过
 
