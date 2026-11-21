@@ -1,7 +1,7 @@
 import {
     getOsReleaseField,
     isOsLike,
-} from "cap:os_release";
+} from "cap:sys";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {

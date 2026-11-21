@@ -4,7 +4,7 @@ import {
     lookupUserByUid,
     lookupGroupByName,
     lookupGroupByGid,
-} from "cap:passwd_parse";
+} from "cap:sys";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {

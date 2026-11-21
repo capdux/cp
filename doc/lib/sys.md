@@ -50,6 +50,14 @@
 | `lib/sys/procstat.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/<pid>/stat Barrel)` | `/proc/<pid>/stat` 单行进程状态解析：`ProcState`、`parseProcState`、`ProcStat` |
 | `lib/sys/statm.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/<pid>/statm Parser)` | `/proc/<pid>/statm` 7 列内存页与饱和换算：`ProcStatm`、`parseProcStatm` |
 | `lib/sys/uptime.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/uptime Zero-Alloc Integer Parser)` | `/proc/uptime` 零浮点整数运行时间解析：`ProcUptime`、`parseProcUptime` |
+| `lib/sys/cgroup.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux cgroup v2 Resource Limits Parser)` | cgroup v2 资源限额解析：`CgroupLimit`、`CpuMaxQuota`、`IoMaxEntry`、`parseCgroupMax`、`parseCpuMax`、`parseIoMaxLine`、`effectiveMemoryLimit` |
+| `lib/sys/sysctl.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux sysctl.conf Zero-Alloc Parser)` | `/etc/sysctl.conf` 配置解析与键归一化：`SysctlEntry`、`SysctlIter`、`normalizeSysctlKey`、`sysctlKeysEqual`、`getSysctlValue` |
+| `lib/sys/fstab.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (POSIX /etc/fstab & /proc/mounts Parser)` | `/etc/fstab` 挂载表解析与选项查询：`FstabEntry`、`MountIter`、`unescapeFstabPath`、`findFstabForPath` |
+| `lib/sys/osrelease.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (freedesktop.org /etc/os-release Barrel)` | `/etc/os-release` 发行版标识解析：`OsReleaseField`、`OsReleaseIter`、`getOsReleaseField`、`isOsLike` |
+| `lib/sys/passwd.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (POSIX /etc/passwd & /etc/group Barrel)` | `/etc/passwd` 与组查询：`PasswdEntry`、`PasswdIter`、`lookupUserByName`、`lookupUserByUid`、`PasswdGroupEntry`、`GroupIter`、`lookupGroupByName`、`lookupGroupByGid` |
+| `lib/sys/resolv.cp` | `// Source: Absorbed from /data/dev/bun/src/dns.zig (POSIX /etc/resolv.conf Barrel)` | `/etc/resolv.conf` DNS 解析配置：`NameserverIter`、`ResolvOptions`、`effectiveSearchRaw`、`firstNameserver` |
+| `lib/sys/systemd.cp` | `// Source: Absorbed from /data/dev/bun/src/ini.zig (Linux systemd Unit File Parser)` | systemd unit 文件解析：`UnitEntry`、`UnitIter`、`getUnitValue`、`countSectionKey` |
+| `lib/sys/xdg.cp` | `// Source: Absorbed from /data/dev/bun/src/env_loader.zig (XDG Base Directory Spec Resolver)` | XDG Base Directory 规范路径解析：`DEFAULT_CONFIG_DIRS`、`DEFAULT_DATA_DIRS`、`XdgEnv`、`XdgDirIter`、`resolveConfigHome`/`DataHome`/`CacheHome`/`StateHome`/`RuntimeDir` |
 | `lib/sys/index.cp` | `// Source: /data/dev/bun/src/sys/sys.zig & /data/dev/bun/src/sys/Error.cp` | `cap:sys` 统一导出、`Sys`/`sys` 命名空间（含 `Sys.pipe`/`Sys.pipe2`/`Sys.dup`/`Sys.dup2`/`Sys.setAffinity`/`Sys.Lib`） |
 
 ---

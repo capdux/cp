@@ -7,7 +7,7 @@ import {
     normalizeSysctlKey,
     sysctlKeysEqual,
     getSysctlValue,
-} from "cap:sysctl_conf";
+} from "cap:sys";
 
 test("1. SysctlIter skips blank and #/; comment lines, handles - ignore_errors prefix and multi-word values", () => {
     const conf =

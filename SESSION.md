@@ -298,3 +298,6 @@
 
 ### 2026-11-22（`cap:semver` 验收，方案 A Wave 2 全部完工：`cli_*`(5) + `proc_*`(13) + `semver_*`(5) 共再消除 23 个（累计 37 个）长下划线顶层目录！Wave 3 启动）
 - **执行成果**：`lib/semver/`（5/5 PASS，`doc/lib/semver.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 2 全部完工：`cli_*`(5) + `proc_*`(13) + `semver_*`(5) 共再消除 23 个（累计 37 个）长下划线顶层目录！Wave 3 启动
+
+### 2026-11-22（`cap:sys` 验收，方案 A Wave 3：8 个系统配置目录收敛至 `cap:sys`（8/8 PASS），累计消除 45 个长下划线顶层目录）
+- **执行成果**：`lib/sys/`（5/5 PASS，`doc/lib/sys.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 3：8 个系统配置目录收敛至 `cap:sys`（8/8 PASS），累计消除 45 个长下划线顶层目录

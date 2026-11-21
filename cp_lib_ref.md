@@ -595,7 +595,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_server_timing` | ServerTimingMetric, ServerTimingIter, findServerTiming, appendServerTiming | W3C Server-Timing 响应头零分配解析器与构造器（纯整数微秒精度与引号转义） |
 | `cap:rfc3339_time` | isLeapYear, daysInMonth, Rfc3339Time | RFC 3339 / ISO 8601 时间戳零分配解析器、闰年/时区校验、Unix 纪元秒互转与规范化格式化器 |
 | `cap:http_csp` | CspDirective, CspSourceIter, CspDirectiveIter, findDirective, effectiveFetchDirective, appendCspDirective | W3C Content-Security-Policy Level 3 响应头零分配解析器、default-src 回退、nonce 校验与策略构造器 |
-| `cap:passwd_parse` | PasswdEntry, PasswdIter, lookupUserByName, lookupUserByUid, GroupEntry, GroupIter, lookupGroupByName, lookupGroupByGid | POSIX /etc/passwd 与 /etc/group 零分配流式解析器、UID/GID/名称查询与组成员判定 |
 | `cap:spdx_license` | SpdxTokenKind, SpdxToken, SpdxLexer, isValidSpdxExpression, SpdxIdIter, isCommonPermissive | SPDX 2.3 开源许可证表达式词法/递归下降语法校验器、ID 提取器与常见宽松许可证判定 |
 | `cap:http_origin` | Origin, isSameOriginUrl | WHATWG URL Origin 元组解析器、默认端口规范化、Same-Origin 比较与安全上下文判定 |
 | `cap:dockerfile_parse` | DockerInstruction, DockerfileIter, FromSpec, parseFromArgs, ExposePort, parseExposeToken | Dockerfile 指令零分配流式解析器（支持 # escape 续行折叠、注释跳过、FROM 阶段与 EXPOSE 端口拆解） |
@@ -620,10 +619,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:sql_params` | countQuestionMarks, maxDollarParam, rewriteQuestionToDollar, NamedParamIter | SQL 占位符词法安全扫描器与方言重写器（跳过字符串/注释/$$ 块，支持 ?→$N 重写与 :name 提取） |
 | `cap:http_ratelimit_header` | RateLimitHeader, RateLimitPolicy | IETF Draft RateLimit / RateLimit-Policy 限流响应头零分配解析与规范化构造器 |
 | `cap:sql_splitter` | SqlStmtKind, SqlStmtIter, classifySqlStmt, isReadOnlySql, countSqlStatements | 多语句 SQL 脚本零分配分号切分器（跳过引号/注释/$$ 块）与 CTE 穿透语句类型识别器 |
-| `cap:resolv_conf` | NameserverIter, ResolvOptions, effectiveSearchRaw, firstNameserver | POSIX /etc/resolv.conf 零分配解析器（nameserver/search/domain 末现优先与 glibc 上限夹紧 options） |
-| `cap:fstab_parse` | MountEntry, MountIter, unescapeMountPath, findMountForPath | POSIX /etc/fstab 与 /proc/mounts 零分配 6 字段解析器、八进制路径反转义与最长前缀挂载点查找 |
-| `cap:os_release` | OsReleaseField, OsReleaseIter, getOsReleaseField, isOsLike | freedesktop.org /etc/os-release 零分配解析器（Shell 引号反转义与 ID/ID_LIKE 发行版家族匹配） |
-| `cap:systemd_unit` | UnitEntry, UnitIter, getUnitValue, countSectionKey | Linux systemd 单元文件（.service/.timer/.socket）零分配解析器（支持重复键、反斜杠续行与空值清空） |
 | `cap:mail_address` | isValidAddrSpec, Mailbox, MailboxListIter | RFC 5322 电子邮件地址校验、"Display Name" <local@domain> 解析与引号逗号感知收件人列表迭代器 |
 | `cap:rfc2047_word` | EncodedWordEncoding, EncodedWord, parseEncodedWord, decodeEncodedWord, decodeHeaderValue, encodeUtf8Base64Word | RFC 2047 MIME Encoded-Word (=?charset?B|Q?text?=) 国际化头零分配编解码器（含相邻空白折叠） |
 | `cap:docker_image_ref` | isValidOciDigest, DockerImageRef | OCI / Docker 镜像引用零分配解析器（[registry[:port]/]repository[:tag][@digest] 与 sha256/sha512 摘要校验） |
@@ -659,16 +654,13 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_etag_gen` | fnv1a64, generateWeakStatEtag, generateStrongHashEtag, generateWeakHashEtag, isValidEtagSyntax | 零分配 HTTP 强/弱 ETag 生成器（FNV-1a 64-bit 内容哈希与 size/mtime 静态文件弱 ETag）及 RFC 9110 语法校验 |
 | `cap:properties_parse` | PropertyEntry, PropertiesIter, getProperty | Java .properties 配置文件零分配流式解析器（支持 =/:/空白分隔、奇偶反斜杠续行与 \uXXXX 代理对反转义） |
 | `cap:proxy_protocol_v1` | ProxyProtoFamily, ProxyV1Header | HAProxy PROXY Protocol v1 文本头零分配解析与规范化格式化器（支持 TCP4/TCP6/UNKNOWN） |
-| `cap:xdg_basedir` | DEFAULT_CONFIG_DIRS, DEFAULT_DATA_DIRS, XdgEnv, resolveConfigHome, resolveDataHome, resolveCacheHome, resolveStateHome, resolveRuntimeDir, XdgDirIter | freedesktop.org XDG Base Directory Spec 路径零分配推导器（绝对路径校验、默认回退与防穿越 app_name） |
 | `cap:proxy_protocol_v2` | PROXY_V2_SIGNATURE, hasProxyV2Signature, ProxyV2Command, ProxyV2Family, ProxyV2Transport, ProxyV2Header, ProxyV2Tlv, ProxyV2TlvIter | HAProxy PROXY Protocol v2 二进制头零分配解析、IPv4/LOCAL 编码与 TLV 扩展迭代器 |
 | `cap:npmrc_config` | DEFAULT_NPM_REGISTRY, NpmrcEntry, NpmrcIter, getNpmrcValue, getNpmrcBool, resolveRegistryForScope, findRegistrySetting | .npmrc 配置文件零分配键值解析器、布尔配置查询与 @scope:registry 仓库路由解析器 |
 | `cap:cron_preset` | CronPreset, parseCronPreset, presetToCron5, normalizeCron5 | Vixie Cron @macro 预设（@hourly/@daily/@weekly/@monthly/@yearly/@reboot）零分配展开与 5 段表达式校验器 |
 | `cap:http_expect` | `ExpectItem`, `ExpectIter`, `ExpectDecision`, `evaluateExpectHeader`, `hasContinueExpectation`, `hasUnknownExpectation` | RFC 9110 §10.1.1 HTTP `Expect` 请求头解析与 `100-continue` / 417 协商判定器 |
 | `cap:http_early_hints` | `EarlyHintRel`, `EarlyHintLink`, `EarlyHintIter`, `formatEarlyHintLink`, `formatEarlyHints103Block` | RFC 8297 HTTP `103 Early Hints` / RFC 8288 `Link` 预加载头零分配解析与报文格式化器 |
 | `cap:http_alt_svc` | `AltSvcEntry`, `isAltSvcClear`, `AltSvcIter`, `formatAltSvcEntry` | RFC 7838 HTTP `Alt-Svc` 备选服务 / HTTP/3 QUIC 发现头零分配解析与格式化器 |
-| `cap:cgroup_v2_limits` | `CgroupLimit`, `CpuMaxQuota`, `IoMaxEntry`, `parseCgroupMax`, `parseCpuMax`, `parseIoMaxLine`, `effectiveMemoryLimit` | Linux cgroup v2 容器资源限额（`cpu.max`/`memory.max`/`pids.max`/`io.max`）零分配解析器 |
 | `cap:http_content_range` | `ContentRangeKind`, `ContentRange`, `parseContentRange`, `formatContentRange` | RFC 9110 §14.4 HTTP `Content-Range` 断点续传响应头零分配解析与格式化器 |
-| `cap:sysctl_conf` | `SysctlEntry`, `SysctlIter`, `normalizeSysctlKey`, `sysctlKeysEqual`, `getSysctlValue` | Linux `/etc/sysctl.conf` / `sysctl.d/*.conf` 内核参数配置零分配解析与键等价查询器 |
 | `cap:http_allow` | `HttpMethodBit`, `AllowMethodSet`, `parseAllowHeader`, `AllowIter`, `isMethodAllowed`, `isSafeMethod`, `isIdempotentMethod` | RFC 9110 §10.2.1 HTTP `Allow` 方法集位掩码解析、格式化与安全/幂等判定器 |
 | `cap:http_trailer` | `isForbiddenTrailerField`, `isValidTrailerFieldName`, `TrailerFieldIter`, `validateTrailerHeader`, `hasTrailerField` | RFC 9110 §6.5.1 HTTP `Trailer` 尾部字段声明零分配解析与 25 项禁传字段安全校验器 |
 | `cap:http_max_forwards` | `MaxForwardsAction`, `MaxForwardsResult`, `parseMaxForwards`, `evaluateMaxForwards`, `formatMaxForwards` | RFC 9110 §7.6.2 HTTP `Max-Forwards` 代理跳数限制零分配解析与递减裁定器 |

@@ -382,6 +382,75 @@ export {
     parseProcUptime,
 } from "./uptime";
 
+export {
+    CgroupLimit,
+    CpuMaxQuota,
+    IoMaxEntry,
+    parseCgroupMax,
+    parseCpuMax,
+    parseIoMaxLine,
+    effectiveMemoryLimit,
+} from "./cgroup";
+
+export {
+    SysctlEntry,
+    SysctlIter,
+    normalizeSysctlKey,
+    sysctlKeysEqual,
+    getSysctlValue,
+} from "./sysctl";
+
+export {
+    FstabEntry,
+    MountIter,
+    unescapeFstabPath,
+    findFstabForPath,
+} from "./fstab";
+
+export {
+    OsReleaseField,
+    OsReleaseIter,
+    getOsReleaseField,
+    isOsLike,
+} from "./osrelease";
+
+export {
+    PasswdEntry,
+    PasswdIter,
+    lookupUserByName,
+    lookupUserByUid,
+    GroupEntry as PasswdGroupEntry,
+    GroupIter,
+    lookupGroupByName,
+    lookupGroupByGid,
+} from "./passwd";
+
+export {
+    NameserverIter,
+    ResolvOptions,
+    effectiveSearchRaw,
+    firstNameserver,
+} from "./resolv";
+
+export {
+    UnitEntry,
+    UnitIter,
+    getUnitValue,
+    countSectionKey,
+} from "./systemd";
+
+export {
+    DEFAULT_CONFIG_DIRS,
+    DEFAULT_DATA_DIRS,
+    XdgEnv,
+    XdgDirIter,
+    resolveConfigHome,
+    resolveDataHome,
+    resolveCacheHome,
+    resolveStateHome,
+    resolveRuntimeDir,
+} from "./xdg";
+
 import { pipe2 as sysPipe2, createPipe as sysCreatePipe } from "./fs_ops";
 
 pub struct Sys {

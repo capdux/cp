@@ -11,7 +11,7 @@ import {
     resolveCacheHome,
     resolveStateHome,
     resolveRuntimeDir,
-} from "cap:xdg_basedir";
+} from "cap:sys";
 
 test("1. Default fallbacks from HOME for config, data, cache, state, and null runtime_dir", () => {
     const env = XdgEnv.empty("/home/alice/");

@@ -83,7 +83,7 @@ fn nextFieldSlice(s: []const u8, pos: *usize): ([]const u8)? {
 }
 
 /// POSIX `/etc/fstab` 与 `/proc/mounts` 单条挂载记录（零拷贝切片）
-export struct MountEntry {
+export struct FstabEntry {
     device: []const u8;
     mount_point: []const u8;
     fs_type: []const u8;
@@ -92,7 +92,7 @@ export struct MountEntry {
     pass_no: u32;
 
     /// 解析单行 fstab / mounts 记录（跳过空行与 `#` 注释；4~6 空白分隔字段，省略 dump_freq/pass_no 默认为 0）
-    fn parseLine(raw: []const u8): MountEntry? {
+    fn parseLine(raw: []const u8): FstabEntry? {
         const line = trimAscii(raw);
         if (line.len == 0 || line[0] == '#') {
             return null;
@@ -114,7 +114,7 @@ export struct MountEntry {
             }
         }
 
-        return MountEntry{
+        return FstabEntry{
             device: device,
             mount_point: mount_point,
             fs_type: fs_type,
@@ -205,8 +205,8 @@ export struct MountIter {
         };
     }
 
-    /// 读取下一条合法 MountEntry（自动跳过空行与注释行）
-    fn next(*_): MountEntry? {
+    /// 读取下一条合法 FstabEntry（自动跳过空行与注释行）
+    fn next(*_): FstabEntry? {
         while (_.pos < _.src.len) {
             const start = _.pos;
             while (_.pos < _.src.len && _.src[_.pos] != '\n') {
@@ -216,7 +216,7 @@ export struct MountIter {
             if (_.pos < _.src.len && _.src[_.pos] == '\n') {
                 _.pos += 1;
             }
-            if (entry := MountEntry.parseLine(line)) {
+            if (entry := FstabEntry.parseLine(line)) {
                 return entry;
             }
         }
@@ -229,7 +229,7 @@ fn isOctalDigit(c: u8): bool {
 }
 
 /// 还原 `/proc/mounts` 路径中的 3 位八进制转义（如 `\040`->空格、`\011`->`\t`、`\012`->`\n`、`\134`->`\`）
-export fn unescapeMountPath(raw: []const u8, out: []u8): ([]const u8)? {
+export fn unescapeFstabPath(raw: []const u8, out: []u8): ([]const u8)? {
     let i: usize = 0;
     let pos: usize = 0;
 
@@ -282,12 +282,12 @@ fn mountPointMatchesPath(mount_point: []const u8, abs_path: []const u8): bool {
 }
 
 /// 按最长路径前缀匹配查找覆盖给定绝对路径的挂载点（同长度以后挂载者优先）
-export fn findMountForPath(content: []const u8, abs_path: []const u8): MountEntry? {
+export fn findFstabForPath(content: []const u8, abs_path: []const u8): FstabEntry? {
     if (abs_path.len == 0 || abs_path[0] != '/') {
         return null;
     }
     let it = MountIter.init(content);
-    let best: MountEntry? = null;
+    let best: FstabEntry? = null;
     let best_len: usize = 0;
 
     while (true) {

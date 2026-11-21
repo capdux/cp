@@ -8,7 +8,7 @@ import {
     parseCpuMax,
     parseIoMaxLine,
     effectiveMemoryLimit,
-} from "cap:cgroup_v2_limits";
+} from "cap:sys";
 
 test("1. parseCgroupMax handles max, numeric limits, whitespace, and rejects invalid inputs", () => {
     const lim_max = parseCgroupMax("max\n") ?? unreachable;

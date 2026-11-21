@@ -1,6 +1,6 @@
 import std from "std";
 import { test, expect_eq } from "cap:test";
-import { MountEntry, MountIter, unescapeMountPath, findMountForPath } from "cap:fstab_parse";
+import { FstabEntry as MountEntry, MountIter, unescapeFstabPath as unescapeMountPath, findFstabForPath as findMountForPath } from "cap:sys";
 
 test("1. MountEntry.parseLine handles 4-field and 6-field lines, comments, and options", () => {
     const e1 = MountEntry.parseLine("/dev/nvme0n1p2  /  ext4  rw,relatime,errors=remount-ro  0  1") ?? unreachable;

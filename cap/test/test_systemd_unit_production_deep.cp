@@ -6,7 +6,7 @@ import {
     UnitIter,
     getUnitValue,
     countSectionKey,
-} from "cap:systemd_unit";
+} from "cap:sys";
 
 test("systemd_unit: full .service parsing with BOM, #/; comments, sections and backslash continuation") {
     const svc =
