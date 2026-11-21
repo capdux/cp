@@ -530,3 +530,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:linear_fifo` | StaticLinearFifo | 零堆分配泛型环形缓冲区 FIFO（支持 item/slice 读写、peek、unget、discard 与环形回绕，吸收自 bun/src/collections/linear_fifo.cp） |
 | `cap:toml_lexer` | TomlTokenKind, TomlToken, TomlLexer, unescapeBasicString | TOML v1.0 零堆分配流式词法扫描器（21 种记号/4 种字符串/4 进制整数/ISO 8601 日期时间与 Unicode 解转义，吸收自 bun/src/interchange/toml/lexer.cp） |
 | `cap:yaml_scalar` | YamlScalarKind, YamlScalar, parseCoreScalar, unescapeDoubleQuoted, unescapeSingleQuoted, needsQuoting, formatSafeScalar | YAML 1.2 Core Schema 零堆分配标量类型推断、单/双引号解转义与安全引用序列化库（吸收自 bun/src/interchange/yaml.cp） |
+| `cap:http_cookie` | SameSite, Cookie, CookiePair, CookieRequestIterator, getCookie | RFC 6265 / 6265bis HTTP Cookie & Set-Cookie 零堆分配解析、域/路径匹配与序列化库（吸收自 bun/src/jsc/bindings/Cookie.cpp 与 CookieMap.cpp） |
+| `cap:hive_array` | HiveArray | 基于 64-bit 分块位图的零堆分配固定容量 Slab 槽池（O(1) 分配/防重复释放/稀疏 @ctz 跳跃迭代，吸收自 bun/src/collections/hive_array.cp） |
+| `cap:header_value_iter` | HeaderValueIterator, HeaderParam, HeaderParamIterator, CacheControl | RFC 9110 HTTP 逗号/分号多值头部零堆分配迭代器（保护引号逗号）与 Cache-Control 指令解析器（吸收自 bun/src/http/HeaderValueIterator.cp） |

@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:header_value_iter` RFC 9110 HTTP 逗号/分号多值头部零堆分配迭代器（保护引号逗号）与 Cache-Control 指令解析器（吸收自 bun/src/http/HeaderValueIterator.cp）（5/5 PASS，自动动态挂载 `cap.header_value_iter`）
+新增 cap:header_value_iter 标准库模块（lib/header_value_iter/{iter,index}.cp, doc/lib/header_value_iter.md, cap/test/test_header_value_iter_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:hive_array` 基于 64-bit 分块位图的零堆分配固定容量 Slab 槽池（O(1) 分配/防重复释放/稀疏 @ctz 跳跃迭代，吸收自 bun/src/collections/hive_array.cp）（5/5 PASS，自动动态挂载 `cap.hive_array`）
+新增 cap:hive_array 标准库模块（lib/hive_array/{hive,index}.cp, doc/lib/hive_array.md, cap/test/test_hive_array_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:http_cookie` RFC 6265 / 6265bis HTTP Cookie & Set-Cookie 零堆分配解析、域/路径匹配与序列化库（吸收自 bun/src/jsc/bindings/Cookie.cpp 与 CookieMap.cpp）（5/5 PASS，自动动态挂载 `cap.http_cookie`）
+新增 cap:http_cookie 标准库模块（lib/http_cookie/{cookie,index}.cp, doc/lib/http_cookie.md, cap/test/test_http_cookie_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:yaml_scalar` YAML 1.2 Core Schema 零堆分配标量类型推断、单/双引号解转义与安全引用序列化库（吸收自 bun/src/interchange/yaml.cp）（5/5 PASS，自动动态挂载 `cap.yaml_scalar`）
 新增 cap:yaml_scalar 标准库模块（lib/yaml_scalar/{scalar,index}.cp, doc/lib/yaml_scalar.md, cap/test/test_yaml_scalar_production_deep.cp）
 

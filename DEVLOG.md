@@ -1,3 +1,12 @@
+## 2026-11-22: 新建 `cap:header_value_iter` RFC 9110 HTTP 逗号/分号多值头部零堆分配迭代器（保护引号逗号）与 Cache-Control 指令解析器（吸收自 bun/src/http/HeaderValueIterator.cp）（5/5 PASS，文档直写 `doc/lib/header_value_iter.md`）
+子智能体 1 吸收 bun/src/http/HeaderValueIterator.cp，实现逗号/分号多值迭代器与 Cache-Control 解析，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:hive_array` 基于 64-bit 分块位图的零堆分配固定容量 Slab 槽池（O(1) 分配/防重复释放/稀疏 @ctz 跳跃迭代，吸收自 bun/src/collections/hive_array.cp）（5/5 PASS，文档直写 `doc/lib/hive_array.md`）
+子智能体 2 吸收 bun/src/collections/hive_array.cp，实现支持任意容量的 64-bit 位图 Slab 槽池，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:http_cookie` RFC 6265 / 6265bis HTTP Cookie & Set-Cookie 零堆分配解析、域/路径匹配与序列化库（吸收自 bun/src/jsc/bindings/Cookie.cpp 与 CookieMap.cpp）（5/5 PASS，文档直写 `doc/lib/http_cookie.md`）
+吸收 Bun Cookie/CookieMap，实现完整 RFC 6265 Set-Cookie 解析/序列化、域/路径匹配与 Cookie 请求头零分配迭代，通过 cpc check 与 cap test
+
 ## 2026-11-22: 新建 `cap:yaml_scalar` YAML 1.2 Core Schema 零堆分配标量类型推断、单/双引号解转义与安全引用序列化库（吸收自 bun/src/interchange/yaml.cp）（5/5 PASS，文档直写 `doc/lib/yaml_scalar.md`）
 子智能体 1 吸收 bun/src/interchange/yaml.cp，实现 YAML 1.2 Core Schema 标量解析与安全序列化，5/5 单测通过
 

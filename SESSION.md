@@ -214,3 +214,12 @@
 
 ### 2026-11-22（`cap:yaml_scalar` 验收，Batch 35: 吸收并验证 cap:yaml_scalar (5/5 PASSED)）
 - **执行成果**：`lib/yaml_scalar/`（5/5 PASS，`doc/lib/yaml_scalar.md`）经 `verify_module.sh` 一次性验收回收；Batch 35: 吸收并验证 cap:yaml_scalar (5/5 PASSED)
+
+### 2026-11-22（`cap:http_cookie` 验收，Batch 36: 吸收并验证 cap:http_cookie (PASSED)）
+- **执行成果**：`lib/http_cookie/`（5/5 PASS，`doc/lib/http_cookie.md`）经 `verify_module.sh` 一次性验收回收；Batch 36: 吸收并验证 cap:http_cookie (PASSED)
+
+### 2026-11-22（`cap:hive_array` 验收，Batch 36: 吸收并验证 cap:hive_array (5/5 PASSED)）
+- **执行成果**：`lib/hive_array/`（5/5 PASS，`doc/lib/hive_array.md`）经 `verify_module.sh` 一次性验收回收；Batch 36: 吸收并验证 cap:hive_array (5/5 PASSED)
+
+### 2026-11-22（`cap:header_value_iter` 验收，Batch 36: 吸收并验证 cap:header_value_iter (5/5 PASSED)）
+- **执行成果**：`lib/header_value_iter/`（5/5 PASS，`doc/lib/header_value_iter.md`）经 `verify_module.sh` 一次性验收回收；Batch 36: 吸收并验证 cap:header_value_iter (5/5 PASSED)
