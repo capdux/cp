@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:semver_satisfies` NPM / Bun 风格 SemVer 2.0.0 版本解析、比较与范围表达式零分配匹配器（5/5 PASS，文档直写 `doc/lib/semver_satisfies.md`）
+- **设计要点**：全状态零堆分配单遍评估 `||` 与空白逻辑与；严格实现 SemVer 2.0.0 预发布优先级与同 `[major, minor, patch]` 预发布比较器放行规则。
+
 ## 2026-11-22: 新建 `cap:sysctl_conf` Linux `/etc/sysctl.conf` / `sysctl.d/*.conf` 内核参数配置零分配解析与键等价查询器（5/5 PASS，文档直写 `doc/lib/sysctl_conf.md`）
 - **设计要点**：`SysctlIter` 零分配跳过注释与非法键行；`sysctlKeysEqual` 无缓冲等价比较 `.` 与 `/`；`getSysctlValue` 严格遵循后定义覆盖前定义语义。
 

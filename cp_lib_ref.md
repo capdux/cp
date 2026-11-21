@@ -694,3 +694,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:cgroup_v2_limits` | `CgroupLimit`, `CpuMaxQuota`, `IoMaxEntry`, `parseCgroupMax`, `parseCpuMax`, `parseIoMaxLine`, `effectiveMemoryLimit` | Linux cgroup v2 容器资源限额（`cpu.max`/`memory.max`/`pids.max`/`io.max`）零分配解析器 |
 | `cap:http_content_range` | `ContentRangeKind`, `ContentRange`, `parseContentRange`, `formatContentRange` | RFC 9110 §14.4 HTTP `Content-Range` 断点续传响应头零分配解析与格式化器 |
 | `cap:sysctl_conf` | `SysctlEntry`, `SysctlIter`, `normalizeSysctlKey`, `sysctlKeysEqual`, `getSysctlValue` | Linux `/etc/sysctl.conf` / `sysctl.d/*.conf` 内核参数配置零分配解析与键等价查询器 |
+| `cap:semver_satisfies` | `SemverVersion`, `satisfiesRange`, `satisfiesVersion`, `isValidSemverRange` | NPM / Bun 风格 SemVer 2.0.0 版本解析、比较与范围表达式零分配匹配器 |

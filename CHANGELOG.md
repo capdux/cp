@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:semver_satisfies` NPM / Bun 风格 SemVer 2.0.0 版本解析、比较与范围表达式零分配匹配器（5/5 PASS，自动动态挂载 `cap.semver_satisfies`）
+- 新增 `lib/semver_satisfies/{satisfies,index}.cp`、`doc/lib/semver_satisfies.md`、`cap/test/test_semver_satisfies_production_deep.cp`：纯 CP 零分配单遍评估 NPM/Bun Semver 范围（`||`/逻辑与/`=`/`>`/`>=`/`<`/`<=`/`^`/`~`/`*`/`x`/连字符区间/预发布保护）（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:sysctl_conf` Linux `/etc/sysctl.conf` / `sysctl.d/*.conf` 内核参数配置零分配解析与键等价查询器（5/5 PASS，自动动态挂载 `cap.sysctl_conf`）
 - 新增 `lib/sysctl_conf/{sysctl,index}.cp`、`doc/lib/sysctl_conf.md`、`cap/test/test_sysctl_conf_production_deep.cp`：纯 CP 零分配解析 Linux `sysctl.conf`（支持 UTF-8 BOM、`#`/`;` 注释、`-` 忽略错误前缀、`/` 与 `.` 键等价规范化及后定义覆盖查询）（5/5 PASS）。
 
