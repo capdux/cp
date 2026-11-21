@@ -88,3 +88,6 @@
 
 ### 2026-11-22（`cap:jfr` 验收，完成 `cap:jfr` 交付验收并登记入库（5/5 PASS）；派发 `cap:smile`。）
 - **执行成果**：`lib/jfr/`（5/5 PASS，`doc/lib/jfr.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:jfr` 交付验收并登记入库（5/5 PASS）；派发 `cap:smile`。
+
+### 2026-11-22（`cap:pickle` 验收，完成 `cap:pickle` 交付验收并登记入库（5/5 PASS）；派发 `cap:marshal`。）
+- **执行成果**：`lib/pickle/`（5/5 PASS，`doc/lib/pickle.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:pickle` 交付验收并登记入库（5/5 PASS）；派发 `cap:marshal`。

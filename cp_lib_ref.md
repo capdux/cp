@@ -582,3 +582,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:bincode` | BincodeEndian, BincodeIntEncoding, BincodeConfig, BincodeWriter, BincodeReader | 零分配 Rust bincode v1 (FixedInt) / v2 (Varint + ZigZag) 二进制编解码器 |
 | `cap:flexbuf` | FlexType, FlexBitWidth, UnpackedFlexType, FlexRef, unpackFlexType, packFlexType, flexBitWidthBytes, parseFlexRoot | 零分配 Google FlatBuffers FlexBuffers 无 Schema 零拷贝二进制解析器 |
 | `cap:jfr` | JFR_MAGIC, JFR_CHUNK_HEADER_SIZE, JFR_EVENT_METADATA, JFR_EVENT_CHECKPOINT, JfrChunkHeader, JfrChunk, JfrChunkIter, JfrVarint, JfrEventFrame, JfrEventIter, JfrStats, isJfr, parseJfrChunkHeader, readJfrUleb128, summarizeJfr | 零分配 JVM Java Flight Recorder v2.0 (.jfr) Chunk 头与事件帧解析器 |
+| `cap:pickle` | PickleOp, PickleIter, PickleAudit, detectPickleProto, isPickle, isUnsafePickleOp, auditPickle | 零分配 Python Pickle Protocol 2-5 指令流解析与静态安全审计器 |

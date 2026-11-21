@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:pickle` 零分配 Python Pickle Protocol 2-5 指令流解析与静态安全审计器（5/5 PASS，自动动态挂载 `cap.pickle`）
+新增 `lib/pickle/{pickle,index}.cp`、`doc/lib/pickle.md` 与 `cap/test/test_pickle_production_deep.cp`（5/5 PASS），支持 Protocol 2-5 全部核心指令解码与 GLOBAL/REDUCE/NEWOBJ 等危险操作码静态扫描。
+
 ## [2026-11-22] - 新建 `cap:jfr` 零分配 JVM Java Flight Recorder v2.0 (.jfr) Chunk 头与事件帧解析器（5/5 PASS，自动动态挂载 `cap.jfr`）
 新增 `lib/jfr/{jfr,index}.cp`、`doc/lib/jfr.md` 与 `cap/test/test_jfr_production_deep.cp`（5/5 PASS），支持 68B Chunk 头、多 Chunk 迭代、JFR 9B 压缩整数与事件帧流解析。
 

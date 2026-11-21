@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:pickle` 零分配 Python Pickle Protocol 2-5 指令流解析与静态安全审计器（5/5 PASS，文档直写 `doc/lib/pickle.md`）
+实现零分配 Python Pickle 指令流解析与模型权重安全审计器，覆盖 FRAME/LONG1/BINUNICODE8/BINFLOAT 与防越界校验。
+
 ## 2026-11-22: 新建 `cap:jfr` 零分配 JVM Java Flight Recorder v2.0 (.jfr) Chunk 头与事件帧解析器（5/5 PASS，文档直写 `doc/lib/jfr.md`）
 实现零分配 JFR v2.0 录制文件解析器，支持 Metadata/Checkpoint/Custom 事件扫描与总时长统计。
 
