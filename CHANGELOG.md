@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:tdigest` 纯 CP 流式 Dunning T-Digest 分位数估算引擎（高精度 p50/p95/p99 尾部估计与分布式 `merge` 聚合，支持 `cap.tdigest` 自动动态挂载，详见 `doc/lib/tdigest.md`）（5/5 PASS，自动动态挂载 `cap.tdigest`）
+- **新增标准库**：`lib/tdigest/{tdigest,index}.cp`，实现流式 `TDigest` 质心压缩、`quantile` 插值与 `merge`。\n- **新增文档与测试**：`doc/lib/tdigest.md` 扁平文档与 `cap/test/test_tdigest_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:merkle_tree` 纯 CP 密码学 SHA-256 Merkle Tree 引擎（`0x00`/`0x01` 域分离防第二原像碰撞、奇数叶支持与无状态包容性证明 `generateProof`/`verifyProof`，支持 `cap.merkle_tree` 自动动态挂载，详见 `doc/lib/merkle_tree.md`）（5/5 PASS，自动动态挂载 `cap.merkle_tree`）
 - **新增标准库**：`lib/merkle_tree/{merkle,index}.cp`，实现域分离 SHA-256 Merkle Tree 与包容性证明生成/验签。\n- **新增文档与测试**：`doc/lib/merkle_tree.md` 扁平文档与 `cap/test/test_merkle_tree_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

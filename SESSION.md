@@ -43,3 +43,6 @@
 
 ### 2026-11-21（`cap:merkle_tree` 验收，验收提交 `cap:merkle_tree` 并新开 `cap:rope_text` 并发子智能体）
 - **执行成果**：`lib/merkle_tree/`（5/5 PASS，`doc/lib/merkle_tree.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:merkle_tree` 并新开 `cap:rope_text` 并发子智能体
+
+### 2026-11-21（`cap:tdigest` 验收，主控完成 `cap:tdigest` 研发验收提交，继续与 `cap:diff_myers` 及 `cap:rope_text` 并行）
+- **执行成果**：`lib/tdigest/`（5/5 PASS，`doc/lib/tdigest.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:tdigest` 研发验收提交，继续与 `cap:diff_myers` 及 `cap:rope_text` 并行

@@ -388,3 +388,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:segment_tree` | `SegError`, `SegmentTree` | 纯 CP 懒传播线段树引擎（$O(\log N)$ 区间增量 `rangeAdd`、区间和/最小/最大值查询，支持 `cap.segment_tree` 自动动态挂载，详见 `doc/lib/segment_tree.md`） |
 | `cap:bimap` | `BiMapError`, `BiMap`, `StringBiMap` | 纯 CP 双向一对一映射容器（$O(1)$ 双向查找、冲突拦截 `insert`、强制覆盖 `forceInsert` 与深拷贝字符串专用 `StringBiMap`，支持 `cap.bimap` 自动动态挂载，详见 `doc/lib/bimap.md`） |
 | `cap:merkle_tree` | `MerkleError`, `ProofStep`, `MerkleProof`, `hashLeaf`, `hashInternal`, `MerkleTree`, `verifyProof` | 纯 CP 密码学 SHA-256 Merkle Tree 引擎（`0x00`/`0x01` 域分离防第二原像碰撞、奇数叶支持与无状态包容性证明 `generateProof`/`verifyProof`，支持 `cap.merkle_tree` 自动动态挂载，详见 `doc/lib/merkle_tree.md`） |
+| `cap:tdigest` | `TDigestError`, `Centroid`, `TDigest` | 纯 CP 流式 Dunning T-Digest 分位数估算引擎（高精度 p50/p95/p99 尾部估计与分布式 `merge` 聚合，支持 `cap.tdigest` 自动动态挂载，详见 `doc/lib/tdigest.md`） |
