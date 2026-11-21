@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:etc_group` Linux `/etc/group` 系统用户组数据库零分配解析与精确成员查询器（5/5 PASS，文档直写 `doc/lib/etc_group.md`）
+- **设计要点**：`GroupMemberIter` 零分配跳过空段与连续逗号；`hasMember` 精确比对整段防 `"dev"` 误匹配 `"devops"`；与 `cap:passwd_parse` 配套补全 Unix 账号/组解析生态。
+
 ## 2026-11-22: 新建 `cap:http_trailer` RFC 9110 §6.5.1 HTTP `Trailer` 尾部字段声明零分配解析与 25 项禁传字段安全校验器（5/5 PASS，文档直写 `doc/lib/http_trailer.md`）
 - **设计要点**：`isForbiddenTrailerField` 按字节长度分支 + 大小写不敏感比较零分配拦截全部 25 项禁传字段；`validateTrailerHeader` 拒绝空头、非法 `tchar` token 与任意禁传字段。
 

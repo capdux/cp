@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:etc_group` Linux `/etc/group` 系统用户组数据库零分配解析与精确成员查询器（5/5 PASS，自动动态挂载 `cap.etc_group`）
+- 新增 `lib/etc_group/{group,index}.cp`、`doc/lib/etc_group.md`、`cap/test/test_etc_group_production_deep.cp`：纯 CP 零分配解析 Linux `/etc/group`（兼容 `\n`/`\r\n`、跳过注释与畸形行、精确逗号分隔成员匹配防止子串误判、按组名/GID 检索）（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:http_trailer` RFC 9110 §6.5.1 HTTP `Trailer` 尾部字段声明零分配解析与 25 项禁传字段安全校验器（5/5 PASS，自动动态挂载 `cap.http_trailer`）
 - 新增 `lib/http_trailer/{trailer,index}.cp`、`doc/lib/http_trailer.md`、`cap/test/test_http_trailer_production_deep.cp`：纯 CP 零分配解析 RFC 9110 `Trailer` 头，按长度分发拦截全部 25 个禁传字段（`Transfer-Encoding`/`Content-Length`/`Host`/`Authorization` 等），提供 `TrailerFieldIter` 与 `validateTrailerHeader`（5/5 PASS）。
 
