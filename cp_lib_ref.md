@@ -556,3 +556,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:cors_policy` | CorsConfig, CorsDecision, CorsPolicy | WHATWG Fetch CORS 策略配置、Simple/Preflight 预检评估与凭证回显/Vary: Origin 决策引擎（吸收自 bun/src/http_types/FetchRequestMode.cp） |
 | `cap:retry_backoff` | JitterMode, BackoffConfig, BackoffState, RetryAfter, parseRetryAfter, isRetryableHttpStatus | 零堆分配指数退避重试调度器（Full/Equal Jitter + SplitMix64 确定性种子）与 RFC 9110 Retry-After 解析库（吸收自 bun/src/http/HTTPContext.cp） |
 | `cap:multipart_boundary` | isValidBoundary, MultipartPart, MultipartParser | RFC 7578 / RFC 2046 multipart/form-data 零堆分配流式边界切分器与分片头部查找库（吸收自 bun/src/http/HTTPRequestBody.cp） |
+| `cap:content_disposition` | ContentDisposition, decodeRfc5987, sanitizeFilename, formatAttachment, formatInline | RFC 6266 / RFC 5987 Content-Disposition 响应头解析、文件名安全消毒与 UTF-8 filename* 格式化器 |
+| `cap:sse_parser` | SseEvent, SseParser, formatSseEvent | WHATWG Server-Sent Events (text/event-stream) 零分配流式解析器与格式化器 |
+| `cap:token_bucket` | TokenBucket, FixedWindowLimiter | 纯整数毫令牌确定性令牌桶与固定时间窗口限流器（防时钟回拨与溢出） |
+| `cap:http_accept` | parseQValue, MediaRange, AcceptIter, EncodingPref, AcceptEncodingIter, LangPref, AcceptLanguageIter, negotiateMediaType, negotiateEncoding, negotiateLanguage | RFC 9110 Accept / Accept-Encoding / Accept-Language 内容协商与 q 值解析器 |

@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:http_accept` RFC 9110 Accept / Accept-Encoding / Accept-Language 内容协商与 q 值解析器（5/5 PASS，文档直写 `doc/lib/http_accept.md`）
+主智能体吸收 `cap:http_accept`，支持带引号参数切分、媒体类型特异度排序、`q=0` 精确排除覆盖通配符、BCP-47 主子标签前缀匹配。
+
+## 2026-11-22: 新建 `cap:token_bucket` 纯整数毫令牌确定性令牌桶与固定时间窗口限流器（防时钟回拨与溢出）（5/5 PASS，文档直写 `doc/lib/token_bucket.md`）
+Subagent 2 吸收 `cap:token_bucket`，采用 `tokens * 1000` 毫令牌整数模型消除浮点误差，具备时钟回拨防护与 `timeUntilReadyMs` 精确等待时长计算。
+
+## 2026-11-22: 新建 `cap:sse_parser` WHATWG Server-Sent Events (text/event-stream) 零分配流式解析器与格式化器（5/5 PASS，文档直写 `doc/lib/sse_parser.md`）
+Subagent 1 吸收 `cap:sse_parser`，内置 4096B 固定缓冲拼接多行 `data:`，完整支持 UTF-8 BOM、CRLF/CR/LF、注释忽略、`id:` NUL 拒绝与 `retry:` 校验。
+
+## 2026-11-22: 新建 `cap:content_disposition` RFC 6266 / RFC 5987 Content-Disposition 响应头解析、文件名安全消毒与 UTF-8 filename* 格式化器（5/5 PASS，文档直写 `doc/lib/content_disposition.md`）
+吸收 `cap:content_disposition`（零堆分配），支持 `filename` / `filename*` 优先级解析、路径分隔符与控制字符清洗，以及 ASCII 回退 + UTF-8 双参数 `formatAttachment`/`formatInline`。
+
 ## 2026-11-22: 新建 `cap:multipart_boundary` RFC 7578 / RFC 2046 multipart/form-data 零堆分配流式边界切分器与分片头部查找库（吸收自 bun/src/http/HTTPRequestBody.cp）（5/5 PASS，文档直写 `doc/lib/multipart_boundary.md`）
 子智能体 1 实现零堆分配 multipart/form-data 流式切分与二进制安全解析，5/5 单测通过
 

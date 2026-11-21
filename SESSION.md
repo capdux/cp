@@ -292,3 +292,15 @@
 
 ### 2026-11-22（`cap:multipart_boundary` 验收，Batch 45: 吸收并验证 cap:multipart_boundary (5/5 PASSED)）
 - **执行成果**：`lib/multipart_boundary/`（5/5 PASS，`doc/lib/multipart_boundary.md`）经 `verify_module.sh` 一次性验收回收；Batch 45: 吸收并验证 cap:multipart_boundary (5/5 PASSED)
+
+### 2026-11-22（`cap:content_disposition` 验收，Batch 46 完成 `cap:content_disposition`、`cap:sse_parser`、`cap:token_bucket`、`cap:http_accept` 4 模块吸收与全量验收。）
+- **执行成果**：`lib/content_disposition/`（5/5 PASS，`doc/lib/content_disposition.md`）经 `verify_module.sh` 一次性验收回收；Batch 46 完成 `cap:content_disposition`、`cap:sse_parser`、`cap:token_bucket`、`cap:http_accept` 4 模块吸收与全量验收。
+
+### 2026-11-22（`cap:sse_parser` 验收，Batch 46 注册 `cap:sse_parser`（WHATWG SSE 零分配解析器）。）
+- **执行成果**：`lib/sse_parser/`（5/5 PASS，`doc/lib/sse_parser.md`）经 `verify_module.sh` 一次性验收回收；Batch 46 注册 `cap:sse_parser`（WHATWG SSE 零分配解析器）。
+
+### 2026-11-22（`cap:token_bucket` 验收，Batch 46 注册 `cap:token_bucket`（令牌桶与固定窗口限流器）。）
+- **执行成果**：`lib/token_bucket/`（5/5 PASS，`doc/lib/token_bucket.md`）经 `verify_module.sh` 一次性验收回收；Batch 46 注册 `cap:token_bucket`（令牌桶与固定窗口限流器）。
+
+### 2026-11-22（`cap:http_accept` 验收，Batch 46 注册 `cap:http_accept` 并提交。）
+- **执行成果**：`lib/http_accept/`（5/5 PASS，`doc/lib/http_accept.md`）经 `verify_module.sh` 一次性验收回收；Batch 46 注册 `cap:http_accept` 并提交。

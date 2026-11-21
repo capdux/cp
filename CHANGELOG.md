@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_accept` RFC 9110 Accept / Accept-Encoding / Accept-Language 内容协商与 q 值解析器（5/5 PASS，自动动态挂载 `cap.http_accept`）
+新增 `cap:http_accept`（`lib/http_accept/{accept,index}.cp`、`doc/lib/http_accept.md`、`cap/test/test_http_accept_production_deep.cp`），实现严格 q 值解析与三类内容协商最佳匹配。
+
+## [2026-11-22] - 新建 `cap:token_bucket` 纯整数毫令牌确定性令牌桶与固定时间窗口限流器（防时钟回拨与溢出）（5/5 PASS，自动动态挂载 `cap.token_bucket`）
+新增 `cap:token_bucket`（`lib/token_bucket/{bucket,index}.cp`、`doc/lib/token_bucket.md`、`cap/test/test_token_bucket_production_deep.cp`），实现亚秒级零精度损失令牌桶与固定窗口限流器。
+
+## [2026-11-22] - 新建 `cap:sse_parser` WHATWG Server-Sent Events (text/event-stream) 零分配流式解析器与格式化器（5/5 PASS，自动动态挂载 `cap.sse_parser`）
+新增 `cap:sse_parser`（`lib/sse_parser/{sse,index}.cp`、`doc/lib/sse_parser.md`、`cap/test/test_sse_parser_production_deep.cp`），实现 WHATWG SSE 规范完整解析与格式化往返。
+
+## [2026-11-22] - 新建 `cap:content_disposition` RFC 6266 / RFC 5987 Content-Disposition 响应头解析、文件名安全消毒与 UTF-8 filename* 格式化器（5/5 PASS，自动动态挂载 `cap.content_disposition`）
+新增 `cap:content_disposition`（`lib/content_disposition/{disposition,index}.cp`、`doc/lib/content_disposition.md`、`cap/test/test_content_disposition_production_deep.cp`），完整实现 RFC 6266 解析、RFC 5987 UTF-8 解码与路径穿越消毒。
+
 ## [2026-11-22] - 新建 `cap:multipart_boundary` RFC 7578 / RFC 2046 multipart/form-data 零堆分配流式边界切分器与分片头部查找库（吸收自 bun/src/http/HTTPRequestBody.cp）（5/5 PASS，自动动态挂载 `cap.multipart_boundary`）
 新增 cap:multipart_boundary 标准库模块（lib/multipart_boundary/{multipart,index}.cp, doc/lib/multipart_boundary.md, cap/test/test_multipart_boundary_production_deep.cp）
 
