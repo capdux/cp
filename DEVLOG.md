@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:anneal` 纯 CP 零分配模拟退火全局优化库：四种降温曲线、Metropolis 接受准则、连续盒约束 SA 与 2-opt/swap 离散排列 TSP SA（5/5 PASS，文档直写 `doc/lib/anneal.md`）
+新增 cap:anneal（lib/anneal/{anneal,index}.cp）：零分配 SplitMix64 确定性模拟退火，支持 Rastrigin 多峰逃逸与 12 城市圆周 TSP 2-opt 精确寻优，cpc check 0 错误，cap test 6/6 PASS (786ms)
+
 ## 2026-11-22: 新建 `cap:savitzky` 纯 CP 零分配 Savitzky-Golay 多项式平滑/求导与 LOESS 局部加权回归库：动态 Vandermonde 卷积核、保峰 1/2 阶数值微分与 Cleveland Tricube 鲁棒 LOESS 平滑（5/5 PASS，文档直写 `doc/lib/savitzky.md`）
 新增 cap:savitzky（lib/savitzky/{savitzky,index}.cp）：零分配 Savitzky-Golay 卷积核与 1/2 阶精确数值微分（< 1e-10）及 Cleveland Tricube 鲁棒 LOESS，cpc check 0 错误，cap test 6/6 PASS (748ms)
 

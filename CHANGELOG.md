@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:anneal` 纯 CP 零分配模拟退火全局优化库：四种降温曲线、Metropolis 接受准则、连续盒约束 SA 与 2-opt/swap 离散排列 TSP SA（5/5 PASS，自动动态挂载 `cap.anneal`）
+新增纯 CP 零分配模拟退火全局优化库 cap:anneal（四种降温曲线、连续盒约束 SA、2-opt 排列 TSP SA），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:savitzky` 纯 CP 零分配 Savitzky-Golay 多项式平滑/求导与 LOESS 局部加权回归库：动态 Vandermonde 卷积核、保峰 1/2 阶数值微分与 Cleveland Tricube 鲁棒 LOESS 平滑（5/5 PASS，自动动态挂载 `cap.savitzky`）
 新增纯 CP 零分配 Savitzky-Golay 与 LOESS 平滑库 cap:savitzky（动态卷积核、数值微分、鲁棒 LOESS），含文档与 6 项深度生产测试
 
