@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:golay` Extended Golay [24,12,8] & Perfect [23,12,7] 3-bit ECC / 4-bit detect zero-alloc codec（5/5 PASS，自动动态挂载 `cap.golay`）
+新增纯 CP 零分配标准库 cap:golay（扩展二元戈莱码 [24,12,8] & [23,12,7] 3 比特纠错/4 比特检错与字节流编解码）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:hamming` Pure-CP zero-alloc ECC: Hamming(7,4), SECDED(8,4) & ECC DRAM SECDED(72,64)（5/5 PASS，自动动态挂载 `cap.hamming`）
 新增纯 CP 零分配标准库 cap:hamming（Hamming(7,4)、SECDED(8,4) 与服务器 ECC DRAM 标准 SECDED(72,64) 纠错码）与 5/5 深度测试
 

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:golay` Extended Golay [24,12,8] & Perfect [23,12,7] 3-bit ECC / 4-bit detect zero-alloc codec（5/5 PASS，文档直写 `doc/lib/golay.md`）
+新增 cap:golay 纯 CP 零分配深空通信纠错码库（4 步 IMLD 伴随式译码器、全 4096 码字重量分布与 2324 种 1..3-bit 错误穷举验证），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:hamming` Pure-CP zero-alloc ECC: Hamming(7,4), SECDED(8,4) & ECC DRAM SECDED(72,64)（5/5 PASS，文档直写 `doc/lib/hamming.md`）
 新增 cap:hamming 纯 CP 零分配纠错码库（常量时间 64-bit SECDED 掩码、全 72 单错纠正与 C(72,2)=2556 双错全检），通过 cpc check 与 5/5 cap test
 
