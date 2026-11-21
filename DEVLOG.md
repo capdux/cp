@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:lu` 纯 CP 零分配部分选主元 LU 分解与三对角求解库：Doolittle PA=LU 分解、多右端项求解、行列式、矩阵求逆、残差检验与 O(n) Thomas 三对角追赶法（5/5 PASS，文档直写 `doc/lib/lu.md`）
+新增 cap:lu（lib/lu/{lu,index}.cp）：原地部分选主元 Doolittle LU 分解、多右端项复用求解、行列式与逆矩阵计算及 100 维 Thomas 三对角求解，cpc check 0 错误，cap test 6/6 PASS (624ms)
+
 ## 2026-11-22: 新建 `cap:simplex` 纯 CP 零分配两阶段线性规划单纯形求解器库：Bland 防退化循环规则、混合 <=/>=/= 约束、Phase-I 人工变量、无界/不可行检出与原/对偶影子价格提取（5/5 PASS，文档直写 `doc/lib/simplex.md`）
 新增 cap:simplex（lib/simplex/{simplex,index}.cp）：基于调用方 tableau/basis 缓冲实现两阶段单纯形法与 Bland 防退化规则，通过 Beale 1955 退化基准与强对偶验证，cpc check 0 错误，cap test 7/7 PASS (761ms)
 

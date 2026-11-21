@@ -103,3 +103,6 @@
 
 ### 2026-11-22（`cap:simplex` 验收，子智能体交付 cap:simplex（两阶段单纯形线性规划求解器，7/7 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/simplex/`（5/5 PASS，`doc/lib/simplex.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:simplex（两阶段单纯形线性规划求解器，7/7 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:lu` 验收，子智能体交付 cap:lu（LU 分解与 Thomas 三对角求解，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/lu/`（5/5 PASS，`doc/lib/lu.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:lu（LU 分解与 Thomas 三对角求解，6/6 PASS），主协调器统一登记并提交
