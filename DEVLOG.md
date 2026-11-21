@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:http_range` RFC 9110 §14.1.2 HTTP Range 请求头（bytes=start-end / start- / -suffix）零分配解析与实体区间求值器（5/5 PASS，文档直写 `doc/lib/http_range.md`）
+主智能体吸收 `cap:http_range`，与 `cap:content_range` 形成完整 HTTP 断点续传/分片传输工具链。
+
+## 2026-11-22: 新建 `cap:semver_sort` SemVer 2.0.0 §11 严格优先级比较、预发布标签无溢出比较与原地升降序排序/极值选择（5/5 PASS，文档直写 `doc/lib/semver_sort.md`）
+Subagent 2 吸收 `cap:semver_sort`，纯数字预发布标识符按任意精度数值比较且低于非数字，原地排序前预校验保证异常零破坏。
+
+## 2026-11-22: 新建 `cap:cli_color_detect` 终端 ANSI 色彩能力探测（遵循 NO_COLOR / FORCE_COLOR / CLICOLOR / COLORTERM / TERM / CI 规范）（5/5 PASS，文档直写 `doc/lib/cli_color_detect.md`）
+主智能体吸收 `cap:cli_color_detect`，严格遵循 `FORCE_COLOR` > `NO_COLOR` > `CLICOLOR_FORCE` > `TERM=dumb` > TTY/CI 优先级链。
+
+## 2026-11-22: 新建 `cap:glob_escape` Glob 通配符元字符转义/反转义、静态目录前缀提取（遍历剪枝）与否定模式解析（5/5 PASS，文档直写 `doc/lib/glob_escape.md`）
+Subagent 1 吸收 `cap:glob_escape`，支持反斜杠转义识别与 `.gitignore`/glob 否定前缀区分。
+
 ## 2026-11-22: 新建 `cap:http_vary` RFC 9110 §12.5.5 Vary 响应头零分配迭代、通配符检测与大小写不敏感去重合并器（5/5 PASS，文档直写 `doc/lib/http_vary.md`）
 主智能体吸收 `cap:http_vary`，确保 `*` 出现时自动塌缩为 `"*"`，并避免大小写重复字段污染缓存键。
 

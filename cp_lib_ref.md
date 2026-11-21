@@ -573,3 +573,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_prefer` | Preference, PreferIter, ReturnPref, HandlingPref, PreferHeader | RFC 7240 Prefer 与 Preference-Applied HTTP 头零分配解析器与格式化器 |
 | `cap:hex_dump` | encodeHexLower, encodeHexUpper, decodeHexStrict, decodeHex, formatHexDumpLine, formatHexDump | 零分配十六进制编解码与规范化 hexdump -C 多行诊断格式化器 |
 | `cap:http_vary` | VaryIter, isVaryWildcard, varyContains, appendVary, mergeVary | RFC 9110 §12.5.5 Vary 响应头零分配迭代、通配符检测与大小写不敏感去重合并器 |
+| `cap:glob_escape` | isGlobMagic, hasGlobMagic, escapeGlob, unescapeGlob, staticBaseDir, isNegatedPattern, stripNegation | Glob 通配符元字符转义/反转义、静态目录前缀提取（遍历剪枝）与否定模式解析 |
+| `cap:cli_color_detect` | ColorLevel, ColorEnv, parseForceColor, detectColorLevel, supportsColor, supportsTruecolor | 终端 ANSI 色彩能力探测（遵循 NO_COLOR / FORCE_COLOR / CLICOLOR / COLORTERM / TERM / CI 规范） |
+| `cap:semver_sort` | SemverOrder, ParsedSemver, parseSemverStrict, parseSemverLoose, compareSemver, compareSemverStr, sortSemverAsc, sortSemverDesc, maxSemverIndex, minSemverIndex | SemVer 2.0.0 §11 严格优先级比较、预发布标签无溢出比较与原地升降序排序/极值选择 |
+| `cap:http_range` | RangeSpecKind, ByteRangeSpec, ResolvedByteRange, ByteRangeIter, resolveSingleByteRange | RFC 9110 §14.1.2 HTTP Range 请求头（bytes=start-end / start- / -suffix）零分配解析与实体区间求值器 |

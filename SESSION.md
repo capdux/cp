@@ -343,3 +343,15 @@
 
 ### 2026-11-22（`cap:http_vary` 验收，Batch 50 注册 `cap:http_vary` 并提交（突破 50 批次里程碑）。）
 - **执行成果**：`lib/http_vary/`（5/5 PASS，`doc/lib/http_vary.md`）经 `verify_module.sh` 一次性验收回收；Batch 50 注册 `cap:http_vary` 并提交（突破 50 批次里程碑）。
+
+### 2026-11-22（`cap:glob_escape` 验收，Batch 51 完成 `cap:glob_escape`、`cap:cli_color_detect`、`cap:semver_sort`、`cap:http_range` 4 模块吸收与全量验收。）
+- **执行成果**：`lib/glob_escape/`（5/5 PASS，`doc/lib/glob_escape.md`）经 `verify_module.sh` 一次性验收回收；Batch 51 完成 `cap:glob_escape`、`cap:cli_color_detect`、`cap:semver_sort`、`cap:http_range` 4 模块吸收与全量验收。
+
+### 2026-11-22（`cap:cli_color_detect` 验收，Batch 51 注册 `cap:cli_color_detect`。）
+- **执行成果**：`lib/cli_color_detect/`（5/5 PASS，`doc/lib/cli_color_detect.md`）经 `verify_module.sh` 一次性验收回收；Batch 51 注册 `cap:cli_color_detect`。
+
+### 2026-11-22（`cap:semver_sort` 验收，Batch 51 注册 `cap:semver_sort`。）
+- **执行成果**：`lib/semver_sort/`（5/5 PASS，`doc/lib/semver_sort.md`）经 `verify_module.sh` 一次性验收回收；Batch 51 注册 `cap:semver_sort`。
+
+### 2026-11-22（`cap:http_range` 验收，Batch 51 注册 `cap:http_range` 并提交（突破 150 模块里程碑）。）
+- **执行成果**：`lib/http_range/`（5/5 PASS，`doc/lib/http_range.md`）经 `verify_module.sh` 一次性验收回收；Batch 51 注册 `cap:http_range` 并提交（突破 150 模块里程碑）。
