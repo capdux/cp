@@ -519,3 +519,144 @@ export {
     RouteGroup,
     HttpRouter,
 } from "./router.cp";
+
+// --- Step 10: Consolidated Final HTTP Modules (Wave 6 Batch 4) ---
+export {
+    FetchSite,
+    FetchMode,
+    FetchDest,
+    parseFetchSite,
+    parseFetchMode,
+    parseFetchDest,
+    FetchMetadata,
+} from "./secfetch.cp";
+
+export {
+    HstsPolicy,
+    ReferrerPolicy,
+    parseReferrerPolicy,
+    FrameOptions,
+    parseFrameOptions,
+    CoopPolicy,
+    parseCoopPolicy,
+    CoepPolicy,
+    parseCoepPolicy,
+    CorpPolicy,
+    parseCorpPolicy,
+    isCrossOriginIsolated,
+} from "./security.cp";
+
+export {
+    ServerTimingMetric,
+    ServerTimingIter,
+    findServerTiming,
+    appendServerTiming,
+} from "./servertiming.cp";
+
+export {
+    SignatureInput,
+    SignatureInputIter,
+    ComponentIter,
+    findSignatureInput,
+    findSignatureValue,
+} from "./siginput.cp";
+
+export {
+    StatusClass,
+    statusLine,
+    statusText,
+    statusTextOrEmpty,
+    classify,
+    isInformational,
+    isSuccess,
+    isRedirect,
+    isClientError,
+    isServerError,
+    isError,
+    canHaveBody,
+    isCacheableByDefault,
+    isRetryable,
+} from "./statusparse.cp";
+
+export {
+    TransferCoding,
+    TransferEncodingValidation,
+    TransferEncodingIter,
+    validateTransferEncoding,
+    isChunkedTransfer,
+    hasConflictingClAndTe,
+    teAcceptsTrailers,
+} from "./te.cp";
+
+export {
+    isForbiddenTrailerField,
+    isValidTrailerFieldName,
+    TrailerFieldIter,
+    validateTrailerHeader,
+    hasTrailerField,
+} from "./trailer.cp";
+
+export {
+    HttpEncoding,
+    OptEncoding,
+    HttpFetchCacheMode,
+    OptFetchCacheMode,
+    HttpFetchRedirect,
+    OptFetchRedirect,
+    HttpFetchRequestMode,
+    OptFetchRequestMode,
+    HttpTypesMethod,
+    OptMethod,
+    HttpParsedETag,
+    parseETag,
+    computeETag,
+    ifNoneMatch,
+    HttpURLPath,
+} from "./types.cp";
+
+export {
+    UpgradeProtocol,
+    UpgradeIter,
+    ConnectionTokenIter,
+    connectionHasToken,
+    upgradeHasProtocol,
+    isHopByHopHeader,
+    isWebSocketUpgrade,
+} from "./upgrade.cp";
+
+export {
+    ProductToken,
+    UserAgentIter,
+    BrowserFamily,
+    OsFamily,
+    isBotUserAgent,
+    isMobileUserAgent,
+    detectBrowser,
+    detectOs,
+    findProductVersion,
+} from "./useragent.cp";
+
+export {
+    VaryIter,
+    isVaryWildcard,
+    varyContains,
+    appendVary,
+    mergeVary,
+} from "./vary.cp";
+
+export {
+    ViaEntry,
+    ViaIter,
+    viaHopCount,
+    viaContainsProxy,
+    appendVia,
+    parseMaxForwards as parseViaMaxForwards,
+    decrementMaxForwards,
+} from "./via.cp";
+
+export {
+    WarningItem,
+    WarningIter,
+    isStaleWarning,
+    formatWarning,
+} from "./warning.cp";

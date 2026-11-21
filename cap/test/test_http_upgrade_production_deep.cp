@@ -7,7 +7,7 @@ import {
     upgradeHasProtocol,
     isHopByHopHeader,
     isWebSocketUpgrade,
-} from "cap:http_upgrade";
+} from "cap:http";
 
 test("1. UpgradeIter parses protocol/version lists and skips empty/malformed entries", () => {
     const hdr = "HTTP/2.0, , SHTTP/1.3, IRC/6.9, websocket, bad/proto/extra";

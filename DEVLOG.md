@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:http` HTTP/1.1/2/3 协议与全套 56 项 RFC 头部/安全/代理/路由/缓存大一统主包（`lib/http_*` 全仓清零！）（5/5 PASS，文档直写 `doc/lib/http.md`）
+- **收敛要点**：`lib/http_types` 内部冲突类型最小重命名避免覆盖既有核心类型；全仓 `lib/http_*` 与 `cap:http_*` 均为 0；累计消除 150 个长下划线顶层目录！
+
 ## 2026-11-22: 新建 `cap:pkg` 包管理/NPM 名称/npmrc/exports/matcher 统一主包（同步收敛 `cap:shell`）（5/5 PASS，文档直写 `doc/lib/pkg.md`）
 - **收敛要点**：`lib/shell/envparse.cp` 避开既有 `env.cp`；顺手修复 `cap:shell`/`cap:pkg` 既有 `E0209` 与 `DirEntry` 导入；累计已消除 137 个长下划线顶层目录。
 

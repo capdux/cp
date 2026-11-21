@@ -14,7 +14,7 @@ import {
     canHaveBody,
     isCacheableByDefault,
     isRetryable,
-} from "cap:http_status";
+} from "cap:http";
 
 test("1. statusText & statusLine across 1xx/2xx/3xx/4xx/5xx standard RFC codes", () => {
     // 1xx Informational

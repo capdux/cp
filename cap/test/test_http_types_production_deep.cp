@@ -3,16 +3,16 @@ const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
 import {
-    Encoding,
-    FetchCacheMode,
-    FetchRedirect,
-    FetchRequestMode,
-    Method,
+    HttpEncoding as Encoding,
+    HttpFetchCacheMode as FetchCacheMode,
+    HttpFetchRedirect as FetchRedirect,
+    HttpFetchRequestMode as FetchRequestMode,
+    HttpTypesMethod as Method,
     parseETag,
     computeETag,
     ifNoneMatch,
-    URLPath,
-} from "cap:http_types";
+    HttpURLPath as URLPath,
+} from "cap:http";
 
 test "http_types: Method lookup & semantics (hasBody, hasRequestBody, isIdempotent)" {
     const get_m = Method.find("GET").?;

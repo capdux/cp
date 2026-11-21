@@ -5,9 +5,9 @@ import {
     viaHopCount,
     viaContainsProxy,
     appendVia,
-    parseMaxForwards,
+    parseViaMaxForwards as parseMaxForwards,
     decrementMaxForwards,
-} from "cap:http_via";
+} from "cap:http";
 
 test("1. ViaIter parses protocol/version, received-by, and comments containing commas", () => {
     const hdr = "1.0 fred, 1.1 p.example.net (Apache/1.1, edge), HTTP/2.0 proxy:8080";

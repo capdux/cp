@@ -6,7 +6,7 @@ import {
     TrailerFieldIter,
     validateTrailerHeader,
     hasTrailerField,
-} from "cap:http_trailer";
+} from "cap:http";
 
 test("1. isForbiddenTrailerField blocks all 25 RFC 9110 §6.5.1 forbidden trailer fields case-insensitively", () => {
     const forbidden: [25][]const u8 = [

@@ -4,7 +4,7 @@ import {
     ServerTimingIter,
     findServerTiming,
     appendServerTiming,
-} from "cap:http_server_timing";
+} from "cap:http";
 
 test("1. ServerTimingIter parses dur_us, quoted desc with commas/semicolons, and bare metrics", () => {
     const hdr = "db;dur=53.2;desc=\"SQL, read; primary\", cache;desc=\"Hit\", missedCache";

@@ -83,6 +83,9 @@
 | `lib/http/ifmatch.cp` / `keepalive.cp` / `link.cp` / `maxforwards.cp` | RFC 9110 条件请求（`If-Match`/`If-None-Match`）、`Keep-Alive` 参数、RFC 8288 `Link` 头、RFC 9110 `Max-Forwards` 跳数裁定 | `src/http/` |
 | `lib/http/methodparse.cp` / `origin.cp` / `permissions.cp` / `prefer.cp` | RFC 9110 36 种 HTTP 方法与 `MethodSet`、WHATWG `Origin`、W3C `Permissions-Policy`、RFC 7240 `Prefer` 头解析 | `src/http/` |
 | `lib/http/proxyurl.cp` / `range.cp` / `ratelimit.cp` / `retryafter.cp` / `router.cp` | HTTP/SOCKS 代理 URL 选择、RFC 9110 `Range` 字节区间、IETF `RateLimit`、`Retry-After`、Radix Trie `HttpRouter` | `src/http/` |
+| `lib/http/secfetch.cp` / `security.cp` / `servertiming.cp` / `siginput.cp` | W3C `Sec-Fetch-*` 元数据、HSTS/Referrer/COOP/COEP 安全头、`Server-Timing`、RFC 9421 `Signature-Input` | `src/http/` |
+| `lib/http/statusparse.cp` / `te.cp` / `trailer.cp` / `types.cp` | HTTP 状态码分类/重试判定、RFC 9110 `TE`/`Transfer-Encoding`、`Trailer` 禁传字段校验、核心 `http_types` 集合 | `src/http/` |
+| `lib/http/upgrade.cp` / `useragent.cp` / `vary.cp` / `via.cp` / `warning.cp` | RFC 9110 `Upgrade`/`Connection`、`User-Agent` 解析、`Vary` 合并、`Via` 代理链、RFC 7234 `Warning` 编解码 | `src/http/` |
 
 ---
 

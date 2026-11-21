@@ -7,7 +7,7 @@ import {
     detectBrowser,
     detectOs,
     findProductVersion,
-} from "cap:http_user_agent";
+} from "cap:http";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {

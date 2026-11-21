@@ -13,7 +13,7 @@ import {
     CorpPolicy,
     parseCorpPolicy,
     isCrossOriginIsolated,
-} from "cap:http_security_headers";
+} from "cap:http";
 
 test("1. HstsPolicy parse, quoted max-age, preload eligibility, and canonical formatting", () => {
     const h = HstsPolicy.parse("Max-Age=\"63072000\"; INCLUDEsubdomains; Preload") ?? unreachable;

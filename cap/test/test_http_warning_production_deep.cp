@@ -1,6 +1,6 @@
 import std from "std";
 import { test, expect_eq } from "cap:test";
-import { WarningIter, isStaleWarning, formatWarning } from "cap:http_warning";
+import { WarningIter, isStaleWarning, formatWarning } from "cap:http";
 
 test("1. WarningIter parses multi-warning headers with quoted commas and HTTP-dates", () => {
     const hdr =

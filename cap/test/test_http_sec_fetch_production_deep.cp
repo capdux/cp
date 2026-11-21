@@ -3,7 +3,7 @@ import {
     FetchMode,
     FetchDest,
     FetchMetadata,
-} from "cap:http_sec_fetch";
+} from "cap:http";
 import { test, expect } from "cap:test";
 
 test("FetchMetadata parses headers and enforces W3C Resource Isolation Policy", () => {

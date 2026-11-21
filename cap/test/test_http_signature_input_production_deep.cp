@@ -6,7 +6,7 @@ import {
     ComponentIter,
     findSignatureInput,
     findSignatureValue,
-} from "cap:http_signature_input";
+} from "cap:http";
 
 test("1. SignatureInputIter parses multi-signature header with all RFC 9421 parameters", () => {
     const hdr =

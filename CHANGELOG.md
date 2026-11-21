@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http` HTTP/1.1/2/3 协议与全套 56 项 RFC 头部/安全/代理/路由/缓存大一统主包（`lib/http_*` 全仓清零！）（5/5 PASS，自动动态挂载 `cap.http`）
+- **方案 A 收敛里程碑 (`http_*` 最终第 4 批 13 目录 -> `cap:http`)**：将最后 13 个 `http_sec_fetch` 至 `http_warning` 合入 `lib/http/`（13/13 PASS），**全仓 56 个 `lib/http_*` 散装目录彻底清零**！累计已消除 **150 个**长下划线顶层目录。
+
 ## [2026-11-22] - 新建 `cap:pkg` 包管理/NPM 名称/npmrc/exports/matcher 统一主包（同步收敛 `cap:shell`）（5/5 PASS，自动动态挂载 `cap.pkg`）
 - **方案 A 收敛 Wave 7 (7 Shell/包管理目录 -> `cap:shell`/`cap:pkg`)**：将 `shell_env_parse`/`shell_quote`/`brace_expand` 合入 `lib/shell/`，将 `npm_package_name`/`npmrc_config`/`pkg_exports`/`pkg_matcher` 合入 `lib/pkg/`（7/7 PASS），顺手修复 `lib/glob/walker.cp`、`lib/pkg/types.cp` `E0209` 及缺失 `DirEntry` 导入，删除 7 个旧目录与文档。
 

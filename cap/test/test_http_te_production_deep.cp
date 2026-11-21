@@ -9,7 +9,7 @@ import {
     isChunkedTransfer,
     hasConflictingClAndTe,
     teAcceptsTrailers,
-} from "cap:http_te";
+} from "cap:http";
 
 test("http_te: TransferCoding parsing and TransferEncodingIter comma/OWS handling") {
     expect_eq(TransferCoding.parse("chunked") == .chunked, true);

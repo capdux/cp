@@ -1,7 +1,7 @@
-// Source: absorbed from bun/src/http_types/{ETag,Encoding,FetchCacheMode,FetchRedirect,FetchRequestMode,Method,URLPath}.cp
+// Source: absorbed from bun/src/http_types/{ETag,HttpEncoding,HttpFetchCacheMode,HttpFetchRedirect,HttpFetchRequestMode,HttpTypesMethod,HttpURLPath}.cp
 const std = @import("std");
 
-pub const Encoding = enum {
+pub const HttpEncoding = enum {
     identity,
     gzip,
     deflate,
@@ -9,14 +9,14 @@ pub const Encoding = enum {
     zstd,
     chunked,
 
-    pub fn canUseLibDeflate(self: Encoding): bool {
+    pub fn canUseLibDeflate(self: HttpEncoding): bool {
         return switch (self) {
             .gzip, .deflate => true,
             else => false,
         };
     }
 
-    pub fn isCompressed(self: Encoding): bool {
+    pub fn isCompressed(self: HttpEncoding): bool {
         return switch (self) {
             .brotli, .gzip, .deflate, .zstd => true,
             else => false,
@@ -35,9 +35,9 @@ pub const Encoding = enum {
         return null;
     }
 };
-pub type OptEncoding = Encoding?;
+pub type OptEncoding = HttpEncoding?;
 
-pub const FetchCacheMode = enum(u3) {
+pub const HttpFetchCacheMode = enum(u3) {
     default,
     @"no-store",
     reload,
@@ -46,7 +46,7 @@ pub const FetchCacheMode = enum(u3) {
     @"only-if-cached",
 
     pub fn parse(s: []const u8): OptFetchCacheMode {
-        return std.StaticStringMap(FetchCacheMode).initComptime(.{
+        return std.StaticStringMap(HttpFetchCacheMode).initComptime(.{
             .{ "default", .default },
             .{ "no-store", .@"no-store" },
             .{ "reload", .reload },
@@ -56,31 +56,31 @@ pub const FetchCacheMode = enum(u3) {
         }).get(s);
     }
 };
-pub type OptFetchCacheMode = FetchCacheMode?;
+pub type OptFetchCacheMode = HttpFetchCacheMode?;
 
-pub const FetchRedirect = enum(u2) {
+pub const HttpFetchRedirect = enum(u2) {
     follow,
     manual,
     @"error",
 
     pub fn parse(s: []const u8): OptFetchRedirect {
-        return std.StaticStringMap(FetchRedirect).initComptime(.{
+        return std.StaticStringMap(HttpFetchRedirect).initComptime(.{
             .{ "follow", .follow },
             .{ "manual", .manual },
             .{ "error", .@"error" },
         }).get(s);
     }
 };
-pub type OptFetchRedirect = FetchRedirect?;
+pub type OptFetchRedirect = HttpFetchRedirect?;
 
-pub const FetchRequestMode = enum(u2) {
+pub const HttpFetchRequestMode = enum(u2) {
     @"same-origin",
     @"no-cors",
     cors,
     navigate,
 
     pub fn parse(s: []const u8): OptFetchRequestMode {
-        return std.StaticStringMap(FetchRequestMode).initComptime(.{
+        return std.StaticStringMap(HttpFetchRequestMode).initComptime(.{
             .{ "same-origin", .@"same-origin" },
             .{ "no-cors", .@"no-cors" },
             .{ "cors", .cors },
@@ -88,9 +88,9 @@ pub const FetchRequestMode = enum(u2) {
         }).get(s);
     }
 };
-pub type OptFetchRequestMode = FetchRequestMode?;
+pub type OptFetchRequestMode = HttpFetchRequestMode?;
 
-pub const Method = enum(u8) {
+pub const HttpTypesMethod = enum(u8) {
     ACL = 0,
     BIND = 1,
     CHECKOUT = 2,
@@ -128,20 +128,20 @@ pub const Method = enum(u8) {
     UNLOCK = 34,
     UNSUBSCRIBE = 35,
 
-    pub const Set = std.enums.EnumSet(Method);
+    pub const Set = std.enums.EnumSet(HttpTypesMethod);
 
-    pub fn hasBody(self: Method): bool {
+    pub fn hasBody(self: HttpTypesMethod): bool {
         return self != .HEAD and self != .TRACE;
     }
 
-    pub fn hasRequestBody(self: Method): bool {
+    pub fn hasRequestBody(self: HttpTypesMethod): bool {
         return switch (self) {
             .GET, .HEAD, .OPTIONS, .TRACE => false,
             else => true,
         };
     }
 
-    pub fn isIdempotent(self: Method): bool {
+    pub fn isIdempotent(self: HttpTypesMethod): bool {
         return switch (self) {
             .GET, .HEAD, .PUT, .DELETE, .OPTIONS, .TRACE, .QUERY => true,
             else => false,
@@ -152,7 +152,7 @@ pub const Method = enum(u8) {
         return Map.get(str);
     }
 
-    const Map = std.StaticStringMap(Method).initComptime(.{
+    const Map = std.StaticStringMap(HttpTypesMethod).initComptime(.{
         .{ "ACL", .ACL },
         .{ "BIND", .BIND },
         .{ "CHECKOUT", .CHECKOUT },
@@ -227,14 +227,14 @@ pub const Method = enum(u8) {
         .{ "unsubscribe", .UNSUBSCRIBE },
     });
 };
-pub type OptMethod = Method?;
+pub type OptMethod = HttpTypesMethod?;
 
-pub const ParsedETag = struct {
+pub const HttpParsedETag = struct {
     tag: []const u8,
     is_weak: bool,
 };
 
-pub fn parseETag(tag_str: []const u8): ParsedETag {
+pub fn parseETag(tag_str: []const u8): HttpParsedETag {
     let str = std.mem.trim(u8, tag_str, " \t");
     let is_weak = false;
     if (str.len >= 2 and std.mem.eql(u8, str[0..2], "W/")) {
@@ -244,7 +244,7 @@ pub fn parseETag(tag_str: []const u8): ParsedETag {
     if (str.len >= 2 and str[0] == '"' and str[str.len - 1] == '"') {
         str = str[1 .. str.len - 1];
     }
-    return ParsedETag{ .tag = str, .is_weak = is_weak };
+    return HttpParsedETag{ .tag = str, .is_weak = is_weak };
 }
 
 pub fn computeETag(bytes: []const u8, buf: *[40]u8): []const u8 {
@@ -268,7 +268,7 @@ pub fn ifNoneMatch(etag: []const u8, if_none_match: []const u8): bool {
     return false;
 }
 
-pub const URLPath = struct {
+pub const HttpURLPath = struct {
     extname: []const u8 = "",
     path: []const u8 = "",
     pathname: []const u8 = "",
@@ -276,9 +276,9 @@ pub const URLPath = struct {
     query_string: []const u8 = "",
     is_source_map: bool = false,
 
-    pub fn parse(raw_pathname: []const u8): URLPath {
+    pub fn parse(raw_pathname: []const u8): HttpURLPath {
         if (raw_pathname.len == 0) {
-            return URLPath{};
+            return HttpURLPath{};
         }
         let question_mark_i: isize = -1;
         let period_i: isize = -1;
@@ -329,7 +329,7 @@ pub const URLPath = struct {
         }
 
         const qs = if (question_mark_i > -1) raw_pathname[@intCast(question_mark_i)..] else "";
-        return URLPath{
+        return HttpURLPath{
             .extname = final_ext,
             .path = path,
             .pathname = raw_pathname,
@@ -339,13 +339,13 @@ pub const URLPath = struct {
         };
     }
 
-    pub fn isRoot(self: URLPath, asset_prefix: []const u8): bool {
+    pub fn isRoot(self: HttpURLPath, asset_prefix: []const u8): bool {
         const without = self.pathWithoutAssetPrefix(asset_prefix);
         if (without.len == 1 and without[0] == '.') { return true; }
         return std.mem.eql(u8, without, "index");
     }
 
-    pub fn pathWithoutAssetPrefix(self: URLPath, asset_prefix: []const u8): []const u8 {
+    pub fn pathWithoutAssetPrefix(self: HttpURLPath, asset_prefix: []const u8): []const u8 {
         if (asset_prefix.len == 0) { return self.path; }
         const offset: usize = if (asset_prefix[0] == '/') 1 else 0;
         const origin = asset_prefix[offset..];
