@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:sflow` sFlow v5 datagram, Flow/Expanded Sample, RawPacketHeader & ExtendedSwitch zero-alloc parser（5/5 PASS，自动动态挂载 `cap.sflow`）
+新增纯 CP 零分配标准库 cap:sflow（sFlow v5 数据报、Flow/Expanded Sample 与 RawPacketHeader/ExtendedSwitch 解析）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:ipfix` IPFIX v10 (RFC 7011) Message/Set/Enterprise IE Template & varlen zero-alloc parser（5/5 PASS，自动动态挂载 `cap.ipfix`）
 新增纯 CP 零分配标准库 cap:ipfix（RFC 7011 IPFIX v10 报头、Template/Data Set、Enterprise IE 与变长字段解码）与 5/5 深度测试
 

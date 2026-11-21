@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:sflow` sFlow v5 datagram, Flow/Expanded Sample, RawPacketHeader & ExtendedSwitch zero-alloc parser（5/5 PASS，文档直写 `doc/lib/sflow.md`）
+新增 cap:sflow 纯 CP 零分配网络采样遥测协议库（IPv4/IPv6 Agent 报头、Sample/Record 嵌套零拷贝迭代），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:ipfix` IPFIX v10 (RFC 7011) Message/Set/Enterprise IE Template & varlen zero-alloc parser（5/5 PASS，文档直写 `doc/lib/ipfix.md`）
 新增 cap:ipfix 纯 CP 零分配 IP 流信息导出协议库（16B 报头、Set/Template/Enterprise IE 零拷贝迭代与 §7 变长字段解码），通过 cpc check 与 5/5 cap test
 
