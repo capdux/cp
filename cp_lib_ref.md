@@ -523,3 +523,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:haproxy` | `HaSectionKind`, `HaSection`, `HaDirective`, `HaSectionIter`, `HaDirectiveIter`, `findHaSection`, `findHaDirective` | 零分配 HAProxy `.cfg` 负载均衡配置段与指令解析器 |
 | `cap:macho` | `MachoKind`, `CPU_TYPE_X86_64`, `CPU_TYPE_ARM64`, `MH_EXECUTE`, `MH_DYLIB`, `MachoHeader`, `MachoLoadCmd`, `FatArchEntry`, `detectMachoKind`, `parseMachoHeader`, `MachoLoadCmdIter`, `FatArchIter` | 零分配 Apple Mach-O 32/64-bit 及 Fat Universal 二进制头与 Load Command 解析器 |
 | `cap:ico` | `IcoKind`, `IcoHeader`, `IcoEntry`, `isIcoOrCur`, `parseIcoHeader`, `IcoEntryIter`, `findBestIcoEntry` | 零分配 Windows ICO / CUR 图标容器二进制目录解析、PNG/BMP 负载提取与最佳尺寸选择器 |
+| `cap:woff2` | `WOFF2_HEADER_SIZE`, `WOFF2_SIGNATURE`, `Woff2Header`, `UIntBase128Result`, `decodeUIntBase128`, `Woff2TableEntry`, `isWoff2`, `parseWoff2Header`, `Woff2TableIter` | 零分配 W3C WOFF2 网页字体 48 字节头、UIntBase128 变长整数与 63 项已知表目录解析器 |

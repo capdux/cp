@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:woff2` 零分配 W3C WOFF2 网页字体 48 字节头、UIntBase128 变长整数与 63 项已知表目录解析器（5/5 PASS，自动动态挂载 `cap.woff2`）
+- 新增 `lib/woff2/{woff2,index}.cp`、`doc/lib/woff2.md`、`cap/test/test_woff2_production_deep.cp`：纯 CP 零分配实现 W3C WOFF2 48 字节头校验、UIntBase128 严格解码（最多 5 字节/禁前导 `0x80`/防溢出）与 63 已知表 tag + 自定义 tag 目录迭代（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:ico` 零分配 Windows ICO / CUR 图标容器二进制目录解析、PNG/BMP 负载提取与最佳尺寸选择器（5/5 PASS，自动动态挂载 `cap.ico`）
 - 新增 `lib/ico/{ico,index}.cp`、`doc/lib/ico.md`、`cap/test/test_ico_production_deep.cp`：纯 CP 零分配实现 ICO/CUR 6 字节头与 16 字节目录项解析（`0`->`256`、PNG 魔数识别、越界防护与最佳尺寸/高色深选择）（5/5 PASS）。
 

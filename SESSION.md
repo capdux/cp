@@ -157,3 +157,6 @@
 
 ### 2026-11-22（`cap:ico` 验收，新增简洁单单词包 `cap:ico`（5/5 PASS））
 - **执行成果**：`lib/ico/`（5/5 PASS，`doc/lib/ico.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:ico`（5/5 PASS）
+
+### 2026-11-22（`cap:woff2` 验收，新增简洁单单词包 `cap:woff2`（5/5 PASS））
+- **执行成果**：`lib/woff2/`（5/5 PASS，`doc/lib/woff2.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:woff2`（5/5 PASS）
