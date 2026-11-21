@@ -133,6 +133,7 @@ impl Codegen {
             self.writeln("        _ = self;");
             self.writeln("    }");
             self.writeln("    ");
+            self.writeln("    pub fn __cp_deinit(self: *Map) void { self.release(); }");
             self.writeln("    pub fn release(self: *Map) void {");
             self.writeln("        if (self.__cp_dropped) return;");
             self.writeln("        self.__cp_dropped = true;");
@@ -234,6 +235,7 @@ impl Codegen {
             self.writeln("        _ = self;");
             self.writeln("    }");
             self.writeln("    ");
+            self.writeln("    pub fn __cp_deinit(self: *Set) void { self.release(); }");
             self.writeln("    pub fn release(self: *Set) void {");
             self.writeln("        if (self.__cp_dropped) return;");
             self.writeln("        self.__cp_dropped = true;");
@@ -316,6 +318,7 @@ impl Codegen {
             self.writeln("        return self;");
             self.writeln("    }");
             self.writeln("    pub fn init(self: *VecDeque) void { _ = self; }");
+            self.writeln("    pub fn __cp_deinit(self: *VecDeque) void { self.release(); }");
             self.writeln("    pub fn release(self: *VecDeque) void {");
             self.writeln("        if (self.__cp_dropped) return;");
             self.writeln("        self.__cp_dropped = true;");
@@ -408,6 +411,7 @@ impl Codegen {
             self.writeln("        return self;");
             self.writeln("    }");
             self.writeln("    pub fn init(self: *BinaryHeap) void { _ = self; }");
+            self.writeln("    pub fn __cp_deinit(self: *BinaryHeap) void { self.release(); }");
             self.writeln("    pub fn release(self: *BinaryHeap) void {");
             self.writeln("        if (self.__cp_dropped) return;");
             self.writeln("        self.__cp_dropped = true;");
@@ -484,6 +488,7 @@ impl Codegen {
             self.writeln("        return self;");
             self.writeln("    }");
             self.writeln("    pub fn init(self: *BTreeMap) void { _ = self; }");
+            self.writeln("    pub fn __cp_deinit(self: *BTreeMap) void { self.release(); }");
             self.writeln("    pub fn release(self: *BTreeMap) void {");
             self.writeln("        if (self.__cp_dropped) return;");
             self.writeln("        self.__cp_dropped = true;");
@@ -594,6 +599,7 @@ impl Codegen {
             self.writeln("        return self;");
             self.writeln("    }");
             self.writeln("    pub fn init(self: *BTreeSet) void { _ = self; }");
+            self.writeln("    pub fn __cp_deinit(self: *BTreeSet) void { self.release(); }");
             self.writeln("    pub fn release(self: *BTreeSet) void {");
             self.writeln("        if (self.__cp_dropped) return;");
             self.writeln("        self.__cp_dropped = true;");
@@ -777,6 +783,7 @@ impl Codegen {
             self.writeln("        const Self = @This();");
             self.writeln("        mutex: *CpMutex(__T),");
             self.writeln("        data: *__T,");
+            self.writeln("        pub fn __cp_deinit(self: Self) void { self.release(); }");
             self.writeln("        pub fn release(self: Self) void { self.mutex.raw.unlock(); }");
             self.writeln("        pub fn unlock(self: Self) void { self.release(); }");
             self.writeln("    };");
@@ -787,6 +794,7 @@ impl Codegen {
             self.writeln("        const Self = @This();");
             self.writeln("        rwlock: *CpRwLock(__T),");
             self.writeln("        data: *const __T,");
+            self.writeln("        pub fn __cp_deinit(self: Self) void { self.release(); }");
             self.writeln(
                 "        pub fn release(self: Self) void { self.rwlock.raw.unlockShared(); }",
             );
@@ -799,6 +807,7 @@ impl Codegen {
             self.writeln("        const Self = @This();");
             self.writeln("        rwlock: *CpRwLock(__T),");
             self.writeln("        data: *__T,");
+            self.writeln("        pub fn __cp_deinit(self: Self) void { self.release(); }");
             self.writeln(
                 "        pub fn release(self: Self) void { self.rwlock.raw.unlockExclusive(); }",
             );
@@ -1103,6 +1112,7 @@ impl Codegen {
             self.writeln("    pub fn retain(self: *ZigSharedTensor) void {");
             self.writeln("        _ = self.ref_count.fetchAdd(1, .monotonic);");
             self.writeln("    }");
+            self.writeln("    pub fn __cp_deinit(self: *ZigSharedTensor) void { self.release(); }");
             self.writeln("    pub fn release(self: *ZigSharedTensor) void {");
             self.writeln("        if (self.ref_count.fetchSub(1, .release) == 1) {");
             self.writeln("            _ = self.ref_count.load(.acquire);");
@@ -1661,6 +1671,7 @@ impl Codegen {
         self.writeln("        if (regexec(&self.preg, c_str.ptr, 1, &pmatch, 0) == 0) { const start: usize = @intCast(pmatch[0].rm_so); const end: usize = @intCast(pmatch[0].rm_eo); return str[start..end]; }");
         self.writeln("        return \"\";");
         self.writeln("    }");
+        self.writeln("    pub fn __cp_deinit(self: *RegExp) void { self.release(); }");
         self.writeln("    pub fn release(self: *RegExp) void { if (self.__cp_dropped) return; self.__cp_dropped = true; regfree(&self.preg); }");
         self.writeln("};");
     }

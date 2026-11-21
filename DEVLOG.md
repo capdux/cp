@@ -48,3 +48,7 @@
   2. 新体系以 `~init()` 作为唯一析构语法（无参无返回值），结合 Layer 1 作用域 `__x_moved` 与 Layer 2 非 C-ABI 实例 `__cp_dropped` 实现双重幂等（保留 `SharedTensor` 等引用计数类型特殊放行）；同时将直接赋值与解构赋值统一至“默认只读、`*` 可变借用、`move` 显式转移”，并在 `Pattern::Object` 落地整体 vs 局部成员精细分离借用（同步与状态机 `ctx` 类型推导同步升级）。
   3. 同步解决 `bun_agy` 热修工单 `task-bun-20261121-sat-assign-op`（补齐 Zig 风格饱和/环绕复合赋值 `+|=`, `-|=`, `*|=` , `<<|=`, `+%=`, `-%=`, `*%=`）。
 - **验证方案**：构建 Release 版 `cpc`，运行 8 组正向深测（`test_raii_deinit_ownership_deep.cp`）、9 组编译期负向安全拦截与 6 组既有核心回归套件，全部 100% 通过。
+
+## 2026-11-21: 彻底取消 `release` 析构语义（`~init()` 唯一化）与 `CP_PITFALLS.md` 全量对齐
+- **设计决策**：用户确认 `release` 无论无参或多参均应作为普通业务方法，不再承担析构职责，以彻底消除与 Bun/业务代码的方法名冲突。编译器后端收口至唯一 `__cp_deinit` 钩子（用户侧对应 `~init()`，提前释放对应 `drop(x)` / `x.~init()`），并同步修复 `call.rs` 历史上对多参 `.release(a, b)` 的截断问题。
+- **验证与广播**：发布 Release 版 `cpc`，`test_raii_deinit_ownership_deep.cp`（8/8 PASS）与核心所有权/生命周期/Trait 回归全通过；同步更新 `cp_agent_ref.md` 与两份下游 `CP_PITFALLS.md` 并向 `bun_agy`/`capsurf_agy` 发出广播 `syntax-raii-20261121-v2`。

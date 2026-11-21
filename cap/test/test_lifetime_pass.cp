@@ -7,7 +7,7 @@ class Tensor {
         this.size = s;
     }
 
-    fn release() {
+    ~init() {
         @print("Tensor(size={d}) released!", this.size);
     }
 }

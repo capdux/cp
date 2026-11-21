@@ -200,16 +200,36 @@ impl Codegen {
     }
 
     pub fn method_is_zero_arg_destructor(m: &Function) -> bool {
-        if m.is_static {
+        !m.is_static && m.ident.sym == "__cp_deinit"
+    }
+
+    pub fn is_builtin_raii_type(&self, ty: Option<&Type>) -> bool {
+        let Some(mut t) = ty else {
             return false;
+        };
+        while let Type::Optional(inner) = t {
+            t = inner;
         }
-        if m.ident.sym == "__cp_deinit" {
-            return true;
-        }
-        if m.ident.sym == "release" {
-            return m.params.is_empty()
-                || (m.params.len() == 1
-                    && matches!(m.params[0].ident.sym.as_str(), "_" | "this" | "self"));
+        if let Type::Ref(id) = t {
+            if self.class_defs.contains_key(&id.sym) {
+                return false;
+            }
+            return id.sym.starts_with("LockGuard")
+                || id.sym.starts_with("ReadGuard")
+                || id.sym.starts_with("WriteGuard")
+                || matches!(
+                    id.sym.as_str(),
+                    "Map"
+                        | "Dict"
+                        | "Set"
+                        | "HashMap"
+                        | "HashSet"
+                        | "VecDeque"
+                        | "BinaryHeap"
+                        | "BTreeMap"
+                        | "BTreeSet"
+                        | "RegExp"
+                );
         }
         false
     }
@@ -341,16 +361,6 @@ impl Codegen {
     }
 
     pub fn build_drop_call_snippet(var_expr: &str) -> String {
-        let one_arg_release = |ty_ident: &str| -> String {
-            format!(
-                "@hasDecl({0}, \"release\") and @typeInfo(@TypeOf({0}.release)) == .@\"fn\" and (if (@hasField(@TypeOf(@typeInfo(@TypeOf({0}.release)).@\"fn\"), \"params\")) @typeInfo(@TypeOf({0}.release)).@\"fn\".params.len == 1 else @typeInfo(@TypeOf({0}.release)).@\"fn\".param_types.len == 1)",
-                ty_ident
-            )
-        };
-        let opt_child_rel = one_arg_release("__CpChild");
-        let opt_val_rel = one_arg_release("__OptT");
-        let ptr_child_rel = one_arg_release("__CpChild");
-        let val_rel = one_arg_release("__T");
         format!(
             concat!(
                 "const __T = @TypeOf({0}); ",
@@ -359,36 +369,20 @@ impl Codegen {
                 "const __OptT = @TypeOf(__cp_opt_v); ",
                 "if (@typeInfo(__OptT) == .pointer and @typeInfo(__OptT).pointer.size == .one and (if (@hasField(@TypeOf(@typeInfo(__OptT).pointer), \"is_const\")) !@typeInfo(__OptT).pointer.is_const else !@typeInfo(__OptT).pointer.attrs.@\"const\")) {{ ",
                 "const __CpChild = @typeInfo(__OptT).pointer.child; ",
-                "if (@typeInfo(__CpChild) == .@\"struct\") {{ ",
-                "if (@hasDecl(__CpChild, \"__cp_deinit\")) {{ __cp_opt_v.__cp_deinit(); }} ",
-                "else if ({1}) {{ ",
-                "const __CpRType = @typeInfo(@TypeOf(__CpChild.release)).@\"fn\".return_type.?; ",
-                "if (@typeInfo(__CpRType) == .error_union) {{ _ = __cp_opt_v.release() catch {{}}; }} else {{ __cp_opt_v.release(); }} ",
+                "if (@typeInfo(__CpChild) == .@\"struct\" and @hasDecl(__CpChild, \"__cp_deinit\")) {{ __cp_opt_v.__cp_deinit(); }} ",
+                "}} ",
+                "else if (@typeInfo(__OptT) == .@\"struct\" and @hasDecl(__OptT, \"__cp_deinit\")) {{ ",
+                "var _drop_val = __cp_opt_v; _drop_val.__cp_deinit(); ",
                 "}} }} }} ",
-                "else if (@typeInfo(__OptT) == .@\"struct\") {{ ",
-                "if (@hasDecl(__OptT, \"__cp_deinit\")) {{ var _drop_val = __cp_opt_v; _drop_val.__cp_deinit(); }} ",
-                "else if ({2}) {{ ",
-                "var _drop_val = __cp_opt_v; ",
-                "const __CpRType = @typeInfo(@TypeOf(__OptT.release)).@\"fn\".return_type.?; ",
-                "if (@typeInfo(__CpRType) == .error_union) {{ _ = _drop_val.release() catch {{}}; }} else {{ _drop_val.release(); }} ",
-                "}} }} }} }} ",
                 "else if (@typeInfo(__T) == .pointer and @typeInfo(__T).pointer.size == .one and (if (@hasField(@TypeOf(@typeInfo(__T).pointer), \"is_const\")) !@typeInfo(__T).pointer.is_const else !@typeInfo(__T).pointer.attrs.@\"const\")) {{ ",
                 "const __CpChild = @typeInfo(__T).pointer.child; ",
-                "if (@typeInfo(__CpChild) == .@\"struct\") {{ ",
-                "if (@hasDecl(__CpChild, \"__cp_deinit\")) {{ {0}.__cp_deinit(); }} ",
-                "else if ({3}) {{ ",
-                "const __CpRType = @typeInfo(@TypeOf(__CpChild.release)).@\"fn\".return_type.?; ",
-                "if (@typeInfo(__CpRType) == .error_union) {{ _ = {0}.release() catch {{}}; }} else {{ {0}.release(); }} ",
-                "}} }} }} ",
-                "else if (@typeInfo(__T) == .@\"struct\") {{ ",
-                "if (@hasDecl(__T, \"__cp_deinit\")) {{ var _drop_val = {0}; _drop_val.__cp_deinit(); }} ",
-                "else if ({4}) {{ ",
-                "var _drop_val = {0}; ",
-                "const __CpRType = @typeInfo(@TypeOf(__T.release)).@\"fn\".return_type.?; ",
-                "if (@typeInfo(__CpRType) == .error_union) {{ _ = _drop_val.release() catch {{}}; }} else {{ _drop_val.release(); }} ",
-                "}} }}"
+                "if (@typeInfo(__CpChild) == .@\"struct\" and @hasDecl(__CpChild, \"__cp_deinit\")) {{ {0}.__cp_deinit(); }} ",
+                "}} ",
+                "else if (@typeInfo(__T) == .@\"struct\" and @hasDecl(__T, \"__cp_deinit\")) {{ ",
+                "var _drop_val = {0}; _drop_val.__cp_deinit(); ",
+                "}}"
             ),
-            var_expr, opt_child_rel, opt_val_rel, ptr_child_rel, val_rel
+            var_expr
         )
     }
 

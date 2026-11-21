@@ -13,7 +13,7 @@ class Tensor {
     pub fn set(*_, v: i32) {
         _.data = v;
     }
-    pub fn release() {
+    ~init() {
         @print("Tensor released: {d}", _.data);
     }
 }
@@ -80,7 +80,7 @@ class BaseEngine implements Resettable {
         _.power = 0;
     }
 
-    pub fn release() {
+    ~init() {
         @print("BaseEngine released, power={d}", _.power);
     }
 }
@@ -107,8 +107,8 @@ class TurboEngine extends BaseEngine {
         return final_score;
     }
 
-    fn release() {
-        _.weights.release();
+    ~init() {
+        _.weights.~init();
         @print("TurboEngine released, power={d}", _.power);
     }
 }

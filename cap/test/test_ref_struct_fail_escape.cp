@@ -3,7 +3,7 @@ import { print } from "cap:io";
 class Tensor {
     size: i32;
     fn init(s: i32) { this.size = s; }
-    fn release() { @print("Tensor released"); }
+    ~init() { @print("Tensor released"); }
 }
 
 // 栈绑定视图 (C# ref struct)

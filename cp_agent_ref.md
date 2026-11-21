@@ -150,10 +150,13 @@ CP 彻底废除 `let mut`、`var` 与 `threadlocal var`，全面拥抱清晰确�
 - **`*` = 安全可变借用（零析构责任）**：如 `const m = *a;`、`const h = *_.handlers;`、`v: *T`、`*_`。**`*T` 是安全可变借用，绝非裸指针**；
 - **`move` = 显式所有权转移**：如 `const b = move a;`、`const h = move _.handlers;`、`move v: T`。转移后原变量即刻失效并移交析构责任；新鲜右值（`new Class(...)`、工厂返回值、结构体字面量）天然拥有所有权无需写 `move`；
 - **`own` = 跨线程独占所有权**：与 `Shared<T>` 对偶，专用于跨线程独占传递与容器成员持有，在最终所有者离开作用域时同样自动触发确定性析构；
-- **唯一析构函数 `~init() { ... }`（双重幂等，彻底消除与业务 `release()` 重名冲突）**：
-  - 唯一签名：`~init() { ... }`（无参数、无返回值、隐式独占可变接收者 `_`），`struct` 与 `class` 均可声明；
-  - **双重幂等保障**：调用方作用域守卫（`__x_moved`）+ 非 C-ABI 实例内建守卫（`__cp_dropped`），手动调用 `x.~init()`、`drop(x)` 或内置容器 `m.release()` 后再离开作用域**绝不 Double-Free**；
-  - **零误伤铁律**：裸指针（`*T!` / `*const T!`）、安全借用（`*T` / `&T`）、字段读取（`const h = _.handlers;`）及多参业务方法（如 `release(*_, slot: usize)`）**绝不注入自动析构**（兼容旧 `class` 无参 `release()`，新代码统一推荐 `~init()`）。
+- **唯一析构函数 `~init() { ... }`（彻底与业务方法 `release` 解耦，双重幂等）**：
+  - **构造与析构对称**：`init(...)` 为 `class` 构造函数；**`~init() { ... }` 是 `struct` / `class` 唯一合法析构函数**（无参数、无返回值、隐式独占可变接收者 `_`）。
+  - **`release` 不再是析构函数**：无论带不带参数（`release()` / `release(*_)` / `release(*_, slot)`），`release` 均按普通方法处理，**永不触发自动析构**，彻底消除与业务方法名冲突。
+  - **显式提前析构两种方式（均具双重幂等保障，绝不 Double-Free）**：
+    - **`drop(x)`（或 `drop(move x)`）**：编译器内置提前释放原语，立即触发一次 `~init()` **同时在编译期消耗 `x` 所有权**（后续再访问 `x` 直接编译报错防 Use-After-Drop，离开作用域跳过 `defer`）；
+    - **`x.~init()`**：直接调用特殊析构函数（受作用域 `__x_moved` + 非 C-ABI 实例 `__cp_dropped` 双重幂等保护，多次调用或离开作用域均不会 Double-Free，但不在编译期作废标识符 `x`）。
+  - **零误伤铁律**：裸指针（`*T!` / `*const T!` / `**T!`）、安全借用（`*T` / `&T`）、字段读取（`const h = _.handlers;`）及任何名为 `release` 的业务方法**绝不注入自动析构**。
 
 ### 3. 借用检查器、容器整体 vs 成员局部精细分离借用与循环迭代锁死
 - **读写互斥原则**：同一生命周期内允许多个只读借用，或仅允许**唯一一个**可变借用（`*T`），读写严格互斥；基础类型可变借用通过 `p.* = val` 就地修改；
@@ -310,7 +313,7 @@ pub type SimpleCb = fn (x: u8) bool;                     // Zig 兼容简写函�
 ## 四、 裸指针机制、Unsafe 操作、内嵌汇编与逃逸舱 (Raw Pointers, Unsafe & Inline Asm) [SYNC_PENDING: 2026-11-21]
 
 ### 1. 变量常量性与指针只读性的正交解耦（`&v` 取址与 `*T!` 互操作）
-> 牢记：`**T` / `*T` 是安全可变借用，不是指针！** 裸指针类型带尾置 `!`（`*T!` / `*const T!`），永不触发自动析构。`&v` 回收为纯取址运算符，可直接初始化裸指针变量：
+> 牢记：**`*T` 是安全可变借用，不是指针！** 裸指针类型必须带尾置 `!`（单级 `*T!` / `*const T!`，二级 `**T!` / `**const T!`），永不触发自动析构。`&v` 回收为纯取址运算符，可直接初始化裸指针变量：
 1. **`const p: *T! = &v;`（或 `*v!`）**：指针自身不可重新指向，但可通过 `unsafe { p.* = val; }` 修改目标内存；
 2. **`let p: *const T! = &v;`**：指针变量可重新赋值指向新地址，但目标内存绝对只读；
 3. **`const p: *const T! = &v;`**：双重不可变。
@@ -397,7 +400,7 @@ fn rawOperation(ptr: *i32!) { unsafe { ptr.* = 100; } }
 
 // 4. 所有权转移参数（move v: T / own v: *T，修饰符在参数名前，调用方原变量失效）
 fn consumeUser(move u: User) { u.saveToDb(); }
-fn consumeBuffer(own buf: *Buffer) { buf.release(); }
+fn consumeBuffer(own buf: Buffer) { drop(buf); }
 
 // 5. 函数返回签名铁律（有返回值必写 `: ReturnType`；无返回值一律省略 `: void`！）
 fn getCount(): usize { return 42; }                 // ✅ 有返回值必须写 `:`
@@ -483,7 +486,7 @@ let is_same = std.mem.eql(u8, slice_a, slice_b);
 
 ### 5. 纯静态命名空间容器 (`static class` 与 `static struct`)
 - 内部所有字段、常量与方法**默认全自动静态**，无需逐个写 `static`；
-- **严禁实例化**（`new` 或 `{}` 报错）、**严禁声明 `init`/`release`**、**严禁 `extends` 继承**；支持 `pub`/`priv`。
+- **严禁实例化**（`new` 或 `{}` 报错）、**严禁声明 `init`/`~init`**、**严禁 `extends` 继承**；支持 `pub`/`priv`。
 
 ---
 
@@ -503,7 +506,7 @@ let is_same = std.mem.eql(u8, slice_a, slice_b);
 - **单继承、构造/析构钩子与 `super`**：
   - 使用 `class Child extends Parent`（亦支持内联契约 `class Dog extends Animal implements Printable`）；
   - 子类构造中通过 **`super.init(...)`** 调用父类初始化；通过 `super.method(...)` 调用父类方法；
-  - 唯一析构函数统一声明为 **`~init() { ... }`**（无参无返回值、双重幂等、离开作用域自动触发确定性释放；兼容旧 `release()`，推荐新代码一律写 `~init()`）。
+  - 构造函数为 `init(...)`（仅 `class` 实例化 `new Class(...)` 调用）；唯一析构函数为 **`~init() { ... }`**（`struct`/`class` 均可声明，无参无返回值、双重幂等，离开作用域自动触发，亦可手调 `x.~init()` 或用 `drop(x)` 提前消耗释放；**`release` 无论是否带参一律为普通方法，不再作为析构函数**）。
 
 ### 2. 枚举全特性与自洽映射体系 (Enums)
 > **可见性与静态规则**：与 `struct` 一致，**`enum` 内部所有变体与成员方法默认即为 `pub`（禁止加冗余 `pub`）**；实例方法省略只读 `_`，静态方法必须显式标注 `static fn`。

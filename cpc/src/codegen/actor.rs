@@ -827,7 +827,6 @@ impl Codegen {
                     self.writeln("_ = self;");
                 }
                 if self.current_receiver_mode == ReceiverMode::Move
-                    && func.ident.sym != "release"
                     && func.ident.sym != "__cp_deinit"
                 {
                     self.writeln("var __self_moved = false; _ = &__self_moved;");

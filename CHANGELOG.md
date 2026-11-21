@@ -56,3 +56,10 @@
   - 统一直接赋值与五态对象解构代码生成及成员级分离借用检查（同步函数与状态机 `ctx` 双路径完整支持）；
   - 扩展 `Expr::Move` 支持成员字段转移（`move _.field`）并安全守卫 `__{id}_moved` 生成。
 - **新增/更新测试与规范**：新增 `cap/test/test_raii_deinit_ownership_deep.cp`（8/8 PASS），更新 `cap/test/test_ownership_fail.cp` 与 `cp_agent_ref.md`（带 `[SYNC_PENDING: 2026-11-21]`）。
+
+## [2026-11-21] - 彻底移除 `release` 析构语义（`~init()` 唯一析构）+ 全面对齐更新 `cp_agent_ref.md` 与下游 `CP_PITFALLS.md`
+- **修改 `cpc/src/codegen/{types/mod,decl_class,actor,expr/call,runtime_emit}.rs`**：
+  - `method_is_zero_arg_destructor`、`build_drop_call_snippet`、`__box_drop` 仅识别 `__cp_deinit`（`~init()`），彻底废除用户 `release` 方法作为析构函数；
+  - `expr/call.rs` 移除对普通对象 `.release(...)` 的无参截断拦截，使无参与多参 `release` 100% 回归普通业务方法；
+  - 内置运行时容器/守卫（`Map`/`Set`/`VecDeque`/`BinaryHeap`/`BTreeMap`/`BTreeSet`/`RegExp`/`LockGuard`/`ReadGuard`/`WriteGuard`/`ZigSharedTensor`）统一提供 `__cp_deinit`。
+- **更新测试与文档**：迁移 `cap/test/test_{ownership_pass,ownership_fail,lifetime_pass,lifetime_fail_nll,lifetime_fail_dangling,ref_struct_fail_escape,trait_class_pass,own_keyword,error_box_switch_pass}.cp` 至 `~init()`；扩展 `test_raii_deinit_ownership_deep.cp` 验证 0 参与多参 `release` 为普通方法；全面同步 `cp_agent_ref.md`、`/data/dev/bun/CP_PITFALLS.md` 与 `/data/dev/capsurf/CP_PITFALLS.md` 并广播 `syntax-raii-20261121-v2`。

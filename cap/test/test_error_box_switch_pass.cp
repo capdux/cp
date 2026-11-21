@@ -165,7 +165,7 @@ class DbTimeoutError implements PluginError {
     fn summary(): string {
         return "DbTimeout:" + _.host_tag;
     }
-    fn release() {
+    ~init() {
         @print("DbTimeoutError released cleanly (retry_ms={d})", _.retry_After_ms);
     }
 }
@@ -182,7 +182,7 @@ class AuthFailedError implements PluginError {
     fn summary(): string {
         return "AuthFailed";
     }
-    fn release() {
+    ~init() {
         @print("AuthFailedError released cleanly (uid={d})", _.user_id);
     }
 }

@@ -164,7 +164,11 @@ fn runBunRepros(): i32 {
     let got = passRawPtr(raw_p);
 
     let pool = SlotPool { count: 10 };
-    return t + got + pool.count;
+    // Verify multi-arg `release` is an ordinary method and NOT truncated or auto-dropped!
+    pool.release(3);
+    // Verify 0-arg `release` on user struct is ALSO an ordinary method (NOT auto-dropped on scope exit!)
+    let bh = BunHandlers { tag: 1 };
+    return t + got + pool.count + bh.tag;
 }
 
 fn runDirectAssign3Mode(): i32 {
@@ -277,10 +281,10 @@ fn main() {
         g_struct_drops = 0;
         g_multi_arg_release_calls = 0;
         let sum = runBunRepros();
-        expect_eq(sum, 142);
+        expect_eq(sum, 140);
         expect_eq(g_bun_handler_drops, 0);
         expect_eq(g_struct_drops, 1);
-        expect_eq(g_multi_arg_release_calls, 0);
+        expect_eq(g_multi_arg_release_calls, 1);
     });
 
     test("6. Direct assignment 3-mode (read-only borrow, *mut borrow, explicit move) + POD copy", () => {

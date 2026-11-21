@@ -506,7 +506,7 @@ impl Codegen {
         }
         if needs_trait_infra {
             self.writeln(&format!(
-                "pub fn __box_drop(ptr: *anyopaque) void {{ const self_ptr: *{0} = @ptrCast(@alignCast(ptr)); if (@hasDecl({0}, \"__cp_deinit\")) {{ self_ptr.__cp_deinit(); }} else if (@hasDecl({0}, \"release\") and @typeInfo(@TypeOf({0}.release)) == .@\"fn\" and (if (@hasField(@TypeOf(@typeInfo(@TypeOf({0}.release)).@\"fn\"), \"params\")) @typeInfo(@TypeOf({0}.release)).@\"fn\".params.len == 1 else @typeInfo(@TypeOf({0}.release)).@\"fn\".param_types.len == 1)) {{ const RType = @typeInfo(@TypeOf({0}.release)).@\"fn\".return_type.?; if (@typeInfo(RType) == .error_union) {{ _ = self_ptr.release() catch {{}}; }} else {{ self_ptr.release(); }} }} std.heap.page_allocator.destroy(self_ptr); }}",
+                "pub fn __box_drop(ptr: *anyopaque) void {{ const self_ptr: *{0} = @ptrCast(@alignCast(ptr)); if (@hasDecl({0}, \"__cp_deinit\")) {{ self_ptr.__cp_deinit(); }} std.heap.page_allocator.destroy(self_ptr); }}",
                 class.ident.sym
             ));
         }

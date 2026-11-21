@@ -11,7 +11,7 @@ struct Resource {
         };
     }
 
-    pub fn release(*_) {
+    ~init() {
         this.is_released = true;
     }
 }

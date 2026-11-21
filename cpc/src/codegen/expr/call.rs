@@ -352,8 +352,10 @@ impl Codegen {
                                 | "tryWrite"
                                 | "isReadLocked"
                                 | "isWriteLocked"
-                                | "release"
                         )
+                        || (prop == "release"
+                            && call.args.is_empty()
+                            && self.is_builtin_raii_type(raw_obj_ty.as_ref()))
                     {
                         let obj_raw = self.generate_expr(&mem.obj);
                         let obj_ty = self.infer_zig_type(None, Some(&mem.obj));
@@ -1132,11 +1134,7 @@ impl Codegen {
                                     } else {
                                         mem.prop.sym.clone()
                                     };
-                                let is_explicit_dtor = mem.prop.sym == "__cp_deinit"
-                                    || (mem.prop.sym == "release"
-                                        && call.args.is_empty()
-                                        && !self
-                                            .is_refcounted_type(self.var_cp_types.get(&id.sym)));
+                                let is_explicit_dtor = mem.prop.sym == "__cp_deinit";
                                 let call_res = if target_recv_mode == ReceiverMode::Move {
                                     if is_self_recv {
                                         self.moved_vars.insert("this".to_string());
@@ -1814,7 +1812,7 @@ impl Codegen {
                         if let Expr::Ident(id) = &*mem.obj {
                             let is_dtor_call = mem.prop.sym == "__cp_deinit"
                                 || (mem.prop.sym == "release"
-                                    && !self.is_refcounted_type(self.var_cp_types.get(&id.sym)));
+                                    && self.is_builtin_raii_type(self.var_cp_types.get(&id.sym)));
                             if is_dtor_call && self.drop_flag_vars.contains(&id.sym) {
                                 Some(format!(
                                     "(blk: {{ if (!__{}_moved) {{ __{}_moved = true; {}({}); }} break :blk {{}}; }})",

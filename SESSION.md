@@ -52,3 +52,17 @@
   - 新增深测套件 `cap/test/test_raii_deinit_ownership_deep.cp`（8/8 PASS）与 9 项编译期负向安全拦截全部通过，核心回归测试全部 PASS；
   - 热修结单 `task-bun-20261121-sat-assign-op` 与 `task-bun-20261121-coalesce-break-label`；
   - 更新 `cp_agent_ref.md`（标注 `[SYNC_PENDING: 2026-11-21]`）与三线热日志，提交 Git。
+
+### 2026-11-21（同步更新下游 `bun/CP_PITFALLS.md` 与 `capsurf/CP_PITFALLS.md` 并广播通知）
+- **用户指令**：同步修改 `bun/CP_PITFALLS.md` 和 `capsurf/CP_PITFALLS.md`，让 `bun_agy` 与 `capsurf_agy` 及时掌握本次语言与编译器重大变动。
+- **执行成果**：已同步更新 `/data/dev/bun/CP_PITFALLS.md` 与 `/data/dev/capsurf/CP_PITFALLS.md`（新增三态赋值、五态解构与成员分离借用、`&v` 取址直赋 `*T!`/`*const T!`、`~init()` 双重幂等析构与容器边界、以及饱和/环绕复合赋值与 `?? break :label` 修复说明），并通过 `task_queue.py broadcast` 向 `bun_agy` 与 `capsurf_agy` 发送广播 `syntax-raii-20261121`。
+
+### 2026-11-21（彻底取消 `release` 析构语义并全面对齐更新 `cp_agent_ref.md` 与下游 `CP_PITFALLS.md`）
+- **用户指令**：
+  1. 指出 `CP_PITFALLS.md` 中二级指针 `**T` 绕行写法有误（应为 `**T!`）；
+  2. 明确 `release` 表达不准确，无论是否带参数一律作为普通方法，不再作为析构函数，避免冲突；
+  3. 对照 `cp_agent_ref.md` 全面补全并说清 `bun/CP_PITFALLS.md` 与 `capsurf/CP_PITFALLS.md`（明确 `init` 为 `class` 构造函数、`~init()` 为唯一析构函数、`x.~init()` 与 `drop(x)` 为显式提前析构方式）。
+- **执行成果**：
+  - 彻底移除 `cpc` 对用户 `release` 的析构识别与参数截断，仅保留 `~init()` (`__cp_deinit`) 为唯一析构钩子（内置运行时容器/守卫统一暴露 `__cp_deinit`），发布 Release 版 `cpc`；
+  - 迁移 `cap/test/` 所有权/生命周期/Trait 核心测试至 `~init()` 并在 `test_raii_deinit_ownership_deep.cp` 实测验证无参与多参 `release` 均按普通方法执行，全部 PASS；
+  - 全面对齐更新 `cp_agent_ref.md`、`/data/dev/bun/CP_PITFALLS.md`、`/data/dev/capsurf/CP_PITFALLS.md`，并发送广播 `syntax-raii-20261121-v2` 通知 `bun_agy` 与 `capsurf_agy`。
