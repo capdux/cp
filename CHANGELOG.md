@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:bzip2` bzip2 (.bz2) MSB-first bitstream, pi/sqrt(pi) block/EOS headers & CRC32 zero-alloc parser（5/5 PASS，自动动态挂载 `cap.bzip2`）
+新增纯 CP 零分配标准库 cap:bzip2（bzip2 .bz2 流容器、MSB-first 位流、π/√π 块头与 CRC32 解析）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:jffs2` Linux JFFS2 flash node stream, Inode/Dirent/Cleanmarker & CRC32 zero-alloc parser（5/5 PASS，自动动态挂载 `cap.jffs2`）
 新增纯 CP 零分配标准库 cap:jffs2（Linux JFFS2 闪存节点流、Inode/Dirent 与 CRC32 解析）与 5/5 深度测试
 

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:bzip2` bzip2 (.bz2) MSB-first bitstream, pi/sqrt(pi) block/EOS headers & CRC32 zero-alloc parser（5/5 PASS，文档直写 `doc/lib/bzip2.md`）
+新增 cap:bzip2 纯 CP 零分配压缩流解析库（MSB-first 0x04C11DB7 CRC32、Bzip2BitReader、48-bit 魔数块头与空流探测），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:jffs2` Linux JFFS2 flash node stream, Inode/Dirent/Cleanmarker & CRC32 zero-alloc parser（5/5 PASS，文档直写 `doc/lib/jffs2.md`）
 新增 cap:jffs2 纯 CP 零分配嵌入式闪存文件系统库（4B 对齐节点流、0xFFFF 擦除区跳过与多级 CRC32 校验），通过 cpc check 与 5/5 cap test
 
