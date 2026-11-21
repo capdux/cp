@@ -181,3 +181,126 @@ export * from "./form_data.cp";
 // --- Step 6: RFC Web Primitives (SSE, Multipart FormData, RFC 6265 CookieJar) ---
 export * from "./sse.cp";
 export * from "./multipart.cp";
+
+// --- Step 7: Consolidated RFC 9110/9111/7838/W3C HTTP Header Codecs (Wave 3 Batch 1) ---
+export {
+    parseQValue,
+    MediaRange,
+    AcceptIter,
+    EncodingPref,
+    AcceptEncodingIter as AcceptEncPrefIter,
+    LangPref,
+    AcceptLanguageIter as AcceptLangPrefIter,
+    negotiateMediaType,
+    negotiateEncoding as negotiateEncPref,
+    negotiateLanguage as negotiateLangPref,
+} from "./accept.cp";
+
+export {
+    EncodingKind,
+    EncodingItem,
+    AcceptEncodingIter,
+    negotiateEncoding,
+    isEncodingAcceptable,
+} from "./acceptenc.cp";
+
+export {
+    LanguageRange,
+    AcceptLanguageIter,
+    negotiateLanguage,
+} from "./acceptlang.cp";
+
+export {
+    AcceptRangesKind,
+    AcceptRanges,
+    AcceptRangesIter,
+    parseAcceptRanges,
+    supportsByteRanges,
+    supportsRangeUnit,
+} from "./acceptranges.cp";
+
+export {
+    HttpMethodBit,
+    AllowIter,
+    AllowMethodSet,
+    parseAllowHeader,
+    isMethodAllowed,
+    isSafeMethod,
+    isIdempotentMethod,
+} from "./allow.cp";
+
+export {
+    AltSvcEntry as AltSvcHeaderEntry,
+    isAltSvcClear,
+    AltSvcIter,
+    formatAltSvcEntry,
+} from "./altsvc.cp";
+
+export {
+    AuthScheme,
+    AuthHeader,
+    BasicCredentials,
+    decodeBasicAuth,
+    encodeBasicAuth,
+    encodeBearerAuth,
+} from "./auth.cp";
+
+export {
+    HttpCacheError,
+    FreshnessStatus,
+    CacheHeader,
+    CacheControl as CachePolicyControl,
+    EntityTag,
+    HttpCacheEvaluator,
+} from "./cache.cp";
+
+export {
+    CacheDirective,
+    CacheControlIter,
+    CacheControl as ParsedCacheControl,
+} from "./cachectrl.cp";
+
+export {
+    isTrackingQueryParam,
+    normalizeQueryWithoutTracking,
+    buildCacheKey,
+    appendVaryDimension,
+} from "./cachekey.cp";
+
+export {
+    ClearSiteData,
+} from "./clearsite.cp";
+
+export {
+    BrandVersion,
+    BrandListIter,
+    findBrandVersion,
+    parseMobileHint,
+    parsePlatformHint,
+} from "./clienthints.cp";
+
+export {
+    ContentCoding,
+    parseContentCoding,
+    ContentEncodingIter,
+    encodingLayerCount,
+    isCompressed,
+    hasContentEncoding,
+    isValidContentEncoding,
+} from "./contentenc.cp";
+
+export {
+    LanguageTagParts,
+    isValidBcp47Tag,
+    parseLanguageTagParts,
+    ContentLanguageIter,
+    canonicalizeLanguageTag,
+    hasContentLanguage,
+} from "./contentlang.cp";
+
+export {
+    ContentRangeKind,
+    ContentRange as ParsedContentRange,
+    parseContentRange,
+    formatContentRange,
+} from "./contentrange.cp";

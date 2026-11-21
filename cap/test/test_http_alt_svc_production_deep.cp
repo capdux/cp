@@ -1,11 +1,11 @@
 import std from "std";
 import { test, expect_eq } from "cap:test";
 import {
-    AltSvcEntry,
+    AltSvcHeaderEntry as AltSvcEntry,
     isAltSvcClear,
     AltSvcIter,
     formatAltSvcEntry,
-} from "cap:http_alt_svc";
+} from "cap:http";
 
 test("1. AltSvcIter parses multi-entry HTTP/3, HTTP/2, IPv6, ma, and persist parameters", () => {
     const hdr =

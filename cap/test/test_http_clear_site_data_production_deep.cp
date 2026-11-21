@@ -1,4 +1,4 @@
-import { ClearSiteData } from "cap:http_clear_site_data";
+import { ClearSiteData } from "cap:http";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {

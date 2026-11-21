@@ -6,7 +6,7 @@ import {
     ContentLanguageIter,
     canonicalizeLanguageTag,
     hasContentLanguage,
-} from "cap:http_content_language";
+} from "cap:http";
 
 test("1. isValidBcp47Tag validates primary 2..=3 alpha and 1..=8 alnum subtags", () => {
     expect_eq(isValidBcp47Tag("en"), true);

@@ -1,6 +1,6 @@
 import std from "std";
 import { test, expect_eq } from "cap:test";
-import { CacheControlIter, CacheControl } from "cap:http_cache_control";
+import { CacheControlIter, ParsedCacheControl as CacheControl } from "cap:http";
 
 test("1. CacheControlIter handles quoted values with commas, escapes, and empty tokens", () => {
     const hdr = " , no-cache=\"Set-Cookie, Authorization\", max-age=3600 , x-custom=\"a\\\"b\" , ";

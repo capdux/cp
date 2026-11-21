@@ -8,7 +8,7 @@ import {
     isCompressed,
     hasContentEncoding,
     isValidContentEncoding,
-} from "cap:http_content_encoding";
+} from "cap:http";
 
 test("1. parseContentCoding maps standard codings and legacy x- aliases case-insensitively", () => {
     expect_eq(parseContentCoding("identity") == ContentCoding.identity, true);

@@ -2,9 +2,9 @@ import {
     parseQValue,
     AcceptIter,
     negotiateMediaType,
-    negotiateEncoding,
-    negotiateLanguage,
-} from "cap:http_accept";
+    negotiateEncPref as negotiateEncoding,
+    negotiateLangPref as negotiateLanguage,
+} from "cap:http";
 import { test, expect } from "cap:test";
 
 test("parseQValue strict RFC 9110 validation", () => {

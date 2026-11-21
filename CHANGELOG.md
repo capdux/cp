@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http` HTTP/1.1/2/3 协议与全套 RFC 9110/7838 头部协商、缓存与分片统一主包（5/5 PASS，自动动态挂载 `cap.http`）
+- **方案 A 收敛 Wave 3 (`http_*` 第 1 批 15 目录 -> `cap:http`)**：将 `http_accept` 至 `http_content_range` 共 15 个散装目录合并收敛至 `lib/http/{accept,acceptenc,acceptlang,acceptranges,allow,altsvc,auth,cache,cachectrl,cachekey,clearsite,clienthints,contentenc,contentlang,contentrange}.cp` 并由 `lib/http/index.cp` 零破坏聚合导出（15/15 PASS），删除 15 个旧目录与旧文档。
+
 ## [2026-11-22] - 新建 `cap:sql` SQL 词法/语法 AST、连接 URI、转义、参数占位符与多语句切分统一主包（5/5 PASS，自动动态挂载 `cap.sql`）
 - **方案 A 收敛 Wave 3 (`sql_*` -> `cap:sql`)**：将全部 5 个 `lib/sql_*` 散装目录合并收敛至 `lib/sql/{ast,lexer,parser,analyzer,uri,escape,params,splitter}.cp` 并由 `lib/sql/index.cp` 零破坏聚合导出（5/5 PASS），删除 5 个旧目录与旧文档。
 

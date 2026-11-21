@@ -187,7 +187,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:vcard` | `VCardError`, `VCardVersion`（`V3_0`/`V4_0`）, `StructuredName`/`TypedValue`/`VCardAddress`/`VCardContact`, `VCardCodec`（75B 行折行展开/`group.` 前缀/多值 `TEL` & `EMAIL`/转义往返 `toVcf`） | RFC 6350/2426 vCard 3.0 & 4.0 通讯录电子名片 `.vcf` 解析与生成引擎（支持 `cap.vcard` 自动动态挂载，详见 `doc/lib/vcard.md`） |
 | `cap:highlight` | `HighlightError`, `Language`（CP/Zig/Rust/TS/Python/JSON/SQL/Bash）, `TokenScope`/`HighlightToken`, `Highlighter`（无损 `tokenize`/`toAnsi`/`toHtml` 防 XSS 转义） | 八语言无损词法高亮与 ANSI/XSS 安全 HTML 渲染引擎（支持 `cap.highlight` 自动动态挂载，详见 `doc/lib/highlight.md`） |
 | `cap:dedup` | `DedupError`, `SimHashHit`/`LshHit`, `SimHash`（`@popCount` 海明距离）, `SimHashIndex`（4x16 鸽巢分片 $k \le 3$ 精确召回）, `MinHash`/`LshIndex`（k-shingle Jaccard 近似） | SimHash 海明分片索引、MinHash 与 LSH 近重复文档/RAG 语料去重引擎（支持 `cap.dedup` 自动动态挂载，详见 `doc/lib/dedup.md`） |
-| `cap:http_cache` | `HttpCacheError`, `FreshnessStatus`, `CacheHeader`, `CacheControl`（`parse`/`toHeader`）, `EntityTag`（强弱比较/`If-None-Match` 304 & `If-Match` 412）, `HttpCacheEvaluator`（`evaluateResponse`/`buildVaryKey`） | RFC 9111 HTTP `Cache-Control` 解析、强弱 `ETag` 304/412 条件协商与 `Vary` 引擎（支持 `cap.http_cache` 自动动态挂载，详见 `doc/lib/http_cache.md`） |
 | `cap:rule` | `RuleError`, `FactValue`/`FactMap`, `Condition`/`CompareOp`（`And`/`Or`/`Not`/`Compare`/`Exists`/`InList` 含 32 层守卫）, `RuleSpec`/`FiredRule`/`RuleEvalReport`, `RuleEngine`（`salience` 降序 + `activation_group` 互斥短路） | 声明式生产规则引擎（复合条件树、优先级排序、互斥组短路与决策审计，支持 `cap.rule` 自动动态挂载，详见 `doc/lib/rule.md`） |
 | `cap:ssh` | `SshError`, `SshKeyType`（Ed25519/RSA/ECDSA-P256/SK-Ed25519）, `SshPublicKey`（RFC 4251 Wire 校验/`fingerprintSha256`/`format`）, `AuthorizedKeyEntry`/`AuthorizedKeys`（引号选项解析/`matchKey`） | OpenSSH 公钥 Wire 格式解析、`SHA256:` 指纹计算与 `authorized_keys` 策略匹配引擎（支持 `cap.ssh` 自动动态挂载，详见 `doc/lib/ssh.md`） |
 | `cap:sheet` | `SheetError`, `CellCoord`（`A1`..`ZZ9999` 大小写不敏感 `parseRef`/`formatRef`）, `CellValue`, `Spreadsheet`（`SUM`/`AVG`/`MIN`/`MAX`/`COUNT`/`IF`/`ROUND`、Kahn 拓扑重算与 `CycleDetected`、`toCsv`） | 电子表格单元格坐标、公式求值、DAG 拓扑自动重算与循环引用检测引擎（支持 `cap.sheet` 自动动态挂载，详见 `doc/lib/sheet.md`） |
@@ -543,7 +542,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_link_header` | WebLink, LinkHeaderIterator, findLinkByRel, formatWebLink | RFC 8288 Web Linking HTTP Link 头部零堆分配解析、rel 查找与格式化库（分页/Preload/Early Hints，吸收自 bun/src/http/HeaderValueIterator.cp） |
 | `cap:mime_lookup` | MimeCategory, ContentType, mimeFromExtension, categoryFromMime | 65+ Web/系统高频扩展名 MIME 查表、Content-Type 头部（charset/boundary）解析与可压缩性判定库（吸收自 bun/src/http_types/{MimeType,mime_type_list_enum}.cp） |
 | `cap:dotenv_parse` | DotEnvQuote, DotEnvEntry, DotEnvIterator, unescapeDoubleQuoted, expandVars | 零堆分配 .env 配置文件解析器（BOM/export/4 种引号/多行/行尾注释）与 ${VAR:-default} 变量展开器（吸收自 bun/src/bun_core/env.cp） |
-| `cap:http_auth` | AuthScheme, AuthHeader, BasicCredentials, decodeBasicAuth, encodeBasicAuth, encodeBearerAuth | RFC 9110 §11 / RFC 7617 Basic / RFC 6750 Bearer HTTP Authorization 认证头零堆分配解析与编解码库（吸收自 bun/src/http/Headers.cp） |
 | `cap:js_ident` | KeywordKind, classifyKeyword, isReservedWord, isValidAsciiIdent, isValidPrivateIdent, needsPropertyQuoting, escapeJsString | ECMAScript/TS 56 关键字分类、ASCII/私有字段标识符校验、属性加引号判定与 JS 字符串转义库（吸收自 bun/src/js_parser/lexer/） |
 | `cap:http_forwarded` | ForwardedHop, ForwardedIterator, parseFirstHop, extractClientIpFromXff, stripPortFromForwardedFor | RFC 7239 Forwarded 与 X-Forwarded-For 反向代理链路零堆分配解析器及客户端真实 IP 提取库（吸收自 bun/src/http/HeaderValueIterator.cp） |
 | `cap:csv_stream` | CsvField, CsvRow, CsvReader, needsCsvQuoting, formatCsvField, formatCsvRow, unescapeField | RFC 4180 CSV / TSV 零堆分配流式字段/行解析器（自定义分隔符/引号内换行/"" 转义还原）与编码器（吸收自 bun/src/bun_core/fmt.cp） |
@@ -553,9 +551,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:content_disposition` | ContentDisposition, decodeRfc5987, sanitizeFilename, formatAttachment, formatInline | RFC 6266 / RFC 5987 Content-Disposition 响应头解析、文件名安全消毒与 UTF-8 filename* 格式化器 |
 | `cap:sse_parser` | SseEvent, SseParser, formatSseEvent | WHATWG Server-Sent Events (text/event-stream) 零分配流式解析器与格式化器 |
 | `cap:token_bucket` | TokenBucket, FixedWindowLimiter | 纯整数毫令牌确定性令牌桶与固定时间窗口限流器（防时钟回拨与溢出） |
-| `cap:http_accept` | parseQValue, MediaRange, AcceptIter, EncodingPref, AcceptEncodingIter, LangPref, AcceptLanguageIter, negotiateMediaType, negotiateEncoding, negotiateLanguage | RFC 9110 Accept / Accept-Encoding / Accept-Language 内容协商与 q 值解析器 |
 | `cap:json_pointer` | isValidPointer, parseArrayIndex, unescapeToken, escapeToken, PointerIter, appendToken, parentPointer | RFC 6901 JSON Pointer 解析、~0/~1 转义反转义、数组索引校验与路径段迭代器 |
-| `cap:http_cache_control` | CacheDirective, CacheControlIter, CacheControl | RFC 9111 Cache-Control 指令零分配流式解析器、缓存存储/有效 TTL 判定与规范化格式化器 |
 | `cap:ip_addr` | Ipv4Addr, Ipv6Addr, IpVersion, IpAddr | RFC 4291 / RFC 5952 IPv4 与 IPv6 零分配解析器、规范化零压缩格式化器、地址分类与 CIDR 子网匹配 |
 | `cap:hosts_file` | HostsLine, HostsIter, lookupHost, lookupHostV4, lookupHostV6, reverseLookup | /etc/hosts 零分配流式解析器与 IPv4/IPv6 正反向解析查找 |
 | `cap:netrc` | NetrcEntry, NetrcIter, lookupNetrc | .netrc / _netrc 认证凭据文件零分配流式解析器（支持引号、注释、macdef 与 default 回退） |
@@ -627,24 +623,20 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_sec_fetch` | FetchSite, FetchMode, FetchDest, parseFetchSite, parseFetchMode, parseFetchDest, FetchMetadata | W3C Fetch Metadata（Sec-Fetch-Site/Mode/Dest/User）零分配解析与资源隔离防护策略求值器 |
 | `cap:git_diff_stat` | FileChangeKind, FileDiffStat, GitDiffIter, DiffSummary, summarizeGitDiff | Git Unified Diff (diff --git) 零分配文件变更统计提取器（增删行数、重命名、新增/删除与二进制识别） |
 | `cap:yaml_escape` | needsYamlQuotes, quoteYamlSingle, quoteYamlDouble, formatYamlScalar, unescapeYamlDouble | YAML 1.2 标量引号安全判定、单/双引号转义与 Unicode（\xHH/\uXXXX/\UXXXXXXXX）反转义器 |
-| `cap:http_client_hints` | BrandVersion, BrandListIter, findBrandVersion, parseMobileHint, parsePlatformHint | W3C Sec-CH-UA / Sec-CH-UA-Mobile / Sec-CH-UA-Platform 客户端提示零分配解析器与 GREASE 识别 |
 | `cap:socket_addr` | HostKind, SocketAddr | 零分配 host:port / [ipv6]:port 套接字地址解析器（支持严格远端模式与 :8080/:0 服务端绑定模式） |
 | `cap:makefile_parse` | MakeAssignOp, MakeVar, MakeRule, MakeRuleIter, MakeVarIter, isPhonyTarget | GNU Makefile 目标、依赖、.PHONY 伪目标与变量赋值（=/ :=/ ?=/ +=）零分配解析器 |
 | `cap:csv_escape` | needsCsvQuotes, escapeCsvField, unescapeCsvField, formatCsvRow, isFormulaInjectionRisk | RFC 4180 CSV / TSV 字段转义器、单行构造器、严格引号反转义器与电子表格公式前缀风险检测 |
-| `cap:http_clear_site_data` | ClearSiteData | W3C Clear-Site-Data 响应头零分配解析与规范化构造器（cache/cookies/storage/executionContexts/clientHints/*） |
 | `cap:http_keep_alive` | KeepAliveParams, shouldKeepAlive | HTTP Keep-Alive 参数（timeout/max）零分配解析格式化器与 RFC 9112 §9.3 持久连接判定器 |
 | `cap:http_via` | ViaEntry, ViaIter, viaHopCount, viaContainsProxy, appendVia, parseMaxForwards, decrementMaxForwards | RFC 9110 §7.6.3 Via 代理链头与 Max-Forwards 零分配解析、环路检测与追加构造器 |
 | `cap:http_freshness` | CacheFreshness, FreshnessInput | RFC 9111 §4.2 HTTP 缓存新鲜度生存期、Age 修正与 RFC 5861 SWR/SIE 窗口求值器 |
 | `cap:http_te` | TransferCoding, TransferEncodingIter, TransferEncodingValidation, validateTransferEncoding, isChunkedTransfer, hasConflictingClAndTe, teAcceptsTrailers | RFC 9110 / RFC 9112 Transfer-Encoding 与 TE 头零分配解析及异常报文边界校验器 |
 | `cap:unicode_width` | isZeroWidth, isWideChar, codepointWidth, strDisplayWidth, sliceToDisplayWidth | Unicode 东亚宽度 / 终端显示列宽（wcwidth）零分配计算器（组合符=0、ASCII=1、CJK/Emoji=2） |
 | `cap:number_format` | formatGroupedU64, formatGroupedI64, ordinalSuffix, formatOrdinal, formatRadixU64, formatFixedPoint | 零分配人类可读数字格式化器（千分位分组、英文序数词、2..36 进制与定点小数） |
-| `cap:http_content_encoding` | ContentCoding, parseContentCoding, ContentEncodingIter, encodingLayerCount, isCompressed, hasContentEncoding, isValidContentEncoding | RFC 9110 §8.4 Content-Encoding 编码栈零分配解析、别名归一化与最大压缩层数安全防护 |
 | `cap:dotenv_escape` | isValidEnvKey, needsDotenvQuotes, formatDotenvValue, formatDotenvLine, unescapeDotenvDouble | .env 环境变量文件键名校验、防 $VAR 误展开安全引号序列化与反转义器 |
 | `cap:http_warning` | WarningItem, WarningIter, isStaleWarning, formatWarning | RFC 7234 §5.5 HTTP Warning 头零分配解析器（引号逗号/转义/日期感知）与格式化器 |
 | `cap:http_digest_auth` | DigestChallenge, DigestCredentials, formatDigestHeader | RFC 7616 HTTP Digest Authentication (WWW-Authenticate / Authorization) 零分配解析与构造器 |
 | `cap:http_signature_input` | SignatureInput, SignatureInputIter, findSignatureInput, ComponentIter, findSignatureValue | RFC 9421 HTTP Message Signatures (Signature-Input / Signature) 零分配解析器与时间窗校验器 |
 | `cap:shell_env_parse` | ShellEnvEntry, ShellEnvIter, getShellEnv | POSIX Shell export KEY=VAL / .profile 风格环境变量赋值行零分配解析器（支持单双引号与 unset 清空） |
-| `cap:http_cache_key` | isTrackingQueryParam, normalizeQueryWithoutTracking, buildCacheKey, appendVaryDimension | HTTP 缓存键零分配规范化构造器（大小写/默认端口归一化、utm_*/fbclid/gclid 追踪参数剥离与 Vary 维度追加） |
 | `cap:ini_writer` | isValidIniKey, needsIniQuotes, appendIniSection, appendIniSubsection, appendIniPair, appendIniComment | INI / gitconfig 配置文件零分配安全序列化写入器（自动引号转义、子段输出与原子回滚） |
 | `cap:http_etag_gen` | fnv1a64, generateWeakStatEtag, generateStrongHashEtag, generateWeakHashEtag, isValidEtagSyntax | 零分配 HTTP 强/弱 ETag 生成器（FNV-1a 64-bit 内容哈希与 size/mtime 静态文件弱 ETag）及 RFC 9110 语法校验 |
 | `cap:properties_parse` | PropertyEntry, PropertiesIter, getProperty | Java .properties 配置文件零分配流式解析器（支持 =/:/空白分隔、奇偶反斜杠续行与 \uXXXX 代理对反转义） |
@@ -654,15 +646,9 @@ const h = cap.hash.wyhash("hello");
 | `cap:cron_preset` | CronPreset, parseCronPreset, presetToCron5, normalizeCron5 | Vixie Cron @macro 预设（@hourly/@daily/@weekly/@monthly/@yearly/@reboot）零分配展开与 5 段表达式校验器 |
 | `cap:http_expect` | `ExpectItem`, `ExpectIter`, `ExpectDecision`, `evaluateExpectHeader`, `hasContinueExpectation`, `hasUnknownExpectation` | RFC 9110 §10.1.1 HTTP `Expect` 请求头解析与 `100-continue` / 417 协商判定器 |
 | `cap:http_early_hints` | `EarlyHintRel`, `EarlyHintLink`, `EarlyHintIter`, `formatEarlyHintLink`, `formatEarlyHints103Block` | RFC 8297 HTTP `103 Early Hints` / RFC 8288 `Link` 预加载头零分配解析与报文格式化器 |
-| `cap:http_alt_svc` | `AltSvcEntry`, `isAltSvcClear`, `AltSvcIter`, `formatAltSvcEntry` | RFC 7838 HTTP `Alt-Svc` 备选服务 / HTTP/3 QUIC 发现头零分配解析与格式化器 |
-| `cap:http_content_range` | `ContentRangeKind`, `ContentRange`, `parseContentRange`, `formatContentRange` | RFC 9110 §14.4 HTTP `Content-Range` 断点续传响应头零分配解析与格式化器 |
-| `cap:http_allow` | `HttpMethodBit`, `AllowMethodSet`, `parseAllowHeader`, `AllowIter`, `isMethodAllowed`, `isSafeMethod`, `isIdempotentMethod` | RFC 9110 §10.2.1 HTTP `Allow` 方法集位掩码解析、格式化与安全/幂等判定器 |
 | `cap:http_trailer` | `isForbiddenTrailerField`, `isValidTrailerFieldName`, `TrailerFieldIter`, `validateTrailerHeader`, `hasTrailerField` | RFC 9110 §6.5.1 HTTP `Trailer` 尾部字段声明零分配解析与 25 项禁传字段安全校验器 |
 | `cap:http_max_forwards` | `MaxForwardsAction`, `MaxForwardsResult`, `parseMaxForwards`, `evaluateMaxForwards`, `formatMaxForwards` | RFC 9110 §7.6.2 HTTP `Max-Forwards` 代理跳数限制零分配解析与递减裁定器 |
-| `cap:http_accept_ranges` | `AcceptRangesKind`, `AcceptRanges`, `AcceptRangesIter`, `parseAcceptRanges`, `supportsByteRanges`, `supportsRangeUnit` | RFC 9110 §14.3 HTTP `Accept-Ranges` 响应头零分配解析与分片能力判定器 |
-| `cap:http_accept_language` | `LanguageRange`, `AcceptLanguageIter`, `negotiateLanguage` | RFC 9110 §12.5.4 + RFC 4647 HTTP `Accept-Language` BCP 47 语言权重零分配协商器 |
 | `cap:text_indent` | `minCommonIndent`, `dedent`, `indentLines`, `stripCommonPrefix` | 零分配多行文本最小公共缩进检测、`dedent` 剥离与 `indentLines` 统一缩进格式化器 |
-| `cap:http_content_language` | `LanguageTagParts`, `isValidBcp47Tag`, `parseLanguageTagParts`, `ContentLanguageIter`, `canonicalizeLanguageTag`, `hasContentLanguage` | RFC 9110 §8.5 + RFC 5646 HTTP `Content-Language` 解析与 BCP 47 标签规范化器 |
 | `cap:jsonl` | `JsonlChunkResult`, `JsonlIter`, `scanCompleteJsonlChunk`, `isBalancedJsonRecord`, `appendJsonlRecord` | JSON Lines / NDJSON 流式行迭代、增量分块扫描与记录平衡零分配校验器 |
 | `cap:jsonc` | `stripJsonc`, `stripJsoncPreserveLines`, `hasJsoncComments`, `countJsoncTrailingCommas` | JSON with Comments & Trailing Commas 零分配注释/尾逗号剥离器与行号保留格式化器 |
 | `cap:mustache` | `MustacheTokenKind`, `MustacheToken`, `MustacheVar`, `MustacheIter`, `validateMustache`, `renderMustache` | 零分配 Mustache 模板词法解析、语法校验与 HTML 转义渲染引擎 |

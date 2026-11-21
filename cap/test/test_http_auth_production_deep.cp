@@ -5,7 +5,7 @@ import {
     decodeBasicAuth,
     encodeBasicAuth,
     encodeBearerAuth,
-} from "cap:http_auth";
+} from "cap:http";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

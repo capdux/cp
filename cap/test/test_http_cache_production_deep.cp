@@ -8,10 +8,10 @@ import {
     HttpCacheError,
     FreshnessStatus,
     CacheHeader,
-    CacheControl,
+    CachePolicyControl as CacheControl,
     EntityTag,
     HttpCacheEvaluator,
-} from "cap:http_cache";
+} from "cap:http";
 
 fn strEql(a: []const u8, b: []const u8): bool {
     return std.mem.eql(u8, a, b);

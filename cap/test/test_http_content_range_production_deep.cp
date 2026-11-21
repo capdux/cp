@@ -2,10 +2,10 @@ import std from "std";
 import { test, expect_eq } from "cap:test";
 import {
     ContentRangeKind,
-    ContentRange,
+    ParsedContentRange as ContentRange,
     parseContentRange,
     formatContentRange,
-} from "cap:http_content_range";
+} from "cap:http";
 
 test("1. parseContentRange parses standard bytes range, unknown length, and unsatisfied 416 headers", () => {
     const r1 = parseContentRange("bytes 0-499/1234") ?? unreachable;

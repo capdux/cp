@@ -7,7 +7,7 @@ import {
     isMethodAllowed,
     isSafeMethod,
     isIdempotentMethod,
-} from "cap:http_allow";
+} from "cap:http";
 
 test("1. parseAllowHeader builds standard bitmask, tracks custom methods, and is case-sensitive", () => {
     const hdr = " , OPTIONS , POST , GET , HEAD , PROPFIND , get , ";

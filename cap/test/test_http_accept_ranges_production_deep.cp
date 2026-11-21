@@ -6,7 +6,7 @@ import {
     parseAcceptRanges,
     supportsByteRanges,
     supportsRangeUnit,
-} from "cap:http_accept_ranges";
+} from "cap:http";
 
 test("1. parseAcceptRanges parses bytes, none, and custom units case-insensitively", () => {
     const b = parseAcceptRanges("bytes");

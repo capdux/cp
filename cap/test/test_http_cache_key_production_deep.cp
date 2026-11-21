@@ -5,7 +5,7 @@ import {
     normalizeQueryWithoutTracking,
     buildCacheKey,
     appendVaryDimension,
-} from "cap:http_cache_key";
+} from "cap:http";
 
 test("1. isTrackingQueryParam matches utm_* and known tracking keys case-insensitively", () => {
     expect_eq(isTrackingQueryParam("utm_source"), true);

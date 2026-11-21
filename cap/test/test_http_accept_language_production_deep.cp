@@ -4,7 +4,7 @@ import {
     LanguageRange,
     AcceptLanguageIter,
     negotiateLanguage,
-} from "cap:http_accept_language";
+} from "cap:http";
 
 test("1. LanguageRange.matchesTag enforces RFC 4647 case-insensitive prefix boundaries and wildcard", () => {
     const en = LanguageRange{ tag: "en", q_permille: 800 };
