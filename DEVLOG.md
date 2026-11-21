@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:squashfs` SquashFS v4.0 96B superblock, Metadata/Data block header, Fragment & InodeRef parser（5/5 PASS，文档直写 `doc/lib/squashfs.md`）
+新增 cap:squashfs 纯 CP 零分配只读压缩文件系统库（96B 超级块校验、48/13-bit InodeRef 编解码、Metadata/Data/Fragment 解析），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:ext4` Linux ext2/ext3/ext4 superblock, 64-bit Inode, Extent tree & dir zero-alloc parser（5/5 PASS，文档直写 `doc/lib/ext4.md`）
 新增 cap:ext4 纯 CP 零分配 Linux 文件系统库（1024B 超级块、64-bit 块/文件大小、48-bit 物理块 Extent 迭代与线性目录空洞跳过），通过 cpc check 与 5/5 cap test
 

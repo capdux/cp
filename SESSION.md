@@ -82,3 +82,6 @@
 
 ### 2026-11-22（`cap:ext4` 验收，完成并注册纯 CP 零分配标准库 cap:ext4（5/5 cap test PASS））
 - **执行成果**：`lib/ext4/`（5/5 PASS，`doc/lib/ext4.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:ext4（5/5 cap test PASS）
+
+### 2026-11-22（`cap:squashfs` 验收，完成并注册纯 CP 零分配标准库 cap:squashfs（5/5 cap test PASS））
+- **执行成果**：`lib/squashfs/`（5/5 PASS，`doc/lib/squashfs.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:squashfs（5/5 cap test PASS）

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:squashfs` SquashFS v4.0 96B superblock, Metadata/Data block header, Fragment & InodeRef parser（5/5 PASS，自动动态挂载 `cap.squashfs`）
+新增纯 CP 零分配标准库 cap:squashfs（Linux SquashFS v4.0 96B 超级块、Metadata/Data 块头与 Fragment 解析）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:ext4` Linux ext2/ext3/ext4 superblock, 64-bit Inode, Extent tree & dir zero-alloc parser（5/5 PASS，自动动态挂载 `cap.ext4`）
 新增纯 CP 零分配标准库 cap:ext4（Linux ext2/ext3/ext4 超级块、64-bit Inode、Extent 树与线性目录解析）与 5/5 深度测试
 
