@@ -58,3 +58,6 @@
 
 ### 2026-11-21（`cap:bptree` 验收，验收提交 `cap:bptree` 内存有序索引 B+ 树标准库）
 - **执行成果**：`lib/bptree/`（5/5 PASS，`doc/lib/bptree.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:bptree` 内存有序索引 B+ 树标准库
+
+### 2026-11-21（`cap:kmp_z_algo` 验收，主控完成 `cap:kmp_z_algo` 研发验收提交，继续与 `cap:suffix_array` 及 `cap:consistent_maglev` 并行）
+- **执行成果**：`lib/kmp_z_algo/`（5/5 PASS，`doc/lib/kmp_z_algo.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:kmp_z_algo` 研发验收提交，继续与 `cap:suffix_array` 及 `cap:consistent_maglev` 并行

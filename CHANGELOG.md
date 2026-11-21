@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:kmp_z_algo` 纯 CP 线性时间 $O(N)$ 字符串算法库（KMP 前缀表与全重叠匹配、Z-Algorithm `zArray` 与 Manacher 最长回文子串，支持 `cap.kmp_z_algo` 自动动态挂载，详见 `doc/lib/kmp_z_algo.md`）（5/5 PASS，自动动态挂载 `cap.kmp_z_algo`）
+- **新增标准库**：`lib/kmp_z_algo/{kmp_z_algo,index}.cp`，实现 KMP、Z-Algorithm 与 Manacher 最长回文。\n- **新增文档与测试**：`doc/lib/kmp_z_algo.md` 扁平文档与 `cap/test/test_kmp_z_algo_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:bptree` 纯 CP 内存有序索引 B+ 树引擎（多层节点分裂、叶子链表 `rangeScan` 范围扫描与动态删除重平衡，支持 `cap.bptree` 自动动态挂载，详见 `doc/lib/bptree.md`）（5/5 PASS，自动动态挂载 `cap.bptree`）
 - **新增标准库**：`lib/bptree/{bptree,index}.cp`，实现泛型有序 `BPlusTree(K, V)` 插入分裂、`rangeScan` 与删除。\n- **新增文档与测试**：`doc/lib/bptree.md` 扁平文档与 `cap/test/test_bptree_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

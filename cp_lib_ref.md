@@ -393,3 +393,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:base58_check` | `Base58Error`, `encode`, `decode`, `encodeCheck`, `CheckDecoded`, `decodeCheck` | 纯 CP Bitcoin Base58 & Base58Check 双重 SHA-256 校验和编解码引擎（支持前导零映射、版本号与防篡改校验，支持 `cap.base58_check` 自动动态挂载，详见 `doc/lib/base58_check.md`） |
 | `cap:rope_text` | `RopeError`, `Rope` | 纯 CP 大文本编辑器平衡二叉树 Rope 引擎（分块叶子、缓存行/字节权重、$O(\log N)$ 插入/删除/`lineAt` 行定位与零泄漏切片拼接，支持 `cap.rope_text` 自动动态挂载，详见 `doc/lib/rope_text.md`） |
 | `cap:bptree` | `BPTREE_ORDER`, `BPlusTree` | 纯 CP 内存有序索引 B+ 树引擎（多层节点分裂、叶子链表 `rangeScan` 范围扫描与动态删除重平衡，支持 `cap.bptree` 自动动态挂载，详见 `doc/lib/bptree.md`） |
+| `cap:kmp_z_algo` | `PalindromeSpan`, `computeLps`, `kmpFindFirst`, `kmpFindAll`, `zArray`, `longestPalindrome` | 纯 CP 线性时间 $O(N)$ 字符串算法库（KMP 前缀表与全重叠匹配、Z-Algorithm `zArray` 与 Manacher 最长回文子串，支持 `cap.kmp_z_algo` 自动动态挂载，详见 `doc/lib/kmp_z_algo.md`） |
