@@ -2,6 +2,15 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: MySQL 协议列类型与 ColumnDefinition41 编解码器（5/5 PASS，文档直写 `doc/lib/mysql_field_types.md`）
+从 Bun sql/mysql/MySQLTypes.cp 与 ColumnDefinition41.cp 吸收完整 MySQL 列类型与 41 号列元数据报文编解码，采用 ~init() 确定性 RAII，零泄漏通过测试。
+
+## 2026-11-21: GFM 宽松自动链接扫描器（5/5 PASS，文档直写 `doc/lib/autolink.md`）
+从 Bun md/autolinks.cp 吸收 GFM 宽松自动链接扫描器，纯 CP 零依赖实现 http/https/ftp/www/email 边界识别与尾部实体/括号裁剪。
+
+## 2026-11-21: HTTP/2 (RFC 9113) 线协议帧头与设置编解码器（5/5 PASS，文档直写 `doc/lib/h2_frame.md`）
+从 Bun http/H2FrameParser.cp 吸收 HTTP/2 线协议帧头、设置单元与流优先级大端编解码器，纯 CP 零依赖实现短缓冲边界防护。
+
 ## 2026-11-21: 编译期类型特征自省与指针元数据（5/5 PASS，文档直写 `doc/lib/type_traits.md`）
 从 Bun meta/traits.cp 与 ptr/meta.cp 吸收编译期类型自省谓词与 PointerMeta.inspect，零运行期开销且完全适配 CP 新语法。
 

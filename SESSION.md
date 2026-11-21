@@ -133,3 +133,12 @@
 
 ### 2026-11-21（`cap:type_traits` 验收，吸收 Bun meta/traits.cp + ptr/meta.cp -> cap:type_traits，测试 3/3 通过。）
 - **执行成果**：`lib/type_traits/`（5/5 PASS，`doc/lib/type_traits.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun meta/traits.cp + ptr/meta.cp -> cap:type_traits，测试 3/3 通过。
+
+### 2026-11-21（`cap:h2_frame` 验收，吸收 Bun http/H2FrameParser.cp -> cap:h2_frame，测试 4/4 通过。）
+- **执行成果**：`lib/h2_frame/`（5/5 PASS，`doc/lib/h2_frame.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun http/H2FrameParser.cp -> cap:h2_frame，测试 4/4 通过。
+
+### 2026-11-21（`cap:autolink` 验收，吸收 Bun md/autolinks.cp -> cap:autolink，测试 4/4 通过。）
+- **执行成果**：`lib/autolink/`（5/5 PASS，`doc/lib/autolink.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun md/autolinks.cp -> cap:autolink，测试 4/4 通过。
+
+### 2026-11-21（`cap:mysql_field_types` 验收，吸收 Bun MySQL FieldType + ColumnDefinition41 -> cap:mysql_field_types，测试 5/5 通过。）
+- **执行成果**：`lib/mysql_field_types/`（5/5 PASS，`doc/lib/mysql_field_types.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun MySQL FieldType + ColumnDefinition41 -> cap:mysql_field_types，测试 5/5 通过。

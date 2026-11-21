@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - MySQL 协议列类型与 ColumnDefinition41 编解码器（5/5 PASS，自动动态挂载 `cap.mysql_field_types`）
+新增 cap:mysql_field_types 标准库（lib/mysql_field_types/、doc/lib/mysql_field_types.md、cap/test/test_mysql_field_types_production_deep.cp），5/5 回归通过（零泄漏）。
+
+## [2026-11-21] - GFM 宽松自动链接扫描器（5/5 PASS，自动动态挂载 `cap.autolink`）
+新增 cap:autolink 标准库（lib/autolink/、doc/lib/autolink.md、cap/test/test_autolink_production_deep.cp），4/4 回归通过。
+
+## [2026-11-21] - HTTP/2 (RFC 9113) 线协议帧头与设置编解码器（5/5 PASS，自动动态挂载 `cap.h2_frame`）
+新增 cap:h2_frame 标准库（lib/h2_frame/、doc/lib/h2_frame.md、cap/test/test_h2_frame_production_deep.cp），4/4 回归通过。
+
 ## [2026-11-21] - 编译期类型特征自省与指针元数据（5/5 PASS，自动动态挂载 `cap.type_traits`）
 新增 cap:type_traits 标准库（lib/type_traits/、doc/lib/type_traits.md、cap/test/test_type_traits_production_deep.cp），3/3 回归通过。
 
