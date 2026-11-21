@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:tftp` TFTP (RFC 1350/2347-2349) RRQ/WRQ/DATA/ACK/ERROR/OACK & option zero-alloc codec（5/5 PASS，文档直写 `doc/lib/tftp.md`）
+新增 cap:tftp 纯 CP 零分配简单文件传输协议库（RRQ/WRQ/DATA/ACK/ERROR/OACK 解析、NUL 分隔选项零拷贝迭代与 TftpOptWriter），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:coap` CoAP (RFC 7252) Delta-encoded Option TLV, CoapWriter & payload zero-alloc codec（5/5 PASS，文档直写 `doc/lib/coap.md`）
 新增 cap:coap 纯 CP 零分配物联网轻量 REST 协议库（4B 报头/Token/Delta 0..12/13/14 扩展编码与 CoapWriter 往返），通过 cpc check 与 6/6 cap test
 
