@@ -652,3 +652,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:cef` | CEF_PREFIX, CefEvent, CefExtPair, CefExtIter, isCef, parseCefLine, findCefExt, unescapeCefHeader, unescapeCefExtValue, formatCefHeader | 零分配 ArcSight CEF SIEM 日志解析、Extension 切分与转义编解码器 |
 | `cap:ldif` | LdifValueKind, LdifChangeType, LdifAttr, LdifAttrIter, LdifEntry, LdifIter, LdifStats, isLdif, summarizeLdif | 零分配 RFC 2849 LDAP LDIF 折行展开、Base64 属性与变更记录解析器 |
 | `cap:age` | AGE_VERSION_LINE, AGE_ARMOR_BEGIN, AGE_ARMOR_END, AGE_STREAM_CHUNK_SIZE, AgeStanza, AgeStanzaIter, AgeHeader, isAge, isAgeArmored, parseAgeHeader, isValidAgePublicKey, isValidAgeSecretKey | 零分配 age v1 现代文件加密头、Stanza 与 Bech32 密钥校验器 |
+| `cap:leef` | LEEF_PREFIX, LEEF_DEFAULT_DELIM, LeefEvent, LeefAttr, LeefAttrIter, isLeef, parseLeefLine, findLeefAttr, formatLeefHeader | 零分配 IBM QRadar LEEF 1.0/2.0 SIEM 日志解析与格式化器 |

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:leef` 零分配 IBM QRadar LEEF 1.0/2.0 SIEM 日志解析与格式化器（5/5 PASS，文档直写 `doc/lib/leef.md`）
+实现零分配 IBM QRadar LEEF 1.0/2.0 解析器，兼容 Syslog 前缀与值内嵌等号。
+
 ## 2026-11-22: 新建 `cap:age` 零分配 age v1 现代文件加密头、Stanza 与 Bech32 密钥校验器（5/5 PASS，文档直写 `doc/lib/age.md`）
 实现零分配 age v1 加密容器解析器，提取 HMAC-SHA256 签名输入切片与 16B STREAM Nonce。
 

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:leef` 零分配 IBM QRadar LEEF 1.0/2.0 SIEM 日志解析与格式化器（5/5 PASS，自动动态挂载 `cap.leef`）
+新增 `lib/leef/{leef,index}.cp`、`doc/lib/leef.md` 与 `cap/test/test_leef_production_deep.cp`（5/5 PASS），支持 LEEF 1.0 Tab 与 2.0 自定义/十六进制分隔符、属性查找与零分配头部编码。
+
 ## [2026-11-22] - 新建 `cap:age` 零分配 age v1 现代文件加密头、Stanza 与 Bech32 密钥校验器（5/5 PASS，自动动态挂载 `cap.age`）
 新增 `lib/age/{age,index}.cp`、`doc/lib/age.md` 与 `cap/test/test_age_production_deep.cp`（5/5 PASS），支持严格 LF v1 头、64 列折行 Stanza、43B MAC 与 age1/AGE-SECRET-KEY-1 密钥校验。
 

@@ -55,3 +55,6 @@
 
 ### 2026-11-22（`cap:age` 验收，完成 `cap:age` 交付验收并登记入库（5/5 PASS）；派发 `cap:minisign`。）
 - **执行成果**：`lib/age/`（5/5 PASS，`doc/lib/age.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:age` 交付验收并登记入库（5/5 PASS）；派发 `cap:minisign`。
+
+### 2026-11-22（`cap:leef` 验收，完成 `cap:leef` 交付验收并登记入库（5/5 PASS）；派发 `cap:sshsig`。）
+- **执行成果**：`lib/leef/`（5/5 PASS，`doc/lib/leef.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:leef` 交付验收并登记入库（5/5 PASS）；派发 `cap:sshsig`。
