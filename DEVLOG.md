@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:bvh` 零分配 Biovision Hierarchy (.bvh) 3D 骨骼动作捕捉与帧数据解析器（5/5 PASS，文档直写 `doc/lib/bvh.md`）
+实现零分配 Biovision BVH 解析器，支持科学计数法浮点帧解码、FPS 与总时长计算。
+
 ## 2026-11-22: 新建 `cap:fit` 零分配 Garmin / ANT+ FIT 1.0/2.0 二进制遥测文件与 CRC-16 解析器（5/5 PASS，文档直写 `doc/lib/fit.md`）
 实现零分配 ANT+ FIT 遥测解析器，维护 16 槽 Local Message 定义表并支持完整头尾 CRC 校验。
 

@@ -172,3 +172,6 @@
 
 ### 2026-11-22（`cap:fit` 验收，完成 `cap:fit` 交付验收并登记入库（5/5 PASS）；派发 `cap:ais`。）
 - **执行成果**：`lib/fit/`（5/5 PASS，`doc/lib/fit.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:fit` 交付验收并登记入库（5/5 PASS）；派发 `cap:ais`。
+
+### 2026-11-22（`cap:bvh` 验收，完成 `cap:bvh` 交付验收并登记入库（5/5 PASS）；派发 `cap:igc`。）
+- **执行成果**：`lib/bvh/`（5/5 PASS，`doc/lib/bvh.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:bvh` 交付验收并登记入库（5/5 PASS）；派发 `cap:igc`。

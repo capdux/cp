@@ -610,3 +610,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:gcode` | GcodeWord, GcodeWordIter, GcodeLine, GcodeIter, GcodeStats, gcodeChecksum, verifyGcodeChecksum, parseGcodeLine, summarizeGcode | 零分配 CNC / 3D 打印 G-Code 指令词法、校验和与刀路包围盒解析器 |
 | `cap:srec` | SrecType, SrecRecord, SrecIter, SrecStats, srecAddrBytes, srecChecksum, parseSrecLine, encodeSrecLine, summarizeSrec | 零分配 Motorola S-Record (S0-S9) 嵌入式固件编解码与校验器 |
 | `cap:fit` | FIT_MAGIC, FIT_HEADER_SIZE_12, FIT_HEADER_SIZE_14, FitFieldDef, FitRecordKind, FitRecord, FitRecordIter, FitStats, fitCrc16, isFit, parseFitHeader, verifyFileCrc, summarizeFit | 零分配 Garmin / ANT+ FIT 1.0/2.0 二进制遥测文件与 CRC-16 解析器 |
+| `cap:bvh` | BvhChannel, BvhJoint, BvhJointIter, BvhHeader, BvhFrameIter, BvhFloatIter, parseBvhChannel, isBvh, parseBvhHeader | 零分配 Biovision Hierarchy (.bvh) 3D 骨骼动作捕捉与帧数据解析器 |
