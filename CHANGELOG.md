@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:mol2` 零分配 Tripos SYBYL (.mol2) 3D 分子结构与力场原子类型解析器（5/5 PASS，自动动态挂载 `cap.mol2`）
+新增 `lib/mol2/{mol2,index}.cp`、`doc/lib/mol2.md` 与 `cap/test/test_mol2_production_deep.cp`（5/5 PASS），支持 @<TRIPOS>MOLECULE/ATOM/BOND 区段、SYBYL 原子类型、多分子流与净电荷统计。
+
 ## [2026-11-22] - 新建 `cap:segy` 零分配 SEG-Y Rev 1/2 地球物理地震反射与 IBM 浮点转换解析器（5/5 PASS，自动动态挂载 `cap.segy`）
 新增 `lib/segy/{segy,index}.cp`、`doc/lib/segy.md` 与 `cap/test/test_segy_production_deep.cp`（5/5 PASS），支持 3600B 卷头、扩展文本头、IBM S/360 浮点转 IEEE-754 与 240B 道迭代。
 

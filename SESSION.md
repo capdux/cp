@@ -28,3 +28,6 @@
 
 ### 2026-11-22（`cap:segy` 验收，完成 `cap:segy` 交付验收并登记入库（5/5 PASS）；派发 `cap:smi`。）
 - **执行成果**：`lib/segy/`（5/5 PASS，`doc/lib/segy.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:segy` 交付验收并登记入库（5/5 PASS）；派发 `cap:smi`。
+
+### 2026-11-22（`cap:mol2` 验收，完成 `cap:mol2` 交付验收并登记入库（5/5 PASS）；派发 `cap:inchi`。）
+- **执行成果**：`lib/mol2/`（5/5 PASS，`doc/lib/mol2.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:mol2` 交付验收并登记入库（5/5 PASS）；派发 `cap:inchi`。
