@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:bessel` 纯 CP 零分配柱贝塞尔与修正贝塞尔特殊函数库：Double-Double 106-bit 无损幂级数 + Hankel 渐近 + Miller 向下递推 + 指数缩放防溢出/下溢（5/5 PASS，文档直写 `doc/lib/bessel.md`）
+新增 cap:bessel（lib/bessel/{bessel,index}.cp）：Double-Double 106-bit 幂级数 + Hankel 渐近 + Miller 向下递推与指数缩放版本，Wronskian 恒等式误差 < 1e-12，cpc check 0 错误，cap test 6/6 PASS (793ms)
+
 ## 2026-11-22: 新建 `cap:ekf` 纯 CP 零分配非线性状态估计库（EKF & UKF）：中心差分雅可比、Joseph 形式对称正定扩展卡尔曼滤波、新息 NIS 计算与 Merwe Sigma 点无迹卡尔曼滤波预测（5/5 PASS，文档直写 `doc/lib/ekf.md`）
 新增 cap:ekf（lib/ekf/{ekf,index}.cp）：零分配 Joseph 形式 EKF 与 Merwe Sigma 点 UKF 预测，通过极坐标雷达 30 步闭环追踪与低噪正定性保持校验，cpc check 0 错误，cap test 6/6 PASS (805ms)
 

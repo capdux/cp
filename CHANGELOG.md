@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:bessel` 纯 CP 零分配柱贝塞尔与修正贝塞尔特殊函数库：Double-Double 106-bit 无损幂级数 + Hankel 渐近 + Miller 向下递推 + 指数缩放防溢出/下溢（5/5 PASS，自动动态挂载 `cap.bessel`）
+新增纯 CP 零分配贝塞尔特殊函数库 cap:bessel（j0/j1/jn、y0/y1/yn、besselI0/besselI1/i0e/i1e、k0/k1/k0e/k1e），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:ekf` 纯 CP 零分配非线性状态估计库（EKF & UKF）：中心差分雅可比、Joseph 形式对称正定扩展卡尔曼滤波、新息 NIS 计算与 Merwe Sigma 点无迹卡尔曼滤波预测（5/5 PASS，自动动态挂载 `cap.ekf`）
 新增纯 CP 零分配非线性状态估计库 cap:ekf（EKF Joseph 更新、数值雅可比、UKF Sigma 点预测），含文档与 6 项深度生产测试
 

@@ -160,3 +160,6 @@
 
 ### 2026-11-22（`cap:ekf` 验收，子智能体交付 cap:ekf（EKF & UKF 非线性状态估计，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/ekf/`（5/5 PASS，`doc/lib/ekf.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:ekf（EKF & UKF 非线性状态估计，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:bessel` 验收，子智能体交付 cap:bessel（柱贝塞尔与修正贝塞尔特殊函数库，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/bessel/`（5/5 PASS，`doc/lib/bessel.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:bessel（柱贝塞尔与修正贝塞尔特殊函数库，6/6 PASS），主协调器统一登记并提交
