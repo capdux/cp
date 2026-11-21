@@ -136,3 +136,6 @@
 
 ### 2026-11-22（`cap:vxlan` 验收，完成 `cap:vxlan` 交付验收并登记入库（5/5 PASS）；派发 `cap:arp`。）
 - **执行成果**：`lib/vxlan/`（5/5 PASS，`doc/lib/vxlan.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:vxlan` 交付验收并登记入库（5/5 PASS）；派发 `cap:arp`。
+
+### 2026-11-22（`cap:geneve` 验收，完成 `cap:geneve` 交付验收并登记入库（5/5 PASS）；派发 `cap:icmp`。）
+- **执行成果**：`lib/geneve/`（5/5 PASS，`doc/lib/geneve.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:geneve` 交付验收并登记入库（5/5 PASS）；派发 `cap:icmp`。
