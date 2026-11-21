@@ -294,7 +294,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:idna` | `IdnaError`, `punycodeEncode`, `punycodeDecode`, `toAscii`, `toUnicode`, `isValidDomain`, `normalizeDomain` | 纯 CP RFC 3492 Punycode 编解码与 IDNA 国际化域名转换校验引擎（支持 `cap.idna` 自动动态挂载，详见 `doc/lib/idna.md`） |
 | `cap:ulid` | `ULID_BYTE_LEN`, `ULID_ENCODED_LEN`, `UlidError`, `Ulid`（`fromParts`/`fromBytes`/`timestampMs`/`entropy`/`encode`/`encodeLower`/`decode`/`decodeStrict`/`toUuidString`/`fromUuidString`）, `MonotonicUlidGenerator` | 纯 CP Crockford Base32 128-bit 单调递增 ULID 编解码、UUID 互转与 CSPRNG 生成器引擎（支持 `cap.ulid` 自动动态挂载，详见 `doc/lib/ulid.md`） |
 | `cap:watcher` | `WatchAction`, `WatchEvent`, `WatchFilter`, `DebounceTracker`, `FileWatcher`, `DebounceEngine`, `IN_*` | 纯 CP Linux inotify 文件监控、事件防抖与路径过滤引擎（吸收对标 Bun `src/watcher/`，详见 `doc/lib/watcher.md`） |
-| `cap:semver_range` | `SemverError`, `CompOp`, `RangeOptions`, `Semver`, `Comparator`, `ComparatorSet`, `RangeExpr`, `parseSemver`, `compare`/`comparePrecedence`, `parseRange`, `satisfies`/`satisfiesStr`, `maxSatisfying`, `minSatisfying`, `intersects` | 纯 CP Semver 2.0 语义化版本解析、npm/Cargo 范围表达式求值与选版引擎（支持 `cap.semver_range` 自动动态挂载，详见 `doc/lib/semver_range.md`） |
 | `cap:paths` | `PathError`, `PathStyle`, `ParsedPath`, `parse`/`dirname`/`basename`/`extname`/`isAbsolute`, `normalize`, `join`, `resolve`, `relative`, `toPosixSlash`/`toWindowsSlash`, `isSubpath`, `safeJoin`, `matchGlobSimple` | 纯 CP POSIX/Windows 双风格路径解析、规范化与防目录穿越安全边界引擎（吸收对标 Bun `src/paths/`，详见 `doc/lib/paths.md`） |
 | `cap:perf` | `PerfClock`, `PerfTimer`, `PerfPhase`, `PerfEvent`, `PerfSpan`, `PerfError`, `PerfRecorder`, `PerfStatSummary`, `summarizeByName`, `exportChromeTraceJson`, `formatSummaryTable` | 纯 CP 高分辨率作用域计时、P95/P99 热点聚合与 Chrome Trace Event JSON 导出引擎（吸收对标 Bun `src/perf/`，详见 `doc/lib/perf.md`） |
 | `cap:collections` | `CollectionError`, `BitSet`, `BoundedDeque`, `RingDeque`, `SmallVec`, `BinaryHeap` | 纯 CP 高性能 BitSet、无堆 BoundedDeque、RingDeque、内联溢出 SmallVec 与泛型 BinaryHeap 集合库（吸收对标 Bun `src/collections/`，详见 `doc/lib/collections.md`） |
@@ -496,7 +495,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:css_gradient` | GradientKind, DirectionSide, LineDirection, RadialShape, RadialExtent, ColorStop, LinearGradient, RadialGradient, ConicGradient, Gradient | CSS Images 4 线性/径向/锥形渐变（含 repeating-* 与双位置色标）零堆分配解析与规范化序列化库（吸收自 bun/src/css/values/gradient.cp） |
 | `cap:ci_info` | CiVendor, EnvEntry, CiInfo, detectFromEntries | 零堆分配 CI/CD 31 供应商环境与 PR 构建检测器（遵循 ci-info v4，吸收自 bun/src/cli/ci_info.cp 与 codegen/ci_info.ts） |
 | `cap:css_selector_builder` | Combinator, ComponentKind, SelectorComponent, Specificity, CombinatorEntry, BuiltSelector, SelectorBuilder | CSS 选择器构建器（Servo 右向左复合匹配序布局）与 Selectors Level 4 特异度计算库（吸收自 bun/src/css/selectors/builder.cp） |
-| `cap:semver_query` | DependencyKind, WorkspaceSpecKind, WorkspaceSpec, GitSpec, NpmAliasSpec, DependencySpec, PackageName | 包管理器多协议依赖版本描述符解析器（npm/workspace/catalog/github/git/file/link/tarball/npm_alias）与 npm 包名校验器（吸收自 bun/src/semver/SemverQuery.cp） |
 | `cap:md_links` | LinkKind, ParsedLink, parseAutolink, parseInlineLinkOrImage, percentEncodeUrl | CommonMark §6.3-6.5 内联链接、图片、引用链接与 URI/Email 自动链接零堆分配解析器及 URL 百分号编码（吸收自 bun/src/md/links.cp） |
 | `cap:css_effects` | FilterKind, FilterLengthUnit, FilterAngleUnit, DropShadow, Filter, FilterList | CSS Filter Effects 11 种标准滤镜函数链（blur/brightness/contrast/grayscale/hue-rotate/invert/opacity/saturate/sepia/drop-shadow/url）零堆分配解析与序列化（吸收自 bun/src/css/properties/effects.cp） |
 | `cap:css_layout_ctrl` | OverflowKeyword, Overflow, TextOverflow, Position, ContainerType, ContainFlags, ZIndex | CSS 布局控制属性库（overflow/text-overflow/position/container-type/contain/z-index，吸收自 bun/src/css/properties/{overflow,position,contain}.cp） |
@@ -571,7 +569,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:hex_dump` | encodeHexLower, encodeHexUpper, decodeHexStrict, decodeHex, formatHexDumpLine, formatHexDump | 零分配十六进制编解码与规范化 hexdump -C 多行诊断格式化器 |
 | `cap:http_vary` | VaryIter, isVaryWildcard, varyContains, appendVary, mergeVary | RFC 9110 §12.5.5 Vary 响应头零分配迭代、通配符检测与大小写不敏感去重合并器 |
 | `cap:glob_escape` | isGlobMagic, hasGlobMagic, escapeGlob, unescapeGlob, staticBaseDir, isNegatedPattern, stripNegation | Glob 通配符元字符转义/反转义、静态目录前缀提取（遍历剪枝）与否定模式解析 |
-| `cap:semver_sort` | SemverOrder, ParsedSemver, parseSemverStrict, parseSemverLoose, compareSemver, compareSemverStr, sortSemverAsc, sortSemverDesc, maxSemverIndex, minSemverIndex | SemVer 2.0.0 §11 严格优先级比较、预发布标签无溢出比较与原地升降序排序/极值选择 |
 | `cap:http_range` | RangeSpecKind, ByteRangeSpec, ResolvedByteRange, ByteRangeIter, resolveSingleByteRange | RFC 9110 §14.1.2 HTTP Range 请求头（bytes=start-end / start- / -suffix）零分配解析与实体区间求值器 |
 | `cap:gitignore_match` | GitignoreRule, parseGitignoreLine, ruleMatchesPath, isIgnored | Git .gitignore 规则集零分配解析与路径匹配引擎（支持 **/! 反忽略/目录锚定与字符类） |
 | `cap:http_digest` | DigestEntry, DigestIter, findDigest, formatDigest, WantDigestPref, WantDigestIter, negotiateDigestAlg | RFC 9530 Content-Digest / Repr-Digest 与 Want-Content-Digest 结构化字段零分配解析与算法协商 |
@@ -591,7 +588,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:structured_headers` | SfItemKind, SfItem, parseSfItem, SfParam, SfParamIter, formatSfString, formatSfByteSeq | RFC 8941 HTTP Structured Field Values 标量项（整数/小数/字符串/Token/字节序列/布尔）与参数列表零分配解析器 |
 | `cap:http_if_match` | EntityTag, etagListMatches, PreconditionResult, ConditionalRequest, evaluatePreconditions | RFC 9110 §13.1/§13.2.2 HTTP 条件请求求值器（If-Match / If-None-Match / If-Modified-Since / If-Unmodified-Since） |
 | `cap:rate_sliding_window` | SlidingWindowCounter, GcraLimiter | 加权滑动窗口计数器与 GCRA（通用信元速率算法）零分配纯整数平滑限流器 |
-| `cap:semver_bump` | BumpKind, bumpMajor, bumpMinor, bumpPatch, bumpPrerelease, stripPrereleaseAndBuild, bumpVersion | SemVer 2.0.0 版本号递增器（major/minor/patch/prerelease/release）与预发布标签剥离器 |
 | `cap:quoted_printable` | encodeQuotedPrintable, decodeQuotedPrintable | RFC 2045 §6.7 MIME Quoted-Printable 零分配编解码器（76 列软换行与行尾空白转义） |
 | `cap:punycode` | isAsciiOnly, encodePunycode, decodePunycode, encodeIdnLabel, decodeIdnLabel | RFC 3492 Punycode / Bootstring 零分配编解码器与 xn-- 国际化域名标签转换器 |
 | `cap:ssh_pubkey` | SshKeyType, parseKeyType, SshPubKey, AuthorizedKeysIter | OpenSSH 公钥与 authorized_keys 文件零分配解析器（含选项字段、Base64 校验与 FIDO2 SK 识别） |
@@ -673,7 +669,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:cgroup_v2_limits` | `CgroupLimit`, `CpuMaxQuota`, `IoMaxEntry`, `parseCgroupMax`, `parseCpuMax`, `parseIoMaxLine`, `effectiveMemoryLimit` | Linux cgroup v2 容器资源限额（`cpu.max`/`memory.max`/`pids.max`/`io.max`）零分配解析器 |
 | `cap:http_content_range` | `ContentRangeKind`, `ContentRange`, `parseContentRange`, `formatContentRange` | RFC 9110 §14.4 HTTP `Content-Range` 断点续传响应头零分配解析与格式化器 |
 | `cap:sysctl_conf` | `SysctlEntry`, `SysctlIter`, `normalizeSysctlKey`, `sysctlKeysEqual`, `getSysctlValue` | Linux `/etc/sysctl.conf` / `sysctl.d/*.conf` 内核参数配置零分配解析与键等价查询器 |
-| `cap:semver_satisfies` | `SemverVersion`, `satisfiesRange`, `satisfiesVersion`, `isValidSemverRange` | NPM / Bun 风格 SemVer 2.0.0 版本解析、比较与范围表达式零分配匹配器 |
 | `cap:http_allow` | `HttpMethodBit`, `AllowMethodSet`, `parseAllowHeader`, `AllowIter`, `isMethodAllowed`, `isSafeMethod`, `isIdempotentMethod` | RFC 9110 §10.2.1 HTTP `Allow` 方法集位掩码解析、格式化与安全/幂等判定器 |
 | `cap:http_trailer` | `isForbiddenTrailerField`, `isValidTrailerFieldName`, `TrailerFieldIter`, `validateTrailerHeader`, `hasTrailerField` | RFC 9110 §6.5.1 HTTP `Trailer` 尾部字段声明零分配解析与 25 项禁传字段安全校验器 |
 | `cap:http_max_forwards` | `MaxForwardsAction`, `MaxForwardsResult`, `parseMaxForwards`, `evaluateMaxForwards`, `formatMaxForwards` | RFC 9110 §7.6.2 HTTP `Max-Forwards` 代理跳数限制零分配解析与递减裁定器 |

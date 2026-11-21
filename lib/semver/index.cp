@@ -39,3 +39,53 @@ pub const Semver = struct {
 };
 
 pub const semver = Semver;
+
+export {
+    BumpKind,
+    bumpMajor,
+    bumpMinor,
+    bumpPatch,
+    stripPrereleaseAndBuild,
+    bumpPrerelease,
+    bumpVersion,
+} from "./bump.cp";
+
+export {
+    DependencyKind,
+    WorkspaceSpecKind,
+    WorkspaceSpec,
+    GitSpec,
+    NpmAliasSpec,
+    DependencySpec,
+    PackageName,
+} from "./spec.cp";
+
+export {
+    MAX_COMPARATORS_PER_GROUP,
+    MAX_GROUPS,
+    SemverVersion,
+    Op as RangeOp,
+    Comparator as RangeComparator,
+    ComparatorGroup,
+    SemverRange as ParsedSemverRange,
+} from "./rset.cp";
+
+export {
+    SemverVersion as SatisfiesVersion,
+    satisfiesRange,
+    satisfiesVersion,
+    isValidSemverRange,
+} from "./satisfies.cp";
+
+export {
+    SemverOrder,
+    ParsedSemver,
+    parseSemverStrict,
+    parseSemverLoose,
+    compareSemver,
+    compareSemverStr,
+    sortSemverAsc,
+    sortSemverDesc,
+    maxSemverIndex,
+    minSemverIndex,
+} from "./sort.cp";

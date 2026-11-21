@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:semver` SemVer 2.0.0 版本解析、排序、递增、依赖查询与 NPM/Bun 范围匹配统一主包（5/5 PASS，文档直写 `doc/lib/semver.md`）
+- **收敛要点**：保留原 `lib/semver/{version,query,range}.cp` 零破坏，新迁入模块通过聚合别名消解重名冲突；Wave 2 全部收官（累计消除 37 个长下划线顶层目录）。
+
 ## 2026-11-22: 新建 `cap:sys` 系统底层信息、Linux `/etc/*` 与 `/proc/*` 全家桶统一主包（5/5 PASS，文档直写 `doc/lib/sys.md`）
 - **收敛要点**：13 个 `/proc/*` 解析器与既有 `cap:sys` 零冲突合并；全库 `cap:proc_` 引用清零，累计已消除 32 个长下划线顶层目录。
 

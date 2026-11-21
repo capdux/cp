@@ -9,7 +9,7 @@ import {
     sortSemverDesc,
     maxSemverIndex,
     minSemverIndex,
-} from "cap:semver_sort";
+} from "cap:semver";
 
 test("1. parseSemverStrict vs parseSemverLoose validation and leading-zero rejection", () => {
     const p = parseSemverStrict("1.2.3-alpha.0.x+build.007") ?? unreachable;

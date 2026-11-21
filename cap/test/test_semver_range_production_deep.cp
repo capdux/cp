@@ -1,7 +1,7 @@
 // Source: cp/cap/test/test_semver_range_production_deep.cp (Production deep tests for cap:semver_range)
 
 import { test, expect_eq } from "cap:test";
-import { SemverVersion, SemverRange } from "cap:semver_range";
+import { SemverVersion, ParsedSemverRange as SemverRange } from "cap:semver";
 
 test("SemverVersion parsing (prerelease/build) and Semver 2.0 total ordering") {
     const v_full = SemverVersion.parse("v1.2.3-beta.11+build.42") catch unreachable;

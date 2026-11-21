@@ -9,7 +9,7 @@ import {
     bumpPrerelease,
     stripPrereleaseAndBuild,
     bumpVersion,
-} from "cap:semver_bump";
+} from "cap:semver";
 
 test("semver_bump: bumpMajor, bumpMinor and bumpPatch with prerelease promotion") {
     let buf: [64]u8 = [0; 64];

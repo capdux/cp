@@ -4,7 +4,7 @@ import {
     WorkspaceSpecKind,
     DependencySpec,
     PackageName,
-} from "cap:semver_query";
+} from "cap:semver";
 
 test("1. npm semver range & dist-tag resolution", () => {
     let buf: [64]u8 = std.mem.zeroes([64]u8);

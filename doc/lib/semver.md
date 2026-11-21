@@ -103,3 +103,17 @@ fn demoRangeMatching() {
     let best = Semver.maxSatisfyingStr(candidates[0..4], "^1.0.0"); // "1.9.0"
 }
 ```
+
+---
+
+## 五、 扩展子模块索引（零堆分配纯 CP 组件）
+
+`cap:semver` 已将以下 5 个零堆分配子模块统一收敛至 `lib/semver/` 并通过 `index.cp` 聚合导出：
+
+| 子文件 | 核心导出符号 | 核心能力 |
+| :--- | :--- | :--- |
+| `lib/semver/bump.cp` | `BumpKind`, `bumpMajor`, `bumpMinor`, `bumpPatch`, `stripPrereleaseAndBuild`, `bumpPrerelease`, `bumpVersion` | SemVer 2.0.0 版本号递增、预发布标识符晋升与构建元数据剥离 |
+| `lib/semver/spec.cp` | `DependencyKind`, `WorkspaceSpecKind`, `WorkspaceSpec`, `GitSpec`, `NpmAliasSpec`, `DependencySpec`, `PackageName` | npm/workspace/git/file/alias 依赖说明符解析与规范化 |
+| `lib/semver/rset.cp` | `MAX_COMPARATORS_PER_GROUP`, `MAX_GROUPS`, `SemverVersion`, `RangeOp`, `RangeComparator`, `ComparatorGroup`, `ParsedSemverRange` | 固定容量零堆分配 Range 比较器组解析与求值 |
+| `lib/semver/satisfies.cp` | `SatisfiesVersion`, `satisfiesRange`, `satisfiesVersion`, `isValidSemverRange` | 轻量零分配版本区间 `satisfies` 校验器 |
+| `lib/semver/sort.cp` | `SemverOrder`, `ParsedSemver`, `parseSemverStrict`, `parseSemverLoose`, `compareSemver`, `compareSemverStr`, `sortSemverAsc`, `sortSemverDesc`, `maxSemverIndex`, `minSemverIndex` | SemVer 2.0.0 严格/宽松解析、原地升降序排序与极值索引查询 |
