@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:haproxy` 零分配 HAProxy `.cfg` 负载均衡配置段与指令解析器（5/5 PASS，文档直写 `doc/lib/haproxy.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:haproxy`；`HaSectionIter` 零拷贝切分 9 类段，`HaDirectiveIter` 精确剥离引号外行尾注释。
+
 ## 2026-11-22: 新建 `cap:nix` 零分配 Nix / `flake.nix` 表达式词法扫描、属性集顶层绑定提取与 64 层定界符校验器（5/5 PASS，文档直写 `doc/lib/nix.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:nix`；`NixAttrIter` 兼容 `rec { ... }` 与裸属性集主体并自动跳过嵌套分号与 `inherit`。
 

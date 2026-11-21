@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:haproxy` 零分配 HAProxy `.cfg` 负载均衡配置段与指令解析器（5/5 PASS，自动动态挂载 `cap.haproxy`）
+- 新增 `lib/haproxy/{haproxy,index}.cp`、`doc/lib/haproxy.md`、`cap/test/test_haproxy_production_deep.cp`：纯 CP 零分配实现 HAProxy `.cfg` 段切分与指令迭代（兼容 CRLF、保护引号内 `#` 与 `\#` 转义），与 `cap:nginx`/`cap:caddy` 集齐反向代理配置三件套（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:nix` 零分配 Nix / `flake.nix` 表达式词法扫描、属性集顶层绑定提取与 64 层定界符校验器（5/5 PASS，自动动态挂载 `cap.nix`）
 - 新增 `lib/nix/{nix,index}.cp`、`doc/lib/nix.md`、`cap/test/test_nix_production_deep.cp`：纯 CP 零分配实现 Nix 词法扫描（`${...}` 嵌套插值、`...` 缩进串、路径/URI）、属性集顶层 `key = value;` 提取与 64 层平衡校验（5/5 PASS）。
 
