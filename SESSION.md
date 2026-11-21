@@ -184,3 +184,6 @@
 
 ### 2026-11-22（`cap:igc` 验收，完成 `cap:igc` 交付验收并登记入库（5/5 PASS）；派发 `cap:vrml`。）
 - **执行成果**：`lib/igc/`（5/5 PASS，`doc/lib/igc.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:igc` 交付验收并登记入库（5/5 PASS）；派发 `cap:vrml`。
+
+### 2026-11-22（`cap:usd` 验收，完成 `cap:usd` 交付验收并登记入库（5/5 PASS）；派发 `cap:bdf`。）
+- **执行成果**：`lib/usd/`（5/5 PASS，`doc/lib/usd.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:usd` 交付验收并登记入库（5/5 PASS）；派发 `cap:bdf`。

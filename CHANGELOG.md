@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:usd` 零分配 Pixar OpenUSD (.usdc/.usda/.usdz) Crate TOC 与阶段元数据解析器（5/5 PASS，自动动态挂载 `cap.usd`）
+新增 `lib/usd/{usd,index}.cp`、`doc/lib/usd.md` 与 `cap/test/test_usd_production_deep.cp`（5/5 PASS），支持 88B Crate Bootstrap、32B TOC 区段零拷贝迭代、.usda 阶段元数据与 .usdz 未压缩首资产探测。
+
 ## [2026-11-22] - 新建 `cap:igc` 零分配 FAI IGC 滑翔机/航空飞行记录仪 A/H/B 记录解析器（5/5 PASS，自动动态挂载 `cap.igc`）
 新增 `lib/igc/{igc,index}.cp`、`doc/lib/igc.md` 与 `cap/test/test_igc_production_deep.cp`（5/5 PASS），支持 A/H 头记录、B 定宽 35B 定位记录、负海拔与跨午夜 UTC 飞行时长统计。
 
