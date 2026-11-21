@@ -259,3 +259,6 @@
 
 ### 2026-11-22（`cap:avif` 验收，完成 `cap:avif` 交付验收并登记入库（5/5 PASS）；派发 `cap:heif`。）
 - **执行成果**：`lib/avif/`（5/5 PASS，`doc/lib/avif.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:avif` 交付验收并登记入库（5/5 PASS）；派发 `cap:heif`。
+
+### 2026-11-22（`cap:mpeg` 验收，完成 `cap:mpeg` 交付验收并登记入库（5/5 PASS）；派发 `cap:ts`。）
+- **执行成果**：`lib/mpeg/`（5/5 PASS，`doc/lib/mpeg.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:mpeg` 交付验收并登记入库（5/5 PASS）；派发 `cap:ts`。

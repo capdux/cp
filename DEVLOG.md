@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:mpeg` 零分配 MPEG-1/2/2.5 MP3 帧头、ID3v2 跳过与 Xing/Info/VBRI VBR 解析器（5/5 PASS，文档直写 `doc/lib/mpeg.md`）
+实现零分配 MPEG 音频帧与 VBR 头解析器，支持连续帧同步字校验与 Side-Info 偏移自适应。
+
 ## 2026-11-22: 新建 `cap:avif` 零分配 AVIF / MIAF ISO BMFF 图像容器与 av1C/ispe/colr 元数据解析器（5/5 PASS，文档直写 `doc/lib/avif.md`）
 实现零分配 AVIF ISO BMFF 元数据解析器，支持 HDR nclx 色彩、Alpha auxC 与动画序列检测。
 
