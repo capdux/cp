@@ -492,3 +492,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:mysql` | `AuthError`, `CapsCapabilities`, `ControlError`, `HandshakeV10`, `HandshakeResponse41`, `StatusFlag`, `WireHandshakeV10`, ... | MySQL 线协议全套认证、能力位、握手、字段类型、控制报文与二进制帧解析统一主包（`lib/mysql_*` 全仓清零） |
 | `cap:markdown` | `LineAnalysis`, `MarkdownLink`, `RefDef`, ... | Markdown 行分析、链接与引用定义统一主包（同步收敛 `cap:unicode`/`cap:s3`/`cap:shell`） |
 | `cap:js` | `JsIdent`, `JsOp`, ... | JS 标识符与运算符解析统一主包（同步收敛 `cap:hash`/`cap:text`/`cap:diff`/`cap:mime`） |
+| `cap:sexp` | `SexpTokenKind`, `SexpToken`, `SexpIter`, `validateSexp`, `maxSexpDepth`, `formatSexpCompact` | 零分配 S-Expression 词法扫描、括号平衡校验、最大深度统计与紧凑格式化器 |

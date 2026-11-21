@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:sexp` 零分配 S-Expression 词法扫描、括号平衡校验、最大深度统计与紧凑格式化器（5/5 PASS，文档直写 `doc/lib/sexp.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:sexp`；`SexpIter` 零拷贝切分 5 类 token，`formatSexpCompact` 规范输出并严格校验缓冲边界。
+
 ## 2026-11-22: 新建 `cap:css` CSS 引擎与全套 36 项样式/布局/选择器/动画/变换/单位大一统主包（`lib/css_*` 全仓清零！）（5/5 PASS，文档直写 `doc/lib/css.md`）
 - **收官里程碑**：`lib/css_*` 与 `"cap:css_*"` 均清零，14/14 PASS；方案 A 全部 235 个同域碎片 100% 归入简洁单单词 TS/Bun 风格主包。
 

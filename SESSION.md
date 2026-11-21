@@ -64,3 +64,6 @@
 
 ### 2026-11-22（`cap:css` 验收，方案 A 领域主包收敛 **100% 圆满收官**：全部 36 个 `lib/css_*` 清零，累计消除 **235 个**长下划线散装目录！全面切换为 3 路 `bun_agy` 增量同步）
 - **执行成果**：`lib/css/`（5/5 PASS，`doc/lib/css.md`）经 `verify_module.sh` 一次性验收回收；方案 A 领域主包收敛 **100% 圆满收官**：全部 36 个 `lib/css_*` 清零，累计消除 **235 个**长下划线散装目录！全面切换为 3 路 `bun_agy` 增量同步
+
+### 2026-11-22（`cap:sexp` 验收，新增简洁单单词包 `cap:sexp`（5/5 PASS））
+- **执行成果**：`lib/sexp/`（5/5 PASS，`doc/lib/sexp.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:sexp`（5/5 PASS）
