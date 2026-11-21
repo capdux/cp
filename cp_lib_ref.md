@@ -563,3 +563,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:json_pointer` | isValidPointer, parseArrayIndex, unescapeToken, escapeToken, PointerIter, appendToken, parentPointer | RFC 6901 JSON Pointer 解析、~0/~1 转义反转义、数组索引校验与路径段迭代器 |
 | `cap:http_cache_control` | CacheDirective, CacheControlIter, CacheControl | RFC 9111 Cache-Control 指令零分配流式解析器、缓存存储/有效 TTL 判定与规范化格式化器 |
 | `cap:ip_addr` | Ipv4Addr, Ipv6Addr, IpVersion, IpAddr | RFC 4291 / RFC 5952 IPv4 与 IPv6 零分配解析器、规范化零压缩格式化器、地址分类与 CIDR 子网匹配 |
+| `cap:hosts_file` | HostsLine, HostsIter, lookupHost, lookupHostV4, lookupHostV6, reverseLookup | /etc/hosts 零分配流式解析器与 IPv4/IPv6 正反向解析查找 |
+| `cap:netrc` | NetrcEntry, NetrcIter, lookupNetrc | .netrc / _netrc 认证凭据文件零分配流式解析器（支持引号、注释、macdef 与 default 回退） |
+| `cap:robots_txt` | matchRobotsPattern, isAllowed, crawlDelaySec, SitemapIter | RFC 9309 robots.txt 解析、通配符匹配、Crawl-delay 提取与 Sitemap 迭代器 |

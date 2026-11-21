@@ -313,3 +313,12 @@
 
 ### 2026-11-22（`cap:ip_addr` 验收，Batch 47 注册 `cap:ip_addr` 并提交。）
 - **执行成果**：`lib/ip_addr/`（5/5 PASS，`doc/lib/ip_addr.md`）经 `verify_module.sh` 一次性验收回收；Batch 47 注册 `cap:ip_addr` 并提交。
+
+### 2026-11-22（`cap:hosts_file` 验收，Batch 48 完成 `cap:hosts_file`、`cap:netrc`、`cap:robots_txt` 3 模块吸收与全量验收。）
+- **执行成果**：`lib/hosts_file/`（5/5 PASS，`doc/lib/hosts_file.md`）经 `verify_module.sh` 一次性验收回收；Batch 48 完成 `cap:hosts_file`、`cap:netrc`、`cap:robots_txt` 3 模块吸收与全量验收。
+
+### 2026-11-22（`cap:netrc` 验收，Batch 48 注册 `cap:netrc`。）
+- **执行成果**：`lib/netrc/`（5/5 PASS，`doc/lib/netrc.md`）经 `verify_module.sh` 一次性验收回收；Batch 48 注册 `cap:netrc`。
+
+### 2026-11-22（`cap:robots_txt` 验收，Batch 48 注册 `cap:robots_txt` 并提交。）
+- **执行成果**：`lib/robots_txt/`（5/5 PASS，`doc/lib/robots_txt.md`）经 `verify_module.sh` 一次性验收回收；Batch 48 注册 `cap:robots_txt` 并提交。

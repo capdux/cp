@@ -1,3 +1,12 @@
+## 2026-11-22: 新建 `cap:robots_txt` RFC 9309 robots.txt 解析、通配符匹配、Crawl-delay 提取与 Sitemap 迭代器（5/5 PASS，文档直写 `doc/lib/robots_txt.md`）
+Subagent 1 吸收 `cap:robots_txt`，采用线性双指针回溯实现 `*`/`$` 通配符匹配，支持 UTF-8 BOM、注释忽略、`Crawl-delay` 与 `SitemapIter`。
+
+## 2026-11-22: 新建 `cap:netrc` .netrc / _netrc 认证凭据文件零分配流式解析器（支持引号、注释、macdef 与 default 回退）（5/5 PASS，文档直写 `doc/lib/netrc.md`）
+Subagent 2 吸收 `cap:netrc`，零堆分配解析 `.netrc` 凭据，正确保留密码内 `#` 并跳过 `macdef` 宏体。
+
+## 2026-11-22: 新建 `cap:hosts_file` /etc/hosts 零分配流式解析器与 IPv4/IPv6 正反向解析查找（5/5 PASS，文档直写 `doc/lib/hosts_file.md`）
+主智能体吸收 `cap:hosts_file`，零堆分配迭代 `/etc/hosts`，提供 `lookupHost`/`lookupHostV4`/`lookupHostV6`/`reverseLookup`。
+
 ## 2026-11-22: 新建 `cap:ip_addr` RFC 4291 / RFC 5952 IPv4 与 IPv6 零分配解析器、规范化零压缩格式化器、地址分类与 CIDR 子网匹配（5/5 PASS，文档直写 `doc/lib/ip_addr.md`）
 主智能体吸收 `cap:ip_addr`，严格拒绝 IPv4 前导零与非法双 `::`，完整实现 RFC 5952 §4.2 规范化输出与 IPv4/IPv6 CIDR 掩码匹配。
 

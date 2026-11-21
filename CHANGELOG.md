@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:robots_txt` RFC 9309 robots.txt 解析、通配符匹配、Crawl-delay 提取与 Sitemap 迭代器（5/5 PASS，自动动态挂载 `cap.robots_txt`）
+新增 `cap:robots_txt`（`lib/robots_txt/{robots,index}.cp`、`doc/lib/robots_txt.md`、`cap/test/test_robots_txt_production_deep.cp`），实现 RFC 9309 最具体组匹配、最长规则优先与同长度 Allow 优先。
+
+## [2026-11-22] - 新建 `cap:netrc` .netrc / _netrc 认证凭据文件零分配流式解析器（支持引号、注释、macdef 与 default 回退）（5/5 PASS，自动动态挂载 `cap.netrc`）
+新增 `cap:netrc`（`lib/netrc/{netrc,index}.cp`、`doc/lib/netrc.md`、`cap/test/test_netrc_production_deep.cp`），完整支持单行/多行、引号含空格、跳过 `macdef` 与大小写不敏感 `machine`/`default` 查找。
+
+## [2026-11-22] - 新建 `cap:hosts_file` /etc/hosts 零分配流式解析器与 IPv4/IPv6 正反向解析查找（5/5 PASS，自动动态挂载 `cap.hosts_file`）
+新增 `cap:hosts_file`（`lib/hosts_file/{hosts,index}.cp`、`doc/lib/hosts_file.md`、`cap/test/test_hosts_file_production_deep.cp`），支持 UTF-8 BOM、多别名、`#` 注释与正反向查询。
+
 ## [2026-11-22] - 新建 `cap:ip_addr` RFC 4291 / RFC 5952 IPv4 与 IPv6 零分配解析器、规范化零压缩格式化器、地址分类与 CIDR 子网匹配（5/5 PASS，自动动态挂载 `cap.ip_addr`）
 新增 `cap:ip_addr`（`lib/ip_addr/{ip,index}.cp`、`doc/lib/ip_addr.md`、`cap/test/test_ip_addr_production_deep.cp`），实现 IPv4/IPv6 解析、RFC 5952 最长零段压缩、IPv4 映射 IPv6 互转与子网匹配。
 
