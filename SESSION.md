@@ -163,3 +163,15 @@
 
 ### 2026-11-22（`cap:html_asset_scanner` 验收，Batch 30: 吸收并验证 cap:html_asset_scanner (6/6 PASSED)）
 - **执行成果**：`lib/html_asset_scanner/`（5/5 PASS，`doc/lib/html_asset_scanner.md`）经 `verify_module.sh` 一次性验收回收；Batch 30: 吸收并验证 cap:html_asset_scanner (6/6 PASSED)
+
+### 2026-11-22（`cap:data_url` 验收，Batch 31: 吸收并验证 cap:data_url (PASSED)）
+- **执行成果**：`lib/data_url/`（5/5 PASS，`doc/lib/data_url.md`）经 `verify_module.sh` 一次性验收回收；Batch 31: 吸收并验证 cap:data_url (PASSED)
+
+### 2026-11-22（`cap:tsconfig_paths` 验收，Batch 31: 吸收并验证 cap:tsconfig_paths (PASSED)）
+- **执行成果**：`lib/tsconfig_paths/`（5/5 PASS，`doc/lib/tsconfig_paths.md`）经 `verify_module.sh` 一次性验收回收；Batch 31: 吸收并验证 cap:tsconfig_paths (PASSED)
+
+### 2026-11-22（`cap:css_image_set` 验收，Batch 31: 吸收并验证 cap:css_image_set (5/5 PASSED)）
+- **执行成果**：`lib/css_image_set/`（5/5 PASS，`doc/lib/css_image_set.md`）经 `verify_module.sh` 一次性验收回收；Batch 31: 吸收并验证 cap:css_image_set (5/5 PASSED)
+
+### 2026-11-22（`cap:gitconfig_ini` 验收，Batch 31: 吸收并验证 cap:gitconfig_ini (5/5 PASSED)）
+- **执行成果**：`lib/gitconfig_ini/`（5/5 PASS，`doc/lib/gitconfig_ini.md`）经 `verify_module.sh` 一次性验收回收；Batch 31: 吸收并验证 cap:gitconfig_ini (5/5 PASSED)

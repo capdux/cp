@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:gitconfig_ini` Git Config / INI 零堆分配解析器（支持 subsection、注释、引号、布尔解析与 url.<base>.insteadOf 重写，吸收自 bun/src/install/repository.cp）（5/5 PASS，文档直写 `doc/lib/gitconfig_ini.md`）
+子智能体 2 吸收 bun/src/install/repository.cp，实现完整 GitConfig/INI 解析与 insteadOf URL 重写，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:css_image_set` CSS Images 4 <image> 与 image-set() 分辨率换算、MIME 过滤 DPR 选图与序列化库（吸收自 bun/src/css/values/image.cp）（5/5 PASS，文档直写 `doc/lib/css_image_set.md`）
+子智能体 1 吸收 bun/src/css/values/image.cp，实现 Resolution 单位换算、image-set() 选图与规范化序列化，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:tsconfig_paths` TSConfig compilerOptions.paths 最长前缀通配符路径映射解析器与 ${configDir} 模板展开器（吸收自 bun/src/resolver/tsconfig_json.cp）（5/5 PASS，文档直写 `doc/lib/tsconfig_paths.md`）
+吸收 bun/src/resolver/tsconfig_json.cp，实现精确匹配优先+最长通配符前缀解析与 ${configDir} 替换，通过 cpc check 与 cap test
+
+## 2026-11-22: 新建 `cap:data_url` RFC 2397 Data URL 零堆分配解析、percent/base64 双解码与最短编码择优器（吸收自 bun/src/resolver/data_url.cp）（5/5 PASS，文档直写 `doc/lib/data_url.md`）
+吸收 bun/src/resolver/data_url.cp，实现 RFC 2397 DataUrl 解析、Base64/Percent 解码与最短编码择优，通过 cpc check 与 cap test
+
 ## 2026-11-22: 新建 `cap:html_asset_scanner` 零堆分配 HTML 资源引用扫描器（支持 script/link/img/video/audio/source、精确字节偏移原位重写与 srcset 解析，吸收自 bun/src/bundler/HTMLScanner.cp）（5/5 PASS，文档直写 `doc/lib/html_asset_scanner.md`）
 子智能体 1 吸收 bun/src/bundler/HTMLScanner.cp，实现零外部依赖 HTML 资源扫描与 srcset CDN 逗号兼容解析，6/6 单测通过
 
