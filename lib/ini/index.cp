@@ -11,3 +11,18 @@ export {
 
 // 向后兼容旧 cap:conf/ini 快捷接口
 export { Ini, ini } from "../conf/ini.cp";
+
+export {
+    isValidIniKey,
+    needsIniQuotes,
+    appendIniSection,
+    appendIniSubsection,
+    appendIniPair,
+    appendIniComment,
+} from "./writer.cp";
+
+export {
+    PropertyEntry,
+    PropertiesIter,
+    getProperty,
+} from "./properties.cp";

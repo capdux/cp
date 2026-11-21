@@ -8,7 +8,7 @@ import {
     parseFromArgs,
     ExposePort,
     parseExposeToken,
-} from "cap:dockerfile_parse";
+} from "cap:docker";
 
 test("dockerfile_parse: multi-instruction stream with comments, blank lines and backslash continuation") {
     const df =

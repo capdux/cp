@@ -7,7 +7,7 @@ import {
     formatDotenvValue,
     formatDotenvLine,
     unescapeDotenvDouble,
-} from "cap:dotenv_escape";
+} from "cap:dotenv";
 
 test("dotenv_escape: isValidEnvKey POSIX identifier validation") {
     expect_eq(isValidEnvKey("PORT"), true);

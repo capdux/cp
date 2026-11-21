@@ -90,3 +90,9 @@ pub fn demoCsvPipeline(): !void {
     * = note;
 }
 ```
+
+---
+
+## 附加零分配子模块
+
+- **`lib/csv/escape.cp`**（RFC 4180 CSV/TSV 字段转义、行构造与公式注入防护）：`needsCsvQuotes`、`escapeCsvField`、`unescapeCsvField`、`formatCsvRow`、`isFormulaInjectionRisk`

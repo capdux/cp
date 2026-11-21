@@ -18,3 +18,18 @@ export {
     config,
     load,
 } from "./loader.cp";
+
+export {
+    isValidEnvKey,
+    needsDotenvQuotes,
+    formatDotenvValue,
+    formatDotenvLine,
+    unescapeDotenvDouble,
+} from "./escape.cp";
+
+export {
+    EnvPair,
+    lookupEnv,
+    expandEnv,
+    hasEnvRefs,
+} from "./expand.cp";

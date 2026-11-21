@@ -90,3 +90,10 @@ fn demoDotenv() {
     // env.get("CERT").?            => "-----BEGIN\nDATA-----"
 }
 ```
+
+---
+
+## 附加零分配子模块
+
+- **`lib/dotenv/escape.cp`**（`.env` 键名校验与安全值序列化）：`isValidEnvKey`、`needsDotenvQuotes`、`formatDotenvValue`、`formatDotenvLine`、`unescapeDotenvDouble`
+- **`lib/dotenv/expand.cp`**（POSIX 环境变量模板展开）：`EnvPair`、`lookupEnv`、`expandEnv`、`hasEnvRefs`

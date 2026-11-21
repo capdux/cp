@@ -1,6 +1,6 @@
 import std from "std";
 import { test, expect_eq } from "cap:test";
-import { EnvPair, lookupEnv, expandEnv, hasEnvRefs } from "cap:env_expand";
+import { EnvPair, lookupEnv, expandEnv, hasEnvRefs } from "cap:dotenv";
 
 test("1. lookupEnv last-wins override and basic $VAR / ${VAR} expansion", () => {
     const pairs: [3]EnvPair = [

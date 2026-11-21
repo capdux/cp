@@ -19,3 +19,11 @@ export {
 export {
     CsvTable,
 } from "./table.cp";
+
+export {
+    needsCsvQuotes,
+    escapeCsvField,
+    unescapeCsvField,
+    formatCsvRow,
+    isFormulaInjectionRisk,
+} from "./escape.cp";

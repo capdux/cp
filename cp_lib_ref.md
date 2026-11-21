@@ -553,7 +553,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_vary` | VaryIter, isVaryWildcard, varyContains, appendVary, mergeVary | RFC 9110 §12.5.5 Vary 响应头零分配迭代、通配符检测与大小写不敏感去重合并器 |
 | `cap:glob_escape` | isGlobMagic, hasGlobMagic, escapeGlob, unescapeGlob, staticBaseDir, isNegatedPattern, stripNegation | Glob 通配符元字符转义/反转义、静态目录前缀提取（遍历剪枝）与否定模式解析 |
 | `cap:http_range` | RangeSpecKind, ByteRangeSpec, ResolvedByteRange, ByteRangeIter, resolveSingleByteRange | RFC 9110 §14.1.2 HTTP Range 请求头（bytes=start-end / start- / -suffix）零分配解析与实体区间求值器 |
-| `cap:env_expand` | EnvPair, lookupEnv, expandEnv, hasEnvRefs | POSIX Shell 风格环境变量模板零分配展开器（支持 $VAR/${VAR:-def}/${VAR:+alt}/嵌套展开与转义） |
 | `cap:editorconfig` | matchSectionPattern, IndentStyle, EndOfLine, Charset, EditorConfigProps, resolveEditorConfig | .editorconfig 零分配解析器、花括号/通配符段匹配与级联属性求值器 |
 | `cap:npm_package_name` | PackageSpecifier, parsePackageSpecifier, isValidPackageName, isRelativeSpecifier, isBareSpecifier | npm / Node.js 包名与模块说明符零分配解析器（作用域/子路径拆分与 validate-npm-package-name 校验） |
 | `cap:logfmt` | LogfmtField, LogfmtIter, getLogfmtValue, appendLogfmtPair | 结构化 logfmt（key=value）日志行零分配流式解析器、键值查询与规范化转义编码器 |
@@ -573,7 +572,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:rfc3339_time` | isLeapYear, daysInMonth, Rfc3339Time | RFC 3339 / ISO 8601 时间戳零分配解析器、闰年/时区校验、Unix 纪元秒互转与规范化格式化器 |
 | `cap:spdx_license` | SpdxTokenKind, SpdxToken, SpdxLexer, isValidSpdxExpression, SpdxIdIter, isCommonPermissive | SPDX 2.3 开源许可证表达式词法/递归下降语法校验器、ID 提取器与常见宽松许可证判定 |
 | `cap:http_origin` | Origin, isSameOriginUrl | WHATWG URL Origin 元组解析器、默认端口规范化、Same-Origin 比较与安全上下文判定 |
-| `cap:dockerfile_parse` | DockerInstruction, DockerfileIter, FromSpec, parseFromArgs, ExposePort, parseExposeToken | Dockerfile 指令零分配流式解析器（支持 # escape 续行折叠、注释跳过、FROM 阶段与 EXPOSE 端口拆解） |
 | `cap:markdown_table` | ColAlign, parseDelimiterCell, TableRowIter, parseDelimiterRow, unescapeTableCell, escapeTableCell | GFM Markdown 管道表格行零分配单元格迭代器、对齐分隔行检测与单元格管道符转义器 |
 | `cap:frontmatter` | FrontmatterKind, FrontmatterSplit, splitFrontmatter, getFrontmatterField | Markdown 文档 YAML (---) / TOML (+++) Frontmatter 零分配提取器与键值查询 |
 | `cap:http_retry_after` | RetryAfterKind, RetryAfter, formatRetryAfterSeconds | RFC 9110 §10.2.3 Retry-After 响应头解析器（delta-seconds 与 IMF-fixdate）与限幅等待时长计算 |
@@ -588,25 +586,20 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_ratelimit_header` | RateLimitHeader, RateLimitPolicy | IETF Draft RateLimit / RateLimit-Policy 限流响应头零分配解析与规范化构造器 |
 | `cap:mail_address` | isValidAddrSpec, Mailbox, MailboxListIter | RFC 5322 电子邮件地址校验、"Display Name" <local@domain> 解析与引号逗号感知收件人列表迭代器 |
 | `cap:rfc2047_word` | EncodedWordEncoding, EncodedWord, parseEncodedWord, decodeEncodedWord, decodeHeaderValue, encodeUtf8Base64Word | RFC 2047 MIME Encoded-Word (=?charset?B|Q?text?=) 国际化头零分配编解码器（含相邻空白折叠） |
-| `cap:docker_image_ref` | isValidOciDigest, DockerImageRef | OCI / Docker 镜像引用零分配解析器（[registry[:port]/]repository[:tag][@digest] 与 sha256/sha512 摘要校验） |
 | `cap:ssh_config` | matchHostPatterns, SshHostConfig, resolveSshConfig, getSshOption | OpenSSH ~/.ssh/config 零分配解析器与主机参数匹配引擎（首现优先、* 与 ! 否定模式） |
 | `cap:brace_expand` | BraceExpandIter | 零分配 Bash 风格花括号展开迭代器（逗号列表、步进/补零整数序列与字母序列） |
 | `cap:mime_headers` | MimeMessageSplit, splitHeadersAndBody, MimeHeader, MimeHeaderIter, findMimeHeader, countMimeHeader | RFC 5322 / MIME 头块零分配解析器（头体分离、obs-fold 折行展开、大小写不敏感查询与重复头计数） |
 | `cap:charset_label` | CharsetKind, resolveCharsetLabel, canonicalCharsetName, isUtf8Compatible, isAsciiSuperset, sniffBomCharset | WHATWG Encoding Standard 字符集标签规范化器（14 种编码别名映射与 UTF-8/UTF-16 BOM 嗅探） |
 | `cap:http_sec_fetch` | FetchSite, FetchMode, FetchDest, parseFetchSite, parseFetchMode, parseFetchDest, FetchMetadata | W3C Fetch Metadata（Sec-Fetch-Site/Mode/Dest/User）零分配解析与资源隔离防护策略求值器 |
 | `cap:makefile_parse` | MakeAssignOp, MakeVar, MakeRule, MakeRuleIter, MakeVarIter, isPhonyTarget | GNU Makefile 目标、依赖、.PHONY 伪目标与变量赋值（=/ :=/ ?=/ +=）零分配解析器 |
-| `cap:csv_escape` | needsCsvQuotes, escapeCsvField, unescapeCsvField, formatCsvRow, isFormulaInjectionRisk | RFC 4180 CSV / TSV 字段转义器、单行构造器、严格引号反转义器与电子表格公式前缀风险检测 |
 | `cap:http_keep_alive` | KeepAliveParams, shouldKeepAlive | HTTP Keep-Alive 参数（timeout/max）零分配解析格式化器与 RFC 9112 §9.3 持久连接判定器 |
 | `cap:http_via` | ViaEntry, ViaIter, viaHopCount, viaContainsProxy, appendVia, parseMaxForwards, decrementMaxForwards | RFC 9110 §7.6.3 Via 代理链头与 Max-Forwards 零分配解析、环路检测与追加构造器 |
 | `cap:http_te` | TransferCoding, TransferEncodingIter, TransferEncodingValidation, validateTransferEncoding, isChunkedTransfer, hasConflictingClAndTe, teAcceptsTrailers | RFC 9110 / RFC 9112 Transfer-Encoding 与 TE 头零分配解析及异常报文边界校验器 |
 | `cap:unicode_width` | isZeroWidth, isWideChar, codepointWidth, strDisplayWidth, sliceToDisplayWidth | Unicode 东亚宽度 / 终端显示列宽（wcwidth）零分配计算器（组合符=0、ASCII=1、CJK/Emoji=2） |
 | `cap:number_format` | formatGroupedU64, formatGroupedI64, ordinalSuffix, formatOrdinal, formatRadixU64, formatFixedPoint | 零分配人类可读数字格式化器（千分位分组、英文序数词、2..36 进制与定点小数） |
-| `cap:dotenv_escape` | isValidEnvKey, needsDotenvQuotes, formatDotenvValue, formatDotenvLine, unescapeDotenvDouble | .env 环境变量文件键名校验、防 $VAR 误展开安全引号序列化与反转义器 |
 | `cap:http_warning` | WarningItem, WarningIter, isStaleWarning, formatWarning | RFC 7234 §5.5 HTTP Warning 头零分配解析器（引号逗号/转义/日期感知）与格式化器 |
 | `cap:http_signature_input` | SignatureInput, SignatureInputIter, findSignatureInput, ComponentIter, findSignatureValue | RFC 9421 HTTP Message Signatures (Signature-Input / Signature) 零分配解析器与时间窗校验器 |
 | `cap:shell_env_parse` | ShellEnvEntry, ShellEnvIter, getShellEnv | POSIX Shell export KEY=VAL / .profile 风格环境变量赋值行零分配解析器（支持单双引号与 unset 清空） |
-| `cap:ini_writer` | isValidIniKey, needsIniQuotes, appendIniSection, appendIniSubsection, appendIniPair, appendIniComment | INI / gitconfig 配置文件零分配安全序列化写入器（自动引号转义、子段输出与原子回滚） |
-| `cap:properties_parse` | PropertyEntry, PropertiesIter, getProperty | Java .properties 配置文件零分配流式解析器（支持 =/:/空白分隔、奇偶反斜杠续行与 \uXXXX 代理对反转义） |
 | `cap:npmrc_config` | DEFAULT_NPM_REGISTRY, NpmrcEntry, NpmrcIter, getNpmrcValue, getNpmrcBool, resolveRegistryForScope, findRegistrySetting | .npmrc 配置文件零分配键值解析器、布尔配置查询与 @scope:registry 仓库路由解析器 |
 | `cap:cron_preset` | CronPreset, parseCronPreset, presetToCron5, normalizeCron5 | Vixie Cron @macro 预设（@hourly/@daily/@weekly/@monthly/@yearly/@reboot）零分配展开与 5 段表达式校验器 |
 | `cap:http_trailer` | `isForbiddenTrailerField`, `isValidTrailerFieldName`, `TrailerFieldIter`, `validateTrailerHeader`, `hasTrailerField` | RFC 9110 §6.5.1 HTTP `Trailer` 尾部字段声明零分配解析与 25 项禁传字段安全校验器 |
@@ -615,3 +608,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:jsonc` | `stripJsonc`, `stripJsoncPreserveLines`, `hasJsoncComments`, `countJsoncTrailingCommas` | JSON with Comments & Trailing Commas 零分配注释/尾逗号剥离器与行号保留格式化器 |
 | `cap:mustache` | `MustacheTokenKind`, `MustacheToken`, `MustacheVar`, `MustacheIter`, `validateMustache`, `renderMustache` | 零分配 Mustache 模板词法解析、语法校验与 HTML 转义渲染引擎 |
 | `cap:ansi` | `Osc8Link`, `formatOsc8`, `parseOsc8`, `stripOsc8`, `SgrColor`, `SgrStyle`, `formatStyled`, `applySgrSequence`, `stripAnsi`, `hasAnsi`, `visibleLen` | ANSI 终端控制序列统一主包（OSC 8 超链接、SGR 16/256/TrueColor 样式、转义剥离与可见宽度） |
+| `cap:docker` | `DockerImageRef`, `DockerfileIter`, ... | Docker 镜像引用与 Dockerfile 解析统一主包（同步收敛 `cap:dotenv`/`cap:ini`/`cap:csv`） |

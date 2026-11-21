@@ -6,7 +6,7 @@ import {
     unescapeCsvField,
     formatCsvRow,
     isFormulaInjectionRisk,
-} from "cap:csv_escape";
+} from "cap:csv";
 
 test("1. needsCsvQuotes and escapeCsvField handle CSV and TSV delimiters", () => {
     expect_eq(needsCsvQuotes("plain", ','), false);

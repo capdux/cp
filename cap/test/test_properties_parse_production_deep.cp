@@ -5,7 +5,7 @@ import {
     PropertyEntry,
     PropertiesIter,
     getProperty,
-} from "cap:properties_parse";
+} from "cap:ini";
 
 test("1. PropertiesIter parses =, :, whitespace separators, comments (# and !), blank lines, and empty values", () => {
     const src =

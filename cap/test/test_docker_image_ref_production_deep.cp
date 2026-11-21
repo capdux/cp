@@ -1,7 +1,7 @@
 import {
     isValidOciDigest,
     DockerImageRef,
-} from "cap:docker_image_ref";
+} from "cap:docker";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {

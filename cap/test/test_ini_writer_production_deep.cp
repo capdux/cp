@@ -8,7 +8,7 @@ import {
     appendIniSubsection,
     appendIniPair,
     appendIniComment,
-} from "cap:ini_writer";
+} from "cap:ini";
 
 test("1. isValidIniKey validates legal keys and rejects forbidden chars or edge whitespace", () => {
     expect_eq(isValidIniKey("host"), true);

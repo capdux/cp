@@ -82,3 +82,10 @@ pub fn demoIni(): ! {
     defer doc2.deinit();
 }
 ```
+
+---
+
+## 附加零分配子模块
+
+- **`lib/ini/writer.cp`**（INI 安全写入与转义）：`isValidIniKey`、`needsIniQuotes`、`appendIniSection`、`appendIniSubsection`、`appendIniPair`、`appendIniComment`
+- **`lib/ini/properties.cp`**（Java `.properties` 零分配流式解析）：`PropertyEntry`、`PropertiesIter`、`getProperty`
