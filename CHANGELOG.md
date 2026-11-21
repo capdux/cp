@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:snmp` 零分配 RFC 1157/3416 SNMP v1/v2c PDU 与 VarBind ASN.1 解析器（5/5 PASS，自动动态挂载 `cap.snmp`）
+新增 `lib/snmp/{snmp,index}.cp`、`doc/lib/snmp.md` 与 `cap/test/test_snmp_production_deep.cp`（6/6 PASS），支持 Get/GetNext/GetBulk/Trap PDU、Counter64/TimeTicks/IpAddress VarBind 与 OID 格式化。
+
 ## [2026-11-22] - 新建 `cap:sctp` 零分配 RFC 4960 SCTP 报头、Castagnoli CRC32C 与 4B 对齐 Chunk 编解码器（5/5 PASS，自动动态挂载 `cap.sctp`）
 新增 `lib/sctp/{sctp,index}.cp`、`doc/lib/sctp.md` 与 `cap/test/test_sctp_production_deep.cp`（5/5 PASS），支持 12B 公共头、Castagnoli CRC32C 校验、DATA/INIT/SACK Chunk 解析与 SctpWriter。
 

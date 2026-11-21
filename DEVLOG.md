@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:snmp` 零分配 RFC 1157/3416 SNMP v1/v2c PDU 与 VarBind ASN.1 解析器（5/5 PASS，文档直写 `doc/lib/snmp.md`）
+实现零分配 SNMP v1/v2c 解析器，严格拒绝不定长 BER、非最小 OID VLQ 与尾随垃圾。
+
 ## 2026-11-22: 新建 `cap:sctp` 零分配 RFC 4960 SCTP 报头、Castagnoli CRC32C 与 4B 对齐 Chunk 编解码器（5/5 PASS，文档直写 `doc/lib/sctp.md`）
 实现零分配 RFC 4960 SCTP 编解码器，支持 4B 对齐 Chunk 迭代与自动 LE CRC32C 回填。
 
