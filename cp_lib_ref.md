@@ -452,3 +452,5 @@ const h = cap.hash.wyhash("hello");
 | `cap:css_display` | Visibility, DisplayKeyword, DisplayOutside, DisplayInside, DisplayPair, DisplayKind, Display | 纯 CP 零依赖 CSS Display Level 3 单值/多关键字组合、旧版简写与规范化 CSS 序列化（源自 Bun css/properties/display.cp） |
 | `cap:sri` | MAX_DIGEST_LEN, SriError, IntegrityTag, Integrity, IntegrityVerifier | 零堆分配 W3C SRI (sha1/sha256/sha384/sha512) 解析、最强算法选择、格式化与恒定时间流式校验（源自 Bun install/integrity.cp） |
 | `cap:css_page_rule` | CssPageError, PagePseudoClass, PageMarginEdge, PageMarginBox, PageSelector, Position | 纯 CP 零依赖 CSS Paged Media 16 种页边盒、页伪类选择器与 Position 定位属性模型（源自 Bun css/rules/page.cp + properties/position.cp） |
+| `cap:tagged_ptr` | PTR_BITS, TAG_BITS, PTR_MASK, MAX_TAG, Tag, Address, TaggedPointer, TaggedPtr2, TaggedPtr4 | 严格 8 字节 49 位指针地址 + 15 位标签编解码与强类型 TaggedPtr2/TaggedPtr4 紧凑联合体（源自 Bun ptr/tagged_pointer.cp） |
+| `cap:env_path` | DEFAULT_DELIMITER, EnvPathIterator, EnvPath | 带 ~init() RAII 释放的 PATH 环境变量构建器（去重/规范化/prepend/append）与零分配迭代器（源自 Bun paths/EnvPath.cp） |

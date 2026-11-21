@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 跨平台 PATH 环境变量构建器与迭代器（5/5 PASS，文档直写 `doc/lib/env_path.md`）
+从 Bun paths/EnvPath.cp 吸收跨平台 PATH 构建器与零分配 EnvPathIterator，采用 ~init() 确定性 RAII 释放，零泄漏通过测试。
+
+## 2026-11-21: 64 位高位标签指针与紧凑指针联合体（5/5 PASS，文档直写 `doc/lib/tagged_ptr.md`）
+从 Bun ptr/tagged_pointer.cp 吸收 64 位高位标签指针与强类型 TaggedPtr2/TaggedPtr4 联合体，全量采用 CP 裸指针 *T! 与严格类型分发。
+
 ## 2026-11-21: CSS @page 分页规则与 Position 定位属性（5/5 PASS，文档直写 `doc/lib/css_page_rule.md`）
 从 Bun css/rules/page.cp 与 properties/position.cp 吸收 16 种 PageMarginBox、PageSelector 与 Position 属性，零堆分配内联存储。
 

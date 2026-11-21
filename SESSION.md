@@ -178,3 +178,9 @@
 
 ### 2026-11-21（`cap:css_page_rule` 验收，吸收 Bun CSS @page + Position -> cap:css_page_rule，测试 5/5 通过。）
 - **执行成果**：`lib/css_page_rule/`（5/5 PASS，`doc/lib/css_page_rule.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun CSS @page + Position -> cap:css_page_rule，测试 5/5 通过。
+
+### 2026-11-21（`cap:tagged_ptr` 验收，吸收 Bun ptr/tagged_pointer.cp -> cap:tagged_ptr，测试 6/6 通过。）
+- **执行成果**：`lib/tagged_ptr/`（5/5 PASS，`doc/lib/tagged_ptr.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun ptr/tagged_pointer.cp -> cap:tagged_ptr，测试 6/6 通过。
+
+### 2026-11-21（`cap:env_path` 验收，吸收 Bun paths/EnvPath.cp -> cap:env_path，测试 2/2 通过。）
+- **执行成果**：`lib/env_path/`（5/5 PASS，`doc/lib/env_path.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun paths/EnvPath.cp -> cap:env_path，测试 2/2 通过。

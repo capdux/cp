@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 跨平台 PATH 环境变量构建器与迭代器（5/5 PASS，自动动态挂载 `cap.env_path`）
+新增 cap:env_path 标准库（lib/env_path/、doc/lib/env_path.md、cap/test/test_env_path_production_deep.cp），2/2 回归通过（零泄漏）。
+
+## [2026-11-21] - 64 位高位标签指针与紧凑指针联合体（5/5 PASS，自动动态挂载 `cap.tagged_ptr`）
+新增 cap:tagged_ptr 标准库（lib/tagged_ptr/、doc/lib/tagged_ptr.md、cap/test/test_tagged_ptr_production_deep.cp），6/6 回归通过。
+
 ## [2026-11-21] - CSS @page 分页规则与 Position 定位属性（5/5 PASS，自动动态挂载 `cap.css_page_rule`）
 新增 cap:css_page_rule 标准库（lib/css_page_rule/、doc/lib/css_page_rule.md、cap/test/test_css_page_rule_production_deep.cp），5/5 回归通过。
 
