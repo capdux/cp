@@ -809,3 +809,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:spline` | CubicSegment, CubicSpline, buildNaturalCubicSpline, buildClampedCubicSpline, buildPchipSpline, catmullRom1d, catmullRom1dDeriv | Natural/Clamped cubic splines (Thomas O(n)), monotone PCHIP & Catmull-Rom interpolation |
 | `cap:earcut` | Point2D, TriangleIdx, signedArea, polygonArea, isCounterClockwise, isConvex, pointInTriangle, pointInPolygon, triangulate, triangulationTotalArea | 2D simple polygon ear-clipping triangulation, signed area & point-in-polygon |
 | `cap:astar` | COST_CARDINAL, COST_DIAGONAL, GridPos, AstarResult, AstarWorkspace, manhattanHeuristic, octileHeuristic, astarFindPath, hasLineOfSight | Zero-alloc 2D grid A* pathfinding (4/8-way, anti-corner-cut min-heap) & Bresenham LOS |
+| `cap:quat` | Vec3, EulerAngles, Mat3, Quat | 3D unit quaternions: Hamilton mul, Euler ZYX, Shepperd Mat3, SLERP & fromToRotation |

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:quat` 3D unit quaternions: Hamilton mul, Euler ZYX, Shepperd Mat3, SLERP & fromToRotation（5/5 PASS，自动动态挂载 `cap.quat`）
+新增纯 CP 零分配标准库 cap:quat（3D 单位四元数、欧拉角 ZYX、Shepperd 3×3 矩阵与最短弧 SLERP）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:astar` Zero-alloc 2D grid A* pathfinding (4/8-way, anti-corner-cut min-heap) & Bresenham LOS（5/5 PASS，自动动态挂载 `cap.astar`）
 新增纯 CP 零分配标准库 cap:astar（2D 网格 A* 最短路径搜索、8 邻域防切角与 Bresenham 视线检测）与 6/6 深度测试
 

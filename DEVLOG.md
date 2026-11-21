@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:quat` 3D unit quaternions: Hamilton mul, Euler ZYX, Shepperd Mat3, SLERP & fromToRotation（5/5 PASS，文档直写 `doc/lib/quat.md`）
+新增 cap:quat 纯 CP 零分配 3D 姿态与旋转库（全 4 分支 Shepperd 矩阵转换、万向锁处理与最短弧 SLERP），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:astar` Zero-alloc 2D grid A* pathfinding (4/8-way, anti-corner-cut min-heap) & Bresenham LOS（5/5 PASS，文档直写 `doc/lib/astar.md`）
 新增 cap:astar 纯 CP 零分配游戏与机器人寻路库（原地降键二叉最小堆、Manhattan/Octile 启发式与整数视线检测），通过 cpc check 与 6/6 cap test
 
