@@ -1,3 +1,9 @@
+## 2026-11-22: 新建 `cap:pkcs12` 零分配 RFC 7292 PKCS#12 (.p12/.pfx) 容器、SafeBag 与 MacData DER 解析器（5/5 PASS，文档直写 `doc/lib/pkcs12.md`）
+实现零分配 PKCS#12 PFX 容器解析器，严格校验 DER 规范并提取 localKeyId 与 friendlyName。
+
+## 2026-11-22: 新建 `cap:radius` 零分配 RFC 2865/2866 RADIUS 认证计费协议 AVP 与 VSA 编解码器（5/5 PASS，文档直写 `doc/lib/radius.md`）
+实现零分配 RADIUS 认证计费协议编解码器，覆盖 Cisco/Microsoft VSA 子 TLV 与严格长度校验。
+
 ## 2026-11-22: 新建 `cap:pkcs8` 零分配 RFC 5958 PKCS#8 私钥/加密私钥与 RFC 5280 SPKI 公钥 DER 解析器（5/5 PASS，文档直写 `doc/lib/pkcs8.md`）
 实现零分配 PKCS#8/SPKI 容器解析器，支持剥离 Ed25519/X25519 内嵌 OCTET STRING 裸种子。
 

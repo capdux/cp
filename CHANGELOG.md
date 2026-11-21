@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:pkcs12` 零分配 RFC 7292 PKCS#12 (.p12/.pfx) 容器、SafeBag 与 MacData DER 解析器（5/5 PASS，自动动态挂载 `cap.pkcs12`）
+新增 `lib/pkcs12/{pkcs12,index}.cp`、`doc/lib/pkcs12.md` 与 `cap/test/test_pkcs12_production_deep.cp`（6/6 PASS），支持 PFX v3、AuthenticatedSafe、SafeBag 属性与 MacData 解析。
+
+## [2026-11-22] - 新建 `cap:radius` 零分配 RFC 2865/2866 RADIUS 认证计费协议 AVP 与 VSA 编解码器（5/5 PASS，自动动态挂载 `cap.radius`）
+新增 `lib/radius/{radius,index}.cp`、`doc/lib/radius.md` 与 `cap/test/test_radius_production_deep.cp`（5/5 PASS），支持 20B 报头、AVP/VSA 迭代与自动回填总长度的 RadiusWriter。
+
 ## [2026-11-22] - 新建 `cap:pkcs8` 零分配 RFC 5958 PKCS#8 私钥/加密私钥与 RFC 5280 SPKI 公钥 DER 解析器（5/5 PASS，自动动态挂载 `cap.pkcs8`）
 新增 `lib/pkcs8/{pkcs8,index}.cp`、`doc/lib/pkcs8.md` 与 `cap/test/test_pkcs8_production_deep.cp`（5/5 PASS），支持 RSA/ECDSA/Ed25519/X25519 PKCS#8 v1/v2、PBES2 加密私钥与 SPKI 公钥解析。
 

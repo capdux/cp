@@ -112,3 +112,9 @@
 
 ### 2026-11-22（`cap:pkcs8` 验收，完成 `cap:pkcs8` 交付验收并登记入库（5/5 PASS）；派发 `cap:bgp`。）
 - **执行成果**：`lib/pkcs8/`（5/5 PASS，`doc/lib/pkcs8.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:pkcs8` 交付验收并登记入库（5/5 PASS）；派发 `cap:bgp`。
+
+### 2026-11-22（`cap:radius` 验收，完成 `cap:radius` 交付验收并登记入库（5/5 PASS）；轮换 `Bio & Chem Absorber`（12 库）并派发 `cap:snmp`。）
+- **执行成果**：`lib/radius/`（5/5 PASS，`doc/lib/radius.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:radius` 交付验收并登记入库（5/5 PASS）；轮换 `Bio & Chem Absorber`（12 库）并派发 `cap:snmp`。
+
+### 2026-11-22（`cap:pkcs12` 验收，完成 `cap:pkcs12` 交付验收并登记入库（6/6 PASS）；派发 `cap:diameter`。）
+- **执行成果**：`lib/pkcs12/`（5/5 PASS，`doc/lib/pkcs12.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:pkcs12` 交付验收并登记入库（6/6 PASS）；派发 `cap:diameter`。
