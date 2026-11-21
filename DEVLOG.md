@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:gemini` Gemini v0.16.1 request/response & text/gemini Gemtext zero-alloc parser & encoder（5/5 PASS，文档直写 `doc/lib/gemini.md`）
+新增 cap:gemini 纯 CP 零分配轻量网络协议库（1024B 请求/响应头校验编码、6 大状态类与 Gemtext 9 种行类型状态机解析），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:nntp` NNTP (RFC 3977) status/GROUP/STAT/OVER parser, dot-unstuffing iter & cmd encoder（5/5 PASS，文档直写 `doc/lib/nntp.md`）
 新增 cap:nntp 纯 CP 零分配网络新闻传输协议库（3 位状态码分类、GROUP/STAT/8 字段 OVER 概览、NntpMultiLineIter 解填充与命令防注入编码），通过 cpc check 与 6/6 cap test
 
