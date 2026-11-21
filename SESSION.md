@@ -142,3 +142,6 @@
 
 ### 2026-11-22（`cap:gre` 验收，完成 `cap:gre` 交付验收并登记入库（6/6 PASS）；派发 `cap:igmp`。）
 - **执行成果**：`lib/gre/`（5/5 PASS，`doc/lib/gre.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:gre` 交付验收并登记入库（6/6 PASS）；派发 `cap:igmp`。
+
+### 2026-11-22（`cap:arp` 验收，完成 `cap:arp` 交付验收并登记入库（5/5 PASS）；派发 `cap:stp`。）
+- **执行成果**：`lib/arp/`（5/5 PASS，`doc/lib/arp.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:arp` 交付验收并登记入库（5/5 PASS）；派发 `cap:stp`。
