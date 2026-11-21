@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:mcts` 纯 CP 零分配蒙特卡洛树搜索（MCTS / UCT & PUCT）决策规划库：左孩子右兄弟固定节点池、UCB1/PUCT 下探选择、先验展开、单人/双人零和回传与根节点策略统计（5/5 PASS，自动动态挂载 `cap.mcts`）
+新增纯 CP 零分配蒙特卡洛树搜索库 cap:mcts（固定池 UCT / PUCT、零和回传、井字棋残局决策规划），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:bessel` 纯 CP 零分配柱贝塞尔与修正贝塞尔特殊函数库：Double-Double 106-bit 无损幂级数 + Hankel 渐近 + Miller 向下递推 + 指数缩放防溢出/下溢（5/5 PASS，自动动态挂载 `cap.bessel`）
 新增纯 CP 零分配贝塞尔特殊函数库 cap:bessel（j0/j1/jn、y0/y1/yn、besselI0/besselI1/i0e/i1e、k0/k1/k0e/k1e），含文档与 6 项深度生产测试
 

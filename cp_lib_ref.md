@@ -846,3 +846,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:markov` | StationaryResult, isStochasticMatrix, stepDistribution, transitionPower, stationaryPowerIter, absorbingFundamental, expectedAbsorptionSteps, absorptionProbabilities, sampleTrajectory, entropyRate | 纯 CP 零分配离散时间马尔可夫链（DTMC）分析与采样库：随机矩阵校验、快速幂、平稳分布幂迭代、吸收链基本矩阵 N=(I-Q)^-1、熵率与确定性轨迹采样 |
 | `cap:ekf` | TransitionFn, MeasurementFn, EkfWorkspace, UkfParams, numericalJacobianF, numericalJacobianH, ekfPredict, ekfUpdate, generateSigmaPoints, ukfPredict | 纯 CP 零分配非线性状态估计库（EKF & UKF）：中心差分雅可比、Joseph 形式对称正定扩展卡尔曼滤波、新息 NIS 计算与 Merwe Sigma 点无迹卡尔曼滤波预测 |
 | `cap:bessel` | j0, j1, jn, y0, y1, yn, besselI0, besselI1, i0e, i1e, k0, k1, k0e, k1e | 纯 CP 零分配柱贝塞尔与修正贝塞尔特殊函数库：Double-Double 106-bit 无损幂级数 + Hankel 渐近 + Miller 向下递推 + 指数缩放防溢出/下溢 |
+| `cap:mcts` | MCTS_NO_NODE, MctsNode, MctsConfig, MctsTree | 纯 CP 零分配蒙特卡洛树搜索（MCTS / UCT & PUCT）决策规划库：左孩子右兄弟固定节点池、UCB1/PUCT 下探选择、先验展开、单人/双人零和回传与根节点策略统计 |

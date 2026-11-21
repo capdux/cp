@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:mcts` 纯 CP 零分配蒙特卡洛树搜索（MCTS / UCT & PUCT）决策规划库：左孩子右兄弟固定节点池、UCB1/PUCT 下探选择、先验展开、单人/双人零和回传与根节点策略统计（5/5 PASS，文档直写 `doc/lib/mcts.md`）
+新增 cap:mcts（lib/mcts/{mcts,index}.cp）：零分配固定节点池 UCT/PUCT 搜索引擎，300 轮井字棋残局 100% 选中必胜与必防走法，cpc check 0 错误，cap test 6/6 PASS (838ms)
+
 ## 2026-11-22: 新建 `cap:bessel` 纯 CP 零分配柱贝塞尔与修正贝塞尔特殊函数库：Double-Double 106-bit 无损幂级数 + Hankel 渐近 + Miller 向下递推 + 指数缩放防溢出/下溢（5/5 PASS，文档直写 `doc/lib/bessel.md`）
 新增 cap:bessel（lib/bessel/{bessel,index}.cp）：Double-Double 106-bit 幂级数 + Hankel 渐近 + Miller 向下递推与指数缩放版本，Wronskian 恒等式误差 < 1e-12，cpc check 0 错误，cap test 6/6 PASS (793ms)
 
