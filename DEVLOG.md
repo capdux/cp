@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:fbx` 零分配 Autodesk FBX Binary (7100-7700) 3D 场景树与属性解析器（5/5 PASS，文档直写 `doc/lib/fbx.md`）
+实现零分配 Autodesk FBX Binary 解析器，严格校验 23B 魔数、end_offset 与 props_end 边界。
+
 ## 2026-11-22: 新建 `cap:bvh` 零分配 Biovision Hierarchy (.bvh) 3D 骨骼动作捕捉与帧数据解析器（5/5 PASS，文档直写 `doc/lib/bvh.md`）
 实现零分配 Biovision BVH 解析器，支持科学计数法浮点帧解码、FPS 与总时长计算。
 

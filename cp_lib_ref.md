@@ -611,3 +611,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:srec` | SrecType, SrecRecord, SrecIter, SrecStats, srecAddrBytes, srecChecksum, parseSrecLine, encodeSrecLine, summarizeSrec | 零分配 Motorola S-Record (S0-S9) 嵌入式固件编解码与校验器 |
 | `cap:fit` | FIT_MAGIC, FIT_HEADER_SIZE_12, FIT_HEADER_SIZE_14, FitFieldDef, FitRecordKind, FitRecord, FitRecordIter, FitStats, fitCrc16, isFit, parseFitHeader, verifyFileCrc, summarizeFit | 零分配 Garmin / ANT+ FIT 1.0/2.0 二进制遥测文件与 CRC-16 解析器 |
 | `cap:bvh` | BvhChannel, BvhJoint, BvhJointIter, BvhHeader, BvhFrameIter, BvhFloatIter, parseBvhChannel, isBvh, parseBvhHeader | 零分配 Biovision Hierarchy (.bvh) 3D 骨骼动作捕捉与帧数据解析器 |
+| `cap:fbx` | FBX_MAGIC, FBX_HEADER_SIZE, FBX_V7500_THRESHOLD, FbxHeader, FbxNode, FbxNodeIter, FbxProp, FbxPropIter, isFbxBinary, parseFbxHeader | 零分配 Autodesk FBX Binary (7100-7700) 3D 场景树与属性解析器 |
