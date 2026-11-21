@@ -85,3 +85,6 @@
 
 ### 2026-11-21（`cap:rate_token_bucket` 验收，主控完成 `cap:rate_token_bucket` 研发验收提交，继续与 `cap:raft_log`、`cap:slab_pool` 及热修子智能体并行）
 - **执行成果**：`lib/rate_token_bucket/`（5/5 PASS，`doc/lib/rate_token_bucket.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:rate_token_bucket` 研发验收提交，继续与 `cap:raft_log`、`cap:slab_pool` 及热修子智能体并行
+
+### 2026-11-21（`cap:raft_log` 验收，验收提交 `cap:raft_log` 并新开 `cap:bitset_simd` 并发子智能体）
+- **执行成果**：`lib/raft_log/`（5/5 PASS，`doc/lib/raft_log.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:raft_log` 并新开 `cap:bitset_simd` 并发子智能体

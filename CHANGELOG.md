@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:raft_log` 纯 CP Raft 共识复制日志与快照压缩引擎（1-based 索引、`appendIfMatch` 冲突截断、安全提交推进与 `compactTo` 快照截断，支持 `cap.raft_log` 自动动态挂载，详见 `doc/lib/raft_log.md`）（5/5 PASS，自动动态挂载 `cap.raft_log`）
+- **新增标准库**：`lib/raft_log/{raft_log,index}.cp`，实现 Raft 日志追加、分叉截断、`commitTo` 与 `compactTo` 快照压缩。\n- **新增文档与测试**：`doc/lib/raft_log.md` 扁平文档与 `cap/test/test_raft_log_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:rate_token_bucket` 纯 CP 零堆分配令牌桶 (`TokenBucket`) 与 GCRA 漏桶 (`GcraLimiter`) 纳秒级精确限流引擎（支持 `cap.rate_token_bucket` 自动动态挂载，详见 `doc/lib/rate_token_bucket.md`）（5/5 PASS，自动动态挂载 `cap.rate_token_bucket`）
 - **新增标准库**：`lib/rate_token_bucket/{rate_limiter,index}.cp`，实现纳秒级时间注入 `TokenBucket` 与零漂移 `GcraLimiter`。\n- **新增文档与测试**：`doc/lib/rate_token_bucket.md` 扁平文档与 `cap/test/test_rate_token_bucket_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

@@ -402,3 +402,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:geo_quadtree` | `QuadError`, `Rect`, `PointItem`, `QuadTree` | 纯 CP 2D 平面空间四叉树索引引擎（矩形包围盒 `queryRect` 与欧氏圆半径 `queryRadius` 检索，支持 `cap.geo_quadtree` 自动动态挂载，详见 `doc/lib/geo_quadtree.md`） |
 | `cap:lru_k` | `LruKError`, `LruKCache` | 纯 CP 抗扫描污染 LRU-K 双队列缓存替换引擎（历史访问队列 + 热键晋升缓存队列，防全表扫描击穿热缓存，支持 `cap.lru_k` 自动动态挂载，详见 `doc/lib/lru_k.md`） |
 | `cap:rate_token_bucket` | `RateLimitError`, `TokenBucket`, `GcraLimiter` | 纯 CP 零堆分配令牌桶 (`TokenBucket`) 与 GCRA 漏桶 (`GcraLimiter`) 纳秒级精确限流引擎（支持 `cap.rate_token_bucket` 自动动态挂载，详见 `doc/lib/rate_token_bucket.md`） |
+| `cap:raft_log` | `RaftLogError`, `LogEntry`, `LogEntryInput`, `RaftLog` | 纯 CP Raft 共识复制日志与快照压缩引擎（1-based 索引、`appendIfMatch` 冲突截断、安全提交推进与 `compactTo` 快照截断，支持 `cap.raft_log` 自动动态挂载，详见 `doc/lib/raft_log.md`） |
