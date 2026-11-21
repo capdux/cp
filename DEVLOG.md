@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:jsonl` JSON Lines / NDJSON 流式行迭代、增量分块扫描与记录平衡零分配校验器（5/5 PASS，文档直写 `doc/lib/jsonl.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:jsonl`；`scanCompleteJsonlChunk` 精准识别网络/文件流末尾半行，`isBalancedJsonRecord` 拦截截断与裸换行。
+
 ## 2026-11-22: 新建 `cap:cli_spinner` 零分配 CLI 终端加载动画帧序列预设（dots/line/arc/arrows/bouncing_bar）与 TTY 状态行渲染器（5/5 PASS，文档直写 `doc/lib/cli_spinner.md`）
 - **设计要点**：`SpinnerSpec.frameAt`/`frameAtMs` 自动取模防越界；`formatSpinnerFrame`/`formatSpinnerDone` 根据 `is_tty` 自动切换 `\r\x1b[2K` 覆写前缀并检查缓冲容量。
 

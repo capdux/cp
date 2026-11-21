@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:jsonl` JSON Lines / NDJSON 流式行迭代、增量分块扫描与记录平衡零分配校验器（5/5 PASS，自动动态挂载 `cap.jsonl`）
+- 新增 `lib/jsonl/{jsonl,index}.cp`、`doc/lib/jsonl.md`、`cap/test/test_jsonl_production_deep.cp`：纯 CP 零分配实现 JSONL/NDJSON 流式迭代（UTF-8 BOM 跳过）、增量分块半行识别与括号/引号平衡校验（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:cli_spinner` 零分配 CLI 终端加载动画帧序列预设（dots/line/arc/arrows/bouncing_bar）与 TTY 状态行渲染器（5/5 PASS，自动动态挂载 `cap.cli_spinner`）
 - 新增 `lib/cli_spinner/{spinner,index}.cp`、`doc/lib/cli_spinner.md`、`cap/test/test_cli_spinner_production_deep.cp`：纯 CP 零分配提供 5 套终端 Spinner 动画预设、时间戳帧计算与 TTY/非 TTY 状态行渲染（5/5 PASS）。
 

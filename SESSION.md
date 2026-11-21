@@ -271,3 +271,6 @@
 
 ### 2026-11-22（`cap:cli_spinner` 验收，Batch 120 落地，标准库总量达 287 模块）
 - **执行成果**：`lib/cli_spinner/`（5/5 PASS，`doc/lib/cli_spinner.md`）经 `verify_module.sh` 一次性验收回收；Batch 120 落地，标准库总量达 287 模块
+
+### 2026-11-22（`cap:jsonl` 验收，Batch 121 落地（简洁单单词 TS 风格新标准首单 `cap:jsonl`））
+- **执行成果**：`lib/jsonl/`（5/5 PASS，`doc/lib/jsonl.md`）经 `verify_module.sh` 一次性验收回收；Batch 121 落地（简洁单单词 TS 风格新标准首单 `cap:jsonl`）

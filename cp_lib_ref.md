@@ -712,3 +712,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_content_language` | `LanguageTagParts`, `isValidBcp47Tag`, `parseLanguageTagParts`, `ContentLanguageIter`, `canonicalizeLanguageTag`, `hasContentLanguage` | RFC 9110 §8.5 + RFC 5646 HTTP `Content-Language` 解析与 BCP 47 标签规范化器 |
 | `cap:proc_io` | `ProcIoStats`, `parseProcIo` | Linux `/proc/<pid>/io` 进程读写字节、系统调用计数与采样窗口增量零分配解析器 |
 | `cap:cli_spinner` | `SpinnerPreset`, `SpinnerSpec`, `formatSpinnerFrame`, `formatSpinnerDone` | 零分配 CLI 终端加载动画帧序列预设（dots/line/arc/arrows/bouncing_bar）与 TTY 状态行渲染器 |
+| `cap:jsonl` | `JsonlChunkResult`, `JsonlIter`, `scanCompleteJsonlChunk`, `isBalancedJsonRecord`, `appendJsonlRecord` | JSON Lines / NDJSON 流式行迭代、增量分块扫描与记录平衡零分配校验器 |
