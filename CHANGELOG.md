@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:isis` IS-IS (ISO 10589 / RFC 1195) common/LSP header, TLV iter & Fletcher-16 checksum parser（5/5 PASS，自动动态挂载 `cap.isis`）
+新增纯 CP 零分配标准库 cap:isis（ISO 10589/RFC 1195 IS-IS 报头、LSP、TLV 零拷贝迭代与 Fletcher-16 校验和）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:pim` PIM-SM v2 (RFC 7761) Hello TLV, Register, Writer & IPv4/IPv6 checksum zero-alloc codec（5/5 PASS，自动动态挂载 `cap.pim`）
 新增纯 CP 零分配标准库 cap:pim（RFC 7761 PIM-SM v2 Hello TLV、Register、PimWriter 与 IPv4/IPv6 校验和）与 5/5 深度测试
 

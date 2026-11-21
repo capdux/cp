@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:isis` IS-IS (ISO 10589 / RFC 1195) common/LSP header, TLV iter & Fletcher-16 checksum parser（5/5 PASS，文档直写 `doc/lib/isis.md`）
+新增 cap:isis 纯 CP 零分配链路状态路由协议库（8B 通用头、27B LSP 报头、2B+len TLV 零拷贝迭代与 ISO 8473 Fletcher-16 校验和），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:pim` PIM-SM v2 (RFC 7761) Hello TLV, Register, Writer & IPv4/IPv6 checksum zero-alloc codec（5/5 PASS，文档直写 `doc/lib/pim.md`）
 新增 cap:pim 纯 CP 零分配组播路由协议库（PIMv2 Hello 选项零拷贝迭代、Register 8B 校验和特例与 IPv4/IPv6 编码往返），通过 cpc check 与 5/5 cap test
 
