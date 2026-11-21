@@ -726,6 +726,13 @@ impl Codegen {
                                 format!(".{}", id.sym)
                             }
                         }
+                        Some(MetaArg::Positional(Expr::EnumInit(ei))) => {
+                            if ei.enum_name.sym.is_empty() {
+                                format!(".{}", ei.variant_name.sym)
+                            } else {
+                                format!("{}.{}", ei.enum_name.sym, ei.variant_name.sym)
+                            }
+                        }
                         Some(MetaArg::Positional(Expr::Member(mem))) => {
                             format!("{}.{}", self.generate_expr(&mem.obj), mem.prop.sym)
                         }
