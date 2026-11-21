@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:rar` RAR4 & RAR5 archive container, 7-bit Vint, block CRC32 & file entry zero-alloc parser（5/5 PASS，文档直写 `doc/lib/rar.md`）
+新增 cap:rar 纯 CP 零分配归档容器解析库（RAR5 7-bit Vint 与完整 IEEE CRC32、RAR4 低 16 位 CRC32 迭代），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:xz` XZ v1.1.0 (.xz) Stream Header/Footer, 7-bit VLI, Filter Chain, Index & CRC32 parser（5/5 PASS，文档直写 `doc/lib/xz.md`）
 新增 cap:xz 纯 CP 零分配压缩容器解析库（VLI 1..9B 编解码、Stream/Block/Index 三重 CRC32 校验与 LZMA2 字典大小解码），通过 cpc check 与 5/5 cap test
 
