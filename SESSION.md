@@ -253,3 +253,6 @@
 
 ### 2026-11-22（`cap:opus` 验收，完成 `cap:opus` 交付验收并登记入库（5/5 PASS）；派发 `cap:mpeg`。）
 - **执行成果**：`lib/opus/`（5/5 PASS，`doc/lib/opus.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:opus` 交付验收并登记入库（5/5 PASS）；派发 `cap:mpeg`。
+
+### 2026-11-22（`cap:iso` 验收，完成 `cap:iso` 交付验收并登记入库（6/6 PASS）；派发 `cap:cab`。）
+- **执行成果**：`lib/iso/`（5/5 PASS，`doc/lib/iso.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:iso` 交付验收并登记入库（6/6 PASS）；派发 `cap:cab`。

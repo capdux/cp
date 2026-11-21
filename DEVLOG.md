@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:iso` 零分配 ISO 9660 光盘镜像 PVD 卷描述符与目录记录解析器（5/5 PASS，文档直写 `doc/lib/iso.md`）
+实现零分配 ISO 9660 光盘镜像解析器，支持 ;1 版本号剥离、扇区末尾 0 填充跳过与防溢出 LBA 读取。
+
 ## 2026-11-22: 新建 `cap:opus` 零分配 RFC 7845 OpusHead/OpusTags 与 RFC 6716 Opus TOC 解析器（5/5 PASS，文档直写 `doc/lib/opus.md`）
 实现零分配 Opus 音频头与 TOC 解析器，严格校验 120ms 上限、映射表索引与 VBR/Padding 帧计数。
 
