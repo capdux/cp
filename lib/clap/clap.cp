@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/clap/clap.cp
+// Source: Absorbed from /data/dev/bun/src/clap/clap.cp | Synced: 2026-11-20T11:53:32Z
 import { OsIterator } from "./args.cp";
 import { ComptimeClap } from "./comptime.cp";
 // CP Standard Library: cap:clap

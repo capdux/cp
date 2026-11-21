@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/interchange/json5.cp
+// Source: Absorbed from /data/dev/bun/src/interchange/json5.cp | Synced: 2026-11-21T12:28:07Z
 // lib/conf/json5.cp
 // Full JSON5 Parser & Comment-Stripping Preprocessor
 // Supports comments, trailing commas, unquoted keys, single quotes, hex numbers, Infinity/NaN

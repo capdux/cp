@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/clap/clap.cp
+// Source: Absorbed from /data/dev/bun/src/clap/clap.cp | Synced: 2026-11-20T11:53:32Z
 // Comptime CLI argument parser with strongly-typed field access
 import std from "std";
 import { Param, Names, Diagnostic, ParseOptions } from "./clap.cp";

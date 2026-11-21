@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/threading/unbounded_queue.cp
+// Source: Absorbed from /data/dev/bun/src/threading/unbounded_queue.cp | Synced: 2026-11-20T04:40:04Z
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/unbounded_queue.cp
 // Upstream Sync: Refer to bun/src/threading/unbounded_queue.zig for future upstream updates.

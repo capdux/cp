@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/threading/channel.cp
+// Source: Absorbed from /data/dev/bun/src/threading/channel.cp | Synced: 2026-11-20T13:14:28Z
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/ring_buffer.cp
 // Upstream Sync: Refer to bun/src/threading/ring_buffer.zig for future upstream updates.
