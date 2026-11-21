@@ -578,3 +578,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:vcd` | VcdTimeUnit, VcdVarType, VcdEventKind, VcdTimescale, VcdVarDef, VcdHeader, VcdVarIter, VcdEvent, VcdValueIter, parseVcdTimescale, parseVcdHeader | 零分配 IEEE 1364 VCD 硬件/RTL 仿真波形头与值变流解析器 |
 | `cap:ubjson` | MAX_UBJ_DEPTH, UbjsonContainerHeader, UbjsonWriter, UbjsonReader | 零分配 Universal Binary JSON (UBJSON Draft 12) 编解码器 |
 | `cap:aof` | AofArgIter, AofCommand, AofIter, AofStats, isAofMixedRdb, isAofResp, summarizeAof | 零分配 Redis AOF 命令日志、#TS: 时间戳与混合 RDB 前导解析器 |
+| `cap:hprof` | HprofBasicType, HprofHeader, HprofRecord, HprofRecordIter, HprofUtf8, HprofLoadClass, HprofHeapSummary, HprofStats, hprofBasicTypeSize, isHprof, parseHprofHeader, parseHprofUtf8, parseHprofLoadClass, parseHprofHeapSummary, summarizeHprof | 零分配 JVM HPROF 1.0.1/1.0.2 二进制堆转储头与记录流解析器 |

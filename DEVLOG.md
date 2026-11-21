@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:hprof` 零分配 JVM HPROF 1.0.1/1.0.2 二进制堆转储头与记录流解析器（5/5 PASS，文档直写 `doc/lib/hprof.md`）
+实现零分配 JVM HPROF 堆转储解析器，覆盖全部 14 个顶层 Record Tag 与 10 个 Heap Dump 子记录常量。
+
 ## 2026-11-22: 新建 `cap:aof` 零分配 Redis AOF 命令日志、#TS: 时间戳与混合 RDB 前导解析器（5/5 PASS，文档直写 `doc/lib/aof.md`）
 实现零分配 Redis AOF 流式解析器，支持混合 RDB 前导探测与断点续读/截断尾部恢复。
 
