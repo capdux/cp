@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:flv` 零分配 Adobe FLV 流媒体容器、Tag 流与音视频头解析器（5/5 PASS，文档直写 `doc/lib/flv.md`）
+实现零分配 Adobe FLV 容器解析器，支持音视频首字节元数据与有符号 24-bit composition_time 解码。
+
 ## 2026-11-22: 新建 `cap:rpm` 零分配 Linux RPM v3/v4 Lead、Signature/Header 区段与 Tag 索引解析器（5/5 PASS，文档直写 `doc/lib/rpm.md`）
 实现零分配 Linux RPM 包头解析器，严格校验 Lead/Header 魔数、8B 对齐偏移与 Store 越界防护。
 
