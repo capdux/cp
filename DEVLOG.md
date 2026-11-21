@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:hyperloglog` 纯 CP HyperLogLog 64 位基数估算引擎（支持 4..18 位精度、小规模 LinearCounting 线性修正、无损 `merge` 与序列化，支持 `cap.hyperloglog` 自动动态挂载，详见 `doc/lib/hyperloglog.md`）（5/5 PASS，文档直写 `doc/lib/hyperloglog.md`）
+- **核心设计**：采用 64 位 Wyhash 均匀哈希与前导零计算，1 万去重样本误差 < 3%，支持 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:crontab` 纯 CP 零堆 5 段式与宏 Cron 表达式位掩码解析、POSIX 匹配及 `nextAfter` 下次触发计算引擎（支持 `cap.crontab` 自动动态挂载，详见 `doc/lib/crontab.md`）（5/5 PASS，文档直写 `doc/lib/crontab.md`）
 - **核心设计**：采用 64 位位掩码零堆表示分钟/小时/日/月/星期，结合 Sakamoto 星期算法与 Hinnant 日历算法实现高精度时间推进。
 

@@ -85,3 +85,6 @@
 
 ### 2026-11-21（`cap:crontab` 验收，主控完成 `cap:crontab` 研发验收提交）
 - **执行成果**：`lib/crontab/`（5/5 PASS，`doc/lib/crontab.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:crontab` 研发验收提交
+
+### 2026-11-21（`cap:hyperloglog` 验收，主控完成 `cap:hyperloglog` 研发验收提交，并顺带归档 `cpc/src/parser/primary.rs` 切片实参热修）
+- **执行成果**：`lib/hyperloglog/`（5/5 PASS，`doc/lib/hyperloglog.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:hyperloglog` 研发验收提交，并顺带归档 `cpc/src/parser/primary.rs` 切片实参热修

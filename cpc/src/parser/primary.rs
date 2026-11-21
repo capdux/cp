@@ -1513,6 +1513,61 @@ impl<'a> Parser<'a> {
             Token::LBracket => {
                 if self.peek() == Some(&Token::RBracket) {
                     self.bump()?;
+                    let (qual, has_const) = self.parse_ptr_qualifiers()?;
+                    if !qual.is_empty()
+                        || has_const
+                        || matches!(
+                            self.peek(),
+                            Some(
+                                Token::U8
+                                    | Token::I8
+                                    | Token::U16
+                                    | Token::I16
+                                    | Token::U32
+                                    | Token::I32
+                                    | Token::U64
+                                    | Token::I64
+                                    | Token::U128
+                                    | Token::I128
+                                    | Token::USize
+                                    | Token::ISize
+                                    | Token::F32
+                                    | Token::F64
+                                    | Token::Bool
+                                    | Token::String
+                                    | Token::Void
+                                    | Token::Any
+                                    | Token::CStr
+                                    | Token::LBracket
+                                    | Token::Star
+                                    | Token::Ident(_)
+                            )
+                        )
+                    {
+                        let elem_ty = self.parse_base_type()?;
+                        let ty = if !qual.is_empty() {
+                            Type::Array(Box::new(Self::apply_ptr_qualifiers(
+                                elem_ty, qual, has_const,
+                            )))
+                        } else if has_const {
+                            Type::BorrowType {
+                                inner: Box::new(Type::Array(Box::new(elem_ty))),
+                                is_mut: false,
+                                lifetimes: vec![],
+                            }
+                        } else {
+                            Type::Array(Box::new(elem_ty))
+                        };
+                        let ty = self.parse_postfix_type_modifiers(ty)?;
+                        let end = self.peek_span().start;
+                        return Ok(Expr::TypeVal {
+                            span: Span {
+                                start: span.start,
+                                end,
+                            },
+                            ty,
+                        });
+                    }
                     return Ok(Expr::Array(Vec::new()));
                 }
                 if self.peek() == Some(&Token::Colon) || self.peek() == Some(&Token::Star) {
