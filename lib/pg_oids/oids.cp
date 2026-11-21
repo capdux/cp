@@ -1,0 +1,306 @@
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/types/Tag.cp and PostgresTypes.cp
+
+/// PostgreSQL 类型大类枚举
+pub enum PgTypeCategory: u8 {
+    boolean = 0,
+    integer = 1,
+    floating = 2,
+    numeric = 3,
+    text = 4,
+    binary = 5,
+    json = 6,
+    datetime = 7,
+    network = 8,
+    uuid = 9,
+    array = 10,
+    other = 11,
+
+    fn asStr(): string {
+        return switch (_) {
+            .boolean => "boolean",
+            .integer => "integer",
+            .floating => "floating",
+            .numeric => "numeric",
+            .text => "text",
+            .binary => "binary",
+            .json => "json",
+            .datetime => "datetime",
+            .network => "network",
+            .uuid => "uuid",
+            .array => "array",
+            .other => "other",
+        };
+    }
+}
+
+/// PostgreSQL 内置标量与数组类型 OID 枚举
+pub enum PgOid: u32 {
+    BOOL = 16,
+    BYTEA = 17,
+    CHAR = 18,
+    NAME = 19,
+    INT8 = 20,
+    INT2 = 21,
+    INT4 = 23,
+    TEXT = 25,
+    OID = 26,
+    JSON = 114,
+    XML = 142,
+    JSON_ARRAY = 199,
+    CIDR = 650,
+    FLOAT4 = 700,
+    FLOAT8 = 701,
+    MONEY = 790,
+    MACADDR = 829,
+    INET = 869,
+    BOOL_ARRAY = 1000,
+    BYTEA_ARRAY = 1001,
+    INT2_ARRAY = 1005,
+    INT4_ARRAY = 1007,
+    TEXT_ARRAY = 1009,
+    VARCHAR_ARRAY = 1015,
+    INT8_ARRAY = 1016,
+    FLOAT4_ARRAY = 1021,
+    FLOAT8_ARRAY = 1022,
+    BPCHAR = 1042,
+    VARCHAR = 1043,
+    DATE = 1082,
+    TIME = 1083,
+    TIMESTAMP = 1114,
+    TIMESTAMP_ARRAY = 1115,
+    TIMESTAMPTZ = 1184,
+    TIMESTAMPTZ_ARRAY = 1185,
+    INTERVAL = 1186,
+    NUMERIC_ARRAY = 1231,
+    TIMETZ = 1266,
+    BIT = 1560,
+    VARBIT = 1562,
+    NUMERIC = 1700,
+    UUID = 2950,
+    UUID_ARRAY = 2951,
+    JSONB = 3802,
+    JSONB_ARRAY = 3807,
+
+    /// 从 32 位 OID 整数解析已知 `PgOid`，未知 OID 返回 `null`
+    static fn fromU32(oid_val: u32): PgOid? {
+        return switch (oid_val) {
+            16 => .BOOL,
+            17 => .BYTEA,
+            18 => .CHAR,
+            19 => .NAME,
+            20 => .INT8,
+            21 => .INT2,
+            23 => .INT4,
+            25 => .TEXT,
+            26 => .OID,
+            114 => .JSON,
+            142 => .XML,
+            199 => .JSON_ARRAY,
+            650 => .CIDR,
+            700 => .FLOAT4,
+            701 => .FLOAT8,
+            790 => .MONEY,
+            829 => .MACADDR,
+            869 => .INET,
+            1000 => .BOOL_ARRAY,
+            1001 => .BYTEA_ARRAY,
+            1005 => .INT2_ARRAY,
+            1007 => .INT4_ARRAY,
+            1009 => .TEXT_ARRAY,
+            1015 => .VARCHAR_ARRAY,
+            1016 => .INT8_ARRAY,
+            1021 => .FLOAT4_ARRAY,
+            1022 => .FLOAT8_ARRAY,
+            1042 => .BPCHAR,
+            1043 => .VARCHAR,
+            1082 => .DATE,
+            1083 => .TIME,
+            1114 => .TIMESTAMP,
+            1115 => .TIMESTAMP_ARRAY,
+            1184 => .TIMESTAMPTZ,
+            1185 => .TIMESTAMPTZ_ARRAY,
+            1186 => .INTERVAL,
+            1231 => .NUMERIC_ARRAY,
+            1266 => .TIMETZ,
+            1560 => .BIT,
+            1562 => .VARBIT,
+            1700 => .NUMERIC,
+            2950 => .UUID,
+            2951 => .UUID_ARRAY,
+            3802 => .JSONB,
+            3807 => .JSONB_ARRAY,
+            else => null,
+        };
+    }
+
+    fn toU32(): u32 {
+        return @intFromEnum(_);
+    }
+
+    fn typeName(): []const u8 {
+        return switch (_) {
+            .BOOL => "bool",
+            .BYTEA => "bytea",
+            .CHAR => "char",
+            .NAME => "name",
+            .INT8 => "int8",
+            .INT2 => "int2",
+            .INT4 => "int4",
+            .TEXT => "text",
+            .OID => "oid",
+            .JSON => "json",
+            .XML => "xml",
+            .JSON_ARRAY => "json[]",
+            .CIDR => "cidr",
+            .FLOAT4 => "float4",
+            .FLOAT8 => "float8",
+            .MONEY => "money",
+            .MACADDR => "macaddr",
+            .INET => "inet",
+            .BOOL_ARRAY => "bool[]",
+            .BYTEA_ARRAY => "bytea[]",
+            .INT2_ARRAY => "int2[]",
+            .INT4_ARRAY => "int4[]",
+            .TEXT_ARRAY => "text[]",
+            .VARCHAR_ARRAY => "varchar[]",
+            .INT8_ARRAY => "int8[]",
+            .FLOAT4_ARRAY => "float4[]",
+            .FLOAT8_ARRAY => "float8[]",
+            .BPCHAR => "bpchar",
+            .VARCHAR => "varchar",
+            .DATE => "date",
+            .TIME => "time",
+            .TIMESTAMP => "timestamp",
+            .TIMESTAMP_ARRAY => "timestamp[]",
+            .TIMESTAMPTZ => "timestamptz",
+            .TIMESTAMPTZ_ARRAY => "timestamptz[]",
+            .INTERVAL => "interval",
+            .NUMERIC_ARRAY => "numeric[]",
+            .TIMETZ => "timetz",
+            .BIT => "bit",
+            .VARBIT => "varbit",
+            .NUMERIC => "numeric",
+            .UUID => "uuid",
+            .UUID_ARRAY => "uuid[]",
+            .JSONB => "jsonb",
+            .JSONB_ARRAY => "jsonb[]",
+        };
+    }
+
+    fn isArray(): bool {
+        return switch (_) {
+            .JSON_ARRAY,
+            .BOOL_ARRAY,
+            .BYTEA_ARRAY,
+            .INT2_ARRAY,
+            .INT4_ARRAY,
+            .TEXT_ARRAY,
+            .VARCHAR_ARRAY,
+            .INT8_ARRAY,
+            .FLOAT4_ARRAY,
+            .FLOAT8_ARRAY,
+            .TIMESTAMP_ARRAY,
+            .TIMESTAMPTZ_ARRAY,
+            .NUMERIC_ARRAY,
+            .UUID_ARRAY,
+            .JSONB_ARRAY => true,
+            else => false,
+        };
+    }
+
+    fn category(): PgTypeCategory {
+        if (_.isArray()) {
+            return .array;
+        }
+        return switch (_) {
+            .BOOL => .boolean,
+            .INT2, .INT4, .INT8, .OID => .integer,
+            .FLOAT4, .FLOAT8 => .floating,
+            .NUMERIC, .MONEY => .numeric,
+            .CHAR, .NAME, .TEXT, .BPCHAR, .VARCHAR, .XML => .text,
+            .BYTEA, .BIT, .VARBIT => .binary,
+            .JSON, .JSONB => .json,
+            .DATE, .TIME, .TIMETZ, .TIMESTAMP, .TIMESTAMPTZ, .INTERVAL => .datetime,
+            .CIDR, .INET, .MACADDR => .network,
+            .UUID => .uuid,
+            else => .other,
+        };
+    }
+
+    /// 数组 OID -> 对应标量元素 OID（非数组返回 `null`）
+    fn elementOid(): PgOid? {
+        return switch (_) {
+            .BOOL_ARRAY => .BOOL,
+            .BYTEA_ARRAY => .BYTEA,
+            .INT2_ARRAY => .INT2,
+            .INT4_ARRAY => .INT4,
+            .INT8_ARRAY => .INT8,
+            .TEXT_ARRAY => .TEXT,
+            .VARCHAR_ARRAY => .VARCHAR,
+            .FLOAT4_ARRAY => .FLOAT4,
+            .FLOAT8_ARRAY => .FLOAT8,
+            .UUID_ARRAY => .UUID,
+            .JSON_ARRAY => .JSON,
+            .JSONB_ARRAY => .JSONB,
+            .TIMESTAMP_ARRAY => .TIMESTAMP,
+            .TIMESTAMPTZ_ARRAY => .TIMESTAMPTZ,
+            .NUMERIC_ARRAY => .NUMERIC,
+            else => null,
+        };
+    }
+
+    /// 标量 OID -> 对应数组 OID（无对应数组项返回 `null`）
+    fn arrayOid(): PgOid? {
+        return switch (_) {
+            .BOOL => .BOOL_ARRAY,
+            .BYTEA => .BYTEA_ARRAY,
+            .INT2 => .INT2_ARRAY,
+            .INT4 => .INT4_ARRAY,
+            .INT8 => .INT8_ARRAY,
+            .TEXT => .TEXT_ARRAY,
+            .VARCHAR => .VARCHAR_ARRAY,
+            .FLOAT4 => .FLOAT4_ARRAY,
+            .FLOAT8 => .FLOAT8_ARRAY,
+            .UUID => .UUID_ARRAY,
+            .JSON => .JSON_ARRAY,
+            .JSONB => .JSONB_ARRAY,
+            .TIMESTAMP => .TIMESTAMP_ARRAY,
+            .TIMESTAMPTZ => .TIMESTAMPTZ_ARRAY,
+            .NUMERIC => .NUMERIC_ARRAY,
+            else => null,
+        };
+    }
+
+    /// 判断在线协议中是否优先采用 PostgreSQL 二进制格式编码
+    fn prefersBinary(): bool {
+        return switch (_) {
+            .BOOL,
+            .BYTEA,
+            .INT2,
+            .INT4,
+            .INT8,
+            .OID,
+            .FLOAT4,
+            .FLOAT8,
+            .DATE,
+            .TIME,
+            .TIMETZ,
+            .TIMESTAMP,
+            .TIMESTAMPTZ,
+            .UUID,
+            .JSONB,
+            .BOOL_ARRAY,
+            .BYTEA_ARRAY,
+            .INT2_ARRAY,
+            .INT4_ARRAY,
+            .INT8_ARRAY,
+            .FLOAT4_ARRAY,
+            .FLOAT8_ARRAY,
+            .UUID_ARRAY,
+            .TIMESTAMP_ARRAY,
+            .TIMESTAMPTZ_ARRAY,
+            .JSONB_ARRAY => true,
+            else => false,
+        };
+    }
+}

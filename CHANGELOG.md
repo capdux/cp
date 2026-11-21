@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:pg_sqlstate` PostgreSQL 5 字符 SQLSTATE 错误码 15 类划分、43 项官方条件名与可重试/约束/连接错误判定库（吸收自 bun/src/sql/postgres/AnyPostgresError.cp）（5/5 PASS，自动动态挂载 `cap.pg_sqlstate`）
+新增 cap:pg_sqlstate 标准库模块（lib/pg_sqlstate/{sqlstate,index}.cp, doc/lib/pg_sqlstate.md, cap/test/test_pg_sqlstate_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:pg_oids` PostgreSQL 45 项高频标量与数组 OID 类型目录、双向数组映射与二进制编码偏好查询库（吸收自 bun/src/sql/postgres/types/Tag.cp 与 PostgresTypes.cp）（5/5 PASS，自动动态挂载 `cap.pg_oids`）
+新增 cap:pg_oids 标准库模块（lib/pg_oids/{oids,index}.cp, doc/lib/pg_oids.md, cap/test/test_pg_oids_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:sourcemap_index` SourceMap v3 Base64-VLQ mappings 零堆分配解码器与 O(log N) 二分查找原始源码定位器（吸收自 bun/src/sourcemap/Mapping.cp）（5/5 PASS，自动动态挂载 `cap.sourcemap_index`）
+新增 cap:sourcemap_index 标准库模块（lib/sourcemap_index/{mapping,index}.cp, doc/lib/sourcemap_index.md, cap/test/test_sourcemap_index_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:no_proxy` HTTP NO_PROXY 零堆分配代理绕过匹配器与 IPv4 CIDR 网段引擎（吸收自 bun/src/http/ProxyTunnel.cp）（5/5 PASS，自动动态挂载 `cap.no_proxy`）
 新增 cap:no_proxy 标准库模块（lib/no_proxy/{no_proxy,index}.cp, doc/lib/no_proxy.md, cap/test/test_no_proxy_production_deep.cp）
 

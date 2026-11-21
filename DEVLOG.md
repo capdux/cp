@@ -1,3 +1,12 @@
+## 2026-11-22: 新建 `cap:pg_sqlstate` PostgreSQL 5 字符 SQLSTATE 错误码 15 类划分、43 项官方条件名与可重试/约束/连接错误判定库（吸收自 bun/src/sql/postgres/AnyPostgresError.cp）（5/5 PASS，文档直写 `doc/lib/pg_sqlstate.md`）
+子智能体 2 吸收 AnyPostgresError，实现 15 大类与 43 项官方 SQLSTATE 条件名及可重试判定，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:pg_oids` PostgreSQL 45 项高频标量与数组 OID 类型目录、双向数组映射与二进制编码偏好查询库（吸收自 bun/src/sql/postgres/types/Tag.cp 与 PostgresTypes.cp）（5/5 PASS，文档直写 `doc/lib/pg_oids.md`）
+子智能体 1 吸收 Bun Postgres OID 表，实现 30 标量 + 15 数组 OID 双向映射与分类查询，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:sourcemap_index` SourceMap v3 Base64-VLQ mappings 零堆分配解码器与 O(log N) 二分查找原始源码定位器（吸收自 bun/src/sourcemap/Mapping.cp）（5/5 PASS，文档直写 `doc/lib/sourcemap_index.md`）
+吸收 bun/src/sourcemap/Mapping.cp，实现 v3 VLQ 解码与二分查找定位，通过 cpc check 与 cap test
+
 ## 2026-11-22: 新建 `cap:no_proxy` HTTP NO_PROXY 零堆分配代理绕过匹配器与 IPv4 CIDR 网段引擎（吸收自 bun/src/http/ProxyTunnel.cp）（5/5 PASS，文档直写 `doc/lib/no_proxy.md`）
 子智能体 2 吸收 ProxyTunnel NO_PROXY 规则，实现 IPv4/CIDR、域名后缀防误匹配、端口约束与 IPv6 方括号支持，5/5 单测通过
 

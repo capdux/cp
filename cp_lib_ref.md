@@ -536,3 +536,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:sql_conn_uri` | SqlDialect, SslMode, PgCommandKind, PgCommandTag, SqlConnUri | PostgreSQL / MySQL / SQLite 连接串零堆分配解析器、SSLMode 策略与 PostgreSQL CommandTag 解析库（吸收自 bun/src/sql/postgres/{CommandTag,SSLMode}.cp 与 mysql/SSLMode.cp） |
 | `cap:mysql_caps` | CapabilityFlag, Capabilities, StatusFlag, StatusFlags | MySQL 4.1-8.4 协议 32-bit 客户端/服务端能力位协商与 16-bit StatusFlags 事务/多结果集状态解析库（吸收自 bun/src/sql/mysql/{Capabilities,StatusFlags}.cp） |
 | `cap:no_proxy` | Ipv4Addr, Ipv4Cidr, shouldBypassProxy | HTTP NO_PROXY 零堆分配代理绕过匹配器与 IPv4 CIDR 网段引擎（吸收自 bun/src/http/ProxyTunnel.cp） |
+| `cap:sourcemap_index` | MappingEntry, SourceMapIndex | SourceMap v3 Base64-VLQ mappings 零堆分配解码器与 O(log N) 二分查找原始源码定位器（吸收自 bun/src/sourcemap/Mapping.cp） |
+| `cap:pg_oids` | PgTypeCategory, PgOid | PostgreSQL 45 项高频标量与数组 OID 类型目录、双向数组映射与二进制编码偏好查询库（吸收自 bun/src/sql/postgres/types/Tag.cp 与 PostgresTypes.cp） |
+| `cap:pg_sqlstate` | SqlStateClass, SqlStateCode | PostgreSQL 5 字符 SQLSTATE 错误码 15 类划分、43 项官方条件名与可重试/约束/连接错误判定库（吸收自 bun/src/sql/postgres/AnyPostgresError.cp） |

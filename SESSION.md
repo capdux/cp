@@ -232,3 +232,12 @@
 
 ### 2026-11-22（`cap:no_proxy` 验收，Batch 37: 吸收并验证 cap:no_proxy (5/5 PASSED)）
 - **执行成果**：`lib/no_proxy/`（5/5 PASS，`doc/lib/no_proxy.md`）经 `verify_module.sh` 一次性验收回收；Batch 37: 吸收并验证 cap:no_proxy (5/5 PASSED)
+
+### 2026-11-22（`cap:sourcemap_index` 验收，Batch 38: 吸收并验证 cap:sourcemap_index (PASSED)）
+- **执行成果**：`lib/sourcemap_index/`（5/5 PASS，`doc/lib/sourcemap_index.md`）经 `verify_module.sh` 一次性验收回收；Batch 38: 吸收并验证 cap:sourcemap_index (PASSED)
+
+### 2026-11-22（`cap:pg_oids` 验收，Batch 38: 吸收并验证 cap:pg_oids (5/5 PASSED)）
+- **执行成果**：`lib/pg_oids/`（5/5 PASS，`doc/lib/pg_oids.md`）经 `verify_module.sh` 一次性验收回收；Batch 38: 吸收并验证 cap:pg_oids (5/5 PASSED)
+
+### 2026-11-22（`cap:pg_sqlstate` 验收，Batch 38: 吸收并验证 cap:pg_sqlstate (5/5 PASSED)）
+- **执行成果**：`lib/pg_sqlstate/`（5/5 PASS，`doc/lib/pg_sqlstate.md`）经 `verify_module.sh` 一次性验收回收；Batch 38: 吸收并验证 cap:pg_sqlstate (5/5 PASSED)
