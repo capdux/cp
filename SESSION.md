@@ -256,3 +256,6 @@
 
 ### 2026-11-22（`cap:minhash` 验收，完成并注册纯 CP 零分配标准库 cap:minhash（5/5 cap test PASS））
 - **执行成果**：`lib/minhash/`（5/5 PASS，`doc/lib/minhash.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:minhash（5/5 cap test PASS）
+
+### 2026-11-22（`cap:roman` 验收，完成并注册纯 CP 零分配标准库 cap:roman（6/6 cap test PASS））
+- **执行成果**：`lib/roman/`（5/5 PASS，`doc/lib/roman.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:roman（6/6 cap test PASS）

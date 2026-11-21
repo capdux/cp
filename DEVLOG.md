@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:roman` Strict canonical Roman numerals (1..3999) & Bijective Base-26 spreadsheet column codec（5/5 PASS，文档直写 `doc/lib/roman.md`）
+新增 cap:roman 纯 CP 零分配数字与列号转换库（1..3999 穷举双射、严格/宽松模式与 Bijective Base-26 A..XFD），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:minhash` Andrei Broder MinHash Jaccard estimator, union merge, cardinality & LSH band hashing（5/5 PASS，文档直写 `doc/lib/minhash.md`）
 新增 cap:minhash 纯 CP 零分配集合相似度估计库（SplitMix64 盐哈希族、并集签名合并与 32×4 LSH 分带检索），通过 cpc check 与 5/5 cap test
 

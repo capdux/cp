@@ -798,3 +798,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:porter` | PORTER_MAX_WORD_LEN, porterMeasure, porterStem, porterStemEquals | Martin Porter (1980) English stemming algorithm (Steps 1a-5b) zero-alloc implementation |
 | `cap:simhash` | SIMHASH_BITS, SIMHASH_DEFAULT_THRESHOLD, SimHasher, fnv1a64, simhashText, simhashShingles, hammingDistance, simhashSimilarity, isNearDuplicate, simhashBands4, sharesAnyBand4 | Charikar 64-bit SimHash near-duplicate fingerprinting, shingles & 4x16-bit LSH |
 | `cap:minhash` | MINHASH_DEFAULT_K, MINHASH_EMPTY_VAL, MinHash, minhashJaccard, minhashBandHash, minhashCardinality | Andrei Broder MinHash Jaccard estimator, union merge, cardinality & LSH band hashing |
+| `cap:roman` | ROMAN_MIN, ROMAN_MAX, ROMAN_MAX_STR_LEN, MAX_COL_LETTERS_LEN, romanEncode, romanEncodeLower, romanDecode, romanDecodeLenient, isValidRoman, colIndexToLetters, lettersToColIndex | Strict canonical Roman numerals (1..3999) & Bijective Base-26 spreadsheet column codec |
