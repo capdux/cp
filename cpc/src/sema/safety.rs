@@ -206,22 +206,24 @@ impl Analyzer {
             }
         }
 
-        if is_write {
-            let obj_ty_res = self.infer_type(obj);
-            if let Ok(ty) = obj_ty_res {
-                let mut base_ty = &ty;
-                while let Type::BorrowType { inner, .. } = base_ty {
-                    base_ty = inner;
-                }
-                let is_unbounded_ptr_or_cstr = matches!(
-                    base_ty,
-                    Type::ManyRawPtr(_)
-                        | Type::CPtr(_)
-                        | Type::SentinelPtr(_, _)
-                        | Type::CStr
-                        | Type::RawPtr { .. }
-                ) || matches!(base_ty, Type::Ref(id) if id.sym == "cstring" || id.sym == "cstr");
+        let obj_ty_res = self.infer_type(obj);
+        if let Ok(ty) = obj_ty_res {
+            let mut base_ty = &ty;
+            while let Type::BorrowType { inner, .. } = base_ty {
+                base_ty = inner;
+            }
+            let is_raw_ptr = matches!(
+                base_ty,
+                Type::ManyRawPtr(_)
+                    | Type::CPtr(_)
+                    | Type::SentinelPtr(_, _)
+                    | Type::RawPtr { .. }
+            );
+            let is_unbounded_ptr_or_cstr = is_raw_ptr
+                || matches!(base_ty, Type::CStr)
+                || matches!(base_ty, Type::Ref(id) if id.sym == "cstring" || id.sym == "cstr");
 
+            if is_write {
                 if is_unbounded_ptr_or_cstr && !self.is_in_unsafe() {
                     let is_statically_proven_safe =
                         if let (Some(idx), Some(len)) = (idx_opt, known_len) {
@@ -239,6 +241,19 @@ impl Analyzer {
                         return Err(SemaError::UnboundedRawPointerMutation(var_name, span));
                     }
                 }
+            } else if is_raw_ptr && !self.is_in_unsafe() {
+                let var_name = if let Expr::Ident(id) = obj {
+                    id.sym.clone()
+                } else {
+                    "pointer".to_string()
+                };
+                self.errors.push(SemaError::UnsafeRequired(
+                    format!(
+                        "Indexing raw pointer '{}' requires an unsafe block or unsafe function",
+                        var_name
+                    ),
+                    span,
+                ));
             }
         }
 

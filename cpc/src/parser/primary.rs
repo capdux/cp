@@ -1467,6 +1467,12 @@ impl<'a> Parser<'a> {
                 }))
             }
             Token::New => {
+                if !matches!(self.peek(), Some(Token::Ident(_))) {
+                    return Ok(Expr::Ident(Ident {
+                        span,
+                        sym: "new".to_string(),
+                    }));
+                }
                 let callee_expr = self.parse_primary_expr()?;
                 if let Expr::Ident(mut ident) = callee_expr {
                     if self.peek() == Some(&Token::Less) {
@@ -1615,7 +1621,14 @@ impl<'a> Parser<'a> {
                     } else {
                         format!("[*]{}{}", const_prefix, elem_str)
                     };
-                    return Ok(Expr::Ident(Ident { span, sym: ty_sym }));
+                    let end = self.peek_span().start;
+                    return Ok(Expr::TypeVal {
+                        span: Span {
+                            start: span.start,
+                            end,
+                        },
+                        ty: Type::Ref(Ident { span, sym: ty_sym }),
+                    });
                 }
                 let size_start = self.peek_span().start;
                 let first = self.parse_expr()?;
@@ -1745,6 +1758,26 @@ impl<'a> Parser<'a> {
                     Ok(Expr::Break(span, val))
                 }
             }
+            Token::Return => {
+                let has_val = !matches!(
+                    self.peek(),
+                    Some(
+                        Token::Semicolon
+                            | Token::RBrace
+                            | Token::RParen
+                            | Token::Comma
+                            | Token::RBracket
+                            | Token::Else
+                    ) | None
+                ) && !(self.peek_span().start >= span.end
+                    && self.input[span.end..self.peek_span().start].contains('\n'));
+                let val = if has_val {
+                    Some(Box::new(self.parse_expr()?))
+                } else {
+                    None
+                };
+                Ok(Expr::Return(span, val))
+            }
             Token::If => {
                 let start = span.start;
                 self.expect(Token::LParen)?;
@@ -1752,6 +1785,42 @@ impl<'a> Parser<'a> {
                 if matches!(self.peek(), Some(Token::Ident(id)) if id == "comptime") {
                     self.bump()?;
                     is_comptime = true;
+                }
+                let mut capture = None;
+                let mut is_ptr_capture = false;
+                if (self.peek() == Some(&Token::Star) || self.peek() == Some(&Token::Mut))
+                    && matches!(
+                        self.peek_next(),
+                        Some(Token::Ident(_)) | Some(Token::ErrorKw)
+                    )
+                {
+                    let cp_lexer = self.lexer.clone();
+                    let cp_p1 = self.peeked.clone();
+                    let cp_p2 = self.peeked2.clone();
+                    let cp_errs = self.errors.len();
+                    self.bump()?;
+                    if let Ok(cap_id) = self.parse_ident() {
+                        if self.peek() == Some(&Token::ColonAssign) {
+                            self.bump()?;
+                            is_ptr_capture = true;
+                            capture = Some(cap_id);
+                        } else {
+                            self.lexer = cp_lexer;
+                            self.peeked = cp_p1;
+                            self.peeked2 = cp_p2;
+                            self.errors.truncate(cp_errs);
+                        }
+                    } else {
+                        self.lexer = cp_lexer;
+                        self.peeked = cp_p1;
+                        self.peeked2 = cp_p2;
+                        self.errors.truncate(cp_errs);
+                    }
+                } else if matches!(self.peek(), Some(Token::Ident(_)) | Some(Token::ErrorKw))
+                    && self.peek_next() == Some(&Token::ColonAssign)
+                {
+                    capture = Some(self.parse_ident()?);
+                    self.expect(Token::ColonAssign)?;
                 }
                 let test = self.parse_expr()?;
                 self.expect(Token::RParen)?;
@@ -1779,8 +1848,8 @@ impl<'a> Parser<'a> {
                     cons: Box::new(cons),
                     alt,
                     is_comptime,
-                    capture: None,
-                    is_ptr_capture: false,
+                    capture,
+                    is_ptr_capture,
                 })
             }
             Token::Slash => {

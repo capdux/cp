@@ -8,6 +8,10 @@ impl Codegen {
     pub(crate) fn generate_expr_error_flow(&mut self, expr: &Expr) -> String {
         match expr {
             Expr::Question(inner) => {
+                if matches!(&**inner, Expr::TypeVal { .. }) {
+                    let exp = self.generate_expr(inner);
+                    return format!("?{}", exp);
+                }
                 let old_in_try = self.in_try_region;
                 self.in_try_region = false;
                 let inner_ty = self.infer_cp_type(inner);

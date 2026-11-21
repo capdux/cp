@@ -53,8 +53,16 @@ impl Codegen {
                 let is_null_vars = Self::extract_is_null_vars(test);
                 let test_s = self.generate_expr(test);
                 let old_narrowed = self.narrowed_null_vars.clone();
+                let old_locals = self.locals.clone();
+                let old_block_locals = self.block_locals.clone();
                 self.narrowed_null_vars.extend(not_null_vars);
+                if let Some(cap) = capture {
+                    self.locals.insert(cap.sym.clone(), "anytype".to_string());
+                    self.block_locals.insert(cap.sym.clone());
+                }
                 let cons_s = self.generate_expr(cons);
+                self.locals = old_locals;
+                self.block_locals = old_block_locals;
                 self.narrowed_null_vars = old_narrowed.clone();
                 let alt_s = if let Some(a) = alt {
                     self.narrowed_null_vars.extend(is_null_vars);

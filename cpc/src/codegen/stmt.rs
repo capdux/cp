@@ -1129,14 +1129,28 @@ impl Codegen {
                             self.generate_expr(&bin.left)
                         };
                         if let Expr::NullCoalesce {
-                            right: ref nc_r, ..
+                            left: ref nc_l,
+                            right: ref nc_r,
                         } = &*bin.right
                         {
-                            let r_code = self.generate_expr(nc_r);
-                            self.write_to_case(&format!(
-                                "if ({} == null) {{ {} = {}; }}",
-                                l, l, r_code
-                            ));
+                            let is_null_coalesce_assign = !matches!(
+                                &**nc_r,
+                                Expr::Return(_, _)
+                                    | Expr::Break(_, _)
+                                    | Expr::LabeledBreak(_, _, _)
+                                    | Expr::Continue(_)
+                                    | Expr::LabeledContinue(_, _)
+                                    | Expr::LabeledBlock { .. }
+                            ) && self.generate_expr(nc_l) == l;
+                            if is_null_coalesce_assign {
+                                let r_code = self.generate_expr(nc_r);
+                                self.write_to_case(&format!(
+                                    "if ({} == null) {{ {} = {}; }}",
+                                    l, l, r_code
+                                ));
+                            } else {
+                                self.write_to_case(&format!("{} = {};", l, r));
+                            }
                         } else {
                             self.write_to_case(&format!("{} = {};", l, r));
                         }
@@ -1690,9 +1704,13 @@ impl Codegen {
                     let end_code = self.generate_expr(end);
                     let op = if *inclusive { "<=" } else { "<" };
 
+                    let old_range_locals = self.locals.clone();
+                    let old_range_block_locals = self.block_locals.clone();
                     if let Pattern::Ident(id) = &f.pat {
                         self.var_scope_depth
                             .insert(id.sym.clone(), self.current_scope_depth);
+                        self.locals.insert(id.sym.clone(), "i32".to_string());
+                        self.block_locals.insert(id.sym.clone());
                         self.var_cp_types.insert(id.sym.clone(), Type::I32);
                         self.write_to_case("{");
                         self.indent();
@@ -1716,6 +1734,8 @@ impl Codegen {
                     } else {
                         self.generate_stmt(&f.body);
                     }
+                    self.locals = old_range_locals;
+                    self.block_locals = old_range_block_locals;
                     self.current_scope_depth -= 1;
                     self.dedent();
                     self.write_to_case("}");
@@ -1742,6 +1762,8 @@ impl Codegen {
                 }
                 let expr_code = self.generate_expr(&f.expr);
                 let old_mut_loop_vars = self.mut_borrow_loop_vars.clone();
+                let old_loop_locals = self.locals.clone();
+                let old_loop_block_locals = self.block_locals.clone();
                 let old_loop_borrowed_containers = self.loop_borrowed_containers.clone();
                 if f.mode != IterMode::Move {
                     if let Expr::Ident(coll_id) = &f.expr {
@@ -1790,6 +1812,8 @@ impl Codegen {
                     if let Pattern::Ident(id) = &f.pat {
                         self.var_scope_depth
                             .insert(id.sym.clone(), self.current_scope_depth);
+                        self.locals.insert(id.sym.clone(), "anytype".to_string());
+                        self.block_locals.insert(id.sym.clone());
                         self.var_cp_types.insert(id.sym.clone(), item_ty);
                         self.write_to_case(&format!(
                             "{}while ({}.next()) |{}| {{",
@@ -1805,6 +1829,10 @@ impl Codegen {
                         } else {
                             self.generate_stmt(&f.body);
                         }
+                        self.locals = old_loop_locals;
+                        self.block_locals = old_loop_block_locals;
+                        self.mut_borrow_loop_vars = old_mut_loop_vars;
+                        self.loop_borrowed_containers = old_loop_borrowed_containers;
                         self.current_scope_depth -= 1;
                         self.dedent();
                         self.write_to_case("}");
@@ -1828,6 +1856,8 @@ impl Codegen {
                                     if let Pattern::Ident(id) = p {
                                         self.var_scope_depth
                                             .insert(id.sym.clone(), self.current_scope_depth);
+                                        self.locals.insert(id.sym.clone(), "anytype".to_string());
+                                        self.block_locals.insert(id.sym.clone());
                                         let val_expr = if let Some(r_idx) = rest_pos {
                                             if idx > r_idx {
                                                 let offset_from_end = elems.len() - idx;
@@ -1865,6 +1895,10 @@ impl Codegen {
                         } else {
                             self.generate_stmt(&f.body);
                         }
+                        self.locals = old_loop_locals;
+                        self.block_locals = old_loop_block_locals;
+                        self.mut_borrow_loop_vars = old_mut_loop_vars;
+                        self.loop_borrowed_containers = old_loop_borrowed_containers;
                         self.current_scope_depth -= 1;
                         self.dedent();
                         self.write_to_case("}");
@@ -1914,6 +1948,8 @@ impl Codegen {
                 if let Pattern::Ident(id) = &f.pat {
                     self.var_scope_depth
                         .insert(id.sym.clone(), self.current_scope_depth);
+                    self.locals.insert(id.sym.clone(), "anytype".to_string());
+                    self.block_locals.insert(id.sym.clone());
                     if f.mode == IterMode::MutBorrow {
                         self.mut_borrow_loop_vars.insert(id.sym.clone());
                     }
@@ -1962,6 +1998,8 @@ impl Codegen {
                                     Pattern::Ident(id) => {
                                         self.var_scope_depth
                                             .insert(id.sym.clone(), self.current_scope_depth);
+                                        self.locals.insert(id.sym.clone(), "anytype".to_string());
+                                        self.block_locals.insert(id.sym.clone());
                                         if f.mode == IterMode::MutBorrow {
                                             self.mut_borrow_loop_vars.insert(id.sym.clone());
                                         }
@@ -2062,6 +2100,8 @@ impl Codegen {
                                 };
                                 self.var_scope_depth
                                     .insert(bound_name.clone(), self.current_scope_depth);
+                                self.locals.insert(bound_name.clone(), "anytype".to_string());
+                                self.block_locals.insert(bound_name.clone());
                                 if f.mode == IterMode::MutBorrow {
                                     self.mut_borrow_loop_vars.insert(bound_name.clone());
                                 }
@@ -2083,6 +2123,8 @@ impl Codegen {
                     self.generate_stmt(&f.body);
                 }
 
+                self.locals = old_loop_locals;
+                self.block_locals = old_loop_block_locals;
                 self.mut_borrow_loop_vars = old_mut_loop_vars;
                 self.loop_borrowed_containers = old_loop_borrowed_containers;
                 self.current_scope_depth -= 1;

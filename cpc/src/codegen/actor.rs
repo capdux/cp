@@ -5,11 +5,40 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 
 impl Codegen {
+    pub(crate) fn returns_borrowed_view(ty: &Type) -> bool {
+        match ty {
+            Type::Array(_)
+            | Type::String
+            | Type::CStr
+            | Type::BorrowType { .. }
+            | Type::RawPtr { .. }
+            | Type::ManyRawPtr(_)
+            | Type::CPtr(_)
+            | Type::SentinelPtr(_, _)
+            | Type::SentinelSlice(_, _) => true,
+            Type::Ref(id)
+                if id.sym == "string"
+                    || id.sym == "cstring"
+                    || id.sym.starts_with('[')
+                    || id.sym.starts_with('*') =>
+            {
+                true
+            }
+            Type::Optional(inner) | Type::ErrorUnion(inner) => Self::returns_borrowed_view(inner),
+            Type::ResultType { ok, .. } => Self::returns_borrowed_view(ok),
+            _ => false,
+        }
+    }
+
     pub(crate) fn is_receiver_param_type(ty: &Type, class_name: Option<&String>) -> bool {
         match ty {
             Type::Auto | Type::Any => true,
             Type::Ref(id) => {
-                if id.sym == "@This()" || id.sym == "This" || id.sym == "Self" {
+                if id.sym == "@This()"
+                    || id.sym == "This"
+                    || id.sym == "Self"
+                    || id.sym == "__CpAnonStruct__"
+                {
                     return true;
                 }
                 if let Some(c) = class_name {
@@ -539,6 +568,13 @@ impl Codegen {
                     } else {
                         c.clone()
                     };
+                    let needs_const_ptr_self = !is_enum
+                        && self.current_receiver_mode == ReceiverMode::ReadOnly
+                        && func
+                            .return_type
+                            .as_ref()
+                            .map(Self::returns_borrowed_view)
+                            .unwrap_or(false);
                     let ptr_type = if let Some(first) = func.params.first().filter(|p| {
                         p.ident.sym == "this"
                             || p.ident.sym == "self"
@@ -554,14 +590,20 @@ impl Codegen {
                             format!("*{}", type_name)
                         } else if matches!(&first.ty, Type::BorrowType { is_mut: false, .. }) {
                             format!("*const {}", type_name)
-                        } else if is_val && self.current_receiver_mode == ReceiverMode::ReadOnly {
+                        } else if is_val
+                            && !needs_const_ptr_self
+                            && self.current_receiver_mode == ReceiverMode::ReadOnly
+                        {
                             type_name
                         } else if self.current_receiver_mode == ReceiverMode::ReadOnly {
                             format!("*const {}", type_name)
                         } else {
                             format!("*{}", type_name)
                         }
-                    } else if is_val && self.current_receiver_mode == ReceiverMode::ReadOnly {
+                    } else if is_val
+                        && !needs_const_ptr_self
+                        && self.current_receiver_mode == ReceiverMode::ReadOnly
+                    {
                         type_name
                     } else if self.current_receiver_mode == ReceiverMode::ReadOnly {
                         format!("*const {}", type_name)

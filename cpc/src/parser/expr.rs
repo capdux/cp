@@ -384,7 +384,17 @@ impl<'a> Parser<'a> {
                     }
                 }
                 Some(Token::Question) => {
-                    self.bump()?;
+                    let q_span = self.bump()?.1;
+                    if let Expr::TypeVal { span: ty_span, ty } = left {
+                        left = Expr::TypeVal {
+                            span: Span {
+                                start: ty_span.start,
+                                end: q_span.end,
+                            },
+                            ty: Type::Optional(Box::new(ty)),
+                        };
+                        continue;
+                    }
                     if self.peek() == Some(&Token::Continue) {
                         let span = self.bump()?.1;
                         left = Expr::QuestionFallback {

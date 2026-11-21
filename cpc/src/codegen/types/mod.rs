@@ -331,7 +331,15 @@ impl Codegen {
         }
         match t {
             Type::Ref(id) => {
-                if let Some(cls) = self.class_defs.get(&id.sym) {
+                let base_name = id
+                    .sym
+                    .split('<')
+                    .next()
+                    .unwrap_or(&id.sym)
+                    .split('(')
+                    .next()
+                    .unwrap_or(&id.sym);
+                if let Some(cls) = self.class_defs.get(&id.sym).or_else(|| self.class_defs.get(base_name)) {
                     cls.methods
                         .iter()
                         .any(|m| Self::method_is_zero_arg_destructor(m))

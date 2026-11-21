@@ -181,7 +181,7 @@ impl Codegen {
             || class.ident.sym == "MethodInfo"
             || class.ident.sym == "Map"
             || class.ident.sym == "Set"
-            || class.ident.sym == "Box"
+            || (!self.is_lib_mode && class.ident.sym == "Box")
         {
             return;
         }

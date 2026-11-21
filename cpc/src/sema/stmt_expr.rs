@@ -811,6 +811,27 @@ impl Analyzer {
                 if let Some(e) = &slice.end {
                     self.analyze_expr(e)?;
                 }
+                if !self.is_in_unsafe() {
+                    if let Ok(ty) = self.infer_type(&slice.obj) {
+                        let mut base_ty = &ty;
+                        while let Type::BorrowType { inner, .. } = base_ty {
+                            base_ty = inner;
+                        }
+                        if matches!(
+                            base_ty,
+                            Type::ManyRawPtr(_)
+                                | Type::CPtr(_)
+                                | Type::SentinelPtr(_, _)
+                                | Type::RawPtr { .. }
+                        ) {
+                            self.errors.push(SemaError::UnsafeRequired(
+                                "Slicing raw pointer requires an unsafe block or unsafe function"
+                                    .to_string(),
+                                slice.span,
+                            ));
+                        }
+                    }
+                }
             }
             Expr::Match(m) => {
                 self.analyze_expr(&m.disc)?;
@@ -920,6 +941,19 @@ impl Analyzer {
             }
             Expr::Builtin(call) => {
                 self.check_async_isolation_for_builtin(call)?;
+                if matches!(
+                    call.name.as_str(),
+                    "@ptrCast" | "@alignCast" | "@intFromPtr" | "@ptrFromInt" | "@constCast"
+                ) && !self.is_in_unsafe()
+                {
+                    self.errors.push(SemaError::UnsafeRequired(
+                        format!(
+                            "Unsafe builtin '{}' requires an unsafe block or unsafe function",
+                            call.name
+                        ),
+                        call.span,
+                    ));
+                }
                 for arg in &call.args {
                     self.analyze_expr(arg)?;
                 }

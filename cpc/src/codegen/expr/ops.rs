@@ -79,6 +79,8 @@ impl Codegen {
                     } else {
                         base
                     }
+                } else if self.mut_borrow_loop_vars.contains(&i.sym) {
+                    format!("({}.*)", i.sym)
                 } else if self.is_class_method && self.is_class_field(&i.sym) {
                     if self.moved_vars.contains("this") || self.moved_vars.contains("_") {
                         panic!(
@@ -98,8 +100,6 @@ impl Codegen {
                     }
                 } else if self.local_trampolines.contains(&i.sym) {
                     format!("__cp_trampoline_{}.{}", i.sym, i.sym)
-                } else if self.mut_borrow_loop_vars.contains(&i.sym) {
-                    format!("({}.*)", i.sym)
                 } else if self.narrowed_null_vars.contains(&i.sym) {
                     format!("({}.?)", i.sym)
                 } else {

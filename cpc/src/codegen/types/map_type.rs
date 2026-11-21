@@ -290,7 +290,10 @@ impl Codegen {
                 if let Type::Optional(opt_inner) = &**inner {
                     let opt_inner_zig = self.map_type(opt_inner);
                     if opt_inner_zig.starts_with('*') {
-                        return format!("*?{}", opt_inner_zig);
+                        if matches!(&**opt_inner, Type::BorrowType { .. } | Type::RawPtr { .. }) {
+                            return format!("*?{}", opt_inner_zig);
+                        }
+                        return format!("?{}", opt_inner_zig);
                     }
                     return format!("?*{}", opt_inner_zig);
                 }
@@ -368,8 +371,25 @@ impl Codegen {
                 name
             }
             Type::RawPtr { inner, depth } => {
-                let base = self.map_raw_ptr_base(inner);
-                format!("{}{}", "*".repeat(*depth), base)
+                if let Type::Optional(opt_inner) = &**inner {
+                    let base = self.map_raw_ptr_base(opt_inner);
+                    format!("?{}{}", "*".repeat(*depth), base)
+                } else if let Type::BorrowType {
+                    inner: b_in,
+                    is_mut: false,
+                    ..
+                } = &**inner
+                {
+                    if let Type::Optional(opt_inner) = &**b_in {
+                        let base = self.map_raw_ptr_base(opt_inner);
+                        return format!("?{}const {}", "*".repeat(*depth), base);
+                    }
+                    let base = self.map_raw_ptr_base(inner);
+                    format!("{}{}", "*".repeat(*depth), base)
+                } else {
+                    let base = self.map_raw_ptr_base(inner);
+                    format!("{}{}", "*".repeat(*depth), base)
+                }
             }
             Type::ManyRawPtr(inner) => {
                 let base = self.map_raw_ptr_base(inner);

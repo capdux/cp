@@ -76,3 +76,4 @@
 
 ### 2026-11-22（`cap:charset_label` 验收，Batch 70 注册 `cap:charset_label` 并提交（突破 70 批次 / 223 模块里程碑）。）
 - **执行成果**：`lib/charset_label/`（5/5 PASS，`doc/lib/charset_label.md`）经 `verify_module.sh` 一次性验收回收；Batch 70 注册 `cap:charset_label` 并提交（突破 70 批次 / 223 模块里程碑）。
+- **CPC 热修里程碑（11 条工单全清零）**：热修子智能体完成并结单 `delivery_id` 54, 55, 56, 57, 58, 59, 60, 67, 68, 70, 71 共 11 条 `bun_agy` 编译器工单，`sync_cpc.sh release` 发布并回收热修子智能体。
