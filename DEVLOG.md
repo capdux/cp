@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:bundle_options` 纯 CP 打包输出格式、全局缓存策略、离线模式与包链接模式枚举引擎（吸收自 Bun `src/options_types/` 与 `src/install_types/`，支持 `cap.bundle_options` 自动动态挂载，详见 `doc/lib/bundle_options.md`）（5/5 PASS，文档直写 `doc/lib/bundle_options.md`）
+- **吸收改造**：采用 `std.StaticStringMap` 实现零堆字符串映射与完整策略矩阵校验。
+
 ## 2026-11-21: 新建 `cap:node_builtins` 纯 CP Node.js & Bun 内建模块映射与规范化注册表（吸收自 Bun `src/resolve_builtins/HardcodedModule.cp`，支持 `cap.node_builtins` 自动动态挂载，详见 `doc/lib/node_builtins.md`）（5/5 PASS，文档直写 `doc/lib/node_builtins.md`）
 - **吸收改造**：采用编译期 `std.StaticStringMap` 重构 `bun.ComptimeStringMap`，零堆分配实现目标隔离与前缀强制校验。
 
