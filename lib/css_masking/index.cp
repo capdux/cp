@@ -1,0 +1,27 @@
+// Source: Absorbed from /data/dev/bun/src/css/properties/masking.cp
+
+export {
+    GeometryBox,
+    MaskOrigin,
+    MaskClip,
+    MaskMode,
+    MaskType,
+    MaskComposite,
+    WebKitMaskComposite,
+    WebKitMaskSourceType,
+    MaskBorderMode,
+    MaskBorderRepeat,
+    FillRule,
+    MASK_FLAG_IMAGE,
+    MASK_FLAG_MODE,
+    MASK_FLAG_ORIGIN,
+    MASK_FLAG_CLIP,
+    MASK_FLAG_COMPOSITE,
+    MASK_FLAG_BORDER,
+    MASK_FLAG_CLIP_PATH,
+    MASK_FLAG_WEBKIT_PREFIX,
+    MaskFeatureFlags,
+    MaskConfig,
+    MaskBorderConfig,
+    getWebKitMaskPropertyName,
+} from "./masking.cp";

@@ -115,3 +115,21 @@
 
 ### 2026-11-21（`cap:exif` 验收，吸收 Bun runtime/image/exif.cp -> cap:exif，测试 4/4 通过。）
 - **执行成果**：`lib/exif/`（5/5 PASS，`doc/lib/exif.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun runtime/image/exif.cp -> cap:exif，测试 4/4 通过。
+
+### 2026-11-21（`cap:binary_schema` 验收，吸收 Bun analytics/schema.cp -> cap:binary_schema，测试 5/5 通过。）
+- **执行成果**：`lib/binary_schema/`（5/5 PASS，`doc/lib/binary_schema.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun analytics/schema.cp -> cap:binary_schema，测试 5/5 通过。
+
+### 2026-11-21（`cap:pe_format` 验收，吸收 Bun exe_format/pe.cp -> cap:pe_format，测试 6/6 通过。）
+- **执行成果**：`lib/pe_format/`（5/5 PASS，`doc/lib/pe_format.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun exe_format/pe.cp -> cap:pe_format，测试 6/6 通过。
+
+### 2026-11-21（`cap:css_masking` 验收，吸收 Bun css/properties/masking.cp -> cap:css_masking，测试 5/5 通过。）
+- **执行成果**：`lib/css_masking/`（5/5 PASS，`doc/lib/css_masking.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun css/properties/masking.cp -> cap:css_masking，测试 5/5 通过。
+
+### 2026-11-21（`cap:utf8_dfa` 验收，吸收 Bun UTF-8 DFA + ASCII 谓词 -> cap:utf8_dfa，测试 4/4 通过。）
+- **执行成果**：`lib/utf8_dfa/`（5/5 PASS，`doc/lib/utf8_dfa.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun UTF-8 DFA + ASCII 谓词 -> cap:utf8_dfa，测试 4/4 通过。
+
+### 2026-11-21（`cap:fallback_alloc` 验收，吸收 Bun bun_alloc/BufferFallbackAllocator.cp -> cap:fallback_alloc，测试 4/4 通过。）
+- **执行成果**：`lib/fallback_alloc/`（5/5 PASS，`doc/lib/fallback_alloc.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun bun_alloc/BufferFallbackAllocator.cp -> cap:fallback_alloc，测试 4/4 通过。
+
+### 2026-11-21（`cap:type_traits` 验收，吸收 Bun meta/traits.cp + ptr/meta.cp -> cap:type_traits，测试 3/3 通过。）
+- **执行成果**：`lib/type_traits/`（5/5 PASS，`doc/lib/type_traits.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun meta/traits.cp + ptr/meta.cp -> cap:type_traits，测试 3/3 通过。

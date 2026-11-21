@@ -2,6 +2,24 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 编译期类型特征自省与指针元数据（5/5 PASS，文档直写 `doc/lib/type_traits.md`）
+从 Bun meta/traits.cp 与 ptr/meta.cp 吸收编译期类型自省谓词与 PointerMeta.inspect，零运行期开销且完全适配 CP 新语法。
+
+## 2026-11-21: 栈内联缓冲优先 + 堆回退分配器（5/5 PASS，文档直写 `doc/lib/fallback_alloc.md`）
+从 Bun bun_alloc/BufferFallbackAllocator.cp 吸收栈内联缓冲优先分配器，支持 ownsBufferPtr/usedBytes/remainingBytes/reset 与跨区域 resize/remap/free 自动路由。
+
+## 2026-11-21: 无分支 UTF-8 DFA 解码器与 ASCII 谓词（5/5 PASS，文档直写 `doc/lib/utf8_dfa.md`）
+从 Bun unicode/uucode_lib/src/{utf8,ascii}.cp 吸收无分支 UTF-8 DFA 流式解码器与 ASCII 码点谓词，纯 CP 零依赖实现超长编码/代理对安全替换为 U+FFFD。
+
+## 2026-11-21: CSS 遮罩与裁剪属性模型（5/5 PASS，文档直写 `doc/lib/css_masking.md`）
+从 Bun css/properties/masking.cp 吸收完整 CSS 遮罩/裁剪枚举、Porter-Duff 合成模式及 13 项 -webkit- 前缀属性映射，纯 CP 零依赖。
+
+## 2026-11-21: Windows PE64 可执行文件解析与构建器（5/5 PASS，文档直写 `doc/lib/pe_format.md`）
+从 Bun exe_format/pe.cp 吸收完整 PE64 可执行文件解析/节表注入/校验和引擎，采用 ~init() RAII 与对齐安全读取，零泄漏通过全量回归。
+
+## 2026-11-21: 紧凑二进制 Schema 流式编解码器（5/5 PASS，文档直写 `doc/lib/binary_schema.md`）
+从 Bun analytics/schema.cp 吸收紧凑二进制 Schema 流式编解码引擎，使用 ~init() 确定性 RAII 与 comptime for 枚举严格校验，零泄漏通过全部边界测试。
+
 ## 2026-11-21: JPEG/TIFF EXIF 方向元数据读取器（5/5 PASS，文档直写 `doc/lib/exif.md`）
 从 Bun runtime/image/exif.cp 吸收 JPEG APP1/Exif 与大小端 TIFF IFD0 0x0112 标签读取器，纯 CP 零依赖实现宽容解析与旋转/翻转变换计算。
 

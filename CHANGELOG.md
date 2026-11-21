@@ -2,6 +2,24 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 编译期类型特征自省与指针元数据（5/5 PASS，自动动态挂载 `cap.type_traits`）
+新增 cap:type_traits 标准库（lib/type_traits/、doc/lib/type_traits.md、cap/test/test_type_traits_production_deep.cp），3/3 回归通过。
+
+## [2026-11-21] - 栈内联缓冲优先 + 堆回退分配器（5/5 PASS，自动动态挂载 `cap.fallback_alloc`）
+新增 cap:fallback_alloc 标准库（lib/fallback_alloc/、doc/lib/fallback_alloc.md、cap/test/test_fallback_alloc_production_deep.cp），4/4 回归通过（零泄漏）。
+
+## [2026-11-21] - 无分支 UTF-8 DFA 解码器与 ASCII 谓词（5/5 PASS，自动动态挂载 `cap.utf8_dfa`）
+新增 cap:utf8_dfa 标准库（lib/utf8_dfa/、doc/lib/utf8_dfa.md、cap/test/test_utf8_dfa_production_deep.cp），4/4 回归通过。
+
+## [2026-11-21] - CSS 遮罩与裁剪属性模型（5/5 PASS，自动动态挂载 `cap.css_masking`）
+新增 cap:css_masking 标准库（lib/css_masking/、doc/lib/css_masking.md、cap/test/test_css_masking_production_deep.cp），5/5 回归通过。
+
+## [2026-11-21] - Windows PE64 可执行文件解析与构建器（5/5 PASS，自动动态挂载 `cap.pe_format`）
+新增 cap:pe_format 标准库（lib/pe_format/、doc/lib/pe_format.md、cap/test/test_pe_format_production_deep.cp），6/6 回归通过（零泄漏）。
+
+## [2026-11-21] - 紧凑二进制 Schema 流式编解码器（5/5 PASS，自动动态挂载 `cap.binary_schema`）
+新增 cap:binary_schema 标准库（lib/binary_schema/、doc/lib/binary_schema.md、cap/test/test_binary_schema_production_deep.cp），5/5 回归通过（零泄漏）。
+
 ## [2026-11-21] - JPEG/TIFF EXIF 方向元数据读取器（5/5 PASS，自动动态挂载 `cap.exif`）
 新增 cap:exif 标准库（lib/exif/、doc/lib/exif.md、cap/test/test_exif_production_deep.cp），4/4 回归通过。
 
