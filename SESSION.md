@@ -97,3 +97,6 @@
 
 ### 2026-11-21（`cap:chacha20` 验收，主控完成 `cap:chacha20` 研发验收提交）
 - **执行成果**：`lib/chacha20/`（5/5 PASS，`doc/lib/chacha20.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:chacha20` 研发验收提交
+
+### 2026-11-21（`cap:roaring_bitmap` 验收，验收提交 `cap:roaring_bitmap` 并新开 `cap:aes_gcm` 并发子智能体）
+- **执行成果**：`lib/roaring_bitmap/`（5/5 PASS，`doc/lib/roaring_bitmap.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:roaring_bitmap` 并新开 `cap:aes_gcm` 并发子智能体

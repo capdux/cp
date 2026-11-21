@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:roaring_bitmap` 纯 CP 工业级 Roaring Bitmap 压缩位图集合引擎（Array/Bitset 自适应升降级、`unionWith`/`intersectWith`/`differenceWith`、`rank`/极值及零泄漏序列化，支持 `cap.roaring_bitmap` 自动动态挂载，详见 `doc/lib/roaring_bitmap.md`）（5/5 PASS，自动动态挂载 `cap.roaring_bitmap`）
+- **新增标准库**：`lib/roaring_bitmap/{roaring,index}.cp`，实现高 16 位分桶与 Array/Bitset 容器自适应转换（4096 阈值）及全套集合运算。\n- **新增文档与测试**：`doc/lib/roaring_bitmap.md` 扁平文档与 `cap/test/test_roaring_bitmap_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:chacha20` 纯 CP RFC 8439 ChaCha20-Poly1305 与 24 字节 Nonce XChaCha20-Poly1305 AEAD 认证加密引擎（支持 `cap.chacha20` 自动动态挂载，详见 `doc/lib/chacha20.md`）（5/5 PASS，自动动态挂载 `cap.chacha20`）
 - **新增标准库**：`lib/chacha20/{chacha20,index}.cp`，实现 ChaCha20-Poly1305、XChaCha20-Poly1305 与随机 Nonce `sealXAlloc`/`openXAlloc`。\n- **新增文档与测试**：`doc/lib/chacha20.md` 扁平文档与 `cap/test/test_chacha20_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 
