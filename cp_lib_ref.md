@@ -677,3 +677,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:proxy_protocol_v2` | PROXY_V2_SIGNATURE, hasProxyV2Signature, ProxyV2Command, ProxyV2Family, ProxyV2Transport, ProxyV2Header, ProxyV2Tlv, ProxyV2TlvIter | HAProxy PROXY Protocol v2 二进制头零分配解析、IPv4/LOCAL 编码与 TLV 扩展迭代器 |
 | `cap:npmrc_config` | DEFAULT_NPM_REGISTRY, NpmrcEntry, NpmrcIter, getNpmrcValue, getNpmrcBool, resolveRegistryForScope, findRegistrySetting | .npmrc 配置文件零分配键值解析器、布尔配置查询与 @scope:registry 仓库路由解析器 |
 | `cap:dns_record_type` | DnsRrType, DnsRcode, DnsClass, SrvRecord, MxRecord | IANA DNS 记录类型（18 种 RRType）、Class、RCODE 编解码与 SRV/MX 文本记录解析器 |
+| `cap:proc_net_route` | RTF_UP, RTF_GATEWAY, RTF_HOST, parseHexIpv4Le, RouteEntry, ProcRouteIter, findDefaultGateway | Linux /proc/net/route 内核路由表零分配解析器、小端十六进制 IPv4 解码与最小 metric 默认网关查找器 |

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:proc_net_route` Linux /proc/net/route 内核路由表零分配解析器、小端十六进制 IPv4 解码与最小 metric 默认网关查找器（5/5 PASS，文档直写 `doc/lib/proc_net_route.md`）
+轮换后的 `Sys Config Absorber` 仅用 1 分 59 秒交付 `cap:proc_net_route`（5 组深度用例 100% PASS）。
+
 ## 2026-11-22: 新建 `cap:dns_record_type` IANA DNS 记录类型（18 种 RRType）、Class、RCODE 编解码与 SRV/MX 文本记录解析器（5/5 PASS，文档直写 `doc/lib/dns_record_type.md`）
 轮换后的 `HTTP RFC Absorber` 仅用 2 分 39 秒交付 `cap:dns_record_type`（5 组深度用例 100% PASS）。
 

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:proc_net_route` Linux /proc/net/route 内核路由表零分配解析器、小端十六进制 IPv4 解码与最小 metric 默认网关查找器（5/5 PASS，自动动态挂载 `cap.proc_net_route`）
+新增 `cap:proc_net_route`（`lib/proc_net_route/{route,index}.cp`、`doc/lib/proc_net_route.md`、`cap/test/test_proc_net_route_production_deep.cp`），实现 11 列路由表迭代、前缀长度计算与默认网关查找。
+
 ## [2026-11-22] - 新建 `cap:dns_record_type` IANA DNS 记录类型（18 种 RRType）、Class、RCODE 编解码与 SRV/MX 文本记录解析器（5/5 PASS，自动动态挂载 `cap.dns_record_type`）
 新增 `cap:dns_record_type`（`lib/dns_record_type/{rr_type,index}.cp`、`doc/lib/dns_record_type.md`、`cap/test/test_dns_record_type_production_deep.cp`），覆盖 `A`/`AAAA`/`CNAME`/`MX`/`TXT`/`SRV`/`HTTPS`/`SVCB`/`CAA` 等 18 种 RRType、RCODE 及 RFC 7505 Null MX。
 

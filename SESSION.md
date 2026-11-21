@@ -166,3 +166,6 @@
 
 ### 2026-11-22（`cap:dns_record_type` 验收，Batch 86 提交 `cap:dns_record_type`（累计 252 模块）。）
 - **执行成果**：`lib/dns_record_type/`（5/5 PASS，`doc/lib/dns_record_type.md`）经 `verify_module.sh` 一次性验收回收；Batch 86 提交 `cap:dns_record_type`（累计 252 模块）。
+
+### 2026-11-22（`cap:proc_net_route` 验收，Batch 87 提交 `cap:proc_net_route`（累计 253 模块，耗时 1 分 59 秒）。）
+- **执行成果**：`lib/proc_net_route/`（5/5 PASS，`doc/lib/proc_net_route.md`）经 `verify_module.sh` 一次性验收回收；Batch 87 提交 `cap:proc_net_route`（累计 253 模块，耗时 1 分 59 秒）。
