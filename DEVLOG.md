@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:proc_loadavg` Linux /proc/loadavg 与 /proc/uptime 纯整数零分配解析器（百分位负载与毫秒运行时间）（5/5 PASS，文档直写 `doc/lib/proc_loadavg.md`）
+主智能体吸收 `cap:proc_loadavg`，避免浮点解析误差并提供 `isOverloaded(num_cpus)` 过载判定。
+
+## 2026-11-22: 新建 `cap:http_ratelimit_header` IETF Draft RateLimit / RateLimit-Policy 限流响应头零分配解析与规范化构造器（5/5 PASS，文档直写 `doc/lib/http_ratelimit_header.md`）
+Subagent 2 吸收 `cap:http_ratelimit_header`，强制校验窗口 `w > 0` 并支持命名策略格式化。
+
+## 2026-11-22: 新建 `cap:proc_meminfo` Linux /proc/meminfo 零分配流式解析器与内存/Swap 使用率计算器（kB 自动转精确字节）（5/5 PASS，文档直写 `doc/lib/proc_meminfo.md`）
+主智能体吸收 `cap:proc_meminfo`，纯整数 `u128` 计算使用百分比并防 `kB * 1024` 溢出。
+
+## 2026-11-22: 新建 `cap:sql_params` SQL 占位符词法安全扫描器与方言重写器（跳过字符串/注释/$$ 块，支持 ?→$N 重写与 :name 提取）（5/5 PASS，文档直写 `doc/lib/sql_params.md`）
+Subagent 1 吸收 `cap:sql_params`，自动忽略 PostgreSQL `::type` 双冒号类型转换。
+
 ## 2026-11-22: 新建 `cap:proc_stat` Linux /proc/<pid>/stat 零分配解析器（末右括号定位，安全兼容含空格/括号的 comm 进程名）（5/5 PASS，文档直写 `doc/lib/proc_stat.md`）
 主智能体吸收 `cap:proc_stat`，按内核规范以最后一个 `)` 切分 `comm`，彻底避免含空格或括号进程名解析错位。
 

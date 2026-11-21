@@ -629,3 +629,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:json_minify` | minifyJson, minifyJsonc, minifyJsoncWithOptions | 零分配 JSON / JSONC（去 // 与 /* */ 注释、去尾随逗号、去 BOM 与空白）压缩器 |
 | `cap:http_upgrade` | UpgradeProtocol, UpgradeIter, ConnectionTokenIter, connectionHasToken, upgradeHasProtocol, isHopByHopHeader, isWebSocketUpgrade | RFC 9110 §7.8 Upgrade / Connection 协议升级与逐跳头零分配解析器及 WebSocket 握手判定器 |
 | `cap:proc_stat` | ProcState, parseProcState, ProcStat | Linux /proc/<pid>/stat 零分配解析器（末右括号定位，安全兼容含空格/括号的 comm 进程名） |
+| `cap:sql_params` | countQuestionMarks, maxDollarParam, rewriteQuestionToDollar, NamedParamIter | SQL 占位符词法安全扫描器与方言重写器（跳过字符串/注释/$$ 块，支持 ?→$N 重写与 :name 提取） |
+| `cap:proc_meminfo` | MemInfoField, MemInfoIter, MemInfo | Linux /proc/meminfo 零分配流式解析器与内存/Swap 使用率计算器（kB 自动转精确字节） |
+| `cap:http_ratelimit_header` | RateLimitHeader, RateLimitPolicy | IETF Draft RateLimit / RateLimit-Policy 限流响应头零分配解析与规范化构造器 |
+| `cap:proc_loadavg` | LoadAvg, SystemUptime | Linux /proc/loadavg 与 /proc/uptime 纯整数零分配解析器（百分位负载与毫秒运行时间） |

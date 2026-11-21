@@ -511,3 +511,15 @@
 
 ### 2026-11-22（`cap:proc_stat` 验收，Batch 65 注册 `cap:proc_stat` 并提交（累计 204 模块）。）
 - **执行成果**：`lib/proc_stat/`（5/5 PASS，`doc/lib/proc_stat.md`）经 `verify_module.sh` 一次性验收回收；Batch 65 注册 `cap:proc_stat` 并提交（累计 204 模块）。
+
+### 2026-11-22（`cap:sql_params` 验收，Batch 66 完成 `cap:sql_params`、`cap:proc_meminfo`、`cap:http_ratelimit_header`、`cap:proc_loadavg` 4 模块吸收与全量验收。）
+- **执行成果**：`lib/sql_params/`（5/5 PASS，`doc/lib/sql_params.md`）经 `verify_module.sh` 一次性验收回收；Batch 66 完成 `cap:sql_params`、`cap:proc_meminfo`、`cap:http_ratelimit_header`、`cap:proc_loadavg` 4 模块吸收与全量验收。
+
+### 2026-11-22（`cap:proc_meminfo` 验收，Batch 66 注册 `cap:proc_meminfo`。）
+- **执行成果**：`lib/proc_meminfo/`（5/5 PASS，`doc/lib/proc_meminfo.md`）经 `verify_module.sh` 一次性验收回收；Batch 66 注册 `cap:proc_meminfo`。
+
+### 2026-11-22（`cap:http_ratelimit_header` 验收，Batch 66 注册 `cap:http_ratelimit_header`。）
+- **执行成果**：`lib/http_ratelimit_header/`（5/5 PASS，`doc/lib/http_ratelimit_header.md`）经 `verify_module.sh` 一次性验收回收；Batch 66 注册 `cap:http_ratelimit_header`。
+
+### 2026-11-22（`cap:proc_loadavg` 验收，Batch 66 注册 `cap:proc_loadavg` 并提交（累计 208 模块）。）
+- **执行成果**：`lib/proc_loadavg/`（5/5 PASS，`doc/lib/proc_loadavg.md`）经 `verify_module.sh` 一次性验收回收；Batch 66 注册 `cap:proc_loadavg` 并提交（累计 208 模块）。

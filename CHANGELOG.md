@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:proc_loadavg` Linux /proc/loadavg 与 /proc/uptime 纯整数零分配解析器（百分位负载与毫秒运行时间）（5/5 PASS，自动动态挂载 `cap.proc_loadavg`）
+新增 `cap:proc_loadavg`（`lib/proc_loadavg/{loadavg,index}.cp`、`doc/lib/proc_loadavg.md`、`cap/test/test_proc_loadavg_production_deep.cp`），纯整数解析 1/5/15 分钟负载、进程数与系统运行毫秒。
+
+## [2026-11-22] - 新建 `cap:http_ratelimit_header` IETF Draft RateLimit / RateLimit-Policy 限流响应头零分配解析与规范化构造器（5/5 PASS，自动动态挂载 `cap.http_ratelimit_header`）
+新增 `cap:http_ratelimit_header`（`lib/http_ratelimit_header/{ratelimit_header,index}.cp`、`doc/lib/http_ratelimit_header.md`、`cap/test/test_http_ratelimit_header_production_deep.cp`），兼容结构化 `"default";r=50;t=30` 与字典 `limit=100, remaining=50, reset=30` 两种格式。
+
+## [2026-11-22] - 新建 `cap:proc_meminfo` Linux /proc/meminfo 零分配流式解析器与内存/Swap 使用率计算器（kB 自动转精确字节）（5/5 PASS，自动动态挂载 `cap.proc_meminfo`）
+新增 `cap:proc_meminfo`（`lib/proc_meminfo/{meminfo,index}.cp`、`doc/lib/proc_meminfo.md`、`cap/test/test_proc_meminfo_production_deep.cp`），支持 `MemAvailable` 与旧内核 `MemFree+Buffers+Cached` 回退。
+
+## [2026-11-22] - 新建 `cap:sql_params` SQL 占位符词法安全扫描器与方言重写器（跳过字符串/注释/$$ 块，支持 ?→$N 重写与 :name 提取）（5/5 PASS，自动动态挂载 `cap.sql_params`）
+新增 `cap:sql_params`（`lib/sql_params/{params,index}.cp`、`doc/lib/sql_params.md`、`cap/test/test_sql_params_production_deep.cp`），安全跳过引号/注释/Dollar-quoted 块实现 `?` 到 `$1` 重写与 `:name` 迭代。
+
 ## [2026-11-22] - 新建 `cap:proc_stat` Linux /proc/<pid>/stat 零分配解析器（末右括号定位，安全兼容含空格/括号的 comm 进程名）（5/5 PASS，自动动态挂载 `cap.proc_stat`）
 新增 `cap:proc_stat`（`lib/proc_stat/{proc_stat,index}.cp`、`doc/lib/proc_stat.md`、`cap/test/test_proc_stat_production_deep.cp`），提取 PID/PPID/状态/CPU 滴答/线程数/VSize/RSS 并防进程名注入。
 
