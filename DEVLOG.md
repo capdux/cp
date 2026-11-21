@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:isbn` ISO 2108 ISBN-10/13, ISO 3297 ISSN & GS1 EAN-13/8/UPC-A validator & converter（5/5 PASS，文档直写 `doc/lib/isbn.md`）
+新增 cap:isbn 纯 CP 零分配出版物与商品条码校验库（Mod-11/Mod-10 校验、978 前缀双向无损转换与 ISSN 格式化），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:hlc` Kulkarni Hybrid Logical Clock (HLC) 64-bit causal timestamps, drift guard & 26B codec（5/5 PASS，文档直写 `doc/lib/hlc.md`）
 新增 cap:hlc 纯 CP 零分配分布式因果时钟库（48+16-bit 紧凑打包、receive 4 分支保序与 26B 十六进制字典序一致编码），通过 cpc check 与 5/5 cap test
 

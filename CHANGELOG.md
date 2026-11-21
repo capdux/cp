@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:isbn` ISO 2108 ISBN-10/13, ISO 3297 ISSN & GS1 EAN-13/8/UPC-A validator & converter（5/5 PASS，自动动态挂载 `cap.isbn`）
+新增纯 CP 零分配标准库 cap:isbn（ISBN-10/13 校验与转换、ISSN 与 GS1 EAN/UPC-A 校验）与 6/6 深度测试
+
 ## [2026-11-22] - 新建 `cap:hlc` Kulkarni Hybrid Logical Clock (HLC) 64-bit causal timestamps, drift guard & 26B codec（5/5 PASS，自动动态挂载 `cap.hlc`）
 新增纯 CP 零分配标准库 cap:hlc（Kulkarni 混合逻辑时钟、漂移防护与 26B 字典序规范编解码）与 5/5 深度测试
 

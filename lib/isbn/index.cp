@@ -1,0 +1,25 @@
+// Source: Absorbed from /data/dev/bun/src/ (Unified Exports for cap:isbn)
+
+export {
+    ISBN10_LEN,
+    ISBN13_LEN,
+    ISSN_LEN,
+    ISSN_FORMATTED_LEN,
+    EAN13_LEN,
+    EAN8_LEN,
+    UPCA_LEN,
+    isbn10CheckDigit,
+    isValidIsbn10,
+    isbn13CheckDigit,
+    isValidIsbn13,
+    isValidIsbn,
+    isbn10To13,
+    isbn13To10,
+    issnCheckDigit,
+    isValidIssn,
+    formatIssn,
+    eanCheckDigit,
+    isValidEan13,
+    isValidEan8,
+    isValidUpcA,
+} from "./isbn.cp";
