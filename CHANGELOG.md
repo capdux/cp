@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:iscsi` iSCSI (RFC 7143) 48B BHS, SCSI/Login PDU, Key=Value iter & CRC32C zero-alloc parser（5/5 PASS，自动动态挂载 `cap.iscsi`）
+新增纯 CP 零分配标准库 cap:iscsi（RFC 7143 iSCSI 48B BHS、SCSI/Login PDU、键值迭代与 CRC32C 校验）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:acpi` ACPI 6.5 RSDP/SDT/RSDT/XSDT/MADT/MCFG firmware tables zero-alloc parser（5/5 PASS，自动动态挂载 `cap.acpi`）
 新增纯 CP 零分配标准库 cap:acpi（ACPI 6.5 RSDP/SDT/RSDT/XSDT/MADT/MCFG 固件系统描述表解析）与 5/5 深度测试
 

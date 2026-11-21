@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:iscsi` iSCSI (RFC 7143) 48B BHS, SCSI/Login PDU, Key=Value iter & CRC32C zero-alloc parser（5/5 PASS，文档直写 `doc/lib/iscsi.md`）
+新增 cap:iscsi 纯 CP 零分配存储网络协议库（Castagnoli CRC32C 双摘要校验、48B BHS/AHS/4B 对齐 Data Segment 与 Login 键值零拷贝迭代），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:acpi` ACPI 6.5 RSDP/SDT/RSDT/XSDT/MADT/MCFG firmware tables zero-alloc parser（5/5 PASS，文档直写 `doc/lib/acpi.md`）
 新增 cap:acpi 纯 CP 零分配固件描述表库（RSDP v1/v2 双校验和、36B SDT 通用表、MADT/MCFG 零拷贝条目迭代），通过 cpc check 与 5/5 cap test
 
