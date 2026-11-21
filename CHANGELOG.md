@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:jfr` 零分配 JVM Java Flight Recorder v2.0 (.jfr) Chunk 头与事件帧解析器（5/5 PASS，自动动态挂载 `cap.jfr`）
+新增 `lib/jfr/{jfr,index}.cp`、`doc/lib/jfr.md` 与 `cap/test/test_jfr_production_deep.cp`（5/5 PASS），支持 68B Chunk 头、多 Chunk 迭代、JFR 9B 压缩整数与事件帧流解析。
+
 ## [2026-11-22] - 新建 `cap:flexbuf` 零分配 Google FlatBuffers FlexBuffers 无 Schema 零拷贝二进制解析器（5/5 PASS，自动动态挂载 `cap.flexbuf`）
 新增 `lib/flexbuf/{flexbuf,index}.cp`、`doc/lib/flexbuf.md` 与 `cap/test/test_flexbuf_production_deep.cp`（5/5 PASS），支持全 28 种 FlexType、间接标量、定型/多态向量与有序 Map 二分查找。
 

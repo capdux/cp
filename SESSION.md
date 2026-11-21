@@ -85,3 +85,6 @@
 
 ### 2026-11-22（`cap:flexbuf` 验收，完成 `cap:flexbuf` 交付验收并登记入库（5/5 PASS）；派发 `cap:ion`。）
 - **执行成果**：`lib/flexbuf/`（5/5 PASS，`doc/lib/flexbuf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:flexbuf` 交付验收并登记入库（5/5 PASS）；派发 `cap:ion`。
+
+### 2026-11-22（`cap:jfr` 验收，完成 `cap:jfr` 交付验收并登记入库（5/5 PASS）；派发 `cap:smile`。）
+- **执行成果**：`lib/jfr/`（5/5 PASS，`doc/lib/jfr.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:jfr` 交付验收并登记入库（5/5 PASS）；派发 `cap:smile`。

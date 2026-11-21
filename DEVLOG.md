@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:jfr` 零分配 JVM Java Flight Recorder v2.0 (.jfr) Chunk 头与事件帧解析器（5/5 PASS，文档直写 `doc/lib/jfr.md`）
+实现零分配 JFR v2.0 录制文件解析器，支持 Metadata/Checkpoint/Custom 事件扫描与总时长统计。
+
 ## 2026-11-22: 新建 `cap:flexbuf` 零分配 Google FlatBuffers FlexBuffers 无 Schema 零拷贝二进制解析器（5/5 PASS，文档直写 `doc/lib/flexbuf.md`）
 实现零分配 FlexBuffers 解析器，完整支持 1/2/4/8B 多态位宽与相对偏移安全解引用。
 
