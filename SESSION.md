@@ -208,3 +208,6 @@
 
 ### 2026-11-22（`cap:newton` 验收，子智能体交付 cap:newton（阻尼 Newton-Raphson 与 Levenberg-Marquardt，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/newton/`（5/5 PASS，`doc/lib/newton.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:newton（阻尼 Newton-Raphson 与 Levenberg-Marquardt，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:louvain` 验收，子智能体交付 cap:louvain（Louvain 模块度社区发现与 LPA，5/5 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/louvain/`（5/5 PASS，`doc/lib/louvain.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:louvain（Louvain 模块度社区发现与 LPA，5/5 PASS），主协调器统一登记并提交

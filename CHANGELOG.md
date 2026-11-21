@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:louvain` 纯 CP 零分配 Louvain 模块度社区发现与标签传播库：带权无向 CSR 图、Newman-Girvan 模块度计算、精确 ΔQ 贪心局部移动、高分辨率细分与零分配 LPA（5/5 PASS，自动动态挂载 `cap.louvain`）
+新增纯 CP 零分配社区发现库 cap:louvain（Louvain 模块度优化、Newman-Girvan 模块度、标签传播 LPA），含文档与 5 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:newton` 纯 CP 零分配非线性方程组求解与非线性最小二乘库：中心差分雅可比阻尼 Newton-Raphson、自适应 Levenberg-Marquardt 非线性最小二乘与 1D Newton/割线求根（5/5 PASS，自动动态挂载 `cap.newton`）
 新增纯 CP 零分配非线性方程组与 LM 最小二乘库 cap:newton（阻尼 Newton-Raphson、Levenberg-Marquardt、1D Newton/割线法），含文档与 6 项深度生产测试
 

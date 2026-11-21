@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:louvain` 纯 CP 零分配 Louvain 模块度社区发现与标签传播库：带权无向 CSR 图、Newman-Girvan 模块度计算、精确 ΔQ 贪心局部移动、高分辨率细分与零分配 LPA（5/5 PASS，文档直写 `doc/lib/louvain.md`）
+新增 cap:louvain（lib/louvain/{louvain,index}.cp）：零分配带权 CSR 图 Louvain 模块度优化与 LPA，通过双团桥接图与三社区模块图校验，cpc check 0 错误，cap test 5/5 PASS (804ms)
+
 ## 2026-11-22: 新建 `cap:newton` 纯 CP 零分配非线性方程组求解与非线性最小二乘库：中心差分雅可比阻尼 Newton-Raphson、自适应 Levenberg-Marquardt 非线性最小二乘与 1D Newton/割线求根（5/5 PASS，文档直写 `doc/lib/newton.md`）
 新增 cap:newton（lib/newton/{newton,index}.cp）：零分配阻尼多维 Newton-Raphson 与自适应 Levenberg-Marquardt，通过 3D 耦合方程组与指数衰减拟合校验，cpc check 0 错误，cap test 6/6 PASS (819ms)
 
