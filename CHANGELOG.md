@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:proxy_protocol_v2` HAProxy PROXY Protocol v2 二进制头零分配解析、IPv4/LOCAL 编码与 TLV 扩展迭代器（5/5 PASS，自动动态挂载 `cap.proxy_protocol_v2`）
+新增 `cap:proxy_protocol_v2`（`lib/proxy_protocol_v2/{proxy_v2,index}.cp`、`doc/lib/proxy_protocol_v2.md`、`cap/test/test_proxy_protocol_v2_production_deep.cp`），完整实现 12 字节签名校验、IPv4/IPv6/UNIX 地址解码与 TLV 扩展迭代，正式突破 250 个纯 CP 标准库模块里程碑！
+
 ## [2026-11-22] - 新建 `cap:xdg_basedir` freedesktop.org XDG Base Directory Spec 路径零分配推导器（绝对路径校验、默认回退与防穿越 app_name）（5/5 PASS，自动动态挂载 `cap.xdg_basedir`）
 新增 `cap:xdg_basedir`（`lib/xdg_basedir/{xdg,index}.cp`、`doc/lib/xdg_basedir.md`、`cap/test/test_xdg_basedir_production_deep.cp`），完整遵循 XDG 规范忽略相对路径并拒绝 `..` 路径穿越。
 
