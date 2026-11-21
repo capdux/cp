@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:iir` 纯 CP 零分配经典 IIR 滤波器设计库：频率预畸变双线性变换 Butterworth 低/高通与 Chebyshev-I 低通 SOS 级联、TDF-II 滤波、零相位 sosFiltFilt 与幅频 dB 响应（5/5 PASS，文档直写 `doc/lib/iir.md`）
+新增 cap:iir（lib/iir/{iir,index}.cp）：零分配频率预畸变双线性变换 Butterworth 与 Chebyshev-I SOS 级联设计及零相位 sosFiltFilt，截止点精度 < 1e-6，cpc check 0 错误，cap test 5/5 PASS (639ms)
+
 ## 2026-11-22: 新建 `cap:anneal` 纯 CP 零分配模拟退火全局优化库：四种降温曲线、Metropolis 接受准则、连续盒约束 SA 与 2-opt/swap 离散排列 TSP SA（5/5 PASS，文档直写 `doc/lib/anneal.md`）
 新增 cap:anneal（lib/anneal/{anneal,index}.cp）：零分配 SplitMix64 确定性模拟退火，支持 Rastrigin 多峰逃逸与 12 城市圆周 TSP 2-opt 精确寻优，cpc check 0 错误，cap test 6/6 PASS (786ms)
 
