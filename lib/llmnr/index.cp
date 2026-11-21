@@ -1,0 +1,28 @@
+// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:llmnr & cap.llmnr)
+
+export {
+    LLMNR_PORT,
+    LLMNR_MULTICAST_V4,
+    LLMNR_MULTICAST_V6,
+    LLMNR_HEADER_SIZE,
+    LLMNR_DEFAULT_TTL,
+    CLASS_IN,
+    TYPE_A,
+    TYPE_PTR,
+    TYPE_AAAA,
+    TYPE_ANY,
+    FLAG_QR,
+    FLAG_CONFLICT,
+    FLAG_TC,
+    FLAG_TENTATIVE,
+    LlmnrHeader,
+    LlmnrQuestion,
+    LlmnrRecord,
+    LlmnrRecordIter,
+    LlmnrPacket,
+    isLlmnr,
+    parseLlmnr,
+    encodeLlmnrQuery,
+    encodeLlmnrResponseA,
+    encodeLlmnrResponseAaaa,
+} from "./llmnr.cp";

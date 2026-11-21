@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:llmnr` LLMNR (RFC 4795) link-local multicast query/response & C/TC/T flags zero-alloc codec（5/5 PASS，文档直写 `doc/lib/llmnr.md`）
+新增 cap:llmnr 纯 CP 零分配链路本地名称解析协议库（Query/A/AAAA 编解码往返、C/TC/T 标志位与 0xC0 压缩指针防环解码），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:mdns` mDNS (RFC 6762) & DNS-SD (RFC 6763) QU/Cache-Flush, SRV/TXT & name-compression codec（5/5 PASS，文档直写 `doc/lib/mdns.md`）
 新增 cap:mdns 纯 CP 零分配零配置服务发现协议库（QU/Cache-Flush 位、PTR/SRV/TXT/A/AAAA 解析、<=16 跳防环 0xC0 压缩解码与 Query 编码），通过 cpc check 与 5/5 cap test
 
