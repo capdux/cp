@@ -67,3 +67,6 @@
 
 ### 2026-11-21（`cap:hkdf_kdf` 验收，主控完成 `cap:hkdf_kdf` 研发验收提交）
 - **执行成果**：`lib/hkdf_kdf/`（5/5 PASS，`doc/lib/hkdf_kdf.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:hkdf_kdf` 研发验收提交
+
+### 2026-11-21（`cap:totp_hotp` 验收，验收提交 `cap:totp_hotp` 并新开 `cap:cbor_diag` 并发子智能体）
+- **执行成果**：`lib/totp_hotp/`（5/5 PASS，`doc/lib/totp_hotp.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:totp_hotp` 并新开 `cap:cbor_diag` 并发子智能体

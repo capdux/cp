@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:totp_hotp` 纯 CP 工业级 RFC 4226 HOTP / RFC 6238 TOTP 动态口令、RFC 4648 Base32 编解码与 `otpauth://` URI 解析构建标准库（支持 `cap.totp_hotp` 自动动态挂载，详见 `doc/lib/totp_hotp.md`）（5/5 PASS，自动动态挂载 `cap.totp_hotp`）
+- **新增标准库**：`lib/totp_hotp/{totp_hotp,index}.cp`，实现 RFC 4226 HOTP、RFC 6238 TOTP (SHA-1/256/512)、时间窗口/drift 常量时间校验、Base32 编解码与 `otpauth://` URI 互转。\n- **新增文档与测试**：`doc/lib/totp_hotp.md` 扁平文档与 `cap/test/test_totp_hotp_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:hkdf_kdf` 纯 CP RFC 5869 HKDF-Extract/Expand 密钥派生引擎（覆盖 SHA-256/384/512 与 TLS 1.3 `expandLabelSha256`，支持 `cap.hkdf_kdf` 自动动态挂载，详见 `doc/lib/hkdf_kdf.md`）（5/5 PASS，自动动态挂载 `cap.hkdf_kdf`）
 - **新增标准库**：`lib/hkdf_kdf/{hkdf,index}.cp`，实现 RFC 5869 SHA-256/384/512 HKDF Extract/Expand 与 TLS 1.3 `expandLabelSha256`。\n- **新增文档与测试**：`doc/lib/hkdf_kdf.md` 扁平文档与 `cap/test/test_hkdf_kdf_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 
