@@ -244,3 +244,6 @@
 
 ### 2026-11-22（`cap:lfu` 验收，完成并注册纯 CP 零分配标准库 cap:lfu（5/5 cap test PASS））
 - **执行成果**：`lib/lfu/`（5/5 PASS，`doc/lib/lfu.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:lfu（5/5 cap test PASS）
+
+### 2026-11-22（`cap:olc` 验收，完成并注册纯 CP 零分配标准库 cap:olc（5/5 cap test PASS））
+- **执行成果**：`lib/olc/`（5/5 PASS，`doc/lib/olc.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:olc（5/5 cap test PASS）

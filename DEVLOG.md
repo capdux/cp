@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:olc` Google Open Location Code / Plus Codes Base-20 geo-grid encoder, decoder & recovery（5/5 PASS，文档直写 `doc/lib/olc.md`）
+新增 cap:olc 纯 CP 零分配全球网格地理编码库（高精度整数网格防浮点漂移、2..15 位编码与跨象限近邻恢复），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:lfu` Zero-alloc LFU cache (LRU tie-break) & 4-bit W-TinyLFU Count-Min Sketch admission filter（5/5 PASS，文档直写 `doc/lib/lfu.md`）
 新增 cap:lfu 纯 CP 零分配高频缓存与准入控制库（最低频次+LRU 破平局淘汰与 4-bit 饱和周期减半 Sketch），通过 cpc check 与 5/5 cap test
 
