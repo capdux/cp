@@ -118,3 +118,6 @@
 
 ### 2026-11-22（`cap:luks` 验收，完成并注册纯 CP 零分配标准库 cap:luks（5/5 cap test PASS））
 - **执行成果**：`lib/luks/`（5/5 PASS，`doc/lib/luks.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:luks（5/5 cap test PASS）
+
+### 2026-11-22（`cap:erofs` 验收，完成并注册纯 CP 零分配标准库 cap:erofs（5/5 cap test PASS））
+- **执行成果**：`lib/erofs/`（5/5 PASS，`doc/lib/erofs.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:erofs（5/5 cap test PASS）

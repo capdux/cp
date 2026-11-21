@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:erofs` Linux EROFS 128B superblock, Compact/Extended Inode, Dirent & CRC32C zero-alloc parser（5/5 PASS，文档直写 `doc/lib/erofs.md`）
+新增 cap:erofs 纯 CP 零分配只读文件系统库（128B 超级块 CRC32C、统一 Inode 视图与目录块零拷贝迭代），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:luks` Linux LUKS1 (592B/8 keyslots) & LUKS2 (4096B dual header & JSON area) zero-alloc parser（5/5 PASS，文档直写 `doc/lib/luks.md`）
 新增 cap:luks 纯 CP 零分配磁盘加密元数据库（LUKS1 密钥槽统计、LUKS2 主备头 seqid 选主与零拷贝 JSON 提取），通过 cpc check 与 5/5 cap test
 
