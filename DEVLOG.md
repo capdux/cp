@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:flatbuf` 零分配 Google FlatBuffers 二进制根表、VTable 字段与向量解析器（5/5 PASS，文档直写 `doc/lib/flatbuf.md`）
+实现零分配 Google FlatBuffers 解析器，全程严控 VTable 与字符串/向量下标越界。
+
 ## 2026-11-22: 新建 `cap:marshal` 零分配 Ruby Marshal 4.8 二进制对象与 Fixnum 压缩整数解析器（5/5 PASS，文档直写 `doc/lib/marshal.md`）
 实现零分配 Ruby Marshal 4.8 解析器，完整支持裸字符串/IVAR 字符串、Symbol/Symlink 与嵌套容器。
 

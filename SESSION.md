@@ -100,3 +100,6 @@
 
 ### 2026-11-22（`cap:marshal` 验收，完成热修 #110 (`@callconv(.c)`) 与 #111 (`cp_unpack_slice` prelude 阴影) 验收、release 部署、双单 resolve 结单及提交并回收热修子智能体；完成 `cap:marshal` 验收提交（5/5 PASS），派发 `cap:wkb`。）
 - **执行成果**：`lib/marshal/`（5/5 PASS，`doc/lib/marshal.md`）经 `verify_module.sh` 一次性验收回收；完成热修 #110 (`@callconv(.c)`) 与 #111 (`cp_unpack_slice` prelude 阴影) 验收、release 部署、双单 resolve 结单及提交并回收热修子智能体；完成 `cap:marshal` 验收提交（5/5 PASS），派发 `cap:wkb`。
+
+### 2026-11-22（`cap:flatbuf` 验收，完成 `cap:flatbuf` 交付验收并登记入库（5/5 PASS）；派发 `cap:shp`。）
+- **执行成果**：`lib/flatbuf/`（5/5 PASS，`doc/lib/flatbuf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:flatbuf` 交付验收并登记入库（5/5 PASS）；派发 `cap:shp`。

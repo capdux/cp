@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:flatbuf` 零分配 Google FlatBuffers 二进制根表、VTable 字段与向量解析器（5/5 PASS，自动动态挂载 `cap.flatbuf`）
+新增 `lib/flatbuf/{flatbuf,index}.cp`、`doc/lib/flatbuf.md` 与 `cap/test/test_flatbuf_production_deep.cp`（5/5 PASS），支持 File Identifier、尺寸前缀剥离、正负 soffset VTable 定位与全标量/字符串/嵌套表/向量读取。
+
 ## [2026-11-22] - 新建 `cap:marshal` 零分配 Ruby Marshal 4.8 二进制对象与 Fixnum 压缩整数解析器（5/5 PASS，自动动态挂载 `cap.marshal`）
 新增 `lib/marshal/{marshal,index}.cp`、`doc/lib/marshal.md` 与 `cap/test/test_marshal_production_deep.cp`（5/5 PASS），支持 Marshal 4.8 版本头、压缩有符号整数、IVAR UTF-8 解包与深度受控 skipValue。
 
