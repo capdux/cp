@@ -73,3 +73,6 @@
 
 ### 2026-11-22（`cap:marc` 验收，完成 `cap:marc` 交付验收并登记入库（5/5 PASS）；派发 `cap:pkcs7`。）
 - **执行成果**：`lib/marc/`（5/5 PASS，`doc/lib/marc.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:marc` 交付验收并登记入库（5/5 PASS）；派发 `cap:pkcs7`。
+
+### 2026-11-22（`cap:pgp` 验收，完成 `cap:pgp` 交付验收并登记入库（5/5 PASS）；派发 `cap:tap`。）
+- **执行成果**：`lib/pgp/`（5/5 PASS，`doc/lib/pgp.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:pgp` 交付验收并登记入库（5/5 PASS）；派发 `cap:tap`。

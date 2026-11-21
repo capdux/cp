@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:pgp` 零分配 OpenPGP RFC 4880/9580 Armor CRC-24 与 Old/New Packet 解析器（5/5 PASS，自动动态挂载 `cap.pgp`）
+新增 `lib/pgp/{pgp,index}.cp`、`doc/lib/pgp.md` 与 `cap/test/test_pgp_production_deep.cp`（5/5 PASS），支持 Radix-64 CRC-24 校验、Old/New Packet 迭代与 PublicKey/Signature/LiteralData 解码。
+
 ## [2026-11-22] - 新建 `cap:marc` 零分配 ISO 2709 / MARC 21 图书馆编目二进制记录解析器（5/5 PASS，自动动态挂载 `cap.marc`）
 新增 `lib/marc/{marc,index}.cp`、`doc/lib/marc.md` 与 `cap/test/test_marc_production_deep.cp`（5/5 PASS），支持 24B Leader、12B 目录表、控制/数据字段与 0x1F 子字段迭代。
 

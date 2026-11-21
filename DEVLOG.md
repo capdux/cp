@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:pgp` 零分配 OpenPGP RFC 4880/9580 Armor CRC-24 与 Old/New Packet 解析器（5/5 PASS，文档直写 `doc/lib/pgp.md`）
+实现零分配 OpenPGP 解析器，内置流式 Base64 解码与 =xxxx CRC-24 强制校验。
+
 ## 2026-11-22: 新建 `cap:marc` 零分配 ISO 2709 / MARC 21 图书馆编目二进制记录解析器（5/5 PASS，文档直写 `doc/lib/marc.md`）
 实现零分配 ISO 2709 MARC 21 书目记录解析器，支持多记录 .mrc 拼接流步进与严格边界校验。
 
