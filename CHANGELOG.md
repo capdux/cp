@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:bimap` 纯 CP 双向一对一映射容器（$O(1)$ 双向查找、冲突拦截 `insert`、强制覆盖 `forceInsert` 与深拷贝字符串专用 `StringBiMap`，支持 `cap.bimap` 自动动态挂载，详见 `doc/lib/bimap.md`）（5/5 PASS，自动动态挂载 `cap.bimap`）
+- **新增标准库**：`lib/bimap/{bimap,index}.cp`，实现泛型 `BiMap(L, R)` 与自动内存托管 `StringBiMap`。\n- **新增文档与测试**：`doc/lib/bimap.md` 扁平文档与 `cap/test/test_bimap_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:segment_tree` 纯 CP 懒传播线段树引擎（$O(\log N)$ 区间增量 `rangeAdd`、区间和/最小/最大值查询，支持 `cap.segment_tree` 自动动态挂载，详见 `doc/lib/segment_tree.md`）（5/5 PASS，自动动态挂载 `cap.segment_tree`）
 - **新增标准库**：`lib/segment_tree/{segment_tree,index}.cp`，实现泛型懒传播 `SegmentTree(T)` 区间更新与聚合查询。\n- **新增文档与测试**：`doc/lib/segment_tree.md` 扁平文档与 `cap/test/test_segment_tree_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

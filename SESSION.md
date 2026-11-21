@@ -37,3 +37,6 @@
 
 ### 2026-11-21（`cap:segment_tree` 验收，主控完成 `cap:segment_tree` 研发验收提交，继续与 `cap:bimap` 及 `cap:merkle_tree` 并行）
 - **执行成果**：`lib/segment_tree/`（5/5 PASS，`doc/lib/segment_tree.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:segment_tree` 研发验收提交，继续与 `cap:bimap` 及 `cap:merkle_tree` 并行
+
+### 2026-11-21（`cap:bimap` 验收，验收提交 `cap:bimap` 并新开 `cap:diff_myers` 并发子智能体，主控同步开发 `cap:tdigest`）
+- **执行成果**：`lib/bimap/`（5/5 PASS，`doc/lib/bimap.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:bimap` 并新开 `cap:diff_myers` 并发子智能体，主控同步开发 `cap:tdigest`

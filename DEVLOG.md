@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:bimap` 纯 CP 双向一对一映射容器（$O(1)$ 双向查找、冲突拦截 `insert`、强制覆盖 `forceInsert` 与深拷贝字符串专用 `StringBiMap`，支持 `cap.bimap` 自动动态挂载，详见 `doc/lib/bimap.md`）（5/5 PASS，文档直写 `doc/lib/bimap.md`）
+- **核心设计**：双哈希表维护严格 1-to-1 双射关系，支持 `forceInsert` 自动清理冲突旧映射与 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:segment_tree` 纯 CP 懒传播线段树引擎（$O(\log N)$ 区间增量 `rangeAdd`、区间和/最小/最大值查询，支持 `cap.segment_tree` 自动动态挂载，详见 `doc/lib/segment_tree.md`）（5/5 PASS，文档直写 `doc/lib/segment_tree.md`）
 - **核心设计**：采用 4N 堆数组节点与延迟下推 (`push`)，通过 64 元素暴力对照测试与 `std.testing.allocator` 零泄漏验证。
 
