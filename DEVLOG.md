@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:topojson` 零分配 TopoJSON v1.0 量化差分 Arc 解码与拓扑对象解析器（5/5 PASS，文档直写 `doc/lib/topojson.md`）
+实现零分配 TopoJSON v1.0 解析器，支持 4/6 元 bbox、3D 坐标兼容与无溢出 ~index 解码。
+
 ## 2026-11-22: 新建 `cap:mobi` 零分配 Mobipocket / Kindle (.mobi/.azw) PalmDB/MOBI/EXTH 解析器（5/5 PASS，文档直写 `doc/lib/mobi.md`）
 实现零分配 Kindle MOBI 电子书解析器，严格校验记录偏移单调递增与 EXTH 边界。
 

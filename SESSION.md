@@ -133,3 +133,6 @@
 
 ### 2026-11-22（`cap:mobi` 验收，完成 `cap:mobi` 交付验收并登记入库（5/5 PASS）；轮换 `Archive & Format Absorber`（14 库满载）并派发 `cap:epub`。）
 - **执行成果**：`lib/mobi/`（5/5 PASS，`doc/lib/mobi.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:mobi` 交付验收并登记入库（5/5 PASS）；轮换 `Archive & Format Absorber`（14 库满载）并派发 `cap:epub`。
+
+### 2026-11-22（`cap:topojson` 验收，完成 `cap:topojson` 交付验收并登记入库（5/5 PASS）；派发 `cap:xlsx`。）
+- **执行成果**：`lib/topojson/`（5/5 PASS，`doc/lib/topojson.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:topojson` 交付验收并登记入库（5/5 PASS）；派发 `cap:xlsx`。

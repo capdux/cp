@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:topojson` 零分配 TopoJSON v1.0 量化差分 Arc 解码与拓扑对象解析器（5/5 PASS，自动动态挂载 `cap.topojson`）
+新增 `lib/topojson/{topojson,index}.cp`、`doc/lib/topojson.md` 与 `cap/test/test_topojson_production_deep.cp`（5/5 PASS），支持 transform 仿射量化还原、差分 Arc 迭代、负索引反向引用与命名 Objects 迭代。
+
 ## [2026-11-22] - 新建 `cap:mobi` 零分配 Mobipocket / Kindle (.mobi/.azw) PalmDB/MOBI/EXTH 解析器（5/5 PASS，自动动态挂载 `cap.mobi`）
 新增 `lib/mobi/{mobi,index}.cp`、`doc/lib/mobi.md` 与 `cap/test/test_mobi_production_deep.cp`（5/5 PASS），支持 78B PalmDB 记录切片、PalmDOC/MOBI 头与 EXTH 元数据迭代。
 
