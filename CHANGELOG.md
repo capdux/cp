@@ -2,6 +2,10 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:bech32` 纯 CP BIP-173 Bech32 & BIP-350 Bech32m 纠错码、5/8-bit 转换与 SegWit 地址编码引擎（支持 `cap.bech32` 自动动态挂载，详见 `doc/lib/bech32.md`）（5/5 PASS，自动动态挂载 `cap.bech32`）
+- **新增标准库**：`lib/bech32/{bech32,index}.cp`，实现 BIP-173/350 官方向量全匹配的 `encode`/`decode`、`convertBits`、`encodeBytes`/`decodeBytes` 与 `encodeSegwitAddr` (v0/v1 Taproot)，严格拦截混合大小写与校验和错误。
+- **新增文档与测试**：`doc/lib/bech32.md` 扁平文档与 `cap/test/test_bech32_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:shamir` 纯 CP GF(2^8) 信息论安全 Shamir (k, n) 门限密钥分片与拉格朗日插值恢复引擎（支持 `cap.shamir` 自动动态挂载，详见 `doc/lib/shamir.md`）（5/5 PASS，自动动态挂载 `cap.shamir`）
 - **新增标准库**：`lib/shamir/{shamir,index}.cp`，实现 CSPRNG 随机多项式 `splitSecret`、GF(2^8) 拉格朗日插值 `combineShares` 与 `CPSS1` `Share.encode`/`decode` 格式化，严格拦截不足门限、重复索引与非法格式。
 - **新增文档与测试**：`doc/lib/shamir.md` 扁平文档与 `cap/test/test_shamir_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。

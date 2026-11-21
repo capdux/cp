@@ -40,3 +40,6 @@
 
 ### 2026-11-21（`cap:shamir` 验收，主控亲自完成第 7 路 `cap:shamir` 验收提交，维持 `cap:lockfree_queue` 与 `cap:blake3` 并发）
 - **执行成果**：`lib/shamir/`（5/5 PASS，`doc/lib/shamir.md`）经 `verify_module.sh` 一次性验收回收；主控亲自完成第 7 路 `cap:shamir` 验收提交，维持 `cap:lockfree_queue` 与 `cap:blake3` 并发
+
+### 2026-11-21（`cap:bech32` 验收，主控亲自完成第 8 路 `cap:bech32` 一次过验收提交，维持 `cap:lockfree_queue` 与 `cap:blake3` 并发）
+- **执行成果**：`lib/bech32/`（5/5 PASS，`doc/lib/bech32.md`）经 `verify_module.sh` 一次性验收回收；主控亲自完成第 8 路 `cap:bech32` 一次过验收提交，维持 `cap:lockfree_queue` 与 `cap:blake3` 并发
