@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:feature_flags` 纯 CP 特性开关与环境变量强类型容错解析引擎（吸收自 Bun `src/bun_core/{feature_flags,env_var}.cp`，支持 `cap.feature_flags` 自动动态挂载，详见 `doc/lib/feature_flags.md`）（5/5 PASS，自动动态挂载 `cap.feature_flags`）
+- **新增标准库**：`lib/feature_flags/{feature_flags,index}.cp`，从 Bun `bun_core` 吸收 `FeatureFlags` 默认开关集与布尔/整数环境变量容错解析。\n- **新增文档与测试**：`doc/lib/feature_flags.md` 扁平文档与 `cap/test/test_feature_flags_production_deep.cp`（4/4 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:coverage_options` 纯 CP 代码覆盖率配置、阈值判定与 LCOV 格式化引擎（吸收自 Bun `src/options_types/CodeCoverageOptions.cp`，支持 `cap.coverage_options` 自动动态挂载，详见 `doc/lib/coverage_options.md`）（5/5 PASS，自动动态挂载 `cap.coverage_options`）
 - **新增标准库**：`lib/coverage_options/{coverage_options,index}.cp`，从 Bun `CodeCoverageOptions.cp` 吸收覆盖率阈值判定与 LCOV 格式化。\n- **新增文档与测试**：`doc/lib/coverage_options.md` 扁平文档与 `cap/test/test_coverage_options_production_deep.cp`（4/4 PASS，经 `verify_module.sh` 校验通过）。
 

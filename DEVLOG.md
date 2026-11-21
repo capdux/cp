@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:feature_flags` 纯 CP 特性开关与环境变量强类型容错解析引擎（吸收自 Bun `src/bun_core/{feature_flags,env_var}.cp`，支持 `cap.feature_flags` 自动动态挂载，详见 `doc/lib/feature_flags.md`）（5/5 PASS，文档直写 `doc/lib/feature_flags.md`）
+- **吸收改造**：剥离进程全局环境依赖，提供纯函数式大小写不敏感布尔/整数解析与默认值回退。
+
 ## 2026-11-21: 新建 `cap:coverage_options` 纯 CP 代码覆盖率配置、阈值判定与 LCOV 格式化引擎（吸收自 Bun `src/options_types/CodeCoverageOptions.cp`，支持 `cap.coverage_options` 自动动态挂载，详见 `doc/lib/coverage_options.md`）（5/5 PASS，文档直写 `doc/lib/coverage_options.md`）
 - **吸收改造**：补充 `CoverageMetrics` 比例计算与 `formatLcovRecord` 标准 LCOV 输出，通过零泄漏测试。
 
