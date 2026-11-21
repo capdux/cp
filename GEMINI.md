@@ -605,6 +605,7 @@ git status --porcelain cpc_dev/src
 | `scripts/verify_module.sh`    | **一键标准库合规与模块化测试验收**（0 `std.posix`/0 `@import("bun")`/首行 `// Source:`/`cpc check`/`cap test -m`） | 子智能体交付前与主控验收时单条命令完成全部检查                                 | `bash scripts/verify_module.sh lib/json cap/test/test_json_rfc_production_deep.cp` |
 | `scripts/archive_hot_logs.py` | **热日志无损滚动归档**（保留最近 N 条于热文件，旧条目无损追加至 `*_H.md` 末尾）                                    | 热文档超过 ~150 行时执行瘦身                                                   | `python3 scripts/archive_hot_logs.py --keep 5`                                     |
 | `scripts/register_stdlib.py`  | **标准库验收一键登记与提交**（自动更新 4 线文档并可选 `git add/commit`）                                           | 主控回收子智能体时单命令收尾                                                   | `python3 scripts/register_stdlib.py --mod <mod> ...`                               |
+| `scripts/audit_bun_sync.py`   | **Bun 上游溯源头规范化与 `Synced` 时间戳增量巡检**（对比 `/data/dev/bun/src/` 真实 `mtime`）                       | 批量规范化溯源头、检出 `bun_agy` 新增修改并刷回同步时间戳                      | `python3 scripts/audit_bun_sync.py [--normalize-headers \| --mark-synced ...]`     |
 
 ---
 
@@ -635,5 +636,9 @@ git status --porcelain cpc_dev/src
 2. **领域子模块扁平归入主包**：
    - 同领域细粒度功能作为简洁子文件放入对应主包（如 `lib/http/accept.cp`、`lib/dns/caa.cp`、`lib/sys/proc.cp`、`lib/cli/table.cp`、`lib/ansi/sgr.cp`），统一在主包 `index.cp` 聚合导出，调用方直接 `import { ... } from "cap:http"` / `"cap:dns"` / `"cap:ansi"`。
 3. **历史长下划线目录分批收敛**：
-   - 逐步将历史遗留的 `http_*`、`proc_*`/`etc_*`、`dns_*`、`cli_*`、`ansi_*`、`semver_*`、`sql_*`、`git_*` 等散装目录合并入对应领域主包，更新测试用例导入并移除旧散装目录。
+   - 逐步将历史遗留的 `http_*`、`proc_*`/`etc_*`、`dns_*`、`cli_*`、`ansi_*`、`semver_*`、`sql_*`、`git_*`、`css_*`、`mysql_*`、`pg_*` 等同域散装目录合并入对应领域主包，更新测试用例导入并移除旧散装目录。
+4. **统一溯源头与上游同步时间戳铁律**：
+   - 所有从 `/data/dev/bun` 吸收的标准库文件，首行必须统一格式并记录上游文件 UTC 修改时间：
+     `// Source: Absorbed from /data/dev/bun/src/<rel> | Synced: YYYY-MM-DDTHH:MM:SSZ (<简述>)`
+   - 定期运行 `python3 scripts/audit_bun_sync.py` 对比 `Synced:` 与上游真实 `mtime`，若 `bun_agy` 更新了对应 `.cp` 文件，及时同步修复/调整并用 `--mark-synced` 刷新时间戳。
 
