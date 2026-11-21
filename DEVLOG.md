@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:vhdx` Microsoft VHDX 1.0 FileId, dual Header, Region Table, BAT & CRC32C zero-alloc parser（5/5 PASS，文档直写 `doc/lib/vhdx.md`）
+新增 cap:vhdx 纯 CP 零分配虚拟硬盘镜像库（Castagnoli CRC32C、4KB Header 选主、64KB Region Table GUID 查找与 64-bit BAT 条目解码），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:qcow2` QEMU QCOW2 v2/v3 virtual disk header, Header Extensions & L1/L2 entry zero-alloc parser（5/5 PASS，文档直写 `doc/lib/qcow2.md`）
 新增 cap:qcow2 纯 CP 零分配虚拟磁盘镜像库（72B/104B 报头、Backing File 切片、8B 对齐扩展头迭代与 64-bit L1/L2 簇表解码），通过 cpc check 与 5/5 cap test
 

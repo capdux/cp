@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:vhdx` Microsoft VHDX 1.0 FileId, dual Header, Region Table, BAT & CRC32C zero-alloc parser（5/5 PASS，自动动态挂载 `cap.vhdx`）
+新增纯 CP 零分配标准库 cap:vhdx（Microsoft VHDX 1.0 FileId、双 Header 选主、Region Table、BAT 与 CRC32C 校验）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:qcow2` QEMU QCOW2 v2/v3 virtual disk header, Header Extensions & L1/L2 entry zero-alloc parser（5/5 PASS，自动动态挂载 `cap.qcow2`）
 新增纯 CP 零分配标准库 cap:qcow2（QEMU QCOW2 v2/v3 虚拟磁盘报头、Header Extensions 与 L1/L2 簇表解析）与 5/5 深度测试
 
