@@ -91,3 +91,6 @@
 
 ### 2026-11-22（`cap:scsi` 验收，完成并注册纯 CP 零分配标准库 cap:scsi（5/5 cap test PASS））
 - **执行成果**：`lib/scsi/`（5/5 PASS，`doc/lib/scsi.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:scsi（5/5 cap test PASS）
+
+### 2026-11-22（`cap:qcow2` 验收，完成并注册纯 CP 零分配标准库 cap:qcow2（5/5 cap test PASS））
+- **执行成果**：`lib/qcow2/`（5/5 PASS，`doc/lib/qcow2.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:qcow2（5/5 cap test PASS）

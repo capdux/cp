@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:qcow2` QEMU QCOW2 v2/v3 virtual disk header, Header Extensions & L1/L2 entry zero-alloc parser（5/5 PASS，文档直写 `doc/lib/qcow2.md`）
+新增 cap:qcow2 纯 CP 零分配虚拟磁盘镜像库（72B/104B 报头、Backing File 切片、8B 对齐扩展头迭代与 64-bit L1/L2 簇表解码），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:scsi` SCSI (SPC-5/SBC-4) CDB codec, INQUIRY, READ CAPACITY(10/16) & Sense Data zero-alloc parser（5/5 PASS，文档直写 `doc/lib/scsi.md`）
 新增 cap:scsi 纯 CP 零分配存储协议库（6/10/12/16B CDB 查表与编码、36B INQUIRY、128-bit 容量计算与双格式 Sense Data），通过 cpc check 与 5/5 cap test
 
