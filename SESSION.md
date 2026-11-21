@@ -274,3 +274,15 @@
 
 ### 2026-11-22（`cap:semver_range` 验收，Batch 22: 吸收并验证 cap:semver_range (6/6 PASSED)）
 - **执行成果**：`lib/semver_range/`（5/5 PASS，`doc/lib/semver_range.md`）经 `verify_module.sh` 一次性验收回收；Batch 22: 吸收并验证 cap:semver_range (6/6 PASSED)
+
+### 2026-11-22（`cap:css_border` 验收，Batch 23: 吸收并验证 cap:css_border (PASSED)）
+- **执行成果**：`lib/css_border/`（5/5 PASS，`doc/lib/css_border.md`）经 `verify_module.sh` 一次性验收回收；Batch 23: 吸收并验证 cap:css_border (PASSED)
+
+### 2026-11-22（`cap:css_sizing` 验收，Batch 23: 吸收并验证 cap:css_sizing (PASSED)）
+- **执行成果**：`lib/css_sizing/`（5/5 PASS，`doc/lib/css_sizing.md`）经 `verify_module.sh` 一次性验收回收；Batch 23: 吸收并验证 cap:css_sizing (PASSED)
+
+### 2026-11-22（`cap:css_background` 验收，Batch 23: 吸收并验证 cap:css_background (5/5 PASSED)）
+- **执行成果**：`lib/css_background/`（5/5 PASS，`doc/lib/css_background.md`）经 `verify_module.sh` 一次性验收回收；Batch 23: 吸收并验证 cap:css_background (5/5 PASSED)
+
+### 2026-11-22（`cap:css_transform` 验收，Batch 23: 吸收并验证 cap:css_transform (6/6 PASSED)）
+- **执行成果**：`lib/css_transform/`（5/5 PASS，`doc/lib/css_transform.md`）经 `verify_module.sh` 一次性验收回收；Batch 23: 吸收并验证 cap:css_transform (6/6 PASSED)

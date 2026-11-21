@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:css_transform` CSS 2D/3D Transform 21 种函数、4x4 齐次矩阵合成、Rodrigues 旋转与原点/样式属性库（吸收自 bun/src/css/properties/transform.cp）（5/5 PASS，自动动态挂载 `cap.css_transform`）
+新增 cap:css_transform 标准库模块（lib/css_transform/{transform,index}.cp, doc/lib/css_transform.md, cap/test/test_css_transform_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:css_background` CSS Background 属性族与多图层简写解析/序列化（吸收自 bun/src/css/properties/background.cp）（5/5 PASS，自动动态挂载 `cap.css_background`）
+新增 cap:css_background 标准库模块（lib/css_background/{background,index}.cp, doc/lib/css_background.md, cap/test/test_css_background_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:css_sizing` CSS Sizing（width/height/max-size/aspect-ratio/fit-content）与盒模型 Insets（margin/padding/inset）属性库（吸收自 bun/src/css/properties/{size,margin_padding}.cp）（5/5 PASS，自动动态挂载 `cap.css_sizing`）
+新增 cap:css_sizing 标准库模块（lib/css_sizing/{sizing,index}.cp, doc/lib/css_sizing.md, cap/test/test_css_sizing_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:css_border` CSS Border 简写、四边宽/样式/颜色与逻辑边属性解析和压缩序列化（吸收自 bun/src/css/properties/border.cp）（5/5 PASS，自动动态挂载 `cap.css_border`）
+新增 cap:css_border 标准库模块（lib/css_border/{border,index}.cp, doc/lib/css_border.md, cap/test/test_css_border_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:semver_range` SemVer 版本比较器与范围匹配引擎（吸收自 bun/src/semver/{SemverRange,Version}.cp）（5/5 PASS，自动动态挂载 `cap.semver_range`）
 新增 cap:semver_range 标准库模块（lib/semver_range/{range,index}.cp, doc/lib/semver_range.md, cap/test/test_semver_range_production_deep.cp）
 
