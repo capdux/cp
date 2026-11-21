@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:vgm` 零分配 Video Game Music (.vgm) 芯片音乐头、GD3 UTF-16LE 标签与命令流解析器（5/5 PASS，文档直写 `doc/lib/vgm.md`）
+实现零分配 VGM 芯片音乐解析器，严格校验相对偏移、0x67 Data Block 跳过与 0x66 结束帧。
+
 ## 2026-11-22: 新建 `cap:sf2` 零分配 SoundFont 2.0 (.sf2) RIFF sfbk 音色库与 Hydra 表解析器（5/5 PASS，文档直写 `doc/lib/sf2.md`）
 实现零分配 SoundFont 2.0 解析器，自动剥离末尾 EOP/EOI/EOS 哨兵并防越界样本访问。
 

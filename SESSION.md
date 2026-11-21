@@ -202,3 +202,6 @@
 
 ### 2026-11-22（`cap:sf2` 验收，完成 `cap:sf2` 交付验收并登记入库（5/5 PASS）；派发 `cap:abc`。）
 - **执行成果**：`lib/sf2/`（5/5 PASS，`doc/lib/sf2.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:sf2` 交付验收并登记入库（5/5 PASS）；派发 `cap:abc`。
+
+### 2026-11-22（`cap:vgm` 验收，完成 `cap:vgm` 交付验收并登记入库（5/5 PASS）；派发 `cap:nsf`。）
+- **执行成果**：`lib/vgm/`（5/5 PASS，`doc/lib/vgm.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:vgm` 交付验收并登记入库（5/5 PASS）；派发 `cap:nsf`。

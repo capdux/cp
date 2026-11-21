@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:vgm` 零分配 Video Game Music (.vgm) 芯片音乐头、GD3 UTF-16LE 标签与命令流解析器（5/5 PASS，自动动态挂载 `cap.vgm`）
+新增 `lib/vgm/{vgm,index}.cp`、`doc/lib/vgm.md` 与 `cap/test/test_vgm_production_deep.cp`（5/5 PASS），支持 v1.00-v1.71 BCD 版本头、GD3 11 字段 UTF-16LE 转 UTF-8 与命令流采样累计。
+
 ## [2026-11-22] - 新建 `cap:sf2` 零分配 SoundFont 2.0 (.sf2) RIFF sfbk 音色库与 Hydra 表解析器（5/5 PASS，自动动态挂载 `cap.sf2`）
 新增 `lib/sf2/{sf2,index}.cp`、`doc/lib/sf2.md` 与 `cap/test/test_sf2_production_deep.cp`（5/5 PASS），支持 INFO/sdta/pdta 解析、Preset/Instrument/Sample 迭代与 16-bit PCM 零拷贝切片。
 

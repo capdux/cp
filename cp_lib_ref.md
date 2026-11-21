@@ -620,3 +620,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:bdf` | BdfBBox, BdfHeader, BdfProperty, BdfPropIter, BdfGlyph, BdfGlyphIter, isBdf, parseBdfHeader, bdfGlyphPixel, findBdfGlyph | 零分配 Adobe BDF 2.1/2.2 点阵字体头、属性表与字形位图解析器 |
 | `cap:psf` | PSF1_MAGIC0, PSF1_MAGIC1, PSF2_MAGIC, PsfVersion, PsfHeader, detectPsfVersion, isPsf, parsePsfHeader, psfGlyphBitmap, psfGlyphPixel, findPsfGlyphByCodepoint | 零分配 Linux 控制台 PSF1/PSF2 点阵字体、像素与 Unicode 映射表解析器 |
 | `cap:sf2` | SF2_PRESET_HEADER_SIZE, SF2_INST_HEADER_SIZE, SF2_SAMPLE_HEADER_SIZE, Sf2Version, Sf2Info, Sf2Sections, Sf2Preset, Sf2PresetIter, Sf2Instrument, Sf2InstIter, Sf2Sample, Sf2SampleIter, isSf2, parseSf2 | 零分配 SoundFont 2.0 (.sf2) RIFF sfbk 音色库与 Hydra 表解析器 |
+| `cap:vgm` | VGM_MAGIC, VGM_GD3_MAGIC, VGM_SAMPLE_RATE, VgmHeader, VgmGd3, VgmCmdStats, isVgm, parseVgmHeader, parseVgmGd3, decodeUtf16LeToUtf8, scanVgmCommands | 零分配 Video Game Music (.vgm) 芯片音乐头、GD3 UTF-16LE 标签与命令流解析器 |
