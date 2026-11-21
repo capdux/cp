@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:aho_corasick` 纯 CP Aho-Corasick $O(N+Z)$ 多模式字符串匹配自动机（BFS 失败指针/输出链、全重叠匹配与零堆 `containsAny`，支持 `cap.aho_corasick` 自动动态挂载，详见 `doc/lib/aho_corasick.md`）（5/5 PASS，自动动态挂载 `cap.aho_corasick`）
+- **新增标准库**：`lib/aho_corasick/{aho_corasick,index}.cp`，实现 Aho-Corasick 自动机、`findAllOverlapping` 与 `containsAny`。\n- **新增文档与测试**：`doc/lib/aho_corasick.md` 扁平文档与 `cap/test/test_aho_corasick_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:base32` 纯 CP RFC 4648 Standard Base32 / Base32hex / Crockford Base32 编解码引擎（支持大小写不敏感、可选填充与 Crockford 字符容错，支持 `cap.base32` 自动动态挂载，详见 `doc/lib/base32.md`）（5/5 PASS，自动动态挂载 `cap.base32`）
 - **新增标准库**：`lib/base32/{base32,index}.cp`，实现 RFC 4648 Standard/Hex/Crockford Base32 编解码与异常填充校验。\n- **新增文档与测试**：`doc/lib/base32.md` 扁平文档与 `cap/test/test_base32_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

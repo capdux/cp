@@ -376,3 +376,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:roaring_bitmap` | `RoaringError`, `Container`, `Bucket`, `RoaringBitmap` | 纯 CP 工业级 Roaring Bitmap 压缩位图集合引擎（Array/Bitset 自适应升降级、`unionWith`/`intersectWith`/`differenceWith`、`rank`/极值及零泄漏序列化，支持 `cap.roaring_bitmap` 自动动态挂载，详见 `doc/lib/roaring_bitmap.md`） |
 | `cap:ed25519` | `Ed25519Error`, `PublicKey`, `SecretKey`, `Signature`, `KeyPair`, `verify`, `verifyBatch`, `toHex`, `fromHex` | 纯 CP 原生 RFC 8032 Ed25519 数字签名、密钥对生成、批量验签与 Hex 编解码引擎（支持 `cap.ed25519` 自动动态挂载，详见 `doc/lib/ed25519.md`） |
 | `cap:base32` | `Base32Error`, `Variant`, `encodedLen`, `encodeAlloc`, `decodeAlloc` | 纯 CP RFC 4648 Standard Base32 / Base32hex / Crockford Base32 编解码引擎（支持大小写不敏感、可选填充与 Crockford 字符容错，支持 `cap.base32` 自动动态挂载，详见 `doc/lib/base32.md`） |
+| `cap:aho_corasick` | `Match`, `AhoCorasick` | 纯 CP Aho-Corasick $O(N+Z)$ 多模式字符串匹配自动机（BFS 失败指针/输出链、全重叠匹配与零堆 `containsAny`，支持 `cap.aho_corasick` 自动动态挂载，详见 `doc/lib/aho_corasick.md`） |

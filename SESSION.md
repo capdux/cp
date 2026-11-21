@@ -106,3 +106,6 @@
 
 ### 2026-11-21（`cap:base32` 验收，主控完成 `cap:base32` 研发验收提交，继续与 `cap:aes_gcm` 及 `cap:promql` 并行）
 - **执行成果**：`lib/base32/`（5/5 PASS，`doc/lib/base32.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:base32` 研发验收提交，继续与 `cap:aes_gcm` 及 `cap:promql` 并行
+
+### 2026-11-21（`cap:aho_corasick` 验收，主控完成 `cap:aho_corasick` 研发验收提交）
+- **执行成果**：`lib/aho_corasick/`（5/5 PASS，`doc/lib/aho_corasick.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:aho_corasick` 研发验收提交
