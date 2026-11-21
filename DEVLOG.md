@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:heif` 零分配 HEIF / HEIC ISO BMFF 图像容器与 hvcC/ispe/colr 解析器（5/5 PASS，文档直写 `doc/lib/heif.md`）
+实现零分配 HEIF/HEIC ISO BMFF 元数据解析器，自动排除纯 AVIF 品牌并解析 Main/Main10 色彩与旋转信息。
+
 ## 2026-11-22: 新建 `cap:cab` 零分配 Microsoft Cabinet (.cab) CFHEADER/CFFOLDER/CFFILE 归档解析器（5/5 PASS，文档直写 `doc/lib/cab.md`）
 实现零分配 Microsoft Cabinet 归档解析器，严格校验 MSCF 魔数、1.3 版本号、ab_reserve 扩展与未闭合文件名边界。
 

@@ -265,3 +265,6 @@
 
 ### 2026-11-22（`cap:cab` 验收，完成 `cap:cab` 交付验收并登记入库（6/6 PASS）；派发 `cap:dmg`。）
 - **执行成果**：`lib/cab/`（5/5 PASS，`doc/lib/cab.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:cab` 交付验收并登记入库（6/6 PASS）；派发 `cap:dmg`。
+
+### 2026-11-22（`cap:heif` 验收，完成 `cap:heif` 交付验收并登记入库（5/5 PASS）；派发 `cap:mkv`。）
+- **执行成果**：`lib/heif/`（5/5 PASS，`doc/lib/heif.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:heif` 交付验收并登记入库（5/5 PASS）；派发 `cap:mkv`。

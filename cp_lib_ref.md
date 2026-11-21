@@ -559,3 +559,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:avif` | AvifBrandInfo, Av1Config, AvifColr, AvifInfo, isAvif, parseAvifBrand, parseAv1C, parseAvifInfo | 零分配 AVIF / MIAF ISO BMFF 图像容器与 av1C/ispe/colr 元数据解析器 |
 | `cap:mpeg` | MpegVersion, MpegLayer, MpegChannelMode, MpegFrameHeader, MpegFrame, MpegFrameIter, XingHeader, MpegSummary, parseMpegFrameHeader, skipId3v2, isMpegAudio, parseXingHeader, summarizeMpeg | 零分配 MPEG-1/2/2.5 MP3 帧头、ID3v2 跳过与 Xing/Info/VBRI VBR 解析器 |
 | `cap:cab` | CAB_MAGIC, CAB_HEADER_SIZE, CAB_FLAG_PREV, CAB_FLAG_NEXT, CAB_FLAG_RESERVE, CabCompression, CabHeader, CabFolder, CabFolderIter, CabFile, CabFileIter, decodeCabCompression, isCab, parseCabHeader, findCabFile | 零分配 Microsoft Cabinet (.cab) CFHEADER/CFFOLDER/CFFILE 归档解析器 |
+| `cap:heif` | HeifBrandInfo, HevcConfig, HeifColr, HeifInfo, isHeif, parseHeifBrand, parseHvcC, parseHeifInfo | 零分配 HEIF / HEIC ISO BMFF 图像容器与 hvcC/ispe/colr 解析器 |
