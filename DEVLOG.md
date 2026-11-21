@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ts` 零分配 ISO/IEC 13818-1 MPEG-TS 188B/M2TS 传输流、PCR、PAT 与 PMT 解析器（5/5 PASS，文档直写 `doc/lib/ts.md`）
+实现零分配 MPEG-TS 传输流解析器，自动跳过 PSI pointer_field 并严格校验 section_length 与 adaptation 边界。
+
 ## 2026-11-22: 新建 `cap:heif` 零分配 HEIF / HEIC ISO BMFF 图像容器与 hvcC/ispe/colr 解析器（5/5 PASS，文档直写 `doc/lib/heif.md`）
 实现零分配 HEIF/HEIC ISO BMFF 元数据解析器，自动排除纯 AVIF 品牌并解析 Main/Main10 色彩与旋转信息。
 
