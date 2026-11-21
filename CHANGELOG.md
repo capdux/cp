@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_accept_language` RFC 9110 §12.5.4 + RFC 4647 HTTP `Accept-Language` BCP 47 语言权重零分配协商器（5/5 PASS，自动动态挂载 `cap.http_accept_language`）
+- 新增 `lib/http_accept_language/{accept_language,index}.cp`、`doc/lib/http_accept_language.md`、`cap/test/test_http_accept_language_production_deep.cp`：纯 CP 零分配解析 RFC 9110 `Accept-Language` 头与千分比 `qvalue`，实现 RFC 4647 前缀匹配、最具体标签覆写与 `q=0` 显式拒绝协商（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:cli_tree` 零分配 CLI 树形结构/依赖树（Unicode/ASCII/圆角，64 层位掩码）渲染器（5/5 PASS，自动动态挂载 `cap.cli_tree`）
 - 新增 `lib/cli_tree/{tree,index}.cp`、`doc/lib/cli_tree.md`、`cap/test/test_cli_tree_production_deep.cp`：纯 CP 零分配渲染 CLI 依赖树与目录树（`unicode`/`ascii`/`rounded` 三种风格、64 层 `u64` 位掩码祖先追踪、多根森林支持）（5/5 PASS）。
 

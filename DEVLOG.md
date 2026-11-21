@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:http_accept_language` RFC 9110 §12.5.4 + RFC 4647 HTTP `Accept-Language` BCP 47 语言权重零分配协商器（5/5 PASS，文档直写 `doc/lib/http_accept_language.md`）
+- **设计要点**：整数千分比 `q_permille`（`0..=1000`）消除浮点误差；`negotiateLanguage` 实现最具体标签覆写规则（正确支持 `en-US;q=0, en;q=0.8` 显式排除）。
+
 ## 2026-11-22: 新建 `cap:cli_tree` 零分配 CLI 树形结构/依赖树（Unicode/ASCII/圆角，64 层位掩码）渲染器（5/5 PASS，文档直写 `doc/lib/cli_tree.md`）
 - **设计要点**：`TreePrefix` 使用 `u64` 位掩码栈上零分配记录 64 层祖先 `is_last` 状态；`renderFlatTree` 向前探测同级末尾兄弟实现零堆分配整树渲染。
 
