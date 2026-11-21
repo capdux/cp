@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:rrt` 纯 CP 零分配 2D 采样运动规划库（RRT & RRT*）：固定节点池、圆/矩形障碍物精确碰撞检测、RRT* 邻域最优父节点选择与子树重连及视线路径平滑（5/5 PASS，文档直写 `doc/lib/rrt.md`）
+新增 cap:rrt（lib/rrt/{rrt,index}.cp）：零分配固定节点池 RRT/RRT* 运动规划、Liang-Barsky 线段碰撞检测与贪心视线平滑，cpc check 0 错误，cap test 6/6 PASS (784ms)
+
 ## 2026-11-22: 新建 `cap:logreg` 纯 CP 零分配二分类与多分类 Softmax 逻辑回归库：数值稳定 sigmoid/softmax、Armijo 回溯 L2 正则二分类与多分类求解及 TP/FP/TN/FN/F1 评估指标（5/5 PASS，文档直写 `doc/lib/logreg.md`）
 新增 cap:logreg（lib/logreg/{logreg,index}.cp）：零分配 Armijo 自适应回溯线搜索实现 L2 二分类与多分类 Softmax 逻辑回归及评估指标，cpc check 0 错误，cap test 7/7 PASS (720ms)
 
