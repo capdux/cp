@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ansi_link` OSC 8 终端超链接（ST/BEL）零分配编码、解析与剥离器（5/5 PASS，自动动态挂载 `cap.ansi_link`）
+- 新增 `lib/ansi_link/{osc8,index}.cp`、`doc/lib/ansi_link.md`、`cap/test/test_ansi_link_production_deep.cp`：纯 CP 零分配实现 OSC 8 终端超链接编码（ST/BEL）、零拷贝解析、控制字节注入拦截与安全剥离（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:http_early_hints` RFC 8297 HTTP `103 Early Hints` / RFC 8288 `Link` 预加载头零分配解析与报文格式化器（5/5 PASS，自动动态挂载 `cap.http_early_hints`）
 - 新增 `lib/http_early_hints/{early_hints,index}.cp`、`doc/lib/http_early_hints.md`、`cap/test/test_http_early_hints_production_deep.cp`：纯 CP 零分配解析 RFC 8288 `Link` 预加载头（`preload`/`preconnect`/`modulepreload`/`dns-prefetch`），支持 CRLF 防护与 `HTTP/1.1 103 Early Hints` 报文块序列化（5/5 PASS）。
 

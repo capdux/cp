@@ -199,3 +199,6 @@
 
 ### 2026-11-22（`cap:http_early_hints` 验收，Batch 96 落地，标准库总量达 263 模块）
 - **执行成果**：`lib/http_early_hints/`（5/5 PASS，`doc/lib/http_early_hints.md`）经 `verify_module.sh` 一次性验收回收；Batch 96 落地，标准库总量达 263 模块
+
+### 2026-11-22（`cap:ansi_link` 验收，Batch 97 落地，标准库总量达 264 模块（第 3 路迁移子智能体首单交付））
+- **执行成果**：`lib/ansi_link/`（5/5 PASS，`doc/lib/ansi_link.md`）经 `verify_module.sh` 一次性验收回收；Batch 97 落地，标准库总量达 264 模块（第 3 路迁移子智能体首单交付）

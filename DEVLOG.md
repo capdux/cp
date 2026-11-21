@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ansi_link` OSC 8 终端超链接（ST/BEL）零分配编码、解析与剥离器（5/5 PASS，文档直写 `doc/lib/ansi_link.md`）
+- **设计要点**：兼容 ST (`\x1b\\`) 与 BEL (`\x07`) 终止符及内嵌样式码，拒绝未闭合、嵌套开启与控制字符注入；提供 `osc8EncodedLen` 便于调用方精准预留缓冲。
+
 ## 2026-11-22: 新建 `cap:http_early_hints` RFC 8297 HTTP `103 Early Hints` / RFC 8288 `Link` 预加载头零分配解析与报文格式化器（5/5 PASS，文档直写 `doc/lib/http_early_hints.md`）
 - **设计要点**：`EarlyHintIter` 零分配尖括号与引号感知解析多条目；`formatEarlyHintLink` 与 `formatEarlyHints103Block` 拦截 CRLF 注入并在缓冲区不足时返回 `null`。
 
