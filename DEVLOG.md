@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:vmdk` VMware VMDK SparseExtentHeader 512B binary & text Descriptor/Extent zero-alloc parser（5/5 PASS，文档直写 `doc/lib/vmdk.md`）
+新增 cap:vmdk 纯 CP 零分配虚拟磁盘镜像库（KDMV 稀疏头换行检测、streamOptimized 标志、文本 Descriptor DDB 与 Extent 零拷贝迭代），通过 cpc check 与 6/6 cap test
+
 ## 2026-11-22: 新建 `cap:vhdx` Microsoft VHDX 1.0 FileId, dual Header, Region Table, BAT & CRC32C zero-alloc parser（5/5 PASS，文档直写 `doc/lib/vhdx.md`）
 新增 cap:vhdx 纯 CP 零分配虚拟硬盘镜像库（Castagnoli CRC32C、4KB Header 选主、64KB Region Table GUID 查找与 64-bit BAT 条目解码），通过 cpc check 与 5/5 cap test
 

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:vmdk` VMware VMDK SparseExtentHeader 512B binary & text Descriptor/Extent zero-alloc parser（5/5 PASS，自动动态挂载 `cap.vmdk`）
+新增纯 CP 零分配标准库 cap:vmdk（VMware VMDK 512B 稀疏报头与文本 Descriptor/Extent 解析）与 6/6 深度测试
+
 ## [2026-11-22] - 新建 `cap:vhdx` Microsoft VHDX 1.0 FileId, dual Header, Region Table, BAT & CRC32C zero-alloc parser（5/5 PASS，自动动态挂载 `cap.vhdx`）
 新增纯 CP 零分配标准库 cap:vhdx（Microsoft VHDX 1.0 FileId、双 Header 选主、Region Table、BAT 与 CRC32C 校验）与 5/5 深度测试
 
