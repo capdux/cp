@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:pim` PIM-SM v2 (RFC 7761) Hello TLV, Register, Writer & IPv4/IPv6 checksum zero-alloc codec（5/5 PASS，自动动态挂载 `cap.pim`）
+新增纯 CP 零分配标准库 cap:pim（RFC 7761 PIM-SM v2 Hello TLV、Register、PimWriter 与 IPv4/IPv6 校验和）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:l2tp` L2TPv2/v3 (RFC 2661/3931) Control/Data header & AVP TLV zero-alloc parser（5/5 PASS，自动动态挂载 `cap.l2tp`）
 新增纯 CP 零分配标准库 cap:l2tp（RFC 2661/3931 L2TPv2/v3 报头与 AVP TLV 解析）与 6/6 深度测试
 

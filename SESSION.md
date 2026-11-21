@@ -190,3 +190,6 @@
 
 ### 2026-11-22（`cap:l2tp` 验收，完成并注册纯 CP 零分配标准库 cap:l2tp（6/6 cap test PASS））
 - **执行成果**：`lib/l2tp/`（5/5 PASS，`doc/lib/l2tp.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:l2tp（6/6 cap test PASS）
+
+### 2026-11-22（`cap:pim` 验收，完成并注册纯 CP 零分配标准库 cap:pim（5/5 cap test PASS））
+- **执行成果**：`lib/pim/`（5/5 PASS，`doc/lib/pim.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:pim（5/5 cap test PASS）

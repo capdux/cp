@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:pim` PIM-SM v2 (RFC 7761) Hello TLV, Register, Writer & IPv4/IPv6 checksum zero-alloc codec（5/5 PASS，文档直写 `doc/lib/pim.md`）
+新增 cap:pim 纯 CP 零分配组播路由协议库（PIMv2 Hello 选项零拷贝迭代、Register 8B 校验和特例与 IPv4/IPv6 编码往返），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:l2tp` L2TPv2/v3 (RFC 2661/3931) Control/Data header & AVP TLV zero-alloc parser（5/5 PASS，文档直写 `doc/lib/l2tp.md`）
 新增 cap:l2tp 纯 CP 零分配二层隧道协议解析库（L2TPv2 Control/Data 可选字段与 AVP 零拷贝迭代、L2TPv3 Control 报头），通过 cpc check 与 6/6 cap test
 
