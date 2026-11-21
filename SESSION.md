@@ -31,3 +31,6 @@
 
 ### 2026-11-21（`cap:mime_type` 验收，主控单兵从 Bun `http_types/MimeType.cp` 吸收并验收提交 `cap:mime_type`）
 - **执行成果**：`lib/mime_type/`（5/5 PASS，`doc/lib/mime_type.md`）经 `verify_module.sh` 一次性验收回收；主控单兵从 Bun `http_types/MimeType.cp` 吸收并验收提交 `cap:mime_type`
+
+### 2026-11-21（`cap:small_string` 验收，主控单兵批量吸收提交 `cap:small_string`）
+- **执行成果**：`lib/small_string/`（5/5 PASS，`doc/lib/small_string.md`）经 `verify_module.sh` 一次性验收回收；主控单兵批量吸收提交 `cap:small_string`

@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:small_string` 纯 CP 8 字节短串内联 (SSO) 与 Wyhash 去重驻留池引擎（吸收自 Bun `src/install_types/{SemverString,ExternalString,SlicedString}.cp`，支持 `cap.small_string` 自动动态挂载，详见 `doc/lib/small_string.md`）（5/5 PASS，文档直写 `doc/lib/small_string.md`）
+- **吸收改造**：去除 `Lockfile`/`bun` 耦合，保留 8 字节 `extern struct` 小串零堆内联布局与 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:mime_type` 纯 CP MIME 类型语义分类与零堆扩展名/路径反查引擎（吸收自 Bun `src/http_types/MimeType.cp`，支持 `cap.mime_type` 自动动态挂载，详见 `doc/lib/mime_type.md`）（5/5 PASS，文档直写 `doc/lib/mime_type.md`）
 - **吸收改造**：剥离 `bun.strings` 耦合，支持 `; charset=` 剥离、前缀 `.` 归一化与大小写不敏感扩展名查表。
 
