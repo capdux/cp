@@ -806,3 +806,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:dct` | DCT_BLOCK_DIM, DCT_BLOCK_SIZE, JPEG_ZIGZAG_8X8, JPEG_LUMA_QUANT_50, JPEG_CHROMA_QUANT_50, dct1d, idct1d, dct8x8, idct8x8, zigzagReorder8x8, unzigzagReorder8x8, quantize8x8, dequantize8x8, scaleQuantTable | Orthonormal 1D & 2D 8x8 DCT-II/IDCT-III, JPEG ZigZag scan & IJG quantization |
 | `cap:fir` | windowHann, windowHamming, windowBlackman, designLowpassFir, FirFilter, Biquad | DSP Windowed-Sinc FIR filter, Hann/Hamming/Blackman windows & RBJ Biquad IIR |
 | `cap:bezier` | Vec2, BBox2, QuadPair, CubicPair, QuadBezier, CubicBezier, tAtArcLength | 2D Quadratic/Cubic Bezier: De Casteljau, curvature, Gauss-Legendre arc length & tight AABB |
+| `cap:spline` | CubicSegment, CubicSpline, buildNaturalCubicSpline, buildClampedCubicSpline, buildPchipSpline, catmullRom1d, catmullRom1dDeriv | Natural/Clamped cubic splines (Thomas O(n)), monotone PCHIP & Catmull-Rom interpolation |

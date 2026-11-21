@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:spline` Natural/Clamped cubic splines (Thomas O(n)), monotone PCHIP & Catmull-Rom interpolation（5/5 PASS，文档直写 `doc/lib/spline.md`）
+新增 cap:spline 纯 CP 零分配数值插值库（O(n) Thomas 三对角求解、精确解析积分与单调保形无过冲 PCHIP），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:bezier` 2D Quadratic/Cubic Bezier: De Casteljau, curvature, Gauss-Legendre arc length & tight AABB（5/5 PASS，文档直写 `doc/lib/bezier.md`）
 新增 cap:bezier 纯 CP 零分配计算几何曲线库（升阶、细分、复合 5 点 Gauss-Legendre 弧长与精确极值包围盒），通过 cpc check 与 6/6 cap test
 
