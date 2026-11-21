@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:edid` VESA EDID 1.3/1.4 128B display block, PNP ID, Detailed/Standard Timing zero-alloc parser（5/5 PASS，文档直写 `doc/lib/edid.md`）
+新增 cap:edid 纯 CP 零分配显示硬件元数据库（128B 块校验和、5-bit PNP ID 编解码、Preferred Timing 刷新率与 Monitor Name/Serial 描述符提取），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:gpt` UEFI GPT & Protective MBR partition table, UTF-16LE name & IEEE CRC32 zero-alloc parser（5/5 PASS，文档直写 `doc/lib/gpt.md`）
 新增 cap:gpt 纯 CP 零分配磁盘分区表库（MBR 保护分区识别、GPT 92B 头与分区数组双 CRC32 校验、UTF-16LE 名称解码与 mixed-endian GUID 格式化），通过 cpc check 与 5/5 cap test
 
