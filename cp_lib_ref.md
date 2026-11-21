@@ -615,18 +615,14 @@ const h = cap.hash.wyhash("hello");
 | `cap:git_ref_check` | isValidGitRefName, isValidBranchName, GitRefKind, ParsedGitRef, parseFullGitRef, isValidGitOidHex, isValidShortOidHex | Git 引用名格式校验器（git-check-ref-format 10 条规则）、refs/* 拆解与 SHA-1/SHA-256 OID 校验 |
 | `cap:xml_escape` | isValidXmlChar, escapeXmlText, escapeXmlAttr, wrapXmlCdata, unescapeXml | XML 1.0 文本/属性转义器、CDATA ]]> 自动安全拆分器与数字/命名实体反转义器 |
 | `cap:http_proxy_url` | ProxyScheme, parseProxyScheme, defaultProxyPort, ProxyUrl, ProxyEnv, selectProxy | HTTP/HTTPS/SOCKS4/SOCKS5/SOCKS5H 代理 URL 解析器与 HTTP_PROXY/HTTPS_PROXY/ALL_PROXY/NO_PROXY 路由选择器 |
-| `cap:proc_cmdline` | NulArgIter, countArgs, argAt, ProcEnvEntry, ProcEnvIter, findProcEnv, formatCmdlineDisplay | POSIX /proc/<pid>/cmdline 与 environ NUL (\0) 分隔缓冲区零分配解析、环境变量查询与可读命令行渲染器 |
 | `cap:http_user_agent` | ProductToken, UserAgentIter, BrowserFamily, OsFamily, isBotUserAgent, isMobileUserAgent, detectBrowser, detectOs, findProductVersion | RFC 9110 §10.1.5 User-Agent 产品令牌零分配迭代器与浏览器/OS/移动端/爬虫分类器 |
 | `cap:http_cookie_match` | defaultCookiePath, cookieDomainMatches, cookiePathMatches, CookiePrefixKind, detectCookiePrefix, validateCookiePrefix, canSendCookie | RFC 6265 §5.1.3/§5.1.4 Cookie 域名匹配、路径匹配、默认路径计算与 __Secure-/__Host- 发送策略判定器 |
 | `cap:rfc7807_problem` | PROBLEM_JSON_CONTENT_TYPE, defaultTitleForStatus, ProblemDetails | RFC 9457 / RFC 7807 HTTP Problem Details (application/problem+json) 零分配构造与转义序列化器 |
 | `cap:http_host_header` | HostHeader | RFC 9110 §7.2 HTTP Host / :authority 请求头安全解析、校验、回环识别与规范化格式化器 |
 | `cap:json_minify` | minifyJson, minifyJsonc, minifyJsoncWithOptions | 零分配 JSON / JSONC（去 // 与 /* */ 注释、去尾随逗号、去 BOM 与空白）压缩器 |
 | `cap:http_upgrade` | UpgradeProtocol, UpgradeIter, ConnectionTokenIter, connectionHasToken, upgradeHasProtocol, isHopByHopHeader, isWebSocketUpgrade | RFC 9110 §7.8 Upgrade / Connection 协议升级与逐跳头零分配解析器及 WebSocket 握手判定器 |
-| `cap:proc_stat` | ProcState, parseProcState, ProcStat | Linux /proc/<pid>/stat 零分配解析器（末右括号定位，安全兼容含空格/括号的 comm 进程名） |
 | `cap:sql_params` | countQuestionMarks, maxDollarParam, rewriteQuestionToDollar, NamedParamIter | SQL 占位符词法安全扫描器与方言重写器（跳过字符串/注释/$$ 块，支持 ?→$N 重写与 :name 提取） |
-| `cap:proc_meminfo` | MemInfoField, MemInfoIter, MemInfo | Linux /proc/meminfo 零分配流式解析器与内存/Swap 使用率计算器（kB 自动转精确字节） |
 | `cap:http_ratelimit_header` | RateLimitHeader, RateLimitPolicy | IETF Draft RateLimit / RateLimit-Policy 限流响应头零分配解析与规范化构造器 |
-| `cap:proc_loadavg` | LoadAvg, SystemUptime | Linux /proc/loadavg 与 /proc/uptime 纯整数零分配解析器（百分位负载与毫秒运行时间） |
 | `cap:sql_splitter` | SqlStmtKind, SqlStmtIter, classifySqlStmt, isReadOnlySql, countSqlStatements | 多语句 SQL 脚本零分配分号切分器（跳过引号/注释/$$ 块）与 CTE 穿透语句类型识别器 |
 | `cap:resolv_conf` | NameserverIter, ResolvOptions, effectiveSearchRaw, firstNameserver | POSIX /etc/resolv.conf 零分配解析器（nameserver/search/domain 末现优先与 glibc 上限夹紧 options） |
 | `cap:fstab_parse` | MountEntry, MountIter, unescapeMountPath, findMountForPath | POSIX /etc/fstab 与 /proc/mounts 零分配 6 字段解析器、八进制路径反转义与最长前缀挂载点查找 |
@@ -670,30 +666,21 @@ const h = cap.hash.wyhash("hello");
 | `cap:xdg_basedir` | DEFAULT_CONFIG_DIRS, DEFAULT_DATA_DIRS, XdgEnv, resolveConfigHome, resolveDataHome, resolveCacheHome, resolveStateHome, resolveRuntimeDir, XdgDirIter | freedesktop.org XDG Base Directory Spec 路径零分配推导器（绝对路径校验、默认回退与防穿越 app_name） |
 | `cap:proxy_protocol_v2` | PROXY_V2_SIGNATURE, hasProxyV2Signature, ProxyV2Command, ProxyV2Family, ProxyV2Transport, ProxyV2Header, ProxyV2Tlv, ProxyV2TlvIter | HAProxy PROXY Protocol v2 二进制头零分配解析、IPv4/LOCAL 编码与 TLV 扩展迭代器 |
 | `cap:npmrc_config` | DEFAULT_NPM_REGISTRY, NpmrcEntry, NpmrcIter, getNpmrcValue, getNpmrcBool, resolveRegistryForScope, findRegistrySetting | .npmrc 配置文件零分配键值解析器、布尔配置查询与 @scope:registry 仓库路由解析器 |
-| `cap:proc_net_route` | RTF_UP, RTF_GATEWAY, RTF_HOST, parseHexIpv4Le, RouteEntry, ProcRouteIter, findDefaultGateway | Linux /proc/net/route 内核路由表零分配解析器、小端十六进制 IPv4 解码与最小 metric 默认网关查找器 |
 | `cap:cron_preset` | CronPreset, parseCronPreset, presetToCron5, normalizeCron5 | Vixie Cron @macro 预设（@hourly/@daily/@weekly/@monthly/@yearly/@reboot）零分配展开与 5 段表达式校验器 |
-| `cap:proc_net_dev` | `NetDevStats`, `ProcNetDevIter`, `findNetDev`, `sumNonLoopbackBytes` | Linux `/proc/net/dev` 网络接口收发字节/包/错误/丢包零分配解析器 |
-| `cap:proc_cpuinfo` | `CpuBlock`, `CpuSummary`, `ProcCpuInfoIter`, `summarizeCpuInfo`, `hasCpuFlag` | Linux `/proc/cpuinfo`（x86_64/ARM64）逻辑/物理核心与指令集标志零分配解析器 |
-| `cap:proc_mounts` | `MountEntry`, `ProcMountsIter`, `unescapeMountPath`, `findMountForPath` | Linux `/proc/mounts` 挂载表、八进制路径转义解码与最长边界前缀挂载点匹配器 |
 | `cap:http_expect` | `ExpectItem`, `ExpectIter`, `ExpectDecision`, `evaluateExpectHeader`, `hasContinueExpectation`, `hasUnknownExpectation` | RFC 9110 §10.1.1 HTTP `Expect` 请求头解析与 `100-continue` / 417 协商判定器 |
-| `cap:proc_uptime` | `ProcUptime`, `parseProcUptime` | Linux `/proc/uptime` 系统运行时间与全核空闲占比零分配整数解析与人类可读格式化器 |
 | `cap:http_early_hints` | `EarlyHintRel`, `EarlyHintLink`, `EarlyHintIter`, `formatEarlyHintLink`, `formatEarlyHints103Block` | RFC 8297 HTTP `103 Early Hints` / RFC 8288 `Link` 预加载头零分配解析与报文格式化器 |
-| `cap:proc_self_status` | `ProcStatus`, `parseProcStatus`, `findProcStatusField` | Linux `/proc/<pid>/status` 进程状态、内存/线程/UID/GID 零分配键值解析器 |
 | `cap:http_alt_svc` | `AltSvcEntry`, `isAltSvcClear`, `AltSvcIter`, `formatAltSvcEntry` | RFC 7838 HTTP `Alt-Svc` 备选服务 / HTTP/3 QUIC 发现头零分配解析与格式化器 |
 | `cap:cgroup_v2_limits` | `CgroupLimit`, `CpuMaxQuota`, `IoMaxEntry`, `parseCgroupMax`, `parseCpuMax`, `parseIoMaxLine`, `effectiveMemoryLimit` | Linux cgroup v2 容器资源限额（`cpu.max`/`memory.max`/`pids.max`/`io.max`）零分配解析器 |
 | `cap:http_content_range` | `ContentRangeKind`, `ContentRange`, `parseContentRange`, `formatContentRange` | RFC 9110 §14.4 HTTP `Content-Range` 断点续传响应头零分配解析与格式化器 |
 | `cap:sysctl_conf` | `SysctlEntry`, `SysctlIter`, `normalizeSysctlKey`, `sysctlKeysEqual`, `getSysctlValue` | Linux `/etc/sysctl.conf` / `sysctl.d/*.conf` 内核参数配置零分配解析与键等价查询器 |
 | `cap:semver_satisfies` | `SemverVersion`, `satisfiesRange`, `satisfiesVersion`, `isValidSemverRange` | NPM / Bun 风格 SemVer 2.0.0 版本解析、比较与范围表达式零分配匹配器 |
 | `cap:http_allow` | `HttpMethodBit`, `AllowMethodSet`, `parseAllowHeader`, `AllowIter`, `isMethodAllowed`, `isSafeMethod`, `isIdempotentMethod` | RFC 9110 §10.2.1 HTTP `Allow` 方法集位掩码解析、格式化与安全/幂等判定器 |
-| `cap:proc_limits` | `LimitValue`, `parseLimitValue`, `ProcLimitEntry`, `ProcLimitsIter`, `findProcLimit`, `maxOpenFiles` | Linux `/proc/<pid>/limits` 进程软/硬资源限额表零分配解析器 |
 | `cap:http_trailer` | `isForbiddenTrailerField`, `isValidTrailerFieldName`, `TrailerFieldIter`, `validateTrailerHeader`, `hasTrailerField` | RFC 9110 §6.5.1 HTTP `Trailer` 尾部字段声明零分配解析与 25 项禁传字段安全校验器 |
 | `cap:http_max_forwards` | `MaxForwardsAction`, `MaxForwardsResult`, `parseMaxForwards`, `evaluateMaxForwards`, `formatMaxForwards` | RFC 9110 §7.6.2 HTTP `Max-Forwards` 代理跳数限制零分配解析与递减裁定器 |
 | `cap:http_accept_ranges` | `AcceptRangesKind`, `AcceptRanges`, `AcceptRangesIter`, `parseAcceptRanges`, `supportsByteRanges`, `supportsRangeUnit` | RFC 9110 §14.3 HTTP `Accept-Ranges` 响应头零分配解析与分片能力判定器 |
 | `cap:http_accept_language` | `LanguageRange`, `AcceptLanguageIter`, `negotiateLanguage` | RFC 9110 §12.5.4 + RFC 4647 HTTP `Accept-Language` BCP 47 语言权重零分配协商器 |
-| `cap:proc_statm` | `ProcStatm`, `parseProcStatm` | Linux `/proc/<pid>/statm` 7 列内存页计数零分配解析与饱和字节换算器 |
 | `cap:text_indent` | `minCommonIndent`, `dedent`, `indentLines`, `stripCommonPrefix` | 零分配多行文本最小公共缩进检测、`dedent` 剥离与 `indentLines` 统一缩进格式化器 |
 | `cap:http_content_language` | `LanguageTagParts`, `isValidBcp47Tag`, `parseLanguageTagParts`, `ContentLanguageIter`, `canonicalizeLanguageTag`, `hasContentLanguage` | RFC 9110 §8.5 + RFC 5646 HTTP `Content-Language` 解析与 BCP 47 标签规范化器 |
-| `cap:proc_io` | `ProcIoStats`, `parseProcIo` | Linux `/proc/<pid>/io` 进程读写字节、系统调用计数与采样窗口增量零分配解析器 |
 | `cap:jsonl` | `JsonlChunkResult`, `JsonlIter`, `scanCompleteJsonlChunk`, `isBalancedJsonRecord`, `appendJsonlRecord` | JSON Lines / NDJSON 流式行迭代、增量分块扫描与记录平衡零分配校验器 |
 | `cap:jsonc` | `stripJsonc`, `stripJsoncPreserveLines`, `hasJsoncComments`, `countJsoncTrailingCommas` | JSON with Comments & Trailing Commas 零分配注释/尾逗号剥离器与行号保留格式化器 |
 | `cap:mustache` | `MustacheTokenKind`, `MustacheToken`, `MustacheVar`, `MustacheIter`, `validateMustache`, `renderMustache` | 零分配 Mustache 模板词法解析、语法校验与 HTML 转义渲染引擎 |

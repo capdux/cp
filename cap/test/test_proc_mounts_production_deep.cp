@@ -6,7 +6,7 @@ import {
     ProcMountsIter,
     unescapeMountPath,
     findMountForPath,
-} from "cap:proc_mounts";
+} from "cap:sys";
 
 test("1. ProcMountsIter skips blank/comment lines and parses standard 6-column entries and options", () => {
     const sample =

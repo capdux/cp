@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:sys` 系统底层信息、Linux `/etc/*` 与 `/proc/*` 全家桶统一主包（5/5 PASS，自动动态挂载 `cap.sys`）
+- **方案 A 收敛 Wave 2 (`proc_*` -> `cap:sys`)**：将全部 13 个 `lib/proc_*` 散装目录合并收敛至 `lib/sys/{cmdline,cpuinfo,procio,limits,loadavg,meminfo,mounts,netdev,route,procstatus,procstat,statm,uptime}.cp` 并由 `lib/sys/index.cp` 零冲突聚合导出，更新 `doc/lib/sys.md` 与 13 个深度测试（13/13 PASS），删除 13 个旧目录与旧文档。
+
 ## [2026-11-22] - 新建 `cap:cli` CLI 终端交互、色彩检测、进度条、加载动画、表格与树形渲染统一主包（5/5 PASS，自动动态挂载 `cap.cli`）
 - **方案 A 收敛 Wave 2 (`cli_*` -> `cap:cli`)**：将 `cli_color_detect`、`cli_progress`、`cli_spinner`、`cli_table`、`cli_tree` 5 个散装目录合并收敛至 `lib/cli/{color,progress,spinner,table_render,tree}.cp` 并由 `lib/cli/index.cp` 零破坏聚合导出，更新 `doc/lib/cli.md` 与 5 个深度测试（5/5 PASS），删除 5 个旧目录与旧文档。
 

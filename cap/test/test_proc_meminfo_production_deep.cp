@@ -1,4 +1,4 @@
-import { MemInfo } from "cap:proc_meminfo";
+import { MemInfo } from "cap:sys";
 import { test, expect } from "cap:test";
 
 const SAMPLE_MEMINFO =

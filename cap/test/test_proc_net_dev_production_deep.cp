@@ -6,7 +6,7 @@ import {
     ProcNetDevIter,
     findNetDev,
     sumNonLoopbackBytes,
-} from "cap:proc_net_dev";
+} from "cap:sys";
 
 test("1. ProcNetDevIter skips 2-line kernel header and parses standard 16-column interface stats", () => {
     const sample =

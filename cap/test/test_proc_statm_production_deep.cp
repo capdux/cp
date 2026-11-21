@@ -1,4 +1,4 @@
-import { ProcStatm, parseProcStatm } from "cap:proc_statm";
+import { ProcStatm, parseProcStatm } from "cap:sys";
 import { test, expect, expect_eq } from "cap:test";
 
 test("parseProcStatm parses standard 7-column /proc/pid/statm output", () => {

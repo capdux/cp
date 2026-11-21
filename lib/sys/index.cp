@@ -293,6 +293,95 @@ export {
     isNologinShell,
 } from "./shells";
 
+export {
+    NulArgIter,
+    countArgs,
+    argAt,
+    ProcEnvEntry,
+    ProcEnvIter,
+    findProcEnv,
+    formatCmdlineDisplay,
+} from "./cmdline";
+
+export {
+    CpuBlock,
+    CpuSummary,
+    ProcCpuInfoIter,
+    summarizeCpuInfo,
+    hasCpuFlag,
+} from "./cpuinfo";
+
+export {
+    ProcIoStats,
+    parseProcIo,
+} from "./procio";
+
+export {
+    LimitValue,
+    ProcLimitEntry,
+    ProcLimitsIter,
+    parseLimitValue,
+    findProcLimit,
+    maxOpenFiles,
+} from "./limits";
+
+export {
+    LoadAvg,
+    SystemUptime,
+} from "./loadavg";
+
+export {
+    MemInfoField,
+    MemInfoIter,
+    MemInfo,
+} from "./meminfo";
+
+export {
+    MountEntry,
+    ProcMountsIter,
+    unescapeMountPath,
+    findMountForPath,
+} from "./mounts";
+
+export {
+    NetDevStats,
+    ProcNetDevIter,
+    findNetDev,
+    sumNonLoopbackBytes,
+} from "./netdev";
+
+export {
+    RTF_UP,
+    RTF_GATEWAY,
+    RTF_HOST,
+    parseHexIpv4Le,
+    RouteEntry,
+    ProcRouteIter,
+    findDefaultGateway,
+} from "./route";
+
+export {
+    ProcStatus,
+    parseProcStatus,
+    findProcStatusField,
+} from "./procstatus";
+
+export {
+    ProcState,
+    parseProcState,
+    ProcStat,
+} from "./procstat";
+
+export {
+    ProcStatm,
+    parseProcStatm,
+} from "./statm";
+
+export {
+    ProcUptime,
+    parseProcUptime,
+} from "./uptime";
+
 import { pipe2 as sysPipe2, createPipe as sysCreatePipe } from "./fs_ops";
 
 pub struct Sys {

@@ -4,7 +4,7 @@ import { test, expect_eq } from "cap:test";
 import {
     ProcUptime,
     parseProcUptime,
-} from "cap:proc_uptime";
+} from "cap:sys";
 
 test("1. parseProcUptime decodes integer, 1-digit, 2-digit, 3-digit, and 4+-digit fractional seconds to ms", () => {
     const u1 = parseProcUptime("12345.67 45678.90\n") ?? unreachable;

@@ -7,7 +7,7 @@ import {
     ProcCpuInfoIter,
     summarizeCpuInfo,
     hasCpuFlag,
-} from "cap:proc_cpuinfo";
+} from "cap:sys";
 
 test("1. ProcCpuInfoIter parses x86_64 multi-socket /proc/cpuinfo blocks with MHz and cache units", () => {
     const sample =

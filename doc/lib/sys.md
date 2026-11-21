@@ -37,6 +37,19 @@
 | `lib/sys/protocols.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /etc/protocols Parser)` | Linux `/etc/protocols` IP 协议号/别名零分配双向查询：`ProtocolEntry`、`EtcProtocolsIter`、`findProtocolNumber`、`findProtocolByNumber` |
 | `lib/sys/services.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /etc/services Parser)` | Linux `/etc/services` 网络服务名与端口/协议零分配双向查询：`ServiceEntry`、`EtcServicesIter`、`findServicePort`、`findServiceByPort` |
 | `lib/sys/shells.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /etc/shells Parser)` | Linux `/etc/shells` 合法登录 Shell 路径清单零分配解析与安全校验：`parseShellLine`、`EtcShellsIter`、`isAllowedShell`、`findShellByBasename`、`countShells`、`isNologinShell` |
+| `lib/sys/cmdline.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (POSIX NUL-Delimited cmdline & environ Parser)` | `/proc/<pid>/cmdline` 与 `environ` NUL 分隔解析：`NulArgIter`、`countArgs`、`argAt`、`ProcEnvEntry`、`ProcEnvIter`、`findProcEnv`、`formatCmdlineDisplay` |
+| `lib/sys/cpuinfo.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/cpuinfo Zero-Alloc Parser)` | `/proc/cpuinfo` 零分配解析：`CpuBlock`、`CpuSummary`、`ProcCpuInfoIter`、`summarizeCpuInfo`、`hasCpuFlag` |
+| `lib/sys/procio.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/<pid>/io Parser)` | `/proc/<pid>/io` 进程 I/O 统计与窗口增量：`ProcIoStats`、`parseProcIo` |
+| `lib/sys/limits.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/<pid>/limits Zero-Alloc Parser)` | `/proc/<pid>/limits` 资源限制解析：`LimitValue`、`ProcLimitEntry`、`ProcLimitsIter`、`parseLimitValue`、`findProcLimit`、`maxOpenFiles` |
+| `lib/sys/loadavg.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/loadavg & /proc/uptime Barrel)` | `/proc/loadavg` 负载均值解析：`LoadAvg`、`SystemUptime` |
+| `lib/sys/meminfo.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/meminfo Barrel)` | `/proc/meminfo` 系统内存统计解析：`MemInfoField`、`MemInfoIter`、`MemInfo` |
+| `lib/sys/mounts.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/mounts Zero-Alloc Parser)` | `/proc/mounts` 挂载表与八进制反转义：`MountEntry`、`ProcMountsIter`、`unescapeMountPath`、`findMountForPath` |
+| `lib/sys/netdev.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/net/dev Network Interface Stats Parser)` | `/proc/net/dev` 网卡流量计数解析：`NetDevStats`、`ProcNetDevIter`、`findNetDev`、`sumNonLoopbackBytes` |
+| `lib/sys/route.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/net/route Routing Table Parser)` | `/proc/net/route` 路由表与默认网关解析：`RTF_UP`、`RTF_GATEWAY`、`RTF_HOST`、`parseHexIpv4Le`、`RouteEntry`、`ProcRouteIter`、`findDefaultGateway` |
+| `lib/sys/procstatus.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/<pid>/status Zero-Alloc Parser)` | `/proc/<pid>/status` 进程状态与内存/线程字段：`ProcStatus`、`parseProcStatus`、`findProcStatusField` |
+| `lib/sys/procstat.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/<pid>/stat Barrel)` | `/proc/<pid>/stat` 单行进程状态解析：`ProcState`、`parseProcState`、`ProcStat` |
+| `lib/sys/statm.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/<pid>/statm Parser)` | `/proc/<pid>/statm` 7 列内存页与饱和换算：`ProcStatm`、`parseProcStatm` |
+| `lib/sys/uptime.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/uptime Zero-Alloc Integer Parser)` | `/proc/uptime` 零浮点整数运行时间解析：`ProcUptime`、`parseProcUptime` |
 | `lib/sys/index.cp` | `// Source: /data/dev/bun/src/sys/sys.zig & /data/dev/bun/src/sys/Error.cp` | `cap:sys` 统一导出、`Sys`/`sys` 命名空间（含 `Sys.pipe`/`Sys.pipe2`/`Sys.dup`/`Sys.dup2`/`Sys.setAffinity`/`Sys.Lib`） |
 
 ---

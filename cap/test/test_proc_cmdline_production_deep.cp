@@ -9,7 +9,7 @@ import {
     ProcEnvIter,
     findProcEnv,
     formatCmdlineDisplay,
-} from "cap:proc_cmdline";
+} from "cap:sys";
 
 test("proc_cmdline: NulArgIter handles trailing NUL, missing trailing NUL and empty middle args") {
     const with_nul = "/usr/bin/cap\x00--flag\x00\x00file.cp\x00";

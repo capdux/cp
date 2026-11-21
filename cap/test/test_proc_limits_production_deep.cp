@@ -8,7 +8,7 @@ import {
     parseLimitValue,
     findProcLimit,
     maxOpenFiles,
-} from "cap:proc_limits";
+} from "cap:sys";
 
 test("1. parseLimitValue parses unlimited, integers, and rejects negative/overflow inputs", () => {
     const u = parseLimitValue("unlimited") ?? unreachable;

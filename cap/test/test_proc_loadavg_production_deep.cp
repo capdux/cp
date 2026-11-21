@@ -1,7 +1,7 @@
 import {
     LoadAvg,
     SystemUptime,
-} from "cap:proc_loadavg";
+} from "cap:sys";
 import { test, expect } from "cap:test";
 
 test("LoadAvg parses /proc/loadavg and checks CPU overload", () => {

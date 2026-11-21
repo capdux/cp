@@ -1,4 +1,4 @@
-import { ProcIoStats, parseProcIo } from "cap:proc_io";
+import { ProcIoStats, parseProcIo } from "cap:sys";
 import { test, expect, expect_eq } from "cap:test";
 
 const SAMPLE_T1 =

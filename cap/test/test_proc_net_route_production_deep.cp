@@ -9,7 +9,7 @@ import {
     RouteEntry,
     ProcRouteIter,
     findDefaultGateway,
-} from "cap:proc_net_route";
+} from "cap:sys";
 
 test("1. parseHexIpv4Le converts 8-hex little-endian IPv4 and rejects invalid inputs", () => {
     const gw = parseHexIpv4Le("0100A8C0") ?? unreachable;

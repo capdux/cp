@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:sys` 系统底层信息、Linux `/etc/*` 与 `/proc/*` 全家桶统一主包（5/5 PASS，文档直写 `doc/lib/sys.md`）
+- **收敛要点**：13 个 `/proc/*` 解析器与既有 `cap:sys` 零冲突合并；全库 `cap:proc_` 引用清零，累计已消除 32 个长下划线顶层目录。
+
 ## 2026-11-22: 新建 `cap:cli` CLI 终端交互、色彩检测、进度条、加载动画、表格与树形渲染统一主包（5/5 PASS，文档直写 `doc/lib/cli.md`）
 - **收敛要点**：保留既有 `lib/cli/tty.cp` 的 `SpinnerStyle`/`ProgressBar` 导出零破坏，新迁入的进度条结构最小重命名为 `ProgressSpinnerStyle`/`ProgressMeter`；全库 `cap:cli_` 引用清零。
 

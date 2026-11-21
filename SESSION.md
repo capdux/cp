@@ -292,3 +292,6 @@
 
 ### 2026-11-22（`cap:cli` 验收，方案 A Wave 2：`cli_*` 5 目录收敛至 `cap:cli`（5/5 PASS），累计消除 19 个长下划线顶层目录）
 - **执行成果**：`lib/cli/`（5/5 PASS，`doc/lib/cli.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 2：`cli_*` 5 目录收敛至 `cap:cli`（5/5 PASS），累计消除 19 个长下划线顶层目录
+
+### 2026-11-22（`cap:sys` 验收，方案 A Wave 2：`proc_*` 13 目录收敛至 `cap:sys`（13/13 PASS），累计消除 32 个长下划线顶层目录）
+- **执行成果**：`lib/sys/`（5/5 PASS，`doc/lib/sys.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 2：`proc_*` 13 目录收敛至 `cap:sys`（13/13 PASS），累计消除 32 个长下划线顶层目录

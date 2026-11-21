@@ -5,7 +5,7 @@ import {
     ProcStatus,
     parseProcStatus,
     findProcStatusField,
-} from "cap:proc_self_status";
+} from "cap:sys";
 
 test("1. parseProcStatus decodes full /proc/<pid>/status including memory, threads, UID/GID, and ctxt switches", () => {
     const sample =
