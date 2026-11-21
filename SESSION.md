@@ -400,3 +400,12 @@
 
 ### 2026-11-22（`cap:duration_parse` 验收，Batch 55 注册 `cap:duration_parse` 并提交。）
 - **执行成果**：`lib/duration_parse/`（5/5 PASS，`doc/lib/duration_parse.md`）经 `verify_module.sh` 一次性验收回收；Batch 55 注册 `cap:duration_parse` 并提交。
+
+### 2026-11-22（`cap:structured_headers` 验收，Batch 56 完成 `cap:structured_headers`、`cap:http_if_match`、`cap:rate_sliding_window` 3 模块吸收与全量验收。）
+- **执行成果**：`lib/structured_headers/`（5/5 PASS，`doc/lib/structured_headers.md`）经 `verify_module.sh` 一次性验收回收；Batch 56 完成 `cap:structured_headers`、`cap:http_if_match`、`cap:rate_sliding_window` 3 模块吸收与全量验收。
+
+### 2026-11-22（`cap:http_if_match` 验收，Batch 56 注册 `cap:http_if_match`。）
+- **执行成果**：`lib/http_if_match/`（5/5 PASS，`doc/lib/http_if_match.md`）经 `verify_module.sh` 一次性验收回收；Batch 56 注册 `cap:http_if_match`。
+
+### 2026-11-22（`cap:rate_sliding_window` 验收，Batch 56 注册 `cap:rate_sliding_window` 并提交（突破 170 模块里程碑）。）
+- **执行成果**：`lib/rate_sliding_window/`（5/5 PASS，`doc/lib/rate_sliding_window.md`）经 `verify_module.sh` 一次性验收回收；Batch 56 注册 `cap:rate_sliding_window` 并提交（突破 170 模块里程碑）。

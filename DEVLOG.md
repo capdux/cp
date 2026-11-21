@@ -1,3 +1,12 @@
+## 2026-11-22: 新建 `cap:rate_sliding_window` 加权滑动窗口计数器与 GCRA（通用信元速率算法）零分配纯整数平滑限流器（5/5 PASS，文档直写 `doc/lib/rate_sliding_window.md`）
+主智能体吸收 `cap:rate_sliding_window`，使用 `u128` 防溢出加权计算前窗口重叠比例并防时钟回拨。
+
+## 2026-11-22: 新建 `cap:http_if_match` RFC 9110 §13.1/§13.2.2 HTTP 条件请求求值器（If-Match / If-None-Match / If-Modified-Since / If-Unmodified-Since）（5/5 PASS，文档直写 `doc/lib/http_if_match.md`）
+主智能体吸收 `cap:http_if_match`，严格区分强比较（`If-Match`）与弱比较（`If-None-Match`）及 GET/HEAD 与写方法差异。
+
+## 2026-11-22: 新建 `cap:structured_headers` RFC 8941 HTTP Structured Field Values 标量项（整数/小数/字符串/Token/字节序列/布尔）与参数列表零分配解析器（5/5 PASS，文档直写 `doc/lib/structured_headers.md`）
+Subagent 2 吸收 `cap:structured_headers`，纯整数千分存储 `decimal_milli` 并支持无 `=` 参数默认 `boolean(true)`。
+
 ## 2026-11-22: 新建 `cap:duration_parse` 纯整数人类可读时长解析器（ns/us/µs/ms/s/m/h/d/w 复合与小数）及规范/紧凑格式化器（5/5 PASS，文档直写 `doc/lib/duration_parse.md`）
 Subagent 1 吸收 `cap:duration_parse`，支持 `"1h30m15s"`、`"1.5s"`、`"250µs"` 等多单位解析与紧凑输出。
 

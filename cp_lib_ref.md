@@ -592,3 +592,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:case_convert` | WordIter, toSnakeCase, toScreamingSnakeCase, toKebabCase, toCamelCase, toPascalCase | 零分配缩写感知标识符命名风格转换器（snake_case / SCREAMING_SNAKE_CASE / kebab-case / camelCase / PascalCase） |
 | `cap:http_form` | encodeFormComponent, decodeFormComponent, FormPairRaw, FormIter, getFormParam, appendFormParam | WHATWG application/x-www-form-urlencoded 零分配编解码器（+ 与空格互转）、迭代器与构造器 |
 | `cap:duration_parse` | NS_PER_US, NS_PER_MS, NS_PER_SEC, NS_PER_MIN, NS_PER_HOUR, NS_PER_DAY, NS_PER_WEEK, parseDurationNs, parseDurationMs, formatDurationNs, formatDurationCompact | 纯整数人类可读时长解析器（ns/us/µs/ms/s/m/h/d/w 复合与小数）及规范/紧凑格式化器 |
+| `cap:structured_headers` | SfItemKind, SfItem, parseSfItem, SfParam, SfParamIter, formatSfString, formatSfByteSeq | RFC 8941 HTTP Structured Field Values 标量项（整数/小数/字符串/Token/字节序列/布尔）与参数列表零分配解析器 |
+| `cap:http_if_match` | EntityTag, etagListMatches, PreconditionResult, ConditionalRequest, evaluatePreconditions | RFC 9110 §13.1/§13.2.2 HTTP 条件请求求值器（If-Match / If-None-Match / If-Modified-Since / If-Unmodified-Since） |
+| `cap:rate_sliding_window` | SlidingWindowCounter, GcraLimiter | 加权滑动窗口计数器与 GCRA（通用信元速率算法）零分配纯整数平滑限流器 |

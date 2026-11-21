@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:rate_sliding_window` 加权滑动窗口计数器与 GCRA（通用信元速率算法）零分配纯整数平滑限流器（5/5 PASS，自动动态挂载 `cap.rate_sliding_window`）
+新增 `cap:rate_sliding_window`（`lib/rate_sliding_window/{sliding_window,index}.cp`、`doc/lib/rate_sliding_window.md`、`cap/test/test_rate_sliding_window_production_deep.cp`），提供平滑跨窗口限流与 GCRA 精确 retry-after 毫秒计算。
+
+## [2026-11-22] - 新建 `cap:http_if_match` RFC 9110 §13.1/§13.2.2 HTTP 条件请求求值器（If-Match / If-None-Match / If-Modified-Since / If-Unmodified-Since）（5/5 PASS，自动动态挂载 `cap.http_if_match`）
+新增 `cap:http_if_match`（`lib/http_if_match/{if_match,index}.cp`、`doc/lib/http_if_match.md`、`cap/test/test_http_if_match_production_deep.cp`），实现强/弱 ETag 比较与 RFC 9110 §13.2.2 优先级求值（200/304/412）。
+
+## [2026-11-22] - 新建 `cap:structured_headers` RFC 8941 HTTP Structured Field Values 标量项（整数/小数/字符串/Token/字节序列/布尔）与参数列表零分配解析器（5/5 PASS，自动动态挂载 `cap.structured_headers`）
+新增 `cap:structured_headers`（`lib/structured_headers/{sfv,index}.cp`、`doc/lib/structured_headers.md`、`cap/test/test_structured_headers_production_deep.cp`），完整覆盖 6 种 SFV 标量项、15 位整数/3 位小数上限校验与参数迭代器。
+
 ## [2026-11-22] - 新建 `cap:duration_parse` 纯整数人类可读时长解析器（ns/us/µs/ms/s/m/h/d/w 复合与小数）及规范/紧凑格式化器（5/5 PASS，自动动态挂载 `cap.duration_parse`）
 新增 `cap:duration_parse`（`lib/duration_parse/{duration,index}.cp`、`doc/lib/duration_parse.md`、`cap/test/test_duration_parse_production_deep.cp`），纯整数防浮点误差与溢出，支持无损复合格式化往返。
 
