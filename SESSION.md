@@ -331,3 +331,15 @@
 
 ### 2026-11-22（`cap:ansi_strip` 验收，Batch 49 注册 `cap:ansi_strip` 并提交。）
 - **执行成果**：`lib/ansi_strip/`（5/5 PASS，`doc/lib/ansi_strip.md`）经 `verify_module.sh` 一次性验收回收；Batch 49 注册 `cap:ansi_strip` 并提交。
+
+### 2026-11-22（`cap:mime_sniff` 验收，Batch 50 完成 `cap:mime_sniff`、`cap:http_prefer`、`cap:hex_dump`、`cap:http_vary` 4 模块吸收与全量验收。）
+- **执行成果**：`lib/mime_sniff/`（5/5 PASS，`doc/lib/mime_sniff.md`）经 `verify_module.sh` 一次性验收回收；Batch 50 完成 `cap:mime_sniff`、`cap:http_prefer`、`cap:hex_dump`、`cap:http_vary` 4 模块吸收与全量验收。
+
+### 2026-11-22（`cap:http_prefer` 验收，Batch 50 注册 `cap:http_prefer`。）
+- **执行成果**：`lib/http_prefer/`（5/5 PASS，`doc/lib/http_prefer.md`）经 `verify_module.sh` 一次性验收回收；Batch 50 注册 `cap:http_prefer`。
+
+### 2026-11-22（`cap:hex_dump` 验收，Batch 50 注册 `cap:hex_dump`。）
+- **执行成果**：`lib/hex_dump/`（5/5 PASS，`doc/lib/hex_dump.md`）经 `verify_module.sh` 一次性验收回收；Batch 50 注册 `cap:hex_dump`。
+
+### 2026-11-22（`cap:http_vary` 验收，Batch 50 注册 `cap:http_vary` 并提交（突破 50 批次里程碑）。）
+- **执行成果**：`lib/http_vary/`（5/5 PASS，`doc/lib/http_vary.md`）经 `verify_module.sh` 一次性验收回收；Batch 50 注册 `cap:http_vary` 并提交（突破 50 批次里程碑）。

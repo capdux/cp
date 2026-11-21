@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:http_vary` RFC 9110 §12.5.5 Vary 响应头零分配迭代、通配符检测与大小写不敏感去重合并器（5/5 PASS，文档直写 `doc/lib/http_vary.md`）
+主智能体吸收 `cap:http_vary`，确保 `*` 出现时自动塌缩为 `"*"`，并避免大小写重复字段污染缓存键。
+
+## 2026-11-22: 新建 `cap:hex_dump` 零分配十六进制编解码与规范化 hexdump -C 多行诊断格式化器（5/5 PASS，文档直写 `doc/lib/hex_dump.md`）
+Subagent 2 吸收 `cap:hex_dump`，零堆分配实现大小写编码、分隔符容错解码与 8+8 分组 ASCII 侧栏转储。
+
+## 2026-11-22: 新建 `cap:http_prefer` RFC 7240 Prefer 与 Preference-Applied HTTP 头零分配解析器与格式化器（5/5 PASS，文档直写 `doc/lib/http_prefer.md`）
+主智能体吸收 `cap:http_prefer`，支持引号内逗号参数切分与 RFC 7240 §2 首现优先生效规则。
+
+## 2026-11-22: 新建 `cap:mime_sniff` WHATWG MIME Sniffing 魔数嗅探引擎（图像/音视频/归档可执行/HTML-XML-JSON/UTF-8 文本与二进制判定）（5/5 PASS，文档直写 `doc/lib/mime_sniff.md`）
+Subagent 1 吸收 `cap:mime_sniff`，覆盖 PNG/JPEG/GIF/WebP/BMP/ICO/SVG、PDF/ZIP/GZIP/ZSTD/WASM/ELF/SQLite、WAV/OGG/FLAC/MP3/MP4/WebM 及 UTF-8 BOM/过长编码校验。
+
 ## 2026-11-22: 新建 `cap:ansi_strip` 零分配 ANSI/VT100 转义序列（CSI/OSC8 超链接/DCS/2 字节 ESC）剥离与可见 UTF-8 字符计数（5/5 PASS，文档直写 `doc/lib/ansi_strip.md`）
 主智能体吸收 `cap:ansi_strip`，零堆分配剥离全部常见终端转义序列并精确计算剥离后字节长与可见 UTF-8 码点数。
 

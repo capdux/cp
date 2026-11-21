@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_vary` RFC 9110 §12.5.5 Vary 响应头零分配迭代、通配符检测与大小写不敏感去重合并器（5/5 PASS，自动动态挂载 `cap.http_vary`）
+新增 `cap:http_vary`（`lib/http_vary/{vary,index}.cp`、`doc/lib/http_vary.md`、`cap/test/test_http_vary_production_deep.cp`），实现 `Vary` 字段合法性校验、`*` 塌缩与规范化小写合并。
+
+## [2026-11-22] - 新建 `cap:hex_dump` 零分配十六进制编解码与规范化 hexdump -C 多行诊断格式化器（5/5 PASS，自动动态挂载 `cap.hex_dump`）
+新增 `cap:hex_dump`（`lib/hex_dump/{hex,index}.cp`、`doc/lib/hex_dump.md`、`cap/test/test_hex_dump_production_deep.cp`），提供严格/宽松十六进制编解码与 16 字节 `hexdump -C` 诊断输出。
+
+## [2026-11-22] - 新建 `cap:http_prefer` RFC 7240 Prefer 与 Preference-Applied HTTP 头零分配解析器与格式化器（5/5 PASS，自动动态挂载 `cap.http_prefer`）
+新增 `cap:http_prefer`（`lib/http_prefer/{prefer,index}.cp`、`doc/lib/http_prefer.md`、`cap/test/test_http_prefer_production_deep.cp`），实现 `respond-async`/`return`/`handling`/`wait` 首现优先解析与规范化输出。
+
+## [2026-11-22] - 新建 `cap:mime_sniff` WHATWG MIME Sniffing 魔数嗅探引擎（图像/音视频/归档可执行/HTML-XML-JSON/UTF-8 文本与二进制判定）（5/5 PASS，自动动态挂载 `cap.mime_sniff`）
+新增 `cap:mime_sniff`（`lib/mime_sniff/{sniff,index}.cp`、`doc/lib/mime_sniff.md`、`cap/test/test_mime_sniff_production_deep.cp`），完整实现 WHATWG 魔数嗅探与前 512B 文本/二进制检测。
+
 ## [2026-11-22] - 新建 `cap:ansi_strip` 零分配 ANSI/VT100 转义序列（CSI/OSC8 超链接/DCS/2 字节 ESC）剥离与可见 UTF-8 字符计数（5/5 PASS，自动动态挂载 `cap.ansi_strip`）
 新增 `cap:ansi_strip`（`lib/ansi_strip/{strip,index}.cp`、`doc/lib/ansi_strip.md`、`cap/test/test_ansi_strip_production_deep.cp`），完整覆盖 CSI、OSC 8（BEL/ST）、字符集切换与 C1 CSI。
 

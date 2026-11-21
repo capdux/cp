@@ -569,3 +569,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:jwt_claims` | decodeBase64Url, JwtParts, splitJwt, extractStringClaim, extractIntClaim, JwtHeader, ClaimStatus, JwtClaims | RFC 7519 JWT 分段器、Base64URL 解码器、Header/Payload 声明提取与 exp/nbf/iss/sub/aud 校验器 |
 | `cap:shell_quote` | needsQuoting, quotePosix, joinArgs, ShellArgIter | POSIX Shell 安全单引号转义、参数拼接与支持单双引号/反斜杠/相邻拼接的命令行拆分器 |
 | `cap:ansi_strip` | hasAnsi, stripAnsi, strippedByteLen, visibleCodepointCount | 零分配 ANSI/VT100 转义序列（CSI/OSC8 超链接/DCS/2 字节 ESC）剥离与可见 UTF-8 字符计数 |
+| `cap:mime_sniff` | isBinaryDataByte, isTextData, sniffImageMime, sniffArchiveOrExecMime, sniffAudioVideoMime, sniffMime | WHATWG MIME Sniffing 魔数嗅探引擎（图像/音视频/归档可执行/HTML-XML-JSON/UTF-8 文本与二进制判定） |
+| `cap:http_prefer` | Preference, PreferIter, ReturnPref, HandlingPref, PreferHeader | RFC 7240 Prefer 与 Preference-Applied HTTP 头零分配解析器与格式化器 |
+| `cap:hex_dump` | encodeHexLower, encodeHexUpper, decodeHexStrict, decodeHex, formatHexDumpLine, formatHexDump | 零分配十六进制编解码与规范化 hexdump -C 多行诊断格式化器 |
+| `cap:http_vary` | VaryIter, isVaryWildcard, varyContains, appendVary, mergeVary | RFC 9110 §12.5.5 Vary 响应头零分配迭代、通配符检测与大小写不敏感去重合并器 |
