@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:cdp` CDP v1/v2 (Cisco Discovery Protocol) TLV parser, writer & RFC 1071 checksum（5/5 PASS，文档直写 `doc/lib/cdp.md`）
+新增 cap:cdp 纯 CP 零分配网络拓扑发现协议库（CDPv1/v2 报头、奇偶字节校验和、TLV 零拷贝迭代与 CdpWriter 编码），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:tacacs` TACACS+ (RFC 8907) 12B header, Authen/Author/Acct body & zero-copy arg iter parser（5/5 PASS，文档直写 `doc/lib/tacacs.md`）
 新增 cap:tacacs 纯 CP 零分配 AAA 协议解析库（12B 报头/标志位与 6 类明文 Body/参数零拷贝迭代），通过 cpc check 与 6/6 cap test
 

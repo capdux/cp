@@ -172,3 +172,6 @@
 
 ### 2026-11-22（`cap:tacacs` 验收，完成并注册纯 CP 零分配标准库 cap:tacacs（6/6 cap test PASS））
 - **执行成果**：`lib/tacacs/`（5/5 PASS，`doc/lib/tacacs.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:tacacs（6/6 cap test PASS）
+
+### 2026-11-22（`cap:cdp` 验收，完成并注册纯 CP 零分配标准库 cap:cdp（5/5 cap test PASS））
+- **执行成果**：`lib/cdp/`（5/5 PASS，`doc/lib/cdp.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:cdp（5/5 cap test PASS）
