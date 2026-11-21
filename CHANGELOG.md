@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:psf` 零分配 Linux 控制台 PSF1/PSF2 点阵字体、像素与 Unicode 映射表解析器（5/5 PASS，自动动态挂载 `cap.psf`）
+新增 `lib/psf/{psf,index}.cp`、`doc/lib/psf.md` 与 `cap/test/test_psf_production_deep.cp`（5/5 PASS），支持 PSF1/PSF2 统一头解析、MSB-first 像素解码及 UCS-2/UTF-8 Unicode 表查找。
+
 ## [2026-11-22] - 新建 `cap:bdf` 零分配 Adobe BDF 2.1/2.2 点阵字体头、属性表与字形位图解析器（5/5 PASS，自动动态挂载 `cap.bdf`）
 新增 `lib/bdf/{bdf,index}.cp`、`doc/lib/bdf.md` 与 `cap/test/test_bdf_production_deep.cp`（5/5 PASS），支持 BDF 全局头、PROPERTIES 引号剥离、STARTCHAR/BBX/BITMAP 迭代与 MSB-first 像素解码。
 

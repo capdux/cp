@@ -196,3 +196,6 @@
 
 ### 2026-11-22（`cap:bdf` 验收，完成 `cap:bdf` 交付验收并登记入库（5/5 PASS）；派发 `cap:pcf`。）
 - **执行成果**：`lib/bdf/`（5/5 PASS，`doc/lib/bdf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:bdf` 交付验收并登记入库（5/5 PASS）；派发 `cap:pcf`。
+
+### 2026-11-22（`cap:psf` 验收，完成 `cap:psf` 交付验收并登记入库（5/5 PASS）；派发 `cap:vgm`。）
+- **执行成果**：`lib/psf/`（5/5 PASS，`doc/lib/psf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:psf` 交付验收并登记入库（5/5 PASS）；派发 `cap:vgm`。

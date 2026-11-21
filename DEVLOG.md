@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:psf` 零分配 Linux 控制台 PSF1/PSF2 点阵字体、像素与 Unicode 映射表解析器（5/5 PASS，文档直写 `doc/lib/psf.md`）
+实现零分配 Linux PSF1/PSF2 控制台字体解析器，支持 STARTSEQ 组合序列跳过与防溢出校验。
+
 ## 2026-11-22: 新建 `cap:bdf` 零分配 Adobe BDF 2.1/2.2 点阵字体头、属性表与字形位图解析器（5/5 PASS，文档直写 `doc/lib/bdf.md`）
 实现零分配 Adobe BDF 点阵字体解析器，支持多字节宽字形与按码点查找。
 
