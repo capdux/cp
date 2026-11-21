@@ -64,3 +64,6 @@
 
 ### 2026-11-21（`cap:consistent_jump` 验收，主控完成 `cap:consistent_jump` 研发验收提交，继续与 `cap:suffix_array` 及 `cap:consistent_maglev` 并行）
 - **执行成果**：`lib/consistent_jump/`（5/5 PASS，`doc/lib/consistent_jump.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:consistent_jump` 研发验收提交，继续与 `cap:suffix_array` 及 `cap:consistent_maglev` 并行
+
+### 2026-11-21（`cap:suffix_array` 验收，验收提交 `cap:suffix_array`）
+- **执行成果**：`lib/suffix_array/`（5/5 PASS，`doc/lib/suffix_array.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:suffix_array`

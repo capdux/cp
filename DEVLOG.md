@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:suffix_array` 纯 CP 后缀数组与 Kasai $O(N)$ LCP 数组引擎（$O(M \log N)$ 二分子串检索、`countOccurrences`、`searchAll` 与最长重复子串，支持 `cap.suffix_array` 自动动态挂载，详见 `doc/lib/suffix_array.md`）（5/5 PASS，文档直写 `doc/lib/suffix_array.md`）
+- **核心设计**：结合 Kasai 线性时间 LCP 计算与二分上下界定位，通过 `"banana"` 官方向量与 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:consistent_jump` 纯 CP Google Jump Consistent Hash 零内存分片与 Rendezvous HRW 等权/加权无状态路由引擎（支持 `cap.consistent_jump` 自动动态挂载，详见 `doc/lib/consistent_jump.md`）（5/5 PASS，文档直写 `doc/lib/consistent_jump.md`）
 - **核心设计**：零堆分配实现单调分片与加权 HRW 最小扰动路由，通过 10->11 桶单调迁移与 3:1 权重分布校验。
 

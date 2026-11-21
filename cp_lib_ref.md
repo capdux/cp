@@ -395,3 +395,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:bptree` | `BPTREE_ORDER`, `BPlusTree` | 纯 CP 内存有序索引 B+ 树引擎（多层节点分裂、叶子链表 `rangeScan` 范围扫描与动态删除重平衡，支持 `cap.bptree` 自动动态挂载，详见 `doc/lib/bptree.md`） |
 | `cap:kmp_z_algo` | `PalindromeSpan`, `computeLps`, `kmpFindFirst`, `kmpFindAll`, `zArray`, `longestPalindrome` | 纯 CP 线性时间 $O(N)$ 字符串算法库（KMP 前缀表与全重叠匹配、Z-Algorithm `zArray` 与 Manacher 最长回文子串，支持 `cap.kmp_z_algo` 自动动态挂载，详见 `doc/lib/kmp_z_algo.md`） |
 | `cap:consistent_jump` | `JumpError`, `WeightedNode`, `jumpConsistentHash`, `jumpConsistentHashBytes`, `hrwSelect`, `hrwSelectWeighted` | 纯 CP Google Jump Consistent Hash 零内存分片与 Rendezvous HRW 等权/加权无状态路由引擎（支持 `cap.consistent_jump` 自动动态挂载，详见 `doc/lib/consistent_jump.md`） |
+| `cap:suffix_array` | `SuffixArray` | 纯 CP 后缀数组与 Kasai $O(N)$ LCP 数组引擎（$O(M \log N)$ 二分子串检索、`countOccurrences`、`searchAll` 与最长重复子串，支持 `cap.suffix_array` 自动动态挂载，详见 `doc/lib/suffix_array.md`） |

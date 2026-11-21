@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:suffix_array` 纯 CP 后缀数组与 Kasai $O(N)$ LCP 数组引擎（$O(M \log N)$ 二分子串检索、`countOccurrences`、`searchAll` 与最长重复子串，支持 `cap.suffix_array` 自动动态挂载，详见 `doc/lib/suffix_array.md`）（5/5 PASS，自动动态挂载 `cap.suffix_array`）
+- **新增标准库**：`lib/suffix_array/{suffix_array,index}.cp`，实现后缀数组构建、Kasai LCP 数组与二分子串检索。\n- **新增文档与测试**：`doc/lib/suffix_array.md` 扁平文档与 `cap/test/test_suffix_array_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:consistent_jump` 纯 CP Google Jump Consistent Hash 零内存分片与 Rendezvous HRW 等权/加权无状态路由引擎（支持 `cap.consistent_jump` 自动动态挂载，详见 `doc/lib/consistent_jump.md`）（5/5 PASS，自动动态挂载 `cap.consistent_jump`）
 - **新增标准库**：`lib/consistent_jump/{consistent_jump,index}.cp`，实现 Jump Consistent Hash 与 Rendezvous HRW 等权/加权路由。\n- **新增文档与测试**：`doc/lib/consistent_jump.md` 扁平文档与 `cap/test/test_consistent_jump_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 
