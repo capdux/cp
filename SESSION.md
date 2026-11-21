@@ -43,3 +43,6 @@
 
 ### 2026-11-22（`cap:rlp` 验收，完成 `cap:rlp` 交付验收并登记入库（5/5 PASS）；派发 `cap:scale`。）
 - **执行成果**：`lib/rlp/`（5/5 PASS，`doc/lib/rlp.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:rlp` 交付验收并登记入库（5/5 PASS）；派发 `cap:scale`。
+
+### 2026-11-22（`cap:borsh` 验收，完成 `cap:borsh` 交付验收并登记入库（5/5 PASS）；派发 `cap:ssz`。）
+- **执行成果**：`lib/borsh/`（5/5 PASS，`doc/lib/borsh.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:borsh` 交付验收并登记入库（5/5 PASS）；派发 `cap:ssz`。

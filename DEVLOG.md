@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:borsh` 零分配 Borsh 确定性二进制小端编解码器（拒绝 NaN 与非 0/1 布尔）（5/5 PASS，文档直写 `doc/lib/borsh.md`）
+实现零分配 Borsh 编解码器，严格执行 NaN 拒绝与 0/1 布尔合法性检查。
+
 ## 2026-11-22: 新建 `cap:rlp` 零分配 Ethereum RLP 确定性二进制规范编解码器（5/5 PASS，文档直写 `doc/lib/rlp.md`）
 实现零分配 Ethereum RLP 编解码器，严格遵循 Yellow Paper 规范性规则与原子缓冲区溢出保护。
 

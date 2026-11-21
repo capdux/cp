@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:borsh` 零分配 Borsh 确定性二进制小端编解码器（拒绝 NaN 与非 0/1 布尔）（5/5 PASS，自动动态挂载 `cap.borsh`）
+新增 `lib/borsh/{borsh,index}.cp`、`doc/lib/borsh.md` 与 `cap/test/test_borsh_production_deep.cp`（5/5 PASS），支持全套小端整数/浮点、Option/Enum/Seq 与原子溢出保护。
+
 ## [2026-11-22] - 新建 `cap:rlp` 零分配 Ethereum RLP 确定性二进制规范编解码器（5/5 PASS，自动动态挂载 `cap.rlp`）
 新增 `lib/rlp/{rlp,index}.cp`、`doc/lib/rlp.md` 与 `cap/test/test_rlp_production_deep.cp`（5/5 PASS），支持严格规范 RLP 解码（拒绝非规范单字节/前导零/短长前缀）、列表迭代与零分配编码。
 
