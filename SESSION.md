@@ -220,3 +220,6 @@
 
 ### 2026-11-22（`cap:isotonic` 验收，子智能体交付 cap:isotonic（保序回归 PAVA 与概率校准，5/5 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/isotonic/`（5/5 PASS，`doc/lib/isotonic.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:isotonic（保序回归 PAVA 与概率校准，5/5 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:huber` 验收，子智能体交付 cap:huber（Huber/Tukey IRLS 鲁棒回归与 Theil-Sen，5/5 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/huber/`（5/5 PASS，`doc/lib/huber.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:huber（Huber/Tukey IRLS 鲁棒回归与 Theil-Sen，5/5 PASS），主协调器统一登记并提交

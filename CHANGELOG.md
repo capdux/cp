@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:huber` 纯 CP 零分配鲁棒统计与 M-估计回归库：median/MAD/trimmedMean/Huber 位置估计、Huber/Tukey Biweight IRLS 多元鲁棒回归与 Theil-Sen 1D 中位数斜率回归（5/5 PASS，自动动态挂载 `cap.huber`）
+新增纯 CP 零分配鲁棒统计与 M-估计回归库 cap:huber（MAD/Trimmed/Huber/Tukey IRLS 与 Theil-Sen），含文档与 5 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:isotonic` 纯 CP 零分配保序回归（Isotonic Regression / PAVA）与概率校准库：O(n) 加权非降/非增 PAVA、重复 x 合并分段线性插值与 Brier / ECE 校准评估（5/5 PASS，自动动态挂载 `cap.isotonic`）
 新增纯 CP 零分配保序回归与概率校准库 cap:isotonic（PAVA、分段线性插值、Brier Score 与 ECE），含文档与 5 项深度生产测试
 

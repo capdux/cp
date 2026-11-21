@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:huber` 纯 CP 零分配鲁棒统计与 M-估计回归库：median/MAD/trimmedMean/Huber 位置估计、Huber/Tukey Biweight IRLS 多元鲁棒回归与 Theil-Sen 1D 中位数斜率回归（5/5 PASS，文档直写 `doc/lib/huber.md`）
+新增 cap:huber（lib/huber/{huber,index}.cp）：零分配 Huber/Tukey IRLS 多元鲁棒回归（20% 离群点精准恢复）与 Theil-Sen 1D 回归，cpc check 0 错误，cap test 5/5 PASS (716ms)
+
 ## 2026-11-22: 新建 `cap:isotonic` 纯 CP 零分配保序回归（Isotonic Regression / PAVA）与概率校准库：O(n) 加权非降/非增 PAVA、重复 x 合并分段线性插值与 Brier / ECE 校准评估（5/5 PASS，文档直写 `doc/lib/isotonic.md`）
 新增 cap:isotonic（lib/isotonic/{isotonic,index}.cp）：零分配 O(n) 加权 PAVA、O(log m) 二分插值预测与 Brier/ECE 校准评估，通过 KKT 最优性检验，cpc check 0 错误，cap test 5/5 PASS (778ms)
 
