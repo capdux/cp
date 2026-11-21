@@ -656,3 +656,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:makefile_parse` | MakeAssignOp, MakeVar, MakeRule, MakeRuleIter, MakeVarIter, isPhonyTarget | GNU Makefile 目标、依赖、.PHONY 伪目标与变量赋值（=/ :=/ ?=/ +=）零分配解析器 |
 | `cap:csv_escape` | needsCsvQuotes, escapeCsvField, unescapeCsvField, formatCsvRow, isFormulaInjectionRisk | RFC 4180 CSV / TSV 字段转义器、单行构造器、严格引号反转义器与电子表格公式前缀风险检测 |
 | `cap:http_clear_site_data` | ClearSiteData | W3C Clear-Site-Data 响应头零分配解析与规范化构造器（cache/cookies/storage/executionContexts/clientHints/*） |
+| `cap:http_keep_alive` | KeepAliveParams, shouldKeepAlive | HTTP Keep-Alive 参数（timeout/max）零分配解析格式化器与 RFC 9112 §9.3 持久连接判定器 |
+| `cap:http_via` | ViaEntry, ViaIter, viaHopCount, viaContainsProxy, appendVia, parseMaxForwards, decrementMaxForwards | RFC 9110 §7.6.3 Via 代理链头与 Max-Forwards 零分配解析、环路检测与追加构造器 |
+| `cap:http_freshness` | CacheFreshness, FreshnessInput | RFC 9111 §4.2 HTTP 缓存新鲜度生存期、Age 修正与 RFC 5861 SWR/SIE 窗口求值器 |
+| `cap:http_te` | TransferCoding, TransferEncodingIter, TransferEncodingValidation, validateTransferEncoding, isChunkedTransfer, hasConflictingClAndTe, teAcceptsTrailers | RFC 9110 / RFC 9112 Transfer-Encoding 与 TE 头零分配解析及异常报文边界校验器 |

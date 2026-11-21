@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:http_te` RFC 9110 / RFC 9112 Transfer-Encoding 与 TE 头零分配解析及异常报文边界校验器（5/5 PASS，文档直写 `doc/lib/http_te.md`）
+Subagent 1 吸收 `cap:http_te`，补齐 HTTP/1.1 传输编码边界防护。
+
+## 2026-11-22: 新建 `cap:http_freshness` RFC 9111 §4.2 HTTP 缓存新鲜度生存期、Age 修正与 RFC 5861 SWR/SIE 窗口求值器（5/5 PASS，文档直写 `doc/lib/http_freshness.md`）
+主智能体吸收 `cap:http_freshness`，与 `cap:http_cache_control`/`cap:http_date` 形成完整 HTTP 缓存引擎。
+
+## 2026-11-22: 新建 `cap:http_via` RFC 9110 §7.6.3 Via 代理链头与 Max-Forwards 零分配解析、环路检测与追加构造器（5/5 PASS，文档直写 `doc/lib/http_via.md`）
+Subagent 2 吸收 `cap:http_via`，零堆分配支撑反向代理链与环路防护。
+
+## 2026-11-22: 新建 `cap:http_keep_alive` HTTP Keep-Alive 参数（timeout/max）零分配解析格式化器与 RFC 9112 §9.3 持久连接判定器（5/5 PASS，文档直写 `doc/lib/http_keep_alive.md`）
+主智能体吸收 `cap:http_keep_alive`，严格遵循 RFC 9112 §9.3 `Connection: close` 优先级。
+
 ## 2026-11-22: 新建 `cap:http_clear_site_data` W3C Clear-Site-Data 响应头零分配解析与规范化构造器（cache/cookies/storage/executionContexts/clientHints/*）（5/5 PASS，文档直写 `doc/lib/http_clear_site_data.md`）
 主智能体吸收 `cap:http_clear_site_data`，补全 Web 安全响应头工具链。
 

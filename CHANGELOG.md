@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_te` RFC 9110 / RFC 9112 Transfer-Encoding 与 TE 头零分配解析及异常报文边界校验器（5/5 PASS，自动动态挂载 `cap.http_te`）
+新增 `cap:http_te`（`lib/http_te/{te,index}.cp`、`doc/lib/http_te.md`、`cap/test/test_http_te_production_deep.cp`），拦截重复 `chunked`、非末项 `chunked` 及 `Content-Length` 与 `Transfer-Encoding` 冲突报文。
+
+## [2026-11-22] - 新建 `cap:http_freshness` RFC 9111 §4.2 HTTP 缓存新鲜度生存期、Age 修正与 RFC 5861 SWR/SIE 窗口求值器（5/5 PASS，自动动态挂载 `cap.http_freshness`）
+新增 `cap:http_freshness`（`lib/http_freshness/{freshness,index}.cp`、`doc/lib/http_freshness.md`、`cap/test/test_http_freshness_production_deep.cp`），完整实现 `s-maxage`/`max-age`/`Expires`/10% `Last-Modified` 启发式及 SWR/SIE 窗口判定。
+
+## [2026-11-22] - 新建 `cap:http_via` RFC 9110 §7.6.3 Via 代理链头与 Max-Forwards 零分配解析、环路检测与追加构造器（5/5 PASS，自动动态挂载 `cap.http_via`）
+新增 `cap:http_via`（`lib/http_via/{via,index}.cp`、`doc/lib/http_via.md`、`cap/test/test_http_via_production_deep.cp`），支持括号内逗号注释、跳数统计、大小写无关环路检测与 `Max-Forwards` 递减。
+
+## [2026-11-22] - 新建 `cap:http_keep_alive` HTTP Keep-Alive 参数（timeout/max）零分配解析格式化器与 RFC 9112 §9.3 持久连接判定器（5/5 PASS，自动动态挂载 `cap.http_keep_alive`）
+新增 `cap:http_keep_alive`（`lib/http_keep_alive/{keep_alive,index}.cp`、`doc/lib/http_keep_alive.md`、`cap/test/test_http_keep_alive_production_deep.cp`），实现 `Keep-Alive` 编解码与 HTTP/1.0 vs HTTP/1.1 持久连接决策。
+
 ## [2026-11-22] - 新建 `cap:http_clear_site_data` W3C Clear-Site-Data 响应头零分配解析与规范化构造器（cache/cookies/storage/executionContexts/clientHints/*）（5/5 PASS，自动动态挂载 `cap.http_clear_site_data`）
 新增 `cap:http_clear_site_data`（`lib/http_clear_site_data/{clear_site_data,index}.cp`、`doc/lib/http_clear_site_data.md`、`cap/test/test_http_clear_site_data_production_deep.cp`），遵循 W3C 大小写敏感引号指令规则与 `"*"` 折叠。
 

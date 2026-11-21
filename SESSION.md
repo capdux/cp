@@ -102,3 +102,15 @@
 ### 2026-11-22（`cap:http_clear_site_data` 验收，Batch 72 注册 `cap:http_clear_site_data` 并提交（累计 231 模块）。）
 - **执行成果**：`lib/http_clear_site_data/`（5/5 PASS，`doc/lib/http_clear_site_data.md`）经 `verify_module.sh` 一次性验收回收；Batch 72 注册 `cap:http_clear_site_data` 并提交（累计 231 模块）。
 - **CPC + 标准库热修（2 条工单清零）**：修复 `task-bun-20261122-sentinel-const-space`（泛型类型实参保留 `const` 空格）与 `task-capsurf-20261122-lib-pack-gzip-e0209`（`lib/pack/gzip.cp` 17 处裸指针操作包裹 `unsafe`），已 release 部署、双结单并回收热修子智能体。
+
+### 2026-11-22（`cap:http_keep_alive` 验收，Batch 73 完成 `cap:http_keep_alive`、`cap:http_via`、`cap:http_freshness`、`cap:http_te` 4 模块吸收与全量验收。）
+- **执行成果**：`lib/http_keep_alive/`（5/5 PASS，`doc/lib/http_keep_alive.md`）经 `verify_module.sh` 一次性验收回收；Batch 73 完成 `cap:http_keep_alive`、`cap:http_via`、`cap:http_freshness`、`cap:http_te` 4 模块吸收与全量验收。
+
+### 2026-11-22（`cap:http_via` 验收，Batch 73 注册 `cap:http_via`。）
+- **执行成果**：`lib/http_via/`（5/5 PASS，`doc/lib/http_via.md`）经 `verify_module.sh` 一次性验收回收；Batch 73 注册 `cap:http_via`。
+
+### 2026-11-22（`cap:http_freshness` 验收，Batch 73 注册 `cap:http_freshness`。）
+- **执行成果**：`lib/http_freshness/`（5/5 PASS，`doc/lib/http_freshness.md`）经 `verify_module.sh` 一次性验收回收；Batch 73 注册 `cap:http_freshness`。
+
+### 2026-11-22（`cap:http_te` 验收，Batch 73 注册 `cap:http_te` 并提交（累计 235 模块）。）
+- **执行成果**：`lib/http_te/`（5/5 PASS，`doc/lib/http_te.md`）经 `verify_module.sh` 一次性验收回收；Batch 73 注册 `cap:http_te` 并提交（累计 235 模块）。
