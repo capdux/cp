@@ -262,3 +262,6 @@
 
 ### 2026-11-22（`cap:bacnet` 验收，完成并注册纯 CP 零分配标准库 cap:bacnet（5/5 cap test PASS））
 - **执行成果**：`lib/bacnet/`（5/5 PASS，`doc/lib/bacnet.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:bacnet（5/5 cap test PASS）
+
+### 2026-11-22（`cap:smb` 验收，完成并注册纯 CP 零分配标准库 cap:smb（5/5 cap test PASS））
+- **执行成果**：`lib/smb/`（5/5 PASS，`doc/lib/smb.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:smb（5/5 cap test PASS）

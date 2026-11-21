@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:smb` SMB2/SMB3 (MS-SMB2) header, Compound chain, Negotiate & Transform zero-alloc parser（5/5 PASS，文档直写 `doc/lib/smb.md`）
+新增 cap:smb 纯 CP 零分配企业文件共享协议库（NetBIOS 解封、64B Sync/Async 报头、8B 对齐复合链与 52B SMB3 Transform 头），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:bacnet` BACnet/IP (ASHRAE 135) BVLC, NPDU, APDU, Object ID & Tag TLV zero-alloc parser（5/5 PASS，文档直写 `doc/lib/bacnet.md`）
 新增 cap:bacnet 纯 CP 零分配楼宇自动化协议库（BVLC/NPDU/APDU 分层解包、32-bit Object ID 与扩展 Context/Application Tag TLV 零拷贝迭代），通过 cpc check 与 5/5 cap test
 
