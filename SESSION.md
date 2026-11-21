@@ -148,3 +148,15 @@
 
 ### 2026-11-21（`cap:case_fold` 验收，吸收 Bun md/unicode.cp -> cap:case_fold，测试 3/3 通过。）
 - **执行成果**：`lib/case_fold/`（5/5 PASS，`doc/lib/case_fold.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun md/unicode.cp -> cap:case_fold，测试 3/3 通过。
+
+### 2026-11-21（`cap:vlq` 验收，吸收 Bun sourcemap/VLQ.cp -> cap:vlq，测试 6/6 通过。）
+- **执行成果**：`lib/vlq/`（5/5 PASS，`doc/lib/vlq.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun sourcemap/VLQ.cp -> cap:vlq，测试 6/6 通过。
+
+### 2026-11-21（`cap:static_hashmap` 验收，吸收 Bun collections/StaticHashMap.cp -> cap:static_hashmap，测试 6/6 通过。）
+- **执行成果**：`lib/static_hashmap/`（5/5 PASS，`doc/lib/static_hashmap.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun collections/StaticHashMap.cp -> cap:static_hashmap，测试 6/6 通过。
+
+### 2026-11-21（`cap:char_freq` 验收，吸收 Bun js_parser/ast/CharFreq.cp -> cap:char_freq，测试 3/3 通过。）
+- **执行成果**：`lib/char_freq/`（5/5 PASS，`doc/lib/char_freq.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun js_parser/ast/CharFreq.cp -> cap:char_freq，测试 3/3 通过。
+
+### 2026-11-21（`cap:bounded_array` 验收，吸收 Bun collections/bounded_array.cp -> cap:bounded_array，测试 2/2 通过。）
+- **执行成果**：`lib/bounded_array/`（5/5 PASS，`doc/lib/bounded_array.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun collections/bounded_array.cp -> cap:bounded_array，测试 2/2 通过。

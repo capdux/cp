@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 栈上定容动态数组 BoundedArray（5/5 PASS，自动动态挂载 `cap.bounded_array`）
+新增 cap:bounded_array 标准库（lib/bounded_array/、doc/lib/bounded_array.md、cap/test/test_bounded_array_production_deep.cp），2/2 回归通过。
+
+## [2026-11-21] - 标识符字符频率统计与压缩短名生成器（5/5 PASS，自动动态挂载 `cap.char_freq`）
+新增 cap:char_freq 标准库（lib/char_freq/、doc/lib/char_freq.md、cap/test/test_char_freq_production_deep.cp），3/3 回归通过。
+
+## [2026-11-21] - 编译期零堆分配静态哈希表（5/5 PASS，自动动态挂载 `cap.static_hashmap`）
+新增 cap:static_hashmap 标准库（lib/static_hashmap/、doc/lib/static_hashmap.md、cap/test/test_static_hashmap_production_deep.cp），6/6 回归通过。
+
+## [2026-11-21] - SourceMap Base64-VLQ 高速查表编解码器（5/5 PASS，自动动态挂载 `cap.vlq`）
+新增 cap:vlq 标准库（lib/vlq/、doc/lib/vlq.md、cap/test/test_vlq_production_deep.cp），6/6 回归通过。
+
 ## [2026-11-21] - 全量 Unicode Case Folding 引擎（5/5 PASS，自动动态挂载 `cap.case_fold`）
 新增 cap:case_fold 标准库（lib/case_fold/、doc/lib/case_fold.md、cap/test/test_case_fold_production_deep.cp），3/3 回归通过。
 

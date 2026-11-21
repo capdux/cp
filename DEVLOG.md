@@ -2,6 +2,18 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 栈上定容动态数组 BoundedArray（5/5 PASS，文档直写 `doc/lib/bounded_array.md`）
+从 Bun collections/bounded_array.cp 吸收零堆分配 BoundedArray<T, capacity>，提供完整增删改查与安全溢出/越界错误返回。
+
+## 2026-11-21: 标识符字符频率统计与压缩短名生成器（5/5 PASS，文档直写 `doc/lib/char_freq.md`）
+从 Bun js_parser/ast/CharFreq.cp 吸收标识符字符频率统计器并配套零堆分配 NameMinifier，修复了原版小路径数字桶偏移并 100% 回归通过。
+
+## 2026-11-21: 编译期零堆分配静态哈希表（5/5 PASS，文档直写 `doc/lib/static_hashmap.md`）
+从 Bun collections/StaticHashMap.cp 吸收编译期静态哈希表，内置 FNV-1a/SplitMix64 哈希与后向移位删除，纯 CP 零依赖。
+
+## 2026-11-21: SourceMap Base64-VLQ 高速查表编解码器（5/5 PASS，文档直写 `doc/lib/vlq.md`）
+从 Bun sourcemap/VLQ.cp 吸收 Base64-VLQ 高速查表编解码器，使用 64 位无溢出算术完整覆盖 i32::MIN..i32::MAX 并严格校验非法字符与截断输入。
+
 ## 2026-11-21: 全量 Unicode Case Folding 引擎（5/5 PASS，文档直写 `doc/lib/case_fold.md`）
 从 Bun md/unicode.cp 吸收压缩范围二分查找表与完整 Unicode Case Folding，纯 CP 零堆分配实现单码点折叠与流式 caseFoldEqual。
 
