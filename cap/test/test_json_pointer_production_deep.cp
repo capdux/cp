@@ -9,7 +9,7 @@ import {
     PointerIter,
     appendToken,
     parentPointer,
-} from "cap:json_pointer";
+} from "cap:json";
 
 test("json_pointer: isValidPointer RFC 6901 syntax validation") {
     expect_eq(isValidPointer(""), true);

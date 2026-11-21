@@ -1,10 +1,10 @@
 import {
     wrapText,
-    indentLines,
+    indentNonEmptyLines,
     commonIndent,
     dedentLines,
     truncateEllipsis,
-} from "cap:text_wrap";
+} from "cap:text";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {
@@ -33,7 +33,7 @@ test("commonIndent, dedentLines, indentLines, and UTF-8 safe truncateEllipsis", 
 
     let buf: [128]u8 = [0; 128];
     expect(strEq(dedentLines(block, buf[0..]).?, "line1\n  line2\n\nline3"));
-    expect(strEq(indentLines("a\n\nb", "  ", buf[0..]).?, "  a\n\n  b"));
+    expect(strEq(indentNonEmptyLines("a\n\nb", "  ", buf[0..]).?, "  a\n\n  b"));
 
     expect(strEq(truncateEllipsis("hello world", 8, "...", buf[0..]).?, "hello..."));
     expect(strEq(truncateEllipsis("short", 10, "...", buf[0..]).?, "short"));

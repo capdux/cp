@@ -79,3 +79,12 @@ pub fn demoTextEngine(alloc: std.mem.Allocator): ! {
     defer alloc.free(hits);
 }
 ```
+
+---
+
+## 零分配文本排版与缩进子模块（收敛自原 `text_*` 系列）
+
+- **多行缩进检测与格式化 (`indent.cp`)**：
+  - `minCommonIndent`、`dedent`、`indentLines(text, prefix, indent_empty, out)`、`stripCommonPrefix`（保留 `\n`/`\r\n`）。
+- **自动换行与 UTF-8 安全省略 (`wrap.cp`)**：
+  - `wrapText`、`indentNonEmptyLines(text, prefix, out)`、`commonIndent`、`dedentLines`、`truncateEllipsis`。

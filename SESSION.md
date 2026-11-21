@@ -310,3 +310,6 @@
 
 ### 2026-11-22（`cap:git` 验收，方案 A Wave 4：5 个 Git 目录收敛至 `cap:git`（5/5 PASS），累计消除 70 个长下划线顶层目录）
 - **执行成果**：`lib/git/`（5/5 PASS，`doc/lib/git.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 4：5 个 Git 目录收敛至 `cap:git`（5/5 PASS），累计消除 70 个长下划线顶层目录
+
+### 2026-11-22（`cap:json` 验收，方案 A Wave 4：`json_*`(3) + `text_*`(2) 收敛落地（5/5 PASS），累计消除 75 个长下划线顶层目录）
+- **执行成果**：`lib/json/`（5/5 PASS，`doc/lib/json.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 4：`json_*`(3) + `text_*`(2) 收敛落地（5/5 PASS），累计消除 75 个长下划线顶层目录

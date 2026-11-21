@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:json` JSON 解析、转义、压缩与 RFC 6901 JSON Pointer 统一主包（同步收敛 `cap:text`）（5/5 PASS，自动动态挂载 `cap.json`）
+- **方案 A 收敛 Wave 4 (`json_*` -> `cap:json` & `text_*` -> `cap:text`)**：将 `json_escape`/`json_minify`/`json_pointer` 合入 `lib/json/{escape,minify,ptr}.cp`，将 `text_indent`/`text_wrap` 合入 `lib/text/{indent,wrap}.cp`（5/5 PASS），删除 5 个旧目录与旧文档。
+
 ## [2026-11-22] - 新建 `cap:git` Git 对象/仓库、Diff 统计、Ref 校验、URL 解析、GitIgnore 与 GitConfig 统一主包（5/5 PASS，自动动态挂载 `cap.git`）
 - **方案 A 收敛 Wave 4 (5 Git 目录 -> `cap:git`)**：将 `git_diff_stat`、`git_ref_check`、`git_url_parse`、`gitignore_match`、`gitconfig_ini` 5 个散装目录合并收敛至 `lib/git/{diffstat,refcheck,url,ignorematch,config}.cp` 并由 `lib/git/index.cp` 零破坏聚合导出（5/5 PASS），删除 5 个旧目录与旧文档。
 

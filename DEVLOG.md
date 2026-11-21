@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:json` JSON 解析、转义、压缩与 RFC 6901 JSON Pointer 统一主包（同步收敛 `cap:text`）（5/5 PASS，文档直写 `doc/lib/json.md`）
+- **收敛要点**：`lib/json/ptr.cp` 避开既有 `pointer.cp`；`lib/text/wrap.cp` 的 3 参 `indentLines` 最小调整为 `indentNonEmptyLines`；累计已消除 75 个长下划线顶层目录。
+
 ## 2026-11-22: 新建 `cap:git` Git 对象/仓库、Diff 统计、Ref 校验、URL 解析、GitIgnore 与 GitConfig 统一主包（5/5 PASS，文档直写 `doc/lib/git.md`）
 - **收敛要点**：保留原 `lib/git/ignore.cp` 零破坏，新迁入规则匹配器命名为 `ignorematch.cp`；累计已消除 70 个长下划线顶层目录。
 

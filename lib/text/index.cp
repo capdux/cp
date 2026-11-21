@@ -21,3 +21,18 @@ export {
     TextStats,
     TokenEstimator,
 } from "./tokens.cp";
+
+export {
+    minCommonIndent,
+    dedent,
+    indentLines,
+    stripCommonPrefix,
+} from "./indent.cp";
+
+export {
+    wrapText,
+    indentNonEmptyLines,
+    commonIndent,
+    dedentLines,
+    truncateEllipsis,
+} from "./wrap.cp";

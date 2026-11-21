@@ -18,6 +18,29 @@ export {
 } from "./pointer";
 export { NdjsonReader, NdjsonWriter, NdjsonError } from "./ndjson";
 
+export {
+    needsJsonEscape,
+    escapeJsonContent,
+    quoteJsonString,
+    unescapeJsonContent,
+} from "./escape.cp";
+
+export {
+    minifyJson,
+    minifyJsonc,
+    minifyJsoncWithOptions,
+} from "./minify.cp";
+
+export {
+    isValidPointer,
+    parseArrayIndex,
+    unescapeToken,
+    escapeToken,
+    PointerIter,
+    appendToken,
+    parentPointer,
+} from "./ptr.cp";
+
 const std = @import("std");
 import { JsonParser, JsonParseOptions } from "./parser";
 import { JsonValue } from "./value";

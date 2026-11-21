@@ -113,3 +113,14 @@ pub fn demoJsonRfcAndNdjson(): !void {
     defer { if (tail.len > 0) allocator.free(tail); }
 }
 ```
+
+---
+
+## 零分配编解码辅助子模块（收敛自原 `json_*` 系列）
+
+- **RFC 8259 字符串转义/反转义 (`escape.cp`)**：
+  - `needsJsonEscape`、`escapeJsonContent`、`quoteJsonString`、`unescapeJsonContent`。
+- **JSON / JSONC 压缩器 (`minify.cp`)**：
+  - `minifyJson`、`minifyJsonc`、`minifyJsoncWithOptions`。
+- **RFC 6901 JSON Pointer 零分配工具 (`ptr.cp`)**：
+  - `isValidPointer`、`parseArrayIndex`、`unescapeToken`、`escapeToken`、`PointerIter`、`appendToken`、`parentPointer`。

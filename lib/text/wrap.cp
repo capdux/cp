@@ -63,7 +63,7 @@ export fn wrapText(text: []const u8, max_width: usize, out: []u8): ([]const u8)?
 }
 
 /// Prefix every non-empty line of `text` with `prefix` into `out`.
-export fn indentLines(text: []const u8, prefix: []const u8, out: []u8): ([]const u8)? {
+export fn indentNonEmptyLines(text: []const u8, prefix: []const u8, out: []u8): ([]const u8)? {
     let pos: usize = 0;
     let i: usize = 0;
     while (i < text.len) {

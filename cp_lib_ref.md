@@ -550,7 +550,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:content_disposition` | ContentDisposition, decodeRfc5987, sanitizeFilename, formatAttachment, formatInline | RFC 6266 / RFC 5987 Content-Disposition 响应头解析、文件名安全消毒与 UTF-8 filename* 格式化器 |
 | `cap:sse_parser` | SseEvent, SseParser, formatSseEvent | WHATWG Server-Sent Events (text/event-stream) 零分配流式解析器与格式化器 |
 | `cap:token_bucket` | TokenBucket, FixedWindowLimiter | 纯整数毫令牌确定性令牌桶与固定时间窗口限流器（防时钟回拨与溢出） |
-| `cap:json_pointer` | isValidPointer, parseArrayIndex, unescapeToken, escapeToken, PointerIter, appendToken, parentPointer | RFC 6901 JSON Pointer 解析、~0/~1 转义反转义、数组索引校验与路径段迭代器 |
 | `cap:ip_addr` | Ipv4Addr, Ipv6Addr, IpVersion, IpAddr | RFC 4291 / RFC 5952 IPv4 与 IPv6 零分配解析器、规范化零压缩格式化器、地址分类与 CIDR 子网匹配 |
 | `cap:hosts_file` | HostsLine, HostsIter, lookupHost, lookupHostV4, lookupHostV6, reverseLookup | /etc/hosts 零分配流式解析器与 IPv4/IPv6 正反向解析查找 |
 | `cap:netrc` | NetrcEntry, NetrcIter, lookupNetrc | .netrc / _netrc 认证凭据文件零分配流式解析器（支持引号、注释、macdef 与 default 回退） |
@@ -570,7 +569,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:logfmt` | LogfmtField, LogfmtIter, getLogfmtValue, appendLogfmtPair | 结构化 logfmt（key=value）日志行零分配流式解析器、键值查询与规范化转义编码器 |
 | `cap:uri_normalize` | isUnreserved, defaultPortForScheme, normalizePercentEncoding, removeDotSegments, normalizeOrigin | RFC 3986 URI 路径点段归约（§5.2.4）、百分号编码规范化与协议默认端口剥离工具 |
 | `cap:html_escape` | needsHtmlEscape, escapeHtml, unescapeHtml | 零分配 HTML 实体转义与命名/十进制/十六进制数字字符引用 UTF-8 反转义器 |
-| `cap:text_wrap` | wrapText, indentLines, commonIndent, dedentLines, truncateEllipsis | 零分配 CLI 贪心自动换行、缩进/公共反缩进与 UTF-8 安全省略号截断工具 |
 | `cap:w3c_traceparent` | TraceParent, TraceStateEntry, TraceStateIter, findTraceState | W3C Trace Context Level 1 traceparent / tracestate 分布式追踪头零分配解析与格式化器 |
 | `cap:byte_size` | parseByteSize, formatBytesIec, formatBytesSi | 纯整数人类可读字节大小解析器（SI/IEC 小数支持与溢出防护）及 SI/IEC 格式化器 |
 | `cap:case_convert` | WordIter, toSnakeCase, toScreamingSnakeCase, toKebabCase, toCamelCase, toPascalCase | 零分配缩写感知标识符命名风格转换器（snake_case / SCREAMING_SNAKE_CASE / kebab-case / camelCase / PascalCase） |
@@ -597,14 +595,12 @@ const h = cap.hash.wyhash("hello");
 | `cap:codeowners` | CodeownersRule, OwnerIter, CodeownersIter, resolveOwners, isOwnedBy | GitHub / GitLab CODEOWNERS 文件零分配规则解析与后匹配代码归属求值引擎 |
 | `cap:http_content_type` | ContentTypeParam, ContentTypeParamIter, ContentType | RFC 9110 §8.3.1 Content-Type 零分配解析器、参数提取器（charset/boundary）与媒体类型分类器 |
 | `cap:http_permissions_policy` | PermissionDirective, PermissionsPolicyIter, findPermission | W3C Permissions-Policy 响应头零分配解析器与特性权限（disabled/self/*/origin）查询器 |
-| `cap:json_escape` | needsJsonEscape, escapeJsonContent, quoteJsonString, unescapeJsonContent | RFC 8259 JSON 字符串零分配转义器、加引号器与支持 UTF-16 代理对解码的严格反转义器 |
 | `cap:xml_escape` | isValidXmlChar, escapeXmlText, escapeXmlAttr, wrapXmlCdata, unescapeXml | XML 1.0 文本/属性转义器、CDATA ]]> 自动安全拆分器与数字/命名实体反转义器 |
 | `cap:http_proxy_url` | ProxyScheme, parseProxyScheme, defaultProxyPort, ProxyUrl, ProxyEnv, selectProxy | HTTP/HTTPS/SOCKS4/SOCKS5/SOCKS5H 代理 URL 解析器与 HTTP_PROXY/HTTPS_PROXY/ALL_PROXY/NO_PROXY 路由选择器 |
 | `cap:http_user_agent` | ProductToken, UserAgentIter, BrowserFamily, OsFamily, isBotUserAgent, isMobileUserAgent, detectBrowser, detectOs, findProductVersion | RFC 9110 §10.1.5 User-Agent 产品令牌零分配迭代器与浏览器/OS/移动端/爬虫分类器 |
 | `cap:http_cookie_match` | defaultCookiePath, cookieDomainMatches, cookiePathMatches, CookiePrefixKind, detectCookiePrefix, validateCookiePrefix, canSendCookie | RFC 6265 §5.1.3/§5.1.4 Cookie 域名匹配、路径匹配、默认路径计算与 __Secure-/__Host- 发送策略判定器 |
 | `cap:rfc7807_problem` | PROBLEM_JSON_CONTENT_TYPE, defaultTitleForStatus, ProblemDetails | RFC 9457 / RFC 7807 HTTP Problem Details (application/problem+json) 零分配构造与转义序列化器 |
 | `cap:http_host_header` | HostHeader | RFC 9110 §7.2 HTTP Host / :authority 请求头安全解析、校验、回环识别与规范化格式化器 |
-| `cap:json_minify` | minifyJson, minifyJsonc, minifyJsoncWithOptions | 零分配 JSON / JSONC（去 // 与 /* */ 注释、去尾随逗号、去 BOM 与空白）压缩器 |
 | `cap:http_upgrade` | UpgradeProtocol, UpgradeIter, ConnectionTokenIter, connectionHasToken, upgradeHasProtocol, isHopByHopHeader, isWebSocketUpgrade | RFC 9110 §7.8 Upgrade / Connection 协议升级与逐跳头零分配解析器及 WebSocket 握手判定器 |
 | `cap:http_ratelimit_header` | RateLimitHeader, RateLimitPolicy | IETF Draft RateLimit / RateLimit-Policy 限流响应头零分配解析与规范化构造器 |
 | `cap:mail_address` | isValidAddrSpec, Mailbox, MailboxListIter | RFC 5322 电子邮件地址校验、"Display Name" <local@domain> 解析与引号逗号感知收件人列表迭代器 |
@@ -643,7 +639,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_early_hints` | `EarlyHintRel`, `EarlyHintLink`, `EarlyHintIter`, `formatEarlyHintLink`, `formatEarlyHints103Block` | RFC 8297 HTTP `103 Early Hints` / RFC 8288 `Link` 预加载头零分配解析与报文格式化器 |
 | `cap:http_trailer` | `isForbiddenTrailerField`, `isValidTrailerFieldName`, `TrailerFieldIter`, `validateTrailerHeader`, `hasTrailerField` | RFC 9110 §6.5.1 HTTP `Trailer` 尾部字段声明零分配解析与 25 项禁传字段安全校验器 |
 | `cap:http_max_forwards` | `MaxForwardsAction`, `MaxForwardsResult`, `parseMaxForwards`, `evaluateMaxForwards`, `formatMaxForwards` | RFC 9110 §7.6.2 HTTP `Max-Forwards` 代理跳数限制零分配解析与递减裁定器 |
-| `cap:text_indent` | `minCommonIndent`, `dedent`, `indentLines`, `stripCommonPrefix` | 零分配多行文本最小公共缩进检测、`dedent` 剥离与 `indentLines` 统一缩进格式化器 |
 | `cap:jsonl` | `JsonlChunkResult`, `JsonlIter`, `scanCompleteJsonlChunk`, `isBalancedJsonRecord`, `appendJsonlRecord` | JSON Lines / NDJSON 流式行迭代、增量分块扫描与记录平衡零分配校验器 |
 | `cap:jsonc` | `stripJsonc`, `stripJsoncPreserveLines`, `hasJsoncComments`, `countJsoncTrailingCommas` | JSON with Comments & Trailing Commas 零分配注释/尾逗号剥离器与行号保留格式化器 |
 | `cap:mustache` | `MustacheTokenKind`, `MustacheToken`, `MustacheVar`, `MustacheIter`, `validateMustache`, `renderMustache` | 零分配 Mustache 模板词法解析、语法校验与 HTML 转义渲染引擎 |
