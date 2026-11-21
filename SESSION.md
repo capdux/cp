@@ -46,3 +46,6 @@
 
 ### 2026-11-22（`cap:der` 验收，完成 `cap:der` 交付验收并登记入库（5/5 PASS）；派发 `cap:age`。）
 - **执行成果**：`lib/der/`（5/5 PASS，`doc/lib/der.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:der` 交付验收并登记入库（5/5 PASS）；派发 `cap:age`。
+
+### 2026-11-22（`cap:cef` 验收，完成 `cap:cef` 交付验收并登记入库（5/5 PASS）；派发 `cap:leef`。）
+- **执行成果**：`lib/cef/`（5/5 PASS，`doc/lib/cef.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:cef` 交付验收并登记入库（5/5 PASS）；派发 `cap:leef`。

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:cef` 零分配 ArcSight CEF SIEM 日志解析、Extension 切分与转义编解码器（5/5 PASS，文档直写 `doc/lib/cef.md`）
+实现零分配 ArcSight CEF Rev 25 日志解析器，准确区分 \| 与 \\| 转义并统一映射数字/文本 Severity。
+
 ## 2026-11-22: 新建 `cap:der` 零分配 ITU-T X.690 ASN.1 DER 严格规范 TLV/OID 编解码器（5/5 PASS，文档直写 `doc/lib/der.md`）
 实现零分配 ASN.1 DER 规范编解码器，拒绝不定长 0x80、非最小长度、冗余整型填充与非法布尔。
 
