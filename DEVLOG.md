@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:geohash_3d` 纯 CP 3D Morton Z-Order 21-bit 空间填充曲线编码与 WGS84 Haversine 球面大圆测距引擎（支持 `cap.geohash_3d` 自动动态挂载，详见 `doc/lib/geohash_3d.md`）（5/5 PASS，文档直写 `doc/lib/geohash_3d.md`）
+- **核心设计**：采用魔数位扩张/压缩实现零堆 $O(1)$ 3D Morton 交错编码，通过 21-bit 极值往返与 NYC-London 大圆距离校验。
+
 ## 2026-11-21: 新建 `cap:consistent_maglev` 纯 CP Google Maglev $O(1)$ 一致性哈希查表路由引擎（置换表均匀分布、加权后端比例路由与最小迁移扰动，支持 `cap.consistent_maglev` 自动动态挂载，详见 `doc/lib/consistent_maglev.md`）（5/5 PASS，文档直写 `doc/lib/consistent_maglev.md`）
 - **核心设计**：采用双 Wyhash 偏移/步长生成置换序列并轮询填充素数查表，通过加权 2:1 比例路由与 `std.testing.allocator` 零泄漏验证。
 

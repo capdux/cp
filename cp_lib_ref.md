@@ -397,3 +397,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:consistent_jump` | `JumpError`, `WeightedNode`, `jumpConsistentHash`, `jumpConsistentHashBytes`, `hrwSelect`, `hrwSelectWeighted` | 纯 CP Google Jump Consistent Hash 零内存分片与 Rendezvous HRW 等权/加权无状态路由引擎（支持 `cap.consistent_jump` 自动动态挂载，详见 `doc/lib/consistent_jump.md`） |
 | `cap:suffix_array` | `SuffixArray` | 纯 CP 后缀数组与 Kasai $O(N)$ LCP 数组引擎（$O(M \log N)$ 二分子串检索、`countOccurrences`、`searchAll` 与最长重复子串，支持 `cap.suffix_array` 自动动态挂载，详见 `doc/lib/suffix_array.md`） |
 | `cap:consistent_maglev` | `DEFAULT_TABLE_SIZE`, `MaglevError`, `Backend`, `MaglevRouter` | 纯 CP Google Maglev $O(1)$ 一致性哈希查表路由引擎（置换表均匀分布、加权后端比例路由与最小迁移扰动，支持 `cap.consistent_maglev` 自动动态挂载，详见 `doc/lib/consistent_maglev.md`） |
+| `cap:geohash_3d` | `MortonError`, `Point3D`, `mortonEncode3D`, `mortonDecode3D`, `quantizeEncode3D`, `haversineMeters` | 纯 CP 3D Morton Z-Order 21-bit 空间填充曲线编码与 WGS84 Haversine 球面大圆测距引擎（支持 `cap.geohash_3d` 自动动态挂载，详见 `doc/lib/geohash_3d.md`） |
