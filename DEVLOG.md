@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:postcard` 零分配 Postcard 嵌入式紧凑二进制（LEB128/ZigZag + COBS）编解码器（5/5 PASS，文档直写 `doc/lib/postcard.md`）
+实现零分配 Postcard 编解码器，严格校验 VarU16/32/64 位宽上限与 COBS 非法零字节。
+
 ## 2026-11-22: 新建 `cap:rdb` 零分配 Redis RDB 二进制快照头、变长/整数编码与流式事件解析器（5/5 PASS，文档直写 `doc/lib/rdb.md`）
 实现零分配 Redis RDB 解析器，自动关联 EXPIRETIME/EXPIRETIME_MS 至后续 KV 并支持 EOF 8B CRC64 校验尾。
 

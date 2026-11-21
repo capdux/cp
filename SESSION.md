@@ -61,3 +61,6 @@
 
 ### 2026-11-22（`cap:rdb` 验收，完成 `cap:rdb` 交付验收并登记入库（5/5 PASS）；派发 `cap:vcd`。）
 - **执行成果**：`lib/rdb/`（5/5 PASS，`doc/lib/rdb.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:rdb` 交付验收并登记入库（5/5 PASS）；派发 `cap:vcd`。
+
+### 2026-11-22（`cap:postcard` 验收，完成 `cap:postcard` 交付验收并登记入库（5/5 PASS）；启动专职热修处理工单 #110 (`task-bun-20261122-root-struct-callconv-c`)，派发 `cap:ubjson`。）
+- **执行成果**：`lib/postcard/`（5/5 PASS，`doc/lib/postcard.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:postcard` 交付验收并登记入库（5/5 PASS）；启动专职热修处理工单 #110 (`task-bun-20261122-root-struct-callconv-c`)，派发 `cap:ubjson`。

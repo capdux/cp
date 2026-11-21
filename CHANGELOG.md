@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:postcard` 零分配 Postcard 嵌入式紧凑二进制（LEB128/ZigZag + COBS）编解码器（5/5 PASS，自动动态挂载 `cap.postcard`）
+新增 `lib/postcard/{postcard,index}.cp`、`doc/lib/postcard.md` 与 `cap/test/test_postcard_production_deep.cp`（5/5 PASS），支持全套 LEB128/ZigZag 变长整数、IEEE-754 浮点与 COBS 帧定界编解码。
+
 ## [2026-11-22] - 新建 `cap:rdb` 零分配 Redis RDB 二进制快照头、变长/整数编码与流式事件解析器（5/5 PASS，自动动态挂载 `cap.rdb`）
 新增 `lib/rdb/{rdb,index}.cp`、`doc/lib/rdb.md` 与 `cap/test/test_rdb_production_deep.cp`（5/5 PASS），支持 REDIS 9B 头、4 种长度编码、int8/16/32/LZF 字符串与全套 Opcode 流式解析。
 
