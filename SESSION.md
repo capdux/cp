@@ -223,3 +223,6 @@
 
 ### 2026-11-22（`cap:sflow` 验收，完成并注册纯 CP 零分配标准库 cap:sflow（5/5 cap test PASS））
 - **执行成果**：`lib/sflow/`（5/5 PASS，`doc/lib/sflow.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:sflow（5/5 cap test PASS）
+
+### 2026-11-22（`cap:ftp` 验收，完成并注册纯 CP 零分配标准库 cap:ftp（5/5 cap test PASS））
+- **执行成果**：`lib/ftp/`（5/5 PASS，`doc/lib/ftp.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:ftp（5/5 cap test PASS）

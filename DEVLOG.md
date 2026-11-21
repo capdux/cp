@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ftp` FTP (RFC 959/2428/3659) control commands, replies, PASV/EPSV & MLSD zero-alloc codec（5/5 PASS，文档直写 `doc/lib/ftp.md`）
+新增 cap:ftp 纯 CP 零分配文件传输控制协议库（单/多行回复、PASV/EPSV 解析、MLSD Fact 零拷贝迭代与 PORT/EPRT 编码），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:sflow` sFlow v5 datagram, Flow/Expanded Sample, RawPacketHeader & ExtendedSwitch zero-alloc parser（5/5 PASS，文档直写 `doc/lib/sflow.md`）
 新增 cap:sflow 纯 CP 零分配网络采样遥测协议库（IPv4/IPv6 Agent 报头、Sample/Record 嵌套零拷贝迭代），通过 cpc check 与 5/5 cap test
 
