@@ -49,3 +49,6 @@
 
 ### 2026-11-22（`cap:cef` 验收，完成 `cap:cef` 交付验收并登记入库（5/5 PASS）；派发 `cap:leef`。）
 - **执行成果**：`lib/cef/`（5/5 PASS，`doc/lib/cef.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:cef` 交付验收并登记入库（5/5 PASS）；派发 `cap:leef`。
+
+### 2026-11-22（`cap:ldif` 验收，完成 `cap:ldif` 交付验收并登记入库（5/5 PASS）；派发 `cap:ris`。）
+- **执行成果**：`lib/ldif/`（5/5 PASS，`doc/lib/ldif.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:ldif` 交付验收并登记入库（5/5 PASS）；派发 `cap:ris`。

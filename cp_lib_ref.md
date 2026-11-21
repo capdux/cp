@@ -650,3 +650,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:warc` | WARC_VERSION_1_0, WARC_VERSION_1_1, WarcRecordType, WarcField, WarcFieldIter, WarcRecord, WarcIter, WarcStats, warcRecordTypeFromSlice, isWarc, findWarcHeader, summarizeWarc | 零分配 ISO 28500 WARC 1.0/1.1 网页归档与 Common Crawl 语料解析器 |
 | `cap:der` | TAG_BOOLEAN, TAG_INTEGER, TAG_BIT_STRING, TAG_OCTET_STRING, TAG_NULL, TAG_OID, TAG_SEQUENCE, DerTlv, DerBitString, DerReader, DerWriter, parseDerTlv, formatDerOid | 零分配 ITU-T X.690 ASN.1 DER 严格规范 TLV/OID 编解码器 |
 | `cap:cef` | CEF_PREFIX, CefEvent, CefExtPair, CefExtIter, isCef, parseCefLine, findCefExt, unescapeCefHeader, unescapeCefExtValue, formatCefHeader | 零分配 ArcSight CEF SIEM 日志解析、Extension 切分与转义编解码器 |
+| `cap:ldif` | LdifValueKind, LdifChangeType, LdifAttr, LdifAttrIter, LdifEntry, LdifIter, LdifStats, isLdif, summarizeLdif | 零分配 RFC 2849 LDAP LDIF 折行展开、Base64 属性与变更记录解析器 |

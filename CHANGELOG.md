@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ldif` 零分配 RFC 2849 LDAP LDIF 折行展开、Base64 属性与变更记录解析器（5/5 PASS，自动动态挂载 `cap.ldif`）
+新增 `lib/ldif/{ldif,index}.cp`、`doc/lib/ldif.md` 与 `cap/test/test_ldif_production_deep.cp`（5/5 PASS），支持 version: 1、RFC 2849 单空格续行展开、Base64/URL 属性与 changetype 解析。
+
 ## [2026-11-22] - 新建 `cap:cef` 零分配 ArcSight CEF SIEM 日志解析、Extension 切分与转义编解码器（5/5 PASS，自动动态挂载 `cap.cef`）
 新增 `lib/cef/{cef,index}.cp`、`doc/lib/cef.md` 与 `cap/test/test_cef_production_deep.cp`（5/5 PASS），支持 Syslog 前缀保留、头部未转义 | 切分、含空格 Extension 解析与 formatCefHeader。
 
