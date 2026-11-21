@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:nmf` 纯 CP 零分配非负矩阵分解（NMF）库：Lee-Seung Frobenius 与广义 KL 散度乘法更新、确定性初始化、固定基矩阵新样本投影与重构误差评估（5/5 PASS，文档直写 `doc/lib/nmf.md`）
+新增 cap:nmf（lib/nmf/{nmf,index}.cp）：零分配 Lee-Seung 2001 乘法更新非负矩阵分解，支持 Frobenius 与 KL 散度及固定 H 投影，cpc check 0 错误，cap test 6/6 PASS (667ms)
+
 ## 2026-11-22: 新建 `cap:naivebayes` 纯 CP 零分配朴素贝叶斯（Naive Bayes）分类库：Gaussian（方差平滑）、Multinomial（Laplace/Lidstone 平滑）与 Bernoulli（阈值二值化）全对数域 log-sum-exp 防下溢分类器（5/5 PASS，文档直写 `doc/lib/naivebayes.md`）
 新增 cap:naivebayes（lib/naivebayes/{naivebayes,index}.cp）：零分配全对数域 log-sum-exp 实现 Gaussian/Multinomial/Bernoulli 朴素贝叶斯，100 维特征无下溢，cpc check 0 错误，cap test 6/6 PASS (792ms)
 

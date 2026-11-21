@@ -196,3 +196,6 @@
 
 ### 2026-11-22（`cap:naivebayes` 验收，子智能体交付 cap:naivebayes（Gaussian / Multinomial / Bernoulli 朴素贝叶斯，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/naivebayes/`（5/5 PASS，`doc/lib/naivebayes.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:naivebayes（Gaussian / Multinomial / Bernoulli 朴素贝叶斯，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:nmf` 验收，子智能体交付 cap:nmf（非负矩阵分解 NMF，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/nmf/`（5/5 PASS，`doc/lib/nmf.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:nmf（非负矩阵分解 NMF，6/6 PASS），主协调器统一登记并提交
