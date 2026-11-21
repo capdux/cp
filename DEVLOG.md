@@ -1,3 +1,12 @@
+## 2026-11-22: 新建 `cap:no_proxy` HTTP NO_PROXY 零堆分配代理绕过匹配器与 IPv4 CIDR 网段引擎（吸收自 bun/src/http/ProxyTunnel.cp）（5/5 PASS，文档直写 `doc/lib/no_proxy.md`）
+子智能体 2 吸收 ProxyTunnel NO_PROXY 规则，实现 IPv4/CIDR、域名后缀防误匹配、端口约束与 IPv6 方括号支持，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:mysql_caps` MySQL 4.1-8.4 协议 32-bit 客户端/服务端能力位协商与 16-bit StatusFlags 事务/多结果集状态解析库（吸收自 bun/src/sql/mysql/{Capabilities,StatusFlags}.cp）（5/5 PASS，文档直写 `doc/lib/mysql_caps.md`）
+子智能体 1 吸收 bun/src/sql/mysql/{Capabilities,StatusFlags}.cp，实现 32 位能力位协商与 14 项服务器状态解析，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:sql_conn_uri` PostgreSQL / MySQL / SQLite 连接串零堆分配解析器、SSLMode 策略与 PostgreSQL CommandTag 解析库（吸收自 bun/src/sql/postgres/{CommandTag,SSLMode}.cp 与 mysql/SSLMode.cp）（5/5 PASS，文档直写 `doc/lib/sql_conn_uri.md`）
+吸收 Bun SQL 连接与 CommandTag 实现，实现零堆分配三方言连接串解析（含 IPv6/默认端口/sslmode）与 CommandTag 解析，通过 cpc check 与 cap test
+
 ## 2026-11-22: 新建 `cap:header_value_iter` RFC 9110 HTTP 逗号/分号多值头部零堆分配迭代器（保护引号逗号）与 Cache-Control 指令解析器（吸收自 bun/src/http/HeaderValueIterator.cp）（5/5 PASS，文档直写 `doc/lib/header_value_iter.md`）
 子智能体 1 吸收 bun/src/http/HeaderValueIterator.cp，实现逗号/分号多值迭代器与 Cache-Control 解析，5/5 单测通过
 

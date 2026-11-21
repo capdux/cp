@@ -533,3 +533,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_cookie` | SameSite, Cookie, CookiePair, CookieRequestIterator, getCookie | RFC 6265 / 6265bis HTTP Cookie & Set-Cookie 零堆分配解析、域/路径匹配与序列化库（吸收自 bun/src/jsc/bindings/Cookie.cpp 与 CookieMap.cpp） |
 | `cap:hive_array` | HiveArray | 基于 64-bit 分块位图的零堆分配固定容量 Slab 槽池（O(1) 分配/防重复释放/稀疏 @ctz 跳跃迭代，吸收自 bun/src/collections/hive_array.cp） |
 | `cap:header_value_iter` | HeaderValueIterator, HeaderParam, HeaderParamIterator, CacheControl | RFC 9110 HTTP 逗号/分号多值头部零堆分配迭代器（保护引号逗号）与 Cache-Control 指令解析器（吸收自 bun/src/http/HeaderValueIterator.cp） |
+| `cap:sql_conn_uri` | SqlDialect, SslMode, PgCommandKind, PgCommandTag, SqlConnUri | PostgreSQL / MySQL / SQLite 连接串零堆分配解析器、SSLMode 策略与 PostgreSQL CommandTag 解析库（吸收自 bun/src/sql/postgres/{CommandTag,SSLMode}.cp 与 mysql/SSLMode.cp） |
+| `cap:mysql_caps` | CapabilityFlag, Capabilities, StatusFlag, StatusFlags | MySQL 4.1-8.4 协议 32-bit 客户端/服务端能力位协商与 16-bit StatusFlags 事务/多结果集状态解析库（吸收自 bun/src/sql/mysql/{Capabilities,StatusFlags}.cp） |
+| `cap:no_proxy` | Ipv4Addr, Ipv4Cidr, shouldBypassProxy | HTTP NO_PROXY 零堆分配代理绕过匹配器与 IPv4 CIDR 网段引擎（吸收自 bun/src/http/ProxyTunnel.cp） |

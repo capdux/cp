@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:no_proxy` HTTP NO_PROXY 零堆分配代理绕过匹配器与 IPv4 CIDR 网段引擎（吸收自 bun/src/http/ProxyTunnel.cp）（5/5 PASS，自动动态挂载 `cap.no_proxy`）
+新增 cap:no_proxy 标准库模块（lib/no_proxy/{no_proxy,index}.cp, doc/lib/no_proxy.md, cap/test/test_no_proxy_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:mysql_caps` MySQL 4.1-8.4 协议 32-bit 客户端/服务端能力位协商与 16-bit StatusFlags 事务/多结果集状态解析库（吸收自 bun/src/sql/mysql/{Capabilities,StatusFlags}.cp）（5/5 PASS，自动动态挂载 `cap.mysql_caps`）
+新增 cap:mysql_caps 标准库模块（lib/mysql_caps/{caps,index}.cp, doc/lib/mysql_caps.md, cap/test/test_mysql_caps_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:sql_conn_uri` PostgreSQL / MySQL / SQLite 连接串零堆分配解析器、SSLMode 策略与 PostgreSQL CommandTag 解析库（吸收自 bun/src/sql/postgres/{CommandTag,SSLMode}.cp 与 mysql/SSLMode.cp）（5/5 PASS，自动动态挂载 `cap.sql_conn_uri`）
+新增 cap:sql_conn_uri 标准库模块（lib/sql_conn_uri/{conn_uri,index}.cp, doc/lib/sql_conn_uri.md, cap/test/test_sql_conn_uri_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:header_value_iter` RFC 9110 HTTP 逗号/分号多值头部零堆分配迭代器（保护引号逗号）与 Cache-Control 指令解析器（吸收自 bun/src/http/HeaderValueIterator.cp）（5/5 PASS，自动动态挂载 `cap.header_value_iter`）
 新增 cap:header_value_iter 标准库模块（lib/header_value_iter/{iter,index}.cp, doc/lib/header_value_iter.md, cap/test/test_header_value_iter_production_deep.cp）
 

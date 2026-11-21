@@ -223,3 +223,12 @@
 
 ### 2026-11-22（`cap:header_value_iter` 验收，Batch 36: 吸收并验证 cap:header_value_iter (5/5 PASSED)）
 - **执行成果**：`lib/header_value_iter/`（5/5 PASS，`doc/lib/header_value_iter.md`）经 `verify_module.sh` 一次性验收回收；Batch 36: 吸收并验证 cap:header_value_iter (5/5 PASSED)
+
+### 2026-11-22（`cap:sql_conn_uri` 验收，Batch 37: 吸收并验证 cap:sql_conn_uri (PASSED)）
+- **执行成果**：`lib/sql_conn_uri/`（5/5 PASS，`doc/lib/sql_conn_uri.md`）经 `verify_module.sh` 一次性验收回收；Batch 37: 吸收并验证 cap:sql_conn_uri (PASSED)
+
+### 2026-11-22（`cap:mysql_caps` 验收，Batch 37: 吸收并验证 cap:mysql_caps (5/5 PASSED)）
+- **执行成果**：`lib/mysql_caps/`（5/5 PASS，`doc/lib/mysql_caps.md`）经 `verify_module.sh` 一次性验收回收；Batch 37: 吸收并验证 cap:mysql_caps (5/5 PASSED)
+
+### 2026-11-22（`cap:no_proxy` 验收，Batch 37: 吸收并验证 cap:no_proxy (5/5 PASSED)）
+- **执行成果**：`lib/no_proxy/`（5/5 PASS，`doc/lib/no_proxy.md`）经 `verify_module.sh` 一次性验收回收；Batch 37: 吸收并验证 cap:no_proxy (5/5 PASSED)
