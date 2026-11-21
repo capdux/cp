@@ -646,3 +646,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:mol2` | MOL2_RTI_MOLECULE, MOL2_RTI_ATOM, MOL2_RTI_BOND, Mol2Header, Mol2Atom, Mol2AtomIter, Mol2Bond, Mol2BondIter, Mol2RecordIter, Mol2Stats, isMol2, parseMol2Header, parseMol2AtomLine, parseMol2BondLine, summarizeMol2 | 零分配 Tripos SYBYL (.mol2) 3D 分子结构与力场原子类型解析器 |
 | `cap:cif` | CifTokenKind, CifToken, CifLexer, CifEntry, CifPairIter, CifLoop, CifLoopIter, CifRow, CifRowIter, CifStats, isCif, findCifTag, summarizeCif | 零分配 IUCr CIF / mmCIF 晶体学与生物大分子结构词法与 loop_ 表解析器 |
 | `cap:smi` | SmiTokenKind, SmiBracketAtom, SmiToken, SmiLexer, SmiStats, parseBracketAtom, analyzeSmiles, isValidSmiles | 零分配 Daylight SMILES / OpenSMILES 分子词法与环配平校验器 |
+| `cap:inchi` | INCHI_PREFIX, INCHI_KEY_LEN, InchiLayerKind, InchiParsed, InchiLayer, InchiLayerIter, FormulaElement, FormulaIter, InchiKey, isInchi, parseInchi, parseInchiKey, isValidInchiKey | 零分配 IUPAC InChI v1.06 分层结构、Hill 分子式与 27 字符 InChIKey 解析器 |

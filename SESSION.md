@@ -37,3 +37,6 @@
 
 ### 2026-11-22（`cap:smi` 验收，完成 `cap:smi` 交付验收并登记入库（5/5 PASS）；派发 `cap:der`。）
 - **执行成果**：`lib/smi/`（5/5 PASS，`doc/lib/smi.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:smi` 交付验收并登记入库（5/5 PASS）；派发 `cap:der`。
+
+### 2026-11-22（`cap:inchi` 验收，完成 `cap:inchi` 交付验收并登记入库（5/5 PASS）；派发 `cap:ldif`。）
+- **执行成果**：`lib/inchi/`（5/5 PASS，`doc/lib/inchi.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:inchi` 交付验收并登记入库（5/5 PASS）；派发 `cap:ldif`。

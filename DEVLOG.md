@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:inchi` 零分配 IUPAC InChI v1.06 分层结构、Hill 分子式与 27 字符 InChIKey 解析器（5/5 PASS，文档直写 `doc/lib/inchi.md`）
+实现零分配 IUPAC InChI 与 InChIKey 解析器，严格校验 27 字符块结构与全部子层前缀。
+
 ## 2026-11-22: 新建 `cap:smi` 零分配 Daylight SMILES / OpenSMILES 分子词法与环配平校验器（5/5 PASS，文档直写 `doc/lib/smi.md`）
 实现零分配 Daylight SMILES 解析器，采用栈上 100 位环表校验成对闭合与分支平衡。
 
