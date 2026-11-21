@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:gopher` Gopher (RFC 1436) selector/search request & Menu item zero-alloc codec（5/5 PASS，文档直写 `doc/lib/gopher.md`）
+新增 cap:gopher 纯 CP 零分配经典信息检索协议库（根目录/搜索请求往返、GopherMenuIter 零拷贝迭代与防注入编码），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:llmnr` LLMNR (RFC 4795) link-local multicast query/response & C/TC/T flags zero-alloc codec（5/5 PASS，文档直写 `doc/lib/llmnr.md`）
 新增 cap:llmnr 纯 CP 零分配链路本地名称解析协议库（Query/A/AAAA 编解码往返、C/TC/T 标志位与 0xC0 压缩指针防环解码），通过 cpc check 与 5/5 cap test
 

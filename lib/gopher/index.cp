@@ -1,0 +1,28 @@
+// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:gopher)
+
+export {
+    GOPHER_TCP_PORT,
+    TYPE_TEXT,
+    TYPE_DIR,
+    TYPE_CSO,
+    TYPE_ERROR,
+    TYPE_BINHEX,
+    TYPE_DOS,
+    TYPE_UUENCODED,
+    TYPE_SEARCH,
+    TYPE_TELNET,
+    TYPE_BINARY,
+    TYPE_MIRROR,
+    TYPE_GIF,
+    TYPE_IMAGE,
+    TYPE_INFO,
+    TYPE_HTML,
+    TYPE_SOUND,
+    GopherRequest,
+    parseGopherRequest,
+    encodeGopherRequest,
+    GopherItem,
+    parseGopherItem,
+    encodeGopherItem,
+    GopherMenuIter,
+} from "./gopher.cp";
