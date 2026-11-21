@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:diff_myers` 纯 CP Myers 最短编辑脚本 (SES) 行级 Diff、Unified Diff 格式化与补丁还原引擎（支持 `cap.diff_myers` 自动动态挂载，详见 `doc/lib/diff_myers.md`）（5/5 PASS，自动动态挂载 `cap.diff_myers`）
+- **新增标准库**：`lib/diff_myers/{diff,index}.cp`，实现 Myers SES 行级 Diff、`reconstructNew` 与 `formatUnifiedDiff`。\n- **新增文档与测试**：`doc/lib/diff_myers.md` 扁平文档与 `cap/test/test_diff_myers_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:tdigest` 纯 CP 流式 Dunning T-Digest 分位数估算引擎（高精度 p50/p95/p99 尾部估计与分布式 `merge` 聚合，支持 `cap.tdigest` 自动动态挂载，详见 `doc/lib/tdigest.md`）（5/5 PASS，自动动态挂载 `cap.tdigest`）
 - **新增标准库**：`lib/tdigest/{tdigest,index}.cp`，实现流式 `TDigest` 质心压缩、`quantile` 插值与 `merge`。\n- **新增文档与测试**：`doc/lib/tdigest.md` 扁平文档与 `cap/test/test_tdigest_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

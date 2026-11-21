@@ -389,3 +389,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:bimap` | `BiMapError`, `BiMap`, `StringBiMap` | 纯 CP 双向一对一映射容器（$O(1)$ 双向查找、冲突拦截 `insert`、强制覆盖 `forceInsert` 与深拷贝字符串专用 `StringBiMap`，支持 `cap.bimap` 自动动态挂载，详见 `doc/lib/bimap.md`） |
 | `cap:merkle_tree` | `MerkleError`, `ProofStep`, `MerkleProof`, `hashLeaf`, `hashInternal`, `MerkleTree`, `verifyProof` | 纯 CP 密码学 SHA-256 Merkle Tree 引擎（`0x00`/`0x01` 域分离防第二原像碰撞、奇数叶支持与无状态包容性证明 `generateProof`/`verifyProof`，支持 `cap.merkle_tree` 自动动态挂载，详见 `doc/lib/merkle_tree.md`） |
 | `cap:tdigest` | `TDigestError`, `Centroid`, `TDigest` | 纯 CP 流式 Dunning T-Digest 分位数估算引擎（高精度 p50/p95/p99 尾部估计与分布式 `merge` 聚合，支持 `cap.tdigest` 自动动态挂载，详见 `doc/lib/tdigest.md`） |
+| `cap:diff_myers` | `DiffOpKind`, `DiffOp`, `DiffResult`, `diffLines`, `reconstructNew`, `formatUnifiedDiff` | 纯 CP Myers 最短编辑脚本 (SES) 行级 Diff、Unified Diff 格式化与补丁还原引擎（支持 `cap.diff_myers` 自动动态挂载，详见 `doc/lib/diff_myers.md`） |

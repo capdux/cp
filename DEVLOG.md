@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:diff_myers` 纯 CP Myers 最短编辑脚本 (SES) 行级 Diff、Unified Diff 格式化与补丁还原引擎（支持 `cap.diff_myers` 自动动态挂载，详见 `doc/lib/diff_myers.md`）（5/5 PASS，文档直写 `doc/lib/diff_myers.md`）
+- **核心设计**：采用 Myers/LCS SES 计算最小编辑序列，生成标准 `@@ -a,b +c,d @@` Unified Diff 并通过 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:tdigest` 纯 CP 流式 Dunning T-Digest 分位数估算引擎（高精度 p50/p95/p99 尾部估计与分布式 `merge` 聚合，支持 `cap.tdigest` 自动动态挂载，详见 `doc/lib/tdigest.md`）（5/5 PASS，文档直写 `doc/lib/tdigest.md`）
 - **核心设计**：采用 Dunning 缩放函数自动合并质心，通过 1 万样本分位数精度与 `std.testing.allocator` 零泄漏验证。
 
