@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:minhash` Andrei Broder MinHash Jaccard estimator, union merge, cardinality & LSH band hashing（5/5 PASS，文档直写 `doc/lib/minhash.md`）
+新增 cap:minhash 纯 CP 零分配集合相似度估计库（SplitMix64 盐哈希族、并集签名合并与 32×4 LSH 分带检索），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:simhash` Charikar 64-bit SimHash near-duplicate fingerprinting, shingles & 4x16-bit LSH（5/5 PASS，文档直写 `doc/lib/simhash.md`）
 新增 cap:simhash 纯 CP 零分配近似重复文档指纹库（栈上 64 维权重向量、中英文 shingle 与 4 段鸽巢 LSH），通过 cpc check 与 5/5 cap test
 
