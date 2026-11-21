@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:netcdf` 零分配 Unidata NetCDF CDF-1/CDF-2/CDF-5 科学多维数组容器解析器（5/5 PASS，自动动态挂载 `cap.netcdf`）
+新增 `lib/netcdf/{netcdf,index}.cp`、`doc/lib/netcdf.md` 与 `cap/test/test_netcdf_production_deep.cp`（5/5 PASS），支持 CDF-1/2/5 4B 对齐头解析与维度/全局属性/变量零分配迭代。
+
 ## [2026-11-22] - 新建 `cap:scale` 零分配 Parity SCALE 确定性小端编解码器与 Compact<u64> 规范校验（5/5 PASS，自动动态挂载 `cap.scale`）
 新增 `lib/scale/{scale,index}.cp`、`doc/lib/scale.md` 与 `cap/test/test_scale_production_deep.cp`（5/5 PASS），支持 Compact<u64> 全 4 模式规范校验、单字节三态 Option<bool> 与全套 LE 标量/容器编解码。
 

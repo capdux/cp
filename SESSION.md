@@ -49,3 +49,6 @@
 
 ### 2026-11-22（`cap:scale` 验收，完成 `cap:scale` 交付验收并登记入库（5/5 PASS）；派发 `cap:sstable`。）
 - **执行成果**：`lib/scale/`（5/5 PASS，`doc/lib/scale.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:scale` 交付验收并登记入库（5/5 PASS）；派发 `cap:sstable`。
+
+### 2026-11-22（`cap:netcdf` 验收，完成 `cap:netcdf` 交付验收并登记入库（5/5 PASS）；派发 `cap:rdb`。）
+- **执行成果**：`lib/netcdf/`（5/5 PASS，`doc/lib/netcdf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:netcdf` 交付验收并登记入库（5/5 PASS）；派发 `cap:rdb`。

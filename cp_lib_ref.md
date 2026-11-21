@@ -569,3 +569,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:rlp` | RlpKind, RlpItem, RlpListIter, RlpWriter, decodeRlpItem, decodeRlpU64, encodedBytesLen, encodedU64Len, encodedListHeaderLen | 零分配 Ethereum RLP 确定性二进制规范编解码器 |
 | `cap:borsh` | BorshWriter, BorshReader | 零分配 Borsh 确定性二进制小端编解码器（拒绝 NaN 与非 0/1 布尔） |
 | `cap:scale` | ScaleOptionBool, ScaleWriter, ScaleReader, compactU64Len | 零分配 Parity SCALE 确定性小端编解码器与 Compact<u64> 规范校验 |
+| `cap:netcdf` | NC_MAGIC, NetcdfFormat, NetcdfType, NetcdfHeader, NetcdfDim, NetcdfDimIter, NetcdfAttr, NetcdfAttrIter, NetcdfVar, NetcdfVarIter, netcdfTypeSize, detectNetcdfFormat, isNetcdf, parseNetcdfHeader | 零分配 Unidata NetCDF CDF-1/CDF-2/CDF-5 科学多维数组容器解析器 |

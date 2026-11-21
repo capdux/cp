@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:netcdf` 零分配 Unidata NetCDF CDF-1/CDF-2/CDF-5 科学多维数组容器解析器（5/5 PASS，文档直写 `doc/lib/netcdf.md`）
+实现零分配 NetCDF 容器解析器，兼容 32-bit 与 64-bit 偏移/长度编码及 UNLIMITED 维度。
+
 ## 2026-11-22: 新建 `cap:scale` 零分配 Parity SCALE 确定性小端编解码器与 Compact<u64> 规范校验（5/5 PASS，文档直写 `doc/lib/scale.md`）
 实现零分配 Parity SCALE 编解码器，严格拒绝非最小 Compact 编码与大整数尾零。
 
