@@ -8233,3 +8233,5 @@ Bun AGY 在 265 个模块的实战重构中提交了 8 项遗漏审查。经逐�
 
 ## 2026-11-21: 新建 `cap:ed25519` 纯 CP 原生 RFC 8032 Ed25519 数字签名、密钥对生成、批量验签与 Hex 编解码引擎（支持 `cap.ed25519` 自动动态挂载，详见 `doc/lib/ed25519.md`）（5/5 PASS，文档直写 `doc/lib/ed25519.md`）
 - **核心设计**：基于 Zig 0.17 `std.crypto.sign.Ed25519` 与 `std.Io.Threaded` 实现零堆签名与批量校验，通过 RFC 8032 Section 7.1 TEST 1/2/3 官方向量与篡改拦截测试。
+
+> 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。

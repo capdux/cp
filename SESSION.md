@@ -286,3 +286,15 @@
 
 ### 2026-11-22（`cap:css_transform` 验收，Batch 23: 吸收并验证 cap:css_transform (6/6 PASSED)）
 - **执行成果**：`lib/css_transform/`（5/5 PASS，`doc/lib/css_transform.md`）经 `verify_module.sh` 一次性验收回收；Batch 23: 吸收并验证 cap:css_transform (6/6 PASSED)
+
+### 2026-11-22（`cap:md_ref_defs` 验收，Batch 24: 吸收并验证 cap:md_ref_defs (PASSED)）
+- **执行成果**：`lib/md_ref_defs/`（5/5 PASS，`doc/lib/md_ref_defs.md`）经 `verify_module.sh` 一次性验收回收；Batch 24: 吸收并验证 cap:md_ref_defs (PASSED)
+
+### 2026-11-22（`cap:css_supports` 验收，Batch 24: 吸收并验证 cap:css_supports (PASSED)）
+- **执行成果**：`lib/css_supports/`（5/5 PASS，`doc/lib/css_supports.md`）经 `verify_module.sh` 一次性验收回收；Batch 24: 吸收并验证 cap:css_supports (PASSED)
+
+### 2026-11-22（`cap:css_font` 验收，Batch 24: 吸收并验证 cap:css_font (5/5 PASSED)）
+- **执行成果**：`lib/css_font/`（5/5 PASS，`doc/lib/css_font.md`）经 `verify_module.sh` 一次性验收回收；Batch 24: 吸收并验证 cap:css_font (5/5 PASSED)
+
+### 2026-11-22（`cap:grapheme_cluster` 验收，Batch 24: 吸收并验证 cap:grapheme_cluster (6/6 PASSED)）
+- **执行成果**：`lib/grapheme_cluster/`（5/5 PASS，`doc/lib/grapheme_cluster.md`）经 `verify_module.sh` 一次性验收回收；Batch 24: 吸收并验证 cap:grapheme_cluster (6/6 PASSED)

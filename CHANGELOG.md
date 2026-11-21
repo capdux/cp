@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:grapheme_cluster` Unicode UAX #29 扩展字素簇边界判定（GB3-GB13/Hangul/ZWJ Emoji/国旗）与零分配 UTF-8 迭代器（吸收自 bun/src/string/immutable/grapheme.cp）（5/5 PASS，自动动态挂载 `cap.grapheme_cluster`）
+新增 cap:grapheme_cluster 标准库模块（lib/grapheme_cluster/{grapheme,index}.cp, doc/lib/grapheme_cluster.md, cap/test/test_grapheme_cluster_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:css_font` CSS Fonts 4 属性族与完整 Font 简写解析/序列化库（吸收自 bun/src/css/properties/font.cp）（5/5 PASS，自动动态挂载 `cap.css_font`）
+新增 cap:css_font 标准库模块（lib/css_font/{font,index}.cp, doc/lib/css_font.md, cap/test/test_css_font_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:css_supports` CSS @supports 条件表达式零分配 Arena 解析、求值与规范化序列化库（吸收自 bun/src/css/rules/supports.cp）（5/5 PASS，自动动态挂载 `cap.css_supports`）
+新增 cap:css_supports 标准库模块（lib/css_supports/{supports,index}.cp, doc/lib/css_supports.md, cap/test/test_css_supports_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:md_ref_defs` CommonMark §4.7 链接引用定义解析、零分配标签规范化与首定义优先查找表（吸收自 bun/src/md/ref_defs.cp）（5/5 PASS，自动动态挂载 `cap.md_ref_defs`）
+新增 cap:md_ref_defs 标准库模块（lib/md_ref_defs/{ref_defs,index}.cp, doc/lib/md_ref_defs.md, cap/test/test_md_ref_defs_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:css_transform` CSS 2D/3D Transform 21 种函数、4x4 齐次矩阵合成、Rodrigues 旋转与原点/样式属性库（吸收自 bun/src/css/properties/transform.cp）（5/5 PASS，自动动态挂载 `cap.css_transform`）
 新增 cap:css_transform 标准库模块（lib/css_transform/{transform,index}.cp, doc/lib/css_transform.md, cap/test/test_css_transform_production_deep.cp）
 

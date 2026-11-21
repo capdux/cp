@@ -1,6 +1,16 @@
-# CP 研发日志 (DEVLOG) - 2026-11-20 (热数据)
+## 2026-11-22: 新建 `cap:grapheme_cluster` Unicode UAX #29 扩展字素簇边界判定（GB3-GB13/Hangul/ZWJ Emoji/国旗）与零分配 UTF-8 迭代器（吸收自 bun/src/string/immutable/grapheme.cp）（5/5 PASS，文档直写 `doc/lib/grapheme_cluster.md`）
+子智能体 1 吸收 bun/src/string/immutable/grapheme.cp，实现完整 UAX #29 15 类码点分类、状态机与容错 UTF-8 字素迭代器，6/6 单测通过
 
-> 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
+## 2026-11-22: 新建 `cap:css_font` CSS Fonts 4 属性族与完整 Font 简写解析/序列化库（吸收自 bun/src/css/properties/font.cp）（5/5 PASS，文档直写 `doc/lib/css_font.md`）
+子智能体 2 吸收 bun/src/css/properties/font.cp，实现完整 FontWeight/Style/Stretch/Size/LineHeight/VariantCaps/GenericFontFamily 与 Font 简写，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:css_supports` CSS @supports 条件表达式零分配 Arena 解析、求值与规范化序列化库（吸收自 bun/src/css/rules/supports.cp）（5/5 PASS，文档直写 `doc/lib/css_supports.md`）
+吸收 bun/src/css/rules/supports.cp，实现 not/and/or/declaration/selector/unknown 递归下降解析、自定义谓词求值与括号规范化序列化，通过 cpc check 与 cap test
+
+## 2026-11-22: 新建 `cap:md_ref_defs` CommonMark §4.7 链接引用定义解析、零分配标签规范化与首定义优先查找表（吸收自 bun/src/md/ref_defs.cp）（5/5 PASS，文档直写 `doc/lib/md_ref_defs.md`）
+吸收 bun/src/md/ref_defs.cp，实现 CommonMark 链接引用定义解析、目标/标题解析器与首定义优先查找表，通过 cpc check 与 cap test
+
+# CP 研发日志 (DEVLOG) - 2026-11-20 (热数据)
 
 ## 2026-11-22: 新建 `cap:css_transform` CSS 2D/3D Transform 21 种函数、4x4 齐次矩阵合成、Rodrigues 旋转与原点/样式属性库（吸收自 bun/src/css/properties/transform.cp）（5/5 PASS，文档直写 `doc/lib/css_transform.md`）
 子智能体 1 吸收 bun/src/css/properties/transform.cp，实现 21 种 2D/3D Transform、4x4 矩阵乘法/伴随行列式与 RAII TransformList，6/6 单测通过
