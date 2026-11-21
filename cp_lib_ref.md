@@ -853,3 +853,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:gmm` | GmmConfig, GmmFitResult, gmmFit, gmmLogProbSample, gmmPredictProba, gmmPredict, gmmScoreSamples | 纯 CP 零分配高斯混合模型（GMM / EM）聚类与密度估计库：对角协方差多维高斯混合、k-means++ 初始化、log-sum-exp 稳定 EM、AIC/BIC 与后验责任度预测 |
 | `cap:svm` | KernelKind, KernelParams, SmoConfig, SmoResult, LinearSvmResult, evalKernel, svmFitSmo, svmDecision, svmPredict, linearSvmFit, linearSvmDecision | 纯 CP 零分配支持向量机（SVM）分类库：Linear/Poly/RBF 核函数、Platt 启发式 SMO 对偶二次规划求解器与 Pegasos 高速线性 SVM |
 | `cap:pso` | ObjectiveFn, GlobalOptResult, PsoConfig, PsoWorkspace, psoMinimize, DeConfig, DeWorkspace, deMinimize | 纯 CP 零分配全局启发式优化库：线性衰减惯性权重粒子群优化（PSO）与经典 DE/rand/1/bin 差分进化，内置确定性 SplitMix64 与盒约束边界保护 |
+| `cap:dtree` | DTREE_NO_NODE, SplitCriterion, TreeNode, TreeConfig, TreeWorkspace, DecisionTree | 纯 CP 零分配全迭代 CART 决策树分类与回归库：固定节点池、Gini/Entropy/MSE 最优轴对齐划分、深度/叶样本剪枝与加权不纯度下降特征重要性 |

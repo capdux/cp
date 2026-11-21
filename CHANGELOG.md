@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:dtree` 纯 CP 零分配全迭代 CART 决策树分类与回归库：固定节点池、Gini/Entropy/MSE 最优轴对齐划分、深度/叶样本剪枝与加权不纯度下降特征重要性（5/5 PASS，自动动态挂载 `cap.dtree`）
+新增纯 CP 零分配 CART 决策树分类与回归库 cap:dtree（全迭代 Gini/Entropy/MSE、特征重要性、池耗尽优雅退化），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:pso` 纯 CP 零分配全局启发式优化库：线性衰减惯性权重粒子群优化（PSO）与经典 DE/rand/1/bin 差分进化，内置确定性 SplitMix64 与盒约束边界保护（5/5 PASS，自动动态挂载 `cap.pso`）
 新增纯 CP 零分配全局启发式优化库 cap:pso（粒子群优化 PSO 与差分进化 DE），含文档与 6 项深度生产测试
 

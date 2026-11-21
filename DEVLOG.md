@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:dtree` 纯 CP 零分配全迭代 CART 决策树分类与回归库：固定节点池、Gini/Entropy/MSE 最优轴对齐划分、深度/叶样本剪枝与加权不纯度下降特征重要性（5/5 PASS，文档直写 `doc/lib/dtree.md`）
+新增 cap:dtree（lib/dtree/{dtree,index}.cp）：零分配固定节点池 + 迭代稳定归并排序实现 Gini/Entropy 分类与中心化 MSE 回归 CART 树，cpc check 0 错误，cap test 6/6 PASS (801ms)
+
 ## 2026-11-22: 新建 `cap:pso` 纯 CP 零分配全局启发式优化库：线性衰减惯性权重粒子群优化（PSO）与经典 DE/rand/1/bin 差分进化，内置确定性 SplitMix64 与盒约束边界保护（5/5 PASS，文档直写 `doc/lib/pso.md`）
 新增 cap:pso（lib/pso/{pso,index}.cp）：零分配确定性 SplitMix64 粒子群 PSO 与 DE/rand/1/bin 差分进化，通过 Sphere/Rastrigin/Ackley/Himmelblau 多峰基准，cpc check 0 错误，cap test 6/6 PASS (800ms)
 
