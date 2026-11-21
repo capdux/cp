@@ -698,3 +698,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_allow` | `HttpMethodBit`, `AllowMethodSet`, `parseAllowHeader`, `AllowIter`, `isMethodAllowed`, `isSafeMethod`, `isIdempotentMethod` | RFC 9110 §10.2.1 HTTP `Allow` 方法集位掩码解析、格式化与安全/幂等判定器 |
 | `cap:proc_limits` | `LimitValue`, `parseLimitValue`, `ProcLimitEntry`, `ProcLimitsIter`, `findProcLimit`, `maxOpenFiles` | Linux `/proc/<pid>/limits` 进程软/硬资源限额表零分配解析器 |
 | `cap:ansi_sgr` | `SgrColorKind`, `SgrColor`, `SgrStyle`, `formatStyled`, `applySgrSequence` | ANSI SGR 终端样式与 16 色/256 色/24-bit TrueColor RGB 转义序列零分配编解码器 |
+| `cap:http_trailer` | `isForbiddenTrailerField`, `isValidTrailerFieldName`, `TrailerFieldIter`, `validateTrailerHeader`, `hasTrailerField` | RFC 9110 §6.5.1 HTTP `Trailer` 尾部字段声明零分配解析与 25 项禁传字段安全校验器 |

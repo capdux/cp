@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_trailer` RFC 9110 §6.5.1 HTTP `Trailer` 尾部字段声明零分配解析与 25 项禁传字段安全校验器（5/5 PASS，自动动态挂载 `cap.http_trailer`）
+- 新增 `lib/http_trailer/{trailer,index}.cp`、`doc/lib/http_trailer.md`、`cap/test/test_http_trailer_production_deep.cp`：纯 CP 零分配解析 RFC 9110 `Trailer` 头，按长度分发拦截全部 25 个禁传字段（`Transfer-Encoding`/`Content-Length`/`Host`/`Authorization` 等），提供 `TrailerFieldIter` 与 `validateTrailerHeader`（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:ansi_sgr` ANSI SGR 终端样式与 16 色/256 色/24-bit TrueColor RGB 转义序列零分配编解码器（5/5 PASS，自动动态挂载 `cap.ansi_sgr`）
 - 新增 `lib/ansi_sgr/{sgr,index}.cp`、`doc/lib/ansi_sgr.md`、`cap/test/test_ansi_sgr_production_deep.cp`：纯 CP 零分配实现 ANSI SGR 样式/16色/256色/TrueColor RGB 格式化与原子增量解析（非法序列不污染原状态）（5/5 PASS）。
 

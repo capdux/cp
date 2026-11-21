@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:http_trailer` RFC 9110 §6.5.1 HTTP `Trailer` 尾部字段声明零分配解析与 25 项禁传字段安全校验器（5/5 PASS，文档直写 `doc/lib/http_trailer.md`）
+- **设计要点**：`isForbiddenTrailerField` 按字节长度分支 + 大小写不敏感比较零分配拦截全部 25 项禁传字段；`validateTrailerHeader` 拒绝空头、非法 `tchar` token 与任意禁传字段。
+
 ## 2026-11-22: 新建 `cap:ansi_sgr` ANSI SGR 终端样式与 16 色/256 色/24-bit TrueColor RGB 转义序列零分配编解码器（5/5 PASS，文档直写 `doc/lib/ansi_sgr.md`）
 - **设计要点**：`applySgrSequence` 采用事务性临时副本更新，拦截截断/非法码避免污染原 `SgrStyle`；`SgrColor` 统一兼容 0..15 调色板索引与 30..37/90..97 SGR 码。
 

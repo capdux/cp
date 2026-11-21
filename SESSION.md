@@ -229,3 +229,6 @@
 
 ### 2026-11-22（`cap:ansi_sgr` 验收，Batch 106 落地，标准库总量达 273 模块）
 - **执行成果**：`lib/ansi_sgr/`（5/5 PASS，`doc/lib/ansi_sgr.md`）经 `verify_module.sh` 一次性验收回收；Batch 106 落地，标准库总量达 273 模块
+
+### 2026-11-22（`cap:http_trailer` 验收，Batch 107 落地，标准库总量达 274 模块（新轮换 HTTP RFC Absorber 首单交付））
+- **执行成果**：`lib/http_trailer/`（5/5 PASS，`doc/lib/http_trailer.md`）经 `verify_module.sh` 一次性验收回收；Batch 107 落地，标准库总量达 274 模块（新轮换 HTTP RFC Absorber 首单交付）
