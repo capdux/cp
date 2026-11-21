@@ -67,3 +67,6 @@
 
 ### 2026-11-22（`cap:sshsig` 验收，完成 `cap:sshsig` 交付验收并登记入库（5/5 PASS）；派发 `cap:marc`。）
 - **执行成果**：`lib/sshsig/`（5/5 PASS，`doc/lib/sshsig.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:sshsig` 交付验收并登记入库（5/5 PASS）；派发 `cap:marc`。
+
+### 2026-11-22（`cap:gedcom` 验收，完成 `cap:gedcom` 交付验收并登记入库（5/5 PASS）；派发 `cap:har`。）
+- **执行成果**：`lib/gedcom/`（5/5 PASS，`doc/lib/gedcom.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:gedcom` 交付验收并登记入库（5/5 PASS）；派发 `cap:har`。

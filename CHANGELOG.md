@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:gedcom` 零分配 GEDCOM 5.5.1/7.0 家谱与谱系数据流式解析器（5/5 PASS，自动动态挂载 `cap.gedcom`）
+新增 `lib/gedcom/{gedcom,index}.cp`、`doc/lib/gedcom.md` 与 `cap/test/test_gedcom_production_deep.cp`（5/5 PASS），支持 HEAD/INDI/FAM/TRLR 解析、层级跳跃校验与单遍汇总。
+
 ## [2026-11-22] - 新建 `cap:sshsig` 零分配 OpenSSH SSHSIG 二进制与 PEM Armor 签名解析与待签载荷构造器（5/5 PASS，自动动态挂载 `cap.sshsig`）
 新增 `lib/sshsig/{sshsig,index}.cp`、`doc/lib/sshsig.md` 与 `cap/test/test_sshsig_production_deep.cp`（5/5 PASS），支持 SSHSIG v1 魔数、PEM Armor Base64 解码、嵌套 key_type/sig_type 提取与 SignedData 构造。
 

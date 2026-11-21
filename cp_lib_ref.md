@@ -656,3 +656,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:ris` | RisTag, RisTagIter, RisRecord, RisIter, RisStats, isRis, summarizeRis | 零分配 Research Information Systems (.ris) 学术文献引文解析与统计器 |
 | `cap:minisign` | MINISIGN_ALG_LEGACY, MINISIGN_ALG_PREHASH, MINISIGN_PUBKEY_ALG, MinisignPublicKey, MinisignSignature, parseMinisignPublicKey, parseMinisignPublicKeyLine, formatMinisignPublicKey, parseMinisignSignature, formatMinisignSignature | 零分配 Minisign & OpenBSD Signify Ed25519 签名与公钥编解码器 |
 | `cap:sshsig` | SSHSIG_MAGIC, SSHSIG_VERSION, SSHSIG_ARMOR_BEGIN, SSHSIG_ARMOR_END, SshsigBlob, isSshsigBinary, isSshsigArmored, decodeSshsigArmor, parseSshsigBinary, buildSshsigSignedData | 零分配 OpenSSH SSHSIG 二进制与 PEM Armor 签名解析与待签载荷构造器 |
+| `cap:gedcom` | GedcomLine, GedcomLineIter, GedcomHeader, GedcomIndividual, GedcomFamily, GedcomIndiIter, GedcomFamIter, GedcomStats, isGedcom, parseGedcomLine, parseGedcomHeader, summarizeGedcom | 零分配 GEDCOM 5.5.1/7.0 家谱与谱系数据流式解析器 |

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:gedcom` 零分配 GEDCOM 5.5.1/7.0 家谱与谱系数据流式解析器（5/5 PASS，文档直写 `doc/lib/gedcom.md`）
+实现零分配 GEDCOM 5.5.1/7.0 解析器，支持指针值检测与个人/家庭实体迭代。
+
 ## 2026-11-22: 新建 `cap:sshsig` 零分配 OpenSSH SSHSIG 二进制与 PEM Armor 签名解析与待签载荷构造器（5/5 PASS，文档直写 `doc/lib/sshsig.md`）
 实现零分配 OpenSSH PROTOCOL.sshsig 解析器，严格校验非空 namespace 与无尾随垃圾字节。
 
