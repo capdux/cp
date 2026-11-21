@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/logger/logger.cp
+// Source: Absorbed from /data/dev/bun/src/logger/logger.cp | Synced: 2026-11-20T11:41:39Z
 // lib/logger/logger.cp
 // Structured Compiler & Runtime Diagnostic Logger (cap:logger)
 // Absorbed from Bun src/logger/logger.cp

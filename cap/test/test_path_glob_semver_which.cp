@@ -115,7 +115,7 @@ fn testCapPathPosixAndWindows(): !void {
 
     let pool_b1 = PathBufferPool.get();
     let pool_b2 = PathBufferPool.get();
-    expect_eq(@intFromPtr(pool_b1) != @intFromPtr(pool_b2), true);
+    expect_eq(unsafe { @intFromPtr(pool_b1) != @intFromPtr(pool_b2) }, true);
     PathBufferPool.put(pool_b1);
     PathBufferPool.put(pool_b2);
 }

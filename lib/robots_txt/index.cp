@@ -1,3 +1,3 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp (RFC 9309 robots.txt Parser & Matcher)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T14:39:13Z (RFC 9309 robots.txt Parser & Matcher)
 
 export * from "./robots";

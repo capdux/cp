@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/meta/meta.cp
+// Source: Absorbed from /data/dev/bun/src/meta/meta.cp | Synced: 2026-11-20T11:41:41Z
 // ============================================================================
 // lib/meta/index.cp — Unified Public Exports for cap:meta
 // ============================================================================
