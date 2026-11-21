@@ -11,3 +11,23 @@ export {
 export {
     MimeDb,
 } from "./db.cp";
+
+export {
+    MimeMessageSplit,
+    MimeHeader,
+    splitHeadersAndBody,
+    MimeHeaderIter,
+    findMimeHeader,
+    countMimeHeader,
+} from "./headers.cp";
+
+export * from "./sniff.cp";
+export * from "./multipart.cp";
+
+export {
+    DispositionType,
+    ContentDisposition,
+    decodeRfc5987,
+    sanitizeFilename,
+    formatAttachment,
+} from "./disposition.cp";

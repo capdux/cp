@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:mail` RFC 5322 邮件地址、RFC 2047 编码字与 Quoted-Printable 统一主包（同步收敛 `cap:mime`）（5/5 PASS，自动动态挂载 `cap.mail`）
+- **方案 A 收敛 Wave 6 (7 MIME/Mail 目录 -> `cap:mime`/`cap:mail`)**：将 `mime_headers`/`mime_sniff`/`multipart_boundary`/`content_disposition` 合入 `lib/mime/`，新建 `lib/mail/` 合入 `mail_address`/`rfc2047_word`/`quoted_printable`（7/7 PASS），删除 7 个旧目录与文档；同步完成热修 `#86` 验收提交与回收。
+
 ## [2026-11-22] - 新建 `cap:http` HTTP/1.1/2/3 协议与全套 RFC 头部协商、条件请求、路由与限流统一主包（5/5 PASS，自动动态挂载 `cap.http`）
 - **方案 A 收敛 Wave 5 (`http_*` 第 3 批 13 目录 -> `cap:http`)**：将 `http_if_match` 至 `http_router` 共 13 个散装目录合并收敛至 `lib/http/{ifmatch,keepalive,link,maxforwards,methodparse,origin,permissions,prefer,proxyurl,range,ratelimit,retryafter,router}.cp` 并由 `lib/http/index.cp` 零破坏聚合导出（13/13 PASS），删除 13 个旧目录与旧文档。
 

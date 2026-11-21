@@ -92,3 +92,12 @@ pub fn demoMime(): ! {
     * = wasm_mime;
 }
 ```
+
+---
+
+## 零分配 MIME 扩展子模块（收敛自 `mime_*` / `multipart_boundary` / `content_disposition`）
+
+- **RFC 5322 MIME 头部块解析与展开 (`headers.cp`)**：`MimeMessageSplit`、`MimeHeader`、`splitHeadersAndBody`、`MimeHeaderIter`、`findMimeHeader`、`countMimeHeader`。
+- **WHATWG MIME 内容嗅探 (`sniff.cp`)**：`isBinaryDataByte`、`isTextData`、`sniffImageMime`、`sniffArchiveOrExecMime`、`sniffAudioVideoMime`、`sniffMime`。
+- **RFC 7578 Multipart 边界解析 (`multipart.cp`)**：`isValidBoundary`、`MultipartPart`、`MultipartParser`。
+- **RFC 6266 / RFC 5987 Content-Disposition (`disposition.cp`)**：`DispositionType`、`ContentDisposition`、`decodeRfc5987`、`sanitizeFilename`、`formatAttachment`。

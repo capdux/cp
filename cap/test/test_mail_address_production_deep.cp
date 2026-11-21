@@ -2,7 +2,7 @@ import {
     isValidAddrSpec,
     Mailbox,
     MailboxListIter,
-} from "cap:mail_address";
+} from "cap:mail";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {

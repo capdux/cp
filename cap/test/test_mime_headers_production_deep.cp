@@ -5,7 +5,7 @@ import {
     MimeHeaderIter,
     findMimeHeader,
     countMimeHeader,
-} from "cap:mime_headers";
+} from "cap:mime";
 
 test("1. splitHeadersAndBody handles CRLF, LF, leading blank line, and header-only messages", () => {
     const crlf = splitHeadersAndBody("From: a@b\r\nTo: c@d\r\n\r\nHello\r\nBody");

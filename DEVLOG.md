@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:mail` RFC 5322 邮件地址、RFC 2047 编码字与 Quoted-Printable 统一主包（同步收敛 `cap:mime`）（5/5 PASS，文档直写 `doc/lib/mail.md`）
+- **收敛要点**：`lib/mime/` 与新建 `lib/mail/` 零冲突通过 `cpc check` 与 7/7 深度测试；累计已消除 130 个长下划线顶层目录。
+
 ## 2026-11-22: 新建 `cap:http` HTTP/1.1/2/3 协议与全套 RFC 头部协商、条件请求、路由与限流统一主包（5/5 PASS，文档直写 `doc/lib/http.md`）
 - **收敛要点**：13 个 HTTP 条件请求/路由/限流子模块零破坏合入 `lib/http/`；`http_router` 的 `HttpMethod` 调整为 `RouterMethod` 避免与 `methodparse.cp` 冲突；累计已消除 123 个长下划线顶层目录。
 

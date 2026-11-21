@@ -8,7 +8,7 @@ import {
     sniffArchiveOrExecMime,
     sniffAudioVideoMime,
     sniffMime,
-} from "cap:mime_sniff";
+} from "cap:mime";
 
 test("mime_sniff: WHATWG binary byte classification and UTF-8/UTF-16 text detection") {
     expect_eq(isBinaryDataByte(0x00), true);

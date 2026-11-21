@@ -536,15 +536,12 @@ const h = cap.hash.wyhash("hello");
 | `cap:csv_stream` | CsvField, CsvRow, CsvReader, needsCsvQuoting, formatCsvField, formatCsvRow, unescapeField | RFC 4180 CSV / TSV 零堆分配流式字段/行解析器（自定义分隔符/引号内换行/"" 转义还原）与编码器（吸收自 bun/src/bun_core/fmt.cp） |
 | `cap:cors_policy` | CorsConfig, CorsDecision, CorsPolicy | WHATWG Fetch CORS 策略配置、Simple/Preflight 预检评估与凭证回显/Vary: Origin 决策引擎（吸收自 bun/src/http_types/FetchRequestMode.cp） |
 | `cap:retry_backoff` | JitterMode, BackoffConfig, BackoffState, RetryAfter, parseRetryAfter, isRetryableHttpStatus | 零堆分配指数退避重试调度器（Full/Equal Jitter + SplitMix64 确定性种子）与 RFC 9110 Retry-After 解析库（吸收自 bun/src/http/HTTPContext.cp） |
-| `cap:multipart_boundary` | isValidBoundary, MultipartPart, MultipartParser | RFC 7578 / RFC 2046 multipart/form-data 零堆分配流式边界切分器与分片头部查找库（吸收自 bun/src/http/HTTPRequestBody.cp） |
-| `cap:content_disposition` | ContentDisposition, decodeRfc5987, sanitizeFilename, formatAttachment, formatInline | RFC 6266 / RFC 5987 Content-Disposition 响应头解析、文件名安全消毒与 UTF-8 filename* 格式化器 |
 | `cap:sse_parser` | SseEvent, SseParser, formatSseEvent | WHATWG Server-Sent Events (text/event-stream) 零分配流式解析器与格式化器 |
 | `cap:token_bucket` | TokenBucket, FixedWindowLimiter | 纯整数毫令牌确定性令牌桶与固定时间窗口限流器（防时钟回拨与溢出） |
 | `cap:netrc` | NetrcEntry, NetrcIter, lookupNetrc | .netrc / _netrc 认证凭据文件零分配流式解析器（支持引号、注释、macdef 与 default 回退） |
 | `cap:robots_txt` | matchRobotsPattern, isAllowed, crawlDelaySec, SitemapIter | RFC 9309 robots.txt 解析、通配符匹配、Crawl-delay 提取与 Sitemap 迭代器 |
 | `cap:jwt_claims` | decodeBase64Url, JwtParts, splitJwt, extractStringClaim, extractIntClaim, JwtHeader, ClaimStatus, JwtClaims | RFC 7519 JWT 分段器、Base64URL 解码器、Header/Payload 声明提取与 exp/nbf/iss/sub/aud 校验器 |
 | `cap:shell_quote` | needsQuoting, quotePosix, joinArgs, ShellArgIter | POSIX Shell 安全单引号转义、参数拼接与支持单双引号/反斜杠/相邻拼接的命令行拆分器 |
-| `cap:mime_sniff` | isBinaryDataByte, isTextData, sniffImageMime, sniffArchiveOrExecMime, sniffAudioVideoMime, sniffMime | WHATWG MIME Sniffing 魔数嗅探引擎（图像/音视频/归档可执行/HTML-XML-JSON/UTF-8 文本与二进制判定） |
 | `cap:hex_dump` | encodeHexLower, encodeHexUpper, decodeHexStrict, decodeHex, formatHexDumpLine, formatHexDump | 零分配十六进制编解码与规范化 hexdump -C 多行诊断格式化器 |
 | `cap:http_vary` | VaryIter, isVaryWildcard, varyContains, appendVary, mergeVary | RFC 9110 §12.5.5 Vary 响应头零分配迭代、通配符检测与大小写不敏感去重合并器 |
 | `cap:glob_escape` | isGlobMagic, hasGlobMagic, escapeGlob, unescapeGlob, staticBaseDir, isNegatedPattern, stripNegation | Glob 通配符元字符转义/反转义、静态目录前缀提取（遍历剪枝）与否定模式解析 |
@@ -558,7 +555,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:duration_parse` | NS_PER_US, NS_PER_MS, NS_PER_SEC, NS_PER_MIN, NS_PER_HOUR, NS_PER_DAY, NS_PER_WEEK, parseDurationNs, parseDurationMs, formatDurationNs, formatDurationCompact | 纯整数人类可读时长解析器（ns/us/µs/ms/s/m/h/d/w 复合与小数）及规范/紧凑格式化器 |
 | `cap:structured_headers` | SfItemKind, SfItem, parseSfItem, SfParam, SfParamIter, formatSfString, formatSfByteSeq | RFC 8941 HTTP Structured Field Values 标量项（整数/小数/字符串/Token/字节序列/布尔）与参数列表零分配解析器 |
 | `cap:rate_sliding_window` | SlidingWindowCounter, GcraLimiter | 加权滑动窗口计数器与 GCRA（通用信元速率算法）零分配纯整数平滑限流器 |
-| `cap:quoted_printable` | encodeQuotedPrintable, decodeQuotedPrintable | RFC 2045 §6.7 MIME Quoted-Printable 零分配编解码器（76 列软换行与行尾空白转义） |
 | `cap:punycode` | isAsciiOnly, encodePunycode, decodePunycode, encodeIdnLabel, decodeIdnLabel | RFC 3492 Punycode / Bootstring 零分配编解码器与 xn-- 国际化域名标签转换器 |
 | `cap:ssh_pubkey` | SshKeyType, parseKeyType, SshPubKey, AuthorizedKeysIter | OpenSSH 公钥与 authorized_keys 文件零分配解析器（含选项字段、Base64 校验与 FIDO2 SK 识别） |
 | `cap:slugify` | slugifyWithSep, slugify, slugifyBounded, isValidSlug | 零分配 URL 安全 Slug 生成器（标点折叠、撇号省略、词边界截断与规范校验） |
@@ -573,11 +569,8 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_user_agent` | ProductToken, UserAgentIter, BrowserFamily, OsFamily, isBotUserAgent, isMobileUserAgent, detectBrowser, detectOs, findProductVersion | RFC 9110 §10.1.5 User-Agent 产品令牌零分配迭代器与浏览器/OS/移动端/爬虫分类器 |
 | `cap:rfc7807_problem` | PROBLEM_JSON_CONTENT_TYPE, defaultTitleForStatus, ProblemDetails | RFC 9457 / RFC 7807 HTTP Problem Details (application/problem+json) 零分配构造与转义序列化器 |
 | `cap:http_upgrade` | UpgradeProtocol, UpgradeIter, ConnectionTokenIter, connectionHasToken, upgradeHasProtocol, isHopByHopHeader, isWebSocketUpgrade | RFC 9110 §7.8 Upgrade / Connection 协议升级与逐跳头零分配解析器及 WebSocket 握手判定器 |
-| `cap:mail_address` | isValidAddrSpec, Mailbox, MailboxListIter | RFC 5322 电子邮件地址校验、"Display Name" <local@domain> 解析与引号逗号感知收件人列表迭代器 |
-| `cap:rfc2047_word` | EncodedWordEncoding, EncodedWord, parseEncodedWord, decodeEncodedWord, decodeHeaderValue, encodeUtf8Base64Word | RFC 2047 MIME Encoded-Word (=?charset?B|Q?text?=) 国际化头零分配编解码器（含相邻空白折叠） |
 | `cap:ssh_config` | matchHostPatterns, SshHostConfig, resolveSshConfig, getSshOption | OpenSSH ~/.ssh/config 零分配解析器与主机参数匹配引擎（首现优先、* 与 ! 否定模式） |
 | `cap:brace_expand` | BraceExpandIter | 零分配 Bash 风格花括号展开迭代器（逗号列表、步进/补零整数序列与字母序列） |
-| `cap:mime_headers` | MimeMessageSplit, splitHeadersAndBody, MimeHeader, MimeHeaderIter, findMimeHeader, countMimeHeader | RFC 5322 / MIME 头块零分配解析器（头体分离、obs-fold 折行展开、大小写不敏感查询与重复头计数） |
 | `cap:charset_label` | CharsetKind, resolveCharsetLabel, canonicalCharsetName, isUtf8Compatible, isAsciiSuperset, sniffBomCharset | WHATWG Encoding Standard 字符集标签规范化器（14 种编码别名映射与 UTF-8/UTF-16 BOM 嗅探） |
 | `cap:http_sec_fetch` | FetchSite, FetchMode, FetchDest, parseFetchSite, parseFetchMode, parseFetchDest, FetchMetadata | W3C Fetch Metadata（Sec-Fetch-Site/Mode/Dest/User）零分配解析与资源隔离防护策略求值器 |
 | `cap:makefile_parse` | MakeAssignOp, MakeVar, MakeRule, MakeRuleIter, MakeVarIter, isPhonyTarget | GNU Makefile 目标、依赖、.PHONY 伪目标与变量赋值（=/ :=/ ?=/ +=）零分配解析器 |
@@ -596,3 +589,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:mustache` | `MustacheTokenKind`, `MustacheToken`, `MustacheVar`, `MustacheIter`, `validateMustache`, `renderMustache` | 零分配 Mustache 模板词法解析、语法校验与 HTML 转义渲染引擎 |
 | `cap:ansi` | `Osc8Link`, `formatOsc8`, `parseOsc8`, `stripOsc8`, `SgrColor`, `SgrStyle`, `formatStyled`, `applySgrSequence`, `stripAnsi`, `hasAnsi`, `visibleLen` | ANSI 终端控制序列统一主包（OSC 8 超链接、SGR 16/256/TrueColor 样式、转义剥离与可见宽度） |
 | `cap:docker` | `DockerImageRef`, `DockerfileIter`, ... | Docker 镜像引用与 Dockerfile 解析统一主包（同步收敛 `cap:dotenv`/`cap:ini`/`cap:csv`） |
+| `cap:mail` | `Mailbox`, `decodeRfc2047`, `decodeQuotedPrintable`, ... | RFC 5322 邮件地址、RFC 2047 编码字与 Quoted-Printable 统一主包（同步收敛 `cap:mime`） |

@@ -6,7 +6,7 @@ import {
     decodeEncodedWord,
     decodeHeaderValue,
     encodeUtf8Base64Word,
-} from "cap:rfc2047_word";
+} from "cap:mail";
 
 test("1. parseEncodedWord and decodeEncodedWord handle B and Q encodings", () => {
     const ew_b = parseEncodedWord("=?UTF-8?B?SGVsbG8gV29ybGQ=?=") ?? unreachable;

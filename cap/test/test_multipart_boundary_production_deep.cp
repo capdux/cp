@@ -5,7 +5,7 @@ import {
     MultipartPart,
     MultipartParser,
     isValidBoundary,
-} from "cap:multipart_boundary";
+} from "cap:mime";
 
 test("multipart_boundary: multi-field and binary upload with preamble and epilogue") {
     const body =

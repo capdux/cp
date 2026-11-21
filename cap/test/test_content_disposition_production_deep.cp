@@ -4,7 +4,7 @@ import {
     ContentDisposition,
     sanitizeFilename,
     formatAttachment,
-} from "cap:content_disposition";
+} from "cap:mime";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
