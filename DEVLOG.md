@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:svm` 纯 CP 零分配支持向量机（SVM）分类库：Linear/Poly/RBF 核函数、Platt 启发式 SMO 对偶二次规划求解器与 Pegasos 高速线性 SVM（5/5 PASS，文档直写 `doc/lib/svm.md`）
+新增 cap:svm（lib/svm/{svm,index}.cp）：零分配 Platt SMO 核 SVM（通过 XOR/同心圆 RBF 分离与 KKT 校验）及 Pegasos 线性 SVM，cpc check 0 错误，cap test 6/6 PASS (652ms)
+
 ## 2026-11-22: 新建 `cap:gmm` 纯 CP 零分配高斯混合模型（GMM / EM）聚类与密度估计库：对角协方差多维高斯混合、k-means++ 初始化、log-sum-exp 稳定 EM、AIC/BIC 与后验责任度预测（5/5 PASS，文档直写 `doc/lib/gmm.md`）
 新增 cap:gmm（lib/gmm/{gmm,index}.cp）：零分配对角协方差 GMM / EM 含方差正则防塌缩与 AIC/BIC 选择，1D/2D 分离混合 100% 聚类准确，cpc check 0 错误，cap test 6/6 PASS (834ms)
 

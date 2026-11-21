@@ -178,3 +178,6 @@
 
 ### 2026-11-22（`cap:gmm` 验收，子智能体交付 cap:gmm（高斯混合模型 GMM / EM，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/gmm/`（5/5 PASS，`doc/lib/gmm.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:gmm（高斯混合模型 GMM / EM，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:svm` 验收，子智能体交付 cap:svm（Platt SMO 核 SVM 与 Pegasos 线性 SVM，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/svm/`（5/5 PASS，`doc/lib/svm.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:svm（Platt SMO 核 SVM 与 Pegasos 线性 SVM，6/6 PASS），主协调器统一登记并提交

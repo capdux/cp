@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:svm` 纯 CP 零分配支持向量机（SVM）分类库：Linear/Poly/RBF 核函数、Platt 启发式 SMO 对偶二次规划求解器与 Pegasos 高速线性 SVM（5/5 PASS，自动动态挂载 `cap.svm`）
+新增纯 CP 零分配支持向量机库 cap:svm（Platt SMO 核 SVM、Linear/Poly/RBF 核、Pegasos 线性 SVM），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:gmm` 纯 CP 零分配高斯混合模型（GMM / EM）聚类与密度估计库：对角协方差多维高斯混合、k-means++ 初始化、log-sum-exp 稳定 EM、AIC/BIC 与后验责任度预测（5/5 PASS，自动动态挂载 `cap.gmm`）
 新增纯 CP 零分配高斯混合模型库 cap:gmm（对角协方差 GMM / EM、AIC/BIC、对数密度与后验预测），含文档与 6 项深度生产测试
 
