@@ -139,3 +139,6 @@
 
 ### 2026-11-22（`cap:kmp` 验收，子智能体交付 cap:kmp（KMP / Z-Algorithm / Manacher 线性字符串算法，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/kmp/`（5/5 PASS，`doc/lib/kmp.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:kmp（KMP / Z-Algorithm / Manacher 线性字符串算法，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:quadrature` 验收，子智能体交付 cap:quadrature（Gauss-Legendre / 自适应 G7-K15 / Romberg 数值积分，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/quadrature/`（5/5 PASS，`doc/lib/quadrature.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:quadrature（Gauss-Legendre / 自适应 G7-K15 / Romberg 数值积分，6/6 PASS），主协调器统一登记并提交

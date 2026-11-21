@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:quadrature` 纯 CP 零分配高精度数值积分库：Gauss-Legendre 5/10 点、复合 Simpson 1/3、无递归显式栈自适应 Gauss-Kronrod G7-K15 与 Romberg Richardson 外推积分（5/5 PASS，自动动态挂载 `cap.quadrature`）
+新增纯 CP 零分配高精度数值积分库 cap:quadrature（Gauss-Legendre 5/10、复合 Simpson、自适应 G7-K15、Romberg 外推），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:kmp` 纯 CP 零分配线性时间字符串匹配与回文算法库：KMP 前缀表/重叠匹配/最小周期、Z-Algorithm 与无哨兵 Manacher 最长回文子串（支持任意二进制字节串）（5/5 PASS，自动动态挂载 `cap.kmp`）
 新增纯 CP 零分配线性时间字符串与回文算法库 cap:kmp（KMP、Z-Algorithm、无哨兵 Manacher），含文档与 6 项深度生产测试
 
