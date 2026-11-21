@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:epub` 零分配 EPUB 2/3 电子书 OCF 校验、container.xml 与 OPF 元数据/书脊解析器（5/5 PASS，自动动态挂载 `cap.epub`）
+新增 `lib/epub/{epub,index}.cp`、`doc/lib/epub.md` 与 `cap/test/test_epub_production_deep.cp`（5/5 PASS），支持未压缩 mimetype OCF 校验、container.xml 与 OPF metadata/manifest/spine 解析。
+
 ## [2026-11-22] - 新建 `cap:topojson` 零分配 TopoJSON v1.0 量化差分 Arc 解码与拓扑对象解析器（5/5 PASS，自动动态挂载 `cap.topojson`）
 新增 `lib/topojson/{topojson,index}.cp`、`doc/lib/topojson.md` 与 `cap/test/test_topojson_production_deep.cp`（5/5 PASS），支持 transform 仿射量化还原、差分 Arc 迭代、负索引反向引用与命名 Objects 迭代。
 

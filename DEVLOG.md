@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:epub` 零分配 EPUB 2/3 电子书 OCF 校验、container.xml 与 OPF 元数据/书脊解析器（5/5 PASS，文档直写 `doc/lib/epub.md`）
+实现零分配 EPUB 2/3 解析器，兼容 dc:/opf: 命名空间、CDATA 与 unique-identifier 精确匹配。
+
 ## 2026-11-22: 新建 `cap:topojson` 零分配 TopoJSON v1.0 量化差分 Arc 解码与拓扑对象解析器（5/5 PASS，文档直写 `doc/lib/topojson.md`）
 实现零分配 TopoJSON v1.0 解析器，支持 4/6 元 bbox、3D 坐标兼容与无溢出 ~index 解码。
 

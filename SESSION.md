@@ -136,3 +136,6 @@
 
 ### 2026-11-22（`cap:topojson` 验收，完成 `cap:topojson` 交付验收并登记入库（5/5 PASS）；派发 `cap:xlsx`。）
 - **执行成果**：`lib/topojson/`（5/5 PASS，`doc/lib/topojson.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:topojson` 交付验收并登记入库（5/5 PASS）；派发 `cap:xlsx`。
+
+### 2026-11-22（`cap:epub` 验收，完成 `cap:epub` 交付验收并登记入库（5/5 PASS）；派发 `cap:odt`。）
+- **执行成果**：`lib/epub/`（5/5 PASS，`doc/lib/epub.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:epub` 交付验收并登记入库（5/5 PASS）；派发 `cap:odt`。
