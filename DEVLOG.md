@@ -2,6 +2,15 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-22: MySQL 4.1 握手响应报文编解码器（5/5 PASS，文档直写 `doc/lib/mysql_handshake.md`）
+从 Bun sql/mysql/protocol/HandshakeResponse41.cp 吸收 MySQL 4.1 客户端握手响应编解码器，支持能力位自动切换与 ~init() 零泄漏释放。
+
+## 2026-11-22: ECMAScript/Web/Node/Bun 已知全局符号与纯度分析器（5/5 PASS，文档直写 `doc/lib/known_globals.md`）
+从 Bun js_parser/ast/KnownGlobal.cp 吸收 69 项 ECMAScript/Web/Node/Bun 全局符号纯度表，零堆分配支持静态属性访问与纯调用 DCE 判定。
+
+## 2026-11-22: 二分查找源码行列偏移表 LineOffsetTable（5/5 PASS，文档直写 `doc/lib/line_offset_table.md`）
+从 Bun sourcemap/LineOffsetTable.cp 吸收源码行列偏移表，单遍扫描识别 LF/CRLF/CR 并支持 O(log N) 二分定位与 ~init() 确定性零泄漏释放。
+
 ## 2026-11-22: CSS @keyframes/@layer/@counter-style/@property 规则集（5/5 PASS，文档直写 `doc/lib/css_at_rules.md`）
 从 Bun css/rules/{keyframes,layer,counter_style,property}.cp 吸收四大 CSS @ 规则元数据与校验模型，零堆分配内联实现。
 

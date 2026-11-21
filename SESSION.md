@@ -214,3 +214,12 @@
 
 ### 2026-11-22（`cap:css_at_rules` 验收，吸收 Bun CSS @keyframes/@layer/@counter-style/@property -> cap:css_at_rules，测试 5/5 通过。）
 - **执行成果**：`lib/css_at_rules/`（5/5 PASS，`doc/lib/css_at_rules.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun CSS @keyframes/@layer/@counter-style/@property -> cap:css_at_rules，测试 5/5 通过。
+
+### 2026-11-22（`cap:line_offset_table` 验收，吸收 Bun sourcemap/LineOffsetTable.cp -> cap:line_offset_table，测试 6/6 通过。）
+- **执行成果**：`lib/line_offset_table/`（5/5 PASS，`doc/lib/line_offset_table.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun sourcemap/LineOffsetTable.cp -> cap:line_offset_table，测试 6/6 通过。
+
+### 2026-11-22（`cap:known_globals` 验收，吸收 Bun js_parser/ast/KnownGlobal.cp -> cap:known_globals，测试 5/5 通过。）
+- **执行成果**：`lib/known_globals/`（5/5 PASS，`doc/lib/known_globals.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun js_parser/ast/KnownGlobal.cp -> cap:known_globals，测试 5/5 通过。
+
+### 2026-11-22（`cap:mysql_handshake` 验收，吸收 Bun sql/mysql/protocol/HandshakeResponse41.cp -> cap:mysql_handshake，测试 2/2 通过。）
+- **执行成果**：`lib/mysql_handshake/`（5/5 PASS，`doc/lib/mysql_handshake.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun sql/mysql/protocol/HandshakeResponse41.cp -> cap:mysql_handshake，测试 2/2 通过。

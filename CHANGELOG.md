@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - MySQL 4.1 握手响应报文编解码器（5/5 PASS，自动动态挂载 `cap.mysql_handshake`）
+新增 cap:mysql_handshake 标准库（lib/mysql_handshake/、doc/lib/mysql_handshake.md、cap/test/test_mysql_handshake_production_deep.cp），2/2 回归通过（零泄漏）。
+
+## [2026-11-22] - ECMAScript/Web/Node/Bun 已知全局符号与纯度分析器（5/5 PASS，自动动态挂载 `cap.known_globals`）
+新增 cap:known_globals 标准库（lib/known_globals/、doc/lib/known_globals.md、cap/test/test_known_globals_production_deep.cp），5/5 回归通过。
+
+## [2026-11-22] - 二分查找源码行列偏移表 LineOffsetTable（5/5 PASS，自动动态挂载 `cap.line_offset_table`）
+新增 cap:line_offset_table 标准库（lib/line_offset_table/、doc/lib/line_offset_table.md、cap/test/test_line_offset_table_production_deep.cp），6/6 回归通过（零泄漏）。
+
 ## [2026-11-22] - CSS @keyframes/@layer/@counter-style/@property 规则集（5/5 PASS，自动动态挂载 `cap.css_at_rules`）
 新增 cap:css_at_rules 标准库（lib/css_at_rules/、doc/lib/css_at_rules.md、cap/test/test_css_at_rules_production_deep.cp），5/5 回归通过。
 
