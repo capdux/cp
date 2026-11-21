@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:http_cache_key` HTTP 缓存键零分配规范化构造器（大小写/默认端口归一化、utm_*/fbclid/gclid 追踪参数剥离与 Vary 维度追加）（5/5 PASS，文档直写 `doc/lib/http_cache_key.md`）
+轮换后的 `HTTP RFC Absorber` 仅用 1 分 39 秒完成 `cap:http_cache_key` 交付与全量验收（5 组深度用例 100% PASS）。
+
 ## 2026-11-22: 新建 `cap:shell_env_parse` POSIX Shell export KEY=VAL / .profile 风格环境变量赋值行零分配解析器（支持单双引号与 unset 清空）（5/5 PASS，文档直写 `doc/lib/shell_env_parse.md`）
 轮换后的 `Sys Config Absorber` 仅用 2 分 52 秒交付 `cap:shell_env_parse`（5 组深度用例 100% PASS），双路轮换提速均已验证有效。
 

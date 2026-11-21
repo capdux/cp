@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_cache_key` HTTP 缓存键零分配规范化构造器（大小写/默认端口归一化、utm_*/fbclid/gclid 追踪参数剥离与 Vary 维度追加）（5/5 PASS，自动动态挂载 `cap.http_cache_key`）
+新增 `cap:http_cache_key`（`lib/http_cache_key/{cache_key,index}.cp`、`doc/lib/http_cache_key.md`、`cap/test/test_http_cache_key_production_deep.cp`），实现确定性缓存键生成、IPv6 默认端口剥离与防换行注入 Vary 维度追加。
+
 ## [2026-11-22] - 新建 `cap:shell_env_parse` POSIX Shell export KEY=VAL / .profile 风格环境变量赋值行零分配解析器（支持单双引号与 unset 清空）（5/5 PASS，自动动态挂载 `cap.shell_env_parse`）
 新增 `cap:shell_env_parse`（`lib/shell_env_parse/{shell_env,index}.cp`、`doc/lib/shell_env_parse.md`、`cap/test/test_shell_env_parse_production_deep.cp`），支持 `export` 前缀、单双引号跨行/转义与 `unset KEY` 清空语义。
 

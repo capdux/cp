@@ -668,3 +668,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_digest_auth` | DigestChallenge, DigestCredentials, formatDigestHeader | RFC 7616 HTTP Digest Authentication (WWW-Authenticate / Authorization) 零分配解析与构造器 |
 | `cap:http_signature_input` | SignatureInput, SignatureInputIter, findSignatureInput, ComponentIter, findSignatureValue | RFC 9421 HTTP Message Signatures (Signature-Input / Signature) 零分配解析器与时间窗校验器 |
 | `cap:shell_env_parse` | ShellEnvEntry, ShellEnvIter, getShellEnv | POSIX Shell export KEY=VAL / .profile 风格环境变量赋值行零分配解析器（支持单双引号与 unset 清空） |
+| `cap:http_cache_key` | isTrackingQueryParam, normalizeQueryWithoutTracking, buildCacheKey, appendVaryDimension | HTTP 缓存键零分配规范化构造器（大小写/默认端口归一化、utm_*/fbclid/gclid 追踪参数剥离与 Vary 维度追加） |

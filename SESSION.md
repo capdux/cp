@@ -139,3 +139,6 @@
 
 ### 2026-11-22（`cap:shell_env_parse` 验收，Batch 77 提交 `cap:shell_env_parse`（累计 243 模块）。）
 - **执行成果**：`lib/shell_env_parse/`（5/5 PASS，`doc/lib/shell_env_parse.md`）经 `verify_module.sh` 一次性验收回收；Batch 77 提交 `cap:shell_env_parse`（累计 243 模块）。
+
+### 2026-11-22（`cap:http_cache_key` 验收，Batch 78 提交 `cap:http_cache_key`（累计 244 模块，耗时 1 分 39 秒）。）
+- **执行成果**：`lib/http_cache_key/`（5/5 PASS，`doc/lib/http_cache_key.md`）经 `verify_module.sh` 一次性验收回收；Batch 78 提交 `cap:http_cache_key`（累计 244 模块，耗时 1 分 39 秒）。
