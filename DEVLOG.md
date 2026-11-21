@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:cab` 零分配 Microsoft Cabinet (.cab) CFHEADER/CFFOLDER/CFFILE 归档解析器（5/5 PASS，文档直写 `doc/lib/cab.md`）
+实现零分配 Microsoft Cabinet 归档解析器，严格校验 MSCF 魔数、1.3 版本号、ab_reserve 扩展与未闭合文件名边界。
+
 ## 2026-11-22: 新建 `cap:mpeg` 零分配 MPEG-1/2/2.5 MP3 帧头、ID3v2 跳过与 Xing/Info/VBRI VBR 解析器（5/5 PASS，文档直写 `doc/lib/mpeg.md`）
 实现零分配 MPEG 音频帧与 VBR 头解析器，支持连续帧同步字校验与 Side-Info 偏移自适应。
 

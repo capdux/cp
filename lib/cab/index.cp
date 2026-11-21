@@ -1,0 +1,27 @@
+// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Microsoft Cabinet .cab Archive Parser)
+
+export {
+    CAB_MAGIC,
+    CAB_HEADER_SIZE,
+    CAB_FOLDER_SIZE,
+    CAB_FILE_FIXED_SIZE,
+    CAB_FLAG_PREV,
+    CAB_FLAG_NEXT,
+    CAB_FLAG_RESERVE,
+    CAB_ATTR_RDONLY,
+    CAB_ATTR_HIDDEN,
+    CAB_ATTR_SYSTEM,
+    CAB_ATTR_ARCH,
+    CAB_ATTR_EXEC,
+    CAB_ATTR_NAME_IS_UTF,
+    CabCompression,
+    decodeCabCompression,
+    CabHeader,
+    CabFolder,
+    CabFile,
+    isCab,
+    parseCabHeader,
+    CabFolderIter,
+    CabFileIter,
+    findCabFile,
+} from "./cab.cp";

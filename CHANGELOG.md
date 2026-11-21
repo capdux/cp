@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:cab` 零分配 Microsoft Cabinet (.cab) CFHEADER/CFFOLDER/CFFILE 归档解析器（5/5 PASS，自动动态挂载 `cap.cab`）
+新增 `lib/cab/{cab,index}.cp`、`doc/lib/cab.md` 与 `cap/test/test_cab_production_deep.cp`（6/6 PASS），支持 MSZIP/LZX/Quantum 压缩识别、RESERVE/PREV/NEXT 扩展偏移与文件夹/文件零拷贝迭代。
+
 ## [2026-11-22] - 新建 `cap:mpeg` 零分配 MPEG-1/2/2.5 MP3 帧头、ID3v2 跳过与 Xing/Info/VBRI VBR 解析器（5/5 PASS，自动动态挂载 `cap.mpeg`）
 新增 `lib/mpeg/{mpeg,index}.cp`、`doc/lib/mpeg.md` 与 `cap/test/test_mpeg_production_deep.cp`（5/5 PASS），支持全版本/层级查表、精确帧字节计算、ID3v2 跳过与 Xing/Info/VBRI 时长汇总。
 
