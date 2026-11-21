@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:arrow` 零分配 Apache Arrow IPC Stream/File 容器帧、Footer 与 FlatBuffers 解析器（5/5 PASS，自动动态挂载 `cap.arrow`）
+新增 `lib/arrow/{arrow,index}.cp`、`doc/lib/arrow.md` 与 `cap/test/test_arrow_production_deep.cp`（5/5 PASS），支持 0xFFFFFFFF 续帧/EOS 迭代、8B 对齐跳过、File Footer 提取与 FlatBuffers 根表元数据读取。
+
 ## [2026-11-22] - 新建 `cap:jxl` 零分配 JPEG XL 裸码流 SizeHeader 与 ISOBMFF 容器解析器（5/5 PASS，自动动态挂载 `cap.jxl`）
 新增 `lib/jxl/{jxl,index}.cp`、`doc/lib/jxl.md` 与 `cap/test/test_jxl_production_deep.cp`（5/5 PASS），支持 LSB-first BitReader 解码 SizeHeader、jxlc/jxlp 与 Exif/XMP 容器识别。
 

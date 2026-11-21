@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:arrow` 零分配 Apache Arrow IPC Stream/File 容器帧、Footer 与 FlatBuffers 解析器（5/5 PASS，文档直写 `doc/lib/arrow.md`）
+实现零分配 Apache Arrow IPC 解析器，兼容新旧封装格式与 V4/V5 FlatBuffers MessageHeader/bodyLength 安全读取。
+
 ## 2026-11-22: 新建 `cap:jxl` 零分配 JPEG XL 裸码流 SizeHeader 与 ISOBMFF 容器解析器（5/5 PASS，文档直写 `doc/lib/jxl.md`）
 实现零分配 JPEG XL 裸码流与 ISOBMFF 容器解析器，完整支持 ISO/IEC 18181-1 small/large 尺寸编码与 0..7 宽高比。
 
