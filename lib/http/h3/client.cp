@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/http/h3_client/ClientSession.cp
+// Source: Absorbed from /data/dev/bun/src/http/h3_client/ClientSession.cp | Synced: 2026-11-20T08:56:59Z
 // lib/http/h3/client.cp
 // CP HTTP/3 Client Session & Stream Manager (cap:http)
 

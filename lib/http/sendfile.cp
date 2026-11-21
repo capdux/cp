@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/http/SendFile.cp
+// Source: Absorbed from /data/dev/bun/src/http/SendFile.cp | Synced: 2026-11-20T04:36:42Z
 // lib/http/sendfile.cp
 // CP HTTP SendFile Kernel Zero-Copy File Upload (cap:http)
 

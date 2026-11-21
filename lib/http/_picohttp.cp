@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/picohttp/picohttp.cp
+// Source: Absorbed from /data/dev/bun/src/picohttp/picohttp.cp | Synced: 2026-11-20T08:57:23Z
 // lib/http/_picohttp.cp
 // PicoHTTPParser C-FFI declarations & zero-copy HTTP/1.x request/response wire parser
 // Absorbed from bun/src/picohttp_sys/picohttpparser.cp & bun/src/picohttp/picohttp.cp

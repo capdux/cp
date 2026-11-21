@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/http/h2_client/ClientSession.cp
+// Source: Absorbed from /data/dev/bun/src/http/h2_client/ClientSession.cp | Synced: 2026-11-21T12:25:56Z
 // lib/http/h2/client.cp
 // CP HTTP/2 Client Session, Stream Manager & Flow Control State Machine (cap:http)
 

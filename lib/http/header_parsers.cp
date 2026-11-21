@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/http/Headers.cp
+// Source: Absorbed from /data/dev/bun/src/http/Headers.cp | Synced: 2026-11-20T12:30:32Z
 // lib/http/header_parsers.cp
 // Standard HTTP Header Parsers: Cache-Control, Content-Disposition, Accept, Range, Content-Range
 

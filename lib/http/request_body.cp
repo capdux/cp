@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/http/HTTPRequestBody.cp
+// Source: Absorbed from /data/dev/bun/src/http/HTTPRequestBody.cp | Synced: 2026-11-20T04:58:54Z
 // lib/http/request_body.cp
 // CP HTTP Request Body (cap:http)
 

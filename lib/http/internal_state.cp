@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/http/InternalState.cp
+// Source: Absorbed from /data/dev/bun/src/http/InternalState.cp | Synced: 2026-11-20T11:15:24Z
 // lib/http/internal_state.cp
 // CP HTTP Internal State & Protocols (cap:http)
 

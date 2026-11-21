@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/http/http.cp
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T14:39:13Z
 // lib/http/status.cp
 // RFC 9110 Complete HTTP Status Code Registry & Reason Phrase Lookup
 

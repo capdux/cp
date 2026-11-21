@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/http/http.cp
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T14:39:13Z
 // lib/http/client.cp
 // CP Industrial HTTP/1.1 Client Engine (cap:http)
 // RFC 7230, RFC 7231, RFC 2616 HTTP/1.1 Protocol Implementation
