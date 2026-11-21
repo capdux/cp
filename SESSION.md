@@ -85,3 +85,6 @@
 
 ### 2026-11-22（`cap:scc` 验收，子智能体交付 cap:scc（Tarjan SCC / Kahn 拓扑 / 2-SAT，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/scc/`（5/5 PASS，`doc/lib/scc.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:scc（Tarjan SCC / Kahn 拓扑 / 2-SAT，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:rmq` 验收，子智能体交付 cap:rmq（Sparse Table RMQ/GCD/LCA 与滑动窗口，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/rmq/`（5/5 PASS，`doc/lib/rmq.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:rmq（Sparse Table RMQ/GCD/LCA 与滑动窗口，6/6 PASS），主协调器统一登记并提交

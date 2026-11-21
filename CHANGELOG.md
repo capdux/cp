@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:rmq` 纯 CP 零分配区间查询与滑动窗口算法库：O(1) Sparse Table（Min/Max/ArgMin/GCD）、O(1) 欧拉序树上 LCA 与 O(n) 单调队列滑动窗口极值（5/5 PASS，自动动态挂载 `cap.rmq`）
+新增纯 CP 零分配区间查询与滑动窗口库 cap:rmq（Sparse Table RMQ/ArgMin/GCD、欧拉序 LCA、单调队列滑动窗口），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:scc` 纯 CP 零分配有向图强连通分量与拓扑算法库：CSR 图、纯迭代无递归 Tarjan SCC、Kahn 拓扑排序/环检测、DAG 最长路径与线性时间 2-SAT 求解器（5/5 PASS，自动动态挂载 `cap.scc`）
 新增纯 CP 零分配有向图强连通分量与 2-SAT 库 cap:scc（迭代 Tarjan SCC、Kahn 拓扑排序、DAG 最长路、2-SAT），含文档与 6 项深度生产测试
 

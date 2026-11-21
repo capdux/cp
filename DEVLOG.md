@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:rmq` 纯 CP 零分配区间查询与滑动窗口算法库：O(1) Sparse Table（Min/Max/ArgMin/GCD）、O(1) 欧拉序树上 LCA 与 O(n) 单调队列滑动窗口极值（5/5 PASS，文档直写 `doc/lib/rmq.md`）
+新增 cap:rmq（lib/rmq/{rmq,index}.cp）：基于调用方缓冲实现 O(1) Sparse Table 区间最值/首次下标/GCD、O(1) 欧拉序 LCA 与 O(n) 单调队列滑动窗口，cpc check 0 错误，cap test 6/6 PASS (717ms)
+
 ## 2026-11-22: 新建 `cap:scc` 纯 CP 零分配有向图强连通分量与拓扑算法库：CSR 图、纯迭代无递归 Tarjan SCC、Kahn 拓扑排序/环检测、DAG 最长路径与线性时间 2-SAT 求解器（5/5 PASS，文档直写 `doc/lib/scc.md`）
 新增 cap:scc（lib/scc/{scc,index}.cp）：基于 CSR 与显式调用栈实现无递归 Tarjan SCC、Kahn 拓扑排序与 2-SAT，全路径零堆分配，cpc check 0 错误，cap test 6/6 PASS (816ms)
 
