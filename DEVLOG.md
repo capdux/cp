@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:thrift` 零分配 Apache Thrift `.thrift` IDL 顶层声明/嵌套泛型字段提取与括号平衡校验器（5/5 PASS，文档直写 `doc/lib/thrift.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:thrift`；`ThriftFieldIter` 零分配处理嵌套泛型类型与注解；全部 3 路常驻子智能体已完成新一轮低上下文轮换。
+
 ## 2026-11-22: 新建 `cap:glsl` 零分配 OpenGL / Vulkan GLSL 着色器词法扫描、`#version` 与 `uniform`/`in`/`out` 声明提取器（5/5 PASS，文档直写 `doc/lib/glsl.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:glsl`，与 `cap:wgsl` 构成双着色器分析套件；`GlslDeclIter` 自动忽略函数体内部声明。
 

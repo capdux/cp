@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:thrift` 零分配 Apache Thrift `.thrift` IDL 顶层声明/嵌套泛型字段提取与括号平衡校验器（5/5 PASS，自动动态挂载 `cap.thrift`）
+- 新增 `lib/thrift/{thrift,index}.cp`、`doc/lib/thrift.md`、`cap/test/test_thrift_production_deep.cp`：纯 CP 零分配实现 Apache Thrift IDL 声明与字段解析（支持 `#`/`//`/`/* */` 注释、`service extends`、嵌套泛型 `map<string, list<i64>>` 与 64 层括号平衡校验）（5/5 PASS）；同步轻量化轮换 `CSS & Web Absorber`。
+
 ## [2026-11-22] - 新建 `cap:glsl` 零分配 OpenGL / Vulkan GLSL 着色器词法扫描、`#version` 与 `uniform`/`in`/`out` 声明提取器（5/5 PASS，自动动态挂载 `cap.glsl`）
 - 新增 `lib/glsl/{glsl,index}.cp`、`doc/lib/glsl.md`、`cap/test/test_glsl_production_deep.cp`：纯 CP 零分配实现 GLSL 词法扫描、`#version` 解析、顶层 `layout(location,binding) uniform/in/out` 声明提取与括号平衡校验（5/5 PASS）；同步轻量化轮换 `PG & Data Absorber`。
 

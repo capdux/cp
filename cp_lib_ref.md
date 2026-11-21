@@ -511,3 +511,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:wat` | `WatTokenKind`, `WatToken`, `WatIter`, `WatExport`, `WatExportIter`, `validateWatStructure` | 零分配 WebAssembly Text Format `.wat` 词法扫描、导出声明提取与模块结构校验器 |
 | `cap:cue` | `CueTokenKind`, `CueToken`, `CueIter`, `validateCue`, `extractCuePackage` | 零分配 CUE 配置与数据约束语言词法扫描、包声明提取与 64 层平衡校验器 |
 | `cap:glsl` | `GlslVersion`, `GlslQualifier`, `GlslDecl`, `GlslTokenKind`, `GlslToken`, `GlslIter`, `parseGlslVersion`, `GlslDeclIter`, `validateGlslBraces` | 零分配 OpenGL / Vulkan GLSL 着色器词法扫描、`#version` 与 `uniform`/`in`/`out` 声明提取器 |
+| `cap:thrift` | `ThriftDeclKind`, `ThriftDecl`, `ThriftField`, `ThriftDeclIter`, `ThriftFieldIter`, `validateThriftBraces` | 零分配 Apache Thrift `.thrift` IDL 顶层声明/嵌套泛型字段提取与括号平衡校验器 |

@@ -121,3 +121,6 @@
 
 ### 2026-11-22（`cap:glsl` 验收，新增简洁单单词包 `cap:glsl`（5/5 PASS），完成 `PG & Data Absorber` 15 任务轻量化轮换）
 - **执行成果**：`lib/glsl/`（5/5 PASS，`doc/lib/glsl.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:glsl`（5/5 PASS），完成 `PG & Data Absorber` 15 任务轻量化轮换
+
+### 2026-11-22（`cap:thrift` 验收，新增简洁单单词包 `cap:thrift`（5/5 PASS），完成 `CSS & Web Absorber` 12 任务轻量化轮换）
+- **执行成果**：`lib/thrift/`（5/5 PASS，`doc/lib/thrift.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:thrift`（5/5 PASS），完成 `CSS & Web Absorber` 12 任务轻量化轮换
