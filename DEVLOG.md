@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:maxflow` 纯 CP 零分配网络流算法库：CSR 残量图、Dinic 最大流（BFS 分层 + 当前弧优化）、最小割可达性判定与 SPFA 最小费用最大流（MCMF）（5/5 PASS，文档直写 `doc/lib/maxflow.md`）
+新增 cap:maxflow（lib/maxflow/{maxflow,index}.cp）：采用静态邻接表残量图 + 当前弧优化 Dinic 算法与 SPFA MCMF，全路径零堆分配，cpc check 0 错误，cap test 6/6 PASS (688ms)
+
 ## 2026-11-22: 新建 `cap:pagerank` CSR directed graph PageRank (dangling-node), Personalized PageRank & Kleinberg HITS（5/5 PASS，文档直写 `doc/lib/pagerank.md`）
 新增 cap:pagerank 纯 CP 零分配图中心性算法库（悬挂节点重分配、Kahan 求和与 L2 归一化 HITS），通过 cpc check 与 6/6 cap test
 

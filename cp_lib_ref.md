@@ -818,3 +818,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:polyfit` | POLYFIT_MAX_DEG, LinearFit, FitMetrics, polyEval, polyDerivEval, polyDerivCoeffs, polyIntegrateCoeffs, linearFit, polyfit, polyfitRidge, evalFitMetrics, polyRootBisect, polyRootNewton | OLS/Ridge polynomial regression (streaming Givens QR), Horner calculus & root-finding |
 | `cap:kmeans` | KmeansResult, sqDist, kmeansPredictOne, kmeansInitPlusPlus, kmeansFit, kmeansInertia, silhouetteScore | Deterministic K-Means++ clustering (arbitrary D), empty-cluster recovery & Silhouette |
 | `cap:pagerank` | CsrGraph, PageRankResult, HitsResult, pagerank, personalizedPagerank, hits, topNode, sumScores | CSR directed graph PageRank (dangling-node), Personalized PageRank & Kleinberg HITS |
+| `cap:maxflow` | NO_EDGE, INF_FLOW, FlowEdge, FlowGraph, MinCostResult, dinicMaxFlow, minCutReachable, minCostMaxFlow | 纯 CP 零分配网络流算法库：CSR 残量图、Dinic 最大流（BFS 分层 + 当前弧优化）、最小割可达性判定与 SPFA 最小费用最大流（MCMF） |

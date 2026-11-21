@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:maxflow` 纯 CP 零分配网络流算法库：CSR 残量图、Dinic 最大流（BFS 分层 + 当前弧优化）、最小割可达性判定与 SPFA 最小费用最大流（MCMF）（5/5 PASS，自动动态挂载 `cap.maxflow`）
+新增纯 CP 零分配网络流算法库 cap:maxflow（Dinic 最大流、最小割、SPFA 最小费用最大流），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:pagerank` CSR directed graph PageRank (dangling-node), Personalized PageRank & Kleinberg HITS（5/5 PASS，自动动态挂载 `cap.pagerank`）
 新增纯 CP 零分配标准库 cap:pagerank（CSR 有向图 PageRank、Personalized PageRank 与 Kleinberg HITS）与 6/6 深度测试
 

@@ -79,3 +79,6 @@
 
 ### 2026-11-22（`cap:pagerank` 验收，完成并注册纯 CP 零分配标准库 cap:pagerank（6/6 cap test PASS））
 - **执行成果**：`lib/pagerank/`（5/5 PASS，`doc/lib/pagerank.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:pagerank（6/6 cap test PASS）
+
+### 2026-11-22（`cap:maxflow` 验收，子智能体交付 cap:maxflow（Dinic 最大流/最小割/MCMF，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/maxflow/`（5/5 PASS，`doc/lib/maxflow.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:maxflow（Dinic 最大流/最小割/MCMF，6/6 PASS），主协调器统一登记并提交
