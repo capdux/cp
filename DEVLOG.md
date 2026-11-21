@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:shell_env_parse` POSIX Shell export KEY=VAL / .profile 风格环境变量赋值行零分配解析器（支持单双引号与 unset 清空）（5/5 PASS，文档直写 `doc/lib/shell_env_parse.md`）
+轮换后的 `Sys Config Absorber` 仅用 2 分 52 秒交付 `cap:shell_env_parse`（5 组深度用例 100% PASS），双路轮换提速均已验证有效。
+
 ## 2026-11-22: 新建 `cap:http_signature_input` RFC 9421 HTTP Message Signatures (Signature-Input / Signature) 零分配解析器与时间窗校验器（5/5 PASS，文档直写 `doc/lib/http_signature_input.md`）
 轮换后的轻上下文子智能体 `HTTP RFC Absorber` 仅用 2 分 19 秒交付 `cap:http_signature_input`（6 组深度用例 100% PASS），验证了定期轮换策略显著提速。
 

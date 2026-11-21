@@ -136,3 +136,6 @@
 
 ### 2026-11-22（`cap:http_signature_input` 验收，Batch 76 提交 `cap:http_signature_input`（累计 242 模块），验证新轮换子智能体 2 分 19 秒高效交付。）
 - **执行成果**：`lib/http_signature_input/`（5/5 PASS，`doc/lib/http_signature_input.md`）经 `verify_module.sh` 一次性验收回收；Batch 76 提交 `cap:http_signature_input`（累计 242 模块），验证新轮换子智能体 2 分 19 秒高效交付。
+
+### 2026-11-22（`cap:shell_env_parse` 验收，Batch 77 提交 `cap:shell_env_parse`（累计 243 模块）。）
+- **执行成果**：`lib/shell_env_parse/`（5/5 PASS，`doc/lib/shell_env_parse.md`）经 `verify_module.sh` 一次性验收回收；Batch 77 提交 `cap:shell_env_parse`（累计 243 模块）。
