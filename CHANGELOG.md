@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:cusum` 纯 CP 零分配在线变点与流式异常检测库：双边 Page CUSUM、无先验 Page-Hinkley 漂移检测、Roberts 时变控制限 EWMA 控制图与 Welford 流式 Z-Score（5/5 PASS，自动动态挂载 `cap.cusum`）
+新增纯 CP 零分配在线变点与异常检测库 cap:cusum（CUSUM、Page-Hinkley、EWMA 控制图、流式 Z-Score），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:holt` 纯 CP 零分配时间序列指数平滑与预测库：单指数平滑 SES、Holt 阻尼线性趋势、Holt-Winters 加法/乘法三指数季节预测与 MAE/RMSE/MAPE/sMAPE 评估（5/5 PASS，自动动态挂载 `cap.holt`）
 新增纯 CP 零分配时间序列指数平滑与预测库 cap:holt（SES / Holt / Holt-Winters 与预测误差评估），含文档与 6 项深度生产测试
 

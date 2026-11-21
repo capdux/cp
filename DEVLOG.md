@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:cusum` 纯 CP 零分配在线变点与流式异常检测库：双边 Page CUSUM、无先验 Page-Hinkley 漂移检测、Roberts 时变控制限 EWMA 控制图与 Welford 流式 Z-Score（5/5 PASS，文档直写 `doc/lib/cusum.md`）
+新增 cap:cusum（lib/cusum/{cusum,index}.cp）：零分配双边 CUSUM、Page-Hinkley、EWMA 控制图与 Welford 流式 Z-Score（1e9 大偏移零抵消），cpc check 0 错误，cap test 6/6 PASS (756ms)
+
 ## 2026-11-22: 新建 `cap:holt` 纯 CP 零分配时间序列指数平滑与预测库：单指数平滑 SES、Holt 阻尼线性趋势、Holt-Winters 加法/乘法三指数季节预测与 MAE/RMSE/MAPE/sMAPE 评估（5/5 PASS，文档直写 `doc/lib/holt.md`）
 新增 cap:holt（lib/holt/{holt,index}.cp）：零分配 SES、Holt 阻尼趋势与 Holt-Winters 加法/乘法季节预测，4 周期合成序列预测误差 < 1e-6，cpc check 0 错误，cap test 6/6 PASS (656ms)
 
