@@ -166,3 +166,6 @@
 
 ### 2026-11-22（`cap:mcts` 验收，子智能体交付 cap:mcts（蒙特卡洛树搜索 UCT / PUCT，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/mcts/`（5/5 PASS，`doc/lib/mcts.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:mcts（蒙特卡洛树搜索 UCT / PUCT，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:dtw` 验收，子智能体交付 cap:dtw（动态时间规整 DTW 与 LB_Keogh 下界，6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/dtw/`（5/5 PASS，`doc/lib/dtw.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:dtw（动态时间规整 DTW 与 LB_Keogh 下界，6/6 PASS），主协调器统一登记并提交
