@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/shell.cp | Synced: 2026-11-20T18:12:41Z
+// Source: Absorbed from /data/dev/bun/src/shell/shell.cp | Synced: 2026-11-21T18:40:02Z
 // ============================================================================
 // Absorbed from Bun: /data/dev/bun/src/shell/
 // Upstream Sync: Refer to /data/dev/bun/src/shell/ for future upstream updates.
