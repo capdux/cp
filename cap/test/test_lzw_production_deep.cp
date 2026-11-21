@@ -1,210 +1,267 @@
-// Source: cp/cap/test/test_lzw_production_deep.cp
-// Comprehensive Production-Grade Verification Suite for cap:lzw & cap.lzw
+// Source: cp/cap/test/test_lzw_production_deep.cp (Production deep tests for cap:lzw)
 
-const std = @import("std");
+import std from "std";
 import { test, expect_eq } from "cap:test";
-import cap from "cap";
 import {
-    LzwError,
+    LZW_MAX_BITS,
+    LZW_TABLE_SIZE,
+    LZW_MIN_CODE_BITS,
+    LZW_MAX_INITIAL_BITS,
     LzwBitOrder,
-    LzwConfig,
-    compress,
-    decompress,
-    decompressWithMaxSize,
+    lzwCompress,
+    lzwDecompress,
+    lzwCompressGif,
+    lzwDecompressGif,
+    lzwCompressTiff,
+    lzwDecompressTiff,
 } from "cap:lzw";
 
-fn emptyMutSlice(): []u8 {
-    return std.heap.page_allocator.alloc(u8, 0) catch unreachable;
-}
-
-fn verifyRoundtrip(alloc: std.mem.Allocator, input: []const u8, cfg: LzwConfig): !void {
-    const comp = compress(alloc, input, cfg)?;
-    defer alloc.free(comp);
-    const dec_out = decompress(alloc, comp, cfg)?;
-    defer alloc.free(dec_out);
-    expect_eq(std.mem.eql(u8, dec_out, input), true);
-}
-
-fn runTest1(): !void {
-    const alloc = std.testing.allocator;
-    const lsb_cfg = LzwConfig{ min_code_size: 8, bit_order: LzwBitOrder.LsbFirst, max_code_size: 12 };
-    const msb_cfg = LzwConfig{ min_code_size: 8, bit_order: LzwBitOrder.MsbFirst, max_code_size: 12 };
-
-    // 1. Empty input
-    verifyRoundtrip(alloc, "", lsb_cfg)?;
-    verifyRoundtrip(alloc, "", msb_cfg)?;
-
-    // 2. Single byte
-    verifyRoundtrip(alloc, "Z", lsb_cfg)?;
-    verifyRoundtrip(alloc, "\x00", msb_cfg)?;
-
-    // 3. High-repetition text
-    const rep = "LZW_HIGH_REPETITION_PATTERN_0123456789_LZW_HIGH_REPETITION_PATTERN_0123456789_LZW_HIGH_REPETITION_PATTERN!";
-    verifyRoundtrip(alloc, rep, lsb_cfg)?;
-    verifyRoundtrip(alloc, rep, msb_cfg)?;
-
-    // 4. Pseudo-random data (LCG)
-    let rnd_buf = alloc.alloc(u8, 1024) catch unreachable;
-    defer alloc.free(rnd_buf);
-    let state: u32 = 0x12345678;
-    let i: usize = 0;
-    while (i < rnd_buf.len) : (i += 1) {
-        state = state *% 1664525 +% 1013904223;
-        rnd_buf[i] = ((state >> 16) & 0xff) as u8;
+fn slicesEq(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) {
+        return false;
     }
-    verifyRoundtrip(alloc, rnd_buf, lsb_cfg)?;
-    verifyRoundtrip(alloc, rnd_buf, msb_cfg)?;
-}
-
-fn runTest2(): !void {
-    const alloc = std.testing.allocator;
-    const lsb_cfg = LzwConfig{ min_code_size: 8, bit_order: LzwBitOrder.LsbFirst, max_code_size: 12 };
-    const msb_cfg = LzwConfig{ min_code_size: 8, bit_order: LzwBitOrder.MsbFirst, max_code_size: 12 };
-
-    // 1. Classic KwKwK sequences: "abababa..." and long run of 'A'
-    const ab_pat = "abababababababababababababababababababababababababababababababab";
-    verifyRoundtrip(alloc, ab_pat, lsb_cfg)?;
-    verifyRoundtrip(alloc, ab_pat, msb_cfg)?;
-
-    let aaa_buf = alloc.alloc(u8, 512) catch unreachable;
-    defer alloc.free(aaa_buf);
-    @memset(aaa_buf, 'A');
-    verifyRoundtrip(alloc, aaa_buf, lsb_cfg)?;
-    verifyRoundtrip(alloc, aaa_buf, msb_cfg)?;
-
-    // 2. Large pseudo-random + structured payload (> 16KB) to force > 4096 dict entries and ClearCode resets
-    let big_buf = alloc.alloc(u8, 16384) catch unreachable;
-    defer alloc.free(big_buf);
-    let seed: u32 = 0x9e3779b9;
     let i: usize = 0;
-    while (i < big_buf.len) : (i += 1) {
-        if ((i % 16) < 4) {
-            big_buf[i] = ((i / 16) & 0xff) as u8;
-        } else {
-            seed = seed *% 1103515245 +% 12345;
-            big_buf[i] = ((seed >> 16) & 0xff) as u8;
+    while (i < a.len) {
+        if (a[i] != b[i]) {
+            return false;
         }
+        i += 1;
     }
-    verifyRoundtrip(alloc, big_buf, lsb_cfg)?;
-    verifyRoundtrip(alloc, big_buf, msb_cfg)?;
+    return true;
 }
 
-fn runTest3(): !void {
-    const alloc = std.testing.allocator;
-    const gif_2bit_lsb = LzwConfig{ min_code_size: 2, bit_order: LzwBitOrder.LsbFirst, max_code_size: 12 };
-    const gif_2bit_msb = LzwConfig{ min_code_size: 2, bit_order: LzwBitOrder.MsbFirst, max_code_size: 12 };
+test("1. LSB-first (GIF) and MSB-first (TIFF/PDF) round-trip with KwKwK edge case and compression ratio", () => {
+    expect_eq(LZW_MAX_BITS, 12 as u8);
+    expect_eq(LZW_TABLE_SIZE, 4096 as usize);
+    expect_eq(LZW_MIN_CODE_BITS, 2 as u8);
+    expect_eq(LZW_MAX_INITIAL_BITS, 8 as u8);
 
-    // 2-bit pixel indices (0..3)
-    let pixels = alloc.alloc(u8, 600) catch unreachable;
-    defer alloc.free(pixels);
+    // Classic KwKwK trigger: long runs of "ABABAB..." and "AAAAAA..."
+    let src: [512]u8 = undefined;
     let i: usize = 0;
-    while (i < pixels.len) : (i += 1) {
-        pixels[i] = ((i * 7 + (i / 13)) % 4) as u8;
+    while (i < 256) {
+        src[i] = if ((i % 2) == 0) { 'A' as u8 } else { 'B' as u8 };
+        i += 1;
+    }
+    while (i < 512) {
+        src[i] = 'Z';
+        i += 1;
     }
 
-    verifyRoundtrip(alloc, pixels, gif_2bit_lsb)?;
-    verifyRoundtrip(alloc, pixels, gif_2bit_msb)?;
-}
+    let comp_arr: [1024]u8 = std.mem.zeroes([1024]u8);
+    let comp_slice: []u8 = comp_arr[0..];
+    let dec_arr: [512]u8 = std.mem.zeroes([512]u8);
+    let dec_slice: []u8 = dec_arr[0..];
 
-fn runTest4(): !void {
-    const alloc = std.testing.allocator;
-    const valid_cfg = LzwConfig{ min_code_size: 8, bit_order: LzwBitOrder.LsbFirst, max_code_size: 12 };
+    // 1a. GIF LSB-first
+    if (c_len := lzwCompressGif(src[0..], *comp_slice, 8)) {
+        expect_eq(c_len < 120, true); // high compression ratio
+        if (d_len := lzwDecompressGif(comp_arr[0..c_len], *dec_slice, 8)) {
+            expect_eq(d_len, 512 as usize);
+            expect_eq(slicesEq(dec_arr[0..d_len], src[0..]), true);
+        } else {
+            expect_eq(true, false);
+        }
+    } else {
+        expect_eq(true, false);
+    }
 
-    // 1. Invalid min_code_size = 1 and 9
-    const bad_cfg_1 = LzwConfig{ min_code_size: 1, bit_order: LzwBitOrder.LsbFirst, max_code_size: 12 };
-    let got_min_1 = false;
-    * = compress(alloc, "abc", bad_cfg_1) catch e => errMin1: {
-        got_min_1 = (e == LzwError.InvalidMinCodeSize);
-        break :errMin1 emptyMutSlice();
-    };
-    expect_eq(got_min_1, true);
-
-    const bad_cfg_9 = LzwConfig{ min_code_size: 9, bit_order: LzwBitOrder.LsbFirst, max_code_size: 12 };
-    let got_min_9 = false;
-    * = decompress(alloc, "abc", bad_cfg_9) catch e => errMin9: {
-        got_min_9 = (e == LzwError.InvalidMinCodeSize);
-        break :errMin9 emptyMutSlice();
-    };
-    expect_eq(got_min_9, true);
-
-    // 2. InvalidCode: first code >= clear_code (e.g. code 300 in 9-bit LSB: 0x2c, 0x01)
-    // 9-bit code 300 = 0b1_0010_1100 -> byte0 = 0x2c, byte1 = 0x01 (plus EOI 257)
-    const bad_code_stream: [3]u8 = [0x2c, 0x01, 0x00];
-    let got_invalid_code = false;
-    * = decompress(alloc, &bad_code_stream, valid_cfg) catch e => errBadCode: {
-        got_invalid_code = (e == LzwError.InvalidCode);
-        break :errBadCode emptyMutSlice();
-    };
-    expect_eq(got_invalid_code, true);
-
-    // 3. MissingEoiCode / TruncatedInput on truncated compressed stream
-    const sample = "Hello LZW truncation test!";
-    const comp = compress(alloc, sample, valid_cfg)?;
-    defer alloc.free(comp);
-
-    let got_trunc_or_eoi = false;
-    * = decompress(alloc, comp[0..(comp.len - 1)], valid_cfg) catch e => errTrunc: {
-        got_trunc_or_eoi = (e == LzwError.TruncatedInput || e == LzwError.MissingEoiCode);
-        break :errTrunc emptyMutSlice();
-    };
-    expect_eq(got_trunc_or_eoi, true);
-
-    // Empty compressed stream -> MissingEoiCode
-    let got_missing_eoi = false;
-    * = decompress(alloc, "", valid_cfg) catch e => errEmpty: {
-        got_missing_eoi = (e == LzwError.MissingEoiCode);
-        break :errEmpty emptyMutSlice();
-    };
-    expect_eq(got_missing_eoi, true);
-
-    // 4. OutputTooLarge anti-bomb protection
-    let bomb_in = alloc.alloc(u8, 4096) catch unreachable;
-    defer alloc.free(bomb_in);
-    @memset(bomb_in, 'X');
-    const bomb_comp = compress(alloc, bomb_in, valid_cfg)?;
-    defer alloc.free(bomb_comp);
-
-    let got_bomb = false;
-    * = decompressWithMaxSize(alloc, bomb_comp, valid_cfg, 512) catch e => errBomb: {
-        got_bomb = (e == LzwError.OutputTooLarge);
-        break :errBomb emptyMutSlice();
-    };
-    expect_eq(got_bomb, true);
-}
-
-fn runTest5(): !void {
-    const alloc = std.testing.allocator;
-    const cfg = cap.lzw.LzwConfig{
-        min_code_size: 8,
-        bit_order: cap.lzw.LzwBitOrder.MsbFirst,
-        max_code_size: 12,
-    };
-
-    const payload = "cap.lzw dynamic mount verification payload -- abababababab -- zero leak!";
-    const comp = cap.lzw.compress(alloc, payload, cfg)?;
-    defer alloc.free(comp);
-
-    const dec_out = cap.lzw.decompressWithMaxSize(alloc, comp, cfg, 4096)?;
-    defer alloc.free(dec_out);
-    expect_eq(std.mem.eql(u8, dec_out, payload), true);
-}
-
-test("1. LsbFirst (GIF) and MsbFirst (TIFF/PDF) empty, single-byte, repetitive, and random roundtrips", () => {
-    runTest1() catch unreachable;
+    // 1b. TIFF/PDF MSB-first
+    if (c_len := lzwCompressTiff(src[0..], *comp_slice)) {
+        expect_eq(c_len < 120, true);
+        if (d_len := lzwDecompressTiff(comp_arr[0..c_len], *dec_slice)) {
+            expect_eq(d_len, 512 as usize);
+            expect_eq(slicesEq(dec_arr[0..d_len], src[0..]), true);
+        } else {
+            expect_eq(true, false);
+        }
+    } else {
+        expect_eq(true, false);
+    }
 });
 
-test("2. Classic KwKwK sequences and > 4096 dictionary overflow ClearCode reset roundtrips", () => {
-    runTest2() catch unreachable;
+test("2. Empty input and single-byte input in both LSB and MSB bit orders", () => {
+    let comp_arr: [32]u8 = std.mem.zeroes([32]u8);
+    let comp_slice: []u8 = comp_arr[0..];
+    let dec_arr: [32]u8 = std.mem.zeroes([32]u8);
+    let dec_slice: []u8 = dec_arr[0..];
+
+    // 2a. Empty input (LSB & MSB)
+    if (c_len := lzwCompressGif("", *comp_slice, 8)) {
+        if (d_len := lzwDecompressGif(comp_arr[0..c_len], *dec_slice, 8)) {
+            expect_eq(d_len, 0 as usize);
+        } else {
+            expect_eq(true, false);
+        }
+    } else {
+        expect_eq(true, false);
+    }
+
+    if (c_len := lzwCompressTiff("", *comp_slice)) {
+        if (d_len := lzwDecompressTiff(comp_arr[0..c_len], *dec_slice)) {
+            expect_eq(d_len, 0 as usize);
+        } else {
+            expect_eq(true, false);
+        }
+    } else {
+        expect_eq(true, false);
+    }
+
+    // 2b. Single-byte input
+    let one: [1]u8 = [0x5A];
+    if (c_len := lzwCompressGif(one[0..], *comp_slice, 8)) {
+        if (d_len := lzwDecompressGif(comp_arr[0..c_len], *dec_slice, 8)) {
+            expect_eq(d_len, 1 as usize);
+            expect_eq(dec_arr[0], 0x5A as u8);
+        } else {
+            expect_eq(true, false);
+        }
+    } else {
+        expect_eq(true, false);
+    }
+
+    if (c_len := lzwCompressTiff(one[0..], *comp_slice)) {
+        if (d_len := lzwDecompressTiff(comp_arr[0..c_len], *dec_slice)) {
+            expect_eq(d_len, 1 as usize);
+            expect_eq(dec_arr[0], 0x5A as u8);
+        } else {
+            expect_eq(true, false);
+        }
+    } else {
+        expect_eq(true, false);
+    }
 });
 
-test("3. Small alphabet min_code_size=2 (2-bit image indices 0..3) roundtrip", () => {
-    runTest3() catch unreachable;
+test("3. Small lit_width (2-bit 4-color and 4-bit 16-color GIF palette index streams)", () => {
+    let comp_arr: [1024]u8 = std.mem.zeroes([1024]u8);
+    let comp_slice: []u8 = comp_arr[0..];
+    let dec_arr: [512]u8 = std.mem.zeroes([512]u8);
+    let dec_slice: []u8 = dec_arr[0..];
+
+    // 3a. 2-bit palette (values 0..3, exercises 3->4->5->6->7->8-bit widening)
+    let pal2: [300]u8 = undefined;
+    let i: usize = 0;
+    while (i < 300) {
+        pal2[i] = ((i * 7 + (i / 13)) % 4) as u8;
+        i += 1;
+    }
+    if (c_len := lzwCompressGif(pal2[0..], *comp_slice, 2)) {
+        if (d_len := lzwDecompressGif(comp_arr[0..c_len], *dec_slice, 2)) {
+            expect_eq(d_len, 300 as usize);
+            expect_eq(slicesEq(dec_arr[0..d_len], pal2[0..]), true);
+        } else {
+            expect_eq(true, false);
+        }
+    } else {
+        expect_eq(true, false);
+    }
+
+    // 3b. 4-bit palette (values 0..15)
+    let pal4: [400]u8 = undefined;
+    i = 0;
+    while (i < 400) {
+        pal4[i] = ((i * 11 + (i / 5)) % 16) as u8;
+        i += 1;
+    }
+    if (c_len := lzwCompress(pal4[0..], *comp_slice, 4, LzwBitOrder.msb)) {
+        if (d_len := lzwDecompress(comp_arr[0..c_len], *dec_slice, 4, LzwBitOrder.msb)) {
+            expect_eq(d_len, 400 as usize);
+            expect_eq(slicesEq(dec_arr[0..d_len], pal4[0..]), true);
+        } else {
+            expect_eq(true, false);
+        }
+    } else {
+        expect_eq(true, false);
+    }
 });
 
-test("4. Error guards: InvalidMinCodeSize, InvalidCode, MissingEoiCode/TruncatedInput, and OutputTooLarge", () => {
-    runTest4() catch unreachable;
+test("4. >4096 dictionary entries triggering 9->10->11->12-bit widening and automatic Clear reset (LSB & MSB)", () => {
+    // 10000 bytes of pseudo-random LCG data fills 4096-entry dictionary multiple times
+    let src: [10000]u8 = undefined;
+    let seed: u32 = 0x12345678;
+    let i: usize = 0;
+    while (i < 10000) {
+        seed = seed *% 1664525 +% 1013904223;
+        src[i] = ((seed >> 16) & 0xFF) as u8;
+        i += 1;
+    }
+
+    let comp_arr: [16384]u8 = std.mem.zeroes([16384]u8);
+    let comp_slice: []u8 = comp_arr[0..];
+    let dec_arr: [10000]u8 = std.mem.zeroes([10000]u8);
+    let dec_slice: []u8 = dec_arr[0..];
+
+    // 4a. LSB-first (GIF)
+    if (c_len := lzwCompressGif(src[0..], *comp_slice, 8)) {
+        if (d_len := lzwDecompressGif(comp_arr[0..c_len], *dec_slice, 8)) {
+            expect_eq(d_len, 10000 as usize);
+            expect_eq(slicesEq(dec_arr[0..d_len], src[0..]), true);
+        } else {
+            expect_eq(true, false);
+        }
+    } else {
+        expect_eq(true, false);
+    }
+
+    // 4b. MSB-first (TIFF/PDF)
+    if (c_len := lzwCompressTiff(src[0..], *comp_slice)) {
+        if (d_len := lzwDecompressTiff(comp_arr[0..c_len], *dec_slice)) {
+            expect_eq(d_len, 10000 as usize);
+            expect_eq(slicesEq(dec_arr[0..d_len], src[0..]), true);
+        } else {
+            expect_eq(true, false);
+        }
+    } else {
+        expect_eq(true, false);
+    }
 });
 
-test("5. import cap from \"cap\"; cap.lzw dynamic mount and std.testing.allocator zero-leak check", () => {
-    runTest5() catch unreachable;
+test("5. Malformed input rejection: invalid lit_width, invalid code > next_code, output overflow, out-of-range symbol", () => {
+    let comp_arr: [64]u8 = std.mem.zeroes([64]u8);
+    let comp_slice: []u8 = comp_arr[0..];
+    let dec_arr: [64]u8 = std.mem.zeroes([64]u8);
+    let dec_slice: []u8 = dec_arr[0..];
+
+    // 5a. Invalid lit_width (< 2 or > 8)
+    if (_ := lzwCompressGif("abc", *comp_slice, 1)) {
+        expect_eq(true, false);
+    } else {
+        expect_eq(true, true);
+    }
+    if (_ := lzwCompressGif("abc", *comp_slice, 9)) {
+        expect_eq(true, false);
+    } else {
+        expect_eq(true, true);
+    }
+
+    // 5b. Symbol >= (1 << lit_width)
+    let bad_sym: [2]u8 = [0, 4]; // 4 is out of range for lit_width=2 (max 3)
+    if (_ := lzwCompressGif(bad_sym[0..], *comp_slice, 2)) {
+        expect_eq(true, false);
+    } else {
+        expect_eq(true, true);
+    }
+
+    // 5c. Output buffer too small during decompression
+    if (c_len := lzwCompressTiff("Hello, LZW world!", *comp_slice)) {
+        let tiny_arr: [5]u8 = std.mem.zeroes([5]u8);
+        let tiny_slice: []u8 = tiny_arr[0..];
+        if (_ := lzwDecompressTiff(comp_arr[0..c_len], *tiny_slice)) {
+            expect_eq(true, false);
+        } else {
+            expect_eq(true, true);
+        }
+    } else {
+        expect_eq(true, false);
+    }
+
+    // 5d. Invalid code > next_code (MSB 9-bit stream: Clear=256 (0x80 0x0), then invalid code 300 (> 258))
+    // 256 (9b): 100000000
+    // 300 (9b): 100101100 -> bits: 10000000 01001011 00000000 = [0x80, 0x4B, 0x00]
+    let bad_code: [3]u8 = [0x80, 0x4B, 0x00];
+    if (_ := lzwDecompressTiff(bad_code[0..], *dec_slice)) {
+        expect_eq(true, false);
+    } else {
+        expect_eq(true, true);
+    }
 });

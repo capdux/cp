@@ -181,3 +181,6 @@
 
 ### 2026-11-22（`cap:minix` 验收，完成并注册纯 CP 零分配标准库 cap:minix（5/5 cap test PASS））
 - **执行成果**：`lib/minix/`（5/5 PASS，`doc/lib/minix.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:minix（5/5 cap test PASS）
+
+### 2026-11-22（`cap:lzw` 验收，完成并注册纯 CP 零分配标准库 cap:lzw（5/5 cap test PASS））
+- **执行成果**：`lib/lzw/`（5/5 PASS，`doc/lib/lzw.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:lzw（5/5 cap test PASS）

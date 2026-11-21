@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:lzw` Pure-CP zero-alloc LZW (GIF LSB / TIFF MSB, 9..12-bit) compressor & decompressor（5/5 PASS，文档直写 `doc/lib/lzw.md`）
+新增 cap:lzw 纯 CP 零分配字典压缩算法库（栈上 4096 字典、KwKwK 特例、自动 9..12-bit 扩展与 Clear 重置），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:minix` MINIX v1/v2/v3 superblock, 32B/64B Inode & 16B/32B/64B dir entry zero-alloc parser（5/5 PASS，文档直写 `doc/lib/minix.md`）
 新增 cap:minix 纯 CP 零分配经典文件系统解析库（v1/v2/v3 五种魔数分类、统一 Inode 与 16B/32B/64B 目录块零拷贝迭代），通过 cpc check 与 5/5 cap test
 
