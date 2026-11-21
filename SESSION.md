@@ -118,3 +118,6 @@
 
 ### 2026-11-22（`cap:pkcs12` 验收，完成 `cap:pkcs12` 交付验收并登记入库（6/6 PASS）；派发 `cap:diameter`。）
 - **执行成果**：`lib/pkcs12/`（5/5 PASS，`doc/lib/pkcs12.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:pkcs12` 交付验收并登记入库（6/6 PASS）；派发 `cap:diameter`。
+
+### 2026-11-22（`cap:bgp` 验收，完成 `cap:bgp` 交付验收并登记入库（5/5 PASS）；轮换 `Signal & Geo Absorber`（12 库）并派发 `cap:sctp`。）
+- **执行成果**：`lib/bgp/`（5/5 PASS，`doc/lib/bgp.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:bgp` 交付验收并登记入库（5/5 PASS）；轮换 `Signal & Geo Absorber`（12 库）并派发 `cap:sctp`。

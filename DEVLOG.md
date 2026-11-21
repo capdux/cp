@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:bgp` 零分配 RFC 4271 BGP-4 边界网关路由协议报头、NLRI 与路径属性解析器（5/5 PASS，文档直写 `doc/lib/bgp.md`）
+实现零分配 BGP-4 路由协议解析器，严格校验 16B 全 0xFF Marker 与 /0..32 前缀压缩编码。
+
 ## 2026-11-22: 新建 `cap:pkcs12` 零分配 RFC 7292 PKCS#12 (.p12/.pfx) 容器、SafeBag 与 MacData DER 解析器（5/5 PASS，文档直写 `doc/lib/pkcs12.md`）
 实现零分配 PKCS#12 PFX 容器解析器，严格校验 DER 规范并提取 localKeyId 与 friendlyName。
 
