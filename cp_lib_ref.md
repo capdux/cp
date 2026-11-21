@@ -562,3 +562,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:heif` | HeifBrandInfo, HevcConfig, HeifColr, HeifInfo, isHeif, parseHeifBrand, parseHvcC, parseHeifInfo | 零分配 HEIF / HEIC ISO BMFF 图像容器与 hvcC/ispe/colr 解析器 |
 | `cap:ts` | TS_PACKET_SIZE, M2TS_PACKET_SIZE, TS_SYNC_BYTE, TS_PID_PAT, TsPacket, TsPacketIter, PatEntry, PatIter, PmtStream, PmtHeader, PmtStreamIter, isMpegTs, parseTsPacket, parsePmt | 零分配 ISO/IEC 13818-1 MPEG-TS 188B/M2TS 传输流、PCR、PAT 与 PMT 解析器 |
 | `cap:dmg` | DMG_KOLY_MAGIC, DMG_KOLY_SIZE, DMG_MISH_MAGIC, DmgKolyHeader, DmgMishHeader, DmgBlkStripe, DmgStripeIter, isDmg, parseDmgKoly, parseDmgMish | 零分配 Apple UDIF (.dmg) 512B koly 尾部块与 mish/BLKX 条带解析器 |
+| `cap:mkv` | ID_EBML, ID_SEGMENT, ID_INFO, ID_TRACKS, MkvTrackType, MkvInfo, MkvTrack, MkvTrackIter, MkvHeader, isMkv, isWebm, parseMkvHeader | 零分配 Matroska / WebM EBML 视频容器 Info 与多轨道解析器 |

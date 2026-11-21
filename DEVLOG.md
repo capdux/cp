@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:mkv` 零分配 Matroska / WebM EBML 视频容器 Info 与多轨道解析器（5/5 PASS，文档直写 `doc/lib/mkv.md`）
+实现零分配 Matroska/WebM EBML 容器解析器，支持视频宽高、音频采样率/声道数与流式无界 Segment 解析。
+
 ## 2026-11-22: 新建 `cap:dmg` 零分配 Apple UDIF (.dmg) 512B koly 尾部块与 mish/BLKX 条带解析器（5/5 PASS，文档直写 `doc/lib/dmg.md`）
 实现零分配 Apple UDIF DMG 解析器，严格校验 koly/mish 魔数、版本号与防溢出 sector_count 字节换算。
 
