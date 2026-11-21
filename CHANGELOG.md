@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:vcd` 零分配 IEEE 1364 VCD 硬件/RTL 仿真波形头与值变流解析器（5/5 PASS，自动动态挂载 `cap.vcd`）
+新增 `lib/vcd/{vcd,index}.cp`、`doc/lib/vcd.md` 与 `cap/test/test_vcd_production_deep.cp`（5/5 PASS），支持 $timescale/$scope/$var 头解析及时间戳/标量/向量/实数波形流迭代。
+
 ## [2026-11-22] - 新建 `cap:lcov` 零分配 LCOV (.info) 代码覆盖率报告流式解析与聚合统计器（5/5 PASS，自动动态挂载 `cap.lcov`）
 新增 `lib/lcov/{lcov,index}.cp`、`doc/lib/lcov.md` 与 `cap/test/test_lcov_production_deep.cp`（5/5 PASS），支持 14 种 LCOV 记录、BRDA 未执行分支、缺失 LF/LH 自动回退实算与全局覆盖率汇总。
 

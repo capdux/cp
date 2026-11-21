@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:vcd` 零分配 IEEE 1364 VCD 硬件/RTL 仿真波形头与值变流解析器（5/5 PASS，文档直写 `doc/lib/vcd.md`）
+实现零分配 IEEE 1364 VCD 波形解析器，支持 1/10/100 全部 6 种时间单位与 Verilator/Icarus 仿真流。
+
 ## 2026-11-22: 新建 `cap:lcov` 零分配 LCOV (.info) 代码覆盖率报告流式解析与聚合统计器（5/5 PASS，文档直写 `doc/lib/lcov.md`）
 实现零分配 LCOV 覆盖率解析器，兼容 CRLF 与含逗号函数名，提供按文件与全局统计视图。
 

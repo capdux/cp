@@ -575,3 +575,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:rdb` | RDB_MAGIC, RDB_HEADER_SIZE, RdbHeader, RdbLengthKind, RdbLength, RdbStringVal, RdbEventKind, RdbEvent, RdbReader, isRdb, parseRdbHeader, readRdbLength, readRdbString | 零分配 Redis RDB 二进制快照头、变长/整数编码与流式事件解析器 |
 | `cap:postcard` | PostcardWriter, PostcardReader, zigzagEncodeI16, zigzagDecodeI16, zigzagEncodeI32, zigzagDecodeI32, zigzagEncodeI64, zigzagDecodeI64, cobsEncode, cobsEncodeFramed, cobsDecode | 零分配 Postcard 嵌入式紧凑二进制（LEB128/ZigZag + COBS）编解码器 |
 | `cap:lcov` | LcovRecordKind, LcovLineHit, LcovBranchHit, LcovFnDef, LcovFnHit, LcovRecord, LcovRecordIter, LcovFileSummary, LcovFileIter, LcovTotals, summarizeLcov | 零分配 LCOV (.info) 代码覆盖率报告流式解析与聚合统计器 |
+| `cap:vcd` | VcdTimeUnit, VcdVarType, VcdEventKind, VcdTimescale, VcdVarDef, VcdHeader, VcdVarIter, VcdEvent, VcdValueIter, parseVcdTimescale, parseVcdHeader | 零分配 IEEE 1364 VCD 硬件/RTL 仿真波形头与值变流解析器 |

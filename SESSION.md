@@ -67,3 +67,6 @@
 
 ### 2026-11-22（`cap:lcov` 验收，收到工单 #110 (`task-bun-20261122-root-struct-callconv-c`) 通知（已提前拉起专职热修处理）；完成 `cap:lcov` 验收提交（5/5 PASS）并派发 `cap:aof`。）
 - **执行成果**：`lib/lcov/`（5/5 PASS，`doc/lib/lcov.md`）经 `verify_module.sh` 一次性验收回收；收到工单 #110 (`task-bun-20261122-root-struct-callconv-c`) 通知（已提前拉起专职热修处理）；完成 `cap:lcov` 验收提交（5/5 PASS）并派发 `cap:aof`。
+
+### 2026-11-22（`cap:vcd` 验收，完成 `cap:vcd` 交付验收并登记入库（5/5 PASS）；派发 `cap:hprof`。）
+- **执行成果**：`lib/vcd/`（5/5 PASS，`doc/lib/vcd.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:vcd` 交付验收并登记入库（5/5 PASS）；派发 `cap:hprof`。
