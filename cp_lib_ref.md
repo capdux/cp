@@ -703,3 +703,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_max_forwards` | `MaxForwardsAction`, `MaxForwardsResult`, `parseMaxForwards`, `evaluateMaxForwards`, `formatMaxForwards` | RFC 9110 §7.6.2 HTTP `Max-Forwards` 代理跳数限制零分配解析与递减裁定器 |
 | `cap:etc_services` | `ServiceEntry`, `EtcServicesIter`, `findServicePort`, `findServiceByPort` | Linux `/etc/services` 网络服务名与端口/协议映射表零分配双向解析器 |
 | `cap:cli_table` | `TableBorderStyle`, `CellAlign`, `computeColumnWidths`, `renderBorderLine`, `renderTableRow`, `renderTable` | 零分配 CLI 终端表格（ASCII/Compact/Unicode 细线、ANSI/宽字符感知）渲染器 |
+| `cap:http_accept_ranges` | `AcceptRangesKind`, `AcceptRanges`, `AcceptRangesIter`, `parseAcceptRanges`, `supportsByteRanges`, `supportsRangeUnit` | RFC 9110 §14.3 HTTP `Accept-Ranges` 响应头零分配解析与分片能力判定器 |

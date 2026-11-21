@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:http_accept_ranges` RFC 9110 §14.3 HTTP `Accept-Ranges` 响应头零分配解析与分片能力判定器（5/5 PASS，文档直写 `doc/lib/http_accept_ranges.md`）
+- **设计要点**：`parseAcceptRanges` 零分配单遍扫描，遵循 RFC 9110 §14.3 拦截 `none` 混用/重复及空头；`supportsRangeUnit` 大小写不敏感匹配自定义分片单位。
+
 ## 2026-11-22: 新建 `cap:cli_table` 零分配 CLI 终端表格（ASCII/Compact/Unicode 细线、ANSI/宽字符感知）渲染器（5/5 PASS，文档直写 `doc/lib/cli_table.md`）
 - **设计要点**：`computeColumnWidths` 跳过 ANSI CSI/OSC 序列并按东亚宽字符 2 列计宽；`renderTable` 栈上零分配支持最多 64 列并拦截缓冲区溢出。
 

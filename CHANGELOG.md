@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_accept_ranges` RFC 9110 §14.3 HTTP `Accept-Ranges` 响应头零分配解析与分片能力判定器（5/5 PASS，自动动态挂载 `cap.http_accept_ranges`）
+- 新增 `lib/http_accept_ranges/{accept_ranges,index}.cp`、`doc/lib/http_accept_ranges.md`、`cap/test/test_http_accept_ranges_production_deep.cp`：纯 CP 零分配解析 RFC 9110 `Accept-Ranges` 头，严格拦截 `none` 与其他单位混用及非法 token，提供 `supportsByteRanges`/`supportsRangeUnit`（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:cli_table` 零分配 CLI 终端表格（ASCII/Compact/Unicode 细线、ANSI/宽字符感知）渲染器（5/5 PASS，自动动态挂载 `cap.cli_table`）
 - 新增 `lib/cli_table/{table,index}.cp`、`doc/lib/cli_table.md`、`cap/test/test_cli_table_production_deep.cp`：纯 CP 零分配渲染 CLI 终端表格（支持 ASCII/Compact/Unicode 细线边框、左/右/居中对齐、ANSI 序列跳过与宽字符列宽计算）（5/5 PASS）。
 
