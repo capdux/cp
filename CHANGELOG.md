@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:scc` 纯 CP 零分配有向图强连通分量与拓扑算法库：CSR 图、纯迭代无递归 Tarjan SCC、Kahn 拓扑排序/环检测、DAG 最长路径与线性时间 2-SAT 求解器（5/5 PASS，自动动态挂载 `cap.scc`）
+新增纯 CP 零分配有向图强连通分量与 2-SAT 库 cap:scc（迭代 Tarjan SCC、Kahn 拓扑排序、DAG 最长路、2-SAT），含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:maxflow` 纯 CP 零分配网络流算法库：CSR 残量图、Dinic 最大流（BFS 分层 + 当前弧优化）、最小割可达性判定与 SPFA 最小费用最大流（MCMF）（5/5 PASS，自动动态挂载 `cap.maxflow`）
 新增纯 CP 零分配网络流算法库 cap:maxflow（Dinic 最大流、最小割、SPFA 最小费用最大流），含文档与 6 项深度生产测试
 

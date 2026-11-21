@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:scc` 纯 CP 零分配有向图强连通分量与拓扑算法库：CSR 图、纯迭代无递归 Tarjan SCC、Kahn 拓扑排序/环检测、DAG 最长路径与线性时间 2-SAT 求解器（5/5 PASS，文档直写 `doc/lib/scc.md`）
+新增 cap:scc（lib/scc/{scc,index}.cp）：基于 CSR 与显式调用栈实现无递归 Tarjan SCC、Kahn 拓扑排序与 2-SAT，全路径零堆分配，cpc check 0 错误，cap test 6/6 PASS (816ms)
+
 ## 2026-11-22: 新建 `cap:maxflow` 纯 CP 零分配网络流算法库：CSR 残量图、Dinic 最大流（BFS 分层 + 当前弧优化）、最小割可达性判定与 SPFA 最小费用最大流（MCMF）（5/5 PASS，文档直写 `doc/lib/maxflow.md`）
 新增 cap:maxflow（lib/maxflow/{maxflow,index}.cp）：采用静态邻接表残量图 + 当前弧优化 Dinic 算法与 SPFA MCMF，全路径零堆分配，cpc check 0 错误，cap test 6/6 PASS (688ms)
 
