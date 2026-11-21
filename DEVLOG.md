@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ntfs` NTFS VBR, MFT FILE record, Resident/Non-Resident attributes & Data Runlist parser（5/5 PASS，文档直写 `doc/lib/ntfs.md`）
+新增 cap:ntfs 纯 CP 零分配 Windows 文件系统库（VBR 负 MFT 簇数换算、常驻/非常驻属性与变长有符号增量 LCN Runlist 迭代），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:squashfs` SquashFS v4.0 96B superblock, Metadata/Data block header, Fragment & InodeRef parser（5/5 PASS，文档直写 `doc/lib/squashfs.md`）
 新增 cap:squashfs 纯 CP 零分配只读压缩文件系统库（96B 超级块校验、48/13-bit InodeRef 编解码、Metadata/Data/Fragment 解析），通过 cpc check 与 5/5 cap test
 

@@ -85,3 +85,6 @@
 
 ### 2026-11-22（`cap:squashfs` 验收，完成并注册纯 CP 零分配标准库 cap:squashfs（5/5 cap test PASS））
 - **执行成果**：`lib/squashfs/`（5/5 PASS，`doc/lib/squashfs.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:squashfs（5/5 cap test PASS）
+
+### 2026-11-22（`cap:ntfs` 验收，完成并注册纯 CP 零分配标准库 cap:ntfs（5/5 cap test PASS））
+- **执行成果**：`lib/ntfs/`（5/5 PASS，`doc/lib/ntfs.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:ntfs（5/5 cap test PASS）
