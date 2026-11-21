@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:tap` 零分配 Test Anything Protocol (TAP v12/13/14) 测试流解析与汇总器（5/5 PASS，文档直写 `doc/lib/tap.md`）
+实现零分配 TAP 测试结果流解析器，支持 \# 转义区分、尾部计划与 1..0 全跳过计划。
+
 ## 2026-11-22: 新建 `cap:pkcs7` 零分配 RFC 5652 CMS / PKCS#7 ASN.1 DER 签名容器解析器（5/5 PASS，文档直写 `doc/lib/pkcs7.md`）
 实现零分配 CMS/PKCS#7 解析器，严格拒绝非最小 DER 长度与尾随垃圾字节。
 

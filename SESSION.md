@@ -82,3 +82,6 @@
 
 ### 2026-11-22（`cap:pkcs7` 验收，完成 `cap:pkcs7` 交付验收并登记入库（5/5 PASS）；派发 `cap:csr`。）
 - **执行成果**：`lib/pkcs7/`（5/5 PASS，`doc/lib/pkcs7.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:pkcs7` 交付验收并登记入库（5/5 PASS）；派发 `cap:csr`。
+
+### 2026-11-22（`cap:tap` 验收，完成 `cap:tap` 交付验收并登记入库（5/5 PASS）；派发 `cap:sarif`。）
+- **执行成果**：`lib/tap/`（5/5 PASS，`doc/lib/tap.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:tap` 交付验收并登记入库（5/5 PASS）；派发 `cap:sarif`。

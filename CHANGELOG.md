@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:tap` 零分配 Test Anything Protocol (TAP v12/13/14) 测试流解析与汇总器（5/5 PASS，自动动态挂载 `cap.tap`）
+新增 `lib/tap/{tap,index}.cp`、`doc/lib/tap.md` 与 `cap/test/test_tap_production_deep.cp`（5/5 PASS），支持 TAP 12-14、YAML 诊断块聚合、# SKIP/# TODO 指令与 Bail out! 汇总。
+
 ## [2026-11-22] - 新建 `cap:pkcs7` 零分配 RFC 5652 CMS / PKCS#7 ASN.1 DER 签名容器解析器（5/5 PASS，自动动态挂载 `cap.pkcs7`）
 新增 `lib/pkcs7/{pkcs7,index}.cp`、`doc/lib/pkcs7.md` 与 `cap/test/test_pkcs7_production_deep.cp`（5/5 PASS），支持 ContentInfo/SignedData（含 detached）、证书集与 SignerInfo 零拷贝迭代。
 

@@ -661,3 +661,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:pgp` | PGP_CRC24_INIT, PGP_CRC24_POLY, PgpArmorHeader, PgpPacket, PgpPacketIter, PgpPublicKeyInfo, PgpSignatureInfo, PgpLiteralData, pgpCrc24, parsePgpArmor, decodePgpArmor, parsePgpPublicKey, parsePgpSignature, parsePgpLiteralData | 零分配 OpenPGP RFC 4880/9580 Armor CRC-24 与 Old/New Packet 解析器 |
 | `cap:har` | HarHeader, HarTimings, HarEntry, HarEntryIter, HarStats, isHar, parseHarHeader, summarizeHar | 零分配 W3C HTTP Archive (.har 1.2) 浏览器抓包日志与性能统计器 |
 | `cap:pkcs7` | OID_DATA, OID_SIGNED_DATA, OID_ENVELOPED_DATA, Pkcs7ContentType, Pkcs7ContentInfo, Pkcs7SignedData, Pkcs7CertIter, Pkcs7SignerInfo, Pkcs7SignerIter, parseContentInfo, isPkcs7SignedData, parseSignedData | 零分配 RFC 5652 CMS / PKCS#7 ASN.1 DER 签名容器解析器 |
+| `cap:tap` | TapEventKind, TapDirective, TapEvent, TapIter, TapSummary, summarizeTap | 零分配 Test Anything Protocol (TAP v12/13/14) 测试流解析与汇总器 |
