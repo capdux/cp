@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:wat` 零分配 WebAssembly Text Format `.wat` 词法扫描、导出声明提取与模块结构校验器（5/5 PASS，自动动态挂载 `cap.wat`）
+- 新增 `lib/wat/{wat,index}.cp`、`doc/lib/wat.md`、`cap/test/test_wat_production_deep.cp`：纯 CP 零分配实现 WebAssembly `.wat` 词法扫描（嵌套 `(; ... ;)` 注释、`$id`、`nan:0x...`）、顶层/内联导出提取与 64 层 `(module ...)` 结构校验（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:wgsl` W3C WebGPU Shading Language `.wgsl` 零分配词法扫描、入口点与资源绑定提取器（5/5 PASS，自动动态挂载 `cap.wgsl`）
 - 新增 `lib/wgsl/{wgsl,index}.cp`、`doc/lib/wgsl.md`、`cap/test/test_wgsl_production_deep.cp`：纯 CP 零分配实现 WGSL 词法扫描（嵌套 `/* */` 注释、`@attr`、后缀数字）、`@vertex`/`@fragment`/`@compute` 入口点与 `@group`/`@binding` 绑定提取（5/5 PASS）。
 

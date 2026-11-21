@@ -112,3 +112,6 @@
 
 ### 2026-11-22（`cap:wgsl` 验收，新增简洁单单词包 `cap:wgsl`（5/5 PASS）；`capsurf_agy` 热修 `#105`（`cp_unpack_elem` 冗余 `comptime`）已合单派发至 `567b0f0a`）
 - **执行成果**：`lib/wgsl/`（5/5 PASS，`doc/lib/wgsl.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:wgsl`（5/5 PASS）；`capsurf_agy` 热修 `#105`（`cp_unpack_elem` 冗余 `comptime`）已合单派发至 `567b0f0a`
+
+### 2026-11-22（`cap:wat` 验收，新增简洁单单词包 `cap:wat`（5/5 PASS））
+- **执行成果**：`lib/wat/`（5/5 PASS，`doc/lib/wat.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:wat`（5/5 PASS）
