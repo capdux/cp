@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ico` 零分配 Windows ICO / CUR 图标容器二进制目录解析、PNG/BMP 负载提取与最佳尺寸选择器（5/5 PASS，自动动态挂载 `cap.ico`）
+- 新增 `lib/ico/{ico,index}.cp`、`doc/lib/ico.md`、`cap/test/test_ico_production_deep.cp`：纯 CP 零分配实现 ICO/CUR 6 字节头与 16 字节目录项解析（`0`->`256`、PNG 魔数识别、越界防护与最佳尺寸/高色深选择）（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:macho` 零分配 Apple Mach-O 32/64-bit 及 Fat Universal 二进制头与 Load Command 解析器（5/5 PASS，自动动态挂载 `cap.macho`）
 - 新增 `lib/macho/{macho,index}.cp`、`doc/lib/macho.md`、`cap/test/test_macho_production_deep.cp`：纯 CP 零分配实现 Apple Mach-O 32/64-bit 与 Fat Universal 二进制头、8 种魔数识别、Load Command 与架构切片边界安全迭代（5/5 PASS）。
 

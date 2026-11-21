@@ -154,3 +154,6 @@
 
 ### 2026-11-22（`cap:macho` 验收，新增简洁单单词包 `cap:macho`（5/5 PASS））
 - **执行成果**：`lib/macho/`（5/5 PASS，`doc/lib/macho.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:macho`（5/5 PASS）
+
+### 2026-11-22（`cap:ico` 验收，新增简洁单单词包 `cap:ico`（5/5 PASS））
+- **执行成果**：`lib/ico/`（5/5 PASS，`doc/lib/ico.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:ico`（5/5 PASS）

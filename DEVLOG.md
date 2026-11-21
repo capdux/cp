@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ico` 零分配 Windows ICO / CUR 图标容器二进制目录解析、PNG/BMP 负载提取与最佳尺寸选择器（5/5 PASS，文档直写 `doc/lib/ico.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:ico`；`findBestIcoEntry` 按最接近目标尺寸、等距优先降采样、同尺寸优先 PNG/高色深裁定。
+
 ## 2026-11-22: 新建 `cap:macho` 零分配 Apple Mach-O 32/64-bit 及 Fat Universal 二进制头与 Load Command 解析器（5/5 PASS，文档直写 `doc/lib/macho.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:macho`，补齐跨平台二进制检查生态；严格校验 `cmdsize >= 8` 与边界偏移防畸形二进制越界。
 
