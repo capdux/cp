@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ip_addr` RFC 4291 / RFC 5952 IPv4 与 IPv6 零分配解析器、规范化零压缩格式化器、地址分类与 CIDR 子网匹配（5/5 PASS，自动动态挂载 `cap.ip_addr`）
+新增 `cap:ip_addr`（`lib/ip_addr/{ip,index}.cp`、`doc/lib/ip_addr.md`、`cap/test/test_ip_addr_production_deep.cp`），实现 IPv4/IPv6 解析、RFC 5952 最长零段压缩、IPv4 映射 IPv6 互转与子网匹配。
+
+## [2026-11-22] - 新建 `cap:http_cache_control` RFC 9111 Cache-Control 指令零分配流式解析器、缓存存储/有效 TTL 判定与规范化格式化器（5/5 PASS，自动动态挂载 `cap.http_cache_control`）
+新增 `cap:http_cache_control`（`lib/http_cache_control/{cache_control,index}.cp`、`doc/lib/http_cache_control.md`、`cap/test/test_http_cache_control_production_deep.cp`），完整覆盖 15 项核心 RFC 9111 指令。
+
+## [2026-11-22] - 新建 `cap:json_pointer` RFC 6901 JSON Pointer 解析、~0/~1 转义反转义、数组索引校验与路径段迭代器（5/5 PASS，自动动态挂载 `cap.json_pointer`）
+新增 `cap:json_pointer`（`lib/json_pointer/{pointer,index}.cp`、`doc/lib/json_pointer.md`、`cap/test/test_json_pointer_production_deep.cp`），实现 RFC 6901 全套零分配解析与转义操作。
+
 ## [2026-11-22] - 新建 `cap:http_accept` RFC 9110 Accept / Accept-Encoding / Accept-Language 内容协商与 q 值解析器（5/5 PASS，自动动态挂载 `cap.http_accept`）
 新增 `cap:http_accept`（`lib/http_accept/{accept,index}.cp`、`doc/lib/http_accept.md`、`cap/test/test_http_accept_production_deep.cp`），实现严格 q 值解析与三类内容协商最佳匹配。
 

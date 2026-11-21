@@ -1,3 +1,12 @@
+## 2026-11-22: 新建 `cap:ip_addr` RFC 4291 / RFC 5952 IPv4 与 IPv6 零分配解析器、规范化零压缩格式化器、地址分类与 CIDR 子网匹配（5/5 PASS，文档直写 `doc/lib/ip_addr.md`）
+主智能体吸收 `cap:ip_addr`，严格拒绝 IPv4 前导零与非法双 `::`，完整实现 RFC 5952 §4.2 规范化输出与 IPv4/IPv6 CIDR 掩码匹配。
+
+## 2026-11-22: 新建 `cap:http_cache_control` RFC 9111 Cache-Control 指令零分配流式解析器、缓存存储/有效 TTL 判定与规范化格式化器（5/5 PASS，文档直写 `doc/lib/http_cache_control.md`）
+Subagent 2 吸收 `cap:http_cache_control`，支持引号内逗号与反斜杠转义、共享/私有缓存 `s-maxage` 优先级、`delta-seconds` 防溢出校验及规范化序列化。
+
+## 2026-11-22: 新建 `cap:json_pointer` RFC 6901 JSON Pointer 解析、~0/~1 转义反转义、数组索引校验与路径段迭代器（5/5 PASS，文档直写 `doc/lib/json_pointer.md`）
+Subagent 1 吸收 `cap:json_pointer`，实现单遍 `~1`/`~0` 反转义、RFC 6901 §4 数组索引校验、`PointerIter` 迭代及 `appendToken`/`parentPointer`。
+
 ## 2026-11-22: 新建 `cap:http_accept` RFC 9110 Accept / Accept-Encoding / Accept-Language 内容协商与 q 值解析器（5/5 PASS，文档直写 `doc/lib/http_accept.md`）
 主智能体吸收 `cap:http_accept`，支持带引号参数切分、媒体类型特异度排序、`q=0` 精确排除覆盖通配符、BCP-47 主子标签前缀匹配。
 

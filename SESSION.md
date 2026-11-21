@@ -304,3 +304,12 @@
 
 ### 2026-11-22（`cap:http_accept` 验收，Batch 46 注册 `cap:http_accept` 并提交。）
 - **执行成果**：`lib/http_accept/`（5/5 PASS，`doc/lib/http_accept.md`）经 `verify_module.sh` 一次性验收回收；Batch 46 注册 `cap:http_accept` 并提交。
+
+### 2026-11-22（`cap:json_pointer` 验收，Batch 47 完成 `cap:json_pointer`、`cap:http_cache_control`、`cap:ip_addr` 3 模块吸收与全量验收。）
+- **执行成果**：`lib/json_pointer/`（5/5 PASS，`doc/lib/json_pointer.md`）经 `verify_module.sh` 一次性验收回收；Batch 47 完成 `cap:json_pointer`、`cap:http_cache_control`、`cap:ip_addr` 3 模块吸收与全量验收。
+
+### 2026-11-22（`cap:http_cache_control` 验收，Batch 47 注册 `cap:http_cache_control`。）
+- **执行成果**：`lib/http_cache_control/`（5/5 PASS，`doc/lib/http_cache_control.md`）经 `verify_module.sh` 一次性验收回收；Batch 47 注册 `cap:http_cache_control`。
+
+### 2026-11-22（`cap:ip_addr` 验收，Batch 47 注册 `cap:ip_addr` 并提交。）
+- **执行成果**：`lib/ip_addr/`（5/5 PASS，`doc/lib/ip_addr.md`）经 `verify_module.sh` 一次性验收回收；Batch 47 注册 `cap:ip_addr` 并提交。

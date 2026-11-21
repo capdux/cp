@@ -560,3 +560,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:sse_parser` | SseEvent, SseParser, formatSseEvent | WHATWG Server-Sent Events (text/event-stream) 零分配流式解析器与格式化器 |
 | `cap:token_bucket` | TokenBucket, FixedWindowLimiter | 纯整数毫令牌确定性令牌桶与固定时间窗口限流器（防时钟回拨与溢出） |
 | `cap:http_accept` | parseQValue, MediaRange, AcceptIter, EncodingPref, AcceptEncodingIter, LangPref, AcceptLanguageIter, negotiateMediaType, negotiateEncoding, negotiateLanguage | RFC 9110 Accept / Accept-Encoding / Accept-Language 内容协商与 q 值解析器 |
+| `cap:json_pointer` | isValidPointer, parseArrayIndex, unescapeToken, escapeToken, PointerIter, appendToken, parentPointer | RFC 6901 JSON Pointer 解析、~0/~1 转义反转义、数组索引校验与路径段迭代器 |
+| `cap:http_cache_control` | CacheDirective, CacheControlIter, CacheControl | RFC 9111 Cache-Control 指令零分配流式解析器、缓存存储/有效 TTL 判定与规范化格式化器 |
+| `cap:ip_addr` | Ipv4Addr, Ipv6Addr, IpVersion, IpAddr | RFC 4291 / RFC 5952 IPv4 与 IPv6 零分配解析器、规范化零压缩格式化器、地址分类与 CIDR 子网匹配 |
