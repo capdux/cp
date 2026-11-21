@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:gpx` 零分配 GPX 1.0/1.1 航点/轨迹 XML 解析与 Haversine 距离统计器（5/5 PASS，自动动态挂载 `cap.gpx`）
+新增 `lib/gpx/{gpx,index}.cp`、`doc/lib/gpx.md` 与 `cap/test/test_gpx_production_deep.cp`（5/5 PASS），支持航点/轨迹点迭代、WGS-84 Haversine 距离、跨段隔离累计与爬升/下降统计。
+
 ## [2026-11-22] - 新建 `cap:kml` 零分配 OGC KML 2.2 地理标记 Placemark 与 coordinates 解析器（5/5 PASS，自动动态挂载 `cap.kml`）
 新增 `lib/kml/{kml,index}.cp`、`doc/lib/kml.md` 与 `cap/test/test_kml_production_deep.cp`（5/5 PASS），支持 BOM/注释/CDATA 剥离、lon,lat[,alt] 坐标迭代与 BBox 单遍统计。
 

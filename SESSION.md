@@ -127,3 +127,6 @@
 
 ### 2026-11-22（`cap:kml` 验收，完成 `cap:kml` 交付验收并登记入库（5/5 PASS）；派发 `e1dcf2e4` 同步 6 处 Bun 上游最新增量。）
 - **执行成果**：`lib/kml/`（5/5 PASS，`doc/lib/kml.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:kml` 交付验收并登记入库（5/5 PASS）；派发 `e1dcf2e4` 同步 6 处 Bun 上游最新增量。
+
+### 2026-11-22（`cap:gpx` 验收，完成 `cap:gpx` 交付验收并登记入库（5/5 PASS）；轮换 `Media & Binary Absorber`（15 库满载）并派发 `cap:topojson`。）
+- **执行成果**：`lib/gpx/`（5/5 PASS，`doc/lib/gpx.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:gpx` 交付验收并登记入库（5/5 PASS）；轮换 `Media & Binary Absorber`（15 库满载）并派发 `cap:topojson`。

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:gpx` 零分配 GPX 1.0/1.1 航点/轨迹 XML 解析与 Haversine 距离统计器（5/5 PASS，文档直写 `doc/lib/gpx.md`）
+实现零分配 GPX 1.0/1.1 解析器，兼容单双引号属性、自闭合标签与严格经纬度校验。
+
 ## 2026-11-22: 新建 `cap:kml` 零分配 OGC KML 2.2 地理标记 Placemark 与 coordinates 解析器（5/5 PASS，文档直写 `doc/lib/kml.md`）
 实现零分配 OGC KML 2.2 解析器，完整支持嵌套 Folder/Document、Point/LineString/Polygon 与经纬度范围校验。
 
