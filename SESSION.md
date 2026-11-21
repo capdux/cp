@@ -37,3 +37,6 @@
 
 ### 2026-11-22（`cap:http` 验收，方案 A 重大里程碑：全部 56 个 `lib/http_*` 彻底清零收敛至 `cap:http`（13/13 PASS），累计消除 **150 个**长下划线顶层目录！）
 - **执行成果**：`lib/http/`（5/5 PASS，`doc/lib/http.md`）经 `verify_module.sh` 一次性验收回收；方案 A 重大里程碑：全部 56 个 `lib/http_*` 彻底清零收敛至 `cap:http`（13/13 PASS），累计消除 **150 个**长下划线顶层目录！
+
+### 2026-11-22（`cap:jwt` 验收，方案 A Wave 8：`ssh`/`git`/`pkg`/`jwt` 6 目录收敛落地（6/6 PASS），累计消除 156 个长下划线顶层目录；完成 Sys Config Absorber 轻量化轮换）
+- **执行成果**：`lib/jwt/`（5/5 PASS，`doc/lib/jwt.md`）经 `verify_module.sh` 一次性验收回收；方案 A Wave 8：`ssh`/`git`/`pkg`/`jwt` 6 目录收敛落地（6/6 PASS），累计消除 156 个长下划线顶层目录；完成 Sys Config Absorber 轻量化轮换

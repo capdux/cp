@@ -4,7 +4,7 @@ import {
     JwtHeader,
     JwtClaims,
     ClaimStatus,
-} from "cap:jwt_claims";
+} from "cap:jwt";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {

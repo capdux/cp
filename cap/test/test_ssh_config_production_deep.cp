@@ -6,7 +6,7 @@ import {
     matchHostPatterns,
     resolveSshConfig,
     getSshOption,
-} from "cap:ssh_config";
+} from "cap:ssh";
 
 test("ssh_config: matchHostPatterns wildcards and ! negation veto rule") {
     expect_eq(matchHostPatterns("*", "anything"), true);

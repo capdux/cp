@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:jwt` JWT 声明解析统一主包（同步收敛 `cap:ssh`/`cap:git`/`cap:pkg`）（5/5 PASS，文档直写 `doc/lib/jwt.md`）
+- **收敛要点**：`lib/ssh/pubkey.cp` 的 `SshKeyType` 重导出为 `PubKeyType` 保留既有 `keys.cp` 零破坏；4 主包均 0 errors，6/6 PASS；同步轮换 `Sys Config Absorber` 为全新低上下文实例。
+
 ## 2026-11-22: 新建 `cap:http` HTTP/1.1/2/3 协议与全套 56 项 RFC 头部/安全/代理/路由/缓存大一统主包（`lib/http_*` 全仓清零！）（5/5 PASS，文档直写 `doc/lib/http.md`）
 - **收敛要点**：`lib/http_types` 内部冲突类型最小重命名避免覆盖既有核心类型；全仓 `lib/http_*` 与 `cap:http_*` 均为 0；累计消除 150 个长下划线顶层目录！
 

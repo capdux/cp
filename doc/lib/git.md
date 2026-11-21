@@ -16,6 +16,8 @@
 | `lib/git/url.cp` | `// Source: Absorbed from /data/dev/bun/src/install/repository.zig (Git Remote URL Parser & Formatter)` | Git 远程 URL 解析与格式化：`GitProtocol`、`GitRemoteUrl` |
 | `lib/git/ignorematch.cp` | `// Source: Absorbed from /data/dev/bun/src/glob.zig (.gitignore Rule Parser & Path Matcher)` | 零分配 `.gitignore` 规则解析与匹配：`GitignoreRule`、`parseGitignoreLine`、`ruleMatchesPath`、`isIgnored` |
 | `lib/git/config.cp` | `// Source: Absorbed from /data/dev/bun/src/install/repository.cp` | `.gitconfig` INI 解析器：`GitConfigEntry`、`GitConfig` |
+| `lib/git/commit.cp` | `// Source: Absorbed from /data/dev/bun/src/cli.zig (Conventional Commits Barrel)` | Conventional Commits 解析与 Semver 升级计算：`ReleaseBump`、`ConventionalCommit` |
+| `lib/git/codeowners.cp` | `// Source: Absorbed from /data/dev/bun/src/glob.zig (CODEOWNERS Rule Parser & Owner Resolver)` | `CODEOWNERS` 规则解析与归属解析：`CodeownersRule`、`OwnerIter`、`CodeownersIter`、`resolveOwners`、`isOwnedBy` |
 | `lib/git/index.cp` | `// Source: cp/lib/git/index.cp (Unified Exports for cap:git)` | `cap:git` 与 `cap.git` 统一公开导出入口 |
 
 ---

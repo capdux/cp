@@ -7,7 +7,7 @@ import {
     CodeownersIter,
     resolveOwners,
     isOwnedBy,
-} from "cap:codeowners";
+} from "cap:git";
 
 test("codeowners: CodeownersIter skips comments, GitLab sections, tracks line_no and escaped spaces") {
     const content =

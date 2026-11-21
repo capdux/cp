@@ -138,3 +138,4 @@
 - **`lib/pkg/npmrc.cp`**（`.npmrc` 配置与作用域 Registry 解析）：`DEFAULT_NPM_REGISTRY`、`NpmrcEntry`、`NpmrcIter`、`getNpmrcValue`、`getNpmrcBool`、`resolveRegistryForScope`、`findRegistrySetting`
 - **`lib/pkg/exports.cp`**（`package.json` `exports` 条件导出解析）：`ExportTargetKind`、`ExportConditionRule`、`ExportSubpathEntry`、`ResolveStatus`、`ResolveResult`、`ExportsMap`
 - **`lib/pkg/matcher.cp`**（包模式通配符匹配器）：`MatcherBehavior`、`PackagePattern`、`PackageMatcher`、`wildcardMatch`
+- **`lib/pkg/spdx.cp`**（SPDX 2.3 许可证表达式词法解析与校验）：`SpdxTokenKind`、`SpdxToken`、`SpdxLexer`、`isValidSpdxExpression`、`SpdxIdIter`、`isCommonPermissive`

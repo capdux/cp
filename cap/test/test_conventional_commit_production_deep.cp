@@ -1,7 +1,7 @@
 import {
     ReleaseBump,
     ConventionalCommit,
-} from "cap:conventional_commit";
+} from "cap:git";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {

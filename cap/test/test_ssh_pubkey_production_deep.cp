@@ -1,8 +1,8 @@
 import {
-    SshKeyType,
+    PubKeyType as SshKeyType,
     SshPubKey,
     AuthorizedKeysIter,
-} from "cap:ssh_pubkey";
+} from "cap:ssh";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {

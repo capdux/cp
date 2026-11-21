@@ -8,3 +8,17 @@ export {
     AuthorizedKeyEntry,
     AuthorizedKeys,
 } from "./keys.cp";
+
+export {
+    SshHostConfig,
+    matchHostPatterns,
+    resolveSshConfig,
+    getSshOption,
+} from "./config.cp";
+
+export {
+    SshKeyType as PubKeyType,
+    parseKeyType,
+    SshPubKey,
+    AuthorizedKeysIter,
+} from "./pubkey.cp";

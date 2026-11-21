@@ -50,3 +50,12 @@ export {
     PackageMatcher,
     wildcardMatch,
 } from "./matcher.cp";
+
+export {
+    SpdxTokenKind,
+    SpdxToken,
+    SpdxLexer,
+    isValidSpdxExpression,
+    SpdxIdIter,
+    isCommonPermissive,
+} from "./spdx.cp";

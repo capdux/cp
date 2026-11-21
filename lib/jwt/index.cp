@@ -8,4 +8,4 @@ export {
     JwtHeader,
     ClaimStatus,
     JwtClaims,
-} from "./jwt.cp";
+} from "./claims.cp";

@@ -55,3 +55,16 @@ export {
     GitConfigEntry,
     GitConfig,
 } from "./config.cp";
+
+export {
+    ReleaseBump,
+    ConventionalCommit,
+} from "./commit.cp";
+
+export {
+    CodeownersRule,
+    OwnerIter,
+    CodeownersIter,
+    resolveOwners,
+    isOwnedBy,
+} from "./codeowners.cp";

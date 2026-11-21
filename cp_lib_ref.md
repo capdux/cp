@@ -536,7 +536,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:token_bucket` | TokenBucket, FixedWindowLimiter | 纯整数毫令牌确定性令牌桶与固定时间窗口限流器（防时钟回拨与溢出） |
 | `cap:netrc` | NetrcEntry, NetrcIter, lookupNetrc | .netrc / _netrc 认证凭据文件零分配流式解析器（支持引号、注释、macdef 与 default 回退） |
 | `cap:robots_txt` | matchRobotsPattern, isAllowed, crawlDelaySec, SitemapIter | RFC 9309 robots.txt 解析、通配符匹配、Crawl-delay 提取与 Sitemap 迭代器 |
-| `cap:jwt_claims` | decodeBase64Url, JwtParts, splitJwt, extractStringClaim, extractIntClaim, JwtHeader, ClaimStatus, JwtClaims | RFC 7519 JWT 分段器、Base64URL 解码器、Header/Payload 声明提取与 exp/nbf/iss/sub/aud 校验器 |
 | `cap:hex_dump` | encodeHexLower, encodeHexUpper, decodeHexStrict, decodeHex, formatHexDumpLine, formatHexDump | 零分配十六进制编解码与规范化 hexdump -C 多行诊断格式化器 |
 | `cap:glob_escape` | isGlobMagic, hasGlobMagic, escapeGlob, unescapeGlob, staticBaseDir, isNegatedPattern, stripNegation | Glob 通配符元字符转义/反转义、静态目录前缀提取（遍历剪枝）与否定模式解析 |
 | `cap:editorconfig` | matchSectionPattern, IndentStyle, EndOfLine, Charset, EditorConfigProps, resolveEditorConfig | .editorconfig 零分配解析器、花括号/通配符段匹配与级联属性求值器 |
@@ -549,16 +548,11 @@ const h = cap.hash.wyhash("hello");
 | `cap:structured_headers` | SfItemKind, SfItem, parseSfItem, SfParam, SfParamIter, formatSfString, formatSfByteSeq | RFC 8941 HTTP Structured Field Values 标量项（整数/小数/字符串/Token/字节序列/布尔）与参数列表零分配解析器 |
 | `cap:rate_sliding_window` | SlidingWindowCounter, GcraLimiter | 加权滑动窗口计数器与 GCRA（通用信元速率算法）零分配纯整数平滑限流器 |
 | `cap:punycode` | isAsciiOnly, encodePunycode, decodePunycode, encodeIdnLabel, decodeIdnLabel | RFC 3492 Punycode / Bootstring 零分配编解码器与 xn-- 国际化域名标签转换器 |
-| `cap:ssh_pubkey` | SshKeyType, parseKeyType, SshPubKey, AuthorizedKeysIter | OpenSSH 公钥与 authorized_keys 文件零分配解析器（含选项字段、Base64 校验与 FIDO2 SK 识别） |
 | `cap:slugify` | slugifyWithSep, slugify, slugifyBounded, isValidSlug | 零分配 URL 安全 Slug 生成器（标点折叠、撇号省略、词边界截断与规范校验） |
 | `cap:rfc3339_time` | isLeapYear, daysInMonth, Rfc3339Time | RFC 3339 / ISO 8601 时间戳零分配解析器、闰年/时区校验、Unix 纪元秒互转与规范化格式化器 |
-| `cap:spdx_license` | SpdxTokenKind, SpdxToken, SpdxLexer, isValidSpdxExpression, SpdxIdIter, isCommonPermissive | SPDX 2.3 开源许可证表达式词法/递归下降语法校验器、ID 提取器与常见宽松许可证判定 |
 | `cap:markdown_table` | ColAlign, parseDelimiterCell, TableRowIter, parseDelimiterRow, unescapeTableCell, escapeTableCell | GFM Markdown 管道表格行零分配单元格迭代器、对齐分隔行检测与单元格管道符转义器 |
 | `cap:frontmatter` | FrontmatterKind, FrontmatterSplit, splitFrontmatter, getFrontmatterField | Markdown 文档 YAML (---) / TOML (+++) Frontmatter 零分配提取器与键值查询 |
-| `cap:conventional_commit` | ReleaseBump, ConventionalCommit | Conventional Commits 1.0.0 提交信息零分配解析器、破坏性变更检测与 SemVer 升级建议器 |
-| `cap:codeowners` | CodeownersRule, OwnerIter, CodeownersIter, resolveOwners, isOwnedBy | GitHub / GitLab CODEOWNERS 文件零分配规则解析与后匹配代码归属求值引擎 |
 | `cap:rfc7807_problem` | PROBLEM_JSON_CONTENT_TYPE, defaultTitleForStatus, ProblemDetails | RFC 9457 / RFC 7807 HTTP Problem Details (application/problem+json) 零分配构造与转义序列化器 |
-| `cap:ssh_config` | matchHostPatterns, SshHostConfig, resolveSshConfig, getSshOption | OpenSSH ~/.ssh/config 零分配解析器与主机参数匹配引擎（首现优先、* 与 ! 否定模式） |
 | `cap:charset_label` | CharsetKind, resolveCharsetLabel, canonicalCharsetName, isUtf8Compatible, isAsciiSuperset, sniffBomCharset | WHATWG Encoding Standard 字符集标签规范化器（14 种编码别名映射与 UTF-8/UTF-16 BOM 嗅探） |
 | `cap:makefile_parse` | MakeAssignOp, MakeVar, MakeRule, MakeRuleIter, MakeVarIter, isPhonyTarget | GNU Makefile 目标、依赖、.PHONY 伪目标与变量赋值（=/ :=/ ?=/ +=）零分配解析器 |
 | `cap:unicode_width` | isZeroWidth, isWideChar, codepointWidth, strDisplayWidth, sliceToDisplayWidth | Unicode 东亚宽度 / 终端显示列宽（wcwidth）零分配计算器（组合符=0、ASCII=1、CJK/Emoji=2） |
@@ -571,3 +565,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:docker` | `DockerImageRef`, `DockerfileIter`, ... | Docker 镜像引用与 Dockerfile 解析统一主包（同步收敛 `cap:dotenv`/`cap:ini`/`cap:csv`） |
 | `cap:mail` | `Mailbox`, `decodeRfc2047`, `decodeQuotedPrintable`, ... | RFC 5322 邮件地址、RFC 2047 编码字与 Quoted-Printable 统一主包（同步收敛 `cap:mime`） |
 | `cap:pkg` | `NpmPackageName`, `NpmrcIter`, `PkgExports`, `PkgMatcher`, ... | 包管理/NPM 名称/npmrc/exports/matcher 统一主包（同步收敛 `cap:shell`） |
+| `cap:jwt` | `JwtClaims`, `parseJwtClaims`, ... | JWT 声明解析统一主包（同步收敛 `cap:ssh`/`cap:git`/`cap:pkg`） |

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:jwt` JWT 声明解析统一主包（同步收敛 `cap:ssh`/`cap:git`/`cap:pkg`）（5/5 PASS，自动动态挂载 `cap.jwt`）
+- **方案 A 收敛 Wave 8 (6 开发工具/SSH/认证目录 -> `cap:ssh`/`cap:git`/`cap:pkg`/`cap:jwt`)**：合入 `ssh_config`/`ssh_pubkey` 至 `cap:ssh`、`conventional_commit`/`codeowners` 至 `cap:git`、`spdx_license` 至 `cap:pkg`，新建 `cap:jwt` 合入 `jwt_claims`（6/6 PASS），删除 6 个旧目录与文档，累计消除 156 个长下划线顶层目录。
+
 ## [2026-11-22] - 新建 `cap:http` HTTP/1.1/2/3 协议与全套 56 项 RFC 头部/安全/代理/路由/缓存大一统主包（`lib/http_*` 全仓清零！）（5/5 PASS，自动动态挂载 `cap.http`）
 - **方案 A 收敛里程碑 (`http_*` 最终第 4 批 13 目录 -> `cap:http`)**：将最后 13 个 `http_sec_fetch` 至 `http_warning` 合入 `lib/http/`（13/13 PASS），**全仓 56 个 `lib/http_*` 散装目录彻底清零**！累计已消除 **150 个**长下划线顶层目录。
 

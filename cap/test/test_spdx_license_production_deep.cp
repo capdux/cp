@@ -6,7 +6,7 @@ import {
     isValidSpdxExpression,
     SpdxIdIter,
     isCommonPermissive,
-} from "cap:spdx_license";
+} from "cap:pkg";
 
 test("1. SpdxLexer distinguishes strict uppercase operators, + suffixes, and LicenseRef", () => {
     let lex = SpdxLexer.init("(GPL-2.0+ OR Apache-2.0 WITH LLVM-exception) AND LicenseRef-Custom-1");

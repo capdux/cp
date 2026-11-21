@@ -76,3 +76,10 @@ pub fn demoSsh(): ! {
     }
 }
 ```
+
+---
+
+## 附加零分配子模块
+
+- **`lib/ssh/config.cp`**（OpenSSH `ssh_config` 解析与 Host 匹配）：`SshHostConfig`、`matchHostPatterns`、`resolveSshConfig`、`getSshOption`
+- **`lib/ssh/pubkey.cp`**（OpenSSH 公钥与 `authorized_keys` 零分配迭代）：`PubKeyType`、`parseKeyType`、`SshPubKey`、`AuthorizedKeysIter`
