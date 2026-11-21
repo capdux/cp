@@ -70,3 +70,6 @@
 
 ### 2026-11-22（`cap:gedcom` 验收，完成 `cap:gedcom` 交付验收并登记入库（5/5 PASS）；派发 `cap:har`。）
 - **执行成果**：`lib/gedcom/`（5/5 PASS，`doc/lib/gedcom.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:gedcom` 交付验收并登记入库（5/5 PASS）；派发 `cap:har`。
+
+### 2026-11-22（`cap:marc` 验收，完成 `cap:marc` 交付验收并登记入库（5/5 PASS）；派发 `cap:pkcs7`。）
+- **执行成果**：`lib/marc/`（5/5 PASS，`doc/lib/marc.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:marc` 交付验收并登记入库（5/5 PASS）；派发 `cap:pkcs7`。
