@@ -2,6 +2,12 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 全量 Unicode Case Folding 引擎（5/5 PASS，文档直写 `doc/lib/case_fold.md`）
+从 Bun md/unicode.cp 吸收压缩范围二分查找表与完整 Unicode Case Folding，纯 CP 零堆分配实现单码点折叠与流式 caseFoldEqual。
+
+## 2026-11-21: Unicode 三级压缩查找表生成器与 O(1) 查询引擎（5/5 PASS，文档直写 `doc/lib/unicode_lut.md`）
+从 Bun unicode/uucode/lut.cp 吸收三级压缩查找表引擎，使用 ~init() 确定性 RAII 自动释放三层表缓冲，支持自定义上限与全量 0x10FFFF 构建。
+
 ## 2026-11-21: MySQL 协议列类型与 ColumnDefinition41 编解码器（5/5 PASS，文档直写 `doc/lib/mysql_field_types.md`）
 从 Bun sql/mysql/MySQLTypes.cp 与 ColumnDefinition41.cp 吸收完整 MySQL 列类型与 41 号列元数据报文编解码，采用 ~init() 确定性 RAII，零泄漏通过测试。
 

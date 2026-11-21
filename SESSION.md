@@ -142,3 +142,9 @@
 
 ### 2026-11-21（`cap:mysql_field_types` 验收，吸收 Bun MySQL FieldType + ColumnDefinition41 -> cap:mysql_field_types，测试 5/5 通过。）
 - **执行成果**：`lib/mysql_field_types/`（5/5 PASS，`doc/lib/mysql_field_types.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun MySQL FieldType + ColumnDefinition41 -> cap:mysql_field_types，测试 5/5 通过。
+
+### 2026-11-21（`cap:unicode_lut` 验收，吸收 Bun unicode/uucode/lut.cp -> cap:unicode_lut，测试 6/6 通过。）
+- **执行成果**：`lib/unicode_lut/`（5/5 PASS，`doc/lib/unicode_lut.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun unicode/uucode/lut.cp -> cap:unicode_lut，测试 6/6 通过。
+
+### 2026-11-21（`cap:case_fold` 验收，吸收 Bun md/unicode.cp -> cap:case_fold，测试 3/3 通过。）
+- **执行成果**：`lib/case_fold/`（5/5 PASS，`doc/lib/case_fold.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun md/unicode.cp -> cap:case_fold，测试 3/3 通过。

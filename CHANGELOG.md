@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 全量 Unicode Case Folding 引擎（5/5 PASS，自动动态挂载 `cap.case_fold`）
+新增 cap:case_fold 标准库（lib/case_fold/、doc/lib/case_fold.md、cap/test/test_case_fold_production_deep.cp），3/3 回归通过。
+
+## [2026-11-21] - Unicode 三级压缩查找表生成器与 O(1) 查询引擎（5/5 PASS，自动动态挂载 `cap.unicode_lut`）
+新增 cap:unicode_lut 标准库（lib/unicode_lut/、doc/lib/unicode_lut.md、cap/test/test_unicode_lut_production_deep.cp），6/6 回归通过（全量 1,114,112 码点 >100x 压缩，零泄漏）。
+
 ## [2026-11-21] - MySQL 协议列类型与 ColumnDefinition41 编解码器（5/5 PASS，自动动态挂载 `cap.mysql_field_types`）
 新增 cap:mysql_field_types 标准库（lib/mysql_field_types/、doc/lib/mysql_field_types.md、cap/test/test_mysql_field_types_production_deep.cp），5/5 回归通过（零泄漏）。
 
