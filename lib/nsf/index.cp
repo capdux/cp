@@ -1,0 +1,25 @@
+// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc NES Sound Format NSF & NSFe Parser)
+
+export {
+    NSF_MAGIC,
+    NSF_HEADER_SIZE,
+    NSFE_MAGIC,
+    NSF_CHIP_VRC6,
+    NSF_CHIP_VRC7,
+    NSF_CHIP_FDS,
+    NSF_CHIP_MMC5,
+    NSF_CHIP_NAMCO163,
+    NSF_CHIP_SUNSOFT5B,
+    NsfRegion,
+    NsfFormat,
+    NsfHeader,
+    NsfeChunk,
+    NsfeInfo,
+    detectNsfFormat,
+    isNsf,
+    isNsfe,
+    parseNsfHeader,
+    NsfeChunkIter,
+    findNsfeChunk,
+    parseNsfeInfo,
+} from "./nsf.cp";

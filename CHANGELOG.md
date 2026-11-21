@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:nsf` 零分配 NES Sound Format (.nsf/.nsfe) 芯片音乐头与分块容器解析器（5/5 PASS，自动动态挂载 `cap.nsf`）
+新增 `lib/nsf/{nsf,index}.cp`、`doc/lib/nsf.md` 与 `cap/test/test_nsf_production_deep.cp`（5/5 PASS），支持 128B NSF1/2 头、6 种扩展芯片位掩码、Bankswitching 检测与 NSFe 分块迭代。
+
 ## [2026-11-22] - 新建 `cap:abc` 零分配 ABC Music Notation v2.1 乐谱头与 MIDI 音符/和弦流解析器（5/5 PASS，自动动态挂载 `cap.abc`）
 新增 `lib/abc/{abc,index}.cp`、`doc/lib/abc.md` 与 `cap/test/test_abc_production_deep.cp`（5/5 PASS），支持 X/T/M/L/Q/K 头解析、升降号/八度 MIDI 音高换算、分数时值与小节线/和弦流。
 

@@ -211,3 +211,6 @@
 
 ### 2026-11-22（`cap:abc` 验收，完成 `cap:abc` 交付验收并登记入库（5/5 PASS）；派发 `cap:xm`。）
 - **执行成果**：`lib/abc/`（5/5 PASS，`doc/lib/abc.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:abc` 交付验收并登记入库（5/5 PASS）；派发 `cap:xm`。
+
+### 2026-11-22（`cap:nsf` 验收，完成 `cap:nsf` 交付验收并登记入库（5/5 PASS）；派发 `cap:s3m`。）
+- **执行成果**：`lib/nsf/`（5/5 PASS，`doc/lib/nsf.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:nsf` 交付验收并登记入库（5/5 PASS）；派发 `cap:s3m`。
