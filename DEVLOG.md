@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:it` 零分配 Impulse Tracker 2.14 (.it) 跟踪器音乐头、采样与 Pattern 解析器（5/5 PASS，文档直写 `doc/lib/it.md`）
+实现零分配 Impulse Tracker IT 解析器，覆盖 4 张偏移表防越界校验与 16-bit/Loop 采样标志。
+
 ## 2026-11-22: 新建 `cap:spc` 零分配 SNES SPC700 (.spc) 芯片音乐头、ID666 与 xid6 扩展块解析器（5/5 PASS，文档直写 `doc/lib/spc.md`）
 实现零分配 SNES SPC700 芯片音乐解析器，覆盖 CPU 寄存器快照与 xid6 扩展标签。
 

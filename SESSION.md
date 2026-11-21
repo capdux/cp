@@ -226,3 +226,6 @@
 
 ### 2026-11-22（`cap:spc` 验收，完成 `cap:spc` 交付验收并登记入库（5/5 PASS）；派发 `cap:dls`。）
 - **执行成果**：`lib/spc/`（5/5 PASS，`doc/lib/spc.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:spc` 交付验收并登记入库（5/5 PASS）；派发 `cap:dls`。
+
+### 2026-11-22（`cap:it` 验收，完成 `cap:it` 交付验收并登记入库（5/5 PASS）；派发 `cap:fasta`。）
+- **执行成果**：`lib/it/`（5/5 PASS，`doc/lib/it.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:it` 交付验收并登记入库（5/5 PASS）；派发 `cap:fasta`。

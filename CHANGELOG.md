@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:it` 零分配 Impulse Tracker 2.14 (.it) 跟踪器音乐头、采样与 Pattern 解析器（5/5 PASS，自动动态挂载 `cap.it`）
+新增 `lib/it/{it,index}.cp`、`doc/lib/it.md` 与 `cap/test/test_it_production_deep.cp`（5/5 PASS），支持 192B IMPM 头、IMPI/IMPS 解析、songMessage 提取与空/打包 Pattern 读取。
+
 ## [2026-11-22] - 新建 `cap:spc` 零分配 SNES SPC700 (.spc) 芯片音乐头、ID666 与 xid6 扩展块解析器（5/5 PASS，自动动态挂载 `cap.spc`）
 新增 `lib/spc/{spc,index}.cp`、`doc/lib/spc.md` 与 `cap/test/test_spc_production_deep.cp`（5/5 PASS），支持 256B 头、Text/Binary ID666 自动区分、64KB RAM/DSP 切片与 xid6 4B 对齐迭代。
 
