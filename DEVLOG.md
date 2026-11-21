@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:hkdf_kdf` 纯 CP RFC 5869 HKDF-Extract/Expand 密钥派生引擎（覆盖 SHA-256/384/512 与 TLS 1.3 `expandLabelSha256`，支持 `cap.hkdf_kdf` 自动动态挂载，详见 `doc/lib/hkdf_kdf.md`）（5/5 PASS，文档直写 `doc/lib/hkdf_kdf.md`）
+- **核心设计**：基于 Zig 0.17 `std.crypto.kdf.hkdf` 提供零堆固定缓冲区与按需分配两种派生模式，通过 RFC 5869 Appendix A.1/A.3 官方向量与 `255*HashLen` 上限测试。
+
 ## 2026-11-21: 新建 `cap:scrypt` 纯 CP 工业级 RFC 7914 `scrypt` 内存硬化口令派生与 PHC 字符串编解码校验标准库（支持 `cap.scrypt` 自动动态挂载，详见 `doc/lib/scrypt.md`）（5/5 PASS，文档直写 `doc/lib/scrypt.md`）
 - **核心设计**：基于 Zig 0.17 `std.crypto.pwhash.scrypt.kdf` 与 `std.crypto.timing_safe.eql` 实现，通过 RFC 7914 Section 12 官方向量与 `std.testing.allocator` 零泄漏验证。
 
