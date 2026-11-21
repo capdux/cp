@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:glsl` 零分配 OpenGL / Vulkan GLSL 着色器词法扫描、`#version` 与 `uniform`/`in`/`out` 声明提取器（5/5 PASS，文档直写 `doc/lib/glsl.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:glsl`，与 `cap:wgsl` 构成双着色器分析套件；`GlslDeclIter` 自动忽略函数体内部声明。
+
 ## 2026-11-22: 新建 `cap:cue` 零分配 CUE 配置与数据约束语言词法扫描、包声明提取与 64 层平衡校验器（5/5 PASS，文档直写 `doc/lib/cue.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:cue`；`CueIter` 零拷贝切分 22 类 token 并防护未闭合字符串与嵌套深度。
 

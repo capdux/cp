@@ -118,3 +118,6 @@
 
 ### 2026-11-22（`cap:cue` 验收，新增简洁单单词包 `cap:cue`（5/5 PASS），完成 `DB & Protocol Absorber` 14 任务轻量化轮换）
 - **执行成果**：`lib/cue/`（5/5 PASS，`doc/lib/cue.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:cue`（5/5 PASS），完成 `DB & Protocol Absorber` 14 任务轻量化轮换
+
+### 2026-11-22（`cap:glsl` 验收，新增简洁单单词包 `cap:glsl`（5/5 PASS），完成 `PG & Data Absorber` 15 任务轻量化轮换）
+- **执行成果**：`lib/glsl/`（5/5 PASS，`doc/lib/glsl.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:glsl`（5/5 PASS），完成 `PG & Data Absorber` 15 任务轻量化轮换

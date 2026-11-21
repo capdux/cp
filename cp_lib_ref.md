@@ -510,3 +510,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:wgsl` | `WgslStage`, `WgslEntryPoint`, `WgslBinding`, `WgslTokenKind`, `WgslToken`, `WgslIter`, `WgslEntryPointIter`, `WgslBindingIter`, `validateWgslDelimiters` | W3C WebGPU Shading Language `.wgsl` 零分配词法扫描、入口点与资源绑定提取器 |
 | `cap:wat` | `WatTokenKind`, `WatToken`, `WatIter`, `WatExport`, `WatExportIter`, `validateWatStructure` | 零分配 WebAssembly Text Format `.wat` 词法扫描、导出声明提取与模块结构校验器 |
 | `cap:cue` | `CueTokenKind`, `CueToken`, `CueIter`, `validateCue`, `extractCuePackage` | 零分配 CUE 配置与数据约束语言词法扫描、包声明提取与 64 层平衡校验器 |
+| `cap:glsl` | `GlslVersion`, `GlslQualifier`, `GlslDecl`, `GlslTokenKind`, `GlslToken`, `GlslIter`, `parseGlslVersion`, `GlslDeclIter`, `validateGlslBraces` | 零分配 OpenGL / Vulkan GLSL 着色器词法扫描、`#version` 与 `uniform`/`in`/`out` 声明提取器 |
