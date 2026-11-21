@@ -89,3 +89,15 @@
 
 ### 2026-11-22（`cap:http_client_hints` 验收，Batch 71 注册 `cap:http_client_hints` 并提交（累计 227 模块）。）
 - **执行成果**：`lib/http_client_hints/`（5/5 PASS，`doc/lib/http_client_hints.md`）经 `verify_module.sh` 一次性验收回收；Batch 71 注册 `cap:http_client_hints` 并提交（累计 227 模块）。
+
+### 2026-11-22（`cap:socket_addr` 验收，Batch 72 完成 `cap:socket_addr`、`cap:makefile_parse`、`cap:csv_escape`、`cap:http_clear_site_data` 4 模块吸收与全量验收。）
+- **执行成果**：`lib/socket_addr/`（5/5 PASS，`doc/lib/socket_addr.md`）经 `verify_module.sh` 一次性验收回收；Batch 72 完成 `cap:socket_addr`、`cap:makefile_parse`、`cap:csv_escape`、`cap:http_clear_site_data` 4 模块吸收与全量验收。
+
+### 2026-11-22（`cap:makefile_parse` 验收，Batch 72 注册 `cap:makefile_parse`。）
+- **执行成果**：`lib/makefile_parse/`（5/5 PASS，`doc/lib/makefile_parse.md`）经 `verify_module.sh` 一次性验收回收；Batch 72 注册 `cap:makefile_parse`。
+
+### 2026-11-22（`cap:csv_escape` 验收，Batch 72 注册 `cap:csv_escape`。）
+- **执行成果**：`lib/csv_escape/`（5/5 PASS，`doc/lib/csv_escape.md`）经 `verify_module.sh` 一次性验收回收；Batch 72 注册 `cap:csv_escape`。
+
+### 2026-11-22（`cap:http_clear_site_data` 验收，Batch 72 注册 `cap:http_clear_site_data` 并提交（累计 231 模块）。）
+- **执行成果**：`lib/http_clear_site_data/`（5/5 PASS，`doc/lib/http_clear_site_data.md`）经 `verify_module.sh` 一次性验收回收；Batch 72 注册 `cap:http_clear_site_data` 并提交（累计 231 模块）。

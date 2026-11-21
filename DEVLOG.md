@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:http_clear_site_data` W3C Clear-Site-Data 响应头零分配解析与规范化构造器（cache/cookies/storage/executionContexts/clientHints/*）（5/5 PASS，文档直写 `doc/lib/http_clear_site_data.md`）
+主智能体吸收 `cap:http_clear_site_data`，补全 Web 安全响应头工具链。
+
+## 2026-11-22: 新建 `cap:csv_escape` RFC 4180 CSV / TSV 字段转义器、单行构造器、严格引号反转义器与电子表格公式前缀风险检测（5/5 PASS，文档直写 `doc/lib/csv_escape.md`）
+Subagent 2 吸收 `cap:csv_escape`，零堆分配提供 CSV/TSV 字段安全序列化与公式注入风险预警。
+
+## 2026-11-22: 新建 `cap:makefile_parse` GNU Makefile 目标、依赖、.PHONY 伪目标与变量赋值（=/ :=/ ?=/ +=）零分配解析器（5/5 PASS，文档直写 `doc/lib/makefile_parse.md`）
+Subagent 1 吸收 `cap:makefile_parse`，精准区分规则 `:` 与赋值 `:=`/`?=`/`+=`。
+
+## 2026-11-22: 新建 `cap:socket_addr` 零分配 host:port / [ipv6]:port 套接字地址解析器（支持严格远端模式与 :8080/:0 服务端绑定模式）（5/5 PASS，文档直写 `doc/lib/socket_addr.md`）
+主智能体吸收 `cap:socket_addr`，区分 `parse()` 严格远端端点与 `parseBind()` 服务端监听地址语义。
+
 ## 2026-11-22: 新建 `cap:http_client_hints` W3C Sec-CH-UA / Sec-CH-UA-Mobile / Sec-CH-UA-Platform 客户端提示零分配解析器与 GREASE 识别（5/5 PASS，文档直写 `doc/lib/http_client_hints.md`）
 主智能体吸收 `cap:http_client_hints`，与 `cap:http_user_agent` 互补覆盖现代浏览器客户端提示。
 

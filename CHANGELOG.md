@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_clear_site_data` W3C Clear-Site-Data 响应头零分配解析与规范化构造器（cache/cookies/storage/executionContexts/clientHints/*）（5/5 PASS，自动动态挂载 `cap.http_clear_site_data`）
+新增 `cap:http_clear_site_data`（`lib/http_clear_site_data/{clear_site_data,index}.cp`、`doc/lib/http_clear_site_data.md`、`cap/test/test_http_clear_site_data_production_deep.cp`），遵循 W3C 大小写敏感引号指令规则与 `"*"` 折叠。
+
+## [2026-11-22] - 新建 `cap:csv_escape` RFC 4180 CSV / TSV 字段转义器、单行构造器、严格引号反转义器与电子表格公式前缀风险检测（5/5 PASS，自动动态挂载 `cap.csv_escape`）
+新增 `cap:csv_escape`（`lib/csv_escape/{csv_escape,index}.cp`、`doc/lib/csv_escape.md`、`cap/test/test_csv_escape_production_deep.cp`），支持自定义分隔符、CRLF/LF 行拼接与严格引号校验。
+
+## [2026-11-22] - 新建 `cap:makefile_parse` GNU Makefile 目标、依赖、.PHONY 伪目标与变量赋值（=/ :=/ ?=/ +=）零分配解析器（5/5 PASS，自动动态挂载 `cap.makefile_parse`）
+新增 `cap:makefile_parse`（`lib/makefile_parse/{makefile,index}.cp`、`doc/lib/makefile_parse.md`、`cap/test/test_makefile_parse_production_deep.cp`），支持双冒号规则、内联 `;` 配方剥离与 `export`/`override` 变量。
+
+## [2026-11-22] - 新建 `cap:socket_addr` 零分配 host:port / [ipv6]:port 套接字地址解析器（支持严格远端模式与 :8080/:0 服务端绑定模式）（5/5 PASS，自动动态挂载 `cap.socket_addr`）
+新增 `cap:socket_addr`（`lib/socket_addr/{socket_addr,index}.cp`、`doc/lib/socket_addr.md`、`cap/test/test_socket_addr_production_deep.cp`），实现 IPv4/IPv6/主机名分类、端口校验与规范化输出。
+
 ## [2026-11-22] - 新建 `cap:http_client_hints` W3C Sec-CH-UA / Sec-CH-UA-Mobile / Sec-CH-UA-Platform 客户端提示零分配解析器与 GREASE 识别（5/5 PASS，自动动态挂载 `cap.http_client_hints`）
 新增 `cap:http_client_hints`（`lib/http_client_hints/{client_hints,index}.cp`、`doc/lib/http_client_hints.md`、`cap/test/test_http_client_hints_production_deep.cp`），支持品牌版本迭代、GREASE 占位过滤与移动/平台提示解析。
 

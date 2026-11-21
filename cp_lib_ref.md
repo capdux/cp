@@ -652,3 +652,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:git_diff_stat` | FileChangeKind, FileDiffStat, GitDiffIter, DiffSummary, summarizeGitDiff | Git Unified Diff (diff --git) 零分配文件变更统计提取器（增删行数、重命名、新增/删除与二进制识别） |
 | `cap:yaml_escape` | needsYamlQuotes, quoteYamlSingle, quoteYamlDouble, formatYamlScalar, unescapeYamlDouble | YAML 1.2 标量引号安全判定、单/双引号转义与 Unicode（\xHH/\uXXXX/\UXXXXXXXX）反转义器 |
 | `cap:http_client_hints` | BrandVersion, BrandListIter, findBrandVersion, parseMobileHint, parsePlatformHint | W3C Sec-CH-UA / Sec-CH-UA-Mobile / Sec-CH-UA-Platform 客户端提示零分配解析器与 GREASE 识别 |
+| `cap:socket_addr` | HostKind, SocketAddr | 零分配 host:port / [ipv6]:port 套接字地址解析器（支持严格远端模式与 :8080/:0 服务端绑定模式） |
+| `cap:makefile_parse` | MakeAssignOp, MakeVar, MakeRule, MakeRuleIter, MakeVarIter, isPhonyTarget | GNU Makefile 目标、依赖、.PHONY 伪目标与变量赋值（=/ :=/ ?=/ +=）零分配解析器 |
+| `cap:csv_escape` | needsCsvQuotes, escapeCsvField, unescapeCsvField, formatCsvRow, isFormulaInjectionRisk | RFC 4180 CSV / TSV 字段转义器、单行构造器、严格引号反转义器与电子表格公式前缀风险检测 |
+| `cap:http_clear_site_data` | ClearSiteData | W3C Clear-Site-Data 响应头零分配解析与规范化构造器（cache/cookies/storage/executionContexts/clientHints/*） |
