@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:code39` ISO/IEC 16388 Code 39 3-of-9 barcode pattern, Mod-43 & adaptive module codec（5/5 PASS，自动动态挂载 `cap.code39`）
+新增纯 CP 零分配标准库 cap:code39（ISO/IEC 16388 Code 39 3-of-9 图案、Mod-43 与自适应模块流编解码）与 6/6 深度测试
+
 ## [2026-11-22] - 新建 `cap:code128` ISO/IEC 15417 Code 128 (A/B/C/Auto) Mod-103 & 11-module barcode zero-alloc codec（5/5 PASS，自动动态挂载 `cap.code128`）
 新增纯 CP 零分配标准库 cap:code128（ISO/IEC 15417 Code 128 A/B/C/Auto 编解码、Mod-103 与 11 模块流）与 5/5 深度测试
 
