@@ -154,3 +154,12 @@
 
 ### 2026-11-22（`cap:hosted_git_info` 验收，Batch 29: 吸收并验证 cap:hosted_git_info (5/5 PASSED)）
 - **执行成果**：`lib/hosted_git_info/`（5/5 PASS，`doc/lib/hosted_git_info.md`）经 `verify_module.sh` 一次性验收回收；Batch 29: 吸收并验证 cap:hosted_git_info (5/5 PASSED)
+
+### 2026-11-22（`cap:css_list_style` 验收，Batch 30: 吸收并验证 cap:css_list_style (PASSED)）
+- **执行成果**：`lib/css_list_style/`（5/5 PASS，`doc/lib/css_list_style.md`）经 `verify_module.sh` 一次性验收回收；Batch 30: 吸收并验证 cap:css_list_style (PASSED)
+
+### 2026-11-22（`cap:css_text` 验收，Batch 30: 吸收并验证 cap:css_text (5/5 PASSED)）
+- **执行成果**：`lib/css_text/`（5/5 PASS，`doc/lib/css_text.md`）经 `verify_module.sh` 一次性验收回收；Batch 30: 吸收并验证 cap:css_text (5/5 PASSED)
+
+### 2026-11-22（`cap:html_asset_scanner` 验收，Batch 30: 吸收并验证 cap:html_asset_scanner (6/6 PASSED)）
+- **执行成果**：`lib/html_asset_scanner/`（5/5 PASS，`doc/lib/html_asset_scanner.md`）经 `verify_module.sh` 一次性验收回收；Batch 30: 吸收并验证 cap:html_asset_scanner (6/6 PASSED)

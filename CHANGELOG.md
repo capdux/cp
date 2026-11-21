@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:html_asset_scanner` 零堆分配 HTML 资源引用扫描器（支持 script/link/img/video/audio/source、精确字节偏移原位重写与 srcset 解析，吸收自 bun/src/bundler/HTMLScanner.cp）（5/5 PASS，自动动态挂载 `cap.html_asset_scanner`）
+新增 cap:html_asset_scanner 标准库模块（lib/html_asset_scanner/{scanner,index}.cp, doc/lib/html_asset_scanner.md, cap/test/test_html_asset_scanner_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:css_text` CSS Text 3/4 与 Text Decoration 属性族（text-transform/white-space/word-break/text-align/text-decoration 简写，吸收自 bun/src/css/properties/text.cp）（5/5 PASS，自动动态挂载 `cap.css_text`）
+新增 cap:css_text 标准库模块（lib/css_text/{text,index}.cp, doc/lib/css_text.md, cap/test/test_css_text_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:css_list_style` CSS Lists & Counters Level 3 属性库（18 种预定义计数器样式、list-style 简写双 none 消歧与 marker-side，吸收自 bun/src/css/properties/list.cp）（5/5 PASS，自动动态挂载 `cap.css_list_style`）
+新增 cap:css_list_style 标准库模块（lib/css_list_style/{list_style,index}.cp, doc/lib/css_list_style.md, cap/test/test_css_list_style_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:hosted_git_info` GitHub/GitLab/Bitbucket/Gist 托管 Git URL 规范化解析与 https/ssh/sshurl/shortcut/tarball/browse/bugs 多格式生成器（吸收自 bun/src/install/hosted_git_info.cp）（5/5 PASS，自动动态挂载 `cap.hosted_git_info`）
 新增 cap:hosted_git_info 标准库模块（lib/hosted_git_info/{git_info,index}.cp, doc/lib/hosted_git_info.md, cap/test/test_hosted_git_info_production_deep.cp）
 

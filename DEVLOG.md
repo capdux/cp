@@ -1,3 +1,12 @@
+## 2026-11-22: 新建 `cap:html_asset_scanner` 零堆分配 HTML 资源引用扫描器（支持 script/link/img/video/audio/source、精确字节偏移原位重写与 srcset 解析，吸收自 bun/src/bundler/HTMLScanner.cp）（5/5 PASS，文档直写 `doc/lib/html_asset_scanner.md`）
+子智能体 1 吸收 bun/src/bundler/HTMLScanner.cp，实现零外部依赖 HTML 资源扫描与 srcset CDN 逗号兼容解析，6/6 单测通过
+
+## 2026-11-22: 新建 `cap:css_text` CSS Text 3/4 与 Text Decoration 属性族（text-transform/white-space/word-break/text-align/text-decoration 简写，吸收自 bun/src/css/properties/text.cp）（5/5 PASS，文档直写 `doc/lib/css_text.md`）
+子智能体 2 吸收 bun/src/css/properties/text.cp，实现全套排版枚举与 text-decoration 简写，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:css_list_style` CSS Lists & Counters Level 3 属性库（18 种预定义计数器样式、list-style 简写双 none 消歧与 marker-side，吸收自 bun/src/css/properties/list.cp）（5/5 PASS，文档直写 `doc/lib/css_list_style.md`）
+吸收 bun/src/css/properties/list.cp，实现完整 list-style 简写、双 none 消歧与 18 种计数器样式，通过 cpc check 与 cap test
+
 ## 2026-11-22: 新建 `cap:hosted_git_info` GitHub/GitLab/Bitbucket/Gist 托管 Git URL 规范化解析与 https/ssh/sshurl/shortcut/tarball/browse/bugs 多格式生成器（吸收自 bun/src/install/hosted_git_info.cp）（5/5 PASS，文档直写 `doc/lib/hosted_git_info.md`）
 子智能体 2 吸收 bun/src/install/hosted_git_info.cp，实现 4 大 Git 平台多协议 URL 解析与 7 种规范输出，5/5 单测通过
 
