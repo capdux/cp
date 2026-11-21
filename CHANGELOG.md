@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ipfix` IPFIX v10 (RFC 7011) Message/Set/Enterprise IE Template & varlen zero-alloc parser（5/5 PASS，自动动态挂载 `cap.ipfix`）
+新增纯 CP 零分配标准库 cap:ipfix（RFC 7011 IPFIX v10 报头、Template/Data Set、Enterprise IE 与变长字段解码）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:netflow` NetFlow v5 & v9 (RFC 3954) flow records, FlowSets & Template zero-alloc parser（5/5 PASS，自动动态挂载 `cap.netflow`）
 新增纯 CP 零分配标准库 cap:netflow（Cisco NetFlow v5 与 RFC 3954 NetFlow v9 流记录/模板解析）与 5/5 深度测试
 

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ipfix` IPFIX v10 (RFC 7011) Message/Set/Enterprise IE Template & varlen zero-alloc parser（5/5 PASS，文档直写 `doc/lib/ipfix.md`）
+新增 cap:ipfix 纯 CP 零分配 IP 流信息导出协议库（16B 报头、Set/Template/Enterprise IE 零拷贝迭代与 §7 变长字段解码），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:netflow` NetFlow v5 & v9 (RFC 3954) flow records, FlowSets & Template zero-alloc parser（5/5 PASS，文档直写 `doc/lib/netflow.md`）
 新增 cap:netflow 纯 CP 零分配网络流遥测协议库（v5 48B 固定流记录与 v9 Template/Options/Data FlowSet 零拷贝迭代），通过 cpc check 与 5/5 cap test
 
