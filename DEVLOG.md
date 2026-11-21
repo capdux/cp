@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:aac` 零分配 MPEG-2/4 AAC ADTS 音频帧流与 AudioSpecificConfig 解析器（5/5 PASS，文档直写 `doc/lib/aac.md`）
+实现零分配 AAC ADTS 与 AudioSpecificConfig 解析器，支持 5-bit escape 对象类型与 24-bit 显式采样率。
+
 ## 2026-11-22: 新建 `cap:flv` 零分配 Adobe FLV 流媒体容器、Tag 流与音视频头解析器（5/5 PASS，文档直写 `doc/lib/flv.md`）
 实现零分配 Adobe FLV 容器解析器，支持音视频首字节元数据与有符号 24-bit composition_time 解码。
 

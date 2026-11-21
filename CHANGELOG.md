@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:aac` 零分配 MPEG-2/4 AAC ADTS 音频帧流与 AudioSpecificConfig 解析器（5/5 PASS，自动动态挂载 `cap.aac`）
+新增 `lib/aac/{aac,index}.cp`、`doc/lib/aac.md` 与 `cap/test/test_aac_production_deep.cp`（5/5 PASS），支持 7B/9B ADTS 帧流迭代、13 档采样率/声道查表、AudioSpecificConfig 扩展解析与时长估算。
+
 ## [2026-11-22] - 新建 `cap:flv` 零分配 Adobe FLV 流媒体容器、Tag 流与音视频头解析器（5/5 PASS，自动动态挂载 `cap.flv`）
 新增 `lib/flv/{flv,index}.cp`、`doc/lib/flv.md` 与 `cap/test/test_flv_production_deep.cp`（5/5 PASS），支持 FLV 9B 头、32-bit 扩展时间戳 Tag 迭代、PreviousTagSize 校验与 AAC/AVC 首字节解码。
 
