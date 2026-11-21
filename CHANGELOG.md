@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:consistent_maglev` 纯 CP Google Maglev $O(1)$ 一致性哈希查表路由引擎（置换表均匀分布、加权后端比例路由与最小迁移扰动，支持 `cap.consistent_maglev` 自动动态挂载，详见 `doc/lib/consistent_maglev.md`）（5/5 PASS，自动动态挂载 `cap.consistent_maglev`）
+- **新增标准库**：`lib/consistent_maglev/{maglev,index}.cp`，实现 Maglev 置换表与 $O(1)$ 查表路由。\n- **新增文档与测试**：`doc/lib/consistent_maglev.md` 扁平文档与 `cap/test/test_consistent_maglev_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:suffix_array` 纯 CP 后缀数组与 Kasai $O(N)$ LCP 数组引擎（$O(M \log N)$ 二分子串检索、`countOccurrences`、`searchAll` 与最长重复子串，支持 `cap.suffix_array` 自动动态挂载，详见 `doc/lib/suffix_array.md`）（5/5 PASS，自动动态挂载 `cap.suffix_array`）
 - **新增标准库**：`lib/suffix_array/{suffix_array,index}.cp`，实现后缀数组构建、Kasai LCP 数组与二分子串检索。\n- **新增文档与测试**：`doc/lib/suffix_array.md` 扁平文档与 `cap/test/test_suffix_array_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

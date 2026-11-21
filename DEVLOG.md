@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:consistent_maglev` 纯 CP Google Maglev $O(1)$ 一致性哈希查表路由引擎（置换表均匀分布、加权后端比例路由与最小迁移扰动，支持 `cap.consistent_maglev` 自动动态挂载，详见 `doc/lib/consistent_maglev.md`）（5/5 PASS，文档直写 `doc/lib/consistent_maglev.md`）
+- **核心设计**：采用双 Wyhash 偏移/步长生成置换序列并轮询填充素数查表，通过加权 2:1 比例路由与 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:suffix_array` 纯 CP 后缀数组与 Kasai $O(N)$ LCP 数组引擎（$O(M \log N)$ 二分子串检索、`countOccurrences`、`searchAll` 与最长重复子串，支持 `cap.suffix_array` 自动动态挂载，详见 `doc/lib/suffix_array.md`）（5/5 PASS，文档直写 `doc/lib/suffix_array.md`）
 - **核心设计**：结合 Kasai 线性时间 LCP 计算与二分上下界定位，通过 `"banana"` 官方向量与 `std.testing.allocator` 零泄漏验证。
 
