@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:iban` ISO 13616 IBAN & ISO 7064 Mod-97-10 validator, 52-country table & formatter（5/5 PASS，文档直写 `doc/lib/iban.md`）
+新增 cap:iban 纯 CP 零分配金融账号校验库（无大整数流式 Mod-97、52 国注册表、校验位反算与电子/打印格式化），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:isbn` ISO 2108 ISBN-10/13, ISO 3297 ISSN & GS1 EAN-13/8/UPC-A validator & converter（5/5 PASS，文档直写 `doc/lib/isbn.md`）
 新增 cap:isbn 纯 CP 零分配出版物与商品条码校验库（Mod-11/Mod-10 校验、978 前缀双向无损转换与 ISSN 格式化），通过 cpc check 与 6/6 cap test
 
