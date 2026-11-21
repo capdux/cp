@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:particle` 纯 CP 零分配序贯蒙特卡洛与粒子滤波库：log-sum-exp 权重更新、ESS 有效样本数、Systematic/Stratified/Multinomial 重采样与非线性多信标追踪（5/5 PASS，自动动态挂载 `cap.particle`）
+新增纯 CP 零分配序贯蒙特卡洛/粒子滤波库 cap:particle（Systematic/Stratified/Multinomial 重采样与 ESS 自适应粒子滤波），含文档与 5 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:spectral` 纯 CP 零分配谱图聚类与图拉普拉斯分析库：非归一化/对称归一化拉普拉斯、Fiedler 代数连通度与谱二分、NJW k-路谱嵌入、NCut 图割度量与高斯 RBF 亲和矩阵（5/5 PASS，自动动态挂载 `cap.spectral`）
 新增纯 CP 零分配谱图聚类与拉普拉斯库 cap:spectral（Fiedler 谱二分、NJW 谱嵌入、NCut、RBF 亲和矩阵），含文档与 6 项深度生产测试
 

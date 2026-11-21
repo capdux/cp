@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:particle` 纯 CP 零分配序贯蒙特卡洛与粒子滤波库：log-sum-exp 权重更新、ESS 有效样本数、Systematic/Stratified/Multinomial 重采样与非线性多信标追踪（5/5 PASS，文档直写 `doc/lib/particle.md`）
+新增 cap:particle（lib/particle/{particle,index}.cp）：零分配确定性 SplitMix64 粒子滤波器，支持 log-sum-exp 防下溢与双信标非线性测距追踪，cpc check 0 错误，cap test 5/5 PASS (911ms)
+
 ## 2026-11-22: 新建 `cap:spectral` 纯 CP 零分配谱图聚类与图拉普拉斯分析库：非归一化/对称归一化拉普拉斯、Fiedler 代数连通度与谱二分、NJW k-路谱嵌入、NCut 图割度量与高斯 RBF 亲和矩阵（5/5 PASS，文档直写 `doc/lib/spectral.md`）
 新增 cap:spectral（lib/spectral/{spectral,index}.cp）：零分配图拉普拉斯、Fiedler 谱二分与 NJW 谱嵌入，通过双团桥接图与双同心圆非凸分离校验，cpc check 0 错误，cap test 6/6 PASS (857ms)
 

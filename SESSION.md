@@ -241,3 +241,6 @@
 
 ### 2026-11-22（`cap:spectral` 验收，子智能体交付 cap:spectral（谱图聚类与拉普拉斯分析，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/spectral/`（5/5 PASS，`doc/lib/spectral.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:spectral（谱图聚类与拉普拉斯分析，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:particle` 验收，子智能体交付 cap:particle（序贯蒙特卡洛粒子滤波，5/5 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/particle/`（5/5 PASS，`doc/lib/particle.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:particle（序贯蒙特卡洛粒子滤波，5/5 PASS），主协调器统一登记并提交
