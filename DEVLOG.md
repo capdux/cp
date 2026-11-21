@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:icmp` 零分配 RFC 792/4443 ICMPv4 & ICMPv6 报头与 RFC 1071 校验和编解码器（5/5 PASS，文档直写 `doc/lib/icmp.md`）
+实现零分配 ICMPv4/v6 编解码器，精确处理奇数字节补零与防溢出校验和折叠。
+
 ## 2026-11-22: 新建 `cap:arp` 零分配 RFC 826/5227 以太网 IPv4 ARP 与变长地址解析编解码器（5/5 PASS，文档直写 `doc/lib/arp.md`）
 实现零分配 ARP 地址解析协议编解码器，覆盖 RFC 5227 Probe 与 Gratuitous 判定。
 

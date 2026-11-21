@@ -145,3 +145,6 @@
 
 ### 2026-11-22（`cap:arp` 验收，完成 `cap:arp` 交付验收并登记入库（5/5 PASS）；派发 `cap:stp`。）
 - **执行成果**：`lib/arp/`（5/5 PASS，`doc/lib/arp.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:arp` 交付验收并登记入库（5/5 PASS）；派发 `cap:stp`。
+
+### 2026-11-22（`cap:icmp` 验收，完成 `cap:icmp` 交付验收并登记入库（5/5 PASS）；派发 `cap:ospf`。）
+- **执行成果**：`lib/icmp/`（5/5 PASS，`doc/lib/icmp.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:icmp` 交付验收并登记入库（5/5 PASS）；派发 `cap:ospf`。

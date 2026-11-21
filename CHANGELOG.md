@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:icmp` 零分配 RFC 792/4443 ICMPv4 & ICMPv6 报头与 RFC 1071 校验和编解码器（5/5 PASS，自动动态挂载 `cap.icmp`）
+新增 `lib/icmp/{icmp,index}.cp`、`doc/lib/icmp.md` 与 `cap/test/test_icmp_production_deep.cp`（5/5 PASS），支持 ICMPv4/v6 Echo、PacketTooBig MTU 与含 IPv6 伪首部校验和。
+
 ## [2026-11-22] - 新建 `cap:arp` 零分配 RFC 826/5227 以太网 IPv4 ARP 与变长地址解析编解码器（5/5 PASS，自动动态挂载 `cap.arp`）
 新增 `lib/arp/{arp,index}.cp`、`doc/lib/arp.md` 与 `cap/test/test_arp_production_deep.cp`（5/5 PASS），支持 28B ARP Request/Reply/Probe/Gratuitous 编解码与通用变长 parseArpRaw。
 
