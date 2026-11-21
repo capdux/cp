@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/md/parser.cp
+// Source: Absorbed from /data/dev/bun/src/md/parser.cp | Synced: 2026-11-20T07:49:10Z
 // lib/md/parser.cp
 // Complete CommonMark + GFM Block Parser, Inline Parser, AST Document & HTML Renderer
 

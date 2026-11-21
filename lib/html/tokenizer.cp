@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/lolhtml_sys/lol_html.cp
+// Source: Absorbed from /data/dev/bun/src/lolhtml_sys/lol_html.cp | Synced: 2026-11-21T12:28:08Z
 // lib/html/tokenizer.cp
 // HTML5 Spec-Compliant Streaming Tokenizer (StartTag, EndTag, SelfClosing, Comment, Doctype, CDATA, RawText)
 

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/perf/tracy.cp
+// Source: Absorbed from /data/dev/bun/src/perf/tracy.cp | Synced: 2026-11-21T12:28:09Z
 // lib/bench/trace.cp
 // Zero-Allocation Nanosecond Perf Trace Ring Buffer & Chrome Trace Event JSON Exporter
 

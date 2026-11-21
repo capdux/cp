@@ -28,6 +28,7 @@ import {
 import { buildRefDefHashtable, normalizeLabel, parseRefDef } from "./ref_defs.cp";
 import { enterBlock, leaveBlock } from "./render_blocks.cp";
 import {
+    OFF,
     BLOCK_CONTAINER_CLOSER,
     BLOCK_CONTAINER_OPENER,
     BLOCK_FENCED_CODE,
@@ -433,16 +434,18 @@ pub fn analyzeLine(
     line.end = off;
 
     if (line.kind == .atxheader) {
-        let tmp = line.end;
+        let tmp: u32 = @as(u32, line.end);
         while (tmp > line.beg && isBlank(p.text[tmp - 1])) tmp -= 1;
         while (tmp > line.beg && p.text[tmp - 1] == '#') tmp -= 1;
         if (tmp == line.beg || isBlank(p.text[tmp - 1]) || p.flags.permissive_atx_headers) {
-            line.end = tmp;
+            line.end = @as(OFF, tmp);
         }
     }
 
     if (line.kind != .indentedcode && line.kind != .fencedcode && line.kind != .html && line.kind != .text) {
-        while (line.end > line.beg && isBlank(p.text[line.end - 1])) line.end -= 1;
+        let end_u32: u32 = @as(u32, line.end);
+        while (end_u32 > line.beg && isBlank(p.text[end_u32 - 1])) end_u32 -= 1;
+        line.end = @as(OFF, end_u32);
     }
 
     if (off < p.size && p.text[off] == '\r') off += 1;
@@ -504,8 +507,8 @@ pub fn processLine(
         p.fence_indent = line.indent;
 
         if (cb_off := p.current_block) {
-            const fence_count = line.data >> 8;
-            let info_beg: u32 = line.beg + fence_count;
+            const fence_count: u32 = line.data >> 8;
+            let info_beg: u32 = @as(u32, line.beg) + fence_count;
             while (info_beg < line.end && isBlank(p.text[info_beg])) info_beg += 1;
             let hdr = p.getBlockHeaderValAt(cb_off);
             hdr.data = info_beg;

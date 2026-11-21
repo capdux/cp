@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/dotenv/env_loader.cp
+// Source: Absorbed from /data/dev/bun/src/dotenv/env_loader.cp | Synced: 2026-11-21T15:11:43Z
 // lib/dotenv/loader.cp
 // Multi-environment cascade loader for .env files
 
@@ -56,7 +56,7 @@ pub struct DotenvLoader {
         let path_z: [4096]u8 = undefined;
         @memcpy(path_z[0..file_path.len], file_path);
         path_z[file_path.len] = 0;
-        const c_path: [*:0]const u8 = @ptrCast(&path_z[0]);
+        const c_path: [*:0]const u8 = unsafe { @ptrCast(&path_z[0]) };
         const fd = std.c.open(c_path, .{ .ACCMODE = .RDONLY }, @as(std.c.mode_t, 0));
         if (fd < 0) return false;
         defer * = std.c.close(fd);
@@ -64,7 +64,7 @@ pub struct DotenvLoader {
         let file_buf: [32768]u8 = undefined;
         let total_read: usize = 0;
         while (total_read < file_buf.len) {
-            const n = std.c.read(fd, @ptrCast(&file_buf[total_read]), file_buf.len - total_read);
+            const n = std.c.read(fd, unsafe { @ptrCast(&file_buf[total_read]) }, file_buf.len - total_read);
             if (n <= 0) break;
             total_read += @as(usize, @intCast(n));
         }

@@ -6,6 +6,7 @@ const std = @import("std");
 import { decodeUtf8, encodeUtf8, isWhitespace } from "./helpers.cp";
 import { caseFold } from "./unicode.cp";
 import {
+    OFF,
     BLOCK_CONTAINER_CLOSER,
     BLOCK_CONTAINER_OPENER,
     BLOCK_REF_DEF_ONLY,
@@ -315,8 +316,8 @@ pub fn buildRefDefHashtable(p: *Md4cParserState): ! {
                 let i: u32 = 0;
                 while (i < lines_consumed) : (i += 1) {
                     unsafe {
-                        line_base[i].beg = 1;
-                        line_base[i].end = 0;
+                        line_base[i].beg = @as(OFF, 1);
+                        line_base[i].end = @as(OFF, 0);
                     }
                 }
             }

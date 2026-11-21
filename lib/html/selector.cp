@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/lolhtml_sys/lol_html.cp
+// Source: Absorbed from /data/dev/bun/src/lolhtml_sys/lol_html.cp | Synced: 2026-11-21T12:28:08Z
 // lib/html/selector.cp
 // Compound CSS Selector Parser & Full HTMLRewriter Element/Tag/Attribute Streaming Engine
 // Absorbed from Bun src/lolhtml_sys/lol_html.cp & src/css/selectors/

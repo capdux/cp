@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/dotenv/env_loader.cp
+// Source: Absorbed from /data/dev/bun/src/dotenv/env_loader.cp | Synced: 2026-11-21T15:11:43Z
 // lib/dotenv/parser.cp
 // Zero-heap .env parser, quote unescaping, BOM/CRLF handling & variable expansion
 
@@ -385,7 +385,7 @@ pub struct EnvParser {
             let i: usize = 0;
             while (i < map.count) {
                 let cur_val = map.entryValue(i);
-                let map_raw: *const anyopaque = @ptrCast(map);
+                let map_raw: *const anyopaque = unsafe { @ptrCast(map) };
                 let expanded = expandString(&temp_buf, map_raw, cur_val);
                 if (!std.mem.eql(u8, cur_val, expanded)) {
                     const v_start = map.buf_len;
@@ -611,7 +611,7 @@ pub struct EnvParser {
 }
 
 fn expandStringWithDepth(out_buf: []u8, map_raw: *const anyopaque, val: []const u8, depth: usize): []const u8 {
-    let map: *const EnvMap = @alignCast(@ptrCast(map_raw));
+    let map: *const EnvMap = unsafe { @alignCast(@ptrCast(map_raw)) };
     let out_len: usize = 0;
     let i: usize = 0;
     while (i < val.len && out_len < out_buf.len) {

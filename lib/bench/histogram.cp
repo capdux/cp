@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/perf/perf.cp
+// Source: Absorbed from /data/dev/bun/src/perf/perf.cp | Synced: 2026-11-20T11:57:26Z
 // lib/bench/histogram.cp
 // Fixed-Bucket Nanosecond Latency Histogram with Min/Max/Mean & Percentile Estimation
 

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/platform/linux.cp
+// Source: Absorbed from /data/dev/bun/src/platform/linux.cp | Synced: 2026-11-20T17:39:29Z
 // ============================================================================
 // lib/platform/os_info.cp — OS, Architecture, Kernel Version & Capability Probe
 // ============================================================================
