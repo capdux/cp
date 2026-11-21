@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/interchange/json.cp
+// Source: Absorbed from /data/dev/bun/src/interchange/json.cp | Synced: 2026-11-21T12:28:07Z
 // Thread-local memory pool for JSON parsing (Ported from Bun.js HashMapPool)
 
 const std = @import("std");

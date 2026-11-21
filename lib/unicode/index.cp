@@ -7,9 +7,9 @@ export * from "./width.cp";
 export * from "./lut.cp";
 
 import r from "./range.cp";
-export const MAX_CODEPOINT = r.MAX_CODEPOINT;
-export const UnicodeRangeError = r.UnicodeRangeError;
-export const UnicodeRange = r.UnicodeRange;
+pub const MAX_CODEPOINT = r.MAX_CODEPOINT;
+pub const UnicodeRangeError = r.UnicodeRangeError;
+pub const UnicodeRange = r.UnicodeRange;
 
 export {
     isZeroWidth,
@@ -18,4 +18,4 @@ export {
     sliceToDisplayWidth,
 } from "./wcwidth.cp";
 import wc from "./wcwidth.cp";
-export const wcwidth = wc.codepointWidth;
+pub const wcwidth = wc.codepointWidth;

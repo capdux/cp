@@ -44,7 +44,7 @@ export {
     tokenize,
 } from "./posixlexer.cp";
 import plex from "./posixlexer.cp";
-export const PosixTokenKind = plex.TokenKind;
+pub const PosixTokenKind = plex.TokenKind;
 
 export {
     RedirectKind,
@@ -56,15 +56,15 @@ export {
     parseScript,
 } from "./posixast.cp";
 import past from "./posixast.cp";
-export const PosixRedirect = past.Redirect;
-export const PosixPipeline = past.Pipeline;
+pub const PosixRedirect = past.Redirect;
+pub const PosixPipeline = past.Pipeline;
 
 export {
     quoteArg,
     joinCommand,
 } from "./posixquote.cp";
 import pquote from "./posixquote.cp";
-export const posixNeedsQuoting = pquote.needsQuoting;
+pub const posixNeedsQuoting = pquote.needsQuoting;
 
 export {
     EnvAssignment,
@@ -76,8 +76,8 @@ export {
     splitEnvAssignment,
 } from "./util.cp";
 import sutil from "./util.cp";
-export const quotePosixBuf = sutil.quotePosix;
-export const joinCommandBuf = sutil.joinCommand;
+pub const quotePosixBuf = sutil.quotePosix;
+pub const joinCommandBuf = sutil.joinCommand;
 
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {

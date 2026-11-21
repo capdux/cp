@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/clap/args.cp
+// Source: Absorbed from /data/dev/bun/src/clap/args.cp | Synced: 2026-11-20T05:09:31Z
 // lib/cli/args.cp
 // Zero-allocation Command-Line Flag, Option, and Positional Argument Parser
 

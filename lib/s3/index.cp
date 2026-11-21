@@ -17,8 +17,8 @@ export {
     S3Uri,
 } from "./meta.cp";
 import s3meta from "./meta.cp";
-export const S3MetaAcl = s3meta.S3Acl;
-export const S3MetaStorageClass = s3meta.S3StorageClass;
+pub const S3MetaAcl = s3meta.S3Acl;
+pub const S3MetaStorageClass = s3meta.S3StorageClass;
 
 export {
     S3SignError,
@@ -31,4 +31,4 @@ export {
     presignUrl,
 } from "./sigv4.cp";
 import sigv4 from "./sigv4.cp";
-export const SigV4Credentials = sigv4.S3Credentials;
+pub const SigV4Credentials = sigv4.S3Credentials;
