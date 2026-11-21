@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:vxlan` 零分配 RFC 7348 VXLAN / VXLAN-GPE / VXLAN-GBP 隧道封装编解码器（5/5 PASS，自动动态挂载 `cap.vxlan`）
+新增 `lib/vxlan/{vxlan,index}.cp`、`doc/lib/vxlan.md` 与 `cap/test/test_vxlan_production_deep.cp`（5/5 PASS），支持 24-bit VNI、GPE NextProto/OAM、GBP Group Policy ID 与严格保留位校验。
+
 ## [2026-11-22] - 新建 `cap:lldp` 零分配 IEEE 802.1AB LLDP 链路层发现协议 TLV 编解码器（5/5 PASS，自动动态挂载 `cap.lldp`）
 新增 `lib/lldp/{lldp,index}.cp`、`doc/lib/lldp.md` 与 `cap/test/test_lldp_production_deep.cp`（6/6 PASS），支持 7b/9b TLV 迭代、必选前 3 TLV 顺序校验、Org-Specific TLV 与 LldpWriter。
 

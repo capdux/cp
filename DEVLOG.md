@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:vxlan` 零分配 RFC 7348 VXLAN / VXLAN-GPE / VXLAN-GBP 隧道封装编解码器（5/5 PASS，文档直写 `doc/lib/vxlan.md`）
+实现零分配 VXLAN/GPE/GBP 隧道封装编解码器，支持经典与扩展模式双向编码。
+
 ## 2026-11-22: 新建 `cap:lldp` 零分配 IEEE 802.1AB LLDP 链路层发现协议 TLV 编解码器（5/5 PASS，文档直写 `doc/lib/lldp.md`）
 实现零分配 IEEE 802.1AB LLDP 编解码器，支持最长 511B TLV 与 End-of-LLDPDU 严格校验。
 

@@ -133,3 +133,6 @@
 
 ### 2026-11-22（`cap:lldp` 验收，完成 `cap:lldp` 交付验收并登记入库（6/6 PASS）；派发 `cap:gre`。）
 - **执行成果**：`lib/lldp/`（5/5 PASS，`doc/lib/lldp.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:lldp` 交付验收并登记入库（6/6 PASS）；派发 `cap:gre`。
+
+### 2026-11-22（`cap:vxlan` 验收，完成 `cap:vxlan` 交付验收并登记入库（5/5 PASS）；派发 `cap:arp`。）
+- **执行成果**：`lib/vxlan/`（5/5 PASS，`doc/lib/vxlan.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:vxlan` 交付验收并登记入库（5/5 PASS）；派发 `cap:arp`。
