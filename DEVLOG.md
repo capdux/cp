@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:pptx` 零分配 OOXML PresentationML (.pptx) 幻灯片清单、EMU 尺寸与文本提取器（5/5 PASS，文档直写 `doc/lib/pptx.md`）
+实现零分配 OOXML PPTX 解析器，精准区分 <a:p> 与 <a:pPr> 及 id 与 r:id 属性。
+
 ## 2026-11-22: 新建 `cap:xlsx` 零分配 OOXML SpreadsheetML (.xlsx) 工作簿、共享串与单元格解析器（5/5 PASS，文档直写 `doc/lib/xlsx.md`）
 实现零分配 OOXML XLSX 解析器，支持富文本 <r><t> 合并、<rPh> 拼音跳过与 XML 实体反转义。
 

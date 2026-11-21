@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:pptx` 零分配 OOXML PresentationML (.pptx) 幻灯片清单、EMU 尺寸与文本提取器（5/5 PASS，自动动态挂载 `cap.pptx`）
+新增 `lib/pptx/{pptx,index}.cp`、`doc/lib/pptx.md` 与 `cap/test/test_pptx_production_deep.cp`（6/6 PASS），支持 16:9 EMU 尺寸换算、幻灯片/备注纯文本提取与 Shape/Table/Pic 统计。
+
 ## [2026-11-22] - 新建 `cap:xlsx` 零分配 OOXML SpreadsheetML (.xlsx) 工作簿、共享串与单元格解析器（5/5 PASS，自动动态挂载 `cap.xlsx`）
 新增 `lib/xlsx/{xlsx,index}.cp`、`doc/lib/xlsx.md` 与 `cap/test/test_xlsx_production_deep.cp`（5/5 PASS），支持 A1..XFD1048576 引用编解码、workbook/sharedStrings 与 sheetData 单元格迭代。
 
