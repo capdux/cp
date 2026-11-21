@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:junit` 零分配 JUnit XML CI 测试报告套件/用例解析与汇总器（5/5 PASS，自动动态挂载 `cap.junit`）
+新增 `lib/junit/{junit,index}.cp`、`doc/lib/junit.md` 与 `cap/test/test_junit_production_deep.cp`（5/5 PASS），支持 <testsuites>/<testsuite>/<testcase> 四态解析、CDATA 堆栈提取与单遍汇总。
+
 ## [2026-11-22] - 新建 `cap:csr` 零分配 RFC 2986 / PKCS#10 证书签发请求 (CSR) ASN.1 DER 解析器（5/5 PASS，自动动态挂载 `cap.csr`）
 新增 `lib/csr/{csr,index}.cp`、`doc/lib/csr.md` 与 `cap/test/test_csr_production_deep.cp`（5/5 PASS），支持 PKCS#10 DER 解析、Subject RDN 查询与 extensionRequest SAN 域名/IP 提取。
 

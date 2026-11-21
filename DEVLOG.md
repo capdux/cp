@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:junit` 零分配 JUnit XML CI 测试报告套件/用例解析与汇总器（5/5 PASS，文档直写 `doc/lib/junit.md`）
+实现零分配 JUnit XML 解析器，兼容 Maven/pytest/Jest/Cargo 报告格式与自闭合用例。
+
 ## 2026-11-22: 新建 `cap:csr` 零分配 RFC 2986 / PKCS#10 证书签发请求 (CSR) ASN.1 DER 解析器（5/5 PASS，文档直写 `doc/lib/csr.md`）
 实现零分配 PKCS#10 CSR 解析器，严格校验 version==0、unused_bits==0 并零拷贝暴露 cri_raw_der。
 

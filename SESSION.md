@@ -88,3 +88,6 @@
 
 ### 2026-11-22（`cap:csr` 验收，完成 `cap:csr` 交付验收并登记入库（5/5 PASS）；派发 `cap:crl`。）
 - **执行成果**：`lib/csr/`（5/5 PASS，`doc/lib/csr.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:csr` 交付验收并登记入库（5/5 PASS）；派发 `cap:crl`。
+
+### 2026-11-22（`cap:junit` 验收，完成 `cap:junit` 交付验收并登记入库（5/5 PASS）；派发 `cap:clf`。）
+- **执行成果**：`lib/junit/`（5/5 PASS，`doc/lib/junit.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:junit` 交付验收并登记入库（5/5 PASS）；派发 `cap:clf`。
