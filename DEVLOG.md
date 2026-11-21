@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:gpt` UEFI GPT & Protective MBR partition table, UTF-16LE name & IEEE CRC32 zero-alloc parser（5/5 PASS，文档直写 `doc/lib/gpt.md`）
+新增 cap:gpt 纯 CP 零分配磁盘分区表库（MBR 保护分区识别、GPT 92B 头与分区数组双 CRC32 校验、UTF-16LE 名称解码与 mixed-endian GUID 格式化），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:xdr` XDR (RFC 4506) 4B-aligned big-endian scalar, opaque & string zero-alloc codec（5/5 PASS，文档直写 `doc/lib/xdr.md`）
 新增 cap:xdr 纯 CP 零分配外部数据表示标准库（全标量、定/变长 Opaque 零填充校验与 XdrWriter 自动对齐），通过 cpc check 与 5/5 cap test
 

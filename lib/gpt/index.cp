@@ -1,0 +1,28 @@
+// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:gpt)
+
+export {
+    GPT_SIGNATURE,
+    GPT_REVISION_1_0,
+    GPT_MIN_HEADER_SIZE,
+    GPT_MIN_ENTRY_SIZE,
+    MBR_SECTOR_SIZE,
+    MBR_BOOT_SIGNATURE,
+    MBR_TYPE_GPT_PROTECTIVE,
+    GUID_UNUSED,
+    GUID_EFI_SYSTEM,
+    GUID_LINUX_FS,
+    GUID_LINUX_SWAP,
+    GUID_MS_BASIC_DATA,
+    gptCrc32,
+    formatGuid,
+    MbrPartition,
+    MbrPartitionTable,
+    parseMbrPartitions,
+    isProtectiveMbr,
+    GptHeader,
+    isGptHeader,
+    parseGptHeader,
+    verifyGptEntriesCrc,
+    GptEntry,
+    GptEntryIter,
+} from "./gpt.cp";

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:gpt` UEFI GPT & Protective MBR partition table, UTF-16LE name & IEEE CRC32 zero-alloc parser（5/5 PASS，自动动态挂载 `cap.gpt`）
+新增纯 CP 零分配标准库 cap:gpt（UEFI GPT 与 Protective MBR 分区表、双 IEEE CRC32 与 GUID 格式化）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:xdr` XDR (RFC 4506) 4B-aligned big-endian scalar, opaque & string zero-alloc codec（5/5 PASS，自动动态挂载 `cap.xdr`）
 新增纯 CP 零分配标准库 cap:xdr（RFC 4506 XDR 4 字节对齐大端编解码器 XdrReader/XdrWriter）与 5/5 深度测试
 
