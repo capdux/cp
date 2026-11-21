@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ocsp` 零分配 RFC 6960 OCSP 请求与响应 ASN.1 DER 解析器（5/5 PASS，自动动态挂载 `cap.ocsp`）
+新增 `lib/ocsp/{ocsp,index}.cp`、`doc/lib/ocsp.md` 与 `cap/test/test_ocsp_production_deep.cp`（5/5 PASS），支持 BasicOCSPResponse、good/revoked/unknown 三态 SingleResponse 与 OCSPRequest 解析。
+
 ## [2026-11-22] - 新建 `cap:trx` 零分配 Visual Studio / .NET (.trx) 测试结果 XML 解析与汇总器（5/5 PASS，自动动态挂载 `cap.trx`）
 新增 `lib/trx/{trx,index}.cp`、`doc/lib/trx.md` 与 `cap/test/test_trx_production_deep.cp`（5/5 PASS），支持 TestRun/Times/UnitTestResult/ErrorInfo/Counters 解析与 HH:MM:SS.fffffff 毫秒换算。
 

@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ocsp` 零分配 RFC 6960 OCSP 请求与响应 ASN.1 DER 解析器（5/5 PASS，文档直写 `doc/lib/ocsp.md`）
+实现零分配 RFC 6960 OCSP 解析器，兼容 byName/byKey ResponderID 并零拷贝暴露 tbs_raw_der。
+
 ## 2026-11-22: 新建 `cap:trx` 零分配 Visual Studio / .NET (.trx) 测试结果 XML 解析与汇总器（5/5 PASS，文档直写 `doc/lib/trx.md`）
 实现零分配 Visual Studio .trx 测试报告解析器，缺失 Counters 时自动回退单遍实算。
 

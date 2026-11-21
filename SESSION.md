@@ -103,3 +103,6 @@
 
 ### 2026-11-22（`cap:trx` 验收，完成 `cap:trx` 交付验收并登记入库（5/5 PASS）；派发 `cap:pkcs8`。）
 - **执行成果**：`lib/trx/`（5/5 PASS，`doc/lib/trx.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:trx` 交付验收并登记入库（5/5 PASS）；派发 `cap:pkcs8`。
+
+### 2026-11-22（`cap:ocsp` 验收，完成 `cap:ocsp` 交付验收并登记入库（5/5 PASS）；轮换 `Med & Sci Absorber`（12 库）并派发 `cap:pkcs12`。）
+- **执行成果**：`lib/ocsp/`（5/5 PASS，`doc/lib/ocsp.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:ocsp` 交付验收并登记入库（5/5 PASS）；轮换 `Med & Sci Absorber`（12 库）并派发 `cap:pkcs12`。
