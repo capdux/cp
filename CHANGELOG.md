@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:cbor_diag` 纯 CP 工业级 RFC 8949 CBOR 确定性编解码（含不定长编码与 Section 4.2 规范排序）与诊断表示法 `toDiag` 标准库（支持 `cap.cbor_diag` 自动动态挂载，详见 `doc/lib/cbor_diag.md`）（5/5 PASS，自动动态挂载 `cap.cbor_diag`）
+- **编译器热修**：修复 `cpc/src/parser/primary.rs` 函数调用实参传入 `[]const u8` / `[]u16` 切片类型表达式被误判为空数组的问题，完成 `task-bun-20261121-slice-type-arg` 结单。\n- **新增标准库**：`lib/cbor_diag/{cbor,index}.cp`，实现 RFC 8949 CBOR 定长/不定长编解码、Section 4.2 确定性规范编码与诊断表示法 `toDiag`。\n- **新增文档与测试**：`doc/lib/cbor_diag.md` 扁平文档与 `cap/test/test_cbor_diag_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:openmetrics` 纯 CP 工业级 Prometheus / OpenMetrics 0.0.4 & 1.0.0 文本暴露格式解析、校验与序列化引擎（支持 `cap.openmetrics` 自动动态挂载，详见 `doc/lib/openmetrics.md`）（5/5 PASS，自动动态挂载 `cap.openmetrics`）
 - **新增标准库**：`lib/openmetrics/{openmetrics,index}.cp`，实现 Counter/Gauge/Histogram/Summary 多家族 `# TYPE`/`# HELP`/`# UNIT`/`# EOF` 解析、标签转义反转义、NaN/`+Inf`/`-Inf` 处理与往返序列化。\n- **新增文档与测试**：`doc/lib/openmetrics.md` 扁平文档与 `cap/test/test_openmetrics_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

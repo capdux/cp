@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:cbor_diag` 纯 CP 工业级 RFC 8949 CBOR 确定性编解码（含不定长编码与 Section 4.2 规范排序）与诊断表示法 `toDiag` 标准库（支持 `cap.cbor_diag` 自动动态挂载，详见 `doc/lib/cbor_diag.md`）（5/5 PASS，文档直写 `doc/lib/cbor_diag.md`）
+- **热修根因**：`primary.rs` 中 `Token::LBracket` 后紧跟 `Token::RBracket` 时直接返回 `Expr::Array(Vec::new())`，未前瞻后续指针修饰符或类型名。已同步 `types.rs` 逻辑返回 `Expr::TypeVal`。\n- **标准库设计**：`cap:cbor_diag` 支持最大嵌套深度 64 防护、RFC 8949 Appendix A 全类型编码解码及字节长+字典序规范排序。
+
 ## 2026-11-21: 新建 `cap:openmetrics` 纯 CP 工业级 Prometheus / OpenMetrics 0.0.4 & 1.0.0 文本暴露格式解析、校验与序列化引擎（支持 `cap.openmetrics` 自动动态挂载，详见 `doc/lib/openmetrics.md`）（5/5 PASS，文档直写 `doc/lib/openmetrics.md`）
 - **核心设计**：流式逐行解析指标家族与带转义标签样本，支持 `# EOF` 检测与 `std.testing.allocator` 零泄漏验证。
 
