@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/hosted_git_info.cp | Synced: 2026-11-21T13:44:46Z
+// Source: Absorbed from /data/dev/bun/src/install/hosted_git_info.cp | Synced: 2026-11-21T18:04:21Z
 
 /// 主流托管 Git 平台枚举
 pub enum GitProvider: u8 {

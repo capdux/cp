@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/hosted_git_info.cp | Synced: 2026-11-20T12:26:20Z
+// Source: Absorbed from /data/dev/bun/src/install/hosted_git_info.cp | Synced: 2026-11-21T18:04:21Z
 // ============================================================================
 // lib/resolver/hosted_git.cp — Hosted Git Repository Specifier & URL Builder
 // ============================================================================
