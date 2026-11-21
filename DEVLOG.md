@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:marshal` 零分配 Ruby Marshal 4.8 二进制对象与 Fixnum 压缩整数解析器（5/5 PASS，文档直写 `doc/lib/marshal.md`）
+实现零分配 Ruby Marshal 4.8 解析器，完整支持裸字符串/IVAR 字符串、Symbol/Symlink 与嵌套容器。
+
 ## 2026-11-22: 新建 `cap:smile` 零分配 FasterXML Jackson Smile 1.0 二进制 JSON 编解码与 Token 流解析器（5/5 PASS，文档直写 `doc/lib/smile.md`）
 实现零分配 Jackson Smile 1.0 流式 Token 解析器，覆盖 5B/10B 7-bit 浮点编码与完整对象键状态机。
 

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:marshal` 零分配 Ruby Marshal 4.8 二进制对象与 Fixnum 压缩整数解析器（5/5 PASS，自动动态挂载 `cap.marshal`）
+新增 `lib/marshal/{marshal,index}.cp`、`doc/lib/marshal.md` 与 `cap/test/test_marshal_production_deep.cp`（5/5 PASS），支持 Marshal 4.8 版本头、压缩有符号整数、IVAR UTF-8 解包与深度受控 skipValue。
+
 ## [2026-11-22] - 新建 `cap:smile` 零分配 FasterXML Jackson Smile 1.0 二进制 JSON 编解码与 Token 流解析器（5/5 PASS，自动动态挂载 `cap.smile`）
 新增 `lib/smile/{smile,index}.cp`、`doc/lib/smile.md` 与 `cap/test/test_smile_production_deep.cp`（5/5 PASS），支持 4B Smile 头、7+6-bit VInt/ZigZag、Tiny/Small/Long 字符串、共享引用与对象键解析。
 
