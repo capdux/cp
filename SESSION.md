@@ -214,3 +214,6 @@
 
 ### 2026-11-22（`cap:lasso` 验收，子智能体交付 cap:lasso（Lasso / Ridge / ElasticNet 稀疏正则回归，5/5 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/lasso/`（5/5 PASS，`doc/lib/lasso.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:lasso（Lasso / Ridge / ElasticNet 稀疏正则回归，5/5 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:biquad` 验收，子智能体交付 cap:biquad（RBJ Biquad IIR 滤波与 Goertzel 单频检测，7/7 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/biquad/`（5/5 PASS，`doc/lib/biquad.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:biquad（RBJ Biquad IIR 滤波与 Goertzel 单频检测，7/7 PASS），主协调器统一登记并提交

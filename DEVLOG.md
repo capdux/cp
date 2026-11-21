@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:biquad` 纯 CP 零分配音频/DSP Biquad IIR 滤波器与 Goertzel 单频检测库：RBJ Cookbook 8 种二阶节、Transposed Direct Form II、级联 SOS、解析频响与 O(n) Goertzel 检测（5/5 PASS，文档直写 `doc/lib/biquad.md`）
+新增 cap:biquad（lib/biquad/{biquad,index}.cp）：零分配 RBJ Audio EQ Cookbook 8 种 Biquad、Transposed Direct Form II、4 阶 SOS 级联与 Goertzel 单频检测，cpc check 0 错误，cap test 7/7 PASS (765ms)
+
 ## 2026-11-22: 新建 `cap:lasso` 纯 CP 零分配稀疏正则化回归库：增量残差循环坐标下降 + 软阈值统一求解 Lasso（L1）、Ridge（L2）与 ElasticNet（L1+L2）及 R²/MSE 评估（5/5 PASS，文档直写 `doc/lib/lasso.md`）
 新增 cap:lasso（lib/lasso/{lasso,index}.cp）：零分配增量残差 O(n) 循环坐标下降 + 软阈值统一求解 Lasso/Ridge/ElasticNet，10 维稀疏真值精确归零噪声特征，cpc check 0 错误，cap test 5/5 PASS (752ms)
 
