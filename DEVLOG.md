@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:conventional_commit` Conventional Commits 1.0.0 提交信息零分配解析器、破坏性变更检测与 SemVer 升级建议器（5/5 PASS，文档直写 `doc/lib/conventional_commit.md`）
+主智能体吸收 `cap:conventional_commit`，与 `cap:semver_bump` 协同支持自动化发版工具链。
+
+## 2026-11-22: 新建 `cap:http_security_headers` Web 安全响应头解析与构造器（HSTS RFC 6797、Referrer-Policy 回退链、X-Frame-Options、COOP/COEP/CORP 跨域隔离）（5/5 PASS，文档直写 `doc/lib/http_security_headers.md`）
+Subagent 2 吸收 `cap:http_security_headers`，支持 HSTS preload 资格判定、W3C Referrer-Policy 末项生效规则及 `isCrossOriginIsolated`。
+
+## 2026-11-22: 新建 `cap:http_retry_after` RFC 9110 §10.2.3 Retry-After 响应头解析器（delta-seconds 与 IMF-fixdate）与限幅等待时长计算（5/5 PASS，文档直写 `doc/lib/http_retry_after.md`）
+主智能体吸收 `cap:http_retry_after`，复用 Howard Hinnant 纯整数日期算法实现零分配 IMF-fixdate 解析。
+
+## 2026-11-22: 新建 `cap:frontmatter` Markdown 文档 YAML (---) / TOML (+++) Frontmatter 零分配提取器与键值查询（5/5 PASS，文档直写 `doc/lib/frontmatter.md`）
+Subagent 1 吸收 `cap:frontmatter`，未闭合头块安全回退为纯正文。
+
 ## 2026-11-22: 新建 `cap:cli_progress` 零分配 CLI 进度条渲染器、百分比/纯整数 ETA 估算器与 ASCII/盲文点阵旋转动画帧生成器（5/5 PASS，文档直写 `doc/lib/cli_progress.md`）
 主智能体吸收 `cap:cli_progress`，零堆分配渲染 `[#####-----] 50% (50/100)` 与 3 种旋转器样式。
 

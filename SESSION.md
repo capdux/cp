@@ -454,3 +454,15 @@
 
 ### 2026-11-22（`cap:cli_progress` 验收，Batch 60 注册 `cap:cli_progress` 并提交（突破 60 批次 / 185 模块里程碑）。）
 - **执行成果**：`lib/cli_progress/`（5/5 PASS，`doc/lib/cli_progress.md`）经 `verify_module.sh` 一次性验收回收；Batch 60 注册 `cap:cli_progress` 并提交（突破 60 批次 / 185 模块里程碑）。
+
+### 2026-11-22（`cap:frontmatter` 验收，Batch 61 完成 `cap:frontmatter`、`cap:http_retry_after`、`cap:http_security_headers`、`cap:conventional_commit` 4 模块吸收与全量验收。）
+- **执行成果**：`lib/frontmatter/`（5/5 PASS，`doc/lib/frontmatter.md`）经 `verify_module.sh` 一次性验收回收；Batch 61 完成 `cap:frontmatter`、`cap:http_retry_after`、`cap:http_security_headers`、`cap:conventional_commit` 4 模块吸收与全量验收。
+
+### 2026-11-22（`cap:http_retry_after` 验收，Batch 61 注册 `cap:http_retry_after`。）
+- **执行成果**：`lib/http_retry_after/`（5/5 PASS，`doc/lib/http_retry_after.md`）经 `verify_module.sh` 一次性验收回收；Batch 61 注册 `cap:http_retry_after`。
+
+### 2026-11-22（`cap:http_security_headers` 验收，Batch 61 注册 `cap:http_security_headers`。）
+- **执行成果**：`lib/http_security_headers/`（5/5 PASS，`doc/lib/http_security_headers.md`）经 `verify_module.sh` 一次性验收回收；Batch 61 注册 `cap:http_security_headers`。
+
+### 2026-11-22（`cap:conventional_commit` 验收，Batch 61 注册 `cap:conventional_commit` 并提交。）
+- **执行成果**：`lib/conventional_commit/`（5/5 PASS，`doc/lib/conventional_commit.md`）经 `verify_module.sh` 一次性验收回收；Batch 61 注册 `cap:conventional_commit` 并提交。

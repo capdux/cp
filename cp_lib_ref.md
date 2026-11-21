@@ -610,3 +610,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:markdown_table` | ColAlign, parseDelimiterCell, TableRowIter, parseDelimiterRow, unescapeTableCell, escapeTableCell | GFM Markdown 管道表格行零分配单元格迭代器、对齐分隔行检测与单元格管道符转义器 |
 | `cap:dns_name` | isValidDnsLabel, isValidHostname, encodeWireName, decodeWireName, isSubdomainOf, normalizeHostname | RFC 1035 / RFC 1123 DNS 域名与标签合法性校验、线缆格式编解码与严格点边界子域匹配器 |
 | `cap:cli_progress` | SpinnerStyle, spinnerFrame, ProgressBar | 零分配 CLI 进度条渲染器、百分比/纯整数 ETA 估算器与 ASCII/盲文点阵旋转动画帧生成器 |
+| `cap:frontmatter` | FrontmatterKind, FrontmatterSplit, splitFrontmatter, getFrontmatterField | Markdown 文档 YAML (---) / TOML (+++) Frontmatter 零分配提取器与键值查询 |
+| `cap:http_retry_after` | RetryAfterKind, RetryAfter, formatRetryAfterSeconds | RFC 9110 §10.2.3 Retry-After 响应头解析器（delta-seconds 与 IMF-fixdate）与限幅等待时长计算 |
+| `cap:http_security_headers` | HstsPolicy, ReferrerPolicy, parseReferrerPolicy, FrameOptions, parseFrameOptions, CoopPolicy, CoepPolicy, CorpPolicy, parseCoopPolicy, parseCoepPolicy, parseCorpPolicy, isCrossOriginIsolated | Web 安全响应头解析与构造器（HSTS RFC 6797、Referrer-Policy 回退链、X-Frame-Options、COOP/COEP/CORP 跨域隔离） |
+| `cap:conventional_commit` | ReleaseBump, ConventionalCommit | Conventional Commits 1.0.0 提交信息零分配解析器、破坏性变更检测与 SemVer 升级建议器 |

@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:conventional_commit` Conventional Commits 1.0.0 提交信息零分配解析器、破坏性变更检测与 SemVer 升级建议器（5/5 PASS，自动动态挂载 `cap.conventional_commit`）
+新增 `cap:conventional_commit`（`lib/conventional_commit/{commit,index}.cp`、`doc/lib/conventional_commit.md`、`cap/test/test_conventional_commit_production_deep.cp`），支持 `type(scope)!: desc`、`BREAKING CHANGE:` 页脚检测与自动版本升级建议。
+
+## [2026-11-22] - 新建 `cap:http_security_headers` Web 安全响应头解析与构造器（HSTS RFC 6797、Referrer-Policy 回退链、X-Frame-Options、COOP/COEP/CORP 跨域隔离）（5/5 PASS，自动动态挂载 `cap.http_security_headers`）
+新增 `cap:http_security_headers`（`lib/http_security_headers/{security_headers,index}.cp`、`doc/lib/http_security_headers.md`、`cap/test/test_http_security_headers_production_deep.cp`），完整覆盖 6 类核心 Web 安全头。
+
+## [2026-11-22] - 新建 `cap:http_retry_after` RFC 9110 §10.2.3 Retry-After 响应头解析器（delta-seconds 与 IMF-fixdate）与限幅等待时长计算（5/5 PASS，自动动态挂载 `cap.http_retry_after`）
+新增 `cap:http_retry_after`（`lib/http_retry_after/{retry_after,index}.cp`、`doc/lib/http_retry_after.md`、`cap/test/test_http_retry_after_production_deep.cp`），支持整数秒与 HTTP 日期解析、相对等待秒数及上限夹紧。
+
+## [2026-11-22] - 新建 `cap:frontmatter` Markdown 文档 YAML (---) / TOML (+++) Frontmatter 零分配提取器与键值查询（5/5 PASS，自动动态挂载 `cap.frontmatter`）
+新增 `cap:frontmatter`（`lib/frontmatter/{frontmatter,index}.cp`、`doc/lib/frontmatter.md`、`cap/test/test_frontmatter_production_deep.cp`），支持 UTF-8 BOM、LF/CRLF、YAML/TOML 块分离与引号/注释剥离查询。
+
 ## [2026-11-22] - 新建 `cap:cli_progress` 零分配 CLI 进度条渲染器、百分比/纯整数 ETA 估算器与 ASCII/盲文点阵旋转动画帧生成器（5/5 PASS，自动动态挂载 `cap.cli_progress`）
 新增 `cap:cli_progress`（`lib/cli_progress/{progress,index}.cp`、`doc/lib/cli_progress.md`、`cap/test/test_cli_progress_production_deep.cp`），提供进度夹紧、`u128` 防溢出百分比与 ETA 计算。
 
