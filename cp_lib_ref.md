@@ -707,3 +707,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:etc_shells` | `parseShellLine`, `EtcShellsIter`, `isAllowedShell`, `findShellByBasename`, `countShells`, `isNologinShell` | Linux `/etc/shells` 合法登录 Shell 路径清单零分配解析与安全校验器 |
 | `cap:cli_tree` | `TreeStyle`, `TreePrefix`, `TreeNode`, `renderFlatTree` | 零分配 CLI 树形结构/依赖树（Unicode/ASCII/圆角，64 层位掩码）渲染器 |
 | `cap:http_accept_language` | `LanguageRange`, `AcceptLanguageIter`, `negotiateLanguage` | RFC 9110 §12.5.4 + RFC 4647 HTTP `Accept-Language` BCP 47 语言权重零分配协商器 |
+| `cap:proc_statm` | `ProcStatm`, `parseProcStatm` | Linux `/proc/<pid>/statm` 7 列内存页计数零分配解析与饱和字节换算器 |

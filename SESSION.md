@@ -256,3 +256,6 @@
 
 ### 2026-11-22（`cap:http_accept_language` 验收，Batch 115 落地，标准库总量达 282 模块）
 - **执行成果**：`lib/http_accept_language/`（5/5 PASS，`doc/lib/http_accept_language.md`）经 `verify_module.sh` 一次性验收回收；Batch 115 落地，标准库总量达 282 模块
+
+### 2026-11-22（`cap:proc_statm` 验收，Batch 116 落地，标准库总量达 283 模块）
+- **执行成果**：`lib/proc_statm/`（5/5 PASS，`doc/lib/proc_statm.md`）经 `verify_module.sh` 一次性验收回收；Batch 116 落地，标准库总量达 283 模块

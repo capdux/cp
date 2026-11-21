@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:proc_statm` Linux `/proc/<pid>/statm` 7 列内存页计数零分配解析与饱和字节换算器（5/5 PASS，文档直写 `doc/lib/proc_statm.md`）
+- **设计要点**：`parseProcStatm` 严格校验恰好 7 列十进制 `u64` 并拦截溢出/负数；`vmBytes`/`rssBytes`/`privateRssPages` 全部采用饱和运算防溢出。
+
 ## 2026-11-22: 新建 `cap:http_accept_language` RFC 9110 §12.5.4 + RFC 4647 HTTP `Accept-Language` BCP 47 语言权重零分配协商器（5/5 PASS，文档直写 `doc/lib/http_accept_language.md`）
 - **设计要点**：整数千分比 `q_permille`（`0..=1000`）消除浮点误差；`negotiateLanguage` 实现最具体标签覆写规则（正确支持 `en-US;q=0, en;q=0.8` 显式排除）。
 

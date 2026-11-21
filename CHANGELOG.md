@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:proc_statm` Linux `/proc/<pid>/statm` 7 列内存页计数零分配解析与饱和字节换算器（5/5 PASS，自动动态挂载 `cap.proc_statm`）
+- 新增 `lib/proc_statm/{statm,index}.cp`、`doc/lib/proc_statm.md`、`cap/test/test_proc_statm_production_deep.cp`：纯 CP 零分配解析 Linux `/proc/<pid>/statm` 7 列内存页计数，提供饱和字节换算与私有 RSS 计算（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:http_accept_language` RFC 9110 §12.5.4 + RFC 4647 HTTP `Accept-Language` BCP 47 语言权重零分配协商器（5/5 PASS，自动动态挂载 `cap.http_accept_language`）
 - 新增 `lib/http_accept_language/{accept_language,index}.cp`、`doc/lib/http_accept_language.md`、`cap/test/test_http_accept_language_production_deep.cp`：纯 CP 零分配解析 RFC 9110 `Accept-Language` 头与千分比 `qvalue`，实现 RFC 4647 前缀匹配、最具体标签覆写与 `q=0` 显式拒绝协商（5/5 PASS）。
 
