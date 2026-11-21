@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:verhoeff` Verhoeff (D5), Damm quasigroup & ISO/IEC 7064 Mod-11-2/37-2 check-digit suite（5/5 PASS，文档直写 `doc/lib/verhoeff.md`）
+新增 cap:verhoeff 纯 CP 零分配高可靠校验位算法库（单错与相邻换位 100% 检出 + ORCID Mod-11-2 / Mod-37-2），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:ean` ISO/IEC 15420 EAN-13 (95-mod), EAN-8 (67-mod) & UPC-A bidirectional barcode codec（5/5 PASS，文档直写 `doc/lib/ean.md`）
 新增 cap:ean 纯 CP 零分配商品条码库（全 10 种首位 L/G 奇偶编码、95/67 模块正向与倒置扫描自动识别），通过 cpc check 与 5/5 cap test
 

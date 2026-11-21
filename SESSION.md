@@ -235,3 +235,6 @@
 
 ### 2026-11-22（`cap:ean` 验收，完成并注册纯 CP 零分配标准库 cap:ean（5/5 cap test PASS））
 - **执行成果**：`lib/ean/`（5/5 PASS，`doc/lib/ean.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:ean（5/5 cap test PASS）
+
+### 2026-11-22（`cap:verhoeff` 验收，完成并注册纯 CP 零分配标准库 cap:verhoeff（5/5 cap test PASS））
+- **执行成果**：`lib/verhoeff/`（5/5 PASS，`doc/lib/verhoeff.md`）经 `verify_module.sh` 一次性验收回收；完成并注册纯 CP 零分配标准库 cap:verhoeff（5/5 cap test PASS）

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:verhoeff` Verhoeff (D5), Damm quasigroup & ISO/IEC 7064 Mod-11-2/37-2 check-digit suite（5/5 PASS，自动动态挂载 `cap.verhoeff`）
+新增纯 CP 零分配标准库 cap:verhoeff（Verhoeff D5、Damm 拟群与 ISO 7064 Mod-11-2/37-2 校验位套件）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:ean` ISO/IEC 15420 EAN-13 (95-mod), EAN-8 (67-mod) & UPC-A bidirectional barcode codec（5/5 PASS，自动动态挂载 `cap.ean`）
 新增纯 CP 零分配标准库 cap:ean（ISO/IEC 15420 EAN-13/EAN-8/UPC-A L/G/R 正反向模块流编解码）与 5/5 深度测试
 
