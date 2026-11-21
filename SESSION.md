@@ -25,3 +25,6 @@
 
 ### 2026-11-21（`cap:bundle_options` 验收，主控单兵从 Bun `options_types`/`install_types` 吸收并验收提交 `cap:bundle_options`）
 - **执行成果**：`lib/bundle_options/`（5/5 PASS，`doc/lib/bundle_options.md`）经 `verify_module.sh` 一次性验收回收；主控单兵从 Bun `options_types`/`install_types` 吸收并验收提交 `cap:bundle_options`
+
+### 2026-11-21（`cap:command_tag` 验收，主控单兵从 Bun `options_types/CommandTag.cp` 吸收并验收提交 `cap:command_tag`）
+- **执行成果**：`lib/command_tag/`（5/5 PASS，`doc/lib/command_tag.md`）经 `verify_module.sh` 一次性验收回收；主控单兵从 Bun `options_types/CommandTag.cp` 吸收并验收提交 `cap:command_tag`

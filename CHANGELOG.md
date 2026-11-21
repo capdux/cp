@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:command_tag` 纯 CP CLI 32 种子命令判别、遥测码、NPM 判定与配置加载策略引擎（吸收自 Bun `src/options_types/CommandTag.cp`，支持 `cap.command_tag` 自动动态挂载，详见 `doc/lib/command_tag.md`）（5/5 PASS，自动动态挂载 `cap.command_tag`）
+- **新增标准库**：`lib/command_tag/{command_tag,index}.cp`，从 Bun `CommandTag.cp` 吸收 32 个子命令判别枚举与策略谓词。\n- **新增文档与测试**：`doc/lib/command_tag.md` 扁平文档与 `cap/test/test_command_tag_production_deep.cp`（4/4 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:bundle_options` 纯 CP 打包输出格式、全局缓存策略、离线模式与包链接模式枚举引擎（吸收自 Bun `src/options_types/` 与 `src/install_types/`，支持 `cap.bundle_options` 自动动态挂载，详见 `doc/lib/bundle_options.md`）（5/5 PASS，自动动态挂载 `cap.bundle_options`）
 - **新增标准库**：`lib/bundle_options/{bundle_options,index}.cp`，从 Bun `options_types`/`install_types` 吸收 `Format`、`GlobalCache`、`OfflineMode`、`NodeLinker` 与 `WindowsOptions`。\n- **新增文档与测试**：`doc/lib/bundle_options.md` 扁平文档与 `cap/test/test_bundle_options_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 
