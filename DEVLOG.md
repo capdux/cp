@@ -2,6 +2,15 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: CSS Display Level 3 与 Visibility 属性模型（5/5 PASS，文档直写 `doc/lib/css_display.md`）
+从 Bun css/properties/display.cp 吸收 CSS Display Level 3 内外流模型与 Visibility 属性，纯 CP 零依赖实现解析、合法性校验与最短规范输出。
+
+## 2026-11-21: PostgreSQL v3 认证握手与大端协议写入器（5/5 PASS，文档直写 `doc/lib/pg_auth.md`）
+从 Bun sql/postgres/protocol/Authentication.cp 与 NewWriter.cp 吸收 PG v3 认证握手解码与大端协议写入器，支持 ~init() 确定性释放与严密截断校验。
+
+## 2026-11-21: 小字符串内联优化 Compact String（5/5 PASS，文档直写 `doc/lib/smol_str.md`）
+从 Bun string/SmolStr.cp 吸收小字符串内联优化引擎，<=15 字节零堆分配，超长自动倍增转堆，采用幂等 ~init() 确定性 RAII，零泄漏通过全部回归。
+
 ## 2026-11-21: HTTP 路由参数映射表与 URLPath 解析器（5/5 PASS，文档直写 `doc/lib/route_params.md`）
 从 Bun router/ParamMap.cp 与 http_types/URLPath.cp 吸收路由参数表与 URL 路径解析器（~init() 零泄漏），并将 Bun threading/unbounded_queue.cp 无损合入 cap:lockfree_queue 新增缓存行防伪共享 UnboundedQueue。
 

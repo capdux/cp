@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - CSS Display Level 3 与 Visibility 属性模型（5/5 PASS，自动动态挂载 `cap.css_display`）
+新增 cap:css_display 标准库（lib/css_display/、doc/lib/css_display.md、cap/test/test_css_display_production_deep.cp），3/3 回归通过。
+
+## [2026-11-21] - PostgreSQL v3 认证握手与大端协议写入器（5/5 PASS，自动动态挂载 `cap.pg_auth`）
+新增 cap:pg_auth 标准库（lib/pg_auth/、doc/lib/pg_auth.md、cap/test/test_pg_auth_production_deep.cp），5/5 回归通过（零泄漏）。
+
+## [2026-11-21] - 小字符串内联优化 Compact String（5/5 PASS，自动动态挂载 `cap.smol_str`）
+新增 cap:smol_str 标准库（lib/smol_str/、doc/lib/smol_str.md、cap/test/test_smol_str_production_deep.cp），6/6 回归通过（零泄漏）。
+
 ## [2026-11-21] - HTTP 路由参数映射表与 URLPath 解析器（5/5 PASS，自动动态挂载 `cap.route_params`）
 新增 cap:route_params 标准库（lib/route_params/、doc/lib/route_params.md、cap/test/test_route_params_production_deep.cp），3/3 回归通过（零泄漏）；同步升级 cap:lockfree_queue 合入 Bun 侵入式无锁 UnboundedQueue（10/10 回归含 4 生产者 MPSC 并发压测通过）。
 

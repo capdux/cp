@@ -447,3 +447,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:char_freq` | CHAR_FREQ_COUNT, HEAD_CHAR_COUNT, TAIL_CHAR_COUNT, CharAndCount, NameMinifier, CharFreq | 纯 CP 零堆分配 64 桶标识符字符频次直方图与按频次排序 Base-54/64 短名生成器（源自 Bun js_parser/ast/CharFreq.cp） |
 | `cap:bounded_array` | BoundedArrayError, BoundedArray | 零堆分配栈上固定容量动态数组，支持 append/insert/orderedRemove/swapRemove/fromSlice（源自 Bun collections/bounded_array.cp） |
 | `cap:route_params` | Param, ParamMap, URLPath, parseURLPath | 带 ~init() RAII 释放的动态路由参数表 ParamMap 与零堆分配 URLPath 解析器（源自 Bun router/ParamMap.cp + http_types/URLPath.cp） |
+| `cap:smol_str` | INLINE_MAX_LEN, Error, SmolStr | 15 字节内零堆分配内联、超长透明堆扩容的 Compact String（~init() 零泄漏，源自 Bun string/SmolStr.cp） |
+| `cap:pg_auth` | AUTH_MESSAGE_TAG, PgAuthError, AuthType, authTypeFromInt, SASLContinueInfo, DecodedAuthMessage, decodeAuthMessage, PgWireWriter | PostgreSQL v3 全量认证子类型/MD5 Salt/SCRAM-SHA-256 SASL 解码与大端自动回填长度写入器（源自 Bun sql/postgres/protocol/{Authentication,NewWriter}.cp） |
+| `cap:css_display` | Visibility, DisplayKeyword, DisplayOutside, DisplayInside, DisplayPair, DisplayKind, Display | 纯 CP 零依赖 CSS Display Level 3 单值/多关键字组合、旧版简写与规范化 CSS 序列化（源自 Bun css/properties/display.cp） |

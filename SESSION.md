@@ -163,3 +163,12 @@
 
 ### 2026-11-21（`cap:route_params` 验收，吸收 cap:route_params（3/3）并升级 cap:lockfree_queue 合入 UnboundedQueue（10/10）。）
 - **执行成果**：`lib/route_params/`（5/5 PASS，`doc/lib/route_params.md`）经 `verify_module.sh` 一次性验收回收；吸收 cap:route_params（3/3）并升级 cap:lockfree_queue 合入 UnboundedQueue（10/10）。
+
+### 2026-11-21（`cap:smol_str` 验收，吸收 Bun string/SmolStr.cp -> cap:smol_str，测试 6/6 通过。）
+- **执行成果**：`lib/smol_str/`（5/5 PASS，`doc/lib/smol_str.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun string/SmolStr.cp -> cap:smol_str，测试 6/6 通过。
+
+### 2026-11-21（`cap:pg_auth` 验收，吸收 Bun PG v3 Authentication + NewWriter -> cap:pg_auth，测试 5/5 通过。）
+- **执行成果**：`lib/pg_auth/`（5/5 PASS，`doc/lib/pg_auth.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun PG v3 Authentication + NewWriter -> cap:pg_auth，测试 5/5 通过。
+
+### 2026-11-21（`cap:css_display` 验收，吸收 Bun css/properties/display.cp -> cap:css_display，测试 3/3 通过。）
+- **执行成果**：`lib/css_display/`（5/5 PASS，`doc/lib/css_display.md`）经 `verify_module.sh` 一次性验收回收；吸收 Bun css/properties/display.cp -> cap:css_display，测试 3/3 通过。
