@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ubifs` Linux UBI EC/VID 64B headers & UBIFS Superblock/Master/Node CRC32 zero-alloc parser（5/5 PASS，自动动态挂载 `cap.ubifs`）
+新增纯 CP 零分配标准库 cap:ubifs（Linux UBI EC/VID 与 UBIFS 超级块/Master 节点及 CRC32 解析）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:lzh` LZH/LHA archive Level 0/1/2 headers, chained extended headers & CRC-16/ARC parser（5/5 PASS，自动动态挂载 `cap.lzh`）
 新增纯 CP 零分配标准库 cap:lzh（LZH/LHA Level 0/1/2 报头、扩展头链与 CRC-16/ARC 解析）与 5/5 深度测试
 

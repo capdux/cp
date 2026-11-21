@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ubifs` Linux UBI EC/VID 64B headers & UBIFS Superblock/Master/Node CRC32 zero-alloc parser（5/5 PASS，文档直写 `doc/lib/ubifs.md`）
+新增 cap:ubifs 纯 CP 零分配闪存文件系统库（UBI 大端 64B EC/VID、UBIFS 24B 通用头与无取反 CRC32 校验），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:lzh` LZH/LHA archive Level 0/1/2 headers, chained extended headers & CRC-16/ARC parser（5/5 PASS，文档直写 `doc/lib/lzh.md`）
 新增 cap:lzh 纯 CP 零分配经典归档容器库（Level 0/1/2 统一解析、2B 链式扩展头迭代与 CRC-16/ARC 0xA001 校验），通过 cpc check 与 5/5 cap test
 
