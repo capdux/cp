@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:wavelet` Discrete Wavelet Transform: Haar, Daubechies-4 (db2) & JPEG 2000 lossless CDF 5/3（5/5 PASS，文档直写 `doc/lib/wavelet.md`）
+新增 cap:wavelet 纯 CP 零分配多分辨率小波变换库（能量守恒 Haar/db4、逐比特无损 CDF 5/3 整数提升与软/硬阈值去噪），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:ode` Numerical ODE solvers: RK2, RK4, adaptive Dormand-Prince RK4(5) & Velocity Verlet（5/5 PASS，文档直写 `doc/lib/ode.md`）
 新增 cap:ode 纯 CP 零分配常微分方程求解库（完整 7 级 Dormand-Prince Butcher 表自适应步长与能量守恒辛积分），通过 cpc check 与 5/5 cap test
 

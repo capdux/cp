@@ -813,3 +813,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:cholesky` | choleskyDecompose, forwardSubstitute, backwardSubstituteT, choleskySolve, choleskyLogDet, choleskyDet, choleskyInvert, ldltDecompose, ldltSolve | SPD Cholesky (LL^T) & square-root-free LDL^T decomposition, solver, logDet & inverse |
 | `cap:perlin` | PerlinNoise, fade, lerp | Ken Perlin (2002) 1D/2D/3D gradient noise, fBm, Ridged multifractal & Turbulence |
 | `cap:ode` | OdeRhsFn, AccelFn, Rk45Result, rk2MidpointStep, rk4Step, rk4Integrate, rk45Step, rk45Integrate, verletStep | Numerical ODE solvers: RK2, RK4, adaptive Dormand-Prince RK4(5) & Velocity Verlet |
+| `cap:wavelet` | haarForward1d, haarInverse1d, haarForwardMulti1d, haarInverseMulti1d, db4Forward1d, db4Inverse1d, cdf53ForwardI32, cdf53InverseI32, softThreshold, hardThreshold, signalEnergy | Discrete Wavelet Transform: Haar, Daubechies-4 (db2) & JPEG 2000 lossless CDF 5/3 |
