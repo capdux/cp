@@ -103,3 +103,6 @@
 
 ### 2026-11-21（`cap:ed25519` 验收，验收提交 `cap:ed25519` 并新开 `cap:promql` 并发子智能体，主控同步验收 `cap:base32`）
 - **执行成果**：`lib/ed25519/`（5/5 PASS，`doc/lib/ed25519.md`）经 `verify_module.sh` 一次性验收回收；验收提交 `cap:ed25519` 并新开 `cap:promql` 并发子智能体，主控同步验收 `cap:base32`
+
+### 2026-11-21（`cap:base32` 验收，主控完成 `cap:base32` 研发验收提交，继续与 `cap:aes_gcm` 及 `cap:promql` 并行）
+- **执行成果**：`lib/base32/`（5/5 PASS，`doc/lib/base32.md`）经 `verify_module.sh` 一次性验收回收；主控完成 `cap:base32` 研发验收提交，继续与 `cap:aes_gcm` 及 `cap:promql` 并行
