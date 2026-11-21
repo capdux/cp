@@ -617,3 +617,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:usd` | USDC_MAGIC, USDC_BOOTSTRAP_SIZE, USDA_MAGIC, UsdFormat, UsdcBootstrap, UsdcSection, UsdcSectionIter, UsdaHeader, detectUsdFormat, isUsdc, isUsda, isUsdz, parseUsdcBootstrap, findUsdcSection, parseUsdaHeader | 零分配 Pixar OpenUSD (.usdc/.usda/.usdz) Crate TOC 与阶段元数据解析器 |
 | `cap:vrml` | VrmlFlavor, VrmlTokenKind, VrmlHeader, VrmlToken, VrmlLexer, VrmlNode, VrmlNodeIter, VrmlStats, isVrml, parseVrmlHeader, findVrmlField, summarizeVrml | 零分配 VRML97 / Classic X3D 3D 场景词法、节点树与字段解析器 |
 | `cap:dae` | DaeAsset, DaeGeometry, DaeGeometryIter, DaeFloatArray, DaeFloatArrayIter, DaeFloatIter, DaeSceneNode, DaeSceneNodeIter, DaeStats, isCollada, parseDaeAsset, summarizeDae | 零分配 Khronos COLLADA 1.4/1.5 (.dae) 3D 资产与顶点数组解析器 |
+| `cap:bdf` | BdfBBox, BdfHeader, BdfProperty, BdfPropIter, BdfGlyph, BdfGlyphIter, isBdf, parseBdfHeader, bdfGlyphPixel, findBdfGlyph | 零分配 Adobe BDF 2.1/2.2 点阵字体头、属性表与字形位图解析器 |

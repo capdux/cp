@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:bdf` 零分配 Adobe BDF 2.1/2.2 点阵字体头、属性表与字形位图解析器（5/5 PASS，文档直写 `doc/lib/bdf.md`）
+实现零分配 Adobe BDF 点阵字体解析器，支持多字节宽字形与按码点查找。
+
 ## 2026-11-22: 新建 `cap:dae` 零分配 Khronos COLLADA 1.4/1.5 (.dae) 3D 资产与顶点数组解析器（5/5 PASS，文档直写 `doc/lib/dae.md`）
 实现零分配 COLLADA 1.4/1.5 XML 解析器，支持前序嵌套场景节点遍历与资产汇总。
 

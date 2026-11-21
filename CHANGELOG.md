@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:bdf` 零分配 Adobe BDF 2.1/2.2 点阵字体头、属性表与字形位图解析器（5/5 PASS，自动动态挂载 `cap.bdf`）
+新增 `lib/bdf/{bdf,index}.cp`、`doc/lib/bdf.md` 与 `cap/test/test_bdf_production_deep.cp`（5/5 PASS），支持 BDF 全局头、PROPERTIES 引号剥离、STARTCHAR/BBX/BITMAP 迭代与 MSB-first 像素解码。
+
 ## [2026-11-22] - 新建 `cap:dae` 零分配 Khronos COLLADA 1.4/1.5 (.dae) 3D 资产与顶点数组解析器（5/5 PASS，自动动态挂载 `cap.dae`）
 新增 `lib/dae/{dae,index}.cp`、`doc/lib/dae.md` 与 `cap/test/test_dae_production_deep.cp`（5/5 PASS），支持 <asset> 元数据、几何体与科学计数法 <float_array> 迭代及场景节点引用提取。
 
