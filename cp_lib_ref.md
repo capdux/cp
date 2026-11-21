@@ -549,3 +549,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_link_header` | WebLink, LinkHeaderIterator, findLinkByRel, formatWebLink | RFC 8288 Web Linking HTTP Link 头部零堆分配解析、rel 查找与格式化库（分页/Preload/Early Hints，吸收自 bun/src/http/HeaderValueIterator.cp） |
 | `cap:mime_lookup` | MimeCategory, ContentType, mimeFromExtension, categoryFromMime | 65+ Web/系统高频扩展名 MIME 查表、Content-Type 头部（charset/boundary）解析与可压缩性判定库（吸收自 bun/src/http_types/{MimeType,mime_type_list_enum}.cp） |
 | `cap:dotenv_parse` | DotEnvQuote, DotEnvEntry, DotEnvIterator, unescapeDoubleQuoted, expandVars | 零堆分配 .env 配置文件解析器（BOM/export/4 种引号/多行/行尾注释）与 ${VAR:-default} 变量展开器（吸收自 bun/src/bun_core/env.cp） |
+| `cap:http_auth` | AuthScheme, AuthHeader, BasicCredentials, decodeBasicAuth, encodeBasicAuth, encodeBearerAuth | RFC 9110 §11 / RFC 7617 Basic / RFC 6750 Bearer HTTP Authorization 认证头零堆分配解析与编解码库（吸收自 bun/src/http/Headers.cp） |
+| `cap:js_ident` | KeywordKind, classifyKeyword, isReservedWord, isValidAsciiIdent, isValidPrivateIdent, needsPropertyQuoting, escapeJsString | ECMAScript/TS 56 关键字分类、ASCII/私有字段标识符校验、属性加引号判定与 JS 字符串转义库（吸收自 bun/src/js_parser/lexer/） |
+| `cap:http_forwarded` | ForwardedHop, ForwardedIterator, parseFirstHop, extractClientIpFromXff, stripPortFromForwardedFor | RFC 7239 Forwarded 与 X-Forwarded-For 反向代理链路零堆分配解析器及客户端真实 IP 提取库（吸收自 bun/src/http/HeaderValueIterator.cp） |

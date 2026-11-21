@@ -271,3 +271,12 @@
 
 ### 2026-11-22（`cap:dotenv_parse` 验收，Batch 42: 吸收并验证 cap:dotenv_parse (5/5 PASSED)）
 - **执行成果**：`lib/dotenv_parse/`（5/5 PASS，`doc/lib/dotenv_parse.md`）经 `verify_module.sh` 一次性验收回收；Batch 42: 吸收并验证 cap:dotenv_parse (5/5 PASSED)
+
+### 2026-11-22（`cap:http_auth` 验收，Batch 43: 吸收并验证 cap:http_auth (PASSED)）
+- **执行成果**：`lib/http_auth/`（5/5 PASS，`doc/lib/http_auth.md`）经 `verify_module.sh` 一次性验收回收；Batch 43: 吸收并验证 cap:http_auth (PASSED)
+
+### 2026-11-22（`cap:js_ident` 验收，Batch 43: 吸收并验证 cap:js_ident (5/5 PASSED)）
+- **执行成果**：`lib/js_ident/`（5/5 PASS，`doc/lib/js_ident.md`）经 `verify_module.sh` 一次性验收回收；Batch 43: 吸收并验证 cap:js_ident (5/5 PASSED)
+
+### 2026-11-22（`cap:http_forwarded` 验收，Batch 43: 吸收并验证 cap:http_forwarded (5/5 PASSED)）
+- **执行成果**：`lib/http_forwarded/`（5/5 PASS，`doc/lib/http_forwarded.md`）经 `verify_module.sh` 一次性验收回收；Batch 43: 吸收并验证 cap:http_forwarded (5/5 PASSED)

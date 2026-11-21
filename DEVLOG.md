@@ -1,3 +1,12 @@
+## 2026-11-22: 新建 `cap:http_forwarded` RFC 7239 Forwarded 与 X-Forwarded-For 反向代理链路零堆分配解析器及客户端真实 IP 提取库（吸收自 bun/src/http/HeaderValueIterator.cp）（5/5 PASS，文档直写 `doc/lib/http_forwarded.md`）
+子智能体 1 吸收 HTTP 多值头迭代模式，实现 RFC 7239 Forwarded 与 XFF 可信代理 IP 提取，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:js_ident` ECMAScript/TS 56 关键字分类、ASCII/私有字段标识符校验、属性加引号判定与 JS 字符串转义库（吸收自 bun/src/js_parser/lexer/）（5/5 PASS，文档直写 `doc/lib/js_ident.md`）
+子智能体 2 吸收 js_parser 词法规则，实现 56 关键字分类与安全 JS 字符串转义，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:http_auth` RFC 9110 §11 / RFC 7617 Basic / RFC 6750 Bearer HTTP Authorization 认证头零堆分配解析与编解码库（吸收自 bun/src/http/Headers.cp）（5/5 PASS，文档直写 `doc/lib/http_auth.md`）
+实现 RFC 7617 Basic Base64 凭据编解码与 Bearer/AWS4 认证方案解析，通过 cpc check 与 cap test
+
 ## 2026-11-22: 新建 `cap:dotenv_parse` 零堆分配 .env 配置文件解析器（BOM/export/4 种引号/多行/行尾注释）与 ${VAR:-default} 变量展开器（吸收自 bun/src/bun_core/env.cp）（5/5 PASS，文档直写 `doc/lib/dotenv_parse.md`）
 子智能体 1 吸收 bun_core/env.cp，实现完整 .env 迭代解析与 ${VAR:-default} 展开，5/5 单测通过
 

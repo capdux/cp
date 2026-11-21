@@ -2,6 +2,15 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_forwarded` RFC 7239 Forwarded 与 X-Forwarded-For 反向代理链路零堆分配解析器及客户端真实 IP 提取库（吸收自 bun/src/http/HeaderValueIterator.cp）（5/5 PASS，自动动态挂载 `cap.http_forwarded`）
+新增 cap:http_forwarded 标准库模块（lib/http_forwarded/{forwarded,index}.cp, doc/lib/http_forwarded.md, cap/test/test_http_forwarded_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:js_ident` ECMAScript/TS 56 关键字分类、ASCII/私有字段标识符校验、属性加引号判定与 JS 字符串转义库（吸收自 bun/src/js_parser/lexer/）（5/5 PASS，自动动态挂载 `cap.js_ident`）
+新增 cap:js_ident 标准库模块（lib/js_ident/{ident,index}.cp, doc/lib/js_ident.md, cap/test/test_js_ident_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:http_auth` RFC 9110 §11 / RFC 7617 Basic / RFC 6750 Bearer HTTP Authorization 认证头零堆分配解析与编解码库（吸收自 bun/src/http/Headers.cp）（5/5 PASS，自动动态挂载 `cap.http_auth`）
+新增 cap:http_auth 标准库模块（lib/http_auth/{auth,index}.cp, doc/lib/http_auth.md, cap/test/test_http_auth_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:dotenv_parse` 零堆分配 .env 配置文件解析器（BOM/export/4 种引号/多行/行尾注释）与 ${VAR:-default} 变量展开器（吸收自 bun/src/bun_core/env.cp）（5/5 PASS，自动动态挂载 `cap.dotenv_parse`）
 新增 cap:dotenv_parse 标准库模块（lib/dotenv_parse/{dotenv,index}.cp, doc/lib/dotenv_parse.md, cap/test/test_dotenv_parse_production_deep.cp）
 
