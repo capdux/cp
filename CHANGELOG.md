@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:diff_unified` 基于栈上 LCS 动态规划的行级 Unified Diff 计算与相邻上下文 Hunk 自动合并格式化库（吸收自 bun/src/test_runner/diff/printDiff.cp 与 diff_format.cp）（5/5 PASS，自动动态挂载 `cap.diff_unified`）
+新增 cap:diff_unified 标准库模块（lib/diff_unified/{unified,index}.cp, doc/lib/diff_unified.md, cap/test/test_diff_unified_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:content_range` RFC 9110 §14 HTTP Range 请求头与 Content-Range 响应头零堆分配解析与格式化库（206/416 分片传输，吸收自 bun/src/http/SendFile.cp）（5/5 PASS，自动动态挂载 `cap.content_range`）
+新增 cap:content_range 标准库模块（lib/content_range/{range,index}.cp, doc/lib/content_range.md, cap/test/test_content_range_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:s3_meta` AWS S3 / R2 / MinIO 8 种 ACL、11 种存储类、Bucket 命名校验与 3 种 S3 URI 格式解析库（吸收自 bun/src/s3_signing/{acl,storage_class,credentials}.cp）（5/5 PASS，自动动态挂载 `cap.s3_meta`）
 新增 cap:s3_meta 标准库模块（lib/s3_meta/{s3_meta,index}.cp, doc/lib/s3_meta.md, cap/test/test_s3_meta_production_deep.cp）
 

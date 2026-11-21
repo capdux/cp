@@ -541,3 +541,5 @@ const h = cap.hash.wyhash("hello");
 | `cap:pg_sqlstate` | SqlStateClass, SqlStateCode | PostgreSQL 5 字符 SQLSTATE 错误码 15 类划分、43 项官方条件名与可重试/约束/连接错误判定库（吸收自 bun/src/sql/postgres/AnyPostgresError.cp） |
 | `cap:human_fmt` | TableStyle, formatBytes, formatDurationNs, redactUrl, formatTableBorder, formatTableRow | 零堆分配人类可读格式化工具库（字节大小/纳秒耗时/URL 密码与 UUID/npm 令牌脱敏/Unicode&ASCII 终端表格渲染，吸收自 bun/src/bun_core/fmt.cp） |
 | `cap:s3_meta` | S3Acl, S3StorageClass, isValidBucketName, S3Uri | AWS S3 / R2 / MinIO 8 种 ACL、11 种存储类、Bucket 命名校验与 3 种 S3 URI 格式解析库（吸收自 bun/src/s3_signing/{acl,storage_class,credentials}.cp） |
+| `cap:content_range` | ByteRange, RangeStatus, ParsedRangeHeader, parseRangeHeader, formatContentRange, formatUnsatisfiedRange, ParsedContentRange, parseContentRange | RFC 9110 §14 HTTP Range 请求头与 Content-Range 响应头零堆分配解析与格式化库（206/416 分片传输，吸收自 bun/src/http/SendFile.cp） |
+| `cap:diff_unified` | DiffOpKind, DiffLine, DiffSummary, diffLines, summarize, formatUnified | 基于栈上 LCS 动态规划的行级 Unified Diff 计算与相邻上下文 Hunk 自动合并格式化库（吸收自 bun/src/test_runner/diff/printDiff.cp 与 diff_format.cp） |

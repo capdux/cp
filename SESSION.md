@@ -247,3 +247,9 @@
 
 ### 2026-11-22（`cap:s3_meta` 验收，Batch 39: 吸收并验证 cap:s3_meta (5/5 PASSED)）
 - **执行成果**：`lib/s3_meta/`（5/5 PASS，`doc/lib/s3_meta.md`）经 `verify_module.sh` 一次性验收回收；Batch 39: 吸收并验证 cap:s3_meta (5/5 PASSED)
+
+### 2026-11-22（`cap:content_range` 验收，Batch 40: 吸收并验证 cap:content_range (PASSED)）
+- **执行成果**：`lib/content_range/`（5/5 PASS，`doc/lib/content_range.md`）经 `verify_module.sh` 一次性验收回收；Batch 40: 吸收并验证 cap:content_range (PASSED)
+
+### 2026-11-22（`cap:diff_unified` 验收，Batch 40: 吸收并验证 cap:diff_unified (5/5 PASSED)）
+- **执行成果**：`lib/diff_unified/`（5/5 PASS，`doc/lib/diff_unified.md`）经 `verify_module.sh` 一次性验收回收；Batch 40: 吸收并验证 cap:diff_unified (5/5 PASSED)

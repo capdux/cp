@@ -1,3 +1,9 @@
+## 2026-11-22: 新建 `cap:diff_unified` 基于栈上 LCS 动态规划的行级 Unified Diff 计算与相邻上下文 Hunk 自动合并格式化库（吸收自 bun/src/test_runner/diff/printDiff.cp 与 diff_format.cp）（5/5 PASS，文档直写 `doc/lib/diff_unified.md`）
+子智能体 1 吸收 Bun test_runner diff，实现零堆分配 LCS 行级 diff 与标准 Unified Diff Hunk 格式化，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:content_range` RFC 9110 §14 HTTP Range 请求头与 Content-Range 响应头零堆分配解析与格式化库（206/416 分片传输，吸收自 bun/src/http/SendFile.cp）（5/5 PASS，文档直写 `doc/lib/content_range.md`）
+吸收 HTTP SendFile 分片传输需求，实现完整 RFC 9110 Range（闭区间/开放尾/后缀/多区间/416）与 Content-Range 双向编解码，通过 cpc check 与 cap test
+
 ## 2026-11-22: 新建 `cap:s3_meta` AWS S3 / R2 / MinIO 8 种 ACL、11 种存储类、Bucket 命名校验与 3 种 S3 URI 格式解析库（吸收自 bun/src/s3_signing/{acl,storage_class,credentials}.cp）（5/5 PASS，文档直写 `doc/lib/s3_meta.md`）
 子智能体 2 吸收 Bun s3_signing 元数据，实现 ACL/StorageClass/Bucket 校验与 s3:// / Virtual-Hosted / Path-Style URI 解析，5/5 单测通过
 
