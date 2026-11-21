@@ -116,6 +116,32 @@ impl<'a> Parser<'a> {
                         });
                         continue;
                     }
+                    if self.peek_next() == Some(&Token::Tilde) {
+                        self.bump()?; // consume .
+                        let tilde_span = self.bump()?.1; // consume ~
+                        let dtor = self.parse_ident()?;
+                        if dtor.sym != "init" {
+                            return Err(ParseError::Generic(
+                                format!("expected '~init' after '.~', found '~{}'", dtor.sym),
+                                dtor.span,
+                            ));
+                        }
+                        left = Expr::Member(MemberExpr {
+                            span: Span {
+                                start: left_span(&left).start,
+                                end: dtor.span.end,
+                            },
+                            obj: Box::new(left),
+                            prop: Ident {
+                                span: Span {
+                                    start: tilde_span.start,
+                                    end: dtor.span.end,
+                                },
+                                sym: "__cp_deinit".to_string(),
+                            },
+                        });
+                        continue;
+                    }
                     self.bump()?;
                     let prop = self.parse_ident()?;
                     if let Expr::Ident(ref obj_id) = left {
@@ -435,10 +461,55 @@ impl<'a> Parser<'a> {
                     self.bump()?;
                     let right = if self.peek() == Some(&Token::Continue) {
                         let span = self.bump()?.1;
-                        Expr::Continue(span)
+                        if self.peek() == Some(&Token::Colon) {
+                            self.bump()?;
+                            let label = self.parse_ident()?;
+                            Expr::LabeledContinue(span, label)
+                        } else {
+                            Expr::Continue(span)
+                        }
                     } else if self.peek() == Some(&Token::Break) {
                         let span = self.bump()?.1;
-                        Expr::Break(span, None)
+                        if self.peek() == Some(&Token::Colon) {
+                            self.bump()?;
+                            let label = self.parse_ident()?;
+                            let has_val = !matches!(
+                                self.peek(),
+                                Some(
+                                    Token::Semicolon
+                                        | Token::RBrace
+                                        | Token::RParen
+                                        | Token::Comma
+                                        | Token::RBracket
+                                ) | None
+                            ) && !(self.peek_span().start >= label.span.end
+                                && self.input[label.span.end..self.peek_span().start]
+                                    .contains('\n'));
+                            let val = if has_val {
+                                Some(Box::new(self.parse_expr()?))
+                            } else {
+                                None
+                            };
+                            Expr::LabeledBreak(span, label, val)
+                        } else {
+                            let has_val = !matches!(
+                                self.peek(),
+                                Some(
+                                    Token::Semicolon
+                                        | Token::RBrace
+                                        | Token::RParen
+                                        | Token::Comma
+                                        | Token::RBracket
+                                ) | None
+                            ) && !(self.peek_span().start >= span.end
+                                && self.input[span.end..self.peek_span().start].contains('\n'));
+                            let val = if has_val {
+                                Some(Box::new(self.parse_expr()?))
+                            } else {
+                                None
+                            };
+                            Expr::Break(span, val)
+                        }
                     } else if self.peek() == Some(&Token::Return) {
                         let span = self.bump()?.1;
                         let has_arg = if matches!(
@@ -663,7 +734,13 @@ impl<'a> Parser<'a> {
                             Expr::LabeledBlock { label: None, block }
                         } else if self.peek() == Some(&Token::Continue) {
                             let span = self.bump()?.1;
-                            Expr::Continue(span)
+                            if self.peek() == Some(&Token::Colon) {
+                                self.bump()?;
+                                let label = self.parse_ident()?;
+                                Expr::LabeledContinue(span, label)
+                            } else {
+                                Expr::Continue(span)
+                            }
                         } else if self.peek() == Some(&Token::Break) {
                             let span = self.bump()?.1;
                             if self.peek() == Some(&Token::Colon) {
@@ -671,8 +748,17 @@ impl<'a> Parser<'a> {
                                 let label = self.parse_ident()?;
                                 let val = if !matches!(
                                     self.peek(),
-                                    Some(Token::Semicolon | Token::RBrace | Token::RParen) | None
-                                ) {
+                                    Some(
+                                        Token::Semicolon
+                                            | Token::RBrace
+                                            | Token::RParen
+                                            | Token::Comma
+                                            | Token::RBracket
+                                    ) | None
+                                ) && !(self.peek_span().start >= label.span.end
+                                    && self.input[label.span.end..self.peek_span().start]
+                                        .contains('\n'))
+                                {
                                     Some(Box::new(self.parse_expr()?))
                                 } else {
                                     None
@@ -681,8 +767,15 @@ impl<'a> Parser<'a> {
                             } else {
                                 let has_val = !matches!(
                                     self.peek(),
-                                    Some(Token::Semicolon | Token::RBrace | Token::RParen) | None
-                                );
+                                    Some(
+                                        Token::Semicolon
+                                            | Token::RBrace
+                                            | Token::RParen
+                                            | Token::Comma
+                                            | Token::RBracket
+                                    ) | None
+                                ) && !(self.peek_span().start >= span.end
+                                    && self.input[span.end..self.peek_span().start].contains('\n'));
                                 let val = if has_val {
                                     Some(Box::new(self.parse_expr()?))
                                 } else {
@@ -733,6 +826,13 @@ impl<'a> Parser<'a> {
                 Some(Token::CaretAssign) => Some(BinaryOp::BitXor),
                 Some(Token::ShlAssign) => Some(BinaryOp::Shl),
                 Some(Token::ShrAssign) => Some(BinaryOp::Shr),
+                Some(Token::WrappingAddAssign) => Some(BinaryOp::WrappingAdd),
+                Some(Token::WrappingSubAssign) => Some(BinaryOp::WrappingSub),
+                Some(Token::WrappingMulAssign) => Some(BinaryOp::WrappingMul),
+                Some(Token::SaturatingAddAssign) => Some(BinaryOp::SaturatingAdd),
+                Some(Token::SaturatingSubAssign) => Some(BinaryOp::SaturatingSub),
+                Some(Token::SaturatingMulAssign) => Some(BinaryOp::SaturatingMul),
+                Some(Token::SaturatingShlAssign) => Some(BinaryOp::SaturatingShl),
                 _ => None,
             };
             if let Some(inner_op) = compound_op {
@@ -961,6 +1061,32 @@ impl<'a> Parser<'a> {
                             },
                             obj: Box::new(left),
                             prop,
+                        });
+                        continue;
+                    }
+                    if self.peek_next() == Some(&Token::Tilde) {
+                        self.bump()?; // consume .
+                        let tilde_span = self.bump()?.1; // consume ~
+                        let dtor = self.parse_ident()?;
+                        if dtor.sym != "init" {
+                            return Err(ParseError::Generic(
+                                format!("expected '~init' after '.~', found '~{}'", dtor.sym),
+                                dtor.span,
+                            ));
+                        }
+                        left = Expr::Member(MemberExpr {
+                            span: Span {
+                                start: left_span(&left).start,
+                                end: dtor.span.end,
+                            },
+                            obj: Box::new(left),
+                            prop: Ident {
+                                span: Span {
+                                    start: tilde_span.start,
+                                    end: dtor.span.end,
+                                },
+                                sym: "__cp_deinit".to_string(),
+                            },
                         });
                         continue;
                     }
@@ -1265,7 +1391,13 @@ impl<'a> Parser<'a> {
                             Expr::LabeledBlock { label: None, block }
                         } else if self.peek() == Some(&Token::Continue) {
                             let span = self.bump()?.1;
-                            Expr::Continue(span)
+                            if self.peek() == Some(&Token::Colon) {
+                                self.bump()?;
+                                let label = self.parse_ident()?;
+                                Expr::LabeledContinue(span, label)
+                            } else {
+                                Expr::Continue(span)
+                            }
                         } else if self.peek() == Some(&Token::Break) {
                             let span = self.bump()?.1;
                             if self.peek() == Some(&Token::Colon) {
@@ -1273,8 +1405,17 @@ impl<'a> Parser<'a> {
                                 let label = self.parse_ident()?;
                                 let val = if !matches!(
                                     self.peek(),
-                                    Some(Token::Semicolon | Token::RBrace | Token::RParen) | None
-                                ) {
+                                    Some(
+                                        Token::Semicolon
+                                            | Token::RBrace
+                                            | Token::RParen
+                                            | Token::Comma
+                                            | Token::RBracket
+                                    ) | None
+                                ) && !(self.peek_span().start >= label.span.end
+                                    && self.input[label.span.end..self.peek_span().start]
+                                        .contains('\n'))
+                                {
                                     Some(Box::new(self.parse_expr()?))
                                 } else {
                                     None
@@ -1283,8 +1424,15 @@ impl<'a> Parser<'a> {
                             } else {
                                 let has_val = !matches!(
                                     self.peek(),
-                                    Some(Token::Semicolon | Token::RBrace | Token::RParen) | None
-                                );
+                                    Some(
+                                        Token::Semicolon
+                                            | Token::RBrace
+                                            | Token::RParen
+                                            | Token::Comma
+                                            | Token::RBracket
+                                    ) | None
+                                ) && !(self.peek_span().start >= span.end
+                                    && self.input[span.end..self.peek_span().start].contains('\n'));
                                 let val = if has_val {
                                     Some(Box::new(self.parse_expr()?))
                                 } else {
@@ -1424,6 +1572,8 @@ impl<'a> Parser<'a> {
             Some(Token::WrappingMul) => Some(BinaryOp::WrappingMul),
             Some(Token::SaturatingAdd) => Some(BinaryOp::SaturatingAdd),
             Some(Token::SaturatingSub) => Some(BinaryOp::SaturatingSub),
+            Some(Token::SaturatingMul) => Some(BinaryOp::SaturatingMul),
+            Some(Token::SaturatingShl) => Some(BinaryOp::SaturatingShl),
             Some(Token::Slash) => Some(BinaryOp::Div),
             Some(Token::Percent) => Some(BinaryOp::Mod),
             Some(Token::Ampersand) => Some(BinaryOp::BitAnd),
@@ -1458,7 +1608,7 @@ impl<'a> Parser<'a> {
             BinaryOp::Eq | BinaryOp::NotEq => 7,
             BinaryOp::Lt | BinaryOp::LtEq | BinaryOp::Gt | BinaryOp::GtEq => 8,
             BinaryOp::Pipe => 9,
-            BinaryOp::Shl | BinaryOp::Shr => 10,
+            BinaryOp::Shl | BinaryOp::Shr | BinaryOp::SaturatingShl => 10,
             BinaryOp::Add
             | BinaryOp::Concat
             | BinaryOp::Sub
@@ -1466,7 +1616,11 @@ impl<'a> Parser<'a> {
             | BinaryOp::WrappingSub
             | BinaryOp::SaturatingAdd
             | BinaryOp::SaturatingSub => 11,
-            BinaryOp::Mul | BinaryOp::Div | BinaryOp::Mod | BinaryOp::WrappingMul => 12,
+            BinaryOp::Mul
+            | BinaryOp::Div
+            | BinaryOp::Mod
+            | BinaryOp::WrappingMul
+            | BinaryOp::SaturatingMul => 12,
         }
     }
 }

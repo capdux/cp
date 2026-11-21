@@ -805,12 +805,37 @@ impl Codegen {
                         }
                     }
                 }
-                if !is_self_used {
+                let is_cp_deinit_guarded = func.ident.sym == "__cp_deinit"
+                    && self
+                        .current_class_name
+                        .as_deref()
+                        .and_then(|cn| self.class_defs.get(cn))
+                        .map_or(false, |cls| {
+                            let is_c_abi = cls.meta.iter().any(|m| {
+                                m.name.sym == "extern"
+                                    || m.name.sym == "c"
+                                    || m.name.sym == "fix"
+                                    || m.name.sym == "packed"
+                                    || m.name.sym == "opaque"
+                            });
+                            !is_c_abi && !cls.is_union && !cls.is_static
+                        });
+                if is_cp_deinit_guarded {
+                    self.writeln("if (self.__cp_dropped) return;");
+                    self.writeln("self.__cp_dropped = true;");
+                } else if !is_self_used {
                     self.writeln("_ = self;");
                 }
-                if self.current_receiver_mode == ReceiverMode::Move && func.ident.sym != "release" {
+                if self.current_receiver_mode == ReceiverMode::Move
+                    && func.ident.sym != "release"
+                    && func.ident.sym != "__cp_deinit"
+                {
                     self.writeln("var __self_moved = false; _ = &__self_moved;");
-                    self.writeln("defer if (!__self_moved) { const __T = @TypeOf(self); if (@typeInfo(__T) == .pointer) { const __CpChild = @typeInfo(__T).pointer.child; if (@typeInfo(__CpChild) == .@\"struct\" and @hasDecl(__CpChild, \"release\")) { const __CpRType = @typeInfo(@TypeOf(__CpChild.release)).@\"fn\".return_type.?; if (@typeInfo(__CpRType) == .error_union) { _ = self.release() catch {}; } else { self.release(); } } } };");
+                    let drop_body = Self::build_drop_call_snippet("self");
+                    self.writeln(&format!(
+                        "defer if (!__self_moved) {{ __self_moved = true; {} }};",
+                        drop_body
+                    ));
                 }
             }
             for name in &mutable_copy_params {
@@ -857,7 +882,11 @@ impl Codegen {
                             "var __{}_moved = false; _ = &__{}_moved;",
                             p.ident.sym, p.ident.sym
                         ));
-                        self.writeln(&format!("defer if (!__{0}_moved) {{ const __T = @TypeOf({0}); if (@typeInfo(__T) == .pointer) {{ const __CpChild = @typeInfo(__T).pointer.child; if (@typeInfo(__CpChild) == .@\"struct\" and @hasDecl(__CpChild, \"release\")) {{ const __CpRType = @typeInfo(@TypeOf(__CpChild.release)).@\"fn\".return_type.?; if (@typeInfo(__CpRType) == .error_union) {{ _ = {0}.release() catch {{}}; }} else {{ {0}.release(); }} }} }} else if (@typeInfo(__T) == .@\"struct\" and @hasDecl(__T, \"release\")) {{ var _drop_val = {0}; _drop_val.release(); }} }};", p.ident.sym));
+                        let drop_body = Self::build_drop_call_snippet(&p.ident.sym);
+                        self.writeln(&format!(
+                            "defer if (!__{0}_moved) {{ __{0}_moved = true; {1} }};",
+                            p.ident.sym, drop_body
+                        ));
                     }
                 }
             }
@@ -1418,13 +1447,23 @@ impl Codegen {
                             }
                         }
                         Pattern::Object(fields) => {
-                            let init_cp_ty = v.init.as_ref().and_then(|e| self.infer_cp_type(e));
+                            let whole_is_mut = matches!(&v.init, Some(Expr::Borrow(_, true)));
+                            let base_init = match &v.init {
+                                Some(Expr::Move(inner)) | Some(Expr::Borrow(inner, _)) => {
+                                    Some(&**inner)
+                                }
+                                other => other.as_ref(),
+                            };
+                            let init_cp_ty = base_init.and_then(|e| self.infer_cp_type(e));
                             let mut resolved_ty = v.ty.as_ref().or(init_cp_ty.as_ref()).cloned();
                             while let Some(Type::BorrowType { inner, .. }) = resolved_ty {
                                 resolved_ty = Some(*inner);
                             }
-                            let obj_fields = match &resolved_ty {
-                                Some(Type::Object(fs)) => Some(fs),
+                            let obj_fields: Option<Vec<Field>> = match &resolved_ty {
+                                Some(Type::Object(fs)) => Some(fs.clone()),
+                                Some(Type::Ref(cname)) => {
+                                    self.class_defs.get(&cname.sym).map(|c| c.fields.clone())
+                                }
                                 _ => None,
                             };
                             let non_rest_keys: HashSet<String> = fields
@@ -1438,7 +1477,7 @@ impl Codegen {
                                     continue;
                                 }
                                 if p.is_rest {
-                                    let remaining_fields = if let Some(tys) = obj_fields {
+                                    let remaining_fields = if let Some(ref tys) = obj_fields {
                                         tys.iter()
                                             .filter(|t| !non_rest_keys.contains(&t.ident.sym))
                                             .cloned()
@@ -1459,13 +1498,34 @@ impl Codegen {
                                     &p.key
                                 };
                                 let f_opt = obj_fields
+                                    .as_ref()
                                     .and_then(|tys| tys.iter().find(|t| t.ident.sym == p.key.sym));
-                                let t_str = f_opt
-                                    .map(|t| self.map_type(&t.ty))
-                                    .unwrap_or_else(|| "i32".to_string());
+                                let is_mut_field = p.mode == DestructureMode::MutBorrow
+                                    || (p.mode == DestructureMode::ReadOnly && whole_is_mut);
+                                let bound_cp_ty = f_opt.map(|f| {
+                                    if is_mut_field {
+                                        Type::BorrowType {
+                                            inner: Box::new(f.ty.clone()),
+                                            is_mut: true,
+                                            lifetimes: vec![],
+                                        }
+                                    } else {
+                                        f.ty.clone()
+                                    }
+                                });
+                                let t_str = bound_cp_ty
+                                    .as_ref()
+                                    .map(|t| self.map_type(t))
+                                    .unwrap_or_else(|| {
+                                        if is_mut_field {
+                                            "*i32".to_string()
+                                        } else {
+                                            "i32".to_string()
+                                        }
+                                    });
                                 self.locals.insert(ident.sym.clone(), t_str);
-                                if let Some(f) = f_opt {
-                                    self.var_cp_types.insert(ident.sym.clone(), f.ty.clone());
+                                if let Some(bt) = bound_cp_ty {
+                                    self.var_cp_types.insert(ident.sym.clone(), bt);
                                 }
                             }
                         }
@@ -1881,13 +1941,23 @@ impl Codegen {
                             }
                         }
                         Pattern::Object(fields) => {
-                            let init_cp_ty = var.init.as_ref().and_then(|e| self.infer_cp_type(e));
+                            let whole_is_mut = matches!(&var.init, Some(Expr::Borrow(_, true)));
+                            let base_init = match &var.init {
+                                Some(Expr::Move(inner)) | Some(Expr::Borrow(inner, _)) => {
+                                    Some(&**inner)
+                                }
+                                other => other.as_ref(),
+                            };
+                            let init_cp_ty = base_init.and_then(|e| self.infer_cp_type(e));
                             let mut resolved_ty = var.ty.as_ref().or(init_cp_ty.as_ref()).cloned();
                             while let Some(Type::BorrowType { inner, .. }) = resolved_ty {
                                 resolved_ty = Some(*inner);
                             }
-                            let obj_fields = match &resolved_ty {
-                                Some(Type::Object(fs)) => Some(fs),
+                            let obj_fields: Option<Vec<Field>> = match &resolved_ty {
+                                Some(Type::Object(fs)) => Some(fs.clone()),
+                                Some(Type::Ref(cname)) => {
+                                    self.class_defs.get(&cname.sym).map(|c| c.fields.clone())
+                                }
                                 _ => None,
                             };
                             let non_rest_keys: HashSet<String> = fields
@@ -1901,7 +1971,7 @@ impl Codegen {
                                     continue;
                                 }
                                 if p.is_rest {
-                                    let remaining_fields = if let Some(tys) = obj_fields {
+                                    let remaining_fields = if let Some(ref tys) = obj_fields {
                                         tys.iter()
                                             .filter(|t| !non_rest_keys.contains(&t.ident.sym))
                                             .cloned()
@@ -1922,10 +1992,31 @@ impl Codegen {
                                     &p.key
                                 };
                                 let f_opt = obj_fields
+                                    .as_ref()
                                     .and_then(|tys| tys.iter().find(|t| t.ident.sym == p.key.sym));
-                                let t_str = f_opt
-                                    .map(|t| self.map_type(&t.ty))
-                                    .unwrap_or_else(|| "i32".to_string());
+                                let is_mut_field = p.mode == DestructureMode::MutBorrow
+                                    || (p.mode == DestructureMode::ReadOnly && whole_is_mut);
+                                let bound_cp_ty = f_opt.map(|f| {
+                                    if is_mut_field {
+                                        Type::BorrowType {
+                                            inner: Box::new(f.ty.clone()),
+                                            is_mut: true,
+                                            lifetimes: vec![],
+                                        }
+                                    } else {
+                                        f.ty.clone()
+                                    }
+                                });
+                                let t_str = bound_cp_ty
+                                    .as_ref()
+                                    .map(|t| self.map_type(t))
+                                    .unwrap_or_else(|| {
+                                        if is_mut_field {
+                                            "*i32".to_string()
+                                        } else {
+                                            "i32".to_string()
+                                        }
+                                    });
                                 self.locals.insert(ident.sym.clone(), t_str.clone());
                                 writeln!(output, "    {}: {},", ident.sym, t_str).unwrap();
                             }

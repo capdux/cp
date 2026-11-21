@@ -14,7 +14,7 @@ class MockTensor {
 
 fn syncFunc() {
     let a = new MockTensor(42);
-    let b = a;  // Move ownership
+    let b = move a;  // Explicit move ownership
     let c = a;  // Should cause compile error: Use of moved value 'a'
 }
 

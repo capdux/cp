@@ -49,16 +49,17 @@ impl<'a> Parser<'a> {
             }
         } else if self.peek() == Some(&Token::Struct) {
             let span = self.bump()?.1;
-            is_ref = false;
             _is_struct = true;
-            class_meta.push(MetaItem {
-                span,
-                name: Ident {
+            if !is_ref {
+                class_meta.push(MetaItem {
                     span,
-                    sym: "value".to_string(),
-                },
-                args: vec![],
-            });
+                    name: Ident {
+                        span,
+                        sym: "value".to_string(),
+                    },
+                    args: vec![],
+                });
+            }
         } else {
             self.expect(Token::Class)?;
         }
@@ -229,6 +230,96 @@ impl<'a> Parser<'a> {
             }
             if self.peek() == Some(&Token::Let) {
                 self.bump()?;
+            }
+            if self.peek() == Some(&Token::Tilde) {
+                let tilde_span = self.bump()?.1;
+                let dtor_ident = self.parse_ident()?;
+                if dtor_ident.sym != "init" {
+                    return Err(ParseError::Generic(
+                        format!(
+                            "CP Syntax Error: destructor must be named '~init()', found '~{}'\n  = cause: CP uses '~init()' as the unique destructor syntax to avoid collisions with business method names.\n  = help: declare the destructor as '~init() {{ ... }}'.\n  = suggestion: rename '~{}' to '~init'",
+                            dtor_ident.sym, dtor_ident.sym
+                        ),
+                        dtor_ident.span,
+                    ));
+                }
+                if is_static {
+                    return Err(ParseError::Generic(
+                        format!(
+                            "Static class or struct '{}' cannot declare destructor '~init()'",
+                            ident.sym
+                        ),
+                        tilde_span,
+                    ));
+                }
+                if methods
+                    .iter()
+                    .any(|m: &Function| m.ident.sym == "__cp_deinit")
+                {
+                    return Err(ParseError::Generic(
+                        format!("Duplicate destructor '~init()' in '{}'", ident.sym),
+                        tilde_span,
+                    ));
+                }
+                self.expect(Token::LParen)?;
+                if self.peek() != Some(&Token::RParen) {
+                    let bad_span = self.peek_span();
+                    return Err(ParseError::Generic(
+                        "CP Syntax Error: destructor '~init()' takes no parameters.\n  = cause: '~init()' implicitly receives mutable exclusive access to '_' and cannot accept explicit parameters.\n  = help: remove all parameters from '~init()'.\n  = suggestion: ~init() { ... }".to_string(),
+                        bad_span,
+                    ));
+                }
+                self.expect(Token::RParen)?;
+                if self.peek() == Some(&Token::Colon) || self.peek() == Some(&Token::Arrow) {
+                    let bad_span = self.peek_span();
+                    return Err(ParseError::Generic(
+                        "CP Syntax Error: destructor '~init()' cannot declare a return type.\n  = cause: destructors always return void and cannot fail.\n  = help: remove the return type annotation from '~init()'.\n  = suggestion: ~init() { ... }".to_string(),
+                        bad_span,
+                    ));
+                }
+                let body = self.parse_block_stmt()?;
+                let end_span = body.span.end;
+                let recv_param = Param {
+                    span: tilde_span,
+                    ident: Ident {
+                        span: tilde_span,
+                        sym: "_".to_string(),
+                    },
+                    ty: Type::BorrowType {
+                        inner: Box::new(Type::Ref(ident.clone())),
+                        is_mut: true,
+                        lifetimes: vec![],
+                    },
+                    is_comptime: false,
+                    is_mut: true,
+                    is_move: false,
+                    meta: vec![],
+                    default: None,
+                };
+                let dtor_fn = Function {
+                    span: Span {
+                        start: tilde_span.start,
+                        end: end_span,
+                    },
+                    ident: Ident {
+                        span: Span {
+                            start: tilde_span.start,
+                            end: dtor_ident.span.end,
+                        },
+                        sym: "__cp_deinit".to_string(),
+                    },
+                    generic_params: vec![],
+                    params: vec![recv_param],
+                    return_type: None,
+                    body,
+                    is_async: false,
+                    is_static: false,
+                    is_unsafe: false,
+                    meta: meta_list,
+                    is_pub: true,
+                };
+                methods.push(dtor_fn);
+                continue;
             }
             let is_method = match self.peek() {
                 Some(Token::Fn) | Some(Token::Async) => true,

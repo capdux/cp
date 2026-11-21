@@ -40,3 +40,15 @@
 
 ### 2026-11-21（`cap:feature_flags` 验收，主控单兵批量吸收提交 `cap:feature_flags`）
 - **执行成果**：`lib/feature_flags/`（5/5 PASS，`doc/lib/feature_flags.md`）经 `verify_module.sh` 一次性验收回收；主控单兵批量吸收提交 `cap:feature_flags`
+
+### 2026-11-21（CP 所有权/借用/五态解构/唯一幂等析构 `~init()` 体系全面重构 + 饱和/环绕复合赋值热修）
+- **用户指令**：
+  1. 全面重构 CP 的所有权、借用、解构赋值与 RAII 析构机制：统一直接赋值/解构/参数三态（默认只读、不变不析构；`*` 安全可变借用；`move` 显式转移；`own` 跨线程独占所有权同样自动析构）；
+  2. 解构支持整体可变借用 `const { handlers: h } = *_`、局部可变借用 `const { *handlers: h } = _`、整体转移 `const { handlers: h } = move _` 与单字段转移 `const { move handlers: h } = _`，且容器支持整体借用 vs 成员局部精细分离借用；
+  3. 唯一析构函数 `~init() { ... }`（无参无返回值、双重幂等，消除与业务 `release()` 重名冲突）；`&v` 回收为取址运算符与 `*T!` / `*const T!` 裸指针互操作，裸指针与借用永不自动析构；明确 `struct` vs `class` 与 `ref struct` 边界。
+  4. 同步加急热修 `bun_agy` 工单 `task-bun-20261121-sat-assign-op`（支持 `+|=`, `-|=`, `*|=` , `<<|=`, `+%=`, `-%=`, `*%=` 及 `*|` / `<<|`）与 `task-bun-20261121-coalesce-break-label`（支持 `?? break :label [val]` 与 `?? continue :label`）。
+- **执行成果**：
+  - 完成 `cpc` 词法/语法/AST/Sema/Codegen 全面重构并发布 Release 优化版；
+  - 新增深测套件 `cap/test/test_raii_deinit_ownership_deep.cp`（8/8 PASS）与 9 项编译期负向安全拦截全部通过，核心回归测试全部 PASS；
+  - 热修结单 `task-bun-20261121-sat-assign-op` 与 `task-bun-20261121-coalesce-break-label`；
+  - 更新 `cp_agent_ref.md`（标注 `[SYNC_PENDING: 2026-11-21]`）与三线热日志，提交 Git。

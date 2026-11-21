@@ -188,12 +188,22 @@ impl<'a> Parser<'a> {
                             key,
                             val,
                             is_rest: true,
+                            mode: DestructureMode::ReadOnly,
                         });
                         if self.peek() == Some(&Token::Comma) {
                             self.bump()?;
                         }
                         continue;
                     }
+                    let prop_mode = if self.peek() == Some(&Token::Star) {
+                        self.bump()?;
+                        DestructureMode::MutBorrow
+                    } else if matches!(self.peek(), Some(Token::Move | Token::Own)) {
+                        self.bump()?;
+                        DestructureMode::Move
+                    } else {
+                        DestructureMode::ReadOnly
+                    };
                     let key = self.parse_ident()?;
                     if key.sym == "mut"
                         && self.peek() != Some(&Token::Colon)
@@ -210,6 +220,7 @@ impl<'a> Parser<'a> {
                         key,
                         val,
                         is_rest: false,
+                        mode: prop_mode,
                     });
                     if self.peek() == Some(&Token::Comma) {
                         self.bump()?;
@@ -276,6 +287,7 @@ impl<'a> Parser<'a> {
                                 key,
                                 val,
                                 is_rest: true,
+                                mode: DestructureMode::ReadOnly,
                             });
                             if self.peek() == Some(&Token::Comma) {
                                 self.bump()?;
@@ -292,6 +304,7 @@ impl<'a> Parser<'a> {
                             key,
                             val,
                             is_rest: false,
+                            mode: DestructureMode::ReadOnly,
                         });
                         if self.peek() == Some(&Token::Comma) {
                             self.bump()?;
@@ -468,6 +481,7 @@ impl<'a> Parser<'a> {
                                     key,
                                     val,
                                     is_rest: true,
+                                    mode: DestructureMode::ReadOnly,
                                 });
                                 if self.peek() == Some(&Token::Comma) {
                                     self.bump()?;
@@ -484,6 +498,7 @@ impl<'a> Parser<'a> {
                                 key,
                                 val,
                                 is_rest: false,
+                                mode: DestructureMode::ReadOnly,
                             });
                             if self.peek() == Some(&Token::Comma) {
                                 self.bump()?;
@@ -536,6 +551,7 @@ impl<'a> Parser<'a> {
                                 key,
                                 val,
                                 is_rest: true,
+                                mode: DestructureMode::ReadOnly,
                             });
                             if self.peek() == Some(&Token::Comma) {
                                 self.bump()?;
@@ -552,6 +568,7 @@ impl<'a> Parser<'a> {
                             key,
                             val,
                             is_rest: false,
+                            mode: DestructureMode::ReadOnly,
                         });
                         if self.peek() == Some(&Token::Comma) {
                             self.bump()?;

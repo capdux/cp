@@ -41,3 +41,18 @@
 ## [2026-11-21] - 新建 `cap:bitset_simd` 纯 CP 按字向量化加速动态位集合引擎（基于 `u64` 字块 `@popCount`/`@ctz` 批量位运算、`setRange`/`nextSetBit` 及集合并交差，支持 `cap.bitset_simd` 自动动态挂载，详见 `doc/lib/bitset_simd.md`）（5/5 PASS，自动动态挂载 `cap.bitset_simd`）
 - **新增标准库**：`lib/bitset_simd/{bitset,index}.cp`，实现字块加速 `BitSet` 位集与稀疏迭代器。\n- **新增文档与测试**：`doc/lib/bitset_simd.md` 扁平文档与 `cap/test/test_bitset_simd_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 
+
+## [2026-11-21] - CP 所有权/借用/五态解构/唯一双重幂等析构 `~init()` 全面重构 + 饱和/环绕复合赋值热修
+- **修改 `cpc/src/ast.rs`、`cpc/src/lexer.rs`、`cpc/src/parser/{container,expr,pattern}.rs`**：
+  - 新增 `~init() { ... }` 唯一析构函数语法与 `.~init()` 调用解析，非法参数/返回值/重名输出三段式 AI-First 诊断；
+  - 新增 `DestructureMode`（`ReadOnly` / `MutBorrow` / `Move`）与对象解构字段级 `*` / `move` / `own` 前缀解析；
+  - 修复 `ref struct` 被 `struct` 分支覆盖 `is_ref = false` 的缺陷；
+  - 新增饱和/环绕复合赋值运算符（`+|=`, `-|=`, `*|=` , `<<|=`, `+%=`, `-%=`, `*%=`）及 `*|` / `<<|` 二元运算（结单 `task-bun-20261121-sat-assign-op`）；修复 `?? break :label [val]` 与 `?? continue :label`（含 `,`/`]` 终结符，结单 `task-bun-20261121-coalesce-break-label`）。
+- **修改 `cpc/src/sema/{mod,coerce}.rs`**：
+  - 内建注册 `drop(x)`；支持 `&v` 取址直接初始化 `*T!` / `*const T!` 裸指针。
+- **修改 `cpc/src/codegen/{types/mod,decl_class,actor,stmt,expr/call,expr/ops,runtime_emit}.rs`**：
+  - `type_has_release` 严格禁止解包裸指针与安全借用，仅识别 `~init()` (`__cp_deinit`) 与零额外参数 `release`；删除 `stmt.rs` 中误伤全文件的兜底 `defer` 注入；
+  - 实现双重幂等析构（调用侧 `__x_moved` 守卫 + 非 C-ABI 实例 `__cp_dropped` 守卫，覆盖用户 `~init()` 与内置 `Map`/`Set`/`VecDeque`/`BinaryHeap`/`BTreeMap`/`BTreeSet`/`RegExp`，并跨 Zig 0.15/0.17 兼容 `pointer.is_const`/`attrs.@"const"` 与 `fn.params`/`param_types`）；
+  - 统一直接赋值与五态对象解构代码生成及成员级分离借用检查（同步函数与状态机 `ctx` 双路径完整支持）；
+  - 扩展 `Expr::Move` 支持成员字段转移（`move _.field`）并安全守卫 `__{id}_moved` 生成。
+- **新增/更新测试与规范**：新增 `cap/test/test_raii_deinit_ownership_deep.cp`（8/8 PASS），更新 `cap/test/test_ownership_fail.cp` 与 `cp_agent_ref.md`（带 `[SYNC_PENDING: 2026-11-21]`）。

@@ -215,6 +215,64 @@ impl Codegen {
                                     (borrow_sources.clone(), is_mut_borrow),
                                 );
                             }
+                            let resolved_val_ty = var
+                                .ty
+                                .clone()
+                                .or_else(|| self.var_cp_types.get(&ident.sym).cloned());
+                            let is_raw_or_borrow_ty = resolved_val_ty
+                                .as_ref()
+                                .map_or(false, Self::is_raw_ptr_or_borrow_type);
+                            let is_explicit_move = matches!(init, Expr::Move(_));
+                            let is_field_or_elem_read = matches!(
+                                init,
+                                Expr::Member(_) | Expr::Index { .. } | Expr::Deref(_)
+                            );
+                            let is_plain_ident_read = matches!(init, Expr::Ident(_));
+                            if is_explicit_move {
+                                is_var_borrow = false;
+                            } else if is_field_or_elem_read {
+                                is_var_borrow = true;
+                                if !is_raw_or_borrow_ty
+                                    && !self.is_copy_type(resolved_val_ty.as_ref())
+                                {
+                                    let (root_opt, field_opt) = self.extract_member_path(init);
+                                    if let Some(root) = root_opt {
+                                        self.check_borrow_conflict_field(
+                                            &root,
+                                            field_opt.as_deref(),
+                                            false,
+                                        );
+                                        if !self.var_borrow_sources.contains_key(&ident.sym) {
+                                            let resolved = self.resolve_borrow_source_field(
+                                                &root,
+                                                field_opt.as_deref(),
+                                            );
+                                            self.var_borrow_sources
+                                                .insert(ident.sym.clone(), (resolved, false));
+                                        }
+                                    }
+                                }
+                            } else if is_plain_ident_read {
+                                if let Expr::Ident(id) = init {
+                                    if !is_raw_or_borrow_ty
+                                        && !self.is_copy_type(resolved_val_ty.as_ref())
+                                    {
+                                        is_var_borrow = true;
+                                        self.check_borrow_conflict(&id.sym, false);
+                                        if !self.var_borrow_sources.contains_key(&ident.sym) {
+                                            let src = if let Some((orig, _)) =
+                                                self.var_borrow_sources.get(&id.sym)
+                                            {
+                                                orig.clone()
+                                            } else {
+                                                vec![(id.sym.clone(), None)]
+                                            };
+                                            self.var_borrow_sources
+                                                .insert(ident.sym.clone(), (src, false));
+                                        }
+                                    }
+                                }
+                            }
                             if is_ref_st {
                                 self.var_is_ref_struct.insert(ident.sym.clone());
                             } else if let Some(Type::Ref(cid)) = &var.ty {
@@ -235,15 +293,32 @@ impl Codegen {
                                     self.uninitialized_vars.insert(ident.sym.clone());
                                 }
                             }
+                            let needs_drop = if is_var_borrow
+                                || is_raw_or_borrow_ty
+                                || is_field_or_elem_read
+                                || is_plain_ident_read
+                            {
+                                false
+                            } else if let Some(t) = &resolved_val_ty {
+                                self.type_has_release(Some(t))
+                            } else {
+                                false
+                            };
+                            let is_value_struct_drop = needs_drop
+                                && resolved_val_ty
+                                    .as_ref()
+                                    .map_or(false, |t| !self.is_zig_heap_ptr_type(t));
                             let is_const = var.kind == crate::ast::VarDeclKind::Const
                                 || matches!(init, Expr::Builtin(b) if b.name == "@typeOf" || b.name == "@typeInfo" || b.name == "@TypeOf" || b.name == "@TypeInfo")
                                 || matches!(init, Expr::Call(c) if matches!(&*c.callee, Expr::Ident(id) if id.sym == "@typeOf" || id.sym == "@TypeOf" || id.sym == "@typeInfo" || id.sym == "@TypeInfo"));
+                            let emit_zig_const = is_const
+                                && !(is_value_struct_drop && !is_type_ns && !var.is_comptime);
                             let lhs = if self.is_state_machine {
                                 format!("ctx.{}", ident.sym)
                             } else {
                                 let keyword = if var.is_threadlocal {
                                     "threadlocal var"
-                                } else if is_const {
+                                } else if emit_zig_const {
                                     if var.is_comptime {
                                         "comptime const"
                                     } else {
@@ -339,39 +414,22 @@ impl Codegen {
                                     init_val
                                 }
                             ));
-                            let needs_drop = if let Some(t) = &var.ty {
-                                self.type_has_release(Some(t))
-                            } else if let Some(t) = self.infer_cp_type(init) {
-                                self.type_has_release(Some(&t))
-                            } else if matches!(
-                                init,
-                                Expr::Lit(_)
-                                    | Expr::Slice(_)
-                                    | Expr::Cast { .. }
-                                    | Expr::Bin(_)
-                                    | Expr::Index { .. }
-                            ) {
-                                false
-                            } else if let Expr::Ident(id) = init {
-                                if let Some(t) = self.var_cp_types.get(&id.sym) {
-                                    self.type_has_release(Some(t))
-                                } else {
-                                    false
-                                }
-                            } else {
-                                self.class_defs
-                                    .values()
-                                    .any(|c| c.methods.iter().any(|m| m.ident.sym == "release"))
-                            };
                             if !self.is_state_machine && !is_var_borrow && needs_drop {
                                 self.drop_flag_vars.insert(ident.sym.clone());
+                                if !emit_zig_const {
+                                    self.write_to_case(&format!("_ = &{};", ident.sym));
+                                }
                                 self.write_to_case(&format!(
                                     "var __{}_moved = false; _ = &__{}_moved;",
                                     ident.sym, ident.sym
                                 ));
-                                self.write_to_case(&format!("defer if (!__{0}_moved) {{ const __T = @TypeOf({0}); if (@typeInfo(__T) == .pointer) {{ const __CpChild = @typeInfo(__T).pointer.child; if (@typeInfo(__CpChild) == .@\"struct\" and @hasDecl(__CpChild, \"release\")) {{ const __CpRType = @typeInfo(@TypeOf(__CpChild.release)).@\"fn\".return_type.?; if (@typeInfo(__CpRType) == .error_union) {{ _ = {0}.release() catch {{}}; }} else {{ {0}.release(); }} }} }} else if (@typeInfo(__T) == .@\"struct\" and @hasDecl(__T, \"release\")) {{ var _drop_val = {0}; _drop_val.release(); }} }};", ident.sym));
+                                let drop_body = Self::build_drop_call_snippet(&ident.sym);
+                                self.write_to_case(&format!(
+                                    "defer if (!__{0}_moved) {{ __{0}_moved = true; {1} }};",
+                                    ident.sym, drop_body
+                                ));
                             } else if !self.is_state_machine {
-                                if !is_const {
+                                if !emit_zig_const {
                                     self.write_to_case(&format!("_ = &{};", ident.sym));
                                 } else if !is_type_ns && !var.is_comptime {
                                     let is_used = self.last_use_map.contains_key(&ident.sym);
@@ -380,42 +438,22 @@ impl Codegen {
                                     }
                                 }
                             }
-                            if let Expr::Ident(id) = init {
-                                // Only move if `id` is an owned local pointer, Box<dyn Trait>, or `move` parameter (not a borrow)
-                                let is_id_borrow = self.var_borrow_sources.contains_key(&id.sym)
-                                    || (self.current_fn_params.contains(&id.sym)
-                                        && !self.move_fn_params.contains(&id.sym));
-                                if !is_id_borrow && self.locals.contains_key(&id.sym) {
-                                    let ty_str = &self.locals[&id.sym];
-                                    let is_owned_type = (ty_str.starts_with('*')
-                                        && ty_str != "*anyopaque")
-                                        || self.trait_defs.contains_key(ty_str.as_str());
-                                    if is_owned_type {
-                                        // NLL Check: cannot move `id` if it has active borrows!
-                                        self.check_active_borrows_before_move(&id.sym);
-                                        // If `id` is a ref struct, check if it's moving to outer scope
-                                        if self.var_is_ref_struct.contains(&id.sym) {
-                                            if let Some((srcs, _)) =
-                                                self.var_borrow_sources.get(&id.sym)
-                                            {
-                                                for (s, _) in srcs {
-                                                    let s_depth = self
-                                                        .var_scope_depth
-                                                        .get(s)
-                                                        .copied()
-                                                        .unwrap_or(1);
-                                                    if s_depth > self.current_scope_depth {
-                                                        panic!("CP Compile Error: Stack-bound ref struct '{}' cannot escape scope of borrowed value '{}'", id.sym, s);
-                                                    }
+                            if let Expr::Move(mv_inner) = init {
+                                if let Expr::Ident(id) = &**mv_inner {
+                                    if self.var_is_ref_struct.contains(&id.sym) {
+                                        if let Some((srcs, _)) =
+                                            self.var_borrow_sources.get(&id.sym)
+                                        {
+                                            for (s, _) in srcs {
+                                                let s_depth = self
+                                                    .var_scope_depth
+                                                    .get(s)
+                                                    .copied()
+                                                    .unwrap_or(1);
+                                                if s_depth > self.current_scope_depth {
+                                                    panic!("CP Compile Error: Stack-bound ref struct '{}' cannot escape scope of borrowed value '{}'", id.sym, s);
                                                 }
                                             }
-                                        }
-                                        self.moved_vars.insert(id.sym.clone());
-                                        if !self.is_state_machine {
-                                            self.write_to_case(&format!(
-                                                "__{}_moved = true;",
-                                                id.sym
-                                            ));
                                         }
                                     }
                                 }
@@ -582,26 +620,120 @@ impl Codegen {
                             }
                         }
                         Pattern::Object(props) => {
-                            let tmp_id = self.tmp_counter;
-                            self.tmp_counter += 1;
-                            self.write_to_case(&format!(
-                                "const _tmp_obj{} = {};",
-                                tmp_id,
-                                if is_try {
-                                    format!("try {}", final_expr)
-                                } else {
-                                    final_expr.clone()
-                                }
-                            ));
-                            let mut init_ty = self.infer_cp_type(init);
+                            let (whole_mode, base_expr) = match init {
+                                Expr::Move(inner) => (DestructureMode::Move, &**inner),
+                                Expr::Borrow(inner, true) => (DestructureMode::MutBorrow, &**inner),
+                                Expr::Borrow(inner, false) => (DestructureMode::ReadOnly, &**inner),
+                                other => (DestructureMode::ReadOnly, other),
+                            };
+                            let any_mut_prop =
+                                props.iter().any(|p| p.mode == DestructureMode::MutBorrow);
+                            let any_mut_mode =
+                                whole_mode == DestructureMode::MutBorrow || any_mut_prop;
+
+                            let mut init_ty = self.infer_cp_type(base_expr);
                             while let Some(Type::BorrowType { inner, .. }) = init_ty {
                                 init_ty = Some(*inner);
                             }
+
+                            let base_already_ptr = if let Some(bt) = self.infer_cp_type(base_expr) {
+                                matches!(
+                                    bt,
+                                    Type::BorrowType { .. }
+                                        | Type::RawPtr { .. }
+                                        | Type::CPtr(_)
+                                        | Type::ManyRawPtr(_)
+                                ) || self.is_zig_heap_ptr_type(&bt)
+                            } else if let Expr::Ident(id) = base_expr {
+                                id.sym == "_"
+                                    || id.sym == "this"
+                                    || self
+                                        .locals
+                                        .get(&id.sym)
+                                        .map_or(false, |t| t.starts_with('*'))
+                            } else {
+                                false
+                            };
+
+                            let tmp_id = self.tmp_counter;
+                            self.tmp_counter += 1;
+                            let tmp_init_code = if is_try {
+                                format!("try {}", final_expr)
+                            } else if any_mut_prop
+                                && whole_mode != DestructureMode::MutBorrow
+                                && !base_already_ptr
+                            {
+                                format!("(&{})", final_expr)
+                            } else {
+                                final_expr.clone()
+                            };
+                            self.write_to_case(&format!(
+                                "const _tmp_obj{} = {};",
+                                tmp_id, tmp_init_code
+                            ));
+
+                            let (root_opt, base_field_opt) = self.extract_member_path(base_expr);
+                            if any_mut_mode {
+                                if let Some(ref root) = root_opt {
+                                    if root == "this" || root == "_" {
+                                        if self.current_receiver_mode == ReceiverMode::ReadOnly {
+                                            panic!(
+                                                "CP Compile Error: Cannot mutably destructure from read-only receiver '{}' (use '*_' as receiver)",
+                                                root
+                                            );
+                                        }
+                                    } else if self.const_vars.contains(root) {
+                                        panic!(
+                                            "CP Compile Error: Cannot mutably destructure from 'const' variable '{}' (declare with 'let')",
+                                            root
+                                        );
+                                    } else if let Some((_, is_m)) =
+                                        self.var_borrow_sources.get(root)
+                                    {
+                                        if !*is_m {
+                                            panic!(
+                                                "CP Compile Error: Cannot mutably destructure from read-only borrow '{}'",
+                                                root
+                                            );
+                                        }
+                                    } else if self.current_fn_params.contains(root)
+                                        && !self.mutable_fn_params.contains(root)
+                                        && !self.move_fn_params.contains(root)
+                                    {
+                                        panic!(
+                                            "CP Compile Error: Cannot mutably destructure from read-only parameter '{}' (mark parameter as '*{}')",
+                                            root, root
+                                        );
+                                    }
+                                }
+                            }
+
                             let non_rest_keys: HashSet<String> = props
                                 .iter()
                                 .filter(|p| !p.is_rest)
                                 .map(|p| p.key.sym.clone())
                                 .collect();
+
+                            let lookup_field_ty = |init_ty: &Option<Type>,
+                                                   class_defs: &HashMap<String, Class>,
+                                                   key: &str|
+                             -> Option<Type> {
+                                match init_ty {
+                                    Some(Type::Object(fields)) => fields
+                                        .iter()
+                                        .find(|f| f.ident.sym == key)
+                                        .map(|f| f.ty.clone()),
+                                    Some(Type::Ref(cname)) => {
+                                        class_defs.get(&cname.sym).and_then(|cls| {
+                                            cls.fields
+                                                .iter()
+                                                .find(|f| f.ident.sym == key)
+                                                .map(|f| f.ty.clone())
+                                        })
+                                    }
+                                    _ => None,
+                                }
+                            };
 
                             for prop in props {
                                 if prop.is_rest {
@@ -680,30 +812,162 @@ impl Codegen {
                                 } else {
                                     prop.key.sym.clone()
                                 };
+                                let eff_mode = if prop.mode != DestructureMode::ReadOnly {
+                                    prop.mode
+                                } else {
+                                    whole_mode
+                                };
+                                let field_ty =
+                                    lookup_field_ty(&init_ty, &self.class_defs, &prop.key.sym);
+                                let full_field = match &base_field_opt {
+                                    Some(bf) => format!("{}.{}", bf, prop.key.sym),
+                                    None => prop.key.sym.clone(),
+                                };
                                 self.var_scope_depth
                                     .insert(bound_name.clone(), self.current_scope_depth);
-                                if let Some(Type::Object(fields)) = &init_ty {
-                                    if let Some(f) =
-                                        fields.iter().find(|f| f.ident.sym == prop.key.sym)
-                                    {
-                                        self.var_cp_types.insert(bound_name.clone(), f.ty.clone());
-                                    }
-                                }
-                                let lhs = if self.is_state_machine {
-                                    format!("ctx.{}", bound_name)
+                                if matches!(var.kind, crate::ast::VarDeclKind::Const) {
+                                    self.const_vars.insert(bound_name.clone());
                                 } else {
-                                    let keyword = match var.kind {
-                                        crate::ast::VarDeclKind::Const => "const",
-                                        _ => "var",
-                                    };
-                                    format!("{} {}", keyword, bound_name)
-                                };
-                                self.write_to_case(&format!(
-                                    "{} = _tmp_obj{}.{};",
-                                    lhs, tmp_id, prop.key.sym
-                                ));
-                                if !self.is_state_machine {
-                                    self.write_to_case(&format!("_ = &{};", bound_name));
+                                    self.const_vars.remove(&bound_name);
+                                }
+
+                                match eff_mode {
+                                    DestructureMode::MutBorrow => {
+                                        if let Some(ref root) = root_opt {
+                                            self.check_borrow_conflict_field(
+                                                root,
+                                                Some(&full_field),
+                                                true,
+                                            );
+                                            let resolved = self.resolve_borrow_source_field(
+                                                root,
+                                                Some(&full_field),
+                                            );
+                                            self.var_borrow_sources
+                                                .insert(bound_name.clone(), (resolved, true));
+                                        }
+                                        let field_already_heap_ptr = field_ty
+                                            .as_ref()
+                                            .map_or(false, |t| self.is_zig_heap_ptr_type(t));
+                                        if let Some(ref ft) = field_ty {
+                                            self.var_cp_types.insert(
+                                                bound_name.clone(),
+                                                Type::BorrowType {
+                                                    inner: Box::new(ft.clone()),
+                                                    is_mut: true,
+                                                    lifetimes: vec![],
+                                                },
+                                            );
+                                        }
+                                        let lhs = if self.is_state_machine {
+                                            format!("ctx.{}", bound_name)
+                                        } else {
+                                            let keyword = match var.kind {
+                                                crate::ast::VarDeclKind::Const => "const",
+                                                _ => "var",
+                                            };
+                                            format!("{} {}", keyword, bound_name)
+                                        };
+                                        let rhs = if field_already_heap_ptr {
+                                            format!("_tmp_obj{}.{}", tmp_id, prop.key.sym)
+                                        } else {
+                                            format!("&_tmp_obj{}.{}", tmp_id, prop.key.sym)
+                                        };
+                                        self.write_to_case(&format!("{} = {};", lhs, rhs));
+                                        if !self.is_state_machine {
+                                            self.write_to_case(&format!("_ = &{};", bound_name));
+                                        }
+                                    }
+                                    DestructureMode::Move => {
+                                        if let Some(ref root) = root_opt {
+                                            self.check_borrow_conflict_field(
+                                                root,
+                                                Some(&full_field),
+                                                true,
+                                            );
+                                        }
+                                        if let Some(ref ft) = field_ty {
+                                            self.var_cp_types
+                                                .insert(bound_name.clone(), ft.clone());
+                                        }
+                                        let prop_needs_drop =
+                                            self.type_has_release(field_ty.as_ref());
+                                        let prop_val_struct_drop = prop_needs_drop
+                                            && field_ty
+                                                .as_ref()
+                                                .map_or(false, |t| !self.is_zig_heap_ptr_type(t));
+                                        let lhs = if self.is_state_machine {
+                                            format!("ctx.{}", bound_name)
+                                        } else {
+                                            let keyword = if matches!(
+                                                var.kind,
+                                                crate::ast::VarDeclKind::Const
+                                            ) && !prop_val_struct_drop
+                                            {
+                                                "const"
+                                            } else {
+                                                "var"
+                                            };
+                                            format!("{} {}", keyword, bound_name)
+                                        };
+                                        self.write_to_case(&format!(
+                                            "{} = _tmp_obj{}.{};",
+                                            lhs, tmp_id, prop.key.sym
+                                        ));
+                                        if !self.is_state_machine && prop_needs_drop {
+                                            self.drop_flag_vars.insert(bound_name.clone());
+                                            self.write_to_case(&format!("_ = &{};", bound_name));
+                                            self.write_to_case(&format!(
+                                                "var __{}_moved = false; _ = &__{}_moved;",
+                                                bound_name, bound_name
+                                            ));
+                                            let drop_body =
+                                                Self::build_drop_call_snippet(&bound_name);
+                                            self.write_to_case(&format!(
+                                                "defer if (!__{0}_moved) {{ __{0}_moved = true; {1} }};",
+                                                bound_name, drop_body
+                                            ));
+                                        } else if !self.is_state_machine {
+                                            self.write_to_case(&format!("_ = &{};", bound_name));
+                                        }
+                                    }
+                                    DestructureMode::ReadOnly => {
+                                        if let Some(ref root) = root_opt {
+                                            self.check_borrow_conflict_field(
+                                                root,
+                                                Some(&full_field),
+                                                false,
+                                            );
+                                            if !self.is_copy_type(field_ty.as_ref()) {
+                                                let resolved = self.resolve_borrow_source_field(
+                                                    root,
+                                                    Some(&full_field),
+                                                );
+                                                self.var_borrow_sources
+                                                    .insert(bound_name.clone(), (resolved, false));
+                                            }
+                                        }
+                                        if let Some(ref ft) = field_ty {
+                                            self.var_cp_types
+                                                .insert(bound_name.clone(), ft.clone());
+                                        }
+                                        let lhs = if self.is_state_machine {
+                                            format!("ctx.{}", bound_name)
+                                        } else {
+                                            let keyword = match var.kind {
+                                                crate::ast::VarDeclKind::Const => "const",
+                                                _ => "var",
+                                            };
+                                            format!("{} {}", keyword, bound_name)
+                                        };
+                                        self.write_to_case(&format!(
+                                            "{} = _tmp_obj{}.{};",
+                                            lhs, tmp_id, prop.key.sym
+                                        ));
+                                        if !self.is_state_machine {
+                                            self.write_to_case(&format!("_ = &{};", bound_name));
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1374,8 +1638,8 @@ impl Codegen {
                             end_code
                         };
                         self.write_to_case(&format!(
-                            "inline for ({}..{}) |{}| {{",
-                            start_code, range_end, bound_id
+                            "{}inline for ({}..{}) |{}| {{",
+                            lbl_prefix, start_code, range_end, bound_id
                         ));
                         self.indent();
                         if let Stmt::Block(b) = &*f.body {
@@ -1395,8 +1659,8 @@ impl Codegen {
                             _ => "item".to_string(),
                         };
                         self.write_to_case(&format!(
-                            "inline for ({}) |{}| {{",
-                            coll_code, bound_id
+                            "{}inline for ({}) |{}| {{",
+                            lbl_prefix, coll_code, bound_id
                         ));
                         self.indent();
                         if let Stmt::Block(b) = &*f.body {
@@ -1436,8 +1700,8 @@ impl Codegen {
                         self.write_to_case(&format!("_ = &{};", id.sym));
                         self.write_to_case(&format!("const __end_{} = {};", tmp_id, end_code));
                         self.write_to_case(&format!(
-                            "while ({} {} __end_{}) : ({} += 1) {{",
-                            id.sym, op, tmp_id, id.sym
+                            "{}while ({} {} __end_{}) : ({} += 1) {{",
+                            lbl_prefix, id.sym, op, tmp_id, id.sym
                         ));
                     } else {
                         panic!("CP Compile Error: Range loop only supports identifier pattern");
@@ -1527,7 +1791,10 @@ impl Codegen {
                         self.var_scope_depth
                             .insert(id.sym.clone(), self.current_scope_depth);
                         self.var_cp_types.insert(id.sym.clone(), item_ty);
-                        self.write_to_case(&format!("while ({}.next()) |{}| {{", iter_var, id.sym));
+                        self.write_to_case(&format!(
+                            "{}while ({}.next()) |{}| {{",
+                            lbl_prefix, iter_var, id.sym
+                        ));
                         self.indent();
                         self.current_scope_depth += 1;
                         self.write_to_case(&format!("_ = &{};", id.sym));
@@ -1548,8 +1815,8 @@ impl Codegen {
                     } else {
                         let item_var = format!("__item_{}", tmp_id);
                         self.write_to_case(&format!(
-                            "while ({}.next()) |{}| {{",
-                            iter_var, item_var
+                            "{}while ({}.next()) |{}| {{",
+                            lbl_prefix, iter_var, item_var
                         ));
                         self.indent();
                         self.current_scope_depth += 1;
@@ -1660,24 +1927,29 @@ impl Codegen {
                         }
                     }
                     self.write_to_case(&format!(
-                        "{}for ({}) |{}{}| {{",
-                        inline_prefix, for_target, ptr_star, id.sym
+                        "{}{}for ({}) |{}{}| {{",
+                        lbl_prefix, inline_prefix, for_target, ptr_star, id.sym
                     ));
                     self.indent();
                     self.current_scope_depth += 1;
                     self.write_to_case(&format!("_ = &{};", id.sym));
                     if f.mode == IterMode::Move {
+                        self.drop_flag_vars.insert(id.sym.clone());
                         self.write_to_case(&format!(
                             "var __{0}_moved = false; _ = &__{0}_moved;",
                             id.sym
                         ));
-                        self.write_to_case(&format!("defer if (!__{0}_moved) {{ const __T = @TypeOf({0}); if (@typeInfo(__T) == .pointer) {{ const __CpChild = @typeInfo(__T).pointer.child; if (@typeInfo(__CpChild) == .@\"struct\" and @hasDecl(__CpChild, \"release\")) {{ const __CpRType = @typeInfo(@TypeOf(__CpChild.release)).@\"fn\".return_type.?; if (@typeInfo(__CpRType) == .error_union) {{ _ = {0}.release() catch {{}}; }} else {{ {0}.release(); }} }} }} else if (@typeInfo(__T) == .@\"struct\" and @hasDecl(__T, \"release\")) {{ var _drop_val = {0}; _drop_val.release(); }} }};", id.sym));
+                        let drop_body = Self::build_drop_call_snippet(&id.sym);
+                        self.write_to_case(&format!(
+                            "defer if (!__{0}_moved) {{ __{0}_moved = true; {1} }};",
+                            id.sym, drop_body
+                        ));
                     }
                 } else {
                     let item_var = format!("__item_{}", tmp_id);
                     self.write_to_case(&format!(
-                        "{}for ({}) |{}{}| {{",
-                        inline_prefix, for_target, ptr_star, item_var
+                        "{}{}for ({}) |{}{}| {{",
+                        lbl_prefix, inline_prefix, for_target, ptr_star, item_var
                     ));
                     self.indent();
                     self.current_scope_depth += 1;

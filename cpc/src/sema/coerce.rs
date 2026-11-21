@@ -674,6 +674,26 @@ impl Analyzer {
             }
         }
 
+        // Address-of `&v` or borrow `*v` initializing a C-compatible raw pointer (`*T!` / `*const T!`)
+        if let (
+            Type::RawPtr {
+                inner: t_inner,
+                depth: 1,
+            },
+            Type::BorrowType { inner: s_inner, .. },
+        ) = (target, src)
+        {
+            let t_base = match &**t_inner {
+                Type::BorrowType { inner, .. } => &**inner,
+                other => other,
+            };
+            if self.can_coerce(t_base, s_inner, None)
+                || **s_inner == Type::Any
+                || *t_base == Type::Any
+            {
+                return true;
+            }
+        }
         // Raw pointers (same depth and coerceable inner, allowing *T! -> *const T!)
         if let (
             Type::RawPtr {

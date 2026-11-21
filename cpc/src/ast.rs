@@ -356,12 +356,22 @@ pub struct EnumPattern {
     pub tuple_pats: Option<Vec<Pattern>>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub enum DestructureMode {
+    #[default]
+    ReadOnly,
+    MutBorrow,
+    Move,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ObjectPatProp {
     pub key: Ident,
     pub val: Option<Pattern>,
     #[serde(default)]
     pub is_rest: bool,
+    #[serde(default)]
+    pub mode: DestructureMode,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -641,6 +651,8 @@ pub enum BinaryOp {
     WrappingMul,
     SaturatingAdd,
     SaturatingSub,
+    SaturatingMul,
+    SaturatingShl,
     Concat,
 }
 

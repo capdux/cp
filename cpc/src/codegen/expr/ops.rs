@@ -212,8 +212,8 @@ impl Codegen {
                     format!("(&{})", inner_code)
                 }
             }
-            Expr::Move(expr) => {
-                if let Expr::Ident(i) = &**expr {
+            Expr::Move(expr) => match &**expr {
+                Expr::Ident(i) => {
                     if i.sym == "this" || i.sym == "_" {
                         if self.current_receiver_mode != ReceiverMode::Move {
                             panic!(
@@ -244,16 +244,54 @@ impl Codegen {
                         self.check_active_borrows_before_move(&i.sym);
                         let gen = self.generate_expr(expr);
                         self.moved_vars.insert(i.sym.clone());
-                        if !self.is_state_machine {
+                        if !self.is_state_machine && self.drop_flag_vars.contains(&i.sym) {
                             format!("(blk: {{ __{}_moved = true; break :blk {}; }})", i.sym, gen)
                         } else {
                             gen
                         }
                     }
-                } else {
-                    panic!("CP Compile Error: move keyword can only be applied to identifiers");
                 }
-            }
+                Expr::Member(_) => {
+                    let (root_opt, field_opt) = self.extract_member_path(expr);
+                    if let Some(root) = root_opt {
+                        if root == "this" || root == "_" {
+                            if self.current_receiver_mode == ReceiverMode::ReadOnly {
+                                panic!(
+                                    "CP Compile Error: Cannot move field '{}.{}' from read-only receiver (use '*_' or 'move _')",
+                                    root,
+                                    field_opt.as_deref().unwrap_or("")
+                                );
+                            }
+                            self.check_borrow_conflict_field("this", field_opt.as_deref(), true);
+                            self.check_borrow_conflict_field("_", field_opt.as_deref(), true);
+                        } else {
+                            if let Some((_, is_m)) = self.var_borrow_sources.get(&root) {
+                                if !*is_m {
+                                    panic!(
+                                        "CP Compile Error: Cannot move field '{}.{}' out of read-only borrow '{}'",
+                                        root,
+                                        field_opt.as_deref().unwrap_or(""),
+                                        root
+                                    );
+                                }
+                            } else if self.current_fn_params.contains(&root)
+                                && !self.mutable_fn_params.contains(&root)
+                                && !self.move_fn_params.contains(&root)
+                            {
+                                panic!(
+                                    "CP Compile Error: Cannot move field '{}.{}' out of read-only parameter '{}'",
+                                    root,
+                                    field_opt.as_deref().unwrap_or(""),
+                                    root
+                                );
+                            }
+                            self.check_borrow_conflict_field(&root, field_opt.as_deref(), true);
+                        }
+                    }
+                    self.generate_expr(expr)
+                }
+                _ => self.generate_expr(expr),
+            },
             Expr::Bin(bin) => {
                 if bin.op == BinaryOp::Pipe {
                     return self.generate_pipeline(&bin.left, &bin.right);
@@ -593,6 +631,8 @@ impl Codegen {
                             BinaryOp::WrappingMul => "*%",
                             BinaryOp::SaturatingAdd => "+|",
                             BinaryOp::SaturatingSub => "-|",
+                            BinaryOp::SaturatingMul => "*|",
+                            BinaryOp::SaturatingShl => "<<|",
                             BinaryOp::Concat => "++",
                             _ => "",
                         };

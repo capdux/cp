@@ -116,6 +116,7 @@ impl Codegen {
             self.writeln("    allocator: std.mem.Allocator,");
             self.writeln("    _map: std.HashMap(Message, Message, MessageContext, std.hash_map.default_max_load_percentage),");
             self.writeln("    size: i32,");
+            self.writeln("    __cp_dropped: bool = false,");
             self.writeln("");
             self.writeln("    pub fn _create(allocator: std.mem.Allocator) !*Map {");
             self.writeln("        const self = try allocator.create(Map);");
@@ -123,6 +124,7 @@ impl Codegen {
             self.writeln("            .allocator = allocator,");
             self.writeln("            ._map = std.HashMap(Message, Message, MessageContext, std.hash_map.default_max_load_percentage).init(allocator),");
             self.writeln("            .size = 0,");
+            self.writeln("            .__cp_dropped = false,");
             self.writeln("        };");
             self.writeln("        return self;");
             self.writeln("    }");
@@ -132,6 +134,8 @@ impl Codegen {
             self.writeln("    }");
             self.writeln("    ");
             self.writeln("    pub fn release(self: *Map) void {");
+            self.writeln("        if (self.__cp_dropped) return;");
+            self.writeln("        self.__cp_dropped = true;");
             self.writeln("        self._map.deinit();");
             self.writeln("        self.allocator.destroy(self);");
             self.writeln("    }");
@@ -213,6 +217,7 @@ impl Codegen {
             self.writeln("    allocator: std.mem.Allocator,");
             self.writeln("    _map: std.HashMap(Message, void, MessageContext, std.hash_map.default_max_load_percentage),");
             self.writeln("    size: i32,");
+            self.writeln("    __cp_dropped: bool = false,");
             self.writeln("");
             self.writeln("    pub fn _create(allocator: std.mem.Allocator) !*Set {");
             self.writeln("        const self = try allocator.create(Set);");
@@ -220,6 +225,7 @@ impl Codegen {
             self.writeln("            .allocator = allocator,");
             self.writeln("            ._map = std.HashMap(Message, void, MessageContext, std.hash_map.default_max_load_percentage).init(allocator),");
             self.writeln("            .size = 0,");
+            self.writeln("            .__cp_dropped = false,");
             self.writeln("        };");
             self.writeln("        return self;");
             self.writeln("    }");
@@ -229,6 +235,8 @@ impl Codegen {
             self.writeln("    }");
             self.writeln("    ");
             self.writeln("    pub fn release(self: *Set) void {");
+            self.writeln("        if (self.__cp_dropped) return;");
+            self.writeln("        self.__cp_dropped = true;");
             self.writeln("        self._map.deinit();");
             self.writeln("        self.allocator.destroy(self);");
             self.writeln("    }");
@@ -290,6 +298,7 @@ impl Codegen {
             self.writeln("    tail: usize,");
             self.writeln("    count: usize,");
             self.writeln("    capacity: usize,");
+            self.writeln("    __cp_dropped: bool = false,");
             self.writeln("");
             self.writeln("    pub fn _create(allocator: std.mem.Allocator) !*VecDeque {");
             self.writeln("        const self = try allocator.create(VecDeque);");
@@ -302,11 +311,14 @@ impl Codegen {
             self.writeln("            .tail = 0,");
             self.writeln("            .count = 0,");
             self.writeln("            .capacity = init_cap,");
+            self.writeln("            .__cp_dropped = false,");
             self.writeln("        };");
             self.writeln("        return self;");
             self.writeln("    }");
             self.writeln("    pub fn init(self: *VecDeque) void { _ = self; }");
             self.writeln("    pub fn release(self: *VecDeque) void {");
+            self.writeln("        if (self.__cp_dropped) return;");
+            self.writeln("        self.__cp_dropped = true;");
             self.writeln("        self.allocator.free(self.buf);");
             self.writeln("        self.allocator.destroy(self);");
             self.writeln("    }");
@@ -388,14 +400,17 @@ impl Codegen {
             self.writeln("const BinaryHeap = struct {");
             self.writeln("    allocator: std.mem.Allocator,");
             self.writeln("    items: std.ArrayList(Message),");
+            self.writeln("    __cp_dropped: bool = false,");
             self.writeln("");
             self.writeln("    pub fn _create(allocator: std.mem.Allocator) !*BinaryHeap {");
             self.writeln("        const self = try allocator.create(BinaryHeap);");
-            self.writeln("        self.* = .{ .allocator = allocator, .items = .empty };");
+            self.writeln("        self.* = .{ .allocator = allocator, .items = .empty, .__cp_dropped = false };");
             self.writeln("        return self;");
             self.writeln("    }");
             self.writeln("    pub fn init(self: *BinaryHeap) void { _ = self; }");
             self.writeln("    pub fn release(self: *BinaryHeap) void {");
+            self.writeln("        if (self.__cp_dropped) return;");
+            self.writeln("        self.__cp_dropped = true;");
             self.writeln("        self.items.deinit(self.allocator);");
             self.writeln("        self.allocator.destroy(self);");
             self.writeln("    }");
@@ -461,14 +476,17 @@ impl Codegen {
             self.writeln("const BTreeMap = struct {");
             self.writeln("    allocator: std.mem.Allocator,");
             self.writeln("    entries: std.ArrayList(MessageEntry),");
+            self.writeln("    __cp_dropped: bool = false,");
             self.writeln("");
             self.writeln("    pub fn _create(allocator: std.mem.Allocator) !*BTreeMap {");
             self.writeln("        const self = try allocator.create(BTreeMap);");
-            self.writeln("        self.* = .{ .allocator = allocator, .entries = .empty };");
+            self.writeln("        self.* = .{ .allocator = allocator, .entries = .empty, .__cp_dropped = false };");
             self.writeln("        return self;");
             self.writeln("    }");
             self.writeln("    pub fn init(self: *BTreeMap) void { _ = self; }");
             self.writeln("    pub fn release(self: *BTreeMap) void {");
+            self.writeln("        if (self.__cp_dropped) return;");
+            self.writeln("        self.__cp_dropped = true;");
             self.writeln("        self.entries.deinit(self.allocator);");
             self.writeln("        self.allocator.destroy(self);");
             self.writeln("    }");
@@ -567,14 +585,18 @@ impl Codegen {
             self.writeln("");
             self.writeln("const BTreeSet = struct {");
             self.writeln("    map: *BTreeMap,");
+            self.writeln("    __cp_dropped: bool = false,");
             self.writeln("");
             self.writeln("    pub fn _create(allocator: std.mem.Allocator) !*BTreeSet {");
             self.writeln("        const self = try allocator.create(BTreeSet);");
             self.writeln("        self.map = try BTreeMap._create(allocator);");
+            self.writeln("        self.__cp_dropped = false;");
             self.writeln("        return self;");
             self.writeln("    }");
             self.writeln("    pub fn init(self: *BTreeSet) void { _ = self; }");
             self.writeln("    pub fn release(self: *BTreeSet) void {");
+            self.writeln("        if (self.__cp_dropped) return;");
+            self.writeln("        self.__cp_dropped = true;");
             self.writeln("        const alloc = self.map.allocator;");
             self.writeln("        self.map.release();");
             self.writeln("        alloc.destroy(self);");
@@ -1544,8 +1566,8 @@ impl Codegen {
         self.writeln("extern \"c\" fn regexec(preg: *const regex_t, string: [*:0]const u8, nmatch: usize, pmatch: [*]regmatch_t, eflags: i32) i32;");
         self.writeln("extern \"c\" fn regfree(preg: *regex_t) void;");
         self.writeln("pub const RegExp = struct {");
-        self.writeln("    preg: regex_t, source: []const u8, lit_prefix: []const u8 = \"\", is_pure_literal: bool = false,");
-        self.writeln("    pub fn _create(allocator: std.mem.Allocator) !*RegExp { const p = try allocator.create(RegExp); p.* = undefined; p.lit_prefix = \"\"; p.is_pure_literal = false; return p; }");
+        self.writeln("    preg: regex_t, source: []const u8, lit_prefix: []const u8 = \"\", is_pure_literal: bool = false, __cp_dropped: bool = false,");
+        self.writeln("    pub fn _create(allocator: std.mem.Allocator) !*RegExp { const p = try allocator.create(RegExp); p.* = undefined; p.lit_prefix = \"\"; p.is_pure_literal = false; p.__cp_dropped = false; return p; }");
         self.writeln("    fn simdIndexOfByte(haystack: []const u8, needle: u8) ?usize {");
         self.writeln("        var i: usize = 0;");
         self.writeln("        const v_needle: @Vector(16, u8) = @splat(needle);");
@@ -1639,7 +1661,7 @@ impl Codegen {
         self.writeln("        if (regexec(&self.preg, c_str.ptr, 1, &pmatch, 0) == 0) { const start: usize = @intCast(pmatch[0].rm_so); const end: usize = @intCast(pmatch[0].rm_eo); return str[start..end]; }");
         self.writeln("        return \"\";");
         self.writeln("    }");
-        self.writeln("    pub fn release(self: *RegExp) void { regfree(&self.preg); }");
+        self.writeln("    pub fn release(self: *RegExp) void { if (self.__cp_dropped) return; self.__cp_dropped = true; regfree(&self.preg); }");
         self.writeln("};");
     }
 }

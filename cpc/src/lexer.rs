@@ -264,6 +264,20 @@ pub enum Token {
     Caret,
     #[token("~")]
     Tilde,
+    #[token("+%=")]
+    WrappingAddAssign,
+    #[token("-%=")]
+    WrappingSubAssign,
+    #[token("*%=")]
+    WrappingMulAssign,
+    #[token("+|=")]
+    SaturatingAddAssign,
+    #[token("-|=")]
+    SaturatingSubAssign,
+    #[token("*|=")]
+    SaturatingMulAssign,
+    #[token("<<|=")]
+    SaturatingShlAssign,
     #[token("+%")]
     WrappingAdd,
     #[token("-%")]
@@ -274,6 +288,10 @@ pub enum Token {
     SaturatingAdd,
     #[token("-|")]
     SaturatingSub,
+    #[token("*|")]
+    SaturatingMul,
+    #[token("<<|")]
+    SaturatingShl,
     #[token("++")]
     PlusPlus,
     #[token("+")]

@@ -185,6 +185,15 @@ impl Codegen {
         {
             return;
         }
+        let has_cp_deinit = class.methods.iter().any(|m| m.ident.sym == "__cp_deinit");
+        let is_c_abi = class.meta.iter().any(|m| {
+            m.name.sym == "extern"
+                || m.name.sym == "c"
+                || m.name.sym == "fix"
+                || m.name.sym == "packed"
+                || m.name.sym == "opaque"
+        });
+        let needs_dropped_guard = has_cp_deinit && !is_c_abi && !class.is_union && !class.is_static;
         let is_root = class.meta.iter().any(|m| m.name.sym == "root");
         if is_root {
             if (class.is_ref || class.meta.iter().any(|m| m.name.sym == "ref"))
@@ -193,6 +202,9 @@ impl Codegen {
                 self.ref_classes.insert(class.ident.sym.clone());
             }
             writeln!(self.output, "pub const {} = @This();\n", class.ident.sym).unwrap();
+            if needs_dropped_guard {
+                self.writeln("__cp_dropped: bool = false,");
+            }
             for f in &class.fields {
                 let default_init = if let Some(def) = &f.default {
                     format!(" = {},", self.generate_expr(def))
@@ -413,6 +425,9 @@ impl Codegen {
                     default_init
                 ));
             }
+            if needs_dropped_guard {
+                self.writeln("__cp_dropped: bool = false,");
+            }
             if !class.is_union
                 && !class.meta.iter().any(|m| {
                     m.name.sym == "value"
@@ -422,6 +437,9 @@ impl Codegen {
                 })
             {
                 let mut default_assigns = String::new();
+                if needs_dropped_guard {
+                    default_assigns.push_str(" self_ptr.__cp_dropped = false;");
+                }
                 for f in &class.fields {
                     if f.is_static {
                         continue;
@@ -488,7 +506,7 @@ impl Codegen {
         }
         if needs_trait_infra {
             self.writeln(&format!(
-                "pub fn __box_drop(ptr: *anyopaque) void {{ const self_ptr: *{0} = @ptrCast(@alignCast(ptr)); if (@hasDecl({0}, \"release\")) {{ const RType = @typeInfo(@TypeOf({0}.release)).@\"fn\".return_type.?; if (@typeInfo(RType) == .error_union) {{ _ = self_ptr.release() catch {{}}; }} else {{ self_ptr.release(); }} }} std.heap.page_allocator.destroy(self_ptr); }}",
+                "pub fn __box_drop(ptr: *anyopaque) void {{ const self_ptr: *{0} = @ptrCast(@alignCast(ptr)); if (@hasDecl({0}, \"__cp_deinit\")) {{ self_ptr.__cp_deinit(); }} else if (@hasDecl({0}, \"release\") and @typeInfo(@TypeOf({0}.release)) == .@\"fn\" and (if (@hasField(@TypeOf(@typeInfo(@TypeOf({0}.release)).@\"fn\"), \"params\")) @typeInfo(@TypeOf({0}.release)).@\"fn\".params.len == 1 else @typeInfo(@TypeOf({0}.release)).@\"fn\".param_types.len == 1)) {{ const RType = @typeInfo(@TypeOf({0}.release)).@\"fn\".return_type.?; if (@typeInfo(RType) == .error_union) {{ _ = self_ptr.release() catch {{}}; }} else {{ self_ptr.release(); }} }} std.heap.page_allocator.destroy(self_ptr); }}",
                 class.ident.sym
             ));
         }

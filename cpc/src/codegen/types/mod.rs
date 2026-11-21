@@ -199,28 +199,125 @@ impl Codegen {
         }
     }
 
+    pub fn method_is_zero_arg_destructor(m: &Function) -> bool {
+        if m.is_static {
+            return false;
+        }
+        if m.ident.sym == "__cp_deinit" {
+            return true;
+        }
+        if m.ident.sym == "release" {
+            return m.params.is_empty()
+                || (m.params.len() == 1
+                    && matches!(m.params[0].ident.sym.as_str(), "_" | "this" | "self"));
+        }
+        false
+    }
+
+    pub fn is_raw_ptr_or_borrow_type(ty: &Type) -> bool {
+        match ty {
+            Type::BorrowType { .. }
+            | Type::RawPtr { .. }
+            | Type::ManyRawPtr(_)
+            | Type::CPtr(_)
+            | Type::SentinelPtr(_, _) => true,
+            Type::Optional(inner) => Self::is_raw_ptr_or_borrow_type(inner),
+            _ => false,
+        }
+    }
+
+    pub fn is_refcounted_type(&self, ty: Option<&Type>) -> bool {
+        let Some(mut t) = ty else {
+            return false;
+        };
+        while let Type::Optional(inner) = t {
+            t = inner;
+        }
+        match t {
+            Type::Ref(id) => {
+                if id.sym == "SharedTensor" {
+                    return true;
+                }
+                if let Some(cls) = self.class_defs.get(&id.sym) {
+                    if cls
+                        .meta
+                        .iter()
+                        .any(|m| m.name.sym == "refCount" || m.name.sym == "refcount")
+                    {
+                        return true;
+                    }
+                    let has_retain = cls
+                        .methods
+                        .iter()
+                        .any(|m| m.ident.sym == "retain" || m.ident.sym == "ref");
+                    let has_release = cls
+                        .methods
+                        .iter()
+                        .any(|m| m.ident.sym == "release" || m.ident.sym == "deref");
+                    return has_retain && has_release;
+                }
+                false
+            }
+            _ => false,
+        }
+    }
+
+    pub fn is_copy_type(&self, ty: Option<&Type>) -> bool {
+        let Some(t) = ty else {
+            return true;
+        };
+        if Self::is_scalar_or_primitive_type(t) || Self::is_raw_ptr_or_borrow_type(t) {
+            return true;
+        }
+        match t {
+            Type::Ref(id) => {
+                if self.enum_defs.contains_key(&id.sym) {
+                    return true;
+                }
+                if self.type_has_release(Some(t)) {
+                    return false;
+                }
+                if let Some(cls) = self.class_defs.get(&id.sym) {
+                    if cls.is_union || self.value_classes.contains(&id.sym) {
+                        return cls
+                            .fields
+                            .iter()
+                            .all(|f| f.is_static || self.is_copy_type(Some(&f.ty)));
+                    }
+                    return false;
+                }
+                true
+            }
+            Type::BoxDyn(_) => false,
+            Type::Optional(inner) => self.is_copy_type(Some(inner)),
+            Type::Tuple(elems) => elems.iter().all(|e| self.is_copy_type(Some(e))),
+            _ => true,
+        }
+    }
+
     pub fn type_has_release(&self, ty: Option<&Type>) -> bool {
         let Some(mut t) = ty else {
             return false;
         };
-        while let Type::BorrowType { inner, .. } = t {
-            t = inner;
-        }
-        while let Type::RawPtr { inner, .. } = t {
-            t = inner;
+        // Raw pointers (*T!, *const T!, [*]T, [*c]T) and safe borrows (&T, *T) NEVER auto-drop!
+        if Self::is_raw_ptr_or_borrow_type(t) {
+            return false;
         }
         while let Type::Optional(inner) = t {
             t = inner;
         }
-        if Self::is_scalar_or_primitive_type(t) {
+        if Self::is_raw_ptr_or_borrow_type(t) || Self::is_scalar_or_primitive_type(t) {
             return false;
         }
         match t {
             Type::Ref(id) => {
                 if let Some(cls) = self.class_defs.get(&id.sym) {
-                    cls.methods.iter().any(|m| m.ident.sym == "release")
+                    cls.methods
+                        .iter()
+                        .any(|m| Self::method_is_zero_arg_destructor(m))
                 } else {
-                    id.sym.starts_with("LockGuard")
+                    id.sym == "SharedTensor"
+                        || id.sym.starts_with("LockGuard")
                         || id.sym.starts_with("ReadGuard")
                         || id.sym.starts_with("WriteGuard")
                         || matches!(
@@ -241,6 +338,58 @@ impl Codegen {
             Type::BoxDyn(_) => true,
             _ => false,
         }
+    }
+
+    pub fn build_drop_call_snippet(var_expr: &str) -> String {
+        let one_arg_release = |ty_ident: &str| -> String {
+            format!(
+                "@hasDecl({0}, \"release\") and @typeInfo(@TypeOf({0}.release)) == .@\"fn\" and (if (@hasField(@TypeOf(@typeInfo(@TypeOf({0}.release)).@\"fn\"), \"params\")) @typeInfo(@TypeOf({0}.release)).@\"fn\".params.len == 1 else @typeInfo(@TypeOf({0}.release)).@\"fn\".param_types.len == 1)",
+                ty_ident
+            )
+        };
+        let opt_child_rel = one_arg_release("__CpChild");
+        let opt_val_rel = one_arg_release("__OptT");
+        let ptr_child_rel = one_arg_release("__CpChild");
+        let val_rel = one_arg_release("__T");
+        format!(
+            concat!(
+                "const __T = @TypeOf({0}); ",
+                "if (@typeInfo(__T) == .optional) {{ ",
+                "if ({0}) |__cp_opt_v| {{ ",
+                "const __OptT = @TypeOf(__cp_opt_v); ",
+                "if (@typeInfo(__OptT) == .pointer and @typeInfo(__OptT).pointer.size == .one and (if (@hasField(@TypeOf(@typeInfo(__OptT).pointer), \"is_const\")) !@typeInfo(__OptT).pointer.is_const else !@typeInfo(__OptT).pointer.attrs.@\"const\")) {{ ",
+                "const __CpChild = @typeInfo(__OptT).pointer.child; ",
+                "if (@typeInfo(__CpChild) == .@\"struct\") {{ ",
+                "if (@hasDecl(__CpChild, \"__cp_deinit\")) {{ __cp_opt_v.__cp_deinit(); }} ",
+                "else if ({1}) {{ ",
+                "const __CpRType = @typeInfo(@TypeOf(__CpChild.release)).@\"fn\".return_type.?; ",
+                "if (@typeInfo(__CpRType) == .error_union) {{ _ = __cp_opt_v.release() catch {{}}; }} else {{ __cp_opt_v.release(); }} ",
+                "}} }} }} ",
+                "else if (@typeInfo(__OptT) == .@\"struct\") {{ ",
+                "if (@hasDecl(__OptT, \"__cp_deinit\")) {{ var _drop_val = __cp_opt_v; _drop_val.__cp_deinit(); }} ",
+                "else if ({2}) {{ ",
+                "var _drop_val = __cp_opt_v; ",
+                "const __CpRType = @typeInfo(@TypeOf(__OptT.release)).@\"fn\".return_type.?; ",
+                "if (@typeInfo(__CpRType) == .error_union) {{ _ = _drop_val.release() catch {{}}; }} else {{ _drop_val.release(); }} ",
+                "}} }} }} }} ",
+                "else if (@typeInfo(__T) == .pointer and @typeInfo(__T).pointer.size == .one and (if (@hasField(@TypeOf(@typeInfo(__T).pointer), \"is_const\")) !@typeInfo(__T).pointer.is_const else !@typeInfo(__T).pointer.attrs.@\"const\")) {{ ",
+                "const __CpChild = @typeInfo(__T).pointer.child; ",
+                "if (@typeInfo(__CpChild) == .@\"struct\") {{ ",
+                "if (@hasDecl(__CpChild, \"__cp_deinit\")) {{ {0}.__cp_deinit(); }} ",
+                "else if ({3}) {{ ",
+                "const __CpRType = @typeInfo(@TypeOf(__CpChild.release)).@\"fn\".return_type.?; ",
+                "if (@typeInfo(__CpRType) == .error_union) {{ _ = {0}.release() catch {{}}; }} else {{ {0}.release(); }} ",
+                "}} }} }} ",
+                "else if (@typeInfo(__T) == .@\"struct\") {{ ",
+                "if (@hasDecl(__T, \"__cp_deinit\")) {{ var _drop_val = {0}; _drop_val.__cp_deinit(); }} ",
+                "else if ({4}) {{ ",
+                "var _drop_val = {0}; ",
+                "const __CpRType = @typeInfo(@TypeOf(__T.release)).@\"fn\".return_type.?; ",
+                "if (@typeInfo(__CpRType) == .error_union) {{ _ = _drop_val.release() catch {{}}; }} else {{ _drop_val.release(); }} ",
+                "}} }}"
+            ),
+            var_expr, opt_child_rel, opt_val_rel, ptr_child_rel, val_rel
+        )
     }
 
     pub fn map_error_type(&self, err: &ErrorType) -> String {

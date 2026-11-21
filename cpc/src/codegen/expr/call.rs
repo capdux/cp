@@ -403,7 +403,23 @@ impl Codegen {
                                 | "isWriteLocked"
                                 | "release"
                         ) {
-                            return format!("(if (comptime @typeInfo(@TypeOf({0})) == .pointer) ({0}) else &({0})).{1}()", obj, prop);
+                            let raw_call = format!(
+                                "(if (comptime @typeInfo(@TypeOf({0})) == .pointer) ({0}) else &({0})).{1}()",
+                                obj, prop
+                            );
+                            if prop == "release" && !self.is_state_machine {
+                                if let Expr::Ident(id) = &*mem.obj {
+                                    if self.drop_flag_vars.contains(&id.sym)
+                                        && !self.is_refcounted_type(self.var_cp_types.get(&id.sym))
+                                    {
+                                        return format!(
+                                            "(blk: {{ if (!__{}_moved) {{ __{}_moved = true; {}; }} break :blk {{}}; }})",
+                                            id.sym, id.sym, raw_call
+                                        );
+                                    }
+                                }
+                            }
+                            return raw_call;
                         }
                     }
 
@@ -1116,6 +1132,11 @@ impl Codegen {
                                     } else {
                                         mem.prop.sym.clone()
                                     };
+                                let is_explicit_dtor = mem.prop.sym == "__cp_deinit"
+                                    || (mem.prop.sym == "release"
+                                        && call.args.is_empty()
+                                        && !self
+                                            .is_refcounted_type(self.var_cp_types.get(&id.sym)));
                                 let call_res = if target_recv_mode == ReceiverMode::Move {
                                     if is_self_recv {
                                         self.moved_vars.insert("this".to_string());
@@ -1130,7 +1151,9 @@ impl Codegen {
                                         }
                                     } else {
                                         self.moved_vars.insert(id.sym.clone());
-                                        if !self.is_state_machine {
+                                        if !self.is_state_machine
+                                            && self.drop_flag_vars.contains(&id.sym)
+                                        {
                                             format!(
                                                 "(blk: {{ __{}_moved = true; break :blk {}.{}({}); }})",
                                                 id.sym, obj_code, prop_name, args
@@ -1139,6 +1162,15 @@ impl Codegen {
                                             format!("{}.{}({})", obj_code, prop_name, args)
                                         }
                                     }
+                                } else if is_explicit_dtor
+                                    && !is_self_recv
+                                    && !self.is_state_machine
+                                    && self.drop_flag_vars.contains(&id.sym)
+                                {
+                                    format!(
+                                        "(blk: {{ if (!__{}_moved) {{ __{}_moved = true; {}.{}({}); }} break :blk {{}}; }})",
+                                        id.sym, id.sym, obj_code, prop_name, args
+                                    )
                                 } else {
                                     format!("{}.{}({})", obj_code, prop_name, args)
                                 };
@@ -1500,6 +1532,42 @@ impl Codegen {
                         return format!("cp_make_atomic({})", arg);
                     }
                 }
+                if callee == "drop" && call.args.len() == 1 && !self.fn_sigs.contains_key("drop") {
+                    let inner_arg = match &call.args[0] {
+                        Expr::Move(inner) => &**inner,
+                        other => other,
+                    };
+                    if let Expr::Ident(id) = inner_arg {
+                        if self.var_borrow_sources.contains_key(&id.sym)
+                            || (self.current_fn_params.contains(&id.sym)
+                                && !self.move_fn_params.contains(&id.sym))
+                        {
+                            panic!(
+                                "CP Compile Error: Cannot drop borrowed reference or read-only parameter '{}'",
+                                id.sym
+                            );
+                        }
+                        self.check_active_borrows_before_move(&id.sym);
+                        let gen = self.generate_expr(inner_arg);
+                        self.moved_vars.insert(id.sym.clone());
+                        let drop_body = Self::build_drop_call_snippet(&gen);
+                        if !self.is_state_machine && self.drop_flag_vars.contains(&id.sym) {
+                            return format!(
+                                "(blk: {{ if (!__{}_moved) {{ __{}_moved = true; {} }} break :blk {{}}; }})",
+                                id.sym, id.sym, drop_body
+                            );
+                        } else {
+                            return format!("(blk: {{ {} break :blk {{}}; }})", drop_body);
+                        }
+                    } else {
+                        let gen = self.generate_expr(inner_arg);
+                        let drop_body = Self::build_drop_call_snippet("__cp_drop_tmp");
+                        return format!(
+                            "(blk: {{ var __cp_drop_tmp = {}; _ = &__cp_drop_tmp; {} break :blk {{}}; }})",
+                            gen, drop_body
+                        );
+                    }
+                }
                 if callee == "Error" {
                     let code = if !call.args.is_empty() {
                         self.generate_expr(&call.args[0])
@@ -1741,6 +1809,27 @@ impl Codegen {
                 }
                 let call_res = if call.is_comptime {
                     format!("comptime {}({})", callee, args)
+                } else if !self.is_state_machine && call.args.is_empty() {
+                    let wrapped = if let Expr::Member(mem) = &*call.callee {
+                        if let Expr::Ident(id) = &*mem.obj {
+                            let is_dtor_call = mem.prop.sym == "__cp_deinit"
+                                || (mem.prop.sym == "release"
+                                    && !self.is_refcounted_type(self.var_cp_types.get(&id.sym)));
+                            if is_dtor_call && self.drop_flag_vars.contains(&id.sym) {
+                                Some(format!(
+                                    "(blk: {{ if (!__{}_moved) {{ __{}_moved = true; {}({}); }} break :blk {{}}; }})",
+                                    id.sym, id.sym, callee, args
+                                ))
+                            } else {
+                                None
+                            }
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    };
+                    wrapped.unwrap_or_else(|| format!("{}({})", callee, args))
                 } else {
                     format!("{}({})", callee, args)
                 };

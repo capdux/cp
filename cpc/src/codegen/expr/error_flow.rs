@@ -218,6 +218,9 @@ impl Codegen {
                     Expr::Continue(_) => {
                         format!("(({}) orelse continue)", l_code)
                     }
+                    Expr::LabeledContinue(_, label) => {
+                        format!("(({}) orelse continue :{})", l_code, label.sym)
+                    }
                     Expr::Break(_, val) => {
                         if let Some(v) = val {
                             let v_code = self.generate_expr(v);

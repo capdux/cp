@@ -135,7 +135,7 @@ export * from "./sub_module.cp";
 
 ---
 
-## 二、 变量绑定、可变性与所有权/借用检查体系 (Bindings, Ownership & Borrowing)
+## 二、 变量绑定、可变性与所有权/借用检查体系 (Bindings, Ownership & Borrowing) [SYNC_PENDING: 2026-11-21]
 
 ### 1. 变量声明矩阵
 CP 彻底废除 `let mut`、`var` 与 `threadlocal var`，全面拥抱清晰确定的可变性语义：
@@ -144,14 +144,21 @@ CP 彻底废除 `let mut`、`var` 与 `threadlocal var`，全面拥抱清晰确�
 - **`@tls let`（或兼容写法 `threadlocal let`）**：线程局部存储变量声明（严禁 `threadlocal var`）；
 - **🚨 绝对禁止 `var` 与 `let mut`**：声明可变变量 100% 直接写 `let`。
 
-### 2. 所有权转移与自动释放 (Ownership & Auto-Drop)
-- **单写者排他所有权**：值语义物理拷贝，引用语义转移所有权；
-- **显式所有权转移**：使用 **`move val`** 或 **`own val`**；移交后原调用方变量即刻失效并被借用检查器拦截；
-- **确定性析构 (Auto-Drop)**：离开作用域时，实现了 `release(*_)` 的类型自动触发析构，零 GC 运行。
+### 2. 三态统一法则、显式 `move` / `own` 与唯一析构 `~init()` (Unified 3-Mode & Idempotent RAII)
+直接赋值、解构赋值、函数参数、方法接收者与循环迭代全面遵循统一三态法则：
+- **无修饰 = 只读（零析构责任）**：POD 值类型（基础类型、无析构 `struct`）执行物理值拷贝；RAII 资源（`class` 或含 `~init()` 的 `struct`）自动作为**只读借用**（原变量保持有效，新绑定绝不触发析构）；
+- **`*` = 安全可变借用（零析构责任）**：如 `const m = *a;`、`const h = *_.handlers;`、`v: *T`、`*_`。**`*T` 是安全可变借用，绝非裸指针**；
+- **`move` = 显式所有权转移**：如 `const b = move a;`、`const h = move _.handlers;`、`move v: T`。转移后原变量即刻失效并移交析构责任；新鲜右值（`new Class(...)`、工厂返回值、结构体字面量）天然拥有所有权无需写 `move`；
+- **`own` = 跨线程独占所有权**：与 `Shared<T>` 对偶，专用于跨线程独占传递与容器成员持有，在最终所有者离开作用域时同样自动触发确定性析构；
+- **唯一析构函数 `~init() { ... }`（双重幂等，彻底消除与业务 `release()` 重名冲突）**：
+  - 唯一签名：`~init() { ... }`（无参数、无返回值、隐式独占可变接收者 `_`），`struct` 与 `class` 均可声明；
+  - **双重幂等保障**：调用方作用域守卫（`__x_moved`）+ 非 C-ABI 实例内建守卫（`__cp_dropped`），手动调用 `x.~init()`、`drop(x)` 或内置容器 `m.release()` 后再离开作用域**绝不 Double-Free**；
+  - **零误伤铁律**：裸指针（`*T!` / `*const T!`）、安全借用（`*T` / `&T`）、字段读取（`const h = _.handlers;`）及多参业务方法（如 `release(*_, slot: usize)`）**绝不注入自动析构**（兼容旧 `class` 无参 `release()`，新代码统一推荐 `~init()`）。
 
-### 3. 借用检查器、多字段分离借用与循环迭代锁死 (Loop-Borrow Lock)
-- **读写互斥原则**：同一生命周期内允许多个只读借用（`&T`），或仅允许**唯一一个**可变借用（`*T`），读写严格互斥；基础类型可变借用通过 `p.* = val` 就地修改；
-- **多字段分离借用 (Disjoint Field Borrowing)**：只要两个借用指向同一对象的不同字段（如 `*data.q_len` 与 `*data.active_timer`），编译器允许同时持有多个可变借用；借用整个结构体（`*data`）依然与子字段互斥；
+### 3. 借用检查器、容器整体 vs 成员局部精细分离借用与循环迭代锁死
+- **读写互斥原则**：同一生命周期内允许多个只读借用，或仅允许**唯一一个**可变借用（`*T`），读写严格互斥；基础类型可变借用通过 `p.* = val` 就地修改；
+- **容器整体借用 vs 成员局部借用 (Disjoint Member Borrowing)**：避免按容器一刀切实施借用检查！指向同一 `struct`/`class` 不同成员的局部可变借用（如 `*data.q_len` 与 `*data.active_timer`，或 `const { *left: dl, *right: dr } = box;`）允许安全并行持有；容器整体可变借用（`*data` / `const { left, right } = *box;`）与任意子成员借用互斥；
+- **普通结构成员无生命周期约束**：普通 `struct` / `class` 的非 Copy 成员必须持有所有权（`move` / `own` / `Shared<T>`，或在 `unsafe` FFI 边界使用裸指针 `*T!`）；需要暂存栈借用字段时必须声明为 **`ref struct`**；
 - **🚨 循环迭代锁死铁律 (`Loop-Borrow Lock`)**：在 `for (item of container)` 遍历受检容器（`Vec`/`Array`/`Map`/`Set`/`Dict`）期间，容器处于迭代锁定态，**严禁在循环体内调用 `push`/`pop`/`set`/`delete`/`clear` 或索引修改容器结构及重赋值容器本身**（编译器静态报错拦截）。
 
 ```typescript
@@ -292,20 +299,21 @@ pub type Callback = @c ((ctx: *!?, status: i32): void)?; // C-ABI 可选函数�
 pub type ArrowCb = (*i32, i32) -> bool;                   // 箭头函数签名写法
 pub type SimpleCb = fn (x: u8) bool;                     // Zig 兼容简写函数类型
 ```
-- **算术**：`+`, `-`, `*`, `/`, `%`；**环绕运算**：`+%`, `-%`, `*%`；**饱和运算**：`+|`, `-|`
+- **算术**：`+`, `-`, `*`, `/`, `%`；**环绕运算**：`+%`, `-%`, `*%`；**饱和运算**：`+|`, `-|`, `*|`, `<<|`
 - **位运算**：`&`, `|`, `^`, `~`, `<<`, `>>`；**比较运算**：`==`, `!=`, `<`, `<=`, `>`, `>=`
-- **复合赋值**：`=`, `+=`, `-=`, `*=`, `/=`, `%=`, `&=`, `|=`, `^=`, `<<=`, `>>=`, `??=`（空值合并赋值：`lhs ??= rhs`，当且仅当 `lhs == null` 时计算 `rhs` 并赋值，零运行时开销短路求值）
+- **复合赋值**：`=`, `+=`, `-=`, `*=`, `/=`, `%=`, `&=`, `|=`, `^=`, `<<=`, `>>=`, `+%=`, `-%=`, `*%=`, `+|=`, `-|=`, `*|=` , `<<|=`, `??=`（空值合并赋值：`lhs ??= rhs`，当且仅当 `lhs == null` 时计算 `rhs` 并赋值，零运行时开销短路求值）
 - **空值与链式解包**：`?.`（可选链：如 `user?.profile?.name`）、`.?`（强制解包可空值，空则 panic）、`??`（空值兜底，不捕获错误）、`orelse`（上下文软关键字空值/错误兜底）
 - **逻辑与管道**：`&&`, `||`, `!`（智能体统一写 `&&`/`||`；`and`/`or` 仅作为编译器上下文软关键字兼容）、`|>`（管道：`data |> filter() |> process()`）
 
 ---
 
-## 四、 裸指针机制、Unsafe 操作、内嵌汇编与逃逸舱 (Raw Pointers, Unsafe & Inline Asm)
+## 四、 裸指针机制、Unsafe 操作、内嵌汇编与逃逸舱 (Raw Pointers, Unsafe & Inline Asm) [SYNC_PENDING: 2026-11-21]
 
-### 1. 变量常量性与指针只读性的正交解耦
-1. **`const p: *T! = ...;`**：指针自身不可重新指向，但可通过 `p.* = val` 修改目标内存；
-2. **`let p: *const T! = ...;`**：指针变量可重新赋值指向新地址，但目标内存绝对只读；
-3. **`const p: *const T! = ...;`**：双重不可变。
+### 1. 变量常量性与指针只读性的正交解耦（`&v` 取址与 `*T!` 互操作）
+> 牢记：`**T` / `*T` 是安全可变借用，不是指针！** 裸指针类型带尾置 `!`（`*T!` / `*const T!`），永不触发自动析构。`&v` 回收为纯取址运算符，可直接初始化裸指针变量：
+1. **`const p: *T! = &v;`（或 `*v!`）**：指针自身不可重新指向，但可通过 `unsafe { p.* = val; }` 修改目标内存；
+2. **`let p: *const T! = &v;`**：指针变量可重新赋值指向新地址，但目标内存绝对只读；
+3. **`const p: *const T! = &v;`**：双重不可变。
 
 ### 2. 获取变量裸指针与裸指针转换矩阵 (`unsafe` 内)
 ```typescript
@@ -479,11 +487,15 @@ let is_same = std.mem.eql(u8, slice_a, slice_b);
 
 ---
 
-## 六、 面向对象、枚举、联合体与 C-FFI 布局 (OOP, Enums, Unions & C-FFI)
+## 六、 面向对象、枚举、联合体与 C-FFI 布局 (OOP, Enums, Unions & C-FFI) [SYNC_PENDING: 2026-11-21]
 
-### 1. 结构体 (`struct`) 与 类 (`class`)
-- **`struct`（值语义，纯栈分配，成员默认 `pub`）**：支持 `priv` 私有字段、方法、`@inline` 内联方法、内嵌常量及 `pub const Info = struct { ... };`；实例化使用 `Point{ x: 10, y: 20 }`。
-- **`class`（引用语义，堆分配，成员默认 `priv`）**：外部公开成员必须显式加 `pub`；
+### 1. 结构体 (`struct`) 与 类 (`class`) 清晰边界
+- **`struct`（纯栈分配，无需 `new`，成员默认 `pub`，无继承）**：
+  - 无 `~init()` 且全为 Copy 字段 -> POD 值类型，直接赋值发生物理值拷贝；
+  - 声明 `~init()` -> 栈上 Move-Only RAII 句柄（如文件句柄、锁守卫），离开作用域自动确定性析构；
+  - 声明 `ref struct` -> 栈绑定借用视图，允许持有借用字段，严禁跨 `spawn`/`await` 或 `return` 逃逸；
+  - 实例化使用 `Point{ x: 10, y: 20 }` 或静态工厂 `FileHandle.open(...)`。
+- **`class`（堆分配引用语义，必须 `new`，成员默认 `priv`，支持 `extends`/`super`/`Box<dyn Trait>`）**：外部公开成员必须显式加 `pub`；
   - **私有哈希前缀标识符 (`#identifier`)**：支持 `#ext: *!;` 声明硬隔离私有字段，杜绝符号遮蔽；
   - **零样板默认 `init` 自动合成**：若类包含字段且未手写 `fn init`，编译器自动合成全字段参数构造器 `new Class(f1, f2, ...)`；
   - **流式迭代器契约**：任何实现 `fn next(*_): Item?` 的类直接支持 `for (n of stream)`；
@@ -491,7 +503,7 @@ let is_same = std.mem.eql(u8, slice_a, slice_b);
 - **单继承、构造/析构钩子与 `super`**：
   - 使用 `class Child extends Parent`（亦支持内联契约 `class Dog extends Animal implements Printable`）；
   - 子类构造中通过 **`super.init(...)`** 调用父类初始化；通过 `super.method(...)` 调用父类方法；
-  - 析构清理钩子声明为 **`pub fn release(*_)`**，离开作用域自动触发确定性释放。
+  - 唯一析构函数统一声明为 **`~init() { ... }`**（无参无返回值、双重幂等、离开作用域自动触发确定性释放；兼容旧 `release()`，推荐新代码一律写 `~init()`）。
 
 ### 2. 枚举全特性与自洽映射体系 (Enums)
 > **可见性与静态规则**：与 `struct` 一致，**`enum` 内部所有变体与成员方法默认即为 `pub`（禁止加冗余 `pub`）**；实例方法省略只读 `_`，静态方法必须显式标注 `static fn`。
@@ -614,9 +626,9 @@ if (net_mut := handler.downcast_mut<NetworkHandler>()) { net_mut.reset(); }
 
 ---
 
-## 七、 字面量、解构赋值与全景 `switch` 模式匹配 (Destructuring & Switch)
+## 七、 字面量、解构赋值与全景 `switch` 模式匹配 (Destructuring & Switch) [SYNC_PENDING: 2026-11-21]
 
-### 1. 纯正 CP 字面量与现代解构赋值
+### 1. 纯正 CP 字面量与现代解构赋值（支持整体 / 局部五态借用与所有权转移）
 ```typescript
 // 1. 纯正字面量（严禁 Zig .{} 与 &.{}）
 const hex = 0xFF; const bin = 0b1010; const oct = 0o755; const ch: u8 = '\n';
@@ -631,9 +643,13 @@ const [head, ...tail] = [1, 2, 3, 4];          // tail 为切片视图
 const [startVal, ..., endVal] = arr;           // 首尾双端提取，忽略中间元素
 const [first, *] = [10, 20];                   // 忽略元素用 *，严禁用 _
 
-// 3. 对象解构（字段提取、字段重命名别名、剩余属性零堆开销强类型打包）
-const { x, y } = pt;
+// 3. 对象解构五态矩阵（整体/局部只读、可变借用与显式 move；局部字段支持分离并行借用！）
+const { x, y } = pt;                           // 默认只读提取（零析构）
 const { id, name: userName } = user;           // 重命名映射为局部变量 userName
+const { handlers: h, port } = *_;              // 整体可变借用容器（与子字段互斥）
+const { *left: ml, *right: mr, label } = box;  // 局部成员分离可变借用（不同字段合法并行修改！）
+const { res: r, tag } = move holder;           // 整体所有权转移（r 接管 RAII 析构）
+const { move res: r, tag } = holder;           // 单字段所有权转移（仅 r 接管 RAII 析构）
 const { id, ...extraProps } = user;            // 剩余字段打包为强类型匿名结构体 extraProps
 const { id, ... } = user;                      // 忽略其余字段
 ```

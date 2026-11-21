@@ -41,3 +41,10 @@
 ## 2026-11-21: 新建 `cap:bitset_simd` 纯 CP 按字向量化加速动态位集合引擎（基于 `u64` 字块 `@popCount`/`@ctz` 批量位运算、`setRange`/`nextSetBit` 及集合并交差，支持 `cap.bitset_simd` 自动动态挂载，详见 `doc/lib/bitset_simd.md`）（5/5 PASS，文档直写 `doc/lib/bitset_simd.md`）
 - **核心设计**：按 64 位字块执行向量化位运算与 `@ctz` 跳位迭代，通过跨字边界与 `std.testing.allocator` 零泄漏验证。
 
+
+## 2026-11-21: CP 所有权/借用/五态解构/唯一双重幂等析构 `~init()` 体系重构与饱和赋值热修
+- **核心原理与问题根因**：
+  1. 下游 Bun 迁移暴露原 `cpc` 的 3 类 RAII 缺陷：① `type_has_release` 错误解包裸指针 `*T!` 与借用导致提前销毁；② `stmt.rs` 存在“文件内任意类有 `release` 则对所有未知类型局部变量注入 `defer release()`”的兜底逻辑，且字段读取 `const h = _.handlers` 未标记借用导致浅拷贝被误析构；③ 手动调用 `release()` 未同步置位 `__x_moved` 引发 Double-Free/Double-Unlock。
+  2. 新体系以 `~init()` 作为唯一析构语法（无参无返回值），结合 Layer 1 作用域 `__x_moved` 与 Layer 2 非 C-ABI 实例 `__cp_dropped` 实现双重幂等（保留 `SharedTensor` 等引用计数类型特殊放行）；同时将直接赋值与解构赋值统一至“默认只读、`*` 可变借用、`move` 显式转移”，并在 `Pattern::Object` 落地整体 vs 局部成员精细分离借用（同步与状态机 `ctx` 类型推导同步升级）。
+  3. 同步解决 `bun_agy` 热修工单 `task-bun-20261121-sat-assign-op`（补齐 Zig 风格饱和/环绕复合赋值 `+|=`, `-|=`, `*|=` , `<<|=`, `+%=`, `-%=`, `*%=`）。
+- **验证方案**：构建 Release 版 `cpc`，运行 8 组正向深测（`test_raii_deinit_ownership_deep.cp`）、9 组编译期负向安全拦截与 6 组既有核心回归套件，全部 100% 通过。

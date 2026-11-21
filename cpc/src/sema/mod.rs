@@ -1001,6 +1001,7 @@ impl Analyzer {
                 })),
             ),
             ("@complete_task", false, Some(Type::Void)),
+            ("drop", false, Some(Type::Void)),
         ] {
             self.scopes[0].insert(
                 fn_name.to_string(),
