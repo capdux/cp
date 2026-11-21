@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:uuid_v7` 纯 CP 零堆 RFC 9562 UUID v4 / v5 / 时间有序 v7 生成与解析引擎（支持 `cap.uuid_v7` 自动动态挂载，详见 `doc/lib/uuid_v7.md`）（5/5 PASS，文档直写 `doc/lib/uuid_v7.md`）
+- **核心设计**：采用 48 位毫秒大端时间戳前缀保证 v7 字典序单调，通过 `v5(DNS, "python.org")` 官方向量与格式错误拦截校验。
+
 ## 2026-11-21: 新建 `cap:slab_pool` 纯 CP 固定块代际 $O(1)$ Slab 对象池引擎（侵入式空闲链表、代际防悬垂 ABA 句柄 `Handle` 与零碎片复用，支持 `cap.slab_pool` 自动动态挂载，详见 `doc/lib/slab_pool.md`）（5/5 PASS，文档直写 `doc/lib/slab_pool.md`）
 - **核心设计**：采用侵入式空闲链表与 32 位代际号防悬垂 ABA 访问，通过 `std.testing.allocator` 零泄漏验证。
 

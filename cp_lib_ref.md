@@ -405,3 +405,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:raft_log` | `RaftLogError`, `LogEntry`, `LogEntryInput`, `RaftLog` | 纯 CP Raft 共识复制日志与快照压缩引擎（1-based 索引、`appendIfMatch` 冲突截断、安全提交推进与 `compactTo` 快照截断，支持 `cap.raft_log` 自动动态挂载，详见 `doc/lib/raft_log.md`） |
 | `cap:circ_buf` | `RingError`, `RingBuffer` | 纯 CP 泛型定容环形缓冲区引擎（支持阻塞 `push`、覆盖最旧元素 `pushOverwrite`、双端弹出与随机下标访问，支持 `cap.circ_buf` 自动动态挂载，详见 `doc/lib/circ_buf.md`） |
 | `cap:slab_pool` | `SlabError`, `Handle`, `SlabPool` | 纯 CP 固定块代际 $O(1)$ Slab 对象池引擎（侵入式空闲链表、代际防悬垂 ABA 句柄 `Handle` 与零碎片复用，支持 `cap.slab_pool` 自动动态挂载，详见 `doc/lib/slab_pool.md`） |
+| `cap:uuid_v7` | `UuidError`, `Uuid`, `NAMESPACE_DNS`, `NAMESPACE_URL` | 纯 CP 零堆 RFC 9562 UUID v4 / v5 / 时间有序 v7 生成与解析引擎（支持 `cap.uuid_v7` 自动动态挂载，详见 `doc/lib/uuid_v7.md`） |
