@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:rego` 零分配 Open Policy Agent OPA Rego 策略语言词法扫描、包名/规则提取与 64 层定界符校验器（5/5 PASS，文档直写 `doc/lib/rego.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:rego`；`RegoRuleIter` 兼容 `default`、`if`、`:=`、`contains`、索引规则与函数规则并跳过 `else`。
+
 ## 2026-11-22: 新建 `cap:xpath` 零分配 W3C XPath 表达式词法扫描、位置路径步进迭代与括号平衡校验器（5/5 PASS，文档直写 `doc/lib/xpath.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:xpath`；`XPathStepIter` 零分配跳过谓词内部 `/` 与字符串。
 
