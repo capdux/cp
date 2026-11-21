@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:cuid` 零分配 CUID / CUID2 碰撞安全 ID 校验、分类、Base36 与确定性编码器（5/5 PASS，文档直写 `doc/lib/cuid.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:cuid`；`formatCuid1` 支持 base36 指纹直写及任意主机名 FNV-1a 确定性映射；`decodeBase36` 拦截溢出与非法字符。
+
 ## 2026-11-22: 新建 `cap:sexp` 零分配 S-Expression 词法扫描、括号平衡校验、最大深度统计与紧凑格式化器（5/5 PASS，文档直写 `doc/lib/sexp.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:sexp`；`SexpIter` 零拷贝切分 5 类 token，`formatSexpCompact` 规范输出并严格校验缓冲边界。
 

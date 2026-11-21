@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:cuid` 零分配 CUID / CUID2 碰撞安全 ID 校验、分类、Base36 与确定性编码器（5/5 PASS，自动动态挂载 `cap.cuid`）
+- 新增 `lib/cuid/{cuid,index}.cp`、`doc/lib/cuid.md`、`cap/test/test_cuid_production_deep.cp`：纯 CP 零分配实现 CUID v1/v2 校验、版本检测、64 位 Base36 编解码与 25 字节定长 CUID v1 确定性编码及时间戳提取（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:sexp` 零分配 S-Expression 词法扫描、括号平衡校验、最大深度统计与紧凑格式化器（5/5 PASS，自动动态挂载 `cap.sexp`）
 - 新增 `lib/sexp/{sexp,index}.cp`、`doc/lib/sexp.md`、`cap/test/test_sexp_production_deep.cp`：纯 CP 零分配实现 S-Expression 词法扫描（跳过 `;` 注释、双引号转义与未闭合检测）、平衡校验与紧凑格式化（5/5 PASS）。
 

@@ -493,3 +493,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:markdown` | `LineAnalysis`, `MarkdownLink`, `RefDef`, ... | Markdown 行分析、链接与引用定义统一主包（同步收敛 `cap:unicode`/`cap:s3`/`cap:shell`） |
 | `cap:js` | `JsIdent`, `JsOp`, ... | JS 标识符与运算符解析统一主包（同步收敛 `cap:hash`/`cap:text`/`cap:diff`/`cap:mime`） |
 | `cap:sexp` | `SexpTokenKind`, `SexpToken`, `SexpIter`, `validateSexp`, `maxSexpDepth`, `formatSexpCompact` | 零分配 S-Expression 词法扫描、括号平衡校验、最大深度统计与紧凑格式化器 |
+| `cap:cuid` | `CuidVersion`, `isValidCuid1`, `isValidCuid2`, `detectCuidVersion`, `encodeBase36`, `decodeBase36`, `formatCuid1`, `parseCuid1Timestamp` | 零分配 CUID / CUID2 碰撞安全 ID 校验、分类、Base36 与确定性编码器 |

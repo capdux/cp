@@ -67,3 +67,6 @@
 
 ### 2026-11-22（`cap:sexp` 验收，新增简洁单单词包 `cap:sexp`（5/5 PASS））
 - **执行成果**：`lib/sexp/`（5/5 PASS，`doc/lib/sexp.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:sexp`（5/5 PASS）
+
+### 2026-11-22（`cap:cuid` 验收，新增简洁单单词包 `cap:cuid`（5/5 PASS）；热修 `#98` 合单派发至 `d0a3d659`）
+- **执行成果**：`lib/cuid/`（5/5 PASS，`doc/lib/cuid.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:cuid`（5/5 PASS）；热修 `#98` 合单派发至 `d0a3d659`
