@@ -2100,7 +2100,8 @@ impl Codegen {
                                 };
                                 self.var_scope_depth
                                     .insert(bound_name.clone(), self.current_scope_depth);
-                                self.locals.insert(bound_name.clone(), "anytype".to_string());
+                                self.locals
+                                    .insert(bound_name.clone(), "anytype".to_string());
                                 self.block_locals.insert(bound_name.clone());
                                 if f.mode == IterMode::MutBorrow {
                                     self.mut_borrow_loop_vars.insert(bound_name.clone());
@@ -2290,7 +2291,16 @@ impl Codegen {
                                 }
                             }
                             if let Expr::EnumInit(ei) = arg {
-                                if ei.enum_name.sym.is_empty() {
+                                if ei.enum_name.sym.is_empty()
+                                    && !ei.variant_name.sym.is_empty()
+                                    && ei.fields.is_none()
+                                    && ei.tuple_args.is_none()
+                                    && self.should_lower_bare_dot_return_as_error(
+                                        &ei.variant_name.sym,
+                                        &fn_ok,
+                                        &fn_err,
+                                    )
+                                {
                                     self.write_to_case(&format!(
                                         "return error.{};",
                                         ei.variant_name.sym
@@ -2315,12 +2325,25 @@ impl Codegen {
                                     }
                                 }
                             } else if let Expr::EnumInit(ei) = arg {
-                                if ei.enum_name.sym.is_empty() {
+                                if ei.enum_name.sym.is_empty()
+                                    && !ei.variant_name.sym.is_empty()
+                                    && ei.fields.is_none()
+                                    && ei.tuple_args.is_none()
+                                    && self.should_lower_bare_dot_return_as_error(
+                                        &ei.variant_name.sym,
+                                        &fn_ok,
+                                        &fn_err,
+                                    )
+                                {
                                     let target_err = self.map_error_type(&fn_err);
                                     self.write_to_case(&format!(
                                         "return .{{ .err = cp_convert_err({}, error.{}) }};",
                                         target_err, ei.variant_name.sym
                                     ));
+                                    return;
+                                } else {
+                                    let e = self.generate_expr(arg);
+                                    self.write_to_case(&format!("return .{{ .ok = {} }};", e));
                                     return;
                                 }
                             } else if is_null_ret {
@@ -2622,5 +2645,83 @@ impl Codegen {
             ),
             _ => false,
         }
+    }
+
+    fn should_lower_bare_dot_return_as_error(
+        &self,
+        variant: &str,
+        fn_ok: &Type,
+        fn_err: &ErrorType,
+    ) -> bool {
+        let mut has_known_closed_err_set = false;
+        if let ErrorType::Named(id) = fn_err {
+            if let Some(err_variants) = self.error_sets.get(&id.sym) {
+                if err_variants.iter().any(|v| v.sym == variant) {
+                    return true;
+                }
+                has_known_closed_err_set = true;
+            }
+        } else if let ErrorType::Union(idents) = fn_err {
+            let mut all_known = !idents.is_empty();
+            for id in idents {
+                if let Some(err_variants) = self.error_sets.get(&id.sym) {
+                    if err_variants.iter().any(|v| v.sym == variant) {
+                        return true;
+                    }
+                } else {
+                    all_known = false;
+                }
+            }
+            has_known_closed_err_set = all_known;
+        }
+        if has_known_closed_err_set {
+            return false;
+        }
+
+        let mut ok_ty = fn_ok;
+        while let Type::Optional(inner) = ok_ty {
+            ok_ty = inner;
+        }
+        let mut alias_guard = 0;
+        while let Type::Ref(id) = ok_ty {
+            if alias_guard >= 8 {
+                break;
+            }
+            if let Some(ta) = self.type_aliases.get(&id.sym) {
+                ok_ty = &ta.target_ty;
+                while let Type::Optional(inner) = ok_ty {
+                    ok_ty = inner;
+                }
+                alias_guard += 1;
+            } else {
+                break;
+            }
+        }
+
+        if let Type::Ref(ok_id) = ok_ty {
+            let base = ok_id.sym.split('<').next().unwrap_or(&ok_id.sym);
+            let leaf = base.rsplit('.').next().unwrap_or(base);
+            if let Some(en) = self
+                .enum_defs
+                .get(base)
+                .or_else(|| self.enum_defs.get(leaf))
+            {
+                if en.variants.iter().any(|v| v.ident.sym == variant) {
+                    return false;
+                }
+            } else if let Some(cls) = self
+                .class_defs
+                .get(base)
+                .or_else(|| self.class_defs.get(leaf))
+            {
+                if cls.fields.iter().any(|f| f.ident.sym == variant) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+
+        true
     }
 }

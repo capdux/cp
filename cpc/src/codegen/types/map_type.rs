@@ -47,7 +47,7 @@ impl Codegen {
                     if name.ends_with('>') {
                         let base = &name[..pos];
                         let args = &name[pos + 1..name.len() - 1];
-                        let mapped_args = Self::map_generic_args_str(args);
+                        let mapped_args = self.map_generic_args_str(args);
                         format!("{}({})", base, mapped_args)
                     } else {
                         name.to_string()
@@ -153,7 +153,7 @@ impl Codegen {
                     if ident.sym.ends_with('>') {
                         let base = &ident.sym[..pos];
                         let args = &ident.sym[pos + 1..ident.sym.len() - 1];
-                        let mapped_args = Self::map_generic_args_str(args);
+                        let mapped_args = self.map_generic_args_str(args);
                         return format!("{}({})", base, mapped_args);
                     }
                 }
@@ -463,7 +463,7 @@ impl Codegen {
         parts
     }
 
-    pub(crate) fn map_generic_args_str(args: &str) -> String {
+    pub(crate) fn map_generic_args_str(&self, args: &str) -> String {
         let parts = Self::split_generic_args_str(args);
         let types = [
             "u8", "u16", "u32", "u64", "i8", "i16", "i32", "i64", "usize", "isize", "f32", "f64",
@@ -476,8 +476,33 @@ impl Codegen {
                     let inner = p[1..p.len() - 1].trim();
                     if types.contains(&inner) {
                         format!("[]{}", inner)
+                    } else if (inner.contains('!')
+                        || inner.contains('<')
+                        || inner.starts_with('*')
+                        || inner.starts_with('[')
+                        || inner.ends_with('?'))
+                        && crate::parser::Parser::parse_standalone_type(inner).is_some()
+                    {
+                        let ty = crate::parser::Parser::parse_standalone_type(inner).unwrap();
+                        format!("[]{}", self.map_type(&ty))
                     } else {
                         format!(".{{ {} }}", inner)
+                    }
+                } else if p.contains('!')
+                    || (p.contains('<') && p.ends_with('>'))
+                    || p.ends_with('?')
+                    || p.starts_with('*')
+                    || p.starts_with("[*")
+                    || p.starts_with("[:")
+                    || p.starts_with("[]")
+                    || p.starts_with('?')
+                {
+                    if let Some(ty) = crate::parser::Parser::parse_standalone_type(&p) {
+                        self.map_type(&ty)
+                    } else if p.contains('<') && p.ends_with('>') {
+                        self.map_type_name(&p)
+                    } else {
+                        p
                     }
                 } else {
                     p

@@ -1413,14 +1413,49 @@ impl<'a> Parser<'a> {
                         span,
                         sym: format!("{}<{}>", sym, inner_str),
                     })
-                } else if sym == "Box" && self.peek() == Some(&Token::Less) {
+                } else if sym == "Box"
+                    && self.peek() == Some(&Token::Less)
+                    && matches!(self.peek_next(), Some(Token::Dyn) | Some(Token::Ident(_)))
+                {
                     self.bump()?;
-                    if self.peek() == Some(&Token::Dyn) {
+                    let had_dyn = if self.peek() == Some(&Token::Dyn) {
                         self.bump()?;
-                    }
+                        true
+                    } else {
+                        false
+                    };
                     let tr = self.parse_ident()?;
-                    self.expect(Token::Greater)?;
-                    Type::BoxDyn(tr)
+                    if had_dyn || self.peek() == Some(&Token::Greater) {
+                        self.expect(Token::Greater)?;
+                        Type::BoxDyn(tr)
+                    } else {
+                        let mut full_sym = format!("Box<{}", tr.sym);
+                        let mut angle_depth = 1;
+                        let mut prev_end: Option<usize> = Some(tr.span.end);
+                        while angle_depth > 0 && self.peek().is_some() {
+                            let (tok, t_span) = self.bump()?;
+                            match tok {
+                                Token::Less => angle_depth += 1,
+                                Token::Greater => angle_depth -= 1,
+                                _ => {}
+                            }
+                            if angle_depth == 0 {
+                                full_sym.push('>');
+                                break;
+                            }
+                            if let Some(pe) = prev_end {
+                                if t_span.start > pe {
+                                    full_sym.push(' ');
+                                }
+                            }
+                            full_sym.push_str(&self.input[t_span.start..t_span.end]);
+                            prev_end = Some(t_span.end);
+                        }
+                        Type::Ref(Ident {
+                            span,
+                            sym: full_sym,
+                        })
+                    }
                 } else if (sym == "Map" || sym == "Dict" || sym == "HashMap" || sym == "BTreeMap")
                     && self.peek() == Some(&Token::Less)
                 {
@@ -1649,6 +1684,16 @@ impl<'a> Parser<'a> {
             Type::PID => "PID".to_string(),
             Type::Array(inner) => format!("[{}]", Self::type_to_str(inner)),
             Type::FixedArray(inner, n) => format!("[{}; {}]", Self::type_to_str(inner), n),
+            Type::RawPtr { inner, depth } => {
+                format!("{}{}!", "*".repeat(*depth), Self::type_to_str(inner))
+            }
+            Type::BorrowType { inner, is_mut, .. } => {
+                if *is_mut {
+                    format!("*{}", Self::type_to_str(inner))
+                } else {
+                    format!("const {}", Self::type_to_str(inner))
+                }
+            }
             Type::ManyRawPtr(inner) => format!("[*]{}", Self::type_to_str(inner)),
             Type::CPtr(inner) => format!("[*c]{}", Self::type_to_str(inner)),
             Type::SentinelPtr(inner, n) => format!("[*:{n}]{}", Self::type_to_str(inner)),
@@ -1671,6 +1716,16 @@ impl<'a> Parser<'a> {
                 )
             }
             _ => "any".to_string(),
+        }
+    }
+
+    pub(crate) fn parse_standalone_type(input: &'a str) -> Option<Type> {
+        let mut parser = Self::new(input);
+        let ty = parser.parse_type().ok()?;
+        if parser.peek().is_none() {
+            Some(ty)
+        } else {
+            None
         }
     }
 }
