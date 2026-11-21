@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:gre` 零分配 RFC 2784/2890/2637 GRE 隧道报头与 RFC 1071 校验和编解码器（5/5 PASS，自动动态挂载 `cap.gre`）
+新增 `lib/gre/{gre,index}.cp`、`doc/lib/gre.md` 与 `cap/test/test_gre_production_deep.cp`（6/6 PASS），支持 v0 标准 GRE C/K/S 标志、v1 PPTP Enhanced GRE 与 RFC 1071 校验和。
+
 ## [2026-11-22] - 新建 `cap:geneve` 零分配 RFC 8926 Geneve 通用网络虚拟化隧道与 TLV 选项编解码器（5/5 PASS，自动动态挂载 `cap.geneve`）
 新增 `lib/geneve/{geneve,index}.cp`、`doc/lib/geneve.md` 与 `cap/test/test_geneve_production_deep.cp`（5/5 PASS），支持 24-bit VNI、O/C 标志、4B 对齐 TLV 选项迭代与 GeneveWriter。
 

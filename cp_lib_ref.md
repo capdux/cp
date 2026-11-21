@@ -680,3 +680,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:lldp` | LLDP_ETHERTYPE, TLV_END, TLV_CHASSIS_ID, TLV_PORT_ID, TLV_TTL, TLV_ORG_SPECIFIC, LldpTlv, LldpTlvIter, LldpNeighbor, LldpOrgTlv, LldpWriter, parseLldpdu, parseLldpOrgTlv | 零分配 IEEE 802.1AB LLDP 链路层发现协议 TLV 编解码器 |
 | `cap:vxlan` | VXLAN_HEADER_SIZE, VXLAN_DEFAULT_PORT, VXLAN_MAX_VNI, VxlanNextProto, VxlanHeader, VxlanPacket, parseVxlan, parseVxlanStrict, parseVxlanGpe, vxlanVerifyHeader, encodeVxlan, encodeVxlanGpe, encodeVxlanGbp | 零分配 RFC 7348 VXLAN / VXLAN-GPE / VXLAN-GBP 隧道封装编解码器 |
 | `cap:geneve` | GENEVE_MIN_HEADER_SIZE, GENEVE_DEFAULT_PORT, GENEVE_MAX_VNI, GeneveHeader, GenevePacket, GeneveOption, GeneveOptionIter, GeneveWriter, isGeneve, parseGeneve | 零分配 RFC 8926 Geneve 通用网络虚拟化隧道与 TLV 选项编解码器 |
+| `cap:gre` | GRE_IP_PROTO, GRE_MIN_HEADER_SIZE, GRE_FLAG_CHECKSUM, GRE_FLAG_KEY, GRE_FLAG_SEQ, GrePacket, greChecksum, verifyGreChecksum, parseGre, encodeGre | 零分配 RFC 2784/2890/2637 GRE 隧道报头与 RFC 1071 校验和编解码器 |
