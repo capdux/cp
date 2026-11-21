@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:cypher` 零分配 openCypher / Neo4j 图查询语言词法扫描、参数提取与只读安全判定器（5/5 PASS，文档直写 `doc/lib/cypher.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:cypher`；`isReadOnlyCypher` 覆盖顶层与 `CALL { ... }` 子查询写关键字拦截并避免属性/标签/字面量误判。
+
 ## 2026-11-22: 新建 `cap:thrift` 零分配 Apache Thrift `.thrift` IDL 顶层声明/嵌套泛型字段提取与括号平衡校验器（5/5 PASS，文档直写 `doc/lib/thrift.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:thrift`；`ThriftFieldIter` 零分配处理嵌套泛型类型与注解；全部 3 路常驻子智能体已完成新一轮低上下文轮换。
 

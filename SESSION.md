@@ -124,3 +124,6 @@
 
 ### 2026-11-22（`cap:thrift` 验收，新增简洁单单词包 `cap:thrift`（5/5 PASS），完成 `CSS & Web Absorber` 12 任务轻量化轮换）
 - **执行成果**：`lib/thrift/`（5/5 PASS，`doc/lib/thrift.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:thrift`（5/5 PASS），完成 `CSS & Web Absorber` 12 任务轻量化轮换
+
+### 2026-11-22（`cap:cypher` 验收，新增简洁单单词包 `cap:cypher`（6/6 PASS））
+- **执行成果**：`lib/cypher/`（5/5 PASS，`doc/lib/cypher.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:cypher`（6/6 PASS）
