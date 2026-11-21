@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:logreg` 纯 CP 零分配二分类与多分类 Softmax 逻辑回归库：数值稳定 sigmoid/softmax、Armijo 回溯 L2 正则二分类与多分类求解及 TP/FP/TN/FN/F1 评估指标（5/5 PASS，自动动态挂载 `cap.logreg`）
+新增纯 CP 零分配逻辑回归库 cap:logreg（二分类/多分类 Softmax L2 正则逻辑回归与分类指标），含文档与 7 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:dtree` 纯 CP 零分配全迭代 CART 决策树分类与回归库：固定节点池、Gini/Entropy/MSE 最优轴对齐划分、深度/叶样本剪枝与加权不纯度下降特征重要性（5/5 PASS，自动动态挂载 `cap.dtree`）
 新增纯 CP 零分配 CART 决策树分类与回归库 cap:dtree（全迭代 Gini/Entropy/MSE、特征重要性、池耗尽优雅退化），含文档与 6 项深度生产测试
 

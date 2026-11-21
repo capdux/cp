@@ -187,3 +187,6 @@
 
 ### 2026-11-22（`cap:dtree` 验收，子智能体交付 cap:dtree（全迭代 CART 决策树分类与回归，6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/dtree/`（5/5 PASS，`doc/lib/dtree.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:dtree（全迭代 CART 决策树分类与回归，6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:logreg` 验收，子智能体交付 cap:logreg（二分类与多分类 Softmax 逻辑回归，7/7 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/logreg/`（5/5 PASS，`doc/lib/logreg.md`）经 `verify_module.sh` 一次性验收回收；子智能体交付 cap:logreg（二分类与多分类 Softmax 逻辑回归，7/7 PASS），主协调器统一登记并提交

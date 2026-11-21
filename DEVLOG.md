@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:logreg` 纯 CP 零分配二分类与多分类 Softmax 逻辑回归库：数值稳定 sigmoid/softmax、Armijo 回溯 L2 正则二分类与多分类求解及 TP/FP/TN/FN/F1 评估指标（5/5 PASS，文档直写 `doc/lib/logreg.md`）
+新增 cap:logreg（lib/logreg/{logreg,index}.cp）：零分配 Armijo 自适应回溯线搜索实现 L2 二分类与多分类 Softmax 逻辑回归及评估指标，cpc check 0 错误，cap test 7/7 PASS (720ms)
+
 ## 2026-11-22: 新建 `cap:dtree` 纯 CP 零分配全迭代 CART 决策树分类与回归库：固定节点池、Gini/Entropy/MSE 最优轴对齐划分、深度/叶样本剪枝与加权不纯度下降特征重要性（5/5 PASS，文档直写 `doc/lib/dtree.md`）
 新增 cap:dtree（lib/dtree/{dtree,index}.cp）：零分配固定节点池 + 迭代稳定归并排序实现 Gini/Entropy 分类与中心化 MSE 回归 CART 树，cpc check 0 错误，cap test 6/6 PASS (801ms)
 
