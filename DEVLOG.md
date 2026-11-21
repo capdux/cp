@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ext4` Linux ext2/ext3/ext4 superblock, 64-bit Inode, Extent tree & dir zero-alloc parser（5/5 PASS，文档直写 `doc/lib/ext4.md`）
+新增 cap:ext4 纯 CP 零分配 Linux 文件系统库（1024B 超级块、64-bit 块/文件大小、48-bit 物理块 Extent 迭代与线性目录空洞跳过），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:fat` FAT12/16/32 BPB, 32B directory entry, 8.3 name, DOS time & LFN checksum zero-alloc parser（5/5 PASS，文档直写 `doc/lib/fat.md`）
 新增 cap:fat 纯 CP 零分配文件系统解析库（FAT12/16/32 精确簇数分类、clusterToLba、8.3 文件名格式化与 LFN 校验和），通过 cpc check 与 5/5 cap test
 

@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ext4` Linux ext2/ext3/ext4 superblock, 64-bit Inode, Extent tree & dir zero-alloc parser（5/5 PASS，自动动态挂载 `cap.ext4`）
+新增纯 CP 零分配标准库 cap:ext4（Linux ext2/ext3/ext4 超级块、64-bit Inode、Extent 树与线性目录解析）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:fat` FAT12/16/32 BPB, 32B directory entry, 8.3 name, DOS time & LFN checksum zero-alloc parser（5/5 PASS，自动动态挂载 `cap.fat`）
 新增纯 CP 零分配标准库 cap:fat（FAT12/16/32 BPB、32B 目录项、DOS 时间与 LFN 校验和解析）与 5/5 深度测试
 
