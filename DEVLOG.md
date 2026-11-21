@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:hid` USB HID 1.11 Report Descriptor short/long item stream & layout summary zero-alloc parser（5/5 PASS，文档直写 `doc/lib/hid.md`）
+新增 cap:hid 纯 CP 零分配外设协议库（Short/Long Item 解码、有符号值扩展、16 层 Push/Pop 栈与 Collection 嵌套平衡校验），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:pci` PCI/PCIe 256B/4096B config space, 32/64-bit BAR & Capability list zero-alloc parser（5/5 PASS，文档直写 `doc/lib/pci.md`）
 新增 cap:pci 纯 CP 零分配总线硬件配置库（Endpoint/Bridge 配置头、BAR 解码与 48/96 跳防环 Capability 遍历），通过 cpc check 与 5/5 cap test
 

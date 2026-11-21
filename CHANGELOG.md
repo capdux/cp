@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:hid` USB HID 1.11 Report Descriptor short/long item stream & layout summary zero-alloc parser（5/5 PASS，自动动态挂载 `cap.hid`）
+新增纯 CP 零分配标准库 cap:hid（USB HID 1.11 Report Descriptor 短/长项迭代与报告布局摘要）与 5/5 深度测试
+
 ## [2026-11-22] - 新建 `cap:pci` PCI/PCIe 256B/4096B config space, 32/64-bit BAR & Capability list zero-alloc parser（5/5 PASS，自动动态挂载 `cap.pci`）
 新增纯 CP 零分配标准库 cap:pci（PCI/PCIe 配置空间、32/64-bit BAR 与标准/扩展 Capability 防环链表解析）与 5/5 深度测试
 
