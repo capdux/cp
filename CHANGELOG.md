@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:age` 零分配 age v1 现代文件加密头、Stanza 与 Bech32 密钥校验器（5/5 PASS，自动动态挂载 `cap.age`）
+新增 `lib/age/{age,index}.cp`、`doc/lib/age.md` 与 `cap/test/test_age_production_deep.cp`（5/5 PASS），支持严格 LF v1 头、64 列折行 Stanza、43B MAC 与 age1/AGE-SECRET-KEY-1 密钥校验。
+
 ## [2026-11-22] - 新建 `cap:ldif` 零分配 RFC 2849 LDAP LDIF 折行展开、Base64 属性与变更记录解析器（5/5 PASS，自动动态挂载 `cap.ldif`）
 新增 `lib/ldif/{ldif,index}.cp`、`doc/lib/ldif.md` 与 `cap/test/test_ldif_production_deep.cp`（5/5 PASS），支持 version: 1、RFC 2849 单空格续行展开、Base64/URL 属性与 changetype 解析。
 

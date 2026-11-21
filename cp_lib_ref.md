@@ -651,3 +651,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:der` | TAG_BOOLEAN, TAG_INTEGER, TAG_BIT_STRING, TAG_OCTET_STRING, TAG_NULL, TAG_OID, TAG_SEQUENCE, DerTlv, DerBitString, DerReader, DerWriter, parseDerTlv, formatDerOid | 零分配 ITU-T X.690 ASN.1 DER 严格规范 TLV/OID 编解码器 |
 | `cap:cef` | CEF_PREFIX, CefEvent, CefExtPair, CefExtIter, isCef, parseCefLine, findCefExt, unescapeCefHeader, unescapeCefExtValue, formatCefHeader | 零分配 ArcSight CEF SIEM 日志解析、Extension 切分与转义编解码器 |
 | `cap:ldif` | LdifValueKind, LdifChangeType, LdifAttr, LdifAttrIter, LdifEntry, LdifIter, LdifStats, isLdif, summarizeLdif | 零分配 RFC 2849 LDAP LDIF 折行展开、Base64 属性与变更记录解析器 |
+| `cap:age` | AGE_VERSION_LINE, AGE_ARMOR_BEGIN, AGE_ARMOR_END, AGE_STREAM_CHUNK_SIZE, AgeStanza, AgeStanzaIter, AgeHeader, isAge, isAgeArmored, parseAgeHeader, isValidAgePublicKey, isValidAgeSecretKey | 零分配 age v1 现代文件加密头、Stanza 与 Bech32 密钥校验器 |

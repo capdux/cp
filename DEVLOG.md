@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:age` 零分配 age v1 现代文件加密头、Stanza 与 Bech32 密钥校验器（5/5 PASS，文档直写 `doc/lib/age.md`）
+实现零分配 age v1 加密容器解析器，提取 HMAC-SHA256 签名输入切片与 16B STREAM Nonce。
+
 ## 2026-11-22: 新建 `cap:ldif` 零分配 RFC 2849 LDAP LDIF 折行展开、Base64 属性与变更记录解析器（5/5 PASS，文档直写 `doc/lib/ldif.md`）
 实现零分配 RFC 2849 LDIF 解析器，支持大小写不敏感 LDAP 属性查找与单遍变更统计。
 
