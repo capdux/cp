@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:ogg` 零分配 RFC 3533 Ogg 容器页头 `"OggS"`、非反射 CRC-32 校验与分页迭代器（5/5 PASS，自动动态挂载 `cap.ogg`）
+- 新增 `lib/ogg/{ogg,index}.cp`、`doc/lib/ogg.md`、`cap/test/test_ogg_production_deep.cp`：纯 CP 零分配实现 RFC 3533 Ogg 分页头解析、段表 lacing 求和与多项式 `0x04C11DB7` 非反射 CRC-32 校验，集齐 `riff`/`id3`/`flac`/`ogg` 音频容器四件套（5/5 PASS）。
+
 ## [2026-11-22] - 新建 `cap:flac` 零分配 FLAC 无损音频流 `"fLaC"` 头、`STREAMINFO` 34 字节位字段与元数据块迭代器（5/5 PASS，自动动态挂载 `cap.flac`）
 - 新增 `lib/flac/{flac,index}.cp`、`doc/lib/flac.md`、`cap/test/test_flac_production_deep.cp`：纯 CP 零分配实现 FLAC 魔数校验、34 字节 `STREAMINFO` 20/36-bit 位字段解码、防溢出时长计算与 RFC 9639 元数据块迭代（5/5 PASS）。
 

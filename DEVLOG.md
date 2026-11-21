@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:ogg` 零分配 RFC 3533 Ogg 容器页头 `"OggS"`、非反射 CRC-32 校验与分页迭代器（5/5 PASS，文档直写 `doc/lib/ogg.md`）
+- **设计要点**：单单词 TS 风格包名 `cap:ogg`；`oggCrc32` 自动将偏移 `22..26` 按 0 处理实现标准分页完整性校验。
+
 ## 2026-11-22: 新建 `cap:flac` 零分配 FLAC 无损音频流 `"fLaC"` 头、`STREAMINFO` 34 字节位字段与元数据块迭代器（5/5 PASS，文档直写 `doc/lib/flac.md`）
 - **设计要点**：单单词 TS 风格包名 `cap:flac`；拦截 RFC 9639 禁止块类型 `127` 并在 `is_last == true` 后自动停止。
 

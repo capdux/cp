@@ -178,3 +178,6 @@
 
 ### 2026-11-22（`cap:flac` 验收，新增简洁单单词包 `cap:flac`（5/5 PASS））
 - **执行成果**：`lib/flac/`（5/5 PASS，`doc/lib/flac.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:flac`（5/5 PASS）
+
+### 2026-11-22（`cap:ogg` 验收，新增简洁单单词包 `cap:ogg`（5/5 PASS），音频容器四件套 `riff`/`id3`/`flac`/`ogg` 集齐）
+- **执行成果**：`lib/ogg/`（5/5 PASS，`doc/lib/ogg.md`）经 `verify_module.sh` 一次性验收回收；新增简洁单单词包 `cap:ogg`（5/5 PASS），音频容器四件套 `riff`/`id3`/`flac`/`ogg` 集齐
