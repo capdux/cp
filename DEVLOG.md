@@ -1,3 +1,15 @@
+## 2026-11-22: 新建 `cap:http_csp` W3C Content-Security-Policy Level 3 响应头零分配解析器、default-src 回退、nonce 校验与策略构造器（5/5 PASS，文档直写 `doc/lib/http_csp.md`）
+主智能体吸收 `cap:http_csp`，零堆分配解析并构造规范化 CSP3 策略头。
+
+## 2026-11-22: 新建 `cap:rfc3339_time` RFC 3339 / ISO 8601 时间戳零分配解析器、闰年/时区校验、Unix 纪元秒互转与规范化格式化器（5/5 PASS，文档直写 `doc/lib/rfc3339_time.md`）
+Subagent 1 吸收 `cap:rfc3339_time`，支持 `T`/`t`/` ` 分隔、小数秒右补零至纳秒、`Z`/`+HH:MM`/`-HH:MM` 与严格闰年校验。
+
+## 2026-11-22: 新建 `cap:http_server_timing` W3C Server-Timing 响应头零分配解析器与构造器（纯整数微秒精度与引号转义）（5/5 PASS，文档直写 `doc/lib/http_server_timing.md`）
+Subagent 2 吸收 `cap:http_server_timing`，采用微秒整数消除浮点精度丢失，并在缓冲不足时原子回滚 `pos`。
+
+## 2026-11-22: 新建 `cap:slugify` 零分配 URL 安全 Slug 生成器（标点折叠、撇号省略、词边界截断与规范校验）（5/5 PASS，文档直写 `doc/lib/slugify.md`）
+主智能体吸收 `cap:slugify`，零堆分配折叠连续非字母数字字符并自动去除首尾分隔符。
+
 ## 2026-11-22: 新建 `cap:ssh_pubkey` OpenSSH 公钥与 authorized_keys 文件零分配解析器（含选项字段、Base64 校验与 FIDO2 SK 识别）（5/5 PASS，文档直写 `doc/lib/ssh_pubkey.md`）
 主智能体吸收 `cap:ssh_pubkey`，零拷贝拆解 `authorized_keys` 行并严格验证 Base64 密钥体。
 

@@ -2,6 +2,18 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:http_csp` W3C Content-Security-Policy Level 3 响应头零分配解析器、default-src 回退、nonce 校验与策略构造器（5/5 PASS，自动动态挂载 `cap.http_csp`）
+新增 `cap:http_csp`（`lib/http_csp/{csp,index}.cp`、`doc/lib/http_csp.md`、`cap/test/test_http_csp_production_deep.cp`），遵循 W3C CSP3 §2.2.1 首现优先、大小写敏感 nonce 校验与 fetch 指令回退。
+
+## [2026-11-22] - 新建 `cap:rfc3339_time` RFC 3339 / ISO 8601 时间戳零分配解析器、闰年/时区校验、Unix 纪元秒互转与规范化格式化器（5/5 PASS，自动动态挂载 `cap.rfc3339_time`）
+新增 `cap:rfc3339_time`（`lib/rfc3339_time/{rfc3339,index}.cp`、`doc/lib/rfc3339_time.md`、`cap/test/test_rfc3339_time_production_deep.cp`），基于 Howard Hinnant 算法实现 1970 前负时间戳与纳秒精度往返。
+
+## [2026-11-22] - 新建 `cap:http_server_timing` W3C Server-Timing 响应头零分配解析器与构造器（纯整数微秒精度与引号转义）（5/5 PASS，自动动态挂载 `cap.http_server_timing`）
+新增 `cap:http_server_timing`（`lib/http_server_timing/{server_timing,index}.cp`、`doc/lib/http_server_timing.md`、`cap/test/test_http_server_timing_production_deep.cp`），支持引号逗号/分号、亚毫秒微秒整数解析与原子回滚构造。
+
+## [2026-11-22] - 新建 `cap:slugify` 零分配 URL 安全 Slug 生成器（标点折叠、撇号省略、词边界截断与规范校验）（5/5 PASS，自动动态挂载 `cap.slugify`）
+新增 `cap:slugify`（`lib/slugify/{slugify,index}.cp`、`doc/lib/slugify.md`、`cap/test/test_slugify_production_deep.cp`），实现 URL 友好 Slug 生成、自定义分隔符、词边界有界截断与校验。
+
 ## [2026-11-22] - 新建 `cap:ssh_pubkey` OpenSSH 公钥与 authorized_keys 文件零分配解析器（含选项字段、Base64 校验与 FIDO2 SK 识别）（5/5 PASS，自动动态挂载 `cap.ssh_pubkey`）
 新增 `cap:ssh_pubkey`（`lib/ssh_pubkey/{pubkey,index}.cp`、`doc/lib/ssh_pubkey.md`、`cap/test/test_ssh_pubkey_production_deep.cp`），支持 `ssh-ed25519`/`ssh-rsa`/`ecdsa`/`sk-*` 与带引号选项解析。
 

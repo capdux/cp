@@ -599,3 +599,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:quoted_printable` | encodeQuotedPrintable, decodeQuotedPrintable | RFC 2045 §6.7 MIME Quoted-Printable 零分配编解码器（76 列软换行与行尾空白转义） |
 | `cap:punycode` | isAsciiOnly, encodePunycode, decodePunycode, encodeIdnLabel, decodeIdnLabel | RFC 3492 Punycode / Bootstring 零分配编解码器与 xn-- 国际化域名标签转换器 |
 | `cap:ssh_pubkey` | SshKeyType, parseKeyType, SshPubKey, AuthorizedKeysIter | OpenSSH 公钥与 authorized_keys 文件零分配解析器（含选项字段、Base64 校验与 FIDO2 SK 识别） |
+| `cap:slugify` | slugifyWithSep, slugify, slugifyBounded, isValidSlug | 零分配 URL 安全 Slug 生成器（标点折叠、撇号省略、词边界截断与规范校验） |
+| `cap:http_server_timing` | ServerTimingMetric, ServerTimingIter, findServerTiming, appendServerTiming | W3C Server-Timing 响应头零分配解析器与构造器（纯整数微秒精度与引号转义） |
+| `cap:rfc3339_time` | isLeapYear, daysInMonth, Rfc3339Time | RFC 3339 / ISO 8601 时间戳零分配解析器、闰年/时区校验、Unix 纪元秒互转与规范化格式化器 |
+| `cap:http_csp` | CspDirective, CspSourceIter, CspDirectiveIter, findDirective, effectiveFetchDirective, appendCspDirective | W3C Content-Security-Policy Level 3 响应头零分配解析器、default-src 回退、nonce 校验与策略构造器 |

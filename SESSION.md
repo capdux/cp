@@ -421,3 +421,15 @@
 
 ### 2026-11-22（`cap:ssh_pubkey` 验收，Batch 57 注册 `cap:ssh_pubkey` 并提交。）
 - **执行成果**：`lib/ssh_pubkey/`（5/5 PASS，`doc/lib/ssh_pubkey.md`）经 `verify_module.sh` 一次性验收回收；Batch 57 注册 `cap:ssh_pubkey` 并提交。
+
+### 2026-11-22（`cap:slugify` 验收，Batch 58 完成 `cap:slugify`、`cap:http_server_timing`、`cap:rfc3339_time`、`cap:http_csp` 4 模块吸收与全量验收。）
+- **执行成果**：`lib/slugify/`（5/5 PASS，`doc/lib/slugify.md`）经 `verify_module.sh` 一次性验收回收；Batch 58 完成 `cap:slugify`、`cap:http_server_timing`、`cap:rfc3339_time`、`cap:http_csp` 4 模块吸收与全量验收。
+
+### 2026-11-22（`cap:http_server_timing` 验收，Batch 58 注册 `cap:http_server_timing`。）
+- **执行成果**：`lib/http_server_timing/`（5/5 PASS，`doc/lib/http_server_timing.md`）经 `verify_module.sh` 一次性验收回收；Batch 58 注册 `cap:http_server_timing`。
+
+### 2026-11-22（`cap:rfc3339_time` 验收，Batch 58 注册 `cap:rfc3339_time`。）
+- **执行成果**：`lib/rfc3339_time/`（5/5 PASS，`doc/lib/rfc3339_time.md`）经 `verify_module.sh` 一次性验收回收；Batch 58 注册 `cap:rfc3339_time`。
+
+### 2026-11-22（`cap:http_csp` 验收，Batch 58 注册 `cap:http_csp` 并提交。）
+- **执行成果**：`lib/http_csp/`（5/5 PASS，`doc/lib/http_csp.md`）经 `verify_module.sh` 一次性验收回收；Batch 58 注册 `cap:http_csp` 并提交。
