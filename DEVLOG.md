@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:minix` MINIX v1/v2/v3 superblock, 32B/64B Inode & 16B/32B/64B dir entry zero-alloc parser（5/5 PASS，文档直写 `doc/lib/minix.md`）
+新增 cap:minix 纯 CP 零分配经典文件系统解析库（v1/v2/v3 五种魔数分类、统一 Inode 与 16B/32B/64B 目录块零拷贝迭代），通过 cpc check 与 5/5 cap test
+
 ## 2026-11-22: 新建 `cap:lzo` lzop (.lzo) container, Adler32/CRC32 & pure-CP zero-alloc LZO1X decompressor（5/5 PASS，文档直写 `doc/lib/lzo.md`）
 新增 cap:lzo 纯 CP 零分配压缩容器与解压库（9B 头部双校验、LzopBlockIter 与完整 LZO1X M1/M2/M3/M4 解压状态机），通过 cpc check 与 5/5 cap test
 
