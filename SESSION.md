@@ -286,3 +286,9 @@
 
 ### 2026-11-22（`cap:cors_policy` 验收，Batch 44: 吸收并验证 cap:cors_policy (5/5 PASSED)）
 - **执行成果**：`lib/cors_policy/`（5/5 PASS，`doc/lib/cors_policy.md`）经 `verify_module.sh` 一次性验收回收；Batch 44: 吸收并验证 cap:cors_policy (5/5 PASSED)
+
+### 2026-11-22（`cap:retry_backoff` 验收，Batch 45: 吸收并验证 cap:retry_backoff (5/5 PASSED)）
+- **执行成果**：`lib/retry_backoff/`（5/5 PASS，`doc/lib/retry_backoff.md`）经 `verify_module.sh` 一次性验收回收；Batch 45: 吸收并验证 cap:retry_backoff (5/5 PASSED)
+
+### 2026-11-22（`cap:multipart_boundary` 验收，Batch 45: 吸收并验证 cap:multipart_boundary (5/5 PASSED)）
+- **执行成果**：`lib/multipart_boundary/`（5/5 PASS，`doc/lib/multipart_boundary.md`）经 `verify_module.sh` 一次性验收回收；Batch 45: 吸收并验证 cap:multipart_boundary (5/5 PASSED)

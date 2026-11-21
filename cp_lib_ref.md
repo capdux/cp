@@ -554,3 +554,5 @@ const h = cap.hash.wyhash("hello");
 | `cap:http_forwarded` | ForwardedHop, ForwardedIterator, parseFirstHop, extractClientIpFromXff, stripPortFromForwardedFor | RFC 7239 Forwarded 与 X-Forwarded-For 反向代理链路零堆分配解析器及客户端真实 IP 提取库（吸收自 bun/src/http/HeaderValueIterator.cp） |
 | `cap:csv_stream` | CsvField, CsvRow, CsvReader, needsCsvQuoting, formatCsvField, formatCsvRow, unescapeField | RFC 4180 CSV / TSV 零堆分配流式字段/行解析器（自定义分隔符/引号内换行/"" 转义还原）与编码器（吸收自 bun/src/bun_core/fmt.cp） |
 | `cap:cors_policy` | CorsConfig, CorsDecision, CorsPolicy | WHATWG Fetch CORS 策略配置、Simple/Preflight 预检评估与凭证回显/Vary: Origin 决策引擎（吸收自 bun/src/http_types/FetchRequestMode.cp） |
+| `cap:retry_backoff` | JitterMode, BackoffConfig, BackoffState, RetryAfter, parseRetryAfter, isRetryableHttpStatus | 零堆分配指数退避重试调度器（Full/Equal Jitter + SplitMix64 确定性种子）与 RFC 9110 Retry-After 解析库（吸收自 bun/src/http/HTTPContext.cp） |
+| `cap:multipart_boundary` | isValidBoundary, MultipartPart, MultipartParser | RFC 7578 / RFC 2046 multipart/form-data 零堆分配流式边界切分器与分片头部查找库（吸收自 bun/src/http/HTTPRequestBody.cp） |

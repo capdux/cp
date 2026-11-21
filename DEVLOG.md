@@ -1,3 +1,9 @@
+## 2026-11-22: 新建 `cap:multipart_boundary` RFC 7578 / RFC 2046 multipart/form-data 零堆分配流式边界切分器与分片头部查找库（吸收自 bun/src/http/HTTPRequestBody.cp）（5/5 PASS，文档直写 `doc/lib/multipart_boundary.md`）
+子智能体 1 实现零堆分配 multipart/form-data 流式切分与二进制安全解析，5/5 单测通过
+
+## 2026-11-22: 新建 `cap:retry_backoff` 零堆分配指数退避重试调度器（Full/Equal Jitter + SplitMix64 确定性种子）与 RFC 9110 Retry-After 解析库（吸收自 bun/src/http/HTTPContext.cp）（5/5 PASS，文档直写 `doc/lib/retry_backoff.md`）
+子智能体 2 实现指数退避/抖动调度与 RFC 9110 Retry-After 秒数/IMF-fixdate 双格式解析，5/5 单测通过
+
 ## 2026-11-22: 新建 `cap:cors_policy` WHATWG Fetch CORS 策略配置、Simple/Preflight 预检评估与凭证回显/Vary: Origin 决策引擎（吸收自 bun/src/http_types/FetchRequestMode.cp）（5/5 PASS，文档直写 `doc/lib/cors_policy.md`）
 子智能体 1 实现零堆分配 WHATWG Fetch CORS 预检评估引擎，5/5 单测通过
 

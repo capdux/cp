@@ -2,6 +2,12 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:multipart_boundary` RFC 7578 / RFC 2046 multipart/form-data 零堆分配流式边界切分器与分片头部查找库（吸收自 bun/src/http/HTTPRequestBody.cp）（5/5 PASS，自动动态挂载 `cap.multipart_boundary`）
+新增 cap:multipart_boundary 标准库模块（lib/multipart_boundary/{multipart,index}.cp, doc/lib/multipart_boundary.md, cap/test/test_multipart_boundary_production_deep.cp）
+
+## [2026-11-22] - 新建 `cap:retry_backoff` 零堆分配指数退避重试调度器（Full/Equal Jitter + SplitMix64 确定性种子）与 RFC 9110 Retry-After 解析库（吸收自 bun/src/http/HTTPContext.cp）（5/5 PASS，自动动态挂载 `cap.retry_backoff`）
+新增 cap:retry_backoff 标准库模块（lib/retry_backoff/{backoff,index}.cp, doc/lib/retry_backoff.md, cap/test/test_retry_backoff_production_deep.cp）
+
 ## [2026-11-22] - 新建 `cap:cors_policy` WHATWG Fetch CORS 策略配置、Simple/Preflight 预检评估与凭证回显/Vary: Origin 决策引擎（吸收自 bun/src/http_types/FetchRequestMode.cp）（5/5 PASS，自动动态挂载 `cap.cors_policy`）
 新增 cap:cors_policy 标准库模块（lib/cors_policy/{cors,index}.cp, doc/lib/cors_policy.md, cap/test/test_cors_policy_production_deep.cp）
 
