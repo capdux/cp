@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/text.cp, list.cp, effects.cp
+// Source: Absorbed from /data/dev/bun/src/css/properties/text.cp | Synced: 2026-11-21T17:10:30Z
 
 /// CSS `text-transform` 大小写转换枚举 (CSS Text Level 3)
 pub enum TextTransformCase: u8 {

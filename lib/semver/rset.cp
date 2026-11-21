@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/semver/SemverRange.cp, /data/dev/bun/src/semver/Version.cp
+// Source: Absorbed from /data/dev/bun/src/semver/SemverRange.cp | Synced: 2026-11-21T16:39:55Z
 
 pub const MAX_COMPARATORS_PER_GROUP: usize = 16;
 pub const MAX_GROUPS: usize = 16;

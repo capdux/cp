@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/sql/postgres/types/Tag.cp
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/types/Tag.cp | Synced: 2026-11-20T11:08:33Z
 // lib/sql/pg_types.cp
 // PostgreSQL Type OID Registry, CommandTag, Error Classification & Binary/Text Codecs
 

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/dotenv/
+// Source: Absorbed from /data/dev/bun/src/dotenv/ | Synced: 2026-11-21T16:48:47Z
 // CP Standard Library: cap:dotenv
 
 export {

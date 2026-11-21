@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/platform/linux.cp & /data/dev/bun/src/runtime/api/bun/spawn.cp
+// Source: Absorbed from /data/dev/bun/src/platform/linux.cp | Synced: 2026-11-21T15:52:06Z
 // ============================================================================
 // lib/sys/process.cp — Process Identity, Clock, WaitPid, Kill & PosixSpawn
 // ============================================================================

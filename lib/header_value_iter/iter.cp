@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/HeaderValueIterator.cp
+// Source: Absorbed from /data/dev/bun/src/http/HeaderValueIterator.cp | Synced: 2026-11-21T14:05:47Z
 
 fn isOws(c: u8): bool {
     return c == ' ' || c == '\t';

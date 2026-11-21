@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/bun_core/tty.cp
+// Source: Absorbed from /data/dev/bun/src/bun_core/tty.cp | Synced: 2026-11-20T11:08:11Z
 // lib/cli/tty.cp
 // Terminal Mode, POSIX TTY Size Probing, Full ANSI 16/256/RGB Colors, Spinner & ProgressBar
 

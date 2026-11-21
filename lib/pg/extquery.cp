@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/Parse.cp, Describe.cp, Execute.cp, Close.cp, PortalOrPreparedStatement.cp
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/Parse.cp | Synced: 2026-11-21T16:59:35Z
 //! PostgreSQL v3 Extended Query Protocol frontend message encoder
 //! (`Parse`, `Bind`, `Describe`, `Execute`, `Close`, `Sync`, `Flush`, `Query`, `Terminate`)
 //! with deterministic `~init()` RAII cleanup.

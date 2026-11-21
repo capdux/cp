@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/cpuinfo Zero-Alloc Parser)
+// Source: Absorbed from /data/dev/bun/src/sys.zig | Synced: 2026-11-21T16:10:25Z (Linux /proc/cpuinfo Zero-Alloc Parser)
 
 const MAX_U64: u64 = 18446744073709551615;
 

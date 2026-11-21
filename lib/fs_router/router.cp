@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/router/{Route,route_types}.cp
+// Source: Absorbed from /data/dev/bun/src/router/{Route,route_types}.cp | Synced: 2026-11-21T14:00:43Z
 
 /// 路由类型枚举（数值越小优先级越高）
 pub enum RouteKind: u8 {

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/jsc/bindings/JSBigInt.cpp
+// Source: Absorbed from /data/dev/bun/src/jsc/bindings/JSBigInt.cpp | Synced: 2026-11-20T06:14:59Z
 // lib/bigint/index.cp
 // High-Performance Arbitrary-Precision BigInt and Web3/EVM uint256
 // Backed by Zig std.math.big.int.Managed and native 256-bit arithmetic

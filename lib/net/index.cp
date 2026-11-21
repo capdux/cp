@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/uws/uws.cp & /data/dev/bun/src/runtime/socket/
+// Source: Absorbed from /data/dev/bun/src/uws/uws.cp | Synced: 2026-11-21T16:46:57Z
 // lib/net/index.cp
 // Unified Public Exports for cap:net
 // Architecture:

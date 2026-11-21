@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/PostgresSQLQuery.zig (SQL Identifier & Literal Escaper)
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/PostgresSQLQuery.zig | Synced: 2026-11-21T14:48:18Z (SQL Identifier & Literal Escaper)
 
 struct OutWriter {
     buf: []u8,

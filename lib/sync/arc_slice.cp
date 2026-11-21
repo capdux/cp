@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/threading/threading.cp
+// Source: Absorbed from /data/dev/bun/src/threading/threading.cp | Synced: 2026-11-19T20:46:25Z
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/arc_slice.cp
 // Upstream Sync: Refer to bun/src/threading/arc_slice.zig for future upstream updates.

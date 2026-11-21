@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/ci_info.cp and codegen/ci_info.ts
+// Source: Absorbed from /data/dev/bun/src/cli/ci_info.cp | Synced: 2026-11-21T13:35:27Z
 // Pure-CP zero-allocation CI/CD environment detector (ci-info v4 semantics).
 
 pub enum CiVendor: u8 {

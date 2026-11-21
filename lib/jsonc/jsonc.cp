@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/js_parser.zig (JSONC Comment & Trailing-Comma Stripper)
+// Source: Absorbed from /data/dev/bun/src/js_parser.zig | Synced: 2026-11-21T16:33:53Z (JSONC Comment & Trailing-Comma Stripper)
 // Pure-CP zero-allocation JSON with Comments (//, /* */) and Trailing Commas stripper & scanner.
 
 /// Result of peeking past whitespace and comments after a comma.

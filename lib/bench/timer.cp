@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/perf/hw_timer.cp
+// Source: Absorbed from /data/dev/bun/src/perf/hw_timer.cp | Synced: 2026-11-20T06:08:45Z
 // lib/bench/timer.cp
 // High-Resolution Monotonic Hardware Timer (Stopwatch) & Benchmark Quantile Statistics
 

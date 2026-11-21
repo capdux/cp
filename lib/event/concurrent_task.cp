@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/event_loop/ConcurrentTask.cp
+// Source: Absorbed from /data/dev/bun/src/event_loop/ConcurrentTask.cp | Synced: 2026-11-21T15:51:40Z
 // lib/event/concurrent_task.cp
 // Cross-thread task representation and spin-locked intrusive queue for cap:event
 

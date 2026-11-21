@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/semver/semver.cp
+// Source: Absorbed from /data/dev/bun/src/semver/semver.cp | Synced: 2026-11-21T16:40:05Z
 // ============================================================================
 // lib/semver/index.cp — Semver 2.0.0 Specification & Query Engine (cap:semver)
 // ============================================================================

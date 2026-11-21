@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/dns/
+// Source: Absorbed from /data/dev/bun/src/dns/ | Synced: 2026-11-20T07:12:50Z
 // lib/dns/cache.cp
 // High-speed TTL-aware DNS Resolver Cache, /etc/hosts Parser & Options (absorbed from bun/src/dns/dns.cp)
 

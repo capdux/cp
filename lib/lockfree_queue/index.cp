@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/threading/unbounded_queue.cp
+// Source: Absorbed from /data/dev/bun/src/threading/unbounded_queue.cp | Synced: 2026-11-21T12:44:38Z
 
 export { SpscQueue } from "./spsc.cp";
 export { MpmcQueue } from "./mpmc.cp";

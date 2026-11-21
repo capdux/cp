@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/libarchive/
+// Source: Absorbed from /data/dev/bun/src/libarchive/ | Synced: 2026-11-19T20:22:39Z
 // ============================================================================
 // lib/pack/zip.cp — PKZIP Local File Header, Central Directory, EOCD & Zero-Copy Reader
 // Absorbed from Bun src/libarchive/

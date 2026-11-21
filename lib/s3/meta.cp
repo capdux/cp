@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/s3_signing/{acl,storage_class,credentials}.cp
+// Source: Absorbed from /data/dev/bun/src/s3_signing/{acl,storage_class,credentials}.cp | Synced: 2026-11-21T17:04:34Z
 
 fn strEql(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/s3_signing/
+// Source: Absorbed from /data/dev/bun/src/s3_signing/ | Synced: 2026-11-19T20:37:56Z
 // ============================================================================
 // lib/s3/list_objects.cp — S3 ListObjectsV2 参数构造与 XML 结果解析
 // 吸收自 Bun src/runtime/webcore/s3/list_objects.cp

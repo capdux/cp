@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/net/dev Network Interface Stats Parser)
+// Source: Absorbed from /data/dev/bun/src/sys.zig | Synced: 2026-11-21T16:07:05Z (Linux /proc/net/dev Network Interface Stats Parser)
 
 const MAX_U64: u64 = 18446744073709551615;
 

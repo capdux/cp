@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/jsc/bindings/Cookie.cpp and CookieMap.cpp
+// Source: Absorbed from /data/dev/bun/src/jsc/bindings/Cookie.cpp | Synced: 2026-11-21T16:45:50Z
 // Pure-CP zero-allocation RFC 6265 / 6265bis HTTP Cookie & Set-Cookie parser,
 // domain/path matcher, and Set-Cookie header serializer.
 

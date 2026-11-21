@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/image/codec_png.cp, /data/dev/bun/src/runtime/image/codec_jpeg.cp, /data/dev/bun/src/runtime/image/codec_webp.cp, /data/dev/bun/src/runtime/image/codec_bmp.cp
+// Source: Absorbed from /data/dev/bun/src/runtime/image/codec_png.cp | Synced: 2026-11-21T12:59:27Z
 
 pub err Error {
     UnknownFormat,

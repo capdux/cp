@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/{overflow,position,contain}.cp
+// Source: Absorbed from /data/dev/bun/src/css/properties/{overflow,position,contain}.cp | Synced: 2026-11-21T17:05:36Z
 // Pure-CP zero-allocation CSS Layout Control properties: Overflow, TextOverflow,
 // Position (with -webkit-sticky), ContainerType, ContainFlags, and ZIndex.
 

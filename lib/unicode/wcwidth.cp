@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string/immutable.zig (Unicode East Asian Display Width / wcwidth)
+// Source: Absorbed from /data/dev/bun/src/string/immutable.zig | Synced: 2026-11-21T17:04:34Z (Unicode East Asian Display Width / wcwidth)
 // Pure-CP zero-allocation terminal display column width calculator (combining=0, ASCII=1, CJK/Fullwidth/Emoji=2).
 
 /// Decode one UTF-8 codepoint starting at `s[pos]`, advancing `pos`. Returns `0xFFFD` on invalid sequence.

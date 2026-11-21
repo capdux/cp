@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/HandshakeV10.cp, OKPacket.cp, ErrorPacket.cp, EOFPacket.cp, AuthSwitchRequest.cp, CommandType.cp
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/HandshakeV10.cp | Synced: 2026-11-21T16:59:39Z
 
 pub const CAP_CLIENT_SSL: u32 = 1 << 11;
 pub const CAP_CLIENT_PLUGIN_AUTH: u32 = 1 << 19;

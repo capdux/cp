@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli.zig (Git Unified Diff Numstat & File Summary Parser)
+// Source: Absorbed from /data/dev/bun/src/cli.zig | Synced: 2026-11-21T15:31:13Z (Git Unified Diff Numstat & File Summary Parser)
 
 /// Git Diff 文件变更类型枚举
 pub enum FileChangeKind: u8 {

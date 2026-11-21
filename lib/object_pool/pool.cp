@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/collections/pool.cp
+// Source: Absorbed from /data/dev/bun/src/collections/pool.cp | Synced: 2026-11-21T12:55:24Z
 
 /// 侵入式单链表对象池节点
 pub struct PoolNode<T> {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/test_runner/diff/printDiff.cp and diff_format.cp
+// Source: Absorbed from /data/dev/bun/src/test_runner/diff/printDiff.cp | Synced: 2026-11-21T17:06:09Z
 
 /// 行级差异操作类型
 pub enum DiffOpKind: u8 {

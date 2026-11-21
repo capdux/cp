@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/meta/bits.cp
+// Source: Absorbed from /data/dev/bun/src/meta/bits.cp | Synced: 2026-11-21T13:59:57Z
 pub import {
     testBit64,
     setBit64,

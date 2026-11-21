@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/util.cp and shell/builtin/{basename,dirname}.cp
+// Source: Absorbed from /data/dev/bun/src/shell/util.cp | Synced: 2026-11-21T17:04:34Z
 
 /// 环境变量赋值拆分结果（`KEY=VALUE`）
 pub struct EnvAssignment {

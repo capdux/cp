@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/ptr/ptr.cp
+// Source: Absorbed from /data/dev/bun/src/ptr/ptr.cp | Synced: 2026-11-19T20:42:44Z
 // CP Standard Library: cap:ptr
 // High-performance smart pointer and memory management abstractions
 

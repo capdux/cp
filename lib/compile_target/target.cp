@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/options_types/CompileTarget.cp
+// Source: Absorbed from /data/dev/bun/src/options_types/CompileTarget.cp | Synced: 2026-11-21T13:58:11Z
 
 /// 目标操作系统枚举
 pub enum TargetOs: u8 {

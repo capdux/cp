@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/http_jsc/websocket_client/
+// Source: Absorbed from /data/dev/bun/src/http_jsc/websocket_client/ | Synced: 2026-11-20T05:42:21Z
 // ============================================================================
 // Absorbed from Bun: bun/src/ws/mask.cp
 // Upstream Sync: Refer to bun/src/ws/mask.zig for future upstream updates.

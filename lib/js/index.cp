@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/js_lexer/identifier.cp, /data/dev/bun/src/js_ast/Op.cp (Unified Exports for cap:js)
+// Source: Absorbed from /data/dev/bun/src/js_lexer/identifier.cp | Synced: 2026-11-21T17:06:43Z (Unified Exports for cap:js)
 
 export {
     KeywordKind,

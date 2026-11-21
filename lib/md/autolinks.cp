@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/md/autolinks.cp
+// Source: Absorbed from /data/dev/bun/src/md/autolinks.cp | Synced: 2026-11-20T08:50:20Z
 // lib/md/autolinks.cp
 // GFM Permissive URL, Email & WWW Autolink Scanner + Boundary/Balanced-Paren Validator
 

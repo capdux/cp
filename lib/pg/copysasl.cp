@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/CopyData.cp, CopyFail.cp, CopyInResponse.cp, CopyOutResponse.cp, PasswordMessage.cp, SASLInitialResponse.cp, SASLResponse.cp, NegotiateProtocolVersion.cp
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/CopyData.cp | Synced: 2026-11-21T16:59:35Z
 
 /// PostgreSQL v3 COPY / SASL / 协议协商报文类型字节常量
 pub const TAG_COPY_DATA: u8 = 'd';

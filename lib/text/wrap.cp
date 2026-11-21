@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli.zig (CLI Word-Wrap, Dedent & Truncate Formatter)
+// Source: Absorbed from /data/dev/bun/src/cli.zig | Synced: 2026-11-21T16:45:27Z (CLI Word-Wrap, Dedent & Truncate Formatter)
 // Pure-CP zero-allocation greedy word-wrapping, common-indent dedent, prefix indent, and ellipsis truncation.
 
 fn writeByte(out: []u8, pos: *usize, b: u8): bool {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/meminfo Zero-Alloc Parser)
+// Source: Absorbed from /data/dev/bun/src/sys.zig | Synced: 2026-11-21T15:18:36Z (Linux /proc/meminfo Zero-Alloc Parser)
 // Pure-CP zero-allocation Linux /proc/meminfo parser converting kB fields to exact byte metrics.
 
 fn isWs(b: u8): bool {

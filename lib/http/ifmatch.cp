@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp (RFC 9110 §13.1 Conditional Requests Evaluator)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T16:49:05Z (RFC 9110 §13.1 Conditional Requests Evaluator)
 // Pure-CP zero-allocation RFC 9110 §13.1/§13.2.2 conditional request evaluator (If-Match, If-None-Match, If-Modified-Since, If-Unmodified-Since).
 
 fn isWs(b: u8): bool {

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/bundler/
+// Source: Absorbed from /data/dev/bun/src/bundler/ | Synced: 2026-11-20T10:24:11Z
 // lib/bundler/index.cp
 // Unified Public Exports for cap:bundler
 

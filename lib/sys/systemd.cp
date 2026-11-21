@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ini.zig (Linux systemd Unit File Parser)
+// Source: Absorbed from /data/dev/bun/src/ini.zig | Synced: 2026-11-21T15:22:08Z (Linux systemd Unit File Parser)
 
 /// 单条解析后的 systemd 单元配置项
 pub struct UnitEntry {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/values/alpha.cp, /data/dev/bun/src/css/values/percentage.cp, /data/dev/bun/src/css/values/url.cp
+// Source: Absorbed from /data/dev/bun/src/css/values/alpha.cp | Synced: 2026-11-21T17:05:36Z
 //! CSS primitive value types: `<alpha-value>`, `<percentage>`, `<number-percentage>`,
 //! and `<url>` absolute/relative/fragment/scheme classification.
 

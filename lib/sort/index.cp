@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/collections/ & Zig std.sort
+// Source: Absorbed from /data/dev/bun/src/collections/ | Synced: 2026-11-19T20:41:51Z
 // ============================================================================
 // lib/sort/index.cp — High-Performance Sorting & Slice Query Primitives (cap:sort)
 // Absorbed from /data/dev/bun/src/collections/ & Zig Standard Library: std.sort (PDQSort, BlockSort, HeapSort)

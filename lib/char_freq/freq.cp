@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/js_parser/ast/CharFreq.cp
+// Source: Absorbed from /data/dev/bun/src/js_parser/ast/CharFreq.cp | Synced: 2026-11-21T12:44:14Z
 //! Identifier character frequency analyzer & frequency-optimal short-name generator
 //! (used by JS/TS minifiers to assign the shortest/most compressible variable names).
 

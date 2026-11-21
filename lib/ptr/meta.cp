@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/ptr/meta.cp
+// Source: Absorbed from /data/dev/bun/src/ptr/meta.cp | Synced: 2026-11-19T20:38:58Z
 // Pointer reflection, metadata extraction, and type transformation utilities
 import std from "std";
 

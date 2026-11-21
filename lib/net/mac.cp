@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys.zig (IEEE 802 MAC-48 / EUI-48 Address Parser & EUI-64 Converter)
+// Source: Absorbed from /data/dev/bun/src/sys.zig | Synced: 2026-11-21T15:27:49Z (IEEE 802 MAC-48 / EUI-48 Address Parser & EUI-64 Converter)
 // Pure-CP zero-allocation MAC-48 parser (colon, hyphen, Cisco dot, bare hex), classifier, formatter, and EUI-64 derivation.
 
 fn hexVal(c: u8): u8? {

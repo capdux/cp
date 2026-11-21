@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/env_loader.zig (XDG Base Directory Spec Resolver)
+// Source: Absorbed from /data/dev/bun/src/env_loader.zig | Synced: 2026-11-21T16:00:44Z (XDG Base Directory Spec Resolver)
 
 pub const DEFAULT_CONFIG_DIRS: []const u8 = "/etc/xdg";
 pub const DEFAULT_DATA_DIRS: []const u8 = "/usr/local/share:/usr/share";

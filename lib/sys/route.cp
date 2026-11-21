@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/net/route Routing Table Parser)
+// Source: Absorbed from /data/dev/bun/src/sys.zig | Synced: 2026-11-21T16:05:03Z (Linux /proc/net/route Routing Table Parser)
 
 pub const RTF_UP: u32 = 0x0001;
 pub const RTF_GATEWAY: u32 = 0x0002;

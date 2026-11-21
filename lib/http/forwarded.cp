@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/HeaderValueIterator.cp
+// Source: Absorbed from /data/dev/bun/src/http/HeaderValueIterator.cp | Synced: 2026-11-21T16:45:50Z
 
 /// RFC 7239 `Forwarded` 头部单跳代理信息（零拷贝切片）
 pub struct ForwardedHop {

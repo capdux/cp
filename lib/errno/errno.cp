@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/errno/linux_errno.cp
+// Source: Absorbed from /data/dev/bun/src/errno/linux_errno.cp | Synced: 2026-11-20T04:55:05Z
 // lib/errno/errno.cp
 // Cross-platform POSIX / Linux / Darwin / Windows System Error Codes (cap:errno)
 // Absorbed from Bun src/errno/{linux_errno,darwin_errno,windows_errno}.cp

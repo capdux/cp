@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/PostgresSQLQuery.zig (SQL Parameter Scanner & Dialect Rewriter)
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/PostgresSQLQuery.zig | Synced: 2026-11-21T15:17:02Z (SQL Parameter Scanner & Dialect Rewriter)
 
 fn isDigit(c: u8): bool {
     return c >= '0' && c <= '9';

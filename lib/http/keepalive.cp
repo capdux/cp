@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp (HTTP Keep-Alive Header & Connection Persistence Policy)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T16:49:05Z (HTTP Keep-Alive Header & Connection Persistence Policy)
 // Pure-CP zero-allocation Keep-Alive header parser/formatter and RFC 9112 §9.3 connection persistence evaluator.
 
 fn isWs(b: u8): bool {

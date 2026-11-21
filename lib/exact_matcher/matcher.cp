@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string/immutable/exact_size_matcher.cp
+// Source: Absorbed from /data/dev/bun/src/string/immutable/exact_size_matcher.cp | Synced: 2026-11-21T12:21:54Z
 // Constant-time fixed-width (1, 2, 4, 8, 12, 16 byte) integer-packed string matcher for O(1) switch dispatch.
 
 /// Returns a matcher type that packs strings up to `max_bytes` (1, 2, 4, 8, 12, or 16)

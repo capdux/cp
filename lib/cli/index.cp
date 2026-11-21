@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/cli/cli.cp
+// Source: Absorbed from /data/dev/bun/src/cli/cli.cp | Synced: 2026-11-21T16:38:51Z
 // lib/cli/index.cp
 // Unified Public Exports for cap:cli
 

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp, /data/dev/bun/src/http/MimeType.zig (Unified Mail Domain Barrel)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T16:50:24Z (Unified Mail Domain Barrel)
 export {
     isValidAddrSpec,
     Mailbox,

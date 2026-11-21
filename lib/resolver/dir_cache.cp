@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/resolver/dir_info.cp
+// Source: Absorbed from /data/dev/bun/src/resolver/dir_info.cp | Synced: 2026-11-21T17:23:42Z
 // ============================================================================
 // lib/resolver/dir_cache.cp — Directory Metadata Cache & Symlink Realpath Resolver
 // ============================================================================

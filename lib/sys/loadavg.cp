@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/loadavg & /proc/uptime Zero-Alloc Parser)
+// Source: Absorbed from /data/dev/bun/src/sys.zig | Synced: 2026-11-21T15:19:45Z (Linux /proc/loadavg & /proc/uptime Zero-Alloc Parser)
 // Pure-CP zero-allocation Linux /proc/loadavg and /proc/uptime parsers using exact integer arithmetic.
 
 fn isWs(b: u8): bool {

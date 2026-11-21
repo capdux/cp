@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/logger.zig (Structured logfmt Parser & Encoder)
+// Source: Absorbed from /data/dev/bun/src/logger.zig | Synced: 2026-11-21T14:47:27Z (Structured logfmt Parser & Encoder)
 // Pure-CP zero-allocation logfmt key=value structured log line parser, lookup, and canonical encoder.
 
 fn isWs(b: u8): bool {

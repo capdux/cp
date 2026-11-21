@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys.zig (freedesktop.org /etc/os-release Parser)
+// Source: Absorbed from /data/dev/bun/src/sys.zig | Synced: 2026-11-21T15:22:05Z (freedesktop.org /etc/os-release Parser)
 // Pure-CP zero-allocation freedesktop.org /etc/os-release parser with shell quote unescaping and ID_LIKE matching.
 
 fn isWs(b: u8): bool {

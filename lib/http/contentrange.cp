@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp (RFC 9110 §14.4 HTTP Content-Range Header Codec)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T16:42:30Z (RFC 9110 §14.4 HTTP Content-Range Header Codec)
 
 const U64_MAX: u64 = 18446744073709551615;
 

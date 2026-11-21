@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/base64/base64.cp
+// Source: Absorbed from /data/dev/bun/src/base64/base64.cp | Synced: 2026-11-20T07:11:57Z
 // lib/encoding/index.cp
 export {
     Base64,

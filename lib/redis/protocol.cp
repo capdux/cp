@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/valkey/valkey_protocol.cp
+// Source: Absorbed from /data/dev/bun/src/valkey/valkey_protocol.cp | Synced: 2026-11-20T07:10:40Z
 // lib/redis/protocol.cp
 // Low-level RESP2 / RESP3 Protocol Types & Verbatim String Slice View in pure CP
 

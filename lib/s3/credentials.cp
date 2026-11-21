@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/s3_signing/
+// Source: Absorbed from /data/dev/bun/src/s3_signing/ | Synced: 2026-11-19T20:37:49Z
 // ============================================================================
 // lib/s3/credentials.cp — S3 凭证模型、校验与 Path-Style / Virtual-Hosted 端点拼接
 // 吸收自 Bun src/s3_signing/credentials.cp

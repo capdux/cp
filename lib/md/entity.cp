@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/md/entity.cp
+// Source: Absorbed from /data/dev/bun/src/md/entity.cp | Synced: 2026-11-20T08:48:59Z
 // lib/md/entity.cp
 // Full W3C HTML5 Named Character Reference Table (2,125 entities) with O(log N) binary search
 

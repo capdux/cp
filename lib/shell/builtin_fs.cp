@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/shell/builtin/ls.cp, cp.cp, mv.cp, mkdir.cp, rm.cp, cat.cp, touch.cp, basename.cp, dirname.cp
+// Source: Absorbed from /data/dev/bun/src/shell/builtin/ls.cp | Synced: 2026-11-21T16:52:14Z
 // ============================================================================
 // lib/shell/builtin_fs.cp
 // Filesystem Built-in Commands for CP Shell (cap:shell)

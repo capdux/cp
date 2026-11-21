@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/dns.zig (POSIX /etc/resolv.conf Zero-Alloc Parser)
+// Source: Absorbed from /data/dev/bun/src/dns.zig | Synced: 2026-11-21T15:21:05Z (POSIX /etc/resolv.conf Zero-Alloc Parser)
 // Pure-CP zero-allocation POSIX /etc/resolv.conf parser (nameserver, search, domain, options).
 
 fn isWs(b: u8): bool {

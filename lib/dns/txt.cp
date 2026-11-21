@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/dns.zig (DNS TXT Key-Value, SPF & DMARC Record Parser)
+// Source: Absorbed from /data/dev/bun/src/dns.zig | Synced: 2026-11-21T16:36:24Z (DNS TXT Key-Value, SPF & DMARC Record Parser)
 
 fn isSpace(c: u8): bool {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';

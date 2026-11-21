@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/s3_signing/
+// Source: Absorbed from /data/dev/bun/src/s3_signing/ | Synced: 2026-11-19T20:37:59Z
 import { S3Acl, S3StorageClass, S3Error } from "./types";
 const std = @import("std");
 

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys.zig (POSIX /etc/fstab & /proc/mounts Parser)
+// Source: Absorbed from /data/dev/bun/src/sys.zig | Synced: 2026-11-21T16:42:56Z (POSIX /etc/fstab & /proc/mounts Parser)
 
 const U32_MAX: u32 = 0xFFFF_FFFF;
 

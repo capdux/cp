@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/install_types/ExternalString.cp
+// Source: Absorbed from /data/dev/bun/src/install_types/ExternalString.cp | Synced: 2026-11-21T16:51:29Z
 // ============================================================================
 // lib/pkg/types.cp — Core Package Manager Types, Compact Strings, Slices & Behavior
 // Absorbed from Bun src/install_types/{ExternalString,SlicedString,NodeLinker,SemverString}.cp

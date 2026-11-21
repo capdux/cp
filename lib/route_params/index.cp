@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/router/ParamMap.cp, /data/dev/bun/src/http_types/URLPath.cp
+// Source: Absorbed from /data/dev/bun/src/router/ParamMap.cp | Synced: 2026-11-21T12:46:48Z
 import p from "./params.cp";
 
 export const Param = p.Param;

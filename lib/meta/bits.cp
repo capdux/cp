@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/meta/bits.cp
+// Source: Absorbed from /data/dev/bun/src/meta/bits.cp | Synced: 2026-11-20T07:21:53Z
 // ============================================================================
 // lib/meta/bits.cp — Branchless Bit Manipulation, Alignment & Integer Packing
 // ============================================================================

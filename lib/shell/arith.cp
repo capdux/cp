@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/shell/
+// Source: Absorbed from /data/dev/bun/src/shell/ | Synced: 2026-11-20T09:33:49Z
 // ============================================================================
 // lib/shell/arith.cp
 // POSIX Integer Arithmetic Expansion Evaluator `$(( ... ))` (cap:shell)

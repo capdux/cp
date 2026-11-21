@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/http/ProxyTunnel.cp
+// Source: Absorbed from /data/dev/bun/src/http/ProxyTunnel.cp | Synced: 2026-11-20T11:28:10Z
 // lib/net/proxy.cp
 // HTTP CONNECT Proxy Tunnel & SOCKS5 Wire Handshake Codec
 // Absorbed from Bun src/http/ProxyTunnel.cp

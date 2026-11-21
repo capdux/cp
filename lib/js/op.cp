@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/js_parser/ast/Op.cp
+// Source: Absorbed from /data/dev/bun/src/js_parser/ast/Op.cp | Synced: 2026-11-21T17:06:09Z
 // Complete JS/TS AST operator codes, precedence levels, associativity, assignment targets, and text metadata.
 
 pub enum AssignTarget: u8 {

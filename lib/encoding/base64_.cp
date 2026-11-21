@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/base64/base64.cp
+// Source: Absorbed from /data/dev/bun/src/base64/base64.cp | Synced: 2026-11-19T20:26:37Z
 // lib/encoding/base64_.cp
 // Low-level Base64 lookup tables, byte decoders, and codec engines in pure CP
 

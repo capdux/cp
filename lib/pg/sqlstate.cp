@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/AnyPostgresError.cp
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/AnyPostgresError.cp | Synced: 2026-11-21T16:59:35Z
 
 /// PostgreSQL SQLSTATE 前 2 字符大类分类
 export enum SqlStateClass {

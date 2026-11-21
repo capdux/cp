@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string.zig (Multi-line Text Dedent & Indent Formatter)
+// Source: Absorbed from /data/dev/bun/src/string.zig | Synced: 2026-11-21T16:28:23Z (Multi-line Text Dedent & Indent Formatter)
 // Pure-CP zero-allocation multi-line indentation detector, dedenter, indenter, and prefix stripper.
 
 /// Byte bounds of a single line split into content and trailing EOL (`\n` or `\r\n`).

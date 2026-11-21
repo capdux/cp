@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/meta/traits.cp
+// Source: Absorbed from /data/dev/bun/src/meta/traits.cp | Synced: 2026-11-20T07:23:00Z
 // ============================================================================
 // lib/meta/traits.cp — Compile-Time Type Introspection & Traits (cap:meta)
 // ============================================================================

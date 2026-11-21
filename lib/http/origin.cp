@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/url.zig (WHATWG Origin Parser, Same-Origin & Same-Site Comparator)
+// Source: Absorbed from /data/dev/bun/src/url.zig | Synced: 2026-11-21T16:49:05Z (WHATWG Origin Parser, Same-Origin & Same-Site Comparator)
 // Pure-CP zero-allocation WHATWG Origin tuple parser, default-port normalization, same-origin/same-site checks, and formatter.
 
 fn toLowerAscii(b: u8): u8 {

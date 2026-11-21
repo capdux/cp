@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/css/properties/properties.cp
+// Source: Absorbed from /data/dev/bun/src/css/properties/properties.cp | Synced: 2026-11-20T10:24:28Z
 // lib/css/engine/properties.cp
 // LightningCSS Shorthand Property Expander & Minifier:
 // RectShorthand, BorderShorthand, BorderRadius, BoxShadow, TransformList (+ Matrix2D), FlexShorthand, Transition, Animation, Display, FilterList

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/sql/
+// Source: Absorbed from /data/dev/bun/src/sql/ | Synced: 2026-11-20T05:02:29Z
 // lib/sql/postgres.cp
 // PostgreSQL v3 Wire Authentication (SCRAM-SHA-256 / MD5), Backend Frame Decoders,
 // RowDescription / DataRow / ErrorResponse / ReadyForQuery / ParameterStatus / BackendKeyData

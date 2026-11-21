@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/http_types/ETag.cp
+// Source: Absorbed from /data/dev/bun/src/http_types/ETag.cp | Synced: 2026-11-19T20:58:51Z
 // lib/http/etag.cp
 // HTTP ETag and If-None-Match evaluation in CP
 

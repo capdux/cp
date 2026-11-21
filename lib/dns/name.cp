@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/dns.zig (RFC 1035 DNS Name Validator & Wire Label Codec)
+// Source: Absorbed from /data/dev/bun/src/dns.zig | Synced: 2026-11-21T16:36:24Z (RFC 1035 DNS Name Validator & Wire Label Codec)
 
 fn toLowerAscii(c: u8): u8 {
     if (c >= 'A' && c <= 'Z') {

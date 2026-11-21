@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/collections/collections.cp
+// Source: Absorbed from /data/dev/bun/src/collections/collections.cp | Synced: 2026-11-19T20:27:32Z
 // ============================================================================
 // Absorbed from Bun: bun/src/collections/
 // Upstream Sync: Refer to bun/src/collections/ for future upstream updates.

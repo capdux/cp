@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/types/Tag.cp and PostgresTypes.cp
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/types/Tag.cp | Synced: 2026-11-21T16:59:35Z
 
 /// PostgreSQL 类型大类枚举
 pub enum PgTypeCategory: u8 {

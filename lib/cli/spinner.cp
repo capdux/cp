@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/ (Zero-Alloc CLI Spinner Renderer)
+// Source: Absorbed from /data/dev/bun/src/cli/ | Synced: 2026-11-21T16:39:27Z (Zero-Alloc CLI Spinner Renderer)
 // Pure-CP zero-allocation CLI terminal spinner frame presets and status-line renderer.
 
 /// Built-in terminal spinner animation presets.

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/sql/
+// Source: Absorbed from /data/dev/bun/src/sql/ | Synced: 2026-11-21T16:42:31Z
 // ============================================================================
 // Absorbed from Bun: bun/src/sql/
 // Upstream Sync: Refer to bun/src/sql/ for future upstream updates.

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/MimeType.zig (RFC 5322 MIME Header Block Parser & Unfolder)
+// Source: Absorbed from /data/dev/bun/src/http/MimeType.zig | Synced: 2026-11-21T15:26:36Z (RFC 5322 MIME Header Block Parser & Unfolder)
 
 /// RFC 5322 报文头与报文体切分结果（零拷贝切片）
 export struct MimeMessageSplit {

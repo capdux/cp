@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/Auth.cp, /data/dev/bun/src/sql/mysql/protocol/SSLRequest.cp
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/Auth.cp | Synced: 2026-11-21T16:59:39Z
 
 pub const NATIVE_SCRAMBLE_LEN: usize = 20;
 pub const CACHING_SHA2_SCRAMBLE_LEN: usize = 32;

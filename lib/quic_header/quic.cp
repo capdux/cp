@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/uws_sys/quic/Header.cp, /data/dev/bun/src/uws_sys/SocketKind.cp
+// Source: Absorbed from /data/dev/bun/src/uws_sys/quic/Header.cp | Synced: 2026-11-21T12:31:02Z
 
 /// QUIC v1 版本号（RFC 9000）
 pub const QUIC_VERSION_1: u32 = 0x00000001;

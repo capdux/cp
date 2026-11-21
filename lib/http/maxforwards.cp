@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/ (RFC 9110 Max-Forwards Hop Limiter)
+// Source: Absorbed from /data/dev/bun/src/http/ | Synced: 2026-11-21T16:49:05Z (RFC 9110 Max-Forwards Hop Limiter)
 
 fn isOws(c: u8): bool {
     return c == ' ' || c == '\t';

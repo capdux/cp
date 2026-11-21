@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/analytics/schema.cp
+// Source: Absorbed from /data/dev/bun/src/analytics/schema.cp | Synced: 2026-11-21T12:33:59Z
 
 /// 紧凑记录结束标记字节（Field ID == 0 表示消息结束）
 pub const END_OF_MESSAGE: u8 = 0;

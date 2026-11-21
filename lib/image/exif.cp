@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/runtime/image/exif.cp
+// Source: Absorbed from /data/dev/bun/src/runtime/image/exif.cp | Synced: 2026-11-19T22:15:15Z
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/exif.cp
 // Upstream Sync: Refer to bun/src/runtime/image/exif.zig for future upstream updates.

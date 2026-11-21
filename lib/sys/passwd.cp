@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys.zig (POSIX /etc/passwd & /etc/group Zero-Alloc Parser)
+// Source: Absorbed from /data/dev/bun/src/sys.zig | Synced: 2026-11-21T15:00:53Z (POSIX /etc/passwd & /etc/group Zero-Alloc Parser)
 // Pure-CP zero-allocation POSIX /etc/passwd and /etc/group streaming parser and UID/GID/name lookups.
 
 fn strEq(a: []const u8, b: []const u8): bool {

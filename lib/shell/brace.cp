@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/glob.zig (Bash-Style Brace Expansion Engine)
+// Source: Absorbed from /data/dev/bun/src/glob.zig | Synced: 2026-11-21T15:26:33Z (Bash-Style Brace Expansion Engine)
 // Pure-CP zero-allocation shell brace expansion: comma lists {a,b,c}, integer ranges {1..5..2}, zero-padded {01..05}, alpha {a..e}.
 
 fn parseI64(s: []const u8): i64? {

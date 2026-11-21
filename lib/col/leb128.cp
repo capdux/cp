@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/collections/ & Zig std.leb128
+// Source: Absorbed from /data/dev/bun/src/collections/ | Synced: 2026-11-19T20:27:14Z
 // ============================================================================
 // lib/col/leb128.cp — ULEB128 (无符号) 与 SLEB128 (有符号) 变长整数编解码引擎
 // 用于 DWARF 调试信息、WebAssembly 二进制指令流、二进制序列化紧凑编码

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/md/entity.cp
+// Source: Absorbed from /data/dev/bun/src/md/entity.cp | Synced: 2026-11-20T05:46:35Z
 // lib/html/escape.cp
 // Zero-copy fast-path HTML Entity Escaper & Full HTML5 Named/Numeric Unescaper
 // Absorbed from Bun src/md/entity.cp & HTML escaping utilities

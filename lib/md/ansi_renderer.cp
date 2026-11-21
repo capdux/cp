@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/md/ansi_renderer.cp
+// Source: Absorbed from /data/dev/bun/src/md/ansi_renderer.cp | Synced: 2026-11-20T09:24:53Z
 // lib/md/ansi_renderer.cp
 // Industrial-Grade Markdown -> ANSI Terminal Renderer
 // Supports colors, word-wrapping, East-Asian visible width, Unicode box tables with SGR/OSC8 state tracking,

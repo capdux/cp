@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/PostgresSQLQuery.zig (Multi-Statement SQL Script Splitter)
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/PostgresSQLQuery.zig | Synced: 2026-11-21T16:42:30Z (Multi-Statement SQL Script Splitter)
 
 /// SQL 语句顶层类型枚举
 pub enum SqlSplitStmtKind: u8 {

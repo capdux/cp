@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/md/line_analysis.cp
+// Source: Absorbed from /data/dev/bun/src/md/line_analysis.cp | Synced: 2026-11-20T09:22:57Z
 // lib/md/line_analysis.cp
 // CommonMark & GFM Line Classification (Setext, ATX, HR, Code Fences, HTML Blocks 1-7, Tables, Containers)
 

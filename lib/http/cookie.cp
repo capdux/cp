@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/runtime/webcore/CookieMap.cp
+// Source: Absorbed from /data/dev/bun/src/runtime/webcore/CookieMap.cp | Synced: 2026-11-20T11:49:45Z
 // lib/http/cookie.cp
 // RFC 6265 HTTP Cookie Header Parser, CookieMap, CookieCodec & HttpCookieJar
 

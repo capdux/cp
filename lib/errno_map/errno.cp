@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys/coreutils_error_map.cp and errno/{linux_errno,darwin_errno}.cp
+// Source: Absorbed from /data/dev/bun/src/sys/coreutils_error_map.cp | Synced: 2026-11-21T13:31:37Z
 
 /// 目标操作系统枚举
 pub enum ErrnoOs: u8 {

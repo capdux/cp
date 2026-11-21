@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/runtime/ffi/
+// Source: Absorbed from /data/dev/bun/src/runtime/ffi/ | Synced: 2026-11-19T20:49:19Z
 // lib/ffi/_tcc.cp
 // TinyCC In-Memory C Compiler C-FFI Bindings
 // Absorbed from Bun src/tcc_sys/tcc.cp

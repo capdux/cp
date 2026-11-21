@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/semver/ (NPM/Bun Semver Range Matcher & Comparator)
+// Source: Absorbed from /data/dev/bun/src/install/semver/ | Synced: 2026-11-21T16:39:55Z (NPM/Bun Semver Range Matcher & Comparator)
 // Pure-CP zero-allocation SemVer 2.0.0 parser, comparator, and single-pass NPM/Bun range evaluator.
 
 /// Parsed SemVer 2.0.0 version (zero-copy `pre` slice referencing the input).

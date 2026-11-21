@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/glob.zig (Glob Pattern Escaping & Prefix Analyzer)
+// Source: Absorbed from /data/dev/bun/src/glob.zig | Synced: 2026-11-21T14:40:55Z (Glob Pattern Escaping & Prefix Analyzer)
 
 /// 判断字节是否为 Glob 通配符元字符（`*`, `?`, `[`, `]`, `{`, `}`, `(`, `)`, `!`, `\`）
 pub fn isGlobMagic(c: u8): bool {

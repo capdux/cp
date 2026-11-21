@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/csrf/csrf.cp
+// Source: Absorbed from /data/dev/bun/src/csrf/csrf.cp | Synced: 2026-11-20T12:19:27Z
 // lib/security/index.cp
 // Unified Entry Point for Security Subsystem (cap:security)
 

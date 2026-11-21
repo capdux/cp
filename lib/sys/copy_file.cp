@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/sys/copy_file.cp & /data/dev/bun/src/sys/sys.cp
+// Source: Absorbed from /data/dev/bun/src/sys/copy_file.cp | Synced: 2026-11-20T11:12:48Z
 // ============================================================================
 // lib/sys/copy_file.cp — High-Performance File Copy Engine (Zero-copy & Fallback)
 // ============================================================================

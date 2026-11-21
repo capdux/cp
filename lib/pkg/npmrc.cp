@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/npmrc.zig (.npmrc Config & Scoped Registry Resolver)
+// Source: Absorbed from /data/dev/bun/src/install/npmrc.zig | Synced: 2026-11-21T16:02:57Z (.npmrc Config & Scoped Registry Resolver)
 
 pub const DEFAULT_NPM_REGISTRY: []const u8 = "https://registry.npmjs.org/";
 

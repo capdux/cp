@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/event_loop/AnyEventLoop.cp
+// Source: Absorbed from /data/dev/bun/src/event_loop/AnyEventLoop.cp | Synced: 2026-11-20T11:08:23Z
 // lib/event/file_poll.cp
 // Cross-platform I/O file descriptor poller based on std.os.linux.poll
 

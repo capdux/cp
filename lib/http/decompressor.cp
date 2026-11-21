@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/http/Decompressor.cp
+// Source: Absorbed from /data/dev/bun/src/http/Decompressor.cp | Synced: 2026-11-21T11:59:38Z
 // lib/http/decompressor.cp
 // CP HTTP Stream Decompressor Bridged to cap:pack (cap:http)
 // RFC 1952 (Gzip), RFC 1950/1951 (Deflate/Inflate), Identity

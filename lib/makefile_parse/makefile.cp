@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli.zig (Makefile Target & Variable Parser)
+// Source: Absorbed from /data/dev/bun/src/cli.zig | Synced: 2026-11-21T15:33:58Z (Makefile Target & Variable Parser)
 
 /// GNU Make 变量赋值运算符枚举
 pub enum MakeAssignOp: u8 {

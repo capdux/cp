@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/url.zig (WHATWG application/x-www-form-urlencoded Parser & Builder)
+// Source: Absorbed from /data/dev/bun/src/url.zig | Synced: 2026-11-21T16:45:50Z (WHATWG application/x-www-form-urlencoded Parser & Builder)
 // Pure-CP zero-allocation application/x-www-form-urlencoded parser, lookup, percent-codec, and builder.
 
 fn hexVal(c: u8): u8? {

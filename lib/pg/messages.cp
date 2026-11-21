@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/ErrorResponse.cp, FieldMessage.cp, FieldType.cp, BackendKeyData.cp, ParameterStatus.cp, ReadyForQuery.cp, NotificationResponse.cp, CommandComplete.cp, TransactionStatusIndicator.cp
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/ErrorResponse.cp | Synced: 2026-11-21T16:59:50Z
 
 /// PostgreSQL v3 后端控制与诊断报文类型字节常量
 pub const TAG_ERROR_RESPONSE: u8 = 'E';

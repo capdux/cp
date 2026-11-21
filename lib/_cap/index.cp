@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/bun.cp
+// Source: Absorbed from /data/dev/bun/src/bun.cp | Synced: 2026-11-20T21:53:29Z
 // ============================================================================
 // lib/_cap/index.cp — `cap` Root Hub Documentation & Static Entry
 // ============================================================================

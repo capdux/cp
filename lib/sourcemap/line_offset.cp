@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/sourcemap/LineOffsetTable.cp
+// Source: Absorbed from /data/dev/bun/src/sourcemap/LineOffsetTable.cp | Synced: 2026-11-20T04:56:21Z
 // ============================================================================
 // lib/sourcemap/line_offset.cp — 源码行起始字节偏移表与二分行号/列号定位器
 // 吸收自 Bun src/sourcemap/LineOffsetTable.cp

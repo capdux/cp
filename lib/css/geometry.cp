@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/values/ratio.cp, values/rect.cp, properties/overflow.cp
+// Source: Absorbed from /data/dev/bun/src/css/values/ratio.cp | Synced: 2026-11-21T17:05:36Z
 
 fn gcdU64(a_in: u64, b_in: u64): u64 {
     let a = a_in;

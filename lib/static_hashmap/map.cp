@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/collections/StaticHashMap.cp
+// Source: Absorbed from /data/dev/bun/src/collections/StaticHashMap.cp | Synced: 2026-11-21T12:44:10Z
 
 pub const EMPTY_HASH: u64 = 0xFFFFFFFFFFFFFFFF;
 

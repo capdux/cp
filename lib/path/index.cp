@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/paths/paths.cp
+// Source: Absorbed from /data/dev/bun/src/paths/paths.cp | Synced: 2026-11-20T04:55:12Z
 // ============================================================================
 // lib/path/index.cp — Industrial-grade Path Standard Library (cap:path)
 // ============================================================================

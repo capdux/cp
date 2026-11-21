@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/threading/Mutex.cp
+// Source: Absorbed from /data/dev/bun/src/threading/Mutex.cp | Synced: 2026-11-21T11:59:41Z
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/mutex.cp
 // Upstream Sync: Refer to bun/src/threading/mutex.zig for future upstream updates.

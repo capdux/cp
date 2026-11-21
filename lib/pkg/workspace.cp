@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/install/lockfile.cp
+// Source: Absorbed from /data/dev/bun/src/install/lockfile.cp | Synced: 2026-11-21T16:52:17Z
 // ============================================================================
 // lib/pkg/workspace.cp — Monorepo Workspaces, Catalogs & Member DAG Engine
 // Absorbed from Bun src/install/{lockfile.cp,PnpmMatcher.cp}

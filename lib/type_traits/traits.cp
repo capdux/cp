@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/meta/traits.cp, /data/dev/bun/src/ptr/meta.cp
+// Source: Absorbed from /data/dev/bun/src/meta/traits.cp | Synced: 2026-11-21T12:37:01Z
 //! Comptime type introspection traits and pointer metadata helpers.
 
 /// Returns true if `T` is a byte slice or pointer to a byte array that coerces to `[]const u8`.

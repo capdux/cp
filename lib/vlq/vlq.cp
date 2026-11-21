@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sourcemap/VLQ.cp
+// Source: Absorbed from /data/dev/bun/src/sourcemap/VLQ.cp | Synced: 2026-11-21T12:41:22Z
 
 pub const MAX_VLQ_BYTES: usize = 7;
 pub const BASE64_ALPHABET: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

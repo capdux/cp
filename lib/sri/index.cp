@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/integrity.cp
+// Source: Absorbed from /data/dev/bun/src/install/integrity.cp | Synced: 2026-11-21T12:50:51Z
 import sri from "./integrity.cp";
 
 export const MAX_DIGEST_LEN = sri.MAX_DIGEST_LEN;

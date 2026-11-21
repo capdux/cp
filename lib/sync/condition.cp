@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/threading/Condition.cp
+// Source: Absorbed from /data/dev/bun/src/threading/Condition.cp | Synced: 2026-11-21T11:59:41Z
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/condition.cp
 // Upstream Sync: Refer to bun/src/threading/condition.zig for future upstream updates.

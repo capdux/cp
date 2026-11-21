@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/env_loader.zig (POSIX Shell Env Assignment Parser)
+// Source: Absorbed from /data/dev/bun/src/env_loader.zig | Synced: 2026-11-21T15:54:12Z (POSIX Shell Env Assignment Parser)
 
 pub struct ShellEnvEntry {
     key: []const u8;

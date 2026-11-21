@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/effects.cp
+// Source: Absorbed from /data/dev/bun/src/css/properties/effects.cp | Synced: 2026-11-21T16:57:43Z
 // Pure-CP zero-allocation CSS Filter Effects (`filter` / `backdrop-filter`)
 // parser and canonical serializer.
 

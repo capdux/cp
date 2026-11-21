@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/js_parser/ast/CharFreq.cp
+// Source: Absorbed from /data/dev/bun/src/js_parser/ast/CharFreq.cp | Synced: 2026-11-21T12:44:17Z
 import freq from "./freq.cp";
 
 export const CHAR_FREQ_COUNT = freq.CHAR_FREQ_COUNT;

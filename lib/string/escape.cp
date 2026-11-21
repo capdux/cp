@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/string/escapeRegExp.cp
+// Source: Absorbed from /data/dev/bun/src/string/escapeRegExp.cp | Synced: 2026-11-20T08:43:57Z
 // lib/string/escape.cp
 // High-speed HTML entity escaping, JS/JSON string escaping & RegExp pattern escaping
 // Absorbed from bun/src/string/immutable/escapeHTML.zig & bun/src/string/escapeRegExp.cp

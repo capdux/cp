@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/output.zig (OSC 8 Terminal Hyperlink Codec)
+// Source: Absorbed from /data/dev/bun/src/output.zig | Synced: 2026-11-21T16:36:35Z (OSC 8 Terminal Hyperlink Codec)
 // Pure-CP zero-allocation OSC 8 terminal hyperlink formatter, parser, and stripper.
 // Supports both ST (ESC \) and BEL (0x07) terminators per the OSC 8 hyperlink specification.
 

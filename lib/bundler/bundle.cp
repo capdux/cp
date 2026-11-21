@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/bundler/
+// Source: Absorbed from /data/dev/bun/src/bundler/ | Synced: 2026-11-20T06:57:33Z
 // lib/bundler/bundle.cp
 // High-performance Bundler configuration, Chunk topology ordering & BundleV2 pipeline state
 // Absorbed from Bun src/bundler/bundle_v2.cp & src/bundler/Chunk.cp

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ini.zig (EditorConfig Parser & File Property Resolver)
+// Source: Absorbed from /data/dev/bun/src/ini.zig | Synced: 2026-11-21T14:46:04Z (EditorConfig Parser & File Property Resolver)
 // Pure-CP zero-allocation .editorconfig parser, section glob matcher, and property resolver.
 
 fn isWs(b: u8): bool {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/uptime Zero-Alloc Integer Parser)
+// Source: Absorbed from /data/dev/bun/src/sys.zig | Synced: 2026-11-21T16:13:49Z (Linux /proc/uptime Zero-Alloc Integer Parser)
 
 const MAX_U64: u64 = 18446744073709551615;
 

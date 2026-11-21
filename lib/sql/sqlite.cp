@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/sql/
+// Source: Absorbed from /data/dev/bun/src/sql/ | Synced: 2026-11-21T11:59:40Z
 // ============================================================================
 // Absorbed from Bun: bun/src/sql/sqlite.cp
 // Upstream Sync: Refer to bun/src/sql/sqlite.zig for future upstream updates.

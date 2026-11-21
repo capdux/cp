@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/md/root.cp
+// Source: Absorbed from /data/dev/bun/src/md/root.cp | Synced: 2026-11-20T11:08:48Z
 // lib/md/engine.cp
 // High-Level Entry Points for the Ported Bun MD4C Engine (HTML, ANSI & Custom Callback Renderer)
 

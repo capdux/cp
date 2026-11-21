@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/interchange/interchange.cp
+// Source: Absorbed from /data/dev/bun/src/interchange/interchange.cp | Synced: 2026-11-20T09:46:56Z
 // lib/conf/index.cp
 // Unified Configuration & Interchange Subsystem (cap:conf / cap:dotenv / cap:ini)
 

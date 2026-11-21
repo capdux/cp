@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/time.zig (RFC 3339 / ISO 8601 Timestamp Parser & Formatter)
+// Source: Absorbed from /data/dev/bun/src/time.zig | Synced: 2026-11-21T14:57:50Z (RFC 3339 / ISO 8601 Timestamp Parser & Formatter)
 
 /// 判断公历年份是否为闰年
 pub fn isLeapYear(year: u16): bool {

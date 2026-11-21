@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/yaml/yaml.zig (YAML 1.2 Scalar Quoting & Escaper)
+// Source: Absorbed from /data/dev/bun/src/yaml/yaml.zig | Synced: 2026-11-21T15:32:48Z (YAML 1.2 Scalar Quoting & Escaper)
 
 const HEX_LOWER: []const u8 = "0123456789abcdef";
 

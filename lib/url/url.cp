@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/url/url.cp
+// Source: Absorbed from /data/dev/bun/src/url/url.cp | Synced: 2026-11-20T11:08:40Z
 // ============================================================================
 // lib/url/url.cp — WHATWG URL Parser & Representation
 // ============================================================================

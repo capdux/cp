@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/meta/traits.cp, /data/dev/bun/src/ptr/meta.cp
+// Source: Absorbed from /data/dev/bun/src/meta/traits.cp | Synced: 2026-11-21T12:35:40Z
 import traits from "./traits.cp";
 
 export const isByteString = traits.isByteString;

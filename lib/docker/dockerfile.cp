@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli.zig (Dockerfile Instruction Parser)
+// Source: Absorbed from /data/dev/bun/src/cli.zig | Synced: 2026-11-21T15:02:16Z (Dockerfile Instruction Parser)
 
 /// 单条解析后的 Dockerfile 指令
 pub struct DockerInstruction {

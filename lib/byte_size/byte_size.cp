@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/fmt.zig (Human Byte-Size Parser & SI/IEC Formatter)
+// Source: Absorbed from /data/dev/bun/src/fmt.zig | Synced: 2026-11-21T14:50:52Z (Human Byte-Size Parser & SI/IEC Formatter)
 // Pure-CP zero-allocation parser for byte sizes ("10KB", "1.5GiB", "512B") and SI/IEC formatters.
 
 fn isWs(b: u8): bool {

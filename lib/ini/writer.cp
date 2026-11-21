@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ini.zig (INI Config Safe Writer & Escaper)
+// Source: Absorbed from /data/dev/bun/src/ini.zig | Synced: 2026-11-21T15:56:07Z (INI Config Safe Writer & Escaper)
 
 fn isHWhitespace(c: u8): bool {
     return c == ' ' || c == '\t';

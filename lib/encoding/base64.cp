@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/base64/base64.cp
+// Source: Absorbed from /data/dev/bun/src/base64/base64.cp | Synced: 2026-11-19T20:26:12Z
 // lib/encoding/base64.cp
 // High-performance Base64 encoder, decoder, in-place decoder & codecs in pure CP
 

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli.zig (OCI / Docker Image Reference Parser)
+// Source: Absorbed from /data/dev/bun/src/cli.zig | Synced: 2026-11-21T15:24:58Z (OCI / Docker Image Reference Parser)
 // Pure-CP zero-allocation OCI / Docker image reference parser (`[registry/]repository[:tag][@digest]`).
 
 fn strEq(a: []const u8, b: []const u8): bool {

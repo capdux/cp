@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp (HTTP Strong & Weak ETag Generator)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T16:45:50Z (HTTP Strong & Weak ETag Generator)
 
 const FNV1A_64_OFFSET: u64 = 0xcbf29ce484222325;
 const FNV1A_64_PRIME: u64 = 0x100000001b3;

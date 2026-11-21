@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/ptr/weak_ptr.cp
+// Source: Absorbed from /data/dev/bun/src/ptr/weak_ptr.cp | Synced: 2026-11-19T20:39:08Z
 // Intrusive weak pointer tracking for objects with deferred destruction
 import std from "std";
 

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/ptr/raw_ref_count.cp
+// Source: Absorbed from /data/dev/bun/src/ptr/raw_ref_count.cp | Synced: 2026-11-19T20:42:39Z
 // Low-level atomic and non-atomic reference count primitives
 import std from "std";
 

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/paths/path_buffer_pool.cp
+// Source: Absorbed from /data/dev/bun/src/paths/path_buffer_pool.cp | Synced: 2026-11-21T11:59:39Z
 // ============================================================================
 // lib/path/buffer_pool.cp — Preallocated Buffer Pool for Zero-Allocation Path Ops
 // ============================================================================

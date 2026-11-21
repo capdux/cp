@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/output.zig (ANSI SGR Style & Color Codec)
+// Source: Absorbed from /data/dev/bun/src/output.zig | Synced: 2026-11-21T16:36:35Z (ANSI SGR Style & Color Codec)
 // Pure-CP zero-allocation ANSI SGR style & 16-color / 256-color / 24-bit TrueColor RGB codec.
 
 /// Color representation mode for ANSI SGR foreground/background colors.

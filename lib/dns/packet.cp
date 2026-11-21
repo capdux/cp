@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/dns/
+// Source: Absorbed from /data/dev/bun/src/dns/ | Synced: 2026-11-20T07:15:24Z
 // lib/dns/packet.cp
 // RFC 1035 DNS Wire Packet Header, Domain Label Codec & Pointer Decompression
 

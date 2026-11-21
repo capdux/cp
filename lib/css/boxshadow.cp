@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/box_shadow.cp, /data/dev/bun/src/css/properties/outline.cp
+// Source: Absorbed from /data/dev/bun/src/css/properties/box_shadow.cp | Synced: 2026-11-21T16:58:27Z
 //! CSS `box-shadow` shorthand parser/serializer and `border-style`/`outline-style` `LineStyle` model.
 
 import std from "std";

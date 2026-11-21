@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/md/ (line_analysis.cp, links.cp, ref_defs.cp)
+// Source: Absorbed from /data/dev/bun/src/md/ | Synced: 2026-11-21T17:05:05Z (line_analysis.cp, links.cp, ref_defs.cp)
 
 export {
     SetextResult,

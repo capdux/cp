@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/env_loader.zig (.env Key Validator & Safe Value Serializer)
+// Source: Absorbed from /data/dev/bun/src/env_loader.zig | Synced: 2026-11-21T15:40:17Z (.env Key Validator & Safe Value Serializer)
 
 struct OutWriter {
     buf: []u8,

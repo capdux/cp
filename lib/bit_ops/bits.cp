@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/meta/bits.cp
+// Source: Absorbed from /data/dev/bun/src/meta/bits.cp | Synced: 2026-11-21T13:59:55Z
 // Pure-CP zero-allocation bitfield, bit-mask, power-of-two alignment, and
 // bit manipulation primitives for u32/u64 systems programming.
 

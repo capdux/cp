@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/md/inlines.cp
+// Source: Absorbed from /data/dev/bun/src/md/inlines.cp | Synced: 2026-11-20T09:22:20Z
 // lib/md/inlines.cp
 // CommonMark & GFM Inline Delimiter Stack Resolution, Code Spans, Entities, Autolinks & Links
 

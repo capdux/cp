@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/router/ParamMap.cp, /data/dev/bun/src/http_types/URLPath.cp
+// Source: Absorbed from /data/dev/bun/src/router/ParamMap.cp | Synced: 2026-11-21T12:47:31Z
 //! HTTP route parameter map (`ParamMap` with `~init()` RAII) and
 //! zero-allocation `URLPath` parser (extname, first segment, query string, `.map` source map detection).
 

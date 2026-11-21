@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/bun_alloc/MaxHeapAllocator.cp & /data/dev/bun/src/bun_alloc/BufferFallbackAllocator.cp
+// Source: Absorbed from /data/dev/bun/src/bun_alloc/MaxHeapAllocator.cp | Synced: 2026-11-21T12:03:25Z
 // lib/mem/allocator.cp
 // High-performance Arena, StackFallbackAllocator, BumpArena, MaybeOwnedBuf, and SharedTensor
 // Absorbed from bun/src/bun_alloc/ (BufferFallbackAllocator, MaxHeapAllocator, maybe_owned, MimallocArena)

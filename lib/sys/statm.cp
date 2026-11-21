@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/<pid>/statm Parser)
+// Source: Absorbed from /data/dev/bun/src/sys.zig | Synced: 2026-11-21T16:27:23Z (Linux /proc/<pid>/statm Parser)
 // Pure-CP zero-allocation Linux /proc/<pid>/statm 7-column memory page counter parser.
 
 const U64_MAX: u64 = 18446744073709551615;

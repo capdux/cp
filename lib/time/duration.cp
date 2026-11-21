@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli.zig (Human Duration Parser & Formatter)
+// Source: Absorbed from /data/dev/bun/src/cli.zig | Synced: 2026-11-21T14:51:01Z (Human Duration Parser & Formatter)
 
 pub const NS_PER_US: u64 = 1000;
 pub const NS_PER_MS: u64 = 1000000;

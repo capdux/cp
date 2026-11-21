@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/sys/File.cp
+// Source: Absorbed from /data/dev/bun/src/sys/File.cp | Synced: 2026-11-20T11:12:46Z
 // ============================================================================
 // lib/sys/file.cp — RAII File Handle Wrapper & High-level File Operations
 // ============================================================================

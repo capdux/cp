@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/ptr/Cow.cp
+// Source: Absorbed from /data/dev/bun/src/ptr/Cow.cp | Synced: 2026-11-19T20:38:55Z
 // Copy-On-Write value wrapper (borrowed or owned)
 import std from "std";
 

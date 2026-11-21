@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/json_parser.zig (RFC 6901 JSON Pointer)
+// Source: Absorbed from /data/dev/bun/src/json_parser.zig | Synced: 2026-11-21T14:31:57Z (RFC 6901 JSON Pointer)
 
 /// 校验字符串是否为合法 RFC 6901 JSON Pointer
 /// 空串合法代表文档根；非空必须以 `/` 开头；任意 `~` 后必须紧跟 `0` 或 `1`

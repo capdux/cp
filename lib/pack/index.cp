@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/zlib/ & /data/dev/bun/src/libarchive/
+// Source: Absorbed from /data/dev/bun/src/zlib/ | Synced: 2026-11-20T11:30:20Z
 // ============================================================================
 // lib/pack/index.cp — CP 标准压缩、归档与校验和模块 (cap:pack / cap:compress) 对外统一出口
 // ============================================================================

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/exe_format/elf.cp
+// Source: Absorbed from /data/dev/bun/src/exe_format/elf.cp | Synced: 2026-11-20T05:50:40Z
 // lib/elf/elf64.cp
 // Full ELF64 Program Header, Section Header, Symbol Table & Dynamic Section Parser (cap:elf)
 // Absorbed from Bun src/exe_format/elf.cp with pure CP semantics

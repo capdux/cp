@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/Authentication.cp, /data/dev/bun/src/sql/postgres/protocol/NewWriter.cp
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/Authentication.cp | Synced: 2026-11-21T16:59:35Z
 
 /// PostgreSQL 后端认证报文类型字节（'R' = 0x52）
 pub const AUTH_MESSAGE_TAG: u8 = 'R';

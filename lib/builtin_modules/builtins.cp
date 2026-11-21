@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/resolve_builtins/HardcodedModule.cp
+// Source: Absorbed from /data/dev/bun/src/resolve_builtins/HardcodedModule.cp | Synced: 2026-11-21T12:57:20Z
 
 /// 目标运行时枚举
 pub enum RuntimeTarget: u8 {

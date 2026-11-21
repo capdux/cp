@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/json_parser.zig (RFC 8259 JSON String Escaper & Unescaper)
+// Source: Absorbed from /data/dev/bun/src/json_parser.zig | Synced: 2026-11-21T15:10:23Z (RFC 8259 JSON String Escaper & Unescaper)
 // Pure-CP zero-allocation RFC 8259 JSON string escaper and unescaper with UTF-16 surrogate pair decoding.
 
 fn hexVal(c: u8): u32? {

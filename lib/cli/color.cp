@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/output.zig (Terminal ANSI Color Capability Detector)
+// Source: Absorbed from /data/dev/bun/src/output.zig | Synced: 2026-11-21T16:39:27Z (Terminal ANSI Color Capability Detector)
 // Pure-CP deterministic terminal color level detection (NO_COLOR, FORCE_COLOR, CLICOLOR, COLORTERM, TERM, CI).
 
 fn toLowerAscii(b: u8): u8 {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/{import,scope,viewport}.cp
+// Source: Absorbed from /data/dev/bun/src/css/rules/{import,scope,viewport}.cp | Synced: 2026-11-21T16:57:43Z
 // Pure-CP zero-allocation CSS Cascade / Scoping rule prelude parsers & serializers:
 // `@import` (with layer/supports/media), `@scope (<start>) [to (<end>)]`, and `@layer`.
 

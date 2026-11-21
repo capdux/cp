@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/md/root.cp
+// Source: Absorbed from /data/dev/bun/src/md/root.cp | Synced: 2026-11-20T08:55:03Z
 // lib/md/index.cp
 // Unified Public Exports for cap:md (Compatible AST/Table API + Full Bun MD4C Engine)
 

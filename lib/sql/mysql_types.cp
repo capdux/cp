@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/sql/mysql/MySQLTypes.cp
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/MySQLTypes.cp | Synced: 2026-11-20T09:04:16Z
 // lib/sql/mysql_types.cp
 // MySQL AuthMethod, Capabilities, StatusFlags, CharacterSets, FieldTypes, Error Classifier & Temporal Values
 

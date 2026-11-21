@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/safety/safety.cp
+// Source: Absorbed from /data/dev/bun/src/safety/safety.cp | Synced: 2026-11-19T20:39:35Z
 import std from "std";
 
 /// Assert condition is true; panic with message otherwise.

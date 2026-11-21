@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli.zig (Vixie Cron Macro Presets & 5-Field Normalizer)
+// Source: Absorbed from /data/dev/bun/src/cli.zig | Synced: 2026-11-21T16:07:20Z (Vixie Cron Macro Presets & 5-Field Normalizer)
 // Pure-CP zero-allocation Vixie/systemd cron preset expander (@hourly/@daily/@weekly/@monthly/@yearly/@reboot).
 
 fn isWs(b: u8): bool {

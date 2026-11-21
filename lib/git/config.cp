@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/repository.cp
+// Source: Absorbed from /data/dev/bun/src/install/repository.cp | Synced: 2026-11-21T13:52:22Z
 
 /// Git Config / INI 单条配置项（零拷贝切片）
 pub struct GitConfigEntry {

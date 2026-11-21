@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/dns.zig (/etc/hosts Parser & Resolver Lookup)
+// Source: Absorbed from /data/dev/bun/src/dns.zig | Synced: 2026-11-21T14:36:08Z (/etc/hosts Parser & Resolver Lookup)
 // Pure-CP zero-allocation /etc/hosts parser supporting IPv4/IPv6, multiple aliases, and comments.
 
 fn isSpaceOrTab(b: u8): bool {

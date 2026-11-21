@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http_types/{Encoding,FetchCacheMode,FetchRedirect,FetchRequestMode,URLPath}.cp
+// Source: Absorbed from /data/dev/bun/src/http_types/{Encoding,FetchCacheMode,FetchRedirect,FetchRequestMode,URLPath}.cp | Synced: 2026-11-21T16:45:50Z
 
 /// 内容编码支持位掩码常量
 pub const ENC_MASK_IDENTITY: u8 = 1 << 0;

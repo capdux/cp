@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc CUID / CUID2 Codec & Validator)
+// Source: Absorbed from /data/dev/bun/src/ | Synced: 2026-11-21T17:35:38Z (Zero-Alloc CUID / CUID2 Codec & Validator)
 
 export {
     CuidVersion,

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/safety/thread_id.cp
+// Source: Absorbed from /data/dev/bun/src/safety/thread_id.cp | Synced: 2026-11-19T20:39:37Z
 import std from "std";
 
 /// A value that does not alias any other thread ID.

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ini.zig (Java .properties Zero-Alloc Parser)
+// Source: Absorbed from /data/dev/bun/src/ini.zig | Synced: 2026-11-21T15:58:36Z (Java .properties Zero-Alloc Parser)
 
 pub struct PropertyEntry {
     key: []const u8;

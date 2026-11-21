@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http_types/{MimeType,mime_type_list_enum}.cp
+// Source: Absorbed from /data/dev/bun/src/http_types/{MimeType,mime_type_list_enum}.cp | Synced: 2026-11-21T17:06:09Z
 
 /// MIME 内容主分类
 export enum MimeCategory {

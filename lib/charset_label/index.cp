@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bun.js/webcore/encoding.zig (WHATWG Charset Label Canonicalizer)
+// Source: Absorbed from /data/dev/bun/src/bun.js/webcore/encoding.zig | Synced: 2026-11-21T15:29:40Z (WHATWG Charset Label Canonicalizer)
 
 export {
     CharsetKind,

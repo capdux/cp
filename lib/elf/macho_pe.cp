@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/exe_format/
+// Source: Absorbed from /data/dev/bun/src/exe_format/ | Synced: 2026-11-19T20:49:16Z
 // lib/elf/macho_pe.cp
 // Mach-O 64-bit Header & PE/COFF Header Binary Inspectors
 // Absorbed from Bun src/exe_format/macho.cp & src/exe_format/pe.cp

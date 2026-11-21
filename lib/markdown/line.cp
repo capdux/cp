@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/md/line_analysis.cp
+// Source: Absorbed from /data/dev/bun/src/md/line_analysis.cp | Synced: 2026-11-21T17:04:34Z
 // Pure-CP CommonMark / GFM block-level line analyzer: Setext & ATX headings,
 // thematic breaks (HR), fenced code blocks, HTML block types 1-7, and GFM table underlines.
 

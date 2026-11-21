@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/semver.zig (SemVer 2.0.0 Version Bumper & Formatter)
+// Source: Absorbed from /data/dev/bun/src/install/semver.zig | Synced: 2026-11-21T16:39:55Z (SemVer 2.0.0 Version Bumper & Formatter)
 
 /// SemVer 2.0.0 版本递增类型枚举
 pub enum BumpKind: u8 {

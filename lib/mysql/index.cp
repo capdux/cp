@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/ (Unified MySQL protocol & wire standard library: cap:mysql)
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/ | Synced: 2026-11-21T17:00:18Z (Unified MySQL protocol & wire standard library: cap:mysql)
 
 import authMod from "./auth.cp";
 import capsMod from "./caps.cp";

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/MimeType.zig (RFC 9110 §8.3.1 Content-Type Header Parser)
+// Source: Absorbed from /data/dev/bun/src/http/MimeType.zig | Synced: 2026-11-21T16:45:50Z (RFC 9110 §8.3.1 Content-Type Header Parser)
 // Pure-CP zero-allocation RFC 9110 Content-Type parser, parameter extractor (charset/boundary), and media-type classifier.
 
 fn isWs(b: u8): bool {

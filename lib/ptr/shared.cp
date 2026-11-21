@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/ptr/shared.cp
+// Source: Absorbed from /data/dev/bun/src/ptr/shared.cp | Synced: 2026-11-19T20:42:42Z
 // Thread-safe and single-threaded reference counted shared pointer体系 (Shared<T>, AtomicShared<T>, Weak<T>)
 import std from "std";
 import { PointerInfo, PointerKind } from "./meta.cp";

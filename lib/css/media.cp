@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/media.cp
+// Source: Absorbed from /data/dev/bun/src/css/rules/media.cp | Synced: 2026-11-21T17:05:36Z
 
 /// CSS Media Queries Level 4 解析错误集
 pub err CssMediaError {

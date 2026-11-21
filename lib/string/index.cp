@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/string/
+// Source: Absorbed from /data/dev/bun/src/string/ | Synced: 2026-11-20T08:44:59Z
 // ============================================================================
 // Absorbed from Bun: /data/dev/bun/src/string/ & /data/dev/bun/src/unicode/
 // Upstream Sync: Refer to /data/dev/bun/src/string/ for future upstream updates.

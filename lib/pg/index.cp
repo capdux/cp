@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/ (Authentication, NewWriter, Copy/SASL/NegotiateProtocolVersion, Parse/Describe/Execute/Close, ErrorResponse/ControlMessages, Tag/PostgresTypes, NewReader, AnyPostgresError, FieldDescription/StartupMessage)
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/ | Synced: 2026-11-21T16:59:53Z (Authentication, NewWriter, Copy/SASL/NegotiateProtocolVersion, Parse/Describe/Execute/Close, ErrorResponse/ControlMessages, Tag/PostgresTypes, NewReader, AnyPostgresError, FieldDescription/StartupMessage)
 
 export {
     AUTH_MESSAGE_TAG,

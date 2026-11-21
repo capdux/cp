@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/output.zig, /data/dev/bun/src/string/immutable.zig (Unified ANSI Domain Barrel)
+// Source: Absorbed from /data/dev/bun/src/output.zig | Synced: 2026-11-21T16:36:21Z (Unified ANSI Domain Barrel)
 export {
     Osc8Link,
     osc8EncodedLen,

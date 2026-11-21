@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/semver.zig (SemVer 2.0.0 Comparator & In-Place Sorter)
+// Source: Absorbed from /data/dev/bun/src/install/semver.zig | Synced: 2026-11-21T16:39:55Z (SemVer 2.0.0 Comparator & In-Place Sorter)
 
 const U64_MAX: u64 = 0xFFFF_FFFF_FFFF_FFFF;
 

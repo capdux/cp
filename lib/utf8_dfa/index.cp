@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/unicode/uucode_lib/src/utf8.cp, /data/dev/bun/src/unicode/uucode_lib/src/ascii.cp
+// Source: Absorbed from /data/dev/bun/src/unicode/uucode_lib/src/utf8.cp | Synced: 2026-11-21T12:33:38Z
 import dfa from "./dfa.cp";
 
 export const UTF8_ACCEPT = dfa.UTF8_ACCEPT;

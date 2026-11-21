@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/threading/threading.cp
+// Source: Absorbed from /data/dev/bun/src/threading/threading.cp | Synced: 2026-11-19T20:53:08Z
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/concurrent_map.cp
 // Upstream Sync: Refer to bun/src/threading/concurrent_map.zig for future upstream updates.

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/toml/toml_parser.zig (TOML 1.0 String & Key Escaper / Unescaper)
+// Source: Absorbed from /data/dev/bun/src/toml/toml_parser.zig | Synced: 2026-11-21T15:30:01Z (TOML 1.0 String & Key Escaper / Unescaper)
 // Pure-CP zero-allocation TOML 1.0 bare-key validator, basic string escaper, and strict unescaper (\uXXXX / \UXXXXXXXX).
 
 fn hexVal(c: u8): u32? {

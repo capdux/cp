@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/mounts Zero-Alloc Parser)
+// Source: Absorbed from /data/dev/bun/src/sys.zig | Synced: 2026-11-21T16:12:14Z (Linux /proc/mounts Zero-Alloc Parser)
 
 fn isHWhitespace(c: u8): bool {
     return c == ' ' || c == '\t';

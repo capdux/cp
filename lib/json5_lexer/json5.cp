@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/interchange/json5.cp
+// Source: Absorbed from /data/dev/bun/src/interchange/json5.cp | Synced: 2026-11-21T13:55:32Z
 
 /// JSON5 词法 Token 类型枚举
 pub enum Json5TokenKind: u8 {

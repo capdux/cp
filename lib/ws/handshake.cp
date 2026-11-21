@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/http/websocket.cp
+// Source: Absorbed from /data/dev/bun/src/http/websocket.cp | Synced: 2026-11-20T05:41:53Z
 // lib/ws/handshake.cp
 // RFC 6455 WebSocket Opening Handshake (Sec-WebSocket-Accept SHA-1 + Base64, Upgrade Headers)
 

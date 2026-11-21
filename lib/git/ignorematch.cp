@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/glob.zig (.gitignore Rule Parser & Path Matcher)
+// Source: Absorbed from /data/dev/bun/src/glob.zig | Synced: 2026-11-21T14:43:22Z (.gitignore Rule Parser & Path Matcher)
 
 /// 解析后的单条 `.gitignore` 规则
 pub struct GitignoreRule {

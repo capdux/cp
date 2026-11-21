@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/js/node/events.ts
+// Source: Absorbed from /data/dev/bun/src/js/node/events.ts | Synced: 2026-11-19T22:20:22Z
 // lib/event/emitter.cp
 // CP Event-Driven Subsystem (cap:event / cap:events)
 // High-level EventEmitter, zero-allocation EventBus & coroutine Event signal primitive

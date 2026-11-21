@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/s3_signing/
+// Source: Absorbed from /data/dev/bun/src/s3_signing/ | Synced: 2026-11-20T07:13:34Z
 // ============================================================================
 // lib/s3/simple_request.cp — S3 基础 HTTP 请求、签名构建、预签名 URL 与结果模型
 // 吸收自 Bun src/runtime/webcore/s3/simple_request.cp

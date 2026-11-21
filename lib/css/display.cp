@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/display.cp
+// Source: Absorbed from /data/dev/bun/src/css/properties/display.cp | Synced: 2026-11-21T16:57:43Z
 //! CSS Display Level 3 (`display` and `visibility` properties):
 //! supports single keywords, multi-keyword outside/inside/list-item combinations,
 //! legacy shorthands (`inline-block`, `inline-flex`, `inline-grid`, vendor prefixes),

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/<pid>/io Parser)
+// Source: Absorbed from /data/dev/bun/src/sys.zig | Synced: 2026-11-21T16:29:10Z (Linux /proc/<pid>/io Parser)
 // Pure-CP zero-allocation Linux /proc/<pid>/io process I/O statistics parser.
 
 const U64_MAX: u64 = 18446744073709551615;

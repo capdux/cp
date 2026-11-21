@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ini.zig (OpenSSH ssh_config Parser & Host Resolver)
+// Source: Absorbed from /data/dev/bun/src/ini.zig | Synced: 2026-11-21T15:24:51Z (OpenSSH ssh_config Parser & Host Resolver)
 
 /// OpenSSH 主机生效配置结构体（零拷贝切片，遵循首现优先生效规则）
 pub struct SshHostConfig {

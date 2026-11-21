@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/unicode/ & /data/dev/bun/src/js_parser/lexer/identifier.cp
+// Source: Absorbed from /data/dev/bun/src/unicode/ | Synced: 2026-11-20T08:45:46Z
 /**
  * CP Unicode Classification, Case Folding & Zero-Alloc Codepoint Iterator (cap:string)
  * 对应 Bun src/unicode/ 与 src/js_parser/lexer/identifier.cp

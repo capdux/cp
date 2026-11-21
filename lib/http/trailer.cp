@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/ (RFC 9110 HTTP Trailer Header Parser & Validator)
+// Source: Absorbed from /data/dev/bun/src/http/ | Synced: 2026-11-21T16:52:35Z (RFC 9110 HTTP Trailer Header Parser & Validator)
 
 fn isSpace(c: u8): bool {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';

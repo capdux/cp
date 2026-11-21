@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/md/links.cp
+// Source: Absorbed from /data/dev/bun/src/md/links.cp | Synced: 2026-11-21T17:04:34Z
 
 /// CommonMark §6.3–6.5 链接与图片类型枚举
 pub enum LinkKind: u8 {

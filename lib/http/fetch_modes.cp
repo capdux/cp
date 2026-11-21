@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/http_types/FetchRequestMode.cp
+// Source: Absorbed from /data/dev/bun/src/http_types/FetchRequestMode.cp | Synced: 2026-11-19T22:12:17Z
 // lib/http/fetch_modes.cp
 // CP Web Fetch Request Enums & Modes (cap:http)
 // Ported from Bun.js http_types (FetchCacheMode, FetchRedirect, FetchRequestMode)

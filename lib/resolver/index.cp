@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/resolver/
+// Source: Absorbed from /data/dev/bun/src/resolver/ | Synced: 2026-11-20T10:22:44Z
 // ============================================================================
 // lib/resolver/index.cp — Unified Public Exports for cap:resolver
 // ============================================================================

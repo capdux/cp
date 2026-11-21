@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/zlib/ & Zig std.compress
+// Source: Absorbed from /data/dev/bun/src/zlib/ | Synced: 2026-11-19T20:22:36Z
 // lib/pack/native.cp
 // Native decompression using Zig std.compress
 

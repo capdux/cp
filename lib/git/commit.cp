@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli.zig (Conventional Commits 1.0.0 Parser & Bump Advisor)
+// Source: Absorbed from /data/dev/bun/src/cli.zig | Synced: 2026-11-21T15:06:30Z (Conventional Commits 1.0.0 Parser & Bump Advisor)
 // Pure-CP zero-allocation Conventional Commits 1.0.0 parser, breaking-change detector, and SemVer bump advisor.
 
 fn isWs(b: u8): bool {

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/wyhash/wyhash.cp
+// Source: Absorbed from /data/dev/bun/src/wyhash/wyhash.cp | Synced: 2026-11-21T17:06:25Z
 // ============================================================================
 // lib/hash/index.cp — High-Speed Non-Cryptographic Hashing Matrix (cap:hash)
 // Absorbed from Bun src/wyhash/wyhash.cp & Zig Standard Library: std.hash

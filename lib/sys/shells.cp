@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /etc/shells Parser)
+// Source: Absorbed from /data/dev/bun/src/sys.zig | Synced: 2026-11-21T16:25:50Z (Linux /etc/shells Parser)
 // Pure-CP zero-allocation Linux /etc/shells parser, validator, and lookup utilities.
 
 fn isWs(c: u8): bool {

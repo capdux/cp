@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp (RFC 9110 §10.2.3 Retry-After Header Parser & Formatter)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T16:49:05Z (RFC 9110 §10.2.3 Retry-After Header Parser & Formatter)
 // Pure-CP zero-allocation RFC 9110 Retry-After parser (delay-seconds and IMF-fixdate) and delay calculator.
 
 fn isWs(b: u8): bool {

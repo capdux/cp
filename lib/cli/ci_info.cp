@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/cli/ci_info.cp
+// Source: Absorbed from /data/dev/bun/src/cli/ci_info.cp | Synced: 2026-11-20T21:44:56Z
 // lib/cli/ci_info.cp
 // Production CI/CD Vendor Detector, PR Detection, ANSI/Hyperlink Probing & Terminal Dimensions
 

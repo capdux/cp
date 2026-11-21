@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/env_loader.zig (POSIX Env Variable Template Expander)
+// Source: Absorbed from /data/dev/bun/src/env_loader.zig | Synced: 2026-11-21T14:44:43Z (POSIX Env Variable Template Expander)
 
 /// 环境变量键值对（零拷贝切片）
 export struct EnvPair {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/{CommandTag,SSLMode}.cp and sql/mysql/SSLMode.cp
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/{CommandTag,SSLMode}.cp | Synced: 2026-11-21T16:42:29Z
 // Pure-CP zero-allocation SQL Connection URI parser (PostgreSQL / MySQL / SQLite),
 // SSLMode negotiation flags, and PostgreSQL CommandTag parser.
 

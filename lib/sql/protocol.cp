@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/sql/
+// Source: Absorbed from /data/dev/bun/src/sql/ | Synced: 2026-11-20T09:04:25Z
 // lib/sql/protocol.cp
 // Unified SQL Parameterized Statement, Postgres v3 Wire Frame, MySQL Packet Protocol,
 // Generic SqlConnectionPool & SQL Transaction State Machine

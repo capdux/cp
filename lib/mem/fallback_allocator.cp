@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/bun_alloc/BufferFallbackAllocator.cp & /data/dev/bun/src/bun_alloc/maybe_owned.cp & /data/dev/bun/src/bun_alloc/LinuxMemFdAllocator.cp
+// Source: Absorbed from /data/dev/bun/src/bun_alloc/BufferFallbackAllocator.cp | Synced: 2026-11-21T11:59:38Z
 // lib/mem/fallback_allocator.cp
 // BufferFallbackAllocator<N>, MaybeOwned<T>, and Linux MemFdBuffer
 

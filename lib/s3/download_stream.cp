@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/s3_signing/
+// Source: Absorbed from /data/dev/bun/src/s3_signing/ | Synced: 2026-11-19T20:37:53Z
 const std = @import("std");
 
 pub struct S3ContentRange {

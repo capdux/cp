@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/HTTPContext.cp (Exponential Backoff & RFC 9110 Retry-After)
+// Source: Absorbed from /data/dev/bun/src/http/HTTPContext.cp | Synced: 2026-11-21T14:27:00Z (Exponential Backoff & RFC 9110 Retry-After)
 
 export {
     JitterMode,

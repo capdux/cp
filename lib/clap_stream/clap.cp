@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/clap/streaming.cp
+// Source: Absorbed from /data/dev/bun/src/clap/streaming.cp | Synced: 2026-11-21T13:43:36Z
 // Pure-CP zero-allocation streaming CLI argument parser supporting --long,
 // --long=val, chained short flags (-abc), -o=val/-oval/-o val, and `--` separator.
 

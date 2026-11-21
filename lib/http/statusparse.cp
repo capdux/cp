@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/server/HTTPStatusText.cp
+// Source: Absorbed from /data/dev/bun/src/runtime/server/HTTPStatusText.cp | Synced: 2026-11-21T16:52:35Z
 
 /// HTTP 状态码大类（RFC 9110 §15）
 pub enum StatusClass {

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/napi/js_native_api_types.h
+// Source: Absorbed from /data/dev/bun/src/napi/js_native_api_types.h | Synced: 2026-11-20T05:44:33Z
 // lib/napi/_napi.cp
 // Node-API (N-API v9) C-ABI Types, Status Codes, Struct Layouts & Extern Declarations
 

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/bun_alloc/ & /data/dev/bun/src/ptr/raw_ref_count.cp
+// Source: Absorbed from /data/dev/bun/src/bun_alloc/ | Synced: 2026-11-20T06:10:38Z
 // lib/mem/rc.cp
 // Deterministic Reference Counting & Weak Control Block (absorbed from bun/src/ptr/raw_ref_count.cp, ref_count.cp, weak_ptr.cp)
 

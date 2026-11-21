@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http_types/Method.cp
+// Source: Absorbed from /data/dev/bun/src/http_types/Method.cp | Synced: 2026-11-21T16:49:05Z
 // Pure-CP zero-allocation HTTP / WebDAV / QUERY Method enum (36 methods)
 // with RFC 9110 safety, idempotency, cacheability, body, and CORS safelist predicates.
 

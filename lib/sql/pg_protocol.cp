@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/sql/postgres/PostgresProtocol.cp
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/PostgresProtocol.cp | Synced: 2026-11-20T11:08:32Z
 // lib/sql/pg_protocol.cp
 // Complete PostgreSQL v3 Binary Wire Protocol Frames (Frontend Encoders & Backend Decoders)
 

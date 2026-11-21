@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/padding_checker.cp
+// Source: Absorbed from /data/dev/bun/src/install/padding_checker.cp | Synced: 2026-11-21T12:27:04Z
 // Compile-time struct layout & uninitialized padding verifier for safe binary serialization (sliceAsBytes).
 
 /// Returns total implicit padding bytes inside struct `T` (comptime).

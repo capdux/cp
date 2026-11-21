@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /etc/protocols Parser)
+// Source: Absorbed from /data/dev/bun/src/sys.zig | Synced: 2026-11-21T16:31:29Z (Linux /etc/protocols Parser)
 // Pure-CP zero-allocation Linux /etc/protocols streaming parser and bidirectional lookup utilities.
 
 fn isWs(c: u8): bool {

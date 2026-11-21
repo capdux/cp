@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/glob/glob.cp
+// Source: Absorbed from /data/dev/bun/src/glob/glob.cp | Synced: 2026-11-20T04:54:22Z
 // lib/glob/index.cp
 
 import { Matcher, GlobMatcher, GlobMatchOptions } from "./matcher.cp";

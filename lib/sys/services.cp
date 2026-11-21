@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /etc/services Parser)
+// Source: Absorbed from /data/dev/bun/src/sys.zig | Synced: 2026-11-21T16:24:22Z (Linux /etc/services Parser)
 // Pure-CP zero-allocation Linux /etc/services streaming parser and bidirectional lookup utilities.
 
 fn isWs(c: u8): bool {

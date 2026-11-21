@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /etc/group Parser)
+// Source: Absorbed from /data/dev/bun/src/sys.zig | Synced: 2026-11-21T16:22:31Z (Linux /etc/group Parser)
 // Pure-CP zero-allocation Linux /etc/group streaming parser and membership lookup utilities.
 
 fn strEq(a: []const u8, b: []const u8): bool {

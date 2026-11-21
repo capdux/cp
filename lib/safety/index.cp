@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/safety/safety.cp
+// Source: Absorbed from /data/dev/bun/src/safety/safety.cp | Synced: 2026-11-20T06:56:21Z
 // CP Standard Library: cap:safety
 // High-performance thread safety, race condition detection, ASAN integration, CPU features & crash diagnostics
 import std from "std";

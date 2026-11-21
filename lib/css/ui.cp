@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/ui.cp
+// Source: Absorbed from /data/dev/bun/src/css/properties/ui.cp | Synced: 2026-11-21T17:10:30Z
 //! CSS Basic User Interface Level 4 properties:
 //! `color-scheme`, `resize`, `user-select`, `caret-shape`, `appearance`, and `cursor`.
 

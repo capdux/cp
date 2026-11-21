@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/http_types/MimeType.cp
+// Source: Absorbed from /data/dev/bun/src/http_types/MimeType.cp | Synced: 2026-11-20T09:58:04Z
 // lib/http/mime.cp
 // Complete 180+ entry MIME database, bidirectional lookup, compression/text/charset classification, and magic sniffing
 

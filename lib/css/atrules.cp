@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/keyframes.cp, /data/dev/bun/src/css/rules/layer.cp, /data/dev/bun/src/css/rules/counter_style.cp, /data/dev/bun/src/css/rules/property.cp
+// Source: Absorbed from /data/dev/bun/src/css/rules/keyframes.cp | Synced: 2026-11-21T16:57:43Z
 
 /// CSS At-Rules（`@keyframes` / `@layer` / `@counter-style` / `@property`）解析错误集
 pub err CssAtRuleError {

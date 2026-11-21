@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string/SmolStr.cp
+// Source: Absorbed from /data/dev/bun/src/string/SmolStr.cp | Synced: 2026-11-21T12:46:41Z
 
 pub const INLINE_MAX_LEN: usize = 15;
 

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/url/url.cp
+// Source: Absorbed from /data/dev/bun/src/url/url.cp | Synced: 2026-11-20T11:08:36Z
 // ============================================================================
 // lib/url/url_.cp — Low-level URL String Search, IP Detection & Port Helpers
 // ============================================================================

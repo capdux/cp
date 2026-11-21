@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli.zig (Deterministic CLI Progress Meter & Spinner Frame)
+// Source: Absorbed from /data/dev/bun/src/cli.zig | Synced: 2026-11-21T16:38:50Z (Deterministic CLI Progress Meter & Spinner Frame)
 // Pure-CP zero-allocation deterministic CLI progress meter, percentage, rate/ETA estimator, and spinner frame renderer.
 
 fn writeByte(out: []u8, pos: *usize, b: u8): bool {

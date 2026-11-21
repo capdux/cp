@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/md/html_renderer.cp
+// Source: Absorbed from /data/dev/bun/src/md/html_renderer.cp | Synced: 2026-11-20T09:23:05Z
 // lib/md/html_renderer.cp
 // Industrial-Grade CommonMark + GFM HTML Renderer (Heading IDs, Autolink Headings, Tag Filter, Escaping)
 

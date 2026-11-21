@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/fmt.zig (Human Number Format Barrel)
+// Source: Absorbed from /data/dev/bun/src/fmt.zig | Synced: 2026-11-21T15:40:56Z (Human Number Format Barrel)
 export {
     formatGroupedU64,
     formatGroupedI64,

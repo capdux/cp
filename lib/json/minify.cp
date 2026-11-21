@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/json_parser.zig (JSON & JSONC Zero-Alloc Minifier)
+// Source: Absorbed from /data/dev/bun/src/json_parser.zig | Synced: 2026-11-21T15:15:50Z (JSON & JSONC Zero-Alloc Minifier)
 // Pure-CP zero-allocation JSON/JSONC minifier: strips comments (// and /* */), trailing commas, and non-string whitespace.
 
 fn isWs(b: u8): bool {

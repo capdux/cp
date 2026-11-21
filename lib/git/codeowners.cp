@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/glob.zig (CODEOWNERS Rule Parser & Owner Resolver)
+// Source: Absorbed from /data/dev/bun/src/glob.zig | Synced: 2026-11-21T15:06:44Z (CODEOWNERS Rule Parser & Owner Resolver)
 
 /// 单条解析后的 `CODEOWNERS` 规则
 pub struct CodeownersRule {

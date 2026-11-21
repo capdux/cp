@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http_types/ETag.cp
+// Source: Absorbed from /data/dev/bun/src/http_types/ETag.cp | Synced: 2026-11-21T13:56:43Z
 // Pure-CP zero-allocation RFC 9110 / RFC 7232 HTTP ETag parser, strong/weak
 // comparison, If-None-Match / If-Match evaluation, and content ETag generator.
 

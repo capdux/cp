@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/md/unicode.cp
+// Source: Absorbed from /data/dev/bun/src/md/unicode.cp | Synced: 2026-11-20T09:13:50Z
 // lib/md/unicode.cp
 // MD4C Unicode Case Folding Tables & Binary Search
 

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/dns.zig (IANA DNS RRType, Class, RCODE & SRV/CAA Helpers)
+// Source: Absorbed from /data/dev/bun/src/dns.zig | Synced: 2026-11-21T16:36:24Z (IANA DNS RRType, Class, RCODE & SRV/CAA Helpers)
 
 fn isSpace(c: u8): bool {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/shell/EnvMap.cp
+// Source: Absorbed from /data/dev/bun/src/shell/EnvMap.cp | Synced: 2026-11-21T11:59:40Z
 // ============================================================================
 // Absorbed from Bun: /data/dev/bun/src/shell/EnvMap.cp & interpreter.cp
 // ============================================================================

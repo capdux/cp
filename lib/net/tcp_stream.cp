@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/uws/uws.cp
+// Source: Absorbed from /data/dev/bun/src/uws/uws.cp | Synced: 2026-11-21T11:59:39Z
 // lib/net/tcp_stream.cp
 // High-throughput TCP Stream with Corking & StreamBuffer
 // Absorbed from Bun us_socket_stream_buffer_t and SocketHandler

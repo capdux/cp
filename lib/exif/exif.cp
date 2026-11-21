@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/image/exif.cp
+// Source: Absorbed from /data/dev/bun/src/runtime/image/exif.cp | Synced: 2026-11-21T12:31:33Z
 //! EXIF Orientation reader (JPEG APP1/Exif + raw TIFF IFD0 tag 0x0112).
 //!
 //! Layout:

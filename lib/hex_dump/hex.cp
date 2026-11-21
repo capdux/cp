@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/fmt.zig (Hex Encode/Decode & Canonical HexDump Formatter)
+// Source: Absorbed from /data/dev/bun/src/fmt.zig | Synced: 2026-11-21T14:40:13Z (Hex Encode/Decode & Canonical HexDump Formatter)
 
 const HEX_LOWER: []const u8 = "0123456789abcdef";
 const HEX_UPPER: []const u8 = "0123456789ABCDEF";

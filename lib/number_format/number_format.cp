@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/fmt.zig (Human Integer Grouping, Radix & Ordinal Formatter)
+// Source: Absorbed from /data/dev/bun/src/fmt.zig | Synced: 2026-11-21T15:40:53Z (Human Integer Grouping, Radix & Ordinal Formatter)
 // Pure-CP zero-allocation integer formatter: thousands grouping, fixed-point decimals, ordinals, and radix formatting.
 
 fn writeByte(out: []u8, pos: *usize, b: u8): bool {

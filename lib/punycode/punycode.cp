@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/url.zig (RFC 3492 Punycode Codec)
+// Source: Absorbed from /data/dev/bun/src/url.zig | Synced: 2026-11-21T14:55:36Z (RFC 3492 Punycode Codec)
 
 const BASE: u32 = 36;
 const TMIN: u32 = 1;

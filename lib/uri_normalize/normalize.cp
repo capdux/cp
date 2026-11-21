@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/url.zig (RFC 3986 URI Normalization)
+// Source: Absorbed from /data/dev/bun/src/url.zig | Synced: 2026-11-21T14:47:37Z (RFC 3986 URI Normalization)
 
 const HEX_UPPER: []const u8 = "0123456789ABCDEF";
 

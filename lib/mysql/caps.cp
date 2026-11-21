@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/{Capabilities,StatusFlags}.cp
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/{Capabilities,StatusFlags}.cp | Synced: 2026-11-21T16:59:39Z
 
 /// MySQL 4.1–8.4 协议 32-bit 客户端/服务端能力位枚举
 pub enum CapabilityFlag: u32 {

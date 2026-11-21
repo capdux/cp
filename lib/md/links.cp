@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/md/links.cp
+// Source: Absorbed from /data/dev/bun/src/md/links.cp | Synced: 2026-11-20T09:22:11Z
 // lib/md/links.cp
 // CommonMark Inline Links, Reference Links, Shortcut Links, Images, Wiki Links & Angle Autolinks
 

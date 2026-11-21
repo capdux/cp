@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/HeaderValueIterator.cp (RFC 8288 Web Linking)
+// Source: Absorbed from /data/dev/bun/src/http/HeaderValueIterator.cp | Synced: 2026-11-21T16:49:05Z (RFC 8288 Web Linking)
 // Pure-CP zero-allocation RFC 8288 HTTP `Link` header parser & serializer
 // for pagination (`next`/`prev`/`last`), Early Hints / Preload (`rel=preload; as=style`), and canonical URLs.
 

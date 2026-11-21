@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys.zig (Linux /proc/<pid>/stat & /proc/<pid>/status Parser)
+// Source: Absorbed from /data/dev/bun/src/sys.zig | Synced: 2026-11-21T15:17:03Z (Linux /proc/<pid>/stat & /proc/<pid>/status Parser)
 // Pure-CP zero-allocation Linux /proc/<pid>/stat parser (safe for comm containing spaces or parentheses).
 
 fn parseI64(s: []const u8): i64? {

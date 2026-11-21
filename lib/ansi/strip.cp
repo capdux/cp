@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string/immutable.zig (ANSI/VT100 Escape Sequence Stripper & Visible Length)
+// Source: Absorbed from /data/dev/bun/src/string/immutable.zig | Synced: 2026-11-21T16:36:35Z (ANSI/VT100 Escape Sequence Stripper & Visible Length)
 // Pure-CP zero-allocation ANSI CSI/OSC/DCS/ESC stripper and visible ASCII/UTF-8 character counter.
 
 /// Check if a byte is an ANSI CSI parameter byte (0x30..=0x3F).

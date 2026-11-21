@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/sql/
+// Source: Absorbed from /data/dev/bun/src/sql/ | Synced: 2026-11-20T05:04:27Z
 // lib/sql/mysql.cp
 // MySQL Wire Protocol: Length-Encoded Integer/String, HandshakeV10, Command Encoders,
 // OK_Packet, ERR_Packet, EOF_Packet & Capabilities

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/options_types/CodeCoverageOptions.cp
+// Source: Absorbed from /data/dev/bun/src/options_types/CodeCoverageOptions.cp | Synced: 2026-11-21T14:16:53Z
 
 /// 单行代码执行命中记录
 pub struct LineHit {

@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/md/blocks.cp
+// Source: Absorbed from /data/dev/bun/src/md/blocks.cp | Synced: 2026-11-20T05:49:16Z
 // lib/md/table.cp
 // GFM Markdown Table Alignment Parser, Row Cell Splitter & HTML <table> Renderer
 // Absorbed from Bun src/md/

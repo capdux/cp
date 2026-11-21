@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc S-Expression Lexer & Formatter)
+// Source: Absorbed from /data/dev/bun/src/ | Synced: 2026-11-21T17:33:13Z (Zero-Alloc S-Expression Lexer & Formatter)
 
 /// S-Expression 词法单元类型
 pub enum SexpTokenKind: u8 {

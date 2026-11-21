@@ -1,4 +1,4 @@
-// Source: /data/dev/bun/src/bun_alloc/ & /data/dev/bun/src/ptr/tagged_pointer.cp
+// Source: Absorbed from /data/dev/bun/src/bun_alloc/ | Synced: 2026-11-19T20:46:01Z
 // lib/mem/tagged_ptr.cp
 // 64-bit NaN-boxing / upper-16-bit & low-3-bit Tagged Pointers (absorbed from bun/src/ptr/tagged_pointer.cp)
 
