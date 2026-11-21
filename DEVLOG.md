@@ -2,6 +2,9 @@
 
 > 历史研发日志已完整归档至 [DEVLOG_H.md](file:///data/dev/cp/DEVLOG_H.md)。本文件仅保留最新活跃记录。
 
+## 2026-11-21: 新建 `cap:lru_k` 纯 CP 抗扫描污染 LRU-K 双队列缓存替换引擎（历史访问队列 + 热键晋升缓存队列，防全表扫描击穿热缓存，支持 `cap.lru_k` 自动动态挂载，详见 `doc/lib/lru_k.md`）（5/5 PASS，文档直写 `doc/lib/lru_k.md`）
+- **核心设计**：采用历史访问队列与主缓存队列分离，访问达 K 次晋升主缓存，通过冷扫描抗污染与 `std.testing.allocator` 零泄漏验证。
+
 ## 2026-11-21: 新建 `cap:geo_quadtree` 纯 CP 2D 平面空间四叉树索引引擎（矩形包围盒 `queryRect` 与欧氏圆半径 `queryRadius` 检索，支持 `cap.geo_quadtree` 自动动态挂载，详见 `doc/lib/geo_quadtree.md`）（5/5 PASS，文档直写 `doc/lib/geo_quadtree.md`）
 - **核心设计**：采用 4 象限自动分裂与深度上限 24 防重合点死循环，通过 50 点分裂检索与 `std.testing.allocator` 零泄漏验证。
 

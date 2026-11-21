@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-21] - 新建 `cap:lru_k` 纯 CP 抗扫描污染 LRU-K 双队列缓存替换引擎（历史访问队列 + 热键晋升缓存队列，防全表扫描击穿热缓存，支持 `cap.lru_k` 自动动态挂载，详见 `doc/lib/lru_k.md`）（5/5 PASS，自动动态挂载 `cap.lru_k`）
+- **新增标准库**：`lib/lru_k/{lru_k,index}.cp`，实现泛型抗扫描污染 `LruKCache(K, V)` 与命中率统计。\n- **新增文档与测试**：`doc/lib/lru_k.md` 扁平文档与 `cap/test/test_lru_k_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
+
 ## [2026-11-21] - 新建 `cap:geo_quadtree` 纯 CP 2D 平面空间四叉树索引引擎（矩形包围盒 `queryRect` 与欧氏圆半径 `queryRadius` 检索，支持 `cap.geo_quadtree` 自动动态挂载，详见 `doc/lib/geo_quadtree.md`）（5/5 PASS，自动动态挂载 `cap.geo_quadtree`）
 - **新增标准库**：`lib/geo_quadtree/{quadtree,index}.cp`，实现泛型二维 `QuadTree(V)` 与深度上限保护。\n- **新增文档与测试**：`doc/lib/geo_quadtree.md` 扁平文档与 `cap/test/test_geo_quadtree_production_deep.cp`（5/5 PASS，经 `verify_module.sh` 校验通过）。
 

@@ -400,3 +400,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:geohash_3d` | `MortonError`, `Point3D`, `mortonEncode3D`, `mortonDecode3D`, `quantizeEncode3D`, `haversineMeters` | 纯 CP 3D Morton Z-Order 21-bit 空间填充曲线编码与 WGS84 Haversine 球面大圆测距引擎（支持 `cap.geohash_3d` 自动动态挂载，详见 `doc/lib/geohash_3d.md`） |
 | `cap:crdt_pn` | `CounterEntry`, `GCounter`, `PNCounter`, `LWWRegister`, `GSet` | 纯 CP 分布式状态型无冲突复制数据类型 (State-Based CRDTs) 套件（`GCounter`、`PNCounter`、`LWWRegister` 与 `GSet`，满足半格幂等/交换/结合律 `merge`，支持 `cap.crdt_pn` 自动动态挂载，详见 `doc/lib/crdt_pn.md`） |
 | `cap:geo_quadtree` | `QuadError`, `Rect`, `PointItem`, `QuadTree` | 纯 CP 2D 平面空间四叉树索引引擎（矩形包围盒 `queryRect` 与欧氏圆半径 `queryRadius` 检索，支持 `cap.geo_quadtree` 自动动态挂载，详见 `doc/lib/geo_quadtree.md`） |
+| `cap:lru_k` | `LruKError`, `LruKCache` | 纯 CP 抗扫描污染 LRU-K 双队列缓存替换引擎（历史访问队列 + 热键晋升缓存队列，防全表扫描击穿热缓存，支持 `cap.lru_k` 自动动态挂载，详见 `doc/lib/lru_k.md`） |
