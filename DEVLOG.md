@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:rdb` 零分配 Redis RDB 二进制快照头、变长/整数编码与流式事件解析器（5/5 PASS，文档直写 `doc/lib/rdb.md`）
+实现零分配 Redis RDB 解析器，自动关联 EXPIRETIME/EXPIRETIME_MS 至后续 KV 并支持 EOF 8B CRC64 校验尾。
+
 ## 2026-11-22: 新建 `cap:sstable` 零分配 LevelDB / RocksDB SSTable Footer、BlockHandle 与前缀压缩块解析器（5/5 PASS，文档直写 `doc/lib/sstable.md`）
 实现零分配 LevelDB/RocksDB SSTable 解析器，严格校验 handle 偏移与 restarts_offset 边界。
 

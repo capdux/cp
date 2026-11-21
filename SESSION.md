@@ -58,3 +58,6 @@
 
 ### 2026-11-22（`cap:sstable` 验收，完成 `cap:sstable` 交付验收并登记入库（5/5 PASS）；派发 `cap:lcov`。）
 - **执行成果**：`lib/sstable/`（5/5 PASS，`doc/lib/sstable.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:sstable` 交付验收并登记入库（5/5 PASS）；派发 `cap:lcov`。
+
+### 2026-11-22（`cap:rdb` 验收，完成 `cap:rdb` 交付验收并登记入库（5/5 PASS）；派发 `cap:vcd`。）
+- **执行成果**：`lib/rdb/`（5/5 PASS，`doc/lib/rdb.md`）经 `verify_module.sh` 一次性验收回收；完成 `cap:rdb` 交付验收并登记入库（5/5 PASS）；派发 `cap:vcd`。
