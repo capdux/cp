@@ -148,3 +148,14 @@ export {
     TaskGraphSummary,
     A2aTaskGraph,
 } from "./taskGraph.cp";
+
+export {
+    TRUST_CHAIN_MAX_HOPS,
+    TrustVerifyStatus,
+    TrustDelegationLink,
+    TrustChainResult,
+    delegateLink,
+    verifyTrustChainWithEpoch,
+    verifyTrustChain,
+    TrustChain,
+} from "./trustChain.cp";

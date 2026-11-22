@@ -421,3 +421,47 @@ pub fn demoA2aTaskGraph() {
     * = dag.summary().overall == TaskGraphStatus.in_progress;
 }
 ```
+
+
+---
+
+### 4.11 零堆分配 A2A 多智能体零信任委派链校验器 (`trustChain.cp`)
+
+面向多智能体跨边界协作的 100% 纯 CP 零动态堆分配 **Capability-Attenuated Delegation Trust Chain**（能力单调衰减委派链与零信任准入校验器）：
+
+- **常量与枚举**：
+  - `TRUST_CHAIN_MAX_HOPS = 16`
+  - `TrustVerifyStatus`（`ok | empty_chain | privilege_escalation | hop_limit_exceeded | cycle_detected | expired | not_yet_valid | revoked | cost_exceeded | missing_capability | broken_subject_link | invalid_time_window | invalid_agent_id`）
+- **数据模型**：
+  - `TrustDelegationLink`（`issuer_agent_id`, `subject_agent_id`, `capability_mask: u64`, `max_cost_micro_usd: u64`, `not_before_ms`, `expires_ms`, `max_further_hops: u8`, `revocation_epoch: u32`）
+  - `TrustChainResult`（`status`, `failed_hop_index`, `effective_capabilities`, `effective_max_cost_micro_usd`, `effective_not_before_ms`, `effective_expires_ms`, `remaining_further_hops`, `root_issuer_id`, `leaf_subject_id`, `hop_count`, `isOk()`）
+- **核心函数与构建器**：
+  - `delegateLink(parent, subject, caps, cost, nbf, exp, max_hops, epoch): TrustDelegationLink?`：强制执行严格单调衰减（能力子集、成本不增、有效期收紧、跳数递减、防自环），违规返回 `null`。
+  - `verifyTrustChain(chain, required_caps, est_cost, now_ms, revoked_ids): TrustChainResult` / `verifyTrustChainWithEpoch(...)`：端到端校验断链、多跳环路、单调衰减、吊销列表/纪元、有效期与最终任务能力/预算准入。
+  - `TrustChain`：固定 16 跳栈容器（`initRoot`, `appendDelegation`, `asSlice`, `len`, `verify`）。
+
+```cp
+import {
+    TrustDelegationLink,
+    TrustChain,
+} from "cap:a2a";
+
+pub fn demoA2aTrustChain() {
+    const root = TrustDelegationLink{
+        issuer_agent_id: 1,
+        subject_agent_id: 2,
+        capability_mask: 0b1111,
+        max_cost_micro_usd: 500_000,
+        not_before_ms: 1000,
+        expires_ms: 9000,
+        max_further_hops: 3,
+        revocation_epoch: 1,
+    };
+    let chain = TrustChain.initRoot(root) ?? return;
+    * = chain.appendDelegation(3, 0b0011, 100_000, 1500, 6000, 1, 1);
+
+    const no_revoked: [0]u64 = [];
+    const res = chain.verify(0b0010, 50_000, 2000, no_revoked[0..]);
+    * = res.isOk(); // true
+}
+```
