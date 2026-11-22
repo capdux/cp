@@ -98,6 +98,17 @@ export {
 } from "./stream";
 
 export {
+    H2_PENDING_MAX_CONNECTS,
+    H2_PENDING_MAX_WAITERS,
+    H2_PENDING_MAX_HOST_LEN,
+    H2PendingConnectError,
+    H2ConnectJoinKind,
+    H2ConnectJoinResult,
+    H2PendingConnectEntry,
+    H2PendingConnectTable,
+} from "./pending_connect";
+
+export {
     H2_DISPATCH_HEADER_SIZE,
     H2_DISPATCH_DEFAULT_MAX_FRAME_SIZE,
     H2_DISPATCH_MAX_FRAME_SIZE_LIMIT,

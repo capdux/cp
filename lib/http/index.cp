@@ -805,3 +805,15 @@ export {
     AsyncHttpConcurrencyLimiter,
     AsyncHttpTask,
 } from "./async_http.cp";
+
+// --- HTTP/2 In-Flight TLS Connect Coalescer ---
+export {
+    H2_PENDING_MAX_CONNECTS,
+    H2_PENDING_MAX_WAITERS,
+    H2_PENDING_MAX_HOST_LEN,
+    H2PendingConnectError,
+    H2ConnectJoinKind,
+    H2ConnectJoinResult,
+    H2PendingConnectEntry,
+    H2PendingConnectTable,
+} from "./h2/pending_connect.cp";

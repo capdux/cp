@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/server/RangeRequest.cp | Synced: 2026-11-22T00:27:22Z
+// Source: Absorbed from /data/dev/bun/src/runtime/server/RangeRequest.cp | Synced: 2026-11-22T09:28:26Z
 // Backward-compatible re-export: canonical implementation consolidated into lib/http/byterange.cp
 
 export {

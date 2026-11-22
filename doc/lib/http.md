@@ -704,3 +704,18 @@ const c2 = pool.connect("API.EXAMPLE.COM", 443, true, 102, 4)?;  // ReusedExisti
 4. **异步 HTTP 并发限流与任务状态机编排（`async_http.cp`，吸收自 `/data/dev/bun/src/http/AsyncHTTP.cp` 与 `/data/dev/bun/docs/guides/http/{fetch,proxy,fetch-unix}.mdx`）**：
    - 导出：`ASYNC_HTTP_DEFAULT_MAX_SIMULTANEOUS` (`256`)、`ASYNC_HTTP_MAX_CONFIG_LIMIT` (`65536`)、`AsyncHttpError`、`AsyncHttpState`、`AsyncHttpVerboseLevel`、`AsyncHttpOptions`、`AsyncHttpConcurrencyLimiter`、`AsyncHttpTask`；
    - 默认最大同时请求数对齐上游 `BUN_CONFIG_MAX_HTTP_REQUESTS = 256`（通过 `parseMaxRequestsEnv()` 校验 `1..65536`）；`AsyncHttpOptions.validate()` 拦截代理与 Unix Domain Socket 传输冲突；`AsyncHttpTask` 强制 `pending -> scheduled -> sending -> success|fail` 合法迁移及有界 `resetForRetry()`。
+5. **HTTP/2 在途 TLS 握手合并器（`h2/pending_connect.cp`，吸收自 `/data/dev/bun/src/http/h2_client/PendingConnect.cp` & `/data/dev/bun/docs/runtime/http/tls.mdx`）**：
+   - 导出：`H2_PENDING_MAX_CONNECTS` (`32`)、`H2_PENDING_MAX_WAITERS` (`32`)、`H2_PENDING_MAX_HOST_LEN` (`255`)、`H2PendingConnectError`、`H2ConnectJoinKind`、`H2ConnectJoinResult`、`H2PendingConnectEntry`、`H2PendingConnectTable`；
+   - 按 `(hostname[大小写不敏感], port, ssl_config_id)` 三元组执行 Singleflight 连接合并，防止高并发冷启动时对同一源站发起重复 TLS/ALPN 握手；严格隔离不同 `ssl_config_id` 的 TLS 证书/CA 策略，支持请求取消自动回收空槽位与 `O(1)` `swapRemove` 批量唤醒。
+
+```cp
+import { H2PendingConnectTable, H2ConnectJoinKind } from "cap:http";
+
+let tbl = H2PendingConnectTable.init();
+const j1 = tbl.joinOrStart("api.example.com", 443, 0, 1001)?; // InitiatedNew
+const j2 = tbl.joinOrStart("API.EXAMPLE.COM", 443, 0, 1002)?; // CoalescedWaiter (同 connect_id)
+let waiters: [8]u64 = [0; 8];
+const n = tbl.resolveAndDrain(j1.connect_id, waiters[0..])?; // n == 2, waiters == [1001, 1002]
+* = j2;
+* = n;
+```
