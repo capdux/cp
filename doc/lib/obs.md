@@ -571,6 +571,50 @@ pub fn demoAlertRules() {
 
 ---
 
+### 零分配金丝雀发布自动化统计门禁与自动回滚裁决器 (`canaryGate.cp`)
+
+面向 Kayenta / Flagger 风格自动化金丝雀发布的 100% 纯 CP 零动态堆分配多 KPI 统计门禁引擎：
+
+- **常量与枚举**：
+  - `CANARY_MAX_METRICS = 16`、`CANARY_NAME_MAX_LEN = 48`、`CANARY_BPS_SCALE = 10000`
+  - `CanaryDirection`（`lower_is_better | higher_is_better`）
+  - `CanaryMetricStatus`（`passed | regressed | insufficient_data`）
+  - `CanaryVerdict`（`pass_promote | marginal_hold | fail_rollback | insufficient_data`）
+- **核心统计函数与格式化器**：
+  - `evaluateMetricSample(spec, baseline_samples, canary_samples): CanaryMetricResult`：过滤 `NaN`/`Inf` 脏样本，Welford 单遍计算均值与无偏样本方差，联合两样本 Welch t 检验（`welch_t >= z_threshold`）与相对退化率（`regression_bps > max_regression_bps`）判定退化（含零方差确定性退化防护，消除小样本高方差噪声误杀）。
+  - `formatCanaryVerdict(verdict)` / `formatCanaryReportJson(report, out_buf: *[]u8): usize?`：零分配 JSON 摘要报告格式化。
+- **核心裁决器 `CanaryGateJudge`**：
+  - `init()` / `clear(*_)` / `addMetric(*_, spec)` / `recordMetricSamples(*_, metric_index, baseline, canary)` / `getMetricResult(metric_index)`
+  - `evaluateCanary(cfg): CanaryJudgeReport`：支持关键指标 `critical` 一票否决自动回滚、有效指标占比不足保护与加权得分（`pass_promote` / `marginal_hold` / `fail_rollback` / `insufficient_data`）。
+
+```cp
+import {
+    CanaryDirection,
+    CanaryMetricSpec,
+    CanaryGateConfig,
+    CanaryGateJudge,
+    formatCanaryReportJson,
+} from "cap:obs";
+
+pub fn demoCanaryGate() {
+    let judge = CanaryGateJudge.init();
+    const m_lat = judge.addMetric(
+        CanaryMetricSpec.make("p99_latency_ms", CanaryDirection.lower_is_better, 5, 500, 1.96, true, 5),
+    ) ?? return;
+
+    const base: [6]f64 = [40.0, 41.0, 39.5, 40.5, 40.2, 39.8];
+    const canary: [6]f64 = [40.1, 40.3, 39.9, 40.4, 40.0, 39.7];
+    * = judge.recordMetricSamples(m_lat, base[0..], canary[0..]);
+
+    const rep = judge.evaluateCanary(CanaryGateConfig.defaults());
+    let json_buf: [256]u8 = [0; 256];
+    let json_s: []u8 = json_buf[0..];
+    * = formatCanaryReportJson(rep, *json_s);
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [btf.md](obs/btf.md)

@@ -312,3 +312,22 @@ export {
     AlertEngineStats,
     AlertRuleEngine,
 } from "./alertRules.cp";
+
+// --- Zero-Alloc Kayenta/Flagger-Style Canary Statistical Gate & Auto-Rollback Judge ---
+
+export {
+    CANARY_MAX_METRICS,
+    CANARY_NAME_MAX_LEN,
+    CANARY_BPS_SCALE,
+    CanaryDirection,
+    CanaryMetricStatus,
+    CanaryVerdict,
+    CanaryMetricSpec,
+    CanaryMetricResult,
+    CanaryGateConfig,
+    CanaryJudgeReport,
+    evaluateMetricSample,
+    formatCanaryVerdict,
+    formatCanaryReportJson,
+    CanaryGateJudge,
+} from "./canaryGate.cp";
