@@ -143,6 +143,18 @@ pub fn demoCsvTable() {
 }
 ```
 
+### 生产级零堆 CSV/TSV 方言嗅探、Schema 推理、查询/排序/聚合与 JSONL 互转 (`csvTable.cp`)
+
+在 100% 向下兼容既有 `CsvTableReader`/`writeCsvRow` 的基础上，新增全套零堆外部切片 ETL 引擎：
+
+- **方言嗅探 (`sniffCsvDialect`)**：自动识别 `,`/`\t`/`;`/`|`、`"`/`'`、`CRLF`/`LF`、UTF-8 BOM 及首行表头启发式；`CsvTableReader` 支持自定义引号、`#` 注释行跳过与严格列数校验。
+- **列 Schema 推理与 Welford 在线统计 (`inferCsvSchema`)**：单调类型格提升（`empty -> bool/int/iso_date -> float -> string`），计算 `non_null_count`/`null_count`/`min`/`max`/`sum`/`mean`/`variance()`/`sampleVariance()`/`max_str_len`。
+- **过滤、投影、分组聚合与稳定排序**：
+  - `CsvFilterOp` / `CsvFilterPred` / `projectAndFilterCsv`（多条件 AND 过滤 + 子列投影输出 RFC 4180 CSV）；
+  - `CsvAggKind` / `CsvGroupAggSlot` / `aggregateCsvByGroup`（零堆分组 `count`/`sum`/`min`/`max`/`avg`）；
+  - `CsvRowSpan` / `sortCsvRowsByColumn`（O(N log N) 迭代稳定归并排序，支持数值与词典序升降序）。
+- **CSV ↔ JSONL (NDJSON) 双向零堆转换**：`csvToJsonl`（按 Schema 输出未加引号数值/布尔、`null` 与完整 RFC 8259 转义字符串）与 `jsonlToCsv`（按列头提取标量并生成规范 RFC 4180 CSV）。
+
 ---
 
 ## 收敛子模块深度文档

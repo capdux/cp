@@ -214,8 +214,9 @@ export {
     formatCsvRow,
 } from "./csvStream.cp";
 
-// --- Zero-Alloc RFC 4180 CSV/TSV Table Header Mapping & Typed Row Decoder ---
+// --- Zero-Alloc RFC 4180 CSV/TSV Dialect Sniffer, Schema Inference, Filter/Sort/Aggregate & JSONL ---
 export {
+    CsvTableError,
     CsvTableOptions,
     CsvRowCursor,
     CsvTableHeader,
@@ -225,4 +226,24 @@ export {
     parseCsvF64,
     parseCsvBool,
     writeCsvRow,
+    CsvLineEnding,
+    CsvDialectInfo,
+    isIsoDateField,
+    sniffCsvDialect,
+    CsvColumnKind,
+    classifyCsvCell,
+    promoteCsvColumnKind,
+    CsvColumnProfile,
+    inferCsvSchema,
+    CsvFilterOp,
+    CsvFilterPred,
+    evalCsvFilterPred,
+    projectAndFilterCsv,
+    CsvAggKind,
+    CsvGroupAggSlot,
+    aggregateCsvByGroup,
+    CsvRowSpan,
+    sortCsvRowsByColumn,
+    csvToJsonl,
+    jsonlToCsv,
 } from "./csvTable.cp";
