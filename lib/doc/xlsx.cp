@@ -1028,3 +1028,1033 @@ pub struct XlsxCellIter {
         return null;
     }
 }
+
+
+// ============================================================================
+// 5. Production Extension: Error Set, Range Codec & Excel 1900/1904 Date Serials
+// ============================================================================
+
+/// Error set returned by extended XLSX coordinate, date, XML builder/parser, and formula operations.
+pub err XlsxError {
+    BufferTooSmall,
+    InvalidCellRef,
+    InvalidRange,
+    InvalidDate,
+    InvalidXml,
+    SlotOverflow,
+    FormulaSyntax,
+    DivisionByZero,
+    InvalidReference,
+    CycleDetected,
+    InvalidArgument,
+}
+
+fn appendBytes(out: []u8, pos: usize, src: []const u8): usize ! XlsxError {
+    if (pos + src.len > out.len) return XlsxError.BufferTooSmall;
+    let i: usize = 0;
+    while (i < src.len) : (i += 1) {
+        out[pos + i] = src[i];
+    }
+    return pos + src.len;
+}
+
+fn appendU32Ascii(out: []u8, pos: usize, v: u32): usize ! XlsxError {
+    let digits: [10]u8 = [0; 10];
+    let n: usize = 0;
+    let x: u32 = v;
+    if (x == 0) {
+        digits[0] = '0';
+        n = 1;
+    } else {
+        while (x > 0) {
+            digits[n] = ('0' as u8) + ((x % 10) as u8);
+            x /= 10;
+            n += 1;
+        }
+    }
+    if (pos + n > out.len) return XlsxError.BufferTooSmall;
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        out[pos + i] = digits[n - 1 - i];
+    }
+    return pos + n;
+}
+
+fn appendXmlEscaped(out: []u8, pos: usize, text: []const u8): usize ! XlsxError {
+    let cur: usize = pos;
+    let i: usize = 0;
+    while (i < text.len) : (i += 1) {
+        const b = text[i];
+        if (b == '&') {
+            cur = appendBytes(out, cur, "&amp;")?;
+        } else if (b == '<') {
+            cur = appendBytes(out, cur, "&lt;")?;
+        } else if (b == '>') {
+            cur = appendBytes(out, cur, "&gt;")?;
+        } else if (b == '"') {
+            cur = appendBytes(out, cur, "&quot;")?;
+        } else if (b == '\'') {
+            cur = appendBytes(out, cur, "&apos;")?;
+        } else {
+            if (cur >= out.len) return XlsxError.BufferTooSmall;
+            out[cur] = b;
+            cur += 1;
+        }
+    }
+    return cur;
+}
+
+fn appendF64Ascii(out: []u8, pos: usize, v: f64): usize ! XlsxError {
+    let cur: usize = pos;
+    let val: f64 = v;
+    if (val < 0.0) {
+        cur = appendBytes(out, cur, "-")?;
+        val = -val;
+    }
+    const int_part: u64 = val as u64;
+    const frac_scaled: u64 = (((val - (int_part as f64)) * 1000000.0) + 0.5) as u64;
+    let ip: u64 = int_part;
+    let fp: u64 = frac_scaled;
+    if (fp >= 1000000) {
+        ip += 1;
+        fp -= 1000000;
+    }
+    // Emit integer part
+    let idig: [20]u8 = [0; 20];
+    let in_len: usize = 0;
+    if (ip == 0) {
+        idig[0] = '0';
+        in_len = 1;
+    } else {
+        let tmp: u64 = ip;
+        while (tmp > 0) {
+            idig[in_len] = ('0' as u8) + ((tmp % 10) as u8);
+            tmp /= 10;
+            in_len += 1;
+        }
+    }
+    if (cur + in_len > out.len) return XlsxError.BufferTooSmall;
+    let k: usize = 0;
+    while (k < in_len) : (k += 1) {
+        out[cur + k] = idig[in_len - 1 - k];
+    }
+    cur += in_len;
+
+    if (fp > 0) {
+        cur = appendBytes(out, cur, ".")?;
+        let fdig: [6]u8 = ['0'; 6];
+        let tmp: u64 = fp;
+        let fi: usize = 6;
+        while (fi > 0) {
+            fi -= 1;
+            fdig[fi] = ('0' as u8) + ((tmp % 10) as u8);
+            tmp /= 10;
+        }
+        let fend: usize = 6;
+        while (fend > 1 && fdig[fend - 1] == '0') : (fend -= 1) {}
+        cur = appendBytes(out, cur, fdig[0..fend])?;
+    }
+    return cur;
+}
+
+/// Encodes a 0-based `XlsxCellRef` into an A1-style string (`"A1"`..`"XFD1048576"`).
+pub fn encodeCellRef(coord: XlsxCellRef, out: []u8): usize ! XlsxError {
+    if (coord.col > MAX_XLSX_COL || coord.row > MAX_XLSX_ROW) return XlsxError.InvalidCellRef;
+    const col_len = formatColName(coord.col, out) orelse return XlsxError.BufferTooSmall;
+    return appendU32Ascii(out, col_len, coord.row + 1);
+}
+
+/// Decodes an A1 cell reference supporting optional `$` absolute markers (`$A$1`, `$B2`, `C$3`) and case insensitivity.
+pub fn decodeCellRef(raw: []const u8): XlsxCellRef ! XlsxError {
+    if (raw.len < 2 || raw.len > 12) return XlsxError.InvalidCellRef;
+    let cleaned: [12]u8 = [0; 12];
+    let clen: usize = 0;
+    let i: usize = 0;
+    while (i < raw.len) : (i += 1) {
+        let b = raw[i];
+        if (b == '$') continue;
+        if (b >= 'a' && b <= 'z') b -= 32;
+        if (clen >= 12) return XlsxError.InvalidCellRef;
+        cleaned[clen] = b;
+        clen += 1;
+    }
+    return parseCellRef(cleaned[0..clen]) orelse return XlsxError.InvalidCellRef;
+}
+
+/// Normalized rectangular Excel range (`start.col <= end.col && start.row <= end.row`).
+pub struct XlsxRangeRef {
+    start: XlsxCellRef = XlsxCellRef{},
+    end: XlsxCellRef = XlsxCellRef{},
+
+    fn contains(coord: XlsxCellRef): bool {
+        return coord.col >= start.col && coord.col <= end.col && coord.row >= start.row && coord.row <= end.row;
+    }
+
+    fn cellCount(): u64 {
+        const w: u64 = ((end.col - start.col) as u64) + 1;
+        const h: u64 = ((end.row - start.row) as u64) + 1;
+        return w * h;
+    }
+}
+
+/// Parses an Excel range string such as `"B2:F100"` or `"$A$1:$C$5"`.
+pub fn parseCellRange(raw: []const u8): XlsxRangeRef ! XlsxError {
+    let colon: usize = raw.len;
+    let i: usize = 0;
+    while (i < raw.len) : (i += 1) {
+        if (raw[i] == ':') {
+            colon = i;
+            break;
+        }
+    }
+    if (colon == 0 || colon + 1 >= raw.len) return XlsxError.InvalidRange;
+    const a = decodeCellRef(raw[0..colon])?;
+    const b = decodeCellRef(raw[(colon + 1)..raw.len])?;
+    return XlsxRangeRef{
+        start: XlsxCellRef{
+            col: if (a.col < b.col) a.col else b.col,
+            row: if (a.row < b.row) a.row else b.row,
+        },
+        end: XlsxCellRef{
+            col: if (a.col > b.col) a.col else b.col,
+            row: if (a.row > b.row) a.row else b.row,
+        },
+    };
+}
+
+/// Calendar date + time-of-day decoded from or encoded into an Excel date serial number.
+pub struct XlsxDateTime {
+    year: i32 = 1900;
+    month: u8 = 1;
+    day: u8 = 1;
+    hour: u8 = 0;
+    minute: u8 = 0;
+    second: u8 = 0;
+}
+
+// Howard Hinnant's O(1) Gregorian civil-calendar conversions (days relative to 1970-01-01).
+fn civilToDays(y_in: i32, m_in: u8, d_in: u8): i64 {
+    const y: i64 = (y_in as i64) - (if (m_in <= 2) @as(i64, 1) else @as(i64, 0));
+    const era: i64 = @divFloor(y, 400);
+    const yoe: i64 = y - era * 400;
+    const m_adj: i64 = (m_in as i64) + (if (m_in > 2) @as(i64, -3) else @as(i64, 9));
+    const doy: i64 = @divTrunc(153 * m_adj + 2, 5) + (d_in as i64) - 1;
+    const doe: i64 = yoe * 365 + @divTrunc(yoe, 4) - @divTrunc(yoe, 100) + doy;
+    return era * 146097 + doe - 719468;
+}
+
+fn daysToCivil(z_in: i64): XlsxDateTime {
+    const z: i64 = z_in + 719468;
+    const era: i64 = @divFloor(z, 146097);
+    const doe: i64 = z - era * 146097;
+    const yoe: i64 = @divTrunc(doe - @divTrunc(doe, 1460) + @divTrunc(doe, 36524) - @divTrunc(doe, 146096), 365);
+    const y0: i64 = yoe + era * 400;
+    const doy: i64 = doe - (365 * yoe + @divTrunc(yoe, 4) - @divTrunc(yoe, 100));
+    const mp: i64 = @divTrunc(5 * doy + 2, 153);
+    const d: i64 = doy - @divTrunc(153 * mp + 2, 5) + 1;
+    const m: i64 = mp + (if (mp < 10) @as(i64, 3) else @as(i64, -9));
+    const y: i64 = y0 + (if (m <= 2) @as(i64, 1) else @as(i64, 0));
+    return XlsxDateTime{
+        year: y as i32,
+        month: m as u8,
+        day: d as u8,
+    };
+}
+
+/// Converts an Excel date serial number to calendar date & time-of-day.
+/// Faithfully handles the 1900 leap-year bug (`serial 60 == 1900-02-29`) and the 1904 Mac system.
+pub fn excelSerialToYmd(serial: f64, use_1904: bool): XlsxDateTime ! XlsxError {
+    if (serial < 0.0 || serial > 2958466.0) return XlsxError.InvalidDate;
+    let day_int: i64 = serial as i64;
+    const frac: f64 = serial - (day_int as f64);
+    let secs: i64 = (frac * 86400.0 + 0.5) as i64;
+    if (secs >= 86400) {
+        secs -= 86400;
+        day_int += 1;
+    }
+
+    let dt = XlsxDateTime{};
+    if (!use_1904) {
+        if (day_int == 60) {
+            dt = XlsxDateTime{ year: 1900, month: 2, day: 29 };
+        } else {
+            // 1899-12-31 is civilToDays(1899, 12, 31) = -25568
+            const adj: i64 = if (day_int > 60) (day_int - 1) else day_int;
+            dt = daysToCivil(-25568 + adj);
+        }
+    } else {
+        // 1904-01-01 is civilToDays(1904, 1, 1) = -24107
+        dt = daysToCivil(-24107 + day_int);
+    }
+
+    dt.hour = (@divTrunc(secs, 3600)) as u8;
+    dt.minute = (@divTrunc(@mod(secs, 3600), 60)) as u8;
+    dt.second = (@mod(secs, 60)) as u8;
+    return dt;
+}
+
+/// Converts a calendar date & time-of-day to an Excel date serial number (1900 or 1904 system).
+pub fn ymdToExcelSerial(dt: XlsxDateTime, use_1904: bool): f64 ! XlsxError {
+    if (dt.month < 1 || dt.month > 12 || dt.day < 1 || dt.day > 31) return XlsxError.InvalidDate;
+    if (dt.hour > 23 || dt.minute > 59 || dt.second > 59) return XlsxError.InvalidDate;
+    const time_frac: f64 = ((dt.hour as f64) * 3600.0 + (dt.minute as f64) * 60.0 + (dt.second as f64)) / 86400.0;
+
+    if (!use_1904) {
+        if (dt.year == 1900 && dt.month == 2 && dt.day == 29) {
+            return 60.0 + time_frac;
+        }
+        const days: i64 = civilToDays(dt.year, dt.month, dt.day);
+        let serial_days: i64 = days + 25568; // 1900-01-01 -> 1
+        if (serial_days >= 60) {
+            serial_days += 1; // account for Excel's non-existent 1900-02-29
+        }
+        if (serial_days < 0) return XlsxError.InvalidDate;
+        return (serial_days as f64) + time_frac;
+    }
+
+    const days: i64 = civilToDays(dt.year, dt.month, dt.day);
+    const serial_days: i64 = days + 24107; // 1904-01-01 -> 0
+    if (serial_days < 0) return XlsxError.InvalidDate;
+    return (serial_days as f64) + time_frac;
+}
+
+// ============================================================================
+// 6. Zero-Heap OOXML Parsers & Builders (SharedStrings, Workbook, Styles, Sheet)
+// ============================================================================
+
+/// Parses all `<si>` entries from `sharedStrings.xml` (rich-text `<r><t>` + XML entity unescaping)
+/// into caller-provided `text_slab` and `out_strings`, returning total string count.
+pub fn parseSharedStringsXml(
+    xml: []const u8,
+    out_strings: [][]const u8,
+    text_slab: []u8,
+): usize ! XlsxError {
+    let it = XlsxSharedStringIter.init(xml);
+    let count: usize = 0;
+    let slab_pos: usize = 0;
+    while (true) {
+        if (count >= out_strings.len) {
+            // Check if another string exists
+            let probe: [1]u8 = [0];
+            if (it.next(probe[0..]) != null) return XlsxError.SlotOverflow;
+            break;
+        }
+        const opt = it.next(text_slab[slab_pos..text_slab.len]);
+        if (s := opt) {
+            out_strings[count] = s;
+            slab_pos += s.len;
+            count += 1;
+        } else {
+            break;
+        }
+    }
+    return count;
+}
+
+/// Parses all `<sheet>` entries from `workbook.xml` into caller-provided `out_sheets`.
+pub fn parseWorkbookSheetsXml(xml: []const u8, out_sheets: []XlsxSheetInfo): usize ! XlsxError {
+    let it = XlsxSheetIter.init(xml);
+    let count: usize = 0;
+    while (sh := it.next()) {
+        if (count >= out_sheets.len) return XlsxError.SlotOverflow;
+        out_sheets[count] = sh;
+        count += 1;
+    }
+    return count;
+}
+
+/// Semantic category of an Excel `numFmtId` / custom format code.
+pub enum XlsxNumFmtKind {
+    general,
+    integer,
+    decimal,
+    currency,
+    percent,
+    date,
+    time,
+    datetime,
+    scientific,
+    text,
+    custom,
+}
+
+/// Parsed `<cellXfs><xf>` style record linked to its `numFmtId` and semantic category.
+pub struct XlsxStyleInfo {
+    xf_index: u32 = 0;
+    num_fmt_id: u32 = 0;
+    kind: XlsxNumFmtKind = XlsxNumFmtKind.general;
+    format_code: []const u8 = "";
+}
+
+fn containsChar(s: []const u8, ch: u8): bool {
+    let i: usize = 0;
+    while (i < s.len) : (i += 1) {
+        if (s[i] == ch) return true;
+    }
+    return false;
+}
+
+/// Classifies an OOXML `numFmtId` and optional custom `format_code` into `XlsxNumFmtKind`.
+pub fn classifyExcelNumFmt(num_fmt_id: u32, format_code: []const u8): XlsxNumFmtKind {
+    if (num_fmt_id == 0) return XlsxNumFmtKind.general;
+    if (num_fmt_id == 1 || num_fmt_id == 3) return XlsxNumFmtKind.integer;
+    if (num_fmt_id == 2 || num_fmt_id == 4) return XlsxNumFmtKind.decimal;
+    if (num_fmt_id >= 5 && num_fmt_id <= 8) return XlsxNumFmtKind.currency;
+    if (num_fmt_id == 9 || num_fmt_id == 10) return XlsxNumFmtKind.percent;
+    if (num_fmt_id == 11) return XlsxNumFmtKind.scientific;
+    if (num_fmt_id >= 14 && num_fmt_id <= 17) return XlsxNumFmtKind.date;
+    if (num_fmt_id >= 18 && num_fmt_id <= 21) return XlsxNumFmtKind.time;
+    if (num_fmt_id == 22) return XlsxNumFmtKind.datetime;
+    if (num_fmt_id == 49) return XlsxNumFmtKind.text;
+
+    if (format_code.len > 0) {
+        const has_date: bool = containsChar(format_code, 'y') || containsChar(format_code, 'Y')
+            || containsChar(format_code, 'd') || containsChar(format_code, 'D');
+        const has_time: bool = containsChar(format_code, 'h') || containsChar(format_code, 'H')
+            || containsChar(format_code, 's') || containsChar(format_code, 'S');
+        if (has_date && has_time) return XlsxNumFmtKind.datetime;
+        if (has_date) return XlsxNumFmtKind.date;
+        if (has_time) return XlsxNumFmtKind.time;
+        if (containsChar(format_code, '%')) return XlsxNumFmtKind.percent;
+        if (containsChar(format_code, '$')) return XlsxNumFmtKind.currency;
+    }
+    return XlsxNumFmtKind.custom;
+}
+
+struct CustomNumFmt {
+    id: u32 = 0;
+    code: []const u8 = "";
+}
+
+/// Parses `xl/styles.xml` `<numFmts>` and `<cellXfs>` entries into caller-provided `out_styles`.
+pub fn parseStylesNumFmtsXml(styles_xml: []const u8, out_styles: []XlsxStyleInfo): usize ! XlsxError {
+    let custom_fmts: [64]CustomNumFmt = [CustomNumFmt{}; 64];
+    let custom_cnt: usize = 0;
+
+    // Pass 1: collect custom <numFmt numFmtId="..." formatCode="..."/>
+    let i: usize = 0;
+    while (i < styles_xml.len) {
+        if (styles_xml[i] != '<') { i += 1; continue; }
+        if (i + 1 >= styles_xml.len) break;
+        const nb = styles_xml[i + 1];
+        if (nb == '!' || nb == '?') {
+            if (after := skipSpecialTag(styles_xml, i)) {
+                i = after;
+                continue;
+            }
+            break;
+        }
+        const gt: usize = findTagClose(styles_xml, i) ?? break;
+        if (nb != '/') {
+            let nend = i + 1;
+            while (nend < gt && !isTagNameEnd(styles_xml[nend])) : (nend += 1) {}
+            const lname = localTagName(styles_xml[(i + 1)..nend]);
+            if (std.mem.eql(u8, lname, "numFmt") && custom_cnt < 64) {
+                const attrs = styles_xml[nend..gt];
+                if (id_s := getAttr(attrs, "numFmtId")) {
+                    if (id_u := parseU32Strict(id_s)) {
+                        const code_s = getAttr(attrs, "formatCode") ?? "";
+                        custom_fmts[custom_cnt] = CustomNumFmt{ id: id_u, code: code_s };
+                        custom_cnt += 1;
+                    }
+                }
+            }
+        }
+        i = gt + 1;
+    }
+
+    // Pass 2: locate <cellXfs> and collect <xf numFmtId="..."/>
+    let count: usize = 0;
+    let in_cell_xfs: bool = false;
+    let j: usize = 0;
+    while (j < styles_xml.len) {
+        if (styles_xml[j] != '<') { j += 1; continue; }
+        if (j + 1 >= styles_xml.len) break;
+        const nb = styles_xml[j + 1];
+        if (nb == '!' || nb == '?') {
+            if (after := skipSpecialTag(styles_xml, j)) {
+                j = after;
+                continue;
+            }
+            break;
+        }
+        const gt: usize = findTagClose(styles_xml, j) ?? break;
+        if (nb == '/') {
+            let nstart = j + 2;
+            while (nstart < gt && isXmlWs(styles_xml[nstart])) : (nstart += 1) {}
+            let nend = nstart;
+            while (nend < gt && !isTagNameEnd(styles_xml[nend])) : (nend += 1) {}
+            if (std.mem.eql(u8, localTagName(styles_xml[nstart..nend]), "cellXfs")) {
+                in_cell_xfs = false;
+            }
+        } else {
+            let nend = j + 1;
+            while (nend < gt && !isTagNameEnd(styles_xml[nend])) : (nend += 1) {}
+            const lname = localTagName(styles_xml[(j + 1)..nend]);
+            if (std.mem.eql(u8, lname, "cellXfs")) {
+                in_cell_xfs = !isSelfClosing(styles_xml, j, gt);
+            } else if (in_cell_xfs && std.mem.eql(u8, lname, "xf")) {
+                if (count >= out_styles.len) return XlsxError.SlotOverflow;
+                const attrs = styles_xml[nend..gt];
+                let nfid: u32 = 0;
+                if (ns := getAttr(attrs, "numFmtId")) {
+                    nfid = parseU32Strict(ns) ?? 0;
+                }
+                let fcode: []const u8 = "";
+                let ci: usize = 0;
+                while (ci < custom_cnt) : (ci += 1) {
+                    if (custom_fmts[ci].id == nfid) {
+                        fcode = custom_fmts[ci].code;
+                        break;
+                    }
+                }
+                out_styles[count] = XlsxStyleInfo{
+                    xf_index: count as u32,
+                    num_fmt_id: nfid,
+                    kind: classifyExcelNumFmt(nfid, fcode),
+                    format_code: fcode,
+                };
+                count += 1;
+            }
+        }
+        j = gt + 1;
+    }
+    return count;
+}
+
+/// High-level resolved worksheet cell value (shared strings already resolved, formula & style preserved).
+pub struct XlsxCellValue {
+    ref: XlsxCellRef = XlsxCellRef{},
+    cell_type: XlsxCellType = XlsxCellType.number,
+    style_idx: u32 = 0,
+    num_val: f64 = 0.0,
+    has_num: bool = false,
+    bool_val: bool = false,
+    text: []const u8 = "",
+    formula: []const u8 = "",
+}
+
+/// Parses all cells from a worksheet XML into caller-provided `out_cells`, resolving `shared_strings`.
+pub fn parseWorksheetCellsXml(
+    sheet_xml: []const u8,
+    shared_strings: []const []const u8,
+    out_cells: []XlsxCellValue,
+): usize ! XlsxError {
+    let it = XlsxCellIter.init(sheet_xml);
+    let count: usize = 0;
+    while (c := it.next()) {
+        if (count >= out_cells.len) return XlsxError.SlotOverflow;
+        let cv = XlsxCellValue{
+            ref: c.ref,
+            cell_type: c.cell_type,
+            style_idx: c.style_idx,
+            formula: c.formula,
+        };
+        if (c.cell_type == XlsxCellType.shared_string) {
+            if (idx := c.asSharedStringIdx()) {
+                if ((idx as usize) < shared_strings.len) {
+                    cv.text = shared_strings[idx as usize];
+                }
+            }
+        } else if (c.cell_type == XlsxCellType.bool_val) {
+            cv.bool_val = c.asBool() ?? false;
+        } else if (c.cell_type == XlsxCellType.number || c.cell_type == XlsxCellType.unknown) {
+            if (fv := c.asF64()) {
+                cv.num_val = fv;
+                cv.has_num = true;
+            }
+        } else {
+            cv.text = c.raw_value;
+        }
+        out_cells[count] = cv;
+        count += 1;
+    }
+    return count;
+}
+
+/// Builds a deduplicated OOXML `xl/sharedStrings.xml`, populating `out_unique` and per-input `out_indices`.
+pub fn buildSharedStringsXml(
+    raw_strings: []const []const u8,
+    out_unique: [][]const u8,
+    out_indices: []u32,
+    out_xml: []u8,
+): usize ! XlsxError {
+    if (out_indices.len < raw_strings.len) return XlsxError.SlotOverflow;
+    let unique_cnt: usize = 0;
+    let i: usize = 0;
+    while (i < raw_strings.len) : (i += 1) {
+        const s = raw_strings[i];
+        let found: usize = unique_cnt;
+        let u: usize = 0;
+        while (u < unique_cnt) : (u += 1) {
+            if (std.mem.eql(u8, out_unique[u], s)) {
+                found = u;
+                break;
+            }
+        }
+        if (found == unique_cnt) {
+            if (unique_cnt >= out_unique.len) return XlsxError.SlotOverflow;
+            out_unique[unique_cnt] = s;
+            unique_cnt += 1;
+        }
+        out_indices[i] = found as u32;
+    }
+
+    let pos: usize = 0;
+    pos = appendBytes(out_xml, pos, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>")?;
+    pos = appendBytes(out_xml, pos, "<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"")?;
+    pos = appendU32Ascii(out_xml, pos, raw_strings.len as u32)?;
+    pos = appendBytes(out_xml, pos, "\" uniqueCount=\"")?;
+    pos = appendU32Ascii(out_xml, pos, unique_cnt as u32)?;
+    pos = appendBytes(out_xml, pos, "\">")?;
+
+    let u: usize = 0;
+    while (u < unique_cnt) : (u += 1) {
+        pos = appendBytes(out_xml, pos, "<si><t>")?;
+        pos = appendXmlEscaped(out_xml, pos, out_unique[u])?;
+        pos = appendBytes(out_xml, pos, "</t></si>")?;
+    }
+    pos = appendBytes(out_xml, pos, "</sst>")?;
+    return pos;
+}
+
+/// Builds a multi-sheet OOXML `xl/workbook.xml` from `sheet_names`.
+pub fn buildWorkbookXml(sheet_names: []const []const u8, out_xml: []u8): usize ! XlsxError {
+    let pos: usize = 0;
+    pos = appendBytes(out_xml, pos, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>")?;
+    pos = appendBytes(out_xml, pos, "<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"><sheets>")?;
+    let i: usize = 0;
+    while (i < sheet_names.len) : (i += 1) {
+        pos = appendBytes(out_xml, pos, "<sheet name=\"")?;
+        pos = appendXmlEscaped(out_xml, pos, sheet_names[i])?;
+        pos = appendBytes(out_xml, pos, "\" sheetId=\"")?;
+        pos = appendU32Ascii(out_xml, pos, (i + 1) as u32)?;
+        pos = appendBytes(out_xml, pos, "\" r:id=\"rId")?;
+        pos = appendU32Ascii(out_xml, pos, (i + 1) as u32)?;
+        pos = appendBytes(out_xml, pos, "\"/>")?;
+    }
+    pos = appendBytes(out_xml, pos, "</sheets></workbook>")?;
+    return pos;
+}
+
+/// Builds an OOXML `xl/worksheets/sheetN.xml` from `cells` (sorted by row) and optional `shared_strings`.
+pub fn buildWorksheetXml(
+    cells: []const XlsxCellValue,
+    shared_strings: []const []const u8,
+    out_xml: []u8,
+): usize ! XlsxError {
+    let pos: usize = 0;
+    pos = appendBytes(out_xml, pos, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>")?;
+    pos = appendBytes(out_xml, pos, "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><sheetData>")?;
+
+    let row_open: bool = false;
+    let cur_row: u32 = 0;
+    let ref_buf: [12]u8 = [0; 12];
+
+    let i: usize = 0;
+    while (i < cells.len) : (i += 1) {
+        const c = cells[i];
+        if (!row_open || c.ref.row != cur_row) {
+            if (row_open) {
+                pos = appendBytes(out_xml, pos, "</row>")?;
+            }
+            pos = appendBytes(out_xml, pos, "<row r=\"")?;
+            pos = appendU32Ascii(out_xml, pos, c.ref.row + 1)?;
+            pos = appendBytes(out_xml, pos, "\">")?;
+            row_open = true;
+            cur_row = c.ref.row;
+        }
+
+        const rlen = encodeCellRef(c.ref, ref_buf[0..])?;
+        pos = appendBytes(out_xml, pos, "<c r=\"")?;
+        pos = appendBytes(out_xml, pos, ref_buf[0..rlen])?;
+        pos = appendBytes(out_xml, pos, "\"")?;
+        if (c.style_idx > 0) {
+            pos = appendBytes(out_xml, pos, " s=\"")?;
+            pos = appendU32Ascii(out_xml, pos, c.style_idx)?;
+            pos = appendBytes(out_xml, pos, "\"")?;
+        }
+
+        if (c.cell_type == XlsxCellType.shared_string) {
+            // Look up index in shared_strings; fall back to inlineStr if absent
+            let found_idx: u32? = null;
+            let si: usize = 0;
+            while (si < shared_strings.len) : (si += 1) {
+                if (std.mem.eql(u8, shared_strings[si], c.text)) {
+                    found_idx = si as u32;
+                    break;
+                }
+            }
+            if (idx := found_idx) {
+                pos = appendBytes(out_xml, pos, " t=\"s\"><v>")?;
+                pos = appendU32Ascii(out_xml, pos, idx)?;
+                pos = appendBytes(out_xml, pos, "</v></c>")?;
+            } else {
+                pos = appendBytes(out_xml, pos, " t=\"inlineStr\"><is><t>")?;
+                pos = appendXmlEscaped(out_xml, pos, c.text)?;
+                pos = appendBytes(out_xml, pos, "</t></is></c>")?;
+            }
+        } else if (c.cell_type == XlsxCellType.inline_string) {
+            pos = appendBytes(out_xml, pos, " t=\"inlineStr\"><is><t>")?;
+            pos = appendXmlEscaped(out_xml, pos, c.text)?;
+            pos = appendBytes(out_xml, pos, "</t></is></c>")?;
+        } else if (c.cell_type == XlsxCellType.bool_val) {
+            pos = appendBytes(out_xml, pos, " t=\"b\"><v>")?;
+            pos = appendBytes(out_xml, pos, if (c.bool_val) "1" else "0")?;
+            pos = appendBytes(out_xml, pos, "</v></c>")?;
+        } else {
+            pos = appendBytes(out_xml, pos, ">")?;
+            if (c.formula.len > 0) {
+                pos = appendBytes(out_xml, pos, "<f>")?;
+                pos = appendXmlEscaped(out_xml, pos, c.formula)?;
+                pos = appendBytes(out_xml, pos, "</f>")?;
+            }
+            if (c.has_num) {
+                pos = appendBytes(out_xml, pos, "<v>")?;
+                pos = appendF64Ascii(out_xml, pos, c.num_val)?;
+                pos = appendBytes(out_xml, pos, "</v>")?;
+            }
+            pos = appendBytes(out_xml, pos, "</c>")?;
+        }
+    }
+
+    if (row_open) {
+        pos = appendBytes(out_xml, pos, "</row>")?;
+    }
+    pos = appendBytes(out_xml, pos, "</sheetData></worksheet>")?;
+    return pos;
+}
+
+// ============================================================================
+// 7. Zero-Heap Spreadsheet Formula Evaluator (`evalXlsxFormula`)
+// ============================================================================
+
+struct FormulaParser {
+    src: []const u8 = "";
+    pos: usize = 0;
+    cells: []const XlsxCellValue = [];
+    visited: [16]XlsxCellRef = [XlsxCellRef{}; 16];
+    depth: usize = 0;
+
+    fn skipWs(*_) {
+        while (pos < src.len && (src[pos] == ' ' || src[pos] == '\t' || src[pos] == '\r' || src[pos] == '\n')) : (pos += 1) {}
+    }
+
+    fn peek(*_): u8 {
+        skipWs();
+        if (pos >= src.len) return 0;
+        return src[pos];
+    }
+
+    fn evalCellValue(*_, coord: XlsxCellRef): f64 ! XlsxError {
+        let vi: usize = 0;
+        while (vi < depth) : (vi += 1) {
+            if (visited[vi].col == coord.col && visited[vi].row == coord.row) {
+                return XlsxError.CycleDetected;
+            }
+        }
+        let ci: usize = 0;
+        while (ci < cells.len) : (ci += 1) {
+            const c = cells[ci];
+            if (c.ref.col == coord.col && c.ref.row == coord.row) {
+                if (c.formula.len > 0) {
+                    if (depth >= 16) return XlsxError.CycleDetected;
+                    let sub = FormulaParser{
+                        src: c.formula,
+                        pos: 0,
+                        cells: cells,
+                        visited: visited,
+                        depth: depth + 1,
+                    };
+                    sub.visited[depth] = coord;
+                    if (sub.peek() == '=') sub.pos += 1;
+                    return sub.parseComparison();
+                }
+                if (c.has_num) return c.num_val;
+                if (c.cell_type == XlsxCellType.bool_val) return if (c.bool_val) 1.0 else 0.0;
+                return 0.0;
+            }
+        }
+        return 0.0; // Empty cell evaluates to 0.0 in Excel
+    }
+
+    fn parseComparison(*_): f64 ! XlsxError {
+        const lhs = parseAddSub()?;
+        skipWs();
+        if (pos >= src.len) return lhs;
+        const c0 = src[pos];
+        if (c0 == '=') {
+            pos += 1;
+            const rhs = parseAddSub()?;
+            return if (lhs == rhs) 1.0 else 0.0;
+        }
+        if (c0 == '<') {
+            if (pos + 1 < src.len && src[pos + 1] == '>') {
+                pos += 2;
+                const rhs = parseAddSub()?;
+                return if (lhs != rhs) 1.0 else 0.0;
+            }
+            if (pos + 1 < src.len && src[pos + 1] == '=') {
+                pos += 2;
+                const rhs = parseAddSub()?;
+                return if (lhs <= rhs) 1.0 else 0.0;
+            }
+            pos += 1;
+            const rhs = parseAddSub()?;
+            return if (lhs < rhs) 1.0 else 0.0;
+        }
+        if (c0 == '>') {
+            if (pos + 1 < src.len && src[pos + 1] == '=') {
+                pos += 2;
+                const rhs = parseAddSub()?;
+                return if (lhs >= rhs) 1.0 else 0.0;
+            }
+            pos += 1;
+            const rhs = parseAddSub()?;
+            return if (lhs > rhs) 1.0 else 0.0;
+        }
+        return lhs;
+    }
+
+    fn parseAddSub(*_): f64 ! XlsxError {
+        let acc = parseMulDiv()?;
+        while (true) {
+            const ch = peek();
+            if (ch == '+') {
+                pos += 1;
+                acc += parseMulDiv()?;
+            } else if (ch == '-') {
+                pos += 1;
+                acc -= parseMulDiv()?;
+            } else {
+                break;
+            }
+        }
+        return acc;
+    }
+
+    fn parseMulDiv(*_): f64 ! XlsxError {
+        let acc = parseUnary()?;
+        while (true) {
+            const ch = peek();
+            if (ch == '*') {
+                pos += 1;
+                acc *= parseUnary()?;
+            } else if (ch == '/') {
+                pos += 1;
+                const denom = parseUnary()?;
+                if (denom == 0.0) return XlsxError.DivisionByZero;
+                acc /= denom;
+            } else {
+                break;
+            }
+        }
+        return acc;
+    }
+
+    fn parseUnary(*_): f64 ! XlsxError {
+        const ch = peek();
+        if (ch == '-') {
+            pos += 1;
+            return -(parseUnary()?);
+        }
+        if (ch == '+') {
+            pos += 1;
+            return parseUnary();
+        }
+        return parsePrimary();
+    }
+
+    fn parseNumber(*_): f64 ! XlsxError {
+        const start: usize = pos;
+        let has_dot: bool = false;
+        while (pos < src.len) {
+            const b = src[pos];
+            if (b >= '0' && b <= '9') {
+                pos += 1;
+            } else if (b == '.' && !has_dot) {
+                has_dot = true;
+                pos += 1;
+            } else {
+                break;
+            }
+        }
+        return std.fmt.parseFloat(f64, src[start..pos]) catch return XlsxError.FormulaSyntax;
+    }
+
+    fn eqIdentUpper(ident: []const u8, upper: []const u8): bool {
+        if (ident.len != upper.len) return false;
+        let i: usize = 0;
+        while (i < ident.len) : (i += 1) {
+            let c = ident[i];
+            if (c >= 'a' && c <= 'z') c -= 32;
+            if (c != upper[i]) return false;
+        }
+        return true;
+    }
+
+    fn evalAggFunc(*_, name: []const u8): f64 ! XlsxError {
+        // Expects '(' already consumed
+        let sum: f64 = 0.0;
+        let cnt: u64 = 0;
+        let min_v: f64 = 0.0;
+        let max_v: f64 = 0.0;
+
+        while (true) {
+            if (peek() == ')') {
+                pos += 1;
+                break;
+            }
+            // Check if next token is a range A1:B5
+            const arg_start: usize = pos;
+            let scan: usize = pos;
+            let has_colon: bool = false;
+            while (scan < src.len && src[scan] != ',' && src[scan] != ')') : (scan += 1) {
+                if (src[scan] == ':') has_colon = true;
+            }
+            if (has_colon) {
+                let end_trim: usize = scan;
+                while (end_trim > arg_start && isXmlWs(src[end_trim - 1])) : (end_trim -= 1) {}
+                const rg = parseCellRange(src[arg_start..end_trim])?;
+                pos = scan;
+                // Iterate over cells inside range
+                let ci: usize = 0;
+                while (ci < cells.len) : (ci += 1) {
+                    const c = cells[ci];
+                    if (rg.contains(c.ref)) {
+                        if (c.has_num || c.formula.len > 0 || c.cell_type == XlsxCellType.bool_val) {
+                            const v = evalCellValue(c.ref)?;
+                            if (cnt == 0) {
+                                min_v = v;
+                                max_v = v;
+                            } else {
+                                if (v < min_v) min_v = v;
+                                if (v > max_v) max_v = v;
+                            }
+                            sum += v;
+                            cnt += 1;
+                        }
+                    }
+                }
+            } else {
+                const v = parseComparison()?;
+                if (cnt == 0) {
+                    min_v = v;
+                    max_v = v;
+                } else {
+                    if (v < min_v) min_v = v;
+                    if (v > max_v) max_v = v;
+                }
+                sum += v;
+                cnt += 1;
+            }
+
+            const sep = peek();
+            if (sep == ',') {
+                pos += 1;
+                continue;
+            }
+            if (sep == ')') {
+                pos += 1;
+                break;
+            }
+            return XlsxError.FormulaSyntax;
+        }
+
+        if (eqIdentUpper(name, "SUM")) return sum;
+        if (eqIdentUpper(name, "COUNT")) return cnt as f64;
+        if (eqIdentUpper(name, "AVERAGE")) {
+            if (cnt == 0) return XlsxError.DivisionByZero;
+            return sum / (cnt as f64);
+        }
+        if (eqIdentUpper(name, "MIN")) return if (cnt == 0) 0.0 else min_v;
+        if (eqIdentUpper(name, "MAX")) return if (cnt == 0) 0.0 else max_v;
+        return XlsxError.FormulaSyntax;
+    }
+
+    fn parsePrimary(*_): f64 ! XlsxError {
+        const ch = peek();
+        if (ch == '(') {
+            pos += 1;
+            const val = parseComparison()?;
+            if (peek() != ')') return XlsxError.FormulaSyntax;
+            pos += 1;
+            return val;
+        }
+        if ((ch >= '0' && ch <= '9') || ch == '.') {
+            return parseNumber();
+        }
+        if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || ch == '$') {
+            const start: usize = pos;
+            while (pos < src.len) {
+                const b = src[pos];
+                if ((b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z') || (b >= '0' && b <= '9') || b == '$' || b == '_') {
+                    pos += 1;
+                } else {
+                    break;
+                }
+            }
+            const ident = src[start..pos];
+            if (peek() == '(') {
+                pos += 1;
+                if (eqIdentUpper(ident, "IF")) {
+                    const cond = parseComparison()?;
+                    if (peek() != ',') return XlsxError.FormulaSyntax;
+                    pos += 1;
+                    const t_val = parseComparison()?;
+                    if (peek() != ',') return XlsxError.FormulaSyntax;
+                    pos += 1;
+                    const f_val = parseComparison()?;
+                    if (peek() != ')') return XlsxError.FormulaSyntax;
+                    pos += 1;
+                    return if (cond != 0.0) t_val else f_val;
+                }
+                if (eqIdentUpper(ident, "ABS")) {
+                    const v = parseComparison()?;
+                    if (peek() != ')') return XlsxError.FormulaSyntax;
+                    pos += 1;
+                    return if (v < 0.0) -v else v;
+                }
+                if (eqIdentUpper(ident, "ROUND")) {
+                    const v = parseComparison()?;
+                    let digits: i32 = 0;
+                    if (peek() == ',') {
+                        pos += 1;
+                        digits = (parseComparison()?) as i32;
+                    }
+                    if (peek() != ')') return XlsxError.FormulaSyntax;
+                    pos += 1;
+                    let scale: f64 = 1.0;
+                    let d: i32 = 0;
+                    while (d < digits && d < 12) : (d += 1) {
+                        scale *= 10.0;
+                    }
+                    const scaled = v * scale;
+                    const rounded: f64 = if (scaled >= 0.0) (((scaled + 0.5) as i64) as f64) else (((scaled - 0.5) as i64) as f64);
+                    return rounded / scale;
+                }
+                return evalAggFunc(ident);
+            }
+            const coord = decodeCellRef(ident) catch return XlsxError.InvalidReference;
+            return evalCellValue(coord);
+        }
+        return XlsxError.FormulaSyntax;
+    }
+}
+
+/// Evaluates an Excel formula (e.g. `"=SUM(A1:A5) * 1.1"`, `"=IF(A1>=10, MAX(B1:B3), ABS(-5))"`)
+/// over caller-provided `cells` with zero dynamic heap allocation and `#DIV/0!`/`#REF!`/`#CYCLE!` guards.
+pub fn evalXlsxFormula(formula: []const u8, cells: []const XlsxCellValue): f64 ! XlsxError {
+    if (formula.len == 0) return XlsxError.FormulaSyntax;
+    let parser = FormulaParser{
+        src: formula,
+        pos: 0,
+        cells: cells,
+        depth: 0,
+    };
+    if (parser.peek() == '=') parser.pos += 1;
+    const val = parser.parseComparison()?;
+    parser.skipWs();
+    if (parser.pos != parser.src.len) return XlsxError.FormulaSyntax;
+    return val;
+}

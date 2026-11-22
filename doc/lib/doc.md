@@ -155,6 +155,19 @@ pub fn demoCsvTable() {
   - `CsvRowSpan` / `sortCsvRowsByColumn`（O(N log N) 迭代稳定归并排序，支持数值与词典序升降序）。
 - **CSV ↔ JSONL (NDJSON) 双向零堆转换**：`csvToJsonl`（按 Schema 输出未加引号数值/布尔、`null` 与完整 RFC 8259 转义字符串）与 `jsonlToCsv`（按列头提取标量并生成规范 RFC 4180 CSV）。
 
+### 生产级零堆 OOXML XLSX 电子表格解析、日期序列、公式求值与多 Sheet 生成引擎 (`xlsx.cp`)
+
+在 100% 向下兼容既有 `XlsxSheetIter`/`XlsxSharedStringIter`/`XlsxCellIter`/`parseCellRef`/`formatColName` 的基础上，新增全套零堆外部切片电子表格引擎：
+
+- **A1/范围坐标与 Excel 1900/1904 日期序列**：
+  - `encodeCellRef` / `decodeCellRef`（支持 `A..XFD`、`1..1048576` 与 `$A$1` 绝对引用剥离）、`XlsxRangeRef` / `parseCellRange`；
+  - `XlsxDateTime`、`excelSerialToYmd` / `ymdToExcelSerial`（精确处理 Excel 1900 闰年兼容虫 `serial 60 == 1900-02-29`、1904 Mac 日期系统与小数 `HH:MM:SS`）。
+- **OOXML 多 Sheet / SharedStrings / Styles 解析与生成**：
+  - `parseSharedStringsXml`、`parseWorkbookSheetsXml`、`parseStylesNumFmtsXml`（自动识别内置与自定义日期/货币/百分比/数值格式 `XlsxNumFmtKind`）、`parseWorksheetCellsXml`（自动关联共享字符串表）；
+  - `buildSharedStringsXml`（自动去重 + XML 实体转义）、`buildWorkbookXml`（多工作表）与 `buildWorksheetXml`（数值/共享字符串/内联字符串/布尔/公式 `<f>`/样式 `s`）。
+- **零堆表格公式求值器 (`evalXlsxFormula`)**：
+  - 支持 `+ - * /` 括号优先级、单元格引用（`$A$1`）、范围聚合（`SUM`/`AVERAGE`/`MIN`/`MAX`/`COUNT`）、条件分支（`IF` 含 `= <> < <= > >=`）、`ABS`/`ROUND`，内置除零（`DivisionByZero`）、无效引用（`InvalidReference`）与循环引用（`CycleDetected`）防护。
+
 ---
 
 ## 收敛子模块深度文档
