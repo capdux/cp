@@ -1,6 +1,6 @@
 # `cap:frontmatter` — Markdown YAML/TOML Frontmatter 零分配提取器
 
-> 来源：吸收自 `/data/dev/bun/src/md/parser.zig`（Markdown YAML/TOML Frontmatter Extractor）
+> 参考来源：`/data/dev/bun/src/md/parser.zig` | 吸收日期：2026-11-22
 
 `cap:frontmatter` 提供纯 CP、零外部依赖、零堆分配的 Markdown Frontmatter 头块切分与键值查询能力，支持 YAML（`---` / `...`）与 TOML（`+++`）两种主流格式。
 
@@ -53,3 +53,13 @@ const sp = splitFrontmatter(doc);
 // sp.kind == .yaml, sp.body == "# Heading\n"
 // getFrontmatterField(sp.raw_meta, sp.kind, "title").? == "Hello CP"
 ```
+
+## 上游行为契约与边界注意事项
+
+1. **零拷贝切片与未闭合头块安全回退**：
+   - `splitFrontmatter` 返回的 `raw_meta` 与 `body` 均为原文档的零拷贝切片；
+   - 若文档首行不是 `---`/`+++`，或仅有起始分隔符而缺少闭合分隔符（`---` / `...` / `+++`），则安全回退为 `kind = .none` 并将完整文档保留在 `body` 中，避免误吞正文。
+2. **UTF-8 BOM 与行尾兼容**：
+   - 自动跳过文件头可选的 UTF-8 BOM（`\xEF\xBB\xBF`）并同时兼容 LF（`\n`）与 CRLF（`\r\n`）。
+3. **行内 `#` 注释与颜色值区分**：
+   - `getFrontmatterField` 在 YAML 模式下仅剥离前导空白后的 `# comment`，保留紧贴字符的值内 `#`（如 `#ff00ff` 或 URL 锚点）。

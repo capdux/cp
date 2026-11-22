@@ -1,6 +1,6 @@
 # `cap:html_asset_scanner` — 零堆分配 HTML 资源引用扫描器
 
-> 来源：吸收自 `/data/dev/bun/src/bundler/HTMLScanner.cp`
+> 参考来源：`/data/dev/bun/docs/bundler/html-static.mdx`、`/data/dev/bun/src/bundler/HTMLScanner.cp` | 吸收日期：2026-11-22
 
 `cap:html_asset_scanner` 提供纯 CP、零外部依赖、零堆分配的 HTML 资源引用扫描与 `srcset` 解析能力，返回每个资源在原始 HTML 缓冲区中的精确字节偏移 `[start_offset, end_offset)`，便于上游打包器（Bundler）或静态站点生成器执行原位 URL 重写与依赖图提取。
 
@@ -98,3 +98,13 @@ const n = HtmlAssetScanner.scan(html, refs[0..]);
 // refs[2]: kind=.image,      url="/hero@2x.png 2x" (attr="srcset")
 // refs[3]: kind=.script,     url="/main.js"
 ```
+
+## 上游行为契约与边界注意事项
+
+1. **精确字节偏移与原位 URL 重写（对齐 Bun HTML Bundler）**：
+   - 每条 `AssetRef` 保证 `html[start_offset..end_offset] == url`，打包器可直接按偏移降序或流式拼接将相对路径（如 `./app.ts`、`./logo.png`）重写为带内容哈希的构建产物路径，无需构建完整 DOM 树。
+2. **伪标签防误报机制**：
+   - 扫描器严格跳过 `<!-- ... -->` 注释、`<!DOCTYPE ...>`、闭合标签以及 `<script>...</script>` / `<style>...</style>` 原始文本块内部出现的字符串（例如 JS 模板字符串里的 `"<img src='...'>"`），防止误提取非真实 DOM 资源。
+3. **`srcset` CDN 参数逗号兼容与零分配上限**：
+   - `parseSrcset` 遵循 HTML Living Standard 区分“URL 内部逗号（如 Cloudinary `w_400,q_80/img.jpg`）”与“候选项分隔逗号”；
+   - `HtmlAssetScanner.scan` 与 `parseSrcset` 均严格受限于调用方 `out` 切片容量，永不越界或触发堆分配。

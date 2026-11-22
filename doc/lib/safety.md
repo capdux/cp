@@ -1,5 +1,7 @@
 # CP 标准库：并发竞态检测、硬件 CPU 特性与崩溃诊断子系统使用手册 (`cap:safety`)
 
+> 参考来源：`/data/dev/bun/src/safety/safety.cp`、`/data/dev/bun/src/crash_handler/CPUFeatures.zig`、`handle_oom.zig`、`crash_handler.zig` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计哲学
 
 `cap:safety` 是 CP 语言官方内置的**线程归属校验（`ThreadLock`）、可重入读写竞态检测（`CriticalSection`）、非托管容器分配器一致性守卫（`CheckedAllocator`）、AddressSanitizer 内存毒化接口（`asan`）、硬件 CPU ISA 特性探测（`CpuFeatures`）以及 OOM 策略守卫与崩溃诊断报告生成（`OomGuard` / `CrashReport`）**标准库。完整吸收自 Bun（`/data/dev/bun/src/safety/` 与 `/data/dev/bun/src/crash_handler/`），以接近零的运行时成本捕获并发竞态、跨分配器释放与异常崩溃上下文。
@@ -121,3 +123,14 @@ fn demoCrashAndOom() {
 | **ASAN 自定义池毒化** | `bun.asan.poison / unpoison` | `poison`, `unpoison`, `isPoisoned`, `registerRootRegion` | 非 ASAN 构建下为 0 |
 | **CPU 硬件指令集探测** | `src/crash_handler/CPUFeatures.zig` | `CpuFeatures` (`detect`, `hasSimd128/256`, `formatSummary`) | 仅启动/崩溃时调用 |
 | **OOM 守卫与崩溃报告** | `handle_oom.zig` / `crash_handler.zig` | `OomGuard`, `OomPolicy`, `CrashReport` | 零堆栈缓冲区格式化 |
+
+---
+
+## 四、 上游行为契约与安全边界注意事项
+
+1. **`ThreadLock` 与 `CriticalSection` 不是阻塞互斥锁**：
+   - 两者均为零系统调用的**并发契约断言器**，用于验证“应单线程独占”或“应读写分离”的高频容器在运行期未被意外跨线程误用；需要真实跨线程阻塞同步时请使用 `cap:sync` 的 `Mutex` / `RwLock`。
+2. **`CrashReport.formatReport` 严格零堆分配**：
+   - 在信号处理上下文（`SIGSEGV`/`SIGBUS`/`SIGABRT`）或 OOM 崩溃路径中，堆分配器本身可能已损坏或耗尽，因此 `formatReport(buf)` 全部写入调用方预分配栈缓冲，杜绝二次崩溃。
+3. **`CpuFeatures.detect()` 与 `XGETBV` 校验**：
+   - 在 `x86_64` 上不仅检查 `CPUID` 硬件位，同时结合操作系统 `XGETBV` 上下文保存支持，确保在旧内核或受限虚拟化环境下不会因错误启用 AVX/AVX2 触发 `SIGILL`。
