@@ -181,3 +181,26 @@ export {
     PgParseFrame,
     PgEmptySignalFrame,
 } from "./parseFrame.cp";
+
+export {
+    PG_TAG_AUTHENTICATION,
+    PG_AUTH_HEADER_LEN,
+    PG_AUTH_CODE_OK,
+    PG_AUTH_CODE_KERBEROS_V5,
+    PG_AUTH_CODE_CLEARTEXT,
+    PG_AUTH_CODE_MD5,
+    PG_AUTH_CODE_SCM_CREDENTIAL,
+    PG_AUTH_CODE_GSS,
+    PG_AUTH_CODE_GSS_CONTINUE,
+    PG_AUTH_CODE_SSPI,
+    PG_AUTH_CODE_SASL,
+    PG_AUTH_CODE_SASL_CONTINUE,
+    PG_AUTH_CODE_SASL_FINAL,
+    PG_AUTH_MAX_SASL_MECHANISMS,
+    PgAuthChallengeError,
+    PgAuthChallengeKind,
+    PgScramServerFirst,
+    PgScramServerFinal,
+    PgSaslMechanismList,
+    PgAuthChallenge,
+} from "./authChallenge.cp";

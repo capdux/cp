@@ -353,6 +353,26 @@ const sync_sig = PgEmptySignalFrame.decodeFrame(buf[0..n_sync], PgEmptySignalKin
 * = dec_p.paramCount(); * = sync_sig.kind;
 ```
 
+### Backend `Authentication`（`'R'`）全认证挑战与 SCRAM 解析（`authChallenge.cp`）
+
+吸收自 `/data/dev/bun/src/sql/postgres/protocol/Authentication.cp`，零堆分配编解码 PostgreSQL v3.0 后端 `Authentication`（`'R' = 0x52`）全部 11 种认证子类型及未知扩展：
+
+- **常量**：`PG_TAG_AUTHENTICATION` (`'R'`)、`PG_AUTH_HEADER_LEN` (`9`)、`PG_AUTH_CODE_OK` (`0`)、`PG_AUTH_CODE_KERBEROS_V5` (`2`)、`PG_AUTH_CODE_CLEARTEXT` (`3`)、`PG_AUTH_CODE_MD5` (`5`)、`PG_AUTH_CODE_SCM_CREDENTIAL` (`6`)、`PG_AUTH_CODE_GSS` (`7`)、`PG_AUTH_CODE_GSS_CONTINUE` (`8`)、`PG_AUTH_CODE_SSPI` (`9`)、`PG_AUTH_CODE_SASL` (`10`)、`PG_AUTH_CODE_SASL_CONTINUE` (`11`)、`PG_AUTH_CODE_SASL_FINAL` (`12`)、`PG_AUTH_MAX_SASL_MECHANISMS` (`8`)。
+- **`PgAuthChallenge` & `PgAuthChallengeKind`**：支持 `ok()` / `cleartext()` / `md5(salt)` / `sasl(mechanisms)` / `saslContinue(server_first)` / `saslFinal(server_final)` / `gssContinue(token)`，以及 `encodeFrame(out)` / `decodeFrame(frame)` / `isOk()` / `requiresPassword()` / `isSaslStep()` / `parseServerFinal()`。
+- **`PgSaslMechanismList`**：零拷贝解析 `AuthenticationSASL` 机制列表，提供 `count()` / `at(idx)` / `supports(mech)` / `supportsScramSha256()` / `supportsScramSha256Plus()`。
+- **`PgScramServerFirst` & `PgScramServerFinal`**：零拷贝解析 SCRAM-SHA-256 `r=<nonce>,s=<salt_b64>,i=<iterations>`（带严格正整数迭代次数解析）与 `v=<verifier_b64>` / `e=<err_msg>`。
+
+```cp
+import { PgAuthChallenge, PgAuthChallengeKind } from "cap:pgwire";
+
+let buf: [256]u8 = [0; 256];
+const c = PgAuthChallenge.saslContinue("r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=4096")?;
+const n = c.encodeFrame(buf[0..])?;
+const dec = PgAuthChallenge.decodeFrame(buf[0..n])?;
+* = dec.kind == PgAuthChallengeKind.SaslContinue;
+* = dec.scram_first.iterations; // 4096
+```
+
 ---
 
 ## 4. 示例
