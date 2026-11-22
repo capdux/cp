@@ -677,10 +677,27 @@ pub fn demoStreamBuffer(allocator: std.mem.Allocator): ! {
     * = ts_buf.reportDrain(); // 缓冲区为空时在解锁后安全触发回调
 }
 ```
+- **HTTP/3 客户端会话池与连接复用调度（`h3/session_pool.cp`，吸收自 `/data/dev/bun/src/http/h3_client/ClientContext.cp`）**：
+  - 导出：`H3_POOL_MAX_SESSIONS` (`32`)、`H3_SESSION_MAX_STREAMS` (`32`)、`H3PoolError`、`H3ConnectOutcomeKind`（`ReusedExisting` / `OpenedNew`）、`H3ConnectOutcome`、`H3PendingRequest`、`H3PooledSession`（`matches` / `hasHeadroom` / `enqueue` / `findRequest` / `detachByHttpId` / `markBodyEnded` / `activeCount`）、`H3SessionPool`（`init` / `count` / `connect` / `findSessionIndex` / `unregister` / `abortByHttpId` / `streamBodyByHttpId` / `failSession`）。
+  - 严格按 `(hostname[大小写无关], port, reject_unauthorized)` 三元组执行连接合并复用，确保 TLS 校验策略隔离与并发流余量溢出自动开新会话，并支持 `O(1)` swap-remove 注销与按 `http_id` 路由中止/体流结束事件。
 
-### 上游 Bun HTTP 运维指标与错误处理最佳实践（吸收自 `/data/dev/bun/docs/runtime/http/{metrics,error-handling}.mdx`）
+```typescript
+import { H3SessionPool } from "cap:http";
+
+let pool = H3SessionPool.init();
+const c1 = pool.connect("api.example.com", 443, true, 101, 4)?;  // OpenedNew
+const c2 = pool.connect("API.EXAMPLE.COM", 443, true, 102, 4)?;  // ReusedExisting (同 session_id)
+* = pool.streamBodyByHttpId(101, true);
+* = pool.abortByHttpId(102);
+* = c1;
+* = c2;
+```
+
+### 上游 Bun HTTP 运维指标、TLS 与错误处理最佳实践（吸收自 `/data/dev/bun/docs/runtime/http/{metrics,error-handling,tls}.mdx`）
 
 1. **活跃连接与订阅指标监控**：
    - 在高并发 HTTP / WebSocket 网关中，应持续观测活跃请求数（对应 Bun `server.pendingRequests`）、活跃 WebSocket 连接数（`server.pendingWebSockets`）以及按主题统计的订阅者数量（`server.subscriberCount(topic)`），结合 `ThreadSafeStreamBuffer.isBackpressured()` 实施流控与优雅降级。
 2. **开发期与生产期错误响应隔离**：
    - 服务端应提供统一的错误处理回调（对应 Bun `error(err)` handler），在开发模式输出详细诊断信息，在生产环境返回脱敏的 5xx 响应并记录结构化错误日志；自定义错误回调返回响应时优先覆盖框架默认 500 错误页。
+3. **TLS 证书载荷、CA 覆盖与 SNI 隔离（吸收自 `/data/dev/bun/docs/runtime/http/tls.mdx`）**：
+   - TLS 配置中的 `key` 与 `cert` 均期望传入**证书/私钥文件内容本身**（而非文件路径字符串），且必须同时提供；自定义 `ca` 会覆盖内置的 Mozilla 根证书列表，客户端连接池复用时必须严格隔离 `reject_unauthorized` 策略（`H3PooledSession.matches` 强制比对），并通过 SNI（`serverName`）支持多域名证书托管。

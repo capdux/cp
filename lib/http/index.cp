@@ -213,6 +213,14 @@ export {
     buildHttp3RequestHeaders,
     encodeFieldSection,
     decodeFieldSection,
+    H3_POOL_MAX_SESSIONS,
+    H3_SESSION_MAX_STREAMS,
+    H3PoolError,
+    H3ConnectOutcomeKind,
+    H3ConnectOutcome,
+    H3PendingRequest,
+    H3PooledSession,
+    H3SessionPool,
 } from "./h3/index";
 
 // --- Step 3: Industrial Client Engine & Lifecycle ---

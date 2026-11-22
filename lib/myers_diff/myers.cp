@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/node/assert/myers_diff.cp | Synced: 2026-11-21T23:56:27Z
+// Source: Absorbed from /data/dev/bun/src/runtime/node/assert/myers_diff.cp | Synced: 2026-11-22T06:39:08Z
 // Myers O(ND) shortest-edit-script diff engine for lines and bytes.
 
 pub err DiffError {
