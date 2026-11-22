@@ -336,3 +336,18 @@ export {
     formatSandboxVerdict,
     McpToolSandbox,
 } from "./toolSandbox.cp";
+
+export {
+    MCP_QUOTA_MAX_SESSIONS,
+    MCP_QUOTA_MAX_RULES,
+    MCP_QUOTA_ID_MAX_LEN,
+    MCP_QUOTA_MILLI_SCALE,
+    MCP_QUOTA_ERR_RATE_LIMITED,
+    McpQuotaVerdict,
+    McpToolQuotaRule,
+    McpSessionQuota,
+    McpQuotaDecision,
+    McpQuotaStats,
+    formatQuotaErrorJson,
+    McpRateQuotaEngine,
+} from "./rateQuota.cp";

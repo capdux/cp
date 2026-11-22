@@ -972,3 +972,44 @@ pub fn demoMcpToolSandbox() {
     * = d2.allowed;
 }
 ```
+
+---
+
+## 二十三、 零堆分配 MCP 会话/工具双层令牌桶限流与成本配额门控引擎 (`rateQuota.cp`)
+
+面向多租户 MCP 工具网关的 100% 纯 CP 零动态堆分配限流、并发槽位与成本预算原子门控引擎：
+
+- **常量与枚举**：
+  - `MCP_QUOTA_MAX_SESSIONS = 32`、`MCP_QUOTA_MAX_RULES = 64`、`MCP_QUOTA_ID_MAX_LEN = 48`、`MCP_QUOTA_MILLI_SCALE = 1000`、`MCP_QUOTA_ERR_RATE_LIMITED = -32029`
+  - `McpQuotaVerdict`（`allowed | denied_rate_limit | denied_cost_budget | denied_concurrency | denied_unknown_session`）
+- **数据模型与格式化器**：
+  - `McpToolQuotaRule`（`tool_name()`, `burst_capacity`, `refill_per_sec`, `cost_micros`, `max_concurrent`）
+  - `McpSessionQuota`（`session_id()`, `max_cost_micros`, `spent_cost_micros`, `global_burst`, `global_refill_per_sec`, `global_tokens_milli`, `last_refill_ms`, `active_calls`, `max_concurrent`, `remainingCostMicros()`）
+  - `McpQuotaDecision`、`McpQuotaStats`
+  - `formatQuotaErrorJson(decision, *out_buf): usize?`：输出标准 JSON-RPC 2.0 `-32029` 限流错误负载（含 `retryAfterMs` / `remainingCostMicros` / `remainingTokens`）。
+- **核心引擎 `McpRateQuotaEngine`**：
+  - `init()` / `registerToolRule(*_, tool_name, burst_capacity, refill_per_sec, cost_micros, max_concurrent)` / `registerSession(*_, session_id, max_cost_micros, global_burst, global_refill_per_sec, max_concurrent, now_ms)` / `getSession` / `getToolRule`
+  - `acquire(*_, session_id, tool_name, now_ms): McpQuotaDecision`：原子校验会话存在性 -> 会话/工具双层并发上限 -> 毫秒级定点令牌桶（不足精确返回 `retry_after_ms`）-> 成本预算，任一环节拒绝均保证零副作用。
+  - `release(*_, session_id, tool_name): bool` / `refundCost(*_, session_id, refund_micros): bool` / `stats(): McpQuotaStats`
+
+```cp
+import {
+    McpQuotaVerdict,
+    formatQuotaErrorJson,
+    McpRateQuotaEngine,
+} from "cap:mcp";
+
+pub fn demoMcpRateQuota() {
+    let eng = McpRateQuotaEngine.init();
+    * = eng.registerToolRule("web_search", 2, 2, 500, 4);
+    * = eng.registerSession("sess-1", 10_000, 10, 5, 8, 1000);
+
+    const d1 = eng.acquire("sess-1", "web_search", 1000);
+    * = (d1.verdict == McpQuotaVerdict.allowed);
+    * = eng.release("sess-1", "web_search");
+
+    let err_buf: [256]u8 = [0; 256];
+    let err_s: []u8 = err_buf[0..];
+    * = formatQuotaErrorJson(d1, *err_s);
+}
+```
