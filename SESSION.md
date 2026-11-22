@@ -2139,3 +2139,16 @@
   > 已读取紧急编译器工单 **`task-bun-20261123-ptr-to-optional-lowering`**（复现文件 [repro_ptr_opt.cp](file:///data/dev/cp/temp/repro_ptr_opt.cp)，`*(u8?)` 被错误 lowering 为 `?*u8` 而非 `*?u8`），已派发专职 **CPC Hotfix Engineer**（`fcad9303`）立即排查修复、`release` 发布并跑全量回归测试；验证通过后将第一时间 `resolve` 结单、同步 `SESSION.md` 并提交。
   >
   > 同时 Wave 16 双轨并行任务（`b4ee5845` W16 R9 / `8090acc8` W16 R4）正常推进中。
+
+### 2026-11-23（下游工单全量补录：`task-bun-20261123-as-ptr-field-addr-of`）[ticket:task-bun-20261123-as-ptr-field-addr-of]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-23 03:41:20` | 状态：`resolved` | 结单：`2026-11-23T03:52:41`
+- **报错/需求摘要**：字段指针 _.p as *u64 被 cpc 错误 lowering 为 @as(*u64, @ptrCast(&(self.p)))（对指针字段取地址而非传递指针值本身，导致 src/bun_core/fmt.cp 发生 ASan stack-buffer-overflow）
+- **结单与处理汇报**：已定位并修复：根因为 codegen/expr/ops.rs 的 Expr::Cast -> is_target_ptr 分支以 starts_with('[') 误将 [*]T / [*c]T / [*:0]T / []T 当作固定长度数组并插入 @ptrCast(&(expr))，且未优先判定 is_src_ptr。现已补全 unwrap_aligned/CPtr/SentinelPtr 指针识别，优先处理 is_src_ptr 直接生成 @ptrCast(@alignCast(inner))，并引入严格 is_zig_fixed_array 与 is_zig_slice 判定。已通过 bash scripts/sync_cpc.sh release 发布正式版，repro_as_ptr_field.cp、testHotfixAsPtrFieldAddrOf.cp 与 test_type_conversion.cp 全部 100% PASS。
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 03:41:48）[step:18164]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-as-ptr-field-addr-of)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取高危编译器误编译工单 **`task-bun-20261123-as-ptr-field-addr-of`**（复现文件 [repro_as_ptr_field.cp](file:///data/dev/cp/temp/repro_as_ptr_field.cp)，`_.p as *u64` 被误 lowering 为 `@ptrCast(&(self.p))` 导致越界读写），已派发专职 **CPC Hotfix Engineer**（`937127f1`）立即定位修复、`release` 发布并跑运行时内存读写回归测试；验证通过后将第一时间 `resolve` 结单、同步 `SESSION.md` 并提交。
+  >
+  > 同时双轨并行任务（`31ff6162` W18 R6 / `c728e330` W17 R10）正常推进中。

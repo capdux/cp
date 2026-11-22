@@ -794,17 +794,27 @@ impl Codegen {
                                     | Type::USize
                             )
                         );
+                        fn unwrap_aligned(mut ty: &Type) -> &Type {
+                            while let Type::Aligned { inner, .. } = ty {
+                                ty = inner;
+                            }
+                            ty
+                        }
+                        let src_ty_base = src_ty.as_ref().map(unwrap_aligned);
+                        let resolved_ty_base = unwrap_aligned(&resolved_ty);
                         let is_src_ptr = matches!(
-                            src_ty,
+                            src_ty_base,
                             Some(
                                 Type::RawPtr { .. }
                                     | Type::ManyRawPtr(_)
+                                    | Type::CPtr(_)
+                                    | Type::SentinelPtr(_, _)
                                     | Type::CStr
                                     | Type::BorrowType { .. }
                             )
                         );
                         let is_target_int = matches!(
-                            resolved_ty,
+                            resolved_ty_base,
                             Type::U8
                                 | Type::I8
                                 | Type::U16
@@ -818,11 +828,13 @@ impl Codegen {
                                 | Type::ISize
                                 | Type::USize
                         );
-                        let is_target_float = matches!(resolved_ty, Type::F32 | Type::F64);
+                        let is_target_float = matches!(resolved_ty_base, Type::F32 | Type::F64);
                         let is_target_ptr = matches!(
-                            resolved_ty,
+                            resolved_ty_base,
                             Type::RawPtr { .. }
                                 | Type::ManyRawPtr(_)
+                                | Type::CPtr(_)
+                                | Type::SentinelPtr(_, _)
                                 | Type::CStr
                                 | Type::BorrowType { .. }
                         );
@@ -887,24 +899,57 @@ impl Codegen {
                                 format!("@as({}, @floatCast({}))", target_zig_ty, inner_code)
                             }
                         } else if is_target_ptr {
+                            let is_zig_fixed_array = |ty: &str| {
+                                let t = ty.trim();
+                                t.starts_with('[')
+                                    && !t.starts_with("[*")
+                                    && !t.starts_with("[]")
+                                    && !t.starts_with("[:")
+                            };
+                            let is_zig_slice = |ty: &str| {
+                                let t = ty.trim();
+                                t.starts_with("[]") || t.starts_with("[:")
+                            };
                             if is_src_int {
                                 format!(
                                     "@as({}, @ptrFromInt(@as(usize, @truncate({}))))",
                                     target_zig_ty, inner_code
                                 )
-                            } else if matches!(
-                                src_ty,
-                                Some(Type::Array(_)) | Some(Type::FixedArray(_, _))
-                            ) || matches!(src_ty, Some(Type::Ref(ref id)) if id.sym.starts_with('['))
-                                || self.infer_zig_type(None, Some(expr)).starts_with('[')
-                                || self
-                                    .locals
-                                    .get(&inner_code)
-                                    .map_or(false, |l| l.starts_with('['))
+                            } else if is_src_ptr {
+                                if inner_code.starts_with("@ptrCast(") {
+                                    format!("@as({}, @alignCast({}))", target_zig_ty, inner_code)
+                                } else {
+                                    format!(
+                                        "@as({}, @ptrCast(@alignCast({})))",
+                                        target_zig_ty, inner_code
+                                    )
+                                }
+                            } else if matches!(src_ty_base, Some(Type::FixedArray(_, _)))
+                                || matches!(src_ty_base, Some(Type::Ref(ref id)) if is_zig_fixed_array(&id.sym))
+                                || (src_ty_base.is_none()
+                                    && (is_zig_fixed_array(&self.infer_zig_type(None, Some(expr)))
+                                        || self
+                                            .locals
+                                            .get(&inner_code)
+                                            .map_or(false, |l| is_zig_fixed_array(l))))
                             {
                                 format!("@as({}, @ptrCast(&({})))", target_zig_ty, inner_code)
-                            } else if matches!(src_ty, Some(Type::String)) {
-                                format!("@as({}, @ptrCast({}.ptr))", target_zig_ty, inner_code)
+                            } else if matches!(
+                                src_ty_base,
+                                Some(Type::String)
+                                    | Some(Type::Array(_))
+                                    | Some(Type::SentinelSlice(_, _))
+                            ) || (src_ty_base.is_none()
+                                && (is_zig_slice(&self.infer_zig_type(None, Some(expr)))
+                                    || self
+                                        .locals
+                                        .get(&inner_code)
+                                        .map_or(false, |l| is_zig_slice(l))))
+                            {
+                                format!(
+                                    "@as({}, @ptrCast(@alignCast({}.ptr)))",
+                                    target_zig_ty, inner_code
+                                )
                             } else if inner_code.starts_with("@ptrCast(") {
                                 format!("@as({}, @alignCast({}))", target_zig_ty, inner_code)
                             } else {
