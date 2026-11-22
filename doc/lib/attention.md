@@ -13,6 +13,7 @@
 - **`SamplingConfig`**: 采样配置（`temperature`, `top_k`, `top_p`, `repetition_penalty`, `seed`）。
 - **`RopeConfig` / RoPE / RMSNorm / LayerNorm / SwiGLU / GeLU** (`rope.cp`)：零堆分配 Transformer 基础推理核，支持 NTK-Aware 长上下文缩放的 RoPE 旋转位置编码、RMSNorm/LayerNorm 归一化与 SiLU/GeLU/SwiGLU 激活函数。
 - **`QUANT_BLOCK_SIZE` / `BlockQ8_0` / `BlockQ4_0` / GEMV** (`quant_matmul.cp`)：零堆分配 GGML 风格 32 元素分块量化与整型累加矩阵向量乘法（`W_q8 * x_q8` 与经典 llama.cpp `W_q4 * x_q8` 混合量化推理核）。
+- **`OnlineSoftmaxState` / `FlashAttnConfig` / `flashAttentionForward` / `flashAttentionSingleQuery`** (`flash.cp`)：零堆分配 O(1) 额外内存 FlashAttention-2 分块在线 Softmax 前向核，绝不物化 $N \times N$ 分数矩阵，原生支持因果掩码、Mistral 滑动窗口注意力与单 token 自回归解码热路径。
 
 ## 3. API 速查
 
@@ -45,6 +46,10 @@
 | `dotQ8_0` / `gemvQ8_0` | `(a, b): f64?` / `(w_q8, x_q8, rows, bpr, y_out): bool` | 块内 `i32` 纯整型累加点积与 Q8_0 GEMV（`y = W * x`） |
 | `quantizeRowQ4_0` / `dequantizeRowQ4_0` | `(src, blocks_out): bool` / `(blocks, dst): bool` | Q4_0 32 元素 4-bit 打包/解包（16B/块，~8x 压缩） |
 | `gemvQ4_0_Q8_0` | `(w_q4, x_q8, rows, bpr, y_out): bool` | 经典 llama.cpp `W_q4 * x_q8` 混合量化推理 GEMV（块内 `i32` 乘加） |
+| `OnlineSoftmaxState.init` / `update` | `(): OnlineSoftmaxState` / `(*_, score: f64): f64` | 在线 Softmax 状态累加原语，返回旧累加器重缩放系数 `exp(old_max - new_max)` |
+| `FlashAttnConfig.default` | `(): FlashAttnConfig` | 默认配置（`scale = auto`、`causal = false`、`window_size = 0`、`block_kv = 32`） |
+| `flashAttentionForward` | `(q, k, v, seq_q, seq_kv, head_dim, cfg, out): bool` | O(1) 额外内存分块在线 Softmax 前向核（支持因果掩码与 Mistral 滑动窗口） |
+| `flashAttentionSingleQuery` | `(q_vec, k, v, seq_kv, head_dim, scale, out_vec): bool` | 自回归 Decode 单 token 生成热路径 |
 
 ## 4. 示例
 
@@ -173,5 +178,33 @@ pub fn demoQuantizedGemv(w_row_32: []const f64, x_32: []const f64) {
     let y_buf: [1]f64 = [0.0];
     let y: []f64 = y_buf[0..];
     * = gemvQ4_0_Q8_0(w_q4_buf[0..], x_q8_buf[0..], 1, 1, y);
+}
+```
+
+### FlashAttention-2 分块在线 Softmax 与滑动窗口示例 (`flash.cp`)
+
+```cp
+import {
+    FlashAttnConfig,
+    flashAttentionForward,
+    flashAttentionSingleQuery,
+} from "cap:attention";
+
+pub fn demoFlashAttention2(q: []const f64, k: []const f64, v: []const f64) {
+    // 1. Mistral 风格滑动窗口因果注意力（0 临时 N x N 矩阵分配）
+    let out_buf: [32]f64 = [0.0; 32]; // seq_q=8 * head_dim=4
+    let out: []f64 = out_buf[0..];
+    const cfg = FlashAttnConfig{
+        scale: 0.0,       // 自动取 1 / sqrt(head_dim)
+        causal: true,
+        window_size: 4,   // 仅关注最近 4 个 token [i - 3, i]
+        block_kv: 16,
+    };
+    * = flashAttentionForward(q, k, v, 8, 8, 4, cfg, out);
+
+    // 2. 自回归单 token Decode 热路径
+    let step_out_buf: [4]f64 = [0.0; 4];
+    let step_out: []f64 = step_out_buf[0..];
+    * = flashAttentionSingleQuery(q[28..32], k, v, 8, 4, 0.0, step_out);
 }
 ```

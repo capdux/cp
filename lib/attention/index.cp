@@ -34,3 +34,10 @@ export {
     dequantizeRowQ4_0,
     gemvQ4_0_Q8_0,
 } from "./quant_matmul.cp";
+
+export {
+    OnlineSoftmaxState,
+    FlashAttnConfig,
+    flashAttentionForward,
+    flashAttentionSingleQuery,
+} from "./flash.cp";
