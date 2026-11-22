@@ -1861,3 +1861,61 @@ fn sessionSnapshotQuickStart()! {
     * = restored.turn_count; // 5
 }
 ```
+
+---
+
+## 子模块：层级 Plan-Execute-Replan 任务树执行引擎（`plan_executor.cp`）
+
+### 核心特性
+
+- **100% 零堆分配层级任务树（`PlanExecutor`）**：基于调用方固定 `[]PlanStepNode` 缓冲，支持多级父子层级（`parent_id`）与显式前置依赖（`depends_on_step_id`），子步骤全部完成后自动自底向上将父阶段汇总为 `Succeeded` 并解锁后续阶段。
+- **确定性叶子调度与自动重试**：`nextReadyStep()` 仅筛选前置依赖与祖先链均已就绪的可执行叶子步骤，并按升序 `step_id` 确定性返回；`completeStep()` 在失败且 `attempts < max_attempts` 时自动回退 `Pending`/`Ready` 支持瞬态重试。
+- **级联跳过与在线重规划（Replan）**：步骤重试耗尽彻底 `Failed` 后，不动点级联将下游依赖节点标记为 `Skipped`；支持通过 `replanAppendStep()` 动态追加补救子步骤，并通过带环检测的 `rebindDependency()` 将被跳过的下游重新挂接到补救路径恢复执行。
+- **实时进度遥测（`PlanProgress`）**：精确统计总步数、各状态计数、`remaining_steps`、`completion_ratio`、`replan_count` 及终态判定 `isDone()` / `isAllSucceeded()`。
+
+### 导出清单
+
+- **常量与类型**：`PLAN_NO_PARENT`（`0xFFFF_FFFF`）、`PlanStepState`（`Pending | Ready | Running | Succeeded | Failed | Skipped`）、`PlanStepNode`、`PlanProgress`（`isDone`, `isAllSucceeded`）
+- **状态机（`PlanExecutor`）**：`init`、`addStep`、`replanAppendStep`、`rebindDependency`、`nextReadyStep`、`startStep`、`completeStep`、`getStep`、`progress`
+
+### QuickStart 示例
+
+```cp
+import {
+    PLAN_NO_PARENT,
+    PlanStepNode,
+    PlanExecutor,
+} from "cap:agent";
+
+fn planExecuteReplanQuickStart() {
+    let buf: [8]PlanStepNode = [PlanStepNode{}; 8];
+    let exec = PlanExecutor.init(buf[0..]) ?? return;
+
+    // 阶段 1（父容器）及其两个叶子子步骤，阶段 2 依赖阶段 1 整体完成
+    * = exec.addStep(1, PLAN_NO_PARENT, PLAN_NO_PARENT, "Phase 1: Prepare", 1);
+    * = exec.addStep(2, 1, PLAN_NO_PARENT, "Fetch schema", 2);
+    * = exec.addStep(3, 1, 2, "Validate payload", 1);
+    * = exec.addStep(4, PLAN_NO_PARENT, 1, "Phase 2: Deploy", 1);
+
+    // 确定性按叶子依赖推进，失败自动重试（step 2 max_attempts=2）
+    if (s := exec.nextReadyStep()) {
+        * = exec.startStep(s); // s == 2
+        * = exec.completeStep(s, false, "transient timeout"); // attempts=1 < 2 -> 可重试
+    }
+    if (s := exec.nextReadyStep()) {
+        * = exec.startStep(s); // s == 2 (重试)
+        * = exec.completeStep(s, true, "ok");
+    }
+    if (s := exec.nextReadyStep()) {
+        * = exec.startStep(s); // s == 3
+        * = exec.completeStep(s, true, "validated"); // 自动汇总 step 1 -> Succeeded，解锁 step 4
+    }
+    if (s := exec.nextReadyStep()) {
+        * = exec.startStep(s); // s == 4
+        * = exec.completeStep(s, true, "deployed");
+    }
+
+    const prog = exec.progress();
+    * = prog.isAllSucceeded(); // true
+}
+```

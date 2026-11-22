@@ -361,3 +361,11 @@ export {
     encodeSessionSnapshot,
     decodeSessionSnapshot,
 } from "./session_codec.cp";
+
+export {
+    PLAN_NO_PARENT,
+    PlanStepState,
+    PlanStepNode,
+    PlanProgress,
+    PlanExecutor,
+} from "./plan_executor.cp";
