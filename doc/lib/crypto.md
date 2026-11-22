@@ -434,6 +434,45 @@ pub fn demoSparseMerkleTree() {
 
 ---
 
+## 零分配 Macaroon 能力令牌与链式 HMAC 衰减引擎 (`macaroon.cp`)
+
+面向微服务零信任授权、去中心化能力委托（Capability Delegation）与 AI Agent 细粒度沙箱权限衰减的 100% 纯 CP 零动态堆分配 **Macaroons (Birgisson et al. 2014)** 引擎：
+
+- **常量与枚举**：
+  - `MACAROON_SIG_LEN = 32`、`MACAROON_MAX_LOCATION_LEN = 64`、`MACAROON_MAX_ID_LEN = 64`、`MACAROON_MAX_CAVEATS = 16`、`MACAROON_MAX_CAVEAT_LEN = 96`、`MACAROON_MAX_CUSTOM_CLAIMS = 8`
+  - `MacaroonStatus`（`ok | invalid_root_key | invalid_identifier | location_too_long | identifier_too_long | caveat_empty | caveat_too_long | caveats_full | signature_mismatch | caveat_expired | caveat_scope_denied | caveat_method_denied | caveat_prefix_denied | caveat_assertion_failed | caveat_malformed | buffer_too_small | invalid_format | truncated`）
+- **核心引擎 `Macaroon`**：
+  - `mint(root_key, location, identifier): Macaroon?`：生成根能力令牌 `sig_0 = HMAC-SHA256(root_key, identifier)`。
+  - `addCaveat(*_, caveat)` / `addExpCaveat(*_, exp_ts)` / `addScopeCaveat(*_, scope)` / `addMethodCaveat(*_, method)` / `addPrefixCaveat(*_, path_prefix)`：无需 `root_key` 的离线单向能力衰减 `sig_i = HMAC-SHA256(sig_{i-1}, caveat_i)`，数学上不可逆去衰减。
+  - `verifySignature(root_key): bool`：常量时间链式 HMAC-SHA256 签名验证（内置 `macaroonConstantTimeEq` 防侧信道）。
+  - `verify(root_key, ctx: MacaroonVerifyContext): MacaroonVerifyResult`：Fail-Closed 校验签名与全部一阶 Caveat（支持 `exp <`、`exp <=`、`scope =`、`method =`、`prefix =` 及自定义 `key = value` 精确/通配 `*` 断言），精确返回失败原因与违规 `failed_caveat_index`。
+  - `encodedSize()` / `encodeBinary(*out_buf): usize?` / `decodeBinary(data): Macaroon?`：零堆分配 `MAC1` 二进制线协议编解码，严格拦截截断、越界与尾随垃圾字节。
+
+```cp
+import {
+    Macaroon,
+    MacaroonVerifyContext,
+} from "cap:crypto";
+
+pub fn demoMacaroon() {
+    const root_key: []const u8 = "kms-root-secret-2026";
+    let tok = Macaroon.mint(root_key, "https://api.cap.dev", "key-id-42") ?? return;
+    // 离线逐级衰减（委托方无需持有 root_key）
+    * = tok.addExpCaveat(2000);
+    * = tok.addScopeCaveat("agent:read");
+    * = tok.addMethodCaveat("GET");
+    * = tok.addPrefixCaveat("/v1/docs/");
+    * = tok.addCaveat("tenant = acme-*");
+
+    let ctx = MacaroonVerifyContext.init(1500, "agent:read", "GET", "/v1/docs/spec.md");
+    * = ctx.addClaim("tenant", "acme-prod");
+    const res = tok.verify(root_key, ctx);
+    * = res.isOk(); // true
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [aes_gcm.md](crypto/aes_gcm.md)

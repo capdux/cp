@@ -507,3 +507,21 @@ export {
     verifySmtInclusionProof,
     verifySmtNonInclusionProof,
 } from "./sparseMerkle.cp";
+
+// --- Zero-Alloc Macaroon Capability Tokens & Chained HMAC Attenuation ---
+
+export {
+    MACAROON_SIG_LEN,
+    MACAROON_MAX_LOCATION_LEN,
+    MACAROON_MAX_ID_LEN,
+    MACAROON_MAX_CAVEATS,
+    MACAROON_MAX_CAVEAT_LEN,
+    MACAROON_MAX_CUSTOM_CLAIMS,
+    macaroonConstantTimeEq,
+    MacaroonStatus,
+    MacaroonCaveat,
+    MacaroonClaim,
+    MacaroonVerifyContext,
+    MacaroonVerifyResult,
+    Macaroon,
+} from "./macaroon.cp";
