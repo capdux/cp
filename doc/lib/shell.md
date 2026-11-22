@@ -502,3 +502,26 @@ const j = tracker.spawn(AsyncParentKind.Stmt, AsyncChildKind.Pipeline, 10)?;
 * = tracker.finishJob(j.job_id, 0)?;
 // tracker.canFinishShell() == true
 ```
+
+### Shell 三通道 IO 描述符、引用计数句柄表与子进程 Stdio 路由器（`ioChannels.cp`）
+
+- 吸收自 `/data/dev/bun/src/shell/IO.cp` 与 `/data/dev/bun/docs/runtime/shell.mdx`；
+- 导出：`SHELL_IO_MAX_HANDLES` (`64`)、`SHELL_IO_INVALID_HANDLE`、`ShellIoError`、`ShellInKind`（`Ignore`/`Fd`）、`ShellOutKind`（`Ignore`/`Pipe`/`Fd`）、`SubprocStdioKind`（`Ignore`/`Pipe`/`Inherit`/`Fd`/`Capture`）、`SubprocStdioRoute`、`ShellSubprocStdioPlan`、`ShellInChannel`、`ShellOutChannel`、`ShellIoTriplet`（`ignored`/`quietPipe`）、`ShellIoHandleEntry`、`ShellIoHandleTable`（`init`/`openHandle`/`getHandle`/`refHandle`/`derefHandle`/`copyTriplet`/`releaseTriplet`/`toSubprocStdio`/`estimateMemoryCost`/`formatTriplet`）；
+- **`.quiet()` 管道捕获与跨平台 Stdio 路由最佳实践（参考 `/data/dev/bun/docs/runtime/shell.mdx` & `IO.cp`）**：
+  - **`.quiet()` 与 `.text()` 静默缓冲**：Bun Shell 默认将命令输出直通终端；调用 `.quiet()`（或隐式启用 `.quiet()` 的 `.text()`）时将 `stdout`/`stderr` 置为 `ShellOutKind.Pipe`（对应 `ShellIoTriplet.quietPipe()`）；
+  - **输出通道三态路由**：`toSubprocStdio()` 对 `.Fd` 通道按优先级判定：① 带捕获缓冲（`has_capture == true`）路由至 `.Capture`（同时写回流与缓冲）；② 有效 OS fd 且未移交事件循环路由至 `.Fd`；③ 已被事件循环接管（如 Windows/libuv）则安全回退至 `.Inherit`；
+  - **引用计数生命周期防泄漏**：管道/子 Shell 共享 IO 通道时必须通过 `copyTriplet()` 递增引用、退出时通过 `releaseTriplet()` 递减，归零自动关闭并拦截双重释放（`AlreadyClosed`）。
+
+```cp
+import { ShellIoHandleTable, ShellIoTriplet, ShellInChannel, ShellOutChannel } from "cap:shell";
+
+let tbl = ShellIoHandleTable.init();
+const h_out = tbl.openHandle(1, false, 128)?;
+const io = ShellIoTriplet{
+    stdin: ShellInChannel{ kind: .Ignore },
+    stdout: ShellOutChannel{ kind: .Fd, handle: h_out, has_capture: true, capture_buf_id: 7 },
+    stderr: ShellOutChannel{ kind: .Pipe },
+};
+const plan = tbl.toSubprocStdio(io)?; // stdout -> .Capture(buf=7), stderr -> .Pipe
+* = plan;
+```

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T13:15:07Z (RFC 9110 Accept / Accept-Encoding / Accept-Language Content Negotiation)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T14:26:00Z (RFC 9110 Accept / Accept-Encoding / Accept-Language Content Negotiation)
 // Pure-CP RFC 9110 content negotiation: q-value parser, header iterators, and best-match selection.
 
 fn isAsciiSpace(b: u8): bool {
