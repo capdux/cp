@@ -195,3 +195,14 @@ export {
     TailSamplerStats,
     TailTraceSampler,
 } from "./trace_sampler.cp";
+
+// --- Zero-Alloc Google SRE Multi-Window Multi-Burn-Rate SLO Monitor ---
+
+export {
+    SLO_RING_MINUTES,
+    SloAlertSeverity,
+    SloBurnConfig,
+    SloWindowMetrics,
+    SloBurnEvaluation,
+    SloBurnMonitor,
+} from "./slo_burn_rate.cp";

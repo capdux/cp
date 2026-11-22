@@ -268,6 +268,46 @@ pub fn demoTailTraceSampler() {
 }
 ```
 
+### 零分配 Google SRE 多窗口多燃烧率 SLO 错误预算与告警引擎 (`slo_burn_rate.cp`)
+
+面向云原生服务、API 网关与 AI Agent 推理集群的 100% 纯 CP 零动态堆分配 Google SRE Workbook 第 5 章多窗口多燃烧率（Multi-Window Multi-Burn-Rate）SLO 错误预算与告警内核（固定 360 个 1 分钟环形桶）：
+
+- **常量与枚举**：
+  - `SLO_RING_MINUTES` (`360`，6 小时 1 分钟粒度环形桶)
+  - `SloAlertSeverity`（`ok | ticket_slow_burn | page_high_burn | page_critical_burn`）
+- **核心类型**：
+  - `SloBurnConfig`（`target_availability_f64`、`critical_burn_rate` [默认 `14.4`]、`high_burn_rate` [默认 `6.0`]、`slow_burn_rate` [默认 `1.0`]、`min_samples_short_win` [默认 `20`]；提供 `defaultsThreeNines()` 与 `isValid()`）
+  - `SloWindowMetrics`（`good_events`、`bad_events`、`total_events`、`error_rate_f64`、`burn_rate_f64`）
+  - `SloBurnEvaluation`（`severity`、`win_5m`、`win_30m`、`win_1h`、`win_6h`、`error_budget_consumed_ratio`、`hours_to_budget_exhaustion`）
+- **核心监控器 `SloBurnMonitor`**：
+  - `init(cfg): SloBurnMonitor?` / `reset(*_)`
+  - `record_events(*_, minute_epoch, good_count, bad_count): bool`：自动推进并清零过期分钟桶，支持窗口内乱序补录，安全拒绝早于当前窗口 `>= 360` 分钟的陈旧事件。
+  - `window_metrics(now_minute, span_minutes): SloWindowMetrics`：精确统计指定回溯分钟窗口的好/坏样本数、错误率与燃烧率。
+  - `evaluate(now_minute): SloBurnEvaluation`：严格执行 Google SRE 双窗防抖（`page_critical_burn` 需 1h+5m 双窗 >= 14.4x、`page_high_burn` 需 6h+30m 双窗 >= 6x、`ticket_slow_burn` 需 6h+30m 双窗 >= 1x，且满足 `min_samples_short_win` 防冷启动误报），故障恢复后短窗归零即可快速消警。
+
+```cp
+import {
+    SloAlertSeverity,
+    SloBurnConfig,
+    SloBurnMonitor,
+} from "cap:obs";
+
+pub fn demoSloBurnMonitor() {
+    let mon = SloBurnMonitor.init(SloBurnConfig.defaultsThreeNines()) ?? return;
+
+    // 突发 2% 错误率（对于 99.9% SLO 相当于 20x 燃烧率 > 14.4x）
+    let m: u64 = 1000;
+    while (m < 1010) : (m += 1) {
+        * = mon.record_events(m, 980, 20);
+    }
+
+    const ev = mon.evaluate(1009);
+    if (ev.severity == SloAlertSeverity.page_critical_burn) {
+        * = ev.hours_to_budget_exhaustion; // ~36.0h (720 / 20)
+    }
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
