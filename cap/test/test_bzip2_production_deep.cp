@@ -21,7 +21,7 @@ import {
     parseBzip2BlockHeader,
     parseBzip2Eos,
     probeBzip2Stream,
-} from "cap:bzip2";
+} from "cap:pack";
 
 struct BitWriter {
     buf: [64]u8,

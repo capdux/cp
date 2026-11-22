@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/pack/tar.cp | Kept for comparison/analysis
 // Source: cp/lib/tar/tar.cp (POSIX ustar Archive Writer & Safe Reader)
 // Pure CP zero-OS-dependency POSIX ustar tar archive builder and safe parser.
 

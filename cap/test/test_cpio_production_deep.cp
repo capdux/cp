@@ -16,7 +16,7 @@ import {
     CpioIter,
     findCpioEntry,
     countCpioEntries,
-} from "cap:cpio";
+} from "cap:pack";
 
 const HEX_CHARS: []const u8 = "0123456789ABCDEF";
 

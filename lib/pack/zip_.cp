@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/pack/zip.cp | Kept for comparison/analysis
 // Source: cp/lib/zip/zip.cp (Pure CP PKZIP Archive Builder & Safe Reader via cap:deflate)
 // Zero external C dependency implementation using pure CP, std, and cap:deflate.
 

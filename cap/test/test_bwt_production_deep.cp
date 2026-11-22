@@ -11,7 +11,7 @@ import {
     bwtMtfEncode,
     bwtMtfDecode,
     zeroByteRatioPermille,
-} from "cap:bwt";
+} from "cap:pack";
 
 fn slicesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

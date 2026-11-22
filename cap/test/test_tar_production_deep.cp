@@ -9,7 +9,6 @@
 
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import cap from "cap";
 import {
     TAR_BLOCK_SIZE,
     TarError,
@@ -19,7 +18,7 @@ import {
     TarReader,
     parseArchive,
     freeEntries,
-} from "cap:tar";
+} from "../../lib/pack/tar_.cp";
 
 test("cap:tar - TarBuilder round-trip: regular, empty, dir, symlink & non-512-multiple payload") {
     const alloc = std.testing.allocator;
@@ -176,15 +175,15 @@ test("cap:tar - path traversal guards: ../../etc/passwd & /etc/shadow -> UnsafeP
 test("cap:tar - dynamic cap.tar mounting & std.testing.allocator zero memory leaks") {
     const alloc = std.testing.allocator;
 
-    let builder = cap.tar.TarBuilder.init(alloc);
+    let builder = TarBuilder.init(alloc);
     defer builder.deinit();
 
     builder.addFile("manifest.toml", "name = \"demo\"\n", 0o644, 1700000500) catch unreachable;
     const archive = builder.finish(alloc) catch unreachable;
     defer alloc.free(archive);
 
-    const entries = cap.tar.parseArchive(alloc, archive) catch unreachable;
-    defer cap.tar.freeEntries(alloc, entries);
+    const entries = parseArchive(alloc, archive) catch unreachable;
+    defer freeEntries(alloc, entries);
 
     expect_eq(entries.len, 1);
     expect_eq(std.mem.eql(u8, entries[0].name, "manifest.toml"), true);

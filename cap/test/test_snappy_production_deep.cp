@@ -6,11 +6,11 @@ import { test, expect_eq } from "cap:test";
 import cap from "cap";
 import {
     SnappyError,
-    compress,
+    snappyCompress as compress,
     decompress,
     decompressWithMaxSize,
     uncompressedLength,
-} from "cap:snappy";
+} from "cap:pack";
 
 fn emptyMutSlice(): []u8 {
     return std.heap.page_allocator.alloc(u8, 0) catch unreachable;
@@ -187,17 +187,17 @@ fn runTest5(): !void {
     const alloc = std.testing.allocator;
 
     const payload = "cap.snappy dynamic mount verification payload -- repeated repeated repeated!";
-    const comp = cap.snappy.compress(alloc, payload)?;
+    const comp = cap.pack.snappyCompress(alloc, payload)?;
     defer alloc.free(comp);
 
-    const len = cap.snappy.uncompressedLength(comp)?;
+    const len = cap.pack.uncompressedLength(comp)?;
     expect_eq(len, payload.len);
 
-    const dec_out = cap.snappy.decompressWithMaxSize(alloc, comp, 4096)?;
+    const dec_out = cap.pack.decompressWithMaxSize(alloc, comp, 4096)?;
     defer alloc.free(dec_out);
     expect_eq(std.mem.eql(u8, dec_out, payload), true);
 
-    const dec2 = cap.snappy.decompress(alloc, comp)?;
+    const dec2 = cap.pack.decompress(alloc, comp)?;
     defer alloc.free(dec2);
     expect_eq(std.mem.eql(u8, dec2, payload), true);
 }

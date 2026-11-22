@@ -47,7 +47,7 @@ import {
     decodeDataBlockSize,
     SquashfsFragmentEntry,
     parseFragmentEntry,
-} from "cap:squashfs";
+} from "cap:pack";
 
 fn putU16Le(buf: []u8, off: usize, v: u16) {
     buf[off] = (v & 0xFF) as u8;

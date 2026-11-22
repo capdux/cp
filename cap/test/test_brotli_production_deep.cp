@@ -3,7 +3,6 @@
 
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import cap from "cap";
 import {
     BrotliError,
     BrotliHeader,
@@ -13,7 +12,7 @@ import {
     compressUncompressed,
     decompress,
     decompressWithLimits,
-} from "cap:brotli";
+} from "../../lib/pack/brotli_.cp";
 
 fn emptyMutSlice(): []u8 {
     return std.heap.page_allocator.alloc(u8, 0) catch unreachable;
@@ -190,13 +189,13 @@ fn runTest5(): !void {
     const alloc = std.testing.allocator;
     const msg = "Dynamic cap.brotli mount verification with zero-leak allocator!";
 
-    const enc = cap.brotli.compress(alloc, msg)?;
+    const enc = compress(alloc, msg)?;
     defer alloc.free(enc);
 
-    const hdr = cap.brotli.parseHeader(enc)?;
+    const hdr = parseHeader(enc)?;
     expect_eq(hdr.window_bits, 16 as u8);
 
-    const decoded = cap.brotli.decompressWithLimits(alloc, enc, 131072, 4096)?;
+    const decoded = decompressWithLimits(alloc, enc, 131072, 4096)?;
     defer alloc.free(decoded);
     expect_eq(std.mem.eql(u8, decoded, msg), true);
 }

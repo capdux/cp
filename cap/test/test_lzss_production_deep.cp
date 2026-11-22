@@ -12,7 +12,7 @@ import {
     lzssDecompress,
     lzssCompressFramed,
     lzssDecompressFramed,
-} from "cap:lzss";
+} from "cap:pack";
 
 test("1. Empty, short, and repetitive text compression ratio and exact round-trip", () => {
     expect_eq(LZSS_WINDOW_SIZE, 4096);

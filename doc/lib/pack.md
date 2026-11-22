@@ -454,3 +454,26 @@ pub fn demoSniffer() {
    - 标准 USTAR `TarHeader` 文件名上限为 100 字节（加 prefix 为 255 字节）；归档路径超过 100 字节或包含非 ASCII 文件名时，应优先使用 `PaxTarWriter` / `PaxTarReader` 自动生成并解析 PAX `path` 扩展记录。
 4. **魔数嗅探优先于文件扩展名**：
    - 处理网络下载包或 HTTP 响应流时，优先使用 `ArchiveSniffer.detect(bytes)` 依据魔数（`Gzip` / `Zstd` / `Zip` / `Tar` / `Xz`）判定真实封装格式，避免错误扩展名导致解压失败。
+
+---
+
+## 七、 收敛集成的纯 CP 压缩算法与归档容器套件
+
+以下纯 CP 零外部依赖压缩/归档模块已统一聚合导出至 `cap:pack`（`lib/pack/index.cp`），零符号冲突：
+
+| 分类 | 文件路径 | 算法 / 格式 | 说明 |
+| :--- | :--- | :--- | :--- |
+| 压缩算法 | `lib/pack/bzip2.cp` | bzip2 Container | 零堆分配 bzip2 容器头与位流解析器 |
+| 压缩算法 | `lib/pack/lz4.cp` | LZ4 Frame / Block + xxHash32 | 纯 CP LZ4 块/帧编解码与校验 |
+| 压缩算法 | `lib/pack/snappy.cp` | Google Snappy | 纯 CP Snappy 压缩/解压与长度上限防护（导出别名 `snappyCompress`） |
+| 压缩算法 | `lib/pack/rle.cp` | PackBits / PCX / TGA / Zero-RLE | 零堆分配多标准游程编码套件 |
+| 压缩算法 | `lib/pack/xz.cp` | XZ / LZMA2 Container | 零堆分配 XZ 流头/块头/索引/CRC 校验解析器 |
+| 压缩算法 | `lib/pack/lzss.cp` | LZSS 滑动窗口 | 零堆分配 LZSS 编解码器 |
+| 压缩算法 | `lib/pack/lzo.cp` | LZO1X | 零堆分配 LZO1X 压缩/解压器 |
+| 压缩算法 | `lib/pack/bwt.cp` | BWT & MTF | 零堆分配 Burrows-Wheeler 变换与 Move-To-Front 前端 |
+| 归档容器 | `lib/pack/rar.cp` | RAR4 & RAR5 | 零堆分配 RAR4/RAR5 Vint、CRC32 与块/文件头解析器 |
+| 归档容器 | `lib/pack/ar.cp` | Unix `ar` / `.deb` | 零堆分配 Unix 静态库与 `.deb` 归档解析器 |
+| 归档容器 | `lib/pack/cpio.cp` | CPIO `newc` / `crc` / `odc` | 零堆分配 Unix CPIO 归档解析器 |
+| 归档容器 | `lib/pack/cab.cp` | Microsoft Cabinet (`.cab`) | 零堆分配 CAB 归档头、文件夹与文件条目解析器 |
+| 只读镜像 | `lib/pack/squashfs.cp` | Linux SquashFS v4.0 | 零堆分配 SquashFS v4.0 超级块与元数据解析器 |
+| 参考归档（不导出） | `lib/pack/{zstd,brotli,tar,zip}_.cp` | Zstd / Brotli / Tar / ZIP（仅参考） | 与 `lib/pack/` 权威实现功能重叠，保留供对比分析，不在 `cap:pack` 重复导出 |

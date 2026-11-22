@@ -1497,3 +1497,7 @@
 ### 2026-11-22（根目录分域收敛第 11 批完成：lib/ds/（净减 19 个顶层目录，累计 -170）+ cli/completions.cp | 2026-11-22 15:00:31）
 - **执行与结单汇报**：
   > 1. Stdlib Root Consolidator 完成 lib/ds/ 建立与收敛：20 个通用数据结构/空间索引/字符串匹配/草图小目录零冲突归并入 lib/ds/ 并物理清理旧目录（20/20 PASS），根目录 695 -> 676（累计 -170）；2. 从 Bun shell_completions.cp 吸收归入 lib/cli/completions.cp (5/5 PASS)。
+
+### 2026-11-22（根目录分域收敛第 13 批完成：lib/pack/（净减 17 个顶层目录，累计 -187） | 2026-11-22 15:01:00）
+- **执行与结单汇报**：
+  > Stdlib Root Consolidator 完成 lib/pack/ 收敛：13 个压缩/归档小目录（bzip2/lz4/snappy/rle/xz/lzss/lzo/bwt/rar/ar/cpio/cab/squashfs）零冲突归并入 lib/pack/ + 4 份参考归档（zstd_/brotli_/tar_/zip_.cp），物理清理 17 个冗余旧目录（18/18 PASS，严格保护 deflate/lzw/zlib）；根目录 676 -> 659（累计 -187）；续派 lib/codec/ 编码与 ID 领域收敛。

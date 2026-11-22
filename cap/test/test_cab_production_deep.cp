@@ -21,7 +21,7 @@ import {
     CabFolderIter,
     CabFileIter,
     findCabFile,
-} from "cap:cab";
+} from "cap:pack";
 
 fn zeroBytes(buf: []u8) {
     let i: usize = 0;

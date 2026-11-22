@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/pack/zstd.cp | Kept for comparison/analysis
 // Source: cp/lib/zstd/zstd.cp (Pure CP RFC 8878 Zstandard Frame & Block Codec + XXH64)
 // Zero external C dependency implementation using pure CP and std.
 

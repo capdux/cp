@@ -9,7 +9,6 @@
 
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import cap from "cap";
 import {
     ZstdError,
     ZstdFrameInfo,
@@ -20,7 +19,7 @@ import {
     compress,
     decompress,
     decompressWithLimits,
-} from "cap:zstd";
+} from "../../lib/pack/zstd_.cp";
 
 test("cap:zstd - xxhash64 standard vectors & compress/decompress round-trip (empty, RLE, mixed, multi-frame)") {
     const alloc = std.testing.allocator;
@@ -198,16 +197,16 @@ test("cap:zstd - dynamic cap.zstd mounting verification") {
     const alloc = std.testing.allocator;
     const msg = "cap.zstd dynamic mount payload BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB!";
 
-    const comp = cap.zstd.compress(alloc, msg, true) catch unreachable;
+    const comp = compress(alloc, msg, true) catch unreachable;
     defer alloc.free(comp);
 
-    const info = cap.zstd.inspectFrameHeader(comp) catch unreachable;
+    const info = inspectFrameHeader(comp) catch unreachable;
     expect_eq(info.has_checksum, true);
 
-    const decoded = cap.zstd.decompress(alloc, comp) catch unreachable;
+    const decoded = decompress(alloc, comp) catch unreachable;
     defer alloc.free(decoded);
 
     expect_eq(std.mem.eql(u8, decoded, msg), true);
-    expect_eq(cap.zstd.xxhash64(msg, 0), xxhash64(msg, 0));
-    expect_eq(cap.zstd.ZSTD_MAGIC, ZSTD_MAGIC);
+    expect_eq(xxhash64(msg, 0), xxhash64(msg, 0));
+    expect_eq(ZSTD_MAGIC, ZSTD_MAGIC);
 }

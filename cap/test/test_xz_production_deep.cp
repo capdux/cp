@@ -37,7 +37,7 @@ import {
     parseXzFooter,
     parseXzBlockHeader,
     parseXzIndex,
-} from "cap:xz";
+} from "cap:pack";
 
 fn putU32Le(buf: []u8, off: usize, v: u32) {
     buf[off + 0] = (v & 0xFF) as u8;

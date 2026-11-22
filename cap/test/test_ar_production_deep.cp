@@ -12,7 +12,7 @@ import {
     ArIter,
     findArMember,
     countArMembers,
-} from "cap:ar";
+} from "cap:pack";
 
 fn putPadded(dst: []u8, off: usize, width: usize, text: []const u8) {
     let i: usize = 0;

@@ -24,7 +24,7 @@ import {
     parseLzopHeader,
     iterLzopBlocks,
     lzo1xDecompress,
-} from "cap:lzo";
+} from "cap:pack";
 
 fn putU16Be(buf: []u8, off: usize, v: u16) {
     buf[off + 0] = ((v >> 8) & 0xFF) as u8;

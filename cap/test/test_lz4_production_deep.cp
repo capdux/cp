@@ -16,7 +16,7 @@ import {
     xxhash32,
     Lz4Block,
     Lz4Frame,
-} from "cap:lz4";
+} from "cap:pack";
 
 test("cap:lz4 - Lz4Block round-trip: high-repeat text, RLE zeros, empty & short (<12B) inputs") {
     const alloc = std.testing.allocator;
@@ -182,12 +182,12 @@ test("cap:lz4 - dynamic cap.lz4 mounting verification") {
     const alloc = std.testing.allocator;
     const msg = "cap.lz4 dynamic mount test payload repeated repeated repeated!";
 
-    const frame = cap.lz4.Lz4Frame.compressFrame(alloc, msg, true) catch unreachable;
+    const frame = cap.pack.Lz4Frame.compressFrame(alloc, msg, true) catch unreachable;
     defer alloc.free(frame);
 
-    const decoded = cap.lz4.Lz4Frame.decompressFrame(alloc, frame, 4096) catch unreachable;
+    const decoded = cap.pack.Lz4Frame.decompressFrame(alloc, frame, 4096) catch unreachable;
     defer alloc.free(decoded);
 
     expect_eq(std.mem.eql(u8, decoded, msg), true);
-    expect_eq(cap.lz4.xxhash32(msg, 0), xxhash32(msg, 0));
+    expect_eq(cap.pack.xxhash32(msg, 0), xxhash32(msg, 0));
 }

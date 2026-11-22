@@ -3,7 +3,6 @@
 
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import cap from "cap";
 import {
     ZipError,
     CompressionMethod,
@@ -12,7 +11,7 @@ import {
     ZipBuilder,
     readArchive,
     readArchiveWithLimits,
-} from "cap:zip";
+} from "../../lib/pack/zip_.cp";
 
 fn emptyArchive(): ZipArchive {
     let empty: [0]ZipEntry = [];
@@ -222,7 +221,7 @@ fn runTest4(): !void {
 fn runTest5(): !void {
     const alloc = std.testing.allocator;
 
-    let builder = cap.zip.ZipBuilder.init(alloc);
+    let builder = ZipBuilder.init(alloc);
     defer builder.deinit();
 
     builder.addStored("a.txt", "stored via cap.zip")?;
@@ -231,16 +230,16 @@ fn runTest5(): !void {
     const zip_bytes = builder.finish(alloc)?;
     defer alloc.free(zip_bytes);
 
-    let archive = cap.zip.readArchiveWithLimits(alloc, zip_bytes, 16, 4096)?;
+    let archive = readArchiveWithLimits(alloc, zip_bytes, 16, 4096)?;
     defer archive.deinit(alloc);
 
     expect_eq(archive.entries.len, 2 as usize);
     const ea = archive.find("a.txt") orelse unreachable;
-    expect_eq(ea.compression == cap.zip.CompressionMethod.Stored, true);
+    expect_eq(ea.compression == CompressionMethod.Stored, true);
     expect_eq(std.mem.eql(u8, ea.data, "stored via cap.zip"), true);
 
     const eb = archive.find("b/c.txt") orelse unreachable;
-    expect_eq(eb.compression == cap.zip.CompressionMethod.Deflated, true);
+    expect_eq(eb.compression == CompressionMethod.Deflated, true);
     expect_eq(std.mem.eql(u8, eb.data, "deflated via cap.zip -- repeated repeated repeated!"), true);
 }
 

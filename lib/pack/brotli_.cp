@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/pack/brotli.cp | Kept for comparison/analysis
 // Source: cp/lib/brotli/brotli.cp (Pure CP RFC 7932 Brotli Meta-Block Framing & Codec)
 // Zero external C dependency implementation using pure CP and std.
 
