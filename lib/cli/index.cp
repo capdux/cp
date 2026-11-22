@@ -271,3 +271,19 @@ export {
     MultiRunLineBuffer,
     MultiRunScheduler,
 } from "./multiRun.cp";
+
+export {
+    PM_LINK_MAX_NAME_LEN,
+    PM_LINK_MAX_PATH_LEN,
+    PM_LINK_MAX_TARGETS,
+    PmLinkError,
+    PmLinkMode,
+    PmLinkMethod,
+    isValidNpmLinkName,
+    extractLinkScope,
+    trimTrailingPathSep,
+    formatLinkDependencySpec,
+    formatLinkSuccessMessage,
+    PmLinkInvocation,
+    PmGlobalLinkPlan,
+} from "./pmLink.cp";

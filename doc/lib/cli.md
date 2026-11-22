@@ -603,3 +603,22 @@ const n2 = lb.flushRemaining("pkg-b:build", sched.max_label_len, 2, false, out[n
 * = n1;
 * = n2;
 ```
+
+18. **本地包全局链接与注销规划器（`lib/cli/pmLink.cp`，吸收自 `/data/dev/bun/src/cli/link_command.cp` & `/data/dev/bun/docs/pm/cli/link.mdx`）**：
+    - **导出符号**：`PM_LINK_MAX_NAME_LEN` (`214`)、`PM_LINK_MAX_PATH_LEN` (`512`)、`PM_LINK_MAX_TARGETS` (`16`)、`PmLinkError`、`PmLinkMode`（`RegisterLocal`/`LinkIntoProject`/`UnlinkLocal`）、`PmLinkMethod`（`PosixSymlink`/`WindowsJunction`）、`isValidNpmLinkName`、`extractLinkScope`、`trimTrailingPathSep`、`formatLinkDependencySpec`、`formatLinkSuccessMessage`、`PmLinkInvocation`、`PmGlobalLinkPlan`；
+    - **本地联调工作流最佳实践（参考 `/data/dev/bun/docs/pm/cli/link.mdx`）**：
+      - 在本地包根目录执行无参 `bun link`（`.RegisterLocal`）注册至全局 `node_modules`，Scoped 包自动创建 `@scope` 子目录；POSIX 使用目录符号链接，Windows 使用目录联接（Junction）；
+      - 在消费项目中执行 `bun link <pkg> --save`（`.LinkIntoProject`, `save_to_pkg_json = true`）链接本地包并写入 `"<pkg>": "link:<pkg>"` 至 `package.json`；开发完成后在本地包目录运行 `bun unlink`（`.UnlinkLocal`）注销全局注册。
+
+### 本地包全局链接规划示例（`lib/cli/pmLink.cp`）
+
+```cp
+import { PmLinkInvocation, PmGlobalLinkPlan, formatLinkDependencySpec } from "cap:cli";
+
+const args: [2][]const u8 = ["--save", "@acme/ui"];
+const inv = PmLinkInvocation.parseArgs(args[0..], false)?;
+const plan = PmGlobalLinkPlan.planRegister("@acme/ui", "/work/ui/", "/root/.bun/install/global", false, true)?;
+let spec: [32]u8 = [0; 32];
+const n = formatLinkDependencySpec("@acme/ui", spec[0..])?; // "link:@acme/ui"
+* = inv; * = plan; * = n;
+```

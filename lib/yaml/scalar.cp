@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/interchange/yaml.cp | Synced: 2026-11-22T14:18:00Z
+// Source: Absorbed from /data/dev/bun/src/interchange/yaml.cp | Synced: 2026-11-22T14:59:00Z
 
 /// YAML 1.2 Core Schema 标量类型枚举
 pub enum YamlScalarKind: u8 {
