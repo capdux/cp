@@ -225,3 +225,12 @@ export {
     ReflexionStats,
     ReflexionController,
 } from "./reflection.cp";
+
+export {
+    ResourceLockMode,
+    ToolCallRequest,
+    WaveAssignment,
+    ParallelPlanStats,
+    callsConflict,
+    planToolWaves,
+} from "./tool_parallel.cp";

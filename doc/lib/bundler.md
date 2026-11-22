@@ -149,6 +149,27 @@ let list = OutputFileListBuilder.initFromLayout(opts, chunks[0..])?;
 const idx0 = list.insertForChunk(OutputFileRecord{ path: "index.js", slot_kind: .chunk, byte_size: 2048 })?; // idx0 == 0
 ```
 
+### 3.8 符号重命名器与最小化短名分配器（`lib/bundler/renamer.cp`，吸收自 `/data/dev/bun/src/js_printer/renamer.cp`）
+- **常量与错误集**：`INLINE_NAME_CAP` (15)、`MAX_SCOPE_NAMES` (128)、`MAX_RESERVED_NAMES` (64)、`MAX_MINIFY_SLOTS` (128)、`DEFAULT_HEAD_ALPHABET`、`DEFAULT_TAIL_ALPHABET`、`RenamerError`
+- **辅助与编码函数**：`isJsIdentStart`、`isJsIdentContinue`、`ensureValidJsIdentifier`、`isJsReservedWord`、`isCjsReservedName`、`encodeMinifiedName`、`encodeMinifiedNameWithAlphabet`（Base54 首字符 + Base64 后续字符，可与 `cap:char_freq` 频率表联动）
+- **数据结构与分配器**：`SlotNamespace`（`default` / `label` / `private_name`）、`InlineName`（15B 栈上内联短名）、`NumberScopeRenamer`（作用域链冲突编号 `foo`/`foo2`/`foo3`）、`MinifySymbolSlot`、`MinifySlotAssigner`（按引用频率降序分配短名，自动跳过 JS 保留字/自定义保留名并遵守 JSX 首字母大写约束）
+
+```typescript
+import { NumberScopeRenamer, MinifySlotAssigner, encodeMinifiedName } from "cap:bundler";
+
+let scope = NumberScopeRenamer.init();
+let out: [32]u8 = [0; 32];
+const n1 = scope.findUnusedName("foo", out[0..])?; // "foo"
+const n2 = scope.findUnusedName("foo", out[0..])?; // "foo2"
+
+let assigner = MinifySlotAssigner.init();
+assigner.addReserved("a")?;
+const s0 = assigner.addSlot(1, 100, false)?;
+const s1 = assigner.addSlot(2, 50, true)?; // JSX 组件需大写首字母
+assigner.assignByFrequency(.default)?;
+// assigner.assignedName(s0) == "b", assigner.assignedName(s1) == "A"
+```
+
 ---
 
 ## 四、 上游行为契约、边界与安全注意事项

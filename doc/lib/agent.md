@@ -1186,3 +1186,44 @@ fn reflexionLoopDemo() {
     * = final_act;
 }
 ```
+
+---
+
+## 子模块：LLM 批量 Tool-Call 读写锁冲突分析与最大并发波次调度器（`tool_parallel.cp`）
+
+### 核心特性
+
+- **读写锁与全局屏障冲突模型（`callsConflict`）**：同资源 `SharedRead` + `SharedRead` 无冲突可并发；同资源任意写（WAR / RAW / WAW）自动冲突；`GlobalBarrier`（如 `git commit` / `cargo build`）与一切调用互斥隔离；不同资源读写互不阻塞。
+- **保序拓扑波次打包与加速比估算（`planToolWaves`）**：100% 零堆分配，严格保持原始程序顺序语义，将无冲突后续调用打包至最早合法并发波次，受 `max_parallelism` 宽度约束，并输出 `total_waves`、`max_wave_width`、`serial_ms`、`critical_path_ms` 与定点加速比 `speedup_x100`。
+
+### 导出清单
+
+- **类型**：`ResourceLockMode`（`SharedRead | ExclusiveWrite | GlobalBarrier`）、`ToolCallRequest`、`WaveAssignment`、`ParallelPlanStats`
+- **分析与调度**：`callsConflict(a, b): bool`、`planToolWaves(calls, max_parallelism, out_assignments): ParallelPlanStats?`
+
+### 使用示例
+
+```cp
+import {
+    ResourceLockMode,
+    ToolCallRequest,
+    WaveAssignment,
+    planToolWaves,
+} from "cap:agent";
+
+fn parallelToolWavesDemo() {
+    const calls: [4]ToolCallRequest = [
+        ToolCallRequest{ call_id: 1, resource_hash: 0xAA, lock_mode: ResourceLockMode.SharedRead, estimated_ms: 100 },
+        ToolCallRequest{ call_id: 2, resource_hash: 0xBB, lock_mode: ResourceLockMode.SharedRead, estimated_ms: 120 },
+        ToolCallRequest{ call_id: 3, resource_hash: 0xAA, lock_mode: ResourceLockMode.ExclusiveWrite, estimated_ms: 80 },
+        ToolCallRequest{ call_id: 4, resource_hash: 0x0, lock_mode: ResourceLockMode.GlobalBarrier, estimated_ms: 200 },
+    ];
+    let waves_buf: [4]WaveAssignment = [WaveAssignment{}; 4];
+    let waves: []WaveAssignment = waves_buf[0..];
+
+    if (stats := planToolWaves(calls[0..], 4, waves)) {
+        // Wave 0: [1, 2] (120ms), Wave 1: [3] (80ms), Wave 2: [4] (200ms)
+        * = stats;
+    }
+}
+```

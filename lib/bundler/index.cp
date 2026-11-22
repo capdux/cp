@@ -99,3 +99,25 @@ export {
     generateServerEntryCode,
     generateMacroEntryId,
 } from "./entry_points";
+
+export {
+    INLINE_NAME_CAP,
+    MAX_SCOPE_NAMES,
+    MAX_RESERVED_NAMES,
+    MAX_MINIFY_SLOTS,
+    DEFAULT_HEAD_ALPHABET,
+    DEFAULT_TAIL_ALPHABET,
+    RenamerError,
+    SlotNamespace,
+    InlineName,
+    isJsIdentStart,
+    isJsIdentContinue,
+    ensureValidJsIdentifier,
+    isJsReservedWord,
+    isCjsReservedName,
+    encodeMinifiedNameWithAlphabet,
+    encodeMinifiedName,
+    NumberScopeRenamer,
+    MinifySymbolSlot,
+    MinifySlotAssigner,
+} from "./renamer";

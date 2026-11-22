@@ -103,3 +103,11 @@ export {
     kmeansAssignF32,
     kmeansFitF32,
 } from "./kmeans.cp";
+
+export {
+    NAV_MAX_DEGREE,
+    NAV_INVALID_NODE,
+    NavGraphHit,
+    NavNodeAdj,
+    NavGraphIndex,
+} from "./nav_graph.cp";
