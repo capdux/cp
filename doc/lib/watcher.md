@@ -144,3 +144,23 @@ const res = relay.watcherReleaseAndSubmit(slot, true)?; // ScheduledImmediate
 const next = relay.serverRecycle(slot)?;                // null (back to idle)
 * = res; * = next;
 ```
+
+7. **零分配 HMR 热重载事件去重批次（`lib/watcher/hotReloadBatch.cp`，吸收自 `/data/dev/bun/src/bake/DevServer/HotReloadEvent.cp` & `/data/dev/bun/docs/bundler/hot-reloading.mdx`）**：
+   - **导出符号**：`HOT_RELOAD_MAX_FILES` (`64`)、`HOT_RELOAD_MAX_DIRS` (`32`)、`HOT_RELOAD_EXTRA_ARENA_CAP` (`4096`)、`HotReloadBatchError`、`isHotReloadPathSep`、`stripTrailingPathSep`、`HotReloadSpan`、`HotReloadBatch`（`init`/`reset`/`isEmpty`/`fileCount`/`dirCount`/`extraFileCount`/`extraArenaUsed`/`appendFile`/`appendDir`/`getFile`/`getDir`/`getExtraFile`/`containsFile`/`containsDir`）；
+   - **与 `WatcherAtomicRelay` 零分配协同**：直接作为 `WatcherAtomicRelay<HotReloadBatch>` 的槽位载荷，单次编辑风暴内的重复文件/目录通知在进入构建图失效阶段前完成去重；`appendDir(dir, sub)` 自动去除冗余尾斜杠与前导斜杠（防双斜杠），将拼接路径以 NUL 分隔写入固定 4 KiB 栈缓冲区 `extra_arena`，处理完毕后调用 `reset()` O(1) 复位复用；
+   - **Bun `hot-reloading.mdx` HMR 实战要点**：
+     - 客户端 `import.meta.hot.accept()` / `dispose()` / `data` 必须**直接调用**（严禁赋值给中间变量如 `const hot = import.meta.hot`），以便生产构建时被彻底 Dead-Code Elimination 裁剪；
+     - 无 `accept()` 边界的模块更新会自动冒泡至整页重载，开发期通过去重后的 `HotReloadBatch` 仅使受影响的目录解析缓存与模块节点失效。
+
+```cp
+import { HotReloadBatch, WatcherAtomicRelay } from "cap:watcher";
+
+let relay = WatcherAtomicRelay<HotReloadBatch>.init(HotReloadBatch.init());
+const slot = relay.watcherAcquire()?;
+let batch = relay.slotMut(slot);
+batch.reset();
+* = batch.appendFile("src/app.ts")?;
+* = batch.appendDir("src/components/", "/Button.tsx")?; // 规范化为 "src/components" + "src/components/Button.tsx"
+const outcome = relay.watcherReleaseAndSubmit(slot, true)?;
+* = outcome;
+```

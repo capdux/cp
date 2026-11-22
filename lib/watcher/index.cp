@@ -80,6 +80,17 @@ export {
     WatcherAtomicRelay,
 } from "./atomicRelay.cp";
 
+export {
+    HOT_RELOAD_MAX_FILES,
+    HOT_RELOAD_MAX_DIRS,
+    HOT_RELOAD_EXTRA_ARENA_CAP,
+    HotReloadBatchError,
+    isHotReloadPathSep,
+    stripTrailingPathSep,
+    HotReloadSpan,
+    HotReloadBatch,
+} from "./hotReloadBatch.cp";
+
 import { Watcher } from "./watcher.cp";
 import { WatchOptions } from "./events.cp";
 
