@@ -447,3 +447,18 @@ export {
     DurableJournalStats,
     DurableExecutionJournal,
 } from "./durable_journal.cp";
+
+export {
+    TOOL_CALL_MAX_SLOTS,
+    TOOL_CALL_ID_MAX_LEN,
+    TOOL_CALL_NAME_MAX_LEN,
+    TOOL_CALL_ARGS_MAX_LEN,
+    TOOL_CALL_MAX_JSON_DEPTH,
+    ToolCallArgsState,
+    ToolCallFeedStatus,
+    ToolStreamFinalStatus,
+    ToolCallDelta,
+    AssembledToolCall,
+    ToolCallStreamReport,
+    ToolCallAssembler,
+} from "./tool_call_assembler.cp";

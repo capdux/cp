@@ -2259,3 +2259,52 @@ fn durableJournalQuickStart() {
     * = s1.action; // DurableReplayAction.execute_live
 }
 ```
+
+
+---
+
+## 子模块：零分配流式 LLM Tool-Call 增量分片组装器（`tool_call_assembler.cp`）
+
+### 核心特性
+
+- **多路并发工具调用零堆分配组装（`ToolCallAssembler`）**：内联固定 16 槽位（`TOOL_CALL_MAX_SLOTS = 16`），按任意稀疏或乱序 `tool_index` 并行追踪 OpenAI (`delta.tool_calls[i]`) 与 Anthropic (`content_block_start` + `input_json_delta`) 风格增量分片，分别拼接 `call_id`（64B）、`tool_name`（64B）与 `arguments_json`（1024B），全程零动态堆分配。
+- **内置流式 JSON 括号/引号/转义状态机**：逐字节维护嵌套分隔符栈（`TOOL_CALL_MAX_JSON_DEPTH = 32`）、字符串上下文（`in_string`）与跨分片反斜杠转义（`escape_next`），实时判定 `isArgumentsComplete(tool_index)`；严格拦截括号失衡、闭合后非空白尾随垃圾字符、字符串内未转义 ASCII 控制字符（`< 0x20`）以及深层嵌套/缓冲区溢出。
+- **流结束批量汇总与多轮复用**：`finalizeStream()` 自动将所有未闭合的 `empty` / `streaming` 槽位收敛为 `truncated`，输出包含 `complete | truncated | malformed` 总判决及各状态计数的 `ToolCallStreamReport`；`reset()` 零分配清零所有活跃槽位以支持多轮对话高频复用。
+
+### 导出清单
+
+- **容量常量**：`TOOL_CALL_MAX_SLOTS` (`16`)、`TOOL_CALL_ID_MAX_LEN` (`64`)、`TOOL_CALL_NAME_MAX_LEN` (`64`)、`TOOL_CALL_ARGS_MAX_LEN` (`1024`)、`TOOL_CALL_MAX_JSON_DEPTH` (`32`)
+- **枚举状态**：`ToolCallArgsState`（`empty | streaming | complete | truncated | malformed | overflow`）、`ToolCallFeedStatus`（`ok | completed | malformed | overflow | slots_full | stream_finalized`）、`ToolStreamFinalStatus`（`complete | truncated | malformed`）
+- **数据模型**：`ToolCallDelta`、`AssembledToolCall`（`callId`, `toolName`, `argumentsJson`, `isArgumentsComplete`, `nestingDepth`）、`ToolCallStreamReport`
+- **核心组装器**：`ToolCallAssembler`（`init`, `reset`, `activeCount`, `isFinalized`, `findSlotIdx`, `feed`, `feedChunk`, `isArgumentsComplete`, `toolState`, `getToolCall`, `slotAt`, `finalizeStream`）
+
+### QuickStart 示例
+
+```cp
+import {
+    ToolStreamFinalStatus,
+    ToolCallAssembler,
+} from "cap:agent";
+
+fn toolCallAssemblerQuickStart() {
+    let assembler = ToolCallAssembler.init();
+
+    // 并行流式接收两个交错的 LLM 工具调用分片
+    * = assembler.feedChunk(0, "call_01", "get_weather", "{\"city\":\"Tok");
+    * = assembler.feedChunk(1, "call_02", "get_time", "{\"tz\":\"UTC\"}");
+    * = assembler.feedChunk(0, "", "", "yo\",\"unit\":\"c\"}");
+
+    if (assembler.isArgumentsComplete(0) && assembler.isArgumentsComplete(1)) {
+        const report = assembler.finalizeStream();
+        if (report.status == ToolStreamFinalStatus.complete) {
+            if (tc0 := assembler.getToolCall(0)) {
+                * = tc0.toolName();      // "get_weather"
+                * = tc0.argumentsJson(); // "{\"city\":\"Tokyo\",\"unit\":\"c\"}"
+            }
+        }
+    }
+
+    // 重置复用于下一轮对话
+    assembler.reset();
+}
+```
