@@ -611,3 +611,26 @@ const n = asm.assemble(chunks[0..], assets[0..], empty[0..], empty[0..], opts, o
 // out[0..n] 中 </STYLE> 与 </script> 均已安全转义为 <\/STYLE> 与 <\/script>，且 logo.png 内联为 data: URI
 * = n;
 ```
+
+- **Bundler 模块图与两阶段扫描/延迟插件协调器（`graph.cp`，吸收自 `/data/dev/bun/src/bundler/Graph.cp` & `/data/dev/bun/docs/bundler/plugins.mdx`）**：
+    - 导出：`GRAPH_MAX_INPUT_FILES` (`64`)、`GRAPH_MAX_ENTRY_POINTS` (`16`)、`GRAPH_MAX_HTML_IMPORTS` (`16`)、`GRAPH_MAX_PATH_LEN` (`128`)、`GraphError`、`GraphLoaderKind`、`GraphScanTransition`（`Scanning` / `WakeDeferredPlugins` / `ReadyToLink`）、`GraphInputFileFlags`、`GraphInputFile`、`GraphEntryPoint`、`GraphHtmlImportPair`、`GraphScanStats`、`BundlerGraph`；
+    - **插件 `onLoad` `.defer()` 官方约束与两阶段调度**：`incrementScanCounter()` / `decrementScanCounter()` / `deferTask(source_index)` 精确建模 `pending_items` 与 `deferred_pending` 转移——当 `pending_items` 归零且存在 `.defer()` 任务时自动唤醒进入新一轮扫描（`WakeDeferredPlugins`），两者均归零才迁移到 `ReadyToLink`；同时强制执行 Bun 插件文档约束“每个 `onLoad` 回调仅允许调用 `.defer()` 一次”，二次调用返回 `GraphError.DeferAlreadyCalled`；
+    - **零重扫描预统计**：`addInputFile` 按路径自动去重并实时累计 `css_file_count`、`estimated_file_loader_count` 与 `has_any_secondary_paths`，同时支持虚拟入口原始名映射（`addEntryPoint`）与服务端->客户端 HTML 导入对追踪（`addHtmlImport`）。
+
+```cp
+import { BundlerGraph, GraphLoaderKind, GraphScanTransition } from "cap:bundler";
+
+let g = BundlerGraph.init();
+const app_id = g.addInputFile("src/app.ts", "", GraphLoaderKind.Ts, false, 0x1111)?;
+const stats_id = g.addInputFile("virtual:stats.json", "", GraphLoaderKind.Json, true, 0x2222)?;
+* = g.addEntryPoint(app_id, "src/app.ts")?;
+
+* = g.incrementScanCounter()?; // app.ts
+* = g.incrementScanCounter()?; // stats.json (onLoad)
+const t1 = g.deferTask(stats_id)?; // Scanning (pending=1, deferred=1)
+const t2 = g.decrementScanCounter()?; // WakeDeferredPlugins (pending=1, deferred=0)
+const t3 = g.decrementScanCounter()?; // ReadyToLink (pending=0, deferred=0)
+* = t1;
+* = t2;
+* = t3;
+```

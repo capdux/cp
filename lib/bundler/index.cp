@@ -368,3 +368,19 @@ export {
     formatChunkDebugIdComment,
     ChunkPieceAssembler,
 } from "./chunk_output";
+
+export {
+    GRAPH_MAX_INPUT_FILES,
+    GRAPH_MAX_ENTRY_POINTS,
+    GRAPH_MAX_HTML_IMPORTS,
+    GRAPH_MAX_PATH_LEN,
+    GraphError,
+    GraphLoaderKind,
+    GraphScanTransition,
+    GraphInputFileFlags,
+    GraphInputFile,
+    GraphEntryPoint,
+    GraphHtmlImportPair,
+    GraphScanStats,
+    BundlerGraph,
+} from "./graph";
