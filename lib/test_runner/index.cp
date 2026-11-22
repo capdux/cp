@@ -100,3 +100,12 @@ export {
     DispatchDecision,
     ParallelCoordinator,
 } from "./coordinator";
+
+export {
+    IPC_CHANNEL_BUF_CAP,
+    IpcChannelError,
+    IpcChannelCloseReason,
+    IpcChannelPollStatus,
+    IpcChannelPollResult,
+    IpcChannel,
+} from "./ipc_channel";

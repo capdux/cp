@@ -205,8 +205,34 @@ const added = coord.applyScaleUp(1200); // 3
 * = d0;
 * = added;
 ```
+10. **并行测试双向背压 IPC 通道（`lib/test_runner/ipc_channel.cp`，吸收自 `/data/dev/bun/src/cli/test/parallel/Channel.cp`）**：
+   - 常量与类型：`IPC_CHANNEL_BUF_CAP` (`8192`)、`IpcChannelError`、`IpcChannelCloseReason`、`IpcChannelPollStatus`、`IpcChannelPollResult`、`IpcChannel`（`init` / `isAttached` / `isDone` / `isProtocolError` / `hasPendingWrites` / `queueSend` / `peekTxChunk` / `advanceTx` / `submitInflight` / `completeInflight` / `ingest` / `pollFrame` / `onPeerEof` / `close`）。
+   - 同时支持 POSIX 部分写入背压队列与 Windows/异步 `tx_buf → inflight_buf` 双缓冲切换；入站支持任意分片重组、粘包连续解帧、未知 `IpcFrameKind` 前向跳过，以及 `> 64 MiB` 畸形帧触发 `ProtocolError`（保持 `isAttached() == true` 以与对端 `PeerEof` 精准区分）。
 
-### 上游 Bun Test Discovery、Reporters 与 Code Coverage 生产最佳实践（吸收自 `/data/dev/bun/docs/test/{discovery,reporters,code-coverage}.mdx` 与 `/data/dev/bun/docs/guides/test/{bail,timeout}.mdx`）
+```cp
+import {
+    IpcChannel,
+    IpcChannelPollStatus,
+    IpcFrameWriter,
+    IpcFrameKind,
+} from "cap:test_runner";
+
+let wire: [256]u8 = [0; 256];
+let w = IpcFrameWriter.init(wire[0..]);
+w.begin(IpcFrameKind.ready)?;
+w.writeU32(42)?;
+const frame = w.finish()?;
+
+let ch = IpcChannel.init(true);
+* = ch.ingest(frame[0..3])?;
+* = ch.ingest(frame[3..])?;
+let payload: [64]u8 = [0; 64];
+const res = ch.pollFrame(payload[0..])?;
+// res.status == IpcChannelPollStatus.Frame, res.kind == IpcFrameKind.ready, res.payload_len == 4
+* = res;
+```
+
+### 上游 Bun Test Discovery、Reporters 与 Code Coverage 生产最佳实践（吸收自 `/data/dev/bun/docs/test/{discovery,reporters,code-coverage,runtime-behavior}.mdx` 与 `/data/dev/bun/docs/guides/test/{bail,timeout}.mdx`）
 
 1. **测试文件发现与过滤契约（参考 `/data/dev/bun/docs/test/discovery.mdx`）**：
    - **默认匹配模式**：递归扫描 `*.test.{js|jsx|ts|tsx|cp}`、`*_test.*`、`*.spec.*`、`*_spec.*`（CP 工程默认兼容 `test_*.cp` 前缀约定），自动忽略 `node_modules` 与隐藏目录（`.` 开头）。
@@ -221,3 +247,7 @@ const added = coord.applyScaleUp(1200); // 3
 4. **并行调度、快速熔断（`--bail`）与超时控制（吸收自 `/data/dev/bun/docs/guides/test/{bail,timeout}.mdx`）**：
    - **懒扩容与工作窃取**：协调器初始仅拉起 1 个 Worker，避免极速小套件产生进程启动开销；仅当所有存活 Worker 均持续忙碌超过 `scale_up_after_ms`（默认 `150ms`）且仍有未派发文件时，才一次性扩容至 `parallel_limit`，随后通过 `WorkStealPool` 从剩余量最大槽位窃取后半段以保持目录局部性。
    - **CI 快速熔断（`--bail` / `--bail=N`）**：设置 `bail_threshold = 1`（单次失败即中止）或 `bail_threshold = N`（累计 N 次失败后中止），触发后立即停止派发新文件并优雅关闭空闲 Worker，显著缩短 CI 失败反馈周期；默认单测超时基线为 `5000ms`（可通过 `--timeout` 调整）。
+5. **运行时环境一致性、超时边界与未处理异常门禁（吸收自 `/data/dev/bun/docs/test/runtime-behavior.mdx`）**：
+   - **确定性环境变量**：测试运行器默认注入 `NODE_ENV=test`（除非外部环境或 `.env` 显式覆盖）并固定时区为 `TZ=Etc/UTC`，避免跨机器日期/时区差异引发偶发失败；
+   - **分级超时配置**：支持全局 `--timeout`、单测第三参数覆盖，以及传入 `0`/`Infinity` 禁用超时；
+   - **测试间未处理异常计入退出码**：即便所有 `test(...)` 用例均通过，测试间隙发生的未捕获异常或未处理异步拒绝仍会导致最终退出码非零（等于未处理错误数），防止异步泄漏被静默掩盖。
