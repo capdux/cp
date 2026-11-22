@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:h2_encode` 吸收自 Bun http/h2_client/encode.cp 的纯 CP 零分配 HTTP/2 出站编码库：RFC 9113 请求头过滤、HPACK 动态表更新、客户端序言、HEADERS/CONTINUATION 分片与双窗口 DATA 帧编码（5/5 PASS，自动动态挂载 `cap.h2_encode`）
+吸收 Bun 上游 src/http/h2_client/encode.cp 为纯 CP 零分配库 cap:h2_encode，含文档与 6 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:mds` 纯 CP 零分配多维尺度分析（MDS）降维嵌入库：Torgerson-Gower 双中心化 Classical MDS、SMACOF 迭代应力最小化与 Kruskal Stress-1 评估（5/5 PASS，自动动态挂载 `cap.mds`）
 新增纯 CP 零分配多维尺度分析库 cap:mds（Classical MDS、SMACOF 迭代精修、Kruskal Stress-1），含文档与 5 项深度生产测试
 
