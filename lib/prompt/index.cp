@@ -38,3 +38,11 @@ export {
     extractTemplateKeys,
     packContextWindow,
 } from "./template.cp";
+
+export {
+    ChatTemplateKind,
+    ChatMsgRole,
+    ChatMessage,
+    sanitizeControlTokens,
+    formatChatPrompt,
+} from "./chat_format.cp";

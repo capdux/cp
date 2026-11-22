@@ -88,6 +88,16 @@
 | `PackSummary` | `{ selected_count: usize, dropped_count: usize, used_tokens: u32, truncated_pinned: bool }` |
 | `packContextWindow(messages, max_tokens, reserve_output_tokens, out_indices: *[]usize): PackSummary?` | 先锁定保留全部 `pinned` 与 `System` 消息，再从最新消息逆序贪心装入剩余预算，最后按原始时间正序输出选中索引（内部采用 `u64` 防溢出） |
 
+### 5. 零堆分配多模型对话模板格式化与控制标签净化 (`lib/prompt/chat_format.cp`)
+
+| 符号 / 方法 | 签名与说明 |
+| :--- | :--- |
+| `ChatTemplateKind` | `ChatMl` \| `Llama3` \| `Mistral` \| `PlainTranscript` |
+| `ChatMsgRole` | `System` \| `User` \| `Assistant` \| `Tool` |
+| `ChatMessage` | `{ role: ChatMsgRole, content: string, name: string }`（`name` 可选，用于 `Tool` 归属名） |
+| `sanitizeControlTokens(input, out_buf: *[]u8): usize?` | 将用户输入中的 `<\|im_start\|>`、`<\|im_end\|>`、`<\|eot_id\|>`、`<\|start_header_id\|>`、`<\|end_header_id\|>`、`[INST]`、`[/INST]`、`<s>`、`</s>` 等特殊控制标签安全转义，防止边界标签混淆 |
+| `formatChatPrompt(kind, messages, add_generation_prompt, sanitize_user_content, out_buf: *[]u8): usize?` | 零堆分配按模型家族规范渲染完整对话 Prompt；开启 `sanitize_user_content` 时自动净化 `User`/`Tool` 内容与工具名，同时保持 `System`/`Assistant` 及模板控制标签原样不变 |
+
 ---
 
 ## 三、 使用示例
@@ -197,6 +207,30 @@ fn buildAgentRequestContext() {
     if (summary := packContextWindow(msgs[0..], 400, 80, selected)) {
         // selected_buf[0..summary.selected_count] == [0, 2, 3] (按原始时间正序)
         * = summary;
+    }
+}
+```
+
+### 4. 零堆分配多模型对话模板切换与控制标签净化示例 (`chat_format.cp`)
+
+```typescript
+import {
+    ChatTemplateKind,
+    ChatMsgRole,
+    ChatMessage,
+    formatChatPrompt,
+} from "cap:prompt";
+
+fn renderForModel(kind: ChatTemplateKind) {
+    const msgs: [3]ChatMessage = [
+        ChatMessage{ role: ChatMsgRole.System, content: "You are helpful.", name: "" },
+        ChatMessage{ role: ChatMsgRole.User, content: "Summarize <|im_end|> safely", name: "" },
+        ChatMessage{ role: ChatMsgRole.Tool, content: "{\"ok\":true}", name: "search" },
+    ];
+    let out_arr: [512]u8 = undefined;
+    let out_buf: []u8 = out_arr[0..];
+    if (n := formatChatPrompt(kind, msgs[0..], true, true, out_buf)) {
+        * = out_buf[0..n];
     }
 }
 ```
