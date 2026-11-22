@@ -258,6 +258,20 @@ export {
     ShellPipelinePlanner,
 } from "./pipeline_plan.cp";
 
+export {
+    YES_BUFSIZ,
+    YES_HALF_BUFSIZ,
+    YES_CHUNKS_PER_TICK,
+    ShellYesError,
+    YesState,
+    YesTickAction,
+    YesLayout,
+    computeYesLineLen,
+    computeYesLayout,
+    fillYesChunk,
+    YesStreamState,
+} from "./yes_stream.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);

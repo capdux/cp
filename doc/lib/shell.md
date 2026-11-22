@@ -303,3 +303,27 @@ const done = pp.onStageDone(1, 2)?; // grep 退出码 2 -> Pipefail 汇总为 2
 // done == true, pp.final_exit_code == 2
 * = done;
 ```
+
+### POSIX / Bun Shell `yes` 高速 8KiB 块倍增生成器与协同让出状态机（`yes_stream.cp`）
+
+- 吸收自 `/data/dev/bun/src/shell/builtin/yes.cp` 与 `/data/dev/bun/docs/runtime/shell.mdx`（跨平台内建 `yes` 命令）；
+- 导出：`YES_BUFSIZ` (`8192`)、`YES_HALF_BUFSIZ` (`4096`)、`YES_CHUNKS_PER_TICK` (`4`)、`ShellYesError`、`YesState`、`YesTickAction`、`YesLayout`、`computeYesLineLen`、`computeYesLayout`、`fillYesChunk`、`YesStreamState`；
+- **最佳实践与边界约束**：
+  - 无参数默认输出 `"y\n"`，多参数以单空格连接并追加 `'\n'`；
+  - 单行长度 `<= 4096` 时按整行倍增平铺填满 `8192` 字节块（`copies = buf_cap / line_len`），**绝不截断半行**；
+  - 同步管道模式下每轮最多连续写出 `4` 个 8KiB 块（`32KiB`）后自动返回 `YesTickAction.YieldToEventLoop`，避免无限输出阻塞事件循环；
+  - 下游管道关闭（如 `yes | head -n 5` 触发 `EPIPE`）可通过 `onWriteError(true)` 优雅收敛为 `YesState.Done`（退出码 `0`），其他 I/O 错误返回退出码 `1`。
+
+```cp
+import { YesStreamState, YesTickAction } from "cap:shell";
+
+const args: [2]([]const u8) = ["hello", "world"];
+let ys = YesStreamState.init(args[0..])?;
+// ys.lineLen() == 12 ("hello world\n"), ys.copiesPerChunk() == 682, ys.chunkSlice().len == 8184
+while (ys.nextStep() == YesTickAction.WriteChunk) {
+    ys.onChunkWritten(ys.chunkSlice().len);
+}
+// 连续写出 4 块 (32KiB) 后自动进入 Suspended 并让出事件循环
+* = ys.resumeFromEventLoop();
+* = ys.onWriteError(true); // EPIPE -> exit_code == 0
+```
