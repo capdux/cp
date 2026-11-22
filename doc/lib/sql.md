@@ -255,6 +255,32 @@ const wire = encodePgRowDescription(buf[0..], cols[0..])?;
 let it = decodePgRowDescription(wire)?; // it.count() == 2
 while (col := it.next()?) { * = col.name; }
 ```
+- **MySQL `OK_Packet` (`0x00`/`0xFE`)、`EOF_Packet` (`0xFE`) 与 16 位服务器状态标志编解码器 (`mysql_ok_eof.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/{OKPacket,EOFPacket}.cp` & `StatusFlags.cp`)**：
+  - 常量与类型：`MYSQL_OK_HEADER` (`0x00`)、`MYSQL_EOF_HEADER` (`0xFE`)、`MYSQL_FLAG_*`（14 项 16 位状态位常量）、`MySqlOkEofError`、`MySqlServerStatusFlags`（`inTransaction` / `isAutoCommit` / `hasMoreResults` / `wasSlowQuery` / `hasSessionStateChanged`）、`MySqlOkPacketView`、`MySqlEofPacketView`；
+  - 编解码函数：`encodeMySqlOkPacket` / `decodeMySqlOkPacket`、`encodeMySqlEofPacket` / `decodeMySqlEofPacket`（严格校验 `EOF_Packet` 载荷长度 `< 9` 字节以区分 `CLIENT_DEPRECATE_EOF` 下的长 `OK_Packet`）。
+
+```typescript
+import {
+    MYSQL_FLAG_IN_TRANS,
+    MYSQL_FLAG_AUTOCOMMIT,
+    MySqlServerStatusFlags,
+    MySqlOkPacketView,
+    encodeMySqlOkPacket,
+    decodeMySqlOkPacket,
+} from "cap:sql";
+
+let buf: [128]u8 = [0; 128];
+const flags = MySqlServerStatusFlags.fromInt(MYSQL_FLAG_IN_TRANS | MYSQL_FLAG_AUTOCOMMIT);
+const wire = encodeMySqlOkPacket(buf[0..], MySqlOkPacketView{
+    sequence_id: 1,
+    affected_rows: 3,
+    last_insert_id: 1001,
+    status_flags: flags,
+    warnings: 0,
+    info: "Records: 3",
+})?;
+const decoded = decodeMySqlOkPacket(wire)?; // decoded.status_flags.inTransaction() == true
+```
 
 ---
 
