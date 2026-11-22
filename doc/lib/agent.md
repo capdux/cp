@@ -1815,3 +1815,49 @@ fn modelCatalogQuickStart() {
     }
 }
 ```
+
+---
+
+## 子模块：长程 Agent 会话快照二进制编解码器（`session_codec.cp`）
+
+### 核心特性
+
+- **确定性小端序二进制格式（`AGENT_SNAPSHOT_MAGIC = 0x41475353` / `AGENT_SNAPSHOT_VERSION = 1`）**：64 字节固定小端头部（含 ZigZag 编码有符号 `updated_ms` 时间戳、Token/微美元成本、步数与暂停标志）+ 4 段长度前缀 UTF-8 切片（`session_id` / `agent_name` / `goal_summary` / `last_checkpoint_note`）+ 4 字节 IEEE 802.3 CRC32 尾部校验和。
+- **零堆分配零拷贝解码（`decodeSessionSnapshot`）**：解码出的所有字符串字段直接切片自原始输入缓冲，无任何堆分配；严格校验 Magic、版本号、保留标志位、CRC32 完整性、长度边界与尾随垃圾字节，任一异常返回精准 `SnapshotDecodeError`。
+- **原子安全编码（`encodeSessionSnapshot`）**：支持 `encodedSnapshotSize` 预计算精确字节数，缓冲不足时直接返回 `null`，绝不半写。
+
+### 导出清单
+
+- **常量与类型**：`AGENT_SNAPSHOT_MAGIC`、`AGENT_SNAPSHOT_VERSION`、`SnapshotDecodeError`（`TruncatedInput | InvalidMagic | UnsupportedVersion | InvalidFlags | ChecksumMismatch | TrailingBytes`）、`AgentSessionSnapshot`
+- **编解码函数**：`encodedSnapshotSize`、`encodeSessionSnapshot`、`decodeSessionSnapshot`
+
+### QuickStart 示例
+
+```cp
+import {
+    AgentSessionSnapshot,
+    encodeSessionSnapshot,
+    decodeSessionSnapshot,
+} from "cap:agent";
+
+fn sessionSnapshotQuickStart()! {
+    const snap = AgentSessionSnapshot{
+        session_id: "sess-2026-001",
+        agent_name: "code-reviewer",
+        turn_count: 5,
+        tool_call_count: 12,
+        input_tokens: 14200,
+        output_tokens: 3100,
+        cost_micro_usd: 89100,
+        updated_ms: 1732250000000,
+        is_paused: true,
+        goal_summary: "Audit PR #42",
+        last_checkpoint_note: "awaiting HITL approval",
+    };
+
+    let buf: [256]u8 = [0; 256];
+    const written = encodeSessionSnapshot(snap, buf[0..]) ?? return;
+    const restored = decodeSessionSnapshot(buf[0..written])?;
+    * = restored.turn_count; // 5
+}
+```

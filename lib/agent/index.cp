@@ -351,3 +351,13 @@ export {
     estimateCallCost,
     ModelCatalog,
 } from "./model_catalog.cp";
+
+export {
+    AGENT_SNAPSHOT_MAGIC,
+    AGENT_SNAPSHOT_VERSION,
+    SnapshotDecodeError,
+    AgentSessionSnapshot,
+    encodedSnapshotSize,
+    encodeSessionSnapshot,
+    decodeSessionSnapshot,
+} from "./session_codec.cp";
