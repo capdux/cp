@@ -2409,3 +2409,50 @@ fn budgetTreeQuickStart() {
     * = tree.closeNodeAndReleaseUnused(sub.child_id);
 }
 ```
+
+
+---
+
+## 子模块：零分配 AI Agent 工具调用多维配额治理器（`tool_governor.cp`）
+
+### 核心特性
+
+- **多维治理策略表（`AgentToolGovernor`）**：支持最多 32 类工具注册独立策略（`max_concurrency`、`max_calls_per_window`、`window_ms`、`dedupe_window_ms`、`failure_trip_threshold`、`cooldown_ms`、`max_cost_micro_usd_per_window`）。
+- **严格有序准入管道（`acquireToolCall`）**：按顺序执行工具注册校验 -> 熔断器状态机（`closed | open | half_open`，冷却到期自动转单探针 `half_open`）-> 短窗重复参数去重（`reject_duplicate_call`）-> 并发信号量（`reject_concurrency_limit`）-> 滑动窗口调用次数与微美元成本硬上限（`reject_rate_limit` / `reject_cost_limit`），通过后签发唯一租约 `ToolLeaseHandle`。
+- **租约完结反馈与成本核销（`releaseToolCall`）**：自动释放并发槽位、将滑动窗口中的预估成本精确修正为实际成本、更新连续失败计数并在达到阈值时触发熔断与冷却；严格拦截重复释放与伪造句柄，内置单调时钟回退保护。
+
+### 导出清单
+
+- **常量与枚举**：`TOOL_GOV_MAX_TOOLS` (`32`)、`TOOL_GOV_MAX_WINDOW_EVENTS` (`64`)、`TOOL_GOV_MAX_DEDUPE_ENTRIES` (`64`)、`TOOL_GOV_MAX_ACTIVE_LEASES` (`64`)、`TOOL_GOV_INVALID_LEASE` (`0`)、`ToolBreakerState`（`closed | open | half_open`）、`ToolGovDecisionKind`、`ToolReleaseStatus`
+- **数据模型**：`ToolGovPolicy`（`defaults()`, `isValid()`）、`ToolLeaseHandle`（`isValid()`）、`ToolAcquireDecision`、`ToolGovToolSnapshot`、`ToolGovernorStats`
+- **核心引擎**：`AgentToolGovernor`（`init`, `registerTool`, `acquireToolCall`, `releaseToolCall`, `getToolSnapshot`, `stats`）
+
+### QuickStart 示例
+
+```cp
+import {
+    ToolGovDecisionKind,
+    ToolGovPolicy,
+    AgentToolGovernor,
+} from "cap:agent";
+
+fn toolGovernorQuickStart() {
+    let gov = AgentToolGovernor.init();
+    * = gov.registerTool(ToolGovPolicy{
+        tool_id: 1,
+        max_concurrency: 2,
+        max_calls_per_window: 10,
+        window_ms: 60_000,
+        dedupe_window_ms: 5_000,
+        failure_trip_threshold: 3,
+        cooldown_ms: 30_000,
+        max_cost_micro_usd_per_window: 50_000,
+    });
+
+    const acq = gov.acquireToolCall(1, 0xABCD, 1_500, 10_000);
+    if (acq.kind == ToolGovDecisionKind.allowed) {
+        // 执行外部工具调用后反馈成功与实际成本
+        * = gov.releaseToolCall(acq.lease, true, 900, 10_250);
+    }
+}
+```

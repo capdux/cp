@@ -493,3 +493,20 @@ export {
     BudgetTreeStats,
     AgentBudgetTree,
 } from "./budget_tree.cp";
+
+export {
+    TOOL_GOV_MAX_TOOLS,
+    TOOL_GOV_MAX_WINDOW_EVENTS,
+    TOOL_GOV_MAX_DEDUPE_ENTRIES,
+    TOOL_GOV_MAX_ACTIVE_LEASES,
+    TOOL_GOV_INVALID_LEASE,
+    ToolBreakerState,
+    ToolGovDecisionKind,
+    ToolReleaseStatus,
+    ToolGovPolicy,
+    ToolLeaseHandle,
+    ToolAcquireDecision,
+    ToolGovToolSnapshot,
+    ToolGovernorStats,
+    AgentToolGovernor,
+} from "./tool_governor.cp";
