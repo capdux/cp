@@ -164,3 +164,21 @@ batch.reset();
 const outcome = relay.watcherReleaseAndSubmit(slot, true)?;
 * = outcome;
 ```
+
+8. **解析失败目录监听与侵入式依赖链存储（`lib/watcher/dirWatchStore.cp`，吸收自 `/data/dev/bun/src/bake/DevServer/DirectoryWatchStore.cp` & `/data/dev/bun/docs/runtime/watch-mode.mdx`）**：
+   - **导出符号**：`DIR_WATCH_MAX_DIRS` (`32`)、`DIR_WATCH_MAX_DEPS` (`128`)、`DIR_WATCH_NONE_INDEX` (`u32::MAX`)、`DirWatchStoreError`、`DirWatchLoaderKind`（`Script`/`Css`/`Html`）、`shouldTrackResolutionFailure`、`DirWatchDep`、`DirWatchEntry`、`DirWatchInsertResult`、`DirWatchRemoveOutcome`、`DirWatchStore`（`init`/`watchCount`/`activeDepCount`/`freeSlotCount`/`insert`/`findDir`/`collectDepsForDir`/`removeDep`/`removeSourceFile`）；
+   - **缺失文件热恢复与零泄漏设计要点**：
+     - 当源码导入尚不存在的相对文件（如 `./Button.tsx`）导致解析失败时，按 `shouldTrackResolutionFailure()` 过滤规则仅对绝对源文件的相对脚本导入（`./` / `../`）或 CSS/HTML 任意说明符登记父目录监听；
+     - 同一目录多个失败依赖通过稳定索引侵入式单链表挂接在唯一 `DirWatchEntry` 下，释放的依赖槽位压入 `free_list` O(1) 复用而不破坏其他链表索引；当某目录全部依赖解除或源文件被删除（`removeSourceFile`）时自动释放空目录监听并返回 `watch_id` 供内核卸载，彻底消除孤儿 watcher 泄漏。
+
+```cp
+import { DirWatchStore, DirWatchDep } from "cap:watcher";
+
+let store = DirWatchStore.init();
+const r1 = store.insert("/app/src/components/", "/app/src/App.tsx", "./components/Button.tsx", 11)?;
+let deps: [8]DirWatchDep = [DirWatchDep{}; 8];
+const n = store.collectDepsForDir("/app/src/components", deps[0..]); // n == 1
+const rm = store.removeDep("/app/src/components", "/app/src/App.tsx", "./components/Button.tsx");
+// rm.dir_removed == true, rm.removed_watch_id == 11
+* = r1; * = n; * = rm;
+```

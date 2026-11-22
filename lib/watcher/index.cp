@@ -91,6 +91,20 @@ export {
     HotReloadBatch,
 } from "./hotReloadBatch.cp";
 
+export {
+    DIR_WATCH_MAX_DIRS,
+    DIR_WATCH_MAX_DEPS,
+    DIR_WATCH_NONE_INDEX,
+    DirWatchStoreError,
+    DirWatchLoaderKind,
+    shouldTrackResolutionFailure,
+    DirWatchDep,
+    DirWatchEntry,
+    DirWatchInsertResult,
+    DirWatchRemoveOutcome,
+    DirWatchStore,
+} from "./dirWatchStore.cp";
+
 import { Watcher } from "./watcher.cp";
 import { WatchOptions } from "./events.cp";
 
