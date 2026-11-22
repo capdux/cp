@@ -71,3 +71,6 @@
 
 ### 2026-11-22（分类合并交付：`lib/http/h3/encode.cp`）
 - **执行成果**：子智能体从 Bun `src/http/h3_client/encode.cp` 吸收并归类合并 `lib/http/h3/encode.cp` 至 `cap:http`（RFC 9114 HTTP/3 伪头部构造、28 项高频 QPACK 静态索引映射与逐跳头过滤，5/5 PASS），已同步 `cp_lib_ref.md` 并提交；继续派发下一项 Bun 纯逻辑子模块合并。
+
+### 2026-11-22（分类合并交付：`lib/a2a/task_queue.cp` + 轮换 `AI & Agent` 子智能体）
+- **执行成果**：子智能体交付 `lib/a2a/task_queue.cp`（A2A 任务生命周期状态机、幂等去重、优先级/DDL 抢占、租约续期与 DeadLetter 回收，5/5 PASS），已同步 `cp_lib_ref.md` 并提交；按满 10 项轮换策略回收 `d0f5938a` 并启动全新 `AI & Agent Protocol Absorber` 推进 `lib/mcp/session.cp`。

@@ -52,3 +52,11 @@ export {
     HandoffStatus,
     HandoffTrace,
 } from "./router.cp";
+
+export {
+    A2aTaskState,
+    canTransition,
+    A2aTaskItem,
+    A2aQueueStats,
+    A2aTaskQueue,
+} from "./task_queue.cp";

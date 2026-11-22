@@ -84,3 +84,31 @@ pub fn demoHandoffRouting() {
     }
 }
 ```
+
+### 4.3 零堆分配 A2A 任务生命周期状态机与租约优先级队列 (`task_queue.cp`)
+
+- **核心类型**：`A2aTaskState`（`Submitted | Working | InputRequired | Completed | Failed | Canceled | DeadLetter`）、`A2aTaskItem`、`A2aQueueStats`
+- **状态机校验**：`canTransition(from, to): bool`（终态 `Completed`/`Failed`/`Canceled`/`DeadLetter` 严格不可逆）
+- **`A2aTaskQueue`**：
+  - `init(slots)` / `enqueue(task_id, idempotency_key_hash, priority, created_ms, deadline_ms, max_attempts)`（幂等键去重，防重复派发）
+  - `claimNext(worker_id, now_ms, lease_ms)`（按高优先级 -> 最早 `deadline_ms` -> `created_ms` 认领并授租约）
+  - `heartbeat(task_id, worker_id, now_ms, lease_ms)`（租约续期）
+  - `reclaimExpiredLeases(now_ms)`（超时自动重入队或超 `max_attempts` 转 `DeadLetter`）
+  - `complete` / `fail` / `requestInput` / `resumeInput` / `cancel` / `findTask` / `stats`
+
+```typescript
+import { A2aTaskItem, A2aTaskQueue } from "cap:a2a";
+
+pub fn demoA2aLeaseQueue() {
+    let slots_arr: [8]A2aTaskItem = undefined;
+    let slots: []A2aTaskItem = slots_arr[0..];
+    let q = A2aTaskQueue.init(slots);
+
+    * = q.enqueue(101, 0xCAFE, 10, 1000, 5000, 3);
+    if (tid := q.claimNext(1, 1100, 2000)) {
+        * = q.heartbeat(tid, 1, 2000, 2000);
+        * = q.complete(tid, 1, 2);
+    }
+    * = q.stats();
+}
+```
