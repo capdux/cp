@@ -430,3 +430,13 @@ export {
     Rfc6962MerkleTree,
     verifyMerkleInclusionProof,
 } from "./merkle_tree.cp";
+
+// --- Zero-Alloc Forward-Secret Symmetric Key Ratchet & Out-of-Order Key Cache ---
+
+export {
+    RATCHET_KEY_LEN,
+    RATCHET_MAX_SKIPPED_KEYS,
+    RatchetDerivedKey,
+    RatchetStats,
+    SymmetricKeyRatchet,
+} from "./key_ratchet.cp";

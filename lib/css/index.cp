@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/css_parser.cp | Synced: 2026-11-22T08:16:01Z
+// Source: Absorbed from /data/dev/bun/src/css/css_parser.cp | Synced: 2026-11-22T10:02:33Z
 // lib/css/index.cp
 // Unified Public Exports for cap:css
 // Zero-Bun, Pure CP Industrial CSS Engine
@@ -455,3 +455,12 @@ export {
     CssDeclParseOptions,
     CssDeclarationBlock,
 } from "./declaration_block.cp";
+
+export {
+    CSS_CTX_MAX_SUPPORTS,
+    CSS_CTX_MAX_UNUSED_SYMBOLS,
+    CssHandlerContextError,
+    CssDeclarationContext,
+    CssSupportsFallbackBucket,
+    CssPropertyHandlerContext,
+} from "./handler_context.cp";

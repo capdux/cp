@@ -551,6 +551,30 @@ const n = blk.toCssBlock(out[0..], true)?;
 * = n;
 ```
 
+### CSS 属性渐进降级上下文（`handler_context.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/context.cp` 与 `/data/dev/bun/docs/bundler/css.mdx`，零堆分配追踪声明语法上下文（`StyleRule`/`Keyframes`/`StyleAttribute`）、聚合 `@supports` 条件回退桶、生成 `:dir(ltr)`/`:dir(rtl)` 逻辑属性降级规则与 `@media (prefers-color-scheme: dark)` 深色主题降级规则，并支持 CSS Modules 未使用符号表继承与死规则剪枝。
+
+- 核心导出：`CSS_CTX_MAX_SUPPORTS` (`16`)、`CSS_CTX_MAX_UNUSED_SYMBOLS` (`32`)、`CssHandlerContextError`、`CssDeclarationContext`（`allowsLogicalLowering`/`allowsAuxiliaryRules`）、`CssSupportsFallbackBucket`、`CssPropertyHandlerContext`（`init`/`child`/`shouldCompileLogical`/`markUnusedSymbol`/`isSymbolUnused`/`addConditionalProperty`/`addLogicalRule`/`addDarkRule`/`hasAdditionalRules`/`reset`/`formatSupportsRules`/`formatAdditionalRules`）。
+
+```cp
+import { CssDeclarationContext, CssPropertyHandlerContext } from "cap:css";
+
+let ctx = CssPropertyHandlerContext.init(CssDeclarationContext.StyleRule);
+* = ctx.addConditionalProperty("(color: oklch(0% 0 0))", "color", "oklch(0.7 0.15 240)")?;
+* = ctx.addLogicalRule("margin-left", "1rem", "margin-right", "1rem")?;
+* = ctx.addDarkRule("background", "#111")?;
+
+let sbuf: [256]u8 = [0; 256];
+const sn = ctx.formatSupportsRules(".card", sbuf[0..], true)?;
+// "@supports (color: oklch(0% 0 0)){.card{color:oklch(0.7 0.15 240)}}"
+let abuf: [256]u8 = [0; 256];
+const an = ctx.formatAdditionalRules(".card", abuf[0..], true)?;
+// ".card:dir(ltr){margin-left:1rem}.card:dir(rtl){margin-right:1rem}@media (prefers-color-scheme:dark){.card{background:#111}}"
+* = sn;
+* = an;
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项

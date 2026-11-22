@@ -273,6 +273,46 @@ pub fn demoRfc6962Merkle() {
 }
 ```
 
+### 零堆分配前向安全对称密钥棘轮与乱序跳步密钥缓存引擎 (`key_ratchet.cp`)
+
+面向安全多 Agent 通信通道、TLS 1.3 密钥更新与 Signal 风格前向安全（Forward Secrecy）的 100% 零动态堆分配对称密钥棘轮内核（基于 RFC 5869 HKDF-SHA256 与 HMAC-SHA256）：
+
+- **常量与数据模型**：
+  - `RATCHET_KEY_LEN` (`32`)、`RATCHET_MAX_SKIPPED_KEYS` (`32`)
+  - `RatchetDerivedKey`（`step_index: u64`, `key: [32]u8`, `nonce_prefix: [12]u8`）
+  - `RatchetStats`（`current_step`, `cached_skipped_keys`, `total_derived`, `total_out_of_order_hits`, `rekey_count`）
+- **核心状态机 `SymmetricKeyRatchet`**：
+  - `init(root_secret, salt, context_info): SymmetricKeyRatchet?`：基于 HKDF-SHA256 `Extract + Expand` 派生初始 32B `chain_key`（拒绝空 `root_secret`）。
+  - `next_send_key(*_): RatchetDerivedKey`：单向推进 `msg_key = HMAC(ck, 0x01)`、`nonce_prefix = HMAC(ck, 0x03)[0..12]`、`chain_key = HMAC(ck, 0x02)`，旧链密钥即刻覆写消除。
+  - `receive_key_for_step(*_, target_step: u64): RatchetDerivedKey?`：支持顺序与乱序到达；前向跳步受 `<= 32` 与空槽容量原子防资源耗尽守卫；历史跳步密钥一次性消费并立即清零，杜绝重放。
+  - `rekey(*_, new_entropy, info): bool`：通过 HKDF 混合新熵实现 Post-Compromise Security（拒绝空熵）。
+  - `zeroize(*_)`：安全清零链密钥与全部缓存跳步密钥。
+  - `stats(): RatchetStats`。
+
+```cp
+import {
+    SymmetricKeyRatchet,
+} from "cap:crypto";
+
+pub fn demoSymmetricKeyRatchet() {
+    let tx = SymmetricKeyRatchet.init("shared-root-secret", "session-salt", "a2a-chan-v1") ?? return;
+    let rx = SymmetricKeyRatchet.init("shared-root-secret", "session-salt", "a2a-chan-v1") ?? return;
+
+    const k0 = tx.next_send_key();
+    const k1 = tx.next_send_key();
+    const k2 = tx.next_send_key();
+
+    // 乱序到达：先收 step 2，再收 step 0、step 1（每步密钥精确匹配且仅可消费一次）
+    * = rx.receive_key_for_step(2);
+    * = rx.receive_key_for_step(0);
+    * = rx.receive_key_for_step(1);
+    * = k0; * = k1; * = k2;
+
+    tx.zeroize();
+    rx.zeroize();
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
