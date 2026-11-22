@@ -6,7 +6,7 @@ import {
     needsCsvQuoting,
     formatCsvField,
     formatCsvRow,
-} from "cap:csv_stream";
+} from "cap:doc";
 
 test("1. multi-row CSV with embedded commas, newlines, and escaped double-quotes", () => {
     const src =

@@ -2,7 +2,7 @@
 // Pure CP zero-allocation PDF structural validator and metadata/page-count inspector.
 
 const std = @import("std");
-import { PdfError } from "./writer.cp";
+import { PdfError } from "./pdf_writer.cp";
 
 /// Structural inspection summary and document metadata extracted from a PDF byte buffer.
 pub struct PdfInfo {

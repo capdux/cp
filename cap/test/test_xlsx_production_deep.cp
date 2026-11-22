@@ -22,7 +22,7 @@ import {
     parseCellRef,
     formatColName,
     extractSharedString,
-} from "cap:xlsx";
+} from "cap:doc";
 
 fn approxEq(a: f64, b: f64): bool {
     return @abs(a - b) < 0.000001;

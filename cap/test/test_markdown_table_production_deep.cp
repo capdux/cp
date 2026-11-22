@@ -4,7 +4,7 @@ import {
     parseDelimiterRow,
     unescapeTableCell,
     escapeTableCell,
-} from "cap:markdown_table";
+} from "../../lib/doc/markdown_table_.cp";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {

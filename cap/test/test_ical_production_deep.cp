@@ -11,7 +11,7 @@ import {
     RRule,
     IcalEvent,
     IcalCalendar,
-} from "cap:ical";
+} from "cap:doc";
 import cap from "cap";
 
 fn expectStrEq(actual: []const u8, expected: []const u8): ! {
@@ -218,11 +218,11 @@ pub fn main() {
             "END:VEVENT\r\n" ++
             "END:VCALENDAR\r\n";
 
-        let cal: IcalCalendar = cap.ical.IcalCalendar.parse(alloc, ics) catch unreachable;
+        let cal: IcalCalendar = cap.doc.IcalCalendar.parse(alloc, ics) catch unreachable;
         defer cal.deinit();
 
-        let start: IcalDateTime = cap.ical.IcalDateTime.parse("20260101T000000Z") catch unreachable;
-        let end: IcalDateTime = cap.ical.IcalDateTime.parse("20280101T000000Z") catch unreachable;
+        let start: IcalDateTime = cap.doc.IcalDateTime.parse("20260101T000000Z") catch unreachable;
+        let end: IcalDateTime = cap.doc.IcalDateTime.parse("20280101T000000Z") catch unreachable;
         let occs = cal.occurrences(alloc, start, end, 10) catch unreachable;
         defer alloc.free(occs);
 

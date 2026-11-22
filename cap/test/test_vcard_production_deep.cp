@@ -11,7 +11,7 @@ import {
     VCardAddress,
     VCardContact,
     VCardCodec,
-} from "cap:vcard";
+} from "cap:doc";
 import cap from "cap";
 
 fn expectStrEq(actual: string, expected: string): ! {
@@ -213,7 +213,7 @@ test("5. cap.vcard Dynamic Namespace Mount Verification") {
         "EMAIL;TYPE=WORK:grace@navy.mil\r\n" ++
         "END:VCARD\r\n";
 
-    let c: VCardContact = cap.vcard.VCardCodec.parseOne(alloc, vcf) catch unreachable;
+    let c: VCardContact = cap.doc.VCardCodec.parseOne(alloc, vcf) catch unreachable;
     defer c.deinit();
 
     expectStrEq(c.fn_name, "Grace Hopper") catch unreachable;
@@ -221,7 +221,7 @@ test("5. cap.vcard Dynamic Namespace Mount Verification") {
     expectStrEq(c.emails[0].value, "grace@navy.mil") catch unreachable;
 
     let arr: [1]VCardContact = [c];
-    let out = cap.vcard.VCardCodec.toVcf(alloc, arr[0..]) catch unreachable;
+    let out = cap.doc.VCardCodec.toVcf(alloc, arr[0..]) catch unreachable;
     defer alloc.free(out);
     expect_eq(std.mem.indexOf(u8, out, "FN:Grace Hopper") != null, true);
 }

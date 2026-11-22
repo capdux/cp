@@ -12,7 +12,7 @@ import {
     RtfLexer,
     parseRtfHeader,
     extractRtfText,
-} from "cap:rtf";
+} from "cap:doc";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

@@ -9,7 +9,7 @@ import {
     parseAtomFeed,
     AtomEntryIter,
     formatAtomEntry,
-} from "cap:atom";
+} from "cap:doc";
 
 const SAMPLE_ATOM: []const u8 =
     "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" ++

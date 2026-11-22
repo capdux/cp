@@ -9,7 +9,7 @@ import {
     BibFieldIter,
     findBibField,
     formatBibField,
-} from "cap:bibtex";
+} from "cap:doc";
 
 const SAMPLE_BIB: []const u8 =
     "% Bibliography database\n" ++

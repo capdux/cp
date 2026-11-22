@@ -17,7 +17,7 @@ import {
     PdfDocument,
     PdfInfo,
     PdfInspector,
-} from "cap:pdf";
+} from "cap:doc";
 import cap from "cap";
 
 fn testSingleAndMultiPageGeneration()! {
@@ -259,33 +259,33 @@ fn testMalformedAndTruncatedGuards()! {
 fn testCapPdfDynamicMount()! {
     const alloc = std.heap.page_allocator;
 
-    let doc = cap.pdf.PdfDocument.init(alloc);
+    let doc = cap.doc.PdfDocument.init(alloc);
     defer doc.deinit();
 
     doc.setTitle("Dynamic Mount PDF") catch unreachable;
-    doc.setAuthor("cap.pdf") catch unreachable;
+    doc.setAuthor("cap.doc") catch unreachable;
     doc.setCreator("CP Runtime") catch unreachable;
 
-    const p1 = doc.addPage(cap.pdf.PageSize.a4()) catch unreachable;
+    const p1 = doc.addPage(cap.doc.PageSize.a4()) catch unreachable;
     p1.setStrokeRgb(0.2, 0.4, 0.8) catch unreachable;
     p1.drawRect(40.0, 700.0, 300.0, 60.0) catch unreachable;
-    p1.drawText(52.0, 725.0, cap.pdf.PdfFont.HelveticaBold, 14.0, "Mounted via cap.pdf") catch unreachable;
+    p1.drawText(52.0, 725.0, cap.doc.PdfFont.HelveticaBold, 14.0, "Mounted via cap.doc") catch unreachable;
 
-    const p2 = doc.addPage(cap.pdf.PageSize.letter()) catch unreachable;
-    p2.drawText(52.0, 700.0, cap.pdf.PdfFont.TimesRoman, 12.0, "Second Page") catch unreachable;
+    const p2 = doc.addPage(cap.doc.PageSize.letter()) catch unreachable;
+    p2.drawText(52.0, 700.0, cap.doc.PdfFont.TimesRoman, 12.0, "Second Page") catch unreachable;
 
     const out = doc.build(alloc) catch unreachable;
     defer alloc.free(out);
 
-    expect_eq(cap.pdf.PdfInspector.isValidPdf(out), true);
-    expect_eq(std.mem.eql(u8, cap.pdf.PdfInspector.extractVersion(out).?, "1.4"), true);
+    expect_eq(cap.doc.PdfInspector.isValidPdf(out), true);
+    expect_eq(std.mem.eql(u8, cap.doc.PdfInspector.extractVersion(out).?, "1.4"), true);
 
-    const info = cap.pdf.PdfInspector.inspect(out) catch unreachable;
+    const info = cap.doc.PdfInspector.inspect(out) catch unreachable;
     expect_eq(info.page_count, 2 as usize);
     expect_eq(info.has_xref, true);
     expect_eq(info.has_eof, true);
     expect_eq(std.mem.eql(u8, info.title.?, "Dynamic Mount PDF"), true);
-    expect_eq(std.mem.eql(u8, info.author.?, "cap.pdf"), true);
+    expect_eq(std.mem.eql(u8, info.author.?, "cap.doc"), true);
     expect_eq(std.mem.eql(u8, info.creator.?, "CP Runtime"), true);
 }
 

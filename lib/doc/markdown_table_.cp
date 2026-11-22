@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/md/table.cp | Kept for comparison/analysis
 // Source: Absorbed from /data/dev/bun/src/md/parser.zig | Synced: 2026-11-21T23:53:53Z (GFM Pipe Table Parser & Alignment Detector)
 // Pure-CP zero-allocation GitHub Flavored Markdown pipe-table row parser, delimiter alignment detector, and cell escaper.
 
