@@ -465,6 +465,52 @@ pub fn demoRingTrace() {
 
 ---
 
+### 零分配自适应结构化日志采样器与防日志风暴去重抑制器 (`logSample.cp`)
+
+面向高吞吐微服务与 AI Agent 运行时的 100% 纯 CP 零动态堆分配 **Uber Zap 风格自适应日志采样器**：
+
+- **常量与枚举**：
+  - `LOG_SAMPLER_MAX_BUCKETS = 64`（定长 `(level, signature_hash)` 分桶表，满表自动 LRU 淘汰）、`LOG_SAMPLER_MAX_SUMMARIES = 64`
+  - `LogSampleLevel`（`trace | debug | info | warn | err | critical | fatal`）
+  - `LogSampleVerdict`（`emit_burst | emit_sampled | emit_bypass | dropped`）
+- **数据模型与核心引擎 `AdaptiveLogSampler`**：
+  - `logSignatureHash(message): u64`：FNV-1a 64-bit 消息指纹。
+  - `LogSamplerConfig`（`window_ms`, `initial_burst`, `thereafter_every`, `bypass_min_level`, `enable_bypass`；`defaults()` / `isValid()`）
+  - `LogSampleDecision`（含 `verdict`, `should_emit`, `window_seen_count`, `dropped_in_prev_window`, `window_rolled`, `evicted_lru`）
+  - `LogSuppressionSummary` / `LogSamplerStats`
+  - `AdaptiveLogSampler.init(cfg)` / `shouldLog(*_, level, signature_hash, now_ms)` / `shouldLogMessage(*_, level, message, now_ms)`：窗口内前 `initial_burst` 条全量放行，随后每 `thereafter_every` 条放行 1 条；`>= bypass_min_level` 始终直通；窗口滚动或 LRU 驱逐时自动上报被抑制摘要。
+  - `flushExpiredWindows(*_, now_ms)` / `drainSummaries(*_, *out_summaries)` / `stats()` / `reset(*_)`。
+
+```cp
+import {
+    LogSampleLevel,
+    LogSamplerConfig,
+    LogSuppressionSummary,
+    AdaptiveLogSampler,
+} from "cap:obs";
+
+pub fn demoLogSampler() {
+    let cfg = LogSamplerConfig.defaults();
+    cfg.initial_burst = 3;
+    cfg.thereafter_every = 10;
+    let sampler = AdaptiveLogSampler.init(cfg) ?? return;
+
+    let i: usize = 0;
+    while (i < 20) : (i += 1) {
+        * = sampler.shouldLogMessage(LogSampleLevel.warn, "upstream timeout", 1000);
+    }
+    // 窗口滚动后自动上报上一窗口被抑制条数
+    const next = sampler.shouldLogMessage(LogSampleLevel.warn, "upstream timeout", 2000);
+    * = next.dropped_in_prev_window; // 16
+
+    let sums: [8]LogSuppressionSummary = [LogSuppressionSummary{}; 8];
+    let sums_s: []LogSuppressionSummary = sums[0..];
+    * = sampler.drainSummaries(*sums_s);
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [btf.md](obs/btf.md)

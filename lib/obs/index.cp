@@ -275,3 +275,18 @@ export {
     formatTraceSummary,
     formatChromeTraceEvent,
 } from "./ringTrace.cp";
+
+// --- Zero-Alloc Adaptive Structured Log Sampler & Storm Suppressor ---
+
+export {
+    LOG_SAMPLER_MAX_BUCKETS,
+    LOG_SAMPLER_MAX_SUMMARIES,
+    logSignatureHash,
+    LogSampleLevel,
+    LogSampleVerdict,
+    LogSamplerConfig,
+    LogSampleDecision,
+    LogSuppressionSummary,
+    LogSamplerStats,
+    AdaptiveLogSampler,
+} from "./logSample.cp";
