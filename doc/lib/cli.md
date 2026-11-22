@@ -115,6 +115,20 @@ let pairs: [2]ColonPair = [ColonPair{}, ColonPair{}];
 const n = parseLoaderMappingList(raw[0..], pairs[0..])?;
 const svg_loader = findColonValue(pairs[0..n], ".svg") ?? ""; // "text"
 ```
+- **零分配 Shell 补全探测与格式化器 (`lib/cli/completions.cp`，吸收自 `/data/dev/bun/src/cli/shell_completions.cp`)**：
+  - 类型与函数：`CompletionError` (`BufferTooSmall`)、`CompletionShell`（`unknown` / `bash` / `zsh` / `fish` / `pwsh`，含 `fromShellPath` / `name` / `delimiter`）、`CompletionItem`、`formatCompletions`、`formatCompletionItems`。
+
+```typescript
+import { CompletionShell, CompletionItem, formatCompletionItems } from "cap:cli";
+
+const sh = CompletionShell.fromShellPath("/usr/bin/zsh"); // CompletionShell.zsh
+const items: [2]CompletionItem = [
+    CompletionItem{ command: "build", description: "Build project" },
+    CompletionItem{ command: "bench", description: "Run benchmarks" },
+];
+let buf: [128]u8 = [0; 128];
+const n = formatCompletionItems(sh, items[0..], "bu", buf[0..])?; // "build\tBuild project"
+```
 
 ---
 

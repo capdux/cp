@@ -56,3 +56,11 @@ export {
     parseLoaderMappingList,
     findColonValue,
 } from "./colon_list.cp";
+
+export {
+    CompletionError,
+    CompletionShell,
+    CompletionItem,
+    formatCompletions,
+    formatCompletionItems,
+} from "./completions.cp";
