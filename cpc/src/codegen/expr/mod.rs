@@ -119,6 +119,7 @@ impl Codegen {
             | Expr::Bin(_)
             | Expr::Cast { .. }
             | Expr::BitNot(_)
+            | Expr::Neg(_)
             | Expr::Deref(_)
             | Expr::Unwrap(_) => self.generate_expr_ops(expr),
             Expr::Call(_) => self.generate_expr_call(expr),

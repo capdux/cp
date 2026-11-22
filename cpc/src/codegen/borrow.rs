@@ -836,6 +836,7 @@ impl Codegen {
             | Expr::Unwrap(p)
             | Expr::Question(p)
             | Expr::BitNot(p)
+            | Expr::Neg(p)
             | Expr::ErrWrap(p)
             | Expr::BoxNew(p)
             | Expr::Await(p)

@@ -835,6 +835,7 @@ impl ModuleFeatures {
             | Expr::Unwrap(inner)
             | Expr::Deref(inner)
             | Expr::BitNot(inner)
+            | Expr::Neg(inner)
             | Expr::ComptimeExpr(inner)
             | Expr::BoxNew(inner) => {
                 self.scan_expr(inner);

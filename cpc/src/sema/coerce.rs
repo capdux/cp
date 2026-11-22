@@ -137,6 +137,7 @@ impl Analyzer {
     pub(super) fn eval_const_int_expr(expr: &Expr) -> Option<i64> {
         match expr {
             Expr::Lit(Lit::Int(n)) => Some(*n),
+            Expr::Neg(inner) => Some(Self::eval_const_int_expr(inner)?.wrapping_neg()),
             Expr::Bin(bin) => {
                 let l = Self::eval_const_int_expr(&bin.left)?;
                 let r = Self::eval_const_int_expr(&bin.right)?;

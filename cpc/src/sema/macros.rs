@@ -971,6 +971,9 @@ impl Analyzer {
                 Self::substitute_expr(&mut b.left, subst);
                 Self::substitute_expr(&mut b.right, subst);
             }
+            Expr::Neg(inner) | Expr::BitNot(inner) => {
+                Self::substitute_expr(inner, subst);
+            }
             Expr::Call(c) | Expr::New(c) | Expr::OptCall(c) => {
                 Self::substitute_expr(&mut c.callee, subst);
                 for a in &mut c.args {
@@ -1033,6 +1036,7 @@ impl Analyzer {
             Expr::ArrayRepeat(val, count) => Self::is_const_expr(val) && Self::is_const_expr(count),
             Expr::Object(fields) => fields.iter().all(|f| Self::is_const_expr(&f.val)),
             Expr::Dict(fields) => fields.iter().all(|f| Self::is_const_expr(&f.val)),
+            Expr::Neg(inner) | Expr::BitNot(inner) => Self::is_const_expr(inner),
             _ => false,
         }
     }

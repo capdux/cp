@@ -25,13 +25,8 @@ impl<'a> Parser<'a> {
                         return Ok(Expr::Lit(Lit::Float(-f)));
                     }
                 }
-                let inner = self.parse_primary_expr()?;
-                Ok(Expr::Bin(BinExpr {
-                    span,
-                    op: BinaryOp::Sub,
-                    left: Box::new(Expr::Lit(Lit::Int(0))),
-                    right: Box::new(inner),
-                }))
+                let inner = self.parse_postfix_expr()?;
+                Ok(Expr::Neg(Box::new(inner)))
             }
             Token::Dot => {
                 if self.peek() == Some(&Token::LBrace) {

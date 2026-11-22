@@ -524,6 +524,7 @@ pub enum Expr {
     Deref(Box<Expr>),
     Unwrap(Box<Expr>),
     BitNot(Box<Expr>),
+    Neg(Box<Expr>),
     Unsafe(BlockStmt),
     Comptime(BlockStmt),
     ComptimeExpr(Box<Expr>),
@@ -914,7 +915,7 @@ pub fn has_pipe_placeholder(expr: &Expr) -> bool {
             fields.iter().any(|f| has_pipe_placeholder(&f.val))
         }
         Expr::Index { obj, index } => has_pipe_placeholder(obj) || has_pipe_placeholder(index),
-        Expr::Deref(d) | Expr::BitNot(d) => has_pipe_placeholder(d),
+        Expr::Deref(d) | Expr::BitNot(d) | Expr::Neg(d) => has_pipe_placeholder(d),
         Expr::Cast { expr, .. } => has_pipe_placeholder(expr),
         Expr::Range { start, end, .. } => has_pipe_placeholder(start) || has_pipe_placeholder(end),
         Expr::Builtin(b) => b.args.iter().any(has_pipe_placeholder),
@@ -1010,6 +1011,7 @@ pub fn substitute_pipe_placeholder(expr: &Expr, pipe_var: &str) -> Expr {
         }),
         Expr::Deref(d) => Expr::Deref(Box::new(substitute_pipe_placeholder(d, pipe_var))),
         Expr::BitNot(d) => Expr::BitNot(Box::new(substitute_pipe_placeholder(d, pipe_var))),
+        Expr::Neg(d) => Expr::Neg(Box::new(substitute_pipe_placeholder(d, pipe_var))),
         Expr::Cast {
             span,
             expr,
@@ -1127,6 +1129,7 @@ impl Expr {
             Expr::Deref(d) => d.span(),
             Expr::Unwrap(u) => u.span(),
             Expr::BitNot(b) => b.span(),
+            Expr::Neg(n) => n.span(),
             Expr::Unsafe(b) => b.span,
             Expr::Comptime(b) => b.span,
             Expr::ComptimeExpr(e) => e.span(),

@@ -162,7 +162,9 @@ impl Codegen {
                     other => Some(other),
                 }
             }
-            Expr::BitNot(inner) => self.infer_cp_type_with_mock(inner, mock_types),
+            Expr::BitNot(inner) | Expr::Neg(inner) => {
+                self.infer_cp_type_with_mock(inner, mock_types)
+            }
             Expr::Move(inner) => self.infer_cp_type_with_mock(inner, mock_types),
             Expr::Borrow(inner, is_mut) => {
                 let inner_ty = self.infer_cp_type_with_mock(inner, mock_types)?;

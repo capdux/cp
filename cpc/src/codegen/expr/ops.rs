@@ -1033,6 +1033,14 @@ impl Codegen {
                 let inner_code = self.generate_expr(inner);
                 format!("(~{})", inner_code)
             }
+            Expr::Neg(inner) => {
+                let inner_code = self.generate_expr(inner);
+                if inner_code.starts_with('-') {
+                    format!("(-({}))", inner_code)
+                } else {
+                    format!("(-{})", inner_code)
+                }
+            }
             Expr::Deref(inner) => {
                 let inner_code = self.generate_expr(inner);
                 if matches!(&**inner, Expr::Ident(_) | Expr::Member(_) | Expr::Deref(_)) {
@@ -1102,6 +1110,14 @@ impl Codegen {
                     op_str,
                     self.expr_to_zig_pure(&bin.right)
                 )
+            }
+            Expr::Neg(inner) => {
+                let s = self.expr_to_zig_pure(inner);
+                if s.starts_with('-') {
+                    format!("(-({}))", s)
+                } else {
+                    format!("(-{})", s)
+                }
             }
             Expr::Unwrap(inner) => {
                 format!("{}.?", self.expr_to_zig_pure(inner))

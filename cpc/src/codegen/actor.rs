@@ -1379,6 +1379,8 @@ impl Codegen {
             Expr::Deref(inner)
             | Expr::Unwrap(inner)
             | Expr::Question(inner)
+            | Expr::BitNot(inner)
+            | Expr::Neg(inner)
             | Expr::Cast { expr: inner, .. } => {
                 self.extract_locals_from_expr_simple(inner);
             }
@@ -1857,6 +1859,8 @@ impl Codegen {
             Expr::Deref(inner)
             | Expr::Unwrap(inner)
             | Expr::Question(inner)
+            | Expr::BitNot(inner)
+            | Expr::Neg(inner)
             | Expr::Cast { expr: inner, .. } => {
                 self.extract_local_vars_from_expr_to_str(inner, output);
             }

@@ -2152,3 +2152,88 @@
   > 已读取高危编译器误编译工单 **`task-bun-20261123-as-ptr-field-addr-of`**（复现文件 [repro_as_ptr_field.cp](file:///data/dev/cp/temp/repro_as_ptr_field.cp)，`_.p as *u64` 被误 lowering 为 `@ptrCast(&(self.p))` 导致越界读写），已派发专职 **CPC Hotfix Engineer**（`937127f1`）立即定位修复、`release` 发布并跑运行时内存读写回归测试；验证通过后将第一时间 `resolve` 结单、同步 `SESSION.md` 并提交。
   >
   > 同时双轨并行任务（`31ff6162` W18 R6 / `c728e330` W17 R10）正常推进中。
+
+### 2026-11-23（下游工单全量补录：`task-bun-20261123-unary-neg-zero-float`）[ticket:task-bun-20261123-unary-neg-zero-float]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-23 06:54:30` | 状态：`resolved` | 结单：`2026-11-23T07:10:05`
+- **报错/需求摘要**：一元负号 -x 被 cpc lowering 为 (0 - x)，导致 IEEE-754 浮点 -0.0 变为 +0.0（0.0 - 0.0 == +0.0），破坏 src/js_parser/ast/visitExpr.cp 等所有 JS -0 字面量
+- **结单与处理汇报**：Root cause: parser/primary.rs lowered unary minus (-x) into BinExpr(0 - x), turning IEEE-754 -0.0 into +0.0 (0.0 - 0.0 == +0.0). Fix: added dedicated AST Expr::Neg(Box<Expr>) across parser/sema/codegen, parsing unary '-' with parse_postfix_expr() and emitting native Zig unary negation (-x) / (-(-x)). Verified release cpc deploy, repro_unary_neg_zero.cp emits 'return (-x);', and cap/test/testHotfixUnaryNegZeroFloat.cp + test_type_conversion.cp 100% PASS.
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 06:50:44）[step:19068]
+- **用户完整原始指令**：
+  > 汇报成果与项目进度
+- **完整回复与执行汇报**：
+  > ## CP 项目成果与进度汇报（2026-11-23）
+  >
+  > ### 一、 全局核心指标（实时快照）
+  >
+  > | 指标 | 当前数值 | 状态 |
+  > | :--- | :---: | :--- |
+  > | 仓库分支 / 最新提交 | `main` @ `5efbbd8b` | 全部已验证批次均已即时 Git 提交 |
+  > | 标准库源码文件（`lib/**/*.cp`） | **2,545** 个（271 既有目录） | 严守“零新建顶层目录 + 简洁无下划线命名”铁律 |
+  > | 正式单元测试文件（`cap/test/*.cp`） | **1,941** 个 | 新增批次 100% `cpc check` 0 错误 + `cap test` 全绿 |
+  > | Bun 上游溯源模块（`bun_sourced`） | **1,103** 个（突破 1,100 里程碑） | `missing_synced_tag=0`；刚检出 1 条新上游增量（`h3_client/callbacks.cp`），正在本轮自动同步 |
+  > | 下游编译器工单队列（`unacked`） | **0 条待处理** | 历史 90 条工单全部 `resolve` 并审计零遗漏 |
+  >
+  > ---
+  >
+  > ### 二、 编译器（`cpc`）热修与下游协同进展
+  >
+  > 近期收到的全部下游 Bun 迁移编译器工单均已完成根因修复、Release 版同步部署、回归测试验证、结单与 `SESSION.md` 审计归档：
+  > - `task-bun-20261123-silent-drop-comptime-auto-dotted-err`（[`6b6b7e82`]）：修复顶层 `print`/`spawn`/`join` 误跳过与 prelude 别名冲突；
+  > - `task-bun-20261123-ptr-to-optional-lowering`（[`305c6df9`]）：修复 `*(T?)` 与 `*T?` 的括号优先级区分及 Zig 指针-可选类型降级；
+  > - `task-bun-20261123-as-ptr-field-addr-of`（[`ae6bb10e`]）：修复 `as` 指针转换中多元素/C 指针误判为定长数组插入 `&` 取址的问题。
+  >
+  > ---
+  >
+  > ### 三、 标准库双轨生态近期交付成果
+  >
+  > #### 1. Priority ①：Bun 上游增量追踪与纯 CP 吸收（Wave 22 收官 + Wave 23 推进至 R9）
+  > - **Wave 22（10/10 完结，`bun_sourced: 1084 -> 1094`）**：
+  >   - `cap:css`：[percentage.cp](file:///data/dev/cp/lib/css/percentage.cp)
+  >   - `cap:semver`：[semverString.cp](file:///data/dev/cp/lib/semver/semverString.cp)（8B 内联/去重池，并修复 [version.cp](file:///data/dev/cp/lib/semver/version.cp) 静态方法声明）
+  >   - `cap:sourcemap`：[packedMap.cp](file:///data/dev/cp/lib/sourcemap/packedMap.cp)（DevServer 增量打包共享存储）
+  >   - `cap:js`：[scope.cp](file:///data/dev/cp/lib/js/scope.cp)、[symbolTable.cp](file:///data/dev/cp/lib/js/symbolTable.cp)、[tsNamespace.cp](file:///data/dev/cp/lib/js/tsNamespace.cp)、[tsMetadata.cp](file:///data/dev/cp/lib/js/tsMetadata.cp)、[lexerTables.cp](file:///data/dev/cp/lib/js/lexerTables.cp)、[importTrim.cp](file:///data/dev/cp/lib/js/importTrim.cp)、[replTransform.cp](file:///data/dev/cp/lib/js/replTransform.cp)
+  > - **Wave 23（已完成 9/10，`bun_sourced: 1094 -> 1103`）**：
+  >   - `cap:unicode`：[ascii.cp](file:///data/dev/cp/lib/unicode/ascii.cp)（无分支 ASCII 分类/折叠/统计）
+  >   - `cap:perf`：[traceEvents.cp](file:///data/dev/cp/lib/perf/traceEvents.cp)（59 项位掩码追踪事件与饱和累加器）
+  >   - `cap:event`：[spawnSyncLoop.cp](file:///data/dev/cp/lib/event/spawnSyncLoop.cp)（同步子进程隔离事件循环）+ `cap:blob` 上游同步
+  >   - `cap:pkg`：[globalCache.cp](file:///data/dev/cp/lib/pkg/globalCache.cp)（`--install=auto|force|fallback|disable` 策略）
+  >   - `cap:bundler`：[bundleEnums.cp](file:///data/dev/cp/lib/bundler/bundleEnums.cp)（输出格式、Windows PE 元数据与包打包策略）
+  >   - `cap:shell`：[pwdBuiltin.cp](file:///data/dev/cp/lib/shell/pwdBuiltin.cp)（达 **`bun_sourced=1100`**）、[stmtState.cp](file:///data/dev/cp/lib/shell/stmtState.cp)
+  >   - `cap:io`：[staticPipeWriter.cp](file:///data/dev/cp/lib/io/staticPipeWriter.cp)、[subprocessReadable.cp](file:///data/dev/cp/lib/io/subprocessReadable.cp)
+  >
+  > #### 2. Priority ② & ③：AI Agent / 向量 / 推理核心与系统基础设施（Wave 21 收官 + Wave 22 推进至 R9）
+  > - **AI / LLM / Agent / 向量方向（全部 100% 纯 CP 零动态堆分配）**：
+  >   - `cap:agentmem`：[toolHistory.cp](file:///data/dev/cp/lib/agentmem/toolHistory.cp)、[scratchpad.cp](file:///data/dev/cp/lib/agentmem/scratchpad.cp)（ReAct 结构化草稿本与检查点回滚）
+  >   - `cap:a2a`：[handoffGate.cp](file:///data/dev/cp/lib/a2a/handoffGate.cp)、[routePolicy.cp](file:///data/dev/cp/lib/a2a/routePolicy.cp)（多智能体能力/成本/SLA 策略路由与回退链）
+  >   - `cap:mcp`：[toolSandbox.cp](file:///data/dev/cp/lib/mcp/toolSandbox.cp)（出网/路径/确认令牌沙箱）、[rateQuota.cp](file:///data/dev/cp/lib/mcp/rateQuota.cp)（多租户双层令牌桶流控与成本配额）
+  >   - `cap:prompt`：[contextWindow.cp](file:///data/dev/cp/lib/prompt/contextWindow.cp)（工具调用原子配对安全压缩与前缀缓存保留率规划）
+  >   - `cap:vector`：[mmrSelect.cp](file:///data/dev/cp/lib/vector/mmrSelect.cp)（`@dot`/`@l2sq` 增量 O(K·N·D) MMR 多样性重排）、[ivfPq.cp](file:///data/dev/cp/lib/vector/ivfPq.cp)（Residual IVF-PQ 粗到精 ANN 索引）
+  >   - `cap:attention`：[rmsNorm.cp](file:///data/dev/cp/lib/attention/rmsNorm.cp)（`@dot`/`@fma` 融合 Add+RMSNorm、Gemma Unit-Offset、GQA QK-Norm 与 SwiGLU/GeGLU）
+  > - **核心系统基础设施方向**：
+  >   - `cap:sys`：[procTree.cp](file:///data/dev/cp/lib/sys/procTree.cp)（进程树与优雅停机）、[cgroupLimit.cp](file:///data/dev/cp/lib/sys/cgroupLimit.cp)（Linux cgroup v2 CPU/内存配额与 PSI 压力评估）
+  >   - `cap:web`：[signedUrl.cp](file:///data/dev/cp/lib/web/signedUrl.cp)（多密钥轮换预签名 URL）、[cspPolicy.cp](file:///data/dev/cp/lib/web/cspPolicy.cp)（W3C CSP Level 3 策略解析与 Nonce/Hash 裁决）
+  >   - `cap:obs`：[baggage.cp](file:///data/dev/cp/lib/obs/baggage.cp)（W3C Baggage 上下文传播与脱敏配额）
+  >   - `cap:time`：[deadlines.cp](file:///data/dev/cp/lib/time/deadlines.cp)（层次截止时间树与 `grpc-timeout` 线缆编解码）
+  >   - `cap:db`：[raftVote.cp](file:///data/dev/cp/lib/db/raftVote.cp)（Sans-IO Raft 选主、Pre-Vote 与法定人数提交）
+  >   - `cap:ds`：[orSet.cp](file:///data/dev/cp/lib/ds/orSet.cp)（无墓碑 Add-Wins OR-Set & LWW-Register64 CRDT）
+  >   - `cap:net`：[outlierDetect.cp](file:///data/dev/cp/lib/net/outlierDetect.cp)（Envoy 风格被动异常节点检测与指数驱逐）
+  >
+  > 所有新增模块均已同步更新对应 [doc/lib/](file:///data/dev/cp/doc/lib) 文档与 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md) 索引契约。
+  >
+  > ---
+  >
+  > ### 四、 当前运行中任务与下一步
+  >
+  > 双轨后台子智能体均处于当前波次 **第 10 轮收官冲刺**：
+  > 1. **Priority ① Wave 23 Round 10**：目标 `bun_sourced=1104`，并自动同步刚检测到的 `http/h3_client/callbacks.cp` 增量至 `upstream_newer=0`；完工后按 10 轮规则轮换进入 **Wave 24**。
+  > 2. **Priority ③ Wave 22 Round 10**：正在实现 `cap:graph` 零堆启发式最短路径引擎 `lib/graph/aStar.cp`；完工后轮换进入 **Wave 23**。
+  > 3. 随时保持对下游编译器工单的零延迟响应通道。
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 06:54:31）[step:19091]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-unary-neg-zero-float)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取紧急编译器工单 `task-bun-20261123-unary-neg-zero-float`（一元负号 `-x` 被 lowering 为 `(0 - x)` 导致 IEEE-754 `-0.0` 退化为 `+0.0`，复现文件 [repro_unary_neg_zero.cp](file:///data/dev/cp/temp/repro_unary_neg_zero.cp)），并已派发专职 `CPC Hotfix Engineer` 子智能体在 `cpc/src/` 根因修复、Release 部署、回归验证并结单。
+  >
+  > 修复验证完成后将立即同步 `SESSION.md` 审计并提交。

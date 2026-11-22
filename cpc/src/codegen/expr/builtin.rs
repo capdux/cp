@@ -515,6 +515,9 @@ impl Codegen {
                     let is_num_lit = |e: &Expr| -> bool {
                         match e {
                             Expr::Lit(Lit::Float(_) | Lit::Int(_)) => true,
+                            Expr::Neg(inner) => {
+                                matches!(&**inner, Expr::Lit(Lit::Float(_) | Lit::Int(_)))
+                            }
                             Expr::Bin(b) => {
                                 b.op == BinaryOp::Sub
                                     && matches!(&*b.left, Expr::Lit(Lit::Int(0)))

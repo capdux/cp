@@ -237,9 +237,11 @@ pub fn find_referenced_vars_in_expr(expr: &Expr, vars: &mut HashSet<String>) {
         Expr::Zig(z) => {
             extract_words_from_str(&z.code, vars);
         }
-        Expr::Deref(d) | Expr::Unwrap(d) | Expr::BitNot(d) | Expr::ComptimeExpr(d) => {
-            find_referenced_vars_in_expr(d, vars)
-        }
+        Expr::Deref(d)
+        | Expr::Unwrap(d)
+        | Expr::BitNot(d)
+        | Expr::Neg(d)
+        | Expr::ComptimeExpr(d) => find_referenced_vars_in_expr(d, vars),
         Expr::Unsafe(b) | Expr::Comptime(b) | Expr::Arena(b) => {
             find_referenced_vars_in_block(b, vars)
         }

@@ -756,6 +756,9 @@ impl Analyzer {
                     let is_num_lit = |e: &Expr| -> bool {
                         match e {
                             Expr::Lit(Lit::Float(_) | Lit::Int(_)) => true,
+                            Expr::Neg(inner) => {
+                                matches!(&**inner, Expr::Lit(Lit::Float(_) | Lit::Int(_)))
+                            }
                             Expr::Bin(b) => {
                                 b.op == BinaryOp::Sub
                                     && matches!(&*b.left, Expr::Lit(Lit::Int(0)))
@@ -856,6 +859,7 @@ impl Analyzer {
                 }
                 Ok(target_ty.clone())
             }
+            Expr::Neg(inner) | Expr::BitNot(inner) => self.infer_type(inner),
             Expr::Deref(inner) => {
                 let inner_ty = self.infer_type(inner)?;
                 match inner_ty {
