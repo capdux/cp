@@ -6,3 +6,4 @@ export { Semaphore } from "./semaphore.cp";
 export { SpinLock } from "./spinLock.cp";
 export { OnceFlag } from "./onceFlag.cp";
 export { Barrier } from "./barrier.cp";
+export { Guarded, GuardedBy } from "./guarded.cp";

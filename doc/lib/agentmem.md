@@ -711,3 +711,46 @@ pub fn demoSkillBank() {
     * = n; // 1 (命中 skill 101)
 }
 ```
+
+
+### 16. 零分配智能体信念修正与冲突消解引擎 (`beliefState.cp`)
+
+面向长程自主 AI Agent 认知状态维护的 100% 纯 CP 零动态堆分配 **AGM / 贝叶斯信念修正与冲突消解引擎**：
+
+- **常量与枚举**：
+  - `BELIEF_MAX_RECORDS = 128`、`BELIEF_MAX_AUDIT_ENTRIES = 64`、`BELIEF_NO_ID = 0`
+  - `BeliefStatus`（`active | contested | superseded | retracted`）
+  - `BeliefRevisionAction`（`inserted | reinforced | superseded_old | retained_old | marked_contested | rejected_invalid | rejected_full`）
+- **数学评分原语**：
+  - `beliefLogOddsReinforce(prior_conf, evidence_conf, source_trust): f32`：按来源可信度折衷的对数几率平滑贝叶斯强化（永不溢出 `> 1.0`）。
+  - `beliefHalfLifeDecay(confidence, elapsed_ms, half_life_ms, min_confidence): f32`：指数半衰期置信衰减 `confidence * 2^(-elapsed / half_life)`。
+  - `beliefEffectiveWeight(confidence, source_trust, elapsed_ms, half_life_ms, min_confidence): f32`：冲突仲裁加权支持度。
+- **数据模型与核心引擎 `BeliefStateStore`**：
+  - `BeliefRevisionConfig`（`half_life_ms`, `contest_margin`, `min_confidence`；`defaults()` / `isValid()`）
+  - `BeliefRecord` / `BeliefRevisionResult` / `BeliefConflictAudit` / `BeliefStateStats`（含平均二元认识论熵 `epistemic_entropy` 与冲突比例 `contradiction_ratio`）
+  - `observe(*_, subject_id, predicate_id, object_hash, confidence, source_trust, now_ms): BeliefRevisionResult`：同 `object_hash` 执行衰减后对数几率强化（并可打破既有 `contested` 僵局）；异 `object_hash` 自动执行三态冲突仲裁（`superseded_old` 链接 `superseded_by` / `retained_old` 保留原信念 / `marked_contested` 标记势均力敌待澄清），同步写入零堆冲突审计环形缓冲。
+  - `retract(*_, belief_id, now_ms): bool`：显式撤回信念（若仅剩唯一 `contested` 候选则自动晋升恢复 `active`）。
+  - `applyDecay(*_, now_ms): usize`：全表半衰期时间衰减刷新。
+  - `queryBestBelief` / `queryContested` / `queryBySubject` / `getBelief` / `recentConflicts` / `stats` / `clear`。
+
+```cp
+import {
+    BeliefRevisionConfig,
+    BeliefRecord,
+    BeliefConflictAudit,
+    BeliefStateStore,
+} from "cap:agentmem";
+
+pub fn demoBeliefState() {
+    let store = BeliefStateStore.init(BeliefRevisionConfig.defaults()) ?? return;
+    // 初始低信任观察：用户偏好语言 = Python (0x11)
+    * = store.observe(1, 10, 0x11, 0.70, 0.50, 1000);
+    // 高信任新证据推翻旧信念：用户偏好语言 = CP (0x22)
+    * = store.observe(1, 10, 0x22, 0.92, 0.95, 2000);
+
+    let audits: [4]BeliefConflictAudit = [BeliefConflictAudit{}; 4];
+    let audits_s: []BeliefConflictAudit = audits[0..];
+    const n = store.recentConflicts(*audits_s);
+    * = n; // 1 (记录 superseded_old 冲突仲裁)
+}
+```

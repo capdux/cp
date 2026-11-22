@@ -15,6 +15,7 @@
 | `SpinLock` | 自适应自旋锁 | 极短临界区低延迟互斥（先自旋后让出 CPU） |
 | `OnceFlag` | 并发单次初始化器 | 多线程竞争下保证初始化回调仅执行一次且阻塞等待完成 |
 | `Barrier` | 可复用栅栏 | N 个线程多轮阶段同步，全部到达后同时放行 |
+| `Guarded<T>` / `GuardedBy<T, Lock>` | 互斥锁受保护值容器 | 将数据与锁物理绑定，防止并发误访问未加锁共享状态（吸收自 `/data/dev/bun/src/threading/guarded.cp`） |
 
 ## 3. API 速查
 
@@ -88,4 +89,26 @@ pub fn runExample() {
     t1.join();
     t2.join();
 }
+```
+
+## 5. 互斥锁受保护值容器 (`guarded.cp`)
+
+吸收自 `/data/dev/bun/src/threading/guarded.cp`（参考 `/data/dev/bun/docs/runtime/workers.mdx` 中的跨线程共享状态最佳实践）：
+
+- **`Guarded<T>`**（默认内置自适应 `SpinLock`）：
+  - `Guarded<T>.init(value: T): Guarded<T>`
+  - `lock(*_): *T` / `tryLock(*_): (*T)?` / `unlock(*_)` / `isLocked(*_): bool`
+  - `getCopy(*_): T` / `set(*_, new_val: T)` / `swap(*_, new_val: T): T`（自动加锁解锁，杜绝遗忘 `unlock`）
+  - `intoUnprotected(*_): T`（在独占所有权阶段零开销解包内部值）
+- **`GuardedBy<T, Lock>`**：支持注入任意实现 `lock(*_)` / `tryLock(*_): bool` / `unlock(*_)` 的自定义锁类型。
+
+```cp
+import { Guarded } from "cap:threading";
+
+let counter = Guarded<i64>.init(0);
+const p = counter.lock();
+p.* += 1;
+counter.unlock();
+const old = counter.swap(10); // 1
+* = old;
 ```

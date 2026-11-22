@@ -149,3 +149,20 @@ export {
     SkillBankStats,
     SkillBank,
 } from "./skillBank.cp";
+
+export {
+    BELIEF_MAX_RECORDS,
+    BELIEF_MAX_AUDIT_ENTRIES,
+    BELIEF_NO_ID,
+    beliefLogOddsReinforce,
+    beliefHalfLifeDecay,
+    beliefEffectiveWeight,
+    BeliefStatus,
+    BeliefRevisionAction,
+    BeliefRevisionConfig,
+    BeliefRecord,
+    BeliefRevisionResult,
+    BeliefConflictAudit,
+    BeliefStateStats,
+    BeliefStateStore,
+} from "./beliefState.cp";
