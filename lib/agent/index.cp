@@ -234,3 +234,12 @@ export {
     callsConflict,
     planToolWaves,
 } from "./tool_parallel.cp";
+
+export {
+    PromptBlockKind,
+    PromptBlockDesc,
+    CachePlanConfig,
+    CachePlanResult,
+    planPromptCacheBreakpoints,
+    computePrefixMatchTokens,
+} from "./prompt_cache_plan.cp";

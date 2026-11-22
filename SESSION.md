@@ -1297,3 +1297,7 @@
 ### 2026-11-22（分类合并交付：lib/agent/tool_parallel.cp | 2026-11-22 13:55:29）
 - **执行与结单汇报**：
   > 子智能体交付 lib/agent/tool_parallel.cp（LLM 批量 Tool-Call 读写锁冲突分析与最大并发执行波次调度器，5/5 PASS），归入 cap:agent 并同步 cp_lib_ref.md；续派 lib/agent/prompt_cache_plan.cp。
+
+### 2026-11-22（分类合并交付：lib/agent/prompt_cache_plan.cp | 2026-11-22 13:58:59）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/agent/prompt_cache_plan.cp（多轮对话 Prompt-Cache 缓存断点规划与成本收益优化器，5/5 PASS），归入 cap:agent 并同步 cp_lib_ref.md；续派 lib/agent/context_budget.cp。

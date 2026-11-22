@@ -1227,3 +1227,54 @@ fn parallelToolWavesDemo() {
     }
 }
 ```
+
+---
+
+## 子模块：多轮对话 Prompt-Cache 缓存断点规划与前缀稳定性优化器（`prompt_cache_plan.cp`）
+
+### 核心特性
+
+- **前缀稳定性截断与语义断点放置（`planPromptCacheBreakpoints`）**：对标 Anthropic / OpenAI Prefix Caching，自动扫描最长非易变（`!volatile_flag` 且非 `CurrentUser`）稳定前缀，按 `min_cacheable_tokens` 门槛与语义块切换边界放置至多 `max_breakpoints` 个断点（始终保留末尾断点覆盖完整稳定前缀）。
+- **多轮成本收益防倒亏核算**：依据 `expected_future_turns`、`write_overhead_pct`（如 25%）与 `read_discount_pct`（如 90%）精确核算 `estimated_net_savings_tokens`，短对话无复用时自动标记 `worth_caching = false` 避免写缓存反而增加费用。
+- **跨轮前缀命中检测（`computePrefixMatchTokens`）**：按顺序比对连续两轮 Prompt 块，遇首处 `content_hash` / `kind` / `tokens` 变异立即停止，精确返回可命中的缓存前缀 Token 数。
+
+### 导出清单
+
+- **类型与配置**：`PromptBlockKind`、`PromptBlockDesc`、`CachePlanConfig`、`CachePlanResult`
+- **规划与分析**：`planPromptCacheBreakpoints(blocks, cfg, out_breakpoint_indices): CachePlanResult?`、`computePrefixMatchTokens(prev_blocks, curr_blocks): u32`
+
+### 使用示例
+
+```cp
+import {
+    PromptBlockKind,
+    PromptBlockDesc,
+    CachePlanConfig,
+    planPromptCacheBreakpoints,
+    computePrefixMatchTokens,
+} from "cap:agent";
+
+fn promptCachePlanDemo() {
+    const blocks: [4]PromptBlockDesc = [
+        PromptBlockDesc{ index: 0, kind: PromptBlockKind.SystemPrompt, tokens: 600, content_hash: 0x11, volatile_flag: false },
+        PromptBlockDesc{ index: 1, kind: PromptBlockKind.ToolDefs, tokens: 700, content_hash: 0x22, volatile_flag: false },
+        PromptBlockDesc{ index: 2, kind: PromptBlockKind.DocContext, tokens: 1500, content_hash: 0x33, volatile_flag: false },
+        PromptBlockDesc{ index: 3, kind: PromptBlockKind.CurrentUser, tokens: 120, content_hash: 0x44, volatile_flag: false },
+    ];
+    let bp_buf: [4]u16 = [0; 4];
+    let bps: []u16 = bp_buf[0..];
+    const cfg = CachePlanConfig{
+        max_breakpoints: 4,
+        min_cacheable_tokens: 1024,
+        expected_future_turns: 3,
+        write_overhead_pct: 25,
+        read_discount_pct: 90,
+    };
+
+    if (plan := planPromptCacheBreakpoints(blocks[0..], cfg, bps)) {
+        // plan.worth_caching == true, cached_prefix_tokens == 2800, breakpoints == [1, 2]
+        * = plan;
+    }
+    * = computePrefixMatchTokens(blocks[0..], blocks[0..]);
+}
+```
