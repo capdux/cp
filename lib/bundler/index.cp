@@ -226,3 +226,15 @@ export {
     PathTemplate,
     formatBundlerNaming,
 } from "./path_template";
+
+export {
+    PureGlobalKind,
+    PureGlobalFlags,
+    lookupPureGlobalIdentifier,
+    isPureGlobalIdentifier,
+    isConstantFoldableGlobal,
+    isPureGlobalPropertyAccess,
+    isPureGlobalPropertyChain,
+    isPureGlobalCallSafeForString,
+    classifyGlobalExpr,
+} from "./pure_globals";

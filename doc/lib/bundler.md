@@ -351,6 +351,26 @@ const n = tpl.formatWithStyle(PathSeparatorStyle.posix, true, buf[0..])?;
 * = n;
 ```
 
+### 3.18 全局无副作用属性访问与树摇纯净度判定表（`lib/bundler/pure_globals.cp`，吸收自 `/data/dev/bun/src/bundler/defines-table.cp` 与 `/data/dev/bun/docs/bundler/minifier.mdx`）
+- **核心类型与函数**：`PureGlobalKind`（`unknown` / `nan_literal` / `infinity_literal` / `strict_undefined` / `pure_identifier`）、`PureGlobalFlags`、`lookupPureGlobalIdentifier`、`isPureGlobalIdentifier`、`isConstantFoldableGlobal`、`isPureGlobalPropertyAccess`、`isPureGlobalPropertyChain`、`isPureGlobalCallSafeForString`、`classifyGlobalExpr`。
+- **DCE 与表达式重排契约**：
+  - `NaN` / `Infinity` / `undefined` 标记为可常量折叠；明确将 `eval` 排除在纯全局白名单外以防破坏 direct eval 词法作用域语义；
+  - `isPureGlobalPropertyChain("console.log")` 等判定仅表明“读取属性引用本身无副作用”（允许将 `if (a) console.log(b); else console.log(c);` 重排为 `console.log(a ? b : c)`），不代表调用函数本身无副作用；
+  - `isPureGlobalCallSafeForString("Symbol", "for")` 对标 React 产物树摇优化，识别字符串参数下永不抛异常的全局调用。
+
+```cp
+import { classifyGlobalExpr, isPureGlobalPropertyChain } from "cap:bundler";
+
+const f_sym = classifyGlobalExpr("Symbol.for");
+// f_sym.safe_to_reorder_read == true && f_sym.call_is_pure_for_string_arg == true
+const f_eval = classifyGlobalExpr("eval");
+// f_eval.can_be_removed_if_unused == false
+const ok = isPureGlobalPropertyChain("Object.prototype.hasOwnProperty"); // true
+* = f_sym;
+* = f_eval;
+* = ok;
+```
+
 ---
 
 ## 四、 上游行为契约、边界与安全注意事项
