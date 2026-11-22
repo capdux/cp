@@ -9,8 +9,8 @@ import {
     kmeansInitPlusPlus,
     kmeansFit,
     kmeansInertia,
-    silhouetteScore,
-} from "cap:kmeans";
+    kmeansSilhouetteScore,
+} from "cap:ml";
 
 fn absF64(x: f64): f64 {
     return if (x < 0.0) 0.0 - x else x;
@@ -98,7 +98,7 @@ test("1. 2D well-separated 3-cluster convergence, centroid accuracy < 0.1 & Silh
     expect_eq(sse < 0.2, true);
 
     // Silhouette score > 0.85
-    const sil: f64 = silhouetteScore(points[0..], 15, 2, labels, 3) ?? unreachable;
+    const sil: f64 = kmeansSilhouetteScore(points[0..], 15, 2, labels, 3) ?? unreachable;
     expect_eq(sil > 0.85 && sil <= 1.0, true);
 });
 
@@ -157,7 +157,7 @@ test("2. 3D well-separated 3-cluster convergence, centroid accuracy < 0.1 & Silh
         c += 1;
     }
 
-    const sil: f64 = silhouetteScore(points[0..], 12, 3, labels, 3) ?? unreachable;
+    const sil: f64 = kmeansSilhouetteScore(points[0..], 12, 3, labels, 3) ?? unreachable;
     expect_eq(sil > 0.85 && sil <= 1.0, true);
 });
 
@@ -309,14 +309,14 @@ test("5. Invalid parameters and insufficient buffers safely rejected", () => {
 
     // Silhouette rejected for k == 1, k > n, or all-same-label degenerate assignment
     const all_zero: [3]usize = [0, 0, 0];
-    expect_eq(silhouetteScore(points[0..], 3, 2, all_zero[0..], 1) == null, true);
-    expect_eq(silhouetteScore(points[0..], 3, 2, all_zero[0..], 2) == null, true);
-    expect_eq(silhouetteScore(points[0..], 3, 2, all_zero[0..], 4) == null, true);
+    expect_eq(kmeansSilhouetteScore(points[0..], 3, 2, all_zero[0..], 1) == null, true);
+    expect_eq(kmeansSilhouetteScore(points[0..], 3, 2, all_zero[0..], 2) == null, true);
+    expect_eq(kmeansSilhouetteScore(points[0..], 3, 2, all_zero[0..], 4) == null, true);
 
     // Out-of-range label rejected by inertia and silhouette
     const bad_labels: [3]usize = [0, 5, 1];
     expect_eq(kmeansInertia(points[0..], 3, 2, centroids, 2, bad_labels[0..]) == null, true);
-    expect_eq(silhouetteScore(points[0..], 3, 2, bad_labels[0..], 2) == null, true);
+    expect_eq(kmeansSilhouetteScore(points[0..], 3, 2, bad_labels[0..], 2) == null, true);
 });
 
 test("6. High-dimensional (D = 70 > 64 stack block) clustering & sqDist accuracy", () => {
@@ -363,6 +363,6 @@ test("6. High-dimensional (D = 70 > 64 stack block) clustering & sqDist accuracy
     expect_eq(absF64(centroids[c_low * 70 + 69] - 0.05) < 1.0e-9, true);
     expect_eq(absF64(centroids[c_high * 70 + 69] - 10.05) < 1.0e-9, true);
 
-    const sil: f64 = silhouetteScore(pts[0..], 4, 70, labels, 2) ?? unreachable;
+    const sil: f64 = kmeansSilhouetteScore(pts[0..], 4, 70, labels, 2) ?? unreachable;
     expect_eq(sil > 0.95, true);
 });

@@ -16,7 +16,7 @@ import {
     evalFitMetrics,
     polyRootBisect,
     polyRootNewton,
-} from "cap:polyfit";
+} from "cap:ml";
 
 fn absDiff(a: f64, b: f64): f64 {
     if (a >= b) {

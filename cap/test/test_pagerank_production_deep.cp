@@ -11,7 +11,7 @@ import {
     hits,
     topNode,
     sumScores,
-} from "cap:pagerank";
+} from "cap:ml";
 
 fn absDiff(a: f64, b: f64): f64 {
     const d = a - b;

@@ -13,7 +13,7 @@ import {
     PoissonDist,
     AbTestResult,
     HypothesisTest,
-} from "cap:prob";
+} from "cap:ml";
 
 fn approxF64(a: f64, b: f64, eps: f64): bool {
     return @abs(a - b) <= eps;
@@ -188,17 +188,17 @@ fn testHypothesisTesting(): !void {
 }
 
 fn testCapProbLazyMount(): !void {
-    const n = cap.prob.NormalDist.standard();
+    const n = cap.ml.NormalDist.standard();
     expect_eq(approxF64(n.cdf(0.0), 0.5, 1.0e-12), true);
 
-    let r = cap.prob.Rng.init(999);
+    let r = cap.ml.Rng.init(999);
     const u = r.uniform(10.0, 20.0)?;
     expect_eq(u >= 10.0 && u < 20.0, true);
 
-    const b = cap.prob.BinomialDist.init(20, 0.5)?;
+    const b = cap.ml.BinomialDist.init(20, 0.5)?;
     expect_eq(approxF64(b.cdf(20), 1.0, 1.0e-10), true);
 
-    const ab = cap.prob.HypothesisTest.twoProportionZTest(50, 500, 90, 500, 0.05)?;
+    const ab = cap.ml.HypothesisTest.twoProportionZTest(50, 500, 90, 500, 0.05)?;
     expect_eq(ab.significant, true);
 }
 

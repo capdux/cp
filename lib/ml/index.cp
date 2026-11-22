@@ -213,3 +213,100 @@ export {
     MctsConfig,
     MctsTree,
 } from "./mcts.cp";
+
+// --- Wave-2: K-Means++, PageRank/HITS, Polyfit, Probability & Optimization ---
+
+export {
+    KmeansResult,
+    sqDist,
+    kmeansPredictOne,
+    kmeansInitPlusPlus,
+    kmeansFit,
+    kmeansInertia,
+    silhouetteScore as kmeansSilhouetteScore,
+} from "./kmeans.cp";
+
+export {
+    CsrGraph,
+    PageRankResult,
+    HitsResult,
+    pagerank,
+    personalizedPagerank,
+    hits,
+    topNode,
+    sumScores,
+} from "./pagerank.cp";
+
+export {
+    POLYFIT_MAX_DEG,
+    LinearFit,
+    FitMetrics,
+    polyEval,
+    polyDerivEval,
+    polyDerivCoeffs,
+    polyIntegrateCoeffs,
+    linearFit,
+    polyfit,
+    polyfitRidge,
+    evalFitMetrics,
+    polyRootBisect,
+    polyRootNewton,
+} from "./polyfit.cp";
+
+export {
+    ProbError,
+    Rng,
+    NormalDist,
+    ExponentialDist,
+    BinomialDist,
+    PoissonDist,
+    AbTestResult,
+    HypothesisTest,
+} from "./prob.cp";
+
+export {
+    OptError,
+    ScalarFn,
+    VectorFn,
+    GradFn,
+    RootResult,
+    MinResult1D,
+    OptResult,
+    Optimizer,
+} from "./optimize.cp";
+
+export {
+    LinalgError,
+    Matrix,
+    dot,
+    vecNorm1,
+    vecNorm2,
+    vecNormInf,
+    leastSquares,
+} from "./linalg.cp";
+
+// --- AI Dataset Dedup, Guardrails, Experimentation & Pathfinding ---
+
+export {
+    DedupError,
+    SimHashHit,
+    LshHit,
+    SimHash,
+    SimHashIndex,
+    MinHash,
+    LshIndex,
+} from "./dedup.cp";
+
+export {
+    GuardrailError,
+    PiiKind,
+    PiiFinding,
+    RedactionResult,
+    PiiScanner,
+} from "./pii.cp";
+
+export {
+    GuardrailAction,
+    GuardrailVerdict,
+    GuardrailPolicy,
+} from "./policy.cp";

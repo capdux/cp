@@ -20,7 +20,7 @@ import {
     GuardrailAction,
     GuardrailVerdict,
     GuardrailPolicy,
-} from "cap:guardrail";
+} from "cap:ml";
 
 test("cap:guardrail - PiiScanner precision with Luhn validation & secret patterns") {
     const alloc = std.heap.page_allocator;
@@ -157,17 +157,17 @@ test("cap:guardrail - GuardrailPolicy.inspectOutput secret redaction and budget 
 test("cap.guardrail - dynamic lazy namespace mounting via import cap") {
     const alloc = std.heap.page_allocator;
 
-    expect_eq(cap.guardrail.PiiScanner.isValidLuhn("4532015112830366"), true);
+    expect_eq(cap.ml.PiiScanner.isValidLuhn("4532015112830366"), true);
 
-    let res = cap.guardrail.PiiScanner.redactTyped(alloc, "Reach me at +1-415-555-0199") catch unreachable;
+    let res = cap.ml.PiiScanner.redactTyped(alloc, "Reach me at +1-415-555-0199") catch unreachable;
     defer res.deinit(alloc);
     expect_eq(res.finding_count, 1 as usize);
     expect_eq(res.text, "Reach me at [REDACTED:PHONE]");
 
-    let pol = cap.guardrail.GuardrailPolicy.init(alloc);
+    let pol = cap.ml.GuardrailPolicy.init(alloc);
     defer pol.deinit();
     let verdict = pol.inspectInput(alloc, "Normal agent query") catch unreachable;
     defer verdict.deinit(alloc);
-    expect_eq(verdict.action, cap.guardrail.GuardrailAction.Allow);
+    expect_eq(verdict.action, cap.ml.GuardrailAction.Allow);
     expect_eq(verdict.blocked, false);
 }

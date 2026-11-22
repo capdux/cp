@@ -18,7 +18,7 @@ import {
     SimHashIndex,
     MinHash,
     LshIndex,
-} from "cap:dedup";
+} from "cap:ml";
 
 fn exactShingleJaccard(alloc: std.mem.Allocator, a: string, b: string, k: usize): f64 {
     let set_a: std.StringHashMapUnmanaged(void) = .empty;
@@ -195,18 +195,18 @@ test("cap:dedup - LshIndex candidate recall, threshold filtering & zero memory l
 test("cap:dedup - import cap from \"cap\"; cap.dedup dynamic mount verification") {
     const alloc = std.testing.allocator;
 
-    const fp1 = cap.dedup.SimHash.computeText("cap.dedup dynamic mount test document alpha");
-    const fp2 = cap.dedup.SimHash.computeText("cap.dedup dynamic mount test document alpha");
-    expect_eq(cap.dedup.SimHash.hammingDistance(fp1, fp2), 0);
+    const fp1 = cap.ml.SimHash.computeText("cap.dedup dynamic mount test document alpha");
+    const fp2 = cap.ml.SimHash.computeText("cap.dedup dynamic mount test document alpha");
+    expect_eq(cap.ml.SimHash.hammingDistance(fp1, fp2), 0);
 
-    let idx = cap.dedup.SimHashIndex.init(alloc);
+    let idx = cap.ml.SimHashIndex.init(alloc);
     defer idx.deinit();
     * = idx.add("dyn-1", "cap.dedup dynamic mount test document alpha") catch unreachable;
     const hits = idx.queryNearDuplicates(alloc, "cap.dedup dynamic mount test document alpha", 1) catch unreachable;
     defer alloc.free(hits);
     expect_eq(hits.len, 1);
 
-    let lsh = cap.dedup.LshIndex.init(alloc, 16, 4) catch unreachable;
+    let lsh = cap.ml.LshIndex.init(alloc, 16, 4) catch unreachable;
     defer lsh.deinit();
     lsh.insert("dyn-lsh-1", "cap.dedup dynamic LSH mount verification text") catch unreachable;
     const lsh_hits = lsh.queryCandidates(alloc, "cap.dedup dynamic LSH mount verification text", 0.9) catch unreachable;

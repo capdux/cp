@@ -19,7 +19,7 @@ import {
     MinResult1D,
     OptResult,
     Optimizer,
-} from "cap:optimize";
+} from "cap:ml";
 
 fn expectNear(actual: f64, expected: f64, tol: f64) {
     expect_eq(@abs(actual - expected) <= tol, true);
@@ -199,12 +199,12 @@ test("cap:optimize - dynamic mounting via cap.optimize") {
     let dummy: u8 = 0;
     const ctx: *anyopaque = unsafe { *dummy as *anyopaque };
 
-    const r = cap.optimize.Optimizer.brentRoot(ctx, fnCosMinusX, 0.0, 1.0, 0.000000000001, 100) catch unreachable;
+    const r = cap.ml.Optimizer.brentRoot(ctx, fnCosMinusX, 0.0, 1.0, 0.000000000001, 100) catch unreachable;
     expect_eq(r.converged, true);
     expectNear(r.root, 0.7390851332151607, 0.0000000001);
 
     const x0 = [0.0, 0.0];
-    let nm = cap.optimize.Optimizer.nelderMead(alloc, ctx, fnRosenbrock, &x0, 0.2, 0.00000001, 2000) catch unreachable;
+    let nm = cap.ml.Optimizer.nelderMead(alloc, ctx, fnRosenbrock, &x0, 0.2, 0.00000001, 2000) catch unreachable;
     defer nm.deinit(alloc);
     expect_eq(nm.converged, true);
     expectNear(nm.x[0], 1.0, 0.0001);

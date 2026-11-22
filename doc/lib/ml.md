@@ -1,6 +1,6 @@
 # CP 标准库：经典机器学习、聚类与决策搜索套件手册 (`cap:ml`)
 
-> 来源：Pure-CP Zero-Alloc 经典机器学习标准库收敛（18 个算法子模块统一聚合） | 创建日期：2026-11-22
+> 来源：Pure-CP 经典机器学习、概率统计、矩阵优化、图排序与 AI 护栏标准库收敛（26 个算法子模块、27 个实现文件统一聚合） | 更新日期：2026-11-22
 
 ## 一、 架构总览
 
@@ -42,6 +42,19 @@
 | :--- | :--- | :--- |
 | `lib/ml/bandit.cp` | 多臂老虎机 (UCB1 / ε-Greedy / Thompson / EXP3) | `Ucb1Bandit`, `EpsilonGreedyBandit`, `ThompsonBandit`, `Exp3Bandit`, `cumulativeRegret` |
 | `lib/ml/mcts.cp` | 蒙特卡洛树搜索 (MCTS / UCT) | `MctsTree`, `MctsNode`, `MctsConfig`, `MCTS_NO_NODE` |
+
+### 4. K-Means++、图排序、概率统计、矩阵优化与 AI 数据去重/安全护栏（8 个子模块）
+
+| 子模块文件 | 算法领域 | 核心导出符号 |
+| :--- | :--- | :--- |
+| `lib/ml/kmeans.cp` | D 维 K-Means++ 聚类与 Lloyd 迭代 | `kmeansFit`, `kmeansInitPlusPlus`, `kmeansPredictOne`, `kmeansInertia`, `kmeansSilhouetteScore`, `sqDist`, `KmeansResult` |
+| `lib/ml/pagerank.cp` | CSR 稀疏有向图 PageRank / PPR / HITS | `CsrGraph`, `pagerank`, `personalizedPagerank`, `hits`, `topNode`, `sumScores`, `PageRankResult`, `HitsResult` |
+| `lib/ml/polyfit.cp` | 多项式最小二乘拟合、Givens QR 与 Ridge 回归 | `polyfit`, `polyfitRidge`, `linearFit`, `polyEval`, `polyDerivEval`, `polyRootBisect`, `polyRootNewton`, `evalFitMetrics` |
+| `lib/ml/prob.cp` | 概率分布、确定性 RNG 与 A/B 假设检验 | `Rng`, `NormalDist`, `ExponentialDist`, `BinomialDist`, `PoissonDist`, `HypothesisTest`, `AbTestResult`, `ProbError` |
+| `lib/ml/optimize.cp` | 1D 求根/极小化与多维非线性优化 | `Optimizer`, `OptError`, `ScalarFn`, `VectorFn`, `GradFn`, `RootResult`, `MinResult1D`, `OptResult` |
+| `lib/ml/linalg.cp` | 任意维稠密矩阵运算与线性最小二乘 | `Matrix`, `LinalgError`, `dot`, `vecNorm1`, `vecNorm2`, `vecNormInf`, `leastSquares` |
+| `lib/ml/dedup.cp` | AI 语料近重复文档指纹去重（SimHash / MinHash / LSH） | `SimHash`, `SimHashIndex`, `MinHash`, `LshIndex`, `SimHashHit`, `LshHit`, `DedupError` |
+| `lib/ml/pii.cp` / `lib/ml/policy.cp` | AI Agent 安全护栏、PII 扫描脱敏与多级策略拦截 | `PiiScanner`, `PiiKind`, `PiiFinding`, `RedactionResult`, `GuardrailPolicy`, `GuardrailAction`, `GuardrailVerdict`, `GuardrailError` |
 
 ---
 

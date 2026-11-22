@@ -18,7 +18,7 @@ import {
     vecNorm2,
     vecNormInf,
     leastSquares,
-} from "cap:linalg";
+} from "cap:ml";
 
 fn expectNear(actual: f64, expected: f64, tol: f64) {
     expect_eq(@abs(actual - expected) <= tol, true);
@@ -224,7 +224,7 @@ test("cap:linalg - leastSquares overdetermined linear fit y = 2x + 3") {
 test("cap:linalg - dynamic mounting via cap.linalg") {
     const alloc = std.testing.allocator;
 
-    let m = cap.linalg.Matrix.fromSlice(alloc, 2, 2, &[
+    let m = cap.ml.Matrix.fromSlice(alloc, 2, 2, &[
         2.0, 1.0,
         1.0, 3.0,
     ]) catch unreachable;
@@ -236,6 +236,6 @@ test("cap:linalg - dynamic mounting via cap.linalg") {
 
     expectNear(x[0], 2.0, 0.000000001);
     expectNear(x[1], 1.0, 0.000000001);
-    expectNear(cap.linalg.vecNorm2(x), @sqrt(5.0), 0.000000001);
-    expectNear(cap.linalg.dot(x, &b) catch unreachable, 15.0, 0.000000001);
+    expectNear(cap.ml.vecNorm2(x), @sqrt(5.0), 0.000000001);
+    expectNear(cap.ml.dot(x, &b) catch unreachable, 15.0, 0.000000001);
 }
