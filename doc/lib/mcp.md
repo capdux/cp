@@ -544,3 +544,51 @@ pub fn demoMcpResourceSubHub() {
     * = drained; // 1 (etag_version == 2, coalesced_count == 2)
 }
 ```
+
+
+---
+
+## 十四、 零堆分配 JSON-RPC 2.0 / MCP 批处理请求关联器与乱序响应重排引擎 (`batch_dispatcher.cp`)
+
+面向 JSON-RPC 2.0 §6 与 MCP 2025-03-26 批处理请求的 100% 纯 CP 零动态堆分配关联器、乱序响应重排器与超时清扫聚合引擎：
+
+- **常量与枚举**：
+  - `MCP_BATCH_MAX_ITEMS = 64`、`MCP_BATCH_ERR_TIMEOUT = -32001`、`MCP_BATCH_ERR_INVALID_REQUEST = -32600`
+  - `McpBatchEntryKind`（`rpc_request | notification`）、`McpBatchItemState`（`pending | succeeded | failed | timed_out | notification_done`）
+  - `McpBatchSubmitStatus`（`ok | invalid_empty_batch | duplicate_request_id | capacity_full | batch_sealed`）
+  - `McpBatchRecordStatus`（`ok | unknown_request_id | already_completed | batch_finalized`）
+  - `McpBatchOrderMode`（`submission_order | completion_order`）
+- **数据模型**：
+  - `McpBatchItem`、`McpBatchResponseItem`、`McpBatchSummary`（含 `avg_latency_us`、`min/max_latency_us`、`success_rate`、`requires_wire_response` 与拒绝遥测计数）
+- **核心引擎 `McpBatchDispatcher`**：
+  - `init(batch_id)` / `addRequest(*_, request_id, method_hash, submitted_at_ms)` / `addNotification(*_, method_hash, submitted_at_ms)` / `sealBatch(*_)`（空批按规范返回 `invalid_empty_batch`，全通知批自动封口完结且 `requiresWireResponse() == false`）。
+  - `recordResult(*_, request_id, payload_hash, is_error, error_code, latency_us)`：支持异步乱序回传，自动拦截未知 ID、重复写入及已完结批次。
+  - `expirePending(*_, now_ms, deadline_ms)`：批次截止清扫未决 RPC 并自动注入 `-32001` 超时错误。
+  - `collectResponses(order, out_buf: *[]McpBatchResponseItem)`：按原始提交顺序或异步完成顺序重排输出（自动剔除通知条目）。
+  - `requiresWireResponse()` / `isComplete()` / `getItemByRequestId(request_id)` / `summary()`
+
+```cp
+import {
+    McpBatchOrderMode,
+    McpBatchResponseItem,
+    McpBatchDispatcher,
+} from "cap:mcp";
+
+pub fn demoMcpBatchDispatcher() {
+    let batch = McpBatchDispatcher.init(9001);
+    * = batch.addRequest(10, 0xA1, 1000);
+    * = batch.addNotification(0xB1, 1000);
+    * = batch.addRequest(20, 0xA2, 1000);
+    * = batch.sealBatch();
+
+    // 乱序回传：20 先完成，10 后完成
+    * = batch.recordResult(20, 0x2222, false, 0, 150);
+    * = batch.recordResult(10, 0x1111, false, 0, 350);
+
+    // 按原始提交顺序重排输出：[10, 20]（自动跳过通知）
+    let out: [4]McpBatchResponseItem = [McpBatchResponseItem{}; 4];
+    let out_s: []McpBatchResponseItem = out[0..];
+    const n = batch.collectResponses(McpBatchOrderMode.submission_order, *out_s);
+    * = n; // 2
+}
+```
