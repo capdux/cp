@@ -162,3 +162,32 @@ pub fn demoPhaseASys(): !void {
 | 服务编排与架构（Batch 40） | `lib/sys/di.cp` | Dependency Injection & IoC | `ServiceContainer`、`ServiceScope`、Singleton/Scoped/Transient 生命周期与循环依赖检测 |
 | 服务编排与架构（Batch 40） | `lib/sys/pipeline.cp` | Onion Middleware Pipeline | 可组合洋葱中间件与多阶段流水线 (`Pipeline`, `PipelineContext`, `StageSpec`) |
 | 服务编排与架构（Batch 40） | `lib/sys/pubsub_topic.cp` / `lib/sys/pubsub_broker.cp` | NATS / MQTT Wildcard Pub/Sub | 进程内通配符发布订阅代理、背压丢弃策略与 Retained 消息重放 |
+| 并发与批量通道 | `lib/sys/byte_ring.cp` | 2-Pow Bitmask Byte/Frame Ring | `ByteRingQueue` / `ByteRingStats`：零堆分配 2 的幂位掩码批量环形字节队列与 4B 小端长度前缀帧原语 |
+
+---
+
+### 零堆分配 2 的幂掩码批量环形字节/帧队列示例 (`byte_ring.cp`)
+
+```cp
+import {
+    ByteRingQueue,
+} from "cap:sys";
+
+pub fn demoByteRingQueue() {
+    let storage: [64]u8 = [0; 64]; // 必须为 >= 2 的 2 的幂次
+    let ring = ByteRingQueue.init(storage[0..]) ?? return;
+
+    // 1. 4 字节小端长度前缀原子帧写入/读取（零粘包）
+    * = ring.writeFrame("agent-event-1");
+    * = ring.writeFrame("agent-event-2");
+
+    let frame_buf: [32]u8 = [0; 32];
+    if (n1 := ring.readFrame(frame_buf[0..])) {
+        * = frame_buf[0..n1]; // "agent-event-1"
+    }
+    if (n2 := ring.readFrame(frame_buf[0..])) {
+        * = frame_buf[0..n2]; // "agent-event-2"
+    }
+    * = ring.stats();
+}
+```

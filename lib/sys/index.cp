@@ -1249,3 +1249,9 @@ export {
     BrokerStats,
     PubSubBroker,
 } from "./pubsub_broker.cp";
+
+// --- byte_ring (Power-of-Two Bitmask Batch Ring Byte & Framed Queue) ---
+export {
+    ByteRingStats,
+    ByteRingQueue,
+} from "./byte_ring.cp";
