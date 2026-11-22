@@ -268,3 +268,13 @@ export {
     LeaseManagerStats,
     LeaseLockManager,
 } from "./leaseLock.cp";
+
+export {
+    TIMELIKE_NS_PER_S,
+    TIMELIKE_NS_PER_MS,
+    TIMELIKE_MS_PER_S,
+    UTIME_NOW_LINUX,
+    UTIME_OMIT_LINUX,
+    TimeLikeError,
+    TimeLikeSpec,
+} from "./timeLike.cp";

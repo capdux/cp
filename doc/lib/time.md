@@ -358,6 +358,37 @@ pub fn demoLeaseLock() {
 
 ---
 
+## 零分配 POSIX 文件时间戳规范化器（`timeLike.cp`）
+
+吸收自 `/data/dev/bun/src/runtime/node/time_like.cp`（对应 Node/Bun `fs.utimes` / `utimensat(2)` 的 `TimeLike` 规范化契约，参考 `/data/dev/bun/docs/runtime/nodejs-compat.mdx`）：
+
+- **常量与错误集**：
+  - `TIMELIKE_NS_PER_S` (`1_000_000_000`)、`TIMELIKE_NS_PER_MS` (`1_000_000`)、`TIMELIKE_MS_PER_S` (`1_000`)
+  - `UTIME_NOW_LINUX` (`0x3fffffff`)、`UTIME_OMIT_LINUX` (`0x3ffffffe`)
+  - `TimeLikeError`（`NonFinite` | `InvalidNumericString` | `OutOfRange`）
+- **核心结构体 `TimeLikeSpec`**：
+  - `nowSentinel()` / `omitSentinel()` / `isNow()` / `isOmit()` / `isSpecial()`：生成与检测 Linux `utimensat(2)` `UTIME_NOW` / `UTIME_OMIT` 哨兵值；
+  - `fromSeconds(seconds: f64)` / `fromNumericString(raw: []const u8)`：遵循 Node/Bun `fs.utimes` 契约——拒绝 `NaN`/`Infinity`，负数自动映射为 `UTIME_NOW` 哨兵，正数拆分为严格归一化 `(sec, nsec)`；
+  - `fromUnixSeconds(seconds: f64)` / `fromMilliseconds(ms: f64)`：保留 1970 之前负时间戳并执行向下取整与纳秒借位归一化（保证 `0 <= nsec < 1_000_000_000`）；
+  - `toFloatSeconds()` / `toUnixMillis()` / `eql(other)`。
+- **POSIX `utimensat(2)` 权限最佳实践**：
+  - 当 `atime`/`mtime` 均使用 `UTIME_NOW` 时，调用进程仅需文件写权限即可更新时间戳；若指定显式时间戳，则要求进程为文件所有者或具备特权；若均为 `UTIME_OMIT`，内核跳过所有权检查且不修改时间戳。
+
+### QuickStart 示例
+
+```cp
+import { TimeLikeSpec } from "cap:time";
+
+pub fn demoTimeLike() {
+    const t1 = TimeLikeSpec.fromNumericString("1700000000.25") catch TimeLikeSpec{};
+    const t2 = TimeLikeSpec.fromMilliseconds(-250.0) catch TimeLikeSpec{}; // sec=-1, nsec=750_000_000
+    const now_s = TimeLikeSpec.fromSeconds(-1.0) catch TimeLikeSpec{};     // UTIME_NOW_LINUX
+    * = t1; * = t2; * = now_s;
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [health.md](time/health.md)
