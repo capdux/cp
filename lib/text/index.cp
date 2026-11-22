@@ -87,3 +87,11 @@ export {
     unigramDecode,
     normalizeSentencePiece,
 } from "./unigram.cp";
+
+export {
+    MdSectionKind,
+    MdChunkConfig,
+    MdHeadingTrail,
+    MdChunkSpan,
+    chunkMarkdownStructured,
+} from "./markdown_chunk.cp";

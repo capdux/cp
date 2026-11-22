@@ -284,6 +284,54 @@ pub fn demoUnigramViterbi() {
 
 ---
 
+## 零堆分配 RAG Markdown 结构感知分块与标题面包屑索引器 (`lib/text/markdown_chunk.cp`)
+
+专为 RAG 知识库索引打造的纯 CP 零堆分配 Markdown 结构分块器，在切分同时自动维护 6 级标题层级路径（面包屑），并保护围栏代码块与 GFM 表格不被撕裂：
+
+- **`MdSectionKind`**：`Prose` \| `CodeBlock` \| `Table` \| `List`
+- **`MdChunkConfig`**：`{ max_chars: usize = 512, min_chars: usize = 64, keep_code_blocks_intact: bool = true, keep_tables_intact: bool = true }`（提供 `MdChunkConfig.default()`）
+- **`MdHeadingTrail`**：固定 6 级 ATX 标题栈（`H1..H6` 字节起止偏移），提供：
+  - `setHeading(*_, level, start, end)` / `clear(*_)` / `depth()` / `headingText(src, level): string?`
+  - `formatBreadcrumb(src, out_buf: *[]u8): usize?`：零堆分配格式化层级路径（如 `"Intro > Setup > Install"`），缓冲不足返回 `null`。
+- **`MdChunkSpan`**：`{ start, end, start_line, end_line, kind, heading_level, trail: MdHeadingTrail }`（1-based 精确行号，提供 `slice(src): string` 零拷贝切片方法）
+- **`chunkMarkdownStructured(src, cfg, out_chunks: *[]MdChunkSpan): usize`**：
+  - 识别非代码块内的 `#`..`######` 标题并更新面包屑（```` ``` ```` / `~~~` 围栏代码块内部 `#` 注释行绝不误判为标题）；
+  - `keep_code_blocks_intact` / `keep_tables_intact` 保护围栏代码块与 GFM 表格完整不撕裂；
+  - 超长段落与列表按换行、空格与 UTF-8 码点边界安全切分，同标题下相邻短段落按 `min_chars` 合并减少碎片；
+  - 输出切片截断安全，始终返回总块数（`src.len == 0` 或 `max_chars == 0` 返回 `0`）。
+
+```typescript
+import {
+    MdChunkConfig,
+    MdChunkSpan,
+    chunkMarkdownStructured,
+} from "cap:text";
+
+pub fn demoMarkdownStructuredChunk(doc: string) {
+    let chunks_buf: [16]MdChunkSpan = [MdChunkSpan{}; 16];
+    let chunks: []MdChunkSpan = chunks_buf[0..];
+    const cfg = MdChunkConfig{
+        max_chars: 256,
+        min_chars: 32,
+        keep_code_blocks_intact: true,
+        keep_tables_intact: true,
+    };
+
+    const total = chunkMarkdownStructured(doc, cfg, chunks);
+    let crumb_buf: [128]u8 = [0; 128];
+    let crumb: []u8 = crumb_buf[0..];
+    let i: usize = 0;
+    while (i < total && i < chunks.len) : (i += 1) {
+        if (n := chunks[i].trail.formatBreadcrumb(doc, crumb)) {
+            * = crumb[0..n];
+            * = chunks[i].slice(doc);
+        }
+    }
+}
+```
+
+---
+
 ## 上游行为契约与文本处理边界注意事项
 
 1. **UTF-8 码点边界安全不变式**：
