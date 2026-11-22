@@ -17,7 +17,7 @@ import {
     RTreeEntry,
     NearestRect,
     RTree,
-} from "cap:rtree";
+} from "cap:ds";
 
 fn sortIds(ids: []u64) {
     let i: usize = 0;
@@ -280,12 +280,12 @@ test("cap:rtree - removeById tightening, full drain, InvalidBox & InvalidCapacit
 
 test("cap.rtree - dynamic cap.rtree mounting & Rect geometry helpers") {
     const alloc = std.testing.allocator;
-    let tree = cap.rtree.RTree<u64>.init(alloc) catch unreachable;
+    let tree = cap.ds.RTree<u64>.init(alloc) catch unreachable;
     defer tree.deinit();
 
-    const r1 = cap.rtree.Rect.init(0.0, 0.0, 4.0, 4.0) catch unreachable;
-    const r2 = cap.rtree.Rect.init(1.0, 1.0, 3.0, 3.0) catch unreachable;
-    const r3 = cap.rtree.Rect.init(4.0, 4.0, 6.0, 6.0) catch unreachable;
+    const r1 = cap.ds.Rect.init(0.0, 0.0, 4.0, 4.0) catch unreachable;
+    const r2 = cap.ds.Rect.init(1.0, 1.0, 3.0, 3.0) catch unreachable;
+    const r3 = cap.ds.Rect.init(4.0, 4.0, 6.0, 6.0) catch unreachable;
 
     expect_eq(r1.containsRect(r2), true);
     expect_eq(r2.containsRect(r1), false);

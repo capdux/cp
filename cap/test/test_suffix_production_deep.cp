@@ -9,7 +9,7 @@ import {
     findPatternRange,
     countDistinctSubstrings,
     longestRepeatedSubstring,
-} from "cap:suffix";
+} from "cap:ds";
 
 fn bytesEqual(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

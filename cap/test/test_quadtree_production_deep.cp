@@ -15,7 +15,7 @@ import {
     QuadEntry,
     QuadHit,
     QuadTree,
-} from "cap:quadtree";
+} from "cap:ds";
 
 fn nextRand(state: *u64): f64 {
     state.* = state.* *% 6364136223846793005 +% 1442695040888963407;
@@ -301,7 +301,7 @@ test("cap:quadtree - remove, update relocation, node collapse & zero memory leak
 
 test("cap.quadtree - dynamic lazy-mount equivalence via import cap") {
     const alloc = std.testing.allocator;
-    let qt = cap.quadtree.QuadTree.init(alloc, -100.0, -100.0, 100.0, 100.0, 4, 6) catch unreachable;
+    let qt = cap.ds.QuadTree.init(alloc, -100.0, -100.0, 100.0, 100.0, 4, 6) catch unreachable;
     defer qt.deinit();
 
     qt.insert(101, 10.0, 10.0) catch unreachable;

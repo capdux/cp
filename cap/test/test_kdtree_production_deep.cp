@@ -15,7 +15,7 @@ import {
     KdPointEntry,
     KdNeighbor,
     KdTree,
-} from "cap:kdtree";
+} from "cap:ds";
 
 fn nextRandState(state: u64): u64 {
     return state *% 6364136223846793005 +% 1442695040888963407;
@@ -328,7 +328,7 @@ test("cap:kdtree - InvalidDimension, DimensionMismatch, InvalidRadius & InvalidB
 test("cap:kdtree - cap.kdtree dynamic mounting & std.testing.allocator zero-leak") {
     const alloc = std.testing.allocator;
 
-    let tree = cap.kdtree.KdTree<u64>.initEmpty(alloc, 4) catch unreachable;
+    let tree = cap.ds.KdTree<u64>.initEmpty(alloc, 4) catch unreachable;
     defer tree.deinit();
 
     const a: [4]f64 = [1.0, 2.0, 3.0, 4.0];

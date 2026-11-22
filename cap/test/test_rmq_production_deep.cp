@@ -13,7 +13,7 @@ import {
     EulerLca,
     slidingWindowMin,
     slidingWindowMax,
-} from "cap:rmq";
+} from "cap:ds";
 
 fn bruteMin(vals: []const i64, l: usize, r: usize): i64 {
     let best = vals[l];

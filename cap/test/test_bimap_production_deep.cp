@@ -1,6 +1,6 @@
 // Source: native-cp-stdlib (Bidirectional 1-to-1 Map)
 import * as zstd from "zig:std";
-import { BiMap, BiMapError, StringBiMap } from "cap:bimap";
+import { BiMap, BiMapError, StringBiMap } from "cap:ds";
 import cap from "cap";
 import { test, expect_eq } from "cap:test";
 
@@ -120,13 +120,13 @@ test "StringBiMap deep copy management and removeByLeft/removeByRight" {
 
 test "cap.bimap dynamic mount and zero-leak verification" {
     const alloc = zstd.testing.allocator;
-    let bm = cap.bimap.BiMap(u32, u64).init(alloc);
+    let bm = cap.ds.BiMap(u32, u64).init(alloc);
     defer bm.deinit();
 
     try bm.insert(42, 4200);
     expect_eq(bm.getLeft(4200).?, 42);
 
-    let sbm = cap.bimap.StringBiMap.init(alloc);
+    let sbm = cap.ds.StringBiMap.init(alloc);
     defer sbm.deinit();
 
     try sbm.insert("alpha", "beta");

@@ -1,0 +1,151 @@
+// Source: cp/lib/ds/index.cp (Unified Exports for cap:ds)
+// Unified Public Exports for General-Purpose Data Structures, Spatial Indexes, String Matching & Probabilistic Sketches (cap:ds & cap.ds)
+
+// --- Ordered Trees, Range Queries & Disjoint Sets ---
+
+export {
+    TREAP_NIL,
+    TreapNode,
+    TreapEntry,
+    Treap,
+} from "./treap.cp";
+
+export {
+    floorLog2,
+    sparseTableCells,
+    gcdU64,
+    RmqMin,
+    RmqMax,
+    RmqArgMin,
+    RangeGcd,
+    EulerLca,
+    slidingWindowMin,
+    slidingWindowMax,
+} from "./rmq.cp";
+
+export {
+    SkipListError,
+    SkipEntry,
+    SkipList,
+} from "./skiplist.cp";
+
+export {
+    SegTreeError,
+    RangeStats,
+    FenwickTree,
+    LazySegmentTree,
+} from "./segtree.cp";
+
+export {
+    DsuError,
+    DisjointSet,
+    WeightedDsu,
+    RollbackDsu,
+} from "./dsu.cp";
+
+export {
+    IntervalError,
+    Interval,
+    IntervalTree,
+} from "./interval_tree.cp";
+
+// --- Spatial Indexes ---
+
+export {
+    QuadError,
+    QuadEntry,
+    QuadHit,
+    QuadTree,
+} from "./quadtree.cp";
+
+export {
+    KdError,
+    KdPointEntry,
+    KdNeighbor,
+    KdTree,
+} from "./kdtree.cp";
+
+export {
+    RTreeError,
+    Rect,
+    RTreeEntry,
+    NearestRect,
+    RTree,
+} from "./rtree.cp";
+
+// --- String Matching & Text Buffers ---
+
+export {
+    SuffixWorkspace,
+    OccurrenceRange,
+    LongestRepeat,
+    buildSuffixArray,
+    buildLcpArray,
+    findPatternRange,
+    countDistinctSubstrings,
+    longestRepeatedSubstring,
+} from "./suffix.cp";
+
+export {
+    PalindromeSpan,
+    computePrefixFunction,
+    kmpFindFirst,
+    kmpFindAll,
+    kmpCount,
+    shortestPeriod,
+    computeZArray,
+    manacherLongestPalindrome,
+    countPalindromicSubstrings,
+} from "./kmp.cp";
+
+export {
+    Match,
+    AhoCorasick,
+} from "./aho_corasick.cp";
+
+export {
+    Rope,
+    RopeError,
+    Node,
+    NodePtr,
+} from "./rope.cp";
+
+// --- Maps, Buffers, Bitsets & Probabilistic Sketches ---
+
+export {
+    BiMap,
+    BiMapError,
+    StringBiMap,
+} from "./bimap.cp";
+
+export {
+    RingError,
+    RingBuffer,
+} from "./circ_buf.cp";
+
+export {
+    BitSet,
+    BitSetError,
+} from "./bitset.cp";
+
+export {
+    CuckooError,
+    CuckooStats,
+    CuckooFilter,
+} from "./cuckoo.cp";
+
+export {
+    HllError,
+    HyperLogLog,
+} from "./hll.cp";
+
+export {
+    RoaringError,
+    RoaringBitmap,
+} from "./roaring.cp";
+
+export {
+    TDigestError,
+    Centroid,
+    TDigest,
+} from "./tdigest.cp";

@@ -2,7 +2,7 @@
 
 import std from "std";
 import { test, expect_eq } from "cap:test";
-import { Rope, RopeError } from "cap:rope_text";
+import { Rope, RopeError } from "cap:ds";
 import cap from "cap";
 
 test "rope_text: large fromSlice and random insert/delete with zero leaks" {
@@ -124,7 +124,7 @@ test "rope_text: bounds and invalid range error interception" {
 
 test "rope_text: dynamic cap.rope_text mount and full delete to empty" {
     const alloc = std.testing.allocator;
-    let r = try cap.rope_text.Rope.fromSlice(alloc, "dynamic\nmount\ncheck");
+    let r = try cap.ds.Rope.fromSlice(alloc, "dynamic\nmount\ncheck");
     defer r.deinit();
 
     expect_eq(r.lineCount(), 3);

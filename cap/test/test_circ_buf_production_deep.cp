@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { RingError, RingBuffer } from "cap:circ_buf";
+import { RingError, RingBuffer } from "cap:ds";
 
 test "circ_buf: FIFO push/popFront and wrap-around indexing" {
     const alloc = std.testing.allocator;
@@ -73,7 +73,7 @@ test "circ_buf: error guards for zero capacity and OOB get" {
 
 test "circ_buf: cap.circ_buf dynamic mount & zero leak" {
     const alloc = std.testing.allocator;
-    let rb = try cap.circ_buf.RingBuffer(u64).init(alloc, 2);
+    let rb = try cap.ds.RingBuffer(u64).init(alloc, 2);
     defer rb.deinit();
     * = rb.pushOverwrite(99);
     try expect_eq(rb.popFront().?, 99);

@@ -13,7 +13,7 @@ import cap from "cap";
 import {
     RoaringError,
     RoaringBitmap,
-} from "cap:roaring";
+} from "cap:ds";
 
 test("cap:roaring - sparse ArrayContainer ops, dedup, min/max, rank & empty boundaries") {
     const alloc = std.testing.allocator;
@@ -258,7 +258,7 @@ test("cap:roaring - serialize/deserialize roundtrip & InvalidSerializedData vali
 
 test("cap:roaring - cap.roaring dynamic mounting & clone isolation") {
     const alloc = std.testing.allocator;
-    let a = cap.roaring.RoaringBitmap.init(alloc);
+    let a = cap.ds.RoaringBitmap.init(alloc);
     defer a.deinit();
 
     a.addRange(1000, 6000) catch unreachable;

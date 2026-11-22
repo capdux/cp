@@ -4,7 +4,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { SkipList, SkipEntry, SkipListError } from "cap:skiplist";
+import { SkipList, SkipEntry, SkipListError } from "cap:ds";
 
 test("1. out-of-order 1024-key insertion, strict lexicographical rangeScan, upsert overwrite and key ownership") {
     const alloc = std.testing.allocator;
@@ -218,7 +218,7 @@ test("4. InvalidMaxLevel, InvalidRange error guards and zero-length empty key bo
 
 test("5. cap.skiplist dynamic mounting, 32-level tower and std.testing.allocator zero-leak check") {
     const alloc = std.testing.allocator;
-    let sl = cap.skiplist.SkipList<i64>.initWithSeed(alloc, 32, 987654321)?;
+    let sl = cap.ds.SkipList<i64>.initWithSeed(alloc, 32, 987654321)?;
     defer sl.deinit();
 
     * = sl.upsert("wal:003", 300)?;

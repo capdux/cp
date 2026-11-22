@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { Match, AhoCorasick } from "cap:aho_corasick";
+import { Match, AhoCorasick } from "cap:ds";
 
 test "aho_corasick: classic ushers overlapping multi-pattern match" {
     const alloc = std.testing.allocator;
@@ -63,7 +63,7 @@ test "aho_corasick: empty pattern list and empty pattern ignored" {
 test "aho_corasick: cap.aho_corasick dynamic mount & zero leak" {
     const alloc = std.testing.allocator;
     const pats: [2][]const u8 = [ "foo", "bar" ];
-    let ac = try cap.aho_corasick.AhoCorasick.init(alloc, &pats);
+    let ac = try cap.ds.AhoCorasick.init(alloc, &pats);
     defer ac.deinit(alloc);
     try expect_eq(ac.containsAny("foobar"), true);
 }

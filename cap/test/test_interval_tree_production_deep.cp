@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { IntervalError, IntervalTree } from "cap:interval_tree";
+import { IntervalError, IntervalTree } from "cap:ds";
 
 test "interval_tree: overlap queries and pruning correctness" {
     const alloc = std.testing.allocator;
@@ -66,7 +66,7 @@ test "interval_tree: InvalidInterval guard" {
 
 test "interval_tree: cap.interval_tree dynamic mount & zero leak" {
     const alloc = std.testing.allocator;
-    let tree = cap.interval_tree.IntervalTree(i64, i64).init(alloc);
+    let tree = cap.ds.IntervalTree(i64, i64).init(alloc);
     defer tree.deinit();
     try tree.insert(1, 5, 99);
     const hits = try tree.queryPoint(alloc, 3);

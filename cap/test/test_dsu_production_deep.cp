@@ -15,7 +15,7 @@ import {
     DisjointSet,
     WeightedDsu,
     RollbackDsu,
-} from "cap:dsu";
+} from "cap:ds";
 
 test("cap:dsu - DisjointSet large-scale merges, path compression, groups & reset") {
     const alloc = std.testing.allocator;
@@ -197,17 +197,17 @@ test("cap:dsu - IndexOutOfBounds rejection & n=0 empty-set boundaries") {
 test("cap.dsu - dynamic cap.dsu namespace mounting & std.testing.allocator zero leaks") {
     const alloc = std.testing.allocator;
 
-    let dsu = cap.dsu.DisjointSet.init(alloc, 4) catch unreachable;
+    let dsu = cap.ds.DisjointSet.init(alloc, 4) catch unreachable;
     defer dsu.deinit();
     expect_eq(dsu.unite(0, 3) catch unreachable, true);
     expect_eq(dsu.connected(0, 3) catch unreachable, true);
 
-    let wdsu = cap.dsu.WeightedDsu.init(alloc, 3) catch unreachable;
+    let wdsu = cap.ds.WeightedDsu.init(alloc, 3) catch unreachable;
     defer wdsu.deinit();
     expect_eq(wdsu.relate(0, 2, 42) catch unreachable, true);
     expect_eq((wdsu.diff(0, 2) catch unreachable).?, 42);
 
-    let rdsu = cap.dsu.RollbackDsu.init(alloc, 3) catch unreachable;
+    let rdsu = cap.ds.RollbackDsu.init(alloc, 3) catch unreachable;
     defer rdsu.deinit();
     const snap = rdsu.snapshot();
     expect_eq(rdsu.unite(1, 2) catch unreachable, true);

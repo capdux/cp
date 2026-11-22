@@ -10,7 +10,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { HyperLogLog, HllError } from "cap:hll";
+import { HyperLogLog, HllError } from "cap:ds";
 
 test("cap:hll - small cardinality (0, 10, 100 with duplicates) LinearCounting") {
     const alloc = std.testing.allocator;
@@ -177,7 +177,7 @@ test("cap:hll - serialize/deserialize round-trip & malformed/precision error int
 test("cap:hll - import cap from \"cap\"; cap.hll dynamic mounting & zero leak") {
     const alloc = std.testing.allocator;
 
-    let hll = cap.hll.HyperLogLog.init(alloc, 12) catch unreachable;
+    let hll = cap.ds.HyperLogLog.init(alloc, 12) catch unreachable;
     defer hll.deinit();
 
     hll.add("alpha");

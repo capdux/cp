@@ -15,7 +15,7 @@ import {
     RangeStats,
     FenwickTree,
     LazySegmentTree,
-} from "cap:segtree";
+} from "cap:ds";
 
 test("cap:segtree - FenwickTree O(N) build, add/set, rangeSum & lowerBoundPrefix") {
     const alloc = std.testing.allocator;
@@ -228,12 +228,12 @@ test("cap:segtree - import cap from \"cap\"; cap.segtree dynamic mounting & zero
     const alloc = std.testing.allocator;
     const vals: [4]i64 = [ 10, 20, 30, 40 ];
 
-    let bit = cap.segtree.FenwickTree.fromSlice(alloc, vals[0..]) catch unreachable;
+    let bit = cap.ds.FenwickTree.fromSlice(alloc, vals[0..]) catch unreachable;
     defer bit.deinit();
     expect_eq(bit.rangeSum(1, 3) catch unreachable, 50);
     expect_eq(bit.lowerBoundPrefix(35).?, 2);
 
-    let seg = cap.segtree.LazySegmentTree.init(alloc, vals[0..]) catch unreachable;
+    let seg = cap.ds.LazySegmentTree.init(alloc, vals[0..]) catch unreachable;
     defer seg.deinit();
     seg.rangeAssign(0, 2, 5) catch unreachable;
     seg.rangeAdd(1, 4, 3) catch unreachable; // [5, 8, 33, 43]

@@ -3,7 +3,7 @@
 import * as std from "std";
 import cap from "cap";
 import { test, expect_eq } from "cap:test";
-import { BitSet, BitSetError } from "cap:bitset_simd";
+import { BitSet, BitSetError } from "cap:ds";
 
 test "bitset_simd: cross-word set/unset/toggle and setRange" {
     const alloc = std.testing.allocator;
@@ -162,7 +162,7 @@ test "bitset_simd: initFull tail masking, equals and bounds checks" {
 
 test "bitset_simd: dynamic mount cap.bitset_simd and zero-leak check" {
     const alloc = std.testing.allocator;
-    let dyn_bs = cap.bitset_simd.BitSet.initEmpty(alloc, 128)?;
+    let dyn_bs = cap.ds.BitSet.initEmpty(alloc, 128)?;
     defer dyn_bs.deinit();
 
     dyn_bs.set(5)?;

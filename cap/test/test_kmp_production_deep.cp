@@ -12,7 +12,7 @@ import {
     computeZArray,
     manacherLongestPalindrome,
     countPalindromicSubstrings,
-} from "cap:kmp";
+} from "cap:ds";
 
 fn bruteLcp(s: []const u8, i: usize): usize {
     let k: usize = 0;

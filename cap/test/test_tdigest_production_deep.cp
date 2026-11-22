@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { TDigestError, TDigest } from "cap:tdigest";
+import { TDigestError, TDigest } from "cap:ds";
 
 test "tdigest: 10000 uniform samples p50, p95, p99 accuracy" {
     const alloc = std.testing.allocator;
@@ -65,7 +65,7 @@ test "tdigest: error guards for empty, invalid compression, and invalid quantile
 
 test "tdigest: cap.tdigest dynamic mount & zero leak" {
     const alloc = std.testing.allocator;
-    let td = try cap.tdigest.TDigest.init(alloc, 50.0);
+    let td = try cap.ds.TDigest.init(alloc, 50.0);
     defer td.deinit();
     try td.observe(10.0);
     try td.observe(20.0);

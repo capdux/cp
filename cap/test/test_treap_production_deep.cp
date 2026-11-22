@@ -7,7 +7,7 @@ import {
     TreapNode,
     TreapEntry,
     Treap,
-} from "cap:treap";
+} from "cap:ds";
 
 test("1. Sequential, reverse & shuffled insertions + in-place updates with invariant checks", () => {
     expect_eq(TREAP_NIL, 0xFFFFFFFF as u32);

@@ -14,7 +14,7 @@ import {
     CuckooError,
     CuckooStats,
     CuckooFilter,
-} from "cap:cuckoo";
+} from "cap:ds";
 
 fn formatKey(buf: []u8, prefix: string, num: usize): []const u8 {
     let pos: usize = 0;
@@ -218,7 +218,7 @@ test("cap:cuckoo - stats, loadFactor, clear, InvalidCapacity & std.testing.alloc
 
 test("cap.cuckoo - dynamic mounting via import cap from \"cap\"") {
     const alloc = std.testing.allocator;
-    let cf = cap.cuckoo.CuckooFilter.init(alloc, 32) catch unreachable;
+    let cf = cap.ds.CuckooFilter.init(alloc, 32) catch unreachable;
     defer cf.deinit();
 
     cf.insert("route:/api/v1/chat") catch unreachable;
