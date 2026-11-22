@@ -98,6 +98,21 @@ pub fn demoPhaseAIo(): !void {
    - 底层 `Reader.read` 允许返回少于请求长度的字节数（返回 `0` 表示 EOF），循环聚合请使用 `copyStream` / `copyN` / `PipeReader.readToEnd`；使用 `BufferedWriter` 时在关闭流前必须调用 `flush()` 避免尾部缓冲数据丢失。
 4. **标准流与惰性文件引用（参考 `/data/dev/bun/docs/runtime/file-io.mdx`）**：
    - `Stdio` / `Console` 封装标准输入输出与错误流；面向文件偏移的 `FileReader` (`pread`) 与 `FileWriter` (`pwrite`) 支持定位读写且不影响内核共享文件偏移指针。
+5. **增量字节汇聚器与流式批刷盘（`arrayBufferSink.cp`，吸收自 `/data/dev/bun/src/runtime/webcore/ArrayBufferSink.cp` & `/data/dev/bun/docs/runtime/streams.mdx`）**：
+   - `ArrayBufferSink` 提供 8KB 固定零堆分配缓冲区（`ARRAY_BUFFER_SINK_CAP = 8192`），支持 `write`（UTF-8/二进制）、`writeLatin1`（ISO-8859-1 转 UTF-8）、`writeUtf16`（含代理对解码与孤立代理转 `U+FFFD`）；
+   - **流式刷盘模式（`stream: true`）**：按 `highWaterMark` 触发 `shouldFlush()` 后调用 `flush(out)` 导出当前分块并归零内部缓冲继续复用，避免频繁碎片化 `socket.write()`；
+   - **终态契约（`end(out)`）**：调用 `end()` 后标记终态，后续写入返回 `ArrayBufferSinkError.SinkEnded` 直至显式调用 `start(opts)` 重置。
+
+```cp
+import { ArrayBufferSink, ArrayBufferSinkOptions } from "cap:io";
+
+let sink = ArrayBufferSink.init();
+sink.start(ArrayBufferSinkOptions { stream: true, high_water_mark: 1024 });
+* = sink.write("hel")?;
+let chunk: [64]u8 = [0; 64];
+const res = sink.flush(chunk[0..])?; // res.bytes_flushed == 3, 内部缓冲自动清零复用
+* = res;
+```
 
 ---
 

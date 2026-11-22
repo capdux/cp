@@ -66,3 +66,12 @@ export {
     FileReader,
     FileWriter
 } from "./fileStream";
+
+export {
+    ARRAY_BUFFER_SINK_CAP,
+    ARRAY_BUFFER_SINK_DEFAULT_HWM,
+    ArrayBufferSinkError,
+    ArrayBufferSinkOptions,
+    SinkFlushResult,
+    ArrayBufferSink,
+} from "./arrayBufferSink";
