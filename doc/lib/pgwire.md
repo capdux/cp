@@ -497,6 +497,26 @@ const f2 = r.readFrame(PG_DEFAULT_MAX_FRAME_BYTES)?; // tag='S', payload=""
 * = f1; * = f2;
 ```
 
+### 零堆分配大端序线协议写入器与长度书签（`wireWriter.cp`）
+
+> 吸收自 `/data/dev/bun/src/sql/postgres/protocol/NewWriter.cp`，与 `PgStackReader` 严格对称：提供大端定长整数/IEEE-754 浮点编码、严格 NUL 终结 C 字符串（`writeCString`/`writeStringZ`）、可空前缀字段（`writeNullableBytes`）以及 `beginFrame`/`beginLength` + `finishLength` 零拷贝长度回填书签。
+
+- 核心导出：`PG_LENGTH_PLACEHOLDER_LEN`（`4`）、`PgWireWriterError`（`BufferTooSmall`/`InvalidBookmark`/`LengthOverflow`/`EmbeddedNul`）、`PgLengthBookmark`、`PgWireWriter`。
+
+```cp
+import { PgWireWriter, PgStackReader, PG_DEFAULT_MAX_FRAME_BYTES } from "cap:pgwire";
+
+let buf: [128]u8 = [0; 128];
+let w = PgWireWriter.init(buf[0..]);
+const bm = w.beginFrame('Q')?;
+* = w.writeCString("SELECT 1")?;
+* = w.finishLength(bm)?;
+
+let r = PgStackReader.init(w.written());
+const frame = r.readFrame(PG_DEFAULT_MAX_FRAME_BYTES)?;
+* = frame.tag; // 'Q'
+```
+
 ---
 
 ## 4. 示例

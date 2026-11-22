@@ -262,3 +262,10 @@ export {
     PgWireFrameSlice,
     PgStackReader,
 } from "./stackReader.cp";
+
+export {
+    PG_LENGTH_PLACEHOLDER_LEN,
+    PgWireWriterError,
+    PgLengthBookmark,
+    PgWireWriter,
+} from "./wireWriter.cp";
