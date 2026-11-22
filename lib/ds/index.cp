@@ -316,3 +316,12 @@ export {
     OrSetCrdt,
     LwwRegister64,
 } from "./orSet.cp";
+
+// --- sparseSet (Zero-Alloc O(1) SparseSet & ECS Dense SparseMapU64) ---
+export {
+    SPARSE_SET_UNIVERSE,
+    SPARSE_SET_INVALID_IDX,
+    SparseSetStats,
+    SparseSet,
+    SparseMapU64,
+} from "./sparseSet.cp";

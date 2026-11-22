@@ -452,6 +452,36 @@ pub fn demoOrSetCrdt() {
 }
 ```
 
+### 零分配 O(1) SparseSet 整数集合与 ECS 密集键值映射引擎 (`sparseSet.cp`)
+
+面向 ECS 实体组件系统、图算法访问集合与高频重置场景的 100% 纯 CP 零动态堆分配 Briggs-Torczon O(1) 稀疏集合与并行密集键值映射：
+
+- **常量与统计**：
+  - `SPARSE_SET_UNIVERSE = 1024`、`SPARSE_SET_INVALID_IDX = 0xFFFF`
+  - `SparseSetStats`（`len`, `universe`, `insert_ops`, `remove_ops`, `clear_ops`）
+- **`SparseSet`**（`[0, 1024)` 整数集合）：
+  - `init()` / `len()` / `isEmpty()` / `contains(id)`（双向不变量校验，完全免疫 `clear()` 后旧脏 `sparse` 槽位）
+  - `insert(*_, id): bool`（O(1) 幂等插入）/ `remove(*_, id): bool`（O(1) 尾元素 swap-remove 无空洞）/ `clear(*_)`（O(1) 仅归零 `dense_len`）/ `denseSlice(): []const u16` / `stats()`
+  - 集合代数：`intersectInto(other, *out)`、`unionInto(other, *out)`、`differenceInto(other, *out)`、`isSubsetOf(other)`
+- **`SparseMapU64`**（ECS 并行密集键值映射）：
+  - `init()` / `put(*_, id, val)` / `get(id): u64?` / `remove(*_, id): u64?`（同步 swap-remove 保持 `denseIds()` 与 `denseValues()` 严格 1-to-1 对齐）/ `contains(id)` / `len()` / `clear(*_)` / `denseIds()` / `denseValues()`
+
+```cp
+import { SparseSet, SparseMapU64 } from "cap:ds";
+
+pub fn demoSparseSet() {
+    let active = SparseSet.init();
+    * = active.insert(10);
+    * = active.insert(42);
+    * = active.remove(10); // O(1) swap-remove
+
+    let hp = SparseMapU64.init();
+    * = hp.put(42, 100);
+    * = hp.get(42); // 100
+    active.clear(); // O(1) 仅重置 dense_len = 0
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
