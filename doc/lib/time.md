@@ -206,3 +206,43 @@ pub fn demoRecurringScheduler() {
     * = sched.stats();
 }
 ```
+
+---
+
+## 高精度多租户 GCRA 速率限流器（`gcra_limiter.cp`）
+
+对标 Stripe / Cloudflare 工业级限流架构的 100% 纯 CP、零堆分配 GCRA（Generic Cell Rate Algorithm）平滑突发限流与多租户配额表：单租户仅需单个 `tat_ms`（Theoretical Arrival Time）时间戳槽位，零后台定时器，内置开放寻址与最旧 TAT 淘汰防止多租户内存膨胀：
+
+- **核心类型**：
+  - `GcraConfig`（`emission_interval_ms`, `burst_capacity`, `max_cost_per_call`，提供 `init(...)`、`isValid()`、`burstWindowMs()`）
+  - `GcraDecision`（`allowed`, `remaining_burst`, `retry_after_ms`, `reset_after_ms`, `tat_ms` —— 直接映射 HTTP `X-RateLimit-Remaining`、`Retry-After` 与 `X-RateLimit-Reset` 响应头）
+  - `GcraTenantSlot`（`key_hash`, `tat_ms`, `occupied`）
+  - `GcraStats`（`capacity`, `active_tenants`, `total_allowed`, `total_rejected`, `total_evictions`）
+- **核心能力（`GcraLimiter`）**：
+  - `init(slots_buf: *[]GcraTenantSlot, cfg: GcraConfig): GcraLimiter?`
+  - `checkAndConsume(*_, key_hash: u64, cost: u32, now_ms: i64): GcraDecision`（支持加权 `cost >= 1` 扣减、精确 `retry_after_ms` 到点瞬间放行、时钟回拨钳制与满槽最旧 TAT 淘汰）
+  - `peek(key_hash: u64, cost: u32, now_ms: i64): GcraDecision`（只读试探，零副作用）
+  - `resetTenant(*_, key_hash: u64): bool` / `resetAll(*_)` / `stats(): GcraStats`
+
+### QuickStart 示例
+
+```cp
+import { GcraConfig, GcraTenantSlot, GcraLimiter } from "cap:time";
+
+pub fn demoGcraRateLimiter() {
+    // 每 100ms 补充 1 配额（10 req/s），突发上限 3，单次最高消耗 3
+    const cfg = GcraConfig.init(100, 3, 3) ?? return;
+    let slots: [128]GcraTenantSlot = [GcraTenantSlot{}; 128];
+    let slots_s: []GcraTenantSlot = slots[0..];
+    let limiter = GcraLimiter.init(slots_s, cfg) ?? return;
+
+    const tenant_hash: u64 = 0xA1B2C3D4;
+    const d1 = limiter.checkAndConsume(tenant_hash, 1, 1000); // allowed=true, remaining=2
+    const d2 = limiter.checkAndConsume(tenant_hash, 2, 1000); // allowed=true, remaining=0
+    const d3 = limiter.checkAndConsume(tenant_hash, 1, 1000); // allowed=false, retry_after_ms=100
+    const d4 = limiter.checkAndConsume(tenant_hash, 1, 1000 + d3.retry_after_ms); // allowed=true!
+    * = d1;
+    * = d2;
+    * = d4;
+}
+```

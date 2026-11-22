@@ -218,3 +218,11 @@ export {
     SchedulerStats,
     RecurringScheduler,
 } from "./recurring_scheduler.cp";
+
+export {
+    GcraConfig,
+    GcraDecision,
+    GcraTenantSlot,
+    GcraStats,
+    GcraLimiter,
+} from "./gcra_limiter.cp";
