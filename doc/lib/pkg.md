@@ -652,3 +652,29 @@ let cache = FolderResolverCache.init();
 * = cache.putResolved(rel_buf[0..lens.rel_len], 7, true)?;
 * = vn;
 ```
+
+### Monorepo Workspace `package.json` 缓存与缩进/JSONC 探测（`lib/pkg/workspace_pkg_cache.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/PackageManager/WorkspacePackageJSONCache.cp` 与 `/data/dev/bun/docs/pm/workspaces.mdx`；
+- 导出：`WORKSPACE_PKG_CACHE_MAX_ENTRIES` (`32`)、`WORKSPACE_PKG_PATH_MAX_LEN` (`256`)、`WorkspacePkgCacheError`、`JsonIndentation`、`WorkspacePkgJsonOptions`、`WorkspacePkgJsonSummary`、`WorkspacePkgCacheEntry`、`WorkspacePkgCacheStats`、`isAbsoluteWorkspacePath`、`normalizeWorkspacePkgJsonPath`、`guessJsonIndentation`、`analyzeWorkspacePackageJson`、`WorkspacePkgJsonCache`；
+- **最佳实践与边界约束**：
+  - 缓存键强制为绝对路径（POSIX `/` 或 Windows `X:\` / `X:/`），并自动将 Windows `\` 规范为 POSIX `/` 且折叠冗余斜杠，确保跨平台路径等价命中；
+  - 默认支持 JSONC 注释（`//`、`/* */`）与尾逗号校验，并可通过 `WorkspacePkgJsonOptions` 切换严格 JSON 模式；
+  - `guessJsonIndentation` 自动识别 Tab 或 1..8 空格缩进宽度，保障写回 `package.json` 时零格式破坏；
+  - 解析失败时递增 `parse_errors` 且**绝不污染缓存**（严格对齐 Bun 失败即 `map.remove` 回滚语义）。
+
+```cp
+import {
+    WorkspacePkgJsonCache,
+    WorkspacePkgJsonOptions,
+} from "cap:pkg";
+
+let cache = WorkspacePkgJsonCache.init();
+const pkg_src = "{\n  // workspace package\n  \"name\": \"pkg-a\",\n  \"version\": \"1.0.0\",\n}";
+const e1 = cache.getOrInsert("C:\\repo\\packages\\pkg-a\\package.json", pkg_src, WorkspacePkgJsonOptions{})?;
+// 跨斜杠写法命中同一规范化键 "C:/repo/packages/pkg-a/package.json"
+const e2 = cache.getOrInsert("C:/repo/packages/pkg-a/package.json", pkg_src, WorkspacePkgJsonOptions{})?;
+// e1.indentation.width == 2, e1.has_comments == true, e1.has_trailing_comma == true, e2.hit_count == 1
+* = e1;
+* = e2;
+```

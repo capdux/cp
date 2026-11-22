@@ -440,3 +440,31 @@ export {
     RatchetStats,
     SymmetricKeyRatchet,
 } from "./key_ratchet.cp";
+
+// --- Zero-Alloc Versioned Envelope Encryption & Key-Rotation Keyring ---
+
+export {
+    ENVELOPE_MAGIC,
+    ENVELOPE_FORMAT_VERSION,
+    ENVELOPE_ALG_HKDF_CTR_HMAC_SHA256,
+    ENVELOPE_FIXED_HEADER_LEN,
+    ENVELOPE_TAG_LEN,
+    ENVELOPE_KEK_LEN,
+    ENVELOPE_MIN_NONCE_LEN,
+    ENVELOPE_MAX_NONCE_LEN,
+    ENVELOPE_MIN_SALT_LEN,
+    ENVELOPE_MAX_SALT_LEN,
+    ENVELOPE_KEYRING_MAX_KEYS,
+    EnvelopeStatus,
+    EnvelopeKeyState,
+    EnvelopeHeader,
+    EnvelopeDecodeResult,
+    EnvelopeOpResult,
+    EnvelopeKeyEntry,
+    EnvelopeKeyringStats,
+    EnvelopeKeyring,
+    encodeEnvelopeHeader,
+    decodeEnvelopeHeader,
+    sealEnvelope,
+    openEnvelope,
+} from "./envelope_seal.cp";

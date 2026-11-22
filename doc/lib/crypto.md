@@ -315,6 +315,46 @@ pub fn demoSymmetricKeyRatchet() {
 
 ---
 
+### 16. 零分配版本化信封加密与密钥轮换环（`envelope_seal.cp`）
+
+纯 CP 零动态堆分配、零 C FFI 依赖的版本化信封加密头编解码、多版本 KEK 轮换密钥环与 Encrypt-then-MAC 端到端加解密引擎：
+
+- **紧凑二进制信封头（`CPE1`）**：`encodeEnvelopeHeader` / `decodeEnvelopeHeader` 确定性编解码 `Magic("CPE1") | version(u8) | alg_id(u8) | key_version(u32 BE) | nonce_len(u8) | salt_len(u8) | aad_len(u32 BE) | ct_len(u32 BE) | nonce | salt | tag(32B)`。
+- **多版本密钥环（`EnvelopeKeyring`）**：内联 16 槽位，支持 `primary | active_decrypt_only | retired | revoked` 四态生命周期、`registerKey`、`promotePrimary`（原子轮换并降级旧主密钥）、`retireKey`、`revokeKey`（立即覆写清零 KEK）、`selectEncryptKey`、`resolveDecryptKey`、`needsRewrap(key_version)`、`stats` 与 `zeroize`。
+- **端到端零堆 `sealEnvelope` / `openEnvelope`**：基于 RFC 5869 HKDF-SHA256 按 `salt + alg_id + key_version + nonce` 派生独立 `enc_key` 与 `mac_key`，通过流式 HMAC-SHA256-CTR 加密与常数时间 Encrypt-then-MAC（绑定完整信封头 + AAD + 密文）防护截断、AAD/标签/密文篡改及已吊销密钥解密。
+
+```cp
+import {
+    EnvelopeStatus,
+    EnvelopeKeyState,
+    EnvelopeKeyring,
+    sealEnvelope,
+    openEnvelope,
+} from "cap:crypto";
+
+pub fn demoEnvelopeSeal() {
+    let ring = EnvelopeKeyring.init();
+    const kek_v1: [32]u8 = [0x11; 32];
+    const kek_v2: [32]u8 = [0x22; 32];
+    * = ring.registerKey(1, kek_v1, EnvelopeKeyState.primary, 1000);
+
+    let env_buf: [256]u8 = [0; 256];
+    let env_slice: []u8 = env_buf[0..];
+    const sealed = sealEnvelope(ring, "nonce_0123456789", "salt_0123456789a", "tenant:acme", "secret payload", *env_slice);
+    if (sealed.status != EnvelopeStatus.ok) return;
+
+    // 密钥轮换至 v2：v1 自动降级为 active_decrypt_only，旧密文仍可解密且触发 needs_rewrap == true
+    * = ring.registerKey(2, kek_v2, EnvelopeKeyState.primary, 2000);
+    let pt_buf: [128]u8 = [0; 128];
+    let pt_slice: []u8 = pt_buf[0..];
+    const opened = openEnvelope(ring, env_buf[0..sealed.bytes_written], "tenant:acme", *pt_slice);
+    * = opened.needs_rewrap; // true -> 触发后台重加密迁移至 v2
+    ring.zeroize();
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [aes_gcm.md](crypto/aes_gcm.md)

@@ -332,3 +332,19 @@ export {
     resolveWorkspacePublishVersion,
     FolderResolverCache,
 } from "./folder_resolver.cp";
+
+export {
+    WORKSPACE_PKG_CACHE_MAX_ENTRIES,
+    WORKSPACE_PKG_PATH_MAX_LEN,
+    WorkspacePkgCacheError,
+    JsonIndentation,
+    WorkspacePkgJsonOptions,
+    WorkspacePkgJsonSummary,
+    WorkspacePkgCacheEntry,
+    WorkspacePkgCacheStats,
+    isAbsoluteWorkspacePath,
+    normalizeWorkspacePkgJsonPath,
+    guessJsonIndentation,
+    analyzeWorkspacePackageJson,
+    WorkspacePkgJsonCache,
+} from "./workspace_pkg_cache.cp";
