@@ -35,3 +35,9 @@ export {
 export {
     computePgMd5Password,
 } from "./auth.cp";
+
+export {
+    PgCommandTagError,
+    PgCommandKind,
+    PgCommandTag,
+} from "./command_tag.cp";

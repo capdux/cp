@@ -35,6 +35,26 @@
 | `PgFrontendStreamDecoder.feed` | `(*_, chunk: []const u8): !void` — 喂入任意长度字节切片 |
 | `PgFrontendStreamDecoder.next` | `(*_): !PgFrontendMsg?` — 拆出下一条完整报文（自动处理 Startup/SSLRequest 无 Tag 帧头） |
 | `computePgMd5Password` | `(alloc, user, password, salt: [4]u8): ![]u8` — 计算 `"md5" + md5(md5(password + user) + salt4)` |
+| `PgCommandTag.parse` | `(tag: []const u8): PgCommandTag` — 零堆分配解析 `CommandComplete` 命令标签（支持 `INSERT <oid> <rows>`、`DELETE`、`UPDATE`、`MERGE`、`SELECT`、`MOVE`、`FETCH`、`COPY` 与 `.other` 安全回退） |
+| `PgCommandTag.format` | `(out: []u8): usize!` — 格式化回标准 PostgreSQL `CommandComplete` 命令标签字符串 |
+| `PgCommandTag.rowCount` | `(): u64?` — 返回 8 类标准命令影响/返回行数，`.other` 返回 `null` |
+| `PgCommandTag.isDml` / `isQueryOrCursor` | `(): bool` — 判断是否为 DML（`INSERT`/`DELETE`/`UPDATE`/`MERGE`）或查询/游标（`SELECT`/`MOVE`/`FETCH`）命令 |
+
+### `CommandComplete` 命令标签解析（`command_tag.cp`）
+
+> 吸收自 `/data/dev/bun/src/sql/postgres/CommandTag.cp`，零堆分配解析并格式化 PostgreSQL v3.0 `CommandComplete` 报文携带的命令标签，严格校验 64 位无符号整数溢出与异常格式。
+
+- 核心导出：`PgCommandTagError`、`PgCommandKind`、`PgCommandTag`。
+
+```typescript
+import { PgCommandTag, PgCommandKind } from "cap:pgwire";
+
+const tag = PgCommandTag.parse("INSERT 0 42");
+// tag.kind == PgCommandKind.Insert, tag.oid == 0, tag.rows == 42, tag.isDml() == true
+let buf: [64]u8 = [0; 64];
+const n = tag.format(buf[0..])?;
+// buf[0..n] == "INSERT 0 42"
+```
 
 ---
 
