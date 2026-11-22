@@ -608,3 +608,25 @@ const d_args: [1][]const u8 = ["/usr/local/bin/"];
 const n2 = runDirnameBuiltin(d_args[0..], out[0..])?;  // "/usr/local\n"
 * = n1; * = n2;
 ```
+
+### POSIX `export` 内建命令与零分配环境变量表（`exportBuiltin.cp`）
+
+- 吸收自 `/data/dev/bun/src/shell/builtin/export.cp` & `/data/dev/bun/docs/runtime/shell.mdx`（Environment variables 章节）；
+- 导出：`SHELL_EXPORT_MAX_VARS` (`64`)、`ShellExportError`、`isValidShellIdent`、`ShellExportEntry`、`ShellExportTable`（`init`/`setVar`/`applyArg`/`applyArgs`/`get`/`isExported`/`unset`/`count`/`exportedCount`/`formatSorted`）；
+- **Bun Shell 环境变量与 `export` 实践**：
+  - 支持行内赋值（`FOO=bar cmd`）、局部/全局 `.env()` 覆盖与内置 `export` 命令；
+  - `applyArg` 严格按 POSIX 规则校验变量名 `[A-Za-z_][A-Za-z0-9_]*`（拒绝数字开头、连字符或空键），对 `NAME=a=b` 仅在首个 `=` 处切分；对裸 `NAME` 优先将已有局部变量提升为已导出变量，否则以空串导出；
+  - 无参 `export`（`formatSorted`）按 key ASCII 字典序升序排序并零分配格式化为 `"KEY=VALUE\n"`，忽略未导出的局部变量。
+
+```cp
+import { ShellExportTable } from "cap:shell";
+
+let env = ShellExportTable.init();
+* = env.setVar("LOCAL_ONLY", "secret", false)?;
+const args: [3][]const u8 = ["Z_KEY=last", "A_KEY=first=1", "B_EMPTY"];
+* = env.applyArgs(args[0..])?;
+let buf: [128]u8 = [0; 128];
+const n = env.formatSorted(buf[0..])?;
+// "A_KEY=first=1\nB_EMPTY=\nZ_KEY=last\n"
+* = n;
+```
