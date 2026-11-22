@@ -1,6 +1,6 @@
 # `cap:agent` — AI Agent 核心运行时标准库
 
-`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏（`budget.cp`）、多智能体任务图 DAG 调度器（`dag.cp`）、评测基准与轨迹打分（`eval.cp`）、ReAct 执行状态机与确定性检查点（`react.cp`）、LLM 流式 SSE 解析与遥测（`sse.cp`）、多模型网关路由与限流故障转移（`model_router.cp`）、输入/输出安全护栏与策略引擎（`guardrail.cp`）、连续批处理与前缀缓存亲和调度器（`scheduler.cp`）、工具调用参数 JSON Schema 校验器（`tool_schema.cp`）以及词表 Logits 采样器（`sampler.cp`）十个子模块。
+`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏（`budget.cp`）、多智能体任务图 DAG 调度器（`dag.cp`）、评测基准与轨迹打分（`eval.cp`）、ReAct 执行状态机与确定性检查点（`react.cp`）、LLM 流式 SSE 解析与遥测（`sse.cp`）、多模型网关路由与限流故障转移（`model_router.cp`）、输入/输出安全护栏与策略引擎（`guardrail.cp`）、连续批处理与前缀缓存亲和调度器（`scheduler.cp`）、工具调用参数 JSON Schema 校验器（`tool_schema.cp`）、词表 Logits 采样器（`sampler.cp`）以及推测解码校验与自适应草稿步长控制（`speculative.cp`）十一个子模块。
 
 ---
 
@@ -529,5 +529,48 @@ fn logitsSamplerDemo() {
 
     const tok = sampleToken(logits[0..], recent[0..], cfg, &wl_s, &wi_s, &wp_s) ?? return;
     * = tok;
+}
+```
+
+---
+
+## 子模块：推测解码校验与自适应草稿步长控制（`speculative.cp`）
+
+### 核心特性
+
+- **无损拒绝采样校验器（`verifySpeculativeStep`）**：严格实现 Leviathan et al. (2023) 推测解码拒绝采样算法：逐位以 $\min(1, p_i(x_i)/q_i(x_i))$ 接受草稿词；首次拒绝时在残差分布 $\text{norm}(\max(0, p_i - q_i))$ 采样修正词；若 `K` 个草稿词全部通过，则从 `target_probs[K]` 采样额外奖励词 `bonus_token`，单步无损产出 `K + 1` 个 token，数学上严格等价于直接从目标大模型分布 $p$ 采样。
+- **确定性贪心校验（`verifySpeculativeGreedy`）**：零随机逐位比对 `draft_tokens[i] == argmax(target_probs[i])`，首个不匹配位置截断并输出目标模型 `argmax`。
+- **自适应草稿步长控制器（`AdaptiveDraftController`）**：基于移动平均接受率（EMA）在 `[min_k, max_k]` 区间内自动拉长或缩减草稿步长 `draft_k`，并实时统计全局 `acceptance_rate` 与 `avg_tokens_per_step`。
+
+### 导出清单
+
+- **校验原语**：`SpecVerifyResult`、`verifySpeculativeStep`、`verifySpeculativeGreedy`
+- **自适应步长控制**：`SpecStats`、`AdaptiveDraftController`（`init`, `currentK`, `recordStep`, `stats`）
+
+### 使用示例
+
+```typescript
+import std from "std";
+import {
+    verifySpeculativeStep,
+    AdaptiveDraftController,
+} from "cap:agent";
+
+fn speculativeDemo() {
+    const draft_tokens: [2]usize = [0, 1];
+    const draft_probs: [6]f64 = [0.7, 0.2, 0.1, 0.1, 0.8, 0.1];
+    const target_probs: [9]f64 = [0.7, 0.2, 0.1, 0.1, 0.8, 0.1, 0.2, 0.3, 0.5];
+    let emitted: [3]usize = std.mem.zeroes([3]usize);
+    let residual: [3]f64 = std.mem.zeroes([3]f64);
+    let em_s: []usize = emitted[0..];
+    let res_s: []f64 = residual[0..];
+
+    const res = verifySpeculativeStep(
+        draft_tokens[0..], draft_probs[0..], target_probs[0..], 3, 42, &em_s, &res_s,
+    ) ?? return;
+
+    let ctrl = AdaptiveDraftController.init(1, 8, 2, 0.3) ?? return;
+    const next_k = ctrl.recordStep(2, res.accepted_count, res.emitted_count);
+    * = next_k;
 }
 ```

@@ -94,3 +94,11 @@ export {
     greedyArgmax,
     sampleToken,
 } from "./sampler.cp";
+
+export {
+    SpecVerifyResult,
+    verifySpeculativeStep,
+    verifySpeculativeGreedy,
+    SpecStats,
+    AdaptiveDraftController,
+} from "./speculative.cp";
