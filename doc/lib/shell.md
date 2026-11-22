@@ -120,6 +120,16 @@ const res = tramp.run(MyCtx, &ctx, ShellYield.forNode(.pipeline, 1), myStepFn, m
 // res.final_yield, res.steps_executed, res.pipelines_drained, res.max_pipeline_depth
 ```
 
+- **`lib/shell/mkdir_opts.cp`**（吸收自 `/data/dev/bun/src/shell/builtin/mkdir.cp`，零堆分配 POSIX `mkdir` 选项解析与父目录规划器）：`DEFAULT_MKDIR_MODE` (`0o777`)、`MkdirParseError`、`parseOctalMode`、`MkdirOpts`（支持 `-p`/`--parents`、`-v`/`--verbose`、`-m`/`--mode` 组合短标志与 `--` 终结符）、`ParentDirIter`（零分配逐级父目录前缀迭代器）
+
+```typescript
+import { MkdirOpts, ParentDirIter } from "cap:shell";
+
+const args = ["-pv", "-m", "0755", "/var/log/app"];
+const opts = MkdirOpts.parse(args[0..])?; // parents=true, verbose=true, effectiveMode()==0o755
+let it = ParentDirIter.init(args[opts.paths_start]); // "/var" -> "/var/log" -> "/var/log/app"
+```
+
 ### GNU/Bash `echo` 格式化与转义示例（`echo.cp`）
 
 ```typescript

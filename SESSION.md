@@ -1341,3 +1341,7 @@
 ### 2026-11-22（分类合并交付：lib/mcp/sampling.cp | 2026-11-22 14:21:44）
 - **执行与结单汇报**：
   > 子智能体交付 lib/mcp/sampling.cp（MCP 2025-03-26 Sampling 三维偏好路由、嵌套递归深度/预算守卫与进度令牌单调追踪器，5/5 PASS），归入 cap:mcp 并同步 cp_lib_ref.md；续派 lib/a2a/negotiation.cp。
+
+### 2026-11-22（分类合并交付：lib/shell/mkdir_opts.cp | 2026-11-22 14:23:13）
+- **执行与结单汇报**：
+  > 子智能体从 Bun src/shell/builtin/mkdir.cp 吸收并归类合并 lib/shell/mkdir_opts.cp 至 cap:shell（mkdir 选项解析、八进制模式校验与 ParentDirIter 路径遍历，6/6 PASS），同步 cp_lib_ref.md 并提交。
