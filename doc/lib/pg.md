@@ -18,6 +18,7 @@
 | `lib/pg/reader.cp` | 零拷贝大端消息帧流式读取器 `PgMessageReader`、`PgFrame` 与 `PgBackendTag` |
 | `lib/pg/sqlstate.cp` | 5 字符 `SqlStateCode` 严格解析/分类与 15 类 `SqlStateClass` |
 | `lib/pg/wiretypes.cp` | 线协议 v3.0 常量、大端整数编解码、`MessageHeader`、`FieldDescription` 与 `StartupMessage` |
+| `lib/pg/paramDesc.cp` | 零分配 `ParameterDescription`（`'t'`）参数 OID 数组编解码器与无界零拷贝视图（`ParameterDescriptionView`、`ParameterDescription`） |
 
 ## 核心 API 摘要
 
@@ -65,3 +66,20 @@ fn example(): bool {
    - `40001`（serialization_failure）与 `40P01`（deadlock_detected）属可安全重试的并发事务冲突；`23505`（unique_violation）等 `integrity_constraint_violation` 属业务约束冲突不可盲目重试。
 4. **COPY 流异常中止（`CopyFail`）**：
    - 在 `CopyInResponse` 写入阶段遇到本地错误时，发送 `encodeCopyFail` 通知服务端安全回滚 COPY 状态，避免连接陷入协议失步。
+5. **`ParameterDescription`（`'t'`）预处理参数类型推断与二进制绑定（`paramDesc.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/ParameterDescription.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
+   - 在 PostgreSQL Extended Query Protocol 中，客户端发送 `Parse` + `Describe('S', stmt)` 后，服务端返回 `ParameterDescription ('t')` 告知每个 `$1..$N` 占位符的期望 OID；
+   - `ParameterDescriptionView` 零拷贝随机访问任意长度参数列表，`allBinaryFriendly()` 与 `hasUnspecifiedTypes()` 帮助驱动决策是否启用零解析开销的二进制参数绑定（`FormatCode.Binary`），同时严格拦截负数计数与截断/越界载荷。
+
+```cp
+import { ParameterDescription, ParameterDescriptionView, PgOid } from "cap:pg";
+
+let pd = ParameterDescription.init();
+* = pd.push(23)?;   // INT4
+* = pd.push(25)?;   // TEXT
+* = pd.push(2950)?; // UUID
+let wire: [32]u8 = [0; 32];
+const n = pd.encodeFrame(wire[0..])?;
+const view = ParameterDescriptionView.decodeFrame(wire[0..n])?;
+* = view.allBinaryFriendly(); // true
+* = PgOid.INT4;
+```

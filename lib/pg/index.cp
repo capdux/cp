@@ -135,3 +135,13 @@ export {
     encodeStartupMessage,
     decodeStartupMessage,
 } from "./wiretypes.cp";
+
+export {
+    TAG_PARAMETER_DESCRIPTION,
+    PARAM_DESC_MAX_PARAMS,
+    PARAM_DESC_MIN_MSG_LEN,
+    ParamDescError,
+    isBinaryFriendlyParamOid,
+    ParameterDescriptionView,
+    ParameterDescription,
+} from "./paramDesc.cp";
