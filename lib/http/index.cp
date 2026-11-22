@@ -112,7 +112,13 @@ export {
     AltSvc,
     H3StreamType,
     H3Stream,
-    H3ClientSession
+    H3ClientSession,
+    H3EncodeError,
+    H3InputHeader,
+    H3Header,
+    H3RequestMeta,
+    H3EncodedRequest,
+    encodeH3RequestHeaders,
 } from "./h3/index";
 
 // --- Step 3: Industrial Client Engine & Lifecycle ---

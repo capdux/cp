@@ -72,7 +72,7 @@
 | `lib/http/proxy.cp` / `sendfile.cp` / `decompressor.cp` | `ProxyTunnel` / `HttpProxyTunnel`（Basic 认证与 `NoProxyMatcher`）、`SendFile`、与 `cap:pack` 协同的 `Decompressor` / `StreamingDecompressor` | `ProxyTunnel.cp` / `SendFile.cp` / `Decompressor.cp` |
 | `lib/http/url_path.cp` / `encoding.cp` / `fetch_modes.cp` / `signals.cp` / `internal_state.cp` / `request_body.cp` / `cert.cp` | 路径解析、`ContentEncodingNegotiator` (`Accept-Encoding` q-value 协商)、Fetch 模式枚举、原子中止信号、状态机与证书信息 | `src/http/` & `src/http_types/` |
 | `lib/http/h2/frame.cp` / `client.cp` / `hpack.cp` | RFC 7540 二进制帧与流控（`WINDOW_UPDATE`/`RST_STREAM`/`PING`/`GOAWAY`）、多路复用流状态机、RFC 7541 完整 HPACK（61 项静态表 + 257 项 Huffman + 动态表） | `H2FrameParser.cp` / `h2_client/ClientSession.cp` / `lshpack.cp` |
-| `lib/http/h3/alt_svc.cp` / `client.cp` | RFC 7838 `Alt-Svc` 升级头解析、HTTP/3 QUIC 会话与双向流 | `h3_client/AltSvc.cp` / `h3_client/ClientSession.cp` |
+| `lib/http/h3/alt_svc.cp` / `client.cp` / `encode.cp` | RFC 7838 `Alt-Svc` 升级头解析、HTTP/3 QUIC 会话与双向流、RFC 9114 HTTP/3 请求伪头部（`:method`/`:scheme`/`:authority`/`:path`）与 QPACK 静态索引零分配规范化编码（`encodeH3RequestHeaders`） | `h3_client/AltSvc.cp` / `ClientSession.cp` / `encode.cp` |
 | `lib/http/accept.cp` / `acceptenc.cp` / `acceptlang.cp` / `acceptranges.cp` | RFC 9110 内容协商（`Accept` / `Accept-Encoding` / `Accept-Language` / `Accept-Ranges`）零分配解析与协商器 | `src/http/` |
 | `lib/http/allow.cp` / `altsvc.cp` / `auth.cp` | RFC 9110 `Allow` 方法集、RFC 7838 `Alt-Svc` 编解码、RFC 7617/6750 Basic/Bearer 认证编解码 | `src/http/` |
 | `lib/http/cache.cp` / `cachectrl.cp` / `cachekey.cp` | RFC 9111 缓存策略与新鲜度评估（`HttpCacheEvaluator`）、`Cache-Control` 指令迭代、缓存键规范化 | `src/http/` |

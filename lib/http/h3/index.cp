@@ -12,3 +12,12 @@ export {
     H3Stream,
     H3ClientSession
 } from "./client";
+
+export {
+    H3EncodeError,
+    H3InputHeader,
+    H3Header,
+    H3RequestMeta,
+    H3EncodedRequest,
+    encodeH3RequestHeaders,
+} from "./encode";
