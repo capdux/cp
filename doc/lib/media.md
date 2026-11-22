@@ -604,6 +604,21 @@ pub fn demoWebmMuxRoundtrip(vp9_keyframe: []const u8, opus_pkt: []const u8)! {
 }
 ```
 
+### 11. 生产级零堆 WAV / RF64 / WAVEFORMATEXTENSIBLE / PCM / Float32 / G.711 / IMA-ADPCM 引擎 (`audioWav.cp`)
+
+在 100% 向下兼容既有 `AudioError` / `WavAudio` / `WavFloatAudio` / `WavCodec` 的基础上，原地深化为全格式零堆外部切片音频容器与编解码核心：
+
+- **容器与扩展头**：
+  - `WavSampleFormat`（`u8_pcm` / `s16_le` / `s24_le` / `s32_le` / `f32_le` / `mulaw` / `alaw` / `ima_adpcm`）、`WAV_FORMAT_*`、`WAV_CHANNEL_MASK_*`、`parseWavSubFormatGuid`；
+  - `WavChunkIter` / `parseWavContainer`：零拷贝解析标准 `RIFF/WAVE`、`WAVE_FORMAT_EXTENSIBLE`（`0xFFFE` + 16 字节 `SubFormat` GUID）、EBU Tech 3306 `RF64` + `ds64` 64-bit 长度（>4GB）、`fact`、`LIST/INFO`（INAM/IART/IALB/ICRD/ICMT/ISFT）、`cue ` 与 `smpl`；
+  - `encodeRf64Header` 与流式 `WavStreamWriter`（`init` -> `writePcm16`/`writeF32`/`writeRawBytes` -> `finalize`/`finalizeWithCues` 自动回填 `RIFF`/`data`/`fact` 长度）。
+- **全位深转换与任意声道混音**：
+  - `u8ToF32Slice`/`f32ToU8Slice`、`s16LeToF32Slice`/`f32ToS16LeSlice`（含可选 TPDF 抖动）、`s24LeToF32Slice`/`f32ToS24LeSlice`（3 字节紧缩读写）、`s32LeToF32Slice`/`f32ToS32LeSlice`、`f32LeBytesToF32Slice`/`f32SliceToF32LeBytes`；
+  - `stereoToMonoF32`、`monoToStereoF32`、`interleaveChannelsF32`、`deinterleaveChannelsF32`（任意声道数，无上限）。
+- **IMA-ADPCM (`0x0011`) 与 G.711 μ-law (`0x0007`) / A-law (`0x0006`)**：
+  - `ImaAdpcmState`、`imaAdpcmBlockSamples`、`encodeImaAdpcmBlock`、`decodeImaAdpcmBlock`（标准 89 级步长表，支持单声道/立体声 4-byte 交错块，4:1 压缩比）；
+  - `wavPcm16ToMulaw`/`wavMulawToPcm16`、`wavPcm16ToAlaw`/`wavAlawToPcm16`、`encodeWavMulaw`/`decodeWavMulaw`、`encodeWavAlaw`/`decodeWavAlaw`。
+
 ---
 
 ## 收敛子模块深度文档
