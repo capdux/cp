@@ -1,5 +1,7 @@
 # CP 标准库：异步 I/O 队列与父进程看门狗子系统使用手册 (`cap:aio`)
 
+> 参考来源：`/data/dev/bun/src/aio/posix_event_loop.zig`, `/data/dev/bun/src/aio/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计哲学
 
 `cap:aio` 是 CP 语言官方内置的**Linux 父进程退出看门狗（`ParentDeathWatchdog`）与零堆分配 POSIX 异步提交/完成环形队列（`AioQueue<CAP>`）**标准库。吸收自 Bun（`/data/dev/bun/src/aio/`），全部基于 Zig 0.17 原生 `std.os.linux.*` 与 `std.c.*` 构建，为多进程监督防护与批量文件 I/O 调度提供零堆分配、确定性的底层基础设施。
@@ -88,3 +90,14 @@ fn batchFileIo(): ! {
 | :--- | :--- | :--- |
 | **Linux 父进程看门狗** | `ParentDeathWatchdog` (`PR_SET_PDEATHSIG`) | `ParentDeathWatchdog` (`install`, `clear`, `isParentAlive`, `parentPidOf`) |
 | **批量 I/O 队列与状态机** | `posix_event_loop.zig` | `AioQueue<CAP>`, `AioOp`, `AioCompletion`, `AioOpKind`, `AioState` |
+
+---
+
+## 四、 上游 Bun `aio` 行为契约与边界注意事项
+
+1. **父进程退出竞态窗口双检（`ParentDeathWatchdog.install`）**：
+   - Linux `PR_SET_PDEATHSIG` 存在极短窗口期：若父进程在 `fork()` 与子进程调用 `prctl()` 之间退出，内核不会补发信号；`install(sig)` 在注册后立即二次核验 `getppid()`，确保零孤儿进程漏网。
+2. **多线程下 `PR_SET_PDEATHSIG` 线程语义**：
+   - Linux 内核将 `PR_SET_PDEATHSIG` 绑定到调用 `fork`/`spawn` 的父**线程**而非整个父进程；因此多工作线程环境中应由常驻主监督线程派生子进程，避免工作线程退出误触发子进程信号。
+3. **固定容量环形队列与取消语义（`AioQueue<CAP>`）**：
+   - `AioQueue<CAP>` 全程零堆分配，满载提交返回错误；`cancel` 仅对尚未进入完成态的 `Pending` 槽位生效，调用方须确保提交的读写缓冲区在对应 `AioCompletion` 被 `drain` 取出前保持存活。

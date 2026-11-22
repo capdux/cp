@@ -1,6 +1,6 @@
 # `cap:simd` — Highway 级 SIMD 硬件向量加速与高速字节扫描标准库
 
-> **上游溯源**: `/data/dev/bun/src/highway/` (`highway.cp`, `highway.zig`) & Zig `std.simd`  
+> 参考来源：`/data/dev/bun/src/highway/highway.cp`, `/data/dev/bun/src/highway/`, Zig `std.simd` | 吸收日期：2026-11-22
 > **模块路径**: `lib/simd/`  
 > **导入协议**: `import { Simd } from "cap:simd";`
 
@@ -110,3 +110,14 @@ fn demoVectorMath(): void {
     let similarity = Simd.dotProductF32(emb_a[0..], emb_b[0..]); // 14.0
 }
 ```
+
+---
+
+## 上游 Bun Highway SIMD 行为契约与性能边界
+
+1. **未对齐切片与尾部标量回落安全**：
+   - `Simd` 全部扫描与归约函数均自动处理任意起始对齐与非 16/32 字节整数倍长度的输入切片：主体按 32B/16B 向量块推进，剩余 `< 16B` 尾部由安全标量循环收尾，绝不越界读取输入缓冲区之外的内存。
+2. **ASCII 大小写无分支转换边界（`toLowerAscii` / `toUpperAscii`）**：
+   - 仅转换 ASCII `A-Z` / `a-z`（位差 `0x20`），其余 UTF-8 多字节序列（高位字节 `>= 0x80`）原样透传不被破坏；若需完整 Unicode 大小写折叠请使用 `cap:string` 的 `Unicode.caseFoldCodepoint`。
+3. **浮点归约与空切片约定**：
+   - `reduceAddI32` / `reduceMinI32` / `reduceMaxI32` 在空切片输入时安全返回 `0`；`dotProductF32` 在两向量长度不等时按较短长度安全截断，且 SIMD 横向归约浮点加法顺序与标量顺序存在微小舍入差异（`< 1e-6`），属 IEEE-754 正常现象。

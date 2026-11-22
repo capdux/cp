@@ -1,5 +1,7 @@
 # CP 标准库：智能指针、引用计数与写时复制内存抽象使用手册 (`cap:ptr`)
 
+> 参考来源：`/data/dev/bun/src/ptr/ptr.cp`, `/data/dev/bun/src/ptr/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计哲学
 
 `cap:ptr` 是 CP 语言官方内置的**零 GC 高性能智能指针、侵入式/非侵入式引用计数、写时复制（Copy-on-Write）与 64 位打标指针（Tagged Pointer）**标准库。完整吸收自 Bun（`/data/dev/bun/src/ptr/`），为 CP 引擎在无需追踪式垃圾回收（Tracing GC）的前提下，提供媲美 Rust `Arc`/`Rc`/`Cow`/`Box` 与 C++ `std::shared_ptr`/`boost::intrusive_ptr` 的确定性内存生命周期管理。
@@ -148,3 +150,16 @@ pub fn demoOwnedAndTagged() {
 | **侵入式引用计数** | 需第三方 `intrusive_collections`| `bun.ptr.RefCount` / `RefPtr`| `RefCount` / `ThreadSafeRefCount` / `RefPtr` |
 | **写时复制容器/切片** | `Cow<'a, T>` / `Cow<'a, str>` | `Cow(T)` / `CowSlice(T)` | `Cow(T)` / `CowSlice(T)` / `CowString` |
 | **高16位/低3位打标指针**| 需第三方 `tagged_ptr` | `TaggedPointer` | `TaggedPointer` / `LowTagPointer` |
+
+---
+
+## 五、 上游 Bun `ptr` 行为契约与内存安全边界
+
+1. **单线程 vs 原子引用计数严格选型**：
+   - `Shared<*T>` / `RefCount` 使用非原子加减（零内存屏障开销），**严禁跨线程共享**（Debug 模式下 `PtrThreadLock` 自动检测跨线程误用）；跨线程/跨 Actor 共享必须使用 `AtomicShared` / `ThreadSafeRefCount`。
+2. **破除引用循环（`Weak` / `AtomicWeak`）**：
+   - 存在父子双向引用的对象图必须在一侧持有 `Weak` / `AtomicWeak`，防止强引用计数永不归零造成泄漏；升级为强引用前须判空处理对象已销毁的情况。
+3. **`CowSlice` / `CowString` 零拷贝借用与写时克隆**：
+   - `CowSlice` 将所有权标志压缩进长度高位（`u63` 长度 + 1-bit 所有权位），只读路径零分配；调用可变修改前自动克隆为独占堆缓冲，离开作用域时仅对拥有所有权的实例执行释放。
+4. **打标指针架构前提（`TaggedPointer` / `LowTagPointer`）**：
+   - `TaggedPointer` 依赖 48-bit 虚拟地址空间高 16 位空闲位；`LowTagPointer` 依赖 `>= 8` 字节对齐，禁止对非对齐字节指针使用低 3 位打标。

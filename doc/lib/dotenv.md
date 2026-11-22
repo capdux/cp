@@ -1,6 +1,6 @@
 # `cap:dotenv` — 零分配 `.env` 环境变量解析、变量插值与多环境级联加载器
 
-> **上游溯源**: `/data/dev/bun/src/dotenv/` (`env_loader.cp`, `env_loader.zig`)  
+> 参考来源：`/data/dev/bun/docs/runtime/environment-variables.mdx`, `/data/dev/bun/src/dotenv/env_loader.cp` | 吸收日期：2026-11-22
 > **模块路径**: `lib/dotenv/`  
 > **导入协议**: `import { parse, parseWithOptions, expandString, EnvMap, DotenvOptions, DotenvLoader, config, load } from "cap:dotenv";`
 
@@ -97,3 +97,16 @@ fn demoDotenv() {
 
 - **`lib/dotenv/escape.cp`**（`.env` 键名校验与安全值序列化）：`isValidEnvKey`、`needsDotenvQuotes`、`formatDotenvValue`、`formatDotenvLine`、`unescapeDotenvDouble`
 - **`lib/dotenv/expand.cp`**（POSIX 环境变量模板展开）：`EnvPair`、`lookupEnv`、`expandEnv`、`hasEnvRefs`
+
+---
+
+## 上游 Bun `.env` 行为契约与边界注意事项
+
+1. **进程环境变量高于 `.env` 文件（参考 `/data/dev/bun/docs/runtime/environment-variables.mdx`）**：
+   - 默认非覆盖模式下，已存在于系统进程环境中的变量优先级最高，其次按 `.env.<mode>.local` > `.env.local` > `.env.<mode>` > `.env` 级联填充；在 `NODE_ENV=test` 下跳过 `.env.local` 可确保测试环境结果确定可复现。
+2. **引号类型与变量插值规则**：
+   - 单引号 `'...'` 为纯字面量（**不执行** `$VAR` 展开与 `\n` 转义）；双引号 `"..."` 与无引号值支持 `$VAR` / `${VAR:-default}` / `${VAR-default}` 插值；反引号 `` `...` `` 允许内部同时出现未转义的单双引号。
+3. **防循环展开与固定缓冲边界**：
+   - 链式变量引用（如 `A=$B; B=$A`）受最大 8 层递归深度保护；`EnvMap` 固定上限 `MAX_ENV_ENTRIES = 256` 键与 `ENV_BUFFER_CAPACITY = 32KB` 字符竞技场，超限写入安全截断而不触发堆分配。
+4. **安全回写序列化（`formatDotenvLine`）**：
+   - 生成 `.env` 文件时使用 `isValidEnvKey` 校验键名并通过 `needsDotenvQuotes` / `formatDotenvValue` 自动转义换行、引号与 `#`，防止注入伪造环境变量行。

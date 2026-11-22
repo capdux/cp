@@ -1,6 +1,6 @@
 # CP 标准库：Node-API (N-API v9) C-ABI 绑定与离线运行时模拟手册 (`cap:napi`)
 
-> **上游溯源**: `/data/dev/bun/src/napi/` (`js_native_api_types.h`, `node_api_types.h`, `js_native_api.h`, `node_api.h`, `napi.cp`)  
+> 参考来源：`/data/dev/bun/src/napi/napi.cp`, `/data/dev/bun/src/napi/node_api.h` | 吸收日期：2026-11-22
 > **模块路径**: `lib/napi/`  
 > **导入协议**: `import { NAPI_VERSION, NapiStatus, NapiValueType, NapiTypedArrayType, NapiPropertyAttributes, NapiModule, NapiPropertyDescriptor, NapiExtendedErrorInfo, NapiNodeVersion, NapiThreadsafeFunctionState, NapiRuntimeContext, NapiEnvMock, Napi } from "cap:napi";`
 
@@ -87,3 +87,16 @@ pub fn demoMockRuntime() {
     * = env.closeHandleScope(outer);
 }
 ```
+
+---
+
+## 上游 Bun Node-API 行为契约与安全边界
+
+1. **`HandleScope` 严格 LIFO 嵌套与单次逃逸契约**：
+   - `openHandleScope` 与 `closeHandleScope` 必须严格按后进先出（LIFO）配对关闭；`EscapableHandleScope` 仅允许调用一次 `escapeHandle`，二次逃逸返回 `EscapeCalledTwice`，防止句柄生命周期越界。
+2. **`NapiStatus` 检查优先于返回值消费**：
+   - 所有 N-API 原语均返回 `NapiStatus`，调用方必须先通过 `Napi.checkStatus(status)` 校验 `NapiStatus.Ok` 后再读取出参；出现 `PendingException` 时不得继续调用会触发 JS 执行的 API。
+3. **`ThreadsafeFunction` 跨线程背压与关闭序列**：
+   - 跨线程调用 `NapiThreadsafeFunctionState.call` 时区分 `NonBlocking`（队列满立即返回 `QueueFull`）与 `Blocking`；工作线程退出前须调用 `releaseThread(NapiTsfnReleaseMode.Release)` 或 `Abort`，避免主事件循环永久挂起。
+4. **ABI 稳定性保障（`NAPI_VERSION = 9`）**：
+   - 所有 `@c struct`（`NapiModule`、`NapiPropertyDescriptor`、`NapiTypeTag`、`NapiNodeVersion`）严格对齐 Node-API v9 C 头文件内存布局，并包含 `Float16`（2 字节）在内的 12 种 `NapiTypedArrayType`。

@@ -1,5 +1,7 @@
 # CP 标准库：跨平台系统错误码子系统手册 (`cap:errno`)
 
+> 参考来源：`/data/dev/bun/src/errno/linux_errno.cp`, `/data/dev/bun/src/errno/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:errno` 是 CP 语言官方内置的跨平台操作系统错误码标准库，吸收自 Bun 的系统错误码体系（`/data/dev/bun/src/errno/{linux_errno,darwin_errno,windows_errno}.cp`），提供覆盖完整 POSIX/Linux 134 项标准系统错误码（涵盖文件、网络、进程、IPC、信号、内存、权限、密钥与硬件错误等）的 `SystemErrno` 枚举、正负 syscall 返回值双向转换、人类可读 `strerror` 诊断描述及全面语义分类断言。
@@ -90,3 +92,14 @@ pub fn handleSyscallResult(ret: i32) {
     }
 }
 ```
+
+---
+
+## 上游 Bun `errno` 行为契约与跨平台边界
+
+1. **正负 syscall 错误码统一归一化（`SystemErrno.fromCode`）**：
+   - Linux 原始系统调用失败返回负值（如 `-11` 表示 `-EAGAIN`），而 C 库 `errno` 为正值（`11`）；`SystemErrno.fromCode(code)` 自动取绝对值并映射至统一的 135 项强类型枚举（未知码安全映射为 `UNKNOWN = 65535`）。
+2. **`EAGAIN` 与 `EWOULDBLOCK` 等价语义**：
+   - 在 Linux 上 `EAGAIN == EWOULDBLOCK`，而在部分 BSD/macOS 平台二者数值不同；非阻塞 I/O 判断务必统一调用 `e.isWouldBlock()` 而非硬编码单个枚举值。
+3. **语义分类谓词指导重试策略**：
+   - `isRetryable()`（含 `EINTR`/`EAGAIN`/`EWOULDBLOCK`）适合立即重试或注册事件循环；`isConnectionError()`（`ECONNRESET`/`ECONNREFUSED`/`EPIPE`）提示应关闭失效连接并重建；`isPermissionDenied()` / `isNotFound()` 属确定性错误应直接上报。

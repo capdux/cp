@@ -1,5 +1,7 @@
 # CP 标准库：Myers 文本差分、Unified Patch 与彩色测试 Diff 渲染子系统 (`cap:patch`)
 
+> 参考来源：`/data/dev/bun/src/patch/patch.cp`, `/data/dev/bun/src/test_runner/diff_format.zig` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计哲学
 
 `cap:patch` 是 CP 语言官方内置的**行级 Myers $O(ND)$ 文本差分引擎、完整多文件/多 Hunk Unified Diff 解析器、支持精确/偏移/上下文模糊容错（Fuzz/Offset）的补丁应用引擎、标准 Unified Diff 生成器与 `bun test` 风格彩色差异渲染器（`DiffFormatter`）**标准库。该模块吸收自 Bun（`/data/dev/bun/src/patch/patch.cp` 与 `/data/dev/bun/src/test_runner/diff_format.zig`），为包管理器 `cap patch`、代码热修复与 `cap test` 断言比对提供工业级差分、打补丁与诊断渲染能力。
@@ -106,3 +108,14 @@ fn demoColoredTestDiff(): ! {
 | **Hunk 应用（偏移与 Fuzz）** | `--fuzz` / 行偏移搜索 | `applyPatch` | `UnifiedDiff.applyFilePatch`（精确+±offset+fuzz+错误定位） |
 | **行级 Myers $O(ND)$ 差分** | Myers $O(ND)$ | `diff` | `LineDiffer.diffLines` / `diffLinesAlloc` + `UnifiedDiff.diffLines` |
 | **测试断言彩色对比渲染** | — | `src/test_runner/diff_format.zig` | `DiffFormatter`, `DiffFormatOptions`（行号、裁剪、行内前后缀高亮） |
+
+---
+
+## 五、 上游 Bun `patch` 行为契约与边界注意事项
+
+1. **Hunk 完整性校验与偏移/模糊容错（`applyWithOptions`）**：
+   - 源自 Bun `src/patch/patch.cp`：每个 Hunk 应用前可调用 `PatchHunk.verifyIntegrity()` 校验 `old_count`/`new_count` 与实际上下文/增删行数一致；默认精确行号失败时，`applyWithOptions` 按偏移窗口（`±offset`）与上下文模糊度（`fuzz`）尝试安全重定位，防止源码轻微变动导致补丁整体失效。
+2. **文件末尾换行符（`\ No newline at end of file`）精确还原**：
+   - 解析器与生成器均严格区分“末尾含 `\n`”与“无末尾换行”两种状态，确保 `diff -> apply` 往返后的字节哈希与原目标文件 100% 比特级一致。
+3. **测试差异输出可读性（`DiffFormatter`）**：
+   - 继承自 Bun `test_runner/diff_format.zig`：大文本比对自动裁剪未变更中间行并高亮单行内的差异前后缀，非 TTY 环境下可关闭 ANSI 颜色标志输出纯文本诊断。

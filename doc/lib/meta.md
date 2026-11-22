@@ -1,5 +1,7 @@
 # CP 标准库：编译期元编程与位操作工具集 (`cap:meta`)
 
+> 参考来源：`/data/dev/bun/src/meta/meta.cp`, `/data/dev/bun/src/meta/bits.cp`, `/data/dev/bun/src/meta/traits.cp` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:meta` 是 CP 语言官方内置的编译期类型内省（Type Traits）与无分支位操作标准库，吸收自 Bun `src/meta/`（`bits.zig`、`traits.zig`、`meta.zig`）。该库向编译器工具链、容器、内存分配器及底层协议解析器提供零运行时开销的位宽运算、内存对齐、整数高低位打包与编译期类型特征探测原语。
@@ -104,3 +106,14 @@ pub fn demoMeta() {
     * = name;
 }
 ```
+
+---
+
+## 上游 Bun `meta` 行为契约与边界注意事项
+
+1. **2 的幂对齐前置条件（`alignUp` / `alignDown` / `isAligned`）**：
+   - `alignment` 必须为正 2 的幂（可用 `isPowerOfTwo(alignment)` 预检）；`nextPowerOfTwo(0)` 与 `nextPowerOfTwo(1)` 均返回 `1`，对接近整数最大值的输入应注意防止无符号上溢。
+2. **零开销硬件位指令映射**：
+   - `bitCount`（`popcnt`）、`leadingZeros`（`lzcnt`/`clz`）、`trailingZeros`（`tzcnt`/`ctz`）与 `rotateLeft`/`rotateRight` 直接编译为单周期 CPU 指令；注意对 `0` 调用 `leadingZeros`/`trailingZeros` 返回完整位宽（如 `u64` 为 `64`）。
+3. **编译期反射零运行时开销（`traits.cp`）**：
+   - `isInt`、`isStruct`、`hasField`、`fieldCount`、`sizeOf`、`alignOf`、`typeName` 与 `ChildType` 全部在编译期（`comptime`）折叠为常量，适用于泛型容器特化与零成本序列化代码生成。
