@@ -475,3 +475,18 @@ export {
     ScanExportDecl,
     ExportScanner,
 } from "./exportScan";
+
+export {
+    WRITE_PLAN_MAX_FILES,
+    WRITE_PLAN_MAX_DIRS,
+    WritePlanError,
+    validateOutputRelPath,
+    extractParentDirPosix,
+    WriteChunkContentKind,
+    WriteSourceMapMode,
+    WriteFileRole,
+    formatSourceMapUrlComment,
+    WritePlannedFile,
+    WritePlanStats,
+    DiskWritePlanner,
+} from "./writePlan";

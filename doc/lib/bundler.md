@@ -792,3 +792,33 @@ const def = sc.lookupExport(m_entry, "default"); // null
 * = hit;
 * = def;
 ```
+
+- **Bundler 磁盘落盘写入规划器（`writePlan.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/writeOutputFilesToDisk.cp` & `/data/dev/bun/docs/bundler/index.mdx`）**：
+    - 导出：`WRITE_PLAN_MAX_FILES` (`64`)、`WRITE_PLAN_MAX_DIRS` (`64`)、`WritePlanError`、`validateOutputRelPath`、`extractParentDirPosix`、`WriteChunkContentKind`（`Js`/`Css`/`Html`/`Asset`）、`WriteSourceMapMode`（`None`/`Inline`/`Linked`/`External`）、`WriteFileRole`（`PrimaryChunk`/`SourceMap`/`Bytecode`/`Placeholder`）、`formatSourceMapUrlComment`、`WritePlannedFile`、`WritePlanStats`、`DiskWritePlanner`（`init`/`planChunk`/`dirAt`/`fileAt`/`stats`）；
+    - **落盘安全防线与 Standalone HTML 对齐契约（参考 `/data/dev/bun/docs/bundler/index.mdx`）**：
+      - 所有写入目标相对路径必须通过 `validateOutputRelPath()` 严格校验（拦截空路径、绝对路径、Windows 盘符、控制字符及 `..` 目录穿越段），并在 `DiskWritePlanner` 中执行全局输出路径碰撞去重（重复返回 `DuplicateOutputPath`）；
+      - Standalone HTML 构建模式下（`standalone_html_only = true`），非 HTML Chunk 仅插入 `Placeholder` 保持输出数组索引对齐而不写盘；
+      - 自动去重待创建父目录、按 `is_executable` 分配 `0o755`/`0o644` 权限，并按 `Linked`/`External` SourceMap 与 Bytecode 开关自动规划 `.map` / `.jsc` 伴生落盘文件及生成 JS/CSS `sourceMappingURL` 注释。
+
+```cp
+import {
+    WriteChunkContentKind,
+    WriteSourceMapMode,
+    DiskWritePlanner,
+} from "cap:bundler";
+
+let wp = DiskWritePlanner.init(false);
+* = wp.planChunk(
+    0,
+    WriteChunkContentKind.Js,
+    "bin/cli.js",
+    4096,
+    true,
+    WriteSourceMapMode.Linked,
+    "bin/cli.js.map",
+    true,
+    "bin/cli.jsc",
+)?;
+const st = wp.stats(); // dirs_to_create == 1 ("bin"), files_to_write == 3, executable_count == 1
+* = st;
+```
