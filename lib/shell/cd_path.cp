@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/builtin/cd.cp | Synced: 2026-11-22T09:28:55Z
+// Source: Absorbed from /data/dev/bun/src/shell/builtin/cd.cp | Synced: 2026-11-22T11:30:24Z
 // Pure-CP zero-allocation POSIX `cd` target parser, `~`/`-` expansion,
 // lexical POSIX path normalizer, and `(cwd, prev_cwd)` directory state machine.
 

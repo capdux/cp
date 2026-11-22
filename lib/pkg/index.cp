@@ -348,3 +348,23 @@ export {
     analyzeWorkspacePackageJson,
     WorkspacePkgJsonCache,
 } from "./workspace_pkg_cache.cp";
+
+export {
+    ISOLATED_MAX_SKIP_DIRS,
+    ISOLATED_MAX_DIRNAME_LEN,
+    IsolatedMaterializeError,
+    IsolatedLinkerMode,
+    MaterializePlatform,
+    MaterializeBackend,
+    MaterializeErrno,
+    MaterializeRecoveryAction,
+    MaterializeDecision,
+    MaterializeStats,
+    resolveDefaultLinkerMode,
+    parseLinkerModeFlag,
+    defaultMaterializeBackend,
+    fallbackMaterializeBackend,
+    decideMaterializeRecovery,
+    resolveMaterializeDestPath,
+    IsolatedMaterializer,
+} from "./isolated_materializer.cp";

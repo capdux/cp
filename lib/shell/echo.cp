@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/builtin/echo.cp | Synced: 2026-11-22T09:32:07Z
+// Source: Absorbed from /data/dev/bun/src/shell/builtin/echo.cp | Synced: 2026-11-22T11:30:30Z
 // Pure-CP zero-allocation GNU/Bash `echo` flag parser (`-n`, `-e`, `-E` and
 // combined forms), backslash escape expander (`\a`, `\b`, `\c`, `\e`/`\E`,
 // `\f`, `\n`, `\r`, `\t`, `\v`, `\\`, `\0NNN`, `\xHH`), and formatter.

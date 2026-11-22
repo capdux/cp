@@ -678,3 +678,34 @@ const e2 = cache.getOrInsert("C:/repo/packages/pkg-a/package.json", pkg_src, Wor
 * = e1;
 * = e2;
 ```
+
+### Isolated Install 文件物化策略、错误自愈与后端降级协调器（`lib/pkg/isolated_materializer.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/isolated_install/FileCloner.cp`、`Hardlinker.cp` 与 `/data/dev/bun/docs/pm/isolated-installs.mdx`；
+- 导出：`ISOLATED_MAX_SKIP_DIRS` (`16`)、`ISOLATED_MAX_DIRNAME_LEN` (`64`)、`IsolatedMaterializeError`、`IsolatedLinkerMode`、`MaterializePlatform`、`MaterializeBackend`、`MaterializeErrno`、`MaterializeRecoveryAction`、`MaterializeDecision`、`MaterializeStats`、`resolveDefaultLinkerMode`、`parseLinkerModeFlag`、`defaultMaterializeBackend`、`fallbackMaterializeBackend`、`decideMaterializeRecovery`、`resolveMaterializeDestPath`、`IsolatedMaterializer`；
+- **最佳实践与边界约束（源自 Bun `docs/pm/isolated-installs.mdx`）**：
+  - 默认 Linker 决策表：`configVersion >= 1` 且启用 `workspaces` 时默认启用 `Isolated`（杜绝幽灵依赖并确保确定性解析），其余情况默认 `Hoisted`，可通过 `--linker isolated|hoisted`（`parseLinkerModeFlag`）显式覆盖；
+  - 平台首选后端：macOS 优先 `Clonefile`（`clonefileat`），Linux/Windows 优先 `Hardlink`；遇到 `EXDEV` / `ENOTSUP` / `EMLINK` 时沿 `Clonefile -> Hardlink -> Copyfile` 自动降级；
+  - Staging 容错重试：`EEXIST` 清理陈旧暂存目标树重试一次、`ENOENT` 自动创建父目录重试一次（再次失败立即终止防死循环）；
+  - 目标路径拼接：当目标路径已是绝对路径（如全局虚拟存储 Global Virtual Store）时原样保留，仅对项目相对路径拼接 `cwd`。
+
+```cp
+import {
+    MaterializePlatform,
+    MaterializeErrno,
+    MaterializeRecoveryAction,
+    MaterializeBackend,
+    resolveDefaultLinkerMode,
+    IsolatedMaterializer,
+} from "cap:pkg";
+
+const mode = resolveDefaultLinkerMode(1, true); // IsolatedLinkerMode.Isolated
+let mat = IsolatedMaterializer.initForPlatform(MaterializePlatform.MacOS);
+const d1 = mat.recordAttempt(MaterializeErrno.Exist, true, false); // DeleteTreeAndRetry
+const d2 = mat.recordAttempt(MaterializeErrno.Exdev, true, false); // FallbackBackend -> Hardlink
+const d3 = mat.recordAttempt(MaterializeErrno.Ok, true, false);    // hardlinked_count == 1
+* = mode;
+* = d1;
+* = d2;
+* = d3;
+```

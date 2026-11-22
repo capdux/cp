@@ -462,3 +462,19 @@ export {
     ToolCallStreamReport,
     ToolCallAssembler,
 } from "./tool_call_assembler.cp";
+
+export {
+    COMPACTOR_MAX_MESSAGES,
+    COMPACTOR_NO_GROUP,
+    CompactMessageRole,
+    CompactionAction,
+    CompactionStatus,
+    ToolPairIssueKind,
+    CompactMessage,
+    CompactionConfig,
+    ToolPairIntegrityReport,
+    CompactionPlan,
+    validateToolPairIntegrity,
+    markOrphanToolMessages,
+    planContextCompaction,
+} from "./context_compactor.cp";

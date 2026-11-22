@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/builtin/exit.cp | Synced: 2026-11-22T05:57:08Z
+// Source: Absorbed from /data/dev/bun/src/shell/builtin/exit.cp | Synced: 2026-11-22T11:30:58Z
 // ============================================================================
 // Pure-CP Zero-Allocation POSIX Shell `exit` Code Parser & `export` Declaration Codec
 // Absorbed from Bun: src/shell/builtin/{exit,export}.cp & docs/runtime/shell.mdx

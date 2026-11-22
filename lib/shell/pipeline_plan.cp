@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/states/Pipeline.cp | Synced: 2026-11-22T09:33:43Z
+// Source: Absorbed from /data/dev/bun/src/shell/states/Pipeline.cp | Synced: 2026-11-22T11:32:11Z
 // Ported from Bun: /data/dev/bun/src/shell/states/Pipeline.cp & /data/dev/bun/docs/runtime/shell.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation Shell Pipeline Topology Planner & State Machine:

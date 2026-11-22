@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/Builtin.cp | Synced: 2026-11-22T07:05:10Z
+// Source: Absorbed from /data/dev/bun/src/shell/Builtin.cp | Synced: 2026-11-22T11:30:41Z
 // ============================================================================
 // Absorbed from Bun: /data/dev/bun/src/shell/Builtin.cp & builtin/*.cp
 // Upstream Sync: Refer to /data/dev/bun/src/shell/ for future upstream updates.

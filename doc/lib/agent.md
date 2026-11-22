@@ -2308,3 +2308,57 @@ fn toolCallAssemblerQuickStart() {
     assembler.reset();
 }
 ```
+
+
+---
+
+## 子模块：零分配多轮对话原子工具对保护与上下文压缩编排器（`context_compactor.cp`）
+
+### 核心特性
+
+- **原子工具对完整性约束（`group_id` Atomic Unit）**：支持 `system | user | assistant | tool_call | tool_result | summary_anchor` 六种角色与 `token_count` / `group_id` / `pinned` / `importance_bps` 元数据；同一 `group_id` 下的 `tool_call` 与全部对应 `tool_result` 聚合为不可拆分的原子单元，压缩决策（`keep | summarize_drop | drop`）严格整组生效，绝不产生孤儿 `tool_result` 或悬挂 `tool_call`。
+- **双阶段上下文压缩编排（`planContextCompaction`）**：
+  1. 始终保护 `pinned` 消息（及其所属原子组）与末尾最近 `min_recent_turns` 轮完整交互（自动对齐原子组边界）；
+  2. 对中段历史按加权 `recency + importance` 评分贪心淘汰最低分原子单元，低重要性单元直接 `drop`，其余归并 `summarize_drop` 并精确输出 `kept_tokens`、`saved_tokens` 与待摘要区间 `[summary_start_idx, summary_end_idx)`。
+- **孤儿工具消息检测与标记**：`validateToolPairIntegrity` 与 `markOrphanToolMessages` 零堆扫描缺失 `group_id`、无响应 `orphan_tool_call` 及无前置调用 `orphan_tool_result`。
+
+### 导出清单
+
+- **常量与枚举**：`COMPACTOR_MAX_MESSAGES` (`128`)、`COMPACTOR_NO_GROUP` (`0`)、`CompactMessageRole`、`CompactionAction`（`keep | summarize_drop | drop`）、`CompactionStatus`（`within_budget | compacted | pinned_exceeds_budget | budget_tight_best_effort`）、`ToolPairIssueKind`
+- **数据模型**：`CompactMessage`、`CompactionConfig`、`ToolPairIntegrityReport`、`CompactionPlan`（`actionAt`）
+- **核心函数**：`validateToolPairIntegrity`、`markOrphanToolMessages`、`planContextCompaction`
+
+### QuickStart 示例
+
+```cp
+import {
+    CompactMessageRole,
+    CompactionStatus,
+    CompactMessage,
+    CompactionConfig,
+    validateToolPairIntegrity,
+    planContextCompaction,
+} from "cap:agent";
+
+fn contextCompactorQuickStart() {
+    let msgs: [6]CompactMessage = [
+        CompactMessage{ msg_id: 1, role: CompactMessageRole.system, token_count: 500, pinned: true, importance_bps: 10000 },
+        CompactMessage{ msg_id: 2, role: CompactMessageRole.user, token_count: 400, importance_bps: 3000 },
+        CompactMessage{ msg_id: 3, role: CompactMessageRole.tool_call, token_count: 300, group_id: 10, importance_bps: 3000 },
+        CompactMessage{ msg_id: 4, role: CompactMessageRole.tool_result, token_count: 1200, group_id: 10, importance_bps: 3000 },
+        CompactMessage{ msg_id: 5, role: CompactMessageRole.user, token_count: 400, importance_bps: 8000 },
+        CompactMessage{ msg_id: 6, role: CompactMessageRole.assistant, token_count: 600, importance_bps: 8000 },
+    ];
+
+    const check = validateToolPairIntegrity(msgs[0..]);
+    if (!check.valid) return;
+
+    const cfg = CompactionConfig{ max_tokens: 2000, target_tokens: 1800, summary_reserve_tokens: 200, min_recent_turns: 1 };
+    const plan = planContextCompaction(msgs[0..], cfg);
+    if (plan.status == CompactionStatus.compacted) {
+        * = plan.saved_tokens;      // 原子组 group_id=10 (tool_call+tool_result) 被整组 summarize_drop
+        * = plan.summary_start_idx;
+        * = plan.summary_end_idx;
+    }
+}
+```
