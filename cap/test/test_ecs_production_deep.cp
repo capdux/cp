@@ -10,7 +10,7 @@ import {
     EntityRegistry,
     ComponentPool,
     EcsQuery,
-} from "cap:ecs";
+} from "cap:gfx";
 
 struct Position {
     x: f32;
@@ -264,19 +264,19 @@ fn testCapEcsDynamicLazyMount(): ! {
     let gpa: std.heap.DebugAllocator(.{}) = .init;
     const alloc = gpa.allocator();
     {
-        let reg = cap.ecs.EntityRegistry.init(alloc);
+        let reg = cap.gfx.EntityRegistry.init(alloc);
         defer reg.deinit();
 
-        let pool = cap.ecs.ComponentPool(Position).init(alloc);
+        let pool = cap.gfx.ComponentPool(Position).init(alloc);
         defer pool.deinit();
-        let hp_pool = cap.ecs.ComponentPool(Health).init(alloc);
+        let hp_pool = cap.gfx.ComponentPool(Health).init(alloc);
         defer hp_pool.deinit();
 
         const e = reg.spawn()?;
         pool.set(e, &reg, Position{ x: 42.0, y: 84.0 })?;
         hp_pool.set(e, &reg, Health{ hp: 99, max_hp: 100 })?;
 
-        const hits = cap.ecs.EcsQuery.collectJoined2(alloc, Position, Health, &pool, &hp_pool)?;
+        const hits = cap.gfx.EcsQuery.collectJoined2(alloc, Position, Health, &pool, &hp_pool)?;
         defer alloc.free(hits);
         expect_eq(hits.len, 1 as usize);
         expect_eq(hits[0].eql(e), true);

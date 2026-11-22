@@ -12,7 +12,7 @@ import {
     octileHeuristic,
     astarFindPath,
     hasLineOfSight,
-} from "cap:astar";
+} from "cap:gfx";
 
 fn absI32(v: i32): i32 {
     return if (v < 0) -v else v;

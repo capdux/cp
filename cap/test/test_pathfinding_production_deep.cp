@@ -10,7 +10,7 @@ import {
     GridCoord,
     PathResult,
     GridMap,
-} from "cap:pathfinding";
+} from "cap:gfx";
 
 const SQRT2: f64 = 1.4142135623730950488;
 
@@ -294,25 +294,25 @@ fn testDijkstraDistanceFieldZeroLeak(): !void {
 fn testCapPathfindingLazyMount(): !void {
     const alloc = std.testing.allocator;
 
-    let grid = cap.pathfinding.GridMap.init(alloc, 6, 6)?;
+    let grid = cap.gfx.GridMap.init(alloc, 6, 6)?;
     defer grid.deinit();
 
     grid.setBlocked(2, 1, true)?;
     grid.setBlocked(2, 2, true)?;
     grid.setBlocked(2, 3, true)?;
 
-    let res: cap.pathfinding.PathResult = grid.findPathAStar(
+    let res: cap.gfx.PathResult = grid.findPathAStar(
         alloc,
-        cap.pathfinding.GridCoord.init(0, 2),
-        cap.pathfinding.GridCoord.init(4, 2),
+        cap.gfx.GridCoord.init(0, 2),
+        cap.gfx.GridCoord.init(4, 2),
         true,
-        cap.pathfinding.HeuristicKind.Octile,
+        cap.gfx.HeuristicKind.Octile,
     )?;
     defer res.deinit();
 
     expect_eq(res.coords.len > 2, true);
-    expect_eq(res.coords[0].eql(cap.pathfinding.GridCoord.init(0, 2)), true);
-    expect_eq(res.coords[res.coords.len - 1].eql(cap.pathfinding.GridCoord.init(4, 2)), true);
+    expect_eq(res.coords[0].eql(cap.gfx.GridCoord.init(0, 2)), true);
+    expect_eq(res.coords[res.coords.len - 1].eql(cap.gfx.GridCoord.init(4, 2)), true);
 
     const smoothed = grid.smoothPath(alloc, res.coords)?;
     defer alloc.free(smoothed);

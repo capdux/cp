@@ -9,7 +9,7 @@ import {
     isDds,
     parseDdsHeader,
     calcDdsMipSize,
-} from "cap:dds";
+} from "cap:gfx";
 
 fn writeU32Le(buf: []u8, pos: usize, v: u32) {
     buf[pos] = u8(v & 0xFF);

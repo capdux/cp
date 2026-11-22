@@ -39,6 +39,10 @@ pub struct Vec2 {
         return Vec2 { x: _.x * s, y: _.y * s };
     }
 
+    fn neg(): Vec2 {
+        return Vec2 { x: 0.0 - _.x, y: 0.0 - _.y };
+    }
+
     fn dot(o: Vec2): f64 {
         return _.x * o.x + _.y * o.y;
     }
@@ -47,8 +51,17 @@ pub struct Vec2 {
         return _.x * o.y - _.y * o.x;
     }
 
+    fn lenSq(): f64 {
+        return _.x * _.x + _.y * _.y;
+    }
+
     fn len(): f64 {
         return std.math.sqrt(_.x * _.x + _.y * _.y);
+    }
+
+    /// 90-degree counter-clockwise perpendicular vector `(-y, x)`.
+    fn perp(): Vec2 {
+        return Vec2 { x: 0.0 - _.y, y: _.x };
     }
 
     fn dist(o: Vec2): f64 {

@@ -20,7 +20,7 @@ import {
     parseBdfHeader,
     bdfGlyphPixel,
     findBdfGlyph,
-} from "cap:bdf";
+} from "cap:gfx";
 
 const SAMPLE_BDF: []const u8 =
     "STARTFONT 2.1\n" ++

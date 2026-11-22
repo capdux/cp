@@ -12,7 +12,7 @@ import {
     parseBvhHeader,
     BvhFloatIter,
     BvhFrameIter,
-} from "cap:bvh";
+} from "cap:gfx";
 
 fn approxEq(a: f64, b: f64): bool {
     const diff = if (a > b) (a - b) else (b - a);

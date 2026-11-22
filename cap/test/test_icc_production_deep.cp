@@ -13,7 +13,7 @@ import {
     parseIccHeader,
     IccTagIter,
     findIccTag,
-} from "cap:icc";
+} from "cap:gfx";
 
 fn writeTag(buf: []u8, off: usize, tag: []const u8) {
     buf[off] = tag[0];

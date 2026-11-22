@@ -13,7 +13,7 @@ import {
     parseTtfHead,
     parseTtfNumGlyphs,
     calcSfntChecksum,
-} from "cap:ttf";
+} from "cap:gfx";
 
 fn putU16BE(buf: *[]u8, off: usize, v: u16) {
     buf[off] = ((v >> 8) & 0xFF) as u8;

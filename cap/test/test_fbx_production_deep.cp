@@ -20,7 +20,7 @@ import {
     FbxPropIter,
     isFbxBinary,
     parseFbxHeader,
-} from "cap:fbx";
+} from "cap:gfx";
 
 fn approxEq(a: f64, b: f64): bool {
     return @abs(a - b) < 0.0001;

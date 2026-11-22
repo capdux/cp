@@ -10,7 +10,7 @@ import {
     QuadBezier,
     CubicBezier,
     tAtArcLength,
-} from "cap:bezier";
+} from "cap:gfx";
 
 fn absF(x: f64): f64 {
     return if (x < 0.0) -x else x;

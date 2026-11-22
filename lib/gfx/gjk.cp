@@ -2,58 +2,9 @@
 
 import std from "std";
 
+import { Vec2 } from "./bezier.cp";
+
 const GJK_MAX_ITERATIONS: u32 = 64;
-
-/// 2D floating-point vector with core physics/geometry operators.
-pub struct Vec2 {
-    x: f64,
-    y: f64,
-
-    fn add(o: Vec2): Vec2 {
-        return Vec2 { x: _.x + o.x, y: _.y + o.y };
-    }
-
-    fn sub(o: Vec2): Vec2 {
-        return Vec2 { x: _.x - o.x, y: _.y - o.y };
-    }
-
-    fn scale(s: f64): Vec2 {
-        return Vec2 { x: _.x * s, y: _.y * s };
-    }
-
-    fn neg(): Vec2 {
-        return Vec2 { x: 0.0 - _.x, y: 0.0 - _.y };
-    }
-
-    fn dot(o: Vec2): f64 {
-        return _.x * o.x + _.y * o.y;
-    }
-
-    fn cross(o: Vec2): f64 {
-        return _.x * o.y - _.y * o.x;
-    }
-
-    fn lenSq(): f64 {
-        return _.x * _.x + _.y * _.y;
-    }
-
-    fn len(): f64 {
-        return std.math.sqrt(_.lenSq());
-    }
-
-    fn normalize(): Vec2 {
-        const l = _.len();
-        if (l <= 1.0e-15) {
-            return Vec2 { x: 0.0, y: 0.0 };
-        }
-        return Vec2 { x: _.x / l, y: _.y / l };
-    }
-
-    /// 90-degree counter-clockwise perpendicular vector `(-y, x)`.
-    fn perp(): Vec2 {
-        return Vec2 { x: 0.0 - _.y, y: _.x };
-    }
-}
 
 /// Separating Axis Theorem contact manifold with unit separation normal (A -> B) and depth.
 pub struct SatContact {

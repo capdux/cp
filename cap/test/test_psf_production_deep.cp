@@ -24,7 +24,7 @@ import {
     psfGlyphBitmap,
     psfGlyphPixel,
     findPsfGlyphByCodepoint,
-} from "cap:psf";
+} from "cap:gfx";
 
 fn writeU16LE(buf: []u8, offset: usize, val: u16) {
     buf[offset] = (val & 0xFF) as u8;

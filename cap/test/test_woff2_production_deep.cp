@@ -15,7 +15,7 @@ import {
     isWoff2,
     parseWoff2Header,
     Woff2TableIter,
-} from "cap:woff2";
+} from "cap:gfx";
 
 fn writeU16BE(buf: []u8, off: usize, v: u16) {
     buf[off] = ((v >> 8) & 0xFF) as u8;

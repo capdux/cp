@@ -38,7 +38,7 @@ import {
     readPcfMetric,
     parsePcfEncodings,
     lookupPcfGlyphIndex,
-} from "cap:pcf";
+} from "cap:gfx";
 
 struct PcfBuilder {
     buf: [1024]u8 = [0; 1024],

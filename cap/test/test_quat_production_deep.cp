@@ -2,7 +2,7 @@
 
 import std from "std";
 import { test, expect_eq } from "cap:test";
-import { Vec3, EulerAngles, Mat3, Quat } from "cap:quat";
+import { Vec3, EulerAngles, Mat3, Quat } from "cap:gfx";
 
 fn absDiff(a: f64, b: f64): f64 {
     if (a >= b) {

@@ -22,7 +22,7 @@ import {
     isEot,
     parseEotHeader,
     decodeUtf16LeName,
-} from "cap:eot";
+} from "cap:gfx";
 
 struct EotBuilder {
     buf: [1024]u8 = [0; 1024],
