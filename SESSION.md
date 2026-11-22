@@ -2498,3 +2498,8 @@
   > 3. `gzip.zig:529`：`NativeZlib.inflateInit2_` 缺少 `static fn` 导致多余 `self` 形参。
   >
   > 该热修与在途的 4 路任务完全无文件冲突，待验证 `cap build -m` 与 `cap:pack` 全套回归测试通过并执行 `resolve` 结单后，我将第一时间同步归档 `SESSION.md` 与 Git 提交并向您汇报。
+
+### 2026-11-23（下游工单全量补录：`task-capsurf-20261123-brotli-zig-narrowing`）[ticket:task-capsurf-20261123-brotli-zig-narrowing]
+- **工单来源**：`capsurf_agy`（项目 `capsurf` / 分类 `compiler_bug`） | 创建：`2026-11-23 09:19:56` | 状态：`pending` | 结单：`进行中`
+- **报错/需求摘要**：cap build -m 调用 brotliDecompress 时 _lib/pack/brotli.zig 报 4 处 Zig 整数窄化类型错误: 1) brotli.zig:199 expected 'u3' found 'u4' (self.bit_pos); 2) brotli.zig:219 expected 'u5' found 'u6' (i); 3) brotli.zig:487 expected 'u6' found 'u8' (window_bits); 4) brotli.zig:1259 expected 'u6' found 'u32' (mskipbits * 8)。此外 brotliDecompress(alloc, body) catch "" 在跨模块 cap build -m 时将 Zig error union 误降级为 switch(.ok/.er ...(截断)
+- **结单与处理汇报**：(处理中/未填写结单备注)

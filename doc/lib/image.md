@@ -29,8 +29,8 @@
 | `lib/image/png.cp` | `// Source: /data/dev/bun/src/runtime/image/codec_png.cp` | `Png`、`PngImage`、`RgbaColor`（RFC 2083 全滤镜解码与 Zlib+CRC32 编码） |
 | `lib/image/bmp.cp` | `// Source: /data/dev/bun/src/runtime/image/codec_bmp.cp` | `Bmp`、`BmpHeader`（Windows DIB 24/32bpp、Top-Down/Bottom-Up 编解码） |
 | `lib/image/gif.cp` | `// Source: /data/dev/bun/src/runtime/image/codec_gif.cp` | `Gif`、`GifHeader`、`GifImage`（GIF87a/89a 探测、4096 节点 LZW 解码与 4-pass 交织） |
-| `lib/image/jpeg.cp` | `// Source: /data/dev/bun/src/runtime/image/codec_jpeg.cp` | `Jpeg`、`JpegHeader`（Baseline SOF0 / Progressive SOF2 尺寸与 EXIF 联合探测） |
-| `lib/image/webp.cp` | `// Source: /data/dev/bun/src/runtime/image/codec_webp.cp` | `Webp`、`WebpHeader`（RIFF 容器 VP8/VP8L/VP8X 尺寸、Alpha 与动画标志探测） |
+| `lib/image/jpeg.cp` | `// Source: /data/dev/bun/src/runtime/image/codec_jpeg.cp` | `Jpeg`、`JpegImage`、`JpegHeader`、`JpegError`、`jpegEncode`、`jpegEncodeInto`（Baseline DCT JFIF 1.01 编码与 SOF0/SOF2/EXIF 探测） |
+| `lib/image/webp.cp` | `// Source: /data/dev/bun/src/runtime/image/codec_webp.cp` | `Webp`、`WebpImage`、`WebpHeader`、`WebpError`、`webpEncode`、`webpEncodeLossless`（RFC 9649 VP8L 编码与 RIFF VP8/VP8L/VP8X 探测） |
 | `lib/image/exif.cp` | `// Source: /data/dev/bun/src/runtime/image/exif.cp` | `Exif`（JPEG APP1 段落扫描与大小端 TIFF IFD0 `0x0112` Orientation 解析） |
 | `lib/image/quantize.cp` | `// Source: /data/dev/bun/src/runtime/image/quantize.cp` | `Quantizer`、`QuantizeResult`（RGBA8 降维至 256 色以内紧凑调色板与索引图） |
 | `lib/image/thumbhash.cp` | `// Source: /data/dev/bun/src/runtime/image/thumbhash.cp` | `ThumbHash`、`DecodedThumbImage`（25 字节微缩占位哈希编码、还原与 Data URL） |
@@ -51,8 +51,12 @@
 | `Codecs.getOrientationTransform(ori): ExifTransform` | 将 RFC EXIF 1~8 方向码映射为 `{ flop, flip, rotate }` 几何变换 |
 | `Exif.readJpeg(bytes): ExifOrientation` | 解析 JPEG APP1 中的 EXIF 方向标号（无标签时返回 `.Normal`） |
 | `Exif.parseTiff(tiff): ExifOrientation?` | 直接解析大端 (`MM`) 或小端 (`II`) TIFF IFD0 目录中的 `0x0112` 标签 |
-| `Jpeg.probe(bytes): JpegHeader?` | 零解码极速获取 JPEG 宽高、色彩分量数、是否渐进式及 EXIF 方向 |
-| `Webp.probe(bytes): WebpHeader?` | 零解码极速获取 WebP VP8/VP8L/VP8X 宽高、Alpha、无损与动图标志 |
+| `Jpeg.probe(bytes): JpegHeader?` / `JpegImage.probe(bytes)` | 零解码极速获取 JPEG 宽高、色彩分量数、是否渐进式及 EXIF 方向 |
+| `jpegEncode(allocator, rgba, width, height, quality): ([]u8)!JpegError` / `Jpeg.encode(...)` / `JpegImage.encode(...)` | 完整 ITU-T T.81 / JFIF 1.01 Baseline DCT YCbCr 4:4:4 编码器（IJG 质量缩放 `1..100`，任意非 8 倍数宽高边缘复制填充） |
+| `jpegEncodeInto(rgba, width, height, quality, out): ([]const u8)!JpegError` | 零堆分配 Baseline DCT JPEG 编码器，直接写入调用方缓冲区 |
+| `Webp.probe(bytes): WebpHeader?` / `WebpImage.probe(bytes)` | 零解码极速获取 WebP VP8/VP8L/VP8X 宽高、Alpha、无损与动图标志 |
+| `webpEncode(allocator, rgba, width, height, quality): ([]u8)!WebpError` / `Webp.encode(...)` / `WebpImage.encode(...)` | 完整 RFC 9649 WebP (VP8L) 编码器（`quality == 100` 严格逐比特无损，`quality < 100` 可控感知量化压缩，含 Subtract Green + LZ77 + 5 组 Canonical Huffman） |
+| `webpEncodeLossless(allocator, rgba, width, height): ([]u8)!WebpError` / `Webp.encodeLossless(...)` / `WebpImage.encodeLossless(...)` | 严格无损 VP8L 编码快捷入口（等价于 `quality = 100`） |
 
 ### 2. 无损与索引像素编解码 (`Png` / `Bmp` / `Gif`)
 
