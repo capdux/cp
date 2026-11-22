@@ -5,6 +5,7 @@ export * from "./props.cp";
 export * from "./grapheme.cp";
 export * from "./width.cp";
 export * from "./lut.cp";
+export * from "./ascii.cp";
 
 import r from "./range.cp";
 pub const MAX_CODEPOINT = r.MAX_CODEPOINT;

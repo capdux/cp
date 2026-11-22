@@ -85,11 +85,16 @@ import cap from "cap";
 
 ---
 
-## 收敛扩展子模块（`lut.cp` / `range.cp` / `wcwidth.cp`）
+## 收敛扩展子模块（`lut.cp` / `range.cp` / `wcwidth.cp` / `ascii.cp`）
 
 - **三级压缩查找表 (`lut.cp`)**：`BLOCK_SIZE`, `MAX_UNICODE_CODEPOINT`, `MAX_UNIQUE_ELEMENTS`, `Error`, `Tables<Elem>`, `Generator<Elem, Context>`，实现 O(1) Stage 1 -> Stage 2 -> Stage 3 Unicode 属性压缩表生成与查询。
 - **CSS `@font-face` Unicode 区间 (`range.cp`)**：`MAX_CODEPOINT`, `UnicodeRangeError`, `UnicodeRange`（`U+XXXX` / `U+XXXX-YYYY` / `U+??` 通配符区间解析、规范化与格式化）。
 - **终端列宽扩展 (`wcwidth.cp`)**：`wcwidth`（原 `codepointWidth` 别名）、`isZeroWidth`、`isWideChar`、`strDisplayWidth`、`sliceToDisplayWidth`。
+- **Unicode `u21` ASCII 分类与零分配切片工具 (`ascii.cp`)**（源自 `/data/dev/bun/src/unicode/uucode_lib/src/ascii.cp`）：
+  - 控制码常量：`AsciiControlCode`（`NUL`, `BEL`, `BS`, `HT`, `LF`, `VT`, `FF`, `CR`, `ESC`, `US`, `DEL` 等 `u21` 常量）
+  - 码点分类谓词：`isAsciiCodepoint`、`isAsciiAlphanumeric`、`isAsciiAlphabetic`、`isAsciiControl`、`isAsciiDigit`、`isAsciiLower`、`isAsciiUpper`、`isAsciiPrint`、`isAsciiGraph`、`isAsciiPunct`、`isAsciiWhitespace`、`isAsciiHex`
+  - 无分支大小写折叠与数字解析：`asciiToUpper`、`asciiToLower`、`asciiDigitValue`、`asciiHexValue`
+  - 零分配切片辅助：`isAllAscii`、`asciiEqlIgnoreCase`、`asciiStartsWithIgnoreCase`、`asciiEndsWithIgnoreCase`、`asciiToLowerBuf`、`asciiToUpperBuf`、`asciiTrimWhitespace`、`AsciiStats`、`scanAsciiStats`
 
 ---
 
