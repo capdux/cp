@@ -113,4 +113,12 @@ export {
     OneShotTaskPool,
 } from "./oneShotTask.cp";
 
+export {
+    ExtraCtxQueueError,
+    ExtraCtxTaskFn,
+    ExtraCtxTaskItem,
+    ExtraCtxDrainStats,
+    ExtraCtxTaskQueue,
+} from "./extraCtxQueue.cp";
+
 export * from "./emitter.cp";

@@ -293,6 +293,27 @@ const res = pool.run(h)?; // res.executed == true, res.result_code == 42
 * = res;
 ```
 
+### 3.14 外部切片驱动双上下文环形任务队列 (`extraCtxQueue.cp`)
+
+吸收自 `/data/dev/bun/src/event_loop/AnyTaskWithExtraContext.cp`：
+
+- **导出符号**：`ExtraCtxQueueError`（`QueueFull`/`QueueEmpty`）、`ExtraCtxTaskFn`、`ExtraCtxTaskItem`、`ExtraCtxDrainStats`、`ExtraCtxTaskQueue`（`init`/`capacity`/`len`/`remaining`/`isEmpty`/`isFull`/`enqueue`/`pushFront`/`cancelByContext`/`runNext`/`drain`/`clear`）；
+- **核心语义**：外部切片驱动环形缓冲区，无硬编码上限与堆分配；入队仅绑定任务上下文 `task_ctx`，派发时实时注入第二个上下文 `extra_ctx`，支持 O(1) 队尾入队/队首插队、按上下文选择性取消以及带错误计数的有界批量 `drain`。
+
+```cp
+import { ExtraCtxTaskQueue, ExtraCtxTaskItem } from "cap:event";
+
+fn combine(task_ctx: u64, extra_ctx: u64): i32 {
+    return @as(i32, @intCast(task_ctx * 10 + extra_ctx));
+}
+
+let buf: [16]ExtraCtxTaskItem = [ExtraCtxTaskItem{}; 16];
+let q = ExtraCtxTaskQueue.init(buf[0..]);
+* = q.enqueue(4, combine)?;
+const rc = q.runNext(2)?; // 42
+* = rc;
+```
+
 ---
 
 ## 四、 上游 Bun 事件循环行为契约与并发边界
