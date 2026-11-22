@@ -48,3 +48,13 @@ export {
     estimateCapacityBytes,
     MemoryCostBreakdown,
 } from "./memoryCost.cp";
+
+export {
+    PERF_TRACE_EVENT_COUNT,
+    PERF_TRACE_ALL_MASK,
+    PerfTraceCategory,
+    PerfTraceEvent,
+    categoryEventMask,
+    PerfTraceFilter,
+    PerfTraceAccumulator,
+} from "./traceEvents.cp";

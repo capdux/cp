@@ -98,3 +98,24 @@ const verdict = t1.diagnoseVsRss(t0, 10_000_000, 25_000_000, 4_000_000);
 // verdict == MemoryLeakVerdict.SuspectedUntrackedLeak
 * = verdict;
 ```
+
+## 7. 标准编译/打包追踪事件目录与零分配累加器 (`traceEvents.cp`)
+
+吸收自 `/data/dev/bun/src/perf/generated_perf_trace_events.cp`：
+
+- **导出符号**：
+  - 常量：`PERF_TRACE_EVENT_COUNT` (`59`)、`PERF_TRACE_ALL_MASK`
+  - 枚举：`PerfTraceCategory`（14 个子系统分类，`name()`）、`PerfTraceEvent`（59 个标准事件，`toId`/`fromId`/`bit`/`name`/`category`/`categoryName`/`fromName`）
+  - 过滤器：`categoryEventMask`、`PerfTraceFilter`（64 位 O(1) 位掩码开关：`none`/`all`/`forCategory`/`enable`/`disable`/`enableCategory`/`disableCategory`/`isEnabled`/`enabledCount`）
+  - 累加器：`PerfTraceAccumulator`（定长 `[59]u64` 零分配 O(1) 计数/累计耗时/峰值耗时聚合：`init`/`record`/`recordFiltered`/`countOf`/`totalNsOf`/`maxNsOf`/`avgNsOf`/`categoryTotalNs`/`grandTotalNs`/`hottestEvent`/`reset`）
+
+```cp
+import { PerfTraceCategory, PerfTraceEvent, PerfTraceFilter, PerfTraceAccumulator } from "cap:perf";
+
+let filter = PerfTraceFilter.forCategory(PerfTraceCategory.JSParser);
+let acc = PerfTraceAccumulator.init();
+acc.recordFiltered(filter, PerfTraceEvent.JSParserParse, 120_000);
+acc.recordFiltered(filter, PerfTraceEvent.BundlerReadFile, 50_000); // 被过滤忽略
+const hottest = acc.hottestEvent(); // PerfTraceEvent.JSParserParse
+* = hottest;
+```
