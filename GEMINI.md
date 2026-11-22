@@ -661,12 +661,22 @@ git status --porcelain cpc_dev/src
 3. **文档与可复用性闭环**：
    - 每个核心引擎必须同步补全 `doc/lib/<pkg>.md` 的架构说明、参数调优要点与端到端可运行示例，以及 `cp_lib_ref.md` 索引条目。
 
-### 2. 内置标准库（`cap:*`）vs 外部 `cap` 生态包分层边界
-1. **内置标准库（`lib/` / `cap:*`）只收三类资产**：
-   - **零外部 C/C++ 重量依赖的纯 CP 协议/帧/容器解析器**（如 HTTP/2/3、gRPC、RTP/RTCP/SRTP/SDP/ICE/STUN/TURN/SCTP、HLS/DASH/fMP4/WebM/Ogg/WAV/PCM/G.711、DOCX/PDF/XLSX 读写基础）；
-   - **高频通用计算与 AI/Agent 核心原语**（基于 CP 原生 `@dot`/`@fma`/`@l2sq`/`@popCount` 加速的向量检索、统计优化、FFT/Biquad/Sinc 音频 DSP、色彩/缩放基础图像处理、MCP/A2A/AgentMem/Attention）；
-   - **极轻量系统与运行时契约**（POSIX/cgroup/事件循环/并发调度/密码学原语）。
-2. **重型外部 C/C++ 生态与大型编解码器一律走 `cap install` 外部官方包**：
-   - 凡涉及庞大 C/C++ 依赖或专利/硬件加速栈的库（如 **OpenCV、libvips、ImageMagick、FFmpeg、libopus、x264/x265、dav1d/SVT-AV1、ONNX Runtime/llama.cpp**），**绝不直接塞进内置标准库**，而是作为官方外部包（如 `@cap/vips`、`@cap/opencv`、`@cap/opus`、`@cap/av`）通过 `cap` 预编译二进制矩阵（`.so`/`.dylib`/`.dll` + 全局缓存软链）按需安装，保持 CP 编译器与标准库核心极速轻量。
+### 2. 内置标准库（`cap:*`）vs 外部 `cap` 生态包分层边界与两阶段路线图
+1. **流媒体 / 实时语音（ASR/TTS）与音视频四层性能超越原则**：
+   - **零 GC + 外部切片零拷贝**：音视频帧（PCM/RTP/fMP4/YUV420）全程原地切片视图传递，杜绝 GC 尾延迟尖刺；
+   - **原生 SIMD 算子 + Zig `@Vector` 向量化**：利用 `@dot` / `@fma` / `@l2sq` / `@popCount` 加速 FFT、Biquad/FIR 滤波、Sinc 重采样、Mel 滤波器组、VAD 与图像卷积；
+   - **`comptime !{}` 编译期查表烘焙**：窗函数、G.711 μ-law/A-law、YUV↔RGB 矩阵、CRC/FEC 伽罗瓦域表在编译期预生成进只读段；
+   - **BEAM Actor + CPS + `Refc Binary`/`SharedTensor` 无锁流水线**：`RTP -> JitterBuffer -> 解码 -> 重采样/VAD -> ASR/LLM -> TTS -> 打包 -> SRTP` 按 Actor 故障隔离，零拷贝指针接力。
+2. **Phase 1（优先完成）：内置标准库（`lib/` / `cap:*`）三层内置核心**：
+   - **WebRTC 与实时流媒体协议层**（`cap:net` / `cap:media`）：RTP/RTCP/SRTP/SDP/ICE/STUN/TURN/SCTP/WHEP、HLS/DASH 播放列表与分片调度、fMP4/WebM/Ogg/WAV 容器读写；
+   - **轻量实时语音与音频 DSP 层**（`cap:media`）：PCM、ITU-T G.711（PCMU/PCMA）、自适应 Jitter Buffer & PLC、Radix-2 FFT/STFT、RBJ Biquad/SOS 滤波器、加窗 Sinc 重采样、ITU-R BS.1770 响度、VAD 与 ASR Mel 声学特征前端；
+   - **纯 CP 基础图像处理与文档层**（`cap:media` / `cap:doc`）：RGBA/YUV420/NV12 色彩互转、双线性/Bicubic/Lanczos 缩放、高斯/Sobel 卷积、无损 BMP/PPM/PNG 基础读写，以及 DOCX/PDF/XLSX 读写强化；
+   - **高频通用计算与 AI/Agent 核心原语**（`cap:vector` / `cap:math` / `cap:sys` / `cap:mcp` / `cap:a2a` / `cap:agentmem` / `cap:attention`）。
+3. **Phase 2（内置库完备后推进）：外部官方可安装 `cap` 生态包（`cap install` 按需安装）**：
+   - 凡涉及百万行级 C/C++ 代码、硬件加速栈（NVENC/VAAPI/VideoToolbox）或专利编解码的知名重型库，**绝不塞进内置标准库**，而是作为官方外部包通过 `cap` 预编译二进制矩阵（`.so`/`.dylib`/`.dll` + 全局缓存软链）按需安装：
+     - 音频/视频编解码：`@cap/opus`（libopus）、`@cap/av`（FFmpeg 封装）、`@cap/codecs`（x264/x265/dav1d/SVT-AV1）；
+     - 图像与计算机视觉：`@cap/vips`（libvips）、`@cap/opencv`（OpenCV）、`@cap/magick`（ImageMagick）；
+     - 推理运行时：`@cap/onnx`（ONNX Runtime）、`@cap/llama`（llama.cpp）。
+
 
 
