@@ -59,3 +59,10 @@ export {
     loraMergeIntoBase,
     loraUnmergeFromBase,
 } from "./lora.cp";
+
+export {
+    softplus,
+    ssmSelectiveStep,
+    ssmSelectiveScan,
+    causalConv1dStep,
+} from "./ssm.cp";

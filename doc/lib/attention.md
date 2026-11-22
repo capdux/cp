@@ -16,6 +16,7 @@
 - **`OnlineSoftmaxState` / `FlashAttnConfig` / `flashAttentionForward` / `flashAttentionSingleQuery`** (`flash.cp`)：零堆分配 O(1) 额外内存 FlashAttention-2 分块在线 Softmax 前向核，绝不物化 $N \times N$ 分数矩阵，原生支持因果掩码、Mistral 滑动窗口注意力与单 token 自回归解码热路径。
 - **`MoeGateKind` / `MoeRouteEntry` / `MoeDispatchStats` / `moeRouteToken` / `moeDispatchBatch` / `moeLoadBalanceLoss` / `moeCombineOutputs`** (`moe.cp`)：零堆分配稀疏混合专家（Sparse MoE）推理调度核，对标 Mixtral / Switch Transformer / Qwen3-MoE / DeepSeek-V3，支持 Softmax 与 Sigmoid 门控、无辅助损失 `expert_bias` 均衡偏置、容量受限 CSR 分桶派发（含溢出丢弃统计）、负载均衡辅助损失 $L_{\text{aux}}$ 与多专家加权输出合并。
 - **`LoraAdapter` / `loraApplyAdd` / `loraApplyWeightedSum` / `loraMergeIntoBase` / `loraUnmergeFromBase`** (`lora.cp`)：零堆分配多租户 LoRA 低秩适配器前向推理与权重热融合核，支持零拷贝借用 `A/B` 低秩矩阵、$O(r(d_{\text{in}} + d_{\text{out}}))$ 动态增量叠加、多 LoRA 加权混合以及零推理开销的静态热合并与在线热卸载。
+- **`softplus` / `ssmSelectiveStep` / `ssmSelectiveScan` / `causalConv1dStep`** (`ssm.cp`)：零堆分配 Mamba / S6 选择性状态空间模型（Selective SSM）$O(N)$ 线性复杂度长上下文推理核与深度可分离因果一维卷积，支持 ZOH 离散化（$A = -\exp(a_{\log}) < 0$ 严格稳定）、分块预填充无缝续接自回归单步生成以及固定环形历史缓存因果卷积。
 
 ## 3. API 速查
 
@@ -60,6 +61,10 @@
 | `loraApplyAdd` | `(adapter, x, y_inout, hidden_scratch): bool` | 单适配器增量前向 `y += (alpha / r) * B * (A * x)`，延迟 $O(r(d_{\text{in}} + d_{\text{out}}))$ |
 | `loraApplyWeightedSum` | `(adapters, weights, x, y_inout, hidden_scratch): bool` | 多租户多 LoRA 加权组合叠加（原子校验，支持零权重跳过） |
 | `loraMergeIntoBase` / `loraUnmergeFromBase` | `(base_weight_inout, adapter): bool` | 静态权重热合并 `W += (alpha / r) * B * A` 与精确逆操作热卸载 `W -= (alpha / r) * B * A` |
+| `softplus` | `(x: f64): f64` | 数值稳定 `ln(1 + exp(x))`，`x > 35.0` 线性直通防溢出 |
+| `ssmSelectiveStep` | `(x, dt, a_log, b_vec, c_vec, d_skip, d_inner, d_state, state_inout, y_out): bool` | Mamba S6 单步 ZOH 选择性状态空间递推（$A = -\exp(a_{\log}) < 0$） |
+| `ssmSelectiveScan` | `(x_seq, dt_seq, a_log, b_seq, c_seq, d_skip, seq_len, d_inner, d_state, state_inout, y_seq_out): bool` | 整序列 $O(N)$ 选择性扫描，支持分块预填充后无缝续接单步解码 |
+| `causalConv1dStep` | `(x, weight, bias, d_inner, kernel_size, conv_state_inout, y_out): bool` | Mamba 深度可分离因果 1D 卷积单步核（带 `[d_inner, kernel_size - 1]` 历史状态） |
 
 ## 4. 示例
 
@@ -290,5 +295,39 @@ pub fn demoMultiTenantLora(
         * = loraMergeIntoBase(base_w, ad);
         * = loraUnmergeFromBase(base_w, ad);
     }
+}
+```
+
+### Mamba / S6 选择性状态空间模型与因果 1D 卷积示例 (`ssm.cp`)
+
+```cp
+import {
+    softplus,
+    ssmSelectiveStep,
+    ssmSelectiveScan,
+    causalConv1dStep,
+} from "cap:attention";
+
+pub fn demoMambaS6Step(
+    x_in: []const f64,
+    conv_w: []const f64,
+    conv_b: []const f64,
+    a_log: []const f64,
+    b_vec: []const f64,
+    c_vec: []const f64,
+    d_skip: []const f64,
+    conv_state: *[]f64,
+    ssm_state: *[]f64,
+) {
+    // 1. 因果深度可分离 1D 卷积 (d_inner = 2, kernel_size = 4)
+    let conv_out_buf: [2]f64 = [0.0; 2];
+    let conv_out: []f64 = conv_out_buf[0..];
+    * = causalConv1dStep(x_in, conv_w, conv_b, 2, 4, conv_state, conv_out);
+
+    // 2. 计算正步长 dt = softplus(dt_raw) 并执行单步 S6 递推 (d_state = 4)
+    const dt_buf: [2]f64 = [softplus(0.25), softplus(-0.5)];
+    let y_buf: [2]f64 = [0.0; 2];
+    let y_out: []f64 = y_buf[0..];
+    * = ssmSelectiveStep(conv_out_buf[0..], dt_buf[0..], a_log, b_vec, c_vec, d_skip, 2, 4, ssm_state, y_out);
 }
 ```
