@@ -435,3 +435,17 @@ export {
     negotiateMySqlCapabilities,
     MySqlSessionMachine,
 } from "./mysqlSession.cp";
+
+export {
+    PgSessionError,
+    PgSessionState,
+    PgSessionSslMode,
+    PgSessionTlsStatus,
+    PgSessionTxStatus,
+    parsePgSessionTxStatus,
+    PgSessionCmdKind,
+    PgSessionCmdResult,
+    parsePgSessionCommandTag,
+    decidePgTlsResponse,
+    PgSessionMachine,
+} from "./pgSession.cp";

@@ -595,3 +595,29 @@ if (use_tls) {
 * = sess.onAuthOk(MYSQL_SESSION_STATUS_AUTOCOMMIT)?;
 // sess.isReadyForQuery() == true, sess.usesDeprecateEof() == true
 ```
+
+11. **PostgreSQL v3.0 会话状态机、SSLRequest 协商与 CommandTag 解析（`lib/sql/pgSession.cp`，吸收自 `/data/dev/bun/src/sql/postgres/{Status,SSLMode,TLSStatus,AnyPostgresError,CommandTag}.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
+    - **SSLRequest 协商与严格顺序守卫**：`decidePgTlsResponse()` 严格处理 PostgreSQL 单字节回复（`'S'`/`'N'`），`Require`/`VerifyCa`/`VerifyFull` 在服务端拒绝 SSL 时立即返回 `TlsNotAvailable`；状态机强制要求 `Pending` TLS 握手完成后才允许 `onStartupSent()`；
+    - **事务块与取消密钥追踪**：记录 `BackendKeyData`（`pid > 0` 与 `secret_key`），通过 `ReadyForQuery`（`'I'`/`'T'`/`'E'`）实时追踪 `inTransaction()` 与 `needsRollback()`（失败事务块 `'E'` 必须显式 `ROLLBACK`）；
+    - **CommandComplete 标签解析**：`parsePgSessionCommandTag()` 精准处理 `INSERT <oid> <rows>`（跳过 OID 提取行数）及 `DELETE`/`UPDATE`/`MERGE`/`SELECT`/`MOVE`/`FETCH`/`COPY` 等标准标签。
+
+```cp
+import {
+    PgSessionSslMode,
+    PgSessionCmdKind,
+    PgSessionMachine,
+} from "cap:sql";
+
+let pg = PgSessionMachine.init(PgSessionSslMode.Require);
+* = pg.beginConnect()?;
+const use_tls = pg.onSslNegotiated('S')?;
+if (use_tls) {
+    * = pg.onTlsHandshakeComplete()?;
+}
+* = pg.onStartupSent()?;
+* = pg.onBackendKeyData(4242, 987654)?;
+* = pg.onReadyForQuery('I')?;
+const cmd = pg.onCommandComplete("INSERT 0 5")?;
+// cmd.kind == PgSessionCmdKind.Insert, cmd.row_count == 5
+* = cmd;
+```

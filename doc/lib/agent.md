@@ -2456,3 +2456,56 @@ fn toolGovernorQuickStart() {
     }
 }
 ```
+
+
+---
+
+## 子模块：零分配 AI Agent 自动化评测裁判聚合器（`evalJudge.cp`）
+
+### 核心特性
+
+- **位置偏差消除两两对决（`resolvePairwiseSwap` / `PairwiseJudgeAggregator`）**：合并正序 `(A vs B)` 与反序 `(B vs A)` 两次裁判结果，自动分类为 `consistent_a_win | consistent_b_win | consistent_tie | position_bias_inconsistent`，支持 `treat_as_tie | downweight_tie | discard_sample` 三种不一致样本策略，并精确统计首/尾位置偏置次数与万分比位置偏差率 `position_bias_bps`。
+- **多维加权 Rubric 评分器（`RubricScorer`）**：支持最多 16 个维度（`weight_bps` + `[min_score, max_score]` + 可选必过硬门禁 `hard_gate_min_score`），使用硬件 `@fma` 归一化加权聚合，任意硬门禁不达标直接判 `fail_hard_gate` 并返回首个失败维度 ID。
+- **多模型 Elo 竞技场排行榜（`ArenaEloTable`）**：支持最多 32 个候选 Agent/模型，基于标准 Logistic 期望胜率 $E_A = 1 / (1 + 10^{(R_B - R_A)/400})$ 与可配置 K 因子实时零和更新 Elo 分数及胜/负/平场次，并支持直接消费 `PairwiseVerdict` 与输出确定性降序排行榜 `leaderboard`。
+
+### 导出清单
+
+- **常量**：`EVAL_JUDGE_MAX_RUBRIC_DIMS` (`16`)、`EVAL_JUDGE_MAX_MODELS` (`32`)、`EVAL_JUDGE_DEFAULT_ELO` (`1500.0`)、`EVAL_JUDGE_DEFAULT_K` (`32.0`)
+- **位置偏差两两裁判**：`RawJudgePick`、`PairwiseOutcome`、`InconsistentPolicy`、`PairwiseVerdict`、`PairwiseSummary`、`resolvePairwiseSwap`、`PairwiseJudgeAggregator`
+- **多维 Rubric 评分**：`RubricDimSpec`、`RubricVerdictKind`、`RubricEvalResult`、`RubricScorer`
+- **Elo 竞技场排行**：`EloModelEntry`、`EloMatchUpdate`、`EloRankEntry`、`ArenaEloTable`
+
+### QuickStart 示例
+
+```cp
+import {
+    RawJudgePick,
+    InconsistentPolicy,
+    PairwiseJudgeAggregator,
+    RubricDimSpec,
+    RubricScorer,
+    ArenaEloTable,
+    EloRankEntry,
+} from "cap:agent";
+
+fn evalJudgeQuickStart() {
+    let agg = PairwiseJudgeAggregator.init(InconsistentPolicy.downweight_tie);
+    const v1 = agg.recordSwap(RawJudgePick.pick_first, RawJudgePick.pick_second); // consistent_a_win
+
+    let arena = ArenaEloTable.defaults();
+    * = arena.registerModel(1);
+    * = arena.registerModel(2);
+    * = arena.recordPairwiseVerdict(1, 2, v1);
+
+    let ranks: [4]EloRankEntry = [EloRankEntry {}; 4];
+    let ranks_s: []EloRankEntry = ranks[0..];
+    * = arena.leaderboard(*ranks_s); // ranks[0].model_id == 1
+
+    if (let scorer := RubricScorer.init(0.75)) {
+        * = scorer.addDimension(RubricDimSpec{ dim_id: 1, weight_bps: 6000, min_score: 0.0, max_score: 5.0 });
+        * = scorer.addDimension(RubricDimSpec{ dim_id: 2, weight_bps: 4000, min_score: 0.0, max_score: 5.0, has_hard_gate: true, hard_gate_min_score: 4.0 });
+        const scores: [2]f64 = [4.5, 4.0];
+        * = scorer.evaluate(scores[0..]);
+    }
+}
+```

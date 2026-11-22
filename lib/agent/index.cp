@@ -510,3 +510,25 @@ export {
     ToolGovernorStats,
     AgentToolGovernor,
 } from "./governor.cp";
+
+export {
+    EVAL_JUDGE_MAX_RUBRIC_DIMS,
+    EVAL_JUDGE_MAX_MODELS,
+    EVAL_JUDGE_DEFAULT_ELO,
+    EVAL_JUDGE_DEFAULT_K,
+    RawJudgePick,
+    PairwiseOutcome,
+    InconsistentPolicy,
+    PairwiseVerdict,
+    PairwiseSummary,
+    resolvePairwiseSwap,
+    PairwiseJudgeAggregator,
+    RubricDimSpec,
+    RubricVerdictKind,
+    RubricEvalResult,
+    RubricScorer,
+    EloModelEntry,
+    EloMatchUpdate,
+    EloRankEntry,
+    ArenaEloTable,
+} from "./evalJudge.cp";
