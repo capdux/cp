@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc IEEE 802.1D / 802.1w STP & RSTP BPDU Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc IEEE 802.1D / 802.1w STP & RSTP BPDU Codec) | Created: 2026-11-22
 
 export {
     STP_PROTOCOL_ID,

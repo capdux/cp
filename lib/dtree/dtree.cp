@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc CART Decision Tree Classifier & Regressor)
+// Origin: Pure-CP Stdlib (Zero-Alloc CART Decision Tree Classifier & Regressor) | Created: 2026-11-22
 
 /// Sentinel node index indicating the absence of a child node.
 pub const DTREE_NO_NODE: u32 = 0xFFFFFFFF;

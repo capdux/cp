@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Robust Statistics, IRLS Huber/Tukey M-Estimation Regression & Theil-Sen 1D)
+// Origin: Pure-CP Stdlib (Zero-Alloc Robust Statistics, IRLS Huber/Tukey M-Estimation Regression & Theil-Sen 1D) | Created: 2026-11-22
 
 const MAD_NORM_FACTOR: f64 = 1.4826;
 const PIVOT_EPS: f64 = 1.0e-14;

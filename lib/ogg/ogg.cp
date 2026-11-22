@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 3533 Ogg Container Page Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 3533 Ogg Container Page Parser) | Created: 2026-11-22
 
 /// RFC 3533 Ogg 容器分页头部标志位常量
 pub const OGG_FLAG_CONTINUATION: u8 = 0x01;

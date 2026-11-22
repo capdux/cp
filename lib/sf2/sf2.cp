@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc SoundFont 2.01/2.04 RIFF sfbk Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc SoundFont 2.01/2.04 RIFF sfbk Parser) | Created: 2026-11-22
 
 /// SoundFont 2.0 Hydra 记录定长常量（字节）
 pub const SF2_PRESET_HEADER_SIZE: usize = 38;

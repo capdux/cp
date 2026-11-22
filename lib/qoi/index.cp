@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc QOI Lossless Image Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc QOI Lossless Image Codec) | Created: 2026-11-22
 
 export {
     QoiHeader,

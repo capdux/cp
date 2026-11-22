@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Network Flow: Dinic Max-Flow, S-T Min-Cut & SPFA Min-Cost Max-Flow)
+// Origin: Pure-CP Stdlib (Zero-Alloc Network Flow: Dinic Max-Flow, S-T Min-Cut & SPFA Min-Cost Max-Flow) | Created: 2026-11-22
 
 /// Sentinel edge index indicating the end of an adjacency linked list.
 pub const NO_EDGE: i32 = -1;

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc LZW Compressor & Decompressor)
+// Origin: Pure-CP Stdlib (Zero-Alloc LZW Compressor & Decompressor) | Created: 2026-11-21
 
 pub const LZW_MAX_BITS: u8 = 12;
 pub const LZW_TABLE_SIZE: usize = 4096;

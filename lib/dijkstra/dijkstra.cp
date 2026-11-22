@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Indexed-Heap Dijkstra, Bellman-Ford & Floyd-Warshall Shortest Path Algorithms)
+// Origin: Pure-CP Stdlib (Zero-Alloc Indexed-Heap Dijkstra, Bellman-Ford & Floyd-Warshall Shortest Path Algorithms) | Created: 2026-11-22
 
 import std from "std";
 

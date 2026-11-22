@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Adobe BDF 2.1/2.2 Bitmap Font Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Adobe BDF 2.1/2.2 Bitmap Font Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation Adobe BDF 2.1/2.2 parser: global font header,
 // STARTPROPERTIES..ENDPROPERTIES iterator, STARTCHAR..ENDCHAR glyph iterator,
 // MSB-first bitmap pixel decoder, and codepoint lookup.

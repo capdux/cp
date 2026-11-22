@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc OpenZFS On-Disk Format Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc OpenZFS On-Disk Format Parser) | Created: 2026-11-22
 
 pub const ZFS_UBERBLOCK_MAGIC: u64 = 0x00BAB10C;
 pub const ZFS_UBERBLOCK_MAGIC_SWAPPED: u64 = 0x0CB1BA00;

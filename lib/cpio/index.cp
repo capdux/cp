@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Unix CPIO newc/crc/odc Archive Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Unix CPIO newc/crc/odc Archive Parser) | Created: 2026-11-22
 
 export {
     CPIO_MAGIC_NEWC,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc FAI IGC Flight Recorder Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc FAI IGC Flight Recorder Parser) | Created: 2026-11-22
 
 /// FAI IGC 文件头（A 记录与 H 头记录，零拷贝切片指向原始文本）
 pub struct IgcHeader {

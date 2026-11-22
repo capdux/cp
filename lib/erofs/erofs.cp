@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Linux EROFS Filesystem Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Linux EROFS Filesystem Parser) | Created: 2026-11-22
 
 pub const EROFS_SUPER_OFFSET: usize = 1024;
 pub const EROFS_SUPER_SIZE: usize = 128;

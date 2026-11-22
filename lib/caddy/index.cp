@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Caddyfile Lexer & Site Block Scanner)
+// Origin: Pure-CP Stdlib (Zero-Alloc Caddyfile Lexer & Site Block Scanner) | Created: 2026-11-22
 
 export {
     CaddyTokenKind,

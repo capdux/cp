@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 1001 / RFC 1002 NetBIOS Name Service Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 1001 / RFC 1002 NetBIOS Name Service Codec) | Created: 2026-11-22
 
 // Standard NBNS Port, Sizes, Record Types & Class
 pub const NBNS_UDP_PORT: u16 = 137;

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Minisign & OpenBSD Signify Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc Minisign & OpenBSD Signify Codec) | Created: 2026-11-22
 
 /// Minisign / Signify 非信任注释行前缀
 pub const MINISIGN_UNTRUSTED_PREFIX: []const u8 = "untrusted comment: ";

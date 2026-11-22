@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc X11 Portable Compiled Format .pcf Font Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc X11 Portable Compiled Format .pcf Font Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation X11 PCF binary bitmap font parser:
 // TOC table iterator, compressed (5B) & uncompressed (12B LE/BE) glyph metrics,
 // O(1) 1D/2D BDF encoding matrix lookup, and aligned PCF_PROPERTIES iterator.

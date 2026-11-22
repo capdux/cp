@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ISO 2709 / MARC 21 Binary Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ISO 2709 / MARC 21 Binary Parser) | Created: 2026-11-22
 // Unified exports for cap:marc.
 
 export {

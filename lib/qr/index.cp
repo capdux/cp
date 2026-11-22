@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Unified Exports for cap:qr)
+// Origin: Pure-CP Stdlib (Unified Exports for cap:qr) | Created: 2026-11-22
 
 export {
     QR_DEFAULT_TOL,

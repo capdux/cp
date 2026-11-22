@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Cisco NetFlow v5 & RFC 3954 v9 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Cisco NetFlow v5 & RFC 3954 v9 Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation NetFlow v5 & NetFlow v9 wire protocol parser:
 // NetFlow v5 24-byte header + 48-byte Flow Record iterator, NetFlow v9 20-byte header +
 // FlowSet iterator + Template FlowSet & FieldSpec zero-copy iterators.

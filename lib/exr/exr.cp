@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc OpenEXR HDR Image Header & Attribute Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc OpenEXR HDR Image Header & Attribute Parser) | Created: 2026-11-22
 
 /// OpenEXR 4 字节魔数（Little-Endian `0x01312F76` = `20000630`；字节序列 `76 2F 31 01`）
 pub const EXR_MAGIC: u32 = 20000630;

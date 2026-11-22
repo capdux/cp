@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 4960 SCTP Packet & Chunk Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 4960 SCTP Packet & Chunk Parser) | Created: 2026-11-22
 
 export {
     SCTP_HEADER_SIZE,

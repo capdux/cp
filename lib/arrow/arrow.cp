@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Apache Arrow IPC Stream & File Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Apache Arrow IPC Stream & File Parser) | Created: 2026-11-22
 
 import std from "std";
 

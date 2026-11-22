@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ODE Solvers: RK2, RK4, Dormand-Prince RK4(5) & Velocity Verlet)
+// Origin: Pure-CP Stdlib (Zero-Alloc ODE Solvers: RK2, RK4, Dormand-Prince RK4(5) & Velocity Verlet) | Created: 2026-11-22
 
 import std from "std";
 

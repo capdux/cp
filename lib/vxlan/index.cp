@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 7348 VXLAN & VXLAN-GPE Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 7348 VXLAN & VXLAN-GPE Codec) | Created: 2026-11-22
 
 export {
     VXLAN_HEADER_SIZE,

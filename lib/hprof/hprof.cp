@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc JVM HPROF 1.0.1/1.0.2 Heap Dump Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc JVM HPROF 1.0.1/1.0.2 Heap Dump Parser) | Created: 2026-11-22
 
 /// JVM HPROF 顶层 Record Tag 常量
 pub const TAG_UTF8: u8 = 0x01;

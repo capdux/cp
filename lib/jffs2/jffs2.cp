@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Linux JFFS2 Flash Node Stream, Inode, Dirent & CRC32 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Linux JFFS2 Flash Node Stream, Inode, Dirent & CRC32 Parser) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // JFFS2 Protocol Constants (Linux include/uapi/linux/jffs2.h)

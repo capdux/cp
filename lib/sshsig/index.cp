@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc OpenSSH PROTOCOL.sshsig v1 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc OpenSSH PROTOCOL.sshsig v1 Parser) | Created: 2026-11-22
 // Unified exports for cap:sshsig.
 
 export {

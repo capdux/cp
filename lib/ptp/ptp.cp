@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc IEEE 1588-2008/2019 PTPv2/v2.1 Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc IEEE 1588-2008/2019 PTPv2/v2.1 Codec) | Created: 2026-11-22
 
 /// IEEE 1588 Layer-2 PTP EtherType (0x88F7)
 pub const PTP_ETHERTYPE: u16 = 0x88F7;

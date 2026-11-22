@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc glTF 2.0 Binary / GLB Container Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc glTF 2.0 Binary / GLB Container Parser) | Created: 2026-11-22
 
 export {
     GLB_MAGIC,

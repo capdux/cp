@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Naive Bayes Classifiers: Gaussian, Multinomial & Bernoulli)
+// Origin: Pure-CP Stdlib (Zero-Alloc Naive Bayes Classifiers: Gaussian, Multinomial & Bernoulli) | Created: 2026-11-22
 
 const LOG_2PI: f64 = 1.8378770664093453;
 

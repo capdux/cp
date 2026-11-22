@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc VRML97 & Classic X3D Scene Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc VRML97 & Classic X3D Scene Parser) | Created: 2026-11-22
 
 /// VRML / Classic X3D 方言类型
 pub enum VrmlFlavor: u8 {

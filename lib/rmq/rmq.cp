@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc O(1) Sparse Table RMQ, Range GCD, Euler-Tour LCA & O(n) Monotonic Deque Sliding Window)
+// Origin: Pure-CP Stdlib (Zero-Alloc O(1) Sparse Table RMQ, Range GCD, Euler-Tour LCA & O(n) Monotonic Deque Sliding Window) | Created: 2026-11-22
 
 /// Computes `floor(log2(n))` for `n >= 1` (returns `0` for `n == 0` or `n == 1`).
 pub fn floorLog2(n: usize): usize {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc CUE Language Lexer & Validator)
+// Origin: Pure-CP Stdlib (Zero-Alloc CUE Language Lexer & Validator) | Created: 2026-11-22
 
 /// CUE 配置与数据约束语言词法单元类型
 pub enum CueTokenKind: u8 {

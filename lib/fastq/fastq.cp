@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Sanger/Illumina FASTQ Sequencing Parser & QC)
+// Origin: Pure-CP Stdlib (Zero-Alloc Sanger/Illumina FASTQ Sequencing Parser & QC) | Created: 2026-11-22
 
 /// Sanger / Illumina 1.8+ Phred+33 质量偏移量
 pub const PHRED_OFFSET_33: u8 = 33;

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Cisco NetFlow v5 & RFC 3954 v9 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Cisco NetFlow v5 & RFC 3954 v9 Parser) | Created: 2026-11-22
 // Unified exports for cap:netflow.
 
 export {

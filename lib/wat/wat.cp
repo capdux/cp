@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc WebAssembly Text WAT Lexer & Scanner)
+// Origin: Pure-CP Stdlib (Zero-Alloc WebAssembly Text WAT Lexer & Scanner) | Created: 2026-11-22
 //! Zero-allocation WebAssembly Text Format (.wat) lexer, export extractor, and structural validator.
 
 pub enum WatTokenKind: u8 {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 3533 Ogg Container Page Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 3533 Ogg Container Page Parser) | Created: 2026-11-22
 
 export {
     OGG_FLAG_CONTINUATION,

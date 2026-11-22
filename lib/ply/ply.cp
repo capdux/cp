@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Stanford PLY 3D Mesh & Point Cloud Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Stanford PLY 3D Mesh & Point Cloud Parser) | Created: 2026-11-22
 
 /// Stanford PLY 数据编码格式
 pub enum PlyFormat {

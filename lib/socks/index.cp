@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 1928 / RFC 1929 / SOCKS4/4a Wire Protocol Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 1928 / RFC 1929 / SOCKS4/4a Wire Protocol Codec) | Created: 2026-11-22
 
 export {
     SOCKS_TCP_PORT,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc OGC WKB / PostGIS EWKB Spatial Geometry Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc OGC WKB / PostGIS EWKB Spatial Geometry Codec) | Created: 2026-11-22
 
 export {
     WKB_XDR,

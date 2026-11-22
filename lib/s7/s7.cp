@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Siemens S7comm / TPKT RFC 1006 / COTP ISO 8073 Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc Siemens S7comm / TPKT RFC 1006 / COTP ISO 8073 Codec) | Created: 2026-11-22
 
 pub const S7_TCP_PORT: u16 = 102;
 pub const TPKT_VERSION: u8 = 3;

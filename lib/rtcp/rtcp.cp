@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 3550 RTCP Compound & Packet Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 3550 RTCP Compound & Packet Parser) | Created: 2026-11-22
 
 /// RTCP 协议版本号 (RFC 3550 = 2)
 pub const RTCP_VERSION: u8 = 2;

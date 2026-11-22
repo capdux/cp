@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ABC Music Notation v2.1 Parser & Event Lexer)
+// Origin: Pure-CP Stdlib (Zero-Alloc ABC Music Notation v2.1 Parser & Event Lexer) | Created: 2026-11-22
 
 /// ABC 分数（拍号 `M:6/8`、默认音长 `L:1/8` 与音符时值倍率 `3/2`）
 pub struct AbcFraction {

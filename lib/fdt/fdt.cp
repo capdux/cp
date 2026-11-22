@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Devicetree Spec v0.4 Flattened Device Tree / .dtb Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Devicetree Spec v0.4 Flattened Device Tree / .dtb Parser) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // FDT Protocol Constants (Big-Endian)

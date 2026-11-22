@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Borsh Deterministic Binary Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc Borsh Deterministic Binary Codec) | Created: 2026-11-22
 
 fn isF32NanBits(bits: u32): bool {
     return (bits & 0x7F80_0000) == 0x7F80_0000 && (bits & 0x007F_FFFF) != 0;

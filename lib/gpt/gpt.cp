@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc UEFI GPT & Protective MBR Parser + CRC32)
+// Origin: Pure-CP Stdlib (Zero-Alloc UEFI GPT & Protective MBR Parser + CRC32) | Created: 2026-11-22
 
 pub const GPT_SIGNATURE: []const u8 = "EFI PART";
 pub const GPT_REVISION_1_0: u32 = 0x00010000;

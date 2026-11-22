@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 4120 Kerberos v5 ASN.1 DER Wire Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 4120 Kerberos v5 ASN.1 DER Wire Parser) | Created: 2026-11-22
 
 // Standard Kerberos Port & Version
 pub const KRB_PORT: u16 = 88;

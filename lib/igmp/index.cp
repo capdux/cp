@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 1112/2236/3376 IGMP v1/v2/v3 Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 1112/2236/3376 IGMP v1/v2/v3 Codec) | Created: 2026-11-22
 // Unified exports for cap:igmp.
 
 export {

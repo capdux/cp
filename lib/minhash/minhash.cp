@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Andrei Broder MinHash & LSH Banding Library)
+// Origin: Pure-CP Stdlib (Zero-Alloc Andrei Broder MinHash & LSH Banding Library) | Created: 2026-11-22
 
 /// Recommended default signature length (128 hash permutations).
 pub const MINHASH_DEFAULT_K: usize = 128;

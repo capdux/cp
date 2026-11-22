@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Microsoft Embedded OpenType .eot Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Microsoft Embedded OpenType .eot Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation W3C / Microsoft EOT v1.0/v2.1/v2.2 container parser:
 // 0x504C magic & 82B fixed header validation, UTF-16LE name extraction & UTF-8 decoder,
 // v2.1 root string whitelist, v2.2 signature/EUDC fields, and embedded font payload slicing.

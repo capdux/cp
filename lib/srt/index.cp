@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc SubRip SRT Subtitle Parser & Formatter)
+// Origin: Pure-CP Stdlib (Zero-Alloc SubRip SRT Subtitle Parser & Formatter) | Created: 2026-11-22
 
 export {
     SrtCue,

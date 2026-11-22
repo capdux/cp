@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 4302 AH / RFC 4303 ESP / RFC 7296 IKEv2 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 4302 AH / RFC 4303 ESP / RFC 7296 IKEv2 Parser) | Created: 2026-11-22
 // Unified exports for cap:ipsec.
 
 export {

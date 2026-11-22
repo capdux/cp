@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Linux SquashFS v4.0 Read-Only Filesystem Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Linux SquashFS v4.0 Read-Only Filesystem Parser) | Created: 2026-11-22
 
 // SquashFS v4.0 Core Constants
 pub const SQUASHFS_MAGIC: u32 = 0x73717368; // "hsqs" little-endian

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Unified Exports for cap:maxflow)
+// Origin: Pure-CP Stdlib (Unified Exports for cap:maxflow) | Created: 2026-11-22
 
 export {
     NO_EDGE,

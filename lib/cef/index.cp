@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ArcSight CEF Rev 25 SIEM Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ArcSight CEF Rev 25 SIEM Parser) | Created: 2026-11-22
 // Unified exports for cap:cef.
 
 export {

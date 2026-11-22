@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc VMware VMDK SparseExtentHeader & Text Descriptor Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc VMware VMDK SparseExtentHeader & Text Descriptor Parser) | Created: 2026-11-22
 
 // VMDK Core Protocol Constants
 pub const VMDK_MAGIC: u32 = 0x564D444B; // "KDMV" little-endian

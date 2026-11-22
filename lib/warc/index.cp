@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ISO 28500 WARC 1.0/1.1 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ISO 28500 WARC 1.0/1.1 Parser) | Created: 2026-11-22
 // Unified exports for cap:warc.
 
 export {

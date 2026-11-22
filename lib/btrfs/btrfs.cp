@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Linux Btrfs Filesystem Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Linux Btrfs Filesystem Parser) | Created: 2026-11-22
 
 pub const BTRFS_SUPER_OFFSET: usize = 65536;
 pub const BTRFS_SUPER_SIZE: usize = 4096;

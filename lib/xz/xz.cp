@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc XZ v1.1.0 Container Format Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc XZ v1.1.0 Container Format Parser) | Created: 2026-11-22
 
 pub const XZ_HEADER_MAGIC: [6]u8 = [0xFD, '7', 'z', 'X', 'Z', 0x00];
 pub const XZ_FOOTER_MAGIC: [2]u8 = ['Y', 'Z'];

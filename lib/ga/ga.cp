@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Genetic Algorithms: Real-Coded GA & Permutation GA with Order Crossover)
+// Origin: Pure-CP Stdlib (Zero-Alloc Genetic Algorithms: Real-Coded GA & Permutation GA with Order Crossover) | Created: 2026-11-22
 
 const TWO_PI: f64 = 6.28318530717958647692;
 const BLX_ALPHA: f64 = 0.3;

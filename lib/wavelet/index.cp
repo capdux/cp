@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc DWT/IDWT: Haar, Daubechies-4 db2 & JPEG 2000 Lossless CDF 5/3)
+// Origin: Pure-CP Stdlib (Zero-Alloc DWT/IDWT: Haar, Daubechies-4 db2 & JPEG 2000 Lossless CDF 5/3) | Created: 2026-11-22
 
 export {
     haarForward1d,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Linux F2FS Superblock, Checkpoint & CRC32 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Linux F2FS Superblock, Checkpoint & CRC32 Parser) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // F2FS Protocol Constants (Linux include/linux/f2fs_fs.h)

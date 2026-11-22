@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Linux Console PSF1 & PSF2 Bitmap Font Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Linux Console PSF1 & PSF2 Bitmap Font Parser) | Created: 2026-11-22
 
 export {
     PSF1_MAGIC0,

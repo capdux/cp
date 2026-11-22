@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Unified Exports for cap:treap)
+// Origin: Pure-CP Stdlib (Unified Exports for cap:treap) | Created: 2026-11-22
 
 export {
     TREAP_NIL,

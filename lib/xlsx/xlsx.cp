@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc OOXML SpreadsheetML .xlsx Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc OOXML SpreadsheetML .xlsx Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation OOXML SpreadsheetML parser:
 // A1 cell reference codec, xl/workbook.xml sheet iterator, xl/sharedStrings.xml iterator
 // with rich-text <r><t> concatenation & XML entity unescaping, and xl/worksheets/sheet*.xml

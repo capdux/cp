@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ID3v1 / ID3v2 Audio Metadata Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ID3v1 / ID3v2 Audio Metadata Parser) | Created: 2026-11-22
 
 /// ID3v2 10 字节文件头（`"ID3"`）元数据
 pub struct Id3v2Header {

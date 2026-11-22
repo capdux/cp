@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc USB HID 1.11 Report Descriptor Parser & Summarizer)
+// Origin: Pure-CP Stdlib (Zero-Alloc USB HID 1.11 Report Descriptor Parser & Summarizer) | Created: 2026-11-22
 
 // HID Item Types & Long Item Prefix (USB HID 1.11 §6.2.2)
 pub const ITEM_TYPE_MAIN: u8 = 0;

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 6960 OCSP DER Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 6960 OCSP DER Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation RFC 6960 Online Certificate Status Protocol (OCSP) DER parser:
 // OCSPResponse / BasicOCSPResponse (good/revoked/unknown SingleResponses, byName/byKey ResponderID,
 // TBSCert/ResponseData raw slice for verification) and OCSPRequest CertID iteration.

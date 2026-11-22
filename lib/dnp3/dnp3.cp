@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc IEEE 1815 DNP3 Wire Protocol & CRC-16 Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc IEEE 1815 DNP3 Wire Protocol & CRC-16 Codec) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // Protocol Constants (IEEE 1815 DNP3)

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Simulated Annealing: Continuous Box-Constrained & Permutation 2-opt/Swap)
+// Origin: Pure-CP Stdlib (Zero-Alloc Simulated Annealing: Continuous Box-Constrained & Permutation 2-opt/Swap) | Created: 2026-11-22
 
 const PI: f64 = 3.14159265358979323846;
 const SPLITMIX_INC: u64 = 0x9E3779B97F4A7C15;

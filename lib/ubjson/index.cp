@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc UBJSON Draft 12 Binary Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc UBJSON Draft 12 Binary Codec) | Created: 2026-11-22
 
 export {
     UBJ_NULL,

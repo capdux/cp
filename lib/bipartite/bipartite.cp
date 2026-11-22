@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Bipartite Graph Algorithms: BFS 2-Coloring, Hopcroft-Karp O(E*sqrt(V)) Matching & Konig Min Vertex Cover)
+// Origin: Pure-CP Stdlib (Zero-Alloc Bipartite Graph Algorithms: BFS 2-Coloring, Hopcroft-Karp O(E*sqrt(V)) Matching & Konig Min Vertex Cover) | Created: 2026-11-22
 
 /// Sentinel indicating an unmatched vertex in `match_left` / `match_right`.
 pub const UNMATCHED: i32 = -1;

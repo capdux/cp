@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 7143 iSCSI BHS, KV & CRC32C Wire Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 7143 iSCSI BHS, KV & CRC32C Wire Parser) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // Protocol Constants (RFC 7143 iSCSI)

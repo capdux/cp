@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 7292 PKCS#12 PFX Container DER Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 7292 PKCS#12 PFX Container DER Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation RFC 7292 PKCS#12 (.p12/.pfx) ASN.1 DER parser:
 // PFX v3 envelope, MacData (DigestInfo + salt + iterations default 1),
 // AuthenticatedSafe ContentInfo iteration, and SafeBag + PKCS12Attribute

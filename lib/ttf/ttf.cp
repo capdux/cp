@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc TrueType / OpenType SFNT Font Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc TrueType / OpenType SFNT Font Parser) | Created: 2026-11-22
 
 /// SFNT 字体容器风格（sfntVersion）枚举
 pub enum SfntFlavor: u8 {

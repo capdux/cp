@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Ruby Marshal 4.8 Binary Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Ruby Marshal 4.8 Binary Parser) | Created: 2026-11-22
 
 export {
     MARSHAL_MAJOR,

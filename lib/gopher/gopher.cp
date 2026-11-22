@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 1436 Gopher Protocol & Menu Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 1436 Gopher Protocol & Menu Codec) | Created: 2026-11-22
 
 pub const GOPHER_TCP_PORT: u16 = 70;
 

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Python Pickle Protocol 2-5 Parser & Static Auditor)
+// Origin: Pure-CP Stdlib (Zero-Alloc Python Pickle Protocol 2-5 Parser & Static Auditor) | Created: 2026-11-22
 
 pub const OP_PROTO: u8 = 0x80;
 pub const OP_FRAME: u8 = 0x95;

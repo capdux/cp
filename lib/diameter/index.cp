@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 6733 Diameter AAA Base Protocol Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 6733 Diameter AAA Base Protocol Codec) | Created: 2026-11-22
 // Unified exports for cap:diameter.
 
 export {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc SAM v1.6 Sequence Alignment/Map Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc SAM v1.6 Sequence Alignment/Map Parser) | Created: 2026-11-22
 // Unified exports for cap:sam.
 
 export {

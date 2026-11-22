@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:apfs & cap.apfs)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:apfs & cap.apfs) | Created: 2026-11-22
 
 export {
     APFS_OBJ_HEADER_SIZE,

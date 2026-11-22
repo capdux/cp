@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Google Open Location Code / Plus Codes Geocoder)
+// Origin: Pure-CP Stdlib (Zero-Alloc Google Open Location Code / Plus Codes Geocoder) | Created: 2026-11-22
 
 pub const OLC_ALPHABET: []const u8 = "23456789CFGHJMPQRVWX";
 pub const OLC_SEPARATOR: u8 = '+';

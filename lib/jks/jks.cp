@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Java KeyStore .jks v1/v2 Binary Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Java KeyStore .jks v1/v2 Binary Parser) | Created: 2026-11-22
 
 pub const JKS_MAGIC: u32 = 0xFEEDFEED;
 pub const JKS_VERSION_1: u32 = 1;

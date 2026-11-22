@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Classic Jacobi Symmetric Eigensolver & Principal Component Analysis PCA)
+// Origin: Pure-CP Stdlib (Zero-Alloc Classic Jacobi Symmetric Eigensolver & Principal Component Analysis PCA) | Created: 2026-11-22
 
 import std from "std";
 

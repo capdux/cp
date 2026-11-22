@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Locality-Sensitive Hashing: Cosine Sign-Random-Projection LSH & E2LSH)
+// Origin: Pure-CP Stdlib (Zero-Alloc Locality-Sensitive Hashing: Cosine Sign-Random-Projection LSH & E2LSH) | Created: 2026-11-22
 
 const PI: f64 = 3.14159265358979323846;
 const SPLITMIX_INC: u64 = 0x9E3779B97F4A7C15;

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc W3C WebIDL Lexer & Decl Scanner)
+// Origin: Pure-CP Stdlib (Zero-Alloc W3C WebIDL Lexer & Decl Scanner) | Created: 2026-11-22
 
 /// W3C WebIDL 顶层声明类型
 pub enum WebIdlDeclKind {

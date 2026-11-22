@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Verhoeff D5, Damm Quasigroup & ISO/IEC 7064 Mod-11-2 / Mod-37-2 Check Digits)
+// Origin: Pure-CP Stdlib (Zero-Alloc Verhoeff D5, Damm Quasigroup & ISO/IEC 7064 Mod-11-2 / Mod-37-2 Check Digits) | Created: 2026-11-22
 
 // Verhoeff Dihedral group D5 multiplication table (10x10 flattened).
 const VERHOEFF_D: [100]u8 = [

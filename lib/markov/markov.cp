@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Discrete-Time Markov Chain DTMC Analysis, Absorbing Chains, Entropy Rate & Deterministic Sampling)
+// Origin: Pure-CP Stdlib (Zero-Alloc Discrete-Time Markov Chain DTMC Analysis, Absorbing Chains, Entropy Rate & Deterministic Sampling) | Created: 2026-11-22
 
 import std from "std";
 

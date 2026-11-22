@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc PCAPng Container & Packet Block Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc PCAPng Container & Packet Block Parser) | Created: 2026-11-22
 
 /// PCAPng Block 类型常量与字节序魔数
 pub const BLOCK_SHB: u32 = 0x0A0D0D0A;

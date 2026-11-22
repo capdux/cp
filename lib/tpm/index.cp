@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc TCG TPM 2.0 Header, Attestation, Quote & Public Parser/Encoder)
+// Origin: Pure-CP Stdlib (Zero-Alloc TCG TPM 2.0 Header, Attestation, Quote & Public Parser/Encoder) | Created: 2026-11-22
 
 export {
     TPM_HEADER_SIZE,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ | Synced: 2026-11-21T16:34:05Z (JSONL / NDJSON Streaming Line Framer)
+// Origin: Pure-CP Stdlib (JSONL / NDJSON Streaming Line Framer) | Created: 2026-11-22
 
 fn isWsNoNewline(c: u8): bool {
     return c == ' ' || c == '\t' || c == '\r';

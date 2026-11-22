@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc openCypher Graph Query Lexer & Analyzer)
+// Origin: Pure-CP Stdlib (Zero-Alloc openCypher Graph Query Lexer & Analyzer) | Created: 2026-11-22
 
 export {
     CYPHER_MAX_DEPTH,

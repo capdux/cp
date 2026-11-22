@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Quasi-Newton Optimization: Full BFGS, Limited-Memory L-BFGS, Strong Wolfe Line Search & Central Finite-Diff Gradient)
+// Origin: Pure-CP Stdlib (Zero-Alloc Quasi-Newton Optimization: Full BFGS, Limited-Memory L-BFGS, Strong Wolfe Line Search & Central Finite-Diff Gradient) | Created: 2026-11-22
 
 /// Objective + gradient callback: evaluates `f(x)`, writes gradient into `grad_out[0..x.len]`, and returns `f(x)`.
 pub type ValueGradFn = fn(x: []const f64, grad_out: *[]f64): f64;

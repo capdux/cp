@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:scsi)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:scsi) | Created: 2026-11-22
 
 export {
     OP_TEST_UNIT_READY,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc lzop Container & LZO1X Decompressor)
+// Origin: Pure-CP Stdlib (Zero-Alloc lzop Container & LZO1X Decompressor) | Created: 2026-11-22
 
 pub const LZOP_MAGIC: [9]u8 = [0x89, 'L', 'Z', 'O', 0x00, 0x0D, 0x0A, 0x1A, 0x0A];
 

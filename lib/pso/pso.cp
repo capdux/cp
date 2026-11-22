@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Global Heuristic Optimization: Particle Swarm Optimization PSO & Differential Evolution DE/rand/1/bin)
+// Origin: Pure-CP Stdlib (Zero-Alloc Global Heuristic Optimization: Particle Swarm Optimization PSO & Differential Evolution DE/rand/1/bin) | Created: 2026-11-22
 
 const SPLITMIX_INC: u64 = 0x9E3779B97F4A7C15;
 const INV_2_POW_53: f64 = 1.0 / 9007199254740992.0;

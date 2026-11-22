@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Linux XFS v4/v5 Filesystem Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Linux XFS v4/v5 Filesystem Parser) | Created: 2026-11-22
 
 pub const XFS_SB_MAGIC: u32 = 0x58465342;      // "XFSB" big-endian
 pub const XFS_SB_MIN_SIZE: usize = 264;

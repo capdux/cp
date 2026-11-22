@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Graphviz DOT Graph Parser & Writer)
+// Origin: Pure-CP Stdlib (Zero-Alloc Graphviz DOT Graph Parser & Writer) | Created: 2026-11-22
 
 export {
     DotGraphKind,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc 3D Octree Spatial Index: AABB/Sphere Queries, Pruned Nearest-Neighbor & Slab Ray Traversal)
+// Origin: Pure-CP Stdlib (Zero-Alloc 3D Octree Spatial Index: AABB/Sphere Queries, Pruned Nearest-Neighbor & Slab Ray Traversal) | Created: 2026-11-22
 
 /// Sentinel index indicating no child node or end of an entry linked list.
 pub const OCTREE_NO_INDEX: i32 = -1;

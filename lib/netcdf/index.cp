@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Unidata NetCDF CDF-1/CDF-2/CDF-5 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Unidata NetCDF CDF-1/CDF-2/CDF-5 Parser) | Created: 2026-11-22
 
 export {
     NC_MAGIC,

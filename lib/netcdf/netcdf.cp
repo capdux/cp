@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Unidata NetCDF CDF-1/CDF-2/CDF-5 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Unidata NetCDF CDF-1/CDF-2/CDF-5 Parser) | Created: 2026-11-22
 
 /// Unidata NetCDF 魔数、节标签与无限维度常量
 pub const NC_MAGIC: []const u8 = "CDF";

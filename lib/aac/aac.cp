@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc AAC ADTS Frame & AudioSpecificConfig Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc AAC ADTS Frame & AudioSpecificConfig Parser) | Created: 2026-11-22
 
 pub const ADTS_HEADER_SIZE: usize = 7;
 pub const ADTS_HEADER_CRC_SIZE: usize = 9;

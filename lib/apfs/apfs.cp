@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Apple File System APFS Superblock & Fletcher-64 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Apple File System APFS Superblock & Fletcher-64 Parser) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // APFS Protocol Constants (Little-Endian)

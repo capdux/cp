@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Impulse Tracker 2.14 .it Binary Module Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Impulse Tracker 2.14 .it Binary Module Parser) | Created: 2026-11-22
 
 /// Impulse Tracker 魔数与结构常量
 pub const IT_MAGIC: []const u8 = "IMPM";

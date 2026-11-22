@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc European Data Format EDF/EDF+ Biosignal Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc European Data Format EDF/EDF+ Biosignal Parser) | Created: 2026-11-22
 
 export {
     EDF_MAIN_HEADER_SIZE,

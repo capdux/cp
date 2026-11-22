@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc QEMU QCOW2 v2/v3 Disk Image Header & Table Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc QEMU QCOW2 v2/v3 Disk Image Header & Table Parser) | Created: 2026-11-22
 
 // QCOW2 Core Constants
 pub const QCOW2_MAGIC: u32 = 0x514649FB; // "QFI\xFB" big-endian

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc W3C HTTP Archive .har 1.2 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc W3C HTTP Archive .har 1.2 Parser) | Created: 2026-11-22
 
 /// W3C HAR 1.2 头部元数据与零拷贝 entries 数组切片
 pub struct HarHeader {

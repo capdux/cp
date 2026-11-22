@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc NASA FITS 2880B HDU & 80B Card Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc NASA FITS 2880B HDU & 80B Card Parser) | Created: 2026-11-22
 
 export {
     FITS_BLOCK_SIZE,

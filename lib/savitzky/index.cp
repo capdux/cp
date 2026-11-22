@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Savitzky-Golay Polynomial Smoothing/Differentiation & Cleveland LOESS)
+// Origin: Pure-CP Stdlib (Zero-Alloc Savitzky-Golay Polynomial Smoothing/Differentiation & Cleveland LOESS) | Created: 2026-11-22
 
 export {
     BoundaryMode,

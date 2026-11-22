@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Ethereum RLP Canonical Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc Ethereum RLP Canonical Codec) | Created: 2026-11-22
 
 /// RLP 项类型枚举（字节串或列表）
 pub enum RlpKind: u8 {

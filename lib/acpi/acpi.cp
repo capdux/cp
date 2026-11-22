@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ACPI 6.5 RSDP / SDT / MADT / MCFG Firmware Table Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ACPI 6.5 RSDP / SDT / MADT / MCFG Firmware Table Parser) | Created: 2026-11-22
 
 // ACPI Structure Signatures & Sizes
 pub const RSDP_SIGNATURE: []const u8 = "RSD PTR ";

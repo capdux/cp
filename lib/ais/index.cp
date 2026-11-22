@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ITU-R M.1371 / IEC 61162-1 Maritime AIS Decoder)
+// Origin: Pure-CP Stdlib (Zero-Alloc ITU-R M.1371 / IEC 61162-1 Maritime AIS Decoder) | Created: 2026-11-22
 
 export {
     AIS_LON_UNAVAILABLE,

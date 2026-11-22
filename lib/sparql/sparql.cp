@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc W3C SPARQL 1.1 Lexer & Analyzer)
+// Origin: Pure-CP Stdlib (Zero-Alloc W3C SPARQL 1.1 Lexer & Analyzer) | Created: 2026-11-22
 
 /// W3C SPARQL 1.1 查询形式分类枚举
 pub enum SparqlQueryForm: u8 {

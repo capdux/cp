@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Microsoft VHDX 1.0 Virtual Hard Disk Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Microsoft VHDX 1.0 Virtual Hard Disk Parser) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // VHDX 1.0 Protocol Constants (MS-VHDX Specification)

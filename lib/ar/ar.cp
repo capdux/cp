@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Unix ar Static Library & .deb Archive Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Unix ar Static Library & .deb Archive Parser) | Created: 2026-11-22
 
 /// Unix `ar` 归档全局魔数与头部常量
 pub const AR_MAGIC: []const u8 = "!<arch>\n";

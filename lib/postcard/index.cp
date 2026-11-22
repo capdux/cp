@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Postcard Embedded Wire Codec + COBS)
+// Origin: Pure-CP Stdlib (Zero-Alloc Postcard Embedded Wire Codec + COBS) | Created: 2026-11-22
 
 export {
     zigzagEncodeI16,

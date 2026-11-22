@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Spectral Graph Clustering, Laplacian & NJW Embedding)
+// Origin: Pure-CP Stdlib (Zero-Alloc Spectral Graph Clustering, Laplacian & NJW Embedding) | Created: 2026-11-22
 
 const SYM_TOL: f64 = 1.0e-9;
 const ZERO_EIG_TOL: f64 = 1.0e-7;

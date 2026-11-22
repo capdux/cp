@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Monte Carlo Tree Search MCTS with UCT & PUCT over Fixed Node Pool)
+// Origin: Pure-CP Stdlib (Zero-Alloc Monte Carlo Tree Search MCTS with UCT & PUCT over Fixed Node Pool) | Created: 2026-11-22
 
 import std from "std";
 

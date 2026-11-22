@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Universal Prefix Integer Codes & Bitstream Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc Universal Prefix Integer Codes & Bitstream Codec) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // Internal Helpers

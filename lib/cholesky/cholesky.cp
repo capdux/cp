@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc SPD Cholesky LL^T & Sqrt-Free LDL^T Decomposition, Solver, LogDet & Inverse)
+// Origin: Pure-CP Stdlib (Zero-Alloc SPD Cholesky LL^T & Sqrt-Free LDL^T Decomposition, Solver, LogDet & Inverse) | Created: 2026-11-22
 
 import std from "std";
 

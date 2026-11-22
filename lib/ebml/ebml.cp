@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 8794 EBML / WebM / MKV Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 8794 EBML / WebM / MKV Parser) | Created: 2026-11-22
 
 import std from "std";
 

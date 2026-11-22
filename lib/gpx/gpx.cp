@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc GPX 1.0/1.1 XML Parser & Haversine Stats)
+// Origin: Pure-CP Stdlib (Zero-Alloc GPX 1.0/1.1 XML Parser & Haversine Stats) | Created: 2026-11-22
 
 import std from "std";
 

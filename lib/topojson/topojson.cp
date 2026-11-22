@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc TopoJSON v1.0 Quantized Arc & Topology Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc TopoJSON v1.0 Quantized Arc & Topology Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation TopoJSON v1.0 Topology header, transform dequantizer,
 // delta-encoded arc point decoder, signed arc reference resolver, and objects iterator.
 

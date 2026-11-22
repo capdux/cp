@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 3977 NNTP Wire Protocol Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 3977 NNTP Wire Protocol Codec) | Created: 2026-11-22
 
 // Standard NNTP TCP Ports & Protocol Limits (RFC 3977 / RFC 8143)
 pub const NNTP_TCP_PORT: u16 = 119;

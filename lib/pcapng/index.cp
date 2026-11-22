@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc PCAPng Container & Packet Block Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc PCAPng Container & Packet Block Parser) | Created: 2026-11-22
 
 export {
     BLOCK_SHB,

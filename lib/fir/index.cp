@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc DSP FIR Windowed-Sinc, Hann/Hamming/Blackman Windows & RBJ Biquad IIR)
+// Origin: Pure-CP Stdlib (Zero-Alloc DSP FIR Windowed-Sinc, Hann/Hamming/Blackman Windows & RBJ Biquad IIR) | Created: 2026-11-22
 
 export {
     windowHann,

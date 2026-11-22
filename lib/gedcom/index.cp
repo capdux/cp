@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc GEDCOM 5.5.1 / 7.0 Genealogy Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc GEDCOM 5.5.1 / 7.0 Genealogy Parser) | Created: 2026-11-22
 
 export {
     GedcomLine,

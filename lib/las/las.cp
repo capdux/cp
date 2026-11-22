@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ASPRS LAS 1.2-1.4 LiDAR Point Cloud Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ASPRS LAS 1.2-1.4 LiDAR Point Cloud Parser) | Created: 2026-11-22
 
 /// ASPRS LAS 1.2-1.4 魔数与头部大小常量
 pub const LAS_MAGIC: []const u8 = "LASF";

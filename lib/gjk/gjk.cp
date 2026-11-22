@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc 2D GJK Convex Collision, Minkowski Support & SAT MTV Physics)
+// Origin: Pure-CP Stdlib (Zero-Alloc 2D GJK Convex Collision, Minkowski Support & SAT MTV Physics) | Created: 2026-11-22
 
 import std from "std";
 

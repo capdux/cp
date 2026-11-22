@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc 1D/2D Joseph-Form Kalman & Alpha-Beta Sensor Fusion Filters)
+// Origin: Pure-CP Stdlib (Zero-Alloc 1D/2D Joseph-Form Kalman & Alpha-Beta Sensor Fusion Filters) | Created: 2026-11-22
 
 fn isFiniteF64(x: f64): bool {
     return (x == x) && ((x - x) == 0.0);

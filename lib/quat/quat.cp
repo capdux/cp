@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc 3D Unit Quaternion, Euler ZYX, Mat3 & SLERP/NLERP Library)
+// Origin: Pure-CP Stdlib (Zero-Alloc 3D Unit Quaternion, Euler ZYX, Mat3 & SLERP/NLERP Library) | Created: 2026-11-22
 
 import std from "std";
 

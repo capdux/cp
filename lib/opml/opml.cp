@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc OPML 2.0 Outline Parser & Writer)
+// Origin: Pure-CP Stdlib (Zero-Alloc OPML 2.0 Outline Parser & Writer) | Created: 2026-11-22
 
 /// OPML 2.0 `<head>` 元数据（零堆分配切片视图）
 pub struct OpmlHead {

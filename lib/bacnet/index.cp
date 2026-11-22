@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:bacnet)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:bacnet) | Created: 2026-11-22
 
 export {
     BACNET_UDP_PORT,

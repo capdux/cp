@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 2453 RIPv1/v2 & RFC 2080 RIPng Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 2453 RIPv1/v2 & RFC 2080 RIPng Codec) | Created: 2026-11-22
 
 export {
     RIP_UDP_PORT,

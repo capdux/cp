@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc JUnit XML CI Test Report Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc JUnit XML CI Test Report Parser) | Created: 2026-11-22
 
 export {
     JunitOutcome,

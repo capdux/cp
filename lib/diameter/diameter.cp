@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 6733 Diameter AAA Base Protocol Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 6733 Diameter AAA Base Protocol Codec) | Created: 2026-11-22
 // Pure CP zero-heap-allocation RFC 6733 Diameter Base Protocol codec:
 // 20-byte big-endian header, 24-bit Command-Code & Message-Length, 4-byte aligned
 // AVP iterator (8B standard / 12B Vendor-Specific), typed AVP accessors, and

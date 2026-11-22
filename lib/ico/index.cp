@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ICO / CUR Icon Container Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ICO / CUR Icon Container Parser) | Created: 2026-11-22
 
 export {
     IcoKind,

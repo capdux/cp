@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc NMEA 0183 GNSS Sentence & Stream Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc NMEA 0183 GNSS Sentence & Stream Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation NMEA 0183 parser: XOR checksum verification, generic sentence
 // and empty-preserving field iteration, ddmm.mmmm coordinate conversion, GGA/RMC/VTG decoders,
 // and noisy serial stream line iterator.

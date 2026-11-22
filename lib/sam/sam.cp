@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc SAM v1.6 Sequence Alignment/Map Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc SAM v1.6 Sequence Alignment/Map Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation SAM v1.6 parser: 12 bitwise FLAG masks, CIGAR iterator
 // with reference/query span calculators, @HD/@SQ/@RG header parser, 11-column alignment
 // record & TAG:TYPE:VALUE lookup, and single-pass alignment statistics summarizer.

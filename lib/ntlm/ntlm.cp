@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc MS-NLMP NTLM v1/v2 Wire Protocol Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc MS-NLMP NTLM v1/v2 Wire Protocol Parser) | Created: 2026-11-22
 
 // MS-NLMP Signature & Message Types
 pub const NTLM_SIGNATURE: []const u8 = "NTLMSSP\x00";

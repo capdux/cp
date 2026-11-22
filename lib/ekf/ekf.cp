@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Nonlinear State Estimation: Numerical Jacobians, Joseph-Form EKF & Merwe-Scaled UKF)
+// Origin: Pure-CP Stdlib (Zero-Alloc Nonlinear State Estimation: Numerical Jacobians, Joseph-Form EKF & Merwe-Scaled UKF) | Created: 2026-11-22
 
 /// Nonlinear state transition callback: writes `f(x, u, dt)` into `x_next_out[0..x.len]`.
 pub type TransitionFn = fn(x: []const f64, u: []const f64, dt: f64, x_next_out: *[]f64);

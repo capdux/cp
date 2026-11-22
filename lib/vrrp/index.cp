@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 3768/5798 VRRPv2 & VRRPv3 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 3768/5798 VRRPv2 & VRRPv3 Parser) | Created: 2026-11-22
 
 export {
     VRRP_IP_PROTO,

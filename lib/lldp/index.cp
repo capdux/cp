@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc IEEE 802.1AB LLDP TLV & Neighbor Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc IEEE 802.1AB LLDP TLV & Neighbor Codec) | Created: 2026-11-22
 // Unified exports for cap:lldp.
 
 export {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 1350 / RFC 2347-2349 TFTP Wire Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 1350 / RFC 2347-2349 TFTP Wire Codec) | Created: 2026-11-22
 
 pub const TFTP_UDP_PORT: u16 = 69;
 pub const TFTP_DEFAULT_BLKSIZE: usize = 512;

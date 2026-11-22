@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Nginx Config Lexer & Block Scanner)
+// Origin: Pure-CP Stdlib (Zero-Alloc Nginx Config Lexer & Block Scanner) | Created: 2026-11-22
 
 /// Nginx 配置词法 Token 类型
 pub enum NginxTokenKind {

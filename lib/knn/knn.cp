@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc K-Nearest Neighbors: Top-K Search, Classification, Regression & LOO-CV)
+// Origin: Pure-CP Stdlib (Zero-Alloc K-Nearest Neighbors: Top-K Search, Classification, Regression & LOO-CV) | Created: 2026-11-22
 
 /// Supported vector distance metrics.
 pub enum DistanceMetric {

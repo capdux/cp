@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Classical IIR Filter Design: Butterworth, Chebyshev-I Bilinear SOS Cascade & Zero-Phase filtfilt)
+// Origin: Pure-CP Stdlib (Zero-Alloc Classical IIR Filter Design: Butterworth, Chebyshev-I Bilinear SOS Cascade & Zero-Phase filtfilt) | Created: 2026-11-22
 
 const PI: f64 = 3.14159265358979323846;
 const TWO_PI: f64 = 6.28318530717958647692;

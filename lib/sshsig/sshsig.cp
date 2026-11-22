@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc OpenSSH PROTOCOL.sshsig v1 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc OpenSSH PROTOCOL.sshsig v1 Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation OpenSSH SSHSIG v1 binary & PEM armor parser:
 // SSH wire-string decoding, nested publickey/signature extraction, strict Base64 PEM
 // armor decoding, and PROTOCOL.sshsig signed-data preimage construction.

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ISO 9660 Volume Descriptor & Directory Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ISO 9660 Volume Descriptor & Directory Parser) | Created: 2026-11-22
 
 /// ISO 9660 (ECMA-119) 标准逻辑扇区大小与卷描述符常量
 pub const ISO_SECTOR_SIZE: usize = 2048;

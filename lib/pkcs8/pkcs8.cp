@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 5958 PKCS#8 & RFC 5280 SPKI DER Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 5958 PKCS#8 & RFC 5280 SPKI DER Parser) | Created: 2026-11-22
 
 /// 常见密码学算法 OID（DER 内容字节，不含 0x06 Tag 与长度字节）
 pub const OID_RSA_ENCRYPTION: [9]u8 = [0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01];

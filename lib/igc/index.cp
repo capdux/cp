@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc FAI IGC Flight Recorder Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc FAI IGC Flight Recorder Parser) | Created: 2026-11-22
 
 export {
     IgcHeader,

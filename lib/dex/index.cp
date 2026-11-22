@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Android DEX Binary Header & String Table Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Android DEX Binary Header & String Table Parser) | Created: 2026-11-22
 
 export {
     DEX_HEADER_SIZE,

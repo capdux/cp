@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Adobe FLV Container & Tag Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Adobe FLV Container & Tag Parser) | Created: 2026-11-22
 
 import std from "std";
 

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 5652 CMS / PKCS#7 DER Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 5652 CMS / PKCS#7 DER Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation RFC 5652 CMS / RFC 2315 PKCS#7 ASN.1 DER parser:
 // ContentInfo OID dispatch, SignedData (attached & detached), X.509 CertificateSet
 // iteration, and SignerInfo (digest/signature algorithm OIDs, signedAttrs, signature) iteration.

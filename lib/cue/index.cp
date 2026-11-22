@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc CUE Language Lexer & Validator)
+// Origin: Pure-CP Stdlib (Zero-Alloc CUE Language Lexer & Validator) | Created: 2026-11-22
 
 export {
     CueTokenKind,

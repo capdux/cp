@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ASHRAE 135 BACnet/IP BVLC, NPDU, APDU & TLV Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc ASHRAE 135 BACnet/IP BVLC, NPDU, APDU & TLV Codec) | Created: 2026-11-22
 
 pub const BACNET_UDP_PORT: u16 = 47808;
 pub const BVLC_TYPE_IPV4: u8 = 0x81;

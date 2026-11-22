@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 2849 LDAP Data Interchange Format .ldif Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 2849 LDAP Data Interchange Format .ldif Parser) | Created: 2026-11-22
 
 /// LDIF 属性值编码类型（`: ` 普通文本、`:: ` Base64、`:< ` URL）
 pub enum LdifValueKind: u8 {

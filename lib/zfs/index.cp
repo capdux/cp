@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:zfs)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:zfs) | Created: 2026-11-22
 
 export {
     ZFS_UBERBLOCK_MAGIC,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:pop3)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:pop3) | Created: 2026-11-22
 
 export {
     POP3_TCP_PORT,

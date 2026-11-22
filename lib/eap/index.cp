@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 3748 EAP + IEEE 802.1X EAPOL Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 3748 EAP + IEEE 802.1X EAPOL Parser) | Created: 2026-11-22
 // Unified exports for cap:eap.
 
 export {

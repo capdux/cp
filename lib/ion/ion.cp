@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Amazon Ion 1.0 Binary Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Amazon Ion 1.0 Binary Parser) | Created: 2026-11-22
 
 /// Amazon Ion 1.0 4 字节版本魔数（IVM: 0xE0 0x01 0x00 0xEA）
 pub const ION_IVM_1_0: []const u8 = "\xE0\x01\x00\xEA";

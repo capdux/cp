@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Naive Bayes Classifiers: Gaussian, Multinomial & Bernoulli)
+// Origin: Pure-CP Stdlib (Zero-Alloc Naive Bayes Classifiers: Gaussian, Multinomial & Bernoulli) | Created: 2026-11-22
 
 export {
     GaussianNbModel,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Khronos KTX 1.1 & KTX2 Texture Container Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Khronos KTX 1.1 & KTX2 Texture Container Parser) | Created: 2026-11-22
 
 export {
     KtxVersion,

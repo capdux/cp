@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ | Synced: 2026-11-21T17:37:17Z (Zero-Alloc RSS 2.0 Feed Parser & Writer)
+// Origin: Pure-CP Stdlib (Zero-Alloc RSS 2.0 Feed Parser & Writer) | Created: 2026-11-22
 
 /// RSS 2.0 频道级元数据（零堆分配切片视图）
 pub struct RssChannel {

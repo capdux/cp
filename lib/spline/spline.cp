@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Natural/Clamped Cubic Spline, Fritsch-Carlson PCHIP & Catmull-Rom Interpolation)
+// Origin: Pure-CP Stdlib (Zero-Alloc Natural/Clamped Cubic Spline, Fritsch-Carlson PCHIP & Catmull-Rom Interpolation) | Created: 2026-11-22
 
 /// Single piecewise cubic polynomial segment on `[x0, x1]`:
 /// `S(x) = a + b*(x - x0) + c*(x - x0)^2 + d*(x - x0)^3`.

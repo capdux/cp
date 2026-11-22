@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Biovision Hierarchy BVH Motion Capture Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Biovision Hierarchy BVH Motion Capture Parser) | Created: 2026-11-22
 
 export {
     BvhChannel,

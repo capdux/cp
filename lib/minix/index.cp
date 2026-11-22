@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc MINIX v1/v2/v3 Filesystem Superblock, Inode & Dir Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc MINIX v1/v2/v3 Filesystem Superblock, Inode & Dir Parser) | Created: 2026-11-22
 
 export {
     MINIX_SUPER_OFFSET,

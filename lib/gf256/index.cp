@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:gf256)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:gf256) | Created: 2026-11-22
 
 export {
     GF256_POLY_AES,

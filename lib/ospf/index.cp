@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 2328 OSPFv2 Routing Protocol Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 2328 OSPFv2 Routing Protocol Parser) | Created: 2026-11-22
 
 export {
     OSPF_IP_PROTO,

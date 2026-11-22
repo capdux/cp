@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:ubifs & cap.ubifs)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:ubifs & cap.ubifs) | Created: 2026-11-22
 
 export {
     UBI_EC_HDR_MAGIC,

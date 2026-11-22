@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ISO/IEC 13818-1 MPEG-TS Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ISO/IEC 13818-1 MPEG-TS Parser) | Created: 2026-11-22
 
 /// 标准 MPEG-TS 分组字节长度（188B）与 M2TS 分组长度（192B）
 pub const TS_PACKET_SIZE: usize = 188;

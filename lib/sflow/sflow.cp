@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc sFlow v5 Network Telemetry Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc sFlow v5 Network Telemetry Parser) | Created: 2026-11-22
 
 /// sFlow 默认 UDP 端口 (6343)
 pub const SFLOW_UDP_PORT: u16 = 6343;

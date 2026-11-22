@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Modbus TCP MBAP & Modbus RTU CRC-16 Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc Modbus TCP MBAP & Modbus RTU CRC-16 Codec) | Created: 2026-11-22
 
 pub const MODBUS_TCP_PORT: u16 = 502;
 pub const MODBUS_MBAP_SIZE: usize = 7;

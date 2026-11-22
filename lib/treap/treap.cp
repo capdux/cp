@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Randomized Treap with Order Statistics, SplitMix64 PRNG & Free-List Pool)
+// Origin: Pure-CP Stdlib (Zero-Alloc Randomized Treap with Order Statistics, SplitMix64 PRNG & Free-List Pool) | Created: 2026-11-22
 
 /// Sentinel index representing a null child or empty free-list link.
 pub const TREAP_NIL: u32 = 0xFFFFFFFF;

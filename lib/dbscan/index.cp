@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Unified Exports for cap:dbscan)
+// Origin: Pure-CP Stdlib (Unified Exports for cap:dbscan) | Created: 2026-11-22
 
 export {
     DBSCAN_NOISE,

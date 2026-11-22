@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc NES Sound Format NSF & NSFe Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc NES Sound Format NSF & NSFe Parser) | Created: 2026-11-22
 
 export {
     NSF_MAGIC,

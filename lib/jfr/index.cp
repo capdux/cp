@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc JVM Java Flight Recorder v2.0 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc JVM Java Flight Recorder v2.0 Parser) | Created: 2026-11-22
 
 export {
     JFR_MAGIC,

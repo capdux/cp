@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc 1D/2D 8x8 Orthonormal DCT-II / IDCT-III, ZigZag & JPEG Quantization DSP Library)
+// Origin: Pure-CP Stdlib (Zero-Alloc 1D/2D 8x8 Orthonormal DCT-II / IDCT-III, ZigZag & JPEG Quantization DSP Library) | Created: 2026-11-22
 
 import std from "std";
 

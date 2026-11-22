@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:dct)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:dct) | Created: 2026-11-22
 
 export {
     DCT_BLOCK_DIM,

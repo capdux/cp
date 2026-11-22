@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc OGC KML 2.2 Placemark & Coordinates Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc OGC KML 2.2 Placemark & Coordinates Parser) | Created: 2026-11-22
 
 export {
     KmlGeomKind,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (ISO/IEC 16388 Code 39 Zero-Alloc 3-of-9 Barcode Codec & Mod-43 Verifier)
+// Origin: Pure-CP Stdlib (ISO/IEC 16388 Code 39 Zero-Alloc 3-of-9 Barcode Codec & Mod-43 Verifier) | Created: 2026-11-22
 
 /// Number of data characters in the ISO/IEC 16388 Code 39 alphabet (`0..9`, `A..Z`, `- . SPACE $ / + %`).
 pub const CODE39_ALPHABET_LEN: usize = 43;

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (RFC 4287 Atom 1.0 Feed Parser & Writer)
+// Origin: Pure-CP Stdlib (RFC 4287 Atom 1.0 Feed Parser & Writer) | Created: 2026-11-22
 
 /// RFC 4287 Atom 1.0 Feed 顶层元数据（零拷贝切片指向原始 XML）
 pub struct AtomFeed {

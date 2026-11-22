@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc UPnP / DLNA SSDP Discovery Protocol Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc UPnP / DLNA SSDP Discovery Protocol Codec) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // Protocol Constants (UPnP / DLNA SSDP)

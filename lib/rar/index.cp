@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RAR4 & RAR5 Archive Vint, CRC32 & Block/File Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RAR4 & RAR5 Archive Vint, CRC32 & Block/File Parser) | Created: 2026-11-22
 
 export {
     RAR4_SIGNATURE,

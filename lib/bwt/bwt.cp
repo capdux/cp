@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc BWT & MTF Compression Frontend)
+// Origin: Pure-CP Stdlib (Zero-Alloc BWT & MTF Compression Frontend) | Created: 2026-11-22
 
 /// Result of a Burrows-Wheeler Transform encoding pass.
 pub struct BwtResult {

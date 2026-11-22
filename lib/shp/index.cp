@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ESRI Shapefile .shp Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ESRI Shapefile .shp Parser) | Created: 2026-11-22
 
 export {
     SHP_FILE_CODE,

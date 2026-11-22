@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Householder QR Factorization & Linear Least Squares)
+// Origin: Pure-CP Stdlib (Zero-Alloc Householder QR Factorization & Linear Least Squares) | Created: 2026-11-22
 
 /// Default rank-deficiency tolerance for `qrSolveLeastSquares`.
 pub const QR_DEFAULT_TOL: f64 = 1.0e-12;

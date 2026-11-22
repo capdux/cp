@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc 2D Hilbert Space-Filling Curve & 2D/3D Morton Z-Order Spatial Index)
+// Origin: Pure-CP Stdlib (Zero-Alloc 2D Hilbert Space-Filling Curve & 2D/3D Morton Z-Order Spatial Index) | Created: 2026-11-22
 
 /// Minimum supported 2D Hilbert curve order (2x2 grid, 2-bit index).
 pub const HILBERT_MIN_ORDER: u8 = 1;

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 1939 / RFC 2449 POP3 Wire Protocol Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 1939 / RFC 2449 POP3 Wire Protocol Codec) | Created: 2026-11-22
 
 pub const POP3_TCP_PORT: u16 = 110;
 pub const POP3S_TCP_PORT: u16 = 995;

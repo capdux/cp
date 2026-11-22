@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ISO 2108 ISBN-10/13, ISO 3297 ISSN & GS1 EAN/UPC Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc ISO 2108 ISBN-10/13, ISO 3297 ISSN & GS1 EAN/UPC Codec) | Created: 2026-11-22
 
 /// Standard lengths of canonical unformatted/formatted identifiers.
 pub const ISBN10_LEN: usize = 10;

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 4302 AH / RFC 4303 ESP / RFC 7296 IKEv2 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 4302 AH / RFC 4303 ESP / RFC 7296 IKEv2 Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation IPsec & IKEv2 parser:
 // RFC 4303 ESP header + decrypted trailer stripping, RFC 4302 AH header & ICV extraction,
 // and RFC 7296 IKEv2 28-byte header + chained Generic Payload TLV iterator.

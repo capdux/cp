@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 3032 MPLS Label Stack, RFC 4385 PW-CW & RFC 5586 G-ACh Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 3032 MPLS Label Stack, RFC 4385 PW-CW & RFC 5586 G-ACh Parser) | Created: 2026-11-22
 
 export {
     MPLS_ETHERTYPE_UNICAST,

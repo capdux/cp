@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Unified Exports for cap:pid)
+// Origin: Pure-CP Stdlib (Unified Exports for cap:pid) | Created: 2026-11-22
 
 export {
     PidConfig,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc OpenPGP RFC 4880/9580 Armor & Packet Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc OpenPGP RFC 4880/9580 Armor & Packet Parser) | Created: 2026-11-22
 
 export {
     PGP_CRC24_INIT,

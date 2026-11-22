@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:gopher)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:gopher) | Created: 2026-11-22
 
 export {
     GOPHER_TCP_PORT,

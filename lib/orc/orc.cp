@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Apache ORC Columnar Container Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Apache ORC Columnar Container Parser) | Created: 2026-11-22
 
 /// Apache ORC 3 字节魔数常量
 pub const ORC_MAGIC: []const u8 = "ORC";

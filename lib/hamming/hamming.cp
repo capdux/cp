@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Hamming(7,4), SECDED(8,4) & SECDED(72,64) ECC Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc Hamming(7,4), SECDED(8,4) & SECDED(72,64) ECC Codec) | Created: 2026-11-22
 
 /// Decoding status for SECDED (Single Error Correction, Double Error Detection) codes.
 pub enum EccStatus: u8 {

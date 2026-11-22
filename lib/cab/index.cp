@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Microsoft Cabinet .cab Archive Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Microsoft Cabinet .cab Archive Parser) | Created: 2026-11-22
 
 export {
     CAB_MAGIC,

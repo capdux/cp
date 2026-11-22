@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Khronos SPIR-V Binary Shader Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Khronos SPIR-V Binary Shader Parser) | Created: 2026-11-22
 
 /// SPIR-V 二进制魔数 (`0x07230203`)
 pub const SPV_MAGIC: u32 = 0x07230203;

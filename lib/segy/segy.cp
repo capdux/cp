@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc SEG-Y Rev 1/2 Seismic Reflection Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc SEG-Y Rev 1/2 Seismic Reflection Parser) | Created: 2026-11-22
 
 /// SEG-Y 固定 3200 字节文本卷头长度（EBCDIC 或 ASCII）
 pub const SEGY_TEXT_HEADER_SIZE: usize = 3200;

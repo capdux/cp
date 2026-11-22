@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 4271 BGP-4 Protocol Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 4271 BGP-4 Protocol Parser) | Created: 2026-11-22
 
 /// BGP-4 固定 19 字节报头长度（16B Marker + 2B Length + 1B Type）
 pub const BGP_HEADER_SIZE: usize = 19;

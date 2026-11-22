@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:llmnr & cap.llmnr)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:llmnr & cap.llmnr) | Created: 2026-11-22
 
 export {
     LLMNR_PORT,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc W3C XPath Lexer & Step Scanner)
+// Origin: Pure-CP Stdlib (Zero-Alloc W3C XPath Lexer & Step Scanner) | Created: 2026-11-22
 
 /// W3C XPath 词法单元类型
 pub enum XPathTokenKind: u8 {

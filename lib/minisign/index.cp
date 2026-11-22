@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Minisign & OpenBSD Signify Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc Minisign & OpenBSD Signify Codec) | Created: 2026-11-22
 
 export {
     MINISIGN_UNTRUSTED_PREFIX,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc HEIF / HEIC ISO BMFF Container Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc HEIF / HEIC ISO BMFF Container Parser) | Created: 2026-11-22
 
 export {
     HEIF_BOX_HEADER_SIZE,

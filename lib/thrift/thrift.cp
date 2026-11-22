@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Apache Thrift IDL Lexer & Scanner)
+// Origin: Pure-CP Stdlib (Zero-Alloc Apache Thrift IDL Lexer & Scanner) | Created: 2026-11-22
 //! Zero-allocation Apache Thrift (.thrift) IDL declaration scanner, struct field iterator, and brace validator.
 
 pub enum ThriftDeclKind: u8 {

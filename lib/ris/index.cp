@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Research Information Systems .ris Citation Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Research Information Systems .ris Citation Parser) | Created: 2026-11-22
 
 export {
     RisTag,

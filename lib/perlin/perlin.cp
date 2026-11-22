@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Ken Perlin 2002 Zero-Alloc Improved Perlin Noise 1D/2D/3D, fBm, Ridged & Turbulence)
+// Origin: Pure-CP Stdlib (Ken Perlin 2002 Zero-Alloc Improved Perlin Noise 1D/2D/3D, fBm, Ridged & Turbulence) | Created: 2026-11-22
 
 import std from "std";
 

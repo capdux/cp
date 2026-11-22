@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc FastTracker II Extended Module .xm v1.04 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc FastTracker II Extended Module .xm v1.04 Parser) | Created: 2026-11-22
 
 export {
     XM_MAGIC,

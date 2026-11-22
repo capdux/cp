@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Deterministic RANSAC Robust Estimation for 2D Line, 2D Circle, 3D Plane & 1D Linear Regression)
+// Origin: Pure-CP Stdlib (Zero-Alloc Deterministic RANSAC Robust Estimation for 2D Line, 2D Circle, 3D Plane & 1D Linear Regression) | Created: 2026-11-22
 
 import std from "std";
 

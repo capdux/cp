@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Linux ext2/ext3/ext4 Filesystem Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Linux ext2/ext3/ext4 Filesystem Parser) | Created: 2026-11-22
 
 pub const EXT4_SUPER_OFFSET: usize = 1024;
 pub const EXT4_SUPER_SIZE: usize = 1024;

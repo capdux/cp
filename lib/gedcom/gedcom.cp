@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc GEDCOM 5.5.1 / 7.0 Genealogy Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc GEDCOM 5.5.1 / 7.0 Genealogy Parser) | Created: 2026-11-22
 
 /// 单条 GEDCOM 逻辑行：<level> [@xref@] <TAG> [value]（零拷贝切片）
 pub struct GedcomLine {

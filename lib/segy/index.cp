@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc SEG-Y Rev 1/2 Seismic Reflection Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc SEG-Y Rev 1/2 Seismic Reflection Parser) | Created: 2026-11-22
 
 export {
     SEGY_TEXT_HEADER_SIZE,

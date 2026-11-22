@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Unix CPIO newc/crc/odc Archive Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Unix CPIO newc/crc/odc Archive Parser) | Created: 2026-11-22
 
 /// CPIO 魔数与固定头大小常量
 pub const CPIO_MAGIC_NEWC: []const u8 = "070701";

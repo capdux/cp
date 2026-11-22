@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc MPEG-1/2/2.5 Layer I/II/III & Xing/Info/VBRI Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc MPEG-1/2/2.5 Layer I/II/III & Xing/Info/VBRI Parser) | Created: 2026-11-22
 
 /// MPEG 音频版本枚举（对应帧头 bits 20..19）
 pub enum MpegVersion: u8 {

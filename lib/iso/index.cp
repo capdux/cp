@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ISO 9660 Volume Descriptor & Directory Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ISO 9660 Volume Descriptor & Directory Parser) | Created: 2026-11-22
 
 export {
     ISO_SECTOR_SIZE,

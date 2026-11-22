@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Suffix Array, Kasai LCP, Binary-Search Pattern Index & Substring Analytics)
+// Origin: Pure-CP Stdlib (Zero-Alloc Suffix Array, Kasai LCP, Binary-Search Pattern Index & Substring Analytics) | Created: 2026-11-22
 
 /// Caller-owned zero-alloc workspace for `buildSuffixArray`.
 /// Required lengths for input length `n`:

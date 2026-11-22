@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Kulkarni Hybrid Logical Clock - HLC)
+// Origin: Pure-CP Stdlib (Zero-Alloc Kulkarni Hybrid Logical Clock - HLC) | Created: 2026-11-22
 
 /// Maximum 48-bit physical millisecond timestamp (0x0000FFFFFFFFFFFF, valid through year 10889).
 pub const HLC_MAX_PHYSICAL_MS: u64 = 0x0000FFFFFFFFFFFF;

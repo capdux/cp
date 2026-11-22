@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Apple UDIF .dmg koly & BLKX mish Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Apple UDIF .dmg koly & BLKX mish Parser) | Created: 2026-11-22
 
 /// Apple UDIF (.dmg) 常量与 BLKX 块类型标志
 pub const DMG_KOLY_MAGIC: []const u8 = "koly";

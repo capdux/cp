@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Linear-Time KMP, Z-Algorithm & Sentinel-Free Manacher Palindrome Algorithms)
+// Origin: Pure-CP Stdlib (Zero-Alloc Linear-Time KMP, Z-Algorithm & Sentinel-Free Manacher Palindrome Algorithms) | Created: 2026-11-22
 
 /// Span describing a palindromic substring `s[start .. start + len]`.
 pub struct PalindromeSpan {

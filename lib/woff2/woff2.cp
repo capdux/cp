@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc W3C WOFF2 Font Header & Table Directory Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc W3C WOFF2 Font Header & Table Directory Parser) | Created: 2026-11-22
 
 import std from "std";
 

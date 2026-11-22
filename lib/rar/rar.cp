@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RAR4 & RAR5 Archive Vint, CRC32 & Block/File Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RAR4 & RAR5 Archive Vint, CRC32 & Block/File Parser) | Created: 2026-11-22
 
 // RAR Signatures & Versions
 pub const RAR4_SIGNATURE: [7]u8 = [0x52, 0x61, 0x72, 0x21, 0x1A, 0x07, 0x00];

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Martin Porter 1980 Zero-Alloc English Porter Stemmer)
+// Origin: Pure-CP Stdlib (Martin Porter 1980 Zero-Alloc English Porter Stemmer) | Created: 2026-11-22
 
 /// Maximum supported input word length in bytes for zero-alloc stemming.
 pub const PORTER_MAX_WORD_LEN: usize = 256;

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ITU-T X.690 ASN.1 DER Strict Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc ITU-T X.690 ASN.1 DER Strict Codec) | Created: 2026-11-22
 
 export {
     TAG_BOOLEAN,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Cisco Discovery Protocol v1/v2 Wire Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc Cisco Discovery Protocol v1/v2 Wire Codec) | Created: 2026-11-22
 
 pub const CDP_SNAP_PID: u16 = 0x2000;
 pub const CDP_V1: u8 = 1;

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Microsoft UF2 Microcontroller Firmware Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc Microsoft UF2 Microcontroller Firmware Codec) | Created: 2026-11-22
 
 /// UF2 固定块大小（512 字节）
 pub const UF2_BLOCK_SIZE: usize = 512;

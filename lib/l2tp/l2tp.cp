@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 2661 L2TPv2 & RFC 3931 L2TPv3 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 2661 L2TPv2 & RFC 3931 L2TPv3 Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation L2TPv2 & L2TPv3 wire protocol parser:
 // L2TPv2 Control/Data headers (L/S/O/P flags), L2TPv3 Control-over-UDP header,
 // and zero-allocation 6-byte header / 10-bit length AVP iterator.

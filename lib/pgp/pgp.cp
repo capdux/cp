@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc OpenPGP RFC 4880/9580 Armor & Packet Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc OpenPGP RFC 4880/9580 Armor & Packet Parser) | Created: 2026-11-22
 
 /// OpenPGP Radix-64 CRC-24 初始值与生成多项式（RFC 4880 §6.1）
 pub const PGP_CRC24_INIT: u32 = 0xB704CE;

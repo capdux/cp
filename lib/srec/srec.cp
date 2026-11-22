@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Motorola S-Record S0-S9 Firmware Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc Motorola S-Record S0-S9 Firmware Codec) | Created: 2026-11-22
 // Pure CP zero-heap-allocation Motorola S-Record (.srec/.s19/.s28/.s37) parser, encoder,
 // one's-complement checksum verifier, multi-line iterator, and firmware summarizer.
 

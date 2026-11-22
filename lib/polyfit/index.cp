@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:polyfit)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:polyfit) | Created: 2026-11-22
 
 export {
     POLYFIT_MAX_DEG,

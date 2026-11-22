@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:code128)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:code128) | Created: 2026-11-22
 
 export {
     CODE128_START_A,

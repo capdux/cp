@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc WebGPU WGSL Lexer & EntryPoint Scanner)
+// Origin: Pure-CP Stdlib (Zero-Alloc WebGPU WGSL Lexer & EntryPoint Scanner) | Created: 2026-11-22
 
 /// WebGPU WGSL 着色器阶段枚举
 pub enum WgslStage: u8 {

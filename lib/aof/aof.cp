@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Redis AOF RESP Command Log Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Redis AOF RESP Command Log Parser) | Created: 2026-11-22
 
 /// 零拷贝 AOF 命令参数迭代器（支持任意含 `\r\n` 与 `\0` 的二进制安全 Bulk String）
 pub struct AofArgIter {

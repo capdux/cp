@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc JPEG XL Codestream & Container Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc JPEG XL Codestream & Container Parser) | Created: 2026-11-22
 
 /// JPEG XL 封装形态
 pub enum JxlContainerKind {

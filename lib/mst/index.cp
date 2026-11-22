@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Unified Exports for cap:mst)
+// Origin: Pure-CP Stdlib (Unified Exports for cap:mst) | Created: 2026-11-22
 
 export {
     MST_INF_WEIGHT,

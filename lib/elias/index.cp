@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:elias & cap.elias)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:elias & cap.elias) | Created: 2026-11-22
 
 export {
     BitWriter,

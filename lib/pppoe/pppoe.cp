@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 2516 PPPoE Discovery & Session Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 2516 PPPoE Discovery & Session Codec) | Created: 2026-11-22
 
 pub const PPPOE_ETHERTYPE_DISCOVERY: u16 = 0x8863;
 pub const PPPOE_ETHERTYPE_SESSION: u16 = 0x8864;

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Microsoft Cabinet .cab Archive Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Microsoft Cabinet .cab Archive Parser) | Created: 2026-11-22
 
 /// Microsoft Cabinet (MS-CAB) 归档常量与标志位
 pub const CAB_MAGIC: []const u8 = "MSCF";

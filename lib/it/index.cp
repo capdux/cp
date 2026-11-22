@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Impulse Tracker 2.14 .it Binary Module Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Impulse Tracker 2.14 .it Binary Module Parser) | Created: 2026-11-22
 
 export {
     IT_MAGIC,

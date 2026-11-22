@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc OOXML DOCX WordprocessingML & CoreProps Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc OOXML DOCX WordprocessingML & CoreProps Parser) | Created: 2026-11-22
 
 /// OOXML WordprocessingML 主文档 Content-Type (`[Content_Types].xml`)
 pub const DOCX_MAIN_CONTENT_TYPE: []const u8 = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml";

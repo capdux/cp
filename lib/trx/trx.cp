@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Visual Studio / .NET TRX XML Test Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Visual Studio / .NET TRX XML Test Parser) | Created: 2026-11-22
 
 /// TRX 测试结果状态枚举
 pub enum TrxOutcome: u8 {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc IEEE 1364 VCD Waveform Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc IEEE 1364 VCD Waveform Parser) | Created: 2026-11-22
 
 export {
     VcdTimeUnit,

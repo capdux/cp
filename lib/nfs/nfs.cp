@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 5531 ONC RPC v2 & RFC 1813 NFSv3 Wire Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 5531 ONC RPC v2 & RFC 1813 NFSv3 Wire Parser) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // Protocol Constants (RFC 5531 ONC RPC v2 & RFC 1813 NFSv3)

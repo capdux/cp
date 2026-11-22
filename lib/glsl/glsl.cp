@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc GLSL Shader Lexer & Decl Scanner)
+// Origin: Pure-CP Stdlib (Zero-Alloc GLSL Shader Lexer & Decl Scanner) | Created: 2026-11-22
 
 /// GLSL `#version` 指令元数据
 pub struct GlslVersion {

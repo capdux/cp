@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc VGM 1.00-1.71 Chiptune & GD3 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc VGM 1.00-1.71 Chiptune & GD3 Parser) | Created: 2026-11-22
 
 /// VGM 文件头魔数（4 字节）
 pub const VGM_MAGIC: []const u8 = "Vgm ";

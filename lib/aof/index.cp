@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Redis AOF RESP Command Log Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Redis AOF RESP Command Log Parser) | Created: 2026-11-22
 
 export {
     AofArgIter,

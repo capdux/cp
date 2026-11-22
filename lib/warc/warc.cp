@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ISO 28500 WARC 1.0/1.1 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ISO 28500 WARC 1.0/1.1 Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation ISO 28500 Web ARChive (.warc) 1.0 & 1.1 streaming parser:
 // zero-copy header field iterator, exact Content-Length binary payload slicing,
 // trailing CRLFCRLF / LFLF separator validation, and single-pass corpus summarization.

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc SubRip SRT Subtitle Parser & Formatter)
+// Origin: Pure-CP Stdlib (Zero-Alloc SubRip SRT Subtitle Parser & Formatter) | Created: 2026-11-22
 import std from "std";
 
 /// SubRip (.srt) 单条字幕条目（零堆分配切片视图）

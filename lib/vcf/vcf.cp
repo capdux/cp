@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc HTSlib VCF 4.2/4.3 Variant Call Format Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc HTSlib VCF 4.2/4.3 Variant Call Format Parser) | Created: 2026-11-22
 
 /// VCF 文件头解析结果（零拷贝切片）
 pub struct VcfHeader {

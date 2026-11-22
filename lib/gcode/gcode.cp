@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RS-274 / Marlin / RepRap G-Code Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RS-274 / Marlin / RepRap G-Code Parser) | Created: 2026-11-22
 
 /// 单个 G-Code 词（字母 + 浮点值，零拷贝原始数值切片）
 pub struct GcodeWord {

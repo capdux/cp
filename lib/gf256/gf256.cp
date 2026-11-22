@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc GF(2^8) Finite Field, Polynomial, Lagrange & Matrix Library)
+// Origin: Pure-CP Stdlib (Zero-Alloc GF(2^8) Finite Field, Polynomial, Lagrange & Matrix Library) | Created: 2026-11-22
 
 /// AES / Rijndael irreducible polynomial low 8 bits: x^8 + x^4 + x^3 + x + 1 (0x11B).
 pub const GF256_POLY_AES: u8 = 0x1B;

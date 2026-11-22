@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc OOXML DOCX WordprocessingML & CoreProps Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc OOXML DOCX WordprocessingML & CoreProps Parser) | Created: 2026-11-22
 
 export {
     DOCX_MAIN_CONTENT_TYPE,

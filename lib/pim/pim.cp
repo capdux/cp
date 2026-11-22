@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 7761 PIM-SM v2 Multicast Wire Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 7761 PIM-SM v2 Multicast Wire Codec) | Created: 2026-11-22
 
 pub const PIM_IP_PROTO: u8 = 103;
 pub const PIM_VERSION: u8 = 2;

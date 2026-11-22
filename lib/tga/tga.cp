@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Truevision TGA Image Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc Truevision TGA Image Codec) | Created: 2026-11-22
 
 /// Truevision TGA 图像类型
 pub enum TgaImageType {

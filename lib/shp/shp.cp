@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ESRI Shapefile .shp Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ESRI Shapefile .shp Parser) | Created: 2026-11-22
 
 /// ESRI Shapefile 文件头魔数（4B Big-Endian = 9994）
 pub const SHP_FILE_CODE: u32 = 9994;

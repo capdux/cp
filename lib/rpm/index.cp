@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Linux RPM v3/v4 Package Header Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Linux RPM v3/v4 Package Header Parser) | Created: 2026-11-22
 
 export {
     RPM_LEAD_MAGIC,

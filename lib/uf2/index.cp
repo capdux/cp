@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Microsoft UF2 Microcontroller Firmware Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc Microsoft UF2 Microcontroller Firmware Codec) | Created: 2026-11-22
 
 export {
     UF2_BLOCK_SIZE,

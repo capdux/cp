@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc VirtualBox VDI 1.1 Disk Image Header & Block Map Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc VirtualBox VDI 1.1 Disk Image Header & Block Map Parser) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // VDI 1.1 Protocol Constants

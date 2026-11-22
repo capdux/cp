@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc HDF5 Superblock v0-v3 & OHDR v2 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc HDF5 Superblock v0-v3 & OHDR v2 Parser) | Created: 2026-11-22
 
 export {
     HDF5_SIGNATURE,

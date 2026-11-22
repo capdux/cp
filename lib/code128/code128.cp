@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ISO/IEC 15417 Code 128 Barcode Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc ISO/IEC 15417 Code 128 Barcode Codec) | Created: 2026-11-22
 
 pub const CODE128_START_A: u8 = 103;
 pub const CODE128_START_B: u8 = 104;

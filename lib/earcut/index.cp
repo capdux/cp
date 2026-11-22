@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc 2D Simple Polygon Ear-Clipping Triangulation & Geometry Primitives)
+// Origin: Pure-CP Stdlib (Zero-Alloc 2D Simple Polygon Ear-Clipping Triangulation & Geometry Primitives) | Created: 2026-11-22
 
 export {
     Point2D,

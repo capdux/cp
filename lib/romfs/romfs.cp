@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Linux Kernel romfs Big-Endian Read-Only Filesystem Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Linux Kernel romfs Big-Endian Read-Only Filesystem Parser) | Created: 2026-11-22
 
 // romfs Core Protocol Constants
 pub const ROMFS_MAGIC: []const u8 = "-rom1fs-";

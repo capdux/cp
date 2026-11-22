@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc NCBI/EMBL FASTA Bioinformatics Parser & IUPAC Reverse Complement)
+// Origin: Pure-CP Stdlib (Zero-Alloc NCBI/EMBL FASTA Bioinformatics Parser & IUPAC Reverse Complement) | Created: 2026-11-22
 
 /// 单条 FASTA 序列零拷贝视图
 pub struct FastaRecord {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc age-encryption.org/v1 File Format Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc age-encryption.org/v1 File Format Parser) | Created: 2026-11-22
 
 export {
     AGE_VERSION_LINE,

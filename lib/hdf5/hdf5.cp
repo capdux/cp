@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc HDF5 Superblock v0-v3 & OHDR v2 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc HDF5 Superblock v0-v3 & OHDR v2 Parser) | Created: 2026-11-22
 
 /// HDF5 8 字节文件签名 `\x89HDF\r\n\x1a\n` 与核心常量
 pub const HDF5_SIGNATURE: []const u8 = "\x89HDF\r\n\x1a\n";

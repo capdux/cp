@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Amazon Mobipocket/Kindle .mobi Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Amazon Mobipocket/Kindle .mobi Parser) | Created: 2026-11-22
 
 export {
     PDB_HEADER_SIZE,

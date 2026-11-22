@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc QOI Lossless Image Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc QOI Lossless Image Codec) | Created: 2026-11-22
 
 /// QOI 14 字节大端文件头（魔数 `"qoif"`）
 pub struct QoiHeader {

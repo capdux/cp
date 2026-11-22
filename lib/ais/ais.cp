@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ITU-R M.1371 / IEC 61162-1 Maritime AIS Decoder)
+// Origin: Pure-CP Stdlib (Zero-Alloc ITU-R M.1371 / IEC 61162-1 Maritime AIS Decoder) | Created: 2026-11-22
 
 /// AIS 经度/纬度不可用哨兵值（1/10000 分整数原始值）
 pub const AIS_LON_UNAVAILABLE: i32 = 108600000; // 181.0 * 600000

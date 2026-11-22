@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Canonical Roman Numerals 1..3999 & Bijective Base-26 Spreadsheet Columns)
+// Origin: Pure-CP Stdlib (Zero-Alloc Canonical Roman Numerals 1..3999 & Bijective Base-26 Spreadsheet Columns) | Created: 2026-11-22
 
 /// Minimum representable canonical Roman numeral value.
 pub const ROMAN_MIN: u16 = 1;

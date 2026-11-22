@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc LFU Cache & 4-bit W-TinyLFU Count-Min Sketch)
+// Origin: Pure-CP Stdlib (Zero-Alloc LFU Cache & 4-bit W-TinyLFU Count-Min Sketch) | Created: 2026-11-22
 
 /// Number of independent hash rows in `TinyLfuSketch`.
 pub const TINYLFU_ROWS: usize = 4;

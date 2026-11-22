@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:lzw)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:lzw) | Created: 2026-11-21
 
 export {
     LZW_MAX_BITS,

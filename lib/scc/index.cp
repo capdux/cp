@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc CSR Graph, Iterative Tarjan SCC, Kahn Topological Sort, DAG Longest Path & 2-SAT Solver)
+// Origin: Pure-CP Stdlib (Zero-Alloc CSR Graph, Iterative Tarjan SCC, Kahn Topological Sort, DAG Longest Path & 2-SAT Solver) | Created: 2026-11-22
 
 export {
     CsrGraph,

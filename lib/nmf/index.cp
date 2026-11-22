@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Non-negative Matrix Factorization via Lee-Seung Multiplicative Updates)
+// Origin: Pure-CP Stdlib (Zero-Alloc Non-negative Matrix Factorization via Lee-Seung Multiplicative Updates) | Created: 2026-11-22
 
 export {
     NmfLoss,

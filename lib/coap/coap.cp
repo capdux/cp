@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 7252 CoAP Wire Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 7252 CoAP Wire Codec) | Created: 2026-11-22
 // Pure CP zero-heap-allocation RFC 7252 Constrained Application Protocol (CoAP) codec:
 // 4-byte header + 0..8B token, Delta/Length extended option encoding (0..12, 13, 14),
 // strict payload marker (0xFF) validation, CoapOptIter, and zero-allocation CoapWriter.

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc BibTeX Citation Parser & Writer)
+// Origin: Pure-CP Stdlib (Zero-Alloc BibTeX Citation Parser & Writer) | Created: 2026-11-22
 
 /// BibTeX 文献条目（零拷贝切片指向原始 `.bib` 文本）
 pub struct BibEntry {

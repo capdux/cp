@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 1157/3416 SNMP v1/v2c PDU & VarBind Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 1157/3416 SNMP v1/v2c PDU & VarBind Parser) | Created: 2026-11-22
 
 export {
     SNMP_PORT,

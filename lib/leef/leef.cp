@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc IBM QRadar LEEF 1.0/2.0 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc IBM QRadar LEEF 1.0/2.0 Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation IBM QRadar Log Event Extended Format (LEEF 1.0 & 2.0) library:
 // optional Syslog prefix extraction, LEEF 1.0 (5-field, Tab) & LEEF 2.0 (6-field, custom single-char
 // or hex 0xHH / xHH delimiter), zero-copy key=value attribute iteration, and header formatting.

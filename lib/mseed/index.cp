@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc IRIS MiniSEED v2.4 Seismology Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc IRIS MiniSEED v2.4 Seismology Parser) | Created: 2026-11-22
 // Unified exports for cap:mseed.
 
 export {

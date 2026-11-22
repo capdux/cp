@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Microsoft Embedded OpenType .eot Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Microsoft Embedded OpenType .eot Parser) | Created: 2026-11-22
 // Unified exports for cap:eot.
 
 export {

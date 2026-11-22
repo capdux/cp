@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 792/4443 ICMPv4 & ICMPv6 Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 792/4443 ICMPv4 & ICMPv6 Codec) | Created: 2026-11-22
 
 /// ICMP 固定报头长度（Type 1B + Code 1B + Checksum 2B + Rest of Header 4B）
 pub const ICMP_HEADER_SIZE: usize = 8;

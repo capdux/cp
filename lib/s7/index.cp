@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:s7)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:s7) | Created: 2026-11-22
 
 export {
     S7_TCP_PORT,

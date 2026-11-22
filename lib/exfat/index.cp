@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Microsoft exFAT Boot Sector, Checksum & 32B Directory Entry Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Microsoft exFAT Boot Sector, Checksum & 32B Directory Entry Parser) | Created: 2026-11-22
 
 export {
     EXFAT_OEM_ID,

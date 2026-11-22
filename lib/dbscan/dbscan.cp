@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Density-Based Spatial Clustering DBSCAN & Silhouette Score)
+// Origin: Pure-CP Stdlib (Zero-Alloc Density-Based Spatial Clustering DBSCAN & Silhouette Score) | Created: 2026-11-22
 
 import std from "std";
 

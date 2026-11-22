@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Sparse Regularized Regression: Lasso, Ridge & ElasticNet via Cyclic Coordinate Descent)
+// Origin: Pure-CP Stdlib (Zero-Alloc Sparse Regularized Regression: Lasso, Ridge & ElasticNet via Cyclic Coordinate Descent) | Created: 2026-11-22
 
 /// Soft-thresholding proximal operator `S(z, gamma) = sign(z) * max(|z| - gamma, 0)`.
 pub fn softThreshold(z: f64, gamma: f64): f64 {

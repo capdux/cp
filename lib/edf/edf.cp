@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc European Data Format EDF/EDF+ Biosignal Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc European Data Format EDF/EDF+ Biosignal Parser) | Created: 2026-11-22
 
 /// EDF 固定 256 字节主头长度
 pub const EDF_MAIN_HEADER_SIZE: usize = 256;

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:uuencode)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:uuencode) | Created: 2026-11-22
 
 export {
     UU_MAX_LINE_BYTES,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc SNES SPC700 .spc Audio Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc SNES SPC700 .spc Audio Parser) | Created: 2026-11-22
 // Unified exports for cap:spc.
 
 export {

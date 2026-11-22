@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:f2fs & cap.f2fs)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:f2fs & cap.f2fs) | Created: 2026-11-22
 
 export {
     F2FS_SUPER_OFFSET,

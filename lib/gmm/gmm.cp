@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Diagonal-Covariance Gaussian Mixture Model: EM Fit, Log-Sum-Exp Density, Posterior Prediction & AIC/BIC)
+// Origin: Pure-CP Stdlib (Zero-Alloc Diagonal-Covariance Gaussian Mixture Model: EM Fit, Log-Sum-Exp Density, Posterior Prediction & AIC/BIC) | Created: 2026-11-22
 
 const LOG_2PI: f64 = 1.8378770664093453;
 

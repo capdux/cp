@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Robust Statistics, IRLS Huber/Tukey M-Estimation Regression & Theil-Sen 1D)
+// Origin: Pure-CP Stdlib (Zero-Alloc Robust Statistics, IRLS Huber/Tukey M-Estimation Regression & Theil-Sen 1D) | Created: 2026-11-22
 
 export {
     RobustKind,

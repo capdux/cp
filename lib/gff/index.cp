@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc GFF3 & GTF2 Genomic Feature Annotation Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc GFF3 & GTF2 Genomic Feature Annotation Parser) | Created: 2026-11-22
 
 export {
     GFF_PHASE_NONE,

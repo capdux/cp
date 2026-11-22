@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 9669 eBPF 64-bit/128-bit Instruction Codec & Program Validator)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 9669 eBPF 64-bit/128-bit Instruction Codec & Program Validator) | Created: 2026-11-22
 
 // Core Constants
 pub const BPF_INSN_SIZE: usize = 8;

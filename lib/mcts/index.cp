@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Unified Exports for cap:mcts)
+// Origin: Pure-CP Stdlib (Unified Exports for cap:mcts) | Created: 2026-11-22
 
 export {
     MCTS_NO_NODE,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:gemini)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:gemini) | Created: 2026-11-22
 
 export {
     GEMINI_TCP_PORT,

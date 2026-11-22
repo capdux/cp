@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:iscsi & cap.iscsi)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:iscsi & cap.iscsi) | Created: 2026-11-22
 
 export {
     ISCSI_TCP_PORT,

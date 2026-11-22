@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 5280 X.509 CRL DER Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 5280 X.509 CRL DER Parser) | Created: 2026-11-22
 // Unified exports for cap:crl.
 
 export {

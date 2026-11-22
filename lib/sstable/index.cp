@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc LevelDB/RocksDB SSTable Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc LevelDB/RocksDB SSTable Parser) | Created: 2026-11-22
 
 export {
     SST_FOOTER_SIZE,

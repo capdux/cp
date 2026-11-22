@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc DirectDraw Surface DDS Texture Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc DirectDraw Surface DDS Texture Parser) | Created: 2026-11-22
 
 export {
     DdsPixelFormat,

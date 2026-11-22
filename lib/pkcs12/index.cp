@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 7292 PKCS#12 PFX Container DER Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 7292 PKCS#12 PFX Container DER Parser) | Created: 2026-11-22
 // Unified exports for cap:pkcs12.
 
 export {

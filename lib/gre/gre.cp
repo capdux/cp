@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 2784/2890/2637 GRE Tunnel Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 2784/2890/2637 GRE Tunnel Codec) | Created: 2026-11-22
 // Pure CP zero-heap-allocation Generic Routing Encapsulation (GRE) codec:
 // RFC 2784 / 2890 v0 standard GRE (Checksum, Key, Sequence), RFC 2637 v1 PPTP Enhanced GRE
 // (Payload Length, Call ID, Sequence, Ack), RFC 1071 16-bit one's complement checksum,

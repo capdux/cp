@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ID3v1 / ID3v2 Audio Metadata Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ID3v1 / ID3v2 Audio Metadata Parser) | Created: 2026-11-22
 
 export {
     Id3v2Header,

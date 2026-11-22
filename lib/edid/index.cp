@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc VESA EDID 1.3 / 1.4 Block & Timing Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc VESA EDID 1.3 / 1.4 Block & Timing Parser) | Created: 2026-11-22
 
 export {
     EDID_BLOCK_SIZE,

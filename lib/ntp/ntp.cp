@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 5905 NTPv4 / SNTP Wire Codec & Clock Offset)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 5905 NTPv4 / SNTP Wire Codec & Clock Offset) | Created: 2026-11-22
 
 pub const NTP_UDP_PORT: u16 = 123;
 pub const NTP_PACKET_SIZE: usize = 48;

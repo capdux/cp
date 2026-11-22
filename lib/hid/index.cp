@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc USB HID 1.11 Report Descriptor Parser & Summarizer)
+// Origin: Pure-CP Stdlib (Zero-Alloc USB HID 1.11 Report Descriptor Parser & Summarizer) | Created: 2026-11-22
 
 export {
     ITEM_TYPE_MAIN,

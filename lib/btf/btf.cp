@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Linux BTF .BTF Type Graph Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Linux BTF .BTF Type Graph Parser) | Created: 2026-11-22
 
 pub const BTF_MAGIC: u16 = 0xEB9F;
 pub const BTF_VERSION: u8 = 1;

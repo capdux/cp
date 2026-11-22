@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Linux LUKS1 & LUKS2 Disk Encryption Header Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Linux LUKS1 & LUKS2 Disk Encryption Header Parser) | Created: 2026-11-22
 
 // LUKS Core Protocol Constants
 pub const LUKS_MAGIC: [6]u8 = [0x4C, 0x55, 0x4B, 0x53, 0xBA, 0xBE]; // "LUKS\xBA\xBE"

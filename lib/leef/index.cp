@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc IBM QRadar LEEF 1.0/2.0 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc IBM QRadar LEEF 1.0/2.0 Parser) | Created: 2026-11-22
 // Unified exports for cap:leef.
 
 export {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Unified Exports for cap:octree)
+// Origin: Pure-CP Stdlib (Unified Exports for cap:octree) | Created: 2026-11-22
 
 export {
     OCTREE_NO_INDEX,

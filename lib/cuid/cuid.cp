@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ | Synced: 2026-11-21T17:35:33Z (Zero-Alloc CUID / CUID2 Codec & Validator)
+// Origin: Pure-CP Stdlib (Zero-Alloc CUID / CUID2 Codec & Validator) | Created: 2026-11-22
 
 /// CUID 版本枚举
 pub enum CuidVersion: u8 {

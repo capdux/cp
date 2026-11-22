@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Apache Lucene CodecUtil Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Apache Lucene CodecUtil Parser) | Created: 2026-11-22
 
 export {
     LUCENE_CODEC_MAGIC,

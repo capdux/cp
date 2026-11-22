@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (ITU-R M.1677-1 Zero-Alloc International Morse Code Codec & CW Pulse Timing Generator)
+// Origin: Pure-CP Stdlib (ITU-R M.1677-1 Zero-Alloc International Morse Code Codec & CW Pulse Timing Generator) | Created: 2026-11-22
 
 /// ITU-R M.1677-1 standard timing unit constants (in dit units).
 pub const DIT_UNITS: u8 = 1;

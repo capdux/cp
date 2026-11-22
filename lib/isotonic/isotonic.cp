@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Isotonic Regression PAVA & Probability Calibration Metrics)
+// Origin: Pure-CP Stdlib (Zero-Alloc Isotonic Regression PAVA & Probability Calibration Metrics) | Created: 2026-11-22
 
 fn isFiniteF64(v: f64): bool {
     return (v == v) && ((v - v) == 0.0);

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RCSB Protein Data Bank .pdb Structure Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RCSB Protein Data Bank .pdb Structure Parser) | Created: 2026-11-22
 
 export {
     PdbHeader,

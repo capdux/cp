@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Multi-Armed Bandits: UCB1, Epsilon-Greedy, Thompson Sampling & EXP3)
+// Origin: Pure-CP Stdlib (Zero-Alloc Multi-Armed Bandits: UCB1, Epsilon-Greedy, Thompson Sampling & EXP3) | Created: 2026-11-22
 
 import std from "std";
 

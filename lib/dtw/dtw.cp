@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Dynamic Time Warping: 1D/Multi-D DTW, Sakoe-Chiba Band, Path Alignment, LB_Keogh & Z-Normalization)
+// Origin: Pure-CP Stdlib (Zero-Alloc Dynamic Time Warping: 1D/Multi-D DTW, Sakoe-Chiba Band, Path Alignment, LB_Keogh & Z-Normalization) | Created: 2026-11-22
 
 /// Sentinel infinity cost for unreachable DP cells outside the Sakoe-Chiba band.
 pub const DTW_INF: f64 = 1.0e300;

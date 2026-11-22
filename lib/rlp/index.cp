@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Ethereum RLP Canonical Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc Ethereum RLP Canonical Codec) | Created: 2026-11-22
 
 export {
     RlpKind,

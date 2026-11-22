@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc GNU Multiboot1 & Multiboot2 Header, Boot Info & Mmap Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc GNU Multiboot1 & Multiboot2 Header, Boot Info & Mmap Parser) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // Multiboot1 & Multiboot2 Protocol Constants (Little-Endian)

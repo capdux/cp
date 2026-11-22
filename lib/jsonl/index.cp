@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ | Synced: 2026-11-21T16:34:07Z (JSONL / NDJSON Streaming Line Framer)
+// Origin: Pure-CP Stdlib (JSONL / NDJSON Streaming Line Framer) | Created: 2026-11-22
 
 export {
     JsonlChunkResult,

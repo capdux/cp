@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ISO/IEC 13818-1 MPEG-TS Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ISO/IEC 13818-1 MPEG-TS Parser) | Created: 2026-11-22
 
 export {
     TS_PACKET_SIZE,

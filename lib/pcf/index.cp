@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc X11 Portable Compiled Format .pcf Font Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc X11 Portable Compiled Format .pcf Font Parser) | Created: 2026-11-22
 // Unified exports for cap:pcf.
 
 export {

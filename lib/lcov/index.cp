@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc LCOV .info Tracefile Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc LCOV .info Tracefile Parser) | Created: 2026-11-22
 
 export {
     LcovRecordKind,

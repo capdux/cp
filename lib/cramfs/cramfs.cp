@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Linux CramFS Superblock, CRC32, Packed Inode & Dir Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Linux CramFS Superblock, CRC32, Packed Inode & Dir Parser) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // CramFS Protocol Constants (Linux include/uapi/linux/cramfs_fs.h)

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc GIMP XCF Layered Image Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc GIMP XCF Layered Image Parser) | Created: 2026-11-22
 
 /// GIMP XCF 9 字节公共魔数前缀（完整签名共 14B：`"gimp xcf "` + 4B 版本 + `'\0'`）
 pub const XCF_MAGIC: []const u8 = "gimp xcf ";

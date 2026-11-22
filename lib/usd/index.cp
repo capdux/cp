@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Pixar OpenUSD Crate .usdc & .usda Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Pixar OpenUSD Crate .usdc & .usda Parser) | Created: 2026-11-22
 // Unified exports for cap:usd.
 
 export {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Linux LUKS1 & LUKS2 Disk Encryption Header Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Linux LUKS1 & LUKS2 Disk Encryption Header Parser) | Created: 2026-11-22
 
 export {
     LUKS_MAGIC,

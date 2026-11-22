@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc bzip2 Container & Bitstream Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc bzip2 Container & Bitstream Parser) | Created: 2026-11-22
 
 pub const BZIP2_MAGIC: []const u8 = "BZh";
 pub const BZIP2_HEADER_SIZE: usize = 4;

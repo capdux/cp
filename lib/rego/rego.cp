@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc OPA Rego Policy Lexer & Scanner)
+// Origin: Pure-CP Stdlib (Zero-Alloc OPA Rego Policy Lexer & Scanner) | Created: 2026-11-22
 
 import std from "std";
 

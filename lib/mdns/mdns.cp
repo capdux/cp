@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 6762 mDNS & RFC 6763 DNS-SD Wire Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 6762 mDNS & RFC 6763 DNS-SD Wire Codec) | Created: 2026-11-22
 
 pub const MDNS_UDP_PORT: u16 = 5353;
 pub const MDNS_MULTICAST_V4: []const u8 = "224.0.0.251";

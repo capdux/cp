@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 5958 PKCS#8 & RFC 5280 SPKI DER Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 5958 PKCS#8 & RFC 5280 SPKI DER Parser) | Created: 2026-11-22
 
 export {
     OID_RSA_ENCRYPTION,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc CSR Graph, Iterative Tarjan SCC, Kahn Topological Sort, DAG Longest Path & 2-SAT Solver)
+// Origin: Pure-CP Stdlib (Zero-Alloc CSR Graph, Iterative Tarjan SCC, Kahn Topological Sort, DAG Longest Path & 2-SAT Solver) | Created: 2026-11-22
 
 /// Zero-allocation Compressed Sparse Row (CSR) directed graph view.
 /// For vertex `u in 0..num_nodes-1`, outgoing neighbors are `col_idx[row_ptr[u]..row_ptr[u + 1]]`.

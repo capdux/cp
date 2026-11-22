@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Louvain Modularity Community Detection & Label Propagation)
+// Origin: Pure-CP Stdlib (Zero-Alloc Louvain Modularity Community Detection & Label Propagation) | Created: 2026-11-22
 
 fn isFiniteF64(v: f64): bool {
     return (v == v) && ((v - v) == 0.0);

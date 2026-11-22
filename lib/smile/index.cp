@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Jackson Smile 1.0 Binary JSON Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Jackson Smile 1.0 Binary JSON Parser) | Created: 2026-11-22
 
 export {
     SMILE_HEADER_MAGIC,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 1112/2236/3376 IGMP v1/v2/v3 Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 1112/2236/3376 IGMP v1/v2/v3 Codec) | Created: 2026-11-22
 // Pure CP zero-heap-allocation IGMP v1/v2/v3 multicast membership protocol codec:
 // RFC 1071 16-bit checksum, RFC 3376 floating-point time code decoder, v1/v2/v3 Query &
 // v3 Membership Report parser, zero-alloc Group Record iterator, and v2 8-byte encoder.

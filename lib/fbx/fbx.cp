@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Autodesk FBX Binary 7100-7700 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Autodesk FBX Binary 7100-7700 Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation Autodesk FBX Binary parser supporting both 32-bit (<7500)
 // and 64-bit (>=7500) node headers, NULL sentinels, recursive child traversal, and all
 // scalar, string/raw, and raw/zlib-encoded array properties.

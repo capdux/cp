@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Matroska / WebM EBML Container Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Matroska / WebM EBML Container Parser) | Created: 2026-11-22
 
 export {
     ID_EBML,

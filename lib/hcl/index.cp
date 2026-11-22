@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc HCL / Terraform Lexer & Block Scanner)
+// Origin: Pure-CP Stdlib (Zero-Alloc HCL / Terraform Lexer & Block Scanner) | Created: 2026-11-22
 
 export {
     HclTokenKind,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Doolittle Partial-Pivoting LU Decomposition, Linear Solver, Determinant, Inverse & O(n) Thomas Tridiagonal Solver)
+// Origin: Pure-CP Stdlib (Zero-Alloc Doolittle Partial-Pivoting LU Decomposition, Linear Solver, Determinant, Inverse & O(n) Thomas Tridiagonal Solver) | Created: 2026-11-22
 
 import std from "std";
 

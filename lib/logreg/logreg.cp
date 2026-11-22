@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Binary & Multinomial L2 Logistic Regression)
+// Origin: Pure-CP Stdlib (Zero-Alloc Binary & Multinomial L2 Logistic Regression) | Created: 2026-11-22
 
 const PROB_EPS: f64 = 1.0e-15;
 const ARMIJO_C1: f64 = 1.0e-4;

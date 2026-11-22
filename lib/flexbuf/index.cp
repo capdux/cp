@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Google FlatBuffers FlexBuffers Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Google FlatBuffers FlexBuffers Parser) | Created: 2026-11-22
 
 export {
     FlexType,

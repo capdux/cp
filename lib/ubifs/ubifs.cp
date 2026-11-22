@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Linux UBI EC/VID Header & UBIFS Node/Superblock/Master Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Linux UBI EC/VID Header & UBIFS Node/Superblock/Master Parser) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // UBI & UBIFS Protocol Constants (Linux ubi-media.h / ubifs-media.h)

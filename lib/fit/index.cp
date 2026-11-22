@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Garmin/ANT+ FIT Protocol 1.0/2.0 Binary Telemetry Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Garmin/ANT+ FIT Protocol 1.0/2.0 Binary Telemetry Parser) | Created: 2026-11-22
 
 export {
     FIT_MAGIC,

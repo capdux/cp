@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:cramfs & cap.cramfs)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:cramfs & cap.cramfs) | Created: 2026-11-22
 
 export {
     CRAMFS_MAGIC,

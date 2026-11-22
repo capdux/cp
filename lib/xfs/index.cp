@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:xfs)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:xfs) | Created: 2026-11-22
 
 export {
     XFS_SB_MAGIC,

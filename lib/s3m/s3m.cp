@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Scream Tracker 3 S3M Module Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Scream Tracker 3 S3M Module Parser) | Created: 2026-11-22
 
 /// S3M 文件魔数（偏移 44..48）
 pub const S3M_MAGIC: []const u8 = "SCRM";

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc GFF3 & GTF2 Genomic Feature Annotation Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc GFF3 & GTF2 Genomic Feature Annotation Parser) | Created: 2026-11-22
 
 /// GFF3 / GTF2 缺失相位常量 (`"."`)
 pub const GFF_PHASE_NONE: u8 = 255;

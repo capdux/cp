@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:lzss & cap.lzss)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:lzss & cap.lzss) | Created: 2026-11-22
 
 export {
     LZSS_WINDOW_SIZE,

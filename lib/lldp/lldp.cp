@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc IEEE 802.1AB LLDP TLV & Neighbor Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc IEEE 802.1AB LLDP TLV & Neighbor Codec) | Created: 2026-11-22
 // Pure CP zero-heap-allocation IEEE 802.1AB-2016 Link Layer Discovery Protocol (LLDP) codec:
 // 2-byte big-endian 7-bit type / 9-bit length TLV iterator, strict mandatory-order
 // LLDPDU neighbor parser, Org-Specific (type 127) OUI/subtype decoder, and zero-alloc LldpWriter.

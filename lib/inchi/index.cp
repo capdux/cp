@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc IUPAC InChI v1.06 & InChIKey Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc IUPAC InChI v1.06 & InChIKey Parser) | Created: 2026-11-22
 
 export {
     INCHI_PREFIX,

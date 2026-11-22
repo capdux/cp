@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Genetic Algorithms: Real-Coded GA & Permutation GA with Order Crossover)
+// Origin: Pure-CP Stdlib (Zero-Alloc Genetic Algorithms: Real-Coded GA & Permutation GA with Order Crossover) | Created: 2026-11-22
 
 export {
     RealObjectiveFn,

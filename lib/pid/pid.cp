@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Industrial Discrete PID Controller with Anti-Windup, Derivative-on-Measurement, LPF & Bumpless Transfer)
+// Origin: Pure-CP Stdlib (Zero-Alloc Industrial Discrete PID Controller with Anti-Windup, Derivative-on-Measurement, LPF & Bumpless Transfer) | Created: 2026-11-22
 
 fn isFiniteF64(x: f64): bool {
     return (x - x) == 0.0;

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 8907 TACACS+ AAA Wire Protocol Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 8907 TACACS+ AAA Wire Protocol Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation RFC 8907 TACACS+ AAA wire protocol parser:
 // 12-byte big-endian header, Authentication START/REPLY, Authorization REQUEST/RESPONSE,
 // Accounting REQUEST/REPLY, and zero-allocation length-prefixed TacacsArgIter.

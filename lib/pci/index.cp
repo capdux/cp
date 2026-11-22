@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:pci)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:pci) | Created: 2026-11-22
 
 export {
     PCI_CONFIG_SIZE,

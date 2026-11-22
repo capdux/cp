@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ABC Music Notation v2.1 Parser & Event Lexer)
+// Origin: Pure-CP Stdlib (Zero-Alloc ABC Music Notation v2.1 Parser & Event Lexer) | Created: 2026-11-22
 
 export {
     AbcFraction,

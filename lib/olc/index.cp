@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:olc)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:olc) | Created: 2026-11-22
 
 export {
     OLC_ALPHABET,

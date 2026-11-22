@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Multi-Standard RLE Suite: PackBits, PCX, TGA, Zero-RLE)
+// Origin: Pure-CP Stdlib (Zero-Alloc Multi-Standard RLE Suite: PackBits, PCX, TGA, Zero-RLE) | Created: 2026-11-22
 
 // PackBits / PCX / TGA Constants
 pub const PACKBITS_NOP: u8 = 0x80;

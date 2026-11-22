@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ | Synced: 2026-11-21T17:33:18Z (Zero-Alloc S-Expression Lexer & Formatter)
+// Origin: Pure-CP Stdlib (Zero-Alloc S-Expression Lexer & Formatter) | Created: 2026-11-22
 
 export {
     SexpTokenKind,

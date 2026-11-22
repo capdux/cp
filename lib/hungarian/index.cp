@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc O(n^3) Jonker-Volgenant / Kuhn-Munkres Hungarian Linear Assignment Solver)
+// Origin: Pure-CP Stdlib (Zero-Alloc O(n^3) Jonker-Volgenant / Kuhn-Munkres Hungarian Linear Assignment Solver) | Created: 2026-11-22
 
 export {
     AssignmentResult,

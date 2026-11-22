@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc EPUB 2/3 OCF & OPF Package Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc EPUB 2/3 OCF & OPF Package Parser) | Created: 2026-11-22
 
 export {
     EPUB_MIMETYPE,

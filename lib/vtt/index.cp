@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (W3C WebVTT Subtitle Parser & Formatter)
+// Origin: Pure-CP Stdlib (W3C WebVTT Subtitle Parser & Formatter) | Created: 2026-11-22
 
 export {
     VttCue,

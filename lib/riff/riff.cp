@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RIFF/RIFX Container Chunk Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RIFF/RIFX Container Chunk Parser) | Created: 2026-11-22
 
 import std from "std";
 

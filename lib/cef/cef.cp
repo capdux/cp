@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ArcSight CEF Rev 25 SIEM Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ArcSight CEF Rev 25 SIEM Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation Micro Focus / ArcSight Common Event Format (CEF Rev 25) library:
 // optional Syslog prefix extraction, escaped-pipe header splitting, severity normalization,
 // whitespace-aware Extension key=value iteration, header/value unescaping, and header encoding.

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 5880 BFD Wire Protocol Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 5880 BFD Wire Protocol Parser) | Created: 2026-11-22
 // Unified exports for cap:bfd.
 
 export {

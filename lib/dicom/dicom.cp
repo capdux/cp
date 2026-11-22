@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc DICOM PS3.10 Medical Imaging Data Element Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc DICOM PS3.10 Medical Imaging Data Element Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation DICOM PS3.10 (.dcm) parser:
 // 128B preamble + "DICM" magic, Group 0x0002 Explicit VR LE File Meta Information,
 // automatic Transfer Syntax switching (Explicit VR LE / Implicit VR LE / Explicit VR BE),

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:ssdp & cap.ssdp)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:ssdp & cap.ssdp) | Created: 2026-11-22
 
 export {
     SSDP_UDP_PORT,

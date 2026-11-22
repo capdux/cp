@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc NCSA Common & Combined HTTP Access Log Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc NCSA Common & Combined HTTP Access Log Parser) | Created: 2026-11-22
 
 export {
     ClfEntry,

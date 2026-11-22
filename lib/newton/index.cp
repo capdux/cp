@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Damped Multidimensional Newton-Raphson & Levenberg-Marquardt Nonlinear Least Squares)
+// Origin: Pure-CP Stdlib (Zero-Alloc Damped Multidimensional Newton-Raphson & Levenberg-Marquardt Nonlinear Least Squares) | Created: 2026-11-22
 
 export {
     ResidualFn,

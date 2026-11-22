@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Redis RDB Snapshot Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Redis RDB Snapshot Parser) | Created: 2026-11-22
 
 /// Redis RDB 文件魔数与头部大小
 pub const RDB_MAGIC: []const u8 = "REDIS";

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RBJ Audio EQ Cookbook Biquad IIR Filters & Goertzel Tone Detector)
+// Origin: Pure-CP Stdlib (Zero-Alloc RBJ Audio EQ Cookbook Biquad IIR Filters & Goertzel Tone Detector) | Created: 2026-11-22
 
 export {
     FilterType,

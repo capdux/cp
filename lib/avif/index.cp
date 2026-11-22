@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc AVIF / MIAF ISO BMFF Container Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc AVIF / MIAF ISO BMFF Container Parser) | Created: 2026-11-22
 
 export {
     AVIF_BOX_HEADER_SIZE,

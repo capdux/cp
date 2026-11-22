@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Daylight SMILES / OpenSMILES Molecular Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Daylight SMILES / OpenSMILES Molecular Parser) | Created: 2026-11-22
 
 /// SMILES 词法单元类型
 pub enum SmiTokenKind {

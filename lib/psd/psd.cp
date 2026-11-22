@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Adobe Photoshop PSD/PSB Container Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Adobe Photoshop PSD/PSB Container Parser) | Created: 2026-11-22
 
 pub const PSD_HEADER_SIZE: usize = 26;
 pub const PSD_VERSION: u16 = 1;

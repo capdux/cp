@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc OpenEXR HDR Image Header & Attribute Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc OpenEXR HDR Image Header & Attribute Parser) | Created: 2026-11-22
 
 export {
     EXR_MAGIC,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc OASIS SARIF 2.1.0 Static Analysis Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc OASIS SARIF 2.1.0 Static Analysis Parser) | Created: 2026-11-22
 
 export {
     SarifLevel,

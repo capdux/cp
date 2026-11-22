@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 5280 X.509 CRL DER Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 5280 X.509 CRL DER Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation RFC 5280 Section 5 X.509 v1/v2 CRL ASN.1 DER parser:
 // TBSCertList raw slice for verification, UTCTime/GeneralizedTime support, revoked certificate
 // iteration with CRLReason extraction, O(N) serial lookup, and single-pass summarization.

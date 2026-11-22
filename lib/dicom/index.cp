@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc DICOM PS3.10 Medical Imaging Data Element Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc DICOM PS3.10 Medical Imaging Data Element Parser) | Created: 2026-11-22
 // Unified exports for cap:dicom.
 
 export {

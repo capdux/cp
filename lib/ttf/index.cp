@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc TrueType / OpenType SFNT Font Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc TrueType / OpenType SFNT Font Parser) | Created: 2026-11-22
 
 export {
     SfntFlavor,

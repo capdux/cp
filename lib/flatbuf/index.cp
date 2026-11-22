@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Google FlatBuffers Binary Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Google FlatBuffers Binary Parser) | Created: 2026-11-22
 
 export {
     FB_SIZE_PREFIX_BYTES,

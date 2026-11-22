@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc MMA Downloadable Sounds .dls RIFF Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc MMA Downloadable Sounds .dls RIFF Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation MMA DLS Level 1/2 RIFF parser:
 // colh/vers/INFO/ptbl header, LIST/lins instrument iterator (with drum bank flag),
 // and LIST/wvpl wave pool iterator (fmt / wsmp / data PCM slices).

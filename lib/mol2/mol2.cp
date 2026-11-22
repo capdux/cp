@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Tripos SYBYL .mol2 3D Molecule Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Tripos SYBYL .mol2 3D Molecule Parser) | Created: 2026-11-22
 
 pub const MOL2_RTI_MOLECULE: []const u8 = "@<TRIPOS>MOLECULE";
 pub const MOL2_RTI_ATOM: []const u8 = "@<TRIPOS>ATOM";

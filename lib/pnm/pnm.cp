@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Netpbm PNM Image Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc Netpbm PNM Image Codec) | Created: 2026-11-22
 
 /// Netpbm P1–P6 图像格式类型
 pub enum PnmFormat {

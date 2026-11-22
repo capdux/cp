@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc SNES SPC700 .spc Audio Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc SNES SPC700 .spc Audio Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation SNES SPC700 v0.30 parser: 256B header, CPU registers,
 // automatic Text vs Binary ID666 tag decoding, 64KB RAM / 128B DSP / 64B Extra RAM slices,
 // and 4-byte aligned Extended ID666 (xid6) sub-chunk iterator.

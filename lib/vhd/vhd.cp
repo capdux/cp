@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Microsoft VHD 1.0 Footer, Dynamic Header & BAT Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Microsoft VHD 1.0 Footer, Dynamic Header & BAT Parser) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // VHD 1.0 Protocol Constants (Big-Endian)

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Parity SCALE Deterministic Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc Parity SCALE Deterministic Codec) | Created: 2026-11-22
 
 /// SCALE 特有单字节三态 `Option<bool>` 编码枚举（0x00=None, 0x01=Some(true), 0x02=Some(false)）
 pub enum ScaleOptionBool: u8 {

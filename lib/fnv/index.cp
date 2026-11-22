@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc IETF FNV-1/FNV-1a 32/64/128-bit & DJB2/SDBM/Jenkins OAAT Hash Suite)
+// Origin: Pure-CP Stdlib (Zero-Alloc IETF FNV-1/FNV-1a 32/64/128-bit & DJB2/SDBM/Jenkins OAAT Hash Suite) | Created: 2026-11-22
 
 export {
     FNV32_OFFSET_BASIS,

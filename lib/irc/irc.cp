@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 1459 / RFC 2812 / IRCv3 Wire Protocol & Message Tags Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 1459 / RFC 2812 / IRCv3 Wire Protocol & Message Tags Codec) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // Protocol Constants & Common Numeric Replies (RFC 1459 / RFC 2812 / IRCv3)

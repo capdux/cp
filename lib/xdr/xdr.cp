@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 4506 XDR External Data Representation Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 4506 XDR External Data Representation Codec) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // Protocol Constants & 4-Byte Alignment Helpers (RFC 4506)

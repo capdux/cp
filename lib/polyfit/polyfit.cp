@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Least-Squares Polyfit, Givens QR, Ridge Regression & Root Finding)
+// Origin: Pure-CP Stdlib (Zero-Alloc Least-Squares Polyfit, Givens QR, Ridge Regression & Root Finding) | Created: 2026-11-22
 
 import std from "std";
 

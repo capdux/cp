@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Apple Mach-O & Fat Binary Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Apple Mach-O & Fat Binary Parser) | Created: 2026-11-22
 
 export {
     MachoKind,

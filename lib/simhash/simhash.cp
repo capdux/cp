@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc 64-bit Charikar SimHash, Hamming Similarity & 4x16-bit LSH Bands)
+// Origin: Pure-CP Stdlib (Zero-Alloc 64-bit Charikar SimHash, Hamming Similarity & 4x16-bit LSH Bands) | Created: 2026-11-22
 
 import std from "std";
 

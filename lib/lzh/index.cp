@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc LZH/LHA Archive Level 0/1/2 & CRC-16/ARC Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc LZH/LHA Archive Level 0/1/2 & CRC-16/ARC Parser) | Created: 2026-11-22
 
 export {
     LZH_METHOD_LH0,

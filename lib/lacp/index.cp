@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc IEEE 802.1AX / 802.3ad LACPDU Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc IEEE 802.1AX / 802.3ad LACPDU Codec) | Created: 2026-11-22
 
 export {
     SLOW_PROTO_ETHERTYPE,

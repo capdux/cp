@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Two-Phase Simplex LP Solver with Bland's Anti-Cycling Rule & Dual Shadow Prices)
+// Origin: Pure-CP Stdlib (Zero-Alloc Two-Phase Simplex LP Solver with Bland's Anti-Cycling Rule & Dual Shadow Prices) | Created: 2026-11-22
 
 const PIVOT_EPS: f64 = 1.0e-10;
 const OPT_EPS: f64 = 1.0e-9;

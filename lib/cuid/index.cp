@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ | Synced: 2026-11-21T17:35:38Z (Zero-Alloc CUID / CUID2 Codec & Validator)
+// Origin: Pure-CP Stdlib (Zero-Alloc CUID / CUID2 Codec & Validator) | Created: 2026-11-22
 
 export {
     CuidVersion,

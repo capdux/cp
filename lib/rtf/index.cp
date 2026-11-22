@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RTF 1.9 Lexer & Text Extractor)
+// Origin: Pure-CP Stdlib (Zero-Alloc RTF 1.9 Lexer & Text Extractor) | Created: 2026-11-22
 
 export {
     RTF_MAGIC,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc PCI / PCIe Configuration Space, BAR & Capability Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc PCI / PCIe Configuration Space, BAR & Capability Parser) | Created: 2026-11-22
 
 pub const PCI_CONFIG_SIZE: usize = 256;
 pub const PCIE_EXT_CONFIG_SIZE: usize = 4096;

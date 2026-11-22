@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc MMA Downloadable Sounds .dls RIFF Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc MMA Downloadable Sounds .dls RIFF Parser) | Created: 2026-11-22
 // Unified exports for cap:dls.
 
 export {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc 3D STL Binary & ASCII Mesh Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc 3D STL Binary & ASCII Mesh Parser) | Created: 2026-11-22
 
 /// 3D STL 文件格式枚举
 pub enum StlFormat: u8 {

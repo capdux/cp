@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc glTF 2.0 Binary / GLB Container Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc glTF 2.0 Binary / GLB Container Parser) | Created: 2026-11-22
 
 /// glTF 2.0 Binary (GLB) 魔数与版本常量
 pub const GLB_MAGIC: u32 = 0x46546C67; // "glTF"

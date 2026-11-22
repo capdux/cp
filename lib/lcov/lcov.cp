@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc LCOV .info Tracefile Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc LCOV .info Tracefile Parser) | Created: 2026-11-22
 
 /// LCOV `.info` 记录类型枚举
 pub enum LcovRecordKind: u8 {

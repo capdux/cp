@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc yEnc v1.3 Binary-to-Text Codec, Header/Trailer Parser & CRC32)
+// Origin: Pure-CP Stdlib (Zero-Alloc yEnc v1.3 Binary-to-Text Codec, Header/Trailer Parser & CRC32) | Created: 2026-11-22
 
 // yEnc Protocol Constants
 pub const YENC_OFFSET: u8 = 42;

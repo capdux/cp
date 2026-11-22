@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Khronos COLLADA 1.4/1.5 3D Asset XML Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Khronos COLLADA 1.4/1.5 3D Asset XML Parser) | Created: 2026-11-22
 
 /// COLLADA `<asset>` 元数据与根版本零拷贝视图
 pub struct DaeAsset {

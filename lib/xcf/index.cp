@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc GIMP XCF Layered Image Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc GIMP XCF Layered Image Parser) | Created: 2026-11-22
 
 export {
     XCF_MAGIC,

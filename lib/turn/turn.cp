@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 8656 TURN Wire Protocol, ChannelData & XOR-ADDRESS Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 8656 TURN Wire Protocol, ChannelData & XOR-ADDRESS Codec) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // Protocol Constants (RFC 8656 / RFC 5389)

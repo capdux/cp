@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc MS-SMB2 / SMB3 Wire Protocol Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc MS-SMB2 / SMB3 Wire Protocol Parser) | Created: 2026-11-22
 
 // Standard SMB Ports & Header Sizes
 pub const SMB_TCP_PORT: u16 = 445;

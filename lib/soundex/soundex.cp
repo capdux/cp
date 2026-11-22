@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Phonetic Coding Suite: NARA Soundex, Metaphone 1990, NYSIIS & Cologne Phonetics)
+// Origin: Pure-CP Stdlib (Zero-Alloc Phonetic Coding Suite: NARA Soundex, Metaphone 1990, NYSIIS & Cologne Phonetics) | Created: 2026-11-22
 
 /// Fixed output length of American Soundex codes (1 letter + 3 digits).
 pub const SOUNDEX_LEN: usize = 4;

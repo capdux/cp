@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ICC Color Profile Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ICC Color Profile Parser) | Created: 2026-11-22
 
 export {
     ICC_HEADER_SIZE,

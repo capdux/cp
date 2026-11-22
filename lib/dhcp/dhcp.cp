@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 2131/2132 DHCPv4 Wire Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 2131/2132 DHCPv4 Wire Codec) | Created: 2026-11-22
 // Pure CP zero-heap-allocation RFC 2131 / RFC 2132 DHCPv4 wire protocol codec:
 // 240-byte BOOTP/DHCP header with Magic Cookie verification, PAD-skipping / END-terminating
 // Option iterator, typed Option accessors, and zero-allocation DhcpWriter encoder.

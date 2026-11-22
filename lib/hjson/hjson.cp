@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Hjson Parser & JSON Converter)
+// Origin: Pure-CP Stdlib (Zero-Alloc Hjson Parser & JSON Converter) | Created: 2026-11-22
 //! Zero-allocation Hjson (Human JSON) parser, comment stripper, validator, and RFC 8259 JSON converter.
 
 pub enum HjsonTokenKind: u8 {

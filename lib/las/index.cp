@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ASPRS LAS 1.2-1.4 LiDAR Point Cloud Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ASPRS LAS 1.2-1.4 LiDAR Point Cloud Parser) | Created: 2026-11-22
 
 export {
     LAS_MAGIC,

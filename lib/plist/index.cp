@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Apple XML Plist Parser & Writer)
+// Origin: Pure-CP Stdlib (Zero-Alloc Apple XML Plist Parser & Writer) | Created: 2026-11-22
 
 export {
     PlistValueKind,

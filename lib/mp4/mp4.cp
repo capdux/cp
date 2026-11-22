@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ISO BMFF / MP4 Box Container Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ISO BMFF / MP4 Box Container Parser) | Created: 2026-11-22
 
 import std from "std";
 

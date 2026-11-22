@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Sanger/Illumina FASTQ Sequencing Parser & QC)
+// Origin: Pure-CP Stdlib (Zero-Alloc Sanger/Illumina FASTQ Sequencing Parser & QC) | Created: 2026-11-22
 
 export {
     PHRED_OFFSET_33,

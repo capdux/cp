@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 3748 EAP + IEEE 802.1X EAPOL Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 3748 EAP + IEEE 802.1X EAPOL Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation IEEE 802.1X EAPOL and RFC 3748 EAP wire protocol parser:
 // EAPOL frame unwrapping, EAP Request/Response/Success/Failure decoding, and
 // RFC 3748 Section 5.7 Expanded Type (254) Vendor-ID / Vendor-Type extraction.

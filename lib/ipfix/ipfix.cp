@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 7011 IPFIX v10 Wire Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 7011 IPFIX v10 Wire Parser) | Created: 2026-11-22
 
 pub const IPFIX_PORT: u16 = 4739;
 pub const IPFIX_TLS_PORT: u16 = 4740;

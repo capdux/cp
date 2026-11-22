@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Online Change-Point & Streaming Anomaly Detection: CUSUM, Page-Hinkley, EWMA & Welford Z-Score)
+// Origin: Pure-CP Stdlib (Zero-Alloc Online Change-Point & Streaming Anomaly Detection: CUSUM, Page-Hinkley, EWMA & Welford Z-Score) | Created: 2026-11-22
 
 fn isFiniteF64(v: f64): bool {
     return (v == v) && ((v - v) == 0.0);

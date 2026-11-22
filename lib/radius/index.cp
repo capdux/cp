@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 2865 / 2866 RADIUS Protocol Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 2865 / 2866 RADIUS Protocol Codec) | Created: 2026-11-22
 
 export {
     RADIUS_HEADER_SIZE,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Microsoft NTFS VBR, MFT & Data Runlist Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Microsoft NTFS VBR, MFT & Data Runlist Parser) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // Protocol Constants (Microsoft NTFS)

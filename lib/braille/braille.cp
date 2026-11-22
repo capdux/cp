@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Unicode Braille U+2800..U+28FF Codec, Grade-1 Converter & 2x4 Sub-Pixel Canvas)
+// Origin: Pure-CP Stdlib (Zero-Alloc Unicode Braille U+2800..U+28FF Codec, Grade-1 Converter & 2x4 Sub-Pixel Canvas) | Created: 2026-11-22
 
 /// Unicode Braille Patterns block base code point (`U+2800`).
 pub const BRAILLE_BASE_CP: u32 = 0x2800;

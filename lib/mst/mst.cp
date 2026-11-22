@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Minimum/Maximum Spanning Tree & Forest: DisjointSet, Kruskal & Dense O(V^2) Prim)
+// Origin: Pure-CP Stdlib (Zero-Alloc Minimum/Maximum Spanning Tree & Forest: DisjointSet, Kruskal & Dense O(V^2) Prim) | Created: 2026-11-22
 
 /// Sentinel weight representing absence of an edge in a dense adjacency matrix.
 pub const MST_INF_WEIGHT: f64 = 1.0e300;

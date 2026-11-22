@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 2986 PKCS#10 CSR DER Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 2986 PKCS#10 CSR DER Parser) | Created: 2026-11-22
 // Unified exports for cap:csr.
 
 export {

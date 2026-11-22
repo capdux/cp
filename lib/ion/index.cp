@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Amazon Ion 1.0 Binary Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Amazon Ion 1.0 Binary Parser) | Created: 2026-11-22
 
 export {
     ION_IVM_1_0,

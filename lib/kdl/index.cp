@@ -1,3 +1,3 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc KDL Document Lexer & Validator)
+// Origin: Pure-CP Stdlib (Zero-Alloc KDL Document Lexer & Validator) | Created: 2026-11-22
 
 export * from "./kdl.cp";

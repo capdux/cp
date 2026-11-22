@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 2661 L2TPv2 & RFC 3931 L2TPv3 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 2661 L2TPv2 & RFC 3931 L2TPv3 Parser) | Created: 2026-11-22
 // Unified exports for cap:l2tp.
 
 export {

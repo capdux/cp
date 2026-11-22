@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Exponential Smoothing: SES, Holt Linear/Damped & Holt-Winters Seasonal)
+// Origin: Pure-CP Stdlib (Zero-Alloc Exponential Smoothing: SES, Holt Linear/Damped & Holt-Winters Seasonal) | Created: 2026-11-22
 
 export {
     SeasonalityKind,

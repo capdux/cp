@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 8926 Geneve Tunneling Encapsulation Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 8926 Geneve Tunneling Encapsulation Codec) | Created: 2026-11-22
 
 /// Geneve 固定报头最小字节数（不含可变长度选项）
 pub const GENEVE_MIN_HEADER_SIZE: usize = 8;

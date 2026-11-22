@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (RFC 4287 Atom 1.0 Feed Parser & Writer)
+// Origin: Pure-CP Stdlib (RFC 4287 Atom 1.0 Feed Parser & Writer) | Created: 2026-11-22
 
 export {
     AtomFeed,

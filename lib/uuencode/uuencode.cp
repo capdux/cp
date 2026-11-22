@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc POSIX uuencode/uudecode & xxencode Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc POSIX uuencode/uudecode & xxencode Codec) | Created: 2026-11-22
 
 pub const UU_MAX_LINE_BYTES: usize = 45;
 pub const UU_DEFAULT_MODE: u16 = 0o644;

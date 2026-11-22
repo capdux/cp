@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 2986 PKCS#10 CSR DER Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 2986 PKCS#10 CSR DER Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation RFC 2986 (PKCS#10 v1.7) Certificate Signing Request DER parser:
 // strict ASN.1 DER validation, CertificationRequestInfo raw slice for verification,
 // SubjectPublicKeyInfo extraction, multi-RDN Subject iteration, and extensionRequest SAN extraction.

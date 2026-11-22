@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc LZSS Sliding-Window Compression & Decompression Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc LZSS Sliding-Window Compression & Decompression Codec) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // LZSS Protocol Constants (12-bit / 4KB Window, 3..18 Match Length)

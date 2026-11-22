@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc 2D Bounded Voronoi Diagram via Half-Plane Clipping & Lloyd Relaxation)
+// Origin: Pure-CP Stdlib (Zero-Alloc 2D Bounded Voronoi Diagram via Half-Plane Clipping & Lloyd Relaxation) | Created: 2026-11-22
 
 import std from "std";
 

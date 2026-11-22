@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc IEEE 802.1AX / 802.3ad LACPDU Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc IEEE 802.1AX / 802.3ad LACPDU Codec) | Created: 2026-11-22
 
 /// IEEE 802.3 Slow Protocols EtherType (0x8809)
 pub const SLOW_PROTO_ETHERTYPE: u16 = 0x8809;

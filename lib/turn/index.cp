@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:turn & cap.turn)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:turn & cap.turn) | Created: 2026-11-22
 
 export {
     TURN_UDP_PORT,

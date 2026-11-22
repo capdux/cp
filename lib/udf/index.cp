@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ECMA-167 / ISO 13346 UDF Parser & OSTA CS0 Decoder)
+// Origin: Pure-CP Stdlib (Zero-Alloc ECMA-167 / ISO 13346 UDF Parser & OSTA CS0 Decoder) | Created: 2026-11-22
 
 export {
     UDF_SECTOR_SIZE,

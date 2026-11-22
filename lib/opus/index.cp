@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Opus RFC 7845 & RFC 6716 TOC Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Opus RFC 7845 & RFC 6716 TOC Parser) | Created: 2026-11-22
 
 export {
     OPUS_HEAD_MAGIC,

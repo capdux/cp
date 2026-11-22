@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ISO 11898 CAN 2.0/FD, SocketCAN, SAE J1939 & DBC Signal Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc ISO 11898 CAN 2.0/FD, SocketCAN, SAE J1939 & DBC Signal Codec) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // Protocol Constants (ISO 11898 / SocketCAN / CAN FD)

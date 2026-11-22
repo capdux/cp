@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Microsoft FAT12/FAT16/FAT32 BPB & DirEntry Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Microsoft FAT12/FAT16/FAT32 BPB & DirEntry Parser) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // Protocol Constants (Microsoft FAT12 / FAT16 / FAT32)

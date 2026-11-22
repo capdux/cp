@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 5880 BFD Wire Protocol Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 5880 BFD Wire Protocol Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation RFC 5880 Bidirectional Forwarding Detection (BFD) parser:
 // 24-byte control header, diagnostic/state/flag decoding, Simple Password / Keyed MD5 /
 // Meticulous Keyed MD5 / Keyed SHA-1 / Meticulous Keyed SHA-1 authentication sections,

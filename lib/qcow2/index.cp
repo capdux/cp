@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc QEMU QCOW2 v2/v3 Disk Image Header & Table Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc QEMU QCOW2 v2/v3 Disk Image Header & Table Parser) | Created: 2026-11-22
 
 export {
     QCOW2_MAGIC,

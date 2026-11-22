@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ISO/IEC 14543-3-2 KNXnet/IP, cEMI & DPT9 Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc ISO/IEC 14543-3-2 KNXnet/IP, cEMI & DPT9 Codec) | Created: 2026-11-22
 
 // ---------------------------------------------------------------------------
 // Protocol Constants (ISO/IEC 14543-3-2 KNXnet/IP & cEMI)

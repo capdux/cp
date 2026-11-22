@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RON Lexer & Validator)
+// Origin: Pure-CP Stdlib (Zero-Alloc RON Lexer & Validator) | Created: 2026-11-22
 
 export {
     RonTokenKind,

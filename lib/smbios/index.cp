@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:smbios)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:smbios) | Created: 2026-11-22
 
 export {
     SMBIOS2_ANCHOR,

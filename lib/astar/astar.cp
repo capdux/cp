@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc 2D Grid A* Shortest Pathfinding, Binary Min-Heap & Bresenham Line-of-Sight)
+// Origin: Pure-CP Stdlib (Zero-Alloc 2D Grid A* Shortest Pathfinding, Binary Min-Heap & Bresenham Line-of-Sight) | Created: 2026-11-22
 
 /// Orthogonal (4-way) step cost scaled by 10 for exact integer arithmetic.
 pub const COST_CARDINAL: u32 = 10;

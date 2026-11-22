@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc OASIS OpenDocument ODT/ODS/ODP Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc OASIS OpenDocument ODT/ODS/ODP Parser) | Created: 2026-11-22
 
 export {
     ODT_MIMETYPE,

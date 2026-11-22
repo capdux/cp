@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 826 / RFC 5227 ARP Packet Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 826 / RFC 5227 ARP Packet Codec) | Created: 2026-11-22
 
 pub const ARP_ETHERTYPE: u16 = 0x0806;
 pub const ARP_MIN_HEADER_SIZE: usize = 8;

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Google FlatBuffers FlexBuffers Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Google FlatBuffers FlexBuffers Parser) | Created: 2026-11-22
 
 /// FlexBuffers 值类型枚举（打包类型字节高 6 位 `packed >> 2`）
 pub enum FlexType: u8 {

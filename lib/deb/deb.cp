@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Debian .deb & RFC 822 Control Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Debian .deb & RFC 822 Control Parser) | Created: 2026-11-22
 
 /// 标准 Unix ar 归档全局魔数（8 字节）
 pub const DEB_AR_MAGIC: []const u8 = "!<arch>\n";

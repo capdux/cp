@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 7252 CoAP Wire Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 7252 CoAP Wire Codec) | Created: 2026-11-22
 // Unified exports for cap:coap.
 
 export {

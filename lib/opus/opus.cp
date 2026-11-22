@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Opus RFC 7845 & RFC 6716 TOC Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Opus RFC 7845 & RFC 6716 TOC Parser) | Created: 2026-11-22
 
 /// RFC 7845 OpusHead 魔数签名（8 字节）
 pub const OPUS_HEAD_MAGIC: []const u8 = "OpusHead";

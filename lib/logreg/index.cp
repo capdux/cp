@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Binary & Multinomial L2 Logistic Regression)
+// Origin: Pure-CP Stdlib (Zero-Alloc Binary & Multinomial L2 Logistic Regression) | Created: 2026-11-22
 
 export {
     sigmoid,

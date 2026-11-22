@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Derivative-Free Optimization: Nelder-Mead Simplex, Golden Section 1D Minimization & Brent 1D Root-Finding)
+// Origin: Pure-CP Stdlib (Zero-Alloc Derivative-Free Optimization: Nelder-Mead Simplex, Golden Section 1D Minimization & Brent 1D Root-Finding) | Created: 2026-11-22
 
 /// Objective function type for multi-dimensional Nelder-Mead minimization.
 pub type ObjectiveFn = fn([]const f64): f64;

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Ethereum SSZ Deterministic Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc Ethereum SSZ Deterministic Codec) | Created: 2026-11-22
 
 export {
     SSZ_OFFSET_BYTES,

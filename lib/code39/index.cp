@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Unified Exports for cap:code39)
+// Origin: Pure-CP Stdlib (Unified Exports for cap:code39) | Created: 2026-11-22
 
 export {
     CODE39_ALPHABET_LEN,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc SCSI SPC-5 / SBC-4 CDB, INQUIRY, CAPACITY & Sense Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc SCSI SPC-5 / SBC-4 CDB, INQUIRY, CAPACITY & Sense Codec) | Created: 2026-11-22
 
 // Common SCSI Opcodes (SPC-5 / SBC-4)
 pub const OP_TEST_UNIT_READY: u8 = 0x00;

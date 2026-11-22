@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Wavefront 3D OBJ Mesh Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Wavefront 3D OBJ Mesh Parser) | Created: 2026-11-22
 
 /// Wavefront 3D `.obj` 语句类型枚举
 pub enum ObjRecordKind: u8 {

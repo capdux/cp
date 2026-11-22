@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc IRIS MiniSEED v2.4 Seismology Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc IRIS MiniSEED v2.4 Seismology Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation FDSN SEED v2.4 MiniSEED parser:
 // 48-byte fixed header, automatic Big/Little Endian detection via BTIME,
 // Blockette 1000 / Blockette 1001 chain decoding, SEED sample rate formula,

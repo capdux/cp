@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Microsoft COFF / PE-COFF Object Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Microsoft COFF / PE-COFF Object Parser) | Created: 2026-11-22
 
 pub const COFF_HEADER_SIZE: usize = 20;
 pub const COFF_SECTION_SIZE: usize = 40;

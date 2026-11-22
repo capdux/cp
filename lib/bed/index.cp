@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc UCSC BED3-BED12 Genomic Interval Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc UCSC BED3-BED12 Genomic Interval Parser) | Created: 2026-11-22
 
 export {
     BedStrand,

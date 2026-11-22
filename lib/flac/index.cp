@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc FLAC Audio Metadata Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc FLAC Audio Metadata Parser) | Created: 2026-11-22
 
 export {
     FLAC_MAGIC_SIZE,

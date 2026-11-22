@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:fat & cap.fat)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:fat & cap.fat) | Created: 2026-11-22
 
 export {
     FAT_BOOT_SECTOR_SIZE,

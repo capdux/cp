@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 6960 OCSP DER Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 6960 OCSP DER Parser) | Created: 2026-11-22
 // Unified exports for cap:ocsp.
 
 export {

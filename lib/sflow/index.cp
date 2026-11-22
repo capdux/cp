@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc sFlow v5 Network Telemetry Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc sFlow v5 Network Telemetry Parser) | Created: 2026-11-22
 
 export {
     SFLOW_UDP_PORT,

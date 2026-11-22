@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc CSR Sparse Directed Graph PageRank, Personalized PageRank & HITS Hub/Authority Centrality)
+// Origin: Pure-CP Stdlib (Zero-Alloc CSR Sparse Directed Graph PageRank, Personalized PageRank & HITS Hub/Authority Centrality) | Created: 2026-11-22
 
 import std from "std";
 

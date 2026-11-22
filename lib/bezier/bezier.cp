@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc 2D Quadratic & Cubic Bezier Computational Geometry)
+// Origin: Pure-CP Stdlib (Zero-Alloc 2D Quadratic & Cubic Bezier Computational Geometry) | Created: 2026-11-22
 
 import std from "std";
 

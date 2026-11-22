@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Google FlatBuffers Binary Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Google FlatBuffers Binary Parser) | Created: 2026-11-22
 
 /// FlatBuffers 带尺寸前缀消息的前缀字节数（4B LE）
 pub const FB_SIZE_PREFIX_BYTES: usize = 4;

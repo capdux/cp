@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ISO 2709 / MARC 21 Binary Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ISO 2709 / MARC 21 Binary Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation ISO 2709 / Library of Congress MARC 21 bibliographic parser:
 // 24-byte ASCII Leader, 12-byte Directory entries, control (001..009) & data (>=010) fields,
 // 0x1F subfield splitting, and multi-record .mrc streaming iteration.

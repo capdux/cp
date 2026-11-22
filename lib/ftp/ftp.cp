@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RFC 959 / RFC 2428 / RFC 3659 FTP Control & MLSD Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc RFC 959 / RFC 2428 / RFC 3659 FTP Control & MLSD Codec) | Created: 2026-11-22
 
 pub const FTP_CONTROL_PORT: u16 = 21;
 pub const FTP_DATA_PORT: u16 = 20;

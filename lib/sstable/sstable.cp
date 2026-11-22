@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc LevelDB/RocksDB SSTable Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc LevelDB/RocksDB SSTable Parser) | Created: 2026-11-22
 
 /// LevelDB / RocksDB SSTable 固定 48 字节 Footer 大小
 pub const SST_FOOTER_SIZE: usize = 48;

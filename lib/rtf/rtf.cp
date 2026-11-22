@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc RTF 1.9 Lexer & Text Extractor)
+// Origin: Pure-CP Stdlib (Zero-Alloc RTF 1.9 Lexer & Text Extractor) | Created: 2026-11-22
 
 /// RTF 1.9 魔数与最大嵌套组深度常量
 pub const RTF_MAGIC: []const u8 = "{\\rtf";

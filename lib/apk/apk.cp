@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Android APK ZIP EOCD & Signing Block v2/v3 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Android APK ZIP EOCD & Signing Block v2/v3 Parser) | Created: 2026-11-22
 
 /// ZIP End of Central Directory (EOCD) 签名（小端序 "PK\x05\x06"）
 pub const ZIP_EOCD_SIG: u32 = 0x06054B50;

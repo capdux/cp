@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc NASA FITS 2880B HDU & 80B Card Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc NASA FITS 2880B HDU & 80B Card Parser) | Created: 2026-11-22
 
 /// FITS 逻辑块固定大小（2880 字节）
 pub const FITS_BLOCK_SIZE: usize = 2880;

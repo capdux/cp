@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc DMTF SMBIOS 2.1 / 3.0+ Table Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc DMTF SMBIOS 2.1 / 3.0+ Table Parser) | Created: 2026-11-22
 
 pub const SMBIOS2_ANCHOR: []const u8 = "_SM_";
 pub const SMBIOS2_DMI_ANCHOR: []const u8 = "_DMI_";

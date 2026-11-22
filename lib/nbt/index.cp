@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Named Binary Tag Parser: Java BE & Bedrock LE)
+// Origin: Pure-CP Stdlib (Zero-Alloc Named Binary Tag Parser: Java BE & Bedrock LE) | Created: 2026-11-22
 
 export {
     MAX_NBT_DEPTH,

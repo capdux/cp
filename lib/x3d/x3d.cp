@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Web3D X3D 3.x/4.0 XML Scene Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Web3D X3D 3.x/4.0 XML Scene Parser) | Created: 2026-11-22
 
 /// X3D 根文档头信息（零拷贝切片）
 pub struct X3dHeader {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc JVM Java Flight Recorder v2.0 Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc JVM Java Flight Recorder v2.0 Parser) | Created: 2026-11-22
 
 /// JVM JFR v2.0 常量与特性标志位
 pub const JFR_MAGIC: []const u8 = "FLR\x00";

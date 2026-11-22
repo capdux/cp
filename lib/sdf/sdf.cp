@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc MDL Molfile V2000 & SDF Structure-Data File Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc MDL Molfile V2000 & SDF Structure-Data File Parser) | Created: 2026-11-22
 
 /// MDL Molfile V2000 头部与 Counts Line 元数据（零拷贝切片）
 pub struct SdfMolHeader {

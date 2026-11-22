@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Debian .deb & RFC 822 Control Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Debian .deb & RFC 822 Control Parser) | Created: 2026-11-22
 
 export {
     DEB_AR_MAGIC,

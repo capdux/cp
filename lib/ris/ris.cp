@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Research Information Systems .ris Citation Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc Research Information Systems .ris Citation Parser) | Created: 2026-11-22
 
 /// 单条 RIS 标签（2 字节大写标签码 + 零拷贝值切片，支持多行续行）
 pub struct RisTag {

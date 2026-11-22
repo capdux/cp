@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Bessel J0/J1/Jn, Y0/Y1/Yn & Modified Bessel I0/I1/I0e/I1e/K0/K1/K0e/K1e)
+// Origin: Pure-CP Stdlib (Zero-Alloc Bessel J0/J1/Jn, Y0/Y1/Yn & Modified Bessel I0/I1/I0e/I1e/K0/K1/K0e/K1e) | Created: 2026-11-22
 
 import std from "std";
 

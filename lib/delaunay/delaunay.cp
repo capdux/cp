@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc 2D Bowyer-Watson Incremental Delaunay Triangulation)
+// Origin: Pure-CP Stdlib (Zero-Alloc 2D Bowyer-Watson Incremental Delaunay Triangulation) | Created: 2026-11-22
 
 const DEGEN_EPS: f64 = 1.0e-18;
 const IN_TRI_EPS: f64 = 1.0e-12;

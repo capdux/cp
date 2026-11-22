@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Public Unified Export for cap:btrfs)
+// Origin: Pure-CP Stdlib (Public Unified Export for cap:btrfs) | Created: 2026-11-22
 
 export {
     BTRFS_SUPER_OFFSET,

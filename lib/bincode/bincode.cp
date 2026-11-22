@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Bincode v1/v2 Binary Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc Bincode v1/v2 Binary Codec) | Created: 2026-11-22
 
 pub const BINCODE_VARINT_U16_TAG: u8 = 251;
 pub const BINCODE_VARINT_U32_TAG: u8 = 252;

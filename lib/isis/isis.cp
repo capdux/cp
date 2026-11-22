@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc ISO/IEC 10589 / RFC 1195 IS-IS Parser)
+// Origin: Pure-CP Stdlib (Zero-Alloc ISO/IEC 10589 / RFC 1195 IS-IS Parser) | Created: 2026-11-22
 
 /// IS-IS Intradomain Routing Protocol Discriminator (NLPID = 0x83)
 pub const ISIS_NLPID: u8 = 0x83;

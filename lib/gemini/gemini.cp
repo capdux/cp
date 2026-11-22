@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Gemini Protocol v0.16.1 & Gemtext Codec)
+// Origin: Pure-CP Stdlib (Zero-Alloc Gemini Protocol v0.16.1 & Gemtext Codec) | Created: 2026-11-22
 
 pub const GEMINI_TCP_PORT: u16 = 1965;
 pub const GEMINI_MAX_URL_LEN: usize = 1024;

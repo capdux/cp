@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (Zero-Alloc Special Math Functions: Gamma, Digamma, Incomplete Gamma/Beta & Erf/Erfc)
+// Origin: Pure-CP Stdlib (Zero-Alloc Special Math Functions: Gamma, Digamma, Incomplete Gamma/Beta & Erf/Erfc) | Created: 2026-11-22
 
 import std from "std";
 

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ (W3C WebVTT Subtitle Parser & Formatter)
+// Origin: Pure-CP Stdlib (W3C WebVTT Subtitle Parser & Formatter) | Created: 2026-11-22
 
 /// W3C WebVTT 字幕条目（零拷贝切片指向原始输入）
 pub struct VttCue {
