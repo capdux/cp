@@ -333,3 +333,23 @@ export {
     PrefixRadixStats,
     PrefixRadixCache,
 } from "./prefix_radix_cache.cp";
+
+export {
+    HEAL_MAX_VOCAB_TOKENS,
+    HEAL_MASK_WORDS,
+    HEAL_MAX_BYTE_POOL,
+    HEAL_MAX_PREFIX_BYTES,
+    HEAL_MAX_BACKTRACK_TOKENS,
+    HealMatchMode,
+    HealSessionState,
+    TokenHealConfig,
+    HealVocabTable,
+    HealCandidateMask,
+    TokenHealPlan,
+    HealStepOutcome,
+    TokenHealingSession,
+    buildHealingCandidateMask,
+    applyHealingLogitsMaskInPlace,
+    planTokenHealing,
+    planTokenHealingWithConfig,
+} from "./token_healing.cp";

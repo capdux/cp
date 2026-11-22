@@ -1387,3 +1387,53 @@ pub fn demoPrefixRadixCache() {
     * = cache.unpinNode(r1.leaf_node_id);
 }
 ```
+
+
+### 零分配 LLM Prompt 边界 Token Healing 与字节前缀 Logits 掩码引擎 (`token_healing.cp`)
+
+面向大语言模型推理（Guidance / llama.cpp 风格）的 100% 纯 CP 零动态堆分配 Prompt 末尾边界 Token Healing 与字节前缀 Logits `-Inf` 掩码引擎，彻底消除 BPE 切分边界伪影（如 `"http:"` 切分阻断生成 `"http://"`）：
+
+- **常量与数据模型**：
+  - `HEAL_MAX_VOCAB_TOKENS = 512`、`HEAL_MASK_WORDS = 8`、`HEAL_MAX_BYTE_POOL = 8192`、`HEAL_MAX_PREFIX_BYTES = 64`、`HEAL_MAX_BACKTRACK_TOKENS = 8`
+  - `HealMatchMode`（`StrictSuperset` 严格超集匹配、`MultiStepPrefix` 多步连续前缀匹配）、`HealSessionState`（`Inactive` / `Active` / `Completed` / `Failed`）
+  - `TokenHealConfig`（`max_backtrack_tokens`, `mode`, `require_strict_extension`；提供 `defaults()` 与 `multiStep(max_backtrack)`）
+  - `HealVocabTable`（`init`, `addToken`, `setToken`, `tokenBytes`, `isValidToken`, `vocabSize`, `poolUsed`）：紧凑固定字节池词表，支持顺序追加、稀疏注册与零拷贝字节切片查询。
+  - `HealCandidateMask`（`empty`, `allowAll`, `clearAll`, `allowToken`, `forbidToken`, `isAllowed`, `allowedCount`, `firstAllowedToken`）：64-bit 位图候选集，使用硬件 `@popCount` 精确统计有效候选数。
+  - `TokenHealPlan`（`no_heal_needed`, `trimmed_prompt_len`, `backtrack_count`, `heal_prefix`, `heal_prefix_len`, `candidate_count`, `strict_extension_count`, `prefixSlice()`）
+  - `HealStepOutcome`（`accepted`, `completed`, `consumed_prefix_bytes`, `remaining_prefix_len`, `extra_healed_bytes`）
+- **核心纯函数与多步修复状态机**：
+  - `planTokenHealing(prompt_tokens, vocab): TokenHealPlan` / `planTokenHealingWithConfig(prompt_tokens, vocab, cfg): TokenHealPlan`：支持从 Prompt 末尾回退 1 个或多个不完整边界 Token，提取拼接字节前缀 `heal_prefix` 与回退后前缀长度 `trimmed_prompt_len`；空 prompt、未知 token、无匹配候选时安全降级为 `no_heal_needed = true`。
+  - `buildHealingCandidateMask(vocab, prefix, mode): HealCandidateMask`：基于紧凑词表字节池生成匹配位图。
+  - `applyHealingLogitsMaskInPlace(logits: *[]f32, mask): usize?`：原地对非候选及 `NaN`/`Inf` 槽位置 `-inf` 并返回保留有效候选数；`logits.len < mask.vocab_size` 时无副作用返回 `null`。
+  - `TokenHealingSession`（`init`, `fromPlan`, `isActive`, `isCompleted`, `trimmedPromptLen`, `remainingPrefix`, `buildStepMask`, `applyStepLogitsMaskInPlace`, `advance`）：支持单步超集与多步部分前缀连续推进，完全覆盖 `heal_prefix` 后自动转入 `Completed` 并解除 Logits 掩码。
+
+```cp
+import {
+    HealMatchMode,
+    TokenHealConfig,
+    HealVocabTable,
+    TokenHealingSession,
+    planTokenHealing,
+} from "cap:attention";
+
+pub fn demoTokenHealing() {
+    let vocab = HealVocabTable.init();
+    const id_visit = vocab.addToken("Visit ") ?? 0;
+    const id_http_c = vocab.addToken("http:") ?? 0;
+    const id_http_url = vocab.addToken("http://") ?? 0;
+    * = vocab.addToken("https://");
+
+    const prompt: [2]u32 = [id_visit, id_http_c];
+    const plan = planTokenHealing(prompt[0..], vocab);
+    // plan.no_heal_needed == false, plan.trimmed_prompt_len == 1, plan.prefixSlice() == "http:"
+
+    let session = TokenHealingSession.fromPlan(plan, HealMatchMode.StrictSuperset);
+    let logits: [4]f32 = [1.0, 3.5, 4.2, 9.9];
+    let logits_s: []f32 = logits[0..];
+    * = session.applyStepLogitsMaskInPlace(vocab, *logits_s); // 屏蔽 "Visit " 与 "https://" 为 -inf
+
+    // 采样得到 "http://" -> 单步完成修复并自动解除后续掩码
+    const step = session.advance(id_http_url, vocab);
+    * = step.completed; // true
+}
+```
