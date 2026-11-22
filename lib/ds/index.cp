@@ -278,3 +278,14 @@ export {
     PrefixTrieStats,
     PrefixTrie,
 } from "./prefixTrie.cp";
+
+// --- countingBloom (Zero-Alloc 4-Bit Saturating Counting Bloom Filter with Deletion) ---
+export {
+    CBLOOM_MAX_BUCKETS,
+    CBLOOM_MIN_BUCKETS,
+    CBLOOM_STORAGE_BYTES,
+    CBLOOM_MAX_HASHES,
+    CBLOOM_MAX_COUNTER,
+    CountingBloomStats,
+    CountingBloomFilter,
+} from "./countingBloom.cp";

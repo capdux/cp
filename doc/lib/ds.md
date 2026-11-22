@@ -352,6 +352,36 @@ pub fn demoPrefixTrie() {
 
 ---
 
+### 零分配 4-bit 饱和计数布隆过滤器 (`countingBloom.cp`)
+
+面向缓存去重、流式集合维护与网络路由黑名单动态删改的 100% 纯 CP 零动态堆分配 4-bit 饱和计数布隆过滤器（支持安全删除、防假阴性饱和保护与饱和并集）：
+
+- **常量与数据模型**：
+  - `CBLOOM_MAX_BUCKETS = 4096`、`CBLOOM_MIN_BUCKETS = 16`、`CBLOOM_STORAGE_BYTES = 2048`（紧凑半字节 nibble 存储）、`CBLOOM_MAX_HASHES = 8`、`CBLOOM_MAX_COUNTER = 15`
+  - `CountingBloomStats`（`num_buckets`, `num_hashes`, `non_zero_buckets`, `saturated_buckets`, `total_inserts`, `total_removes`, `rejected_removes`, `saturation_hits`, `estimated_items`, `estimated_fpr`）
+- **核心引擎 `CountingBloomFilter`**：
+  - `init(bucket_count, hash_count): CountingBloomFilter?`（校验 `bucket_count` 为 `16..=4096` 之间的 2 的幂、`hash_count` 在 `1..=8`）/ `initDefault()`
+  - `insert(*_, key)` / `insertU64(*_, key)` / `contains(key)` / `containsU64(key)` / `minCount(key): u8`
+  - `remove(*_, key)` / `removeU64(*_, key)`：删除前先校验 `contains(key)` 避免误扣减破坏其他键；已达 4-bit 饱和值 `15` 的计数器保持饱和不减，彻底杜绝假阴性。
+  - `mergeAdd(*_, other): bool`：同配置过滤器执行 4-bit 饱和并集 `min(15, a + b)`。
+  - `clear(*_)` / `nonZeroBuckets()` / `saturatedBuckets()` / `estimatedItems()` / `estimatedFpr()` / `stats()`。
+
+```cp
+import { CountingBloomFilter } from "cap:ds";
+
+pub fn demoCountingBloom() {
+    let bf = CountingBloomFilter.init(1024, 4) ?? return;
+    * = bf.insert("session:alpha");
+    * = bf.insert("session:beta");
+    * = bf.contains("session:alpha"); // true
+    * = bf.remove("session:alpha");   // true (精确删除)
+    * = bf.contains("session:alpha"); // false
+    * = bf.contains("session:beta");  // true (不受影响)
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [aho_corasick.md](ds/aho_corasick.md)
