@@ -879,3 +879,17 @@ const z = CssInteger.parse("+1024")?;
 * = len;
 * = z;
 ```
+
+22. **CSS Containment Level 3 `container-name` / `container-type` / `container` 简写属性（`containProp.cp`，吸收自 `/data/dev/bun/src/css/properties/contain.cp` & `/data/dev/bun/docs/bundler/css.mdx`）**：
+    - **导出符号**：`CSS_CONTAINER_MAX_NAMES` (`16`)、`CssContainError`、`isReservedContainerName`、`CssContainType`（`normal`/`size`/`inline_size`）、`CssContainerNameList`（`none`/`parse`/`isNone`/`contains`/`get`/`toCss`/`eql`）、`CssContainerShorthand`（`default`/`parse`/`toCss`/`eql`）；
+    - **规范与压缩实践**：严格按 W3C CSS Containment L3 拦截保留字（`none`/`and`/`not`/`or`/`initial`/`inherit`/`unset`/`revert` 等）及非法 `<custom-ident>`（如 `--foo`），`<custom-ident>` 名称匹配区分大小写，`CssContainerShorthand.toCss` 自动省略默认 `" / normal"` 后缀以最小化输出。
+
+```cp
+import { CssContainerShorthand } from "cap:css";
+
+const c = CssContainerShorthand.parse("sidebar card / inline-size")?;
+let buf: [64]u8 = [0; 64];
+const n = c.toCss(buf[0..])?;
+// buf[0..n] == "sidebar card / inline-size"
+* = n;
+```

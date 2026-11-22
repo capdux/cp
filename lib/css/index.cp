@@ -634,3 +634,12 @@ export {
     CssNumber,
     CssInteger,
 } from "./number.cp";
+
+export {
+    CSS_CONTAINER_MAX_NAMES,
+    CssContainError,
+    isReservedContainerName,
+    CssContainType,
+    CssContainerNameList,
+    CssContainerShorthand,
+} from "./containProp.cp";

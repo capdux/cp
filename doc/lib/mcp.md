@@ -878,3 +878,48 @@ pub fn demoMcpAuthScope() {
     * = eng.formatChallengeForDecision(dec, *hdr_s);
 }
 ```
+
+---
+
+## 二十一、 零堆分配 MCP 长耗时异步工具任务句柄与轮询状态机 (`taskAsync.cp`)
+
+面向 MCP 长耗时工具调用（异步任务句柄、进度轮询、人机交互挂起与幂等取消）的 100% 纯 CP 零动态堆分配状态机与增量事件环引擎：
+
+- **常量与枚举**：
+  - `MCP_TASK_MAX_TASKS = 64`、`MCP_TASK_EVENT_RING_CAP = 128`、`MCP_TASK_SUMMARY_MAX_LEN = 128`、`MCP_TASK_DEFAULT_POLL_MS = 1000`、`MCP_TASK_MAX_PROGRESS_BPS = 10000`
+  - `McpAsyncTaskState`（`queued | running | input_required | completed | failed | cancelled`；配套 `mcpTaskStateIsTerminal(state)`、`mcpTaskStateName(state)`）
+  - `McpAsyncTaskOpStatus`（`ok | already_cancelled | invalid_arg | duplicate_task_id | capacity_full | not_found | invalid_transition`）
+  - `McpAsyncTaskEventKind`（`submitted | started | progress | input_required | resumed | completed | failed | cancelled | expired`）
+- **数据模型**：
+  - `McpAsyncTask`（含 `summarySlice()`）、`McpAsyncTaskEvent`（含 `summarySlice()`）、`McpAsyncTaskPollResult`（含 `count`, `next_seq`, `latest_seq`, `lagged`, `has_more`）、`McpAsyncTaskStats`
+- **纯函数工具**：
+  - `formatTaskStatusJson(task, out_buf: *[]u8): usize?`：零分配 RFC 8259 转义 JSON-RPC 任务状态视图格式化，缓冲不足安全返回 `null`。
+- **核心引擎 `McpAsyncTaskManager`**：
+  - `init()` / `submitTask(*_, task_id, tool_name_hash, poll_interval_ms, ttl_ms, now_ms)` / `startTask(*_, task_id, now_ms)`
+  - `requireInput(*_, task_id, prompt_summary, now_ms)` / `resumeFromInput(*_, task_id, note, now_ms)`
+  - `updateProgress(*_, task_id, progress_bps, poll_interval_ms, message, now_ms)`
+  - `completeTask(*_, task_id, result_summary, now_ms)` / `failTask(*_, task_id, error_code, reason, now_ms)` / `cancelTask(*_, task_id, reason, now_ms)`（终态不可逆；重复取消幂等返回 `already_cancelled`）
+  - `reapExpired(*_, now_ms): usize`（自动回收 TTL 过期任务并写入 `expired` 事件）
+  - `pollEvents(since_seq, task_filter, out_events: *[]McpAsyncTaskEvent): McpAsyncTaskPollResult`（支持全局或按任务过滤增量拉取、环形覆盖 `lagged` 告警与 `has_more` 分页）
+  - `getTask(task_id)` / `stats()`
+
+```cp
+import {
+    McpAsyncTask,
+    McpAsyncTaskManager,
+    formatTaskStatusJson,
+} from "cap:mcp";
+
+pub fn demoMcpAsyncTask() {
+    let mgr = McpAsyncTaskManager.init();
+    * = mgr.submitTask(101, 0xABCD, 500, 60_000, 1000);
+    * = mgr.startTask(101, 1100);
+    * = mgr.updateProgress(101, 4500, 250, "indexing shard 2/4", 2000);
+
+    let json_buf: [512]u8 = [0; 512];
+    let json_s: []u8 = json_buf[0..];
+    if (task := mgr.getTask(101)) {
+        * = formatTaskStatusJson(task, json_s);
+    }
+}
+```

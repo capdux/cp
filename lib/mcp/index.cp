@@ -299,3 +299,22 @@ export {
     formatWwwAuthenticateHeader,
     McpAuthScopeEngine,
 } from "./authScope.cp";
+
+export {
+    MCP_TASK_MAX_TASKS,
+    MCP_TASK_EVENT_RING_CAP,
+    MCP_TASK_SUMMARY_MAX_LEN,
+    MCP_TASK_DEFAULT_POLL_MS,
+    MCP_TASK_MAX_PROGRESS_BPS,
+    McpAsyncTaskState,
+    mcpTaskStateIsTerminal,
+    mcpTaskStateName,
+    McpAsyncTaskOpStatus,
+    McpAsyncTaskEventKind,
+    McpAsyncTask,
+    McpAsyncTaskEvent,
+    McpAsyncTaskPollResult,
+    McpAsyncTaskStats,
+    formatTaskStatusJson,
+    McpAsyncTaskManager,
+} from "./taskAsync.cp";
