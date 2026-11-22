@@ -353,3 +353,13 @@ export {
     planTokenHealing,
     planTokenHealingWithConfig,
 } from "./tokenHeal.cp";
+
+export {
+    KV_COMPACTOR_MAX_SLOTS,
+    KvSlotRole,
+    KvCompactorSlot,
+    KvCompactorConfig,
+    KvCompactReport,
+    KvCompactorStats,
+    KvCacheCompactor,
+} from "./kvCompactor.cp";

@@ -1437,3 +1437,54 @@ pub fn demoTokenHealing() {
     * = step.completed; // true
 }
 ```
+
+
+### 零分配 StreamingLLM + H2O KV-Cache 压缩器 (`kvCompactor.cp`)
+
+面向长上下文大模型自回归推理的 100% 纯 CP 零动态堆分配 **StreamingLLM + H2O (Heavy-Hitter Oracle) KV-Cache Compactor**：
+
+- **常量与数据模型**：
+  - `KV_COMPACTOR_MAX_SLOTS = 256`：固定容量内联槽位表上限，零动态堆分配。
+  - `KvSlotRole`：`sink`（初始 attention-sink 永久保留）、`heavy_hitter`（中间区 Top-H 重击者）、`recent_window`（尾部滑动窗口）、`evictable`（待压缩淘汰）。
+  - `KvCompactorSlot`：单槽元数据（`pos_id`, `attn_score_ema`, `last_step`, `role`）。
+  - `KvCompactorConfig`：三区配额与 EMA 衰减配置（`sink_budget`, `heavy_budget`, `recent_budget`, `ema_decay`, `auto_compact_on_full`；提供 `defaults()`, `totalBudget()`, `isValid()`）。
+  - `KvCompactReport`：压缩统计报告（`before_len`, `after_len`, `evicted_count`, `written_evicted_pos`, `sink_kept`, `heavy_kept`, `recent_kept`, `step`）。
+  - `KvCompactorStats`：全局占用、四类角色分布与累计追加/驱逐/压缩计数器。
+- **核心引擎 `KvCacheCompactor` 方法**：
+  - `init(cfg): KvCacheCompactor?`：校验总预算 `1 <= totalBudget() <= 256` 且 `ema_decay ∈ (0.0, 1.0]`，非法配置返回 `null`。
+  - `appendToken(*_, pos_id, initial_attn): bool`：清洗 NaN/Inf/负权重后追加新 token 并自动刷新三区角色；物理满池时依据 `auto_compact_on_full` 自动压缩或驱逐最弱非 sink 槽位（全 sink 满池时拒绝驱逐返回 `false`）。
+  - `updateAttentionStep(*_, attn_weights): bool`：每 decode 步使用硬件 `@fma` 原地更新各槽位 EMA 注意力重要度（`score = @fma(decay, score, clean_w)`），自动清洗 NaN/Inf/负权重；权重长度不匹配时原子拒绝并返回 `false`。
+  - `compactToBudget(*_, out_evicted_pos: *[]u64): KvCompactReport`：一键原地双指针紧缩保留槽位（严格保持 `pos_id` 时序递增），将淘汰位置写入 `out_evicted_pos` 并返回 `KvCompactReport`（空池与未超预算均安全无副作用）。
+  - `len()` / `capacity()` / `budget()` / `needsCompaction()` / `slotAt(i)` / `activeSlots()` / `findByPosId(pos_id)` / `stats()` / `reset(*_)`。
+
+```cp
+import {
+    KvCompactorConfig,
+    KvCacheCompactor,
+} from "cap:attention";
+
+pub fn demoKvCompactor() {
+    const cfg = KvCompactorConfig {
+        sink_budget: 2,
+        heavy_budget: 2,
+        recent_budget: 2,
+        ema_decay: 0.9,
+        auto_compact_on_full: true,
+    };
+    if (let comp := KvCacheCompactor.init(cfg)) {
+        let p: u64 = 0;
+        while (p < 10) : (p += 1) {
+            * = comp.appendToken(p, 0.05);
+        }
+        const weights: [10]f32 = [0.2, 0.2, 0.01, 0.95, 0.02, 0.85, 0.01, 0.01, 0.1, 0.1];
+        * = comp.updateAttentionStep(weights[0..]);
+
+        let evicted: [8]u64 = [0; 8];
+        let evicted_s: []u64 = evicted[0..];
+        const rep = comp.compactToBudget(*evicted_s);
+        // rep.before_len == 10, rep.after_len == 6, rep.evicted_count == 4
+        // 保留 sink(0,1) + heavy_hitter(3,5) + recent_window(8,9)
+        * = rep.after_len;
+    }
+}
+```
