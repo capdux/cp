@@ -622,3 +622,37 @@ let spec: [32]u8 = [0; 32];
 const n = formatLinkDependencySpec("@acme/ui", spec[0..])?; // "link:@acme/ui"
 * = inv; * = plan; * = n;
 ```
+
+19. **Node/Bun `util.parseArgs` 零分配词法分类与参数解析器（`lib/cli/parseArgsUtils.cp`，吸收自 `/data/dev/bun/src/runtime/node/util/parse_args_utils.cp` & `/data/dev/bun/docs/guides/process/argv.mdx`）**：
+    - **导出符号**：`PARSE_ARGS_MAX_TOKENS` (`128`)、`ParseArgsError`（`UnknownOption`/`UnexpectedArgument`/`MissingArgument`/`OptionLikeValue`/`UnexpectedPositional`/`NegativeNotAllowed`/`OutputBufferTooSmall`）、`ParseArgsValueType`（`Boolean`/`String`）、`ParseArgsOptionDef`、`ParseArgsTokenSubtype`（`OptionTerminator`/`LoneShortOption`/`ShortOptionGroup`/`ShortOptionAndValue`/`LoneLongOption`/`LongOptionAndValue`/`Positional`）、`ParseArgsTokenKind`、`ParseArgsLongSplit`、`ParseArgsToken`、`ParseArgsConfig`、`isOptionLikeValue`、`findOptionByShortName`、`findOptionByLongName`、`classifyArgToken`、`splitLongOption`、`parseArgsTokens`；
+    - **`argv` 解析实战最佳实践（参考 `/data/dev/bun/docs/guides/process/argv.mdx`）**：
+      - 当直接读取原始 `argv` 时，前两项通常为可执行路径与脚本路径（如 `["/path/to/bun", "/path/to/cli.ts", "--flag1", "--flag2", "value"]`），需启用 `allow_positionals: true` 或先切片跳过前两项再交给 `parseArgsTokens`；
+      - 默认启用 `strict: true` 可自动拦截未知选项、布尔选项误传 `=value`、缺失参数值以及 `isOptionLikeValue` 场景（例如 `--port --verbose` 漏写端口值导致把 `--verbose` 误吞为字符串值）；
+      - 开启 `allow_negative: true` 支持 `--no-<flag>` 对已注册 `Boolean` 选项取反（若存在字面名为 `no-<flag>` 的显式选项则优先精确匹配）；
+      - 短选项支持单写（`-v`）、内联附值（`-fFILE`）与连写分组（`-vfFILE` 或 `-vf FILE`），`--` 之后的全部参数统一归为 `Positional`。
+
+### `util.parseArgs` 零分配词法与严格解析示例（`lib/cli/parseArgsUtils.cp`）
+
+```cp
+import {
+    ParseArgsOptionDef,
+    ParseArgsValueType,
+    ParseArgsConfig,
+    ParseArgsToken,
+    parseArgsTokens,
+} from "cap:cli";
+
+const defs: [2]ParseArgsOptionDef = [
+    ParseArgsOptionDef{ long_name: "flag1", short_name: "a", value_type: .Boolean },
+    ParseArgsOptionDef{ long_name: "flag2", short_name: "f", value_type: .String },
+];
+const argv: [5]([]const u8) = ["/path/to/bin", "/path/to/cli.cp", "--flag1", "--flag2", "value"];
+let out: [16]ParseArgsToken = [ParseArgsToken{}; 16];
+const n = parseArgsTokens(
+    argv[0..],
+    defs[0..],
+    ParseArgsConfig{ strict: true, allow_positionals: true, allow_negative: false },
+    out[0..],
+)?;
+* = n;
+```

@@ -287,3 +287,21 @@ export {
     PmLinkInvocation,
     PmGlobalLinkPlan,
 } from "./pmLink.cp";
+
+export {
+    PARSE_ARGS_MAX_TOKENS,
+    ParseArgsError,
+    ParseArgsValueType,
+    ParseArgsOptionDef,
+    ParseArgsTokenSubtype,
+    ParseArgsTokenKind,
+    ParseArgsLongSplit,
+    ParseArgsToken,
+    ParseArgsConfig,
+    isOptionLikeValue,
+    findOptionByShortName,
+    findOptionByLongName,
+    classifyArgToken,
+    splitLongOption,
+    parseArgsTokens,
+} from "./parseArgsUtils.cp";
