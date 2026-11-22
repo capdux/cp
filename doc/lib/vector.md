@@ -19,6 +19,7 @@
 | `lib/vector/hybrid.cp` | `// Origin: Pure-CP Stdlib (RAG Hybrid Retrieval: RRF, MMR Rerank & Int8 Scalar Quantization) \| Created: 2026-11-22` | `RrfFusion` + 零堆分配多路 RRF (`rrfFuse`)、线性归一化融合 (`normalizeScoresMinMax`/`normalizeScoresZScore`/`weightedScoreFuse`)、MMR 多样性重排 (`mmrRerank`) 与 U8 标量量化 (`quantizeVectorU8`/`dequantizeVectorU8`/`quantizedDotU8`) |
 | `lib/vector/semantic_cache.cp` | `// Origin: Pure-CP Stdlib (AI Agent Semantic Cache: Cosine Threshold Lookup, TTL & LRU Eviction) \| Created: 2026-11-22` | `SemanticCache` 零堆分配 LLM 语义缓存（余弦阈值命中、TTL 过期与过期优先 + LRU 淘汰） |
 | `lib/vector/binary_quant.cp` | `// Origin: Pure-CP Stdlib (RAG 1-Bit Binary Vector Quantization, Hamming Search & Two-Stage Rescore) \| Created: 2026-11-22` | 1-bit 二值量化（32x 压缩）、`@popCount` 汉明距离、Charikar 余弦估计与两阶段粗排+全精度精排 (`twoStageSearch`) |
+| `lib/vector/ivf.cp` | `// Origin: Pure-CP Stdlib (RAG IVF-Flat Coarse-Quantized Inverted File ANN Index) \| Created: 2026-11-22` | `IvfFlatIndex` 零堆分配 CSR 倒排文件近似最近邻索引（L2 / Cosine 多探针 `nprobe` 亚线性检索） |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -109,6 +110,16 @@
 - **`binaryCosineApprox(hamming: u32, dim: usize): f64`**：Charikar 无偏余弦估计 $\cos(\pi \cdot \text{hamming} / d)$。
 - **`searchBinaryTopK(query_words, corpus_words, n_docs, words_per_vec, top_k, out_candidates): usize?`**：基于堆的零堆分配 1-bit 汉明 Top-K 召回（按 `hamming` 升序、同分按 `index` 升序）。
 - **`twoStageSearch(query, query_words, corpus_words, corpus_fp, n_docs, dim, oversample_m, top_k, coarse_scratch, out_hits): usize?`**：两阶段粗排（1-bit Hamming Top-M）+ 精排（全精度 Cosine Top-K），零堆分配支持超大规模向量语料。
+
+### 6. 倒排文件近似最近邻索引 (`ivf.cp`)
+
+- **`IvfHit`**：`{ doc_id: usize, dist_sq: f64, cluster_id: usize }`（`searchCosine` 中 `dist_sq` 存储余弦距离 `1 - cos(q, x)`）
+- **`IvfBuildStats`**：`{ n_clusters: usize, n_docs: usize, min_cluster_size: usize, max_cluster_size: usize }`
+- **`IvfFlatIndex`**（借用调用方 `centroids`、`list_offsets`、`list_doc_ids`）：
+  - `IvfFlatIndex.buildFromCentroids(corpus, n_docs, dim, centroids, n_clusters, list_offsets_out, list_doc_ids_out, counts_scratch): IvfBuildStats?`（单遍计数 + 前缀和 + 写入，零堆分配构建紧凑 CSR 倒排表）
+  - `IvfFlatIndex.searchL2(index, corpus, query, nprobe, top_k, probe_ids_s, probe_dists_s, out_hits): usize?`（先选 `nprobe` 个最近质心，再扫描对应倒排桶返回 L2 平方距离升序 Top-K）
+  - `IvfFlatIndex.searchCosine(index, corpus, query, nprobe, top_k, probe_ids_s, probe_dists_s, out_hits): usize?`（按余弦距离 `1 - cos(q, x)` 多探针检索 Top-K）
+  - `IvfFlatIndex.clusterSize(index, cluster_id): usize`（查询指定倒排桶大小，越界安全返回 `0`）
 
 ---
 
@@ -270,5 +281,45 @@ pub fn demoTwoStageBinarySearch() {
         3, 4, 2, 2, scratch, hits,
     ) ?? 0;
     * = k;
+}
+```
+
+### IVF-Flat 多探针倒排索引检索示例 (`ivf.cp`)
+
+```typescript
+import {
+    IvfHit,
+    IvfFlatIndex,
+} from "cap:vector";
+
+pub fn demoIvfFlatSearch() {
+    const centroids: [4]f64 = [0.0, 0.0, 10.0, 10.0];
+    const corpus: [8]f64 = [0.1, 0.2, -0.1, 0.0, 9.8, 10.1, 10.2, 9.9];
+
+    let offsets_buf: [3]usize = [0; 3];
+    let doc_ids_buf: [4]usize = [0; 4];
+    let counts_buf: [2]usize = [0; 2];
+    let offsets: []usize = offsets_buf[0..];
+    let doc_ids: []usize = doc_ids_buf[0..];
+    let counts: []usize = counts_buf[0..];
+    * = IvfFlatIndex.buildFromCentroids(corpus[0..], 4, 2, centroids[0..], 2, offsets, doc_ids, counts);
+
+    const idx = IvfFlatIndex{
+        centroids: centroids[0..],
+        list_offsets: offsets,
+        list_doc_ids: doc_ids,
+        n_clusters: 2,
+        dim: 2,
+    };
+
+    const query: [2]f64 = [9.9, 10.0];
+    let p_ids_buf: [2]usize = [0; 2];
+    let p_dists_buf: [2]f64 = [0.0; 2];
+    let hits_buf: [2]IvfHit = [IvfHit{}; 2];
+    let p_ids: []usize = p_ids_buf[0..];
+    let p_dists: []f64 = p_dists_buf[0..];
+    let hits: []IvfHit = hits_buf[0..];
+    const n = IvfFlatIndex.searchL2(idx, corpus[0..], query[0..], 1, 2, p_ids, p_dists, hits) ?? 0;
+    * = n;
 }
 ```

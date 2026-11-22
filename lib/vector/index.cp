@@ -44,3 +44,9 @@ export {
     searchBinaryTopK,
     twoStageSearch,
 } from "./binary_quant.cp";
+
+export {
+    IvfHit,
+    IvfBuildStats,
+    IvfFlatIndex,
+} from "./ivf.cp";
