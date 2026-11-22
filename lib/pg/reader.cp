@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/NewReader.cp | Synced: 2026-11-21T16:59:35Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/NewReader.cp | Synced: 2026-11-22T00:04:14Z
 //! Zero-copy PostgreSQL v3 big-endian wire message frame reader.
 
 export const FRAME_HEADER_SIZE: usize = 5; // 1-byte tag + 4-byte inclusive length

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell_parser/braces.cp | Synced: 2026-11-21T11:59:40Z
+// Source: Absorbed from /data/dev/bun/src/shell_parser/braces.cp | Synced: 2026-11-22T00:04:13Z
 // ============================================================================
 // Absorbed from Bun: /data/dev/bun/src/shell_parser/braces.cp
 // Upstream Sync: Refer to /data/dev/bun/src/shell_parser/braces.cp for future upstream updates.
