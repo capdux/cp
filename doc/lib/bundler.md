@@ -1033,3 +1033,17 @@ let url_buf: [64]u8 = [0; 64];
 const url = formatAssetUrl(0x0123456789abcdef, ".png", url_buf[0..])?; // "/_bun/asset/0123456789abcdef.png"
 * = r1; * = r2; * = url;
 ```
+
+- **打包输出格式、Windows PE 元数据与包打包规则表（`bundleEnums.cp`，吸收自 `/data/dev/bun/src/options_types/BundleEnums.cp`）**：
+    - 导出：`BundleFormat`（`Esm` / `Iife` / `Cjs` / `InternalBakeDev`，提供 `keepES6ImportExportSyntax`/`isESM`/`isAlwaysStrictMode`/`supportsCodeSplitting`/`supportsTopLevelAwait`/`asStr`/`fromString`）、`WindowsExeOptions`（`hide_console`/`icon`/`title`/`publisher`/`version`/`description`/`copyright`，提供 `hasMetadata`/`subsystemName`/`isValidVersion` 校验 Windows 4 段 `A.B.C.D` 版本号）、`BundlePackageMode`（`Always` / `Never`）、`BUNDLE_PACKAGE_MAX_RULES` (`64`)、`BundlePackageError`、`BundlePackageRule`、`BundlePackageMap`（零分配 `init`/`count`/`set`/`get`/`remove`/`shouldBundle`）。
+
+```cp
+import { BundleFormat, WindowsExeOptions, BundlePackageMode, BundlePackageMap } from "cap:bundler";
+
+const fmt = BundleFormat.fromString("esm");
+const win = WindowsExeOptions{ hide_console: true, title: "MyApp", version: "1.2.3.4" };
+let pkg_map = BundlePackageMap.init();
+* = pkg_map.set("fsevents", BundlePackageMode.Never)?;
+const bundle_fs = pkg_map.shouldBundle("fsevents", BundlePackageMode.Always); // false
+* = fmt; * = win; * = bundle_fs;
+```

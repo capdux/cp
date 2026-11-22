@@ -563,6 +563,43 @@ pub fn demoProcessTree() {
 }
 ```
 
+## 零分配 Linux cgroup v2 CPU/内存配额、PSI 压力解析与自适应并发预算引擎 (`cgroupLimit.cp`)
+
+面向 Kubernetes / 容器化部署运行时的 100% 纯 CP 零动态堆分配资源配额与 PSI 压力感知引擎，纯整数定点解析零浮点误差并给出确定性并发度与背压裁决：
+
+- **CPU 配额解析 (`cpu.max`)**：
+  - `CgroupCpuQuota`（`is_unlimited`, `quota_us`, `period_us`, `effectiveMillicores()`, `recommendedWorkers(host_cores)`）
+  - `parseCgroupCpuMax(content): CgroupCpuQuota?`（支持 `"max 100000"` 与 `"250000 100000"`，拒绝零周期/负值/畸形输入）
+- **内存配额解析 (`memory.max` / `memory.high` / `memory.current`)**：
+  - `CgroupMemoryLimit`（`is_unlimited`, `limit_bytes`）、`parseCgroupMemoryValue(content): CgroupMemoryLimit?`
+- **PSI (Pressure Stall Information) 定点解析 (`/proc/pressure/memory|cpu|io`)**：
+  - `CGROUP_BPS_SCALE = 10000`、`PsiMetrics`（`avg10_bps`, `avg60_bps`, `avg300_bps`, `total_us`）、`PsiSnapshot`（`has_some`, `some`, `has_full`, `full`）
+  - `parsePsiPressure(content): PsiSnapshot?`（纯整数定点数解析 `12.34% -> 1234 bps`，零浮点误差）
+- **容器自适应负载/背压裁决器**：
+  - `CgroupPressureLevel`（`nominal | elevated | critical | oom_imminent`）
+  - `CgroupBudgetAdvice`（`pressure_level`, `memory_util_bps`, `effective_workers`, `headroom_bytes`, `should_shed_load`, `should_pause_background`）
+  - `evaluateCgroupBudget(cpu, mem_max, mem_current_bytes, psi, host_cores): CgroupBudgetAdvice`
+
+```cp
+import {
+    parseCgroupCpuMax,
+    parseCgroupMemoryValue,
+    parsePsiPressure,
+    evaluateCgroupBudget,
+} from "cap:sys";
+
+pub fn demoCgroupBudget() {
+    const cpu = parseCgroupCpuMax("250000 100000\n") ?? return;
+    const mem = parseCgroupMemoryValue("1073741824\n") ?? return; // 1 GiB
+    const psi = parsePsiPressure(
+        "some avg10=1.25 avg60=0.50 avg300=0.10 total=12345\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    ) ?? return;
+
+    const advice = evaluateCgroupBudget(cpu, mem, 536870912, psi, 16);
+    * = advice.effective_workers; // 3 (2.5 vCPU -> ceil = 3)
+}
+```
+
 ## 收敛子模块深度文档
 
 - [acpi.md](sys/acpi.md)

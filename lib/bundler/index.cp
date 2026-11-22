@@ -623,3 +623,13 @@ export {
     formatAssetUrl,
     AssetStore,
 } from "./assetStore";
+
+export {
+    BundleFormat,
+    WindowsExeOptions,
+    BundlePackageMode,
+    BUNDLE_PACKAGE_MAX_RULES,
+    BundlePackageError,
+    BundlePackageRule,
+    BundlePackageMap,
+} from "./bundleEnums";

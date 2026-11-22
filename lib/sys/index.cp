@@ -1429,3 +1429,18 @@ export {
     ProcessTree,
 } from "./procTree.cp";
 
+// --- cgroupLimit (Zero-Alloc Linux cgroup v2 CPU/Memory Quota, PSI Pressure & Budget Advisor) ---
+export {
+    CGROUP_BPS_SCALE,
+    CgroupCpuQuota,
+    CgroupMemoryLimit,
+    PsiMetrics,
+    PsiSnapshot,
+    CgroupPressureLevel,
+    CgroupBudgetAdvice,
+    parseCgroupCpuMax,
+    parseCgroupMemoryValue,
+    parsePsiPressure,
+    evaluateCgroupBudget,
+} from "./cgroupLimit.cp";
+
