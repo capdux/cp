@@ -493,6 +493,22 @@ const n = nested.liftForParent("dialog[open]", buf[0..])?;
 * = n;
 ```
 
+### CSS 逻辑属性 12 分组映射与 LTR/RTL 双向降级（`logical.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/logical.cp` 与 `/data/dev/bun/docs/bundler/css.mdx`，零堆分配实现 CSS Logical Properties & Values Level 1 全部 12 大分组（`border_color`/`border_style`/`border_width`/`border_radius`/`margin`/`scroll_margin`/`padding`/`scroll_padding`/`inset`/`size`/`min_size`/`max_size`）的分类、LTR/RTL 物理属性映射及 `:dir(ltr)`/`:dir(rtl)` 自动降级规则生成。
+
+- 核心导出：`CssLogicalError`、`LogicalPropertyCategory`（`physical`/`logical`）、`LogicalPropertyGroup`（12 组）、`WritingDirection`（`ltr`/`rtl`）、`LogicalPhysicalPair`（`isDirectionDependent`/`physicalFor`/`secondPhysicalFor`）、`classifyLogicalProperty`、`logicalGroupOf`、`mapLogicalToPhysical`、`formatLogicalFallbackRule`。
+- 降级语义：方向无关属性（如 `block-size`、`margin-block-start`）以及对称简写（如 `margin-inline: 16px`）直接降级为单块物理声明；方向相关属性（如 `margin-inline-start`、`border-start-end-radius`）及非对称 inline 轴双值（如 `margin-inline: 8px 16px`）自动生成 `:dir(ltr)` 与 `:dir(rtl)` 双分支降级规则。
+
+```cp
+import { formatLogicalFallbackRule } from "cap:css";
+
+let buf: [256]u8 = [0; 256];
+const n = formatLogicalFallbackRule(".card", "margin-inline-start", "16px", buf[0..])?;
+// ":dir(ltr) .card { margin-left: 16px; } :dir(rtl) .card { margin-right: 16px; }"
+* = n;
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项

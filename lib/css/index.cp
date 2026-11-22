@@ -421,3 +421,15 @@ export {
     CssStartingStyleRule,
     CssStartingStyleRuleList,
 } from "./starting_style.cp";
+
+export {
+    CssLogicalError,
+    LogicalPropertyCategory,
+    LogicalPropertyGroup,
+    WritingDirection,
+    LogicalPhysicalPair,
+    classifyLogicalProperty,
+    logicalGroupOf,
+    mapLogicalToPhysical,
+    formatLogicalFallbackRule,
+} from "./logical.cp";
