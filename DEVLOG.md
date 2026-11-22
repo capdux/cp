@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:cssmodules` 吸收自 Bun css/css_modules.cp 的纯 CP 零分配 CSS Modules 命名模板、Wyhash+Base64 确定性哈希、作用域类名编译与 composes 跨文件依赖解析库（5/5 PASS，文档直写 `doc/lib/cssmodules.md`）
+从 /data/dev/bun/src/css/css_modules.cp 吸收纯 CP 零分配 CSS Modules 库 cap:cssmodules（lib/cssmodules/{cssmodules,index}.cp），cpc check 0 错误，cap test 5/5 PASS (708ms)
+
 ## 2026-11-22: 新建 `cap:mediaquery` 吸收自 Bun css/media_query.cp 的纯 CP 零分配 W3C CSS Media Queries Level 4 库：长度/分辨率/宽高比单位换算、单/双边区间范围、媒体特性求值与规范化（5/5 PASS，文档直写 `doc/lib/mediaquery.md`）
 从 /data/dev/bun/src/css/media_query.cp 吸收纯 CP 零分配 CSS Media Queries Level 4 库 cap:mediaquery（lib/mediaquery/{mediaquery,index}.cp），cpc check 0 错误，cap test 6/6 PASS (710ms)
 

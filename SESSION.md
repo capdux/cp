@@ -262,3 +262,6 @@
 
 ### 2026-11-22（`cap:mediaquery` 验收，子智能体吸收 Bun 上游 css/media_query.cp 为 cap:mediaquery（6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/mediaquery/`（5/5 PASS，`doc/lib/mediaquery.md`）经 `verify_module.sh` 一次性验收回收；子智能体吸收 Bun 上游 css/media_query.cp 为 cap:mediaquery（6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:cssmodules` 验收，子智能体吸收 Bun 上游 css/css_modules.cp 为 cap:cssmodules（5/5 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/cssmodules/`（5/5 PASS，`doc/lib/cssmodules.md`）经 `verify_module.sh` 一次性验收回收；子智能体吸收 Bun 上游 css/css_modules.cp 为 cap:cssmodules（5/5 PASS），主协调器统一登记并提交
