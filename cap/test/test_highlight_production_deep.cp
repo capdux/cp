@@ -11,7 +11,7 @@ import {
     TokenScope,
     HighlightToken,
     Highlighter,
-} from "cap:highlight";
+} from "cap:text";
 
 fn strEql(a: string, b: string): bool {
     return std.mem.eql(u8, a, b);
@@ -219,19 +219,19 @@ fn testLanguageFromNameAndLeakFree(): !void {
 fn testCapHighlightDynamicMount(): !void {
     const alloc = std.testing.allocator;
 
-    const lang = cap.highlight.Highlighter.languageFromName("rust") ?? cap.highlight.Language.Rust;
-    expect_eq(lang, cap.highlight.Language.Rust);
+    const lang = cap.text.Highlighter.languageFromName("rust") ?? cap.text.Language.Rust;
+    expect_eq(lang, cap.text.Language.Rust);
 
     const code = "pub fn sum(a: u32, b: u32) -> u32 { a + b }";
-    const toks = cap.highlight.Highlighter.tokenize(alloc, lang, code)?;
+    const toks = cap.text.Highlighter.tokenize(alloc, lang, code)?;
     defer alloc.free(toks);
     expect_eq(toks.len > 0, true);
 
-    const ansi = cap.highlight.Highlighter.toAnsi(alloc, lang, code)?;
+    const ansi = cap.text.Highlighter.toAnsi(alloc, lang, code)?;
     defer alloc.free(ansi);
     expect_eq(strContains(ansi, "\x1b["), true);
 
-    const html = cap.highlight.Highlighter.toHtml(alloc, lang, code)?;
+    const html = cap.text.Highlighter.toHtml(alloc, lang, code)?;
     defer alloc.free(html);
     expect_eq(strContains(html, "<span class=\"hl-keyword\">pub</span>"), true);
 }

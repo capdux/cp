@@ -23,7 +23,7 @@ import {
     MarcRecordIter,
     isMarcRecord,
     parseMarcLeader,
-} from "cap:marc";
+} from "cap:text";
 
 struct MarcBuilder {
     dir_buf: [512]u8 = [0; 512],

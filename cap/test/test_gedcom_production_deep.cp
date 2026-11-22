@@ -15,7 +15,7 @@ import {
     parseGedcomLine,
     parseGedcomHeader,
     summarizeGedcom,
-} from "cap:gedcom";
+} from "cap:text";
 
 // 完整 GEDCOM 5.5.1 家谱样例（含 UTF-8 BOM、CRLF/LF 混用、HEAD、3x INDI、1x FAM、SOUR、NOTE、TRLR）
 const SAMPLE_GEDCOM: []const u8 =

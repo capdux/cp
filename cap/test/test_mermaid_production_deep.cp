@@ -21,7 +21,7 @@ import {
     SequenceBuilder,
     ErBuilder,
     StateBuilder,
-} from "cap:mermaid";
+} from "cap:text";
 import cap from "cap";
 
 fn containsSubstr(haystack: []const u8, needle: []const u8): bool {
@@ -224,12 +224,12 @@ fn testStateAndErrorGuardsZeroLeak()! {
 
 fn testDynamicCapMermaidNamespace()! {
     const alloc = std.testing.allocator;
-    let fc = cap.mermaid.FlowchartBuilder.init(alloc, cap.mermaid.FlowDirection.LR);
+    let fc = cap.text.FlowchartBuilder.init(alloc, cap.text.FlowDirection.LR);
     defer fc.deinit();
 
-    fc.addNode("a", "Agent (A)", cap.mermaid.NodeShape.Rounded)?;
-    fc.addNode("b", "Tool (B)", cap.mermaid.NodeShape.Rect)?;
-    fc.addEdge("a", "b", "invoke", cap.mermaid.EdgeStyle.SolidArrow)?;
+    fc.addNode("a", "Agent (A)", cap.text.NodeShape.Rounded)?;
+    fc.addNode("b", "Tool (B)", cap.text.NodeShape.Rect)?;
+    fc.addEdge("a", "b", "invoke", cap.text.EdgeStyle.SolidArrow)?;
 
     const out = fc.render(alloc)?;
     defer alloc.free(out);

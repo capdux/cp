@@ -11,7 +11,7 @@ import {
     parseIgcBRecord,
     IgcFixIter,
     summarizeIgc,
-} from "cap:igc";
+} from "cap:text";
 
 fn approxEq(a: f64, b: f64): bool {
     const diff = if (a > b) (a - b) else (b - a);

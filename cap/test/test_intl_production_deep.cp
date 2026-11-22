@@ -17,7 +17,7 @@ import {
     ByteSize,
     HumanDuration,
     RelativeTime,
-} from "cap:intl";
+} from "cap:text";
 import cap from "cap";
 
 fn expectStrEq(alloc: std.mem.Allocator, actual: []u8, expected: string)! {
@@ -222,11 +222,11 @@ fn testRelativeTime()! {
 fn testCapIntlDynamicLazyMount()! {
     const alloc = std.heap.page_allocator;
 
-    const grouped = cap.intl.NumberFormatter.formatInt(alloc, 9876543, ',')?;
+    const grouped = cap.text.NumberFormatter.formatInt(alloc, 9876543, ',')?;
     defer alloc.free(grouped);
     expect_eq(std.mem.eql(u8, grouped, "9,876,543"), true);
 
-    const euro = cap.intl.NumberFormatter.formatFloat(alloc, 1234.56, cap.intl.NumberFormatOptions {
+    const euro = cap.text.NumberFormatter.formatFloat(alloc, 1234.56, cap.text.NumberFormatOptions {
         thousands_sep: '.',
         decimal_sep: ',',
         decimals: 2,
@@ -234,13 +234,13 @@ fn testCapIntlDynamicLazyMount()! {
     defer alloc.free(euro);
     expect_eq(std.mem.eql(u8, euro, "1.234,56"), true);
 
-    const bytes = cap.intl.ByteSize.parse("2.5 GiB")?;
+    const bytes = cap.text.ByteSize.parse("2.5 GiB")?;
     expect_eq(bytes, 2684354560 as u64);
 
-    const dur_ms = cap.intl.HumanDuration.parseMs("1h30m")?;
+    const dur_ms = cap.text.HumanDuration.parseMs("1h30m")?;
     expect_eq(dur_ms, 5400000 as u64);
 
-    const rel = cap.intl.RelativeTime.formatDeltaSec(alloc, 7200)?;
+    const rel = cap.text.RelativeTime.formatDeltaSec(alloc, 7200)?;
     defer alloc.free(rel);
     expect_eq(std.mem.eql(u8, rel, "in 2 hours"), true);
 }

@@ -22,7 +22,7 @@ import {
     parseMobiHeader,
     ExthIter,
     findExthRecord,
-} from "cap:mobi";
+} from "cap:text";
 
 fn zeroBytes(buf: []u8) {
     let i: usize = 0;

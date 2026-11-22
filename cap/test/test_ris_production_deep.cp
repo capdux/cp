@@ -10,7 +10,7 @@ import {
     RisIter,
     isRis,
     summarizeRis,
-} from "cap:ris";
+} from "cap:text";
 
 // 含 UTF-8 BOM、CRLF/LF 混用、JOUR + BOOK + CONF 三条完整文献、多作者、多关键词与多行续行摘要
 const SAMPLE_RIS_CORPUS: []const u8 =

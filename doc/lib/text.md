@@ -476,3 +476,28 @@ pub fn demoCodePatternMatch(src: string) {
 | `lib/text/spell.cp` | SymSpell / BK-Tree 拼写纠错 | `SymSpellIndex`, `BkTree`, `SpellSuggestion`, `SuggestVerbosity`, `spellDamerauLevenshtein`, `spellSoundex` |
 
 > **重叠对照参考归档说明**：`lib/text/fuzzy_.cp`（与 `fuzzy.cp` 重叠）与 `lib/text/suffix_array_.cp`（与 `suffixarray.cp` 重叠）为对照参考副本（文件首行带 `// Reference Only:` 声明），不在 `lib/text/index.cp` 冲突导出。
+
+---
+
+## Batch 34 国际化、语法高亮、通配符、标记图谱与文本记录格式子模块（零冲突归并）
+
+以下 16 个纯 CP 文本/国际化/高亮/通配符/标记语言与记录解析子模块已统一收敛至 `lib/text/` 并零冲突导出至 `cap:text`：
+
+| 子模块文件 | 原目录 | 核心职责 |
+| :--- | :--- | :--- |
+| `lib/text/i18n.cp` | `lib/i18n` | Locale Negotiator、CLDR 复数规则与层级消息目录 (`I18nCatalog`) |
+| `lib/text/intl_number.cp`, `intl_units.cp` | `lib/intl` | 分组/紧凑/序数/百分比数字格式化与双向人类可读单位解析 |
+| `lib/text/punycode.cp`, `idna.cp` | `lib/idna` | RFC 3492 Punycode 与 IDNA 国际化域名编解码及 RFC 1034/1123 校验 |
+| `lib/text/highlight.cp` | `lib/highlight` | 多语言词法语法高亮器 |
+| `lib/text/glob.cp`, `globset.cp` | `lib/globset` | 单模式与多模式 Glob NFA 编译器与匹配集 |
+| `lib/text/mermaid.cp` | `lib/mermaid` | 声明式 Mermaid 流程图/时序图文本构建与校验 |
+| `lib/text/dot.cp` | `lib/dot` | Graphviz DOT 图谱文本解析器与序列化器 |
+| `lib/text/ris.cp` | `lib/ris` | Research Information Systems `.ris` 文献引文文本解析器 |
+| `lib/text/gedcom.cp` | `lib/gedcom` | GEDCOM 5.5.1 / 7.0 族谱文本记录解析器 |
+| `lib/text/marc.cp` | `lib/marc` | ISO 2709 / MARC 21 图书馆书目记录解析器 |
+| `lib/text/mobi.cp` | `lib/mobi` | Amazon Mobipocket / Kindle `.mobi` 电子书文档解析器 |
+| `lib/text/yenc.cp` | `lib/yenc` | yEnc v1.3 二进制转文本编解码器与头尾解析 |
+| `lib/text/abc.cp` | `lib/abc` | ABC 音乐记谱法 v2.1 文本标记解析与事件词法器 |
+| `lib/text/smi.cp` | `lib/smi` | Daylight SMILES / OpenSMILES 线性化学分子记法解析器 |
+| `lib/text/lucene.cp` | `lib/lucene` | Apache Lucene CodecUtil 全文索引文件头解析器 |
+| `lib/text/igc.cp` | `lib/igc` | FAI IGC 纯文本飞行记录仪日志解析器 |

@@ -17,7 +17,7 @@ import {
     GlobSet,
     GlobSetBuilder,
     IgnoreMatcher,
-} from "cap:globset";
+} from "cap:text";
 
 test("cap:globset - GlobMatcher *, **, ?, char classes, escapes, and a/**/b") {
     const alloc = std.testing.allocator;
@@ -219,12 +219,12 @@ test("cap:globset - GlobError validation (UnclosedBracket, UnclosedBrace, EmptyP
 test("cap:globset - cap.globset dynamic mounting & std.testing.allocator zero-leak") {
     const alloc = std.testing.allocator;
 
-    let m = cap.globset.GlobMatcher.compile(alloc, "lib/*/index.cp", cap.globset.GlobOptions{}) catch unreachable;
+    let m = cap.text.GlobMatcher.compile(alloc, "lib/*/index.cp", cap.text.GlobOptions{}) catch unreachable;
     defer m.deinit();
     expect_eq(m.matches("lib/globset/index.cp"), true);
     expect_eq(m.matches("lib/a/b/index.cp"), false);
 
-    let builder = cap.globset.GlobSetBuilder.init(alloc);
+    let builder = cap.text.GlobSetBuilder.init(alloc);
     defer builder.deinit();
     builder.add("*.{cp,zig}") catch unreachable;
     let set = builder.build() catch unreachable;
@@ -232,7 +232,7 @@ test("cap:globset - cap.globset dynamic mounting & std.testing.allocator zero-le
     expect_eq(set.matches("glob.cp"), true);
     expect_eq(set.matches("main.zig"), true);
 
-    let ig = cap.globset.IgnoreMatcher.init(alloc);
+    let ig = cap.text.IgnoreMatcher.init(alloc);
     defer ig.deinit();
     ig.addRule("*.o") catch unreachable;
     expect_eq(ig.isIgnored("out/main.o", false), true);

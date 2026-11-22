@@ -21,7 +21,7 @@ import {
     parseLuceneIndexHeader,
     parseLuceneFooter,
     isLuceneFile,
-} from "cap:lucene";
+} from "cap:text";
 
 fn writeU32BE(dst: []u8, off: usize, val: u32): usize {
     dst[off + 0] = ((val >> 24) & 0xFF) as u8;

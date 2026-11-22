@@ -16,7 +16,7 @@ import {
     LocaleNegotiator,
     PluralRules,
     I18nCatalog,
-} from "cap:i18n";
+} from "cap:text";
 import cap from "cap";
 
 fn expectStrEq(alloc: std.mem.Allocator, actual: []u8, expected: string)! {
@@ -221,17 +221,17 @@ fn testLoadJsonAndPlurals()! {
 fn testCapI18nDynamicLazyMount()! {
     const alloc = std.heap.page_allocator;
 
-    const norm = cap.i18n.LocaleNegotiator.normalizeLocale(alloc, "zh_hans_cn")?;
+    const norm = cap.text.LocaleNegotiator.normalizeLocale(alloc, "zh_hans_cn")?;
     defer alloc.free(norm);
     expect_eq(std.mem.eql(u8, norm, "zh-Hans-CN"), true);
 
-    expect_eq(cap.i18n.PluralRules.select("fr", 0), cap.i18n.PluralCategory.One);
+    expect_eq(cap.text.PluralRules.select("fr", 0), cap.text.PluralCategory.One);
 
-    let cat = cap.i18n.I18nCatalog.init(alloc, "en")?;
+    let cat = cap.text.I18nCatalog.init(alloc, "en")?;
     defer cat.deinit();
     cat.add("en", "hello", "Hi {who}")?;
 
-    const p: [1]cap.i18n.I18nParam = [cap.i18n.I18nParam{ key: "who", value: "CP" }];
+    const p: [1]cap.text.I18nParam = [cap.text.I18nParam{ key: "who", value: "CP" }];
     const msg = cat.format(alloc, "en", "hello", &p)?;
     defer alloc.free(msg);
     expect_eq(std.mem.eql(u8, msg, "Hi CP"), true);

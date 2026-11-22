@@ -10,7 +10,7 @@ import {
     DotEdgeIter,
     validateDotBraces,
     formatDotEdge,
-} from "cap:dot";
+} from "cap:text";
 
 test("1. parseDotHeader handles strict, anonymous, quoted names, and all comment styles", () => {
     const h1 = parseDotHeader("// line comment\n# hash comment\n/* block */\nstrict digraph \"Dep Graph\" { a -> b; }") ?? unreachable;

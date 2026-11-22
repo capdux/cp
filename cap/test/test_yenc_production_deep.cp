@@ -16,7 +16,7 @@ import {
     parseYencBegin,
     parseYencPart,
     parseYencEnd,
-} from "cap:yenc";
+} from "cap:text";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

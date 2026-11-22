@@ -12,7 +12,7 @@ import {
     toUnicode,
     isValidDomain,
     normalizeDomain,
-} from "cap:idna";
+} from "cap:text";
 
 fn emptyMutSlice(): []u8 {
     return std.heap.page_allocator.alloc(u8, 0) catch unreachable;
@@ -265,28 +265,28 @@ fn runTest5(): !void {
     const alloc = std.testing.allocator;
 
     // Dynamic mount via `cap.idna`
-    const p_enc = cap.idna.punycodeEncode(alloc, "他们为什么不说中文")?;
+    const p_enc = cap.text.punycodeEncode(alloc, "他们为什么不说中文")?;
     defer alloc.free(p_enc);
     expect_eq(std.mem.eql(u8, p_enc, "ihqwcrb4cv8a8dqg056pqjye"), true);
 
-    const p_dec = cap.idna.punycodeDecode(alloc, p_enc)?;
+    const p_dec = cap.text.punycodeDecode(alloc, p_enc)?;
     defer alloc.free(p_dec);
     expect_eq(std.mem.eql(u8, p_dec, "他们为什么不说中文"), true);
 
-    const d_asc = cap.idna.toAscii(alloc, "München\u{3002}DE")?;
+    const d_asc = cap.text.toAscii(alloc, "München\u{3002}DE")?;
     defer alloc.free(d_asc);
     expect_eq(std.mem.eql(u8, d_asc, "xn--mnchen-3ya.de"), true);
 
-    const d_uni = cap.idna.toUnicode(alloc, d_asc)?;
+    const d_uni = cap.text.toUnicode(alloc, d_asc)?;
     defer alloc.free(d_uni);
     expect_eq(std.mem.eql(u8, d_uni, "münchen.de"), true);
 
-    const d_norm = cap.idna.normalizeDomain(alloc, "Sub\u{FF61}Example.ORG")?;
+    const d_norm = cap.text.normalizeDomain(alloc, "Sub\u{FF61}Example.ORG")?;
     defer alloc.free(d_norm);
     expect_eq(std.mem.eql(u8, d_norm, "sub.example.org"), true);
 
-    expect_eq(cap.idna.isValidDomain("xn--mnchen-3ya.de"), true);
-    expect_eq(cap.idna.isValidDomain("-invalid.de"), false);
+    expect_eq(cap.text.isValidDomain("xn--mnchen-3ya.de"), true);
+    expect_eq(cap.text.isValidDomain("-invalid.de"), false);
 }
 
 test("1. RFC 3492 official Punycode vectors (Arabic, Chinese Simplified/Traditional, Japanese, German)", () => {
