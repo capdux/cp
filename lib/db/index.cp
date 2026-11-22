@@ -281,3 +281,18 @@ export {
     WalFrameWriter,
     WalRecoveryScanner,
 } from "./wal_recovery.cp";
+
+// --- lsm_compactor ---
+export {
+    MAX_LSM_LEVELS,
+    MAX_LSM_SST_FILES,
+    MAX_SST_KEY_LEN,
+    MAX_COMPACTION_INPUTS,
+    compareKeyBytesLex,
+    LsmCompactionReason,
+    LsmCompactionConfig,
+    SstFileMeta,
+    CompactionPlan,
+    LsmLevelStats,
+    LsmCompactionPlanner,
+} from "./lsm_compactor.cp";

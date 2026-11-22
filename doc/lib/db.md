@@ -35,6 +35,7 @@
 | Schema 校验引擎 | `lib/db/schema.cp` / `lib/db/schema_validator.cp` | JSON Schema Draft 2020-12 & AI Tool Calling 运行时结构化校验器（`Schema` / `SchemaValidator`） | — |
 | 连接池生命周期引擎 | `lib/db/conn_pool.cp` | 零堆分配数据库连接池状态机（LIFO 温连接复用、空闲/最大寿命淘汰、不健康连续错误摘除与满载背压 `DbConnPool`） | — |
 | 崩溃恢复 WAL 引擎 | `lib/db/wal_recovery.cp` | 零堆分配 IEEE CRC32 防撕裂写 WAL 帧编解码与崩溃恢复引擎（`WalFrameWriter` / `WalRecoveryScanner`） | — |
+| LSM 分层压缩规划器 | `lib/db/lsm_compactor.cp` | 零堆分配 RocksDB/Pebble 级 LSM-Tree 分层压缩规划器与 SSTable 键区间重叠选择器（`LsmCompactionPlanner`） | — |
 
 ---
 
@@ -127,5 +128,41 @@ pub fn demoWalCrashRecovery() {
     * = report.valid_end_offset;   // 安全回退至第 2 帧末尾
     * = report.last_valid_lsn;     // 2
     * = report.torn_tail_bytes;    // 被截断的尾部撕裂字节数
+}
+```
+
+### 零堆分配 LSM-Tree 分层压缩规划器示例 (`lsm_compactor.cp`)
+
+面向 RocksDB / Pebble 级存储引擎的 100% 纯 CP 零堆分配分层压缩规划内核（固定 128 SSTable 内联槽位）：支持 L0 重叠簇展开 + L1 扇出、Ln->Ln+1 空间超限与零写放大 `trivial_move` 快路径、高墓碑率 `tombstone_reclaim` 回收及 `being_compacted` 并发冲突跳过。
+
+```cp
+import {
+    LsmCompactionConfig,
+    SstFileMeta,
+    LsmCompactionPlanner,
+} from "cap:db";
+
+pub fn demoLsmCompactionPlanner() {
+    const cfg = LsmCompactionConfig{
+        max_levels: 4,
+        l0_compaction_trigger: 2,
+        base_level_bytes: 1024,
+        level_multiplier: 10,
+        tombstone_trigger_bps: 3000,
+    };
+    let planner = LsmCompactionPlanner.init(cfg) ?? return;
+
+    // L1 空间超限（1500 > 1024），且 L2 零重叠 -> 触发零写放大 trivial_move 快路径
+    if (f1 := SstFileMeta.init(101, 1, 1500, "a", "f", 100)) {
+        * = planner.add_sst(f1);
+    }
+    if (f2 := SstFileMeta.init(201, 2, 500, "m", "z", 50)) {
+        * = planner.add_sst(f2);
+    }
+
+    const plan = planner.plan_next_compaction();
+    if (plan.valid && plan.is_trivial_move) {
+        * = planner.mark_compacting(plan.source_file_ids[0], true);
+    }
 }
 ```
