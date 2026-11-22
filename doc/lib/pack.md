@@ -476,4 +476,33 @@ pub fn demoSniffer() {
 | 归档容器 | `lib/pack/cpio.cp` | CPIO `newc` / `crc` / `odc` | 零堆分配 Unix CPIO 归档解析器 |
 | 归档容器 | `lib/pack/cab.cp` | Microsoft Cabinet (`.cab`) | 零堆分配 CAB 归档头、文件夹与文件条目解析器 |
 | 只读镜像 | `lib/pack/squashfs.cp` | Linux SquashFS v4.0 | 零堆分配 SquashFS v4.0 超级块与元数据解析器 |
+| 内容定义分块与去重 | `lib/pack/cdc_chunker.cp` | FastCDC (Gear Hash) | 零堆分配双掩码归一化 FastCDC 分块器与开放寻址去重索引（`FastCdcChunker` / `CdcDedupTable`） |
 | 参考归档（不导出） | `lib/pack/{zstd,brotli,tar,zip}_.cp` | Zstd / Brotli / Tar / ZIP（仅参考） | 与 `lib/pack/` 权威实现功能重叠，保留供对比分析，不在 `cap:pack` 重复导出 |
+
+### FastCDC 内容定义分块与去重 QuickStart 示例 (`cdc_chunker.cp`)
+
+```cp
+import {
+    FastCdcConfig,
+    CdcChunkSpan,
+    FastCdcChunker,
+    CdcDedupSlot,
+    CdcDedupTable,
+} from "cap:pack";
+
+pub fn demoFastCdcDedup(dataset: []const u8) {
+    const cfg = FastCdcConfig.init(256, 1024, 4096) ?? return;
+    let chunker = FastCdcChunker.init(cfg) ?? return;
+
+    let spans: [128]CdcChunkSpan = [CdcChunkSpan{}; 128];
+    const count = chunker.chunkAll(dataset, spans[0..]);
+
+    let slots: [256]CdcDedupSlot = [CdcDedupSlot{}; 256];
+    let dedup = CdcDedupTable.init(slots[0..]) ?? return;
+    let i: usize = 0;
+    while (i < count) : (i += 1) {
+        * = dedup.observe(spans[i]);
+    }
+    * = dedup.dedupRatio(); // [0.0, 1.0] 字节去重率
+}
+```

@@ -338,3 +338,13 @@ export {
     SquashfsFragmentEntry,
     parseFragmentEntry,
 } from "./squashfs.cp";
+
+// --- cdc_chunker ---
+export {
+    FastCdcConfig,
+    CdcChunkSpan,
+    FastCdcChunker,
+    CdcDedupSlot,
+    CdcDedupStats,
+    CdcDedupTable,
+} from "./cdc_chunker.cp";
