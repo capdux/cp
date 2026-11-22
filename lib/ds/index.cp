@@ -289,3 +289,16 @@ export {
     CountingBloomStats,
     CountingBloomFilter,
 } from "./countingBloom.cp";
+
+// --- spscRing (Zero-Alloc Power-of-Two Bitmask Batch SPSC Ring & Hysteresis Backpressure Queue) ---
+export {
+    SPSC_MIN_CAPACITY,
+    SPSC_MAX_CAPACITY,
+    SPSC_DEFAULT_HIGH_WATERMARK_PERMILLE,
+    SPSC_DEFAULT_LOW_WATERMARK_PERMILLE,
+    spscIsValidCapacity,
+    SpscWatermarkConfig,
+    SpscBackpressureState,
+    SpscRingStats,
+    SpscRingU64,
+} from "./spscRing.cp";

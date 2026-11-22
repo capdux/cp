@@ -382,6 +382,37 @@ pub fn demoCountingBloom() {
 
 ---
 
+### 零分配 2 的幂位掩码批量 SPSC 环形通道与高低水位背压队列 (`spscRing.cp`)
+
+面向高性能生产者-消费者管道、流式遥测滑窗与滞回背压限流的 100% 纯 CP 零动态堆分配 SPSC 环形队列：
+
+- **常量与数据模型**：
+  - `SPSC_MIN_CAPACITY = 4`、`SPSC_MAX_CAPACITY = 256`、`SPSC_DEFAULT_HIGH_WATERMARK_PERMILLE = 800`、`SPSC_DEFAULT_LOW_WATERMARK_PERMILLE = 250`
+  - `spscIsValidCapacity(cap): bool`（校验 `4..=256` 之间的 2 的幂）
+  - `SpscWatermarkConfig`（`high_permille`, `low_permille`）、`SpscBackpressureState`（`normal | throttled`）、`SpscRingStats`
+- **核心引擎 `SpscRingU64`**：
+  - `init(capacity): SpscRingU64?` / `initWithWatermarks(capacity, wm): SpscRingU64?`：采用单调递增 `u64` 游标与 `& mask` 零取模索引，满/空状态精确区分且不浪费 1 槽。
+  - 单条与随机访问：`tryPush(*_, item)`、`tryPop(*_)`、`peek()`、`peekAt(offset)`、`pushOverwrite(*_, item): u64?`（满时覆写最旧元素并返回被淘汰值）。
+  - 批量零拷贝：`pushBatch(*_, items)`、`popBatch(*_, out_items)`、`skip(*_, count)`、`clear(*_)`。
+  - 滞回高低水位背压：`fillPermille()`、`isAboveHighWatermark()`、`isBelowLowWatermark()`、`isBackpressured()`、`stats()`。
+
+```cp
+import { SpscRingU64 } from "cap:ds";
+
+pub fn demoSpscRing() {
+    let ring = SpscRingU64.init(8) ?? return;
+    const batch: [4]u64 = [10, 20, 30, 40];
+    * = ring.pushBatch(batch[0..]);
+
+    let out: [4]u64 = [0; 4];
+    let out_s: []u64 = out[0..];
+    const popped = ring.popBatch(out_s);
+    * = popped; // 4 ([10, 20, 30, 40])
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [aho_corasick.md](ds/aho_corasick.md)
