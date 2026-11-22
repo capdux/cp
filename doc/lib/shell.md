@@ -164,6 +164,21 @@ pub fn demoSeq(allocator: std.mem.Allocator): ! {
 }
 ```
 
+### POSIX `exit` 退出码解析与 `export` 环境变量声明编解码（`exit_export.cp`，吸收自 `/data/dev/bun/src/shell/builtin/{exit,export}.cp`）
+
+- 导出：`SHELL_EXIT_SUCCESS` (`0`)、`SHELL_EXIT_GENERAL_ERROR` (`1`)、`SHELL_EXIT_MISUSE` (`2`)、`SHELL_EXIT_NOT_EXECUTABLE` (`126`)、`SHELL_EXIT_NOT_FOUND` (`127`)、`SHELL_EXIT_SIGNAL_BASE` (`128`)、`ShellExitExportError`、`ExportEntry`、`isValidShellIdentifier`、`parseExitCodeStr`（逐位模 256 解析，支持任意大十进制与负整数永不溢出）、`parseExitArgs`、`exitCodeFromSignal`、`isSignalExitCode`、`parseExportArg`、`formatExportLine`。
+
+```typescript
+import { parseExitCodeStr, parseExportArg, formatExportLine } from "cap:shell";
+
+const code = parseExitCodeStr("257")?; // 1 (257 mod 256)
+const entry = parseExportArg("APP_ENV=production")?; // name="APP_ENV", value="production", has_value=true
+let buf: [64]u8 = [0; 64];
+const line = formatExportLine(buf[0..], entry.name, entry.value)?; // "APP_ENV=production\n"
+* = code;
+* = line;
+```
+
 
 ---
 
