@@ -360,3 +360,23 @@ const ok = cb.complete(10250)?; // true, cb.didPass() == true, cb.elapsedMs() ==
 const settled = cb.finalize();  // true
 * = ok; * = settled;
 ```
+
+11. **零分配 Mock / Spy 调用记录与 Jest/Bun 断言器（`lib/test_runner/mockSpy.cp`，吸收自 `/data/dev/bun/src/test_runner/expect/toHaveBeenCalledTimes.cp` & `/data/dev/bun/docs/test/mocks.mdx`）**：
+    - **导出符号**：`MOCK_SPY_MAX_CALLS` (`64`)、`MockSpyError`、`MockCallOutcome`（`Returned`/`Threw`）、`MockCallRecord`、`MockSpy`（`init`/`recordReturn`/`recordThrow`/`mockClear`/`mockReset`/`mockRestore`/`callCount`/`getCall`/`toHaveBeenCalled`/`toHaveBeenCalledOnce`/`toHaveBeenCalledTimes`/`toHaveBeenCalledWith`/`toHaveBeenLastCalledWith`/`toHaveBeenNthCalledWith`/`toHaveReturned`/`toHaveReturnedTimes`/`toHaveReturnedWith`/`toHaveLastReturnedWith`/`toHaveNthReturnedWith`）；
+    - **Bun `mocks.mdx` 生命周期清理最佳实践**：
+      - `mockClear()`：仅清空调用历史与计数，保留自定义 mock 实现（适合同一套 mock 跨多个测试用例复用）；
+      - `mockReset()`：清空调用历史并移除自定义实现；
+      - `mockRestore()`：清空历史、移除自定义实现并恢复原始被 spy 的目标函数（推荐在 `afterEach` 中调用以避免跨测试状态泄漏）；
+      - `toHaveBeenNthCalledWith` / `toHaveNthReturnedWith` 严格遵循 Jest/Bun 的 **1-based** 序号约定（第 1 次调用传 `1`，传入 `0` 返回 `false`），且抛出异常的调用不计入 `toHaveReturnedTimes`。
+
+```cp
+import { MockSpy } from "cap:test_runner";
+
+let spy = MockSpy.init(true);
+* = spy.recordReturn(1, "getUser", 200, "alice")?;
+* = spy.recordReturn(2, "saveUser", 201, "ok")?;
+assert(spy.toHaveBeenCalledTimes(2));
+assert(spy.toHaveBeenNthCalledWith(1, 1, "getUser"));
+assert(spy.toHaveLastReturnedWith(201, "ok"));
+spy.mockRestore();
+```

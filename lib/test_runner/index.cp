@@ -183,3 +183,11 @@ export {
     DoneCallbackState,
     DoneCallback,
 } from "./doneCallback";
+
+export {
+    MOCK_SPY_MAX_CALLS,
+    MockSpyError,
+    MockCallOutcome,
+    MockCallRecord,
+    MockSpy,
+} from "./mockSpy";
