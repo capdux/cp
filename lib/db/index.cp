@@ -268,3 +268,16 @@ export {
     DbPoolStats,
     DbConnPool,
 } from "./conn_pool.cp";
+
+// --- wal_recovery ---
+export {
+    WAL_FRAME_MAGIC,
+    WAL_FRAME_HEADER_SIZE,
+    walCrc32Ieee,
+    WalRecordKind,
+    WalFrameView,
+    WalRecoveryStatus,
+    WalRecoveryReport,
+    WalFrameWriter,
+    WalRecoveryScanner,
+} from "./wal_recovery.cp";

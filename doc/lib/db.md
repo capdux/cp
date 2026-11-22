@@ -34,6 +34,7 @@
 | SQL 查询构建器 | `lib/db/query_types.cp` / `lib/db/query_builder.cp` | 参数化 SQL 查询构建器（PostgreSQL `$1..$N`、MySQL/SQLite `?` 防注入 `SelectBuilder`/`InsertBuilder`/`UpdateBuilder`/`DeleteBuilder`） | — |
 | Schema 校验引擎 | `lib/db/schema.cp` / `lib/db/schema_validator.cp` | JSON Schema Draft 2020-12 & AI Tool Calling 运行时结构化校验器（`Schema` / `SchemaValidator`） | — |
 | 连接池生命周期引擎 | `lib/db/conn_pool.cp` | 零堆分配数据库连接池状态机（LIFO 温连接复用、空闲/最大寿命淘汰、不健康连续错误摘除与满载背压 `DbConnPool`） | — |
+| 崩溃恢复 WAL 引擎 | `lib/db/wal_recovery.cp` | 零堆分配 IEEE CRC32 防撕裂写 WAL 帧编解码与崩溃恢复引擎（`WalFrameWriter` / `WalRecoveryScanner`） | — |
 
 ---
 
@@ -96,5 +97,35 @@ pub fn demoDbConnPool() {
     * = pool.release(acq.slot_index, true, 1200); // 健康归还以供下次 LIFO 复用
     * = pool.evictExpired(90000);                 // 批量清理过期空闲连接
     * = pool.stats();
+}
+```
+
+### 零堆分配 CRC32 防撕裂写 WAL 崩溃恢复示例 (`wal_recovery.cp`)
+
+```cp
+import {
+    WalRecordKind,
+    WalFrameView,
+    WalFrameWriter,
+    WalRecoveryScanner,
+} from "cap:db";
+
+pub fn demoWalCrashRecovery() {
+    let raw_log: [256]u8 = [0; 256];
+    let writer = WalFrameWriter.init(raw_log[0..]);
+
+    * = writer.appendFrame(1, WalRecordKind.Put, "k1=v1");
+    * = writer.appendFrame(2, WalRecordKind.Commit, "");
+    * = writer.appendFrame(3, WalRecordKind.Checkpoint, "snap_01");
+
+    // 模拟断电时尾部仅写入半帧：截断最后 4 字节后扫描恢复
+    const full = writer.writtenBytes();
+    const torn = full[0 .. full.len - 4];
+
+    let frames: [8]WalFrameView = [WalFrameView{}; 8];
+    const report = WalRecoveryScanner.scanAndRecover(torn, frames[0..]);
+    * = report.valid_end_offset;   // 安全回退至第 2 帧末尾
+    * = report.last_valid_lsn;     // 2
+    * = report.torn_tail_bytes;    // 被截断的尾部撕裂字节数
 }
 ```
