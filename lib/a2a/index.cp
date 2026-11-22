@@ -136,3 +136,15 @@ export {
     A2aQuorumSession,
     aggregateNumericEstimates,
 } from "./quorum.cp";
+
+export {
+    TASK_GRAPH_MAX_NODES,
+    TASK_GRAPH_MAX_EDGES,
+    TaskGraphNodeState,
+    TaskGraphStatus,
+    TaskGraphOpStatus,
+    TaskGraphNode,
+    TaskGraphEdge,
+    TaskGraphSummary,
+    A2aTaskGraph,
+} from "./taskGraph.cp";

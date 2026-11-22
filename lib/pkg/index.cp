@@ -481,3 +481,18 @@ export {
     HoistNode,
     HoistTreeBuilder,
 } from "./hoistTree.cp";
+
+export {
+    PKG_CLI_MAX_POSITIONALS,
+    PKG_CLI_MAX_FILTERS,
+    PKG_CLI_MAX_PLATFORMS,
+    PKG_CLI_DEFAULT_NETWORK_CONCURRENCY,
+    PkgCliArgsError,
+    PkgCliSubcommand,
+    PkgCliLogLevel,
+    PkgCliLinker,
+    PkgCliBackend,
+    PkgCliDepTarget,
+    PkgCliParsedArgs,
+    parsePkgCliArgs,
+} from "./cliArgs.cp";

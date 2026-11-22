@@ -900,3 +900,21 @@ const n = b.formatPackageInstallPath(1, "lodash", buf[0..])?;
 * = trees;
 * = n;
 ```
+
+### 包管理器 CLI 参数解析与子命令规范校验（`lib/pkg/cliArgs.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/PackageManager/CommandLineArguments.cp` 与 `/data/dev/bun/docs/pm/cli/install.mdx`；
+- 导出：`PKG_CLI_MAX_POSITIONALS` (`32`)、`PKG_CLI_MAX_FILTERS` (`16`)、`PKG_CLI_MAX_PLATFORMS` (`8`)、`PKG_CLI_DEFAULT_NETWORK_CONCURRENCY` (`48`)、`PkgCliArgsError`、`PkgCliSubcommand`（`Install`/`Add`/`Remove`/`Update`/`Pm`/`Link`/`Audit`/`Patch` + `parse`/`asStr`）、`PkgCliLogLevel`、`PkgCliLinker`、`PkgCliBackend`、`PkgCliDepTarget`、`PkgCliParsedArgs`（`positionalSlice` / `filterSlice` / `cpuSlice` / `osSlice` / `shouldPersistChanges` / `canModifyLockfile`）、`parsePkgCliArgs`；
+- **CLI 标志行为与 CI/安全最佳实践（参考 `/data/dev/bun/docs/pm/cli/install.mdx`）**：
+  - **CI 可复现构建**：在 CI 环境始终传递 `--frozen-lockfile`（禁止修改 `bun.lock`，对应 `canModifyLockfile() == false`）；配合 `--production`/`-p`/`-P` 或 `--omit=dev` 排除开发依赖，`parsePkgCliArgs()` 自动将 `--production` 归一化为 `omit_dev = true`；
+  - **生命周期脚本与供应链防护**：默认不执行第三方依赖的 `postinstall` 脚本，仅当显式传入 `--trust`（写入 `trustedDependencies`）才放行；可通过 `--minimum-release-age <seconds>` 拒绝发布时间过短的新版本包，降低供应链投毒风险；
+  - **并发与标志校验**：`--network-concurrency` 默认 48、`--concurrent-scripts` 默认 2× CPU 核数（均拒绝 `0`）；支持 `--flag=value`、短选项簇（如 `-dE`、`-pf`）与 `--` 位置参数终止符，自动拦截跨子命令非法标志（如 `remove --latest`）与互斥标志（如 `--silent` + `--verbose` 或 `--dev` + `--optional`）。
+
+```cp
+import { PkgCliSubcommand, parsePkgCliArgs } from "cap:pkg";
+
+const argv: [5][]const u8 = ["--frozen-lockfile", "--linker=isolated", "--omit=dev", "--minimum-release-age=86400", "--network-concurrency=32"];
+const parsed = parsePkgCliArgs(PkgCliSubcommand.Install, argv[0..])?;
+// parsed.canModifyLockfile() == false, parsed.omit_dev == true, parsed.network_concurrency == 32
+* = parsed;
+```

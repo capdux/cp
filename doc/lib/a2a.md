@@ -381,3 +381,43 @@ pub fn demoA2aConsensusQuorum() {
     }
 }
 ```
+
+
+---
+
+### 4.10 零堆分配 A2A 多智能体子任务 DAG 依赖调度与失败传播引擎 (`taskGraph.cp`)
+
+面向多智能体协同任务编排的 100% 纯 CP 零动态堆分配有向无环图（DAG）调度器、并发波次分派与失败级联/取消引擎：
+
+- **容量常量与枚举**：
+  - `TASK_GRAPH_MAX_NODES = 64`、`TASK_GRAPH_MAX_EDGES = 128`
+  - `TaskGraphNodeState`（`pending | ready | running | succeeded | failed | skipped_dep_failed | cancelled`）
+  - `TaskGraphStatus`（`in_progress | completed_ok | completed_partial | failed`）
+  - `TaskGraphOpStatus`（`ok | duplicate_task_id | task_not_found | capacity_full | self_loop | cycle_detected | duplicate_edge | invalid_transition`）
+- **数据模型与引擎 `A2aTaskGraph`**：
+  - `addTask(*_, task_id, assigned_agent_id, priority, allow_partial_fail)` / `addDependency(*_, dep_task_id, target_task_id)`：插入边时内置纯迭代 BFS 环路检测，严拒自环与多跳环。
+  - `collectReadyTasks(max_concurrency, out_task_ids: *[]u64)`：扣除当前在途 `running` 槽位后按 `(priority 降序, task_id 升序)` 返回就绪任务。
+  - `markRunning` / `markSucceeded` / `markFailed`：任务失败时自动纯迭代级联将未设置 `allow_partial_fail` 的下游全部标记为 `skipped_dep_failed`；若下游设置 `allow_partial_fail = true`，待其所有前置终结后仍可推进为 `ready` 执行降级聚合。
+  - `cancelSubtree(*_, root_task_id)` / `getTask(task_id)` / `summary()` / `clear(*_)`。
+
+```cp
+import {
+    TaskGraphStatus,
+    A2aTaskGraph,
+} from "cap:a2a";
+
+pub fn demoA2aTaskGraph() {
+    let dag = A2aTaskGraph.init();
+    * = dag.addTask(1, 101, 10, false);
+    * = dag.addTask(2, 102, 20, false);
+    * = dag.addTask(3, 103, 5, false);
+    * = dag.addDependency(1, 3);
+    * = dag.addDependency(2, 3);
+
+    let wave: [4]u64 = [0; 4];
+    let wave_s: []u64 = wave[0..];
+    const n = dag.collectReadyTasks(2, *wave_s); // [2, 1] 按优先级降序
+    * = n;
+    * = dag.summary().overall == TaskGraphStatus.in_progress;
+}
+```
