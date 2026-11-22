@@ -1,6 +1,6 @@
 # `cap:pe_format` — Windows PE64 可执行文件头与节表解析/校验/构建库
 
-> 溯源：从 `/data/dev/bun/src/exe_format/pe.cp` 吸收并规范化为纯 CP 标准库模块。
+> 参考来源：`/data/dev/bun/src/exe_format/pe.cp` | 吸收日期：2026-11-22
 
 `cap:pe_format` 提供完整的 Windows PE32+ (PE64) 二进制镜像解析、结构校验、节表查询/注入、Authenticode 安全目录剥离以及标准 Windows PE 校验和计算能力，底层缓冲采用 `~init()` 确定性 RAII 生命周期管理。
 
@@ -90,3 +90,14 @@ fn embedPayload(allocator: std.mem.Allocator)! {
     * = raw;
 } // 离开作用域自动触发 pe.~init() 释放内存
 ```
+
+---
+
+## 上游 Bun PE64 行为契约与安全边界注意事项
+
+1. **单文件可执行体节注入与 Authenticode 剥离（`addSection` / `StripMode`）**：
+   - 源自 Bun `bun build --compile` Windows 单文件打包管线：向已签名 PE64 镜像注入自定义数据节（如 `.cap`）前，需按 `StripMode` 清理既有 Authenticode 安全目录并重新计算标准校验和（`computePEChecksum`），避免 Windows 加载器因签名/校验和失效拒绝执行。
+2. **文件对齐与虚拟地址对齐校验（`validate`）**：
+   - `FileAlignment` 与 `SectionAlignment` 必须为 2 的幂（`isPow2`），`addSection` 自动按 `alignUpU32` 对齐原始偏移与虚拟大小，防止镜像加载偏移错位。
+3. **RAII 确定性释放（`~init()`）**：
+   - `PEFile` 持有内部镜像缓冲区，离开作用域自动触发 `~init()` 释放内存，无需手动调用释放函数。

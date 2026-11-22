@@ -1,5 +1,7 @@
 # `cap:qpack` — 零堆分配 HTTP/3 QPACK 静态表与 Field Section 编解码库
 
+> 参考来源：`/data/dev/bun/src/uws_sys/quic/Header.cp`, `/data/dev/bun/src/http/h3_client/encode.cp` | 吸收日期：2026-11-22
+
 `cap:qpack` 吸收自 Bun 上游 HTTP/3 QUIC 头部子系统（`src/uws_sys/quic/Header.cp` 与 `src/http/h3_client/encode.cp`），剥离了底层 uWS/QUIC 宿主绑定，提供 100% 纯 CP、零堆分配（zero-alloc）的 RFC 9204 QPACK 静态表索引分类、变长前缀整数编解码、HTTP/3 出站请求伪头部规范编排以及静态 QPACK Field Section 零拷贝编解码。
 
 ## 核心特性
@@ -72,3 +74,14 @@ fn qpackDemo() {
     * = dcnt;
 }
 ```
+
+---
+
+## 上游 Bun HTTP/3 QPACK 行为契约与安全边界
+
+1. **伪头部槽位顺序与 `Host` 合并（`buildHttp3RequestHeaders`）**：
+   - RFC 9114 要求所有伪头部（`:method`、`:scheme`、`:authority`、`:path`）必须位于普通头部之前；当调用方传入 `Host` 头时自动覆盖 `:authority` 并剔除冗余 `Host`，空路径自动回落为 `"/"`。
+2. **零动态表无队头阻塞（`RIC = 0`）**：
+   - `encodeFieldSection` / `decodeFieldSection` 采用纯静态表 + 字面量编码（`Required Insert Count = 0`），彻底规避 QUIC 多流乱序到达时的 QPACK 动态表队头阻塞；敏感头自动置 `N = 1` 禁止中间节点索引。
+3. **前缀整数溢出与截断防护（`decodePrefixedInt`）**：
+   - 严格校验 `prefix_bits ∈ [1, 8]` 与无符号位移溢出边界，防止畸形 QUIC 头部帧引发无限续位或整数回绕。

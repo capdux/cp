@@ -1,5 +1,7 @@
 # `cap:lockfree_queue` — 无锁并发环形队列、侵入式无界队列与有界通道
 
+> 参考来源：`/data/dev/bun/src/threading/unbounded_queue.cp` | 吸收日期：2026-11-22
+
 ## 1. 概述
 
 `cap:lockfree_queue`（同时支持 `cap.lockfree_queue` 动态挂载）提供工业级无锁并发队列与有界阻塞通道原语：
@@ -65,3 +67,14 @@ while (node := it.next()) {
     // 依次消费 n1, n2
 }
 ```
+
+---
+
+## 5. 上游 Bun 无锁队列行为契约与并发边界
+
+1. **SPSC vs MPMC 严格线程模型**：
+   - `SpscQueue(T, CAP)` 仅在**恰好 1 个生产者线程 + 1 个消费者线程**场景下 Wait-Free 安全；若存在多个生产者或消费者必须使用 `MpmcQueue(T, CAP)`（Vyukov 序列号防 ABA）或 `BoundedChannel(T)`。
+2. **2 的幂容量编译期约束**：
+   - `SpscQueue` 与 `MpmcQueue` 的编译期容量 `CAP` 必须为 2 的幂（`MpmcQueue` 要求 `CAP >= 2`），以通过位掩码无分支寻址。
+3. **侵入式 `UnboundedQueue` 节点生命周期与防伪共享**：
+   - 节点在入队期间不得被释放或重复入队同一队列；`CACHE_LINE_LENGTH` 与 `QUEUE_PADDING_LENGTH` 隔离头尾指针消除多核伪共享，高吞吐批处理优先使用 `popBatch()` 一次性原子摘除整链。

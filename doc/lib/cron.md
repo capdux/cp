@@ -1,5 +1,7 @@
 # CP 标准库：5/6 字段 Cron 表达式解析与触发时间计算手册 (`cap:cron`)
 
+> 参考来源：`/data/dev/bun/src/bun_core/time.cp`, POSIX / Vixie Cron 规范 | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:cron` 是 CP 语言官方内置的纯 CP **5/6 字段 Cron 表达式解析与 UTC 触发时间计算库**，**零 C 依赖、零 `std.posix`、零 `@import("bun")`**。内部采用位掩码（bitmask）紧凑表示与 Howard Hinnant O(1) 纯 UTC 日历换算，不依赖系统时钟或 libc，支持 `import { ... } from "cap:cron"` 与 `import cap from "cap"; cap.cron.*` 动态挂载调用。
@@ -66,3 +68,14 @@ pub fn demoCron(): ! {
 ## Vixie Cron 快捷预设子模块（`preset.cp`，收敛自 `cron_preset`）
 
 - `CronPreset`、`parseCronPreset`、`presetToCron5`、`normalizeCron5`。
+
+---
+
+## 上游行为契约与调度边界注意事项
+
+1. **28 年最大搜索窗口防死循环（`NoMatchingTime`）**：
+   - 对公历中永不成立的日期组合（如 `0 0 31 2 *` 2 月 31 日），`nextAfter` / `prevBefore` 在覆盖完整 28 年闰年周期后确定性返回 `CronError.NoMatchingTime`，绝不陷入无限循环。
+2. **5 字段 vs 6 字段（含秒）显式区分**：
+   - `CronSchedule.has_seconds` 标记表达式是否含秒字段（5 字段默认仅在 `second == 0` 触发）；`normalizeCron5` 可将 `@daily` / `@hourly` / `@weekly` 等 Vixie 宏统一规范化为标准 5 字段表达式。
+3. **纯 UTC 计算避免夏令时歧义**：
+   - 所有触发时间均基于纯 UTC `UtcDateTime` 与 `toEpochSec` / `decomposeUtc` 计算，不存在夏令时（DST）跳小时或重复触发问题。

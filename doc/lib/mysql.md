@@ -1,5 +1,7 @@
 # `cap:mysql` — MySQL 协议与 Wire 编解码标准库
 
+> 参考来源：`/data/dev/bun/src/sql/mysql/`, `/data/dev/bun/docs/runtime/sql.mdx` | 吸收日期：2026-11-22
+
 `cap:mysql` 统一收敛了 MySQL 客户端/服务端协议栈的全部纯 CP 能力，涵盖认证加盐、能力位与状态标志、控制报文解析、字段类型与列定义、握手响应、数据包帧读写以及文本结果集编解码。
 
 ## 目录结构
@@ -48,3 +50,14 @@ fn demo() {
     * = method;
 }
 ```
+
+---
+
+## 上游 Bun MySQL 协议契约与安全边界
+
+1. **MySQL 8.0 `caching_sha2_password` 与 `AuthSwitchRequest` 握手**：
+   - `HandshakeV10` 返回服务端 20 字节认证盐（`MIN_SALT_LEN`）与默认插件名；若服务端要求切换插件则返回 `AuthSwitchRequest`，客户端需按目标插件选用 `scrambleCachingSha2Password`（SHA-256）或 `scrambleNativePassword`（SHA-1），明文传输仅应在 `SSLRequest` TLS 升级完成后进行。
+2. **16 MiB 单包上限与序号回绕（`MAX_PACKET_PAYLOAD`）**：
+   - MySQL 4 字节包头采用 24-bit 小端长度（最大 `0xFFFFFF = 16 MiB - 1`）+ 8-bit 递增序号 `seq_id`；单条载荷超过 `MAX_PACKET_PAYLOAD` 时须分多包发送并以不足 16 MiB 的末包收尾。
+3. **长度编码整数与 NULL 哨兵（`decodeLenEncInt`）**：
+   - 在文本结果集 `TextResultRow` 中，`0xFB` 表示 SQL `NULL`（区别于空字符串 `0x00`），`0xFC`/`0xFD`/`0xFE` 分别引导 2/3/8 字节无符号长度。

@@ -1,5 +1,7 @@
 # `cap:h2stream` — 零堆分配 HTTP/2 流状态机与流控窗口库
 
+> 参考来源：`/data/dev/bun/src/http/h2_client/Stream.cp` | 吸收日期：2026-11-22
+
 `cap:h2stream` 吸收自 Bun 上游 HTTP/2 多路复用流实现（`src/http/h2_client/Stream.cp`），剥离了会话指针与堆缓冲耦合，提供 100% 纯 CP、零堆分配（zero-alloc）的 RFC 9113 §5.1 流生命周期状态机、§6.9 双向流量控制窗口管理、§6.4 幂等 `RST_STREAM` 帧编码以及背压阈值触发的 `WINDOW_UPDATE` 自动补窗器。
 
 ## 核心特性
@@ -63,3 +65,14 @@ fn h2StreamDemo() {
     * = rst_len;
 }
 ```
+
+---
+
+## 上游 Bun HTTP/2 流状态机契约与边界注意事项
+
+1. **流窗口溢出与合法负窗口（RFC 9113 §6.9.2）**：
+   - `applySendWindowUpdate` 严格拦截 `increment == 0` 与导致窗口超过 `H2_MAX_WINDOW_SIZE`（`2^31 - 1`）的增量（应回送 `FlowControlError`）；而对端通过 `SETTINGS_INITIAL_WINDOW_SIZE` 调小初始窗口时，`applySettingsInitialWindowDelta` 合法允许当前发送窗口暂时变为负值并暂停发送直至收到新的 `WINDOW_UPDATE`。
+2. **幂等 `RST_STREAM` 防重复发帧**：
+   - `H2Stream.reset` 在流已进入 `Closed` 状态后再次调用返回空/0 字节，防止错误回调链重复发送多个 `RST_STREAM` 污染连接。
+3. **1xx 信息响应与流状态保持**：
+   - 收到 `100 Continue` 等 1xx 头部帧时解除等待发送阻塞但不结束流，流保持 `Open` 或 `HalfClosedLocal` 直至最终响应与 `END_STREAM` 到达。

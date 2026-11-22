@@ -1,5 +1,7 @@
 # CP 标准库：平台信息与内核特性探测 (`cap:platform`)
 
+> 参考来源：`/data/dev/bun/src/platform/linux.cp`, `/data/dev/bun/src/platform/darwin.zig` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:platform` 是 CP 语言官方内置的跨平台操作系统探测、内核版本解析与系统能力检测标准库，吸收自 Bun `src/platform/`（`linux.zig`、`darwin.zig`）。该库向事件循环、文件 I/O 引擎（如 `io_uring` / `copy_file_range` / `statx` 探测）、进程管理工具链提供零堆分配的系统元信息与内核特性判定接口。
@@ -89,3 +91,14 @@ pub fn demoPlatform(): ! {
     }
 }
 ```
+
+---
+
+## 上游 Bun `platform` 行为契约与内核探测边界
+
+1. **Linux 内核版本门槛探测（`supportsIoUring` / `supportsStatx`）**：
+   - 继承自 Bun `src/platform/linux.cp`：在启用 `io_uring`（Linux >= 5.1，生产推荐 >= 5.6）或 `statx`（Linux >= 4.11）等现代内核系统调用前，先通过 `PlatformInfo.kernelVersion()` 与特性探针检测，老内核或容器 seccomp 受限环境自动回退至标准 `epoll`/`stat`。
+2. **发行版后缀兼容解析（`KernelVersion.parse`）**：
+   - 忽略 `-generic`、`-lts`、`-azure`、`+deb12` 等发行版自定义后缀，可靠提取 `(major, minor, patch)` 三元组进行 `isAtLeast` 版本门槛比对。
+3. **零堆路径缓冲与容器环境注意**：
+   - `executablePath(&exe_buf)`（读取 `/proc/self/exe`）与 `hostname(&host_buf)` 全程零堆分配；若缓冲区过小返回错误而不截断返回残缺路径。
