@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/threading/work_pool.cp | Synced: 2026-11-21T11:59:41Z
+// Source: Absorbed from /data/dev/bun/src/threading/work_pool.cp | Synced: 2026-11-22T07:23:10Z
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/pool.cp
 // Upstream Sync: Refer to bun/src/threading/pool.zig for future upstream updates.

@@ -108,3 +108,18 @@ export {
     buildOpenEditorCommand,
     normalizeEditorTempFilename,
 } from "./open.cp";
+
+export {
+    COMPLETION_MAX_CANDIDATES,
+    COMPLETION_PATH_BUF_CAP,
+    CompletionInstallError,
+    CompletionInstallEnv,
+    CompletionCandidateList,
+    completionFilename,
+    collectCompletionDirs,
+    resolveZshrcPath,
+    zshrcNeedsCompletionHint,
+    formatZshrcSourceLine,
+    collectAliasSymlinkTargets,
+    isWindowsInstallerBinDir,
+} from "./install_completions.cp";

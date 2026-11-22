@@ -204,3 +204,32 @@ const cmd = buildOpenEditorCommand(
 // cmd.args[0..cmd.argc] => ["code", "--goto", "/src/main.cp:42:7"]
 * = cmd;
 ```
+
+7. **Shell 补全安装路径探测与 Zsh 启动脚本提示（`lib/cli/install_completions.cp`，吸收自 `/data/dev/bun/src/cli/install_completions_command.cp`）**：
+   - **三类 Shell 补全文件名**：Fish → `<tool>.fish`，Zsh → `_<tool>`，Bash → `<tool>.completion.bash`；
+   - **探测优先级链**：Fish 优先 `$XDG_CONFIG_HOME` → `$XDG_DATA_HOME` → `$HOME/.config/fish/completions` → macOS Homebrew（ARM64 `/opt/homebrew` / x64 `/usr/local`）→ `/etc/fish/completions`；Zsh 优先解析空格分隔的 `$fpath` 再回退 `$XDG_DATA_HOME/zsh-completions` / `$HOME/.oh-my-zsh/completions`；Bash 优先 `$XDG_DATA_HOME` / `$XDG_CONFIG_HOME` / `$HOME/.oh-my-bash/custom/completions` / `$HOME/.bash_completion.d`；
+   - **Zsh `$ZDOTDIR` 兼容**：`resolveZshrcPath` 优先定位 `$ZDOTDIR/.zshrc` 再回退 `$HOME/.zshrc`，配合 `zshrcNeedsCompletionHint` 与 `formatZshrcSourceLine` 避免重复追加 `source` 行。
+
+### Shell 补全目录规划示例（`lib/cli/install_completions.cp`）
+
+```cp
+import {
+    CompletionShell,
+    CompletionInstallEnv,
+    collectCompletionDirs,
+    completionFilename,
+} from "cap:cli";
+
+const env = CompletionInstallEnv{
+    home: "/Users/dev",
+    fpath: "/Users/dev/.zfunc /usr/local/share/zsh/site-functions",
+    is_macos: true,
+    is_arm64: true,
+};
+const dirs = collectCompletionDirs(CompletionShell.zsh, env)?;
+let fname: [64]u8 = [0; 64];
+const fn_len = completionFilename(CompletionShell.zsh, "cap", fname[0..])?;
+// dirs.at(0) == "/Users/dev/.zfunc", fname[0..fn_len] == "_cap"
+* = dirs;
+* = fn_len;
+```

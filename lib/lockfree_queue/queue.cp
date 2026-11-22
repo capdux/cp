@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/threading/unbounded_queue.cp | Synced: 2026-11-21T12:45:24Z
+// Source: Absorbed from /data/dev/bun/src/threading/unbounded_queue.cp | Synced: 2026-11-22T07:26:20Z
 
 /// 当前目标架构缓存行大小（字节）
 pub const CACHE_LINE_LENGTH: usize = std.atomic.cache_line;
