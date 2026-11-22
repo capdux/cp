@@ -72,6 +72,23 @@ const n = msg.encodeFrame(frame[0..])?;
 const decoded = PgNegotiateProtocolVersion.decodeFrame(frame[0..n])?;
 ```
 
+### `ErrorResponse` / `NoticeResponse` 18 字段诊断消息编解码（`field_message.cp`）
+
+> 吸收自 `/data/dev/bun/src/sql/postgres/protocol/FieldMessage.cp`，零堆分配完整支持 PostgreSQL v3.0 协议全部 18 种诊断字段（`S`/`V`/`C`/`M`/`D`/`H`/`P`/`p`/`q`/`W`/`s`/`t`/`c`/`d`/`n`/`F`/`L`/`R`）、SQLSTATE 分类提取与可重试事务冲突判定（`40001` / `40P01`）。
+
+- 核心导出：`PG_MAX_DIAGNOSTIC_FIELDS` (`24`)、`PgFieldMessageError`、`PgDiagnosticFieldType`、`parseDiagnosticFieldType`、`diagnosticFieldName`、`PgDiagnosticField`、`PgDiagnosticFields`（`init` / `add` / `count` / `at` / `get` / `severity` / `code` / `message` / `detail` / `hint` / `schema` / `table` / `column` / `constraint` / `sqlstateClass` / `isRetryable` / `encodedLen` / `encodePayload` / `decodePayload` / `decodePayloadStrict` / `eql`）。
+
+```typescript
+import { PgDiagnosticFields, PgDiagnosticFieldType } from "cap:pgwire";
+
+let fields = PgDiagnosticFields.init();
+* = fields.add(PgDiagnosticFieldType.Severity, "ERROR")?;
+* = fields.add(PgDiagnosticFieldType.Code, "23505")?;
+* = fields.add(PgDiagnosticFieldType.Message, "duplicate key value violates unique constraint")?;
+* = fields.add(PgDiagnosticFieldType.Constraint, "users_email_key")?;
+// fields.sqlstateClass() == "23", fields.constraint() == "users_email_key"
+```
+
 ---
 
 ## 4. 示例

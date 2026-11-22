@@ -48,3 +48,13 @@ export {
     PgNegotiateError,
     PgNegotiateProtocolVersion,
 } from "./negotiate_protocol.cp";
+
+export {
+    PG_MAX_DIAGNOSTIC_FIELDS,
+    PgFieldMessageError,
+    PgDiagnosticFieldType,
+    parseDiagnosticFieldType,
+    diagnosticFieldName,
+    PgDiagnosticField,
+    PgDiagnosticFields,
+} from "./field_message.cp";
