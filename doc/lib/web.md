@@ -197,6 +197,48 @@ pub fn demoSseFanoutBroker() {
 }
 ```
 
+### 零分配 Stripe 风格 API 幂等键并发锁与响应重放存储引擎 (`idempotency_store.cp`)
+
+面向支付网关、计费 API、分布式 RPC 与 AI Agent 工具防重执行的 100% 纯 CP 零动态堆分配 Stripe 风格 `Idempotency-Key` 并发锁与响应重放引擎：
+
+- **常量与数据模型**：
+  - `IDEM_STORE_MAX_ENTRIES` (`64`)、`IDEM_KEY_MAX_LEN` (`64`)、`IDEM_BODY_MAX_LEN` (`256`)
+  - `IdemEntryState`（`in_progress | completed`）、`IdemAcquireKind`（`acquired_new | replay_completed | conflict_in_progress | conflict_payload_mismatch | rejected_invalid | rejected_full`）
+  - `IdemStoreConfig`（`lock_ttl_ms`、`result_ttl_ms`，提供 `defaults()` 与 `isValid()`）、`IdemRecord`（提供 `keySlice()` 与 `responseSlice()`）、`IdemAcquireDecision`、`IdemStoreStats`
+- **核心引擎 `ApiIdempotencyStore`**：
+  - `init(cfg): ApiIdempotencyStore?`：初始化固定 64 槽位内联幂等表（零堆分配）。
+  - `begin_request(*_, tenant_id, key, payload_hash, now_ms): IdemAcquireDecision`：自动驱逐过期条目（含崩溃超时的 `in_progress` 锁）；命中同 `(tenant_id, key)` 时依次校验 `payload_hash` 不一致 -> `conflict_payload_mismatch`（HTTP 422）、在途 -> `conflict_in_progress`（HTTP 409）、已完成 -> `replay_completed`（直接重放缓存状态码与响应体）；未命中则加锁置 `in_progress`。
+  - `commit_response(*_, slot_idx, status_code, response_body, now_ms): bool`：仅允许 `in_progress` 槽位提交响应并转入 `completed`，延长 TTL 为 `now_ms + result_ttl_ms`。
+  - `abort_request(*_, slot_idx): bool`：可重试 5xx 异常时释放 `in_progress` 锁，允许客户端使用同 Key 安全重试。
+  - `get_record(slot_idx): IdemRecord?` / `prune_expired(*_, now_ms): usize` / `stats(): IdemStoreStats`。
+
+```cp
+import {
+    IdemAcquireKind,
+    IdemStoreConfig,
+    ApiIdempotencyStore,
+} from "cap:web";
+
+pub fn demoApiIdempotencyStore() {
+    let store = ApiIdempotencyStore.init(IdemStoreConfig.defaults()) ?? return;
+
+    // 1. 首次请求获得执行锁
+    const d1 = store.begin_request(1001, "pay_ord_98765", 0xABCD1234, 10_000);
+    if (d1.kind == IdemAcquireKind.acquired_new) {
+        * = store.commit_response(d1.slot_idx, 201, "{\"charge_id\":\"ch_01\"}", 10_050);
+    }
+
+    // 2. 客户端网络抖动重试 -> 直接重放 201 与原响应体，避免重复扣款
+    const d2 = store.begin_request(1001, "pay_ord_98765", 0xABCD1234, 12_000);
+    if (d2.kind == IdemAcquireKind.replay_completed) {
+        if (rec := store.get_record(d2.slot_idx)) {
+            * = rec.status_code;     // 201
+            * = rec.responseSlice(); // "{\"charge_id\":\"ch_01\"}"
+        }
+    }
+}
+```
+
 ---
 
 ## 收敛子模块深度文档

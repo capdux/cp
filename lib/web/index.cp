@@ -275,3 +275,17 @@ export {
     formatSseEventWire,
     SseFanoutBroker,
 } from "./sse_broker.cp";
+
+// --- Zero-Alloc Stripe-Style API Idempotency-Key Lock & Response Replay Store ---
+export {
+    IDEM_STORE_MAX_ENTRIES,
+    IDEM_KEY_MAX_LEN,
+    IDEM_BODY_MAX_LEN,
+    IdemEntryState,
+    IdemAcquireKind,
+    IdemStoreConfig,
+    IdemRecord,
+    IdemAcquireDecision,
+    IdemStoreStats,
+    ApiIdempotencyStore,
+} from "./idempotency_store.cp";
