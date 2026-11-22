@@ -151,3 +151,18 @@ export {
     PgWireFrameSlice,
     PgStackReader,
 } from "./stackReader.cp";
+
+export {
+    TAG_EXECUTE,
+    TAG_DESCRIBE,
+    TAG_CLOSE,
+    TAG_SYNC,
+    TAG_FLUSH,
+    TARGET_PORTAL,
+    TARGET_PREPARED_STATEMENT,
+    EXECUTE_UNLIMITED_ROWS,
+    ExecuteMsgError,
+    PortalTarget,
+    ExecuteMessage,
+    ExecuteControlCodec,
+} from "./executeMsg.cp";

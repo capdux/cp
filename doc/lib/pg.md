@@ -20,6 +20,7 @@
 | `lib/pg/wiretypes.cp` | 线协议 v3.0 常量、大端整数编解码、`MessageHeader`、`FieldDescription` 与 `StartupMessage` |
 | `lib/pg/paramDesc.cp` | 零分配 `ParameterDescription`（`'t'`）参数 OID 数组编解码器与无界零拷贝视图（`ParameterDescriptionView`、`ParameterDescription`） |
 | `lib/pg/stackReader.cp` | 零分配有界大端协议游标与原子半包回滚后端帧读取器（`PgStackReader`、`PgWireFrameSlice`） |
+| `lib/pg/executeMsg.cp` | 零分配 `Execute`（`'E'`）执行帧编解码器、`PortalTarget` 及 `Describe`/`Close`/`Sync`/`Flush` 控制帧编码器 |
 
 ## 核心 API 摘要
 
@@ -96,4 +97,18 @@ const wire: [6]u8 = ['Z', 0, 0, 0, 5, 'I'];
 let r = PgStackReader.init(wire[0..]);
 const frame = r.readBackendFrame()?; // tag='Z', payload_len=1, payload="I"
 * = frame;
+```
+
+7. **扩展查询 `Execute`（`'E'`）执行帧与 Portal 分批拉取控制（`executeMsg.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/Execute.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
+   - `PortalTarget` 精确区分 Portal（`'P'`）与 Prepared Statement（`'S'`），在编码 `Execute` 帧时自动遵循协议约束（非 Portal 目标以空 Portal 名 `""` 发送）；
+   - `ExecuteMessage` 支持 `max_rows == 0`（`EXECUTE_UNLIMITED_ROWS`，拉取全部结果行）或正整数分页上限（触发服务端 `PortalSuspended` `'s'` 以便流式游标分批消费），并配套零分配 `ExecuteControlCodec` 编码 `Describe`/`Close`/`Sync`/`Flush` 完整控制帧。
+
+```cp
+import { PortalTarget, ExecuteMessage, ExecuteControlCodec } from "cap:pg";
+
+let buf: [64]u8 = [0; 64];
+const msg = ExecuteMessage.init(PortalTarget.portal("p_users"), 100);
+const n1 = msg.encodeFrame(buf[0..])?;
+const n2 = ExecuteControlCodec.encodeSyncFrame(buf[n1..])?;
+* = n2;
 ```
