@@ -56,16 +56,16 @@ pub @c {
 
 /// Zlib 原生流式压缩与解压 C-FFI 接口容器（避免与顶层高级 API 同名冲突）
 pub struct NativeZlib {
-    pub extern fn deflateInit2_(strm: *z_stream_s, level: i32, method: i32, windowBits: i32, memLevel: i32, strategy: i32, version: [*c]const u8, stream_size: i32): i32;
-    pub extern fn deflate(strm: *z_stream_s, flush: i32): i32;
-    pub extern fn deflateEnd(strm: *z_stream_s): i32;
-    pub extern fn deflateReset(strm: *z_stream_s): i32;
-    pub extern fn deflateBound(strm: *z_stream_s, sourceLen: usize): usize;
-    pub extern fn inflateInit2_(strm: *z_stream_s, windowBits: i32, version: [*c]const u8, stream_size: i32): i32;
-    pub extern fn inflate(strm: *z_stream_s, flush: i32): i32;
-    pub extern fn inflateEnd(strm: *z_stream_s): i32;
-    pub extern fn inflateReset(strm: *z_stream_s): i32;
-    pub extern fn crc32(crc: usize, buf: [*c]const u8, len: u32): usize;
+    pub static extern fn deflateInit2_(strm: *z_stream_s, level: i32, method: i32, windowBits: i32, memLevel: i32, strategy: i32, version: [*c]const u8, stream_size: i32): i32;
+    pub static extern fn deflate(strm: *z_stream_s, flush: i32): i32;
+    pub static extern fn deflateEnd(strm: *z_stream_s): i32;
+    pub static extern fn deflateReset(strm: *z_stream_s): i32;
+    pub static extern fn deflateBound(strm: *z_stream_s, sourceLen: usize): usize;
+    pub static extern fn inflateInit2_(strm: *z_stream_s, windowBits: i32, version: [*c]const u8, stream_size: i32): i32;
+    pub static extern fn inflate(strm: *z_stream_s, flush: i32): i32;
+    pub static extern fn inflateEnd(strm: *z_stream_s): i32;
+    pub static extern fn inflateReset(strm: *z_stream_s): i32;
+    pub static extern fn crc32(crc: usize, buf: [*c]const u8, len: u32): usize;
 }
 
 pub const Z_MIN_WBITS: i32 = 8;

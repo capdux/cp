@@ -265,7 +265,7 @@ struct BrBitReader {
         return val;
     }
 
-    fn alignToByte(*_): !BrotliError {
+    fn alignToByte(*_): void ! BrotliError {
         if (_.bit_pos != 0) {
             const rem: u6 = (8 - (_.bit_pos as u6));
             const pad = _.readBits(rem)?;
@@ -284,7 +284,7 @@ struct BrBitReader {
         return slice;
     }
 
-    fn skipBytes(*_, len: usize): !BrotliError {
+    fn skipBytes(*_, len: usize): void ! BrotliError {
         if (len > _.data.len - _.byte_pos) {
             return BrotliError.UnexpectedEof;
         }
@@ -302,7 +302,7 @@ struct BrOutputSink {
 
     static fn initDynamic(alloc: std.mem.Allocator): BrOutputSink {
         return BrOutputSink{
-            ext_buf: &[],
+            ext_buf: std.ArrayList(u8).empty.items,
             use_ext: false,
             ext_pos: 0,
             list: std.ArrayList(u8).empty,
@@ -340,7 +340,7 @@ struct BrOutputSink {
         return _.list.items[idx];
     }
 
-    fn appendByte(*_, b: u8): !BrotliError {
+    fn appendByte(*_, b: u8): void ! BrotliError {
         if (_.use_ext) {
             if (_.ext_pos >= _.ext_buf.len) {
                 return BrotliError.OutputBufferTooSmall;
@@ -352,7 +352,7 @@ struct BrOutputSink {
         _.list.append(_.alloc, b) catch return BrotliError.OutOfMemory;
     }
 
-    fn appendSlice(*_, data: []const u8): !BrotliError {
+    fn appendSlice(*_, data: []const u8): void ! BrotliError {
         if (data.len == 0) {
             return;
         }
@@ -658,7 +658,7 @@ fn brDecodeBlockType(
     br: *BrBitReader,
     cur_type: *usize,
     prev_type: *usize,
-): !BrotliError {
+): void ! BrotliError {
     const sym = type_tree.decode(br)? as usize;
     let next_type: usize = 0;
     if (sym == 0) {
@@ -880,7 +880,7 @@ fn brDecodeCompressedMetaBlock(
     max_window_size: usize,
     dist_rb: *[4]usize,
     dist_rb_idx: *usize,
-): !BrotliError {
+): void ! BrotliError {
     const start_out_len = sink.len();
     const target_out_len = start_out_len + mlen;
 
@@ -1158,7 +1158,7 @@ fn brDecodeStream(
     sink: *BrOutputSink,
     max_window_bytes: usize,
     max_output_bytes: usize,
-): !BrotliError {
+): void ! BrotliError {
     if (compressed.len == 0) {
         return BrotliError.UnexpectedEof;
     }
