@@ -29,6 +29,21 @@
 | `jfr.cp` | JVM Java Flight Recorder v2.0 区块与事件帧解析 | `JFR_MAGIC`, `JfrChunkHeader`, `JfrEventFrame`, `JfrStats`, `isJfr`, `parseJfrChunkHeader`, `JfrChunkIter`, `JfrEventIter`, `summarizeJfr` |
 | `lcov.cp` | LCOV `.info` 覆盖率轨迹文件解析与汇总 | `LcovRecordKind`, `LcovRecord`, `LcovFileSummary`, `LcovTotals`, `LcovRecordIter`, `LcovFileIter`, `summarizeLcov` |
 | `aof.cp` | Redis AOF RESP 命令日志流解析与汇总 | `AofArgIter`, `AofCommand`, `AofIter`, `AofStats`, `isAofMixedRdb`, `isAofResp`, `summarizeAof` |
+| `dex.cp` | Android DEX 可执行头、MapList 与 MUTF-8 字符串表解析 | `DexHeader`, `Uleb128Result`, `DexMapItem`, `DexMapIter`, `isDex`, `parseDexHeader`, `readUleb128`, `readDexString` |
+| `pcap.cp` | libpcap `.pcap` 容器与 L2-L4（Ethernet/IPv4/TCP/UDP）解析与写入 | `PcapError`, `PcapGlobalHeader`, `PcapPacket`, `PcapFile`, `PcapWriter`, `parsePcap`, `parseEthernet`, `parseIpv4`, `parseTcp`, `parseUdp` |
+| `har.cp` | W3C HTTP Archive `.har` 1.2 零分配解析与汇总 | `HarHeader`, `HarTimings`, `HarEntry`, `HarStats`, `HarEntryIter`, `isHar`, `parseHarHeader`, `summarizeHar` |
+| `warc.cp` | ISO 28500 WARC 1.0/1.1 网页归档解析与汇总 | `WarcRecordType`, `WarcField`, `WarcFieldIter`, `WarcRecord`, `WarcIter`, `WarcStats`, `isWarc`, `summarizeWarc` |
+| `fits.cp` | NASA FITS 2880B HDU 与 80B 卡片头零分配解析 | `FitsCard`, `FitsHeader`, `FitsCardIter`, `isFits`, `parseFitsHeader`, `fitsBytesPerPixel`, `findFitsCard`, `parseFitsInt`, `parseFitsBool` |
+| `pickle.cp` | Python Pickle Protocol 2-5 操作码遍历与静态安全审计 | `PickleOp`, `PickleAudit`, `detectPickleProto`, `isPickle`, `isUnsafePickleOp`, `PickleIter`, `auditPickle` |
+| `thrift.cp` | Apache Thrift IDL 声明与字段词法扫描 | `ThriftDeclKind`, `ThriftDecl`, `ThriftField`, `ThriftDeclIter`, `ThriftFieldIter`, `validateThriftBraces` |
+| `ion.cp` | Amazon Ion 1.0 二进制值与结构流解析 | `ION_IVM_1_0`, `IonType`, `IonValue`, `IonReader`, `IonListIter`, `IonStructIter`, `isIonBinary` |
+| `smile.cp` | Jackson Smile 1.0 二进制 JSON 词法读取器 | `SMILE_HEADER_MAGIC`, `SmileHeader`, `SmileTokenKind`, `SmileToken`, `isSmile`, `parseSmileHeader`, `SmileReader` |
+| `rlp.cp` | Ethereum RLP 规范确定性编解码器 | `RlpKind`, `RlpItem`, `RlpListIter`, `RlpWriter`, `decodeRlpItem`, `decodeRlpU64` |
+| `ssz.cp` | Ethereum SSZ 确定性编解码与 Bitlist/Bitvector 校验 | `SszWriter`, `SszReader`, `sszBitlistLen`, `sszBitlistGet`, `sszBitvectorValid`, `SszOffsetListIter`, `sszChunkCount` |
+| `scale.cp` | Parity SCALE 确定性编解码器与 Compact 整数编码 | `ScaleOptionBool`, `compactU64Len`, `ScaleWriter`, `ScaleReader` |
+| `xdr.cp` | RFC 4506 XDR 外部数据表示编解码器 | `XDR_UNIT`, `xdrPadLen`, `xdrAlignedLen`, `XdrReader`, `XdrWriter` |
+| `hdf5.cp` | HDF5 Superblock v0-v3 与 OHDR v2 解析 | `HDF5_SIGNATURE`, `Hdf5Superblock`, `Hdf5ObjHeaderV2`, `findHdf5Signature`, `isHdf5`, `parseHdf5Superblock`, `parseHdf5ObjHeaderV2` |
+| `rdb.cp` | Redis RDB 快照流式事件解析 | `RDB_MAGIC`, `RdbLengthKind`, `RdbEventKind`, `RdbHeader`, `RdbEvent`, `isRdb`, `parseRdbHeader`, `RdbReader` |
 
 ## 3. 使用示例
 

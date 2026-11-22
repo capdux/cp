@@ -17,7 +17,7 @@ import {
     parseDexHeader,
     readUleb128,
     readDexString,
-} from "cap:dex";
+} from "cap:binfmt";
 
 fn writeU16LE(buf: []u8, off: usize, v: u16) {
     buf[off] = (v & 0xFF) as u8;

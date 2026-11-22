@@ -7,7 +7,7 @@ import {
     compactU64Len,
     ScaleWriter,
     ScaleReader,
-} from "cap:scale";
+} from "cap:binfmt";
 
 test("1. Compact<u64> all 4 modes boundary values round-trip with exact Parity SCALE vectors", () => {
     const vals: [10]u64 = [

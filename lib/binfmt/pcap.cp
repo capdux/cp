@@ -104,19 +104,19 @@ pub struct UdpDatagram {
 }
 
 fn readU16(bytes: []const u8, endian: PcapEndian): u16 {
-    const arr: *const [2]u8 = @ptrCast(bytes.ptr);
+    const arr: [2]u8 = [bytes[0], bytes[1]];
     if (endian == .Little) {
-        return std.mem.readInt(u16, arr, .little);
+        return std.mem.readInt(u16, &arr, .little);
     }
-    return std.mem.readInt(u16, arr, .big);
+    return std.mem.readInt(u16, &arr, .big);
 }
 
 fn readU32(bytes: []const u8, endian: PcapEndian): u32 {
-    const arr: *const [4]u8 = @ptrCast(bytes.ptr);
+    const arr: [4]u8 = [bytes[0], bytes[1], bytes[2], bytes[3]];
     if (endian == .Little) {
-        return std.mem.readInt(u32, arr, .little);
+        return std.mem.readInt(u32, &arr, .little);
     }
-    return std.mem.readInt(u32, arr, .big);
+    return std.mem.readInt(u32, &arr, .big);
 }
 
 fn appendU16(buf: *std.ArrayList(u8), allocator: std.mem.Allocator, val: u16, endian: PcapEndian): PcapError!void {

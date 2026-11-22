@@ -11,7 +11,7 @@ import {
     isHar,
     parseHarHeader,
     summarizeHar,
-} from "cap:har";
+} from "cap:binfmt";
 
 fn approxEq(a: f64, b: f64, eps: f64): bool {
     const diff = if (a > b) (a - b) else (b - a);

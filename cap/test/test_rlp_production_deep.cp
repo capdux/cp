@@ -12,7 +12,7 @@ import {
     encodedBytesLen,
     encodedU64Len,
     encodedListHeaderLen,
-} from "cap:rlp";
+} from "cap:binfmt";
 
 test("1. Ethereum official vectors: dog, [cat, dog], empty string, empty list, and canonical integers", () => {
     let buf: [64]u8 = [0; 64];

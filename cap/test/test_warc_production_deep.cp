@@ -21,7 +21,7 @@ import {
     WarcStats,
     isWarc,
     summarizeWarc,
-} from "cap:warc";
+} from "cap:binfmt";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

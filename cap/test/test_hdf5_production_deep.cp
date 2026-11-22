@@ -13,7 +13,7 @@ import {
     isHdf5,
     parseHdf5Superblock,
     parseHdf5ObjHeaderV2,
-} from "cap:hdf5";
+} from "cap:binfmt";
 
 fn zeroBytes(buf: []u8) {
     let i: usize = 0;

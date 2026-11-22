@@ -19,7 +19,7 @@ import {
     ionAsSymbolId,
     ionAsString,
     ionAsBlob,
-} from "cap:ion";
+} from "cap:binfmt";
 
 test("1. IVM 1.0 detection and all scalar Ion types (null, bool, pos_int, neg_int, f32, f64, symbol, string, blob)", () => {
     expect_eq(isIonBinary(ION_IVM_1_0), true);

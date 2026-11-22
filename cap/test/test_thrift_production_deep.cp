@@ -8,7 +8,7 @@ import {
     ThriftDeclIter,
     ThriftFieldIter,
     validateThriftBraces,
-} from "cap:thrift";
+} from "cap:binfmt";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

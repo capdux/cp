@@ -24,7 +24,7 @@ import {
     readRdbLength,
     readRdbString,
     RdbReader,
-} from "cap:rdb";
+} from "cap:binfmt";
 
 fn writeBytes(dst: []u8, off: usize, src: []const u8): usize {
     let i: usize = 0;

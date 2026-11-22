@@ -15,7 +15,7 @@ import {
     findFitsCard,
     parseFitsInt,
     parseFitsBool,
-} from "cap:fits";
+} from "cap:binfmt";
 
 fn fillSpaces(buf: []u8) {
     let i: usize = 0;

@@ -28,7 +28,7 @@ import {
     parseIpv4,
     parseTcp,
     parseUdp,
-} from "cap:pcap";
+} from "cap:binfmt";
 import cap from "cap";
 
 fn verifyRoundTripCombo(
@@ -284,12 +284,12 @@ test("4. Defensive Guards: InvalidMagic, UnsupportedVersion, Truncated, PacketTo
 test("5. Dynamic Lazy Namespace Mounting via cap.pcap & Zero-Leak") {
     const alloc = std.testing.allocator;
 
-    let writer = cap.pcap.PcapWriter.init(
+    let writer = cap.binfmt.PcapWriter.init(
         alloc,
         .Big,
         .Nanosecond,
         1500,
-        @intFromEnum(cap.pcap.LinkType.RawIp),
+        @intFromEnum(cap.binfmt.LinkType.RawIp),
     ) catch unreachable;
     defer writer.deinit();
 
@@ -307,14 +307,14 @@ test("5. Dynamic Lazy Namespace Mounting via cap.pcap & Zero-Leak") {
     const raw = writer.finish(alloc) catch unreachable;
     defer alloc.free(raw);
 
-    let file = cap.pcap.parsePcap(alloc, raw) catch unreachable;
+    let file = cap.binfmt.parsePcap(alloc, raw) catch unreachable;
     defer file.deinit(alloc);
 
     expect_eq(file.header.link_type, 101 as u32);
     expect_eq(file.packets.len, 1 as usize);
 
-    const ip = cap.pcap.parseIpv4(file.packets[0].data) catch unreachable;
-    const udp = cap.pcap.parseUdp(ip.payload) catch unreachable;
+    const ip = cap.binfmt.parseIpv4(file.packets[0].data) catch unreachable;
+    const udp = cap.binfmt.parseUdp(ip.payload) catch unreachable;
     expect_eq(udp.src_port, 1234 as u16);
     expect_eq(udp.dst_port, 5678 as u16);
     expect_eq(udp.payload.len, 0 as usize);
