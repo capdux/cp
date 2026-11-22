@@ -1305,3 +1305,7 @@
 ### 2026-11-22（分类合并交付：lib/bundler/barrel_imports.cp | 2026-11-22 14:00:12）
 - **执行与结单汇报**：
   > 子智能体从 Bun src/bundler/barrel_imports.cp 吸收并归类合并 lib/bundler/barrel_imports.cp 至 cap:bundler（Barrel 模块按需延迟导入与增量唤醒优化，6/6 PASS，upstream_newer=0），同步 cp_lib_ref.md；续派下一项 Bun 纯逻辑子模块合并。
+
+### 2026-11-22（分类合并交付：lib/vector/nav_graph.cp | 2026-11-22 14:02:19）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/vector/nav_graph.cp（基于 @l2sq SIMD 与 RobustPrune 多样性剪枝的零堆分配 Vamana/NSW 导航图近似检索索引，64D Recall@5 >= 0.90，5/5 PASS），归入 cap:vector 并同步 cp_lib_ref.md；续派 lib/vector/sparse_vec.cp。

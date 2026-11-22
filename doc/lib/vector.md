@@ -25,6 +25,7 @@
 | `lib/vector/filter.cp` | `// Origin: Pure-CP Stdlib (AI Vector Search Metadata Bitset Filter & Selectivity Planner) \| Created: 2026-11-22` | 1024-bit 零堆分配位图 (`FilterBitset`)、数值/范围元数据谓词过滤、选择度自适应 Filtered ANN 路由规划器与位跳跃掩码 Top-K 余弦检索 |
 | `lib/vector/simd_ops.cp` | `// Origin: Pure-CP Stdlib (AI-Native SIMD Vector Distance & Batch Retrieval Kernels using @dot/@l2sq/@fma) \| Created: 2026-11-22` | 原生 8-lane SIMD 内建原语 (`@dot`/`@l2sq`/`@fma`) 驱动的向量距离、单舍入 AXPY 与零堆分配批量 Top-K Cosine / L2 检索核 |
 | `lib/vector/kmeans.cp` | `// Origin: Pure-CP Stdlib (AI-Native SIMD K-Means++ Clustering & IVF/PQ Codebook Trainer) \| Created: 2026-11-22` | 基于 `@l2sq`/`@fma` 原生 SIMD 与确定性 SplitMix64 的零堆分配 K-Means++ 聚类与 IVF/PQ 码本训练器 |
+| `lib/vector/nav_graph.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc Vamana/NSW Navigable Graph ANN using @l2sq) \| Created: 2026-11-22` | 零堆分配 Vamana / NSW 单层近邻导航图近似检索索引 (`NavGraphIndex`)，基于 `@l2sq` 8-lane SIMD 贪心束搜索、双向建边与按距离剪枝 |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -516,6 +517,47 @@ pub fn demoSimdKMeans(data: []const f32, n: usize, dim: usize) {
     const cfg = KMeansConfig{ k: 4, max_iters: 30, tol: 0.0001, seed: 2026 };
     if (res := kmeansFitF32(data, n, dim, cfg, cent_s, assign_s, counts_s, scratch_s)) {
         * = res;
+    }
+}
+```
+
+### 12. 零堆分配 Vamana / NSW 近邻导航图近似检索索引 (`nav_graph.cp`)
+
+面向大规模高维嵌入向量亚线性近似最近邻（ANN）检索的单层可导航小世界图索引，对标 DiskANN / HNSW Layer-0 贪心束搜索，零堆分配并直接调用原生 8-lane SIMD `@l2sq` 内建原语：
+
+- **`NAV_MAX_DEGREE` (`16`)** / **`NAV_INVALID_NODE` (`0xFFFFFFFF`)**：单节点固定邻接表最大度数与无效节点哨兵。
+- **`NavGraphHit`**：`{ node_id: u32, dist_sq: f32 }`
+- **`NavNodeAdj`**：`{ neighbors: [16]u32, degree: u8, occupied: bool }`
+- **`NavGraphIndex`**（调用方提供扁平 `vectors_buf` 与 `adj_buf` 槽位池）：
+  - `NavGraphIndex.init(vectors_buf: *[]f32, adj_buf: *[]NavNodeAdj, dim: usize, max_degree: usize): NavGraphIndex?`（校验 `dim > 0`、`1 <= max_degree <= 16` 与缓冲容量）
+  - `insert(*_, vec: []const f32, ef_construct: usize): u32?`（基于 `@l2sq` 贪心束搜索候选近邻、双向建边、超度时按距离裁剪保留最近邻）
+  - `search(query: []const f32, k: usize, ef_search: usize, out_hits: *[]NavGraphHit): usize?`（基于固定栈候选束与 visited 位图执行贪心束搜索，按 `(dist_sq 升序, node_id 升序)` 输出 Top-K）
+  - `nodeCount(): usize` / `edgeCount(): usize` / `entryPoint(): u32`
+
+```typescript
+import {
+    NavGraphHit,
+    NavNodeAdj,
+    NavGraphIndex,
+} from "cap:vector";
+
+pub fn demoNavGraphAnn() {
+    let vecs: [128]f32 = [0.0; 128]; // 16 nodes * 8 dims
+    let adjs: [16]NavNodeAdj = [NavNodeAdj{}; 16];
+    let vecs_s: []f32 = vecs[0..];
+    let adjs_s: []NavNodeAdj = adjs[0..];
+
+    if (idx_init := NavGraphIndex.init(vecs_s, adjs_s, 8, 8)) {
+        let idx = idx_init;
+        const v0: [8]f32 = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        const v1: [8]f32 = [0.9, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        * = idx.insert(v0[0..], 16);
+        * = idx.insert(v1[0..], 16);
+
+        let hits: [2]NavGraphHit = [NavGraphHit{}; 2];
+        let hits_s: []NavGraphHit = hits[0..];
+        const n = idx.search(v0[0..], 2, 16, hits_s) ?? 0;
+        * = n;
     }
 }
 ```
