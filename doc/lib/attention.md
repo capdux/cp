@@ -1802,3 +1802,42 @@ pub fn demoKvForkCow() {
     * = mgr.releaseSequence(1);
 }
 ```
+
+---
+
+### 零分配原生 `@dot`/`@fma` Fused RMSNorm / LayerNorm / QK-Norm & SwiGLU / GeGLU 算子 (`rmsNorm.cp`)
+
+面向 Llama / Qwen3 / Gemma-2/3 Transformer 推理热路径的 100% 纯 CP 零动态堆分配归一化与门控激活算子库：
+
+- **常量、配置与错误集**：
+  - `RMSNORM_DEFAULT_EPS = 1e-6`、`NormConfig`（`eps`, `unit_offset`, `defaults()`, `gemmaDefaults()`, `isValid()`）、`NormKernelError`（`DimMismatch | EmptyInput | InvalidEps`）
+- **RMSNorm 族（`@dot` / `@fma` 硬件加速）**：
+  - `rmsNormF32(x, weight, eps, *out)` / `rmsNormInPlaceF32(*x, weight, eps)` / `rmsNormUnitOffsetF32(x, weight, eps, *out)`（Gemma `1 + w` 偏移权重）/ `rmsNormWithConfigF32(x, weight, cfg, *out)`
+  - `fusedAddRmsNormF32(*residual, x, weight, eps, *out)`：单次遍历融合残差加法 `residual += x` 与平方和累积，减少全局内存往返。
+  - `qkRmsNormHeadsInPlaceF32(*q, *k, q_weight, k_weight, num_q_heads, num_kv_heads, head_dim, eps)`：支持 GQA 的多头独立 QK-Norm。
+  - `batchRmsNormF32(x_rows, rows, dim, weight, eps, *out_rows)`：行主序批量归一化。
+- **LayerNorm 与门控 MLP 激活族**：
+  - `layerNormF32(x, weight, bias: ([]const f32)?, eps, *out)`
+  - `siluF32(v)`、`geluTanhF32(v)`、`swigluF32(gate, up, *out)`、`gegluF32(gate, up, *out)`、`swigluInterleavedF32(gate_up, *out)`、`swigluSplitF32(gate_up, *out)`
+
+```cp
+import {
+    RMSNORM_DEFAULT_EPS,
+    fusedAddRmsNormF32,
+    swigluF32,
+} from "cap:attention";
+
+pub fn demoRmsNormAndSwiglu() {
+    let residual: [4]f32 = [1.0, 2.0, 3.0, 4.0];
+    const x: [4]f32 = [0.5, -0.5, 0.5, -0.5];
+    const w: [4]f32 = [1.0, 1.0, 1.0, 1.0];
+    let out: [4]f32 = [0.0; 4];
+    let res_s: []f32 = residual[0..];
+    let out_s: []f32 = out[0..];
+    * = fusedAddRmsNormF32(*res_s, x[0..], w[0..], RMSNORM_DEFAULT_EPS, *out_s) catch 0;
+
+    let mlp_out: [4]f32 = [0.0; 4];
+    let mlp_s: []f32 = mlp_out[0..];
+    * = swigluF32(out[0..], residual[0..], *mlp_s) catch 0;
+}
+```

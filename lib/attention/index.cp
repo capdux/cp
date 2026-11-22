@@ -457,3 +457,23 @@ export {
     KvForkStats,
     KvForkManager,
 } from "./kvFork.cp";
+
+export {
+    RMSNORM_DEFAULT_EPS,
+    NormKernelError,
+    NormConfig,
+    rmsNormF32,
+    rmsNormInPlaceF32,
+    rmsNormUnitOffsetF32,
+    rmsNormWithConfigF32,
+    fusedAddRmsNormF32,
+    qkRmsNormHeadsInPlaceF32,
+    batchRmsNormF32,
+    layerNormF32,
+    siluF32,
+    geluTanhF32,
+    swigluF32,
+    gegluF32,
+    swigluInterleavedF32,
+    swigluSplitF32,
+} from "./rmsNorm.cp";
