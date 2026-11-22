@@ -628,3 +628,39 @@ fn demoJsonStreamScanner() {
     * = sc.is_complete(); // true
 }
 ```
+
+### 14. 零分配 RAG 回答引用解析与忠实度/幻觉溯源校验引擎 (`citation_grounder.cp`)
+
+面向 Perplexity / 企业级 RAG 问答与 AI Agent 输出校验的 100% 纯 CP 零动态堆分配内联引用解析、越界幻觉拦截与源文词元忠实度门禁内核：
+
+- **常量与数据模型**：
+  - `CITATION_MAX_REFS` (`64`)、`CITATION_MAX_SENTENCES` (`32`)
+  - `CitationRefSpan`（`source_id_1based: u32`, `start_byte`, `end_byte`, `in_bounds: bool`）
+  - `CitationSentenceAudit`（`start_byte`, `end_byte`, `citation_count`, `valid_citations`, `invalid_citations`, `support_overlap_bps: u16` [`0..=10000`], `is_grounded: bool`）
+  - `CitationGateConfig`（`min_support_overlap_bps` [默认 `3500` 即 35%], `min_token_len` [默认 `3`], `allow_uncited_sentences`, `reject_out_of_bounds`；提供 `defaults()` 与 `isValid()`）
+  - `CitationAuditReport`（`total_sentences`, `cited_sentences`, `grounded_sentences`, `weak_grounding_sentences`, `valid_citation_refs`, `out_of_bounds_refs`, `avg_support_bps`, `passed_gate`）
+- **核心纯函数**：
+  - `extractInlineCitations(answer, source_count, out_refs): usize`：零堆解析 `[1]`、`[2, 3]`、`[1][4]` 等 1-based 数字引用，自动忽略 `[note]`/`[todo]`/`[]`/`[1a]`/`[1 2]` 等非引用方括号，精确标记 `[0]` 与 `> source_count` 为 `in_bounds = false`。
+  - `computeClaimSupportBps(claim, source, min_token_len): u16`：零堆 ASCII 大小写折叠去重分词，自动跳过内联引用标记，计算 `claim` 内容词元在 `source` 中的覆盖基点 `[0, 10000]`。
+  - `auditRagCitations(answer, sources, cfg, out_sentences): CitationAuditReport`：自动分句（保留小数点 `3.14` 与紧贴句尾的 `.[1]`）、逐句提取引用并对所引用全部有效源文计算联合词元覆盖度，生成逐句审计明细与全局 `passed_gate` 门禁裁决。
+
+```cp
+import {
+    CitationGateConfig,
+    CitationSentenceAudit,
+    auditRagCitations,
+} from "cap:prompt";
+
+fn demoRagCitationGrounder() {
+    const sources: [2][]const u8 = [
+        "CP compiles directly to native Zig state machines without garbage collection.",
+        "The BEAM scheduler preemptively schedules millions of concurrent AI agents.",
+    ];
+    const answer = "CP compiles to native Zig state machines [1]. The BEAM scheduler manages concurrent agents [2].";
+
+    let audits: [8]CitationSentenceAudit = [CitationSentenceAudit{}; 8];
+    let audits_s: []CitationSentenceAudit = audits[0..];
+    const report = auditRagCitations(answer, sources[0..], CitationGateConfig.defaults(), audits_s);
+    * = report; // passed_gate == true, grounded_sentences == 2, out_of_bounds_refs == 0
+}
+```

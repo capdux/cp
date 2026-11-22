@@ -245,6 +245,8 @@ const n = plan.resolveDestPath(0, true, dst[0..])?; // "dist/a.cp"
 10. **POSIX/GNU `ls` 选项解析、权限/尺寸格式化与原地稳定排序器（`lib/shell/ls_opts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/ls.cp` & `/data/dev/bun/docs/runtime/shell.mdx`）**：
     - 零堆分配支持 `-a`/`-A`/`-B`/`-d`/`-f`/`-F`/`-h`/`-l`/`-1`/`-p`/`-r`/`-R`/`-S`/`-t`/`-U` 短标志聚合、`--all`/`--almost-all`/`--ignore-backups`/`--group-directories-first` 等长选项与 `--` 终止符（无路径操作数默认列出 `"."`）；
     - `formatLsMode` 支持全部 7 类文件首字符与 setuid/setgid/sticky 特殊权限位；`formatLsHumanSize` 纯整数实现 `K`/`M`/`G`/`T`/`P` 尺寸格式化；`sortLsEntries` 原地稳定排序支持目录优先分组、大小/修改时间/名称排序及 `-r` 反转。
+11. **跨平台 `which` 路径扫描器与退出码评估（`lib/shell/which_plan.cp`，吸收自 `/data/dev/bun/src/shell/builtin/which.cp` & `/data/dev/bun/docs/runtime/shell.mdx`）**：
+    - 零堆分配提供 `PathEnvIter`（POSIX `:` / Windows `;` 分隔，自动将空段规范化为当前目录 `.`）、`WhichPlan`（支持 `-a`/`-s`/`--` 与多命令顺序解析）、`resolveWhichSingle`（含路径分隔符命令跳过 `PATH` 直接相对 `cwd` 解析）及 `evaluateWhichExitCode`（空参数或任一命令未命中均返回退出码 `1`，全部命中返回 `0`）。
 
 ### POSIX `rm` 选项解析与根目录防误删示例（`RmPlan`）
 

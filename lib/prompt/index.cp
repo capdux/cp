@@ -155,3 +155,15 @@ export {
     JsonStreamStats,
     JsonStreamScanner,
 } from "./json_stream_scanner.cp";
+
+export {
+    CITATION_MAX_REFS,
+    CITATION_MAX_SENTENCES,
+    CitationRefSpan,
+    CitationSentenceAudit,
+    CitationGateConfig,
+    CitationAuditReport,
+    extractInlineCitations,
+    computeClaimSupportBps,
+    auditRagCitations,
+} from "./citation_grounder.cp";

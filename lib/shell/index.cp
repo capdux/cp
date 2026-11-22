@@ -227,6 +227,22 @@ export {
     sortLsEntries,
 } from "./ls_opts.cp";
 
+export {
+    SHELL_WHICH_MAX_ARGS,
+    SHELL_WHICH_MAX_PATH_LEN,
+    ShellWhichError,
+    WhichPlatform,
+    WhichProbeFn,
+    PathEnvIter,
+    WhichResolveOutcome,
+    WhichPlan,
+    isDirectCommandPath,
+    joinDirAndCommand,
+    formatWhichNotFound,
+    resolveWhichSingle,
+    evaluateWhichExitCode,
+} from "./which_plan.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);
