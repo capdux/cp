@@ -1,11 +1,21 @@
 # `cap:image_probe` — 零解码极速图片头探测器
 
-> 溯源：从 `/data/dev/bun/src/runtime/image/{codec_png,codec_jpeg,codec_webp,codec_bmp}.cp` 吸收并规范化为纯 CP 标准库模块。
+> 参考来源：/data/dev/bun/src/runtime/image/codec_png.cp, /data/dev/bun/src/runtime/image/codec_jpeg.cp, /data/dev/bun/src/runtime/image/codec_webp.cp, /data/dev/bun/src/runtime/image/codec_bmp.cp | 吸收日期：2026-11-22
 
-`cap:image_probe` 提供零外部 C 库、零堆分配、零像素解码的图片头部元数据探测器，支持 **PNG / JPEG / WebP (VP8/VP8L/VP8X) / BMP / GIF (87a/89a)**：
+## 概述
 
-- 仅读取头部数十字节即可精确获取格式、宽高、色深、色彩类型、Alpha 通道、动画标志、渐进式/隔行标志及 BMP 扫描方向；
-- 严格校验截断头、零宽高、非标准 FourCC、`i32::MIN` BMP 负高度溢出等异常边界。
+`cap:image_probe` 吸收自 Bun 图像子系统各格式编解码器的头部规范定义，并彻底剥离 `libspng` / `libjpeg` / `libwebp` 等 C 库依赖，提供 100% 纯 CP、零堆分配、零像素解码的图片头部元数据探测器，支持 **PNG / JPEG / WebP (VP8/VP8L/VP8X) / BMP / GIF (87a/89a)**。
+
+## 行为契约与安全防御
+
+- **微秒级零解码探测**：仅读取输入头部数十字节即可精确获取格式、宽高、色深、色彩类型、Alpha 通道、动画标志、渐进式/隔行标志及 BMP 扫描方向，非常适合 HTTP 上传预检、媒体库索引与防超大尺寸图像资源耗尽拦截。
+- **格式专项解析规则**：
+  - **PNG**：校验 8 字节魔数与 `IHDR` 块（宽、高、色深、色彩类型、Adam7 隔行标志），自动识别带 Alpha 的色彩类型（4 / 6）；
+  - **JPEG**：跳过 `APPn` / `COM` 等任意元数据段，定位 `SOF0`（基线）/`SOF2`（渐进式）等帧头提取精确宽高与色深；
+  - **WebP**：解析 `RIFF....WEBP` 容器内的 `VP8 `（有损）、`VP8L`（无损，含 Alpha 标志）与 `VP8X`（扩展头，含 24-bit 宽高、Alpha 与动画标志）；
+  - **BMP**：支持 `BITMAPINFOHEADER` 及 V4/V5 头，正确区分正高度（bottom-up）与负高度（top-down，设 `top_down = true`）；
+  - **GIF**：解析 `GIF87a` / `GIF89a` 逻辑屏幕描述符获取宽高。
+- **畸形输入防御**：严格校验截断头（`TruncatedHeader`）、零宽或零高（`InvalidHeader`）、非标准 FourCC（`UnsupportedVariant`）以及 BMP 负高度等于 `i32::MIN`（`-2147483648`）时取绝对值的整数溢出防护。
 
 ---
 
@@ -62,7 +72,7 @@ import { probe } from "cap:image_probe";
 fn inspectImage(header_bytes: []const u8)! {
     const info = probe(header_bytes)?;
     const mime = info.mimeType();
-    const pixels = info.pixelCount();
+    const pixels = info.pixelCount(); // u64，避免 width * height 32 位溢出
     * = mime;
     * = pixels;
 }
