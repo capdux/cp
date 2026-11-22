@@ -39,6 +39,14 @@ export {
     WsSessionResult,
     WsSession,
 } from "./session";
+export {
+    WS_PUBSUB_MAX_TOPICS,
+    WS_PUBSUB_MAX_SUBSCRIBERS_PER_TOPIC,
+    WsPubSubError,
+    WsPubSubConfig,
+    WsPublishResult,
+    WsPubSubBroker,
+} from "./pubsub";
 
 import { FrameBuilder } from "./frame";
 import { Mask } from "./mask";

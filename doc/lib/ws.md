@@ -112,6 +112,23 @@ pub fn demoProductionWs(): !void {
 }
 ```
 
+### WebSocket 主题发布/订阅代理（`lib/ws/pubsub.cp`，吸收自 `/data/dev/bun/src/runtime/server/WebSocketServerContext.cp`）
+
+- 核心导出：`WS_PUBSUB_MAX_TOPICS` (`64`)、`WS_PUBSUB_MAX_SUBSCRIBERS_PER_TOPIC` (`64`)、`WsPubSubError`、`WsPubSubConfig`（`publish_to_self`）、`WsPublishResult`、`WsPubSubBroker`（`init` / `topicCount` / `subscriberCount` / `isSubscribed` / `subscribe` / `unsubscribe` / `unsubscribeAll` / `collectRecipients` / `listClientTopics`）。
+
+```typescript
+import { WsPubSubBroker, WsPubSubConfig } from "cap:ws";
+
+let broker = WsPubSubBroker.init(WsPubSubConfig{ publish_to_self: false });
+* = broker.subscribe(1, "the-group-chat")?;
+* = broker.subscribe(2, "the-group-chat")?;
+let targets: [8]u64 = [0; 8];
+// ws.publish(sender=1): 仅投递给 client 2，跳过发送者自身
+const r = broker.collectRecipients("the-group-chat", 1, targets[0..]);
+// r.delivered_count == 1, targets[0] == 2, r.skipped_self == true
+* = r;
+```
+
 ---
 
 ## 上游 Bun WebSocket 行为契约与安全边界注意事项
@@ -122,5 +139,8 @@ pub fn demoProductionWs(): !void {
    - RFC 6455 规定 `Ping` / `Pong` / `Close` 控制帧长度不得超过 `125` 字节且**禁止分片**（`FIN` 必须为 `1`），但允许在数据帧分片流中间交错插入；`WebSocketMessageAssembler` 自动处理控制帧交错并在开启 `auto_pong: true` 时即时生成匹配载荷的 `Pong` 帧。
 3. **关闭码合法性与状态机（`CloseCodeValidator`）**：
    - `1005`（No Status）、`1006`（Abnormal Closure）与 `1015`（TLS Handshake）为保留内部状态码，**禁止在线路 `Close` 帧中发送**；`CloseCodeValidator` 严格拦截非法关闭码并校验关闭原因的 UTF-8 合法性。
-4. **`permessage-deflate` 压缩与防解压膨胀（RFC 7692）**：
-   - 开启 `PerMessageDeflate` 时，压缩消息须正确附加/剥离 `0x00 0x00 0xFF 0xFF` 同步尾（`PMD_SYNC_TRAILER`）；服务端务必在 `WsSessionConfig` 中设置合理的 `max_frame_bytes` 与 `max_message_bytes`，防止高压缩比载荷耗尽内存。
+4. **`permessage-deflate` 压缩与防解压膨胀（RFC 7692，吸收自 `/data/dev/bun/docs/guides/websocket/compression.mdx`）**：
+   - 开启 `PerMessageDeflate` 时，既可全局启用全消息压缩，也可针对单条消息按需开启压缩（对应 Bun `ws.send(msg, true)`）；压缩消息须正确附加/剥离 `0x00 0x00 0xFF 0xFF` 同步尾（`PMD_SYNC_TRAILER`）；服务端务必在 `WsSessionConfig` 中设置合理的 `max_frame_bytes` 与 `max_message_bytes`，防止高压缩比载荷耗尽内存。
+5. **原生 Pub-Sub 主题生命周期与 `publish_to_self` 契约（吸收自 `/data/dev/bun/docs/guides/websocket/pubsub.mdx`）**：
+   - 默认 `publish_to_self == false` 时，单连接广播（`ws.publish`，传入 `sender_id`）自动排除发送者自身，而服务端广播（`server.publish`，传入 `sender_id = null`）投递给主题内全部订阅者；
+   - 连接断开（`close` 回调）时务必调用 `unsubscribeAll(client_id)` 清理订阅并自动回收空主题槽位，防止长周期服务出现孤儿订阅泄漏。
