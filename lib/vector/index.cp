@@ -140,3 +140,13 @@ export {
     sq4AsymmetricL2Sq,
     sq4BatchTopK,
 } from "./quant_sq4.cp";
+
+export {
+    RabitqCodeMeta,
+    rabitqWordsForDim,
+    rabitqSignFlipInPlace,
+    rabitqFastWalshHadamardInPlace,
+    rabitqEncodeUnit,
+    rabitqEstimateDot,
+    rabitqEstimateL2Sq,
+} from "./rabitq.cp";

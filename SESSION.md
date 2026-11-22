@@ -1345,3 +1345,7 @@
 ### 2026-11-22（分类合并交付：lib/shell/mkdir_opts.cp | 2026-11-22 14:23:13）
 - **执行与结单汇报**：
   > 子智能体从 Bun src/shell/builtin/mkdir.cp 吸收并归类合并 lib/shell/mkdir_opts.cp 至 cap:shell（mkdir 选项解析、八进制模式校验与 ParentDirIter 路径遍历，6/6 PASS），同步 cp_lib_ref.md 并提交。
+
+### 2026-11-22（分类合并交付：lib/vector/rabitq.cp | 2026-11-22 14:24:21）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/vector/rabitq.cp（SIGMOD 2024 RaBitQ 32x 无偏 1-bit 随机正交二值量化与 FWHT/@fma/@popCount 距离估算核，5/5 PASS），归入 cap:vector 并同步 cp_lib_ref.md；续派 lib/vector/proj_reduce.cp。

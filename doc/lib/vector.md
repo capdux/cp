@@ -29,6 +29,7 @@
 | `lib/vector/sparse_vec.cp` | `// Origin: Pure-CP Stdlib (AI Learned Sparse Retrieval: SPLADE/BGE-M3 Sparse Vector & Merge-Join Scorer) \| Created: 2026-11-22` | SPLADE / BGE-M3 学习型稀疏词法向量表示、原位规范化、O(m+n) `@fma` 归并点积、Top-K 稀疏裁剪与零堆分配 CSR 批量 Top-K 检索核 |
 | `lib/vector/eval_harness.cp` | `// Origin: Pure-CP Stdlib (AI Vector ANN Evaluation Harness: SIMD Ground-Truth, Recall@K & Latency Percentiles) \| Created: 2026-11-22` | ANN 向量索引离线评测与延迟分位数统计套件：原位堆排序 P50/P95/P99、原生 `@l2sq` SIMD 暴力 Ground-Truth、去重 Recall@K 与批量汇总 |
 | `lib/vector/quant_sq4.cp` | `// Origin: Pure-CP Stdlib (AI Vector Search 4-bit Asymmetric Scalar Quantization SQ4) \| Created: 2026-11-22` | 4-bit 非对称标量量化（SQ4）：`f32` 向量 8x 显存压缩、奇偶维 Nibble 打包、无临时解码缓冲 `@fma` 非对称 L2 距离与批量 Top-K 检索 |
+| `lib/vector/rabitq.cp` | `// Origin: Pure-CP Stdlib (AI Vector Search RaBitQ Unbiased 1-bit Binary Quantization & Estimator) \| Created: 2026-11-22` | SIGMOD 2024 RaBitQ 无偏 1-bit 随机正交二值量化（32x 压缩）：$O(D \log D)$ 归一化 FWHT、确定性符号翻转、精确几何修正元数据与无偏内积/L2 距离估算核 |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -690,5 +691,50 @@ pub fn demoSq4Retrieval(corpus: []const f32, query: []const f32) {
     let ids_s: []usize = ids[0..];
     let dists_s: []f32 = dists[0..];
     * = sq4BatchTopK(query, packed_buf[0..], 2, mins[0..], scales[0..], 2, ids_s, dists_s);
+}
+```
+
+### 16. RaBitQ 无偏 1-Bit 随机正交二值量化（32x 显存压缩）(`rabitq.cp`)
+
+对标 SIGMOD 2024 RaBitQ 的零堆分配无偏 1-bit 随机正交量化与内积/L2 估算核，将 `f32` 向量压缩 32 倍同时保持理论无偏距离估计：
+
+- **`RabitqCodeMeta`**：`{ norm_l2: f32, dot_o_obar: f32, sum_bits: u32 }`
+- **`rabitqWordsForDim(dim: usize): usize`**：返回打包 `dim` 比特所需 `u64` 字数 `ceil(dim / 64)`。
+- **`rabitqSignFlipInPlace(vec: *[]f32, seed: u64): bool`**：确定性 Rademacher（`±1`）坐标符号翻转（对合可逆）。
+- **`rabitqFastWalshHadamardInPlace(vec: *[]f32): bool`**：2 的幂维度 $O(D \log D)$ 归一化快速沃尔什-哈达玛正交变换（保范数、保内积、自逆 $H_D^2 = I$）。
+- **`rabitqEncodeUnit(vec, centroid, out_words: *[]u64): RabitqCodeMeta?`**：相对质心残差编码为 1-bit 打包字并输出精确几何修正因子 `norm_l2`、`dot_o_obar = <o, o_bar>` 与 `@popCount` 置位数 `sum_bits`。
+- **`rabitqEstimateDot(query_residual, code_words, meta): f32?`**：零临时解码缓冲计算无偏内积估计 $\hat{d} = \|x - c\| \cdot \langle q', \bar{o} \rangle / \langle o, \bar{o} \rangle$。
+- **`rabitqEstimateL2Sq(query_residual, query_norm_sq, code_words, meta): f32?`**：基于 `@fma` 计算无偏平方 L2 距离估计。
+
+```typescript
+import {
+    rabitqSignFlipInPlace,
+    rabitqFastWalshHadamardInPlace,
+    rabitqEncodeUnit,
+    rabitqEstimateL2Sq,
+} from "cap:vector";
+
+pub fn demoRabitq(x_in: []const f32, q_in: []const f32) {
+    let x: [64]f32 = [0.0; 64];
+    let q: [64]f32 = [0.0; 64];
+    const c: [64]f32 = [0.0; 64];
+    let i: usize = 0;
+    while (i < 64 && i < x_in.len && i < q_in.len) : (i += 1) {
+        x[i] = x_in[i];
+        q[i] = q_in[i];
+    }
+    let xs: []f32 = x[0..];
+    let qs: []f32 = q[0..];
+    * = rabitqSignFlipInPlace(xs, 2026);
+    * = rabitqFastWalshHadamardInPlace(xs);
+    * = rabitqSignFlipInPlace(qs, 2026);
+    * = rabitqFastWalshHadamardInPlace(qs);
+
+    let code: [1]u64 = [0];
+    let code_s: []u64 = code[0..];
+    if (m := rabitqEncodeUnit(x[0..], c[0..], code_s)) {
+        const q_norm_sq: f32 = @dot(q[0..], q[0..]);
+        * = rabitqEstimateL2Sq(q[0..], q_norm_sq, code[0..], m);
+    }
 }
 ```
