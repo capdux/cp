@@ -1011,3 +1011,23 @@ assert(matchCssMediaAspectRatio(1920.0, 1080.0, reduced, false, false));
 * = n2;
 ```
 
+29. **CSS 类型化二维值对（`Size2D<Number>`、`Size2D<LengthPercentage>`）与椭圆四角 `border-radius` 简写（`size2d.cp`，吸收自 `/data/dev/bun/src/css/values/size.cp`）**：
+    - **导出符号**：`CssSize2DError`、`CssNumberPair`（`uniform`/`fromParts`/`parse`/`isUniform`/`isZero`/`scale`/`add`/`eql`/`toCss`）、`CssLengthPctUnit`、`CssSizeComponent`（`zero`/`px`/`pct`/`parse`/`isZero`/`isPercentage`/`isNegative`/`resolvePx`/`scale`/`eql`/`toCss`）、`CssLengthPctPair`（`zero`/`uniform`/`fromParts`/`parse`/`isUniform`/`isZero`/`scale`/`eql`/`toCss`）、`CssCornerRadii`（`uniform`/`parse`/`isCircular`/`isZero`/`eql`/`toCss`）；
+    - **Bun `Size2D(T)` 单值折叠与四角圆角最简序列化**：
+      - `CssNumberPair` 与 `CssLengthPctPair` 严格对齐 Bun `Size2D(f32)` / `Size2D(LengthPercentage)` 语义：解析 1~2 个分量（单值自动复制为 `(a, a)`），序列化时若 `a == b` 自动折叠为单值（如 `10px 10px` -> `10px`，`0px 0px` 压缩为 `0`）；
+      - `CssSizeComponent` 支持 16 种 CSS 长度/百分比单位（含 `em`/`ex` 与科学计数法无歧义区分、`0%` 与 `0px` 精确区分及 `resolvePx` 像素求值）；
+      - `CssCornerRadii` 基于四个 `CssLengthPctPair` 完整支持 W3C `border-radius` `1..4 horiz [ / 1..4 vert ]?` 椭圆简写解析、负值拒绝与最简 1/2/3/4 分量零分配序列化。
+
+```cp
+import { CssNumberPair, CssLengthPctPair, CssCornerRadii } from "cap:css";
+
+const gap = CssLengthPctPair.parse("12px 12px")?;
+let buf: [64]u8 = [0; 64];
+const n1 = gap.toCss(buf[0..], true)?; // "12px"
+
+const rad = CssCornerRadii.parse("8px 16px 8px 16px / 4px 8px 4px 8px")?;
+const n2 = rad.toCss(buf[0..], true)?; // "8px 16px/4px 8px"
+* = n1;
+* = n2;
+```
+

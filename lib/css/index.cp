@@ -696,3 +696,12 @@ export {
     CssAspectRatioVal,
     matchCssMediaAspectRatio,
 } from "./ratio.cp";
+
+export {
+    CssSize2DError,
+    CssNumberPair,
+    CssLengthPctUnit,
+    CssSizeComponent,
+    CssLengthPctPair,
+    CssCornerRadii,
+} from "./size2d.cp";
