@@ -158,3 +158,13 @@ export {
     projectEmbeddingsF32,
     jlRandomProjectF32,
 } from "./proj_reduce.cp";
+
+export {
+    HybridRagHit,
+    HybridRrfFusion,
+    RagContextChunk,
+    TokenBudgetResult,
+    mmrRerankSimdF32,
+    dedupNearDuplicatesL2F32,
+    selectWithinTokenBudget,
+} from "./hybrid_rag.cp";

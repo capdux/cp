@@ -31,6 +31,7 @@
 | `lib/vector/quant_sq4.cp` | `// Origin: Pure-CP Stdlib (AI Vector Search 4-bit Asymmetric Scalar Quantization SQ4) \| Created: 2026-11-22` | 4-bit 非对称标量量化（SQ4）：`f32` 向量 8x 显存压缩、奇偶维 Nibble 打包、无临时解码缓冲 `@fma` 非对称 L2 距离与批量 Top-K 检索 |
 | `lib/vector/rabitq.cp` | `// Origin: Pure-CP Stdlib (AI Vector Search RaBitQ Unbiased 1-bit Binary Quantization & Estimator) \| Created: 2026-11-22` | SIGMOD 2024 RaBitQ 无偏 1-bit 随机正交二值量化（32x 压缩）：$O(D \log D)$ 归一化 FWHT、确定性符号翻转、精确几何修正元数据与无偏内积/L2 距离估算核 |
 | `lib/vector/proj_reduce.cp` | `// Origin: Pure-CP Stdlib (AI Embedding Dimensionality Reduction: Power-Iter PCA & JL Random Projection using @dot/@fma) \| Created: 2026-11-22` | 高维 Embedding 降维与随机投影核：均值中心化、无协方差矩阵幂迭代 Top-K 主成分求解、`@dot` 批量投影与 Achlioptas 稀疏 JL 随机投影 |
+| `lib/vector/hybrid_rag.cp` | `// Origin: Pure-CP Stdlib (AI Hybrid RAG Pipeline: Weighted RRF Fusion, SIMD @dot/@l2sq MMR Rerank & Token Budget Pruning) \| Created: 2026-11-22` | 生产级零堆分配混合 RAG 管线：可配权重双路/多路 RRF (`HybridRrfFusion`)、`@dot`/`@fma` SIMD MMR 多样性重排 (`mmrRerankSimdF32`)、`@l2sq` 近重复去重 (`dedupNearDuplicatesL2F32`) 与 Prompt Token 预算裁剪 (`selectWithinTokenBudget`) |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -776,5 +777,69 @@ pub fn demoProjReduce(data_in: *[]f32, n: usize) {
     let proj_s: []f32 = proj_one[0..];
     * = projectEmbeddingsF32(data_in[0..8], 1, 8, axes[0..], 2, proj_s);
     * = jlRandomProjectF32(data_in[0..8], 8, 2, 2026, proj_s);
+}
+```
+
+### 18. 生产级零堆分配混合检索、SIMD MMR 多样性重排与 Token 预算裁剪 (`hybrid_rag.cp`)
+
+面向 AI Agent RAG 上下文构造的端到端零堆分配、8-lane SIMD（`@dot` / `@l2sq` / `@fma`）加速混合检索与上下文裁剪管线：
+
+- **`HybridRagHit`**：`{ doc_id: u32, score: f32, dense_rank: u32, sparse_rank: u32 }`（1-based 通道排名，`0` 表示未出现在该通道）
+- **`HybridRrfFusion`**：可配置 `dense_weight`、`sparse_weight`、`rrf_k` 的零堆分配加权 RRF 融合器：
+  - `HybridRrfFusion.init(dense_weight: f32, sparse_weight: f32, rrf_k: f32): HybridRrfFusion?`（校验权重与 `rrf_k` 有限非负，拒绝双权重同为 `0.0`）
+  - `fuseDual(dense_ids, sparse_ids, top_k, out_hits: *[]HybridRagHit, work_hits: *[]HybridRagHit): usize?`：双路加权倒数排名融合 `dense_weight / (rrf_k + dense_rank) + sparse_weight / (rrf_k + sparse_rank)`，自动通道内去重并记录双路排名，按 `(score 降序, doc_id 升序)` 输出 Top-K。
+  - `fuseMultiWeighted(lists_doc_ids, list_offsets, list_weights, top_k, out_hits: *[]HybridRagHit, work_hits: *[]HybridRagHit): usize?`：CSR 紧凑多路加权 RRF 融合（支持 Dense + BM25 + SPLADE + Graph 等任意 M 路召回）。
+- **`mmrRerankSimdF32(relevance_scores, embeddings_flat, n_docs, dim, top_k, lambda, out_indices: *[]usize): usize?`**：基于 `@dot` 与 `@fma` 的 8-lane SIMD `f32` 最大边际相关性（MMR）多样性重排（`lambda ∈ [0.0, 1.0]`，`O(1)` 额外栈空间，无需外部 mask 缓冲，彻底消除 RAG 近重复片段）。
+- **`dedupNearDuplicatesL2F32(embeddings_flat, n_docs, dim, min_l2_sq, max_keep, out_indices: *[]usize): usize?`**：基于 `@l2sq` SIMD 平方欧氏距离阈值的快速近重复片段去重。
+- **`RagContextChunk`**（`{ doc_id: u32, score: f32, token_count: u32 }`）/ **`TokenBudgetResult`**（`{ selected_count, used_tokens, skipped_oversized, filtered_low_score, budget_limit }`）
+- **`selectWithinTokenBudget(candidates, max_tokens, min_score, greedy_skip_oversized, out_selected: *[]RagContextChunk): TokenBudgetResult?`**：在硬性 LLM Prompt Token 预算内按最低分数过滤并执行贪心填充（`greedy_skip_oversized = true`）或严格前缀截断（`greedy_skip_oversized = false`）。
+
+```typescript
+import {
+    HybridRagHit,
+    HybridRrfFusion,
+    RagContextChunk,
+    mmrRerankSimdF32,
+    dedupNearDuplicatesL2F32,
+    selectWithinTokenBudget,
+} from "cap:vector";
+
+pub fn demoHybridRagPipeline() {
+    // 1. 可配权重 Dense + Sparse RRF 融合（偏向 Dense 语义召回 0.7 : 0.3）
+    if (rrf := HybridRrfFusion.init(0.7, 0.3, 60.0)) {
+        const dense_ids: [4]u32 = [101, 102, 103, 104];
+        const sparse_ids: [4]u32 = [103, 105, 101, 106];
+        let work: [8]HybridRagHit = [HybridRagHit{}; 8];
+        let fused: [4]HybridRagHit = [HybridRagHit{}; 4];
+        let work_s: []HybridRagHit = work[0..];
+        let fused_s: []HybridRagHit = fused[0..];
+        const n_fused = rrf.fuseDual(dense_ids[0..], sparse_ids[0..], 4, fused_s, work_s) ?? 0;
+
+        // 2. 基于 @dot 的 SIMD MMR 多样性重排（消除 101/102 近重复片段）
+        const rels: [4]f32 = [0.95, 0.94, 0.85, 0.78];
+        const embs: [16]f32 = [
+            1.0, 0.0, 0.0, 0.0,
+            0.998, 0.02, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+        ];
+        let mmr_idx: [3]usize = [0; 3];
+        let mmr_s: []usize = mmr_idx[0..];
+        const n_mmr = mmrRerankSimdF32(rels[0..], embs[0..], 4, 4, 3, 0.5, mmr_s) ?? 0;
+
+        // 3. 按 LLM Prompt Token 预算裁剪（max_tokens = 600，贪心跳过超大块）
+        const chunks: [3]RagContextChunk = [
+            RagContextChunk{ doc_id: 101, score: 0.95, token_count: 350 },
+            RagContextChunk{ doc_id: 103, score: 0.85, token_count: 400 },
+            RagContextChunk{ doc_id: 104, score: 0.78, token_count: 200 },
+        ];
+        let packed_buf: [3]RagContextChunk = [RagContextChunk{}; 3];
+        let packed_s: []RagContextChunk = packed_buf[0..];
+        if (budget := selectWithinTokenBudget(chunks[0..], 600, 0.5, true, packed_s)) {
+            * = budget.used_tokens; // 550 tokens (selected doc 101 + doc 104, skipped doc 103)
+        }
+        * = n_fused;
+        * = n_mmr;
+    }
 }
 ```
