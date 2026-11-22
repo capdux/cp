@@ -130,3 +130,13 @@ export {
     annRecallAtK,
     evaluateAnnBatch,
 } from "./eval_harness.cp";
+
+export {
+    Sq4Codebook,
+    sq4PackedBytes,
+    sq4FitCodebook,
+    sq4EncodeVector,
+    sq4DecodeVector,
+    sq4AsymmetricL2Sq,
+    sq4BatchTopK,
+} from "./quant_sq4.cp";

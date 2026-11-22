@@ -147,3 +147,13 @@ export {
     ScbBitSet,
     ServerComponentBoundaryTable,
 } from "./server_components";
+
+export {
+    MAX_STATIC_ROUTE_NODES,
+    MAX_STATIC_ROUTE_EDGES,
+    INVALID_ROUTE_SOURCE,
+    StaticRouteError,
+    StaticRouteEdge,
+    StaticRouteGraph,
+    StaticRouteVisitor,
+} from "./static_route_visitor";

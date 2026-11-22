@@ -1404,3 +1404,37 @@ fn agentMailboxDemo() {
     }
 }
 ```
+
+---
+
+## 子模块：多核 Agent 调度器 Work-Stealing 双端队列池与负载均衡引擎（`work_steal.cp`）
+
+### 核心特性
+
+- **本地 LIFO + 远端 FIFO 双端队列（`WorkerQueue`）**：固定环形槽位缓冲，`pushLocal`/`popLocal` 从队尾操作保障 CPU L1/L2 缓存局部性，`stealFromHead` 从队头窃取最老任务以降低与本地核心的竞争。
+- **多核自动负载均衡池（`WorkStealPool`）**：支持最多 16 个核心（`MAX_WORK_STEAL_WORKERS`），单块扁平缓冲零堆分配；`nextTask(worker_idx)` 优先本地 LIFO 弹出，本地为空时自动选择当前队列最长的最繁忙核心进行头部 FIFO 窃取，并提供 `WorkStealStats` 负载倾斜监控。
+
+### 导出清单
+
+- **常量与类型**：`MAX_WORK_STEAL_WORKERS` (`16`)、`WorkTask`、`WorkStealStats`
+- **双端队列与多核池**：`WorkerQueue`（`init`, `pushLocal`, `popLocal`, `stealFromHead`, `count`, `capacity`, `isEmpty`）、`WorkStealPool`（`init`, `submit`, `nextTask`, `queueLen`, `stats`）
+
+### 使用示例
+
+```cp
+import { WorkTask, WorkStealPool } from "cap:agent";
+
+fn workStealDemo() {
+    let flat_buf: [16]WorkTask = [WorkTask{}; 16];
+    let flat: []WorkTask = flat_buf[0..];
+    let pool = WorkStealPool.init(4, flat, 4) ?? return;
+
+    // 所有任务集中在核 0，核 1 空闲拉取时自动从核 0 头部 FIFO 窃取最老任务
+    * = pool.submit(0, WorkTask{ task_id: 1, agent_id: 10, reductions_budget: 2000 });
+    * = pool.submit(0, WorkTask{ task_id: 2, agent_id: 11, reductions_budget: 2000 });
+    if (stolen := pool.nextTask(1)) {
+        * = stolen; // task_id == 1
+    }
+    * = pool.stats();
+}
+```

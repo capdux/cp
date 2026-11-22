@@ -200,6 +200,24 @@ let tbl = ServerComponentBoundaryTable.init();
 const bs = tbl.buildBitSet()?;   // bs.isSet(10) == true
 ```
 
+### 3.11 静态路由与 SSG 可达性分析器（`lib/bundler/static_route_visitor.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/StaticRouteVisitor.cp`）
+- **常量与错误集**：`MAX_STATIC_ROUTE_NODES` (256)、`MAX_STATIC_ROUTE_EDGES` (1024)、`INVALID_ROUTE_SOURCE`、`StaticRouteError`（`NodeIndexOutOfRange` / `EdgeCapacityExceeded`）
+- **数据模型与分析器**：`StaticRouteEdge`、`StaticRouteGraph`（`init` / `addImport`）、`StaticRouteVisitor`（`init` / `resetCache` / `isClientBoundary` / `hasTransitiveUseClient` / `isFullyStatic`，采用零堆分配迭代 DFS + 环路安全访问位图 + 三态记忆化缓存，直接联动 `ServerComponentBoundaryTable`）
+
+```typescript
+import { StaticRouteGraph, StaticRouteVisitor, ServerComponentBoundaryTable } from "cap:bundler";
+
+let graph = StaticRouteGraph.init(4)?;
+graph.addImport(0, 1)?;
+graph.addImport(1, 3)?;
+
+let scb = ServerComponentBoundaryTable.init();
+* = scb.putSharedSsr(2, .use_client, 3)?; // client 边界生成的服务端引用模块为 3
+
+let visitor = StaticRouteVisitor.init();
+const is_ssg = visitor.isFullyStatic(&graph, &scb, 0)?; // false（传递依赖 client 边界）
+```
+
 ---
 
 ## 四、 上游行为契约、边界与安全注意事项

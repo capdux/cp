@@ -1325,3 +1325,11 @@
 ### 2026-11-22（分类合并交付：lib/agent/mailbox.cp & lib/vector/eval_harness.cp | 2026-11-22 14:12:29）
 - **执行与结单汇报**：
   > 1. 交付 lib/agent/mailbox.cp (多优先级有界 Agent 信箱与背压/按键合并引擎, 5/5 PASS)；2. 交付 lib/vector/eval_harness.cp (ANN 评测与 P50/P95/P99 延迟分位数套件，实战使用 @l2sq SIMD 与 slice.split(k) 方法糖, 5/5 PASS)；均已同步 cp_lib_ref.md 并与 server_components.cp 一并提交。
+
+### 2026-11-22（分类合并交付：lib/bundler/static_route_visitor.cp + 3 项 Bun 上游清零 | 2026-11-22 14:14:44）
+- **执行与结单汇报**：
+  > 子智能体核查清零 3 项 Bun 上游变动并从 Bun StaticRouteVisitor.cp 吸收归入 lib/bundler/static_route_visitor.cp (零堆迭代 DFS 静态路由 SSG 判定器, 6/6 PASS)，同步 cp_lib_ref.md 并提交。
+
+### 2026-11-22（分类合并交付：lib/agent/work_steal.cp + 满 10 项轮换 | 2026-11-22 14:16:03）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/agent/work_steal.cp（多核 Agent 调度器 Work-Stealing 双端队列池与负载均衡，5/5 PASS），归入 cap:agent 并同步 cp_lib_ref.md；满 10 项回收 c8791a25 并启全新 AI & Protocol Core Absorber 推进 lib/mcp/sampling.cp。

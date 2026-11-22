@@ -267,3 +267,11 @@ export {
     MailboxStats,
     AgentMailbox,
 } from "./mailbox.cp";
+
+export {
+    MAX_WORK_STEAL_WORKERS,
+    WorkTask,
+    WorkerQueue,
+    WorkStealStats,
+    WorkStealPool,
+} from "./work_steal.cp";
