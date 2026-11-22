@@ -18,7 +18,7 @@ import {
     Aabb2,
     Circle2,
     Geom2D,
-} from "cap:geom2d";
+} from "cap:geo";
 
 fn expectNear(actual: f64, expected: f64, tol: f64) {
     expect_eq(@abs(actual - expected) <= tol, true);
@@ -257,21 +257,21 @@ test("cap.geom2d - dynamic lazy-mount equivalence via import cap") {
     const alloc = std.testing.allocator;
     const tol: f64 = 0.000000001;
 
-    const p1 = cap.geom2d.Point2.init(0.0, 0.0);
-    const p2 = cap.geom2d.Point2.init(3.0, 4.0);
+    const p1 = cap.geo.Point2.init(0.0, 0.0);
+    const p2 = cap.geo.Point2.init(3.0, 4.0);
     expectNear(p1.dist(p2), 5.0, tol);
 
-    const box = cap.geom2d.Aabb2.init(0.0, 0.0, 10.0, 10.0);
-    const cir = cap.geom2d.Circle2.init(cap.geom2d.Point2.init(11.0, 5.0), 1.5);
-    expect_eq(cap.geom2d.Geom2D.circleAabbIntersects(cir, box), true);
+    const box = cap.geo.Aabb2.init(0.0, 0.0, 10.0, 10.0);
+    const cir = cap.geo.Circle2.init(cap.geo.Point2.init(11.0, 5.0), 1.5);
+    expect_eq(cap.geo.Geom2D.circleAabbIntersects(cir, box), true);
 
     const pts = [
-        cap.geom2d.Point2.init(0.0, 0.0),
-        cap.geom2d.Point2.init(4.0, 0.0),
-        cap.geom2d.Point2.init(2.0, 1.0),
-        cap.geom2d.Point2.init(2.0, 3.0),
+        cap.geo.Point2.init(0.0, 0.0),
+        cap.geo.Point2.init(4.0, 0.0),
+        cap.geo.Point2.init(2.0, 1.0),
+        cap.geo.Point2.init(2.0, 3.0),
     ];
-    const hull = cap.geom2d.Geom2D.convexHull(alloc, &pts) catch unreachable;
+    const hull = cap.geo.Geom2D.convexHull(alloc, &pts) catch unreachable;
     defer alloc.free(hull);
     expect_eq(hull.len, 3);
 }

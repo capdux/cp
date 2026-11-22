@@ -18,7 +18,7 @@ import {
     WkbChildIter,
     WkbReader,
     WkbWriter,
-} from "cap:wkb";
+} from "cap:geo";
 
 test("1. NDR (LE) and XDR (BE) Point, LineString, and Polygon roundtrip", () => {
     // NDR LineString with 3 points

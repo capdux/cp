@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { MortonError, Point3D, mortonEncode3D, mortonDecode3D, quantizeEncode3D, haversineMeters } from "cap:geohash_3d";
+import { MortonError, Point3D, mortonEncode3D, mortonDecode3D, quantizeEncode3D, haversineMeters } from "cap:geo";
 
 test "geohash_3d: Morton 3D encode/decode exact bit interleaving & roundtrip" {
     try expect_eq(mortonEncode3D(0, 0, 0), 0);
@@ -47,8 +47,8 @@ test "geohash_3d: Haversine great-circle distance NYC to London" {
 }
 
 test "geohash_3d: cap.geohash_3d dynamic mount" {
-    const code = cap.geohash_3d.mortonEncode3D(7, 8, 9);
-    const pt = cap.geohash_3d.mortonDecode3D(code);
+    const code = cap.geo.mortonEncode3D(7, 8, 9);
+    const pt = cap.geo.mortonDecode3D(code);
     try expect_eq(pt.x, 7);
     try expect_eq(pt.y, 8);
     try expect_eq(pt.z, 9);

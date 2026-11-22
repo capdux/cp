@@ -23,7 +23,7 @@ import {
     parseNmeaGga,
     parseNmeaRmc,
     parseNmeaVtg,
-} from "cap:nmea";
+} from "cap:geo";
 
 fn approxEq(a: f64, b: f64): bool {
     return @abs(a - b) < 0.0001;

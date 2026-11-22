@@ -19,7 +19,7 @@ import {
     formatWkt,
     encodeWkb,
     decodeWkb,
-} from "cap:wkt";
+} from "cap:geo";
 import cap from "cap";
 
 fn testWktCaseInsensitiveRoundTripAndEmpty(): ! {
@@ -160,16 +160,16 @@ fn testValidationAndSecurityGuards(): ! {
 
 fn testDynamicCapNamespaceAndZeroLeaks(): ! {
     const alloc = std.testing.allocator;
-    let geom = cap.wkt.parseWkt(alloc, "POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0))")?;
+    let geom = cap.geo.parseWkt(alloc, "POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0))")?;
     defer geom.deinit(alloc);
 
-    const wkb = cap.wkt.encodeWkb(alloc, geom, cap.wkt.WkbByteOrder.BigEndian)?;
+    const wkb = cap.geo.encodeWkb(alloc, geom, cap.geo.WkbByteOrder.BigEndian)?;
     defer alloc.free(wkb);
 
-    let decoded = cap.wkt.decodeWkb(alloc, wkb)?;
+    let decoded = cap.geo.decodeWkb(alloc, wkb)?;
     defer decoded.deinit(alloc);
 
-    const out = cap.wkt.formatWkt(alloc, decoded)?;
+    const out = cap.geo.formatWkt(alloc, decoded)?;
     defer alloc.free(out);
     expect_eq(std.mem.eql(u8, out, "POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0))"), true);
 }

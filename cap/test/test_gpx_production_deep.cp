@@ -13,7 +13,7 @@ import {
     GpxTrackPointIter,
     haversineMeters,
     summarizeGpx,
-} from "cap:gpx";
+} from "cap:geo";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

@@ -11,7 +11,7 @@ import {
     KmlStats,
     isKml,
     summarizeKml,
-} from "cap:kml";
+} from "cap:geo";
 
 test("1. KML 2.2 Document/Folder with Point, LineString, and Polygon Placemarks", () => {
     const kml =

@@ -78,3 +78,26 @@ pub fn demoGeo(): !void {
     defer alloc.free(hits);
 }
 ```
+
+---
+
+## 扩展 GIS 格式、导航协议与空间计算模块（零冲突归并）
+
+以下 12 个纯 CP 地理空间/GIS/导航/空间索引子模块已统一收敛至 `lib/geo/` 并零冲突导出至 `cap:geo`：
+
+| 子模块文件 | 领域分类 | 核心导出符号 |
+| :--- | :--- | :--- |
+| `lib/geo/geojson.cp` | RFC 7946 GeoJSON 编解码与折线简化 | `parse`, `stringify`, `computeBBox`, `computeDocBBox`, `pointInPolygon`, `simplifyDouglasPeucker`, `GeoJsonBBox`, `FeatureCollection` |
+| `lib/geo/topojson.cp` | TopoJSON v1.0 量化弧与拓扑解析 | `isTopoJson`, `parseTopoHeader`, `TopoArcIter`, `TopoObjectIter`, `resolveArcRef`, `TopoTransform` |
+| `lib/geo/wkt.cp` | OGC WKT / WKB 几何编解码 | `parseWkt`, `formatWkt`, `encodeWkb`, `decodeWkb`, `WktGeometry`, `WktCoord`, `WktError` |
+| `lib/geo/wkb.cp` | 零分配 OGC WKB / PostGIS EWKB | `parseWkbHeader`, `wkbByteLength`, `WkbReader`, `WkbWriter`, `WkbPointIter`, `WkbGeomType` |
+| `lib/geo/gpx.cp` | GPX 1.0/1.1 轨迹 XML 解析与统计 | `isGpx`, `parseGpxHeader`, `GpxWaypointIter`, `GpxTrackPointIter`, `summarizeGpx`, `haversineMeters` |
+| `lib/geo/kml.cp` | OGC KML 2.2 地标与坐标解析 | `isKml`, `summarizeKml`, `KmlPlacemarkIter`, `KmlCoordIter`, `KmlGeomKind` |
+| `lib/geo/nmea.cp` | NMEA 0183 GNSS 卫星定位报文 | `parseNmeaSentence`, `verifyNmeaSentence`, `parseNmeaGga`, `parseNmeaRmc`, `parseNmeaVtg`, `NmeaLineIter` |
+| `lib/geo/olc.cp` | Open Location Code (Plus Codes) | `olcEncode`, `olcDecode`, `olcShorten`, `olcRecoverNearest`, `isValidOlc`, `OlcArea` |
+| `lib/geo/ais.cp` | ITU-R M.1371 海事 AIS 船舶报文 | `parseAisSentence`, `parseAisPositionReport`, `parseAisClassBPosition`, `aisMessageType`, `AisBitReader` |
+| `lib/geo/geohash_3d.cp` | 3D 莫顿空间编码 | `mortonEncode3D`, `mortonDecode3D`, `quantizeEncode3D`, `Point3D`, `MortonError` |
+| `lib/geo/geom2d.cp` | 2D 计算几何、凸包与碰撞检测 | `Geom2D`, `Point2`, `Segment2`, `Aabb2`, `Circle2`, `Orientation`, `GeomError` |
+| `lib/geo/geo_quadtree.cp` | 泛型四叉树 2D 空间索引 | `QuadTree`, `PointItem`, `Rect`, `QuadError` |
+
+> **重叠对照参考归档说明**：`lib/geo/geohash_.cp` 为与 `lib/geo/geohash.cp` 功能重叠的对照参考副本（文件首行带 `// Reference Only:` 声明），不在 `lib/geo/index.cp` 冲突导出。

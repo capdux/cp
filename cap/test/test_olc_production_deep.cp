@@ -17,7 +17,7 @@ import {
     olcDecode,
     olcShorten,
     olcRecoverNearest,
-} from "cap:olc";
+} from "cap:geo";
 
 fn slicesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

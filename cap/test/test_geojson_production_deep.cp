@@ -12,7 +12,7 @@ import { test, expect_eq } from "cap:test";
 import {
     GeoJsonError,
     Position,
-    BBox,
+    GeoJsonBBox as BBox,
     PolygonData,
     Geometry,
     Feature,
@@ -23,7 +23,7 @@ import {
     computeBBox,
     pointInPolygon,
     simplifyDouglasPeucker,
-} from "cap:geojson";
+} from "cap:geo";
 import cap from "cap";
 
 fn approxEq(a: f64, b: f64): bool {
@@ -187,21 +187,21 @@ fn testDynamicCapNamespaceAndZeroLeaks(): ! {
     const alloc = std.testing.allocator;
     const raw = "{\"type\":\"Feature\",\"id\":\"ns-1\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[0,0],[4,0],[4,4],[0,4],[0,0]]]},\"properties\":{\"ok\":true}}";
 
-    let doc = cap.geojson.parse(alloc, raw)?;
+    let doc = cap.geo.parse(alloc, raw)?;
     defer doc.deinit(alloc);
 
-    const out = cap.geojson.stringify(alloc, doc)?;
+    const out = cap.geo.stringify(alloc, doc)?;
     defer alloc.free(out);
 
     switch (doc) {
         .feature => |f| {
             const g = f.geometry.?;
-            const bb = cap.geojson.computeBBox(g).?;
+            const bb = cap.geo.computeBBox(g).?;
             expect_eq(approxEq(bb.max_lon, 4.0), true);
             switch (g) {
                 .polygon => |poly| {
-                    expect_eq(cap.geojson.pointInPolygon(cap.geojson.Position{ lon: 2.0, lat: 2.0, alt: null }, poly), true);
-                    expect_eq(cap.geojson.pointInPolygon(cap.geojson.Position{ lon: 5.0, lat: 2.0, alt: null }, poly), false);
+                    expect_eq(cap.geo.pointInPolygon(cap.geo.Position{ lon: 2.0, lat: 2.0, alt: null }, poly), true);
+                    expect_eq(cap.geo.pointInPolygon(cap.geo.Position{ lon: 5.0, lat: 2.0, alt: null }, poly), false);
                 },
                 else => expect_eq(false, true),
             }
@@ -209,12 +209,12 @@ fn testDynamicCapNamespaceAndZeroLeaks(): ! {
         else => expect_eq(false, true),
     }
 
-    let line: [3]cap.geojson.Position = .{
-        cap.geojson.Position{ lon: 0.0, lat: 0.0, alt: null },
-        cap.geojson.Position{ lon: 1.0, lat: 0.01, alt: null },
-        cap.geojson.Position{ lon: 2.0, lat: 0.0, alt: null },
+    let line: [3]cap.geo.Position = .{
+        cap.geo.Position{ lon: 0.0, lat: 0.0, alt: null },
+        cap.geo.Position{ lon: 1.0, lat: 0.01, alt: null },
+        cap.geo.Position{ lon: 2.0, lat: 0.0, alt: null },
     };
-    const simplified = cap.geojson.simplifyDouglasPeucker(alloc, &line, 0.1)?;
+    const simplified = cap.geo.simplifyDouglasPeucker(alloc, &line, 0.1)?;
     defer alloc.free(simplified);
     expect_eq(simplified.len, 2);
 }

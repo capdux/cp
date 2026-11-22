@@ -24,7 +24,7 @@ import {
     resolveArcRef,
     arcSliceAt,
     countArcPoints,
-} from "cap:topojson";
+} from "cap:geo";
 
 fn approxEq(a: f64, b: f64): bool {
     return @abs(a - b) < 0.000001;

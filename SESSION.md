@@ -1505,3 +1505,7 @@
 ### 2026-11-22（根目录分域收敛第 12 批完成：lib/binfmt/（净减 15 个顶层目录，累计突破 -202） | 2026-11-22 15:02:06）
 - **执行与结单汇报**：
   > Stdlib Root Consolidator 完成 lib/binfmt/ 建立与收敛：16 个二进制/列存/序列化/剖析格式小目录（macho/pcapng/vmdk/netcdf/avro/arrow/orc/msgpack/cbor_diag/bson/ubjson/postcard/hprof/jfr/lcov/aof）零冲突归并入 lib/binfmt/ 并物理清理旧目录（16/16 PASS），根目录 659 -> 644（累计突破 -202）；续派第 10 项 lib/binfmt/ 第 2 波收敛。
+
+### 2026-11-22（根目录分域收敛第 14 批完成：lib/geo/（净减 12 个顶层目录，累计 -214） | 2026-11-22 15:02:55）
+- **执行与结单汇报**：
+  > Stdlib Root Consolidator 完成 lib/geo/ 收敛：12 个地理/GIS/导航/空间编码小目录（geojson/topojson/wkt/wkb/gpx/kml/nmea/olc/ais/geohash_3d/geom2d/geo_quadtree）零冲突归并入 lib/geo/ + geohash_.cp 参考归档，物理清理 12 个冗余旧目录（14/14 PASS），根目录 644 -> 632（累计 -214）；续派 lib/text/ 文本/格式化/模板领域收敛。

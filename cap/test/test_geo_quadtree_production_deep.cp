@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { QuadError, Rect, QuadTree } from "cap:geo_quadtree";
+import { QuadError, Rect, QuadTree } from "cap:geo";
 
 test "geo_quadtree: insert, subdivide, and queryRect accuracy" {
     const alloc = std.testing.allocator;
@@ -69,8 +69,8 @@ test "geo_quadtree: error guards for zero capacity & invalid bounds" {
 
 test "geo_quadtree: cap.geo_quadtree dynamic mount & zero leak" {
     const alloc = std.testing.allocator;
-    const world = cap.geo_quadtree.Rect{ .cx = 0.0, .cy = 0.0, .half_w = 50.0, .half_h = 50.0 };
-    let qt = try cap.geo_quadtree.QuadTree(i32).init(alloc, world, 4);
+    const world = cap.geo.Rect{ .cx = 0.0, .cy = 0.0, .half_w = 50.0, .half_h = 50.0 };
+    let qt = try cap.geo.QuadTree(i32).init(alloc, world, 4);
     defer qt.deinit();
     * = try qt.insert(5.0, -5.0, 77);
     const hits = try qt.queryRadius(alloc, 5.0, -5.0, 1.0);
