@@ -546,3 +546,25 @@ const same = pool.eql(s_static, s_rc)?;  // true
 * = cost;
 * = same;
 ```
+
+### Shell 跨平台引用计数环境变量映射表（`envMap.cp`）
+
+- 吸收自 `/data/dev/bun/src/shell/EnvMap.cp` 与 `/data/dev/bun/docs/runtime/shell.mdx`；
+- 导出：`ENV_MAP_MAX_ENTRIES` (`64`)、`EnvMapError`、`EnvMapEntry`、`ShellEnvMap`（`init`/`len`/`slice`/`insert`/`get`/`getSlice`/`remove`/`clear`/`clone`/`memoryCost`/`formatSortedExports`）；
+- **跨平台环境变量大小写与子 Shell 隔离最佳实践（参考 `/data/dev/bun/docs/runtime/shell.mdx` & `EnvMap.cp`）**：
+  - **POSIX vs Windows 键匹配**：POSIX 下 `PATH` 与 `Path` 为不同键（`case_insensitive_keys = false`）；Windows 下环境变量名 ASCII 大小写不敏感（`case_insensitive_keys = true`，写入 `Path` 将覆盖已有 `PATH`）；
+  - **零拷贝克隆与引用计数闭环**：子 Shell/管道通过 `clone(&pool)` 仅递增引用计数而不复制字符串字节；覆盖写入或删除时自动递减旧值引用计数，退出时调用 `clear(&pool)` 确保零泄漏；
+  - **确定性字典序导出**：`formatSortedExports()` 使用零堆分配稳定排序按 ASCII 字典序输出 `KEY=VALUE\n`，对齐 `export` 无参输出规范。
+
+```cp
+import { EnvStr, EnvStrPool, ShellEnvMap } from "cap:shell";
+
+let pool = EnvStrPool.init();
+let env = ShellEnvMap.init(true); // Windows ASCII case-insensitive mode
+const k1 = pool.dupeRefCounted("PATH")?;
+const v1 = pool.dupeRefCounted("/usr/bin")?;
+* = env.insert(&pool, k1, v1)?;
+let child = env.clone(&pool)?; // zero-copy refcounted clone
+const got = child.getSlice(&pool, "path")?; // "/usr/bin"
+* = got;
+```
