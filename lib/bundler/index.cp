@@ -506,3 +506,20 @@ export {
     formatNestedExternalImport,
     dedupCssChunkRulesReverse,
 } from "./cssChunkPrep";
+
+export {
+    NS_EXPORT_MAX_ENTRIES,
+    NS_EXPORT_MAX_AMBIG_REFS,
+    NS_EXPORT_MAX_BINDINGS,
+    NS_EXPORT_MAX_BIND_HOPS,
+    NsExportError,
+    NsSymbolRef,
+    NsImportBinding,
+    NsResolvedExport,
+    NsExportExprKind,
+    NsEmittedExport,
+    NsExportEmitOptions,
+    NsExportStats,
+    NsExportPlanner,
+    isSimpleJsIdent,
+} from "./nsExport";

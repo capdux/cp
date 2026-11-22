@@ -853,3 +853,24 @@ const n = wrapCssBodyWithConditions("", conds[0..], out[0..])?; // "@media scree
 * = st;
 * = n;
 ```
+
+- **Bundler Step 5 命名空间导出规划与 `__export(...)` 代码生成器（`nsExport.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/doStep5.cp` & `/data/dev/bun/docs/bundler/index.mdx`）**：
+    - 导出：`NS_EXPORT_MAX_ENTRIES` (`64`)、`NS_EXPORT_MAX_AMBIG_REFS` (`8`)、`NS_EXPORT_MAX_BINDINGS` (`64`)、`NS_EXPORT_MAX_BIND_HOPS` (`16`)、`NsExportError`、`NsSymbolRef`、`NsImportBinding`、`NsResolvedExport`、`NsExportExprKind`（`DirectIdent`/`ImportIdent`）、`NsEmittedExport`、`NsExportEmitOptions`、`NsExportStats`、`NsExportPlanner`（`init`/`addBinding`/`addExport`/`addAmbiguousRef`/`build`/`emittedSlice`/`formatJsCode`）、`isSimpleJsIdent`；
+    - **ESM/CJS 互操作与命名空间导出最佳实践（参考 `/data/dev/bun/docs/bundler/index.mdx`）**：
+      - **菱形重导出 vs 歧义冲突**：多个 `export *` 导出同名符号时，先经 `imports_to_bind` 传递归约至最终符号；若归约到同一目标符号（菱形重导出）则正常保留，若指向不同目标符号则按 ECMAScript 规范静默剔除；
+      - **TypeScript `type-only` 静默省略与确定性排序**：未解析的 TypeScript 类型重导出（`probably_ts_type == true`）自动忽略；全部保留导出别名按字典降序排序（对齐 Bun `strings.sortDesc`），保证跨平台构建产物字节级确定性；
+      - **CJS 入口包装与属性名转义**：CommonJS 入口点自动追加 `module.exports = __toCommonJS(<exports>);`，非合法 JS 标识符别名（如 `"kebab-export"`）自动以双引号包裹。
+
+```cp
+import { NsExportPlanner, NsSymbolRef, NsExportEmitOptions } from "cap:bundler";
+
+let p = NsExportPlanner.init();
+* = p.addExport("alpha", NsSymbolRef{ source_index: 1, inner_index: 1 }, "alpha_fn", false)?;
+* = p.addExport("zeta", NsSymbolRef{ source_index: 1, inner_index: 2 }, "zeta_val", false)?;
+* = p.build();
+
+let buf: [256]u8 = [0; 256];
+const n = p.formatJsCode(NsExportEmitOptions{ exports_var_name: "exports_mod" }, buf[0..])?;
+// "var exports_mod = {};\n__export(exports_mod, { zeta: () => zeta_val, alpha: () => alpha_fn });\n"
+* = n;
+```
