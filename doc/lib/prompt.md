@@ -469,3 +469,31 @@ fn demoStructuredOutputRepair() {
     }
 }
 ```
+
+### 9. Agent 系统提示词与工具/记忆/RAG 一体化编排器 (`agent_composer.cp`)
+
+100% 纯 CP 零堆分配的 Agent Prompt 编排器，在总 `max_tokens` 预算下按优先级分配预算、支持超预算按比例截断与丢弃，并按标准 LLM 分段顺序（`SystemRole -> ToolCatalog -> MemoryContext -> RagContext -> UserQuery`）输出结构化提示词与 `AgentPromptBuildReport` 分段计数报告：
+
+- **导出符号**：`MAX_COMPOSER_BLOCKS`、`AgentPromptSection`（`SystemRole | MemoryContext | RagContext | ToolCatalog | UserQuery`）、`AgentPromptBlock`、`AgentPromptBuildReport`、`AgentPromptComposer`（`init`, `addSection`, `addSystemRole`, `addUserQuery`, `addToolCatalog`, `addRagContext`, `addMemoryContext`, `build`, `sectionCount`, `reset`）。
+
+```cp
+import { AgentPromptBlock, AgentPromptComposer } from "cap:prompt";
+
+fn demoAgentPromptComposer() {
+    let blocks: [8]AgentPromptBlock = [AgentPromptBlock{}; 8];
+    let blocks_s: []AgentPromptBlock = blocks[0..];
+    let composer = AgentPromptComposer.init(blocks_s, 120) ?? return;
+
+    * = composer.addSystemRole("You are a precise CP systems assistant.", 12);
+    * = composer.addToolCatalog("read_file(path), run_test(filter)", 14);
+    * = composer.addMemoryContext("[mem#1] User prefers zero-alloc stack buffers.", 16);
+    * = composer.addRagContext("[doc:10] CP supports 8-lane SIMD @dot.", 16);
+    * = composer.addUserQuery("Explain how to build a zero-alloc RAG loop.", 14);
+
+    let out: [1024]u8 = [0; 1024];
+    let out_s: []u8 = out[0..];
+    if (rep := composer.build(out_s)) {
+        * = out_s[0..rep.bytes_written];
+    }
+}
+```

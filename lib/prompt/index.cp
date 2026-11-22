@@ -95,3 +95,11 @@ export {
     checkRequiredJsonFields,
     formatRepairRetryPrompt,
 } from "./structured_output.cp";
+
+export {
+    MAX_COMPOSER_BLOCKS,
+    AgentPromptSection,
+    AgentPromptBlock,
+    AgentPromptBuildReport,
+    AgentPromptComposer,
+} from "./agent_composer.cp";
