@@ -1663,3 +1663,59 @@ fn streamLlmQuickStart() {
     * = stats; // done == true, input_tokens == 42, output_tokens == 18
 }
 ```
+
+---
+
+## 子模块：离线确定性回放录像与轨迹 Diff 调试器（`replay.cp`）
+
+### 核心特性
+
+- **零堆分配录像带（`ReplayCassette`）**：基于调用方提供的固定 `[]ReplayFrame` 切片录制 `LlmCall` / `ToolCall` 调用序列（`name`、`args_hash`、`response`、`latency_ms`、`succeeded`），内置 `computeReplayArgsHash`（64-bit FNV-1a）与 `recordRawArgs` 便捷录制接口，满槽安全拦截绝不越界。
+- **双模式确定性回放器（`ReplayPlayer`）**：
+  - `StrictOrder`：严格校验执行顺序、`kind`、`name` 与 `args_hash`，发生入参漂移或调用失序时精准区分 `arg_mismatches` 与 `misses` 并保留 `cursor` 现场。
+  - `KeyedLoose`：允许乱序/并行调度的 Agent 按 `(kind, name, args_hash)` 跨槽命中已录制响应，同时准确识别同名工具的入参漂移。
+- **步进轨迹 Diff 对比器（`diffReplayTrajectories`）**：逐帧对比基线与候选轨迹，精准定位首个漂移步号 `first_divergence_step`、分类记录 `KindMismatch | NameMismatch | ArgsMismatch | MissingStep | ExtraStep` 并计算保真度分数 `fidelity_score`（`0.0 ~ 1.0`），`out_diffs` 缓冲不足时安全置位 `diffs_truncated`。
+
+### 导出清单
+
+- **录制与哈希**：`computeReplayArgsHash`、`ReplayEntryKind`（`LlmCall | ToolCall`）、`ReplayMatchMode`（`StrictOrder | KeyedLoose`）、`ReplayFrame`、`ReplayCassette`（`init`, `record`, `recordRawArgs`, `count`, `capacity`, `isFull`, `frameAt`, `frames`, `clear`）
+- **离线回放**：`ReplayStats`、`ReplayPlayer`（`init`, `reset`, `stats`, `remaining`, `isExhausted`, `replay`, `replayRawArgs`）
+- **轨迹 Diff**：`ReplayDiffKind`、`ReplayStepDiff`、`ReplayDiffSummary`（`isExactMatch`）、`diffReplayTrajectories`
+
+### QuickStart 示例
+
+```cp
+import {
+    ReplayEntryKind,
+    ReplayMatchMode,
+    ReplayFrame,
+    ReplayCassette,
+    ReplayPlayer,
+    ReplayStepDiff,
+    diffReplayTrajectories,
+} from "cap:agent";
+
+fn offlineReplayQuickStart() {
+    let rec_buf: [8]ReplayFrame = [ReplayFrame{}; 8];
+    let rec_s: []ReplayFrame = rec_buf[0..];
+    let cassette = ReplayCassette.init(rec_s);
+
+    * = cassette.recordRawArgs(ReplayEntryKind.LlmCall, "gpt-4o", "{\"msg\":\"find bug\"}", "call search", 120, true);
+    * = cassette.recordRawArgs(ReplayEntryKind.ToolCall, "search_code", "{\"q\":\"panic\"}", "main.cp:42", 15, true);
+
+    // 1. 脱离线上 LLM 毫秒级严格离线回放
+    let player = ReplayPlayer.init(cassette.frames(), ReplayMatchMode.StrictOrder);
+    if (f1 := player.replayRawArgs(ReplayEntryKind.LlmCall, "gpt-4o", "{\"msg\":\"find bug\"}")) {
+        * = f1.response;
+    }
+    if (f2 := player.replayRawArgs(ReplayEntryKind.ToolCall, "search_code", "{\"q\":\"panic\"}")) {
+        * = f2.response;
+    }
+
+    // 2. 步进对比新旧轨迹保真度
+    let diffs_buf: [8]ReplayStepDiff = [ReplayStepDiff{}; 8];
+    let diffs_s: []ReplayStepDiff = diffs_buf[0..];
+    const summary = diffReplayTrajectories(cassette.frames(), cassette.frames(), diffs_s);
+    * = summary.fidelity_score; // 1.0
+}
+```

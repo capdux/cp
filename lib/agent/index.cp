@@ -318,3 +318,17 @@ export {
     parseAnthropicSseData,
     LlmDeltaParser,
 } from "./llm_stream.cp";
+
+export {
+    computeReplayArgsHash,
+    ReplayEntryKind,
+    ReplayMatchMode,
+    ReplayFrame,
+    ReplayCassette,
+    ReplayStats,
+    ReplayPlayer,
+    ReplayDiffKind,
+    ReplayStepDiff,
+    ReplayDiffSummary,
+    diffReplayTrajectories,
+} from "./replay.cp";
