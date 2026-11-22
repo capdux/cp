@@ -162,3 +162,16 @@ export {
     matchFilterGlob,
     formatFilterScriptPrefix,
 } from "./filter_arg.cp";
+
+export {
+    TEST_SCANNER_MAX_FILTERS,
+    TEST_SCANNER_MAX_EXCLUSIONS,
+    TEST_SCANNER_MAX_IGNORE_PATTERNS,
+    TestScannerError,
+    isTestSupportedExtension,
+    hasTestNameSuffix,
+    couldBeTestFile,
+    isExactTestPathArg,
+    formatScopedTestName,
+    TestFileScanner,
+} from "./test_scanner.cp";

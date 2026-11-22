@@ -325,3 +325,35 @@ const fn_len = formatFilterScriptPrefix("pkg-a", "packages/pkg-a", "build", pfx_
 * = pn;
 * = fn_len;
 ```
+
+11. **`bun test` / `cap test` 测试文件发现与路径过滤引擎（`lib/cli/test_scanner.cp`，吸收自 `/data/dev/bun/src/cli/test/Scanner.cp` & `/data/dev/bun/docs/test/discovery.mdx`）**：
+    - **默认发现规则（参考 `/data/dev/bun/docs/test/discovery.mdx`）**：
+      - 匹配 `*.test.{js,jsx,ts,tsx,mjs,cjs,mts,cts,cp}`、`*_test.*`、`*.spec.*` 与 `*_spec.*`（`couldBeTestFile` / `hasTestNameSuffix`）；
+      - 默认跳过隐藏目录（`.` 开头）与 `node_modules`（`TestFileScanner.shouldScanDir`）。
+    - **位置过滤词 vs 精确文件路径**：
+      - 无前导 `./`/`../`/`/` 的位置参数按路径子串过滤（如 `bun test utils` 命中 `src/utils/string.test.ts`）；
+      - 指定精确文件需以 `./` 或 `/` 开头（`isExactTestPathArg`）；
+      - 按测试名过滤（`-t` / `--test-name-pattern`）将全部外层 `describe` 标签与测试名以空格拼接（`formatScopedTestName`）。
+    - **`path_ignore_patterns` 智能目录剪枝**：
+      - 仅对包含 `**` 的忽略模式（如 `vendor/**`）执行子树提前剪枝，单 `*` 模式（如 `vendor/*`）不剪枝子目录以避免误跳过深层文件。
+
+### 测试文件发现与忽略剪枝示例（`TestFileScanner`）
+
+```cp
+import { TestFileScanner, formatScopedTestName } from "cap:cli";
+
+let sc = TestFileScanner.init();
+sc.addFilter("utils")?;
+sc.addPathIgnorePattern("vendor/**")?;
+
+const keep = sc.shouldIncludeFile("/repo/src/utils/str.test.ts", "src/utils/str.test.ts", true); // true
+const prune = sc.shouldScanDir("vendor", "vendor"); // false
+
+const labels: [2]([]const u8) = ["Math", "operations"];
+let name_buf: [64]u8 = [0; 64];
+const n = formatScopedTestName(labels[0..], "should add", name_buf[0..])?;
+// name_buf[0..n] == "Math operations should add"
+* = keep;
+* = prune;
+* = n;
+```
