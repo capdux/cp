@@ -261,6 +261,60 @@ pub fn demoSimdStats() {
 }
 ```
 
+### 无上限外部切片概率分布、假设检验与 OLS/Ridge 回归统计套件 (`statsDist.cp`)
+
+面向科学计算、A/B 实验统计推断与特征回归建模的 100% 纯 CP 零动态堆分配统计套件。全部样本统计、假设检验、相关性与回归算子直接作用于调用方传入的任意长度 `[]const f64` 外部切片，无缝承接数万级样本：
+
+- **常量与错误集**：
+  - `STATS_MAX_FEATURES = 16`
+  - `StatsDistError`（`EmptySample | InsufficientSamples | InvalidParameter | LengthMismatch | ZeroVariance | SingularMatrix | BufferTooSmall`）
+- **高精度特殊函数**：
+  - `logGamma(x)`（9 项 Lanczos 近似，精度 `< 1e-13`）
+  - `erfApprox(x)` / `erfcApprox(x)`（基于 `P(0.5, x^2)`/`Q(0.5, x^2)`，全定义域无尾部相消）
+  - `normalInvCdf(p)`（Acklam 分段有理逼近 + Halley 精化，精度 `< 1e-13`）
+  - `regularizedIncompleteGammaP(a, x)` / `regularizedIncompleteGammaQ(a, x)`（级数 + Modified Lentz 连分式）
+  - `regularizedIncompleteBeta(a, b, x)`（对称变换 + Modified Lentz 连分式）
+- **6 大概率分布（PDF/PMF、CDF、PPF）**：
+  - 正态分布：`normalPdf`, `normalCdf`, `normalPpf`
+  - Student-t 分布：`studentTPdf`, `studentTCdf`, `studentTPpf`（有界 Newton-Halley 精确求逆）
+  - 卡方分布：`chiSquarePdf`, `chiSquareCdf`, `chiSquarePpf`（Wilson-Hilferty + 有界 Newton）
+  - F / Beta / Poisson 分布：`fDistCdf`, `betaPdf`, `betaCdf`, `poissonPmf`, `poissonCdf`
+- **描述统计与假设检验**：
+  - `DescriptiveStats` & `describeSample(xs)`（两遍补偿中心矩：`count`, `mean`, `variance`, `std_dev`, `skewness`, `kurtosis`, `min`, `max`, `sem`）
+  - `TTestResult` & `oneSampleTTest(xs, mu0)` / `welchTwoSampleTTest(xs, ys)`（Welch-Satterthwaite 自由度、双侧 `p_value`、95% 置信区间与 Cohen's d 效应量）
+  - `ChiSquareTestResult` & `chiSquareGoodnessOfFit(observed, expected)`
+  - `CorrelationResult` & `pearsonCorrelationTest(xs, ys)`
+- **简单 OLS & 多元 OLS / Ridge 线性回归**：
+  - `SimpleRegressionResult` & `fitSimpleOls(xs, ys)`（`slope`, `intercept`, `r_squared`, `rmse`, `std_err_slope`, `p_value_slope`）
+  - `MultiRegressionResult` & `fitRidgeRegression(x_rows, n_samples, n_features, y, ridge_lambda)` / `predictLinear(res, x_row)`（流式累积法方程 + 列主元高斯-约旦消元，不惩罚截距项，返回系数、`r_squared`、`adj_r_squared`、`rmse`）
+
+```cp
+import {
+    describeSample,
+    welchTwoSampleTTest,
+    fitRidgeRegression,
+    predictLinear,
+} from "cap:math";
+
+pub fn demoStatsAndRegression() {
+    // 1. A/B 实验 Welch 双样本 t 检验
+    const ctrl: [6]f64 = [10.2, 9.8, 10.5, 10.1, 9.9, 10.3];
+    const treat: [6]f64 = [11.6, 12.1, 11.8, 12.0, 11.5, 11.9];
+    const st = describeSample(treat[0..]) catch return;
+    const tt = welchTwoSampleTTest(treat[0..], ctrl[0..]) catch return;
+    * = st.mean;
+    * = tt.p_value_two_tailed; // < 0.0001
+
+    // 2. 多元 Ridge 线性回归 (y = 2.0 + 3.0*x0 - 1.5*x1)
+    const x_rows: [10]f64 = [1.0, 0.0, 2.0, 1.0, 3.0, 2.0, 4.0, 1.0, 5.0, 3.0];
+    const y: [5]f64 = [5.0, 6.5, 8.0, 12.5, 12.5];
+    const model = fitRidgeRegression(x_rows[0..], 5, 2, y[0..], 0.0) catch return;
+    const x_new: [2]f64 = [6.0, 2.0];
+    const y_hat = predictLinear(model, x_new[0..]) catch 0.0; // ~17.0
+    * = y_hat;
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
