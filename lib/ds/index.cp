@@ -248,3 +248,20 @@ export {
     findGaps,
     AugmentedIntervalTree,
 } from "./augInterval.cp";
+
+// --- w_tinylfu ---
+export {
+    TINYLFU_SKETCH_ROWS,
+    TINYLFU_SKETCH_WORDS_PER_ROW,
+    TINYLFU_SKETCH_WIDTH,
+    TINYLFU_MAX_COUNT,
+    TINYLFU_MAX_CAPACITY,
+    TINYLFU_NO_NODE,
+    TinyLfuSketch,
+    TinyLfuSegment,
+    TinyLfuPutOutcome,
+    TinyLfuConfig,
+    TinyLfuNode,
+    TinyLfuStats,
+    WTinyLfuCache,
+} from "./tinyLfu.cp";

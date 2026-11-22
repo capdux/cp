@@ -277,6 +277,42 @@ pub fn demoAugmentedIntervalTree() {
 }
 ```
 
+### 零分配 Caffeine/Ristretto 风格 W-TinyLFU 频率草图准入与 SLRU 缓存引擎 (`tinyLfu.cp`)
+
+面向高吞吐抗扫描缓存的 100% 纯 CP 零动态堆分配 **W-TinyLFU (Window-TinyLFU)** 缓存引擎：
+
+- **4-bit Count-Min Sketch（`TinyLfuSketch`）**：
+  - 4 行独立哈希 × 256 列 4-bit 饱和计数器（`0..=15`，打包于 `[4][16]u64` 共 512 字节）；
+  - 周期性 SWAR 并行右移减半 `resetHalve()`（`(w >> 1) & 0x7777777777777777`），防止旧热点僵化。
+- **三段 SLRU 缓存布局（`WTinyLfuCache`）**：
+  - `Window` + `Probation` + `Protected` 三段 O(1) 静态侵入式双向链表（上限 `TINYLFU_MAX_CAPACITY = 256`）；
+  - 新键进入 Window LRU；Window 溢出时与 Main Probation 队尾受害者通过 `sketch.estimate(candidate) >= sketch.estimate(victim)` 决胜准入，拦截一次性冷扫描污染；
+  - Probation 二次命中自动晋升 Protected，Protected 溢出自动降级回 Probation。
+- **核心导出**：
+  - 常量与枚举：`TINYLFU_SKETCH_ROWS` (`4`)、`TINYLFU_SKETCH_WIDTH` (`256`)、`TINYLFU_MAX_COUNT` (`15`)、`TINYLFU_MAX_CAPACITY` (`256`)、`TinyLfuSegment`、`TinyLfuPutOutcome`
+  - 结构体：`TinyLfuSketch`、`TinyLfuConfig`、`TinyLfuNode`、`TinyLfuStats`、`WTinyLfuCache`（`init`, `get`, `put`, `remove`, `contains`, `segmentOf`, `estimateFreq`, `len`, `capacity`, `stats`, `clear`）
+
+```cp
+import {
+    TinyLfuConfig,
+    WTinyLfuCache,
+} from "cap:ds";
+
+pub fn demoWTinyLfu() {
+    const cfg = TinyLfuConfig{
+        window_cap: 2,
+        probation_cap: 4,
+        protected_cap: 6,
+        sketch_reset_threshold: 256,
+    };
+    if (let cache := WTinyLfuCache.init(cfg)) {
+        * = cache.put(1001, 42);
+        * = cache.get(1001); // 42
+        * = cache.stats().hit_rate_bps;
+    }
+}
+```
+
 ---
 
 ## 收敛子模块深度文档

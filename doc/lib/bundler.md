@@ -763,3 +763,32 @@ const res = assembleJsChunk(
 // res.is_executable == true, res.parts_emitted == 2
 * = res;
 ```
+
+- **Bundler 链接期导入导出扫描与 `export *` 展开引擎（`exportScan.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/scanImportsAndExports.cp` & `/data/dev/bun/docs/runtime/module-resolution.mdx`）**：
+    - 导出：`EXPORT_SCAN_MAX_MODULES` (`64`)、`EXPORT_SCAN_MAX_EXPORTS` (`128`)、`EXPORT_SCAN_MAX_RECORDS` (`128`)、`ExportScanError`、`ScanExportsKind`（`None`/`Esm`/`Cjs`/`EsmWithDynamicFallback`）、`ScanWrapKind`（`None`/`Cjs`/`Esm`）、`ScanImportKind`（`Stmt`/`Require`/`DynamicImport`/`RequireResolve`）、`ScanModuleNode`、`ScanImportEdge`、`ScanExportDecl`、`ExportScanner`（`init`/`addModule`/`addLocalExport`/`addImportEdge`/`resolveModuleWraps`/`resolveExportStars`/`lookupExport`/`moduleAt`）；
+    - **ESM/CJS 互操作与 `export *` 语义契约（参考 `/data/dev/bun/docs/runtime/module-resolution.mdx`）**：
+      - 当 `require()` 引用任意模块或 `import *` / `import def` 引用无导出语法的空模块时，链接器自动将目标标记为 `ScanWrapKind.Cjs` 以生成命名空间/兼容包装；`export *` 指向 CJS 模块时宿主升级为 `EsmWithDynamicFallback`；含顶层 `await` 的模块分配 `ScanWrapKind.Esm` 异步包装；
+      - `resolveExportStars()` 严格遵守 ES 规范：**绝不转发 `"default"` 导出**、本地显式声明优先遮蔽重导出、菱形重导出同一源模块不冲突、多源同名导出自动置位 `ambiguous = true`，并内置 64 位访问掩码防止循环 `export *` 死循环。
+
+```cp
+import {
+    ScanExportsKind,
+    ScanImportKind,
+    ScanModuleNode,
+    ScanImportEdge,
+    ExportScanner,
+} from "cap:bundler";
+
+let sc = ExportScanner.init();
+const m_entry = sc.addModule(ScanModuleNode{ source_index: 0, exports_kind: ScanExportsKind.Esm, is_entry_point: true })?;
+const m_lib = sc.addModule(ScanModuleNode{ source_index: 1, exports_kind: ScanExportsKind.Esm })?;
+* = sc.addLocalExport(m_lib, "foo")?;
+* = sc.addLocalExport(m_lib, "default")?; // 不会被 export * 转发
+* = sc.addImportEdge(ScanImportEdge{ importer_idx: m_entry, target_idx: m_lib, kind: ScanImportKind.Stmt, is_export_star: true })?;
+* = sc.resolveModuleWraps();
+* = sc.resolveExportStars();
+const hit = sc.lookupExport(m_entry, "foo");     // found (origin == m_lib)
+const def = sc.lookupExport(m_entry, "default"); // null
+* = hit;
+* = def;
+```

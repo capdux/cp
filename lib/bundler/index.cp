@@ -461,3 +461,17 @@ export {
     JsChunkAssemblyResult,
     assembleJsChunk,
 } from "./jsPostprocess";
+
+export {
+    EXPORT_SCAN_MAX_MODULES,
+    EXPORT_SCAN_MAX_EXPORTS,
+    EXPORT_SCAN_MAX_RECORDS,
+    ExportScanError,
+    ScanExportsKind,
+    ScanWrapKind,
+    ScanImportKind,
+    ScanModuleNode,
+    ScanImportEdge,
+    ScanExportDecl,
+    ExportScanner,
+} from "./exportScan";
