@@ -14,7 +14,7 @@ import {
     Crc64Stream,
     crc64Xz,
     crc64Ecma182,
-} from "cap:crc";
+} from "cap:crypto";
 
 const CHECK_INPUT = "123456789";
 
@@ -64,6 +64,6 @@ test("4. Streaming 1..5 byte chunking and O(log N) crc32Combine") {
 }
 
 test("5. Dynamic cap.crc namespace and zero-alloc check") {
-    expect_eq(cap.crc.crc32Ieee(CHECK_INPUT), 0xCBF43926);
-    expect_eq(cap.crc.crc32Castagnoli(CHECK_INPUT), 0xE3069283);
+    expect_eq(cap.crypto.crc32Ieee(CHECK_INPUT), 0xCBF43926);
+    expect_eq(cap.crypto.crc32Castagnoli(CHECK_INPUT), 0xE3069283);
 }

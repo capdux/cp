@@ -7,7 +7,7 @@ import {
     murmur3_128,
     Murmur3_32Stream,
     Murmur3_128Stream,
-} from "cap:murmur3";
+} from "cap:crypto";
 
 test("1. MurmurHash3_x86_32 official specification test vectors") {
     expect_eq(murmur3_32("", 0), 0x00000000);
@@ -69,7 +69,7 @@ test("4. Avalanche sensitivity across 0..64 byte lengths") {
 }
 
 test("5. Dynamic cap.murmur3 namespace and zero-alloc check") {
-    expect_eq(cap.murmur3.murmur3_32("hello", 0), 0x248BFA47);
-    const h128 = cap.murmur3.murmur3_128("cap", 7);
+    expect_eq(cap.crypto.murmur3_32("hello", 0), 0x248BFA47);
+    const h128 = cap.crypto.murmur3_128("cap", 7);
     expect_eq(h128.len, 16);
 }

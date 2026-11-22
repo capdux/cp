@@ -30,7 +30,7 @@ import {
     Pkcs12BagIter,
     parsePkcs12Der,
     isPkcs12Der,
-} from "cap:pkcs12";
+} from "cap:crypto";
 
 const OID_SHA256: []const u8 = "\x60\x86\x48\x01\x65\x03\x04\x02\x01";
 const OID_SHA1: []const u8 = "\x2B\x0E\x03\x02\x1A";

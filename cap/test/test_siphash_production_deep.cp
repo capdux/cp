@@ -9,7 +9,7 @@ import {
     siphash13,
     siphash24_128,
     verifySipHash24,
-} from "cap:siphash";
+} from "cap:crypto";
 
 fn testKey(): [16]u8 {
     let k: [16]u8 = undefined;
@@ -89,6 +89,6 @@ test("4. Constant-time verifySipHash24 and key/data sensitivity") {
 
 test("5. Dynamic cap.siphash namespace and zero-alloc check") {
     const k = testKey();
-    const h = cap.siphash.siphash24(k, "hello-cap");
-    expect_eq(cap.siphash.verifySipHash24(k, "hello-cap", h), true);
+    const h = cap.crypto.siphash24(k, "hello-cap");
+    expect_eq(cap.crypto.verifySipHash24(k, "hello-cap", h), true);
 }

@@ -36,7 +36,25 @@
 | `lib/crypto/jwt.cp` | `// Source: Custom implementation by Antigravity AI (RFC 7519 JWT & RFC 7468 PEM)` | **JWT 引擎与 PEM 编解码**（`Jwt`, `JwtParts`, `Pem`, `PemBlock`, `constantTimeEql`, `base64UrlEncode`, `base64UrlDecode`） |
 | `lib/crypto/_boringssl.cp` | `// Source: /data/dev/bun/src/boringssl/boringssl.cp` | 底层 BoringSSL C 头文件桥接声明 |
 | `lib/crypto/boringssl.cp` | `// Source: /data/dev/bun/src/boringssl/boringssl.cp` | BoringSSL 导出包装层 |
-| `lib/crypto/index.cp` | `// Source: /data/dev/bun/src/boringssl/boringssl.cp` | `cap:crypto` 标准库对外统一导出入口 |
+| `lib/crypto/minisign.cp` | `// Origin: Pure-CP Stdlib` | Minisign / OpenBSD Signify 公钥与签名编解码 |
+| `lib/crypto/pgp.cp` | `// Origin: Pure-CP Stdlib` | OpenPGP RFC 4880/9580 Armor 与 Packet 解析器（含 CRC24） |
+| `lib/crypto/age.cp` | `// Origin: Pure-CP Stdlib` | `age-encryption.org/v1` 文件头、Stanza 与密钥格式解析 |
+| `lib/crypto/sshsig.cp` | `// Origin: Pure-CP Stdlib` | OpenSSH `PROTOCOL.sshsig` v1 签名块解析与构造 |
+| `lib/crypto/pkcs7.cp` | `// Origin: Pure-CP Stdlib` | RFC 5652 CMS / PKCS#7 SignedData DER 解析器 |
+| `lib/crypto/pkcs8.cp` | `// Origin: Pure-CP Stdlib` | RFC 5958 PKCS#8 私钥与 RFC 5280 SPKI 公钥 DER 解析器 |
+| `lib/crypto/pkcs12.cp` | `// Origin: Pure-CP Stdlib` | RFC 7292 PKCS#12 PFX 容器 DER 解析器 |
+| `lib/crypto/der.cp` | `// Origin: Pure-CP Stdlib` | ITU-T X.690 严格 ASN.1 DER TLV 读写编解码器 |
+| `lib/crypto/shamir.cp` | `// Source: cp/lib/shamir` | `GF(2^8)` Shamir 门限秘密分享（`splitSecret`/`combineShares`） |
+| `lib/crypto/merkle.cp` | `// Source: cp/lib/merkle` | RFC 6962 Merkle Hash Tree 构建、存在性证明与树差分 |
+| `lib/crypto/otp.cp` | `// Source: cp/lib/otp` | RFC 4226 HOTP / RFC 6238 TOTP、Base32 与 `otpauth://` URI |
+| `lib/crypto/bech32.cp` | `// Source: cp/lib/bech32` | BIP-173 Bech32 与 BIP-350 Bech32m 地址/字节编解码 |
+| `lib/crypto/siphash.cp` | `// Source: cp/lib/siphash` | SipHash-2-4 / SipHash-1-3 与 128-bit 抗哈希洪水 PRF |
+| `lib/crypto/fnv.cp` | `// Origin: Pure-CP Stdlib` | FNV-1/FNV-1a (32/64/128-bit)、DJB2、SDBM、Jenkins OAAT |
+| `lib/crypto/murmur3.cp` | `// Source: cp/lib/murmur3` | MurmurHash3 `x86_32` 与 `x64_128`（单发 + 流式） |
+| `lib/crypto/crc.cp` | `// Source: cp/lib/crc` | CRC-8/16/32 (IEEE & Castagnoli)/64（含 `crc32Combine`） |
+| `lib/crypto/simhash.cp` | `// Origin: Pure-CP Stdlib` | 64-bit Charikar SimHash、汉明相似度与 4x16-bit LSH 去重 |
+| `lib/crypto/minhash.cp` | `// Origin: Pure-CP Stdlib` | MinHash 集合 Jaccard 相似度、LSH Band 与基数估算 |
+| `lib/crypto/index.cp` | `// Source: /data/dev/bun/src/boringssl/boringssl.cp` | `cap:crypto` 标准库对外统一零冲突导出入口（共 315 符号） |
 
 ---
 

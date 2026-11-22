@@ -13,7 +13,7 @@ import {
     isNearDuplicate,
     simhashBands4,
     sharesAnyBand4,
-} from "cap:simhash";
+} from "cap:crypto";
 
 test("1. Identical documents, case/punctuation normalization & FNV-1a reference check", () => {
     expect_eq(SIMHASH_BITS, 64 as u8);

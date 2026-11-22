@@ -18,7 +18,7 @@ import {
     verifyTotp,
     formatOtpAuthUri,
     parseOtpAuthUri,
-} from "cap:otp";
+} from "cap:crypto";
 
 fn emptyMutSlice(): []u8 {
     return std.heap.page_allocator.alloc(u8, 0) catch unreachable;
@@ -218,22 +218,22 @@ fn runTest4(): !void {
 fn runTest5(): !void {
     const alloc = std.testing.allocator;
 
-    const raw_secret = cap.otp.base32Decode(alloc, "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ")?;
+    const raw_secret = cap.crypto.base32Decode(alloc, "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ")?;
     defer alloc.free(raw_secret);
     expect_eq(std.mem.eql(u8, raw_secret, "12345678901234567890"), true);
 
-    const h0 = cap.otp.hotp(raw_secret, 0, 6, cap.otp.OtpAlgorithm.Sha1)?;
+    const h0 = cap.crypto.hotp(raw_secret, 0, 6, cap.crypto.OtpAlgorithm.Sha1)?;
     expect_eq(h0, 755224 as u32);
 
-    const t_str = cap.otp.totpString(alloc, raw_secret, 1111111109, 30, 8, cap.otp.OtpAlgorithm.Sha1)?;
+    const t_str = cap.crypto.totpString(alloc, raw_secret, 1111111109, 30, 8, cap.crypto.OtpAlgorithm.Sha1)?;
     defer alloc.free(t_str);
     expect_eq(std.mem.eql(u8, t_str, "07081804"), true);
 
-    const v = cap.otp.verifyTotp(raw_secret, t_str, 1111111109, 30, 8, cap.otp.OtpAlgorithm.Sha1, 1)?;
+    const v = cap.crypto.verifyTotp(raw_secret, t_str, 1111111109, 30, 8, cap.crypto.OtpAlgorithm.Sha1, 1)?;
     expect_eq(v.valid, true);
     expect_eq(v.delta, 0 as i64);
 
-    let u = cap.otp.parseOtpAuthUri(alloc, "otpauth://hotp/Test:bob?secret=GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ&counter=7&digits=6")?;
+    let u = cap.crypto.parseOtpAuthUri(alloc, "otpauth://hotp/Test:bob?secret=GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ&counter=7&digits=6")?;
     defer u.deinit(alloc);
     expect_eq(u.is_totp, false);
     expect_eq(u.counter, 7 as u64);

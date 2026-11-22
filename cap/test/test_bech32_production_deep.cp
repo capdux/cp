@@ -1,7 +1,6 @@
 // Source: cp/cap/test/test_bech32_production_deep.cp
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import cap from "cap";
 import {
     Bech32Variant,
     Bech32Error,
@@ -10,7 +9,7 @@ import {
     encodeBytes,
     decodeBytes,
     encodeSegwitAddr,
-} from "cap:bech32";
+} from "cap:crypto";
 
 test("1. BIP-173 & BIP-350 official specification test vectors") {
     const alloc = std.testing.allocator;
@@ -79,10 +78,10 @@ test("4. Checksum tampering, mixed case and invalid witness protection") {
 
 test("5. Dynamic cap.bech32 namespace and zero-leak check") {
     const alloc = std.testing.allocator;
-    const encoded = try cap.bech32.encodeBytes(alloc, "cp", "hello-bech32m", .bech32m);
+    const encoded = try cap.crypto.encodeBytes(alloc, "cp", "hello-bech32m", .bech32m);
     defer alloc.free(encoded);
-    const out = try cap.bech32.decodeBytes(alloc, encoded);
+    const out = try cap.crypto.decodeBytes(alloc, encoded);
     defer out.deinit(alloc);
     try std.testing.expectEqualStrings("hello-bech32m", out.bytes);
-    expect_eq(out.variant, cap.bech32.Bech32Variant.bech32m);
+    expect_eq(out.variant, cap.crypto.Bech32Variant.bech32m);
 }

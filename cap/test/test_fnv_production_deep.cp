@@ -25,7 +25,7 @@ import {
     djb2Xor,
     sdbm,
     jenkinsOaat,
-} from "cap:fnv";
+} from "cap:crypto";
 
 test("1. IETF FNV-1a & FNV-1 32-bit official test vectors", () => {
     expect_eq(FNV32_OFFSET_BASIS, 0x811C9DC5 as u32);

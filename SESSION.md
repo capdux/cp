@@ -1509,3 +1509,7 @@
 ### 2026-11-22（根目录分域收敛第 14 批完成：lib/geo/（净减 12 个顶层目录，累计 -214） | 2026-11-22 15:02:55）
 - **执行与结单汇报**：
   > Stdlib Root Consolidator 完成 lib/geo/ 收敛：12 个地理/GIS/导航/空间编码小目录（geojson/topojson/wkt/wkb/gpx/kml/nmea/olc/ais/geohash_3d/geom2d/geo_quadtree）零冲突归并入 lib/geo/ + geohash_.cp 参考归档，物理清理 12 个冗余旧目录（14/14 PASS），根目录 644 -> 632（累计 -214）；续派 lib/text/ 文本/格式化/模板领域收敛。
+
+### 2026-11-22（根目录分域收敛第 15 批完成：lib/crypto/（净减 18 个顶层目录，累计 -232） | 2026-11-22 15:03:50）
+- **执行与结单汇报**：
+  > Stdlib Root Consolidator 完成 lib/crypto/ 收敛：18 个签名/PKI/DER/秘密分享/Merkle/OTP/Bech32/哈希小目录零冲突归并入 lib/crypto/ 并物理清理旧目录（19/19 PASS，严格保护 Bun jwt/wyhash/sri/csrf 与跨库依赖）；根目录 632 -> 614（累计 -232）；续派 lib/auth/ 认证与鉴权领域收敛。

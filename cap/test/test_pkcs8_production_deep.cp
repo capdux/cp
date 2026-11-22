@@ -20,7 +20,7 @@ import {
     parsePkcs8PrivateKey,
     parsePkcs8Encrypted,
     parseSpkiPublicKey,
-} from "cap:pkcs8";
+} from "cap:crypto";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

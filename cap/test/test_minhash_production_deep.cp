@@ -9,7 +9,7 @@ import {
     minhashJaccard,
     minhashBandHash,
     minhashCardinality,
-} from "cap:minhash";
+} from "cap:crypto";
 
 fn absDiff(a: f64, b: f64): f64 {
     if (a >= b) {

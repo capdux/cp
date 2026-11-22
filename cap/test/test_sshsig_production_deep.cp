@@ -19,7 +19,7 @@ import {
     decodeSshsigArmor,
     parseSshsigBinary,
     buildSshsigSignedData,
-} from "cap:sshsig";
+} from "cap:crypto";
 
 struct WireBuilder {
     buf: [1024]u8 = [0; 1024],

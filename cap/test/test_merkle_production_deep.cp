@@ -20,7 +20,7 @@ import {
     hashNode,
     verifyProof,
     diffTrees,
-} from "cap:merkle";
+} from "cap:crypto";
 
 fn expectBuildEmpty(alloc: std.mem.Allocator): bool {
     const empty_slice: []const string = [];
@@ -235,12 +235,12 @@ test("cap:merkle - import cap from \"cap\" dynamic mounting (cap.merkle)") {
     const alloc = std.testing.allocator;
     const items: [4]string = ["m0", "m1", "m2", "m3"];
 
-    let tree = cap.merkle.MerkleTree.build(alloc, &items) catch unreachable;
+    let tree = cap.crypto.MerkleTree.build(alloc, &items) catch unreachable;
     defer tree.deinit();
 
     expect_eq(tree.leafCount(), 4);
     let proof = tree.generateProof(alloc, 3) catch unreachable;
     defer proof.deinit();
 
-    expect_eq(cap.merkle.MerkleTree.verifyProof(tree.rootHash(), "m3", &proof), true);
+    expect_eq(cap.crypto.MerkleTree.verifyProof(tree.rootHash(), "m3", &proof), true);
 }

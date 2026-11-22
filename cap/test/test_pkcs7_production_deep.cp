@@ -23,7 +23,7 @@ import {
     parseContentInfo,
     isPkcs7SignedData,
     parseSignedData,
-} from "cap:pkcs7";
+} from "cap:crypto";
 
 // Standard algorithm OIDs for tests
 const OID_SHA256: []const u8 = "\x60\x86\x48\x01\x65\x03\x04\x02\x01";

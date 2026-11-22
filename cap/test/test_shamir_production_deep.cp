@@ -8,7 +8,7 @@ import {
     freeShares,
     splitSecret,
     combineShares,
-} from "cap:shamir";
+} from "cap:crypto";
 
 test("1. (3, 5) threshold secret splitting and arbitrary subset recovery") {
     const alloc = std.testing.allocator;
@@ -78,10 +78,10 @@ test("4. Duplicate share index, zero index, length mismatch and threshold valida
 
 test("5. Dynamic cap.shamir namespace and zero-leak check") {
     const alloc = std.testing.allocator;
-    const shares = try cap.shamir.splitSecret(alloc, "cap-shamir-ok", 2, 3);
-    defer cap.shamir.freeShares(alloc, shares);
-    const pair: [2]cap.shamir.Share = [ shares[1], shares[2] ];
-    const out = try cap.shamir.combineShares(alloc, &pair);
+    const shares = try cap.crypto.splitSecret(alloc, "cap-shamir-ok", 2, 3);
+    defer cap.crypto.freeShares(alloc, shares);
+    const pair: [2]cap.crypto.Share = [ shares[1], shares[2] ];
+    const out = try cap.crypto.combineShares(alloc, &pair);
     defer alloc.free(out);
     try std.testing.expectEqualStrings("cap-shamir-ok", out);
 }

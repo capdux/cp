@@ -4,7 +4,7 @@
 // O(log N) inclusion proof generation & stateless verification, and O(k log N) dual-tree diffing.
 
 const std = @import("std");
-import { sha256Raw } from "cap:crypto";
+import { sha256Raw } from "./hash.cp";
 
 pub err MerkleError {
     EmptyTree,
