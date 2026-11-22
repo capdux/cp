@@ -1,5 +1,7 @@
 # CP 标准库：SourceMap v3 源码映射与位置反查子系统使用手册 (`cap:sourcemap`)
 
+> 参考来源：`/data/dev/bun/src/sourcemap/sourcemap.cp`, `/data/dev/bun/src/sourcemap/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计哲学
 
 `cap:sourcemap` 是 CP 语言官方内置的工业级 **SourceMap v3 (ECMA-426)** 源码位置映射、Base64 VLQ 变长编解码、行偏移 $O(\log N)$ 二分定位、`MappingList` 排序与反查、`SourceMapChunk` 多段拼接以及紧凑二进制检查点（`InternalSourceMap`）标准库。完整吸收自 Bun（`/data/dev/bun/src/sourcemap/`）。
@@ -132,3 +134,16 @@ pub fn demoChunkMerge()! {
 | **运行时二进制压缩表** | 不支持 | `InternalSourceMap` | `InternalSourceMapBuilder` / `InternalSourceMap.find` |
 | **多段 Chunk 拼接合并** | `SourceNode` | `Chunk` / `appendSourceMapChunk` | `SourceMapChunk` (`appendChunk`, `merge`, `fromParsed`) |
 | **JSON 解析与序列化** | `new SourceMapConsumer(json)` | `ParsedSourceMap` | `SourceMapConsumer` / `ParsedSourceMapRecord.parse` / `toJSON` |
+
+---
+
+## 五、 上游 Bun 行为契约与边界注意事项
+
+1. **0-based 坐标与 UTF-16 列偏移约定（ECMA-426）**：
+   - SourceMap v3 协议的 `line` 与 `column` 均从 `0` 开始计，且列号按 **UTF-16 码元**计量（非 UTF-8 字节偏移）；对包含中文或 Emoji（代理对占 2 个 UTF-16 码元）的源码行，务必通过 `LineOffsetTable` / `utf8ToUtf16Column` 转换后再编码 VLQ，避免堆栈反查列偏移错位。
+2. **VLQ 极端整数与畸形输入防护**：
+   - `VLQ.encode` / `VLQ.decode` 在 64 位无符号算术下处理 `i32` 边界（含 `INT32_MIN = -2147483648`），拒绝超长连续续位字节与非法 Base64 字符，防止畸形 `.map` 文件触发位移溢出或死循环。
+3. **运行时紧凑检查点（`InternalSourceMap`）性能特征**：
+   - 对标 Bun 运行时异常堆栈反解机制：`InternalSourceMap` 每 64 条映射记录一个稀疏检查点，在极低内存占用下先二分定位检查点再线性推进至多 64 步，适合嵌入 AOT 二进制或长驻服务中做毫秒级错误堆栈还原。
+4. **多 Chunk 拼接与偏移重定位**：
+   - 使用 `SourceMapChunk.appendChunk(alloc, &chunk, line_offset, col_offset)` 合并多份打包产物时，自动按目标行/列偏移重算生成坐标并重映射 `sources` / `names` 索引，支持直接通过 `printSourceMapJSON` 输出标准 v3 JSON。

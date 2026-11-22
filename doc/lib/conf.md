@@ -1,6 +1,6 @@
 # `cap:conf` — 统一配置交换引擎（YAML 1.2 / TOML 1.0 / INI / JSON5 & `ConfGetter`）
 
-> **上游溯源**: `/data/dev/bun/src/ini/ini.cp` & `/data/dev/bun/src/interchange/` (`toml/`, `yaml.cp`, `json5.cp`, `interchange.cp`)  
+> 参考来源：`/data/dev/bun/docs/runtime/{toml,yaml,json5,environment-variables}.mdx`, `/data/dev/bun/src/interchange/`, `/data/dev/bun/src/ini/ini.cp` | 吸收日期：2026-11-22
 > **模块路径**: `lib/conf/`  
 > **导入协议**: `import { ConfTag, ConfDateTime, ConfDateTimeKind, ConfValue, YamlParser, YamlStream, YamlDoc, YAML, TomlParser, TomlDoc, TOML, Ini, JSON5, DotEnv, ConfGetter, ConfValueParser } from "cap:conf";`
 
@@ -193,3 +193,16 @@ fn demoJson5(): !void {
     let clean_json = JSON5.stripCommentsAndTrailingCommas(json5_src, &out_buf);
 }
 ```
+
+---
+
+## 五、 上游 Bun 行为契约与边界注意事项
+
+1. **`.env` 分层加载优先级约定（参考 `/data/dev/bun/docs/runtime/environment-variables.mdx`）**：
+   - 上游 Bun 按递增优先级依次读取 `.env` < `.env.<NODE_ENV>`（`production`/`development`/`test`）< `.env.local` < 进程显式环境变量；在 CP 应用中通过 `DotEnv` 分层加载多份配置文件时推荐沿用该优先级，避免本地覆盖泄露至生产配置。
+2. **YAML 1.2 安全与多文档边界**：
+   - `YamlParser.parseStream` 严格以 `---` / `...` 切分多文档流，支持锚点（`&a`）、别名（`*a`）与合并键（`<<: *a`）；对来自不可信输入的 YAML 须控制锚点展开深度以防止资源耗尽。
+3. **TOML 1.0 与 RFC 3339 严格校验**：
+   - `ConfDateTime` 在解析 TOML 日期时间字面量时严格校验闰年与月/日/时/分/秒边界；`TomlParser.parse` 对重复表定义与非法点分键直接返回错误，符合 TOML 1.0 规范。
+4. **JSON5 净化快路径**：
+   - 对仅需兼容注释与尾随逗号的配置文件（如 `tsconfig.json`），优先调用零分配 `JSON5.stripCommentsAndTrailingCommas(src, out_buf)` 将其净化为标准 JSON 后交由 `cap:json` 极速解析。

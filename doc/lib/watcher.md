@@ -1,6 +1,6 @@
 # `cap:watch` (`cap:watcher`) — 跨平台文件系统监控、路径过滤与事件合并防抖引擎
 
-> **上游溯源**: `/data/dev/bun/src/watcher/Watcher.cp` & `/data/dev/bun/src/watcher/INotifyWatcher.cp`  
+> 参考来源：`/data/dev/bun/docs/runtime/watch-mode.mdx`, `/data/dev/bun/src/watcher/Watcher.cp`, `/data/dev/bun/src/watcher/INotifyWatcher.cp` | 吸收日期：2026-11-22
 > **模块路径**: `lib/watch/` & `lib/watcher/`  
 > **导入协议**: `import { Watcher, createWatcher, WatchOptions, WatchEvent, WatchAction, WatchEventOp, WatchEventKind, WatchMask, FileWatcher, WatchFilter, DebounceTracker, DebounceEngine, InotifyBackend } from "cap:watch";`（或 `"cap:watcher"`）
 
@@ -99,3 +99,16 @@ fn demoWatcherLifecycle(): void {
     // ready_n => 1 (两次事件被合并为 1 条 WatchAction.create 事件)
 }
 ```
+
+---
+
+## 上游 Bun 行为契约与性能边界注意事项
+
+1. **内核原生事件驱动优于轮询（参考 `/data/dev/bun/docs/runtime/watch-mode.mdx`）**：
+   - `InotifyBackend` 直接调用 Linux `inotify_init1(IN_NONBLOCK | IN_CLOEXEC)` 与静态栈缓冲批量读取事件，彻底避免传统多层封装与轮询模式带来的 CPU 空转；监控大型项目目录树时应留意宿主系统的 `fs.inotify.max_user_watches` 与文件描述符 `rlimit` 上限。
+2. **原子保存与事件风暴合并（`DebounceEngine`）**：
+   - 现代编辑器（如 VSCode / Vim）保存文件时通常会连续触发 `create temp -> write -> rename -> delete` 序列；开启防抖合并窗口（推荐 `20ms ~ 50ms`）可按 `delete > rename > create > modify` 语义合并为单次变更通知。
+3. **默认忽略噪音路径（`WatchFilter`）**：
+   - 在监控项目根目录时优先启用 `WatchFilter.shouldIgnore(path)`，过滤 `.git`、`node_modules`、`.cap`、`zig-cache` 与编辑器临时文件（`*.swp`/`*.tmp`/`*~`），防止构建产物写入触发死循环重载。
+4. **容量上限与确定性清理**：
+   - `Watcher` 采用固定容量表（`MAX_WATCH_ITEMS`、`MAX_PATH_LEN`、`MAX_RAW_BATCH`）实现零堆分配；使用完毕后务必配对 `defer watcher.close();` 及时释放 `inotify` 文件描述符。

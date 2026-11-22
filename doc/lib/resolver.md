@@ -1,5 +1,7 @@
 # CP 标准库：模块解析引擎与路径别名手册 (`cap:resolver`)
 
+> 参考来源：`/data/dev/bun/src/resolver/`, `/data/dev/bun/docs/guides/runtime/tsconfig-paths.mdx` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:resolver` 是 CP 语言官方内置的高性能模块解析引擎标准库，完整吸收自 Bun `src/resolver/`（`data_url.zig`、`package_json.zig`、`tsconfig_json.zig`、`resolver.zig`、`dir_info.cp`、`stat_hash.zig`）。该库面向编译器、打包器与包管理工具提供一站式模块定位能力，支持 RFC 2397 `data:` URL、`package.json` `exports`/`imports`/`browser`/`sideEffects` 路由与自引用、JSONC `tsconfig.json` `paths` 别名与 `extends` 继承链、协议识别（`cap:*` / `node:*` / `bun:*`）、目录元数据缓存（`DirEntryCache` + `StatHash`）、软链接穿透解析（`RealpathResolver` 含 `ELOOP` 环路防护），以及 W3C SRI 校验与 HostedGit 解析。
@@ -134,3 +136,16 @@ pub fn demoResolver(): !void {
     * = fp.value;
 }
 ```
+
+---
+
+## 上游 Bun 行为契约与安全边界注意事项
+
+1. **`package.json` `exports` 条件匹配顺序与回退（`PackageJson` / `ResolveConditions`）**：
+   - 条件对象按 `package.json` 中键的**声明顺序**匹配（而非调用方传入条件集合的顺序），`"default"` 应置于末尾作为兜底；子路径通配模式（如 `"./*"`）按最长静态前缀优先匹配；当目标映射为 `null` 时表示显式封锁该子路径（阻止内部私有文件泄漏）。
+2. **`tsconfig.json` `paths` 与 `extends` 继承链（`TsConfigChainLoader`）**：
+   - 参考 `/data/dev/bun/docs/guides/runtime/tsconfig-paths.mdx`：`paths` 别名映射相对于声明该 `paths` 的配置文件所在目录（或 `baseUrl`）解析；`TsConfigChainLoader` 强制限制最大继承深度（`MAX_EXTENDS_DEPTH`）以拦截循环 `extends` 链。
+3. **符号链接环路与目录缓存失效（`RealpathResolver` & `DirEntryCache`）**：
+   - `RealpathResolver` 严格限制最大软链接跳转次数（`MAX_SYMLINK_DEPTH = 40`），遇环路立即返回 `ELOOP` 错误而非无限递归；`DirEntryCache` 通过 `DirInfo.isStale()` 与 `StatHash` 探测目录变更，兼顾高频解析性能与热更新一致性。
+4. **W3C SRI 多算法择强与恒定时间校验（`Integrity`）**：
+   - 当完整性字符串包含多个算法摘要（如 `sha256-... sha512-...`）时，按 W3C SRI 规范自动选择最强支持算法进行校验，并采用恒定时间字节比对防止侧信道泄露。

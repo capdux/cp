@@ -1,5 +1,7 @@
 # CP 标准库：RFC 8259/6901/6902/7396/8785 JSON 与 NDJSON 流式协议手册 (`cap:json`)
 
+> 参考来源：`/data/dev/bun/docs/runtime/jsonl.mdx`, `/data/dev/bun/src/interchange/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:json` 是 CP 语言官方内置的高性能 JSON 数据交换标准库，对照 Bun 生产级数据交换模块（`/data/dev/bun/src/interchange/`）构建，实现 **16 字节 SIMD 引号/转义/控制字符扫描 + 零拷贝切片借用 + 严格 RFC 8259 校验 + UTF-16 代理对解码 + RFC 6901 JSON Pointer + RFC 6902 JSON Patch + RFC 7396 Merge Patch + RFC 8785 Canonical/Pretty 序列化 + NDJSON/JSONL 流式读写** 全栈能力。
@@ -124,3 +126,16 @@ pub fn demoJsonRfcAndNdjson(): !void {
   - `minifyJson`、`minifyJsonc`、`minifyJsoncWithOptions`。
 - **RFC 6901 JSON Pointer 零分配工具 (`ptr.cp`)**：
   - `isValidPointer`、`parseArrayIndex`、`unescapeToken`、`escapeToken`、`PointerIter`、`appendToken`、`parentPointer`。
+
+---
+
+## 上游 Bun 行为契约与安全边界注意事项
+
+1. **NDJSON / JSONL 分块流式边界（参考 `/data/dev/bun/docs/runtime/jsonl.mdx`）**：
+   - `NdjsonReader` 对标上游 `Bun.JSONL.parseChunk` 增量流语义：当网络分片在 JSON 对象中间截断时，`feed(chunk)` 仅产出完整已闭合的记录并将半行缓冲在内部，最后在流结束时必须调用 `finish()` 冲刷尾部无换行符的最后一条记录；单行超长输入内置长度上限保护以防止内存耗尽。
+2. **严格 RFC 8259 vs JSONC 预处理分离**：
+   - `JSON.parse` / `JsonParser.parse` 严格遵循 RFC 8259（拒绝注释、尾随逗号与非法控制字符 `< 0x20`），并支持通过 `JsonParseOptions` 限制最大嵌套深度防止递归栈溢出；需要处理带注释的配置文件时，先使用 `minifyJsonc` / `minifyJsoncWithOptions` 剥离注释。
+3. **JSON Pointer 与 Patch 原子性（RFC 6901 / 6902）**：
+   - RFC 6901 转义序列严格按顺序解码：`~1` 先转为 `/`，再将 `~0` 转为 `~`（`unescapeToken`）；数组索引拒绝前导零（如 `"01"` 非法，仅 `"0"` 或正整数合法）；`JsonPatch` 中的 `test` 操作失败时中止补丁应用。
+4. **RFC 8785 规范化输出与签名场景**：
+   - 需要对 JSON 载荷做哈希或密码学签名时，使用 `JSON.stringifyCanonical`（键名按字典序确定性排列、无多余空白）保证跨节点序列化字节完全一致。

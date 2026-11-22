@@ -1,6 +1,6 @@
 # CP 标准库：命令行解析、POSIX 终端探测、16/256/RGB 配色、Spinner 与多边框表格手册 (`cap:cli`)
 
-> **上游溯源**: `/data/dev/bun/src/clap/args.cp`, `/data/dev/bun/src/bun_core/tty.cp`, `/data/dev/bun/src/cli/cli.cp`  
+> 参考来源：`/data/dev/bun/src/clap/args.cp`, `/data/dev/bun/src/bun_core/tty.cp`, `/data/dev/bun/src/cli/cli.cp` | 吸收日期：2026-11-22
 > **模块路径**: `lib/cli/`  
 > **导入协议**: `import { CliArgs, SliceIterator, TtyMode, Terminal, AnsiColor, Spinner, SpinnerStyle, ProgressBar, CliTable, CliTableAlign, CliTableBorder } from "cap:cli";`
 
@@ -103,3 +103,16 @@ pub fn demoWidgets() {
   - `TableBorderStyle`（`ascii`/`compact`/`unicode_light`）、`CellAlign`（`left`/`right`/`center`）、`computeColumnWidths`、`renderBorderLine`、`renderTableRow`、`renderTable`。
 - **零分配树形 / 依赖树渲染器 (`lib/cli/tree.cp`)**：
   - `TreeStyle`（`unicode`/`ascii`/`rounded`）、`TreePrefix`（64 层祖先位掩码）、`TreeNode`、`renderFlatTree`。
+
+---
+
+## 上游 Bun 行为契约与终端边界注意事项
+
+1. **色彩降级与环境变量优先级（`lib/cli/color.cp`）**：
+   - `detectColorLevel` 严格遵循标准终端环境变量契约：`NO_COLOR` 非空或 `TERM=dumb` 时强制关闭色彩；`FORCE_COLOR`（`0`/`1`/`2`/`3`）优先覆盖非 TTY 重定向探测；`COLORTERM=truecolor|24bit` 启用 24-bit TrueColor；在 CI 环境（`lib/cli/ci_info.cp`）中自动识别非交互流水线避免渲染无意义的覆盖式动画帧。
+2. **参数解析 `--` 终止哨兵（`CliArgs`）**：
+   - 遇到独立 `--` 标志后，其后所有参数无论是否以 `-` 开头均按位置参数透传，与 POSIX `getopt` 及 Bun CLI 参数规范完全一致。
+3. **非 TTY 与管道重定向安全回退**：
+   - 当标准输出被重定向至文件或管道时，`Terminal.isTty(fd)` 返回 `false`，`Terminal.getSize(fd)` 安全回退至 `80x24`，避免 `ioctl(TIOCGWINSZ)` 失败引发异常。
+4. **宽字符与 ANSI 转义宽度剥离**：
+   - `CliTable` 与 `renderTable` 在计算列宽前先剥离 ANSI 色彩转义序列（`AnsiColor.stripAnsi`），再按 Unicode 显示宽度对齐 CJK 双宽字符，避免彩色表格边框错位。

@@ -1,5 +1,7 @@
 # CP 标准库：全栈压缩、归档与校验和子系统开发与使用手册 (`cap:pack`)
 
+> 参考来源：`/data/dev/bun/docs/runtime/archive.mdx`, `/data/dev/bun/src/{zlib,zstd,brotli,libarchive}/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计哲学
 
 `cap:pack`（在包管理器中同时兼容映射为 `cap:compress`）是 CP 语言官方内置的**工业级无损数据压缩、流式解压、零拷贝归档（Tar / PKZIP）与完整性校验和（CRC32 / Adler32）**全栈标准库。模块完整吸收自 Bun（`/data/dev/bun/src/zlib/`、`/data/dev/bun/src/zstd/`、`/data/dev/bun/src/brotli/`、`/data/dev/bun/src/libarchive/`），并针对 CP 强类型、确定性内存安全与零动态链接依赖进行了深度重构。
@@ -439,3 +441,16 @@ pub fn demoSniffer() {
 | **Tar 归档解析与构建** | 需第三方 `npm:tar` | `Bun.Archive` (`src/libarchive/`) | `TarHeader.encodeHeader()` / `TarReader` (零拷贝) |
 | **ZIP 归档解析与构建** | 需第三方 `npm:adm-zip` / `yauzl` | `src/libarchive/` | `ZipLocalHeader` / `ZipEocd.findInBuffer()` / `ZipReader` |
 | **CRC32 / Adler32** | `zlib.crc32(data)` | `Bun.hash.crc32` / `adler32` | `Crc32.checksum()` / `Adler32.checksum()` + 增量流 |
+
+---
+
+## 六、 上游 Bun 行为契约与安全防御注意事项
+
+1. **归档解包路径穿越防线（Zip-Slip / Tar-Slip 防护）**：
+   - 参考 `/data/dev/bun/docs/runtime/archive.mdx` 与 `lib/pack/tar_pax.cp`：在解压外部 Tar / ZIP 归档至磁盘前，必须通过 `validateArchivePath(entry.name)` 校验每一条路径，严格拦截绝对路径（`/` 开头或 Windows 盘符）以及含 `..` 的父目录逃逸路径。
+2. **纯内存只读遍历（无落盘解析）**：
+   - 对标 `Bun.Archive.files()` 语义，使用 `TarReader` / `PaxTarReader` / `ZipReader` 可直接在内存切片上零拷贝遍历条目并读取内容，无需先解压到临时目录，适合包校验、代码审计与无状态 Serverless 场景。
+3. **长路径与 PAX 扩展头**：
+   - 标准 USTAR `TarHeader` 文件名上限为 100 字节（加 prefix 为 255 字节）；归档路径超过 100 字节或包含非 ASCII 文件名时，应优先使用 `PaxTarWriter` / `PaxTarReader` 自动生成并解析 PAX `path` 扩展记录。
+4. **魔数嗅探优先于文件扩展名**：
+   - 处理网络下载包或 HTTP 响应流时，优先使用 `ArchiveSniffer.detect(bytes)` 依据魔数（`Gzip` / `Zstd` / `Zip` / `Tar` / `Xz`）判定真实封装格式，避免错误扩展名导致解压失败。

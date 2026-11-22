@@ -1,5 +1,7 @@
 # CP 标准库：MD4C 级工业 Markdown 解析与渲染手册 (`cap:md`)
 
+> 参考来源：`/data/dev/bun/docs/runtime/markdown.mdx`, `/data/dev/bun/src/md/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:md` 是 CP 语言官方内置的高完整度 CommonMark + GitHub Flavored Markdown (GFM) 解析与多目标渲染标准库，直接原版移植自 Bun 生产级 MD4C 架构引擎（`/data/dev/bun/src/md/`，21 个文件 11,735 行），同时 100% 保留原有 `Markdown.parse` / `Markdown.toHtml` / `MdTable` 结构化 AST 与表格 API 的向后兼容性。
@@ -99,3 +101,16 @@ pub fn demoMd4c(): ! {
     renderWithRenderer("![logo](https://example.com/a.png)", allocator, opts, collector.renderer())?;
 }
 ```
+
+---
+
+## 上游 Bun (MD4C) 行为契约与安全边界注意事项
+
+1. **GFM 扩展开关矩阵（参考 `/data/dev/bun/docs/runtime/markdown.mdx`）**：
+   - `cap:md` 底层原版移植自 Bun MD4C 引擎，支持通过 `MdEngineOptions` / `Flags` 精细控制 GFM 表格（`tables`）、删除线（`strikethrough`）、任务列表（`tasklists`）、URL/Email/www 自动链接（`autolinks`）、标题锚点 ID（`heading_ids` / `autolink_headings`）、下划线与 LaTeX 数学定界符等特性。
+2. **不可信 Markdown 渲染安全防线（`tag_filter` & `sanitize_html`）**：
+   - 渲染用户提交的 Markdown 为 HTML 时，务必开启 `tag_filter: true`（GFM 规范过滤 `<title>`、`<textarea>`、`<style>`、`<xmp>`、`<iframe>`、`<noembed>`、`<noframes>`、`<script>`、`<plaintext>` 等危险原始标签）与 `sanitize_html: true`，防止 XSS 注入。
+3. **双遍解析与自定义流式渲染器（`renderWithRenderer`）**：
+   - MD4C 引擎第一遍扫描全部链接引用定义（`ref_defs.cp`）与块结构，第二遍解析内联并通过 `RendererVTable` 流式派发事件，可直接接入自定义 `HtmlRenderer`、`AnsiRenderer` 或 `ImageUrlCollector`，无需构建完整 DOM 树。
+4. **Unicode 大小写折叠与 HTML5 实体完备性**：
+   - 引用链接标签匹配遵循 CommonMark Unicode Case-Folding（支持 1/2/3 码点折叠映射），完整内置 2,125 条 W3C HTML5 命名字符实体（二分查找）。
