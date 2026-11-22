@@ -1,6 +1,8 @@
 # cap:uri_normalize
 
-> 源码吸收自 `/data/dev/bun/src/url.zig`（RFC 3986 URI 规范化），提供纯 CP、零外部依赖、零堆分配的 URI 路径点段归约、百分号编码规范化与默认端口剥离库。
+> 参考来源：/data/dev/bun/src/url.zig | 吸收日期：2026-11-22
+
+基于 RFC 3986 URI 规范化标准，提供纯 CP、零外部依赖、零堆分配的 URI 路径点段归约、百分号编码规范化与默认端口剥离库。
 
 ## 导入方式
 
@@ -36,3 +38,10 @@ fn example() {
     * = normalizePercentEncoding("/%7euser/%2fdoc", &buf);      // "/~user/%2Fdoc"
 }
 ```
+
+## 上游行为契约与安全规范化边界
+
+1. **保留字符不误解码 (`normalizePercentEncoding`)**：
+   - 仅将 RFC 3986 §2.3 非保留字符（`ALPHA`/`DIGIT`/`-`/`.`/`_`/`~`，如 `%7e` -> `~`）解码为字面量；保留字符（如 `%2f` `/`、`%3f` `?`、`%23` `#`）仅统一转大写十六进制（`%2F`），绝不改变 URI 路径结构语义，防止路由鉴权绕过。
+2. **点段归约与缓存键归一化 (`removeDotSegments` & `normalizeOrigin`)**：
+   - 严格按 RFC 3986 §5.2.4 消解 `.` / `..` 路径段，配合 `normalizeOrigin` 小写化 scheme/host 并剥离默认端口（如 `https:443`、`http:80`），适合 CDN 缓存键去重与 SSRF 源校验。

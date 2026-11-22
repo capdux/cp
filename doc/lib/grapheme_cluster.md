@@ -1,6 +1,6 @@
 # `cap:grapheme_cluster` — Unicode UAX #29 扩展字素簇边界判定与 UTF-8 迭代器
 
-> 溯源：从 `/data/dev/bun/src/string/immutable/grapheme.cp` 吸收并规范化为纯 CP 标准库模块。
+> 参考来源：/data/dev/bun/src/string/immutable/grapheme.cp | 吸收日期：2026-11-22
 
 `cap:grapheme_cluster` 提供零外部依赖、零堆分配的 Unicode UAX #29 Extended Grapheme Cluster 切分、计数与切片引擎：
 
@@ -55,3 +55,12 @@ fn demo() {
     * = emoji_only;
 }
 ```
+
+## 上游行为契约与 Unicode 切分边界
+
+1. **复合 Emoji 与国旗序列不撕裂（UAX #29 GB11/GB12/GB13）**：
+   - 终端排版、编辑器光标移动与 UI 截断严禁按字节或单码点切分，`GraphemeIterator` 与 `sliceByGraphemes` 将 ZWJ 家庭 Emoji（如 `👨‍👩‍👧‍👦`）、肤色修饰符、组合音调及双 Regional Indicator 国旗（如 `🇨🇳`）完整保持为单一字素簇。
+2. **CRLF 原子性（GB3）**：
+   - Windows 换行符 `\r\n` 视为单个字素簇，不会在 `\r` 与 `\n` 之间错误断开。
+3. **跨调用状态机重置**：
+   - 直接调用底层 `shouldBreak(state, prev, next)` 连续扫描多段文本时，切换新文本段前须调用 `state.reset()` 清除残留的 `RegionalIndicator` 奇偶计数与 `ExtPict` ZWJ 状态。

@@ -1,6 +1,6 @@
 # `cap:json5` — 零分配 JSON5 1.0 词法器、校验器与标准 JSON 转换器
 
-> 来源：`/data/dev/bun/src/interchange/json5.cp`（纯 CP 零堆分配实现）
+> 参考来源：/data/dev/bun/src/interchange/json5.cp | 吸收日期：2026-11-22
 
 `cap:json5` 提供完整的 JSON5 1.0 词法迭代、语法校验以及零堆分配的标准 RFC 8259 JSON 转换能力，适用于配置文件（如 `tsconfig.json` / `cap.json5`）、高吞吐预处理管线与无 GC 嵌入式场景。
 
@@ -59,3 +59,10 @@ if (json := toStandardJson(src, buf[0..])) {
     * = json;
 }
 ```
+
+## 上游行为契约与规范化边界
+
+1. **JSON5 到 RFC 8259 JSON 严格降级规则 (`toStandardJson`)**：
+   - `Infinity` / `-Infinity` / `NaN` 按 RFC 8259 兼容性规范化为 `null`；前导/尾随小数点（`.5` / `5.`）自动补 `0`（`0.5` / `5.0`）；显式 `+` 号剥离；单引号字符串内的未转义 `"` 自动转义为 `\"`。
+2. **嵌套深度与整数溢出防护**：
+   - 严格限制最大嵌套深度 64 层以防止畸形配置栈溢出；十六进制整数超出 `u64` 或遇到未闭合块注释 `/*` 时返回 `null`；建议调用方预留 `out.len >= input.len * 2` 以容纳补全双引号与转义展开。
