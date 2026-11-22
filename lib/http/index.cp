@@ -221,6 +221,17 @@ export {
     H3PendingRequest,
     H3PooledSession,
     H3SessionPool,
+    H3_DISPATCH_MAX_STREAMS,
+    H3_DISPATCH_MAX_HEADERS,
+    H3_DISPATCH_NO_STREAM,
+    H3DispatchError,
+    H3ConnCloseReason,
+    H3HeaderEventKind,
+    H3RawHeader,
+    H3StreamSlot,
+    H3HeaderDispatchResult,
+    H3ConnCloseSummary,
+    H3CallbackDispatcher,
 } from "./h3/index";
 
 // --- Step 3: Industrial Client Engine & Lifecycle ---

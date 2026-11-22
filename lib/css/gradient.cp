@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/values/gradient.cp | Synced: 2026-11-22T05:04:38Z
+// Source: Absorbed from /data/dev/bun/src/css/values/gradient.cp | Synced: 2026-11-22T10:18:02Z
 
 pub const MAX_STOPS: usize = 16;
 const PI: f64 = 3.14159265358979323846;

@@ -79,3 +79,17 @@ export {
     H3PooledSession,
     H3SessionPool,
 } from "./session_pool";
+
+export {
+    H3_DISPATCH_MAX_STREAMS,
+    H3_DISPATCH_MAX_HEADERS,
+    H3_DISPATCH_NO_STREAM,
+    H3DispatchError,
+    H3ConnCloseReason,
+    H3HeaderEventKind,
+    H3RawHeader,
+    H3StreamSlot,
+    H3HeaderDispatchResult,
+    H3ConnCloseSummary,
+    H3CallbackDispatcher,
+} from "./stream_dispatch";

@@ -719,3 +719,27 @@ const n = tbl.resolveAndDrain(j1.connect_id, waiters[0..])?; // n == 2, waiters 
 * = j2;
 * = n;
 ```
+
+6. **HTTP/3 QUIC 客户端回调事件调度器（`h3/stream_dispatch.cp`，吸收自 `/data/dev/bun/src/http/h3_client/callbacks.cp` & `/data/dev/bun/docs/guides/http/fetch.mdx`）**：
+   - 导出：`H3_DISPATCH_MAX_STREAMS` (`32`)、`H3_DISPATCH_MAX_HEADERS` (`32`)、`H3_DISPATCH_NO_STREAM` (`0`)、`H3DispatchError`、`H3ConnCloseReason`（`HandshakeFailed`/`ConnectionClosed`/`GoawayReceived`）、`H3HeaderEventKind`、`H3RawHeader`、`H3StreamSlot`、`H3HeaderDispatchResult`、`H3ConnCloseSummary`、`H3CallbackDispatcher`；
+   - 100% 零堆分配建模 `onHandshakeDone` / `onGoaway` / `onConnClose` / `onStreamOpen` / `onStreamHeaders` / `onStreamData` / `onStreamClose` 全生命周期：自动过滤 `:*` 伪头部并解析 `:status`，忽略 `1xx` 信息响应与响应后 trailer，首帧缺失 `:status` 判定为协议错误，连接关闭时按握手完成态区分 `HandshakeFailed` 与 `ConnectionClosed` 并批量排空在途请求。
+
+```cp
+import { H3CallbackDispatcher, H3RawHeader, H3HeaderEventKind } from "cap:http";
+
+let d = H3CallbackDispatcher.init();
+* = d.enqueueRequest(1001)?;
+const to_open = d.onHandshakeDone(true); // 1
+const req_id = d.onStreamOpen(4, true)?; // 1001
+const hdrs: [2]H3RawHeader = [
+    H3RawHeader{ name: ":status", value: "200" },
+    H3RawHeader{ name: "content-type", value: "application/json" },
+];
+const hr = d.onStreamHeaders(4, hdrs[0..])?;
+// hr.kind == H3HeaderEventKind.DeliveredFinalHeaders, hr.status_code == 200
+* = d.onStreamData(4, 128, true)?;
+* = d.onStreamClose(4)?;
+* = to_open;
+* = req_id;
+* = hr;
+```

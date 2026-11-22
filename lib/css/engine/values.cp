@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/values/values.cp | Synced: 2026-11-20T10:24:24Z
+// Source: Absorbed from /data/dev/bun/src/css/values/values.cp | Synced: 2026-11-22T10:17:30Z
 // lib/css/engine/values.cp
 // Industrial CSS Value Types: Angle, Time, Resolution, Ratio, AlphaValue, UrlValue, Position, EasingFunction, Gradient, CssRect
 
