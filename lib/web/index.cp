@@ -436,3 +436,19 @@ export {
     CspDirective,
     CspPolicy,
 } from "./cspPolicy.cp";
+
+// --- Zero-Alloc RFC 6797 HSTS Parser, Domain Store & HTTPS Upgrade Engine ---
+export {
+    HSTS_MAX_DOMAINS,
+    HSTS_HOST_MAX_LEN,
+    HSTS_PRELOAD_MIN_MAX_AGE,
+    HstsError,
+    HstsPolicy,
+    HstsEntry,
+    HstsLookupResult,
+    HstsStoreStats,
+    parseHstsHeader,
+    formatHstsHeader,
+    isHstsEligibleHost,
+    HstsStore,
+} from "./hstsStore.cp";

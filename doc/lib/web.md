@@ -575,6 +575,36 @@ pub fn demoCspPolicy() {
 }
 ```
 
+### RFC 6797 HTTP Strict-Transport-Security (HSTS) 解析、域名表与 HTTPS 自动升级引擎 (`hstsStore.cp`)
+
+100% 纯 CP、零动态堆分配的 RFC 6797 HSTS 策略解析器、预加载/动态域名表与 HTTPS 自动升级裁决引擎：
+
+- **常量与错误集**：
+  - `HSTS_MAX_DOMAINS = 64`、`HSTS_HOST_MAX_LEN = 128`、`HSTS_PRELOAD_MIN_MAX_AGE = 31_536_000`
+  - `HstsError`（`EmptyHeader | MissingMaxAge | DuplicateDirective | InvalidMaxAge | CrlfRejected | InvalidHost | IpLiteralDisallowed | StoreFull | BufferTooSmall`）
+- **数据模型与解析/格式化器**：
+  - `HstsPolicy`（`max_age_sec`, `include_subdomains`, `preload`, `isPreloadEligible()`）
+  - `HstsEntry`（`host()`, `expires_at_sec`, `include_subdomains`, `is_preload`）、`HstsLookupResult`、`HstsStoreStats`
+  - `parseHstsHeader(header): HstsPolicy ! HstsError`（大小写不敏感指令、支持引号包裹 `max-age="31536000"`、严格拒绝重复指令/非法数值/CRLF）
+  - `formatHstsHeader(policy, *out_buf): usize ! HstsError`
+  - `isHstsEligibleHost(host): bool`（遵循 RFC 6797 §8.1.1 拒绝 IPv4/IPv6 字面量，自动规范化小写与尾点）
+- **核心存储引擎 `HstsStore`**：
+  - `init()` / `addPreload(*_, host, include_subdomains)`（不可变预加载条目，永不过期且不被动态 `max-age=0` 撤销）
+  - `applyHeader(*_, host, header, now_sec): bool ! HstsError`（`max-age=0` 即时移除动态条目，`max-age > 0` 插入/续期）
+  - `shouldUpgrade(*_, host, now_sec): HstsLookupResult`（精确匹配优先，否则逐级父域查 `includeSubDomains`）
+  - `evictExpired(*_, now_sec): usize` / `stats(): HstsStoreStats`
+
+```cp
+import { HstsStore } from "cap:web";
+
+pub fn demoHstsStore() {
+    let store = HstsStore.init();
+    * = store.applyHeader("example.com", "max-age=31536000; includeSubDomains; preload", 1_700_000_000) catch false;
+    const res = store.shouldUpgrade("api.example.com", 1_700_000_100);
+    * = res.must_upgrade; // true (matched_via_subdomain == true)
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
