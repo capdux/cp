@@ -1,6 +1,6 @@
 # `cap:semver` — Semver 2.0.0 语义化版本解析与区间查询引擎
 
-> **上游溯源**: `/data/dev/bun/src/semver/` (`semver.cp`, `Version.cp`, `SemverQuery.cp`, `SemverRange.cp`)  
+> 参考来源：`/data/dev/bun/docs/runtime/semver.mdx`, `/data/dev/bun/src/semver/` | 吸收日期：2026-11-22
 > **模块路径**: `lib/semver/`  
 > **导入协议**: `import { Semver, Version, PartialVersion, ReleaseType, SemverRange, Query } from "cap:semver";`
 
@@ -117,3 +117,17 @@ fn demoRangeMatching() {
 | `lib/semver/rset.cp` | `MAX_COMPARATORS_PER_GROUP`, `MAX_GROUPS`, `SemverVersion`, `RangeOp`, `RangeComparator`, `ComparatorGroup`, `ParsedSemverRange` | 固定容量零堆分配 Range 比较器组解析与求值 |
 | `lib/semver/satisfies.cp` | `SatisfiesVersion`, `satisfiesRange`, `satisfiesVersion`, `isValidSemverRange` | 轻量零分配版本区间 `satisfies` 校验器 |
 | `lib/semver/sort.cp` | `SemverOrder`, `ParsedSemver`, `parseSemverStrict`, `parseSemverLoose`, `compareSemver`, `compareSemverStr`, `sortSemverAsc`, `sortSemverDesc`, `maxSemverIndex`, `minSemverIndex` | SemVer 2.0.0 严格/宽松解析、原地升降序排序与极值索引查询 |
+
+---
+
+## 上游 Bun Semver 行为契约与边界注意事项
+
+1. **非法输入静默返回 `false`（参考 `/data/dev/bun/docs/runtime/semver.mdx`）**：
+   - 与 `Bun.semver.satisfies` 及 `node-semver` 保持一致：当 `Semver.satisfiesStr(version, range)` 的版本号或范围表达式非法时，不抛出异常而是安全返回 `false`；需要提前校验范围语法合法性时请调用 `Semver.isValidRange` / `Semver.validRange`。
+2. **`order` 三态比较与预发布排序**：
+   - `Semver.order(a, b)` 返回 `-1` / `0` / `1`，与 `sortSemverAsc` / `Semver.sortStr` 配合可精确按 SemVer 2.0.0 优先级排序（例如 `1.0.0-alpha < 1.0.0-beta < 1.0.0-rc < 1.0.0 < 1.0.1`），且构建元数据（`+build.123`）在相等性与排序比较中严格忽略。
+3. **预发布版本隔离与 `^0.x` 特殊边界**：
+   - 默认情况下 `^1.0.0` 不匹配 `1.2.0-alpha.1`（仅当范围同组比较器显式包含相同 `[major, minor, patch]` 的预发布标签，或通过 `satisfiesWithOptions(..., true)` 开启 `include_prerelease` 时匹配）。
+   - `^0.2.3` 等价于 `>=0.2.3 <0.3.0`，`^0.0.3` 等价于 `>=0.0.3 <0.0.4`（锁定最左侧非零位），与 npm / Bun 生态 100% 兼容。
+4. **高性能零堆比较**：
+   - 上游 Bun Semver 引擎相比 JS 版 `node-semver` 提速约 20 倍；在包管理器批量候选版本筛选中优先使用已解析 `Version` 结构体配合 `Semver.maxSatisfying` / `Semver.minSatisfying` 避免重复字符串解析。

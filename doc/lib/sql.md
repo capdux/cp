@@ -1,5 +1,7 @@
 # CP 标准库：统一多方言 SQL 协议引擎与嵌入式 SQLite 手册 (`cap:sql`)
 
+> 参考来源：`/data/dev/bun/docs/runtime/sql.mdx`, `/data/dev/bun/docs/runtime/sqlite.mdx`, `/data/dev/bun/src/sql/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:sql` 是 CP 语言官方内置的多方言关系型数据库协议与嵌入式存储标准库，直接原版移植自 Bun 原生 SQL 驱动与 `bun:sqlite` 引擎（`/data/dev/bun/src/sql/`，10 个文件 4,718 行）。
@@ -120,3 +122,16 @@ pub fn demoSqlCodecs(): ! {
   - `countQuestionMarks`、`maxDollarParam`、`rewriteQuestionToDollar`、`NamedParamIter`。
 - **多语句脚本切分与分类 (`splitter.cp`)**：
   - `SqlSplitStmtKind`、`SqlStmtIter`、`classifySqlStmt`、`isReadOnlySql`、`countSqlStatements`。
+
+---
+
+## 上游 Bun SQL 行为契约与安全边界注意事项
+
+1. **三方言统一协议与连接串路由（参考 `/data/dev/bun/docs/runtime/sql.mdx`）**：
+   - 覆盖 **PostgreSQL v3**（`postgres://` / `postgresql://`，默认回退方言，支持 SCRAM-SHA-256 / MD5 / 明文鉴权及 `PgBinaryCodec` 90+ OID 二进制编解码）、**MySQL 5.7+ / 8.0+**（`mysql://`，支持 `mysql_native_password` SHA-1 与 `caching_sha2_password` SHA-256 及二进制预处理协议）以及 **嵌入式 SQLite3**（`sqlite://` / `SqliteDatabase`）。
+2. **参数化绑定与防 SQL 注入**：
+   - 严禁通过字符串拼接构造含外部输入的 SQL；始终通过 `SqlStatement` / `SqliteDatabase` 参数绑定或 `MySqlPreparedProtocol` / PostgreSQL Extended Query 参数帧分离语句与数据；审计或读写分离路由可结合 `parseSqlWithMaxDepth`、`isReadOnlyQuery` / `isReadOnlySql` 与 `normalizeSqlFingerprint` 实现安全校验与查询脱敏。
+3. **连接状态机与事务边界**：
+   - PostgreSQL 事务内一旦单条语句出错即进入 `Aborted` 状态，须执行 `ROLLBACK` 后方可继续新查询；`SqlTransactionStateMachine` 与 `SqliteDatabase`（`begin`/`commit`/`rollback`）配合 `defer` 可确保异常路径下确定性回滚，防止连接池归还脏事务连接。
+4. **15 字节小对象优化（`SqlData`）**：
+   - 继承自 Bun `src/sql/shared/Data.cp`，短列值直接内联存储于 15 字节槽位，显著降低宽表批量扫描时的堆分配压力。

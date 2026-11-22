@@ -1,6 +1,6 @@
 # `cap:shell` — 嵌入式跨平台 Shell 词法/AST 引擎与进程内/外混合管道执行器
 
-> **上游溯源**: `/data/dev/bun/src/shell/` (`shell.cp`, `interpreter.cp`, `ParsedShellScript.cp`, `EnvMap.cp`, `Builtin.cp`, `builtin/*.cp`) & `/data/dev/bun/src/shell_parser/braces.cp`  
+> 参考来源：`/data/dev/bun/docs/runtime/shell.mdx`, `/data/dev/bun/src/shell/`, `/data/dev/bun/src/shell_parser/braces.cp` | 吸收日期：2026-11-22
 > **模块路径**: `lib/shell/`  
 > **导入协议**: `import { Shell, sh, exec, ShellSession, ShellEnv, DirStack, ShellOptions, AliasMap, BraceExpander, ArithEval, expandWord, expandWordWithSession, Lexer, Token, TokenKind, QuoteKind, Parser, Script, Statement, Pipeline, Command, CommandKind, ControlOp, Executor, ShellResult, isBuiltin, runBuiltin, runBuiltinWithState } from "cap:shell";`
 
@@ -114,3 +114,16 @@ fn demoMixedPipeline(): void {
 
 - **独立 POSIX Shell 词法/AST 解析与转义 (`posixlexer.cp` / `posixast.cp` / `posixquote.cp`)**：`ShellError`, `PosixTokenKind`, `ShellToken`, `deinitTokens`, `tokenize`, `RedirectKind`, `PosixRedirect`, `Assignment`, `SimpleCommand`, `PosixPipeline`, `ListOp`, `ListItem`, `ShellScript`, `parseScript`, `posixNeedsQuoting`, `quoteArg`, `joinCommand`（支持 `cap.shell.*` 动态挂载）。
 - **零堆分配 POSIX 转义与路径工具 (`util.cp`)**：`EnvAssignment`, `isSafeUnquoted`, `quotePosixBuf`, `escapeDoubleQuoted`, `joinCommandBuf`, `posixBasename`, `posixDirname`, `isValidEnvVarName`, `splitEnvAssignment`。
+
+---
+
+## 上游 Bun Shell 行为契约与安全防御注意事项
+
+1. **命令注入防线（默认安全引用转义）**：
+   - 参考 `/data/dev/bun/docs/runtime/shell.mdx`：向动态构造的 Shell 命令拼接外部用户输入时，务必使用 `quotePosix` / `quotePosixBuf` / `joinArgs` 对所有非安全字面量参数执行 POSIX 单引号安全转义（仅 `isSafeUnquoted` 返回 `true` 的安全字符集可免引号），彻底阻断元字符注入。
+2. **原生内置命令跨平台一致性**：
+   - `ls`、`cd`、`rm`、`cp`、`mv`、`mkdir`、`cat`、`grep`、`head`、`tail`、`wc`、`sort`、`uniq` 等 30+ 常用命令均在进程内原生实现（`isBuiltin` / `runBuiltinWithState`），无需依赖外部 `/bin/sh` 或第三方工具，并可在同一 `ShellSession` 内维护独立工作目录与 `ShellEnv` 而不污染宿主进程全局环境。
+3. **子 Shell 状态隔离（`(...)` vs `{ ...; }`）**：
+   - 括号子 Shell `(...)` 会克隆当前 `ShellSession` 的环境变量与目录栈，内部 `cd`/`export` 不会泄漏至父会话；花括号命令组 `{ ...; }` 则在当前会话中直接执行。
+4. **POSIX 展开顺序契约**：
+   - 严格遵循 `大括号展开 -> 波浪号 -> 参数/算术/命令替换 -> 无引号分词 -> Glob 展开 -> 去引号` 顺序；单引号 `'...'` 禁止一切展开，双引号 `"..."` 允许变量替换但禁止 Glob 与分词。

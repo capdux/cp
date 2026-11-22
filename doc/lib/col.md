@@ -1,5 +1,7 @@
 # CP 标准库：高性能零 GC 容器与数据结构子系统使用手册 (`cap:col`)
 
+> 参考来源：`/data/dev/bun/src/collections/collections.cp`, `/data/dev/bun/src/collections/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计哲学
 
 `cap:col`（兼容映射 `cap:collections`）是 CP 语言专为**百万级 AI Agent 并发、确定性无 GC 内存管理与 CPU 缓存行局部性（Cache-Line Locality）**设计的工业级数据结构标准库。该子系统完整吸收自 Bun（`/data/dev/bun/src/collections/`）与 Zig 高性能容器原语，消除了传统动态语言中链表指针追逐（Pointer Chasing）与垃圾回收停顿的开销。
@@ -321,3 +323,16 @@ pub fn demoLeb128() {
     }
 }
 ```
+
+---
+
+## 上游 Bun 容器行为契约与边界注意事项
+
+1. **零堆容量上限与安全溢出拦截**：
+   - `BoundedArray<T, CAP>`、`HiveArray<T, CAP>`、`ObjectPool<T, CAP>`、`StaticHashMap<K, V, CAP>` 与 `FastStringMap<V, CAP>` 均在编译期固定容量 `CAP`；满载写入返回错误或 `null` 而不触发隐式堆扩容，适合实时热路径与有界内存预算系统。
+2. **`BabyList<T>` 32 位索引上界**：
+   - 继承自 Bun `src/collections/baby_list.zig`，`BabyList<T>` 以 `u32` 计数将容器头压缩至 16 字节（相比 `ArrayList` 节省 33% 头开销），单列表元素数上限为 `u32` 范围，销毁时必须显式调用 `deinit(allocator)`。
+3. **`LinearFifo<T>` 2 的幂容量与环形回绕**：
+   - `LinearFifo` 采用位掩码取模实现无分支环形读写，适用于流式解码/编码与生产者-消费者单线程缓冲。
+4. **`Leb128` 截断与位宽溢出防护**：
+   - `decodeUleb128` / `decodeSleb128` 对超过目标整数位宽的恶意超长续位序列或未闭合截断字节流返回 `null`，安全适配 WebAssembly 与 DWARF 二进制解析。

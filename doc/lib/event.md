@@ -1,5 +1,7 @@
 # CP 标准库：事件发布/订阅与高性能异步事件循环统一子系统 (`cap:event` / `cap:events` / `cap:event_loop`)
 
+> 参考来源：`/data/dev/bun/src/event_loop/MiniEventLoop.cp`, `/data/dev/bun/src/event_loop/`, `/data/dev/bun/src/js/node/events.ts` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计哲学
 
 `cap:event`（别名 `cap:events`、`cap:event_loop`）统一整合 CP 语言的**应用层事件发布/订阅模型**（`EventBus`、`EventEmitter`、协程信号 `Event`）与**底层高性能异步事件循环内核**（侵入式配对最小堆 `TimerHeap`、自旋锁保护跨线程并发队列 `ConcurrentTaskQueue`/`ConcurrentQueue`、去重延迟微任务队列 `DeferredTaskQueue`、I/O 自动刷盘合并器 `AutoFlusher`、跨平台 FD 轮询器 `PollEngine`、类型擦除与可取消受管任务 `AnyTask`/`AnyTaskWithExtraContext`/`ManagedTask` 与统一事件循环引擎 `EventLoop`）。完整吸收自 Bun 的 `/data/dev/bun/src/js/node/events.ts` 与 `/data/dev/bun/src/event_loop/`。
@@ -156,3 +158,16 @@ pub fn demoEventLoop() {
 | **FD 多路复用器** | `event_loop/AnyEventLoop.cp` | `PollEngine`, `PollEvents`, `FilePollRegistration` | 懒初始化 POSIX `poll` 监听 |
 | **类型擦除与受管任务** | `event_loop/AnyTask.cp`, `ManagedTask.cp` | `AnyTask`, `AnyTaskWithExtraContext`, `ManagedTask` | 栈/堆双模安全释放，支持 `cancel()` |
 | **统一事件循环内核** | `event_loop/MiniEventLoop.cp` | `EventLoop` | 零堆碎片 64 槽定时/任务池 + 四阶段 `tick` |
+
+---
+
+## 四、 上游 Bun 事件循环行为契约与并发边界
+
+1. **四阶段确定性调度顺序（`EventLoop.tick`）**：
+   - 继承自 Bun `MiniEventLoop`：单次 `tick()` 严格依次执行（1）`ConcurrentTaskQueue.drainAll` 跨线程任务摘除、（2）`DeferredTaskQueue.run` 与 `AutoFlusher` 微任务/刷盘合并、（3）`PollEngine.poll` I/O 就绪派发、（4）`TimerHeap.fireExpired` 到期定时器触发；回调中重新投递的任务不会导致当前阶段无限饿死。
+2. **跨线程无锁执行窗口（`ConcurrentTaskQueue`）**：
+   - `drainAll` / `drainMax` 仅在摘除链表头尾指针期间持有 `SpinLock`，实际执行用户回调时**完全释放自旋锁**，防止回调内再次入队引发自旋死锁。
+3. **侵入式定时器生命周期（`Timer` / `TimerHeap`）**：
+   - `Timer` 节点采用侵入式指针嵌入 `TimerHeap`，在定时器仍处于活跃态（未触发且未取消）期间，调用方不得移动或释放该 `Timer` 所在内存地址；提前销毁前须显式取消。
+4. **有界容量防洪泛**：
+   - `EventLoop`（`MAX_LOOP_TIMERS` / `MAX_LOOP_TASKS`）、`DeferredTaskQueue`（`MAX_DEFERRED_TASKS`）与 `EventBus` 均为固定槽位零堆分配结构，满载时返回明确失败状态而非无限增长内存。

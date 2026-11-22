@@ -1,6 +1,6 @@
 # `cap:sort` — 工业级自适应排序（PDQSort / BlockSort / HeapSort）与二分检索标准库
 
-> **上游溯源**: `/data/dev/bun/src/collections/` & Zig Standard Library `std.sort`  
+> 参考来源：`/data/dev/bun/src/collections/`, Zig Standard Library `std.sort` | 吸收日期：2026-11-22
 > **模块路径**: `lib/sort/`  
 > **导入协议**: `import { Sort, SortOf } from "cap:sort";`
 
@@ -124,3 +124,14 @@ fn demoExtrema(): void {
     const max_idx = Sort.argMax(scores[0..]).?; // 3 (scores[3] == 99)
 }
 ```
+
+---
+
+## 上游行为契约与边界注意事项
+
+1. **严格弱序（Strict Weak Ordering）契约**：
+   - 传给 `Sort.sort` / `Sort.stable` / `Sort.heap` 的自定义比较器必须满足反自反性（`cmp(a, a) == false`）与传递性；**排序浮点切片时严禁包含 `NaN`**（`NaN < x` 与 `x < NaN` 均为 `false` 会破坏严格弱序），调用前应先过滤或归一化 `NaN`。
+2. **稳定性与栈深度选型**：
+   - 多键排序或需要保留原始输入次序时，必须使用 `Sort.stable` / `Sort.stableAsc`（原地 BlockSort，$O(1)$ 辅助空间）；在极小栈空间（如嵌入式/微协程）环境下使用 `Sort.heap` / `Sort.heapAsc` 可完全消除递归栈开销。
+3. **二分查询前置条件与空切片安全**：
+   - `Sort.binarySearch`、`Sort.lowerBound`、`Sort.upperBound` 要求输入切片已按升序排列（可用 `Sort.isSortedAsc` 校验）；`SortOf<T>.min` / `max` 与 `Sort.argMin` / `argMax` 在空切片输入时安全返回 `null`。

@@ -1,5 +1,7 @@
 # CP 标准库：高速非加密哈希算法矩阵使用手册 (`cap:hash`)
 
+> 参考来源：`/data/dev/bun/docs/runtime/hashing.mdx`, `/data/dev/bun/src/wyhash/wyhash.cp` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计哲学
 
 `cap:hash` 是 CP 语言官方内置的**超高速非加密哈希（Non-Cryptographic Hash Functions）与校验和矩阵**标准库。模块吸收自 Bun（`/data/dev/bun/src/wyhash/wyhash.cp`）与 Zig 标准库硬件加速原语，涵盖 64/128 位极速内存哈希（**Wyhash**、**XxHash3**、**XxHash128**、**CityHash64**）、32/64 位通用字典与布隆过滤器哈希（**MurmurHash3**、**FNV-1a**、**djb2**、**hashInt**）、抗碰撞洪泛安全伪随机函数（**SipHash-2-4**）以及帧完整性校验和（**CRC32**、**Adler32**）。
@@ -124,3 +126,14 @@ pub fn demoStreamingHashes() {
 - **`lib/hash/conshash.cp`（虚拟节点哈希环）**：`ConsistentHashError`, `HashRing`
 - **`lib/hash/jump.cp`（Jump Consistent Hash & HRW 最高随机权重）**：`JumpError`, `jumpConsistentHash`, `jumpConsistentHashBytes`, `WeightedNode`, `hrwSelect`, `hrwSelectWeighted`
 - **`lib/hash/maglev.cp`（Google Maglev 查表路由）**：`DEFAULT_TABLE_SIZE`, `MaglevError`, `Backend`, `MaglevRouter`
+
+---
+
+## 上游 Bun 行为契约与安全选型边界
+
+1. **非加密哈希与密码学哈希严格分界（参考 `/data/dev/bun/docs/runtime/hashing.mdx`）**：
+   - `Hash.wyhash`、`Hash.xxhash3`、`Hash.murmur3`、`Hash.cityhash64`、`Hash.crc32` 均为**非加密**高速指纹函数，严禁用于密码存储、令牌签名或防篡改消息认证（MAC）；若面向不可信外部键需防哈希碰撞退化，应选用 `Hash.siphash` / `Hash.siphash128` 并传入随机 128-bit 密钥；密码哈希与加密摘要请使用 `cap:crypto`。
+2. **流式增量 vs 一次性哈希一致性**：
+   - `WyhashStream` 与 `XxHash3Stream` 无论如何切分输入 chunk，最终摘要与单次调用 `Hash.wyhash` / `Hash.xxhash3` 在相同 `seed` 下保持比特级完全一致，适合网络流与大文件分块指纹计算。
+3. **一致性哈希路由选型**：
+   - 节点编号连续且固定规模集群优先选用零内存的 `jumpConsistentHash`；支持任意节点上下线与加权均衡时选用 `HashRing`、`hrwSelectWeighted` 或 $O(1)$ 查表 `MaglevRouter`。
