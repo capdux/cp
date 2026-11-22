@@ -331,3 +331,21 @@ export {
     formatCanaryReportJson,
     CanaryGateJudge,
 } from "./canaryGate.cp";
+
+// --- Zero-Alloc W3C Baggage Distributed Context Propagation & Redaction Engine ---
+
+export {
+    BAGGAGE_MAX_ENTRIES,
+    BAGGAGE_MAX_HEADER_BYTES,
+    BAGGAGE_MAX_MEMBER_BYTES,
+    BAGGAGE_MAX_KEY_LEN,
+    BAGGAGE_MAX_VALUE_LEN,
+    BAGGAGE_MAX_PROPS_LEN,
+    BaggageOpStatus,
+    BaggageEntry,
+    BaggageParseReport,
+    isValidBaggageKey,
+    BaggageContext,
+    parseBaggageHeader,
+    formatBaggageHeader,
+} from "./baggage.cp";

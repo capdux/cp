@@ -613,6 +613,43 @@ pub fn demoCanaryGate() {
 }
 ```
 
+### 零分配 W3C Baggage 分布式上下文传播与脱敏配额引擎 (`baggage.cp`)
+
+严格遵循 W3C Baggage (Trace Context Level 2) 规范上限（成员数、单成员 `<= 4096B`、总头 `<= 8192B`）的 100% 纯 CP 零动态堆分配上下文传播与安全脱敏引擎：
+
+- **常量与枚举**：
+  - `BAGGAGE_MAX_ENTRIES = 32`、`BAGGAGE_MAX_HEADER_BYTES = 8192`、`BAGGAGE_MAX_MEMBER_BYTES = 4096`、`BAGGAGE_MAX_KEY_LEN = 64`、`BAGGAGE_MAX_VALUE_LEN = 160`、`BAGGAGE_MAX_PROPS_LEN = 128`
+  - `BaggageOpStatus`（`ok | invalid_key | invalid_value | invalid_props | crlf_rejected | header_too_large | capacity_full | buffer_too_small`）
+- **数据模型与解析/格式化器**：
+  - `BaggageEntry`（`key()`, `value()`, `props()`）、`BaggageParseReport`（`status`, `parsed_members`, `stored_entries`, `overwritten_duplicates`, `skipped_invalid`, `dropped_overflow`, `header_bytes`）
+  - `isValidBaggageKey(key)`（RFC 7230 `token` 字符集校验）
+  - `parseBaggageHeader(header, *out_ctx): BaggageParseReport`：支持逗号分隔成员、`key=value;prop1=v1;prop2` 属性解析、OWS 空白裁剪、`%XX` 百分号解码、重复键 Last-Write-Wins 去重与 CRLF/超长头/洪峰防护。
+  - `formatBaggageHeader(ctx, *out_buf): usize?`：零分配自动 `%XX` 编码与属性保留序列化。
+- **核心容器 `BaggageContext`**：
+  - `init()` / `set(*_, key, value)` / `setWithProps(*_, key, value, props)` / `get(key)` / `getProps(key)` / `remove(*_, key)` / `has(key)` / `len()` / `clear(*_)` / `estimatedHeaderBytes()`
+  - `mergeFrom(*_, src, overwrite_existing, allowed_prefix): usize`：跨进程/跨 Agent 传播合并，支持前缀白名单与只读不覆盖保护。
+  - `redactKeys(*_, sensitive_keys, mask): usize`：原位大小写不敏感敏感键脱敏掩码。
+
+```cp
+import {
+    BaggageContext,
+    parseBaggageHeader,
+    formatBaggageHeader,
+} from "cap:obs";
+
+pub fn demoW3cBaggage() {
+    let ctx = BaggageContext.init();
+    * = parseBaggageHeader("tenant=acme;tier=gold, user_email=a%40b.com, trace.env=prod", *ctx);
+
+    const pii: [1][]const u8 = ["user_email"];
+    * = ctx.redactKeys(pii[0..], "[REDACTED]");
+
+    let out: [256]u8 = [0; 256];
+    let out_s: []u8 = out[0..];
+    * = formatBaggageHeader(ctx, *out_s);
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
