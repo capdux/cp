@@ -1929,3 +1929,15 @@ export {
     OutlierDetectorStats,
     OutlierDetector,
 } from "./outlierDetect.cp";
+
+// --- healthProbe (Envoy-Style Zero-Alloc Active Health Prober, Slow-Start Ramp & Panic Mode) ---
+export {
+    HEALTH_PROBE_MAX_ENDPOINTS,
+    HEALTH_PROBE_ID_MAX_LEN,
+    ProbeEndpointState,
+    ProbeOutcome,
+    HealthProbeConfig,
+    ProbeEndpointSlot,
+    ClusterHealthSummary,
+    ActiveHealthProber,
+} from "./healthProbe.cp";

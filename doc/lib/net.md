@@ -838,6 +838,40 @@ pub fn demoOutlierDetector() {
 }
 ```
 
+## Envoy 风格零分配主动健康探测状态机、慢启动权重爬坡与集群恐慌熔断引擎 (`healthProbe.cp`)
+
+与 `outlierDetect.cp` 互补的 100% 纯 CP 零动态堆分配主动健康探测引擎，支持周期性探测调度、慢启动权重爬坡与 Envoy Panic Mode 防级联雪崩保护：
+
+- **常量与枚举**：
+  - `HEALTH_PROBE_MAX_ENDPOINTS = 64`、`HEALTH_PROBE_ID_MAX_LEN = 48`
+  - `ProbeEndpointState`（`unknown | warming | healthy | degraded | unhealthy | draining`）
+  - `ProbeOutcome`（`pass | fail_timeout | fail_status | fail_connect | degraded_header`）
+- **配置与模型**：
+  - `HealthProbeConfig`（`interval_ms = 5000`, `unhealthy_interval_ms = 1000`, `healthy_threshold = 2`, `unhealthy_threshold = 3`, `slow_start_window_ms = 30000`, `slow_start_min_weight_bps = 1000`, `panic_threshold_pct = 50`, `defaults()`）
+  - `ProbeEndpointSlot`（`endpoint_id()`, `state`, `base_weight`, `consecutive_pass`, `consecutive_fail`, `last_probe_ms`, `next_probe_ms`, `healthy_since_ms`, `effectiveWeightAt(now_ms, cfg)` — 慢启动窗口内线性爬坡，降级态 50% 权重）
+  - `ClusterHealthSummary`（`total_endpoints`, `healthy_count`, `warming_count`, `unhealthy_count`, `draining_count`, `healthy_pct`, `in_panic_mode`, `total_effective_weight`）
+- **核心引擎 `ActiveHealthProber`**：
+  - `init(cfg)` / `registerEndpoint(*_, endpoint_id, base_weight, now_ms)` / `removeEndpoint(*_, endpoint_id)` / `setDraining(*_, endpoint_id, draining)` / `getEndpoint(endpoint_id)`
+  - `collectDueProbes(now_ms, *out_indices): usize`：扫描到期且非 `draining` 的待探测节点索引。
+  - `recordProbeResult(*_, endpoint_id, outcome, now_ms): ProbeEndpointState?`：连续通过达 `healthy_threshold` 晋升 `warming`/`healthy`，连续失败达 `unhealthy_threshold` 降级 `unhealthy` 并切换 `unhealthy_interval_ms` 快速复检，`degraded_header` 切 `degraded`。
+  - `isRoutable(endpoint_id, now_ms): bool` / `clusterSummary(now_ms): ClusterHealthSummary`：正常放行 `healthy`/`warming`/`degraded`；集群触发 `in_panic_mode` 时除 `draining` 外全量 fail-open 防止剩余节点被雪崩击穿。
+
+```cp
+import {
+    ProbeOutcome,
+    HealthProbeConfig,
+    ActiveHealthProber,
+} from "cap:net";
+
+pub fn demoActiveHealthProber() {
+    let prober = ActiveHealthProber.init(HealthProbeConfig.defaults());
+    * = prober.registerEndpoint("10.0.1.1:8080", 1000, 1000);
+    * = prober.recordProbeResult("10.0.1.1:8080", ProbeOutcome.pass, 1000);
+    * = prober.recordProbeResult("10.0.1.1:8080", ProbeOutcome.pass, 2000); // -> warming
+    * = prober.isRoutable("10.0.1.1:8080", 2000); // true
+}
+```
+
 ## 收敛子模块深度文档
 
 - [amqp.md](net/amqp.md)
