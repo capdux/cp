@@ -225,3 +225,45 @@ pub fn demoHdrHistogram() {
     * = s.p99;
 }
 ```
+
+### 零堆分配 OpenTelemetry 尾部链路采样器与决策引擎 (`trace_sampler.cp`)
+
+面向高吞吐微服务与百万级 AI Agent 分布式链路追踪（对标 OpenTelemetry Collector / Jaeger Tail-Based Sampling）的 100% 纯 CP 零动态堆分配尾部采样决策引擎（内联 128 槽位在途 Trace 聚合池）：
+
+- **常量与枚举**：
+  - `TAIL_SAMPLER_MAX_TRACES` (`128`)
+  - `TailSampleReason`（`dropped | kept_error | kept_slow_latency | kept_priority_tag | kept_probabilistic | dropped_budget_cap`）
+- **核心类型**：
+  - `TailSamplerConfig`（`slow_threshold_us`、`baseline_sample_bps` [`0..=10000`]、`decision_wait_ms`、`max_kept_per_window`、`rate_window_ms`；提供 `defaults()` 与 `isValid()`）
+  - `ActiveTraceSlot`、`TailSampleDecision`、`TailSamplerStats`
+- **核心引擎 `TailTraceSampler`**：
+  - `init(cfg): TailTraceSampler?`：校验配置合法性并初始化零堆 128 槽位尾部采样器。
+  - `ingest_span(*_, trace_id_lo, trace_id_hi, duration_us, is_error, is_priority, is_root, now_ms): bool`：按 128 位 TraceID 聚合多 Span 属性（拒绝全零 TraceID），满 128 槽时自动驱逐最旧在途槽位并累计 `evicted_overflow`。
+  - `flush_ready_decisions(*_, now_ms, out_decisions): usize`：对 `root_finished == true` 或超时 `now_ms - first_seen_ms >= decision_wait_ms` 的就绪链路执行四级优先级尾部决策（错误优先 -> 慢延迟优先 -> 高优标签优先 -> SplitMix64 确定性基点概率采样），并通过每 `rate_window_ms` 窗口 `max_kept_per_window` 预算熔断防止错误风暴打爆下游存储；输出缓冲满时暂停出队以免丢失决策。
+  - `stats(): TailSamplerStats`：返回在途数、累计评估数、各类保留/丢弃/预算熔断与满池驱逐统计。
+
+```cp
+import {
+    TailSamplerConfig,
+    TailSampleDecision,
+    TailTraceSampler,
+} from "cap:obs";
+
+pub fn demoTailTraceSampler() {
+    let cfg = TailSamplerConfig.defaults();
+    cfg.slow_threshold_us = 200_000; // 200ms
+    cfg.baseline_sample_bps = 1000;  // 10% 基线采样
+    cfg.max_kept_per_window = 50;
+
+    let sampler = TailTraceSampler.init(cfg) ?? return;
+
+    // 同一 Trace 的子 Span 报错，随后 Root Span 结束 -> 尾部 100% 保留 (kept_error)
+    * = sampler.ingest_span(0x1001, 0xAAAA, 12_000, true, false, false, 1000);
+    * = sampler.ingest_span(0x1001, 0xAAAA, 45_000, false, false, true, 1045);
+
+    let decisions: [8]TailSampleDecision = [TailSampleDecision{}; 8];
+    let dec_s: []TailSampleDecision = decisions[0..];
+    const n = sampler.flush_ready_decisions(1050, dec_s);
+    * = n; // 1 (decisions[0].keep == true, reason == TailSampleReason.kept_error)
+}
+```

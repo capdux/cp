@@ -183,3 +183,15 @@ export {
     HdrQuantileSummary,
     HdrHistogram,
 } from "./hdr_histogram.cp";
+
+// --- Zero-Alloc OpenTelemetry Tail-Based Trace Sampler ---
+
+export {
+    TAIL_SAMPLER_MAX_TRACES,
+    TailSampleReason,
+    TailSamplerConfig,
+    ActiveTraceSlot,
+    TailSampleDecision,
+    TailSamplerStats,
+    TailTraceSampler,
+} from "./trace_sampler.cp";
