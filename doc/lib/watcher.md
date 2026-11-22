@@ -129,3 +129,18 @@ const n = batch.formatNdjsonLine(line[0..])?;
 // {"timestamp":1700000000123,"files":{"src":{"events":["metadata","write","is_dir"],"changed":["app.cp","util.cp"]}}}\n
 * = n;
 ```
+
+6. **三缓冲原子 HMR 事件中继器（`lib/watcher/atomicRelay.cp`，吸收自 `/data/dev/bun/src/bake/DevServer/WatcherAtomics.cp` & `/data/dev/bun/docs/bundler/hot-reloading.mdx`）**：
+   - 导出：`WATCHER_RELAY_SLOTS` (`3`)、`NEXT_EVENT_WAITING` (`254`)、`NEXT_EVENT_DONE` (`255`)、`WatcherRelayError`、`WatcherSubmitOutcome`、`WatcherAtomicRelay<T>`；
+   - **HMR 高频编辑零分配复用最佳实践**：Watcher 线程与 DevServer 线程共享 3 个固定事件槽（1 个执行中、1 个排队待执行、1 个生产者填充中），高频保存时通过 `watcherReleaseAndSubmit` 原子替换尚未开始的排队槽（`ReplacedPending`），消费者完成后调用 `serverRecycle` 无锁接管下一批或回落至 `NEXT_EVENT_DONE`，彻底杜绝高频文件变更下的内存分配风暴与事件队列无限积压。
+
+```cp
+import { WatcherAtomicRelay, WatcherSubmitOutcome } from "cap:watcher";
+
+let relay = WatcherAtomicRelay<u32>.init(0);
+const slot = relay.watcherAcquire()?;
+relay.slotMut(slot).* = 42;
+const res = relay.watcherReleaseAndSubmit(slot, true)?; // ScheduledImmediate
+const next = relay.serverRecycle(slot)?;                // null (back to idle)
+* = res; * = next;
+```

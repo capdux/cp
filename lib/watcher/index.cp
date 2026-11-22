@@ -71,6 +71,15 @@ export {
     formatJsonEscapedStr,
 } from "./trace.cp";
 
+export {
+    WATCHER_RELAY_SLOTS,
+    NEXT_EVENT_WAITING,
+    NEXT_EVENT_DONE,
+    WatcherRelayError,
+    WatcherSubmitOutcome,
+    WatcherAtomicRelay,
+} from "./atomicRelay.cp";
+
 import { Watcher } from "./watcher.cp";
 import { WatchOptions } from "./events.cp";
 
