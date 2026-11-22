@@ -150,6 +150,20 @@ const ok = CondExprEvaluator.evalTokens(tokens[0..], null)?;
 const exit_code = condToExitCode(ok); // 0
 ```
 
+### POSIX/GNU `seq` 数字序列解析与格式化示例（`seq.cp`，吸收自 `/data/dev/bun/src/shell/builtin/seq.cp`）
+
+- 导出：`DEFAULT_SEQ_MAX_STEPS`、`SeqError`、`SeqOptions`（支持 `-s`/`--separator`、`-t`/`--terminator`、`-w`/`--fixed-width`、`--` 与 1/2/3 位置参数及步进方向校验）、`SeqIter`（零堆分配惰性迭代器，使用 `start + step * increment` 消除浮点累加漂移）、`formatSeq`、`formatSeqArgs`（内置 `max_steps` 防资源耗尽保护）。
+
+```typescript
+import { formatSeqArgs } from "cap:shell";
+
+pub fn demoSeq(allocator: std.mem.Allocator): ! {
+    const args: [4][]const u8 = ["-w", "-s", ",", "8", "10"];
+    const out = formatSeqArgs(allocator, args[0..])?; // "08,09,10,"
+    defer allocator.free(out);
+}
+```
+
 
 ---
 
@@ -170,3 +184,6 @@ const exit_code = condToExitCode(ok); // 0
    - 括号子 Shell `(...)` 会克隆当前 `ShellSession` 的环境变量与目录栈，内部 `cd`/`export` 不会泄漏至父会话；花括号命令组 `{ ...; }` 则在当前会话中直接执行。
 4. **POSIX 展开顺序契约**：
    - 严格遵循 `大括号展开 -> 波浪号 -> 参数/算术/命令替换 -> 无引号分词 -> Glob 展开 -> 去引号` 顺序；单引号 `'...'` 禁止一切展开，双引号 `"..."` 允许变量替换但禁止 Glob 与分词。
+5. **重定向、管道与非零退出码治理（吸收自 `/data/dev/bun/docs/runtime/shell.mdx`）**：
+   - 完整支持标准文件描述符重定向（`<`、`>`/`1>`、`2>`、`&>`、`>>`/`2>>`/`&>>`、`1>&2`、`2>&1`）及内存缓冲/流对象互连，无需落地临时文件；
+   - 自动化脚本与 CI 流水线中应显式检查每条命令的 `exit_code`（对应 Bun `.nothrow()` 与 `.throws(bool)` 策略），避免吞掉上游管道失败状态。

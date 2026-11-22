@@ -126,6 +126,15 @@ export {
     ParentDirIter,
 } from "./mkdir_opts.cp";
 
+export {
+    DEFAULT_SEQ_MAX_STEPS,
+    SeqError,
+    SeqOptions,
+    SeqIter,
+    formatSeq,
+    formatSeqArgs,
+} from "./seq.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);

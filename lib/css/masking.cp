@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/masking.cp | Synced: 2026-11-22T04:57:22Z
+// Source: Absorbed from /data/dev/bun/src/css/properties/masking.cp | Synced: 2026-11-22T05:15:10Z
 
 /// CSS `<geometry-box>`（CSS Masking Level 1）
 pub enum GeometryBox: u8 {
