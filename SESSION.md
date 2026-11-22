@@ -1361,3 +1361,14 @@
 ### 2026-11-22（分类合并交付：lib/vector/proj_reduce.cp | 2026-11-22 14:29:26）
 - **执行与结单汇报**：
   > 子智能体交付 lib/vector/proj_reduce.cp（高维 Embedding 均值中心化、无协方差幂迭代 Top-K PCA、@dot SIMD 批量投影与 Achlioptas JL 稀疏随机投影，5/5 PASS），归入 cap:vector 并同步 cp_lib_ref.md；续派 lib/attention/quant_fp8.cp。
+
+### 2026-11-22（收到下游工单 task-bun-20261122-const-type-opt-try | 2026-11-22 14:30:46）
+- **下游工单**：`task-bun-20261122-const-type-opt-try` | 来源：`bun_agy` | 状态：`received`
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261122-const-type-opt-try)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **执行与结单汇报**：
+  > 已立即拉取工单详情并启动专职 CPC Hotfix Engineer 排查修复。
+
+### 2026-11-22（分类合并交付：lib/agentmem/consolidation.cp | 2026-11-22 14:32:53）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/agentmem/consolidation.cp（AI Agent 长期记忆睡眠期巩固、重复去重合并、指数半衰期衰减与 pinned 保护剪枝引擎，5/5 PASS），归入 cap:agentmem 并同步 cp_lib_ref.md；续派 lib/text/unified_diff.cp。

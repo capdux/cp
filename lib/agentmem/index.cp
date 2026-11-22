@@ -43,3 +43,12 @@ export {
     spreadActivation,
     personalizedPageRank,
 } from "./activation.cp";
+
+export {
+    MemConsolidationTier,
+    ConsolidatableRecord,
+    ConsolidationPolicy,
+    ConsolidationReport,
+    halfLifeDecayFactor,
+    consolidateMemoriesInPlace,
+} from "./consolidation.cp";

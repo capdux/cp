@@ -29,6 +29,7 @@
 | `lib/agentmem/kg.cp` | `// Origin: Pure-CP Stdlib (AI Agent Temporal Knowledge Graph Memory: SPO Triples & 2-Hop Recall)` | `KgEntity`、`KgTriple`、`KgStore`（时序三元组、事实版本失效与 1~2 跳 GraphRAG 邻域检索） |
 | `lib/agentmem/working_mem.cp` | `// Origin: Pure-CP Stdlib (AI Agent Working Memory & Token-Budget Context Window Manager)` | `MemSlotRole`、`EvictionPolicy`、`WorkingMemItem`、`WorkingMemStats`、`WorkingMemory`（零堆分配工作记忆与 Token 预算滑动上下文窗） |
 | `lib/agentmem/activation.cp` | `// Origin: Pure-CP Stdlib (AI GraphRAG Spreading Activation & Personalized PageRank Memory Recall)` | `MemGraphEdge`、`ActivatedNode`、`SpreadingConfig`、`spreadActivation`、`personalizedPageRank`（零堆分配 GraphRAG 扩散激活与个性化 PageRank 记忆召回） |
+| `lib/agentmem/consolidation.cp` | `// Origin: Pure-CP Stdlib (AI Agent Memory Consolidation, Dedup & Retention Pruning Engine)` | `MemConsolidationTier`、`ConsolidatableRecord`、`ConsolidationPolicy`、`ConsolidationReport`、`halfLifeDecayFactor`、`consolidateMemoriesInPlace`（零堆分配睡眠期记忆巩固、去重合并、半衰期衰减、分级晋升与遗忘剪枝归档） |
 | `lib/agentmem/index.cp` | `// Source: cp/lib/agentmem/index.cp (Unified Exports for cap:agentmem)` | `cap:agentmem` 与 `cap.agentmem` 统一公开导出入口 |
 
 ---
@@ -112,6 +113,21 @@
 - **`SpreadingConfig`**：`{ decay: f32 = 0.6, hops: u32 = 2, min_threshold: f32 = 0.01, bidirectional: bool = false }`
 - **`spreadActivation(num_nodes, edges, seed_nodes, seed_weights, cfg, scores_a, scores_b, out_top_k): usize?`**：从种子节点出发沿加权边进行多跳扩散激活（每跳乘以 `decay` 并截断低于 `min_threshold` 的噪声，支持单/双向传播），按得分降序（同分按 `node_id` 升序）输出 Top-K 激活节点；非法配置或缓冲不足返回 `null`。
 - **`personalizedPageRank(num_nodes, edges, seed_nodes, seed_weights, damping, max_iters, tol, rank_cur, rank_next, out_deg, out_top_k): usize?`**：加权个性化 PageRank，自动将悬挂节点（出度为 0）概率质量回收至个性化种子分布（严格保持总概率和为 `1.0`）并支持 L1 残差早停收敛。
+
+### 7. 零堆分配长期记忆睡眠期巩固与剪枝压缩器 (`consolidation.cp`)
+
+面向 AI Agent 后台空闲/睡眠期记忆整理，原地零堆分配完成四阶段记忆巩固周期：
+
+- **`MemConsolidationTier`**：`ShortTerm` | `Episodic` | `Semantic` | `Archived`
+- **`ConsolidatableRecord`**：`{ id: u32, content_hash: u64, topic_hash: u64, tier: MemConsolidationTier, strength: f32, recall_count: u32, last_recall_ms: u64, pinned: bool, alive: bool }`
+- **`ConsolidationPolicy`**：`{ prune_strength_threshold: f32, promote_min_recalls: u32, promote_min_strength: f32, half_life_ms: u64, max_age_archive_ms: u64 }`（提供 `default()` 与 `isValid()`）
+- **`ConsolidationReport`**：`{ merged_duplicates: u32, promoted_count: u32, archived_count: u32, pruned_count: u32, surviving_count: u32 }`
+- **`halfLifeDecayFactor(age_ms: u64, half_life_ms: u64): f32`**：计算指数半衰期衰减系数 $2^{-\text{age} / T_{1/2}} \in [0, 1]$。
+- **`consolidateMemoriesInPlace(records: *[]ConsolidatableRecord, now_ms: u64, policy: ConsolidationPolicy): ConsolidationReport?`**：
+  1. **重复合并**：将相同非零 `content_hash` 的存活条目合并到首条，饱和累加 `recall_count`，取最大 `strength` 与 `last_recall_ms`，继承 `pinned` 与更高层级；
+  2. **指数半衰期衰减**：按 $2^{-\Delta t / T_{1/2}}$ 衰减 `strength`（内置时钟回拨保护）；
+  3. **分级晋升**：满足 `recall_count >= promote_min_recalls` 且 `strength >= promote_min_strength` 时执行 `ShortTerm -> Episodic -> Semantic` 晋升；
+  4. **剪枝与归档**：剪枝低于 `prune_strength_threshold` 的非 `pinned` 非 `Semantic` 条目；将超龄（`age >= max_age_archive_ms`）的非 `pinned` 条目归档至 `Archived`；`pinned` 记忆严格免于剪枝与归档。非法策略返回 `null` 且零副作用。
 
 ---
 
@@ -289,5 +305,50 @@ pub fn demoGraphRagActivation() {
 
     // 2. Personalized PageRank 实体关联重排（含悬挂节点回收与早停）
     * = personalizedPageRank(4, edges[0..], seeds[0..], seed_w[0..], 0.85, 50, 0.0001, buf_a[0..], buf_b[0..], deg_buf[0..], top_buf[0..]);
+}
+```
+
+### 6. 长期记忆睡眠期巩固、去重合并与遗忘剪枝 (`consolidation.cp`) 示例
+
+```cp
+import {
+    MemConsolidationTier,
+    ConsolidatableRecord,
+    ConsolidationPolicy,
+    consolidateMemoriesInPlace,
+} from "cap:agentmem";
+
+pub fn demoMemoryConsolidation() {
+    let pool: [3]ConsolidatableRecord = [
+        ConsolidatableRecord{
+            id: 1, content_hash: 0xAA01, topic_hash: 10,
+            tier: MemConsolidationTier.ShortTerm, strength: 0.75,
+            recall_count: 2, last_recall_ms: 9000, pinned: false, alive: true,
+        },
+        ConsolidatableRecord{
+            id: 2, content_hash: 0xAA01, topic_hash: 10,
+            tier: MemConsolidationTier.ShortTerm, strength: 0.90,
+            recall_count: 2, last_recall_ms: 10000, pinned: true, alive: true,
+        },
+        ConsolidatableRecord{
+            id: 3, content_hash: 0xBB02, topic_hash: 20,
+            tier: MemConsolidationTier.ShortTerm, strength: 0.20,
+            recall_count: 1, last_recall_ms: 1000, pinned: false, alive: true,
+        },
+    ];
+
+    const policy = ConsolidationPolicy{
+        prune_strength_threshold: 0.15,
+        promote_min_recalls: 3,
+        promote_min_strength: 0.60,
+        half_life_ms: 3000,
+        max_age_archive_ms: 20000,
+    };
+
+    if (report := consolidateMemoriesInPlace(pool[0..], 10000, policy)) {
+        // id=1 与 id=2 合并（recall=4, strength=0.90, pinned=true）并晋升至 Episodic；
+        // id=3 衰减后低于阈值 0.15 被剪枝。
+        * = report;
+    }
 }
 ```
