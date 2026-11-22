@@ -269,3 +269,15 @@ export {
     PgLengthBookmark,
     PgWireWriter,
 } from "./wireWriter.cp";
+
+export {
+    PG_SCRAM_NONCE_RAW_LEN,
+    PG_SCRAM_NONCE_MAX_LEN,
+    PG_SCRAM_KEY_LEN,
+    PG_SCRAM_SIG_B64_LEN,
+    PG_SCRAM_MAX_SALT_LEN,
+    PgSaslStatus,
+    PgSaslError,
+    escapeScramUsername,
+    PgSaslState,
+} from "./saslScram.cp";

@@ -517,6 +517,34 @@ const frame = r.readFrame(PG_DEFAULT_MAX_FRAME_BYTES)?;
 * = frame.tag; // 'Q'
 ```
 
+### SCRAM-SHA-256 客户端 SASL 认证状态机（`saslScram.cp`）
+
+吸收自 `/data/dev/bun/src/sql_jsc/postgres/SASL.cp`，实现零动态堆分配的 RFC 5802 / RFC 7677 PostgreSQL `SCRAM-SHA-256` 客户端认证密码学状态机（析构时自动清零内部密钥缓存）：
+
+- **常量**：`PG_SCRAM_NONCE_RAW_LEN` (`18`)、`PG_SCRAM_NONCE_MAX_LEN` (`64`)、`PG_SCRAM_KEY_LEN` (`32`)、`PG_SCRAM_SIG_B64_LEN` (`44`)、`PG_SCRAM_MAX_SALT_LEN` (`64`)。
+- **类型与函数**：`PgSaslStatus`（`Init` / `Continue` / `Verified`）、`PgSaslError`、`escapeScramUsername(user, out)`（按 RFC 5802 将 `=` 转义为 `=3D`、`,` 转义为 `=2C`）。
+- **`PgSaslState`**：
+  - `initWithNonceBytes(raw_nonce)` / `initWithBase64Nonce(b64_nonce)` / `.nonce()`；
+  - `.formatClientFirstBare(user, out)` / `.formatClientFirst(user, out)`；
+  - `.computeSaltedPassword(password, salt_bytes, iterations)` / `.computeSaltedPasswordB64(password, salt_b64, iterations)`（PBKDF2-HMAC-SHA256）与 `.saltedPassword()`；
+  - `.clientKey()` / `.storedKey()` / `PgSaslState.clientKeySignature(client_key, auth_message)` / `.computeClientProof(auth_message, out_b64)`；
+  - `.formatClientFinal(server_nonce, auth_message, out)`（一次完成 `c=biws,r=...,p=...` 编码与服务端签名缓存）；
+  - `.computeServerSignature(auth_message)` / `.serverSignature()` / `.verifyServerSignature(received_b64)`（恒定时间比对，校验通过推进至 `Verified`）；
+  - `.reset()` 与 `~init()` 密钥清零。
+
+```cp
+import { PgSaslState, PgSaslStatus } from "cap:pgwire";
+
+let sasl = PgSaslState.initWithBase64Nonce("rOprNGfwEbeRWgbNEkqO")?;
+let out: [256]u8 = [0; 256];
+const c1_len = sasl.formatClientFirst("user", out[0..])?;
+* = sasl.computeSaltedPasswordB64("pencil", "W22ZaJ0SNY7soEsUEjb6gQ==", 4096)?;
+const auth_msg = "n=user,r=rOprNGfwEbeRWgbNEkqO,r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=4096,c=biws,r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0";
+const cf_len = sasl.formatClientFinal("rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0", auth_msg, out[0..])?;
+* = sasl.verifyServerSignature("6rriTRBi23WpRR/wtup+mMhUZUn/dB5nLTJRsjl95G4=")?;
+* = c1_len; * = cf_len; * = sasl.status == PgSaslStatus.Verified;
+```
+
 ---
 
 ## 4. 示例
