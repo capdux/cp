@@ -28,3 +28,14 @@ export {
     exportChromeTraceJson,
     formatSummaryTable,
 } from "./trace.cp";
+
+export {
+    RUSAGE_USEC_PER_SEC,
+    RUSAGE_BYTES_PER_KB,
+    ResourceUsageError,
+    CpuTimeUs,
+    IoBlockOps,
+    IpcMessages,
+    ContextSwitches,
+    ResourceUsage,
+} from "./resourceUsage.cp";

@@ -48,3 +48,32 @@ pub fn runExample(alloc: std.mem.Allocator): !void {
     defer alloc.free(trace_json);
 }
 ```
+
+## 5. 进程与子进程资源用量剖析 (`resourceUsage.cp`)
+
+吸收自 `/data/dev/bun/src/runtime/api/bun/subprocess/ResourceUsage.cp`（参考 `/data/dev/bun/docs/runtime/child-process.mdx` 中 `proc.resourceUsage()` 实战指南）：
+
+- **导出符号**：`RUSAGE_USEC_PER_SEC` (`1_000_000`)、`RUSAGE_BYTES_PER_KB` (`1_024`)、`ResourceUsageError`（`BufferTooSmall`）、`CpuTimeUs`（`fromTimevals`/`userSharePermille`）、`IoBlockOps`（`total`）、`IpcMessages`（`total`）、`ContextSwitches`（`total`/`involuntaryRatioPermille`）、`ResourceUsage`（`linuxMaxRssKbToBytes`/`cpuTime`/`ops`/`messages`/`contextSwitches`/`diff`/`merge`/`formatSummary`）；
+- **实战最佳实践**：
+  - 子进程退出后（如 `await proc.exited` 后）采集 `ResourceUsage`，可获取峰值常驻内存（`max_rss_bytes`）、用户态/内核态微秒级 CPU 耗时（`cpuTime()`）、块 I/O 次数（`ops()`）、IPC 消息数（`messages()`）与上下文切换次数（`contextSwitches()`）；
+  - Linux `getrusage(2)` 返回的 `ru_maxrss` 单位为 KiB，调用 `ResourceUsage.linuxMaxRssKbToBytes(kb)` 可与 macOS 统一为字节口径；
+  - 使用 `diff(earlier)` 进行区间资源差分（饱和减法防倒退，RSS 取峰值），使用 `merge(other)` 聚合多 Worker/子进程集群总开销，调用 `formatSummary(&buf)` 零分配输出诊断摘要。
+
+```cp
+import { ResourceUsage } from "cap:perf";
+
+const u = ResourceUsage{
+    utime_sec: 0,
+    utime_usec: 12_500,
+    stime_sec: 0,
+    stime_usec: 2_500,
+    max_rss_bytes: ResourceUsage.linuxMaxRssKbToBytes(4096),
+    in_block_ops: 8,
+    out_block_ops: 2,
+    voluntary_ctx_switches: 15,
+    involuntary_ctx_switches: 3,
+};
+let buf: [128]u8 = [0; 128];
+const n = u.formatSummary(buf[0..])?;
+* = n;
+```
