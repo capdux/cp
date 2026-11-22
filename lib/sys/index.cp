@@ -1299,3 +1299,17 @@ export {
     verifyBinaryDump,
     parseBinaryDump,
 } from "./flightLog.cp";
+
+// --- workQueue (Zero-Alloc Multi-Priority Aging Work Queue & Backpressure Scheduler) ---
+export {
+    WORK_QUEUE_MAX_CAPACITY,
+    WORK_QUEUE_MAX_PRIORITY,
+    WorkBackpressurePolicy,
+    WorkEnqueueStatus,
+    WorkQueueConfig,
+    WorkTask,
+    WorkEnqueueOutcome,
+    WorkDequeueItem,
+    WorkQueueStats,
+    WorkQueue,
+} from "./workQueue.cp";

@@ -297,6 +297,47 @@ pub fn demoFlightRecorder() {
 }
 ```
 
+### 零分配多优先级防饥饿老化任务队列与背压调度器 (`workQueue.cp`)
+
+面向高负载任务调度与后台作业编排的 100% 纯 CP 零动态堆分配多优先级工作队列：
+
+- **常量与枚举**：
+  - `WORK_QUEUE_MAX_CAPACITY = 128`、`WORK_QUEUE_MAX_PRIORITY = 3`（优先级 `0..3`）
+  - `WorkBackpressurePolicy`（`reject_new | drop_lowest_priority | drop_oldest`）
+  - `WorkEnqueueStatus`（`accepted | accepted_after_evict | rejected_full | rejected_invalid_id | rejected_duplicate_id | rejected_invalid_priority | rejected_already_expired`）
+- **数据模型**：
+  - `WorkQueueConfig`（`capacity`, `aging_step_ms`, `backpressure`；提供 `defaults()`, `isValid()`）
+  - `WorkTask`（`task_id`, `priority`, `enqueued_ms`, `deadline_ms`, `payload_id`, `cancelled`, `occupied`, `seq`）
+  - `WorkEnqueueOutcome`（`status`, `evicted_task_id`, `isAccepted()`）、`WorkDequeueItem`（`task`, `effective_priority`, `wait_ms`）、`WorkQueueStats`（占用与累计遥测指标）
+- **核心引擎 `WorkQueue`**：
+  - `init(config): WorkQueue?`：校验 `1 <= capacity <= 128`，非法返回 `null`。
+  - `enqueue(*_, task_id, priority, now_ms, deadline_ms, payload_id): WorkEnqueueOutcome`：拦截 `task_id == 0`、非法优先级、重复活跃 ID 与已过期任务；满队列时优先回收已取消/过期槽位，仍满则按 `WorkBackpressurePolicy` 执行背压。
+  - `dequeueNext(*_, now_ms): WorkDequeueItem?` / `peekNext(now_ms): WorkDequeueItem?`：自动跳过已取消与超过 `deadline_ms` 的任务；等待时间每超过 `aging_step_ms` 自动 +1 提升有效优先级（封顶 3），彻底消除饥饿。
+  - `cancelTask(*_, task_id): bool` / `sweepExpired(*_, now_ms): usize` / `findTask(task_id)` / `len()` / `isEmpty()` / `isFull()` / `capacity()` / `clear(*_)` / `stats()`：支持精确取消、批量过期清扫与内置单调时钟防回退保护。
+
+```cp
+import {
+    WorkBackpressurePolicy,
+    WorkQueueConfig,
+    WorkQueue,
+} from "cap:sys";
+
+pub fn demoWorkQueue() {
+    const cfg = WorkQueueConfig{
+        capacity: 32,
+        aging_step_ms: 500,
+        backpressure: WorkBackpressurePolicy.drop_lowest_priority,
+    };
+    let q = WorkQueue.init(cfg) ?? return;
+    * = q.enqueue(1001, 0, 1000, 0, 10); // 低优任务
+    * = q.enqueue(1002, 2, 2000, 0, 20); // 高优任务
+    // 经过 1500ms 后（3 个 aging_step_ms），任务 1001 有效优先级升至 3，优先出队防饥饿
+    if (item := q.dequeueNext(2500)) {
+        * = item.task.task_id; // 1001
+    }
+}
+```
+
 ## 收敛子模块深度文档
 
 - [acpi.md](sys/acpi.md)
