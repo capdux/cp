@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/dotenv/env_loader.cp | Synced: 2026-11-22T05:34:22Z
+// Source: Absorbed from /data/dev/bun/src/dotenv/env_loader.cp | Synced: 2026-11-22T05:39:42Z
 // lib/dotenv/loader.cp
 // Multi-environment cascade loader for .env files
 

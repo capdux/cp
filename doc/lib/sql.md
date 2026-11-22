@@ -281,6 +281,36 @@ const wire = encodeMySqlOkPacket(buf[0..], MySqlOkPacketView{
 })?;
 const decoded = decodeMySqlOkPacket(wire)?; // decoded.status_flags.inTransaction() == true
 ```
+- **PostgreSQL v3 Extended Query 协议零分配编解码器 (`pg_extended.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/{Parse,Describe,Execute,Close,PortalOrPreparedStatement}.cp`)**：
+  - 常量与类型：`PG_PARSE_TAG` (`'P'`)、`PG_DESCRIBE_TAG` (`'D'`)、`PG_EXECUTE_TAG` (`'E'`)、`PG_CLOSE_TAG` (`'C'`)、`PG_SYNC_TAG` (`'S'`)、`PG_FLUSH_TAG` (`'H'`)、`PG_TARGET_PORTAL` (`'P'`)、`PG_TARGET_STATEMENT` (`'S'`)、`PG_MAX_PARSE_PARAMS` (`65535`)、`PgExtendedError`、`PgTargetKind`、`PgTargetRef`（`portal`/`statement`/`tag`/`isUnnamed`）、`PgParamOidIter`（零堆参数 OID 迭代器）、`PgDecodedParse`、`PgExecuteMsg`；
+  - 编解码函数：`encodePgParse` / `decodePgParse`、`encodePgDescribe` / `decodePgDescribe`、`encodePgExecute` / `decodePgExecute`、`encodePgClose` / `decodePgClose`、`encodePgSync` / `decodePgSync`、`encodePgFlush` / `decodePgFlush`。
+
+```typescript
+import {
+    PgTargetRef,
+    encodePgParse,
+    decodePgParse,
+    encodePgDescribe,
+    encodePgExecute,
+    encodePgClose,
+    encodePgSync,
+} from "cap:sql";
+
+let buf: [256]u8 = [0; 256];
+const oids: [2]i32 = [23, 25]; // int4, text
+const parse_wire = encodePgParse(buf[0..], "stmt_user_by_id", "SELECT * FROM users WHERE id = $1 AND role = $2", oids[0..])?;
+let parsed = decodePgParse(parse_wire)?; // parsed.paramCount() == 2
+while (oid := parsed.params.next()?) { * = oid; }
+
+const desc_wire = encodePgDescribe(buf[0..], PgTargetRef.statement("stmt_user_by_id"))?;
+const exec_wire = encodePgExecute(buf[0..], "", 100)?; // 匿名 Portal，最多返回 100 行
+const close_wire = encodePgClose(buf[0..], PgTargetRef.statement("stmt_user_by_id"))?;
+const sync_wire = encodePgSync(buf[0..])?; // 5 字节定长同步帧 ['S', 0, 0, 0, 4]
+* = desc_wire;
+* = exec_wire;
+* = close_wire;
+* = sync_wire;
+```
 
 ---
 
@@ -288,9 +318,13 @@ const decoded = decodeMySqlOkPacket(wire)?; // decoded.status_flags.inTransactio
 
 1. **三方言统一协议与连接串路由（参考 `/data/dev/bun/docs/runtime/sql.mdx`）**：
    - 覆盖 **PostgreSQL v3**（`postgres://` / `postgresql://`，默认回退方言，支持 SCRAM-SHA-256 / MD5 / 明文鉴权及 `PgBinaryCodec` 90+ OID 二进制编解码）、**MySQL 5.7+ / 8.0+**（`mysql://` / `mysql2://`，支持 `mysql_native_password` SHA-1 与 `caching_sha2_password` SHA-256、Query Attributes、二进制预处理协议与查询管线化）以及 **嵌入式 SQLite3**（`sqlite://` / `file://` / `:memory:` / `SqliteDatabase`，无协议前缀的裸文件名须显式指定 SQLite 适配器以避免与 PostgreSQL 产生歧义）。
-2. **参数化绑定与防 SQL 注入**：
+2. **PostgreSQL Simple vs Extended Query 与预处理语句最佳实践（参考 `/data/dev/bun/docs/runtime/sql.mdx`）**：
+   - **Simple Query (`'Q'`) vs Extended Query (`'P'`/`'B'`/`'D'`/`'E'`/`'C'`/`'S'`)**：Simple Query 支持单次提交多条分号分隔语句但不支持参数绑定；Extended Query 是默认推荐路径，支持二进制参数绑定与查询管线化（Pipelining），但单条 `Parse` 仅允许包含一条 SQL 语句。
+   - **命名 vs 匿名预处理语句（Named vs Unnamed Prepared Statements）**：对静态高频查询使用命名语句（`name != ""`）可复用服务端执行计划并启用管线化；在 **PGBouncer 事务池模式（Transaction Pooling）** 或低频动态查询场景下，应使用匿名语句（`name = ""`，对应 Bun `prepare: false`），其生命周期仅持续至下一次匿名 `Parse`，避免跨连接复用引发 `ERR_POSTGRES_EXPECTED_STATEMENT`。
+   - **管线化同步边界**：在多帧管线化序列末尾发送 `Sync` (`'S'`) 以建立事务恢复点并触发服务端 `ReadyForQuery`；若需在不断开管线的前提下提前拉取服务端响应，使用 `Flush` (`'H'`)。
+3. **参数化绑定与防 SQL 注入**：
    - 严禁通过字符串拼接构造含外部输入的 SQL；始终通过 `SqlStatement` / `SqliteDatabase` 参数绑定或 `MySqlPreparedProtocol` / `encodeMySqlQueryWithAttrs` / PostgreSQL Extended Query 参数帧分离语句与数据；审计或读写分离路由可结合 `parseSqlWithMaxDepth`、`isReadOnlyQuery` / `isReadOnlySql` 与 `normalizeSqlFingerprint` 实现安全校验与查询脱敏。
-3. **连接状态机与事务边界**：
+4. **连接状态机与事务边界**：
    - PostgreSQL 事务内一旦单条语句出错即进入 `Aborted` 状态，须执行 `ROLLBACK` 后方可继续新查询；`SqlTransactionStateMachine` 与 `SqliteDatabase`（`begin`/`commit`/`rollback`）配合 `defer` 可确保异常路径下确定性回滚，防止连接池归还脏事务连接。
-4. **15 字节小对象优化（`SqlData`）**：
+5. **15 字节小对象优化（`SqlData`）**：
    - 继承自 Bun `src/sql/shared/Data.cp`，短列值直接内联存储于 15 字节槽位，显著降低宽表批量扫描时的堆分配压力。
