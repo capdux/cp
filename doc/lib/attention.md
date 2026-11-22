@@ -1532,3 +1532,44 @@ pub fn demoAwqGemv(calib_acts: []const f32, weights: []const f32, x: []const f32
     * = awqGemvF32(q_packed[0..], groups[0..], scales[0..], x, 2, 16, 16, *scratch_s, *out_y_s);
 }
 ```
+
+
+### 零分配 FlashDecoding Split-K KV 分区注意力与 Log-Sum-Exp 无损归约内核 (`flashDecode.cp`)
+
+面向超长上下文自回归解码（Decode 阶段）的 100% 纯 CP 零动态堆分配 **Dao-AILab FlashDecoding Split-K** 并行注意力核心算子，基于原生 8-lane SIMD `@dot` 与硬件 `@fma` 实现：
+
+- **常量与数据模型**：
+  - `FLASH_DECODE_MAX_HEAD_DIM = 256`、`FLASH_DECODE_MAX_SPLITS = 64`
+  - `FlashDecodePartial`：单分区在线 Softmax 累加结果（含归一化部分输出 `partial_out: [256]f32`、精确 `lse = max_logit + ln(sum_exp)`、`max_logit`、`sum_exp`、`head_dim`、`num_kv`、`valid`；提供 `empty()`、`isValid()`、`outputSlice()`）。
+  - `FlashDecodeMergeStats`：归约诊断摘要（`global_lse`、`active_partitions`、`skipped_empty`、`total_kv`）。
+- **核心 Split-K 与归约算子**：
+  - `flashDecodePartition(q, k_part, v_part, num_kv, head_dim, scale, *out_acc): bool`：对单个 KV 分区独立执行在线 Softmax 注意力（`scale <= 0.0` 默认 `1 / sqrt(head_dim)`），输出 `partial_out` 与精确 `lse`；当 `num_kv == 0` 时输出安全空分区（`valid = false`）供后续归约自动跳过。
+  - `mergeFlashDecodePartialsWithStats(partials, head_dim, *out_vec): FlashDecodeMergeStats?` / `mergeFlashDecodePartials(partials, head_dim, *out_vec): bool`：基于全局最大 LSE 偏移的无溢出 Log-Sum-Exp 归约（权重 `exp(lse_s - global_lse) ∈ (0, 1]`），自动跳过空分区，支持任意切分点与任意分区顺序，与全量单遍 SDPA 数学等价（误差 `< 1e-5`）。
+  - `flashDecodeSplitK(q, k_all, v_all, num_kv, head_dim, num_splits, scale, *out_vec): bool`：端到端 Split-K 解码入口，将 KV 序列均匀划分为 `num_splits` 个分区（支持 `num_splits > num_kv`）并无损合并。
+  - `flashDecodeSplitKGqa(q_heads, k_heads, v_heads, num_q_heads, num_kv_heads, num_kv, head_dim, num_splits, scale, *out_heads): bool`：多 Query 头 Grouped-Query Attention (GQA) 批量 Split-K 解码归约。
+
+```cp
+import {
+    FlashDecodePartial,
+    flashDecodePartition,
+    mergeFlashDecodePartials,
+    flashDecodeSplitK,
+} from "cap:attention";
+
+pub fn demoFlashDecode(q: []const f32, k_all: []const f32, v_all: []const f32, num_kv: usize, head_dim: usize) {
+    // 方式 1：手动 Split-K 分区 + LSE 无损归约
+    const mid: usize = num_kv / 2;
+    let parts: [2]FlashDecodePartial = [FlashDecodePartial.empty(); 2];
+    * = flashDecodePartition(q, k_all[0 .. mid * head_dim], v_all[0 .. mid * head_dim], mid, head_dim, 0.0, *parts[0]);
+    * = flashDecodePartition(q, k_all[mid * head_dim .. num_kv * head_dim], v_all[mid * head_dim .. num_kv * head_dim], num_kv - mid, head_dim, 0.0, *parts[1]);
+
+    let out_a: [64]f32 = [0.0; 64];
+    let out_a_s: []f32 = out_a[0..head_dim];
+    * = mergeFlashDecodePartials(parts[0..], head_dim, *out_a_s);
+
+    // 方式 2：端到端 4 路 Split-K 解码
+    let out_b: [64]f32 = [0.0; 64];
+    let out_b_s: []f32 = out_b[0..head_dim];
+    * = flashDecodeSplitK(q, k_all, v_all, num_kv, head_dim, 4, 0.0, *out_b_s);
+}
+```

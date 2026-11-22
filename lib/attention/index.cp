@@ -377,3 +377,15 @@ export {
     awqGemvF32,
     evaluateAwqQuantError,
 } from "./quantAwq.cp";
+
+export {
+    FLASH_DECODE_MAX_HEAD_DIM,
+    FLASH_DECODE_MAX_SPLITS,
+    FlashDecodePartial,
+    FlashDecodeMergeStats,
+    flashDecodePartition,
+    mergeFlashDecodePartialsWithStats,
+    mergeFlashDecodePartials,
+    flashDecodeSplitK,
+    flashDecodeSplitKGqa,
+} from "./flashDecode.cp";
