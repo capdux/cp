@@ -108,6 +108,27 @@ const decoded = PgNotificationResponse.decodeFrame(frame[0..n])?;
 * = decoded.isChannel("orders_events"); // true
 ```
 
+### `Close`（`'C'`）/ `Describe`（`'D'`）与 `CloseComplete`（`'3'`）扩展查询生命周期编解码（`closeDescribe.cp`）
+
+> 吸收自 `/data/dev/bun/src/sql/postgres/protocol/Close.cp`（参考 `/data/dev/bun/docs/runtime/sql.mdx` PostgreSQL Extended Query 与预处理语句缓存最佳实践），零堆分配实现 `Close`、`Describe` 与 `CloseComplete` 帧编解码及 `PgTargetRef`（`'S'` 预处理语句 / `'P'` 游标 Portal）。
+
+- 核心导出：`PG_TAG_CLOSE`（`'C'`）、`PG_TAG_DESCRIBE`（`'D'`）、`PG_TAG_CLOSE_COMPLETE`（`'3'`）、`PG_TARGET_PREPARED_STATEMENT`（`'S'`）、`PG_TARGET_PORTAL`（`'P'`）、`PgCloseDescribeError`、`PgTargetKind`、`PgTargetRef`、`PgCloseMsg`（含 `encodeCloseCompleteFrame` / `decodeCloseCompleteFrame`）、`PgDescribeMsg`；
+- **实战最佳实践**：
+  - 复用预处理语句缓存淘汰旧语句时，在管线中发送 `PgCloseMsg.statement(name)` 并等待服务端 `CloseComplete`（`'3'`）确认，避免连接侧 Prepared Statement 泄漏；
+  - 一次性参数化查询可使用未命名目标 `PgTargetRef.unnamedStatement()` / `PgTargetRef.unnamedPortal()`（空名称 + 单个 NUL 终结符），无需额外 `Close` 往返即可被下一次 `Parse`/`Bind` 自动覆写。
+
+```cp
+import { PgCloseMsg, PgDescribeMsg } from "cap:pgwire";
+
+let buf: [64]u8 = [0; 64];
+const n1 = PgDescribeMsg.statement("stmt_users_by_id").encodeFrame(buf[0..])?;
+const desc = PgDescribeMsg.decodeFrame(buf[0..n1])?;
+const n2 = PgCloseMsg.portal("cursor_1").encodeFrame(buf[0..])?;
+const cls = PgCloseMsg.decodeFrame(buf[0..n2])?;
+* = desc.target.name;
+* = cls.target.name;
+```
+
 ---
 
 ## 4. 示例

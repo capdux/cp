@@ -65,3 +65,16 @@ export {
     PgNotificationError,
     PgNotificationResponse,
 } from "./notificationResponse.cp";
+
+export {
+    PG_TAG_CLOSE,
+    PG_TAG_DESCRIBE,
+    PG_TAG_CLOSE_COMPLETE,
+    PG_TARGET_PREPARED_STATEMENT,
+    PG_TARGET_PORTAL,
+    PgCloseDescribeError,
+    PgTargetKind,
+    PgTargetRef,
+    PgCloseMsg,
+    PgDescribeMsg,
+} from "./closeDescribe.cp";
