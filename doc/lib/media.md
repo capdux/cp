@@ -383,6 +383,75 @@ pub fn demoStreamingAbr(master_m3u8: []const u8)! {
 }
 ```
 
+### 7. CMAF / Fragmented MP4 (fMP4) 与 Ogg-Opus 流式容器复用/解复用引擎 (`fmp4Mux.cp`)
+
+面向 LL-HLS / MPEG-DASH CMAF 分片与实时语音 Opus 流的 100% 纯 CP 零动态堆分配、外部切片驱动流媒体容器引擎：
+
+- **常量与错误集**：
+  - ISO BMFF 4CC 常量：`FMP4_BOX_FTYP` / `MOOV` / `MVHD` / `TRAK` / `TKHD` / `MDIA` / `MDHD` / `HDLR` / `MINF` / `STBL` / `MVEX` / `TREX` / `MOOF` / `MFHD` / `TRAF` / `TFHD` / `TFDT` / `TRUN` / `MDAT`
+  - 同步样本标志：`FMP4_SAMPLE_FLAG_SYNC` (`0x02000000`)、`FMP4_SAMPLE_FLAG_NON_SYNC` (`0x01010000`)
+  - Ogg/Opus 常量：`OGG_CAPTURE_PATTERN` (`"OggS"`)、`OGG_PAGE_FLAG_CONT` / `BOS` / `EOS`、`OPUS_HEAD_MIN_LEN` (`19`)
+  - `Fmp4MuxError`（`InvalidBox | TruncatedBox | BufferTooSmall | OutputSliceTooSmall | InvalidConfig | InvalidOggMagic | OggChecksumMismatch | InvalidOpusHead | TooManySegments`）
+- **ISO BMFF / CMAF Init Segment 与 Box 迭代**：
+  - `Fmp4TrackKind`（`video_avc | video_hevc | video_av1 | audio_aac | audio_opus`）、`Fmp4InitConfig`
+  - `encodeFmp4InitSegment(cfg, out_buf): usize ! Fmp4MuxError`（自动嵌套回填 `ftyp` + `moov`/`mvhd`/`trak`/`mdia`/`mvex`/`trex`）
+  - `Fmp4BoxHeader`、`Fmp4BoxIter`（支持 32-bit 与 64-bit `largesize` Box，安全拦截截断与畸形长度）
+- **CMAF Media Fragment (`moof` + `mdat`) 复用与解复用**：
+  - `Fmp4SampleMeta`、`Fmp4FragmentHeader`、`Fmp4ParsedSample`
+  - `encodeFmp4Fragment(seq_num, track_id, base_decode_time, samples, concatenated_payload, out_buf)`（写入 64-bit `tfdt` 与含精确 `trun.data_offset == moof_size + 8` 的 `trun` v1）
+  - `parseFmp4Fragment(raw, out_samples)`（还原每帧 `pts`/`dts`/`duration`/`data_offset`/`data_len`/`is_keyframe`）
+- **RFC 3533 Ogg 页封装 + RFC 7845 OpusHead / OpusTags**：
+  - `computeOggCrc32(data)`（标准 Ogg 非反射多项式 `0x04C11DB7`）
+  - `OggPageHeader`、`encodeOggPage`（自动 255 字节切分 lacing table 与 CRC32 回填）、`parseOggPage`（无修改全量 CRC32 校验）
+  - `OpusHeadInfo`、`encodeOpusHead`、`parseOpusHeadInfo`、`encodeOpusTags`
+
+```cp
+import {
+    Fmp4TrackKind,
+    Fmp4InitConfig,
+    encodeFmp4InitSegment,
+    Fmp4SampleMeta,
+    FMP4_SAMPLE_FLAG_SYNC,
+    FMP4_SAMPLE_FLAG_NON_SYNC,
+    encodeFmp4Fragment,
+    Fmp4ParsedSample,
+    parseFmp4Fragment,
+    OpusHeadInfo,
+    encodeOpusHead,
+    encodeOggPage,
+    OGG_PAGE_FLAG_BOS,
+} from "cap:media";
+
+pub fn demoFmp4AndOggOpus()! {
+    // 1. 生成 CMAF Video Init Segment (ftyp + moov)
+    let init_buf: [1024]u8 = [0; 1024];
+    const init_len = encodeFmp4InitSegment(
+        Fmp4InitConfig{ track_id: 1, timescale: 90000, kind: Fmp4TrackKind.video_avc, width: 1920, height: 1080 },
+        init_buf[0..],
+    )?;
+
+    // 2. 封装 2 帧 Media Fragment (moof + mdat) 并解复用
+    const samples: [2]Fmp4SampleMeta = [
+        Fmp4SampleMeta{ duration: 3000, size: 4, flags: FMP4_SAMPLE_FLAG_SYNC, cts_offset: 3000 },
+        Fmp4SampleMeta{ duration: 3000, size: 4, flags: FMP4_SAMPLE_FLAG_NON_SYNC, cts_offset: -3000 },
+    ];
+    const payload: [8]u8 = [1, 2, 3, 4, 5, 6, 7, 8];
+    let frag_buf: [512]u8 = [0; 512];
+    const frag_len = encodeFmp4Fragment(1, 1, 900000, samples[0..], payload[0..], frag_buf[0..])?;
+    let parsed: [4]Fmp4ParsedSample = [Fmp4ParsedSample{}; 4];
+    const hdr = parseFmp4Fragment(frag_buf[0..frag_len], parsed[0..])?;
+
+    // 3. 打包 RFC 7845 OpusHead 到 RFC 3533 Ogg BOS 页
+    let head_buf: [32]u8 = [0; 32];
+    const head_len = encodeOpusHead(OpusHeadInfo{ channels: 2, pre_skip: 312, input_sample_rate: 48000 }, head_buf[0..])?;
+    let page_buf: [128]u8 = [0; 128];
+    const page_len = encodeOggPage(OGG_PAGE_FLAG_BOS, 0, 0x12345678, 0, head_buf[0..head_len], page_buf[0..])?;
+    * = init_len;
+    * = hdr.sample_count;
+    * = page_len;
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
