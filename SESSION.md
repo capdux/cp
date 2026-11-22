@@ -256,3 +256,6 @@
 
 ### 2026-11-22（`cap:h2stream` 验收，子智能体吸收 Bun 上游 h2_client/Stream.cp 为 cap:h2stream（6/6 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/h2stream/`（5/5 PASS，`doc/lib/h2stream.md`）经 `verify_module.sh` 一次性验收回收；子智能体吸收 Bun 上游 h2_client/Stream.cp 为 cap:h2stream（6/6 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:textstream` 验收，子智能体吸收 Bun 上游 TextEncoderStreamEncoder.cp 为 cap:textstream（5/5 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/textstream/`（5/5 PASS，`doc/lib/textstream.md`）经 `verify_module.sh` 一次性验收回收；子智能体吸收 Bun 上游 TextEncoderStreamEncoder.cp 为 cap:textstream（5/5 PASS），主协调器统一登记并提交
