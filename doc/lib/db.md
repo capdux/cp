@@ -466,6 +466,48 @@ pub fn demoGroupCommit() {
 
 ---
 
+### 零分配确定性 Arena SkipList 有序 KV 引擎 (`skipList.cp`)
+
+专为 LSM-Tree MemTable 打造的 100% 纯 CP 零动态堆分配确定性跳表引擎，内联定长节点池与 8 KiB 字节 Arena，使用可设种子的 xorshift64 PRNG（1/4 分支因子）实现严格字典序 O(log N) 读写与范围扫描：
+
+- **常量与枚举**：
+  - `SKIPLIST_MAX_NODES = 256`、`SKIPLIST_MAX_LEVEL = 12`、`SKIPLIST_ARENA_BYTES = 8192`、`SKIPLIST_NO_NODE = 0xFFFF`、`SKIPLIST_DEFAULT_SEED`
+  - `SkipListWriteStatus`（`ok | empty_key | node_pool_full | arena_full`）
+  - `SkipListGetKind`（`found | tombstone | not_found`）
+- **数据模型**：
+  - `SkipListNode`、`SkipListEntryView`、`SkipListGetResult`、`SkipListStats`（`total_nodes`, `live_keys`, `tombstone_keys`, `current_max_level`, `arena_used_bytes`, `arena_util_permille`, `node_util_permille`, `total_comparisons`, `next_version`）
+- **核心引擎 `ArenaSkipList`**：
+  - `init()` / `initWithSeed(seed)` / `clear(*_)`
+  - `put(*_, key, value): SkipListWriteStatus`：O(log N) 字典序插入或更新（同键新值 `<= val_cap` 零额外 Arena 原地覆写，否则前置原子校验扩容，杜绝半写损坏；单调递增 `version` 并可复活墓碑键）；
+  - `delete(*_, key): SkipListWriteStatus`：写入墓碑删除标记（含独立墓碑插入以遮蔽下层 SSTable）；
+  - `get(*_, key)` / `getConst(key)`：O(log N) 精确点查；
+  - `seek(lower_key)` / `nextNode(idx)` / `entryAt(idx)` / `rangeScan(start_key, end_key, include_tombstones, *out_entries)`：前向游标与 `[start_key, end_key)` 区间扫描；
+  - `keySlice(entry)` / `valueSlice(entry)` / `shouldFlush(threshold_permille)` / `stats()`。
+
+```cp
+import {
+    SkipListEntryView,
+    ArenaSkipList,
+} from "cap:db";
+
+pub fn demoArenaSkipList() {
+    let sl = ArenaSkipList.initWithSeed(42);
+    * = sl.put("user:03", "charlie");
+    * = sl.put("user:01", "alice");
+    * = sl.put("user:02", "bob");
+    * = sl.delete("user:02"); // 写入墓碑
+
+    let entries: [4]SkipListEntryView = [SkipListEntryView{}; 4];
+    let entries_s: []SkipListEntryView = entries[0..];
+    const n = sl.rangeScan("user:01", "user:99", false, *entries_s);
+    // 按字典序返回 ["user:01", "user:03"] (跳过墓碑 user:02)
+    * = n;
+    * = sl.shouldFlush(750);
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [bloom_cuckoo.md](db/bloom_cuckoo.md)

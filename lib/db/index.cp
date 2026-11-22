@@ -417,3 +417,19 @@ export {
     GroupCommitStats,
     GroupCommitCoordinator,
 } from "./writeBatch.cp";
+
+// --- arena_skiplist ---
+export {
+    SKIPLIST_MAX_NODES,
+    SKIPLIST_MAX_LEVEL,
+    SKIPLIST_ARENA_BYTES,
+    SKIPLIST_NO_NODE,
+    SKIPLIST_DEFAULT_SEED,
+    SkipListWriteStatus,
+    SkipListGetKind,
+    SkipListNode,
+    SkipListEntryView,
+    SkipListGetResult,
+    SkipListStats,
+    ArenaSkipList,
+} from "./skipList.cp";
