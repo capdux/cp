@@ -46,6 +46,7 @@
 | `lib/web/ratelimit.cp` | 确定性限流器 (令牌桶/滑动窗口/GCRA/分键限流) | `TokenBucket`, `SlidingWindowCounter`, `GcraLimiter`, `KeyedRateLimiter`, `RateDecision`, `RateLimitError` |
 | `lib/web/circuit_breaker.cp` / `circuit_policy.cp` | 熔断器、指数退避抖动与舱壁隔离 | `CircuitBreaker`, `CircuitConfig`, `CircuitState`, `CircuitStats`, `BackoffPolicy`, `Bulkhead`, `JitterMode` |
 | `lib/web/middleware.cp` | 零堆分配 HTTP 洋葱中间件链、CORS/Bearer 鉴权/413 守卫与指标统计 | `WebContext`, `WebMiddlewareConfig`, `WebMiddlewareOutcome`, `WebMiddlewareStats`, `WebMiddlewarePipeline`, `renderJsonErrorBody` |
+| `lib/web/hedged_policy.cp` | Google "The Tail at Scale" 对冲请求（Hedged Requests）与重试预算防风暴控制器 | `HEDGED_MAX_ATTEMPTS`, `RetryBudgetConfig`, `RetryBudgetStats`, `RetryBudget`, `HedgedRequestConfig`, `HedgedAction`, `HedgedAttemptState`, `HedgedWinResult`, `HedgedRequestTracker` |
 
 ---
 
@@ -115,5 +116,46 @@ pub fn demoWebMiddleware() {
         * = renderJsonErrorBody(ctx.status_code, ctx.abort_reason, ctx.request_id, err_buf[0..]);
     }
     * = mw.stats();
+}
+```
+
+### 对冲请求（Hedged Requests）与重试预算防风暴示例 (`hedged_policy.cp`)
+
+```cp
+import {
+    RetryBudgetConfig,
+    RetryBudget,
+    HedgedRequestConfig,
+    HedgedAction,
+    HedgedRequestTracker,
+} from "cap:web";
+
+pub fn demoHedgedRequestPolicy() {
+    // 1. 重试预算：限制重试+对冲不超过正常流量 10%（1000 bps），每秒保底 2 次
+    let budget = RetryBudget.init(RetryBudgetConfig{
+        retry_ratio_bps: 1000,
+        min_retries_per_sec: 2,
+        window_ms: 1000,
+        max_burst_retries: 20,
+    }, 1000) ?? return;
+
+    budget.recordRequest(1000);
+
+    // 2. 幂等请求在主请求超过 50ms 未返回时自动发射对冲副本
+    let tracker = HedgedRequestTracker.init(HedgedRequestConfig{
+        hedge_delay_ms: 50,
+        max_hedges: 2,
+        total_timeout_ms: 300,
+        idempotent_only: true,
+    }, true, 1000) ?? return;
+
+    const a1 = tracker.evaluate(1020, &budget); // HedgedAction.Wait
+    const a2 = tracker.evaluate(1055, &budget); // HedgedAction.LaunchHedge (attempt 1)
+    if (a2 == HedgedAction.LaunchHedge) {
+        // 对冲副本 1 率先返回，自动取消仍在途的主请求 0
+        const win = tracker.onReplicaSucceeded(tracker.latestAttemptIdx());
+        * = win.cancelled_inflight; // 1
+    }
+    * = a1;
 }
 ```

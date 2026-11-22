@@ -248,3 +248,15 @@ export {
     WebMiddlewarePipeline,
     renderJsonErrorBody,
 } from "./middleware.cp";
+
+export {
+    HEDGED_MAX_ATTEMPTS,
+    RetryBudgetConfig,
+    RetryBudgetStats,
+    RetryBudget,
+    HedgedRequestConfig,
+    HedgedAction,
+    HedgedAttemptState,
+    HedgedWinResult,
+    HedgedRequestTracker,
+} from "./hedged_policy.cp";
