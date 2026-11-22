@@ -239,3 +239,12 @@ export {
     BackoffPolicy,
     Bulkhead,
 } from "./circuit_policy.cp";
+
+export {
+    WebContext,
+    WebMiddlewareConfig,
+    WebMiddlewareOutcome,
+    WebMiddlewareStats,
+    WebMiddlewarePipeline,
+    renderJsonErrorBody,
+} from "./middleware.cp";

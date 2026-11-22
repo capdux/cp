@@ -45,6 +45,7 @@
 | :--- | :--- | :--- |
 | `lib/web/ratelimit.cp` | 确定性限流器 (令牌桶/滑动窗口/GCRA/分键限流) | `TokenBucket`, `SlidingWindowCounter`, `GcraLimiter`, `KeyedRateLimiter`, `RateDecision`, `RateLimitError` |
 | `lib/web/circuit_breaker.cp` / `circuit_policy.cp` | 熔断器、指数退避抖动与舱壁隔离 | `CircuitBreaker`, `CircuitConfig`, `CircuitState`, `CircuitStats`, `BackoffPolicy`, `Bulkhead`, `JitterMode` |
+| `lib/web/middleware.cp` | 零堆分配 HTTP 洋葱中间件链、CORS/Bearer 鉴权/413 守卫与指标统计 | `WebContext`, `WebMiddlewareConfig`, `WebMiddlewareOutcome`, `WebMiddlewareStats`, `WebMiddlewarePipeline`, `renderJsonErrorBody` |
 
 ---
 
@@ -72,5 +73,47 @@ pub fn demoWeb() {
     // 3. OPML 检测 & HTTP/1.1 零分配解析
     * = isOpmlDocument("<opml version=\"2.0\"></opml>");
     * = parseRequest;
+}
+```
+
+### 生产级零堆分配 HTTP 洋葱中间件链示例 (`middleware.cp`)
+
+```cp
+import {
+    WebContext,
+    WebMiddlewareConfig,
+    WebMiddlewareOutcome,
+    WebMiddlewarePipeline,
+    renderJsonErrorBody,
+} from "cap:web";
+
+pub fn demoWebMiddleware() {
+    let mw = WebMiddlewarePipeline.init(WebMiddlewareConfig{
+        max_body_bytes: 65536,
+        allowed_origin: "https://app.example.com",
+        required_bearer_token: "sk-live-secret",
+        auth_skip_paths_csv: "/healthz,/metrics",
+    });
+
+    let ctx = WebContext{
+        method: "POST",
+        path: "/v1/chat",
+        origin: "https://app.example.com",
+        bearer_token: "sk-live-secret",
+        body_len: 512,
+    };
+
+    let id_buf: [32]u8 = [0; 32];
+    * = mw.ensureRequestId(&ctx, id_buf[0..]); // 自动生成 "req-1"
+
+    const outcome = mw.runBefore(&ctx);
+    if (outcome == WebMiddlewareOutcome.Continue) {
+        // 执行业务路由并在洋葱后置阶段记录状态码与延迟
+        mw.recordAfter(&ctx, 200, 1250);
+    } else if (ctx.aborted) {
+        let err_buf: [256]u8 = [0; 256];
+        * = renderJsonErrorBody(ctx.status_code, ctx.abort_reason, ctx.request_id, err_buf[0..]);
+    }
+    * = mw.stats();
 }
 ```
