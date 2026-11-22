@@ -52,3 +52,15 @@ export {
     JsScopeNode,
     JsScopeTree,
 } from "./scope.cp";
+
+export {
+    JS_SYMBOL_MAX_ENTRIES,
+    JS_SYMBOL_INVALID_INDEX,
+    JsSymbolTableError,
+    JsSlotNamespace,
+    JsImportItemStatus,
+    JsSymbolEntryKind,
+    JsSymbolRef,
+    JsSymbolRecord,
+    JsSymbolTable,
+} from "./symbolTable.cp";

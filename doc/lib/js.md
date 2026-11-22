@@ -126,3 +126,28 @@ const blk = tree.pushScope(JsScopeKind.block, entry)?;
 * = tree.markDirectEval(blk)?;
 assert(!tree.canMinifyIdentifiersInScope(entry));
 ```
+
+### 跨模块符号链接表与并查集压缩 (`symbolTable.cp`)
+
+吸收自 `/data/dev/bun/src/js_parser/ast/Symbol.cp`，并结合 `/data/dev/bun/docs/bundler/minifier.mdx` 中的标识符压缩分槽实践：
+
+- **导出符号**：`JS_SYMBOL_MAX_ENTRIES` (`256`)、`JS_SYMBOL_INVALID_INDEX`、`JsSymbolTableError`、`JsSlotNamespace`（`must_not_be_renamed`/`default_ns`/`label_ns`/`private_name`/`mangled_prop`）、`JsImportItemStatus`、`JsSymbolEntryKind`（24 种符号分类，含 `isPrivate`/`isHoisted`/`isHoistedOrFunction`/`isFunction`）、`JsSymbolRef`、`JsSymbolRecord`、`JsSymbolTable`（`init`/`len`/`addSymbol`/`get`/`follow`/`getResolved`/`merge`/`followAll`/`assignChunkIndex`/`addUseCount`/`markMustNotBeRenamed`/`countCanonicalByNamespace`）；
+- **核心链接器特性**：
+  1. **迭代路径压缩并查集 (`merge` / `follow` / `followAll`)**：跨模块 import/export 符号合并时零递归完成根追踪与路径压缩，同步聚合 `use_count_estimate` 并保持 `must_not_be_renamed` 与 `original_name` 锁定不变量；
+  2. **5 槽位重命名命名空间**：将 `unbound`/`must_not_be_renamed`、普通标识符、`label`、私有成员 `#name` 与属性混淆分桶隔离，配合 `countCanonicalByNamespace()` 统计待重命名活跃符号数，供 minifier 按使用频次分配最短标识符。
+
+```cp
+import { JsSymbolTable, JsSymbolEntryKind, JsSlotNamespace } from "cap:js";
+
+let tbl = JsSymbolTable.init();
+const imp = tbl.addSymbol(0, "helper", JsSymbolEntryKind.import_sym)?;
+const exp = tbl.addSymbol(1, "helperImpl", JsSymbolEntryKind.hoisted_function)?;
+* = tbl.addUseCount(imp, 5)?;
+* = tbl.addUseCount(exp, 3)?;
+const root = tbl.merge(imp, exp)?;
+if (rec := tbl.getResolved(imp)) {
+    assert(rec.use_count_estimate == 8);
+    assert(rec.slotNamespace() == JsSlotNamespace.default_ns);
+}
+* = root;
+```
