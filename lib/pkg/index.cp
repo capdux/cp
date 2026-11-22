@@ -706,3 +706,27 @@ export {
     IsoDfsFrame,
     IsoInstallPlanner,
 } from "./isolatedPlan.cp";
+
+export {
+    PACK_TARBALL_PREFIX,
+    PACK_MAX_PATH_LEN,
+    PackRulesError,
+    normalizePackRelPath,
+    formatTarballEntryPath,
+    formatTarballFileName,
+    matchPackGlob,
+    isAlwaysIncludedPackFile,
+    isRootReadmeFile,
+    isRootLicenseFile,
+    isHardExcludedPackPath,
+    isDefaultIgnoredPackPath,
+    PackRuleKind,
+    PackRulePattern,
+    parsePackIgnoreFile,
+    parseFilesFieldRule,
+    PackFileCandidate,
+    PackDecisionReason,
+    PackPlannedFile,
+    PackPlanSummary,
+    PackPlanner,
+} from "./packRules.cp";

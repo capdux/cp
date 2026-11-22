@@ -1171,3 +1171,25 @@ let planner = IsoInstallPlanner.init(entries[0..], links[0..]);
 * = planner;
 * = ISO_DEFAULT_STORE_DIR;
 ```
+
+### `cap pack` / `cap publish` 发布包文件包含/排除规则引擎与 Tarball 清单规划器（`packRules.cp`）
+
+- 吸收自 `/data/dev/bun/src/cli/pack_command.cp`（纯 CP 零堆分配、全外部切片驱动、无硬编码规则/文件数量上限）；
+- **核心导出**：
+  - 路径规范化与 Tarball 命名：`PACK_TARBALL_PREFIX` (`"package/"`)、`PackRulesError`、`normalizePackRelPath`（拦截绝对路径、反斜杠、空字节与 `..` 路径穿越）、`formatTarballEntryPath`、`formatTarballFileName`（`@scope/ui` + `1.2.3` -> `scope-ui-1.2.3.tgz`）；
+  - 零 ReDoS 路径 Glob 引擎与默认规则分类：`matchPackGlob`（支持 `*`/`?`/`[a-z]`/`**`）、`isAlwaysIncludedPackFile`（强制保留 `package.json`/`cap.json`/`README*`/`LICENSE*`/`CHANGELOG*`）、`isHardExcludedPackPath`（强制剔除 `.git`/`.hg`/`.npmrc`/`node_modules`/`cap_modules`/`.cap`）、`isDefaultIgnoredPackPath`（锁文件、`.DS_Store`、`._*`、`.*.swp`、`.env.production`、`bunfig.toml` 等）；
+  - 规则解析与清单规划器：`PackRuleKind`、`PackRulePattern`、`parsePackIgnoreFile`（精准区分 `.npmignore` 与 `.gitignore` 同目录覆写优先级）、`parseFilesFieldRule`（支持 `"files"` 白名单与 `!test/**` 反向排除）、`PackFileCandidate`、`PackDecisionReason`、`PackPlannedFile`、`PackPlanSummary`、`PackPlanner`（确定性词典序排序、64 位清单完整性摘要 `manifest_hash64` 与零分配 `formatPackReport`）。
+
+```cp
+import { PackPlanner, PackRulePattern, PackPlannedFile, PackFileCandidate, PackRuleKind } from "cap:pkg";
+
+let f_rules: [8]PackRulePattern = [PackRulePattern.empty(); 8];
+let i_rules: [16]PackRulePattern = [PackRulePattern.empty(); 16];
+let entries: [4][]const u8 = [""; 4];
+let planned: [32]PackPlannedFile = [PackPlannedFile.empty(); 32];
+let planner = PackPlanner.init(f_rules[0..], i_rules[0..], entries[0..], planned[0..]);
+
+planner.addFilesEntry("dist")?;
+planner.addFilesEntry("!dist/**/*.map")?;
+* = planner.addIgnoreFile("*.log\n", "", 0, PackRuleKind.npm_ignore)?;
+```
