@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sourcemap/Mapping.cp | Synced: 2026-11-22T02:15:38Z
+// Source: Absorbed from /data/dev/bun/src/sourcemap/Mapping.cp | Synced: 2026-11-22T12:57:27Z
 // ============================================================================
 // lib/sourcemap/mapping.cp — SourceMap v3 映射表定义、排序与二分位置反查
 // 吸收自 Bun src/sourcemap/Mapping.cp & ParsedSourceMap.cp

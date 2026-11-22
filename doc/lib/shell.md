@@ -451,3 +451,35 @@ const end_s = sc.nextStep()?;     // AbortedOnError(exit_code == 127), 语句 3 
 * = cont;
 * = end_s;
 ```
+
+### POSIX / Bun Shell 子 Shell 隔离与重定向状态机（`subshellState.cp`）
+
+- 吸收自 `/data/dev/bun/src/shell/states/Subshell.cp` 与 `/data/dev/bun/docs/runtime/shell.mdx`；
+- 导出：`SUBSHELL_MAX_REDIRECT_PATH_LEN` (`512`)、`SUBSHELL_MAX_ENV_SNAPSHOT` (`32`)、`SubshellError`、`SubshellParentKind`（`Pipeline`/`Binary`/`Stmt`）、`SubshellRunState`（`Idle`/`ExpandingRedirect`/`Exec`/`WaitWriteErr`/`Done`）、`SubshellRedirectKind`（`None`/`WriteTrunc`/`WriteAppend`/`Read`/`ErrTrunc`/`ErrAppend`/`BothTrunc`）、`SubshellExecPolicy`、`SubshellEnvEntry`、`SubshellStepKind`、`SubshellStepAction`、`SubshellStateMachine`；
+- **Bun Shell 隔离与错误处理最佳实践（参考 `/data/dev/bun/docs/runtime/shell.mdx`）**：
+  - 子 Shell `( ... )` 在启动时复制父 Shell 环境变量与工作目录快照（`captureParentEnv`），内部通过 `setLocalEnv()` / `setLocalCwd()` 所做的任何修改均严格隔离在子 Shell 空间内（`propagatesSideEffectsToParent() == false`），绝不反向污染父 Shell；
+  - 带外层重定向（如 `(echo hi) > out.txt`）时状态机严格走 `Idle -> ExpandingRedirect -> Exec -> Done` 路径，先校验重定向路径无控制字符且长度 `<= 512`；重定向失败时走 `WaitWriteErr -> Done`（启用 `.quiet()` 时跳过错误回显直接 `Done`）；
+  - 默认 `throw_on_nonzero = true`（对齐 `$` 默认非零退出码抛出 `ShellError`），可通过 `SubshellExecPolicy{ throw_on_nonzero: false }`（对应 `.nothrow()`）改为手动检查 `exitCode()`。
+
+```cp
+import {
+    SubshellParentKind,
+    SubshellRedirectKind,
+    SubshellExecPolicy,
+    SubshellStateMachine,
+} from "cap:shell";
+
+let sub = SubshellStateMachine.init(
+    SubshellParentKind.Stmt,
+    SubshellRedirectKind.WriteTrunc,
+    SubshellExecPolicy{ throw_on_nonzero: false },
+);
+* = sub.captureParentEnv("PATH", "/usr/bin")?;
+* = sub.setLocalEnv("FOO", "bar")?; // 仅子 Shell 可见
+* = sub.nextStep()?;                // ExpandRedirect
+* = sub.onRedirectExpanded("/tmp/out.txt")?;
+* = sub.nextStep()?;                // ExecuteScript
+* = sub.onScriptFinished(0)?;
+const done = sub.nextStep()?;       // Completed, exit_code == 0
+* = done;
+```

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/ | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/shell/ | Synced: 2026-11-22T12:57:27Z
 // ============================================================================
 // Absorbed from Bun: /data/dev/bun/src/shell/ & /data/dev/bun/src/shell_parser/
 // Upstream Sync: Refer to /data/dev/bun/src/shell/ for future upstream updates.
@@ -319,6 +319,20 @@ export {
     scriptPropagatesEnvToParent,
     ShellScriptStateMachine,
 } from "./scriptState.cp";
+
+export {
+    SUBSHELL_MAX_REDIRECT_PATH_LEN,
+    SUBSHELL_MAX_ENV_SNAPSHOT,
+    SubshellError,
+    SubshellParentKind,
+    SubshellRunState,
+    SubshellRedirectKind,
+    SubshellExecPolicy,
+    SubshellEnvEntry,
+    SubshellStepKind,
+    SubshellStepAction,
+    SubshellStateMachine,
+} from "./subshellState.cp";
 
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {

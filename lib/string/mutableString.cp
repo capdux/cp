@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string/MutableString.cp | Synced: 2026-11-20T08:44:56Z
+// Source: Absorbed from /data/dev/bun/src/string/MutableString.cp | Synced: 2026-11-22T12:57:27Z
 /**
  * CP MutableString (cap:string)
  * 对应 Bun src/string/MutableString.zig 的可增长字符串缓冲
