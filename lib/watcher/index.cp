@@ -60,6 +60,17 @@ export {
     Watcher,
 } from "./watcher.cp";
 
+export {
+    WATCHER_TRACE_MAX_EVENTS,
+    WATCHER_TRACE_MAX_CHANGED_NAMES,
+    WATCHER_TRACE_ENV_VAR,
+    WatcherTraceError,
+    WatchTraceOpMask,
+    WatchTraceEntry,
+    WatchTraceBatch,
+    formatJsonEscapedStr,
+} from "./trace.cp";
+
 import { Watcher } from "./watcher.cp";
 import { WatchOptions } from "./events.cp";
 

@@ -256,3 +256,22 @@ export {
     FlameFoldProfiler,
     diffHotspots,
 } from "./flameFold.cp";
+
+// --- Zero-Alloc Distributed Tracing Flight Recorder / Ring Span Buffer ---
+
+export {
+    RING_TRACE_CAPACITY,
+    RING_TRACE_FROZEN_CAPACITY,
+    RING_TRACE_OP_MAX_LEN,
+    RING_TRACE_TAG_MAX_LEN,
+    RingSpanStatus,
+    RingFreezeReason,
+    RingSpan,
+    SpanSelfTime,
+    TraceAnalysis,
+    RingTraceStats,
+    RingTraceRecorder,
+    analyzeTraceSpans,
+    formatTraceSummary,
+    formatChromeTraceEvent,
+} from "./ringTrace.cp";

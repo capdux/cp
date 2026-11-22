@@ -112,3 +112,20 @@ fn demoWatcherLifecycle(): void {
    - 在监控项目根目录时优先启用 `WatchFilter.shouldIgnore(path)`，过滤 `.git`、`node_modules`、`.cap`、`zig-cache` 与编辑器临时文件（`*.swp`/`*.tmp`/`*~`），防止构建产物写入触发死循环重载。
 4. **容量上限与确定性清理**：
    - `Watcher` 采用固定容量表（`MAX_WATCH_ITEMS`、`MAX_PATH_LEN`、`MAX_RAW_BATCH`）实现零堆分配；使用完毕后务必配对 `defer watcher.close();` 及时释放 `inotify` 文件描述符。
+5. **NDJSON 事件追踪与 `--watch` / `--hot` 并发观测（`lib/watcher/trace.cp`，吸收自 `/data/dev/bun/src/watcher/WatcherTrace.cp` & `/data/dev/bun/docs/runtime/watch-mode.mdx`）**：
+   - 导出：`WATCHER_TRACE_MAX_EVENTS` (`32`)、`WATCHER_TRACE_MAX_CHANGED_NAMES` (`16`)、`WATCHER_TRACE_ENV_VAR` (`"BUN_WATCHER_TRACE"`)、`WatcherTraceError`、`WatchTraceOpMask`、`WatchTraceEntry`、`WatchTraceBatch`、`formatJsonEscapedStr`；
+   - `--watch` 硬重启进程并保留初始 CLI 参数与环境变量（崩溃自动拉起），`--hot` 在进程内热替换模块缓存；多进程并行监听时推荐搭配 `--no-clear-screen` 避免清屏覆盖其他进程日志；
+   - 排查编辑器保存风暴或漏触发问题时，可通过 `WatchTraceBatch.addOrMergePath()` 按路径去重合并事件位，并调用 `formatNdjsonLine()` 输出单行 RFC 8259 转义 NDJSON 追踪日志。
+
+```cp
+import { WatchTraceBatch, WatchTraceOpMask } from "cap:watcher";
+
+let batch = WatchTraceBatch.init(1700000000123);
+* = batch.addOrMergePath("src", WatchTraceOpMask{ write: true, is_dir: true }, "app.cp")?;
+* = batch.addOrMergePath("src", WatchTraceOpMask{ metadata: true }, "util.cp")?;
+
+let line: [512]u8 = [0; 512];
+const n = batch.formatNdjsonLine(line[0..])?;
+// {"timestamp":1700000000123,"files":{"src":{"events":["metadata","write","is_dir"],"changed":["app.cp","util.cp"]}}}\n
+* = n;
+```

@@ -423,6 +423,46 @@ pub fn demoFlameFold() {
 }
 ```
 
+### 零分配分布式追踪飞行记录仪 / Ring Span Buffer (`ringTrace.cp`)
+
+面向低开销常驻分布式追踪与故障现场取证的 100% 纯 CP 零动态堆分配环形 Span 飞行记录仪：
+
+- **常量与枚举**：
+  - `RING_TRACE_CAPACITY = 128`（2 的幂 O(1) 覆盖主环形缓冲）、`RING_TRACE_FROZEN_CAPACITY = 64`（独立隔离冻结快照槽）、`RING_TRACE_OP_MAX_LEN = 48`、`RING_TRACE_TAG_MAX_LEN = 48`
+  - `RingSpanStatus`（`ok | err`）、`RingFreezeReason`（`none | manual | error_span | high_latency`）
+- **数据模型**：
+  - `RingSpan`（`trace_id`, `span_id`, `parent_span_id`, `opSlice()`, `tagSlice()`, `start_us`, `duration_us`, `endUs()`, `status`）
+  - `SpanSelfTime`（`span_id`, `total_us`, `self_us`, `depth`, `is_on_critical_path`）、`TraceAnalysis`（`total_wall_us`, `critical_path_us`, `criticalPathSlice()`, `max_depth`, `error_span_count`, `bottleneck_span_id`, `bottleneck_self_us`）、`RingTraceStats`
+- **核心引擎与分析/导出函数**：
+  - `RingTraceRecorder`：`init(latency_threshold_us, auto_freeze_on_error)`、`recordSpan(...)`（满环 O(1) 覆盖最旧，遇错误 Span 或高延迟自动冻结该 `trace_id` 关联全部 Span 防冲刷）、`extractTrace(trace_id, *out_spans)`、`freezeTrace`、`unfreeze`、`frozenSpans()`、`clear()`、`stats()`。
+  - `analyzeTraceSpans(spans, *out_self_times): TraceAnalysis?`：纯迭代自底向上 DP（零递归、环路安全）计算每 Span 自耗时、最大深度、瓶颈 Span 与完整关键路径。
+  - `formatTraceSummary(analysis, *out_buf): usize?` / `formatChromeTraceEvent(span, pid, tid, *out_buf): usize?`：零分配单行摘要与 Chrome Trace Event (`chrome://tracing` / Perfetto) JSON 行导出。
+
+```cp
+import {
+    RingSpanStatus,
+    SpanSelfTime,
+    RingTraceRecorder,
+    analyzeTraceSpans,
+    formatChromeTraceEvent,
+} from "cap:obs";
+
+pub fn demoRingTrace() {
+    let rec = RingTraceRecorder.init(500_000, true);
+    * = rec.recordSpan(100, 1, 0, "http.handle", "route=/chat", 1000, 900, RingSpanStatus.ok);
+    * = rec.recordSpan(100, 2, 1, "db.query", "err=timeout", 1100, 700, RingSpanStatus.err); // 自动冻结
+
+    let selfs: [8]SpanSelfTime = [SpanSelfTime{}; 8];
+    let selfs_s: []SpanSelfTime = selfs[0..];
+    if (an := analyzeTraceSpans(rec.frozenSpans(), *selfs_s)) {
+        * = an.bottleneck_span_id; // 2
+    }
+    let line: [256]u8 = [0; 256];
+    let line_s: []u8 = line[0..];
+    * = formatChromeTraceEvent(rec.frozenSpans()[0], 1, 1, *line_s);
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
