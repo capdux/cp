@@ -575,6 +575,25 @@ const an = ctx.formatAdditionalRules(".card", abuf[0..], true)?;
 * = an;
 ```
 
+### CSS `@viewport` 规则解析、校验与多前缀降级输出（`viewport_rule.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/rules/viewport.cp` 与 `/data/dev/bun/docs/bundler/css.mdx`，零堆分配实现 W3C CSS Device Adaptation Level 1 `@viewport` 与供应商前缀变体（`@-ms-viewport` / `@-webkit-viewport` / `@-o-viewport` / `@-moz-viewport`）的解析、标准描述符语义校验、`width`/`height` 简写展开、级联安全去重、美化/压缩序列化、多前缀降级输出及样式表批量提取。
+
+- 核心导出：`CSS_VIEWPORT_MAX_DECLS` (`32`)、`CSS_VIEWPORT_MAX_RULES` (`16`)、`CssViewportError`、`CssViewportVendorPrefix`（`asStr`/`atRuleName`/`isPrefixed`/`fromAtKeyword`）、`CssViewportDescriptorKind`（`fromName`/`canonicalName`/`isShorthand`）、`CssViewportUserZoom`、`CssViewportOrientation`、`CssViewportFit`、`CssViewportMinMaxPair`（`parseShorthand`/`eql`）、`CssViewportDeclaration`（`validate`/`eql`）、`CssViewportRule`（`init`/`parse`/`push`/`count`/`isEmpty`/`at`/`find`/`effectiveOrientation`/`effectiveUserZoom`/`effectiveViewportFit`/`expandWidthShorthand`/`expandHeightShorthand`/`deduplicate`/`eql`/`toCss`/`toCssMinified`/`toCssWithPrefixes`）、`CssViewportRuleList`（`extractFromStylesheet`/`count`/`at`）。
+
+```cp
+import { CssViewportRule, CssViewportVendorPrefix } from "cap:css";
+
+const rule = CssViewportRule.parse(
+    "@-ms-viewport { width: device-width; zoom: 1.0; orientation: portrait; viewport-fit: cover; }"
+)?;
+const prefixes = [CssViewportVendorPrefix.Ms, CssViewportVendorPrefix.None];
+let out: [256]u8 = [0; 256];
+const n = rule.toCssWithPrefixes(out[0..], prefixes[0..], true)?;
+// "@-ms-viewport{width:device-width;zoom:1.0;orientation:portrait;viewport-fit:cover}@viewport{width:device-width;zoom:1.0;orientation:portrait;viewport-fit:cover}"
+* = n;
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项
@@ -600,3 +619,6 @@ const an = ctx.formatAdditionalRules(".card", abuf[0..], true)?;
 8. **声明块 `!important` 双桶分离与自定义属性大小写规则（`declaration_block.cp`）**：
    - 对齐 LightningCSS/Bun 的 `DeclarationBlock` 布局，普通声明与 `!important` 声明分别存储在独立数组中，序列化时先输出普通声明再输出 `!important` 声明；压缩模式下省略块内末条声明的分号与冒号后空格；
    - 标准 CSS 属性名按 ASCII 大小写无关比对（`Color` 与 `color` 视为同一属性），而 `--` 开头的 CSS 自定义属性（CSS Variables）严格区分大小写（`--Theme` 与 `--theme` 互不覆盖）。
+9. **`@viewport` 供应商前缀降级与描述符边界约束（`viewport_rule.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
+   - 遵循 Bun CSS Bundler 的默认浏览器目标与厂商前缀注入策略：`@viewport` 规则块不接受任何 prelude token（`@viewport screen { ... }` 属于非法语法），标准描述符仅接受规范定义的值域（`user-zoom` 仅限 `zoom | fixed`，`orientation` 仅限 `auto | portrait | landscape`，`viewport-fit` 仅限 `auto | contain | cover`，`zoom`/`min-zoom`/`max-zoom` 禁止负值）；
+   - `width`/`height` 简写按 W3C 规范接收 1~2 个 `<viewport-length>` 值（单值同时展开为 `min-*` 与 `max-*`，双值分别对应 `min-*` 与 `max-*`）；针对旧版 Edge/IE 兼容场景，推荐使用 `toCssWithPrefixes()` 同时输出 `@-ms-viewport` 与标准 `@viewport`。

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/interchange/yaml.cp | Synced: 2026-11-21T00:07:45Z
+// Source: Absorbed from /data/dev/bun/src/interchange/yaml.cp | Synced: 2026-11-22T11:54:26Z
 // lib/conf/yaml.cp
 // Lightweight zero-allocation YAML key-value & block configuration parser + bridge to full YAML 1.2 AST
 

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string/immutable.zig | Synced: 2026-11-22T11:13:01Z (XML 1.0 Text / Attribute / CDATA Escaper)
+// Source: Absorbed from /data/dev/bun/src/string/immutable.zig | Synced: 2026-11-22T11:50:35Z (XML 1.0 Text / Attribute / CDATA Escaper)
 
 /// XML 1.0 Fifth Edition §2.2 合法字符码点校验
 export fn isValidXmlChar(cp: u32): bool {

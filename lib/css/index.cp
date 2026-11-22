@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/css_parser.cp | Synced: 2026-11-22T11:44:48Z
+// Source: Absorbed from /data/dev/bun/src/css/css_parser.cp | Synced: 2026-11-22T11:52:34Z
 // lib/css/index.cp
 // Unified Public Exports for cap:css
 // Zero-Bun, Pure CP Industrial CSS Engine
@@ -464,3 +464,18 @@ export {
     CssSupportsFallbackBucket,
     CssPropertyHandlerContext,
 } from "./handler_context.cp";
+
+export {
+    CSS_VIEWPORT_MAX_DECLS,
+    CSS_VIEWPORT_MAX_RULES,
+    CssViewportError,
+    CssViewportVendorPrefix,
+    CssViewportDescriptorKind,
+    CssViewportUserZoom,
+    CssViewportOrientation,
+    CssViewportFit,
+    CssViewportMinMaxPair,
+    CssViewportDeclaration,
+    CssViewportRule,
+    CssViewportRuleList,
+} from "./viewport_rule.cp";
