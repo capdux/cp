@@ -168,3 +168,10 @@ export {
     dedupNearDuplicatesL2F32,
     selectWithinTokenBudget,
 } from "./hybrid_rag.cp";
+
+export {
+    RagDocMeta,
+    RagSearchHit,
+    RagStoreStats,
+    InMemoryRagStore,
+} from "./rag_store.cp";

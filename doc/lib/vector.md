@@ -843,3 +843,44 @@ pub fn demoHybridRagPipeline() {
     }
 }
 ```
+
+---
+
+## 零堆分配一站式本地 RAG 向量库门面（`rag_store.cp`）
+
+面向人类与 AI 程序员的 15 行开箱即用本地 RAG 存储与检索门面，100% 纯 CP 零堆分配：
+
+- **`RagDocMeta` / `RagSearchHit` / `RagStoreStats`**：承载 `doc_id`、`namespace_hash`、64 位多标签位图 `tag_mask: u64`、`token_count`、`timestamp_ms`、`text` 与逻辑删除墓碑标记。
+- **`InMemoryRagStore`**：
+  - `init(metas_buf, vecs_flat_buf, dim): InMemoryRagStore?`：复用调用方栈/静态切片零堆承载元数据与扁平向量池；
+  - `upsert(*_, doc_id, namespace_hash, tag_mask, token_count, timestamp_ms, text, embedding): bool`：自动 L2 归一化写入，同 `doc_id` 原地更新，新文档自动复用已删除墓碑槽位；
+  - `remove(*_, doc_id): bool` / `get(doc_id): RagDocMeta?`；
+  - `searchFiltered(query_vec, namespace_hash, required_tag_mask, min_score, top_k, out_hits): usize?`：命名空间 + 64 位标签位图预过滤 + `@dot` 8-lane SIMD 余弦相似度 Top-K 召回；
+  - `packSearchContext(hits, max_tokens, out_buf): usize?`：在 `max_tokens` 预算内自动拼装带 `[doc:<id>]` 来源标记的 LLM 上下文块；
+  - `len()` / `capacity()` / `embeddingDim()` / `stats()`。
+
+### 15 行开箱即用 QuickStart 示例
+
+```cp
+import { RagDocMeta, RagSearchHit, InMemoryRagStore } from "cap:vector";
+
+pub fn demoLocalRagQuickStart() {
+    let metas: [8]RagDocMeta = [RagDocMeta{}; 8];
+    let vecs: [32]f32 = [0.0; 32]; // 8 docs x dim 4
+    let metas_s: []RagDocMeta = metas[0..];
+    let vecs_s: []f32 = vecs[0..];
+    let store = InMemoryRagStore.init(metas_s, vecs_s, 4) ?? return;
+
+    const e1: [4]f32 = [1.0, 0.0, 0.0, 0.0];
+    const e2: [4]f32 = [0.0, 1.0, 0.0, 0.0];
+    * = store.upsert(1, 100, 0b01, 12, 1000, "CP supports 8-lane SIMD @dot", e1[0..]);
+    * = store.upsert(2, 100, 0b10, 15, 1001, "BEAM scheduler runs millions of actors", e2[0..]);
+
+    let hits: [2]RagSearchHit = [RagSearchHit{}; 2];
+    let hits_s: []RagSearchHit = hits[0..];
+    const n = store.searchFiltered(e1[0..], 100, 0b01, 0.5, 2, hits_s) ?? 0;
+    let ctx: [256]u8 = [0; 256];
+    let ctx_s: []u8 = ctx[0..];
+    * = store.packSearchContext(hits_s[0..n], 64, ctx_s);
+}
+```
