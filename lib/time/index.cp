@@ -278,3 +278,12 @@ export {
     TimeLikeError,
     TimeLikeSpec,
 } from "./timeLike.cp";
+
+export {
+    RATE_WINDOW_MAX_KEYS,
+    RateWindowConfig,
+    RateWindowDecision,
+    RateWindowSlot,
+    RateWindowStats,
+    RateWindowLimiter,
+} from "./rateWindow.cp";

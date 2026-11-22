@@ -389,6 +389,42 @@ pub fn demoTimeLike() {
 
 ---
 
+## 零分配多租户滑动窗口计数器限流器（`rateWindow.cp`）
+
+面向高并发 API 网关与多租户配额治理的 100% 纯 CP 零动态堆分配 Cloudflare 风格混合滑动窗口计数器限流器（Sliding Window Counter），采用 `u128` 纯整数精确插值算法（`effective_count = prev_count * (1 - elapsed_in_curr / window_ms) + curr_count`），彻底消除固定窗口跨边界 2x 突发毛刺与浮点舍入误差：
+
+- **常量与数据模型**：
+  - `RATE_WINDOW_MAX_KEYS = 128`（内联定长多租户表，零堆分配）
+  - `RateWindowConfig`（`default_limit`, `default_window_ms`；提供 `init(...)` 与 `isValid()`）
+  - `RateWindowDecision`（`allowed`, `remaining`, `effective_used`, `limit`, `retry_after_ms`, `reset_at_ms`）
+  - `RateWindowSlot`、`RateWindowStats`（`capacity`, `active_keys`, `total_requests`, `total_allowed`, `total_rejected`, `total_evictions`）
+- **核心引擎 `RateWindowLimiter`**：
+  - `init(default_limit, default_window_ms): RateWindowLimiter?` / `initWithConfig(cfg): RateWindowLimiter?`
+  - `checkAndConsume(*_, key_hash, cost, now_ms): RateWindowDecision`：支持任意 `cost` 权重扣减，拒绝时计算 1ms 级精确 `retry_after_ms`（到点即刻放行），并给出彻底清零时间戳 `reset_at_ms`；
+  - `peek(key_hash, now_ms): RateWindowDecision`：纯只读探测当前有效占用、剩余额度与预计等待时间，零副作用；
+  - `setKeyQuota(*_, key_hash, limit, window_ms): bool` / `clearKeyQuota(*_, key_hash): bool`：按租户独立覆盖配额与窗口时长；
+  - `removeKey(*_, key_hash)` / `purgeExpired(*_, now_ms)` / `resetAll(*_)` / `activeCount()` / `stats()`：自动归零过期窗口，满 128 槽时优先淘汰已过期冷槽位，再按 LRU 淘汰最久未活跃租户。
+
+### QuickStart 示例
+
+```cp
+import { RateWindowLimiter } from "cap:time";
+
+pub fn demoRateWindowLimiter() {
+    let limiter = RateWindowLimiter.init(10, 1000) ?? return;
+    const tenant: u64 = 0xCAFE_BABE;
+
+    // 窗口 0 末尾打满 10 次请求
+    const d1 = limiter.checkAndConsume(tenant, 10, 900); // allowed=true, remaining=0
+    // 窗口 1 刚开始（t=1200, elapsed=200ms）：prev 权重 0.8 => effective_used=8，仅可再放行 2 次（防止 2x 突发）
+    const d2 = limiter.checkAndConsume(tenant, 3, 1200); // allowed=false, remaining=2, retry_after_ms=100
+    const d3 = limiter.checkAndConsume(tenant, 3, 1200 + @as(i64, @intCast(d2.retry_after_ms))); // allowed=true!
+    * = d1; * = d3;
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [health.md](time/health.md)
