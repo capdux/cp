@@ -179,3 +179,17 @@ export {
     GetAddrInfoOptions,
     GetAddrInfoQuery,
 } from "./getaddrinfo.cp";
+
+export {
+    DNS_PREFETCH_DEFAULT_TTL_MS,
+    DNS_PREFETCH_MAX_TTL_MS,
+    DNS_PREFETCH_MAX_ENTRIES,
+    DnsPrefetchError,
+    parseDnsTtlEnvSeconds,
+    DnsCacheStats,
+    DnsLookupState,
+    DnsLookupOutcomeKind,
+    DnsLookupOutcome,
+    DnsPrefetchEntry,
+    DnsPrefetchCache,
+} from "./prefetch_cache.cp";

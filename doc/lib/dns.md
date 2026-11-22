@@ -158,8 +158,23 @@ const q = GetAddrInfoQuery.init("API.Example.COM", 443, opts)?;
 const cache_key = q.hash(); // case-insensitive deterministic u64 key
 ```
 
-1. **有界 TTL 缓存与失败驱逐（参考 `/data/dev/bun/docs/runtime/networking/dns.mdx`）**：
-   - 上游 Bun DNS 缓存采用固定条目上限（默认 255 条）与有界 TTL（默认 30s），连接失败时主动驱逐失效缓存；在 CP 中可使用 `DnsCache<256>` 零堆分配实现同等有界缓存，并在高并发建连前合并重复域名查询。
+- **`lib/dns/prefetch_cache.cp`**（吸收自 `/data/dev/bun/src/runtime/dns_jsc/dns.cp`，零堆分配 255 槽预取与在途去重缓存）：`DNS_PREFETCH_DEFAULT_TTL_MS` (`30000`)、`DNS_PREFETCH_MAX_TTL_MS`、`DNS_PREFETCH_MAX_ENTRIES` (`255`)、`DnsPrefetchError`、`parseDnsTtlEnvSeconds`、`DnsCacheStats`、`DnsLookupState`、`DnsLookupOutcomeKind`、`DnsLookupOutcome`、`DnsPrefetchEntry`、`DnsPrefetchCache`（`init` / `stats` / `lookup` / `prefetch` / `complete` / `failLookup` / `onConnectionError` / `pruneExpired`）。
+
+```typescript
+import { DnsPrefetchCache, parseDnsTtlEnvSeconds } from "cap:dns";
+
+const ttl_ms = parseDnsTtlEnvSeconds("5")?; // 5000ms (BUN_CONFIG_DNS_TIME_TO_LIVE_SECONDS=5)
+let cache = DnsPrefetchCache.init(ttl_ms);
+const started = cache.prefetch("my.database-host.com", 5432, 1000)?; // true
+* = cache.complete("my.database-host.com", 5432, "10.0.0.12", 1020);
+const hit = cache.lookup("MY.DATABASE-HOST.COM", 5432, 2000)?; // HitCompleted -> "10.0.0.12"
+* = started;
+* = hit;
+```
+
+1. **有界 TTL 缓存、预取、在途去重与失败驱逐（参考 `/data/dev/bun/docs/runtime/networking/dns.mdx`）**：
+   - 上游 Bun DNS 缓存采用 255 条固定容量上限与默认 30 秒 TTL（可通过 `$BUN_CONFIG_DNS_TIME_TO_LIVE_SECONDS` 调整，如云原生场景调至 `5` 秒以适配 AWS 推荐值）；
+   - 应用启动期可通过 `prefetch(hostname, port)` 预先解析数据库/上游网关域名，并发同域名请求经 `lookup` 自动合并为单次在途查询（计入 `cache_hits_inflight`），连接失败时调用 `onConnectionError` 立即驱逐脏缓存并累计 `errors`，全程可通过 `stats()`（对齐 `dns.getCacheStats()`）观测命中率。
 2. **DNS 压缩指针防环与标签长度边界（RFC 1035）**：
    - `DnsWireCodec` 与 `DnsNameCodec` 解码 `0xC0` 压缩指针时强制限制最大跳转深度（16 跳）并校验单标签长度 `<= 63`、总域名长度 `<= 253`（`isValidDnsLabel` / `isValidHostname`），彻底拦截畸形压缩指针死循环。
 3. **DoH（RFC 8484）无填充 Base64URL 约定**：
