@@ -312,3 +312,14 @@ export {
     PgTimestampCodec,
     PgDateCodec,
 } from "./pgDate.cp";
+
+export {
+    PG_STMT_MAX_FIELDS,
+    PG_STMT_MAX_PARAMS,
+    PgStmtLifecycleError,
+    PgStmtStatus,
+    PgStmtColumnKeyKind,
+    PgStmtColumnMeta,
+    PgStmtFieldsFlags,
+    PgStmtLifecycle,
+} from "./stmtLifecycle.cp";

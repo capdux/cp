@@ -588,6 +588,30 @@ const d_ms = PgDateCodec.fromBinaryToUnixMs(d_buf[0..])?; // 946684800000
 * = ts_ms; * = d_ms;
 ```
 
+### 预处理语句生命周期与右向左列去重状态机（`stmtLifecycle.cp`）
+
+吸收自 `/data/dev/bun/src/sql_jsc/postgres/PostgresSQLStatement.cp`，实现零动态堆分配的 PostgreSQL 预处理语句生命周期与重复列判定引擎：
+
+- **常量**：`PG_STMT_MAX_FIELDS` (`64`)、`PG_STMT_MAX_PARAMS` (`32`)。
+- **类型**：`PgStmtLifecycleError`、`PgStmtStatus`（`Pending`/`Parsing`/`Prepared`/`Failed`）、`PgStmtColumnKeyKind`（`Named`/`Indexed`/`Duplicate`）、`PgStmtColumnMeta`、`PgStmtFieldsFlags`。
+- **`PgStmtLifecycle`**：
+  - `init()`、`beginParse()`、`setParamOids(oids)`、`addField(col)`、`markPrepared()`、`markFailed(sqlstate)`、`errorSqlState()`、`reset()`；
+  - `checkForDuplicateFields()`：按 Bun 右向左扫描策略保留同名/同索引最右侧一列，左侧重复列标记为 `Duplicate` 并输出 `has_duplicate_columns`/`has_named_columns`/`has_indexed_columns`；
+  - `fieldAt(idx)`、`paramOidsSlice()`、`uniqueFieldCount()`。
+
+```cp
+import { PgStmtLifecycle, PgStmtColumnMeta } from "cap:pgwire";
+
+let st = PgStmtLifecycle.init();
+* = st.beginParse()?;
+* = st.addField(PgStmtColumnMeta.named("id", 23))?;
+* = st.addField(PgStmtColumnMeta.named("name", 25))?;
+* = st.addField(PgStmtColumnMeta.named("id", 20))?; // 右侧 id 覆盖左侧 id
+* = st.markPrepared()?;
+* = st.fields_flags.has_duplicate_columns; // true
+* = st.uniqueFieldCount(); // 2
+```
+
 ---
 
 ## 4. 示例
