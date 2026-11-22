@@ -713,6 +713,25 @@ const n_flat = r.toCss(buf[0..], true, false)?;
 * = n_flat;
 ```
 
+### CSS 属性渐进增强 Fallback 降级处理器（`fallback.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/properties/prefix_handler.cp`，零堆分配实现 LightningCSS/Bun 风格 `FallbackHandler`：针对 `color`/`text-shadow`/`background-color`/`border-color`/`fill`/`stroke`/`caret-color` 等属性，按目标浏览器色域特性位掩码自动前置注入 sRGB fallback、保留手动渐进增强链、原地去重兼容声明并处理含 `var(...)` 的未解析属性。
+
+- 核心导出：`CSS_FALLBACK_MAX_DECLS` (`64`)、`CSS_FALLBACK_MAX_PER_PROP` (`4`)、`CSS_COMPAT_LAB_COLORS`/`OKLAB_COLORS`/`P3_COLORS`/`COLOR_MIX`/`LIGHT_DARK`/`ALL_MODERN`、`CssFallbackError`、`CssFallbackProp`、`CssFallbackDecl`、`CssFallbackDeclList`（`init`/`push`/`slice`/`formatCss`）、`detectRequiredColorFeatures`、`isCssValueCompatible`、`containsCssVarRef`、`CssFallbackHandler`（`init`/`handleProperty`/`handleUnparsed`/`finalize`）。
+
+```cp
+import { CssFallbackHandler, CssFallbackDeclList } from "cap:css";
+
+let h = CssFallbackHandler.init(0); // 目标浏览器不支持 oklch
+let dest = CssFallbackDeclList.init();
+const fbs: [1][]const u8 = ["#3b82f6"];
+* = h.handleProperty(.Color, "oklch(62% 0.21 259)", fbs[0..], &dest)?;
+let buf: [128]u8 = [0; 128];
+const n = dest.formatCss(buf[0..], true)?;
+// buf[0..n] == "color:#3b82f6;color:oklch(62% 0.21 259)"
+* = n;
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项
@@ -760,3 +779,6 @@ const n_flat = r.toCss(buf[0..], true, false)?;
 15. **CSS `StyleRule` 嵌套降级与规则去重边界（`styleRule.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
     - 当目标浏览器不支持原生 CSS Nesting 时（`supports_nesting == false`），子规则通过 `resolveNestedSelector()` 展平为平铺选择器（显式 `&` 替换为父选择器，无 `&` 按后代空格拼接，多父多子做笛卡尔积）；若父规则本身无声明，展平后自动省略空父块；
     - 规则合并（`mergeFrom()`）与 `setDecl()` 严格遵守级联保护：已存在的 `!important` 声明不可被后续普通声明覆盖，标准属性按 ASCII 大小写无关归一化，`--*` 自定义属性严格区分大小写。
+16. **CSS 现代色域渐进增强 Fallback 策略（`fallback.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
+    - 当目标浏览器不支持 `oklab()`/`oklch()`/`lab()`/`lch()`/`display-p3`/`color-mix()`/`light-dark()` 时，首次遇到该属性自动前置注入兼容 sRGB fallback，再保留现代声明形成渐进增强链；若目标浏览器已原生支持，则跳过冗余 fallback；
+    - 同一规则块内若开发者手动书写了 fallback + 现代色值（如 `background-color: #ff0000; background-color: oklch(...)`），处理器必须保留前一条 fallback 而不原地覆盖；仅当后续声明对目标浏览器完全兼容时才原地覆盖旧槽位，并在块结束时调用 `finalize()` 复位槽位。

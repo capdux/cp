@@ -563,3 +563,22 @@ export {
     CssStyleRule,
     resolveNestedSelector,
 } from "./styleRule.cp";
+
+export {
+    CSS_FALLBACK_MAX_DECLS,
+    CSS_FALLBACK_MAX_PER_PROP,
+    CSS_COMPAT_LAB_COLORS,
+    CSS_COMPAT_OKLAB_COLORS,
+    CSS_COMPAT_P3_COLORS,
+    CSS_COMPAT_COLOR_MIX,
+    CSS_COMPAT_LIGHT_DARK,
+    CSS_COMPAT_ALL_MODERN,
+    CssFallbackError,
+    CssFallbackProp,
+    CssFallbackDecl,
+    CssFallbackDeclList,
+    detectRequiredColorFeatures,
+    isCssValueCompatible,
+    containsCssVarRef,
+    CssFallbackHandler,
+} from "./fallback.cp";
