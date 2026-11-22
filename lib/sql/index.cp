@@ -218,3 +218,20 @@ export {
     encodePgFlush,
     decodePgFlush,
 } from "./pg_extended.cp";
+
+export {
+    PG_ERROR_RESPONSE_TAG,
+    PG_NOTICE_RESPONSE_TAG,
+    PG_MAX_DIAGNOSTIC_FIELDS,
+    PgErrorNoticeError,
+    PgDiagnosticFieldKind,
+    PgDiagnosticField,
+    PgDiagnosticIter,
+    PgErrorNoticeView,
+    encodePgErrorResponse,
+    encodePgNoticeResponse,
+    decodePgErrorNoticeIter,
+    decodePgErrorOrNotice,
+    decodePgErrorResponse,
+    decodePgNoticeResponse,
+} from "./pg_error_notice.cp";

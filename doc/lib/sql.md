@@ -311,6 +311,29 @@ const sync_wire = encodePgSync(buf[0..])?; // 5 字节定长同步帧 ['S', 0, 0
 * = close_wire;
 * = sync_wire;
 ```
+- **PostgreSQL v3 `ErrorResponse` (`'E'`) 与 `NoticeResponse` (`'N'`) 诊断帧零分配编解码器 (`pg_error_notice.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/{ErrorResponse,NoticeResponse,FieldMessage,FieldType}.cp`)**：
+  - 常量与类型：`PG_ERROR_RESPONSE_TAG` (`'E'`)、`PG_NOTICE_RESPONSE_TAG` (`'N'`)、`PG_MAX_DIAGNOSTIC_FIELDS` (`64`)、`PgErrorNoticeError`、`PgDiagnosticFieldKind`（完整覆盖 18 种 PostgreSQL 标准诊断字段 `'S'`/`'V'`/`'C'`/`'M'`/`'D'`/`'H'`/`'P'`/`'p'`/`'q'`/`'W'`/`'s'`/`'t'`/`'c'`/`'d'`/`'n'`/`'F'`/`'L'`/`'R'`）、`PgDiagnosticField`、`PgDiagnosticIter`（零堆流式迭代器）、`PgErrorNoticeView`（聚合视图 + `effectiveSeverity`/`isFatal`/`isConstraintViolation`/`isRetryableSqlState` 分类）；
+  - 编解码函数：`encodePgErrorResponse`、`encodePgNoticeResponse`、`decodePgErrorNoticeIter`、`decodePgErrorOrNotice`、`decodePgErrorResponse`、`decodePgNoticeResponse`。
+
+```typescript
+import {
+    PgDiagnosticField,
+    PgDiagnosticFieldKind,
+    encodePgErrorResponse,
+    decodePgErrorResponse,
+} from "cap:sql";
+
+let buf: [256]u8 = [0; 256];
+const fields: [4]PgDiagnosticField = [
+    PgDiagnosticField.of(PgDiagnosticFieldKind.localized_severity, "ERROR"),
+    PgDiagnosticField.of(PgDiagnosticFieldKind.code, "23505"),
+    PgDiagnosticField.of(PgDiagnosticFieldKind.message, "duplicate key value violates unique constraint"),
+    PgDiagnosticField.of(PgDiagnosticFieldKind.constraint, "users_email_key"),
+];
+const wire = encodePgErrorResponse(buf[0..], fields[0..])?;
+const view = decodePgErrorResponse(wire)?; // view.isConstraintViolation() == true, view.constraint == "users_email_key"
+* = view;
+```
 
 ---
 
@@ -322,7 +345,10 @@ const sync_wire = encodePgSync(buf[0..])?; // 5 字节定长同步帧 ['S', 0, 0
    - **Simple Query (`'Q'`) vs Extended Query (`'P'`/`'B'`/`'D'`/`'E'`/`'C'`/`'S'`)**：Simple Query 支持单次提交多条分号分隔语句但不支持参数绑定；Extended Query 是默认推荐路径，支持二进制参数绑定与查询管线化（Pipelining），但单条 `Parse` 仅允许包含一条 SQL 语句。
    - **命名 vs 匿名预处理语句（Named vs Unnamed Prepared Statements）**：对静态高频查询使用命名语句（`name != ""`）可复用服务端执行计划并启用管线化；在 **PGBouncer 事务池模式（Transaction Pooling）** 或低频动态查询场景下，应使用匿名语句（`name = ""`，对应 Bun `prepare: false`），其生命周期仅持续至下一次匿名 `Parse`，避免跨连接复用引发 `ERR_POSTGRES_EXPECTED_STATEMENT`。
    - **管线化同步边界**：在多帧管线化序列末尾发送 `Sync` (`'S'`) 以建立事务恢复点并触发服务端 `ReadyForQuery`；若需在不断开管线的前提下提前拉取服务端响应，使用 `Flush` (`'H'`)。
-3. **参数化绑定与防 SQL 注入**：
+3. **PostgreSQL / SQLite 结构化错误分类与重试策略（参考 `/data/dev/bun/docs/runtime/sql.mdx`）**：
+   - PostgreSQL 后端诊断帧同时携带非本地化严重度 `'V'`（PostgreSQL 9.6+ 推荐用于程序化判定 `ERROR`/`FATAL`/`PANIC`）与 5 位 `SQLSTATE` `'C'`；应用层应通过 `PgErrorNoticeView.isRetryableSqlState()`（`40001` 序列化冲突、`40P01` 死锁、`08xxx` 连接中断）驱动指数退避重试，通过 `isConstraintViolation()`（`23xxx`）精准映射业务冲突，并在 `isFatal()` 时主动摘除连接池中的失效连接。
+   - SQLite 错误码以 `SQLITE_CONSTRAINT` (`errno=19`)、`SQLITE_BUSY` (`errno=5`)、`SQLITE_LOCKED` (`errno=6`) 与 `SQLITE_READONLY` (`errno=8`) 为主，高并发写入场景应结合 WAL 模式与 `SQLITE_BUSY` 退避重试。
+4. **参数化绑定与防 SQL 注入**：
    - 严禁通过字符串拼接构造含外部输入的 SQL；始终通过 `SqlStatement` / `SqliteDatabase` 参数绑定或 `MySqlPreparedProtocol` / `encodeMySqlQueryWithAttrs` / PostgreSQL Extended Query 参数帧分离语句与数据；审计或读写分离路由可结合 `parseSqlWithMaxDepth`、`isReadOnlyQuery` / `isReadOnlySql` 与 `normalizeSqlFingerprint` 实现安全校验与查询脱敏。
 4. **连接状态机与事务边界**：
    - PostgreSQL 事务内一旦单条语句出错即进入 `Aborted` 状态，须执行 `ROLLBACK` 后方可继续新查询；`SqlTransactionStateMachine` 与 `SqliteDatabase`（`begin`/`commit`/`rollback`）配合 `defer` 可确保异常路径下确定性回滚，防止连接池归还脏事务连接。

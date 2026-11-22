@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/extract_tarball.cp | Synced: 2026-11-22T02:32:21Z
+// Source: Absorbed from /data/dev/bun/src/install/extract_tarball.cp | Synced: 2026-11-22T05:44:16Z
 // ============================================================================
 // lib/pkg/tarball.cp — Safe Tarball (.tgz / .tar.gz) Builder, Verifier & Extractor
 // Absorbed from Bun src/install/{extract_tarball.cp,TarballStream.cp}
