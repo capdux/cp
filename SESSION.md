@@ -1281,3 +1281,11 @@
 ### 2026-11-22（分类合并交付：lib/agentmem/activation.cp & lib/sql/mysql_lenenc.cp | 2026-11-22 13:48:43）
 - **执行与结单汇报**：
   > 1. 交付 lib/agentmem/activation.cp (GraphRAG 扩散激活与个性化 PageRank 多跳记忆召回, 5/5 PASS)；2. 从 Bun src/sql/mysql/protocol/EncodeInt.cp 吸收归入 lib/sql/mysql_lenenc.cp (MySQL Length-Encoded Int/String 零拷贝编解码, 6/6 PASS)；均已同步 cp_lib_ref.md 并提交。
+
+### 2026-11-22（分类合并交付：lib/agent/reflection.cp | 2026-11-22 13:52:06）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/agent/reflection.cp（AI Agent Reflexion 自我反思迭代与早停收敛控制器，5/5 PASS），归入 cap:agent 并同步 cp_lib_ref.md；续派 lib/agent/tool_parallel.cp。
+
+### 2026-11-22（分类合并交付：lib/attention/vision_patch.cp + 满 10 项轮换 | 2026-11-22 13:53:24）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/attention/vision_patch.cp（多模态 ViT/CLIP/Qwen2-VL Patchify、2D 正弦位置编码与 2D-RoPE，使用 @dot/@fma SIMD，6/6 PASS），归入 cap:attention 并同步 cp_lib_ref.md；满 10 项回收 625e9687 并启全新 AI & Tensor Compute Absorber 推进 lib/vector/nav_graph.cp。

@@ -30,6 +30,7 @@
 - **`PREFIX_INVALID_BLOCK` / `computePrefixBlockHash` / `PrefixBlockEntry` / `PrefixMatchResult` / `PrefixCacheStats` / `KvPrefixCache`** (`prefix_cache.cp`)：零堆分配多智能体共享提示词块级 KV 前缀缓存（对标 SGLang RadixAttention / vLLM Automatic Prefix Caching），支持链式 FNV-1a 64-bit 哈希防分叉误命中、最长前缀匹配、在途引用计数 `pinBlock`/`unpinBlock` 保护与未 pin 槽位 LRU 驱逐。
 - **`gemmTransposedBF32` / `gemmF32` / `batchedGemmTransposedBF32` / `splitGemmRowsF32`** (`tiled_gemm.cp`)：零堆分配 Cache-Friendly 分块矩阵乘法 GEMM 与多头批量 QK^T MatMul 核，基于 CP 原生 8-lane SIMD `@dot`、`@fma` 与零拷贝互斥分片 `@splitAtMut` 实现。
 - **`conv1dCausalF32` / `depthwiseConv1dF32` / `hzToMel` / `melToHz` / `buildMelFilterbankF32` / `applyMelFilterbankF32`** (`conv1d.cp`)：零堆分配 AI 语音/状态空间 1D 因果空洞卷积、深度可分离 1D 卷积、HTK 梅尔频率变换、三角梅尔滤波器组构建与 `@dot` SIMD 对数梅尔谱投影核（对标 Whisper / Mamba / ConvNeXt-1D）。
+- **`ImageNormParams` / `normalizeRgbU8ToF32` / `patchifyHwcF32` / `patchEmbedLinearF32` / `build2dSinCosPosEmbF32` / `applyRope2dInPlaceF32`** (`vision_patch.cp`)：零堆分配多模态视觉大模型（ViT / CLIP / Qwen2-VL / Flux）前端核，覆盖 `@fma` RGB 归一化、HWC Patchify、`@dot` 线性补丁投影、MAE/ViT 2D 正弦位置编码与严格保范数的 2D 空间 RoPE。
 
 ## 3. API 速查
 
@@ -129,6 +130,10 @@
 | `depthwiseConv1dF32` | `(input, weight, bias, channels, seq_len, kernel_size, stride, padding, out): bool` | 逐通道深度可分离 1D 卷积（支持任意 `stride`/`padding` 与可选偏置） |
 | `hzToMel` / `melToHz` | `(hz: f64): f64` / `(mel: f64): f64` | HTK 梅尔刻度与赫兹频率精确互转 |
 | `buildMelFilterbankF32` / `applyMelFilterbankF32` | `(n_mels, n_fft, sr, f_min, f_max, out_fb)` / `(power_spec, fb, n_mels, n_bins, log_floor, out_log_mel)` | 零堆分配三角梅尔滤波器组构建与 8-lane SIMD `@dot` 对数梅尔谱投影 |
+| `ImageNormParams.clipDefault` / `imagenetDefault` / `normalizeRgbU8ToF32` | `(rgb_u8, params, out_f32): bool` | CLIP / ImageNet RGB 均值方差预设与单 `@fma` 硬件融合归一化 |
+| `patchifyHwcF32` / `patchEmbedLinearF32` | `(img_hwc, h, w, c, ps, out): usize?` / `(patches, w, b, np, pdim, edim, out): bool` | 零堆分配 HWC 图像分块切分与 `@dot` 8-lane SIMD 线性补丁嵌入投影 |
+| `build2dSinCosPosEmbF32` | `(grid_h, grid_w, embed_dim, out_pos): bool` | MAE / ViT 2D 正弦余弦位置编码（前一半编 `y`、后一半编 `x`，要求 `embed_dim % 4 == 0`） |
+| `applyRope2dInPlaceF32` | `(vec: *[]f32, row, col, theta_base): bool` | Qwen2-VL / Flux 原位 2D 空间旋转位置编码（严格保 L2 范数不变） |
 
 ## 4. 示例
 
@@ -803,5 +808,40 @@ pub fn demoAudioMelAndCausalConv() {
     let y: [5]f32 = undefined;
     let y_s: []f32 = y[0..];
     * = conv1dCausalF32(x[0..], w[0..], no_bias, 1, 1, 5, 3, 1, y_s);
+}
+```
+
+### 多模态 ViT 图像分块、2D 位置编码与 2D-RoPE 示例 (`vision_patch.cp`)
+
+```cp
+import {
+    ImageNormParams,
+    normalizeRgbU8ToF32,
+    patchifyHwcF32,
+    build2dSinCosPosEmbF32,
+    applyRope2dInPlaceF32,
+} from "cap:attention";
+
+pub fn demoVisionPatchFrontend() {
+    // 4x4x3 RGB 图像按 patch_size=2 切分为 4 个 12D 补丁
+    let rgb: [48]u8 = [128; 48];
+    let img_f32: [48]f32 = undefined;
+    let patches: [48]f32 = undefined;
+    let pos_emb: [32]f32 = undefined; // 4 patches * embed_dim=8
+
+    let img_s: []f32 = img_f32[0..];
+    let patch_s: []f32 = patches[0..];
+    let pos_s: []f32 = pos_emb[0..];
+
+    if (normalizeRgbU8ToF32(rgb[0..], ImageNormParams.clipDefault(), img_s)) {
+        if (n_patches := patchifyHwcF32(img_f32[0..], 4, 4, 3, 2, patch_s)) {
+            * = n_patches;
+            * = build2dSinCosPosEmbF32(2, 2, 8, pos_s);
+        }
+    }
+
+    let q_tok: [8]f32 = [1.0, 0.5, -0.5, 0.25, 0.8, -0.4, 0.2, 0.6];
+    let q_s: []f32 = q_tok[0..];
+    * = applyRope2dInPlaceF32(q_s, 1, 2, 10000.0);
 }
 ```

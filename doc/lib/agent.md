@@ -1142,3 +1142,47 @@ fn costLedgerDemo() {
     * = root_summary;
 }
 ```
+
+---
+
+## 子模块：AI Agent Reflexion 自我反思迭代与早停收敛控制器（`reflection.cp`）
+
+### 核心特性
+
+- **结构化失败归因与多门控收敛决策（`ReflexionController`）**：支持 `SyntaxError` / `RuntimeError` / `TestAssertion` / `ToolError` / `Timeout` / `FormatViolation` / `Hallucination` 七类失败归因，单次 `recordAttempt` 依优先级输出 `AcceptBest`（达标且无错误立即接受）、`EscalateHuman`（同类失败连续重复达 `repeat_failure_limit` 或耗尽迭代/槽位上限）、`AbortNoProgress`（连续无显著提升达 `plateau_patience` 早停）或 `ContinueRefine`。
+- **经验去重与最优尝试回溯**：通过 `hasSeenLesson(lesson_hash)` 避免 Agent 重复生成相同无效反思；即使后续尝试得分退化，`bestAttempt()` 仍能 O(1) 回溯历史最高分尝试，并支持 `reset()` 零分配复用控制器。
+
+### 导出清单
+
+- **类型与配置**：`FailureCategory`、`ReflectionAction`、`AttemptRecord`、`ReflexionConfig`、`ReflexionStats`
+- **控制器**：`ReflexionController`（`init`, `recordAttempt`, `bestAttempt`, `hasSeenLesson`, `stats`, `reset`）
+
+### 使用示例
+
+```cp
+import {
+    FailureCategory,
+    ReflectionAction,
+    AttemptRecord,
+    ReflexionConfig,
+    ReflexionController,
+} from "cap:agent";
+
+fn reflexionLoopDemo() {
+    let slots_buf: [6]AttemptRecord = [AttemptRecord{}; 6];
+    let slots: []AttemptRecord = slots_buf[0..];
+    const cfg = ReflexionConfig{
+        target_score: 0.9,
+        max_attempts: 6,
+        plateau_patience: 2,
+        min_delta: 0.05,
+        repeat_failure_limit: 3,
+    };
+
+    let ctrl = ReflexionController.init(slots, cfg) ?? return;
+    * = ctrl.recordAttempt(0.45, FailureCategory.SyntaxError, 0x101, 500);   // ContinueRefine
+    * = ctrl.recordAttempt(0.75, FailureCategory.TestAssertion, 0x202, 600); // ContinueRefine
+    const final_act = ctrl.recordAttempt(0.95, FailureCategory.None, 0x303, 550); // AcceptBest
+    * = final_act;
+}
+```

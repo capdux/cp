@@ -216,3 +216,12 @@ export {
     computeCacheSavingsMicroUsd,
     CostLedger,
 } from "./cost_ledger.cp";
+
+export {
+    FailureCategory,
+    ReflectionAction,
+    AttemptRecord,
+    ReflexionConfig,
+    ReflexionStats,
+    ReflexionController,
+} from "./reflection.cp";
