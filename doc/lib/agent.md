@@ -870,3 +870,40 @@ fn skillRegistryDemo() {
     * = reg.matchTopK(q, matches, 2);
 }
 ```
+
+---
+
+## 子模块：LLM API 自适应重试、限流感知与故障分类引擎（`retry_policy.cp`）
+
+### 核心特性
+
+- **标准化故障分类（`classifyHttpStatus`）**：将常见 LLM 厂商 HTTP 状态码（`401`/`403`、`400`/`413`/`422` + 上下文溢出标记、`429`、`503`/`529`、`408`/`504`/`524`、`5xx` 等）归一化为 `LlmErrorClass`。
+- **限流头解析与优先尊重（`parseRetryAfterMs` / `RateLimitSnapshot`）**：零堆分配解析整秒/小数秒及 `ms`/`s`/`m` 后缀（防负数、非法字符与溢出），并在 `decideLlmRetry` 中优先尊重 `retry_after_ms` 及耗尽桶的 `reset_requests_ms`/`reset_tokens_ms`（按 `max_delay_ms` 上限钳位）。
+- **确定性抖动指数退避与智能切流（`decideLlmRetry`）**：基于 SplitMix64 实现可复现的 `±jitter_pct%` 指数退避；对认证/参数/致命错误立即 `Abort`；对 `ContextLengthExceeded` 建议 `ShrinkContextAndRetry`；对连续 `429`/`529` 或重试耗尽自动建议 `FallbackProvider`。
+
+### 导出清单
+
+- **错误与决策类型**：`LlmErrorClass`、`RetryDecisionKind`、`RetryDecision`、`RateLimitSnapshot`、`LlmRetryPolicy`
+- **核心函数**：`classifyHttpStatus(status_code, is_context_overflow)`、`parseRetryAfterMs(header_val)`、`decideLlmRetry(policy, err_class, attempt, rl_snapshot, seed)`
+
+### 使用示例
+
+```typescript
+import {
+    LlmRetryPolicy,
+    RateLimitSnapshot,
+    classifyHttpStatus,
+    parseRetryAfterMs,
+    decideLlmRetry,
+} from "cap:agent";
+
+fn llmRetryDecisionDemo(http_status: u16, retry_after_header: string, attempt: u32) {
+    const err_class = classifyHttpStatus(http_status, false);
+    const rl = RateLimitSnapshot{
+        retry_after_ms: parseRetryAfterMs(retry_after_header) ?? 0,
+    };
+    const policy = LlmRetryPolicy.default();
+    const decision = decideLlmRetry(policy, err_class, attempt, rl, 42);
+    * = decision;
+}
+```

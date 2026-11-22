@@ -682,3 +682,7 @@
 ### 2026-11-22（分类合并交付：lib/css/font_palette_values.cp | 2026-11-22 13:06:49）
 - **执行与结单汇报**：
   > 子智能体从 Bun src/css/rules/font_palette_values.cp 吸收并归类合并 lib/css/font_palette_values.cp 至 cap:css（W3C CSS Fonts Level 4 @font-palette-values 规则解析/校验/序列化，6/6 PASS，upstream_newer=0），同步 cp_lib_ref.md；续派下一项 Bun 纯逻辑子模块合并。
+
+### 2026-11-22（分类合并交付：lib/agent/retry_policy.cp | 2026-11-22 13:08:04）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/agent/retry_policy.cp（LLM API 故障分类、Retry-After 解析、确定性抖动退避与切流/上下文压缩决策，5/5 PASS），归入 cap:agent 并同步 cp_lib_ref.md；续派 lib/agent/tool_cache.cp。

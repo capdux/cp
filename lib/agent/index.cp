@@ -160,3 +160,14 @@ export {
     skillTagHash,
     SkillRegistry,
 } from "./skill_registry.cp";
+
+export {
+    LlmErrorClass,
+    RetryDecisionKind,
+    RetryDecision,
+    RateLimitSnapshot,
+    LlmRetryPolicy,
+    classifyHttpStatus,
+    parseRetryAfterMs,
+    decideLlmRetry,
+} from "./retry_policy.cp";
