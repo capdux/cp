@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/css_parser.cp | Synced: 2026-11-22T11:52:34Z
+// Source: Absorbed from /data/dev/bun/src/css/css_parser.cp | Synced: 2026-11-22T11:59:44Z
 // lib/css/index.cp
 // Unified Public Exports for cap:css
 // Zero-Bun, Pure CP Industrial CSS Engine
@@ -479,3 +479,14 @@ export {
     CssViewportRule,
     CssViewportRuleList,
 } from "./viewport_rule.cp";
+
+export {
+    CSS_UNKNOWN_AT_MAX_RULES,
+    CSS_UNKNOWN_AT_MAX_PRELUDE_TOKENS,
+    CssUnknownAtRuleError,
+    isStandardKnownAtRule,
+    CssUnknownAtRuleKind,
+    CssUnknownPreludeTokens,
+    CssUnknownAtRule,
+    CssUnknownAtRuleList,
+} from "./unknown_rule.cp";

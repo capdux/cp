@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/md/helpers.cp | Synced: 2026-11-20T09:22:04Z
+// Source: Absorbed from /data/dev/bun/src/md/helpers.cp | Synced: 2026-11-22T11:56:16Z
 // lib/md/helpers.cp
 // CommonMark/GFM Character Classification, Unicode Punctuation Ranges, UTF-8 Codec,
 // HTML Entity Decoding & Deduplicated Heading Slug Tracker

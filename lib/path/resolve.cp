@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/paths/resolve_path.cp | Synced: 2026-11-22T10:53:00Z
+// Source: Absorbed from /data/dev/bun/src/paths/resolve_path.cp | Synced: 2026-11-22T11:56:29Z
 // ============================================================================
 // lib/path/resolve.cp — Path Normalization, Resolution & Relative Path Engine
 // ============================================================================

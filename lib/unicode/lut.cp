@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/unicode/uucode/lut.cp | Synced: 2026-11-21T23:17:12Z
+// Source: Absorbed from /data/dev/bun/src/unicode/uucode/lut.cp | Synced: 2026-11-22T11:56:50Z
 
 pub const BLOCK_SIZE: usize = 256;
 pub const MAX_UNICODE_CODEPOINT: u21 = 0x10FFFF;

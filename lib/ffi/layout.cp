@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/ffi/ffi.cp | Synced: 2026-11-22T11:08:28Z
+// Source: Absorbed from /data/dev/bun/src/runtime/ffi/ffi.cp | Synced: 2026-11-22T11:56:48Z
 // lib/ffi/layout.cp
 // C-ABI Struct Memory Alignment, Padding, #packed & Nested Sub-Struct Layout Engine
 

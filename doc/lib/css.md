@@ -594,6 +594,28 @@ const n = rule.toCssWithPrefixes(out[0..], prefixes[0..], true)?;
 * = n;
 ```
 
+### CSS 未知 / 扩展 `@-rule` 通用保留与提取（`unknown_rule.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/rules/unknown.cp` 与 `/data/dev/bun/docs/bundler/css.mdx`，零堆分配实现 W3C CSS Syntax Level 3 未知及工具链扩展 `@-rule`（如 `@tailwind`、`@theme`、`@utility`、`@position-try`、`@view-transition`、`@-moz-document`）的语句/块双形态解析、括号安全 prelude 词法切分、标准/扩展分类、带源码行列号追踪的样式表批量提取及美化/压缩序列化。
+
+- 核心导出：`CSS_UNKNOWN_AT_MAX_RULES` (`32`)、`CSS_UNKNOWN_AT_MAX_PRELUDE_TOKENS` (`32`)、`CssUnknownAtRuleError`、`isStandardKnownAtRule`、`CssUnknownAtRuleKind`（`Statement`/`Block`）、`CssUnknownPreludeTokens`（`parse`/`count`/`at`）、`CssUnknownAtRule`（`statement`/`withBlock`/`parse`/`kind`/`hasBlock`/`hasPrelude`/`isVendorPrefixed`/`isKnownStandard`/`preludeTokens`/`eql`/`toCss`/`toCssMinified`）、`CssUnknownAtRuleList`（`extractUnknownFromStylesheet`/`extractAllAtRulesFromStylesheet`/`count`/`at`）。
+
+```cp
+import { CssUnknownAtRule, CssUnknownAtRuleList } from "cap:css";
+
+const rule = CssUnknownAtRule.parse("@position-try --flip-block { top: anchor(bottom); }")?;
+let out: [128]u8 = [0; 128];
+const n = rule.toCssMinified(out[0..])?;
+// "@position-try --flip-block{top: anchor(bottom);}"
+
+const list = CssUnknownAtRuleList.extractUnknownFromStylesheet(
+    "@import \"./base.css\";\n@tailwind utilities;\n@theme { --color-brand: #3b82f6; }"
+)?;
+// list.count() == 2 (自动跳过已知标准 @import，仅提取 @tailwind 与 @theme)
+* = n;
+* = list;
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项
@@ -622,3 +644,6 @@ const n = rule.toCssWithPrefixes(out[0..], prefixes[0..], true)?;
 9. **`@viewport` 供应商前缀降级与描述符边界约束（`viewport_rule.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
    - 遵循 Bun CSS Bundler 的默认浏览器目标与厂商前缀注入策略：`@viewport` 规则块不接受任何 prelude token（`@viewport screen { ... }` 属于非法语法），标准描述符仅接受规范定义的值域（`user-zoom` 仅限 `zoom | fixed`，`orientation` 仅限 `auto | portrait | landscape`，`viewport-fit` 仅限 `auto | contain | cover`，`zoom`/`min-zoom`/`max-zoom` 禁止负值）；
    - `width`/`height` 简写按 W3C 规范接收 1~2 个 `<viewport-length>` 值（单值同时展开为 `min-*` 与 `max-*`，双值分别对应 `min-*` 与 `max-*`）；针对旧版 Edge/IE 兼容场景，推荐使用 `toCssWithPrefixes()` 同时输出 `@-ms-viewport` 与标准 `@viewport`。
+10. **未知与工具链扩展 `@-rule` 保留透传契约（`unknown_rule.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
+    - 现代 CSS 生态与 Bun CSS Bundler 插件（如 Tailwind v4 的 `@tailwind` / `@theme` / `@utility` / `@custom-variant`，以及 CSS Anchor Positioning `@position-try` / `@view-transition`）依赖解析器无损保留未知 `@-rule` 的原始 prelude 与块内容；
+    - 词法边界：语句型未知规则必须以顶层 `;` 终止，块型规则的 `{...}` 及内部 `()`/`[]` 必须严格平衡；序列化时 at-keyword 统一规范为小写 ASCII，prelude 与块内容保持原样不破坏下游插件语法。
