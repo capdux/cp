@@ -320,6 +320,20 @@ const n = reg.resolveMediaQuery("screen and (--narrow)", out[0..])?;
 // out[0..n] == "screen and (max-width: 30em)"
 ```
 
+### `@namespace` 规则解析、序列化与命名空间注册表（`namespace_rule.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/rules/namespace.cp`，零堆分配支持 W3C CSS Namespaces Level 3 默认/前缀命名空间声明（字符串与 `url(...)` 双语法）、规范序列化及选择器前缀解析。
+
+- 核心导出：`CSS_NAMESPACE_MAX_RULES` (`32`)、`CSS_HTML_NS`、`CSS_SVG_NS`、`CSS_MATHML_NS`、`CssNamespaceError`、`NamespaceRule`（`parse` / `isDefault` / `toCss`）、`NamespaceRegistry`（`init` / `register` / `lookupPrefix` / `resolveSelectorPrefix`）。
+
+```typescript
+import { NamespaceRule, NamespaceRegistry, CSS_SVG_NS } from "cap:css";
+
+let reg = NamespaceRegistry.init();
+* = reg.register(NamespaceRule.parse("@namespace svg url(\"http://www.w3.org/2000/svg\");")?)?;
+const uri = reg.resolveSelectorPrefix("svg") ?? ""; // CSS_SVG_NS
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项

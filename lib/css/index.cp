@@ -310,3 +310,13 @@ export {
     CustomMediaRule,
     CustomMediaRegistry,
 } from "./custom_media.cp";
+
+export {
+    CSS_NAMESPACE_MAX_RULES,
+    CSS_HTML_NS,
+    CSS_SVG_NS,
+    CSS_MATHML_NS,
+    CssNamespaceError,
+    NamespaceRule,
+    NamespaceRegistry,
+} from "./namespace_rule.cp";
