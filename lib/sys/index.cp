@@ -1402,3 +1402,15 @@ export {
     WalkerPathStack,
 } from "./walkerSkip.cp";
 
+// --- fairSched (Zero-Alloc Multi-Tenant Deficit Round Robin Weighted Fair Scheduler) ---
+export {
+    FAIR_SCHED_MAX_TENANTS,
+    FAIR_SCHED_QUEUE_CAP,
+    FAIR_SCHED_BPS_SCALE,
+    FairSchedOpStatus,
+    FairTask,
+    FairTenantStats,
+    FairSchedStats,
+    DeficitRoundRobinScheduler,
+} from "./fairSched.cp";
+

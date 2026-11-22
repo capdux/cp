@@ -481,6 +481,45 @@ if (full := stack.joinEntry("main.cp")) {
 * = d1;
 ```
 
+### 多租户赤字轮询 DRR 加权公平任务调度器 (`fairSched.cp`)
+
+面向多租户并发请求/AI Token/带宽公平调度的 100% 纯 CP 零动态堆分配 Deficit Round Robin (DRR) 加权公平调度器：
+
+- **常量与枚举**：
+  - `FAIR_SCHED_MAX_TENANTS = 32`、`FAIR_SCHED_QUEUE_CAP = 32`、`FAIR_SCHED_BPS_SCALE = 10000`
+  - `FairSchedOpStatus`（`ok | invalid_input | tenant_exists | tenant_not_found | tenant_table_full | queue_full`）
+- **数据模型**：
+  - `FairTask`（`tenant_id`, `task_id`, `cost`, `enqueued_ms`）
+  - `FairTenantStats`（每租户 `quantum`, `deficit`, `queued_count`, `enqueued_total`, `dequeued_total`, `dropped_total`, `scheduled_cost_total`, `in_active_ring`）
+  - `FairSchedStats`（全局统计与加权 Jain 公平性指数 `jain_fairness_bps`）
+- **核心引擎 `DeficitRoundRobinScheduler`**：
+  - `init()` / `reset(*_)` / `registerTenant(*_, tenant_id, quantum)` / `setQuantum(*_, tenant_id, new_quantum)` / `removeTenant(*_, tenant_id)`
+  - `enqueue(*_, tenant_id, task_id, cost, now_ms)`：每租户 32 槽 FIFO 环形入队与队列满背压拒绝（`queue_full`）。
+  - `dequeue(*_): FairTask?`：标准 O(1) 活跃环赤字轮询，回合累加 `deficit += quantum`，队首任务 `cost <= deficit` 即出队并扣减赤字，队列排空自动归零赤字并移出活跃环，严格按权重比例分配大/小任务吞吐且零饥饿。
+  - `tenantStats(tenant_id)` / `jainFairnessBps()` / `stats()`
+
+```cp
+import {
+    DeficitRoundRobinScheduler,
+} from "cap:sys";
+
+pub fn demoFairScheduler() {
+    let sched = DeficitRoundRobinScheduler.init();
+    * = sched.registerTenant(1, 200); // 权重 2x
+    * = sched.registerTenant(2, 100); // 权重 1x
+
+    * = sched.enqueue(1, 101, 100, 1000);
+    * = sched.enqueue(1, 102, 100, 1001);
+    * = sched.enqueue(2, 201, 100, 1002);
+
+    // 租户 1 本轮 quantum=200 连续出队 101 & 102，随后轮转租户 2 出队 201
+    * = sched.dequeue();
+    * = sched.dequeue();
+    * = sched.dequeue();
+    * = sched.jainFairnessBps(); // 10000 (100% 加权公平)
+}
+```
+
 ## 收敛子模块深度文档
 
 - [acpi.md](sys/acpi.md)
