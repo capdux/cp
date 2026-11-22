@@ -281,3 +281,12 @@ export {
     planLoraSgmvBatch,
     applyLoraDeltaSimdF32,
 } from "./lora_router.cp";
+
+export {
+    GUIDED_TRIE_MAX_NODES,
+    GUIDED_TRIE_NO_NODE,
+    GuidedTrieNode,
+    GuidedTrieCursor,
+    GuidedTrieStats,
+    GuidedTokenTrie,
+} from "./guided_trie.cp";

@@ -1166,3 +1166,52 @@ pub fn demoMultiLoraSgmv() {
     * = ng; // 3 组: [101: 0,3], [0: 1,4], [202: 2]
 }
 ```
+
+### 零分配受限解码前缀树（Prefix-Trie）与 Logit 掩码处理器 (`guided_trie.cp`)
+
+面向生产级 LLM 受限解码（工具名白名单、枚举值约束、JSON 键名约束、vLLM / SGLang Guided Decoding）的 100% 纯 CP 零动态堆分配 Token-ID 前缀树与 $O(V + B)$ Logit 掩码引擎：
+
+- **常量与数据模型**：
+  - `GUIDED_TRIE_MAX_NODES` (`512`)、`GUIDED_TRIE_NO_NODE` (`0xFFFF`)
+  - `GuidedTrieNode`（`token_id`, `is_terminal`, `first_child`, `next_sibling`, `parent`, `depth`）：Left-Child Right-Sibling（LCRS）紧凑节点布局，零堆分配。
+  - `GuidedTrieCursor`（`node_idx`, `step_count`, `is_complete`, `is_dead`）：轻量值类型解码光标，支持推测解码多分支回溯与非法 Token 死状态拦截。
+  - `GuidedTrieStats`（`node_count`, `sequence_count`, `max_depth`）：前缀树规模与深度统计快照。
+- **核心引擎（`GuidedTokenTrie`）**：
+  - `init(): GuidedTokenTrie`：初始化含虚拟根节点（`index = 0`）的空前缀树。
+  - `insert_sequence(*_, tokens: []const u32): bool`：两阶段原子插入——自动共享公共前缀、重复序列幂等不重复计数、拒绝空序列、容量不足时零副作用返回 `false`。
+  - `new_cursor(): GuidedTrieCursor` / `advance(cursor, token_id): GuidedTrieCursor`：从根节点或当前光标沿合法子边推进；未命中时返回 `is_dead = true` 的死光标。
+  - `allowed_next_tokens(cursor, eos_token_id, out_tokens): usize`：枚举当前光标所有合法下一 Token；当 `cursor.is_complete` 时自动将 `eos_token_id` 纳入合法集合（自动去重）。
+  - `apply_logit_mask_f32(cursor, eos_token_id, logits): usize`：零堆分配 $O(V + B)$ Logit 掩码处理器，将所有非法词表项置为 `-1.0e30`，精确保留所有合法下一 Token（及终态 `eos_token_id`）的原始 logit 并返回合法数量；越界 `token_id` 安全忽略，死光标屏蔽全部词表返回 `0`。
+  - `stats(): GuidedTrieStats`：返回当前节点数、序列数与最大深度。
+
+```cp
+import {
+    GuidedTokenTrie,
+} from "cap:attention";
+
+pub fn demoGuidedTokenTrie() {
+    let trie = GuidedTokenTrie.init();
+    const eos_id: u32 = 2;
+
+    // 注册合法工具调用名称 Token 序列（自动共享前缀 [10, 20]）
+    const tool_get: [2]u32 = [10, 20];
+    const tool_get_user: [3]u32 = [10, 20, 31];
+    const tool_set: [2]u32 = [10, 25];
+    * = trie.insert_sequence(tool_get[0..]);
+    * = trie.insert_sequence(tool_get_user[0..]);
+    * = trie.insert_sequence(tool_set[0..]);
+
+    // 沿 [10, 20] 推进：既是终态又是中间节点，允许继续走 31 或生成 eos_id (2)
+    let cur = trie.new_cursor();
+    cur = trie.advance(cur, 10);
+    cur = trie.advance(cur, 20);
+
+    let logits_buf: [64]f32 = [0.5; 64];
+    logits_buf[2] = 1.2;
+    logits_buf[31] = 2.8;
+    logits_buf[50] = 99.0; // 非法高分 token 将被掩码为 -1.0e30
+    let logits: []f32 = logits_buf[0..];
+    const allowed = trie.apply_logit_mask_f32(cur, eos_id, logits);
+    * = allowed; // 2 (token 31 与 eos_id 2)
+}
+```
