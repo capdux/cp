@@ -204,3 +204,13 @@ export {
     SccCondensationResult,
     IterativeTarjanGraph,
 } from "./scc_condensation.cp";
+
+export {
+    HUNGARIAN_MAX_DIM,
+    HUNGARIAN_UNASSIGNED,
+    HUNGARIAN_FORBIDDEN_COST,
+    HungarianStatus,
+    HungarianAssignment,
+    solveMinCostAssignment,
+    solveMaxProfitAssignment,
+} from "./hungarian_assign.cp";

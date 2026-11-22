@@ -260,6 +260,46 @@ pub fn demoIterativeTarjanScc() {
 
 ---
 
+## 七、 零分配匈牙利（Kuhn-Munkres）最小代价与最大收益指派求解器（`hungarian_assign.cp`）
+
+面向多智能体任务分配、资源调度、目标跟踪匹配（MOT）与物流派单的 100% 纯 CP 零动态堆分配 O(N³) 势函数增广路指派求解器：
+
+- **常量与枚举**：
+  - `HUNGARIAN_MAX_DIM = 32`、`HUNGARIAN_UNASSIGNED = 0xFFFF`、`HUNGARIAN_FORBIDDEN_COST = 0x7FFFFFFFFFFFFFFF`
+  - `HungarianStatus`（`ok | invalid_dimensions | matrix_length_mismatch | infeasible | overflow`）
+- **数据结构**：`HungarianAssignment`（`status`, `rows`, `cols`, `matched_count`, `total_cost`, `row_to_col`, `col_to_row`；提供 `colForRow(r)` 与 `rowForCol(c)`）
+- **核心求解器**：
+  - `solveMinCostAssignment(rows, cols, cost_matrix)`：方阵与任意矩形矩阵（`rows <= cols` 或 `rows > cols`）最小代价最优指派，内部采用 `i128` 势函数防大整数溢出，精确检测禁止边不可行。
+  - `solveMaxProfitAssignment(rows, cols, profit_matrix)`：最大收益最优指派（自动取反求解，支持负收益与禁止边）。
+
+### QuickStart 示例
+
+```cp
+import {
+    HungarianStatus,
+    solveMinCostAssignment,
+    solveMaxProfitAssignment,
+} from "cap:graph";
+
+pub fn demoHungarianAssign() {
+    // 3 个 Agent 分配给 3 个任务（行主序代价矩阵）
+    const costs: [9]i64 = [
+        9, 2, 7,
+        6, 4, 3,
+        5, 8, 1,
+    ];
+    const min_res = solveMinCostAssignment(3, 3, costs[0..]);
+    if (min_res.status == HungarianStatus.ok) {
+        * = min_res.total_cost; // 2 + 6 + 1 = 9 (row0->col1, row1->col0, row2->col2)
+    }
+
+    const max_res = solveMaxProfitAssignment(3, 3, costs[0..]);
+    * = max_res.total_cost; // 9 + 4 + 8 = 21
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [bipartite.md](graph/bipartite.md)
