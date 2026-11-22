@@ -14,3 +14,8 @@ export { ConcurrentMap } from "./concurrentMap";
 export { ArcSlice } from "./arcSlice";
 export { Wyhash, WyhashStateless } from "./wyhash";
 export { Guarded, TaskDesc, WorkPool } from "./pool.cp";
+export {
+    THREAD_LOCK_INVALID_ID,
+    ThreadLockError,
+    ThreadLock,
+} from "./threadLock.cp";

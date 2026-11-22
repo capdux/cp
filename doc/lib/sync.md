@@ -185,3 +185,16 @@ pub fn demoConcurrentMapAndArcSlice()! {
    - `MpmcQueue` / `RingBuffer` 依赖 2 的幂容量与 Vyukov 序列号实现无锁多生产者多消费者通信；`ArcSlice<T>` 跨线程传递只读大数据块时每次 `clone()` 必须配对一次 `release()`，引用计数归零时自动释放底层堆内存。
 4. **`WaitGroup` 计数守卫**：
    - 务必在派生工作线程之前调用 `wg.add(1)`（而非在子线程内部调用），避免主线程 `wg.wait()` 在子线程尚未执行 `add` 前提前返回。
+5. **单线程所有权排他校验锁（`threadLock.cp`，吸收自 `/data/dev/bun/src/safety/ThreadLock.cp`）**：
+   - 导出：`THREAD_LOCK_INVALID_ID` (`0`)、`ThreadLockError`（`InvalidThreadId` / `AlreadyLocked` / `NotLocked` / `WrongThread`）、`ThreadLock`（`initUnlocked` / `initDisabled` / `initLocked` / `isLocked` / `owningThread` / `isOwnedBy` / `lock` / `assertLocked` / `unlock` / `lockOrAssert` / `transfer`）；
+   - 用于保护非线程安全数据结构（如单线程事件循环句柄、本地缓存、引用计数对象）：零系统调用、零堆分配检测跨线程误访问与重复加锁，支持 `lockOrAssert` 懒绑定与显式 `transfer(from, to)` 跨线程移交。
+
+```cp
+import { ThreadLock } from "cap:sync";
+
+let lk = ThreadLock.initUnlocked();
+* = lk.lockOrAssert(1001)?; // 绑定到线程 1001
+* = lk.assertLocked(1001)?; // ok
+* = lk.transfer(1001, 1002)?; // 移交到线程 1002
+* = lk.unlock(1002)?;
+```
