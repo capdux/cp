@@ -2514,3 +2514,101 @@
   > 2. **跨模块 `catch` 降级修复（`cpc/src/`）**：修复 `cap build -m` 跨模块调用返回 Zig error union（如 `brotliDecompress`）时，`expr catch fallback` 误降级为 `switch(.ok/.err)` 的问题，修复后执行 `sync_cpc.sh release` 发布并验证端到端 `cap build -m` 与 `testPackBrotliDecompress.cp` 全绿结单。
   >
   > 待验证通过并结单后，我将第一时间同步归档 `SESSION.md` 与 Git 提交并汇报。
+
+### 2026-11-23（下游工单全量补录：`task-capsurf-20261123-brotli-segfault`）[ticket:task-capsurf-20261123-brotli-segfault]
+- **工单来源**：`capsurf_agy`（项目 `capsurf` / 分类 `compiler_bug`） | 创建：`2026-11-23 09:35:57` | 状态：`resolved` | 结单：`2026-11-23T09:48:23`
+- **报错/需求摘要**：cap build -m 运行 brotliDecompress(std.heap.c_allocator, data) 解压 zlib.brotliCompressSync HTML 向量时触发 Segmentation fault: brotli.zig:319:30 BrHuffmanTree.deinit (if self.symbols.len > 0) <- brFreeTreeSlice (brotli.zig:876) <- brDecodeCompressedMetaBlock (brotli.zig:1048, dist_trees[0..dist_built])，疑似 dist_trees/trees 切片元素未零初始化或悬垂释放。
+- **结单与处理汇报**：Fixed 2 root causes in lib/pack/brotli.cp: (1) brDecodeCompressedMetaBlock registered BOTH errdefer brFreeTreeSlice(alloc, X[0..X_built]) and defer brFreeTreeSlice(alloc, X) for lit_trees/iac_trees/dist_trees, causing a double-free & subslice-free SEGFAULT on error unwind under std.heap.c_allocator (plus moved l/i/d_type_tree & len_tree defers before if-blocks and cleared symbols slice in BrHuffmanTree.deinit); (2) BR_INSERT_RANGE_LUT and BR_COPY_RANGE_LUT had wrong RFC 7932 §5 mappings for rang ...(截断)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 09:35:58）[step:19879]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-capsurf-20261123-brotli-segfault)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取工单 **`task-capsurf-20261123-brotli-segfault`**（复现用例：[repro_brotli_segfault.cp](file:///data/dev/cp/temp/repro_brotli_segfault.cp)），并立即拉起独立热修子智能体专责排查与修复 [lib/pack/brotli.cp](file:///data/dev/cp/lib/pack/brotli.cp) 中 `BrHuffmanTree.deinit` / `brFreeTreeSlice` 在 `std.heap.c_allocator` 下的段错误问题（待 `cap build -m` 实跑复现用例 + `testPackBrotliDecompress.cp` 全绿后自动结单）。
+  >
+  > ### 同步完成 Priority ① Bun 同步 W29 R3（已提交 `5768f968`）
+  > - 吸收 Bun `bun_alloc/heap_breakdown.cp` -> [lib/bun_alloc/heapBreakdown.cp](file:///data/dev/cp/lib/bun_alloc/heapBreakdown.cp)（376 行，外部切片无上限跨平台分区堆账本 `HeapBreakdown`），并顺带修复同伞包 [bump.cp](file:///data/dev/cp/lib/bun_alloc/bump.cp) 与 [scratch.cp](file:///data/dev/cp/lib/bun_alloc/scratch.cp) 的 `unsafe {}` 兼容；
+  > - 通过 [testBunAllocHeapBreakdown.cp](file:///data/dev/cp/cap/test/testBunAllocHeapBreakdown.cp) 5/5 PASS（`bun_sourced=1157, missing_synced_tag=0, upstream_newer=0`），已自动派发 **W29 R4**。
+  >
+  > ### 当前在途（3 路并行）
+  > 1. **紧急工单**：`task-capsurf-20261123-brotli-segfault`（[brotli.cp](file:///data/dev/cp/lib/pack/brotli.cp) `BrHuffmanTree` 释放段错误热修）
+  > 2. **Priority ① W29 R4**：Bun 同步吸收（目标 `bun_sourced=1158`）
+  > 3. **Priority ③ W26 R1**：`lib/net/sctpDataChannel.cp`（RFC 4960 SCTP / PR-SCTP / RFC 8832 WebRTC DataChannel DCEP）
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 09:39:47）[step:19908]
+- **用户完整原始指令**：
+  > bun 同步吸收, 还剩多少文件?
+- **完整回复与执行汇报**：
+  > 对 `/data/dev/bun/src/` 与 `/data/dev/cp/lib/` 做了全量精确扫描（截至刚刚提交的 **W29 R4 `84d0df83`**，[bindingPattern.cp](file:///data/dev/cp/lib/js/bindingPattern.cp)）：
+  >
+  > ### 1. 总体进度账单
+  > | 指标 | 数量 | 说明 |
+  > |---|---:|---|
+  > | Bun 上游 `/data/dev/bun/src/**/*.cp` 总数 | **1,295** | 全量上游 `.cp` 文件 |
+  > | 已吸收并匹配的上游独立源文件 | **628** | 在 `cp/lib/` 侧对应 `bun_sourced=1158`（含早期按功能拆分与版本更新，`missing_synced_tag=0, upstream_newer=0`） |
+  > | 尚未吸收的剩余源文件 | **667** | 详细拆解见下表 |
+  >
+  > ### 2. 剩余 667 个文件的精准分类
+  > 1. **423 个 — 强耦合 JSC / VM / C-FFI（不适合吸收）**：
+  >    - 依赖 `JSGlobalObject` / `JSValue` / `VirtualMachine` / `extern "C"`，集中在 `runtime/`、`jsc/`、`sql_jsc/`、`http_jsc/` 等，属于 Bun JS 引擎专属绑定，不应进入通用 CP 标准库。
+  > 2. **99 个 — 微小壳文件 / Bun 专属流程（无需吸收）**：
+  >    - `<40` 行小文件、`index.cp` 出口、或 `cli/` / `bake/` / `test_runner/` 等 Bun 宿主专用代码。
+  > 3. **145 个 — 实质性纯逻辑候选（其中高复用价值约 40~70 个）**：
+  >    - `js_parser/`（30）、`install/`（18）、`uws_sys/`（15，多为底层绑定封装）、`unicode/`（9）、`css/`（7）、`jsc/`（7）、`bundler/`（5）、`runtime/`（5）、`bun_core/`（4）、`sql/`（4）、`string/`（4）、`sys/`（3）、`zlib_sys/`（3）、`bun_alloc/`（2）等。
+  >
+  > ### 结论与建议
+  > Bun 中高通用价值的基础模块**已完成绝大部分（约 90%+）**，剩余真正值得吸收的纯逻辑模块大约仅 **40~70 个**（按当前节奏 4~6 个波次内即可全部清完）。届时（或如果您希望提前切换），可以将 Priority ① 这路子智能体一并投入到 **「存量旧库回溯深化 + Phase 1 流媒体/文档/高价值核心库」**，实现双路提速。
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 09:47:54）[step:19949]
+- **用户完整原始指令**：
+  > 1. 你提到的: 3. 145 个 — 实质性纯逻辑候选（其中高复用价值约 40~70 个）
+  > 这些之前没有吸收吗? 还是吸收了, 目录名称修改了, 没有对齐?
+  > 2. cap 后续也需要参照bun, 实现 install/cli/shell/add/pkg, 以及调式/打包等各种指令/功能, 你列出的这些, 对cap 有很高的价值, 需抓紧吸收.
+  > 3. 你提到 不建议吸收的部分, 与 虚拟机绑定的部分, 是否对我们即将实现的 Nest 虚拟机有帮助? cp 应用默认编译为独立应用或库, -n 则编译为Nest容器动态加载二进制, 运行在 Nest 容器中, bun的这部分容器绑定, 对我们有和帮助/借鉴价值?
+- **完整回复与执行汇报**：
+  > 针对您的三个问题，我已对 `/data/dev/bun/src/` 与 `/data/dev/cp/lib/` 做了二次实查，逐一详细答复如下：
+  >
+  > ---
+  >
+  > ### 一、那 145 个实质性纯逻辑候选：是真没吸收，还是改名没对齐？
+  >
+  > **结论：绝大多数是真的尚未吸收（并非改名漏匹配）。**
+  >
+  > 实查核对后，只有 `unicode/uucode_lib/` 等极少数子目录存在同名近似实现；真正未吸收的核心大块头恰恰集中在 `install/`、`cli/`、`bundler/` 这三个此前为了避开大文件耦合而延后的目录：
+  >
+  > - **`install/`（19 个未吸收，且多为 600~2,200 行硬核引擎）**：
+  >   - [PackageInstall.cp](file:///data/dev/bun/src/install/PackageInstall.cp) (1552L)、[PackageInstaller.cp](file:///data/dev/bun/src/install/PackageInstaller.cp) (1645L)、[isolated_install.cp](file:///data/dev/bun/src/install/isolated_install.cp) (2198L，pnpm 风格隔离软链接安装)、[TarballStream.cp](file:///data/dev/bun/src/install/TarballStream.cp) (985L)、[patch_install.cp](file:///data/dev/bun/src/install/patch_install.cp) (608L)、[PackageManagerEnqueue.cp](file:///data/dev/bun/src/install/PackageManager/PackageManagerEnqueue.cp) (2027L)、[runTasks.cp](file:///data/dev/bun/src/install/PackageManager/runTasks.cp) (1357L)、[updatePackageJSONAndInstall.cp](file:///data/dev/bun/src/install/PackageManager/updatePackageJSONAndInstall.cp) (797L)
+  > - **`cli/`（21 个未吸收）**：
+  >   - [Arguments.cp](file:///data/dev/bun/src/cli/Arguments.cp) (1810L)、[bunfig.cp](file:///data/dev/bun/src/cli/bunfig.cp) (1356L)、[build_command.cp](file:///data/dev/bun/src/cli/build_command.cp) (856L)、[init_command.cp](file:///data/dev/bun/src/cli/init_command.cp) (1345L)、[create_command.cp](file:///data/dev/bun/src/cli/create_command.cp) (2455L)、[pack_command.cp](file:///data/dev/bun/src/cli/pack_command.cp) (3129L)、[publish_command.cp](file:///data/dev/bun/src/cli/publish_command.cp) (1630L)
+  > - **`bundler/`（12 个未吸收）**：
+  >   - [LinkerContext.cp](file:///data/dev/bun/src/bundler/LinkerContext.cp) (2878L)、[bundle_v2.cp](file:///data/dev/bun/src/bundler/bundle_v2.cp) (4733L)、[ParseTask.cp](file:///data/dev/bun/src/bundler/ParseTask.cp) (1533L)、[transpiler.cp](file:///data/dev/bun/src/bundler/transpiler.cp) (1516L)、[generateChunksInParallel.cp](file:///data/dev/bun/src/bundler/linker_context/generateChunksInParallel.cp) (910L)
+  >
+  > ---
+  >
+  > ### 二、调整 Priority ① 策略：立即提拔 `install/`、`cli/`、`bundler/` 为头号吸收队列
+  >
+  > 完全同意您的判断——这些模块对 `cap` 后续实现 `cap install` / `cap add` / `cap patch` / `cap init` / `cap pack` / `cap publish` / `cap build` 以及调试、打包与 Shell 能力具有极高直接复用价值。
+  >
+  > **立即执行调整**：从 **W29 R9** 开始，Priority ① 将暂停吸收零散的 JS/CSS 小边角，**全面优先吸收 `install/`、`cli/`、`bundler/` 中的核心算法与协议管线**（剥离 Bun 宿主耦合，以「做深不做薄、零堆外部切片」标准沉淀进 `cap:pkg` / `cap:cli` / `cap:bundler` / `cap:shell` 等已有伞包），直接为 `cap` 自身升级铺好地基。
+  >
+  > ---
+  >
+  > ### 三、Bun 的虚拟机绑定部分，对即将实现的 Nest 容器（`cap build -n`）有何帮助？
+  >
+  > 这部分需要明确切分 **「不要照搬的」** 与 **「对 Nest 容器 (`-n`) 极具架构价值的 5 大设计」**：
+  >
+  > 1. **不要直接照搬的部分（JSC 专属）**：
+  >    - JavaScriptCore 的动态 GC 堆对象模型（`JSValue` NaN-boxing、`JSGlobalObject` 原型链、`StructureID` 隐藏类、GC 写屏障）。CP 是无 GC 原生编译语言，Nest 是面向原生状态机与 Actor 调度的容器，不应背负 JS 动态对象模型的包袱。
+  > 2. **对 Nest 容器（`cap build -n` 动态加载二进制）极具借鉴/复用价值的 5 大机制**：
+  >    - **① 实例级隔离上下文与生命周期管理**（借鉴 `jsc/VirtualMachine.cp`、`jsc/event_loop.cp`）：
+  >      每个动态加载的 `-n` 模块/Actor 在 Nest 中需要独立的 `InstanceContext`（独立事件循环槽、定时器、微任务与优雅退场 drain 钩子），确保多租户/多模块同进程并发互不干扰。
+  >    - **② 跨异步边界的资源句柄托管（Crash-Proof）**（借鉴 `jsc/Strong.cp`、`jsc/Weak.cp`、引用计数资源封装）：
+  >      `-n` 动态二进制在挂起/唤醒（`await`）或异常退出时，通过 Host 侧统一的句柄表 + 自动析构兜底（类似 BEAM NIF Resource Objects），彻底杜绝句柄泄漏与晚到回调悬垂指针。
+  >    - **③ 动态加载、ABI 握手与热更新**（借鉴 `jsc/ModuleLoader.cp`、`bake/` 增量失效图）：
+  >      指导 Nest 容器对 `-n` 动态库（`.so`/`.dylib`）执行入口符号校验、ABI 版本号握手、引用计数隔离与不停机热替换（旧实例排空、新请求切流）。
+  >    - **④ Host ↔ 模块零拷贝二进制通道**（借鉴 `ArrayBuffer` / `SharedArrayBuffer` / `MessagePort` 的 `ExternalMemory` 所有权转移）：
+  >      与 CP 的 `SharedTensor` / `Refc Binary` / `move` 完全契合，让 Nest 宿主与多个 `-n` 动态模块之间以指针 + 原子引用计数零拷贝交换大块数据（音频帧、视频帧、Tensor、HTTP 报文）。
+  >    - **⑤ 故障隔离与资源配额门禁**（借鉴 `TerminationException` / 异常边界拦截）：
+  >      当某个 `-n` 模块触发错误、超时或内存配额超限时，Nest 容器能够精准终止该单个模块/Actor 生命周期并回收全部托管资源，不拖垮宿主进程与其他正常模块。
+  >
+  > **建议落地方式**：不把这 423 个 JSC 文件强塞进通用 `lib/`，而是在后续启动 **Nest 虚拟机 & `cap build -n`** 设计阶段，将其作为架构蓝本直接提炼成干净、无 JSC 负担的 **Nest Host ABI 与原生模块容器运行时**。您看这样分层推进是否符合预期？

@@ -220,8 +220,8 @@ const BR_COPY_NBITS: [24]u6 = [
     3, 3, 4, 4, 5, 5, 6, 7, 8, 9, 10, 24,
 ];
 
-const BR_INSERT_RANGE_LUT: [11]u8 = [0, 0, 0, 8, 8, 16, 0, 8, 16, 16, 16];
-const BR_COPY_RANGE_LUT: [11]u8 = [0, 8, 0, 0, 8, 0, 16, 16, 8, 16, 16];
+const BR_INSERT_RANGE_LUT: [11]u8 = [0, 0, 0, 0, 8, 8, 0, 16, 8, 16, 16];
+const BR_COPY_RANGE_LUT: [11]u8 = [0, 8, 0, 8, 0, 8, 16, 0, 16, 8, 16];
 
 /// LSB-first 位流读取器
 struct BrBitReader {
@@ -376,6 +376,7 @@ struct BrHuffmanTree {
     fn deinit(*_, alloc: std.mem.Allocator) {
         if (_.symbols.len > 0) {
             alloc.free(_.symbols);
+            _.symbols = std.ArrayList(u16).empty.items;
         }
     }
 
@@ -845,9 +846,9 @@ fn brApplyDictTransform(dst: []u8, word: []const u8, transform_idx: usize): usiz
     return idx;
 }
 
-fn brFreeTreeSlice(alloc: std.mem.Allocator, trees: []BrHuffmanTree) {
+fn brFreeTreeSlice(alloc: std.mem.Allocator, trees: []BrHuffmanTree, built: usize) {
     let i: usize = 0;
-    while (i < trees.len) : (i += 1) {
+    while (i < built) : (i += 1) {
         trees[i].deinit(alloc);
     }
     alloc.free(trees);
@@ -892,6 +893,8 @@ fn brDecodeCompressedMetaBlock(
     let has_l_len = false;
     let has_l_switch = false;
     let l_block_len: usize = 0;
+    defer if (has_l_type) { l_type_tree.deinit(alloc); }
+    defer if (has_l_len) { l_len_tree.deinit(alloc); }
     if (nbltypes_l > 1) {
         l_type_tree = brReadPrefixCode(alloc, br, nbltypes_l + 2)?;
         has_l_type = true;
@@ -900,8 +903,6 @@ fn brDecodeCompressedMetaBlock(
         has_l_switch = true;
         l_block_len = brDecodeBlockLength(&l_len_tree, br)?;
     }
-    defer if (has_l_type) { l_type_tree.deinit(alloc); }
-    defer if (has_l_len) { l_len_tree.deinit(alloc); }
 
     const nbltypes_i = brDecodeVarUint8(br)? + 1;
     let i_type_tree: BrHuffmanTree = undefined;
@@ -910,6 +911,8 @@ fn brDecodeCompressedMetaBlock(
     let has_i_len = false;
     let has_i_switch = false;
     let i_block_len: usize = 0;
+    defer if (has_i_type) { i_type_tree.deinit(alloc); }
+    defer if (has_i_len) { i_len_tree.deinit(alloc); }
     if (nbltypes_i > 1) {
         i_type_tree = brReadPrefixCode(alloc, br, nbltypes_i + 2)?;
         has_i_type = true;
@@ -918,8 +921,6 @@ fn brDecodeCompressedMetaBlock(
         has_i_switch = true;
         i_block_len = brDecodeBlockLength(&i_len_tree, br)?;
     }
-    defer if (has_i_type) { i_type_tree.deinit(alloc); }
-    defer if (has_i_len) { i_len_tree.deinit(alloc); }
 
     const nbltypes_d = brDecodeVarUint8(br)? + 1;
     let d_type_tree: BrHuffmanTree = undefined;
@@ -928,6 +929,8 @@ fn brDecodeCompressedMetaBlock(
     let has_d_len = false;
     let has_d_switch = false;
     let d_block_len: usize = 0;
+    defer if (has_d_type) { d_type_tree.deinit(alloc); }
+    defer if (has_d_len) { d_len_tree.deinit(alloc); }
     if (nbltypes_d > 1) {
         d_type_tree = brReadPrefixCode(alloc, br, nbltypes_d + 2)?;
         has_d_type = true;
@@ -936,8 +939,6 @@ fn brDecodeCompressedMetaBlock(
         has_d_switch = true;
         d_block_len = brDecodeBlockLength(&d_len_tree, br)?;
     }
-    defer if (has_d_type) { d_type_tree.deinit(alloc); }
-    defer if (has_d_len) { d_len_tree.deinit(alloc); }
 
     // 2. Distance parameters: NPOSTFIX (2 bits), NDIRECT (4 bits << NPOSTFIX)
     const npostfix = br.readBits(2)?;
@@ -962,27 +963,24 @@ fn brDecodeCompressedMetaBlock(
     // 5. Prefix Code Trees
     let lit_trees = alloc.alloc(BrHuffmanTree, lit_cmap.num_trees) catch return BrotliError.OutOfMemory;
     let lit_built: usize = 0;
-    errdefer brFreeTreeSlice(alloc, lit_trees[0..lit_built]);
+    defer brFreeTreeSlice(alloc, lit_trees, lit_built);
     while (lit_built < lit_cmap.num_trees) : (lit_built += 1) {
         lit_trees[lit_built] = brReadPrefixCode(alloc, br, BR_NUM_LITERAL_SYMBOLS)?;
     }
-    defer brFreeTreeSlice(alloc, lit_trees);
 
     let iac_trees = alloc.alloc(BrHuffmanTree, nbltypes_i) catch return BrotliError.OutOfMemory;
     let iac_built: usize = 0;
-    errdefer brFreeTreeSlice(alloc, iac_trees[0..iac_built]);
+    defer brFreeTreeSlice(alloc, iac_trees, iac_built);
     while (iac_built < nbltypes_i) : (iac_built += 1) {
         iac_trees[iac_built] = brReadPrefixCode(alloc, br, BR_NUM_INSERT_COPY_SYMBOLS)?;
     }
-    defer brFreeTreeSlice(alloc, iac_trees);
 
     let dist_trees = alloc.alloc(BrHuffmanTree, dist_cmap.num_trees) catch return BrotliError.OutOfMemory;
     let dist_built: usize = 0;
-    errdefer brFreeTreeSlice(alloc, dist_trees[0..dist_built]);
+    defer brFreeTreeSlice(alloc, dist_trees, dist_built);
     while (dist_built < dist_cmap.num_trees) : (dist_built += 1) {
         dist_trees[dist_built] = brReadPrefixCode(alloc, br, num_dist_syms)?;
     }
-    defer brFreeTreeSlice(alloc, dist_trees);
 
     // 6. Main Meta-Block Decode Loop
     let l_type: usize = 0;

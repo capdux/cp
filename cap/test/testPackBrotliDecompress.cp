@@ -97,10 +97,17 @@ const BR_MULTI_META: [90]u8 = [
     0x06, 0xca, 0x81, 0x6e, 0xb6, 0x2d, 0xcc, 0xc3, 0xc6, 0xd8, 0xd8, 0x22, 0xb6, 0x9a, 0x9b, 0x60,
     0x6b, 0x36, 0xb2, 0x0b, 0xbf, 0x95, 0x39, 0xdb, 0x6d, 0x09,
 ];
+const BR_CAPSURF_HTML: [54]u8 = [
+    0x1b, 0x49, 0x00, 0x80, 0x45, 0x6f, 0x78, 0xfd, 0x7e, 0x39, 0x9e, 0xe5, 0x70, 0x9d, 0xf2, 0x88,
+    0x52, 0x12, 0x70, 0xc8, 0x01, 0xfb, 0xf9, 0x0a, 0x2d, 0xc4, 0x40, 0x83, 0x0d, 0x38, 0x0c, 0x34,
+    0x5e, 0x86, 0xed, 0xa6, 0x80, 0x44, 0x4c, 0xe3, 0xfb, 0xf2, 0x14, 0xa9, 0xed, 0x5c, 0xe7, 0x7f,
+    0x68, 0x80, 0x44, 0xbe, 0xd6, 0x00,
+];
 
 const EXP_SHORT: []const u8 = "Hello, Brotli RFC 7932!";
 const EXP_Q0: []const u8 = "Uncompressed or q0 short payload 0123456789abcdef";
 const EXP_HTML: []const u8 = "<!DOCTYPE html><html><head><title>CapSurf Brotli Test</title></head><body><h1>Hello World</h1><p>The quick brown fox jumps over the lazy dog. Welcome to the web!</p></body></html>";
+const EXP_CAPSURF_HTML: []const u8 = "<!doctype html><html><body><div id=\"br-ok\">BrotliWorks</div></body></html>";
 const EXP_JSON: []const u8 = "{\"status\":\"ok\",\"encoding\":\"br\",\"items\":[{\"id\":0,\"name\":\"item_0\",\"active\":true,\"description\":\"repeated JSON payload for LZ77 and Huffman testing\"},{\"id\":1,\"name\":\"item_1\",\"active\":false,\"description\":\"repeated JSON payload for LZ77 and Huffman testing\"},{\"id\":2,\"name\":\"item_2\",\"active\":true,\"description\":\"repeated JSON payload for LZ77 and Huffman testing\"},{\"id\":3,\"name\":\"item_3\",\"active\":false,\"description\":\"repeated JSON payload for LZ77 and Huffman testing\"},{\"id\":4,\"name\":\"item_4\",\"active\":true,\"description\":\"repeated JSON payload for LZ77 and Huffman testing\"},{\"id\":5,\"name\":\"item_5\",\"active\":false,\"description\":\"repeated JSON payload for LZ77 and Huffman testing\"},{\"id\":6,\"name\":\"item_6\",\"active\":true,\"description\":\"repeated JSON payload for LZ77 and Huffman testing\"},{\"id\":7,\"name\":\"item_7\",\"active\":false,\"description\":\"repeated JSON payload for LZ77 and Huffman testing\"},{\"id\":8,\"name\":\"item_8\",\"active\":true,\"description\":\"repeated JSON payload for LZ77 and Huffman testing\"},{\"id\":9,\"name\":\"item_9\",\"active\":false,\"description\":\"repeated JSON payload for LZ77 and Huffman testing\"},{\"id\":10,\"name\":\"item_10\",\"active\":true,\"description\":\"repeated JSON payload for LZ77 and Huffman testing\"},{\"id\":11,\"name\":\"item_11\",\"active\":false,\"description\":\"repeated JSON payload for LZ77 and Huffman testing\"}]}";
 const EXP_OVERLAP: []const u8 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCXYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345XYZ12345";
 const EXP_UTF8: []const u8 = "\xe4\xbd\xa0\xe5\xa5\xbd\xe4\xb8\x96\xe7\x95\x8c\xef\xbc\x81CapSurf \xe6\xb5\x8f\xe8\xa7\x88\xe5\x99\xa8\xe5\x86\x85\xe6\xa0\xb8\xe5\x8e\x9f\xe7\x94\x9f\xe6\x94\xaf\xe6\x8c\x81 RFC 7932 Brotli \xe8\xa7\xa3\xe5\x8e\x8b \xe2\x80\x94 UTF-8 \xe5\xa4\x9a\xe5\xad\x97\xe8\x8a\x82\xe6\x96\x87\xe6\x9c\xac\xe4\xb8\x8e\xe4\xb8\xad\xe6\x96\x87\xe6\xa0\x87\xe7\x82\xb9\xe6\xb5\x8b\xe8\xaf\x95\xe3\x80\x82\xe4\xbd\xa0\xe5\xa5\xbd\xe4\xb8\x96\xe7\x95\x8c\xef\xbc\x81CapSurf \xe6\xb5\x8f\xe8\xa7\x88\xe5\x99\xa8\xe5\x86\x85\xe6\xa0\xb8\xe5\x8e\x9f\xe7\x94\x9f\xe6\x94\xaf\xe6\x8c\x81 RFC 7932 Brotli \xe8\xa7\xa3\xe5\x8e\x8b \xe2\x80\x94 UTF-8 \xe5\xa4\x9a\xe5\xad\x97\xe8\x8a\x82\xe6\x96\x87\xe6\x9c\xac\xe4\xb8\x8e\xe4\xb8\xad\xe6\x96\x87\xe6\xa0\x87\xe7\x82\xb9\xe6\xb5\x8b\xe8\xaf\x95\xe3\x80\x82\xe4\xbd\xa0\xe5\xa5\xbd\xe4\xb8\x96\xe7\x95\x8c\xef\xbc\x81CapSurf \xe6\xb5\x8f\xe8\xa7\x88\xe5\x99\xa8\xe5\x86\x85\xe6\xa0\xb8\xe5\x8e\x9f\xe7\x94\x9f\xe6\x94\xaf\xe6\x8c\x81 RFC 7932 Brotli \xe8\xa7\xa3\xe5\x8e\x8b \xe2\x80\x94 UTF-8 \xe5\xa4\x9a\xe5\xad\x97\xe8\x8a\x82\xe6\x96\x87\xe6\x9c\xac\xe4\xb8\x8e\xe4\xb8\xad\xe6\x96\x87\xe6\xa0\x87\xe7\x82\xb9\xe6\xb5\x8b\xe8\xaf\x95\xe3\x80\x82\xe4\xbd\xa0\xe5\xa5\xbd\xe4\xb8\x96\xe7\x95\x8c\xef\xbc\x81CapSurf \xe6\xb5\x8f\xe8\xa7\x88\xe5\x99\xa8\xe5\x86\x85\xe6\xa0\xb8\xe5\x8e\x9f\xe7\x94\x9f\xe6\x94\xaf\xe6\x8c\x81 RFC 7932 Brotli \xe8\xa7\xa3\xe5\x8e\x8b \xe2\x80\x94 UTF-8 \xe5\xa4\x9a\xe5\xad\x97\xe8\x8a\x82\xe6\x96\x87\xe6\x9c\xac\xe4\xb8\x8e\xe4\xb8\xad\xe6\x96\x87\xe6\xa0\x87\xe7\x82\xb9\xe6\xb5\x8b\xe8\xaf\x95\xe3\x80\x82\xe4\xbd\xa0\xe5\xa5\xbd\xe4\xb8\x96\xe7\x95\x8c\xef\xbc\x81CapSurf \xe6\xb5\x8f\xe8\xa7\x88\xe5\x99\xa8\xe5\x86\x85\xe6\xa0\xb8\xe5\x8e\x9f\xe7\x94\x9f\xe6\x94\xaf\xe6\x8c\x81 RFC 7932 Brotli \xe8\xa7\xa3\xe5\x8e\x8b \xe2\x80\x94 UTF-8 \xe5\xa4\x9a\xe5\xad\x97\xe8\x8a\x82\xe6\x96\x87\xe6\x9c\xac\xe4\xb8\x8e\xe4\xb8\xad\xe6\x96\x87\xe6\xa0\x87\xe7\x82\xb9\xe6\xb5\x8b\xe8\xaf\x95\xe3\x80\x82";
@@ -272,3 +279,51 @@ test("brotli: error handling & resource limits", () => {
         BrotliError.OutputTooLarge,
     ));
 });
+
+test("brotli: c_allocator & testing.allocator HTML range_idx=3/4 + error-unwind no double-free", () => {
+    const c_alloc = std.heap.c_allocator;
+    const t_alloc = std.testing.allocator;
+
+    // 1. Exact CapSurf HTML vector with c_allocator (exercises RFC 7932 §5 range_idx 3/4 LUT)
+    const out_c = brotliDecompress(c_alloc, BR_CAPSURF_HTML[0..]) catch unreachable;
+    defer c_alloc.free(out_c);
+    assertSliceEq(out_c, EXP_CAPSURF_HTML);
+
+    // 2. Same vector & multi-tree vectors with testing.allocator (verifies zero memory leaks)
+    const out_t = brotliDecompress(t_alloc, BR_CAPSURF_HTML[0..]) catch unreachable;
+    defer t_alloc.free(out_t);
+    assertSliceEq(out_t, EXP_CAPSURF_HTML);
+
+    const html_c = brotliDecompress(c_alloc, BR_HTML_Q11[0..]) catch unreachable;
+    defer c_alloc.free(html_c);
+    assertSliceEq(html_c, EXP_HTML);
+
+    const json_t = brotliDecompress(t_alloc, BR_JSON_Q6[0..]) catch unreachable;
+    defer t_alloc.free(json_t);
+    assertSliceEq(json_t, EXP_JSON);
+
+    // 3. Truncated mid-stream after prefix trees are built: must unwind cleanly with 0 double-free & 0 leaks
+    let cut: usize = 36;
+    while (cut < BR_CAPSURF_HTML.len) : (cut += 4) {
+        let got_err_c = false;
+        const ok_c = brotliDecompress(c_alloc, BR_CAPSURF_HTML[0..cut]) catch {
+            got_err_c = true;
+            break;
+        };
+        if (!got_err_c) {
+            c_alloc.free(ok_c);
+            expect(false);
+        }
+    }
+    let cut_t: usize = 36;
+    while (cut_t < BR_CAPSURF_HTML.len) : (cut_t += 4) {
+        expect(isBrotliErrWithAlloc(t_alloc, brotliDecompress(t_alloc, BR_CAPSURF_HTML[0..cut_t])));
+        expect(isBrotliErrWithAlloc(c_alloc, brotliDecompress(c_alloc, BR_CAPSURF_HTML[0..cut_t])));
+    }
+});
+
+fn isBrotliErrWithAlloc(alloc: std.mem.Allocator, res: []u8 ! BrotliError): bool {
+    const val = res catch return true;
+    alloc.free(val);
+    return false;
+}
