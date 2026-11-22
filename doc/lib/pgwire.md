@@ -566,6 +566,28 @@ const sig = PgStmtSignature.build("SELECT * FROM users WHERE id=$1 AND name=$2",
 * = sig.hash();
 ```
 
+### 二进制 `DATE` / `TIMESTAMP` / `TIMESTAMPTZ` 纪元编解码器（`pgDate.cp`）
+
+吸收自 `/data/dev/bun/src/sql_jsc/postgres/types/date.cp`，实现零动态堆分配的 PostgreSQL `2000-01-01` 纪元与 Unix `1970-01-01` 毫秒时间戳双向大端二进制编解码：
+
+- **常量**：`PG_OID_DATE` (`1082`)、`PG_OID_TIMESTAMP` (`1114`)、`PG_OID_TIMESTAMPTZ` (`1184`)、`PG_EPOCH_UNIX_MS` (`946684800000`)、`PG_EPOCH_UNIX_DAYS` (`10957`)、`PG_TIMESTAMP_POS_INFINITY` / `PG_TIMESTAMP_NEG_INFINITY`、`PG_DATE_POS_INFINITY` / `PG_DATE_NEG_INFINITY`。
+- **类型与函数**：`PgDateError`、`PgTimestampKind`（`Finite`/`PosInfinity`/`NegInfinity`）、`isPgDateTimeOid(oid)`。
+- **`PgTimestampCodec`（8B 大端微秒）**：`decodeMicros`、`encodeMicros`、`classifyMicros`、`pgMicrosToUnixMsF64`、`pgMicrosToUnixMs`、`unixMsToPgMicros`、`fromBinaryToUnixMsF64`、`fromBinaryToUnixMs`、`encodeUnixMs`。
+- **`PgDateCodec`（4B 大端天数）**：`decodeDays`、`encodeDays`、`classifyDays`、`pgDaysToUnixMs`、`unixMsToPgDays`、`fromBinaryToUnixMs`、`encodeUnixMs`。
+
+```cp
+import { PgTimestampCodec, PgDateCodec, PG_EPOCH_UNIX_MS } from "cap:pgwire";
+
+let ts_buf: [8]u8 = [0; 8];
+* = PgTimestampCodec.encodeUnixMs(PG_EPOCH_UNIX_MS + 1500, ts_buf[0..])?;
+const ts_ms = PgTimestampCodec.fromBinaryToUnixMs(ts_buf[0..])?;
+
+let d_buf: [4]u8 = [0; 4];
+* = PgDateCodec.encodeDays(0, d_buf[0..])?; // 2000-01-01
+const d_ms = PgDateCodec.fromBinaryToUnixMs(d_buf[0..])?; // 946684800000
+* = ts_ms; * = d_ms;
+```
+
 ---
 
 ## 4. 示例

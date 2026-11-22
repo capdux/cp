@@ -291,3 +291,24 @@ export {
     PgParamTypeTag,
     PgStmtSignature,
 } from "./stmtSignature.cp";
+
+export {
+    PG_OID_DATE,
+    PG_OID_TIMESTAMP,
+    PG_OID_TIMESTAMPTZ,
+    PG_EPOCH_UNIX_MS,
+    PG_EPOCH_UNIX_SEC,
+    PG_EPOCH_UNIX_DAYS,
+    PG_US_PER_MS,
+    PG_US_PER_SEC,
+    PG_MS_PER_DAY,
+    PG_TIMESTAMP_POS_INFINITY,
+    PG_TIMESTAMP_NEG_INFINITY,
+    PG_DATE_POS_INFINITY,
+    PG_DATE_NEG_INFINITY,
+    PgDateError,
+    PgTimestampKind,
+    isPgDateTimeOid,
+    PgTimestampCodec,
+    PgDateCodec,
+} from "./pgDate.cp";
