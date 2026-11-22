@@ -1547,3 +1547,55 @@ pub fn demoMultiQueryFusion() {
     * = rep.consensus_docs; // 1 (doc 20, consensus_mask == 0b11)
 }
 ```
+
+### 33. 零堆分配增量式 SIMD `@dot`/`@l2sq` MMR 与多源配额多样性重排引擎 (`mmrSelect.cp`)
+
+面向 RAG 上下文去冗余与多源多样性平衡的 100% 纯 CP 零动态堆分配增量式 MMR 重排引擎（复杂度由 O(K²·N·D) 降至 O(K·N·D)）：
+
+- **常量与枚举**：
+  - `MMR_MAX_CANDIDATES = 128`
+  - `MmrMetric`（`cosine | dot | neg_l2`，底层直接调用 CP 原生 `@dot` / `@l2sq` 硬件算子）
+- **配置与数据模型**：
+  - `MmrConfig`（`lambda: f32` ∈ `[0.0, 1.0]`, `top_k`, `min_relevance`, `redundancy_threshold`, `max_per_source`, `metric`; `defaults()`, `isValid()`）
+  - `MmrCandidate`（`doc_id`, `source_id`, `base_score`, `vec_offset`）
+  - `MmrSelectedItem`（`doc_id`, `source_id`, `relevance`, `max_redundancy`, `mmr_score`, `orig_index`, `vec_offset`）
+  - `MmrStats`（`candidates_evaluated`, `selected_count`, `skipped_low_relevance`, `skipped_redundant`, `skipped_source_cap`）
+- **核心纯函数**：
+  - `mmrPairSimilarity(a, b, metric): f32`
+  - `selectMmr(query_vec, flat_vecs, dim, candidates, cfg, *out_selected, *out_stats): usize`
+  - `selectMmrWithPrecomputedScores(flat_vecs, dim, candidates, cfg, *out_selected, *out_stats): usize`（适配 BM25 / Cross-Encoder 预打分场景）
+  - `computeListDiversity(flat_vecs, dim, selected, metric): f32`（计算选中结果集的平均两两多样性得分）
+
+```cp
+import {
+    MmrConfig,
+    MmrCandidate,
+    MmrSelectedItem,
+    MmrStats,
+    selectMmr,
+    computeListDiversity,
+} from "cap:vector";
+
+pub fn demoMmrSelect() {
+    const query: [2]f32 = [1.0, 0.0];
+    const vecs: [6]f32 = [
+        1.0, 0.0,   // doc 1: 最相关
+        0.99, 0.14, // doc 2: 与 doc 1 高度冗余
+        0.70, 0.71, // doc 3: 相关且更具多样性
+    ];
+    const cands: [3]MmrCandidate = [
+        MmrCandidate{ doc_id: 1, source_id: 10, vec_offset: 0 },
+        MmrCandidate{ doc_id: 2, source_id: 10, vec_offset: 2 },
+        MmrCandidate{ doc_id: 3, source_id: 20, vec_offset: 4 },
+    ];
+    let cfg = MmrConfig.defaults();
+    cfg.lambda = 0.5;
+    cfg.top_k = 2;
+
+    let out: [2]MmrSelectedItem = [MmrSelectedItem{}; 2];
+    let out_s: []MmrSelectedItem = out[0..];
+    let st = MmrStats{};
+    const n = selectMmr(query[0..], vecs[0..], 2, cands[0..], cfg, *out_s, *st);
+    * = computeListDiversity(vecs[0..], 2, out[0..n], cfg.metric);
+}
+```

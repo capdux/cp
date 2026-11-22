@@ -344,3 +344,16 @@ export {
     fuseQueryVectorsF32,
     MultiQueryFusion,
 } from "./queryFusion.cp";
+
+export {
+    MMR_MAX_CANDIDATES,
+    MmrMetric,
+    MmrConfig,
+    MmrCandidate,
+    MmrSelectedItem,
+    MmrStats,
+    mmrPairSimilarity,
+    selectMmr,
+    selectMmrWithPrecomputedScores,
+    computeListDiversity,
+} from "./mmrSelect.cp";
