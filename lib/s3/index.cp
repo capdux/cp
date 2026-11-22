@@ -45,3 +45,19 @@ export {
     parseS3XmlError,
     formatS3XmlError,
 } from "./xml_error.cp";
+
+export {
+    S3_PRESIGN_MIN_EXPIRES,
+    S3_PRESIGN_MAX_EXPIRES,
+    S3_PRESIGN_DEFAULT_EXPIRES,
+    S3EndpointError,
+    S3EndpointProvider,
+    containsS3Crlf,
+    validateS3HeaderValue,
+    validateS3PresignExpiry,
+    normalizeS3ObjectKey,
+    encodeS3UriComponent,
+    guessS3Bucket,
+    guessS3Region,
+    S3ParsedEndpoint,
+} from "./endpoint.cp";
