@@ -411,3 +411,13 @@ export {
     CssCounterSpeakAs,
     CssCounterStyleRule,
 } from "./counter_style.cp";
+
+export {
+    CSS_STARTING_STYLE_MAX_ENTRIES,
+    CSS_STARTING_STYLE_MAX_RULES,
+    CssStartingStyleError,
+    CssStartingStyleEntryKind,
+    CssStartingStyleEntry,
+    CssStartingStyleRule,
+    CssStartingStyleRuleList,
+} from "./starting_style.cp";

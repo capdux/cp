@@ -257,3 +257,14 @@ export {
     IterSchedulerStats,
     ContinuousIterScheduler,
 } from "./iter_scheduler.cp";
+
+export {
+    MAX_KV_EVICTION_SLOTS,
+    KvEvictionPolicyKind,
+    KvTokenRole,
+    KvEvictionConfig,
+    KvSlotMeta,
+    KvEvictionResult,
+    KvEvictionStats,
+    KvEvictionManager,
+} from "./kv_eviction.cp";

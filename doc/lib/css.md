@@ -476,6 +476,23 @@ const n = roman.formatMarker(2026, buf[0..])?;
 * = n;
 ```
 
+### CSS `@starting-style` 入场过渡规则与嵌套提升（`starting_style.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/rules/starting_style.cp`，零堆分配实现 W3C CSS Transitions Level 2 `@starting-style` 规则解析、块内声明/子规则拆解、压缩与规范序列化、嵌套父选择器提升（`liftForParent`）与样式表批量提取。
+
+- 核心导出：`CSS_STARTING_STYLE_MAX_ENTRIES` (`32`)、`CSS_STARTING_STYLE_MAX_RULES` (`32`)、`CssStartingStyleError`、`CssStartingStyleEntryKind`、`CssStartingStyleEntry`、`CssStartingStyleRule`（`empty` / `parse` / `isEmpty` / `hasDirectDeclarations` / `count` / `get` / `eql` / `toCss` / `toCssMinified` / `liftForParent`）、`CssStartingStyleRuleList`（`extractFromStylesheet` / `count` / `get`）。
+- 规范防线与嵌套降级：`@starting-style` 强制要求空 prelude（禁止 `@starting-style foo { ... }`），严格拦截内部非法 `@import` / `@charset` / `@namespace`；配合 `/data/dev/bun/docs/bundler/css.mdx` 的 CSS Nesting 展平管线，`liftForParent(".popover", buf)` 可将嵌套在选择器内部的 `@starting-style { opacity: 0; &:hover { ... } }` 展平提升为顶层 `@starting-style { .popover { opacity: 0; } .popover:hover { ... } }`。
+
+```cp
+import { CssStartingStyleRule } from "cap:css";
+
+const nested = CssStartingStyleRule.parse("@starting-style { opacity: 0; transform: translateY(8px); }")?;
+let buf: [256]u8 = [0; 256];
+const n = nested.liftForParent("dialog[open]", buf[0..])?;
+// "@starting-style { dialog[open] { opacity: 0; transform: translateY(8px); } }"
+* = n;
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项

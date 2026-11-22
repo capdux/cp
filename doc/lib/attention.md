@@ -1079,3 +1079,47 @@ pub fn demoContinuousIterScheduler() {
     * = plan2;
 }
 ```
+
+### 零分配长上下文 KV-Cache 驱逐引擎：StreamingLLM Attention Sink + H2O Heavy-Hitter Oracle (`kv_eviction.cp`)
+
+面向长上下文 LLM 推理与多轮 AI Agent 对话的 100% 纯 CP 零堆分配 KV-Cache 淘汰策略内核（内联固定容量 `MAX_KV_EVICTION_SLOTS = 256`）：
+
+- **策略与角色枚举**：`KvEvictionPolicyKind`（`streaming_sink_window | h2o_heavy_hitter | hybrid_sink_h2o_window`）、`KvTokenRole`（`empty | attention_sink | heavy_hitter | recent_window`）
+- **配置与数据结构**：`KvEvictionConfig`（`sink_budget`, `heavy_budget`, `recent_budget`, `score_decay_f32`, `policy`，提供 `totalCapacity()` 与 `isValid()`）、`KvSlotMeta`、`KvEvictionResult`、`KvEvictionStats`（含实时压缩比 `compression_ratio_f32`）
+- **核心引擎（`KvEvictionManager`）**：
+  - `init(cfg): KvEvictionManager?`
+  - `admit_token(*_, token_pos, kv_block_idx, init_score): KvEvictionResult`：前 `sink_budget` 个 token 永久锚定为 `attention_sink`；满预算时将滑出 `recent_window` 的高分 token 自动晋升为 `heavy_hitter`，并精准驱逐最低分（LRU 破平局）的非 sink 槽位；严格保证三区配额守恒。
+  - `update_attention_scores(*_, step_scores): bool`：基于硬件 `@fma` 执行 `score = @fma(score, decay, step_score)` 并刷新活跃槽位 LRU 步号。
+  - `lookup_by_token_pos(token_pos): usize?` / `collect_active_positions(out_pos): usize`（按 `token_pos` 升序零堆输出驻留 RoPE 位置列表）/ `stats()` / `reset()`。
+
+```cp
+import {
+    KvEvictionPolicyKind,
+    KvEvictionConfig,
+    KvEvictionManager,
+} from "cap:attention";
+
+pub fn demoKvEvictionHybrid() {
+    const cfg = KvEvictionConfig{
+        sink_budget: 2,
+        heavy_budget: 2,
+        recent_budget: 2,
+        score_decay_f32: 0.9,
+        policy: KvEvictionPolicyKind.hybrid_sink_h2o_window,
+    };
+    let mgr = KvEvictionManager.init(cfg) ?? return;
+
+    // 接入 10 个 token：pos 0..1 永久锁定为 Sink，高分 token 晋升 Heavy-Hitter，低分淘汰
+    let pos: u64 = 0;
+    while (pos < 10) : (pos += 1) {
+        const init_s: f32 = if (pos == 3) 5.0 else 0.1;
+        * = mgr.admit_token(pos, pos as u32, init_s);
+    }
+
+    let active_pos: [6]u64 = [0; 6];
+    let active_s: []u64 = active_pos[0..];
+    const n = mgr.collect_active_positions(active_s); // 升序 RoPE 位置列表，必含 0, 1, 3, 8, 9
+    * = n;
+    * = mgr.stats().compression_ratio_f32; // 10 / 6 = 1.6667x
+}
+```
