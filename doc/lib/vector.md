@@ -18,6 +18,7 @@
 | `lib/vector/bm25.cp` | `// Source: cp/lib/vector/bm25.cp (Okapi BM25 Full-Text Inverted Index)` | `Bm25Config`、`Bm25Index` 倒排索引与分词器 |
 | `lib/vector/hybrid.cp` | `// Origin: Pure-CP Stdlib (RAG Hybrid Retrieval: RRF, MMR Rerank & Int8 Scalar Quantization) \| Created: 2026-11-22` | `RrfFusion` + 零堆分配多路 RRF (`rrfFuse`)、线性归一化融合 (`normalizeScoresMinMax`/`normalizeScoresZScore`/`weightedScoreFuse`)、MMR 多样性重排 (`mmrRerank`) 与 U8 标量量化 (`quantizeVectorU8`/`dequantizeVectorU8`/`quantizedDotU8`) |
 | `lib/vector/semantic_cache.cp` | `// Origin: Pure-CP Stdlib (AI Agent Semantic Cache: Cosine Threshold Lookup, TTL & LRU Eviction) \| Created: 2026-11-22` | `SemanticCache` 零堆分配 LLM 语义缓存（余弦阈值命中、TTL 过期与过期优先 + LRU 淘汰） |
+| `lib/vector/binary_quant.cp` | `// Origin: Pure-CP Stdlib (RAG 1-Bit Binary Vector Quantization, Hamming Search & Two-Stage Rescore) \| Created: 2026-11-22` | 1-bit 二值量化（32x 压缩）、`@popCount` 汉明距离、Charikar 余弦估计与两阶段粗排+全精度精排 (`twoStageSearch`) |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -97,6 +98,17 @@
   - `put(*_, key_id, payload_id, embedding, now_ms, ttl_ms_override): usize?`（先原地更新同 `key_id` 槽位；满池优先驱逐已过期条目，再按 LRU 最久未命中 `last_hit_ms` 淘汰；自动拒绝零向量与 `NaN`/`Inf`）
   - `lookup(*_, query_embedding, now_ms): SemanticLookupHit?`（跳过过期条目，返回最高余弦相似度 `>= similarity_threshold` 的命中项并原子刷新 `last_hit_ms` 与 `hit_count`）
   - `invalidate(*_, key_id: u64): bool` / `purgeExpired(*_, now_ms: i64): usize` / `stats(): SemanticCacheStats`
+
+### 5. 1-Bit 二值向量量化与两阶段粗排+精排检索 (`binary_quant.cp`)
+
+- **`BinaryCandidate`**：`{ index: usize, hamming: u32 }`
+- **`RescoredHit`**：`{ index: usize, cosine: f64, hamming: u32 }`
+- **`binaryWordsForDim(dim: usize): usize`**：返回打包 `dim` 位所需 `u64` 字数 `ceil(dim / 64)`。
+- **`quantizeBinary(vec: []const f64, threshold: f64, words_out: *[]u64): bool`**：1-bit 符号量化（`vec[i] >= threshold` 置位 1，`f32` 32x / `f64` 64x 压缩），校验无 `NaN`/`Inf` 且输出缓冲足够。
+- **`hammingDistanceWords(a: []const u64, b: []const u64): u32`**：基于硬件 `@popCount` 的极速位异或汉明距离。
+- **`binaryCosineApprox(hamming: u32, dim: usize): f64`**：Charikar 无偏余弦估计 $\cos(\pi \cdot \text{hamming} / d)$。
+- **`searchBinaryTopK(query_words, corpus_words, n_docs, words_per_vec, top_k, out_candidates): usize?`**：基于堆的零堆分配 1-bit 汉明 Top-K 召回（按 `hamming` 升序、同分按 `index` 升序）。
+- **`twoStageSearch(query, query_words, corpus_words, corpus_fp, n_docs, dim, oversample_m, top_k, coarse_scratch, out_hits): usize?`**：两阶段粗排（1-bit Hamming Top-M）+ 精排（全精度 Cosine Top-K），零堆分配支持超大规模向量语料。
 
 ---
 
@@ -217,5 +229,46 @@ pub fn demoSemanticCache() {
         * = cache.purgeExpired(70000);
         * = cache.stats();
     }
+}
+```
+
+### 1-Bit 二值量化与两阶段粗排+精排示例 (`binary_quant.cp`)
+
+```typescript
+import {
+    BinaryCandidate,
+    RescoredHit,
+    quantizeBinary,
+    twoStageSearch,
+} from "cap:vector";
+
+pub fn demoTwoStageBinarySearch() {
+    const query: [4]f64 = [0.9, -0.2, 0.5, -0.8];
+    const corpus_fp: [12]f64 = [
+        0.88, -0.18, 0.52, -0.79, // doc 0: closest
+        -0.9, 0.2, -0.5, 0.8,     // doc 1: opposite
+        0.5, 0.5, 0.5, -0.5,      // doc 2: partial match
+    ];
+
+    let q_words_buf: [1]u64 = [0];
+    let c_words_buf: [3]u64 = [0; 3];
+    let q_words: []u64 = q_words_buf[0..];
+    * = quantizeBinary(query[0..], 0.0, q_words);
+
+    let d: usize = 0;
+    while (d < 3) : (d += 1) {
+        let cw: []u64 = c_words_buf[d .. d + 1];
+        * = quantizeBinary(corpus_fp[d * 4 .. (d + 1) * 4], 0.0, cw);
+    }
+
+    let scratch_buf: [2]BinaryCandidate = [BinaryCandidate{}; 2];
+    let hits_buf: [2]RescoredHit = [RescoredHit{}; 2];
+    let scratch: []BinaryCandidate = scratch_buf[0..];
+    let hits: []RescoredHit = hits_buf[0..];
+    const k = twoStageSearch(
+        query[0..], q_words_buf[0..], c_words_buf[0..], corpus_fp[0..],
+        3, 4, 2, 2, scratch, hits,
+    ) ?? 0;
+    * = k;
 }
 ```

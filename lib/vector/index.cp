@@ -33,3 +33,14 @@ export {
     SemanticCacheStats,
     SemanticCache,
 } from "./semantic_cache.cp";
+
+export {
+    BinaryCandidate,
+    RescoredHit,
+    binaryWordsForDim,
+    quantizeBinary,
+    hammingDistanceWords,
+    binaryCosineApprox,
+    searchBinaryTopK,
+    twoStageSearch,
+} from "./binary_quant.cp";
