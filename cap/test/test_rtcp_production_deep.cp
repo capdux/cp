@@ -21,7 +21,7 @@ import {
     RtcpReportBlockIter,
     RtcpSr,
     RtcpRr,
-    RtcpBye,
+    RtcpByePacket as RtcpBye,
     RtcpApp,
     RtcpSdesItem,
     RtcpSdesItemIter,
@@ -33,7 +33,7 @@ import {
     parseRtcpRr,
     parseRtcpBye,
     parseRtcpApp,
-} from "cap:rtcp";
+} from "cap:net";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

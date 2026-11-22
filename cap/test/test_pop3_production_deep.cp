@@ -21,7 +21,7 @@ import {
     Pop3MultiLineIter,
     encodePop3Command,
     pop3DotStuff,
-} from "cap:pop3";
+} from "cap:net";
 
 test("1. Constants, +OK/-ERR status lines, and RFC 2449 [RESP-CODE] parsing", () => {
     expect_eq(POP3_TCP_PORT, 110 as u16);

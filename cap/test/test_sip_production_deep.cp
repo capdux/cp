@@ -13,7 +13,7 @@ import {
     SipBuilder,
     parse,
     normalizeHeaderName,
-} from "cap:sip";
+} from "cap:net";
 
 fn runTest1(): !void {
     const alloc = std.testing.allocator;
@@ -192,7 +192,7 @@ fn runTest4(): !void {
 fn runTest5(): !void {
     const alloc = std.testing.allocator;
 
-    let rb = cap.sip.SipBuilder.response(alloc, 200, "OK");
+    let rb = cap.net.SipBuilder.response(alloc, 200, "OK");
     defer rb.deinit();
     * = rb.header("v", "SIP/2.0/TCP proxy.example.com;branch=z9hG4bK123")?;
     * = rb.header("i", "dyn-call-id-999")?;
@@ -200,7 +200,7 @@ fn runTest5(): !void {
     const wire = rb.build()?;
     defer alloc.free(wire);
 
-    let msg = cap.sip.parse(alloc, wire)?;
+    let msg = cap.net.parse(alloc, wire)?;
     defer msg.deinit(alloc);
 
     expect_eq(std.mem.eql(u8, msg.callId() orelse unreachable, "dyn-call-id-999"), true);

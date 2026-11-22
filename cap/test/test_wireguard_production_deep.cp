@@ -18,7 +18,7 @@ import {
     encryptTransport,
     decryptTransport,
     blake2sMac16,
-} from "cap:wireguard";
+} from "cap:net";
 
 test("wireguard_replay_window_rfc6479") {
     let win = ReplayWindow.init();
@@ -190,13 +190,13 @@ test("wireguard_security_mac1_aead_key_and_replay_rejections") {
 }
 
 test("wireguard_cap_dynamic_mount_and_zero_leak") {
-    const t = cap.wireguard.Tai64n.fromUnixNs(1700000300, 999);
+    const t = cap.net.Tai64n.fromUnixNs(1700000300, 999);
     const enc = t.encode();
-    const decoded_t = try cap.wireguard.Tai64n.decode(&enc);
+    const decoded_t = try cap.net.Tai64n.decode(&enc);
     try expect_eq(decoded_t.sec, t.sec);
 
     const key: [32]u8 = [0x11; 32];
-    const mac = cap.wireguard.blake2sMac16(&key, "cap.wireguard");
+    const mac = cap.net.blake2sMac16(&key, "cap.wireguard");
     const mac_direct = blake2sMac16(&key, "cap.wireguard");
     try expect_eq(std.mem.eql(u8, &mac, &mac_direct), true);
 

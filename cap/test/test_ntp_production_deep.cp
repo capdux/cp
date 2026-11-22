@@ -28,7 +28,7 @@ import {
     makeClientRequest,
     calcOffsetNs,
     calcDelayNs,
-} from "cap:ntp";
+} from "cap:net";
 
 test("1. 48B NTPv4 client request and server response encode/decode roundtrip", () => {
     expect_eq(NTP_UDP_PORT, 123 as u16);

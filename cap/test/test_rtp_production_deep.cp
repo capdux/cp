@@ -13,7 +13,7 @@ import {
     RtcpBye,
     JitterBuffer,
     seqDiff,
-} from "cap:rtp";
+} from "cap:net";
 
 fn runTest1(): !void {
     const alloc = std.testing.allocator;
@@ -237,7 +237,7 @@ fn runTest4(): !void {
 fn runTest5(): !void {
     const alloc = std.testing.allocator;
 
-    const pkt = cap.rtp.RtpPacket {
+    const pkt = cap.net.RtpPacket {
         version: 2,
         padding: false,
         marker: true,
@@ -250,18 +250,18 @@ fn runTest5(): !void {
     const wire = pkt.encode(alloc)?;
     defer alloc.free(wire);
 
-    let decoded = cap.rtp.RtpPacket.decode(alloc, wire)?;
+    let decoded = cap.net.RtpPacket.decode(alloc, wire)?;
     defer decoded.deinit(alloc);
     expect_eq(decoded.sequence_number, 555 as u16);
     expect_eq(std.mem.eql(u8, decoded.payload, "cap-rtp-mount"), true);
 
-    let jb = cap.rtp.JitterBuffer.init(alloc, 4);
+    let jb = cap.net.JitterBuffer.init(alloc, 4);
     defer jb.deinit();
     jb.push(decoded.sequence_number, decoded.timestamp, decoded.payload)?;
     let out = jb.popNext() orelse unreachable;
     defer out.deinit(alloc);
     expect_eq(out.seq, 555 as u16);
-    expect_eq(cap.rtp.seqDiff(556, out.seq), 1 as i32);
+    expect_eq(cap.net.seqDiff(556, out.seq), 1 as i32);
 }
 
 test("cap:rtp Test 1: RtpPacket basic, CSRC, Header Extension & Padding encode/decode roundtrip") {

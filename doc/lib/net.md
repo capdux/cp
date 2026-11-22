@@ -227,3 +227,18 @@ pub fn demoProductionNet() {
 | 经典应用与凭证协议 | `lib/net/ldap.cp` | RFC 4514 / RFC 4515 | LDAP 搜索过滤器解析/求值与 DN 编解码 |
 | 经典应用与凭证协议 | `lib/net/netrc.cp` | `.netrc` (Absorbed from Bun `npm_client.zig`) | `.netrc` 凭证迭代与主机查找（`NetrcIter` / `lookupNetrc`） |
 | 参考归档（不导出） | `lib/net/cidr_.cp` | CIDR / LPM 路由（仅参考） | 与权威 `lib/net/cidr.cp` 功能重叠，保留供对比分析，不在 `cap:net` 重复导出 |
+| 邮件与经典协议（第 2 波） | `lib/net/smtp.cp` | RFC 5321 / 2047 | SMTP 命令编解码、点填充、响应解析与 MIME `MailBuilder` |
+| 邮件与经典协议（第 2 波） | `lib/net/pop3.cp` | RFC 1939 | 零堆分配 POP3 邮件协议命令与响应编解码 |
+| 邮件与经典协议（第 2 波） | `lib/net/whois.cp` | RFC 3912 | 零堆分配 WHOIS 查询与响应字段解析 |
+| 邮件与经典协议（第 2 波） | `lib/net/tftp.cp` | RFC 1350 / 2347-2349 | 零堆分配 TFTP 线缆编解码与选项协商 |
+| 时间/路由/传输（第 2 波） | `lib/net/ntp.cp` | RFC 5905 | 零堆分配 NTPv4 / SNTP 线缆编解码与时钟偏移计算 |
+| 时间/路由/传输（第 2 波） | `lib/net/ospf.cp` | RFC 2328 | 零堆分配 OSPFv2 路由协议报文解析器 |
+| 时间/路由/传输（第 2 波） | `lib/net/sctp.cp` | RFC 4960 | 零堆分配 SCTP 报文与 Chunk 解析器 |
+| 安全隧道（第 2 波） | `lib/net/wg_replay.cp` / `lib/net/wg_noise.cp` | WireGuard Noise_IKpsk2 | TAI64N 时间戳、滑动窗口重放保护与 BLAKE2s/Noise 握手原语 |
+| 实时通信与流媒体（第 2 波） | `lib/net/stun.cp` / `lib/net/turn.cp` | RFC 5389 / RFC 5766 | STUN 绑定/完整性/指纹与 TURN 中继协议编解码 |
+| 实时通信与流媒体（第 2 波） | `lib/net/sip.cp` / `lib/net/rtsp.cp` | RFC 3261 / RFC 2326 | SIP 请求响应构建/解析与 RTSP 传输头/交错帧编解码（`RTSP_DEFAULT_MAX_PAYLOAD_BYTES` 别名） |
+| 实时通信与流媒体（第 2 波） | `lib/net/rtp.cp` / `lib/net/rtcp.cp` | RFC 3550 | RTP 封包/抖动缓冲与 RTCP 复合报文解析（`RtcpByePacket` 别名） |
+| 消息与网管/AAA（第 2 波） | `lib/net/stomp.cp` | STOMP 1.2 | STOMP 帧编解码与增量流解析器（`encodeStompFrame` 别名） |
+| 消息与网管/AAA（第 2 波） | `lib/net/snmp.cp` | RFC 1157 / 3416 | 零堆分配 SNMP v1/v2c PDU 与 VarBind 解析器 |
+| 消息与网管/AAA（第 2 波） | `lib/net/radius.cp` / `lib/net/diameter.cp` | RFC 2865 / RFC 6733 | 零堆分配 RADIUS 与 Diameter AAA 认证计费协议编解码 |
+| 参考归档（不导出） | `lib/net/socks_.cp` / `lib/net/socks5_.cp` | SOCKS4/4a/5（仅参考） | 与权威 `lib/net/socks5.cp` 功能重叠，保留供对比分析，不在 `cap:net` 重复导出 |

@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/net/socks5.cp | Kept for comparison/analysis
 // Source: cp/lib/socks5/socks5.cp (RFC 1928 & RFC 1929 SOCKS5 Wire Protocol Codec)
 
 const std = @import("std");

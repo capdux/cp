@@ -13,7 +13,7 @@ import {
     parseReply,
     dotStuff,
     dotUnstuff,
-} from "cap:smtp";
+} from "cap:net";
 
 fn runTest1(): !void {
     const alloc = std.testing.allocator;
@@ -211,25 +211,25 @@ fn runTest5(): !void {
     const alloc = std.testing.allocator;
 
     // Dynamic mount: import cap from "cap"; cap.smtp
-    let rep = cap.smtp.parseReply(alloc, "220 mail.cp.dev ESMTP ready\r\n")?;
+    let rep = cap.net.parseReply(alloc, "220 mail.cp.dev ESMTP ready\r\n")?;
     defer rep.deinit(alloc);
     expect_eq(rep.code, 220 as u16);
     expect_eq(rep.isSuccess(), true);
 
-    const ehlo = cap.smtp.SmtpCommandCodec.ehlo(alloc, "app.cp.dev")?;
+    const ehlo = cap.net.SmtpCommandCodec.ehlo(alloc, "app.cp.dev")?;
     defer alloc.free(ehlo);
     expect_eq(std.mem.eql(u8, ehlo, "EHLO app.cp.dev\r\n"), true);
 
-    let mb = cap.smtp.MailBuilder.init(alloc, "bot@cp.dev", "ASCII Subject");
+    let mb = cap.net.MailBuilder.init(alloc, "bot@cp.dev", "ASCII Subject");
     defer mb.deinit();
     mb.addTo("dev@cp.dev")?;
     mb.setTextBody("Ping");
     const mail = mb.build(alloc, "b-cap")?;
     defer alloc.free(mail);
 
-    const wire = cap.smtp.dotStuff(alloc, mail)?;
+    const wire = cap.net.dotStuff(alloc, mail)?;
     defer alloc.free(wire);
-    const back = cap.smtp.dotUnstuff(alloc, wire)?;
+    const back = cap.net.dotUnstuff(alloc, wire)?;
     defer alloc.free(back);
     expect_eq(std.mem.eql(u8, back, mail), true);
 }

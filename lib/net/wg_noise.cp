@@ -6,7 +6,7 @@ const Blake2s256 = std.crypto.hash.blake2.Blake2s256;
 const Blake2s128 = std.crypto.hash.blake2.Blake2s(128);
 const ChaCha20Poly1305 = std.crypto.aead.chacha_poly.ChaCha20Poly1305;
 
-import { WgError, Tai64n, ReplayWindow } from "./replay.cp";
+import { WgError, Tai64n, ReplayWindow } from "./wg_replay.cp";
 
 pub const MSG_INITIATION_TYPE: u8 = 1;
 pub const MSG_RESPONSE_TYPE: u8 = 2;

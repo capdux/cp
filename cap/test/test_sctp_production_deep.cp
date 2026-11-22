@@ -37,7 +37,7 @@ import {
     SctpSackChunk,
     parseSctpSack,
     SctpWriter,
-} from "cap:sctp";
+} from "cap:net";
 
 test("1. Castagnoli CRC32C standard vector and DATA + SACK multi-chunk roundtrip", () => {
     // RFC 3720 / Castagnoli CRC32C standard check value for "123456789"

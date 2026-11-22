@@ -1485,3 +1485,7 @@
 ### 2026-11-22（根目录分域收敛第 7 批完成：lib/graph/（净减 10 个顶层目录，累计 -117） | 2026-11-22 14:56:51）
 - **执行与结单汇报**：
   > Stdlib Root Consolidator 完成 lib/graph/ 收敛：10 个图论与计算几何小目录（dijkstra/mst/maxflow/scc/bipartite/hungarian/delaunay/voronoi/octree/rrt）零冲突归并入 lib/graph/ 并物理清理旧目录（11/11 PASS）；累计已安全削减 117 个顶层目录（846 -> 729）；续派 lib/binfmt/ 二进制格式领域收敛。
+
+### 2026-11-22（根目录分域收敛第 8 批完成：lib/net/ 第 2 波（净减 20 个顶层目录，累计 -137） | 2026-11-22 14:57:24）
+- **执行与结单汇报**：
+  > Stdlib Root Consolidator 完成 lib/net/ 第 2 波收敛：18 个网络/通信/AAA/隧道协议归并入 lib/net/ + socks_.cp/socks5_.cp 参考归档，物理清理 20 个冗余顶层目录（21/21 PASS）；累计已安全削减 137 个顶层目录（846 -> 709）；续派 lib/pack/ 压缩与归档领域收敛。

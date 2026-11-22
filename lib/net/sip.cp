@@ -130,7 +130,7 @@ pub class SipMessage {
         if (_.headers.len > 0) {
             allocator.free(_.headers);
         }
-        _.owned_values = @constCast(&EMPTY_U8_SLICES);
+        _.owned_values = unsafe { @constCast(&EMPTY_U8_SLICES) };
         _.headers = _.headers[0..0];
     }
 
@@ -447,9 +447,9 @@ pub fn parse(allocator: std.mem.Allocator, raw_bytes: []const u8): SipMessage ! 
             allocator.free(headers_slice);
             return SipError.OutOfMemory;
         })
-    else blk: {
+    else empty_blk: {
         owned_values.deinit(allocator);
-        break :blk @constCast(&EMPTY_U8_SLICES);
+        break :empty_blk unsafe { @constCast(&EMPTY_U8_SLICES) };
     };
 
     return SipMessage{

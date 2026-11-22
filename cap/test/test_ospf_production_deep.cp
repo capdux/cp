@@ -24,7 +24,7 @@ import {
     parseOspf2,
     parseOspfHello,
     parseOspfLsaHeader,
-} from "cap:ospf";
+} from "cap:net";
 
 fn writeBeU16(buf: *[]u8, off: usize, v: u16) {
     buf.*[off] = ((v >> 8) & 0xFF) as u8;

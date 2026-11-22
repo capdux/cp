@@ -15,7 +15,7 @@ import {
     parseWhoisRefer,
     WhoisSummary,
     parseWhoisSummary,
-} from "cap:whois";
+} from "cap:net";
 
 fn expectBytesEq(actual: []const u8, expected: []const u8) {
     expect_eq(std.mem.eql(u8, actual, expected), true);

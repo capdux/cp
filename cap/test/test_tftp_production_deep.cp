@@ -40,7 +40,7 @@ import {
     encodeTftpAck,
     encodeTftpError,
     TftpOptWriter,
-} from "cap:tftp";
+} from "cap:net";
 
 test("1. RRQ / WRQ with RFC 2347 options (blksize, timeout, tsize) roundtrip and case-insensitive lookup", () => {
     expect_eq(TFTP_UDP_PORT, 69 as u16);

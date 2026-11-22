@@ -45,7 +45,7 @@ import {
     encodeSocks5Udp,
     Socks4Request,
     parseSocks4Request,
-} from "cap:socks";
+} from "../../lib/net/socks_.cp";
 
 test("1. SOCKS5 constants, greeting & method selection round-trip", () => {
     expect_eq(SOCKS_TCP_PORT, 1080 as u16);

@@ -11,10 +11,10 @@ import {
     StompFrame,
     StompBuilder,
     StompStreamParser,
-    encodeFrame,
+    encodeStompFrame as encodeFrame,
     escapeHeaderValue,
     unescapeHeaderValue,
-} from "cap:stomp";
+} from "cap:net";
 
 fn expectStrEq(actual_opt: ([]const u8)?, expected: []const u8) {
     if (actual := actual_opt) {
@@ -339,7 +339,7 @@ fn runTest5(): !void {
     const alloc = std.testing.allocator;
 
     // Dynamic mount: import cap from "cap"; cap.stomp
-    let builder = cap.stomp.StompBuilder.init(alloc, cap.stomp.StompCommand.Send);
+    let builder = cap.net.StompBuilder.init(alloc, cap.net.StompCommand.Send);
     defer builder.deinit();
     builder.addHeader("destination", "/queue/cap:stomp")?;
     builder.setBody("ok\x00cap")?;
@@ -347,13 +347,13 @@ fn runTest5(): !void {
     const wire = builder.build()?;
     defer alloc.free(wire);
 
-    let parser = cap.stomp.StompStreamParser.init(alloc, 4096);
+    let parser = cap.net.StompStreamParser.init(alloc, 4096);
     defer parser.deinit();
     parser.feed(wire)?;
 
     if (frame := parser.nextFrame()) {
         defer frame.deinit(alloc);
-        expect_eq(frame.command == cap.stomp.StompCommand.Send, true);
+        expect_eq(frame.command == cap.net.StompCommand.Send, true);
         expectStrEq(frame.header("destination"), "/queue/cap:stomp");
         expect_eq(std.mem.eql(u8, frame.body, "ok\x00cap"), true);
     } else {

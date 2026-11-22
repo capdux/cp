@@ -21,7 +21,7 @@ import {
     verifyFingerprint,
     decodeXorMappedAddress,
     decodeErrorCode,
-} from "cap:stun";
+} from "cap:net";
 
 fn runTest1(): !void {
     const alloc = std.testing.allocator;
@@ -273,28 +273,28 @@ fn runTest4(): !void {
 
 fn runTest5(): !void {
     const alloc = std.testing.allocator;
-    expect_eq(cap.stun.MAGIC_COOKIE, MAGIC_COOKIE);
-    expect_eq(cap.stun.FINGERPRINT_XOR, FINGERPRINT_XOR);
+    expect_eq(cap.net.MAGIC_COOKIE, MAGIC_COOKIE);
+    expect_eq(cap.net.FINGERPRINT_XOR, FINGERPRINT_XOR);
 
     const tid: [12]u8 = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 1, 2];
-    let b = cap.stun.StunBuilder.init(
+    let b = cap.net.StunBuilder.init(
         alloc,
-        cap.stun.StunClass.Indication,
-        cap.stun.StunMethod.Binding as u16,
+        cap.net.StunClass.Indication,
+        cap.net.StunMethod.Binding as u16,
         tid,
     );
     defer b.deinit();
-    b.addAttribute(cap.stun.AttrType.Username as u16, "dyn-mount")?;
+    b.addAttribute(cap.net.AttrType.Username as u16, "dyn-mount")?;
     const wire = b.finishWithIntegrity(alloc, "dyn-key", true)?;
     defer alloc.free(wire);
 
-    expect_eq(cap.stun.verifyMessageIntegrity(wire, "dyn-key")?, true);
-    expect_eq(cap.stun.verifyFingerprint(wire)?, true);
+    expect_eq(cap.net.verifyMessageIntegrity(wire, "dyn-key")?, true);
+    expect_eq(cap.net.verifyFingerprint(wire)?, true);
 
-    let msg = cap.stun.parseMessage(alloc, wire)?;
+    let msg = cap.net.parseMessage(alloc, wire)?;
     defer msg.deinit(alloc);
-    expect_eq(msg.msg_class == cap.stun.StunClass.Indication, true);
-    const u = msg.findAttr(cap.stun.AttrType.Username as u16) orelse unreachable;
+    expect_eq(msg.msg_class == cap.net.StunClass.Indication, true);
+    const u = msg.findAttr(cap.net.AttrType.Username as u16) orelse unreachable;
     expect_eq(std.mem.eql(u8, u.value, "dyn-mount"), true);
 }
 

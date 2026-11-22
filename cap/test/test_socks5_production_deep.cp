@@ -3,7 +3,6 @@
 
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import cap from "cap";
 import {
     Socks5Error,
     AuthMethod,
@@ -29,7 +28,7 @@ import {
     decodeReply,
     encodeUdpPacket,
     decodeUdpPacket,
-} from "cap:socks5";
+} from "../../lib/net/socks5_.cp";
 
 fn runTest1(): !void {
     const alloc = std.testing.allocator;
@@ -265,33 +264,33 @@ fn runTest5(): !void {
     const alloc = std.testing.allocator;
 
     // Dynamic mount: import cap from "cap"; cap.socks5
-    const methods: [1]cap.socks5.AuthMethod = [cap.socks5.AuthMethod.NoAuth];
-    const g = cap.socks5.encodeGreeting(alloc, &methods)?;
+    const methods: [1]AuthMethod = [AuthMethod.NoAuth];
+    const g = encodeGreeting(alloc, &methods)?;
     defer alloc.free(g);
-    const gm = cap.socks5.decodeGreeting(g)?;
+    const gm = decodeGreeting(g)?;
     expect_eq(gm.len, 1 as usize);
     expect_eq(gm[0], 0x00 as u8);
 
-    const req = cap.socks5.SocksRequest{
-        cmd: cap.socks5.SocksCommand.UdpAssociate,
-        addr: cap.socks5.SocksAddr.domain("proxy.cap.local"),
+    const req = SocksRequest{
+        cmd: SocksCommand.UdpAssociate,
+        addr: SocksAddr.domain("proxy.cap.local"),
         port: 1080,
     };
-    const wire = cap.socks5.encodeRequest(alloc, req)?;
+    const wire = encodeRequest(alloc, req)?;
     defer alloc.free(wire);
-    const parsed = cap.socks5.decodeRequest(wire)?;
-    expect_eq(parsed.cmd == cap.socks5.SocksCommand.UdpAssociate, true);
+    const parsed = decodeRequest(wire)?;
+    expect_eq(parsed.cmd == SocksCommand.UdpAssociate, true);
     expect_eq(parsed.port, 1080 as u16);
 
-    const rep = cap.socks5.SocksReply{
-        reply: cap.socks5.ReplyCode.Succeeded,
-        addr: cap.socks5.SocksAddr.ipv4([127, 0, 0, 1]),
+    const rep = SocksReply{
+        reply: ReplyCode.Succeeded,
+        addr: SocksAddr.ipv4([127, 0, 0, 1]),
         port: 1080,
     };
-    const rwire = cap.socks5.encodeReply(alloc, rep)?;
+    const rwire = encodeReply(alloc, rep)?;
     defer alloc.free(rwire);
-    const rparsed = cap.socks5.decodeReply(rwire)?;
-    expect_eq(rparsed.reply == cap.socks5.ReplyCode.Succeeded, true);
+    const rparsed = decodeReply(rwire)?;
+    expect_eq(rparsed.reply == ReplyCode.Succeeded, true);
 }
 
 test("cap:socks5 Greeting/MethodChoice and RFC 1929 UserPassAuth round-trip") {

@@ -24,7 +24,7 @@ import {
     RadiusVsaIter,
     RadiusWriter,
     parseRadiusPacket,
-} from "cap:radius";
+} from "cap:net";
 
 test("1. Access-Request, Access-Accept, and Accounting-Request full codec roundtrip", () => {
     expect_eq(RADIUS_HEADER_SIZE, 20);

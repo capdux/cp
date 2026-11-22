@@ -20,7 +20,7 @@ import {
     parseTransportHeader,
     formatTransportHeader,
     encodeInterleavedFrame,
-} from "cap:rtsp";
+} from "cap:net";
 import cap from "cap";
 
 test("1. RtspBuilder OPTIONS/DESCRIBE/SETUP/PLAY/TEARDOWN & SDP Response Round-Trip") {
@@ -334,7 +334,7 @@ test("4. Security & Malformed Guards: InvalidVersion, HeaderInjection, InvalidCo
 test("5. Dynamic Lazy Namespace Mounting (cap.rtsp) & Zero Memory Leaks") {
     const alloc = std.testing.allocator;
 
-    const rtsp = cap.rtsp;
+    const rtsp = cap.net;
     let b = rtsp.RtspBuilder.init(alloc);
     defer b.deinit();
 
