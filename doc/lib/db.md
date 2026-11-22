@@ -622,6 +622,50 @@ pub fn demoRaftElection() {
 }
 ```
 
+### 零分配关系查询代价估算、谓词选择率与多表左深连接顺序规划器 (`queryCost.cp`)
+
+面向关系型数据库与分析型查询优化器（System R / PostgreSQL 成本模型）的 100% 纯 CP 零动态堆分配查询代价估算与多表连接顺序规划引擎：
+
+- **常量与枚举**：
+  - `QCOST_MAX_TABLES = 8`、`QCOST_BPS_SCALE = 10000`
+  - `PredicateKind`（`eq | neq | range_half | range_between | is_null | is_not_null | like_prefix | in_list`）
+  - `AccessPathKind`（`seq_scan | index_scan | index_only_scan`）
+  - `JoinAlgoKind`（`nested_loop | hash_join | merge_join`）
+- **代价模型与计划结构**：
+  - `CostModelParams`（`seq_page_cost`, `random_page_cost`, `cpu_tuple_cost`, `cpu_index_tuple_cost`, `hash_build_cost`, `sort_cost_factor`, `defaults()`）
+  - `TableStats`、`AccessPathCost`、`JoinPlanCost`、`JoinOrderPlan`
+- **核心估算与规划函数**：
+  - `estimatePredicateSelectivity(kind, ndv, null_frac_bps, in_list_len, range_frac): f64`（严格钳位 `[1e-6, 1.0]`）
+  - `combineSelectivityAnd(s1, s2)` / `combineSelectivityOr(s1, s2)`
+  - `chooseBestAccessPath(tbl, selectivity, params): AccessPathCost`（低选择率优先 `index_only_scan`/`index_scan`，高选择率自动切换 `seq_scan`）
+  - `chooseBestJoinAlgo(left_rows, right_rows, join_selectivity, right_indexed, both_sorted, params): JoinPlanCost`（在 `nested_loop` / `hash_join` / `merge_join` 间择优）
+  - `planLeftDeepJoinOrder(tables, join_selectivity, params): JoinOrderPlan`（零堆贪心左深树连接规划，优先小基数表做驱动端，输出连接顺序、每步物理算子与总代价）
+
+```cp
+import {
+    CostModelParams,
+    PredicateKind,
+    TableStats,
+    estimatePredicateSelectivity,
+    chooseBestAccessPath,
+    planLeftDeepJoinOrder,
+} from "cap:db";
+
+pub fn demoQueryCostPlanner() {
+    const params = CostModelParams.defaults();
+    const sel = estimatePredicateSelectivity(PredicateKind.eq, 10000.0, 0, 0, 0.0);
+
+    const tables: [3]TableStats = [
+        TableStats{ table_id: 1, row_count: 50000.0, page_count: 1000.0, has_index: true },
+        TableStats{ table_id: 2, row_count: 80.0, page_count: 2.0, has_index: true, is_covering_index: true },
+        TableStats{ table_id: 3, row_count: 4000.0, page_count: 80.0, has_index: true },
+    ];
+    * = chooseBestAccessPath(tables[1], sel, params);
+    const plan = planLeftDeepJoinOrder(tables[0..], 0.001, params);
+    * = plan.order[0]; // 2 (最小基数驱动表)
+}
+```
+
 ---
 
 ## 收敛子模块深度文档

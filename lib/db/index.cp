@@ -485,3 +485,23 @@ export {
     formatRaftRole,
     RaftElectionNode,
 } from "./raftVote.cp";
+
+// --- query_cost (Zero-Alloc Relational Query Cost Estimator & Left-Deep Join Planner) ---
+export {
+    QCOST_MAX_TABLES,
+    QCOST_BPS_SCALE,
+    CostModelParams,
+    PredicateKind,
+    AccessPathKind,
+    JoinAlgoKind,
+    TableStats,
+    AccessPathCost,
+    JoinPlanCost,
+    JoinOrderPlan,
+    estimatePredicateSelectivity,
+    combineSelectivityAnd,
+    combineSelectivityOr,
+    chooseBestAccessPath,
+    chooseBestJoinAlgo,
+    planLeftDeepJoinOrder,
+} from "./queryCost.cp";
