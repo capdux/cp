@@ -388,6 +388,32 @@ const retryable = LibuvErrno.EAI_AGAIN.isRetryable(); // true
 * = retryable;
 ```
 
+### 零分配 Node.js `fs.constants`、CopyfileFlags 与 POSIX FileMode (`fsConstants.cp`)
+
+吸收自 `/data/dev/bun/src/runtime/node/node_fs_constant.cp`（参考 `/data/dev/bun/docs/runtime/file-io.mdx` 与 `nodejs-compat.mdx` 中文件权限与 CoW 克隆拷贝最佳实践）：
+
+- **常量集**：
+  - 拷贝标志：`COPYFILE_EXCL`、`COPYFILE_FICLONE`、`COPYFILE_FICLONE_FORCE`、`COPYFILE_VALID_MASK`、`UV_FS_O_FILEMAP`
+  - 文件类型掩码：`FS_IFMT`、`FS_IFREG`、`FS_IFDIR`、`FS_IFLNK`、`FS_IFIFO`、`FS_IFSOCK`、`FS_IFCHR`、`FS_IFBLK`
+  - 权限位：`S_IRWXU`/`S_IRUSR`/`S_IWUSR`/`S_IXUSR`、`S_IRWXG`/`S_IRGRP`/`S_IWGRP`/`S_IXGRP`、`S_IRWXO`/`S_IROTH`/`S_IWOTH`/`S_IXOTH`、`S_ISUID`/`S_ISGID`/`S_ISVTX`、`FS_PERM_MASK`
+- **核心类型**：
+  - `CopyfileFlags`：`none`/`fromBits`/`isValid`/`shouldntOverwrite`/`wantsClone`/`isForceClone`/`withExclusive`/`withClone`/`withForceClone`
+  - `FileMode`：`init`/`fromTypeAndPerms`/`fileTypeBits`/`permBits`/`rwxBits`/`isReg`/`isDir`/`isSymlink`/`isFifo`/`isSocket`/`isCharDevice`/`isBlockDevice`/`typeChar`/`canOwner*`/`canGroup*`/`canOther*`/`hasSetuid`/`hasSetgid`/`hasSticky`/`applyUmask`/`formatSymbolic(out)`（10 字符 `ls -l` 权限串，支持 `s/S/t/T` 特殊位）/`parseOctal(input)`（支持 `"755"` / `"0755"` / `"0o644"` / `"4755"`）；
+- **实战最佳实践**：
+  - 优先使用 `COPYFILE_FICLONE`（而非 `COPYFILE_FICLONE_FORCE`）以在 APFS/Btrfs/XFS 上自动启用零拷贝 reflink，同时在不支持 CoW 的文件系统（如 ext4/tmpfs）上平滑回退至常规拷贝；
+  - 创建敏感凭据文件时配合 `FileMode.fromTypeAndPerms(FS_IFREG, 0o600)` 与 `COPYFILE_EXCL` 防止意外覆盖和过度开放权限。
+
+```cp
+import { FS_IFDIR, COPYFILE_EXCL, COPYFILE_FICLONE, CopyfileFlags, FileMode } from "cap:sys";
+
+const flags = CopyfileFlags.none().withExclusive().withClone();
+const mode = FileMode.fromTypeAndPerms(FS_IFDIR, 0o755);
+let buf: [10]u8 = [0; 10];
+const sym = mode.formatSymbolic(buf[0..]); // "drwxr-xr-x"
+* = flags.shouldntOverwrite(); // true
+* = sym;
+```
+
 ## 收敛子模块深度文档
 
 - [acpi.md](sys/acpi.md)

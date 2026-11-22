@@ -1341,3 +1341,38 @@ export {
     LibuvErrorMap,
 } from "./libuvErrorMap.cp";
 
+// --- fsConstants (Zero-Alloc Node.js fs.constants, CopyfileFlags & POSIX FileMode) ---
+export {
+    COPYFILE_EXCL,
+    COPYFILE_FICLONE,
+    COPYFILE_FICLONE_FORCE,
+    COPYFILE_VALID_MASK,
+    UV_FS_O_FILEMAP,
+    FS_IFMT,
+    FS_IFIFO,
+    FS_IFCHR,
+    FS_IFDIR,
+    FS_IFBLK,
+    FS_IFREG,
+    FS_IFLNK,
+    FS_IFSOCK,
+    S_ISUID,
+    S_ISGID,
+    S_ISVTX,
+    S_IRWXU,
+    S_IRUSR,
+    S_IWUSR,
+    S_IXUSR,
+    S_IRWXG,
+    S_IRGRP,
+    S_IWGRP,
+    S_IXGRP,
+    S_IRWXO,
+    S_IROTH,
+    S_IWOTH,
+    S_IXOTH,
+    FS_PERM_MASK,
+    CopyfileFlags,
+    FileMode,
+} from "./fsConstants.cp";
+
