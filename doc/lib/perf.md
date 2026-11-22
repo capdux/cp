@@ -77,3 +77,24 @@ let buf: [128]u8 = [0; 128];
 const n = u.formatSummary(buf[0..])?;
 * = n;
 ```
+
+## 6. 长生命周期服务内存账本与泄漏诊断 (`memoryCost.cp`)
+
+吸收自 `/data/dev/bun/src/bake/DevServer/memory_cost.cp`（参考 `/data/dev/bun/docs/project/benchmarking.mdx` 内存剖析指南）：
+
+- **导出符号**：`MemoryCostError`（`BufferTooSmall`）、`MemoryCostCategory`（`IncrementalGraphClient`/`IncrementalGraphServer`/`JsCode`/`SourceMaps`/`Assets`/`Other`）、`MemoryLeakVerdict`（`Healthy`/`SuspectedUntrackedLeak`/`UnboundedTrackedGrowth`）、`estimateSliceBytes`、`estimateCapacityBytes`、`MemoryCostBreakdown`（`totalBytes`/`add`/`bytesFor`/`sharePermille`/`largestCategory`/`merge`/`diffSigned`/`diagnoseVsRss`/`formatSummary`）；
+- **内存泄漏双维度定位最佳实践（来自 Bun DevServer 工程经验）**：
+  - 将服务显式持有的内存按 6 大类记账，定期与进程 `RSS`（如 `ResourceUsage.max_rss_bytes`）交叉比对：
+  - 若显式记账总额保持平稳而进程 RSS 持续上涨（`diagnoseVsRss` 返回 `.SuspectedUntrackedLeak`），说明存在未追踪内存泄漏（如遗忘释放的底层缓冲或外部句柄）；
+  - 若显式记账总额自身失控增长（返回 `.UnboundedTrackedGrowth`），说明增量缓存/淘汰或 GC 策略不足，可结合 `largestCategory()` 与 `sharePermille()` 立即定位最大增长源。
+
+```cp
+import { MemoryCostBreakdown, MemoryCostCategory, MemoryLeakVerdict } from "cap:perf";
+
+let t0 = MemoryCostBreakdown{ js_code: 4096, source_maps: 2048 };
+let t1 = t0;
+t1.add(MemoryCostCategory.Assets, 1024);
+const verdict = t1.diagnoseVsRss(t0, 10_000_000, 25_000_000, 4_000_000);
+// verdict == MemoryLeakVerdict.SuspectedUntrackedLeak
+* = verdict;
+```

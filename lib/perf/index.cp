@@ -39,3 +39,12 @@ export {
     ContextSwitches,
     ResourceUsage,
 } from "./resourceUsage.cp";
+
+export {
+    MemoryCostError,
+    MemoryCostCategory,
+    MemoryLeakVerdict,
+    estimateSliceBytes,
+    estimateCapacityBytes,
+    MemoryCostBreakdown,
+} from "./memoryCost.cp";
