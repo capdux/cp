@@ -357,6 +357,52 @@ pub fn demoCachePolicy() {
 
 ---
 
+### 零分配 RFC 9110 HTTP 内容协商与 `Vary` 响应头引擎 (`contentNeg.cp`)
+
+面向现代 HTTP 网关、API 服务端与 CDN 边缘节点的 100% 纯 CP 零动态堆分配 **RFC 9110 §12 Content Negotiation** 引擎：
+
+- **常量与枚举**：
+  - `NEG_Q_MAX = 1000`（千分比整数权重 0..1000，零浮点漂移）、`NEG_MAX_ITEMS = 32`、`NEG_VARY_MAX_HEADERS = 16`
+  - `ContentEncoding`（`identity | gzip | deflate | br | zstd`；提供 `asHeaderValue()`, `fromToken()`）
+  - `NegotiationMatchKind`（`matched | not_acceptable | invalid_header`）
+- **核心函数**：
+  - `parseQValue(raw): u16?`：严格 RFC 9110 §12.4.2 千分比 q-value 解析（`0..=1000`，拒绝 `> 1.0`、超过 3 位小数与非法字符）。
+  - `negotiateMediaType(accept_header, offered): MediaMatchResult`：RFC 9110 §12.5.1 `Accept` 媒体类型协商，支持 `type/subtype; param=v; q=0.8`、通配符 `type/*` 与 `*/*`、精度优先 + q-value + 服务端偏好序决胜，以及 `q=0` 显式拒绝（优先于 `*/*`）。
+  - `negotiateEncoding(accept_encoding, offered): EncodingMatchResult`：RFC 9110 §12.5.3 `Accept-Encoding` 协商，支持 `zstd`/`br`/`gzip`/`deflate`/`identity`/`*`，精确处理 `identity;q=0` 与 `*;q=0` 返回 `not_acceptable` (406)。
+  - `negotiateLanguage(accept_lang, offered): LanguageMatchResult`：RFC 9110 §12.5.4 + BCP 47 语言标签协商，支持大小写无关精确匹配、子标签前缀回退（`zh-Hans-CN` -> `zh-Hans` -> `zh`）、`*` 通配与 `q=0` 排除。
+  - `formatVaryHeader(existing_vary, add_headers, *out_buf): usize?`：零分配 `Vary` 头大小写无关去重合并，遵循 RFC 9110 §12.5.5 遇 `*` 自动折叠为 `*`，严格拦截 CRLF/控制字符注入。
+
+```cp
+import {
+    ContentEncoding,
+    negotiateMediaType,
+    negotiateEncoding,
+    negotiateLanguage,
+    formatVaryHeader,
+} from "cap:web";
+
+pub fn demoContentNeg() {
+    const media_offered: [2][]const u8 = ["application/json", "text/html"];
+    const m = negotiateMediaType("text/html;q=0.5, application/json;q=0.9", media_offered[0..]);
+    * = m.offered_index; // 0 (application/json)
+
+    const enc_offered: [3]ContentEncoding = [ContentEncoding.zstd, ContentEncoding.br, ContentEncoding.gzip];
+    const e = negotiateEncoding("gzip;q=0.8, br;q=1.0", enc_offered[0..]);
+    * = e.encoding; // ContentEncoding.br
+
+    const lang_offered: [2][]const u8 = ["zh-Hans", "en"];
+    const l = negotiateLanguage("zh-Hans-CN, en;q=0.5", lang_offered[0..]);
+    * = l.offered_index; // 0 (zh-Hans 前缀回退命中)
+
+    let vary_buf: [128]u8 = [0; 128];
+    let vary_s: []u8 = vary_buf[0..];
+    const add: [2][]const u8 = ["Accept-Encoding", "accept-language"];
+    * = formatVaryHeader("Accept, accept-encoding", add[0..], *vary_s);
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [circuit.md](web/circuit.md)

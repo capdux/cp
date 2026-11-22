@@ -348,3 +348,20 @@ export {
     computeCurrentAge,
     evaluateCacheLookup,
 } from "./cachePolicy.cp";
+
+// --- Zero-Alloc RFC 9110 §12 HTTP Content Negotiation & Vary Header Engine ---
+export {
+    NEG_Q_MAX,
+    NEG_MAX_ITEMS,
+    NEG_VARY_MAX_HEADERS,
+    parseQValue,
+    ContentEncoding,
+    NegotiationMatchKind,
+    MediaMatchResult,
+    EncodingMatchResult,
+    LanguageMatchResult,
+    negotiateMediaType,
+    negotiateEncoding,
+    negotiateLanguage,
+    formatVaryHeader,
+} from "./contentNeg.cp";
