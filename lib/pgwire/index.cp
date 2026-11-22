@@ -204,3 +204,13 @@ export {
     PgSaslMechanismList,
     PgAuthChallenge,
 } from "./authChallenge.cp";
+
+export {
+    PG_TAG_PARAMETER_DESCRIPTION,
+    PG_PARAM_DESC_HEADER_LEN,
+    PG_PARAM_DESC_MAX_OIDS,
+    PgParamDescError,
+    PgParamDescIter,
+    PgParamDescView,
+    PgParamDescEncoder,
+} from "./paramDesc.cp";

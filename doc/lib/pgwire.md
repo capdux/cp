@@ -373,6 +373,30 @@ const dec = PgAuthChallenge.decodeFrame(buf[0..n])?;
 * = dec.scram_first.iterations; // 4096
 ```
 
+### `ParameterDescription`（`'t'`）预处理语句参数类型 OID 编解码（`paramDesc.cp`）
+
+> 吸收自 `/data/dev/bun/src/sql/postgres/protocol/ParameterDescription.cp`，零堆分配实现 PostgreSQL v3.0 Backend `ParameterDescription`（Tag `'t' = 0x74`）报文的大端序零拷贝解码视图、OID 迭代器与栈/切片编码器。
+
+- 核心导出：`PG_TAG_PARAMETER_DESCRIPTION`（`'t'`）、`PG_PARAM_DESC_HEADER_LEN`（`7`）、`PG_PARAM_DESC_MAX_OIDS`（`64`）、`PgParamDescError`（`InvalidTag`/`InvalidLength`/`NegativeCount`/`Truncated`/`TrailingBytes`/`BufferTooSmall`/`TooManyParams`/`IndexOutOfBounds`）、`PgParamDescIter`（`next`/`remaining`/`reset`）、`PgParamDescView`（`decodePayload`/`decodeFrame`/`isEmpty`/`oidAt`/`iter`/`copyOids`/`containsOid`/`hasUnspecifiedOid`）、`PgParamDescEncoder`（`init`/`addOid`/`payloadLen`/`frameLen`/`encodePayload`/`encodeFrame`/`encodeFrameFromSlice`）；
+- **实战最佳实践**：
+  - 在 Extended Query 管线中发送 `Parse` + `Describe('S', name)` 后，服务端先返回 `ParameterDescription`（`'t'`）列出各占位符 `$1..$N` 推断的 PostgreSQL Type OID，随后返回 `RowDescription`（`'T'`）或 `NoData`（`'n'`）；
+  - `PgParamDescView` 直接零拷贝借用输入报文缓冲，支持任意参数个数；`encodeFrameFromSlice` 同样支持任意长度 OID 切片（上限受协议 `Int16` 32767 约束）。
+
+```cp
+import { PgParamDescEncoder, PgParamDescView } from "cap:pgwire";
+
+let enc = PgParamDescEncoder.init();
+* = enc.addOid(23)?;   // INT4
+* = enc.addOid(25)?;   // TEXT
+* = enc.addOid(2950)?; // UUID
+
+let buf: [64]u8 = [0; 64];
+const n = enc.encodeFrame(buf[0..])?;
+const view = PgParamDescView.decodeFrame(buf[0..n])?;
+const oid0 = view.oidAt(0)?; // 23
+* = oid0;
+```
+
 ---
 
 ## 4. 示例
