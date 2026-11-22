@@ -2162,3 +2162,51 @@ fn providerPoolQuickStart() {
     * = lease2.used_failover; // true
 }
 ```
+
+---
+
+## 子模块：零分配 AI Agent 统计显著性 A/B 评测与发布门禁引擎（`ab_evaluator.cp`）
+
+### 核心特性
+
+- **O(1) 零堆分配流式聚合（`AgentAbEvaluator`）**：基于 Welford 在线算法精确累积基线 A 与候选 B 的得分均值、无偏样本方差、平均延迟与平均微美元成本，无需缓存原始样本切片，支持百万级配对样本零堆分配评测。
+- **Welch t-统计量与 Wilson 95% 置信区间**：内置双样本 Welch t-stat（含零方差退化确定性保护）与精确 `computeWilsonInterval95(passes, total)`（严格钳位至 `[0.0, 1.0]`），同时输出 head-to-head `b_wins` / `a_wins` / `ties` 胜负平统计。
+- **多维成本/延迟防回归守卫**：以基点（bps，100 bps = 1%）量化延迟变化 `latency_delta_bps` 与成本变化 `cost_delta_bps`，避免候选模型虽有提分但延迟或 Token 成本超阈回归。
+- **确定性五态发布裁决（`AbVerdictKind`）**：按严格优先级依次判定 `inconclusive_low_samples`（样本不足或非法配置）-> `keep_baseline_a`（候选显著退化）-> `reject_cost_or_latency_regression`（延迟或成本回归超阈）-> `ship_candidate_b`（显著提分且达标）-> `statistically_tied`（无统计显著差异），并对 `NaN`/`Inf` 脏输入实行原子拒绝。
+
+### 导出清单
+
+- **枚举与配置**：`AbVerdictKind`（`inconclusive_low_samples | ship_candidate_b | keep_baseline_a | reject_cost_or_latency_regression | statistically_tied`）、`AbEvalGateConfig`（`defaults`, `isValid`）
+- **统计报告模型**：`AbArmStats`、`AbComparisonReport`
+- **纯函数与流式聚合器**：`computeWilsonInterval95(passes, total)`、`AgentAbEvaluator`（`init`, `record_pair`, `evaluate`, `reset`）
+
+### QuickStart 示例
+
+```cp
+import {
+    AbVerdictKind,
+    AbEvalGateConfig,
+    AgentAbEvaluator,
+} from "cap:agent";
+
+fn abEvaluatorQuickStart() {
+    let eval = AgentAbEvaluator.init();
+    const cfg = AbEvalGateConfig.defaults();
+
+    // 录制 24 组配对评测：候选 Prompt B 得分显著高于基线 A，且延迟/成本回归在 1500 bps (15%) 内
+    let i: u64 = 0;
+    while (i < 24) : (i += 1) {
+        const jitter: f64 = ((i % 4) as f64) * 0.01;
+        * = eval.record_pair(
+            0.70 + jitter, i % 3 != 0, 500, 1000, // Arm A (baseline)
+            0.85 + jitter, true,       540, 1080, // Arm B (candidate: +8% lat/cost)
+        );
+    }
+
+    const report = eval.evaluate(cfg);
+    if (report.verdict == AbVerdictKind.ship_candidate_b) {
+        // 安全放量发布候选 B
+        * = report.welch_t_stat;
+    }
+}
+```

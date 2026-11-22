@@ -426,3 +426,12 @@ export {
     ProviderPoolStats,
     LlmProviderPool,
 } from "./provider_pool.cp";
+
+export {
+    AbVerdictKind,
+    AbEvalGateConfig,
+    AbArmStats,
+    AbComparisonReport,
+    computeWilsonInterval95,
+    AgentAbEvaluator,
+} from "./ab_evaluator.cp";
