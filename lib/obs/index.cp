@@ -172,3 +172,14 @@ export {
     AnomalyDetectorStats,
     OnlineAnomalyDetector,
 } from "./anomaly_detector.cp";
+
+// --- Zero-Alloc HDR Log-Linear High-Dynamic-Range Latency Histogram ---
+
+export {
+    HDR_SUB_BUCKETS,
+    HDR_NUM_SCALES,
+    HDR_TOTAL_BUCKETS,
+    HDR_MAX_SUPPORTED_VALUE,
+    HdrQuantileSummary,
+    HdrHistogram,
+} from "./hdr_histogram.cp";

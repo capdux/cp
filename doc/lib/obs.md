@@ -191,3 +191,37 @@ pub fn demoOnlineAnomalyDetector() {
     * = e1; * = e2; * = e3;
 }
 ```
+
+### 零堆分配 HDR 对数线性高精度延迟直方图与协同遗漏校正示例 (`hdr_histogram.cp`)
+
+面向高并发微服务、存储引擎与 AI Agent 推理网关的 100% 纯 CP 零动态堆分配 HdrHistogram 风格延迟直方图内核（恒定 1920 桶内联存储，覆盖 `[0, 34_359_738_367]` 动态范围，相对误差 `<= 1.5625%`）：
+
+- **几何常量**：`HDR_SUB_BUCKETS` (`64`)、`HDR_NUM_SCALES` (`28`)、`HDR_TOTAL_BUCKETS` (`1920`)、`HDR_MAX_SUPPORTED_VALUE` (`34_359_738_367`)。
+- **核心类型**：
+  - `HdrQuantileSummary`：`{ total_count, min_val, max_val, mean_f64, p50, p90, p95, p99, p999 }`。
+  - `HdrHistogram`：
+    - `HdrHistogram.init(max_trackable_val)`：初始化直方图（`0` 或超上限自动夹紧至 `HDR_MAX_SUPPORTED_VALUE`）。
+    - `value_to_bucket(val)` / `bucket_upper_bound(bucket_idx)`：纯位运算 O(1) 对数线性映射（`[0, 127]` 零误差精确映射，更高量级保守上界 `<= 1.5625%` 相对误差）。
+    - `record(val)` / `record_n(val, count)`：O(1) 写入；超 `max_trackable_val` 时截断入桶并累计 `clamped_count` 后返回 `false`。
+    - `record_with_expected_interval(val, expected_interval)`：Coordinated Omission 协同遗漏校正，当 `val > expected_interval` 时自动按步长回填被阻塞的隐形高延迟样本。
+    - `value_at_quantile(q)` / `summarize()`：计算任意分位点与 `P50/P90/P95/P99/P99.9` 汇总。
+    - `merge_from(other)`：跨线程/分片直方图无损聚合（要求 `max_trackable_val` 一致）。
+    - `reset()`：清零复用。
+
+```cp
+import {
+    HdrHistogram,
+} from "cap:obs";
+
+pub fn demoHdrHistogram() {
+    let h = HdrHistogram.init(60_000_000); // 追踪最高 60 秒（微秒粒度）
+    // 常规快速请求：1000us
+    * = h.record_n(1_000, 990);
+    // 1 次 100ms 停顿，预期到达间隔 10ms -> Coordinated Omission 自动回填 9 条隐形排队样本
+    * = h.record_with_expected_interval(100_000, 10_000);
+
+    const s = h.summarize();
+    // s.p50 ~ 1000us, s.p99 精确暴露出被阻塞的高尾延迟
+    * = s.p99;
+}
+```
