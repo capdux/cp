@@ -1295,3 +1295,35 @@ let url_buf: [256]u8 = [0; 256];
 const ulen = buildPublishPutUrl(summary.effective_registry, summary.package_name, url_buf[0..])?;
 * = ulen;
 ```
+
+### 流式 Tarball (USTAR/PAX/GNU) 解析、安全解包与打包引擎（`tarballStream.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/TarballStream.cp`（纯 CP 零堆分配、全外部切片驱动、支持任意分片块增量喂入）；
+- **核心导出**：
+  - 512B 头解码与校验：`TAR_BLOCK_SIZE`、`TarStreamError`、`TarEntryKind`、`TarParsedHeader`、`isZeroTarBlock`、`parseTarOctalOrBase256`（ASCII 八进制 + GNU base-256 大整数）、`verifyTarHeaderChecksum`（无符号/有符号校验和双兼容）、`parseTarHeaderBlock`、`parsePaxRecords`（POSIX PAX `<len> <key>=<value>\n`）；
+  - 严格安全守卫：`sanitizeTarEntryPath`（`strip_components` 剥离 + 严防绝对路径、`..` 穿越、反斜杠、Windows 盘符、NUL 字节）、`validateTarLinkTarget`（符号链接/硬链接深度跟踪防越界逃逸）、设备节点拦截与最大文件数/单文件/总解压体积上限；
+  - 流式增量状态机：`TarStreamOptions`、`TarStreamEventKind`、`TarStreamEntryMeta`、`TarStreamEvent`、`TarStreamStats`、`TarStreamPhase`、`TarStreamDecoder`（`init` / `step` / `finish` / `stats`，支持 USTAR `prefix` + GNU `L`/`K` + PAX `x`/`g`）；
+  - USTAR/PAX 打包器：`encodeTarEntry`、`encodeTarPaxHeader`、`finalizeTarArchive`（可与 `cap:pack` 的 `gzip`/`gunzip` 组合实现 `.tgz` 端到端闭环）。
+
+```cp
+import {
+    TarStreamOptions,
+    TarStreamDecoder,
+    TarStreamEventKind,
+    TarEntryKind,
+    encodeTarEntry,
+    finalizeTarArchive,
+} from "cap:pkg";
+
+let archive: [4096]u8 = [0; 4096];
+let apos: usize = 0;
+encodeTarEntry("package/index.cp", TarEntryKind.RegularFile, 0o644, 1700000000, "", "pub const X = 1;\n", archive[0..], &apos)?;
+finalizeTarArchive(archive[0..], &apos)?;
+
+let pbuf: [512]u8 = [0; 512];
+let lbuf: [512]u8 = [0; 512];
+let mbuf: [512]u8 = [0; 512];
+let decoder = TarStreamDecoder.init(TarStreamOptions.defaults(), pbuf[0..], lbuf[0..], mbuf[0..]);
+const ev = decoder.step(archive[0..apos])?;
+* = ev;
+```
