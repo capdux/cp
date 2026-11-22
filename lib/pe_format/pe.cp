@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/exe_format/pe.cp | Synced: 2026-11-21T12:33:35Z
+// Source: Absorbed from /data/dev/bun/src/exe_format/pe.cp | Synced: 2026-11-22T01:25:50Z
 
 pub err Error {
     OutOfBounds,

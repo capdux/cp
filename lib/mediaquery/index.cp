@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/media_query.cp | Synced: 2026-11-22T00:18:00Z (Zero-Alloc CSS Media Queries Level 4 Parser & Evaluator)
+// Source: Absorbed from /data/dev/bun/src/css/media_query.cp | Synced: 2026-11-22T01:29:57Z (Zero-Alloc CSS Media Queries Level 4 Parser & Evaluator)
 
 export {
     MediaType,

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bun_alloc/memory.cp | Synced: 2026-11-20T06:10:32Z
+// Source: Absorbed from /data/dev/bun/src/bun_alloc/memory.cp | Synced: 2026-11-22T01:14:40Z
 // lib/mem/primitives.cp
 // Memory alignment primitives & compiler-optimization-proof secure memory zeroing
 
