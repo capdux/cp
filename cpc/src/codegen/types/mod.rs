@@ -203,6 +203,22 @@ impl Codegen {
         !m.is_static && m.ident.sym == "__cp_deinit"
     }
 
+    pub fn method_is_zero_arg_err_destructor(m: &Function) -> bool {
+        !m.is_static && m.ident.sym == "__cp_errdeinit"
+    }
+
+    pub fn current_fn_returns_error_union(&self) -> bool {
+        match &self.current_fn_ret_ty {
+            Some(Type::ErrorUnion(_)) => true,
+            Some(Type::ResultType { err: fn_err, .. }) => self.is_native_error_union_err(fn_err),
+            Some(Type::Ref(id)) => {
+                let resolved = self.resolve_type_alias_sym(&id.sym);
+                id.sym.contains('!') || resolved.contains('!')
+            }
+            _ => false,
+        }
+    }
+
     pub fn is_builtin_raii_type(&self, ty: Option<&Type>) -> bool {
         let Some(mut t) = ty else {
             return false;
@@ -294,7 +310,7 @@ impl Codegen {
                 if self.enum_defs.contains_key(&id.sym) {
                     return true;
                 }
-                if self.type_has_release(Some(t)) {
+                if self.type_has_release(Some(t)) || self.type_has_err_release(Some(t)) {
                     return false;
                 }
                 if let Some(cls) = self.class_defs.get(&id.sym) {
@@ -323,8 +339,33 @@ impl Codegen {
         if Self::is_raw_ptr_or_borrow_type(t) {
             return false;
         }
-        while let Type::Optional(inner) = t {
-            t = inner;
+        let mut depth = 0;
+        while depth < 20 {
+            if let Type::Optional(inner) = t {
+                t = inner;
+                depth += 1;
+                continue;
+            }
+            if let Type::Ref(id) = t {
+                let base = id
+                    .sym
+                    .split('<')
+                    .next()
+                    .unwrap_or(&id.sym)
+                    .split('(')
+                    .next()
+                    .unwrap_or(&id.sym);
+                if let Some(ta) = self
+                    .type_aliases
+                    .get(&id.sym)
+                    .or_else(|| self.type_aliases.get(base))
+                {
+                    t = &ta.target_ty;
+                    depth += 1;
+                    continue;
+                }
+            }
+            break;
         }
         if Self::is_raw_ptr_or_borrow_type(t) || Self::is_scalar_or_primitive_type(t) {
             return false;
@@ -339,7 +380,11 @@ impl Codegen {
                     .split('(')
                     .next()
                     .unwrap_or(&id.sym);
-                if let Some(cls) = self.class_defs.get(&id.sym).or_else(|| self.class_defs.get(base_name)) {
+                if let Some(cls) = self
+                    .class_defs
+                    .get(&id.sym)
+                    .or_else(|| self.class_defs.get(base_name))
+                {
                     cls.methods
                         .iter()
                         .any(|m| Self::method_is_zero_arg_destructor(m))
@@ -368,7 +413,71 @@ impl Codegen {
         }
     }
 
-    pub fn build_drop_call_snippet(var_expr: &str) -> String {
+    pub fn type_has_err_release(&self, ty: Option<&Type>) -> bool {
+        let Some(mut t) = ty else {
+            return false;
+        };
+        if Self::is_raw_ptr_or_borrow_type(t) {
+            return false;
+        }
+        let mut depth = 0;
+        while depth < 20 {
+            if let Type::Optional(inner) = t {
+                t = inner;
+                depth += 1;
+                continue;
+            }
+            if let Type::Ref(id) = t {
+                let base = id
+                    .sym
+                    .split('<')
+                    .next()
+                    .unwrap_or(&id.sym)
+                    .split('(')
+                    .next()
+                    .unwrap_or(&id.sym);
+                if let Some(ta) = self
+                    .type_aliases
+                    .get(&id.sym)
+                    .or_else(|| self.type_aliases.get(base))
+                {
+                    t = &ta.target_ty;
+                    depth += 1;
+                    continue;
+                }
+            }
+            break;
+        }
+        if Self::is_raw_ptr_or_borrow_type(t) || Self::is_scalar_or_primitive_type(t) {
+            return false;
+        }
+        match t {
+            Type::Ref(id) => {
+                let base_name = id
+                    .sym
+                    .split('<')
+                    .next()
+                    .unwrap_or(&id.sym)
+                    .split('(')
+                    .next()
+                    .unwrap_or(&id.sym);
+                if let Some(cls) = self
+                    .class_defs
+                    .get(&id.sym)
+                    .or_else(|| self.class_defs.get(base_name))
+                {
+                    cls.methods
+                        .iter()
+                        .any(|m| Self::method_is_zero_arg_err_destructor(m))
+                } else {
+                    false
+                }
+            }
+            _ => false,
+        }
+    }
+
+    pub fn build_drop_call_snippet_with_method(var_expr: &str, method_name: &str) -> String {
         format!(
             concat!(
                 "const __T = @TypeOf({0}); ",
@@ -377,21 +486,29 @@ impl Codegen {
                 "const __OptT = @TypeOf(__cp_opt_v); ",
                 "if (@typeInfo(__OptT) == .pointer and @typeInfo(__OptT).pointer.size == .one and (if (@hasField(@TypeOf(@typeInfo(__OptT).pointer), \"is_const\")) !@typeInfo(__OptT).pointer.is_const else !@typeInfo(__OptT).pointer.attrs.@\"const\")) {{ ",
                 "const __CpChild = @typeInfo(__OptT).pointer.child; ",
-                "if (@typeInfo(__CpChild) == .@\"struct\" and @hasDecl(__CpChild, \"__cp_deinit\")) {{ __cp_opt_v.__cp_deinit(); }} ",
+                "if (@typeInfo(__CpChild) == .@\"struct\" and @hasDecl(__CpChild, \"{1}\")) {{ __cp_opt_v.{1}(); }} ",
                 "}} ",
-                "else if (@typeInfo(__OptT) == .@\"struct\" and @hasDecl(__OptT, \"__cp_deinit\")) {{ ",
-                "var _drop_val = __cp_opt_v; _drop_val.__cp_deinit(); ",
+                "else if (@typeInfo(__OptT) == .@\"struct\" and @hasDecl(__OptT, \"{1}\")) {{ ",
+                "var _drop_val = __cp_opt_v; _drop_val.{1}(); ",
                 "}} }} }} ",
                 "else if (@typeInfo(__T) == .pointer and @typeInfo(__T).pointer.size == .one and (if (@hasField(@TypeOf(@typeInfo(__T).pointer), \"is_const\")) !@typeInfo(__T).pointer.is_const else !@typeInfo(__T).pointer.attrs.@\"const\")) {{ ",
                 "const __CpChild = @typeInfo(__T).pointer.child; ",
-                "if (@typeInfo(__CpChild) == .@\"struct\" and @hasDecl(__CpChild, \"__cp_deinit\")) {{ {0}.__cp_deinit(); }} ",
+                "if (@typeInfo(__CpChild) == .@\"struct\" and @hasDecl(__CpChild, \"{1}\")) {{ {0}.{1}(); }} ",
                 "}} ",
-                "else if (@typeInfo(__T) == .@\"struct\" and @hasDecl(__T, \"__cp_deinit\")) {{ ",
-                "var _drop_val = {0}; _drop_val.__cp_deinit(); ",
+                "else if (@typeInfo(__T) == .@\"struct\" and @hasDecl(__T, \"{1}\")) {{ ",
+                "var _drop_val = {0}; _drop_val.{1}(); ",
                 "}}"
             ),
-            var_expr
+            var_expr, method_name
         )
+    }
+
+    pub fn build_drop_call_snippet(var_expr: &str) -> String {
+        Self::build_drop_call_snippet_with_method(var_expr, "__cp_deinit")
+    }
+
+    pub fn build_err_drop_call_snippet(var_expr: &str) -> String {
+        Self::build_drop_call_snippet_with_method(var_expr, "__cp_errdeinit")
     }
 
     pub fn map_error_type(&self, err: &ErrorType) -> String {
@@ -762,7 +879,18 @@ impl Codegen {
     pub fn resolve_type_alias_sym<'a>(&'a self, mut sym: &'a str) -> &'a str {
         let mut depth = 0;
         while depth < 20 {
-            if let Some(ta) = self.type_aliases.get(sym) {
+            let base = sym
+                .split('<')
+                .next()
+                .unwrap_or(sym)
+                .split('(')
+                .next()
+                .unwrap_or(sym);
+            if let Some(ta) = self
+                .type_aliases
+                .get(sym)
+                .or_else(|| self.type_aliases.get(base))
+            {
                 if let Type::Ref(id) = &ta.target_ty {
                     sym = &id.sym;
                     depth += 1;

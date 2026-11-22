@@ -903,29 +903,46 @@ impl Codegen {
             Type::Map(_, _) | Type::Dict(_, _) | Type::Set(_) => true,
             Type::BorrowType { .. } | Type::RawPtr { .. } => true,
             Type::Ref(cid) => {
-                if cid.sym == "Map"
-                    || cid.sym == "Dict"
-                    || cid.sym == "Set"
-                    || cid.sym == "RegExp"
-                    || cid.sym == "Task"
-                    || cid.sym == "Server"
-                    || cid.sym == "Socket"
-                    || cid.sym == "Request"
-                    || cid.sym == "Response"
-                    || cid.sym == "VecDeque"
-                    || cid.sym == "BinaryHeap"
-                    || cid.sym == "BTreeMap"
-                    || cid.sym == "BTreeSet"
-                    || cid.sym == "HashMap"
-                    || cid.sym == "HashSet"
+                let resolved_sym = self.resolve_type_alias_sym(&cid.sym);
+                let base_name = resolved_sym
+                    .split('<')
+                    .next()
+                    .unwrap_or(resolved_sym)
+                    .split('(')
+                    .next()
+                    .unwrap_or(resolved_sym);
+                if base_name == "Map"
+                    || base_name == "Dict"
+                    || base_name == "Set"
+                    || base_name == "RegExp"
+                    || base_name == "Task"
+                    || base_name == "Server"
+                    || base_name == "Socket"
+                    || base_name == "Request"
+                    || base_name == "Response"
+                    || base_name == "VecDeque"
+                    || base_name == "BinaryHeap"
+                    || base_name == "BTreeMap"
+                    || base_name == "BTreeSet"
+                    || base_name == "HashMap"
+                    || base_name == "HashSet"
                     || self.ref_classes.contains(&cid.sym)
+                    || self.ref_classes.contains(resolved_sym)
+                    || self.ref_classes.contains(base_name)
                 {
                     return true;
                 }
-                if self.value_classes.contains(&cid.sym) {
+                if self.value_classes.contains(&cid.sym)
+                    || self.value_classes.contains(resolved_sym)
+                    || self.value_classes.contains(base_name)
+                {
                     return false;
                 }
-                self.class_defs.get(&cid.sym).map_or(false, |c| !c.is_ref)
+                self.class_defs
+                    .get(&cid.sym)
+                    .or_else(|| self.class_defs.get(resolved_sym))
+                    .or_else(|| self.class_defs.get(base_name))
+                    .map_or(false, |c| !c.is_ref)
             }
             _ => false,
         }

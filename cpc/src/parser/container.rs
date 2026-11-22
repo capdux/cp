@@ -257,30 +257,31 @@ impl<'a> Parser<'a> {
             if self.peek() == Some(&Token::Tilde) {
                 let tilde_span = self.bump()?.1;
                 let dtor_ident = self.parse_ident()?;
-                if dtor_ident.sym != "init" {
-                    return Err(ParseError::Generic(
-                        format!(
-                            "CP Syntax Error: destructor must be named '~init()', found '~{}'\n  = cause: CP uses '~init()' as the unique destructor syntax to avoid collisions with business method names.\n  = help: declare the destructor as '~init() {{ ... }}'.\n  = suggestion: rename '~{}' to '~init'",
-                            dtor_ident.sym, dtor_ident.sym
-                        ),
-                        dtor_ident.span,
-                    ));
-                }
+                let (dtor_sym, dtor_label) = match dtor_ident.sym.as_str() {
+                    "init" => ("__cp_deinit", "~init()"),
+                    "errinit" => ("__cp_errdeinit", "~errinit()"),
+                    _ => {
+                        return Err(ParseError::Generic(
+                            format!(
+                                "CP Syntax Error: destructor must be named '~init()' or '~errinit()', found '~{}'\n  = cause: CP uses '~init()' (unconditional destructor) and '~errinit()' (error-path destructor) to avoid collisions with business method names.\n  = help: declare the destructor as '~init() {{ ... }}' or '~errinit() {{ ... }}'.\n  = suggestion: rename '~{}' to '~init' or '~errinit'",
+                                dtor_ident.sym, dtor_ident.sym
+                            ),
+                            dtor_ident.span,
+                        ));
+                    }
+                };
                 if is_static {
                     return Err(ParseError::Generic(
                         format!(
-                            "Static class or struct '{}' cannot declare destructor '~init()'",
-                            ident.sym
+                            "Static class or struct '{}' cannot declare destructor '{}'",
+                            ident.sym, dtor_label
                         ),
                         tilde_span,
                     ));
                 }
-                if methods
-                    .iter()
-                    .any(|m: &Function| m.ident.sym == "__cp_deinit")
-                {
+                if methods.iter().any(|m: &Function| m.ident.sym == dtor_sym) {
                     return Err(ParseError::Generic(
-                        format!("Duplicate destructor '~init()' in '{}'", ident.sym),
+                        format!("Duplicate destructor '{}' in '{}'", dtor_label, ident.sym),
                         tilde_span,
                     ));
                 }
@@ -288,7 +289,10 @@ impl<'a> Parser<'a> {
                 if self.peek() != Some(&Token::RParen) {
                     let bad_span = self.peek_span();
                     return Err(ParseError::Generic(
-                        "CP Syntax Error: destructor '~init()' takes no parameters.\n  = cause: '~init()' implicitly receives mutable exclusive access to '_' and cannot accept explicit parameters.\n  = help: remove all parameters from '~init()'.\n  = suggestion: ~init() { ... }".to_string(),
+                        format!(
+                            "CP Syntax Error: destructor '{}' takes no parameters.\n  = cause: '{}' implicitly receives mutable exclusive access to '_' and cannot accept explicit parameters.\n  = help: remove all parameters from '{}'.\n  = suggestion: {} {{ ... }}",
+                            dtor_label, dtor_label, dtor_label, dtor_label
+                        ),
                         bad_span,
                     ));
                 }
@@ -296,7 +300,10 @@ impl<'a> Parser<'a> {
                 if self.peek() == Some(&Token::Colon) || self.peek() == Some(&Token::Arrow) {
                     let bad_span = self.peek_span();
                     return Err(ParseError::Generic(
-                        "CP Syntax Error: destructor '~init()' cannot declare a return type.\n  = cause: destructors always return void and cannot fail.\n  = help: remove the return type annotation from '~init()'.\n  = suggestion: ~init() { ... }".to_string(),
+                        format!(
+                            "CP Syntax Error: destructor '{}' cannot declare a return type.\n  = cause: destructors always return void and cannot fail.\n  = help: remove the return type annotation from '{}'.\n  = suggestion: {} {{ ... }}",
+                            dtor_label, dtor_label, dtor_label
+                        ),
                         bad_span,
                     ));
                 }
@@ -329,7 +336,7 @@ impl<'a> Parser<'a> {
                             start: tilde_span.start,
                             end: dtor_ident.span.end,
                         },
-                        sym: "__cp_deinit".to_string(),
+                        sym: dtor_sym.to_string(),
                     },
                     generic_params: vec![],
                     params: vec![recv_param],

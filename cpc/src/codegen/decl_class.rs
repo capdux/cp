@@ -151,7 +151,7 @@ impl Codegen {
     pub(crate) fn generate_zig_or_struct(&mut self, code: &str) -> String {
         if let Some(mut cls) = Self::parse_anon_struct_or_union(code) {
             for m in &mut cls.methods {
-                let is_dtor = m.ident.sym == "__cp_deinit";
+                let is_dtor = m.ident.sym == "__cp_deinit" || m.ident.sym == "__cp_errdeinit";
                 let has_explicit_self = m.params.first().map_or(false, |p| {
                     if p.ident.sym == "this" || p.ident.sym == "self" {
                         true
@@ -231,6 +231,10 @@ impl Codegen {
             return;
         }
         let has_cp_deinit = class.methods.iter().any(|m| m.ident.sym == "__cp_deinit");
+        let has_cp_errdeinit = class
+            .methods
+            .iter()
+            .any(|m| m.ident.sym == "__cp_errdeinit");
         let is_c_abi = class.meta.iter().any(|m| {
             m.name.sym == "extern"
                 || m.name.sym == "c"
@@ -239,6 +243,8 @@ impl Codegen {
                 || m.name.sym == "opaque"
         });
         let needs_dropped_guard = has_cp_deinit && !is_c_abi && !class.is_union && !class.is_static;
+        let needs_errdropped_guard =
+            has_cp_errdeinit && !is_c_abi && !class.is_union && !class.is_static;
         let is_root = class.meta.iter().any(|m| m.name.sym == "root");
         if is_root {
             if (class.is_ref || class.meta.iter().any(|m| m.name.sym == "ref"))
@@ -249,6 +255,9 @@ impl Codegen {
             writeln!(self.output, "pub const {} = @This();\n", class.ident.sym).unwrap();
             if needs_dropped_guard {
                 self.writeln("__cp_dropped: bool = false,");
+            }
+            if needs_errdropped_guard {
+                self.writeln("__cp_errdropped: bool = false,");
             }
             for f in &class.fields {
                 let default_init = if let Some(def) = &f.default {
@@ -476,6 +485,9 @@ impl Codegen {
             if needs_dropped_guard {
                 self.writeln("__cp_dropped: bool = false,");
             }
+            if needs_errdropped_guard {
+                self.writeln("__cp_errdropped: bool = false,");
+            }
             if !class.is_union
                 && !class.meta.iter().any(|m| {
                     m.name.sym == "value"
@@ -487,6 +499,9 @@ impl Codegen {
                 let mut default_assigns = String::new();
                 if needs_dropped_guard {
                     default_assigns.push_str(" self_ptr.__cp_dropped = false;");
+                }
+                if needs_errdropped_guard {
+                    default_assigns.push_str(" self_ptr.__cp_errdropped = false;");
                 }
                 for f in &class.fields {
                     if f.is_static {

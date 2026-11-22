@@ -1134,7 +1134,8 @@ impl Codegen {
                                     } else {
                                         mem.prop.sym.clone()
                                     };
-                                let is_explicit_dtor = mem.prop.sym == "__cp_deinit";
+                                let is_explicit_dtor = mem.prop.sym == "__cp_deinit"
+                                    || mem.prop.sym == "__cp_errdeinit";
                                 let call_res = if target_recv_mode == ReceiverMode::Move {
                                     if is_self_recv {
                                         self.moved_vars.insert("this".to_string());
@@ -1811,6 +1812,7 @@ impl Codegen {
                     let wrapped = if let Expr::Member(mem) = &*call.callee {
                         if let Expr::Ident(id) = &*mem.obj {
                             let is_dtor_call = mem.prop.sym == "__cp_deinit"
+                                || mem.prop.sym == "__cp_errdeinit"
                                 || (mem.prop.sym == "release"
                                     && self.is_builtin_raii_type(self.var_cp_types.get(&id.sym)));
                             if is_dtor_call && self.drop_flag_vars.contains(&id.sym) {

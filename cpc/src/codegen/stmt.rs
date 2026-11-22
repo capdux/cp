@@ -191,6 +191,67 @@ impl Codegen {
                                             is_pub: var.is_pub,
                                         },
                                     );
+                                } else if let Expr::Call(call) = init {
+                                    let target_ident = match &*call.callee {
+                                        Expr::Ident(cid)
+                                            if self.class_defs.contains_key(&cid.sym)
+                                                || self.type_aliases.contains_key(&cid.sym)
+                                                || self.enum_defs.contains_key(&cid.sym) =>
+                                        {
+                                            Some(cid.clone())
+                                        }
+                                        Expr::Member(mem)
+                                            if self.class_defs.contains_key(&mem.prop.sym)
+                                                || self
+                                                    .type_aliases
+                                                    .contains_key(&mem.prop.sym)
+                                                || self.enum_defs.contains_key(&mem.prop.sym) =>
+                                        {
+                                            Some(mem.prop.clone())
+                                        }
+                                        _ => None,
+                                    };
+                                    if let Some(tid) = target_ident {
+                                        self.type_aliases.insert(
+                                            ident.sym.clone(),
+                                            crate::ast::TypeAliasDecl {
+                                                span: var.span,
+                                                ident: ident.clone(),
+                                                target_ty: Type::Ref(tid),
+                                                is_pub: var.is_pub,
+                                            },
+                                        );
+                                    }
+                                } else if let Expr::Ident(cid) = init {
+                                    if self.class_defs.contains_key(&cid.sym)
+                                        || self.type_aliases.contains_key(&cid.sym)
+                                        || self.enum_defs.contains_key(&cid.sym)
+                                    {
+                                        self.type_aliases.insert(
+                                            ident.sym.clone(),
+                                            crate::ast::TypeAliasDecl {
+                                                span: var.span,
+                                                ident: ident.clone(),
+                                                target_ty: Type::Ref(cid.clone()),
+                                                is_pub: var.is_pub,
+                                            },
+                                        );
+                                    }
+                                } else if let Expr::Member(mem) = init {
+                                    if self.class_defs.contains_key(&mem.prop.sym)
+                                        || self.type_aliases.contains_key(&mem.prop.sym)
+                                        || self.enum_defs.contains_key(&mem.prop.sym)
+                                    {
+                                        self.type_aliases.insert(
+                                            ident.sym.clone(),
+                                            crate::ast::TypeAliasDecl {
+                                                span: var.span,
+                                                ident: ident.clone(),
+                                                target_ty: Type::Ref(mem.prop.clone()),
+                                                is_pub: var.is_pub,
+                                            },
+                                        );
+                                    }
                                 }
                             } else {
                                 self.const_vars.remove(&ident.sym);
@@ -310,7 +371,20 @@ impl Codegen {
                             } else {
                                 false
                             };
-                            let is_value_struct_drop = needs_drop
+                            let needs_err_drop = if is_var_borrow
+                                || is_raw_or_borrow_ty
+                                || is_field_or_elem_read
+                                || is_plain_ident_read
+                                || !self.current_fn_returns_error_union()
+                            {
+                                false
+                            } else if let Some(t) = &resolved_val_ty {
+                                self.type_has_err_release(Some(t))
+                            } else {
+                                false
+                            };
+                            let needs_any_drop = needs_drop || needs_err_drop;
+                            let is_value_struct_drop = needs_any_drop
                                 && resolved_val_ty
                                     .as_ref()
                                     .map_or(false, |t| !self.is_zig_heap_ptr_type(t));
@@ -420,7 +494,7 @@ impl Codegen {
                                     init_val
                                 }
                             ));
-                            if !self.is_state_machine && !is_var_borrow && needs_drop {
+                            if !self.is_state_machine && !is_var_borrow && needs_any_drop {
                                 self.drop_flag_vars.insert(ident.sym.clone());
                                 if !emit_zig_const {
                                     self.write_to_case(&format!("_ = &{};", ident.sym));
@@ -429,11 +503,28 @@ impl Codegen {
                                     "var __{}_moved = false; _ = &__{}_moved;",
                                     ident.sym, ident.sym
                                 ));
-                                let drop_body = Self::build_drop_call_snippet(&ident.sym);
-                                self.write_to_case(&format!(
-                                    "defer if (!__{0}_moved) {{ __{0}_moved = true; {1} }};",
-                                    ident.sym, drop_body
-                                ));
+                                if needs_drop {
+                                    let drop_body = Self::build_drop_call_snippet(&ident.sym);
+                                    self.write_to_case(&format!(
+                                        "defer if (!__{0}_moved) {{ __{0}_moved = true; {1} }};",
+                                        ident.sym, drop_body
+                                    ));
+                                }
+                                if needs_err_drop {
+                                    let err_drop_body =
+                                        Self::build_err_drop_call_snippet(&ident.sym);
+                                    if needs_drop {
+                                        self.write_to_case(&format!(
+                                            "errdefer if (!__{0}_moved) {{ {1} }};",
+                                            ident.sym, err_drop_body
+                                        ));
+                                    } else {
+                                        self.write_to_case(&format!(
+                                            "errdefer if (!__{0}_moved) {{ __{0}_moved = true; {1} }};",
+                                            ident.sym, err_drop_body
+                                        ));
+                                    }
+                                }
                             } else if !self.is_state_machine {
                                 if !emit_zig_const {
                                     self.write_to_case(&format!("_ = &{};", ident.sym));
@@ -898,7 +989,12 @@ impl Codegen {
                                         }
                                         let prop_needs_drop =
                                             self.type_has_release(field_ty.as_ref());
-                                        let prop_val_struct_drop = prop_needs_drop
+                                        let prop_needs_err_drop = self
+                                            .current_fn_returns_error_union()
+                                            && self.type_has_err_release(field_ty.as_ref());
+                                        let prop_needs_any_drop =
+                                            prop_needs_drop || prop_needs_err_drop;
+                                        let prop_val_struct_drop = prop_needs_any_drop
                                             && field_ty
                                                 .as_ref()
                                                 .map_or(false, |t| !self.is_zig_heap_ptr_type(t));
@@ -920,19 +1016,36 @@ impl Codegen {
                                             "{} = _tmp_obj{}.{};",
                                             lhs, tmp_id, prop.key.sym
                                         ));
-                                        if !self.is_state_machine && prop_needs_drop {
+                                        if !self.is_state_machine && prop_needs_any_drop {
                                             self.drop_flag_vars.insert(bound_name.clone());
                                             self.write_to_case(&format!("_ = &{};", bound_name));
                                             self.write_to_case(&format!(
                                                 "var __{}_moved = false; _ = &__{}_moved;",
                                                 bound_name, bound_name
                                             ));
-                                            let drop_body =
-                                                Self::build_drop_call_snippet(&bound_name);
-                                            self.write_to_case(&format!(
-                                                "defer if (!__{0}_moved) {{ __{0}_moved = true; {1} }};",
-                                                bound_name, drop_body
-                                            ));
+                                            if prop_needs_drop {
+                                                let drop_body =
+                                                    Self::build_drop_call_snippet(&bound_name);
+                                                self.write_to_case(&format!(
+                                                    "defer if (!__{0}_moved) {{ __{0}_moved = true; {1} }};",
+                                                    bound_name, drop_body
+                                                ));
+                                            }
+                                            if prop_needs_err_drop {
+                                                let err_drop_body =
+                                                    Self::build_err_drop_call_snippet(&bound_name);
+                                                if prop_needs_drop {
+                                                    self.write_to_case(&format!(
+                                                        "errdefer if (!__{0}_moved) {{ {1} }};",
+                                                        bound_name, err_drop_body
+                                                    ));
+                                                } else {
+                                                    self.write_to_case(&format!(
+                                                        "errdefer if (!__{0}_moved) {{ __{0}_moved = true; {1} }};",
+                                                        bound_name, err_drop_body
+                                                    ));
+                                                }
+                                            }
                                         } else if !self.is_state_machine {
                                             self.write_to_case(&format!("_ = &{};", bound_name));
                                         }

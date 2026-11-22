@@ -424,7 +424,7 @@ impl Codegen {
             .collect();
         self.current_class_name = class_name.cloned();
         self.current_receiver_mode = if let Some(c) = class_name {
-            if self.value_classes.contains(c) {
+            if self.value_classes.contains(c) || self.enum_defs.contains_key(c) {
                 Self::get_func_receiver_mode(func)
             } else if func.is_static {
                 ReceiverMode::Static
@@ -442,7 +442,11 @@ impl Codegen {
                 } else {
                     ReceiverMode::Mut
                 }
-            } else if let Some(first) = func.params.first() {
+            } else if let Some(first) = func.params.first().filter(|p| {
+                p.ident.sym == "this"
+                    || p.ident.sym == "self"
+                    || (p.ident.sym == "_" && Self::is_receiver_param_type(&p.ty, class_name))
+            }) {
                 if first.is_move {
                     ReceiverMode::Move
                 } else if first.is_mut {
@@ -855,29 +859,36 @@ impl Codegen {
                         }
                     }
                 }
-                let is_cp_deinit_guarded = func.ident.sym == "__cp_deinit"
-                    && self
-                        .current_class_name
-                        .as_deref()
-                        .and_then(|cn| self.class_defs.get(cn))
-                        .map_or(false, |cls| {
-                            let is_c_abi = cls.meta.iter().any(|m| {
-                                m.name.sym == "extern"
-                                    || m.name.sym == "c"
-                                    || m.name.sym == "fix"
-                                    || m.name.sym == "packed"
-                                    || m.name.sym == "opaque"
-                            });
-                            !is_c_abi && !cls.is_union && !cls.is_static
+                let is_non_c_instance_class = self
+                    .current_class_name
+                    .as_deref()
+                    .and_then(|cn| self.class_defs.get(cn))
+                    .map_or(false, |cls| {
+                        let is_c_abi = cls.meta.iter().any(|m| {
+                            m.name.sym == "extern"
+                                || m.name.sym == "c"
+                                || m.name.sym == "fix"
+                                || m.name.sym == "packed"
+                                || m.name.sym == "opaque"
                         });
+                        !is_c_abi && !cls.is_union && !cls.is_static
+                    });
+                let is_cp_deinit_guarded =
+                    func.ident.sym == "__cp_deinit" && is_non_c_instance_class;
+                let is_cp_errdeinit_guarded =
+                    func.ident.sym == "__cp_errdeinit" && is_non_c_instance_class;
                 if is_cp_deinit_guarded {
                     self.writeln("if (self.__cp_dropped) return;");
                     self.writeln("self.__cp_dropped = true;");
+                } else if is_cp_errdeinit_guarded {
+                    self.writeln("if (self.__cp_errdropped) return;");
+                    self.writeln("self.__cp_errdropped = true;");
                 } else if !is_self_used {
                     self.writeln("_ = self;");
                 }
                 if self.current_receiver_mode == ReceiverMode::Move
                     && func.ident.sym != "__cp_deinit"
+                    && func.ident.sym != "__cp_errdeinit"
                 {
                     self.writeln("var __self_moved = false; _ = &__self_moved;");
                     let drop_body = Self::build_drop_call_snippet("self");

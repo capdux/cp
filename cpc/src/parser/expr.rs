@@ -166,12 +166,19 @@ impl<'a> Parser<'a> {
                         self.bump()?; // consume .
                         let tilde_span = self.bump()?.1; // consume ~
                         let dtor = self.parse_ident()?;
-                        if dtor.sym != "init" {
-                            return Err(ParseError::Generic(
-                                format!("expected '~init' after '.~', found '~{}'", dtor.sym),
-                                dtor.span,
-                            ));
-                        }
+                        let dtor_sym = match dtor.sym.as_str() {
+                            "init" => "__cp_deinit",
+                            "errinit" => "__cp_errdeinit",
+                            _ => {
+                                return Err(ParseError::Generic(
+                                    format!(
+                                        "expected '~init' or '~errinit' after '.~', found '~{}'",
+                                        dtor.sym
+                                    ),
+                                    dtor.span,
+                                ));
+                            }
+                        };
                         left = Expr::Member(MemberExpr {
                             span: Span {
                                 start: left_span(&left).start,
@@ -183,7 +190,7 @@ impl<'a> Parser<'a> {
                                     start: tilde_span.start,
                                     end: dtor.span.end,
                                 },
-                                sym: "__cp_deinit".to_string(),
+                                sym: dtor_sym.to_string(),
                             },
                         });
                         continue;
@@ -1170,12 +1177,19 @@ impl<'a> Parser<'a> {
                         self.bump()?; // consume .
                         let tilde_span = self.bump()?.1; // consume ~
                         let dtor = self.parse_ident()?;
-                        if dtor.sym != "init" {
-                            return Err(ParseError::Generic(
-                                format!("expected '~init' after '.~', found '~{}'", dtor.sym),
-                                dtor.span,
-                            ));
-                        }
+                        let dtor_sym = match dtor.sym.as_str() {
+                            "init" => "__cp_deinit",
+                            "errinit" => "__cp_errdeinit",
+                            _ => {
+                                return Err(ParseError::Generic(
+                                    format!(
+                                        "expected '~init' or '~errinit' after '.~', found '~{}'",
+                                        dtor.sym
+                                    ),
+                                    dtor.span,
+                                ));
+                            }
+                        };
                         left = Expr::Member(MemberExpr {
                             span: Span {
                                 start: left_span(&left).start,
@@ -1187,7 +1201,7 @@ impl<'a> Parser<'a> {
                                     start: tilde_span.start,
                                     end: dtor.span.end,
                                 },
-                                sym: "__cp_deinit".to_string(),
+                                sym: dtor_sym.to_string(),
                             },
                         });
                         continue;
