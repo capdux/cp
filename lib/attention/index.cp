@@ -477,3 +477,17 @@ export {
     swigluInterleavedF32,
     swigluSplitF32,
 } from "./rmsNorm.cp";
+
+export {
+    MROPE_MAX_HEAD_DIM,
+    MROPE_MAX_SEQ_LEN,
+    MropeError,
+    MropeConfig,
+    MropePos3d,
+    MropeSegmentKind,
+    MropePosBuilder,
+    computeMropeInvFreqs,
+    applyMropeHeadInPlaceF32,
+    applyMropeMultiHeadInPlaceF32,
+    applyMropeSequenceInPlaceF32,
+} from "./mrope.cp";

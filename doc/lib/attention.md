@@ -1841,3 +1841,51 @@ pub fn demoRmsNormAndSwiglu() {
     * = swigluF32(out[0..], residual[0..], *mlp_s) catch 0;
 }
 ```
+
+---
+
+### 零分配 3D 多模态旋转位置编码（M-RoPE，对标 Qwen2-VL / Qwen2.5-VL）(`mrope.cp`)
+
+面向多模态视觉语言模型（VLM）文本 + 2D 图像 + 3D 视频统一时空位置编码的 100% 纯 CP 零动态堆分配 3D M-RoPE 引擎：
+
+- **常量与错误集**：
+  - `MROPE_MAX_HEAD_DIM = 256`、`MROPE_MAX_SEQ_LEN = 512`
+  - `MropeError`（`InvalidHeadDim | InvalidSections | DimMismatch | SequenceOverflow`）
+- **配置与 3D 坐标模型**：
+  - `MropeConfig`（`head_dim`, `section_t`, `section_h`, `section_w`, `theta = 1000000.0`, `interleaved = false`；提供 `isValid()` 与 `qwen2VlDefaults()` 对应 `[16, 24, 24]` / `head_dim = 128`）
+  - `MropePos3d`（`pos_t`, `pos_h`, `pos_w`；`textPos(p)` 退化为 `(p, p, p)` 与标准 1D RoPE 完全等价；`visionPos(t, h, w)`）
+  - `MropeSegmentKind`（`text | image | video`）
+  - `MropePosBuilder`（零堆 3D 位置 ID 生成器：`init()`、`appendTextTokens(*_, count)`、`appendImageGrid(*_, grid_h, grid_w)`、`appendVideoGrid(*_, grid_t, grid_h, grid_w)`、`len()`、`getPos(idx)`、`getKind(idx)`、`nextTextPos()`、`positionsSlice()`，自动维护图像/视频后继文本 `max(t, h, w) + 1` 坐标连续性）
+- **核心旋转算子**：
+  - `computeMropeInvFreqs(cfg, *out_inv_freqs): void ! MropeError`
+  - `applyMropeHeadInPlaceF32(*head_vec, pos, inv_freqs, cfg): void ! MropeError`（支持分段与轮询交错两种布局，严格保持 L2 范数不变）
+  - `applyMropeMultiHeadInPlaceF32(*qk_flat, num_heads, pos, inv_freqs, cfg): void ! MropeError`（单次计算 `cos/sin` 复用至多头，兼容 MHA / GQA）
+  - `applyMropeSequenceInPlaceF32(*seq_flat, seq_len, num_heads, positions, inv_freqs, cfg): void ! MropeError`
+
+```cp
+import {
+    MropeConfig,
+    MropePosBuilder,
+    computeMropeInvFreqs,
+    applyMropeSequenceInPlaceF32,
+} from "cap:attention";
+
+pub fn demoMultimodalMrope() {
+    // 1. Qwen2-VL 默认配置 (head_dim=128, sections=[16, 24, 24], theta=1e6)
+    const cfg = MropeConfig.qwen2VlDefaults();
+    let inv_buf: [64]f32 = [0.0; 64];
+    let inv_s: []f32 = inv_buf[0..];
+    computeMropeInvFreqs(cfg, *inv_s) catch return;
+
+    // 2. 构建 [2 text + 2x2 image + 1 text] 共 7 个多模态 token 的 3D 坐标
+    let builder = MropePosBuilder.init();
+    builder.appendTextTokens(2) catch return;
+    builder.appendImageGrid(2, 2) catch return;
+    builder.appendTextTokens(1) catch return;
+
+    // 3. 对 [seq_len=7, num_heads=1, head_dim=128] 批量原地施加 3D M-RoPE
+    let q_seq: [896]f32 = [0.5; 896];
+    let q_s: []f32 = q_seq[0..];
+    applyMropeSequenceInPlaceF32(*q_s, builder.len(), 1, builder.positionsSlice(), inv_buf[0..], cfg) catch return;
+}
+```
