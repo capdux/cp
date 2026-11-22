@@ -727,10 +727,11 @@ impl Codegen {
                 } else {
                     p.ident.sym.clone()
                 };
-                let noalias_prefix = if fn_allows_noalias
-                    && !p.is_comptime
-                    && matches!(&p.ty, Type::BorrowType { .. } | Type::Array(_))
-                    && (mapped_ty.starts_with("[]") || mapped_ty.starts_with('*'))
+                let noalias_prefix = if p.is_noalias
+                    || (fn_allows_noalias
+                        && !p.is_comptime
+                        && matches!(&p.ty, Type::BorrowType { .. } | Type::Array(_))
+                        && (mapped_ty.starts_with("[]") || mapped_ty.starts_with('*')))
                 {
                     "noalias "
                 } else {

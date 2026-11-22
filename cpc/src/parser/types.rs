@@ -270,9 +270,27 @@ impl<'a> Parser<'a> {
         let mut param_types = Vec::new();
         while self.peek() != Some(&Token::RParen) && self.peek().is_some() {
             let mut is_comptime = false;
-            if matches!(self.peek(), Some(Token::Ident(id)) if id == "comptime") {
-                self.bump()?;
-                is_comptime = true;
+            let mut is_noalias = false;
+            loop {
+                if matches!(self.peek(), Some(Token::Ident(id)) if id == "comptime")
+                    && !matches!(
+                        self.peek_next(),
+                        Some(Token::Colon | Token::Comma | Token::RParen)
+                    )
+                {
+                    self.bump()?;
+                    is_comptime = true;
+                } else if matches!(self.peek(), Some(Token::Ident(id)) if id == "noalias")
+                    && !matches!(
+                        self.peek_next(),
+                        Some(Token::Colon | Token::Comma | Token::RParen)
+                    )
+                {
+                    self.bump()?;
+                    is_noalias = true;
+                } else {
+                    break;
+                }
             }
             if matches!(self.peek(), Some(Token::Ident(_)) | Some(Token::ErrorKw))
                 && self.peek_next() == Some(&Token::Colon)
@@ -281,10 +299,17 @@ impl<'a> Parser<'a> {
                 self.bump()?; // colon
             }
             let mut ty = self.parse_type()?;
-            if is_comptime {
+            if is_comptime || is_noalias {
+                let mut prefix = String::new();
+                if is_comptime {
+                    prefix.push_str("comptime ");
+                }
+                if is_noalias {
+                    prefix.push_str("noalias ");
+                }
                 ty = Type::Ref(Ident {
                     span: self.peek_span(),
-                    sym: format!("comptime {}", Self::type_to_str(&ty)),
+                    sym: format!("{}{}", prefix, Self::type_to_str(&ty)),
                 });
             }
             param_types.push(ty);

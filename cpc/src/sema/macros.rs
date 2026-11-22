@@ -101,6 +101,7 @@ impl Analyzer {
                             is_mut: false,
                             is_move: matches!(f.ty, Type::Ref(_) | Type::BoxDyn(_)),
                             is_comptime: false,
+                            is_noalias: false,
                             default: None,
                             meta: vec![],
                         });
@@ -334,6 +335,7 @@ impl Analyzer {
                 is_mut: false,
                 is_move: false,
                 is_comptime: false,
+                is_noalias: false,
                 default: None,
                 meta: vec![],
             }],
@@ -428,6 +430,7 @@ impl Analyzer {
                 is_mut: false,
                 is_move: false,
                 is_comptime: false,
+                is_noalias: false,
                 default: None,
                 meta: vec![],
             }],

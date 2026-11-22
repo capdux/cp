@@ -1751,3 +1751,27 @@
   > 已读取工单 **`task-bun-20261122-switch-mut-payload`**（复现：[repro_switch_mut_payload.cp](file:///data/dev/cp/temp/repro_switch_mut_payload.cp)：`switch` 分支无管道可变载荷捕获 `.a *v => { ... }` 报 `E0111: expected token 'FatArrow', found 'Star'`），并立即启动独立热修子智能体 **`49d5d09e`**（`CPC Hotfix Engineer`）专职修复、发布 `sync_cpc.sh release`、补齐回归测试并执行 `resolve` 结单。
   >
   > 原有 2 路第 3 波常驻生态子智能体（Priority ① `e7adabc2` + Priority ③ `0e1f5c0c`）继续并行运转不受影响。待热修回报后将立即验收提交并同步 `SESSION.md`。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-fn-noalias-param`）[ticket:task-bun-20261122-fn-noalias-param]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 17:50:22` | 状态：`resolved` | 结单：`2026-11-22T17:58:32`
+- **报错/需求摘要**：fn 形参修饰符 noalias（如 fn f(noalias dst: [*]u8, ...)）导致参数解析错位，报 E0207 type mismatch
+- **结单与处理汇报**：已修复: (1) Param AST 与 parse_params/parse_fn_type_sig_body 新增 noalias 修饰符支持并在 codegen/dcp 正确输出 noalias；(2) sema type_infer 对 ManyRawPtr/CPtr/SentinelPtr/SentinelSlice 索引解包只读 BorrowType/Aligned 限定符，消除 [*]const u8 索引赋值 E0207。已发布 release cpc，repro_fn_noalias_param.cp 与 cap/test/test_fn_noalias_param.cp 100% PASS。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-extern-any-ptr`）[ticket:task-bun-20261122-extern-any-ptr]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 17:50:22` | 状态：`resolved` | 结单：`2026-11-22T17:58:32`
+- **报错/需求摘要**：@extern(*!, { name: "foo" }) 首个类型参数传 *! 时，parser 报 E0100 unexpected token 'Comma'
+- **结单与处理汇报**：已修复: (1) parser/primary.rs 为 @extern 首个参数走 parse_type() 生成 Expr::TypeVal，并支持表达式位置 *! / *!? 等原始不透明指针类型字面量；(2) sema type_infer 为 @extern 推导首个类型参数作为返回类型。已发布 release cpc，repro_extern_any_ptr.cp 与 cap/test/test_extern_any_ptr.cp 100% PASS。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 17:50:23）[step:15686]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(2条: task-bun-20261122-fn-noalias-param,task-bun-20261122-extern-any-ptr)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取 2 条新编译器阻断工单并立即启动独立热修子智能体 **`98d22122`**（`CPC Hotfix Engineer`）打包修复、发布 `sync_cpc.sh release`、补齐回归测试并逐一 `resolve` 结单：
+  > 1. **`task-bun-20261122-fn-noalias-param`**（复现：[repro_fn_noalias_param.cp](file:///data/dev/cp/temp/repro_fn_noalias_param.cp)）：`fn f(noalias dst: [*]u8, ...)` 形参 `noalias` 修饰符导致参数解析错位；
+  > 2. **`task-bun-20261122-extern-any-ptr`**（复现：[repro_extern_any_ptr.cp](file:///data/dev/cp/temp/repro_extern_any_ptr.cp)）：`@extern(*!, { name: "foo" })` 首个类型参数 `*!` 报 `E0100`。
+  >
+  > 同时已完成 **Priority ① 第 3 波第 9 轮** 验收、文档同步与 Git 提交（Commit `75cec5b7`）：
+  > - 吸收零堆 POSIX 路径规范化与 `ShellDirState` 目录切换状态机 [cd_path.cp](file:///data/dev/cp/lib/shell/cd_path.cp) 至 [lib/shell/index.cp](file:///data/dev/cp/lib/shell/index.cp)，同步 `/data/dev/bun/docs/runtime/shell.mdx` 至 [doc/lib/shell.md](file:///data/dev/cp/doc/lib/shell.md) 并更新 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md)（6/6 PASS，`bun_sourced=903, upstream_newer=0`）；
+  > - 已向 `e7adabc2` 派发 **Priority ① 第 3 波第 10 轮（收官轮）**。
+  >
+  > 当前 3 路并行运转中：**紧急热修 2 条工单（`98d22122`）+ Priority ① 第 3 波第 10 轮收官（`e7adabc2`）+ Priority ② 第 4 波第 1 轮 `lib/attention/iter_scheduler.cp`（`a71d0cb8`）**。

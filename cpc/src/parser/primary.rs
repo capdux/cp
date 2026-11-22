@@ -534,6 +534,38 @@ impl<'a> Parser<'a> {
                     self.bump()?;
                     depth += 1;
                 }
+                if self.peek() == Some(&Token::Bang)
+                    && matches!(
+                        self.peek_next(),
+                        Some(
+                            Token::Comma
+                                | Token::RParen
+                                | Token::RBracket
+                                | Token::RBrace
+                                | Token::Semicolon
+                                | Token::Question
+                                | Token::Eq
+                                | Token::NotEq
+                        ) | None
+                    )
+                {
+                    let mut end = self.bump()?.1.end;
+                    let mut ty = Type::RawPtr {
+                        inner: Box::new(Type::Any),
+                        depth,
+                    };
+                    if self.peek() == Some(&Token::Question) {
+                        end = self.bump()?.1.end;
+                        ty = Type::Optional(Box::new(ty));
+                    }
+                    return Ok(Expr::TypeVal {
+                        span: Span {
+                            start: span.start,
+                            end,
+                        },
+                        ty,
+                    });
+                }
                 if matches!(
                     self.peek(),
                     Some(
@@ -1109,6 +1141,35 @@ impl<'a> Parser<'a> {
                         is_volatile,
                         content,
                     });
+                }
+                if name == "@extern" {
+                    self.expect(Token::LParen)?;
+                    let ty_start = self.peek_span().start;
+                    let target_ty = self.parse_type()?;
+                    let ty_end = self.peek_span().start;
+                    let mut args = vec![Expr::TypeVal {
+                        span: Span {
+                            start: ty_start,
+                            end: ty_end,
+                        },
+                        ty: target_ty,
+                    }];
+                    while self.peek() == Some(&Token::Comma) {
+                        self.bump()?;
+                        if self.peek() == Some(&Token::RParen) {
+                            break;
+                        }
+                        args.push(self.parse_bin_expr(0)?);
+                    }
+                    let end = self.expect(Token::RParen)?.end;
+                    return Ok(Expr::Builtin(BuiltinCall {
+                        span: Span {
+                            start: span.start,
+                            end,
+                        },
+                        name,
+                        args,
+                    }));
                 }
                 if name == "@map" || name == "@comptimeMap" || name == "@comptime_map" {
                     self.expect(Token::LParen)?;

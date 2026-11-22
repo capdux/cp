@@ -2692,9 +2692,10 @@ impl Codegen {
                         params_str.push_str(", ");
                     }
                     let comptime_prefix = if p.is_comptime { "comptime " } else { "" };
+                    let noalias_prefix = if p.is_noalias { "noalias " } else { "" };
                     params_str.push_str(&format!(
-                        "{}{}: {}",
-                        comptime_prefix, p.ident.sym, mapped_ty
+                        "{}{}{}: {}",
+                        comptime_prefix, noalias_prefix, p.ident.sym, mapped_ty
                     ));
                 }
 

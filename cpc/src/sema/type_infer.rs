@@ -650,7 +650,19 @@ impl Analyzer {
                     Type::ManyRawPtr(elem)
                     | Type::CPtr(elem)
                     | Type::SentinelPtr(elem, _)
-                    | Type::SentinelSlice(elem, _) => Ok(*elem),
+                    | Type::SentinelSlice(elem, _) => {
+                        let mut elem_ty = *elem;
+                        while let Type::BorrowType {
+                            inner,
+                            is_mut: false,
+                            ..
+                        }
+                        | Type::Aligned { inner, .. } = elem_ty
+                        {
+                            elem_ty = *inner;
+                        }
+                        Ok(elem_ty)
+                    }
                     Type::CStr => Ok(Type::U8),
                     Type::String => Ok(Type::U8),
                     Type::Ref(id) if id.sym == "cstring" || id.sym == "cstr" => Ok(Type::U8),
@@ -725,6 +737,13 @@ impl Analyzer {
                     span: Span { start: 0, end: 0 },
                     sym: "SharedTensor".to_string(),
                 })),
+                "@extern" => {
+                    if let Some(Expr::TypeVal { ty, .. }) = call.args.first() {
+                        Ok(ty.clone())
+                    } else {
+                        Ok(Type::Any)
+                    }
+                }
                 "@map" => {
                     if call.args.len() > 0 {
                         let inner = self.infer_type(&call.args[0])?;

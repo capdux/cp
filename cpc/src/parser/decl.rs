@@ -1579,6 +1579,7 @@ impl<'a> Parser<'a> {
                     },
                     ty: Type::Any,
                     is_comptime: false,
+                    is_noalias: false,
                     is_mut: false,
                     is_move: false,
                     default: None,
@@ -1592,9 +1593,27 @@ impl<'a> Parser<'a> {
             let mut is_mut = false;
             let mut is_move = false;
             let mut is_comptime = meta.iter().any(|m| m.name.sym == "comptime");
-            if matches!(self.peek(), Some(Token::Ident(id)) if id == "comptime") {
-                self.bump()?;
-                is_comptime = true;
+            let mut is_noalias = meta.iter().any(|m| m.name.sym == "noalias");
+            loop {
+                if matches!(self.peek(), Some(Token::Ident(id)) if id == "comptime")
+                    && !matches!(
+                        self.peek_next(),
+                        Some(Token::Colon | Token::Comma | Token::RParen | Token::Assign)
+                    )
+                {
+                    self.bump()?;
+                    is_comptime = true;
+                } else if matches!(self.peek(), Some(Token::Ident(id)) if id == "noalias")
+                    && !matches!(
+                        self.peek_next(),
+                        Some(Token::Colon | Token::Comma | Token::RParen | Token::Assign)
+                    )
+                {
+                    self.bump()?;
+                    is_noalias = true;
+                } else {
+                    break;
+                }
             }
 
             let mut had_prefix_mut_or_let = false;
@@ -1684,6 +1703,7 @@ impl<'a> Parser<'a> {
                     ident: p_ident,
                     ty,
                     is_comptime,
+                    is_noalias,
                     is_mut,
                     is_move,
                     default,
@@ -1737,6 +1757,7 @@ impl<'a> Parser<'a> {
                     ident: p_ident,
                     ty,
                     is_comptime,
+                    is_noalias,
                     is_mut,
                     is_move,
                     default,
@@ -1801,6 +1822,7 @@ impl<'a> Parser<'a> {
                 ident: p_ident,
                 ty,
                 is_comptime,
+                is_noalias,
                 is_mut,
                 is_move,
                 meta,

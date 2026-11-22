@@ -321,6 +321,7 @@ impl<'a> Parser<'a> {
                         lifetimes: vec![],
                     },
                     is_comptime: false,
+                    is_noalias: false,
                     is_mut: true,
                     is_move: false,
                     meta: vec![],

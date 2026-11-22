@@ -838,6 +838,8 @@ pub struct Param {
     pub ident: Ident,
     pub ty: Type,
     pub is_comptime: bool,
+    #[serde(default)]
+    pub is_noalias: bool,
     pub is_mut: bool,
     pub is_move: bool,
     #[serde(default)]

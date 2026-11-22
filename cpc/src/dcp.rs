@@ -213,6 +213,9 @@ impl DcpEmitter {
             if p.is_comptime {
                 self.output.push_str("comptime ");
             }
+            if p.is_noalias {
+                self.output.push_str("noalias ");
+            }
             self.output
                 .push_str(&format!("{}: {}", p.ident.sym, self.format_type(&p.ty)));
             if i < params.len() - 1 {
