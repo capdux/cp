@@ -583,6 +583,45 @@ pub fn demoWalCheckpoint() {
 }
 ```
 
+### 零分配 Sans-IO Raft 选主、Pre-Vote 防分区扰动与法定人数提交状态机 (`raftVote.cp`)
+
+与 `raftLog.cp` 互补的 100% 纯 CP 零动态堆分配 Sans-IO Raft 共识选主状态机：
+
+- **常量与消息模型**：
+  - `RAFT_MAX_PEERS = 15`、`RAFT_NO_NODE = 0`
+  - `RaftRole`（`follower | pre_candidate | candidate | leader`；配套 `formatRaftRole`）
+  - `RaftVoteRejectReason`（`none | stale_term | already_voted | log_not_up_to_date | leader_lease_active`）
+  - `RaftVoteRequest`、`RaftVoteResponse`、`RaftHeartbeat`、`RaftPeerProgress`、`RaftElectionStats`
+  - `isLogUpToDate(cand_last_term, cand_last_index, local_last_term, local_last_index): bool`（Raft §5.4.1 日志最新性比较）
+- **核心引擎 `RaftElectionNode`**：
+  - `init(node_id, cluster_size, election_timeout_ms, heartbeat_interval_ms, enable_pre_vote)` / `quorumSize()` / `isLeaderLeaseActive(now_ms)`
+  - `tick(*_, now_ms, last_log_term, last_log_index): RaftVoteRequest?`（选举超时自动触发 Pre-Vote 或正式 RequestVote）
+  - `handleVoteRequest(*_, req, now_ms, local_last_term, local_last_index): RaftVoteResponse`（Leader Lease 防惊群、Pre-Vote 不递增任期/不落盘 `voted_for`、§5.4.1 日志最新性校验）
+  - `handleVoteResponse(*_, resp, now_ms, last_log_term, last_log_index): RaftVoteRequest?`（Pre-Vote 达法定人数自动晋级正式 Candidate；正式 Candidate 达法定人数自动当选 Leader；更高任期立即退位）
+  - `handleHeartbeat(*_, hb, now_ms)` / `recordPeerAck(*_, peer_id, match_index, now_ms)` / `computeQuorumCommitIndex(local_last_index)` / `advanceCommitIndex(*_, local_last_index)` / `stepDown(*_, new_term)` / `stats()`
+
+```cp
+import {
+    RaftRole,
+    RaftElectionNode,
+} from "cap:db";
+
+pub fn demoRaftElection() {
+    let n1 = RaftElectionNode.init(1, 3, 300, 100, true) ?? return;
+    let n2 = RaftElectionNode.init(2, 3, 300, 100, true) ?? return;
+
+    // 超时发起 Pre-Vote -> n2 同意 -> n1 晋级正式 Candidate -> n2 投正式票 -> n1 当选 Leader
+    if (pre_req := n1.tick(500, 1, 10)) {
+        const pre_resp = n2.handleVoteRequest(pre_req, 500, 1, 10);
+        if (vote_req := n1.handleVoteResponse(pre_resp, 510, 1, 10)) {
+            const vote_resp = n2.handleVoteRequest(vote_req, 510, 1, 10);
+            * = n1.handleVoteResponse(vote_resp, 520, 1, 10);
+        }
+    }
+    * = (n1.stats().role == RaftRole.leader);
+}
+```
+
 ---
 
 ## 收敛子模块深度文档

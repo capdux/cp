@@ -94,3 +94,14 @@ export {
     isTsAccessibilityModifier,
     lookupJsxEntity,
 } from "./lexerTables.cp";
+
+export {
+    IMPORT_TRIM_MAX_ITEMS,
+    TsImportsNotUsedAsValues,
+    ImportTrimPolicy,
+    ImportBindingUsage,
+    ImportStmtInput,
+    ImportStmtDecision,
+    ImportTrimResult,
+    evaluateImportStmt,
+} from "./importTrim.cp";

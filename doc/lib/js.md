@@ -224,3 +224,24 @@ if (cp := lookupJsxEntity("rarr")) {
 }
 assert(JsToken.t_question_question_equals.isAssign());
 ```
+
+### ESM / TypeScript 未使用导入裁剪决策 (`importTrim.cp`)
+
+吸收自 `/data/dev/bun/src/js_parser/ast/ImportScanner.cp`：
+
+- **导出符号**：`IMPORT_TRIM_MAX_ITEMS` (`32`)、`TsImportsNotUsedAsValues`（`remove`/`preserve`/`error_mode`）、`ImportTrimPolicy`（`tsDefault`/`tsBundler`/`shouldTrimUnusedImports`）、`ImportBindingUsage`（`runtimeUsed`/`typeOnly`/`unused`）、`ImportStmtInput`、`ImportStmtDecision`（`keep_with_bindings`/`keep_side_effect_only`/`omit_completely`/`disable_macro`）、`ImportTrimResult`、`evaluateImportStmt`；
+- **关键裁剪策略**：
+  1. **宏导入与裸副作用导入**：`with { type: "macro" }` 宏导入总是返回 `disable_macro` 并置 `mark_record_unused = true`；裸 `import "./polyfill"` 始终返回 `keep_side_effect_only`；
+  2. **Svelte / 局部模块兼容**：非打包且未开启 `minify_identifiers` 且 `importsNotUsedAsValues != remove` 时关闭自动裁剪，保护模板中隐式引用的导入；
+  3. **命名空间属性访问保活**：`* as ns` 即使 `runtime_use_count == 0`，若打包器检测到 `has_namespace_prop_access == true` 仍保持存活。
+
+```cp
+import { ImportTrimPolicy, ImportStmtInput, ImportBindingUsage, ImportStmtDecision, evaluateImportStmt } from "cap:js";
+
+let stmt = ImportStmtInput.sideEffectOnly();
+* = stmt.addNamed(ImportBindingUsage.typeOnly("User"));
+* = stmt.addNamed(ImportBindingUsage.runtimeUsed("fetchUser", 2));
+const res = evaluateImportStmt(stmt, ImportTrimPolicy.tsDefault());
+assert(res.decision == ImportStmtDecision.keep_with_bindings);
+assert(res.kept_named_count == 1 && res.removed_binding_count == 1);
+```

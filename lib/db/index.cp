@@ -469,3 +469,19 @@ export {
     WalCheckpointStats,
     WalCheckpointCoordinator,
 } from "./walCheckpt.cp";
+
+// --- raft_vote (Sans-IO Raft Election, Pre-Vote & Quorum Commit FSM) ---
+export {
+    RAFT_MAX_PEERS,
+    RAFT_NO_NODE,
+    RaftRole,
+    RaftVoteRejectReason,
+    RaftVoteRequest,
+    RaftVoteResponse,
+    RaftHeartbeat,
+    RaftPeerProgress,
+    RaftElectionStats,
+    isLogUpToDate,
+    formatRaftRole,
+    RaftElectionNode,
+} from "./raftVote.cp";
