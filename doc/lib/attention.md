@@ -1675,3 +1675,40 @@ pub fn demoChunkedBatchScheduler() {
     }
 }
 ```
+
+---
+
+### 零分配 LLM 前缀缓存感知多副本推理路由器 (`cacheAware.cp`)
+
+面向 SGLang Router / Mooncake 风格分布式 LLM 推理网关的 100% 纯 CP 零动态堆分配前缀亲和度 + 负载联合路由器：
+
+- **常量与枚举**：
+  - `CACHE_ROUTE_MAX_REPLICAS = 16`、`CACHE_ROUTE_LRU_BLOCKS = 64`（每副本内联 64 槽近似前缀块 LRU 缓存）、`CACHE_ROUTE_BPS_SCALE = 10000`
+  - `CacheRouteStatus`（`routed | no_healthy_replica | all_replicas_saturated | invalid_input`）
+- **配置与数据模型**：
+  - `CacheRouteConfig`（`cache_affinity_weight`, `kv_load_weight`, `queue_load_weight`, `overload_kv_bps`, `overload_penalty`；提供 `defaults()` 与 `isValid()`）
+  - `ReplicaBlockSlot` / `ReplicaNodeState`（`isAvailable()`, `queueLoadRatio()`, `kvLoadRatio()`, `hasBlock`, `matchedPrefixBlocks`, `touchBlock`）
+  - `CacheRouteDecision`（`status`, `replica_id`, `matched_blocks`, `total_blocks`, `hit_ratio`, `score`, `diverted_by_overload`, `hotspot_fallback`）
+  - `CacheRouterStats`（集群健康副本数、总路由数、缓存命中路由数、累计命中块数、过载分流次数、热点回退次数与拒绝次数）
+- **核心引擎 `CacheAwareRouter`**：
+  - `init()` / `initWithConfig(config)` / `registerReplica(*_, replica_id, max_requests)` / `removeReplica` / `setReplicaHealth` / `updateReplicaLoad` / `completeRequest(*_, replica_id, new_kv_util_bps)`
+  - `routePrompt(*_, prompt_block_hashes, now_ms): CacheRouteDecision`：联合最长连续共享前缀命中率、KV 缓存余量与队列余量打分，自动对 `kv_util_bps >= overload_kv_bps` 的热点副本施加降权惩罚分流防雪崩，选中后自动刷新副本 LRU 前缀块并递增 `active_requests`。
+
+```cp
+import { CacheAwareRouter } from "cap:attention";
+
+pub fn demoCacheAwareRouter() {
+    let router = CacheAwareRouter.init();
+    * = router.registerReplica(1, 32);
+    * = router.registerReplica(2, 32);
+
+    const sys_prompt: [3]u64 = [0x101, 0x102, 0x103];
+    const r1 = router.routePrompt(sys_prompt[0..], 1000); // 写入副本 1 前缀缓存
+    * = router.completeRequest(r1.replica_id, 2000);
+
+    // 后续同前缀请求自动路由回副本 1 (matched_blocks == 3)
+    const follow_up: [4]u64 = [0x101, 0x102, 0x103, 0x204];
+    const r2 = router.routePrompt(follow_up[0..], 2000);
+    * = (r2.replica_id == r1.replica_id && r2.matched_blocks == 3);
+}
+```

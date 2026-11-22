@@ -418,3 +418,16 @@ export {
     BatchSchedStats,
     ChunkedBatchScheduler,
 } from "./batchSched.cp";
+
+export {
+    CACHE_ROUTE_MAX_REPLICAS,
+    CACHE_ROUTE_LRU_BLOCKS,
+    CACHE_ROUTE_BPS_SCALE,
+    CacheRouteStatus,
+    CacheRouteConfig,
+    ReplicaBlockSlot,
+    ReplicaNodeState,
+    CacheRouteDecision,
+    CacheRouterStats,
+    CacheAwareRouter,
+} from "./cacheAware.cp";
