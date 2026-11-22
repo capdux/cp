@@ -222,3 +222,19 @@ export {
     PgExecuteFrameError,
     PgExecuteFrame,
 } from "./executeFrame.cp";
+
+export {
+    PG_TAG_COPY_IN_RESPONSE,
+    PG_TAG_COPY_OUT_RESPONSE,
+    PG_TAG_COPY_BOTH_RESPONSE,
+    PG_COPY_RESP_HEADER_LEN,
+    PG_COPY_FORMAT_TEXT,
+    PG_COPY_FORMAT_BINARY,
+    PG_COPY_RESP_MAX_COLS,
+    PgCopyResponseError,
+    PgCopyDirection,
+    PgCopyFormat,
+    PgCopyFormatIter,
+    PgCopyResponseView,
+    PgCopyResponseEncoder,
+} from "./copyResponse.cp";

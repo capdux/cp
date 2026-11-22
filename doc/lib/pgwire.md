@@ -415,6 +415,32 @@ const decoded = PgExecuteFrame.decodeFrame(buf[0..(n - 5)])?;
 * = decoded.max_rows; // 500
 ```
 
+### `CopyInResponse` (`'G'`) / `CopyOutResponse` (`'H'`) / `CopyBothResponse` (`'W'`) 编解码（`copyResponse.cp`）
+
+> 吸收自 `/data/dev/bun/src/sql/postgres/protocol/CopyInResponse.cp`（覆盖 `CopyInResponse` / `CopyOutResponse` / `CopyBothResponse` 三类 COPY 握手响应），零堆分配实现整体格式码与逐列格式码的严格校验、零拷贝视图/迭代器及任意列数切片编码。
+
+- 核心导出：`PG_TAG_COPY_IN_RESPONSE`（`'G'`）、`PG_TAG_COPY_OUT_RESPONSE`（`'H'`）、`PG_TAG_COPY_BOTH_RESPONSE`（`'W'`）、`PG_COPY_RESP_HEADER_LEN`（`8`）、`PG_COPY_FORMAT_TEXT`（`0`）、`PG_COPY_FORMAT_BINARY`（`1`）、`PG_COPY_RESP_MAX_COLS`（`64`）、`PgCopyResponseError`、`PgCopyDirection`、`PgCopyFormat`、`PgCopyFormatIter`、`PgCopyResponseView`、`PgCopyResponseEncoder`；
+- **实战最佳实践**：
+  - 服务端响应 `COPY ... FROM STDIN` 返回 `'G'`（`CopyIn`），响应 `COPY ... TO STDOUT` 返回 `'H'`（`CopyOut`），逻辑复制流使用 `'W'`（`CopyBoth`）；收到响应后即进入 `CopyData`（`'d'`）流式传输阶段，并以 `CopyDone`（`'c'`）或 `CopyFail`（`'f'`）收尾。
+
+```cp
+import {
+    PgCopyDirection,
+    PgCopyFormat,
+    PgCopyResponseEncoder,
+    PgCopyResponseView,
+} from "cap:pgwire";
+
+let enc = PgCopyResponseEncoder.init(PgCopyDirection.CopyIn, PgCopyFormat.Binary);
+* = enc.addColumn(PgCopyFormat.Binary)?;
+* = enc.addColumn(PgCopyFormat.Text)?;
+
+let buf: [64]u8 = [0; 64];
+const n = enc.encodeFrame(buf[0..])?;
+const view = PgCopyResponseView.decodeFrame(buf[0..n])?;
+* = view.isBinary(); // true
+```
+
 ---
 
 ## 4. 示例
