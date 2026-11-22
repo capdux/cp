@@ -17,7 +17,7 @@ import {
     SlidingWindowCounter,
     GcraLimiter,
     KeyedRateLimiter,
-} from "cap:ratelimit";
+} from "cap:web";
 
 test("cap:ratelimit - TokenBucket burst, exact retry_after_ms, smooth refill & rollback clamp") {
     let tb = TokenBucket.init(10, 5.0, 1000) catch unreachable;
@@ -182,18 +182,18 @@ test("cap:ratelimit - KeyedRateLimiter isolation, evictIdle & RateLimitError val
 test("cap.ratelimit - dynamic mounting & std.testing.allocator zero-leak verification") {
     const alloc = std.testing.allocator;
 
-    let tb = cap.ratelimit.TokenBucket.initWithTokens(5, 10.0, 2, 1000) catch unreachable;
+    let tb = cap.web.TokenBucket.initWithTokens(5, 10.0, 2, 1000) catch unreachable;
     const d1 = tb.tryAcquire(2, 1000) catch unreachable;
     expect_eq(d1.allowed, true);
     expect_eq(d1.remaining, 0);
 
-    let sw = cap.ratelimit.SlidingWindowCounter.init(4, 1000, 0) catch unreachable;
+    let sw = cap.web.SlidingWindowCounter.init(4, 1000, 0) catch unreachable;
     expect_eq((sw.tryAcquire(4, 100) catch unreachable).allowed, true);
 
-    let gcra = cap.ratelimit.GcraLimiter.init(50, 1) catch unreachable;
+    let gcra = cap.web.GcraLimiter.init(50, 1) catch unreachable;
     expect_eq((gcra.tryAcquire(2, 500) catch unreachable).allowed, true);
 
-    let keyed = cap.ratelimit.KeyedRateLimiter.init(alloc, 3, 1.0) catch unreachable;
+    let keyed = cap.web.KeyedRateLimiter.init(alloc, 3, 1.0) catch unreachable;
     defer keyed.deinit();
     expect_eq((keyed.tryAcquireFor("k1", 1, 100) catch unreachable).allowed, true);
     expect_eq((keyed.tryAcquireFor("k2", 1, 200) catch unreachable).allowed, true);

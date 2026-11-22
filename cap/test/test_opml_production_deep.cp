@@ -8,7 +8,7 @@ import {
     parseOpmlHead,
     OpmlOutlineIter,
     formatOpmlFeedOutline,
-} from "cap:opml";
+} from "cap:web";
 
 const SAMPLE_OPML =
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" ++

@@ -13,7 +13,7 @@ import {
     encodeRpcMessage,
     decodeRpcMessage,
     RpcStreamDecoder,
-} from "cap:msgpack_rpc";
+} from "cap:web";
 
 test("1. MessagePack-RPC Request, Response and Notification roundtrip") {
     const alloc = std.testing.allocator;
@@ -108,12 +108,12 @@ test("4. Malformed frame, invalid msg_type and MessageTooLarge protection") {
 
 test("5. Dynamic cap.msgpack_rpc namespace and zero-leak check") {
     const alloc = std.testing.allocator;
-    let p: [1]cap.msgpack_rpc.RpcValue = [ cap.msgpack_rpc.RpcValue{ .bool_val = true } ];
-    const raw = try cap.msgpack_rpc.encodeRpcMessage(alloc, cap.msgpack_rpc.RpcMessage{
-        .notification = cap.msgpack_rpc.RpcNotification{ .method = "ready", .params = &p },
+    let p: [1]cap.web.RpcValue = [ cap.web.RpcValue{ .bool_val = true } ];
+    const raw = try cap.web.encodeRpcMessage(alloc, cap.web.RpcMessage{
+        .notification = cap.web.RpcNotification{ .method = "ready", .params = &p },
     });
     defer alloc.free(raw);
-    const decoded = try cap.msgpack_rpc.decodeRpcMessage(alloc, raw);
+    const decoded = try cap.web.decodeRpcMessage(alloc, raw);
     defer decoded.message.deinit(alloc);
     try std.testing.expectEqualStrings("ready", decoded.message.notification.method);
 }

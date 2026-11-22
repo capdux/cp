@@ -12,7 +12,7 @@ import {
     extractBoundary,
     parse,
     parseWithLimits,
-} from "cap:multipart";
+} from "cap:web";
 
 fn runTest1(): !void {
     const alloc = std.testing.allocator;
@@ -206,7 +206,7 @@ fn runTest5(): !void {
     const alloc = std.testing.allocator;
 
     // Dynamic mounting via cap.multipart & std.testing.allocator zero-leak check
-    let builder = cap.multipart.MultipartBuilder.init(alloc, "CapHubBnd42")?;
+    let builder = cap.web.MultipartBuilder.init(alloc, "CapHubBnd42")?;
     defer builder.deinit();
 
     builder.addField("mode", "production")?;
@@ -217,8 +217,8 @@ fn runTest5(): !void {
     const body = builder.finish(alloc)?;
     defer alloc.free(body);
 
-    const bnd = cap.multipart.extractBoundary(ct)?;
-    let doc = cap.multipart.parse(alloc, bnd, body)?;
+    const bnd = cap.web.extractBoundary(ct)?;
+    let doc = cap.web.parse(alloc, bnd, body)?;
     defer doc.deinit(alloc);
 
     expect_eq(doc.parts.len, 2 as usize);

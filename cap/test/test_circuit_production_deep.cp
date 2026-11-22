@@ -19,7 +19,7 @@ import {
     JitterMode,
     BackoffPolicy,
     Bulkhead,
-} from "cap:circuit";
+} from "cap:web";
 
 test("cap:circuit - Closed -> Open -> HalfOpen -> Closed & HalfOpen failure fallback") {
     const alloc = std.heap.page_allocator;
@@ -242,7 +242,7 @@ test("cap:circuit - Bulkhead concurrency, releasePermit, forceOpen/forceClose & 
 
 test("cap.circuit - dynamic mounting & std.testing.allocator zero-leak check") {
     const alloc = std.testing.allocator;
-    let cb = cap.circuit.CircuitBreaker.init(alloc, cap.circuit.CircuitConfig{
+    let cb = cap.web.CircuitBreaker.init(alloc, cap.web.CircuitConfig{
         failure_threshold_rate: 0.5,
         minimum_calls: 2,
         window_size: 4,
@@ -255,16 +255,16 @@ test("cap.circuit - dynamic mounting & std.testing.allocator zero-leak check") {
     expect_eq(cb.allowRequest(10), true);
     cb.recordFailure(10);
     cb.recordFailure(20);
-    expect_eq(cb.stats(20).state == cap.circuit.CircuitState.Open, true);
+    expect_eq(cb.stats(20).state == cap.web.CircuitState.Open, true);
     expect_eq(cb.allowRequest(220), true);
     cb.recordSuccess(225);
-    expect_eq(cb.stats(225).state == cap.circuit.CircuitState.Closed, true);
+    expect_eq(cb.stats(225).state == cap.web.CircuitState.Closed, true);
 
-    let bo = cap.circuit.BackoffPolicy.init(10, 100, 2.0, 3, cap.circuit.JitterMode.Equal) catch unreachable;
+    let bo = cap.web.BackoffPolicy.init(10, 100, 2.0, 3, cap.web.JitterMode.Equal) catch unreachable;
     const d = bo.nextDelayMs(1, 10, 999);
     expect_eq(d >= 10 && d <= 20, true);
 
-    let bh = cap.circuit.Bulkhead.init(1, 0) catch unreachable;
+    let bh = cap.web.Bulkhead.init(1, 0) catch unreachable;
     expect_eq(bh.tryAcquire(), true);
     expect_eq(bh.tryAcquire(), false);
     bh.releasePermit();

@@ -17,13 +17,13 @@ import {
     H3Frame,
     H3Header,
     parseStreamType,
-    encodeFrame,
+    encodeH3Frame as encodeFrame,
     decodeFrames,
     decodeFramesWithMaxSize,
     freeFrames,
     encodeQpackHeaders,
     decodeQpackHeaders,
-} from "cap:http3";
+} from "cap:web";
 
 fn appendSlice(list: *std.ArrayList(u8), alloc: std.mem.Allocator, data: []const u8): !void {
     list.appendSlice(alloc, data) catch return Http3Error.OutOfMemory;
@@ -251,16 +251,16 @@ fn runTestFrameAndQpackErrorGuards(): !void {
 fn runTestDynamicCapMount(): !void {
     const alloc = std.testing.allocator;
 
-    const push_wire = cap.http3.encodeFrame(alloc, cap.http3.H3Frame {
-        push_promise: cap.http3.H3PushPromiseFrame {
+    const push_wire = cap.web.encodeH3Frame(alloc, cap.web.H3Frame {
+        push_promise: cap.web.H3PushPromiseFrame {
             push_id: 42,
             header_block: "\x00\x00\xd1",
         },
     })?;
     defer alloc.free(push_wire);
 
-    const frames = cap.http3.decodeFrames(alloc, push_wire)?;
-    defer cap.http3.freeFrames(alloc, frames);
+    const frames = cap.web.decodeFrames(alloc, push_wire)?;
+    defer cap.web.freeFrames(alloc, frames);
 
     expect_eq(frames.len, 1 as usize);
     switch (frames[0]) {
@@ -271,14 +271,14 @@ fn runTestDynamicCapMount(): !void {
         else => unreachable,
     }
 
-    const hdrs: [2]cap.http3.H3Header = [
-        cap.http3.H3Header { name: ":status", value: "200" },
-        cap.http3.H3Header { name: "server", value: "cap-h3" },
+    const hdrs: [2]cap.web.H3Header = [
+        cap.web.H3Header { name: ":status", value: "200" },
+        cap.web.H3Header { name: "server", value: "cap-h3" },
     ];
-    const encoded_hdrs = cap.http3.encodeQpackHeaders(alloc, &hdrs)?;
+    const encoded_hdrs = cap.web.encodeQpackHeaders(alloc, &hdrs)?;
     defer alloc.free(encoded_hdrs);
 
-    const decoded_hdrs = cap.http3.decodeQpackHeaders(alloc, encoded_hdrs)?;
+    const decoded_hdrs = cap.web.decodeQpackHeaders(alloc, encoded_hdrs)?;
     defer alloc.free(decoded_hdrs);
     expect_eq(decoded_hdrs.len, 2 as usize);
     expect_eq(std.mem.eql(u8, decoded_hdrs[0].name, ":status"), true);

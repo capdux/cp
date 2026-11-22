@@ -9,7 +9,7 @@ import {
     SseEvent,
     SseParser,
     SseEncoder,
-} from "cap:sse";
+} from "cap:web";
 
 fn runTest1(): !void {
     const alloc = std.testing.allocator;
@@ -148,10 +148,10 @@ fn runTest5(): !void {
     const alloc = std.testing.allocator;
 
     // Dynamic mount: import cap from "cap"; cap.sse
-    const frame = cap.sse.SseEncoder.formatEvent(alloc, "stream", "chunk-a\nchunk-b", "99", 500)?;
+    const frame = cap.web.SseEncoder.formatEvent(alloc, "stream", "chunk-a\nchunk-b", "99", 500)?;
     defer alloc.free(frame);
 
-    let parser = cap.sse.SseParser.init(alloc, 1024);
+    let parser = cap.web.SseParser.init(alloc, 1024);
     defer parser.deinit();
     parser.feed(frame)?;
 

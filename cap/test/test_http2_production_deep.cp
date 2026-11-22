@@ -40,7 +40,7 @@ import {
     decodeRstStream,
     encodeDataFrame,
     decodeDataPayload,
-} from "cap:http2";
+} from "cap:web";
 
 test("cap:http2 - SETTINGS (incl ACK), PING, GOAWAY, RST_STREAM, WINDOW_UPDATE & PADDED DATA roundtrip") {
     const alloc = std.testing.allocator;
@@ -338,27 +338,27 @@ test("cap:http2 - FrameSizeError, InvalidSettingsLength, ProtocolError & Invalid
 test("cap.http2 - dynamic mounting via import cap from \"cap\" with std.testing.allocator") {
     const alloc = std.testing.allocator;
 
-    expect_eq(cap.http2.CONNECTION_PREFACE.len, 24);
-    let decoder = cap.http2.FrameStreamDecoder.init(alloc, cap.http2.DEFAULT_MAX_FRAME_SIZE);
+    expect_eq(cap.web.CONNECTION_PREFACE.len, 24);
+    let decoder = cap.web.FrameStreamDecoder.init(alloc, cap.web.DEFAULT_MAX_FRAME_SIZE);
     defer decoder.deinit();
 
     const params = [
-        cap.http2.SettingParam.init(cap.http2.SettingId.HEADER_TABLE_SIZE, 8192),
+        cap.web.SettingParam.init(cap.web.SettingId.HEADER_TABLE_SIZE, 8192),
     ];
-    const wire = cap.http2.encodeSettings(alloc, params[0..], false) catch unreachable;
+    const wire = cap.web.encodeSettings(alloc, params[0..], false) catch unreachable;
     defer alloc.free(wire);
 
     decoder.feed(wire) catch unreachable;
     let frame = (decoder.nextFrame() catch unreachable).?;
     defer frame.deinit(alloc);
 
-    const decoded = cap.http2.decodeSettings(alloc, frame) catch unreachable;
+    const decoded = cap.web.decodeSettings(alloc, frame) catch unreachable;
     defer alloc.free(decoded);
     expect_eq(decoded.len, 1);
-    expect_eq(decoded[0].id, cap.http2.SettingId.HEADER_TABLE_SIZE);
+    expect_eq(decoded[0].id, cap.web.SettingId.HEADER_TABLE_SIZE);
     expect_eq(decoded[0].value, 8192);
 
-    let win = cap.http2.FlowWindow.init(cap.http2.DEFAULT_INITIAL_WINDOW_SIZE);
+    let win = cap.web.FlowWindow.init(cap.web.DEFAULT_INITIAL_WINDOW_SIZE);
     win.consume(1024) catch unreachable;
     expect_eq(win.available(), 64511);
 }

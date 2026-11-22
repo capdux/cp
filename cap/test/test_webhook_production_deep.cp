@@ -16,7 +16,7 @@ import {
     GitHubWebhook,
     StripeWebhook,
     IdempotencyStore,
-} from "cap:webhook";
+} from "cap:web";
 
 fn testStandardWebhookAndRotation(): !void {
     const alloc = std.heap.page_allocator;
@@ -235,29 +235,29 @@ fn testCapWebhookDynamicMount(): !void {
     const payload = "{\"ok\":true}";
     const ts: i64 = 1700005000;
 
-    // 1. cap.webhook.StandardWebhook
-    const std_hdr = cap.webhook.StandardWebhook.sign(alloc, "mount_sec", "msg_mount", ts, payload)?;
+    // 1. cap.web.StandardWebhook
+    const std_hdr = cap.web.StandardWebhook.sign(alloc, "mount_sec", "msg_mount", ts, payload)?;
     defer alloc.free(std_hdr);
-    cap.webhook.StandardWebhook.verify("mount_sec", "msg_mount", ts, payload, std_hdr, ts, 60)?;
+    cap.web.StandardWebhook.verify("mount_sec", "msg_mount", ts, payload, std_hdr, ts, 60)?;
 
-    // 2. cap.webhook.GitHubWebhook
-    const gh_hdr = cap.webhook.GitHubWebhook.signSha256(alloc, "mount_gh", payload)?;
+    // 2. cap.web.GitHubWebhook
+    const gh_hdr = cap.web.GitHubWebhook.signSha256(alloc, "mount_gh", payload)?;
     defer alloc.free(gh_hdr);
-    expect_eq(cap.webhook.GitHubWebhook.verifySha256("mount_gh", payload, gh_hdr), true);
+    expect_eq(cap.web.GitHubWebhook.verifySha256("mount_gh", payload, gh_hdr), true);
 
-    // 3. cap.webhook.StripeWebhook & WebhookError
-    const st_hdr = cap.webhook.StripeWebhook.signHeader(alloc, "mount_st", ts, payload)?;
+    // 3. cap.web.StripeWebhook & WebhookError
+    const st_hdr = cap.web.StripeWebhook.signHeader(alloc, "mount_st", ts, payload)?;
     defer alloc.free(st_hdr);
-    cap.webhook.StripeWebhook.verifyHeader("mount_st", payload, st_hdr, ts, 60)?;
+    cap.web.StripeWebhook.verifyHeader("mount_st", payload, st_hdr, ts, 60)?;
 
     let caught_expired = false;
-    cap.webhook.StripeWebhook.verifyHeader("mount_st", payload, st_hdr, ts + 61, 60) catch |e| {
-        if (e == cap.webhook.WebhookError.TimestampExpired) caught_expired = true;
+    cap.web.StripeWebhook.verifyHeader("mount_st", payload, st_hdr, ts + 61, 60) catch |e| {
+        if (e == cap.web.WebhookError.TimestampExpired) caught_expired = true;
     };
     expect_eq(caught_expired, true);
 
-    // 4. cap.webhook.IdempotencyStore
-    let dedup = cap.webhook.IdempotencyStore.init(alloc, 2000);
+    // 4. cap.web.IdempotencyStore
+    let dedup = cap.web.IdempotencyStore.init(alloc, 2000);
     defer dedup.deinit();
     expect_eq(dedup.checkAndRecord("msg_mount", 100), true);
     expect_eq(dedup.checkAndRecord("msg_mount", 500), false);

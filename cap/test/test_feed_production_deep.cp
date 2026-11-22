@@ -9,7 +9,7 @@
 
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import { FeedError, FeedFormat, FeedItem, Feed, FeedCodec } from "cap:feed";
+import { FeedError, FeedFormat, FeedItem, Feed, FeedCodec } from "cap:web";
 import cap from "cap";
 
 fn testRss2FullParsing()! {
@@ -247,10 +247,10 @@ fn testDynamicCapFeedMount()! {
         "<item><title>Mounted</title><link>https://cp-lang.org</link></item>" ++
         "</channel></rss>";
 
-    const fmt = cap.feed.FeedCodec.detectFormat(minimal_rss) catch unreachable;
-    expect_eq(fmt == cap.feed.FeedFormat.Rss2, true);
+    const fmt = cap.web.FeedCodec.detectFormat(minimal_rss) catch unreachable;
+    expect_eq(fmt == cap.web.FeedFormat.Rss2, true);
 
-    let f = cap.feed.FeedCodec.parse(alloc, minimal_rss) catch unreachable;
+    let f = cap.web.FeedCodec.parse(alloc, minimal_rss) catch unreachable;
     defer f.deinit();
     expect_eq(std.mem.eql(u8, f.title, "Cap Dynamic"), true);
     expect_eq(f.items.len, 1 as usize);

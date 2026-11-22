@@ -23,7 +23,7 @@ import {
     parseHeaders,
     findHeader,
     parseContentLength,
-} from "cap:picohttp";
+} from "cap:web";
 import cap from "cap";
 
 fn testRequestAndPipelining()! {
@@ -204,13 +204,13 @@ fn testCapLazyMountAndZeroAlloc()! {
     // Verify `cap.picohttp` lazy namespace mounting
     let hdr_buf: [8]HttpHeader = undefined;
     const raw = "PUT /kv/key HTTP/1.1\r\nHost: local\r\nContent-Length: 3\r\n\r\n";
-    const req = cap.picohttp.parseRequest(raw, &hdr_buf) catch unreachable;
+    const req = cap.web.parseRequest(raw, &hdr_buf) catch unreachable;
     expect_eq(std.mem.eql(u8, req.method, "PUT"), true);
     expect_eq(std.mem.eql(u8, req.path, "/kv/key"), true);
-    expect_eq((cap.picohttp.parseContentLength(req.headers) catch unreachable) ?? 0, 3 as usize);
+    expect_eq((cap.web.parseContentLength(req.headers) catch unreachable) ?? 0, 3 as usize);
 
     // Zero heap allocation: all APIs operate purely on stack slices without any Allocator parameter
-    let decoder = cap.picohttp.ChunkedDecoder.init(true);
+    let decoder = cap.web.ChunkedDecoder.init(true);
     let chunk_data = "3\r\nabc\r\n0\r\n\r\n".*;
     const dres = decoder.decode(&chunk_data) catch unreachable;
     expect_eq(dres.done, true);

@@ -12,7 +12,7 @@ import {
     OpenApiOperation,
     OpenApiEndpoint,
     OpenApiDoc,
-} from "./spec.cp";
+} from "./openapi_spec.cp";
 
 pub struct KeyValuePair {
     key: []const u8 = "",

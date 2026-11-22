@@ -3,7 +3,7 @@
 // and non-blocking concurrency bulkhead limiter.
 
 const std = @import("std");
-import { CircuitError } from "./breaker.cp";
+import { CircuitError } from "./circuit_breaker.cp";
 
 /// Jitter distribution strategy for `BackoffPolicy`.
 pub enum JitterMode: u8 {

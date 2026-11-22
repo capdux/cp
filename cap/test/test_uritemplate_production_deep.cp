@@ -10,7 +10,7 @@ import {
     AssocPair,
     TemplateVars,
     UriTemplate,
-} from "cap:uritemplate";
+} from "cap:web";
 
 fn expectExpanded(
     alloc: std.mem.Allocator,
@@ -156,10 +156,10 @@ fn testMalformedTemplatesRejected(): ! {
 fn testCapUriTemplateDynamicMount(): ! {
     const alloc = std.heap.page_allocator;
 
-    let tmpl = cap.uritemplate.UriTemplate.parse(alloc, "https://mcp.example.com/v1{/tool}{?format,limit:2}")?;
+    let tmpl = cap.web.UriTemplate.parse(alloc, "https://mcp.example.com/v1{/tool}{?format,limit:2}")?;
     defer tmpl.deinit();
 
-    let vars = cap.uritemplate.TemplateVars.init(alloc);
+    let vars = cap.web.TemplateVars.init(alloc);
     defer vars.deinit();
     vars.set("tool", "search docs")?;
     vars.set("format", "json")?;

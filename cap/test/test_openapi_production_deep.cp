@@ -24,7 +24,7 @@ import {
     KeyValuePair,
     MatchStatus,
     OpenApiValidator,
-} from "cap:openapi";
+} from "cap:web";
 import cap from "cap";
 
 fn testSpecBuildAndJsonExport()! {
@@ -383,24 +383,24 @@ fn testRequestContractValidation()! {
 fn testCapOpenApiLazyMount()! {
     const alloc = std.heap.page_allocator;
 
-    let doc = cap.openapi.OpenApiDoc.init(
+    let doc = cap.web.OpenApiDoc.init(
         alloc,
-        cap.openapi.OpenApiInfo.init("Lazy Mount API", "0.1.0"),
+        cap.web.OpenApiInfo.init("Lazy Mount API", "0.1.0"),
     )?;
     defer doc.deinit();
 
-    const p: [1]cap.openapi.OpenApiParam = [
-        cap.openapi.OpenApiParam.path("tool", "string"),
+    const p: [1]cap.web.OpenApiParam = [
+        cap.web.OpenApiParam.path("tool", "string"),
         // Single element
     ];
-    const q: [1]cap.openapi.OpenApiParam = [
-        cap.openapi.OpenApiParam.query("timeout_ms", true, "integer"),
+    const q: [1]cap.web.OpenApiParam = [
+        cap.web.OpenApiParam.query("timeout_ms", true, "integer"),
     ];
-    let params_all: [2]cap.openapi.OpenApiParam = [p[0], q[0]];
+    let params_all: [2]cap.web.OpenApiParam = [p[0], q[0]];
     doc.addOperation(
         "/tools/{tool}/invoke",
         .Post,
-        cap.openapi.OpenApiOperation.init("invokeTool")
+        cap.web.OpenApiOperation.init("invokeTool")
             .withParams(&params_all)
             .withRequestBodyRequired(true),
     )?;
@@ -409,9 +409,9 @@ fn testCapOpenApiLazyMount()! {
     defer alloc.free(spec_json);
     expect_eq(std.mem.indexOf(u8, spec_json, "\"operationId\":\"invokeTool\"") != null, true);
 
-    const validator = cap.openapi.OpenApiValidator.init(&doc);
-    const req_q: [1]cap.openapi.KeyValuePair = [
-        cap.openapi.KeyValuePair{ key: "timeout_ms", value: "1500" },
+    const validator = cap.web.OpenApiValidator.init(&doc);
+    const req_q: [1]cap.web.KeyValuePair = [
+        cap.web.KeyValuePair{ key: "timeout_ms", value: "1500" },
     ];
     let rep = validator.validateRequest(alloc, .Post, "/tools/web_search/invoke", &req_q, [], true)?;
     defer rep.deinit();

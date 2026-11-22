@@ -9,7 +9,7 @@ import {
     XPathStep,
     XPathStepIter,
     validateXPathDelimiters,
-} from "cap:xpath";
+} from "cap:web";
 
 test("1. XPathIter lexes multi-char tokens, QNames, vars, strings, numbers, and operators", () => {
     const expr = "//svg:path[@id != 'a/b' and $limit <= 10.5] | ../child::* | .5";

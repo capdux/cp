@@ -10,7 +10,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import { XmlParser } from "cap:xml";
-import { CssSelector, SelectorError, AttrOp, Combinator } from "cap:selector";
+import { CssSelector, SelectorError, AttrOp, Combinator } from "cap:web";
 import cap from "cap";
 
 fn testBasicAndAttributeSelectors()! {
@@ -298,12 +298,12 @@ fn testCapSelectorLazyMount()! {
         "  <entry status=\"draft\"><title>Beta</title></entry>" ++
         "</feed>";
 
-    const first_title = cap.selector.CssSelector.selectXmlFirst(alloc, feed, "entry[status=\"ok\"] > title") catch unreachable;
+    const first_title = cap.web.CssSelector.selectXmlFirst(alloc, feed, "entry[status=\"ok\"] > title") catch unreachable;
     defer alloc.free(first_title.?);
     expect_eq(std.mem.eql(u8, first_title.?, "Alpha"), true);
 
-    const all_titles = cap.selector.CssSelector.selectXml(alloc, feed, "feed > entry > title") catch unreachable;
-    defer cap.selector.CssSelector.freeTexts(alloc, all_titles);
+    const all_titles = cap.web.CssSelector.selectXml(alloc, feed, "feed > entry > title") catch unreachable;
+    defer cap.web.CssSelector.freeTexts(alloc, all_titles);
     expect_eq(all_titles.len, 2 as usize);
     expect_eq(std.mem.eql(u8, all_titles[1], "Beta"), true);
 }

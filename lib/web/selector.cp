@@ -329,7 +329,8 @@ pub struct CssSelector {
         depth: *usize,
         out_frame: *ElemFrame,
     ): bool {
-        if (@intFromPtr(cur) == @intFromPtr(target)) {
+        const is_same = unsafe { @intFromPtr(cur) == @intFromPtr(target) };
+        if (is_same) {
             return true;
         }
         if (depth.* >= 127) {

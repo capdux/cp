@@ -18,7 +18,7 @@ import {
     SitemapIndexItem,
     RobotsRules,
     SitemapCodec,
-} from "cap:sitemap";
+} from "cap:web";
 import cap from "cap";
 
 fn testRobotsRfc9309Matching()! {
@@ -229,11 +229,11 @@ fn testDynamicCapSitemapMount()! {
     const alloc = std.testing.allocator;
     const xml = "<urlset><url><loc>https://cp-lang.org/dynamic</loc></url></urlset>";
 
-    const kind = cap.sitemap.SitemapCodec.detectKind(xml) catch unreachable;
-    expect_eq(kind == cap.sitemap.SitemapKind.UrlSet, true);
+    const kind = cap.web.SitemapCodec.detectKind(xml) catch unreachable;
+    expect_eq(kind == cap.web.SitemapKind.UrlSet, true);
 
-    const urls = cap.sitemap.SitemapCodec.parseUrlSet(alloc, xml) catch unreachable;
-    defer cap.sitemap.SitemapCodec.freeUrlSet(alloc, urls);
+    const urls = cap.web.SitemapCodec.parseUrlSet(alloc, xml) catch unreachable;
+    defer cap.web.SitemapCodec.freeUrlSet(alloc, urls);
 
     expect_eq(urls.len, 1 as usize);
     expect_eq(std.mem.eql(u8, urls[0].loc, "https://cp-lang.org/dynamic"), true);
