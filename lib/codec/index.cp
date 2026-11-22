@@ -14,3 +14,259 @@ export {
     Bech32,
     Crockford32,
 } from "./bech32_crockford.cp";
+
+// === Consolidated Radix/Text Encodings, Distributed IDs, Check-Digits & 1D Barcodes ===
+
+// --- base32 ---
+export * from "./base32";
+
+// --- base64url ---
+export * from "./base64url";
+
+// --- punycode ---
+export {
+    isAsciiOnly,
+    encodePunycode,
+    decodePunycode,
+    encodeIdnLabel,
+    decodeIdnLabel,
+} from "./punycode.cp";
+
+// --- vlq ---
+export * from "./vlq";
+
+// --- uuencode ---
+export {
+    UU_MAX_LINE_BYTES,
+    UU_DEFAULT_MODE,
+    XX_ALPHABET,
+    UuHeader,
+    UuDecoded,
+    parseUuHeader,
+    uuEncodeRaw,
+    uuDecodeRaw,
+    uuEncode,
+    uuDecode,
+    xxEncode,
+    xxDecode,
+} from "./uuencode.cp";
+
+// --- morse ---
+export {
+    DIT_UNITS,
+    DAH_UNITS,
+    INTRA_CHAR_GAP,
+    INTER_CHAR_GAP,
+    INTER_WORD_GAP,
+    PARIS_WORD_UNITS,
+    MAX_MORSE_CODE_LEN,
+    MorsePulse,
+    wpmToDitMs,
+    charToMorse,
+    morseToChar,
+    morseEncode,
+    morseDecode,
+    morseToPulses,
+    morseDurationUnits,
+} from "./morse.cp";
+
+// --- braille ---
+export {
+    BRAILLE_BASE_CP,
+    DOT1,
+    DOT2,
+    DOT3,
+    DOT4,
+    DOT5,
+    DOT6,
+    DOT7,
+    DOT8,
+    BRAILLE_NUMBER_SIGN,
+    BRAILLE_CAPITAL_SIGN,
+    dotBitForPixel,
+    brailleToUtf8,
+    utf8ToBraille,
+    encodeBrailleMasks,
+    decodeBrailleUtf8,
+    asciiToBrailleMask,
+    textToBrailleUtf8,
+    BrailleCanvas,
+} from "./braille.cp";
+
+// --- roman ---
+export {
+    ROMAN_MIN,
+    ROMAN_MAX,
+    ROMAN_MAX_STR_LEN,
+    MAX_COL_LETTERS_LEN,
+    romanEncode,
+    romanEncodeLower,
+    romanDecode,
+    romanDecodeLenient,
+    isValidRoman,
+    colIndexToLetters,
+    lettersToColIndex,
+} from "./roman.cp";
+
+// --- nanoid ---
+export {
+    IdError,
+    IdRng,
+    NanoId,
+    Ulid,
+    MonotonicUlidGenerator,
+    UuidV7,
+} from "./nanoid.cp";
+
+// --- ksuid ---
+export {
+    KSUID_EPOCH,
+    KSUID_BYTE_LEN,
+    KSUID_ENCODED_LEN,
+    KSUID_PAYLOAD_LEN,
+    KsuidError,
+    Ksuid,
+} from "./ksuid.cp";
+
+// --- snowflake ---
+export {
+    DEFAULT_EPOCH_MS,
+    MAX_DATACENTER_ID,
+    MAX_WORKER_ID,
+    MAX_SEQUENCE,
+    SnowflakeError,
+    SnowflakeParts,
+    SnowflakeGenerator,
+    decomposeId,
+    encodeBase62,
+    decodeBase62,
+} from "./snowflake.cp";
+
+// --- cuid ---
+export {
+    CuidVersion,
+    isValidCuid1,
+    isValidCuid2,
+    detectCuidVersion,
+    encodeBase36,
+    decodeBase36,
+    formatCuid1,
+    parseCuid1Timestamp,
+} from "./cuid.cp";
+
+// --- cuid2 ---
+export * from "./cuid2";
+
+// --- isbn ---
+export {
+    ISBN10_LEN,
+    ISBN13_LEN,
+    ISSN_LEN,
+    ISSN_FORMATTED_LEN,
+    EAN13_LEN,
+    EAN8_LEN,
+    UPCA_LEN,
+    isbn10CheckDigit,
+    isValidIsbn10,
+    isbn13CheckDigit,
+    isValidIsbn13,
+    isValidIsbn,
+    isbn10To13,
+    isbn13To10,
+    issnCheckDigit,
+    isValidIssn,
+    formatIssn,
+    eanCheckDigit as isbnEanCheckDigit,
+    isValidEan13,
+    isValidEan8,
+    isValidUpcA,
+} from "./isbn.cp";
+
+// --- iban ---
+export {
+    IBAN_MIN_LEN,
+    IBAN_MAX_LEN,
+    IbanCheckDigits,
+    IbanInfo,
+    ibanCountryLength,
+    ibanMod97,
+    isValidIban,
+    parseIban,
+    computeIbanCheckDigits,
+    formatIbanElectronic,
+    formatIbanPrint,
+} from "./iban.cp";
+
+// --- verhoeff ---
+export {
+    verhoeffCheckDigit,
+    isValidVerhoeff,
+    verhoeffAppend,
+    dammCheckDigit,
+    isValidDamm,
+    dammAppend,
+    iso7064Mod11_2CheckDigit,
+    isValidIso7064Mod11_2,
+    iso7064Mod37_2CheckDigit,
+    isValidIso7064Mod37_2,
+} from "./verhoeff.cp";
+
+// --- ean ---
+export {
+    EAN13_MODULES,
+    EAN8_MODULES,
+    UPCA_MODULES,
+    EAN_DIGIT_MODULES,
+    GUARD_OUTER,
+    GUARD_CENTER,
+    eanPatternL,
+    eanPatternG,
+    eanPatternR,
+    ean13ParityMask,
+    eanCheckDigit,
+    encodeEan13Modules,
+    decodeEan13Modules,
+    encodeEan8Modules,
+    decodeEan8Modules,
+    encodeUpcAModules,
+} from "./ean.cp";
+
+// --- code128 ---
+export {
+    CODE128_START_A,
+    CODE128_START_B,
+    CODE128_START_C,
+    CODE128_STOP,
+    CODE128_FNC1,
+    CODE128_CODE_C,
+    CODE128_CODE_B,
+    CODE128_CODE_A,
+    CODE128_SHIFT,
+    CODE128_MOD_PER_SYMBOL,
+    CODE128_STOP_MODULES,
+    code128Pattern,
+    code128SymbolFromPattern,
+    code128Checksum,
+    encodeCode128B,
+    encodeCode128C,
+    encodeCode128Auto,
+    renderCode128Modules,
+    decodeCode128Symbols,
+    decodeCode128Modules,
+} from "./code128.cp";
+
+// --- code39 ---
+export {
+    CODE39_ALPHABET_LEN,
+    CODE39_START_STOP,
+    CODE39_ELEMENTS_PER_CHAR,
+    CODE39_WIDE_COUNT,
+    code39Value,
+    code39Char,
+    code39Pattern9,
+    code39CharFromPattern9,
+    code39CheckDigit,
+    verifyCode39Mod43,
+    encodeCode39Modules,
+    decodeCode39Modules,
+} from "./code39.cp";

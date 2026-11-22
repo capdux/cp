@@ -11,7 +11,7 @@ import {
     decodeBase36,
     formatCuid1,
     parseCuid1Timestamp,
-} from "cap:cuid";
+} from "cap:codec";
 
 test("1. isValidCuid1, isValidCuid2 & detectCuidVersion classification", () => {
     const v1_id = "cjld2cjxh0000qzrmn831i7rn";

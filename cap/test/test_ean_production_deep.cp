@@ -19,7 +19,7 @@ import {
     encodeEan8Modules,
     decodeEan8Modules,
     encodeUpcAModules,
-} from "cap:ean";
+} from "cap:codec";
 
 fn popcnt8(x: u8): u8 {
     let v = x;

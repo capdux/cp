@@ -120,3 +120,31 @@ pub fn demoCodec(): ! {
     * = restored;
 }
 ```
+
+---
+
+## 收敛集成的通用编码、分布式 ID、校验码与一维条码套件
+
+以下纯 CP 零外部依赖编码/ID/条码模块已统一聚合导出至 `cap:codec`（`lib/codec/index.cp`），零符号冲突：
+
+| 分类 | 文件路径 | 标准 / 算法 | 说明 |
+| :--- | :--- | :--- | :--- |
+| 进制与文本编码 | `lib/codec/base32.cp` | RFC 4648 Base32 / Base32hex / Crockford | Base32 多变体编解码 |
+| 进制与文本编码 | `lib/codec/base64url.cp` | RFC 4648 Base64 & Base64URL | URL 安全无填充/自动填充编解码 |
+| 进制与文本编码 | `lib/codec/punycode.cp` | RFC 3492 Punycode (Absorbed from Bun `url.zig`) | IDNA 国际化域名 Punycode 编解码 |
+| 进制与文本编码 | `lib/codec/vlq.cp` | SourceMap Base64-VLQ (Absorbed from Bun `sourcemap/VLQ.cp`) | 变长整数 Base64-VLQ 编解码 |
+| 进制与文本编码 | `lib/codec/uuencode.cp` | Unix UUEncode | 经典 UUEncode/UUDecode 编解码 |
+| 进制与文本编码 | `lib/codec/morse.cp` | ITU-R Morse Code | 摩斯电码编解码与波形映射 |
+| 进制与文本编码 | `lib/codec/braille.cp` | Unicode Braille (`U+2800..U+28FF`) | 零堆分配盲文点字编解码与 Grade-1 转换 |
+| 进制与文本编码 | `lib/codec/roman.cp` | Roman Numerals | 罗马数字与整数双向严格转换 |
+| 分布式 ID | `lib/codec/nanoid.cp` | NanoID / ULID / UUIDv7 | 统一随机与单调 ID 生成/解析套件 |
+| 分布式 ID | `lib/codec/ksuid.cp` | Segment KSUID | 20 字节时间有序 KSUID 编解码与生成 |
+| 分布式 ID | `lib/codec/snowflake.cp` | Twitter Snowflake 64-bit | 分布式 64 位雪花 ID 生成与拆解 |
+| 分布式 ID | `lib/codec/cuid.cp` / `lib/codec/cuid2.cp` | CUID / CUID2 | 抗碰撞 Base36 CUID 与 CUID2 生成/校验 |
+| 校验码与金融编码 | `lib/codec/isbn.cp` | ISBN-10 / ISBN-13 | 国际标准书号解析、转换与校验（`isbnEanCheckDigit` 别名） |
+| 校验码与金融编码 | `lib/codec/iban.cp` | ISO 13616 / ISO 7064 Mod-97-10 | 国际银行账号校验与格式化 |
+| 校验码与金融编码 | `lib/codec/verhoeff.cp` | Verhoeff Check-Digit | 二面体群 D5 校验位生成与验证 |
+| 一维条码 | `lib/codec/ean.cp` | ISO/IEC 15420 (EAN-13 / EAN-8 / UPC-A) | L/G/R 模块编解码与校验位计算 |
+| 一维条码 | `lib/codec/code128.cp` | ISO/IEC 15417 Code 128 | 零堆分配 Code 128 条码编解码 |
+| 一维条码 | `lib/codec/code39.cp` | ISO/IEC 16388 Code 39 | 零堆分配 3-of-9 条码编解码与 Mod-43 校验 |
+| 参考归档（不导出） | `lib/codec/{base58,base85,bech32}_.cp` | Base58 / Base85 / Bech32（仅参考） | 与权威 `base58_85.cp` / `bech32_crockford.cp` 功能重叠，保留供对比分析 |

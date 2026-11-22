@@ -6,7 +6,7 @@ import {
     KSUID_EPOCH,
     KsuidError,
     Ksuid,
-} from "cap:ksuid";
+} from "cap:codec";
 
 test("1. Official KSUID known test vector and 27-char Base62 roundtrip") {
     // Official Segment KSUID reference: ts=107608047 (unix 1507608047), payload=0xB5A1CD34B5F99D1154FB6853345C9735 -> "0ujtsYcgvSTl8PAuAdqWYSMnLOv"
@@ -62,8 +62,8 @@ test("4. Overflow, invalid length, invalid char and timestamp range errors") {
 }
 
 test("5. Dynamic cap.ksuid namespace and zero-alloc check") {
-    const id = try cap.ksuid.Ksuid.generateAt(1750000000);
+    const id = try cap.codec.Ksuid.generateAt(1750000000);
     const enc = id.encode();
-    const dec_id = try cap.ksuid.Ksuid.decode(&enc);
+    const dec_id = try cap.codec.Ksuid.decode(&enc);
     try std.testing.expect(id.equals(dec_id));
 }

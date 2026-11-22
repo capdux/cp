@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/codec/base58_85.cp | Kept for comparison/analysis
 // Source: cp/lib/base58/base58.cp (Pure CP Base58, Base58Check, and BIP-173/350 Bech32/Bech32m Codec)
 // Zero external C dependency implementation using pure CP and std.
 

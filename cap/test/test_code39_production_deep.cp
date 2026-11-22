@@ -15,7 +15,7 @@ import {
     verifyCode39Mod43,
     encodeCode39Modules,
     decodeCode39Modules,
-} from "cap:code39";
+} from "cap:codec";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

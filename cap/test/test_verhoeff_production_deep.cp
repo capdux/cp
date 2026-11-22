@@ -13,7 +13,7 @@ import {
     isValidIso7064Mod11_2,
     iso7064Mod37_2CheckDigit,
     isValidIso7064Mod37_2,
-} from "cap:verhoeff";
+} from "cap:codec";
 
 fn slicesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

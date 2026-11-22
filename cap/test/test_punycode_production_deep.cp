@@ -6,7 +6,7 @@ import {
     decodePunycode,
     encodeIdnLabel,
     decodeIdnLabel,
-} from "cap:punycode";
+} from "cap:codec";
 
 test("1. RFC 3492 canonical vectors: German umlauts, Chinese, and Japanese", () => {
     let enc_buf: [128]u8 = std.mem.zeroes([128]u8);

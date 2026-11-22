@@ -15,7 +15,7 @@ import {
     uuDecode,
     xxEncode,
     xxDecode,
-} from "cap:uuencode";
+} from "cap:codec";
 
 fn slicesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

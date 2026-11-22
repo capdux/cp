@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { Base32Error, Variant, encodedLen, encodeAlloc, decodeAlloc } from "cap:base32";
+import { Base32Error, Variant, encodedLen, encodeAlloc, decodeAlloc } from "cap:codec";
 
 test "base32: RFC 4648 Section 10 official test vectors" {
     const alloc = std.testing.allocator;
@@ -65,9 +65,9 @@ test "base32: rejects invalid characters & mid-stream padding" {
 
 test "base32: cap.base32 dynamic mount & zero leak" {
     const alloc = std.testing.allocator;
-    const enc = try cap.base32.encodeAlloc(alloc, "cp-lang", .Standard, true);
+    const enc = try cap.codec.encodeAlloc(alloc, "cp-lang", .Standard, true);
     defer alloc.free(enc);
-    const orig = try cap.base32.decodeAlloc(alloc, enc, .Standard);
+    const orig = try cap.codec.decodeAlloc(alloc, enc, .Standard);
     defer alloc.free(orig);
     try expect_eq(std.mem.eql(u8, orig, "cp-lang"), true);
 }

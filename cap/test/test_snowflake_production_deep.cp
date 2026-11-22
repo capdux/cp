@@ -9,7 +9,7 @@ import {
     decomposeId,
     encodeBase62,
     decodeBase62,
-} from "cap:snowflake";
+} from "cap:codec";
 
 test("1. Deterministic generation, bit layout and decomposeId roundtrip") {
     let gen = try SnowflakeGenerator.init(7, 19, DEFAULT_EPOCH_MS);
@@ -89,8 +89,8 @@ test("4. Multi-threaded real concurrent ID uniqueness (4 threads x 500 IDs)") {
 }
 
 test("5. Dynamic cap.snowflake namespace and zero-leak check") {
-    let gen = try cap.snowflake.SnowflakeGenerator.init(0, 1, cap.snowflake.DEFAULT_EPOCH_MS);
-    const id = try gen.nextIdAt(cap.snowflake.DEFAULT_EPOCH_MS + 42);
-    const parts = cap.snowflake.decomposeId(id, cap.snowflake.DEFAULT_EPOCH_MS);
+    let gen = try cap.codec.SnowflakeGenerator.init(0, 1, cap.codec.DEFAULT_EPOCH_MS);
+    const id = try gen.nextIdAt(cap.codec.DEFAULT_EPOCH_MS + 42);
+    const parts = cap.codec.decomposeId(id, cap.codec.DEFAULT_EPOCH_MS);
     expect_eq(parts.worker_id, 1);
 }

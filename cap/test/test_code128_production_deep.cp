@@ -23,7 +23,7 @@ import {
     renderCode128Modules,
     decodeCode128Symbols,
     decodeCode128Modules,
-} from "cap:code128";
+} from "cap:codec";
 
 fn slicesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

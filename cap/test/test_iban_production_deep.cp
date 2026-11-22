@@ -13,7 +13,7 @@ import {
     computeIbanCheckDigits,
     formatIbanElectronic,
     formatIbanPrint,
-} from "cap:iban";
+} from "cap:codec";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

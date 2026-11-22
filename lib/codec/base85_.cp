@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/codec/base58_85.cp | Kept for comparison/analysis
 // Source: cp/lib/base85/base85.cp (Pure CP Z85, Adobe Ascii85 & RFC 1924 Base85 Encoding Engine)
 // Zero-C-dependency industrial Base85 codec suite.
 

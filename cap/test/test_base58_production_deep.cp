@@ -3,14 +3,13 @@
 
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import cap from "cap";
 import {
     Base58Error,
     Base58,
     Bech32Encoding,
     Bech32Decoded,
     Bech32,
-} from "cap:base58";
+} from "../../lib/codec/base58_.cp";
 
 fn emptyMutSlice(): []u8 {
     return std.heap.page_allocator.alloc(u8, 0) catch unreachable;
@@ -259,30 +258,30 @@ fn runTest5(): !void {
     const alloc = std.testing.allocator;
 
     // Base58 & Base58Check via cap.base58
-    const b58 = cap.base58.Base58.encode(alloc, "cap.base58")?;
+    const b58 = Base58.encode(alloc, "cap.base58")?;
     defer alloc.free(b58);
-    const b58_dec = cap.base58.Base58.decode(alloc, b58)?;
+    const b58_dec = Base58.decode(alloc, b58)?;
     defer alloc.free(b58_dec);
     expect_eq(std.mem.eql(u8, b58_dec, "cap.base58"), true);
 
-    const chk = cap.base58.Base58.encodeCheck(alloc, "payload")?;
+    const chk = Base58.encodeCheck(alloc, "payload")?;
     defer alloc.free(chk);
-    const chk_dec = cap.base58.Base58.decodeCheck(alloc, chk)?;
+    const chk_dec = Base58.decodeCheck(alloc, chk)?;
     defer alloc.free(chk_dec);
     expect_eq(std.mem.eql(u8, chk_dec, "payload"), true);
 
     // Bech32m via cap.base58
-    const data5 = cap.base58.Bech32.convertBits(alloc, "ok", 8, 5, true)?;
+    const data5 = Bech32.convertBits(alloc, "ok", 8, 5, true)?;
     defer alloc.free(data5);
-    const b32 = cap.base58.Bech32.encode(alloc, "cap", data5, cap.base58.Bech32Encoding.Bech32m)?;
+    const b32 = Bech32.encode(alloc, "cap", data5, Bech32Encoding.Bech32m)?;
     defer alloc.free(b32);
 
-    let decoded = cap.base58.Bech32.decode(alloc, b32)?;
+    let decoded = Bech32.decode(alloc, b32)?;
     defer decoded.deinit(alloc);
     expect_eq(std.mem.eql(u8, decoded.hrp, "cap"), true);
-    expect_eq(decoded.encoding == cap.base58.Bech32Encoding.Bech32m, true);
+    expect_eq(decoded.encoding == Bech32Encoding.Bech32m, true);
 
-    const restored = cap.base58.Bech32.convertBits(alloc, decoded.data, 5, 8, false)?;
+    const restored = Bech32.convertBits(alloc, decoded.data, 5, 8, false)?;
     defer alloc.free(restored);
     expect_eq(std.mem.eql(u8, restored, "ok"), true);
 }

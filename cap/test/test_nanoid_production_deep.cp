@@ -17,7 +17,7 @@ import {
     Ulid,
     MonotonicUlidGenerator,
     UuidV7,
-} from "cap:nanoid";
+} from "cap:codec";
 
 fn containsByte(haystack: []const u8, needle: u8): bool {
     for (i of 0..haystack.len) {
@@ -225,21 +225,21 @@ test("cap:nanoid - UuidV7 RFC 9562 version=7 / variant=2 layout, round-trip & or
 
 test("cap.nanoid - dynamic mounting & std.testing.allocator zero-leak check") {
     const alloc = std.testing.allocator;
-    let rng = cap.nanoid.IdRng.init(55555);
+    let rng = cap.codec.IdRng.init(55555);
 
-    const nid = cap.nanoid.NanoId.generate(alloc, &rng, 21) catch unreachable;
+    const nid = cap.codec.NanoId.generate(alloc, &rng, 21) catch unreachable;
     defer alloc.free(nid);
     expect_eq(nid.len, 21);
 
-    let mono = cap.nanoid.MonotonicUlidGenerator.init();
+    let mono = cap.codec.MonotonicUlidGenerator.init();
     const u = mono.next(&rng, 1700000005000) catch unreachable;
     const enc = u.encode();
-    const decoded = cap.nanoid.Ulid.decode(&enc) catch unreachable;
+    const decoded = cap.codec.Ulid.decode(&enc) catch unreachable;
     expect_eq(decoded.timestampMs(), 1700000005000);
 
-    const v7 = cap.nanoid.UuidV7.generate(&rng, 1700000005000) catch unreachable;
+    const v7 = cap.codec.UuidV7.generate(&rng, 1700000005000) catch unreachable;
     const fmt = v7.format();
-    const pv7 = cap.nanoid.UuidV7.parse(&fmt) catch unreachable;
+    const pv7 = cap.codec.UuidV7.parse(&fmt) catch unreachable;
     expect_eq(pv7.version(), 7);
     expect_eq(pv7.variant(), 2);
 }

@@ -13,7 +13,7 @@ import {
     decode,
     decodeChecked,
     decodeSegment,
-} from "cap:vlq";
+} from "cap:codec";
 
 test("0..255 fast lookup table matches slow path and roundtrips exactly") {
     expect_eq(MAX_VLQ_BYTES, @as(usize, 7));

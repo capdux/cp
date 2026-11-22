@@ -20,11 +20,11 @@ import {
     issnCheckDigit,
     isValidIssn,
     formatIssn,
-    eanCheckDigit,
+    isbnEanCheckDigit as eanCheckDigit,
     isValidEan13,
     isValidEan8,
     isValidUpcA,
-} from "cap:isbn";
+} from "cap:codec";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

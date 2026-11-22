@@ -10,7 +10,7 @@ import {
     decodeUrlNoPad,
     encodeUrlPadded,
     decodeUrlAuto,
-} from "cap:base64url";
+} from "cap:codec";
 
 test "base64url: RFC 4648 Section 10 official standard vectors" {
     const alloc = std.testing.allocator;
@@ -66,9 +66,9 @@ test "base64url: rejects invalid chars & bad padding" {
 
 test "base64url: cap.base64url dynamic mount & zero leak" {
     const alloc = std.testing.allocator;
-    const enc = try cap.base64url.encodeUrlNoPad(alloc, "cp-stdlib");
+    const enc = try cap.codec.encodeUrlNoPad(alloc, "cp-stdlib");
     defer alloc.free(enc);
-    const orig = try cap.base64url.decodeUrlAuto(alloc, enc);
+    const orig = try cap.codec.decodeUrlAuto(alloc, enc);
     defer alloc.free(orig);
     try expect_eq(std.mem.eql(u8, orig, "cp-stdlib"), true);
 }

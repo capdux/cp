@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { CUID2_DEFAULT_LEN, Cuid2Error, Cuid2Generator, isValidCuid2 } from "cap:cuid2";
+import { CUID2_DEFAULT_LEN, Cuid2Error, Cuid2Generator, isValidCuid2 } from "cap:codec";
 
 test "cuid2: default 24-char format and lowercase alpha prefix" {
     let gen = Cuid2Generator.init("node-a");
@@ -64,7 +64,7 @@ test "cuid2: isValidCuid2 rejects uppercase, symbols, and digit-prefix" {
 }
 
 test "cuid2: cap.cuid2 dynamic mount" {
-    let gen = cap.cuid2.Cuid2Generator.init("dyn-mount");
+    let gen = cap.codec.Cuid2Generator.init("dyn-mount");
     const id = gen.next24();
-    try expect_eq(cap.cuid2.isValidCuid2(&id), true);
+    try expect_eq(cap.codec.isValidCuid2(&id), true);
 }

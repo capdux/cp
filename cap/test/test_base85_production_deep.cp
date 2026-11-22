@@ -3,13 +3,12 @@
 
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import cap from "cap";
 import {
     Base85Error,
     Z85,
     Ascii85,
     Rfc1924,
-} from "cap:base85";
+} from "../../lib/codec/base85_.cp";
 
 fn emptyMutSlice(): []u8 {
     return std.heap.page_allocator.alloc(u8, 0) catch unreachable;
@@ -247,21 +246,21 @@ fn runTest5(): !void {
         0xB5, 0x59, 0xF7, 0x5B,
     ];
 
-    const z_enc = cap.base85.Z85.encode(alloc, &payload)?;
+    const z_enc = Z85.encode(alloc, &payload)?;
     defer alloc.free(z_enc);
-    const z_dec = cap.base85.Z85.decode(alloc, z_enc)?;
+    const z_dec = Z85.decode(alloc, z_enc)?;
     defer alloc.free(z_dec);
     expect_eq(std.mem.eql(u8, z_dec, &payload), true);
 
-    const a_enc = cap.base85.Ascii85.encodeFramed(alloc, &payload)?;
+    const a_enc = Ascii85.encodeFramed(alloc, &payload)?;
     defer alloc.free(a_enc);
-    const a_dec = cap.base85.Ascii85.decodeFramed(alloc, a_enc)?;
+    const a_dec = Ascii85.decodeFramed(alloc, a_enc)?;
     defer alloc.free(a_dec);
     expect_eq(std.mem.eql(u8, a_dec, &payload), true);
 
-    const r_enc = cap.base85.Rfc1924.encode(alloc, &payload)?;
+    const r_enc = Rfc1924.encode(alloc, &payload)?;
     defer alloc.free(r_enc);
-    const r_dec = cap.base85.Rfc1924.decode(alloc, r_enc)?;
+    const r_dec = Rfc1924.decode(alloc, r_enc)?;
     defer alloc.free(r_dec);
     expect_eq(std.mem.eql(u8, r_dec, &payload), true);
 }
