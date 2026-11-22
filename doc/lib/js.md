@@ -151,3 +151,29 @@ if (rec := tbl.getResolved(imp)) {
 }
 * = root;
 ```
+
+### TypeScript `namespace` / `enum` 兄弟块成员合并与隐式访问代理 (`tsNamespace.cp`)
+
+吸收自 `/data/dev/bun/src/js_parser/ast/TS.cp`：
+
+- **导出符号**：`TS_NS_MAX_SCOPES` (`32`)、`TS_NS_MAX_MEMBERS` (`128`)、`TS_NS_MAX_PROXIES` (`128`)、`TsNamespaceError`、`TsNamespaceMemberKind`（`property`/`nested_namespace`/`enum_number`/`enum_string`/`enum_property`，含 `isEnum`）、`TsNamespaceMember`、`TsNamespaceBlock`、`TsPropertyAccessProxy`、`TsNamespaceRegistry`（`init`/`createGroup`/`openBlock`/`exportProperty`/`exportNestedNamespace`/`exportEnumNumber`/`exportEnumString`/`exportEnumProperty`/`lookupMember`/`lookupImplicitInBlock`/`getOrCreatePropertyProxy`/`formatPropertyAccess`）；
+- **关键 TypeScript 语义守卫**：
+  1. **跨块共享导出表**：多个同名 `namespace Foo {}` 或 `enum Foo {}` 共享同一 `group_id`，前一个块导出的成员可被后一个兄弟块直接解析；
+  2. **enum/namespace 隐式查找隔离**：`lookupImplicitInBlock` 严格执行 `block.is_enum_scope == member.isEnum()`，仅允许 `enum -> enum` 与 `namespace -> namespace` 隐式跨块引用，阻断跨界泄漏；
+  3. **每块独立 IIFE 属性代理**：降级为 `(function(ns3) { ns3.z = ns3.y; })(ns || (ns = {}))` 时，`getOrCreatePropertyProxy` 为每个块懒缓存独立的代理符号 ref，`formatPropertyAccess` 零分配格式化 `"ns3.y"`。
+
+```cp
+import { TsNamespaceRegistry } from "cap:js";
+
+let reg = TsNamespaceRegistry.init();
+const gid = reg.createGroup();
+const b1 = reg.openBlock(gid, 10, "ns2", false)?;
+const b2 = reg.openBlock(gid, 11, "ns3", false)?;
+* = reg.exportProperty(gid, "y", 12)?;
+if (m := reg.lookupImplicitInBlock(b2, "y")) {
+    let buf: [32]u8 = [0; 32];
+    const n = reg.formatPropertyAccess(b2, m.name, buf[0..])?; // "ns3.y"
+    * = n;
+}
+* = b1;
+```

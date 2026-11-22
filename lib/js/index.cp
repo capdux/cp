@@ -64,3 +64,15 @@ export {
     JsSymbolRecord,
     JsSymbolTable,
 } from "./symbolTable.cp";
+
+export {
+    TS_NS_MAX_SCOPES,
+    TS_NS_MAX_MEMBERS,
+    TS_NS_MAX_PROXIES,
+    TsNamespaceError,
+    TsNamespaceMemberKind,
+    TsNamespaceMember,
+    TsNamespaceBlock,
+    TsPropertyAccessProxy,
+    TsNamespaceRegistry,
+} from "./tsNamespace.cp";
