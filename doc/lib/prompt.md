@@ -420,3 +420,52 @@ fn demoReasoningStream() {
     * = st;
 }
 ```
+
+### 8. LLM 结构化输出提取、容错 JSON 修复与自动纠错提示器 (`structured_output.cp`)
+
+面向生产级 LLM 结构化输出解析与自愈重试的 100% 零堆分配管线：
+
+- **`JsonCandidateSpan` / `extractJsonCandidate(raw_output: string): JsonCandidateSpan?`**：自动剥离 `<think>...</think>` 推理块（含孤立 `</think>`）、Markdown 代码围栏（```` ```json ... ``` ````）与前后自然语言解释，零拷贝定位最外层 `{...}` / `[...]` 区间并标记 `from_code_fence`、`skipped_thought` 与 `is_truncated`。
+- **`JsonRepairReport` / `repairLlmJson(input: string, out_buf: *[]u8): JsonRepairReport?`**：确定性修复 LLM 常见畸形 JSON——剔除尾随逗号（`,}` / `,]` / 尾部 `,`）、闭合截断的字符串与嵌套括号、补全截断键值冒号（`{"k":` -> `{"k":null}`）、规范化单引号键/值字符串并转义内部双引号与原始换行 `\n`/`\r`，缓冲区不足或嵌套超过 64 层安全返回 `null`。
+- **`JsonValueKind` / `RequiredFieldSpec` / `FieldCheckIssueKind` / `FieldCheckIssue` / `RequiredFieldsReport`**：
+  - **`checkRequiredJsonFields(json_text, specs, out_issues: *[]FieldCheckIssue): RequiredFieldsReport`**：跳过嵌套结构精准校验顶层必填字段存在性与类型匹配（`Integer` 自动兼容 `Number`）。
+  - **`formatRepairRetryPrompt(issues, issue_count, schema_hint, out_buf: *[]u8): usize?`**：基于校验问题清单零堆分配生成简洁精准的 LLM Self-Correction 重试提示词。
+
+```cp
+import {
+    JsonValueKind,
+    RequiredFieldSpec,
+    FieldCheckIssue,
+    extractJsonCandidate,
+    repairLlmJson,
+    checkRequiredJsonFields,
+    formatRepairRetryPrompt,
+} from "cap:prompt";
+
+fn demoStructuredOutputRepair() {
+    const raw = "<think>drafting</think>Here is the result:\n```json\n{'title': 'CP', 'score': 98,}\n```";
+    if (span := extractJsonCandidate(raw)) {
+        const candidate = raw[span.start..span.end];
+        let repaired_buf: [256]u8 = [0; 256];
+        let repaired_s: []u8 = repaired_buf[0..];
+        if (rep := repairLlmJson(candidate, repaired_s)) {
+            const clean_json = repaired_buf[0..rep.bytes_written];
+            const specs: [3]RequiredFieldSpec = [
+                RequiredFieldSpec{ name: "title", expected_kind: JsonValueKind.String },
+                RequiredFieldSpec{ name: "score", expected_kind: JsonValueKind.Number },
+                RequiredFieldSpec{ name: "tags", expected_kind: JsonValueKind.Array },
+            ];
+            let issues_buf: [4]FieldCheckIssue = [FieldCheckIssue{}; 4];
+            let issues_s: []FieldCheckIssue = issues_buf[0..];
+            const chk = checkRequiredJsonFields(clean_json, specs[0..], issues_s);
+            if (!chk.passed) {
+                let retry_buf: [512]u8 = [0; 512];
+                let retry_s: []u8 = retry_buf[0..];
+                if (n := formatRepairRetryPrompt(issues_buf[0..], chk.issue_count, "{title, score, tags}", retry_s)) {
+                    * = retry_buf[0..n];
+                }
+            }
+        }
+    }
+}
+```

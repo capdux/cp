@@ -81,3 +81,17 @@ export {
     DemuxStats,
     ReasoningStreamDemuxer,
 } from "./reasoning_stream.cp";
+
+export {
+    JsonCandidateSpan,
+    JsonRepairReport,
+    JsonValueKind,
+    RequiredFieldSpec,
+    FieldCheckIssueKind,
+    FieldCheckIssue,
+    RequiredFieldsReport,
+    extractJsonCandidate,
+    repairLlmJson,
+    checkRequiredJsonFields,
+    formatRepairRetryPrompt,
+} from "./structured_output.cp";
