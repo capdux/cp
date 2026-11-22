@@ -343,3 +343,20 @@ const res = clock.advanceTimersByTime(100, log[0..])?;
 clock.useRealTimers();
 * = t1; * = res;
 ```
+
+10. **异步测试 `done()` 回调生命周期状态机（`lib/test_runner/doneCallback.cp`，吸收自 `/data/dev/bun/src/test_runner/DoneCallback.cp` & `/data/dev/bun/docs/test/writing-tests.mdx`）**：
+    - **导出符号**：`DONE_CALLBACK_DEFAULT_TIMEOUT_MS` (`5000`)、`DONE_CALLBACK_MAX_ERR_MSG` (`128`)、`DoneCallbackError`、`DoneCallbackState`（`Unbound`/`Pending`/`Passed`/`Failed`/`TimedOut`/`Detached`）、`DoneCallback`（`createUnbound`/`bind`/`complete`/`fail`/`onTimeout`/`finalize`/`isPending`/`isSettled`/`didPass`/`didFail`/`didTimeout`/`elapsedMs`/`deadlineMs`/`errorMessage`）；
+    - **Bun `writing-tests.mdx` 异步测试与超时最佳实践**：
+      - 每个测试默认超时为 `5000ms`（可通过 `bind(test_id, started_at_ms, timeout_ms)` 覆盖，传入 `0` 自动回落到 5000ms）；
+      - 严格单次结算：`Pending` 状态下调用 `complete()` / `fail(code, msg)` 转入 `Passed`/`Failed`，重复调用返回 `DoneCallbackError.AlreadySettled` 以捕获双回调竞态；超时或 `finalize()` 解绑后的迟到调用降级为安全 no-op（返回 `false`）；
+      - 析构/收尾阶段调用 `finalize()` 可显式检测用例是否在未调用 `done()` 的情况下悬空退出（返回 `false`）。
+
+```cp
+import { DoneCallback } from "cap:test_runner";
+
+let cb = DoneCallback.createUnbound();
+* = cb.bind(1001, 10000, 0)?; // default 5000ms timeout -> deadline 15000
+const ok = cb.complete(10250)?; // true, cb.didPass() == true, cb.elapsedMs() == 250
+const settled = cb.finalize();  // true
+* = ok; * = settled;
+```

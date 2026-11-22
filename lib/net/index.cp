@@ -1900,3 +1900,19 @@ export {
     ConnTrackStats,
     ConnTrackTable,
 } from "./connTrack.cp";
+
+// --- zoneRouter (Zero-Alloc Multi-AZ Topology-Aware Envoy Locality Spillover Load Balancer) ---
+export {
+    ZONE_ROUTER_MAX_ENDPOINTS,
+    ZONE_ROUTER_MAX_ZONES,
+    ZONE_ROUTER_BPS_SCALE,
+    ZONE_ROUTER_DEFAULT_PANIC_BPS,
+    ZonePickMode,
+    ZoneRouterOpStatus,
+    ZoneRouterConfig,
+    ZoneEndpoint,
+    ZoneSummary,
+    ZonePickDecision,
+    ZoneRouterStats,
+    ZoneLocalityRouter,
+} from "./zoneRouter.cp";

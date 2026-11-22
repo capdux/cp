@@ -175,3 +175,11 @@ export {
     normalizeFakeDelayMs,
     FakeTimerClock,
 } from "./fakeTimers";
+
+export {
+    DONE_CALLBACK_DEFAULT_TIMEOUT_MS,
+    DONE_CALLBACK_MAX_ERR_MSG,
+    DoneCallbackError,
+    DoneCallbackState,
+    DoneCallback,
+} from "./doneCallback";

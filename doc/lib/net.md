@@ -765,6 +765,40 @@ pub fn demoConnTrack() {
 }
 ```
 
+---
+
+## 零分配多可用区拓扑感知与 Envoy 风格 Locality 溢出负载均衡路由器 (`zoneRouter.cp`)
+
+面向多可用区（Multi-AZ）云原生服务网格降低跨区流量成本与尾部延迟的 100% 纯 CP 零动态堆分配 Locality 亲和与平滑溢出路由器：
+
+- **常量与枚举**：
+  - `ZONE_ROUTER_MAX_ENDPOINTS = 64`、`ZONE_ROUTER_MAX_ZONES = 8`（`zone_id: 0..=7`）、`ZONE_ROUTER_BPS_SCALE = 10000`、`ZONE_ROUTER_DEFAULT_PANIC_BPS = 5000`
+  - `ZonePickMode`（`local_hit | remote_spillover | panic_fallback | no_endpoint`）
+  - `ZoneRouterOpStatus`（`ok | invalid_arg | duplicate_endpoint | capacity_full | not_found`）
+- **数据模型**：
+  - `ZoneRouterConfig`（`panic_threshold_bps`, `fail_open_on_total_panic`）、`ZoneEndpoint`、`ZoneSummary`、`ZonePickDecision`（`mode`, `endpoint_id`, `selected_zone`, `local_health_bps`, `local_retain_bps`）、`ZoneRouterStats`
+- **核心引擎 `ZoneLocalityRouter`**：
+  - `init(cfg)` / `initDefault()` / `addEndpoint(*_, endpoint_id, zone_id, weight, healthy)` / `removeEndpoint` / `setHealth` / `setWeight` / `incActiveConns` / `decActiveConns`
+  - `pickEndpoint(*_, caller_zone, selector_hash): ZonePickDecision`：本区健康占比 `>= panic_threshold_bps` 时 100% 本地亲和；低于恐慌阈值时按 `local_health_bps / panic_threshold_bps` 比例保留本地流量、其余平滑按健康权重溢出至远端健康 AZ；全局全不健康时按配置执行 `panic_fallback` 或 `no_endpoint` 拒流。
+  - `getEndpoint(endpoint_id)` / `zoneSummary(zone_id)` / `stats()`。
+
+```cp
+import {
+    ZonePickMode,
+    ZoneLocalityRouter,
+} from "cap:net";
+
+pub fn demoZoneLocalityRouter() {
+    let lb = ZoneLocalityRouter.initDefault();
+    * = lb.addEndpoint(1, 0, 100, true);
+    * = lb.addEndpoint(2, 0, 100, true);
+    * = lb.addEndpoint(3, 1, 100, true);
+
+    const pick = lb.pickEndpoint(0, 42);
+    * = (pick.mode == ZonePickMode.local_hit && pick.selected_zone == 0);
+}
+```
+
 ## 收敛子模块深度文档
 
 - [amqp.md](net/amqp.md)
