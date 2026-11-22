@@ -828,3 +828,41 @@ fn demoCotStreamParser() {
     * = parser.summary();
 }
 ```
+
+
+### 19. 零分配 LLM 流式工具调用提取与状态机解析器 (`toolCallParser.cp`)
+
+面向大模型流式推理（Qwen/Hermes `<tool_call>`、Markdown ```` ```json ```` 代码块与裸 JSON 工具调用）的 100% 纯 CP 零动态堆分配增量提取状态机：
+
+- **常量与枚举**：
+  - `TOOL_CALL_MAX_CALLS = 16`、`TOOL_CALL_NAME_MAX_LEN = 64`、`TOOL_CALL_ID_MAX_LEN = 64`、`TOOL_CALL_ARGS_MAX_LEN = 512`、`TOOL_CALL_TEXT_MAX_LEN = 1024`、`TOOL_CALL_WORK_BUF_LEN = 1024`
+  - `ToolCallStatus`（`complete | truncated | malformed`）
+  - `ToolCallWrapperKind`（`xml_tag | code_fence | bare_json`）
+- **数据模型**：
+  - `ParsedToolCall`（`nameSlice()`, `idSlice()`, `argsJsonSlice()`, `status`, `wrapper`）
+  - `ToolCallParserStats`（`bytes_fed`, `text_bytes_emitted`, `text_bytes_dropped`, `total_calls`, `complete_calls`, `truncated_calls`, `malformed_calls`, `dropped_calls`）
+- **核心引擎 `ToolCallStreamParser`**：
+  - `init()` / `reset(*_)`
+  - `feed(*_, chunk: []const u8)` / `finish(*_): ToolCallParserStats`：支持任意分片（低至单字节），内置括号/字符串/转义深度状态机（免疫引号内花括号、转义引号、伪闭合标签与多字节 UTF-8），自动分离自然语言文本与单回合多工具并发调用，并在流截断时抢救已解析工具名标记 `truncated`。
+  - `textSlice()` / `toolCalls()` / `stats()`。
+
+```cp
+import {
+    ToolCallStatus,
+    ToolCallStreamParser,
+} from "cap:prompt";
+
+fn demoToolCallStreamParser() {
+    let parser = ToolCallStreamParser.init();
+    parser.feed("Checking weather... <tool_call>{\"id\":\"c1\",\"name\":\"get_weather\",");
+    parser.feed("\"arguments\":{\"city\":\"Tokyo\"}}</tool_call> Done.");
+    const st = parser.finish();
+    if (st.complete_calls == 1) {
+        const call = parser.toolCalls()[0];
+        * = call.nameSlice();     // "get_weather"
+        * = call.argsJsonSlice(); // "{\"city\":\"Tokyo\"}"
+        * = parser.textSlice();   // "Checking weather...  Done."
+        * = (call.status == ToolCallStatus.complete);
+    }
+}
+```

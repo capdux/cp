@@ -226,3 +226,17 @@ export {
     CotParseSummary,
     CotStreamParser,
 } from "./cotParser.cp";
+
+export {
+    TOOL_CALL_MAX_CALLS,
+    TOOL_CALL_NAME_MAX_LEN,
+    TOOL_CALL_ID_MAX_LEN,
+    TOOL_CALL_ARGS_MAX_LEN,
+    TOOL_CALL_TEXT_MAX_LEN,
+    TOOL_CALL_WORK_BUF_LEN,
+    ToolCallStatus,
+    ToolCallWrapperKind,
+    ParsedToolCall,
+    ToolCallParserStats,
+    ToolCallStreamParser,
+} from "./toolCallParser.cp";
