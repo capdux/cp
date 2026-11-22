@@ -500,3 +500,47 @@ pub fn demoMcpInflightGate() {
     * = n_exp; // 1 (req_id == 102)
 }
 ```
+
+---
+
+## 十三、 零堆分配 MCP 资源订阅注册表、RFC 6570 URI 模板匹配与增量变更扇出通知器 (`resource_subscription.cp`)
+
+面向 MCP 2025-03-26 `resources/subscribe` 与 `notifications/resources/updated` 协议的 100% 纯 CP 零动态堆分配资源订阅与变更扇出引擎：
+
+- **常量与 RFC 6570 模板函数**：
+  - `MCP_RSUB_MAX_SUBSCRIPTIONS = 128`、`MCP_RSUB_MAX_URI_LEN = 192`、`MCP_RSUB_MAX_TEMPLATE_PARAMS = 8`、`MCP_RSUB_MAX_PENDING_NOTIFS = 128`、`MCP_RSUB_DEFAULT_MAX_PER_SESSION = 32`
+  - `validateRfc6570Template(template)`：校验非空、长度、控制符、花括号成对、禁止嵌套 `{` / 空 `{}` / 连续 `}{` 及合法变量字符（支持 `{var}` 单段与 `{+path}` 多段路径展开）。
+  - `matchRfc6570Template(template, uri): McpTemplateMatchResult`：精确匹配静态段与 `{var}` / `{+var}` 占位符，返回零拷贝参数偏移数组 `McpTemplateParam`。
+- **数据模型**：
+  - `McpSubKind`（`exact_uri | uri_template`）、`McpSubStatus`（`ok | already_subscribed | invalid_session | invalid_uri | capacity_full | session_limit_reached | not_found`）
+  - `McpSubEntry`、`McpPendingNotification`（含 `uriSlice()`、`etag_version`、`coalesced_count`）、`McpResourceNotifyReport`、`McpResourceSubStats`
+- **核心引擎 `McpResourceSubHub`**：
+  - `init(max_per_session): McpResourceSubHub?`：配置单会话订阅配额（`1..=128`）。
+  - `subscribe(*_, subscriber_id, uri_or_template)` / `unsubscribe(*_, subscriber_id, uri_or_template)` / `unsubscribeAllForSession(*_, subscriber_id)`：支持精确 URI 与 RFC 6570 模板订阅、自动去重、单会话/全局配额限制与会话断开全量清理（含待发通知）。
+  - `notifyResourceUpdated(*_, resource_uri, out_subscriber_ids: *[]u64): McpResourceNotifyReport`：单调递增 `etag_version`，扇出收集去重后的受影响订阅者 ID，并将同 `(subscriber_id, resource_uri)` 的重复脏标记原地去抖合并（更新最新 `etag_version` 与 `coalesced_count`）。
+  - `drainPendingNotifications(*_, subscriber_id, out_notifs: *[]McpPendingNotification): usize`：支持全局（`0`）或按会话分批排空待发通知不丢数据。
+
+```cp
+import {
+    McpPendingNotification,
+    McpResourceSubHub,
+} from "cap:mcp";
+
+pub fn demoMcpResourceSubHub() {
+    let hub = McpResourceSubHub.init(16) ?? return;
+    * = hub.subscribe(101, "db://{tenant}/tables/{table}");
+    * = hub.subscribe(102, "db://acme/tables/orders");
+
+    let targets: [8]u64 = [0; 8];
+    let targets_s: []u64 = targets[0..];
+    const r1 = hub.notifyResourceUpdated("db://acme/tables/orders", *targets_s);
+    const r2 = hub.notifyResourceUpdated("db://acme/tables/orders", *targets_s);
+    * = r1;
+    * = r2; // coalesced_notifications == 2, etag_version == 2
+
+    let out: [4]McpPendingNotification = [McpPendingNotification{}; 4];
+    let out_s: []McpPendingNotification = out[0..];
+    const drained = hub.drainPendingNotifications(101, *out_s);
+    * = drained; // 1 (etag_version == 2, coalesced_count == 2)
+}
+```

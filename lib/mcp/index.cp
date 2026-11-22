@@ -141,3 +141,22 @@ export {
     McpGateStats,
     McpInflightGate,
 } from "./inflight_gate.cp";
+
+export {
+    MCP_RSUB_MAX_SUBSCRIPTIONS,
+    MCP_RSUB_MAX_URI_LEN,
+    MCP_RSUB_MAX_TEMPLATE_PARAMS,
+    MCP_RSUB_MAX_PENDING_NOTIFS,
+    MCP_RSUB_DEFAULT_MAX_PER_SESSION,
+    McpTemplateParam,
+    McpTemplateMatchResult,
+    validateRfc6570Template,
+    matchRfc6570Template,
+    McpSubKind,
+    McpSubStatus,
+    McpSubEntry,
+    McpPendingNotification,
+    McpResourceNotifyReport,
+    McpResourceSubStats,
+    McpResourceSubHub,
+} from "./resource_subscription.cp";
