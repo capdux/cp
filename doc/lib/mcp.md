@@ -394,3 +394,62 @@ pub fn demoMcpArgValidator() {
     }
 }
 ```
+
+---
+
+## 十一、 零堆分配 MCP 协议版本/能力协商与资源订阅路由引擎 (`capability_negotiator.cp`)
+
+面向多版本 MCP（`2024-11-05` / `2025-03-26` / `2025-06-18`）服务端与多 Agent 客户端的 100% 纯 CP 零动态堆分配协议握手、能力位图交集协商、会话五态门禁与通配符资源订阅广播引擎：
+
+- **能力位图常量 (`u32`)**：
+  - `MCP_CAP_TOOLS` (`1<<0`)、`MCP_CAP_TOOLS_LIST_CHANGED` (`1<<1`)、`MCP_CAP_RESOURCES` (`1<<2`)、`MCP_CAP_RESOURCES_SUBSCRIBE` (`1<<3`)、`MCP_CAP_PROMPTS` (`1<<4`)、`MCP_CAP_LOGGING` (`1<<5`)、`MCP_CAP_SAMPLING` (`1<<6`)、`MCP_CAP_ROOTS` (`1<<7`)、`MCP_CAP_ELICITATION` (`1<<8`)、`MCP_CAP_ALL_KNOWN` (`0x1FF`)
+- **协议版本与状态枚举**：
+  - `McpNegotiatedVersion`：`unknown | v2024_11_05 | v2025_03_26 | v2025_06_18`（规避与 `session.cp` 中 `McpProtocolVersion` 冲突），内置 `parse(s)`、`toString()`、`rank()`、`isKnown()`、`compare(other)`、`isAtLeast(other)`、`isAtMost(other)`。
+  - `McpSessionPhase`：`uninitialized | initializing | ready | closing | closed`。
+- **会话能力协商器 (`McpSessionNegotiator`)**：
+  - `McpSessionNegotiator.init(server_min_ver, server_max_ver, server_caps, required_client_caps)`
+  - `negotiate(client_ver_str, client_caps): McpHandshakeResult`（与 `negotiate_request(req)`）：校验版本区间（高版本兼容降级至 `server_max_ver`，过旧/未知版本拒绝）与 `required_client_caps`（缺失位在 `missing_required_caps` 中精确报告），按位与计算交集 `effective_caps`，仅成功时推进 `uninitialized -> initializing`。
+  - `mark_initialized(): bool`：仅 `initializing -> ready` 合法。
+  - `can_invoke(required_cap_bit: u32): bool`：仅 `ready` 态且目标能力位已协商通过返回 `true`。
+  - `begin_close(): bool` / `finish_close(): bool`：执行优雅关闭并在 `closed` 态清零 `effective_caps`。
+- **零堆分配资源订阅路由器 (`McpResourceSubscriptionRegistry`)**：
+  - 固定 `MCP_SUB_MAX_SLOTS = 64` 槽位与每槽 `MCP_SUB_MAX_URI_LEN = 128` 字节内联缓冲，零动态堆分配。
+  - `subscribe(client_id, uri_pattern): bool`：支持精确 URI 与尾部 `*` 前缀通配（如 `file:///workspace/*`），幂等去重，拦截 `client_id == 0`、空/超长 URI 及非法中置 `*`。
+  - `unsubscribe(client_id, uri_pattern): bool` / `unsubscribe_all(client_id): usize`：即时释放槽位供后续订阅复用。
+  - `match_subscribers(changed_uri, out_client_ids): usize`：零堆匹配精确与通配符规则，并按 `client_id` 去重输出待推送通知列表。
+  - `active_count(): usize`：返回当前活跃订阅槽位数。
+
+```cp
+import {
+    MCP_CAP_TOOLS,
+    MCP_CAP_RESOURCES,
+    MCP_CAP_RESOURCES_SUBSCRIBE,
+    MCP_CAP_ELICITATION,
+    McpNegotiatedVersion,
+    McpSessionNegotiator,
+    McpResourceSubscriptionRegistry,
+} from "cap:mcp";
+
+pub fn demoMcpCapabilityNegotiator() {
+    let neg = McpSessionNegotiator.init(
+        McpNegotiatedVersion.v2024_11_05,
+        McpNegotiatedVersion.v2025_03_26,
+        MCP_CAP_TOOLS | MCP_CAP_RESOURCES | MCP_CAP_RESOURCES_SUBSCRIBE,
+        MCP_CAP_TOOLS,
+    );
+    // 客户端请求 2025-06-18 -> 自动兼容降级至 2025-03-26
+    const res = neg.negotiate("2025-06-18", MCP_CAP_TOOLS | MCP_CAP_RESOURCES_SUBSCRIBE | MCP_CAP_ELICITATION);
+    if (res.accepted && neg.mark_initialized() && neg.can_invoke(MCP_CAP_RESOURCES_SUBSCRIBE)) {
+        let reg = McpResourceSubscriptionRegistry.init();
+        * = reg.subscribe(1001, "file:///workspace/*");
+        * = reg.subscribe(1001, "file:///workspace/main.cp");
+        * = reg.subscribe(1002, "file:///workspace/main.cp");
+
+        let targets: [8]u64 = [0; 8];
+        let targets_s: []u64 = targets[0..];
+        const n = reg.match_subscribers("file:///workspace/main.cp", targets_s);
+        // n == 2 (client 1001 去重仅出现一次, client 1002 出现一次)
+        * = n;
+    }
+}
+```

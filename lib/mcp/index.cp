@@ -108,3 +108,25 @@ export {
     validateMcpToolArgs,
     formatMcpArgErrorHint,
 } from "./arg_validator.cp";
+
+export {
+    MCP_CAP_TOOLS,
+    MCP_CAP_TOOLS_LIST_CHANGED,
+    MCP_CAP_RESOURCES,
+    MCP_CAP_RESOURCES_SUBSCRIBE,
+    MCP_CAP_PROMPTS,
+    MCP_CAP_LOGGING,
+    MCP_CAP_SAMPLING,
+    MCP_CAP_ROOTS,
+    MCP_CAP_ELICITATION,
+    MCP_CAP_ALL_KNOWN,
+    MCP_SUB_MAX_SLOTS,
+    MCP_SUB_MAX_URI_LEN,
+    McpNegotiatedVersion,
+    McpSessionPhase,
+    McpHandshakeRequest,
+    McpHandshakeResult,
+    McpSessionNegotiator,
+    McpSubscriptionSlot,
+    McpResourceSubscriptionRegistry,
+} from "./capability_negotiator.cp";
