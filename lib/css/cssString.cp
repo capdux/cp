@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/values/css_string.cp | Synced: 2026-11-22T16:08:00Z
+// Source: Absorbed from /data/dev/bun/src/css/values/css_string.cp | Synced: 2026-11-22T17:15:35Z
 // ============================================================================
 // lib/css/cssString.cp — Zero-Alloc W3C CSSOM String Serializer & Syntax L3 Parser
 // ============================================================================

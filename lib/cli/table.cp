@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/cli.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/cli/cli.cp | Synced: 2026-11-22T17:13:24Z
 // lib/cli/table.cp
 // Terminal Table Formatter with Unicode/CJK/Emoji Display Width Alignment (cap:string) & Ascii/Box/Markdown Borders
 

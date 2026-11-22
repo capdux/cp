@@ -161,3 +161,22 @@ const ok = RoutePatternEngine.match("/blog/[slug]/[[...rest]]", "/blog/hello-cp/
 // ok == true, params.get("slug") == "hello-cp", params.get("rest") == "a/b"
 * = ok;
 ```
+
+6. **DevServer 路由打包生命周期状态机与客户端脚本代数管理（`lib/router/routeBundle.cp`，吸收自 `/data/dev/bun/src/bake/DevServer/RouteBundle.cp` & `/data/dev/bun/docs/bundler/fullstack.mdx`）**：
+   - **导出符号**：`ROUTE_BUNDLE_MAX_COUNT` (`128`)、`RouteBundleError`、`RouteBundleKind`（`Framework`/`Html`）、`RouteBundleState`（6 态：`Unqueued`/`Bundling`/`DeferredToNextBundle`/`PossibleBundlingFailures`/`EvaluationFailure`/`Loaded`，含 `isReady`/`isFailed`/`isPending`）、`RouteBundleEntry`（`sourceMapKey`/`hasActiveViewers`/`isGenerationCurrent`/`memoryCost`/`formatClientBundleUrl`）、`RouteBundleRegistry`（`init`/`count`/`registerFramework`/`registerHtml`/`get`/`findByPattern`/`beginBundling`/`markLoaded`/`markBundlingFailure`/`markEvaluationFailure`/`deferToNextBundle`/`invalidateClientBundle`/`addViewer`/`removeViewer`/`activeRouteCount`/`totalMemoryCost`）；
+   - **Bun 全栈开发服务器路由按需打包最佳实践（参考 `fullstack.mdx`）**：
+     - 区分 **Framework 服务端路由**（SSR/全栈）与 **HTML 前端入口路由**（SPA，支持 `script_injection_offset` 注入 `<script>`/`<link>`）；
+     - 每次下游客户端模块更新时调用 `invalidateClientBundle()` 清除旧脚本与 HTML 响应缓存并轮转 `client_script_generation`（若浏览器仍请求旧代数脚本，`isGenerationCurrent(gen)` 返回 `false` 以指示整页刷新）；
+     - 通过 `addViewer()` / `removeViewer()` 维护每个路由上挂载的活跃 HMR 连接数，热重载时可跳过 `active_viewers == 0` 的冷路由，大幅降低大型全栈工程的增量图遍历开销。
+
+```cp
+import { RouteBundleRegistry } from "cap:router";
+
+let reg = RouteBundleRegistry.init();
+const id = reg.registerHtml("/dashboard", 1)?;
+* = reg.addViewer(id)?;
+* = reg.beginBundling(id)?;
+* = reg.markLoaded(id, 4096, 1024, 1200, 256)?;
+const next_gen = reg.invalidateClientBundle(id)?; // 2; client_bundle & cached_response cleared
+* = next_gen;
+```

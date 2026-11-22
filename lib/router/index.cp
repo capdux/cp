@@ -26,3 +26,12 @@ export {
     RouteCapturedParams,
     RoutePatternEngine,
 } from "./routeTypes";
+
+export {
+    ROUTE_BUNDLE_MAX_COUNT,
+    RouteBundleError,
+    RouteBundleKind,
+    RouteBundleState,
+    RouteBundleEntry,
+    RouteBundleRegistry,
+} from "./routeBundle";
