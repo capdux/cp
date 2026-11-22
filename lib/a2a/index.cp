@@ -79,3 +79,10 @@ export {
     scoreCompatiblePeer,
     negotiateBestPeers,
 } from "./negotiation.cp";
+
+export {
+    DelegationState,
+    DelegationRecord,
+    DelegationStats,
+    A2aDelegationManager,
+} from "./delegation.cp";

@@ -206,3 +206,43 @@ pub fn demoA2aCapabilityNegotiation() {
     * = matched;
 }
 ```
+
+### 4.6 零堆分配跨 Agent 任务委派、租约续期、超时故障转移与 Fencing Token 校验示例 (`delegation.cp`)
+
+- **核心类型**：`DelegationState`（`Pending | Active | Completed | Failed | TimedOut | Escalated | Cancelled`）、`DelegationRecord`、`DelegationStats`、`A2aDelegationManager`
+- **核心能力**：
+  - `delegate(*_, task_id, owner_agent_id, backup_agent_id, lease_ms, deadline_ms, now_ms): u64?`：分配单调递增 `fence_token`，防止重复委派与满槽越界；
+  - `renewLease(*_, task_id, fence_token, extend_ms, now_ms): bool`：仅持有当前有效 `fence_token` 且未过租约/总截止时间允许续租，自动封顶至 `deadline_ms`；
+  - `complete(*_, task_id, fence_token, result_summary, now_ms): bool` / `fail(...)` / `cancel(...)`：严格校验 `fence_token`，拒绝过期僵尸 Worker 延迟回写并统计 `stale_fence_rejections`；
+  - `sweepTimeouts(*_, now_ms): usize`：租约超时自动故障转移至 `backup_agent_id` 并轮换 `fence_token` 使旧 Worker 失效；超过 `deadline_ms` 自动标记 `Escalated`；无备用或备用再超时标记 `TimedOut`；
+  - `get(task_id)`、`verifyFence(task_id, fence_token)`、`activeCount()`、`stats()`、`releaseTerminal(task_id)`（零堆分配槽位复用）。
+
+```cp
+import {
+    DelegationRecord,
+    A2aDelegationManager,
+} from "cap:a2a";
+
+pub fn demoA2aDelegationQuickStart() {
+    let slots: [8]DelegationRecord = [DelegationRecord{}; 8];
+    let slots_s: []DelegationRecord = slots[0..];
+    let mgr = A2aDelegationManager.init(slots_s) ?? return;
+
+    // 1. 委派任务 1001 给主节点 10，备用节点 20，租约 2000ms，总截止 10000ms
+    const tok1 = mgr.delegate(1001, 10, 20, 2000, 10000, 1000) ?? return;
+    // 主节点续租至 4500ms
+    * = mgr.renewLease(1001, tok1, 2500, 2000);
+
+    // 2. 假设主节点 10 失联，t=5000ms 触发 sweepTimeouts 自动切换至备用节点 20 并递增 fence_token
+    * = mgr.sweepTimeouts(5000);
+
+    // 3. 主节点 10 复活后持旧 tok1 尝试回写 -> 被 Fencing Token 拒绝！
+    * = mgr.complete(1001, tok1, "stale result", 5200); // false
+
+    // 4. 备用节点 20 持新 fence_token 正常完成任务
+    if (rec := mgr.get(1001)) {
+        * = mgr.complete(1001, rec.fence_token, "backup ok", 5300); // true
+    }
+    * = mgr.stats();
+}
+```
