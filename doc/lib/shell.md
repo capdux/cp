@@ -420,3 +420,34 @@ const done = am.nextStep()?; // Completed(exit_code == 0), FLAGS == "--fast --st
 * = s2;
 * = done;
 ```
+
+### POSIX / Bun Shell 顶层脚本与语句序列状态机（`script_state.cp`）
+
+- 吸收自 `/data/dev/bun/src/shell/states/Script.cp`、`Stmt.cp` 与 `/data/dev/bun/docs/runtime/shell.mdx`；
+- 导出：`SHELL_SCRIPT_MAX_EXPRS` (`64`)、`ShellScriptError`、`ScriptHostKind`（`TopLevel`/`Subshell`/`CommandSubstitution`）、`ShellExprKind`（8 种表达式）、`ScriptStepKind`（`RunExpr`/`Completed`/`AbortedOnError`）、`ScriptExprItem`、`ScriptStepResult`、`scriptPropagatesEnvToParent`、`ShellScriptStateMachine`；
+- **执行与错误传播约束**：
+  - 空脚本（0 条语句）立即以退出码 `0` 结束；
+  - 支持 Bun Shell 默认 `errexit`（`.throws(true)`）遇非零退出码立即中止（`AbortedOnError`）与 `nothrow` 顺序执行模式；
+  - 对条件语句等豁免项（`exempt_from_errexit = true`）不触发 `errexit` 提前中止；仅 `TopLevel` 宿主向外传播环境副作用，`Subshell` 与 `CommandSubstitution` 保持环境隔离。
+
+```cp
+import {
+    ScriptHostKind,
+    ShellExprKind,
+    ScriptStepKind,
+    ShellScriptStateMachine,
+} from "cap:shell";
+
+let sc = ShellScriptStateMachine.init(ScriptHostKind.TopLevel, true);
+* = sc.pushExpr(ShellExprKind.Assign, 1, false)?;
+* = sc.pushExpr(ShellExprKind.Cmd, 2, false)?;
+* = sc.pushExpr(ShellExprKind.Cmd, 3, false)?;
+
+* = sc.nextStep()?; // RunExpr(1)
+* = sc.onExprDone(0)?;
+* = sc.nextStep()?; // RunExpr(2)
+const cont = sc.onExprDone(127)?; // false (触发 errexit 中止)
+const end_s = sc.nextStep()?;     // AbortedOnError(exit_code == 127), 语句 3 不会执行
+* = cont;
+* = end_s;
+```
