@@ -940,3 +940,33 @@ const tlen = planner.formatRelativeSymlinkTarget(0, buf[0..])?;         // "../@
 * = dlen;
 * = tlen;
 ```
+
+### Manifest 缓存预热规划与 `minimumReleaseAge` 供应链门控（`lib/pkg/manifestWarmup.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/PackageManager/PopulateManifestCache.cp` 与 `/data/dev/bun/docs/pm/cli/install.mdx`；
+- 导出：`MANIFEST_WARMUP_MAX_PKGS` (`64`)、`MANIFEST_WARMUP_MAX_DEPS` (`128`)、`MANIFEST_WARMUP_MAX_TASKS` (`64`)、`MANIFEST_WARMUP_MAX_EXCLUDES` (`16`)、`MANIFEST_WARMUP_INVALID_PKG_ID`、`MANIFEST_WARMUP_STABILITY_WINDOW_SECS` (`7 * 86400`)、`ManifestWarmupError`、`WarmupResolutionKind`、`WarmupCacheState`、`ReleaseAgeDecision`、`WarmupPkgNode`、`WarmupDepEdge`、`WarmupTaskItem`、`WarmupOptions`、`WarmupPlanStats`、`manifestTaskHash`、`isManifestCacheSatisfied`、`evaluateReleaseAgeGate`、`ManifestWarmupPlanner`（`init`/`addPackage`/`addDependency`/`planAll`/`planForRootIds`/`tasks`）；
+- **Manifest 预热与供应链最小发布年龄最佳实践（参考 `/data/dev/bun/docs/pm/cli/install.mdx`）**：
+  - **全量与定向预热分流**：`planAll()` 扫描全量 lockfile 并按 `PackageID` 去重；`planForRootIds()` 仅扫描指定根/工作区包的直接依赖区间，自动忽略非 `.Npm` 来源（Git/Tarball/Workspace/Folder）与无效包 ID；
+  - **Optional -> Required 任务升级与扩展 Manifest 降级防护**：同名包先被可选依赖入队、后被必选依赖引用时自动升级为非可选任务；启用 `--minimum-release-age` 时，缓存中仅有精简版（`AbbreviatedOnly`）的条目视为未命中，自动触发含 `time` 字段的扩展 Manifest 拉取；
+  - **7 天稳定性检查与精确版本例外**：开启 `minimumReleaseAge` 时（仅作用于新增解析，不改动已有 `bun.lock`），若门控外 7 天窗口内存在密集快速发布版本则拦截以回退至更成熟版本；精确版本请求（如 `pkg@1.1.1`）仍受年龄门控但跳过稳定性检查；命中 `minimumReleaseAgeExcludes` 或缺少 `time` 字段的包按 Bun 策略放行。
+
+```cp
+import {
+    ManifestWarmupPlanner,
+    WarmupPkgNode,
+    WarmupDepEdge,
+    WarmupOptions,
+    evaluateReleaseAgeGate,
+} from "cap:pkg";
+
+let planner = ManifestWarmupPlanner.init();
+const lodash = planner.addPackage(WarmupPkgNode{ name: "lodash", resolution: .Npm, cache_state: .AbbreviatedOnly })?;
+* = planner.addDependency(WarmupDepEdge{ resolved_pkg_id: lodash, is_optional: false })?;
+
+let opts = WarmupOptions{ minimum_release_age_secs: 259200 }; // 3 days
+* = opts.addExclude("@types/node")?;
+const stats = planner.planAll(opts)?; // enqueued_tasks == 1, extended_manifest_tasks == 1
+const decision = evaluateReleaseAgeGate("lodash", 1_700_000_000, 1_700_100_000, false, false, opts); // .BlockedTooNew
+* = stats;
+* = decision;
+```

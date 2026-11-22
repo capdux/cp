@@ -510,3 +510,25 @@ export {
     BinLinkPlanItem,
     BinLinkPlanner,
 } from "./binLink.cp";
+
+export {
+    MANIFEST_WARMUP_MAX_PKGS,
+    MANIFEST_WARMUP_MAX_DEPS,
+    MANIFEST_WARMUP_MAX_TASKS,
+    MANIFEST_WARMUP_MAX_EXCLUDES,
+    MANIFEST_WARMUP_INVALID_PKG_ID,
+    MANIFEST_WARMUP_STABILITY_WINDOW_SECS,
+    ManifestWarmupError,
+    WarmupResolutionKind,
+    WarmupCacheState,
+    ReleaseAgeDecision,
+    WarmupPkgNode,
+    WarmupDepEdge,
+    WarmupTaskItem,
+    WarmupOptions,
+    WarmupPlanStats,
+    manifestTaskHash,
+    isManifestCacheSatisfied,
+    evaluateReleaseAgeGate,
+    ManifestWarmupPlanner,
+} from "./manifestWarmup.cp";
