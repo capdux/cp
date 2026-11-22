@@ -711,3 +711,36 @@ const res = parseCapArgs(argv[0..], specs[0..], env_vars[0..], true, flags[0..],
 * = res;
 * = getParsedFlag(specs[0..], flags[0..], "max-mem");
 ```
+
+### 项目脚手架模板规划、渲染、冲突裁决与 `cap.json` 生成引擎（`lib/cli/projectScaffold.cp`，吸收自 `/data/dev/bun/src/cli/init_command.cp`）
+
+- **纯 CP、零堆分配、全外部切片驱动**，面向 `cap init` / `cap create`；
+- **核心导出**：
+  - 项目名规范化与安全校验：`ScaffoldError`、`isReservedProjectName`、`normalizeProjectName`（将目录名规范化为合法 kebab-case / `@scope/pkg`，拦截保留名与路径穿越）；
+  - 6 大内建项目模板库：`ScaffoldTemplateKind`（`MinimalApp`/`StdLibrary`/`AiAgentService`/`HttpApiServer`/`RealtimeMediaApp`/`WorkspaceMonorepo`）、`parseScaffoldTemplateKind`、`scaffoldTemplateName`、`scaffoldTemplateDescription`、`collectTemplateFiles`；
+  - 零堆模板插值引擎：`ScaffoldVarBinding`、`ScaffoldRenderOptions`、`ScaffoldRenderDiag`、`renderScaffoldTemplate`（支持 `{{key}}`、`{{#if cond}}...{{else}}...{{/if}}` 嵌套条件块与严格/宽松未定义变量诊断）；
+  - 冲突裁决与 `cap.json` 生成：`ScaffoldConflictPolicy`（`SkipExisting`/`Overwrite`/`FailOnConflict`/`MergeJson`）、`ScaffoldFileAction`、`resolveScaffoldConflict`、`CapManifestDep`、`CapManifestScript`、`formatCapManifestJson`、`ScaffoldProjectOptions`、`ScaffoldPlannedFile`、`ScaffoldPlanSummary`、`planProjectScaffold`、`formatScaffoldPlanReport`。
+
+```cp
+import {
+    ScaffoldProjectOptions,
+    ScaffoldTemplateKind,
+    ScaffoldConflictPolicy,
+    ScaffoldPlannedFile,
+    ScaffoldVarBinding,
+    planProjectScaffold,
+} from "cap:cli";
+
+const opts = ScaffoldProjectOptions{
+    name: "My AI Agent",
+    template: ScaffoldTemplateKind.AiAgentService,
+    conflict_policy: ScaffoldConflictPolicy.MergeJson,
+};
+const existing: [1][]const u8 = ["cap.json"];
+const extra: [0]ScaffoldVarBinding = [];
+let planned: [16]ScaffoldPlannedFile = [ScaffoldPlannedFile.empty(); 16];
+let arena: [8192]u8 = [0; 8192];
+let apos: usize = 0;
+const summary = planProjectScaffold(opts, existing[0..], extra[0..], planned[0..], arena[0..], &apos)?;
+* = summary;
+```

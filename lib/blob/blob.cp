@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/webcore/Blob.cp | Synced: 2026-11-22T19:57:50Z
+// Source: Absorbed from /data/dev/bun/src/runtime/webcore/Blob.cp | Synced: 2026-11-22T23:26:45Z
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/webcore/Blob.cp
 // Upstream Sync: Refer to bun/src/runtime/webcore/Blob.zig for future upstream updates.
