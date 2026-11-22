@@ -186,8 +186,27 @@ const explicit = isExplicitPathArg("./test/specific.test.cp"); // true
 * = prune_vendor;
 * = explicit;
 ```
+9. **并行测试协调器状态机（`lib/test_runner/coordinator.cp`，吸收自 `/data/dev/bun/src/cli/test/parallel/Coordinator.cp`）**：
+   - 常量与类型：`COORDINATOR_MAX_WORKERS` (`64`)、`COORDINATOR_MAX_CRASHED_FILES` (`64`)、`COORDINATOR_DEFAULT_SCALE_UP_MS` (`150`)、`CoordinatorError`、`WorkerSlotState`、`WorkerSlot`、`CoordinatorConfig`、`DispatchDecisionKind`、`DispatchDecision`、`ParallelCoordinator`（`init` / `isDone` / `hasUndispatchedFiles` / `spawnNextWorker` / `shouldScaleUp` / `applyScaleUp` / `assignWork` / `bailOut` / `onTestResult` / `onFileDone` / `onWorkerExited` / `shouldEmitHeader` / `crashedFileAt`）。
 
-### 上游 Bun Test Discovery、Reporters 与 Code Coverage 生产最佳实践（吸收自 `/data/dev/bun/docs/test/{discovery,reporters,code-coverage}.mdx`）
+```typescript
+import { ParallelCoordinator, CoordinatorConfig } from "cap:test_runner";
+
+let coord = ParallelCoordinator.init(CoordinatorConfig{
+    file_count: 8,
+    parallel_limit: 4,
+    scale_up_after_ms: 150,
+    bail_threshold: 1,
+});
+const w0 = coord.spawnNextWorker() ?? 0;
+const d0 = coord.assignWork(w0, 1000)?;
+// 当 w0 持续忙碌超过 150ms 后，applyScaleUp(1200) 自动拉起剩余 3 个 Worker
+const added = coord.applyScaleUp(1200); // 3
+* = d0;
+* = added;
+```
+
+### 上游 Bun Test Discovery、Reporters 与 Code Coverage 生产最佳实践（吸收自 `/data/dev/bun/docs/test/{discovery,reporters,code-coverage}.mdx` 与 `/data/dev/bun/docs/guides/test/{bail,timeout}.mdx`）
 
 1. **测试文件发现与过滤契约（参考 `/data/dev/bun/docs/test/discovery.mdx`）**：
    - **默认匹配模式**：递归扫描 `*.test.{js|jsx|ts|tsx|cp}`、`*_test.*`、`*.spec.*`、`*_spec.*`（CP 工程默认兼容 `test_*.cp` 前缀约定），自动忽略 `node_modules` 与隐藏目录（`.` 开头）。
@@ -196,6 +215,9 @@ const explicit = isExplicitPathArg("./test/specific.test.cp"); // true
 2. **多形态 CI 报告协同**：
    - 终端交互与大套件推荐精简进度输出（如 dots 模式，仅打印 `.` / `F` 减少日志刷屏）；无颜色终端环境自动降级为纯 ASCII（`(pass)` / `(fail)`）。
    - CI 流水线（GitLab CI / Jenkins / GitHub Actions）可同时输出控制台摘要与 JUnit XML 文件，并在并发执行时通过 `mergeJUnitFragments` 汇总多 Worker 产物。
-2. **代码覆盖率阈值门禁与持久化报告**：
+3. **代码覆盖率阈值门禁与持久化报告**：
    - 推荐在 CI 中配置分层覆盖率阈值（`functions` 与 `lines` 可分别设定，如 `0.9`），任一文件低于阈值时触发门禁失败；
    - 通过 `CoverageAggregator.renderMergedLcov` 输出标准 `lcov.info`，可直接对接 Codecov、Coveralls、VS Code Coverage Gutters 等生态工具。
+4. **并行调度、快速熔断（`--bail`）与超时控制（吸收自 `/data/dev/bun/docs/guides/test/{bail,timeout}.mdx`）**：
+   - **懒扩容与工作窃取**：协调器初始仅拉起 1 个 Worker，避免极速小套件产生进程启动开销；仅当所有存活 Worker 均持续忙碌超过 `scale_up_after_ms`（默认 `150ms`）且仍有未派发文件时，才一次性扩容至 `parallel_limit`，随后通过 `WorkStealPool` 从剩余量最大槽位窃取后半段以保持目录局部性。
+   - **CI 快速熔断（`--bail` / `--bail=N`）**：设置 `bail_threshold = 1`（单次失败即中止）或 `bail_threshold = N`（累计 N 次失败后中止），触发后立即停止派发新文件并优雅关闭空闲 Worker，显著缩短 CI 失败反馈周期；默认单测超时基线为 `5000ms`（可通过 `--timeout` 调整）。

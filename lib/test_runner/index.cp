@@ -87,3 +87,16 @@ export {
     matchesDiscoveryGlob,
     TestDiscoveryFilter,
 } from "./discovery";
+
+export {
+    COORDINATOR_MAX_WORKERS,
+    COORDINATOR_MAX_CRASHED_FILES,
+    COORDINATOR_DEFAULT_SCALE_UP_MS,
+    CoordinatorError,
+    WorkerSlotState,
+    WorkerSlot,
+    CoordinatorConfig,
+    DispatchDecisionKind,
+    DispatchDecision,
+    ParallelCoordinator,
+} from "./coordinator";
