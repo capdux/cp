@@ -87,3 +87,14 @@ export {
     ProgressUpdateStatus,
     McpProgressTracker,
 } from "./sampling.cp";
+
+export {
+    McpToolAccess,
+    McpToolSpec,
+    McpToolCatalog,
+    McpCallRequest,
+    McpDispatchStatus,
+    McpDispatchDecision,
+    McpToolDispatcher,
+    McpToolResultBuilder,
+} from "./tool_dispatch.cp";

@@ -287,3 +287,63 @@ pub fn demoMcpSamplingAndProgress() {
     * = reclaimed;
 }
 ```
+
+---
+
+## 九、 生产级 MCP 工具目录、策略门控分发与 `CallToolResult` 构造器 (`tool_dispatch.cp`)
+
+面向 AI Agent MCP Tool Server 的 100% 零堆分配工具注册、策略路由与标准结果响应构造引擎（30 行内构建类型安全、可观测 MCP 工具服务）：
+
+- **工具目录与 `tools/list` 发射（`McpToolAccess` / `McpToolSpec` / `McpToolCatalog`）**：
+  - `McpToolAccess`：`ReadOnly | Mutating | ApprovalRequired`
+  - `McpToolCatalog.init(slots)` / `register(*_, tool_id, name, description, required_params_csv, access, max_concurrency)`（自动防重名、防重复 ID 与满槽保护）/ `unregister` / `findByName` / `count` / `capacity`
+  - `renderToolsListJson(out_buf: *[]u8): usize?`：零堆分配输出标准 MCP `{"tools":[...]}` JSON 列表（完整 RFC 8259 转义，缓冲不足返回 `null`）。
+- **策略门控分发器（`McpCallRequest` / `McpDispatchStatus` / `McpDispatchDecision` / `McpToolDispatcher`）**：
+  - `dispatch(*_, catalog: *McpToolCatalog, req: McpCallRequest): McpDispatchDecision`：依次校验工具存在性（`ToolNotFound`）、只读模式拦截（`ReadOnlyBlocked`）、人工审批门控（`ApprovalRequired`）、JSON 对象参数格式（`InvalidArguments`）、顶层必填参数齐全性（`MissingRequiredParam`，精确返回缺失字段名 `missing_param`）与单工具并发上限（`ConcurrencyLimitReached`），放行后原子递增 `inflight` 与 `call_count`。
+  - `finishCall(catalog, slot_index, is_error)`：释放并发槽位并累计 `error_count`。
+- **零堆分配 `CallToolResult` 构造器（`McpToolResultBuilder`）**：
+  - `init(out_buf, is_error)` / `addText(*_, text)` / `addResourceText(*_, uri, mime_type, text)` / `finish(*_): usize?`
+  - 便捷静态构造：`buildTextResult(text, is_error, out_buf)` / `buildErrorResult(message, out_buf)`。
+
+```cp
+import {
+    McpToolAccess,
+    McpToolSpec,
+    McpToolCatalog,
+    McpCallRequest,
+    McpDispatchStatus,
+    McpToolDispatcher,
+    McpToolResultBuilder,
+} from "cap:mcp";
+
+pub fn demoMcpToolDispatch() {
+    let slots_buf: [4]McpToolSpec = [McpToolSpec{}; 4];
+    let slots_s: []McpToolSpec = slots_buf[0..];
+    let catalog = McpToolCatalog.init(slots_s);
+    * = catalog.register(1, "read_file", "Read workspace file", "path", McpToolAccess.ReadOnly, 4);
+    * = catalog.register(2, "deploy_prod", "Deploy release", "version,env", McpToolAccess.ApprovalRequired, 1);
+
+    let list_buf: [512]u8 = [0; 512];
+    let list_s: []u8 = list_buf[0..];
+    if (n_list := catalog.renderToolsListJson(list_s)) {
+        * = list_buf[0..n_list];
+    }
+
+    let dispatcher = McpToolDispatcher.init(false);
+    const dec = dispatcher.dispatch(&catalog, McpCallRequest{
+        tool_name: "read_file",
+        arguments_json: "{\"path\":\"README.md\"}",
+        read_only_mode: true,
+        approved: false,
+    });
+
+    let res_buf: [256]u8 = [0; 256];
+    let res_s: []u8 = res_buf[0..];
+    if (dec.status == McpDispatchStatus.Allowed) {
+        if (n := McpToolResultBuilder.buildTextResult("file content\nline 2", false, res_s)) {
+            * = res_buf[0..n];
+        }
+        * = dispatcher.finishCall(&catalog, dec.slot_index, false);
+    }
+}
+```
