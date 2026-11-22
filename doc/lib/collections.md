@@ -11,6 +11,7 @@
 - `SmallVec(T, INLINE_CAP)`：栈上内联小向量，元素数不超过 `INLINE_CAP` 时零堆分配，超出后平滑溢出至堆。
 - `BinaryHeap(T, cmp)`：基于 `std.ArrayList(T).empty` 的通用二叉堆，通过 `cmp(a, b) == .lt` 决定优先级。
 - `IdentityContextU64` / `IdentityContextU32` / `ArrayIdentityContext` / `ArrayIdentityContextU64` / `IdentitySetU64` / `IdentityMapU64`（`identityContext.cp`，吸收自 `/data/dev/bun/src/collections/identity_context.cp`）：专为预哈希键（Wyhash / XxHash64 摘要）打造的零二次哈希上下文与固定 64 槽位零堆分配开放寻址哈希集合/映射表（支持墓碑槽位回收与键 `0` 边界）。
+- `SliceListError` / `SliceList<T>`（`sliceList.cp`，吸收自 `/data/dev/bun/src/collections/array_list.cp`）：外部切片驱动、无硬编码上限的泛型零堆分配列表视图，完整支持 `append`/`appendSlice`/`appendNTimes`/`pop`/`insert`/`insertSlice`/`orderedRemove`/`swapRemove`/`replaceRange`/`resize`/`shrinkRetainingCapacity`/`clearRetainingCapacity`/`reverse`/`unusedCapacitySlice` 与前置原子容量检查。
 
 ## 3. API 速查
 - **`BitSet`**: `init(alloc, bit_len)` / `deinit()` / `set(idx)` / `unset(idx)` / `isSet(idx)` / `toggle(idx)` / `clearAll()` / `countSetBits()` / `unionWith(&other)` / `intersectWith(&other)` / `differenceWith(&other)` / `nextSetBit(from)`

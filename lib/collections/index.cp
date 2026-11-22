@@ -16,3 +16,7 @@ export {
     IdentitySetU64,
     IdentityMapU64,
 } from "./identityContext.cp";
+export {
+    SliceListError,
+    SliceList,
+} from "./sliceList.cp";
