@@ -938,3 +938,50 @@ pub fn demoToolHistoryStore() {
     * = store.renderEntry(r1, *buf_s); // "[ref#1: read_file, 32B, ok]"
 }
 ```
+
+### 20. 零分配 Agent ReAct/Plan-Execute 结构化草稿本与 TAO 账本 (`scratchpad.cp`)
+
+面向自主 ReAct / Plan-Execute 推理型 AI Agent 的 100% 纯 CP 零动态堆分配结构化推理草稿本与 Thought-Action-Observation（TAO）账本，内置失败分支检查点回滚、滑动窗口防重复动作检测及 `pinned`/`milestone` 优先的 Token 预算提示词渲染：
+
+- **常量与枚举**：
+  - `SCRATCHPAD_MAX_STEPS = 64`、`SCRATCHPAD_MAX_CHECKPOINTS = 8`、`SCRATCHPAD_TEXT_MAX_LEN = 192`、`SCRATCHPAD_TAG_MAX_LEN = 40`、`SCRATCHPAD_NO_STEP = 0`
+  - `ScratchStepKind`（`thought | action | observation | reflection | milestone | step_error`）
+- **数据模型与纯函数**：
+  - `ScratchStep`（`step_id`, `parent_step_id`, `kind`, `token_estimate`, `pinned`, `timestamp_ms`, `tag_truncated`, `content_truncated`；提供 `tag()`, `content()`, `isPriority()`）
+  - `ScratchCheckpoint`（`checkpoint_id`, `step_count`, `last_step_id`；提供 `label()`）
+  - `ScratchpadStats`（`active_steps`, `capacity`, `checkpoint_count`, `pinned_steps`, `milestone_steps`, `error_steps`, `total_tokens`, `total_appended`, `total_rollbacks`, `total_rolled_back_steps`）
+  - `ScratchRenderReport`（`bytes_written`, `rendered_steps`, `omitted_steps`, `pinned_rendered`, `milestone_rendered`, `tokens_used`, `truncated_by_budget`, `truncated_by_buffer`）
+  - `formatScratchStepKind(kind)`
+- **核心引擎 `AgentScratchpad`**：
+  - `init()` / `len()` / `clear(*_)` / `stats(): ScratchpadStats`
+  - `appendStep(*_, kind, tag, content, token_estimate, timestamp_ms): u32?`：追加结构化推理步并自动链接 `parent_step_id`，超长标签/正文安全截断，满 64 步返回 `null` 且零副作用。
+  - `pinStep(*_, step_id, pinned): bool` / `getStep(step_id)` / `getStepAt(idx)`
+  - `saveCheckpoint(*_, label): u32?` / `getCheckpoint(checkpoint_id)` / `rollbackToCheckpoint(*_, checkpoint_id): usize`：支持在探索分支前保存检查点、分支失败后安全回滚并自动作废后续嵌套检查点，同时保留目标检查点供多次重试并累加回滚统计。
+  - `detectRepeatedAction(tag, window_size): usize`：统计最近 `window_size` 步内同标签 `action` 的重复调用次数，辅助死循环检测。
+  - `renderWithinTokenBudget(max_tokens, *out_buf): ScratchRenderReport`：优先锁定所有 `pinned`/`milestone` 步骤，再从新到旧回填近期步骤，按时间正序渲染为紧凑 `[Thought]` / `[Action:tag]` / `[Observation]` / `[Milestone]` 提示词文本并在跳过区间自动插入 `... (N steps omitted)` 摘要。
+
+```cp
+import {
+    ScratchStepKind,
+    AgentScratchpad,
+} from "cap:agentmem";
+
+pub fn demoAgentScratchpad() {
+    let pad = AgentScratchpad.init();
+    const s1 = pad.appendStep(ScratchStepKind.milestone, "goal", "Fix parser panic on empty input", 20, 1000) ?? return;
+    * = pad.pinStep(s1, true);
+    const cp = pad.saveCheckpoint("before_patch") ?? return;
+
+    * = pad.appendStep(ScratchStepKind.action, "run_test", "Running regression suite", 15, 2000);
+    * = pad.appendStep(ScratchStepKind.step_error, "run_test", "Segmentation fault on edge case", 18, 2500);
+
+    // 失败分支安全回滚到检查点
+    * = pad.rollbackToCheckpoint(cp);
+    * = pad.appendStep(ScratchStepKind.reflection, "retry", "Guard empty slice before indexing", 16, 3000);
+
+    let out_buf: [512]u8 = [0; 512];
+    let out_s: []u8 = out_buf[0..];
+    const rep = pad.renderWithinTokenBudget(100, *out_s);
+    * = rep.rendered_steps;
+}
+```

@@ -230,3 +230,18 @@ export {
     formatToolStatus,
     ToolHistoryStore,
 } from "./toolHistory.cp";
+
+export {
+    SCRATCHPAD_MAX_STEPS,
+    SCRATCHPAD_MAX_CHECKPOINTS,
+    SCRATCHPAD_TEXT_MAX_LEN,
+    SCRATCHPAD_TAG_MAX_LEN,
+    SCRATCHPAD_NO_STEP,
+    ScratchStepKind,
+    ScratchStep,
+    ScratchCheckpoint,
+    ScratchpadStats,
+    ScratchRenderReport,
+    formatScratchStepKind,
+    AgentScratchpad,
+} from "./scratchpad.cp";
