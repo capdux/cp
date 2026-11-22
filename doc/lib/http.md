@@ -743,3 +743,31 @@ const hr = d.onStreamHeaders(4, hdrs[0..])?;
 * = req_id;
 * = hr;
 ```
+
+7. **HTTP/3 DNS-Pending QUIC 连接协调队列（`h3/pending_connect.cp`，吸收自 `/data/dev/bun/src/http/h3_client/PendingConnect.cp` & `/data/dev/bun/docs/runtime/networking/dns.mdx`）**：
+   - 导出：`H3_DNS_PENDING_MAX_CONNECTS` (`32`)、`H3_DNS_MAX_HOST_LEN` (`255`)、`H3_DNS_DEFAULT_TTL_SECS` (`30`)、`H3_DNS_MAX_TTL_SECS` (`86400`)、`H3PendingConnectError`、`H3DnsConnectState`、`H3DnsDrainAction`、`H3SessionFailReason`、`H3RegisterResult`、`H3DrainOutcome`、`H3DnsPendingStats`、`parseH3DnsTtlSeconds`、`H3PendingDnsEntry`、`H3PendingConnectQueue`；
+   - **上游 DNS 最佳实践与边界约束（源自 Bun `docs/runtime/networking/dns.mdx`）**：
+     - 默认 DNS 缓存 TTL 为 `30s`（对齐 `BUN_CONFIG_DNS_TIME_TO_LIVE_SECONDS`，可通过 `parseH3DnsTtlSeconds` 校验 `1..86400`，AWS 等云环境可按需缩短至 `5s`）；
+     - 同一 `(hostname[大小写不敏感], port)` 并发发起 QUIC 连接时，自动识别并计入在途 DNS 去重命中（`inflight_dedup_hits`），避免对同一主机重复发出并发 DNS 查询；
+     - 任一主机 DNS 解析失败或未获得有效 QUIC socket 时，排空结果显式标记 `should_evict_dns_cache = true`，通知调用方从 DNS 缓存驱逐失效记录；
+   - **完整线程交接与取消语义**：`register` -> `onDnsResolvedThreadsafe`（首条入队返回 `needs_wakeup = true`）-> `drainResolved` 精准区分 `AttachedSocket`、`CancelledSessionClosed`（不重复触发 `failSession`）、`AbortedNoPendingStreams`（触发 `Aborted`）与 `FailedDnsResolution`（触发 `DnsResolutionFailed` + 驱逐 DNS 缓存），并在排空时通过 `O(1)` `swapRemove` 回收槽位与引用计数。
+
+```cp
+import {
+    H3PendingConnectQueue,
+    H3DrainOutcome,
+    H3DnsDrainAction,
+    parseH3DnsTtlSeconds,
+} from "cap:http";
+
+const ttl = parseH3DnsTtlSeconds("5")?; // 5s (云环境推荐短 TTL)
+let q = H3PendingConnectQueue.initWithTtl(ttl)?;
+const r1 = q.register(101, "quic.example.com", 443, 2)?;
+const r2 = q.register(102, "QUIC.EXAMPLE.COM", 443, 1)?; // r2.deduped_inflight == true
+const wakeup = q.onDnsResolvedThreadsafe(r1.connect_id, true, 9001)?; // true
+let outcomes: [4]H3DrainOutcome = [H3DrainOutcome{}; 4];
+const n = q.drainResolved(outcomes[0..])?; // n == 1, outcomes[0].action == .AttachedSocket
+* = r2;
+* = wakeup;
+* = n;
+```

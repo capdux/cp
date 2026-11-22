@@ -228,6 +228,57 @@ pub fn demoFenwickOrderStat() {
 
 ---
 
+## 零分配增强区间树、重叠/刺穿查询与连续区间合并引擎（`augmented_interval_tree.cp`）
+
+面向调度空闲槽位、内存页空洞查找、时间窗口冲突检测的 100% 纯 CP 零动态堆分配增强区间树与连续区间合并引擎（保留既有 `interval_tree.cp` 向下兼容，全新纯迭代无递归零堆实现）：
+
+- **常量与数据模型**：
+  - `AUG_ITREE_MAX_NODES = 256`、`AUG_ITREE_NO_NODE = 0xFFFF`
+  - `IntervalSpan`（`start: i64`, `end: i64`, `payload_id: u64`）、`IntervalQueryResult`（`written`, `total_matched`, `truncated`）、`IntervalTreeStats`
+- **区间合并与补集空洞提取纯函数**：
+  - `coalesceIntervals(in_out_ranges: *[]IntervalSpan, count, merge_adjacent): usize?`：原地排序并合并重叠/相邻区间（`merge_adjacent` 支持合并 `[a, b]` 与 `[b+1, c]` 且防 `i64` 溢出）。
+  - `findGaps(ranges, window_start, window_end, out_gaps: *[]IntervalSpan): IntervalQueryResult`：提取闭区间窗口 `[window_start, window_end]` 内所有未覆盖补集空洞。
+- **核心引擎 `AugmentedIntervalTree`**：
+  - `init()` / `buildFromSlice(items): AugmentedIntervalTree?`（纯迭代中位二分构建严格平衡增强二叉树并自底向上回填 `max_end`）
+  - `insert(*_, start, end, payload_id): bool` / `rebuildBalanced(*_)` / `stats()`
+  - `queryPoint(point, out_hits)`（刺穿查询）、`queryOverlap(low, high, out_hits)`（重叠查询）、`queryContained(low, high, out_hits)`（包含查询）、`hasAnyOverlap(low, high): bool`（CLRS O(log N) 单路径快检）、`findGapsInWindow(window_start, window_end, out_gaps)`。
+
+### QuickStart 示例
+
+```cp
+import {
+    IntervalSpan,
+    coalesceIntervals,
+    AugmentedIntervalTree,
+} from "cap:ds";
+
+pub fn demoAugmentedIntervalTree() {
+    const items: [3]IntervalSpan = [
+        IntervalSpan{ start: 10, end: 20, payload_id: 1 },
+        IntervalSpan{ start: 15, end: 30, payload_id: 2 },
+        IntervalSpan{ start: 50, end: 60, payload_id: 3 },
+    ];
+    let tree = AugmentedIntervalTree.buildFromSlice(items[0..]) ?? return;
+
+    let hits: [4]IntervalSpan = [IntervalSpan{}; 4];
+    let hits_s: []IntervalSpan = hits[0..];
+    const q = tree.queryPoint(18, *hits_s); // total_matched == 2 (payload 1, 2)
+
+    let gaps: [4]IntervalSpan = [IntervalSpan{}; 4];
+    let gaps_s: []IntervalSpan = gaps[0..];
+    const g = tree.findGapsInWindow(0, 100, *gaps_s); // [0,9], [31,49], [61,100]
+
+    let mut_items: [3]IntervalSpan = items;
+    let mut_s: []IntervalSpan = mut_items[0..];
+    const merged_n = coalesceIntervals(*mut_s, 3, true) ?? 0; // 2 ([10,30], [50,60])
+    * = q;
+    * = g;
+    * = merged_n;
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [aho_corasick.md](ds/aho_corasick.md)

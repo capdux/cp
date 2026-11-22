@@ -236,3 +236,15 @@ export {
     FenwickTreeI64,
     FenwickOrderStat,
 } from "./fenwick_order.cp";
+
+// --- augmented_interval_tree ---
+export {
+    AUG_ITREE_MAX_NODES,
+    AUG_ITREE_NO_NODE,
+    IntervalSpan,
+    IntervalQueryResult,
+    IntervalTreeStats,
+    coalesceIntervals,
+    findGaps,
+    AugmentedIntervalTree,
+} from "./augmented_interval_tree.cp";

@@ -232,6 +232,20 @@ export {
     H3HeaderDispatchResult,
     H3ConnCloseSummary,
     H3CallbackDispatcher,
+    H3_DNS_PENDING_MAX_CONNECTS,
+    H3_DNS_MAX_HOST_LEN,
+    H3_DNS_DEFAULT_TTL_SECS,
+    H3_DNS_MAX_TTL_SECS,
+    H3PendingConnectError,
+    H3DnsConnectState,
+    H3DnsDrainAction,
+    H3SessionFailReason,
+    H3RegisterResult,
+    H3DrainOutcome,
+    H3DnsPendingStats,
+    parseH3DnsTtlSeconds,
+    H3PendingDnsEntry,
+    H3PendingConnectQueue,
 } from "./h3/index";
 
 // --- Step 3: Industrial Client Engine & Lifecycle ---

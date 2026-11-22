@@ -93,3 +93,20 @@ export {
     H3ConnCloseSummary,
     H3CallbackDispatcher,
 } from "./stream_dispatch";
+
+export {
+    H3_DNS_PENDING_MAX_CONNECTS,
+    H3_DNS_MAX_HOST_LEN,
+    H3_DNS_DEFAULT_TTL_SECS,
+    H3_DNS_MAX_TTL_SECS,
+    H3PendingConnectError,
+    H3DnsConnectState,
+    H3DnsDrainAction,
+    H3SessionFailReason,
+    H3RegisterResult,
+    H3DrainOutcome,
+    H3DnsPendingStats,
+    parseH3DnsTtlSeconds,
+    H3PendingDnsEntry,
+    H3PendingConnectQueue,
+} from "./pending_connect";
