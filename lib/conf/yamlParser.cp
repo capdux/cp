@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/interchange/yaml.cp | Synced: 2026-11-22T15:04:00Z
+// Source: Absorbed from /data/dev/bun/src/interchange/yaml.cp | Synced: 2026-11-22T19:03:00Z
 // lib/conf/yaml_parser.cp
 // Industrial-grade YAML 1.2 Parser & Bidirectional Serializer:
 // - Multi-document streams (`---` / `...`, `%YAML`/`%TAG`)

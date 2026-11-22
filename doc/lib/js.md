@@ -104,3 +104,25 @@ if (folded := foldStringAddition(lhs, JsFoldExpr.numberInt(2), FoldStringKind.No
     * = out;
 }
 ```
+
+### JS/TS 词法作用域树与符号合并裁决 (`scope.cp`) 与直接 `eval()` 重命名防护
+
+吸收自 `/data/dev/bun/src/js_parser/ast/Scope.cp`，并同步 `/data/dev/bun/docs/bundler/minifier.mdx` 中的 `--minify-identifiers` 安全重命名实践：
+
+- **导出符号**：`JS_SCOPE_MAX_SCOPES` (`64`)、`JS_SCOPE_MAX_MEMBERS` (`256`)、`JS_SCOPE_NO_PARENT`、`JsScopeError`、`JsScopeKind`（`stopsHoisting` / `asStr`）、`JsStrictModeKind`（`isStrict`）、`JsSymbolKind`（`isHoisted` / `isHoistedOrFunction`）、`JsSymbolMergeResult`、`canMergeJsSymbols`、`JsScopeMember`、`JsScopeNode`、`JsScopeTree`（`init`/`pushScope`/`getScope`/`declareSymbol`/`lookupInScope`/`resolveSymbol`/`findHoistTargetScope`/`markDirectEval`/`canMinifyIdentifiersInScope`/`recursiveSetStrictMode`）；
+- **核心语义与 Bun Minifier 实战要点**：
+  1. **ECMAScript + TypeScript 符号合并裁决**：完整支持 TS `namespace` / `enum` / `function` / `class` 声明合并、私有字段 `get #x` + `set #x` 配对升级、`catch (e) { var e }` 与 `arguments` 遮蔽规则，静态拦截非法重声明（`MergeForbidden`）；
+  2. **`var` 提升边界与严格模式传播**：`JsScopeKind.stopsHoisting()` 界定 `entry` / `function_args` / `function_body` / `class_static_init` 提升边界；`class_body` 自动开启 `implicit_strict_mode_class` 与 `forbid_arguments`，`recursiveSetStrictMode` 零递归向所有 `sloppy_mode` 后代传播严格模式；
+  3. **Direct `eval()` 标识符保护**：若某作用域包含直接 `eval()` 调用，调用 `markDirectEval(scope_id)` 会沿父链标记整条可达作用域链，`canMinifyIdentifiersInScope` 返回 `false`，防止 minifier 误重命名可能被 `eval` 动态引用的局部变量。
+
+```cp
+import { JsScopeTree, JsScopeKind, JsSymbolKind } from "cap:js";
+
+let tree = JsScopeTree.init(true); // TypeScript mode
+const entry = tree.pushScope(JsScopeKind.entry, null)?;
+const blk = tree.pushScope(JsScopeKind.block, entry)?;
+* = tree.declareSymbol(entry, "Foo", JsSymbolKind.ts_enum, 1, 0)?;
+* = tree.declareSymbol(entry, "Foo", JsSymbolKind.ts_namespace, 2, 16)?; // keep_existing
+* = tree.markDirectEval(blk)?;
+assert(!tree.canMinifyIdentifiersInScope(entry));
+```

@@ -37,3 +37,18 @@ export {
     formatJsInt,
     foldStringAddition,
 } from "./foldString.cp";
+
+export {
+    JS_SCOPE_MAX_SCOPES,
+    JS_SCOPE_MAX_MEMBERS,
+    JS_SCOPE_NO_PARENT,
+    JsScopeError,
+    JsScopeKind,
+    JsStrictModeKind,
+    JsSymbolKind,
+    JsSymbolMergeResult,
+    canMergeJsSymbols,
+    JsScopeMember,
+    JsScopeNode,
+    JsScopeTree,
+} from "./scope.cp";
