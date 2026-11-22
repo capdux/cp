@@ -645,3 +645,28 @@ git status --porcelain cpc_dev/src
      `// Source: Absorbed from /data/dev/bun/src/<rel> | Synced: YYYY-MM-DDTHH:MM:SSZ (<简述>)`
    - 定期运行 `python3 scripts/audit_bun_sync.py` 对比 `Synced:` 与上游真实 `mtime`，若 `bun_agy` 更新了对应 `.cp` 文件，及时同步修复/调整并用 `--mark-synced` 刷新时间戳。
 
+---
+
+## 十一、标准库“做深不做薄”与内置/外部生态分层铁律 (CRITICAL)
+
+为避免标准库沦为“文件数量多、单个功能浅、难以直接用于生产”的浅层合集，所有新增与深化核心库必须严格遵守以下工程底线：
+
+### 1. “做深不做薄”生产级实现铁律
+1. **解除小容量玩具上限（外部切片 / Arena 驱动）**：
+   - 除协议规范本身规定小上限的场景（如 W3C `tracestate` 最多 32 项）外，**检索、优化、统计、调度、通信、多媒体等重型核心引擎严禁硬编码小容量定长数组（如 `MAX_DOCS = 256`、`MAX_TABLES = 8`）作为唯一上限**。
+   - 必须优先采用**调用方传入任意长度外部切片/工作缓冲**（`[]f32`/`[]f64`/`[]u8`/`[]Node`）或 Arena 驱动，既保持 100% 纯 CP 零动态堆分配与内存安全，又能无缝承接十万级/高并发真实生产数据规模。
+2. **功能完备优先于模块数量**：
+   - 复杂领域引擎不再为了“每轮凑 1 个 300 行小文件”而阉割关键能力；单核心模块按业务真实复杂度写透（通常 **800–1,500 行**，或按清晰子职责分多轮打磨成完整套件），补齐**核心算法 + 边界/数值稳定性 + 二进制持久化/流式编解码 + 权威基准值对照验证**（如 R/SciPy、RFC 测试向量、Parseval 定理、召回率实测）。
+   - 单文件体量仍受总规范 `<= 3000` 行约束；超出时按职责拆分为同主包下的清晰子模块（并在 `index.cp` 统一导出）。
+3. **文档与可复用性闭环**：
+   - 每个核心引擎必须同步补全 `doc/lib/<pkg>.md` 的架构说明、参数调优要点与端到端可运行示例，以及 `cp_lib_ref.md` 索引条目。
+
+### 2. 内置标准库（`cap:*`）vs 外部 `cap` 生态包分层边界
+1. **内置标准库（`lib/` / `cap:*`）只收三类资产**：
+   - **零外部 C/C++ 重量依赖的纯 CP 协议/帧/容器解析器**（如 HTTP/2/3、gRPC、RTP/RTCP/SRTP/SDP/ICE/STUN/TURN/SCTP、HLS/DASH/fMP4/WebM/Ogg/WAV/PCM/G.711、DOCX/PDF/XLSX 读写基础）；
+   - **高频通用计算与 AI/Agent 核心原语**（基于 CP 原生 `@dot`/`@fma`/`@l2sq`/`@popCount` 加速的向量检索、统计优化、FFT/Biquad/Sinc 音频 DSP、色彩/缩放基础图像处理、MCP/A2A/AgentMem/Attention）；
+   - **极轻量系统与运行时契约**（POSIX/cgroup/事件循环/并发调度/密码学原语）。
+2. **重型外部 C/C++ 生态与大型编解码器一律走 `cap install` 外部官方包**：
+   - 凡涉及庞大 C/C++ 依赖或专利/硬件加速栈的库（如 **OpenCV、libvips、ImageMagick、FFmpeg、libopus、x264/x265、dav1d/SVT-AV1、ONNX Runtime/llama.cpp**），**绝不直接塞进内置标准库**，而是作为官方外部包（如 `@cap/vips`、`@cap/opencv`、`@cap/opus`、`@cap/av`）通过 `cap` 预编译二进制矩阵（`.so`/`.dylib`/`.dll` + 全局缓存软链）按需安装，保持 CP 编译器与标准库核心极速轻量。
+
+
