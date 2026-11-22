@@ -238,3 +238,12 @@ export {
     PgCopyResponseView,
     PgCopyResponseEncoder,
 } from "./copyResponse.cp";
+
+export {
+    PG_TAG_ERROR_RESPONSE,
+    PG_ERROR_HEADER_LEN,
+    PgErrorResponseError,
+    PgErrorSeverity,
+    parseErrorSeverity,
+    PgErrorResponse,
+} from "./errorResponse.cp";

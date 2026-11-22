@@ -441,6 +441,30 @@ const view = PgCopyResponseView.decodeFrame(buf[0..n])?;
 * = view.isBinary(); // true
 ```
 
+### `ErrorResponse`（`'E'`）诊断错误报文与 SQLSTATE 分类器（`errorResponse.cp`）
+
+> 吸收自 `/data/dev/bun/src/sql/postgres/protocol/ErrorResponse.cp`，零堆分配复用 `PgDiagnosticFields` 18 字段容器，实现 PostgreSQL v3.0 Backend `ErrorResponse`（Tag `'E' = 0x45`）编解码与生产级 SQLSTATE 分类（可重试事务冲突、约束冲突、认证失败与连接级 `FATAL`/`PANIC` 识别）。
+
+- 核心导出：`PG_TAG_ERROR_RESPONSE`（`'E'`）、`PG_ERROR_HEADER_LEN`（`5`）、`PgErrorResponseError`、`PgErrorSeverity`（`Error`/`Fatal`/`Panic`/`Unknown`）、`parseErrorSeverity`、`PgErrorResponse`（`init`/`fromFields`/`addField`/`severity`/`severityLevel`/`isError`/`isFatal`/`isPanic`/`isFatalOrPanic`/`isRetryable`/`isConstraintViolation`/`isUniqueViolation`/`isForeignKeyViolation`/`isAuthFailure`/`isConnectionException`/`encodeFrame`/`decodeFrame`/`decodeFrameStrict`/`decodePayload`/`decodePayloadStrict`/`eql`）；
+- **连接池自愈最佳实践**：
+  - 仅当 `err_resp.isRetryable()`（`40001` 序列化冲突 / `40P01` 死锁检测）为 `true` 时执行业务事务重试；
+  - 若 `err_resp.isConnectionException()` 为 `true`（`FATAL`/`PANIC` 或 SQLSTATE Class `08`），须立即关闭并丢弃连接，严禁归还连接池。
+
+```cp
+import { PgDiagnosticFieldType, PgErrorResponse } from "cap:pgwire";
+
+let e = PgErrorResponse.init();
+* = e.addField(PgDiagnosticFieldType.Severity, "ERROR")?;
+* = e.addField(PgDiagnosticFieldType.Code, "23505")?;
+* = e.addField(PgDiagnosticFieldType.Message, "duplicate key value violates unique constraint")?;
+* = e.addField(PgDiagnosticFieldType.Constraint, "users_email_key")?;
+
+let buf: [256]u8 = [0; 256];
+const n = e.encodeFrame(buf[0..])?;
+const decoded = PgErrorResponse.decodeFrame(buf[0..n])?;
+* = decoded.isUniqueViolation(); // true
+```
+
 ---
 
 ## 4. 示例
