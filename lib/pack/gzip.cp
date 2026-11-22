@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/zlib/zlib.cp | Synced: 2026-11-21T15:37:42Z
+// Source: Absorbed from /data/dev/bun/src/zlib/zlib.cp | Synced: 2026-11-22T12:33:04Z
 // ============================================================================
 // lib/pack/gzip.cp — RFC 1952 Gzip & RFC 1950/1951 Deflate/Inflate 工业级压缩与解压引擎
 // 吸收自 Bun src/zlib/zlib.cp，由底层 vendor/zlib 纯静态库 (libz.a) 驱动

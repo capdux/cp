@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/PackageManager/security_scanner.cp | Synced: 2026-11-22T12:17:05Z
+// Source: Absorbed from /data/dev/bun/src/install/PackageManager/security_scanner.cp | Synced: 2026-11-22T12:34:06Z
 // Ported from Bun: /data/dev/bun/src/install/PackageManager/security_scanner.cp & /data/dev/bun/docs/pm/security-scanner-api.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation package security scanner protocol types, strict JSON advisory parser,

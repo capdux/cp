@@ -752,3 +752,37 @@ const any_latest = set.latestAny(); // 2.0.0-beta.1
 * = stable;
 * = any_latest;
 ```
+
+### pnpm-lock.yaml (v7/v8/v9) 依赖路径解析与迁移索引（`lib/pkg/pnpm_lock.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/pnpm.cp` 与 `/data/dev/bun/docs/pm/lockfile.mdx`；
+- 导出：`PNPM_LOCK_MIN_SUPPORTED_MAJOR` (`7`)、`PNPM_LOCK_MAX_PATCHES` (`64`)、`PNPM_LOCK_MAX_SNAPSHOTS` (`128`)、`PNPM_LOCK_MAX_IMPORTERS` (`64`)、`PnpmLockError`、`PnpmLockVersion`、`parsePnpmLockfileVersion`、`PnpmDepPathSuffix`、`indexOfPnpmDepPathSuffix`、`removePnpmDepPathSuffix`、`extractPnpmPatchHash`、`extractPnpmPeersSuffix`、`PnpmPackageKey`、`parsePnpmPackageKey`、`PnpmDepResolutionKind`、`PnpmImporterDepSpec`、`parsePnpmImporterVersion`、`formatPnpmCanonicalKey`、`PnpmPatchEntry`、`PnpmSnapshotRecord`、`PnpmImporterRecord`、`PnpmMigrationStats`、`PnpmMigrationIndex`；
+- **Automatic Lockfile Migration 最佳实践与边界约束（参考 `/data/dev/bun/docs/pm/lockfile.mdx`）**：
+  - 当项目不存在 `bun.lock` 但存在 `pnpm-lock.yaml` 时，包管理器可自动迁移并保留原锁文件以供核验；`lockfileVersion` 必须 `>= 7`（低于 v7 返回 `PnpmLockError.LockfileTooOld`，需先升级 pnpm 锁文件再迁移）；
+  - 依赖路径后缀（如 `(patch_hash=abc)(react@18.2.0(scheduler@0.23.0))`）必须通过平衡括号逆向扫描剥离，严禁简单按首个 `(` 截断；
+  - pnpm v9 将 `packages` 与 `snapshots` 分离，同一 `canonical_key` 在 `snapshots` 中可能因不同 peer 组合出现多个变体，`PnpmMigrationIndex.registerSnapshot()` 会按去后缀键幂等合并并自动关联 `patchedDependencies` 中的补丁版本，而 `matchPackage()` 强制校验每个 `packages` 条目均存在对应 `snapshots` 项，且必须存在根工作区 `importers["."]`。
+
+```cp
+import {
+    parsePnpmLockfileVersion,
+    removePnpmDepPathSuffix,
+    parsePnpmPackageKey,
+    parsePnpmImporterVersion,
+    PnpmMigrationIndex,
+} from "cap:pkg";
+
+const ver = parsePnpmLockfileVersion("'9.0'")?;
+let idx = PnpmMigrationIndex.init(ver);
+* = idx.registerImporter(".", 2)?;
+* = idx.registerPatch("react-dom", "patches/react-dom.patch", "abc123")?;
+* = idx.registerSnapshot("react-dom@18.2.0(patch_hash=abc123)(react@18.2.0)")?;
+* = idx.matchPackage("react-dom@18.2.0")?;
+const st = idx.validateAndStats()?; // packages_matched == 1, patches_matched == 1
+* = st;
+const clean = removePnpmDepPathSuffix("react-dom@18.2.0(react@18.2.0)");
+const pk = parsePnpmPackageKey("@scope/pkg@1.2.3(peer@2.0.0)")?;
+const spec = parsePnpmImporterVersion("my-lodash", "npm:lodash@4.17.21")?;
+* = clean;
+* = pk;
+* = spec;
+```
