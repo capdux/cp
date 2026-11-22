@@ -636,6 +636,20 @@ pub fn demoWebmMuxRoundtrip(vp9_keyframe: []const u8, opus_pkt: []const u8)! {
 - **RFC 3640 `AAC-hbr` WebRTC/RTSP RTP 分包重组与 SDP `fmtp`**：
   - `AacRtpAuSpan`、`AacRtpPacketSpan`、`packetizeAacRtpHbr`（多帧聚合 + 超 MTU 分片）、`depacketizeAacRtpHbr`（零拷贝多帧解包）与 `formatAacSdpFmtp`。
 
+### 13. RFC 6716 Opus 帧打包解包、LBRR-FEC/DTX 比特级探测与 RFC 7587 WebRTC RTP 引擎 (`opus.cp`)
+
+在 100% 向下兼容既有 RFC 7845 `OpusHead`/`OpusTags` 与 RFC 6716 `parseOpusToc` 的基础上，原地深化为全套零堆外部切片 Opus 实时语音核心：
+
+- **RFC 6716 Code 0 / 1 / 2 / 3 帧解析与最紧凑重打包**：
+  - `encodeOpusFrameLen` / `decodeOpusFrameLen`（1 字节 `0..251` 与 2 字节 `252..1275`）；
+  - `parseOpusPacketFrames`（外部切片零拷贝提取 1..48 帧，完整支持 Code 0/1/2/3 CBR/VBR、多字节 `255` 累加填充跳过及 `<= 120ms` 强校验）；
+  - `repackOpusFrames`（自动选择最紧凑 Code 0/1/2/3 封装，支持目标包长 `target_packet_len` 精确零填充）。
+- **RFC 6716 §4.2.7 SILK/Hybrid VAD、In-Band FEC (LBRR) 与 DTX 诊断**：
+  - `OpusFrameSignalInfo`、`inspectOpusFrameSignal`、`OpusPacketDiagnostics`、`diagnoseOpusPacket`（一键输出模式、带宽、时长、样本数、DTX、VAD 与 LBRR FEC 标志）。
+- **RFC 7587 WebRTC Opus SDP `fmtp` 与 RTP 聚合/拆包器**：
+  - `OpusSdpFmtpConfig`、`parseOpusSdpFmtp`、`formatOpusSdpFmtp`（全量支持 `minptime`/`maxplaybackrate`/`maxaveragebitrate`/`stereo`/`sprop-stereo`/`cbr`/`useinbandfec`/`usedtx`）；
+  - `OpusRtpPacketizer`（48kHz RTP 时间戳递增、DTX 静音后首个语音包自动置位 `Marker`、`aggregatePackets` 如 20ms×2 -> 40ms）与 `OpusRtpUnpacker`（`observePacket` 统计 + `splitToSingleFramePackets` 多帧拆分）。
+
 ---
 
 ## 收敛子模块深度文档
