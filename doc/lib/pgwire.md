@@ -481,6 +481,22 @@ const frame = PgCommandCompleteFrame.decodeFrame(buf[0..n])?;
 * = frame.rowCount(); // 42
 ```
 
+### 有界零拷贝协议游标与原子半包帧读取器（`stackReader.cp`）
+
+> 吸收自 `/data/dev/bun/src/sql/postgres/protocol/StackReader.cp`，零堆分配实现 PostgreSQL v3.0 大端序流式解包游标：支持消息起点书签（`markMessageStart`/`rewindMessage`/`setOffsetFromStart`）、饱和跳过（`skip`）、大端定长整数（`readU8`..`readI64Be`）、NUL 终结字符串（`readZ`）以及带 `max_frame_bytes` 防护和原子半包回滚的 `readFrame()`。
+
+- 核心导出：`PG_FRAME_HEADER_LEN`（`5`）、`PG_DEFAULT_MAX_FRAME_BYTES`（`64 MiB`）、`PgStackReaderError`（`ShortRead`/`InvalidLength`/`FrameTooLarge`/`OffsetOutOfBounds`）、`PgWireFrameSlice`（`tag`/`msg_len`/`payload`/`payloadLen`/`frameLen`）、`PgStackReader`。
+
+```cp
+import { PgStackReader, PG_DEFAULT_MAX_FRAME_BYTES } from "cap:pgwire";
+
+const wire: [11]u8 = ['Z', 0, 0, 0, 5, 'I', 'S', 0, 0, 0, 4];
+let r = PgStackReader.init(wire[0..]);
+const f1 = r.readFrame(PG_DEFAULT_MAX_FRAME_BYTES)?; // tag='Z', payload="I"
+const f2 = r.readFrame(PG_DEFAULT_MAX_FRAME_BYTES)?; // tag='S', payload=""
+* = f1; * = f2;
+```
+
 ---
 
 ## 4. 示例

@@ -254,3 +254,11 @@ export {
     PgCommandCompleteError,
     PgCommandCompleteFrame,
 } from "./commandComplete.cp";
+
+export {
+    PG_FRAME_HEADER_LEN,
+    PG_DEFAULT_MAX_FRAME_BYTES,
+    PgStackReaderError,
+    PgWireFrameSlice,
+    PgStackReader,
+} from "./stackReader.cp";
