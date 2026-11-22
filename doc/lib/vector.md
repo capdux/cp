@@ -1361,3 +1361,52 @@ pub fn demoLateChunking(token_embeddings: []const f32, num_tokens: usize, dim: u
     * = n_hits;
 }
 ```
+
+
+---
+
+## 零分配 8-bit 非对称标量量化向量索引（SQ8，`sq8Quant.cp`）
+
+面向高性价比 4x 显存/内存压缩向量检索的 100% 纯 CP 零动态堆分配 **8-bit Asymmetric Scalar Quantization (SQ8)** 引擎：
+
+- **常量与数据模型**：
+  - `SQ8_MAX_DIM = 64`、`SQ8_MAX_DOCS = 256`（16 KiB 内联 `u8` 压缩池，4x 压缩对比 64 KiB `f32`）
+  - `Sq8Metric`：`dot`（内积降序）| `l2_sq`（平方欧氏距离升序）
+  - `Sq8Codebook`：逐维 `min_vals`、`scales`、`inv_scales`（零方差维度自动安全退化为 `scale = 0.0` 零除零）
+  - `Sq8SearchHit`、`Sq8ErrorStats`（`mse`, `mae`, `max_abs_err`, `cosine_fidelity`, `compression_ratio`）、`Sq8IndexStats`
+- **校准器与编解码核**：
+  - `Sq8Calibrator`：`init(dim, clip_quantile)`、`observe(*_, vec)`、`finalize(): Sq8Codebook?`（增量流式 Min/Max + Welford 均值/方差可选极值截断）
+  - `sq8CalibrateBatch(vecs_flat, n_vecs, dim, clip_quantile): Sq8Codebook?`：两遍 64-bin 零堆直方图 1%~99% 极值截断校准
+  - `encodeF32ToU8` / `decodeU8ToF32`：4x 压缩量化与反量化
+  - `sq8AsymDotF32` / `sq8AsymL2SqF32` / `sq8SymDotU8`：非对称（`f32` vs `u8`）与对称（`u8` vs `u8`）距离核
+  - `evaluateSq8Error(codebook, orig_vecs, n_vecs): Sq8ErrorStats?`：批量量化重建保真度评估
+- **核心索引 `Sq8VectorIndex`**：
+  - `init(codebook)` / `addVector(*_, doc_id, vec)` / `addQuantized(*_, doc_id, codes)` / `clear(*_)` / `stats()`
+  - `searchTopK(query, metric, top_k, *out_hits): usize?`：一阶段 SQ8 非对称粗排 Top-K
+  - `rescoreTopK(query, raw_vecs_flat, metric, coarse_k, final_k, *out_hits): usize?`：两阶段 SQ8 粗排 + 外部原始 `f32` 精确重打分。
+
+```cp
+import {
+    Sq8Metric,
+    Sq8Calibrator,
+    Sq8SearchHit,
+    Sq8VectorIndex,
+} from "cap:vector";
+
+pub fn demoSq8VectorIndex() {
+    let cal = Sq8Calibrator.init(4, 0.0) ?? return;
+    const v1: [4]f32 = [1.0, 0.0, 0.0, 0.0];
+    const v2: [4]f32 = [0.0, 1.0, 0.0, 0.0];
+    * = cal.observe(v1[0..]);
+    * = cal.observe(v2[0..]);
+    const cb = cal.finalize() ?? return;
+
+    let idx = Sq8VectorIndex.init(cb) ?? return;
+    * = idx.addVector(101, v1[0..]);
+    * = idx.addVector(102, v2[0..]);
+
+    let hits: [2]Sq8SearchHit = [Sq8SearchHit{}; 2];
+    let hits_s: []Sq8SearchHit = hits[0..];
+    * = idx.searchTopK(v1[0..], Sq8Metric.dot, 2, *hits_s);
+}
+```

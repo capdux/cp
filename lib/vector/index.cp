@@ -285,3 +285,22 @@ export {
     searchLateChunks,
     computeLateChunkStats,
 } from "./lateChunk.cp";
+
+export {
+    SQ8_MAX_DIM,
+    SQ8_MAX_DOCS,
+    Sq8Metric,
+    Sq8Codebook,
+    Sq8Calibrator,
+    Sq8ErrorStats,
+    Sq8SearchHit,
+    Sq8IndexStats,
+    sq8CalibrateBatch,
+    encodeF32ToU8,
+    decodeU8ToF32,
+    sq8AsymDotF32,
+    sq8AsymL2SqF32,
+    sq8SymDotU8,
+    evaluateSq8Error,
+    Sq8VectorIndex,
+} from "./sq8Quant.cp";
