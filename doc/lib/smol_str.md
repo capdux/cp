@@ -1,6 +1,6 @@
 # `cap:smol_str` — 小字符串内联优化 Compact String
 
-> 溯源：从 `/data/dev/bun/src/string/SmolStr.cp` 吸收并规范化为纯 CP 标准库模块。
+> 参考来源：/data/dev/bun/src/string/SmolStr.cp | 吸收日期：2026-11-22
 
 `cap:smol_str` 提供带小字符串优化（SSO, Small String Optimization）与 `~init()` 确定性 RAII 释放的 `SmolStr` 类型：
 
@@ -53,3 +53,12 @@ fn buildTag(alloc: std.mem.Allocator)! {
     * = view;
 } // 离开作用域自动触发 s.~init() 释放堆内存
 ```
+
+## 上游行为契约与 SSO 内存边界
+
+1. **15 字节内联零堆分配阈值 (`INLINE_MAX_LEN = 15`)**：
+   - 绝大多数标识符、HTTP 方法/短头名、路由段与标签长度均 `<= 15B`，`SmolStr.fromSlice` 自动存入栈内联缓冲且 `isInline() == true`，彻底消除小对象堆碎片与分配器锁竞争。
+2. **切片视图失效契约**：
+   - `slice()` 返回指向内联栈缓冲或堆缓冲的只读视图：当 `SmolStr` 被按值移动、或触发 `appendChar`/`appendSlice` 跨越 15B 阈值迁移至堆及扩容时，此前获取的 `slice()` 视图即刻失效，须重新调用 `slice()`。
+3. **RAII 确定性释放**：
+   - `SmolStr` 实现幂等 `~init()`，内联形态析构零开销，堆形态离开作用域自动释放底层内存。

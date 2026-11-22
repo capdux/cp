@@ -1,6 +1,6 @@
 # `cap:vlq` — SourceMap Base64-VLQ 查表高速编解码器
 
-> 溯源：从 `/data/dev/bun/src/sourcemap/VLQ.cp` 吸收并规范化为纯 CP 标准库模块。
+> 参考来源：/data/dev/bun/src/sourcemap/VLQ.cp | 吸收日期：2026-11-22
 
 `cap:vlq` 提供零堆分配、查表加速的 SourceMap v3 Base64-VLQ 编解码器：
 
@@ -68,3 +68,11 @@ fn demo()! {
     * = count; // 4
 }
 ```
+
+## 上游行为契约与数值边界防护
+
+1. **热路径 O(1) 查表加速（源自 Bun `sourcemap/VLQ.cp`）**：
+   - SourceMap 中超过 95% 的列/行增量落在 `0..=255` 区间，`encode` 直接命中编译期 256 项查找表零循环返回；超出范围自动无缝切至 `encodeSlowPath`。
+2. **`i32::MIN` 无溢出与续位流安全**：
+   - 内部先转 64 位无符号再做 ZigZag 符号位搬移，彻底避免对 `i32::MIN`（`-2147483648`）取反溢出；
+   - `decodeChecked` 严格校验最高续位 bit 5 链长与边界，拦截截断流（`TruncatedInput`）、非法字符（`InvalidBase64Char`）与超 `i32` 范围编码（`Overflow`）。

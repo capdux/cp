@@ -1,5 +1,7 @@
 # `cap:textdecode` — 零堆分配 WHATWG 流式文本解码器（TextDecoder）
 
+> 参考来源：/data/dev/bun/src/runtime/webcore/TextDecoder.cp | 吸收日期：2026-11-22
+
 `cap:textdecode` 吸收自 Bun 上游 WebCore `TextDecoder` 实现（`src/runtime/webcore/TextDecoder.cp`），剥离了 JSC 与堆分配耦合，提供 100% 纯 CP、零堆分配（zero-alloc）的 WHATWG Encoding Standard 流式文本解码器，支持 **UTF-8**、**UTF-16LE**、**UTF-16BE** 与 **Latin-1** 跨分块流式解码至规范 UTF-8，完整覆盖 BOM 嗅探/剥离、`fatal` 严格模式、过长/代理非法序列拦截与 `U+FFFD` 替换。
 
 ## 核心特性
@@ -49,3 +51,10 @@ fn textDecodeDemo() {
     * = r2;
 }
 ```
+
+## 上游行为契约与安全解码边界
+
+1. **`fatal` 严格模式 vs 容错替换模式**：
+   - `fatal = true` 时遇到过长编码（如 `C0 AF`）、UTF-16 代理码点（`ED A0 80`）、超范围码点（`> U+10FFFF`）或流末尾截断序列立即返回 `null` 拒绝输入；`fatal = false` 时按 WHATWG §8.1.1 输出 `U+FFFD` 并置 `DecodeResult.had_error = true`。
+2. **流结束标志 (`stream = false`)**：
+   - 跨分块读取网络/文件流时传 `stream = true` 暂存截断的多字节续字节或高代理；最终一块必须传 `stream = false` 触发 EOF 冲刷并重置状态机以备复用。
