@@ -670,3 +670,10 @@ export {
     CssPositionKind,
     CssPositionProp,
 } from "./positionProp.cp";
+
+export {
+    CssOverflowPropError,
+    CssOverflowAxis,
+    CssOverflowProp,
+    CssTextOverflowProp,
+} from "./overflowProp.cp";

@@ -946,3 +946,19 @@ const n = p.toCssDecls(true, buf[0..])?;
 // buf[0..n] == "position:-webkit-sticky;position:sticky"
 * = n;
 ```
+
+26. **CSS Overflow Level 3 `overflow` 双值简写折叠、降级与 `text-overflow`（`overflowProp.cp`，吸收自 `/data/dev/bun/src/css/properties/overflow.cp` & `/data/dev/bun/docs/bundler/css.mdx`）**：
+    - **导出符号**：`CssOverflowPropError`、`CssOverflowAxis`（`visible`/`hidden`/`clip`/`scroll`/`auto_mode`，含 `allowsProgrammaticScroll`/`isClipped`）、`CssOverflowProp`（`default`/`single`/`parse`/`isSymmetric`/`needsTwoValueLowering`/`eql`/`toCss`/`toCssDecls`）、`CssTextOverflowProp`（`clip`/`ellipsis`）；
+    - **Bun CSS 双值简写降级与最小化实践（吸收自 `bundler/css.mdx`）**：
+      - 当 `overflow` 两轴相同时（如 `overflow: hidden hidden`），`toCss` 自动折叠为单值 `"hidden"`；
+      - 当 `x != y`（如 `overflow: hidden auto`）且目标浏览器不支持双值 `overflow` 简写（如旧版 Safari/Edge）时，`toCssDecls(false, minify, out)` 零分配自动降级拆分为 `overflow-x:hidden;overflow-y:auto`。
+
+```cp
+import { CssOverflowProp } from "cap:css";
+
+const o = CssOverflowProp.parse("hidden auto")?;
+let buf: [64]u8 = [0; 64];
+const n1 = o.toCssDecls(false, true, buf[0..])?; // "overflow-x:hidden;overflow-y:auto"
+const n2 = o.toCssDecls(true, true, buf[0..])?;  // "overflow:hidden auto"
+* = n1; * = n2;
+```
