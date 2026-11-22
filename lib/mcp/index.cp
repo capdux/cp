@@ -261,3 +261,22 @@ export {
     encodeElicitationRequest,
     formatElicitationResponseSummary,
 } from "./elicitation.cp";
+
+export {
+    MCP_ROOTS_MAX_ENTRIES,
+    MCP_ROOTS_PATH_MAX_LEN,
+    MCP_ROOTS_URI_MAX_LEN,
+    MCP_ROOTS_NAME_MAX_LEN,
+    McpRootPolicy,
+    McpRootOpStatus,
+    McpPathAccessStatus,
+    McpRootEntry,
+    McpPathAuthDecision,
+    McpRootsSyncStats,
+    normalizeAbsolutePath,
+    parseFileRootUri,
+    formatFileRootUri,
+    isPathWithinRoot,
+    encodeRootsListChangedNotification,
+    McpRootsRegistry,
+} from "./rootsSync.cp";

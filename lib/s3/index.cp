@@ -61,3 +61,13 @@ export {
     guessS3Region,
     S3ParsedEndpoint,
 } from "./endpoint.cp";
+
+export {
+    S3_STAT_MAX_ETAG_LEN,
+    S3_STAT_MAX_TYPE_LEN,
+    S3_STAT_MAX_DATE_LEN,
+    S3_STAT_MAX_VERSION_LEN,
+    S3StatError,
+    parseHttpDateEpochMs,
+    S3Stat,
+} from "./stat.cp";

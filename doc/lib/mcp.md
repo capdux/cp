@@ -778,3 +778,53 @@ pub fn demoMcpElicitation() {
     * = encodeElicitationRequest(101, "Approve deployment?", schema[0..], *json_s);
 }
 ```
+
+---
+
+## 十九、 零堆分配 MCP Workspace Roots 工作区根目录同步与路径边界沙箱守卫 (`rootsSync.cp`)
+
+面向 MCP 2025-03-26 / 2025-06-18 `roots/list` 与 `notifications/roots/list_changed` 规范的 100% 纯 CP 零动态堆分配工作区根目录同步器与路径沙箱守卫：
+
+- **常量与枚举**：
+  - `MCP_ROOTS_MAX_ENTRIES = 32`、`MCP_ROOTS_PATH_MAX_LEN = 256`、`MCP_ROOTS_URI_MAX_LEN = 264`、`MCP_ROOTS_NAME_MAX_LEN = 64`
+  - `McpRootPolicy`（`read_only | read_write`）
+  - `McpRootOpStatus`（`ok | invalid_uri | name_too_long | already_exists | not_found | capacity_full`）
+  - `McpPathAccessStatus`（`allowed | denied_outside_roots | denied_read_only | denied_invalid_path`）
+- **路径规范化与 URI 工具函数**：
+  - `normalizeAbsolutePath(raw_path, *out_buf): usize?`：合并多重 `/`、消除 `.`、解析 `..` 并截断前导根越界；严格拦截相对路径、空路径、NUL 字节、控制字符与反斜杠 `\`。
+  - `parseFileRootUri(uri, *out_path): usize?` / `formatFileRootUri(norm_path, *out_uri): usize?`：解析 `file:///...` 与 `file://localhost/...` 并格式化为规范 `file://` URI。
+  - `isPathWithinRoot(norm_root, norm_path): bool`：严格目录边界判定，确保 `/app` 绝不误放行 `/app2`。
+  - `encodeRootsListChangedNotification(*out_buf): usize?`：零分配编码 `{"jsonrpc":"2.0","method":"notifications/roots/list_changed"}`。
+- **核心引擎 `McpRootsRegistry`**：
+  - `init()` / `addRoot(*_, uri, name, policy)` / `upsertRoot(*_, uri, name, policy)` / `removeRoot(*_, uri_or_path)` / `setPolicy(*_, uri_or_path, policy)` / `clear(*_)` / `findRoot` / `getRoot` / `count`
+  - `revisionNumber()` / `hasPendingListChanged()` / `ackListChanged(*_)` / `encodePendingListChanged(*_, *out_buf)`：单调递增 `revision` 追踪根列表变更并按需发射 `notifications/roots/list_changed`。
+  - `authorizePath(*_, raw_path, need_write): McpPathAuthDecision` / `authorizeUri(*_, raw_uri, need_write): McpPathAuthDecision`：零堆规范化 + 最长前缀 Root 匹配 + 读写权限裁决。
+  - `encodeRootsListResult(request_id, *out_buf): usize?`：零分配输出标准 JSON-RPC 2.0 `roots/list` 响应（含 RFC 8259 转义）。
+  - `stats(): McpRootsSyncStats`：返回活跃 Root 数、当前 `revision`、放行/拒绝/写拒绝/越界/畸形路径拦截累计计数。
+
+```cp
+import {
+    McpRootPolicy,
+    McpPathAccessStatus,
+    McpRootsRegistry,
+} from "cap:mcp";
+
+pub fn demoMcpRootsSync() {
+    let reg = McpRootsRegistry.init();
+    * = reg.addRoot("file:///workspace", "Workspace", McpRootPolicy.read_write);
+    * = reg.addRoot("file:///workspace/.git", "Git Metadata", McpRootPolicy.read_only);
+
+    // 最长前缀匹配：/workspace/.git 覆盖外层 read_write 策略，拦截写入
+    const d1 = reg.authorizePath("/workspace/src/../README.md", true); // allowed
+    const d2 = reg.authorizePath("/workspace/.git/config", true);      // denied_read_only
+    const d3 = reg.authorizePath("/workspace2/secret.txt", false);     // denied_outside_roots
+    * = d1.status == McpPathAccessStatus.allowed;
+    * = d2.status == McpPathAccessStatus.denied_read_only;
+    * = d3.status == McpPathAccessStatus.denied_outside_roots;
+
+    let buf: [512]u8 = [0; 512];
+    let buf_s: []u8 = buf[0..];
+    * = reg.encodeRootsListResult(1, *buf_s);
+    * = reg.encodePendingListChanged(*buf_s);
+}
+```
