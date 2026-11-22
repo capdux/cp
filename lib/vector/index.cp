@@ -357,3 +357,16 @@ export {
     selectMmrWithPrecomputedScores,
     computeListDiversity,
 } from "./mmrSelect.cp";
+
+export {
+    IVFPQ_MAX_LISTS,
+    IVFPQ_MAX_SUBSPACES,
+    IVFPQ_MAX_KSUB,
+    IVFPQ_MAX_DIM,
+    IVFPQ_MAX_DOCS,
+    IvfPqError,
+    IvfPqConfig,
+    IvfPqHit,
+    IvfPqStats,
+    IvfPqIndex,
+} from "./ivfPq.cp";

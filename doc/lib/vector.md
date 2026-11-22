@@ -1599,3 +1599,47 @@ pub fn demoMmrSelect() {
     * = computeListDiversity(vecs[0..], 2, out[0..n], cfg.metric);
 }
 ```
+
+### 34. 零堆分配 SIMD `@l2sq` 残差乘积量化索引 (`ivfPq.cp`)
+
+对标 FAISS `IndexIVFPQ` 的 100% 纯 CP 零动态堆分配粗到精近似最近邻检索引擎，原生调用 `@l2sq` 硬件算子：
+
+- **常量与错误**：
+  - `IVFPQ_MAX_LISTS = 16`、`IVFPQ_MAX_SUBSPACES = 8`、`IVFPQ_MAX_KSUB = 16`、`IVFPQ_MAX_DIM = 64`、`IVFPQ_MAX_DOCS = 256`
+  - `IvfPqError`（`InvalidDim | InvalidParams | NotTrained | CapacityFull | DimMismatch`）
+- **配置与数据模型**：
+  - `IvfPqConfig`（`dim`, `nlist`, `m_subspaces`, `ksub`, `nprobe`, `train_iters`; `isValid()`）
+  - `IvfPqHit`（`doc_id`, `list_id`, `approx_l2_sq`）、`IvfPqStats`（`doc_count`, `nlist`, `m_subspaces`, `ksub`, `bytes_per_code`, `compression_ratio_x100`, `trained`）
+- **核心引擎 `IvfPqIndex`**：
+  - `init(cfg): IvfPqIndex ! IvfPqError`
+  - `train(*_, flat_vecs, num_vecs): void ! IvfPqError`：两阶段确定性零堆训练（粗聚类 K-Means + 各子空间残差 `r = x - c_l` PQ 码本聚类）。
+  - `add(*_, doc_id, vec): u16 ! IvfPqError`：计算残差并编码为紧凑 `[IVFPQ_MAX_SUBSPACES]u8` 码字挂入侵入式倒排表。
+  - `reconstruct(doc_idx, *out_vec): bool`：叠加粗中心与子空间 PQ 码本还原近似向量。
+  - `search(*_, query_vec, nprobe, *out_hits): usize`：Multi-Probe ADC 检索，按探测倒排表预建 `[m_subspaces][ksub]f32` 查表并以 O(M) 查表累加输出升序 Top-K。
+  - `stats(): IvfPqStats`
+
+```cp
+import {
+    IvfPqConfig,
+    IvfPqHit,
+    IvfPqIndex,
+} from "cap:vector";
+
+pub fn demoIvfPq()! {
+    const cfg = IvfPqConfig{ dim: 8, nlist: 2, m_subspaces: 4, ksub: 4, nprobe: 2, train_iters: 6 };
+    let idx = IvfPqIndex.init(cfg)?;
+    const train_vecs: [32]f32 = [
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0,
+        10.1, 10.1, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0,
+    ];
+    idx.train(train_vecs[0..], 4)?;
+    * = idx.add(101, train_vecs[0..8])?;
+    * = idx.add(202, train_vecs[16..24])?;
+
+    let hits: [2]IvfPqHit = [IvfPqHit{}; 2];
+    let hits_s: []IvfPqHit = hits[0..];
+    * = idx.search(train_vecs[0..8], 2, *hits_s); // Top-1 == doc 101
+}
+```
