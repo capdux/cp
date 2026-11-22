@@ -777,31 +777,47 @@ impl Codegen {
                         let inner_code = self.generate_expr(expr);
                         let src_ty = self.infer_cp_type(expr);
                         let is_src_float = matches!(src_ty, Some(Type::F32 | Type::F64));
-                        let is_src_int = matches!(
-                            src_ty,
-                            Some(
-                                Type::U8
-                                    | Type::I8
-                                    | Type::U16
-                                    | Type::I16
-                                    | Type::I32
-                                    | Type::U32
-                                    | Type::I64
-                                    | Type::U64
-                                    | Type::U128
-                                    | Type::I128
-                                    | Type::ISize
-                                    | Type::USize
-                            )
-                        );
                         fn unwrap_aligned(mut ty: &Type) -> &Type {
                             while let Type::Aligned { inner, .. } = ty {
                                 ty = inner;
                             }
                             ty
                         }
+                        fn is_int_ty(ty: &Type) -> bool {
+                            match ty {
+                                Type::U8
+                                | Type::I8
+                                | Type::U16
+                                | Type::I16
+                                | Type::I32
+                                | Type::U32
+                                | Type::I64
+                                | Type::U64
+                                | Type::U128
+                                | Type::I128
+                                | Type::ISize
+                                | Type::USize => true,
+                                Type::Ref(id) => {
+                                    matches!(
+                                        id.sym.as_str(),
+                                        "c_int"
+                                            | "c_uint"
+                                            | "c_short"
+                                            | "c_ushort"
+                                            | "c_long"
+                                            | "c_ulong"
+                                            | "c_char"
+                                            | "c_uchar"
+                                    ) || ((id.sym.starts_with('u') || id.sym.starts_with('i'))
+                                        && id.sym.len() > 1
+                                        && id.sym[1..].chars().all(|c| c.is_ascii_digit()))
+                                }
+                                _ => false,
+                            }
+                        }
                         let src_ty_base = src_ty.as_ref().map(unwrap_aligned);
                         let resolved_ty_base = unwrap_aligned(&resolved_ty);
+                        let is_src_int = src_ty_base.map_or(false, is_int_ty);
                         let is_src_ptr = matches!(
                             src_ty_base,
                             Some(
@@ -813,21 +829,7 @@ impl Codegen {
                                     | Type::BorrowType { .. }
                             )
                         );
-                        let is_target_int = matches!(
-                            resolved_ty_base,
-                            Type::U8
-                                | Type::I8
-                                | Type::U16
-                                | Type::I16
-                                | Type::I32
-                                | Type::U32
-                                | Type::I64
-                                | Type::U64
-                                | Type::U128
-                                | Type::I128
-                                | Type::ISize
-                                | Type::USize
-                        );
+                        let is_target_int = is_int_ty(resolved_ty_base);
                         let is_target_float = matches!(resolved_ty_base, Type::F32 | Type::F64);
                         let is_target_ptr = matches!(
                             resolved_ty_base,

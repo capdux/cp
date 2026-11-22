@@ -69,6 +69,7 @@ struct ImportedEnv {
     decls: Vec<Decl>,
     vars: Vec<VarDecl>,
     zig_globals: Vec<String>,
+    extra_error_sets: Vec<ErrorSetDecl>,
 }
 
 pub fn fnv1a64(bytes: &[u8]) -> u64 {
@@ -555,6 +556,8 @@ fn collect_exported_env_from_module(
                 if let Some(n) = name_opt {
                     if allow(n) {
                         env.decls.push(d.clone());
+                    } else if let Decl::ErrorSet(es) = d {
+                        env.extra_error_sets.push(es.clone());
                     }
                 }
             }
@@ -687,6 +690,12 @@ fn populate_codegen_from_env(codegen: &mut Codegen, env: &ImportedEnv) {
     }
     for zg in &env.zig_globals {
         codegen.value_classes.insert(zg.clone());
+    }
+    for es in &env.extra_error_sets {
+        codegen
+            .error_sets
+            .entry(es.ident.sym.clone())
+            .or_insert_with(|| es.variants.clone());
     }
 }
 

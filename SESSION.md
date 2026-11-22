@@ -2503,3 +2503,14 @@
 - **工单来源**：`capsurf_agy`（项目 `capsurf` / 分类 `compiler_bug`） | 创建：`2026-11-23 09:19:56` | 状态：`pending` | 结单：`进行中`
 - **报错/需求摘要**：cap build -m 调用 brotliDecompress 时 _lib/pack/brotli.zig 报 4 处 Zig 整数窄化类型错误: 1) brotli.zig:199 expected 'u3' found 'u4' (self.bit_pos); 2) brotli.zig:219 expected 'u5' found 'u6' (i); 3) brotli.zig:487 expected 'u6' found 'u8' (window_bits); 4) brotli.zig:1259 expected 'u6' found 'u32' (mskipbits * 8)。此外 brotliDecompress(alloc, body) catch "" 在跨模块 cap build -m 时将 Zig error union 误降级为 switch(.ok/.er ...(截断)
 - **结单与处理汇报**：(处理中/未填写结单备注)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 09:20:57）[step:19803]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-capsurf-20261123-brotli-zig-narrowing)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取工单 `task-capsurf-20261123-brotli-zig-narrowing`（复现用例：[repro_brotli_zig_narrowing.cp](file:///data/dev/cp/temp/repro_brotli_zig_narrowing.cp)），并已拉起独立热修子智能体同步修复以下两类问题：
+  >
+  > 1. **[lib/pack/brotli.cp](file:///data/dev/cp/lib/pack/brotli.cp) 移位右侧整数窄化**：修复 `u4 -> u3`、`u6 -> u5`、`u8 -> u6`、`u32 -> u6` 全部 4 处（并全文件扫描同类移位位宽隐患）；
+  > 2. **跨模块 `catch` 降级修复（`cpc/src/`）**：修复 `cap build -m` 跨模块调用返回 Zig error union（如 `brotliDecompress`）时，`expr catch fallback` 误降级为 `switch(.ok/.err)` 的问题，修复后执行 `sync_cpc.sh release` 发布并验证端到端 `cap build -m` 与 `testPackBrotliDecompress.cp` 全绿结单。
+  >
+  > 待验证通过并结单后，我将第一时间同步归档 `SESSION.md` 与 Git 提交并汇报。

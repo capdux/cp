@@ -569,7 +569,7 @@ fn brReadPrefixCode(alloc: std.mem.Allocator, br: *BrBitReader, alphabet_size: u
         const cl_len = brReadCodeLengthCode(br)?;
         cl_lengths[code_idx] = cl_len;
         if (cl_len != 0) {
-            space -= (32 >> (cl_len as u5));
+            space -= ((32 as i32) >> (cl_len as u5));
             num_codes += 1;
         }
     }
@@ -594,7 +594,7 @@ fn brReadPrefixCode(alloc: std.mem.Allocator, br: *BrBitReader, alphabet_size: u
             sym_idx += 1;
             if (code != 0) {
                 prev_len = code as u8;
-                cl_space -= (32768 >> (code as u5));
+                cl_space -= ((32768 as i32) >> (code as u5));
             }
         } else {
             const extra_bits: u6 = if (code == 16) 2 else 3;
@@ -619,7 +619,7 @@ fn brReadPrefixCode(alloc: std.mem.Allocator, br: *BrBitReader, alphabet_size: u
                 sym_idx += 1;
             }
             if (rep_val != 0) {
-                cl_space -= (delta as i32) * (32768 >> (rep_val as u5));
+                cl_space -= (delta as i32) * ((32768 as i32) >> (rep_val as u5));
             }
         }
     }
@@ -942,7 +942,7 @@ fn brDecodeCompressedMetaBlock(
     // 2. Distance parameters: NPOSTFIX (2 bits), NDIRECT (4 bits << NPOSTFIX)
     const npostfix = br.readBits(2)?;
     const ndirect = br.readBits(4)? << (npostfix as u5);
-    const num_dist_syms = 16 + (ndirect as usize) + (48 << (npostfix as u5));
+    const num_dist_syms = 16 + (ndirect as usize) + ((48 as usize) << (npostfix as u5));
 
     // 3. Context modes for literal block types
     let context_modes = alloc.alloc(u8, nbltypes_l) catch return BrotliError.OutOfMemory;

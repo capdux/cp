@@ -106,9 +106,8 @@ impl Codegen {
     pub(crate) fn generate_expr_error_flow(&mut self, expr: &Expr) -> String {
         match expr {
             Expr::Question(inner) => {
-                let is_optional_type_ctx = self.in_container_const
-                    || self.in_type_expr_ctx
-                    || self.is_type_expr(inner);
+                let is_optional_type_ctx =
+                    self.in_container_const || self.in_type_expr_ctx || self.is_type_expr(inner);
                 if is_optional_type_ctx {
                     let saved = self.in_type_expr_ctx;
                     self.in_type_expr_ctx = true;
@@ -446,7 +445,14 @@ impl Codegen {
                             {
                                 format!("{};", ec)
                             } else if let Some(ty_str) = &target_payload_ty {
-                                format!("break :{} @as({}, {});", blk_label, ty_str, ec)
+                                if ty_str == "[]u8" && matches!(e, Expr::Lit(Lit::Str(_))) {
+                                    format!(
+                                        "break :{} @constCast(@as([]const u8, {}));",
+                                        blk_label, ec
+                                    )
+                                } else {
+                                    format!("break :{} @as({}, {});", blk_label, ty_str, ec)
+                                }
                             } else if self.is_lib_mode || matches!(e, Expr::Lit(_)) {
                                 format!("break :{} {};", blk_label, ec)
                             } else {
@@ -505,10 +511,17 @@ impl Codegen {
                                     {
                                         self.write_to_case(&format!("{};", ec));
                                     } else if let Some(ty_str) = &target_payload_ty {
-                                        self.write_to_case(&format!(
-                                            "break :{} @as({}, {});",
-                                            blk_label, ty_str, ec
-                                        ));
+                                        if ty_str == "[]u8" && matches!(e, Expr::Lit(Lit::Str(_))) {
+                                            self.write_to_case(&format!(
+                                                "break :{} @constCast(@as([]const u8, {}));",
+                                                blk_label, ec
+                                            ));
+                                        } else {
+                                            self.write_to_case(&format!(
+                                                "break :{} @as({}, {});",
+                                                blk_label, ty_str, ec
+                                            ));
+                                        }
                                     } else if self.is_lib_mode {
                                         self.write_to_case(&format!(
                                             "break :{} {};",
@@ -566,7 +579,7 @@ impl Codegen {
                 }
 
                 format!(
-                    "({blk_label}: {{ const __r_{id} = {exp}; switch (__r_{id}) {{ .ok => |__v_{id}| break :{blk_label} __v_{id}, .err => |{err_bind}| {{ _ = &{err_bind}; {catch_arm_body} }} }} }})"
+                    "({blk_label}: {{ const __r_{id} = {exp}; if (comptime is_cp_result(@TypeOf(__r_{id}))) {{ switch (__r_{id}) {{ .ok => |__v_{id}| break :{blk_label} __v_{id}, .err => |{err_bind}| {{ _ = &{err_bind}; {catch_arm_body} }} }} }} else {{ break :{blk_label} (__r_{id} catch |{err_bind}| {{ _ = &{err_bind}; {catch_arm_body} }}); }} }})"
                 )
             }
             Expr::ErrWrap(inner) => self.generate_err_value(inner, None),
