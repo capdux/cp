@@ -60,4 +60,11 @@ export {
     EventLoopDelayMonitor,
 } from "./delayMonitor.cp";
 
+export {
+    SpawnSyncTickState,
+    SpawnSyncLoopError,
+    SpawnSyncDeadline,
+    SpawnSyncLoop,
+} from "./spawnSyncLoop.cp";
+
 export * from "./emitter.cp";

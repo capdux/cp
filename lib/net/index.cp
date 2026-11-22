@@ -1916,3 +1916,16 @@ export {
     ZoneRouterStats,
     ZoneLocalityRouter,
 } from "./zoneRouter.cp";
+
+// --- outlierDetect (Envoy-Style Zero-Alloc Passive Outlier Detection & Exponential Ejection) ---
+export {
+    OUTLIER_MAX_HOSTS,
+    OUTLIER_HOST_ID_MAX_LEN,
+    OutlierEjectReason,
+    OutlierOutcome,
+    OutlierConfig,
+    OutlierHostSlot,
+    OutlierEvalReport,
+    OutlierDetectorStats,
+    OutlierDetector,
+} from "./outlierDetect.cp";

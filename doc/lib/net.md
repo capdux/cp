@@ -799,6 +799,45 @@ pub fn demoZoneLocalityRouter() {
 }
 ```
 
+## Envoy 风格零分配被动异常节点检测与指数驱逐健康引擎 (`outlierDetect.cp`)
+
+面向微服务网格与上游集群健康治理的 100% 纯 CP 零动态堆分配被动异常节点检测器（Envoy Passive Outlier Detection），实时摘除连续失败与统计学成功率离群节点并防止级联全集群熔断：
+
+- **常量与枚举**：
+  - `OUTLIER_MAX_HOSTS = 64`、`OUTLIER_HOST_ID_MAX_LEN = 48`
+  - `OutlierEjectReason`（`none | consecutive_5xx | consecutive_local_origin | success_rate_anomaly`）
+  - `OutlierOutcome`（`success | http_5xx | local_origin_error | gateway_error`）
+- **配置与模型**：
+  - `OutlierConfig`（`consecutive_5xx = 5`, `consecutive_local_origin = 5`, `base_ejection_time_ms = 30000`, `max_ejection_time_ms = 300000`, `max_ejection_percent = 50`, `min_hosts_for_success_rate = 5`, `success_rate_min_volume = 10`, `success_rate_stdev_factor = 1.9`；提供 `defaults()`）
+  - `OutlierHostSlot`（`host_id()`, `ejected`, `ejection_count`, `ejected_until_ms`, `last_reason`, `window_requests`, `window_successes`, `consecutive_5xx`, `consecutive_local_errors`, `successRate()`）
+  - `OutlierEvalReport`、`OutlierDetectorStats`
+- **核心引擎 `OutlierDetector`**：
+  - `init(cfg)` / `registerHost(*_, host_id)` / `removeHost(*_, host_id)` / `isHostHealthy(host_id, now_ms)` / `getHost(host_id)` / `stats()`
+  - `recordOutcome(*_, host_id, outcome, now_ms): OutlierEjectReason`：实时追踪连续 5xx / 网关错误与本地连接错误，超阈值且未触及 `max_ejection_percent` 上限时按 `min(base_ejection_time_ms * ejection_count, max_ejection_time_ms)` 驱逐。
+  - `runIntervalCheck(*_, now_ms): OutlierEvalReport`：到期自动复职并衰减健康周期历史计数；对满足最小请求量的活跃主机计算群体成功率均值与标准差，按从差到优驱逐低于 `mean - stdev_factor * stdev` 的离群节点，并清零统计窗口。
+
+```cp
+import {
+    OutlierConfig,
+    OutlierOutcome,
+    OutlierEjectReason,
+    OutlierDetector,
+} from "cap:net";
+
+pub fn demoOutlierDetector() {
+    let cfg = OutlierConfig.defaults();
+    cfg.consecutive_5xx = 3;
+    let det = OutlierDetector.init(cfg);
+    * = det.registerHost("10.0.0.1:8080");
+    * = det.registerHost("10.0.0.2:8080");
+
+    * = det.recordOutcome("10.0.0.1:8080", OutlierOutcome.http_5xx, 1000);
+    * = det.recordOutcome("10.0.0.1:8080", OutlierOutcome.http_5xx, 1100);
+    const reason = det.recordOutcome("10.0.0.1:8080", OutlierOutcome.http_5xx, 1200);
+    * = (reason == OutlierEjectReason.consecutive_5xx);
+}
+```
+
 ## 收敛子模块深度文档
 
 - [amqp.md](net/amqp.md)

@@ -181,6 +181,26 @@ const p99 = mon.histogram.percentile(99.0)?;
 * = d1; * = p99;
 ```
 
+### 3.8 同步阻塞子事件循环与超时隔离状态机 (`spawnSyncLoop.cp`)
+
+吸收自 `/data/dev/bun/src/event_loop/SpawnSyncEventLoop.cp`：
+
+- **导出符号**：`SpawnSyncTickState`（`Running`/`Completed`/`Timeout`/`Cancelled`）、`SpawnSyncLoopError`（`NotPrepared`/`AlreadyPrepared`/`InvalidSubHandle`）、`SpawnSyncDeadline`（`infinite`/`fromTimeout`/`isInfinite`/`deadlineMs`/`remainingMs`/`isExpired`/`elapsedMs`）、`SpawnSyncLoop`（`init`/`prepare`/`markCompleted`/`cancel`/`state`/`tick`/`remainingTimeoutMs`/`elapsedMs`/`cleanup`）；
+- **核心设计**：在执行同步阻塞等待（如 `spawnSync`）时，`prepare(&active_handle, start_ms, timeout_ms)` 暂存并替换父事件循环句柄以防止事件重入污染，通过确定性时间戳 `tick(now_ms)` 推进超时/完成/取消状态机，结束后由 `cleanup(&active_handle)` 严格还原父事件循环句柄。
+
+```cp
+import { SpawnSyncLoop, SpawnSyncTickState } from "cap:event";
+
+let active_loop_id: u64 = 1; // 父事件循环句柄
+let sub = SpawnSyncLoop.init(42);
+const saved = sub.prepare(&active_loop_id, 1000, 500)?; // active_loop_id 切换为 42
+* = sub.tick(1200); // SpawnSyncTickState.Running，剩余 300ms
+sub.markCompleted();
+const st = sub.tick(1250); // SpawnSyncTickState.Completed
+const restored = sub.cleanup(&active_loop_id)?; // active_loop_id 还原为 1
+* = saved; * = st; * = restored;
+```
+
 ---
 
 ## 四、 上游 Bun 事件循环行为契约与并发边界
