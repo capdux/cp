@@ -1120,3 +1120,22 @@ meta.validateForSave()?;
 const ok = meta.matchesPlatform(PKG_ARCH_X64, PKG_OS_LINUX); // true
 * = ok;
 ```
+
+### 全局缓存与自动安装解析策略引擎（`globalCache.cp`）
+
+- 吸收自 `/data/dev/bun/src/options_types/GlobalCache.cp`（对齐 Bun CLI `--install=auto|force|fallback|disable` 自动安装与全局缓存回退行为）；
+- 导出：`GlobalCacheMode`（`AllowInstall` / `ReadOnly` / `Auto` / `Force` / `Fallback` / `Disable`，提供 `parseCliFlag`/`parse`/`asStr`/`allowVersionSpecifier`/`canUse`/`isEnabled`/`canInstall`/`isReadOnly`）、`GlobalCacheAction`（`UseLocalNodeModules` / `UseGlobalCacheHit` / `InstallToGlobalCache` / `RejectDisabled` / `RejectVersionSpecifier`）、`GlobalCacheDecision`（`isResolved`）、`GlobalCachePolicy`（`init`/`offlinePolicy`/`evaluate`）；
+- **核心策略真值表**：
+  - `Auto`：无本地 `node_modules` 时自动启用全局缓存并允许自动安装；一旦项目存在 `node_modules`，则不再回退全局缓存；
+  - `Fallback`：优先使用本地 `node_modules`，本地缺失时自动回退至全局缓存并按需安装；
+  - `Force`：忽略本地 `node_modules`，强制经全局缓存解析并允许在 import 路径中直接携带 `@version` 显式版本说明符；
+  - `Disable`：完全禁用全局缓存与自动安装；`ReadOnly` 仅允许离线命中只读全局缓存。
+
+```cp
+import { GlobalCacheMode, GlobalCachePolicy, GlobalCacheAction } from "cap:pkg";
+
+const pol = GlobalCachePolicy.init(GlobalCacheMode.Fallback, true);
+const decision = pol.evaluate(false, false, false);
+// decision.action == GlobalCacheAction.InstallToGlobalCache
+* = decision;
+```

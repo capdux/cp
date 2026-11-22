@@ -674,3 +674,10 @@ export {
     applyNpmArchList,
     PkgMeta,
 } from "./pkgMeta.cp";
+
+export {
+    GlobalCacheMode,
+    GlobalCacheAction,
+    GlobalCacheDecision,
+    GlobalCachePolicy,
+} from "./globalCache.cp";
