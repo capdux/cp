@@ -643,3 +643,12 @@ export {
     CssContainerNameList,
     CssContainerShorthand,
 } from "./containProp.cp";
+
+export {
+    CSS_DPI_PER_DPPX,
+    CSS_CM_PER_INCH,
+    CSS_DPCM_PER_DPPX,
+    CssResolutionError,
+    CssResolutionUnitKind,
+    CssResolutionVal,
+} from "./resolution.cp";

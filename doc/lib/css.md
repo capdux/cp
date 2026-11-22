@@ -893,3 +893,21 @@ const n = c.toCss(buf[0..])?;
 // buf[0..n] == "sidebar card / inline-size"
 * = n;
 ```
+
+23. **CSS Values Level 4 `<resolution>` 解析、单位换算与目标兼容压缩（`resolution.cp`，吸收自 `/data/dev/bun/src/css/values/resolution.cp` & `/data/dev/bun/docs/bundler/css.mdx`）**：
+    - **导出符号**：`CSS_DPI_PER_DPPX` (`96.0`)、`CSS_CM_PER_INCH` (`2.54`)、`CSS_DPCM_PER_DPPX` (`96.0 / 2.54`)、`CssResolutionError`、`CssResolutionUnitKind`（`dpi`/`dpcm`/`dppx`，`parse`/`asStr`）、`CssResolutionVal`（`dpi`/`dpcm`/`dppx`/`tryFromDimension`/`parse`/`parseNonNegative`/`toDppx`/`toDpi`/`toDpcm`/`convertTo`/`addF64`/`add`/`scale`/`isNegative`/`isZero`/`eql`/`approxEqlPhysical`/`comparePhysical`/`matchesRange`/`toCss`）；
+    - **Bun CSS 浏览器目标兼容与最小化实践（吸收自 `bundler/css.mdx`）**：
+      - Bun CSS bundler 默认面向 Edge 88+ / Firefox 78+ / Chrome 87+ / Safari 14+，并根据浏览器特性目标（`targets.isCompatible(.x_resolution_unit)`）决定是否将 `dppx` 压缩为更短的 `"x"` 单位；`CssResolutionVal.toCss(use_x_alias, out)` 零分配对齐该行为（`use_x_alias=true` 输出 `"2x"` / `".5x"`，`use_x_alias=false` 输出 `"2dppx"` / `".5dppx"`）；
+      - 严格按照 W3C CSS Values & Units Level 4 换算 `1dppx = 96dpi = (96 / 2.54)dpcm`，提供 `parseNonNegative` 守卫媒体查询与 `image-set()` 非负约束，并通过 `matchesRange` 直接判定 `@media (min-resolution: ...) and (max-resolution: ...)`。
+
+```cp
+import { CssResolutionVal, CssResolutionUnitKind } from "cap:css";
+
+const r = CssResolutionVal.parseNonNegative("192DPI")?;
+const in_dppx = r.convertTo(CssResolutionUnitKind.dppx); // 2dppx
+let buf: [32]u8 = [0; 32];
+const n1 = in_dppx.toCss(true, buf[0..])?;  // "2x"
+const n2 = in_dppx.toCss(false, buf[0..])?; // "2dppx"
+* = n1;
+* = n2;
+```
