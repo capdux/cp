@@ -652,3 +652,12 @@ export {
     CssResolutionUnitKind,
     CssResolutionVal,
 } from "./resolution.cp";
+
+export {
+    CSS_COMPOSES_MAX_NAMES,
+    CssComposesError,
+    isValidComposesSelector,
+    CssComposesFromKind,
+    CssComposesSpecifier,
+    CssComposesProp,
+} from "./composes.cp";

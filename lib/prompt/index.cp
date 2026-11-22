@@ -294,3 +294,27 @@ export {
     diffWithPrevTurn,
     PromptCacheTracker,
 } from "./cacheBreak.cp";
+
+export {
+    MODEL_ROUTE_MAX_ENDPOINTS,
+    MODEL_ROUTE_BPS_SCALE,
+    MODEL_CAP_TOOLS,
+    MODEL_CAP_VISION,
+    MODEL_CAP_JSON_MODE,
+    MODEL_CAP_REASONING,
+    MODEL_CAP_STREAMING,
+    MODEL_ROUTE_DEFAULT_BASE_COOLDOWN_MS,
+    MODEL_ROUTE_DEFAULT_MAX_COOLDOWN_MS,
+    MODEL_ROUTE_DEFAULT_FAIL_THRESHOLD,
+    ModelRouteStrategy,
+    ModelEndpointHealth,
+    ModelCallOutcomeKind,
+    ModelEndpointSpec,
+    ModelEndpointState,
+    ModelRouteRequest,
+    ModelRouteCandidate,
+    ModelRouterConfig,
+    ModelRouterStats,
+    estimateRequestCostMicros,
+    ModelGatewayRouter,
+} from "./modelRoute.cp";

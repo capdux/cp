@@ -911,3 +911,23 @@ const n2 = in_dppx.toCss(false, buf[0..])?; // "2dppx"
 * = n1;
 * = n2;
 ```
+
+24. **CSS Modules `composes` 属性解析、规则校验与零分配序列化（`composes.cp`，吸收自 `/data/dev/bun/src/css/properties/css_modules.cp` & `/data/dev/bun/docs/bundler/css.mdx`）**：
+    - **导出符号**：`CSS_COMPOSES_MAX_NAMES` (`16`)、`CssComposesError`、`isValidComposesSelector`、`CssComposesFromKind`（`local`/`global`/`file`）、`CssComposesSpecifier`（`local`/`global`/`file`/`isLocal`/`isGlobal`/`isFile`/`eql`/`toCss`）、`CssComposesProp`（`parse`/`count`/`get`/`contains`/`isLocal`/`isGlobal`/`isExternalFile`/`eql`/`toCss`）；
+    - **Bun CSS Modules `composes` 实战规范（吸收自 `bundler/css.mdx`）**：
+      - 支持本地组合（`composes: background bold`）、全局组合（`composes: btn from global`）以及跨模块文件组合（`composes: background from "./background.module.css"` 与 `from url(...)`）；
+      - **两条核心规则**：① `composes` 声明必须位于普通 CSS 声明之前；② 仅允许在单一简单类选择器（如 `.button`）中使用，可用 `isValidComposesSelector(selector)` 静态拦截 `#button`、`.a, .b`、`.a:hover` 等非法选择器；
+      - **跨文件组合注意**：跨不同 `.module.css` 文件组合的类应避免声明冲突属性，否则按 CSS Modules 规范输出顺序未定义。
+
+```cp
+import { CssComposesProp, isValidComposesSelector } from "cap:css";
+
+assert(isValidComposesSelector(".button"));
+assert(!isValidComposesSelector(".button, .button-secondary"));
+
+const c = CssComposesProp.parse("background elevated from \"./background.module.css\"")?;
+let buf: [96]u8 = [0; 96];
+const n = c.toCss(buf[0..])?;
+// buf[0..n] == "background elevated from \"./background.module.css\""
+* = n;
+```

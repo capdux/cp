@@ -1020,3 +1020,70 @@ fn demoPromptCacheBreak() {
     * = diff2.savings_bps;
 }
 ```
+
+### 24. 零堆分配多模型 LLM 网关路由、成本/延迟 SLA 择优与故障级联回退引擎 (`modelRoute.cp`)
+
+面向多供应商 LLM 网关（如 Claude / GPT / DeepSeek / 本地 vLLM 混合编排）的 100% 纯 CP 零动态堆分配策略路由器与指数退避熔断回退引擎：
+
+- **常量与能力位图**：
+  - `MODEL_ROUTE_MAX_ENDPOINTS = 16`、`MODEL_ROUTE_BPS_SCALE = 10000`、`MODEL_ROUTE_DEFAULT_BASE_COOLDOWN_MS = 5000`、`MODEL_ROUTE_DEFAULT_MAX_COOLDOWN_MS = 300_000`、`MODEL_ROUTE_DEFAULT_FAIL_THRESHOLD = 3`
+  - 能力位图：`MODEL_CAP_TOOLS`、`MODEL_CAP_VISION`、`MODEL_CAP_JSON_MODE`、`MODEL_CAP_REASONING`、`MODEL_CAP_STREAMING`
+- **枚举与数据模型**：
+  - `ModelRouteStrategy`（`lowest_cost | lowest_latency | highest_quality | balanced_sla`）
+  - `ModelEndpointHealth`（`healthy | degraded | cooldown | disabled`）
+  - `ModelCallOutcomeKind`（`ok | rate_limited | server_error | timeout`）
+  - `ModelEndpointSpec`、`ModelEndpointState`、`ModelRouteRequest`、`ModelRouteCandidate`、`ModelRouterConfig`、`ModelRouterStats`
+- **纯函数成本估算**：
+  - `estimateRequestCostMicros(input_tokens, output_tokens, input_price_micros_per_1m, output_price_micros_per_1m): u64`（128 位防溢出向上取整微美元估算）
+- **核心引擎 `ModelGatewayRouter`**：
+  - `init()` / `initWithConfig(cfg)` / `registerEndpoint(*_, spec)` / `setEnabled(*_, model_id, enabled)`
+  - `planRoute(*_, req, now_ms, out_chain: *[]ModelRouteCandidate): usize`：过滤能力位图不满足、上下文窗口不足、冷却期/禁用及延迟/成本/质量 SLA 硬约束，按策略原地排序输出完整 Primary -> Fallback 有序回退链。
+  - `recordOutcome(*_, model_id, latency_ms, outcome, now_ms): bool`：成功更新 EWMA 延迟并清除连败与冷却；`rate_limited` (429) 立即触发指数退避冷却；`server_error`/`timeout` 达阈值自动熔断。
+  - `getEndpoint(model_id)` / `stats(now_ms)`
+
+```cp
+import {
+    MODEL_CAP_TOOLS,
+    MODEL_CAP_JSON_MODE,
+    ModelEndpointSpec,
+    ModelRouteRequest,
+    ModelRouteStrategy,
+    ModelRouteCandidate,
+    ModelCallOutcomeKind,
+    ModelGatewayRouter,
+} from "cap:prompt";
+
+fn demoModelGatewayRoute() {
+    let gw = ModelGatewayRouter.init();
+    * = gw.registerEndpoint(ModelEndpointSpec{
+        model_id: 1,
+        cap_mask: MODEL_CAP_TOOLS | MODEL_CAP_JSON_MODE,
+        max_context_tokens: 200_000,
+        input_price_micros_per_1m: 3_000_000,
+        output_price_micros_per_1m: 15_000_000,
+        quality_bps: 9600,
+        initial_latency_ms: 850,
+    });
+    * = gw.registerEndpoint(ModelEndpointSpec{
+        model_id: 2,
+        cap_mask: MODEL_CAP_TOOLS | MODEL_CAP_JSON_MODE,
+        max_context_tokens: 128_000,
+        input_price_micros_per_1m: 150_000,
+        output_price_micros_per_1m: 600_000,
+        quality_bps: 8200,
+        initial_latency_ms: 280,
+    });
+
+    let chain: [4]ModelRouteCandidate = [ModelRouteCandidate{}; 4];
+    let chain_s: []ModelRouteCandidate = chain[0..];
+    const n = gw.planRoute(ModelRouteRequest{
+        required_caps: MODEL_CAP_TOOLS,
+        estimated_input_tokens: 4000,
+        estimated_output_tokens: 1000,
+        strategy: ModelRouteStrategy.lowest_cost,
+    }, 10_000, chain_s);
+    if (n > 0) {
+        * = gw.recordOutcome(chain[0].model_id, 240, ModelCallOutcomeKind.ok, 10_240);
+    }
+}
+```
