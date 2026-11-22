@@ -175,3 +175,13 @@ export {
     RagStoreStats,
     InMemoryRagStore,
 } from "./rag_store.cp";
+
+export {
+    MatryoshkaConfig,
+    MatryoshkaHit,
+    MatryoshkaStats,
+    truncateAndNormalizeF32,
+    buildCoarseEmbeddingsF32,
+    searchMatryoshkaTwoStageF32,
+    searchMatryoshkaTwoStageL2F32,
+} from "./matryoshka.cp";

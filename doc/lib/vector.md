@@ -32,6 +32,8 @@
 | `lib/vector/rabitq.cp` | `// Origin: Pure-CP Stdlib (AI Vector Search RaBitQ Unbiased 1-bit Binary Quantization & Estimator) \| Created: 2026-11-22` | SIGMOD 2024 RaBitQ 无偏 1-bit 随机正交二值量化（32x 压缩）：$O(D \log D)$ 归一化 FWHT、确定性符号翻转、精确几何修正元数据与无偏内积/L2 距离估算核 |
 | `lib/vector/proj_reduce.cp` | `// Origin: Pure-CP Stdlib (AI Embedding Dimensionality Reduction: Power-Iter PCA & JL Random Projection using @dot/@fma) \| Created: 2026-11-22` | 高维 Embedding 降维与随机投影核：均值中心化、无协方差矩阵幂迭代 Top-K 主成分求解、`@dot` 批量投影与 Achlioptas 稀疏 JL 随机投影 |
 | `lib/vector/hybrid_rag.cp` | `// Origin: Pure-CP Stdlib (AI Hybrid RAG Pipeline: Weighted RRF Fusion, SIMD @dot/@l2sq MMR Rerank & Token Budget Pruning) \| Created: 2026-11-22` | 生产级零堆分配混合 RAG 管线：可配权重双路/多路 RRF (`HybridRrfFusion`)、`@dot`/`@fma` SIMD MMR 多样性重排 (`mmrRerankSimdF32`)、`@l2sq` 近重复去重 (`dedupNearDuplicatesL2F32`) 与 Prompt Token 预算裁剪 (`selectWithinTokenBudget`) |
+| `lib/vector/rag_store.cp` | `// Origin: Pure-CP Stdlib (Zero-Heap Local RAG Store, 64-Bit Tag Filter & SIMD Cosine Top-K Facade) \| Created: 2026-11-22` | 零堆分配一站式本地 RAG 存储与检索门面 (`InMemoryRagStore`)：L2 归一化写入、墓碑槽位复用、64 位标签位图预过滤与 Token 预算上下文拼装 |
+| `lib/vector/matryoshka.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc Matryoshka Multi-Resolution Two-Stage SIMD Vector Retrieval) \| Created: 2026-11-22` | 零堆分配 Matryoshka 嵌套维多分辨率粗召回 + 精排重打分管线：前 `k` 维截断归一化 (`truncateAndNormalizeF32`)、紧凑粗向量库构建 (`buildCoarseEmbeddingsF32`)、8-lane SIMD `@dot` / `@l2sq` 两阶段检索与计算压缩比统计 |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -882,5 +884,61 @@ pub fn demoLocalRagQuickStart() {
     let ctx: [256]u8 = [0; 256];
     let ctx_s: []u8 = ctx[0..];
     * = store.packSearchContext(hits_s[0..n], 64, ctx_s);
+}
+```
+
+---
+
+## Matryoshka 嵌套维多分辨率两阶段 SIMD 向量检索管线（`matryoshka.cp`）
+
+面向 OpenAI `text-embedding-3`、Nomic、Jina、Gemini 等现代 Matryoshka Representation Learning (MRL) 嵌套维度嵌入模型的 100% 纯 CP、零堆分配两阶段粗到精检索引擎，充分利用 CP 原生 8-lane SIMD `@dot`、`@l2sq` 与 `slice.split` 零开销行遍历：
+
+- **`MatryoshkaConfig`**：`{ full_dim, coarse_dim, coarse_top_k, final_top_k }`
+  - `MatryoshkaConfig.init(full_dim, coarse_dim, coarse_top_k, final_top_k): MatryoshkaConfig?`（校验 `0 < coarse_dim <= full_dim` 与 `0 < final_top_k <= coarse_top_k`）
+  - `isValid(): bool`
+- **`MatryoshkaHit`**：`{ doc_idx: usize, coarse_score: f32, fine_score: f32 }`
+- **`MatryoshkaStats`**：`{ scanned_docs, coarse_candidates, returned_hits, coarse_dim, full_dim, coarse_macs, fine_macs, brute_force_macs, compute_speedup_ratio }`
+  - 自动统计阶段一粗排 MACs、阶段二精排 MACs、全维暴力 MACs 及真实计算压缩加速比 `compute_speedup_ratio = brute_force_macs / (coarse_macs + fine_macs)`。
+- **核心算子**：
+  - `truncateAndNormalizeF32(full_vec: []const f32, target_dim: usize, out_vec: *[]f32): bool`：截取前 `target_dim` 维并用 8-lane SIMD `@dot` + `@sqrt` 单位化，拒绝越界、零向量与 `NaN`/`Inf`。
+  - `buildCoarseEmbeddingsF32(full_vecs_flat: []const f32, n_docs: usize, full_dim: usize, coarse_dim: usize, out_coarse_flat: *[]f32): bool`：通过 `slice.split` 零开销批量构建 `[n_docs, coarse_dim]` 紧凑单位化粗检索库。
+  - `searchMatryoshkaTwoStageF32(query_full, coarse_vecs_flat, full_vecs_flat, n_docs, cfg, scratch_coarse_hits, out_final_hits): MatryoshkaStats?`：阶段一仅用 `coarse_dim` 8-lane SIMD `@dot` 扫描全库取 `coarse_top_k` 候选；阶段二仅对候选集执行 `full_dim` 精确 `@dot` 余弦精排输出 `final_top_k`，支持任意高维且无栈维度上限。
+  - `searchMatryoshkaTwoStageL2F32(query_full, coarse_vecs_flat, full_vecs_flat, n_docs, cfg, scratch_coarse_hits, out_final_hits): MatryoshkaStats?`：基于 8-lane SIMD `@l2sq` 的两阶段 L2 欧氏近邻检索（仅对最终 `final_top_k` 执行 `@sqrt`）。
+
+### Matryoshka 两阶段检索 QuickStart 示例
+
+```cp
+import {
+    MatryoshkaConfig,
+    MatryoshkaHit,
+    buildCoarseEmbeddingsF32,
+    searchMatryoshkaTwoStageF32,
+} from "cap:vector";
+
+pub fn demoMatryoshkaTwoStage() {
+    // 示例：4 条 16D 嵌套嵌入压缩至 4D 粗检索库，先粗召回 Top-3 再全维精排 Top-2
+    const full_corpus: [64]f32 = [
+        1.0, 0.0, 0.0, 0.0,  0.5, 0.5, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0,
+        0.9, 0.1, 0.0, 0.0,  0.9, 0.9, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,  0.0, 0.0, 1.0, 0.0,  0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,  0.0, 0.0, 0.0, 1.0,  0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0,
+    ];
+    let coarse_bank: [16]f32 = [0.0; 16]; // 4 docs x 4D
+    let coarse_s: []f32 = coarse_bank[0..];
+    if (!buildCoarseEmbeddingsF32(full_corpus[0..], 4, 16, 4, coarse_s)) return;
+
+    const query: [16]f32 = [
+        0.9, 0.1, 0.0, 0.0,  0.9, 0.9, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0,
+    ];
+    const cfg = MatryoshkaConfig.init(16, 4, 3, 2) ?? return;
+    let scratch: [3]MatryoshkaHit = [MatryoshkaHit{}; 3];
+    let out_hits: [2]MatryoshkaHit = [MatryoshkaHit{}; 2];
+    let scratch_s: []MatryoshkaHit = scratch[0..];
+    let out_s: []MatryoshkaHit = out_hits[0..];
+
+    if (stats := searchMatryoshkaTwoStageF32(query[0..], coarse_bank[0..], full_corpus[0..], 4, cfg, scratch_s, out_s)) {
+        // out_hits[0].doc_idx == 1 (精排翻转粗排), stats.compute_speedup_ratio 记录计算压缩比
+        * = stats.compute_speedup_ratio;
+    }
 }
 ```
