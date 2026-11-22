@@ -917,3 +917,54 @@ fn demoDynamicToolRouter() {
     * = rep;
 }
 ```
+
+### 21. 零分配 LLM-as-a-Judge 多维评分 Rubric 与抗位置偏置成对裁决聚合器 (`evalJudge.cp`)
+
+面向大模型自动评测、Prompt 发布门禁与多模型 A/B 竞技场的 100% 纯 CP 零动态堆分配评分与 Elo 聚合引擎：
+
+- **常量与枚举**：
+  - `JUDGE_MAX_DIMENSIONS = 16`、`JUDGE_MAX_MODELS = 16`、`JUDGE_NAME_MAX_LEN = 48`、`JUDGE_BPS_SCALE = 10000`、`JUDGE_DEFAULT_ELO = 1500.0`、`JUDGE_DEFAULT_K_FACTOR = 32.0`
+  - `PairwiseRawVerdict`（`prefer_first | prefer_second | tie`）
+  - `PairwiseResolvedVerdict`（`win_a | win_b | tie | inconsistent_bias`）
+- **多维加权 Rubric (`JudgeRubric`)**：
+  - `init(pass_threshold_bps): JudgeRubric?` / `addDimension(*_, name, weight, max_score, min_score, hard_gate): usize?`
+  - `evaluate(scores): RubricEvalReport`：计算加权归一化总分（`0..10000` bps），校验每维 `min_score` 与 `hard_gate` 一票否决，严格拦截长度不匹配与单维分数越界。
+- **抗位置偏置裁决合并**：
+  - `resolvePairwiseBias(forward_verdict, swapped_verdict): PairwiseResolvedVerdict`：合并正向 `(A, B)` 与交换 `(B, A)` 裁判结果，精准区分 `win_a` / `win_b` / `tie` / `inconsistent_bias`。
+  - `isPurePositionBias(forward_verdict, swapped_verdict): bool`：检测纯首/尾位置偏置。
+- **多模型 Elo 竞技场 (`JudgeArena`) 与门禁摘要**：
+  - `init(k_factor)` / `registerModel(*_, model_id, name, initial_elo)` / `recordPairwiseMatch(*_, a, b, fwd, swp)` / `recordResolvedMatch` / `leaderboard(*out_rows)` / `stats()`：自动过滤 `inconsistent_bias` 脏样本不污染 Elo，支持 Elo 降序排行榜与偏置率基点统计。
+  - `formatReleaseGateSummary(eval_report, arena_stats, max_bias_bps, *out_buf): usize?`：零分配输出 JSON 发布门禁摘要。
+
+```cp
+import {
+    JUDGE_DEFAULT_ELO,
+    PairwiseRawVerdict,
+    ArenaLeaderboardRow,
+    JudgeRubric,
+    JudgeArena,
+    formatReleaseGateSummary,
+} from "cap:prompt";
+
+fn demoEvalJudge() {
+    let rubric = JudgeRubric.init(7500) ?? return;
+    * = rubric.addDimension("accuracy", 5, 5, 4, true);   // 硬门禁：低于 4/5 一票否决
+    * = rubric.addDimension("clarity", 3, 5, 3, false);
+
+    const scores: [2]u32 = [5, 4];
+    const eval_rep = rubric.evaluate(scores[0..]);
+
+    let arena = JudgeArena.init(32.0) ?? return;
+    * = arena.registerModel(1, "model-a", JUDGE_DEFAULT_ELO);
+    * = arena.registerModel(2, "model-b", JUDGE_DEFAULT_ELO);
+    * = arena.recordPairwiseMatch(1, 2, PairwiseRawVerdict.prefer_first, PairwiseRawVerdict.prefer_second);
+
+    let board: [4]ArenaLeaderboardRow = [ArenaLeaderboardRow{}; 4];
+    let board_s: []ArenaLeaderboardRow = board[0..];
+    * = arena.leaderboard(*board_s);
+
+    let buf: [256]u8 = [0; 256];
+    let buf_s: []u8 = buf[0..];
+    * = formatReleaseGateSummary(eval_rep, arena.stats(), 1500, *buf_s);
+}
+```

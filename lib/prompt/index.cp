@@ -255,3 +255,24 @@ export {
     ToolRouterStats,
     ToolRouter,
 } from "./toolRouter.cp";
+
+export {
+    JUDGE_MAX_DIMENSIONS,
+    JUDGE_MAX_MODELS,
+    JUDGE_NAME_MAX_LEN,
+    JUDGE_BPS_SCALE,
+    JUDGE_DEFAULT_ELO,
+    JUDGE_DEFAULT_K_FACTOR,
+    JudgeDimensionSpec,
+    RubricEvalReport,
+    PairwiseRawVerdict,
+    PairwiseResolvedVerdict,
+    ArenaModelEntry,
+    ArenaLeaderboardRow,
+    JudgeArenaStats,
+    JudgeRubric,
+    resolvePairwiseBias,
+    isPurePositionBias,
+    JudgeArena,
+    formatReleaseGateSummary,
+} from "./evalJudge.cp";
