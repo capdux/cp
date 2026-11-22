@@ -532,3 +532,24 @@ export {
     evaluateReleaseAgeGate,
     ManifestWarmupPlanner,
 } from "./manifestWarmup.cp";
+
+export {
+    PREINSTALL_MAX_PKGS,
+    LIFECYCLE_LOG_MAX_ENTRIES,
+    SLOW_SCRIPT_DEFAULT_INTERVAL_NS,
+    SLOW_SCRIPT_VERBOSE_INTERVAL_NS,
+    PreinstallStateError,
+    PreinstallStateKind,
+    LifecycleScriptSlot,
+    MonitorLogLevel,
+    TrustSourceKind,
+    PreinstallProbe,
+    LifecycleTimeEntry,
+    ActiveLifecycleSnapshot,
+    stripPatchHashFolderSuffix,
+    formatDurationOneDecimal,
+    isLifecycleScriptTrusted,
+    PreinstallStateTable,
+    LifecycleTimeLog,
+    SlowLifecycleMonitor,
+} from "./preinstallState.cp";

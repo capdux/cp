@@ -970,3 +970,39 @@ const decision = evaluateReleaseAgeGate("lodash", 1_700_000_000, 1_700_100_000, 
 * = stats;
 * = decision;
 ```
+
+### 预安装状态机、慢脚本监控与 `trustedDependencies` 安全裁决（`lib/pkg/preinstallState.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/PackageManager/PackageManagerLifecycle.cp` 与 `/data/dev/bun/docs/guides/install/trusted.mdx`；
+- 导出：`PREINSTALL_MAX_PKGS` (`128`)、`LIFECYCLE_LOG_MAX_ENTRIES` (`64`)、`SLOW_SCRIPT_DEFAULT_INTERVAL_NS` (`30s`)、`SLOW_SCRIPT_VERBOSE_INTERVAL_NS` (`5s`)、`PreinstallStateError`、`PreinstallStateKind`（`Unknown`/`CalcPatchHash`/`Extract`/`ApplyPatch`/`Done`）、`LifecycleScriptSlot`、`MonitorLogLevel`、`TrustSourceKind`、`PreinstallProbe`、`LifecycleTimeEntry`、`ActiveLifecycleSnapshot`、`stripPatchHashFolderSuffix`、`formatDurationOneDecimal`、`isLifecycleScriptTrusted`、`PreinstallStateTable`、`LifecycleTimeLog`、`SlowLifecycleMonitor`；
+- **生命周期脚本安全与性能监控最佳实践（参考 `/data/dev/bun/docs/guides/install/trusted.mdx`）**：
+  - **非传递信任与来源隔离**：Bun 默认拦截第三方依赖的 `postinstall`/`node-gyp` 生命周期脚本；内置默认白名单仅适用于 `.Npm` 来源，任何 `file:`/`link:`/`git:`/`github:`/`tarball` 依赖必须显式加入 `trustedDependencies`；且信任关系不向传递依赖扩散；
+  - **补丁缓存快速路径**：`PreinstallStateTable.determine()` 先跳过 CPU/OS 禁用包（`.Done`）；对已打补丁但未命中的缓存目录，通过 `stripPatchHashFolderSuffix()` 定位原始基础目录，若基础目录已在缓存中则直接进入 `.ApplyPatch` 跳过下载解包；
+  - **慢脚本防刷屏监控**：`SlowLifecycleMonitor` 按 `verbose` 5s / 默认 30s 节流并按事件循环 tick 去重，采用英语所有格语法（`esbuild's` vs `fsevents'`）输出一位小数耗时告警。
+
+```cp
+import {
+    PreinstallStateTable,
+    PreinstallProbe,
+    LifecycleTimeLog,
+    isLifecycleScriptTrusted,
+    TrustSourceKind,
+} from "cap:pkg";
+
+let tbl = PreinstallStateTable.init();
+const st = tbl.determine(PreinstallProbe{
+    pkg_id: 1,
+    is_patched: true,
+    cached_folder_path: "is-even@1.0.0_patch_hash=abc123",
+    is_base_folder_in_cache: true,
+})?; // .ApplyPatch
+
+let log = LifecycleTimeLog.init();
+* = log.record("esbuild", .Postinstall, 2_350_000_000)?;
+let buf: [128]u8 = [0; 128];
+const n = log.formatLongestWarning(buf[0..])?; // "esbuild's postinstall script took 2.3s"
+const trusted = isLifecycleScriptTrusted(TrustSourceKind.Git, false, true); // false (non-npm must be explicit)
+* = st;
+* = n;
+* = trusted;
+```
