@@ -320,3 +320,12 @@ export {
     NamespaceRule,
     NamespaceRegistry,
 } from "./namespace_rule.cp";
+
+export {
+    CSS_SCOPE_MAX_SELECTORS,
+    CSS_SCOPE_MAX_RULES,
+    CssScopeError,
+    ScopeSelectorList,
+    ScopeRule,
+    ScopeRuleList,
+} from "./scope_rule.cp";

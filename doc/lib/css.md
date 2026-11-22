@@ -334,6 +334,21 @@ let reg = NamespaceRegistry.init();
 const uri = reg.resolveSelectorPrefix("svg") ?? ""; // CSS_SVG_NS
 ```
 
+### `@scope` 规则解析、序列化与样式表提取（`scope_rule.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/rules/scope.cp`，零堆分配支持 W3C CSS Cascading and Inheritance Level 6 `@scope [(<scope-start>)]? [to (<scope-end>)]? { <body> }` 规则解析（隐式/单根/仅下限/甜甜圈作用域）、嵌套括号与属性引号安全选择器拆分、美化与压缩 CSS 序列化及样式表批量提取。
+
+- 核心导出：`CSS_SCOPE_MAX_SELECTORS` (`16`)、`CSS_SCOPE_MAX_RULES` (`32`)、`CssScopeError`、`ScopeSelectorList`（`parse` / `count` / `at` / `eql` / `writeCss`）、`ScopeRule`（`parse` / `isImplicit` / `isDonut` / `hasStart` / `hasEnd` / `startCount` / `endCount` / `eql` / `toCss` / `toCssMinified`）、`ScopeRuleList`（`extractFromStylesheet` / `count` / `at`）。
+
+```typescript
+import { ScopeRule } from "cap:css";
+
+const rule = ScopeRule.parse("@scope (.card, .panel) to (.card-footer) { a { color: blue; } }")?;
+let buf: [256]u8 = [0; 256];
+const n = rule.toCssMinified(buf[0..])?;
+// buf[0..n] == "@scope(.card,.panel) to (.card-footer){a { color: blue; }}"
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项
