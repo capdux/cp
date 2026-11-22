@@ -1,5 +1,6 @@
 pub mod ast;
 pub mod ast_visitor;
+pub mod brief;
 pub mod codegen;
 pub mod dcp;
 pub mod diagnostic;

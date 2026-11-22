@@ -20,6 +20,30 @@ def run(cmd):
     return subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
 
+def resolve_zig_bin(explicit=None):
+    if explicit:
+        return explicit
+    env_zig = os.environ.get("ZIG_BIN", "").strip()
+    if env_zig:
+        return env_zig
+    script_repo_zig = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "vendor",
+        "zig",
+        "zig",
+    )
+    candidates = [
+        os.path.join("vendor", "zig", "zig"),
+        os.path.join("..", "vendor", "zig", "zig"),
+        script_repo_zig,
+        "/data/dev/cp/vendor/zig/zig",
+    ]
+    for cand in candidates:
+        if os.path.isfile(cand) and os.access(cand, os.X_OK):
+            return cand
+    return "zig"
+
+
 def gates(cp, bak):
     txt = open(cp, encoding="utf-8").read()
     res = OrderedDict()
@@ -43,8 +67,8 @@ def main():
     ap.add_argument("-n", type=int, default=8, help="Max distinct errors to display")
     ap.add_argument(
         "--zig",
-        default=os.environ.get("ZIG_BIN", "zig"),
-        help="Path to zig binary for ast-check (default: $ZIG_BIN or 'zig' in PATH)",
+        default=None,
+        help="Path to zig binary for ast-check (priority: --zig > $ZIG_BIN > ./vendor/zig/zig > ../vendor/zig/zig > /data/dev/cp/vendor/zig/zig > zig)",
     )
     ap.add_argument(
         "--require-backup",
@@ -58,6 +82,7 @@ def main():
     )
     ap.add_argument("files", nargs="+", help="Target .cp files")
     a = ap.parse_args()
+    zig_bin = resolve_zig_bin(a.zig)
 
     failed = False
     for cp_arg in a.files:
@@ -111,7 +136,7 @@ def main():
                     if "error" in ln:
                         errs.append({"code": "E_CODEGEN", "msg": ln.strip(), "line": 0, "suggestion": ""})
             else:
-                z = run(f"{shlex.quote(a.zig)} ast-check {shlex.quote(zig)}")
+                z = run(f"{shlex.quote(zig_bin)} ast-check {shlex.quote(zig)}")
                 if z.returncode != 0:
                     status = "FAIL(ast-check)"
                     zl = [l for l in (z.stderr + z.stdout).splitlines() if re.match(r".*\.zig:\d+:\d+: error", l)]

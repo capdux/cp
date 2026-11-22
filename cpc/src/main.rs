@@ -109,6 +109,24 @@ enum Commands {
         #[arg(short = 'b', long)]
         brief: bool,
     },
+    /// Token-saving multi-file verifier: check + --lib codegen + zig ast-check + static purity gates
+    Brief {
+        /// Max distinct errors to display
+        #[arg(short = 'n', default_value_t = 8)]
+        max: usize,
+        /// Path to zig binary for ast-check (priority: --zig > $ZIG_BIN > ./vendor/zig/zig > ../vendor/zig/zig > /data/dev/cp/vendor/zig/zig > zig)
+        #[arg(long)]
+        zig: Option<PathBuf>,
+        /// Fail gate if migration backup file <stem>_.zig is missing
+        #[arg(long)]
+        require_backup: bool,
+        /// Keep emitted <stem>.zig instead of cleaning up when target did not exist
+        #[arg(long)]
+        keep_zig: bool,
+        /// Target .cp files
+        #[arg(required = true)]
+        files: Vec<PathBuf>,
+    },
     /// Emit .d.cp type declarations
     EmitTypes {
         input: PathBuf,
@@ -555,6 +573,24 @@ fn run(cli: Cli) -> anyhow::Result<()> {
             }
             Commands::Fix { input, json, brief } => {
                 run_check(&input, json, brief, None, true, false)?;
+            }
+            Commands::Brief {
+                max,
+                zig,
+                require_backup,
+                keep_zig,
+                files,
+            } => {
+                let ok = cpc::brief::run_brief(&cpc::brief::BriefOptions {
+                    max,
+                    zig,
+                    require_backup,
+                    keep_zig,
+                    files,
+                })?;
+                if !ok {
+                    std::process::exit(1);
+                }
             }
             Commands::EmitTypes { input, output } => {
                 let code = fs::read_to_string(&input)?;

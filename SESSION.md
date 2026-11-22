@@ -2466,3 +2466,35 @@
   >    - 派发至 `Stdlib Deep Engineer (cap:image JPEG+WebP)`：在 [lib/image/jpeg.cp](file:///data/dev/cp/lib/image/jpeg.cp) 与 [lib/image/webp.cp](file:///data/dev/cp/lib/image/webp.cp) 按生产级深度补齐标准 Baseline DCT `jpegEncode` 与 RFC 9649 无损/可调质量 VP8L `webpEncode`，交叉校验外部标准解码器，验证通过后结单。
   >
   > *(同期 `Priority ① Wave 28 Round 1` [debugTree.cp](file:///data/dev/cp/lib/test_runner/debugTree.cp) 已验证提交 [`26a04d5a`]，`bun_sourced=1145, missing_synced_tag=0, upstream_newer=0`。待任一工单或生态轨道完工后将立即收口、审计并提交。)*
+
+### 2026-11-23（下游工单全量补录：`task-capsurf-20261123-cpc-brief-builtin`）[ticket:task-capsurf-20261123-cpc-brief-builtin]
+- **工单来源**：`capsurf_agy`（项目 `capsurf` / 分类 `compiler_bug`） | 创建：`2026-11-23 09:11:17` | 状态：`resolved` | 结单：`2026-11-23T09:16:02`
+- **报错/需求摘要**：1) 改进 /data/dev/cp/scripts/cpc_brief.py：优先使用 cp 目录下 vendor/zig/zig（或 ../vendor/zig/zig）兜底，若无再回退系统通用 zig，避免系统 zig 版本更新导致 cp 编译出错；2) 强烈建议将该聚合诊断与 4 门禁检查（zig{}/var/tuple.@N/anyopaque）直接集成到 cpc 内置子命令 cpc brief 中（如 cpc brief <files...>），使下游项目（capsurf/bun 等）无需跨目录调用脚本即可直接运行 cpc brief 完成门禁。
+- **结单与处理汇报**：已内置原生子命令 cpc brief（cpc/src/brief.rs + main.rs + lib.rs），并同步改进 scripts/cpc_brief.py 的 Zig 自动探测优先级（--zig > $ZIG_BIN > ./vendor/zig/zig > ../vendor/zig/zig > /data/dev/cp/vendor/zig/zig > zig）；已发布 release 版 cpc，实测 PASS/FAIL(cpc)/var 门禁/--require-backup 及退出码 0/1 全部通过，并更新 cp_agent_ref.md 第 1.4 节置顶推荐 cpc brief。
+
+### 2026-11-23（下游工单全量补录：`task-capsurf-20261123-pack-modular-build`）[ticket:task-capsurf-20261123-pack-modular-build]
+- **工单来源**：`capsurf_agy`（项目 `capsurf` / 分类 `compiler_bug`） | 创建：`2026-11-23 09:13:37` | 状态：`pending` | 结单：`进行中`
+- **报错/需求摘要**：cap build -m 编译导入 cap:pack (brotliDecompress/gunzip) 时 _lib/pack/brotli.zig 与 gzip.zig 报 3 处错误: 1) brotli.zig:259 .ext_buf = (&&.{}) expected u8 found pointer; 2) brotli.zig:1226 brDecodeStream 返回 anyerror!BrotliError (error union with payload of error set); 3) gzip.zig:529 NativeZlib.inflateInit2_ 多出 self: NativeZlib 形参导致 expected 5 args found 4。
+- **结单与处理汇报**：(处理中/未填写结单备注)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 09:11:18）[step:19730]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-capsurf-20261123-cpc-brief-builtin)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取新工单 **`task-capsurf-20261123-cpc-brief-builtin`** 并立即派发专职 `CPC Feature Engineer (cpc brief)` 实施两项升级：
+  > 1. 改进 [scripts/cpc_brief.py](file:///data/dev/cp/scripts/cpc_brief.py)，优先探测 `vendor/zig/zig` / `../vendor/zig/zig` / `/data/dev/cp/vendor/zig/zig`，无 vendor 时再回退系统 `PATH` 中的 `zig`；
+  > 2. 在 `cpc` 编译器内置原生子命令 `cpc brief [-n N] [--zig <path>] [--require-backup] [--keep-zig] <files...>`，集成聚合错误诊断 + `zig ast-check` + 4 项纯净度门禁，编译发布 Release 版、更新 [cp_agent_ref.md](file:///data/dev/cp/cp_agent_ref.md) 并结单。
+  >
+  > *(同期 `Priority ① Wave 28 Round 6` [allocScope.cp](file:///data/dev/cp/lib/shell/allocScope.cp) 已验证提交 [`7911ecb1`]，达成 **`bun_sourced=1150`** 里程碑，`missing_synced_tag=0, upstream_newer=0`。待任一工单或生态轨道完工后将立即收口、审计并提交。)*
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 09:15:13）[step:19754]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-capsurf-20261123-pack-modular-build)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取工单 `task-capsurf-20261123-pack-modular-build`（复现用例：[repro_pack_modular_build.cp](file:///data/dev/cp/temp/repro_pack_modular_build.cp)），并已拉起独立紧急热修子智能体专责处理 [lib/pack/brotli.cp](file:///data/dev/cp/lib/pack/brotli.cp) 与 [lib/pack/gzip.cp](file:///data/dev/cp/lib/pack/gzip.cp) 在 `cap build -m` 下的 3 处编译问题：
+  >
+  > 1. `brotli.zig:259`：`.ext_buf = (&&.{})` 指针层级不匹配；
+  > 2. `brotli.zig:1226`：`brDecodeStream` 返回类型错误联合嵌套错误集（`anyerror!BrotliError`）；
+  > 3. `gzip.zig:529`：`NativeZlib.inflateInit2_` 缺少 `static fn` 导致多余 `self` 形参。
+  >
+  > 该热修与在途的 4 路任务完全无文件冲突，待验证 `cap build -m` 与 `cap:pack` 全套回归测试通过并执行 `resolve` 结单后，我将第一时间同步归档 `SESSION.md` 与 Git 提交并向您汇报。
