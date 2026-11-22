@@ -368,3 +368,13 @@ export {
     resolveMaterializeDestPath,
     IsolatedMaterializer,
 } from "./isolated_materializer.cp";
+
+export {
+    INSTALL_PROGRESS_NAME_CAP,
+    InstallProgressError,
+    InstallProgressStage,
+    stagePlainLabel,
+    stageEmojiPrefix,
+    stageBannerLabel,
+    InstallProgressTracker,
+} from "./install_progress.cp";

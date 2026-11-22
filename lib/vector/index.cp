@@ -255,3 +255,19 @@ export {
     RaptorTreeStats,
     RaptorTree,
 } from "./raptor_tree.cp";
+
+export {
+    FHNSW_MAX_NODES,
+    FHNSW_MAX_DEGREE,
+    FHNSW_INVALID_SLOT,
+    FHNSW_ANY_TENANT,
+    FilteredSearchPath,
+    FilteredGraphStatus,
+    FilteredGraphConfig,
+    FilteredPredicate,
+    FilteredGraphNode,
+    FilteredSearchHit,
+    FilteredSearchReport,
+    FilteredGraphStats,
+    FilteredHnswIndex,
+} from "./filtered_hnsw.cp";

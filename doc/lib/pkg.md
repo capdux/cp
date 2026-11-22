@@ -709,3 +709,24 @@ const d3 = mat.recordAttempt(MaterializeErrno.Ok, true, false);    // hardlinked
 * = d2;
 * = d3;
 ```
+
+### 包安装 5 阶段进度条渲染与节点计数器（`lib/pkg/install_progress.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/PackageManager/ProgressStrings.cp` 与 `/data/dev/bun/docs/pm/cli/install.mdx`；
+- 导出：`INSTALL_PROGRESS_NAME_CAP` (`128`)、`InstallProgressError`、`InstallProgressStage`（`Download`/`Extract`/`Install`/`Save`/`Script`）、`stagePlainLabel`、`stageEmojiPrefix`、`stageBannerLabel`、`InstallProgressTracker`；
+- **TTY / CI 最佳实践与边界约束**：
+  - TTY 彩色模式（`enable_ansi_colors = true`）带 Emoji 前缀；非 TTY / CI 模式自动退化为纯文本行（`Download`/`Extract`/`Install`/`Script` 附带 `\n`，`Save` 不附带 `\n`）；
+  - `--silent` 模式下 `startIfNone()` 直接返回 `false` 抑制进度条激活；
+  - `setNodeName` 支持 `is_first = false` 增量复用 Emoji 前缀槽位；`finish()` 自动将完成数对齐至预估总数并刷新一次。
+
+```cp
+import { InstallProgressStage, InstallProgressTracker } from "cap:pkg";
+
+let pt = InstallProgressTracker.init(false, false);
+* = pt.startIfNone(20, 15, 5)?; // estimated_total=25, completed=5 (20%)
+* = pt.transitionStage(InstallProgressStage.Install, 20, 5, 5)?;
+let line: [128]u8 = [0; 128];
+const n = pt.formatStatusLine(line[0..])?; // "Installing [15/25]"
+* = pt.finish();
+* = n;
+```

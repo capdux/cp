@@ -1259,3 +1259,51 @@ pub fn demoRaptorTree() {
     * = n;
 }
 ```
+
+
+---
+
+## 零分配单阶段谓词感知过滤图检索与自适应回退引擎（Filtered HNSW，`filtered_hnsw.cp`）
+
+面向多租户、多标签 RAG 元数据过滤的 100% 纯 CP 零动态堆分配 ACORN / Filtered-DiskANN 风格图检索引擎（原生 `@dot`、`@l2sq` 与 `@popCount` 驱动）：
+
+- **常量与枚举**：
+  - `FHNSW_MAX_NODES = 256`、`FHNSW_MAX_DEGREE = 16`、`FHNSW_INVALID_SLOT = 0xFFFF`、`FHNSW_ANY_TENANT = 0`
+  - `FilteredSearchPath`（`graph_filtered | exact_fallback | empty_result`）
+  - `FilteredGraphStatus`（`ok | invalid_dimension | invalid_vector | index_full | duplicate_doc_id | node_not_found`）
+- **数据模型**：
+  - `FilteredGraphConfig`（`dim`, `max_nodes`, `max_degree`, `ef_construction`, `exact_fallback_bps`）
+  - `FilteredPredicate`（`required_tags`, `forbidden_tags`, `tenant_id`；`matches(tag_mask, node_tenant)`）
+  - `FilteredGraphNode`、`FilteredSearchHit`、`FilteredSearchReport`（执行路径、命中数、选择率 `selectivity_bps`、访问节点与距离计算数）、`FilteredGraphStats`
+- **核心引擎（`FilteredHnswIndex`）**：
+  - `init(cfg, vecs_flat_buf)` / `insert(*_, doc_id, embedding, tag_mask, tenant_id)`：贪心近邻构图与双向受限度数边（`M <= 16`）。
+  - `updateNodeTags(*_, doc_id, new_tag_mask)` / `markDeleted(*_, doc_id)` / `stats()`：在线元数据热更新与保连通逻辑删除。
+  - `search(query, pred, k, ef_search, out_hits)`：通过 `@popCount` 计算过滤选择率；高选择率走单阶段谓词感知图遍历（穿越非匹配/墓碑节点保持连通），极低选择率自动回退至精确掩码 SIMD `@dot` 扫描保证 100% Recall。
+
+### Filtered HNSW QuickStart 示例
+
+```cp
+import {
+    FilteredGraphConfig,
+    FilteredPredicate,
+    FilteredSearchHit,
+    FilteredHnswIndex,
+} from "cap:vector";
+
+pub fn demoFilteredHnsw() {
+    let vec_buf: [256]f32 = [0.0; 256]; // up to 64 nodes x 4D
+    let vec_s: []f32 = vec_buf[0..];
+    let idx = FilteredHnswIndex.init(FilteredGraphConfig{ dim: 4, max_nodes: 64, max_degree: 8 }, *vec_s) ?? return;
+
+    const e0: [4]f32 = [1.0, 0.0, 0.0, 0.0];
+    const e1: [4]f32 = [0.9, 0.2, 0.0, 0.0];
+    * = idx.insert(101, e0[0..], 0b0011, 1);
+    * = idx.insert(102, e1[0..], 0b0001, 1);
+
+    let hits: [4]FilteredSearchHit = [FilteredSearchHit{}; 4];
+    let hits_s: []FilteredSearchHit = hits[0..];
+    const pred = FilteredPredicate{ required_tags: 0b0001, forbidden_tags: 0b0010, tenant_id: 1 };
+    const rep = idx.search(e0[0..], pred, 2, 16, *hits_s);
+    * = rep.hit_count; // 精确命中 doc_id=102，过滤掉含禁止标签 0b0010 的 doc_id=101
+}
+```
