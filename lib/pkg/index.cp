@@ -88,3 +88,14 @@ export {
     UpdateRequest,
     UpdateRequestList,
 } from "./update_request.cp";
+
+export {
+    MAX_YARN_LOCK_PACKAGES,
+    YarnPrintError,
+    YarnLockDepKind,
+    YarnLockDep,
+    YarnLockPackage,
+    mustQuoteYarnName,
+    mustQuoteYarnKey,
+    YarnLockPrinter,
+} from "./yarn_lock_printer.cp";

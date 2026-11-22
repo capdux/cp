@@ -1047,3 +1047,51 @@ fn streamingToolCallDemo() {
     }
 }
 ```
+
+---
+
+## 子模块：确定性多步骤 AI Agent 编排有限状态机与审计回滚引擎（`workflow_fsm.cp`）
+
+### 核心特性
+
+- **确定性优先级边路由（`AgentWorkflowFsm`）**：支持 `Start` / `LlmStep` / `ToolStep` / `Decision` / `HumanGate` / `TerminalOk` / `TerminalFail` 七类节点；同一 `(from_id, event_code)` 存在多条边时按 `priority` 最高者确定性流转。
+- **循环护栏与人工审批门控**：每个节点可配置 `max_visits`（`0` 为不限），超限时返回 `VisitLimitExceeded` 且不破坏当前状态或审计日志；`HumanGate` 节点配合 `isWaitingHuman()` 实现原生人工介入暂停与事件恢复。
+- **零堆分配审计轨迹、单步回滚与静态可达性校验**：每步流转写入固定 `TransitionRecord` 审计缓冲；`rollbackLastStep()` 精确还原上一节点并回退目标节点 `visit_count`；`validateReachability()` 在零堆分配下检测缺起点、悬空边、孤立节点与不可达终态。
+
+### 导出清单
+
+- **图与记录类型**：`WorkflowNodeKind`、`WorkflowNode`、`WorkflowEdge`、`TransitionRecord`、`WorkflowStepResult`、`ReachabilityReport`
+- **状态机**：`AgentWorkflowFsm`（`init`, `start`, `trigger`, `rollbackLastStep`, `currentNodeId`, `currentNodeKind`, `isTerminal`, `isWaitingHuman`, `history`, `validateReachability`）
+
+### 使用示例
+
+```typescript
+import {
+    WorkflowNodeKind,
+    WorkflowNode,
+    WorkflowEdge,
+    TransitionRecord,
+    AgentWorkflowFsm,
+} from "cap:agent";
+
+fn workflowFsmDemo() {
+    let nodes_buf: [3]WorkflowNode = [
+        WorkflowNode{ id: 1, kind: WorkflowNodeKind.Start, max_visits: 1 },
+        WorkflowNode{ id: 2, kind: WorkflowNodeKind.LlmStep, max_visits: 3 },
+        WorkflowNode{ id: 3, kind: WorkflowNodeKind.TerminalOk, max_visits: 1 },
+    ];
+    const edges: [2]WorkflowEdge = [
+        WorkflowEdge{ from_id: 1, to_id: 2, event_code: 1, priority: 0 },
+        WorkflowEdge{ from_id: 2, to_id: 3, event_code: 2, priority: 0 },
+    ];
+    let hist_buf: [8]TransitionRecord = [TransitionRecord{}; 8];
+    let nodes: []WorkflowNode = nodes_buf[0..];
+    let hist: []TransitionRecord = hist_buf[0..];
+
+    let fsm = AgentWorkflowFsm.init(nodes, edges[0..], hist);
+    if (fsm.validateReachability().isValid() && fsm.start()) {
+        * = fsm.trigger(1, 1000);
+        * = fsm.trigger(2, 1500); // TerminalReached
+    }
+}
+```

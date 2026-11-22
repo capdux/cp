@@ -84,3 +84,14 @@ export {
     planFilterStrategy,
     maskedTopKCosine,
 } from "./filter.cp";
+
+export {
+    simdDotF32,
+    simdDotF64,
+    simdL2SqF32,
+    simdL2DistF32,
+    simdCosineF32,
+    simdAxpyInPlaceF32,
+    simdBatchTopKCosineF32,
+    simdBatchTopKL2F32,
+} from "./simd_ops.cp";

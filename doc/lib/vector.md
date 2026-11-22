@@ -23,6 +23,7 @@
 | `lib/vector/pq.cp` | `// Origin: Pure-CP Stdlib (RAG Product Quantization & Asymmetric Distance Computation ADC) \| Created: 2026-11-22` | `PqCodebook` 乘积量化编码/解码与 `O(m)` 查表非对称距离（ADC）Top-K 检索 |
 | `lib/vector/reranker.cp` | `// Origin: Pure-CP Stdlib (AI RAG Reranker: MMR, ColBERT MaxSim & IR Metrics) \| Created: 2026-11-22` | 零辅助缓冲 MMR (`mmrSelect`)、ColBERT Late-Interaction (`colbertMaxSim`)、原位 MinMax/ZScore 归一化与 `NDCG@K` / `MRR` / `Recall@K` IR 评测 |
 | `lib/vector/filter.cp` | `// Origin: Pure-CP Stdlib (AI Vector Search Metadata Bitset Filter & Selectivity Planner) \| Created: 2026-11-22` | 1024-bit 零堆分配位图 (`FilterBitset`)、数值/范围元数据谓词过滤、选择度自适应 Filtered ANN 路由规划器与位跳跃掩码 Top-K 余弦检索 |
+| `lib/vector/simd_ops.cp` | `// Origin: Pure-CP Stdlib (AI-Native SIMD Vector Distance & Batch Retrieval Kernels using @dot/@l2sq/@fma) \| Created: 2026-11-22` | 原生 8-lane SIMD 内建原语 (`@dot`/`@l2sq`/`@fma`) 驱动的向量距离、单舍入 AXPY 与零堆分配批量 Top-K Cosine / L2 检索核 |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -443,5 +444,46 @@ pub fn demoMetadataBitsetFilter(corpus: []const f64, query: []const f64) {
         let scores: []f64 = scores_buf[0..];
         * = maskedTopKCosine(query, corpus, 4, 2, mask, 2, ids, scores);
     }
+}
+```
+
+### 10. 原生 SIMD 内建原语向量距离与批量 Top-K 检索 (`simd_ops.cp`)
+
+直接基于 CP 编译器原生 8-lane SIMD 内建原语 `@dot`、`@l2sq`、`@fma` 的零堆分配向量算子与批量检索核：
+
+- **`simdDotF32(a: []const f32, b: []const f32): f32?`** / **`simdDotF64(a: []const f64, b: []const f64): f64?`**：校验非空等长后直调 `@dot(a, b)`。
+- **`simdL2SqF32(a: []const f32, b: []const f32): f32?`** / **`simdL2DistF32(a: []const f32, b: []const f32): f32?`**：基于 `@l2sq(a, b)` 计算平方欧氏距离与欧氏距离。
+- **`simdCosineF32(a: []const f32, b: []const f32): f32?`**：基于 `@dot` 计算余弦相似度并钳位至 `[-1.0, 1.0]`，零向量安全返回 `0.0`。
+- **`simdAxpyInPlaceF32(alpha: f32, x: []const f32, y: *[]f32): bool`**：原位单舍入硬件融合乘加 `y[i] = @fma(alpha, x[i], y[i])`。
+- **`simdBatchTopKCosineF32(query, corpus_flat, n_docs, dim, k, out_ids: *[]usize, out_scores: *[]f32): usize?`**：零堆分配批量 SIMD 余弦 Top-K 降序检索（同分按 `doc_id` 升序）。
+- **`simdBatchTopKL2F32(query, corpus_flat, n_docs, dim, k, out_ids: *[]usize, out_dists: *[]f32): usize?`**：零堆分配批量 SIMD L2 最近邻 Top-K 升序检索（排序阶段用 `@l2sq`，仅对最终 Top-K 胜出者执行 `@sqrt`）。
+
+```typescript
+import {
+    simdCosineF32,
+    simdAxpyInPlaceF32,
+    simdBatchTopKCosineF32,
+    simdBatchTopKL2F32,
+} from "cap:vector";
+
+pub fn demoSimdVectorOps() {
+    const query: [4]f32 = [1.0, 0.0, 0.0, 0.0];
+    const corpus: [12]f32 = [
+        0.9, 0.1, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        1.0, 0.0, 0.0, 0.0,
+    ];
+    let ids: [2]usize = [0, 0];
+    let scores: [2]f32 = [0.0, 0.0];
+    let ids_s: []usize = ids[0..];
+    let scores_s: []f32 = scores[0..];
+
+    * = simdBatchTopKCosineF32(query[0..], corpus[0..], 3, 4, 2, ids_s, scores_s);
+    * = simdBatchTopKL2F32(query[0..], corpus[0..], 3, 4, 2, ids_s, scores_s);
+
+    let y: [4]f32 = [1.0, 2.0, 3.0, 4.0];
+    let y_s: []f32 = y[0..];
+    * = simdAxpyInPlaceF32(0.5, query[0..], y_s);
+    * = simdCosineF32(query[0..], y[0..]);
 }
 ```

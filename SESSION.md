@@ -1150,3 +1150,11 @@
 ### 2026-11-22（分类合并交付：lib/attention/prefix_cache.cp | 2026-11-22 13:26:16）
 - **执行与结单汇报**：
   > 子智能体交付 lib/attention/prefix_cache.cp（多智能体共享提示词块级 KV 前缀缓存与引用计数 LRU 驱逐，5/5 PASS），归入 cap:attention 并同步 cp_lib_ref.md；续派 lib/vector/simd_ops.cp（率先实战使用刚发布的 @dot/@l2sq/@fma 8-lane SIMD 原语）。
+
+### 2026-11-22（分类合并交付：lib/agent/workflow_fsm.cp | 2026-11-22 13:30:02）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/agent/workflow_fsm.cp（确定性多步骤 AI Agent 编排有限状态机、防循环护栏、审计日志回滚与可达性校验，5/5 PASS），归入 cap:agent 并同步 cp_lib_ref.md；续派第 10 项 lib/agent/cost_ledger.cp。
+
+### 2026-11-22（分类合并交付：lib/pkg/yarn_lock_printer.cp & lib/vector/simd_ops.cp | 2026-11-22 13:31:05）
+- **执行与结单汇报**：
+  > 1. 吸收 Bun src/install/lockfile/printer/Yarn.cp 归入 lib/pkg/yarn_lock_printer.cp (6/6 PASS, upstream_newer=0)；2. 交付 lib/vector/simd_ops.cp (5/5 PASS，首个直接使用 CP 原生 8-lane SIMD @dot/@l2sq/@fma 的标准库向量核)；均已同步 cp_lib_ref.md 并提交。
