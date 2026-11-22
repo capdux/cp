@@ -41,7 +41,8 @@
 | `lib/pack/index.cp` | `cap:pack` / `cap:compress` 统一导出门面 | `/data/dev/bun/src/zlib/` & `/data/dev/bun/src/libarchive/` |
 | `lib/pack/gzip.cp` | RFC 1952 Gzip / RFC 1950 Zlib / RFC 1951 Raw Deflate 单发与流式引擎 | `/data/dev/bun/src/zlib/zlib.cp` |
 | `lib/pack/zstd.cp` | RFC 8478 Zstandard 帧头解析（`ZstdFrameHeader`）、压缩上界与编解码接口 | `/data/dev/bun/src/zstd/zstd.cp` |
-| `lib/pack/brotli.cp` | RFC 7932 Brotli 模式枚举（`BrotliMode`）、窗口位数解析（`BrotliHeader`）与上界 | `/data/dev/bun/src/brotli/brotli.cp` |
+| `lib/pack/brotli.cp` | RFC 7932 Brotli 完整纯 CP 解压引擎（`brotliDecompress` / `brotliDecompressInto` / `brotliDecompressWithLimits`）、窗口位数解析（`BrotliHeader`）与上界 | `/data/dev/bun/src/brotli/brotli.cp` & RFC 7932 |
+| `lib/pack/_brotliDict.cp` | RFC 7932 122KB 静态字典、4 模式字面量上下文查表与 121 种词变换表（内部模块） | RFC 7932 Appendix A / §7.1 / §8 |
 | `lib/pack/tar.cp` | POSIX.1-1988 USTAR 512 字节块编解码（`TarHeader`）与零拷贝读取器（`TarReader`） | `/data/dev/bun/src/libarchive/libarchive.cp` |
 | `lib/pack/tarPax.cp` | POSIX.1-2001 PAX 扩展头（`'x'`）安全归档读写器（`PaxTarWriter` / `PaxTarReader`）与 `validateArchivePath` | `cp/lib/pack/tarPax.cp` (POSIX.1-2001 PAX & USTAR) |
 | `lib/pack/zip.cp` | PKZIP Local Header / Central Directory / EOCD 反向扫描与零拷贝读取器（`ZipReader`） | `/data/dev/bun/src/libarchive/` |
@@ -143,9 +144,14 @@ pub fn demoZstd() {
 
 ---
 
-### 3. Brotli (`Brotli` / `BrotliMode` / `BrotliHeader` — RFC 7932)
+### 3. Brotli (`brotliDecompress` / `brotliDecompressInto` / `Brotli` / `BrotliHeader` — RFC 7932)
 
-`lib/pack/brotli.cp` 吸收自 Bun `src/brotli/brotli.cp`，提供 RFC 7932 压缩模式枚举 `BrotliMode`（`Generic`、`Text`、`Font`）、流式状态机枚举 `BrotliStreamState`、编解码参数容器 `BrotliEncoderOptions` / `BrotliDecoderOptions`、WBITS 滑动窗口帧头解析器 `BrotliHeader` 以及 `Brotli` 压缩上界计算器：
+`lib/pack/brotli.cp`（配合内部字典表 `lib/pack/_brotliDict.cp`）提供 **100% 纯 CP、零外部依赖的完整 RFC 7932 Brotli 解压引擎**，支持 `WBITS`（10..24）、多 Meta-Block、Metadata 跳过块、未压缩直通块、Simple/Complex Canonical Huffman 前缀码、4 模式精确字面量上下文查表（LSB6/MSB6/UTF8/Signed）、Context Map（RLE + 逆 MTF）、4-entry 距离环形缓存与短码、重叠 LZ77 后向复制，以及完整 122KB RFC 7932 静态字典与 121 种词变换，适用于 HTTP `Content-Encoding: br`（`q=0..11`）响应解压：
+
+- `brotliDecompress(allocator: std.mem.Allocator, compressed: []const u8): []u8 ! BrotliError`（默认安全上限：16MiB 窗口 / 64MiB 输出）
+- `brotliDecompressWithLimits(allocator: std.mem.Allocator, compressed: []const u8, max_window_bytes: usize, max_output_bytes: usize): []u8 ! BrotliError`
+- `brotliDecompressInto(compressed: []const u8, out: *[]u8): usize ! BrotliError`（直接写入外部缓冲区，零输出堆分配，缓冲区不足时返回 `BrotliError.OutputBufferTooSmall`）
+- `Brotli.decompress` / `Brotli.decompressWithLimits` / `Brotli.decompressInto`（面向对象门面别名）
 
 ```typescript
 import {
@@ -154,31 +160,31 @@ import {
     BrotliHeader,
     BrotliEncoderOptions,
     BrotliDecoderOptions,
+    brotliDecompress,
+    brotliDecompressInto,
     BROTLI_DEFAULT_QUALITY,
     BROTLI_DEFAULT_WINDOW,
 } from "cap:pack";
 
-pub fn demoBrotli() {
-    // 1. 预估 Brotli 压缩输出缓冲区上界
-    const bound_len = Brotli.bound(8192);
-    const comp_bound = Brotli.compressBound(8192);
+pub fn demoBrotli(alloc: std.mem.Allocator, br_body: []const u8) {
+    // 1. 完整 RFC 7932 解压（分配器版本，适配 HTTP Content-Encoding: br）
+    if (plain := brotliDecompress(alloc, br_body) catch null) {
+        defer alloc.free(plain);
+        @print("Brotli 解压成功: {d} 字节\n", plain.len);
+    }
 
-    // 2. 校验质量等级 [0..11] 与窗口位数 [10..24] / Large Window [10..30]
+    // 2. 零输出堆分配解压至外部切片
+    let out_buf: [4096]u8 = [0; 4096];
+    let out_slice: []u8 = out_buf[0..];
+    if (n := brotliDecompressInto(br_body, &out_slice) catch null) {
+        @print("Brotli 写入外部切片: {d} 字节\n", n);
+    }
+
+    // 3. 预估 Brotli 压缩输出缓冲区上界与帧头解析
+    const bound_len = Brotli.bound(8192);
     const ok_q = Brotli.isValidQuality(BROTLI_DEFAULT_QUALITY);
     const ok_w = Brotli.isValidWindowBits(BROTLI_DEFAULT_WINDOW, false);
-    const ok_large_w = Brotli.isValidWindowBits(28, true);
-
-    // 3. 配置 UTF-8 文本模式或 WOFF2 字体优化模式
-    const enc_opts = BrotliEncoderOptions{
-        mode: BrotliMode.Text,
-        quality: 9,
-        lgwin: 22,
-    };
-
-    // 4. 解析 RFC 7932 Section 9.1 Brotli 帧头首字节 WBITS
-    // 例如首字节 bit 0 == 0 代表 WBITS = 16
-    let sample_br: [2]u8 = [0x06, 0x00];
-    if (bhdr := BrotliHeader.parse(sample_br[0..2])) {
+    if (bhdr := BrotliHeader.parse(br_body)) {
         @print("Brotli 窗口位数 WBITS = {d}, is_last = {}\n", bhdr.window_bits, bhdr.is_last);
     }
 }
@@ -437,7 +443,7 @@ pub fn demoSniffer() {
 | **裸 Deflate 编解码** | `zlib.deflateRawSync` / `inflateRawSync` | `Bun.deflateRawSync` / `inflateRawSync` | `deflateRaw(src)` / `inflateRaw(src)` |
 | **流式分块压缩/解压** | `zlib.createGzip()` / `createGunzip()` | `ZlibCompressorArrayList` / `NewZlibReader` | `GzipStream.create()` / `GunzipStream.create()` |
 | **Zstd 帧解析与边界** | `zlib.zstdCompressSync` (Node 22+) | `src/zstd/zstd.cp` (`ZSTD_*`) | `Zstd.bound()` / `ZstdFrameHeader.parse()` |
-| **Brotli 模式与帧解析** | `zlib.brotliCompressSync` | `src/brotli/brotli.cp` | `Brotli.bound()` / `BrotliMode` / `BrotliHeader` |
+| **Brotli 解压与帧解析** | `zlib.brotliDecompressSync` | `src/brotli/brotli.cp` | `brotliDecompress(alloc, src)` / `brotliDecompressInto(src, &out)` / `Brotli.bound()` / `BrotliHeader` |
 | **Tar 归档解析与构建** | 需第三方 `npm:tar` | `Bun.Archive` (`src/libarchive/`) | `TarHeader.encodeHeader()` / `TarReader` (零拷贝) |
 | **ZIP 归档解析与构建** | 需第三方 `npm:adm-zip` / `yauzl` | `src/libarchive/` | `ZipLocalHeader` / `ZipEocd.findInBuffer()` / `ZipReader` |
 | **CRC32 / Adler32** | `zlib.crc32(data)` | `Bun.hash.crc32` / `adler32` | `Crc32.checksum()` / `Adler32.checksum()` + 增量流 |

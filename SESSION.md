@@ -2443,3 +2443,26 @@
   > “做深不做薄” 不仅仅在后续新模块中实施, 你之前编写/吸收的库, 也要重新审核, 需要深化补全的, 补全功能及文档, 阉割版没有意义.
 - **完整回复与执行汇报**：
   > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（下游工单全量补录：`task-capsurf-20261123-pack-brotli-decompress`）[ticket:task-capsurf-20261123-pack-brotli-decompress]
+- **工单来源**：`capsurf_agy`（项目 `capsurf` / 分类 `compiler_bug`） | 创建：`2026-11-23 08:57:22` | 状态：`resolved` | 结单：`2026-11-23T09:08:13`
+- **报错/需求摘要**：cap:pack (lib/pack/brotli.cp) 仅含 brotliBound 与帧头解析，缺少完整 RFC 7932 Brotli 解压接口 (brotliDecompress)，导致 CapSurf http_loader.cp 无法解压 Content-Encoding: br 响应
+- **结单与处理汇报**：Implemented full pure-CP RFC 7932 Brotli decompressor in cap:pack (lib/pack/brotli.cp + lib/pack/_brotliDict.cp, exported via lib/pack/index.cp): brotliDecompress(allocator: std.mem.Allocator, compressed: []const u8): []u8 ! BrotliError, brotliDecompressWithLimits(allocator, compressed, max_window_bytes, max_output_bytes): []u8 ! BrotliError, brotliDecompressInto(compressed: []const u8, out: *[]u8): usize ! BrotliError, brotliWindowSizeFromBits(window_bits: u8): usize ! BrotliError, BrotliError, ...(截断)
+
+### 2026-11-23（下游工单全量补录：`task-capsurf-20261123-image-jpeg-webp-encode`）[ticket:task-capsurf-20261123-image-jpeg-webp-encode]
+- **工单来源**：`capsurf_agy`（项目 `capsurf` / 分类 `compiler_bug`） | 创建：`2026-11-23 08:57:22` | 状态：`pending` | 结单：`进行中`
+- **报错/需求摘要**：cap:image (lib/image/jpeg.cp 与 webp.cp) 仅含 probe()，缺少 JPEG 与 WebP(含无损VP8L) 编码接口，无法在 Page.captureScreenshot 中直接输出合标 JPEG/WebP 字节流
+- **结单与处理汇报**：(处理中/未填写结单备注)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 08:57:24）[step:19662]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(2条: task-capsurf-20261123-pack-brotli-decompress,task-capsurf-20261123-image-jpeg-webp-encode)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取 2 条下游 `capsurf_agy` 紧急工单并立即派发 2 路隔离专职深度工程师并行攻关（与现有双轨零文件冲突）：
+  >
+  > 1. **`task-capsurf-20261123-pack-brotli-decompress`**（[repro_pack_brotli_decompress.cp](file:///data/dev/cp/temp/repro_pack_brotli_decompress.cp)）
+  >    - 派发至 `Stdlib Deep Engineer (cap:pack Brotli)`：在 [lib/pack/brotli.cp](file:///data/dev/cp/lib/pack/brotli.cp) 按生产级深度补齐完整 RFC 7932 Brotli 解压接口（`brotliDecompress` + 零堆 `brotliDecompressInto`），交叉校验真实 Brotli 压缩响应，验证通过后结单。
+  > 2. **`task-capsurf-20261123-image-jpeg-webp-encode`**（[repro_image_jpeg_webp_encode.cp](file:///data/dev/cp/temp/repro_image_jpeg_webp_encode.cp)）
+  >    - 派发至 `Stdlib Deep Engineer (cap:image JPEG+WebP)`：在 [lib/image/jpeg.cp](file:///data/dev/cp/lib/image/jpeg.cp) 与 [lib/image/webp.cp](file:///data/dev/cp/lib/image/webp.cp) 按生产级深度补齐标准 Baseline DCT `jpegEncode` 与 RFC 9649 无损/可调质量 VP8L `webpEncode`，交叉校验外部标准解码器，验证通过后结单。
+  >
+  > *(同期 `Priority ① Wave 28 Round 1` [debugTree.cp](file:///data/dev/cp/lib/test_runner/debugTree.cp) 已验证提交 [`26a04d5a`]，`bun_sourced=1145, missing_synced_tag=0, upstream_newer=0`。待任一工单或生态轨道完工后将立即收口、审计并提交。)*
