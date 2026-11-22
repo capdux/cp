@@ -103,6 +103,18 @@ pub fn demoWidgets() {
   - `TableBorderStyle`（`ascii`/`compact`/`unicode_light`）、`CellAlign`（`left`/`right`/`center`）、`computeColumnWidths`、`renderBorderLine`、`renderTableRow`、`renderTable`。
 - **零分配树形 / 依赖树渲染器 (`lib/cli/tree.cp`)**：
   - `TreeStyle`（`unicode`/`ascii`/`rounded`）、`TreePrefix`（64 层祖先位掩码）、`TreeNode`、`renderFlatTree`。
+- **零分配冒号/等号键值列表解析器 (`lib/cli/colon_list.cp`，吸收自 `/data/dev/bun/src/cli/colon_list_type.cp`)**：
+  - 错误集与结构体：`ColonListError`（`InvalidSeparator` / `EmptyKey` / `InvalidExtensionPrefix` / `OutputBufferTooSmall`）、`ColonPair`
+  - 解析与查询函数：`parseColonPair`、`parseColonPairNonEmptyKey`、`parseLoaderMapping`、`parseColonList`、`parseLoaderMappingList`、`findColonValue`（优先匹配先出现的 `:` 或 `=`，兼容 Bun/esbuild CLI `--define`/`--loader` 语法，支持 last-wins 查询）
+
+```typescript
+import { ColonPair, parseLoaderMappingList, findColonValue } from "cap:cli";
+
+const raw: [2]([]const u8) = [".ts:tsx", ".svg=text"];
+let pairs: [2]ColonPair = [ColonPair{}, ColonPair{}];
+const n = parseLoaderMappingList(raw[0..], pairs[0..])?;
+const svg_loader = findColonValue(pairs[0..n], ".svg") ?? ""; // "text"
+```
 
 ---
 
