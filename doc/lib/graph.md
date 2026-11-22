@@ -120,3 +120,52 @@ pub fn demoDagAndShortestPath(alloc: std.mem.Allocator): !void {
     defer scc.deinit();
 }
 ```
+
+---
+
+## 四、 零堆分配 DAG 拓扑波次规划与关键路径分析器（`workflow_dag.cp`）
+
+面向构建系统、数据流水线与多智能体任务编排的 100% 纯 CP 零堆分配 DAG 规划原语：
+
+- **导出类型**：`DagNodeCost`、`DagEdgeSpec`、`DagWaveAssignment`、`CriticalPathMetrics`、`WorkflowPlanSummary`
+- **核心算法**：
+  - `planParallelWaves(node_count, edges, out_order, out_waves, scratch_in_deg, scratch_queue): WorkflowPlanSummary?`：Kahn 拓扑排序 + 最早并发波次（`wave_index`）划分与最大并发度统计，遇环返回 `has_cycle = true` 及首个成环节点；
+  - `analyzeCriticalPath(node_count, durations_ms, edges, topo_order, out_metrics): u64?`：正反两遍 CPM 动态规划精确计算每个节点的 `earliest_start`、`earliest_finish`、`latest_start`、`latest_finish`、`total_slack`、`is_critical` 与最短总工期（makespan）；
+  - `findCycleNodes(node_count, edges, out_cycle_nodes, scratch_color, scratch_parent): usize`：三色 DFS 提取真实成环节点序列，秒级定位循环依赖。
+
+### QuickStart 示例（菱形并行波次 + CPM 关键路径）
+
+```cp
+import {
+    DagEdgeSpec,
+    DagWaveAssignment,
+    CriticalPathMetrics,
+    planParallelWaves,
+    analyzeCriticalPath,
+} from "cap:graph";
+
+pub fn demoWorkflowDagCpm() {
+    // 0 (10ms) -> 1 (50ms) -> 3 (20ms)  [关键路径 = 80ms]
+    // 0 (10ms) -> 2 (15ms) -> 3 (20ms)  [松弛时间 = 35ms]
+    const edges: [4]DagEdgeSpec = [
+        DagEdgeSpec{ from: 0, to: 1 },
+        DagEdgeSpec{ from: 0, to: 2 },
+        DagEdgeSpec{ from: 1, to: 3 },
+        DagEdgeSpec{ from: 2, to: 3 },
+    ];
+    const durs: [4]u64 = [10, 50, 15, 20];
+    let order: [4]u32 = [0; 4];
+    let waves: [4]DagWaveAssignment = [DagWaveAssignment{}; 4];
+    let in_deg: [4]u32 = [0; 4];
+    let queue: [4]u32 = [0; 4];
+
+    if (plan := planParallelWaves(4, edges[0..], order[0..], waves[0..], in_deg[0..], queue[0..])) {
+        if (!plan.has_cycle) {
+            let metrics: [4]CriticalPathMetrics = [CriticalPathMetrics{}; 4];
+            if (makespan := analyzeCriticalPath(4, durs[0..], edges[0..], order[0..], metrics[0..])) {
+                * = makespan; // 80ms; metrics[0], metrics[1], metrics[3] are critical; metrics[2].total_slack == 35
+            }
+        }
+    }
+}
+```

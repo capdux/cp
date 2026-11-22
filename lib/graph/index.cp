@@ -173,3 +173,14 @@ export {
     smoothPath,
     pathLength,
 } from "./rrt.cp";
+
+export {
+    DagNodeCost,
+    DagEdgeSpec,
+    DagWaveAssignment,
+    CriticalPathMetrics,
+    WorkflowPlanSummary,
+    planParallelWaves,
+    analyzeCriticalPath,
+    findCycleNodes,
+} from "./workflow_dag.cp";
