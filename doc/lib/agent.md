@@ -1438,3 +1438,66 @@ fn workStealDemo() {
     * = pool.stats();
 }
 ```
+
+---
+
+## 子模块：多智能体 Handoff 移交路由、版本化共享黑板与扇出汇聚 Quorum（`handoff.cp`）
+
+### 核心特性
+
+- **Handoff 移交路由与防环保护（`HandoffRouter` / `HandoffRecord`）**：支持显式 Agent 所有权移交、`max_hops` 最大跳数硬限制、自移交拦截（`SelfHandoff`）、`A -> B -> A` 环路检测（`CycleDetected`）、移交上下文摘要与完整轨迹回溯（`history()` / `recordAt()`）。
+- **版本化共享黑板（`AgentBlackboard` / `BlackboardEntry`）**：固定槽位零堆分配共享键值板，支持无条件写入（`put`）、乐观锁版本 CAS 写入（`putIfVersion`：键不存在要求 `expected_version == 0`，存在要求精确匹配版本号，否则返回 `VersionConflict`）、写入者 `writer_agent_id` 审计追踪，以及按前缀过滤（`listByPrefix`）与全局单调序列号增量拉取（`listSinceSeq`）。
+- **扇出/扇入法定人数汇聚器（`FanOutAggregator` / `FanOutSlot`）**：支持多路并行子 Agent 任务提交、成功/失败状态机转移、达到 `quorum` 立即提前就绪（`isQuorumReady` / `FanOutStatus.QuorumReached`）、不可达提前失败判定（`FanOutStatus.QuorumFailed`）与按得分降序提取已成功结果（`collectSucceeded`）。
+
+### 导出清单
+
+- **移交路由**：`HandoffStatus`（`Accepted | SelfHandoff | CycleDetected | MaxHopsExceeded | HistoryFull`）、`HandoffRecord`、`HandoffRouter`（`init`, `hasVisited`, `handoff`, `currentAgent`, `hopCount`, `remainingHops`, `recordAt`, `history`, `reset`）
+- **共享黑板**：`BlackboardWriteStatus`（`Ok | VersionConflict | Full | InvalidKey`）、`BlackboardEntry`、`AgentBlackboard`（`init`, `get`, `put`, `putIfVersion`, `remove`, `listByPrefix`, `listSinceSeq`, `count`, `capacity`, `currentSeq`）
+- **扇出汇聚**：`FanOutTaskState`（`Pending | Succeeded | Failed`）、`FanOutStatus`（`InProgress | QuorumReached | QuorumFailed`）、`FanOutSlot`、`FanOutSummary`、`FanOutAggregator`（`init`, `submit`, `recordSuccess`, `recordFailure`, `isQuorumReady`, `status`, `summary`, `collectSucceeded`）
+
+### 使用示例
+
+```cp
+import {
+    HandoffRecord,
+    HandoffRouter,
+    BlackboardEntry,
+    AgentBlackboard,
+    FanOutSlot,
+    FanOutAggregator,
+} from "cap:agent";
+
+fn multiAgentHandoffDemo() {
+    // 1. Handoff 移交路由（Triage Agent 1 -> Coder Agent 2 -> Reviewer Agent 3，禁止回环）
+    let trace_buf: [4]HandoffRecord = [HandoffRecord{}; 4];
+    let trace_s: []HandoffRecord = trace_buf[0..];
+    let router = HandoffRouter.init(trace_s, 1, 3, true) ?? return;
+    * = router.handoff(2, "implement feature", 1000);
+    * = router.handoff(3, "review patch", 2000);
+    // 试图移交回 Agent 1 将触发 HandoffStatus.CycleDetected
+    * = router.handoff(1, "loop back", 3000);
+
+    // 2. 版本化共享黑板（乐观锁 CAS 防并发覆盖）
+    let bb_buf: [8]BlackboardEntry = [BlackboardEntry{}; 8];
+    let bb_s: []BlackboardEntry = bb_buf[0..];
+    let board = AgentBlackboard.init(bb_s);
+    * = board.putIfVersion("plan.status", "draft", 0, 1, 1000);       // Ok (v1)
+    * = board.putIfVersion("plan.status", "approved", 1, 3, 2000);    // Ok (v2)
+    * = board.putIfVersion("plan.status", "stale", 1, 2, 2100);       // VersionConflict
+
+    // 3. 扇出/扇入汇聚器（3 路并行子 Agent，Quorum = 2 提前就绪）
+    let fan_buf: [4]FanOutSlot = [FanOutSlot{}; 4];
+    let fan_s: []FanOutSlot = fan_buf[0..];
+    let agg = FanOutAggregator.init(fan_s, 2) ?? return;
+    * = agg.submit(10, 101);
+    * = agg.submit(11, 102);
+    * = agg.submit(12, 103);
+    * = agg.recordSuccess(10, 0.91, "answer-A", 1200);
+    * = agg.recordSuccess(12, 0.97, "answer-C", 1300);
+    if (agg.isQuorumReady()) {
+        let winners: [2]FanOutSlot = [FanOutSlot{}; 2];
+        let winners_s: []FanOutSlot = winners[0..];
+        * = agg.collectSucceeded(winners_s); // winners[0].task_id == 12 (0.97)
+    }
+}
+```
