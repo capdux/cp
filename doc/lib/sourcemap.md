@@ -164,3 +164,23 @@ const still_ok = store.get(id, 105);      // 仍在 10s 宽限期内，DevTools 
 const pruned = store.pruneExpired(110);   // 110s 过期自动物理回收 (pruned == 1)
 * = still_ok; * = pruned;
 ```
+
+6. **增量打包 SourceMap 零分配共享存储与引用摊销计费（`lib/sourcemap/packedMap.cp`，吸收自 `/data/dev/bun/src/bake/DevServer/PackedMap.cp` & `/data/dev/bun/docs/bundler/index.mdx`）**：
+   - **导出符号**：`PACKED_MAP_MAX_SLOTS` (`64`)、`PACKED_MAP_ARENA_BYTES` (`8192`)、`PACKED_MAP_ENTRY_OVERHEAD` (`40`)、`PackedMapError`、`PackedMapEndState`、`SharedPackedMapKind`（`none`/`line_count`/`some`）、`SharedPackedMapRef`（`none`/`fromLineCount`/`fromSlot`/`isNone`/`isLineCount`/`hasMap`/`slotIndex`/`lineCount`/`take`）、`PackedMapEntry`、`PackedMapArena`（`init`/`totalActiveCount`/`usedArenaBytes`/`allocPacked`/`cloneRef`/`releaseRef`/`vlqSlice`/`escapedSourceSlice`/`endState`/`strongCount`/`memoryCost`/`amortizedMemoryCost`/`writeSourcesContentItem`）；
+   - **Bun DevServer 零对象分配与懒拼接实践**：
+     - 对 HTML/CSS/静态资源等无 SourceMap 文件使用 `SharedPackedMapRef.fromLineCount(lines)`，零槽位零内存占用地保留行偏移；
+     - 对 JS/TS 文件将 VLQ 字节流与预转义 JSON 源码打包存入 `PackedMapArena`，在 IncrementalGraph 与多份 `SourceMapStore` 条目间通过 `cloneRef` / `releaseRef` 共享，并用 `amortizedMemoryCost` 按强引用数摊销内存账单，避免多路由重复计费与重复 JSON 转义。
+
+```cp
+import { PackedMapArena, PackedMapEndState, SharedPackedMapRef } from "cap:sourcemap";
+
+let arena = PackedMapArena.init();
+const h1 = arena.allocPacked("AAAA;AACA", "const x = 1;\\n", PackedMapEndState{ original_line: 1, original_column: 12 })?;
+const h2 = arena.cloneRef(h1)?;           // strong_count == 2，amortizedMemoryCost 减半
+let json_buf: [64]u8 = [0; 64];
+const n = arena.writeSourcesContentItem(h2, json_buf[0..])?; // "\"const x = 1;\\n\""
+* = arena.releaseRef(h1)?;                // false (仍由 h2 持有)
+* = arena.releaseRef(h2)?;                // true (归零释放槽位)
+const css_ref = SharedPackedMapRef.fromLineCount(42);
+* = n; * = css_ref;
+```
