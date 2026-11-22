@@ -568,3 +568,19 @@ export {
     parsePinDirective,
     CertPinStore,
 } from "./certPin.cp";
+
+// --- Zero-Alloc RFC 9001 AEAD Nonce Deriver, Reuse Guard & 128-Bit Anti-Replay Window ---
+
+export {
+    AEAD_NONCE_LEN,
+    AEAD_ANTI_REPLAY_WINDOW_BITS,
+    AEAD_DEFAULT_REKEY_LIMIT,
+    AntiReplayVerdict,
+    AeadNonceTicket,
+    AeadNonceSenderStats,
+    AntiReplayStats,
+    deriveAeadNonce,
+    AeadNonceSender,
+    AntiReplayWindow128,
+    AeadNonceReceiver,
+} from "./aeadNonce.cp";

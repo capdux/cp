@@ -449,3 +449,12 @@ export {
     decidePgTlsResponse,
     PgSessionMachine,
 } from "./pgSession.cp";
+
+export {
+    SQL_COLUMN_ID_MAX_COLS,
+    SQL_COLUMN_ID_MAX_INDEX,
+    SqlColumnIdError,
+    SqlColumnIdKind,
+    SqlColumnId,
+    SqlColumnIdMap,
+} from "./columnId.cp";

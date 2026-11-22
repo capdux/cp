@@ -621,3 +621,19 @@ const cmd = pg.onCommandComplete("INSERT 0 5")?;
 // cmd.kind == PgSessionCmdKind.Insert, cmd.row_count == 5
 * = cmd;
 ```
+
+12. **零分配 SQL 结果集列标识符分类与重复列阴影追踪（`lib/sql/columnId.cp`，吸收自 `/data/dev/bun/src/sql/shared/ColumnIdentifier.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
+    - **导出符号**：`SQL_COLUMN_ID_MAX_COLS` (`64`)、`SQL_COLUMN_ID_MAX_INDEX` (`4294967294`)、`SqlColumnIdError`、`SqlColumnIdKind`（`name`/`index`/`duplicate`）、`SqlColumnId`（`parse`/`fromIndex`/`duplicateOf`/`isName`/`isIndex`/`isDuplicate`/`sameKey`/`eql`）、`SqlColumnIdMap`（`init`/`addColumn`/`count`/`duplicateCount`/`activeCount`/`hasDuplicates`/`get`/`rawNameAt`/`lookupByName`/`lookupByIndex`/`formatHeaderList`）；
+    - **Bun SQL 结果集格式与重复列实战实践（吸收自 `runtime/sql.mdx`）**：
+      - Bun SQL 客户端（PostgreSQL / MySQL / SQLite 共享层）默认以对象数组返回结果行，此时重复列名（如 `SELECT a.id, b.id FROM a JOIN b`）遵循**后列覆盖前列（last-column-wins）**规则；当存在重复列名或需要更高性能二进制输出时，应使用 `.values()`（按位置数组返回，完整保留所有重复列）或 `.raw()`（返回原始字节缓冲数组）；
+      - `SqlColumnId.parse` 精确对齐 Bun 规则：将 1..10 位且值 `<= 4294967294`（`< u32::MAX`）的纯数字列名归类为 `.index` 快速数组索引键，其余（含空名、前导符号或 `>= 4294967295`）保留为零拷贝 `.name`；`SqlColumnIdMap` 在无堆分配前提下自动标记被覆写前列为 `.duplicate` 并通过 `hasDuplicates()` 提示调用方切换位置访问模式。
+
+```cp
+import { SqlColumnIdMap } from "cap:sql";
+
+let cols = SqlColumnIdMap.init();
+* = cols.addColumn("id")?;
+* = cols.addColumn("name")?;
+* = cols.addColumn("id")?; // 阴影覆盖第 0 列，对象模式保留第 2 列
+// cols.hasDuplicates() == true, cols.lookupByName("id") == 2, cols.activeCount() == 2
+```

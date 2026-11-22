@@ -559,6 +559,45 @@ pub fn demoCertPinning() {
 
 ---
 
+### 零分配 TLS 1.3 / QUIC RFC 9001 AEAD Nonce 派生、防重用守卫与 128 位防重放滑窗 (`aeadNonce.cp`)
+
+面向 AES-GCM / ChaCha20-Poly1305 安全传输层的 100% 纯 CP 零动态堆分配 Nonce 派生与 128 位防重放引擎：
+
+- **常量与纯函数**：
+  - `AEAD_NONCE_LEN = 12`、`AEAD_ANTI_REPLAY_WINDOW_BITS = 128`、`AEAD_DEFAULT_REKEY_LIMIT = 8_388_608`
+  - `deriveAeadNonce(base_iv: [12]u8, seq: u64): [12]u8`：按 RFC 9001 §5.3 / TLS 1.3 §5.3 将大端 64 位 `seq` 与 `base_iv[4..12]` 异或。
+- **枚举与数据模型**：
+  - `AntiReplayVerdict`（`accepted | duplicate_replay | too_old_below_window`）
+  - `AeadNonceTicket`（`seq`, `key_epoch`, `nonce`）、`AeadNonceSenderStats`、`AntiReplayStats`
+- **发送端防重用守卫 `AeadNonceSender`**：
+  - `init(base_iv, rekey_limit, warn_threshold): AeadNonceSender?` / `initDefault(base_iv)`
+  - `nextNonce(*_): AeadNonceTicket?`：严格单调递增序号，到达 `rekey_limit` 硬上限后拒绝签发返回 `null`，彻底杜绝 Nonce 重用灾难。
+  - `needsRekey()` / `isExhausted()` / `remaining()` / `rekey(*_, new_base_iv)`（递增 `key_epoch` 并归零序号）/ `stats()`
+- **接收端 128 位防重放滑窗 `AntiReplayWindow128` & `AeadNonceReceiver`**：
+  - `checkOnly(seq)`（AEAD 验签前只读预检，防止伪造包污染窗口）/ `checkAndMark(*_, seq)`（验签通过后 O(1) 标记，支持最高 128 包乱序到达与大序号跳跃清窗）/ `rekey(*_)` / `stats()`。
+
+```cp
+import {
+    AeadNonceSender,
+    AeadNonceReceiver,
+    AntiReplayVerdict,
+} from "cap:crypto";
+
+pub fn demoAeadNonce() {
+    const iv: [12]u8 = [0x01, 0x02, 0x03, 0x04, 0xAA, 0xBB, 0xCC, 0xDD, 0x10, 0x20, 0x30, 0x40];
+    let tx = AeadNonceSender.init(iv, 1000, 800) ?? return;
+    let rx = AeadNonceReceiver.init(iv);
+
+    if (ticket := tx.nextNonce()) {
+        * = rx.deriveForSeq(ticket.seq); // 与 ticket.nonce 字节逐一相同
+        * = (rx.checkAndMark(ticket.seq) == AntiReplayVerdict.accepted);
+        * = (rx.checkAndMark(ticket.seq) == AntiReplayVerdict.duplicate_replay);
+    }
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [aes_gcm.md](crypto/aes_gcm.md)
