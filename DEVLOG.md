@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:mediaquery` 吸收自 Bun css/media_query.cp 的纯 CP 零分配 W3C CSS Media Queries Level 4 库：长度/分辨率/宽高比单位换算、单/双边区间范围、媒体特性求值与规范化（5/5 PASS，文档直写 `doc/lib/mediaquery.md`）
+从 /data/dev/bun/src/css/media_query.cp 吸收纯 CP 零分配 CSS Media Queries Level 4 库 cap:mediaquery（lib/mediaquery/{mediaquery,index}.cp），cpc check 0 错误，cap test 6/6 PASS (710ms)
+
 ## 2026-11-22: 新建 `cap:textstream` 吸收自 Bun runtime/webcore/TextEncoderStreamEncoder.cp 的纯 CP 零分配 WHATWG 流式 UTF-8 编码器：跨分块 UTF-16 代理对拼接、孤立代理 U+FFFD 替换、Latin-1 转码与小缓冲原子保护（5/5 PASS，文档直写 `doc/lib/textstream.md`）
 从 /data/dev/bun/src/runtime/webcore/TextEncoderStreamEncoder.cp 吸收纯 CP 零分配流式 UTF-8 编码器 cap:textstream（lib/textstream/{textstream,index}.cp），cpc check 0 错误，cap test 5/5 PASS (736ms)
 
