@@ -62,3 +62,16 @@ export {
     hashMethodName,
     McpSession,
 } from "./session.cp";
+
+export {
+    UriParamCapture,
+    McpResourceRoute,
+    McpResourceMatch,
+    McpSubscription,
+    McpResourceRouterStats,
+    hashResourceUri,
+    isValidUriTemplate,
+    isStaticUriTemplate,
+    matchUriTemplate,
+    McpResourceRouter,
+} from "./resource_router.cp";

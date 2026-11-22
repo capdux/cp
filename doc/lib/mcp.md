@@ -8,6 +8,7 @@
 - **能力路由器 (`server.cp`)**：`McpServer` 内置 `initialize`、`notifications/initialized`、`ping`、`tools/list`、`tools/call`、`resources/list`、`resources/read`、`prompts/list`、`prompts/get` 路由分发，并自动将工具执行错误封装为 `isError: true`。
 - **零堆分配工具注册表与权限治理 (`registry.cp`)**：`McpToolRegistry` 基于调用方固定槽位缓冲实现工具注册、能力风险分级（`ReadOnly`/`WriteLocal`/`Network`/`Destructive`）、网络 ACL、高危人工审批门槛（`RequireApproval`）、固定 60 秒窗口限流与动态 `tools/list` 可见集过滤。
 - **零堆分配会话生命周期与请求追踪器 (`session.cp`)**：`McpSession` 提供协议版本解析/格式化与兼容性降级协商（`V2024_11_05` / `V2025_03_26`）、能力位掩码交集协商（`McpCapabilityFlags`）、严格五态生命周期门控（`Disconnected` -> `Initializing` -> `Ready` -> `Closing` -> `Closed`）及固定槽位 JSON-RPC 2.0 在途请求追踪（注册、完成、取消、批量超时回收与统计）。
+- **零堆分配资源 URI 模板路由与订阅分发器 (`resource_router.cp`)**：`McpResourceRouter` 与 `matchUriTemplate` 提供 RFC 6570 简单 `{var}` 路径段零拷贝参数提取、静态路由优先于模板路由的分级解析、幂等去重客户端资源订阅/退订以及变更广播订阅者扇出收集。
 
 ## 2. 核心类型
 
@@ -17,6 +18,7 @@
 - **服务端**：`ToolHandler`、`ResourceReader`、`PromptBuilder`、`McpServer`
 - **工具治理注册表 (`registry.cp`)**：`ToolRiskLevel`、`ToolPolicy`、`PolicyDecision`、`RegisteredTool`、`McpToolRegistry`
 - **会话状态机与请求追踪 (`session.cp`)**：`McpProtocolVersion`、`McpCapabilityFlags`、`McpSessionState`、`McpSessionOpError`、`McpInflightRequest`、`McpSessionStats`、`McpSession`
+- **资源路由与订阅分发 (`resource_router.cp`)**：`UriParamCapture`、`McpResourceRoute`、`McpResourceMatch`、`McpSubscription`、`McpResourceRouterStats`、`McpResourceRouter`
 
 ## 3. API 速查
 
@@ -52,6 +54,17 @@
 | `sess.beginRequest(id, method_hash, sent_ms, timeout_ms)` / `sess.beginMethodRequest(...)` | 注册在途请求（拒绝非 `Ready`、0 ID、重复 ID 与满槽） |
 | `sess.completeRequest(id)` / `sess.cancelRequest(id)` / `sess.purgeCancelled(out_ids)` | 完成并释放请求（返回副本供识别迟到已取消响应）、标记取消与批量清理已取消槽位 |
 | `sess.collectTimedOut(now_ms, out_ids)` | 批量回收超时在途请求（支持 `timeout_ms == 0` 豁免、时钟回拨防护与输出截断安全） |
+| `hashResourceUri(uri)` | 计算 MCP 资源 URI 的确定性 64 位 FNV-1a 哈希 |
+| `isValidUriTemplate(template)` / `isStaticUriTemplate(template)` | 校验 URI 模板合法性 / 判定是否为无变量静态 URI |
+| `matchUriTemplate(template, uri, out_params)` | RFC 6570 简单 `{var}` 路径段零拷贝匹配与参数提取（不匹配返回 `null`，输出截断安全） |
+| `McpResourceRouter.init(routes, subscriptions)` | 使用调用方固定路由表与订阅表槽位初始化零堆分配资源路由器 |
+| `router.registerTemplate(route_id, uri_template, mime_type, read_only)` | 注册静态 URI 或模板路由（拒绝 `route_id == 0`、非法模板、重复 ID/模板与满槽） |
+| `router.unregisterRoute(route_id)` / `router.getRoute(slot_index)` | 按 `route_id` 注销路由释放槽位 / 按槽位索引获取只读副本 |
+| `router.resolveUri(uri, out_params)` | 解析资源 URI（严格优先精确静态路由，未命中时再按槽位顺序匹配模板路由） |
+| `router.subscribe(client_id, uri)` / `router.unsubscribe(client_id, uri)` | 客户端资源变更订阅（幂等去重）与退订 |
+| `router.unsubscribeClient(client_id)` | 批量清理指定客户端的全部订阅（客户端断连回收） |
+| `router.collectSubscribers(uri, out_client_ids)` | 收集指定 URI 的全部订阅客户端 ID 用于变更广播扇出（输出截断安全） |
+| `router.stats()` | 返回路由/订阅槽位占用与解析命中/未命中/广播累计统计快照 `McpResourceRouterStats` |
 
 ## 4. 示例
 
@@ -158,5 +171,44 @@ pub fn demoMcpSessionLifecycle() {
     let timed_out: []u64 = timed_out_buf[0..];
     const expired_count = sess.collectTimedOut(2500, timed_out); // 回收请求 2
     * = expired_count;
+}
+```
+
+### MCP 资源 URI 模板路由与变更订阅广播示例 (`resource_router.cp`)
+
+```cp
+import {
+    UriParamCapture,
+    McpResourceRoute,
+    McpSubscription,
+    McpResourceRouter,
+} from "cap:mcp";
+
+pub fn demoMcpResourceRouter() {
+    let route_buf: [8]McpResourceRoute = [McpResourceRoute{}; 8];
+    let sub_buf: [16]McpSubscription = [McpSubscription{}; 16];
+    let routes: []McpResourceRoute = route_buf[0..];
+    let subs: []McpSubscription = sub_buf[0..];
+    let router = McpResourceRouter.init(routes, subs);
+
+    // 注册模板路由与精确静态路由（静态路由自动优先于模板路由）
+    * = router.registerTemplate(10, "db://{schema}/{table}", "application/json", true);
+    * = router.registerTemplate(20, "db://public/users", "application/vnd.mcp.users+json", false);
+
+    // 解析 URI 并零拷贝提取模板变量
+    let params_buf: [4]UriParamCapture = [UriParamCapture{}; 4];
+    let params: []UriParamCapture = params_buf[0..];
+    if (hit := router.resolveUri("db://analytics/events", params)) {
+        // hit.route_id == 10, hit.param_count == 2 (schema="analytics", table="events")
+        * = hit;
+    }
+
+    // 多客户端幂等订阅与变更广播扇出
+    * = router.subscribe(101, "db://public/users");
+    * = router.subscribe(102, "db://public/users");
+    let targets_buf: [8]u32 = [0; 8];
+    let targets: []u32 = targets_buf[0..];
+    const fanout_count = router.collectSubscribers("db://public/users", targets); // 2
+    * = fanout_count;
 }
 ```
