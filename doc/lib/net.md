@@ -557,6 +557,51 @@ pub fn demoHappyEyeballs() {
 }
 ```
 
+## 自适应网络重试退避与全局防重试风暴预算门控 (`adaptive_retry.cp`)
+
+面向 Google SRE / Envoy / AWS Architecture 防级联雪崩模型的 100% 纯 CP 零动态堆分配自适应重试退避、服务端 `Retry-After` 夹紧与令牌桶式全局重试预算门控引擎：
+
+- **常量与枚举**：
+  - `RETRY_BPS_DENOM = 10_000`、`RETRY_DEFAULT_RATIO_BPS = 2_000`（20%）、`RETRY_DEFAULT_MAX_DELAY_MS = 30_000`
+  - `RetryJitterMode`（`none | full_jitter | equal_jitter | decorrelated_jitter`，底层确定性 SplitMix64 PRNG）
+  - `RetryErrorClass`（可重试：`transient_network | timeout | rate_limited_429 | server_5xx`；不可重试：`client_4xx | cancelled`）
+  - `RetryDecisionKind`（`retry_allowed | reject_non_retryable | reject_max_attempts | reject_deadline_exceeded | reject_budget_exhausted`）
+- **配置与纯函数**：
+  - `RetryPolicyConfig`（`max_attempts`, `base_delay_ms`, `max_delay_ms`, `jitter_mode`, `respect_retry_after`, `max_retry_after_ms`；`defaults()` / `isValid()`）
+  - `RetryBudgetConfig`（`retry_ratio_bps`, `min_retries_per_sec`, `max_budget_tokens`, `initial_tokens`；`defaults()` / `isValid()`）
+  - `RetryDecision`、`RetryControllerStats`
+  - `isRetryableError(err_class)` / `computeBackoffDelayMs(cfg, attempt_idx, prev_delay_ms, rng_state: *u64): u64`（溢出保护饱和指数退避 + 4 种抖动）
+- **核心引擎 `AdaptiveRetryController`**：
+  - `init(policy, budget, rng_seed, start_ms): AdaptiveRetryController?`
+  - `recordNormalRequest(*_, now_ms)`：按 `retry_ratio_bps` 与经过时间 `min_retries_per_sec` 补充预算令牌（带时钟回退保护与桶上限夹紧）。
+  - `evaluateRetry(*_, err_class, attempt_idx, prev_delay_ms, retry_after_ms, now_ms, deadline_ms): RetryDecision`：依次执行错误可重试校验 -> 尝试次数校验 -> `Retry-After` 夹紧/抖动退避计算 -> 截止时间防溢出校验 -> 全局预算扣减（仅最终 `retry_allowed` 时消耗令牌）。
+  - `availableBudgetTokens()` / `stats()`
+
+```cp
+import {
+    RetryErrorClass,
+    RetryDecisionKind,
+    RetryPolicyConfig,
+    RetryBudgetConfig,
+    AdaptiveRetryController,
+} from "cap:net";
+
+pub fn demoAdaptiveRetry() {
+    let ctrl = AdaptiveRetryController.init(
+        RetryPolicyConfig.defaults(),
+        RetryBudgetConfig.defaults(),
+        42,
+        10_000,
+    ) ?? return;
+
+    ctrl.recordNormalRequest(10_000);
+    const decision = ctrl.evaluateRetry(RetryErrorClass.rate_limited_429, 1, 0, 1500, 10_000, 15_000);
+    if (decision.kind == RetryDecisionKind.retry_allowed) {
+        * = decision.delay_ms; // 1500 (采纳并夹紧 Retry-After)
+    }
+}
+```
+
 ---
 
 ## 收敛子模块深度文档

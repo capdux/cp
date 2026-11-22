@@ -1816,3 +1816,20 @@ export {
     HeStats,
     HappyEyeballsEngine,
 } from "./happy_eyeballs.cp";
+
+// --- adaptive_retry ---
+export {
+    RETRY_BPS_DENOM,
+    RETRY_DEFAULT_RATIO_BPS,
+    RETRY_DEFAULT_MAX_DELAY_MS,
+    RetryJitterMode,
+    RetryErrorClass,
+    RetryDecisionKind,
+    RetryPolicyConfig,
+    RetryBudgetConfig,
+    RetryDecision,
+    RetryControllerStats,
+    isRetryableError,
+    computeBackoffDelayMs,
+    AdaptiveRetryController,
+} from "./adaptive_retry.cp";
