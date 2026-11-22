@@ -129,13 +129,28 @@ const items: [2]CompletionItem = [
 let buf: [128]u8 = [0; 128];
 const n = formatCompletionItems(sh, items[0..], "bu", buf[0..])?; // "build\tBuild project"
 ```
+- **Yarn v1/v2 命令分类与包管理进度标签渲染 (`lib/cli/pm_commands.cp`，吸收自 `/data/dev/bun/src/cli/list-of-yarn-commands.cp` & `src/install/PackageManager/ProgressStrings.cp`)**：
+  - 类型与函数：`PmCommandsError` (`BufferTooSmall`)、`YarnCommandEra`（`none`/`v1_only`/`v2_only`/`both`）、`PmStage`（`resolve`/`extract`/`install`/`save_lockfile`/`run_script`）、`yarnCommandEra`、`isYarnCommand`、`mapYarnToCapSubcommand`、`pmStagePlainName`、`pmStageLabel`、`formatPmStageBanner`。
+
+```typescript
+import { PmStage, yarnCommandEra, mapYarnToCapSubcommand, formatPmStageBanner } from "cap:cli";
+
+const era = yarnCommandEra("dlx"); // YarnCommandEra.v2_only
+const mapped = mapYarnToCapSubcommand("up") ?? ""; // "update"
+let buf: [128]u8 = [0; 128];
+const banner = formatPmStageBanner(buf[0..], PmStage.install, "lodash@4.17.21", false)?;
+// "Installing lodash@4.17.21"
+* = era;
+* = mapped;
+* = banner;
+```
 
 ---
 
 ## 上游 Bun 行为契约与终端边界注意事项
 
-1. **色彩降级与环境变量优先级（`lib/cli/color.cp`）**：
-   - `detectColorLevel` 严格遵循标准终端环境变量契约：`NO_COLOR` 非空或 `TERM=dumb` 时强制关闭色彩；`FORCE_COLOR`（`0`/`1`/`2`/`3`）优先覆盖非 TTY 重定向探测；`COLORTERM=truecolor|24bit` 启用 24-bit TrueColor；在 CI 环境（`lib/cli/ci_info.cp`）中自动识别非交互流水线避免渲染无意义的覆盖式动画帧。
+1. **色彩降级与环境变量优先级（`lib/cli/color.cp` & `lib/cli/pm_commands.cp`）**：
+   - `detectColorLevel` 严格遵循标准终端环境变量契约：`NO_COLOR` 非空或 `TERM=dumb` 时强制关闭色彩；`FORCE_COLOR`（`0`/`1`/`2`/`3`）优先覆盖非 TTY 重定向探测；`COLORTERM=truecolor|24bit` 启用 24-bit TrueColor；在 CI 环境（`lib/cli/ci_info.cp`）中自动识别非交互流水线，并通过 `pmStageLabel(stage, false)` / `formatPmStageBanner(..., false)` 自动降级为无 Emoji 的纯文本进度输出（配合 `/data/dev/bun/docs/pm/cli/pm.mdx` 的 `--quiet` 脚本静默输出规范）。
 2. **参数解析 `--` 终止哨兵（`CliArgs`）**：
    - 遇到独立 `--` 标志后，其后所有参数无论是否以 `-` 开头均按位置参数透传，与 POSIX `getopt` 及 Bun CLI 参数规范完全一致。
 3. **非 TTY 与管道重定向安全回退**：
