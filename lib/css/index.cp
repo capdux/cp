@@ -500,3 +500,13 @@ export {
     CssMozDocumentRule,
     CssMozDocumentRuleList,
 } from "./document_rule.cp";
+
+export {
+    CSS_TAILWIND_MAX_RULES,
+    CSS_TAILWIND_MAX_APPLY_CLASSES,
+    CssTailwindError,
+    CssTailwindStyleName,
+    CssTailwindAtRule,
+    CssTailwindApplyRule,
+    CssTailwindDirectiveList,
+} from "./tailwind_rule.cp";

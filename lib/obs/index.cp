@@ -221,3 +221,21 @@ export {
     formatExemplarOpenMetrics,
     AlignedHistogramExemplarReservoir,
 } from "./exemplar_reservoir.cp";
+
+// --- Zero-Alloc Prometheus / OpenTelemetry High-Cardinality Guard & __overflow__ Rollup ---
+
+export {
+    CARD_MAX_METRICS,
+    CARD_MAX_SERIES,
+    CARD_HLL_REGISTERS,
+    CARD_OVERFLOW_LABEL,
+    CardinalityOverflowPolicy,
+    CardinalityDecision,
+    MetricQuotaConfig,
+    MetricCardinalitySnapshot,
+    CardinalityGuardStats,
+    fnv1aHash64,
+    computeSeriesFingerprint,
+    labelValueOrOverflow,
+    CardinalityGuard,
+} from "./cardinality_guard.cp";

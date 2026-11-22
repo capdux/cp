@@ -634,6 +634,24 @@ const n = strict_rule.toCssMinified(out[0..])?;
 * = n;
 ```
 
+### CSS Tailwind 指令（`@tailwind` / `@apply`）解析与级联诊断（`tailwind_rule.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/rules/tailwind.cp` 与 `/data/dev/bun/docs/bundler/css.mdx`，零堆分配实现 Tailwind `@tailwind <base|components|utilities|variants>;` 指令解析与序列化、`@apply` 实用类列表解析（支持方括号任意值如 `bg-[#1da1f2]` 与末尾 `!important`）、样式表批量提取（含行列号追踪）、重复层检测及标准级联顺序校验（`base < components < utilities < variants`）。
+
+- 核心导出：`CSS_TAILWIND_MAX_RULES` (`32`)、`CSS_TAILWIND_MAX_APPLY_CLASSES` (`32`)、`CssTailwindError`、`CssTailwindStyleName`（`Base`/`Components`/`Utilities`/`Variants` + `fromStr`/`asStr`/`cascadeOrder`）、`CssTailwindAtRule`（`of`/`parse`/`cascadeOrder`/`eql`/`toCss`）、`CssTailwindApplyRule`（`parse`/`count`/`at`/`contains`/`toCss`）、`CssTailwindDirectiveList`（`extractFromStylesheet`/`count`/`at`/`hasLayer`/`hasDuplicateLayers`/`isCanonicalOrder`）。
+
+```cp
+import { CssTailwindDirectiveList, CssTailwindApplyRule } from "cap:css";
+
+const list = CssTailwindDirectiveList.extractFromStylesheet(
+    "@tailwind base;\n@tailwind components;\n@tailwind utilities;\n"
+)?;
+const ok_order = list.isCanonicalOrder() && !list.hasDuplicateLayers(); // true
+const applied = CssTailwindApplyRule.parse("@apply flex items-center bg-[#1da1f2] !important;")?;
+* = ok_order;
+* = applied;
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项
@@ -668,3 +686,6 @@ const n = strict_rule.toCssMinified(out[0..])?;
 11. **`@-moz-document` 严格模式与域名匹配安全边界（`document_rule.cp`）**：
     - 仅 Firefox 曾实现该规则且现代版本出于隐私限制仅保留无参 `@-moz-document url-prefix()`（用作 Firefox 特性检测）；与 Bun/LightningCSS 保持一致，默认拒绝非 `-moz` 前缀（如 `@document` / `@-webkit-document` 返回 `UnsupportedPrefix`），生产打包推荐使用 `parseStrict()` 强制约束；
     - `domain("example.com")` 匹配器严格校验点号边界，匹配 `example.com` 与 `sub.example.com`，绝不误匹配 `evil-example.com`；自动剥离 URL 中的 `userinfo@` 与 `:port`。
+12. **Tailwind `@tailwind` / `@apply` 指令级联与插件透传契约（`tailwind_rule.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
+    - `@tailwind` 仅允许 `base` / `components` / `utilities` / `variants` 四种标准层名且严禁附带块 `{...}`；推荐按 `base -> components -> utilities -> variants` 严格递增顺序声明并通过 `isCanonicalOrder()` 与 `hasDuplicateLayers()` 在打包预处理阶段执行静态诊断；
+    - `@apply` 的 `!important` 修饰符必须位于实用类列表末尾，方括号任意值（如 `grid-cols-[1fr_2fr]`）内部括号须严格平衡。

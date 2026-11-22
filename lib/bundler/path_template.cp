@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/options.cp | Synced: 2026-11-22T10:11:21Z
+// Source: Absorbed from /data/dev/bun/src/bundler/options.cp | Synced: 2026-11-22T12:08:48Z
 // Pure-CP zero-allocation bundler output path template engine (`[dir]`, `[name]`, `[ext]`,
 // `[hash]`, `[target]`) with official entry/chunk/asset presets, POSIX/Windows slash
 // normalization, strict placeholder & traversal validation, and deterministic truncated hex hash formatting.

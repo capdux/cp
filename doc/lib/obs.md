@@ -351,6 +351,45 @@ pub fn demoExemplarReservoir() {
 }
 ```
 
+### 零分配指标高基数防护与 `__overflow__` 自动归并守卫 (`cardinality_guard.cp`)
+
+面向 Prometheus / OpenTelemetry 生产可观测性管道的 100% 纯 CP 零动态堆分配高基数防护与溢出归并控制器：
+
+- **常量与枚举**：
+  - `CARD_MAX_METRICS = 32`、`CARD_MAX_SERIES = 1024`（开放寻址哈希表固定容量）、`CARD_HLL_REGISTERS = 64`（每指标 64 桶 HyperLogLog 寄存器，基于原生 `@clz`）、`CARD_OVERFLOW_LABEL = "__overflow__"`
+  - `CardinalityOverflowPolicy`（`drop` | `rollup_overflow_label` | `warn_only`）
+  - `CardinalityDecision`（`allow_existing` | `allow_new` | `rewrite_to_overflow` | `drop_over_limit` | `unknown_metric`）
+- **数据模型与纯函数**：
+  - `MetricQuotaConfig`（`metric_id`, `max_series`, `max_label_value_len`, `overflow_policy`；提供 `defaultRollup`, `defaultDrop`, `isValid`）
+  - `MetricCardinalitySnapshot`、`CardinalityGuardStats`
+  - `fnv1aHash64(bytes)` / `computeSeriesFingerprint(metric_id, label_kv_bytes)` / `labelValueOrOverflow(value, max_label_value_len)`
+- **核心引擎 `CardinalityGuard`**：
+  - `init()` / `registerMetric(*_, cfg): bool`（拦截 `max_series == 0`、重复 `metric_id` 与满指标表）
+  - `admitSeries(*_, metric_id, label_fingerprint, now_ms): CardinalityDecision`：已存在序列走快速路径永不限流；新序列超限时按策略自动归并至 `__overflow__`、丢弃或告警，同时持续更新 64 桶 HyperLogLog 寄存器以保留超限后真实基数可见性。
+  - `evictStaleSeries(*_, cutoff_ms): usize` / `resetMetricWindow(*_, metric_id): bool`：TTL 冷序列驱逐（支持 Tombstone 槽位复用）与单指标窗口轮转。
+  - `estimateMetricCardinality(metric_id): f64?` / `getMetricSnapshot(metric_id)` / `guardLabelValue(metric_id, value)` / `stats()`
+
+```cp
+import {
+    CardinalityDecision,
+    MetricQuotaConfig,
+    computeSeriesFingerprint,
+    CardinalityGuard,
+} from "cap:obs";
+
+pub fn demoCardinalityGuard() {
+    let guard = CardinalityGuard.init();
+    * = guard.registerMetric(MetricQuotaConfig.defaultRollup(101, 4));
+
+    const fp = computeSeriesFingerprint(101, "route=/api/chat,region=us-east");
+    const decision = guard.admitSeries(101, fp, 1_700_000_000_000);
+    if (decision == CardinalityDecision.rewrite_to_overflow) {
+        // 将高基数标签值重写为 "__overflow__" 后上报，防止 TSDB 内存暴涨
+    }
+    * = guard.evictStaleSeries(1_700_000_060_000);
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
