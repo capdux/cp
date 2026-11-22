@@ -181,3 +181,47 @@ pub fn demoHeavyHitterAndCms() {
     * = est;
 }
 ```
+
+---
+
+## 零分配 Fenwick 树状数组与 O(log N) 动态顺序统计/加权采样引擎（`fenwick_order.cp`）
+
+面向实时动态前缀和、流式第 K 小顺序统计（Binary Lifting）与 O(log N) 动态加权随机采样（如动态权重路由表、优先级队列与词表采样）的 100% 纯 CP 零动态堆分配 Fenwick / Binary Indexed Tree 内核：
+
+- **常量与统计**：`FENWICK_MAX_LEN = 1024`、`FenwickStats`（`len`, `total_sum`, `updates_count`）。
+- **有符号前缀/区间和树（`FenwickTreeI64`）**：
+  - `init(len)` / `build_from_slice(values)`（严格 $O(N)$ 线性建树）
+  - `add(*_, idx, delta)` / `set(*_, idx, new_val)` / `point_value(idx)` / `prefix_sum(idx_inclusive)` / `range_sum(lo, hi_inclusive)` / `total_sum()` / `stats()`。
+- **非负顺序统计与加权采样树（`FenwickOrderStat`）**：
+  - `init(len)` / `add_weight(*_, idx, delta)` / `sub_weight(*_, idx, delta)`（防下溢，拒绝减成负数）
+  - `prefix_weight(idx_inclusive)` / `total_weight()`
+  - `find_lower_bound(target_cumulative: u64): usize?`：严格 $O(\log N)$ 二进制倍增查找满足 `prefix_weight(idx) >= target_cumulative` 的最小索引（自动跳过零权重空洞）。
+  - `sample_weighted_index(rng_val: u64): usize?`：将任意 `u64` 均匀映射到 `[1, total_weight()]` 并按权重比例 $O(\log N)$ 采样。
+
+### QuickStart 示例
+
+```cp
+import {
+    FenwickTreeI64,
+    FenwickOrderStat,
+} from "cap:ds";
+
+pub fn demoFenwickOrderStat() {
+    // 1. O(N) 线性建树 + 动态点更与区间和
+    const vals: [5]i64 = [10, -3, 7, 4, -2];
+    let ft = FenwickTreeI64.build_from_slice(vals[0..]) ?? return;
+    * = ft.add(1, 5);                 // vals[1]: -3 -> 2
+    const rsum = ft.range_sum(1, 3);  // 2 + 7 + 4 = 13
+
+    // 2. O(log N) 动态第 K 小与加权路由采样
+    let os = FenwickOrderStat.init(4) ?? return;
+    * = os.add_weight(0, 10);
+    * = os.add_weight(2, 30); // idx 1 为零权重空洞
+    * = os.add_weight(3, 60);
+    const kth = os.find_lower_bound(11) ?? 0; // 自动跳过 idx 1 -> 返回 2
+    const sampled = os.sample_weighted_index(123456789) ?? 0;
+    * = rsum;
+    * = kth;
+    * = sampled;
+}
+```

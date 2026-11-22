@@ -448,6 +448,34 @@ const compiled = compileHtmlChunk(html, opts, out[0..])?;
 * = compiled;
 ```
 
+### 3.22 CSS `@import` 依赖排序与 Last-Wins 层叠去重引擎（`lib/bundler/css_import_order.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/findImportedFilesInCSSOrder.cp` 与 `/data/dev/bun/docs/bundler/css.mdx`）
+- **常量与错误集**：`CSS_IMPORT_MAX_FILES` (`64`)、`CSS_IMPORT_MAX_RULES_PER_FILE` (`16`)、`CSS_IMPORT_MAX_CONDITIONS` (`8`)、`CSS_IMPORT_MAX_ORDER_ENTRIES` (`256`)、`CSS_IMPORT_MAX_DEPTH` (`32`)、`CssImportOrderError`
+- **核心类型与方法**：`CssImportCondition`、`CssConditionStack`（`push()` / `eql()` / `isRedundantBefore()`）、`CssImportRuleKind`（`Internal` / `External` / `Composes`）、`CssImportRule`、`CssImportFile`、`CssImportEntryKind`（`SourceFile` / `ExternalUrl` / `LayersOnly`）、`CssImportOrderEntry`、`CssImportOrderResult`、`CssImportGraph`（`init()` / `addFile()` / `addImport()` / `addExternalImport()` / `addComposes()` / `computeCssOrder()`）。
+- **核心算法契约**：
+  - 100% 零动态堆分配：遵循 WebKit `StyleRuleImport` 父链环路检测语义，安全处理循环 `@import`；
+  - 外链 `@import` 自动顶置至文件头部以满足 CSS 语法规范；
+  - 逆序 Last-Wins 去重：菱形依赖 `A -> B, C` 且 `B, C -> D` 初始遍历为 `D B D C A`，去重后保留最后一次求值 `B D C A`；若 `D` 含 `@layer` 声明，则首次出现降级为 `LayersOnly` 占位符以保留 CSS Cascade Layers 声明顺序；条件 `@import`（`layer`/`supports`/`media`）仅在后继无条件或条件链完全一致时才判定前驱冗余。
+
+```cp
+import { CssImportGraph, CssImportCondition } from "cap:bundler";
+
+let g = CssImportGraph.init();
+const s_d = g.addFile(4, true)?; // D 含 @layer 声明
+const s_b = g.addFile(2, false)?;
+const s_c = g.addFile(3, false)?;
+const s_a = g.addFile(1, false)?;
+const none = CssImportCondition{};
+g.addImport(s_a, 2, none)?;
+g.addImport(s_a, 3, none)?;
+g.addImport(s_b, 4, none)?;
+g.addImport(s_c, 4, none)?;
+
+const entries: [1]u32 = [1];
+const res = g.computeCssOrder(entries[0..])?;
+// 输出: D(LayersOnly) -> B -> D(SourceFile) -> C -> A
+* = res;
+```
+
 ---
 
 ## 四、 上游行为契约、边界与安全注意事项
@@ -479,3 +507,6 @@ const compiled = compileHtmlChunk(html, opts, out[0..])?;
 9. **单文件 Standalone HTML 打包与防闭合标签注入（吸收自 `/data/dev/bun/docs/bundler/standalone-html.mdx`）**：
    - 使用 `bun build --compile --target=browser ./index.html` 可将整个前端应用（JS/TS/JSX、CSS、图片、字体、WASM）内联为单一自包含 `.html` 文件，无需任何相对路径或本地 HTTP 服务即可离线双击打开、嵌入 WebView 或单文件上传至 S3/CDN；
    - 在 `compileHtmlChunk(..., standalone_html = true)` 中，CSS 内联为 `<style>` 置于 `</head>` 前以避免样式闪烁，JS 内联为 `<script type="module">` 置于 `</body>` 前以确保 DOM 节点完成解析；内联正文必须经过 `writeEscapedInlineScript` / `writeEscapedInlineStyle` 将任意大小写的 `</script`/`</style` 转义为 `<\/script`/`<\/style`，外链 URL 必须经过 `writeEscapedAttrUrl` 防止属性逃逸。
+10. **CSS `@import` 多次求值与 `@layer` 首次声明保留（吸收自 `/data/dev/bun/src/bundler/linker_context/findImportedFilesInCSSOrder.cp` & `/data/dev/bun/docs/bundler/css.mdx`）**：
+    - 与 JS ESM 模块“首次求值缓存”语义不同，CSS `@import` 每次出现均参与层叠覆盖，因此 `CssImportGraph` 采用“保留最后一次（Last-Wins）”去重策略；但 CSS `@layer` 的优先级由**首次声明顺序**决定，故当被覆盖的早先文件声明了 `@layer` 时必须降级保留为 `CssImportEntryKind.LayersOnly`；
+    - 外部 `@import`（如 CDN 字体样式）必须被顶置至打包文件最顶部以保证浏览器正常解析；带 `@media`/`@supports` 条件的后继导入不能覆盖无条件或不同条件的前驱导入。

@@ -287,3 +287,21 @@ export {
     writeEscapedInlineStyle,
     compileHtmlChunk,
 } from "./html_chunk";
+
+export {
+    CSS_IMPORT_MAX_FILES,
+    CSS_IMPORT_MAX_RULES_PER_FILE,
+    CSS_IMPORT_MAX_CONDITIONS,
+    CSS_IMPORT_MAX_ORDER_ENTRIES,
+    CSS_IMPORT_MAX_DEPTH,
+    CssImportOrderError,
+    CssImportCondition,
+    CssConditionStack,
+    CssImportRuleKind,
+    CssImportRule,
+    CssImportFile,
+    CssImportEntryKind,
+    CssImportOrderEntry,
+    CssImportOrderResult,
+    CssImportGraph,
+} from "./css_import_order";

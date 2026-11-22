@@ -228,3 +228,11 @@ export {
     CmsSketchConfig,
     ConservativeCms,
 } from "./heavy_hitter.cp";
+
+// --- fenwick_order ---
+export {
+    FENWICK_MAX_LEN,
+    FenwickStats,
+    FenwickTreeI64,
+    FenwickOrderStat,
+} from "./fenwick_order.cp";
