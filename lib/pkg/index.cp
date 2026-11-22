@@ -899,3 +899,27 @@ export {
     reconcileResolvedGraph,
     formatResolveQueueReport,
 } from "./resolveQueue.cp";
+
+export {
+    ORCH_DEFAULT_MAX_DOWNLOADS,
+    ORCH_DEFAULT_MAX_EXTRACTS,
+    InstallOrchestratorError,
+    LockSnapshotEntry,
+    InstallDiffOpKind,
+    InstallDiffOp,
+    InstallDiffOptions,
+    InstallDiffSummary,
+    OrchPkgPhase,
+    OrchActionKind,
+    OrchDispatchItem,
+    OrchPkgRecord,
+    OrchTimingMetrics,
+    OrchStats,
+    RollbackActionKind,
+    RollbackAction,
+    RollbackPlanSummary,
+    diffLockfileSnapshots,
+    InstallOrchestrator,
+    planInstallRollback,
+    formatInstallSummaryReport,
+} from "./installOrchestrator.cp";

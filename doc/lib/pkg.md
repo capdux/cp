@@ -1352,3 +1352,35 @@ if (next := q.popNextReady(0)) {
 }
 * = id;
 ```
+
+### Lockfile 增量 Diff、安装事务编排与原子回滚引擎（`installOrchestrator.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/PackageInstaller.cp`（纯 CP 零堆分配、全外部切片驱动）；
+- **核心导出**：
+  - Lockfile 增量 Diff：`InstallOrchestratorError`、`LockSnapshotEntry`、`InstallDiffOpKind`（`Add`/`Remove`/`Upgrade`/`Downgrade`/`ReinstallIntegrityMismatch`/`KeepUnchanged`）、`InstallDiffOp`、`InstallDiffOptions`（支持 `frozen_lockfile` 与 `force_reinstall`）、`InstallDiffSummary`、`diffLockfileSnapshots`；
+  - 并发安装编排状态机：`OrchPkgPhase`（`Pending -> CacheCheck -> Downloading -> VerifyingSri -> Extracting -> Linking -> Postinstall -> Installed` / `Failed` / `RolledBack`）、`OrchActionKind`、`OrchDispatchItem`、`OrchPkgRecord`、`OrchTimingMetrics`、`OrchStats`、`InstallOrchestrator`（`init` / `loadDiffOps` / `dispatchNextBatch` 按 `max_downloads`/`max_extracts` 限流派发 / `onCacheCheckDone` 缓存命中直通 Linking / `onDownloadDone` / `onSriVerified` / `onExtractDone` / `onLinkDone` / `onPostinstallDone` / `onPackageFailed`）；
+  - 逆序原子回滚规划与报表：`RollbackActionKind`（`UnlinkBin`/`RemoveNewDir`/`RestoreBackup`/`CleanupTemp`）、`RollbackAction`、`RollbackPlanSummary`、`planInstallRollback`、`formatInstallSummaryReport`。
+
+```cp
+import {
+    LockSnapshotEntry,
+    InstallDiffOp,
+    InstallDiffOptions,
+    OrchPkgRecord,
+    OrchDispatchItem,
+    diffLockfileSnapshots,
+    InstallOrchestrator,
+} from "cap:pkg";
+
+const cur: [0]LockSnapshotEntry = [];
+const tgt: [1]LockSnapshotEntry = [
+    LockSnapshotEntry{ name: "zod", version: "3.23.8", integrity_hash64: 0xAA, install_path: "cap_modules/zod" },
+];
+let ops: [4]InstallDiffOp = [InstallDiffOp.empty(); 4];
+const diff_sum = diffLockfileSnapshots(cur[0..], tgt[0..], InstallDiffOptions.defaults(), ops[0..])?;
+let recs: [4]OrchPkgRecord = [OrchPkgRecord.empty(); 4];
+let orch = InstallOrchestrator.init(recs[0..], 4, 2);
+* = orch.loadDiffOps(ops[0..@as(usize, diff_sum.total_ops)])?;
+let batch: [4]OrchDispatchItem = [OrchDispatchItem.empty(); 4];
+* = orch.dispatchNextBatch(batch[0..]);
+```
