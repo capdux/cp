@@ -98,3 +98,13 @@ export {
     McpToolDispatcher,
     McpToolResultBuilder,
 } from "./tool_dispatch.cp";
+
+export {
+    McpArgType,
+    McpArgRule,
+    McpArgViolationKind,
+    McpArgViolation,
+    McpArgValidationReport,
+    validateMcpToolArgs,
+    formatMcpArgErrorHint,
+} from "./arg_validator.cp";

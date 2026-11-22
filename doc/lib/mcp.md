@@ -347,3 +347,50 @@ pub fn demoMcpToolDispatch() {
     }
 }
 ```
+
+---
+
+## 十、 零堆分配 MCP 工具参数严格约束校验与 AI 友好错误提示器 (`arg_validator.cp`)
+
+面向生产级 MCP Tool Server 的零拷贝顶层 JSON 参数校验器与 LLM 自愈提示渲染器：
+
+- **声明式约束与违规报告**：
+  - `McpArgType`：`Str | Int | Float | Bool | Array | Object`
+  - `McpArgRule`：`name`、`kind`、`required`、`min_len` / `max_len`（字符串解码长度上下界）、`min_int` / `max_int` / `has_int_bounds`（整数闭合区间）、`enum_csv`（逗号分隔白名单，如 `"asc,desc"`）
+  - `McpArgViolationKind`：`MalformedJson | MissingRequired | TypeMismatch | StringTooShort | StringTooLong | IntOutOfRange | EnumMismatch | DuplicateKey`
+  - `McpArgViolation`、`McpArgValidationReport`
+- **核心函数**：
+  - `validateMcpToolArgs(args_json, rules, out_violations): McpArgValidationReport`：零堆分配单遍扫描 RFC 8259 顶层 JSON 对象键值对，自动跳过嵌套 `{...}` / `[...]` 防止内层同名键误判，完整校验必填性、类型匹配、字符串长度、整数区间、枚举白名单与重复键。
+  - `formatMcpArgErrorHint(report, violations, out_buf): usize?`：零堆输出精准可读的 LLM 自愈修正提示（明确告知违规字段名与合法约束区间/白名单，缓冲不足返回 `null`）。
+
+```cp
+import {
+    McpArgType,
+    McpArgRule,
+    McpArgViolation,
+    validateMcpToolArgs,
+    formatMcpArgErrorHint,
+} from "cap:mcp";
+
+pub fn demoMcpArgValidator() {
+    const rules: [3]McpArgRule = [
+        McpArgRule{ name: "query", kind: McpArgType.Str, required: true, min_len: 1, max_len: 64 },
+        McpArgRule{ name: "limit", kind: McpArgType.Int, required: false, min_int: 1, max_int: 100, has_int_bounds: true },
+        McpArgRule{ name: "order", kind: McpArgType.Str, required: false, enum_csv: "asc,desc" },
+    ];
+    let violations: [4]McpArgViolation = [McpArgViolation{}; 4];
+    const report = validateMcpToolArgs(
+        "{\"query\":\"cp stdlib\",\"limit\":250,\"order\":\"random\"}",
+        rules[0..],
+        violations[0..],
+    );
+
+    if (!report.valid) {
+        let hint_buf: [256]u8 = [0; 256];
+        if (n := formatMcpArgErrorHint(report, violations[0..], hint_buf[0..])) {
+            // "Invalid tool arguments: field 'limit' out of range (allowed [1, 100]); field 'order' invalid value (allowed: asc,desc)"
+            * = hint_buf[0..n];
+        }
+    }
+}
+```
