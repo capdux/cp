@@ -7,7 +7,7 @@ import {
     THREAD_LOCK_INVALID_ID,
     ThreadLockError,
     ThreadLock,
-} from "../../lib/sync/threadLock.cp";
+} from "cap:sync";
 
 test("ThreadLock: initUnlocked, initLocked, lock, assertLocked & unlock", () => {
     assertEq(THREAD_LOCK_INVALID_ID, 0);

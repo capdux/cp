@@ -20,7 +20,7 @@ export struct FreshnessInput {
     request_time_sec: i64,
     response_time_sec: i64,
 
-    pub fn empty(is_shared_cache: bool, request_time_sec: i64, response_time_sec: i64): FreshnessInput {
+    pub static fn empty(is_shared_cache: bool, request_time_sec: i64, response_time_sec: i64): FreshnessInput {
         return FreshnessInput {
             is_shared_cache: is_shared_cache,
             max_age_sec: null,

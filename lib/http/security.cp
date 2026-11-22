@@ -83,7 +83,7 @@ export struct HstsPolicy {
     preload: bool;
 
     /// 解析 `Strict-Transport-Security` 头部（必须含合法非负 max-age，大小写无关，支持引号值）
-    fn parse(header: []const u8): HstsPolicy? {
+    static fn parse(header: []const u8): HstsPolicy? {
         let has_max_age = false;
         let max_age: u64 = 0;
         let include_subdomains = false;

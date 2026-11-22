@@ -74,7 +74,7 @@ export struct ProxyUrl {
     port: u16,
 
     /// Parse a proxy URL (`http://[user[:pass]@]host[:port][/]`, `socks5h://...`, or bare `host:port` defaulting to `http`).
-    pub fn parse(raw: []const u8): ProxyUrl? {
+    pub static fn parse(raw: []const u8): ProxyUrl? {
         const s = trimWs(raw);
         if (s.len == 0) return null;
 
@@ -195,7 +195,7 @@ export struct ProxyEnv {
     all_proxy: ([]const u8)?,
     no_proxy: ([]const u8)?,
 
-    pub fn empty(): ProxyEnv {
+    pub static fn empty(): ProxyEnv {
         return ProxyEnv {
             http_proxy: null,
             https_proxy: null,

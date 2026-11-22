@@ -1,7 +1,8 @@
 // Source: Absorbed from /data/dev/bun/src/threading/channel.cp | Synced: 2026-11-22T12:49:17Z
 // Thread-safe bounded channel in CP
 // High-throughput CSP communication primitive
-import { Mutex } from "./mutex";
+import mutexMod from "./mutex";
+const Mutex = mutexMod.Mutex;
 import { Condition } from "./condition";
 
 pub fn Channel(comptime T: type): type {

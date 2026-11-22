@@ -109,7 +109,7 @@ export struct FetchMetadata {
     dest: FetchDest?,
     user_activated: bool,
 
-    pub fn parse(
+    pub static fn parse(
         sec_fetch_site: ([]const u8)?,
         sec_fetch_mode: ([]const u8)?,
         sec_fetch_dest: ([]const u8)?,

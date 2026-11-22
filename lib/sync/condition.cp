@@ -6,7 +6,8 @@
 // Condition variable synchronization primitive in CP
 // Ported from Bun.js core threading architecture
 import { Futex, Deadline } from "./futex";
-import { Mutex } from "./mutex";
+import mutexMod from "./mutex";
+const Mutex = mutexMod.Mutex;
 
 pub struct Condition {
     impl: Impl = .{},

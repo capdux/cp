@@ -7,7 +7,8 @@
 // WorkPool and Guarded<T> synchronization wrappers
 // Absorbed from Bun src/threading/work_pool.cp and guarded.cp with pure CP semantics
 
-import { Mutex } from "./mutex";
+import mutexMod from "./mutex";
+const Mutex = mutexMod.Mutex;
 import { Condition } from "./condition";
 
 // Thread-safe container wrapping a value with an internal Mutex

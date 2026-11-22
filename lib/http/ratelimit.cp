@@ -134,7 +134,7 @@ export struct RateLimitHeader {
     policy_name: ([]const u8)? = null;
 
     /// 解析 IETF `"default";r=50;t=30` 结构化格式或 `limit=100, remaining=50, reset=30` 字典格式
-    fn parse(header: []const u8): RateLimitHeader? {
+    static fn parse(header: []const u8): RateLimitHeader? {
         const s = trimAscii(header);
         if (s.len == 0) {
             return null;
@@ -276,7 +276,7 @@ export struct RateLimitPolicy {
     comment: ([]const u8)? = null;
 
     /// 解析 `100;w=60` 或 `"burst";q=100;w=60`（严格要求 window_sec > 0）
-    fn parse(header: []const u8): RateLimitPolicy? {
+    static fn parse(header: []const u8): RateLimitPolicy? {
         const s = trimAscii(header);
         if (s.len == 0) {
             return null;

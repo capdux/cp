@@ -5,7 +5,8 @@
 // ============================================================================
 // WaitGroup synchronization primitive in CP
 // Ported from Bun.js core threading architecture
-import { Mutex } from "./mutex";
+import mutexMod from "./mutex";
+const Mutex = mutexMod.Mutex;
 import { Condition } from "./condition";
 
 pub struct WaitGroup {
@@ -13,11 +14,11 @@ pub struct WaitGroup {
     mutex: Mutex = .{},
     cond: Condition = .{},
 
-    pub fn init(): WaitGroup {
+    pub static fn init(): WaitGroup {
         return .{};
     }
 
-    pub fn initWithCount(count: usize): WaitGroup {
+    pub static fn initWithCount(count: usize): WaitGroup {
         return .{ .raw_count = .{ .raw = count } };
     }
 

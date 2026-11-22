@@ -15,7 +15,7 @@ pub struct Soa<T> {
         }
     }
 
-    pub fn init(allocator: auto = null): Soa<T> {
+    pub static fn init(allocator: auto = null): Soa<T> {
         let s = Soa<T> {};
         zig {
             s.raw = .{};
@@ -31,7 +31,7 @@ pub struct Soa<T> {
         return s;
     }
 
-    pub fn initCapacity(initial_cap: usize, allocator: auto = null): Soa<T> {
+    pub static fn initCapacity(initial_cap: usize, allocator: auto = null): Soa<T> {
         let s = Soa<T> {};
         zig {
             s.raw = .{};

@@ -5,7 +5,8 @@
 // ============================================================================
 // Striped concurrent hash map in CP
 // Lock contention partitioned across stripes using Wyhash
-import { Mutex } from "./mutex";
+import mutexMod from "./mutex";
+const Mutex = mutexMod.Mutex;
 import { Wyhash } from "./wyhash";
 
 pub fn ConcurrentMap(comptime K: type, comptime V: type): type {

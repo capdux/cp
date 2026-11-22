@@ -28,7 +28,7 @@ export struct EntityTag {
     is_weak: bool,
 
     /// Parse an RFC 9110 entity-tag (`"abc"` or `W/"abc"`).
-    pub fn parse(raw: []const u8): EntityTag? {
+    pub static fn parse(raw: []const u8): EntityTag? {
         const s = trimWs(raw);
         let is_weak = false;
         let rest = s;
@@ -107,7 +107,7 @@ export struct ConditionalRequest {
     if_none_match: ([]const u8)?,
     if_modified_since_sec: i64?,
 
-    pub fn empty(is_get_or_head: bool): ConditionalRequest {
+    pub static fn empty(is_get_or_head: bool): ConditionalRequest {
         return ConditionalRequest {
             is_get_or_head: is_get_or_head,
             if_match: null,
