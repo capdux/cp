@@ -22,7 +22,7 @@ import {
     NsfeChunkIter,
     findNsfeChunk,
     parseNsfeInfo,
-} from "cap:nsf";
+} from "cap:media";
 
 fn writeU16LE(buf: []u8, offset: usize, val: u16) {
     buf[offset] = (val & 0xFF) as u8;

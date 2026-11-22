@@ -22,7 +22,7 @@ import {
     DlsWaveIter,
     isDls,
     parseDls,
-} from "cap:dls";
+} from "cap:media";
 
 struct RiffBuilder {
     buf: [2048]u8 = [0; 2048],

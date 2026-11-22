@@ -21,7 +21,7 @@ import {
     parseVgmGd3,
     decodeUtf16LeToUtf8,
     scanVgmCommands,
-} from "cap:vgm";
+} from "cap:media";
 
 fn writeU16LE(buf: []u8, offset: usize, val: u16) {
     buf[offset] = (val & 0xFF) as u8;

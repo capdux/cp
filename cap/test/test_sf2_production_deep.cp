@@ -19,7 +19,7 @@ import {
     Sf2SampleIter,
     isSf2,
     parseSf2,
-} from "cap:sf2";
+} from "cap:media";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

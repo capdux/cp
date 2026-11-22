@@ -27,7 +27,7 @@ import {
     SpcXid6Iter,
     isSpc,
     parseSpcHeader,
-} from "cap:spc";
+} from "cap:media";
 
 let g_full_spc: [66120]u8 = [0; 66120];
 
