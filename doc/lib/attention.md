@@ -1889,3 +1889,43 @@ pub fn demoMultimodalMrope() {
     applyMropeSequenceInPlaceF32(*q_s, builder.len(), 1, builder.positionsSlice(), inv_buf[0..], cfg) catch return;
 }
 ```
+
+---
+
+### 零分配 KIVI 非对称 2-Bit Per-Channel Key / Per-Token Value KV-Cache 压缩与混合残差注意力引擎 (`quantKivi.cp`)
+
+面向超长上下文大模型推理（16x 理论压缩率，对标 KIVI: Tuning-Free Asymmetric 2bit Quantization for KV Cache）的 100% 纯 CP 零动态堆分配 2-bit KV-Cache 量化与混合残差注意力引擎：
+
+- **常量、错误集与参数模型**：
+  - `KIVI_MAX_HEAD_DIM = 64`、`KIVI_MAX_TOKENS = 128`、`KIVI_PACKED_STRIDE = 16`（每字节紧致打包 4 个 2-bit 量化值 `0..3`）
+  - `KiviError`（`InvalidHeadDim | CapacityFull | DimMismatch`）、`KiviAffineParams`（`scale`, `zero_point`）、`KiviCacheStats`
+- **2-Bit 位打包与量化/内积核**：
+  - `pack2BitQuad(q0, q1, q2, q3): u8` / `unpack2BitLane(packed_byte, lane): u8`
+  - `quantizeToken2BitPerToken(vec, *out_packed)` / `dequantizeToken2BitPerToken(packed_buf, dim, params, *out_vec)`（Value 沿通道维每 Token 独立量化）
+  - `quantizeKeys2BitPerChannel(flat_keys, num_tokens, dim, *out_packed_keys, *out_ch_params)` / `dequantizeKey2BitPerChannel(packed_key, dim, ch_params, *out_vec)`（Key 沿时间维按通道独立计算 `[min_c, max_c]`，完美隔离固定通道离群值）
+  - `kiviDotQueryKey2Bit(q, packed_key, dim, ch_params): f32`（零反量化缓冲直接对 2-bit Key 做非对称内积）
+- **混合残差 KV-Cache 引擎 `KiviKvCache`**：
+  - `init(head_dim, residual_window): KiviKvCache ! KiviError`
+  - `appendToken(*_, k_vec, v_vec): void ! KiviError`（新 Token 先进入全精度 FP32 残差窗口，满窗自动批量触发 Per-Channel Key + Per-Token Value 2-bit 量化归档）
+  - `decodeSingleQuery(q_vec, *out_vec): void ! KiviError`（融合 2-bit 量化主存与 `@dot` 加速的 FP32 残差窗，执行统一数值稳定 Softmax 加权聚合）
+  - `stats(): KiviCacheStats`（返回量化/残差 Token 数、压缩字节数、FP32 等效字节数与百倍压缩比 `compression_ratio_x100`）
+
+```cp
+import { KiviKvCache } from "cap:attention";
+
+pub fn demoKivi2BitKvCache() {
+    let cache = KiviKvCache.init(16, 4) catch return;
+    const k: [16]f32 = [0.5; 16];
+    const v: [16]f32 = [0.25; 16];
+    let i: usize = 0;
+    while (i < 10) : (i += 1) {
+        cache.appendToken(k[0..], v[0..]) catch return; // 前 8 条自动 2-bit 归档，最近 2 条留 FP32 残差
+    }
+
+    const q: [16]f32 = [0.8; 16];
+    let out: [16]f32 = [0.0; 16];
+    let out_s: []f32 = out[0..];
+    cache.decodeSingleQuery(q[0..], *out_s) catch return;
+    * = cache.stats().compression_ratio_x100;
+}
+```

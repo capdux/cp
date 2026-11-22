@@ -491,3 +491,20 @@ export {
     applyMropeMultiHeadInPlaceF32,
     applyMropeSequenceInPlaceF32,
 } from "./mrope.cp";
+
+export {
+    KIVI_MAX_HEAD_DIM,
+    KIVI_MAX_TOKENS,
+    KIVI_PACKED_STRIDE,
+    KiviError,
+    KiviAffineParams,
+    KiviCacheStats,
+    pack2BitQuad,
+    unpack2BitLane,
+    quantizeToken2BitPerToken,
+    dequantizeToken2BitPerToken,
+    quantizeKeys2BitPerChannel,
+    dequantizeKey2BitPerChannel,
+    kiviDotQueryKey2Bit,
+    KiviKvCache,
+} from "./quantKivi.cp";
