@@ -60,3 +60,10 @@ export {
     A2aQueueStats,
     A2aTaskQueue,
 } from "./task_queue.cp";
+
+export {
+    A2aEventKind,
+    A2aStreamEvent,
+    ReplayResult,
+    A2aEventStreamRing,
+} from "./event_stream.cp";

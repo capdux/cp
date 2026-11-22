@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/event_loop/EventLoopTimer.cp | Synced: 2026-11-21T15:51:48Z
+// Source: Absorbed from /data/dev/bun/src/event_loop/EventLoopTimer.cp | Synced: 2026-11-22T02:33:19Z
 // lib/event/timer.cp
 // Intrusive pairing min-heap timer scheduler for cap:event (unified event loop)
 

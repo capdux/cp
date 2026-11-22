@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/values/color.cp | Synced: 2026-11-20T14:42:07Z
+// Source: Absorbed from /data/dev/bun/src/css/values/color.cp | Synced: 2026-11-22T02:36:13Z
 // lib/css/color.cp
 // CSS Color Level 4 Parser & Color Space Converter
 // Supports Hex (3/4/6/8), RGB/RGBA, HSL/HSLA, HWB, OKLAB, OKLCH, 148 W3C Named Colors, WCAG & Mixing

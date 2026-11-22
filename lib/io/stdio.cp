@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/io/source.cp | Synced: 2026-11-20T17:36:08Z
+// Source: Absorbed from /data/dev/bun/src/io/source.cp | Synced: 2026-11-22T02:32:52Z
 /**
  * CP Standard Console and Stdio (cap:io)
  * 标准控制台与终端流输入输出

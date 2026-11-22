@@ -179,3 +179,19 @@ export {
     PrefixCacheStats,
     KvPrefixCache,
 } from "./prefix_cache.cp";
+
+export {
+    gemmTransposedBF32,
+    gemmF32,
+    batchedGemmTransposedBF32,
+    splitGemmRowsF32,
+} from "./tiled_gemm.cp";
+
+export {
+    conv1dCausalF32,
+    depthwiseConv1dF32,
+    hzToMel,
+    melToHz,
+    buildMelFilterbankF32,
+    applyMelFilterbankF32,
+} from "./conv1d.cp";

@@ -108,6 +108,17 @@ fn demoMixedPipeline(): void {
 - **`lib/shell/brace.cp`**（Bash 风格花括号展开零分配迭代器）：`BraceExpandIter`
 - **`lib/shell/cond_expr.cp`**（吸收自 `/data/dev/bun/src/shell/states/CondExpr.cp`，零堆分配 Bash `[[ ... ]]` 条件表达式解析与求值器）：`MAX_COND_DEPTH`、`POSIX_S_*`、`CondExprError`、`CondOp`、`CondFileStat`、`CondStatFn`、`condToExitCode`、`CondExprEvaluator`（支持 `-e/-f/-d/-c/-L/-s/-r/-w/-x` 文件测试、`-z/-n/==/!=/</>` 字符串测试、`-eq/-ne/-lt/-le/-gt/-ge` 64 位整数比较、`&&`/`||`/`!`/`(...)` 逻辑组合与递归深度防护）
 - **`lib/shell/echo.cp`**（吸收自 `/data/dev/bun/src/shell/builtin/echo.cp`，零堆分配 GNU/Bash `echo` 标志解析与反斜杠转义展开引擎）：`EchoError`、`EchoOptions`、`EchoEscapeResult`、`expandEchoEscapes`、`formatEchoArgs`（支持 `-n`/`-e`/`-E` 组合标志、`\\`/`\a`/`\b`/`\c`/`\e`/`\f`/`\n`/`\r`/`\t`/`\v`/`\0NNN`/`\xHH` 转义与 `\c` 提前截断）
+- **`lib/shell/trampoline.cp`**（吸收自 `/data/dev/bun/src/shell/Yield.cp`，零堆分配栈安全 Shell Trampoline & Continuation 调度内核）：`MAX_TRAMPOLINE_REENTRY`、`MAX_PIPELINE_STACK_DEPTH`、`DEFAULT_MAX_TRAMPOLINE_STEPS`、`TrampolineError`、`YieldKind`、`PipelinePhase`、`ShellYield`、`PipelineStack`、`TrampolineResult`、`ShellTrampoline`（支持非递归状态机步进、嵌套管道栈自顶向下 `drainPipelines` 排空、`io_writer_chunk` 续跑、RAII `~init()` 重入深度守卫与步数上限防护）
+
+### 栈安全 Trampoline & Continuation 调度示例（`trampoline.cp`）
+
+```typescript
+import { ShellTrampoline, ShellYield, PipelinePhase } from "cap:shell";
+
+let tramp = ShellTrampoline.init();
+const res = tramp.run(MyCtx, &ctx, ShellYield.forNode(.pipeline, 1), myStepFn, myPhaseFn)?;
+// res.final_yield, res.steps_executed, res.pipelines_drained, res.max_pipeline_depth
+```
 
 ### GNU/Bash `echo` 格式化与转义示例（`echo.cp`）
 

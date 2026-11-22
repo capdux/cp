@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/collections/multi_array_list.cp | Synced: 2026-11-21T12:32:12Z
+// Source: Absorbed from /data/dev/bun/src/collections/multi_array_list.cp | Synced: 2026-11-22T02:33:35Z
 // ============================================================================
 // lib/col/soa.cp
 // High-performance SoA (Struct of Arrays) column-oriented container

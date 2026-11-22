@@ -1,4 +1,5 @@
 // Source: Absorbed from /data/dev/bun/src/uws_sys/quic/Header.cp | Synced: 2026-11-22T00:10:49Z
+// Backward-compatible re-export: canonical implementation consolidated into lib/http/h3/qpack.cp
 
 export {
     QPACK_NO_INDEX,
@@ -45,4 +46,4 @@ export {
     buildHttp3RequestHeaders,
     encodeFieldSection,
     decodeFieldSection,
-} from "./qpack.cp";
+} from "../http/h3/qpack.cp";

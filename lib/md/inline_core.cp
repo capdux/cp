@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/md/inlines.cp | Synced: 2026-11-20T09:11:12Z
+// Source: Absorbed from /data/dev/bun/src/md/inlines.cp | Synced: 2026-11-22T02:32:45Z
 // lib/md/inline_core.cp
 // Shared Low-Level Inline Span Helpers, Code Span Scanner, Flanking Rules & HTML Tag Scanner
 

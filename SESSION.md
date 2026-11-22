@@ -1203,3 +1203,51 @@
 ### 2026-11-22（第 1 批历史重叠目录安全收敛验收（cap:pkg & cap:css） | 2026-11-22 13:38:44）
 - **执行与结单汇报**：
   > 按用户确立的「Bun 优先 + 冲突留 xxx_.cp 参考」铁律完成第 1 批治理：1) lib/pkg/catalog.cp、lib/css/css_modules.cp、lib/css/keyframes.cp 零冲突归并入主包（旧目录保留薄向后兼容 re-export）；2) lib/mediaquery 涉及与权威 lib/css/media.cp 功能冲突，严格归档为 lib/css/media_query_.cp 并标注 Reference Only 头，0 覆盖/0 删除；3) 10/10 cpc check 与 8/8 cap test 全部 PASS；已续派第 2 批 cap:http 领域收敛。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 13:41:28）[step:14535]
+- **用户完整原始指令**：
+  > @splitAtMut 作用是啥, 能否简洁些
+- **完整回复与执行汇报**：
+  > ### 1. `@splitAtMut` 的作用（一句话）
+  > 把**同一块连续可变切片**从位置 `mid` **零拷贝拆成左右两段互不重叠的可变切片**，让借用检查器放心允许你**同时修改左右两半**，而不会触发“对同一个变量同时存在两个可变借用”的冲突。
+  >
+  > **典型用途**：
+  > - **AI/张量**：把一块连续显存/内存拆成 `Q`、`K`、`V` 或上下两个输出分块，各自原地写入；
+  > - **算法/系统**：原地归并/快排、环形缓冲头尾两段同时填充、矩阵分块并发写不同行。
+  >
+  > ```typescript
+  > // 传统写法：两次切片都借用了整个 buf，借用检查器难以静态证明它们不重叠
+  > // @splitAtMut：由编译器保证左右两段绝对不重叠，可安全同时修改
+  > let [left, right] = @splitAtMut(buf, mid);
+  > left[0] = 1.0;
+  > right[0] = 2.0; // 安全，互不冲突，且自动越界钳位
+  > ```
+  >
+  > ---
+  >
+  > ### 2. 能否更简洁些？——完全可以！
+  > `@splitAtMut` 确实带了点 Rust 味、名字偏长。我们在 CP 里可以做得更优雅简洁，有 **2 种改进方案**：
+  >
+  > 1. **方案 A（推荐）：切片方法糖 `buf.split(mid)`**
+  >    ```typescript
+  >    let [left, right] = buf.split(mid);
+  >    ```
+  >    - 去掉 `@` 前缀和冗余的 `AtMut`；
+  >    - 编译器自动根据 `buf` 是可变切片还是只读切片，返回对应的两个可变或只读互斥子切片；
+  >    - 符合 CP「TS 的优雅 + Rust 的安全」定位。
+  >
+  > 2. **方案 B：短内建原语 `@split(buf, mid)`**
+  >    ```typescript
+  >    let [left, right] = @split(buf, mid);
+  >    ```
+  >    - 保留 `@` 显式编译器原语风格，但去掉 `AtMut`，同样按可变性自动推导。
+  >
+  > 如果你倾向 **方案 A（`buf.split(mid)`）**（或同时支持 `buf.split(mid)` + `@split(buf, mid)`），告诉我一声，我可以在下一轮编译器小迭代里直接加上，同时保留原 `@splitAtMut` 兼容。
+
+### 2026-11-22（分类合并交付：lib/attention/tiled_gemm.cp | 2026-11-22 13:42:36）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/attention/tiled_gemm.cp（综合实战 @dot/@fma/@splitAtMut 与 noalias 的 16x16 分块 GEMM 与多头 Batched QK^T，5/5 PASS），归入 cap:attention 并同步 cp_lib_ref.md；续派 lib/attention/conv1d.cp。
+
+### 2026-11-22（分类合并交付：lib/a2a/event_stream.cp & lib/shell/trampoline.cp + 46 项 Bun 上游清零 | 2026-11-22 13:43:36）
+- **执行与结单汇报**：
+  > 1. 交付 lib/a2a/event_stream.cp (A2A 事件流环形回放与 Last-Event-ID 断线续传, 5/5 PASS)；2. 核查清零 46 项 Bun 上游变动 (upstream_newer=0) 并从 Bun src/shell/Yield.cp 吸收 lib/shell/trampoline.cp (6/6 PASS)；均已同步 cp_lib_ref.md 并提交。

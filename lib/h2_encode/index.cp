@@ -1,4 +1,5 @@
-// Source: Absorbed from /data/dev/bun/src/http/h2_client/encode.cp | Synced: 2026-11-22T00:06:56Z
+// Source: Absorbed from /data/dev/bun/src/http/h2_client/encode.cp | Synced: 2026-11-22T02:34:49Z
+// Backward-compatible re-export: canonical implementation consolidated into lib/http/h2/encode.cp
 
 export {
     H2_CLIENT_PREFACE,
@@ -29,4 +30,4 @@ export {
     encodeClientPreface,
     encodeHeaderBlockFrames,
     encodeDataWindowed,
-} from "./h2_encode.cp";
+} from "../http/h2/encode.cp";

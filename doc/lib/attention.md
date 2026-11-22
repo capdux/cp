@@ -28,6 +28,8 @@
 - **`KvQuantParams` / `quantizeTokenKvI8` / `dequantizeTokenKvI8` / `dotQueryQuantKeyI8` / `quantizedAttentionSingleQuery`** (`kv_quant.cp`)：零堆分配长上下文 KV-Cache 在线 INT8 逐 Token 对称量化压缩（4x 显存压缩，对标 vLLM/KIVI）、尺度外提 Query-Key 点积以及 O(1) 额外内存 Online Softmax 融合单 Query 注意力核。
 - **`SwaConfig` / `RingKvCache` / `swaAttentionSingleQuery` / `ringKvAttentionSingleQuery`** (`sliding_window.cp`)：零堆分配滑动窗口注意力（SWA，对标 Mistral / Gemma 2）与 StreamingLLM Attention Sink 固定容量环形 KV-Cache，支持前 `sink_tokens` 永久锚定、窗口环形覆盖与 $O((S+W)\cdot d)$ 无界流式解码。
 - **`PREFIX_INVALID_BLOCK` / `computePrefixBlockHash` / `PrefixBlockEntry` / `PrefixMatchResult` / `PrefixCacheStats` / `KvPrefixCache`** (`prefix_cache.cp`)：零堆分配多智能体共享提示词块级 KV 前缀缓存（对标 SGLang RadixAttention / vLLM Automatic Prefix Caching），支持链式 FNV-1a 64-bit 哈希防分叉误命中、最长前缀匹配、在途引用计数 `pinBlock`/`unpinBlock` 保护与未 pin 槽位 LRU 驱逐。
+- **`gemmTransposedBF32` / `gemmF32` / `batchedGemmTransposedBF32` / `splitGemmRowsF32`** (`tiled_gemm.cp`)：零堆分配 Cache-Friendly 分块矩阵乘法 GEMM 与多头批量 QK^T MatMul 核，基于 CP 原生 8-lane SIMD `@dot`、`@fma` 与零拷贝互斥分片 `@splitAtMut` 实现。
+- **`conv1dCausalF32` / `depthwiseConv1dF32` / `hzToMel` / `melToHz` / `buildMelFilterbankF32` / `applyMelFilterbankF32`** (`conv1d.cp`)：零堆分配 AI 语音/状态空间 1D 因果空洞卷积、深度可分离 1D 卷积、HTK 梅尔频率变换、三角梅尔滤波器组构建与 `@dot` SIMD 对数梅尔谱投影核（对标 Whisper / Mamba / ConvNeXt-1D）。
 
 ## 3. API 速查
 
@@ -119,6 +121,14 @@
 | `computePrefixBlockHash` | `(parent_hash: u64, block_tokens: []const u32): u64` | 链式 FNV-1a 64-bit 前缀块哈希（保证完整前缀一致才命中，根 `parent_hash = 0`） |
 | `KvPrefixCache.init` / `matchLongestPrefix` / `insertPrefixBlocks` | `(entries, block_size)` / `(*_, tokens, tick, out_block_ids): PrefixMatchResult` / `(*_, tokens, block_ids, tick): usize` | 零堆分配固定槽位块级 KV 前缀缓存、最长前缀匹配与链式块写入 |
 | `KvPrefixCache.pinBlock` / `unpinBlock` / `evictLruUnpinned` / `stats` | `(*_, prefix_hash): bool` / `(*_): u32?` / `(): PrefixCacheStats` | 在途请求引用计数保护、仅驱逐 `ref_count == 0` 的最旧块与命中/节省 Token 统计 |
+| `gemmTransposedBF32` | `(a, b_t, m, n, k, alpha, beta, c): bool` | 2D 分块 + `@dot` 8-lane SIMD + `@fma` 计算 `C = alpha * (A * B^T) + beta * C` |
+| `gemmF32` | `(a, b, m, n, k, alpha, beta, c): bool` | 3D 分块 `ikj` 缓存友好遍历 + `@fma` 计算 `C = alpha * (A * B) + beta * C` |
+| `batchedGemmTransposedBF32` | `(a, b_t, batch, m, n, k, c): bool` | 多头注意力 `QK^T` 批量矩阵乘法（`[batch, m, k] * [batch, n, k]^T`） |
+| `splitGemmRowsF32` | `(a, b_t, m, n, k, split_row, c): bool` | 基于 `@splitAtMut` 将输出矩阵零拷贝拆分为上下互斥分区并分别计算 `A * B^T` |
+| `conv1dCausalF32` | `(input, weight, bias, in_ch, out_ch, seq_len, kernel_size, dilation, out): bool` | 左因果填充 `(kernel_size - 1) * dilation` 的 1D 因果空洞卷积（`@dot`/`@fma`，零未来帧泄露） |
+| `depthwiseConv1dF32` | `(input, weight, bias, channels, seq_len, kernel_size, stride, padding, out): bool` | 逐通道深度可分离 1D 卷积（支持任意 `stride`/`padding` 与可选偏置） |
+| `hzToMel` / `melToHz` | `(hz: f64): f64` / `(mel: f64): f64` | HTK 梅尔刻度与赫兹频率精确互转 |
+| `buildMelFilterbankF32` / `applyMelFilterbankF32` | `(n_mels, n_fft, sr, f_min, f_max, out_fb)` / `(power_spec, fb, n_mels, n_bins, log_floor, out_log_mel)` | 零堆分配三角梅尔滤波器组构建与 8-lane SIMD `@dot` 对数梅尔谱投影 |
 
 ## 4. 示例
 
@@ -742,5 +752,26 @@ pub fn demoKvPrefixCache() {
         // res.matched_blocks == 1, res.matched_tokens == 4, matched_ids[0] == 100
         * = res;
     }
+}
+```
+
+### 分块 SIMD GEMM、多头 Batched QK^T 与 `@splitAtMut` 分片示例 (`tiled_gemm.cp`)
+
+```cp
+import {
+    gemmTransposedBF32,
+    batchedGemmTransposedBF32,
+    splitGemmRowsF32,
+} from "cap:attention";
+
+pub fn demoTiledGemm() {
+    const a: [8]f32 = [1.0, 2.0, 3.0, 4.0,  5.0, 6.0, 7.0, 8.0]; // 2x4
+    const b_t: [8]f32 = [1.0, 0.0, 1.0, 0.0,  0.0, 1.0, 0.0, 1.0]; // 2x4 (B^T)
+    let c: [4]f32 = [0.0, 0.0, 0.0, 0.0];
+    let c_s: []f32 = c[0..];
+
+    * = gemmTransposedBF32(a[0..], b_t[0..], 2, 2, 4, 1.0, 0.0, c_s);
+    * = splitGemmRowsF32(a[0..], b_t[0..], 2, 2, 4, 1, c_s);
+    * = batchedGemmTransposedBF32(a[0..], b_t[0..], 1, 2, 2, 4, c_s);
 }
 ```

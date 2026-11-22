@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/FieldDescription.cp | Synced: 2026-11-21T16:59:35Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/FieldDescription.cp | Synced: 2026-11-22T02:41:21Z
 
 /// PostgreSQL Wire Protocol v3.0 版本号（(3 << 16) | 0 = 196608）
 pub const PROTOCOL_VERSION_3_0: u32 = 196608;

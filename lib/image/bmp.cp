@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/image/codec_bmp.cp | Synced: 2026-11-20T07:01:07Z
+// Source: Absorbed from /data/dev/bun/src/runtime/image/codec_bmp.cp | Synced: 2026-11-22T02:31:50Z
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/codec_bmp.cp
 // Upstream Sync: Refer to bun/src/runtime/image/codec_bmp.zig for future upstream updates.

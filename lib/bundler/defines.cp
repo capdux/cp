@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/defines.cp | Synced: 2026-11-22T01:36:00Z
+// Source: Absorbed from /data/dev/bun/src/bundler/defines.cp | Synced: 2026-11-22T02:32:07Z
 // Pure-CP zero-allocation compile-time `--define` & `--drop` constant replacement table
 // and side-effect purity flags for `cap:bundler`.
 

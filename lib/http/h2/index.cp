@@ -52,3 +52,47 @@ export {
     HpackDynamicTable,
     HpackSessionCodec
 } from "./hpack";
+
+export {
+    H2_CLIENT_PREFACE,
+    H2_FRAME_HEADER_LEN,
+    H2_DEFAULT_WINDOW_SIZE,
+    H2_DEFAULT_MAX_FRAME_SIZE,
+    H2_MAX_FRAME_SIZE_LIMIT,
+    H2_FRAME_DATA,
+    H2_FRAME_HEADERS,
+    H2_FRAME_SETTINGS,
+    H2_FRAME_WINDOW_UPDATE,
+    H2_FRAME_CONTINUATION,
+    H2_FLAG_END_STREAM,
+    H2_FLAG_END_HEADERS,
+    H2_SETTINGS_ENABLE_PUSH,
+    H2_SETTINGS_INITIAL_WINDOW_SIZE,
+    H2_SETTINGS_MAX_HEADER_LIST_SIZE,
+    RequestHeaderAction,
+    HeaderBlockEncodeResult,
+    DataWindowState,
+    DataWriteResult,
+    classifyRequestHeader,
+    shouldSkipRequestHeader,
+    isSensitiveHeader,
+    lowercaseHeaderName,
+    encodeHpackTableSizeUpdate,
+    encodeFrameHeader,
+    encodeClientPreface,
+    encodeHeaderBlockFrames,
+    encodeDataWindowed,
+} from "./encode";
+
+export {
+    H2_MAX_WINDOW_SIZE,
+    H2_DEFAULT_INITIAL_WINDOW,
+    H2_RST_STREAM_FRAME_LEN,
+    H2_WINDOW_UPDATE_FRAME_LEN,
+    StreamState,
+    H2ErrorCode,
+    errorCodeToU32,
+    encodeRstStreamFrame,
+    encodeWindowUpdateFrame,
+    H2Stream as H2StreamMachine,
+} from "./stream";

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/image/thumbhash.cp | Synced: 2026-11-21T13:00:24Z
+// Source: Absorbed from /data/dev/bun/src/runtime/image/thumbhash.cp | Synced: 2026-11-22T02:33:15Z
 //! ThumbHash — compact (~21–25 byte) blurry image placeholder (LQIP) encoder & decoder
 //! with approximate aspect ratio and average RGBA extraction.
 

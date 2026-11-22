@@ -37,6 +37,10 @@
 | `router.releaseTask(*_, id)` | 任务完成后递减节点 `active_tasks` |
 | `router.listCapablePeers(required_skills, now_ms, out_ids)` | 列出满足技能且存活可路由的节点 ID |
 | `HandoffTrace.init(buf, max_hops)` | 初始化零堆分配交接链防环与跳数守卫（`recordHop` / `hasVisited` / `hops`） |
+| `A2aEventStreamRing.init(slots)` | 初始化零堆分配任务事件流环形回放缓冲（`event_stream.cp`） |
+| `ring.publish(*_, task_id, kind, timestamp_ms, is_final, payload_hash, payload_len)` | 分配单调递增 `event_id` 并写入事件，环满自动覆盖最旧槽位 |
+| `ring.replayAfter(last_event_id, task_filter, out_events)` | 按 `Last-Event-ID` 游标与可选 `task_id` 过滤回放事件，返回 `ReplayResult`（含 `gap_detected` 覆盖缺口检测与截断安全） |
+| `ring.latestEventId()` / `ring.oldestEventId()` / `ring.count()` / `ring.clear()` | 查询最新/最旧保留事件 ID、有效数量与清空缓冲 |
 
 ## 4. 示例
 
@@ -110,5 +114,34 @@ pub fn demoA2aLeaseQueue() {
         * = q.complete(tid, 1, 2);
     }
     * = q.stats();
+}
+```
+
+### 4.4 零堆分配任务事件流环形回放与 `Last-Event-ID` 断线续传示例 (`event_stream.cp`)
+
+```cp
+import {
+    A2aEventKind,
+    A2aStreamEvent,
+    A2aEventStreamRing,
+} from "cap:a2a";
+
+pub fn demoA2aEventStreamResume() {
+    let slots_buf: [16]A2aStreamEvent = [A2aStreamEvent{}; 16];
+    let slots: []A2aStreamEvent = slots_buf[0..];
+    let ring = A2aEventStreamRing.init(slots);
+
+    const id1 = ring.publish(42, A2aEventKind.StatusUpdate, 1000, false, 0x101, 32);
+    * = ring.publish(42, A2aEventKind.ArtifactAppend, 1050, false, 0x102, 64);
+    * = ring.publish(42, A2aEventKind.ArtifactComplete, 1100, true, 0x103, 128);
+
+    // 客户端携带 Last-Event-ID = id1 断线重连，按 task_id = 42 精确续传后续事件
+    let out_buf: [8]A2aStreamEvent = [A2aStreamEvent{}; 8];
+    let out: []A2aStreamEvent = out_buf[0..];
+    const res = ring.replayAfter(id1, 42, out);
+    if (res.gap_detected) {
+        // 游标已被环形覆盖，通知客户端拉取任务全量快照
+    }
+    * = res;
 }
 ```

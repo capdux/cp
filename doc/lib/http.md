@@ -632,3 +632,13 @@ pub fn demoWebPrimitives(): !void {
    - 端口与主机默认约定（参考 `/data/dev/bun/docs/runtime/http/server.mdx`）：未显式指定 `hostname` 时默认监听 `"0.0.0.0"`，未匹配任何路由时回落至 `fetch` 处理器或返回 `404`。
    - `CookieMap` 遵循 RFC 6265：`CookieMap.parse(header)` 零分配解析请求 `Cookie` 头部（64 槽内联），`CookieMap.formatSetCookie(entry, &buf)` 支持 `Path`、`Domain`、`Max-Age`、`HttpOnly`、`Secure` 与 `SameSite` 属性序列化。
    - **Chunked 传输与连接池复用**：HTTP/1.1 Keep-Alive 连接复用前须确保上一响应体（含分块终止符 `0\r\n\r\n`）已完整消费；HTTP/2 客户端流严格使用奇数流 ID（1, 3, 5…），收到 `GOAWAY` 后停止在现有会话上新建流。
+
+---
+
+## 五、 归并的协议编解码子模块（H2 / H3 QPACK / ByteRange）
+
+- **HTTP/2 请求编码与窗口分帧（`h2/encode.cp`）**：归并自 `lib/h2_encode/`（Bun `src/http/h2_client/encode.cp`），提供 `encodeClientPreface`、`encodeFrameHeader`、`encodeHeaderBlockFrames`、`encodeDataWindowed`、`classifyRequestHeader`、`isSensitiveHeader`、`DataWindowState` 等零分配编码原语。
+- **HTTP/2 流状态机与控制帧（`h2/stream.cp`）**：归并自 `lib/h2stream/`（Bun `src/http/h2_client/Stream.cp`），在主包以 `H2StreamMachine`（避开 `h2/client.cp` 的 `H2Stream`）、`StreamState`、`H2ErrorCode`、`encodeRstStreamFrame`、`encodeWindowUpdateFrame` 导出。
+- **HTTP/3 QPACK 静态表与字段段编解码（`h3/qpack.cp`）**：归并自 `lib/qpack/`（Bun `src/uws_sys/quic/Header.cp`），导出 `QPACK_IDX_*`、`QpackHeader`、`classifyHeader`、`encodePrefixedInt`、`decodePrefixedInt`、`buildHttp3RequestHeaders`、`encodeFieldSection`、`decodeFieldSection`。
+- **服务端 HTTP Byte Range 区间求值与 206/416 响应格式化（`byterange.cp`）**：归并自 `lib/byterange/`（Bun `src/runtime/server/RangeRequest.cp`），导出 `ByteRange`、`RangeStatus`、`parseRange`、`parseMultiRange`、`formatUnsatisfiableContentRange`，以及 `ByteRangeContentRange` / `formatByteContentRange` / `parseByteContentRange`（避开 `contentrange.cp` 原导出）。
+- **SSE 零堆分配参考实现（`sse_parser_.cp`）**：原 `lib/sse_parser/sse.cp`（Bun `src/http/HTTPRequestBody.cp`）与 `lib/http/sse.cp` 存在 `SseEvent`/`SseParser` 功能重叠，按参考归档规范保留为 `lib/http/sse_parser_.cp`（不从 `cap:http` 重复导出）。

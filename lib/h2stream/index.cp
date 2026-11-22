@@ -1,4 +1,5 @@
 // Source: Absorbed from /data/dev/bun/src/http/h2_client/Stream.cp | Synced: 2026-11-22T00:14:33Z
+// Backward-compatible re-export: canonical implementation consolidated into lib/http/h2/stream.cp
 
 export {
     H2_MAX_WINDOW_SIZE,
@@ -11,4 +12,4 @@ export {
     encodeRstStreamFrame,
     encodeWindowUpdateFrame,
     H2Stream,
-} from "./h2stream.cp";
+} from "../http/h2/stream.cp";

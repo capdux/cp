@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/image/thumbhash.cp | Synced: 2026-11-21T13:00:27Z
+// Source: Absorbed from /data/dev/bun/src/runtime/image/thumbhash.cp | Synced: 2026-11-22T02:33:15Z
 import th from "./thumbhash.cp";
 
 export const MAX_LEN = th.MAX_LEN;

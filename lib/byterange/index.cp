@@ -1,4 +1,5 @@
 // Source: Absorbed from /data/dev/bun/src/runtime/server/RangeRequest.cp | Synced: 2026-11-22T00:27:22Z
+// Backward-compatible re-export: canonical implementation consolidated into lib/http/byterange.cp
 
 export {
     ByteRange,
@@ -14,4 +15,4 @@ export {
     formatContentRange,
     formatUnsatisfiableContentRange,
     parseContentRange,
-} from "./byterange.cp";
+} from "../http/byterange.cp";

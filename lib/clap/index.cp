@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/clap/clap.cp | Synced: 2026-11-20T11:53:32Z
+// Source: Absorbed from /data/dev/bun/src/clap/clap.cp | Synced: 2026-11-22T02:32:49Z
 // CP Standard Library: cap:clap
 // Fast, robust command-line argument parsing with comptime validation
 

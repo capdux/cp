@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/clap/clap.cp | Synced: 2026-11-20T11:53:32Z
+// Source: Absorbed from /data/dev/bun/src/clap/clap.cp | Synced: 2026-11-22T02:32:49Z
 // Argument iterators for CLI argument parsing (Slice, Shell, OS)
 import std from "std";
 

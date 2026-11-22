@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/NewWriter.cp | Synced: 2026-11-21T16:59:39Z
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/NewWriter.cp | Synced: 2026-11-22T02:41:12Z
 //! MySQL wire-protocol 4-byte PacketHeader framing, `MySqlPacketWriter` (with `~init()` RAII
 //! and automatic 24-bit LE payload length backfill), and zero-copy `MySqlPacketReader`.
 
