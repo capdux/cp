@@ -19,6 +19,19 @@ export {
 } from "./audio_dsp.cp";
 
 export {
+    AudioFrameStats,
+    analyzeAudioFrameF32,
+    VadConfig,
+    VadState,
+    VadDecision,
+    AdaptiveEnergyVad,
+    applyPreEmphasisF32,
+    applyHannWindowF32,
+    normalizePeakF32,
+    resampleLinearF32,
+} from "./dsp_pipeline.cp";
+
+export {
     FLAC_MAGIC_SIZE,
     FLAC_BLOCK_HEADER_SIZE,
     FLAC_STREAMINFO_SIZE,

@@ -82,3 +82,51 @@ pub fn demoMedia(buf: []const u8) {
     * = sz;
 }
 ```
+
+---
+
+## 四、 实时语音 AI 前端：SIMD 音频预处理与自适应 VAD 管线（`dsp_pipeline.cp`）
+
+面向实时语音 Agent、ASR/Whisper 前端与低延迟流式语音检测的 100% 纯 CP 零堆分配 DSP 管线：
+
+- **8-lane SIMD 帧能量与过零率分析（`AudioFrameStats` / `analyzeAudioFrameF32`）**：利用 `@dot` 硬件内积加速计算 RMS 能量、dBFS、绝对峰值与过零率（ZCR）。
+- **自适应底噪与迟滞状态机 VAD（`VadConfig` / `VadState` / `VadDecision` / `AdaptiveEnergyVad`）**：融合能量阈值、自适应 EMA 底噪跟踪、ZCR 频段门控以及起音（`min_speech_frames`）/ 尾音（`hangover_frames`）迟滞防抖，精确输出 `Silence | SpeechStart | Speech | SpeechEnd`（与 `audio_dsp.cp` 的离线批量 `EnergyVad` 互补无冲突）。
+- **零堆音频前端算子**：`applyPreEmphasisF32`（`@fma` 一阶预加重）、`applyHannWindowF32`（对称 Hann 窗）、`normalizePeakF32`（防削波峰值归一化）与 `resampleLinearF32`（任意采样率线性重采样，如 48kHz -> 16kHz）。
+
+### QuickStart 示例（48kHz -> 16kHz 预处理 + 流式 VAD）
+
+```cp
+import {
+    VadConfig,
+    AdaptiveEnergyVad,
+    analyzeAudioFrameF32,
+    applyPreEmphasisF32,
+    applyHannWindowF32,
+    normalizePeakF32,
+    resampleLinearF32,
+} from "cap:media";
+
+pub fn demoVoiceAiFrontend(pcm_48k: []const f32) {
+    let pcm_16k_buf: [320]f32 = [0.0; 320];
+    let pcm_16k: []f32 = pcm_16k_buf[0..];
+    const n16 = resampleLinearF32(pcm_48k, 48000, pcm_16k, 16000) ?? return;
+
+    let frame: []f32 = pcm_16k[0..n16];
+    * = normalizePeakF32(frame, 0.95);
+    let vad = AdaptiveEnergyVad.init(VadConfig{
+        energy_threshold: 0.02,
+        min_speech_frames: 2,
+        hangover_frames: 3,
+    }) ?? return;
+
+    const decision = vad.processFrame(frame);
+    let pre_buf: [320]f32 = [0.0; 320];
+    let pre: []f32 = pre_buf[0..];
+    if (written := applyPreEmphasisF32(frame, pre, 0.97)) {
+        let win_slice: []f32 = pre[0..written];
+        * = applyHannWindowF32(win_slice);
+    }
+    * = analyzeAudioFrameF32(frame);
+    * = decision;
+}
+```
