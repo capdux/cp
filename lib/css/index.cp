@@ -340,3 +340,9 @@ export {
     CssIdentFromKind,
     DashedIdentReference,
 } from "./ident.cp";
+
+export {
+    CssUrlError,
+    CssUrlKind,
+    CssUrlValue,
+} from "./url_value.cp";

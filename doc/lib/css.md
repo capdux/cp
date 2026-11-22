@@ -365,6 +365,21 @@ const n = serializeCssIdentifier("1a:b", buf[0..])?;
 // buf[0..n] == "\\31 a\\:b"
 ```
 
+### CSS `url(...)` 解析、路径分类与最短化序列化（`url_value.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/values/url.cp`，零堆分配实现 W3C CSS Values Level 4 `url(...)` 解析、RFC 3986 / WHATWG `isAbsolute()` 分类（相对路径、根相对 `/`、片段 `#`、`data:`、绝对 scheme），以及对齐 Bun 的最短化压缩序列化（在带引号与反斜杠转义无引号形式间自动择短）。
+
+- 核心导出：`CssUrlError`、`CssUrlKind`（`Relative` / `RootRelative` / `Fragment` / `Data` / `AbsoluteScheme`）、`CssUrlValue`（`parse` / `kind` / `isAbsolute` / `isRelative` / `isFragment` / `isDataUrl` / `needsQuoting` / `eql` / `toCss` / `toCssMinified`）。
+
+```typescript
+import { CssUrlValue } from "cap:css";
+
+const u = CssUrlValue.parse("url(\"./assets/logo.svg\")")?;
+let buf: [64]u8 = [0; 64];
+const n = u.toCssMinified(buf[0..])?;
+// buf[0..n] == "url(./assets/logo.svg)"
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项
