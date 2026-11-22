@@ -105,3 +105,18 @@ export {
     ImportRecord,
     ImportRecordList,
 } from "./importRecord";
+
+export {
+    STAT_HASH_SEED,
+    STAT_HTTP_DATE_LEN,
+    STAT_STRONG_ETAG_LEN,
+    STAT_WEAK_ETAG_LEN,
+    STAT_MODE_TYPE_MASK,
+    STAT_MODE_REG,
+    STAT_MODE_DIR,
+    STAT_MODE_LNK,
+    StatHashError,
+    FileStatMeta,
+    formatHttpDate,
+    FileStatHash,
+} from "./statHash";

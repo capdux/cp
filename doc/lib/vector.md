@@ -1455,3 +1455,45 @@ pub fn demoMultiVecIndex() {
     * = idx.explainAlignment(1, q[0..], w[0..], *align_s); // q[0]->d[1] (2.0), q[1]->d[0] (1.0)
 }
 ```
+
+---
+
+### 零分配流式语义近重复检测与在线质心聚类去重引擎 (`semanticDedup.cp`)
+
+面向 RAG 语料入库清洗的 100% 纯 CP 零动态堆分配流式语义去重与在线质心聚类引擎：
+
+- **常量与枚举**：
+  - `SEM_DEDUP_MAX_CLUSTERS = 128`、`SEM_DEDUP_MAX_DIM = 64`、`SEM_DEDUP_BPS_SCALE = 10000`
+  - `SemanticDedupStatus`（`novel | duplicate | capacity_full | invalid_vector`）
+- **数据模型**：
+  - `SemanticDedupConfig`（`make(dim, sim_threshold, update_centroid)`, `isValid()`）
+  - `SemanticCluster`（归一化质心、`canonical_doc_id`、`member_count`、`min_member_sim`、`avgMemberSim()`）
+  - `SemanticDedupDecision`、`SemanticClusterHit`、`SemanticDedupBatchReport`、`SemanticDedupStats`（含 `dedup_ratio_bps`）
+- **核心引擎 `SemanticDeduplicator`**：
+  - `init(cfg)` / `reset(*_)` / `getClusterById(cluster_id)` / `stats()`
+  - `ingest(*_, doc_id, vec): SemanticDedupDecision`：单遍 L2 归一化（防零向量/NaN/Inf/维度不匹配）+ 原生 SIMD `@dot` 余弦相似度匹配，命中 `>= sim_threshold` 判为 `duplicate` 并按配置滑动更新质心，否则建新簇返回 `novel`。
+  - `dedupBatch(*_, doc_ids, vecs_flat, out_kept_ids): SemanticDedupBatchReport`：批量入库清洗并输出保留文档 ID 与本批去重率万分比。
+  - `findNearestClusters(vec, top_k, out_hits): usize`：降序召回 Top-K 最相近语义簇。
+  - `mergeClusters(*_, merge_threshold): usize`：按成员数加权合并相近质心簇并释放槽位。
+
+```cp
+import {
+    SemanticDedupConfig,
+    SemanticDedupStatus,
+    SemanticDeduplicator,
+} from "cap:vector";
+
+pub fn demoSemanticDedup() {
+    let dedup = SemanticDeduplicator.init(SemanticDedupConfig.make(4, 0.92, true)) ?? return;
+    const v1: [4]f32 = [1.0, 0.0, 0.0, 0.0];
+    const v2: [4]f32 = [0.99, 0.14, 0.0, 0.0]; // cos ~= 0.990
+    const v3: [4]f32 = [0.0, 1.0, 0.0, 0.0];
+
+    const d1 = dedup.ingest(101, v1[0..]); // novel (cluster 1)
+    const d2 = dedup.ingest(102, v2[0..]); // duplicate -> canonical_doc_id == 101
+    const d3 = dedup.ingest(103, v3[0..]); // novel (cluster 2)
+    * = (d1.status == SemanticDedupStatus.novel);
+    * = (d2.status == SemanticDedupStatus.duplicate);
+    * = (d3.status == SemanticDedupStatus.novel);
+}
+```

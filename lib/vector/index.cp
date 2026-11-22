@@ -315,3 +315,17 @@ export {
     MultiVecIndexStats,
     MultiVecIndex,
 } from "./multiVec.cp";
+
+export {
+    SEM_DEDUP_MAX_CLUSTERS,
+    SEM_DEDUP_MAX_DIM,
+    SEM_DEDUP_BPS_SCALE,
+    SemanticDedupStatus,
+    SemanticDedupConfig,
+    SemanticCluster,
+    SemanticDedupDecision,
+    SemanticClusterHit,
+    SemanticDedupBatchReport,
+    SemanticDedupStats,
+    SemanticDeduplicator,
+} from "./semanticDedup.cp";

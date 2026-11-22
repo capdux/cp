@@ -31,6 +31,7 @@
 | `lib/resolver/integrity.cp` | `// Source: /data/dev/bun/src/install/integrity.cp` | W3C SRI 完整性校验（`IntegrityTag` / `Integrity` 解析、多算法择强、SHA256/512 计算与恒定时间比对） |
 | `lib/resolver/hostedGit.cp` | `// Source: /data/dev/bun/src/install/hosted_git_info.cp` | Git 托管地址解析（`GitHost` / `HostedGitInfo`，支持简写、HTTPS、SSH 与 Tarball URL 生成） |
 | `lib/resolver/fallbacks.cp` | `// Source: /data/dev/bun/src/resolver/node_fallbacks.cp` | 面向浏览器打包目标的 23 个 Node.js 核心模块虚拟 Polyfill 路由注册表（`NodeFallbackModule`、`lookupNodeFallback`、`hasNodeFallback`、`isNodeFallbackVfsPath`、`resolveNodeFallbackFromVfsPath`、`formatNodeFallbackEntryPath`、`formatNodeFallbackPackageJsonPath`） |
+| `lib/resolver/statHash.cp` | `// Source: /data/dev/bun/src/resolver/fs/stat_hash.cp` | 零分配文件元信息指纹 `FileStatHash`（含 29 字节缓存 `Last-Modified` IMF-fixdate 与强/弱 ETag 格式化）及独立 `formatHttpDate` |
 | `lib/resolver/index.cp` | `// Source: /data/dev/bun/src/resolver/` | `cap:resolver` 对外统一导出入口 |
 
 ---
@@ -186,4 +187,27 @@ const printable = rec.formatPrintablePath(buf[0..])?; // "yaml:/app/config.yaml"
 let list = ImportRecordList.init();
 * = list.push(rec)?;
 * = printable;
+```
+
+7. **零分配文件指纹、RFC 9110 `Last-Modified` 缓存与 ETag 生成（`lib/resolver/statHash.cp`，吸收自 `/data/dev/bun/src/resolver/fs/stat_hash.cp` & `/data/dev/bun/docs/pm/global-cache.mdx`）**：
+   - **导出符号**：`STAT_HASH_SEED` (`42`)、`STAT_HTTP_DATE_LEN` (`29`)、`STAT_STRONG_ETAG_LEN` (`18`)、`STAT_WEAK_ETAG_LEN` (`20`)、`STAT_MODE_TYPE_MASK`/`STAT_MODE_REG`/`STAT_MODE_DIR`/`STAT_MODE_LNK`、`StatHashError`、`FileStatMeta`、`formatHttpDate`、`FileStatHash`；
+   - **增量缓存失效与静态资产条件请求最佳实践**：
+     - 将 `(size, mode, mtime_sec, mtime_nsec, ino, path)` 混合为 64-bit 确定性指纹，仅在指纹变化且目标为普通文件（`S_ISREG`）时重算 29 字节 `Last-Modified`（IMF-fixdate），高频热路径零重算、零堆分配；
+     - 目录、软链接或 `mtime <= 0` 的虚拟节点自动清空 `lastModified()`，避免向客户端发送误导性缓存头；
+     - 配合 `formatWeakEtag` / `formatStrongEtag` 生成 `W/"<16-hex>"` 或 `"<16-hex>"`，直接支持 DevServer / Bundler 的 `If-None-Match` 与 `If-Modified-Since` 304 协商。
+
+```cp
+import { FileStatMeta, FileStatHash } from "cap:resolver";
+
+let sh = FileStatHash.init();
+const meta = FileStatMeta.regular(4096, 784111777, 0, 1001);
+const changed = sh.update(meta, "/app/dist/bundle.js"); // true
+if (lm := sh.lastModified()) {
+    // "Sun, 06 Nov 1994 08:49:37 GMT"
+    * = lm;
+}
+let etag_buf: [24]u8 = [0; 24];
+const etag_len = sh.formatWeakEtag(etag_buf[0..])?;
+* = changed;
+* = etag_len;
 ```
