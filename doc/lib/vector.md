@@ -1410,3 +1410,48 @@ pub fn demoSq8VectorIndex() {
     * = idx.searchTopK(v1[0..], Sq8Metric.dot, 2, *hits_s);
 }
 ```
+
+---
+
+### 零分配多向量延迟交互文档检索与 Token 对齐归因索引 (`multiVec.cp`)
+
+面向 ColBERT / PLAID / 可解释 RAG 高亮重排的 100% 纯 CP 零动态堆分配多向量延迟交互（Chamfer / MaxSim）检索索引：
+
+- **常量与枚举**：
+  - `MULTIVEC_MAX_DOCS = 64`、`MULTIVEC_MAX_DIM = 32`、`MULTIVEC_ARENA_FLOATS = 16384`（64 KiB 连续 `f32` Token 嵌入 Arena）
+  - `MultiVecScoreMode`（`weighted_maxsim` | `chamfer_symmetric`）
+- **数据模型**：
+  - `MultiVecHit`（`doc_id`, `score`, `coarse_score`, `q2d_maxsim`, `d2q_maxsim`, `token_count`）
+  - `MultiVecTokenAlign`（`query_token_idx`, `best_doc_token_idx`, `dot_score`, `weighted_contribution`）
+  - `MultiVecIndexStats`（`dim`, `doc_capacity`, `doc_count`, `total_tokens`, `arena_used_floats`, `total_searches`, `total_coarse_pruned`）
+- **核心索引 `MultiVecIndex`**：
+  - `init(dim)` / `clear(*_)` / `stats()`
+  - `addDocument(*_, doc_id, doc_tokens_flat, normalize_tokens)`: 写入变长多向量文档（支持可选逐 Token L2 归一化），自动维护 L2 归一化文档质心 `centroid`，并内置 NaN/Inf、维度对齐、重复 ID 与 Arena 容量原子防护。
+  - `searchTwoStage(*_, query_tokens_flat, query_weights, mode, coarse_k, top_k, *out_hits)`: 两阶段 SIMD `@dot` 检索——阶段 1 基于查询质心与文档质心快速粗排剪枝至 Top-`coarse_k`；阶段 2 执行带权重 MaxSim（`sum_i w_i * max_j @dot(q_i, d_j)`）或对称 Chamfer 双向打分并降序输出 Top-`top_k`。
+  - `explainAlignment(doc_id, query_tokens_flat, query_weights, *out_pairs)`: 精确输出每个查询 Token 命中的最佳文档 Token 索引与加权点积贡献，支撑可解释 RAG 证据高亮。
+
+```cp
+import {
+    MultiVecScoreMode,
+    MultiVecHit,
+    MultiVecTokenAlign,
+    MultiVecIndex,
+} from "cap:vector";
+
+pub fn demoMultiVecIndex() {
+    let idx = MultiVecIndex.init(4) ?? return;
+    // Doc 1: 2 tokens ([1,0,0,0], [0,1,0,0])
+    const d1: [8]f32 = [1.0, 0.0, 0.0, 0.0,  0.0, 1.0, 0.0, 0.0];
+    * = idx.addDocument(1, d1[0..], true);
+
+    const q: [8]f32 = [0.0, 1.0, 0.0, 0.0,  1.0, 0.0, 0.0, 0.0];
+    const w: [2]f32 = [2.0, 1.0];
+    let hits: [2]MultiVecHit = [MultiVecHit{}; 2];
+    let hits_s: []MultiVecHit = hits[0..];
+    * = idx.searchTwoStage(q[0..], w[0..], MultiVecScoreMode.weighted_maxsim, 4, 2, *hits_s);
+
+    let align: [2]MultiVecTokenAlign = [MultiVecTokenAlign{}; 2];
+    let align_s: []MultiVecTokenAlign = align[0..];
+    * = idx.explainAlignment(1, q[0..], w[0..], *align_s); // q[0]->d[1] (2.0), q[1]->d[0] (1.0)
+}
+```

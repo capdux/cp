@@ -304,3 +304,14 @@ export {
     evaluateSq8Error,
     Sq8VectorIndex,
 } from "./sq8Quant.cp";
+
+export {
+    MULTIVEC_MAX_DOCS,
+    MULTIVEC_MAX_DIM,
+    MULTIVEC_ARENA_FLOATS,
+    MultiVecScoreMode,
+    MultiVecHit,
+    MultiVecTokenAlign,
+    MultiVecIndexStats,
+    MultiVecIndex,
+} from "./multiVec.cp";
