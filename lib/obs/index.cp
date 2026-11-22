@@ -162,3 +162,13 @@ export {
     ObsLoggerStats,
     ObsStructuredLogger,
 } from "./structured_log.cp";
+
+// --- Zero-Alloc Online Welford/EWMA Anomaly Detector & Alert Cooldown Controller ---
+
+export {
+    AnomalyConfig,
+    AnomalySeverity,
+    AnomalyEval,
+    AnomalyDetectorStats,
+    OnlineAnomalyDetector,
+} from "./anomaly_detector.cp";

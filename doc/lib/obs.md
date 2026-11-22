@@ -25,6 +25,8 @@
 | `lib/obs/eval_suite.cp` | 评测报告聚合与 CI 回归门禁对比（`EvalReport`, `RegressionDiff`） |
 | `lib/obs/btf.cp` | Linux 内核 `.BTF`（BPF Type Format）类型图与成员布局零分配解析器 |
 | `lib/obs/telemetry_export.cp` | 零堆分配 16 桶对数延迟直方图（`LatencyBucketHistogram`、p50/p95/p99 与 Prometheus 文本导出）及 OTLP/HTTP JSON 链路 Span 批导出器（`OtlpSpanRecord`, `OtlpSpanBatch`） |
+| `lib/obs/structured_log.cp` | 零堆分配 JSONL / Logfmt 结构化日志与链路追踪关联引擎（`ObsStructuredLogger`） |
+| `lib/obs/anomaly_detector.cp` | 零堆分配流式 Welford/EWMA 在线异常检测、连续违约防抖与冷却防风暴控制器（`OnlineAnomalyDetector`） |
 | `lib/obs/index.cp` | `cap:obs` 与 `cap.obs` 统一零冲突公开导出入口 |
 
 ---
@@ -150,5 +152,42 @@ pub fn demoStructuredLogger() {
         * = out_buf[0..n];
     }
     * = logger.stats();
+}
+```
+
+### 零堆分配流式在线异常检测与告警防抖示例 (`anomaly_detector.cp`)
+
+面向微服务延迟突刺与 AI Agent 成本/错误率监控的 100% 纯 CP 零堆分配流式异常检测器：
+
+- **导出符号**：`AnomalyConfig`（`warmup_samples`, `z_threshold`, `ewma_alpha`, `consecutive_breaches`, `cooldown_ms`, `min_stddev_eps`）、`AnomalySeverity`（`Normal | Warmup | Warning | AlertFired | SuppressedCooldown`）、`AnomalyEval`、`AnomalyDetectorStats`、`OnlineAnomalyDetector`（`init`, `observe`, `baselineMean`, `baselineStddev`, `ewma`, `stats`, `reset`）。
+
+```cp
+import {
+    AnomalyConfig,
+    AnomalySeverity,
+    OnlineAnomalyDetector,
+} from "cap:obs";
+
+pub fn demoOnlineAnomalyDetector() {
+    let det = OnlineAnomalyDetector.init(AnomalyConfig{
+        warmup_samples: 5,
+        z_threshold: 3.0,
+        ewma_alpha: 0.25,
+        consecutive_breaches: 2,
+        cooldown_ms: 10000,
+    }) ?? return;
+
+    // 1. 预热期（静默学习 Welford 基线，不误报）
+    const base: [5]f64 = [10.0, 11.0, 9.0, 10.5, 9.5];
+    let i: usize = 0;
+    while (i < 5) : (i += 1) {
+        * = det.observe(base[i], (i as i64) * 1000);
+    }
+
+    // 2. 连续 2 次突刺：第 1 次 Warning 防抖，第 2 次 AlertFired，冷却期内第 3 次 SuppressedCooldown
+    const e1 = det.observe(50.0, 5000); // AnomalySeverity.Warning
+    const e2 = det.observe(52.0, 6000); // AnomalySeverity.AlertFired
+    const e3 = det.observe(55.0, 7000); // AnomalySeverity.SuppressedCooldown
+    * = e1; * = e2; * = e3;
 }
 ```
