@@ -676,3 +676,44 @@ fn multiAgentConsensusDemo() {
     * = resolveBordaRanking(rankings[0..], 2, 3, equal_w, pts);
 }
 ```
+
+---
+
+## 子模块：人机协同审批队列与多签 Quorum 治理（`hitl.cp`）
+
+### 核心特性
+
+- **风险分级自动放行与人工挂起（`ActionRisk` + `HitlPolicy`）**：`risk <= policy.auto_approve_max_risk` 的低风险动作立即记为 `Approved` 自动放行；更高风险动作进入 `Pending`，其中 `Critical` 级别强制要求 `policy.critical_quorum`（默认 `2`）人多签复核。
+- **确定性 SLA 过期与终态不可逆守卫**：`approve`/`reject`/`cancel` 执行前优先校验 `now_ms >= deadline_ms` 自动转为 `Expired`；支持 `sweepExpired(now_ms)` 批量清理超时挂起项；一旦进入 `Approved`/`Rejected`/`Expired`/`Cancelled` 终态则永久不可逆，完整保留 `created_ms` / `deadline_ms` / `resolved_ms` 审计时间戳。
+- **固定池零堆分配**：由调用方提供 `ApprovalRequest` 切片，拒绝重复 ID、空动作名与池满写入。
+
+### 导出清单
+
+- **类型与策略**：`ApprovalState`、`ActionRisk`、`ApprovalRequest`、`HitlPolicy`（含 `HitlPolicy.default()`）
+- **固定池队列**：`HitlQueue`（`init`, `submit`, `approve`, `reject`, `cancel`, `sweepExpired`, `pendingCount`, `findRequest`）
+
+### 使用示例
+
+```typescript
+import {
+    ActionRisk,
+    ApprovalRequest,
+    ApprovalState,
+    HitlPolicy,
+    HitlQueue,
+} from "cap:agent";
+
+fn hitlApprovalDemo() {
+    let pool_arr: [8]ApprovalRequest = undefined;
+    let pool: []ApprovalRequest = pool_arr[0..];
+    let q = HitlQueue.init(pool, HitlPolicy.default());
+
+    // Low-risk action auto-approves immediately
+    * = q.submit(1, 10, "read_docs", 0x11, ActionRisk.Low, 1000);
+
+    // Critical action requires 2 approvals before deadline
+    * = q.submit(2, 10, "deploy_prod", 0x22, ActionRisk.Critical, 1000);
+    * = q.approve(2, 2000); // Pending (1/2)
+    * = q.approve(2, 3000); // Approved (2/2)
+}
+```

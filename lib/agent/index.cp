@@ -121,3 +121,11 @@ export {
     BordaResult,
     resolveBordaRanking,
 } from "./consensus.cp";
+
+export {
+    ApprovalState,
+    ActionRisk,
+    ApprovalRequest,
+    HitlPolicy,
+    HitlQueue,
+} from "./hitl.cp";
