@@ -20,6 +20,7 @@
 | `lib/vector/semantic_cache.cp` | `// Origin: Pure-CP Stdlib (AI Agent Semantic Cache: Cosine Threshold Lookup, TTL & LRU Eviction) \| Created: 2026-11-22` | `SemanticCache` 零堆分配 LLM 语义缓存（余弦阈值命中、TTL 过期与过期优先 + LRU 淘汰） |
 | `lib/vector/binary_quant.cp` | `// Origin: Pure-CP Stdlib (RAG 1-Bit Binary Vector Quantization, Hamming Search & Two-Stage Rescore) \| Created: 2026-11-22` | 1-bit 二值量化（32x 压缩）、`@popCount` 汉明距离、Charikar 余弦估计与两阶段粗排+全精度精排 (`twoStageSearch`) |
 | `lib/vector/ivf.cp` | `// Origin: Pure-CP Stdlib (RAG IVF-Flat Coarse-Quantized Inverted File ANN Index) \| Created: 2026-11-22` | `IvfFlatIndex` 零堆分配 CSR 倒排文件近似最近邻索引（L2 / Cosine 多探针 `nprobe` 亚线性检索） |
+| `lib/vector/pq.cp` | `// Origin: Pure-CP Stdlib (RAG Product Quantization & Asymmetric Distance Computation ADC) \| Created: 2026-11-22` | `PqCodebook` 乘积量化编码/解码与 `O(m)` 查表非对称距离（ADC）Top-K 检索 |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -120,6 +121,16 @@
   - `IvfFlatIndex.searchL2(index, corpus, query, nprobe, top_k, probe_ids_s, probe_dists_s, out_hits): usize?`（先选 `nprobe` 个最近质心，再扫描对应倒排桶返回 L2 平方距离升序 Top-K）
   - `IvfFlatIndex.searchCosine(index, corpus, query, nprobe, top_k, probe_ids_s, probe_dists_s, out_hits): usize?`（按余弦距离 `1 - cos(q, x)` 多探针检索 Top-K）
   - `IvfFlatIndex.clusterSize(index, cluster_id): usize`（查询指定倒排桶大小，越界安全返回 `0`）
+
+### 7. 乘积量化与非对称距离查找表 (`pq.cp`)
+
+- **`PqCodebook`**：`{ dim, m, sub_dim, ks, centroids }`，提供 `PqCodebook.init(dim, m, ks, centroids): PqCodebook?`（校验 `dim % m == 0`、`1 <= ks <= 256` 及有限质心）
+- **`PqHit`**：`{ doc_id: usize, dist_sq: f64 }`
+- **`pqEncodeVector(cb, vec, code_out: *[]u8): bool`**：将 `dim` 维向量切分为 `m` 个子空间编码为 `m` 字节 `u8` 码字
+- **`pqDecodeVector(cb, code, vec_out: *[]f64): bool`**：从 `m` 字节码字重建近似向量（越界码字返回 `false`）
+- **`pqBuildAdcTable(cb, query, lut_out: *[]f64): bool`**：预计算 `m * ks` 子空间平方距离查找表 `lut[s * ks + c]`
+- **`pqAdcDistanceSq(lut, code, m, ks): f64`**：纯 `m` 次查表累加（零浮点乘法），与 `L2Sq(query, decode(code))` 精确等价
+- **`pqSearchAdcTopK(cb, codes_flat, n_docs, query, top_k, lut_scratch, out_hits): usize?`**：`O(n * m)` 极速 ADC 检索，按 `(dist_sq 升序, doc_id 升序)` 输出 Top-K
 
 ---
 
@@ -321,5 +332,31 @@ pub fn demoIvfFlatSearch() {
     let hits: []IvfHit = hits_buf[0..];
     const n = IvfFlatIndex.searchL2(idx, corpus[0..], query[0..], 1, 2, p_ids, p_dists, hits) ?? 0;
     * = n;
+}
+```
+
+### 乘积量化（PQ）与 ADC 查找表极速检索示例 (`pq.cp`)
+
+```typescript
+import {
+    PqCodebook,
+    PqHit,
+    pqEncodeVector,
+    pqSearchAdcTopK,
+} from "cap:vector";
+
+pub fn demoPqAdcSearch(centroids_128: []const f64, query_16: []const f64, vec_a: []const f64) {
+    if (cb := PqCodebook.init(16, 4, 8, centroids_128)) {
+        let codes_buf: [4]u8 = [0; 4];
+        let code_slice: []u8 = codes_buf[0..];
+        * = pqEncodeVector(cb, vec_a, code_slice);
+
+        let lut_buf: [32]f64 = [0.0; 32];
+        let hits_buf: [1]PqHit = [PqHit{}; 1];
+        let lut: []f64 = lut_buf[0..];
+        let hits: []PqHit = hits_buf[0..];
+        const k = pqSearchAdcTopK(cb, codes_buf[0..], 1, query_16, 1, lut, hits) ?? 0;
+        * = k;
+    }
 }
 ```

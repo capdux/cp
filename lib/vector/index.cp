@@ -50,3 +50,13 @@ export {
     IvfBuildStats,
     IvfFlatIndex,
 } from "./ivf.cp";
+
+export {
+    PqCodebook,
+    PqHit,
+    pqEncodeVector,
+    pqDecodeVector,
+    pqBuildAdcTable,
+    pqAdcDistanceSq,
+    pqSearchAdcTopK,
+} from "./pq.cp";
