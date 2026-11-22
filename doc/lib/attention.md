@@ -1929,3 +1929,48 @@ pub fn demoKivi2BitKvCache() {
     * = cache.stats().compression_ratio_x100;
 }
 ```
+
+#### 无上限外部切片长上下文多头 GQA KIVI 2-Bit KV-Cache 与 CRC32 快照持久化 (`KiviFlatKvCache`)
+
+面向 4K–32K+ 长上下文与 Llama-3 / Qwen-2.5 风格 GQA（Grouped-Query Attention）的 100% 纯 CP 零动态堆分配 2-bit KV-Cache 引擎，完整实现 ICML 2024 分组 Per-Channel Key + Per-Token Value 归档、单遍数值稳定 Online Softmax 解码与长 System Prompt KV 前缀零重算二进制快照热加载：
+
+- **常量与错误**：`KIVI_SNAPSHOT_MAGIC = 0x4956494B` (`"KIVI"`)、`KIVI_SNAPSHOT_VERSION = 1`、`KiviFlatError`（`InvalidConfig | DimMismatch | CapacityFull | BufferTooSmall | InvalidSnapshot | ChecksumMismatch | HeadOutOfBounds`）
+- **配置与容量规划**：`KiviFlatConfig`（任意 `num_kv_heads`、`head_dim` 如 64/128/256、`max_tokens`、`group_size`、`residual_window >= group_size`）、`kiviPackedKvBufLen`、`kiviKeyGroupParamsBufLen`、`kiviValTokParamsBufLen`、`kiviResidualBufLen`、`kiviSnapshotMaxBytes`
+- **多头 GQA 核心引擎与持久化 API**：
+  - `KiviFlatKvCache.init(cfg, packed_keys, packed_vals, key_group_params, val_tok_params, res_keys, res_vals)`
+  - `appendTokenAllHeads(*_, k_all_heads, v_all_heads)`（满 `residual_window` 自动归档最老 `group_size` 条 Token）
+  - `decodeHeadQuery(kv_head_idx, q_head, out_head)`（单遍 Online Softmax，零分数缓冲/零反量化缓冲）
+  - `decodeGqaAllHeads(q_all_heads, num_q_heads, out_all_heads)`（支持 `num_q_heads = R * num_kv_heads` 批量解码）
+  - `serializeKiviSnapshot(cache, out_bytes)` / `deserializeKiviSnapshot(bytes, ...)`（魔数/版本/边界/IEEE CRC32 校验）
+
+```cp
+import {
+    KiviFlatConfig,
+    KiviAffineParams,
+    KiviFlatKvCache,
+    serializeKiviSnapshot,
+    deserializeKiviSnapshot,
+} from "cap:attention";
+
+pub fn demoKiviFlatGqa(k_step: []const f32, v_step: []const f32, q_gqa: []const f32)! {
+    const cfg = KiviFlatConfig{ num_kv_heads: 4, head_dim: 128, max_tokens: 512, group_size: 32, residual_window: 32 };
+    let pk: [65536]u8 = [0; 65536];
+    let pv: [65536]u8 = [0; 65536];
+    let kgp: [8192]KiviAffineParams = [KiviAffineParams{}; 8192];
+    let vtp: [2048]KiviAffineParams = [KiviAffineParams{}; 2048];
+    let rk: [16384]f32 = [0.0; 16384];
+    let rv: [16384]f32 = [0.0; 16384];
+
+    let cache = KiviFlatKvCache.init(cfg, pk[0..], pv[0..], kgp[0..], vtp[0..], rk[0..], rv[0..])?;
+    cache.appendTokenAllHeads(k_step, v_step)?;
+
+    // 16 Q-heads -> 4 KV-heads GQA 解码
+    let out_gqa: [2048]f32 = [0.0; 2048];
+    cache.decodeGqaAllHeads(q_gqa, 16, out_gqa[0..])?;
+
+    // System Prompt KV 前缀快照持久化与零重算热加载
+    let snap: [262144]u8 = [0; 262144];
+    const snap_len = serializeKiviSnapshot(cache, snap[0..])?;
+    * = deserializeKiviSnapshot(snap[0..snap_len], pk[0..], pv[0..], kgp[0..], vtp[0..], rk[0..], rv[0..])?;
+}
+```

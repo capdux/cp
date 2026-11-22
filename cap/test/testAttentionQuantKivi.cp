@@ -25,6 +25,18 @@ import {
     dequantizeKey2BitPerChannel,
     kiviDotQueryKey2Bit,
     KiviKvCache,
+    KIVI_SNAPSHOT_MAGIC,
+    KIVI_SNAPSHOT_VERSION,
+    KiviFlatError,
+    KiviFlatConfig,
+    kiviPackedKvBufLen,
+    kiviKeyGroupParamsBufLen,
+    kiviValTokParamsBufLen,
+    kiviResidualBufLen,
+    kiviSnapshotMaxBytes,
+    KiviFlatKvCache,
+    serializeKiviSnapshot,
+    deserializeKiviSnapshot,
 } from "cap:attention";
 
 fn absF32(x: f32): f32 {
@@ -264,4 +276,324 @@ test("KIVI: error boundaries (InvalidHeadDim, DimMismatch, CapacityFull) & facad
     expect_eq(cap.attention.KIVI_PACKED_STRIDE, @as(usize, 16));
     expect_eq(KIVI_MAX_HEAD_DIM, @as(usize, 64));
     expect_eq(KIVI_PACKED_STRIDE, @as(usize, 16));
+}
+
+fn genTokenKv(h: usize, t: usize, c: usize, is_val: bool): f32 {
+    const hf: f64 = (h as f64) * 0.7;
+    const tf: f64 = (t as f64) * 0.05;
+    const cf: f64 = (c as f64) * 0.13;
+    if (!is_val) {
+        // Channel 0 has a fixed outlier per head; token (100 + h*80) has strong semantic match
+        const target_t: usize = h * 80 + 100;
+        const boost: f32 = if (t == target_t) 1.8 else 0.25;
+        const outlier: f32 = if (c == 0) (12.0 + (h as f32) * 2.0) else 0.0;
+        return outlier + boost + (@sin(tf + cf + hf) as f32) * 0.35;
+    } else {
+        return 0.4 + ((h as f32) * 0.2) + ((t as f32) * 0.002) + (@cos(cf + hf) as f32) * 0.5;
+    }
+}
+
+test("KiviFlatKvCache: 513-token x 128D x 4-KV/16-Q GQA stress, cosine > 0.95 & >= 10x compression") {
+    const cfg = KiviFlatConfig{
+        num_kv_heads: 4,
+        head_dim: 128,
+        max_tokens: 520,
+        group_size: 32,
+        residual_window: 32,
+    };
+    expect_true(cfg.isValid());
+    expect_eq(kiviPackedKvBufLen(cfg), @as(usize, 4 * 520 * 32));      // 66,560
+    expect_eq(kiviKeyGroupParamsBufLen(cfg), @as(usize, 4 * 17 * 128)); // 8,704
+    expect_eq(kiviValTokParamsBufLen(cfg), @as(usize, 4 * 520));        // 2,080
+    expect_eq(kiviResidualBufLen(cfg), @as(usize, 4 * 32 * 128));       // 16,384
+
+    let pk: [66560]u8 = [0; 66560];
+    let pv: [66560]u8 = [0; 66560];
+    let kgp: [8704]KiviAffineParams = [KiviAffineParams{}; 8704];
+    let vtp: [2080]KiviAffineParams = [KiviAffineParams{}; 2080];
+    let rk: [16384]f32 = [0.0; 16384];
+    let rv: [16384]f32 = [0.0; 16384];
+
+    let cache = KiviFlatKvCache.init(cfg, pk[0..], pv[0..], kgp[0..], vtp[0..], rk[0..], rv[0..]) catch {
+        expect_true(false);
+        return;
+    };
+
+    // Append 513 tokens across 4 KV heads (16 archived groups = 512 quantized + 1 residual)
+    const n_tokens: usize = 513;
+    let k_step: [512]f32 = [0.0; 512]; // 4 * 128
+    let v_step: [512]f32 = [0.0; 512];
+    let t: usize = 0;
+    while (t < n_tokens) : (t += 1) {
+        let h: usize = 0;
+        while (h < 4) : (h += 1) {
+            let c: usize = 0;
+            while (c < 128) : (c += 1) {
+                k_step[h * 128 + c] = genTokenKv(h, t, c, false);
+                v_step[h * 128 + c] = genTokenKv(h, t, c, true);
+            }
+        }
+        cache.appendTokenAllHeads(k_step[0..], v_step[0..]) catch {
+            expect_true(false);
+            return;
+        };
+    }
+
+    const st = cache.stats();
+    expect_eq(st.quantized_tokens, @as(usize, 512));
+    expect_eq(st.residual_tokens, @as(usize, 1));
+    expect_eq(st.total_tokens, @as(usize, 513));
+    // End-to-end compression including affine params & residual window >= 10.0x (1000)
+    expect_true(st.compression_ratio_x100 >= 1000);
+
+    // 16 Q-heads -> 4 KV-heads GQA decode (4 Q-heads per KV-head)
+    let q_all: [2048]f32 = [0.0; 2048];
+    let qh: usize = 0;
+    while (qh < 16) : (qh += 1) {
+        let c: usize = 0;
+        while (c < 128) : (c += 1) {
+            q_all[qh * 128 + c] = if (c == 0) 0.05 else (0.5 + ((qh % 4) as f32) * 0.1);
+        }
+    }
+    let out_all: [2048]f32 = [0.0; 2048];
+    cache.decodeGqaAllHeads(q_all[0..], 16, out_all[0..]) catch {
+        expect_true(false);
+        return;
+    };
+
+    // Compare each KV head's representative Q-head (qh = h * 4) against exact FP32 reference
+    const inv_sqrt_d: f64 = 1.0 / std.math.sqrt(128.0);
+    let h: usize = 0;
+    while (h < 4) : (h += 1) {
+        const q_slice: []const f32 = q_all[(h * 4) * 128 .. (h * 4 + 1) * 128];
+        let ref_out: [128]f32 = [0.0; 128];
+        let running_max: f64 = -1.0e300;
+        let running_sum: f64 = 0.0;
+        let ref_acc: [128]f64 = [0.0; 128];
+
+        let ti: usize = 0;
+        while (ti < n_tokens) : (ti += 1) {
+            let dot_v: f64 = 0.0;
+            let c: usize = 0;
+            while (c < 128) : (c += 1) {
+                dot_v += (q_slice[c] as f64) * (genTokenKv(h, ti, c, false) as f64);
+            }
+            const sc: f64 = dot_v * inv_sqrt_d;
+            if (sc > running_max) {
+                const rs: f64 = if (running_sum > 0.0) std.math.exp(running_max - sc) else 0.0;
+                running_sum = running_sum * rs + 1.0;
+                running_max = sc;
+                c = 0;
+                while (c < 128) : (c += 1) {
+                    ref_acc[c] = ref_acc[c] * rs + (genTokenKv(h, ti, c, true) as f64);
+                }
+            } else {
+                const w: f64 = std.math.exp(sc - running_max);
+                running_sum += w;
+                c = 0;
+                while (c < 128) : (c += 1) {
+                    ref_acc[c] += w * (genTokenKv(h, ti, c, true) as f64);
+                }
+            }
+        }
+        let c: usize = 0;
+        while (c < 128) : (c += 1) {
+            ref_out[c] = (ref_acc[c] / running_sum) as f32;
+        }
+
+        const kivi_head = out_all[(h * 4) * 128 .. (h * 4 + 1) * 128];
+        const cos_sim = cosineSimF32(kivi_head, ref_out[0..]);
+        expect_true(cos_sim > 0.95);
+    }
+}
+
+test("KiviFlatKvCache: sliding residual_window > group_size archives oldest group and keeps tail") {
+    const cfg = KiviFlatConfig{
+        num_kv_heads: 2,
+        head_dim: 16,
+        max_tokens: 64,
+        group_size: 8,
+        residual_window: 12,
+    };
+    let pk: [512]u8 = [0; 512];
+    let pv: [512]u8 = [0; 512];
+    let kgp: [256]KiviAffineParams = [KiviAffineParams{}; 256];
+    let vtp: [128]KiviAffineParams = [KiviAffineParams{}; 128];
+    let rk: [384]f32 = [0.0; 384];
+    let rv: [384]f32 = [0.0; 384];
+
+    let cache = KiviFlatKvCache.init(cfg, pk[0..], pv[0..], kgp[0..], vtp[0..], rk[0..], rv[0..]) catch {
+        expect_true(false);
+        return;
+    };
+    const kv: [32]f32 = [0.5; 32];
+
+    // Append 12 tokens -> still in residual window (no archival yet)
+    let i: usize = 0;
+    while (i < 12) : (i += 1) {
+        cache.appendTokenAllHeads(kv[0..], kv[0..]) catch { expect_true(false); };
+    }
+    expect_eq(cache.stats().quantized_tokens, @as(usize, 0));
+    expect_eq(cache.stats().residual_tokens, @as(usize, 12));
+
+    // 13th token triggers archival of oldest 8 -> 8 quantized + (4 shifted + 1 new = 5) residual
+    cache.appendTokenAllHeads(kv[0..], kv[0..]) catch { expect_true(false); };
+    expect_eq(cache.stats().quantized_tokens, @as(usize, 8));
+    expect_eq(cache.stats().residual_tokens, @as(usize, 5));
+    expect_eq(cache.stats().total_tokens, @as(usize, 13));
+}
+
+test("KiviFlatKvCache: CRC32 binary snapshot roundtrip yields bit-exact GQA decode") {
+    const cfg = KiviFlatConfig{
+        num_kv_heads: 2,
+        head_dim: 16,
+        max_tokens: 32,
+        group_size: 8,
+        residual_window: 8,
+    };
+    let pk1: [256]u8 = [0; 256];
+    let pv1: [256]u8 = [0; 256];
+    let kgp1: [128]KiviAffineParams = [KiviAffineParams{}; 128];
+    let vtp1: [64]KiviAffineParams = [KiviAffineParams{}; 64];
+    let rk1: [256]f32 = [0.0; 256];
+    let rv1: [256]f32 = [0.0; 256];
+
+    let c1 = KiviFlatKvCache.init(cfg, pk1[0..], pv1[0..], kgp1[0..], vtp1[0..], rk1[0..], rv1[0..]) catch {
+        expect_true(false);
+        return;
+    };
+
+    let k_step: [32]f32 = [0.0; 32];
+    let v_step: [32]f32 = [0.0; 32];
+    let t: usize = 0;
+    while (t < 19) : (t += 1) {
+        let j: usize = 0;
+        while (j < 32) : (j += 1) {
+            k_step[j] = genTokenKv(j / 16, t, j % 16, false);
+            v_step[j] = genTokenKv(j / 16, t, j % 16, true);
+        }
+        c1.appendTokenAllHeads(k_step[0..], v_step[0..]) catch { expect_true(false); };
+    }
+
+    const max_snap = kiviSnapshotMaxBytes(cfg, 19);
+    let snap: [8192]u8 = [0; 8192];
+    expect_true(snap.len >= max_snap);
+    const snap_len = serializeKiviSnapshot(c1, snap[0..]) catch {
+        expect_true(false);
+        return;
+    };
+    expect_true(snap_len <= max_snap);
+
+    // Warm-load into completely independent slices
+    let pk2: [256]u8 = [0; 256];
+    let pv2: [256]u8 = [0; 256];
+    let kgp2: [128]KiviAffineParams = [KiviAffineParams{}; 128];
+    let vtp2: [64]KiviAffineParams = [KiviAffineParams{}; 64];
+    let rk2: [256]f32 = [0.0; 256];
+    let rv2: [256]f32 = [0.0; 256];
+
+    let c2 = deserializeKiviSnapshot(snap[0..snap_len], pk2[0..], pv2[0..], kgp2[0..], vtp2[0..], rk2[0..], rv2[0..]) catch {
+        expect_true(false);
+        return;
+    };
+    expect_eq(c2.stats().quantized_tokens, @as(usize, 16));
+    expect_eq(c2.stats().residual_tokens, @as(usize, 3));
+
+    const q_gqa: [64]f32 = [0.6; 64]; // 4 Q-heads -> 2 KV-heads
+    let out1: [64]f32 = [0.0; 64];
+    let out2: [64]f32 = [0.0; 64];
+    c1.decodeGqaAllHeads(q_gqa[0..], 4, out1[0..]) catch { expect_true(false); };
+    c2.decodeGqaAllHeads(q_gqa[0..], 4, out2[0..]) catch { expect_true(false); };
+
+    let d: usize = 0;
+    while (d < 64) : (d += 1) {
+        expect_eq(out1[d], out2[d]);
+    }
+}
+
+test("KiviFlatKvCache: snapshot tamper ChecksumMismatch & InvalidSnapshot guards") {
+    const cfg = KiviFlatConfig{ num_kv_heads: 1, head_dim: 8, max_tokens: 16, group_size: 4, residual_window: 4 };
+    let pk: [32]u8 = [0; 32];
+    let pv: [32]u8 = [0; 32];
+    let kgp: [32]KiviAffineParams = [KiviAffineParams{}; 32];
+    let vtp: [16]KiviAffineParams = [KiviAffineParams{}; 16];
+    let rk: [32]f32 = [0.0; 32];
+    let rv: [32]f32 = [0.0; 32];
+
+    let c = KiviFlatKvCache.init(cfg, pk[0..], pv[0..], kgp[0..], vtp[0..], rk[0..], rv[0..]) catch {
+        expect_true(false);
+        return;
+    };
+    const kv: [8]f32 = [1.0; 8];
+    let i: usize = 0;
+    while (i < 6) : (i += 1) {
+        c.appendTokenAllHeads(kv[0..], kv[0..]) catch { expect_true(false); };
+    }
+
+    let snap: [2048]u8 = [0; 2048];
+    const snap_len = serializeKiviSnapshot(c, snap[0..]) catch {
+        expect_true(false);
+        return;
+    };
+
+    // Single-byte tamper in payload -> ChecksumMismatch
+    snap[45] ^= 0x01;
+    let got_crc: bool = false;
+    * = deserializeKiviSnapshot(snap[0..snap_len], pk[0..], pv[0..], kgp[0..], vtp[0..], rk[0..], rv[0..]) catch |e| {
+        if (e == KiviFlatError.ChecksumMismatch) got_crc = true;
+    };
+    expect_true(got_crc);
+
+    // Corrupt magic -> InvalidSnapshot
+    snap[0] = 0x00;
+    let got_inv: bool = false;
+    * = deserializeKiviSnapshot(snap[0..snap_len], pk[0..], pv[0..], kgp[0..], vtp[0..], rk[0..], rv[0..]) catch |e| {
+        if (e == KiviFlatError.InvalidSnapshot) got_inv = true;
+    };
+    expect_true(got_inv);
+}
+
+test("KiviFlatKvCache: error boundaries (InvalidConfig, HeadOutOfBounds, CapacityFull, BufferTooSmall) & facade parity") {
+    expect_eq(cap.attention.KIVI_SNAPSHOT_MAGIC, KIVI_SNAPSHOT_MAGIC);
+    expect_eq(cap.attention.KIVI_SNAPSHOT_VERSION, KIVI_SNAPSHOT_VERSION);
+
+    // residual_window < group_size -> InvalidConfig
+    const bad_cfg = cap.attention.KiviFlatConfig{ num_kv_heads: 2, head_dim: 16, max_tokens: 16, group_size: 8, residual_window: 4 };
+    expect_true(!bad_cfg.isValid());
+    let pk: [64]u8 = [0; 64];
+    let pv: [64]u8 = [0; 64];
+    let kgp: [64]KiviAffineParams = [KiviAffineParams{}; 64];
+    let vtp: [32]KiviAffineParams = [KiviAffineParams{}; 32];
+    let rk: [64]f32 = [0.0; 64];
+    let rv: [64]f32 = [0.0; 64];
+
+    let got_cfg: bool = false;
+    * = cap.attention.KiviFlatKvCache.init(bad_cfg, pk[0..], pv[0..], kgp[0..], vtp[0..], rk[0..], rv[0..]) catch |e| {
+        if (e == KiviFlatError.InvalidConfig) got_cfg = true;
+    };
+    expect_true(got_cfg);
+
+    // Valid small cache -> HeadOutOfBounds & CapacityFull
+    const ok_cfg = KiviFlatConfig{ num_kv_heads: 1, head_dim: 8, max_tokens: 4, group_size: 4, residual_window: 4 };
+    let c = KiviFlatKvCache.init(ok_cfg, pk[0..], pv[0..], kgp[0..], vtp[0..], rk[0..], rv[0..]) catch {
+        expect_true(false);
+        return;
+    };
+    const kv: [8]f32 = [1.0; 8];
+    let out8: [8]f32 = [0.0; 8];
+    let got_oob: bool = false;
+    c.decodeHeadQuery(2, kv[0..], out8[0..]) catch |e| {
+        if (e == KiviFlatError.HeadOutOfBounds) got_oob = true;
+    };
+    expect_true(got_oob);
+
+    let i: usize = 0;
+    while (i < 4) : (i += 1) {
+        c.appendTokenAllHeads(kv[0..], kv[0..]) catch { expect_true(false); };
+    }
+    let got_full: bool = false;
+    c.appendTokenAllHeads(kv[0..], kv[0..]) catch |e| {
+        if (e == KiviFlatError.CapacityFull) got_full = true;
+    };
+    expect_true(got_full);
 }
