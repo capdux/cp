@@ -247,3 +247,10 @@ export {
     parseErrorSeverity,
     PgErrorResponse,
 } from "./errorResponse.cp";
+
+export {
+    PG_TAG_COMMAND_COMPLETE,
+    PG_COMMAND_COMPLETE_MIN_FRAME_LEN,
+    PgCommandCompleteError,
+    PgCommandCompleteFrame,
+} from "./commandComplete.cp";

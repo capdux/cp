@@ -465,6 +465,22 @@ const decoded = PgErrorResponse.decodeFrame(buf[0..n])?;
 * = decoded.isUniqueViolation(); // true
 ```
 
+### `CommandComplete`（`'C'`）命令完成帧编解码与事务状态判别（`commandComplete.cp`）
+
+> 吸收自 `/data/dev/bun/src/sql/postgres/protocol/CommandComplete.cp`，零堆分配实现 PostgreSQL v3.0 Backend `CommandComplete`（Tag `'C' = 0x43`）完整线协议帧编解码，无缝衔接 `PgCommandTag` 提取 DML/查询行数与事务控制命令判别。
+
+- 核心导出：`PG_TAG_COMMAND_COMPLETE`（`'C'`）、`PG_COMMAND_COMPLETE_MIN_FRAME_LEN`（`6`）、`PgCommandCompleteError`、`PgCommandCompleteFrame`（`init`/`validate`/`payloadLen`/`frameLen`/`encodePayload`/`encodeFrame`/`encodeFromTag`/`decodePayload`/`decodeFrame`/`parseTag`/`kind`/`rowCount`/`isDml`/`isQueryOrCursor`/`isTransactionControl`/`eql`）。
+
+```cp
+import { PgCommandCompleteFrame, PgCommandTag } from "cap:pgwire";
+
+let buf: [64]u8 = [0; 64];
+const n = PgCommandCompleteFrame.encodeFromTag(PgCommandTag.parse("INSERT 0 42"), buf[0..])?;
+const frame = PgCommandCompleteFrame.decodeFrame(buf[0..n])?;
+* = frame.isDml();    // true
+* = frame.rowCount(); // 42
+```
+
 ---
 
 ## 4. 示例
