@@ -683,3 +683,22 @@ const res = runDirnameBuiltin(args[0..], out[0..])?;
 // out[0..res.bytes_written] == "/usr/local\n.\n", res.exit_code == 0
 * = res;
 ```
+
+### Shell `Cmd` 七态执行状态机与管道 I/O 关闭栅栏（`cmdState.cp`）
+
+- 吸收自 `/data/dev/bun/src/shell/states/Cmd.cp`；
+- 导出：`CmdParentKind`（`Stmt` / `Binary` / `Pipeline` / `Async`）、`CmdExecKind`（`None` / `Builtin` / `Subprocess`）、`CmdPhase`（`Idle` / `ExpandingAssigns` / `ExpandingRedirect` / `ExpandingArgs` / `Exec` / `WaitingWriteErr` / `Done`）、`CmdIoChannel`（`Stdin` / `Stdout` / `Stderr`）、`CmdStepAction`、`CmdStateError`、`CmdStep`、`CmdBufferedIoTracker`、`CmdStateMachine`；
+- 精确还原 Bun Shell 命令执行全生命周期：按 `Assigns -> Redirects -> Args -> Exec` 确定性推进；子进程模式下内置 `CmdBufferedIoTracker` 栅栏，严格保证仅在子进程退出且全部管道化的 `stdin`/`stdout`/`stderr` 关闭排空后才转入 `Done`，彻底避免输出截断与悬空管道引用。
+
+```cp
+import { CmdStateMachine, CmdParentKind, CmdIoChannel } from "cap:shell";
+
+let cmd = CmdStateMachine.init(CmdParentKind.Pipeline, false, 0, 1);
+* = cmd.next()?; // ExpandArg(0)
+* = cmd.onArgDone()?;
+* = cmd.next()?; // RunExec
+* = cmd.startSubprocess(false, true, false)?;
+* = cmd.onSubprocessExited(0)?; // false (等待 stdout 管道关闭)
+const done = cmd.onSubprocessIoClosed(CmdIoChannel.Stdout)?; // true -> Done
+* = done;
+```

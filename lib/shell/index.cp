@@ -453,6 +453,18 @@ export {
     runDirnameBuiltin,
 } from "./dirnameBuiltin.cp";
 
+export {
+    CmdParentKind,
+    CmdExecKind,
+    CmdPhase,
+    CmdIoChannel,
+    CmdStepAction,
+    CmdStateError,
+    CmdStep,
+    CmdBufferedIoTracker,
+    CmdStateMachine,
+} from "./cmdState.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);
