@@ -227,8 +227,6 @@ impl Codegen {
             || class.ident.sym == "TypeInfo"
             || class.ident.sym == "FieldInfo"
             || class.ident.sym == "MethodInfo"
-            || class.ident.sym == "Map"
-            || class.ident.sym == "Set"
             || (!self.is_lib_mode && class.ident.sym == "Box")
         {
             return;

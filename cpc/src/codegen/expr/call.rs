@@ -427,7 +427,7 @@ impl Codegen {
 
                     let _is_builtin_container = matches!(
                         raw_obj_ty,
-                        Some(Type::Ref(ref id)) if id.sym == "BinaryHeap" || id.sym == "VecDeque" || id.sym == "BTreeMap" || id.sym == "BTreeSet" || id.sym == "Map" || id.sym == "Set" || id.sym == "HashMap" || id.sym == "HashSet"
+                        Some(Type::Ref(ref id)) if !self.class_defs.contains_key(&id.sym) && (id.sym == "BinaryHeap" || id.sym == "VecDeque" || id.sym == "BTreeMap" || id.sym == "BTreeSet" || id.sym == "Map" || id.sym == "Set" || id.sym == "HashMap" || id.sym == "HashSet")
                     );
                     let is_array_type = matches!(raw_obj_ty, Some(Type::Array(_)));
                     if prop == "push" && is_array_type {

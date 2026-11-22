@@ -23,9 +23,39 @@ impl Codegen {
                                 || s.starts_with("[:")
                         }
                         Expr::Ident(id) => {
+                            let is_prim_type = matches!(
+                                id.sym.as_str(),
+                                "i8" | "u8"
+                                    | "i16"
+                                    | "u16"
+                                    | "i32"
+                                    | "u32"
+                                    | "i64"
+                                    | "u64"
+                                    | "i128"
+                                    | "u128"
+                                    | "isize"
+                                    | "usize"
+                                    | "f16"
+                                    | "f32"
+                                    | "f64"
+                                    | "f80"
+                                    | "f128"
+                                    | "bool"
+                                    | "void"
+                                    | "string"
+                                    | "anyopaque"
+                                    | "type"
+                                    | "anyerror"
+                                    | "noreturn"
+                            ) || id.sym.starts_with("c_")
+                                || ((id.sym.starts_with('u') || id.sym.starts_with('i'))
+                                    && id.sym.len() > 1
+                                    && id.sym[1..].chars().all(|c| c.is_ascii_digit()));
                             !self.locals.contains_key(&id.sym)
                                 && !self.current_fn_params.contains(&id.sym)
-                                && (self.type_aliases.contains_key(&id.sym)
+                                && (is_prim_type
+                                    || self.type_aliases.contains_key(&id.sym)
                                     || self.class_defs.contains_key(&id.sym)
                                     || self.enum_defs.contains_key(&id.sym)
                                     || self.trait_defs.contains_key(&id.sym)

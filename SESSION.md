@@ -1605,3 +1605,24 @@
   > 2. **`task-bun-20261122-static-let-addr`**（复现：[repro_static_let_addr.cp](file:///data/dev/cp/temp/repro_static_let_addr.cp)）：`struct` 内 `static fn` 返回 `static let` 静态变量地址 `&q` 时，借用检查器误报 `E0200: Cannot return reference to local variable 'this'`。
   >
   > 原有 2 路第 2 波常驻生态子智能体（Priority ① `0dcb94a7` + Priority ② `67ff1fce`）继续并行运转不受影响。待热修回报后将立即验收提交并同步 `SESSION.md`。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-struct-map-collision`）[ticket:task-bun-20261122-struct-map-collision]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 16:52:56` | 状态：`resolved` | 结单：`2026-11-22T17:00:02`
+- **报错/需求摘要**：顶层声明 pub struct Map 与内置 Map 冲突时，cpc 无报错但静默丢弃整段结构体输出
+- **结单与处理汇报**：已修复并发布 release cpc：移除 decl_class.rs 中对顶层 struct Map/Set 的静默跳过，并为 runtime_emit.rs/borrow.rs/call.rs 补充用户自定义 class_defs 冲突守卫。原始 repro_struct_map_collision.cp (zig ast-check) 与新增回归 cap/test/test_struct_map_collision.cp 均 100% PASS。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-generic-arg-opt`）[ticket:task-bun-20261122-generic-arg-opt]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 16:52:56` | 状态：`resolved` | 结单：`2026-11-22T17:00:02`
+- **报错/需求摘要**：泛型实参位后缀可选类型 Box(i32?) 未被 lower 为 Box(?i32)，原样输出导致 zig ast-check 报 expected ',' after argument
+- **结单与处理汇报**：已修复并发布 release cpc：map_type.rs 新增 map_call_type_sym 对泛型圆括号实参位（含嵌套与链式成员）递归调用 map_generic_args_str 将后缀可选类型 Box(i32?) lower 为 Box(?i32)，并补全 error_flow.rs 表达式位基础原始类型可选识别。原始 repro_generic_arg_opt_typeof.cp (zig ast-check) 与新增回归 cap/test/test_generic_arg_opt.cp 均 100% PASS。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 16:52:58）[step:15409]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(2条: task-bun-20261122-struct-map-collision,task-bun-20261122-generic-arg-opt)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取 2 条新编译器阻断工单并立即启动独立热修子智能体 **`b1e72764`**（`CPC Hotfix Engineer`）打包排查修复、发布 `sync_cpc.sh release`、补齐回归测试并执行 `resolve` 结单：
+  >
+  > 1. **`task-bun-20261122-struct-map-collision`**（复现：[repro_struct_map_collision.cp](file:///data/dev/cp/temp/repro_struct_map_collision.cp)）：顶层声明 `pub struct Map` 与内置 `Map` 冲突时，`cpc` 无报错但静默丢弃整段结构体输出；
+  > 2. **`task-bun-20261122-generic-arg-opt`**（复现：[repro_generic_arg_opt_typeof.cp](file:///data/dev/cp/temp/repro_generic_arg_opt_typeof.cp)）：泛型实参位后缀可选类型 `Box(i32?)` 未 lower 为 `Box(?i32)`，导致 Zig 报 `expected ',' after argument`。
+  >
+  > 原有 2 路常驻生态子智能体（Priority ① `0dcb94a7` + Priority ③ `67ff1fce`）继续并行运转不受影响。待热修回报后将立即验收提交并同步 `SESSION.md`。

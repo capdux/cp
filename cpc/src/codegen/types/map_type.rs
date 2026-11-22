@@ -52,6 +52,8 @@ impl Codegen {
                     } else {
                         name.to_string()
                     }
+                } else if !name.starts_with('@') && name.contains('(') && name.contains(')') {
+                    self.map_call_type_sym(name)
                 } else {
                     name.to_string()
                 }
@@ -168,6 +170,10 @@ impl Codegen {
                 }
                 if Self::is_inline_container_type_sym(&ident.sym) {
                     return super::lower_struct_body(&ident.sym);
+                }
+                if !ident.sym.starts_with('@') && ident.sym.contains('(') && ident.sym.contains(')')
+                {
+                    return self.map_call_type_sym(&ident.sym);
                 }
                 let is_custom_int = (ident.sym.starts_with('u') || ident.sym.starts_with('i'))
                     && ident.sym.len() > 1
@@ -443,6 +449,60 @@ impl Codegen {
         parts
     }
 
+    pub(crate) fn map_call_type_sym(&self, sym: &str) -> String {
+        if sym.starts_with('@') {
+            return sym.to_string();
+        }
+        let bytes = sym.as_bytes();
+        let mut out = String::with_capacity(sym.len());
+        let mut i = 0;
+        while i < bytes.len() {
+            if bytes[i] == b'(' {
+                let start = i + 1;
+                let mut depth = 1usize;
+                let mut j = start;
+                let mut in_str = false;
+                while j < bytes.len() && depth > 0 {
+                    let b = bytes[j];
+                    if in_str {
+                        if b == b'\\' && j + 1 < bytes.len() {
+                            j += 2;
+                            continue;
+                        }
+                        if b == b'"' {
+                            in_str = false;
+                        }
+                        j += 1;
+                        continue;
+                    }
+                    match b {
+                        b'"' => in_str = true,
+                        b'(' => depth += 1,
+                        b')' => depth -= 1,
+                        _ => {}
+                    }
+                    if depth == 0 {
+                        break;
+                    }
+                    j += 1;
+                }
+                if depth == 0 {
+                    let args = &sym[start..j];
+                    let mapped = self.map_generic_args_str(args);
+                    out.push('(');
+                    out.push_str(&mapped);
+                    out.push(')');
+                    i = j + 1;
+                    continue;
+                }
+            }
+            let ch = sym[i..].chars().next().unwrap();
+            out.push(ch);
+            i += ch.len_utf8();
+        }
+        out
+    }
+
     pub(crate) fn map_generic_args_str(&self, args: &str) -> String {
         let parts = Self::split_generic_args_str(args);
         let types = [
@@ -470,6 +530,7 @@ impl Codegen {
                     }
                 } else if p.contains('!')
                     || (p.contains('<') && p.ends_with('>'))
+                    || (!p.starts_with('@') && p.contains('(') && p.contains(')'))
                     || p.ends_with('?')
                     || p.starts_with('*')
                     || p.starts_with("[*")
@@ -481,6 +542,8 @@ impl Codegen {
                         self.map_type(&ty)
                     } else if p.contains('<') && p.ends_with('>') {
                         self.map_type_name(&p)
+                    } else if !p.starts_with('@') && p.contains('(') && p.contains(')') {
+                        self.map_call_type_sym(&p)
                     } else {
                         p
                     }

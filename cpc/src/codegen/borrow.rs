@@ -911,21 +911,22 @@ impl Codegen {
                     .split('(')
                     .next()
                     .unwrap_or(resolved_sym);
-                if base_name == "Map"
-                    || base_name == "Dict"
-                    || base_name == "Set"
-                    || base_name == "RegExp"
-                    || base_name == "Task"
-                    || base_name == "Server"
-                    || base_name == "Socket"
-                    || base_name == "Request"
-                    || base_name == "Response"
-                    || base_name == "VecDeque"
-                    || base_name == "BinaryHeap"
-                    || base_name == "BTreeMap"
-                    || base_name == "BTreeSet"
-                    || base_name == "HashMap"
-                    || base_name == "HashSet"
+                if !self.class_defs.contains_key(base_name)
+                    && (base_name == "Map"
+                        || base_name == "Dict"
+                        || base_name == "Set"
+                        || base_name == "RegExp"
+                        || base_name == "Task"
+                        || base_name == "Server"
+                        || base_name == "Socket"
+                        || base_name == "Request"
+                        || base_name == "Response"
+                        || base_name == "VecDeque"
+                        || base_name == "BinaryHeap"
+                        || base_name == "BTreeMap"
+                        || base_name == "BTreeSet"
+                        || base_name == "HashMap"
+                        || base_name == "HashSet")
                 {
                     return true;
                 }
