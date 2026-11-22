@@ -223,6 +223,22 @@ const params: [2]MySqlQueryParam = [
 const wire = encodeMySqlQueryWithAttrs(buf[0..], 0, "SELECT * FROM users WHERE id = ? AND status = ?", params[0..])?;
 const decoded = decodeMySqlQueryWithAttrs(wire)?; // decoded.param_count == 2, decoded.query == "SELECT ..."
 ```
+- **PostgreSQL v3 `StartupMessage` / `SSLRequest` / `CancelRequest` 零分配编解码器 (`pg_startup.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/StartupMessage.cp`)**：
+  - 常量与类型：`PG_PROTOCOL_V3_0` (`196608`)、`PG_SSL_REQUEST_CODE` (`80877103`)、`PG_CANCEL_REQUEST_CODE` (`80877102`)、`PG_MAX_STARTUP_PARAMS` (`32`)、`PgStartupCodecError`、`PgStartupParam`、`PgStartupConfig`（`database` 为空自动回退为 `user`，`client_encoding` 默认 `"UTF8"`）、`PgStartupParamIter`、`PgDecodedStartup`；
+  - 编解码函数：`encodePgStartup`、`decodePgStartup`、`encodePgSslRequestFrame`、`isPgSslRequestFrame`、`encodePgCancelFrame`。
+
+```typescript
+import { PgStartupConfig, PgStartupParam, encodePgStartup, decodePgStartup } from "cap:sql";
+
+let buf: [256]u8 = [0; 256];
+const extras: [1]PgStartupParam = [PgStartupParam{ key: "TimeZone", value: "UTC" }];
+const wire = encodePgStartup(buf[0..], PgStartupConfig{
+    user: "postgres",
+    application_name: "cap-agent",
+    extra_params: extras[0..],
+})?;
+const decoded = decodePgStartup(wire)?; // database 自动回退为 "postgres", client_encoding == "UTF8"
+```
 
 ---
 

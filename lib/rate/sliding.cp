@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/HTTPContext.cp | Synced: 2026-11-21T16:53:27Z (Weighted Sliding Window Rate Limiter)
+// Source: Absorbed from /data/dev/bun/src/http/HTTPContext.cp | Synced: 2026-11-22T05:28:51Z (Weighted Sliding Window Rate Limiter)
 // Pure-CP zero-allocation weighted sliding window counter & leaky bucket rate limiters (pure integer arithmetic).
 
 export struct SlidingWindowCounter {

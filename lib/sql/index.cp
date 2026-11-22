@@ -133,3 +133,20 @@ export {
     decodeMySqlSimpleQuery,
     decodeMySqlQueryWithAttrs,
 } from "./mysql_query.cp";
+
+export {
+    PG_PROTOCOL_V3_0,
+    PG_SSL_REQUEST_CODE,
+    PG_CANCEL_REQUEST_CODE,
+    PG_MAX_STARTUP_PARAMS,
+    PgStartupCodecError,
+    PgStartupParam,
+    PgStartupConfig,
+    PgStartupParamIter,
+    PgDecodedStartup,
+    encodePgStartup,
+    decodePgStartup,
+    encodePgSslRequestFrame,
+    isPgSslRequestFrame,
+    encodePgCancelFrame,
+} from "./pg_startup.cp";

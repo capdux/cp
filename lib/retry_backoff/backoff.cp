@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/HTTPContext.cp | Synced: 2026-11-21T14:26:58Z (Exponential Backoff & RFC 9110 Retry-After)
+// Source: Absorbed from /data/dev/bun/src/http/HTTPContext.cp | Synced: 2026-11-22T05:28:51Z (Exponential Backoff & RFC 9110 Retry-After)
 
 /// 指数退避随机抖动策略
 export enum JitterMode {

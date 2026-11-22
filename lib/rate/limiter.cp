@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/HTTPContext.cp | Synced: 2026-11-21T16:53:35Z (Token Bucket & Sliding Window Rate Limiter)
+// Source: Absorbed from /data/dev/bun/src/http/HTTPContext.cp | Synced: 2026-11-22T05:28:51Z (Token Bucket & Sliding Window Rate Limiter)
 
 const U64_MAX: u64 = 0xFFFF_FFFF_FFFF_FFFF;
 

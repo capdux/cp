@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/glob/matcher.cp | Synced: 2026-11-21T12:28:06Z
+// Source: Absorbed from /data/dev/bun/src/glob/matcher.cp | Synced: 2026-11-22T05:27:23Z
 // lib/glob/matcher.cp
 // High-performance Unix Glob matcher in pure CP
 

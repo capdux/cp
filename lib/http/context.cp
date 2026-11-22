@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/HTTPContext.cp | Synced: 2026-11-21T02:57:04Z
+// Source: Absorbed from /data/dev/bun/src/http/HTTPContext.cp | Synced: 2026-11-22T05:28:51Z
 // lib/http/context.cp
 // CP HTTP Context & Keep-Alive Connection Pool (cap:http)
 
