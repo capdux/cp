@@ -74,6 +74,20 @@
 | `RedactStats` | `{ bytes_written: usize, redacted_emails: usize, redacted_keys: usize, redacted_phones: usize }` |
 | `redactSensitiveText(input, out_buf: *[]u8)` | 零分配脱敏 Email、API Key（`sk-`/`ghp_`/`AKIA`）与长数字/电话号码为 `[REDACTED]`，缓冲不足返回 `null` |
 
+### 4. 零堆分配 Prompt 模板渲染与 Token 预算对话窗口打包 (`lib/prompt/template.cp`)
+
+| 符号 / 方法 | 签名与说明 |
+| :--- | :--- |
+| `TemplateVar` | `{ key: string, value: string }` |
+| `TemplateRenderStatus` | `Ok` \| `MissingVariable` \| `UnclosedPlaceholder` \| `BufferTooSmall` |
+| `TemplateRenderResult` | `{ status: TemplateRenderStatus, bytes_written: usize, substitutions: usize }` |
+| `renderPromptTemplate(tmpl, vars, strict, out_buf: *[]u8)` | 零堆分配渲染 `{{key}}` 与 `{{key\|fallback}}`（支持 `\{\{` 转义；`strict = true` 缺参报 `MissingVariable`，`false` 保留原占位符） |
+| `extractTemplateKeys(tmpl, out_keys: *[]string): usize?` | 提取模板中所有去重占位符键名（跳过转义序列），用于启动期变量完备性校验；未闭合或缓冲不足返回 `null` |
+| `PackRole` | `System` \| `User` \| `Assistant` \| `Tool` |
+| `PackableMessage` | `{ id: u32, role: PackRole, token_count: u32, pinned: bool }` |
+| `PackSummary` | `{ selected_count: usize, dropped_count: usize, used_tokens: u32, truncated_pinned: bool }` |
+| `packContextWindow(messages, max_tokens, reserve_output_tokens, out_indices: *[]usize): PackSummary?` | 先锁定保留全部 `pinned` 与 `System` 消息，再从最新消息逆序贪心装入剩余预算，最后按原始时间正序输出选中索引（内部采用 `u64` 防溢出） |
+
 ---
 
 ## 三、 使用示例
@@ -143,5 +157,46 @@ fn processAgentOutput(raw_reply: string): bool {
         return jsonHasTopLevelKeys(json_slice, required);
     }
     return false;
+}
+```
+
+### 3. 零堆分配 Prompt 模板渲染与对话窗口打包示例 (`template.cp`)
+
+```typescript
+import {
+    TemplateVar,
+    PackRole,
+    PackableMessage,
+    renderPromptTemplate,
+    extractTemplateKeys,
+    packContextWindow,
+} from "cap:prompt";
+
+fn buildAgentRequestContext() {
+    // 1. 启动期提取模板变量键并零堆渲染 System Prompt
+    const tmpl = "You are {{agent_name|Nexus}}, mode={{mode}}, literal=\\{\\{tag}}";
+    let keys_buf: [4]string = [""; 4];
+    let keys: []string = keys_buf[0..];
+    * = extractTemplateKeys(tmpl, keys);
+
+    const vars: [1]TemplateVar = [TemplateVar{ key: "mode", value: "strict" }];
+    let rendered_buf: [256]u8 = [0; 256];
+    let rendered: []u8 = rendered_buf[0..];
+    const render_res = renderPromptTemplate(tmpl, vars[0..], true, rendered);
+    * = render_res;
+
+    // 2. 在 320 token 输入预算内锁定 System + Pinned 并优先保留最新轮次
+    const msgs: [4]PackableMessage = [
+        PackableMessage{ id: 1, role: PackRole.System, token_count: 100, pinned: false },
+        PackableMessage{ id: 2, role: PackRole.User, token_count: 150, pinned: false },
+        PackableMessage{ id: 3, role: PackRole.User, token_count: 80, pinned: false },
+        PackableMessage{ id: 4, role: PackRole.Assistant, token_count: 90, pinned: false },
+    ];
+    let selected_buf: [4]usize = [0; 4];
+    let selected: []usize = selected_buf[0..];
+    if (summary := packContextWindow(msgs[0..], 400, 80, selected)) {
+        // selected_buf[0..summary.selected_count] == [0, 2, 3] (按原始时间正序)
+        * = summary;
+    }
 }
 ```

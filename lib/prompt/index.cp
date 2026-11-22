@@ -26,3 +26,15 @@ export {
     jsonHasTopLevelKeys,
     redactSensitiveText,
 } from "./structured.cp";
+
+export {
+    TemplateVar,
+    TemplateRenderStatus,
+    TemplateRenderResult,
+    PackRole,
+    PackableMessage,
+    PackSummary,
+    renderPromptTemplate,
+    extractTemplateKeys,
+    packContextWindow,
+} from "./template.cp";
