@@ -77,3 +77,12 @@ export {
     ScheduleStep,
     BatchScheduler,
 } from "./scheduler.cp";
+
+export {
+    FieldType,
+    FieldSpec,
+    SchemaErrorKind,
+    ValidationReport,
+    validateToolArgs,
+    formatValidationHint,
+} from "./tool_schema.cp";

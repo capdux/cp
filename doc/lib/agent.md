@@ -1,6 +1,6 @@
 # `cap:agent` — AI Agent 核心运行时标准库
 
-`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏（`budget.cp`）、多智能体任务图 DAG 调度器（`dag.cp`）、评测基准与轨迹打分（`eval.cp`）、ReAct 执行状态机与确定性检查点（`react.cp`）、LLM 流式 SSE 解析与遥测（`sse.cp`）、多模型网关路由与限流故障转移（`model_router.cp`）、输入/输出安全护栏与策略引擎（`guardrail.cp`）以及连续批处理与前缀缓存亲和调度器（`scheduler.cp`）八个子模块。
+`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏（`budget.cp`）、多智能体任务图 DAG 调度器（`dag.cp`）、评测基准与轨迹打分（`eval.cp`）、ReAct 执行状态机与确定性检查点（`react.cp`）、LLM 流式 SSE 解析与遥测（`sse.cp`）、多模型网关路由与限流故障转移（`model_router.cp`）、输入/输出安全护栏与策略引擎（`guardrail.cp`）、连续批处理与前缀缓存亲和调度器（`scheduler.cp`）以及工具调用参数 JSON Schema 校验器（`tool_schema.cp`）九个子模块。
 
 ---
 
@@ -447,5 +447,46 @@ fn continuousBatchingDemo() {
 
     const step = sched.stepSchedule(1010, 0xCAFE, &pf_s, &dc_s);
     * = step;
+}
+```
+
+---
+
+## 子模块：LLM 工具调用参数 JSON Schema 零分配校验器（`tool_schema.cp`）
+
+### 核心特性
+
+- **零分配直接扫描原始 JSON 对象（`validateToolArgs`）**：无需先反序列化 DOM/AST，直接在词法层遍历顶层 `"key": value` 键值对，精准区分 `Integer`（纯整数）与 `Number`（含小数/科学计数法），执行 `[min_num, max_num]` 数值区间、解码后字符串长度 `[min_len, max_len]`、`enum_values` 枚举白名单、必填字段缺失、重复键与未知字段校验。
+- **LLM 自愈错误提示格式化（`formatValidationHint`）**：将 `ValidationReport` 直接格式化为标准自然语言诊断字符串（如 `"Tool argument validation failed: missing required field 'path'"`），可直接回灌给模型进行下一轮自动参数修正。
+
+### 导出清单
+
+- **Schema 与报告类型**：`FieldType`（`Any | String | Number | Integer | Boolean | Array | Object | Null`）、`FieldSpec`、`SchemaErrorKind`、`ValidationReport`
+- **校验与提示生成**：`validateToolArgs`、`formatValidationHint`
+
+### 使用示例
+
+```typescript
+import std from "std";
+import {
+    FieldType,
+    FieldSpec,
+    validateToolArgs,
+    formatValidationHint,
+} from "cap:agent";
+
+fn toolSchemaDemo() {
+    const modes: [2]string = ["read", "write"];
+    const empty_enum: [0]string = [];
+    const specs: [3]FieldSpec = [
+        FieldSpec { name: "path", kind: FieldType.String, required: true, has_min_num: false, min_num: 0.0, has_max_num: false, max_num: 0.0, min_len: 1, max_len: 256, enum_values: empty_enum[0..] },
+        FieldSpec { name: "mode", kind: FieldType.String, required: true, has_min_num: false, min_num: 0.0, has_max_num: false, max_num: 0.0, min_len: 0, max_len: 0, enum_values: modes[0..] },
+        FieldSpec { name: "limit", kind: FieldType.Integer, required: false, has_min_num: true, min_num: 1.0, has_max_num: true, max_num: 100.0, min_len: 0, max_len: 0, enum_values: empty_enum[0..] },
+    ];
+
+    const rep = validateToolArgs("{\"path\":\"src/main.cp\",\"mode\":\"read\",\"limit\":20}", specs[0..], false);
+    let hint_buf: [128]u8 = std.mem.zeroes([128]u8);
+    let hint_s: []u8 = hint_buf[0..];
+    * = formatValidationHint(rep, &hint_s);
 }
 ```
