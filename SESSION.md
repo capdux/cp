@@ -1353,3 +1353,7 @@
 ### 2026-11-22（分类合并交付：lib/pkg/workspace_map.cp + 3 项 Bun 清零 + 满 10 项轮换 | 2026-11-22 14:27:19）
 - **执行与结单汇报**：
   > 子智能体核查清零 3 项 Bun 上游变动并从 Bun WorkspaceMap.cp 吸收归入 lib/pkg/workspace_map.cp (6/6 PASS)，满 10 项（累计清零 66 项 Bun 变动、吸收 10 个子模块 60/60 PASS）回收 6b80f1d4 并启全新 Bun Upstream Sync Absorber。
+
+### 2026-11-22（分类合并交付：lib/a2a/negotiation.cp | 2026-11-22 14:28:23）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/a2a/negotiation.cp（A2A 多智能体能力协商、模态/特性交集与 SLA 契约 Top-K 择优引擎，5/5 PASS），归入 cap:a2a 并同步 cp_lib_ref.md；续派 lib/agentmem/consolidation.cp。

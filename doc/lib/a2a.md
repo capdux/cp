@@ -6,6 +6,7 @@
 - **AgentCard 与能力发现**：标准化描述 Agent 名称、端点 URL、版本、技能（`AgentSkill`）与流式/推送能力，支持 RFC 8259 JSON 序列化与摘要解析。
 - **Task 生命周期状态机与多模态载荷**：严格校验 `Submitted` / `Working` / `InputRequired` / `Completed` / `Failed` / `Canceled` / `Rejected` 状态转移，终态不可逆；支持 `Text`、`DataJson`、`FileUri` 载荷及 `Artifact` 产物分片。
 - **JSON-RPC 2.0 任务路由与 SSE 流式事件**：内置 `A2aServer`（支持 `agent/card`、`tasks/send`、`tasks/get`、`tasks/cancel`，含 `historyLength` 截断与容量上限防护）及 `TaskStatusUpdateEvent` / `TaskArtifactUpdateEvent` SSE 编解码。
+- **零堆分配多智能体能力协商与 SLA 契约择优 (`negotiation.cp`)**：通过 `A2aModalityMask` / `A2aFeatureMask` 位掩码进行输入/输出模态与特性交集计算，`checkPeerCompatibility` 精确分类 7 类硬约束拒绝原因，`negotiateBestPeers` 基于可靠性、偏好特性命中、延迟与成本综合打分零堆分配输出 Top-K 最优协作节点。
 
 ## 2. 核心类型
 
@@ -15,6 +16,7 @@
 - `A2aServerConfig` / `A2aTask` / `A2aServer`：有界容量的任务路由器与状态机管理器。
 - `SseEventKind` / `TaskStatusUpdateEvent` / `TaskArtifactUpdateEvent` / `SseTaskEvent` / `ParsedSseTaskEvent`：SSE 流式事件模型。
 - `A2aError`：协议错误集（`InvalidJson`、`TaskNotFound`、`TaskNotCancelable`、`InvalidStateTransition`、`CapacityExceeded`、`InvalidSseEvent` 等）。
+- `A2aModalityMask` / `A2aFeatureMask` / `A2aRequirement` / `A2aPeerOffer` / `NegotiationRejectReason` / `NegotiationMatch`：多智能体能力协商位掩码、需求/报价模型、硬约束拒绝原因与 Top-K 匹配结果（`negotiation.cp`）。
 
 ## 3. API 速查
 
@@ -41,6 +43,9 @@
 | `ring.publish(*_, task_id, kind, timestamp_ms, is_final, payload_hash, payload_len)` | 分配单调递增 `event_id` 并写入事件，环满自动覆盖最旧槽位 |
 | `ring.replayAfter(last_event_id, task_filter, out_events)` | 按 `Last-Event-ID` 游标与可选 `task_id` 过滤回放事件，返回 `ReplayResult`（含 `gap_detected` 覆盖缺口检测与截断安全） |
 | `ring.latestEventId()` / `ring.oldestEventId()` / `ring.count()` / `ring.clear()` | 查询最新/最旧保留事件 ID、有效数量与清空缓冲 |
+| `checkPeerCompatibility(req, offer)` | 按严格优先级校验离线、协议版本、输入/输出模态、必选特性、延迟与成本上限，返回 `NegotiationRejectReason` |
+| `scoreCompatiblePeer(req, offer)` | 按可靠性(4000) + 偏好特性命中(2500) + 延迟效率(2000) + 成本效率(1500) 计算 `[0, 10000]` 整数综合分 |
+| `negotiateBestPeers(req, offers, *out_matches)` | 零堆分配过滤不兼容节点并原地降序输出全局 Top-K 最优 `NegotiationMatch`（含模态/特性位掩码交集） |
 
 ## 4. 示例
 
@@ -143,5 +148,61 @@ pub fn demoA2aEventStreamResume() {
         // 游标已被环形覆盖，通知客户端拉取任务全量快照
     }
     * = res;
+}
+```
+
+### 4.5 零堆分配多智能体能力协商与 SLA 择优示例 (`negotiation.cp`)
+
+```cp
+import {
+    A2aModalityMask,
+    A2aFeatureMask,
+    A2aRequirement,
+    A2aPeerOffer,
+    NegotiationMatch,
+    negotiateBestPeers,
+} from "cap:a2a";
+
+pub fn demoA2aCapabilityNegotiation() {
+    const req = A2aRequirement{
+        required_in_modalities: A2aModalityMask.TEXT | A2aModalityMask.CODE,
+        required_out_modalities: A2aModalityMask.JSON,
+        required_features: A2aFeatureMask.STREAMING,
+        preferred_features: A2aFeatureMask.STATE_HISTORY | A2aFeatureMask.AUTH_MTLS,
+        max_latency_ms: 800,
+        max_cost_micro_usd: 50000,
+        min_protocol_minor: 2,
+    };
+
+    const offers: [2]A2aPeerOffer = [
+        A2aPeerOffer{
+            peer_id: 10,
+            in_modalities: A2aModalityMask.TEXT | A2aModalityMask.CODE | A2aModalityMask.IMAGE,
+            out_modalities: A2aModalityMask.JSON | A2aModalityMask.TEXT,
+            features: A2aFeatureMask.STREAMING | A2aFeatureMask.STATE_HISTORY,
+            p95_latency_ms: 420,
+            cost_micro_usd: 22000,
+            protocol_minor: 3,
+            reliability_bps: 9920,
+            online: true,
+        },
+        A2aPeerOffer{
+            peer_id: 20,
+            in_modalities: A2aModalityMask.TEXT | A2aModalityMask.CODE,
+            out_modalities: A2aModalityMask.JSON,
+            features: A2aFeatureMask.STREAMING | A2aFeatureMask.STATE_HISTORY | A2aFeatureMask.AUTH_MTLS,
+            p95_latency_ms: 180,
+            cost_micro_usd: 15000,
+            protocol_minor: 3,
+            reliability_bps: 9980,
+            online: true,
+        },
+    ];
+
+    let top_buf: [2]NegotiationMatch = [NegotiationMatch{}; 2];
+    let top: []NegotiationMatch = top_buf[0..];
+    const matched = negotiateBestPeers(req, offers[0..], top);
+    // matched == 2, top[0].peer_id == 20（更高可靠性、全偏好特性命中且更低延迟与成本）
+    * = matched;
 }
 ```
