@@ -116,3 +116,16 @@ export {
     evaluatePromptFirewall,
     redactFirewallSecrets,
 } from "./firewall.cp";
+
+export {
+    MediaPartKind,
+    ImageDetailMode,
+    MultimodalRejectReason,
+    MultimodalPart,
+    MultimodalLimits,
+    MultimodalAuditResult,
+    estimateImageTokens,
+    estimateAudioTokens,
+    isAllowedMultimodalMime,
+    auditMultimodalPayload,
+} from "./multimodal.cp";

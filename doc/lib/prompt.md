@@ -525,3 +525,41 @@ fn demoPromptFirewall(text: string) {
     }
 }
 ```
+
+### 11. 零堆分配多模态附件校验与视觉瓦片 Token 预算估算器 (`multimodal.cp`)
+
+面向多模态 AI Agent（文本 / 图像 / 音频 / 文档）的 100% 纯 CP 零堆分配附件治理与 Token 估算器：
+
+- **导出符号**：`MediaPartKind`（`Text | Image | Audio | Document`）、`ImageDetailMode`（`Low | High | Auto`）、`MultimodalRejectReason`、`MultimodalPart`、`MultimodalLimits`（`default`, `isValid`）、`MultimodalAuditResult`、`estimateImageTokens`、`estimateAudioTokens`、`isAllowedMultimodalMime`、`auditMultimodalPayload`。
+- **核心算法**：
+  - `estimateImageTokens(w, h, detail)`：`Low` 固定 `85` tokens；`High` 遵循先缩放至 `2048×2048` 内、再将短边缩放至 `768px` 按 `512×512` 瓦片计 `85 + 170 * tiles`；`Auto` 对 `<= 512×512` 小图走 `Low`，大图走 `High`。
+  - `estimateAudioTokens(duration_ms, tokens_per_sec)`：默认 `32 tokens/sec` 向上取整。
+  - `isAllowedMultimodalMime(kind, mime_type)`：大小写无关且自动忽略 `;charset=...` 参数的严格 MIME 白名单。
+  - `auditMultimodalPayload(parts, limits)`：一站式校验附件数、总字节数、尺寸/时长/页数上限、MIME 白名单与多模态总 Token 预算，精准返回违规原因与 `offending_index`。
+
+```cp
+import {
+    MediaPartKind,
+    ImageDetailMode,
+    MultimodalPart,
+    MultimodalLimits,
+    estimateImageTokens,
+    auditMultimodalPayload,
+} from "cap:prompt";
+
+fn demoMultimodalBudgetAudit() {
+    // 1024x1024 High 图像 => 缩放至 768x768 => 2x2=4 瓦片 => 85 + 170*4 = 765 tokens
+    const img_toks = estimateImageTokens(1024, 1024, ImageDetailMode.High);
+    * = img_toks;
+
+    const parts: [3]MultimodalPart = [
+        MultimodalPart{ kind: MediaPartKind.Text, mime_type: "text/plain; charset=utf-8", byte_size: 400 },
+        MultimodalPart{ kind: MediaPartKind.Image, mime_type: "image/png", byte_size: 250000, width: 1024, height: 1024, image_detail: ImageDetailMode.High },
+        MultimodalPart{ kind: MediaPartKind.Audio, mime_type: "audio/wav", byte_size: 160000, duration_ms: 5000 },
+    ];
+    const audit = auditMultimodalPayload(parts[0..], MultimodalLimits.default());
+    if (audit.allowed) {
+        * = audit.total_tokens; // 100 + 765 + 160 = 1025
+    }
+}
+```
