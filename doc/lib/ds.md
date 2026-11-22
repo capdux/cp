@@ -122,3 +122,62 @@ pub fn demoDs(alloc: std.mem.Allocator): !void {
 | 文本驻留/模糊/校验 | `lib/ds/fuzzy.cp` | Levenshtein / Damerau / Jaro-Winkler | 模糊匹配与候选排序 |
 | 文本驻留/模糊/校验 | `lib/ds/merkle_tree.cp` | SHA-256 Merkle Tree | 默克尔树构建与包容证明验证 |
 | 参考归档（不导出） | `lib/ds/{bitset,disjoint_set,fenwick,segment_tree,skip_list,suffix_array,rope,trie_radix}_.cp` | 重叠数据结构（仅参考） | 与 `lib/ds/` 权威实现功能重叠，保留供对比分析，不在 `cap:ds` 重复导出 |
+
+---
+
+## 流式热点探测与高频 Top-K 统计基础库（`heavy_hitter.cp`）
+
+面向实时流量热点分析、缓存准入（W-TinyLFU / Heavy-Hitter 识别）与 AI 高频查询检测的 100% 纯 CP、零堆分配、确定性流式频率估计与热点追踪引擎：
+
+### 1. Space-Saving 热点追踪器（`HeavyHitterEntry` / `HeavyHitterTracker`）
+- 经典 Metwally Space-Saving 算法：固定 `K` 槽位（调用方栈/静态切片 `[]HeavyHitterEntry`），`O(K)` 插入与最小计数槽替换，严格保证任意被追踪项满足 `est_count - error_bound <= true_freq <= est_count` 且 `error_bound <= floor(total_weight / K)`：
+  - `HeavyHitterTracker.init(slots_buf: *[]HeavyHitterEntry): HeavyHitterTracker?`（空槽返回 `null`）
+  - `observe(*_, key: string, weight: u64): bool`（拒绝 `weight == 0`）
+  - `topK(out_entries: *[]HeavyHitterEntry): usize`（按 `est_count` 降序、同分按 `key_hash` 升序确定性输出）
+  - `lookup(key: string): HeavyHitterEntry?` / `guaranteedMinCount(key: string): u64`
+  - `totalWeight(): u64` / `len(): usize` / `capacity(): usize` / `evictionCount(): u64` / `reset(*_)`
+
+### 2. Conservative-Update Count-Min Sketch（`CmsSketchConfig` / `ConservativeCms`）
+- 调用方 `[]u32` 扁平缓冲零堆承载（`depth × width`），采用 Conservative Update（仅递增小于 `min_val + delta` 的行，显著压低高偏斜 Zipf 分布下的过估计误差）：
+  - `CmsSketchConfig.init(depth, width, seed = 0x517CC1B727220A95): CmsSketchConfig?` / `isValid()` / `requiredCells(): usize?`
+  - `ConservativeCms.init(counters_buf: *[]u32, cfg: CmsSketchConfig): ConservativeCms?`
+  - `add(*_, key: string, delta: u32): bool`（拒绝 `delta == 0`）
+  - `estimate(key: string): u32`
+  - `mergeFrom(*_, other: ConservativeCms): bool`（分布式分片饱和聚合，校验 `depth`/`width`/`seed` 一致）
+  - `decayHalf(*_)`（滑动时间窗指数半衰 `>> 1`）/ `reset(*_)` / `totalCount()` / `rowCount()` / `colCount()`
+
+### QuickStart 示例
+
+```cp
+import {
+    HeavyHitterEntry,
+    HeavyHitterTracker,
+    CmsSketchConfig,
+    ConservativeCms,
+} from "cap:ds";
+
+pub fn demoHeavyHitterAndCms() {
+    // 1. Space-Saving 零堆热点追踪器（固定 8 槽位）
+    let slots: [8]HeavyHitterEntry = [HeavyHitterEntry{}; 8];
+    let slots_s: []HeavyHitterEntry = slots[0..];
+    let tracker = HeavyHitterTracker.init(slots_s) ?? return;
+
+    * = tracker.observe("/api/chat", 500);
+    * = tracker.observe("/api/embed", 200);
+    * = tracker.observe("/health", 10);
+
+    let top: [2]HeavyHitterEntry = [HeavyHitterEntry{}; 2];
+    let top_s: []HeavyHitterEntry = top[0..];
+    const n_top = tracker.topK(top_s); // top[0].label == "/api/chat"
+
+    // 2. Conservative-Update Count-Min Sketch（4 x 256 栈缓冲）
+    const cfg = CmsSketchConfig.init(4, 256) ?? return;
+    let buf: [1024]u32 = [0; 1024];
+    let buf_s: []u32 = buf[0..];
+    let cms = ConservativeCms.init(buf_s, cfg) ?? return;
+    * = cms.add("prompt:summarize", 42);
+    const est = cms.estimate("prompt:summarize"); // >= 42
+    * = n_top;
+    * = est;
+}
+```

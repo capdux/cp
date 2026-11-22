@@ -220,3 +220,11 @@ export {
     hashInternal,
     verifyProof,
 } from "./merkle_tree.cp";
+
+// --- heavy_hitter ---
+export {
+    HeavyHitterEntry,
+    HeavyHitterTracker,
+    CmsSketchConfig,
+    ConservativeCms,
+} from "./heavy_hitter.cp";
