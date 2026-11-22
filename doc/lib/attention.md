@@ -14,6 +14,7 @@
 - **`RopeConfig` / RoPE / RMSNorm / LayerNorm / SwiGLU / GeLU** (`rope.cp`)：零堆分配 Transformer 基础推理核，支持 NTK-Aware 长上下文缩放的 RoPE 旋转位置编码、RMSNorm/LayerNorm 归一化与 SiLU/GeLU/SwiGLU 激活函数。
 - **`QUANT_BLOCK_SIZE` / `BlockQ8_0` / `BlockQ4_0` / GEMV** (`quant_matmul.cp`)：零堆分配 GGML 风格 32 元素分块量化与整型累加矩阵向量乘法（`W_q8 * x_q8` 与经典 llama.cpp `W_q4 * x_q8` 混合量化推理核）。
 - **`OnlineSoftmaxState` / `FlashAttnConfig` / `flashAttentionForward` / `flashAttentionSingleQuery`** (`flash.cp`)：零堆分配 O(1) 额外内存 FlashAttention-2 分块在线 Softmax 前向核，绝不物化 $N \times N$ 分数矩阵，原生支持因果掩码、Mistral 滑动窗口注意力与单 token 自回归解码热路径。
+- **`MoeGateKind` / `MoeRouteEntry` / `MoeDispatchStats` / `moeRouteToken` / `moeDispatchBatch` / `moeLoadBalanceLoss` / `moeCombineOutputs`** (`moe.cp`)：零堆分配稀疏混合专家（Sparse MoE）推理调度核，对标 Mixtral / Switch Transformer / Qwen3-MoE / DeepSeek-V3，支持 Softmax 与 Sigmoid 门控、无辅助损失 `expert_bias` 均衡偏置、容量受限 CSR 分桶派发（含溢出丢弃统计）、负载均衡辅助损失 $L_{\text{aux}}$ 与多专家加权输出合并。
 
 ## 3. API 速查
 
@@ -50,6 +51,10 @@
 | `FlashAttnConfig.default` | `(): FlashAttnConfig` | 默认配置（`scale = auto`、`causal = false`、`window_size = 0`、`block_kv = 32`） |
 | `flashAttentionForward` | `(q, k, v, seq_q, seq_kv, head_dim, cfg, out): bool` | O(1) 额外内存分块在线 Softmax 前向核（支持因果掩码与 Mistral 滑动窗口） |
 | `flashAttentionSingleQuery` | `(q_vec, k, v, seq_kv, head_dim, scale, out_vec): bool` | 自回归 Decode 单 token 生成热路径 |
+| `moeRouteToken` | `(router_logits, expert_bias, top_k, kind, renorm_topk, out_routes): bool` | 稀疏 MoE Top-K 专家门控路由（支持 `Softmax`/`Sigmoid`、可选 `expert_bias` 均衡偏置与 Top-K 权重重归一化） |
+| `moeDispatchBatch` | `(token_routes, n_tokens, top_k, n_experts, expert_capacity, expert_offsets_out, expert_tokens_out, expert_weights_out, counts_scratch): MoeDispatchStats?` | 容量受限批量 Token-to-Expert CSR 分桶派发，按到达顺序截断溢出并统计 `dispatched`/`dropped` |
+| `moeLoadBalanceLoss` | `(router_probs_flat, chosen_experts_flat, n_tokens, n_experts, top_k, frac_scratch, prob_scratch): f64?` | Switch/Mixtral 负载均衡辅助损失 $L_{\text{aux}} = E \sum f_e P_e$（完美均匀为 `1.0`，单专家坍缩为 `E`） |
+| `moeCombineOutputs` | `(expert_outs_flat, routes, hidden_dim, out_vec): bool` | 按 Top-K 路由权重加权合并多专家隐藏层输出 |
 
 ## 4. 示例
 
@@ -206,5 +211,48 @@ pub fn demoFlashAttention2(q: []const f64, k: []const f64, v: []const f64) {
     let step_out_buf: [4]f64 = [0.0; 4];
     let step_out: []f64 = step_out_buf[0..];
     * = flashAttentionSingleQuery(q[28..32], k, v, 8, 4, 0.0, step_out);
+}
+```
+
+### 稀疏混合专家（MoE）Top-K 路由、CSR 容量派发与加权合并示例 (`moe.cp`)
+
+```cp
+import {
+    MoeGateKind,
+    MoeRouteEntry,
+    moeRouteToken,
+    moeDispatchBatch,
+    moeCombineOutputs,
+} from "cap:attention";
+
+pub fn demoSparseMoeRouting() {
+    // 1. DeepSeek-V3 风格 Sigmoid Top-2 路由（带专家均衡偏置 + Top-K 重归一化）
+    const logits: [4]f64 = [1.2, 0.9, 0.3, -0.4];
+    const bias: [4]f64 = [-0.25, 0.0, 0.30, 0.0];
+    let routes_buf: [2]MoeRouteEntry = [MoeRouteEntry{}; 2];
+    let routes: []MoeRouteEntry = routes_buf[0..];
+    * = moeRouteToken(logits[0..], bias[0..], 2, MoeGateKind.Sigmoid, true, routes);
+
+    // 2. 批量容量受限 CSR 派发（此处演示 1 token x Top-2 到 4 专家，单专家容量 2）
+    let offsets_buf: [5]usize = [0; 5];
+    let tokens_buf: [2]usize = [0; 2];
+    let weights_buf: [2]f64 = [0.0; 2];
+    let scratch_buf: [4]usize = [0; 4];
+    let offsets: []usize = offsets_buf[0..];
+    let tokens: []usize = tokens_buf[0..];
+    let weights: []f64 = weights_buf[0..];
+    let scratch: []usize = scratch_buf[0..];
+    if (stats := moeDispatchBatch(routes_buf[0..], 1, 2, 4, 2, offsets, tokens, weights, scratch)) {
+        * = stats; // stats.dispatched == 2, stats.dropped == 0
+    }
+
+    // 3. 加权合并选中专家的隐藏层输出（hidden_dim = 4）
+    const expert_outs: [8]f64 = [
+        1.0, 2.0, 3.0, 4.0,
+        4.0, 3.0, 2.0, 1.0,
+    ];
+    let combined_buf: [4]f64 = [0.0; 4];
+    let combined: []f64 = combined_buf[0..];
+    * = moeCombineOutputs(expert_outs[0..], routes_buf[0..], 4, combined);
 }
 ```

@@ -130,6 +130,59 @@ pub fn demoRagChunking(doc: string) {
 
 ---
 
+## 零堆分配字节级 BPE 分词器 (`lib/text/bpe.cp`)
+
+专为 AI Agent / LLM 推理前端打造的纯 CP 零堆分配字节级 Byte-Pair Encoding（BPE）编解码器，以 `0..255` 原始字节为基础词表，支持任意 UTF-8 与二进制字节串比特无损往返：
+
+- **`BpeMerge`**：`{ left: u32, right: u32, merged_id: u32, rank: u32 }`（`rank` 越小优先级越高，支持多级嵌套合并树）
+- **`SpecialToken`**：`{ text: string, id: u32 }`（如 `<|endoftext|>`、`<|im_start|>`、`<|im_end|>`）
+- **`BpeVocab`**：`{ merges: []const BpeMerge, specials: []const SpecialToken }`，提供 `BpeVocab.init(merges, specials)`
+- **`bpeEncodeSegment(vocab: BpeVocab, bytes: []const u8, work_tokens: *[]u32): usize?`**：将原始字节初始化为 `0..255` token 序列后原地按最低 `rank` 迭代贪心合并，返回最终 token 数；`work_tokens` 容量不足返回 `null`。
+- **`bpeEncodeWithSpecials(vocab: BpeVocab, text: string, out_tokens: *[]u32, seg_work: *[]u32): usize?`**：优先识别 `specials` 中最长匹配控制词发射原子 ID（不被 BPE 拆散），其余正文段调用 `bpeEncodeSegment`；任一缓冲不足返回 `null`。
+- **`bpeDecode(vocab: BpeVocab, tokens: []const u32, out_bytes: *[]u8, expand_stack: *[]u32): usize?`**：无递归迭代栈展开，将 `0..255` 基础字节、`merged_id` 合并树与 `specials` 还原为原始字节流；内置未知 token ID、直接/间接循环合并规则与缓冲/栈溢出防护（异常时返回 `null`）。
+- **`bpeCountTokens(vocab: BpeVocab, text: string, seg_work: *[]u32): usize?`**：无需输出 token 缓冲即可精确计算 `text` 的 BPE token 总数（与 `bpeEncodeWithSpecials` 输出长度严格一致）。
+
+```typescript
+import {
+    BpeMerge,
+    SpecialToken,
+    BpeVocab,
+    bpeEncodeWithSpecials,
+    bpeDecode,
+    bpeCountTokens,
+} from "cap:text";
+
+pub fn demoBpeTokenizer() {
+    const merges: [2]BpeMerge = [
+        BpeMerge{ left: 104, right: 105, merged_id: 256, rank: 0 }, // "hi"
+        BpeMerge{ left: 256, right: 33, merged_id: 257, rank: 1 },  // "hi!"
+    ];
+    const specials: [1]SpecialToken = [
+        SpecialToken{ text: "<|im_start|>", id: 1000 },
+    ];
+    const vocab = BpeVocab.init(merges[0..], specials[0..]);
+
+    let out_toks_buf: [64]u32 = undefined;
+    let seg_work_buf: [64]u32 = undefined;
+    let out_toks: []u32 = out_toks_buf[0..];
+    let seg_work: []u32 = seg_work_buf[0..];
+
+    const input = "<|im_start|>hi!";
+    if (n := bpeEncodeWithSpecials(vocab, input, out_toks, seg_work)) {
+        let out_bytes_buf: [64]u8 = undefined;
+        let stack_buf: [32]u32 = undefined;
+        let out_bytes: []u8 = out_bytes_buf[0..];
+        let stack: []u32 = stack_buf[0..];
+        if (m := bpeDecode(vocab, out_toks[0..n], out_bytes, stack)) {
+            * = out_bytes[0..m]; // "<|im_start|>hi!"
+        }
+    }
+    * = bpeCountTokens(vocab, input, seg_work);
+}
+```
+
+---
+
 ## 上游行为契约与文本处理边界注意事项
 
 1. **UTF-8 码点边界安全不变式**：

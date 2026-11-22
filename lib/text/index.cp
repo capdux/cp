@@ -59,3 +59,13 @@ export {
     estimateRagTokens,
     locateLineRange,
 } from "./rag_chunker.cp";
+
+export {
+    BpeMerge,
+    SpecialToken,
+    BpeVocab,
+    bpeEncodeSegment,
+    bpeEncodeWithSpecials,
+    bpeDecode,
+    bpeCountTokens,
+} from "./bpe.cp";

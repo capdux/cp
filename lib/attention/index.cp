@@ -41,3 +41,13 @@ export {
     flashAttentionForward,
     flashAttentionSingleQuery,
 } from "./flash.cp";
+
+export {
+    MoeGateKind,
+    MoeRouteEntry,
+    MoeDispatchStats,
+    moeRouteToken,
+    moeDispatchBatch,
+    moeLoadBalanceLoss,
+    moeCombineOutputs,
+} from "./moe.cp";
