@@ -91,3 +91,12 @@ export {
     SubprocessReadableError,
     SubprocessReadable,
 } from "./subprocessReadable";
+
+export {
+    SUBPROCESS_WRITABLE_BUF_CAP,
+    SUBPROCESS_WRITABLE_PIPE_OVERHEAD_BYTES,
+    SUBPROCESS_WRITABLE_BUFFER_OVERHEAD_BYTES,
+    SubprocessWritableKind,
+    SubprocessWritableError,
+    SubprocessWritable,
+} from "./subprocessWritable";

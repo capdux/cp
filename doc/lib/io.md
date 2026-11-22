@@ -140,6 +140,21 @@ let r = SubprocessReadable.initPipe(7, 1024);
 const data = r.finishPipeToBuffer()?; // "out: ok", r.kind == SubprocessReadableKind.Buffer
 * = data;
 ```
+8. **子进程输入流六态写入状态机（`subprocessWritable.cp`，吸收自 `/data/dev/bun/src/runtime/api/bun/subprocess/Writable.cp` & `/data/dev/bun/docs/runtime/child-process.mdx`）**：
+   - 导出：`SUBPROCESS_WRITABLE_BUF_CAP` (`4096`)、`SUBPROCESS_WRITABLE_PIPE_OVERHEAD_BYTES` (`64`)、`SUBPROCESS_WRITABLE_BUFFER_OVERHEAD_BYTES` (`48`)、`SubprocessWritableKind`（`Pipe` / `Fd` / `Buffer` / `Memfd` / `Inherit` / `Ignore`）、`SubprocessWritableError`（`NotPipe` / `NotWritable` / `BufferOverflow` / `AlreadyEnded` / `InvalidFd`）、`SubprocessWritable`（`initInherit`/`initIgnore`/`initFd`/`initMemfd`/`initPipe`/`initBuffer`/`pendingBytes`/`pendingSlice`/`memoryCost`/`hasPendingActivity`/`ref`/`unref`/`writePipe`/`flushTo`/`takePipeHandle`/`onClose`/`close`/`finalize`/`isIgnored`）；
+   - 完整还原 Bun `Bun.spawn` 子进程 `stdin` 生命周期：`.Pipe` 支持增量 `writePipe`/`flushTo`/`close`（优雅排空后自动转 `.Ignore` 释放 `subprocess_ref_held` 防止悬空引用），`.Buffer` 支持静态载荷分片投喂且排空后自动触发 `onClose()`，`takePipeHandle(process_exited)` 复刻上游 `Writable.toJS()` 句柄移交与引用平衡语义。
+
+```cp
+import { SubprocessWritable, SubprocessWritableKind } from "cap:io";
+
+let w = SubprocessWritable.initPipe(8)?;
+* = w.writePipe("hello")?;
+* = w.writePipe(" world!")?;
+w.close(); // 标记 ended，等待剩余字节排空
+let out: [32]u8 = [0; 32];
+const n = w.flushTo(out[0..])?; // n == 12, w.kind == SubprocessWritableKind.Ignore
+* = n;
+```
 
 ---
 
