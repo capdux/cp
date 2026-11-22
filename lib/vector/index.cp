@@ -185,3 +185,13 @@ export {
     searchMatryoshkaTwoStageF32,
     searchMatryoshkaTwoStageL2F32,
 } from "./matryoshka.cp";
+
+export {
+    COLBERT_MAX_DOCS,
+    ColbertConfig,
+    ColbertDocSpan,
+    ColbertSearchHit,
+    ColbertIndexStats,
+    ColbertLiteIndex,
+    prune_low_norm_tokens,
+} from "./colbert_index.cp";

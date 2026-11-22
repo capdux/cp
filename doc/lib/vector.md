@@ -34,6 +34,7 @@
 | `lib/vector/hybrid_rag.cp` | `// Origin: Pure-CP Stdlib (AI Hybrid RAG Pipeline: Weighted RRF Fusion, SIMD @dot/@l2sq MMR Rerank & Token Budget Pruning) \| Created: 2026-11-22` | 生产级零堆分配混合 RAG 管线：可配权重双路/多路 RRF (`HybridRrfFusion`)、`@dot`/`@fma` SIMD MMR 多样性重排 (`mmrRerankSimdF32`)、`@l2sq` 近重复去重 (`dedupNearDuplicatesL2F32`) 与 Prompt Token 预算裁剪 (`selectWithinTokenBudget`) |
 | `lib/vector/rag_store.cp` | `// Origin: Pure-CP Stdlib (Zero-Heap Local RAG Store, 64-Bit Tag Filter & SIMD Cosine Top-K Facade) \| Created: 2026-11-22` | 零堆分配一站式本地 RAG 存储与检索门面 (`InMemoryRagStore`)：L2 归一化写入、墓碑槽位复用、64 位标签位图预过滤与 Token 预算上下文拼装 |
 | `lib/vector/matryoshka.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc Matryoshka Multi-Resolution Two-Stage SIMD Vector Retrieval) \| Created: 2026-11-22` | 零堆分配 Matryoshka 嵌套维多分辨率粗召回 + 精排重打分管线：前 `k` 维截断归一化 (`truncateAndNormalizeF32`)、紧凑粗向量库构建 (`buildCoarseEmbeddingsF32`)、8-lane SIMD `@dot` / `@l2sq` 两阶段检索与计算压缩比统计 |
+| `lib/vector/colbert_index.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc ColBERT Multi-Vector Late-Interaction MaxSim Retrieval Index) \| Created: 2026-11-22` | 零堆分配 ColBERTv2 / ColPali 多向量 Token 级延迟交互（MaxSim）检索索引 (`ColbertLiteIndex`)：调用方扁平 Token 池、可选插入期 L2 归一化、8-lane SIMD `@dot` MaxSim 精确打分、确定性 Top-K 检索与 `@l2sq` 低范数噪声 Token 裁剪 (`prune_low_norm_tokens`) |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -940,5 +941,71 @@ pub fn demoMatryoshkaTwoStage() {
         // out_hits[0].doc_idx == 1 (精排翻转粗排), stats.compute_speedup_ratio 记录计算压缩比
         * = stats.compute_speedup_ratio;
     }
+}
+```
+
+---
+
+## ColBERT 多向量延迟交互（MaxSim）检索索引（`colbert_index.cp`）
+
+面向 ColBERTv2 / ColPali 等现代高精度代码、文档与表格多向量 RAG 场景的 100% 纯 CP 零动态堆分配 Token 级延迟交互（Late-Interaction MaxSim）检索引擎：
+
+- **常量与数据结构**：
+  - `COLBERT_MAX_DOCS = 128`：索引定长文档槽位上限（零堆分配）。
+  - `ColbertConfig`：`{ dim: usize, l2_normalize_on_insert: bool = true }`，提供 `ColbertConfig.init(dim, l2_normalize_on_insert)` 与 `isValid(): bool`。
+  - `ColbertDocSpan`：`{ doc_id: u64, token_offset: usize, token_count: usize, active: bool }`，记录单篇文档在调用方扁平 Token 池中的连续区间。
+  - `ColbertSearchHit`：`{ doc_id: u64, maxsim_score_f32: f32, avg_maxsim_f32: f32, matched_tokens: usize }`。
+  - `ColbertIndexStats`：`{ active_docs, total_stored_tokens, token_capacity, dim }`。
+- **核心索引 `ColbertLiteIndex`**：
+  - `ColbertLiteIndex.init(cfg: ColbertConfig, token_pool: *[]f32): ColbertLiteIndex?`：在调用方拥有的扁平 `f32` Token 池上零分配初始化索引。
+  - `add_document(*_, doc_id: u64, doc_tokens: []const f32, num_tokens: usize): bool`：提供活跃 ID 去重、容量/槽位/维度/非有限值守卫，支持插入期按 token 粒度通过 `@dot` + `@sqrt` 自动 L2 归一化写入。
+  - `remove_document(*_, doc_id: u64): bool`：逻辑摘除目标文档，使其不再参与 MaxSim 打分与 Top-K 检索。
+  - `score_document_maxsim(query_tokens: []const f32, q_tokens: usize, doc_idx: usize): f32`：利用 CP 原生 8-lane SIMD `@dot` 计算精确延迟交互得分 $\sum_{i} \max_{j} \langle q_i, d_j \rangle$。
+  - `search_topk(query_tokens: []const f32, q_tokens: usize, k: usize, out_hits: *[]ColbertSearchHit): usize`：精确 MaxSim Top-K 降序检索，平局按 `doc_id` 升序稳定决胜，同时输出 `avg_maxsim_f32` 与正相关匹配 token 数 `matched_tokens`。
+  - `stats(): ColbertIndexStats`：返回当前活跃文档数、已存 Token 数、池容量与维度。
+- **低范数噪声 Token 裁剪核**：
+  - `prune_low_norm_tokens(tokens: []const f32, num_tokens: usize, dim: usize, min_l2_norm: f32, out_tokens: *[]f32): usize`：基于 CP 原生 `@l2sq` 分块 SIMD 裁剪 L2 范数低于阈值的停用词/噪声 Token 嵌入并紧凑写回 `out_tokens`，自动过滤 `NaN`/`Inf`，有效加速 2x~4x 检索。
+
+### ColBERT MaxSim 多向量检索 QuickStart 示例
+
+```cp
+import {
+    ColbertConfig,
+    ColbertSearchHit,
+    ColbertLiteIndex,
+    prune_low_norm_tokens,
+} from "cap:vector";
+
+pub fn demoColbertMaxSim() {
+    let pool: [128]f32 = [0.0; 128]; // 最多容纳 32 个 4D token
+    let pool_s: []f32 = pool[0..];
+    const cfg = ColbertConfig.init(4, true) ?? return;
+    let idx = ColbertLiteIndex.init(cfg, pool_s) ?? return;
+
+    // 文档 101 包含两个语义正交的 token（覆盖概念 A 与概念 B）
+    const doc101: [8]f32 = [
+        3.0, 0.0, 0.0, 0.0,
+        0.0, 4.0, 0.0, 0.0,
+    ];
+    // 文档 102 仅覆盖概念 A
+    const doc102: [4]f32 = [2.0, 0.0, 0.0, 0.0];
+    * = idx.add_document(101, doc101[0..], 2);
+    * = idx.add_document(102, doc102[0..], 1);
+
+    // 裁剪查询中的低范数停用词噪声 token
+    const raw_q: [12]f32 = [
+        1.0, 0.0, 0.0, 0.0,   // 有效概念 A
+        0.05, 0.02, 0.0, 0.0, // 低范数噪声 token -> 将被裁剪
+        0.0, 1.0, 0.0, 0.0,   // 有效概念 B
+    ];
+    let clean_q: [12]f32 = [0.0; 12];
+    let clean_q_s: []f32 = clean_q[0..];
+    const kept = prune_low_norm_tokens(raw_q[0..], 3, 4, 0.5, clean_q_s);
+
+    let hits: [2]ColbertSearchHit = [ColbertSearchHit{}; 2];
+    let hits_s: []ColbertSearchHit = hits[0..];
+    const n = idx.search_topk(clean_q[0 .. kept * 4], kept, 2, hits_s);
+    // n == 2, hits[0].doc_id == 101 (MaxSim = 2.0), hits[1].doc_id == 102 (MaxSim = 1.0)
+    * = n;
 }
 ```
