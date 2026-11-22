@@ -1418,3 +1418,45 @@ let batch: [2]ScriptDispatchItem = [ScriptDispatchItem.empty(); 2];
 const n = sched.dispatchReadyBatch(1000, batch[0..])?;
 * = n;
 ```
+
+### 保真 `cap.json`/`package.json` 依赖改写与同步规划引擎（`manifestUpdater.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/PackageManager/updatePackageJSONAndInstall.cp`（纯 CP 零堆分配、全外部切片驱动）；
+- **核心导出**：
+  - 原格式保真探测：`ManifestUpdaterError`、`ManifestIndentKind`（`Spaces`/`Tabs`）、`ManifestNewlineKind`（`Lf`/`CrLf`）、`ManifestFormatProfile`、`detectManifestFormat`（自动识别 2/4 空格、Tab、LF/CRLF、冒号间距与尾换行）；
+  - 版本说明符策略与规范化：`ManifestVersionStyle`（`Caret`/`Tilde`/`Exact`/`WorkspaceStar`/`WorkspaceCaret`/`WorkspaceTilde`/`CatalogDefault`/`Preserve`）、`ManifestVersionKind`、`classifyVersionSpec`、`normalizeVersionSpec`（支持 `--exact`、`^`、`~`、`workspace:^`/`workspace:*`、`npm:<alias>@<ver>` 与 `catalog:`）；
+  - 跨分组原子操作与零堆 RFC 8259 重写器：`ManifestDepGroup`、`ManifestMutationKind`（`Add`/`Upgrade`/`Remove`/`MoveGroup`）、`ManifestMutationOp`、`ManifestChangeKind`、`ManifestChangeRecord`、`ManifestDepEntry`、`ManifestTopPropSpan`、`ManifestUpdateOptions`、`ManifestUpdateBuffers`、`ManifestUpdateSummary`、`applyManifestMutations`（保留无关顶层字段原样、字典序合并、跨组自动去重、缺失分组自动创建与空分组裁剪）、`formatManifestUpdateReport`。
+
+```cp
+import {
+    ManifestMutationOp,
+    ManifestMutationKind,
+    ManifestDepGroup,
+    ManifestVersionStyle,
+    ManifestTopPropSpan,
+    ManifestDepEntry,
+    ManifestChangeRecord,
+    ManifestUpdateBuffers,
+    ManifestUpdateOptions,
+    applyManifestMutations,
+} from "cap:pkg";
+
+const src = "{\n  \"name\": \"demo\",\n  \"dependencies\": {\n    \"zod\": \"^3.22.0\"\n  }\n}\n";
+const ops: [1]ManifestMutationOp = [
+    ManifestMutationOp{
+        kind: ManifestMutationKind.Add,
+        package_name: "axios",
+        version_spec: "1.7.2",
+        target_group: ManifestDepGroup.Dependencies,
+        version_style: ManifestVersionStyle.Caret,
+    },
+];
+let props: [16]ManifestTopPropSpan = [ManifestTopPropSpan.empty(); 16];
+let deps: [32]ManifestDepEntry = [ManifestDepEntry.empty(); 32];
+let specs: [256]u8 = [0; 256];
+let changes: [8]ManifestChangeRecord = [ManifestChangeRecord.empty(); 8];
+let bufs = ManifestUpdateBuffers{ top_props: props[0..], dep_entries: deps[0..], spec_scratch: specs[0..], out_changes: changes[0..] };
+let out: [1024]u8 = [0; 1024];
+const sum = applyManifestMutations(src, ops[0..], ManifestUpdateOptions.defaults(), &bufs, out[0..])?;
+* = sum;
+```
