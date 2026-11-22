@@ -509,6 +509,37 @@ pub fn demoDeadlines() {
 
 ---
 
+## 事件循环延迟监控器与零分配对数直方图（`eventLoopDelay.cp`）
+
+吸收自 `/data/dev/bun/src/runtime/timer/EventLoopDelayMonitor.cp`，对标 Node.js `perf_hooks.monitorEventLoopDelay({ resolution })` 的 100% 纯 CP、零堆分配事件循环卡顿观测引擎：
+
+- **核心常量**：`EVENT_LOOP_DELAY_DEFAULT_RESOLUTION_MS` (`10`)、`EVENT_LOOP_DELAY_NS_PER_MS` (`1_000_000`)、`EVENT_LOOP_DELAY_MAX_RECORDABLE_NS` (`3_600_000_000_000`)、`EVENT_LOOP_DELAY_HIST_BUCKETS` (`44`)
+- **核心类型**：`EventLoopDelayError`（`InvalidResolution` / `NotEnabled` / `InvalidPercentile`）、`EventLoopDelaySample`、`EventLoopDelayStats`、`EventLoopDelayMonitor`
+- **核心能力**：
+  - `init(resolution_ms)` / `initWithMax(resolution_ms, max_recordable_ns)`：校验采样分辨率并配置最大记录上限；
+  - `enable(now_ns)` / `disable()` / `isEnabled()` / `reset()`：幂等启停调度、保留或清零直方图；
+  - `onFire(now_ns)`：首次触发建立 `last_fire_ns` 基线，后续每次触发计算 `actual_ns - expected_ns`（时钟回拨安全钳位为 `0`）并自动写入 44 桶 log2 纳秒直方图，返回下一次 `next_fire_ns`；
+  - `recordDelay(delay_ns)` / `meanNs()` / `percentileNs(p)` / `stats()`：零分配实时查询 `min`/`max`/`mean`/`p50`/`p95`/`p99` 与 `exceeds` 溢出计数。
+
+### QuickStart 示例
+
+```cp
+import { EventLoopDelayMonitor } from "cap:time";
+
+pub fn demoEventLoopDelay() {
+    let mon = EventLoopDelayMonitor.init(10) catch return; // 10ms 分辨率
+    const t0: u64 = 1_000_000_000;
+    * = mon.enable(t0);
+    * = mon.onFire(t0 + 10_000_000) catch return; // 首次建立基线
+    const s = mon.onFire(t0 + 24_500_000) catch return; // 超额延迟 4.5ms
+    const st = mon.stats();
+    * = s;
+    * = st;
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [health.md](time/health.md)

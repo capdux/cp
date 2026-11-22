@@ -318,3 +318,14 @@ export {
     formatGrpcTimeoutHeader,
     DeadlineTree,
 } from "./deadlines.cp";
+
+export {
+    EVENT_LOOP_DELAY_DEFAULT_RESOLUTION_MS,
+    EVENT_LOOP_DELAY_NS_PER_MS,
+    EVENT_LOOP_DELAY_MAX_RECORDABLE_NS,
+    EVENT_LOOP_DELAY_HIST_BUCKETS,
+    EventLoopDelayError,
+    EventLoopDelaySample,
+    EventLoopDelayStats,
+    EventLoopDelayMonitor,
+} from "./eventLoopDelay.cp";
