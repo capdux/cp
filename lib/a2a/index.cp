@@ -159,3 +159,20 @@ export {
     verifyTrustChain,
     TrustChain,
 } from "./trustChain.cp";
+
+export {
+    BLACKBOARD_MAX_ENTRIES,
+    BLACKBOARD_MAX_KEY_LEN,
+    BLACKBOARD_MAX_VAL_LEN,
+    BLACKBOARD_EVENT_RING_CAP,
+    BLACKBOARD_NO_OWNER,
+    BLACKBOARD_NO_TTL,
+    BlackboardOpStatus,
+    BlackboardEventKind,
+    BlackboardEntry,
+    BlackboardWriteResult,
+    BlackboardEvent,
+    BlackboardPollResult,
+    BlackboardStats,
+    SharedBlackboard,
+} from "./blackboard.cp";

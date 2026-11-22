@@ -260,3 +260,20 @@ pub fn demoPhaseE1Mem(): ! {
    - 低位打标（`LowTagPointer`）依赖目标指针自然对齐产生的低位全零位；高位打标（`TaggedPointer`）利用 64 位虚拟地址高 16 位空闲位，解引用前必须先还原掩码（`ADDR_MASK`）。
 4. **Mimalloc 线程本地堆隔离（`MiHeap`）**：
    - `mi_heap_new()` 创建的专属堆支持 `mi_heap_destroy()` 一次性 O(1) 整体回收，适合请求级或任务级短暂生命周期批处理。
+5. **紧凑 8 字节外部偏移视图（`ExternalSlice<T>` / `ExternalSliceMap<T>` / `ExternalBytePool`，`externalSlice.cp`）**：
+   - 吸收自 `/data/dev/bun/src/install/ExternalSlice.cp`（参考 `/data/dev/bun/docs/runtime/binary-data.mdx` 中零拷贝二进制视图实践）：用 8 字节 `(off: u32, len: u32)` 取代 16 字节指针切片，内存占用减半且不受底层 `ArrayBuffer`/Arena 扩容重分配影响；
+   - `get(buf)` / `mut(buf)` 提供安全钳位零拷贝视图，`getChecked(buf)` / `mutChecked(buf)` 与 `subslice(rel_off, rel_len)` 提供严格越界与 `u32` 溢出防护；
+   - 配合 `ExternalBytePool`（调用方提供 `[]u8` 缓冲区）与 `ExternalSliceMap<T>` 可零堆分配构建二进制协议表、Lockfile 字符串池与紧凑 AST 索引。
+
+```cp
+import { ExternalBytePool, ExternalSlice } from "cap:mem";
+
+let backing: [64]u8 = [0; 64];
+let pool = ExternalBytePool.init(backing[0..]);
+if (h1 := pool.append("bun-lockfile")) {
+    const view = pool.get(h1); // "bun-lockfile" (zero-copy)
+    * = view;
+}
+const inv = ExternalSlice<u8>.invalid();
+* = inv.isInvalid(); // true
+```

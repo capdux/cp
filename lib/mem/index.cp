@@ -104,3 +104,11 @@ export {
     MemFdError,
     MemFdBuffer,
 } from "./fallbackAllocator.cp";
+
+export {
+    EXTERNAL_SLICE_INVALID_SENTINEL,
+    ExternalSlice,
+    ExternalByteSlice,
+    ExternalSliceMap,
+    ExternalBytePool,
+} from "./externalSlice.cp";

@@ -465,3 +465,45 @@ pub fn demoA2aTrustChain() {
     * = res.isOk(); // true
 }
 ```
+
+
+---
+
+### 4.12 零堆分配多智能体共享黑板与乐观并发 CAS 协同引擎 (`blackboard.cp`)
+
+面向多智能体黑板架构（Blackboard Architecture）协同编辑、任务状态同步与分布式锁控制的 100% 纯 CP 零动态堆分配共享工作区引擎：
+
+- **常量与枚举**：
+  - `BLACKBOARD_MAX_ENTRIES = 64`、`BLACKBOARD_MAX_KEY_LEN = 48`、`BLACKBOARD_MAX_VAL_LEN = 256`、`BLACKBOARD_EVENT_RING_CAP = 128`、`BLACKBOARD_NO_OWNER = 0`、`BLACKBOARD_NO_TTL = 0`
+  - `BlackboardOpStatus`（`ok | not_found | version_conflict | lease_held_by_other | table_full | invalid_key | value_too_large | invalid_writer`）
+  - `BlackboardEventKind`（`put | cas | delete | lease_expired | ttl_expired`）
+- **数据模型**：
+  - `BlackboardEntry`（定长 `key`, `value`, `version`, `writer_id`, `lease_owner_id`, `lease_expires_ms`, `expires_ms`, `updated_ms`；提供 `keySlice()`, `valueSlice()`, `hasActiveLease(now_ms)`, `isExpired(now_ms)`）
+  - `BlackboardWriteResult`、`BlackboardEvent`、`BlackboardPollResult`（含 `lagged` 环形覆盖落后检测）、`BlackboardStats`
+- **核心引擎 `SharedBlackboard`**：
+  - `init()` / `clear(*_)` / `stats()` / `sweepExpired(*_, now_ms)`
+  - `put(*_, key, value, writer_id, ttl_ms, now_ms)` / `get(*_, key, now_ms)` / `peek(key, now_ms)` / `deleteKey(*_, key, writer_id, now_ms)`
+  - `compareAndSwap(*_, key, expected_version, new_val, writer_id, ttl_ms, now_ms)`：支持 `expected_version == 0` 原子创建（Create-If-Absent），冲突时返回 `version_conflict` 及当前最新 `version`
+  - `acquireLease(*_, key, owner_id, lease_ttl_ms, now_ms)` / `releaseLease(*_, key, owner_id, now_ms)`：排他编辑权与同主续租，租约到期自动释放并写入 `lease_expired` 事件
+  - `pollChanges(prefix, since_seq, *out_events): BlackboardPollResult` / `listKeysByPrefix(prefix, now_ms, *out_entries): usize`。
+
+```cp
+import {
+    BLACKBOARD_NO_TTL,
+    BlackboardEvent,
+    SharedBlackboard,
+} from "cap:a2a";
+
+pub fn demoSharedBlackboard() {
+    let bb = SharedBlackboard.init();
+    // Agent 101 原子创建 plan/step1 (expected_version = 0 -> version 1)
+    const r1 = bb.compareAndSwap("plan/step1", 0, "draft", 101, BLACKBOARD_NO_TTL, 1000);
+    // Agent 102 持版本 1 乐观更新 -> version 2
+    * = bb.compareAndSwap("plan/step1", r1.version, "approved", 102, BLACKBOARD_NO_TTL, 1100);
+
+    let evs: [8]BlackboardEvent = [BlackboardEvent{}; 8];
+    let evs_s: []BlackboardEvent = evs[0..];
+    const poll = bb.pollChanges("plan/", 0, *evs_s);
+    * = poll.count; // 2
+}
+```
