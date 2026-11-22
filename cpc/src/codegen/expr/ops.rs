@@ -127,14 +127,34 @@ impl Codegen {
             }
             Expr::Borrow(inner, is_mut) => {
                 if let Expr::Ident(i) = &**inner {
-                    if *is_mut
+                    if self.type_param_names.contains(&i.sym) {
+                        return if *is_mut {
+                            format!("*{}", i.sym)
+                        } else {
+                            format!("*const {}", i.sym)
+                        };
+                    }
+                    let is_known_value_binding = self.locals.contains_key(&i.sym)
+                        || self.var_cp_types.contains_key(&i.sym)
+                        || self.current_fn_params.contains(&i.sym)
+                        || (self.globals.contains(&i.sym)
+                            && !self.class_defs.contains_key(&i.sym)
+                            && !self.enum_defs.contains_key(&i.sym)
+                            && !self.trait_defs.contains_key(&i.sym)
+                            && !self.type_aliases.contains_key(&i.sym)
+                            && !self.type_namespace_vars.contains(&i.sym));
+                    if !is_known_value_binding
                         && (self.class_defs.contains_key(&i.sym)
                             || self.enum_defs.contains_key(&i.sym)
                             || self.trait_defs.contains_key(&i.sym)
                             || self.type_aliases.contains_key(&i.sym)
                             || self.type_namespace_vars.contains(&i.sym))
                     {
-                        return format!("*{}", i.sym);
+                        return if *is_mut {
+                            format!("*{}", i.sym)
+                        } else {
+                            format!("*const {}", i.sym)
+                        };
                     }
                     if self.local_trampolines.contains(&i.sym) {
                         return format!("&__cp_trampoline_{}.{}", i.sym, i.sym);
@@ -173,24 +193,41 @@ impl Codegen {
                 let inner_code = self.generate_expr(inner);
                 let is_type_name = match &**inner {
                     Expr::Ident(id) => {
-                        !self.locals.contains_key(&id.sym)
-                            && !self.var_cp_types.contains_key(&id.sym)
-                            && (self.class_defs.contains_key(&id.sym)
+                        let is_val = self.locals.contains_key(&id.sym)
+                            || self.var_cp_types.contains_key(&id.sym)
+                            || (self.current_fn_params.contains(&id.sym)
+                                && !self.type_param_names.contains(&id.sym))
+                            || (self.globals.contains(&id.sym)
+                                && !self.class_defs.contains_key(&id.sym)
+                                && !self.enum_defs.contains_key(&id.sym)
+                                && !self.trait_defs.contains_key(&id.sym)
+                                && !self.type_aliases.contains_key(&id.sym)
+                                && !self.type_namespace_vars.contains(&id.sym));
+                        !is_val
+                            && (self.type_param_names.contains(&id.sym)
+                                || self.class_defs.contains_key(&id.sym)
                                 || self.value_classes.contains(&id.sym)
+                                || self.enum_defs.contains_key(&id.sym)
                                 || self.type_aliases.contains_key(&id.sym)
                                 || self.trait_defs.contains_key(&id.sym)
-                                || id
-                                    .sym
-                                    .chars()
-                                    .next()
-                                    .map_or(false, |c| c.is_ascii_uppercase()))
+                                || self.type_namespace_vars.contains(&id.sym)
+                                || ((self.in_type_expr_ctx || self.in_container_const)
+                                    && id
+                                        .sym
+                                        .chars()
+                                        .next()
+                                        .map_or(false, |c| c.is_ascii_uppercase())))
                     }
-                    Expr::Member(mem) => mem
-                        .prop
-                        .sym
-                        .chars()
-                        .next()
-                        .map_or(false, |c| c.is_ascii_uppercase()),
+                    Expr::Member(mem) => {
+                        (self.in_type_expr_ctx || self.in_container_const || *is_mut)
+                            && mem
+                                .prop
+                                .sym
+                                .chars()
+                                .next()
+                                .map_or(false, |c| c.is_ascii_uppercase())
+                    }
+                    Expr::TypeVal { .. } => true,
                     _ => false,
                 };
                 if is_type_name {
@@ -877,10 +914,31 @@ impl Codegen {
                                 )
                             }
                         } else if is_target_enum {
-                            if inner_code.starts_with("@enumFromInt(") {
+                            let is_src_union = matches!(
+                                src_ty,
+                                Some(Type::Ref(ref id))
+                                    if self
+                                        .class_defs
+                                        .get(&id.sym)
+                                        .map_or(false, |c| c.is_union)
+                            );
+                            if inner_code.starts_with("@enumFromInt(")
+                                || is_src_union
+                                || is_src_enum
+                            {
                                 format!("@as({}, {})", target_zig_ty, inner_code)
-                            } else {
+                            } else if is_src_int {
                                 format!("@as({}, @enumFromInt({}))", target_zig_ty, inner_code)
+                            } else if self.is_comptime {
+                                format!(
+                                    "(if (@typeInfo(@TypeOf({1})) == .int or @typeInfo(@TypeOf({1})) == .comptime_int) @as({0}, @enumFromInt({1})) else @as({0}, {1}))",
+                                    target_zig_ty, inner_code
+                                )
+                            } else {
+                                format!(
+                                    "(if (comptime @typeInfo(@TypeOf({1})) == .int or @typeInfo(@TypeOf({1})) == .comptime_int) @as({0}, @enumFromInt({1})) else @as({0}, {1}))",
+                                    target_zig_ty, inner_code
+                                )
                             }
                         } else if is_target_fn {
                             format!("@as({}, @ptrCast({}))", target_zig_ty, inner_code)
@@ -902,12 +960,12 @@ impl Codegen {
                                 format!("@as({}, {})", target_zig_ty, inner_code)
                             } else if self.is_comptime {
                                 format!(
-                                    "(if (@typeInfo({0}) == .@\"enum\") @as({0}, @enumFromInt({1})) else @as({0}, {1}))",
+                                    "(if (@typeInfo({0}) == .@\"enum\" and (@typeInfo(@TypeOf({1})) == .int or @typeInfo(@TypeOf({1})) == .comptime_int)) @as({0}, @enumFromInt({1})) else @as({0}, {1}))",
                                     target_zig_ty, inner_code
                                 )
                             } else {
                                 format!(
-                                    "(if (comptime @typeInfo({0}) == .@\"enum\") @as({0}, @enumFromInt({1})) else @as({0}, {1}))",
+                                    "(if (comptime @typeInfo({0}) == .@\"enum\" and (@typeInfo(@TypeOf({1})) == .int or @typeInfo(@TypeOf({1})) == .comptime_int)) @as({0}, @enumFromInt({1})) else @as({0}, {1}))",
                                     target_zig_ty, inner_code
                                 )
                             }

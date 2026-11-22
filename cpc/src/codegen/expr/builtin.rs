@@ -473,11 +473,17 @@ impl Codegen {
                     format!("@TypeOf({})", val)
                 }
                 "@typeName" => {
+                    let saved = self.in_type_expr_ctx;
+                    self.in_type_expr_ctx = true;
                     let t = self.generate_expr(&call.args[0]);
+                    self.in_type_expr_ctx = saved;
                     format!("@typeName({})", t)
                 }
                 "@fieldsOf" => {
+                    let saved = self.in_type_expr_ctx;
+                    self.in_type_expr_ctx = true;
                     let t = self.generate_expr(&call.args[0]);
+                    self.in_type_expr_ctx = saved;
                     format!("@typeInfo({}).@\"struct\".fields", t)
                 }
                 "@field" => {
@@ -487,13 +493,19 @@ impl Codegen {
                     format!("@field({}, {})", obj, f)
                 }
                 "@hasField" => {
+                    let saved = self.in_type_expr_ctx;
+                    self.in_type_expr_ctx = true;
                     let t = self.generate_expr(&call.args[0]);
+                    self.in_type_expr_ctx = saved;
                     let f = self.generate_expr(&call.args[1]);
                     let f = strip_redundant_comptime(&f);
                     format!("@hasField({}, {})", t, f)
                 }
                 "@sizeOf" => {
+                    let saved = self.in_type_expr_ctx;
+                    self.in_type_expr_ctx = true;
                     let t = self.generate_expr(&call.args[0]);
+                    self.in_type_expr_ctx = saved;
                     format!("@sizeOf({})", t)
                 }
                 "@fma" if call.args.len() == 3 => {
@@ -539,7 +551,10 @@ impl Codegen {
                     format!("__cp_split_at_mut({}, {})", s, mid)
                 }
                 "@alignOf" => {
+                    let saved = self.in_type_expr_ctx;
+                    self.in_type_expr_ctx = true;
                     let t = self.generate_expr(&call.args[0]);
+                    self.in_type_expr_ctx = saved;
                     format!("@alignOf({})", t)
                 }
                 "@import" if call.args.len() == 1 => {
@@ -571,9 +586,25 @@ impl Codegen {
                     format!("{}({})", call.name, args_code.join(", "))
                 }
                 _ => {
+                    let first_arg_is_type = matches!(
+                        call.name.as_str(),
+                        "@bitSizeOf"
+                            | "@typeInfo"
+                            | "@hasDecl"
+                            | "@offsetOf"
+                            | "@FieldType"
+                            | "@Child"
+                    );
                     let mut args_code = Vec::new();
-                    for a in &call.args {
-                        args_code.push(self.generate_expr(a));
+                    for (idx, a) in call.args.iter().enumerate() {
+                        if idx == 0 && first_arg_is_type {
+                            let saved = self.in_type_expr_ctx;
+                            self.in_type_expr_ctx = true;
+                            args_code.push(self.generate_expr(a));
+                            self.in_type_expr_ctx = saved;
+                        } else {
+                            args_code.push(self.generate_expr(a));
+                        }
                     }
                     format!("{}({})", call.name, args_code.join(", "))
                 }

@@ -1228,7 +1228,10 @@ impl Codegen {
                     }
                     if self.enum_defs.contains_key(&ident.sym) && call.args.len() == 1 {
                         let arg_code = self.generate_expr(&call.args[0]);
-                        return format!("@as({}, @enumFromInt({}))", ident.sym, arg_code);
+                        return format!(
+                            "(if (comptime @typeInfo(@TypeOf({1})) == .int or @typeInfo(@TypeOf({1})) == .comptime_int) @as({0}, @enumFromInt({1})) else @as({0}, {1}))",
+                            ident.sym, arg_code
+                        );
                     }
                     if (ident.sym == "string" || ident.sym == "String") && call.args.len() == 1 {
                         let arg_code = self.generate_expr(&call.args[0]);

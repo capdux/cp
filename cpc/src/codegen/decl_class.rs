@@ -19,28 +19,81 @@ impl Codegen {
 
     pub(crate) fn parse_anon_struct_or_union(code: &str) -> Option<Class> {
         let trimmed = code.trim();
-        let is_struct_or_union = (trimmed.starts_with("struct")
-            && trimmed.as_bytes().get("struct".len()).map_or(false, |b| {
+        let (layout_prefix, rest) = if let Some(r) = trimmed.strip_prefix("packed") {
+            if r.starts_with(char::is_whitespace) {
+                ("@packed ", r.trim_start())
+            } else {
+                ("", trimmed)
+            }
+        } else if let Some(r) = trimmed.strip_prefix("extern") {
+            if r.starts_with(char::is_whitespace) {
+                ("@c ", r.trim_start())
+            } else {
+                ("", trimmed)
+            }
+        } else {
+            ("", trimmed)
+        };
+        let is_struct_or_union = (rest.starts_with("struct")
+            && rest.as_bytes().get("struct".len()).map_or(false, |b| {
                 b.is_ascii_whitespace() || *b == b'{' || *b == b'('
             }))
-            || (trimmed.starts_with("union")
-                && trimmed.as_bytes().get("union".len()).map_or(false, |b| {
+            || (rest.starts_with("union")
+                && rest.as_bytes().get("union".len()).map_or(false, |b| {
                     b.is_ascii_whitespace() || *b == b'{' || *b == b'('
                 }));
 
         if !is_struct_or_union {
             return None;
         }
-        let brace_idx = trimmed.find('{')?;
+        let brace_idx = rest.find('{')?;
         let wrapped = format!(
-            "{} __CpAnonStruct__ {}",
-            trimmed[..brace_idx].trim_end(),
-            &trimmed[brace_idx..]
+            "{}{} __CpAnonStruct__ {}",
+            layout_prefix,
+            rest[..brace_idx].trim_end(),
+            &rest[brace_idx..]
         );
         let mut parser = crate::parser::Parser::new(&wrapped);
         let (module, _) = parser.parse_module_with_recovery();
         if let Some(ModuleItem::Decl(Decl::Class(cls))) = module.body.into_iter().next() {
             return Some(cls);
+        }
+        None
+    }
+
+    pub(crate) fn parse_anon_enum(code: &str) -> Option<(EnumDecl, bool)> {
+        let trimmed = code.trim();
+        let (is_extern, rest) = if let Some(r) = trimmed.strip_prefix("extern") {
+            if r.starts_with(char::is_whitespace) {
+                (true, r.trim_start())
+            } else {
+                (false, trimmed)
+            }
+        } else {
+            (false, trimmed)
+        };
+        let is_enum = rest.starts_with("enum")
+            && rest.as_bytes().get("enum".len()).map_or(false, |b| {
+                b.is_ascii_whitespace() || *b == b'{' || *b == b'('
+            });
+        if !is_enum {
+            return None;
+        }
+        let brace_idx = rest.find('{')?;
+        let header_after_enum = rest["enum".len()..brace_idx].trim();
+        let wrapped = format!(
+            "enum __CpAnonEnum__{} {}",
+            if header_after_enum.is_empty() {
+                String::new()
+            } else {
+                format!(" {}", header_after_enum)
+            },
+            &rest[brace_idx..]
+        );
+        let mut parser = crate::parser::Parser::new(&wrapped);
+        let (module, _) = parser.parse_module_with_recovery();
+        if let Some(ModuleItem::Decl(Decl::Enum(e))) = module.body.into_iter().next() {
+            return Some((e, is_extern));
         }
         None
     }
@@ -55,6 +108,8 @@ impl Codegen {
         for name in self.current_fn_params.iter().chain(self.locals.keys()) {
             sub.globals.insert(name.clone());
         }
+        sub.type_param_names = self.type_param_names.clone();
+        sub.type_namespace_vars = self.type_namespace_vars.clone();
         sub.ref_classes = self.ref_classes.clone();
         sub.value_classes = self.value_classes.clone();
         sub.fn_sigs = self.fn_sigs.clone();
@@ -152,68 +207,22 @@ impl Codegen {
     }
 
     pub(crate) fn generate_zig_or_struct(&mut self, code: &str) -> String {
-        if let Some(mut cls) = Self::parse_anon_struct_or_union(code) {
-            for m in &mut cls.methods {
-                let is_dtor = m.ident.sym == "__cp_deinit" || m.ident.sym == "__cp_errdeinit";
-                let has_explicit_self = m.params.first().map_or(false, |p| {
-                    if p.ident.sym == "this" || p.ident.sym == "self" {
-                        true
-                    } else if p.ident.sym == "_" {
-                        fn is_self_like_ty(ty: &Type, cls_name: &str) -> bool {
-                            match ty {
-                                Type::Any => true,
-                                Type::BorrowType { inner, .. } | Type::RawPtr { inner, .. } => {
-                                    is_self_like_ty(inner, cls_name)
-                                }
-                                Type::Ref(id) => {
-                                    id.sym == cls_name
-                                        || id.sym == "@This()"
-                                        || id.sym == "Self"
-                                        || id.sym == "__CpAnonStruct__"
-                                }
-                                _ => false,
-                            }
-                        }
-                        is_self_like_ty(&p.ty, &cls.ident.sym)
-                    } else {
-                        false
-                    }
-                });
-                let declares_local = |name: &str| {
-                    m.body.body.iter().any(|st| match st {
-                        Stmt::Var(v) => matches!(&v.pat, Pattern::Ident(id) if id.sym == name),
-                        _ => false,
-                    })
-                };
-                let uses_implicit_self = Self::block_contains_ident(&m.body, "_")
-                    || (!declares_local("this") && Self::block_contains_ident(&m.body, "this"))
-                    || (!declares_local("self") && Self::block_contains_ident(&m.body, "self"));
-                if !is_dtor && !has_explicit_self && !uses_implicit_self {
-                    m.is_static = true;
-                }
-            }
-            let mut sub = Codegen::new();
-            sub.is_lib_mode = self.is_lib_mode;
-            sub.is_beam_mode = self.is_beam_mode;
-            sub.has_imported_ptr = self.has_imported_ptr;
-            sub.globals = self.globals.clone();
-            for name in self.current_fn_params.iter().chain(self.locals.keys()) {
-                sub.globals.insert(name.clone());
-            }
-            sub.ref_classes = self.ref_classes.clone();
-            sub.value_classes = self.value_classes.clone();
-            sub.fn_sigs = self.fn_sigs.clone();
-            sub.class_defs = self.class_defs.clone();
-            sub.trait_defs = self.trait_defs.clone();
-            sub.enum_defs = self.enum_defs.clone();
-            sub.error_sets = self.error_sets.clone();
-            sub.type_aliases = self.type_aliases.clone();
-            sub.dec_defs = self.dec_defs.clone();
-            sub.anon_obj_structs = self.anon_obj_structs.clone();
+        if let Some(cls) = Self::parse_anon_struct_or_union(code) {
+            let mut sub = self.spawn_sub_codegen();
             sub.value_classes.insert("@This()".to_string());
             sub.class_defs.insert("@This()".to_string(), cls.clone());
             sub.generate_class_inner(&cls, true);
             return sub.output.trim_end().to_string();
+        }
+        if let Some((e, is_extern)) = Self::parse_anon_enum(code) {
+            let mut sub = self.spawn_sub_codegen();
+            sub.enum_defs.insert("@This()".to_string(), e.clone());
+            sub.generate_enum_inner(&e, true);
+            let out = sub.output.trim_end().to_string();
+            if is_extern && out.starts_with("enum") {
+                return format!("extern {}", out);
+            }
+            return out;
         }
         lower_struct_body(code)
     }

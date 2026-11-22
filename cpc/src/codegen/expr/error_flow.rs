@@ -5,66 +5,115 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 
 impl Codegen {
+    pub(crate) fn is_type_expr(&self, expr: &Expr) -> bool {
+        match expr {
+            Expr::TypeVal { .. } => true,
+            Expr::Zig(z) => {
+                let s = z.code.trim_start();
+                s.starts_with('*')
+                    || s.starts_with('[')
+                    || s.starts_with('?')
+                    || s.starts_with("fn ")
+                    || s.starts_with("fn(")
+                    || s.starts_with("struct")
+                    || s.starts_with("union")
+                    || s.starts_with("enum")
+                    || s.starts_with("packed ")
+                    || s.starts_with("extern ")
+                    || s == "anyopaque"
+            }
+            Expr::Ident(id) => {
+                if self.type_param_names.contains(&id.sym) {
+                    return true;
+                }
+                let is_prim_type = matches!(
+                    id.sym.as_str(),
+                    "i8" | "u8"
+                        | "i16"
+                        | "u16"
+                        | "i32"
+                        | "u32"
+                        | "i64"
+                        | "u64"
+                        | "i128"
+                        | "u128"
+                        | "isize"
+                        | "usize"
+                        | "f16"
+                        | "f32"
+                        | "f64"
+                        | "f80"
+                        | "f128"
+                        | "bool"
+                        | "void"
+                        | "string"
+                        | "anyopaque"
+                        | "type"
+                        | "anyerror"
+                        | "noreturn"
+                ) || id.sym.starts_with("c_")
+                    || ((id.sym.starts_with('u') || id.sym.starts_with('i'))
+                        && id.sym.len() > 1
+                        && id.sym[1..].chars().all(|c| c.is_ascii_digit()));
+                if is_prim_type {
+                    return true;
+                }
+                let is_local_val = self.locals.contains_key(&id.sym)
+                    || (self.current_fn_params.contains(&id.sym)
+                        && !self.type_param_names.contains(&id.sym));
+                if is_local_val {
+                    return false;
+                }
+                self.type_aliases.contains_key(&id.sym)
+                    || self.class_defs.contains_key(&id.sym)
+                    || self.enum_defs.contains_key(&id.sym)
+                    || self.trait_defs.contains_key(&id.sym)
+                    || self.value_classes.contains(&id.sym)
+                    || self.type_namespace_vars.contains(&id.sym)
+                    || (self.in_type_expr_ctx
+                        && id
+                            .sym
+                            .chars()
+                            .next()
+                            .map_or(false, |c| c.is_ascii_uppercase()))
+            }
+            Expr::Borrow(inner, _) => self.is_type_expr(inner),
+            Expr::Question(inner) => self.is_type_expr(inner),
+            Expr::Member(mem) => {
+                let prop_upper = mem
+                    .prop
+                    .sym
+                    .chars()
+                    .next()
+                    .map_or(false, |c| c.is_ascii_uppercase());
+                prop_upper
+                    && (self.in_type_expr_ctx
+                        || self.is_type_expr(&mem.obj)
+                        || matches!(&*mem.obj, Expr::Ident(o) if self.type_namespace_vars.contains(&o.sym) || o.sym == "std"))
+            }
+            Expr::Builtin(b) => matches!(
+                b.name.as_str(),
+                "@This" | "@TypeOf" | "@FieldType" | "@Type" | "@Vector" | "@Int" | "@Child"
+            ),
+            Expr::Call(c) => {
+                self.in_type_expr_ctx
+                    || matches!(&*c.callee, Expr::Ident(id) if self.class_defs.contains_key(&id.sym) || self.type_aliases.contains_key(&id.sym))
+            }
+            _ => false,
+        }
+    }
+
     pub(crate) fn generate_expr_error_flow(&mut self, expr: &Expr) -> String {
         match expr {
             Expr::Question(inner) => {
                 let is_optional_type_ctx = self.in_container_const
-                    || match &**inner {
-                        Expr::TypeVal { .. } => true,
-                        Expr::Zig(z) => {
-                            let s = z.code.trim_start();
-                            s.starts_with("*const ")
-                                || s.starts_with("*fn")
-                                || s.starts_with("fn ")
-                                || s.starts_with("fn(")
-                                || s.starts_with("[*]")
-                                || s.starts_with("[*c]")
-                                || s.starts_with("[*:")
-                                || s.starts_with("[:")
-                        }
-                        Expr::Ident(id) => {
-                            let is_prim_type = matches!(
-                                id.sym.as_str(),
-                                "i8" | "u8"
-                                    | "i16"
-                                    | "u16"
-                                    | "i32"
-                                    | "u32"
-                                    | "i64"
-                                    | "u64"
-                                    | "i128"
-                                    | "u128"
-                                    | "isize"
-                                    | "usize"
-                                    | "f16"
-                                    | "f32"
-                                    | "f64"
-                                    | "f80"
-                                    | "f128"
-                                    | "bool"
-                                    | "void"
-                                    | "string"
-                                    | "anyopaque"
-                                    | "type"
-                                    | "anyerror"
-                                    | "noreturn"
-                            ) || id.sym.starts_with("c_")
-                                || ((id.sym.starts_with('u') || id.sym.starts_with('i'))
-                                    && id.sym.len() > 1
-                                    && id.sym[1..].chars().all(|c| c.is_ascii_digit()));
-                            !self.locals.contains_key(&id.sym)
-                                && !self.current_fn_params.contains(&id.sym)
-                                && (is_prim_type
-                                    || self.type_aliases.contains_key(&id.sym)
-                                    || self.class_defs.contains_key(&id.sym)
-                                    || self.enum_defs.contains_key(&id.sym)
-                                    || self.trait_defs.contains_key(&id.sym)
-                                    || self.value_classes.contains(&id.sym))
-                        }
-                        _ => false,
-                    };
+                    || self.in_type_expr_ctx
+                    || self.is_type_expr(inner);
                 if is_optional_type_ctx {
+                    let saved = self.in_type_expr_ctx;
+                    self.in_type_expr_ctx = true;
                     let exp = self.generate_expr(inner);
+                    self.in_type_expr_ctx = saved;
                     return format!("?{}", exp);
                 }
                 let old_in_try = self.in_try_region;

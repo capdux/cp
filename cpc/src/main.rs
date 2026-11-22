@@ -97,6 +97,9 @@ enum Commands {
         /// Automatically apply mechanical fixes in-place
         #[arg(long)]
         fix: bool,
+        /// Strict CP purification gate: reject legacy Zig/TS syntax (orelse, and, or, prefix try, ?T, : void, self, this, |capture|, zig {}, var)
+        #[arg(long)]
+        strict: bool,
     },
     /// Automatically apply mechanical syntax fixes in-place (alias for 'check --fix')
     Fix {
@@ -546,11 +549,12 @@ fn run(cli: Cli) -> anyhow::Result<()> {
                 brief,
                 max,
                 fix,
+                strict,
             } => {
-                run_check(&input, json, brief, max, fix)?;
+                run_check(&input, json, brief, max, fix, strict)?;
             }
             Commands::Fix { input, json, brief } => {
-                run_check(&input, json, brief, None, true)?;
+                run_check(&input, json, brief, None, true, false)?;
             }
             Commands::EmitTypes { input, output } => {
                 let code = fs::read_to_string(&input)?;
@@ -620,12 +624,16 @@ fn run(cli: Cli) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn collect_diagnostics(code: &str) -> Vec<cpc::diagnostic::Diagnostic> {
+fn collect_diagnostics(code: &str, strict: bool) -> Vec<cpc::diagnostic::Diagnostic> {
     let mut parser = CPParser::new(code);
     let (mut module, mut all_diags) = parser.parse_module_with_recovery();
     let mut analyzer = Analyzer::new();
     let _ = analyzer.analyze_module(&mut module);
     all_diags.extend(analyzer.get_diagnostics());
+    if strict {
+        let strict_diags = cpc::strict::collect_strict_diagnostics(code, &all_diags);
+        all_diags.extend(strict_diags);
+    }
     cpc::diagnostic::mark_cascades(&mut all_diags, Some(code));
     all_diags
 }
@@ -636,6 +644,7 @@ fn run_check(
     brief: bool,
     max: Option<usize>,
     fix: bool,
+    strict: bool,
 ) -> anyhow::Result<()> {
     let mut code = match fs::read_to_string(input) {
         Ok(c) => c,
@@ -653,7 +662,7 @@ fn run_check(
         }
     };
 
-    let mut all_diags = collect_diagnostics(&code);
+    let mut all_diags = collect_diagnostics(&code, strict);
     let mut total_fixed = 0usize;
 
     if fix && !all_diags.is_empty() {
@@ -665,7 +674,7 @@ fn run_check(
             }
             total_fixed += applied;
             code = fixed_code;
-            all_diags = collect_diagnostics(&code);
+            all_diags = collect_diagnostics(&code, strict);
             if all_diags.is_empty() {
                 break;
             }

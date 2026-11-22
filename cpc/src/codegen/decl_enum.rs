@@ -81,6 +81,10 @@ impl Codegen {
     }
 
     pub(crate) fn generate_enum(&mut self, e: &EnumDecl) {
+        self.generate_enum_inner(e, false);
+    }
+
+    pub(crate) fn generate_enum_inner(&mut self, e: &EnumDecl, is_anon: bool) {
         let has_payloads = e
             .variants
             .iter()
@@ -93,7 +97,11 @@ impl Codegen {
             } else {
                 "".to_string()
             };
-            self.writeln(&format!("pub const {} = enum{} {{", e.ident.sym, tag_str));
+            if is_anon {
+                self.writeln(&format!("enum{} {{", tag_str));
+            } else {
+                self.writeln(&format!("pub const {} = enum{} {{", e.ident.sym, tag_str));
+            }
             self.indent();
             for v in &e.variants {
                 let mut line = v.ident.sym.clone();
@@ -128,31 +136,38 @@ impl Codegen {
             let has_from_string_fn = (e.methods.iter().any(|m| m.ident.sym == "fromString")
                 || e.extra_zig.iter().any(|z| z.contains("fn fromString(")))
                 && !has_variant("fromString");
-            if !has_get {
-                if has_from_string_fn {
-                    self.writeln("pub fn get(__cp_s: []const u8) ?@This() { return @This().fromString(__cp_s); }");
-                } else {
-                    self.writeln("pub fn get(__cp_s: []const u8) ?@This() { return std.meta.stringToEnum(@This(), __cp_s); }");
+            if !is_anon {
+                if !has_get {
+                    if has_from_string_fn {
+                        self.writeln("pub fn get(__cp_s: []const u8) ?@This() { return @This().fromString(__cp_s); }");
+                    } else {
+                        self.writeln("pub fn get(__cp_s: []const u8) ?@This() { return std.meta.stringToEnum(@This(), __cp_s); }");
+                    }
                 }
-            }
-            if !has_has {
-                self.writeln("pub fn has(__cp_s: []const u8) bool { return std.meta.stringToEnum(@This(), __cp_s) != null; }");
-            }
-            if !has_from_name {
-                if has_from_string_fn {
-                    self.writeln("pub fn fromName(__cp_s: []const u8) ?@This() { return @This().fromString(__cp_s); }");
-                } else {
-                    self.writeln("pub fn fromName(__cp_s: []const u8) ?@This() { return std.meta.stringToEnum(@This(), __cp_s); }");
+                if !has_has {
+                    self.writeln("pub fn has(__cp_s: []const u8) bool { return std.meta.stringToEnum(@This(), __cp_s) != null; }");
                 }
-            }
-            if !has_name {
-                self.writeln(
-                    "pub fn name(__cp_self: @This()) []const u8 { return @tagName(__cp_self); }",
-                );
+                if !has_from_name {
+                    if has_from_string_fn {
+                        self.writeln("pub fn fromName(__cp_s: []const u8) ?@This() { return @This().fromString(__cp_s); }");
+                    } else {
+                        self.writeln("pub fn fromName(__cp_s: []const u8) ?@This() { return std.meta.stringToEnum(@This(), __cp_s); }");
+                    }
+                }
+                if !has_name {
+                    self.writeln(
+                        "pub fn name(__cp_self: @This()) []const u8 { return @tagName(__cp_self); }",
+                    );
+                }
             }
             if !e.methods.is_empty() {
+                let owner_name = if is_anon {
+                    "@This()".to_string()
+                } else {
+                    e.ident.sym.clone()
+                };
                 for m in &e.methods {
-                    self.generate_function_decorated(m, Some(&e.ident.sym));
+                    self.generate_function_decorated(m, Some(&owner_name));
                 }
             }
             for code in &e.extra_zig {
@@ -167,7 +182,11 @@ impl Codegen {
                 self.generate_container_test(tb);
             }
             self.dedent();
-            self.writeln("};\n");
+            if is_anon {
+                self.writeln("}");
+            } else {
+                self.writeln("};\n");
+            }
             return;
         }
         let enum_type = if e.variants.iter().any(|v| v.value.is_some()) {

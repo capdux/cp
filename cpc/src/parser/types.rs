@@ -544,10 +544,38 @@ impl<'a> Parser<'a> {
         if self.peek() == Some(&Token::Const) {
             self.bump()?;
             let inner = self.parse_base_type()?;
-            let ty = Type::BorrowType {
-                inner: Box::new(inner),
-                is_mut: false,
-                lifetimes: vec![],
+            let ty = match inner {
+                Type::RawPtr {
+                    inner: ptr_inner,
+                    depth,
+                } => {
+                    let const_inner = match *ptr_inner {
+                        Type::BorrowType { is_mut: false, .. } => *ptr_inner,
+                        other => Type::BorrowType {
+                            inner: Box::new(other),
+                            is_mut: false,
+                            lifetimes: vec![],
+                        },
+                    };
+                    Type::RawPtr {
+                        inner: Box::new(const_inner),
+                        depth,
+                    }
+                }
+                Type::BorrowType {
+                    inner: b_inner,
+                    lifetimes,
+                    ..
+                } => Type::BorrowType {
+                    inner: b_inner,
+                    is_mut: false,
+                    lifetimes,
+                },
+                other => Type::BorrowType {
+                    inner: Box::new(other),
+                    is_mut: false,
+                    lifetimes: vec![],
+                },
             };
             return self.parse_postfix_type_modifiers(ty);
         }

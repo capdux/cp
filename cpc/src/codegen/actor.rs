@@ -111,10 +111,7 @@ impl Codegen {
         {
             return ReceiverMode::ReadOnly;
         }
-        if !func.params.is_empty() {
-            return ReceiverMode::Static;
-        }
-        ReceiverMode::Static
+        ReceiverMode::ReadOnly
     }
 
     pub fn get_sig_receiver_mode(sig: &MethodSig) -> ReceiverMode {
@@ -238,11 +235,13 @@ impl Codegen {
 
         let saved_const = self.const_vars.clone();
         let saved_ns = self.type_namespace_vars.clone();
+        let saved_type_params = self.type_param_names.clone();
 
         if active_decs.is_empty() {
             self.generate_function_logic(func, class_name);
             self.const_vars = saved_const;
             self.type_namespace_vars = saved_ns;
+            self.type_param_names = saved_type_params;
             return;
         }
 
@@ -311,6 +310,7 @@ impl Codegen {
         }
         self.const_vars = saved_const;
         self.type_namespace_vars = saved_ns;
+        self.type_param_names = saved_type_params;
     }
 
     pub(crate) fn generate_function(&mut self, func: &Function) {
@@ -531,6 +531,13 @@ impl Codegen {
                 }
             }
         }
+        self.type_param_names.clear();
+        for gp in &func.generic_params {
+            if let GenericParam::Type { ident, .. } = gp {
+                self.type_param_names.insert(ident.sym.clone());
+                self.type_namespace_vars.insert(ident.sym.clone());
+            }
+        }
         for p in &func.params {
             if p.ident.sym == "this" || p.ident.sym == "_" {
                 continue;
@@ -538,6 +545,10 @@ impl Codegen {
             self.current_fn_params.insert(p.ident.sym.clone());
             self.var_scope_depth.insert(p.ident.sym.clone(), 0);
             self.var_cp_types.insert(p.ident.sym.clone(), p.ty.clone());
+            if matches!(&p.ty, Type::Ref(id) if id.sym == "type") {
+                self.type_param_names.insert(p.ident.sym.clone());
+                self.type_namespace_vars.insert(p.ident.sym.clone());
+            }
             if p.is_mut || p.is_move {
                 self.mutable_fn_params.insert(p.ident.sym.clone());
             }
