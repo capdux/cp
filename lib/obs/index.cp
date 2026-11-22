@@ -290,3 +290,25 @@ export {
     LogSamplerStats,
     AdaptiveLogSampler,
 } from "./logSample.cp";
+
+// --- Zero-Alloc Prometheus-Style Alert Rules Evaluator & `for` Hysteresis FSM ---
+
+export {
+    ALERT_MAX_RULES,
+    ALERT_MAX_SILENCES,
+    ALERT_MAX_INHIBITIONS,
+    ALERT_NAME_MAX_LEN,
+    AlertCompareOp,
+    AlertSeverity,
+    AlertState,
+    AlertNotifyKind,
+    AlertSilenceTarget,
+    AlertRuleSpec,
+    AlertRuleEntry,
+    AlertSilence,
+    AlertInhibition,
+    AlertEvalOutcome,
+    FiringAlertSnapshot,
+    AlertEngineStats,
+    AlertRuleEngine,
+} from "./alertRules.cp";

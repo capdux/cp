@@ -511,6 +511,66 @@ pub fn demoLogSampler() {
 
 ---
 
+### 零分配 Prometheus 风格告警规则评估器与 `for` 滞回状态机 (`alertRules.cp`)
+
+面向微服务监控、SLO 告警与 AIOps 故障收敛的 100% 纯 CP 零动态堆分配告警规则引擎：
+
+- **常量与枚举**：
+  - `ALERT_MAX_RULES = 32`、`ALERT_MAX_SILENCES = 32`、`ALERT_MAX_INHIBITIONS = 32`、`ALERT_NAME_MAX_LEN = 48`
+  - `AlertCompareOp`（`gt | ge | lt | le | eq`）、`AlertSeverity`（`info | warning | critical`）
+  - `AlertState`（`inactive | pending | firing | resolved`）、`AlertNotifyKind`（`none | fire | resolve`）、`AlertSilenceTarget`（`by_rule | by_group`）
+- **数据模型**：`AlertRuleSpec`、`AlertRuleEntry`、`AlertSilence`、`AlertInhibition`、`AlertEvalOutcome`、`FiringAlertSnapshot`、`AlertEngineStats`
+- **核心引擎 `AlertRuleEngine`**：
+  - `init()` / `addRule(*_, spec)` / `removeRule(*_, rule_id)` / `getRule(rule_id)`
+  - `evaluate(*_, rule_id, value, now_ms): AlertEvalOutcome`：严格执行四态滞回（越界进入 `pending` 持续 `for_duration_ms` 升级 `firing`，瞬时抖动直接回落 `inactive`；恢复正常经 `keep_firing_for_ms` 冷却保持后转为一次性 `resolved` 并发射 `resolve` 通知）。
+  - `addSilence(*_, rule_id_or_group, by_group, start_ms, end_ms)` / `removeSilence` / `isSilenced`：支持按规则 ID 或分组标签哈希配置时间静默窗口。
+  - `addInhibition(*_, source_rule_id, target_rule_id)` / `removeInhibition` / `isInhibited`：上游告警 `firing` 时自动抑制下游子告警通知。
+  - `collectFiringAlerts(now_ms, include_suppressed, *out_alerts): usize`：按严重级别降序提取活跃/被抑制告警快照。
+  - `stats(): AlertEngineStats`。
+
+```cp
+import {
+    AlertCompareOp,
+    AlertSeverity,
+    AlertRuleSpec,
+    FiringAlertSnapshot,
+    AlertRuleEngine,
+} from "cap:obs";
+
+pub fn demoAlertRules() {
+    let eng = AlertRuleEngine.init();
+    * = eng.addRule(AlertRuleSpec{
+        rule_id: 1,
+        name: "ClusterDown",
+        op: AlertCompareOp.eq,
+        threshold: 0.0,
+        for_duration_ms: 0,
+        severity: AlertSeverity.critical,
+    });
+    * = eng.addRule(AlertRuleSpec{
+        rule_id: 2,
+        name: "HighCpu",
+        op: AlertCompareOp.gt,
+        threshold: 90.0,
+        for_duration_ms: 5000,
+        keep_firing_for_ms: 3000,
+        severity: AlertSeverity.warning,
+    });
+    * = eng.addInhibition(1, 2); // 集群宕机抑制单节点高 CPU 告警
+
+    * = eng.evaluate(1, 0.0, 1000);   // ClusterDown -> firing
+    * = eng.evaluate(2, 95.0, 1000);  // HighCpu -> pending
+    const r = eng.evaluate(2, 96.0, 6000); // HighCpu -> firing (inhibited = true, should_notify = false)
+    * = r.inhibited;
+
+    let out: [4]FiringAlertSnapshot = [FiringAlertSnapshot{}; 4];
+    let out_s: []FiringAlertSnapshot = out[0..];
+    * = eng.collectFiringAlerts(6000, false, *out_s); // 1 (仅 ClusterDown)
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [btf.md](obs/btf.md)
