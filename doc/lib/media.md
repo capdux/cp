@@ -323,6 +323,66 @@ pub fn demoVideoAndVlmPreprocess(src_rgba: []const u8)! {
 }
 ```
 
+### 无上限外部切片 RFC 8216 HLS/LL-HLS 清单编解码、MPEG-DASH 模板与 Dual-EWMA/BOLA ABR 引擎 (`hlsDash.cp`)
+
+面向现代自适应流媒体（HLS / LL-HLS / MPEG-DASH）服务端打包与客户端播放器的 100% 纯 CP 零动态堆分配引擎，所有分片、变体、低延迟 Part 与格式化缓冲均由调用方外部切片驱动：
+
+- **错误集与枚举**：
+  - `StreamManifestError`（`MissingExtM3u | InvalidTag | InvalidNumber | InvalidByteRange | BufferTooSmall | OutputSliceTooSmall | InvalidTemplate | InvalidConfig`）
+  - `HlsPlaylistKind`（`master | media_vod | media_event | media_live`）
+- **RFC 8216 HLS Master Playlist**：
+  - `HlsVariant`（零拷贝 `codecs(src)` / `uri(src)` 视图，含 `bandwidth_bps`, `average_bandwidth_bps`, `width`, `height`, `frame_rate_milli`）、`HlsVariantSpec`
+  - `parseHlsMasterPlaylist(raw, *out_variants)`（完整处理引号内逗号 `CODECS="avc1.640028,mp4a.40.2"`）、`formatHlsMasterPlaylist(variants_spec, *out_buf)`
+- **RFC 8216 HLS & LL-HLS Media Playlist**：
+  - `HlsByteRange`、`HlsSegment`、`HlsSegmentSpec`、`HlsPartialSegment`（`#EXT-X-PART`）、`HlsMediaPlaylistInfo`
+  - `parseHlsMediaPlaylist(raw, *out_segments, *out_parts)`（完整支持 `#EXT-X-BYTERANGE` 隐式累加偏移、`#EXT-X-DISCONTINUITY`、`#EXT-X-KEY:METHOD=AES-128`、`#EXT-X-PART`、`#EXT-X-ENDLIST`）、`formatHlsMediaPlaylist(...)`
+- **MPEG-DASH `SegmentTemplate` 展开器 (ISO/IEC 23009-1)**：
+  - `DashTemplateParams`、`expandDashSegmentTemplate(template, params, *out_buf)`（支持 `$RepresentationID$`、`$Number%05d$`、`$Bandwidth$`、`$Time$` 与 `$$` 字面转义）
+- **生产级 ABR 自适应码率控制器**：
+  - `AbrStrategy`（`throughput_ewma | bola_buffer | hybrid_safe`）、`AbrLevel`、`AbrDecision`
+  - `AbrController`（Fast/Slow 双 EWMA 吞吐估算 + BOLA 对数缓冲效用 + 安全系数 + 升档滞回冷却 + 低缓冲紧急降档；提供 `init`, `recordDownload`, `estimatedBandwidthBps`, `selectLevel`）
+
+```cp
+import {
+    HlsVariant,
+    parseHlsMasterPlaylist,
+    DashTemplateParams,
+    expandDashSegmentTemplate,
+    AbrStrategy,
+    AbrLevel,
+    AbrController,
+} from "cap:media";
+
+pub fn demoStreamingAbr(master_m3u8: []const u8)! {
+    // 1. 零堆解析 HLS Master Playlist
+    let vars: [8]HlsVariant = [HlsVariant{}; 8];
+    let vars_s: []HlsVariant = vars[0..];
+    const n_vars = parseHlsMasterPlaylist(master_m3u8, *vars_s)?;
+
+    // 2. 展开 MPEG-DASH SegmentTemplate URL
+    let url_buf: [128]u8 = [0; 128];
+    let url_s: []u8 = url_buf[0..];
+    const url_len = expandDashSegmentTemplate(
+        "seg/$RepresentationID$/chunk_$Number%05d$.m4s",
+        DashTemplateParams{ representation_id: "1080p", number: 42 },
+        *url_s,
+    )?;
+
+    // 3. Dual-EWMA + BOLA 混合 ABR 决策
+    let abr = AbrController.init(AbrStrategy.hybrid_safe, 0.85, 2000, 20000, 4000)?;
+    abr.recordDownload(1_500_000, 2000); // 6 Mbps
+    const levels: [3]AbrLevel = [
+        AbrLevel{ level_id: 0, bitrate_bps: 800_000, width: 640, height: 360 },
+        AbrLevel{ level_id: 1, bitrate_bps: 2_500_000, width: 1280, height: 720 },
+        AbrLevel{ level_id: 2, bitrate_bps: 5_000_000, width: 1920, height: 1080 },
+    ];
+    const pick = abr.selectLevel(levels[0..], 12_000, 10_000);
+    * = n_vars;
+    * = url_len;
+    * = pick;
+}
+```
+
 ---
 
 ## 收敛子模块深度文档

@@ -120,6 +120,28 @@ export {
 } from "./imageOps.cp";
 
 export {
+    StreamManifestError,
+    HlsPlaylistKind,
+    HlsVariant,
+    HlsVariantSpec,
+    parseHlsMasterPlaylist,
+    formatHlsMasterPlaylist,
+    HlsByteRange,
+    HlsSegment,
+    HlsSegmentSpec,
+    HlsPartialSegment,
+    HlsMediaPlaylistInfo,
+    parseHlsMediaPlaylist,
+    formatHlsMediaPlaylist,
+    DashTemplateParams,
+    expandDashSegmentTemplate,
+    AbrStrategy,
+    AbrLevel,
+    AbrDecision,
+    AbrController,
+} from "./hlsDash.cp";
+
+export {
     FLAC_MAGIC_SIZE,
     FLAC_BLOCK_HEADER_SIZE,
     FLAC_STREAMINFO_SIZE,
