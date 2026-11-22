@@ -15,7 +15,7 @@ import {
     secded84DecodeBytes,
     secded7264Encode,
     secded7264Decode,
-} from "cap:hamming";
+} from "cap:codec";
 
 fn slicesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

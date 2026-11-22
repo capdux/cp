@@ -8,7 +8,7 @@ import {
     gfInv,
     gfDiv,
     ReedSolomon,
-} from "cap:reed_solomon";
+} from "cap:codec";
 
 test("1. GF(2^8) arithmetic and multiplicative inverse axioms") {
     let a: u16 = 1;
@@ -93,7 +93,7 @@ test("4. Error boundaries: TooFewShards, InvalidShardCount and ShardSizeMismatch
 
 test("5. Dynamic cap.reed_solomon namespace and zero-leak check") {
     const alloc = std.testing.allocator;
-    const rs = try cap.reed_solomon.ReedSolomon.init(alloc, 2, 1);
+    const rs = try cap.codec.ReedSolomon.init(alloc, 2, 1);
     defer rs.deinit();
     let d0: [4]u8 = [ 0x11, 0x22, 0x33, 0x44 ];
     let d1: [4]u8 = [ 0x55, 0x66, 0x77, 0x88 ];

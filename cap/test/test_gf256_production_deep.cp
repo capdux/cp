@@ -7,7 +7,7 @@ import {
     GF256_POLY_RS,
     gf256MulConstTime,
     Gf256Field,
-} from "cap:gf256";
+} from "cap:codec";
 
 test("1. AES (0x11B) & RS (0x11D) exhaustive 255-element inverse, division, and power identities", () => {
     expect_eq(GF256_POLY_AES, 0x1B as u8);

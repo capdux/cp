@@ -17,7 +17,7 @@ import {
     quantize8x8,
     dequantize8x8,
     scaleQuantTable,
-} from "cap:dct";
+} from "cap:codec";
 
 fn absDiff(a: f64, b: f64): f64 {
     if (a >= b) {

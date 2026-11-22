@@ -16,7 +16,7 @@ import {
     golay23Decode,
     golay24EncodeBytes,
     golay24DecodeBytes,
-} from "cap:golay";
+} from "cap:codec";
 
 fn popcnt32(x: u32): u8 {
     let v = x;

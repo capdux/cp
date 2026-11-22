@@ -148,3 +148,4 @@ pub fn demoCodec(): ! {
 | 一维条码 | `lib/codec/code128.cp` | ISO/IEC 15417 Code 128 | 零堆分配 Code 128 条码编解码 |
 | 一维条码 | `lib/codec/code39.cp` | ISO/IEC 16388 Code 39 | 零堆分配 3-of-9 条码编解码与 Mod-43 校验 |
 | 参考归档（不导出） | `lib/codec/{base58,base85,bech32}_.cp` | Base58 / Base85 / Bech32（仅参考） | 与权威 `base58_85.cp` / `bech32_crockford.cp` 功能重叠，保留供对比分析 |
+| 纠错码与有限域（Batch 38） | `lib/codec/elias.cp`, `gf256.cp`, `golay.cp`, `hamming.cp`, `reed_solomon.cp`, `dct.cp` | Elias 通用前缀码、GF(2^8) 有限域、Golay [24,12,8]/[23,12,7]、Hamming(7,4)/SECDED(8,4)/(72,64)、Cauchy Reed-Solomon 纠删码、8x8 DCT-II/IDCT-III | 零冲突导出至 `cap:codec`（原 `elias`/`gf256`/`golay`/`hamming`/`reed_solomon`/`dct` 已收敛） |

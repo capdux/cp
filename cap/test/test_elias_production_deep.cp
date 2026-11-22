@@ -18,7 +18,7 @@ import {
     readRice,
     writeFibonacci,
     readFibonacci,
-} from "cap:elias";
+} from "cap:codec";
 
 test("1. Elias Gamma, Delta, and Omega round-trip from 1..1_000_000 and 60-bit large integers", () => {
     const vals: [10]u64 = [

@@ -270,3 +270,97 @@ export {
     encodeCode39Modules,
     decodeCode39Modules,
 } from "./code39.cp";
+
+// ============================================================================
+// Batch 38: ECC, Finite Fields, Universal Prefix Codes & DCT Transform Codecs
+// ============================================================================
+// --- elias ---
+export {
+    BitWriter,
+    BitReader,
+    writeEliasGamma,
+    readEliasGamma,
+    writeEliasDelta,
+    readEliasDelta,
+    writeEliasOmega,
+    readEliasOmega,
+    writeExpGolombU,
+    readExpGolombU,
+    writeExpGolombS,
+    readExpGolombS,
+    writeRice,
+    readRice,
+    writeFibonacci,
+    readFibonacci,
+} from "./elias.cp";
+
+// --- gf256 ---
+export {
+    GF256_POLY_AES,
+    GF256_POLY_RS,
+    gf256MulConstTime,
+    Gf256Field,
+} from "./gf256.cp";
+
+// --- golay ---
+export {
+    GOLAY24_DATA_BITS,
+    GOLAY24_CODE_BITS,
+    GOLAY24_MIN_DIST,
+    GOLAY23_CODE_BITS,
+    GolayStatus,
+    GolayDecode,
+    golay24Parity,
+    golay24Encode,
+    golay24Decode,
+    golay23Encode,
+    golay23Decode,
+    golay24EncodeBytes,
+    golay24DecodeBytes,
+} from "./golay.cp";
+
+// --- hamming ---
+export {
+    EccStatus,
+    Hamming4Decode,
+    Secded4Decode,
+    Secded64Decode,
+    hamming74Encode,
+    hamming74Decode,
+    secded84Encode,
+    secded84Decode,
+    secded84EncodeBytes,
+    secded84DecodeBytes,
+    secded7264Encode,
+    secded7264Decode,
+} from "./hamming.cp";
+
+// --- reed_solomon ---
+export {
+    RsError,
+    gfAdd,
+    gfMul,
+    gfPow,
+    gfInv,
+    gfDiv,
+    ReedSolomon,
+} from "./reed_solomon.cp";
+
+// --- dct ---
+export {
+    DCT_BLOCK_DIM,
+    DCT_BLOCK_SIZE,
+    JPEG_ZIGZAG_8X8,
+    JPEG_LUMA_QUANT_50,
+    JPEG_CHROMA_QUANT_50,
+    dct1d,
+    idct1d,
+    dct8x8,
+    idct8x8,
+    zigzagReorder8x8,
+    unzigzagReorder8x8,
+    quantize8x8,
+    dequantize8x8,
+    scaleQuantTable,
+} from "./dct.cp";
+
