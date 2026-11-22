@@ -117,6 +117,7 @@ fn demoRangeMatching() {
 | `lib/semver/rset.cp` | `MAX_COMPARATORS_PER_GROUP`, `MAX_GROUPS`, `SemverVersion`, `RangeOp`, `RangeComparator`, `ComparatorGroup`, `ParsedSemverRange` | 固定容量零堆分配 Range 比较器组解析与求值 |
 | `lib/semver/satisfies.cp` | `SatisfiesVersion`, `satisfiesRange`, `satisfiesVersion`, `isValidSemverRange` | 轻量零分配版本区间 `satisfies` 校验器 |
 | `lib/semver/sort.cp` | `SemverOrder`, `ParsedSemver`, `parseSemverStrict`, `parseSemverLoose`, `compareSemver`, `compareSemverStr`, `sortSemverAsc`, `sortSemverDesc`, `maxSemverIndex`, `minSemverIndex` | SemVer 2.0.0 严格/宽松解析、原地升降序排序与极值索引查询 |
+| `lib/semver/semverString.cp` | `SEMVER_STRING_MAX_INLINE_LEN`, `SEMVER_POOL_MAX_BYTES`, `SEMVER_POOL_MAX_ENTRIES`, `SemverStringError`, `SemverStringTag`, `SemverStringPointer`, `semverStringHash`, `SemverString`, `SemverExternalString`, `SemverStringPool` | Bun 风格 8 字节内联/外置压缩字符串、固定容量哈希去重池与 store-path 安全转义 |
 
 ---
 
@@ -129,5 +130,22 @@ fn demoRangeMatching() {
 3. **预发布版本隔离与 `^0.x` 特殊边界**：
    - 默认情况下 `^1.0.0` 不匹配 `1.2.0-alpha.1`（仅当范围同组比较器显式包含相同 `[major, minor, patch]` 的预发布标签，或通过 `satisfiesWithOptions(..., true)` 开启 `include_prerelease` 时匹配）。
    - `^0.2.3` 等价于 `>=0.2.3 <0.3.0`，`^0.0.3` 等价于 `>=0.0.3 <0.0.4`（锁定最左侧非零位），与 npm / Bun 生态 100% 兼容。
-4. **高性能零堆比较**：
-   - 上游 Bun Semver 引擎相比 JS 版 `node-semver` 提速约 20 倍；在包管理器批量候选版本筛选中优先使用已解析 `Version` 结构体配合 `Semver.maxSatisfying` / `Semver.minSatisfying` 避免重复字符串解析。
+4. **高性能零堆比较与 8 字节压缩字符串池（`semverString.cp`）**：
+   - 上游 Bun Semver 引擎相比 JS 版 `node-semver` 提速约 20 倍；在包管理器批量候选版本与 lockfile 标识符存储中，使用 `SemverString`（≤ 8 字节 ASCII 直接内联于 8 字节值内、无需外部缓冲区寻址；> 8 字节自动存入固定容量 `SemverStringPool` 并按 64 位 FNV-1a 哈希去重）配合 `SemverExternalString.eqlFast` 可实现 O(1) 快速拒绝与零堆分配。
+   - 调用 `SemverString.formatStorePath` 可自动将包名与版本标签中的 `/`、`\`、`:`、`#` 替换为 `+`（如 `@types/node` -> `@types+node`），与 Bun 包存储目录命名规范一致。
+
+```cp
+import { SemverStringPool } from "cap:semver";
+
+let pool = SemverStringPool.init();
+const short_tag = pool.intern("1.0.0")?;                 // 内联存储，不占 pool 字节
+const scoped = pool.internExternal("@types/node@22.0.0")?; // 入池并带 64 位哈希
+const dup = pool.internExternal("@types/node@22.0.0")?;    // 复用同一偏移，dedupCount 不增
+assert(scoped.eqlFast(dup, pool.bytes(), pool.bytes()));
+
+let path_buf: [64]u8 = [0; 64];
+const n = scoped.value.formatStorePath(pool.bytes(), path_buf[0..])?;
+// path_buf[0..n] == "@types+node@22.0.0"
+* = short_tag;
+* = n;
+```

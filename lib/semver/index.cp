@@ -89,3 +89,16 @@ export {
     maxSemverIndex,
     minSemverIndex,
 } from "./sort.cp";
+
+export {
+    SEMVER_STRING_MAX_INLINE_LEN,
+    SEMVER_POOL_MAX_BYTES,
+    SEMVER_POOL_MAX_ENTRIES,
+    SemverStringError,
+    SemverStringTag,
+    SemverStringPointer,
+    semverStringHash,
+    SemverString,
+    SemverExternalString,
+    SemverStringPool,
+} from "./semverString.cp";

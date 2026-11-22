@@ -39,7 +39,7 @@ pub const Version = struct {
                c == '-';
     }
 
-    fn validateTagSegments(tag: []const u8, check_no_leading_zero: bool): bool {
+    static fn validateTagSegments(tag: []const u8, check_no_leading_zero: bool): bool {
         if (tag.len == 0) return false;
         let iter = std.mem.splitScalar(u8, tag, '.');
         while (seg := iter.next()) {
@@ -65,7 +65,7 @@ pub const Version = struct {
         return true;
     }
 
-    pub fn parseStrict(input_str: []const u8): !Version {
+    static fn parseStrict(input_str: []const u8): !Version {
         let str = std.mem.trim(u8, input_str, " \t\r\n");
         if (str.len == 0) return error.InvalidVersion;
 
@@ -103,7 +103,7 @@ pub const Version = struct {
         return Version.parse(input_str);
     }
 
-    pub fn parse(input_str: []const u8): !Version {
+    static fn parse(input_str: []const u8): !Version {
         let str = std.mem.trim(u8, input_str, " \t\r\n");
         while (str.len > 0 && (str[0] == 'v' || str[0] == 'V' || str[0] == '=' || str[0] == ' ' || str[0] == '\t')) {
             str = str[1..];
@@ -172,7 +172,7 @@ pub const Version = struct {
         return v;
     }
 
-    pub fn parsePartial(input_str: []const u8): !PartialVersion {
+    static fn parsePartial(input_str: []const u8): !PartialVersion {
         let str = std.mem.trim(u8, input_str, " \t\r\n");
         while (str.len > 0 && (str[0] == 'v' || str[0] == 'V' || str[0] == '=' || str[0] == ' ' || str[0] == '\t')) {
             str = str[1..];
@@ -290,7 +290,7 @@ pub const Version = struct {
         return _.prerelease.len > 0;
     }
 
-    pub fn order(a: Version, b: Version): std.math.Order {
+    static fn order(a: Version, b: Version): std.math.Order {
         if (a.major != b.major) return if (a.major < b.major) .lt else .gt;
         if (a.minor != b.minor) return if (a.minor < b.minor) .lt else .gt;
         if (a.patch != b.patch) return if (a.patch < b.patch) .lt else .gt;
