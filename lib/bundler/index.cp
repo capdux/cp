@@ -238,3 +238,19 @@ export {
     isPureGlobalCallSafeForString,
     classifyGlobalExpr,
 } from "./pure_globals";
+
+export {
+    HTML_SCANNER_MAX_ASSETS,
+    HTML_SCANNER_MAX_SRCSET_CANDIDATES,
+    HtmlScannerError,
+    HtmlImportKind,
+    HtmlTagKind,
+    HtmlAssetRef,
+    SrcsetCandidate,
+    HtmlRewritePair,
+    HtmlScanResult,
+    isExternalHtmlUrl,
+    parseSrcsetCandidates,
+    scanHtmlAssets,
+    rewriteHtmlAssetUrls,
+} from "./html_scanner";

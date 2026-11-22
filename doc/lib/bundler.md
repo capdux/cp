@@ -371,6 +371,31 @@ const ok = isPureGlobalPropertyChain("Object.prototype.hasOwnProperty"); // true
 * = ok;
 ```
 
+### 3.19 HTML 入口静态资源扫描器与无损 URL 改写引擎（`lib/bundler/html_scanner.cp`，吸收自 `/data/dev/bun/src/bundler/HTMLScanner.cp` 与 `/data/dev/bun/docs/bundler/html-static.mdx`）
+- **常量与错误集**：`HTML_SCANNER_MAX_ASSETS` (`64`)、`HTML_SCANNER_MAX_SRCSET_CANDIDATES` (`16`)、`HtmlScannerError`
+- **核心类型与函数**：`HtmlImportKind`（`stmt` / `at` / `url`）、`HtmlTagKind`（`script` / `link` / `img` / `video` / `audio` / `source`）、`HtmlAssetRef`（含 `isLocalBundleable()` 与精确字节偏移 `url_start`..`url_end`）、`SrcsetCandidate`、`HtmlRewritePair`、`HtmlScanResult`、`isExternalHtmlUrl`、`parseSrcsetCandidates`、`scanHtmlAssets`、`rewriteHtmlAssetUrls`。
+- **HTML 打包契约（参考 `/data/dev/bun/docs/bundler/html-static.mdx`）**：
+  - 自动发现 `<script src>`（`.stmt`）、`<link rel="stylesheet" href>` / `<link as="style" href>`（`.at`）、`<link as="worker" href>`（`.stmt`）以及字体/图片/视频/音频/Manifest/图标与 `<img/source srcset>` 多候选资源（`.url`）；
+  - 自动跳过 `<!-- ... -->` 注释与 `<script>`/`<style>` 原始正文，避免误提取内联代码片段中的伪标签；自动识别 `http://`/`https://`/`//`/`data:`/`blob:`/`#` 等外部或内联 URI 使其不参与本地打包；
+  - `rewriteHtmlAssetUrls` 按精确字节偏移将本地静态资源改写为带内容哈希的构建产物路径（支持 SPA 单入口回退与 MPA 多页入口静态站打包）。
+
+```cp
+import { scanHtmlAssets, rewriteHtmlAssetUrls, HtmlRewritePair } from "cap:bundler";
+
+const html = "<html><head><link rel=\"stylesheet\" href=\"./styles.css\"><script type=\"module\" src=\"./app.ts\"></script></head><body><img src=\"./logo.png\"></body></html>";
+const scan = scanHtmlAssets(html)?;
+// scan.count == 3, scan.localAssetCount() == 3, scan.has_head == true
+
+const pairs: [2]HtmlRewritePair = [
+    HtmlRewritePair{ from_url: "./styles.css", to_url: "/assets/styles-abc123.css" },
+    HtmlRewritePair{ from_url: "./app.ts", to_url: "/assets/app-def456.js" },
+];
+let out: [256]u8 = [0; 256];
+const n = rewriteHtmlAssetUrls(html, pairs[0..], out[0..])?;
+* = scan;
+* = n;
+```
+
 ---
 
 ## 四、 上游行为契约、边界与安全注意事项

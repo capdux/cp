@@ -1123,3 +1123,46 @@ pub fn demoKvEvictionHybrid() {
     * = mgr.stats().compression_ratio_f32; // 10 / 6 = 1.6667x
 }
 ```
+
+### 零分配多租户 Multi-LoRA 适配器缓存路由与 SGMV 批处理编排引擎 (`lora_router.cp`)
+
+面向 S-LoRA / Punica / vLLM 多租户 LLM 推理服务的 100% 纯 CP 零动态堆分配 Multi-LoRA 适配器驻留缓存、引用计数 LRU 驱逐、混合批 SGMV 编排与 SIMD 增量核：
+
+- **常量与数据模型**：`LORA_ROUTER_MAX_ADAPTERS` (`32`)、`LORA_MAX_BATCH_GROUPS` (`32`)、`LoraRouterConfig`（`max_loaded_adapters`, `memory_budget_bytes`, `max_rank`, `isValid()`）、`LoraAdapterSlot`、`LoraAcquireOutcome`、`LoraBatchGroup`、`LoraRouterStats`。
+- **多租户适配器驻留路由器（`MultiLoraRouter`）**：
+  - `init(cfg): MultiLoraRouter?`
+  - `acquire_adapter(*_, adapter_id, rank, alpha_f32, mem_bytes, step, pin): LoraAcquireOutcome`：命中则递增 `active_refs` 并刷新 `last_used_step`；未命中时原子预检冷槽位可回收容量，按 LRU 驱逐 `active_refs == 0 && !pinned` 的冷适配器；若全被锁定/在途占用则返回 `oom_blocked = true` 且不破坏现有缓存。
+  - `release_adapter(*_, adapter_id): bool`（递减引用计数防下溢）、`unpin_adapter(*_, adapter_id): bool`、`get_slot(slot_idx)`、`stats()`。
+- **零堆 SGMV 批编排与 SIMD 增量算子**：
+  - `planLoraSgmvBatch(req_adapter_ids, out_groups, out_sorted_req_indices): usize`：零辅助内存将混合多租户请求按 `adapter_id` 稳定聚合为连续 SGMV 分组（`adapter_id == 0` 的 base-only 请求独立成组）。
+  - `applyLoraDeltaSimdF32(x, a_mat, b_mat, in_dim, rank, out_dim, scale, scratch_mid, y_inout): bool`：利用 CP 原生 8-lane SIMD `@dot` 与硬件 `@fma` 原位计算 `y += scale * (B * (A * x))`。
+
+```cp
+import {
+    LoraRouterConfig,
+    LoraBatchGroup,
+    MultiLoraRouter,
+    planLoraSgmvBatch,
+    applyLoraDeltaSimdF32,
+} from "cap:attention";
+
+pub fn demoMultiLoraSgmv() {
+    let router = MultiLoraRouter.init(LoraRouterConfig{
+        max_loaded_adapters: 4,
+        memory_budget_bytes: 64 * 1024 * 1024,
+        max_rank: 32,
+    }) ?? return;
+
+    * = router.acquire_adapter(101, 16, 32.0, 8 * 1024 * 1024, 1, false);
+    * = router.acquire_adapter(202, 8, 16.0, 4 * 1024 * 1024, 2, true);
+
+    // 混合多租户 batch 稳定分组（0 为 base-only）
+    const reqs: [5]u64 = [101, 0, 202, 101, 0];
+    let groups: [4]LoraBatchGroup = [LoraBatchGroup{}; 4];
+    let sorted: [5]usize = [0; 5];
+    let groups_s: []LoraBatchGroup = groups[0..];
+    let sorted_s: []usize = sorted[0..];
+    const ng = planLoraSgmvBatch(reqs[0..], groups_s, sorted_s);
+    * = ng; // 3 组: [101: 0,3], [0: 1,4], [202: 2]
+}
+```

@@ -268,3 +268,16 @@ export {
     KvEvictionStats,
     KvEvictionManager,
 } from "./kv_eviction.cp";
+
+export {
+    LORA_ROUTER_MAX_ADAPTERS,
+    LORA_MAX_BATCH_GROUPS,
+    LoraRouterConfig,
+    LoraAdapterSlot,
+    LoraAcquireOutcome,
+    LoraBatchGroup,
+    LoraRouterStats,
+    MultiLoraRouter,
+    planLoraSgmvBatch,
+    applyLoraDeltaSimdF32,
+} from "./lora_router.cp";
