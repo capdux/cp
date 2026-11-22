@@ -19,7 +19,7 @@ import {
     parseJksHeader,
     findJksEntry,
     summarizeJks,
-} from "cap:jks";
+} from "cap:binfmt";
 
 /// 零堆分配栈上大端序 JKS 构造器（测试专用）
 struct JksBuilder {

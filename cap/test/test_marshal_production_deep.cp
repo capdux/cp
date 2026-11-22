@@ -23,7 +23,7 @@ import {
     isMarshal,
     readMarshalInt,
     MarshalReader,
-} from "cap:marshal";
+} from "cap:binfmt";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

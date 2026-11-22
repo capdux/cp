@@ -12,7 +12,7 @@ import {
     decodeUleb128,
     encodeSleb128,
     decodeSleb128,
-} from "cap:varint_leb128";
+} from "cap:binfmt";
 
 test "varint_leb128: DWARF official ULEB128 vector (624485 -> 0xE5 0x8E 0x26)" {
     let buf: [10]u8 = undefined;
@@ -66,7 +66,7 @@ test "varint_leb128: max u64, EOF, Overflow, and BufferTooSmall guards" {
 
 test "varint_leb128: cap.varint_leb128 dynamic mount" {
     let buf: [10]u8 = undefined;
-    const n = try cap.varint_leb128.encodeSleb128(-42, &buf);
-    const res = try cap.varint_leb128.decodeSleb128(buf[0..n]);
+    const n = try cap.binfmt.encodeSleb128(-42, &buf);
+    const res = try cap.binfmt.decodeSleb128(buf[0..n]);
     try expect_eq(res.value, -42);
 }

@@ -16,7 +16,7 @@ import {
     parseSegyHeader,
     readSampleF64,
     applyCoordScalar,
-} from "cap:segy";
+} from "cap:binfmt";
 
 fn approxEq(a: f64, b: f64, eps: f64): bool {
     const diff = if (a >= b) a - b else b - a;

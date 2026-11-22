@@ -33,7 +33,7 @@ import {
     CoffReloc,
     CoffObject,
     parseCoff,
-} from "cap:coff";
+} from "cap:binfmt";
 
 fn putU16Le(buf: []u8, off: usize, v: u16) {
     buf[off + 0] = (v & 0xFF) as u8;

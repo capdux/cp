@@ -72,3 +72,24 @@ pub fn demoBinfmt() {
     * = summarizeLcov("TN:\nSF:main.cp\nDA:1,1\nend_of_record\n");
 }
 ```
+
+---
+
+## Batch 35 扩展：二进制对象、序列化器、科学数据容器与比特流（14 个子模块）
+
+| 子模块文件 | 领域分类 | 核心导出说明 |
+| :--- | :--- | :--- |
+| `lib/binfmt/coff.cp` | COFF / PE Object File | `isCoff`, `parseCoffHeader`, `CoffSectionIter`, `CoffSymbolIter` |
+| `lib/binfmt/bincode.cp` | Rust Bincode v1/v2 二进制编解码 | `BincodeReader`, `BincodeWriter`, `BincodeConfig` |
+| `lib/binfmt/borsh.cp` | Borsh 确定性二进制编解码 | `BorshReader`, `BorshWriter` |
+| `lib/binfmt/marshal.cp` | Ruby Marshal 4.8 二进制解析 | `isMarshal`, `parseMarshalHeader`, `MarshalReader` |
+| `lib/binfmt/nbt.cp` | Named Binary Tag (Java BE & Bedrock LE) | `NbtTagType`, `NbtReader`, `parseNbtRoot` |
+| `lib/binfmt/jks.cp` | Java KeyStore `.jks` v1/v2 二进制解析 | `isJks`, `parseJksHeader`, `JksEntryIter` |
+| `lib/binfmt/tpm.cp` | TCG TPM 2.0 二进制头/Quote/Attestation | `parseTpmHeader`, `parseTpmAttest`, `parseTpmPublic` |
+| `lib/binfmt/lzh.cp` | LZH / LHA 二进制归档与 CRC-16/ARC | `isLzh`, `LzhEntryIter`, `lzhCrc16` |
+| `lib/binfmt/mseed.cp` | IRIS MiniSEED v2.4 地震学记录 | `isMiniSeed`, `parseMiniSeedHeader`, `MiniSeedIter` |
+| `lib/binfmt/segy.cp` | SEG-Y Rev 1/2 地震勘探二进制格式 | `parseSegyBinaryHeader`, `parseSegyTraceHeader`, `SegyTraceIter` |
+| `lib/binfmt/shp.cp` | ESRI Shapefile `.shp` 二进制矢量 | `isShapefile`, `parseShpHeader`, `ShpRecordIter` |
+| `lib/binfmt/ts.cp` | ISO/IEC 13818-1 MPEG-TS 传输流 | `isMpegTs`, `MpegTsPacketIter`, `parseTsPacket` |
+| `lib/binfmt/varint_leb128.cp` | LEB128 & ZigZag 变长整数编解码 | `encodeUleb128`, `decodeUleb128`, `encodeSleb128`, `decodeSleb128`, `zigzagEncode64`, `zigzagDecode64` |
+| `lib/binfmt/bitstream.cp` | LSB/MSB 比特流读写器与 Leb128 | `BitReader`, `BitWriter`, `BitOrder`, `Leb128`, `BitstreamUleb128Result` |

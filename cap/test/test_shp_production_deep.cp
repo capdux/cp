@@ -17,7 +17,7 @@ import {
     isShp,
     parseShpPoint,
     parseShpPoly,
-} from "cap:shp";
+} from "cap:binfmt";
 
 fn putU32BE(buf: *[]u8, off: usize, v: u32) {
     buf[off] = ((v >> 24) & 0xFF) as u8;

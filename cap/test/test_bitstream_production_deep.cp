@@ -7,12 +7,12 @@ import cap from "cap";
 import {
     BitStreamError,
     BitOrder,
-    Uleb128Result,
+    BitstreamUleb128Result as Uleb128Result,
     Sleb128Result,
     BitWriter,
     BitReader,
     Leb128,
-} from "cap:bitstream";
+} from "cap:binfmt";
 
 fn emptyMutSlice(): []u8 {
     return std.heap.page_allocator.alloc(u8, 0) catch unreachable;
@@ -260,7 +260,7 @@ fn runTest5(): !void {
     const alloc = std.testing.allocator;
 
     // Dynamic mounting via import cap from "cap"; cap.bitstream
-    let bw = cap.bitstream.BitWriter.init(alloc, cap.bitstream.BitOrder.LsbFirst);
+    let bw = cap.binfmt.BitWriter.init(alloc, cap.binfmt.BitOrder.LsbFirst);
     defer bw.deinit();
 
     bw.writeBits(0b1010, 4)?;
@@ -269,13 +269,13 @@ fn runTest5(): !void {
     const raw = bw.finish()?;
     defer alloc.free(raw);
 
-    let br = cap.bitstream.BitReader.init(raw, cap.bitstream.BitOrder.LsbFirst);
+    let br = cap.binfmt.BitReader.init(raw, cap.binfmt.BitOrder.LsbFirst);
     expect_eq(br.readBits(4)?, 0b1010 as u64);
     expect_eq(br.readExpGolombS()?, -5 as i32);
 
-    const leb = cap.bitstream.Leb128.encodeUleb128(alloc, 300)?;
+    const leb = cap.binfmt.Leb128.encodeUleb128(alloc, 300)?;
     defer alloc.free(leb);
-    const decoded = cap.bitstream.Leb128.decodeUleb128(leb)?;
+    const decoded = cap.binfmt.Leb128.decodeUleb128(leb)?;
     expect_eq(decoded.value, 300 as u64);
     expect_eq(decoded.bytes_read, 2 as usize);
 }

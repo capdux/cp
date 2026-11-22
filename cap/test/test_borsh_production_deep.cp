@@ -2,7 +2,7 @@
 
 import std from "std";
 import { test, expect_eq } from "cap:test";
-import { BorshWriter, BorshReader } from "cap:borsh";
+import { BorshWriter, BorshReader } from "cap:binfmt";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

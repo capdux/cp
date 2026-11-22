@@ -20,7 +20,7 @@ import {
     isMpegTs,
     parseTsPacket,
     parsePmt,
-} from "cap:ts";
+} from "cap:binfmt";
 
 fn writeTsHeader(
     buf: *[]u8,

@@ -45,7 +45,7 @@ import {
     parseTpmQuoteInfo,
     TpmPublicHeader,
     parseTpmPublicHeader,
-} from "cap:tpm";
+} from "cap:binfmt";
 
 fn putU16Be(buf: []u8, off: usize, v: u16) {
     buf[off] = ((v >> 8) & 0xFF) as u8;
