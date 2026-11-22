@@ -1002,6 +1002,45 @@ pub fn demoWebRtcWhepHandshake(offer_sdp: []const u8)! {
 }
 ```
 
+### 21. RFC 3711 SRTP / SRTCP 媒体加密传输与 RFC 5764 DTLS-SRTP 密钥导出引擎 (`srtpCodec.cp`)
+
+面向 WebRTC 安全音视频媒体闭环的 100% 纯 CP 零动态堆分配、零外部 FFI 依赖 SRTP / SRTCP 加密引擎，内置 FIPS 197 AES-128-CM 与 FIPS 180-4 SHA-1 / RFC 2104 HMAC-SHA1，逐字节通过 RFC 3711 Appendix B.3 官方 KDF 测试向量：
+
+- **常量与错误集**：
+  - `SRTP_MASTER_KEY_LEN = 16`、`SRTP_MASTER_SALT_LEN = 14`、`SRTP_AUTH_KEY_LEN = 20`、`SRTP_HMAC_SHA1_80_TAG_LEN = 10`、`SRTP_HMAC_SHA1_32_TAG_LEN = 4`、`SRTP_REPLAY_WINDOW_SIZE = 64`、`SRTP_DTLS_EKM_LEN = 60`
+  - `SrtpError`（`PacketTooShort | AuthTagMismatch | ReplayDetected | PacketTooOld | BufferTooSmall | InvalidProfile | InvalidKeyLen | IndexOverflow`）
+- **套件与密钥派生（RFC 3711 §4.3.1 & RFC 5764 §4.2）**：
+  - `SrtpProfile`（`aes128_cm_hmac_sha1_80 | aes128_cm_hmac_sha1_32 | null_cipher_hmac_sha1_80`）
+  - `SrtpKeyMaterial`、`DtlsSrtpKeyPair`、`splitDtlsExportedKeyingMaterial(ekm)`（按 RFC 5764 §4.2 拆分 60B EKM 为 client/server 主密钥与主盐）
+  - `SrtpSessionKeys`、`deriveSrtpSessionKeys(master)`（派生 6 组 SRTP/SRTCP 会话密钥）
+- **ROC 48-bit 包索引与 64-bit 防重放滑窗**：
+  - `estimateSrtpPacketIndex(roc, s_l, seq): u64`（RFC 3711 Appendix A 16-bit 序号回绕估算）
+  - `SrtpReplayWindow`（`check(index)` / `accept(*_, index)`）
+- **SRTP / SRTCP 状态机 (`SrtpContext`)**：
+  - `init(master, profile)`、`~init()`（析构自动清零全部会话密钥）
+  - `protectRtp(*_, rtp_packet, out_buf)` / `unprotectRtp(*_, srtp_packet, out_buf)`（支持 CSRC 与 RTP 扩展头、恒定时间 HMAC-SHA1 标签校验、自动 ROC 回绕同步）
+  - `protectRtcp(*_, rtcp_packet, out_buf)` / `unprotectRtcp(*_, srtcp_packet, out_buf)`（RFC 3711 §3.4 加密 8B 头之后载荷 + `E|31-bit index` + 10B 标签 + 独立防重放滑窗）
+
+```cp
+import {
+    SrtpProfile,
+    splitDtlsExportedKeyingMaterial,
+    SrtpContext,
+} from "cap:net";
+
+pub fn demoDtlsSrtpMedia(ekm_60: []const u8, rtp_pkt: []const u8)! {
+    const pair = splitDtlsExportedKeyingMaterial(ekm_60)?;
+    let tx = SrtpContext.init(pair.client, SrtpProfile.aes128_cm_hmac_sha1_80);
+    let rx = SrtpContext.init(pair.client, SrtpProfile.aes128_cm_hmac_sha1_80);
+
+    let wire: [1500]u8 = [0; 1500];
+    let plain: [1500]u8 = [0; 1500];
+    const srtp_len = tx.protectRtp(rtp_pkt, wire[0..])?;
+    const out_len = rx.unprotectRtp(wire[0..srtp_len], plain[0..])?;
+    * = out_len; // 离开作用域自动触发 ~init() 清零会话密钥
+}
+```
+
 ## 收敛子模块深度文档
 
 - [amqp.md](net/amqp.md)

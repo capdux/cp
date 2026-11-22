@@ -2005,3 +2005,24 @@ export {
     negotiateCommonCodecs,
     formatWhepOfferRequest,
 } from "./webrtcIce.cp";
+
+// --- srtpCodec (RFC 3711 SRTP/SRTCP AES-128-CM + HMAC-SHA1, KDF, ROC, 64-Bit Replay & RFC 5764 DTLS-SRTP) ---
+export {
+    SRTP_MASTER_KEY_LEN,
+    SRTP_MASTER_SALT_LEN,
+    SRTP_AUTH_KEY_LEN,
+    SRTP_HMAC_SHA1_80_TAG_LEN,
+    SRTP_HMAC_SHA1_32_TAG_LEN,
+    SRTP_REPLAY_WINDOW_SIZE,
+    SRTP_DTLS_EKM_LEN,
+    SrtpError,
+    SrtpProfile,
+    SrtpKeyMaterial,
+    DtlsSrtpKeyPair,
+    splitDtlsExportedKeyingMaterial,
+    SrtpSessionKeys,
+    deriveSrtpSessionKeys,
+    estimateSrtpPacketIndex,
+    SrtpReplayWindow,
+    SrtpContext,
+} from "./srtpCodec.cp";
