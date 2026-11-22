@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bun_core/fmt.cp | Synced: 2026-11-22T13:47:11Z
+// Source: Absorbed from /data/dev/bun/src/bun_core/fmt.cp | Synced: 2026-11-22T16:34:08Z
 pub import {
     TableStyle,
     formatBytes,

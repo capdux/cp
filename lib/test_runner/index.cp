@@ -143,3 +143,22 @@ export {
     WorkerArgvBuilder,
     WorkerEnvPlan,
 } from "./parallelRun";
+
+export {
+    isAsciiWhitespace,
+    ExpectOutcome,
+    equalIgnoringWhitespace,
+    equalIgnoringWhitespacePos,
+    collapseWhitespace,
+    startsWith,
+    endsWith,
+    includesSubstring,
+    countOccurrences,
+    includesRepeated,
+    isCloseTo,
+    isWithinI64,
+    isWithinF64,
+    isEvenI64,
+    isOddI64,
+    ExpectMatcher,
+} from "./expectMatch";

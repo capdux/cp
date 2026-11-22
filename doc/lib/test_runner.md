@@ -300,3 +300,20 @@ const argv = WorkerArgvBuilder.build(WorkerCliOptions{ default_timeout_ms: 3000,
 const delta = WorkerFileDelta.diff(0, WorkerSummarySnapshot{}, WorkerSummarySnapshot{ pass: 5, files: 1 });
 * = part; * = argv; * = delta;
 ```
+8. **零分配 `expect()` 断言匹配器引擎（`lib/test_runner/expectMatch.cp`，吸收自 `/data/dev/bun/src/test_runner/expect/toEqualIgnoringWhitespace.cp` & `/data/dev/bun/docs/test/writing-tests.mdx`）**：
+   - **导出符号**：`isAsciiWhitespace`、`ExpectOutcome`、`equalIgnoringWhitespace`、`equalIgnoringWhitespacePos`、`collapseWhitespace`、`startsWith`、`endsWith`、`includesSubstring`、`countOccurrences`、`includesRepeated`、`isCloseTo`、`isWithinI64`、`isWithinF64`、`isEvenI64`、`isOddI64`、`ExpectMatcher`；
+   - **忽略空白等价（`equalIgnoringWhitespace`）**：采用零分配双指针扫描跳过所有 ASCII 空白（` `、`\t`、`\n`、`\r`、`\x0b`、`\x0c`），适合对比格式化后的 HTML/SQL/JSON 文本；`equalIgnoringWhitespacePos` 额外返回首个不匹配字节偏移 `mismatch_pos`；
+   - **Bun `writing-tests.mdx` 断言实战指南**：
+     - 浮点运算（如 `0.1 + 0.2`）严禁使用严格相等，应使用 `isCloseTo(actual, expected, num_digits)`（默认 `num_digits = 2`，公差 `< 10^(-num_digits) / 2`，自动拦截 `NaN`）；
+     - 区间断言 `isWithinI64` / `isWithinF64` 采用左闭右开 `[start, end)` 语义，与 Bun `.toBeWithin(start, end)` 完全一致；
+     - `ExpectMatcher` 支持 `.not` 取反模式（`ExpectMatcher.negatedMatcher()`）并自动累计 `assertionCount()` 与 `failureCount()`。
+
+```cp
+import { equalIgnoringWhitespace, isCloseTo, ExpectMatcher } from "cap:test_runner";
+
+const same_html = equalIgnoringWhitespace("<div>\n  ok\n</div>", "<div>ok</div>"); // true
+const approx_ok = isCloseTo(0.1 + 0.2, 0.3, 5);                                   // true
+let m = ExpectMatcher.init();
+const pass = m.toIncludeRepeated("ok,ok,ok", "ok", 3);                             // true
+* = same_html; * = approx_ok; * = pass;
+```

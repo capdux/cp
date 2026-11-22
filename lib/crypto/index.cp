@@ -525,3 +525,23 @@ export {
     MacaroonVerifyResult,
     Macaroon,
 } from "./macaroon.cp";
+
+// --- Zero-Alloc Merkle Mountain Range (MMR) Append-Only Accumulator ---
+
+export {
+    MMR_HASH_LEN,
+    MMR_MAX_LEAVES,
+    MMR_MAX_NODES,
+    MMR_MAX_HEIGHT,
+    MMR_MAX_PEAKS,
+    mmrConstantTimeEq,
+    mmrHashEmpty,
+    mmrHashLeaf,
+    mmrHashParent,
+    mmrHashBag,
+    MmrPeak,
+    MmrInclusionProof,
+    MmrStats,
+    verifyMmrProof,
+    MerkleMmr,
+} from "./merkleMmr.cp";

@@ -473,6 +473,45 @@ pub fn demoMacaroon() {
 
 ---
 
+### 零分配 Merkle Mountain Range (MMR) 仅追加密码学累加器 (`merkleMmr.cp`)
+
+面向不可篡改审计日志、轻客户端状态承诺与区块链历史前缀校验的 100% 纯 CP 零动态堆分配 Merkle Mountain Range (MMR) 引擎：
+
+- **常量与域分离 SHA-256 原语**：
+  - `MMR_HASH_LEN = 32`、`MMR_MAX_LEAVES = 128`、`MMR_MAX_NODES = 256`、`MMR_MAX_HEIGHT = 8`、`MMR_MAX_PEAKS = 16`
+  - `mmrHashEmpty()` (`SHA256("")`)、`mmrHashLeaf(pos, payload)` (`SHA256(0x00 || pos_le64 || payload)`)、`mmrHashParent(pos, left, right)` (`SHA256(0x01 || pos_le64 || left || right)`)、`mmrHashBag(mmr_size, left_peak, right_bag)` (`SHA256(0x02 || mmr_size_le64 || left_peak || right_bag)`)、`mmrConstantTimeEq(a, b)`
+- **数据模型与独立验证器**：
+  - `MmrPeak`（`pos`, `height`, `hash`）、`MmrInclusionProof`、`MmrStats`（`leaf_count`, `node_count`, `peak_count`, `max_height`）
+  - `verifyMmrProof(root, proof, leaf_data): bool`：无状态常量时间 O(log N) 包含性证明验证（沿子树兄弟爬升至对应山峰，再完成左右山峰 bagging）。
+- **核心引擎 `MerkleMmr`**：
+  - `init()` / `clear(*_)` / `leafCount()` / `nodeCount()` / `peakCount()` / `stats()`
+  - `appendLeaf(*_, data): u64?`：O(log N) 仅追加叶子并自动合并同高度相邻山峰，返回 0-based MMR 节点位置。
+  - `bagPeaks(): [32]u8` / `peaks(*out_peaks): usize`：从右向左折叠全部山峰输出单一 32 字节根哈希，或提取全部山峰位置、高度与哈希。
+  - `generateProof(leaf_index): MmrInclusionProof?` / `rootAtLeafCount(prefix_leaf_count): ([32]u8)?` / `verifyPrefixRoot(prefix_leaf_count, expected_root): bool`：O(log N) 证明生成与历史前缀快照一致性验证。
+
+```cp
+import {
+    MerkleMmr,
+    verifyMmrProof,
+} from "cap:crypto";
+
+pub fn demoMerkleMmr() {
+    let mmr = MerkleMmr.init();
+    * = mmr.appendLeaf("tx:0");
+    * = mmr.appendLeaf("tx:1");
+    * = mmr.appendLeaf("tx:2");
+    const root3 = mmr.bagPeaks();
+
+    if (proof := mmr.generateProof(1)) {
+        * = verifyMmrProof(root3, proof, "tx:1"); // true
+    }
+    * = mmr.appendLeaf("tx:3");
+    * = mmr.verifyPrefixRoot(3, root3); // true (append-only 历史前缀不可篡改!)
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [aes_gcm.md](crypto/aes_gcm.md)
