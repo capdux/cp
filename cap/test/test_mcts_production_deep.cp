@@ -7,7 +7,7 @@ import {
     MctsNode,
     MctsConfig,
     MctsTree,
-} from "cap:mcts";
+} from "cap:ml";
 
 // --- Tic-Tac-Toe helper for two-player zero-sum MCTS verification ---
 // Board cells: 0 = empty, 1 = X, -1 = O

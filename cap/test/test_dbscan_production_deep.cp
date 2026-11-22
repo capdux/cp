@@ -11,7 +11,7 @@ import {
     dbscanCluster,
     dbscanFromDistanceMatrix,
     silhouetteScore,
-} from "cap:dbscan";
+} from "cap:ml";
 
 test("1. Non-convex concentric rings + outliers cleanly separated into 2 clusters and noise", () => {
     // 12 points on inner ring (r = 1.0), 16 points on outer ring (r = 4.0), 3 far outliers => 31 points

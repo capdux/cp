@@ -11,7 +11,7 @@ import {
     nmfReconstruct,
     nmfFrobeniusError,
     nmfKlDivergence,
-} from "cap:nmf";
+} from "cap:ml";
 
 fn absF64(x: f64): f64 {
     return if (x < 0.0) 0.0 - x else x;

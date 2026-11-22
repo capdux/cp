@@ -16,7 +16,7 @@ import {
     tukeyBiweight,
     huberRegress,
     theilSen1D,
-} from "cap:huber";
+} from "cap:ml";
 
 fn absF64(v: f64): f64 {
     return if (v < 0.0) (0.0 - v) else v;

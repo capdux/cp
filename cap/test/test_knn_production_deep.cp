@@ -11,7 +11,7 @@ import {
     knnClassify,
     knnRegress,
     knnLeaveOneOutAccuracy,
-} from "cap:knn";
+} from "cap:ml";
 
 fn approxEq(a: f64, b: f64, eps: f64): bool {
     const d = a - b;

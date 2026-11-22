@@ -1473,3 +1473,7 @@
 ### 2026-11-22（根目录分域收敛第 4/5 批完成：lib/net/ (-19 目录) & lib/math/ (-16 目录) + prompt/reasoning_stream.cp | 2026-11-22 14:53:04）
 - **执行与结单汇报**：
   > 1. Batch 4 lib/net/：18 个网络协议归并入 lib/net/ + cidr_.cp 参考归档，物理清理 19 个冗余顶层目录（21/21 PASS）；2. Batch 5 lib/math/：16 个数值/优化/滤波算法归并入 lib/math/，物理清理 16 个冗余顶层目录（17/17 PASS）；累计已安全削减 74 个顶层目录（846 -> 772），0 覆盖/0 丢失 Bun 资产；3. 同步提交 lib/prompt/reasoning_stream.cp (5/5 PASS)。
+
+### 2026-11-22（根目录分域收敛第 6 批完成：lib/ml/（净减 17 个顶层目录，累计 -91） | 2026-11-22 14:54:47）
+- **执行与结单汇报**：
+  > Stdlib Root Consolidator 完成 lib/ml/ 建立与收敛：18 个经典机器学习/聚类/降维/决策算法小目录（svm/knn/dtree/logreg/naivebayes/lasso/isotonic/huber/nmf/mds/ransac/dbscan/gmm/spectral/louvain/lsh/bandit/mcts）零冲突归并入 lib/ml/ 并物理清理旧目录，18/18 PASS，顶层目录 772 -> 755（累计 -91）；续派 lib/media/ 音视频领域收敛。

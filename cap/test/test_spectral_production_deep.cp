@@ -9,7 +9,7 @@ import {
     spectralEmbedding,
     normalizedCut,
     rbfAffinityMatrix,
-} from "cap:spectral";
+} from "cap:ml";
 
 const TWO_PI: f64 = 6.28318530717958647692;
 

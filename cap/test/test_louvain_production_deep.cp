@@ -9,7 +9,7 @@ import {
     computeModularity,
     louvainDetect,
     labelPropagation,
-} from "cap:louvain";
+} from "cap:ml";
 
 fn absF64(v: f64): f64 {
     return if (v < 0.0) -v else v;

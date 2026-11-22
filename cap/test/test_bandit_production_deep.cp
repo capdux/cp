@@ -8,7 +8,7 @@ import {
     ThompsonBandit,
     Exp3Bandit,
     cumulativeRegret,
-} from "cap:bandit";
+} from "cap:ml";
 
 const ARM_MEANS: [5]f64 = [0.20, 0.35, 0.80, 0.45, 0.30];
 const BEST_MEAN: f64 = 0.80;

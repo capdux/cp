@@ -14,7 +14,7 @@ import {
     ransacFitCircle2D,
     ransacFitPlane3D,
     ransacFitLinear1D,
-} from "cap:ransac";
+} from "cap:ml";
 
 fn absDiff(a: f64, b: f64): f64 {
     const d = a - b;
