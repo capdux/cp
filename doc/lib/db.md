@@ -365,6 +365,47 @@ pub fn demoBloomBlock() {
 
 ---
 
+## 零分配 LSM-Tree 有序 MemTable（`memTable.cp`）
+
+面向 LSM-Tree 键值存储引擎的 100% 纯 CP 零动态堆分配有序内存表，内置 8 KiB 紧凑字节池与 128 槽位字典序二分查找索引：
+
+- **常量与枚举**：
+  - `MEMTABLE_MAX_ENTRIES = 128`、`MEMTABLE_ARENA_BYTES = 8192`
+  - `MemTableWriteStatus`（`ok | frozen | empty_key | stale_seq | index_full | arena_full`）
+  - `MemTableGetKind`（`found_value | found_tombstone | not_found`）
+- **数据模型**：
+  - `MemTableEntryRef`（`seq_num`, `is_tombstone`, `key_off`, `key_len`, `val_off`, `val_len`）
+  - `MemTableGetResult`（`kind`, `seq_num`, `entry`）、`MemTableStats`（`entry_count`, `live_count`, `tombstone_count`, `arena_used_bytes`, `min_seq_num`, `max_seq_num`, `frozen`）
+- **核心引擎 `SortedMemTable`**：
+  - `init()` / `freeze(*_)` / `isFrozen()` / `stats()`
+  - `put(*_, key, value, seq_num): MemTableWriteStatus`：严格单调 `seq_num` 写入，同 key 自动复用键字节与原位值槽位；冻结态/空 key/过期序列号/满池均原子拒绝。
+  - `deleteKey(*_, key, seq_num): MemTableWriteStatus`：写入墓碑记录保留 `seq_num` 以遮蔽下层 SSTable（即使键不在当前 MemTable 中）。
+  - `get(key): MemTableGetResult`：`O(log N)` 二分点查，精确区分 `found_value` / `found_tombstone` / `not_found`。
+  - `scanRange(start_key, end_key, include_tombstones, *out_entries)` / `scanPrefix(prefix, *out_entries)`：`O(log N)` 定位起点的严格字典序范围/前缀扫描。
+  - `copyKey` / `copyValue` / `keyEquals` / `valueEquals`：安全无悬垂键值读取与比对。
+
+```cp
+import {
+    MemTableEntryRef,
+    SortedMemTable,
+} from "cap:db";
+
+pub fn demoSortedMemTable() {
+    let mt = SortedMemTable.init();
+    * = mt.put("user:2", "bob", 1);
+    * = mt.put("user:1", "alice", 2);
+    * = mt.deleteKey("user:2", 3);
+    mt.freeze(); // 冻结准备 Flush 至 SSTable
+
+    let out: [8]MemTableEntryRef = [MemTableEntryRef{}; 8];
+    let out_s: []MemTableEntryRef = out[0..];
+    const n = mt.scanRange("", "", true, *out_s);
+    * = n; // 2: ["user:1"(live), "user:2"(tombstone)]
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [bloom_cuckoo.md](db/bloom_cuckoo.md)

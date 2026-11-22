@@ -381,3 +381,15 @@ export {
     BloomBlock,
     BlockedBloomFilter,
 } from "./bloomBlock.cp";
+
+// --- sorted_memtable ---
+export {
+    MEMTABLE_MAX_ENTRIES,
+    MEMTABLE_ARENA_BYTES,
+    MemTableWriteStatus,
+    MemTableGetKind,
+    MemTableEntryRef,
+    MemTableGetResult,
+    MemTableStats,
+    SortedMemTable,
+} from "./memTable.cp";
