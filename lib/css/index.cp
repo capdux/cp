@@ -302,3 +302,11 @@ pub const isReservedCssKeyword = _keyframes.isReservedCssKeyword;
 pub const parseKeyframesRule = _keyframes.parseKeyframesRule;
 pub const sortStopsByOffset = _keyframes.sortStopsByOffset;
 pub const sampleKeyframeSegment = _keyframes.sampleKeyframeSegment;
+
+export {
+    CUSTOM_MEDIA_MAX_RULES,
+    CustomMediaError,
+    CustomMediaValueKind,
+    CustomMediaRule,
+    CustomMediaRegistry,
+} from "./custom_media.cp";

@@ -304,6 +304,22 @@ const minified = rule.toCssMinified(buf[0..])?;
 
 > 注：原 `lib/mediaquery/mediaquery.cp` 因与 `lib/css/media.cp` 存在 Media Queries Level 4 功能重叠，按参考归档规范保留为 `lib/css/media_query_.cp`（不从 `cap:css` 重复导出）。
 
+### `@custom-media` 规则解析、序列化与媒体查询展开（`custom_media.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/rules/custom_media.cp`，零堆分配支持 W3C Media Queries Level 5 `@custom-media` 声明、`true`/`false` 布尔媒体值、级联覆盖注册表与 `(--custom-name)` 媒体查询展开。
+
+- 核心导出：`CUSTOM_MEDIA_MAX_RULES` (`64`)、`CustomMediaError`、`CustomMediaValueKind`（`query` / `always_true` / `always_false`）、`CustomMediaRule`（`parse` / `toCss`）、`CustomMediaRegistry`（`init` / `register` / `lookup` / `resolveMediaQuery`）。
+
+```typescript
+import { CustomMediaRule, CustomMediaRegistry } from "cap:css";
+
+let reg = CustomMediaRegistry.init();
+* = reg.register(CustomMediaRule.parse("@custom-media --narrow (max-width: 30em);")?)?;
+let out: [128]u8 = [0; 128];
+const n = reg.resolveMediaQuery("screen and (--narrow)", out[0..])?;
+// out[0..n] == "screen and (max-width: 30em)"
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项
