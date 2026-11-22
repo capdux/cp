@@ -187,3 +187,21 @@ export {
     formatInstalledPackageLine,
     InstallTreePrinter,
 } from "./tree_printer.cp";
+
+export {
+    BIN_SHIM_VERSION_V1,
+    BIN_SHIM_VERSION_V2,
+    BIN_SHIM_VERSION_V3,
+    BIN_SHIM_VERSION_V4,
+    BIN_SHIM_VERSION_V5,
+    BIN_SHIM_VERSION_CURRENT,
+    BIN_SHIM_MAX_SHEBANG_INPUT_LEN,
+    BinShimError,
+    BinShimExtensionKind,
+    classifyBinExtension,
+    BinShimFlags,
+    BinShimShebang,
+    DecodedBinShim,
+    decodeShimUtf16LeToUtf8,
+    BinLinkingShim,
+} from "./bin_shim.cp";

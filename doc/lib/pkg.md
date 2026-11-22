@@ -361,3 +361,23 @@ const stats = printer.render(
 // \n^ react 18.3.1 -> 19.1.1\n\ninstalled typescript@5.8.2 with binaries:\n - tsc\n - tsserver\n\n
 * = stats;
 ```
+
+8. **包可执行文件 Shebang、`.bunx` 垫片编解码与 `bunx` 运行契约（`lib/pkg/bin_shim.cp`，吸收自 `/data/dev/bun/src/install/windows-shim/BinLinkingShim.cp` 与 `/data/dev/bun/docs/pm/bunx.mdx`）**：
+   - **Shebang 尊重与 `--bun` 覆盖**：默认尊重包可执行文件头部的 `#!` Shebang（如 `#!/usr/bin/env node` 标记 `is_node = true` 并在缺少 `node` 时可自动回退至 `bun`）；无 Shebang 时按扩展名回退启动器（`.js`/`.mjs`/`.cjs`/`.ts`/`.tsx`/`.sh` → `bun run`，`.cmd`/`.bat` → `cmd /c`，`.ps1` → `powershell -ExecutionPolicy Bypass -File`）。使用 `bunx --bun <cli>` 时 `--bun` 必须位于可执行文件名之前（其后的标志透传给目标 CLI）；当包名与可执行名不同时使用 `-p <pkg>` / `--package <pkg>`。
+   - **`.bunx` 二进制布局与抗损坏校验**：尾部 16 位 `BinShimFlags` 携带 `v1=5474..v5=5478` 非零魔数版本标签（防偏移错位读取），配合 `bin_path_byte_len` / `arg_byte_len` 偶数字节长度与边界校验实现零分配安全解码。
+
+### `.bunx` 垫片编解码示例（`BinLinkingShim`）
+
+```cp
+import { BinLinkingShim, BinShimShebang, decodeShimUtf16LeToUtf8 } from "cap:pkg";
+
+const sb = BinShimShebang.parse("#!/usr/bin/env node\nconsole.log(1);\n", "cowsay/cli.js");
+const shim = BinLinkingShim{ bin_path: "cowsay/cli.js", shebang: sb };
+let wire: [256]u8 = [0; 256];
+const n = shim.encodeInto(wire[0..])?;
+const decoded = BinLinkingShim.decode(wire[0..n])?;
+let path_utf8: [64]u8 = [0; 64];
+const pn = decodeShimUtf16LeToUtf8(decoded.bin_path_utf16_bytes, path_utf8[0..])?;
+// path_utf8[0..pn] == "cowsay/cli.js", decoded.flags.is_node == true
+* = pn;
+```
