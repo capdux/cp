@@ -428,3 +428,50 @@ let w = DebugTreeWriter.init(buf[0..], true, false);
 const trace = w.slice();
 * = trace;
 ```
+
+14. **零分配 IEEE-754 数值分类、`Object.is` 与关系比较断言器（`lib/test_runner/expectNum.cp`，吸收自 `/data/dev/bun/src/test_runner/expect/toBeFinite.cp` & `/data/dev/bun/docs/test/writing-tests.mdx`）**：
+    - **导出符号**：`F64_SIGN_MASK`、`F64_EXP_MASK`、`F64_MANT_MASK`、`F64_MAX_SAFE_INT` (`9007199254740991.0`)、`isNaNF64`、`isInfiniteF64`、`isFiniteF64`、`isNegativeZeroF64`、`isPositiveF64`、`isNegativeF64`、`isIntegerF64`、`isSafeIntegerF64`、`isSameValueF64`、`isGreaterThanF64`、`isGreaterThanOrEqualF64`、`isLessThanF64`、`isLessThanOrEqualF64`、`isGreaterThanI64`、`isGreaterThanOrEqualI64`、`isLessThanI64`、`isLessThanOrEqualI64`、`ExpectNumMatcher`（`init`/`negate`/`toBeFinite`/`toBeNaN`/`toBePositive`/`toBeNegative`/`toBeInteger`/`toBeSafeInteger`/`toBeSameValue`/`toBeGreaterThan`/`toBeGreaterThanOrEqual`/`toBeLessThan`/`toBeLessThanOrEqual`/`toBeGreaterThanI64`/`toBeLessThanI64`）；
+    - **IEEE-754 与 Bun `expect()` 语义对齐**：
+      - 直接基于 `@bitCast(u64)` 解析 IEEE-754 binary64 位布局，零外部依赖；
+      - `isSameValueF64` 严格遵循 `Object.is` / Bun `.toBe()` 语义：`NaN` 与 `NaN` 相等，`+0.0` 与 `-0.0` 不相等；
+      - `isPositiveF64` / `isNegativeF64` 排除 `±Infinity` 与 `±0.0`；`isIntegerF64` 与 `isSafeIntegerF64` 对齐 `Number.isInteger` / `Number.isSafeInteger` 边界（`2^53 - 1`）。
+
+```cp
+import {
+    isFiniteF64,
+    isSameValueF64,
+    isSafeIntegerF64,
+    ExpectNumMatcher,
+} from "cap:test_runner";
+
+let m = ExpectNumMatcher.init();
+assert(m.toBeFinite(3.14));
+assert(isSafeIntegerF64(9007199254740991.0));
+assert(!isSameValueF64(0.0, -0.0));
+m.negate();
+assert(m.toBePositive(0.0)); // .not.toBePositive(0.0) -> true
+```
+
+15. **零分配序列、切片与集合成员断言器（`lib/test_runner/expectSeq.cp`，吸收自 `/data/dev/bun/src/test_runner/expect/toBeArrayOfSize.cp` & `toBeEmpty.cp`）**：
+    - **导出符号**：`toBeEmptyBytes`、`toBeEmptyStrSlice`、`toBeEmptyI64Slice`、`toHaveLengthBytes`、`toBeArrayOfSizeStr`、`toBeArrayOfSizeI64`、`toContainStr`、`toContainI64`、`toIncludeAllMembersStr`、`toIncludeAllMembersI64`、`toIncludeAnyMembersStr`、`toIncludeAnyMembersI64`、`toIncludeSameOrderStr`、`toIncludeSameOrderI64`、`toBeSortedAscI64`、`toBeSortedDescI64`、`toBeUniqueI64`、`toBeUniqueStr`、`ExpectSeqMatcher`（`init`/`negate`/`checkEmptyBytes`/`checkEmptyStr`/`checkEmptyI64`/`checkArrayOfSizeStr`/`checkArrayOfSizeI64`/`checkContainStr`/`checkContainI64`/`checkIncludeAllMembersStr`/`checkIncludeAllMembersI64`/`checkIncludeAnyMembersStr`/`checkIncludeAnyMembersI64`/`checkSortedAscI64`/`checkUniqueStr`）；
+    - **多重集与有序性语义**：
+      - `toIncludeAllMembersStr` / `toIncludeAllMembersI64` 采用零分配多重集频次比对（如 `[1, 1, 2]` 与 `[1, 2, 2]` 准确判 `false`，`[2, 1, 1]` 判 `true`）；
+      - `toBeSortedAscI64` / `toBeSortedDescI64` 支持含重复值的非递减/非递增序判定，空切片与单元素切片恒为 `true`。
+
+```cp
+import {
+    toBeArrayOfSizeI64,
+    toIncludeAllMembersStr,
+    toBeSortedAscI64,
+    ExpectSeqMatcher,
+} from "cap:test_runner";
+
+const nums: [3]i64 = [1, 2, 2];
+assert(toBeArrayOfSizeI64(nums[0..], 3));
+assert(toBeSortedAscI64(nums[0..]));
+const a: [2][]const u8 = ["b", "a"];
+const b: [2][]const u8 = ["a", "b"];
+assert(toIncludeAllMembersStr(a[0..], b[0..]));
+let m = ExpectSeqMatcher.init();
+assert(m.checkUniqueStr(a[0..]));
+```
