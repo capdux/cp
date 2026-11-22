@@ -1,5 +1,7 @@
 # CP 标准库：统一流式抽象门面手册 (`cap:stream`)
 
+> 参考来源：/data/dev/bun/src/io/pipes.cp | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:stream` 是 CP 语言面向流式数据处理场景的标准门面模块（Facade），直接与底层 `cap:io` 共享零开销的 Trait 契约与实现（无任何中间适配器包装损耗），确保通过 `cap:stream` 与 `cap:io` 导入的 `Reader` / `Writer` / `BufferReader` / `Pipe` 等类型在编译期完全同一、可无缝互操作。设计吸收自 Bun 统一流管道体系（`/data/dev/bun/src/io/pipes.cp`）。
@@ -102,3 +104,14 @@ pub fn demoStreamPipeline() {
 | **缓冲聚合** | `ArrayBufferSink` | `highWaterMark` 内部缓冲 | `BufferedReader<R>` / `BufferedWriter<W>` |
 | **流大小上限保护** | `MaxBuf` | `maxBuffer` 选项 | `MaxBuf` (`MaxBufKind.Stdout/Stderr/Custom`) |
 | **进程间匿名管道** | `PipeReader` / `PipeWriter` | `child_process` stdio pipes | `Pipe.create()` |
+
+---
+
+## 五、 上游行为契约与流控边界注意事项
+
+1. **零开销类型同一性**：
+   - `cap:stream` 直接重导出 `cap:io` 类型，无需类型转换即可将 `cap:stream` 构造的 `BufferReader`/`PipeReader` 传入接受 `cap:io.Reader` 的任意协议解析器。
+2. **`BufferedWriter` 刷新与 `Pipe` 关闭顺序**：
+   - 使用 `BufferedWriter<W>` 结束写入前必须显式调用 `flush()` 将 256B 内联缓冲排空；使用 `Pipe` 跨端通信时，写端发送完毕后应立即 `pipe.writer.close()` 以向读端发出 EOF，避免读端无限阻塞。
+3. **非受信流背压防御 (`MaxBuf`)**：
+   - 读取不可信网络流或子进程输出时务必配合 `MaxBuf` 或 `copyN` 限制最大字节数，超限即刻返回 `IOError.BufferFull` 防止内存耗尽。

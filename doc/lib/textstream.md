@@ -1,5 +1,7 @@
 # `cap:textstream` — 零堆分配 WHATWG 流式 UTF-8 编码器（TextEncoderStream）
 
+> 参考来源：/data/dev/bun/src/runtime/webcore/TextEncoderStreamEncoder.cp | 吸收日期：2026-11-22
+
 `cap:textstream` 吸收自 Bun 上游 WebCore `TextEncoderStream` 实现（`src/runtime/webcore/TextEncoderStreamEncoder.cp`），剥离了 JSC 与堆分配器耦合，提供 100% 纯 CP、零堆分配（zero-alloc）的 WHATWG Encoding Standard 流式 UTF-8 编码状态机，支持跨分块 UTF-16 高低代理对无缝拼接、孤立代理替换（`U+FFFD`）、Latin-1 流式转码及精确输出字节长度预计算。
 
 ## 核心特性
@@ -57,3 +59,10 @@ fn textStreamDemo() {
     * = nf;
 }
 ```
+
+## 上游行为契约与流式编码边界
+
+1. **原子缓冲不足防御**：
+   - `encodeLatin1` / `encodeUtf16` / `flush` 在 `out_buf` 容量不足时返回 `null` 且不破坏 `pending_lead_surrogate` 内部状态；调用方可使用 `utf8ByteLengthFromLatin1` / `utf8ByteLengthFromUtf16(input, enc.hasPendingSurrogate())` 提前精确计算所需字节数。
+2. **流结束必须调用 `flush()`**：
+   - 若最后一个 UTF-16 分块以高代理（`0xD800..0xDBFF`）结尾，编码器会将其暂存以等待可能的后续低代理；流终止时必须调用 `flush(&out)` 将孤立高代理冲刷为 3 字节 `U+FFFD`（`UTF8_REPLACEMENT`）。
