@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/builtin/seq.cp | Synced: 2026-11-21T11:59:40Z
+// Source: Absorbed from /data/dev/bun/src/shell/builtin/seq.cp | Synced: 2026-11-22T00:02:43Z
 // ============================================================================
 // lib/shell/builtin_text.cp
 // Text, Sequence & Filter Built-in Commands for CP Shell (cap:shell)
@@ -93,6 +93,9 @@ pub fn runBuiltinSeq(argv: []const []const u8, stdout: *StringJoiner, stderr: *S
             }
             term = argv[idx + 1];
             idx += 2;
+        } else if (std.mem.startsWith(u8, a, "-t") && a.len > 2) {
+            term = a[2..];
+            idx += 1;
         } else if (std.mem.eql(u8, a, "-w") || std.mem.eql(u8, a, "--fixed-width")) {
             fixed_width = true;
             idx += 1;
@@ -196,6 +199,10 @@ pub fn runBuiltinSeq(argv: []const []const u8, stdout: *StringJoiner, stderr: *S
         start_f = std.fmt.parseFloat(f64, argv[idx]) catch { stderr.push("seq: invalid argument\n"); return 1; };
         inc_f = std.fmt.parseFloat(f64, argv[idx + 1]) catch { stderr.push("seq: invalid argument\n"); return 1; };
         end_f = std.fmt.parseFloat(f64, argv[idx + 2]) catch { stderr.push("seq: invalid argument\n"); return 1; };
+    }
+    if (!std.math.isFinite(start_f) || !std.math.isFinite(inc_f) || !std.math.isFinite(end_f)) {
+        stderr.push("seq: invalid argument\n");
+        return 1;
     }
     if (inc_f == 0.0) { stderr.push("seq: zero increment\n"); return 1; }
     let cur_f = start_f;
