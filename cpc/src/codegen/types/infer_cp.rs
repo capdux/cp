@@ -166,18 +166,11 @@ impl Codegen {
             Expr::Move(inner) => self.infer_cp_type_with_mock(inner, mock_types),
             Expr::Borrow(inner, is_mut) => {
                 let inner_ty = self.infer_cp_type_with_mock(inner, mock_types)?;
-                match inner_ty {
-                    Type::BorrowType { inner: sub, .. } => Some(Type::BorrowType {
-                        inner: sub,
-                        is_mut: *is_mut,
-                        lifetimes: vec![],
-                    }),
-                    other => Some(Type::BorrowType {
-                        inner: Box::new(other),
-                        is_mut: *is_mut,
-                        lifetimes: vec![],
-                    }),
-                }
+                Some(Type::BorrowType {
+                    inner: Box::new(inner_ty),
+                    is_mut: *is_mut,
+                    lifetimes: vec![],
+                })
             }
             Expr::Await(inner) => self.infer_cp_type_with_mock(inner, mock_types),
             Expr::Call(c) => {

@@ -201,24 +201,36 @@ impl Codegen {
                     };
                 }
                 let already_ptr = if let Some(ty) = self.infer_cp_type(inner) {
-                    self.is_zig_heap_ptr_type(&ty)
+                    self.is_implicit_zig_heap_ptr_type(&ty)
                 } else if matches!(&**inner, Expr::Member(_) | Expr::Index { .. }) {
                     false
                 } else if let Expr::Ident(id) = &**inner {
-                    if let Some(zig_ty) = self.locals.get(&id.sym) {
-                        let clean_zig_ty = if self.narrowed_null_vars.contains(&id.sym) {
-                            zig_ty.trim_start_matches('?')
-                        } else {
-                            zig_ty.as_str()
-                        };
-                        clean_zig_ty.starts_with('*') && clean_zig_ty != "*anyopaque"
-                    } else if let Some(ty) = self.var_cp_types.get(&id.sym) {
+                    if let Some(ty) = self.var_cp_types.get(&id.sym) {
                         let clean_ty = if self.narrowed_null_vars.contains(&id.sym) {
                             Self::unwrap_optional_type(ty)
                         } else {
                             ty.clone()
                         };
-                        self.is_zig_heap_ptr_type(&clean_ty)
+                        self.is_implicit_zig_heap_ptr_type(&clean_ty)
+                    } else if let Some(zig_ty) = self.locals.get(&id.sym) {
+                        let clean_zig_ty = if self.narrowed_null_vars.contains(&id.sym) {
+                            zig_ty.trim_start_matches('?')
+                        } else {
+                            zig_ty.as_str()
+                        };
+                        if let Some(pointee) = clean_zig_ty
+                            .strip_prefix("*const ")
+                            .or_else(|| clean_zig_ty.strip_prefix('*'))
+                        {
+                            !pointee.starts_with('*')
+                                && pointee != "anyopaque"
+                                && self.is_implicit_zig_heap_ptr_type(&Type::Ref(Ident {
+                                    span: Span { start: 0, end: 0 },
+                                    sym: pointee.to_string(),
+                                }))
+                        } else {
+                            false
+                        }
                     } else {
                         false
                     }

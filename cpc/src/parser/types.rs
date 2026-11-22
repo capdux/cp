@@ -840,7 +840,7 @@ impl<'a> Parser<'a> {
             for idx in 0..depth {
                 ty = Type::BorrowType {
                     inner: Box::new(ty),
-                    is_mut,
+                    is_mut: if idx == 0 { is_mut } else { true },
                     lifetimes: if idx == 0 { lifetimes.clone() } else { vec![] },
                 };
             }

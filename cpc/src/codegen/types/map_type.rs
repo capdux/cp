@@ -242,6 +242,9 @@ impl Codegen {
                     }
                     if let Type::Optional(opt_inner) = &**inner {
                         let opt_zig = self.map_type(opt_inner);
+                        if self.is_explicit_ptr_type(opt_inner) {
+                            return format!("*const ?{}", opt_zig);
+                        }
                         if opt_zig.starts_with("*const ") {
                             return format!("?{}", opt_zig);
                         }
@@ -253,6 +256,9 @@ impl Codegen {
                         return format!("?*const {}", clean_opt);
                     }
                     let inner_zig = self.map_type(inner);
+                    if self.is_explicit_ptr_type(inner) {
+                        return format!("*const {}", inner_zig);
+                    }
                     if matches!(**inner, Type::Aligned { .. }) {
                         return format!("*{}", inner_zig);
                     }
@@ -293,7 +299,7 @@ impl Codegen {
                 if let Type::Optional(opt_inner) = &**inner {
                     let opt_inner_zig = self.map_type(opt_inner);
                     if opt_inner_zig.starts_with('*') {
-                        if matches!(&**opt_inner, Type::BorrowType { .. } | Type::RawPtr { .. }) {
+                        if self.is_explicit_ptr_type(opt_inner) {
                             return format!("*?{}", opt_inner_zig);
                         }
                         return format!("?{}", opt_inner_zig);
@@ -306,7 +312,10 @@ impl Codegen {
                 } else {
                     false
                 };
-                if inner_zig.starts_with('*') || is_trait || inner_zig == "anytype" {
+                if (!self.is_explicit_ptr_type(inner) && inner_zig.starts_with('*'))
+                    || is_trait
+                    || inner_zig == "anytype"
+                {
                     inner_zig
                 } else {
                     format!("*{}", inner_zig)

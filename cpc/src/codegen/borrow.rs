@@ -910,6 +910,38 @@ impl Codegen {
         }
     }
 
+    pub(crate) fn is_explicit_ptr_type(&self, ty: &Type) -> bool {
+        self.is_explicit_ptr_type_depth(ty, 0)
+    }
+
+    fn is_explicit_ptr_type_depth(&self, ty: &Type, depth: usize) -> bool {
+        if depth > 8 {
+            return false;
+        }
+        match ty {
+            Type::BorrowType { .. }
+            | Type::RawPtr { .. }
+            | Type::ManyRawPtr(_)
+            | Type::CPtr(_)
+            | Type::SentinelPtr(_, _) => true,
+            Type::Ref(id) => {
+                if let Some(ta) = self.type_aliases.get(&id.sym) {
+                    self.is_explicit_ptr_type_depth(&ta.target_ty, depth + 1)
+                } else {
+                    false
+                }
+            }
+            _ => false,
+        }
+    }
+
+    pub(crate) fn is_implicit_zig_heap_ptr_type(&self, ty: &Type) -> bool {
+        if self.is_explicit_ptr_type(ty) {
+            return false;
+        }
+        self.is_zig_heap_ptr_type(ty)
+    }
+
     pub(crate) fn is_zig_heap_ptr_type(&self, ty: &Type) -> bool {
         match ty {
             Type::Map(_, _) | Type::Dict(_, _) | Type::Set(_) => true,

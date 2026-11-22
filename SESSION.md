@@ -1983,3 +1983,30 @@
   > - **方案 B（合并删除）**：将旧文档内容全部追加进 `doc/lib/<umbrella>.md` 后删除旧文件（缺点是 `net.md`/`binfmt.md` 等会膨胀到数千行，不利于按需检索）。
   >
   > 如果认可 **方案 A**，回复一声我立刻安排执行收敛、修正导入路径并提交（不影响当前热修与 Wave 8 双线并发）。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-double-ptr-addr-of`）[ticket:task-bun-20261122-double-ptr-addr-of]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 20:49:59` | 状态：`resolved` | 结单：`2026-11-22T21:00:44`
+- **报错/需求摘要**：cpc 将形参/变量类型 **S 错误折叠为 *S，且对 *S 类型的局部/字段变量取地址 &p 时会剥离 & 生成 p（导致传入 out: *SelfPtr 即 **S 时类型不匹配）
+- **结单与处理汇报**：已修复双重指针折叠与对指针变量取地址剥离 & 的问题（release cpc 已原子部署）：(1) cpc/src/codegen/borrow.rs 新增 is_explicit_ptr_type / is_implicit_zig_heap_ptr_type，区分显式指针类型（BorrowType/RawPtr/ManyRawPtr/CPtr/SentinelPtr 及其 type alias）与隐式堆 class/容器；(2) cpc/src/codegen/types/map_type.rs 修复 Type::BorrowType 仅对隐式堆指针折叠 *，保留 **S / *SelfPtr / **const S / *const *S / *const *const S / *((*S)?)；(3) cpc/src/codegen/expr/ops.rs 修复 Expr::Borrow 仅对隐式堆指针剥离 &，对显式指针局部/字段变量 &p 保留 (&p)；(4) cpc/src/codegen/types/infer_cp.rs & infer_zig.rs 停止折叠 Bo ...(截断)
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 20:41:22）[step:16414]
+- **用户完整原始指令**：
+  > 方案 A
+- **完整回复与执行汇报**：
+  > 已立即启动 **方案 A**（`doc/lib/` 伞包子目录收敛，零细节丢失），同时完成 **Priority ① Wave 8 R1** 与 **Priority ② Wave 8 R4** 合并提交：
+  >
+  > - **方案 A 文档收敛已启动**：
+  >   - 专职子智能体 `193db3e8`（`Doc Consolidation Engineer`）正在基于 Git 历史重命名与现存伞包映射，将 597 份旧文档精准迁移至 `doc/lib/<umbrella>/<old>.md`、修正内部 `"cap:<old>"` 导入路径、补齐缺失的 1 份主包文档并在主包手册挂载子文档链接，收敛完成后 `doc/lib/` 顶层将与 `lib/` 严格 1:1 对齐（`271 + CATALOG.md = 272`）。
+  > - **已提交成果**（`e93edf73`）：
+  >   - **Bun 上游增量同步**：对齐 5 个增量文件时间戳，`audit_bun_sync.py` 达成 `bun_sourced=945, missing_synced_tag=0, upstream_newer=0`。
+  >   - **`cap:bundler` 多入口 Chunk 规划器**：新增 [chunk_planner.cp](file:///data/dev/cp/lib/bundler/chunk_planner.cp)，深度测试 [test_bundler_chunk_planner_production_deep.cp](file:///data/dev/cp/cap/test/test_bundler_chunk_planner_production_deep.cp) 8/8 PASS。
+  >   - **`cap:agent` 多模型 LLM 供应商 RPM/TPM 双维配额与 429 故障转移池**：新增 [provider_pool.cp](file:///data/dev/cp/lib/agent/provider_pool.cp)，深度测试 [test_agent_provider_pool_production_deep.cp](file:///data/dev/cp/cap/test/test_agent_provider_pool_production_deep.cp) 8/8 PASS。
+  > - **Wave 8 双线继续并发**：
+  >   - `9416dff0`（Priority ① W8 R2）：推进 Bun 上游同步与下一高价值纯逻辑子模块/文档吸收。
+  >   - `acaeeb12`（Priority ③ W8 R5）：正在构建零分配代次安全 Slab 对象句柄池（`lib/sys/gen_slab.cp`）。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 20:49:59）[step:16457]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261122-double-ptr-addr-of)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已拉起独立编译器热修专线子智能体 `a081a92a`（`CPC Hotfix Engineer`）处理工单 `task-bun-20261122-double-ptr-addr-of`（读取详情 → 根因定位与修复 → `sync_cpc.sh release` 正式发布 → 回归验证 → `resolve` 结单），Wave 8 双路生态子智能体继续并行不受阻断。修复结单后主控将立即同步 `SESSION.md` 并完成 Git 提交。

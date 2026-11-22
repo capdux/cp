@@ -408,15 +408,16 @@ impl Codegen {
                 Expr::Move(inner) => {
                     return self.infer_zig_type(None, Some(inner));
                 }
-                Expr::Borrow(inner, _) => {
+                Expr::Borrow(inner, is_mut) => {
                     if let Some(cp_ty) = self.infer_cp_type(expr) {
                         return self.map_type(&cp_ty);
                     }
                     let inner_z = self.infer_zig_type(None, Some(inner));
-                    if inner_z.starts_with('*') {
-                        return inner_z;
-                    }
-                    return format!("*{}", inner_z);
+                    return if *is_mut {
+                        format!("*{}", inner_z)
+                    } else {
+                        format!("*const {}", inner_z)
+                    };
                 }
                 Expr::Ident(id) => {
                     if id.sym == "true" || id.sym == "false" {
