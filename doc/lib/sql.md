@@ -432,6 +432,33 @@ const li = decodeMySqlLocalInfileRequest(li_wire)?; // li.isSafeRelativeFilename
 * = ssl;
 * = li;
 ```
+- **PostgreSQL v3 鉴权 (`PasswordMessage`/`SASLInitialResponse`/`SASLResponse`)、`COPY` 流与 `Terminate` 零分配编解码器 (`pg_auth_copy.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/{SASLInitialResponse,SASLResponse,PasswordMessage,CopyData,CopyFail}.cp`)**：
+  - 常量与类型：`PG_PASSWORD_TAG` (`'p'`)、`PG_COPY_DATA_TAG` (`'d'`)、`PG_COPY_DONE_TAG` (`'c'`)、`PG_COPY_FAIL_TAG` (`'f'`)、`PG_TERMINATE_TAG` (`'X'`)、`PgAuthCopyError`、`PgSaslInitialResponseView`（支持 `data == null` 编码线协议 `-1` 无初始载荷）；
+  - 编解码函数：`encodePgPasswordMessage`/`decodePgPasswordMessage`、`encodePgSaslInitialResponse`/`decodePgSaslInitialResponse`、`encodePgSaslResponse`/`decodePgSaslResponse`、`encodePgCopyData`/`decodePgCopyData`、`encodePgCopyDone`/`decodePgCopyDone`、`encodePgCopyFail`/`decodePgCopyFail`、`encodePgTerminate`/`decodePgTerminate`。
+
+```typescript
+import {
+    encodePgSaslInitialResponse,
+    decodePgSaslInitialResponse,
+    encodePgCopyData,
+    decodePgCopyData,
+    encodePgCopyDone,
+    encodePgTerminate,
+} from "cap:sql";
+
+let buf: [256]u8 = [0; 256];
+const sasl_wire = encodePgSaslInitialResponse(buf[0..], "SCRAM-SHA-256", "n,,n=,r=nonce123")?;
+const sasl = decodePgSaslInitialResponse(sasl_wire)?; // sasl.mechanism == "SCRAM-SHA-256"
+
+const copy_wire = encodePgCopyData(buf[0..], "1\tAlice\n2\tBob\n")?;
+const copy_payload = decodePgCopyData(copy_wire)?;
+const done_wire = encodePgCopyDone(buf[0..])?;      // ['c', 0, 0, 0, 4]
+const term_wire = encodePgTerminate(buf[0..])?;     // ['X', 0, 0, 0, 4]
+* = sasl;
+* = copy_payload;
+* = done_wire;
+* = term_wire;
+```
 
 ---
 

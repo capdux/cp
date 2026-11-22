@@ -296,3 +296,27 @@ export {
     encodeMySqlLocalInfileRequest,
     decodeMySqlLocalInfileRequest,
 } from "./mysql_auth_frames.cp";
+
+export {
+    PG_PASSWORD_TAG,
+    PG_COPY_DATA_TAG,
+    PG_COPY_DONE_TAG,
+    PG_COPY_FAIL_TAG,
+    PG_TERMINATE_TAG,
+    PgAuthCopyError,
+    PgSaslInitialResponseView,
+    encodePgPasswordMessage,
+    decodePgPasswordMessage,
+    encodePgSaslInitialResponse,
+    decodePgSaslInitialResponse,
+    encodePgSaslResponse,
+    decodePgSaslResponse,
+    encodePgCopyData,
+    decodePgCopyData,
+    encodePgCopyDone,
+    decodePgCopyDone,
+    encodePgCopyFail,
+    decodePgCopyFail,
+    encodePgTerminate,
+    decodePgTerminate,
+} from "./pg_auth_copy.cp";
