@@ -233,6 +233,57 @@ pub fn demoWordPieceReranker() {
 
 ---
 
+## 零堆分配 SentencePiece Unigram 语言模型分词器 (`lib/text/unigram.cp`)
+
+专为 T5 / LLaMA-1 / XLNet / Multilingual SentencePiece 模型打造的纯 CP 零堆分配 Unigram 分词器，采用精确 Viterbi 动态规划求解全局最大对数似然切分路径，完整补齐现代 AI 三大分词范式（BPE + WordPiece + Unigram）：
+
+- **`UnigramPiece`**：`{ piece: string, log_prob: f64, id: u32 }`
+- **`UnigramVocab`**：`{ pieces: []const UnigramPiece, unk_id: u32, unk_penalty: f64 }`（提供 `UnigramVocab.init(pieces, unk_id, unk_penalty)`）
+- **`UnigramResult`**：`{ token_count: usize, total_log_prob: f64, unk_count: usize }`
+- **`normalizeSentencePiece(text: string, add_dummy_prefix: bool, out_buf: *[]u8): usize?`**：将 ASCII 空白替换为 SentencePiece `▁`（`0xE2 0x96 0x81`），并在非空串首可选注入引导 `▁`。
+- **`unigramEncodeViterbi(vocab, text, out_ids, dp_score_s, dp_prev_s, dp_id_s): UnigramResult?`**：零堆分配 Viterbi 动态规划最优切分（DP 缓冲长度需 `>= text.len + 1`）；支持 UTF-8 码点级未知字符回退 `unk_id`（不截断多字节中文/Emoji），内置 `NaN`/Inf 概率与缓冲不足防护。
+- **`unigramDecode(vocab, ids, strip_leading_space, out_bytes): usize?`**：将 token 序列还原为 UTF-8 字节流，自动将 `▁` 还原为空格并可选剥离首部引导空格；未知 ID 或缓冲不足返回 `null`。
+
+```typescript
+import {
+    UnigramPiece,
+    UnigramVocab,
+    normalizeSentencePiece,
+    unigramEncodeViterbi,
+    unigramDecode,
+} from "cap:text";
+
+pub fn demoUnigramViterbi() {
+    const pieces: [4]UnigramPiece = [
+        UnigramPiece{ piece: "▁hello", log_prob: -1.2, id: 1 },
+        UnigramPiece{ piece: "▁world", log_prob: -1.4, id: 2 },
+        UnigramPiece{ piece: "▁", log_prob: -2.0, id: 3 },
+        UnigramPiece{ piece: "!", log_prob: -1.5, id: 4 },
+    ];
+    const vocab = UnigramVocab.init(pieces[0..], 0, -10.0);
+
+    let norm_arr: [64]u8 = undefined;
+    let norm: []u8 = norm_arr[0..];
+    if (norm_len := normalizeSentencePiece("hello world!", true, norm)) {
+        let out_ids_arr: [32]u32 = undefined;
+        let dp_s_arr: [65]f64 = undefined;
+        let dp_p_arr: [65]usize = undefined;
+        let dp_id_arr: [65]u32 = undefined;
+        let out_ids: []u32 = out_ids_arr[0..];
+        let dp_s: []f64 = dp_s_arr[0..];
+        let dp_p: []usize = dp_p_arr[0..];
+        let dp_id: []u32 = dp_id_arr[0..];
+        if (res := unigramEncodeViterbi(vocab, norm[0..norm_len], out_ids, dp_s, dp_p, dp_id)) {
+            let dec_arr: [64]u8 = undefined;
+            let dec_buf: []u8 = dec_arr[0..];
+            * = unigramDecode(vocab, out_ids[0..res.token_count], true, dec_buf);
+        }
+    }
+}
+```
+
+---
+
 ## 上游行为契约与文本处理边界注意事项
 
 1. **UTF-8 码点边界安全不变式**：

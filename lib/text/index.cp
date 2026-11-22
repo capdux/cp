@@ -78,3 +78,12 @@ export {
     wordPieceEncodeText,
     wordPieceEncodePair,
 } from "./wordpiece.cp";
+
+export {
+    UnigramPiece,
+    UnigramVocab,
+    UnigramResult,
+    unigramEncodeViterbi,
+    unigramDecode,
+    normalizeSentencePiece,
+} from "./unigram.cp";
