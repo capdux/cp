@@ -121,6 +121,19 @@ pub fn demoBundlerDeep(): !void {
 - **`Metafile`**：esbuild / Bun 兼容的输入输出依赖图分析模型，支持 `addInput` / `addInputImport` / `addOutput` / `addOutputInput` / `addOutputImport` / `addOutputExport` / `setOutputCssBundle`，通过 `toJsonAlloc(alloc)` 导出标准 JSON，并通过 `formatAnalysisTable(alloc, use_color)` 输出按 `bytesInOutput` 降序排列的彩色体积占比树状报告。
 - **`CodeSplitter` & `AssetManifest`**：基于 `ModuleGraph` 对最多 64 个入口点执行 `u64` 可达位掩码遍历，自动剔除死模块、将多入口公共依赖合并抽取为 `chunk-<hash>.<ext>` 共享 Chunk、计算确定性 8 位 Hex 内容哈希并构建跨 Chunk 导入边与 `AssetManifest`。
 - **`OutputFileListBuilder` (`lib/bundler/output_file_list.cp`)**：吸收自 `/data/dev/bun/src/bundler/linker_context/OutputFileListBuilder.cp`，零堆分配三段式构建产物布局器（`[chunks | sourcemaps/bytecode/module_info | additional]`），保证 `outputIndexForChunk(chunk[i]) == i` 的 O(1) 零映射不变量，并在 `--compile` ESM 字节码与 standalone HTML 模式下精确预计算分区容量。
+- **`entry_points.cp` (`lib/bundler/entry_points.cp`)**：吸收自 `/data/dev/bun/src/bundler/entry_points.cp`，零堆分配虚拟入口路径编解码器与框架引导代码生成器（`EntryPointError`、`EntryPointNamespace`、`MacroEntryId`、`isEntryPointPath`、`encodeEntryPointPath`、`decodeEntryPointPath`、`generateFallbackEntryCode`、`generateClientEntryCode`、`generateServerEntryCode`、`generateMacroEntryId`），支持 JS 字符串安全转义防注入与确定性 `macro://<16-hex>.js` 宏入口 ID 生成。
+
+### 6. 虚拟入口点与宏 ID 生成示例（`entry_points.cp`）
+
+```typescript
+import { encodeEntryPointPath, decodeEntryPointPath, generateMacroEntryId } from "cap:bundler";
+
+let pbuf: [128]u8 = undefined;
+const virt = encodeEntryPointPath("/src/pages", "index", ".tsx", pbuf[0..])?; // "/src/pages/index.entry.tsx"
+let spec_buf: [64]u8 = undefined;
+const mid = generateMacroEntryId("/src/macros.ts", "buildTime", spec_buf[0..])?;
+// spec_buf[0..mid.specifier_len] => "macro://<16-hex>.js"
+```
 
 ### 5. 三段式 `OutputFileListBuilder` 示例
 

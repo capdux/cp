@@ -170,3 +170,12 @@ export {
     swaAttentionSingleQuery,
     ringKvAttentionSingleQuery,
 } from "./sliding_window.cp";
+
+export {
+    PREFIX_INVALID_BLOCK,
+    computePrefixBlockHash,
+    PrefixBlockEntry,
+    PrefixMatchResult,
+    PrefixCacheStats,
+    KvPrefixCache,
+} from "./prefix_cache.cp";

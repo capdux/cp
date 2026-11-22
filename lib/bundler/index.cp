@@ -86,3 +86,16 @@ export {
     calculateOutputFileListCapacity,
     OutputFileListBuilder,
 } from "./output_file_list";
+
+export {
+    EntryPointError,
+    EntryPointNamespace,
+    MacroEntryId,
+    isEntryPointPath,
+    encodeEntryPointPath,
+    decodeEntryPointPath,
+    generateFallbackEntryCode,
+    generateClientEntryCode,
+    generateServerEntryCode,
+    generateMacroEntryId,
+} from "./entry_points";

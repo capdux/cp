@@ -27,6 +27,7 @@
 - **`Int4QuantMode` / `Int4GroupParams` / `packInt4Pair` / `unpackInt4Lo` / `unpackInt4Hi` / `quantizeGroupInt4Sym` / `quantizeGroupInt4Asym` / `dequantizeGroupInt4` / `gemvInt4Group`** (`quant_int4.cp`)：零堆分配 GPTQ / AWQ 风格 Per-Group INT4 权重压缩与混合精度融合 GEMV 引擎，支持对称 `[-8, 7]` 与非对称 `[0, 15] + zero_point` 分组量化、4-bit nibble 紧致打包以及尺度外提（Scale Hoisting）零临时反量化矩阵乘加。
 - **`KvQuantParams` / `quantizeTokenKvI8` / `dequantizeTokenKvI8` / `dotQueryQuantKeyI8` / `quantizedAttentionSingleQuery`** (`kv_quant.cp`)：零堆分配长上下文 KV-Cache 在线 INT8 逐 Token 对称量化压缩（4x 显存压缩，对标 vLLM/KIVI）、尺度外提 Query-Key 点积以及 O(1) 额外内存 Online Softmax 融合单 Query 注意力核。
 - **`SwaConfig` / `RingKvCache` / `swaAttentionSingleQuery` / `ringKvAttentionSingleQuery`** (`sliding_window.cp`)：零堆分配滑动窗口注意力（SWA，对标 Mistral / Gemma 2）与 StreamingLLM Attention Sink 固定容量环形 KV-Cache，支持前 `sink_tokens` 永久锚定、窗口环形覆盖与 $O((S+W)\cdot d)$ 无界流式解码。
+- **`PREFIX_INVALID_BLOCK` / `computePrefixBlockHash` / `PrefixBlockEntry` / `PrefixMatchResult` / `PrefixCacheStats` / `KvPrefixCache`** (`prefix_cache.cp`)：零堆分配多智能体共享提示词块级 KV 前缀缓存（对标 SGLang RadixAttention / vLLM Automatic Prefix Caching），支持链式 FNV-1a 64-bit 哈希防分叉误命中、最长前缀匹配、在途引用计数 `pinBlock`/`unpinBlock` 保护与未 pin 槽位 LRU 驱逐。
 
 ## 3. API 速查
 
@@ -115,6 +116,9 @@
 | `RingKvCache.init` / `appendToken` / `activeLen` / `totalSeen` / `clear` | `(cfg, keys_buf, vals_buf): RingKvCache?` / `(*_, k, v): bool` | 固定容量 `(sink_tokens + window_size) * head_dim` StreamingLLM 环形 KV-Cache，前 `sink_tokens` 永久锚定不被覆盖 |
 | `swaAttentionSingleQuery` | `(query, keys, vals, seq_len, query_pos, cfg, out): bool` | $O((S+W)\cdot d)$ 滑动窗口 + Attention Sink 单 Query Online Softmax 融合注意力 |
 | `ringKvAttentionSingleQuery` | `(query, cache, out): bool` | 直接在 `RingKvCache` 上按时间顺序执行无界流式 StreamingLLM 单 Query 注意力 |
+| `computePrefixBlockHash` | `(parent_hash: u64, block_tokens: []const u32): u64` | 链式 FNV-1a 64-bit 前缀块哈希（保证完整前缀一致才命中，根 `parent_hash = 0`） |
+| `KvPrefixCache.init` / `matchLongestPrefix` / `insertPrefixBlocks` | `(entries, block_size)` / `(*_, tokens, tick, out_block_ids): PrefixMatchResult` / `(*_, tokens, block_ids, tick): usize` | 零堆分配固定槽位块级 KV 前缀缓存、最长前缀匹配与链式块写入 |
+| `KvPrefixCache.pinBlock` / `unpinBlock` / `evictLruUnpinned` / `stats` | `(*_, prefix_hash): bool` / `(*_): u32?` / `(): PrefixCacheStats` | 在途请求引用计数保护、仅驱逐 `ref_count == 0` 的最旧块与命中/节省 Token 统计 |
 
 ## 4. 示例
 
@@ -708,6 +712,35 @@ pub fn demoStreamingLlmRingKv() {
         let out: [4]f32 = undefined;
         let out_s: []f32 = out[0..];
         * = ringKvAttentionSingleQuery(tok_k[0..], cache, out_s);
+    }
+}
+```
+
+### 块级 KV 前缀缓存与多 Agent 共享 System Prompt 示例 (`prefix_cache.cp`)
+
+```cp
+import {
+    PrefixBlockEntry,
+    KvPrefixCache,
+} from "cap:attention";
+
+pub fn demoKvPrefixCache() {
+    let entries: [8]PrefixBlockEntry = undefined;
+    let entry_s: []PrefixBlockEntry = entries[0..];
+
+    if (init_cache := KvPrefixCache.init(entry_s, 4)) {
+        let cache = init_cache;
+        const sys_and_user_a: [8]u32 = [10, 20, 30, 40, 101, 102, 103, 104];
+        const block_ids_a: [2]u32 = [100, 101];
+        * = cache.insertPrefixBlocks(sys_and_user_a[0..], block_ids_a[0..], 1);
+
+        // Agent B 共享相同前 4 个 System Prompt token，第 2 块分叉
+        const sys_and_user_b: [8]u32 = [10, 20, 30, 40, 201, 202, 203, 204];
+        let matched_ids: [2]u32 = undefined;
+        let matched_s: []u32 = matched_ids[0..];
+        const res = cache.matchLongestPrefix(sys_and_user_b[0..], 2, matched_s);
+        // res.matched_blocks == 1, res.matched_tokens == 4, matched_ids[0] == 100
+        * = res;
     }
 }
 ```
