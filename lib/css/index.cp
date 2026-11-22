@@ -352,3 +352,18 @@ export {
     CssBoxRect,
     CssSize2D,
 } from "./box_rect.cp";
+
+export {
+    CSS_LAYER_MAX_SEGMENTS,
+    CSS_LAYER_MAX_STATEMENT_NAMES,
+    CSS_LAYER_MAX_RULES,
+    CSS_LAYER_MAX_REGISTRY,
+    CssLayerError,
+    CssLayerName,
+    CssLayerStatementRule,
+    CssLayerBlockRule,
+    CssLayerRuleKind,
+    CssLayerRule,
+    CssLayerRuleList,
+    CssLayerOrderRegistry,
+} from "./layer_rule.cp";

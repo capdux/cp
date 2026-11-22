@@ -395,6 +395,24 @@ const n = r.toCss(buf[0..])?;
 // buf[0..n] == "10px 20px"
 ```
 
+### CSS `@layer` 级联层规则解析、序列化与优先级注册表（`layer_rule.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/rules/layer.cp`，零堆分配实现 W3C CSS Cascading and Inheritance Level 5 `@layer` 语句声明（`@layer reset, base, theme.dark;`）、命名/匿名 `@layer` 块规则（`@layer framework.layout { ... }` / `@layer { ... }`）、样式表批量提取（`CssLayerRuleList`）与级联优先级排序注册表（`CssLayerOrderRegistry`）。
+
+- 核心导出：`CSS_LAYER_MAX_SEGMENTS` (`16`)、`CSS_LAYER_MAX_STATEMENT_NAMES` (`32`)、`CSS_LAYER_MAX_RULES` (`32`)、`CSS_LAYER_MAX_REGISTRY` (`64`)、`CssLayerError`、`CssLayerName`（`parse` / `count` / `at` / `eql` / `hash` / `isSublayerOf` / `isSameOrSublayerOf` / `parent` / `writeCss` / `toCss`）、`CssLayerStatementRule`（`parse` / `count` / `at` / `isEmpty` / `eql` / `toCss` / `toCssMinified`）、`CssLayerBlockRule`（`parse` / `isAnonymous` / `hasName` / `eql` / `toCss` / `toCssMinified`）、`CssLayerRuleKind`、`CssLayerRule`、`CssLayerRuleList`（`extractFromStylesheet`）、`CssLayerOrderRegistry`（`init` / `registerName` / `registerAnonymous` / `registerRule` / `registerRuleList` / `priorityOf` / `comparePriority`）。
+
+```typescript
+import { CssLayerRuleList, CssLayerOrderRegistry, CssLayerName } from "cap:css";
+
+const rules = CssLayerRuleList.extractFromStylesheet(
+    "@layer reset, theme.base, utilities; @layer reset { * { margin: 0; } } @layer theme.dark { body { color: #eee; } }"
+)?;
+let reg = CssLayerOrderRegistry.init();
+* = reg.registerRuleList(rules)?;
+const cmp = reg.comparePriority(CssLayerName.parse("reset")?, CssLayerName.parse("utilities")?);
+// cmp == -1（reset 优先级低于 utilities）
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项
@@ -407,3 +425,10 @@ const n = r.toCss(buf[0..])?;
    - `:where(...)` 特异性恒为 `(0, 0, 0)`；`:is(...)`、`:not(...)`、`:has(...)` 取参数列表中特异性最高的选择器作为整体特异性。
 4. **CSS Color 4 与数学求值边界**：
    - `CssColor` 支持 `oklab()` / `oklch()` / `hwb()` / `hsl()` / `rgb()` / 148 命名色与色域转换；`CssCalc` 递归下降求值器遵循规范要求：`+` 与 `-` 运算符两侧必须留白（`calc(100% - 16px)`），支持 `min()`、`max()`、`clamp()` 嵌套。
+5. **CSS Modules 作用域与 `composes` 约束（参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
+   - `.module.css` 文件自动启用局部作用域，类名与 `@keyframes` 动画名会被改写为带模块哈希的唯一标识符，避免全局命名冲突。
+   - `composes` 声明**必须**位于规则块内所有普通 CSS 属性声明之前，且**仅允许**用于单个类选择器（如 `.button`）；在 ID 选择器（`#button`）或逗号复合选择器（`.a, .b`）中使用 `composes` 属于非法语法。
+   - 跨文件组合（`composes: bg from "./background.module.css"`）时，应避免被组合类之间定义相互冲突的同名属性（CSS Modules 规范将跨文件同名属性冲突定义为未定义行为）。
+6. **`@layer` 级联层声明顺序与最佳实践**：
+   - 推荐在入口样式表顶部使用单条语句规则（如 `@layer reset, base, components, utilities;`）显式锁定层顺序；后续重复出现的同名 `@layer` 块或语句不会改变其首次声明时的优先级。
+   - 点分嵌套层名（如 `framework.theme.dark`）的 `.` 两侧严禁空白；同一块规则的 prelude 不允许逗号列表（`@layer a, b { ... }` 为非法语法）。
