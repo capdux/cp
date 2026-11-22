@@ -148,3 +148,17 @@ export {
     PmPkgValueKind,
     classifyPmPkgValue,
 } from "./pm_pkg.cp";
+
+export {
+    FILTER_MAX_PATTERNS,
+    FILTER_PATH_BUF_CAP,
+    FilterArgError,
+    FilterPatternKind,
+    FilterRule,
+    FilterSet,
+    isFilterSkippedDir,
+    formatWorkspacePackagePattern,
+    normalizeFilterPath,
+    matchFilterGlob,
+    formatFilterScriptPrefix,
+} from "./filter_arg.cp";

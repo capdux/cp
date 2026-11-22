@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/svg.cp | Synced: 2026-11-21T17:10:30Z
+// Source: Absorbed from /data/dev/bun/src/css/properties/svg.cp | Synced: 2026-11-22T08:17:38Z
 
 pub const MAX_DASH_ENTRIES: usize = 16;
 

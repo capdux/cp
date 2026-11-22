@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/PackageManager.zig | Synced: 2026-11-22T05:34:12Z (SPDX 2.3 License Expression Parser & Validator)
+// Source: Absorbed from /data/dev/bun/src/install/PackageManager.zig | Synced: 2026-11-22T08:20:58Z (SPDX 2.3 License Expression Parser & Validator)
 
 /// SPDX 2.3 词法记号类型
 export enum SpdxTokenKind {

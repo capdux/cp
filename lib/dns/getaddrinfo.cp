@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/dns/dns.cp | Synced: 2026-11-22T02:33:09Z
+// Source: Absorbed from /data/dev/bun/src/dns/dns.cp | Synced: 2026-11-22T08:20:22Z
 // Pure-CP zero-allocation RFC 3493 / Bun `GetAddrInfo` query options, address
 // family/socket-type/protocol/backend parsers, AI_* flag bitmask validator,
 // and deterministic case-insensitive cache-key hasher (zero std.posix import).

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/dependency.cp | Synced: 2026-11-21T22:53:17Z
+// Source: Absorbed from /data/dev/bun/src/install/dependency.cp | Synced: 2026-11-22T08:19:27Z
 // ============================================================================
 // lib/pkg/dependency.cp — Full Dependency Specifier Parser & DependencyList
 // Absorbed from Bun src/install/dependency.cp

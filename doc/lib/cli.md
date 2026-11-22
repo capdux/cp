@@ -285,3 +285,43 @@ const n = assign.path.formatCanonical(buf[0..])?;
 * = kind;
 * = n;
 ```
+
+10. **Monorepo `--filter` / `-F` 工作区包过滤与脚本前缀格式化（`lib/cli/filter_arg.cp`，吸收自 `/data/dev/bun/src/cli/filter_arg.cp` & `/data/dev/bun/docs/pm/filter.mdx`）**：
+    - **包名与路径双模式匹配**：
+      - 包名模式（如 `pkg-*`、`@scope/*`、`*`）匹配 `package.json` 的 `name` 字段；
+      - 路径模式（以 `.`、`/` 或 `\` 开头，如 `./packages/*`、`./packages/**`、`./`）自动结合 `cwd` 规范化路径（折叠 `.`/`..`、统一 Windows `\` 为 `/`）后进行 Glob 匹配；
+      - 当 `--filter "*"` 与路径规则混用（如 `--filter "*" --filter "./bar"`）时，`match_all` 仅自动匹配非空包名，允许路径规则精准筛选无名包。
+    - **`!` 排除规则组合（参考 `/data/dev/bun/docs/pm/filter.mdx`）**：
+      - 支持纯排除模式（如 `--filter '!pkg-c'`：默认选中全部候选包再剔除匹配项）及正反混合模式（如 `--filter '!./' --filter './packages/*'`：选中 `./packages/*` 同时排除根 `package.json`）；排除规则优先级高于正向规则。
+    - **零递归迭代式 Glob 与遍历跳过守卫**：
+      - `matchFilterGlob` 支持 `*`（单段通配）、`**`（跨目录含零层通配）、`?` 与 `[a-z]`/`[!a-z]` 字符类，迭代实现杜绝多星号畸形输入导致的回溯爆炸；
+      - `isFilterSkippedDir` 自动过滤 `.`、`node_modules`、`.git`；`formatWorkspacePackagePattern` 将工作区配置（如 `packages/*`）规范化为 `packages/*/package.json`。
+    - **Foreman 风格并行/串行脚本输出前缀（`formatFilterScriptPrefix`）**：
+      - 配合 `--parallel` / `--sequential` 运行多包脚本时，输出 `<pkg_name>:<script>`（包名为空时自动回退 `<rel_path>:<script>`，均为空时输出 `<script>`）；下游执行器应按工作区依赖拓扑顺序调度（被依赖包先完成）。
+
+### Monorepo `--filter` 过滤集合与脚本前缀示例（`lib/cli/filter_arg.cp`）
+
+```cp
+import {
+    FilterSet,
+    formatWorkspacePackagePattern,
+    formatFilterScriptPrefix,
+} from "cap:cli";
+
+const raw_filters: [2]([]const u8) = ["!./", "./packages/*"];
+const fs = FilterSet.fromPatterns(raw_filters[0..], "/repo")?;
+const keep_a = fs.matches("/repo/packages/pkg-a", "pkg-a"); // true
+const keep_root = fs.matches("/repo", "monorepo-root");     // false
+
+let pat_buf: [64]u8 = [0; 64];
+const pn = formatWorkspacePackagePattern("packages/*", pat_buf[0..])?;
+// pat_buf[0..pn] == "packages/*/package.json"
+
+let pfx_buf: [64]u8 = [0; 64];
+const fn_len = formatFilterScriptPrefix("pkg-a", "packages/pkg-a", "build", pfx_buf[0..])?;
+// pfx_buf[0..fn_len] == "pkg-a:build"
+* = keep_a;
+* = keep_root;
+* = pn;
+* = fn_len;
+```

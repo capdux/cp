@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/supports.cp | Synced: 2026-11-22T05:00:43Z
+// Source: Absorbed from /data/dev/bun/src/css/rules/supports.cp | Synced: 2026-11-22T08:16:46Z
 // Pure-CP CSS Conditional Rules `@supports` condition AST, recursive-descent
 // parser, evaluator, and canonical serializer (zero heap allocation via fixed arena).
 

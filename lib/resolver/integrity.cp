@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/integrity.cp | Synced: 2026-11-21T00:07:45Z
+// Source: Absorbed from /data/dev/bun/src/install/integrity.cp | Synced: 2026-11-22T08:21:08Z
 // ============================================================================
 // lib/resolver/integrity.cp — W3C Subresource Integrity (SRI) Parser & Verifier
 // ============================================================================

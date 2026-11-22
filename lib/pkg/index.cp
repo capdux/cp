@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/install.cp | Synced: 2026-11-21T16:55:12Z
+// Source: Absorbed from /data/dev/bun/src/install/install.cp | Synced: 2026-11-22T08:20:32Z
 // ============================================================================
 // lib/pkg/index.cp — Unified Public Exports for Industrial Package Core (cap:pkg)
 // ============================================================================
