@@ -1,6 +1,6 @@
 # `cap:agent` — AI Agent 核心运行时标准库
 
-`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏（`budget.cp`）、多智能体任务图 DAG 调度器（`dag.cp`）、评测基准与轨迹打分（`eval.cp`）、ReAct 执行状态机与确定性检查点（`react.cp`）、LLM 流式 SSE 解析与遥测（`sse.cp`）以及多模型网关路由与限流故障转移（`model_router.cp`）六个子模块。
+`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏（`budget.cp`）、多智能体任务图 DAG 调度器（`dag.cp`）、评测基准与轨迹打分（`eval.cp`）、ReAct 执行状态机与确定性检查点（`react.cp`）、LLM 流式 SSE 解析与遥测（`sse.cp`）、多模型网关路由与限流故障转移（`model_router.cp`）以及输入/输出安全护栏与策略引擎（`guardrail.cp`）七个子模块。
 
 ---
 
@@ -361,5 +361,45 @@ fn multiModelFailoverDemo() {
     // 3. 冷却期过后（15000ms）自动回切主模型
     const slot3 = router.selectEndpoint(ModelRoutePolicy.PriorityOrder, 2000, 15000) ?? return;
     * = slot3;
+}
+```
+
+---
+
+## 子模块：输入/输出安全护栏与策略引擎（`guardrail.cp`）
+
+### 核心特性
+
+- **零分配规则策略引擎（`evaluateGuardrails`）**：在进入 LLM 推理或返回最终响应前，单次完成载荷长度超限校验（`MaxLengthExceeded`）、NUL/控制字符异常检测（`ControlCharAnomaly`）、JSON 嵌套深度预检（`NestingTooDeep`）、内置凭证密钥泄漏扫描（`SecretLeak`：`sk-` / `ghp_` / `AKIA` / PEM 私钥头）以及自定义规则表匹配与风险分累加升级（`Allow | Warn | Block`）。
+- **工具参数载荷结构深度预检（`inspectJsonPayloadDepth`）**：零分配跳过字符串内嵌的 `{}`、`[]` 与 `\"`/`\\` 转义序列，精确统计最大括号嵌套深度与字符串数量，超过 `max_allowed_depth` 时立即提前截断以防范深层嵌套载荷耗尽解析栈。
+
+### 导出清单
+
+- **裁决与配置**：`GuardAction`（`Allow | Warn | Block`）、`GuardReason`、`GuardRule`、`GuardVerdict`、`GuardConfig`（`default`）
+- **评估与预检**：`evaluateGuardrails`、`JsonDepthReport`、`inspectJsonPayloadDepth`
+
+### 使用示例
+
+```typescript
+import {
+    GuardAction,
+    GuardRule,
+    GuardConfig,
+    evaluateGuardrails,
+    inspectJsonPayloadDepth,
+} from "cap:agent";
+
+fn guardrailDemo() {
+    const rules: [2]GuardRule = [
+        GuardRule { id: 101, pattern: "ignore previous instructions", case_insensitive: true, action: GuardAction.Warn, weight: 50 },
+        GuardRule { id: 102, pattern: "reveal system prompt", case_insensitive: true, action: GuardAction.Warn, weight: 50 },
+    ];
+    const cfg = GuardConfig.default();
+
+    const v = evaluateGuardrails("Please summarize the release notes.", rules[0..], cfg);
+    * = v;
+
+    const depth_report = inspectJsonPayloadDepth("{\"args\":{\"query\":\"{nested}\"}}", 16);
+    * = depth_report;
 }
 ```

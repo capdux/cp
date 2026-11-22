@@ -58,3 +58,14 @@ export {
     ModelEndpoint,
     ModelRouter,
 } from "./model_router.cp";
+
+export {
+    GuardAction,
+    GuardReason,
+    GuardRule,
+    GuardVerdict,
+    GuardConfig,
+    evaluateGuardrails,
+    JsonDepthReport,
+    inspectJsonPayloadDepth,
+} from "./guardrail.cp";
