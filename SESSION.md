@@ -201,13 +201,13 @@
 - **报错/需求摘要**：在 vendor/zig (0.15.2) 下编译元组解构 prelude 时，CpUnpackElemType/cp_unpack_elem/CpUnpackTailType/cp_unpack_tail/CpUnpackSliceType/cp_unpack_slice 使用了 Zig 0.14 的 ti.@"struct".field_types[idx] 与 ti.@"struct".field_names[idx]，在 Zig 0.15.2 中应改为 ti.@"struct".fields[idx].type 与 ti.@"struct".fields[idx].name
 - **结单与处理汇报**：已修复 cpc/src/codegen/runtime_emit.rs 中 CpUnpackElemType/cp_unpack_elem/CpUnpackTailType/cp_unpack_tail/CpUnpackSliceType/cp_unpack_slice 的结构体反射兼容性：通过 @hasField(@TypeOf(s), "fields") 同时兼容 Zig 0.15.2 (fields[idx].type/.name) 与 Zig 0.17.0 (field_types/field_names)，并清理冗余 comptime 关键字。已发布 release 版 cpc，repro_tuple_unpack_anyopaque.cp 及 elem/tail/slice 全覆盖用例在 Zig 0.15.2 与 Zig 0.17.0 下 ast-check 和 build-obj 均 100% 通过。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 01:26:25）[step:10412]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 01:26:25）[step:10412]
 - **用户完整原始指令**：
   > 收到新的编译器待处理工单(5条: task-bun-20261122-orelse-assign-drop,task-bun-20261122-loop-field-shadow,task-bun-20261122-if-else-return-drop,task-bun-20261122-expr-walrus-drop,task-bun-20261122-ptr-opt-and-string-from)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 已提前捕获全部 5 条编译器热修工单，专职热修子智能体（`CPC Compiler Hotfix Specialist`）正在并行分析复现并集中修复中，验证通过后将发布 `release` 版 `cpc`、执行 `resolve` 结单，并立即收回该热修子智能体；同时 2 路标准库吸收子智能体继续并行运转（`cap:multipart_boundary`、`cap:retry_backoff`）。待回报后第一时间同步结果。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 02:35:01）[step:10994]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 02:35:01）[step:10994]
 - **用户完整原始指令**：
   > 收到新的编译器待处理工单(1条: task-bun-20261122-ptr-postfix-opt)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
   > 收到新的编译器待处理工单(1条: task-bun-20261122-unsafe-e0209-gaps)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
@@ -217,22 +217,22 @@
   > 收到新的编译器待处理工单(1条: task-bun-20261122-generic-struct-raii-defer)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
   > 收到新的编译器待处理工单(1条: task-bun-20261122-call-new-silently-empties-fn)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
   > 收到新的编译器待处理工单(1条: task-bun-20261122-sentinel-const-space)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > (正在执行/待本轮结束落盘)
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 02:35:32）[step:11003]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 02:35:32）[step:11003]
 - **用户完整原始指令**：
   > 收到新的编译器待处理工单(1条: task-capsurf-20261122-lib-pack-gzip-e0209)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > (正在执行/待本轮结束落盘)
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 02:40:22）[step:11046]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 02:40:22）[step:11046]
 - **用户完整原始指令**：
   > 主线程不要卡死在任务中, 要一边工作,一边 接收我的指令/工单消息, 工单消息必须安排专门的热修子智能体紧急处理,主线程及时给我汇报, 和提交产物
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > (正在执行/待本轮结束落盘)
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 02:48:05）[step:11049]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 02:48:05）[step:11049]
 - **用户完整原始指令**：
   > ● Agent(bun-absorber: MySQL Proto Absorber) · Gemini 4 Neon  Running command · 3h20m45s
   > 这个 子智能体 3个多小时
@@ -240,7 +240,7 @@
   > 你可以开启两个子智能体做迁移, 一个热修子智能体
   > 你作为主智能体, 负责巡检/审核/验收/ 子智能体工作成果, 及时回应我的指令/及时接收工单避免消息积压/及时安排子智能体处理/及时git提交 汇报阶段性成果,固化成果, 通过监控子智能体执行效率, 分析执行效率, 提出改进方式方法, 检验如果有效, 写入 GEMINI.md固化, 实现自我进化
   > 主智能体 切不可陷入死循环或卡死在长任务中出不来, 做些耗时少, 步数短的任务
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 收到你的批评与架构纠偏，**已立即执行切换**：主智能体不再陷入长回合连续编码循环，从现在起专注承担 **巡检 / 审核 / 验收 / 及时响应指令与工单 / 阶段性 `git commit` 与汇报 / 子智能体效率监控与自我进化**，每个短周期完成后立即结束回合向你汇报并保持随时可响应状态。
   >
   > ---
@@ -250,12 +250,31 @@
   >   - `commit 8057ce36`：通过专用热修子智能体解决 `bun_agy` 11 条工单（`delivery_id` 54–60、67–68、70–71：含 `orelse`/`??` 赋值、循环变量遮蔽、`if` 表达式 `return`/捕获、`[*:0]u8?`/`*Foo?`、`cp_string_from("")`、6 类 `unsafe` 外部 E0209 拦截、只读方法返回切片自动 `*const T`、匿名/泛型结构体 RAII `~init()` 注入、`new(this)` 调用），已 `sync_cpc.sh release` 发布并回收热修子智能体。
   >   - `commit 39dd34d1`：解决 `task-bun-20261122-sentinel-const-space`（#74，泛型类型实参保留 `const` 空格）与 `task-capsurf-20261122-lib-pack-gzip-e0209`（#77，[gzip.cp](file:///data/dev/cp/lib/pack/gzip.cp) 17 处裸指针操作包入 `unsafe`），已发布结单并回收热修子智能体。
   > - **正在热修（1 条，刚进队）**：
-  >   - `task-capsurf-20261122-lib-e0209-batch`（#8 ...(截断)
+  >   - `task-capsurf-20261122-lib-e0209-batch`（#80，12 个 CapSurf 依赖标准库文件的 E0209 批量补 `unsafe`），已立即派发专用热修子智能体 `Stdlib E0209 Hotfix Specialist` 紧急处理，完工后即刻验收、提交并回收。
+  >
+  > ---
+  >
+  > ### 二、 标准库吸收阶段性成果（Batch 46–74，累计 **239** 个纯 CP 模块）
+  > - 刚完成 **Batch 74** 提交（`commit 94fd1d84`）：[unicode_width](file:///data/dev/cp/lib/unicode_width/index.cp)、[number_format](file:///data/dev/cp/lib/number_format/index.cp)、[http_content_encoding](file:///data/dev/cp/lib/http_content_encoding/index.cp)、[dotenv_escape](file:///data/dev/cp/lib/dotenv_escape/index.cp)（均 0 errors、`cap test -m` 100% PASS，四线文档已同步，且热日志 [SESSION.md](file:///data/dev/cp/SESSION.md) / [CHANGELOG.md](file:///data/dev/cp/CHANGELOG.md) / [DEVLOG.md](file:///data/dev/cp/DEVLOG.md) 已滚动归档至 `*_H.md` 保持 ~50 行极简状态）。
+  > - **2 个迁移子智能体当前并行任务**：
+  >   1. `MySQL Proto Absorber`：正在吸收 `cap:http_digest_auth`（RFC 7616 Digest 认证头）
+  >   2. `HTTP Status Absorber`：正在吸收 `cap:http_warning`（RFC 7234 `Warning` 头）
+  >
+  > ---
+  >
+  > ### 三、 子智能体效率监控分析与改进方案（待验证后固化到 `GEMINI.md`）
+  > 1. **关于 UI 显示 `Running · 3h20m45s`**：该时长是持久子智能体从创建至今的**累计存活时间**（实际已完成 30+ 个模块，单模块平均 2–3 分钟），并非单个命令卡死 3 小时。
+  > 2. **发现的两个真实效率瓶颈与对应改进**：
+  >    - **长生命周期子智能体上下文膨胀**：持续复用超过 ~15 个模块后，单轮 token 读入增大、响应变慢；**改进**：迁移子智能体每完成 **10–15 个模块** 主动 `kill` 轮换重建新会话，保持低上下文延迟。
+  >    - **主智能体回合过长导致消息积压**：主智能体自编模块 + 连续多轮不结束回合会阻塞你的即时指令与工单响应；**改进**：主智能体严格限制为 **“单批巡检/审核 → 登记提交 → 派发下一批 → 立即结束回合汇报”**（单回合不超过 3–5 步），依靠系统事件驱动唤醒。
+  >    - **附带环境异常记录**：`/data/dev/cp/cpc_dev` 当前存在内核级 `walk_component` D 状态锁（访问会卡死），热修通道已规避直接访问该目录。
+  >
+  > 如认可上述主/子智能体协作与轮换策略，我将在下一轮验收完当前 3 个子智能体并验证有效后，将其正式写入 [GEMINI.md](file:///data/dev/cp/GEMINI.md) 固化。我现在停在此处等待子智能体完工通知或你的新指令。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 03:01:08）[step:11116]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 03:01:08）[step:11116]
 - **用户完整原始指令**：
   > 认可上述主/子智能体协作与轮换策略，在下一轮验收完当前 3 个子智能体并验证有效后，将其正式写入 GEMINI.md固化
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 收到确认！该协作与轮换策略已实测连续 6 个模块均在 **1.2–2.8 分钟**内一次零错误交付，并已在 `commit 99173025` 正式写入 [GEMINI.md](file:///data/dev/cp/GEMINI.md#L611-L624) 第九章固化。
   >
   > ### 阶段汇报（Batch 83 已提交）
@@ -268,10 +287,10 @@
   >
   > 主智能体结束本回合待命。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 03:06:34）[step:11141]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 03:06:34）[step:11141]
 - **用户完整原始指令**：
   > 主智能体结束本回合待命。 我的意思是不要空闲待命,也不要陷入长回合连续编码循环, 需取一个平衡, 做些耗时短的任务.
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 已完成本轮快速验收、登记提交与双路派发（当前标准库总量 **257 模块**，`HEAD = 37644442`）：
   >
   > ### 1. 本轮验收与 Git 提交
@@ -280,34 +299,47 @@
   >   - 文档与测试：[proc_net_dev.md](file:///data/dev/cp/doc/lib/proc_net_dev.md)、[test_proc_net_dev_production_deep.cp](file:///data/dev/cp/cap/test/test_proc_net_dev_production_deep.cp)
   > - **Batch 90 (`37644442`) — `cap:dns_caa_record`**（RFC 8659 DNS CAA 文本/线缆格式解析与通配符签发策略判定器，5/5 PASS）：
   >   - 源码：[caa.cp](file:///data/dev/cp/lib/dns_caa_record/caa.cp)、[index.cp](file:///data/dev/cp/lib/dns_caa_record/index.cp)
-  >   - 文档与测试：[dns_caa_record.md](file:///data/dev/cp/doc/lib/dns_caa_record.md)、[test_dn ...(截断)
+  >   - 文档与测试：[dns_caa_record.md](file:///data/dev/cp/doc/lib/dns_caa_record.md)、[test_dns_caa_record_production_deep.cp](file:///data/dev/cp/cap/test/test_dns_caa_record_production_deep.cp)
+  >
+  > ### 2. 工单巡检与双路子智能体并行状态
+  > - **下游热修工单**：`task_queue.py unacked` 返回 `[]`（0 条待处理工单）。
+  > - **Sys Config Absorber (`a788a642`)**：已派发 **`cap:proc_cpuinfo`**（Linux `/proc/cpuinfo` 零分配解析器），正在推进中。
+  > - **HTTP RFC Absorber (`31272260`)**：已派发 **`cap:dns_srv_record`**（RFC 2782 DNS SRV 服务发现记录解析与优先级/权重选择器），正在推进中。
+  >
+  > 本轮收尾完成，等待下一波子智能体交付、下游工单或您的新指令唤醒。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 03:10:17）[step:11171]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 03:10:17）[step:11171]
 - **用户完整原始指令**：
   > 收到新的编译器待处理工单(1条: task-bun-20261122-return-dot-enum-err)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 已收到并立即接单 **`task-bun-20261122-return-dot-enum-err`**（`delivery_id: 82`）：
   >
   > - **问题摘要**：在错误联合返回函数 `fn f(): E!Status` 中执行 `return .blocked;` 时，`cpc` 误将成功枚举值 `.blocked` 降级为 `return error.blocked;`（复现文件：[repro_return_dot_enum_in_err_union.cp](file:///data/dev/cp/temp/repro_return_dot_enum_in_err_union.cp)）。
   > - **紧急调度**：已立即启动专职热修子智能体 **`CPC Hotfix Engineer` (`bdffeee8`)** 负责定位修复、发布 `release` 版 `cpc`、复测并执行 `task_queue.py resolve` 结单；完成后主智能体将立即验收提交并回收该热修子智能体。
   > - **并行迁移状态**：`Sys Config Absorber`（`cap:proc_cpuinfo`）与 `HTTP RFC Absorber`（`cap:dns_srv_record`）持续并行推进中。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 03:11:59）[step:11190]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 03:11:59）[step:11190]
 - **用户完整原始指令**：
   > 日常工作,你只开了一个子智能体, 还要开一个, 加快速度
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 已按您的要求**新增第 3 路常驻迁移子智能体**加速推进，同时完成 **Batch 93–94** 两连提交（标准库总量已突破 **260 模块里程碑**，现达 **261 模块**，`HEAD = b9ae8202`）：
   >
   > ### 1. 本轮新增提交（260 里程碑达成）
   > - **Batch 93 (`67ab4140`) — `cap:proc_mounts`**（Linux `/proc/mounts` 挂载表、八进制转义解码与最长路径边界前缀匹配器，5/5 PASS）：
   >   - [mounts.cp](file:///data/dev/cp/lib/proc_mounts/mounts.cp)、[index.cp](file:///data/dev/cp/lib/proc_mounts/index.cp)、[proc_mounts.md](file:///data/dev/cp/doc/lib/proc_mounts.md)、[test_proc_mounts_production_deep.cp](file:///data/dev/cp/cap/test/test_proc_mounts_production_deep.cp)
   > - **Batch 94 (`b9ae8202`) — `cap:http_expect`**（RFC 9110 §10.1.1 HTTP `Expect` 头解析与 `100-continue` / 417 协商判定器，5/5 PASS）：
-  >   - [expect.cp](file:///data/dev/cp/lib/http_expect/expect.cp)、[index.cp](file:///data/dev/cp/lib/http_expect/index.cp)、[http_expect.md](file:///data/ ...(截断)
+  >   - [expect.cp](file:///data/dev/cp/lib/http_expect/expect.cp)、[index.cp](file:///data/dev/cp/lib/http_expect/index.cp)、[http_expect.md](file:///data/dev/cp/doc/lib/http_expect.md)、[test_http_expect_production_deep.cp](file:///data/dev/cp/cap/test/test_http_expect_production_deep.cp)
+  >
+  > ### 2. 当前 4 路满载并行状态（3 路常驻迁移 + 1 路专职热修）
+  > 1. **CLI & Format Absorber (`4de66279`，新开第 3 路)**：正在吸收 **`cap:ansi_link`**（OSC 8 终端超链接编码/解析/剥离器）。
+  > 2. **Sys Config Absorber (`a788a642`)**：正在吸收 **`cap:proc_uptime`**（Linux `/proc/uptime` 零分配整数解析器）。
+  > 3. **HTTP RFC Absorber (`31272260`)**：正在吸收 **`cap:http_early_hints`**（RFC 8297 `103 Early Hints` / `Link` 预加载头解析与格式化器）。
+  > 4. **CPC Hotfix Engineer (`bdffeee8`，专职热修)**：正在修复 `task-bun-20261122-return-dot-enum-err`（`delivery_id: 82`）。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 03:15:58）[step:11222]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 03:15:58）[step:11222]
 - **用户完整原始指令**：
   > 收到新的编译器待处理工单(1条: task-bun-20261122-generic-raw-ptr-arg)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 已立即接单 **`task-bun-20261122-generic-raw-ptr-arg`**（`delivery_id: 83`）并合单派发至正在修改 `cpc/src/` 的专职热修子智能体，同时完成 **Batch 98 (`525cb309`)** 验收提交（当前标准库总量 **265 模块**）：
   >
   > ### 1. 热修合单调度（避免 `cpc/src/` 写冲突 + 节省一次 Release 编译）
@@ -317,13 +349,18 @@
   >
   > ### 2. 本轮标准库验收提交（Batch 98，265 模块）
   > - **新增模块 `cap:proc_self_status`**（Linux `/proc/<pid>/status` 进程状态/内存/线程/UID/GID 解析器，5/5 PASS）：
-  >   - [status.cp](file:/// ...(截断)
+  >   - [status.cp](file:///data/dev/cp/lib/proc_self_status/status.cp)、[index.cp](file:///data/dev/cp/lib/proc_self_status/index.cp)、[proc_self_status.md](file:///data/dev/cp/doc/lib/proc_self_status.md)、[test_proc_self_status_production_deep.cp](file:///data/dev/cp/cap/test/test_proc_self_status_production_deep.cp)
+  >
+  > ### 3. 三路常驻迁移子智能体状态
+  > 1. **Sys Config Absorber (`a788a642`)**：已派发 **`cap:cgroup_v2_limits`**（Linux cgroup v2 `cpu.max`/`memory.max`/`io.max` 容器限额解析器）。
+  > 2. **HTTP RFC Absorber (`31272260`)**：正在推进 **`cap:http_alt_svc`**。
+  > 3. **CLI & Format Absorber (`4de66279`)**：正在推进 **`cap:semver_satisfies`**。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 03:31:01）[step:11352]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 03:31:01）[step:11352]
 - **用户完整原始指令**：
   > 吸收来的模块, 命名需符合 cp 规则: 简洁, ts 风格 http_accept_language 太长了, 另外 下划线, 符合 cp ts 名称风格么?
   > 收到新的编译器待处理工单(1条: task-bun-20261122-factory-struct-raii-lowering)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > ### 1. 热修工单已立即接单派发
   > - 已读取 **`task-bun-20261122-factory-struct-raii-lowering`**（`delivery_id: 86`，复现文件：[repro_factory_struct_raii.cp](file:///data/dev/cp/temp/repro_factory_struct_raii.cp)），并立即启动专职热修子智能体 **`CPC Hotfix Engineer` (`08359aab`)** 处理 `return struct { ... }` 工厂函数体内 `~init()` 局部实例自动注入 `defer __cp_deinit()` 的问题，完成后将第一时间 `release` 发布、结单并回收。
   >
@@ -335,24 +372,46 @@
   > 对照 `lib/` 原生设计（如 `cap:http`、`cap:dns`、`cap:net`、`cap:crypto`、`cap:cache`、`cap:semver`）与 TS/Node/Bun 生态，更符合 CP 风格的规范应为：
   > 1. **顶层包名极简、无下划线（TS/Bun 风格）**：
   >    - 使用短单词或领域主包：`cap:http`、`cap:dns`、`cap:sys`、`cap:cli`、`cap:ansi`、`cap:semver`、`cap:text`、`cap:git`、`cap:docker`、`cap:sql` 等；
-  >    - 必须使用组合词时采用 **短驼峰** 或 **子路径导 ...(截断)
+  >    - 必须使用组合词时采用 **短驼峰** 或 **子路径导入**（如 `cap:http/headers`、`cap:sys/proc`、`cap:cli/table`，而不是 `cap:http_accept_language`）。
+  > 2. **细粒度功能作为子文件归入主包（避免顶层碎片化）**：
+  >    - 例如 `lib/http/` 下已有 `cookie.cp`、`etag.cp`、`headers.cp`、`encoding.cp`、`sse.cp`、`proxy.cp` 等扁平子文件，统一由 `lib/http/index.cp` 聚合导出；
+  >    - 同理，`proc_*`/`etc_*`/`cgroup_*` 应归入 `lib/sys/`（如 `proc.cp`、`mounts.cp`、`limits.cp`、`cgroup.cp`），`cli_table`/`cli_tree`/`cli_spinner` 应归入 `lib/cli/`，`ansi_sgr`/`ansi_link`/`ansi_strip` 应归入 `lib/ansi/`，`dns_*` 应归入 `lib/dns/`。
+  >
+  > ### 3. 下一步执行方案请您拍板（已暂缓派发新的长下划线顶层目录）
+  > - **方案 A（推荐，标本兼治）**：
+  >   1. 将「**短命名 + 领域主包收敛 + 禁止长下划线顶层目录**」正式写入 `GEMINI.md`；
+  >   2. 后续所有新吸收的模块直接按领域归入 `lib/<domain>/`（或简短无下划线包名）；
+  >   3. 同步安排 3 路子智能体分批将近期散落的 `http_*`、`proc_*`、`etc_*`、`dns_*`、`cli_*`、`ansi_*` 模块**合并收敛**到 `lib/http/`、`lib/sys/`、`lib/dns/`、`lib/cli/`、`lib/ansi/` 主包中，同步更新文档与测试并清理冗余散装目录。
+  > - **方案 B（仅控增量）**：
+  >   - 仅对后续新增生效，不再新建长下划线顶层目录，已有目录暂保持不动。
+  >
+  > 请确认选择 **方案 A** 还是 **方案 B**？（另外顺带汇报：本轮前序交付的 Batch 117–120 `text_indent`/`http_content_language`/`proc_io`/`cli_spinner` 已提交至 `e3c0db89`。）
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 03:34:16）[step:11369]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 03:34:16）[step:11369]
 - **用户完整原始指令**：
   > 方案 A
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 已正式启动 **方案 A** 并固化规范，同时完成 3 个全新简洁单单词标准库提交（`HEAD = e5d829c3`）：
   >
   > ### 1. 规范固化与全新简洁单单词包提交（Batch 121–123）
   > - **规范写入**：已在 [GEMINI.md](file:///data/dev/cp/GEMINI.md) 写入**第十章「标准库简洁 TS 风格命名与领域主包收敛铁律」**，禁止新建长下划线顶层目录，同步更新第九章为 3 迁移/收敛 + 1 专用热修并行架构。
   > - **Batch 121 (`9abec255`) — `cap:jsonl`**：[jsonl.cp](file:///data/dev/cp/lib/jsonl/jsonl.cp)、[jsonl.md](file:///data/dev/cp/doc/lib/jsonl.md)、[test_jsonl_production_deep.cp](file:///data/dev/cp/cap/test/test_jsonl_production_deep.cp)（5/5 PASS）。
   > - **Batch 122 (`f06422d8`) — `cap:jsonc` + `GEMINI.md`**：[jsonc.cp](file:///data/dev/cp/lib/jsonc/jsonc.cp)、[jsonc.md](file:///data/dev/cp/doc/lib/jsonc.md)、[test_jsonc_production_deep.cp](file:///data/dev/cp/cap/test/test_jsonc_production_deep.cp)（5/5 PASS）。
-  > - **Batch 123 (`e5d829c3`) — `cap:mustache`**：[mustache.cp ...(截断)
+  > - **Batch 123 (`e5d829c3`) — `cap:mustache`**：[mustache.cp](file:///data/dev/cp/lib/mustache/mustache.cp)、[mustache.md](file:///data/dev/cp/doc/lib/mustache.md)、[test_mustache_production_deep.cp](file:///data/dev/cp/cap/test/test_mustache_production_deep.cp)（5/5 PASS）。
+  >
+  > ### 2. 方案 A 领域主包收敛 Wave 1（3 路并行推进中）
+  > 经盘点，历史长下划线散装目录主要集中在 `http_*` (56)、`proc_*` (13)、`etc_*` (4)、`dns_*` (6)、`cli_*` (5)、`ansi_*` (4)、`semver_*` (5)、`sql_*` (5)、`git_*` (3)。已率先派发 Wave 1 三路并行收敛：
+  > 1. **HTTP RFC Absorber (`daed7a77`)**：收敛 6 个 `lib/dns_*` → **`lib/dns/`**（`cap:dns`），同步更新测试与文档并删除旧目录。
+  > 2. **CLI & Format Absorber (`4de66279`)**：收敛 4 个 `lib/ansi_*` → **`lib/ansi/`**（`cap:ansi`），同步更新测试与文档并删除旧目录。
+  > 3. **Sys Config Absorber (`072700c1`)**：收敛 4 个 `lib/etc_*`（含刚交付的 `etc_protocols`）→ **`lib/sys/`**（`cap:sys`），同步更新测试与文档并删除旧目录。
+  > 4. **CPC Hotfix Engineer (`08359aab`)**：持续修复热修工单 `#86`（`task-bun-20261122-factory-struct-raii-lowering`）。
+  >
+  > Wave 1 验收提交后，将紧接着推进 Wave 2（`cli_*` → `lib/cli/`、`semver_*` → `lib/semver/`、`proc_*` → `lib/sys/`）与 Wave 3（`sql_*`/`git_*`/`http_*` 分批收敛至 `lib/sql/`、`lib/git/`、`lib/http/`）。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 03:58:26）[step:11504]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 03:58:26）[step:11504]
 - **用户完整原始指令**：
   > 之前很多库 都是这样处理的, 如 http, 这次, 你重新处理了一遍吗? 带 _下划线的库, 没有那么多吧!
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 没有重做原有的 `lib/http/`（原 `lib/http/` 里的 `server.cp`、`client.cp`、`headers.cp` 等全部原样保留、零破坏）。
   >
   > ### 1. 为什么刚才消除了 162 个带 `_` 的目录？
@@ -366,14 +425,17 @@
   >      - `mysql_*` (8) → `lib/mysql/`（正在收敛）
   >      - `pg_*` (8) → `lib/pg/`（正在收敛）
   >      - 其余 9 个小簇共 21 个：`consistent_*`(3)、`md_*`(3)、`unicode_*`(3)、`case_*`(2)、`diff_*`(2)、`js_*`(2)、`mime_*`(2)、`s3_*`(2)、`shell_*`(2)
-  >   2. **历史独立的双词数据结构/算法库（118 个）**：如 `aes ...(截断)
+  >   2. **历史独立的双词数据结构/算法库（118 个）**：如 `aes_gcm`、`aho_corasick`、`bplus_tree`、`bloom_cuckoo`、`merkle_tree`、`roaring_bitmap`、`skip_list` 等，本身是独立单库，并非碎片。
+  >
+  > ### 3. 建议收敛边界
+  > 把剩下这 **73 个同域碎片**（`css`/`mysql`/`pg` 及 9 个小簇，预计 ~2–3 轮收完）收敛完毕后，**立即切回 Bun 新资产吸收**（新资产严格按简洁单单词或直接合入对应主包），那 118 个历史独立单库暂不动，避免无谓折腾。您看这样安排是否合适？
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 04:03:03）[step:11513]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 04:03:03）[step:11513]
 - **用户完整原始指令**：
   > 合适, 118个历史独立库, 需要头部备注来源, 已经备注的 你核实下, 确保 备注格式一直, 方便将来同步 bun的更新.
   > 实际上 bun agy 一直在测试更新 这些 cp文件
   > 你在检查来源时, 对比下文件修改时间, 如 bun agy 修改了cp 文件, 我们的lib 库对应 cp 文件, 也要做相应修改/调整.
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 收到！已立即对全库 **`lib/` 全部 1,760 个 `.cp` 文件**完成首轮溯源头与上游 `bun_agy` 修改时间（`mtime`）扫描，同时完成 **`pg_*`、`css_*` 第 1 批、`mysql_*` 三连提交**（累计已消除 **190 个**长下划线散装目录，`HEAD = b579d86a`）：
   >
   > ### 1. 全库溯源头 & `bun_agy` 更新时间扫描结果（重大发现）
@@ -382,12 +444,25 @@
   > - **上游 `bun_agy` 有更新的文件**：对比 `mtime` 发现 **226 个** `lib/` 文件对应的 `/data/dev/bun/src/**/*.cp` 已被 `bun_agy` 较新修改（领先约 1.5 天 / 14 万秒），典型如：
   >   - `lib/conf/dotenv.cp` ← `/data/dev/bun/src/dotenv/env_loader.cp`
   >   - `lib/http/{server,client}.cp` ← `/data/dev/bun/src/http/http.cp`
-  >   - `lib/blob/index.cp` ← `/data/dev/bun/src/runtime/webcore/Blob.cp` ...(截断)
+  >   - `lib/blob/index.cp` ← `/data/dev/bun/src/runtime/webcore/Blob.cp`
+  >   - `lib/col/{soa,bounded_array,hash_map,hive_array,object_pool,string_map}.cp` ← `/data/dev/bun/src/collections/*.cp`
+  >   - `lib/conf/{json5,ini}.cp`、`lib/sourcemap/index.cp`、`lib/ptr/ref_count.cp`、`lib/net/address.cp` 等
+  >
+  > ### 2. 本轮收敛提交（累计消除 190 个散装目录）
+  > - **`64694881` — `pg_*` (8) → `cap:pg`**：[lib/pg/index.cp](file:///data/dev/cp/lib/pg/index.cp)，8/8 PASS，`lib/pg_*` 全仓清零。
+  > - **`76a8b056` — `css_*` 第 1 批 (12) → `cap:css`**：[lib/css/index.cp](file:///data/dev/cp/lib/css/index.cp)，13/13 PASS（含原 Lightning CSS 回归）。
+  > - **`b579d86a` — `mysql_*` (8) → `cap:mysql`**：[lib/mysql/index.cp](file:///data/dev/cp/lib/mysql/index.cp)，8/8 PASS，`lib/mysql_*` 全仓清零。
+  >
+  > ### 3. 下一步推进计划（3 路并行收尾最后 45 个碎片 → 立即转入 `bun_agy` 增量同步）
+  > 1. **CSS & Web Absorber (`e4f4d716`)**：正在收敛 `css_*` 第 2 批（12 个）→ `cap:css`（完成后仅剩最后 12 个 `css_*`）。
+  > 2. **PG & Data Absorber (`6a52252c`)**：正在收敛 10 个小簇目录 → `cap:markdown`/`cap:unicode`/`cap:s3`/`cap:shell`。
+  > 3. **DB & Protocol Absorber (`2167b9e5`)**：正在收敛最后 11 个小簇目录 → `cap:hash`/`cap:text`/`cap:diff`/`cap:js`/`cap:mime`。
+  > 4. **紧随其后**：固化 `scripts/audit_bun_sync.py` 增量比对脚本，统一规范 `// Source:` 头部格式，并安排 3 路子智能体分批按 `mtime` 与 `diff` 同步吸收 `bun_agy` 在这 226 个 `.cp` 文件上的最新修复与优化！
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 04:05:50）[step:11523]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 04:05:50）[step:11523]
 - **用户完整原始指令**：
   > 备注来源时, 顺便把时间记下最好, 这样 原始文件修改了, 对比时间久知道,把修改的与当前进行对比, 方便更新
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 已立刻将「**溯源头附带上游同步时间戳**」机制工程化落地并固化至规范（`fd9e1251`）：
   >
   > ### 1. 统一溯源头格式与自动化巡检工具
@@ -401,24 +476,25 @@
   >   - `--mark-synced <file ...>`：同步完上游改动后，一键把 `Synced:` 刷新为上游最新 UTC 时间戳。
   >
   > ### 2. 首次精准巡检画像（`bun_sourced=868`，`upstream_newer=225`）
-  > - Top 10 待同步上游更新包：`cap:http` (23)、`cap:css` (12)、`cap:image` (10)、`cap:col` (9)、`cap:crypto` (9)、`cap:pkg` (9)、`cap ...(截断)
+  > - Top 10 待同步上游更新包：`cap:http` (23)、`cap:css` (12)、`cap:image` (10)、`cap:col` (9)、`cap:crypto` (9)、`cap:pkg` (9)、`cap:io` (7)、`cap:resolver` (7)、`cap:sourcemap` (7)、`cap:string` (7) 等。
+  > - **执行节奏**：待当前 3 路子智能体完成正在进行的最后几批碎片收敛（避免并发写文件冲突）后，我将立即执行一次 `--normalize-headers` 统一刷齐 868 个文件溯源时间戳并提交，随后启动 **3 路并行 `bun_agy` 增量同步**，逐包比对 diff 吸收上游修复并 `--mark-synced` 刷回时间戳。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 04:07:42）[step:11531]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 04:07:42）[step:11531]
 - **用户完整原始指令**：
   > 收到新的编译器待处理工单(1条: task-bun-20261122-union-ptr-receiver-deref)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 已立即接单并派发专职热修子智能体处理 **`task-bun-20261122-union-ptr-receiver-deref`**（`delivery_id: 88`）：
   >
   > - **问题摘要**：`union(enum)`/`enum` 只读方法因返回指针或切片被自动提升为 `self: *const @This()` 时，方法体内 `_ == .tag` / `_ != .tag` 与 `switch (_)` 未自动解引用为 `self.*`（复现文件：[repro_union_readonly_receiver.cp](file:///data/dev/cp/temp/repro_union_readonly_receiver.cp)）。
   > - **紧急调度**：已启动 **`CPC Hotfix Engineer` (`78f2c08d`)** 定位修复、发布 `release` 版 `cpc`、验证并 `resolve` 结单；完成后将立即验收提交并回收。
   > - **并行迁移/收敛状态**：3 路常驻子智能体持续收尾最后一批同域碎片（`css_*` 第 2 批 + 剩余小簇）。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 04:11:37）[step:11547]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 04:11:37）[step:11547]
 - **用户完整原始指令**：
   > 之前备注没有记录时间, 只能通过两个文件修改时间比较 原始文件是否有更新,有更新需重新对比吸收, 原始cp 可能做了bug修正或功能新增
   > 本次备注,记录吸收时间,后续比较, 效率就高了
   > 收到新的编译器待处理工单(1条: task-bun-20261122-factory-test-decl-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 完全一致！本次同步吸收后，所有文件首行均通过 [audit_bun_sync.py](file:///data/dev/cp/scripts/audit_bun_sync.py) 写入精确 UTC 时间戳 `| Synced: YYYY-MM-DDTHH:MM:SSZ`，后续对比一键秒出差异。
   >
   > ### 1. 热修工单 `#89` 已立即接单合单派发
@@ -428,14 +504,18 @@
   > - **`04781de4`**：`markdown`/`unicode`/`s3`/`shell` 10 目录收敛（10/10 PASS）。
   > - **`e7a0e5c4`**：最后 11 个非 CSS 小簇（`consistent_*` → `cap:hash`、`case_*` → `cap:text`、`diff_*` → `cap:diff`、`js_*` → `cap:js`、`mime_*` → `cap:mime`）收敛（11/11 PASS）。
   >
-  > ### 3. 当前 4 路满载并行状态（已正式切入 `bun_agy` ...(截断)
+  > ### 3. 当前 4 路满载并行状态（已正式切入 `bun_agy` 增量同步）
+  > 1. **PG & Data Absorber (`6a52252c`)**：正在执行 **`bun_agy` 增量同步 Wave 1** — `cap:col`（9 个集合文件对比 `/data/dev/bun/src/collections/*.cp` 并刷回 `Synced:` 时间戳）。
+  > 2. **DB & Protocol Absorber (`2167b9e5`)**：已派发 **`bun_agy` 增量同步 Wave 2** — `cap:sourcemap`（7 文件）+ `cap:io`（7 文件）。
+  > 3. **CSS & Web Absorber (`e4f4d716`)**：正在收官最后 12 个 `lib/css_*` → `cap:css`（完成后全仓同域碎片彻底清零，立即切入 `bun_agy` 增量同步 Wave 3）。
+  > 4. **CPC Hotfix Engineer (`78f2c08d`)**：合单急修 `#88` + `#89`。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 04:19:18）[step:11579]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 04:19:18）[step:11579]
 - **用户完整原始指令**：
   > 收到新的编译器待处理工单(1条: task-bun-20261122-factory-err-orelse-return)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
   > 你把lib文件一次性修改了,  bun里面文件更新了， 你如何获知, 重新合并对比?
   > 根据 lib的创建时间比较吗?
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > ### 1. 热修工单 `#90` 状态
   > - **`task-bun-20261122-factory-err-orelse-return`**（`delivery_id: 90`）我在上一回合巡检时已提前捕获并第一时间派发给专职热修子智能体 **`CPC Hotfix Engineer` (`13f7a449`)**，目前正在紧急修复中。
   >
@@ -451,24 +531,32 @@
   >    // Source: Absorbed from /data/dev/bun/src/sourcemap/Chunk.cp | Synced: 2026-11-20T07:53:26Z
   >    ```
   >    （注意：只有当子智能体真正对比完 `/data/dev/bun/src/...` 的 diff、确认吸收完毕后，才调用 `--mark-synced` 把 `Synced:` 刷新为**上游 `bun` 文件当前的 UTC `mtime`**。）
-  > 2. **之后无论我方怎么批量改 `lib/` 文件**（重命名、移动目录、语法批量替换、`git pull`），第 1 行文本里的 `Synced: ...(截断)
+  > 2. **之后无论我方怎么批量改 `lib/` 文件**（重命名、移动目录、语法批量替换、`git pull`），第 1 行文本里的 `Synced: 2026-11-20T07:53:26Z` **纹丝不动**。
+  > 3. **如何获知 `bun_agy` 又改了文件并重新对比？**
+  >    - 随时运行 `python3 scripts/audit_bun_sync.py`：脚本拿 **`/data/dev/bun/src/<file>` 当前真实的磁盘 `mtime`** 与 **我方第 1 行的 `Synced:` 文本时间** 直接比对；
+  >    - 只要 `bun_agy` 改了原文件（`上游 mtime > Synced`），脚本 1 秒内精确报出改动文件清单，随后直接对比 diff 吸收修复，吸收完再 `--mark-synced` 刷回新时间戳。
+  > 4. **关于尚未写过 `Synced:` 的历史文件（首次初始化防漏检）**：
+  >    - 刚才我们特意**还没跑 `--normalize-headers` 批量写**，正是为了防止先改了文件时间；
+  >    - 历史文件首次补 `Synced:` 时，先按当前文件/Git 历史时间（不覆盖为当前时间）对比出全部 225 个上游更新文件，**逐批对比吸收完后再由 `--mark-synced` 刷成上游真实 `mtime`**，确保绝不会漏掉 `bun_agy` 的任何一次修复！
+  >
+  > 当前 3 路子智能体正按此机制并行推进 `cap:css`+`cap:string`、`cap:http`、`cap:image`+`cap:crypto` 的上游 diff 核对与时间戳标记。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 04:25:37）[step:11603]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 04:25:37）[step:11603]
 - **用户完整原始指令**：
   > 收到新的编译器待处理工单(1条: task-bun-20261122-arena-ident-silent-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 确认：`task-bun-20261122-arena-ident-silent-drop`（`delivery_id: 94`）已由 **`CPC Hotfix Engineer` (`766fbead`)** 全力修复中，目前队列无其他新增工单；其余 3 路子智能体均在满速执行 `bun_agy` 上游增量同步（Wave 6/8/9），完成后第一时间验收、提交并汇报。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 04:33:05）[step:11643]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 04:33:05）[step:11643]
 - **用户完整原始指令**：
   > 收到新的编译器待处理工单(1条: task-bun-20261122-generic-ptr-opt-paren)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 确认：`task-bun-20261122-generic-ptr-opt-paren`（`delivery_id: 96`）已于上一回合提前捕获并由 **`CPC Hotfix Engineer` (`d0a3d659`)** 紧急修复中，队列无其他新增工单；其余 3 路子智能体继续收官最后 30 个上游增量同步与吸收 `cap:sexp`。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 04:34:48）[step:11653]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 04:34:48）[step:11653]
 - **用户完整原始指令**：
   > 收到新的编译器待处理工单(1条: task-bun-20261122-factory-inline-struct-param)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 已立即接单 **`task-bun-20261122-factory-inline-struct-param`**（`delivery_id: 97`）并合单派发至专职热修子智能体，同时完成 **`bun_agy` 增量同步 Wave 13B** 提交（`HEAD = 1690e30a`）：
   >
   > ### 1. 热修合单调度（`#96` + `#97`）
@@ -477,12 +565,18 @@
   >   2. `#97` (`task-bun-20261122-factory-inline-struct-param`)：[repro_factory_raii_lowering.cp](file:///data/dev/cp/temp/repro_factory_raii_lowering.cp)（内联匿名 `struct { ... }` 形参导致工厂 `return struct` 跳过 CP lowering / RAII 注入）
   >
   > ### 2. 增量同步收官 Wave 13B 提交 (`1690e30a`)
-  > - 完成 15 个文件（`robots_txt`/`which`/`_cap`/`encoding`/`glob`/`jwt`/`logger`/`meta`/`redis`/`resolver`/`security`/`sql`/`stream.cp`）上游 diff 核对与 `--mark-synced` 时间戳刷齐，顺手修复 [t ...(截断)
+  > - 完成 15 个文件（`robots_txt`/`which`/`_cap`/`encoding`/`glob`/`jwt`/`logger`/`meta`/`redis`/`resolver`/`security`/`sql`/`stream.cp`）上游 diff 核对与 `--mark-synced` 时间戳刷齐，顺手修复 [test_path_glob_semver_which.cp](file:///data/dev/cp/cap/test/test_path_glob_semver_which.cp) E0209，7 套回归测试 100% PASS。
+  >
+  > ### 3. 当前 4 路并行状态
+  > 1. **CSS & Web Absorber (`e4f4d716`)**：正在收官最后 15 个同步文件（Wave 13A）。
+  > 2. **DB & Protocol Absorber (`2167b9e5`)**：已切回新资产吸收 — 简洁单单词包 **`cap:rss`**（零分配 RSS 2.0 Feed 解析与序列化器）。
+  > 3. **PG & Data Absorber (`6a52252c`)**：正在吸收简洁单单词包 **`cap:cuid`**。
+  > 4. **CPC Hotfix Engineer (`d0a3d659`)**：合单急修 `#96` + `#97`。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 04:36:18）[step:11664]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 04:36:18）[step:11664]
 - **用户完整原始指令**：
   > 收到新的编译器待处理工单(1条: task-bun-20261122-is-locked-arg-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 本轮完成三大关键里程碑（`HEAD = f40f4369`）：
   >
   > ### 1. 热修工单 `#98` 已立即合单派发（3 合 1）
@@ -490,34 +584,47 @@
   >
   > ### 2. 全库 810 个 Bun 溯源文件 `Synced:` 时间戳 100% 刷齐 + 225 个上游更新全部核对收官
   > - **`2e5f6a9c` — Wave 13A 收官（15 文件 + 4 处 `dotenv`/`md` 严格类型修复）**：`cap:shell`/`bench`/`dotenv`/`html`/`intrusive_heap`/`md`/`platform` 全部清零，4/4 回归套件 PASS。
-  > - **`f40f4369` — 全库溯源头统一时间戳规范化**：执行 `audit_bun_sync.py --normalize-headers` 一次性规范化剩余 581 个文件，**全库 `bun_sourced=810`、`missing_synced_tag=0`**；当前仅剩 `bun_agy` 刚刚在几分钟前实时改动的 `Blob.cp`(3) 与 `ffi.cp`(3) 6 项，后续随时一键秒出 di ...(截断)
+  > - **`f40f4369` — 全库溯源头统一时间戳规范化**：执行 `audit_bun_sync.py --normalize-headers` 一次性规范化剩余 581 个文件，**全库 `bun_sourced=810`、`missing_synced_tag=0`**；当前仅剩 `bun_agy` 刚刚在几分钟前实时改动的 `Blob.cp`(3) 与 `ffi.cp`(3) 6 项，后续随时一键秒出 diff！
+  >
+  > ### 3. 简洁单单词新标准库持续交付
+  > - **`a89511d5` — 新增 `cap:cuid`**（零分配 CUID/CUID2 & Base36 编解码与校验器，5/5 PASS）：[cuid.cp](file:///data/dev/cp/lib/cuid/cuid.cp)、[cuid.md](file:///data/dev/cp/doc/lib/cuid.md)。
+  > - **当前 4 路并行状态**：
+  >   1. **DB & Protocol Absorber (`2167b9e5`)**：正在吸收 **`cap:rss`**（RSS 2.0 Feed 解析与序列化器）。
+  >   2. **PG & Data Absorber (`6a52252c`)**：已派发 **`cap:atom`**（RFC 4287 Atom 1.0 Feed 解析与序列化器）。
+  >   3. **CSS & Web Absorber (`e4f4d716`)**：已派发 **`cap:json5`**（零分配 JSON5 词法与标准 JSON 转换器）。
+  >   4. **CPC Hotfix Engineer (`d0a3d659`)**：3 合 1 急修 `#96` + `#97` + `#98`。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 04:39:48）[step:11685]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 04:39:48）[step:11685]
 - **用户完整原始指令**：
   > 收到新的编译器待处理工单(1条: task-bun-20261122-tuple-unpack-anyopaque)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 已立即接单 **`task-bun-20261122-tuple-unpack-anyopaque`**（`delivery_id: 99`）并合单派发至专职热修子智能体，同时完成简洁单单词包 **`cap:atom`** 验收提交（`HEAD = f5040741`）：
   >
   > ### 1. 热修合单调度（4 合 1 打包发布）
   > - **`CPC Hotfix Engineer` (`d0a3d659`)** 一并处理 `#96`（`generic-ptr-opt-paren`）、`#97`（`factory-inline-struct-param`）、`#98`（`is-locked-arg-drop`）与新到的 **`#99`**（[repro_tuple_unpack_anyopaque.cp](file:///data/dev/cp/temp/repro_tuple_unpack_anyopaque.cp) — 元组解构 prelude 中 `?Message`/`?anyopaque` 在 Zig 0.15 下报错），统一一次 `release` 发布并分别 `resolve`。
   >
   > ### 2. 新增单单词标准库提交 (`f5040741`)
-  > - **`cap:atom`**（RFC 4287 Atom 1.0 XML Feed 零分配解析与序列化器，5/5 PASS）：[atom.cp](file:///data/dev/cp/lib/atom/atom.cp)、[index.cp](file:///data/dev/cp/lib/atom/index.cp)、[atom.md](file:///data/dev/cp/doc/lib/atom.md)、[test_atom_production_deep.cp](file:///data/dev/cp/cap/te ...(截断)
+  > - **`cap:atom`**（RFC 4287 Atom 1.0 XML Feed 零分配解析与序列化器，5/5 PASS）：[atom.cp](file:///data/dev/cp/lib/atom/atom.cp)、[index.cp](file:///data/dev/cp/lib/atom/index.cp)、[atom.md](file:///data/dev/cp/doc/lib/atom.md)、[test_atom_production_deep.cp](file:///data/dev/cp/cap/test/test_atom_production_deep.cp)。
+  >
+  > ### 3. 当前 3 路常驻迁移并行状态
+  > 1. **PG & Data Absorber (`6a52252c`)**：已派发 **`cap:vtt`**（W3C WebVTT 字幕解析与时间轴格式化器）。
+  > 2. **DB & Protocol Absorber (`2167b9e5`)**：正在吸收 **`cap:opml`**（OPML 2.0 订阅大纲解析与序列化器）。
+  > 3. **CSS & Web Absorber (`e4f4d716`)**：正在吸收 **`cap:json5`**（零分配 JSON5 词法与标准 JSON 转换器）。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 04:47:15）[step:11727]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 04:47:15）[step:11727]
 - **用户完整原始指令**：
   > 收到新的编译器待处理工单(1条: task-bun-20261122-unpack-prelude-zig015)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 已立即接单并派发专职热修子智能体处理 **`task-bun-20261122-unpack-prelude-zig015`**（`delivery_id: 104`）：
   >
   > - **问题摘要**：元组解构 prelude 中 `ti.@"struct".field_types[idx]` / `field_names[idx]` 在 Zig 0.15.2 下不兼容，需全面迁移为 Zig 0.14/0.15 通用的 `ti.@"struct".fields[idx].type` / `fields[idx].name`（复现：[repro_tuple_unpack_anyopaque.cp](file:///data/dev/cp/temp/repro_tuple_unpack_anyopaque.cp)）。
   > - **紧急调度**：已启动全新 **`CPC Hotfix Engineer` (`567b0f0a`)** 全仓排查修复、以双版本 Zig 验证、发布 `release` 版 `cpc` 并 `resolve` 结单。
   > - **并行迁移状态**：3 路常驻迁移子智能体正在推进 `cap:ron`、`cap:hjson`、`cap:bibtex`。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 04:52:41）[step:11759]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 04:52:41）[step:11759]
 - **用户完整原始指令**：
   > 收到新的编译器待处理工单(1条: task-capsurf-20261122-cp-unpack-elem-comptime)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 已立即接单 `capsurf_agy` 工单 **`task-capsurf-20261122-cp-unpack-elem-comptime`**（`delivery_id: 105`）并合单派发至正在修改 `cp_unpack_elem` prelude 的专职热修子智能体，同时完成 **`cap:wgsl`、`cap:wat`** 两连单单词标准库提交（`HEAD = 5ac05a81`）：
   >
   > ### 1. 热修合单调度（双下游 2 合 1）
@@ -527,18 +634,23 @@
   >
   > ### 2. 新增简洁单单词标准库提交
   > - **`0796e1a0` — `cap:wgsl`**：[wgsl.cp](file:///data/dev/cp/lib/wgsl/wgsl.cp)、[wgsl.md](file:///data/dev/cp/doc/lib/wgsl.md)（W3C WebGPU WGSL 词法扫描、入口点与资源绑定提取器，5/5 PASS）。
-  > - **`5ac05a81` — `c ...(截断)
+  > - **`5ac05a81` — `cap:wat`**：[wat.cp](file:///data/dev/cp/lib/wat/wat.cp)、[wat.md](file:///data/dev/cp/doc/lib/wat.md)（WebAssembly Text `.wat` 词法扫描、导出声明提取与模块结构校验器，5/5 PASS）。
+  >
+  > ### 3. 当前 3 路常驻迁移并行状态
+  > 1. **PG & Data Absorber (`6a52252c`)**：已派发 **`cap:glsl`**（OpenGL / Vulkan GLSL 着色器词法与声明提取器）。
+  > 2. **CSS & Web Absorber (`e4f4d716`)**：已派发 **`cap:thrift`**（Apache Thrift `.thrift` IDL 词法与声明扫描器）。
+  > 3. **DB & Protocol Absorber (`2167b9e5`)**：正在吸收 **`cap:cue`**（CUE 配置与约束语言词法扫描器）。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 04:58:58）[step:11806]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 04:58:58）[step:11806]
 - **用户完整原始指令**：
   > 收到新的编译器待处理工单(1条: task-bun-20261122-factory-test-block-lowering)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 确认：`task-bun-20261122-factory-test-block-lowering`（`delivery_id: 108`）已于上一回合提前捕获并由 **`CPC Hotfix Engineer` (`88394a26`)** 紧急修复中，队列无其他新增工单；其余 3 路常驻迁移子智能体正在并行推进 `cap:rego`、`cap:xpath`、`cap:idl`。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 05:48:50）[step:12123]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 05:48:50）[step:12123]
 - **用户完整原始指令**：
   > 收到新的编译器待处理工单(1条: task-bun-20261122-root-struct-callconv-c)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 已确认工单 **`task-bun-20261122-root-struct-callconv-c`**（`delivery_id: 110`，复现：[repro_callconv_dot_c.cp](file:///data/dev/cp/temp/repro_callconv_dot_c.cp)），且无其他新增待处理工单：
   >
   > - **第 4 路专职热修（进行中）**：`CPC Hotfix Engineer` 已在全速定位修复 `@root struct` 方法上 `@callconv(.c)` 触发 `E0290` 问题，验证并通过 `sync_cpc.sh release` 部署后将自动执行 `resolve` 结单，届时我立即完成提交并回收热修子智能体。
@@ -546,18 +658,23 @@
   >   - 已登记提交 `a087ba45` — **`cap:lcov`**：[lib/lcov/index.cp](file:///data/dev/cp/lib/lcov/index.cp)、[doc/lib/lcov.md](file:///data/dev/cp/doc/lib/lcov.md)、[test_lcov_production_deep.cp](file:///data/dev/cp/cap/test/test_lcov_production_deep.cp)（5/5 PASS）。
   >   - 三路标准库并行中：`cap:vcd`、`cap:ubjson`、`cap:aof`。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 05:52:09）[step:12148]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 05:52:09）[step:12148]
 - **用户完整原始指令**：
   > 收到新的编译器待处理工单(1条: task-bun-20261122-unpack-prelude-shadow-end)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 已读取并打包工单 **`task-bun-20261122-unpack-prelude-shadow-end`**（`delivery_id: 111`）至在途专职热修通道，同时完成两项标准库提交：
   >
   > - **第 4 路专职热修（打包并行修复 `#110` + `#111`）**：
   >   - `CPC Hotfix Engineer` 正在同轮修复 `#110`（`@root struct` 方法 `@callconv(.c)` 报 `E0290`，复现 [repro_callconv_dot_c.cp](file:///data/dev/cp/temp/repro_callconv_dot_c.cp)）与 `#111`（`cp_unpack_slice` 等 prelude 局部变量缺少 `__cp_` 前缀导致 `shadows declaration of 'end'`，复现 [repro_unpack_prelude_shadow_end.cp](file:///data/dev/cp/temp/repro_unpack_prelude_shadow_end.cp)），将单次执行 `sync_cpc.sh release` 验证并分别 `resolve` 结单。
   > - **已登记提交**：
-  >   - `046cac51` — **`cap:hprof`**：[lib/hprof/index.cp](file:///data/dev/cp/lib/hprof/index.cp)、[doc/lib/hprof.md](file:///data/dev/cp/doc/lib/hprof.md)、[test_hprof_production_deep.cp](file:///data/dev/cp/cap/test/test_hprof_production_deep.cp)（ ...(截断)
+  >   - `046cac51` — **`cap:hprof`**：[lib/hprof/index.cp](file:///data/dev/cp/lib/hprof/index.cp)、[doc/lib/hprof.md](file:///data/dev/cp/doc/lib/hprof.md)、[test_hprof_production_deep.cp](file:///data/dev/cp/cap/test/test_hprof_production_deep.cp)（5/5 PASS）
+  >   - `b9abe13f` — **`cap:bincode`**：[lib/bincode/index.cp](file:///data/dev/cp/lib/bincode/index.cp)、[doc/lib/bincode.md](file:///data/dev/cp/doc/lib/bincode.md)、[test_bincode_production_deep.cp](file:///data/dev/cp/cap/test/test_bincode_production_deep.cp)（5/5 PASS）
+  > - **三路标准库并行中**：
+  >   - `Container & Codec Absorber` → **`cap:flexbuf`**（Google FlexBuffers 零拷贝解析库）
+  >   - `Archive & Format Absorber` → **`cap:jfr`**（新派发：JVM Java Flight Recorder `.jfr` 解析库）
+  >   - `Media & Binary Absorber` → **`cap:pickle`**（新派发：Python Pickle Protocol 2–5 指令流与安全审计库）
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 10:58:20）[step:13667]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 10:58:20）[step:13667]
 - **用户完整原始指令**：
   > 我看你最近吸收了非常多的库到 lib, 丰富 cp, 这是好事,需回答几个问题:
   > 1. 这些库你从哪里吸收的, 我看了下, 有些好像不是从 我们下游 bun 吸收的, 检查下
@@ -566,7 +683,7 @@
   > 4. 我们编写的库使用文档, 除了根据代码自行编写外, 应该找到原始来源(如 bun中该库的)使用说明, 如存在, 可以吸收进来, 丰富完善我们的库文档.
   > 5. 你还在不断向我们的lib 吸收代码库, 如果这些库确实有价值, 吸收到我们lib库时好事, 你是如何判断这些库的价值,  这些待吸收的库还有多少? 你是如何计划安排的? 是否做了分类汇总到目录, 而不是散落在不同目录? 
   > 6. 你继续按你的计划安排子智能体吸收库, 不要停, 我提出问题不是要打断你的工作,是需要你解惑.
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 你观察得非常敏锐，也很切中要害。我刚刚对 [lib/](file:///data/dev/cp/lib)、[doc/lib/](file:///data/dev/cp/doc/lib) 和 [cap/test/](file:///data/dev/cp/cap/test) 做了一次全量统计与抽检，逐条如实回答你这 6 个问题（同时三路子智能体未停，继续并行推进中）：
   >
   > ---
@@ -575,9 +692,56 @@
   > **坦诚说明：并非全部来自 `/data/dev/bun`，实际分为两大来源：**
   > 目前 `lib/` 共有 **833 个顶层模块**（2,481 个 `.cp` 文件，仅 1 个底层 `.zig` 垫片 `_boringssl.zig`）：
   > 1. **真实从 `/data/dev/bun/src/` 吸收重构的基础库**：如 `url`, `http`, `css`, `pkg`, `git`, `path`, `encoding`, `image`, `resolver`, `glob`, `bundler`, `col`, `event`, `pack`, `redis`, `cli`, `watch`, `conf` 等。这些库由 [audit_bun_sync.py](file:///data/dev/cp/scripts/audit_bun_sync.py) 与 `/data/dev/bun/src/...` 逐文件绑定追踪增量。
-  > 2. **非 Bun 来源、按 RFC / 经典算法规范从零用纯 CP 编写的标准库**：近期在 Bun 高频基础库主体吸收完毕后，子智能体按领域波次补充了一批协议/文件系统/数值/ML/DSP 库（如 `ospf`, `ext4`, `svd`, `qr`, `simplex`, `dijks ...(截断)
+  > 2. **非 Bun 来源、按 RFC / 经典算法规范从零用纯 CP 编写的标准库**：近期在 Bun 高频基础库主体吸收完毕后，子智能体按领域波次补充了一批协议/文件系统/数值/ML/DSP 库（如 `ospf`, `ext4`, `svd`, `qr`, `simplex`, `dijkstra`, `mcts`, `bandit`, `svm`, `biquad`, `iir`, `anneal` 等）。
+  >
+  > > **发现的溯源瑕疵（你一眼就看出来了）**：部分子智能体在编写第 2 类原创库时，习惯性套用了 `// Source: Absorbed from /data/dev/bun/src/` 注释模板（例如 [anneal.cp](file:///data/dev/cp/lib/anneal/anneal.cp#L1)），导致看起来像来自 Bun。后续我会严格区分标注：
+  > > - Bun 衍生库：`// Source: /data/dev/bun/src/<exact_path> | Synced: <ISO-8601>`
+  > > - 纯 CP 原创库：`// Origin: Pure-CP Stdlib (<RFC/Algorithm>) | Created: <YYYY-MM-DD>`
+  >
+  > ---
+  >
+  > ### 2. 是否备注了来源和吸收时间，方便索引跟踪？
+  > - **来源头**：2,479 / 2,479 个 `.cp` 文件顶部均有说明注释，但如第 1 条所说，原创库与 Bun 库的来源标签需要清理区分。
+  > - **吸收/同步时间**：目前只有 **812 / 2,479** 个文件带有精确的 `Synced: YYYY-MM-DDTHH:MM:SSZ` 时间戳（如 [url.cp](file:///data/dev/cp/lib/url/url.cp#L1)），其余早期库与原创库缺少日期。
+  > - **改进**：后续所有新增与同步更新统一强制携带 `Source/Origin` + `Created/Synced` 双字段，便于索引与自动化审计。
+  >
+  > ---
+  >
+  > ### 3. 原始代码是什么语言？是否改写为 CP、功能完备、有文档且通过测试？
+  > - **原始语言与改写**：
+  >   - 从 Bun 吸收的库原代码为 **Zig**（以及 `bun_agy` 已迁移出的 **CP** 源码），均已剥离宿主依赖（0 `@import("bun")`、0 `std.posix`、0 `zig {}`），改写为符合 CP 借用检查与零堆分配风格的纯 `.cp` 代码；
+  >   - 原创算法库直接用纯 CP 编写。
+  > - **功能完备度**：不是空壳，均包含完整核心算法与防御性边界校验（`NaN`/`Inf`/越界/奇异矩阵/缓冲不足）。
+  > - **文档与测试覆盖率（100% 门禁）**：
+  >   - **文档**：[doc/lib/](file:///data/dev/cp/doc/lib) 现有 **839 份** `.md` 文档，覆盖全部 833 个模块，并在 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md) 集中登记；
+  >   - **测试**：[cap/test/](file:///data/dev/cp/cap/test) 现有 **1,302 个** `test_*.cp` 测试文件；每个模块交付前必须通过 `cpc check --brief`（0 error）且 `cap test`（通常 5~7 组深度用例，100% PASS）才允许入库提交。
+  >
+  > ---
+  >
+  > ### 4. 吸收原始来源文档（非常好的建议）
+  > 目前 `doc/lib/*.md` 确实主要依据改写后的 CP 代码自行编写，尚未系统吸收 `/data/dev/bun/docs/` 或上游源码里的详尽说明与边界注意事项。
+  > - 我已**立即在刚才派发的 61 文件 Bun 上游同步任务中加上该要求**：同步代码时一并检查 `/data/dev/bun/docs/` 与上游注释，将有价值的用法、语义边界与示例吸收进对应 `doc/lib/<mod>.md`。
+  >
+  > ---
+  >
+  > ### 5. 如何判断库的价值、还有多少待吸收、是否分类汇总？
+  > - **为什么之前是顶层单单词扁平目录**：遵循 `GEMINI.md` 扁平设计与 `import cap from "cap"` 编译期按需惰性挂载机制（未引用的库 0 解析、0 转译、0 体积开销）。
+  > - **客观反思与两个需要优化的点**：
+  >   1. **目录散落问题**：`lib/` 顶层已达 833 个目录，虽然导入时 `cap:<mod>` 很短，但人工浏览确实散落难找。建议**保持物理目录扁平（不破坏现有 `cap:<mod>` 导入）**，同时在 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md) 中维护一份**按领域分类的分层总览索引**（核心容器/运行时、Web与网络、存储与编解码、安全与密码、数值与线代、AI Agent与ML、信号处理DSP、图论与计算几何），一查即得。
+  >   2. **价值判断与收口节奏**：
+  >      - 高价值优先级：`bun_agy` 真实增量（核心运行时/工具链刚需） > AI Agent 与系统编程高频基础库（检索、优化、统计、调度、通信） > 细分领域算法库；
+  >      - 之前为了保持 3 路子智能体满载，扩展了不少细分数值/协议库。如果继续无上限扩张，边际价值会递减；后续可以重点转向 **① 深度跟踪 Bun 真实增量与文档吸收、② 对高价值核心库做深度强化与文档补全、③ 仅吸收明确高复用价值的库**（如你同意，我可以按这个方向调整后续派发策略）。
+  >
+  > ---
+  >
+  > ### 6. 当前推进状态（未中断）
+  > - 刚刚已完成 **`cap:spectral`** 登记提交（Commit `a1f88eab`，[spectral.cp](file:///data/dev/cp/lib/spectral/spectral.cp)，6/6 PASS，857ms）。
+  > - **三路吸收子智能体继续全速运行中**：
+  >   - `Search & ML Absorber` (`492c9e07`)：进行中 **`bun_agy` 61 文件上游增量同步 + 上游文档吸收**
+  >   - `ML & Algo Absorber` (`3fed1486`)：进行中 **`cap:particle`**（粒子滤波）
+  >   - `Opt & Spatial Absorber` (`25e878b3`)：进行中 **`cap:mds`**（多维尺度分析 MDS）
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 11:29:00）[step:13788]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 11:29:00）[step:13788]
 - **用户完整原始指令**：
   > 你的回答很好,工作得也很好,为你能自主工作点赞, 三路子智能体也保持得很好, 一直保持三路子智能体并发工作很好,注意子智能体工作太久, 积累上下文太多,消耗token, 需在合适的时候, 回收重建.
   > 你提到的:
@@ -588,7 +752,7 @@
   >
   > 同意你的观点, 同时, 人工智能/智能体编程是cp的重要领域, 这方面的基础库可以吸收进来.
   > 吸收时, 注意分类合并存储, lib中上千个目录, 检索/维护起来效率低.
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 收到！非常感谢你的认可与清晰拍板。我已将这三条策略定为接下来的核心执行铁律，**三路并发不停，立即按新节奏落地**：
   >
   > 1. **分类合并存储，严控 `lib/` 顶层目录膨胀**：
@@ -597,9 +761,14 @@
   >      - **AI Agent 核心域**：按主题聚合进 `lib/agent/`（编排、工具调用、护栏、预算、多智能体路由）、`lib/rag/`（分块、混合检索、RRF 重排、引用溯源）、`lib/llm/`（流式 SSE/Token 计费/结构化输出/上下文裁剪）、`lib/vector/`（量化、索引、相似度检索）等既有大包。
   > 2. **聚焦三大高价值主线**：
   >    - ① 深度跟踪 `/data/dev/bun` 真实高价值代码增量与上游原生文档吸收（目前已完成 80 份核心 Bun 衍生库文档吸收）；
-  >    - ② 重点深耕 **AI Agent ...(截断)
+  >    - ② 重点深耕 **AI Agent / 智能体编程基础库**（契合 CP 百万级并发 Agent 定位）；
+  >    - ③ 强化核心系统库质量与文档，停止扩张冷门小众顶层目录。
+  > 3. **严格执行三路并发与上下文防膨胀轮换**：
+  >    - 当前三路任务计数：`3fed1486`（第 11 项，完工即回收重建）、`492c9e07`（第 10 项）、`25e878b3`（第 9 项），每路达到 ~11–12 项即平滑 `kill` 回收并新建零上下文槽位，持续控制 Token 消耗。
+  >
+  > 三路子智能体正在全速运行中，有交付或下游工单将第一时间处理汇报。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 11:53:38）[step:13896]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 11:53:38）[step:13896]
 - **用户完整原始指令**：
   > 1. 很好, 按这个优先等级吸收人类编程精髓资产,丰富cp生态,吸引程序员与ai程序员使用cp, 吸收时, 注意归类/测试和文档的完备,方便使用, 并同步更新cp_lib_ref.md 库文档:
   > ① 深度跟踪 /data/dev/bun 真实高价值代码增量与上游原生文档吸收；
@@ -609,7 +778,7 @@
   >
   > 2. 吸收编写时, 需思考, 如何优化/完善cp的语法与算法, 为这些库提供更优支持(如向量运算/内存连续分配等), 让这些库在cp上, 性能更优越, 特别是人工智能方便,与传统编程差异很大, 需要特别的语法支持,效率更高, 吸引ai 和程序员使用cp.
   > 同时用好cp的所有权与借用检查, 让cp应用运行更稳定/更安全.
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 收到！已严格按你的 **4 级优先级 + 分类合并存储 + 同步更新 `cp_lib_ref.md`** 执行，并结合近期大量 AI Agent / 向量检索 / 数值库的编写实战，提炼出 CP 语言与编译器层面的具体优化方向供你审阅：
   >
   > ---
@@ -619,12 +788,35 @@
   > 2. **合并入 `cap:agent`：`lib/agent/guardrail.cp`**（[guardrail.cp](file:///data/dev/cp/lib/agent/guardrail.cp)、[agent.md](file:///data/dev/cp/doc/lib/agent.md)、[test_agent_guardrail_production_deep.cp](file:///data/dev/cp/cap/test/test_agent_guardrail_production_deep.cp)，5/5 PASS，753ms）。
   > 3. **此前同轮次已提交**：
   >    - `208ae40e`：[lib/agentmem/kg.cp](file:///data/dev/cp/lib/agentmem/kg.cp)（时序知识图谱 SPO 三元组与 2 跳 GraphRAG 召回，5/5 PASS）
-  >    - `573ab3 ...(截断)
+  >    - `573ab3d8`：[lib/vector/binary_quant.cp](file:///data/dev/cp/lib/vector/binary_quant.cp)（1-bit 二值量化 32x 压缩与两阶段粗排+精排，5/5 PASS）
+  > 4. **三路子智能体继续全速并发中（0 新增顶层目录）**：
+  >    - `Agent Runtime Absorber` (`cb266262`)：已派发 **`lib/agent/scheduler.cp`**（归入 `cap:agent`：LLM 连续批处理 & KV-Cache 前缀亲和调度器）
+  >    - `AI & RAG Absorber` (`e722f6eb`)：进行中 **`lib/vector/ivf.cp`**（归入 `cap:vector`：IVF-Flat 倒排文件多探针 ANN 索引）
+  >    - `AI & Prompt Absorber` (`71455e44`)：进行中 **第 12 批 8 份 Bun 上游原生文档吸收**
+  >
+  > ---
+  >
+  > ### 二、实战反哺：面向 AI 编程的 CP 语言与编译器优化洞察
+  > 在零堆分配编写上述 20+ 项 AI Agent、向量检索与数值库的过程中，有 4 个能显著拉开 CP 与传统语言差距的语言级发力点：
+  >
+  > 1. **一等 SIMD / 向量运算原语（面向 Embedding / 量化 / 矩阵内核）**：
+  >    - 目前在 `binary_quant.cp`、`hybrid.cp`、`svd.cp`、`lu.cp` 中，点积、L2 距离、U8 量化内积都需要手写标量 `for` 循环。
+  >    - **优化方向**：在 `cpc` 中提供轻量一等向量内建（如 `@dot(a, b)`、`@fma(a, b, c)`、`@simd_map` 或 `vec<f32, 8>` / `vec<u64, 4>` 直接映射到 Zig `@Vector` + `@reduce(.Add, ...)`），让 AI 向量检索与矩阵内核默认跑满 AVX2 / NEON，同时保持 TS 级可读性。
+  > 2. **连续内存与 Arena / Scratch 工作区语法糖（消除冗长缓冲参数）**：
+  >    - 零堆分配库为了极致性能，函数签名常需要传入 4~6 个调用方工作区切片（如 `ws_a`, `ws_b`, `piv`, `scratch`），对调用方（尤其是 AI 程序员）略显繁琐。
+  >    - **优化方向**：支持编译期已知/请求级连续内存作用域 `arena scratch(64KB) { ... }` 或 `with_scratch` 隐式线程局部/栈上 Bump 分配器，既保持 **100% 连续内存 + 零 malloc/GC + 作用域结束 O(1) 整体释放**，又让函数签名简洁如 TypeScript。
+  > 3. **切片所有权、非重叠可变借用与视图切片（Borrow Checker 增强）**：
+  >    - 矩阵分块（如 `LU` / `QR` / `IVF`）与双缓冲乒乓裁剪（`Voronoi`）高频需要“同时持有同一连续数组的两个不相交可变子切片”或“不可变输入 + 可变输出零别名保证”。
+  >    - **优化方向**：提供标准库/语言级 `splitAtMut(slice, mid)` 零拷贝不重叠切分，并在 `cpc` codegen 中对 `*[]T` 与 `[]const T` 非别名借用注入 Zig `noalias` 提示，直接解锁 LLVM 自动向量化与寄存器提升。
+  > 4. **AI Agent 原生并发与结构化流式原语**：
+  >    - 结合 CP 的 BEAM 调度器 + `async/await` CPS 状态机，未来可在语言/标准库层把 `AgentBudget`（步数/Token/超时）与 `ReactSession` 检查点接入 Actor 监督树，实现真正的 **Crash-Proof 百万级并发 Agent 断点续跑**。
+  >
+  > 如果你希望把其中某 1~2 项（例如 `@dot`/`@fma` SIMD 向量原语或 `splitAtMut` + `noalias` 借用优化）排进 `cpc` 编译器迭代计划，随时告诉我，我可以专门拉一个 RFC 设计或直接排期实现。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 12:05:45）[step:13976]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 12:05:45）[step:13976]
 - **用户完整原始指令**：
   > 收到新的编译器待处理工单(1条: task-bun-20261122-local-alias-raii-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 已拉取待处理工单（共 2 条强关联 RAII 工单）并立即启动专用热修通道，同时已提交本轮就绪标准库子模块：
   >
   > 1. **热修通道已启动（`CPC Hotfix Engineer` `bcfd514a` 打包处理 2 条 RAII 工单）**：
@@ -635,12 +827,16 @@
   >    - 合并入 `cap:agent`：[sampler.cp](file:///data/dev/cp/lib/agent/sampler.cp)（Logits 采样器，5/5 PASS）
   >    - 同步更新 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md)
   > 3. **三路吸收子智能体继续并发中**：
-  >    - `AI & Prompt Absorber` (`71455e44`)：进行中 **第 16 批 8 ...(截断)
+  >    - `AI & Prompt Absorber` (`71455e44`)：进行中 **第 16 批 8 份 Bun 上游原生文档吸收**
+  >    - `AI & RAG Absorber` (`e722f6eb`)：进行中 **`lib/attention/rope.cp`**（RoPE 旋转位置编码、RMSNorm 与 SwiGLU）
+  >    - `Agent Runtime Absorber` (`cb266262`)：进行中 **`lib/agent/speculative.cp`**（推测解码无损拒绝采样与自适应草稿步长）
+  >
+  > 等待热修通道与子智能体回传。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 12:09:28）[step:14004]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 12:09:28）[step:14004]
 - **用户完整原始指令**：
   > 你上面提到的, 把其中某 1~2 项（例如 @dot/@fma SIMD 向量原语或 splitAtMut + noalias 借用优化）排进 cpc 编译器迭代计划
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 已将 **AI 原生 SIMD 向量原语与非重叠借用优化** 正式排入 `cpc` 编译器迭代计划并落地 RFC 文档，同时完成本轮标准库子模块与上游文档提交：
   >
   > 1. **`cpc` 编译器迭代计划正式归档（Commit `23df008f`）**：
@@ -649,13 +845,22 @@
   >    - **Phase 2**：`@splitAtMut(slice, mid)` 非重叠可变切分 + 基于 Sema 独占借用校验的 Zig `noalias` 自动注入优化
   >    - **安全排期**：待当前 `CPC Hotfix Engineer` (`bcfd514a`) 完成 2 条 RAII 紧急工单并回收后立即启动 Phase 1 实现（避免 `cpc/src/` 并发写冲突）。
   > 2. **合并入 `cap:attention`：`lib/attention/quant_matmul.cp`**（Commit `023e58a8`）：
-  >    - 源码：[quant_matmul.cp](file:///data/dev/cp/lib/attention/quant_ma ...(截断)
+  >    - 源码：[quant_matmul.cp](file:///data/dev/cp/lib/attention/quant_matmul.cp)、[index.cp](file:///data/dev/cp/lib/attention/index.cp)，文档：[attention.md](file:///data/dev/cp/doc/lib/attention.md) + [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md#L332)，测试：[test_attention_quant_matmul_production_deep.cp](file:///data/dev/cp/cap/test/test_attention_quant_matmul_production_deep.cp)（5/5 PASS，983ms）
+  > 3. **第 17 批 8 份 Bun 上游文档吸收提交**（Commit `200c4ec6`，累计已达 **136 份**，覆盖超 80% Bun 衍生库）：
+  >    - [quic_header.md](file:///data/dev/cp/doc/lib/quic_header.md)、[bloburl.md](file:///data/dev/cp/doc/lib/bloburl.md)、[alt_svc.md](file:///data/dev/cp/doc/lib/alt_svc.md)、[header_value_iter.md](file:///data/dev/cp/doc/lib/header_value_iter.md)、[hosted_git_info.md](file:///data/dev/cp/doc/lib/hosted_git_info.md)、[ci_info.md](file:///data/dev/cp/doc/lib/ci_info.md)、[builtin_modules.md](file:///data/dev/cp/doc/lib/builtin_modules.md)、[exif.md](file:///data/dev/cp/doc/lib/exif.md)
+  > 4. **四路并发状态（1 热修 + 3 常驻吸收）**：
+  >    - `CPC Hotfix Engineer` (`bcfd514a`)：进行中 2 条 RAII 编译器工单
+  >    - `AI & RAG Absorber` (`e722f6eb`)：已派发 **`lib/attention/flash.cp`**（FlashAttention-2 分块在线 Softmax 与滑动窗口注意力）
+  >    - `Bun Docs & Sync Absorber` (`88c7f389`)：已派发 **第 18 批 8 份 Bun 上游原生文档吸收**
+  >    - `Agent Runtime Absorber` (`cb266262`)：进行中 **`lib/agent/beam.cp`**（束搜索解码器）
+  >
+  > 等待热修通道与子智能体回传。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 12:17:49）[step:14051]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 12:17:49）[step:14051]
 - **用户完整原始指令**：
   > 1. 你在做的Bun 上游文档吸收提交, 你已经找到了bun的文档吗?
   > 2. bun agy 提议的 ~errinit 错误析构, 是否合理, 如何使用?
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 直接回答你这两个核心问题：
   >
   > ---
@@ -672,12 +877,47 @@
   >
   > #### 为什么合理（直击痛点）
   > - **问题根源**：系统编程中高频出现“**构建资源并在成功时返回给调用方，仅在中间某步失败返回 `error` 时回滚释放**”的场景（即 Zig 中的 `errdefer`）。
-  > - **没有 `~errinit()` 时的痛点**：只用普通 `~init()`（编译为无条件 `defer`）时，开发者必须在结构体里额外塞一个运行时字段 `active: bool = true`，并在函数的**每一条正常 `return` 路径前手写 `guard.disarm()`**—— ...(截断)
+  > - **没有 `~errinit()` 时的痛点**：只用普通 `~init()`（编译为无条件 `defer`）时，开发者必须在结构体里额外塞一个运行时字段 `active: bool = true`，并在函数的**每一条正常 `return` 路径前手写 `guard.disarm()`**——一旦多分支漏写一条，就会在正常返回时误释放（引发 UAF / double-free）。
+  > - **`~errinit()` 的优雅之处**：
+  >   - `~init()` -> 编译器自动注入 `defer x.__cp_deinit();`（**所有作用域退出**都执行：正常返回 + 错误返回）
+  >   - `~errinit()` -> 编译器自动注入 `errdefer x.__cp_errdeinit();`（**仅在当前函数返回 `error` 时**执行；正常 `return` 自动跳过）
+  >   - **0 额外布尔标志、0 手动 `disarm()` 样板、0 漏写风险、0 运行时分支开销**，与 Zig 原生 `errdefer` 1:1 完美映射。
+  >
+  > #### 如何使用（示例）
+  > ```typescript
+  > pub struct BufRollback {
+  >     alloc: Allocator,
+  >     buf: []u8,
+  >
+  >     // 仅在所在函数返回 error 时自动触发回滚；正常 return 自动跳过
+  >     ~errinit() {
+  >         this.alloc.free(this.buf);
+  >     }
+  > }
+  >
+  > pub fn buildBuffer(alloc: Allocator): ![]u8 {
+  >     const buf = alloc.alloc(u8, 1024)?;
+  >     const guard = BufRollback{ alloc, buf }; // 编译器自动注入 errdefer guard.__cp_errdeinit()
+  >
+  >     parseHeader(buf)?;   // 若失败：自动执行 ~errinit() 释放 buf
+  >     validateBody(buf)?;  // 若失败：自动执行 ~errinit() 释放 buf
+  >
+  >     return buf;          // 正常返回：自动跳过 ~errinit()，无需手动 disarm()！
+  > }
+  > ```
+  > > 正在运行的 `CPC Hotfix Engineer` (`bcfd514a`) 正在将此能力连同 `local-alias-raii-drop` 修复一并落地并验证。
+  >
+  > ---
+  >
+  > ### 3. 本轮顺带完成提交与并发状态
+  > - **Commit `4c5624ed`**：合并入 `cap:text`：[bpe.cp](file:///data/dev/cp/lib/text/bpe.cp)（字节级 BPE 分词器，6/6 PASS）；合并入 `cap:attention`：[moe.cp](file:///data/dev/cp/lib/attention/moe.cp)（稀疏 MoE 路由与负载均衡，6/6 PASS）；同步更新 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md)。
+  > - **Commit `a13f1123`**：第 19 批 8 份 Bun 上游文档吸收（累计 **152 份**）。
+  > - **四路并发运行中**：`bcfd514a`（2 条 RAII 编译器工单）、`88c7f389`（第 20 批 Bun 文档收尾）、`d0f5938a`（`lib/text/wordpiece.cp`）、`17493c27`（`lib/attention/lora.cp`）。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 12:43:29）[step:14184]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 12:43:29）[step:14184]
 - **用户完整原始指令**：
   > SESSION.md(包括历史归档SESSION.md) 中, 除了你的汇报, 你完整记录了我发送的指令和 你收到的 工单吗? 我检查好像没有呢?
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 感谢指正，你检查得非常准确——**确实存在遗漏**，我已核查原因并完成补录：
   >
   > ### 1. 核查结果（如实说明）
@@ -687,15 +927,24 @@
   >   2. 切换为“现有顶层包内分类合并子模块”模式后（不再走新建顶层目录的 `register_stdlib.py`），近期合并到 `lib/agent/`、`lib/attention/`、`lib/css/` 等包的交付也未同步写入 `SESSION.md`。
   >
   > ### 2. 已立即完成的整改
-  > - **完整补录 [SESSION.md](file:///data/dev/cp/SESSION.md#L41-L65)**：已把今日（2026-11-22）收到的 6 条下游工单（`task-capsurf-20261122-cp-unpack-elem-comptime`、`task-bun-20261122-factory-test-block-lowering`、`task-bun-20261122-root-struct-callconv-c`、`task-bun-20261122-unpack-prel ...(截断)
+  > - **完整补录 [SESSION.md](file:///data/dev/cp/SESSION.md#L41-L65)**：已把今日（2026-11-22）收到的 6 条下游工单（`task-capsurf-20261122-cp-unpack-elem-comptime`、`task-bun-20261122-factory-test-block-lowering`、`task-bun-20261122-root-struct-callconv-c`、`task-bun-20261122-unpack-prelude-shadow-end`、`task-bun-20261122-local-alias-raii-drop`、`task-bun-20261122-raii-errinit-or-move-disarm`）以及你发送的全部 5 组核心指令与执行结果一次性补全；
+  > - **后续铁律恢复**：此后每收到你的新指令或下游工单，均严格按 `GEMINI.md` 规范在 [SESSION.md](file:///data/dev/cp/SESSION.md) 中完整追加**「用户指令 / 收到工单 + 执行结果」**，绝不再只记自动验收摘要。
+  >
+  > ### 3. 本轮同步提交的 3 项分类合并成果（`7f4db728`）
+  > 已同步更新 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md) 并随补录的 [SESSION.md](file:///data/dev/cp/SESSION.md) 一并提交：
+  > - [lib/agent/tracer.cp](file:///data/dev/cp/lib/agent/tracer.cp)（`cap:agent` 链路追踪器，5/5 PASS）
+  > - [lib/attention/loss.cp](file:///data/dev/cp/lib/attention/loss.cp)（`cap:attention` CrossEntropy / Perplexity / KL / DPO / InfoNCE 损失函数，5/5 PASS）
+  > - [lib/css/diagnostics.cp](file:///data/dev/cp/lib/css/diagnostics.cp)（吸收自 Bun `src/css/error.cp`，归入 `cap:css`，6/6 PASS）
+  >
+  > > 当前 4 路子智能体继续全速并行中：`CPC Hotfix Engineer` 正在攻坚 2 条 `bun_agy` RAII 工单，3 路吸收子智能体分别在推进 `lib/agent/skill_registry.cp`、`lib/attention/optimizer.cp` 与下一项 Bun 纯逻辑子模块合并。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 12:53:12）[step:14275]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 12:53:12）[step:14275]
 - **用户完整原始指令**：
   > 再次检查了, 我发的指令和下游agy工单还是没有,  需把所有遗漏的全部补充上
   > 如你使用 脚本做历史迁移与新增, 脚本中需包含我的指令和下游工单以及你的结单和汇报,
   > 不得有任何遗漏
   > 将这条铁律 写入GEMINI.md固化, 并严格遵守
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 已完成**全量无损补录**、**脚本级零遗漏守卫**与 **[GEMINI.md](file:///data/dev/cp/GEMINI.md) 铁律固化**（提交 `3314422f`）：
   >
   > ### 1. 全量审计与无损补录结果（0 遗漏）
@@ -707,7 +956,17 @@
   >   - `user_turns_total=223, missing_user_turns=0`（全部用户完整原始指令 **100% 原文落盘**）
   >
   > ### 2. 工具化防呆与 [GEMINI.md](file:///data/dev/cp/GEMINI.md) 铁律固化
-  > - 新增 [scripts/sync_se ...(截断)
+  > - 新增 [scripts/sync_session_audit.py](file:///data/dev/cp/scripts/sync_session_audit.py)（全量审计/补录校验）与 [scripts/log_session.py](file:///data/dev/cp/scripts/log_session.py)（实时追加用户原始指令、下游工单与结单汇报）；
+  > - 已将铁律永久写入 [GEMINI.md](file:///data/dev/cp/GEMINI.md#L286-L289) 及热修规范 [GEMINI.md](file:///data/dev/cp/GEMINI.md#L313)：
+  >   - 无论手工或任何脚本（历史迁移、热冷归档、新增记录），`SESSION.md` / `SESSION_H.md` 必须完整保留 **① 用户原始完整指令、② 下游 AGY 工单、③ 主智能体结单与汇报**，绝不得遗漏；
+  >   - 即使在 Hotfix 极速通道下，每次 `task_queue.py resolve` 后也必须通过脚本同步落盘工单与结单汇报；每次里程碑提交前运行 `sync_session_audit.py --check` 确保遗漏数为 0。
+  >
+  > ### 3. 本轮同步验收提交的 3 项分类合并子模块与 1 路轮换
+  > - **[lib/vector/filter.cp](file:///data/dev/cp/lib/vector/filter.cp)**（**5/5 PASS**，归入 `cap:vector`）：元数据位图过滤与选择度自适应路由；原 `AI & Tensor Absorber` 满 10 项已轮换为全新 `AI & Memory Core Absorber`（推进 `lib/agentmem/working_mem.cp`）；
+  > - **[lib/mcp/session.cp](file:///data/dev/cp/lib/mcp/session.cp)**（**5/5 PASS** + `registry` 回归 5/5 PASS，归入 `cap:mcp`）：MCP 会话生命周期、能力协商与在途请求追踪；已续派 `lib/prompt/safety.cp`；
+  > - **[lib/css/property_rule.cp](file:///data/dev/cp/lib/css/property_rule.cp)**（**6/6 PASS**，吸收自 Bun `src/css/rules/property.cp`，归入 `cap:css`）+ 8 份 Bun 上游同步戳刷新（`upstream_newer=0`）；已续派下一项 Bun 纯逻辑子模块合并。
+  >
+  > > 当前 4 路子智能体继续全速并行中（含 `CPC Hotfix Engineer` 攻坚 2 条 `bun_agy` RAII 工单）。
 
 ### 2026-11-22（全量补录完成 + GEMINI.md 固化零遗漏铁律 + 3 项分类合并交付验收 | 2026-11-22 12:58:00）
 - **执行与结单汇报**：
@@ -740,19 +999,21 @@
 - **执行与结单汇报**：
   > 子智能体交付 lib/agent/retry_policy.cp（LLM API 故障分类、Retry-After 解析、确定性抖动退避与切流/上下文压缩决策，5/5 PASS），归入 cap:agent 并同步 cp_lib_ref.md；续派 lib/agent/tool_cache.cp。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 13:03:55）[step:14336]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 13:03:55）[step:14336]
 - **用户完整原始指令**：
   > 收到新的编译器待处理工单(1条: task-bun-20261122-enum-readonly-method-mut-self)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
-- **执行与汇报摘要**：
+- **完整回复与执行汇报**：
   > 已拉取并登记新工单 **`task-bun-20261122-enum-readonly-method-mut-self`**（已按铁律完整记入 [SESSION.md](file:///data/dev/cp/SESSION.md)），并已并入专职 `CPC Hotfix Engineer` 统一处理：
   >
   > - **工单摘要**：`pub enum` 中只读实例方法 `fn toCss(dest: *Printer)`（未写 `*_` 且仅调用 `_.asStr()`）被 `cpc` 错误生成为可变指针接收者 `self: *RoundingStrategy`，导致 `*const` 调用失败（复现：[repro_enum_readonly_method_mut_self.cp](file:///data/dev/cp/temp/repro_enum_readonly_method_mut_self.cp)）；
   > - **排查发现**：此前热修子智能体在完成前 2 条 RAII 改动后因后台编译任务静默进入 `idle`，现已立即唤醒，合并前 2 条 RAII 工单与本条 `enum` 只读方法工单（共 3 条）一次性验证、release 发布并逐一 `resolve` 结单。
   >
   > ### 同步验收提交（`30f0357a`）
-  > - **[lib/text/markdown_chunk. ...(截断)
+  > - **[lib/text/markdown_chunk.cp](file:///data/dev/cp/lib/text/markdown_chunk.cp)**（**5/5 PASS**，归入 `cap:text`）：RAG Markdown 结构感知分块与 6 级标题面包屑索引器（已同步 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md)）；已续派 `lib/agent/retry_policy.cp`。
+  >
+  > > 4 路子智能体继续全速并行中（1 路专职热修 3 条编译器工单 + 3 路标准库吸收）。待热修结单后将立即汇报并启动 RFC Phase 1（`@dot`/`@fma` SIMD 内建原语）。
 
-### 2026-11-22（用户原始指令与汇报记录 2026-11-22 13:09:28）[step:14366]
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 13:09:28）[step:14366]
 - **用户完整原始指令**：
   > q### 2026-11-22（用户原始指令与汇报记录 2026-11-22 12:17:49）[step:14051]
   > - **用户完整原始指令**：
@@ -770,8 +1031,30 @@
   > 我检查SESSION.md 我发的指令, 与实际汇报不一致, 如上
   >
   > 需严格匹配我的指令与你的汇报, 多智能体并行工作, 你需识别出, 哪些汇报是针对我的指令做出的响应, 而不是按时间顺序随便给我写一个错误的回应
-- **执行与汇报摘要**：
-  > (正在执行/已合并至后续汇报)
+- **完整回复与执行汇报**：
+  > 你抓得非常精准！已定位根因并彻底修复了多智能体并行场景下的**指令-汇报精确配对**问题，同时完成了 **3 条编译器工单全部结单**、**RFC Phase 1 SIMD 原语启动**与 **3 项标准库子模块提交**：
+  >
+  > ### 1. `SESSION.md` / `SESSION_H.md` 精确 1-to-1 配对修复（Commit `76e271b2`）
+  > - **根因**：此前 [scripts/sync_session_audit.py](file:///data/dev/cp/scripts/sync_session_audit.py) 在相邻两条 `USER_EXPLICIT` 之间取了**最后一条** `PLANNER_RESPONSE`，导致多智能体并行期间后续 `SYSTEM_MESSAGE` 唤醒产生的子智能体汇报覆盖了针对用户指令的真实答复。
+  > - **修复**：改为严格提取每条 `USER_EXPLICIT` 后**首个无工具调用（`tool_calls=[]`）的终态 `PLANNER_RESPONSE`** 并立即截断，彻底隔离后续子智能体唤醒汇报；
+  > - **全量原地修复（`--repair-replies`）**：已精准修复 [SESSION_H.md](file:///data/dev/cp/SESSION_H.md) **135 条** + [SESSION.md](file:///data/dev/cp/SESSION.md) **36 条**（共 **171 条**）配对关系，抽检 `[step:14051]` 已精确对应「直接回答你这两个核心问题：1. 是否已经找到了 Bun 的官方文档？...」；复检 `tickets_total=56/missing=0`、`user_turns_total=225/missing=0`。
+  >
+  > ### 2. 全部 3 条 `bun_agy` 编译器工单修复发布并结单（Commit `069c5828`）
+  > 已执行 `bash scripts/sync_cpc.sh release` 正式部署、全部 `resolve` 结单并回收热修子智能体：
+  > 1. **`task-bun-20261122-local-alias-raii-drop`**：修复 `const G = Guard(i32); const g = G{...}` 局部类型别名穿透，正确注入 `defer __cp_deinit()`；
+  > 2. **`task-bun-20261122-raii-errinit-or-move-disarm`**：编译器原生支持 `~errinit()`（仅在返回 error union 的错误路径触发 `errdefer __cp_errdeinit()`，与 `~init()` 正交且支持 `move(guard)` 撤防）；
+  > 3. **`task-bun-20261122-enum-readonly-method-mut-self`**：修复 `pub enum` 只读实例方法（如 `fn toCss(dest: *Printer)`）不再误判为可变 `self: *T` 接收者；
+  > - **验证**：新增端到端测试 [test_raii_local_alias_errinit.cp](file:///data/dev/cp/cap/test/test_raii_local_alias_errinit.cp) **PASS** + [test_raii_deinit_ownership_deep.cp](file:///data/dev/cp/cap/test/test_raii_deinit_ownership_deep.cp) **8/8 PASS**。
+  >
+  > ### 3. 已启动用户批准的 `cpc` 编译器迭代 RFC Phase 1（SIMD 向量原语）
+  > - 已拉起全新专职 `CPC Compiler Engineer (RFC Phase 1 SIMD)`，按 [ai_native_simd_and_borrow.md](file:///data/dev/cp/doc/rfc/ai_native_simd_and_borrow.md) 落地 **`@fma`、`@dot`、`@l2sq`** 8-lane SIMD 向量内建原语，并编写端到端测试 `cap/test/test_builtin_simd_dot_fma.cp`。
+  >
+  > ### 4. 本轮同步验收提交的 3 项分类合并子模块（Commit `76e271b2`）
+  > - **[lib/attention/quant_int4.cp](file:///data/dev/cp/lib/attention/quant_int4.cp)**（**5/5 PASS**，归入 `cap:attention`）：Per-Group INT4 对称/非对称量化与融合 GEMV；已续派 `lib/attention/kv_quant.cp`；
+  > - **[lib/shell/cond_expr.cp](file:///data/dev/cp/lib/shell/cond_expr.cp)**（**6/6 PASS**，`upstream_newer=0`，吸收自 Bun `src/shell/states/CondExpr.cp`，归入 `cap:shell`）：Bash `[[ ... ]]` 条件表达式求值引擎；已续派下一项 Bun 纯逻辑子模块；
+  > - **[lib/agent/tool_cache.cp](file:///data/dev/cp/lib/agent/tool_cache.cp)**（**5/5 PASS**，归入 `cap:agent`）：幂等工具调用记忆化缓存与写操作副作用门控器；已续派 `lib/agent/quota_limiter.cp`。
+  >
+  > > 4 路子智能体全速并行中（1 路 RFC Phase 1 SIMD 编译器工程师 + 3 路标准库吸收）。
 
 ### 2026-11-22（修复 SESSION 指令-汇报精确配对 + 验收 3 项分类合并子模块 | 2026-11-22 13:12:46）
 - **执行与结单汇报**：
@@ -793,3 +1076,23 @@
 ### 2026-11-22（分类合并交付：lib/agent/quota_limiter.cp | 2026-11-22 13:16:45）
 - **执行与结单汇报**：
   > 子智能体交付 lib/agent/quota_limiter.cp（多租户 LLM 双维度 TPM/RPM 滑动窗口限流、并发槽位控制与实际 Token 消耗多退少补，5/5 PASS），归入 cap:agent 并同步 cp_lib_ref.md；续派 lib/agent/tool_stream.cp。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 13:17:38）[step:14415]
+- **用户完整原始指令**：
+  > - **用户完整原始指令**：
+  >   > 1. 很好, 按这个优先等级吸收人类编程精髓资产,丰富cp生态,吸引程序员与ai程序员使用cp, 吸收时, 注意归类/测试和文档的完备,方便使用, 并同步更新cp_lib_ref.md 库文档:
+  >   > ① 深度跟踪 /data/dev/bun 真实高价值代码增量与上游原生文档吸收；
+  >   > ② 重点深耕 AI Agent / 智能体编程基础库（契合 CP 百万级并发 Agent 定位）；
+  >   > ③ 吸收高价值基础库（检索、优化、统计、调度、通信 多媒体等），对高价值核心库做深度强化与文档补全；
+  >   > ④ 高频引用库和细分领域算法库，仅吸收明确高复用价值的库，停止扩张冷门小众顶层目录，对这些库做完整性强化与文档补全。
+  >   >
+  >   > 2. 吸收编写时, 需思考, 如何优化/完善cp的语法与算法, 为这些库提供更优支持(如向量运算/内存连续分配等), 让这些库在cp上, 性能更优越, 特别是人工智能方便,与传统编程差异很大, 需要特别的语法支持,效率更高, 吸引ai 和程序员使用cp.
+  >   > 同时用好cp的所有权与借用检查, 让cp应用运行更稳定/更安全.
+  > - **执行与汇报摘要**：
+  >   > 收到！已严格按你的 **4 级优先级 + 分类合并存储 + 同步更新 `cp_lib_ref.md`** 执行，并结合近期大量 AI Agent / 向量检索 / 数值库的编写实战，提炼出 CP 语言与编译器层面的具体优化方向供你审阅：
+  >   >
+  >   > ---
+  >
+  > 回复,你提供的是摘要, 要全部回复, 这对我们复盘/了解系统研发过程至关重要,不可省略!
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)

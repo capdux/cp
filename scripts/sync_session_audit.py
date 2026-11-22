@@ -54,9 +54,9 @@ def extract_user_body(raw: str) -> str:
     return (m.group(1) if m else raw).strip()
 
 
-def sanitize_block(text: str, max_chars: int = 1200) -> str:
+def sanitize_block(text: str, max_chars: int | None = None) -> str:
     text = text.strip()
-    if len(text) > max_chars:
+    if max_chars is not None and len(text) > max_chars:
         text = text[:max_chars].rstrip() + " ...(截断)"
     return text
 
@@ -162,13 +162,13 @@ def repair_existing_replies(target: Path, turn_map: dict[int, tuple[str, str, st
             step_idx = int(m.group(1))
             if step_idx in turn_map:
                 day, ts, body, reply = turn_map[step_idx]
-                reply_snip = sanitize_block(reply or "(正在执行/待本轮结束落盘)", 800)
+                reply_full = sanitize_block(reply or "(正在执行/待本轮结束落盘)", None)
                 new_sec = (
-                    f"### {day}（用户原始指令与汇报记录 {ts}）[step:{step_idx}]\n"
+                    f"### {day}（用户原始指令与完整回复 {ts}）[step:{step_idx}]\n"
                     f"- **用户完整原始指令**：\n"
                     f"{indent_quote(body)}\n"
-                    f"- **执行与汇报摘要**：\n"
-                    f"{indent_quote(reply_snip)}\n\n"
+                    f"- **完整回复与执行汇报**：\n"
+                    f"{indent_quote(reply_full)}\n\n"
                 )
                 if new_sec.strip() != sec.strip():
                     repaired += 1
@@ -234,13 +234,13 @@ def main():
         marker = f"[step:{step_idx}]"
         if marker in combined:
             continue
-        reply_snip = sanitize_block(reply or "(正在执行/已合并至后续汇报)", 600)
+        reply_full = sanitize_block(reply or "(正在执行/待本轮结束落盘)", None)
         entry = (
-            f"### {day}（用户原始指令与汇报记录 {ts}）{marker}\n"
+            f"### {day}（用户原始指令与完整回复 {ts}）{marker}\n"
             f"- **用户完整原始指令**：\n"
             f"{indent_quote(body)}\n"
-            f"- **执行与汇报摘要**：\n"
-            f"{indent_quote(reply_snip)}"
+            f"- **完整回复与执行汇报**：\n"
+            f"{indent_quote(reply_full)}"
         )
         if day < args.today:
             hist_user_entries.append(entry)
