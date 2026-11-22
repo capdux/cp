@@ -446,6 +446,46 @@ pub fn demoDominatorTree() {
 
 ---
 
+## 十二、 零分配 A* / Weighted A* 启发式图与网格最短路径引擎 (`aStar.cp`)
+
+面向机器人路径规划、游戏网格导航与空间路由的 100% 纯 CP 零动态堆分配 A* / Weighted A* 最短路引擎（内置索引化二叉最小堆 O(log V) `decrease-key` 与偏向终点的 `g` 值平局打破）：
+
+- **常量与枚举**：
+  - `ASTAR_MAX_NODES = 128`、`ASTAR_MAX_EDGES = 512`、`ASTAR_NO_NODE = 0xFFFF`
+  - `AStarHeuristic`（`zero_dijkstra | manhattan | euclidean | chebyshev | octile`）
+  - `AStarStatus`（`found | no_path | invalid_node | expansion_limit_hit`）
+- **数据模型与纯函数**：
+  - `AStarNodeCoord`（`x: f32`, `y: f32`）、`AStarEdge`、`AStarConfig`（`heuristic`, `heuristic_weight`, `max_expansions`; `defaults()`）、`AStarResult`（`status`, `total_cost`, `path_len`, `path`, `nodes_expanded`, `nodes_pushed`）
+  - `computeAStarHeuristic(a, b, kind): f32`
+- **核心引擎 `AStarGraph`**：
+  - `init()` / `addNode(*_, x, y): u16?` / `addDirectedEdge(*_, from, to, weight): bool` / `addUndirectedEdge(*_, a, b, weight): bool` / `setNodeBlocked(*_, node_id, is_blocked): bool`
+  - `findPath(start, goal, cfg): AStarResult` / `nodeCount()` / `edgeCount()`
+
+```cp
+import {
+    AStarHeuristic,
+    AStarConfig,
+    AStarStatus,
+    AStarGraph,
+} from "cap:graph";
+
+pub fn demoAStar() {
+    let g = AStarGraph.init();
+    const n0 = g.addNode(0.0, 0.0) ?? return;
+    const n1 = g.addNode(1.0, 0.0) ?? return;
+    const n2 = g.addNode(2.0, 0.0) ?? return;
+    * = g.addUndirectedEdge(n0, n1, 1.0);
+    * = g.addUndirectedEdge(n1, n2, 1.0);
+
+    let cfg = AStarConfig.defaults();
+    cfg.heuristic = AStarHeuristic.manhattan;
+    const res = g.findPath(n0, n2, cfg);
+    * = (res.status == AStarStatus.found && res.path_len == 3);
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [bipartite.md](graph/bipartite.md)

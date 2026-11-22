@@ -67,4 +67,15 @@ export {
     SpawnSyncLoop,
 } from "./spawnSyncLoop.cp";
 
+export {
+    TIMEOUT_MAX_INTERVAL_MS,
+    TIMEOUT_REGISTRY_MAX,
+    TimeoutKind,
+    TimeoutState,
+    TimeoutObjectError,
+    clampTimeoutIntervalMs,
+    TimeoutObject,
+    TimeoutRegistry,
+} from "./timeoutObject.cp";
+
 export * from "./emitter.cp";

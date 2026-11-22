@@ -201,6 +201,23 @@ const restored = sub.cleanup(&active_loop_id)?; // active_loop_id 还原为 1
 * = saved; * = st; * = restored;
 ```
 
+### 3.9 Node/Bun `TimeoutObject` 生命周期与 `ref`/`unref`/`refresh` 调度表 (`timeoutObject.cp`)
+
+吸收自 `/data/dev/bun/src/runtime/timer/TimeoutObject.cp`：
+
+- **导出符号**：`TIMEOUT_MAX_INTERVAL_MS` (`2_147_483_647`)、`TIMEOUT_REGISTRY_MAX` (`64`)、`TimeoutKind`（`SetTimeout` / `SetInterval`）、`TimeoutState`（`Active` / `Fired` / `Cancelled` / `Destroyed`）、`TimeoutObjectError`（`AlreadyDestroyed` / `RegistryFull` / `NotFound`）、`clampTimeoutIntervalMs`、`TimeoutObject`（`init` / `toPrimitive` / `doRef` / `doUnref` / `hasRef` / `ref` / `deref` / `doRefresh` / `isDue` / `fire` / `cancel` / `finalize`）、`TimeoutRegistry`（`init` / `scheduleTimeout` / `scheduleInterval` / `get` / `clear` / `refresh` / `setRef` / `activeRefCount` / `tickDue`）；
+- **核心语义**：严格遵循 Node.js / Bun `u31` 超时钳位规范（`<= 0` 或 `> 2^31 - 1` 钳位至 `1ms`），支持事件循环保活 `ref()` / `unref()`、一次性定时器触发后 `refresh()` 重新激活、以及 64 槽位零分配批量 `tickDue(now_ms)` 触发。
+
+```cp
+import { TimeoutRegistry } from "cap:event";
+
+let reg = TimeoutRegistry.init();
+const id1 = reg.scheduleTimeout(1000, 100)?;
+const id2 = reg.scheduleInterval(1000, 50)?;
+const fired = reg.tickDue(1060); // 仅 id2 到期触发 -> fired == 1
+* = id1; * = id2; * = fired;
+```
+
 ---
 
 ## 四、 上游 Bun 事件循环行为契约与并发边界

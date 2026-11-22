@@ -259,3 +259,17 @@ export {
     DominatorResult,
     DominatorGraph,
 } from "./dominator.cp";
+
+export {
+    ASTAR_MAX_NODES,
+    ASTAR_MAX_EDGES,
+    ASTAR_NO_NODE,
+    AStarHeuristic,
+    AStarStatus,
+    AStarNodeCoord,
+    AStarEdge,
+    AStarConfig,
+    AStarResult,
+    computeAStarHeuristic,
+    AStarGraph,
+} from "./aStar.cp";
