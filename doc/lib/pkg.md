@@ -1193,3 +1193,37 @@ planner.addFilesEntry("dist")?;
 planner.addFilesEntry("!dist/**/*.map")?;
 * = planner.addIgnoreFile("*.log\n", "", 0, PackRuleKind.npm_ignore)?;
 ```
+
+### Unified Diff / Git Patch 解析与零堆补丁应用引擎（`patchApply.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/patch_install.cp`（纯 CP 零堆分配、全外部切片驱动、无硬编码文件/Hunk/行容量上限）；
+- **核心导出**：
+  - 路径安全与元数据解析：`isSafePatchRelPath`（严格拦截 `..` 穿越、绝对路径、反斜杠、空字节与 Windows 盘符）、`sanitizePatchHeaderPath`（支持 `-pN` 前缀剥离、引号与时间戳裁剪、`/dev/null` 识别）、`parseFileModeOctal`、`parseHunkHeaderLine`；
+  - 多文件 Unified Diff / Git Patch 解析器：`PatchFileKind`（`Modify`/`Create`/`Delete`/`Rename`/`ModeChange`/`Binary`）、`PatchLineOpKind`、`PatchLineOp`、`PatchHunk`、`PatchFileEntry`、`PatchParseOptions`、`PatchSummary`、`ParsedUnifiedPatch`、`parseUnifiedPatch`（支持 `diff --git`、`---`/`+++`、`rename from/to`、`old mode/new mode`、`\ No newline at end of file`、二进制补丁默认拦截或显式标记、64 位 FNV-1a 内容摘要）；
+  - 零堆应用、回滚与干跑校验：`SourceLineSpan`、`splitSourceLines`、`PatchApplyOptions`、`PatchConflictInfo`、`PatchApplyResult`、`PatchDryRunReport`、`applyFilePatch`、`applyUnifiedPatch`、`reverseUnifiedPatch`、`dryRunPatch`（支持精确行号匹配、有限偏移窗口 `max_offset_lines` 对称搜索、CRLF/LF 行尾保留与精确冲突行号定位）；
+  - 摘要与原子安装管线状态机：`formatPatchSummaryReport`、`PatchInstallStage`、`PatchInstallSession`（`Init -> Parsed -> Staged -> Applied -> Tagged -> Committed` 6 阶段原子状态机）。
+
+```cp
+import {
+    PatchFileEntry,
+    PatchHunk,
+    PatchLineOp,
+    PatchParseOptions,
+    SourceLineSpan,
+    PatchConflictInfo,
+    parseUnifiedPatch,
+    applyUnifiedPatch,
+    reverseUnifiedPatch,
+} from "cap:pkg";
+
+let files: [4]PatchFileEntry = [PatchFileEntry.empty(); 4];
+let hunks: [8]PatchHunk = [PatchHunk.empty(); 8];
+let ops: [64]PatchLineOp = [PatchLineOp.empty(); 64];
+let lines: [64]SourceLineSpan = [SourceLineSpan.empty(); 64];
+let out_buf: [1024]u8 = [0; 1024];
+let conflict = PatchConflictInfo.none();
+
+const parsed = parseUnifiedPatch(patch_text, PatchParseOptions.defaults(), files[0..], hunks[0..], ops[0..])?;
+const res = applyUnifiedPatch(src, files[0], hunks[0..parsed.hunks_len], ops[0..parsed.ops_len], lines[0..], out_buf[0..], &conflict)?;
+* = res;
+```
