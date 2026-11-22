@@ -1327,3 +1327,28 @@ let decoder = TarStreamDecoder.init(TarStreamOptions.defaults(), pbuf[0..], lbuf
 const ev = decoder.step(archive[0..apos])?;
 * = ev;
 ```
+
+### 包依赖入队调度器、SemVer 区间求值与菱形依赖去重引擎（`resolveQueue.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/PackageManager/PackageManagerEnqueue.cp`（纯 CP 零堆分配、全外部切片驱动）；
+- **核心导出**：
+  - SemVer 2.0 比较与区间求值：`ResolveQueueError`、`RqSemver`（`parse` / `compare` / `sameCore`）、`satisfiesSemverRange`（完整支持 `^` 含 `0.x`/`0.0.x` 语义、`~`、`>=`/`<=`/`>`/`<`/`=`、AND 交集、`||` OR 并集、`*`/`latest` 及预发布隔离）；
+  - 去重优先级工作队列：`RqDepPriority`（`RootDirect > Peer > Transitive > Optional`）、`RqTaskStatus`、`RqTaskEntry`、`RqQueueStats`、`PkgResolveQueue`（`init` / `enqueue` 按 `(name_hash, spec_hash)` 去重并自动提升优先级 / `popNextReady` 并发度限流 + 退避时间窗 / `markResolved` / `markFailed` 指数退避重试与 Optional 自动降级 / `stats` / `isDrained`）；
+  - 版本择优与菱形依赖冲突决议：`RqVersionCandidate`、`RqSelectionResult`、`selectBestMatchingVersion`（优先复用已选版本去重，过滤 yanked，优先非 deprecated）、`RqDemandSpec`、`RqPlacementKind`（`HoistedShared` / `NestedIsolated` / `UnresolvedConflict`）、`RqReconciledDep`、`RqReconcileSummary`、`reconcileResolvedGraph`、`formatResolveQueueReport`。
+
+```cp
+import {
+    RqTaskEntry,
+    RqDepPriority,
+    RESOLVE_QUEUE_NO_PARENT,
+    PkgResolveQueue,
+} from "cap:pkg";
+
+let backing: [16]RqTaskEntry = [RqTaskEntry.empty(); 16];
+let q = PkgResolveQueue.init(backing[0..], 4, 3);
+const id = q.enqueue("lodash", "^4.17.21", RqDepPriority.RootDirect, RESOLVE_QUEUE_NO_PARENT)?;
+if (next := q.popNextReady(0)) {
+    q.markResolved(next, "4.17.21")?;
+}
+* = id;
+```

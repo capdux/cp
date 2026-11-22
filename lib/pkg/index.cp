@@ -875,3 +875,27 @@ export {
     encodeTarPaxHeader,
     finalizeTarArchive,
 } from "./tarballStream.cp";
+
+export {
+    RESOLVE_QUEUE_DEFAULT_MAX_IN_FLIGHT,
+    RESOLVE_QUEUE_DEFAULT_MAX_RETRIES,
+    RESOLVE_QUEUE_BASE_BACKOFF_MS,
+    RESOLVE_QUEUE_NO_PARENT,
+    ResolveQueueError,
+    RqDepPriority,
+    RqTaskStatus,
+    RqPlacementKind,
+    RqSemver,
+    RqTaskEntry,
+    RqQueueStats,
+    RqVersionCandidate,
+    RqSelectionResult,
+    RqDemandSpec,
+    RqReconciledDep,
+    RqReconcileSummary,
+    satisfiesSemverRange,
+    PkgResolveQueue,
+    selectBestMatchingVersion,
+    reconcileResolvedGraph,
+    formatResolveQueueReport,
+} from "./resolveQueue.cp";
