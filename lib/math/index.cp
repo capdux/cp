@@ -433,3 +433,17 @@ export {
     MoneyError,
     Money,
 } from "./decimal_money.cp";
+
+// --- SIMD Vectorized Statistics & Linear Algebra Facade ---
+
+export {
+    SimdSummaryStats,
+    simdSummaryStatsF32,
+    simdPearsonCorrF32,
+    simdCosineSimF32,
+    simdEuclideanDistF32,
+    simdZScoreNormalizeF32,
+    simdSoftmaxF32,
+    simdMatVecF32,
+    simdAxpyF32,
+} from "./simd_stats.cp";

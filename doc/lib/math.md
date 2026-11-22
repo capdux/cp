@@ -50,7 +50,8 @@
 | `lib/math/spline.cp` | 自然/钳位三次样条、单调保形 PCHIP 样条与 Catmull-Rom 插值 |
 | `lib/math/ode.cp` | RK2 中点、经典 RK4、自适应 Dormand-Prince RK45 与 Velocity Verlet 积分器 |
 | `lib/math/cholesky.cp` | SPD 矩阵 Cholesky `LL^T` 与无开方 `LDL^T` 分解、求解、对数行列式与求逆 |
-| `lib/math/index.cp` | `cap:math` 与 `cap.math` 统一零冲突公开导出入口（共 297 符号，35 个实现子模块） |
+| `lib/math/simd_stats.cp` | 原生 8-lane SIMD（`@dot`/`@l2sq`/`@fma`/`slice.split`）零堆描述统计、相关/余弦/欧氏距离、Z-Score、Softmax、GEMV 与 AXPY |
+| `lib/math/index.cp` | `cap:math` 与 `cap.math` 统一零冲突公开导出入口 |
 
 ---
 
@@ -212,5 +213,50 @@ pub fn demoMath(): !void {
     // 动态懒加载挂载等价用法
     const sim = cap.math.cosineSimilarityF32(&vec, rec);
     * = sim;
+}
+```
+
+### 原生 SIMD 向量化统计与线性代数极速算子示例 (`simd_stats.cp`)
+
+```cp
+import {
+    simdSummaryStatsF32,
+    simdPearsonCorrF32,
+    simdCosineSimF32,
+    simdEuclideanDistF32,
+    simdZScoreNormalizeF32,
+    simdSoftmaxF32,
+    simdMatVecF32,
+    simdAxpyF32,
+} from "cap:math";
+
+pub fn demoSimdStats() {
+    const x: [8]f32 = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
+    const y: [8]f32 = [2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0];
+
+    // 1. Welford 防抵消描述统计 + 8-lane SIMD @dot L2 范数
+    if (st := simdSummaryStatsF32(x[0..])) {
+        * = st.mean;
+        * = st.l2_norm;
+    }
+
+    // 2. 皮尔逊相关 / SIMD 余弦相似度 / SIMD 欧氏距离
+    * = simdPearsonCorrF32(x[0..], y[0..]);   // 1.0
+    * = simdCosineSimF32(x[0..], y[0..]);     // 1.0
+    * = simdEuclideanDistF32(x[0..], y[0..]);
+
+    // 3. Z-Score 标准化 & 数值稳定 Softmax
+    let z_out: [8]f32 = [0.0; 8];
+    * = simdZScoreNormalizeF32(x[0..], z_out[0..]);
+    let probs: [3]f32 = [0.0; 3];
+    const logits: [3]f32 = [1000.0, 1001.0, 1002.0];
+    * = simdSoftmaxF32(logits[0..], probs[0..]);
+
+    // 4. 基于 slice.split + @dot 的行主序 GEMV 与硬件 @fma AXPY
+    const mat: [6]f32 = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+    const v: [3]f32 = [1.0, 0.0, -1.0];
+    let mv_out: [2]f32 = [0.0; 2];
+    * = simdMatVecF32(mat[0..], 2, 3, v[0..], mv_out[0..]); // [-2.0, -2.0]
+    * = simdAxpyF32(0.5, v[0..], probs[0..]);
 }
 ```
