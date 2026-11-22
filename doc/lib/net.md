@@ -248,3 +248,67 @@ pub fn demoProductionNet() {
 | 名称与远程存储（第 3 波） | `lib/net/nbns.cp` / `lib/net/smb.cp` / `lib/net/nfs.cp` / `lib/net/iscsi.cp` | RFC 1001 / MS-SMB2/3 / ONC RPC-NFSv3 / RFC 7143 | NetBIOS、SMB2/3、NFSv3（`NFS_AUTH_NONE` 别名）与 iSCSI 线缆解析 |
 | 现代传输与实时通信（第 3 波） | `lib/net/quic.cp` / `lib/net/sdp.cp` | RFC 9000 QUIC & RFC 8866 WebRTC SDP | QUIC 变长整数/帧编解码（`encodeQuicFrame` 别名）与 WebRTC SDP 解析构建 |
 | 内容与目录协议（第 3 波） | `lib/net/gemini.cp` / `lib/net/nntp.cp` / `lib/net/ldif.cp` | Gemini / RFC 3977 / RFC 2849 | Gemini/Gemtext、NNTP 与 LDIF 线缆与目录解析 |
+
+---
+
+## 七、 零堆分配流量整形、WDRR 公平调度与 AIMD 拥塞控制（`traffic_shaper.cp`）
+
+面向高并发 API 网关、多租户 Agent 通信与 LLM 客户端自适应背压的三大零堆分配确定性原语：
+
+- **双速三色令牌桶整形器（`TrTcmConfig` / `TrafficColor` / `TrTcmPolicer`）**：严格遵循 RFC 2698（CIR/CBS 承诺速率 + PIR/PBS 峰值速率），亚毫秒余数精确补桶（零浮点误差），O(1) 将报文/请求标记为 `Green`（承诺内放行）、`Yellow`（超承诺但在峰值内降级标记）或 `Red`（超峰值丢弃/限流）。
+- **加权赤字轮询公平调度器（`DrrFlowSlot` / `WeightedDrrScheduler`）**：按流权重（`quantum`）公平分配带宽并内建 O(N) 多轮快进防饥饿，彻底杜绝大包/高负载流饿死小包流。
+- **AIMD 自适应并发窗口控制器（`AimdConfig` / `AimdLimiter`）**：纯整数加性增（`onSuccess`）/ 乘性减（`onCongestion`，如 429/超时按 `backoff_num / backoff_den` 骤降），严格钳位至 `[min_limit, max_limit]`。
+
+### QuickStart 示例
+
+```cp
+import {
+    TrafficColor,
+    TrTcmConfig,
+    TrTcmPolicer,
+    DrrFlowSlot,
+    WeightedDrrScheduler,
+    AimdConfig,
+    AimdLimiter,
+} from "cap:net";
+
+pub fn demoTrafficShaperQuickStart() {
+    // 1. RFC 2698 trTCM 三色标记：CIR=1KB/s, CBS=1KB, PIR=2KB/s, PBS=2KB
+    let policer = TrTcmPolicer.init(TrTcmConfig{
+        cir_bytes_per_sec: 1000,
+        cbs_bytes: 1000,
+        pir_bytes_per_sec: 2000,
+        pbs_bytes: 2000,
+    }, 1000) ?? return;
+    const c1 = policer.police(1000, 1000); // TrafficColor.Green
+    const c2 = policer.police(800, 1000);  // TrafficColor.Yellow
+    const c3 = policer.police(500, 1000);  // TrafficColor.Red
+    * = c1; * = c2; * = c3;
+
+    // 2. WDRR 加权公平调度：流 1 (quantum=600) vs 流 2 (quantum=200)
+    let slots: [4]DrrFlowSlot = [DrrFlowSlot{}; 4];
+    let slots_s: []DrrFlowSlot = slots[0..];
+    let sched = WeightedDrrScheduler.init(slots_s) ?? return;
+    * = sched.registerFlow(1, 600);
+    * = sched.registerFlow(2, 200);
+    * = sched.enqueue(1, 200);
+    * = sched.enqueue(2, 200);
+    * = sched.scheduleNext();
+
+    // 3. AIMD 自适应并发窗口：初始 8，成功 +1，遇 429/超时减半 (1/2)
+    let aimd = AimdLimiter.init(AimdConfig{
+        initial_limit: 8,
+        min_limit: 2,
+        max_limit: 32,
+        additive_increase: 1,
+        backoff_num: 1,
+        backoff_den: 2,
+    }) ?? return;
+    if (aimd.tryAcquire()) {
+        * = aimd.onSuccess();    // limit -> 9
+    }
+    if (aimd.tryAcquire()) {
+        * = aimd.onCongestion(); // limit -> 4
+    }
+}
+```

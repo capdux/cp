@@ -1735,3 +1735,14 @@ export {
     isLdif,
     summarizeLdif,
 } from "./ldif.cp";
+
+// --- traffic_shaper ---
+export {
+    TrafficColor,
+    TrTcmConfig,
+    TrTcmPolicer,
+    DrrFlowSlot,
+    WeightedDrrScheduler,
+    AimdConfig,
+    AimdLimiter,
+} from "./traffic_shaper.cp";
