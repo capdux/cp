@@ -32,6 +32,7 @@
 - **`conv1dCausalF32` / `depthwiseConv1dF32` / `hzToMel` / `melToHz` / `buildMelFilterbankF32` / `applyMelFilterbankF32`** (`conv1d.cp`)：零堆分配 AI 语音/状态空间 1D 因果空洞卷积、深度可分离 1D 卷积、HTK 梅尔频率变换、三角梅尔滤波器组构建与 `@dot` SIMD 对数梅尔谱投影核（对标 Whisper / Mamba / ConvNeXt-1D）。
 - **`ImageNormParams` / `normalizeRgbU8ToF32` / `patchifyHwcF32` / `patchEmbedLinearF32` / `build2dSinCosPosEmbF32` / `applyRope2dInPlaceF32`** (`vision_patch.cp`)：零堆分配多模态视觉大模型（ViT / CLIP / Qwen2-VL / Flux）前端核，覆盖 `@fma` RGB 归一化、HWC Patchify、`@dot` 线性补丁投影、MAE/ViT 2D 正弦位置编码与严格保范数的 2D 空间 RoPE。
 - **`FP8_E4M3_MAX_FINITE` / `Fp8BlockScale` / `computeBlockAmaxF32` / `quantizeBlockFp8E4m3` / `dequantizeBlockFp8E4m3` / `gemvBlockFp8E4m3`** (`quant_fp8.cp`)：零堆分配 DeepSeek-V3 / H100 风格块级动态缩放 FP8 E4M3FN 量化与尺度外提融合混合精度 GEMV 核（支持任意非整除尾部块与全零块零除防护）。
+- **`VocabBitset` / `DfaEdge` / `ConstrainedDfa` / `applyVocabMaskInPlace` / `applyTemperatureAndTopKMaskInPlace`** (`constrained_mask.cp`)：零堆分配 LLM 结构化受限解码 Logits 位图掩码与 DFA 状态引导词表过滤器（对标 xgrammar / Outlines，支持硬件 `@popCount`、尾位自动清零、`-inf` 掩码与零堆分配温度 + Top-K 过滤）。
 
 ## 3. API 速查
 
@@ -137,6 +138,10 @@
 | `applyRope2dInPlaceF32` | `(vec: *[]f32, row, col, theta_base): bool` | Qwen2-VL / Flux 原位 2D 空间旋转位置编码（严格保 L2 范数不变） |
 | `computeBlockAmaxF32` / `quantizeBlockFp8E4m3` / `dequantizeBlockFp8E4m3` | `(src, block_size, out_q, out_scales): bool` | DeepSeek-V3 / H100 风格块级动态缩放（`amax / 448.0`）FP8 E4M3FN 量化与反量化（支持非整除尾块与全零块防护） |
 | `gemvBlockFp8E4m3` | `(x, w_q, w_scales, rows, cols, block_size, out_y): bool` | 零临时反量化大矩阵的块级 FP8 尺度外提融合 GEMV（块内 `@fma` 累加、块外乘加 `w_scale`） |
+| `VocabBitset` | `init` / `allowAll` / `clearAll` / `allowToken` / `forbidToken` / `isAllowed` / `allowedCount` / `intersectWith` | 零堆分配词表位图掩码（自动清零尾位、硬件 `@popCount`） |
+| `applyVocabMaskInPlace` | `(logits: *[]f32, mask_words: []const u64): usize?` | 将未置位词表 token 置 `-inf`，返回保留合法 token 数（全禁止返回 `0` 供上层回退） |
+| `ConstrainedDfa` | `init` / `buildAllowedMask` / `step` / `isAccepting` | 零堆分配固定转移表 DFA 状态引导词表掩码生成器与终态判定 |
+| `applyTemperatureAndTopKMaskInPlace` | `(logits: *[]f32, temperature: f32, top_k: usize): usize?` | 温度缩放 + 零堆分配确定性 Top-K Logits 掩码（其余置 `-inf`） |
 
 ## 4. 示例
 
@@ -867,5 +872,31 @@ pub fn demoBlockFp8Gemv(w_row0: []const f32, x: []const f32) {
     let y: [1]f32 = [0.0];
     let y_s: []f32 = y[0..];
     * = gemvBlockFp8E4m3(x, w_q[0..], w_scales[0..], 1, 64, 32, y_s);
+}
+```
+
+### 结构化受限解码 Logits 掩码与 DFA 状态引导示例 (`constrained_mask.cp`)
+
+```cp
+import {
+    DfaEdge,
+    ConstrainedDfa,
+    applyVocabMaskInPlace,
+    applyTemperatureAndTopKMaskInPlace,
+} from "cap:attention";
+
+pub fn demoConstrainedDfaDecode(logits_in: *[]f32) {
+    const edges: [2]DfaEdge = [
+        DfaEdge{ from_state: 0, to_state: 1, token_id: 2 },
+        DfaEdge{ from_state: 1, to_state: 2, token_id: 5 },
+    ];
+    const accept: [1]u64 = [4]; // bit 2 -> state 2 accepting
+    if (dfa := ConstrainedDfa.init(edges[0..], accept[0..], 3, 16)) {
+        let mask_buf: [1]u64 = [0];
+        let mask_s: []u64 = mask_buf[0..];
+        * = dfa.buildAllowedMask(0, mask_s);
+        * = applyVocabMaskInPlace(logits_in, mask_buf[0..]);
+        * = applyTemperatureAndTopKMaskInPlace(logits_in, 0.8, 1);
+    }
 }
 ```

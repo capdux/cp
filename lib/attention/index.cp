@@ -213,3 +213,11 @@ export {
     dequantizeBlockFp8E4m3,
     gemvBlockFp8E4m3,
 } from "./quant_fp8.cp";
+
+export {
+    VocabBitset,
+    DfaEdge,
+    ConstrainedDfa,
+    applyVocabMaskInPlace,
+    applyTemperatureAndTopKMaskInPlace,
+} from "./constrained_mask.cp";

@@ -1380,3 +1380,49 @@
 ### 2026-11-22（分类合并交付：lib/sql/pg_wire_writer.cp + 4 项 Bun 清零 + 启动 lib/ 根目录大收敛 | 2026-11-22 14:37:03）
 - **执行与结单汇报**：
   > 1. 从 Bun src/sql/postgres/protocol/NewWriter.cp 吸收归入 lib/sql/pg_wire_writer.cp (6/6 PASS, upstream_newer=0) 并同步 cp_lib_ref.md；2. 按用户指令启动专职 Stdlib Root Consolidator，按 image -> doc -> conf -> net 四个领域批次安全收敛 lib/ 根目录小包（严格遵守 Bun 优先、不覆盖/不丢失、冲突留 xxx_.cp 参考铁律）。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 14:30:07）[step:14737]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261122-const-type-opt-try)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取工单 **`task-bun-20261122-const-type-opt-try`** 详情并登记至 [SESSION.md](file:///data/dev/cp/SESSION.md)，已立即拉起专职 `CPC Hotfix Engineer` 排查修复：
+  >
+  > - **问题摘要**：顶层 `const` 类型别名右值中使用后缀可选类型 `(T)?` 或 `T?`（如 `pub const FnA = (*const fn (...))?;`、`pub const OptFnB = FnB?;`）时，被 `cpc` 误生成为表达式错误传播 `try ...`，导致 Zig 报 `'try' outside function scope`（复现：[repro_const_type_opt_try.cp](file:///data/dev/cp/temp/repro_const_type_opt_try.cp)）；
+  > - **执行路径**：修复 `/data/dev/cp/cpc/src/` 后将新增正式回归测试 `cap/test/test_const_type_opt_try.cp`、执行 `bash scripts/sync_cpc.sh release` 正式部署、验证零回归并执行 `task_queue.py resolve` 结单通知下游。
+  >
+  > > 当前 4 路子智能体全速并行中（1 路专职热修 + 3 路标准库吸收）。待热修结单后将第一时间汇报并回收热修子智能体。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 14:35:24）[step:14761]
+- **用户完整原始指令**：
+  > 开启一个子智能体, 继续约定规则, 整理/收敛lib 根目录, 还存在大量的目录, 目录下面文件很少
+  > 图片, 全部归类到 imge
+  > 文档 到 doc
+  > 文本到 conf
+  > 网络 到 net
+  > 注意, 遵守上面我们约定的归纳规则, 不要覆盖/丢失 bun资产!
+- **完整回复与执行汇报**：
+  > 已立即开启专职 **`Stdlib Root Consolidator`** 子智能体，严格按你约定的铁律推进 `/data/dev/cp/lib/` 根目录大收敛！
+  >
+  > ### 1. 根目录小包盘点与 4 批次收敛计划（当前共 845 个顶层目录，其中 ≤3 文件小目录约 700 个）
+  > 已核查目标主包现状（注：`lib/image/` 已存在 11 个文件，沿用 `image`；`lib/conf/`、`lib/net/` 已存在；`lib/doc/` 将新建为统一文档主包）：
+  > - **第 1 批（已启动）：图片与图形 → `lib/image/`（`cap:image`）**
+  >   - 先核查潜在重叠组（`bmp`/`gif`/`png`/`exif`/`thumbhash`/`image_probe`），**Bun 资产绝对优先、冲突严格留 `xxx_.cp` 并注头参考，绝不覆盖/丢失**；
+  >   - 将 13 个无冲突独立格式小目录（`avif`/`exr`/`heif`/`ico`/`pnm`/`psd`/`qoi`/`svg`/`tga`/`tiff`/`dicom`/`barcode`/`qr`）归并至 `lib/image/<fmt>.cp`，同步更新各自测试并清理空壳冗余顶层目录；
+  > - **第 2 批（接续）：文档格式 → `lib/doc/`（`cap:doc`）**（`pdf`/`docx`/`xlsx`/`pptx`/`epub`/`odt`/`rtf`/`bibtex`/`ical`/`vcard`/`rss`/`atom`/`markdown_table` 等）；
+  > - **第 3 批（接续）：配置与结构化文本 → `lib/conf/`（`cap:conf`）**（`hjson`/`json5`/`jsonc`/`jsonl`/`ndjson`/`kdl`/`hcl`/`cue`/`ron`/`nix`/`plist`/`editorconfig`/`dotenv_parse`/`frontmatter`/`crontab` 等）；
+  > - **第 4 批（接续）：网络协议 → `lib/net/`（`cap:net`）**（`arp`/`bgp`/`cidr`/`dhcp`/`ftp`/`gopher`/`haproxy`/`icmp`/`imap`/`ipfix`/`ipsec`/`irc`/`ldap`/`nats`/`netflow`/`netrc`/`amqp`/`coap` 等）。
+  >
+  > ### 2. 同步验收提交（`bd929b87`、`2fe22675`）
+  > - **[lib/sql/pg_wire_writer.cp](file:///data/dev/cp/lib/sql/pg_wire_writer.cp)**（**6/6 PASS**，吸收自 Bun `NewWriter.cp`，并清零 4 项 Bun mtime 变动至 `upstream_newer=0`）；
+  > - **[lib/text/unified_diff.cp](file:///data/dev/cp/lib/text/unified_diff.cp)**（**5/5 PASS**，归入 `cap:text`）：AI 编程智能体 Unified Diff 补丁解析与两遍原子安全应用器。
+  >
+  > > 当前 5 路并行推进中（1 路 `CPC Hotfix Engineer` 修复 `task-bun-20261122-const-type-opt-try` + 1 路 `Stdlib Root Consolidator` 根目录大收敛 + 3 路标准库吸收子智能体）。每批收敛验收通过后立即汇报并自动衔接下一批。
+
+### 2026-11-22（分类合并交付：lib/attention/constrained_mask.cp | 2026-11-22 14:39:12）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/attention/constrained_mask.cp（LLM 结构化受限解码词表位图掩码、DFA 状态引导与温度/Top-K 过滤，5/5 PASS），归入 cap:attention 并同步 cp_lib_ref.md；续派 lib/attention/rope_yarn.cp。
+
+### 2026-11-22（工单 task-bun-20261122-const-type-opt-try 修复发布结单 + 启动全仓根目录分域收敛 | 2026-11-22 14:40:30）
+- **下游工单**：`task-bun-20261122-const-type-opt-try` | 来源：`bun_agy` | 状态：`resolved`
+- **执行与结单汇报**：
+  > 1. 专职热修完成 task-bun-20261122-const-type-opt-try：新增 in_container_const 上下文标记，在顶层/容器内 const 类型别名右值中将 (T)? / T? 精确降级为可选类型 ?T 而非 try，函数体内正常 expr? 零回归；release 部署生效，test_const_type_opt_try.cp 与 test_raii_local_alias_errinit.cp 全部 PASS，已 resolve 结单并回收热修子智能体；2. 响应用户全仓根目录收敛指令，增开第 2 路根目录收敛专员并行推进 lib/doc/，与第 1 路 lib/image/ 同步开展全仓分域收敛。
