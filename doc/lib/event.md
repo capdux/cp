@@ -237,6 +237,23 @@ const n = q.drainTurn(out[0..]); // n == 1, out[0] == id2
 * = n;
 ```
 
+### 3.11 高精度浮点秒级 `RunLoopTimer` 与 Imminent 零延迟快路径 (`runLoopTimer.cp`)
+
+吸收自 `/data/dev/bun/src/runtime/timer/WTFTimer.cp`：
+
+- **导出符号**：`RUN_LOOP_TIMER_MAX_SECONDS` (`2_147_483_647.0`)、`RUN_LOOP_TIMER_NS_PER_SEC` (`1_000_000_000`)、`RunLoopTimerState`（`Cancelled` / `Imminent` / `Active` / `Fired`）、`RunLoopTimeSpec`（`init` / `addSeconds` / `compare` / `isReached`）、`RunLoopTimer`（`init` / `hasValidContext` / `update` / `isImminent` / `isDue` / `runIfImminent` / `fire` / `cancel`）；
+- **核心语义**：支持 `f64` 秒级调度与 `i32` 上限钳位、`timespec` 纳秒进位规格化、`seconds <= 0` 立即抢占 `Imminent` 零延迟快速通道（用于 GC/微任务紧急调度），以及重复触发与上下文受保护取消。
+
+```cp
+import { RunLoopTimeSpec, RunLoopTimer } from "cap:event";
+
+let t = RunLoopTimer.init(1);
+const now = RunLoopTimeSpec.init(100, 750_000_000);
+t.update(now, 0.5, false); // next == (101s, 250_000_000ns)
+const fired = t.fire(RunLoopTimeSpec.init(101, 250_000_000)); // true
+* = fired;
+```
+
 ---
 
 ## 四、 上游 Bun 事件循环行为契约与并发边界

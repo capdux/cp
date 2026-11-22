@@ -86,4 +86,12 @@ export {
     ImmediateQueue,
 } from "./immediateObject.cp";
 
+export {
+    RUN_LOOP_TIMER_MAX_SECONDS,
+    RUN_LOOP_TIMER_NS_PER_SEC,
+    RunLoopTimerState,
+    RunLoopTimeSpec,
+    RunLoopTimer,
+} from "./runLoopTimer.cp";
+
 export * from "./emitter.cp";
