@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/server/WebSocketServerContext.cp | Synced: 2026-11-22T12:28:39Z
+// Source: Absorbed from /data/dev/bun/src/runtime/server/WebSocketServerContext.cp | Synced: 2026-11-22T13:11:31Z
 // Pure-CP zero-allocation WebSocket Pub-Sub topic broker:
 // subscribe / unsubscribe / unsubscribeAll (with empty-topic reclamation),
 // `publish_to_self` semantics (`ws.publish` vs `server.publish`), subscriberCount, and topic listing.

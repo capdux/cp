@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/uws_sys/socket.cp | Synced: 2026-11-22T12:57:27Z
+// Source: Absorbed from /data/dev/bun/src/uws_sys/socket.cp | Synced: 2026-11-22T13:13:07Z
 // lib/net/socket.cp
 // SafeSocket with RAII, socket options, long-timeout splitting, and legacy Socket compatibility
 // Absorbed from Bun src/uws_sys/socket.cp and src/uws_sys/us_socket_t.cp

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:49:17Z (RFC 9110 Via Proxy Chain & Max-Forwards)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T13:15:07Z (RFC 9110 Via Proxy Chain & Max-Forwards)
 
 const U32_MAX: u32 = 0xFFFF_FFFF;
 

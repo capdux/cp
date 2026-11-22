@@ -580,6 +580,38 @@ pub fn demoForBitpack() {
 }
 ```
 
+### Apache Parquet / Arrow 风格零分配 Hybrid RLE + Bit-Packed 编解码器 (`rleHybrid.cp`)
+
+面向列式存储字典索引（`RLE_DICTIONARY`）与 Definition/Repetition Levels 的 100% 纯 CP 零动态堆分配混合游程 + 位打包编解码器（原生 `@clz` 计算最小位宽）：
+
+- **格式规范**：
+  - RLE 段：ULEB128 `header = (run_len << 1) | 0` + `ceil(bit_width / 8)` 字节小端重复值（连续重复 `>= 8` 次自动启用）；
+  - Bit-Packed 段：ULEB128 `header = (num_groups << 1) | 1` + `num_groups * bit_width` 字节（每组 8 个值 LSB-first 紧致打包）。
+- **导出符号**：`HYBRID_RLE_MAX_BIT_WIDTH` (`32`)、`HYBRID_RLE_MIN_RUN_LEN` (`8`)、`HYBRID_RLE_GROUP_SIZE` (`8`)、`HYBRID_RLE_MAX_BITPACK_GROUPS` (`63`)、`hybridBitWidthU32`、`hybridMinBitWidthSlice`、`hybridValueByteWidth`、`hybridMaxEncodedSize`、`HybridRleStatus`、`HybridRleEncodeResult`、`HybridRleDecodeResult`、`encodeHybridRleU32`、`decodeHybridRleU32`、`HybridRleDecoder`（`init`, `nextBatch`, `remaining`, `isDone`, `bytesConsumed`, `status`）。
+
+```cp
+import {
+    HybridRleStatus,
+    hybridMinBitWidthSlice,
+    encodeHybridRleU32,
+    decodeHybridRleU32,
+} from "cap:pack";
+
+pub fn demoHybridRle() {
+    const src: [16]u32 = [3, 3, 3, 3, 3, 3, 3, 3, 0, 1, 2, 3, 4, 5, 6, 7];
+    const bw: u8 = hybridMinBitWidthSlice(src[0..]); // 3 bits via @clz
+
+    let enc_buf: [64]u8 = [0; 64];
+    let enc_s: []u8 = enc_buf[0..];
+    const enc = encodeHybridRleU32(src[0..], bw, *enc_s);
+    if (enc.status != HybridRleStatus.ok) return;
+
+    let out: [16]u32 = [0; 16];
+    let out_s: []u32 = out[0..];
+    * = decodeHybridRleU32(enc_buf[0..enc.bytes_written], bw, 16, *out_s);
+}
+```
+
 ---
 
 ## 收敛子模块深度文档

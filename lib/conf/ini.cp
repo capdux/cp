@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ini/ini.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/ini/ini.cp | Synced: 2026-11-22T13:11:45Z
 // ============================================================================
 // Absorbed from Bun: /data/dev/bun/src/ini/ini.cp
 // Upstream Sync: Refer to /data/dev/bun/src/ini/ini.zig for future upstream updates.

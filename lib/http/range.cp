@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:49:17Z (RFC 9110 §14.1.2 HTTP Range Request Parser)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T13:15:07Z (RFC 9110 §14.1.2 HTTP Range Request Parser)
 // Pure-CP zero-allocation RFC 9110 Range header parser, multi-range iterator, and byte-range resolver.
 
 fn isWs(b: u8): bool {

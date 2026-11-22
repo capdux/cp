@@ -864,3 +864,39 @@ const ln = formatGlobalStoreLinkDir(dir_buf[0..resolved.len], "react@18.3.1", 0x
 * = elig;
 * = ln;
 ```
+
+### Node Modules 依赖提升树构建与路径格式化（`lib/pkg/hoistTree.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/lockfile/Tree.cp` 与 `/data/dev/bun/docs/pm/{isolated-installs,lockfile}.mdx`；
+- 导出：`HOIST_MAX_TREES` (`64`)、`HOIST_MAX_PACKAGES` (`64`)、`HOIST_MAX_DEPS` (`256`)、`HOIST_MAX_DEPS_PER_TREE` (`64`)、`HOIST_MAX_DEPTH` (`32`)、`HOIST_INVALID_ID`、`HOIST_ROOT_DEP_ID`、`HOIST_DEP_NORMAL`/`DEV`/`OPTIONAL`/`PEER`/`BUNDLED`/`FOLDER`/`WORKSPACE_ROOT`、`HoistTreeError`、`HoistPathStyle`（`NodeModules`/`PkgPath`）、`HoistBuildMode`（`Resolvable`/`Filter`）、`HoistDecisionKind`、`HoistOmitPolicy`、`HoistDecision`、`HoistPathResult`、`HoistPkgRecord`、`HoistDepRecord`、`HoistNode`、`HoistTreeBuilder`（`init` / `addPackage` / `addDependency` / `build` / `treeCount` / `treeAt` / `treeDepCount` / `treeDepAt` / `resolvedPkg` / `formatRelativePath` / `formatPackageInstallPath`）；
+- **Hoisting vs Isolated 依赖树最佳实践与边界约束（参考 `/data/dev/bun/docs/pm/{isolated-installs,lockfile}.mdx`）**：
+  - **两阶段构建模式**：`HoistBuildMode.Resolvable` 保留所有依赖（含禁用 OS/CPU 包与可选依赖），确保写入 `bun.lock` 后跨平台变更配置仍可完整解析；`HoistBuildMode.Filter` 在实际物化安装时过滤禁用包与 `--omit=dev/peer/optional` 依赖，允许剩余依赖更激进地提升至顶层；
+  - **Hoist Root 隔离与冲突退回**：`bundledDependencies`（`HOIST_DEP_BUNDLED`）与本地 `folder` 依赖（`HOIST_DEP_FOLDER`）不得向上提升，其中 `bundled` 依赖还会开启新的 `hoist_root_id`，限制其传递子依赖不越界泄漏至外层 `node_modules`；当向祖先提升遇到同名不同版本冲突时，自动退回至当前子树嵌套 `node_modules/<pkg>/node_modules`；
+  - **Optional Peer 延迟解析**：未解析的 `optional + peer` 依赖若在后续 BFS 阶段遇到同层或祖先层提供的真实包，会通过 `ResolveReplace` / `ResolveOptionalPeer` 自动回填 `resolvedPkg()`；同级非 peer 同名不同版本直接返回 `HoistTreeError.DependencyLoop` 防护。
+
+```cp
+import {
+    HOIST_DEP_NORMAL,
+    HoistBuildMode,
+    HoistPathStyle,
+    HoistOmitPolicy,
+    HoistTreeBuilder,
+} from "cap:pkg";
+
+let b = HoistTreeBuilder.init();
+const root = b.addPackage("app", "1.0.0", false)?;
+const lodash4 = b.addPackage("lodash", "4.17.21", false)?;
+const lodash3 = b.addPackage("lodash", "3.10.1", false)?;
+const legacy = b.addPackage("legacy", "1.0.0", false)?;
+
+* = b.addDependency(root, "lodash", lodash4, HOIST_DEP_NORMAL, false)?;
+* = b.addDependency(root, "legacy", legacy, HOIST_DEP_NORMAL, false)?;
+* = b.addDependency(legacy, "lodash", lodash3, HOIST_DEP_NORMAL, false)?;
+
+const trees = b.build(HoistBuildMode.Resolvable, HoistOmitPolicy{})?; // 2
+let buf: [128]u8 = [0; 128];
+const n = b.formatPackageInstallPath(1, "lodash", buf[0..])?;
+// buf[0..n] == "node_modules/legacy/node_modules/lodash"
+* = trees;
+* = n;
+```

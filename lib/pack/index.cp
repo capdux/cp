@@ -390,3 +390,21 @@ export {
     encodeDeltaForBlockU32,
     decodeDeltaForBlockU32,
 } from "./forBitpack.cp";
+
+// --- rle_hybrid ---
+export {
+    HYBRID_RLE_MAX_BIT_WIDTH,
+    HYBRID_RLE_MIN_RUN_LEN,
+    HYBRID_RLE_GROUP_SIZE,
+    HYBRID_RLE_MAX_BITPACK_GROUPS,
+    hybridBitWidthU32,
+    hybridMinBitWidthSlice,
+    hybridValueByteWidth,
+    hybridMaxEncodedSize,
+    HybridRleStatus,
+    HybridRleEncodeResult,
+    HybridRleDecodeResult,
+    encodeHybridRleU32,
+    HybridRleDecoder,
+    decodeHybridRleU32,
+} from "./rleHybrid.cp";
