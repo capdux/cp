@@ -23,7 +23,7 @@ import {
     encodeValue,
     encodeCommand,
     encodeInlineCommand,
-} from "cap:valkey";
+} from "cap:db";
 import cap from "cap";
 
 fn expectRoundTrip(alloc: std.mem.Allocator, val: RespValue, resp3: bool) {
@@ -294,10 +294,10 @@ test("5. Dynamic Namespace Mounting (cap.valkey) & Zero Memory Leaks") {
     const alloc = std.testing.allocator;
 
     let cmd_args: [2][]const u8 = ["GET", "session:42"];
-    const wire = cap.valkey.encodeCommand(alloc, &cmd_args) catch unreachable;
+    const wire = cap.db.encodeCommand(alloc, &cmd_args) catch unreachable;
     defer alloc.free(wire);
 
-    let parser = cap.valkey.RespStreamParser.init(alloc);
+    let parser = cap.db.RespStreamParser.init(alloc);
     defer parser.deinit();
 
     parser.feed(wire) catch unreachable;

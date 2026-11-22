@@ -15,7 +15,7 @@ import {
     VrmlNodeIter,
     findVrmlField,
     summarizeVrml,
-} from "cap:vrml";
+} from "cap:gfx";
 
 const SAMPLE_VRML97: []const u8 =
     "#VRML V2.0 utf8\n" ++

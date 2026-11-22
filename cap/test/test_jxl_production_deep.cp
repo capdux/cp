@@ -14,7 +14,7 @@ import {
     parseJxlSizeHeader,
     JxlBoxIter,
     parseJxlInfo,
-} from "cap:jxl";
+} from "cap:image";
 
 const JXL_SIG_BOX: [12]u8 = [
     0x00, 0x00, 0x00, 0x0C,

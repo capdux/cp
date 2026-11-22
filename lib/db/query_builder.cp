@@ -9,7 +9,7 @@ import {
     QueryParam,
     BuiltQuery,
     IdentCodec,
-} from "./types.cp";
+} from "./query_types.cp";
 
 enum PendingErr: u8 {
     None = 0,

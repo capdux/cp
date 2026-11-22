@@ -4,7 +4,7 @@
 
 ## 一、 架构总览
 
-`cap:gfx` 将原本分散在根目录的 20 个纯 CP 图形与游戏引擎基础小模块统一收敛至 `lib/gfx/`，通过 `lib/gfx/index.cp` 提供零符号冲突的统一导出（`import { ... } from "cap:gfx"` 与 `import cap from "cap"; cap.gfx.*`）。
+`cap:gfx` 将原本分散在根目录的 25 个纯 CP 图形与游戏引擎基础小模块统一收敛至 `lib/gfx/`，通过 `lib/gfx/index.cp` 提供零符号冲突的统一导出（`import { ... } from "cap:gfx"` 与 `import cap from "cap"; cap.gfx.*`）。
 
 - **统一 2D 向量类型 (`Vec2`)**：`bezier.cp` 与 `gjk.cp` 共享同一 `Vec2` 结构体（含 `add`/`sub`/`scale`/`neg`/`dot`/`cross`/`lenSq`/`len`/`dist`/`lerp`/`normalize`/`perp`），支持贝塞尔曲线几何与 GJK/SAT 凸包碰撞检测无缝互操作。
 - **零外部依赖、零 Bun 资产冲突**：全部为纯 CP 零分配或显式 Allocator 确定性实现。
@@ -35,6 +35,11 @@
 | `lib/gfx/gltf.cp` | `lib/gltf` | `GlbHeader`, `GlbChunk`, `parseGlbHeader`, `GlbChunkIter` 等（glTF 2.0 / GLB 3D 资产容器解析） |
 | `lib/gfx/fbx.cp` | `lib/fbx` | `FbxHeader`, `FbxNodeHeader`, `parseFbxHeader` 等（Autodesk FBX 7100-7700 二进制 3D 资产解析） |
 | `lib/gfx/bvh.cp` | `lib/bvh` | `BvhHeader`, `BvhJoint`, `parseBvh` 等（Biovision Hierarchy BVH 骨骼动作捕捉解析） |
+| `lib/gfx/dae.cp` | `lib/dae` | `DaeAsset`, `DaeGeometry`, `DaeFloatArray`, `DaeSceneNode`, `DaeStats`, `isCollada`, `parseDaeAsset`, `summarizeDae` 等（零分配 Khronos COLLADA 1.4/1.5 3D 资产 XML 解析） |
+| `lib/gfx/usd.cp` | `lib/usd` | `UsdFormat`, `UsdcBootstrap`, `UsdcSection`, `UsdaHeader`, `detectUsdFormat`, `parseUsdcBootstrap`, `findUsdcSection`, `parseUsdaHeader` 等（零分配 Pixar OpenUSD `.usdc`/`.usda`/`.usdz` 解析） |
+| `lib/gfx/vrml.cp` | `lib/vrml` | `VrmlFlavor`, `VrmlHeader`, `VrmlToken`, `VrmlNode`, `VrmlStats`, `VrmlLexer`, `VrmlNodeIter`, `summarizeVrml` 等（零分配 VRML97 & Classic X3D 场景解析） |
+| `lib/gfx/x3d.cp` | `lib/x3d` | `X3dHeader`, `X3dMeta`, `X3dNode`, `X3dStats`, `isX3d`, `parseX3dHeader`, `X3dNodeIter`, `summarizeX3d` 等（零分配 Web3D X3D 3.x/4.0 XML 场景解析） |
+| `lib/gfx/noise.cp` | `lib/noise` | `NoiseError`, `FractalConfig`, `NoiseGen`（确定性 2D/3D Perlin、fBm、Ridged、Worley 噪声与高度图网格生成） |
 
 ---
 

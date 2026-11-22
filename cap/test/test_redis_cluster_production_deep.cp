@@ -14,7 +14,7 @@ import {
     RedirectKind,
     ClusterTopology,
     parseRedirectError,
-} from "cap:redis_cluster";
+} from "cap:db";
 
 test("redis_cluster crc16 official vector, hash tag edge cases and keySlot") {
     try expect_eq(@as(u16, 16384), REDIS_CLUSTER_SLOTS);
@@ -117,13 +117,13 @@ test("redis_cluster ensureSameSlot multi-key consistency") {
 }
 
 test("redis_cluster cap.redis_cluster dynamic mount and zero-leak check") {
-    const slot = cap.redis_cluster.keySlot("session:{abc}:token");
+    const slot = cap.db.keySlot("session:{abc}:token");
     try expect_eq(keySlot("session:{abc}:token"), slot);
 
-    let topo = cap.redis_cluster.ClusterTopology.init(std.testing.allocator);
+    let topo = cap.db.ClusterTopology.init(std.testing.allocator);
     defer topo.deinit();
-    const empty_replicas: [0]cap.redis_cluster.NodeEndpoint = [];
-    try topo.addSlotRange(0, 16383, cap.redis_cluster.NodeEndpoint.init("127.0.0.1", 6379), &empty_replicas);
+    const empty_replicas: [0]cap.db.NodeEndpoint = [];
+    try topo.addSlotRange(0, 16383, cap.db.NodeEndpoint.init("127.0.0.1", 6379), &empty_replicas);
     const ep = try topo.routeKey("session:{abc}:token");
     try std.testing.expectEqualStrings("127.0.0.1", ep.host);
     try expect_eq(@as(u16, 6379), ep.port);

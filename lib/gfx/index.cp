@@ -296,3 +296,79 @@ export {
     BvhFrameIter,
 } from "./bvh.cp";
 
+// --- dae ---
+export {
+    DaeAsset,
+    DaeGeometry,
+    DaeFloatArray,
+    DaeSceneNode,
+    DaeStats,
+    DaeGeometryIter,
+    DaeFloatArrayIter,
+    DaeFloatIter,
+    DaeSceneNodeIter,
+    isCollada,
+    parseDaeAsset,
+    summarizeDae,
+} from "./dae.cp";
+
+// --- usd ---
+export {
+    USDC_MAGIC,
+    USDC_BOOTSTRAP_SIZE,
+    USDC_SECTION_NAME_LEN,
+    USDC_SECTION_ENTRY_SIZE,
+    USDA_MAGIC,
+    UsdFormat,
+    UsdcBootstrap,
+    UsdcSection,
+    UsdaHeader,
+    UsdcSectionIter,
+    isUsdc,
+    isUsda,
+    isUsdz,
+    detectUsdFormat,
+    parseUsdcBootstrap,
+    findUsdcSection,
+    parseUsdaHeader,
+} from "./usd.cp";
+
+// --- vrml ---
+export {
+    VrmlFlavor,
+    VrmlTokenKind,
+    VrmlHeader,
+    VrmlToken,
+    VrmlNode,
+    VrmlStats,
+    parseVrmlHeader,
+    isVrml,
+    VrmlLexer,
+    VrmlNodeIter,
+    findVrmlField,
+    summarizeVrml,
+} from "./vrml.cp";
+
+// --- x3d ---
+export {
+    X3dHeader,
+    X3dMeta,
+    X3dNode,
+    X3dStats,
+    isX3d,
+    parseX3dHeader,
+    X3dMetaIter,
+    findX3dMeta,
+    X3dNodeIter,
+    X3dFloatIter,
+    X3dIntIter,
+    summarizeX3d,
+} from "./x3d.cp";
+
+// --- noise ---
+export {
+    NoiseError,
+    FractalConfig,
+    NoiseGen,
+} from "./noise.cp";
+

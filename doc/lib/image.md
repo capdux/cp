@@ -150,7 +150,7 @@ pub fn demoImagePipeline() {
 
 ## 六、 扩展图像、矢量绘图与条码格式（Pure-CP 零冲突归并）
 
-以下 13 个纯 CP 图像/容器/矢量/条码格式模块已统一收敛至 `lib/image/` 并零冲突导出至 `cap:image`：
+以下 15 个纯 CP 图像/容器/矢量/条码格式模块已统一收敛至 `lib/image/` 并零冲突导出至 `cap:image`：
 
 | 子模块文件 | 领域分类 | 核心导出符号 |
 | :--- | :--- | :--- |
@@ -167,5 +167,7 @@ pub fn demoImagePipeline() {
 | `svg_canvas.cp` / `svg_charts.cp` | SVG 1.1 画布与统计图表 | `SvgCanvas`, `SvgPathBuilder`, `SvgStyle`, `SvgCharts`, `ChartDatum`, `LineSeries` |
 | `barcode.cp` | 1D 条码 (Code128/EAN13/UPCA) | `BarcodeEncoder`, `BarcodeRenderer`, `BarcodeFormat`, `BarcodeBitPattern`, `BarcodeError` |
 | `qrcode_ecc.cp` / `qrcode_encoder.cp` / `qrcode_render.cp` | ISO/IEC 18004 二维码 | `QrCode`, `QrMatrix`, `QrRenderer`, `QrEccLevel`, `ReedSolomon`, `QrError` |
+| `jxl.cp` | JPEG XL 码流与 ISOBMFF 容器 | `JxlContainerKind`, `JxlSizeHeader`, `JxlBox`, `JxlInfo`, `isJxl`, `detectJxlKind`, `parseJxlSizeHeader`, `JxlBoxIter`, `parseJxlInfo` |
+| `xcf.cp` | GIMP XCF 多图层图像解析 | `XCF_MAGIC`, `XcfBaseType`, `XcfCompression`, `XcfPrecision`, `XcfHeader`, `XcfLayerInfo`, `XcfPropIter`, `XcfPointerIter`, `isXcf`, `parseXcfHeader`, `parseXcfLayerHeader` |
 
 > **重叠参考归档说明**：`bmp_.cp`、`gif_.cp`、`png_.cp`、`exif_.cp`、`thumbhash_.cp`、`image_probe_.cp` 为与 Bun 权威实现功能重叠的对照参考副本（文件首行带 `// Reference Only:` 声明），不在 `lib/image/index.cp` 冲突导出。

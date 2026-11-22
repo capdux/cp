@@ -1,7 +1,7 @@
 // Source: cp/lib/redis_cluster/topology.cp (Redis Cluster Topology, O(1) Slot Router & Redirect Parser)
 
 const std = @import("std");
-import { REDIS_CLUSTER_SLOTS, keySlot } from "./crc16.cp";
+import { REDIS_CLUSTER_SLOTS, keySlot } from "./redis_cluster_crc16.cp";
 
 pub const ClusterError = error{
     InvalidSlotRange,

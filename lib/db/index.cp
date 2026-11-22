@@ -186,3 +186,74 @@ export {
     QuantileDigest,
     ReservoirSampler,
 } from "./sketch.cp";
+
+// --- redis_cluster ---
+export {
+    REDIS_CLUSTER_SLOTS,
+    crc16Ccitt,
+    extractHashTag,
+    keySlot,
+    ensureSameSlot,
+} from "./redis_cluster_crc16.cp";
+
+export {
+    ClusterError,
+    NodeEndpoint,
+    SlotRange,
+    RedirectKind,
+    ClusterRedirect,
+    ClusterTopology,
+    parseRedirectError,
+} from "./redis_cluster_topology.cp";
+
+// --- valkey ---
+export {
+    DEFAULT_MAX_DEPTH,
+    DEFAULT_MAX_BULK_LEN,
+    DEFAULT_MAX_COLLECTION_LEN,
+    ProtocolError,
+    RespLimits,
+    RespType,
+    VerbatimString,
+    MapEntry,
+    RespValue,
+    ParseResult,
+    RespStreamParser,
+    parseOne,
+    parseOneWithLimits,
+    parseInlineCommand,
+    encodeValue,
+    encodeCommand,
+    encodeInlineCommand,
+} from "./valkey.cp";
+
+// --- query ---
+export {
+    QueryError,
+    QueryDialect,
+    QueryParam,
+    BuiltQuery,
+    IdentCodec,
+} from "./query_types.cp";
+
+export {
+    SelectBuilder,
+    InsertBuilder,
+    UpdateBuilder,
+    DeleteBuilder,
+} from "./query_builder.cp";
+
+// --- schema ---
+export {
+    SchemaParseError,
+    SchemaType,
+    StringFormat,
+    PropertySchema,
+    Schema,
+} from "./schema.cp";
+
+export {
+    ValidationIssue,
+    ValidationResult,
+    SchemaValidator,
+} from "./schema_validator.cp";

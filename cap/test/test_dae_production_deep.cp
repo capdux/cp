@@ -14,7 +14,7 @@ import {
     isCollada,
     parseDaeAsset,
     summarizeDae,
-} from "cap:dae";
+} from "cap:gfx";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

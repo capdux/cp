@@ -18,7 +18,7 @@ import {
     ValidationIssue,
     ValidationResult,
     SchemaValidator,
-} from "cap:schema";
+} from "cap:db";
 import cap from "cap";
 
 fn hasIssue(res: ValidationResult, path: []const u8, code: []const u8): bool {
@@ -277,10 +277,10 @@ fn testCapSchemaLazyMount()! {
     const alloc = std.heap.page_allocator;
 
     const raw_schema = "{\"type\":\"object\",\"required\":[\"request_id\",\"ip\"],\"additionalProperties\":false,\"properties\":{\"request_id\":{\"type\":\"string\",\"format\":\"uuid\"},\"ip\":{\"type\":\"string\",\"format\":\"ipv4\"}}}";
-    let s = cap.schema.Schema.fromJson(alloc, raw_schema) catch unreachable;
+    let s = cap.db.Schema.fromJson(alloc, raw_schema) catch unreachable;
     defer s.deinit();
 
-    let ok_res = cap.schema.SchemaValidator.validateJson(
+    let ok_res = cap.db.SchemaValidator.validateJson(
         alloc,
         s,
         "{\"request_id\":\"123e4567-e89b-12d3-a456-426614174000\",\"ip\":\"10.0.0.1\"}",
@@ -288,7 +288,7 @@ fn testCapSchemaLazyMount()! {
     defer ok_res.deinit();
     expect_eq(ok_res.ok, true);
 
-    let bad_res = cap.schema.SchemaValidator.validateJson(
+    let bad_res = cap.db.SchemaValidator.validateJson(
         alloc,
         s,
         "{\"request_id\":\"bad\",\"ip\":\"999.0.0.1\"}",

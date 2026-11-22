@@ -10,7 +10,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { NoiseError, FractalConfig, NoiseGen } from "cap:noise";
+import { NoiseError, FractalConfig, NoiseGen } from "cap:gfx";
 
 test("cap:noise - determinism and seed isolation") {
     const g1 = NoiseGen.init(123456789);
@@ -176,9 +176,9 @@ test("cap:noise - generateGrid2D heightmap bounds, guards & zero-leak") {
 
 test("cap.noise - dynamic mounting via import cap") {
     const alloc = std.testing.allocator;
-    const g_dyn = cap.noise.NoiseGen.init(42);
+    const g_dyn = cap.gfx.NoiseGen.init(42);
     const g_dir = NoiseGen.init(42);
-    const cfg = cap.noise.FractalConfig.init(3, 0.5, 2.0, 0.5);
+    const cfg = cap.gfx.FractalConfig.init(3, 0.5, 2.0, 0.5);
 
     expect_eq(g_dyn.perlin2(1.25, -0.75) == g_dir.perlin2(1.25, -0.75), true);
     expect_eq(g_dyn.perlin3(0.5, 1.5, 2.5) == g_dir.perlin3(0.5, 1.5, 2.5), true);

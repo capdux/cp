@@ -20,7 +20,7 @@ import {
     InsertBuilder,
     UpdateBuilder,
     DeleteBuilder,
-} from "cap:query";
+} from "cap:db";
 
 fn testSelectPostgresComplex(): !void {
     const alloc = std.heap.page_allocator;
@@ -306,38 +306,38 @@ fn testUpdateDeleteAndInjectionIsolation(): !void {
 fn testCapQueryDynamicMount(): !void {
     const alloc = std.heap.page_allocator;
 
-    // Verify `import cap from "cap"; cap.query.*` automatic dynamic mounting
-    const quoted = cap.query.IdentCodec.quote(alloc, cap.query.QueryDialect.MySql, "app.users")?;
+    // Verify `import cap from "cap"; cap.db.*` automatic dynamic mounting
+    const quoted = cap.db.IdentCodec.quote(alloc, cap.db.QueryDialect.MySql, "app.users")?;
     defer alloc.free(quoted);
     expect_eq(std.mem.eql(u8, quoted, "`app`.`users`"), true);
 
-    let sb = cap.query.SelectBuilder.init(alloc, .Sqlite, "tasks");
+    let sb = cap.db.SelectBuilder.init(alloc, .Sqlite, "tasks");
     defer sb.deinit();
     const cols: [2]string = ["id", "title"];
     let sq = sb.columns(&cols)
-        .whereEq("done", cap.query.QueryParam.makeBool(false))
+        .whereEq("done", cap.db.QueryParam.makeBool(false))
         .limit(5)
         .build()?;
     defer sq.deinit();
     expect_eq(std.mem.eql(u8, sq.sql, "SELECT \"id\", \"title\" FROM \"tasks\" WHERE \"done\" = ? LIMIT 5"), true);
     expect_eq(sq.params.len, 1 as usize);
 
-    let ib = cap.query.InsertBuilder.init(alloc, .Postgres, "tasks");
+    let ib = cap.db.InsertBuilder.init(alloc, .Postgres, "tasks");
     defer ib.deinit();
     const icols: [1]string = ["title"];
-    const irow: [1]cap.query.QueryParam = [.Text("ship cap:query")];
+    const irow: [1]cap.db.QueryParam = [.Text("ship cap:query")];
     const iret: [1]string = ["id"];
     let iq = ib.columns(&icols).addRow(&irow).returning(&iret).build()?;
     defer iq.deinit();
     expect_eq(std.mem.eql(u8, iq.sql, "INSERT INTO \"tasks\" (\"title\") VALUES ($1) RETURNING \"id\""), true);
 
-    let ub = cap.query.UpdateBuilder.init(alloc, .Postgres, "tasks");
+    let ub = cap.db.UpdateBuilder.init(alloc, .Postgres, "tasks");
     defer ub.deinit();
     let uq = ub.set("done", .Bool(true)).whereEq("id", .Int(1)).build()?;
     defer uq.deinit();
     expect_eq(std.mem.eql(u8, uq.sql, "UPDATE \"tasks\" SET \"done\" = $1 WHERE \"id\" = $2"), true);
 
-    let db = cap.query.DeleteBuilder.init(alloc, .Sqlite, "tasks");
+    let db = cap.db.DeleteBuilder.init(alloc, .Sqlite, "tasks");
     defer db.deinit();
     let dq = db.whereEq("done", .Bool(true)).build()?;
     defer dq.deinit();
