@@ -85,3 +85,20 @@ pub fn demoPhaseAString(): !void {
    - 对标 `Bun.stringWidth`：`stringWidth` 综合处理 CJK 双宽字符、零宽组合音标、Emoji 与 ANSI 控制序列；截断用户可见文本时优先按 `GraphemeIterator`（UAX #29）边界切分，避免把多码点 Emoji 或组合字符截断成乱码。
 4. **15 字节短字符串内联（`SmolStr`）与 16B SIMD 扫描（`SimdScanner`）**：
    - 长度 `<= 15` 字节的标识符/短键使用 `SmolStr` 零堆内联；大缓冲区查找分隔符、引号或换行符优先走 `SimdScanner` 16 字节向量快路径。
+5. **宿主缓冲区绑定子串视图（`SlicedString` / `SlicedSpan`，吸收自 `/data/dev/bun/src/install_types/SlicedString.cp`）**：
+   - 导出符号：`SlicedStringError`（`OutOfBounds`/`InvalidRange`）、`SlicedSpan`（`offset`/`len`/`end`/`isEmpty`/`resolve`）、`SlicedSplit`、`SlicedString`（`fromBuffer`/`fromRange`/`fromSpan`/`slice`/`buffer`/`offsetInBuffer`/`length`/`isEmpty`/`toSpan`/`subRange`/`trimAscii`/`stripPrefix`/`stripSuffix`/`splitOnceByte`/`eql`/`hashFnv64`）；
+   - 在解析包清单、lockfile 或大文本协议时，通过 `(buf, offset, len)` 保持子串与宿主缓冲区的显式归属关系，零拷贝完成二次切片、裁剪、键值拆分，并可导出 8 字节紧凑 `SlicedSpan` 句柄持久化到字符串池。
+
+```cp
+import { SlicedString } from "cap:string";
+
+const raw = "  @scope/pkg@1.2.3  ";
+const view = SlicedString.fromBuffer(raw).trimAscii();
+if (parts := view.splitOnceByte('@')) {
+    // 跳过前导 '@'，再按下一个 '@' 拆分包名与版本
+    if (nv := parts.right.splitOnceByte('@')) {
+        const span = nv.right.toSpan(); // offset=13, len=5 -> "1.2.3"
+        * = span;
+    }
+}
+```

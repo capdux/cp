@@ -59,3 +59,10 @@ export * from "./path.cp";
 export * from "./joiner.cp";
 export * from "./wcwidth.cp";
 export * from "./utils.cp";
+
+export {
+    SlicedStringError,
+    SlicedSpan,
+    SlicedSplit,
+    SlicedString,
+} from "./sliced.cp";
