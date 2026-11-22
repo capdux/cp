@@ -140,3 +140,23 @@ export {
     isSensitiveEnvKey,
     filterEnvIndices,
 } from "./sandbox.cp";
+
+export {
+    NO_PARENT_SPAN,
+    AgentSpanKind,
+    AgentSpanStatus,
+    AgentSpan,
+    TraceRollup,
+    AgentTracer,
+} from "./tracer.cp";
+
+export {
+    SKILL_NO_DEP,
+    SkillStatus,
+    SkillDescriptor,
+    SkillQuery,
+    SkillMatch,
+    SkillRegistryStats,
+    skillTagHash,
+    SkillRegistry,
+} from "./skill_registry.cp";

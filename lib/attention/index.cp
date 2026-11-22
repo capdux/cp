@@ -121,3 +121,13 @@ export {
     matryoshkaProject,
     cosineSimilarityMatrix,
 } from "./embedding.cp";
+
+export {
+    DpoResult,
+    logSumExp,
+    crossEntropyLoss,
+    sequencePerplexity,
+    klDivergenceFromLogits,
+    dpoLoss,
+    infoNceLoss,
+} from "./loss.cp";

@@ -773,3 +773,100 @@ fn codingAgentSandboxDemo() {
     * = filterEnvIndices(env_keys[0..], allow_env, true, keep);
 }
 ```
+
+---
+
+## 子模块：AI Agent 层级 Span 链路追踪与 GenAI 遥测导出器（`tracer.cp`）
+
+### 核心特性
+
+- **对标 OpenTelemetry GenAI 语义约定**：提供 `AgentRun` / `LlmCall` / `ToolExec` / `Retrieval` / `Guardrail` / `Handoff` 六类语义 Span，通过 `NO_PARENT_SPAN` 与 `parent_id` 构建完整树形调用链。
+- **确定性时间与指标汇总（`rollup`）**：`endSpan` 禁止重复结束与回退为 `Running`，自动对时间回拨执行 `end_ms >= start_ms` 钳位；`rollup()` 精确汇总全链路 `prompt_tokens`、`completion_tokens`、微美元成本、错误 Span 数、LLM/Tool 调用次数及端到端耗时。
+- **零堆分配 RFC-8259 转义 JSON 导出（`exportJson`）**：直接将 `trace_id`、`rollup` 与全部 `spans` 序列化至调用方缓冲（自动转义 `"`/`\`/`\n`/控制字符），可直接对接可观测性平台。
+
+### 导出清单
+
+- **常量与类型**：`NO_PARENT_SPAN`、`AgentSpanKind`、`AgentSpanStatus`、`AgentSpan`、`TraceRollup`
+- **链路追踪器**：`AgentTracer`（`init`, `startSpan`, `endSpan`, `rollup`, `exportJson`）
+
+### 使用示例
+
+```typescript
+import {
+    NO_PARENT_SPAN,
+    AgentSpan,
+    AgentSpanKind,
+    AgentSpanStatus,
+    AgentTracer,
+} from "cap:agent";
+
+fn agentTracerDemo() {
+    let pool_arr: [8]AgentSpan = undefined;
+    let pool: []AgentSpan = pool_arr[0..];
+    let tr = AgentTracer.init(9001, pool);
+
+    if (root := tr.startSpan(NO_PARENT_SPAN, AgentSpanKind.AgentRun, "solve", "planner", 1000)) {
+        if (llm := tr.startSpan(root, AgentSpanKind.LlmCall, "chat", "gpt-4o", 1010)) {
+            * = tr.endSpan(llm, AgentSpanStatus.Ok, 250, 80, 1200, 1450);
+        }
+        * = tr.endSpan(root, AgentSpanStatus.Ok, 0, 0, 0, 1500);
+    }
+
+    const r = tr.rollup();
+    * = r;
+
+    let json_arr: [2048]u8 = undefined;
+    let json_buf: []u8 = json_arr[0..];
+    * = tr.exportJson(json_buf);
+}
+```
+
+---
+
+## 子模块：AI Agent Skill / Plugin 注册中心与能力匹配引擎（`skill_registry.cp`）
+
+### 核心特性
+
+- **固定槽位注册与生命周期治理**：支持按 ID/名称去重注册（`register`）、安全注销（正在执行中的技能禁止强行卸载）、启用/禁用/废弃状态切换（`enable`/`disable`/`setStatus`）与快速检索（`findById`/`findByName`）。
+- **位掩码能力匹配 + 标签过滤 + Top-K 综合打分（`matchTopK`）**：支持 `required_caps` 强制能力掩码、`preferred_caps` 偏好能力加分（`popcount * 1000`）、`skillTagHash` 标签匹配、`max_cost_units` 成本上限与并发空闲槽位过滤，按 `score` 降序确定性输出 Top-K 技能。
+- **确定性依赖拓扑激活解析（`resolveActivationOrder`）**：基于 Kahn 拓扑算法校验依赖图完整性，严格拦截缺失依赖、禁用依赖、自依赖与循环依赖，输出确定性的激活序列。
+- **并发配额限流与状态汇总（`tryAcquire` / `release` / `stats`）**：精确执行每技能 `max_concurrency` 并发上限与防下溢释放，并实时输出 `SkillRegistryStats`。
+
+### 导出清单
+
+- **常量与类型**：`SKILL_NO_DEP`、`SkillStatus`、`SkillDescriptor`、`SkillQuery`、`SkillMatch`、`SkillRegistryStats`
+- **辅助与注册中心**：`skillTagHash`、`SkillRegistry`（`init`, `register`, `unregister`, `setStatus`, `enable`, `disable`, `findById`, `findByName`, `tryAcquire`, `release`, `matchTopK`, `resolveActivationOrder`, `stats`）
+
+### 使用示例
+
+```typescript
+import {
+    SkillDescriptor,
+    SkillQuery,
+    SkillMatch,
+    SkillRegistry,
+    skillTagHash,
+} from "cap:agent";
+
+fn skillRegistryDemo() {
+    let slots_arr: [8]SkillDescriptor = undefined;
+    let slots: []SkillDescriptor = slots_arr[0..];
+    let reg = SkillRegistry.init(slots);
+
+    const tag_code = skillTagHash("coding");
+    * = reg.register(SkillDescriptor{
+        id: 1,
+        name: "code_search",
+        capability_mask: 0b0011,
+        priority: 20,
+        cost_units: 5,
+        max_concurrency: 2,
+        tag_hash_0: tag_code,
+    });
+
+    let matches_arr: [4]SkillMatch = undefined;
+    let matches: []SkillMatch = matches_arr[0..];
+    const q = SkillQuery{ required_caps: 0b0001, preferred_caps: 0b0010, required_tag_hash: tag_code };
+    * = reg.matchTopK(q, matches, 2);
+}
+```

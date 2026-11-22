@@ -246,3 +246,14 @@ export {
     formatDependencyPlaceholder,
     CssDependencyIter,
 } from "./dependencies.cp";
+
+export {
+    MAX_CSS_DIAGNOSTICS,
+    CssDiagnosticSeverity,
+    CssErrorLocation,
+    CssParserErrorKind,
+    CssPrinterErrorKind,
+    CssDiagnosticDomain,
+    CssDiagnostic,
+    CssDiagnosticBag,
+} from "./diagnostics.cp";

@@ -22,6 +22,7 @@
 - **FP16 / BF16 / FP8 E4M3FN 低精度浮点编解码核** (`fp16.cp`)：零堆分配位级精确 AI 浮点转换与批量小端解包/打包核，完整覆盖 IEEE-754 Binary16（含次正规与 RNE 舍入）、Brain Float16（RNE 防截断偏差）与 OCP/NVIDIA Hopper FP8 E4M3FN（偏置 7、饱和至 `±448.0`、张量级 `scale` 批量反量化）。
 - **`MlaConfig` / `alibiSlopes` / `alibiAttentionSingleQuery` / `mlaCompressKv` / `mlaDecodeSingleHead`** (`mla.cp`)：零堆分配 DeepSeek-V2/V3 多头潜在注意力（MLA：低秩 KV 潜空间压缩 + 矩阵吸收优化 + 解耦 RoPE）与 ALiBi 线性距离偏置注意力核，推理期无需重建完整 K/V 缓存，大幅降低 KV-Cache 显存占用。
 - **`PoolKind` / `embeddingLookup` / `poolHiddenStates` / `l2NormalizeInPlace` / `matryoshkaProject` / `cosineSimilarityMatrix`** (`embedding.cp`)：零堆分配词嵌入查表、带 `attention_mask` 掩码的四流派序列池化（`Mean`/`Cls`/`LastToken`/`Max`，覆盖 BGE/E5/Nomic/Qwen3-Embedding）、Matryoshka 套娃维度截断重归一化与批量余弦相似度矩阵计算。
+- **`DpoResult` / `logSumExp` / `crossEntropyLoss` / `sequencePerplexity` / `klDivergenceFromLogits` / `dpoLoss` / `infoNceLoss`** (`loss.cp`)：零堆分配数值稳定大模型训练与偏好对齐损失函数库，覆盖 Cross-Entropy（含 Label Smoothing）、带 `ignore_index` 序列困惑度、零概率缓冲 KL 散度、防溢出 DPO 偏好对齐损失（Rafailov et al. 2023）与 InfoNCE 对比学习损失。
 
 ## 3. API 速查
 
@@ -91,6 +92,11 @@
 | `l2NormalizeInPlace` | `(vec, eps): f64?` | 原地 L2 单位化并返回归一化前原始范数（零向量返回 `null`） |
 | `matryoshkaProject` | `(full_vec, target_dim, out_vec): bool` | Matryoshka (MRL) 套娃维度截断并重新 L2 归一化为单位向量 |
 | `cosineSimilarityMatrix` | `(queries, n_q, docs, n_d, dim, out_mat): bool` | 批量计算 `[n_q, n_d]` 查询-文档余弦相似度矩阵 |
+| `logSumExp` / `crossEntropyLoss` | `(logits): f64?` / `(logits, target_idx, label_smoothing): f64?` | 数值稳定 LogSumExp 与支持 `label_smoothing ∈ [0, 1)` 的 Cross-Entropy 损失 |
+| `sequencePerplexity` | `(logits_flat, targets, seq_len, vocab_size, ignore_index): f64?` | 跳过 `ignore_index`（如 `-100`）计算序列困惑度 $\exp(\text{mean CE})$ |
+| `klDivergenceFromLogits` | `(p_logits, q_logits): f64?` | 直接从 logits 计算非负 $D_{\text{KL}}(P \| Q)$（无需分配概率缓冲） |
+| `dpoLoss` | `(pi_chosen, pi_rejected, ref_chosen, ref_rejected, beta): DpoResult?` | Direct Preference Optimization 对齐损失与隐式奖励/准确率诊断（极限大负 margin 防溢出） |
+| `infoNceLoss` | `(similarities, positive_idx, temperature): f64?` | 对比学习 InfoNCE 损失（Embedding 微调与检索重排） |
 
 ## 4. 示例
 
@@ -517,5 +523,35 @@ pub fn demoEmbeddingPipeline(vocab_table: []const f64) {
     let mrl_buf: [2]f64 = [0.0; 2];
     let mrl: []f64 = mrl_buf[0..];
     * = matryoshkaProject(pooled_buf[0..], 2, mrl);
+}
+```
+
+### 大模型对齐与评测损失（DPO / InfoNCE / Perplexity）示例 (`loss.cp`)
+
+```cp
+import {
+    sequencePerplexity,
+    dpoLoss,
+    infoNceLoss,
+} from "cap:attention";
+
+pub fn demoAlignmentAndEvalLosses(logits_flat: []const f64, targets: []const i32) {
+    // 1. 序列困惑度（忽略 prompt/PAD 位 -100）
+    if (ppl := sequencePerplexity(logits_flat, targets, 4, 8, -100)) {
+        * = ppl;
+    }
+
+    // 2. DPO 偏好对齐损失（beta = 0.1）
+    if (dpo := dpoLoss(-12.5, -18.0, -14.0, -16.0, 0.1)) {
+        * = dpo.loss;
+        * = dpo.reward_margin;
+        * = dpo.accuracy;
+    }
+
+    // 3. InfoNCE 对比学习损失（positive_idx = 0, tau = 0.05）
+    const sims: [4]f64 = [0.92, 0.41, 0.15, -0.10];
+    if (nce := infoNceLoss(sims[0..], 0, 0.05)) {
+        * = nce;
+    }
 }
 ```
