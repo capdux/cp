@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/PnpmMatcher.cp | Synced: 2026-11-22T05:39:42Z
+// Source: Absorbed from /data/dev/bun/src/install/PnpmMatcher.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation PNPM-compatible package name matcher with include/exclude
 // 3-state semantics and linear-time wildcard (`*`, `?`) matching.
 

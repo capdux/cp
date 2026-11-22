@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/node/dir_iterator.cp | Synced: 2026-11-22T10:07:24Z
+// Source: Absorbed from /data/dev/bun/src/runtime/node/dir_iterator.cp | Synced: 2026-11-22T12:49:17Z
 // ============================================================================
 // lib/sys/dir.cp — Zero-Heap Linux getdents64 Directory Iterator & Dir Handle
 // ============================================================================

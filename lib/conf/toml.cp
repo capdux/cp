@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/interchange/toml/ | Synced: 2026-11-20T09:56:26Z
+// Source: Absorbed from /data/dev/bun/src/interchange/toml/ | Synced: 2026-11-22T12:49:17Z
 // lib/conf/toml.cp
 // Industrial-grade TOML 1.0 Parser, AST Builder, Serializer, and Document Model:
 // - Inline tables (`point = { x = 1, y = 2 }`), nested dotted keys (`a.b.c = 1`), quoted keys (`"a.b" = 1`)

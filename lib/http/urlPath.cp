@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http_types/URLPath.cp | Synced: 2026-11-21T00:07:45Z
+// Source: Absorbed from /data/dev/bun/src/http_types/URLPath.cp | Synced: 2026-11-22T12:49:17Z
 // lib/http/url_path.cp
 // CP HTTP URL Path Parser (cap:http)
 

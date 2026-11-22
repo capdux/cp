@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:17:21Z (W3C Content-Security-Policy Level 3 Parser & Builder)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:49:17Z (W3C Content-Security-Policy Level 3 Parser & Builder)
 // Pure-CP zero-allocation W3C CSP Level 3 directive parser, source lookup, fallback resolution, and builder.
 
 fn isWs(b: u8): bool {

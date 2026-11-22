@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/pm_trusted_command.cp | Synced: 2026-11-21T20:23:25Z
+// Source: Absorbed from /data/dev/bun/src/cli/pm_trusted_command.cp | Synced: 2026-11-22T12:49:17Z
 // Ported from Bun: /data/dev/bun/src/cli/pm_trusted_command.cp & /data/dev/bun/docs/pm/lifecycle.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation Package Lifecycle Script Trust & Supply-Chain Policy Engine:

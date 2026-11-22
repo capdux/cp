@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/zlib/ | Synced: 2026-11-19T20:22:35Z
+// Source: Absorbed from /data/dev/bun/src/zlib/ | Synced: 2026-11-22T12:49:17Z
 // ============================================================================
 // lib/pack/checksum.cp — IEEE 802.3 CRC32 与 RFC 1950 Adler32 校验和引擎
 // 用于 Gzip / Zlib / ZIP 帧完整性校验与流式增量哈希

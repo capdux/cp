@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/states/Script.cp | Synced: 2026-11-22T09:33:55Z
+// Source: Absorbed from /data/dev/bun/src/shell/states/Script.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation POSIX / Bun Shell Top-Level Script & Statement Sequence State Machine
 // Aligned with Bun src/shell/states/{Script,Stmt}.cp & docs/runtime/shell.mdx:
 // - Models all 3 script host contexts: `TopLevel` (Interpreter), `Subshell` (`(...)`), and `CommandSubstitution` (`$(...)`)

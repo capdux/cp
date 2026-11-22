@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/semver/SemverRange.cp | Synced: 2026-11-20T05:06:41Z
+// Source: Absorbed from /data/dev/bun/src/semver/SemverRange.cp | Synced: 2026-11-22T12:49:17Z
 // ============================================================================
 // lib/semver/range.cp — Semver Range & Disjunctive Set Matching Engine
 // ============================================================================

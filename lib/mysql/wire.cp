@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/ | Synced: 2026-11-21T16:59:39Z (packet framing, wire auth, text resultset & COM_* protocol)
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/ | Synced: 2026-11-22T12:49:17Z (packet framing, wire auth, text resultset & COM_* protocol)
 const std = @import("std");
 
 pub const MAX_DEFAULT_PACKET_BYTES: usize = 16 * 1024 * 1024;

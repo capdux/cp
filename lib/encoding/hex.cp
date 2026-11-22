@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/base64/base64.cp | Synced: 2026-11-21T23:47:23Z
+// Source: Absorbed from /data/dev/bun/src/base64/base64.cp | Synced: 2026-11-22T12:49:17Z
 // lib/encoding/hex.cp
 // Zero-heap table-driven & allocating Hexadecimal Encoder & Decoder in pure CP
 

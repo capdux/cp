@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/values/time.cp | Synced: 2026-11-22T05:02:42Z
+// Source: Absorbed from /data/dev/bun/src/css/values/time.cp | Synced: 2026-11-22T12:49:17Z
 //! CSS `<time>` value (`s` / `ms`): parsing, unit conversion, arithmetic,
 //! comparison, and shortest-form CSS serialization (`0.05s` -> `50ms`, `200ms` -> `0.2s`).
 

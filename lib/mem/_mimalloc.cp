@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bun_alloc/MimallocArena.cp | Synced: 2026-11-22T04:41:52Z
+// Source: Absorbed from /data/dev/bun/src/bun_alloc/MimallocArena.cp | Synced: 2026-11-22T12:49:17Z
 // lib/mem/_mimalloc.cp
 // Low-level Mimalloc C-FFI bindings and opaque heap handles (absorbed from bun/src/mimalloc_sys/mimalloc.cp)
 

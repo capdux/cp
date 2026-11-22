@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/resolver/tsconfig_json.cp | Synced: 2026-11-21T23:11:30Z
+// Source: Absorbed from /data/dev/bun/src/resolver/tsconfig_json.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation TSConfig `paths` wildcard resolver & `${configDir}`
 // template expander (longest-prefix match + target substitution).
 

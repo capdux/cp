@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/lshpack.cp | Synced: 2026-11-22T11:12:13Z
+// Source: Absorbed from /data/dev/bun/src/http/lshpack.cp | Synced: 2026-11-22T12:49:17Z
 // lib/http/h2/hpack.cp
 // RFC 7541 Complete HPACK Header Compression for HTTP/2:
 // - 61-entry Static Table (Appendix A)

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http_jsc/websocket_client/ | Synced: 2026-11-20T05:42:23Z
+// Source: Absorbed from /data/dev/bun/src/http_jsc/websocket_client/ | Synced: 2026-11-22T12:49:17Z
 // lib/ws/assembler.cp
 // RFC 6455 Fragmented Message Reassembly, UTF-8 Validation, Close Parsing & Auto-Pong
 

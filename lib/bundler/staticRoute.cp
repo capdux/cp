@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/StaticRouteVisitor.cp | Synced: 2026-11-18T21:40:53Z
+// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/StaticRouteVisitor.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation Static Route / SSG Analyzer for React Server Components:
 // - Determines whether an entry route module is fully static (`isFullyStatic`) or
 //   transitively imports any `"use client"` boundary (`hasTransitiveUseClient`)

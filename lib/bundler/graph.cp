@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/Graph.cp | Synced: 2026-11-18T22:07:30Z
+// Source: Absorbed from /data/dev/bun/src/bundler/Graph.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation Bundler Module Graph & Two-Phase Scan/Defer Coordinator
 // Aligned with Bun src/bundler/Graph.cp & docs/bundler/plugins.mdx:
 // - Deduplicates input files into stable dense `source_index` slots with loader & flag tracking

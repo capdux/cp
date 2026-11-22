@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/uws_sys/ | Synced: 2026-11-19T20:58:05Z
+// Source: Absorbed from /data/dev/bun/src/uws_sys/ | Synced: 2026-11-22T12:49:17Z
 // lib/net/_usockets.cp
 // Low-level uSockets C-FFI bindings, opaque handles, and constants
 // Absorbed from Bun src/uws_sys/ and src/uws/uws.cp

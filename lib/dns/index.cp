@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/dns/ | Synced: 2026-11-21T16:36:41Z
+// Source: Absorbed from /data/dev/bun/src/dns/ | Synced: 2026-11-22T12:49:17Z
 // lib/dns/index.cp
 // Unified Cap DNS Resolution, Wire Codec, HostsTable & c-ares Subsystem (cap:dns)
 

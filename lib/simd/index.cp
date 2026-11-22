@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/highway/ | Synced: 2026-11-19T20:43:01Z
+// Source: Absorbed from /data/dev/bun/src/highway/ | Synced: 2026-11-22T12:49:17Z
 // ============================================================================
 // lib/simd/index.cp — Highway-grade SIMD Vector Acceleration & Byte Scanners (cap:simd)
 // Absorbed from /data/dev/bun/src/highway/highway.cp & Zig std.simd

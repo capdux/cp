@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/OutputFileListBuilder.cp | Synced: 2026-11-22T04:28:11Z
+// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/OutputFileListBuilder.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation 3-segment bundler OutputFileList layout builder:
 //   Segment 1: [0 .. chunk_count)                           -> Chunks (O(1) invariant: outputIndexForChunk(i) == i)
 //   Segment 2: [chunk_count .. additional_start)            -> External sourcemaps, bytecode caches, ESM module_info

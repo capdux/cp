@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/unknown.cp | Synced: 2026-11-22T12:14:23Z
+// Source: Absorbed from /data/dev/bun/src/css/rules/unknown.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation W3C CSS Syntax Level 3 generic / unknown `@-rule` parser,
 // prelude tokenizer, standard-vs-extension classifier (e.g. `@tailwind`, `@apply`,
 // `@theme`, `@position-try`, `@view-transition`, `@-moz-document`), canonical &

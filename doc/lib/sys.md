@@ -255,6 +255,48 @@ pub fn demoProcSupervisor() {
 }
 ```
 
+### 零分配黑匣子二进制事件环形飞行记录器 (`flightLog.cp`)
+
+面向系统崩溃取证与故障现场回放的 100% 纯 CP 零动态堆分配紧凑二进制环形飞行记录器：
+
+- **常量与枚举**：
+  - `FLIGHT_LOG_RING_BYTES = 8192`（8 KiB 2 的幂位掩码环形缓冲）、`FLIGHT_LOG_MAX_PAYLOAD = 256`、`FLIGHT_LOG_RECORD_HEADER_SIZE = 22`、`FLIGHT_LOG_DUMP_MAGIC = 0x314C4643` (`"CFL1"`)、`FLIGHT_LOG_DUMP_HEADER_SIZE = 32`、`FLIGHT_LOG_DUMP_TRAILER_SIZE = 4`
+  - `FlightSeverity`（`trace | debug | info | warn | err | fatal`）
+  - `FlightRecordStatus`（`ok | frozen | payload_too_large`）
+  - `FlightDumpStatus`（`ok | invalid_magic | invalid_version | truncated | checksum_mismatch | corrupt_record`）
+- **数据模型与离线校验函数**：
+  - `FlightEvent`（`seq_id`, `timestamp_ns`, `event_kind`, `severity`, `payload_len`, `payload`, `payloadSlice()`）
+  - `FlightDumpMeta`、`FlightLogStats`
+  - `verifyBinaryDump(dump): FlightDumpMeta` / `parseBinaryDump(dump, out_events): usize?`：校验 Magic `"CFL1"`、版本、尾部 IEEE CRC32 与全部嵌入式记录帧结构及严格递增 `seq_id`。
+- **核心引擎 `FlightRecorder`**：
+  - `init()` / `recordEvent(*_, timestamp_ns, event_kind, severity, payload)`：单调递增 `seq_id`，缓冲满时自动驱逐最老记录并精确累计 `dropped_count`。
+  - `snapshotEvents(after_seq_id, max_recent, out_events)`：支持按 `after_seq_id` 增量导出或取最近 N 条有序回放。
+  - `freeze()` / `unfreeze()` / `isFrozen()` / `clear()`：崩溃/严重故障时冻结黑匣子防止后续日志冲刷现场。
+  - `exportBinaryDump(out_buf)` / `stats()`：导出带尾部 CRC32 的自包含二进制转储。
+
+```cp
+import {
+    FlightSeverity,
+    FlightDumpStatus,
+    FlightRecorder,
+    verifyBinaryDump,
+} from "cap:sys";
+
+pub fn demoFlightRecorder() {
+    let rec = FlightRecorder.init();
+    * = rec.recordEvent(1_000, 10, FlightSeverity.info as u8, "worker:started");
+    * = rec.recordEvent(2_000, 99, FlightSeverity.fatal as u8, "panic:oom");
+    rec.freeze(); // 冻结黑匣子保护现场
+
+    let dump: [512]u8 = [0; 512];
+    let dump_s: []u8 = dump[0..];
+    if (n := rec.exportBinaryDump(*dump_s)) {
+        const meta = verifyBinaryDump(dump[0..n]);
+        * = (meta.status == FlightDumpStatus.ok && meta.frozen); // true
+    }
+}
+```
+
 ## 收敛子模块深度文档
 
 - [acpi.md](sys/acpi.md)

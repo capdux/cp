@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/EncodeInt.cp | Synced: 2026-11-20T04:53:37Z
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/EncodeInt.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation MySQL wire-protocol length-encoded integer (`lenenc-int`)
 // and length-encoded string (`lenenc-str`) encoder/decoder (1/3/4/9-byte LE format,
 // with 0xfb NULL & 0xff ERR marker awareness and truncation/overflow guards).

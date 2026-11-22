@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/md/ref_defs.cp | Synced: 2026-11-22T12:23:20Z
+// Source: Absorbed from /data/dev/bun/src/md/ref_defs.cp | Synced: 2026-11-22T12:49:17Z
 // lib/md/ref_defs.cp
 // CommonMark Link Reference Definition Parser, Unicode Case-Folding Normalizer & Hashtable Builder
 

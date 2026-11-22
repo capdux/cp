@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/tailwind.cp | Synced: 2026-11-22T12:14:24Z
+// Source: Absorbed from /data/dev/bun/src/css/rules/tailwind.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation Tailwind CSS `@tailwind` directive parser (base / components /
 // utilities / variants), `@apply` utility list parser (arbitrary-value bracket safe),
 // cascade-order validator, duplicate-layer detector, canonical serializer, and

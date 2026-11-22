@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:17:21Z (RFC 5952 IPv4 / IPv6 Address Parser & Canonical Formatter)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:49:17Z (RFC 5952 IPv4 / IPv6 Address Parser & Canonical Formatter)
 // Pure-CP zero-allocation IPv4 & IPv6 parser, RFC 5952 canonical formatter, classification, and CIDR matching.
 
 fn hexVal(c: u8): u8? {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/io/pipes.cp | Synced: 2026-11-20T09:23:15Z
+// Source: Absorbed from /data/dev/bun/src/io/pipes.cp | Synced: 2026-11-22T12:49:17Z
 /**
  * CP Buffer Streams (cap:io)
  * 内存切片、增强型缓冲读写器、组合流装饰器与动态 ChunkedBuffer

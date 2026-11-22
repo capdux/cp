@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/server/RangeRequest.cp | Synced: 2026-11-22T09:28:26Z
+// Source: Absorbed from /data/dev/bun/src/runtime/server/RangeRequest.cp | Synced: 2026-11-22T12:49:17Z
 
 /// Inclusive byte range `[start, end]` where `start <= end`.
 pub struct ByteRange {

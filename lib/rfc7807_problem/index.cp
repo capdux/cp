@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:17:21Z (RFC 9457 / RFC 7807 Problem Details Barrel)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:49:17Z (RFC 9457 / RFC 7807 Problem Details Barrel)
 export {
     PROBLEM_JSON_CONTENT_TYPE,
     defaultTitleForStatus,

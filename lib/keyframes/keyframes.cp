@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/keyframes.cp | Synced: 2026-11-22T08:17:40Z (Zero-Alloc CSS @keyframes Parser, Minifier & Timeline Sampler)
+// Source: Absorbed from /data/dev/bun/src/css/rules/keyframes.cp | Synced: 2026-11-22T12:49:17Z (Zero-Alloc CSS @keyframes Parser, Minifier & Timeline Sampler)
 
 /// Vendor prefix of a `@keyframes` at-rule.
 pub enum VendorPrefix: u8 {

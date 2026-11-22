@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/keyframes.cp | Synced: 2026-11-22T08:17:40Z
+// Source: Absorbed from /data/dev/bun/src/css/rules/keyframes.cp | Synced: 2026-11-22T12:49:17Z
 
 /// CSS At-Rules（`@keyframes` / `@layer` / `@counter-style` / `@property`）解析错误集
 pub err CssAtRuleError {

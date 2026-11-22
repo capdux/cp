@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/collections/ | Synced: 2026-11-19T20:30:26Z
+// Source: Absorbed from /data/dev/bun/src/collections/ | Synced: 2026-11-22T12:49:17Z
 // ============================================================================
 // lib/col/treap.cp — 零堆碎片平衡树堆 (Treap: Randomized Binary Search Tree)
 // 兼具二叉搜索树 (BST 按 Key 有序) 与最大堆 (按 SplitMix64 伪随机优先级平衡) 特性

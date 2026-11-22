@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/integrity.cp | Synced: 2026-11-22T08:21:08Z
+// Source: Absorbed from /data/dev/bun/src/install/integrity.cp | Synced: 2026-11-22T12:49:17Z
 //! W3C Subresource Integrity (SRI) parser, formatter, one-shot & streaming verifier
 //! (`sha1-`, `sha256-`, `sha384-`, `sha512-`, plus 40-char hex shasum).
 

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/safety/alloc.cp | Synced: 2026-11-20T07:55:15Z
+// Source: Absorbed from /data/dev/bun/src/safety/alloc.cp | Synced: 2026-11-22T12:49:17Z
 import std from "std";
 
 const alloc_safety_enabled: bool = true;

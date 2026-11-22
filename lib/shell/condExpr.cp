@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/states/CondExpr.cp | Synced: 2026-11-22T09:33:35Z
+// Source: Absorbed from /data/dev/bun/src/shell/states/CondExpr.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation Bash `[[ ... ]]` conditional expression parser &
 // evaluator supporting file tests (-e/-f/-d/-c/-L/-s/-r/-w/-x), string tests
 // (-z/-n/==/!=/</>), signed 64-bit integer comparisons (-eq/-ne/-lt/-le/-gt/-ge),

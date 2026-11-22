@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/napi/napi.cp | Synced: 2026-11-22T10:07:49Z
+// Source: Absorbed from /data/dev/bun/src/napi/napi.cp | Synced: 2026-11-22T12:49:17Z
 // lib/napi/napi.cp
 // Safe CP High-Level Wrapper, Status/Error Mapping & Addon Registry for Node-API (cap:napi)
 

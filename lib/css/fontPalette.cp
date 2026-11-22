@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/font_palette_values.cp | Synced: 2026-11-22T08:17:13Z
+// Source: Absorbed from /data/dev/bun/src/css/rules/font_palette_values.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation W3C CSS Fonts Level 4 `@font-palette-values` rule
 // parser, validator (generic font-family & `currentColor` rejection, non-negative
 // palette indices), lookup helper, and canonical/minified serializer.

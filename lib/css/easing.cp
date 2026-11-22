@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/values/easing.cp | Synced: 2026-11-22T12:15:40Z
+// Source: Absorbed from /data/dev/bun/src/css/values/easing.cp | Synced: 2026-11-22T12:49:17Z
 
 /// CSS Easing Functions Level 1 解析与序列化错误集
 pub err CssEasingError {

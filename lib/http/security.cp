@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:17:21Z (HTTP Security Headers HSTS / Referrer / COOP / COEP)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:49:17Z (HTTP Security Headers HSTS / Referrer / COOP / COEP)
 
 const U64_MAX: u64 = 0xFFFF_FFFF_FFFF_FFFF;
 

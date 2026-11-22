@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/unicode/uucode_lib/src/x/config_x/wcwidth.cp | Synced: 2026-11-20T04:56:52Z
+// Source: Absorbed from /data/dev/bun/src/unicode/uucode_lib/src/x/config_x/wcwidth.cp | Synced: 2026-11-22T12:49:17Z
 // lib/string/wcwidth.cp
 // Unicode Monospace Display Column Width (`wcwidth` & `stringWidth` / `Bun.stringWidth` parity)
 // Absorbed from Bun src/unicode/uucode_lib/src/x/config_x/wcwidth.cp

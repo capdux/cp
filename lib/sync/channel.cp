@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/threading/channel.cp | Synced: 2026-11-22T11:56:52Z
+// Source: Absorbed from /data/dev/bun/src/threading/channel.cp | Synced: 2026-11-22T12:49:17Z
 // Thread-safe bounded channel in CP
 // High-throughput CSP communication primitive
 import { Mutex } from "./mutex";

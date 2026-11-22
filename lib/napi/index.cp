@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/napi/napi.cp | Synced: 2026-11-22T10:07:49Z
+// Source: Absorbed from /data/dev/bun/src/napi/napi.cp | Synced: 2026-11-22T12:49:17Z
 // lib/napi/index.cp
 // Unified Public Exports for Node-API C-ABI & Safe Wrapper (cap:napi)
 

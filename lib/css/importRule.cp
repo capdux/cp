@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/import.cp | Synced: 2026-11-22T12:14:03Z
+// Source: Absorbed from /data/dev/bun/src/css/rules/import.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation W3C CSS Cascading and Inheritance Level 5 `@import` rule parser,
 // condition model (`layer` / `supports(...)` / `<media-query-list>`), canonical serializer
 // with bundler placeholder rewriting, and stylesheet leading `@import` extractor.

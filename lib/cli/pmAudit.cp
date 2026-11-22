@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/audit_command.cp | Synced: 2026-11-21T18:39:59Z
+// Source: Absorbed from /data/dev/bun/src/cli/audit_command.cp | Synced: 2026-11-22T12:49:17Z
 // Ported from Bun: /data/dev/bun/src/cli/audit_command.cp & /data/dev/bun/docs/pm/cli/audit.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation Package Security Audit Engine:

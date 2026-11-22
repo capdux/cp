@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/collections/ | Synced: 2026-11-19T20:27:16Z
+// Source: Absorbed from /data/dev/bun/src/collections/ | Synced: 2026-11-22T12:49:17Z
 // ============================================================================
 // lib/col/priority_queue.cp — 二叉最小堆优先队列 (Binary Min-Heap PriorityQueue<T>)
 // 支持 O(log N) 入队 (add / push)、O(log N) 弹出最小元 (pop) 与 O(1) 窥视堆顶 (peek)

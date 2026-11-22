@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/builtin/yes.cp | Synced: 2026-11-22T11:31:00Z
+// Source: Absorbed from /data/dev/bun/src/shell/builtin/yes.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation POSIX/Bun Shell `yes` Builtin Chunk Generator & Cooperative Yield State Machine
 // Aligned with Bun src/shell/builtin/yes.cp & docs/runtime/shell.mdx:
 // - Formats default "y\n" or space-joined arguments + "\n" into a single template line

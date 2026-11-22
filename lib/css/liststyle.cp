@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/list.cp | Synced: 2026-11-22T04:57:13Z
+// Source: Absorbed from /data/dev/bun/src/css/properties/list.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation CSS Lists and Counters Module Level 3 properties:
 // PredefinedCounterStyle, ListStyleType, ListStylePosition, MarkerSide, ListStyle shorthand.
 

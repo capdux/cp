@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:17:21Z (W3C Clear-Site-Data Header Parser & Builder)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:49:17Z (W3C Clear-Site-Data Header Parser & Builder)
 // Pure-CP zero-allocation W3C Clear-Site-Data response header parser and canonical builder.
 
 fn isWs(b: u8): bool {

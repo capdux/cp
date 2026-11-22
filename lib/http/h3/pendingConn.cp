@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/h3_client/PendingConnect.cp | Synced: 2026-11-15T16:56:37Z
+// Source: Absorbed from /data/dev/bun/src/http/h3_client/PendingConnect.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation HTTP/3 DNS-Pending QUIC Connect Queue & Lifecycle Coordinator
 // Aligned with Bun src/http/h3_client/PendingConnect.cp & docs/runtime/networking/dns.mdx:
 // - Tracks in-flight DNS lookups preceding QUIC socket attachment with bounded fixed-capacity slots

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/exe_format/ | Synced: 2026-11-20T05:46:06Z
+// Source: Absorbed from /data/dev/bun/src/exe_format/ | Synced: 2026-11-22T12:49:17Z
 // lib/elf/format.cp
 // Executable Binary Format Detection & ELF64 / Mach-O / PE Header Inspector
 // Absorbed from Bun src/exe_format/elf.cp, macho.cp & pe.cp

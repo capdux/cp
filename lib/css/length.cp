@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/values/length.cp | Synced: 2026-11-20T16:13:49Z
+// Source: Absorbed from /data/dev/bun/src/css/values/length.cp | Synced: 2026-11-22T12:49:17Z
 // lib/css/length.cp
 // CSS Values & Units Level 4: CssUnit, CssLength, and Recursive-Descent CssCalc Evaluator
 // Absorbed from Bun src/css/values/{length,angle,time,percentage,calc}.cp

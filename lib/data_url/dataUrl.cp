@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/resolver/data_url.cp | Synced: 2026-11-21T23:32:33Z
+// Source: Absorbed from /data/dev/bun/src/resolver/data_url.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation RFC 2397 Data URL parser, percent-encoder/decoder,
 // base64 payload decoder/encoder, and shortest Data URL encoder.
 

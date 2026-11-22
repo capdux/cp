@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/js_parser/ast/ServerComponentBoundary.cp | Synced: 2026-11-20T13:19:13Z
+// Source: Absorbed from /data/dev/bun/src/js_parser/ast/ServerComponentBoundary.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation React Server Components (RSC) Boundary Registry:
 // - Parses `"use client"` / `"use server"` module directives
 // - Tracks canonical `source_index` <-> cross-platform `reference_source_index`

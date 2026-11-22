@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:17:21Z (RFC 7838 HTTP Alt-Svc Header Parser & Formatter)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:49:17Z (RFC 7838 HTTP Alt-Svc Header Parser & Formatter)
 
 const DEFAULT_ALT_SVC_MAX_AGE: u64 = 86400;
 const U64_MAX: u64 = 18446744073709551615;

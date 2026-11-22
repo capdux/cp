@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/ | Synced: 2026-11-21T16:39:27Z (Zero-Alloc CLI Table Renderer)
+// Source: Absorbed from /data/dev/bun/src/cli/ | Synced: 2026-11-22T12:49:17Z (Zero-Alloc CLI Table Renderer)
 // Pure-CP zero-allocation CLI terminal table border, column-width, and alignment renderer.
 
 /// Terminal table border drawing style.

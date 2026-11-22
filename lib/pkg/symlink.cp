@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/isolated_install/Symlinker.cp | Synced: 2026-11-22T10:39:50Z
+// Source: Absorbed from /data/dev/bun/src/install/isolated_install/Symlinker.cp | Synced: 2026-11-22T12:49:17Z
 // Ported from Bun: /data/dev/bun/src/install/isolated_install/Symlinker.cp & /data/dev/bun/docs/pm/isolated-installs.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation isolated-install symlink reconciliation engine & relative symlink target planner:

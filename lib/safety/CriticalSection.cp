@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/safety/CriticalSection.cp | Synced: 2026-11-20T05:01:16Z
+// Source: Absorbed from /data/dev/bun/src/safety/CriticalSection.cp | Synced: 2026-11-22T12:49:17Z
 import std from "std";
 import { invalid } from "./threadId.cp";
 

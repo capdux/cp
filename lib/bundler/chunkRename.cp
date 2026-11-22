@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/renameSymbolsInChunk.cp | Synced: 2026-11-21T23:23:20Z
+// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/renameSymbolsInChunk.cp | Synced: 2026-11-22T12:49:17Z
 // Ported from Bun: /data/dev/bun/src/bundler/linker_context/renameSymbolsInChunk.cp & /data/dev/bun/docs/bundler/minifier.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation Chunk-Level Symbol Renaming Coordinator:

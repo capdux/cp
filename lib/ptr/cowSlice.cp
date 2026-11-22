@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ptr/CowSlice.cp | Synced: 2026-11-21T23:32:17Z
+// Source: Absorbed from /data/dev/bun/src/ptr/CowSlice.cp | Synced: 2026-11-22T12:49:17Z
 // Copy-on-Write slice primitive with pointer-packed ownership flag
 import std from "std";
 

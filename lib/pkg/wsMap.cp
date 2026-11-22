@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/lockfile/Package/WorkspaceMap.cp | Synced: 2026-11-21T23:00:54Z
+// Source: Absorbed from /data/dev/bun/src/install/lockfile/Package/WorkspaceMap.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation Monorepo Workspace Map & Deterministic Sorter:
 // - Ignored path filtering (`node_modules`, `.git`, `CMakeFiles`)
 // - Bidirectional lookup by normalized relative path and package name

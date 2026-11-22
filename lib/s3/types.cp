@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/s3_signing/ | Synced: 2026-11-19T20:37:48Z
+// Source: Absorbed from /data/dev/bun/src/s3_signing/ | Synced: 2026-11-22T12:49:17Z
 // ============================================================================
 // lib/s3/types.cp — S3 访问控制列表 (ACL)、存储类型 (StorageClass) 与错误码
 // 吸收自 Bun src/s3_signing/acl.cp, storage_class.cp, error.cp

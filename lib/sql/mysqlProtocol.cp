@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/Auth.cp | Synced: 2026-11-22T03:19:48Z
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/Auth.cp | Synced: 2026-11-22T12:49:17Z
 // lib/sql/mysql_protocol.cp
 // Complete MySQL 4.1+ / 8.0 Wire Protocol Codecs: Auth (Native/CachingSHA2/Switch),
 // SSLRequest, ColumnDefinition41, ResultSetHeader, COM_STMT_PREPARE/EXECUTE & Binary Row Decoder

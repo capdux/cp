@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/grid.cp | Synced: 2026-11-22T12:13:48Z
+// Source: Absorbed from /data/dev/bun/src/css/properties/grid.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation W3C CSS Grid Layout Level 2 property parser & serializer:
 // - `grid-template-columns` / `grid-template-rows` (`none`, `<track-size>`, `minmax()`,
 //   `fit-content()`, `repeat(N | auto-fill | auto-fit, ...)`, `[line-name]` brackets)

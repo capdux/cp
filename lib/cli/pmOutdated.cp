@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/outdated_command.cp | Synced: 2026-11-22T08:14:32Z
+// Source: Absorbed from /data/dev/bun/src/cli/outdated_command.cp | Synced: 2026-11-22T12:49:17Z
 // Ported from Bun: /data/dev/bun/src/cli/outdated_command.cp & /data/dev/bun/docs/pm/cli/outdated.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation Package Outdated Analysis & Table Formatter:

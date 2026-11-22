@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sourcemap/sourcemap.cp | Synced: 2026-11-21T23:40:09Z
+// Source: Absorbed from /data/dev/bun/src/sourcemap/sourcemap.cp | Synced: 2026-11-22T12:49:17Z
 // ============================================================================
 // lib/sourcemap/index.cp — CP 工业级标准 SourceMap v3 模块 (cap:sourcemap)
 // ============================================================================

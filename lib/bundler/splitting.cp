@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/LinkerGraph.cp | Synced: 2026-11-22T02:31:58Z
+// Source: Absorbed from /data/dev/bun/src/bundler/LinkerGraph.cp | Synced: 2026-11-22T12:49:17Z
 // lib/bundler/splitting.cp
 // Multi-entry CodeSplitter using u64 reachability bitmasks, shared chunk extraction, content hashing & AssetManifest
 

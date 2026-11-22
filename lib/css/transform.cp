@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/transform.cp | Synced: 2026-11-22T12:14:07Z
+// Source: Absorbed from /data/dev/bun/src/css/properties/transform.cp | Synced: 2026-11-22T12:49:17Z
 
 pub err Error {
     EmptyInput,

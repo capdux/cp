@@ -698,3 +698,32 @@ let col = BuildOutputCollection.init();
 * = col.push(f)?;
 * = n;
 ```
+
+- **Bundler 懒导出规划器与 CSS Modules `composes` 展开图（`lazyExport.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/generateCodeForLazyExport.cp` & `/data/dev/bun/docs/bundler/loaders.mdx`）**：
+    - 导出：`LAZY_EXPORT_MAX_PROPS` (`64`)、`LAZY_EXPORT_MAX_CSS_CLASSES` (`64`)、`LAZY_EXPORT_MAX_COMPOSES_EDGES` (`128`)、`LAZY_EXPORT_MAX_RESOLVED_TOKENS` (`32`)、`LazyExportError`、`isLazyExportJsIdentifier`、`isPromotableLazyNamedExport`、`formatLazyDefaultIdent`、`LazyExportKind`（`Esm`/`Cjs`/`CjsNapiAddon`）、`LazyExportPropDecision`、`LazyExportPropRecord`、`LazyExportPlanSummary`、`LazyExportPlanner`、`CssComposeTargetKind`、`CssModuleClassDef`、`CssComposeEdge`、`CssComposeGraph`；
+    - **Built-in Loaders 与 CSS Modules 最佳实践（参考 `/data/dev/bun/docs/bundler/loaders.mdx`）**：
+      - `.json` / `.jsonc` / `.toml` / `.yaml` 与 CSS Modules 在 ESM 模式下通过懒导出将合法 JS 标识符顶层属性拆分为独立 `Part`（`PromotedNamedExport`），使未引用的字段在链接期直接被 tree-shake 裁剪；`"default"`、`"__esModule"` 以及含连字符/保留字的键保留在 `<stem>_default` 默认导出对象中；
+      - `.node`（N-API Addon）在非 CJS 输出格式（`output_is_cjs = false`）下必须注入运行时 `__require` 符号；
+      - CSS Modules 的 `composes` 仅允许作用于单类选择器（复合选择器返回 `NonSingleClassCompose`），支持同文件、跨文件导入与 `from global` 原始类名，`CssComposeGraph` 通过 64 位访问掩码保障递归组合零死循环且无重复类名。
+
+```cp
+import {
+    LazyExportKind,
+    LazyExportPlanner,
+    CssComposeGraph,
+} from "cap:bundler";
+
+let plan = LazyExportPlanner.init(LazyExportKind.Esm, false);
+* = plan.addProperty("version")?;     // PromotedNamedExport (tree-shakeable)
+* = plan.addProperty("my-key")?;      // DefaultOnlyNonIdent
+* = plan.addProperty("default")?;     // DefaultOnlyReserved
+
+let g = CssComposeGraph.init();
+const base = g.registerClass(0, "base", "base_a1", true)?;
+const btn = g.registerClass(1, "btn", "btn_b2", true)?;
+* = g.addComposeGlobal(base, "u-reset")?;
+* = g.addComposeRef(btn, base)?;
+let cls_buf: [64]u8 = [0; 64];
+const n = g.formatExpandedClassExpr(btn, cls_buf[0..])?; // "u-reset base_a1 btn_b2"
+* = n;
+```

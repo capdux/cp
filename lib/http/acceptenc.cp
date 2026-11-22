@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/ | Synced: 2026-11-22T11:12:13Z (RFC 9110 Accept-Encoding Negotiator)
+// Source: Absorbed from /data/dev/bun/src/http/ | Synced: 2026-11-22T12:49:17Z (RFC 9110 Accept-Encoding Negotiator)
 
 fn isOws(c: u8): bool {
     return c == ' ' || c == '\t';

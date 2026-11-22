@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/states/Assigns.cp | Synced: 2026-11-22T11:32:07Z
+// Source: Absorbed from /data/dev/bun/src/shell/states/Assigns.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation POSIX / Bun Shell Environment Assignment Expansion & Scope Commit State Machine
 // Aligned with Bun src/shell/states/Assigns.cp & docs/runtime/shell.mdx:
 // - Models all 3 POSIX assignment contexts: `Cmd` (per-command prefix), `Shell` (local shell var), `Exported` (`export`)

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/PackageManager.cp | Synced: 2026-11-22T12:15:52Z (SPDX 2.3 License Expression Parser & Validator)
+// Source: Absorbed from /data/dev/bun/src/install/PackageManager.cp | Synced: 2026-11-22T12:49:17Z (SPDX 2.3 License Expression Parser & Validator)
 
 /// SPDX 2.3 词法记号类型
 export enum SpdxTokenKind {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/s3_signing/ | Synced: 2026-11-19T20:37:50Z
+// Source: Absorbed from /data/dev/bun/src/s3_signing/ | Synced: 2026-11-22T12:49:17Z
 // ============================================================================
 // lib/s3/signing.cp — AWS Signature Version 4 (AWS4-HMAC-SHA256) 签名引擎
 // 吸收自 Bun src/s3_signing/credentials.cp

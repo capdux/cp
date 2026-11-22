@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/isolated_install/FileCloner.cp | Synced: 2026-11-14T05:56:26Z
+// Source: Absorbed from /data/dev/bun/src/install/isolated_install/FileCloner.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation Isolated Install File Materializer Policy, Recovery State Machine & Path Planner
 // Aligned with Bun src/install/isolated_install/{FileCloner,Hardlinker}.cp & docs/pm/isolated-installs.mdx:
 // - Resolves default linker mode (`isolated` vs `hoisted`) from lockfile `configVersion` and workspace presence

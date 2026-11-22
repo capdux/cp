@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/states/If.cp | Synced: 2026-11-22T09:33:42Z
+// Source: Absorbed from /data/dev/bun/src/shell/states/If.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation POSIX / Bun Shell `if / elif / else` Control-Flow State Machine
 // Aligned with Bun src/shell/states/If.cp & docs/runtime/shell.mdx:
 // - Uses Bun's flat `else_parts` layout:

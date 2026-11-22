@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/ffi/ffi.cp | Synced: 2026-11-22T12:26:05Z
+// Source: Absorbed from /data/dev/bun/src/runtime/ffi/ffi.cp | Synced: 2026-11-22T12:51:02Z
 // lib/ffi/index.cp
 // Unified Public Exports for cap:ffi
 

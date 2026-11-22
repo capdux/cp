@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/repository.cp | Synced: 2026-11-22T12:18:49Z (Git Refname Validator & Classifier)
+// Source: Absorbed from /data/dev/bun/src/install/repository.cp | Synced: 2026-11-22T12:49:17Z (Git Refname Validator & Classifier)
 
 /// Git 引用类型枚举
 pub enum GitRefKind: u8 {

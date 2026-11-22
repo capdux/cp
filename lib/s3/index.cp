@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/s3_signing/ | Synced: 2026-11-21T17:30:09Z
+// Source: Absorbed from /data/dev/bun/src/s3_signing/ | Synced: 2026-11-22T12:49:17Z
 // ============================================================================
 // lib/s3/index.cp — CP 工业级 S3 客户端引擎与 AWS SigV4 模块 (cap:s3)
 // ============================================================================

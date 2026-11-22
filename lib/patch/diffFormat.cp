@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/test_runner/diff_format.zig | Synced: 2026-11-22T00:07:46Z
+// Source: Absorbed from /data/dev/bun/src/test_runner/diff_format.zig | Synced: 2026-11-22T12:49:17Z
 // lib/patch/diff_format.cp
 // Bun Test-Runner Style Colored Diff Renderer with Line Numbers, Context Trimming & Inline Prefix/Suffix Highlight
 

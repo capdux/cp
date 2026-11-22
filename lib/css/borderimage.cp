@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/border_image.cp | Synced: 2026-11-22T05:12:51Z
+// Source: Absorbed from /data/dev/bun/src/css/properties/border_image.cp | Synced: 2026-11-22T12:49:17Z
 
 fn isSpace(c: u8): bool {
     return c == ' ' || c == '\t' || c == '\n' || c == '\r';

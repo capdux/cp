@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/md/ref_defs.cp | Synced: 2026-11-22T12:23:20Z
+// Source: Absorbed from /data/dev/bun/src/md/ref_defs.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP CommonMark §4.7 Link Reference Definition parser, label normalizer,
 // destination/title parsers, and first-definition-wins lookup table.
 

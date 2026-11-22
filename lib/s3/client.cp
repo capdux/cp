@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/s3_signing/ | Synced: 2026-11-20T07:10:31Z
+// Source: Absorbed from /data/dev/bun/src/s3_signing/ | Synced: 2026-11-22T12:49:17Z
 import { S3Acl, S3StorageClass, S3SignErrorCode, S3Error } from "./types";
 import { S3Credentials } from "./credentials";
 import { SigV4Signer } from "./signing";

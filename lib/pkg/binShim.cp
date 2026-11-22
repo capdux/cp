@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/windows-shim/BinLinkingShim.cp | Synced: 2026-11-22T10:04:13Z
+// Source: Absorbed from /data/dev/bun/src/install/windows-shim/BinLinkingShim.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation `.bunx` bin-linking shim binary codec, shebang parser
 // (`#!/usr/bin/env node|bun`), script extension launcher classifier, and UTF-16LE
 // trailer/flags encoder & decoder (`v1=5474..v5=5478` corruption-detection magic).

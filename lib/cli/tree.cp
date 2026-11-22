@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/ | Synced: 2026-11-21T16:39:27Z (Zero-Alloc CLI Tree Renderer)
+// Source: Absorbed from /data/dev/bun/src/cli/ | Synced: 2026-11-22T12:49:17Z (Zero-Alloc CLI Tree Renderer)
 // Pure-CP zero-allocation CLI tree & dependency-graph renderer supporting Unicode, ASCII, and Rounded styles.
 
 /// Tree branch and connector drawing style.

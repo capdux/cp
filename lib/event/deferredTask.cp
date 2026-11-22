@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/event_loop/DeferredTaskQueue.cp | Synced: 2026-11-20T11:15:37Z
+// Source: Absorbed from /data/dev/bun/src/event_loop/DeferredTaskQueue.cp | Synced: 2026-11-22T12:49:17Z
 // lib/event/deferred_task.cp
 // Zero-allocation deduplicated deferred microtask queue for cap:event
 

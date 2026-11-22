@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/prefixes.cp | Synced: 2026-11-20T13:41:13Z
+// Source: Absorbed from /data/dev/bun/src/css/prefixes.cp | Synced: 2026-11-22T12:49:17Z
 // lib/css/prefixes.cp
 // CSS Vendor Prefixing & Logical-to-Physical Property Expansion
 // Absorbed from Bun src/css/prefixes.cp & src/css/logical.cp

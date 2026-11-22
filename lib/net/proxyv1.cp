@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:17:21Z (HAProxy PROXY Protocol v1 Parser & Formatter)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:49:17Z (HAProxy PROXY Protocol v1 Parser & Formatter)
 
 const MAX_PROXY_V1_LEN: usize = 107;
 

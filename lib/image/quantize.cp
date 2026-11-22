@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/image/quantize.cp | Synced: 2026-11-21T22:59:40Z
+// Source: Absorbed from /data/dev/bun/src/runtime/image/quantize.cp | Synced: 2026-11-22T12:49:17Z
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/quantize.cp
 // Upstream Sync: Refer to bun/src/runtime/image/quantize.zig for future upstream updates.

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/libarchive/libarchive.cp | Synced: 2026-11-21T21:31:06Z
+// Source: Absorbed from /data/dev/bun/src/libarchive/libarchive.cp | Synced: 2026-11-22T12:49:17Z
 // ============================================================================
 // lib/pack/tar.cp — POSIX.1-1988 USTAR Tar Archive Header & Zero-Copy Reader
 // Absorbed from Bun src/libarchive/libarchive.cp

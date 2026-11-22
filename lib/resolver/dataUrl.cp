@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/resolver/data_url.zig | Synced: 2026-11-21T23:32:46Z
+// Source: Absorbed from /data/dev/bun/src/resolver/data_url.zig | Synced: 2026-11-22T12:49:17Z
 // ============================================================================
 // lib/resolver/data_url.cp — RFC 2397 Data URL Parser & Decoder (cap:resolver)
 // ============================================================================

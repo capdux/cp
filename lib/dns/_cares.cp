@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/dns/ | Synced: 2026-11-19T20:50:09Z
+// Source: Absorbed from /data/dev/bun/src/dns/ | Synced: 2026-11-22T12:49:17Z
 // lib/dns/_cares.cp
 // Low-level c-ares C-FFI bindings, NSClass/NSType & ARES status codes
 // Absorbed from bun/src/cares_sys/c_ares.cp

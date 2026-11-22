@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http_jsc/websocket_client/ | Synced: 2026-11-20T05:41:48Z
+// Source: Absorbed from /data/dev/bun/src/http_jsc/websocket_client/ | Synced: 2026-11-22T12:49:17Z
 // ============================================================================
 // Absorbed from Bun: bun/src/ws/opcode.cp
 // Upstream Sync: Refer to bun/src/ws/opcode.zig for future upstream updates.

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/builtin/seq.cp | Synced: 2026-11-22T00:02:43Z
+// Source: Absorbed from /data/dev/bun/src/shell/builtin/seq.cp | Synced: 2026-11-22T12:49:17Z
 // ============================================================================
 // lib/shell/builtin_text.cp
 // Text, Sequence & Filter Built-in Commands for CP Shell (cap:shell)

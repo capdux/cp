@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/PackageManager/WorkspacePackageJSONCache.cp | Synced: 2026-11-22T09:21:59Z
+// Source: Absorbed from /data/dev/bun/src/install/PackageManager/WorkspacePackageJSONCache.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation Monorepo Workspace `package.json` Cache, Path Normalizer & Indentation/JSONC Analyzer
 // Aligned with Bun src/install/PackageManager/WorkspacePackageJSONCache.cp & docs/pm/workspaces.mdx:
 // - Enforces absolute path invariant and normalizes Windows '\' to POSIX '/' for cross-platform cache keys

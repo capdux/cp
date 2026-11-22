@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/repository.cp | Synced: 2026-11-22T12:18:49Z
+// Source: Absorbed from /data/dev/bun/src/install/repository.cp | Synced: 2026-11-22T12:49:17Z
 // Ported from Bun: /data/dev/bun/src/install/repository.cp & /data/dev/bun/docs/pm/cli/add.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation Git/GitHub/GitLab/Bitbucket dependency specifier parser,

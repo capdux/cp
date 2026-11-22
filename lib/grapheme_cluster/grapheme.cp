@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string/immutable/grapheme.cp | Synced: 2026-11-22T10:09:34Z
+// Source: Absorbed from /data/dev/bun/src/string/immutable/grapheme.cp | Synced: 2026-11-22T12:49:17Z
 
 /// Unicode UAX #29 扩展字素簇断行属性分类
 pub enum GraphemeBreakProperty: u8 {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/namespace.cp | Synced: 2026-11-22T12:14:02Z
+// Source: Absorbed from /data/dev/bun/src/css/rules/namespace.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation W3C CSS Namespaces Module Level 3 `@namespace` rule parser,
 // serializer, and fixed-capacity default/prefixed namespace registry.
 

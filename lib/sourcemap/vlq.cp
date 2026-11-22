@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sourcemap/VLQ.cp | Synced: 2026-11-20T23:40:09Z
+// Source: Absorbed from /data/dev/bun/src/sourcemap/VLQ.cp | Synced: 2026-11-22T12:49:17Z
 // ============================================================================
 // lib/sourcemap/vlq.cp — Base64 VLQ (Variable-Length Quantity) 编解码器
 // 吸收自 Bun src/sourcemap/VLQ.cp

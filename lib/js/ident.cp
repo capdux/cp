@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/js_parser/lexer/ | Synced: 2026-11-21T17:06:09Z
+// Source: Absorbed from /data/dev/bun/src/js_parser/lexer/ | Synced: 2026-11-22T12:49:17Z
 
 /// ECMAScript / TypeScript 关键字分类
 export enum KeywordKind {

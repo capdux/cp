@@ -1280,3 +1280,22 @@ export {
     ProcSupStats,
     ProcSupervisor,
 } from "./supervisor.cp";
+
+// --- flightLog (Zero-Alloc Black-Box Binary Flight-Recorder Event Ring Buffer) ---
+export {
+    FLIGHT_LOG_RING_BYTES,
+    FLIGHT_LOG_MAX_PAYLOAD,
+    FLIGHT_LOG_RECORD_HEADER_SIZE,
+    FLIGHT_LOG_DUMP_MAGIC,
+    FLIGHT_LOG_DUMP_HEADER_SIZE,
+    FLIGHT_LOG_DUMP_TRAILER_SIZE,
+    FlightSeverity,
+    FlightRecordStatus,
+    FlightDumpStatus,
+    FlightEvent,
+    FlightDumpMeta,
+    FlightLogStats,
+    FlightRecorder,
+    verifyBinaryDump,
+    parseBinaryDump,
+} from "./flightLog.cp";

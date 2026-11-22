@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/ | Synced: 2026-11-20T10:24:11Z
+// Source: Absorbed from /data/dev/bun/src/bundler/ | Synced: 2026-11-22T12:49:17Z
 // lib/bundler/index.cp
 // Unified Public Exports for cap:bundler
 
@@ -424,3 +424,23 @@ export {
     BuildOutputFile,
     BuildOutputCollection,
 } from "./outputFile";
+
+export {
+    LAZY_EXPORT_MAX_PROPS,
+    LAZY_EXPORT_MAX_CSS_CLASSES,
+    LAZY_EXPORT_MAX_COMPOSES_EDGES,
+    LAZY_EXPORT_MAX_RESOLVED_TOKENS,
+    LazyExportError,
+    isLazyExportJsIdentifier,
+    isPromotableLazyNamedExport,
+    formatLazyDefaultIdent,
+    LazyExportKind,
+    LazyExportPropDecision,
+    LazyExportPropRecord,
+    LazyExportPlanSummary,
+    LazyExportPlanner,
+    CssComposeTargetKind,
+    CssModuleClassDef,
+    CssComposeEdge,
+    CssComposeGraph,
+} from "./lazyExport";

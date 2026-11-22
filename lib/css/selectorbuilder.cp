@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/selectors/builder.cp | Synced: 2026-11-22T10:15:27Z
+// Source: Absorbed from /data/dev/bun/src/css/selectors/builder.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation CSS Selector Builder (Servo/LightningCSS matching-order
 // compound selector layout) with W3C Selectors Level 4 Specificity calculation.
 

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ptr/owned.cp | Synced: 2026-11-22T10:10:19Z
+// Source: Absorbed from /data/dev/bun/src/ptr/owned.cp | Synced: 2026-11-22T12:49:17Z
 // Unique single-ownership pointer and slice abstraction (Owned<T>, OwnedIn<T, Allocator>, Dynamic<T>)
 import std from "std";
 import { PointerInfo, PointerKind, AddConst } from "./meta.cp";

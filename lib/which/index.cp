@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/which/which.cp | Synced: 2026-11-21T05:00:29Z
+// Source: Absorbed from /data/dev/bun/src/which/which.cp | Synced: 2026-11-22T12:49:17Z
 // ============================================================================
 // Absorbed from Bun: /data/dev/bun/src/which/which.cp
 // Upstream Sync: Refer to /data/dev/bun/src/which/ for future upstream updates.

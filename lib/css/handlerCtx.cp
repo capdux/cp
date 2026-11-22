@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/context.cp | Synced: 2026-11-21T12:58:20Z
+// Source: Absorbed from /data/dev/bun/src/css/context.cp | Synced: 2026-11-22T12:49:17Z
 // Ported from Bun: /data/dev/bun/src/css/context.cp & /data/dev/bun/docs/bundler/css.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation CSS PropertyHandlerContext for Progressive Lowering:

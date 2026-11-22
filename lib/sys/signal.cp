@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys/SignalCode.cp | Synced: 2026-11-21T00:07:46Z
+// Source: Absorbed from /data/dev/bun/src/sys/SignalCode.cp | Synced: 2026-11-22T12:49:17Z
 // ============================================================================
 // lib/sys/signal.cp — Cross-platform POSIX Signal Codes & Name Lookup
 // ============================================================================

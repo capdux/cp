@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/dotenv/env_loader.cp | Synced: 2026-11-22T11:54:39Z
+// Source: Absorbed from /data/dev/bun/src/dotenv/env_loader.cp | Synced: 2026-11-22T12:49:17Z
 // lib/conf/dotenv.cp
 // High-performance, zero-allocation .env loader in CP
 

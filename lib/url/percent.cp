@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/url/url.cp | Synced: 2026-11-22T11:13:51Z
+// Source: Absorbed from /data/dev/bun/src/url/url.cp | Synced: 2026-11-22T12:49:17Z
 // ============================================================================
 // lib/url/percent.cp — RFC 3986 URI Component Percent-Encoder & Decoder
 // ============================================================================

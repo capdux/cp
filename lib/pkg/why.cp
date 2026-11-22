@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/why_command.cp | Synced: 2026-11-22T09:59:11Z
+// Source: Absorbed from /data/dev/bun/src/cli/why_command.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP zero-allocation package dependency reverse-explanation (`bun why`) engine:
 // glob + version pattern matcher, specifier specificity & dependency-type sorter,
 // cycle-safe dependency chain renderer (`--top` / `--depth`).

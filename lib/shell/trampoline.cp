@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/Yield.cp | Synced: 2026-11-22T01:52:18Z
+// Source: Absorbed from /data/dev/bun/src/shell/Yield.cp | Synced: 2026-11-22T12:49:17Z
 // Pure-CP stack-safe Shell Trampoline & Continuation Scheduler supporting
 // non-recursive state-machine stepping, nested pipeline stack draining
 // (starting_cmds / running / done), I/O chunk continuations, reentry depth

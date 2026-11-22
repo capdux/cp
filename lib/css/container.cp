@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/container.cp | Synced: 2026-11-22T12:14:14Z
+// Source: Absorbed from /data/dev/bun/src/css/rules/container.cp | Synced: 2026-11-22T12:49:17Z
 
 /// CSS Container Queries Level 3 解析错误集
 pub err CssContainerError {

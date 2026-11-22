@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/js_parser/ast/KnownGlobal.cp | Synced: 2026-11-21T13:03:52Z
+// Source: Absorbed from /data/dev/bun/src/js_parser/ast/KnownGlobal.cp | Synced: 2026-11-22T12:49:17Z
 
 /// 全局符号所属运行时/规范命名空间
 pub enum GlobalNamespace: u8 {
