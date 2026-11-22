@@ -19,7 +19,7 @@ import {
     mergeLines,
     mergeTexts,
     hasConflicts,
-} from "cap:diff3";
+} from "cap:text";
 import cap from "cap";
 
 test("diff3 non-overlapping independent edits merge cleanly") {
@@ -191,7 +191,7 @@ test("diff3 cap.diff3 lazy mounting, mergeLines, hasConflicts, and zero leaks") 
     const ours_lines: [3][]const u8 = ["one_ours", "two", "three"];
     const theirs_lines: [3][]const u8 = ["one", "two", "three_theirs"];
 
-    let res = cap.diff3.mergeLines(alloc, &base_lines, &ours_lines, &theirs_lines, cap.diff3.MergeOptions{})?;
+    let res = cap.text.mergeLines(alloc, &base_lines, &ours_lines, &theirs_lines, cap.text.MergeOptions{})?;
     defer res.deinit(alloc);
 
     expect_eq(res.has_conflicts, false);
@@ -199,5 +199,5 @@ test("diff3 cap.diff3 lazy mounting, mergeLines, hasConflicts, and zero leaks") 
     expect_eq(std.mem.eql(u8, res.merged_text, "one_ours\ntwo\nthree_theirs\n"), true);
 
     expect_eq(hasConflicts("a\nb\n", "a1\nb\n", "a2\nb\n"), true);
-    expect_eq(cap.diff3.hasConflicts("a\nb\n", "a1\nb\n", "a\nb1\n"), false);
+    expect_eq(cap.text.hasConflicts("a\nb\n", "a1\nb\n", "a\nb1\n"), false);
 }

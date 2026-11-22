@@ -16,7 +16,7 @@ import {
     TableStyle,
     ColumnSpec,
     Table,
-} from "cap:table";
+} from "cap:text";
 import cap from "cap";
 
 fn contains(haystack: string, needle: string): bool {
@@ -174,14 +174,14 @@ fn testWrapSortAndMismatch()! {
 fn testDynamicCapTableNamespace()! {
     const alloc = std.heap.page_allocator;
 
-    expect_eq(cap.table.DisplayWidth.visibleWidth("测试"), 4 as usize);
+    expect_eq(cap.text.DisplayWidth.visibleWidth("测试"), 4 as usize);
 
-    let t = cap.table.Table.init(alloc);
+    let t = cap.text.Table.init(alloc);
     defer t.deinit();
 
-    t.setStyle(cap.table.TableStyle.Rounded);
-    t.addColumn("Agent", cap.table.TextAlign.Left)?;
-    t.addColumn("Width", cap.table.TextAlign.Right)?;
+    t.setStyle(cap.text.TableStyle.Rounded);
+    t.addColumn("Agent", cap.text.TextAlign.Left)?;
+    t.addColumn("Width", cap.text.TextAlign.Right)?;
     t.addRow(["测试", "4"])?;
 
     const out = t.render()?;

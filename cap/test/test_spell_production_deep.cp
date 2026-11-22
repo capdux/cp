@@ -14,11 +14,11 @@ import {
     SpellError,
     SuggestVerbosity,
     SpellSuggestion,
-    damerauLevenshtein,
-    soundex,
+    spellDamerauLevenshtein as damerauLevenshtein,
+    spellSoundex as soundex,
     SymSpellIndex,
     BkTree,
-} from "cap:spell";
+} from "cap:text";
 
 test("cap:spell - damerauLevenshtein OSA transposition & soundex phonetic encoding") {
     const alloc = std.testing.allocator;
@@ -213,23 +213,23 @@ test("cap:spell - edge error interception & std.testing.allocator zero-leak") {
 test("cap.spell - dynamic mounting via import cap from \"cap\"") {
     const alloc = std.testing.allocator;
 
-    const d = cap.spell.damerauLevenshtein(alloc, "algoritm", "algorithm") catch unreachable;
+    const d = cap.text.spellDamerauLevenshtein(alloc, "algoritm", "algorithm") catch unreachable;
     expect_eq(d, 1);
 
-    const sx = cap.spell.soundex("Rupert");
+    const sx = cap.text.spellSoundex("Rupert");
     expect_eq(std.mem.eql(u8, sx[0..], "R163"), true);
 
-    let idx = cap.spell.SymSpellIndex.init(alloc, 2, 7) catch unreachable;
+    let idx = cap.text.SymSpellIndex.init(alloc, 2, 7) catch unreachable;
     defer idx.deinit();
     idx.addWord("compile", 500) catch unreachable;
 
-    const res = idx.lookup(alloc, "compiel", cap.spell.SuggestVerbosity.Top, 2) catch unreachable;
+    const res = idx.lookup(alloc, "compiel", cap.text.SuggestVerbosity.Top, 2) catch unreachable;
     defer alloc.free(res);
     expect_eq(res.len, 1);
     expect_eq(std.mem.eql(u8, res[0].term, "compile"), true);
     expect_eq(res[0].distance, 1);
 
-    let tree = cap.spell.BkTree.init(alloc);
+    let tree = cap.text.BkTree.init(alloc);
     defer tree.deinit();
     tree.insert("compile", 500) catch unreachable;
     const bk_res = tree.search(alloc, "compiel", 1) catch unreachable;

@@ -13,7 +13,7 @@ import cap from "cap";
 import {
     SuffixArrayError,
     SuffixArray,
-} from "cap:suffixarray";
+} from "cap:text";
 
 fn expectSliceEqUsize(actual: []const usize, expected: []const usize) {
     expect_eq(actual.len, expected.len);
@@ -187,7 +187,7 @@ test("cap:suffixarray - empty text, single byte, all-identical, binary NUL paylo
 
 test("cap.suffixarray - dynamic namespace mount and zero-leak check") {
     const alloc = std.testing.allocator;
-    let sa = cap.suffixarray.SuffixArray.build(alloc, "abracadabra") catch unreachable;
+    let sa = cap.text.SuffixArray.build(alloc, "abracadabra") catch unreachable;
     defer sa.deinit();
 
     expect_eq(sa.contains("abra") catch unreachable, true);

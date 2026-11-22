@@ -16,7 +16,7 @@ import {
     AhoMatch,
     AhoBuilder,
     AhoCorasick,
-} from "cap:aho";
+} from "cap:text";
 
 test("cap:aho - classic he/she/his/hers overlapping findAll and failure links") {
     const alloc = std.testing.allocator;
@@ -185,7 +185,7 @@ test("cap:aho - error interception and 550-pattern large dictionary linear scan"
 test("cap:aho - cap.aho dynamic namespace mounting and AhoBuilder zero-leak") {
     const alloc = std.testing.allocator;
 
-    let builder = cap.aho.AhoBuilder.init(alloc);
+    let builder = cap.text.AhoBuilder.init(alloc);
     defer builder.deinit();
 
     * = builder.addPattern("agent") catch unreachable;
@@ -197,7 +197,7 @@ test("cap:aho - cap.aho dynamic namespace mounting and AhoBuilder zero-leak") {
     defer ac.deinit();
 
     const text = "agentic beam runtime";
-    const hits = ac.findLeftmost(alloc, text, cap.aho.MatchKind.LeftmostLongest) catch unreachable;
+    const hits = ac.findLeftmost(alloc, text, cap.text.MatchKind.LeftmostLongest) catch unreachable;
     defer alloc.free(hits);
 
     expect_eq(hits.len, 2);

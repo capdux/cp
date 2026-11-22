@@ -123,3 +123,112 @@ export {
     tokenizeCodeLite,
     findCodePatternMatches,
 } from "./code_pattern.cp";
+
+// ============================================================================
+// Pure-CP Templates, NLP, Full-Text Search, String Algorithms & Formatting
+// ============================================================================
+export {
+    MustacheTokenKind,
+    MustacheToken,
+    MustacheVar,
+    MustacheIter,
+    validateMustache,
+    renderMustache,
+} from "./mustache.cp";
+
+export * from "./template_value.cp";
+export * from "./template_engine.cp";
+
+export {
+    SOUNDEX_LEN,
+    MAX_PHONETIC_WORD_LEN,
+    soundex,
+    soundexEquals,
+    soundexDifference,
+    metaphone,
+    nysiis,
+    colognePhonetic,
+} from "./soundex.cp";
+
+export {
+    PORTER_MAX_WORD_LEN,
+    porterMeasure,
+    porterStem,
+    porterStemEquals,
+} from "./porter.cp";
+
+export {
+    TokenizerConfig,
+    defaultStopwords,
+    tokenizeTerms,
+    freeTerms,
+} from "./bm25_tokenizer.cp";
+
+export {
+    Bm25Error,
+    Bm25Config,
+    Posting,
+    Bm25Hit,
+    Bm25Index,
+} from "./bm25.cp";
+
+export {
+    RankedDoc,
+    rrfFuse,
+} from "./bm25_rrf.cp";
+
+export {
+    TextAlign,
+    TableError,
+    DisplayWidth,
+} from "./table_width.cp";
+
+export {
+    TableStyle,
+    ColumnSpec,
+    Table,
+} from "./table.cp";
+
+export {
+    Diff3Error,
+    ConflictStyle,
+    ConflictBlock,
+    MergeHunk,
+    MergeOptions,
+    MergeResult,
+    mergeLines,
+    mergeTexts,
+    hasConflicts,
+} from "./diff3.cp";
+
+export {
+    MAX_NFA_STATES,
+    RegexError,
+    MatchSpan,
+    NfaRegex,
+} from "./nfa_regex.cp";
+
+export {
+    AhoError,
+    MatchKind,
+    AhoMatch,
+    AhoBuilder,
+    AhoCorasick,
+} from "./aho.cp";
+
+export * from "./kmp_z_algo.cp";
+
+export {
+    SuffixArrayError,
+    SuffixArray,
+} from "./suffixarray.cp";
+
+export {
+    SpellError,
+    SuggestVerbosity,
+    SpellSuggestion,
+    damerauLevenshtein as spellDamerauLevenshtein,
+    soundex as spellSoundex,
+    SymSpellIndex,
+    BkTree,
+} from "./spell.cp";

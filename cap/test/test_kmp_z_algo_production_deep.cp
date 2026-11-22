@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { computeLps, kmpFindFirst, kmpFindAll, zArray, longestPalindrome } from "cap:kmp_z_algo";
+import { computeLps, kmpFindFirst, kmpFindAll, zArray, longestPalindrome } from "cap:text";
 
 test "kmp_z_algo: KMP LPS table & overlapping matches" {
     const alloc = std.testing.allocator;
@@ -52,7 +52,7 @@ test "kmp_z_algo: Manacher longestPalindrome odd, even, and single char" {
 
 test "kmp_z_algo: cap.kmp_z_algo dynamic mount & zero leak" {
     const alloc = std.testing.allocator;
-    const hits = try cap.kmp_z_algo.kmpFindAll(alloc, "aaaa", "aa");
+    const hits = try cap.text.kmpFindAll(alloc, "aaaa", "aa");
     defer alloc.free(hits);
     try expect_eq(hits.len, 3);
 }

@@ -3,7 +3,7 @@
 // {{! comment }}, {{> partial}} with recursion depth guard, and renderRaw() for AI prompts.
 
 const std = @import("std");
-import { TemplateValue, TemplateValueTag, TemplateEntry, TemplateContext } from "./value.cp";
+import { TemplateValue, TemplateValueTag, TemplateEntry, TemplateContext } from "./template_value.cp";
 
 pub const DEFAULT_MAX_DEPTH: usize = 32;
 

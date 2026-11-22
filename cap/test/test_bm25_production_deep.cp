@@ -11,7 +11,7 @@ import {
     Bm25Index,
     RankedDoc,
     rrfFuse,
-} from "cap:bm25";
+} from "cap:text";
 
 test("tokenizeTerms case folding, stopwords, max_len, and UTF-8 preservation") {
     const alloc = std.testing.allocator;
@@ -118,7 +118,7 @@ test("Bm25Index searchPhrase strict adjacent position matching") {
 
 test("rrfFuse hybrid ranking, cap.bm25 mount, and zero memory leaks") {
     const alloc = std.testing.allocator;
-    let idx = try cap.bm25.Bm25Index.init(alloc, cap.bm25.Bm25Config{});
+    let idx = try cap.text.Bm25Index.init(alloc, cap.text.Bm25Config{});
     defer idx.deinit();
     try idx.addDocument(1, "hybrid search fusion");
     expect_eq(idx.docCount(), 1);

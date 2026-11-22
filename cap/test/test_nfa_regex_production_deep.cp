@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { RegexError, NfaRegex } from "cap:nfa_regex";
+import { RegexError, NfaRegex } from "cap:text";
 
 test("1. ReDoS-immune linear-time matching on pathological pattern (a+)+b") {
     const alloc = std.testing.allocator;
@@ -63,7 +63,7 @@ test("4. Malformed pattern syntax error protection") {
 
 test("5. Dynamic cap.nfa_regex namespace and zero-leak check") {
     const alloc = std.testing.allocator;
-    const re = try cap.nfa_regex.NfaRegex.compile(alloc, "cap-[0-9]+");
+    const re = try cap.text.NfaRegex.compile(alloc, "cap-[0-9]+");
     defer re.deinit();
     expect_eq(try re.isMatch(alloc, "hello cap-2026!"), true);
     expect_eq(try re.isMatch(alloc, "hello cap-abc!"), false);

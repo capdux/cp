@@ -15,7 +15,7 @@ import {
     CompiledTemplate,
     TemplateEngine,
     DEFAULT_MAX_DEPTH,
-} from "cap:template";
+} from "cap:text";
 
 fn eql(a: []const u8, b: []const u8): bool {
     return std.mem.eql(u8, a, b);
@@ -343,17 +343,17 @@ fn testErrorsAndAiPromptRenderRaw(): !void {
 
 fn testCapDynamicHubMount(): !void {
     const alloc = std.heap.page_allocator;
-    let eng = cap.template.TemplateEngine.init(alloc);
+    let eng = cap.text.TemplateEngine.init(alloc);
     defer eng.deinit();
 
-    expect_eq(cap.template.DEFAULT_MAX_DEPTH, 32 as usize);
+    expect_eq(cap.text.DEFAULT_MAX_DEPTH, 32 as usize);
     * = eng.registerPartial("greeting", "Hello, {{user}}!")?;
 
-    let entries: [2]cap.template.TemplateEntry = undefined;
-    entries[0] = cap.template.TemplateEntry.init("user", cap.template.TemplateValue.fromStr("CP & <Agent>"));
-    entries[1] = cap.template.TemplateEntry.init("code", cap.template.TemplateValue.fromStr("x < y && y > 0"));
-    const ctx = cap.template.TemplateContext.init(
-        cap.template.TemplateValue.fromMap(&entries),
+    let entries: [2]cap.text.TemplateEntry = undefined;
+    entries[0] = cap.text.TemplateEntry.init("user", cap.text.TemplateValue.fromStr("CP & <Agent>"));
+    entries[1] = cap.text.TemplateEntry.init("code", cap.text.TemplateValue.fromStr("x < y && y > 0"));
+    const ctx = cap.text.TemplateContext.init(
+        cap.text.TemplateValue.fromMap(&entries),
     );
 
     const html_out = eng.render("{{> greeting}} | {{code}}", ctx)?;

@@ -453,3 +453,26 @@ pub fn demoCodePatternMatch(src: string) {
    - `overlap_chars` 必须严格小于目标块大小，避免切分游标原地踏步；Markdown 模式下围栏代码块（```` ``` ````）内部的 `#` 注释行不会被误判为章节标题（`TextChunk.heading`）。
 3. **Unicode 完整大小写折叠（`caseFoldEqual`）**：
    - 相比仅限 ASCII 的大小写比较，`caseFoldEqual` 正确处理德语 `ß == SS`、希腊语与多码点折叠映射，适合国际化搜索与标识符去重。
+
+---
+
+## 扩展模板引擎、NLP、全文检索、字符串算法与格式化模块（零冲突归并）
+
+以下 12 个纯 CP 文本/模板/NLP/字符串算法/三路合并/终端表格子模块已统一收敛至 `lib/text/` 并零冲突导出至 `cap:text`：
+
+| 子模块文件 | 领域分类 | 核心导出符号 |
+| :--- | :--- | :--- |
+| `lib/text/mustache.cp` | 零分配 Mustache 模板引擎 | `renderMustache`, `validateMustache`, `MustacheIter`, `MustacheVar`, `MustacheToken` |
+| `lib/text/template_value.cp` / `template_engine.cp` | Mustache 兼容 Prompt/HTML/代码生成模板 | `TemplateEngine`, `CompiledTemplate`, `TemplateContext`, `TemplateValue`, `TemplateError` |
+| `lib/text/soundex.cp` | 语音编码 (Soundex/Metaphone/NYSIIS/Cologne) | `soundex`, `soundexEquals`, `soundexDifference`, `metaphone`, `nysiis`, `colognePhonetic` |
+| `lib/text/porter.cp` | Porter 英文词干提取器 | `porterStem`, `porterStemEquals`, `porterMeasure`, `PORTER_MAX_WORD_LEN` |
+| `lib/text/bm25_tokenizer.cp` / `bm25.cp` / `bm25_rrf.cp` | BM25 全文检索、分词与 RRF 融合排序 | `Bm25Index`, `Bm25Config`, `Bm25Hit`, `rrfFuse`, `tokenizeTerms`, `defaultStopwords` |
+| `lib/text/table_width.cp` / `table.cp` | ANSI & 东亚宽字符感知表格渲染 | `Table`, `ColumnSpec`, `TableStyle`, `DisplayWidth`, `TextAlign`, `TableError` |
+| `lib/text/diff3.cp` | 三路文本合并与冲突块检测 | `mergeLines`, `mergeTexts`, `hasConflicts`, `MergeResult`, `MergeHunk`, `ConflictBlock`, `ConflictStyle` |
+| `lib/text/nfa_regex.cp` | 线性时间 Thompson NFA 正则引擎 | `NfaRegex`, `MatchSpan`, `RegexError`, `MAX_NFA_STATES` |
+| `lib/text/aho.cp` | Aho-Corasick 多模式字符串匹配自动机 | `AhoCorasick`, `AhoBuilder`, `AhoMatch`, `MatchKind`, `AhoError` |
+| `lib/text/kmp_z_algo.cp` | KMP / Z-Algorithm / 最长回文子串 | `computeLps`, `kmpFindFirst`, `kmpFindAll`, `zArray`, `longestPalindrome`, `PalindromeSpan` |
+| `lib/text/suffixarray.cp` | 后缀数组、Kasai LCP 与子串索引 | `SuffixArray`, `SuffixArrayError` |
+| `lib/text/spell.cp` | SymSpell / BK-Tree 拼写纠错 | `SymSpellIndex`, `BkTree`, `SpellSuggestion`, `SuggestVerbosity`, `spellDamerauLevenshtein`, `spellSoundex` |
+
+> **重叠对照参考归档说明**：`lib/text/fuzzy_.cp`（与 `fuzzy.cp` 重叠）与 `lib/text/suffix_array_.cp`（与 `suffixarray.cp` 重叠）为对照参考副本（文件首行带 `// Reference Only:` 声明），不在 `lib/text/index.cp` 冲突导出。
