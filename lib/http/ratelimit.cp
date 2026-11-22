@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T14:26:00Z (IETF RateLimit & RateLimit-Policy HTTP Headers)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T16:05:00Z (IETF RateLimit & RateLimit-Policy HTTP Headers)
 
 const U64_MAX: u64 = 0xFFFF_FFFF_FFFF_FFFF;
 

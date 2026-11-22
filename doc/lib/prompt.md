@@ -866,3 +866,54 @@ fn demoToolCallStreamParser() {
     }
 }
 ```
+
+### 20. 零分配 AI Agent 动态工具路由与上下文 Token 预算裁剪器 (`toolRouter.cp`)
+
+面向多工具 AI Agent（解决全量工具 Schema 注入导致上下文膨胀与注意力分散）的 100% 纯 CP 零动态堆分配动态工具路由与预算装箱引擎：
+
+- **常量与枚举**：
+  - `TOOL_ROUTER_MAX_TOOLS = 64`、`TOOL_ROUTER_NAME_MAX_LEN = 64`、`TOOL_ROUTER_MAX_KEYWORDS = 8`、`TOOL_ROUTER_KEYWORD_MAX_LEN = 32`
+  - `ToolRiskTier`（`safe | low | medium | high | critical`）与 `toolRiskRank(tier): u8`
+- **数据模型**：
+  - `ToolRouterWeights`（`domain_hit_weight`, `keyword_hit_weight`, `keyword_per_hit_bonus`, `name_match_bonus`, `priority_weight`, `min_score_threshold`；提供 `defaults()`）
+  - `ToolSpecEntry`（`nameSlice()`, `keywordCount()`, `keywordSlice(idx)`）
+  - `RoutedToolPick`（`tool_id`, `slot_index`, `score`, `schema_tokens`, `domain_overlap`, `keyword_hits`, `pinned`, `risk_tier`）
+  - `ToolRouteReport`（`catalog_total_tools`, `catalog_total_tokens`, `selected_count`, `pinned_selected_count`, `consumed_tokens`, `saved_tokens`, `savings_permille`, `skipped_by_risk`, `skipped_by_budget`, `skipped_by_limit`, `skipped_by_threshold`, `pinned_budget_overflow`）
+  - `ToolRouterStats`（`total_routes`, `total_registered`, `total_removed`, `total_picks_emitted`, `total_tokens_consumed`, `total_tokens_saved`, `total_risk_blocked`, `total_budget_blocked`）
+- **核心引擎 `ToolRouter`**：
+  - `init()` / `initWithWeights(weights)` / `setWeights(*_, weights)` / `clear(*_)` / `resetAll(*_)`
+  - `registerTool(*_, tool_id, name, domain_mask, risk_tier, schema_tokens, priority, pinned): usize?`
+  - `addKeyword(*_, tool_id, keyword): bool` / `registerToolWithKeywords(...)` / `removeTool(*_, tool_id)` / `setPinned(*_, tool_id, pinned)`
+  - `count()` / `totalCatalogTokens()` / `findById(tool_id)` / `getEntry(slot_idx)` / `stats()`
+  - `routeTools(*_, query, required_domain_mask, max_risk_tier, token_budget, max_tools, *out_picks): ToolRouteReport`：两阶段零堆路由——第一阶段先锁定符合风险上限的 `pinned` 核心工具并扣除预算（超预算置 `pinned_budget_overflow` 且绝不突破硬上限）；第二阶段对非 `pinned` 工具综合计算能力域位图重叠度（`@popCount`）+ 大小写无关查询词命中率 + 工具名直接命中加分 + 优先级权重，按得分降序贪心装箱，并输出节省 Token、节省千分比及风险/预算/数量/门槛拦截统计。
+
+```cp
+import {
+    ToolRiskTier,
+    RoutedToolPick,
+    ToolRouter,
+} from "cap:prompt";
+
+fn demoDynamicToolRouter() {
+    const DOM_CODE: u64 = 1 << 0;
+    const DOM_DB: u64 = 1 << 1;
+    const DOM_NET: u64 = 1 << 2;
+
+    let router = ToolRouter.init();
+    const kws_read: [2][]const u8 = ["file", "read"];
+    const kws_sql: [2][]const u8 = ["sql", "query"];
+    const kws_curl: [2][]const u8 = ["http", "fetch"];
+
+    * = router.registerToolWithKeywords(1, "read_file", DOM_CODE, ToolRiskTier.safe, 120, 10, true, kws_read[0..]);
+    * = router.registerToolWithKeywords(2, "run_sql", DOM_DB, ToolRiskTier.medium, 260, 20, false, kws_sql[0..]);
+    * = router.registerToolWithKeywords(3, "http_fetch", DOM_NET, ToolRiskTier.high, 220, 15, false, kws_curl[0..]);
+
+    let picks: [4]RoutedToolPick = [RoutedToolPick{}; 4];
+    let picks_s: []RoutedToolPick = picks[0..];
+
+    const rep = router.routeTools("Run a SQL query on orders", DOM_DB, ToolRiskTier.medium, 400, 3, *picks_s);
+    // 入选 read_file(pinned, 120) + run_sql(DOM_DB + "sql"/"query", 260) = 380 tokens
+    // http_fetch 被风险上限(medium)拦截，节省 220/600 = 366 permille
+    * = rep;
+}
+```

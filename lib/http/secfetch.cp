@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T14:26:00Z (W3C Fetch Metadata Sec-Fetch-* Resource Isolation Policy)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T16:05:00Z (W3C Fetch Metadata Sec-Fetch-* Resource Isolation Policy)
 // Pure-CP zero-allocation W3C Fetch Metadata parser (Sec-Fetch-Site/Mode/Dest/User) and resource-isolation guard.
 
 fn isWs(b: u8): bool {

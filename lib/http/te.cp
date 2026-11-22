@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T14:26:00Z (RFC 9110 Transfer-Encoding & TE Parser)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T16:05:00Z (RFC 9110 Transfer-Encoding & TE Parser)
 
 /// HTTP `Transfer-Encoding` 传输编码枚举
 pub enum TransferCoding: u8 {

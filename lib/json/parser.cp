@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/interchange/json.cp | Synced: 2026-11-22T15:45:00Z
+// Source: Absorbed from /data/dev/bun/src/interchange/json.cp | Synced: 2026-11-22T16:05:00Z
 // RFC 8259 Compliant Zero-Copy Streaming & Typed JSON Parser with SIMD Acceleration
 // Handles full escape sequences, UTF-16 surrogate pairs, strict numbers, and max depth guards
 

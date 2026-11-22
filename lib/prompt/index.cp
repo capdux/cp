@@ -240,3 +240,18 @@ export {
     ToolCallParserStats,
     ToolCallStreamParser,
 } from "./toolCallParser.cp";
+
+export {
+    TOOL_ROUTER_MAX_TOOLS,
+    TOOL_ROUTER_NAME_MAX_LEN,
+    TOOL_ROUTER_MAX_KEYWORDS,
+    TOOL_ROUTER_KEYWORD_MAX_LEN,
+    ToolRiskTier,
+    toolRiskRank,
+    ToolRouterWeights,
+    ToolSpecEntry,
+    RoutedToolPick,
+    ToolRouteReport,
+    ToolRouterStats,
+    ToolRouter,
+} from "./toolRouter.cp";

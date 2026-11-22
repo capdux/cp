@@ -3,3 +3,4 @@
 // Unified Public Exports for cap:errno
 
 export * from "./errno.cp";
+export * from "./darwinErrno.cp";

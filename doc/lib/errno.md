@@ -103,3 +103,14 @@ pub fn handleSyscallResult(ret: i32) {
    - 在 Linux 上 `EAGAIN == EWOULDBLOCK`，而在部分 BSD/macOS 平台二者数值不同；非阻塞 I/O 判断务必统一调用 `e.isWouldBlock()` 而非硬编码单个枚举值。
 3. **语义分类谓词指导重试策略**：
    - `isRetryable()`（含 `EINTR`/`EAGAIN`/`EWOULDBLOCK`）适合立即重试或注册事件循环；`isConnectionError()`（`ECONNRESET`/`ECONNREFUSED`/`EPIPE`）提示应关闭失效连接并重建；`isPermissionDenied()` / `isNotFound()` 属确定性错误应直接上报。
+4. **macOS / Darwin 原生错误码与跨平台双向桥接（`darwinErrno.cp`）**：
+   - 吸收自 `/data/dev/bun/src/errno/darwin_errno.cp`：导出 `DARWIN_MAX_ERRNO`（`107`）与完整 107 项 `DarwinErrno`（`0..106`），精确区分 Linux 与 macOS 差异数值（如 Darwin `EAGAIN=35`、`EADDRINUSE=48`、`ETIMEDOUT=60`、`ECONNREFUSED=61`、`ENOTEMPTY=66`、`ENOSYS=78`）及 macOS 独有 Mach-O / 电源 / 扩展属性错误码（`EBADMACHO`、`EBADARCH`、`ENOATTR`、`EQFULL` 等）；
+   - 通过 `DarwinErrno.toSystemErrno()` 与 `DarwinErrno.fromSystemErrno(err)` 可在跨平台日志诊断、远程 macOS 节点回报解析与统一重试逻辑间零开销双向转换。
+
+```cp
+import { DarwinErrno, SystemErrno } from "cap:errno";
+
+const d = DarwinErrno.fromCode(-61).?; // Darwin ECONNREFUSED (61)
+const canonical = d.toSystemErrno();   // SystemErrno.ECONNREFUSED (111)
+* = canonical.isConnectionError();     // true
+```
