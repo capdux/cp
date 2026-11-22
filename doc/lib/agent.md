@@ -2118,3 +2118,47 @@ fn toolBatcherQuickStart() {
     * = summary;
 }
 ```
+
+---
+
+## 子模块：零分配多模型 LLM 供应商 RPM/TPM 双维配额与 429 故障转移池（`provider_pool.cp`）
+
+### 核心特性
+
+- **零堆分配 16 供应商内联池（`LlmProviderPool`）**：固定 16 槽位（`PROVIDER_POOL_MAX_ENDPOINTS = 16`）与 48 字节定长端点 ID（`PROVIDER_ID_MAX_LEN = 48`），零动态堆分配，支持 ID 去重与参数完备性校验。
+- **确定性优先级 + 成本择优调度**：按 `(priority 升序, cost_per_1k_micro_usd 升序, slot_idx 升序)` 选取首个同时满足 `window_requests + 1 <= rpm_limit`、`window_tokens + estimated_tokens <= tpm_limit` 且非冷却的端点并立即预扣配额；主选端点受限自动故障转移并置 `used_failover = true`。
+- **上游 429 `Retry-After` 冷却隔离与自动恢复**：`report_rate_limit_429` 立即置入冷却至 `now_ms + retry_after_ms`，到期后下一次 `acquire` 自动恢复；全端点不可用时返回精确 `earliest_retry_ms`。
+- **响应后真实 Token 对账（`reconcile_actual_tokens`）**：多退少补修正窗口内预扣 token 差额，内置防下溢与防上溢保护；支持 `set_enabled` 在线摘流/恢复与 `stats(now_ms)` 全量状态遥测。
+
+### 导出清单
+
+- **常量与枚举**：`PROVIDER_POOL_MAX_ENDPOINTS` (`16`)、`PROVIDER_ID_MAX_LEN` (`48`)、`ProviderStatus`（`available | rate_limited | cooldown_429 | disabled`）
+- **数据模型**：`ProviderEndpointSpec`（`create`, `idSlice`, `isValid`）、`ProviderLeaseResult`（`idSlice`）、`ProviderPoolStats`
+- **故障转移池**：`LlmProviderPool`（`init`, `register_endpoint`, `acquire`, `reconcile_actual_tokens`, `report_rate_limit_429`, `set_enabled`, `endpoint_status`, `stats`）
+
+### QuickStart 示例
+
+```cp
+import {
+    ProviderEndpointSpec,
+    LlmProviderPool,
+} from "cap:agent";
+
+fn providerPoolQuickStart() {
+    let pool = LlmProviderPool.init();
+    const p1 = ProviderEndpointSpec.create("openai-east", 1, 60, 100_000, 60_000, 3_000) ?? return;
+    const p2 = ProviderEndpointSpec.create("anthropic-backup", 2, 40, 80_000, 60_000, 3_500) ?? return;
+    * = pool.register_endpoint(p1);
+    * = pool.register_endpoint(p2);
+
+    // 正常主选 openai-east
+    const lease1 = pool.acquire(2_000, 1_000);
+    // 响应后按实际消费 1_200 tokens 退还多预扣的 800 tokens
+    * = pool.reconcile_actual_tokens(lease1.slot_idx, 2_000, 1_200);
+
+    // 收到上游 429 Retry-After: 5000ms -> 下次请求自动故障转移至 anthropic-backup
+    * = pool.report_rate_limit_429(lease1.slot_idx, 5_000, 1_100);
+    const lease2 = pool.acquire(2_000, 1_200);
+    * = lease2.used_failover; // true
+}
+```

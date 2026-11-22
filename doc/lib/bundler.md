@@ -476,6 +476,36 @@ const res = g.computeCssOrder(entries[0..])?;
 * = res;
 ```
 
+### 3.23 Bundler Chunk 规划与确定性排序引擎（`lib/bundler/chunk_planner.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/computeChunks.cp` 与 `/data/dev/bun/docs/bundler/index.mdx`）
+- **常量与错误集**：`CHUNK_PLAN_MAX_ENTRIES` (`32`)、`CHUNK_PLAN_MAX_FILES` (`64`)、`CHUNK_PLAN_MAX_CHUNKS` (`64`)、`CHUNK_PLAN_MAX_FILES_PER_CHUNK` (`64`)、`CHUNK_PLAN_MAX_CSS_DEPS` (`16`)、`CHUNK_PLAN_INVALID_INDEX` (`0xFFFFFFFF`)、`CHUNK_PLAN_KEY_CAP` (`32`)、`ChunkPlanError`
+- **核心类型与函数**：`ChunkPlanContentKind`（`Javascript` / `Css` / `Html`，含 `ext()`）、`ChunkPlanLoaderKind`、`ChunkPlanEntryKind`（`UserSpecified` / `DynamicImport` / `ServerComponent`）、`ChunkPlanTarget`（`Browser` / `Bun` / `Node` / `BunMacro` / `BakeSsr`，含 `isServerSide()` / `asLabel()`）、`ChunkPlanTemplateKind`（`EntryFile` / `EntryFileWithTarget` / `SharedChunk` / `SharedChunkWithTarget`）、`ChunkPlanOptions`、`ChunkPlanFileInput`、`ChunkPlanUniqueKey`、`PlannedChunk`、`EntryChunkMapping`、`ChunkPlanResult`、`hashCssOrderKey()`、`formatChunkUniqueKey()`、`ChunkPlanner`（`init()` / `addFile()` / `addEntryPoint()` / `attachCssDep()` / `setFileEntryBits()` / `computeChunks()`）。
+- **核心算法契约**：
+  - 100% 零动态堆分配：基于 `u64` 入口可达位掩码，在 `code_splitting = true` 时将共享同一入口子集的活文件聚合成独立共享 Chunk，在 `code_splitting = false` 时按置位掩码扇出到每个入口 Chunk；
+  - CSS Chunk 去重与索引重映射：启用 `css_chunking` 时按有序 CSS 依赖列表 64 位 FNV-1a 哈希复用共享 CSS Chunk；排序阶段将 CSS Chunks 按哈希升序排布在 JS/HTML 之后，并自动把所有 JS Chunk 引用的 `css_chunk_index` 重映射为最终索引；
+  - 服务端全栈构建兼容：当 `target.isServerSide() && has_html_imports` 时自动为浏览器端入口及含浏览器端文件的共享 Chunk 传播 `is_browser_chunk_from_server_build` 标记，并按 Bun 规则生成 `<hex_lower>C<08d>` 确定性唯一键与 `[target]` 命名模板类型。
+
+```cp
+import {
+    ChunkPlanner,
+    ChunkPlanFileInput,
+    ChunkPlanOptions,
+} from "cap:bundler";
+
+let planner = ChunkPlanner.init();
+* = planner.addFile(ChunkPlanFileInput{ source_index: 1, entry_bits: 0b01, output_base_name: "entry-a" })?;
+* = planner.addFile(ChunkPlanFileInput{ source_index: 2, entry_bits: 0b10, output_base_name: "entry-b" })?;
+* = planner.addFile(ChunkPlanFileInput{ source_index: 3, entry_bits: 0b11, output_base_name: "shared" })?;
+* = planner.addEntryPoint(1)?;
+* = planner.addEntryPoint(2)?;
+
+const plan = planner.computeChunks(ChunkPlanOptions{
+    code_splitting: true,
+    unique_key: 0xbeef,
+})?;
+// 产出 3 个 JS Chunk：entry-a (0b01)、entry-b (0b10) 与共享 chunk (0b11，含 source_index=3)
+* = plan;
+```
+
 ---
 
 ## 四、 上游行为契约、边界与安全注意事项
@@ -510,3 +540,7 @@ const res = g.computeCssOrder(entries[0..])?;
 10. **CSS `@import` 多次求值与 `@layer` 首次声明保留（吸收自 `/data/dev/bun/src/bundler/linker_context/findImportedFilesInCSSOrder.cp` & `/data/dev/bun/docs/bundler/css.mdx`）**：
     - 与 JS ESM 模块“首次求值缓存”语义不同，CSS `@import` 每次出现均参与层叠覆盖，因此 `CssImportGraph` 采用“保留最后一次（Last-Wins）”去重策略；但 CSS `@layer` 的优先级由**首次声明顺序**决定，故当被覆盖的早先文件声明了 `@layer` 时必须降级保留为 `CssImportEntryKind.LayersOnly`；
     - 外部 `@import`（如 CDN 字体样式）必须被顶置至打包文件最顶部以保证浏览器正常解析；带 `@media`/`@supports` 条件的后继导入不能覆盖无条件或不同条件的前驱导入。
+11. **多入口 Chunk 规划、`naming` 模板占位符与 `cssChunking` 最佳实践（吸收自 `/data/dev/bun/src/bundler/linker_context/computeChunks.cp` & `/data/dev/bun/docs/bundler/index.mdx`）**：
+    - 当 `splitting: true` 且多个入口点共享模块时，`ChunkPlanner.computeChunks` 自动按精确 `entry_bits` 位掩码抽离共享 Chunk，而 `splitting: false` 时将共享模块内联扇出到每个引用入口以产出单文件自包含产物；
+    - `naming` 支持 `[dir]`、`[name]`、`[hash]`、`[ext]` 与服务端多目标场景下的 `[target]` 占位符；在同时存在服务端入口与 HTML 浏览器入口的构建中，未显式指定 `entry_naming` / `chunk_naming` 时自动启用 `EntryFileWithTarget` / `SharedChunkWithTarget`，避免服务端与浏览器同名产物相互覆盖；
+    - 开启 `cssChunking` 时，引用完全相同有序 CSS 依赖序列的多个入口会复用同一 CSS Chunk，排序后通过重映射表同步更新 JS Chunk 的 `css_chunk_index`，保证跨平台构建产物顺序与唯一键（`<hex>C<08d>`）100% 确定性可复现。

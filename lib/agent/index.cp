@@ -416,3 +416,13 @@ export {
     ToolBatchPlanSummary,
     planToolCallBatch,
 } from "./tool_batcher.cp";
+
+export {
+    PROVIDER_POOL_MAX_ENDPOINTS,
+    PROVIDER_ID_MAX_LEN,
+    ProviderStatus,
+    ProviderEndpointSpec,
+    ProviderLeaseResult,
+    ProviderPoolStats,
+    LlmProviderPool,
+} from "./provider_pool.cp";

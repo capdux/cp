@@ -305,3 +305,28 @@ export {
     CssImportOrderResult,
     CssImportGraph,
 } from "./css_import_order";
+
+export {
+    CHUNK_PLAN_MAX_ENTRIES,
+    CHUNK_PLAN_MAX_FILES,
+    CHUNK_PLAN_MAX_CHUNKS,
+    CHUNK_PLAN_MAX_FILES_PER_CHUNK,
+    CHUNK_PLAN_MAX_CSS_DEPS,
+    CHUNK_PLAN_INVALID_INDEX,
+    CHUNK_PLAN_KEY_CAP,
+    ChunkPlanError,
+    ChunkPlanContentKind,
+    ChunkPlanLoaderKind,
+    ChunkPlanEntryKind,
+    ChunkPlanTarget,
+    ChunkPlanTemplateKind,
+    ChunkPlanOptions,
+    ChunkPlanFileInput,
+    ChunkPlanUniqueKey,
+    PlannedChunk,
+    EntryChunkMapping,
+    ChunkPlanResult,
+    hashCssOrderKey,
+    formatChunkUniqueKey,
+    ChunkPlanner,
+} from "./chunk_planner";
