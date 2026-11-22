@@ -349,6 +349,22 @@ const n = rule.toCssMinified(buf[0..])?;
 // buf[0..n] == "@scope(.card,.panel) to (.card-footer){a { color: blue; }}"
 ```
 
+### CSS `<ident>` / `<custom-ident>` / `<dashed-ident>` 与 CSSOM 标识符转义（`ident.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/values/ident.cp`，零堆分配支持 W3C CSS Values Level 4 `<ident>`、`<custom-ident>`（自动拒绝 6 大 CSS-wide 全局关键字）、`<dashed-ident>`、CSS Modules `DashedIdentReference`（`--var from "./tokens.css" | global`）与 W3C CSSOM `serializeCssIdentifier` 转义序列化。
+
+- 核心导出：`CssIdentError`、`isCssWideKeyword`、`serializeCssIdentifier`、`CssIdent`、`CustomIdent`、`DashedIdent`、`CssIdentFromKind`、`DashedIdentReference`。
+
+```typescript
+import { CustomIdent, DashedIdentReference, serializeCssIdentifier } from "cap:css";
+
+const ci = CustomIdent.parse("slide-in")?;
+const ref_mod = DashedIdentReference.parse("--brand-color from \"./tokens.css\"")?;
+let buf: [64]u8 = [0; 64];
+const n = serializeCssIdentifier("1a:b", buf[0..])?;
+// buf[0..n] == "\\31 a\\:b"
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项

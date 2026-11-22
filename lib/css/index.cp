@@ -329,3 +329,14 @@ export {
     ScopeRule,
     ScopeRuleList,
 } from "./scope_rule.cp";
+
+export {
+    CssIdentError,
+    isCssWideKeyword,
+    serializeCssIdentifier,
+    CssIdent,
+    CustomIdent,
+    DashedIdent,
+    CssIdentFromKind,
+    DashedIdentReference,
+} from "./ident.cp";
