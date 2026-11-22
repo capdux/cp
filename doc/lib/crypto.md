@@ -512,6 +512,53 @@ pub fn demoMerkleMmr() {
 
 ---
 
+### 零分配 TLS 公钥指纹钉扎 SPKI Pinning 与备用 Pin 轮换校验引擎 (`certPin.cp`)
+
+面向高安全 TLS 连接校验的 100% 纯 CP 零动态堆分配 SPKI SHA-256 公钥指纹钉扎与轮换引擎（RFC 7469 风格）：
+
+- **常量与枚举**：
+  - `CERT_PIN_MAX_POLICIES = 32`、`CERT_PIN_MAX_PINS_PER_HOST = 8`、`CERT_PIN_HASH_LEN = 32`、`CERT_PIN_HOST_MAX_LEN = 128`、`CERT_PIN_B64_LEN = 44`、`CERT_PIN_DIRECTIVE_LEN = 57`
+  - `CertPinMode`（`enforce | report_only`）
+  - `CertPinOpStatus`（`ok | invalid_host | invalid_pin_list | backup_pin_required | duplicate_pin | host_exists | not_found | capacity_full`）
+  - `CertPinVerifyStatus`（`matched | no_pin_policy | pin_expired | mismatch_blocked | mismatch_reported | invalid_input`）
+- **纯函数工具**：
+  - `certPinConstantTimeEq(a, b): bool`：32 字节常量时间指纹比对（杜绝短路计时侧信道）。
+  - `encodePinSha256Base64(hash, out_buf)` / `decodePinSha256Base64(b64)`：零分配规范 RFC 4648 Base64 编解码（拒绝非规范尾部填充位）。
+  - `formatPinDirective(hash, out_buf)` / `parsePinDirective(directive)`：零分配 `pin-sha256="<44B>"` 指令格式化与解析。
+- **核心引擎 `CertPinStore`**：
+  - `init()` / `clear(*_)` / `addPolicy(*_, host, pins, include_subdomains, require_backup_pin, mode, expires_epoch_s)` / `rotatePins(*_, host, new_pins, new_expires_epoch_s)` / `addPin` / `removePin` / `removePolicy` / `findExactHost` / `getPolicy`
+  - 安全轮换守卫：`require_backup_pin == true` 时强制至少 2 个互不重复的非零 Pin 才允许激活或移除旧 Pin，防止单 Pin 轮换锁死服务。
+  - `verifyChain(*_, host, chain_spki_hashes, now_epoch_s): CertPinDecision`：规范化域名（大小写无关、剥离根点），精确主机优先于 `include_subdomains` 最长父域继承（拒绝 `evil-example.com` 误匹配 `example.com`），常量时间全链比对并返回精准裁决。
+  - `stats(): CertPinStats` / `resetStats(*_)`
+
+```cp
+import {
+    CertPinMode,
+    CertPinVerifyStatus,
+    CertPinStore,
+    formatPinDirective,
+} from "cap:crypto";
+
+pub fn demoCertPinning() {
+    let store = CertPinStore.init();
+    const pin_primary: [32]u8 = [0x11; 32];
+    const pin_backup: [32]u8 = [0x22; 32];
+    const pins: [2][32]u8 = [pin_primary, pin_backup];
+
+    * = store.addPolicy("api.cap.dev", pins[0..], true, true, CertPinMode.enforce, 1_800_000_000);
+
+    const chain: [2][32]u8 = [[0x99; 32], pin_backup];
+    const dec = store.verifyChain("v1.api.cap.dev", chain[0..], 1_700_000_000);
+    * = (dec.status == CertPinVerifyStatus.matched);
+
+    let dir_buf: [64]u8 = [0; 64];
+    let dir_s: []u8 = dir_buf[0..];
+    * = formatPinDirective(pin_primary, *dir_s);
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [aes_gcm.md](crypto/aes_gcm.md)

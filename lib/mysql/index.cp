@@ -194,3 +194,20 @@ export {
     MysqlFrameSlice,
     StackReader,
 } from "./stackReader.cp";
+
+// --- 11. Prepared Statement COM_STMT_PREPARE_OK & Lifecycle Codec (./stmtPrepareOk.cp) ---
+export {
+    STMT_PREPARE_OK_STATUS,
+    STMT_PREPARE_OK_MIN_LEN,
+    STMT_PREPARE_OK_STD_LEN,
+    STMT_PREPARE_OK_META_LEN,
+    COM_STMT_PREPARE_CMD,
+    COM_STMT_CLOSE_CMD,
+    COM_STMT_RESET_CMD,
+    STMT_METADATA_NONE,
+    STMT_METADATA_FOLLOWS,
+    STMT_MAX_SINGLE_PACKET_PAYLOAD,
+    StmtPrepareOkError,
+    StmtPrepareOKPacket,
+    StmtCommandCodec,
+} from "./stmtPrepareOk.cp";

@@ -14,6 +14,9 @@
 - `lib/mysql/packet.cp`：MySQL 4 字节包头与流式包读写器（`PacketHeader`、`MySqlPacketReader`、`MySqlPacketWriter`）
 - `lib/mysql/proto.cp`：32-bit 协议能力常量（`CAP_CLIENT_*`）、结构化 `Capabilities`、`StatusFlags` 与完整 `CharacterSet` Collation 枚举
 - `lib/mysql/wire.cp`：带分配器的全功能 Wire 帧组装（`MysqlStreamFramer`、`WireHandshakeV10`、`WireHandshakeResponse41`、`OkPacket`/`ErrPacket`/`EofPacket`/`ComPacket`、`ColumnDef41`、`TextResultRow`）
+- `lib/mysql/localInfile.cp`：零分配 `LOCAL INFILE Request`（`0xFB`）编解码与客户端路径穿越策略防护
+- `lib/mysql/stackReader.cp`：零拷贝有界协议游标与原子半包回滚帧读取器（`StackReader`、`MysqlFrameSlice`）
+- `lib/mysql/stmtPrepareOk.cp`：零分配 `COM_STMT_PREPARE_OK` 预处理响应编解码与预处理语句生命周期帧编码（`StmtPrepareOKPacket`、`StmtCommandCodec`）
 - `lib/mysql/index.cp`：`cap:mysql` 统一聚合导出入口
 
 ## 核心导出摘要
@@ -28,6 +31,9 @@
 | 包读写器 (`packet.cp`) | `PACKET_HEADER_SIZE`, `MAX_PACKET_PAYLOAD`, `MySqlPacketError`, `PacketHeader`, `DecodedLenInt`, `decodeLenInt`, `MySqlPacketReader`, `PacketHandle`, `MySqlPacketWriter` |
 | 协议常量 & 字符集 (`proto.cp`) | `CAP_CLIENT_*` (32 项), `Capabilities`, `StatusFlags`, `CharacterSet` |
 | Wire 帧 & 结果集 (`wire.cp`) | `MysqlStreamFramer`, `MysqlPacket`, `MysqlError`, `encodePacketFrame`, `WireHandshakeV10`, `WireHandshakeResponse41`, `computeNativePasswordAuth`, `OkPacket`, `ErrPacket`, `EofPacket`, `ComPacket`, `ColumnDef41`, `CellValue`, `TextResultRow` |
+| LOCAL INFILE (`localInfile.cp`) | `LOCAL_INFILE_HEADER`, `LOCAL_INFILE_MAX_FILENAME`, `LocalInfileError`, `LocalInfileRequest` |
+| 有界游标 (`stackReader.cp`) | `StackReaderError`, `MysqlFrameSlice`, `StackReader` |
+| 预处理语句响应 (`stmtPrepareOk.cp`) | `STMT_PREPARE_OK_STATUS`, `STMT_PREPARE_OK_MIN_LEN`, `STMT_PREPARE_OK_STD_LEN`, `STMT_PREPARE_OK_META_LEN`, `COM_STMT_PREPARE_CMD`, `COM_STMT_CLOSE_CMD`, `COM_STMT_RESET_CMD`, `StmtPrepareOkError`, `StmtPrepareOKPacket`, `StmtCommandCodec` |
 
 ## 使用示例
 
@@ -87,4 +93,21 @@ const wire: [7]u8 = [3, 0, 0, 1, 'O', 'K', '!'];
 let r = StackReader.init(wire[0..]);
 const frame = r.readPacketFrame()?; // payload_len=3, sequence_id=1, payload="OK!"
 * = frame;
+```
+
+6. **MySQL 预处理语句二进制协议与流水线（`stmtPrepareOk.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/StmtPrepareOKPacket.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
+   - 依据 Bun SQL 文档（`/data/dev/bun/docs/runtime/sql.mdx`）的 MySQL 最佳实践：参数化查询自动走 **Prepared Statements + Binary Protocol**，可同时获得语句缓存、精确二进制类型编码以及多语句 **Query Pipelining** 吞吐优势；
+   - `StmtPrepareOKPacket` 完整兼容 10 字节传统包（无 `warning_count`）、12 字节标准包以及 MySQL 8.0+ 13 字节可选元数据标志包（`CLIENT_OPTIONAL_RESULTSET_METADATA` / `metadata_follows`）；
+   - 通过 `pkt.expectedFollowupPackets(deprecate_eof)` 可零分配计算出服务端紧随其后发送的参数定义包、列定义包与可选 EOF 包总数，配合 `StmtCommandCodec.encodePrepareFrame` / `encodeCloseFrame` / `encodeResetFrame` 管理完整预处理语句生命周期（注意：不再复用的语句应及时发送 `COM_STMT_CLOSE` 释放服务端句柄，避免触发 `max_prepared_stmt_count` 上限）。
+
+```cp
+import { StmtPrepareOKPacket, StmtCommandCodec } from "cap:mysql";
+
+let req_buf: [128]u8 = [0; 128];
+const req_n = StmtCommandCodec.encodePrepareFrame("SELECT id FROM users WHERE id = ?", 0, req_buf[0..])?;
+* = req_n;
+
+const ok = StmtPrepareOKPacket.initWithMetadata(42, 1, 1, 0, true);
+const followup = ok.expectedFollowupPackets(true); // CLIENT_DEPRECATE_EOF: 1 param + 1 col = 2
+* = followup;
 ```

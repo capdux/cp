@@ -545,3 +545,26 @@ export {
     verifyMmrProof,
     MerkleMmr,
 } from "./merkleMmr.cp";
+
+// --- Zero-Alloc TLS SPKI Public-Key Pinning & Backup Pin Rotation Engine ---
+
+export {
+    CERT_PIN_MAX_POLICIES,
+    CERT_PIN_MAX_PINS_PER_HOST,
+    CERT_PIN_HASH_LEN,
+    CERT_PIN_HOST_MAX_LEN,
+    CERT_PIN_B64_LEN,
+    CERT_PIN_DIRECTIVE_LEN,
+    CertPinMode,
+    CertPinOpStatus,
+    CertPinVerifyStatus,
+    CertPinPolicy,
+    CertPinDecision,
+    CertPinStats,
+    certPinConstantTimeEq,
+    encodePinSha256Base64,
+    decodePinSha256Base64,
+    formatPinDirective,
+    parsePinDirective,
+    CertPinStore,
+} from "./certPin.cp";
