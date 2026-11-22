@@ -955,3 +955,48 @@ fn toolCacheDemo() {
     * = cache.put(k_write, ToolSideEffectMode.MutatingInvalidateScope, "ok", 0, 30, 1600);
 }
 ```
+
+---
+
+## 子模块：多租户 LLM 双维度 TPM/RPM 滑动窗口配额限流与预留/回退引擎（`quota_limiter.cp`）
+
+### 核心特性
+
+- **双窗口加权滑动计数器（`TenantQuotaSlot`）**：使用全整数 `u128` 精确计算当前窗口与上一窗口的线性衰减加权 RPM/TPM 消耗，杜绝固定窗口边界突刺，并在限流拒绝时给出精确平滑的 `retry_after_ms`。
+- **三维度独立门控（`tryAcquire`）**：按 `ConcurrencyExceeded` -> `RpmExceeded` -> `TpmExceeded` 顺序独立校验各租户配额（任一维度设为 `0` 表示不限制），多租户槽位物理隔离。
+- **响应后多退少补与失败全量回退（`reconcileTokens` / `abortRequest`）**：`reconcileTokens` 在 LLM 响应后按 `actual_tokens` 对比 `estimated_tokens` 精准退还盈余或补扣差额并释放并发槽位；`abortRequest` 在上游失败/取消时全量回退并发、RPM 与预估 TPM 配额。
+
+### 导出清单
+
+- **枚举与配置**：`QuotaRejectReason`、`TenantQuotaConfig`、`QuotaDecision`、`TenantQuotaStats`、`TenantQuotaSlot`
+- **核心限流器**：`LlmQuotaLimiter`（`init`, `tenantCount`, `registerTenant`, `updateTenantConfig`, `tryAcquire`, `reconcileTokens`, `abortRequest`, `getStats`）
+
+### 使用示例
+
+```typescript
+import {
+    QuotaRejectReason,
+    TenantQuotaConfig,
+    TenantQuotaSlot,
+    LlmQuotaLimiter,
+} from "cap:agent";
+
+fn multiTenantQuotaDemo() {
+    let slots_arr: [4]TenantQuotaSlot = [TenantQuotaSlot{}; 4];
+    let slots: []TenantQuotaSlot = slots_arr[0..];
+    let limiter = LlmQuotaLimiter.init(slots);
+
+    * = limiter.registerTenant(1001, TenantQuotaConfig{
+        rpm_limit: 60,
+        tpm_limit: 50000,
+        max_concurrent: 4,
+        window_ms: 60000,
+    });
+
+    const dec = limiter.tryAcquire(1001, 1200, 1000);
+    if (dec.reason == QuotaRejectReason.Allowed) {
+        // LLM 实际消耗 850 tokens -> 退还 350 tokens 并释放并发槽位
+        * = limiter.reconcileTokens(1001, 1200, 850, 1400);
+    }
+}
+```

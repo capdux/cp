@@ -79,3 +79,12 @@ export {
     normalizeOverrideKey,
     OverrideMap,
 } from "./overrides.cp";
+
+export {
+    MAX_UPDATE_REQUESTS,
+    UpdateRequestError,
+    PackageSubcommand,
+    UpdateSpecKind,
+    UpdateRequest,
+    UpdateRequestList,
+} from "./update_request.cp";

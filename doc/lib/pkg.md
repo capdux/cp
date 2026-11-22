@@ -141,6 +141,17 @@
 - **`lib/pkg/spdx.cp`**（SPDX 2.3 许可证表达式词法解析与校验）：`SpdxTokenKind`、`SpdxToken`、`SpdxLexer`、`isValidSpdxExpression`、`SpdxIdIter`、`isCommonPermissive`
 - **`lib/pkg/postinstall_optimizer.cp`**（吸收自 `/data/dev/bun/src/install/postinstall_optimizer.cp`，零分配 Postinstall 脚本优化器与原生二进制替代包匹配）：`MAX_DYNAMIC_OPTIMIZER_RULES`、`PostinstallMode`、`SemverTriple`、`PostinstallPkgInfo`、`DynamicOptimizerRule`、`PostinstallOptimizerConfig`、`findNativeBinlinkReplacement`（内置 `esbuild` / `@anthropic-ai/claude-code` 原生二进制直连替换与 `sharp >= 0.33.0` 版本门限跳过，Windows 平台自动禁用 Unix binlink 替换，支持 `configureNativeDependencies` / `configureIgnoreScripts` 动态覆盖与根安装树 `tree_id == 0` 约束）
 - **`lib/pkg/overrides.cp`**（吸收自 `/data/dev/bun/src/install/lockfile/OverrideMap.cp`，零堆分配 npm `overrides` 与 Yarn `resolutions` 依赖版本覆写映射）：`MAX_OVERRIDE_RULES`、`OverrideError`、`OverrideSourceKind`、`RootDepSpec`、`OverrideRule`、`normalizeOverrideKey`、`OverrideMap`（支持 `$pkg` 根依赖版本解引用、npm 单层 `{ ".": "ver" }` 语法、Yarn `**/` 通配前缀剥离、多级嵌套与 `patch:` 拦截、按包名字典序确定性排序与 JSON 序列化）
+- **`lib/pkg/update_request.cp`**（吸收自 `/data/dev/bun/src/install/PackageManager/UpdateRequest.cp`，零堆分配 CLI `add/remove/update/link/unlink` 位置参数说明符解析与去重列表）：`MAX_UPDATE_REQUESTS`、`UpdateRequestError`、`PackageSubcommand`、`UpdateSpecKind`、`UpdateRequest`、`UpdateRequestList`（支持 scoped/unscoped semver、dist-tag、`npm:` 别名、`link:` 自动补全、`file:`/`workspace:`/tarball/git/GitHub 简写与批量去重）
+
+### CLI `UpdateRequest` 批量解析与去重示例（`update_request.cp`）
+
+```typescript
+import { UpdateRequestList, PackageSubcommand } from "cap:pkg";
+
+const args = ["lodash@^4.17.21", "@types/node@22.0.0", "lodash@latest"];
+const list = UpdateRequestList.parseAll(args[0..], .add)?;
+// list.count() == 2 (duplicate "lodash" deduplicated, first occurrence wins)
+```
 
 ### `overrides` / `resolutions` 依赖覆写示例（`overrides.cp`）
 

@@ -781,3 +781,15 @@
 - **下游工单**：`task-bun-20261122-local-alias-raii-drop, task-bun-20261122-raii-errinit-or-move-disarm, task-bun-20261122-enum-readonly-method-mut-self` | 来源：`bun_agy` | 状态：`resolved`
 - **执行与结单汇报**：
   > 专职热修子智能体完成全部 3 条工单修复并 release 部署生效：1) 局部类型别名 const G = Guard(i32) 正确注入 defer __cp_deinit()；2) 原生支持 ~errinit()（仅在返回 error union 错误路径触发 errdefer __cp_errdeinit()，与 ~init() 正交且支持 move(guard) 撤防）；3) pub enum 只读方法不再因首个普通 *T 参数误判为可变 self 接收者。新增回归 test_raii_local_alias_errinit.cp PASS + test_raii_deinit_ownership_deep.cp 8/8 PASS，3 条工单均已 resolve 并回收热修子智能体；按用户批准计划启动 RFC Phase 1 (@fma/@dot/@l2sq SIMD 原语)。
+
+### 2026-11-22（分类合并交付：lib/pkg/update_request.cp | 2026-11-22 13:15:06）
+- **执行与结单汇报**：
+  > 子智能体从 Bun src/install/PackageManager/UpdateRequest.cp 吸收并归类合并 lib/pkg/update_request.cp 至 cap:pkg（CLI 更新说明符解析与去重，6/6 PASS），同步 cp_lib_ref.md；续派核查同步 6 项 Bun 上游新变动并吸收下一项纯逻辑子模块。
+
+### 2026-11-22（分类合并交付：lib/attention/kv_quant.cp | 2026-11-22 13:15:57）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/attention/kv_quant.cp（长上下文在线 INT8 KV-Cache 4x 压缩与 Online Softmax 融合注意力，5/5 PASS，余弦相似度 > 0.999），归入 cap:attention 并同步 cp_lib_ref.md；续派 lib/attention/sliding_window.cp。
+
+### 2026-11-22（分类合并交付：lib/agent/quota_limiter.cp | 2026-11-22 13:16:45）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/agent/quota_limiter.cp（多租户 LLM 双维度 TPM/RPM 滑动窗口限流、并发槽位控制与实际 Token 消耗多退少补，5/5 PASS），归入 cap:agent 并同步 cp_lib_ref.md；续派 lib/agent/tool_stream.cp。
