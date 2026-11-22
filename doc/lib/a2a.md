@@ -691,3 +691,49 @@ pub fn demoHandoffGate() {
     * = gate.formatTrace(*trace_s);
 }
 ```
+
+---
+
+### 零分配多智能体能力/成本/延迟/SLA 策略路由器与有序故障回退链引擎 (`routePolicy.cp`)
+
+面向多智能体集群调度与 SLA 治理的 100% 纯 CP 零动态堆分配策略路由器（A2A Route Policy Engine），支持能力位掩码硬过滤、成本/延迟/可靠性 SLA 门控、四类目标评分排序、有序无重复故障回退链以及 `degraded` 优雅降级：
+
+- **常量与枚举**：
+  - `A2A_ROUTE_MAX_TARGETS = 32`、`A2A_ROUTE_MAX_FALLBACKS = 4`、`A2A_ROUTE_ID_MAX_LEN = 48`、`A2A_ROUTE_BPS_SCALE = 10000`
+  - `RoutePolicyGoal`（`lowest_latency | lowest_cost | highest_reliability | balanced_sla`）
+  - `RouteTargetState`（`healthy | degraded | circuit_open | draining`）
+  - `RouteRejectKind`（`ok | no_matching_capability | budget_exceeded | latency_sla_exceeded | all_unavailable`）
+- **数据模型**：
+  - `RouteTargetSpec`（`agent_id()`, `capability_mask`, `cost_per_1k_micros`, `p95_latency_ms`, `success_rate_bps`, `max_inflight`, `active_inflight`, `state`, `canary_weight_bps`, `hasCapacity()`）
+  - `RouteTaskSpec`（`required_capabilities`, `max_cost_micros`, `max_latency_ms`, `min_success_rate_bps`, `goal`, `allow_degraded_fallback`, `sticky_key_hash`）
+  - `RoutePlan`（`status`, `primary_index`, `fallback_count`, `fallback_indices`, `evaluated_candidates`, `filtered_by_cap`, `filtered_by_sla`, `filtered_by_state`, `primary_score`, `used_degraded_fallback`）
+  - `RoutePolicyStats`（`total_routes`, `routed_ok`, `routed_degraded`, `rejected_count`, `target_count`）
+- **核心引擎 `A2aRoutePolicyEngine`**：
+  - `init()` / `upsertTarget(*_, agent_id, capability_mask, cost_per_1k_micros, p95_latency_ms, success_rate_bps, max_inflight)` / `setTargetState(*_, agent_id, state)` / `updateTargetMetrics(*_, agent_id, p95_latency_ms, success_rate_bps, active_inflight)` / `getTarget(agent_id)` / `getTargetAt(idx)`
+  - `planRoute(*_, task): RoutePlan` / `stats(): RoutePolicyStats`
+
+```cp
+import {
+    RoutePolicyGoal,
+    RouteTaskSpec,
+    RouteRejectKind,
+    A2aRoutePolicyEngine,
+} from "cap:a2a";
+
+pub fn demoA2aRoutePolicy() {
+    let router = A2aRoutePolicyEngine.init();
+    * = router.upsertTarget("agent-fast", 0b11, 800, 120, 9700, 32);
+    * = router.upsertTarget("agent-cheap", 0b11, 200, 450, 9500, 64);
+    * = router.upsertTarget("agent-reliable", 0b11, 1200, 300, 9990, 16);
+
+    const plan = router.planRoute(RouteTaskSpec{
+        required_capabilities: 0b11,
+        max_cost_micros: 1500,
+        max_latency_ms: 500,
+        min_success_rate_bps: 9000,
+        goal: RoutePolicyGoal.lowest_latency,
+        allow_degraded_fallback: true,
+    });
+    * = (plan.status == RouteRejectKind.ok && plan.fallback_count == 2);
+}
+```

@@ -242,3 +242,18 @@ export {
     formatHandoffHopState,
     HandoffGate,
 } from "./handoffGate.cp";
+
+export {
+    A2A_ROUTE_MAX_TARGETS,
+    A2A_ROUTE_MAX_FALLBACKS,
+    A2A_ROUTE_ID_MAX_LEN,
+    A2A_ROUTE_BPS_SCALE,
+    RoutePolicyGoal,
+    RouteTargetState,
+    RouteRejectKind,
+    RouteTargetSpec,
+    RouteTaskSpec,
+    RoutePlan,
+    RoutePolicyStats,
+    A2aRoutePolicyEngine,
+} from "./routePolicy.cp";
