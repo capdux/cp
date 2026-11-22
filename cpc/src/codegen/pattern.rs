@@ -1732,7 +1732,8 @@ impl Codegen {
             Expr::Ident(id)
                 if !self.locals.contains_key(&id.sym)
                     && !self.var_cp_types.contains_key(&id.sym)
-                    && !self.is_class_field(&id.sym) =>
+                    && !self.is_class_field(&id.sym)
+                    && !self.is_static_class_field(&id.sym) =>
             {
                 if let Some(dst_err) = target_err {
                     let dst_zig = self.map_error_type(dst_err);

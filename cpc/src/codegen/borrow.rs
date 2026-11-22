@@ -1227,7 +1227,9 @@ impl Codegen {
             Expr::Borrow(inner, is_mut) => {
                 match &**inner {
                     Expr::Ident(id) => {
-                        if self.local_trampolines.contains(&id.sym) {
+                        if self.local_trampolines.contains(&id.sym)
+                            || self.is_static_class_field(&id.sym)
+                        {
                             return (vec![], false, false);
                         }
                         if id.sym == "this" || id.sym == "_" || self.is_class_field(&id.sym) {

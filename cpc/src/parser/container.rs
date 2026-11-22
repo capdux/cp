@@ -358,7 +358,13 @@ impl<'a> Parser<'a> {
                         || matches!(self.peek_next(), Some(Token::Ident(id)) if id == "inline" || id == "extern" || id == "noinline")
                 }
                 Some(Token::Ident(id)) if id == "inline" || id == "extern" || id == "noinline" => {
-                    matches!(self.peek_next(), Some(Token::Fn) | Some(Token::Async))
+                    matches!(
+                        self.peek_next(),
+                        Some(Token::Fn)
+                            | Some(Token::Async)
+                            | Some(Token::Static)
+                            | Some(Token::Unsafe)
+                    )
                 }
                 _ => false,
             };
@@ -711,12 +717,23 @@ impl<'a> Parser<'a> {
                 extra_zig.push(format!("{}{}", pub_prefix, raw_code.trim()));
                 continue;
             }
-            if matches!(
-                self.peek(),
+            let is_method = match self.peek() {
                 Some(Token::Fn) | Some(Token::Async) | Some(Token::Static)
-            ) {
+                | Some(Token::Unsafe) => true,
+                Some(Token::Ident(id)) if id == "inline" || id == "extern" || id == "noinline" => {
+                    matches!(
+                        self.peek_next(),
+                        Some(Token::Fn)
+                            | Some(Token::Async)
+                            | Some(Token::Static)
+                            | Some(Token::Unsafe)
+                    )
+                }
+                _ => false,
+            };
+            if is_method {
                 let mut method = self.parse_function()?;
-                method.meta = meta_list;
+                method.meta.extend(meta_list);
                 if method_is_pub {
                     method.is_pub = true;
                 }

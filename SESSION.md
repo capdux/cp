@@ -1584,3 +1584,24 @@
   > 已读取工单 **`task-bun-20261122-ref-union-addr-of`**（来自 `bun_agy`，复现路径 [repro_ref_union_addr_of.cp](file:///data/dev/cp/temp/repro_ref_union_addr_of.cp)：含 `[]const u8` 切片字段的 `union(enum)` 被视作 ref 类型后，调用传参 `&u` 被 codegen 剥离 `&` 导致 Zig 报 `expected *U, found U`），并已立即启动独立热修子智能体 **`8640251e`**（`CPC Hotfix Engineer`）专职排查修复、发布 `sync_cpc.sh release`、补充回归测试并执行 `resolve` 结单。
   >
   > 原有 2 路常驻生态子智能体（Priority ① `11f7f1f4` + Priority ③ `e9122205`）继续并行运转不受影响。待热修完成回报后将立即验收提交并同步 `SESSION.md`。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-enum-inline-fn`）[ticket:task-bun-20261122-enum-inline-fn]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 16:38:24` | 状态：`resolved` | 结单：`2026-11-22T16:44:51`
+- **报错/需求摘要**：pub enum 内定义 inline fn 方法时，cpc 将 inline 误解析为枚举变体并生成 inline, 导致 zig ast-check 报 expected function, found ','
+- **结单与处理汇报**：已修复 parse_enum 对 inline/extern/noinline 修饰方法的识别及 meta.extend 保留逻辑，已发布 release cpc 并通过原 repro 及 cap/test/test_enum_inline_fn.cp 回归验证
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-static-let-addr`）[ticket:task-bun-20261122-static-let-addr]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 16:38:24` | 状态：`resolved` | 结单：`2026-11-22T16:44:51`
+- **报错/需求摘要**：struct 内 static fn 返回 static let 静态变量地址 &q 时，borrow checker 误报 E0200: Cannot return reference to local variable 'this'
+- **结单与处理汇报**：已修复 is_class_field 误包含 static let 静态字段并新增 is_static_class_field 静态存储期豁免（支持 &q、经局部指针传递、&T.q、&c.val 及实例方法返回），已发布 release cpc 并通过原 repro 及 cap/test/test_static_let_addr.cp 回归验证
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 16:38:44）[step:15340]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(2条: task-bun-20261122-enum-inline-fn,task-bun-20261122-static-let-addr)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取 2 条新编译器阻断工单并立即启动独立热修子智能体 **`f6a132d6`**（`CPC Hotfix Engineer`）打包修复、发布 `sync_cpc.sh release`、补齐回归测试并执行 `resolve` 结单：
+  >
+  > 1. **`task-bun-20261122-enum-inline-fn`**（复现：[repro_enum_inline_fn.cp](file:///data/dev/cp/temp/repro_enum_inline_fn.cp)）：`pub enum` 内定义 `inline fn` 方法时，`inline` 被误解析为枚举变体并生成 `inline,` 导致 Zig 语法报错；
+  > 2. **`task-bun-20261122-static-let-addr`**（复现：[repro_static_let_addr.cp](file:///data/dev/cp/temp/repro_static_let_addr.cp)）：`struct` 内 `static fn` 返回 `static let` 静态变量地址 `&q` 时，借用检查器误报 `E0200: Cannot return reference to local variable 'this'`。
+  >
+  > 原有 2 路第 2 波常驻生态子智能体（Priority ① `0dcb94a7` + Priority ② `67ff1fce`）继续并行运转不受影响。待热修回报后将立即验收提交并同步 `SESSION.md`。

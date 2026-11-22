@@ -2321,6 +2321,8 @@ impl Codegen {
                         if self.local_trampolines.contains(src)
                             || self.globals.contains(src)
                             || self.global_var_types.contains_key(src)
+                            || self.is_static_class_field(src)
+                            || (self.class_defs.contains_key(src) && !self.locals.contains_key(src))
                         {
                             continue;
                         }
