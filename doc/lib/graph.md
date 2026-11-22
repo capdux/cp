@@ -169,3 +169,53 @@ pub fn demoWorkflowDagCpm() {
     }
 }
 ```
+
+---
+
+## 五、 零分配 Dinic 最大流 / 最小割与二分图最大匹配求解器（`max_flow.cp`）
+
+面向网络带宽分配、多 Agent 任务-算力二分图最优匹配与最小割图划分的 100% 纯 CP 零动态堆分配 Dinic 最大流/最小割内核（带当前弧优化 Current-Arc Optimization）：
+
+- **常量与数据模型**：
+  - `FLOW_MAX_NODES = 64`、`FLOW_MAX_EDGES = 512`（含反向残量边，最多 256 条有向用户边）、`FLOW_NO_EDGE = 0xFFFF`。
+  - `DinicFlowEdge`（模块内名为 `FlowEdge`，为避免与 `maxflow.cp` 冲突在 `cap:graph` 具名导出为 `DinicFlowEdge`）：`{ to, rev, next, cap, flow }`。
+  - `MaxFlowResult`：`{ valid, max_flow, bfs_phases, source_cut_mask }`，提供 `isInSourceCut(node: usize): bool` 精确判定节点是否位于最小 s-t 割的源侧集合 `S`。
+  - `BipartiteMatchPair`：`{ left_idx: u16, right_idx: u16 }`。
+- **核心求解器**：
+  - `DinicFlowNetwork`：`init(node_count)`、`add_edge(*_, u, v, cap)`（自动写入正/反残量边对）、`solve(*_, source, sink): MaxFlowResult`（BFS 分层图 + 当前弧优化有界 DFS 阻塞流 + 残量图源可达集最小割导出）、`edge_flow(edge_pair_idx): i64`。
+  - `solveBipartiteMatching(left_count, right_count, edges_left, edges_right, out_pairs): usize`：基于单位容量 Dinic 与 O(1) 64-bit 边去重求解最大基数二分图匹配。
+
+### QuickStart 示例
+
+```cp
+import {
+    BipartiteMatchPair,
+    DinicFlowNetwork,
+    solveBipartiteMatching,
+} from "cap:graph";
+
+pub fn demoDinicMaxFlowAndMatching() {
+    // 1. 经典 CLRS 6 节点网络最大流 (max_flow = 23) 与最小割
+    let net = DinicFlowNetwork.init(6) ?? return;
+    * = net.add_edge(0, 1, 16);
+    * = net.add_edge(0, 2, 13);
+    * = net.add_edge(1, 2, 10);
+    * = net.add_edge(2, 1, 4);
+    * = net.add_edge(1, 3, 12);
+    * = net.add_edge(3, 2, 9);
+    * = net.add_edge(2, 4, 14);
+    * = net.add_edge(4, 3, 7);
+    * = net.add_edge(3, 5, 20);
+    * = net.add_edge(4, 5, 4);
+    const res = net.solve(0, 5); // res.max_flow == 23, res.isInSourceCut(0) == true, res.isInSourceCut(5) == false
+
+    // 2. 多 Agent 任务-Worker 二分图最大匹配
+    const el: [4]u16 = [0, 0, 1, 2];
+    const er: [4]u16 = [0, 1, 0, 2];
+    let pairs: [3]BipartiteMatchPair = [BipartiteMatchPair{}; 3];
+    let pairs_s: []BipartiteMatchPair = pairs[0..];
+    const matched = solveBipartiteMatching(3, 3, el[0..], er[0..], pairs_s); // matched == 3
+    * = res;
+    * = matched;
+}
+```

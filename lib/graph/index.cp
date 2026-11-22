@@ -184,3 +184,14 @@ export {
     analyzeCriticalPath,
     findCycleNodes,
 } from "./workflow_dag.cp";
+
+export {
+    FLOW_MAX_NODES,
+    FLOW_MAX_EDGES,
+    FLOW_NO_EDGE,
+    FlowEdge as DinicFlowEdge,
+    MaxFlowResult,
+    BipartiteMatchPair,
+    DinicFlowNetwork,
+    solveBipartiteMatching,
+} from "./max_flow.cp";
