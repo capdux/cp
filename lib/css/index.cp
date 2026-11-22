@@ -265,3 +265,12 @@ export {
     PropertySyntax,
     CssPropertyRule,
 } from "./property_rule.cp";
+
+export {
+    MAX_PALETTE_OVERRIDES,
+    CssFontPaletteError,
+    BasePaletteKind,
+    BasePalette,
+    PaletteOverrideColor,
+    CssFontPaletteValuesRule,
+} from "./font_palette_values.cp";

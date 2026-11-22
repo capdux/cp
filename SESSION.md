@@ -678,3 +678,7 @@
   > 收到新的编译器待处理工单(1条: task-bun-20261122-enum-readonly-method-mut-self)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
 - **执行与结单汇报**：
   > 已拉取工单详情并并入专职热修通道处理；同步验收提交 lib/text/markdown_chunk.cp (5/5 PASS，归入 cap:text) 并续派 lib/agent/retry_policy.cp。
+
+### 2026-11-22（分类合并交付：lib/css/font_palette_values.cp | 2026-11-22 13:06:49）
+- **执行与结单汇报**：
+  > 子智能体从 Bun src/css/rules/font_palette_values.cp 吸收并归类合并 lib/css/font_palette_values.cp 至 cap:css（W3C CSS Fonts Level 4 @font-palette-values 规则解析/校验/序列化，6/6 PASS，upstream_newer=0），同步 cp_lib_ref.md；续派下一项 Bun 纯逻辑子模块合并。

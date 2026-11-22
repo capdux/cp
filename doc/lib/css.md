@@ -261,6 +261,20 @@ const disp = Display.parse("inline flex").?;
 | `lib/css/dependencies.cp` | `bun/src/css/dependencies.cp` | `CssDependencyOptions`, `CssDependencyLocation`, `CssSourceRange`, `CssDependencyKind`, `CssDependency`, `formatDependencyPlaceholder`, `CssDependencyIter`（零分配 `@import` / `url(...)` 依赖提取、1-based 行列追踪、`supports(...)`/media 识别与确定性 16 字符占位符哈希） |
 | `lib/css/diagnostics.cp` | `bun/src/css/error.cp` | `MAX_CSS_DIAGNOSTICS`, `CssDiagnosticSeverity`, `CssErrorLocation`, `CssParserErrorKind`（17 项解析错误码）, `CssPrinterErrorKind`（6 项 CSS Modules/打印错误码）, `CssDiagnosticDomain`, `CssDiagnostic`, `CssDiagnosticBag`（零分配诊断收集器与格式化） |
 | `lib/css/property_rule.cp` | `bun/src/css/rules/property.cp` | `MAX_PROPERTY_SYNTAX_COMPONENTS`, `CssPropertyRuleError`, `isValidDashedIdent`, `PropertySyntax`, `CssPropertyRule`（零堆分配 W3C CSS Properties and Values API Level 1 `@property` 自定义属性注册解析、`syntax`/`inherits`/`initial-value` 规范校验与美化/压缩序列化） |
+| `lib/css/font_palette_values.cp` | `bun/src/css/rules/font_palette_values.cp` | `MAX_PALETTE_OVERRIDES`, `CssFontPaletteError`, `BasePaletteKind`, `BasePalette`, `PaletteOverrideColor`, `CssFontPaletteValuesRule`（零堆分配 W3C CSS Fonts Level 4 `@font-palette-values` 彩色字体调色板解析、泛型字体族与 `currentColor` 拒绝、非负槽位覆写查询与格式化/压缩序列化） |
+
+### `@font-palette-values` 彩色字体调色板示例（`font_palette_values.cp`）
+
+```typescript
+import { CssFontPaletteValuesRule } from "cap:css";
+
+const palette = CssFontPaletteValuesRule.parse(
+    "@font-palette-values --brand { font-family: \"Bungee Spice\"; base-palette: 1; override-colors: 0 #ff6b6b, 1 rgb(25, 113, 194); }"
+)?;
+// palette.findOverride(0) == "#ff6b6b", palette.findOverride(1) == "rgb(25, 113, 194)"
+let buf: [256]u8 = undefined;
+const minified = palette.toCssMinified(buf[0..])?;
+```
 
 ### `@property` 自定义属性注册规则示例（`property_rule.cp`）
 
