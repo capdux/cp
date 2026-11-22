@@ -116,3 +116,22 @@ pub fn demoTestRunner(): !void {
    - CI 流水线应始终使用 `SnapshotUpdateMode.Check`（严禁静默写入新快照）；本地显式更新时切换至 `Update` 或 `CreateNew`，不匹配时自动联动 `cap:patch` 的 `DiffFormatter` 输出彩色差异。
 4. **CI 报告格式（`TestReporter`）**：
    - 原生支持 `TAP` v13、`JUnit` XML 与 `JSON` 三种标准格式，可直接对接 GitHub Actions / GitLab CI 测试结果归档。
+5. **并行测试 IPC 二进制帧编解码（`lib/test_runner/ipc_frame.cp`，吸收自 `/data/dev/bun/src/cli/test/parallel/Frame.cp`）**：
+   - 线协议格式：`[u32 LE payload_len][u8 kind][payload]`，嵌入式字符串为 `[u32 LE len][bytes]`，强制 64 MiB (`IPC_FRAME_MAX_PAYLOAD`) 单帧载荷上限，防止 `5 + len` 整数溢出与异常大包内存膨胀。
+   - 核心符号：`IPC_FRAME_HEADER_SIZE` (`5`)、`IPC_FRAME_MAX_PAYLOAD`、`IPC_TRUNC_MARKER`、`IpcFrameError`、`IpcFrameKind`（`ready` / `file_start` / `test_done` / `file_done` / `repeat_bufs` / `junit_file` / `coverage_file` / `run` / `shutdown`）、`IpcDecodedFrame`、`IpcPayloadReader`、`IpcFrameWriter`、`decodeIpcFrame`。
+
+```typescript
+import { IpcFrameKind, IpcFrameWriter, IpcPayloadReader, decodeIpcFrame } from "cap:test_runner";
+
+let buf: [128]u8 = [0; 128];
+let w = IpcFrameWriter.init(buf[0..]);
+* = w.begin(IpcFrameKind.run)?;
+* = w.writeU32(7)?;
+* = w.writeStr("test/math.test.cp")?;
+const wire = w.finish()?;
+
+const frame = decodeIpcFrame(wire)?;
+let r = IpcPayloadReader.init(frame.payload);
+const file_idx = r.readU32Checked()?; // 7
+const path = r.readStrChecked()?;     // "test/math.test.cp"
+```

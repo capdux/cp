@@ -42,3 +42,15 @@ export {
     PrettyFormat,
     TestReporter,
 } from "./reporter";
+
+export {
+    IPC_FRAME_HEADER_SIZE,
+    IPC_FRAME_MAX_PAYLOAD,
+    IPC_TRUNC_MARKER,
+    IpcFrameError,
+    IpcFrameKind,
+    IpcDecodedFrame,
+    IpcPayloadReader,
+    IpcFrameWriter,
+    decodeIpcFrame,
+} from "./ipc_frame";
