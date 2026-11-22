@@ -1712,3 +1712,54 @@ pub fn demoCacheAwareRouter() {
     * = (r2.replica_id == r1.replica_id && r2.matched_blocks == 3);
 }
 ```
+
+---
+
+### 零分配多模态/长序列二分软匹配 Token 合并引擎 (`tokenMerge.cp`)
+
+面向 ViT / 多模态 VLM 与长上下文 Transformer 推理加速的 100% 纯 CP 零动态堆分配 ToMe (Token Merging) 引擎：
+
+- **常量与枚举**：
+  - `TOME_MAX_TOKENS = 256`、`TOME_MAX_DIM = 64`、`TOME_PERMILLE_SCALE = 1000`
+  - `TokenMergeStatus`（`ok | invalid_input | capacity_exceeded | buffer_too_small`）
+- **配置与报告**：
+  - `TokenMergeConfig`（`r`, `protect_prefix`, `min_similarity`；`make(...)`, `isValid()`）
+  - `TokenMergeReport`（`status`, `input_tokens`, `output_tokens`, `merged_pairs`, `protected_tokens`, `compression_permille`, `avg_merge_sim`, `min_merge_sim`）
+- **核心算子**：
+  - `mergeTokensF32(tokens, sizes, seq_len, dim, cfg, out_tokens, out_sizes, out_merge_map): TokenMergeReport`：保留 `protect_prefix` 个系统/CLS 前缀 Token，对剩余序列做偶/奇二分软匹配（原生 SIMD `@dot` 余弦相似度），贪心选取 Top-`r`（满足 `>= min_similarity`）冗余对执行加权平均融合并累加权重 `s_new = sum s_i`。
+  - `computeProportionalLogBias(sizes, out_bias): bool`：计算 Proportional Attention 偏置 `log(size)` 供 SDPA 保持合并后注意力质量。
+  - `unmergeTokensF32(merged_tokens, merge_map, orig_seq_len, merged_seq_len, dim, out_tokens)`：按 `merge_map` 零堆投影还原至原序列长度。
+
+```cp
+import {
+    TokenMergeConfig,
+    mergeTokensF32,
+    computeProportionalLogBias,
+    unmergeTokensF32,
+} from "cap:attention";
+
+pub fn demoTokenMerge() {
+    // 5 tokens (dim=2): token 0 is protected CLS; tokens (1,2) and (3,4) are near-duplicates
+    const toks: [10]f32 = [
+        0.0, 1.0,  // CLS
+        1.0, 0.0,  1.0, 0.05,
+        0.0, -1.0, 0.05, -1.0,
+    ];
+    const empty_sizes: [0]f32 = [];
+    let out_toks: [10]f32 = [0.0; 10];
+    let out_sizes: [5]f32 = [0.0; 5];
+    let merge_map: [5]usize = [0; 5];
+    let ot_s: []f32 = out_toks[0..];
+    let os_s: []f32 = out_sizes[0..];
+    let mm_s: []usize = merge_map[0..];
+
+    const rep = mergeTokensF32(toks[0..], empty_sizes[0..], 5, 2, TokenMergeConfig.make(2, 1, 0.9), *ot_s, *os_s, *mm_s);
+    let bias: [5]f32 = [0.0; 5];
+    let b_s: []f32 = bias[0..];
+    * = computeProportionalLogBias(out_sizes[0..rep.output_tokens], *b_s);
+
+    let restored: [10]f32 = [0.0; 10];
+    let rs_s: []f32 = restored[0..];
+    * = unmergeTokensF32(out_toks[0 .. rep.output_tokens * 2], merge_map[0..], 5, rep.output_tokens, 2, *rs_s);
+}
+```

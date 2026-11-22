@@ -431,3 +431,15 @@ export {
     CacheRouterStats,
     CacheAwareRouter,
 } from "./cacheAware.cp";
+
+export {
+    TOME_MAX_TOKENS,
+    TOME_MAX_DIM,
+    TOME_PERMILLE_SCALE,
+    TokenMergeStatus,
+    TokenMergeConfig,
+    TokenMergeReport,
+    mergeTokensF32,
+    computeProportionalLogBias,
+    unmergeTokensF32,
+} from "./tokenMerge.cp";
