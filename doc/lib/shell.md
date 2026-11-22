@@ -236,3 +236,19 @@ const n = plan.resolveDestPath(0, true, dst[0..])?; // "dist/a.cp"
 7. **POSIX `cp` 选项解析、符号链接策略与自拷贝环路防线（`lib/shell/cp_opts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/cp.cp`）**：
    - 零堆分配支持 `-r`/`-R`/`--recursive`、`-f`/`-i`/`-n`（后出现覆盖前者）、`-p`/`--preserve`、`-v`/`--verbose`、`-a`/`--archive`（等价 `-RPp`）与 `-H`/`-L`/`-P` 符号链接解析策略；
    - `CpPlan.resolveTargetFor()` 强制校验目录源必须开启递归标志（否则返回 `OmittingDirectory`）、多源或尾斜杠目标必须为目录（`DestinationMustBeDir`），并自动阻断自拷贝及目录递归拷贝至自身子目录（`CannotCopyIntoSelf`）。
+8. **POSIX `rm` 选项解析与根目录/`.` 防误删守卫（`lib/shell/rm_opts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/rm.cp` & `/data/dev/bun/docs/runtime/shell.mdx`）**：
+   - 零堆分配支持 `-f`/`--force`、`-r`/`-R`/`--recursive`（自动隐含 `-d`）、`-d`/`--dir`、`-v`/`--verbose`、`-i`/`-I`/`--interactive=never|once|always`、`--preserve-root`/`--no-preserve-root`、短标志聚合（如 `-rfv`）与 `--` 操作数终止哨兵（支持删除 `-weird` 开头文件名）；
+   - **安全删除防线**：默认启用 `preserve_root = true`，`isRmRootPath(cwd, target)` 结合当前工作目录词法规范化折叠 `..` 后拦截 `/` 及 Windows 驱动器根 `C:/`（返回 `RefusingToRemoveRoot`）；`isRmDotOrDotDotTarget()` 严格拦截 `.` / `..` 尾段（返回 `RefusingToRemoveDotOrDotDot`）；`rm -f` 无操作数时按 POSIX 约定静默成功。
+
+### POSIX `rm` 选项解析与根目录防误删示例（`RmPlan`）
+
+```cp
+import { RmPlan, RmPathKind, RmTargetDecision } from "cap:shell";
+
+const args: [3]([]const u8) = ["-rfv", "--", "-temp.log"];
+const plan = RmPlan.parse(args[0..])?;
+const decision = plan.validateTarget("/workspace/app", "-temp.log", RmPathKind.File)?;
+// decision == RmTargetDecision.Remove
+// plan.validateTarget("/workspace/app", "../..", RmPathKind.NonEmptyDir) -> ShellRmError.RefusingToRemoveRoot
+* = decision;
+```

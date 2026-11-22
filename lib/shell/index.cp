@@ -190,6 +190,19 @@ export {
     CpPlan,
 } from "./cp_opts.cp";
 
+export {
+    SHELL_RM_MAX_TARGETS,
+    ShellRmError,
+    RmPromptBehaviour,
+    RmPathKind,
+    RmJoinStyle,
+    RmTargetDecision,
+    RmOpts,
+    RmPlan,
+    isRmRootPath,
+    isRmDotOrDotDotTarget,
+} from "./rm_opts.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);
