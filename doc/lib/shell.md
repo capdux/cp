@@ -525,3 +525,24 @@ const io = ShellIoTriplet{
 const plan = tbl.toSubprocStdio(io)?; // stdout -> .Capture(buf=7), stderr -> .Pipe
 * = plan;
 ```
+
+### Shell 混合借用/引用计数环境字符串与共享池（`envStr.cp`）
+
+- 吸收自 `/data/dev/bun/src/shell/EnvStr.cp` 与 `/data/dev/bun/docs/runtime/shell.mdx`；
+- 导出：`ENV_STR_MAX_SLOTS` (`64`)、`ENV_STR_ARENA_CAP` (`4096`)、`ENV_STR_INVALID_SLOT`、`EnvStrError`、`EnvStrTag`（`Empty`/`Slice`/`RefCounted`）、`EnvStr`（`empty`/`initSlice`/`isEmpty`/`isRefCounted`）、`EnvStrSlot`、`EnvStrPool`（`init`/`dupeRefCounted`/`slice`/`ref`/`deref`/`refCount`/`memoryCost`/`eql`）；
+- **环境变量高频拷贝与内存分摊最佳实践（参考 `/data/dev/bun/docs/runtime/shell.mdx` & `EnvStr.cp`）**：
+  - **三态零开销折叠**：空串统一折叠为 `.Empty`（不消耗池槽位）；来自 AST 或编译期常量的静态环境值使用 `.Slice`（零拷贝、零引用计数）；动态值使用 `.RefCounted`，在管道与子 Shell 复制 `.env(...)` 空间时仅递增引用计数而不深拷贝字节载荷；
+  - **GC 均摊内存统计**：`memoryCost()` 按 `len / ref_count` 均摊共享字符串内存，避免多子 Shell 重复累计同一环境变量字节数；归零后自动拦截二次释放（`AlreadyReleased`）与悬垂读取。
+
+```cp
+import { EnvStr, EnvStrPool } from "cap:shell";
+
+let pool = EnvStrPool.init();
+const s_static = EnvStr.initSlice("/usr/local/bin");
+const s_rc = pool.dupeRefCounted("/usr/local/bin")?;
+* = pool.ref(s_rc)?;                     // ref_count == 2
+const cost = pool.memoryCost(s_rc);      // 14 / 2 == 7
+const same = pool.eql(s_static, s_rc)?;  // true
+* = cost;
+* = same;
+```
