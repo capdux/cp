@@ -682,3 +682,46 @@ pub fn demoMcpLogRouter() {
     * = n; // 1
 }
 ```
+
+
+---
+
+## 十七、 零堆分配 MCP 2025-03-26 进度令牌与竞态安全取消通知状态机 (`progress.cp`)
+
+面向 MCP 2025-03-26 `notifications/progress` 与 `notifications/cancelled` 规范的 100% 纯 CP 零动态堆分配进度令牌表、节流防刷屏、竞态安全取消状态机与 JSON-RPC 2.0 载荷编解码器：
+
+- **常量与枚举**：
+  - `MCP_PROGRESS_MAX_SLOTS = 64`、`MCP_PROGRESS_MAX_TOMBSTONES = 64`、`MCP_PROGRESS_TOKEN_MAX_LEN = 64`、`MCP_PROGRESS_MSG_MAX_LEN = 128`、`MCP_CANCEL_REASON_MAX_LEN = 128`
+  - `McpProgressTokenKind`（`int_token | str_token`）、`McpProgressState`（`active | completed | cancelled | timed_out`）
+  - `McpProgressReportStatus`（`emitted | throttled | non_monotonic | not_found | already_terminal | invalid_value`）
+  - `McpCancelOutcome`（`cancelled_active | recorded_early_cancel | already_cancelled | already_completed | invalid_or_full`）
+- **数据模型与零分配 JSON-RPC 2.0 编解码**：
+  - `McpProgressToken`（`fromInt`, `fromStr`, `strSlice`, `equals`）、`McpProgressSlot`（`messageSlice`, `cancelReasonSlice`, `percent`）、`McpProgressHubStats`
+  - `McpParsedProgressNotif` / `McpParsedCancelNotif`
+  - `encodeProgressNotification` / `parseProgressNotification` / `encodeCancelledNotification` / `parseCancelledNotification`
+- **核心状态机 `McpProgressHub`**：
+  - `init(default_min_interval_ms, early_cancel_ttl_ms)`
+  - `register(*_, token, request_id, total, min_interval_ms, timeout_ms, now_ms)`：绑定令牌与 `request_id`；若存在提前到达的取消墓碑，立即消费墓碑并置为 `cancelled` 防止启动无效任务。
+  - `reportProgress(*_, token, progress, total, message, now_ms)`：严格校验单调递增，按 `min_interval_ms` 节流防刷屏（到达 `total` 时允许穿透节流发射终态进度）。
+  - `complete(*_, request_id)` / `cancelByRequestId(*_, request_id, reason, now_ms)` / `isCancelled(request_id)` / `reapExpired(*_, now_ms)` / `purgeTerminal(*_)` / `getByToken` / `getByRequestId` / `stats()`。
+
+```cp
+import {
+    McpProgressToken,
+    McpProgressReportStatus,
+    encodeProgressNotification,
+    McpProgressHub,
+} from "cap:mcp";
+
+pub fn demoMcpProgressHub() {
+    let hub = McpProgressHub.init(100, 30_000);
+    const tok = McpProgressToken.fromStr("job-42") ?? return;
+    * = hub.register(tok, 1001, 100.0, null, 10_000, 1_000);
+
+    if (hub.reportProgress(tok, 25.0, null, "indexing", 1_000) == McpProgressReportStatus.emitted) {
+        let buf: [256]u8 = [0; 256];
+        let buf_s: []u8 = buf[0..];
+        * = encodeProgressNotification(tok, 25.0, 100.0, "indexing", *buf_s);
+    }
+}
+```

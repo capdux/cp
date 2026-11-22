@@ -216,3 +216,25 @@ export {
     McpLogRouterStats,
     McpLogRouter,
 } from "./logRouter.cp";
+
+export {
+    MCP_PROGRESS_MAX_SLOTS,
+    MCP_PROGRESS_MAX_TOMBSTONES,
+    MCP_PROGRESS_TOKEN_MAX_LEN,
+    MCP_PROGRESS_MSG_MAX_LEN,
+    MCP_CANCEL_REASON_MAX_LEN,
+    McpProgressTokenKind,
+    McpProgressState,
+    McpProgressReportStatus,
+    McpCancelOutcome,
+    McpProgressToken,
+    McpProgressSlot,
+    McpProgressHubStats,
+    McpParsedProgressNotif,
+    McpParsedCancelNotif,
+    encodeProgressNotification,
+    parseProgressNotification,
+    encodeCancelledNotification,
+    parseCancelledNotification,
+    McpProgressHub,
+} from "./progress.cp";
