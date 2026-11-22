@@ -263,6 +263,27 @@ pub fn demoCssOrder(allocator: std.mem.Allocator): ! {
 }
 ```
 
+### 3.14 CSS Chunk 后处理与 SourceMap 相对行列偏移引擎（`lib/bundler/css_chunk_postprocess.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/postProcessCSSChunk.cp`）
+- **常量与错误集**：`CSS_CHUNK_MAX_PARTS` (`64`)、`CssChunkPostProcessError`（`BufferTooSmall` / `TooManyParts`）
+- **核心类型与函数**：`CssChunkSourceOffset`（`advance` / `reset` / `eql`，支持 `\n` 与 `\r\n`）、`CssChunkCompileResult`、`CssChunkPostProcessOptions`（`is_bundle` / `minify_whitespace` / `emit_source_maps` / `banner` / `footer`）、`CssSourceMapEntry`、`CssChunkPostProcessResult`（`sourceMapAt`）、`postProcessCssChunk`（零堆分配合并 CSS 片段、自动生成 `/* <path> */` 注释与空行分隔、追踪并重置 SourceMap 相对行列偏移、确保非空输出以 `\n` 结尾）。
+
+```typescript
+import {
+    CssChunkCompileResult,
+    CssChunkPostProcessOptions,
+    postProcessCssChunk,
+} from "cap:bundler";
+
+const parts: [2]CssChunkCompileResult = [
+    CssChunkCompileResult{ source_index: 0, pretty_path: "src/base.css", code: "body { margin: 0; }\n", has_source_map: true },
+    CssChunkCompileResult{ source_index: 1, pretty_path: "src/app.css", code: ".app { color: red; }", has_source_map: true },
+];
+let out: [256]u8 = [0; 256];
+const res = postProcessCssChunk(parts[0..], CssChunkPostProcessOptions{ emit_source_maps: true }, out[0..])?;
+// res.source_map_count == 2，输出含 "/* src/base.css */\n" 与 "/* src/app.css */\n" 注释及末尾换行
+* = res;
+```
+
 ---
 
 ## 四、 上游行为契约、边界与安全注意事项
@@ -282,3 +303,6 @@ pub fn demoCssOrder(allocator: std.mem.Allocator): ! {
 5. **CSS 打包级联顺序与语法降级基线（吸收自 `/data/dev/bun/docs/bundler/css.mdx`）**：
    - 当 JS/TS 与 CSS 混排打包时，必须按 JS 深度优先后序（`CssOrderGraph.findImportedCssInJsOrder`）合并样式表，确保菱形依赖中的基础样式先于上层样式输出，避免级联覆盖错乱；
    - 现代 CSS 语法（CSS Nesting、嵌套 `@media`、`color-mix()` 等）默认面向 ES2020 / Chrome 87+ / Safari 14+ / Firefox 78+ / Edge 88+ 自动展平降级并补全厂商前缀。
+6. **生产压缩三模态与死代码消除策略（吸收自 `/data/dev/bun/docs/bundler/minifier.mdx`）**：
+   - 打包压缩分为三类可独立开关的粒度：`--minify-whitespace`（移除空白、换行与打包注释头，配合 `postProcessCssChunk` 自动省略 `/* path */` 注释）、`--minify-syntax`（常量折叠、死代码消除、布尔字面量 `true`/`false` 缩短为 `!0`/`!1` 及布尔代数化简）与 `--minify-identifiers`（基于频次的局部标识符短名重命名，对应 `NumberScopeRenamer`）；
+   - 生产模式（`--production`）默认同时启用全部三类压缩、注入 `process.env.NODE_ENV="production"` 并切换至生产态 JSX 转换；需注意 SourceMap 开启时 `postProcessCssChunk` 按带 SourceMap 的片段边界重置相对行列偏移，确保下游 VLQ 拼接零漂移。

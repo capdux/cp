@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/resolver/node_fallbacks.cp | Synced: 2026-11-22T01:50:00Z
+// Source: Absorbed from /data/dev/bun/src/resolver/node_fallbacks.cp | Synced: 2026-11-22T06:27:04Z
 // Pure-CP zero-allocation Node.js browser-target virtual polyfill registry & VFS path router
 // (mirrors Bun `src/resolver/node_fallbacks.cp`).
 

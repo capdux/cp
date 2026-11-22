@@ -172,3 +172,14 @@ export {
     CssOrderLoaderKind,
     CssOrderGraph,
 } from "./css_order";
+
+export {
+    CSS_CHUNK_MAX_PARTS,
+    CssChunkPostProcessError,
+    CssChunkSourceOffset,
+    CssChunkCompileResult,
+    CssChunkPostProcessOptions,
+    CssSourceMapEntry,
+    CssChunkPostProcessResult,
+    postProcessCssChunk,
+} from "./css_chunk_postprocess";

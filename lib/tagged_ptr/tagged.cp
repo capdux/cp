@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ptr/tagged_pointer.cp | Synced: 2026-11-21T12:50:27Z
+// Source: Absorbed from /data/dev/bun/src/ptr/tagged_pointer.cp | Synced: 2026-11-22T06:27:04Z
 
 pub const PTR_BITS: u6 = 49;
 pub const TAG_BITS: u6 = 15;
