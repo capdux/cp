@@ -14,7 +14,7 @@ import {
     isEbmlHeader,
     EbmlElementIter,
     decodeEbmlUint,
-} from "cap:ebml";
+} from "cap:media";
 
 test("1. decodeEbmlId decodes 1-4 byte IDs and rejects reserved/out-of-range IDs per RFC 8794 section 5", () => {
     const id1: [1]u8 = [0xD7];

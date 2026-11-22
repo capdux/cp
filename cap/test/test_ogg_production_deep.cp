@@ -10,7 +10,7 @@ import {
     oggCrc32,
     isOgg,
     OggPageIter,
-} from "cap:ogg";
+} from "cap:media";
 
 fn putU32LE(buf: *[]u8, off: usize, v: u32) {
     buf[off] = (v & 0xFF) as u8;

@@ -10,7 +10,7 @@ import {
     parseId3v2Header,
     Id3v2FrameIter,
     parseId3v1Tail,
-} from "cap:id3";
+} from "cap:media";
 
 fn putSyncsafe(buf: *[]u8, off: usize, v: u32) {
     buf[off] = ((v >> 21) & 0x7F) as u8;

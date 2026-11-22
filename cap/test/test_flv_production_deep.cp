@@ -18,7 +18,7 @@ import {
     parseFlvHeader,
     parseFlvAudioHeader,
     parseFlvVideoHeader,
-} from "cap:flv";
+} from "cap:media";
 
 fn writeU24BE(buf: []u8, off: usize, v: u32) {
     buf[off] = ((v >> 16) & 0xFF) as u8;

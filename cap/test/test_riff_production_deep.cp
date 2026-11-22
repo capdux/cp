@@ -12,7 +12,7 @@ import {
     parseListType,
     RiffChunkIter,
     findRiffChunk,
-} from "cap:riff";
+} from "cap:media";
 
 fn writeTag(buf: []u8, off: usize, tag: []const u8) {
     buf[off] = tag[0];

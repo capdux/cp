@@ -2,7 +2,7 @@
 // Pure CP audio DSP utilities for ASR/Whisper 16kHz preprocessing, metering, and energy VAD.
 
 const std = @import("std");
-import { AudioError } from "./wav.cp";
+import { AudioError } from "./audio_wav.cp";
 
 /// Detected active speech region in sample indices `[start_sample, end_sample)`.
 pub struct SpeechSegment {

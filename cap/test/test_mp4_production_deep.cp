@@ -20,7 +20,7 @@ import {
     parseMvhd,
     parseMdhd,
     parseTkhd,
-} from "cap:mp4";
+} from "cap:media";
 
 fn writeTag(buf: []u8, off: usize, tag: []const u8) {
     buf[off] = tag[0];

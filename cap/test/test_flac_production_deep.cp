@@ -13,7 +13,7 @@ import {
     FlacBlockIter,
     parseStreamInfoPayload,
     parseFlacStreamInfo,
-} from "cap:flac";
+} from "cap:media";
 
 fn writeBlockHeader(buf: []u8, off: usize, is_last: bool, raw_type: u8, payload_len: u32) {
     let b0: u8 = raw_type & 0x7F;

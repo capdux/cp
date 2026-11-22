@@ -8,7 +8,7 @@ import {
     SrtCueIter,
     formatSrtCue,
     shiftSrtCue,
-} from "cap:srt";
+} from "cap:media";
 
 fn main() {
     test("1. parseSrtTimestampMs parses comma/dot timestamps and rejects invalid ranges/formats", () => {

@@ -18,7 +18,7 @@ import {
     AdtsIter,
     parseAudioSpecificConfig,
     summarizeAdts,
-} from "cap:aac";
+} from "cap:media";
 
 fn writeAdtsFrame(
     buf: []u8,

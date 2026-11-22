@@ -12,7 +12,7 @@ import {
     SpeechSegment,
     EnergyVad,
     AudioDsp,
-} from "cap:audio";
+} from "cap:media";
 
 fn approxF32(a: f32, b: f32, eps: f32): bool {
     return @abs(a - b) <= eps;
@@ -251,28 +251,28 @@ fn testEnergyVadTwoSpeechSegments(): !void {
 fn testCapAudioLazyMount(): !void {
     const alloc = std.heap.page_allocator;
 
-    // End-to-end TTS/ASR pipeline via `cap.audio.*` lazy namespace mounting
-    const raw48k = cap.audio.AudioDsp.generateSineWave(alloc, 440.0, 48000, 24000, 0.6)?;
+    // End-to-end TTS/ASR pipeline via `cap.media.*` lazy namespace mounting
+    const raw48k = cap.media.AudioDsp.generateSineWave(alloc, 440.0, 48000, 24000, 0.6)?;
     defer alloc.free(raw48k);
 
-    const asr16k = cap.audio.AudioDsp.resampleLinear(alloc, raw48k, 48000, 16000)?;
+    const asr16k = cap.media.AudioDsp.resampleLinear(alloc, raw48k, 48000, 16000)?;
     defer alloc.free(asr16k);
     expect_eq(asr16k.len, 8000);
 
-    const pcm = cap.audio.AudioDsp.f32ToPcm16(alloc, asr16k)?;
+    const pcm = cap.media.AudioDsp.f32ToPcm16(alloc, asr16k)?;
     defer alloc.free(pcm);
 
-    const wav_bytes = cap.audio.WavCodec.encodePcm16(alloc, pcm, 16000, 1)?;
+    const wav_bytes = cap.media.WavCodec.encodePcm16(alloc, pcm, 16000, 1)?;
     defer alloc.free(wav_bytes);
 
-    let decoded = cap.audio.WavCodec.decodePcm16(alloc, wav_bytes)?;
+    let decoded = cap.media.WavCodec.decodePcm16(alloc, wav_bytes)?;
     defer decoded.deinit();
     expect_eq(decoded.durationMs(), 500);
 
-    const f32_back = cap.audio.AudioDsp.pcm16ToF32(alloc, decoded.samples)?;
+    const f32_back = cap.media.AudioDsp.pcm16ToF32(alloc, decoded.samples)?;
     defer alloc.free(f32_back);
 
-    const vad = cap.audio.EnergyVad.init(160, 0.05, 1);
+    const vad = cap.media.EnergyVad.init(160, 0.05, 1);
     const segs = vad.detectSegments(alloc, f32_back)?;
     defer alloc.free(segs);
     expect_eq(segs.len, 1);

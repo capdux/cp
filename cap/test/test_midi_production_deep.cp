@@ -20,7 +20,7 @@ import {
     MidiFile,
     parse,
     encode,
-} from "cap:midi";
+} from "cap:media";
 
 fn approxF64(a: f64, b: f64, eps: f64): bool {
     return @abs(a - b) <= eps;
@@ -364,29 +364,29 @@ fn testErrorInterception(): !void {
 fn testCapHubDynamicMountAndZeroLeak(): !void {
     const alloc = std.testing.allocator;
 
-    let evs: [2]cap.midi.MidiEvent = [
-        cap.midi.MidiEvent {
+    let evs: [2]cap.media.MidiEvent = [
+        cap.media.MidiEvent {
             delta_ticks: 0,
-            kind: cap.midi.MidiEventKind {
-                note_on: cap.midi.NoteEventData { channel: 1, note: 72, velocity: 120 },
+            kind: cap.media.MidiEventKind {
+                note_on: cap.media.NoteEventData { channel: 1, note: 72, velocity: 120 },
             },
         },
-        cap.midi.MidiEvent {
+        cap.media.MidiEvent {
             delta_ticks: 240,
-            kind: cap.midi.MidiEventKind.meta_end_of_track,
+            kind: cap.media.MidiEventKind.meta_end_of_track,
         },
     ];
-    let trs: [1]cap.midi.MidiTrack = [cap.midi.MidiTrack { events: &evs }];
-    const mf = cap.midi.MidiFile {
-        format: cap.midi.MidiFormat.SingleTrack,
+    let trs: [1]cap.media.MidiTrack = [cap.media.MidiTrack { events: &evs }];
+    const mf = cap.media.MidiFile {
+        format: cap.media.MidiFormat.SingleTrack,
         ticks_per_quarter: 480,
         tracks: &trs,
     };
 
-    const encoded = cap.midi.encode(alloc, mf)?;
+    const encoded = cap.media.encode(alloc, mf)?;
     defer alloc.free(encoded);
 
-    let decoded = cap.midi.parse(alloc, encoded)?;
+    let decoded = cap.media.parse(alloc, encoded)?;
     defer decoded.deinit(alloc);
 
     expect_eq(decoded.ticks_per_quarter, 480);

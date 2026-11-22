@@ -31,7 +31,7 @@ import {
     isMkv,
     isWebm,
     parseMkvHeader,
-} from "cap:mkv";
+} from "cap:media";
 
 fn writeId(buf: []u8, pos: usize, id: u32): usize {
     if (id <= 0xFF) {

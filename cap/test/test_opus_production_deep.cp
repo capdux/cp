@@ -18,7 +18,7 @@ import {
     parseOpusHead,
     parseOpusTags,
     parseOpusToc,
-} from "cap:opus";
+} from "cap:media";
 
 fn putU16LE(buf: *[]u8, off: usize, v: u16) {
     buf[off] = (v & 0xFF) as u8;

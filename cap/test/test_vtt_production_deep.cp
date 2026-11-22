@@ -9,7 +9,7 @@ import {
     formatVttTimestampMs,
     VttCueIter,
     formatVttCue,
-} from "cap:vtt";
+} from "cap:media";
 
 test("1. isWebVttHeader validates BOM, header title, and rejects malformed prefixes", () => {
     expect_eq(isWebVttHeader("WEBVTT"), true);

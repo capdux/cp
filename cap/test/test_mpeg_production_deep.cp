@@ -15,7 +15,7 @@ import {
     isMpegAudio,
     parseXingHeader,
     summarizeMpeg,
-} from "cap:mpeg";
+} from "cap:media";
 
 fn writeFrameHeader(
     buf: *[]u8,
