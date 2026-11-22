@@ -114,3 +114,15 @@ const d = DarwinErrno.fromCode(-61).?; // Darwin ECONNREFUSED (61)
 const canonical = d.toSystemErrno();   // SystemErrno.ECONNREFUSED (111)
 * = canonical.isConnectionError();     // true
 ```
+
+5. **FreeBSD 原生错误码与 Capsicum 沙箱诊断（`freebsdErrno.cp`）**：
+   - 吸收自 `/data/dev/bun/src/errno/freebsd_errno.cp`：导出 `FREEBSD_MAX_ERRNO`（`98`）与完整 98 项 `FreebsdErrno`（`0..97`），覆盖 FreeBSD Capsicum 能力模式沙箱专有错误（`ENOTCAPABLE = 93`、`ECAPMODE = 94`，提供 `isCapsicumError()` 谓词）、完整性错误（`EINTEGRITY = 97`）与 `EOPNOTSUPP = 45`（兼容 `"ENOTSUP"` 别名），同样支持 `toSystemErrno()` / `fromSystemErrno(err)` 双向映射。
+
+```cp
+import { FreebsdErrno } from "cap:errno";
+
+const cap_err = FreebsdErrno.fromCode(94).?; // ECAPMODE
+* = cap_err.isCapsicumError();               // true
+const sys = FreebsdErrno.ECANCELED.toSystemErrno(); // SystemErrno.ECANCELED
+* = sys;
+```

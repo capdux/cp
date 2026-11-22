@@ -4,3 +4,4 @@
 
 export * from "./errno.cp";
 export * from "./darwinErrno.cp";
+export * from "./freebsdErrno.cp";
