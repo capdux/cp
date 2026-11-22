@@ -842,3 +842,16 @@ export {
     H2PendingConnectEntry,
     H2PendingConnectTable,
 } from "./h2/pendingConn.cp";
+
+// --- Zero-Alloc HTTP Date Header Timer & IMF-fixdate Cache ---
+export {
+    HTTP_DATE_HEADER_LEN,
+    HTTP_DATE_HEADER_LINE_LEN,
+    HTTP_DATE_REFRESH_MS,
+    HTTP_DATE_MAX_EPOCH_SECS,
+    DateHeaderError,
+    DateHeaderTimerState,
+    formatImfFixdate,
+    formatDateHeaderLine,
+    DateHeaderTimer,
+} from "./dateHeader.cp";

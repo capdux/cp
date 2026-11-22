@@ -771,3 +771,21 @@ const n = q.drainResolved(outcomes[0..])?; // n == 1, outcomes[0].action == .Att
 * = wakeup;
 * = n;
 ```
+
+8. **零分配 HTTP `Date` 响应头秒级缓存与 IMF-fixdate 定时器（`dateHeader.cp`，吸收自 `/data/dev/bun/src/runtime/timer/DateHeaderTimer.cp` & `/data/dev/bun/docs/runtime/http/server.mdx`）**：
+   - 导出：`HTTP_DATE_HEADER_LEN` (`29`)、`HTTP_DATE_HEADER_LINE_LEN` (`37`)、`HTTP_DATE_REFRESH_MS` (`1000`)、`HTTP_DATE_MAX_EPOCH_SECS`、`DateHeaderError`、`DateHeaderTimerState`（`Idle`/`Active`/`Fired`）、`formatImfFixdate`、`formatDateHeaderLine`、`DateHeaderTimer`（`init`/`enable`/`onTick`/`disable`/`isActive`/`nextFireMs`/`refreshCount`/`dateSlice`/`headerLineSlice`）；
+   - **Bun.serve() 连接活跃度与零空转实践（参考 `docs/runtime/http/server.mdx`）**：
+     - 高并发 HTTP 服务端不应在每次响应时重复格式化 `Date:` 头：`DateHeaderTimer` 在内联固定缓冲区（29B 值 / 37B 完整头行）中按 1 秒周期缓存 RFC 7231 IMF-fixdate；
+     - 结合连接活跃计数（与 `idleTimeout` 默认 10s、最大 255s 清理闲置连接协同）：`onTick(now_ms, active_connections)` 仅在 `active_connections > 0` 时自动续期 1 秒；当活跃连接归零时立即转入 `.Idle` 休眠，彻底消除空闲服务端 CPU 唤醒。
+
+```cp
+import { DateHeaderTimer } from "cap:http";
+
+let timer = DateHeaderTimer.init();
+const refreshed = timer.enable(784111777000)?; // true -> "Sun, 06 Nov 1994 08:49:37 GMT"
+const keep_running = timer.onTick(784111778000, 4)?; // true (4 active connections)
+const sleep_now = timer.onTick(784111779000, 0)?;    // false -> transitions to Idle
+* = refreshed;
+* = keep_running;
+* = sleep_now;
+```
