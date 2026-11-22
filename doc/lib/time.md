@@ -425,6 +425,48 @@ pub fn demoRateWindowLimiter() {
 
 ---
 
+## 零分配分布式心跳看门狗与 Phi-Accrual 自适应故障检测器（`watchdog.cp`）
+
+面向分布式集群、Actor 监督树与多 Agent Worker 活性监控的 100% 纯 CP 零动态堆分配双模故障检测引擎：
+
+- **常量与枚举**：
+  - `WATCHDOG_MAX_NODES = 64`、`WATCHDOG_SAMPLE_WINDOW = 16`（每节点 16 槽心跳间隔环形样本窗）
+  - `WatchdogMode`（`fixed_timeout | phi_accrual`）
+  - `WatchdogState`（`healthy | suspect | dead | paused`）
+  - `WatchdogEventKind`（`became_suspect | became_dead | recovered`）
+- **核心算法与数据模型**：
+  - `computePhiAccrual(elapsed_ms, mean_ms, std_dev_ms): f64`：Akka/Cassandra 风格 Phi-Accrual 自适应怀疑度评分（数值稳定，防下溢/NaN）。
+  - `WatchdogNodeConfig`（`fixedDefaults()`, `phiDefaults()`, `isValid()`）、`WatchdogNodeState`（`meanIntervalMs()`, `stdDevIntervalMs()`）、`WatchdogTransitionEvent`、`WatchdogStats`
+- **核心引擎 `HeartbeatWatchdog`**：
+  - `init()` / `registerNode(*_, node_id, config, now_ms)` / `unregisterNode(*_, node_id)`
+  - `heartbeat(*_, node_id, now_ms)`：记录心跳样本，若节点原处于 `suspect`/`dead` 则自动恢复 `healthy` 并排队一次性 `recovered` 跃迁事件。
+  - `pauseNode(*_, node_id, now_ms)` / `resumeNode(*_, node_id, now_ms)`：维护窗口免检与恢复重置。
+  - `phiOf(node_id, now_ms)` / `pollTransitions(*_, now_ms, *out_events)` / `getNode(node_id)` / `stats()`。
+
+### QuickStart 示例
+
+```cp
+import {
+    WatchdogNodeConfig,
+    WatchdogTransitionEvent,
+    HeartbeatWatchdog,
+} from "cap:time";
+
+pub fn demoWatchdog() {
+    let wd = HeartbeatWatchdog.init();
+    * = wd.registerNode(1, WatchdogNodeConfig.phiDefaults(), 1000);
+    * = wd.heartbeat(1, 2000);
+    * = wd.heartbeat(1, 3000);
+
+    let evs: [8]WatchdogTransitionEvent = [WatchdogTransitionEvent{}; 8];
+    let evs_s: []WatchdogTransitionEvent = evs[0..];
+    const n = wd.pollTransitions(6000, *evs_s); // 静默 3s -> phi 飙升触发 became_dead
+    * = n;
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [health.md](time/health.md)

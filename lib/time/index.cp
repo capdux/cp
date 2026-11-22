@@ -287,3 +287,17 @@ export {
     RateWindowStats,
     RateWindowLimiter,
 } from "./rateWindow.cp";
+
+export {
+    WATCHDOG_MAX_NODES,
+    WATCHDOG_SAMPLE_WINDOW,
+    WatchdogMode,
+    WatchdogState,
+    WatchdogEventKind,
+    WatchdogNodeConfig,
+    WatchdogNodeState,
+    WatchdogTransitionEvent,
+    WatchdogStats,
+    computePhiAccrual,
+    HeartbeatWatchdog,
+} from "./watchdog.cp";
