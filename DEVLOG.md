@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:keyframes` 吸收自 Bun css/rules/keyframes.cp 的纯 CP 零分配 CSS @keyframes 解析、压缩与时间轴采样库：保留字拦截、from/to 最优压缩与关键帧区间插值采样（5/5 PASS，文档直写 `doc/lib/keyframes.md`）
+从 /data/dev/bun/src/css/rules/keyframes.cp 吸收纯 CP 零分配 CSS @keyframes 库 cap:keyframes（lib/keyframes/{keyframes,index}.cp），cpc check 0 错误，cap test 5/5 PASS (768ms)
+
 ## 2026-11-22: 新建 `cap:byterange` 吸收自 Bun runtime/server/RangeRequest.cp 的纯 CP 零分配 HTTP Range（RFC 9110）单/多段解析与 Content-Range 206/416 编解码库（5/5 PASS，文档直写 `doc/lib/byterange.md`）
 从 /data/dev/bun/src/runtime/server/RangeRequest.cp 吸收纯 CP 零分配 HTTP Range 库 cap:byterange（lib/byterange/{byterange,index}.cp），cpc check 0 错误，cap test 5/5 PASS (761ms)
 

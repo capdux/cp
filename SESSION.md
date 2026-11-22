@@ -31,3 +31,6 @@
 
 ### 2026-11-22（`cap:byterange` 验收，子智能体吸收 Bun 上游 RangeRequest.cp 为 cap:byterange（5/5 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/byterange/`（5/5 PASS，`doc/lib/byterange.md`）经 `verify_module.sh` 一次性验收回收；子智能体吸收 Bun 上游 RangeRequest.cp 为 cap:byterange（5/5 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:keyframes` 验收，子智能体吸收 Bun 上游 css/rules/keyframes.cp 为 cap:keyframes（5/5 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/keyframes/`（5/5 PASS，`doc/lib/keyframes.md`）经 `verify_module.sh` 一次性验收回收；子智能体吸收 Bun 上游 css/rules/keyframes.cp 为 cap:keyframes（5/5 PASS），主协调器统一登记并提交
