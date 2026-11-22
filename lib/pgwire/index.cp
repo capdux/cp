@@ -78,3 +78,14 @@ export {
     PgCloseMsg,
     PgDescribeMsg,
 } from "./closeDescribe.cp";
+
+export {
+    PG_TAG_COPY_DATA,
+    PG_TAG_COPY_DONE,
+    PG_TAG_COPY_FAIL,
+    PG_COPY_DONE_FRAME_LEN,
+    PgCopyError,
+    PgCopyData,
+    PgCopyDone,
+    PgCopyFail,
+} from "./copyFrames.cp";

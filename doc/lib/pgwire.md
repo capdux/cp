@@ -129,6 +129,26 @@ const cls = PgCloseMsg.decodeFrame(buf[0..n2])?;
 * = cls.target.name;
 ```
 
+### `COPY` 流式数据帧编解码（`CopyData` `'d'` / `CopyDone` `'c'` / `CopyFail` `'f'`，`copyFrames.cp`）
+
+> 吸收自 `/data/dev/bun/src/sql/postgres/protocol/CopyFail.cp` 与 `CopyData.cp`（参考 `/data/dev/bun/docs/runtime/sql.mdx` PostgreSQL 批量流式写入实践），零堆分配实现 PostgreSQL v3.0 `COPY FROM STDIN` / `COPY TO STDOUT` 全套流帧编解码与异常中止协议。
+
+- 核心导出：`PG_TAG_COPY_DATA`（`'d'`）、`PG_TAG_COPY_DONE`（`'c'`）、`PG_TAG_COPY_FAIL`（`'f'`）、`PG_COPY_DONE_FRAME_LEN`（`5`）、`PgCopyError`、`PgCopyData`（支持含 `0x00` 的任意二进制/文本块）、`PgCopyDone`（固定 5 字节完结帧）、`PgCopyFail`（携带 NUL 终结中止原因，自动拦截内嵌 NUL 与畸形帧）；
+- **实战最佳实践**：
+  - 客户端在 `COPY FROM STDIN` 过程中如遇本地数据源错误，应发送 `PgCopyFail.init("reason")` 而非直接断开 TCP，使服务端回滚 `COPY` 并返回规范 `ErrorResponse` + `ReadyForQuery`，保持连接池会话可复用。
+
+```cp
+import { PgCopyData, PgCopyDone, PgCopyFail } from "cap:pgwire";
+
+let buf: [64]u8 = [0; 64];
+const n_data = PgCopyData.init("1\talice\n").encodeFrame(buf[0..])?;
+const d = PgCopyData.decodeFrame(buf[0..n_data])?;
+const n_done = PgCopyDone.encodeFrame(buf[0..])?;
+* = PgCopyDone.decodeFrame(buf[0..n_done])?;
+const n_fail = PgCopyFail.init("upstream csv parse error").encodeFrame(buf[0..])?;
+* = d.data; * = n_fail;
+```
+
 ---
 
 ## 4. 示例

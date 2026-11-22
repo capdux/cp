@@ -754,3 +754,48 @@ pub fn demoBeliefState() {
     * = n; // 1 (记录 superseded_old 冲突仲裁)
 }
 ```
+
+### 17. 零分配智能体层次目标分解与 HTN 计划状态树引擎 (`goalTree.cp`)
+
+面向自主 AI Agent 任务分解与 HTN（Hierarchical Task Network）计划追踪的 100% 纯 CP 零动态堆分配层次目标状态树引擎（全树纯迭代传播，零递归、零堆分配）：
+
+- **常量与枚举**：
+  - `GOAL_TREE_MAX_NODES = 64`、`GOAL_TREE_MAX_DEPTH = 16`、`GOAL_TREE_NAME_MAX_LEN = 48`、`GOAL_NO_NODE = 0xFFFF`、`GOAL_PROGRESS_FULL_BPS = 10000`
+  - `GoalOperator`（`leaf | op_and | op_or | op_seq`）
+  - `GoalStatus`（`pending | blocked | active | achieved | failed | skipped`）
+- **数据模型**：
+  - `GoalNode`（含 `nameSlice()`, `isLeaf()`, `isTerminal()`, `canRetry()`, `progress_bps`, `retry_count`, `max_retries`, `priority`, `goal_hash`）
+  - `GoalTreeStats`（各状态节点数、`max_depth`, `root_progress_bps`, `total_transitions`, `total_retries`）
+- **核心引擎 `GoalTree`**：
+  - `init()` / `reset(*_)` / `setRoot(*_, name, goal_hash, operator, priority, max_retries): u32?` / `addChild(*_, parent_id, name, goal_hash, operator, priority, max_retries): u32?`
+  - `markActive(*_, node_id)` / `markAchieved(*_, node_id)` / `markFailed(*_, node_id)` / `retryNode(*_, node_id)`：
+    - `op_and`：全部子节点达成则达成，任一子节点失败则失败；
+    - `op_or`：任一子节点达成则达成并自动将剩余未启动分支标记为 `skipped`，全部子节点失败才失败；
+    - `op_seq`：按添加顺序逐一解锁，前驱未达成时后续节点保持 `blocked`；
+    - 自动自底向上纯迭代汇总每个父节点的 `progress_bps`（`0..=10000`），且 `retryNode` 支持在 `max_retries` 内恢复失败分支并重新激活父链。
+  - `pickNextActionable(): u32?` / `collectActionable(*out_ids): usize`：按 `(priority 降序, node_id 升序)` 调度当前可执行叶子目标，自动遵守 `SEQ` 前驱门控与 `OR` 备选回退。
+  - `getNode(node_id)` / `rootId()` / `rootStatus()` / `rootProgressBps()` / `stats()`。
+
+```cp
+import {
+    GoalOperator,
+    GoalStatus,
+    GoalTree,
+} from "cap:agentmem";
+
+pub fn demoGoalTree() {
+    let tree = GoalTree.init();
+    const root = tree.setRoot("release_v1", 0xA1, GoalOperator.op_seq, 100, 0) ?? return;
+    const step1 = tree.addChild(root, "run_tests", 0xA2, GoalOperator.leaf, 90, 1) ?? return;
+    const step2 = tree.addChild(root, "deploy", 0xA3, GoalOperator.op_or, 80, 0) ?? return;
+    const d_primary = tree.addChild(step2, "deploy_k8s", 0xA4, GoalOperator.leaf, 85, 0) ?? return;
+    const d_fallback = tree.addChild(step2, "deploy_vm", 0xA5, GoalOperator.leaf, 60, 0) ?? return;
+
+    // SEQ 门控：仅 step1 可执行
+    * = tree.pickNextActionable(); // step1
+    * = tree.markAchieved(step1);  // 解锁 step2，root 进度 5000 bps (50%)
+    * = tree.markFailed(d_primary); // OR 备选自动回退至 d_fallback
+    * = tree.markAchieved(d_fallback); // step2 & root 全部达成 (10000 bps)
+    * = (tree.rootStatus() == GoalStatus.achieved);
+}
+```

@@ -166,3 +166,16 @@ export {
     BeliefStateStats,
     BeliefStateStore,
 } from "./beliefState.cp";
+
+export {
+    GOAL_TREE_MAX_NODES,
+    GOAL_TREE_MAX_DEPTH,
+    GOAL_TREE_NAME_MAX_LEN,
+    GOAL_NO_NODE,
+    GOAL_PROGRESS_FULL_BPS,
+    GoalOperator,
+    GoalStatus,
+    GoalNode,
+    GoalTreeStats,
+    GoalTree,
+} from "./goalTree.cp";
