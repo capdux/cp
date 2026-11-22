@@ -205,3 +205,15 @@ export {
     decodeShimUtf16LeToUtf8,
     BinLinkingShim,
 } from "./bin_shim.cp";
+
+export {
+    PkgOptionsError,
+    PkgLogLevel,
+    PkgPublishAccess,
+    PkgAuthType,
+    PkgPublishConfig,
+    PkgDoFlags,
+    PkgEnableFlags,
+    PkgDepOmitFlags,
+    PkgInstallOptions,
+} from "./install_options.cp";

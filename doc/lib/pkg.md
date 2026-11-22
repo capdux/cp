@@ -381,3 +381,22 @@ const pn = decodeShimUtf16LeToUtf8(decoded.bin_path_utf16_bytes, path_utf8[0..])
 // path_utf8[0..pn] == "cowsay/cli.js", decoded.flags.is_node == true
 * = pn;
 ```
+
+9. **安装/发布运行选项、全局虚拟存储与供应链冷却期门禁（`lib/pkg/install_options.cp`，吸收自 `/data/dev/bun/src/install/PackageManager/PackageManagerOptions.cp`、`/data/dev/bun/docs/pm/cli/publish.mdx` 与 `/data/dev/bun/docs/pm/global-store.mdx`）**：
+   - **`bun publish` 规范校验**：默认 dist-tag 为 `latest`；非 scoped 包（不以 `@` 开头）始终公开，尝试以 `--access restricted` 发布会被 `PkgPublishConfig.validateForPackage` 拒绝（`UnscopedRestrictedPublish`）；CI 重跑场景建议启用 `--tolerate-republish` 以幂等退出码 0 忽略已存在版本；直接传入预打包 `.tgz` 路径发布时不执行 `prepublishOnly`/`prepack` 等生命周期脚本。
+   - **全局虚拟存储（Global Virtual Store）**：默认关闭且**仅在 `isolated` 链接器下生效**（`enableGlobalVirtualStore(true)`，hoisted 下自动拒绝或禁用）；热安装路径将逐文件 `clonefileat` 替换为单次 `symlink()` 指向共享 `<cache>/links/` 目录，显著缩短 CI 温缓存安装耗时并压缩单项目 `node_modules` 体积。
+   - **供应链冷却期门禁（`--minimum-release-age`）**：通过 `isReleaseAgeSatisfied(published_unix_sec, now_unix_sec)` 拒绝发布未满设定秒数的新版本，缓解供应链恶意抢发风险。
+
+### 安装与发布选项配置示例（`PkgInstallOptions`）
+
+```cp
+import { PkgInstallOptions, PkgPublishAccess } from "cap:pkg";
+
+let opts = PkgInstallOptions.init();
+opts.applyFrozenLockfile();
+opts.applyProduction();
+opts.enableGlobalVirtualStore(true)?;
+opts.minimum_release_age_secs = 86400; // 24h 冷却期
+opts.publish.access = PkgPublishAccess.Restricted;
+opts.publish.validateForPackage("@acme/sdk")?;
+```
