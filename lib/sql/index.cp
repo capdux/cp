@@ -235,3 +235,24 @@ export {
     decodePgErrorResponse,
     decodePgNoticeResponse,
 } from "./pg_error_notice.cp";
+
+export {
+    PG_READY_FOR_QUERY_TAG,
+    PG_BACKEND_KEY_DATA_TAG,
+    PG_COMMAND_COMPLETE_TAG,
+    PG_PARAMETER_STATUS_TAG,
+    PG_BACKEND_KEY_DATA_FRAME_LEN,
+    PgControlError,
+    PgTxStatus,
+    PgBackendKeyData,
+    PgParameterStatusView,
+    PgCommandCompleteView,
+    encodePgReadyForQuery,
+    decodePgReadyForQuery,
+    encodePgBackendKeyData,
+    decodePgBackendKeyData,
+    encodePgCommandComplete,
+    decodePgCommandComplete,
+    encodePgParameterStatus,
+    decodePgParameterStatus,
+} from "./pg_control.cp";

@@ -334,6 +334,35 @@ const wire = encodePgErrorResponse(buf[0..], fields[0..])?;
 const view = decodePgErrorResponse(wire)?; // view.isConstraintViolation() == true, view.constraint == "users_email_key"
 * = view;
 ```
+- **PostgreSQL v3 后端生命周期控制帧零分配编解码器 (`pg_control.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/{ReadyForQuery,BackendKeyData,CommandComplete,ParameterStatus,TransactionStatusIndicator}.cp`)**：
+  - 常量与类型：`PG_READY_FOR_QUERY_TAG` (`'Z'`)、`PG_BACKEND_KEY_DATA_TAG` (`'K'`)、`PG_COMMAND_COMPLETE_TAG` (`'C'`)、`PG_PARAMETER_STATUS_TAG` (`'S'`)、`PG_BACKEND_KEY_DATA_FRAME_LEN` (`12`)、`PgControlError`、`PgTxStatus`（`idle = 'I'` / `in_transaction = 'T'` / `failed_transaction = 'E'`）、`PgBackendKeyData`（`process_id` + `secret_key`）、`PgParameterStatusView`、`PgCommandCompleteView`（含 `rowsAffected()` 行数解析）；
+  - 编解码函数：`encodePgReadyForQuery`/`decodePgReadyForQuery`、`encodePgBackendKeyData`/`decodePgBackendKeyData`、`encodePgCommandComplete`/`decodePgCommandComplete`、`encodePgParameterStatus`/`decodePgParameterStatus`。
+
+```typescript
+import {
+    PgTxStatus,
+    PgBackendKeyData,
+    encodePgReadyForQuery,
+    decodePgReadyForQuery,
+    encodePgBackendKeyData,
+    decodePgBackendKeyData,
+    encodePgCommandComplete,
+    decodePgCommandComplete,
+} from "cap:sql";
+
+let buf: [64]u8 = [0; 64];
+const rfq_wire = encodePgReadyForQuery(buf[0..], PgTxStatus.in_transaction)?;
+const tx_status = decodePgReadyForQuery(rfq_wire)?; // tx_status.inTransaction() == true
+
+const key_wire = encodePgBackendKeyData(buf[0..], PgBackendKeyData{ process_id: 12345, secret_key: 0xdeadbeef })?;
+const key = decodePgBackendKeyData(key_wire)?; // 用于后续 CancelRequest
+
+const cc_wire = encodePgCommandComplete(buf[0..], "INSERT 0 5")?;
+const cc = decodePgCommandComplete(cc_wire)?; // cc.rowsAffected() == 5
+* = tx_status;
+* = key;
+* = cc;
+```
 
 ---
 
@@ -350,7 +379,7 @@ const view = decodePgErrorResponse(wire)?; // view.isConstraintViolation() == tr
    - SQLite 错误码以 `SQLITE_CONSTRAINT` (`errno=19`)、`SQLITE_BUSY` (`errno=5`)、`SQLITE_LOCKED` (`errno=6`) 与 `SQLITE_READONLY` (`errno=8`) 为主，高并发写入场景应结合 WAL 模式与 `SQLITE_BUSY` 退避重试。
 4. **参数化绑定与防 SQL 注入**：
    - 严禁通过字符串拼接构造含外部输入的 SQL；始终通过 `SqlStatement` / `SqliteDatabase` 参数绑定或 `MySqlPreparedProtocol` / `encodeMySqlQueryWithAttrs` / PostgreSQL Extended Query 参数帧分离语句与数据；审计或读写分离路由可结合 `parseSqlWithMaxDepth`、`isReadOnlyQuery` / `isReadOnlySql` 与 `normalizeSqlFingerprint` 实现安全校验与查询脱敏。
-4. **连接状态机与事务边界**：
-   - PostgreSQL 事务内一旦单条语句出错即进入 `Aborted` 状态，须执行 `ROLLBACK` 后方可继续新查询；`SqlTransactionStateMachine` 与 `SqliteDatabase`（`begin`/`commit`/`rollback`）配合 `defer` 可确保异常路径下确定性回滚，防止连接池归还脏事务连接。
+5. **连接状态机与事务边界（参考 `/data/dev/bun/docs/runtime/sql.mdx`）**：
+   - PostgreSQL 事务内一旦单条语句出错，`ReadyForQuery` (`'Z'`) 返回 `PgTxStatus.failed_transaction` (`'E'`)，须执行 `ROLLBACK`（或回滚至 `SAVEPOINT` 以实现局部错误恢复）待状态恢复为 `idle` (`'I'`) / `in_transaction` (`'T'`) 后方可继续新查询；`SqlTransactionStateMachine`、`PgBackendKeyData`（配合 `CancelRequest`）与 `SqliteDatabase`（`begin`/`commit`/`rollback`）配合 `defer` 可确保异常路径下确定性回滚，防止连接池归还脏事务连接；跨会话分布式事务在 PostgreSQL 走 Prepared Transactions (2PC)，在 MySQL 走 XA Transactions。
 5. **15 字节小对象优化（`SqlData`）**：
    - 继承自 Bun `src/sql/shared/Data.cp`，短列值直接内联存储于 15 字节槽位，显著降低宽表批量扫描时的堆分配压力。

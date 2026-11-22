@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/interchange/json5.cp | Synced: 2026-11-21T12:28:07Z (Zero-Alloc JSON5 Lexer & JSON Converter)
+// Source: Absorbed from /data/dev/bun/src/interchange/json5.cp | Synced: 2026-11-22T05:55:02Z (Zero-Alloc JSON5 Lexer & JSON Converter)
 //! Zero-allocation JSON5 1.0 lexer, validator, and RFC 8259 standard JSON converter.
 
 pub enum Json5TokenKind: u8 {

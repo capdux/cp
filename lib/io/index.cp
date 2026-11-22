@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/io/io.cp | Synced: 2026-11-22T01:52:38Z
+// Source: Absorbed from /data/dev/bun/src/io/io.cp | Synced: 2026-11-22T05:55:02Z
 /**
  * CP Standard I/O (cap:io)
  * 工业级统一高性能 I/O 流体系、非阻塞管道/文件流与标准终端

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/resolution.cp | Synced: 2026-11-21T05:48:10Z
+// Source: Absorbed from /data/dev/bun/src/install/resolution.cp | Synced: 2026-11-22T05:52:40Z
 // ============================================================================
 // lib/pkg/resolution.cp — Package Resolution, Platform Bitmasks, Meta & BinLink
 // Absorbed from Bun src/install/{resolution,repository,bin,lockfile/Package/Meta}.cp
