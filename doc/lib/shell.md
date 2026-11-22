@@ -390,3 +390,33 @@ const done = bm.nextStep()?; // Completed(exit_code == 0)
 * = r3;
 * = done;
 ```
+
+### POSIX / Bun Shell 环境变量赋值展开与作用域提交状态机（`assigns_state.cp`）
+
+- 吸收自 `/data/dev/bun/src/shell/states/Assigns.cp` 与 `/data/dev/bun/docs/runtime/shell.mdx`；
+- 导出：`SHELL_ASSIGNS_MAX_ITEMS` (`16`)、`SHELL_ASSIGN_MAX_LABEL_LEN` (`64`)、`SHELL_ASSIGN_MAX_VALUE_LEN` (`256`)、`ShellAssignsError`、`AssignScopeCtx`（`Cmd`/`Shell`/`Exported`）、`AssignStepKind`（`ExpandValue`/`Completed`/`Failed`）、`AssignStepResult`、`CommittedAssign`、`isValidAssignLabel`、`canSkipPipelineAssigns`、`joinExpandedWords`、`ShellAssignsStateMachine`；
+- **POSIX 赋值与管道优化约束**：
+  - 区分 `Cmd`（单命令前缀作用域）、`Shell`（当前 Shell 局部作用域）与 `Exported`（`export` 导出作用域）；
+  - 管道中的独立 `Shell`/`Exported` 赋值（如 `FOO=bar | echo hi`）对父 Shell 环境无副作用，`canSkipPipelineAssigns` 返回 `true` 直接跳过；
+  - 右侧展开产生多个词时以单空格拼接（`0 词 -> ""`），同名变量按自左向右 last-write-wins 覆盖；任意项展开失败时立即中止并返回退出码 `1`。
+
+```cp
+import { AssignScopeCtx, AssignStepKind, ShellAssignsStateMachine } from "cap:shell";
+
+let am = ShellAssignsStateMachine.init(AssignScopeCtx.Exported, false);
+* = am.addAssignLabel("NODE_ENV")?;
+* = am.addAssignLabel("FLAGS")?;
+
+const s1 = am.nextStep()?; // ExpandValue(0)
+const w1: [1]([]const u8) = ["production"];
+* = am.onExpansionDone(w1[0..])?;
+
+const s2 = am.nextStep()?; // ExpandValue(1)
+const w2: [2]([]const u8) = ["--fast", "--strict"];
+* = am.onExpansionDone(w2[0..])?;
+
+const done = am.nextStep()?; // Completed(exit_code == 0), FLAGS == "--fast --strict"
+* = s1;
+* = s2;
+* = done;
+```

@@ -293,6 +293,21 @@ export {
     ShellBinaryStateMachine,
 } from "./binary_state.cp";
 
+export {
+    SHELL_ASSIGNS_MAX_ITEMS,
+    SHELL_ASSIGN_MAX_LABEL_LEN,
+    SHELL_ASSIGN_MAX_VALUE_LEN,
+    ShellAssignsError,
+    AssignScopeCtx,
+    AssignStepKind,
+    AssignStepResult,
+    CommittedAssign,
+    isValidAssignLabel,
+    canSkipPipelineAssigns,
+    joinExpandedWords,
+    ShellAssignsStateMachine,
+} from "./assigns_state.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);
