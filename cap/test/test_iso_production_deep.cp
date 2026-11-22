@@ -19,7 +19,7 @@ import {
     parseIsoPvd,
     findIsoEntry,
     readIsoFileData,
-} from "cap:iso";
+} from "cap:devops";
 
 fn zeroBytes(buf: []u8) {
     let i: usize = 0;

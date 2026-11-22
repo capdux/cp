@@ -28,7 +28,7 @@ import {
     iterMb2Mmap,
     parseMb2Framebuffer,
     parseMb2Module,
-} from "cap:multiboot";
+} from "cap:devops";
 
 fn writeU32Le(buf: []u8, off: usize, v: u32) {
     buf[off] = (v & 0xFF) as u8;

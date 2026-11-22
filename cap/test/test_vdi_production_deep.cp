@@ -18,7 +18,7 @@ import {
     parseVdiHeader,
     decodeVdiBlockEntry,
     lookupVdiBlock,
-} from "cap:vdi";
+} from "cap:devops";
 
 fn writeU16Le(buf: []u8, off: usize, v: u16) {
     buf[off] = (v & 0xFF) as u8;

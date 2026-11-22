@@ -19,7 +19,7 @@ import {
     parseCramfsInode,
     parseCramfsSuperblock,
     iterCramfsDir,
-} from "cap:cramfs";
+} from "cap:devops";
 
 fn writeU16Le(buf: []u8, off: usize, v: u16) {
     buf[off] = (v & 0xFF) as u8;

@@ -20,7 +20,7 @@ import {
     TargetingRule,
     VariantWeight,
     FeatureEngine,
-} from "cap:feature";
+} from "cap:devops";
 
 // ============================================================================
 // Test 1: Consistent Bucketing Uniformity & Monotonicity (25% -> 50%)
@@ -292,18 +292,18 @@ fn testMissingFlagAndJsonSnapshot(): !void {
 
 fn testCapFeatureDynamicMount(): !void {
     const alloc = std.heap.page_allocator;
-    let engine = cap.feature.FeatureEngine.init(alloc);
+    let engine = cap.devops.FeatureEngine.init(alloc);
     defer engine.deinit();
 
-    expect_eq(cap.feature.BUCKET_SCALE, 10000);
+    expect_eq(cap.devops.BUCKET_SCALE, 10000);
 
     engine.defineBoolFlag("edge_cache", false, 100)?;
-    let ctx = cap.feature.EvalContext.init(alloc, "edge-user-99")?;
+    let ctx = cap.devops.EvalContext.init(alloc, "edge-user-99")?;
     defer ctx.deinit();
 
     const decision = engine.evaluateBool("edge_cache", ctx);
     expect_eq(decision.enabled, true);
-    expect_eq(decision.reason == cap.feature.EvalReason.RolloutIncluded, true);
+    expect_eq(decision.reason == cap.devops.EvalReason.RolloutIncluded, true);
     expect_eq(engine.flagCount(), 1);
 }
 

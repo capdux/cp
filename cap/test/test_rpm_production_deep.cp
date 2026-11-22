@@ -27,7 +27,7 @@ import {
     readRpmString,
     readRpmU32,
     parseRpmPackage,
-} from "cap:rpm";
+} from "cap:devops";
 
 fn putU16BE(buf: []u8, off: usize, v: u16) {
     buf[off] = ((v >> 8) & 0xFF) as u8;

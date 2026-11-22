@@ -23,7 +23,7 @@ import {
     parseJffs2Inode,
     parseJffs2Dirent,
     iterJffs2Nodes,
-} from "cap:jffs2";
+} from "cap:devops";
 
 fn writeU16Le(buf: []u8, off: usize, v: u16) {
     buf[off] = (v & 0xFF) as u8;

@@ -20,7 +20,7 @@ import {
     ApkSigPairIter,
     findApkSigPair,
     summarizeApkSigning,
-} from "cap:apk";
+} from "cap:devops";
 
 fn writeU16LE(buf: []u8, offset: usize, val: u16) {
     buf[offset] = (val & 0xFF) as u8;

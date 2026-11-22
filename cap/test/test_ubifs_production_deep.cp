@@ -11,9 +11,9 @@ import {
     UBIFS_INO_NODE,
     UBIFS_SB_NODE,
     UBIFS_MST_NODE,
-    COMPR_NONE,
-    COMPR_LZO,
-    COMPR_ZLIB,
+    UBIFS_COMPR_NONE as COMPR_NONE,
+    UBIFS_COMPR_LZO as COMPR_LZO,
+    UBIFS_COMPR_ZLIB as COMPR_ZLIB,
     COMPR_ZSTD,
     ubifsCrc32,
     parseUbiEcHeader,
@@ -22,7 +22,7 @@ import {
     parseUbifsNode,
     parseUbifsSuperblock,
     parseUbifsMaster,
-} from "cap:ubifs";
+} from "cap:devops";
 
 fn writeU16Le(buf: []u8, off: usize, v: u16) {
     buf[off] = (v & 0xFF) as u8;

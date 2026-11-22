@@ -24,7 +24,7 @@ import {
     parseDmgKoly,
     parseDmgMish,
     DmgStripeIter,
-} from "cap:dmg";
+} from "cap:devops";
 
 fn zeroBytes(buf: []u8) {
     let i: usize = 0;

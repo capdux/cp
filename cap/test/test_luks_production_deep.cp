@@ -22,7 +22,7 @@ import {
     Luks2Header,
     parseLuks2Header,
     selectActiveLuks2,
-} from "cap:luks";
+} from "cap:devops";
 
 fn putU16Be(buf: []u8, off: usize, v: u16) {
     buf[off] = ((v >> 8) & 0xFF) as u8;

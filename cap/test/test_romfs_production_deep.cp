@@ -24,7 +24,7 @@ import {
     RomfsImage,
     isRomfs,
     parseRomfs,
-} from "cap:romfs";
+} from "cap:devops";
 
 fn putU32Be(buf: []u8, off: usize, v: u32) {
     buf[off] = ((v >> 24) & 0xFF) as u8;

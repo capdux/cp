@@ -14,7 +14,7 @@ import {
     isDeb,
     parseDebPackage,
     parseDebControl,
-} from "cap:deb";
+} from "cap:devops";
 
 fn copyBytes(dst: *[]u8, off: usize, src: []const u8) {
     let i: usize = 0;

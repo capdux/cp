@@ -21,7 +21,7 @@ import {
     MigrationStatusEntry,
     MigrationRegistry,
     SqliteMigrator,
-} from "cap:migrate";
+} from "cap:devops";
 
 test("cap:migrate - register, parseSqlFile, out-of-order planUp & DuplicateVersion") {
     const alloc = std.heap.page_allocator;
@@ -221,7 +221,7 @@ test("cap:migrate - SqliteMigrator end-to-end (:memory: migrateUp, idempotent, r
 
 test("cap:migrate - dynamic namespace mounting via import cap from \"cap\"") {
     const alloc = std.heap.page_allocator;
-    let reg = cap.migrate.MigrationRegistry.init(alloc);
+    let reg = cap.devops.MigrationRegistry.init(alloc);
     defer reg.deinit();
 
     const spec = reg.register(
@@ -233,11 +233,11 @@ test("cap:migrate - dynamic namespace mounting via import cap from \"cap\"") {
     expect_eq(spec.version, 10);
 
     const db = new Database(":memory:");
-    const n = cap.migrate.SqliteMigrator.migrateUp(alloc, db, reg, 1700000010000) catch unreachable;
+    const n = cap.devops.SqliteMigrator.migrateUp(alloc, db, reg, 1700000010000) catch unreachable;
     expect_eq(n, 1);
 
-    const applied = cap.migrate.SqliteMigrator.loadApplied(alloc, db) catch unreachable;
-    defer cap.migrate.SqliteMigrator.freeApplied(alloc, applied);
+    const applied = cap.devops.SqliteMigrator.loadApplied(alloc, db) catch unreachable;
+    defer cap.devops.SqliteMigrator.freeApplied(alloc, applied);
     expect_eq(applied.len, 1);
     expect_eq(applied[0].version, 10);
     expect_eq(applied[0].name, "create_logs");

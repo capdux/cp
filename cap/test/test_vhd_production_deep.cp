@@ -21,7 +21,7 @@ import {
     parseVhdFooter,
     parseVhdDynamicHeader,
     lookupVhdBatEntry,
-} from "cap:vhd";
+} from "cap:devops";
 
 fn writeU16Be(buf: []u8, off: usize, v: u16) {
     buf[off] = ((v >> 8) & 0xFF) as u8;

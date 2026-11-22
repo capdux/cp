@@ -22,7 +22,7 @@ import {
     parseF2fsSuperblock,
     parseF2fsCheckpoint,
     selectActiveCheckpoint,
-} from "cap:f2fs";
+} from "cap:devops";
 
 fn writeU16Le(buf: []u8, off: usize, v: u16) {
     buf[off] = (v & 0xFF) as u8;
