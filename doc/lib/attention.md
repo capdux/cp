@@ -33,6 +33,7 @@
 - **`ImageNormParams` / `normalizeRgbU8ToF32` / `patchifyHwcF32` / `patchEmbedLinearF32` / `build2dSinCosPosEmbF32` / `applyRope2dInPlaceF32`** (`vision_patch.cp`)：零堆分配多模态视觉大模型（ViT / CLIP / Qwen2-VL / Flux）前端核，覆盖 `@fma` RGB 归一化、HWC Patchify、`@dot` 线性补丁投影、MAE/ViT 2D 正弦位置编码与严格保范数的 2D 空间 RoPE。
 - **`FP8_E4M3_MAX_FINITE` / `Fp8BlockScale` / `computeBlockAmaxF32` / `quantizeBlockFp8E4m3` / `dequantizeBlockFp8E4m3` / `gemvBlockFp8E4m3`** (`quant_fp8.cp`)：零堆分配 DeepSeek-V3 / H100 风格块级动态缩放 FP8 E4M3FN 量化与尺度外提融合混合精度 GEMV 核（支持任意非整除尾部块与全零块零除防护）。
 - **`VocabBitset` / `DfaEdge` / `ConstrainedDfa` / `applyVocabMaskInPlace` / `applyTemperatureAndTopKMaskInPlace`** (`constrained_mask.cp`)：零堆分配 LLM 结构化受限解码 Logits 位图掩码与 DFA 状态引导词表过滤器（对标 xgrammar / Outlines，支持硬件 `@popCount`、尾位自动清零、`-inf` 掩码与零堆分配温度 + Top-K 过滤）。
+- **`RopeScalingKind` / `YarnConfig` / `yarnAttentionMscale` / `computeRopeInvFreqs` / `applyScaledRopeInPlaceF32`** (`rope_yarn.cp`)：零堆分配长上下文大模型 RoPE 扩展引擎，统一支持标准 RoPE、Linear PI、NTK-Aware 与 YaRN（Peng et al. 2023）波长频段斜坡插值以及 `mscale` 注意力温度缩放。
 
 ## 3. API 速查
 
@@ -142,6 +143,9 @@
 | `applyVocabMaskInPlace` | `(logits: *[]f32, mask_words: []const u64): usize?` | 将未置位词表 token 置 `-inf`，返回保留合法 token 数（全禁止返回 `0` 供上层回退） |
 | `ConstrainedDfa` | `init` / `buildAllowedMask` / `step` / `isAccepting` | 零堆分配固定转移表 DFA 状态引导词表掩码生成器与终态判定 |
 | `applyTemperatureAndTopKMaskInPlace` | `(logits: *[]f32, temperature: f32, top_k: usize): usize?` | 温度缩放 + 零堆分配确定性 Top-K Logits 掩码（其余置 `-inf`） |
+| `yarnAttentionMscale` | `(scale_factor: f64, mscale_coeff: f64): f64` | YaRN 注意力温度缩放系数 `0.1 * mscale_coeff * ln(scale_factor) + 1.0` |
+| `computeRopeInvFreqs` | `(kind: RopeScalingKind, cfg: YarnConfig, out_inv_freqs: *[]f64): bool` | 计算 `None` / `Linear` / `NtkAware` / `Yarn`（高频保留、低频线性插值、中频斜坡混合）逆频率表 |
+| `applyScaledRopeInPlaceF32` | `(vec: *[]f32, pos: usize, inv_freqs: []const f64, mscale: f32): bool` | 支持 `mscale` 的原位半切分 RoPE 旋转（严格保范数 `mscale * ||vec||`） |
 
 ## 4. 示例
 
@@ -898,5 +902,28 @@ pub fn demoConstrainedDfaDecode(logits_in: *[]f32) {
         * = applyVocabMaskInPlace(logits_in, mask_buf[0..]);
         * = applyTemperatureAndTopKMaskInPlace(logits_in, 0.8, 1);
     }
+}
+```
+
+### 长上下文 YaRN / NTK-Aware / Linear PI RoPE 扩展示例 (`rope_yarn.cp`)
+
+```cp
+import {
+    RopeScalingKind,
+    YarnConfig,
+    yarnAttentionMscale,
+    computeRopeInvFreqs,
+    applyScaledRopeInPlaceF32,
+} from "cap:attention";
+
+pub fn demoYarnLongContextRope(q_head: *[]f32, pos: usize) {
+    // 将 4K 预训练上下文 4x 扩展至 16K
+    const cfg = YarnConfig.default(64, 4096, 4.0);
+    let inv_freqs: [32]f64 = [0.0; 32];
+    let inv_s: []f64 = inv_freqs[0..];
+    * = computeRopeInvFreqs(RopeScalingKind.Yarn, cfg, inv_s);
+
+    const mscale: f32 = yarnAttentionMscale(cfg.scale_factor, 1.0) as f32;
+    * = applyScaledRopeInPlaceF32(q_head, pos, inv_freqs[0..], mscale);
 }
 ```

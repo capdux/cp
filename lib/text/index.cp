@@ -106,3 +106,11 @@ export {
     parseDiffOp,
     applyUnifiedPatch,
 } from "./unified_diff.cp";
+
+export {
+    SymbolKind,
+    CodeSymbolSpan,
+    extractCodeOutline,
+    findSymbolByName,
+    formatRepoMapLine,
+} from "./code_outline.cp";

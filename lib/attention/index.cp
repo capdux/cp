@@ -221,3 +221,11 @@ export {
     applyVocabMaskInPlace,
     applyTemperatureAndTopKMaskInPlace,
 } from "./constrained_mask.cp";
+
+export {
+    RopeScalingKind,
+    YarnConfig,
+    yarnAttentionMscale,
+    computeRopeInvFreqs,
+    applyScaledRopeInPlaceF32,
+} from "./rope_yarn.cp";

@@ -370,6 +370,42 @@ pub fn demoUnifiedDiffApply() {
 
 ---
 
+## 零堆分配多语言源码符号大纲与 Repo-Map 提取器 (`lib/text/code_outline.cp`)
+
+专为 AI 编程智能体构建紧凑代码仓库地图（Repo-Map）与精准行号定位打造，单遍零堆分配扫描 CP / TypeScript / Rust / Zig 源码：
+
+- **`SymbolKind`**：`Function` | `Class` | `Struct` | `Enum` | `Trait` | `Const` | `Import` | `Test`
+- **`CodeSymbolSpan`**：`{ kind, name_start, name_end, start_line, end_line, brace_depth, is_public }`，提供零拷贝 `nameSlice(src: string): string`
+- **`extractCodeOutline(src: string, *out_symbols: []CodeSymbolSpan): usize`**：自动跳过 `//` 单行注释、`/* ... */` 块注释及双/单/反引号字符串字面量内的伪关键字与伪花括号（兼容 Rust `'a` 生命周期），识别 `pub`/`export`/`static`/`async` 修饰的声明并通过花括号栈追踪精确 `[start_line, end_line]` 作用域范围；输出截断安全并返回总符号数。
+- **`findSymbolByName(src, symbols, target): CodeSymbolSpan?`**：按精确符号名零拷贝检索首个匹配符号。
+- **`formatRepoMapLine(src, sym, *out_buf: []u8): usize?`**：格式化为 `pub fn applyUnifiedPatch [L42-L98]` 风格单行 Repo-Map 摘要；缓冲不足返回 `null`。
+
+```cp
+import {
+    CodeSymbolSpan,
+    extractCodeOutline,
+    findSymbolByName,
+    formatRepoMapLine,
+} from "cap:text";
+
+pub fn demoRepoMap(src: string) {
+    let syms_buf: [32]CodeSymbolSpan = [CodeSymbolSpan{}; 32];
+    let syms: []CodeSymbolSpan = syms_buf[0..];
+    const total = extractCodeOutline(src, syms);
+    const written = if (total < syms.len) total else syms.len;
+
+    if (hit := findSymbolByName(src, syms[0..written], "applyUnifiedPatch")) {
+        let line_buf: [128]u8 = [0; 128];
+        let line: []u8 = line_buf[0..];
+        if (n := formatRepoMapLine(src, hit, line)) {
+            * = line[0..n]; // e.g. "pub fn applyUnifiedPatch [L42-L98]"
+        }
+    }
+}
+```
+
+---
+
 ## 上游行为契约与文本处理边界注意事项
 
 1. **UTF-8 码点边界安全不变式**：

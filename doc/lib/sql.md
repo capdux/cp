@@ -175,6 +175,22 @@ const table = r.readLenEncString()?;   // "users"
 const opt = r.readLenEncStringOrNull()?; // null (0xfb)
 const tag = r.readByte()?; // 0x2a
 ```
+- **MySQL 线协议零堆分配二进制包写入器 (`mysql_wire_writer.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/NewWriter.cp`)**：
+  - 常量与错误集：`MYSQL_PACKET_HEADER_SIZE` (`4`)、`MYSQL_MAX_PACKET_PAYLOAD` (`0xffffff`)、`MySqlWireWriterError`（`BufferTooSmall` / `InvalidPatchOffset` / `PacketLengthOverflow`）
+  - 结构体与方法：`MySqlPacketPatch`、`MySqlWireWriter`（`init` / `offset` / `remaining` / `written` / `reset` / `writeByte` / `writeBytes` / `pwrite` / `writeU16` / `writeU24` / `writeU32` / `writeU64` / `writeI32` / `writeI64` / `writeF32` / `writeF64` / `writeZ` / `writeLenEncInt` / `writeLenEncString` / `writeLenEncNull` / `writeNullBitmap` / `beginPacket` / `finishPacket`）
+
+```typescript
+import { MySqlWireWriter, MySqlWireReader } from "cap:sql";
+
+let buf: [64]u8 = [0; 64];
+let w = MySqlWireWriter.init(buf[0..]);
+const pkt = w.beginPacket(0)?;
+* = w.writeByte(0x03)?; // COM_QUERY
+* = w.writeBytes("SELECT 1")?;
+const payload_len = w.finishPacket(pkt)?; // 9 bytes
+let r = MySqlWireReader.init(w.written());
+const hdr_len = r.readU24()?; // 9
+```
 
 ---
 

@@ -1426,3 +1426,34 @@
 - **下游工单**：`task-bun-20261122-const-type-opt-try` | 来源：`bun_agy` | 状态：`resolved`
 - **执行与结单汇报**：
   > 1. 专职热修完成 task-bun-20261122-const-type-opt-try：新增 in_container_const 上下文标记，在顶层/容器内 const 类型别名右值中将 (T)? / T? 精确降级为可选类型 ?T 而非 try，函数体内正常 expr? 零回归；release 部署生效，test_const_type_opt_try.cp 与 test_raii_local_alias_errinit.cp 全部 PASS，已 resolve 结单并回收热修子智能体；2. 响应用户全仓根目录收敛指令，增开第 2 路根目录收敛专员并行推进 lib/doc/，与第 1 路 lib/image/ 同步开展全仓分域收敛。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 14:38:42）[step:14783]
+- **用户完整原始指令**：
+  > 根目录大量 lib 库目录, 根据分类和领域, 收敛, 我上面只是部分举例
+- **完整回复与执行汇报**：
+  > 完全明白！你前面只是举例，我们要对 `/data/dev/cp/lib/` 根目录下全部 700 个小目录按**完整领域分类体系**系统性收敛，彻底消除根目录膨胀，并严格遵守 **Bun 优先、不覆盖/不丢失、冲突留 `xxx_.cp` 参考** 的铁律。
+  >
+  > ### 1. 全仓 `/data/dev/cp/lib/` 系统性分域收敛蓝图（已双路并行启动）
+  > 目前主控已同时开启 **2 路专职根目录收敛专员**（原热修子智能体结单回收后腾出配额），按以下全量领域逐批安全收敛并清理冗余空壳目录：
+  > 1. **`lib/image/`（第 1 路执行中）**：图片/图形/条码/字体（`avif`/`bmp`/`gif`/`png`/`exr`/`heif`/`ico`/`pnm`/`psd`/`qoi`/`svg`/`tga`/`tiff`/`exif`/`thumbhash`/`dicom`/`barcode`/`qr`/`ttf`/`woff2` 等）
+  > 2. **`lib/doc/`（第 2 路已启动）**：文档/办公/电子书/日程/订阅（`pdf`/`docx`/`xlsx`/`pptx`/`epub`/`odt`/`rtf`/`bibtex`/`ical`/`vcard`/`rss`/`atom`/`markdown_table`/`csv_stream` 等）
+  > 3. **`lib/conf/`（紧随其后）**：配置与结构化文本（`hjson`/`json5`/`jsonc`/`jsonl`/`ndjson`/`json_patch`/`jsonschema`/`kdl`/`hcl`/`cue`/`ron`/`nix`/`plist`/`editorconfig`/`dotenv_parse`/`frontmatter`/`crontab`/`makefile_parse`/`tsconfig_paths` 等）
+  > 4. **`lib/net/`（紧随其后）**：网络与传输/应用层协议（`arp`/`bgp`/`cidr`/`dhcp`/`ftp`/`gopher`/`haproxy`/`icmp`/`imap`/`ipfix`/`ipsec`/`irc`/`ldap`/`nats`/`netflow`/`netrc`/`amqp`/`coap`/`smtp`/`ssh`/`socks`/`mqtt`/`grpc`/`redis` 等）
+  > 5. **`lib/media/`（音视频）**、**`lib/math/`（科学计算/线性代数/优化/信号/统计）**、**`lib/ml/`（经典机器学习/聚类）**、**`lib/graph/`（图论/几何/地理）**、**`lib/ds/`（通用数据结构）**、**`lib/pack/`（压缩与归档）**、**`lib/crypto/`（密码学/证书/认证）**、**`lib/binfmt/`（二进制/序列化/磁盘格式）**——全部按同一套铁律逐批推进，每批 100% `cpc check` + `cap test` 通过后清理冗余旧顶层目录并同步更新 [doc/lib/CATALOG.md](file:///data/dev/cp/doc/lib/CATALOG.md) 与 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md)。
+  >
+  > ---
+  >
+  > ### 2. 工单 `task-bun-20261122-const-type-opt-try` 已修复发布并结单（Commit `c562185b`）
+  > - **修复**：在 `cpc/src/codegen/` 引入 `in_container_const` 上下文标记，在顶层与容器内 `const` 类型别名右值中将 `(T)?` / `T?` 精确生成为 Zig 可选类型 `?T`（不再误生成非法 `try`），函数体内正常 `expr?` 错误传播 100% 零回归；
+  > - **验证与发布**：`bash scripts/sync_cpc.sh release` 已原子部署；[test_const_type_opt_try.cp](file:///data/dev/cp/cap/test/test_const_type_opt_try.cp) 与 [test_raii_local_alias_errinit.cp](file:///data/dev/cp/cap/test/test_raii_local_alias_errinit.cp) 全部 **PASS**，已 `resolve` 结单并回收热修子智能体。
+  >
+  > ### 3. 同步验收提交（`5b26cfd5`、`5aab9435`）
+  > - **[lib/attention/constrained_mask.cp](file:///data/dev/cp/lib/attention/constrained_mask.cp)**（**5/5 PASS**，归入 `cap:attention`）：LLM 受限解码词表位图掩码与 DFA 状态引导 Logits 过滤器；
+  > - **[lib/sql/mysql_wire_reader.cp](file:///data/dev/cp/lib/sql/mysql_wire_reader.cp)**（**6/6 PASS**，吸收自 Bun `NewReader.cp`，归入 `cap:sql`）：MySQL 零堆线协议读取器；
+  > - （刚刚送达的 `lib/text/code_outline.cp` 5/5 PASS 将在下一轮同步提交并续派。）
+  >
+  > > 当前 5 路并行全速推进中（2 路全仓根目录分域收敛专员 + 3 路标准库吸收子智能体）。
+
+### 2026-11-22（分类合并交付：lib/text/code_outline.cp & lib/attention/rope_yarn.cp | 2026-11-22 14:43:35）
+- **执行与结单汇报**：
+  > 1. 交付 lib/text/code_outline.cp (多语言源码符号大纲与 Repo-Map 格式化, 5/5 PASS)；2. 交付 lib/attention/rope_yarn.cp (Linear PI / NTK-Aware / YaRN 长上下文 RoPE 扩展与 mscale, 5/5 PASS)；均已同步 cp_lib_ref.md 并提交。

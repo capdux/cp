@@ -106,3 +106,11 @@ export {
     MySqlWireReaderError,
     MySqlWireReader,
 } from "./mysql_wire_reader.cp";
+
+export {
+    MYSQL_PACKET_HEADER_SIZE,
+    MYSQL_MAX_PACKET_PAYLOAD,
+    MySqlWireWriterError,
+    MySqlPacketPatch,
+    MySqlWireWriter,
+} from "./mysql_wire_writer.cp";
