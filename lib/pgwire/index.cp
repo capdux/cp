@@ -126,3 +126,16 @@ export {
     PgParameterStatusFrame,
     PgReadyForQueryFrame,
 } from "./sessionFrames.cp";
+
+export {
+    PG_STARTUP_PROTOCOL_V3,
+    PG_STARTUP_SSL_REQUEST_CODE,
+    PG_STARTUP_GSSENC_REQUEST_CODE,
+    PG_STARTUP_UPGRADE_FRAME_LEN,
+    PG_STARTUP_MAX_PARAMS,
+    PgStartupError,
+    PgUpgradeKind,
+    PgStartupParam,
+    PgStartupMessage,
+    PgTlsUpgradeRequest,
+} from "./startupFrame.cp";

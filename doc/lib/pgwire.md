@@ -240,6 +240,35 @@ const rfq = PgReadyForQueryFrame.decodeFrame(buf[0..n_rfq])?;
 * = cancel.process_id; * = ps.isServerVersion(); * = rfq.isIdle();
 ```
 
+### 连接握手与传输升级帧编解码（`StartupMessage` / `SSLRequest` / `GSSENCRequest`，`startupFrame.cp`）
+
+吸收自 `/data/dev/bun/src/sql/postgres/protocol/StartupMessage.cp`，零堆分配编解码 PostgreSQL v3.0 连接启动与 TLS/GSSAPI 升级握手帧：
+
+- **常量**：`PG_STARTUP_PROTOCOL_V3` (`196608`)、`PG_STARTUP_SSL_REQUEST_CODE` (`80877103`)、`PG_STARTUP_GSSENC_REQUEST_CODE` (`80877104`)、`PG_STARTUP_UPGRADE_FRAME_LEN` (`8`)、`PG_STARTUP_MAX_PARAMS` (`16`)。
+- **`PgStartupMessage`**：固定容量 16 个启动参数键值对（`PgStartupParam`），支持：
+  - `PgStartupMessage.withDefaults(user, database)`（对齐 Bun 语义：`database` 为空时默认回退为 `user`，自动附加 `client_encoding = "UTF8"`）；
+  - `.addParam(key, value)` / `.get(key)` / `.user()` / `.database()` / `.clientEncoding()` / `.applicationName()` / `.protocolMajor()` / `.protocolMinor()`；
+  - `.encodedLen()` / `.encodeFrame(out)`（校验必填 `user` 与无内嵌 NUL）/ `PgStartupMessage.decodeFrame(frame)`（校验主版本号 3、成对 NUL 终止及尾部 `0x00`）。
+- **`PgTlsUpgradeRequest` (`PgUpgradeKind.Ssl` / `PgUpgradeKind.GssEnc`)**：8 字节传输层升级请求帧编解码，内置服务端单字节响应判定 `.isAcceptedByte(resp)`（`'S'` / `'G'`）与 `PgTlsUpgradeRequest.isRejectedByte(resp)`（`'N'`）。
+
+```cp
+import {
+    PgStartupMessage,
+    PgTlsUpgradeRequest,
+} from "cap:pgwire";
+
+let buf: [256]u8 = [0; 256];
+const ssl = PgTlsUpgradeRequest.ssl();
+const n_ssl = ssl.encodeFrame(buf[0..])?;
+* = ssl.isAcceptedByte('S');
+
+let startup = PgStartupMessage.withDefaults("postgres", "app_prod")?;
+* = startup.addParam("application_name", "cp_worker")?;
+const n_start = startup.encodeFrame(buf[0..])?;
+const decoded = PgStartupMessage.decodeFrame(buf[0..n_start])?;
+* = n_ssl; * = decoded.database();
+```
+
 ---
 
 ## 4. 示例

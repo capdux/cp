@@ -1173,3 +1173,53 @@ fn demoStructuredRetry() {
     * = ctrl.recordSuccess();
 }
 ```
+
+### 零堆分配 AI Agent 并行工具调用 DAG 编排器与波次规划器 (`toolGraph.cp`)
+
+面向多工具并发调用 AI Agent 的 100% 纯 CP 零动态堆分配 DAG 编排与波次规划引擎，自动推导同资源读写冲突、执行全局屏障隔离与失败级联跳过：
+
+- **常量与枚举**：
+  - `TOOL_GRAPH_MAX_CALLS = 32`、`TOOL_GRAPH_MAX_DEPS = 64`、`TOOL_GRAPH_MAX_WAVES = 32`、`TOOL_GRAPH_NAME_MAX_LEN = 48`
+  - `ToolAccessMode`（`read_only | write_exclusive | barrier_all`）
+  - `ToolCallExecState`（`pending | ready | running | succeeded | failed | skipped_dep_failed`）
+  - `ToolGraphStatus`（`ok | cycle_detected | capacity_full | invalid_id`）
+- **数据模型**：
+  - `ToolCallNode`（`call_id`, `tool_name()`, `resource_hash`, `access_mode`, `est_cost_ms`, `wave_index`, `state`）
+  - `ToolWavePlan`（`status`, `wave_count`, `wave_sizes`, `wave_members`, `critical_path_ms`, `total_serial_ms`, `auto_conflict_edges`）
+  - `ToolGraphStats`（`total_calls`, `succeeded`, `failed`, `skipped`, `completed_waves`）
+- **核心引擎 `ToolCallGraph`**：
+  - `init()` / `reset(*_)` / `nodeCount()` / `getNode(call_id)`
+  - `addCall(*_, tool_name, resource_hash, access_mode, est_cost_ms): u16?`：注册工具调用节点（超容返回 `null`）。
+  - `addDependency(*_, before_id, after_id): ToolGraphStatus`：显式声明 `before_id` 必须先于 `after_id` 完成（自动去重与越界校验）。
+  - `buildWavePlan(*_, max_parallel_per_wave): ToolWavePlan`：① 按提交顺序自动注入同 `resource_hash` 的 RAW/WAR/WAW 冲突边（`read_only` 同资源可同波并行，`barrier_all` 自动隔离前后所有调用）；② Kahn 拓扑排序检测环路（返回 `.cycle_detected`）；③ 结合 `max_parallel_per_wave` 并发上限切分并行波次并计算 `critical_path_ms` vs `total_serial_ms`。
+  - `markRunning(*_, call_id)` / `markResult(*_, call_id, succeeded): usize`：记录执行结果，成功时自动唤醒前驱均完成的下游节点为 `ready`，失败时沿 DAG 传递闭包将所有下游未终态节点级联标记为 `skipped_dep_failed` 并返回级联跳过数量。
+  - `collectReadyCalls(out_ids: *[]u16): usize` / `stats(): ToolGraphStats`。
+
+```cp
+import {
+    ToolAccessMode,
+    ToolGraphStatus,
+    ToolCallGraph,
+} from "cap:prompt";
+
+fn demoParallelToolGraph() {
+    let g = ToolCallGraph.init();
+    const r1 = g.addCall("read_config", 0x1001, ToolAccessMode.read_only, 40) ?? 0;
+    const r2 = g.addCall("read_schema", 0x1001, ToolAccessMode.read_only, 60) ?? 0;
+    const w1 = g.addCall("patch_config", 0x1001, ToolAccessMode.write_exclusive, 90) ?? 0;
+    const r3 = g.addCall("verify_config", 0x1001, ToolAccessMode.read_only, 30) ?? 0;
+
+    // r1 & r2 同资源只读合并至 Wave 0 并行；w1 因 WAR 自动落入 Wave 1；r3 因 RAW 自动落入 Wave 2
+    const plan = g.buildWavePlan(4);
+    if (plan.status == ToolGraphStatus.ok) {
+        let ready_buf: [8]u16 = [0; 8];
+        let ready_s: []u16 = ready_buf[0..];
+        const ready_n = g.collectReadyCalls(*ready_s);
+        * = ready_n; // 2 (r1, r2)
+        * = g.markResult(r1, true);
+        * = g.markResult(r2, true);
+        * = g.markResult(w1, false); // 自动级联跳过 r3 (skipped_dep_failed)
+        * = r3;
+    }
+}
+```

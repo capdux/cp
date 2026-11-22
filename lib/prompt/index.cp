@@ -344,3 +344,17 @@ export {
     StructuredRetryStats,
     StructuredRetryController,
 } from "./structuredRetry.cp";
+
+export {
+    TOOL_GRAPH_MAX_CALLS,
+    TOOL_GRAPH_MAX_DEPS,
+    TOOL_GRAPH_MAX_WAVES,
+    TOOL_GRAPH_NAME_MAX_LEN,
+    ToolAccessMode,
+    ToolCallExecState,
+    ToolGraphStatus,
+    ToolCallNode,
+    ToolWavePlan,
+    ToolGraphStats,
+    ToolCallGraph,
+} from "./toolGraph.cp";
