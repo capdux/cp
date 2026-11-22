@@ -604,6 +604,49 @@ pub fn demoAdaptiveRetry() {
 
 ---
 
+## 零分配上游集群离群驱逐、熔断器与半开探测池（`circuitPool.cp`）
+
+对标 Envoy Outlier Detection & Circuit Breaker 的 100% 纯 CP 零动态堆分配上游多节点健康治理与加权路由池：
+
+- **常量与枚举**：
+  - `CIRCUIT_POOL_MAX_ENDPOINTS = 64`、`CIRCUIT_POOL_BPS_DENOM = 10_000`、`CIRCUIT_POOL_WINDOW_BUCKETS = 8`
+  - `CircuitEndpointState`（`healthy | ejected_open | half_open_probe`）
+  - `CircuitOutcomeKind`（`success | server_error_5xx | timeout | connect_failure | client_error_4xx`）
+  - `CircuitPickMode`（`normal_healthy | half_open_probe | panic_fallback | empty_pool`）
+- **配置与视图**：
+  - `CircuitPoolConfig`：`consecutive_5xx_threshold`、`error_rate_threshold_bps`、`min_request_volume`、`window_ms`、`base_ejection_ms`、`max_ejection_ms`、`max_ejection_percent_bps`（默认 `5000` 即 50% 上限）、`half_open_success_threshold`
+  - `CircuitEndpointView`、`CircuitPickResult`、`CircuitPoolStats`
+- **核心引擎（`CircuitBreakerPool`）**：
+  - `init(config)` / `addEndpoint(*_, endpoint_id, weight)` / `removeEndpoint(*_, endpoint_id)` / `updateWeight(*_, endpoint_id, new_weight)`
+  - `recordOutcome(*_, endpoint_id, outcome, now_ms)`：维护 8 桶滑动窗口错误率 `error_rate_bps` 与连续 5xx/超时/连接失败计数（免疫 4xx）；支持 Envoy 最大驱逐比例上限保护与递增冷却时长 `min(base_ejection_ms * ejection_count, max_ejection_ms)`；单调时钟防回退。
+  - `advanceClock(*_, now_ms)` / `forceRecover(*_, endpoint_id)`：到期自动转 `half_open_probe` 放行单路探测，探测成功恢复 `healthy`。
+  - `pickHealthyEndpoint(*_, rng_seed, now_ms)`：优先放行单路半开探测、正常按权重选择健康节点、全驱逐时自动触发 `panic_fallback` 防止级联断流。
+
+### Upstream Circuit Pool QuickStart 示例
+
+```cp
+import {
+    CircuitOutcomeKind,
+    CircuitPickMode,
+    CircuitPoolConfig,
+    CircuitBreakerPool,
+} from "cap:net";
+
+pub fn demoCircuitPool() {
+    let pool = CircuitBreakerPool.init(CircuitPoolConfig.defaults()) ?? return;
+    * = pool.addEndpoint(101, 50);
+    * = pool.addEndpoint(102, 50);
+
+    * = pool.recordOutcome(101, CircuitOutcomeKind.server_error_5xx, 1_000);
+    const pick = pool.pickHealthyEndpoint(42, 1_500);
+    if (pick.mode == CircuitPickMode.normal_healthy) {
+        * = pick.endpoint_id;
+    }
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [amqp.md](net/amqp.md)

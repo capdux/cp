@@ -1833,3 +1833,19 @@ export {
     computeBackoffDelayMs,
     AdaptiveRetryController,
 } from "./retry.cp";
+
+// --- circuit_pool ---
+export {
+    CIRCUIT_POOL_MAX_ENDPOINTS,
+    CIRCUIT_POOL_BPS_DENOM,
+    CIRCUIT_POOL_WINDOW_BUCKETS,
+    CircuitEndpointState,
+    CircuitOutcomeKind,
+    CircuitPickMode,
+    CircuitPoolConfig,
+    CircuitEndpointSlot,
+    CircuitEndpointView,
+    CircuitPickResult,
+    CircuitPoolStats,
+    CircuitBreakerPool,
+} from "./circuitPool.cp";
