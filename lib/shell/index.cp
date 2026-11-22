@@ -421,6 +421,17 @@ export {
     ShellExportTable,
 } from "./exportBuiltin.cp";
 
+export {
+    PwdOutputKind,
+    PwdState,
+    PwdMode,
+    PwdError,
+    PwdResult,
+    parsePwdArgs,
+    PwdBuiltin,
+    runPwdBuiltin,
+} from "./pwdBuiltin.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);

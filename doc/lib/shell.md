@@ -630,3 +630,20 @@ const n = env.formatSorted(buf[0..])?;
 // "A_KEY=first=1\nB_EMPTY=\nZ_KEY=last\n"
 * = n;
 ```
+
+### POSIX `pwd` 内建命令状态机与 `-L`/`-P` 解析器（`pwdBuiltin.cp`）
+
+- 吸收自 `/data/dev/bun/src/shell/builtin/pwd.cp`；
+- 导出：`PwdOutputKind`（`Stdout` / `Stderr`）、`PwdState`（`Idle` / `WaitingStdout` / `WaitingStderr` / `Err` / `Done`）、`PwdMode`（`Logical` / `Physical`）、`PwdError`（`TooManyArguments` / `InvalidOption` / `BufferTooSmall` / `InvalidState`）、`PwdResult`、`parsePwdArgs`、`PwdBuiltin`（`init` / `isTerminal` / `start` / `startAsync` / `onIoComplete`）、`runPwdBuiltin`；
+- 支持 POSIX `-L`（逻辑路径）/ `-P`（物理路径）及组合标志 `-LP`/`-PL`（最后一个生效）与 `--` 选项结束符，位置参数过多时按 Bun 规范输出 `"pwd: too many arguments\n"` 并返回退出码 `1`，零堆分配写入调用方缓冲区。
+
+```cp
+import { PwdBuiltin, PwdMode } from "cap:shell";
+
+let pwd = PwdBuiltin.init();
+const args: [1][]const u8 = ["-P"];
+let out: [128]u8 = [0; 128];
+const res = pwd.start(args[0..], "/home/user/link", "/data/real", out[0..])?;
+// out[0..res.bytes_written] == "/data/real\n", res.exit_code == 0, res.mode == PwdMode.Physical
+* = res;
+```
