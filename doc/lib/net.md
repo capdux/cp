@@ -459,3 +459,52 @@ pub fn demoP2cLoadBalancer() {
     * = lb.stats();
 }
 ```
+
+---
+
+## 十一、 零分配 RFC 9002 拥塞控制与 SRTT/PTO/Pacing 传输调度引擎（`congestion_ctrl.cp`）
+
+面向 QUIC / HTTP/3、自定义 UDP 传输与高并发 AI Agent RPC 的 100% 纯 CP 零动态堆分配 RFC 9002 NewReno 拥塞控制、Jacobson/Karels RTT 估算与字节级 Pacing 速率调度引擎：
+
+- **核心类型**：
+  - `CongestionPhase`（`slow_start | congestion_avoidance | recovery`）
+  - `CongestionConfig`（`max_datagram_size` [默认 `1200`]、`initial_cwnd_bytes` [默认 `12000`]、`min_cwnd_bytes` [默认 `2400`]、`initial_rtt_us` [默认 `333000`]、`loss_reduction_bps` [默认 `5000` 即 0.5x]、`pacing_gain_bps` [默认 `12500` 即 1.25x]，提供 `defaults()` 与 `isValid()`）
+  - `RttEstimate`（`has_sample`, `latest_rtt_us`, `min_rtt_us`, `smoothed_rtt_us`, `rttvar_us`，提供 RFC 9002 §6.2.1 `pto_us(max_ack_delay_us): u64`）
+  - `CongestionStats`（完整拥塞窗口、阶段、在途字节、可用窗口、Pacing 速率、SRTT/min_rtt 与丢包/持续拥塞计数）
+- **核心引擎（`Rfc9002CongestionController`）**：
+  - `init(cfg): Rfc9002CongestionController?`
+  - `on_rtt_sample(*_, latest_rtt_us, ack_delay_us, max_ack_delay_us)`：严格遵循 RFC 9002 §5.3 更新 `min_rtt`、`adjusted_rtt`（仅当 `latest_rtt >= min_rtt + min(ack_delay, max_ack_delay)` 时扣减）、`smoothed_rtt`（7/8 + 1/8）与 `rttvar`（3/4 + 1/4）。
+  - `on_packet_sent(*_, bytes)` / `can_send(bytes): bool` / `available_window(): u64`
+  - `on_packets_acked(*_, acked_bytes, sent_time_us, is_app_limited)`：防下溢扣减 `bytes_in_flight`；`is_app_limited` 或 `sent_time_us <= recovery_start_us` 抑制扩窗；否则 Slow Start 指数扩窗、Congestion Avoidance 按 `max_datagram_size * acked_bytes / cwnd` 线性扩窗。
+  - `on_congestion_event(*_, lost_bytes, largest_lost_sent_us, now_us)`：单 RTT 恢复窗口防重复腰斩守卫，首次触发进入 `recovery` 并按 `loss_reduction_bps` 缩减 `ssthresh`/`cwnd`（不低于 `min_cwnd_bytes`）。
+  - `on_persistent_congestion(*_)`（RFC 9002 §7.6 坍缩 `cwnd` 至 `min_cwnd_bytes` 并清零恢复状态）、`pacing_rate_bytes_per_sec(): u64`（`u128` 防溢出计算）、`stats(): CongestionStats`。
+
+### QuickStart 示例
+
+```cp
+import {
+    CongestionConfig,
+    Rfc9002CongestionController,
+} from "cap:net";
+
+pub fn demoRfc9002CongestionCtrl() {
+    let cc = Rfc9002CongestionController.init(CongestionConfig.defaults()) ?? return;
+
+    // 1. 首包 RTT 采样 (40ms) -> srtt=40ms, rttvar=20ms, pto=40+80+25=145ms
+    cc.on_rtt_sample(40000, 0, 25000);
+    const pto = cc.rtt.pto_us(25000);
+
+    // 2. 发送 2400B 并收到确认 -> Slow Start 指数扩窗
+    if (cc.can_send(2400)) {
+        cc.on_packet_sent(2400);
+        cc.on_packets_acked(2400, 1000, false); // cwnd: 12000 -> 14400
+    }
+
+    // 3. 丢包进入 Recovery（cwnd 减半为 7200），同 RTT 再次丢包不重复腰斩
+    cc.on_congestion_event(1200, 2000, 5000);
+    const rate = cc.pacing_rate_bytes_per_sec();
+    * = pto;
+    * = rate;
+    * = cc.stats();
+}
+```

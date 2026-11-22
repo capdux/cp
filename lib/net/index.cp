@@ -1790,3 +1790,12 @@ export {
     P2cBalancerStats,
     P2cLoadBalancer,
 } from "./p2c_balancer.cp";
+
+// --- congestion_ctrl ---
+export {
+    CongestionPhase,
+    CongestionConfig,
+    RttEstimate,
+    CongestionStats,
+    Rfc9002CongestionController,
+} from "./congestion_ctrl.cp";
