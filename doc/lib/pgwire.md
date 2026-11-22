@@ -298,6 +298,39 @@ while (cell := it.next()) {
 }
 ```
 
+### `RowDescription`（`'T'`）零拷贝列元数据视图与流式编码器（`rowDesc.cp`）
+
+吸收自 `/data/dev/bun/src/sql/postgres/protocol/RowDescription.cp`，零堆分配编解码 PostgreSQL v3.0 结果集列元数据 `RowDescription`（`'T' = 0x54`）报文，与 `DataRow`（`'D'`）构成完整零拷贝结果集消费链路：
+
+- **常量**：`PG_TAG_ROW_DESCRIPTION` (`'T'`)、`PG_ROW_DESC_HEADER_LEN` (`7`)、`PG_ROW_DESC_FIELD_META_LEN` (`18`)。
+- **格式码**：`PgFormatCode`（`Text = 0` / `Binary = 1`）与 `parseFormatCode(raw)`。
+- **`PgRowDescView` & `PgRowDescIter` & `PgRowFieldDesc`**：
+  - `PgRowDescView.decodeFrame(frame)` / `.decodePayload(payload)` 在构造时单遍校验全部字段的 NUL 终止、18B 元数据边界与格式码（仅允许 `0` 或 `1`）；
+  - `.iter()` / `.fieldAt(idx)` / `.findByName(name)` / `.indexOfName(name)` / `.fieldCount()` / `.isEmpty()` / `.allText()` / `.allBinary()`；
+  - `PgRowFieldDesc` 提供 `name`、`table_oid`、`column_attr`、`type_oid`、`type_size`、`type_modifier`、`format` 及 `.isBinary()` / `.isText()` / `.isVariableLength()`。
+- **`PgRowDescEncoder`**：流式 `'T'` 帧编码器，提供 `init(buf)` / `writeField(field)` / `writeSimpleText(name, type_oid)` / `fieldCount()` / `writtenLen()` / `finish()`。
+
+```cp
+import { PgRowDescEncoder, PgRowDescView, PgRowFieldDesc, PgFormatCode } from "cap:pgwire";
+
+let buf: [256]u8 = [0; 256];
+let enc = PgRowDescEncoder.init(buf[0..])?;
+* = enc.writeField(PgRowFieldDesc{
+    name: "id",
+    table_oid: 16384,
+    column_attr: 1,
+    type_oid: 23, // INT4
+    type_size: 4,
+    type_modifier: -1,
+    format: PgFormatCode.Binary,
+})?;
+* = enc.writeSimpleText("email", 25)?; // TEXT
+const n = enc.finish()?;
+
+const desc = PgRowDescView.decodeFrame(buf[0..n])?;
+* = desc.indexOfName("email");
+```
+
 ---
 
 ## 4. 示例

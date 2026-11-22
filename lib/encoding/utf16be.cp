@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string/wtf.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/string/wtf.cp | Synced: 2026-11-22T20:42:08Z
 // lib/encoding/utf16be.cp
 // UTF-16BE & ASCII / Latin-1 fast codecs for cap:encoding
 

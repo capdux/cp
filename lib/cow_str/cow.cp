@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/EnvStr.cp | Synced: 2026-11-21T12:54:25Z
+// Source: Absorbed from /data/dev/bun/src/shell/EnvStr.cp | Synced: 2026-11-22T20:41:10Z
 //! Copy-on-Write / Reference-Counted-or-Borrowed string (`CowStr`) with
 //! deterministic `~init()` RAII cleanup and O(1) atomic `clone()`.
 

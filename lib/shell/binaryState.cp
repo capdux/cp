@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/states/Binary.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/shell/states/Binary.cp | Synced: 2026-11-22T20:42:08Z
 // Pure-CP zero-allocation POSIX / Bun Shell `&&` / `||` Short-Circuit Binary Logic State Machine
 // Aligned with Bun src/shell/states/Binary.cp & docs/runtime/shell.mdx:
 // - Implements POSIX AND-OR list evaluation with equal precedence and strict left-associativity:

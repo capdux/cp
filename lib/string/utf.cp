@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string/wtf.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/string/wtf.cp | Synced: 2026-11-22T20:42:08Z
 // lib/string/utf.cp
 // High-speed UTF-8 / UTF-16 / WTF-8 codecs & East-Asian / ANSI visible display width
 // Absorbed from bun/src/string/immutable/unicode.zig, wtf.zig, visible.zig & unicode/uucode/

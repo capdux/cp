@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/states/Stmt.cp | Synced: 2026-11-22T19:43:30Z (Bun Shell Stmt child-expression dispatch state machine for Script & If parent contexts)
+// Source: Absorbed from /data/dev/bun/src/shell/states/Stmt.cp | Synced: 2026-11-22T20:42:08Z (Bun Shell Stmt child-expression dispatch state machine for Script & If parent contexts)
 // Pure-CP zero-allocation shell statement execution state machine with sequential child dispatch and exit-code propagation.
 
 /// Maximum number of sequential child expressions inside a single `StmtState`.

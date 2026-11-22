@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bake/DevServer/WatcherAtomics.cp | Synced: 2026-11-22T15:35:31Z
+// Source: Absorbed from /data/dev/bun/src/bake/DevServer/WatcherAtomics.cp | Synced: 2026-11-22T20:41:10Z
 // Zero-allocation triple-buffered atomic watcher <-> dev-server hot-reload event relay.
 
 const std = @import("std");

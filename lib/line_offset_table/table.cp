@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sourcemap/LineOffsetTable.cp | Synced: 2026-11-21T13:01:47Z
+// Source: Absorbed from /data/dev/bun/src/sourcemap/LineOffsetTable.cp | Synced: 2026-11-22T20:42:08Z
 
 pub err Error {
     SourceTooLarge,

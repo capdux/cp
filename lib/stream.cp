@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/io/pipes.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/io/pipes.cp | Synced: 2026-11-22T20:41:10Z
 /**
  * CP Standard Stream Library (cap:stream)
  * 工业级统一流式 Trait 契约与管道体系

@@ -150,3 +150,16 @@ export {
     PgDataRowView,
     PgDataRowEncoder,
 } from "./dataRow.cp";
+
+export {
+    PG_TAG_ROW_DESCRIPTION,
+    PG_ROW_DESC_HEADER_LEN,
+    PG_ROW_DESC_FIELD_META_LEN,
+    PgRowDescError,
+    PgFormatCode,
+    parseFormatCode,
+    PgRowFieldDesc,
+    PgRowDescIter,
+    PgRowDescView,
+    PgRowDescEncoder,
+} from "./rowDesc.cp";
