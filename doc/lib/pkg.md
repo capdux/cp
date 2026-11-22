@@ -1384,3 +1384,37 @@ let orch = InstallOrchestrator.init(recs[0..], 4, 2);
 let batch: [4]OrchDispatchItem = [OrchDispatchItem.empty(); 4];
 * = orch.dispatchNextBatch(batch[0..]);
 ```
+
+### 生命周期脚本规划、零信任门禁与 Monorepo 任务图调度引擎（`scriptRunner.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/PackageManager/runTasks.cp`（纯 CP 零堆分配、全外部切片驱动）；
+- **核心导出**：
+  - 生命周期阶段序列规划与自定义钩子展开：`ScriptRunnerError`、`ScriptHookStage`、`ScriptManifestEntry`、`ScriptPackageHooks`、`PlannedScriptStep`、`LifecyclePlanOptions`、`planLifecycleSequence`（支持 `preinstall -> install -> postinstall -> preprepare -> prepare -> postprepare` 及 `binding.gyp` 隐式 `node-gyp rebuild`）、`expandCustomScriptHooks`（展开 `pre<script> -> <script> -> post<script>`）；
+  - 零信任安全沙箱门禁与报表：`ScriptTrustReason`、`ScriptTrustPolicy`（支持 `trustedDependencies` 通配符、`blocked_packages` 黑名单、`--ignore-scripts`、Root/Workspace 自动信任）、`ScriptTrustDecision`、`ScriptTrustSummary`、`evaluateScriptTrust`、`evaluateBatchScriptTrust`、`formatUntrustedScriptsReport`（输出被阻止的 postinstall 列表与 `cap pm trust` 操作提示）；
+  - 依赖感知并发工作池：`ScriptTaskStatus`、`ScriptFailurePolicy`（`FailFast` / `ContinueOnError`）、`ScriptDepEdge`、`ScriptTaskNode`、`ScriptDispatchItem`、`ScriptSchedulerStats`、`PkgScriptScheduler`（Kahn 环路检测、`max_concurrency` 并发度限流、优先级调度、`checkTimeouts` 超时退出码 124、Optional 包失败优雅降级及退出码聚合）；
+  - 环境变量注入与敏感键过滤：`ScriptEnvEntry`、`ScriptEnvOptions`、`ScriptEnvBuildResult`、`isSensitiveEnvKey`、`buildScriptEnvVars`（自动前置 `cap_modules/.bin` 与 workspace `.bin` 至 `PATH`，注入 `npm_lifecycle_*` / `npm_package_*` / `CAP_EXEC_PATH` / `INIT_CWD` 并剥离凭证键）；
+  - 彩色标签行缓冲与耗时摘要报表：`ScriptAnsiColor`、`ScriptLinePrefixConfig`、`ScriptLineBuffer`、`formatScriptDurationMs`、`formatScriptRunSummary`。
+
+```cp
+import {
+    ScriptTaskNode,
+    ScriptDepEdge,
+    ScriptDispatchItem,
+    ScriptFailurePolicy,
+    PkgScriptScheduler,
+    formatScriptRunSummary,
+} from "cap:pkg";
+
+let nodes: [4]ScriptTaskNode = [ScriptTaskNode.empty(); 4];
+let edges: [4]ScriptDepEdge = [ScriptDepEdge.empty(); 4];
+let sched = PkgScriptScheduler.init(nodes[0..], edges[0..], 2, 60000, ScriptFailurePolicy.FailFast);
+const core = sched.addTask(ScriptTaskNode{ task_id: 1, package_name: "@acme/core", script_name: "build", command: "cap build" })?;
+const app = sched.addTask(ScriptTaskNode{ task_id: 2, package_name: "@acme/app", script_name: "build", command: "cap build" })?;
+sched.addDependency(core, app)?;
+let in_deg: [4]u32 = [0; 4];
+let queue: [4]u32 = [0; 4];
+sched.finalizeGraph(in_deg[0..], queue[0..])?;
+let batch: [2]ScriptDispatchItem = [ScriptDispatchItem.empty(); 2];
+const n = sched.dispatchReadyBatch(1000, batch[0..])?;
+* = n;
+```
