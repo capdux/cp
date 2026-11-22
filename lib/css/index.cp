@@ -618,3 +618,11 @@ export {
     resolveNestedSelector,
     CssNestingRule,
 } from "./nestingRule.cp";
+
+export {
+    CssOutlineError,
+    CssOutlineStyle,
+    CssOutlineWidthKind,
+    CssOutlineWidth,
+    CssOutline,
+} from "./outline.cp";

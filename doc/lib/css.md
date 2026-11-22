@@ -846,3 +846,19 @@ const flat = rule.toLoweredCss(".btn, .link", true, buf[0..])?;
 // ".btn:hover,.btn.active,.link:hover,.link.active{color:#fff}"
 * = flat;
 ```
+
+20. **CSS UI Level 4 `outline` / `outline-style` / `outline-width` 简写解析与最小化压缩（`outline.cp`，吸收自 `/data/dev/bun/src/css/properties/outline.cp` & `/data/dev/bun/docs/bundler/css.mdx`）**：
+    - **导出符号**：`CssOutlineError`、`CssOutlineStyle`（`auto` + 10 种 `LineStyle`，`default`/`parse`/`asStr`/`isVisible`/`isAuto`）、`CssOutlineWidthKind`、`CssOutlineWidth`（`thin`/`medium`/`thick`/`<length>`，拒绝负宽度）、`CssOutline`（顺序无关解析、`toCss` 规范最小化输出、`isVisible`/`isNone`/`eql`）；
+    - **Bun CSS 简写压缩实践（吸收自 `bundler/css.mdx`）**：
+      - `CssOutline.parse` 支持任意分量顺序与含内部空白的函数颜色（如 `rgb(0, 128, 255) solid 2px`），严格拦截重复分量、负宽度与超额 token；
+      - `CssOutline.toCss` 按规范顺序 `width style color` 最小化输出，自动省略默认 `medium` 宽度与默认 `currentcolor` 颜色以缩减产物体积。
+
+```cp
+import { CssOutline } from "cap:css";
+
+const o = CssOutline.parse("rgb(0, 128, 255) solid 2px")?;
+let buf: [64]u8 = [0; 64];
+const n = o.toCss(buf[0..])?;
+// buf[0..n] == "2px solid rgb(0, 128, 255)"
+* = n;
+```
