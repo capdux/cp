@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/md/autolinks.cp | Synced: 2026-11-21T12:39:37Z
+// Source: Absorbed from /data/dev/bun/src/md/autolinks.cp | Synced: 2026-11-22T13:35:10Z
 //! GFM (GitHub Flavored Markdown) permissive autolink scanner for URLs (`http://`, `https://`,
 //! `ftp://`), `www.` links, and email addresses, with trailing unbalanced parenthesis and
 //! HTML entity reference trimming.

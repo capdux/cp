@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/md/autolinks.cp | Synced: 2026-11-21T12:39:39Z
+// Source: Absorbed from /data/dev/bun/src/md/autolinks.cp | Synced: 2026-11-22T13:35:10Z
 import al from "./autolink.cp";
 
 export const AutolinkKind = al.AutolinkKind;

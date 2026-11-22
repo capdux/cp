@@ -690,6 +690,29 @@ const n2 = pi.toCss(buf[0..])?; // "center"（相等双值折叠为单值）
 * = n2;
 ```
 
+### CSS `StyleRule` 规则模型、去重哈希、合并与嵌套降级引擎（`styleRule.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/rules/style.cp`，零堆分配实现 LightningCSS/Bun 风格 `StyleRule`：支持 `isEmpty()` 空规则判定、64 位 FNV-1a 规则去重键 `hashKey()`、遵守 `!important` 优先级与 `--*` 大小写规则的声明合并 `mergeFrom()`，以及面向目标浏览器的原生 CSS Nesting 与降级展平双模式序列化。
+
+- 核心导出：`CSS_STYLE_RULE_MAX_SELECTORS` (`16`)、`CSS_STYLE_RULE_MAX_DECLS` (`32`)、`CSS_STYLE_RULE_MAX_NESTED` (`16`)、`CSS_STYLE_PREFIX_NONE`/`WEBKIT`/`MOZ`/`MS`/`O`、`CssStyleRuleError`、`CssStyleDecl`、`CssStyleNestedRule`、`CssStyleRule`（`init`/`addSelector`/`setDecl`/`addNested`/`isEmpty`/`selectorsEql`/`hashKey`/`mergeFrom`/`toCss`）、`resolveNestedSelector`。
+
+```cp
+import { CssStyleRule, CssStyleNestedRule } from "cap:css";
+
+let r = CssStyleRule.init();
+* = r.addSelector(".card")?;
+* = r.setDecl("padding", "1rem", false)?;
+let hover = CssStyleNestedRule.init();
+* = hover.addSelector("&:hover")?;
+* = hover.setDecl("color", "blue", false)?;
+* = r.addNested(hover)?;
+
+let buf: [256]u8 = [0; 256];
+const n_flat = r.toCss(buf[0..], true, false)?;
+// buf[0..n_flat] == ".card{padding:1rem}.card:hover{color:blue}"
+* = n_flat;
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项
@@ -734,3 +757,6 @@ const n2 = pi.toCss(buf[0..])?; // "center"（相等双值折叠为单值）
     - `place-content` 单值传入 `baseline` / `first baseline` / `last baseline` 时，`justify-content` 不允许取值 `baseline`，必须按 W3C 规范回退为 `start`（序列化为 `"baseline start"`）；
     - `left` / `right` 仅允许用于水平主轴的 `justify-*` 属性，`align-*` 中使用 `left`/`right` 属于非法语法；`legacy` 仅允许用于 `justify-items`（支持 `legacy center` 与 `center legacy` 双语序）；
     - 当 `place-content` / `place-items` / `place-self` 的双值完全相等时，压缩序列化自动折叠为单值以减小 CSS 体积。
+15. **CSS `StyleRule` 嵌套降级与规则去重边界（`styleRule.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
+    - 当目标浏览器不支持原生 CSS Nesting 时（`supports_nesting == false`），子规则通过 `resolveNestedSelector()` 展平为平铺选择器（显式 `&` 替换为父选择器，无 `&` 按后代空格拼接，多父多子做笛卡尔积）；若父规则本身无声明，展平后自动省略空父块；
+    - 规则合并（`mergeFrom()`）与 `setDecl()` 严格遵守级联保护：已存在的 `!important` 声明不可被后续普通声明覆盖，标准属性按 ASCII 大小写无关归一化，`--*` 自定义属性严格区分大小写。

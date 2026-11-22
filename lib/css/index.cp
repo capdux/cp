@@ -547,3 +547,19 @@ export {
     CssPlaceItems,
     CssPlaceSelf,
 } from "./boxAlign.cp";
+
+export {
+    CSS_STYLE_RULE_MAX_SELECTORS,
+    CSS_STYLE_RULE_MAX_DECLS,
+    CSS_STYLE_RULE_MAX_NESTED,
+    CSS_STYLE_PREFIX_NONE,
+    CSS_STYLE_PREFIX_WEBKIT,
+    CSS_STYLE_PREFIX_MOZ,
+    CSS_STYLE_PREFIX_MS,
+    CSS_STYLE_PREFIX_O,
+    CssStyleRuleError,
+    CssStyleDecl,
+    CssStyleNestedRule,
+    CssStyleRule,
+    resolveNestedSelector,
+} from "./styleRule.cp";

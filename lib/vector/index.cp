@@ -271,3 +271,17 @@ export {
     FilteredGraphStats,
     FilteredHnswIndex,
 } from "./filtHnsw.cp";
+
+export {
+    LateChunkPoolMode,
+    LateChunkSpan,
+    LateChunkHit,
+    LateChunkStats,
+    sanitizeVectorF32,
+    normalizeVectorInPlaceF32,
+    detectSemanticBoundaries,
+    poolLateChunkSpan,
+    poolLateChunks,
+    searchLateChunks,
+    computeLateChunkStats,
+} from "./lateChunk.cp";

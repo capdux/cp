@@ -37,6 +37,7 @@
 | `lib/vector/colbert.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc ColBERT Multi-Vector Late-Interaction MaxSim Retrieval Index) \| Created: 2026-11-22` | 零堆分配 ColBERTv2 / ColPali 多向量 Token 级延迟交互（MaxSim）检索索引 (`ColbertLiteIndex`)：调用方扁平 Token 池、可选插入期 L2 归一化、8-lane SIMD `@dot` MaxSim 精确打分、确定性 Top-K 检索与 `@l2sq` 低范数噪声 Token 裁剪 (`prune_low_norm_tokens`) |
 | `lib/vector/simhash.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc 64-bit Charikar SimHash & 4-Band LSH Near-Duplicate RAG Dedup) \| Created: 2026-11-22` | 零堆分配 64-bit Charikar SimHash 指纹与鸽巢 4x16-bit LSH 分带近重复 RAG 文档去重索引 (`SimHashDedupIndex`)：硬件 `@popCount` 汉明距离、零堆大小写折叠分词 + 2-shingle 哈希、256 槽位内联去重与槽位复用 |
 | `lib/vector/bm25f.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc BM25F Multi-Field Weighted Inverted Index) \| Created: 2026-11-22` | 零堆分配 Robertson/Zaragoza **BM25F** 多字段加权倒排检索索引 (`Bm25fIndex`)：每字段独立长度归一化 `b_f` 与权重 `w_f` 聚合虚拟词频后统一 `k1` 饱和、平滑非负 IDF 与 4 字段代码检索预设 |
+| `lib/vector/lateChunk.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc Late Chunking & Contextual Token-Span Pooling Engine using @dot/@fma) \| Created: 2026-11-22` | 零堆分配长上下文 RAG **延迟分块与上下文 Token 区间池化引擎**（`detectSemanticBoundaries`、`poolLateChunkSpan`、`poolLateChunks`、`searchLateChunks`）：基于 `@dot`/`@fma` 的 3 策略池化（`mean_pool` / `weighted_attention_pool` / `max_norm_pool`）、相邻余弦突变自动断句、安全 L2 归一化与 NaN/Inf 清洗 |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -1305,5 +1306,58 @@ pub fn demoFilteredHnsw() {
     const pred = FilteredPredicate{ required_tags: 0b0001, forbidden_tags: 0b0010, tenant_id: 1 };
     const rep = idx.search(e0[0..], pred, 2, 16, *hits_s);
     * = rep.hit_count; // 精确命中 doc_id=102，过滤掉含禁止标签 0b0010 的 doc_id=101
+}
+```
+
+
+---
+
+## 零分配长上下文 RAG 延迟分块与 Token 区间池化引擎（Late Chunking，`lateChunk.cp`）
+
+面向长上下文 RAG（保留跨段指代与篇章上下文语义）的 100% 纯 CP 零动态堆分配延迟分块池化引擎，全程基于原生 8-lane SIMD `@dot` 与单舍入硬件融合乘加 `@fma`：
+
+- **数据模型与策略枚举**：
+  - `LateChunkPoolMode`：`mean_pool` | `weighted_attention_pool` | `max_norm_pool`
+  - `LateChunkSpan`：`{ start_token: usize, end_token: usize, boundary_sim: f32 }`，提供 `tokenCount(): usize` 与 `isValid(num_tokens: usize): bool`
+  - `LateChunkHit`：`{ chunk_idx: usize, score: f32 }`
+  - `LateChunkStats`：`{ num_tokens, num_chunks, dim, min_chunk_len, max_chunk_len, zero_norm_chunks }`
+- **清洗与安全归一化原语**：
+  - `sanitizeVectorF32(src, *dst): usize?`：将 `NaN`/`Inf` 清洗为 `0.0` 并返回清洗计数。
+  - `normalizeVectorInPlaceF32(*vec): bool`：先清洗非有限值再基于 `@dot` + `@sqrt` 原位 L2 归一化；零向量安全保持全零并返回 `false`。
+- **核心引擎 API**：
+  - `detectSemanticBoundaries(token_embeddings, num_tokens, dim, min_chunk_tokens, max_chunk_tokens, drop_threshold, *out_spans): usize?`：通过 `@dot` 计算相邻 Token 余弦相似度，在 `cos < drop_threshold` 的语义低谷自动切分并严格遵守 `[min_chunk_tokens, max_chunk_tokens]` 长度上下界。
+  - `poolLateChunkSpan(token_embeddings, num_tokens, dim, span, mode, token_weights, l2_normalize, *out_vec): bool` / `poolLateChunks(..., *out_chunk_vecs): usize?`：支持均池化、外部注意力权重或自适应 L2 范数显著度加权池化（`@fma` 累积）及最大范数池化，可选自动零向量安全 L2 归一化。
+  - `searchLateChunks(query_vec, chunk_vecs, num_chunks, dim, *out_hits): usize?`：零堆分配文档内 Top-K 余弦检索，按 `score` 降序、同分按 `chunk_idx` 升序确定性输出。
+  - `computeLateChunkStats(spans, num_tokens, dim, chunk_vecs): LateChunkStats?`：汇总块长分布与零范数块计数。
+
+### Late Chunking QuickStart 示例
+
+```cp
+import {
+    LateChunkPoolMode,
+    LateChunkSpan,
+    LateChunkHit,
+    detectSemanticBoundaries,
+    poolLateChunks,
+    searchLateChunks,
+} from "cap:vector";
+
+pub fn demoLateChunking(token_embeddings: []const f32, num_tokens: usize, dim: usize, query: []const f32) {
+    let spans_buf: [16]LateChunkSpan = [LateChunkSpan{}; 16];
+    let spans_s: []LateChunkSpan = spans_buf[0..];
+    const n_spans = detectSemanticBoundaries(token_embeddings, num_tokens, dim, 2, 8, 0.5, *spans_s) ?? return;
+
+    let chunks_buf: [64]f32 = [0.0; 64]; // up to 16 chunks x 4D
+    let chunks_s: []f32 = chunks_buf[0..];
+    const empty_w: [0]f32 = [];
+    const n_chunks = poolLateChunks(
+        token_embeddings, num_tokens, dim, spans_buf[0..n_spans],
+        LateChunkPoolMode.mean_pool, empty_w[0..], true, *chunks_s,
+    ) ?? return;
+
+    let hits_buf: [3]LateChunkHit = [LateChunkHit{}; 3];
+    let hits_s: []LateChunkHit = hits_buf[0..];
+    const n_hits = searchLateChunks(query, chunks_buf[0..], n_chunks, dim, *hits_s) ?? 0;
+    * = n_hits;
 }
 ```
