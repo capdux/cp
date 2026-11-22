@@ -637,3 +637,16 @@ let cols = SqlColumnIdMap.init();
 * = cols.addColumn("id")?; // 阴影覆盖第 0 列，对象模式保留第 2 列
 // cols.hasDuplicates() == true, cols.lookupByName("id") == 2, cols.activeCount() == 2
 ```
+
+13. **零分配跨方言 SQL 结果单元格与行缓冲（`lib/sql/dataCell.cp`，吸收自 `/data/dev/bun/src/sql_jsc/shared/SQLDataCell.cp`）**：
+    - **导出符号**：`SQL_DATA_CELL_MAX_ROW_COLS` (`64`)、`SqlDataCellError`、`SqlDataCellTag`（逐值对齐 Bun 15 种标签 `0..14`，提供 `tagName`/`isNumeric`/`isTemporal`/`isBinaryLike`）、`SqlDataCellFlags`（`toMask`/`fromMask`/`canUseFastObjectLayout`）、`SqlDataCell`（`nullCell`/`fromInt4`/`fromInt8`/`fromUint4`/`fromUint8`/`fromFloat8`/`fromBool`/`fromString`/`fromJson`/`fromBytea`/`fromRaw`/`fromDateMs`/`fromDateTzMs` 与强类型读取器 `asInt64`/`asUint64`/`asFloat64`/`asBool`/`asSlice`/`eql`）、`SqlDataRow`（64 列固定容量零堆分配行容器）。
+
+```cp
+import { SqlDataCell, SqlDataRow } from "cap:sql";
+
+let row = SqlDataRow.init();
+* = row.push(SqlDataCell.fromInt4(42))?;
+* = row.push(SqlDataCell.fromString("alice"))?;
+* = row.push(SqlDataCell.nullCell())?;
+// row.len == 3, row.nullCount() == 1
+```

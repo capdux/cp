@@ -458,3 +458,12 @@ export {
     SqlColumnId,
     SqlColumnIdMap,
 } from "./columnId.cp";
+
+export {
+    SQL_DATA_CELL_MAX_ROW_COLS,
+    SqlDataCellError,
+    SqlDataCellTag,
+    SqlDataCellFlags,
+    SqlDataCell,
+    SqlDataRow,
+} from "./dataCell.cp";
