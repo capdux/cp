@@ -36,6 +36,7 @@
 | `lib/vector/matryoshka.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc Matryoshka Multi-Resolution Two-Stage SIMD Vector Retrieval) \| Created: 2026-11-22` | 零堆分配 Matryoshka 嵌套维多分辨率粗召回 + 精排重打分管线：前 `k` 维截断归一化 (`truncateAndNormalizeF32`)、紧凑粗向量库构建 (`buildCoarseEmbeddingsF32`)、8-lane SIMD `@dot` / `@l2sq` 两阶段检索与计算压缩比统计 |
 | `lib/vector/colbert_index.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc ColBERT Multi-Vector Late-Interaction MaxSim Retrieval Index) \| Created: 2026-11-22` | 零堆分配 ColBERTv2 / ColPali 多向量 Token 级延迟交互（MaxSim）检索索引 (`ColbertLiteIndex`)：调用方扁平 Token 池、可选插入期 L2 归一化、8-lane SIMD `@dot` MaxSim 精确打分、确定性 Top-K 检索与 `@l2sq` 低范数噪声 Token 裁剪 (`prune_low_norm_tokens`) |
 | `lib/vector/simhash_dedup.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc 64-bit Charikar SimHash & 4-Band LSH Near-Duplicate RAG Dedup) \| Created: 2026-11-22` | 零堆分配 64-bit Charikar SimHash 指纹与鸽巢 4x16-bit LSH 分带近重复 RAG 文档去重索引 (`SimHashDedupIndex`)：硬件 `@popCount` 汉明距离、零堆大小写折叠分词 + 2-shingle 哈希、256 槽位内联去重与槽位复用 |
+| `lib/vector/bm25f_index.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc BM25F Multi-Field Weighted Inverted Index) \| Created: 2026-11-22` | 零堆分配 Robertson/Zaragoza **BM25F** 多字段加权倒排检索索引 (`Bm25fIndex`)：每字段独立长度归一化 `b_f` 与权重 `w_f` 聚合虚拟词频后统一 `k1` 饱和、平滑非负 IDF 与 4 字段代码检索预设 |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -1058,5 +1059,48 @@ pub fn demoSimHashRagDedup() {
     * = r1;
     * = r2;
     * = r3;
+}
+```
+
+---
+
+## 零分配 BM25F 多字段加权倒排检索索引（`bm25f_index.cp`）
+
+面向代码检索、结构化文档 RAG 与多字段元数据搜索的 100% 纯 CP 零动态堆分配 Robertson/Zaragoza **BM25F** 多字段加权倒排检索内核：
+
+- **核心原理**：先按各字段独立长度归一化参数 `b_f` 与字段权重 `w_f` 聚合虚拟词频 $\text{pseudo\_tf} = \sum_f \frac{w_f \cdot \text{tf}_f}{(1 - b_f) + b_f \cdot \text{len}_f / \text{avg\_len}_f}$，再统一经过 `k1` 饱和与 Lucene 非负平滑 IDF $\ln(1 + \frac{N - \text{df} + 0.5}{\text{df} + 0.5})$，彻底避免多字段线性叠加破坏词频饱和特性。
+- **常量与数据模型**：
+  - `BM25F_MAX_FIELDS = 4`、`BM25F_MAX_DOCS = 128`、`BM25F_MAX_POSTINGS = 2048`
+  - `Bm25fFieldSpec`（`weight_f32`, `b_f32`, `isValid()`）、`Bm25fConfig`（`k1_f32`, `field_count`, `fields`, `defaultsCodeSearch()`, `isValid()`）、`Bm25fHit`（`doc_id`, `score_f32`, `matched_terms`）、`Bm25fIndexStats`（`active_docs`, `posting_count`, `field_count`, `avg_field_lens`）。
+- **核心引擎（`Bm25fIndex`）**：
+  - `init(cfg): Bm25fIndex?`
+  - `add_document(*_, doc_id, field_texts): bool`（ASCII 大小写折叠分词 + FNV-1a 64-bit 哈希，ID 去重与倒排池溢出原子回滚）
+  - `remove_document(*_, doc_id): bool`（逻辑摘除并同步维护 `active_docs`、`posting_count` 与 `avg_field_lens`）
+  - `search_topk(query_text, k, out_hits): usize`（查询词去重、BM25F 打分降序 Top-K、平局按 `doc_id` 升序决胜）
+  - `stats(): Bm25fIndexStats`
+
+### BM25F 代码/文档多字段检索 QuickStart 示例
+
+```cp
+import {
+    Bm25fConfig,
+    Bm25fHit,
+    Bm25fIndex,
+} from "cap:vector";
+
+pub fn demoBm25fCodeSearch() {
+    let idx = Bm25fIndex.init(Bm25fConfig.defaultsCodeSearch()) ?? return;
+
+    // 4 字段: [title, symbol, body, tags]
+    const doc1: [4][]const u8 = ["Paged KV Cache", "PagedKvAllocator", "manages physical blocks", "attention kv"];
+    const doc2: [4][]const u8 = ["Runtime Notes", "init_runtime", "mentions PagedKvAllocator in passing", "docs"];
+    * = idx.add_document(101, doc1[0..]);
+    * = idx.add_document(102, doc2[0..]);
+
+    let hits: [2]Bm25fHit = [Bm25fHit{}; 2];
+    let hits_s: []Bm25fHit = hits[0..];
+    const n = idx.search_topk("PagedKvAllocator", 2, hits_s);
+    // hits[0].doc_id == 101 (symbol 字段高权重显著领先)
+    * = n;
 }
 ```

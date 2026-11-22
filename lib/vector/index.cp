@@ -207,3 +207,14 @@ export {
     computeSimHash64,
     SimHashDedupIndex,
 } from "./simhash_dedup.cp";
+
+export {
+    BM25F_MAX_FIELDS,
+    BM25F_MAX_DOCS,
+    BM25F_MAX_POSTINGS,
+    Bm25fFieldSpec,
+    Bm25fConfig,
+    Bm25fHit,
+    Bm25fIndexStats,
+    Bm25fIndex,
+} from "./bm25f_index.cp";
