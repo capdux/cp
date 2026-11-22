@@ -595,3 +595,53 @@ pub fn demoSwarmBudget() {
     * = ledger.completeAgent(2); // 归还剩余 2500 tokens 预留给根节点
 }
 ```
+
+---
+
+### 零分配 SWIM 多智能体集群成员关系与故障检测 Gossip 状态机 (`gossipHealth.cp`)
+
+面向大规模多智能体去中心化集群发现、心跳搭便车传播与故障收敛的 100% 纯 CP 零动态堆分配 SWIM 风格 Gossip 状态机：
+
+- **常量与枚举**：
+  - `GOSSIP_MAX_MEMBERS = 64`、`GOSSIP_QUEUE_CAP = 64`、`GOSSIP_DEFAULT_SUSPECT_TIMEOUT_MS = 5000`、`GOSSIP_DEFAULT_RETRANSMIT_LIMIT = 4`、`GOSSIP_DEFAULT_PRNG_SEED`
+  - `GossipMemberState`（`alive | suspect | dead`；配套 `gossipStateRank(state)` 满足 `dead > suspect > alive`）
+  - `GossipApplyOutcome`（`ignored_stale | applied_new | applied_updated | refuted_self | capacity_full`）
+- **配置与数据模型**：
+  - `GossipConfig`（`suspect_timeout_ms`, `retransmit_limit`, `prng_seed`）
+  - `GossipMember`（`agent_id`, `state`, `incarnation`, `capabilities`, `state_changed_ms`, `last_seen_ms`）
+  - `GossipUpdate`、`GossipDisseminationEntry`、`GossipHealthStats`
+- **核心引擎 `GossipHealthMachine`**：
+  - `init(local_agent_id, capabilities, now_ms, config): GossipHealthMachine?`：初始化本机节点（`incarnation = 1`）并自动入队初始 `alive` 宣告。
+  - `upsertPeer(*_, agent_id, capabilities, now_ms)` / `applyUpdate(*_, update, now_ms)` / `applyBatch(*_, updates, now_ms)`：严格执行 SWIM 化身号优先级规则（高 `incarnation` 覆盖低 `incarnation`；同 `incarnation` 按 `dead > suspect > alive` 收敛）；收到针对本机且 `incarnation >= local.incarnation` 的 `suspect` / `dead` 谣言时，自动递增 `local.incarnation = update.incarnation + 1` 并广播 `alive` 反驳事件。
+  - `markSuspect(*_, agent_id, now_ms)` / `recordDirectAck(*_, agent_id, now_ms)` / `updateLocalCapabilities(*_, new_capabilities, now_ms)`。
+  - `buildGossipBatch(*_, max_items, *out_updates): usize`：从有界搭便车传播队列中优先选取已传播次数（`tx_count`）最少、序号最新（`seq` 最大）的变更随心跳发出，并递减 `retransmits_left` 直至退役。
+  - `reapSuspects(*_, now_ms)` / `purgeDead(*_, now_ms, min_dead_age_ms)` / `selectProbeTarget(*_)`（Fisher-Yates 洗牌轮询均匀探测所有非死亡远端节点）/ `getMember(agent_id)` / `localMember()` / `listCapableAlive(required_caps, include_local, *out_ids)` / `stats()`。
+
+```cp
+import {
+    GossipConfig,
+    GossipMemberState,
+    GossipUpdate,
+    GossipHealthMachine,
+} from "cap:a2a";
+
+pub fn demoGossipHealth() {
+    let node = GossipHealthMachine.init(1, 0b011, 1000, GossipConfig{
+        suspect_timeout_ms: 5000,
+        retransmit_limit: 3,
+    }) ?? return;
+
+    * = node.upsertPeer(2, 0b101, 1000);
+    // 收到针对本机的 suspect 谣言 -> 自动递增 incarnation 并在队列中广播 alive 反驳
+    * = node.applyUpdate(GossipUpdate{
+        agent_id: 1,
+        state: GossipMemberState.suspect,
+        incarnation: 1,
+    }, 1500);
+
+    let batch_buf: [4]GossipUpdate = [GossipUpdate{}; 4];
+    let batch: []GossipUpdate = batch_buf[0..];
+    const sent = node.buildGossipBatch(4, batch);
+    * = sent;
+}
+```

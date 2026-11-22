@@ -206,3 +206,20 @@ export {
     SwarmBudgetStats,
     SwarmBudgetLedger,
 } from "./swarmBudget.cp";
+
+export {
+    GOSSIP_MAX_MEMBERS,
+    GOSSIP_QUEUE_CAP,
+    GOSSIP_DEFAULT_SUSPECT_TIMEOUT_MS,
+    GOSSIP_DEFAULT_RETRANSMIT_LIMIT,
+    GOSSIP_DEFAULT_PRNG_SEED,
+    GossipMemberState,
+    gossipStateRank,
+    GossipApplyOutcome,
+    GossipConfig,
+    GossipMember,
+    GossipUpdate,
+    GossipDisseminationEntry,
+    GossipHealthStats,
+    GossipHealthMachine,
+} from "./gossipHealth.cp";
