@@ -1269,3 +1269,29 @@ const cfg = parseToolConfig(toml_src, env_vars[0..], ToolConfigParseOptions.defa
 const route = resolveScopedRegistry(cfg, scopes[0..cfg.scopes_len], "@acme/core");
 * = route;
 ```
+
+### `cap publish` 包发布规划、依赖改写与 Registry PUT 载荷引擎（`publishPlan.cp`）
+
+- 吸收自 `/data/dev/bun/src/cli/publish_command.cp`（纯 CP 零堆分配、全外部切片驱动）；
+- **核心导出**：
+  - 包名 / SemVer / Tag / Access 校验：`PublishPlanError`、`PublishAccessLevel`、`isValidPublishPkgName`、`isScopedPublishPkgName`、`encodePackageNameForRegistry`（`@scope/pkg` -> `@scope%2fpkg`）、`isValidPublishSemver`、`validatePublishDistTag`（拦截与 SemVer 冲突的 tag）、`PublishConfigOverrides`、`EffectivePublishFields`、`applyPublishConfigOverrides`、`validatePublishInput`（阻断 `private: true` 与 unscoped `restricted`）；
+  - Monorepo 协议改写：`PublishDepKind`、`PublishDepSpec`、`PublishWorkspaceTarget`、`PublishCatalogEntry`、`rewritePublishDepSpec`、`rewritePublishDependencies`（将 `workspace:*`/`^`/`~` 与 `catalog:`/`catalog:<name>` 精确改写为发布版本）；
+  - 认证头与 Registry PUT JSON 载荷：`encodeBase64Standard`、`PublishAuthMethod`、`PublishAuthTypeHeader`、`PublishAuthCredentials`、`PublishHttpHeader`、`buildPublishAuthHeaders`（Bearer / Basic / `npm-otp` / `npm-auth-type` / `npm-provenance`）、`buildPublishPutUrl`、`formatPublishTarballUrl`、`PublishTarballDist`、`buildPublishRegistryPayload`（完整生成 `_id`/`dist-tags`/`versions`/`dist`/`_attachments` 标准 JSON）；
+  - 干跑摘要与发布状态机：`PublishPlanSummary`、`formatPublishDryRunReport`、`PublishStage`、`PublishLifecycleSession`（`Init -> Validated -> Packed -> Signed -> Uploaded -> Verified`）。
+
+```cp
+import {
+    PublishPackageInput,
+    PublishOptions,
+    PublishAccessLevel,
+    validatePublishInput,
+    buildPublishPutUrl,
+} from "cap:pkg";
+
+const input = PublishPackageInput{ name: "@acme/sdk", version: "1.4.0", main: "dist/index.cp" };
+const opts = PublishOptions{ access: PublishAccessLevel.Public, dry_run: true };
+const summary = validatePublishInput(input, opts)?;
+let url_buf: [256]u8 = [0; 256];
+const ulen = buildPublishPutUrl(summary.effective_registry, summary.package_name, url_buf[0..])?;
+* = ulen;
+```
