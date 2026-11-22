@@ -545,6 +545,27 @@ const cf_len = sasl.formatClientFinal("rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIl
 * = c1_len; * = cf_len; * = sasl.status == PgSaslStatus.Verified;
 ```
 
+### 预处理语句缓存签名生成器（`stmtSignature.cp`）
+
+吸收自 `/data/dev/bun/src/sql_jsc/postgres/Signature.cp`，实现零动态堆分配的 PostgreSQL 预处理语句签名键、参数 OID 列表与命名标识符生成器：
+
+- **常量**：`PG_STMT_SIG_MAX_PARAMS` (`32`)、`PG_STMT_SIG_MAX_NAME_LEN` (`512`)、`PG_STMT_SIG_MAX_STMT_NAME_LEN` (`64`)、`PG_STMT_SIG_PREFIX_MAX` (`40`)。
+- **`PgParamTypeTag`**：PostgreSQL 内建参数 OID 枚举（`Null`/`Bool`/`Bytea`/`Int8`/`Int2`/`Int4`/`Text`/`Json`/`Float4`/`Float8`/`Timestamp`/`Timestamptz`/`Numeric`/`Jsonb`），提供 `.typeSuffix()` 与 `.wireParamOid()`（基础标量/二进制传显式 OID，其余传 `0` 由服务端推导）。
+- **`PgStmtSignature`**：
+  - `PgStmtSignature.empty()` / `PgStmtSignature.build(query, param_tags, prepared_statement_id, unnamed)`；
+  - `.nameSlice()` / `.querySlice()` / `.preparedNameSlice()`（`unnamed` 时为空，否则为 `"P<prefix>$<id>"`，前缀截断上限 40 字节）/ `.paramOids()` / `.paramCount()` / `.isUnnamed()`；
+  - `.hash()`（覆盖签名键与参数 OID 的确定性 64 位 FNV-1a 哈希）与 `.eql(other)`。
+
+```cp
+import { PgParamTypeTag, PgStmtSignature } from "cap:pgwire";
+
+const tags: [2]PgParamTypeTag = [PgParamTypeTag.Int4, PgParamTypeTag.Text];
+const sig = PgStmtSignature.build("SELECT * FROM users WHERE id=$1 AND name=$2", tags[0..], 7, false)?;
+* = sig.nameSlice();         // "SELECT * FROM users WHERE id=$1 AND name=$2.int4.string"
+* = sig.preparedNameSlice(); // "PSELECT * FROM users WHERE id=$1 AND name$7"
+* = sig.hash();
+```
+
 ---
 
 ## 4. 示例

@@ -281,3 +281,13 @@ export {
     escapeScramUsername,
     PgSaslState,
 } from "./saslScram.cp";
+
+export {
+    PG_STMT_SIG_MAX_PARAMS,
+    PG_STMT_SIG_MAX_NAME_LEN,
+    PG_STMT_SIG_MAX_STMT_NAME_LEN,
+    PG_STMT_SIG_PREFIX_MAX,
+    PgStmtSignatureError,
+    PgParamTypeTag,
+    PgStmtSignature,
+} from "./stmtSignature.cp";
