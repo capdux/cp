@@ -611,3 +611,15 @@ export {
     HmrFailureFrame,
     HmrFailureCodec,
 } from "./hmrFailure";
+
+export {
+    ASSET_STORE_MAX_PATHS,
+    ASSET_STORE_MAX_FILES,
+    ASSET_URL_PREFIX,
+    AssetStoreError,
+    AssetEntry,
+    AssetPathMapping,
+    AssetReplaceOutcome,
+    formatAssetUrl,
+    AssetStore,
+} from "./assetStore";

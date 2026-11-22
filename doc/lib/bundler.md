@@ -1015,3 +1015,21 @@ const n = HmrFailureCodec.encode(frame, wire[0..])?;
 const decoded = HmrFailureCodec.decode(wire[0..n])?;
 * = decoded;
 ```
+
+- **内容寻址引用计数静态资产存储（`assetStore.cp`，吸收自 `/data/dev/bun/src/bake/DevServer/Assets.cp` & `/data/dev/bun/docs/bundler/fullstack.mdx`）**：
+    - 导出：`ASSET_STORE_MAX_PATHS` (`128`)、`ASSET_STORE_MAX_FILES` (`128`)、`ASSET_URL_PREFIX` (`"/_bun/asset/"`)、`AssetStoreError`、`AssetEntry`、`AssetPathMapping`、`AssetReplaceOutcome`、`formatAssetUrl`、`AssetStore`（`init`/`pathCount`/`uniqueAssetCount`/`totalMemoryBytes`/`getHash`/`getByHash`/`getRefCount`/`replacePath`/`putOrIncrementRefCount`/`unrefByHash`/`removePath`）；
+    - **Bun 全栈 DevServer 内容寻址资产最佳实践（参考 `/data/dev/bun/docs/bundler/fullstack.mdx`）**：
+      - HTML 路由中引用的静态资源由全栈开发服务器自动打包并挂载至 `/_bun/asset/<16-hex>.<ext>`；不同路径若内容哈希相同，自动通过 `AssetStore` 共享唯一底层条目并递增引用计数；
+      - 开发期文件覆写时，`replacePath()` 在 `refs == 1` 且新哈希不冲突时执行原地替换并立即吊销旧哈希，彻底避免浏览器缓存陈旧资源；引用计数归零时以 O(1) `swapRemove` 紧凑回收并自动修复所有受影响的 `path -> entry_index` 映射。
+
+```cp
+import { AssetStore, formatAssetUrl } from "cap:bundler";
+
+let store = AssetStore.init();
+const r1 = store.replacePath("/app/logo.png", 0x0123456789abcdef, 4096, "image/png")?;
+const r2 = store.replacePath("/app/favicon.png", 0x0123456789abcdef, 4096, "image/png")?;
+// r2.shared_existing == true, store.uniqueAssetCount() == 1, store.getRefCount(...) == 2
+let url_buf: [64]u8 = [0; 64];
+const url = formatAssetUrl(0x0123456789abcdef, ".png", url_buf[0..])?; // "/_bun/asset/0123456789abcdef.png"
+* = r1; * = r2; * = url;
+```
