@@ -14,7 +14,7 @@ import {
     FdtTokenKind,
     isFdt,
     parseFdt,
-} from "cap:fdt";
+} from "cap:sys";
 
 fn writeU32Be(buf: []u8, off: usize, v: u32) {
     buf[off] = ((v >> 24) & 0xFF) as u8;

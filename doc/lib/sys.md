@@ -131,3 +131,31 @@ pub fn demoPhaseASys(): !void {
    - `copyFileWithState` 优先尝试 Linux `copy_file_range` / `sendfile` 内核零拷贝路径，在目标文件系统返回 `EXDEV` / `ENOSYS` / `EINVAL` 时平滑回退至用户态缓冲读写。
 4. **`DirIterator` 零堆 `getdents64` 遍历**：
    - 使用 8KB 栈内联缓冲批量读取内核目录项，调用方须配对 `defer it.close();` 并在遍历期间消费当前 `entry.name` 切片（下次 `next()` 会复用同一缓冲）。
+
+---
+
+## 收敛集成的内核/固件、文件系统、虚拟磁盘与无锁缓冲套件
+
+以下纯 CP 零外部依赖系统底层模块已统一聚合导出至 `cap:sys`（`lib/sys/index.cp`），零符号冲突：
+
+| 分类 | 文件路径 | 规范 / 格式 | 说明 |
+| :--- | :--- | :--- | :--- |
+| 内核、固件与总线 | `lib/sys/bpf.cp` | RFC 9669 eBPF | 64-bit/128-bit eBPF 指令编解码与程序校验器 |
+| 内核、固件与总线 | `lib/sys/acpi.cp` | ACPI 6.5 | RSDP / SDT / MADT / MCFG 固件表零堆分配解析器 |
+| 内核、固件与总线 | `lib/sys/smbios.cp` | SMBIOS / DMI | 固件 SMBIOS 结构表解析器 |
+| 内核、固件与总线 | `lib/sys/fdt.cp` | Devicetree Spec v0.4 | Flattened Device Tree (`.dtb`) 解析器 |
+| 内核、固件与总线 | `lib/sys/pci.cp` | PCI / PCIe | 配置空间头与 Capability 链表解析器 |
+| 内核、固件与总线 | `lib/sys/hid.cp` | USB HID 1.11 | HID 报告描述符解析与摘要器 |
+| 内核、固件与总线 | `lib/sys/edid.cp` | VESA EDID 1.3 / 1.4 | 显示器 EDID 块与时序解析器 |
+| 文件系统与分区 | `lib/sys/gpt.cp` | UEFI GPT / Protective MBR | GPT 头、分区条目解析与 CRC32 校验 |
+| 文件系统与分区 | `lib/sys/ext4.cp` | Linux ext2 / ext3 / ext4 | 超级块、组描述符、Inode 与目录解析器 |
+| 文件系统与分区 | `lib/sys/btrfs.cp` | Linux Btrfs | 超级块、Chunk 树与元数据解析器 |
+| 文件系统与分区 | `lib/sys/xfs.cp` | Linux XFS | XFS 超级块与 Inode 解析器（常量别名 `XFS_S_IFMT`/`XFS_S_IFREG`/`XFS_S_IFDIR`） |
+| 文件系统与分区 | `lib/sys/zfs.cp` | OpenZFS | Vdev Label、Uberblock 与 NVList 解析器 |
+| 文件系统与分区 | `lib/sys/fat.cp` | FAT12 / FAT16 / FAT32 | BPB 与目录条目解析器 |
+| 文件系统与分区 | `lib/sys/exfat.cp` | Microsoft exFAT | 引导扇区、校验和与 32B 目录项解析器（常量别名 `EXFAT_ATTR_*`） |
+| 文件系统与分区 | `lib/sys/ntfs.cp` | Microsoft NTFS | 引导扇区与 MFT 记录解析器 |
+| 文件系统与分区 | `lib/sys/apfs.cp` | Apple APFS | 容器/卷超级块与 Fletcher-64 校验解析器 |
+| 虚拟磁盘与块存储 | `lib/sys/qcow2.cp` / `lib/sys/vhdx.cp` | QEMU QCOW2 v2/v3 & VHDX | 虚拟磁盘镜像头与映射表解析器 |
+| 虚拟磁盘与块存储 | `lib/sys/scsi.cp` | SCSI SPC / SBC | SCSI CDB、Inquiry 与 Sense 数据编解码 |
+| 并发缓冲 | `lib/sys/ringbuf.cp` | RingBuffer / ByteRing / MicroBatcher | 零拷贝环形缓冲与微批聚合器 |

@@ -10,7 +10,7 @@ import {
     RingBuffer,
     ByteRing,
     MicroBatcher,
-} from "cap:ringbuf";
+} from "cap:sys";
 
 fn testRingBufferRejectWrapAroundAndBatch(): ! {
     const alloc = std.heap.page_allocator;
@@ -186,7 +186,7 @@ fn testMicroBatcherCountAndTimeoutTriggers(): ! {
 fn testCapRingbufDynamicLazyMount(): ! {
     const alloc = std.heap.page_allocator;
 
-    let rb = cap.ringbuf.RingBuffer(i32).init(alloc, 2, cap.ringbuf.OverflowPolicy.OverwriteOldest)?;
+    let rb = cap.sys.RingBuffer(i32).init(alloc, 2, cap.sys.OverflowPolicy.OverwriteOldest)?;
     defer rb.deinit();
     rb.push(100)?;
     rb.push(200)?;
@@ -194,14 +194,14 @@ fn testCapRingbufDynamicLazyMount(): ! {
     expect_eq(rb.overwrittenCount(), 1 as u64);
     expect_eq(rb.pop().?, 200 as i32);
 
-    let pipe = cap.ringbuf.ByteRing.init(alloc, 8)?;
+    let pipe = cap.sys.ByteRing.init(alloc, 8)?;
     defer pipe.deinit();
     expect_eq(pipe.write("ok\n"), 3 as usize);
     const frame = (pipe.readUntilByte(alloc, '\n')?).?;
     defer alloc.free(frame);
     expect_eq(std.mem.eql(u8, frame, "ok\n"), true);
 
-    let mb = cap.ringbuf.MicroBatcher(i32).init(alloc, 2, 50)?;
+    let mb = cap.sys.MicroBatcher(i32).init(alloc, 2, 50)?;
     defer mb.deinit();
     expect_eq(mb.add(7, 10)?, false);
     expect_eq(mb.add(8, 20)?, true);

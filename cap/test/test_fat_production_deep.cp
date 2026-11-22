@@ -22,7 +22,7 @@ import {
     parseFatBpb,
     FatDirEntry,
     FatDirIter,
-} from "cap:fat";
+} from "cap:sys";
 
 fn expectBytesEq(actual: []const u8, expected: []const u8) {
     expect_eq(std.mem.eql(u8, actual, expected), true);

@@ -14,11 +14,11 @@ import {
     ENTRY_FILE,
     ENTRY_STREAM_EXT,
     ENTRY_FILE_NAME,
-    ATTR_READ_ONLY,
-    ATTR_HIDDEN,
-    ATTR_SYSTEM,
-    ATTR_DIRECTORY,
-    ATTR_ARCHIVE,
+    EXFAT_ATTR_READ_ONLY,
+    EXFAT_ATTR_HIDDEN,
+    EXFAT_ATTR_SYSTEM,
+    EXFAT_ATTR_DIRECTORY,
+    EXFAT_ATTR_ARCHIVE,
     STREAM_ALLOC_POSSIBLE,
     STREAM_NO_FAT_CHAIN,
     VOLUME_FLAG_DIRTY,
@@ -34,7 +34,7 @@ import {
     decodeFileNameAscii,
     ExfatRawEntry,
     ExfatDirIter,
-} from "cap:exfat";
+} from "cap:sys";
 
 fn putU16Le(buf: []u8, off: usize, v: u16) {
     buf[off] = (v & 0xFF) as u8;
@@ -114,10 +114,10 @@ test("1. exFAT 512B Boot Sector parsing, cluster geometry & clusterToLba", () =>
     expect_eq(EXFAT_BOOT_SIGNATURE, 0xAA55 as u16);
     expect_eq(ENTRY_ALLOC_BITMAP, 0x81 as u8);
     expect_eq(ENTRY_UPCASE_TABLE, 0x82 as u8);
-    expect_eq(ATTR_READ_ONLY, 0x0001 as u16);
-    expect_eq(ATTR_HIDDEN, 0x0002 as u16);
-    expect_eq(ATTR_SYSTEM, 0x0004 as u16);
-    expect_eq(ATTR_ARCHIVE, 0x0020 as u16);
+    expect_eq(EXFAT_ATTR_READ_ONLY, 0x0001 as u16);
+    expect_eq(EXFAT_ATTR_HIDDEN, 0x0002 as u16);
+    expect_eq(EXFAT_ATTR_SYSTEM, 0x0004 as u16);
+    expect_eq(EXFAT_ATTR_ARCHIVE, 0x0020 as u16);
 
     let sec0: [512]u8 = std.mem.zeroes([512]u8);
     // 512B sector (shift=9), 64 sectors/cluster (shift=6) -> 32 KiB clusters
@@ -187,7 +187,7 @@ test("3. File + StreamExt + FileName complete directory entry set parsing & 16-b
     // Entry 0: File Entry (0x85)
     set_bytes[0] = ENTRY_FILE;
     set_bytes[1] = 2; // secondary_count = 2 (StreamExt + 1 FileName)
-    putU16Le(set_bytes[0..], 4, ATTR_ARCHIVE | ATTR_READ_ONLY);
+    putU16Le(set_bytes[0..], 4, EXFAT_ATTR_ARCHIVE | EXFAT_ATTR_READ_ONLY);
     putU32Le(set_bytes[0..], 8, 0x5821A000); // create_ts
     putU32Le(set_bytes[0..], 12, 0x5821B000); // last_mod_ts
     putU32Le(set_bytes[0..], 16, 0x5821C000); // last_acc_ts
@@ -214,7 +214,7 @@ test("3. File + StreamExt + FileName complete directory entry set parsing & 16-b
     const f_ent = parseFileEntry(set_bytes[0..32]) ?? unreachable;
     expect_eq(f_ent.secondary_count, 2 as u8);
     expect_eq(f_ent.set_checksum, expected_cs);
-    expect_eq(f_ent.file_attributes, ATTR_ARCHIVE | ATTR_READ_ONLY);
+    expect_eq(f_ent.file_attributes, EXFAT_ATTR_ARCHIVE | EXFAT_ATTR_READ_ONLY);
     expect_eq(f_ent.isDirectory(), false);
     expect_eq(f_ent.create_ts, 0x5821A000 as u32);
     expect_eq(f_ent.last_mod_ts, 0x5821B000 as u32);
@@ -249,7 +249,7 @@ test("4. ExfatDirIter skips deleted entries, stops on EOD (0x00), and handles di
     // Slot 2: Active Directory File Entry (0x85)
     dir[64] = ENTRY_FILE;
     dir[65] = 2;
-    putU16Le(dir[0..], 68, ATTR_DIRECTORY);
+    putU16Le(dir[0..], 68, EXFAT_ATTR_DIRECTORY);
 
     // Slot 3: StreamExt (0xC0) without NoFatChain (fragmented)
     dir[96] = ENTRY_STREAM_EXT;

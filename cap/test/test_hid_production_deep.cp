@@ -42,7 +42,7 @@ import {
     HidItemIter,
     HidReportSummary,
     summarizeHidDescriptor,
-} from "cap:hid";
+} from "cap:sys";
 
 test("1. Standard USB Boot Mouse Report Descriptor (signed -127..127 & 24-bit Input)", () => {
     expect_eq(ITEM_TYPE_MAIN, 0 as u8);

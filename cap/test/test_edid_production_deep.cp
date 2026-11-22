@@ -21,7 +21,7 @@ import {
     EdidInfo,
     isEdid,
     parseEdid,
-} from "cap:edid";
+} from "cap:sys";
 
 fn finalizeEdid(block: []u8) {
     let sum: u32 = 0;

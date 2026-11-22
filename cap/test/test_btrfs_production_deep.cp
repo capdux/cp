@@ -40,7 +40,7 @@ import {
     parseBtrfsSuperblock,
     parseBtrfsKey,
     parseBtrfsTreeHeader,
-} from "cap:btrfs";
+} from "cap:sys";
 
 fn putU16Le(buf: []u8, off: usize, v: u16) {
     buf[off] = (v & 0xFF) as u8;

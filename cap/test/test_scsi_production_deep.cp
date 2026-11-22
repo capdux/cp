@@ -44,7 +44,7 @@ import {
     encodeWrite10Cdb,
     encodeRead16Cdb,
     encodeWrite16Cdb,
-} from "cap:scsi";
+} from "cap:sys";
 
 fn putBytes(buf: []u8, off: usize, src: []const u8) {
     let i: usize = 0;

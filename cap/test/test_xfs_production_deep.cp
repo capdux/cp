@@ -23,9 +23,9 @@ import {
     RO_COMPAT_REFLINK,
     INCOMPAT_FTYPE,
     INCOMPAT_BIGTIME,
-    S_IFMT,
-    S_IFREG,
-    S_IFDIR,
+    XFS_S_IFMT,
+    XFS_S_IFREG,
+    XFS_S_IFDIR,
     xfsCrc32c,
     xfsCrc32cWithZeroField,
     XfsSuperblock,
@@ -36,7 +36,7 @@ import {
     parseXfsInodeCore,
     decodeXfsBmbtRec,
     encodeXfsBmbtRec,
-} from "cap:xfs";
+} from "cap:sys";
 
 fn putU16Be(buf: []u8, off: usize, v: u16) {
     buf[off + 0] = ((v >> 8) & 0xFF) as u8;
@@ -251,7 +251,7 @@ test("4. XFS v2 and v3 Inode Core ('IN') parsing", () => {
     // 4a. v3 regular file with FMT_EXTENTS
     let ino_v3: [176]u8 = std.mem.zeroes([176]u8);
     putU16Be(ino_v3[0..], 0, XFS_INODE_MAGIC);        // "IN"
-    putU16Be(ino_v3[0..], 2, S_IFREG | 0x01A4);       // 0100644
+    putU16Be(ino_v3[0..], 2, XFS_S_IFREG | 0x01A4);       // 0100644
     ino_v3[4] = 3;                                    // version = 3
     ino_v3[5] = FMT_EXTENTS;                          // format = 2
     putU32Be(ino_v3[0..], 8, 1000);                   // uid
@@ -279,7 +279,7 @@ test("4. XFS v2 and v3 Inode Core ('IN') parsing", () => {
     // 4b. v2 directory with FMT_LOCAL
     let ino_v2: [96]u8 = std.mem.zeroes([96]u8);
     putU16Be(ino_v2[0..], 0, XFS_INODE_MAGIC);
-    putU16Be(ino_v2[0..], 2, S_IFDIR | 0x01ED);       // 0040755
+    putU16Be(ino_v2[0..], 2, XFS_S_IFDIR | 0x01ED);       // 0040755
     ino_v2[4] = 2;                                    // version = 2
     ino_v2[5] = FMT_LOCAL;
     putU32Be(ino_v2[0..], 16, 5);                     // nlink
@@ -296,7 +296,7 @@ test("4. XFS v2 and v3 Inode Core ('IN') parsing", () => {
 
     expect_eq(FMT_DEV, 0 as u8);
     expect_eq(FMT_BTREE, 3 as u8);
-    expect_eq(S_IFMT, 0xF000 as u16);
+    expect_eq(XFS_S_IFMT, 0xF000 as u16);
 });
 
 test("5. Malformed input rejection: bad magic, corrupt v5 CRC32C, mismatched blocklog, unsupported version, truncation", () => {

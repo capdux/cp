@@ -65,7 +65,7 @@ import {
     insnExit,
     BpfProgIter,
     validateBpfProgram,
-} from "cap:bpf";
+} from "cap:sys";
 
 test("1. Standard 8B ALU64 / JMP / CALL / EXIT encode & decode roundtrip (with negative offset & imm)", () => {
     expect_eq(BPF_INSN_SIZE, 8 as usize);
