@@ -516,3 +516,49 @@ pub fn demoHierarchicalSummaryTree() {
     * = plan.covered_turns; // 6
 }
 ```
+
+### 11. 零分配多层级 AI Agent 记忆融合路由器 (`memory_router.cp`)
+
+面向多层 AI Agent 记忆系统（Working Memory / Episodic Memory / Semantic Long-Term / Entity Graph）的 100% 纯 CP 零动态堆分配跨层加权 RRF 融合、跨层共识激励与 Token 预算打包内核：
+
+- **常量与枚举**：
+  - `MEM_ROUTER_MAX_CANDIDATES` (`64`)
+  - `MemorySourceStore`（`working | episodic | semantic | entity_graph`）
+  - `MemoryQueryIntent`（`recent_context | factual_lookup | deep_synthesis | custom_weights`）
+- **配置与数据模型**：
+  - `MemoryTierWeights`（`working_w`, `episodic_w`, `semantic_w`, `graph_w`, `rrf_k` [默认 `60.0`]；提供 `forIntent(intent)` 预设与 `isValid()`）
+  - `MemoryRecallCandidate`（`memory_id`, `source`, `rank_in_source` [0-based], `token_cost`, `pinned`）
+  - `FusedMemoryPick`（`memory_id`, `fused_score_f32`, `source_mask` [bit0..bit3 对应四层存储], `token_cost`, `pinned`）
+  - `MemoryRouteSummary`（`input_candidates`, `unique_memories`, `selected_count`, `total_tokens`, `multi_store_consensus_count`）
+- **核心纯函数**：
+  - `fuseAndPackMemoryRecalls(candidates, weights, token_budget, out_picks): MemoryRouteSummary`：按 `memory_id` 聚合去重（同层重复候选防重复计分、仅保留最优 rank；跨层共识叠加各层加权 RRF 分数 `w_s / (rrf_k + rank + 1)` 并置位 `source_mask`），优先锁定 `pinned` 记忆，其余按 `(fused_score_f32 降序, memory_id 升序)` 在 `token_budget` 内贪心装入。
+
+```cp
+import {
+    MemorySourceStore,
+    MemoryQueryIntent,
+    MemoryTierWeights,
+    MemoryRecallCandidate,
+    FusedMemoryPick,
+    fuseAndPackMemoryRecalls,
+} from "cap:agentmem";
+
+pub fn demoMemoryFusionRouter() {
+    const cands: [3]MemoryRecallCandidate = [
+        MemoryRecallCandidate{ memory_id: 10, source: MemorySourceStore.working,      rank_in_source: 0, token_cost: 80, pinned: false },
+        MemoryRecallCandidate{ memory_id: 20, source: MemorySourceStore.semantic,     rank_in_source: 1, token_cost: 90, pinned: false },
+        MemoryRecallCandidate{ memory_id: 20, source: MemorySourceStore.entity_graph, rank_in_source: 0, token_cost: 90, pinned: false },
+    ];
+    let picks: [3]FusedMemoryPick = [FusedMemoryPick{}; 3];
+    let picks_s: []FusedMemoryPick = picks[0..];
+
+    const summary = fuseAndPackMemoryRecalls(
+        cands[0..],
+        MemoryTierWeights.forIntent(MemoryQueryIntent.factual_lookup),
+        200,
+        picks_s,
+    );
+    // memory_id=20 被 semantic + entity_graph 双层共识命中，稳居榜首 (source_mask == 0b1100)
+    * = summary;
+}
+```
