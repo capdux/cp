@@ -86,3 +86,16 @@ export {
     DelegationStats,
     A2aDelegationManager,
 } from "./delegation.cp";
+
+export {
+    A2A_LIFECYCLE_MAX_TASKS,
+    A2A_LIFECYCLE_MAX_ARTIFACTS_PER_TASK,
+    A2A_ARTIFACT_ID_MAX_LEN,
+    A2A_ARTIFACT_MIME_MAX_LEN,
+    A2aTaskPhase,
+    A2aArtifactMeta,
+    A2aTaskRecord,
+    A2aTransitionOutcome,
+    A2aLifecycleStats,
+    A2aTaskLifecycleManager,
+} from "./task_lifecycle.cp";

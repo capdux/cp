@@ -246,3 +246,41 @@ pub fn demoA2aDelegationQuickStart() {
     * = mgr.stats();
 }
 ```
+
+### 4.7 零堆分配 A2A 任务生命周期状态机与 Artifact 流式分片路由器 (`task_lifecycle.cp`)
+
+面向 Google Agent2Agent (A2A) 多智能体异步任务编排与流式产物交付的 100% 零动态堆分配内核：
+
+- **容量常量**：`A2A_LIFECYCLE_MAX_TASKS = 64`、`A2A_LIFECYCLE_MAX_ARTIFACTS_PER_TASK = 4`、`A2A_ARTIFACT_ID_MAX_LEN = 64`、`A2A_ARTIFACT_MIME_MAX_LEN = 64`。
+- **核心类型**：
+  - `A2aTaskPhase`：`submitted | working | input_required | auth_required | completed | failed | canceled | rejected`，内置 `isTerminal()` 与 `canTransitionTo(next)`（严格拦截终态迁移、自环及跳过 `working` 直接 `completed` 等非法边）。
+  - `A2aArtifactMeta`：定长内联 `artifact_id` / `mime_type`、`chunks_received`、`total_bytes`、`finalized`、`last_seq`。
+  - `A2aTaskRecord`、`A2aTransitionOutcome`（`ok` / `prev_phase` / `next_phase` / `rejected_terminal` / `invalid_edge`）、`A2aLifecycleStats`。
+- **核心管理器 `A2aTaskLifecycleManager`**：
+  - `submit_task(task_id, context_id, now_ms): bool`：ID 去重与 64 槽位满槽守卫。
+  - `transition(task_id, next_phase, now_ms): A2aTransitionOutcome`：按 A2A 规范严格校验状态转移边并原子维护阶段统计。
+  - `request_cancel(task_id, now_ms): bool`：非终态标记 `cancel_requested` 并流转至 `canceled`；终态安全拒绝。
+  - `append_artifact_chunk(task_id, artifact_id, mime_type, seq, chunk_bytes, is_last_chunk): bool`：仅 `working` / `input_required` 态允许写入，严格校验单调递增 `seq` 防乱序/重复，`finalized` 封口后拒绝继续追加。
+  - `prune_terminal_before(cutoff_ms): usize`：回收 `updated_ms < cutoff_ms` 的终态任务及关联 Artifact 槽位供复用。
+  - `get_task(task_id)`、`get_artifact(task_id, artifact_id)`、`stats()`。
+
+```cp
+import {
+    A2aTaskPhase,
+    A2aTaskLifecycleManager,
+} from "cap:a2a";
+
+pub fn demoA2aTaskLifecycle() {
+    let mgr = A2aTaskLifecycleManager.init();
+    * = mgr.submit_task(1001, 500, 1000);
+    * = mgr.transition(1001, A2aTaskPhase.working, 1010);
+
+    // 流式分片交付产物（单调序号 1 -> 2 并封口）
+    * = mgr.append_artifact_chunk(1001, "report.md", "text/markdown", 1, 512, false);
+    * = mgr.append_artifact_chunk(1001, "report.md", "text/markdown", 2, 256, true);
+
+    * = mgr.transition(1001, A2aTaskPhase.completed, 1100);
+    // 回收过期终态任务槽位
+    * = mgr.prune_terminal_before(2000);
+}
+```
