@@ -36,9 +36,9 @@ pub struct BumpAllocator {
     }
 
     pub fn ownsPtr(ptr: [*]const u8): bool {
-        const start_addr = @intFromPtr(_.buffer.ptr);
+        const start_addr = unsafe { @intFromPtr(_.buffer.ptr) };
         const end_addr = start_addr + _.buffer.len;
-        const addr = @intFromPtr(ptr);
+        const addr = unsafe { @intFromPtr(ptr) };
         return addr >= start_addr and addr < end_addr;
     }
 
@@ -46,7 +46,7 @@ pub struct BumpAllocator {
         if (len == 0) {
             return _.buffer.ptr + _.end_index;
         }
-        const base_addr = @intFromPtr(_.buffer.ptr);
+        const base_addr = unsafe { @intFromPtr(_.buffer.ptr) };
         const curr_addr = base_addr + _.end_index;
         const align_bytes = alignment.toByteUnits();
         const aligned_addr = std.mem.alignForward(usize, curr_addr, align_bytes);
@@ -87,7 +87,7 @@ pub struct BumpAllocator {
         if (!inst.ownsPtr(buf.ptr)) {
             return false;
         }
-        const buf_offset = @intFromPtr(buf.ptr) - @intFromPtr(inst.buffer.ptr);
+        const buf_offset = unsafe { @intFromPtr(buf.ptr) - @intFromPtr(inst.buffer.ptr) };
         if (buf_offset + buf.len == inst.end_index) {
             if (new_len <= inst.buffer.len - buf_offset) {
                 inst.end_index = buf_offset + new_len;
@@ -110,7 +110,7 @@ pub struct BumpAllocator {
         if (!inst.ownsPtr(buf.ptr)) {
             return;
         }
-        const buf_offset = @intFromPtr(buf.ptr) - @intFromPtr(inst.buffer.ptr);
+        const buf_offset = unsafe { @intFromPtr(buf.ptr) - @intFromPtr(inst.buffer.ptr) };
         if (buf_offset + buf.len == inst.end_index) {
             inst.end_index = buf_offset;
         }

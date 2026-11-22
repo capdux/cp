@@ -99,7 +99,7 @@ pub struct ScratchArena {
     }
 
     static fn tryAllocInChunk(chunk: *Chunk, len: usize, align_bytes: usize): ([*]u8)? {
-        const base_addr = @intFromPtr(chunk.buffer.ptr);
+        const base_addr = unsafe { @intFromPtr(chunk.buffer.ptr) };
         const curr_addr = base_addr + chunk.used;
         const aligned_addr = std.mem.alignForward(usize, curr_addr, align_bytes);
         const offset = aligned_addr - base_addr;

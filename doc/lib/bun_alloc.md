@@ -15,6 +15,7 @@
 | `TrackingAllocator` | 审计追踪与泄漏检测包装分配器 | 单元测试泄漏审计、峰值内存分析 |
 | `ScratchArena` | 支持 `mark()` / `rewind()` 的作用域暂存 Arena | 编译器/解析器阶段性临时内存、局部回滚 |
 | `Checkpoint` | `ScratchArena` 状态快照句柄 | 记录并恢复 Arena 分配偏移 |
+| `HeapBreakdown` | 外部切片驱动命名内存分区分析器（`Bun__<Zone>`） | 跨平台按子系统统计实时/峰值内存、泄漏审计与排序报表 |
 
 ---
 
@@ -47,6 +48,14 @@
 - `mark(): Checkpoint` / `rewind(*_, cp: Checkpoint)`
 - `resetRetainingCapacity(*_)` / `usedBytes(): usize` / `capacityBytes(): usize` / `chunkCount(): usize`
 - `allocator(*_): std.mem.Allocator` / `deinit(*_)`
+
+### `HeapBreakdown`（吸收自 `/data/dev/bun/src/bun_alloc/heap_breakdown.cp`）
+- 常量与辅助：`HEAP_ZONE_PREFIX` (`"Bun__"`), `heapZoneBaseName(qualified: []const u8): []const u8`, `formatHeapZoneLabel(name: []const u8, out: []u8): HeapBreakdownError!usize`
+- `HeapBreakdown.init(storage: []ZoneStats): HeapBreakdown`（外部切片驱动，无硬编码分区上限）
+- `registerZone(*_, name)` / `getOrRegisterZone(*_, name)` / `findZone(name)` / `stats(handle)`
+- `recordAlloc(*_, handle, bytes)` / `recordFree(*_, handle, bytes)` / `recordResize(*_, handle, old_bytes, new_bytes)`
+- `resetZone(*_, handle)` / `resetAll(*_)` / `totalLiveBytes()` / `totalPeakBytes()` / `totalAllocatedBytes()` / `totalActiveAllocations()` / `hasLeaks()` / `heaviestLiveZone()`
+- `sortByLiveBytesDesc(*_)` / `formatReport(out: []u8): HeapBreakdownError!usize`
 
 ---
 

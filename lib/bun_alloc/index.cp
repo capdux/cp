@@ -4,3 +4,12 @@ export { BumpAllocator } from "./bump.cp";
 export { PoolAllocator } from "./pool.cp";
 export { TrackingAllocator } from "./tracking.cp";
 export { ScratchArena, Checkpoint } from "./scratch.cp";
+export {
+    HEAP_ZONE_PREFIX,
+    HeapBreakdownError,
+    heapZoneBaseName,
+    formatHeapZoneLabel,
+    HeapZoneHandle,
+    ZoneStats,
+    HeapBreakdown,
+} from "./heapBreakdown.cp";
