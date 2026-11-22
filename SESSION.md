@@ -34,3 +34,6 @@
 
 ### 2026-11-22（`cap:keyframes` 验收，子智能体吸收 Bun 上游 css/rules/keyframes.cp 为 cap:keyframes（5/5 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/keyframes/`（5/5 PASS，`doc/lib/keyframes.md`）经 `verify_module.sh` 一次性验收回收；子智能体吸收 Bun 上游 css/rules/keyframes.cp 为 cap:keyframes（5/5 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:agent` 验收，子智能体建立统一 AI Agent 聚合主包 cap:agent 并交付 budget.cp（6/6 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/agent/`（5/5 PASS，`doc/lib/agent.md`）经 `verify_module.sh` 一次性验收回收；子智能体建立统一 AI Agent 聚合主包 cap:agent 并交付 budget.cp（6/6 PASS），主协调器统一登记并提交

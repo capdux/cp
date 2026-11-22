@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:agent` 纯 CP 零分配 AI Agent 统一运行时聚合主包：四维 Token/微美元成本/步数/超时预算控制、LoopGuard 死循环检测、ToolCircuitBreaker 工具熔断与 ContextWindowAdvisor 上下文压缩建议（5/5 PASS，文档直写 `doc/lib/agent.md`）
+建立 AI Agent 统一聚合主包 cap:agent（lib/agent/{budget,index}.cp），零分配实现微美元整数计费、LoopGuard 乒乓检测、三态工具熔断与上下文窗口顾问，cpc check 0 错误，cap test 6/6 PASS (780ms)
+
 ## 2026-11-22: 新建 `cap:keyframes` 吸收自 Bun css/rules/keyframes.cp 的纯 CP 零分配 CSS @keyframes 解析、压缩与时间轴采样库：保留字拦截、from/to 最优压缩与关键帧区间插值采样（5/5 PASS，文档直写 `doc/lib/keyframes.md`）
 从 /data/dev/bun/src/css/rules/keyframes.cp 吸收纯 CP 零分配 CSS @keyframes 库 cap:keyframes（lib/keyframes/{keyframes,index}.cp），cpc check 0 错误，cap test 5/5 PASS (768ms)
 
