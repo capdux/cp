@@ -79,3 +79,15 @@ pub fn demoFinance(alloc: std.mem.Allocator): !void {
     * = ledger.post("tx-1", "Payment received", &lines)?;
 }
 ```
+
+---
+
+## 收敛子模块深度文档
+
+- [audit.md](finance/audit.md)
+- [base58_check.md](finance/base58_check.md)
+- [billing.md](finance/billing.md)
+- [fx.md](finance/fx.md)
+- [ledger.md](finance/ledger.md)
+- [rule.md](finance/rule.md)
+- [sheet.md](finance/sheet.md)

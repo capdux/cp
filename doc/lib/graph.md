@@ -219,3 +219,18 @@ pub fn demoDinicMaxFlowAndMatching() {
     * = matched;
 }
 ```
+
+---
+
+## 收敛子模块深度文档
+
+- [bipartite.md](graph/bipartite.md)
+- [delaunay.md](graph/delaunay.md)
+- [dijkstra.md](graph/dijkstra.md)
+- [hungarian.md](graph/hungarian.md)
+- [maxflow.md](graph/maxflow.md)
+- [mst.md](graph/mst.md)
+- [octree.md](graph/octree.md)
+- [rrt.md](graph/rrt.md)
+- [scc.md](graph/scc.md)
+- [voronoi.md](graph/voronoi.md)

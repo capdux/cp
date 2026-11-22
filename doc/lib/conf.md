@@ -241,3 +241,20 @@ fn demoJson5(): !void {
 | `crontab.cp` | 5-Field & Macro Cron 解析与下次触发 | `CronExpr`, `DateTime`, `CronError` |
 
 > **重叠对照参考归档说明**：`json5_.cp`、`json5_lexer_.cp`、`dotenv_parse_.cp`、`json_patch_.cp` 为与权威实现功能重叠的对照参考副本（文件首行带 `// Reference Only:` 声明），不在 `lib/conf/index.cp` 冲突导出。
+
+---
+
+## 收敛子模块深度文档
+
+- [crontab.md](conf/crontab.md)
+- [cue.md](conf/cue.md)
+- [hcl.md](conf/hcl.md)
+- [hjson.md](conf/hjson.md)
+- [jsonl.md](conf/jsonl.md)
+- [jsonpatch.md](conf/jsonpatch.md)
+- [jsonschema.md](conf/jsonschema.md)
+- [kdl.md](conf/kdl.md)
+- [ndjson.md](conf/ndjson.md)
+- [nix.md](conf/nix.md)
+- [plist.md](conf/plist.md)
+- [ron.md](conf/ron.md)

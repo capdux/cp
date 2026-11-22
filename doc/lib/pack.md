@@ -506,3 +506,26 @@ pub fn demoFastCdcDedup(dataset: []const u8) {
     * = dedup.dedupRatio(); // [0.0, 1.0] 字节去重率
 }
 ```
+
+---
+
+## 收敛子模块深度文档
+
+- [ar.md](pack/ar.md)
+- [brotli.md](pack/brotli.md)
+- [bwt.md](pack/bwt.md)
+- [bzip2.md](pack/bzip2.md)
+- [cab.md](pack/cab.md)
+- [cpio.md](pack/cpio.md)
+- [lz4.md](pack/lz4.md)
+- [lzo.md](pack/lzo.md)
+- [lzss.md](pack/lzss.md)
+- [pack_native.md](pack/pack_native.md)
+- [rar.md](pack/rar.md)
+- [rle.md](pack/rle.md)
+- [snappy.md](pack/snappy.md)
+- [squashfs.md](pack/squashfs.md)
+- [tar.md](pack/tar.md)
+- [xz.md](pack/xz.md)
+- [zip.md](pack/zip.md)
+- [zstd.md](pack/zstd.md)

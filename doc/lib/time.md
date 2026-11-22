@@ -279,3 +279,24 @@ pub fn demoTimingWheel() {
     * = h1;
 }
 ```
+
+---
+
+## 收敛子模块深度文档
+
+- [health.md](time/health.md)
+- [hlc.md](time/hlc.md)
+- [interval.md](time/interval.md)
+- [pool.md](time/pool.md)
+- [pqueue.md](time/pqueue.md)
+- [prometheus.md](time/prometheus.md)
+- [promql.md](time/promql.md)
+- [ptp.md](time/ptp.md)
+- [queue.md](time/queue.md)
+- [supervisor.md](time/supervisor.md)
+- [timeseries.md](time/timeseries.md)
+- [tween.md](time/tween.md)
+- [tz.md](time/tz.md)
+- [union_interval.md](time/union_interval.md)
+- [uuid_v7.md](time/uuid_v7.md)
+- [vcd.md](time/vcd.md)

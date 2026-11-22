@@ -133,3 +133,22 @@ pub fn demoCsvTable() {
     * = writeCsvRow(row[0..], ',', out[0..]);
 }
 ```
+
+---
+
+## 收敛子模块深度文档
+
+- [atom.md](doc/atom.md)
+- [bibtex.md](doc/bibtex.md)
+- [csv_stream.md](doc/csv_stream.md)
+- [docx.md](doc/docx.md)
+- [epub.md](doc/epub.md)
+- [ical.md](doc/ical.md)
+- [markdown_table.md](doc/markdown_table.md)
+- [odt.md](doc/odt.md)
+- [pdf.md](doc/pdf.md)
+- [pptx.md](doc/pptx.md)
+- [rss.md](doc/rss.md)
+- [rtf.md](doc/rtf.md)
+- [vcard.md](doc/vcard.md)
+- [xlsx.md](doc/xlsx.md)

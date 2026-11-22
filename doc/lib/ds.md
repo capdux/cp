@@ -225,3 +225,44 @@ pub fn demoFenwickOrderStat() {
     * = sampled;
 }
 ```
+
+---
+
+## 收敛子模块深度文档
+
+- [aho_corasick.md](ds/aho_corasick.md)
+- [bimap.md](ds/bimap.md)
+- [bitset.md](ds/bitset.md)
+- [bitset_simd.md](ds/bitset_simd.md)
+- [bptree.md](ds/bptree.md)
+- [circ_buf.md](ds/circ_buf.md)
+- [crdt_pn.md](ds/crdt_pn.md)
+- [cuckoo.md](ds/cuckoo.md)
+- [disjoint_set.md](ds/disjoint_set.md)
+- [dsu.md](ds/dsu.md)
+- [fenwick.md](ds/fenwick.md)
+- [fuzzy.md](ds/fuzzy.md)
+- [hll.md](ds/hll.md)
+- [intern.md](ds/intern.md)
+- [interval_tree.md](ds/interval_tree.md)
+- [kdtree.md](ds/kdtree.md)
+- [kmp.md](ds/kmp.md)
+- [merkle_tree.md](ds/merkle_tree.md)
+- [quadtree.md](ds/quadtree.md)
+- [radix.md](ds/radix.md)
+- [ringhash.md](ds/ringhash.md)
+- [rmq.md](ds/rmq.md)
+- [roaring.md](ds/roaring.md)
+- [rope.md](ds/rope.md)
+- [rope_text.md](ds/rope_text.md)
+- [rtree.md](ds/rtree.md)
+- [segment_tree.md](ds/segment_tree.md)
+- [segtree.md](ds/segtree.md)
+- [skip_list.md](ds/skip_list.md)
+- [skiplist.md](ds/skiplist.md)
+- [suffix.md](ds/suffix.md)
+- [suffix_array.md](ds/suffix_array.md)
+- [tdigest.md](ds/tdigest.md)
+- [treap.md](ds/treap.md)
+- [trie_radix.md](ds/trie_radix.md)
+- [zset.md](ds/zset.md)

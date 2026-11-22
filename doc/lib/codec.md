@@ -149,3 +149,35 @@ pub fn demoCodec(): ! {
 | 一维条码 | `lib/codec/code39.cp` | ISO/IEC 16388 Code 39 | 零堆分配 3-of-9 条码编解码与 Mod-43 校验 |
 | 参考归档（不导出） | `lib/codec/{base58,base85,bech32}_.cp` | Base58 / Base85 / Bech32（仅参考） | 与权威 `base58_85.cp` / `bech32_crockford.cp` 功能重叠，保留供对比分析 |
 | 纠错码与有限域（Batch 38） | `lib/codec/elias.cp`, `gf256.cp`, `golay.cp`, `hamming.cp`, `reed_solomon.cp`, `dct.cp` | Elias 通用前缀码、GF(2^8) 有限域、Golay [24,12,8]/[23,12,7]、Hamming(7,4)/SECDED(8,4)/(72,64)、Cauchy Reed-Solomon 纠删码、8x8 DCT-II/IDCT-III | 零冲突导出至 `cap:codec`（原 `elias`/`gf256`/`golay`/`hamming`/`reed_solomon`/`dct` 已收敛） |
+
+---
+
+## 收敛子模块深度文档
+
+- [base32.md](codec/base32.md)
+- [base58.md](codec/base58.md)
+- [base64url.md](codec/base64url.md)
+- [base85.md](codec/base85.md)
+- [braille.md](codec/braille.md)
+- [code128.md](codec/code128.md)
+- [code39.md](codec/code39.md)
+- [cuid.md](codec/cuid.md)
+- [cuid2.md](codec/cuid2.md)
+- [dct.md](codec/dct.md)
+- [ean.md](codec/ean.md)
+- [elias.md](codec/elias.md)
+- [gf256.md](codec/gf256.md)
+- [golay.md](codec/golay.md)
+- [hamming.md](codec/hamming.md)
+- [iban.md](codec/iban.md)
+- [isbn.md](codec/isbn.md)
+- [ksuid.md](codec/ksuid.md)
+- [morse.md](codec/morse.md)
+- [nanoid.md](codec/nanoid.md)
+- [punycode.md](codec/punycode.md)
+- [reed_solomon.md](codec/reed_solomon.md)
+- [roman.md](codec/roman.md)
+- [snowflake.md](codec/snowflake.md)
+- [uuencode.md](codec/uuencode.md)
+- [verhoeff.md](codec/verhoeff.md)
+- [vlq.md](codec/vlq.md)

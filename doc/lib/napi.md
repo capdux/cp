@@ -100,3 +100,9 @@ pub fn demoMockRuntime() {
    - 跨线程调用 `NapiThreadsafeFunctionState.call` 时区分 `NonBlocking`（队列满立即返回 `QueueFull`）与 `Blocking`；工作线程退出前须调用 `releaseThread(NapiTsfnReleaseMode.Release)` 或 `Abort`，避免主事件循环永久挂起。
 4. **ABI 稳定性保障（`NAPI_VERSION = 9`）**：
    - 所有 `@c struct`（`NapiModule`、`NapiPropertyDescriptor`、`NapiTypeTag`、`NapiNodeVersion`）严格对齐 Node-API v9 C 头文件内存布局，并包含 `Float16`（2 字节）在内的 12 种 `NapiTypedArrayType`。
+
+---
+
+## 收敛子模块深度文档
+
+- [runtime.md](napi/runtime.md)

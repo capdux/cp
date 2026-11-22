@@ -221,3 +221,31 @@ pub fn demoGenSlabPool() {
     * = pool.stats();
 }
 ```
+
+## 收敛子模块深度文档
+
+- [acpi.md](sys/acpi.md)
+- [apfs.md](sys/apfs.md)
+- [bpf.md](sys/bpf.md)
+- [btrfs.md](sys/btrfs.md)
+- [di.md](sys/di.md)
+- [edid.md](sys/edid.md)
+- [exfat.md](sys/exfat.md)
+- [ext4.md](sys/ext4.md)
+- [fat.md](sys/fat.md)
+- [fdt.md](sys/fdt.md)
+- [fs.md](sys/fs.md)
+- [gpt.md](sys/gpt.md)
+- [hid.md](sys/hid.md)
+- [ntfs.md](sys/ntfs.md)
+- [pci.md](sys/pci.md)
+- [pipeline.md](sys/pipeline.md)
+- [pubsub.md](sys/pubsub.md)
+- [qcow2.md](sys/qcow2.md)
+- [ringbuf.md](sys/ringbuf.md)
+- [scsi.md](sys/scsi.md)
+- [smbios.md](sys/smbios.md)
+- [vhdx.md](sys/vhdx.md)
+- [xfs.md](sys/xfs.md)
+- [zfs.md](sys/zfs.md)
+

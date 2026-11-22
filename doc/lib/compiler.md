@@ -65,3 +65,24 @@ pub fn demoCompiler(buf: []const u8) {
     * = isSpv(buf);
 }
 ```
+
+---
+
+## 收敛子模块深度文档
+
+- [caddy.md](compiler/caddy.md)
+- [cypher.md](compiler/cypher.md)
+- [expr.md](compiler/expr.md)
+- [flatbuf.md](compiler/flatbuf.md)
+- [flexbuf.md](compiler/flexbuf.md)
+- [glsl.md](compiler/glsl.md)
+- [idl.md](compiler/idl.md)
+- [nginx.md](compiler/nginx.md)
+- [protobuf.md](compiler/protobuf.md)
+- [regex.md](compiler/regex.md)
+- [sat.md](compiler/sat.md)
+- [sexp.md](compiler/sexp.md)
+- [sparql.md](compiler/sparql.md)
+- [spv.md](compiler/spv.md)
+- [wat.md](compiler/wat.md)
+- [wgsl.md](compiler/wgsl.md)

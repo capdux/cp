@@ -85,3 +85,34 @@ pub fn demoMl() {
     * = DbscanMetric.Euclidean;
 }
 ```
+
+---
+
+## 收敛子模块深度文档
+
+- [bandit.md](ml/bandit.md)
+- [dbscan.md](ml/dbscan.md)
+- [dedup.md](ml/dedup.md)
+- [dtree.md](ml/dtree.md)
+- [gmm.md](ml/gmm.md)
+- [guardrail.md](ml/guardrail.md)
+- [huber.md](ml/huber.md)
+- [isotonic.md](ml/isotonic.md)
+- [kmeans.md](ml/kmeans.md)
+- [knn.md](ml/knn.md)
+- [lasso.md](ml/lasso.md)
+- [linalg.md](ml/linalg.md)
+- [logreg.md](ml/logreg.md)
+- [louvain.md](ml/louvain.md)
+- [lsh.md](ml/lsh.md)
+- [mcts.md](ml/mcts.md)
+- [mds.md](ml/mds.md)
+- [naivebayes.md](ml/naivebayes.md)
+- [nmf.md](ml/nmf.md)
+- [optimize.md](ml/optimize.md)
+- [pagerank.md](ml/pagerank.md)
+- [polyfit.md](ml/polyfit.md)
+- [prob.md](ml/prob.md)
+- [ransac.md](ml/ransac.md)
+- [spectral.md](ml/spectral.md)
+- [svm.md](ml/svm.md)

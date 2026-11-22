@@ -74,3 +74,33 @@ pub fn demoGfx() {
     * = v;
 }
 ```
+
+---
+
+## 收敛子模块深度文档
+
+- [astar.md](gfx/astar.md)
+- [bdf.md](gfx/bdf.md)
+- [bezier.md](gfx/bezier.md)
+- [bvh.md](gfx/bvh.md)
+- [dae.md](gfx/dae.md)
+- [dds.md](gfx/dds.md)
+- [earcut.md](gfx/earcut.md)
+- [ecs.md](gfx/ecs.md)
+- [eot.md](gfx/eot.md)
+- [fbx.md](gfx/fbx.md)
+- [gjk.md](gfx/gjk.md)
+- [gltf.md](gfx/gltf.md)
+- [icc.md](gfx/icc.md)
+- [ktx.md](gfx/ktx.md)
+- [noise.md](gfx/noise.md)
+- [pathfinding.md](gfx/pathfinding.md)
+- [pcf.md](gfx/pcf.md)
+- [perlin.md](gfx/perlin.md)
+- [psf.md](gfx/psf.md)
+- [quat.md](gfx/quat.md)
+- [ttf.md](gfx/ttf.md)
+- [usd.md](gfx/usd.md)
+- [vrml.md](gfx/vrml.md)
+- [woff2.md](gfx/woff2.md)
+- [x3d.md](gfx/x3d.md)

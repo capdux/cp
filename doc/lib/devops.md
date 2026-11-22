@@ -71,3 +71,28 @@ pub fn demoDevops(buf: []const u8) {
     * = consistentBucket("new_checkout", "user_42");
 }
 ```
+
+---
+
+## 收敛子模块深度文档
+
+- [apk.md](devops/apk.md)
+- [cramfs.md](devops/cramfs.md)
+- [deb.md](devops/deb.md)
+- [dmg.md](devops/dmg.md)
+- [erofs.md](devops/erofs.md)
+- [f2fs.md](devops/f2fs.md)
+- [feature.md](devops/feature.md)
+- [iso.md](devops/iso.md)
+- [jffs2.md](devops/jffs2.md)
+- [luks.md](devops/luks.md)
+- [migrate.md](devops/migrate.md)
+- [minix.md](devops/minix.md)
+- [multiboot.md](devops/multiboot.md)
+- [romfs.md](devops/romfs.md)
+- [rpm.md](devops/rpm.md)
+- [trx.md](devops/trx.md)
+- [ubifs.md](devops/ubifs.md)
+- [udf.md](devops/udf.md)
+- [vdi.md](devops/vdi.md)
+- [vhd.md](devops/vhd.md)

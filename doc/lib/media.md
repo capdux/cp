@@ -130,3 +130,31 @@ pub fn demoVoiceAiFrontend(pcm_48k: []const f32) {
     * = decision;
 }
 ```
+
+---
+
+## 收敛子模块深度文档
+
+- [aac.md](media/aac.md)
+- [audio.md](media/audio.md)
+- [dls.md](media/dls.md)
+- [ebml.md](media/ebml.md)
+- [flac.md](media/flac.md)
+- [flv.md](media/flv.md)
+- [id3.md](media/id3.md)
+- [it.md](media/it.md)
+- [midi.md](media/midi.md)
+- [mkv.md](media/mkv.md)
+- [mp4.md](media/mp4.md)
+- [mpeg.md](media/mpeg.md)
+- [nsf.md](media/nsf.md)
+- [ogg.md](media/ogg.md)
+- [opus.md](media/opus.md)
+- [riff.md](media/riff.md)
+- [s3m.md](media/s3m.md)
+- [sf2.md](media/sf2.md)
+- [spc.md](media/spc.md)
+- [srt.md](media/srt.md)
+- [vgm.md](media/vgm.md)
+- [vtt.md](media/vtt.md)
+- [xm.md](media/xm.md)

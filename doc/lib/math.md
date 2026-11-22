@@ -260,3 +260,42 @@ pub fn demoSimdStats() {
     * = simdAxpyF32(0.5, v[0..], probs[0..]);
 }
 ```
+
+---
+
+## 收敛子模块深度文档
+
+- [anneal.md](math/anneal.md)
+- [bessel.md](math/bessel.md)
+- [bfgs.md](math/bfgs.md)
+- [biquad.md](math/biquad.md)
+- [cholesky.md](math/cholesky.md)
+- [cusum.md](math/cusum.md)
+- [decimal.md](math/decimal.md)
+- [decimal_fp.md](math/decimal_fp.md)
+- [dtw.md](math/dtw.md)
+- [ekf.md](math/ekf.md)
+- [fft.md](math/fft.md)
+- [fir.md](math/fir.md)
+- [ga.md](math/ga.md)
+- [gamma.md](math/gamma.md)
+- [hilbert.md](math/hilbert.md)
+- [hmm.md](math/hmm.md)
+- [holt.md](math/holt.md)
+- [iir.md](math/iir.md)
+- [kalman.md](math/kalman.md)
+- [lu.md](math/lu.md)
+- [markov.md](math/markov.md)
+- [nelder.md](math/nelder.md)
+- [newton.md](math/newton.md)
+- [ode.md](math/ode.md)
+- [particle.md](math/particle.md)
+- [pca.md](math/pca.md)
+- [pso.md](math/pso.md)
+- [qr.md](math/qr.md)
+- [quadrature.md](math/quadrature.md)
+- [savitzky.md](math/savitzky.md)
+- [simplex.md](math/simplex.md)
+- [spline.md](math/spline.md)
+- [svd.md](math/svd.md)
+- [wavelet.md](math/wavelet.md)

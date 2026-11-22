@@ -196,3 +196,24 @@ pub fn demoSseFanoutBroker() {
     * = id2;
 }
 ```
+
+---
+
+## 收敛子模块深度文档
+
+- [circuit.md](web/circuit.md)
+- [feed.md](web/feed.md)
+- [http2.md](web/http2.md)
+- [http3.md](web/http3.md)
+- [msgpack_rpc.md](web/msgpack_rpc.md)
+- [multipart.md](web/multipart.md)
+- [openapi.md](web/openapi.md)
+- [opml.md](web/opml.md)
+- [picohttp.md](web/picohttp.md)
+- [ratelimit.md](web/ratelimit.md)
+- [selector.md](web/selector.md)
+- [sitemap.md](web/sitemap.md)
+- [sse.md](web/sse.md)
+- [uritemplate.md](web/uritemplate.md)
+- [webhook.md](web/webhook.md)
+- [xpath.md](web/xpath.md)

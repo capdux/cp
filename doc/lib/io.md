@@ -98,3 +98,9 @@ pub fn demoPhaseAIo(): !void {
    - 底层 `Reader.read` 允许返回少于请求长度的字节数（返回 `0` 表示 EOF），循环聚合请使用 `copyStream` / `copyN` / `PipeReader.readToEnd`；使用 `BufferedWriter` 时在关闭流前必须调用 `flush()` 避免尾部缓冲数据丢失。
 4. **标准流与惰性文件引用（参考 `/data/dev/bun/docs/runtime/file-io.mdx`）**：
    - `Stdio` / `Console` 封装标准输入输出与错误流；面向文件偏移的 `FileReader` (`pread`) 与 `FileWriter` (`pwrite`) 支持定位读写且不影响内核共享文件偏移指针。
+
+---
+
+## 收敛子模块深度文档
+
+- [stream.md](io/stream.md)

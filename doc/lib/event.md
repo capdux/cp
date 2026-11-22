@@ -171,3 +171,9 @@ pub fn demoEventLoop() {
    - `Timer` 节点采用侵入式指针嵌入 `TimerHeap`，在定时器仍处于活跃态（未触发且未取消）期间，调用方不得移动或释放该 `Timer` 所在内存地址；提前销毁前须显式取消。
 4. **有界容量防洪泛**：
    - `EventLoop`（`MAX_LOOP_TIMERS` / `MAX_LOOP_TASKS`）、`DeferredTaskQueue`（`MAX_DEFERRED_TASKS`）与 `EventBus` 均为固定槽位零堆分配结构，满载时返回明确失败状态而非无限增长内存。
+
+---
+
+## 收敛子模块深度文档
+
+- [event_loop.md](event/event_loop.md)

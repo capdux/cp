@@ -336,3 +336,10 @@ pub fn demoLeb128() {
    - `LinearFifo` 采用位掩码取模实现无分支环形读写，适用于流式解码/编码与生产者-消费者单线程缓冲。
 4. **`Leb128` 截断与位宽溢出防护**：
    - `decodeUleb128` / `decodeSleb128` 对超过目标整数位宽的恶意超长续位序列或未闭合截断字节流返回 `null`，安全适配 WebAssembly 与 DWARF 二进制解析。
+
+---
+
+## 收敛子模块深度文档
+
+- [col_advanced.md](col/col_advanced.md)
+- [soa.md](col/soa.md)

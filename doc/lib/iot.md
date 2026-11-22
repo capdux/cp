@@ -30,3 +30,28 @@
 | 工业以太网与遥测 | `lib/iot/pim.cp` | RFC 7761 PIM-SM v2 | 组播路由协议线缆编解码 |
 | 工业以太网与遥测 | `lib/iot/sflow.cp` | sFlow v5 | 交换机/边缘流量采样遥测解析器 |
 | 工业以太网与遥测 | `lib/iot/vxlan.cp` | RFC 7348 VXLAN & VXLAN-GPE | 虚拟扩展局域网封装编解码 |
+
+---
+
+## 收敛子模块深度文档
+
+- [bfd.md](iot/bfd.md)
+- [can.md](iot/can.md)
+- [cdp.md](iot/cdp.md)
+- [dnp3.md](iot/dnp3.md)
+- [fit.md](iot/fit.md)
+- [ihex.md](iot/ihex.md)
+- [knx.md](iot/knx.md)
+- [lacp.md](iot/lacp.md)
+- [lldp.md](iot/lldp.md)
+- [llmnr.md](iot/llmnr.md)
+- [mdns.md](iot/mdns.md)
+- [modbus.md](iot/modbus.md)
+- [pim.md](iot/pim.md)
+- [s7.md](iot/s7.md)
+- [sflow.md](iot/sflow.md)
+- [srec.md](iot/srec.md)
+- [ssdp.md](iot/ssdp.md)
+- [stp.md](iot/stp.md)
+- [uf2.md](iot/uf2.md)
+- [vxlan.md](iot/vxlan.md)

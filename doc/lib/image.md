@@ -171,3 +171,23 @@ pub fn demoImagePipeline() {
 | `xcf.cp` | GIMP XCF 多图层图像解析 | `XCF_MAGIC`, `XcfBaseType`, `XcfCompression`, `XcfPrecision`, `XcfHeader`, `XcfLayerInfo`, `XcfPropIter`, `XcfPointerIter`, `isXcf`, `parseXcfHeader`, `parseXcfLayerHeader` |
 
 > **重叠参考归档说明**：`bmp_.cp`、`gif_.cp`、`png_.cp`、`exif_.cp`、`thumbhash_.cp`、`image_probe_.cp` 为与 Bun 权威实现功能重叠的对照参考副本（文件首行带 `// Reference Only:` 声明），不在 `lib/image/index.cp` 冲突导出。
+
+---
+
+## 收敛子模块深度文档
+
+- [avif.md](image/avif.md)
+- [barcode.md](image/barcode.md)
+- [dicom.md](image/dicom.md)
+- [exr.md](image/exr.md)
+- [heif.md](image/heif.md)
+- [ico.md](image/ico.md)
+- [jxl.md](image/jxl.md)
+- [pnm.md](image/pnm.md)
+- [psd.md](image/psd.md)
+- [qoi.md](image/qoi.md)
+- [qrcode.md](image/qrcode.md)
+- [svg.md](image/svg.md)
+- [tga.md](image/tga.md)
+- [tiff.md](image/tiff.md)
+- [xcf.md](image/xcf.md)

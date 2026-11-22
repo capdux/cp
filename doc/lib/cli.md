@@ -357,3 +357,54 @@ const n = formatScopedTestName(labels[0..], "should add", name_buf[0..])?;
 * = prune;
 * = n;
 ```
+
+12. **包安全漏洞审计引擎与报告格式化（`lib/cli/pm_audit.cp`，吸收自 `/data/dev/bun/src/cli/audit_command.cp` & `/data/dev/bun/docs/pm/cli/audit.mdx`）**：
+    - **严重性分级与阈值过滤（`--audit-level=<low|moderate|high|critical>`）**：
+      - `PmAuditSeverity.parse` 严格大小写无关解析 4 个等级，`parseOrDefault` 遵循上游宽容策略将未知级别归为 `Moderate`；`meetsThreshold` 按 `Low < Moderate < High < Critical` 过滤低危条目。
+    - **CVE/GHSA 忽略与生产依赖范围（`--ignore` / `--prod`）**：
+      - `PmAuditFilter.shouldInclude` 同时支持精确匹配公告 `id` 与公告 `url` 子串命中（可叠加多个 `--ignore CVE-...`）；
+      - `PmAuditRequestBuilder` 自动跳过非默认 Registry 包并累计 `skipped_non_default_count`，在 `prod_only = true` 时排除 `devDependencies`，并通过 `formatBulkAdvisoryJson` 零堆分配序列化 RFC 8259 转义后的 NPM Bulk Advisory 请求 JSON。
+    - **退出码契约与无环依赖链追踪**：
+      - 对齐 `/data/dev/bun/docs/pm/cli/audit.mdx` 规范：无论是否启用 `--json`，无漏洞返回退出码 `0`（摘要 `"No vulnerabilities found"`），存在任意漏洞返回退出码 `1` 并附带 `cap update` / `cap update --latest` 升级建议；
+      - `PmAuditDepGraph.findDependentChain` 以访问集守卫反向追踪引入漏洞包的依赖链，安全免疫循环依赖。
+
+### 包安全审计与 Bulk Advisory 请求构建示例（`lib/cli/pm_audit.cp`）
+
+```cp
+import {
+    PmAuditSeverity,
+    PmAuditFilter,
+    PmAuditRequestBuilder,
+    PmAuditAdvisory,
+    PmAuditReport,
+} from "cap:cli";
+
+// 1. 构建 NPM Bulk Advisory 请求体（仅生产依赖、自动跳过私有源）
+let req = PmAuditRequestBuilder.init(true);
+* = req.addPackage("lodash", "4.17.20", true, true)?;
+* = req.addPackage("vitest", "1.0.0", false, true)?;
+let json_buf: [256]u8 = [0; 256];
+const jn = req.formatBulkAdvisoryJson(json_buf[0..])?;
+// json_buf[0..jn] == "{\"lodash\":[\"4.17.20\"]}"
+
+// 2. 过滤与聚合审计报告
+let filter = PmAuditFilter.init();
+filter.min_level = PmAuditSeverity.High;
+* = filter.addIgnore("CVE-2022-25883")?;
+
+let report = PmAuditReport.init();
+* = report.addAdvisory(PmAuditAdvisory{
+    package_name: "lodash",
+    id: "GHSA-jf85-cpcp-j695",
+    severity: PmAuditSeverity.High,
+    title: "Prototype Pollution",
+    url: "https://github.com/advisories/GHSA-jf85-cpcp-j695",
+    vulnerable_versions: "<4.17.21",
+}, filter)?;
+
+let sum_buf: [128]u8 = [0; 128];
+const sn = report.formatSummaryLine(sum_buf[0..])?;
+// sum_buf[0..sn] == "1 vulnerability (1 high)", report.exitCode() == 1
+* = jn;
+* = sn;
+```

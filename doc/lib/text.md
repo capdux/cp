@@ -501,3 +501,36 @@ pub fn demoCodePatternMatch(src: string) {
 | `lib/text/smi.cp` | `lib/smi` | Daylight SMILES / OpenSMILES 线性化学分子记法解析器 |
 | `lib/text/lucene.cp` | `lib/lucene` | Apache Lucene CodecUtil 全文索引文件头解析器 |
 | `lib/text/igc.cp` | `lib/igc` | FAI IGC 纯文本飞行记录仪日志解析器 |
+
+---
+
+## 收敛子模块深度文档
+
+- [abc.md](text/abc.md)
+- [aho.md](text/aho.md)
+- [bm25.md](text/bm25.md)
+- [diff3.md](text/diff3.md)
+- [dot.md](text/dot.md)
+- [gedcom.md](text/gedcom.md)
+- [globset.md](text/globset.md)
+- [highlight.md](text/highlight.md)
+- [i18n.md](text/i18n.md)
+- [idna.md](text/idna.md)
+- [igc.md](text/igc.md)
+- [intl.md](text/intl.md)
+- [kmp_z_algo.md](text/kmp_z_algo.md)
+- [lucene.md](text/lucene.md)
+- [marc.md](text/marc.md)
+- [mermaid.md](text/mermaid.md)
+- [mobi.md](text/mobi.md)
+- [mustache.md](text/mustache.md)
+- [nfa_regex.md](text/nfa_regex.md)
+- [porter.md](text/porter.md)
+- [ris.md](text/ris.md)
+- [smi.md](text/smi.md)
+- [soundex.md](text/soundex.md)
+- [spell.md](text/spell.md)
+- [suffixarray.md](text/suffixarray.md)
+- [table.md](text/table.md)
+- [template.md](text/template.md)
+- [yenc.md](text/yenc.md)

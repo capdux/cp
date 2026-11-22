@@ -267,3 +267,17 @@ pub fn demoTailTraceSampler() {
     * = n; // 1 (decisions[0].keep == true, reason == TailSampleReason.kept_error)
 }
 ```
+
+---
+
+## 收敛子模块深度文档
+
+- [btf.md](obs/btf.md)
+- [cef.md](obs/cef.md)
+- [clf.md](obs/clf.md)
+- [eval.md](obs/eval.md)
+- [junit.md](obs/junit.md)
+- [leef.md](obs/leef.md)
+- [openmetrics.md](obs/openmetrics.md)
+- [sarif.md](obs/sarif.md)
+- [tap.md](obs/tap.md)

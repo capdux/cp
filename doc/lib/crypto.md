@@ -272,3 +272,34 @@ pub fn demoRfc6962Merkle() {
     }
 }
 ```
+
+---
+
+## 收敛子模块深度文档
+
+- [aes_gcm.md](crypto/aes_gcm.md)
+- [age.md](crypto/age.md)
+- [argon2.md](crypto/argon2.md)
+- [bech32.md](crypto/bech32.md)
+- [blake3.md](crypto/blake3.md)
+- [chacha20.md](crypto/chacha20.md)
+- [crc.md](crypto/crc.md)
+- [der.md](crypto/der.md)
+- [ed25519.md](crypto/ed25519.md)
+- [fnv.md](crypto/fnv.md)
+- [hkdf_kdf.md](crypto/hkdf_kdf.md)
+- [merkle.md](crypto/merkle.md)
+- [minhash.md](crypto/minhash.md)
+- [minisign.md](crypto/minisign.md)
+- [murmur3.md](crypto/murmur3.md)
+- [otp.md](crypto/otp.md)
+- [pgp.md](crypto/pgp.md)
+- [pkcs12.md](crypto/pkcs12.md)
+- [pkcs7.md](crypto/pkcs7.md)
+- [pkcs8.md](crypto/pkcs8.md)
+- [scrypt.md](crypto/scrypt.md)
+- [shamir.md](crypto/shamir.md)
+- [simhash.md](crypto/simhash.md)
+- [siphash.md](crypto/siphash.md)
+- [sshsig.md](crypto/sshsig.md)
+- [x25519.md](crypto/x25519.md)

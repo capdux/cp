@@ -86,3 +86,22 @@ pub fn demoAuth(alloc: std.mem.Allocator): !void {
     * = code;
 }
 ```
+
+---
+
+## 收敛子模块深度文档
+
+- [asn1.md](auth/asn1.md)
+- [crl.md](auth/crl.md)
+- [csr.md](auth/csr.md)
+- [eap.md](auth/eap.md)
+- [kerberos.md](auth/kerberos.md)
+- [ntlm.md](auth/ntlm.md)
+- [oauth.md](auth/oauth.md)
+- [ocsp.md](auth/ocsp.md)
+- [pem.md](auth/pem.md)
+- [rbac.md](auth/rbac.md)
+- [rego.md](auth/rego.md)
+- [tacacs.md](auth/tacacs.md)
+- [totp_hotp.md](auth/totp_hotp.md)
+- [x509.md](auth/x509.md)

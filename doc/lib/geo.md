@@ -101,3 +101,20 @@ pub fn demoGeo(): !void {
 | `lib/geo/geo_quadtree.cp` | 泛型四叉树 2D 空间索引 | `QuadTree`, `PointItem`, `Rect`, `QuadError` |
 
 > **重叠对照参考归档说明**：`lib/geo/geohash_.cp` 为与 `lib/geo/geohash.cp` 功能重叠的对照参考副本（文件首行带 `// Reference Only:` 声明），不在 `lib/geo/index.cp` 冲突导出。
+
+---
+
+## 收敛子模块深度文档
+
+- [ais.md](geo/ais.md)
+- [geo_quadtree.md](geo/geo_quadtree.md)
+- [geohash_3d.md](geo/geohash_3d.md)
+- [geojson.md](geo/geojson.md)
+- [geom2d.md](geo/geom2d.md)
+- [gpx.md](geo/gpx.md)
+- [kml.md](geo/kml.md)
+- [nmea.md](geo/nmea.md)
+- [olc.md](geo/olc.md)
+- [topojson.md](geo/topojson.md)
+- [wkb.md](geo/wkb.md)
+- [wkt.md](geo/wkt.md)

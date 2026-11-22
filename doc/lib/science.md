@@ -86,3 +86,26 @@ pub fn demoScience() {
     * = isValidInchiKey("BSYNRYMUTXBXSQ-UHFFFAOYSA-N");
 }
 ```
+
+---
+
+## 收敛子模块深度文档
+
+- [bed.md](science/bed.md)
+- [cif.md](science/cif.md)
+- [edf.md](science/edf.md)
+- [fasta.md](science/fasta.md)
+- [fastq.md](science/fastq.md)
+- [gcode.md](science/gcode.md)
+- [gff.md](science/gff.md)
+- [inchi.md](science/inchi.md)
+- [las.md](science/las.md)
+- [mol2.md](science/mol2.md)
+- [obj.md](science/obj.md)
+- [pdb.md](science/pdb.md)
+- [pid.md](science/pid.md)
+- [ply.md](science/ply.md)
+- [sam.md](science/sam.md)
+- [sdf.md](science/sdf.md)
+- [stl.md](science/stl.md)
+- [vcf.md](science/vcf.md)
