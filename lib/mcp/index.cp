@@ -351,3 +351,16 @@ export {
     formatQuotaErrorJson,
     McpRateQuotaEngine,
 } from "./rateQuota.cp";
+
+export {
+    MCP_RES_CACHE_MAX_ENTRIES,
+    MCP_RES_URI_MAX_LEN,
+    MCP_RES_ETAG_MAX_LEN,
+    MCP_RES_BODY_MAX_LEN,
+    ResCacheLookupKind,
+    ResCachePutStatus,
+    ResCacheEntry,
+    ResCacheLookupResult,
+    ResCacheStats,
+    McpResourceCache,
+} from "./resourceCache.cp";

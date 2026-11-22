@@ -1013,3 +1013,41 @@ pub fn demoMcpRateQuota() {
     * = formatQuotaErrorJson(d1, *err_s);
 }
 ```
+
+---
+
+## 二十四、 零堆分配 MCP 资源 URI 版本/ETag 缓存、订阅失效与字节预算 LRU 淘汰引擎 (`resourceCache.cp`)
+
+面向 MCP 资源高频读取与 `notifications/resources/updated` 订阅同步场景的 100% 纯 CP 零动态堆分配资源缓存引擎：
+
+- **常量与枚举**：
+  - `MCP_RES_CACHE_MAX_ENTRIES = 32`、`MCP_RES_URI_MAX_LEN = 96`、`MCP_RES_ETAG_MAX_LEN = 48`、`MCP_RES_BODY_MAX_LEN = 512`
+  - `ResCacheLookupKind`（`hit_fresh | hit_stale_revalidate | miss_not_found | miss_expired | miss_invalidated`）
+  - `ResCachePutStatus`（`inserted | updated | evicted_and_inserted | rejected_too_large`）
+- **数据模型**：
+  - `ResCacheEntry`（`uri()`, `etag()`, `body()`, `content_hash`, `fetched_at_ms`, `expires_at_ms`, `last_access_ms`, `version`, `pinned`, `invalidated`）
+  - `ResCacheLookupResult`（`kind`, `entry_index`, `etag_len`, `body_len`, `version`）
+  - `ResCacheStats`（`entry_count`, `used_bytes`, `max_bytes`, `hits`, `stale_hits`, `misses`, `evictions`, `invalidations`）
+- **核心引擎 `McpResourceCache`**：
+  - `init(max_bytes, default_ttl_ms, stale_while_revalidate_ms)` / `entryAt(idx)` / `stats()` / `clear(*_)`
+  - `put(*_, uri, etag, body, now_ms, ttl_override_ms, pinned): ResCachePutStatus`：计算 FNV-1a 内容哈希；超字节预算或满 32 槽时按 LRU 自动驱逐非 `pinned` 最久未访问条目；更新已存在 URI 递增 `version` 并清除 `invalidated`；若 `pinned` 占满预算则原子拒绝零破坏。
+  - `lookup(*_, uri, now_ms): ResCacheLookupResult`：区分新鲜命中、SWR 宽限期命中、已失效未命中、过期未命中与不存在，命中自动刷新 `last_access_ms`。
+  - `invalidateUri(*_, uri)` / `invalidatePrefix(*_, uri_prefix)`：精准或按目录前缀失效缓存。
+  - `revalidateNotModified(*_, uri, etag, now_ms): bool`：ETag 匹配时零拷贝延长 TTL 并恢复新鲜态。
+
+```cp
+import {
+    ResCacheLookupKind,
+    McpResourceCache,
+} from "cap:mcp";
+
+pub fn demoMcpResourceCache() {
+    let cache = McpResourceCache.init(4096, 30_000, 10_000);
+    * = cache.put("file:///docs/spec.md", "\"v1\"", "# Spec", 1000, 0, false);
+
+    const hit = cache.lookup("file:///docs/spec.md", 5000);
+    * = (hit.kind == ResCacheLookupKind.hit_fresh);
+    * = cache.revalidateNotModified("file:///docs/spec.md", "\"v1\"", 35_000);
+    * = cache.invalidatePrefix("file:///docs/");
+}
+```
