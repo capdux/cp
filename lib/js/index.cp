@@ -105,3 +105,15 @@ export {
     ImportTrimResult,
     evaluateImportStmt,
 } from "./importTrim.cp";
+
+export {
+    REPL_MAX_STMTS,
+    REPL_MAX_HOISTED_VARS,
+    ReplTransformError,
+    ReplStmtKind,
+    ReplWrapMode,
+    ReplStmtDesc,
+    ReplProgramInput,
+    ReplTransformPlan,
+    planReplTransform,
+} from "./replTransform.cp";

@@ -245,3 +245,24 @@ const res = evaluateImportStmt(stmt, ImportTrimPolicy.tsDefault());
 assert(res.decision == ImportStmtDecision.keep_with_bindings);
 assert(res.kept_named_count == 1 && res.removed_binding_count == 1);
 ```
+
+### 交互式 REPL AST 变换规划器 (`replTransform.cp`)
+
+吸收自 `/data/dev/bun/src/js_parser/ast/repl_transforms.cp`：
+
+- **导出符号**：`REPL_MAX_STMTS` (`32`)、`REPL_MAX_HOISTED_VARS` (`64`)、`ReplTransformError`、`ReplStmtKind`（`hoistsBinding`/`requiresAsync`）、`ReplWrapMode`（`skip`/`sync_iife`/`async_iife`）、`ReplStmtDesc`、`ReplProgramInput`、`ReplTransformPlan`（`hasHoistedVar`/`formatHoistedDecls`/`formatWrapperPrefix`/`formatWrapperSuffix`）、`planReplTransform`；
+- **核心 REPL 变换语义**：
+  1. **安全跳过**：空输入或包含顶层 `return`（模块模式）时返回 `ReplWrapMode.skip`；
+  2. **自动异步升级**：当包含顶层 `await` 或 `import` 语句（动态 `await import(...)`）时自动升级为 `async_iife`；
+  3. **跨行变量持久化提升**：将 `var`/`let`/`const`/`function`/`class`/`import` 绑定去重提升为顶层 `var a, b;` 挂载到 REPL 上下文全局对象，末条普通表达式标记 `captures_last_expr = true` 供 `{ value: expr }` 捕获。
+
+```cp
+import { ReplProgramInput, ReplStmtDesc, ReplStmtKind, ReplWrapMode, planReplTransform } from "cap:js";
+
+let prog = ReplProgramInput.init();
+* = prog.addStmt(ReplStmtDesc.decl(ReplStmtKind.const_decl, "x", true))?;
+* = prog.addStmt(ReplStmtDesc.expr(true))?; // top-level await expression
+const plan = planReplTransform(prog)?;
+assert(plan.mode == ReplWrapMode.async_iife);
+assert(plan.captures_last_expr && plan.hasHoistedVar("x"));
+```
