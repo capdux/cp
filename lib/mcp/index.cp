@@ -238,3 +238,26 @@ export {
     parseCancelledNotification,
     McpProgressHub,
 } from "./progress.cp";
+
+export {
+    MCP_ELICIT_MAX_SESSIONS,
+    MCP_ELICIT_MAX_FIELDS,
+    MCP_ELICIT_MAX_ENUM_VALS,
+    MCP_ELICIT_NAME_MAX_LEN,
+    MCP_ELICIT_MSG_MAX_LEN,
+    elicitValidateEmail,
+    elicitValidateUri,
+    elicitValidateDate,
+    ElicitFieldType,
+    ElicitStringFormat,
+    ElicitAction,
+    ElicitSessionState,
+    ElicitStatus,
+    ElicitFieldSpec,
+    ElicitFieldValue,
+    ElicitResponseOutcome,
+    ElicitHubStats,
+    ElicitationHub,
+    encodeElicitationRequest,
+    formatElicitationResponseSummary,
+} from "./elicitation.cp";

@@ -725,3 +725,56 @@ pub fn demoMcpProgressHub() {
     }
 }
 ```
+
+
+---
+
+## 十八、 零堆分配 MCP 2025-06-18 人机协同 Elicitation 交互审批与扁平 Schema 校验网关 (`elicitation.cp`)
+
+面向 MCP 2025-06-18 `elicitation/create` 人机交互确认与表单采集规范的 100% 纯 CP 零动态堆分配会话网关：
+
+- **常量与枚举**：
+  - `MCP_ELICIT_MAX_SESSIONS = 32`、`MCP_ELICIT_MAX_FIELDS = 8`、`MCP_ELICIT_MAX_ENUM_VALS = 8`、`MCP_ELICIT_NAME_MAX_LEN = 48`、`MCP_ELICIT_MSG_MAX_LEN = 160`
+  - `ElicitFieldType`（`string_val | number_val | integer_val | boolean_val` — 严格扁平原始类型，禁止嵌套对象）
+  - `ElicitStringFormat`（`none | email | uri | date`）
+  - `ElicitAction`（`accept | decline | cancel`）、`ElicitSessionState`（`pending | accepted | declined | cancelled | timed_out`）
+  - `ElicitStatus`（`ok | not_found | already_resolved | session_expired | capacity_full | duplicate_request_id | invalid_schema | missing_required_field | unknown_field | duplicate_field | type_mismatch | length_out_of_bounds | format_invalid | number_out_of_bounds | enum_mismatch`）
+- **格式校验与 JSON-RPC 2.0 编解码**：
+  - `elicitValidateEmail` / `elicitValidateUri` / `elicitValidateDate`（含闰年日期边界校验）
+  - `encodeElicitationRequest(request_id, message, fields, *out_buf): usize?`：零分配生成标准 MCP 2025-06-18 `elicitation/create` JSON-RPC 2.0 请求载荷（含 `requestedSchema` 与 `required` 数组）。
+  - `formatElicitationResponseSummary(action, field_count, *out_buf): usize?`。
+- **核心会话状态机 `ElicitationHub`**：
+  - `init(default_timeout_ms)` / `createRequest(*_, request_id, message, fields, timeout_ms, now_ms)`
+  - `respondAccept(*_, request_id, values, now_ms): ElicitResponseOutcome`：逐字段校验类型/必填/长度/格式/数值上下界/枚举白名单，校验失败保持 `pending` 并返回精确 `failed_field_index`；防重放拦截已终态响应。
+  - `respondDecline` / `respondCancel` / `reapExpired` / `purgeTerminal` / `getSessionState` / `stats`。
+
+```cp
+import {
+    ElicitStringFormat,
+    ElicitFieldSpec,
+    ElicitFieldValue,
+    ElicitationHub,
+    encodeElicitationRequest,
+} from "cap:mcp";
+
+pub fn demoMcpElicitation() {
+    let hub = ElicitationHub.init(30_000);
+    const envs: [2][]const u8 = ["staging", "prod"];
+    const schema: [2]ElicitFieldSpec = [
+        ElicitFieldSpec.enumField("env", true, envs[0..]),
+        ElicitFieldSpec.stringField("approver", true, 5, 64, ElicitStringFormat.email),
+    ];
+    * = hub.createRequest(101, "Approve deployment?", schema[0..], 0, 1_000);
+
+    const vals: [2]ElicitFieldValue = [
+        ElicitFieldValue{ name: "env", raw_value: "prod" },
+        ElicitFieldValue{ name: "approver", raw_value: "ops@cap.dev" },
+    ];
+    const out = hub.respondAccept(101, vals[0..], 2_000);
+    * = out.status; // ElicitStatus.ok
+
+    let json_buf: [512]u8 = [0; 512];
+    let json_s: []u8 = json_buf[0..];
+    * = encodeElicitationRequest(101, "Approve deployment?", schema[0..], *json_s);
+}
+```

@@ -58,3 +58,10 @@ export {
     PgDiagnosticField,
     PgDiagnosticFields,
 } from "./fieldMessage.cp";
+
+export {
+    PG_TAG_NOTIFICATION_RESPONSE,
+    PG_NOTIFY_DEFAULT_MAX_PAYLOAD,
+    PgNotificationError,
+    PgNotificationResponse,
+} from "./notificationResponse.cp";

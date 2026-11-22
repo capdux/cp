@@ -89,6 +89,25 @@ let fields = PgDiagnosticFields.init();
 // fields.sqlstateClass() == "23", fields.constraint() == "users_email_key"
 ```
 
+### `NotificationResponse`（`'A'`）LISTEN/NOTIFY 异步通知编解码（`notificationResponse.cp`）
+
+> 吸收自 `/data/dev/bun/src/sql/postgres/protocol/NotificationResponse.cp`（参考 `/data/dev/bun/docs/runtime/sql.mdx` PostgreSQL 二进制协议与连接管线最佳实践），零堆分配实现 PostgreSQL v3.0 `NotificationResponse` 报文（Tag `'A' = 0x41`）的零拷贝编解码与异常边界防护。
+
+- 核心导出：`PG_TAG_NOTIFICATION_RESPONSE`（`'A'`）、`PG_NOTIFY_DEFAULT_MAX_PAYLOAD`（`8000`）、`PgNotificationError`（`InvalidTag`/`InvalidLength`/`Truncated`/`MissingNulTerminator`/`EmbeddedNul`/`EmptyChannel`/`TrailingBytes`/`BufferTooSmall`）、`PgNotificationResponse`（`init`/`hasPayload`/`isChannel`/`isWithinDefaultPayloadLimit`/`encodedPayloadLen`/`encodedFrameLen`/`validate`/`encodePayload`/`encodeFrame`/`decodePayload`/`decodeFrame`/`eql`）；
+- **安全与实战最佳实践**：
+  - 解码切片直接零拷贝借用输入报文缓冲区，严格校验 `Int32` 大端长度、频道非空、双 NUL 终结符与零尾随字节；
+  - 编码前自动拦截空频道名与内嵌 `0x00` 字节（防止 C-string 协议截断注入），并可通过 `isWithinDefaultPayloadLimit()` 校验是否遵守 PostgreSQL 默认 8000 字节 `NOTIFY` 负载上限。
+
+```cp
+import { PgNotificationResponse } from "cap:pgwire";
+
+const note = PgNotificationResponse.init(4219, "orders_events", "{\"id\":99}");
+let frame: [128]u8 = [0; 128];
+const n = note.encodeFrame(frame[0..])?;
+const decoded = PgNotificationResponse.decodeFrame(frame[0..n])?;
+* = decoded.isChannel("orders_events"); // true
+```
+
 ---
 
 ## 4. 示例
