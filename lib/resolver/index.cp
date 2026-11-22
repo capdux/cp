@@ -81,3 +81,14 @@ export {
     formatNodeFallbackEntryPath,
     formatNodeFallbackPackageJsonPath,
 } from "./node_fallbacks";
+
+export {
+    PathPlatform,
+    ResolverPathError,
+    ResolverPathName,
+    NodeJSPathName,
+    PackageSpecifier,
+    isRelativeModuleSpecifier,
+    isBarePackageSpecifier,
+    stripNodeModulesPrefix,
+} from "./path_name";

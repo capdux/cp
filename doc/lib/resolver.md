@@ -150,3 +150,21 @@ pub fn demoResolver(): !void {
    - `RealpathResolver` 严格限制最大软链接跳转次数（`MAX_SYMLINK_DEPTH = 40`），遇环路立即返回 `ELOOP` 错误而非无限递归；`DirEntryCache` 通过 `DirInfo.isStale()` 与 `StatHash` 探测目录变更，兼顾高频解析性能与热更新一致性。
 4. **W3C SRI 多算法择强与恒定时间校验（`Integrity`）**：
    - 当完整性字符串包含多个算法摘要（如 `sha256-... sha512-...`）时，按 W3C SRI 规范自动选择最强支持算法进行校验，并采用恒定时间字节比对防止侧信道泄露。
+5. **无扩展名导入探测顺序与零拷贝路径拆解（`lib/resolver/path_name.cp`，吸收自 `/data/dev/bun/src/resolver/fs.cp` & `/data/dev/bun/docs/runtime/module-resolution.mdx`）**：
+   - **导出符号**：`PathPlatform`、`ResolverPathError`、`ResolverPathName`（`init`/`findExtname`/`extWithoutLeadingDot`/`dirOrDot`/`nonUniqueNameStringBase`/`formatValidIdentifier`）、`NodeJSPathName`、`PackageSpecifier`、`isRelativeModuleSpecifier`、`isBarePackageSpecifier`、`stripNodeModulesPrefix`（100% 零动态堆分配、零拷贝切片视图）；
+   - **Bun 模块扩展名探测基线**：无扩展名相对导入（如 `./hello`）按 `.tsx` -> `.jsx` -> `.ts` -> `.mjs` -> `.js` -> `.cjs` -> `.json` 顺序探测文件，再按同顺序探测目录下 `index.*`；若导入路径已显式携带扩展名，则仅精确匹配该扩展名；
+   - `PackageSpecifier.parse()` 严格区分裸包（含 `@scope/pkg/subpath`）、相对路径（`./`/`../`）、子路径导入（`#...`）与协议说明符（`node:`/`bun:`/`cap:`/`https:`），配合 `stripNodeModulesPrefix()` 可直接定位最深层 `node_modules` 包名。
+
+```cp
+import { ResolverPathName, PackageSpecifier, stripNodeModulesPrefix } from "cap:resolver";
+
+const pn = ResolverPathName.init("/app/components/Button/index.tsx");
+// pn.dir == "/app/components/Button", pn.base == "index", pn.ext == ".tsx", pn.nonUniqueNameStringBase() == "Button"
+const spec = PackageSpecifier.parse("@acme/ui/dist/button.js")?;
+// spec.scope == "@acme", spec.name == "ui", spec.full_name == "@acme/ui", spec.subpath == "dist/button.js"
+const rel = stripNodeModulesPrefix("/proj/node_modules/a/node_modules/@acme/ui/index.js");
+// rel == "@acme/ui/index.js"
+* = pn;
+* = spec;
+* = rel;
+```
