@@ -240,3 +240,18 @@ export {
     formatFilterOutputBlock,
     FilterRunGraph,
 } from "./filter_run.cp";
+
+export {
+    BUNX_CACHE_TTL_SECS,
+    BunxError,
+    BunxRuntimeChoice,
+    BunxPackageSpec,
+    BunxOptions,
+    formatBunxCreatePackageName,
+    parseBunxPackageSpec,
+    resolveBunxDefaultBinName,
+    extractBinBasename,
+    isBunxCacheStale,
+    formatBunxCacheDirName,
+    resolveBunxShebangRuntime,
+} from "./bunx.cp";

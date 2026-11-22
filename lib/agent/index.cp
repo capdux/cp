@@ -435,3 +435,15 @@ export {
     computeWilsonInterval95,
     AgentAbEvaluator,
 } from "./ab_evaluator.cp";
+
+export {
+    DURABLE_JOURNAL_MAX_STEPS,
+    DURABLE_RESULT_MAX_LEN,
+    DurableStepKind,
+    DurableStepOutcome,
+    DurableReplayAction,
+    DurableStepEntry,
+    DurableStepDecision,
+    DurableJournalStats,
+    DurableExecutionJournal,
+} from "./durable_journal.cp";

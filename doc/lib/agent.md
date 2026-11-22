@@ -2210,3 +2210,52 @@ fn abEvaluatorQuickStart() {
     }
 }
 ```
+
+---
+
+## 子模块：零分配 AI Agent 持久化执行日志与崩溃恢复防重放分叉引擎（`durable_journal.cp`）
+
+### 核心特性
+
+- **128 步零堆分配执行日志（`DurableExecutionJournal`）**：固定内联 128 步日志槽（`DURABLE_JOURNAL_MAX_STEPS = 128`）与 128 字节结果摘要缓冲（`DURABLE_RESULT_MAX_LEN = 128`），零动态堆分配，对标 Temporal / Restate / LangGraph Durable Execution。
+- **确定性崩溃重放防重复副作用**：崩溃恢复调用 `begin_replay()` 后，`next_step` 自动对已完结的 `succeeded` / `failed` 历史步返回 `replay_cached`，直接复用原结果而绝不重复扣款或重调外部工具；追平日志末尾后自动无缝切回 `execute_live`。
+- **严格非确定性分叉检测（`divergence_detected`）**：重放阶段逐一校验 `(kind, input_hash)`；若改版代码导致步骤类型或输入指纹偏离原日志，立即锁定游标返回 `divergence_detected` 并暴露 `expected_kind` / `expected_input_hash`。
+- **未完成 `pending` 步原地续跑**：若进程在某步提交前崩溃，重启重放到达该 `pending` 步且指纹一致时，原地切回 `execute_live` 复用原 `step_seq` 继续执行并固化。
+
+### 导出清单
+
+- **常量与枚举**：`DURABLE_JOURNAL_MAX_STEPS` (`128`)、`DURABLE_RESULT_MAX_LEN` (`128`)、`DurableStepKind`（`llm_completion | tool_call | human_approval | timer_sleep | subagent_spawn`）、`DurableStepOutcome`（`pending | succeeded | failed`）、`DurableReplayAction`（`execute_live | replay_cached | divergence_detected | journal_full`）
+- **数据模型**：`DurableStepEntry`（`resultSlice`）、`DurableStepDecision`、`DurableJournalStats`
+- **核心日志引擎**：`DurableExecutionJournal`（`init`, `begin_replay`, `next_step`, `complete_step`, `get_step`, `stats`）
+
+### QuickStart 示例
+
+```cp
+import {
+    DurableStepKind,
+    DurableReplayAction,
+    DurableExecutionJournal,
+} from "cap:agent";
+
+fn durableJournalQuickStart() {
+    let journal = DurableExecutionJournal.init(42);
+
+    // 1. 首次在线执行并固化步骤 0
+    const s0 = journal.next_step(DurableStepKind.tool_call, 0xABCD, 1000);
+    if (s0.action == DurableReplayAction.execute_live) {
+        * = journal.complete_step(s0.step_seq, true, "{\"order\":\"ok\"}");
+    }
+
+    // 2. 进程崩溃重启 -> 进入确定性重放
+    journal.begin_replay();
+    const r0 = journal.next_step(DurableStepKind.tool_call, 0xABCD, 2000);
+    if (r0.action == DurableReplayAction.replay_cached) {
+        if (entry := journal.get_step(r0.step_seq)) {
+            * = entry.resultSlice(); // "{\"order\":\"ok\"}"（不重复调用工具）
+        }
+    }
+    // 3. 追平末尾后自动进入 execute_live 继续执行步骤 1
+    const s1 = journal.next_step(DurableStepKind.llm_completion, 0x1234, 2010);
+    * = s1.action; // DurableReplayAction.execute_live
+}
+```

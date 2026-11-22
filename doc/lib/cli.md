@@ -528,3 +528,43 @@ const bn = formatFilterOutputBlock(g.nodes[core_main], "ok\n", false, box_buf[0.
 * = elided;
 * = bn;
 ```
+
+16. **`bunx` / `bun x` 包可执行文件解析、Shebang 运行时路由与 24h 缓存管理（`lib/cli/bunx.cp`，吸收自 `/data/dev/bun/src/cli/bunx_command.cp` & `/data/dev/bun/docs/pm/bunx.mdx`）**：
+    - **严格位置语义的参数解析（`BunxOptions.parse`）**：
+      - `--bun` / `-b`、`--package <pkg>` / `-p <pkg>`、`--no-install`、`--verbose`、`--silent` 等 `bunx` 标志必须出现在目标包/可执行文件**之前**；出现在目标名之后的所有参数（包括 `--bun`）原样透传给下游可执行文件，零拷贝切片通过 `passthroughSlice(argv)` 获取；
+      - 当包名与可执行文件名不一致时（如 `bunx -p @angular/cli ng` 或 `bunx --package=renovate renovate-config-validator`），自动校验必须同时提供目标可执行文件名。
+    - **模板包前缀与作用域说明符解析**：
+      - `formatBunxCreatePackageName` 完整对齐 `bun create` / `bunxAddCreatePrefix` 规则（`vite` -> `create-vite`、`@scope/app` -> `@scope/create-app`、`@scope@1.0` -> `@scope/create@1.0`、`@scope` -> `@scope/create`）；
+      - `parseBunxPackageSpec` 与 `resolveBunxDefaultBinName` 支持作用域包与 `@version` 标签拆解，并从 `package.json` 的 `"bin"` 路径提取基础文件名（`extractBinBasename`）。
+    - **Shebang 运行时探测与 24 小时临时缓存防护**：
+      - `resolveBunxShebangRuntime` 尊重脚本首行 `#!/usr/bin/env node` / `#!/usr/bin/env bun`（支持 `env -S` 标志），并在 `--bun`（`force_bun = true`）时强制切换至 Bun 运行时；
+      - `isBunxCacheStale` 按 `BUNX_CACHE_TTL_SECS = 86400`（24 小时）判定缓存过期；`formatBunxCacheDirName` 拒绝 `..` 路径穿越与控制字符，安全规范化作用域分隔符。
+
+### `bunx` 参数解析与 Shebang 运行时路由示例（`lib/cli/bunx.cp`）
+
+```cp
+import {
+    BunxOptions,
+    BunxRuntimeChoice,
+    formatBunxCreatePackageName,
+    parseBunxPackageSpec,
+    resolveBunxShebangRuntime,
+} from "cap:cli";
+
+const argv: [6]([]const u8) = ["bunx", "--bun", "-p", "@angular/cli@17", "ng", "version"];
+const opts = BunxOptions.parse(argv[0..], true)?;
+// opts.run_in_bun == true, opts.package_name == "@angular/cli@17", opts.binary_name == "ng"
+const pass = opts.passthroughSlice(argv[0..]); // ["version"]
+
+const spec = parseBunxPackageSpec(opts.package_name)?; // package_name="@angular/cli", version="17"
+const rt = resolveBunxShebangRuntime("#!/usr/bin/env node\nconsole.log(1);", opts.run_in_bun);
+// rt == BunxRuntimeChoice.Bun (--bun 覆盖 node shebang)
+
+let create_buf: [64]u8 = [0; 64];
+const cn = formatBunxCreatePackageName("@acme/app@2", create_buf[0..])?;
+// create_buf[0..cn] == "@acme/create-app@2"
+* = pass;
+* = spec;
+* = rt;
+* = cn;
+```
