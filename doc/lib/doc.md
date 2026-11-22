@@ -31,7 +31,11 @@
 ## 核心 API 速查
 
 ### 1. PDF 1.4–1.7 生成、对象/XRef/FlateDecode 解析与文本提取 (`pdfWriter.cp` / `pdfInspector.cp`)
-- **文档生成 (`pdfWriter.cp`)**：`PdfError`, `PdfFont`, `PageSize`, `PdfPage`, `PdfDocument`（支持 A4 / Letter / 自定义尺寸、4 种 Base14 字体、RGB 描边与填充、线段/矩形绘制、精确字节偏移 xref 表）。
+- **向后兼容生成器 (`pdfWriter.cp`)**：`PdfError`, `PdfFont`, `PageSize`（含 `a4` / `letter` / `a4Landscape` / `letterLandscape` / `custom`）, `PdfPage`, `PdfDocument`。
+- **生产级零堆外部切片排版与序列化引擎 (`pdfWriter.cp`)**：
+  - `PdfWriteError`、`PdfTextAlign`（`left | center | right`）、`PdfColorSpace`（`device_rgb | device_gray`）、`PdfRgb`、`PdfMargins`、`PdfPoint`、`PdfTableStyle`、`PdfImageSpec`、`PdfBookmarkSpec`、`PdfMetadataSpec`、`PdfPageSpec`
+  - `PdfPageCanvas`：多行自动换行（`drawWrappedText`）、页眉页脚与页码（`drawHeaderFooter`）、结构化表格渲染（`drawTable`）、矢量原语（`drawLine` / `drawRect` / `fillRect` / `fillStrokeRect` / `drawPolygon` / `drawRoundedRect` / 虚线 `setDashPattern`）与图像 XObject 绘制（`drawImageXObject`）
+  - `pdfWriterXrefWorkLen` & `writePdfDocument`：支持 `/Filter /FlateDecode` 内容流与图像流压缩（复用 `cap:pack` `deflate`）、RGB/Gray 8-bit `Image XObject`、`/Outlines` 书签链、ASCII + UTF-16BE BOM `/Info` 元数据与精确 10 位 `xref` 表，与 `pdfInspector.cp` 100% 双向闭环。
 - **轻量校验 (`pdfInspector.cp` 向后兼容)**：`PdfInfo`, `PdfInspector`（`extractVersion` / `isValidPdf` / `inspect`）。
 - **生产级 PDF 1.4–1.7 对象/XRef/流解压/页面树/文本提取引擎（零堆外部切片）**：
   - **词法与 XRef**：`PdfParseError`、`PdfTokenKind`、`PdfToken`、`PdfLexer`（支持 `%` 注释、嵌套 `(...)`、`<...>` 十六进制串、`/#XX` Name、`<<...>>`、`[...]`）、`PdfObjRef`、`PdfXrefEntry`、`PdfTrailerInfo`、`PdfXrefTable`（支持多段 subsection 与增量更新 `/Prev` 链最新优先覆盖、`locateObjectBody`）

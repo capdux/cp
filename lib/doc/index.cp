@@ -5,13 +5,27 @@
 // Note: GFM pipe-table reference (`markdown_table_.cp`) is archived for comparison with
 // authoritative `lib/md/table.cp` and intentionally excluded from barrel exports.
 
-// --- PDF 1.4 Writer & Structural/Metadata Inspector ---
+// --- PDF 1.4-1.7 Writer & Structural/Metadata/Text Inspector ---
 export {
     PdfError,
     PdfFont,
     PageSize,
     PdfPage,
     PdfDocument,
+    PdfWriteError,
+    PdfTextAlign,
+    PdfColorSpace,
+    PdfRgb,
+    PdfMargins,
+    PdfPoint,
+    PdfTableStyle,
+    PdfImageSpec,
+    PdfBookmarkSpec,
+    PdfMetadataSpec,
+    PdfPageSpec,
+    PdfPageCanvas,
+    pdfWriterXrefWorkLen,
+    writePdfDocument,
 } from "./pdfWriter.cp";
 
 export {
