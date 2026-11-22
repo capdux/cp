@@ -258,6 +258,7 @@ const disp = Display.parse("inline flex").?;
 | `lib/css/transition.cp` | `bun/src/css/properties/transition.cp` | `CssTransitionError`, `TransitionBehavior`, `TransitionPropertyKind`, `TransitionProperty`, `TransitionTime`, `TransitionEasingKind`, `TransitionEasing`, `CssTransition`, `TransitionList` |
 | `lib/css/ui.cp` | `bun/src/css/properties/ui.cp` | `UiColorScheme`, `Resize`, `UserSelect`, `CaretShape`, `Appearance`, `CursorKeyword` |
 | `lib/css/units.cp` | `bun/src/css/values/{angle,resolution}.cp` | `UnitAngleUnit`, `UnitAngle`, `UnitResolutionUnit`, `UnitResolution` |
+| `lib/css/dependencies.cp` | `bun/src/css/dependencies.cp` | `CssDependencyOptions`, `CssDependencyLocation`, `CssSourceRange`, `CssDependencyKind`, `CssDependency`, `formatDependencyPlaceholder`, `CssDependencyIter`（零分配 `@import` / `url(...)` 依赖提取、1-based 行列追踪、`supports(...)`/media 识别与确定性 16 字符占位符哈希） |
 
 ---
 

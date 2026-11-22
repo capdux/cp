@@ -236,3 +236,13 @@ pub const UnitAngleUnit = _units.AngleUnit;
 pub const UnitAngle = _units.Angle;
 pub const UnitResolutionUnit = _units.ResolutionUnit;
 pub const UnitResolution = _units.Resolution;
+
+export {
+    CssDependencyOptions,
+    CssDependencyLocation,
+    CssSourceRange,
+    CssDependencyKind,
+    CssDependency,
+    formatDependencyPlaceholder,
+    CssDependencyIter,
+} from "./dependencies.cp";
