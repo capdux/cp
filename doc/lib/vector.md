@@ -30,6 +30,7 @@
 | `lib/vector/eval_harness.cp` | `// Origin: Pure-CP Stdlib (AI Vector ANN Evaluation Harness: SIMD Ground-Truth, Recall@K & Latency Percentiles) \| Created: 2026-11-22` | ANN 向量索引离线评测与延迟分位数统计套件：原位堆排序 P50/P95/P99、原生 `@l2sq` SIMD 暴力 Ground-Truth、去重 Recall@K 与批量汇总 |
 | `lib/vector/quant_sq4.cp` | `// Origin: Pure-CP Stdlib (AI Vector Search 4-bit Asymmetric Scalar Quantization SQ4) \| Created: 2026-11-22` | 4-bit 非对称标量量化（SQ4）：`f32` 向量 8x 显存压缩、奇偶维 Nibble 打包、无临时解码缓冲 `@fma` 非对称 L2 距离与批量 Top-K 检索 |
 | `lib/vector/rabitq.cp` | `// Origin: Pure-CP Stdlib (AI Vector Search RaBitQ Unbiased 1-bit Binary Quantization & Estimator) \| Created: 2026-11-22` | SIGMOD 2024 RaBitQ 无偏 1-bit 随机正交二值量化（32x 压缩）：$O(D \log D)$ 归一化 FWHT、确定性符号翻转、精确几何修正元数据与无偏内积/L2 距离估算核 |
+| `lib/vector/proj_reduce.cp` | `// Origin: Pure-CP Stdlib (AI Embedding Dimensionality Reduction: Power-Iter PCA & JL Random Projection using @dot/@fma) \| Created: 2026-11-22` | 高维 Embedding 降维与随机投影核：均值中心化、无协方差矩阵幂迭代 Top-K 主成分求解、`@dot` 批量投影与 Achlioptas 稀疏 JL 随机投影 |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -736,5 +737,44 @@ pub fn demoRabitq(x_in: []const f32, q_in: []const f32) {
         const q_norm_sq: f32 = @dot(q[0..], q[0..]);
         * = rabitqEstimateL2Sq(q[0..], q_norm_sq, code[0..], m);
     }
+}
+```
+
+### 17. 高维 Embedding 降维与随机投影 (`proj_reduce.cp`)
+
+面向高维语义嵌入降维、去均值与保距稀疏投影的零堆分配算子，基于 `@dot`/`@fma` 8-lane SIMD 与 `slice.split` 实现：
+
+- **`computeMeanF32(data, n, dim, out_mean: *[]f32): bool`** / **`subtractMeanInPlaceF32(data: *[]f32, n, dim, mean): bool`**：按维计算均值与原位零均值中心化。
+- **`fitTopKPrincipalAxesF32(centered_data, n, dim, k, max_iters, seed, out_axes: *[]f32, out_eigenvals: *[]f32, scratch_vec: *[]f32): bool`**：零堆分配无协方差矩阵幂迭代（$w = X^T(X v)/n$）+ 两遍修正 Gram-Schmidt 正交消去，输出前 `k` 个单位正交主轴及降序样本方差。
+- **`projectEmbeddingsF32(data, n, in_dim, axes, out_dim, out_proj: *[]f32): bool`**：基于 `@dot` 8-lane SIMD 批量将 `[n, in_dim]` 投影至 `[n, out_dim]`。
+- **`jlRandomProjectF32(vec, in_dim, out_dim, seed, out_proj: *[]f32): bool`**：Achlioptas 稀疏 `{-1, 0, +1}`（2/3 稀疏度）确定性 Johnson-Lindenstrauss 随机投影，零矩阵存储且期望精确保距。
+
+```typescript
+import {
+    computeMeanF32,
+    subtractMeanInPlaceF32,
+    fitTopKPrincipalAxesF32,
+    projectEmbeddingsF32,
+    jlRandomProjectF32,
+} from "cap:vector";
+
+pub fn demoProjReduce(data_in: *[]f32, n: usize) {
+    let mean: [8]f32 = [0.0; 8];
+    let mean_s: []f32 = mean[0..];
+    * = computeMeanF32(data_in[0..], n, 8, mean_s);
+    * = subtractMeanInPlaceF32(data_in, n, 8, mean[0..]);
+
+    let axes: [16]f32 = [0.0; 16]; // k = 2, dim = 8
+    let evals: [2]f32 = [0.0; 2];
+    let scratch: [8]f32 = [0.0; 8];
+    let axes_s: []f32 = axes[0..];
+    let evals_s: []f32 = evals[0..];
+    let scratch_s: []f32 = scratch[0..];
+    * = fitTopKPrincipalAxesF32(data_in[0..], n, 8, 2, 40, 42, axes_s, evals_s, scratch_s);
+
+    let proj_one: [2]f32 = [0.0; 2];
+    let proj_s: []f32 = proj_one[0..];
+    * = projectEmbeddingsF32(data_in[0..8], 1, 8, axes[0..], 2, proj_s);
+    * = jlRandomProjectF32(data_in[0..8], 8, 2, 2026, proj_s);
 }
 ```
