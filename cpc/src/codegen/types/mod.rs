@@ -12,21 +12,6 @@ impl Codegen {
     pub fn unwrap_optional_type(ty: &Type) -> Type {
         match ty {
             Type::Optional(inner) => *inner.clone(),
-            Type::BorrowType {
-                inner,
-                is_mut,
-                lifetimes,
-            } => {
-                if let Type::Optional(opt_inner) = &**inner {
-                    Type::BorrowType {
-                        inner: opt_inner.clone(),
-                        is_mut: *is_mut,
-                        lifetimes: lifetimes.clone(),
-                    }
-                } else {
-                    ty.clone()
-                }
-            }
             _ => ty.clone(),
         }
     }

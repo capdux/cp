@@ -588,7 +588,16 @@ impl<'a> Parser<'a> {
                     )
                 ) && self.peek_next() != Some(&Token::LParen)
                 {
-                    let mut ty = self.parse_base_type()?;
+                    let inner_is_paren = self.peek() == Some(&Token::LParen);
+                    let inner = self.parse_base_type()?;
+                    let (mut ty, has_unparen_opt) = if !inner_is_paren {
+                        match inner {
+                            Type::Optional(opt_inner) => (*opt_inner, true),
+                            other => (other, false),
+                        }
+                    } else {
+                        (inner, false)
+                    };
                     let end = self.peek_span().end;
                     for _ in 0..depth {
                         ty = Type::BorrowType {
@@ -596,6 +605,9 @@ impl<'a> Parser<'a> {
                             is_mut: true,
                             lifetimes: vec![],
                         };
+                    }
+                    if has_unparen_opt {
+                        ty = Type::Optional(Box::new(ty));
                     }
                     return Ok(Expr::TypeVal {
                         span: Span {

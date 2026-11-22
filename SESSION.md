@@ -2126,3 +2126,16 @@
   > 已读取紧急编译器工单 **`task-bun-20261123-silent-drop-comptime-auto-dotted-err`**（复现文件 [repro_silent_drop_comptime_auto_err.cp](file:///data/dev/cp/temp/repro_silent_drop_comptime_auto_err.cp)），并已派发专职 **CPC Hotfix Engineer**（`0dbebbc3`）立即定位修复、`release` 发布并跑回归测试；验证通过后将第一时间 `resolve` 结单、同步 `SESSION.md` 并提交。
   >
   > 同时 Wave 15 Round 7 双轨并行任务（`192354e5` / `23060f99`）正常推进中。
+
+### 2026-11-23（下游工单全量补录：`task-bun-20261123-ptr-to-optional-lowering`）[ticket:task-bun-20261123-ptr-to-optional-lowering]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-23 02:35:37` | 状态：`resolved` | 结单：`2026-11-23T02:43:39`
+- **报错/需求摘要**：*(u8?) 被错误 lowering 为 ?*u8 而非 *?u8（在 fetch.cp 中曾导致 setHeaders(&headers, ...) 编译报错）
+- **结单与处理汇报**：已定位并修复：Parser (parser/types.rs, parser/primary.rs) 原先在解析指针/借用/切片类型时未区分 inner_is_paren，将 *(T?) 与 *T? 解析为同一 AST，且 Codegen (codegen/types/map_type.rs, mod.rs) 强制将 BorrowType(Optional(T)) 翻转为 ?*T。现已按括号语义精确区分：*(T?) -> *?T、*const (T?) -> *const ?T、*[N](T?) -> *[N]?T、[](T?) -> []?T，同时 100% 保持 *T? / (*T)? -> ?*T 与 *const T? -> ?*const T 兼容。已通过 bash scripts/sync_cpc.sh release 发布正式版，repro_ptr_opt.cp zig ast-check 与回归测试 cap/test/testHotfixPtrToOptional.cp 100% PASS。
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 02:35:38）[step:17878]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-ptr-to-optional-lowering)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取紧急编译器工单 **`task-bun-20261123-ptr-to-optional-lowering`**（复现文件 [repro_ptr_opt.cp](file:///data/dev/cp/temp/repro_ptr_opt.cp)，`*(u8?)` 被错误 lowering 为 `?*u8` 而非 `*?u8`），已派发专职 **CPC Hotfix Engineer**（`fcad9303`）立即排查修复、`release` 发布并跑全量回归测试；验证通过后将第一时间 `resolve` 结单、同步 `SESSION.md` 并提交。
+  >
+  > 同时 Wave 16 双轨并行任务（`b4ee5845` W16 R9 / `8090acc8` W16 R4）正常推进中。

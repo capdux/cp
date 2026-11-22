@@ -241,19 +241,7 @@ impl Codegen {
                         return "[*:0]const u8".to_string();
                     }
                     if let Type::Optional(opt_inner) = &**inner {
-                        let opt_zig = self.map_type(opt_inner);
-                        if self.is_explicit_ptr_type(opt_inner) {
-                            return format!("*const ?{}", opt_zig);
-                        }
-                        if opt_zig.starts_with("*const ") {
-                            return format!("?{}", opt_zig);
-                        }
-                        let clean_opt = if opt_zig.starts_with('*') {
-                            &opt_zig[1..]
-                        } else {
-                            &opt_zig
-                        };
-                        return format!("?*const {}", clean_opt);
+                        return format!("*const ?{}", self.map_type(opt_inner));
                     }
                     let inner_zig = self.map_type(inner);
                     if self.is_explicit_ptr_type(inner) {
@@ -287,24 +275,9 @@ impl Codegen {
                     if matches!(**inner, Type::CStr) {
                         return "[*:0]u8".to_string();
                     }
-                    if let Type::Optional(opt_inner) = &**inner {
-                        if let Type::Array(elem) = &**opt_inner {
-                            return format!("?[]{}", self.map_type(elem));
-                        }
-                        if let Type::String = &**opt_inner {
-                            return "?[]u8".to_string();
-                        }
-                    }
                 }
                 if let Type::Optional(opt_inner) = &**inner {
-                    let opt_inner_zig = self.map_type(opt_inner);
-                    if opt_inner_zig.starts_with('*') {
-                        if self.is_explicit_ptr_type(opt_inner) {
-                            return format!("*?{}", opt_inner_zig);
-                        }
-                        return format!("?{}", opt_inner_zig);
-                    }
-                    return format!("?*{}", opt_inner_zig);
+                    return format!("*?{}", self.map_type(opt_inner));
                 }
                 let inner_zig = self.map_type(inner);
                 let is_trait = if let Type::Ref(id) = &**inner {

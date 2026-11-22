@@ -543,8 +543,17 @@ impl<'a> Parser<'a> {
         }
         if self.peek() == Some(&Token::Const) {
             self.bump()?;
+            let inner_is_paren = self.peek() == Some(&Token::LParen);
             let inner = self.parse_base_type()?;
-            let ty = match inner {
+            let (inner, has_unparen_opt) = if !inner_is_paren {
+                match inner {
+                    Type::Optional(opt_inner) => (*opt_inner, true),
+                    other => (other, false),
+                }
+            } else {
+                (inner, false)
+            };
+            let mut ty = match inner {
                 Type::RawPtr {
                     inner: ptr_inner,
                     depth,
@@ -577,6 +586,9 @@ impl<'a> Parser<'a> {
                     lifetimes: vec![],
                 },
             };
+            if has_unparen_opt {
+                ty = Type::Optional(Box::new(ty));
+            }
             return self.parse_postfix_type_modifiers(ty);
         }
         if self.peek() == Some(&Token::Dyn) {
@@ -860,6 +872,14 @@ impl<'a> Parser<'a> {
                     return self.parse_postfix_type_modifiers(ty);
                 }
             }
+            let (inner, has_unparen_opt) = if !inner_is_paren {
+                match inner {
+                    Type::Optional(opt_inner) => (*opt_inner, true),
+                    other => (other, false),
+                }
+            } else {
+                (inner, false)
+            };
             let mut ty = if !ptr_qual.is_empty() {
                 Self::apply_ptr_qualifiers(inner, ptr_qual, !is_mut)
             } else {
@@ -871,6 +891,9 @@ impl<'a> Parser<'a> {
                     is_mut: if idx == 0 { is_mut } else { true },
                     lifetimes: if idx == 0 { lifetimes.clone() } else { vec![] },
                 };
+            }
+            if has_unparen_opt {
+                ty = Type::Optional(Box::new(ty));
             }
             return self.parse_postfix_type_modifiers(ty);
         }
@@ -927,12 +950,24 @@ impl<'a> Parser<'a> {
                     self.peeked2 = peeked2_checkpoint;
                 }
             }
+            let inner_is_paren = self.peek() == Some(&Token::LParen);
             let inner = self.parse_base_type()?;
-            let ty = Type::BorrowType {
+            let (inner, has_unparen_opt) = if !inner_is_paren {
+                match inner {
+                    Type::Optional(opt_inner) => (*opt_inner, true),
+                    other => (other, false),
+                }
+            } else {
+                (inner, false)
+            };
+            let mut ty = Type::BorrowType {
                 inner: Box::new(inner),
                 is_mut,
                 lifetimes,
             };
+            if has_unparen_opt {
+                ty = Type::Optional(Box::new(ty));
+            }
             return self.parse_postfix_type_modifiers(ty);
         }
         if self.peek() == Some(&Token::LBracket) {
@@ -945,15 +980,20 @@ impl<'a> Parser<'a> {
                 if self.peek() == Some(&Token::RBracket) {
                     self.bump()?;
                     let (qual, has_const) = self.parse_ptr_qualifiers()?;
+                    let elem_is_paren = self.peek() == Some(&Token::LParen);
                     let elem_ty = if self.peek() == Some(&Token::Bang) {
                         self.bump()?;
                         Type::Any
                     } else {
                         self.parse_base_type()?
                     };
-                    let (elem_ty, has_elem_opt) = match elem_ty {
-                        Type::Optional(inner) => (*inner, true),
-                        other => (other, false),
+                    let (elem_ty, has_elem_opt) = if !elem_is_paren {
+                        match elem_ty {
+                            Type::Optional(inner) => (*inner, true),
+                            other => (other, false),
+                        }
+                    } else {
+                        (elem_ty, false)
                     };
                     let elem_ty = Self::apply_ptr_qualifiers(elem_ty, qual, has_const);
                     let mut is_optional = false;
@@ -987,6 +1027,7 @@ impl<'a> Parser<'a> {
                         };
                         self.expect(Token::RBracket)?;
                         let (qual, has_const) = self.parse_ptr_qualifiers()?;
+                        let elem_is_paren = self.peek() == Some(&Token::LParen);
                         let elem_ty = self.parse_base_type()?;
                         let mut is_optional = false;
                         if self.peek() == Some(&Token::Question)
@@ -1002,9 +1043,13 @@ impl<'a> Parser<'a> {
                                 is_optional = true;
                             }
                         }
-                        let (elem_ty, has_elem_opt) = match elem_ty {
-                            Type::Optional(inner) => (*inner, true),
-                            other => (other, false),
+                        let (elem_ty, has_elem_opt) = if !elem_is_paren {
+                            match elem_ty {
+                                Type::Optional(inner) => (*inner, true),
+                                other => (other, false),
+                            }
+                        } else {
+                            (elem_ty, false)
                         };
                         let elem_ty = Self::apply_ptr_qualifiers(elem_ty, qual, has_const);
                         let mut ty = Type::SentinelPtr(Box::new(elem_ty), sentinel);
@@ -1015,10 +1060,15 @@ impl<'a> Parser<'a> {
                     } else if self.peek() == Some(&Token::RBracket) {
                         self.bump()?;
                         let (qual, has_const) = self.parse_ptr_qualifiers()?;
+                        let elem_is_paren = self.peek() == Some(&Token::LParen);
                         let elem_ty = self.parse_base_type()?;
-                        let (elem_ty, has_elem_opt) = match elem_ty {
-                            Type::Optional(inner) => (*inner, true),
-                            other => (other, false),
+                        let (elem_ty, has_elem_opt) = if !elem_is_paren {
+                            match elem_ty {
+                                Type::Optional(inner) => (*inner, true),
+                                other => (other, false),
+                            }
+                        } else {
+                            (elem_ty, false)
                         };
                         let elem_ty = Self::apply_ptr_qualifiers(elem_ty, qual, has_const);
                         let mut is_optional = false;
@@ -1051,6 +1101,7 @@ impl<'a> Parser<'a> {
                     };
                     self.expect(Token::RBracket)?;
                     let (qual, has_const) = self.parse_ptr_qualifiers()?;
+                    let elem_is_paren = self.peek() == Some(&Token::LParen);
                     let elem_ty = self.parse_base_type()?;
                     let mut is_optional = false;
                     if self.peek() == Some(&Token::Question)
@@ -1066,9 +1117,13 @@ impl<'a> Parser<'a> {
                             is_optional = true;
                         }
                     }
-                    let (elem_ty, has_elem_opt) = match elem_ty {
-                        Type::Optional(inner) => (*inner, true),
-                        other => (other, false),
+                    let (elem_ty, has_elem_opt) = if !elem_is_paren {
+                        match elem_ty {
+                            Type::Optional(inner) => (*inner, true),
+                            other => (other, false),
+                        }
+                    } else {
+                        (elem_ty, false)
                     };
                     let elem_ty = Self::apply_ptr_qualifiers(elem_ty, qual, has_const);
                     let mut ty = Type::SentinelPtr(Box::new(elem_ty), sentinel);
@@ -1221,6 +1276,7 @@ impl<'a> Parser<'a> {
                 } else {
                     false
                 };
+                let elem_is_paren = self.peek() == Some(&Token::LParen);
                 let elem_ty = self.parse_base_type()?;
                 let mut is_optional = false;
                 if self.peek() == Some(&Token::Question) && self.peek_next() == Some(&Token::Bang) {
@@ -1234,9 +1290,13 @@ impl<'a> Parser<'a> {
                         is_optional = true;
                     }
                 }
-                let (elem_ty, has_elem_opt) = match elem_ty {
-                    Type::Optional(inner) => (*inner, true),
-                    other => (other, false),
+                let (elem_ty, has_elem_opt) = if !elem_is_paren {
+                    match elem_ty {
+                        Type::Optional(inner) => (*inner, true),
+                        other => (other, false),
+                    }
+                } else {
+                    (elem_ty, false)
                 };
                 let s_val = if has_const {
                     format!("{}:const", sentinel)
@@ -1279,6 +1339,7 @@ impl<'a> Parser<'a> {
                                 | Token::Ident(_)
                                 | Token::LBracket
                                 | Token::LBrace
+                                | Token::LParen
                                 | Token::Star
                                 | Token::Ampersand
                                 | Token::TypeKw
@@ -1906,10 +1967,15 @@ impl<'a> Parser<'a> {
                 format!("{}{}!", "*".repeat(*depth), inner_str)
             }
             Type::BorrowType { inner, is_mut, .. } => {
-                if *is_mut {
-                    format!("*{}", Self::type_to_str(inner))
+                let inner_str = if matches!(inner.as_ref(), Type::Optional(_)) {
+                    format!("({})", Self::type_to_str(inner))
                 } else {
-                    format!("const {}", Self::type_to_str(inner))
+                    Self::type_to_str(inner)
+                };
+                if *is_mut {
+                    format!("*{}", inner_str)
+                } else {
+                    format!("const {}", inner_str)
                 }
             }
             Type::ManyRawPtr(inner) => format!("[*]{}", Self::type_to_str(inner)),
