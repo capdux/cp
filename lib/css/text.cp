@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/text.cp | Synced: 2026-11-21T17:10:30Z
+// Source: Absorbed from /data/dev/bun/src/css/properties/text.cp | Synced: 2026-11-22T04:57:17Z
 
 /// CSS Text 3/4 与 Text Decoration 解析错误集
 pub err CssTextError {

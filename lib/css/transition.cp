@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/transition.cp | Synced: 2026-11-21T17:10:30Z
+// Source: Absorbed from /data/dev/bun/src/css/properties/transition.cp | Synced: 2026-11-22T04:59:00Z
 
 /// CSS Transitions 1/2 解析与序列化错误集
 pub err CssTransitionError {

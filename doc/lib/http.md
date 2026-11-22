@@ -653,3 +653,34 @@ if (ev := disp.parseNext(wire_buf, &consumed)?) {
 - **HTTP/3 QPACK 静态表与字段段编解码（`h3/qpack.cp`）**：归并自 `lib/qpack/`（Bun `src/uws_sys/quic/Header.cp`），导出 `QPACK_IDX_*`、`QpackHeader`、`classifyHeader`、`encodePrefixedInt`、`decodePrefixedInt`、`buildHttp3RequestHeaders`、`encodeFieldSection`、`decodeFieldSection`。
 - **服务端 HTTP Byte Range 区间求值与 206/416 响应格式化（`byterange.cp`）**：归并自 `lib/byterange/`（Bun `src/runtime/server/RangeRequest.cp`），导出 `ByteRange`、`RangeStatus`、`parseRange`、`parseMultiRange`、`formatUnsatisfiableContentRange`，以及 `ByteRangeContentRange` / `formatByteContentRange` / `parseByteContentRange`（避开 `contentrange.cp` 原导出）。
 - **SSE 零堆分配参考实现（`sse_parser_.cp`）**：原 `lib/sse_parser/sse.cp`（Bun `src/http/HTTPRequestBody.cp`）与 `lib/http/sse.cp` 存在 `SseEvent`/`SseParser` 功能重叠，按参考归档规范保留为 `lib/http/sse_parser_.cp`（不从 `cap:http` 重复导出）。
+- **线程安全 HTTP 流缓冲区与背压控制（`stream_buffer.cp`，吸收自 `/data/dev/bun/src/http/ThreadSafeStreamBuffer.cp`）**：导出 `DEFAULT_STREAM_SHRINK_THRESHOLD`、`StreamBufferError`、`StreamDrainCallback`、`StreamBuffer`、`ThreadSafeStreamBuffer`。
+  - `StreamBuffer` 提供游标式零拷贝读切片（`slice()`）、`write()`/`writeByte()`/`wrote()`/`consume()`、自动头部空洞压缩（`compact()`）、超阈值释放收缩（`maybeShrink()`/`reset()`）及可选容量上限防护（`initBounded` 防资源耗尽返回 `err.BufferOverflow`）；
+  - `ThreadSafeStreamBuffer` 使用 `std.Thread.Mutex` 保护内部 `StreamBuffer`，支持与 Bun 对齐的 `acquire()`/`release()` 零拷贝锁区间访问，也提供细粒度线程安全方法（`write`/`read`/`size`/`isEmpty`/`isBackpressured`）与 **解锁后触发排空回调**（`reportDrain()`，彻底避免回调重入死锁）。
+
+```typescript
+import { ThreadSafeStreamBuffer, StreamDrainCallback } from "cap:http";
+
+fn onDrained(ctx: usize) {
+    * = ctx;
+}
+
+pub fn demoStreamBuffer(allocator: std.mem.Allocator): ! {
+    let ts_buf = ThreadSafeStreamBuffer.initBounded(allocator, 65536, 16384);
+    defer ts_buf.deinit();
+
+    ts_buf.setDrainCallback(StreamDrainCallback.init(onDrained, 1));
+    ts_buf.write("HTTP/1.1 200 OK\r\n\r\nhello")?;
+
+    let out: [64]u8 = [0; 64];
+    const n = ts_buf.read(out[0..]);
+    * = n;
+    * = ts_buf.reportDrain(); // 缓冲区为空时在解锁后安全触发回调
+}
+```
+
+### 上游 Bun HTTP 运维指标与错误处理最佳实践（吸收自 `/data/dev/bun/docs/runtime/http/{metrics,error-handling}.mdx`）
+
+1. **活跃连接与订阅指标监控**：
+   - 在高并发 HTTP / WebSocket 网关中，应持续观测活跃请求数（对应 Bun `server.pendingRequests`）、活跃 WebSocket 连接数（`server.pendingWebSockets`）以及按主题统计的订阅者数量（`server.subscriberCount(topic)`），结合 `ThreadSafeStreamBuffer.isBackpressured()` 实施流控与优雅降级。
+2. **开发期与生产期错误响应隔离**：
+   - 服务端应提供统一的错误处理回调（对应 Bun `error(err)` handler），在开发模式输出详细诊断信息，在生产环境返回脱敏的 5xx 响应并记录结构化错误日志；自定义错误回调返回响应时优先覆盖框架默认 500 错误页。

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/font_face.cp | Synced: 2026-11-21T17:04:34Z
+// Source: Absorbed from /data/dev/bun/src/css/rules/font_face.cp | Synced: 2026-11-22T04:58:39Z
 //! CSS `@font-face` `<urange>` Unicode codepoint range parser, wildcard `?` optimizer,
 //! membership/overlap/merge utilities, and canonical `U+...` serializer.
 

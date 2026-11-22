@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/values/angle.cp | Synced: 2026-11-21T17:10:30Z
+// Source: Absorbed from /data/dev/bun/src/css/values/angle.cp | Synced: 2026-11-22T05:00:41Z
 
 pub err Error {
     EmptyInput,

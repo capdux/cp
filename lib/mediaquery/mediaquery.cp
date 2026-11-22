@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/media_query.cp | Synced: 2026-11-22T01:29:57Z (Zero-Alloc CSS Media Queries Level 4 Parser & Evaluator)
+// Source: Absorbed from /data/dev/bun/src/css/media_query.cp | Synced: 2026-11-22T04:54:53Z (Zero-Alloc CSS Media Queries Level 4 Parser & Evaluator)
 
 const MAX_DEPTH: usize = 32;
 const FLOAT_EPS: f64 = 1.0e-9;

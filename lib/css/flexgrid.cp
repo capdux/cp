@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/flex.cp | Synced: 2026-11-21T17:05:36Z
+// Source: Absorbed from /data/dev/bun/src/css/properties/flex.cp | Synced: 2026-11-22T04:59:45Z
 
 /// CSS Flexbox / Box Alignment / Grid 布局属性解析错误集
 pub err CssLayoutError {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/rules.cp | Synced: 2026-11-21T23:51:49Z
+// Source: Absorbed from /data/dev/bun/src/css/rules/rules.cp | Synced: 2026-11-22T04:59:25Z
 // lib/css/engine/rules.cp
 // Modern CSS At-Rule AST, Evaluation & Range Lowering:
 // SupportsAst, MediaRangeQuery (Level 4 -> legacy), ContainerQuery, CascadeLayer/LayerManager, FontFaceRule, PropertyRule, ScopeRule

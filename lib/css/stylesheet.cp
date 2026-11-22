@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/rules.cp | Synced: 2026-11-21T23:51:49Z
+// Source: Absorbed from /data/dev/bun/src/css/rules/rules.cp | Synced: 2026-11-22T04:59:25Z
 // lib/css/stylesheet.cp
 // CSS Rules, Declarations, @media Queries, @keyframes, Nesting Flattener, Stylesheet AST, Printer & Minifier
 // Absorbed from Bun src/css/rules/{rules,style,media,keyframes,supports,layer,container,font_face,import,nesting}.cp & printer.cp

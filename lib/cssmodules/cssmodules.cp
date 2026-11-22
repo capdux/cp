@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/css_modules.cp | Synced: 2026-11-22T00:22:00Z (Zero-Alloc CSS Modules Naming Pattern, Hash & Composes Parser)
+// Source: Absorbed from /data/dev/bun/src/css/css_modules.cp | Synced: 2026-11-22T04:54:04Z (Zero-Alloc CSS Modules Naming Pattern, Hash & Composes Parser)
 
 const MAX_PATTERN_SEGMENTS: usize = 16;
 const B64_URL_TABLE: [64]u8 = [

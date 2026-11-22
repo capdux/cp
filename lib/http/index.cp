@@ -776,3 +776,12 @@ export {
     formatUnsatisfiableContentRange,
     parseContentRange as parseByteContentRange,
 } from "./byterange.cp";
+
+// --- Thread-Safe HTTP Stream Buffer & Backpressure ---
+export {
+    DEFAULT_STREAM_SHRINK_THRESHOLD,
+    StreamBufferError,
+    StreamDrainCallback,
+    StreamBuffer,
+    ThreadSafeStreamBuffer,
+} from "./stream_buffer.cp";

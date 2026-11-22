@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/csrf/csrf.cp | Synced: 2026-11-20T04:42:54Z
+// Source: Absorbed from /data/dev/bun/src/csrf/csrf.cp | Synced: 2026-11-22T04:33:13Z
 // lib/security/csrf.cp
 // CSRF Token Generation and Verification in pure CP
 // Uses CSPRNG nonces, HMAC-SHA256 signatures, and constant-time comparison
