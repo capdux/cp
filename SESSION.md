@@ -1571,3 +1571,16 @@
   > 继续工作
 - **完整回复与执行汇报**：
   > (正在执行/待本轮结束落盘)
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-ref-union-addr-of`）[ticket:task-bun-20261122-ref-union-addr-of]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 16:24:24` | 状态：`resolved` | 结单：`2026-11-22T16:31:42`
+- **报错/需求摘要**：含 []const u8 切片字段的 union(enum) 被视作 ref 类型后，调用传参 &u 会被 codegen 剥离 & 导致 Zig 报 expected *U found U
+- **结单与处理汇报**：Fixed in cpc/src/codegen/borrow.rs (is_zig_heap_ptr_type): ref_classes (stack-bound ref structs and unions containing slice/borrow fields) and union/generic classes are Zig value types, not heap pointers, so Expr::Borrow (&u) is no longer stripped. Released cpc (release) via scripts/sync_cpc.sh release. Verified repro_ref_union_addr_of.cp (cpc --lib + zig ast-check + zig test), new regression cap/test/test_ref_union_addr_of.cp (2/2 PASS), and existing union/ref tests (PASS).
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 16:25:49）[step:15264]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261122-ref-union-addr-of)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取工单 **`task-bun-20261122-ref-union-addr-of`**（来自 `bun_agy`，复现路径 [repro_ref_union_addr_of.cp](file:///data/dev/cp/temp/repro_ref_union_addr_of.cp)：含 `[]const u8` 切片字段的 `union(enum)` 被视作 ref 类型后，调用传参 `&u` 被 codegen 剥离 `&` 导致 Zig 报 `expected *U, found U`），并已立即启动独立热修子智能体 **`8640251e`**（`CPC Hotfix Engineer`）专职排查修复、发布 `sync_cpc.sh release`、补充回归测试并执行 `resolve` 结单。
+  >
+  > 原有 2 路常驻生态子智能体（Priority ① `11f7f1f4` + Priority ③ `e9122205`）继续并行运转不受影响。待热修完成回报后将立即验收提交并同步 `SESSION.md`。

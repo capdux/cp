@@ -926,13 +926,13 @@ impl Codegen {
                     || base_name == "BTreeSet"
                     || base_name == "HashMap"
                     || base_name == "HashSet"
-                    || self.ref_classes.contains(&cid.sym)
-                    || self.ref_classes.contains(resolved_sym)
-                    || self.ref_classes.contains(base_name)
                 {
                     return true;
                 }
-                if self.value_classes.contains(&cid.sym)
+                if self.ref_classes.contains(&cid.sym)
+                    || self.ref_classes.contains(resolved_sym)
+                    || self.ref_classes.contains(base_name)
+                    || self.value_classes.contains(&cid.sym)
                     || self.value_classes.contains(resolved_sym)
                     || self.value_classes.contains(base_name)
                 {
@@ -942,7 +942,9 @@ impl Codegen {
                     .get(&cid.sym)
                     .or_else(|| self.class_defs.get(resolved_sym))
                     .or_else(|| self.class_defs.get(base_name))
-                    .map_or(false, |c| !c.is_ref)
+                    .map_or(false, |c| {
+                        !c.is_ref && !c.is_union && c.generic_params.is_empty()
+                    })
             }
             _ => false,
         }
