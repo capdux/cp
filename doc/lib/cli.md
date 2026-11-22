@@ -568,3 +568,38 @@ const cn = formatBunxCreatePackageName("@acme/app@2", create_buf[0..])?;
 * = rt;
 * = cn;
 ```
+
+17. **Foreman 风格多脚本并行/顺序调度与流式行前缀引擎（`lib/cli/multi_run.cp`，吸收自 `/data/dev/bun/src/cli/multi_run.cp` & `/data/dev/bun/docs/snippets/cli/run.mdx`）**：
+    - **Foreman 6 色对齐前缀与流式行缓冲（`MultiRunLineBuffer` / `formatMultiRunPrefix`）**：
+      - 按 6 色 ANSI 循环调色板（`cyan`/`yellow`/`magenta`/`green`/`blue`/`red`）与 `max_label_len` 动态右补空格输出 `<label>   | <line>`；
+      - `feedChunk` 支持跨分片拼接半行数据并按 `\n` 逐行发射前缀，`flushRemaining` 在子进程退出时刷出末尾未换行数据并自动补齐 `\n`。
+    - **双层依赖级联（`MultiRunScheduler`：`GroupChain` vs `NextGroup`）**：
+      - 忠实还原 `bun run --parallel` / `--sequential` / `--no-exit-on-error` 语义：同组生命周期链（`pre -> main -> post`，`GroupChain`）中前置脚本失败时，即便开启 `--no-exit-on-error` 也必须跳过同组剩余步骤（`MultiRunStatus.Skipped`），但跨组顺序边（`NextGroup`）仍被迭代释放，确保后续独立脚本组继续运行。
+
+### Foreman 流式前缀与双层依赖级联示例（`lib/cli/multi_run.cp`）
+
+```cp
+import {
+    MultiRunEdgeKind,
+    MultiRunLineBuffer,
+    MultiRunScheduler,
+} from "cap:cli";
+
+let sched = MultiRunScheduler.init(true); // --no-exit-on-error
+const pre_a = sched.addTask("pkg-a:prebuild")?;
+const main_a = sched.addTask("pkg-a:build")?;
+const main_b = sched.addTask("pkg-b:build")?;
+sched.addEdge(pre_a, main_a, MultiRunEdgeKind.GroupChain)?;
+sched.addEdge(main_a, main_b, MultiRunEdgeKind.NextGroup)?;
+
+// pre_a 失败 -> main_a 自动标记 Skipped，同时释放 NextGroup 使 main_b 就绪！
+sched.markStarted(pre_a)?;
+sched.markExited(pre_a, 1, 20_000_000)?;
+
+let lb = MultiRunLineBuffer.init();
+let out: [256]u8 = [0; 256];
+const n1 = lb.feedChunk("hello\nwor", "pkg-b:build", sched.max_label_len, 2, false, out[0..])?;
+const n2 = lb.flushRemaining("pkg-b:build", sched.max_label_len, 2, false, out[n1..])?;
+* = n1;
+* = n2;
+```

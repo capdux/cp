@@ -255,3 +255,19 @@ export {
     formatBunxCacheDirName,
     resolveBunxShebangRuntime,
 } from "./bunx.cp";
+
+export {
+    MULTI_RUN_MAX_SCRIPTS,
+    MULTI_RUN_MAX_EDGES,
+    MULTI_RUN_LINE_BUF_CAP,
+    MULTI_RUN_PALETTE_LEN,
+    MultiRunError,
+    MultiRunEdgeKind,
+    MultiRunStatus,
+    MultiRunTask,
+    multiRunPaletteColor,
+    formatMultiRunPrefix,
+    formatMultiRunExitStatus,
+    MultiRunLineBuffer,
+    MultiRunScheduler,
+} from "./multi_run.cp";
