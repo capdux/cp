@@ -397,6 +397,24 @@ const oid0 = view.oidAt(0)?; // 23
 * = oid0;
 ```
 
+### `Execute`（`'E'`）扩展查询 Portal 执行与管线帧编解码（`executeFrame.cp`）
+
+> 吸收自 `/data/dev/bun/src/sql/postgres/protocol/Execute.cp`，零堆分配实现 PostgreSQL v3.0 Frontend `Execute`（Tag `'E' = 0x45`）报文编解码、游标分页 `max_rows` 校验以及单缓冲 `Execute+Sync` / `Execute+Flush` 管线组合。
+
+- 核心导出：`PG_TAG_EXECUTE`（`'E'`）、`PG_EXECUTE_MIN_FRAME_LEN`（`10`）、`PG_EXECUTE_UNLIMITED_ROWS`（`0`）、`PgExecuteFrameError`（`InvalidTag`/`InvalidLength`/`Truncated`/`TrailingBytes`/`MissingNulTerminator`/`EmbeddedNul`/`NegativeMaxRows`/`BufferTooSmall`）、`PgExecuteFrame`（`unnamed`/`unnamedAll`/`named`/`namedAll`/`isUnnamed`/`isUnlimited`/`validate`/`payloadLen`/`frameLen`/`encodePayload`/`encodeFrame`/`encodeExecuteSync`/`encodeExecuteFlush`/`decodePayload`/`decodeFrame`/`eql`）；
+- **实战最佳实践**：
+  - 常规扩展查询发送 `Execute` + `Sync`（`encodeExecuteSync`）单次 flush；流式游标分页拉取大结果集时设定 `max_rows > 0` 并配对 `encodeExecuteFlush`，收到 `PortalSuspended`（`'s'`）后继续下一次 `Execute`，直至收到 `CommandComplete`（`'C'`）。
+
+```cp
+import { PgExecuteFrame } from "cap:pgwire";
+
+let buf: [64]u8 = [0; 64];
+const req = PgExecuteFrame.named("cursor_orders", 500);
+const n = req.encodeExecuteFlush(buf[0..])?;
+const decoded = PgExecuteFrame.decodeFrame(buf[0..(n - 5)])?;
+* = decoded.max_rows; // 500
+```
+
 ---
 
 ## 4. 示例

@@ -214,3 +214,11 @@ export {
     PgParamDescView,
     PgParamDescEncoder,
 } from "./paramDesc.cp";
+
+export {
+    PG_TAG_EXECUTE,
+    PG_EXECUTE_MIN_FRAME_LEN,
+    PG_EXECUTE_UNLIMITED_ROWS,
+    PgExecuteFrameError,
+    PgExecuteFrame,
+} from "./executeFrame.cp";
