@@ -302,3 +302,17 @@ export {
     MySqlSigParam,
     MySqlStmtSignature,
 } from "./stmtSignature.cp";
+
+// --- 17. Binary Protocol Result Row Value Decoder (./binaryValue.cp) ---
+export {
+    MYSQL_BINARY_CHARSET,
+    MYSQL_BINARY_ROW_HEADER,
+    MySqlBinaryValueError,
+    MySqlBinaryDateTime,
+    MySqlBinaryTime,
+    MySqlBinaryValueKind,
+    MySqlDecodedBinaryValue,
+    mysqlBinaryRowNullBitmapLen,
+    isBinaryRowColNull,
+    decodeMySqlBinaryValue,
+} from "./binaryValue.cp";

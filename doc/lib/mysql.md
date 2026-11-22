@@ -213,3 +213,17 @@ const sig = MySqlStmtSignature.build("SELECT * FROM t WHERE id=? AND x=? AND s=?
 * = sig.nameSlice(); // "SELECT * FROM t WHERE id=? AND x=? AND s=?UMYSQL_TYPE_LONG.nullMYSQL_TYPE_VAR_STRING"
 * = sig.hash();
 ```
+
+12. **二进制结果集行单元格值解码器（`binaryValue.cp`，吸收自 `/data/dev/bun/src/sql_jsc/mysql/protocol/DecodeBinaryValue.cp`）**：
+    - `decodeMySqlBinaryValue(src, field_type, is_unsigned, is_binary, character_set)` 实现零动态堆分配的 `COM_STMT_EXECUTE` 二进制结果行解码，覆盖小端整型（`TINY`/`SHORT`/`YEAR`/`INT24`/`LONG`/`LONGLONG` 有/无符号）、IEEE-754 `FLOAT`/`DOUBLE`、二进制 `DATE`/`DATETIME`/`TIMESTAMP`（`MySqlBinaryDateTime.formatIso`）、`TIME`（`MySqlBinaryTime.formatHms`，支持负号与 `days * 24 + hours` 累计小时）、以及零拷贝 `lenenc-str` 文本/BLOB（自动按 `MYSQL_BINARY_CHARSET = 63` 区分 `Text` 与 `Bytes`）；
+    - 提供 `mysqlBinaryRowNullBitmapLen(col_count)` 与 `isBinaryRowColNull(bitmap, col_idx)` 精确处理 MySQL 二进制结果行 NULL 位图的 2-bit 协议偏移。
+
+```cp
+import { decodeMySqlBinaryValue, MYSQL_BINARY_CHARSET, MySqlBinaryValueKind } from "cap:mysql";
+
+const long_le: [4]u8 = [0x2A, 0x00, 0x00, 0x00];
+const v = decodeMySqlBinaryValue(long_le[0..], 0x03, false, false, 45)?;
+* = v.kind == MySqlBinaryValueKind.Int64; // true
+* = v.int_val; // 42
+* = MYSQL_BINARY_CHARSET; // 63
+```
