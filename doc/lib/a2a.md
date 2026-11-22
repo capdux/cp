@@ -30,8 +30,17 @@
 | `server.handleJsonRpc(raw_req)` | 路由 `agent/card`、`tasks/send`、`tasks/get`、`tasks/cancel` |
 | `encodeTaskEventSse(alloc, event)` | 编码 `TaskStatusUpdateEvent` / `TaskArtifactUpdateEvent` 为 SSE 帧 |
 | `parseSseTaskEvent(alloc, raw_sse)` | 解析 SSE 帧为 `ParsedSseTaskEvent`（需调用 `deinit(alloc)`） |
+| `AgentRouter.init(peers, heartbeat_timeout_ms)` | 初始化零堆分配固定池多智能体能力路由器（`router.cp`） |
+| `router.registerPeer(*_, id, name, skill_mask, priority, max_concurrency, now_ms)` | 注册智能体节点（拒绝空名、重复 ID 与池满） |
+| `router.heartbeat(*_, id, now_ms, health)` | 刷新节点心跳时间戳与健康状态（`Healthy`/`Degraded`/`Unhealthy`/`Draining`） |
+| `router.routeTask(*_, required_skills, now_ms, exclude_peer_id)` | 64 位技能位掩码 O(1) 匹配，按健康优先→最低负载率→最高优先级→最小 ID 路由并递增并发数 |
+| `router.releaseTask(*_, id)` | 任务完成后递减节点 `active_tasks` |
+| `router.listCapablePeers(required_skills, now_ms, out_ids)` | 列出满足技能且存活可路由的节点 ID |
+| `HandoffTrace.init(buf, max_hops)` | 初始化零堆分配交接链防环与跳数守卫（`recordHop` / `hasVisited` / `hops`） |
 
 ## 4. 示例
+
+### 4.1 A2A Server JSON-RPC 路由示例
 
 ```typescript
 import { AgentCard, AgentSkill, A2aServer, encodeAgentCardJson } from "cap:a2a";
@@ -43,4 +52,35 @@ defer srv.deinit();
 
 const resp = try srv.handleJsonRpc("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tasks/send\",\"params\":{\"id\":\"t-1\",\"message\":{\"text\":\"check diff\"}}}");
 defer alloc.free(resp);
+```
+
+### 4.2 零堆分配多智能体技能路由与 Handoff 防环示例 (`router.cp`)
+
+```typescript
+import { AgentPeer, AgentRouter, PeerHealth, HandoffTrace, HandoffStatus } from "cap:a2a";
+
+pub fn demoHandoffRouting() {
+    const SKILL_CODE: u64 = 1;
+    const SKILL_SQL: u64 = 2;
+
+    let pool: [4]AgentPeer = undefined;
+    let pool_slice: []AgentPeer = pool[0..];
+    let router = AgentRouter.init(pool_slice, 5000);
+
+    * = router.registerPeer(1, "planner", SKILL_CODE, 10, 4, 1000);
+    * = router.registerPeer(2, "sql-worker", SKILL_CODE | SKILL_SQL, 5, 4, 1000);
+
+    let trace_buf: [8]u32 = undefined;
+    let trace_slice: []u32 = trace_buf[0..];
+    let trace = HandoffTrace.init(trace_slice, 4);
+    * = trace.recordHop(1);
+
+    // 排除当前节点 1，路由至具备 SKILL_SQL 的最优健康节点
+    if (next_peer := router.routeTask(SKILL_SQL, 2000, 1)) {
+        if (trace.recordHop(next_peer) == HandoffStatus.Ok) {
+            // 执行跨 Agent 交接后释放并发槽位
+            * = router.releaseTask(next_peer);
+        }
+    }
+}
 ```

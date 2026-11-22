@@ -44,3 +44,11 @@ export {
     A2aTask,
     A2aServer,
 } from "./server.cp";
+
+export {
+    PeerHealth,
+    AgentPeer,
+    AgentRouter,
+    HandoffStatus,
+    HandoffTrace,
+} from "./router.cp";
