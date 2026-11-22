@@ -284,3 +284,59 @@ pub fn demoA2aTaskLifecycle() {
     * = mgr.prune_terminal_before(2000);
 }
 ```
+
+### 4.8 零堆分配 A2A AgentCard 能力发现注册表与健康加权路由器 (`card_registry.cp`)
+
+面向多智能体网络（Agent2Agent Mesh）的 100% 纯 CP 零动态堆分配 AgentCard 服务发现、技能/模态位图过滤、TTL 心跳过期摘除与健康加权路由择优内核（固定 64 槽位内联数组）：
+
+- **容量与能力位图常量**：
+  - `A2A_REGISTRY_MAX_CARDS = 64`、`A2A_CARD_NAME_MAX_LEN = 48`、`A2A_CARD_URL_MAX_LEN = 128`
+  - 模态位图：`A2A_MOD_TEXT`、`A2A_MOD_JSON`、`A2A_MOD_IMAGE`、`A2A_MOD_AUDIO`、`A2A_MOD_FILE`
+  - 协议特性位图：`A2A_FEAT_STREAMING`、`A2A_FEAT_PUSH_NOTIFY`、`A2A_FEAT_STATE_HISTORY`
+- **数据模型**：`A2aCardEntry`（`create`, `nameSlice`, `urlSlice`, `isValid`）、`A2aDiscoveryQuery`、`A2aDiscoveryHit`、`A2aCardRegistryStats`。
+- **核心引擎 `A2aCardRegistry`**：
+  - `init()` / `upsert_card(*_, entry): bool`（同 `agent_id` 原地刷新元数据与心跳，新 ID 分配空槽）
+  - `heartbeat(*_, agent_id, health_score_bps, avg_latency_ms, now_ms): bool` / `deregister(*_, agent_id): bool`
+  - `prune_expired(*_, now_ms): usize`（清理 `now_ms - last_heartbeat_ms > ttl_ms` 的失联节点）
+  - `discover_topk(*_, query, now_ms, k, out_hits): usize`（自动跳过过期节点，按位与精确校验技能/输入输出模态/特性与最低健康分/延迟上限，按 `health_score_bps / 10000.0 / (1.0 + avg_latency_ms / 200.0)` 降序返回 Top-K，平局按 `agent_id` 升序稳定决胜）
+  - `stats(): A2aCardRegistryStats`
+
+```cp
+import {
+    A2A_MOD_TEXT,
+    A2A_MOD_JSON,
+    A2A_FEAT_STREAMING,
+    A2aCardEntry,
+    A2aDiscoveryQuery,
+    A2aDiscoveryHit,
+    A2aCardRegistry,
+} from "cap:a2a";
+
+pub fn demoA2aCardRegistry() {
+    let reg = A2aCardRegistry.init();
+    const SKILL_SQL: u64 = 1 << 0;
+    const c1 = A2aCardEntry.create(
+        101, "sql-fast", "https://sql1.local/a2a",
+        SKILL_SQL, A2A_MOD_TEXT, A2A_MOD_JSON, A2A_FEAT_STREAMING,
+        9800, 80, 1_000, 10_000,
+    ) ?? return;
+    * = reg.upsert_card(c1);
+
+    let hits: [4]A2aDiscoveryHit = [A2aDiscoveryHit{}; 4];
+    let hits_s: []A2aDiscoveryHit = hits[0..];
+    const n = reg.discover_topk(
+        A2aDiscoveryQuery{
+            required_skills: SKILL_SQL,
+            required_in_mods: A2A_MOD_TEXT,
+            required_out_mods: A2A_MOD_JSON,
+            required_features: A2A_FEAT_STREAMING,
+            min_health_bps: 9000,
+            max_latency_ms: 200,
+        },
+        2_000,
+        4,
+        hits_s,
+    );
+    * = n; // 1 (agent_id == 101)
+}
+```

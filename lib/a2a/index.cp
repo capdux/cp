@@ -99,3 +99,22 @@ export {
     A2aLifecycleStats,
     A2aTaskLifecycleManager,
 } from "./task_lifecycle.cp";
+
+export {
+    A2A_REGISTRY_MAX_CARDS,
+    A2A_CARD_NAME_MAX_LEN,
+    A2A_CARD_URL_MAX_LEN,
+    A2A_MOD_TEXT,
+    A2A_MOD_JSON,
+    A2A_MOD_IMAGE,
+    A2A_MOD_AUDIO,
+    A2A_MOD_FILE,
+    A2A_FEAT_STREAMING,
+    A2A_FEAT_PUSH_NOTIFY,
+    A2A_FEAT_STATE_HISTORY,
+    A2aCardEntry,
+    A2aDiscoveryQuery,
+    A2aDiscoveryHit,
+    A2aCardRegistryStats,
+    A2aCardRegistry,
+} from "./card_registry.cp";

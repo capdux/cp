@@ -530,6 +530,27 @@ const hit = ff.matchesCodePoint(0x4E2D); // true
 * = hit;
 ```
 
+### CSS 声明块解析、去重压缩与序列化（`declaration_block.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/declaration.cp` 与 `/data/dev/bun/docs/bundler/css.mdx`，采用普通声明与 `!important` 声明双桶分离布局，零堆分配实现词法感知解析、`error_recovery` 容错恢复、级联安全去重压缩（`minifyDeduplicate`）、`propertyIdHash` 规则合并签名以及美化/压缩双模式序列化。
+
+- 核心导出：`CSS_DECL_MAX_NORMAL` (`64`)、`CSS_DECL_MAX_IMPORTANT` (`32`)、`CssDeclBlockError`、`CssDeclItem`（`eqlName`/`eql`）、`CssDeclParseOptions`、`CssDeclarationBlock`（`init`/`parse`/`push`/`isEmpty`/`len`/`normalSlice`/`importantSlice`/`getEffective`/`minifyDeduplicate`/`propertyIdHash`/`toCss`/`toCssBlock`）。
+
+```cp
+import { CssDeclarationBlock, CssDeclParseOptions } from "cap:css";
+
+let blk = CssDeclarationBlock.parse(
+    "{ color: red; background: url('a;b:c.png'); color: blue !important; }",
+    CssDeclParseOptions{},
+)?;
+const removed = blk.minifyDeduplicate(); // 移除被 !important 覆盖的 color: red (removed == 1)
+let out: [128]u8 = [0; 128];
+const n = blk.toCssBlock(out[0..], true)?;
+// out[0..n] == "{background:url('a;b:c.png');color:blue!important}"
+* = removed;
+* = n;
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项
@@ -552,3 +573,6 @@ const hit = ff.matchesCodePoint(0x4E2D); // true
 7. **`@import` 条件顺序、外链保留与打包占位符改写（参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
    - W3C CSS Cascading Level 5 规定 `@import` 必须位于样式表头部（仅允许出现在 `@charset` 与前置 `@layer` 语句之后、任何普通规则之前）；出现在普通规则之后的 `@import` 必须被忽略（`CssImportRuleList.ignored_after_rules` 可用于静态诊断告警）。
    - `@import` 条件严格遵循 `layer` → `supports(...)` → `<media-query-list>` 顺序；打包器在内联本地样式表时应通过 `isExternalUrl()` 跳过 `http://` / `https://` / `//` / `data:` 外链资源，并使用 `toCssWithPlaceholder()` 生成稳定的依赖占位符。
+8. **声明块 `!important` 双桶分离与自定义属性大小写规则（`declaration_block.cp`）**：
+   - 对齐 LightningCSS/Bun 的 `DeclarationBlock` 布局，普通声明与 `!important` 声明分别存储在独立数组中，序列化时先输出普通声明再输出 `!important` 声明；压缩模式下省略块内末条声明的分号与冒号后空格；
+   - 标准 CSS 属性名按 ASCII 大小写无关比对（`Color` 与 `color` 视为同一属性），而 `--` 开头的 CSS 自定义属性（CSS Variables）严格区分大小写（`--Theme` 与 `--theme` 互不覆盖）。

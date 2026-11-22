@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/findImportedFilesInCSSOrder.cp | Synced: 2026-11-22T09:15:00Z
+// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/findImportedFilesInCSSOrder.cp | Synced: 2026-11-22T09:59:12Z
 // Ported from Bun: /data/dev/bun/src/bundler/linker_context/findImportedFilesInCSSOrder.cp & /data/dev/bun/docs/bundler/css.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation CSS @import Dependency Ordering & Cascade Deduplication Engine:

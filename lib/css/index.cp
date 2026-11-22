@@ -446,3 +446,12 @@ export {
     CssFontFaceSource,
     CssFontFaceRule,
 } from "./font_face.cp";
+
+export {
+    CSS_DECL_MAX_NORMAL,
+    CSS_DECL_MAX_IMPORTANT,
+    CssDeclBlockError,
+    CssDeclItem,
+    CssDeclParseOptions,
+    CssDeclarationBlock,
+} from "./declaration_block.cp";
