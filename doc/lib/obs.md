@@ -107,3 +107,48 @@ pub fn demoTelemetryExport() {
     }
 }
 ```
+
+### 零堆分配结构化日志与 JSONL / Logfmt 双格式渲染示例 (`structured_log.cp`)
+
+面向生产服务与 AI Agent 链路可观测性的 100% 纯 CP 零堆分配结构化日志门面：
+
+- **导出符号**：`OBS_LOG_MAX_FIELDS`、`ObsLogLevel`（`Trace | Debug | Info | Warn | Error | Fatal`）、`ObsLogFieldKind`（`Str | Int | Float | Bool`）、`ObsLogField`、`ObsLogRecord`（含 `service`/`trace_id`/`span_id` 链路关联与最多 16 个结构化字段）、`ObsLogFormat`（`JsonLines | Logfmt`）、`ObsLoggerConfig`、`ObsLoggerStats`、`ObsStructuredLogger`（`init`, `shouldLog`, `formatRecord`, `emit`, `stats`, `resetStats`）。
+
+```cp
+import {
+    ObsLogLevel,
+    ObsLogField,
+    ObsLogRecord,
+    ObsLogFormat,
+    ObsLoggerConfig,
+    ObsStructuredLogger,
+} from "cap:obs";
+
+pub fn demoStructuredLogger() {
+    let logger = ObsStructuredLogger.init(ObsLoggerConfig{
+        min_level: ObsLogLevel.Info,
+        format: ObsLogFormat.JsonLines,
+        default_service: "cp-agent-worker",
+        append_newline: true,
+    });
+
+    let rec = ObsLogRecord{
+        timestamp_ms: 1732250000123,
+        level: ObsLogLevel.Info,
+        trace_id: "4bf92f3577b34da6a3ce929d0e0e4736",
+        span_id: "00f067aa0ba902b7",
+        message: "tool call completed",
+    };
+    * = rec.addField(ObsLogField.str("tool", "search_docs"));
+    * = rec.addField(ObsLogField.int("latency_ms", 42));
+    * = rec.addField(ObsLogField.float("score", 0.9625));
+    * = rec.addField(ObsLogField.boolean("cached", true));
+
+    let out_buf: [512]u8 = [0; 512];
+    let out_s: []u8 = out_buf[0..];
+    if (n := logger.emit(rec, out_s)) {
+        * = out_buf[0..n];
+    }
+    * = logger.stats();
+}
+```

@@ -148,3 +148,17 @@ export {
     OtlpSpanRecord,
     OtlpSpanBatch,
 } from "./telemetry_export.cp";
+
+// --- Zero-Alloc Structured Logger (JSONL / Logfmt + Trace Correlation) ---
+
+export {
+    OBS_LOG_MAX_FIELDS,
+    ObsLogLevel,
+    ObsLogFieldKind,
+    ObsLogField,
+    ObsLogRecord,
+    ObsLogFormat,
+    ObsLoggerConfig,
+    ObsLoggerStats,
+    ObsStructuredLogger,
+} from "./structured_log.cp";
