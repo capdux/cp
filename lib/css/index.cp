@@ -346,3 +346,9 @@ export {
     CssUrlKind,
     CssUrlValue,
 } from "./url_value.cp";
+
+export {
+    CssBoxRectError,
+    CssBoxRect,
+    CssSize2D,
+} from "./box_rect.cp";

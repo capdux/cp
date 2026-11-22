@@ -380,6 +380,21 @@ const n = u.toCssMinified(buf[0..])?;
 // buf[0..n] == "url(./assets/logo.svg)"
 ```
 
+### CSS 盒模型四边简写（`CssBoxRect`）与二维简写（`CssSize2D`）（`box_rect.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/values/rect.cp`，零堆分配实现 CSS 1/2/3/4 边盒模型简写（`margin` / `padding` / `inset` / `border-width`）与 1/2 值属性（`gap` / `overflow` / `border-spacing`）的函数安全解析（保护 `calc(...)`/`var(...)` 内部空白）与最短化折叠序列化。
+
+- 核心导出：`CssBoxRectError`、`CssBoxRect`（`all` / `symmetric` / `parse` / `minimalComponentCount` / `isUniform` / `isSymmetric` / `eql` / `toCss` / `toCssExpanded`）、`CssSize2D`（`both` / `parse` / `isUniform` / `eql` / `toCss`）。
+
+```typescript
+import { CssBoxRect } from "cap:css";
+
+const r = CssBoxRect.parse("10px 20px 10px 20px")?;
+let buf: [64]u8 = [0; 64];
+const n = r.toCss(buf[0..])?;
+// buf[0..n] == "10px 20px"
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项
