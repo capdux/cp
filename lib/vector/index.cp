@@ -195,3 +195,15 @@ export {
     ColbertLiteIndex,
     prune_low_norm_tokens,
 } from "./colbert_index.cp";
+
+export {
+    SIMHASH_MAX_DOCS,
+    SIMHASH_NUM_BANDS,
+    SimHashDedupConfig,
+    SimHashDocEntry,
+    SimHashMatch,
+    SimHashDedupStats,
+    hammingDistanceU64,
+    computeSimHash64,
+    SimHashDedupIndex,
+} from "./simhash_dedup.cp";

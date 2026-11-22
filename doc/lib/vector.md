@@ -35,6 +35,7 @@
 | `lib/vector/rag_store.cp` | `// Origin: Pure-CP Stdlib (Zero-Heap Local RAG Store, 64-Bit Tag Filter & SIMD Cosine Top-K Facade) \| Created: 2026-11-22` | 零堆分配一站式本地 RAG 存储与检索门面 (`InMemoryRagStore`)：L2 归一化写入、墓碑槽位复用、64 位标签位图预过滤与 Token 预算上下文拼装 |
 | `lib/vector/matryoshka.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc Matryoshka Multi-Resolution Two-Stage SIMD Vector Retrieval) \| Created: 2026-11-22` | 零堆分配 Matryoshka 嵌套维多分辨率粗召回 + 精排重打分管线：前 `k` 维截断归一化 (`truncateAndNormalizeF32`)、紧凑粗向量库构建 (`buildCoarseEmbeddingsF32`)、8-lane SIMD `@dot` / `@l2sq` 两阶段检索与计算压缩比统计 |
 | `lib/vector/colbert_index.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc ColBERT Multi-Vector Late-Interaction MaxSim Retrieval Index) \| Created: 2026-11-22` | 零堆分配 ColBERTv2 / ColPali 多向量 Token 级延迟交互（MaxSim）检索索引 (`ColbertLiteIndex`)：调用方扁平 Token 池、可选插入期 L2 归一化、8-lane SIMD `@dot` MaxSim 精确打分、确定性 Top-K 检索与 `@l2sq` 低范数噪声 Token 裁剪 (`prune_low_norm_tokens`) |
+| `lib/vector/simhash_dedup.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc 64-bit Charikar SimHash & 4-Band LSH Near-Duplicate RAG Dedup) \| Created: 2026-11-22` | 零堆分配 64-bit Charikar SimHash 指纹与鸽巢 4x16-bit LSH 分带近重复 RAG 文档去重索引 (`SimHashDedupIndex`)：硬件 `@popCount` 汉明距离、零堆大小写折叠分词 + 2-shingle 哈希、256 槽位内联去重与槽位复用 |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -1007,5 +1008,55 @@ pub fn demoColbertMaxSim() {
     const n = idx.search_topk(clean_q[0 .. kept * 4], kept, 2, hits_s);
     // n == 2, hits[0].doc_id == 101 (MaxSim = 2.0), hits[1].doc_id == 102 (MaxSim = 1.0)
     * = n;
+}
+```
+
+---
+
+## 零分配 64-bit Charikar SimHash 与 4-Band LSH 近重复 RAG 文档去重索引（`simhash_dedup.cp`）
+
+面向 RAG 语料摄取、AI Agent 网页抓取记忆与代码分块入库的 100% 纯 CP 零动态堆分配近重复文本检测与去重索引：
+
+- **常量与数据结构**：
+  - `SIMHASH_MAX_DOCS = 256`、`SIMHASH_NUM_BANDS = 4`
+  - `SimHashDedupConfig`：`{ max_hamming_dist: u32 = 3, min_token_len: usize = 2 }`，提供 `isValid(): bool`（校验 `max_hamming_dist <= 16 && min_token_len >= 1`）。
+  - `SimHashDocEntry`：`{ doc_id: u64, fingerprint: u64, active: bool }`
+  - `SimHashMatch`：`{ is_duplicate: bool, matched_doc_id: u64, hamming_dist: u32, fingerprint: u64, inserted: bool }`
+  - `SimHashDedupStats`：`{ active_docs, total_checked, duplicates_rejected, unique_accepted }`
+- **纯函数算子**：
+  - `hammingDistanceU64(a: u64, b: u64): u32`：调用硬件 `@popCount(a ^ b)` 计算精确 64 位汉明距离。
+  - `computeSimHash64(text: []const u8, min_token_len: usize): u64`：零堆 ASCII 大小写折叠分词 + 单词与 2-shingle FNV-1a/SplitMix64 哈希 + 64 维符号权重累加（空或无有效词元文本返回 `0`）。
+- **核心去重索引（`SimHashDedupIndex`）**：
+  - `SimHashDedupIndex.init(cfg): SimHashDedupIndex?`
+  - `query_nearest_fp(fp: u64): SimHashMatch`：`max_hamming_dist <= 3` 时启用鸽巢原理 4x16-bit 分带零漏报预筛；`> 3` 时自动全量 `@popCount` 精确扫描，平局按 `doc_id` 升序决胜。
+  - `query_nearest(text: []const u8): SimHashMatch`
+  - `check_and_insert(*_, doc_id: u64, text: []const u8): SimHashMatch`：近重复或活跃 `doc_id` 冲突时拒插并递增 `duplicates_rejected`；唯一文档入库并递增 `unique_accepted`；空文本与满 256 槽安全防护。
+  - `remove_doc(*_, doc_id: u64): bool`：逻辑摘除并释放槽位供后续文档复用。
+  - `stats(): SimHashDedupStats`
+
+### 64-bit SimHash 与 4-Band LSH 近重复去重 QuickStart 示例
+
+```cp
+import {
+    SimHashDedupConfig,
+    SimHashDedupIndex,
+} from "cap:vector";
+
+pub fn demoSimHashRagDedup() {
+    let idx = SimHashDedupIndex.init(SimHashDedupConfig{
+        max_hamming_dist: 3,
+        min_token_len: 2,
+    }) ?? return;
+
+    const doc1: []const u8 = "CP language compiles to native Zig state machines for million-scale AI agent concurrency.";
+    const doc1_dup: []const u8 = "CP Language compiles to native Zig state machines, for million-scale AI agent concurrency!";
+    const doc2: []const u8 = "Quantum entanglement enables teleportation of photonic qubits across optical fiber networks.";
+
+    const r1 = idx.check_and_insert(101, doc1);     // inserted == true, is_duplicate == false
+    const r2 = idx.check_and_insert(102, doc1_dup); // inserted == false, is_duplicate == true, matched_doc_id == 101
+    const r3 = idx.check_and_insert(103, doc2);     // inserted == true, is_duplicate == false
+    * = r1;
+    * = r2;
+    * = r3;
 }
 ```
