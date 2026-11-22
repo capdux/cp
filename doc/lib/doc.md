@@ -30,9 +30,14 @@
 
 ## 核心 API 速查
 
-### 1. PDF 1.4 (`pdfWriter.cp` / `pdfInspector.cp`)
-- 类型：`PdfError`, `PdfFont`, `PageSize`, `PdfPage`, `PdfDocument`, `PdfInfo`, `PdfInspector`
-- 支持 A4 / Letter / 自定义尺寸、4 种 Base14 字体、RGB 描边与填充、线段/矩形绘制、精确字节偏移 xref 表及结构验证。
+### 1. PDF 1.4–1.7 生成、对象/XRef/FlateDecode 解析与文本提取 (`pdfWriter.cp` / `pdfInspector.cp`)
+- **文档生成 (`pdfWriter.cp`)**：`PdfError`, `PdfFont`, `PageSize`, `PdfPage`, `PdfDocument`（支持 A4 / Letter / 自定义尺寸、4 种 Base14 字体、RGB 描边与填充、线段/矩形绘制、精确字节偏移 xref 表）。
+- **轻量校验 (`pdfInspector.cp` 向后兼容)**：`PdfInfo`, `PdfInspector`（`extractVersion` / `isValidPdf` / `inspect`）。
+- **生产级 PDF 1.4–1.7 对象/XRef/流解压/页面树/文本提取引擎（零堆外部切片）**：
+  - **词法与 XRef**：`PdfParseError`、`PdfTokenKind`、`PdfToken`、`PdfLexer`（支持 `%` 注释、嵌套 `(...)`、`<...>` 十六进制串、`/#XX` Name、`<<...>>`、`[...]`）、`PdfObjRef`、`PdfXrefEntry`、`PdfTrailerInfo`、`PdfXrefTable`（支持多段 subsection 与增量更新 `/Prev` 链最新优先覆盖、`locateObjectBody`）
+  - **字符串与流解码**：`decodePdfName`、`decodePdfStringToUtf8`（支持 `\n/\r/\t/八进制` 转义、十六进制串与 UTF-16BE BOM `FE FF` + 代理对转 UTF-8）、`PdfStreamFilter`、`PdfStreamView`、`extractStreamFromObject`（支持直接与间接 `/Length N 0 R`）、`decodePdfStream`（跨模块复用 `cap:pack` 的 `inflate` 实现 `/FlateDecode` 解压，兼支持原始流与 `/ASCIIHexDecode`）
+  - **元数据、页面树与大纲**：`PdfMetaSpan`、`PdfDocMetadata`、`extractPdfMetadata`（8 项 `/Info` + `/Encrypt` 检测）、`PdfRect`、`PdfPageInfo`、`collectPdfPages`（外部栈迭代遍历任意页数 `/Pages -> /Kids` + 属性继承）、`PdfOutlineItem`、`extractPdfOutlines`
+  - **正文文本提取 (`BT ... ET`)**：`extractTextFromContentStream`（支持 `Tj`、`TJ` 自动 kerning 补空格、`'`、`"`、`T*`、`Td`/`TD`/`Tm` 换行与词距启发式）与 `extractPageText`（兼容单流与 `/Contents [...]` 多流数组）
 
 ### 2. OOXML 办公套件 (`docx.cp` / `xlsx.cp` / `pptx.cp`)
 - **DOCX**：`DOCX_MAIN_CONTENT_TYPE`, `DocxCoreProps`, `DocxParagraph`, `DocxStats`, `DocxParagraphIter`, `isWordDocumentXml`, `isDocxContentTypes`, `parseDocxCoreProps`, `extractDocxParagraphText`, `extractDocxText`, `summarizeDocx`
