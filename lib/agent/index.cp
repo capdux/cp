@@ -112,3 +112,12 @@ export {
     BeamCandidate,
     BeamSearch,
 } from "./beam.cp";
+
+export {
+    AgentVote,
+    ConsensusStatus,
+    ConsensusResult,
+    resolveConsensus,
+    BordaResult,
+    resolveBordaRanking,
+} from "./consensus.cp";

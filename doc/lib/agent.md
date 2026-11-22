@@ -624,3 +624,55 @@ fn beamSearchDemo() {
     * = bs.stepLogProbs(step1[0..], 3, &cand_s);
 }
 ```
+
+---
+
+## 子模块：多智能体自洽投票与置信度加权共识仲裁器（`consensus.cp`）
+
+### 核心特性
+
+- **Self-Consistency 多数决与置信度加权仲裁（`resolveConsensus`）**：按 `answer_hash` 聚合多路 Agent 投票权重（支持 `agent_weight` 等权/专家加权或 `agent_weight * confidence` 置信度加权），精确计算胜出占比 `agreement_ratio` 与 Shannon 分歧熵 `disagreement_entropy`（比特）；全一致时熵精确为 `0.0`，平票返回 `TieUnresolved`，未达法定人数 `quorum_ratio` 返回 `NoQuorum`。
+- **加权 / 等权 Borda 排名投票汇总（`resolveBordaRanking`）**：支持多智能体对多候选方案排序打分，自动校验候选编号范围与同一投票者重复作弊，输出每位候选人的累计 Borda 总分、胜出者索引及平局标记 `is_tie`。
+- **纯 CP 零堆分配**：内置满精度 IEEE-754 纯 CP `log2` 实现，零外部依赖；对 `NaN`/Inf、越界置信度/权重/法定人数及缓冲不足全面防御返回 `null`。
+
+### 导出清单
+
+- **自洽投票与共识仲裁**：`AgentVote`、`ConsensusStatus`（`Reached | NoQuorum | TieUnresolved | Empty`）、`ConsensusResult`、`resolveConsensus`
+- **Borda 排名聚合**：`BordaResult`、`resolveBordaRanking`
+
+### 使用示例
+
+```typescript
+import {
+    AgentVote,
+    ConsensusStatus,
+    resolveConsensus,
+    resolveBordaRanking,
+} from "cap:agent";
+
+fn multiAgentConsensusDemo() {
+    const votes: [5]AgentVote = [
+        AgentVote{ answer_hash: 1001, answer_index: 0, confidence: 0.9, agent_weight: 1.0 },
+        AgentVote{ answer_hash: 1001, answer_index: 1, confidence: 0.85, agent_weight: 1.0 },
+        AgentVote{ answer_hash: 1001, answer_index: 2, confidence: 0.8, agent_weight: 1.0 },
+        AgentVote{ answer_hash: 2002, answer_index: 3, confidence: 0.7, agent_weight: 1.0 },
+        AgentVote{ answer_hash: 2002, answer_index: 4, confidence: 0.6, agent_weight: 1.0 },
+    ];
+    let h_arr: [5]u64 = undefined;
+    let w_arr: [5]f64 = undefined;
+    let idx_arr: [5]usize = undefined;
+    let h_s: []u64 = h_arr[0..];
+    let w_s: []f64 = w_arr[0..];
+    let idx_s: []usize = idx_arr[0..];
+
+    if (res := resolveConsensus(votes[0..], 0.5, true, h_s, w_s, idx_s)) {
+        * = res; // status == ConsensusStatus.Reached, winner_hash == 1001
+    }
+
+    const rankings: [6]usize = [0, 1, 2, 1, 0, 2];
+    const equal_w: []const f64 = [];
+    let pts_arr: [3]f64 = undefined;
+    let pts: []f64 = pts_arr[0..];
+    * = resolveBordaRanking(rankings[0..], 2, 3, equal_w, pts);
+}
+```

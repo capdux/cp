@@ -19,6 +19,7 @@
 - **`softplus` / `ssmSelectiveStep` / `ssmSelectiveScan` / `causalConv1dStep`** (`ssm.cp`)：零堆分配 Mamba / S6 选择性状态空间模型（Selective SSM）$O(N)$ 线性复杂度长上下文推理核与深度可分离因果一维卷积，支持 ZOH 离散化（$A = -\exp(a_{\log}) < 0$ 严格稳定）、分块预填充无缝续接自回归单步生成以及固定环形历史缓存因果卷积。
 - **`GGUF_MAGIC` / `GgufValueType` / `GgmlType` / `GgufHeader` / `GgufKvEntry` / `GgufTensorInfo` / `parseGgufHeader` / `parseGgufFile` / `ggufFindKv` / `ggufFindTensor` / `ggufTensorByteSize`** (`gguf.cp`)：零堆分配零拷贝 GGUF v2/v3 大模型权重文件解析器，直接面向 mmap 缓冲区解析头、元数据 KV（自动提取 `general.alignment`）、张量描述符与对齐 `data_offset`，并精确计算 F32/F16/BF16/Q4_0/Q8_0/K-Quants 张量物理字节数。
 - **`SafeDtype` / `SafeTensorDesc` / `SafeTensorsInfo` / `parseSafeTensors` / `safeTensorFind` / `safeTensorBytes`** (`safetensors.cp`)：零堆分配零拷贝 HuggingFace Safetensors 模型权重解析器，直接面向 mmap 缓冲区解析 `[8B LE header_len][JSON header][payload]`，跳过 `__metadata__`，严格校验 `shape * dtype.byteSize() == data_end - data_start` 与载荷边界，并返回只读零拷贝权重切片。
+- **FP16 / BF16 / FP8 E4M3FN 低精度浮点编解码核** (`fp16.cp`)：零堆分配位级精确 AI 浮点转换与批量小端解包/打包核，完整覆盖 IEEE-754 Binary16（含次正规与 RNE 舍入）、Brain Float16（RNE 防截断偏差）与 OCP/NVIDIA Hopper FP8 E4M3FN（偏置 7、饱和至 `±448.0`、张量级 `scale` 批量反量化）。
 
 ## 3. API 速查
 
@@ -74,6 +75,11 @@
 | `parseSafeTensors` | `(data, tensors_out): SafeTensorsInfo?` | 零堆分配单遍解析 Safetensors 头与张量描述符（跳过 `__metadata__`，严格校验长度与边界） |
 | `safeTensorFind` | `(tensors, name): usize?` | 按张量名检索 `SafeTensorDesc` 索引 |
 | `safeTensorBytes` | `(data, info, desc): ([]const u8)?` | 零拷贝返回张量原始权重字节切片（支持 0D 标量至 6D 张量） |
+| `f16BitsToF32` / `f32ToF16Bits` | `(bits: u16): f32` / `(val: f32): u16` | IEEE-754 FP16 精确位级互转（支持次正规、`±0`/`±Inf`/NaN 与 RNE 舍入） |
+| `decodeF16SliceLe` / `encodeF16SliceLe` | `(src_bytes, dst): bool` / `(src, dst_bytes): bool` | 批量小端 FP16 权重字节流与 `f32` 切片互转 |
+| `bf16BitsToF32` / `f32ToBf16Bits` | `(bits: u16): f32` / `(val: f32): u16` | Brain Float16 精确互转（带 Round-to-Nearest-Even 舍入防系统偏差） |
+| `decodeBf16SliceLe` / `encodeBf16SliceLe` | `(src_bytes, dst): bool` / `(src, dst_bytes): bool` | 批量小端 BF16 权重字节流与 `f32` 切片互转 |
+| `fp8E4m3ToF32` / `f32ToFp8E4m3` / `decodeFp8E4m3Slice` | `(bits: u8): f32` / `(val: f32): u8` / `(src_bytes, scale, dst): bool` | OCP FP8 E4M3FN 精确互转（最大 `448.0`、饱和钳位、`0x7F`/`0xFF`=NaN）与带缩放批量反量化 |
 
 ## 4. 示例
 
@@ -399,5 +405,27 @@ pub fn demoLoadSafeTensors(mmap_bytes: []const u8) {
             }
         }
     }
+}
+```
+
+### 低精度权重解包（FP16 / BF16 / FP8 E4M3FN）示例 (`fp16.cp`)
+
+```cp
+import {
+    decodeF16SliceLe,
+    decodeBf16SliceLe,
+    decodeFp8E4m3Slice,
+} from "cap:attention";
+
+pub fn demoDecodeLowPrecisionWeights(
+    f16_bytes: []const u8,
+    bf16_bytes: []const u8,
+    fp8_bytes: []const u8,
+) {
+    let out_buf: [64]f32 = [0.0; 64];
+    let out: []f32 = out_buf[0..];
+    * = decodeF16SliceLe(f16_bytes, out);
+    * = decodeBf16SliceLe(bf16_bytes, out);
+    * = decodeFp8E4m3Slice(fp8_bytes, 0.015625, out); // 张量级 scale 反量化
 }
 ```

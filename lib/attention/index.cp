@@ -90,3 +90,17 @@ export {
     safeTensorFind,
     safeTensorBytes,
 } from "./safetensors.cp";
+
+export {
+    f16BitsToF32,
+    f32ToF16Bits,
+    decodeF16SliceLe,
+    encodeF16SliceLe,
+    bf16BitsToF32,
+    f32ToBf16Bits,
+    decodeBf16SliceLe,
+    encodeBf16SliceLe,
+    fp8E4m3ToF32,
+    f32ToFp8E4m3,
+    decodeFp8E4m3Slice,
+} from "./fp16.cp";
