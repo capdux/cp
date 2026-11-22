@@ -302,3 +302,17 @@ export {
     SpscRingStats,
     SpscRingU64,
 } from "./spscRing.cp";
+
+// --- orSet (Zero-Alloc Observed-Remove Set CRDT & LWW-Register64) ---
+export {
+    ORSET_MAX_REPLICAS,
+    ORSET_MAX_ENTRIES,
+    ORSET_KEY_MAX_LEN,
+    OrSetDot,
+    OrSetOpStatus,
+    OrSetEntry,
+    OrSetStats,
+    OrSetCausalContext,
+    OrSetCrdt,
+    LwwRegister64,
+} from "./orSet.cp";

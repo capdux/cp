@@ -411,6 +411,47 @@ pub fn demoSpscRing() {
 }
 ```
 
+### 零堆分配 Observed-Remove Set (OR-Set) 与 LWW-Register64 CRDT 引擎 (`orSet.cp`)
+
+与 `crdtPn.cp`（GCounter / PNCounter / GSet / LWWRegister）互补的 100% 纯 CP 零动态堆分配无墓碑 **Add-Wins Observed-Remove Set (AWORSet)** 与 **LWW-Register64** 分布式无冲突复制数据结构：
+
+- **常量与模型**：
+  - `ORSET_MAX_REPLICAS = 16`、`ORSET_MAX_ENTRIES = 64`、`ORSET_KEY_MAX_LEN = 48`
+  - `OrSetDot`（`replica_id: u16`, `seq: u64`；提供 `equals`）
+  - `OrSetOpStatus`（`ok | capacity_full | key_too_long | unknown_replica | not_found`）
+  - `OrSetEntry`（`key()`, `dot`）、`OrSetStats`（`active_dots`, `distinct_elements`, `replicas_tracked`, `merge_count`）
+- **因果上下文 `OrSetCausalContext`**：
+  - 紧凑 16 副本向量时钟 `clocks: [ORSET_MAX_REPLICAS]u64`，提供 `init()`、`nextDot(*_, replica_id)`、`hasSeen(dot)`、`merge(*_, other)`、`dominates(other)`、`equals(other)`、`trackedReplicas()`。
+- **无墓碑 Add-Wins OR-Set `OrSetCrdt`**：
+  - `init(replica_id)` / `add(*_, elem): OrSetOpStatus` / `remove(*_, elem): bool`（仅删除本地已观测 dot，绝不误删并发新增的未观测 dot）
+  - `contains(elem)` / `distinctCount()` / `dotCount()` / `equalsElements(other)` / `stats()`
+  - `merge(*_, remote): OrSetOpStatus`：严格满足 CRDT 结合律、交换律、幂等律，满容时零副作用返回 `.capacity_full`。
+- **64 位最后写入胜出寄存器 `LwwRegister64`**：
+  - `init(replica_id)` / `initWithValue(replica_id, val, ts_ms)` / `set(*_, val, ts_ms)` / `get(): u64?` / `merge(*_, remote): bool`（基于 `(timestamp_ms, replica_id, value)` 确定性全序决胜与幂等合并）。
+
+```cp
+import { OrSetCrdt, LwwRegister64 } from "cap:ds";
+
+pub fn demoOrSetCrdt() {
+    let a = OrSetCrdt.init(0);
+    let b = OrSetCrdt.init(1);
+
+    * = a.add("task-1");
+    * = b.merge(a);
+
+    // 并发冲突：A 删除 "task-1"，B 并发重新添加 "task-1" -> Add-Wins 保留 B 的新 dot
+    * = a.remove("task-1");
+    * = b.add("task-1");
+    * = a.merge(b);
+    * = b.merge(a);
+    // a.contains("task-1") == true && b.contains("task-1") == true
+
+    let r1 = LwwRegister64.initWithValue(1, 100, 5000);
+    let r2 = LwwRegister64.initWithValue(2, 200, 5000);
+    * = r1.merge(r2); // 同时间戳下 replica_id=2 胜出，r1.get() == 200
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
