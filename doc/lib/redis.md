@@ -1,5 +1,7 @@
 # CP 标准库：Redis / Valkey 协议引擎与流水线命令构建手册 (`cap:redis`)
 
+> 参考来源：`/data/dev/bun/docs/runtime/redis.mdx`, `/data/dev/bun/src/valkey/valkey_protocol.cp` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:redis`（以及底层同源协议层 `lib/valkey/`）是 CP 语言官方内置的工业级 Redis / Valkey 序列化协议（RESP2 / RESP3）标准库，全面吸收自 Bun 原生 Valkey 协议实现（`/data/dev/bun/src/valkey/valkey_protocol.cp`）。
@@ -163,3 +165,16 @@ pub fn demoStreamReader() {
 | **Pub/Sub 推送与命令** | `SubscriptionPushMessage.map` | `SubscriptionPushMessage.fromString(kind)`（含 `Message` / `Subscribe` / `Unsubscribe` / `PMessage` / `PSubscribe` / `PUnsubscribe`）+ `encodePublish` / `encodeSubscribe` / `encodePSubscribe` |
 | **基础命令编码** | `ValkeyClient` 内部格式化 | `RedisCommand.encodeCommandN` / `encodeHello` / `encodeGet` / `encodeSet` / `encodeHSet` / `encodeIncr` / `encodeDecr` / `encodeTtl` / `encodeSelect` / `encodeQuit` 等 |
 | **流水线批量打包** | 自动 Auto-Pipelining 队列 | `RedisPipeline.init()` -> `pipe.hello(3)` / `pipe.set(...)` / `pipe.publish(...)` / `pipe.command(&args)` -> `pipe.bytes()` |
+
+---
+
+## 五、 上游 Bun 行为契约与边界注意事项
+
+1. **协议版本与服务端兼容性**：
+   - 对标 Bun `docs/runtime/redis.mdx`：协议引擎原生支持 **RESP2 与 RESP3**（Redis 7.2+ / Valkey 推荐通过 `RedisCommand.encodeHello(3, ...)` 或 `pipe.hello(3)` 握手切换至 RESP3），完整识别 `Map`、`Set`、`Double`、`Boolean`、`BigNumber`、`VerbatimString`、`Push`、`Attribute` 等 RESP3 扩展帧。
+2. **流水线（Pipelining）与粘包/半包边界**：
+   - `RedisPipeline` 将多条指令连续编码进单一缓冲区一次性发送，减少 RTT 往返；读取响应时须使用 `ValkeyReader.init(buf)` 循环调用 `reader.nextFrame()`，当网络缓冲区仅到达半帧时解析返回 `null`，调用方应保留未消费尾部字节并等待下次 `read` 续接。
+3. **Null 与空字符串的严格区分**：
+   - RESP2 的 `$-1\r\n` / `*-1\r\n` 与 RESP3 的 `_\r\n` 均设置 `frame.is_null == true`，而空 BulkString `$0\r\n\r\n` 设置 `frame.is_null == false` 且 `frame.str_val.len == 0`，业务层切勿仅凭长度判断键是否存在。
+4. **连接 URI 与适用范围**：
+   - 上游 Bun 客户端约定支持 `redis://`、`rediss://`、`redis+tls://`、`redis+unix://` 与 `REDIS_URL` / `VALKEY_URL`（默认 `redis://localhost:6379`）；`cap:redis` 聚焦于纯协议层零拷贝编解码与流水线构建，传输层可灵活对接 `cap:net`（TCP/TLS/Unix Socket），事务（`MULTI`/`EXEC`）与高级命令可通过 `RedisCommand.encodeCommandN` / `pipe.command` 直接构造。

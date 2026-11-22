@@ -1,5 +1,7 @@
 # CP 标准库：全栈工业级 HTTP/1.1 · HTTP/2 · HTTP/3 子系统使用手册 (`cap:http`)
 
+> 参考来源：`/data/dev/bun/docs/runtime/http/{server,routing,cookies,tls}.mdx`, `/data/dev/bun/src/http/`, `/data/dev/bun/src/picohttp/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计哲学
 
 `cap:http` 是 CP 语言官方内置的**全栈工业级 HTTP 协议子系统**，完整吸收自 Bun（`/data/dev/bun/src/http/`、`/data/dev/bun/src/http_types/`、`/data/dev/bun/src/picohttp/` 与 `/data/dev/bun/src/runtime/webcore/`），以 100% 纯现代 CP 语法重构，兼顾 **零拷贝（Zero-Copy）协议解析、零堆分配栈内缓冲（Small-Buffer Optimization）、确定性资源管理（`defer`）与多协议栈演进（HTTP/1.1 → H2/HPACK → H3/QUIC）**。
@@ -625,3 +627,8 @@ pub fn demoWebPrimitives(): !void {
    - `HTTPClient.formatRequest(&buf)`、`ProxyTunnel.formatConnectRequest(&buf)`、`CookieMap.formatSetCookie(entry, &buf)`、`FrameHeader.encode(&buf)`、`HpackCodec.encodeHeader(buf, ...)` 均无需分配器，天然适配百万并发 Agent 场景。
 4. **敏感头部禁止索引（HPACK 安全防线）**：
    - 在通过 `HpackCodec.encodeHeader` 编码 `authorization`、`cookie` 等凭据头部时，应将 `never_index` 置为 `true`（生成 `0x10` Never-Indexed 帧），防止代理与中间节点缓存敏感字段。
+5. **上游 Bun HTTP 路由优先级与服务端边界契约**：
+   - 路由匹配遵循自上而下的特异性顺序（参考 `/data/dev/bun/docs/runtime/http/routing.mdx`）：精确路径（`/users/all`）> 参数路径（`/users/:id`）> 前缀通配（`/users/*`）> 全局兜底（`/*` / `fetch`）。
+   - 端口与主机默认约定（参考 `/data/dev/bun/docs/runtime/http/server.mdx`）：未显式指定 `hostname` 时默认监听 `"0.0.0.0"`，未匹配任何路由时回落至 `fetch` 处理器或返回 `404`。
+   - `CookieMap` 遵循 RFC 6265：`CookieMap.parse(header)` 零分配解析请求 `Cookie` 头部（64 槽内联），`CookieMap.formatSetCookie(entry, &buf)` 支持 `Path`、`Domain`、`Max-Age`、`HttpOnly`、`Secure` 与 `SameSite` 属性序列化。
+   - **Chunked 传输与连接池复用**：HTTP/1.1 Keep-Alive 连接复用前须确保上一响应体（含分块终止符 `0\r\n\r\n`）已完整消费；HTTP/2 客户端流严格使用奇数流 ID（1, 3, 5…），收到 `GOAWAY` 后停止在现有会话上新建流。

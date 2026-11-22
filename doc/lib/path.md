@@ -1,6 +1,6 @@
 # `cap:path` — 跨平台工业级路径解析与缓冲区池标准库
 
-> **上游溯源**: `/data/dev/bun/src/paths/` (`paths.cp`, `Path.cp`, `resolve_path.cp`, `EnvPath.cp`, `path_buffer_pool.cp`)  
+> 参考来源：`/data/dev/bun/src/paths/paths.cp`, `/data/dev/bun/docs/guides/util/file-url-to-path.mdx`, `/data/dev/bun/docs/guides/util/path-to-file-url.mdx` | 吸收日期：2026-11-22
 > **模块路径**: `lib/path/`  
 > **导入协议**: `import { Path, PosixPath, WindowsPath, ParsedPath, EnvPath, PathBufferPool } from "cap:path";`
 
@@ -122,3 +122,8 @@ fn demoParseFormat() {
 2. **根目录越界防护**：绝对路径中的上级跳转不会越过根目录，例如 `PosixPath.normalize("/../../a", buf)` 归约为 `"/a"`，`WindowsPath.normalize("\\\\server\\share\\..\\..\\a", buf)` 归约为 `"\\\\server\\share\\a"`。
 3. **相对路径锚点**：`relativePosix(".", "a/b", buf)` 返回 `"a/b"`，`relativePosix("a/b", ".", buf)` 返回 `"../.."`；当一方为绝对路径而另一方为相对路径时，相对路径自动锚定至根路径后再计算共同前缀。
 4. **Windows 跨盘符 `relative`**：当 `from` 与 `to` 位于不同驱动器卷或不同 UNC 共享（如 `C:\foo` 与 `D:\bar`）时，直接返回规范化后的目标绝对路径 `"D:\\bar"`。
+5. **上游 Bun 缓冲区大小与跨平台复用约定**：
+   - 继承自 `/data/dev/bun/src/paths/paths.cp`：`MAX_PATH_BYTES` 为 `4096` 字节（`PathBuffer`），高频路径拼接/规范化场景推荐使用 `PathBufferPool` 复用预分配槽位，避免在热循环中反复分配大栈帧或堆内存。
+   - `PosixPath` 与 `WindowsPath` 在任意宿主 OS 上行为完全确定，适用于构建工具、打包器（如解析 `tsconfig` 路径映射与跨平台产物路径）与 `file://` URL 双向转换辅助。
+6. **`formatParsedPath` 字段优先级**：
+   - 遵循 Node.js / Bun 规范：若同时提供 `dir` 与 `root`，优先使用 `dir`；若同时提供 `base` 与 `name`/`ext`，优先使用 `base` 忽略 `name`/`ext`；当 `ext` 不带前导 `.` 时按原样拼接。

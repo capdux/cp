@@ -1,5 +1,7 @@
 # CP 标准库：WHATWG URL 解析、查询参数与百分号编码手册 (`cap:url`)
 
+> 参考来源：`/data/dev/bun/src/url/url.cp`, `/data/dev/bun/docs/guides/util/file-url-to-path.mdx`, `/data/dev/bun/docs/guides/util/path-to-file-url.mdx` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:url` 是 CP 语言官方内置的工业级 URL 解析与 URI 编解码标准库，全量对标并吸收自 Bun 原生 URL 运行时实现（`/data/dev/bun/src/url/url.cp`）。
@@ -182,3 +184,18 @@ pub fn demoUrlAndQuery(): !void {
 | **查询参数排序** | `params.sort()` | *不支持原地排序* | `params.sort()` |
 | **URI 组件编码** | `encodeURIComponent(str)` | `PercentEncoding.encode` | `PercentEncoding.encodeComponentToBuf(str, out)` / `PercentEncoding.encodeComponent(str, alloc)` |
 | **URI 组件解码** | `decodeURIComponent(str)` | `PercentEncoding.decode(Writer, writer, str)` | `PercentEncoding.decodeToBuf(str, plus_as_space, out)` / `PercentEncoding.decodeAlloc(str, plus_as_space, alloc)` |
+
+---
+
+## 七、 上游 Bun 行为契约与边界注意事项
+
+1. **特殊协议（Special Schemes）与默认端口省略**：
+   - 对标 WHATWG URL 标准与 Bun `src/url/url.cp`，`http` (80)、`https` (443)、`ws` (80)、`wss` (443)、`ftp` (21) 为特殊协议；当 URL 未显式声明端口时 `url.port` 为空切片，`url.getPortAuto()` 自动推导对应默认端口，非特殊协议默认端口返回 `0`。
+2. **零拷贝视图生命周期与原位切片**：
+   - `URL.parseSlice(input)` 返回的 `protocol`、`hostname`、`pathname`、`search`、`hash` 等字段均为指向原始 `input` 缓冲区的零拷贝子切片，调用方须确保 `input` 在 `URL` 使用期间保持有效；需要跨作用域持久化时应使用 `URL.parse(input, alloc)`。
+3. **IPv6 字面量与 Localhost 判定边界**：
+   - IPv6 主机名保留方括号（如 `[::1]`），端口解析严格校验 `0..65535` 范围并拒绝前导垃圾字符或溢出；`file://` URL（如 `file:///path/to/file.txt`）的主机部分为空字符串且路径以 `/` 起始，配合 `cap:path` 可安全完成路径规范化。
+4. **`URLSearchParams` 编码差异（`+` 与 `%20`）**：
+   - `application/x-www-form-urlencoded` 场景（查询串）中 `+` 解码为空格（`PercentEncoding.decodeToBuf(str, true, out)`），而通用 URI 路径组件（RFC 3986）中 `+` 保持字面量（`plus_as_space = false`），空格编码为 `%20`。
+5. **高吞吐零分配查询扫描**：
+   - 在高频 HTTP 路由与网关场景下，优先使用 `Scanner.init(query_str)` 流式迭代提取键值对，避免构造完整 `URLSearchParams` 容器带来的临时内存开销。

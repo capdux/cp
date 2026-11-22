@@ -1,5 +1,7 @@
 # CP 标准库：二进制与文本编码子系统开发与使用手册 (`cap:encoding`)
 
+> 参考来源：`/data/dev/bun/src/base64/base64.cp`, `/data/dev/bun/src/string/wtf.cp`, `/data/dev/bun/docs/runtime/utils.mdx` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:encoding` 是 CP 语言官方内置的工业级二进制与文本编码转换标准库，全面吸收自 Bun 生产级运行时源码（`/data/dev/bun/src/base64/base64.cp` 及字符编码基础设施）。
@@ -189,3 +191,16 @@ pub fn demoHex(): !void {
 | **Hex 编码 (小写/大写)** | `Buffer.from(src).toString("hex")` | `std.fmt.bytesToHex(src, .lower)` | `Hex.encodeLower(src, out)` / `Hex.encodeUpper(src, out)` / `Hex.encodeAlloc(alloc, src)` |
 | **Hex 解码** | `Buffer.from(hex, "hex")` | `std.fmt.hexToBytes(out, hex)` | `Hex.decode(hex, out)` / `Hex.decodeInPlace(buf)` / `Hex.decodeAlloc(alloc, hex)` |
 | **Hex 合法性校验** | `/^[0-9a-fA-F]+$/` (偶数长度) | 手动遍历 nibble | `Hex.isValid(hex)` |
+
+---
+
+## 五、 上游 Bun 行为契约与边界注意事项
+
+1. **Base64 宽容解码 vs 严格编解码器选择**：
+   - `Base64.decode` / `Base64.decodeInPlace` 遵循 WHATWG Forgiving-Base64 与 Bun `src/base64/base64.cp` 约定：同时接受标准表（`+`/`/`）与 URL-Safe 表（`-`/`_`）、允许省略末尾 `=` 填充并自动忽略 ASCII 空白符；若协议要求严格校验字符集与填充，请直接使用 `Codecs` 中的 `standard`、`standard_no_pad`、`url_safe`、`url_safe_no_pad` 及 `Base64Decoder`。
+2. **输出缓冲区容量精确预估**：
+   - 调用零堆分配编码接口前，请先使用 `Base64.encodeLen(src.len)` / `Base64.encodeLenURLSafe(src.len)` 或 `Base64.exactDecodedLen(b64)` 计算所需字节数；Hex 编码输出长度恒为 `2 * src.len`，解码输出长度为 `hex.len / 2`（奇数长度或非法十六进制字符会被 `Hex.isValid` 与 `Hex.decode` 拦截）。
+3. **UTF-8 / UTF-16 / Ascii 跨边界替换策略**：
+   - 聚合导出的 `Utf8`、`Utf16`、`Utf16BE` 遇到非法代理项或截断多字节序列时统一替换为 `REPLACEMENT_CHAR`（`U+FFFD`），避免未校验外部字节流引发越界读取；`Ascii` 原语针对纯 ASCII/Latin-1 快路径优化，零堆分配完成大小写转换与 Latin-1 到 UTF-8 展开。
+4. **百分号编码复用**：
+   - `cap:encoding` 直接重导出 `PercentEncoding`（别名 `Percent`），适合在同一模块内同时处理 Base64/Hex/UTF 与 URI 百分号编解码而无需额外引入 `cap:url`。

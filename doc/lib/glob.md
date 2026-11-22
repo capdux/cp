@@ -1,6 +1,6 @@
 # `cap:glob` — 高性能通配符状态机与目录扫描引擎
 
-> **上游溯源**: `/data/dev/bun/src/glob/glob.cp` (`matcher.cp`, `GlobWalker.cp`)  
+> 参考来源：`/data/dev/bun/docs/runtime/glob.mdx`, `/data/dev/bun/src/glob/glob.cp` | 吸收日期：2026-11-22
 > **模块路径**: `lib/glob/`  
 > **导入协议**: `import { Glob, Matcher, GlobMatcher, GlobMatchOptions, GlobWalker, GlobWalkerOptions } from "cap:glob";`
 
@@ -102,3 +102,16 @@ fn demoDirectoryScan(): ! {
     }
 }
 ```
+
+---
+
+## 五、 上游 Bun 行为契约与边界注意事项
+
+1. **嵌套花括号深度与转义规则**：
+   - 继承自 Bun `docs/runtime/glob.mdx`，花括号展开 `{a,b,c}` 支持多层嵌套（上游规范最高 10 层）并可组合 `*`、`?`、`[...]` 通配符；使用 `\` 转义前导 `!`（如 `\\!index.ts`）或特殊符号时按字面量精确匹配。
+2. **快速通配符探测（`Glob.hasMagic`）**：
+   - 对应上游 `detectGlobSyntax`：检查前导 `!` 与未转义的 `*`、`{`、`[`、`?`（通过统计前导反斜杠奇偶性判定是否被转义）。若 `Glob.hasMagic(pattern)` 返回 `false`，调用方可直接走精确字符串比较或直接文件路径打开以跳过目录遍历。
+3. **默认扫描语义（`GlobWalkerOptions`）**：
+   - 与 Bun `Glob.scan` / `Glob.scanSync` 保持一致：`dot` 默认为 `false`（跳过以 `.` 开头的文件/目录，除非模式显式包含前导 `.`）、`onlyFiles` 默认为 `true`（仅返回文件不返回目录本身）、`follow_symlinks` 默认为 `false`（避免符号链接环路导致无限遍历）。
+4. **跨平台分隔符与 ReDoS 防护**：
+   - 单星号 `*` 严格不跨越路径分隔符 `/`（Windows 模式下同时不跨越 `\`）；连续 `**/**` 与连续 `***` 在匹配引擎内部自动折叠，避免恶意超长模式触发指数级回溯。

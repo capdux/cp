@@ -1,5 +1,7 @@
 # CP 标准库：工业级 CSS 引擎与样式表处理手册 (`cap:css`)
 
+> 参考来源：`/data/dev/bun/docs/bundler/css.mdx`, `/data/dev/bun/src/css/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与去 Bun 化纯正 CP 架构
 
 `cap:css` 是 CP 语言官方内置的工业级 CSS 解析、词法分析、颜色空间与数学求值、选择器权重匹配、变量解析、厂商前缀/逻辑属性展开、CSS 嵌套展平与样式表压缩/美化标准库。整体架构吸收自 Bun 内置的 LightningCSS 引擎（`/data/dev/bun/src/css/`），已完成 **100% 去 Bun 化重构**——零 `@import("bun")`、零外部 JS/Bundler 耦合、零堆分配、全部 8 个核心 `.cp` 模块均可直接通过 `cpc check` 与 `cap test` 独立编译。
@@ -256,3 +258,16 @@ const disp = Display.parse("inline flex").?;
 | `lib/css/transition.cp` | `bun/src/css/properties/transition.cp` | `CssTransitionError`, `TransitionBehavior`, `TransitionPropertyKind`, `TransitionProperty`, `TransitionTime`, `TransitionEasingKind`, `TransitionEasing`, `CssTransition`, `TransitionList` |
 | `lib/css/ui.cp` | `bun/src/css/properties/ui.cp` | `UiColorScheme`, `Resize`, `UserSelect`, `CaretShape`, `Appearance`, `CursorKeyword` |
 | `lib/css/units.cp` | `bun/src/css/values/{angle,resolution}.cp` | `UnitAngleUnit`, `UnitAngle`, `UnitResolutionUnit`, `UnitResolution` |
+
+---
+
+## 上游 Bun (LightningCSS) 行为契约与边界注意事项
+
+1. **引擎血统与默认浏览器降级基线**：
+   - 参考 `/data/dev/bun/docs/bundler/css.mdx`，Bun CSS 引擎源自 LightningCSS 的原生移植，默认面向 ES2020 / Chrome 87+ / Safari 14+ / Firefox 78+ / Edge 88+ 执行语法降级与厂商前缀注入；`cap:css` 在 `CssPrefixer`、`CssLogical` 与 `CssNesting.flatten()` 中完整保留了这一降级管线。
+2. **CSS 嵌套展平（`CssNesting.flatten()`）语义**：
+   - 支持选择器内嵌套子选择器以及嵌套 `@media` 等条件规则；展平后自动将父选择器注入子规则并将嵌套 `@media` 提升至顶层，兼容不支持原生 CSS Nesting 的运行环境。
+3. **Selectors Level 4 特异性规则（`CssSpecificity`）**：
+   - `:where(...)` 特异性恒为 `(0, 0, 0)`；`:is(...)`、`:not(...)`、`:has(...)` 取参数列表中特异性最高的选择器作为整体特异性。
+4. **CSS Color 4 与数学求值边界**：
+   - `CssColor` 支持 `oklab()` / `oklch()` / `hwb()` / `hsl()` / `rgb()` / 148 命名色与色域转换；`CssCalc` 递归下降求值器遵循规范要求：`+` 与 `-` 运算符两侧必须留白（`calc(100% - 16px)`），支持 `min()`、`max()`、`clamp()` 嵌套。

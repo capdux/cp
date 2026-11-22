@@ -1,6 +1,6 @@
 # `cap:pkg` — CP 工业级包管理核心标准库文档 (`lib/pkg/`)
 
-> **源资产迁移来源**：`/data/dev/bun/src/install/` 与 `/data/dev/bun/src/install_types/`  
+> 参考来源：`/data/dev/bun/docs/pm/{global-cache,isolated-installs}.mdx`, `/data/dev/bun/src/install/`, `/data/dev/bun/src/install_types/` | 吸收日期：2026-11-22
 > **设计原则**：零 `@import("bun")`、零 `std.posix`、零 JSC 耦合、100% 纯正 CP 语法，复用 `cap:semver`、`cap:pack`、`cap:patch`、`cap:json`、`cap:encoding`、`cap:hash`、`cap:sys`、`cap:glob`、`cap:io` 与 `lib/{http,conf,resolver}/`。
 
 ---
@@ -139,3 +139,19 @@
 - **`lib/pkg/exports.cp`**（`package.json` `exports` 条件导出解析）：`ExportTargetKind`、`ExportConditionRule`、`ExportSubpathEntry`、`ResolveStatus`、`ResolveResult`、`ExportsMap`
 - **`lib/pkg/matcher.cp`**（包模式通配符匹配器）：`MatcherBehavior`、`PackagePattern`、`PackageMatcher`、`wildcardMatch`
 - **`lib/pkg/spdx.cp`**（SPDX 2.3 许可证表达式词法解析与校验）：`SpdxTokenKind`、`SpdxToken`、`SpdxLexer`、`isValidSpdxExpression`、`SpdxIdIter`、`isCommonPermissive`
+
+---
+
+## 上游 Bun 包管理行为契约与边界注意事项
+
+1. **全局缓存与版本目录去重策略**：
+   - 参考 `/data/dev/bun/docs/pm/global-cache.mdx`：缓存目录按 `${name}@${version}` 组织以支持多版本并存；当版本包含超长预发布（pre-release）或构建元数据（`+build`）后缀时通过哈希缩短路径避免超长文件名错误；`RegistryHttpClient` 通过 `If-None-Match` / HTTP `304` 校验磁盘缓存元数据最小化重复下载。
+2. **Hoisted vs Isolated 链接策略（`NodeLinker` / `InstallStrategy`）**：
+   - 参考 `/data/dev/bun/docs/pm/isolated-installs.mdx`：
+     - `Isolated`（隔离安装）采用两层结构（中心存储 + 仅暴露显式声明依赖），杜绝幽灵依赖（Phantom Dependencies），是 Monorepo / Workspace 项目的推荐策略；
+     - `Hoisted`（提升安装）将兼容版本扁平化至顶层模块目录，兼容传统 Node/npm 布局；
+     - 跨文件系统链接时，优先使用硬链接（Linux）/ 拷贝回退，并对 `file:`/`link:` 软链跳过嵌套 `node_modules` 以防止符号链接环路。
+3. **零信任生命周期脚本安全模型（`LifecycleRunner` & `TrustedPolicy`）**：
+   - 默认拦截未列入 `trustedDependencies` 白名单的包安装脚本（记入 `blocked_scripts`），避免供应链恶意 `postinstall` 静默执行。
+4. **Tarball 解包安全防线（`TarballExtractor`）**：
+   - 解包前校验 W3C SRI 完整性摘要（`Integrity`），并在写入每个归档条目时拦截 `..` 路径穿越与绝对路径逃逸。
