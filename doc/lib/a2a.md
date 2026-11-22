@@ -507,3 +507,46 @@ pub fn demoSharedBlackboard() {
     * = poll.count; // 2
 }
 ```
+
+---
+
+### 零分配 FIPA Contract Net Protocol 多智能体招投标与自适应中标分配引擎 (`contractNet.cp`)
+
+面向多智能体市场化任务竞标与故障自动递补的 100% 纯 CP 零动态堆分配 FIPA Contract Net Protocol (CNP) 经纪器：
+
+- **常量与枚举**：
+  - `CNP_MAX_AUCTIONS = 32`、`CNP_MAX_BIDS_PER_CFP = 16`、`CNP_BPS_SCALE = 10000`
+  - `CnpAuctionState`（`open | awarded | completed | failed_no_bids | cancelled`）
+  - `CnpBidStatus`（`submitted | awarded | rejected | succeeded | failed`）
+  - `CnpBidSubmitStatus`（`accepted | cfp_not_found | cfp_not_open | deadline_passed | capability_mismatch | cost_exceeded | latency_exceeded | duplicate_worker | bids_full | invalid_arg`）
+- **配置与数据模型**：
+  - `CnpScoreWeights`（`cost_weight`, `latency_weight`, `confidence_weight`, `reputation_weight`; 提供 `defaults()` 与 `isValid()`）
+  - `CnpBid`、`CnpAwardResult`、`CnpAuctionView`、`CnpReapReport`、`CnpStats`
+- **核心引擎 `ContractNetBroker`**：
+  - `init()` / `initWithWeights(weights)` / `reset(*_)` / `openCfp(...)` / `cancelCfp(*_, cfp_id)`
+  - `submitBid(...)`: 严格拦截能力位图不满足、超预算、超延迟、逾期、重复 Worker 投标、满标（16 份）及非法基点，预计算纯整数多目标效用分（`0..=10000`）。
+  - `evaluateAndAward(*_, cfp_id, now_ms)`: 选出最高效用中标者并将落选者标记 `rejected`（保留作为次优递补池）；无有效标则流标 `failed_no_bids`。
+  - `reportExecutionOutcome(*_, cfp_id, worker_id, succeeded, now_ms)` / `fallbackToRunnerUp(*_, cfp_id, new_exec_deadline_ms, now_ms)`: 中标者成功即闭环；失败或经 `reapExpired` 判定超时后，无需重新广播招标即可直接按效用顺序递补给次优候选。
+  - `reapExpired(*_, now_ms)` / `purgeTerminal(*_)` / `getAuction(cfp_id)` / `stats()`。
+
+```cp
+import {
+    CnpBidSubmitStatus,
+    ContractNetBroker,
+} from "cap:a2a";
+
+pub fn demoContractNet() {
+    let broker = ContractNetBroker.init();
+    const CAP_SQL: u64 = 1 << 0;
+    const CAP_GPU: u64 = 1 << 1;
+
+    * = broker.openCfp(100, CAP_SQL | CAP_GPU, 500, 1000, 2000, 5000);
+    * = (broker.submitBid(100, 1, CAP_SQL | CAP_GPU, 200, 300, 9000, 8500, 1100) == CnpBidSubmitStatus.accepted);
+    * = (broker.submitBid(100, 2, CAP_SQL | CAP_GPU, 300, 400, 8000, 8000, 1200) == CnpBidSubmitStatus.accepted);
+
+    const award = broker.evaluateAndAward(100, 2000); // Worker 1 中标
+    * = broker.reportExecutionOutcome(100, award.winner_worker_id, false, 2500); // Worker 1 失败
+    const fb = broker.fallbackToRunnerUp(100, 6000, 2600); // 自动递补给 Worker 2
+    * = broker.reportExecutionOutcome(100, fb.winner_worker_id, true, 3000); // 递补成功!
+}
+```

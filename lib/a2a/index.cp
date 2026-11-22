@@ -176,3 +176,19 @@ export {
     BlackboardStats,
     SharedBlackboard,
 } from "./blackboard.cp";
+
+export {
+    CNP_MAX_AUCTIONS,
+    CNP_MAX_BIDS_PER_CFP,
+    CNP_BPS_SCALE,
+    CnpAuctionState,
+    CnpBidStatus,
+    CnpBidSubmitStatus,
+    CnpScoreWeights,
+    CnpBid,
+    CnpAwardResult,
+    CnpAuctionView,
+    CnpReapReport,
+    CnpStats,
+    ContractNetBroker,
+} from "./contractNet.cp";
