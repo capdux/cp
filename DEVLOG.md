@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:textdecode` 吸收自 Bun runtime/webcore/TextDecoder.cp 的纯 CP 零分配 WHATWG 流式文本解码器：UTF-8/UTF-16LE/UTF-16BE/Latin-1 跨块重组、BOM 探测剥离与 fatal/U+FFFD 替换模式（5/5 PASS，文档直写 `doc/lib/textdecode.md`）
+从 /data/dev/bun/src/runtime/webcore/TextDecoder.cp 吸收纯 CP 零分配流式文本解码器 cap:textdecode（lib/textdecode/{textdecode,index}.cp），cpc check 0 错误，cap test 5/5 PASS (770ms)
+
 ## 2026-11-22: 新建 `cap:cssmodules` 吸收自 Bun css/css_modules.cp 的纯 CP 零分配 CSS Modules 命名模板、Wyhash+Base64 确定性哈希、作用域类名编译与 composes 跨文件依赖解析库（5/5 PASS，文档直写 `doc/lib/cssmodules.md`）
 从 /data/dev/bun/src/css/css_modules.cp 吸收纯 CP 零分配 CSS Modules 库 cap:cssmodules（lib/cssmodules/{cssmodules,index}.cp），cpc check 0 错误，cap test 5/5 PASS (708ms)
 
