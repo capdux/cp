@@ -432,6 +432,30 @@ const n2 = areas.toCss(buf[0..])?;
 * = n2;
 ```
 
+### CSS `@import` 规则解析、条件组合与依赖提取（`import_rule.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/rules/import.cp`，零堆分配实现 W3C CSS Cascading and Inheritance Level 5 `@import` 规则解析器、组合条件模型（`layer` / `layer(<layer-name>)`、`supports(<cond> | <declaration>)`、`<media-query-list>`）、带 bundler 占位符改写的规范序列化器与样式表前置 `@import` 批量提取器。
+
+- 核心导出：`CSS_IMPORT_MAX_RULES` (`64`)、`CSS_IMPORT_NO_RECORD` (`0xFFFF_FFFF`)、`CssImportError`、`CssImportLayerKind`、`CssImportLayer`（`none` / `anonymous` / `named` / `isPresent` / `isAnonymous` / `eql` / `toCss`）、`CssImportSupportsKind`、`CssImportSupports`（`none` / `parse` / `isPresent` / `eql` / `toCss`）、`CssImportConditions`（`empty` / `isEmpty` / `hasAnonymousLayer` / `layersEql` / `supportsEql` / `eql` / `toCss`）、`CssImportRule`（`fromUrl` / `fromUrlAndImportRecordIdx` / `fromConditionsAndUrl` / `parse` / `hasConditions` / `hasImportRecord` / `isExternalUrl` / `eql` / `toCss` / `toCssWithPlaceholder`）、`CssImportRuleList`（`extractFromStylesheet` / `count` / `get`、`ignored_after_rules`）。
+- 规范防线：支持 `"..."` / `'...'` / `url("...")` / `url('...')` / `url(...)` 目标格式；强制校验 `layer` 必须位于 `supports(...)` 之前（违序返回 `DuplicateCondition`）；`CssImportRuleList.extractFromStylesheet()` 严格遵循 CSS Syntax 规范，仅采集位于 `@charset` 与前置 `@layer` 语句之后、首个普通样式规则之前的 `@import`，并自动统计被规范忽略的迟到 `@import` 数量。
+
+```cp
+import { CssImportRule, CssImportRuleList } from "cap:css";
+
+const rule = CssImportRule.parse(
+    "@import url(\"./theme.css\") layer(framework.theme) supports(display: grid) screen and (min-width: 768px);"
+)?;
+let buf: [256]u8 = [0; 256];
+const n = rule.toCss(buf[0..])?;
+// "@import \"./theme.css\" layer(framework.theme) supports(display: grid) screen and (min-width: 768px);"
+
+const list = CssImportRuleList.extractFromStylesheet(
+    "@charset \"utf-8\"; @layer reset, theme; @import \"./reset.css\" layer(reset); body { color: #111; } @import \"./late.css\";"
+)?;
+// list.count() == 1, list.ignored_after_rules == 1
+* = n;
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项
@@ -451,3 +475,6 @@ const n2 = areas.toCss(buf[0..])?;
 6. **`@layer` 级联层声明顺序与最佳实践**：
    - 推荐在入口样式表顶部使用单条语句规则（如 `@layer reset, base, components, utilities;`）显式锁定层顺序；后续重复出现的同名 `@layer` 块或语句不会改变其首次声明时的优先级。
    - 点分嵌套层名（如 `framework.theme.dark`）的 `.` 两侧严禁空白；同一块规则的 prelude 不允许逗号列表（`@layer a, b { ... }` 为非法语法）。
+7. **`@import` 条件顺序、外链保留与打包占位符改写（参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
+   - W3C CSS Cascading Level 5 规定 `@import` 必须位于样式表头部（仅允许出现在 `@charset` 与前置 `@layer` 语句之后、任何普通规则之前）；出现在普通规则之后的 `@import` 必须被忽略（`CssImportRuleList.ignored_after_rules` 可用于静态诊断告警）。
+   - `@import` 条件严格遵循 `layer` → `supports(...)` → `<media-query-list>` 顺序；打包器在内联本地样式表时应通过 `isExternalUrl()` 跳过 `http://` / `https://` / `//` / `data:` 外链资源，并使用 `toCssWithPlaceholder()` 生成稳定的依赖占位符。

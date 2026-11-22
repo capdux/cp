@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/md/types.cp | Synced: 2026-11-22T06:21:30Z
+// Source: Absorbed from /data/dev/bun/src/md/types.cp | Synced: 2026-11-22T07:38:53Z
 // lib/md/ast.cp
 // Markdown Options, Block AST Nodes, Link Reference Definitions & Custom Renderer Callbacks
 

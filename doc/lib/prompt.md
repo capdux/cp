@@ -563,3 +563,39 @@ fn demoMultimodalBudgetAudit() {
     }
 }
 ```
+
+### 12. 零堆分配 Prompt 版本注册表与灰度 A/B 流量分配器 (`version_registry.cp`)
+
+面向生产级 AI Agent Prompt 运维与实验平台的 100% 纯 CP 零堆分配版本管理与灰度切流内核（内联固定容量 `MAX_PROMPT_VERSIONS = 16` 与定长字节缓冲，零动态内存分配）：
+
+- **导出符号**：`MAX_PROMPT_VERSIONS`、`BPS_SCALE`（`10000`）、`PromptVariantStatus`（`draft | canary | active | shadow | deprecated | rolled_back`）、`PromptVersionEntry`、`RouteDecision`、`RolloutGuardConfig`、`RegistrySummaryStats`、`PromptVersionRegistry`。
+- **核心能力**：
+  - `register_version(*_, id, template_hash, model_hint, summary, major, minor, patch, created_ms): usize?`：去重 ID、校验定长字节上限与容量边界；
+  - `set_active` / `set_shadow` / `start_canary` / `promote_canary` / `rollback`：原子状态流转与基点权重（`0..=10000` bps）自动归一化，支持灰度中一键回滚与晋升后一键回滚至 `prev_active_slot`；
+  - `route_request(tenant_key: []const u8, seed: u64): RouteDecision`：基于 FNV-1a + SplitMix64 混合映射到 `[0, 10000)` 基点桶，确保同租户 100% 粘性路由与扩量单调性，支持影子流量标记与无 `active` 时安全降级（`is_fallback = true`）；
+  - `record_outcome` / `should_auto_rollback(guard)` / `evaluate_and_auto_rollback(guard)` / `variant_error_rate_bps` / `variant_avg_latency_us` / `summary_stats`。
+
+```cp
+import {
+    RolloutGuardConfig,
+    PromptVersionRegistry,
+} from "cap:prompt";
+
+fn demoPromptCanaryRollout() {
+    let reg = PromptVersionRegistry.init();
+    const v1 = reg.register_version("sys-v1", 0x1111, "claude-3.5", "Baseline assistant", 1, 0, 0, 1000) ?? return;
+    const v2 = reg.register_version("sys-v2", 0x2222, "claude-3.5", "Concise JSON assistant", 1, 1, 0, 2000) ?? return;
+
+    * = reg.set_active(v1);
+    * = reg.start_canary(v2, 2000); // 20.00% 灰度切流至 v2，80.00% 留在 v1
+
+    const route = reg.route_request("tenant-acme", 42);
+    if (route.found) {
+        * = reg.record_outcome(route.slot_idx, true, 120000, 350);
+    }
+
+    if (guard := RolloutGuardConfig.init(20, 500, 1500000)) {
+        * = reg.evaluate_and_auto_rollback(guard);
+    }
+}
+```

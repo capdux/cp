@@ -129,3 +129,17 @@ export {
     isAllowedMultimodalMime,
     auditMultimodalPayload,
 } from "./multimodal.cp";
+
+export {
+    MAX_PROMPT_VERSIONS,
+    MAX_VERSION_ID_LEN,
+    MAX_MODEL_HINT_LEN,
+    MAX_PROMPT_SUMMARY_LEN,
+    BPS_SCALE,
+    PromptVariantStatus,
+    PromptVersionEntry,
+    RouteDecision,
+    RolloutGuardConfig,
+    RegistrySummaryStats,
+    PromptVersionRegistry,
+} from "./version_registry.cp";

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/webcore/ObjectURLRegistry.cp | Synced: 2026-11-22T06:52:30Z
+// Source: Absorbed from /data/dev/bun/src/runtime/webcore/ObjectURLRegistry.cp | Synced: 2026-11-22T07:42:24Z
 
 export {
     BLOB_PREFIX,

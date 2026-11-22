@@ -386,3 +386,16 @@ export {
     CssGridTrackSizing,
     CssGridTemplateAreas,
 } from "./grid.cp";
+
+export {
+    CSS_IMPORT_MAX_RULES,
+    CSS_IMPORT_NO_RECORD,
+    CssImportError,
+    CssImportLayerKind,
+    CssImportLayer,
+    CssImportSupportsKind,
+    CssImportSupports,
+    CssImportConditions,
+    CssImportRule,
+    CssImportRuleList,
+} from "./import_rule.cp";

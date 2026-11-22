@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/semver/Version.cp | Synced: 2026-11-22T07:13:20Z
+// Source: Absorbed from /data/dev/bun/src/semver/Version.cp | Synced: 2026-11-22T07:42:24Z
 // ============================================================================
 // lib/semver/version.cp — Semver 2.0.0 Specification Core Types & Logic
 // ============================================================================
