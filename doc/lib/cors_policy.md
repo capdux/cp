@@ -1,6 +1,6 @@
 # `cap:cors_policy` — WHATWG Fetch CORS 策略与预检评估引擎
 
-> 来源：吸收自 `/data/dev/bun/src/http_types/FetchRequestMode.cp`（WHATWG Fetch CORS 规范）
+> 参考来源：/data/dev/bun/src/http_types/FetchRequestMode.cp | 吸收日期：2026-11-22
 
 `cap:cors_policy` 提供纯 CP、零外部依赖、零堆分配的 CORS 策略配置、简单请求与预检（Preflight）评估以及响应头决策计算能力。
 
@@ -72,3 +72,12 @@ const decision = policy.evaluatePreflight(
 );
 // decision.allowed == true, decision.allow_origin_header == "https://app.example.com", decision.vary_origin == true
 ```
+
+## 上游行为契约与安全边界
+
+1. **凭证模式禁止通配符（WHATWG Fetch 铁律）**：
+   - 当 `CorsConfig.allow_credentials == true` 时，即使配置了 `allow_all_origins = true`，`CorsDecision.allow_origin_header` 也绝不返回 `"*"`，必须回显精确 `origin` 并设置 `vary_origin = true` 防止 CDN 跨源缓存污染。
+2. **预检请求头白名单与 Safelist 豁免**：
+   - `CorsPolicy.isSafelistedHeader` 大小写无关识别 `accept` / `accept-language` / `content-language` / `content-type`；非安全请求头须全部命中 `allowed_headers` 才允许通过 `evaluatePreflight`。
+3. **固定容量防御**：
+   - 零堆分配上限为 16 个源、12 个方法与 16 个请求头，`addOrigin`/`addMethod`/`addHeader` 超限时安全返回 `false`。
