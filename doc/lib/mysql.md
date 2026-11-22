@@ -75,3 +75,16 @@ const n = req.encodeFrame(frame[0..])?;
 const decoded = LocalInfileRequest.decodeFrame(frame[0..n])?;
 * = decoded.isSafeRelativeFilename(); // true
 ```
+
+5. **有界零分配协议游标（`stackReader.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/StackReader.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
+   - 面向 MySQL 5.7+ / 8.0+ 线缆流式解包场景提供零拷贝 `StackReader`：支持消息起点书签（`markMessageStart`/`rewindMessage`/`setOffsetFromStart`）、双向饱和跳过（`skip`）、NUL 终止字符串（`readZ`）、小端定长整数（`readU8`..`readU64Le`）以及 Length-Encoded 整数/字符串解码；
+   - `readPacketFrame()` 自动执行原子半包回滚：若网络流缓冲区尚未收齐完整载荷，自动回退游标至 `message_start` 并返回 `StackReaderError.ShortRead`，等待下一次网络读就绪后无损续解。
+
+```cp
+import { StackReader } from "cap:mysql";
+
+const wire: [7]u8 = [3, 0, 0, 1, 'O', 'K', '!'];
+let r = StackReader.init(wire[0..]);
+const frame = r.readPacketFrame()?; // payload_len=3, sequence_id=1, payload="OK!"
+* = frame;
+```

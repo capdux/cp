@@ -187,3 +187,10 @@ export {
     LocalInfileError,
     LocalInfileRequest,
 } from "./localInfile.cp";
+
+// --- 10. Bounded Zero-Alloc Wire Cursor (./stackReader.cp) ---
+export {
+    StackReaderError,
+    MysqlFrameSlice,
+    StackReader,
+} from "./stackReader.cp";
