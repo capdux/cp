@@ -1,5 +1,7 @@
 # CP 标准库：TOML v1.0.0 配置解析、类型安全访问与序列化手册 (`cap:toml`)
 
+> 参考来源：`/data/dev/bun/docs/runtime/toml.mdx`, `/data/dev/bun/src/interchange/toml/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:toml` 是 CP 语言官方内置的纯 CP TOML v1.0.0 配置解析与序列化引擎，**零外部依赖、零 `std.posix`、零 `@import("bun")`**，全面覆盖 `Cargo.toml`、`pyproject.toml`、`cap` 配置及 Rust / Python / 云原生配置场景。既可通过 `import { ... } from "cap:toml"` 导入，也支持 `import cap from "cap"; cap.toml.*` 动态懒挂载调用。
@@ -100,3 +102,14 @@ pub fn demoTomlConfig(): ! {
 
 - **字符串与键名转义 (`escape.cp`)**：`isBareTomlKey`、`formatTomlBasicString`、`formatTomlKey`、`unescapeTomlBasic`。
 - **词法扫描器 (`lexer.cp`)**：`TomlTokenKind`、`TomlToken`、`TomlLexer`。
+
+---
+
+## 上游 Bun TOML 行为契约与安全边界注意事项
+
+1. **严格键冲突与嵌套深度守卫（`TOML_MAX_DEPTH = 64`）**：
+   - 遵循 TOML v1.0.0 与 Bun `src/interchange/toml/` 契约：重复定义同一键或试图将标量表项重新打开为子表时立即返回 `DuplicateKey` / `TypeConflict`；嵌套深度硬上限 64 层，防止恶意深层内联表耗尽调用栈。
+2. **裸键与引号键规则（`isBareTomlKey` / `formatTomlKey`）**：
+   - 仅包含 `A-Za-z0-9_-` 的非空键可不加引号，包含点号（如 `"127.0.0.1"`）、空白或非 ASCII 字符的键必须加引号；序列化时通过 `formatTomlKey` 自动判定，避免生成非法 TOML。
+3. **跨格式桥接（`TomlSerializer.toJson`）**：
+   - 可将解析后的 `TomlDoc` 直接无损导出为 RFC 8259 JSON，便于下游配置校验或与 `cap:json` 管线集成。

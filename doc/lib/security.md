@@ -1,5 +1,7 @@
 # CP 标准库：应用安全与鉴权引擎手册 (`cap:security`)
 
+> 参考来源：`/data/dev/bun/src/csrf/csrf.cp`, `/data/dev/bun/docs/runtime/utils.mdx` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:security` 是 CP 语言官方内置的应用安全与鉴权标准库，提供纯 CP 实现的 **CSRF 无状态令牌**、**RFC 4226/6238 HOTP/TOTP 双因素认证与 RFC 4648 Base32**、**Fetch CORS 跨域策略引擎**、以及 **CSP 策略构造器与 OWASP 安全响应头预设**。全部模块 0 `std.posix`、0 `@import("bun")`。
@@ -111,3 +113,16 @@ pub fn demoSecuritySuite(): !void {
     const hdrs = SecurityHeadersPreset.strictApi();
 }
 ```
+
+---
+
+## 上游 Bun `csrf` 行为契约与安全边界注意事项
+
+1. **恒定时间签名比对（`constantTimeEql`）**：
+   - 源自 Bun `src/csrf/csrf.cp`：验证 64 字节无状态 CSRF 令牌的 HMAC-SHA256 签名与用户提供的 TOTP 验证码时，必须通过 `constantTimeEql` 逐字节常量时间比较，杜绝基于响应耗时的侧信道泄露。
+2. **CSRF 过期时间窗与时钟偏移**：
+   - 令牌内置 `Timestamp (ms)` 与 `ExpiresIn (ms)`（默认 `DEFAULT_EXPIRATION_MS`），验证端除校验签名外须同时检查当前时间未超出有效期且未来自异常未来时间戳。
+3. **CORS 凭据与通配源互斥（`CorsPolicy`）**：
+   - 遵循 Fetch CORS 规范：当 `allow_credentials: true` 时，响应头 `Access-Control-Allow-Origin` **严禁**回显 `*`，必须回显经白名单（`allowed_origins`）校验通过的具体请求 `Origin` 并附带 `Vary: Origin`。
+4. **TOTP 容错窗口限制（`Totp.verifyAt`）**：
+   - 建议将时间步长容错窗口（`skew`）控制在 `±1`（30 秒步长）以内，并在服务端记录已消费时间步防止同一窗口内重放。

@@ -1,5 +1,7 @@
 # CP 标准库：纯 CP 生产测试框架基础设施 (`cap:test_runner`)
 
+> 参考来源：`/data/dev/bun/docs/test/{configuration,runtime-behavior}.mdx`, `/data/dev/bun/src/test_runner/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:test_runner` 是零 JSC 耦合的纯 CP 生产级测试套件编排、快照管理、值格式化与 CI 报告引擎，完整直迁自 Bun `src/test_runner/` 核心无 JS 引擎逻辑（`Order.cp`、`Collection.cp`、`Execution.cp`、`snapshot.cp`、`pretty_format.cp`、`bun_test.cp`）。
@@ -101,3 +103,16 @@ pub fn demoTestRunner(): !void {
     * = m.matched;
 }
 ```
+
+---
+
+## 上游 Bun Test Runner 行为契约与边界注意事项
+
+1. **确定性随机洗牌与复现（`TestOrderMode.Random` & `Prng64`）**：
+   - 参考 `/data/dev/bun/docs/test/runtime-behavior.mdx`：随机乱序执行用于暴露测试用例间的隐式共享状态依赖；通过记录 `TestRunner.setOrderMode(TestOrderMode.Random, seed)` 中的 `seed`（SplitMix64 + Xoshiro256++），CI 失败时可 100% 复现相同的执行顺序。
+2. **嵌套生命周期钩子顺序（`HookKind`）**：
+   - 嵌套 `TestGroup` 严格遵循 `外层 beforeAll -> 外层 beforeEach -> 内层 beforeEach -> 用例 -> 内层 afterEach -> 外层 afterEach -> 外层 afterAll` 执行，且即使单个用例失败仍保证执行对应的 `afterEach` / `afterAll` 清理钩子。
+3. **快照更新策略（`SnapshotUpdateMode`）**：
+   - CI 流水线应始终使用 `SnapshotUpdateMode.Check`（严禁静默写入新快照）；本地显式更新时切换至 `Update` 或 `CreateNew`，不匹配时自动联动 `cap:patch` 的 `DiffFormatter` 输出彩色差异。
+4. **CI 报告格式（`TestReporter`）**：
+   - 原生支持 `TAP` v13、`JUnit` XML 与 `JSON` 三种标准格式，可直接对接 GitHub Actions / GitLab CI 测试结果归档。

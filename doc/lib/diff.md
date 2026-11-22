@@ -1,5 +1,7 @@
 # CP 标准库：Myers Diff、Unified Patch 与三方合并手册 (`cap:diff`)
 
+> 参考来源：`/data/dev/bun/src/patch/patch.cp`, `/data/dev/bun/src/test_runner/diff_format.zig` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:diff` 是 CP 语言官方内置的纯 CP 文本差异分析与代码合并标准库，**零外部依赖、零 `std.posix`、零 `@import("bun")`**，专为 CP 代码工具链与 AI Coding Agent 设计。既可通过 `import { ... } from "cap:diff"` 导入，也支持 `import cap from "cap"; cap.diff.*` 动态懒挂载调用。
@@ -82,3 +84,14 @@ pub fn demoDiff(): ! {
 
 - **`lib/diff/linediff.cp`**：`MyersOpKind`, `DiffOp`, `DiffResult`, `diffLines`, `reconstructNew`, `formatUnifiedDiff`
 - **`lib/diff/unified.cp`**：`UnifiedOpKind`, `DiffLine`, `DiffSummary`, `unifiedDiffLines`, `summarize`, `formatUnified`
+
+---
+
+## 上游行为契约与合并边界注意事项
+
+1. **严格上下文校验 vs 模糊补丁定位**：
+   - `cap:diff` 的 `UnifiedDiff.applyPatch` 采用**严格上下文精确校验**（任意上下文行不匹配即报错拒绝，适合自动化代码生成与 AI Coding Agent 安全编辑）；若需要面向旧版源码的 `±offset` / `fuzz` 容错打补丁，请使用 `cap:patch` 的 `applyWithOptions`。
+2. **三方合并冲突检测（`UnifiedDiff.merge3`）**：
+   - 以共同祖先 `base` 为基准分别比对 `ours` 与 `theirs`：互不重叠的修改自动无损合并；同一行区间被双方不同修改时输出标准 `<<<<<<<` / `=======` / `>>>>>>>` 冲突标记并置位 `MergeResult.has_conflicts`。
+3. **行级 vs 词级差分选型**：
+   - 代码补丁与版本控制使用 `DiffEngine.diffLines`；长段落文本或断言行内细粒度高亮使用 `DiffEngine.diffWords` + `tokenizeWordsAlloc`。

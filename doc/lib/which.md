@@ -1,6 +1,6 @@
 # `cap:which` — 跨平台可执行二进制查找与权限校验标准库
 
-> **上游溯源**: `/data/dev/bun/src/which/which.cp` (`which.zig`)  
+> 参考来源：`/data/dev/bun/docs/guides/util/which-path-to-executable-bin.mdx`, `/data/dev/bun/src/which/which.cp` | 吸收日期：2026-11-22
 > **模块路径**: `lib/which/`  
 > **导入协议**: `import { Which, WhichOptions, which, isExecutable, endsWithExtension } from "cap:which";`
 
@@ -86,3 +86,14 @@ fn demoSecurityChecks(): void {
     let ext3 = endsWithExtension("script.sh");  // false
 }
 ```
+
+---
+
+## 上游 Bun `Bun.which` 行为契约与安全边界
+
+1. **目录排除与非空命令校验**：
+   - 在 POSIX 系统中目录天然带有 `+x`（遍历）权限，`isExecutable` 结合 `access(X_OK)` 与目录探测确保绝不把同名目录误判为可执行文件；空命令字符串或包含 NUL 字节的输入安全返回 `null`。
+2. **显式 `WhichOptions.path` 覆盖与 `cwd` 相对路径**：
+   - 当传入含 `/` 或 `\` 的相对路径（如 `./bin/tool`）时，仅基于 `options.cwd` 定位而不扫描 `PATH`；当传入纯命令名时按 `options.path`（缺省为系统 `PATH`）顺序返回首个命中项，`whichAll` 可一次收集全部候选路径用于冲突排查。
+3. **零堆输出缓冲截断防护**：
+   - 传入的 `out_buf` 推荐不小于 `4096` 字节（`MAX_PATH_BYTES`），若候选完整路径超出 `out_buf.len` 则安全跳过/返回 `null` 而不越界写入。

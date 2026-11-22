@@ -1,6 +1,6 @@
 # `cap:clap` — 编译期强类型与零分配流式命令行参数解析标准库
 
-> **上游溯源**: `/data/dev/bun/src/clap/clap.cp` (`args.cp`, `streaming.cp`, `comptime.cp`)  
+> 参考来源：`/data/dev/bun/src/clap/clap.cp`, `/data/dev/bun/src/clap/` | 吸收日期：2026-11-22
 > **模块路径**: `lib/clap/`  
 > **导入协议**: `import { Param, Help, ParamHelp, Values, Names, ParseOptions, parseParam, parseEx, parseArgs, usage, help, SliceIterator, ShellIterator, OsIterator, StreamingClap, ComptimeClap } from "cap:clap";`
 
@@ -153,3 +153,14 @@ fn demoShellTokenizer(): !void {
     }
 }
 ```
+
+---
+
+## 上游 Bun `clap` 行为契约与边界注意事项
+
+1. **短标志连写与取值截断（`StreamingClap`）**：
+   - 在 `chaining` 状态下，布尔短标志可连续组合（如 `-vf` 展开为 `-v` 与 `-f`）；一旦遇到需要取值的短选项（如 `-ofile` 或 `-o=file`），该选项之后的剩余字符立即作为其参数值消费并退出连写状态。
+2. **`--` 透传哨兵与负数值区分**：
+   - 遇到独立 `--` 后进入 `rest_are_positional` 状态，后续所有以 `-` 开头的参数（包括负数或子命令标志）均原样作为位置参数返回。
+3. **编译期参数名零拼写错误保障（`ComptimeClap`）**：
+   - 通过 `ComptimeClap` 声明参数表时，对不存在的标志名或类型不匹配（如对布尔标志调用 `option`）会在编译期直接报错拦截，消除运行时静默忽略拼错参数的隐患。

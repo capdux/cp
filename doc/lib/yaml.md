@@ -1,5 +1,7 @@
 # CP 标准库：YAML 1.2 解析、类型安全访问、序列化与 JSON 互转 (`cap:yaml`)
 
+> 参考来源：`/data/dev/bun/docs/runtime/yaml.mdx`, `/data/dev/bun/src/interchange/yaml.cp` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:yaml` 是 CP 语言官方内置的工业生产级纯 CP YAML 1.2 核心子集解析与序列化标准库，**零 C 依赖、零 `std.posix`、零 `@import("bun")`**，既可通过 `import { ... } from "cap:yaml"` 导入，也支持 `import cap from "cap"; cap.yaml.*` 动态挂载调用。
@@ -88,3 +90,14 @@ pub fn demoYaml(): ! {
 
 - **标量引号与转义 (`escape.cp`)**：`needsYamlQuotes`、`quoteYamlSingle`、`quoteYamlDouble`、`formatYamlScalar`、`unescapeYamlDouble`。
 - **Core Schema 标量解析 (`scalar.cp`)**：`YamlScalarKind`、`YamlScalar`、`parseCoreScalar`、`unescapeDoubleQuoted`、`unescapeSingleQuoted`、`needsQuoting`、`formatSafeScalar`。
+
+---
+
+## 上游 Bun YAML 1.2 行为契约与安全边界注意事项
+
+1. **YAML 1.2 Core Schema 与 1.1 挪威问题免疫（`parseCoreScalar`）**：
+   - 严格遵循 YAML 1.2 Core Schema：仅 `true`/`True`/`TRUE`、`false`/`False`/`FALSE` 解析为布尔值，**不再**将 `yes`/`no`/`on`/`off`/`y`/`n` 误判为布尔（彻底消除 YAML 1.1 经典“挪威国码 `NO` 变 `false`”陷阱）。
+2. **禁止 Tab 缩进与重复键防护**：
+   - 块级缩进中出现制表符 `\t` 直接报错拒绝；同层映射中重复键与过深嵌套均被拦截，避免配置静默覆盖或资源耗尽。
+3. **安全标量序列化（`needsYamlQuotes` / `formatSafeScalar`）**：
+   - 写回 YAML 时对以特殊字符（`:`、`#`、`@`、`&`、`*`、`!`、`-`）开头或与 `null`/`true`/`false`/数字字面量冲突的字符串自动加引号，确保往返解析类型不漂移。

@@ -1,6 +1,6 @@
 # CP 标准库：结构化日志与分布式可观测性引擎手册 (`cap:logger`)
 
-> **上游溯源**: `/data/dev/bun/src/logger/logger.cp` + CP 生产级可观测性扩展  
+> 参考来源：`/data/dev/bun/src/logger/logger.cp`, `/data/dev/bun/src/logger/` | 吸收日期：2026-11-22
 > **模块路径**: `lib/logger/`（`logger.cp`, `structured.cp`, `trace.cp`, `sampler.cp`, `index.cp`）  
 > **导入协议**: `import { LogLevel, Log, StructuredLogger, LogFormat, LogField, TraceParent, TraceState, Span, SpanStatus, RatioSampler, BurstSampler, RingLogBuffer } from "cap:logger";`
 
@@ -149,3 +149,16 @@ pub fn demoRichDiagnostics() {
     * = plain;
 }
 ```
+
+---
+
+## 上游 Bun `logger` 行为契约与可观测性边界
+
+1. **错误上限截断与源码诊断定位（`Log.initWithMaxErrors`）**：
+   - 继承自 Bun 编译器诊断引擎：通过 `max_errors` 限制单次编译/校验收集的最大错误数，防止连锁语法错刷屏；每条 `Msg` 支持附加关联 `Note`（`addNoteFromSource`）精确定位原始声明位置。
+2. **敏感字段自动脱敏与 JSON 转义（`StructuredLogger`）**：
+   - `redactKeys` 自动将 `password`、`token`、`authorization`、`secret` 等敏感字段值替换为 `REDACTED`；`LogFormat.Json` 严格执行 RFC 8259 转义，防止日志注入破坏结构化采集管线。
+3. **W3C Trace Context 全零拒绝（`TraceParent`）**：
+   - 遵循 W3C Trace Context 规范：解析 `00-<32hex>-<16hex>-<2hex>` 时严格拒绝全零 `trace-id` 或全零 `parent-id`，`childSpan` 生成新 Span ID 并保留原始 `trace-id` 与采样标志。
+4. **防日志风暴（`BurstSampler` / `RingLogBuffer<CAP>`）**：
+   - 高并发错误突增场景推荐挂载 `BurstSampler` 限制单位窗口输出速率，或先写入零堆分配 `RingLogBuffer<CAP>` 仅在异常崩溃时回放最近上下文。
