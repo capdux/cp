@@ -985,3 +985,51 @@ pub fn demoAgentScratchpad() {
     * = rep.rendered_steps;
 }
 ```
+
+### 21. 零分配 Agent 标准化操作剧本 SOP / Playbook 记忆与贝叶斯置信度引擎 (`playbook.cp`)
+
+面向自主执行型 AI Agent 的 100% 纯 CP 零动态堆分配程序性流程记忆库，支持多步 SOP 编排、硬件 `@popCount` 意图位图匹配、前置条件硬过滤、EWMA 延迟追踪与贝叶斯可靠性自动降级/恢复：
+
+- **常量与枚举**：
+  - `PLAYBOOK_MAX_ENTRIES = 32`、`PLAYBOOK_MAX_STEPS = 12`、`PLAYBOOK_NAME_MAX_LEN = 48`、`PLAYBOOK_STEP_MAX_LEN = 64`
+  - `PlaybookStatus`（`active | degraded | deprecated | draft`）
+- **数据模型**：
+  - `PlaybookStepSpec`（`tool_name()`, `expected_outcome()`, `is_optional`, `timeout_ms`）
+  - `PlaybookEntry`（`playbook_id`, `name()`, `intent_mask`, `precondition_mask`, `step_count`, `steps`, `success_count`, `failure_count`, `avg_latency_ms`, `version`, `status`, `last_used_ms`, `successRateBps()` — Laplace 平滑 `(s+1)/(s+f+2)`）
+  - `PlaybookQuery`（`required_intent_mask`, `available_preconditions`, `max_latency_ms`, `min_success_rate_bps`, `include_degraded`）
+  - `PlaybookMatch`（`playbook_id`, `index`, `score`, `intent_overlap`, `success_rate_bps`）
+  - `PlaybookStoreStats`（`total_playbooks`, `active_count`, `degraded_count`, `deprecated_count`, `total_executions`, `total_successes`）
+- **核心引擎 `PlaybookMemoryStore`**：
+  - `init()` / `registerPlaybook(*_, name, intent_mask, precondition_mask, now_ms): u32?` / `addStep(*_, playbook_id, tool_name, expected_outcome, is_optional, timeout_ms): bool`
+  - `recordExecution(*_, playbook_id, succeeded, latency_ms, now_ms): PlaybookStatus?`：更新 EWMA 延迟与成功/失败计数；样本数 `>= 3` 且失败率恶化时自动执行 `active -> degraded -> deprecated` 状态机降级，连续成功且可靠性回升时自动恢复 `active`。
+  - `deprecate(*_, playbook_id)` / `getPlaybook(playbook_id)` / `matchTopK(query, *out_matches): usize`（`@popCount` 意图覆盖 + 硬过滤前置条件/延迟/可靠性 + 综合打分降序 Top-K） / `stats()`。
+
+```cp
+import {
+    PlaybookQuery,
+    PlaybookMatch,
+    PlaybookMemoryStore,
+} from "cap:agentmem";
+
+pub fn demoPlaybookStore() {
+    const INT_BUILD: u64 = 1 << 0;
+    const INT_DEPLOY: u64 = 1 << 1;
+    const PRE_DOCKER: u64 = 1 << 0;
+
+    let store = PlaybookMemoryStore.init();
+    const id = store.registerPlaybook("docker_deploy", INT_BUILD | INT_DEPLOY, PRE_DOCKER, 1000) ?? return;
+    * = store.addStep(id, "docker_build", "image tagged", false, 30000);
+    * = store.addStep(id, "docker_push", "pushed to registry", false, 15000);
+    * = store.recordExecution(id, true, 420, 2000);
+
+    let hits: [4]PlaybookMatch = [PlaybookMatch{}; 4];
+    let hits_s: []PlaybookMatch = hits[0..];
+    const q = PlaybookQuery{
+        required_intent_mask: INT_BUILD | INT_DEPLOY,
+        available_preconditions: PRE_DOCKER,
+        max_latency_ms: 1000,
+        min_success_rate_bps: 6000,
+    };
+    * = store.matchTopK(q, *hits_s);
+}
+```

@@ -245,3 +245,17 @@ export {
     formatScratchStepKind,
     AgentScratchpad,
 } from "./scratchpad.cp";
+
+export {
+    PLAYBOOK_MAX_ENTRIES,
+    PLAYBOOK_MAX_STEPS,
+    PLAYBOOK_NAME_MAX_LEN,
+    PLAYBOOK_STEP_MAX_LEN,
+    PlaybookStatus,
+    PlaybookStepSpec,
+    PlaybookEntry,
+    PlaybookQuery,
+    PlaybookMatch,
+    PlaybookStoreStats,
+    PlaybookMemoryStore,
+} from "./playbook.cp";
