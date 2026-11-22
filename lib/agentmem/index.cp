@@ -125,3 +125,16 @@ export {
     EpisodeIndexStats,
     HybridEpisodeIndex,
 } from "./episodes.cp";
+
+export {
+    FACT_LEDGER_MAX_RECORDS,
+    FACT_TIME_INF,
+    FACT_NO_ID,
+    FACT_MAX_CONFIDENCE_BPS,
+    FactStatus,
+    FactLedgerOpStatus,
+    BiTemporalFact,
+    FactAssertResult,
+    FactLedgerStats,
+    BiTemporalFactLedger,
+} from "./factLedger.cp";

@@ -637,3 +637,39 @@ pub fn demoHybridEpisodeIndex() {
     * = n; // 1
 }
 ```
+
+
+### 14. 零分配双时态事实账本 (`factLedger.cp`)
+
+面向长程 AI Agent 的 100% 纯 CP 零动态堆分配 **Bi-Temporal Agent Fact Ledger**（Zep / Graphiti 双时态知识记忆架构），沿业务生效时间（Valid-Time `[valid_from_ms, valid_to_ms)`）与系统记账时间（Transaction-Time `[tx_from_ms, tx_to_ms)`）双正交时间轴追踪事实演化：
+
+- **常量与模型**：
+  - `FACT_LEDGER_MAX_RECORDS = 256`、`FACT_TIME_INF = i64::MAX`、`FACT_NO_ID = 0`、`FACT_MAX_CONFIDENCE_BPS = 10000`。
+  - `FactStatus`（`active | superseded | retracted`）、`FactLedgerOpStatus`（`ok | invalid_time_range | invalid_confidence | capacity_full | fact_not_found | already_closed | invalid_tx_time`）。
+  - `BiTemporalFact`（`fact_id`, `subject_id`, `predicate_id`, `object_hash`, `confidence_bps`, `valid_from_ms`, `valid_to_ms`, `tx_from_ms`, `tx_to_ms`, `source_turn_id`, `superseded_by`, `status`；提供 `isValidAt`, `isRecordedAt`, `isActiveAt`）、`FactAssertResult`、`FactLedgerStats`。
+- **核心引擎 `BiTemporalFactLedger`**：
+  - `assertFact(*_, subject, predicate, obj_hash, valid_from, tx_now, confidence_bps)` / `assertFactWindow(...)`：自动闭环冲突旧事实并记录 `superseded_by` 链，相同有效事实重叠写入自动强化置信度不浪费槽位。
+  - `queryCurrentFacts(subject_id, now_ms, out_facts)`：查询当前系统认知在 `now_ms` 生效的真相事实。
+  - `queryAsOf(subject_id, valid_at_ms, tx_at_ms, out_facts)`：任意历史双时态回溯查询（还原“在过去 `tx_at_ms` 时刻，Agent 认为 `valid_at_ms` 时刻的事实是什么”）。
+  - `retractFact(*_, fact_id, tx_now_ms)`：显式撤回活跃事实并闭环记账区间。
+  - `tracePredicateHistory(subject_id, predicate_id, out_facts)`：完整演化历史审计链。
+
+```cp
+import {
+    BiTemporalFact,
+    BiTemporalFactLedger,
+} from "cap:agentmem";
+
+pub fn demoBiTemporalFactLedger() {
+    let ledger = BiTemporalFactLedger.init();
+    // t=100: Agent 记录用户居住城市 = 北京 (hash=0x11)
+    * = ledger.assertFact(1, 10, 0x11, 100, 100, 9000);
+    // t=200: 用户搬家至上海 (hash=0x22) -> 自动失效旧事实并链接 superseded_by
+    * = ledger.assertFact(1, 10, 0x22, 200, 200, 9500);
+
+    let out: [4]BiTemporalFact = [BiTemporalFact{}; 4];
+    let out_s: []BiTemporalFact = out[0..];
+    * = ledger.queryCurrentFacts(1, 250, *out_s); // 命中 0x22
+    * = ledger.queryAsOf(1, 150, 150, *out_s);    // 回溯命中 0x11
+}
+```
