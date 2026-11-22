@@ -32,3 +32,16 @@ export {
 } from "./sigv4.cp";
 import sigv4 from "./sigv4.cp";
 pub const SigV4Credentials = sigv4.S3Credentials;
+
+export {
+    S3_XML_ERR_MAX_FIELD_LEN,
+    S3XmlErrorParseError,
+    S3ErrorCategory,
+    S3SignErrorInfo,
+    getS3SignErrorInfo,
+    classifyS3ErrorCode,
+    isS3ErrorRetryable,
+    S3XmlErrorRecord,
+    parseS3XmlError,
+    formatS3XmlError,
+} from "./xml_error.cp";
