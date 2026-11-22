@@ -477,6 +477,7 @@ pub fn demoSniffer() {
 | 归档容器 | `lib/pack/cab.cp` | Microsoft Cabinet (`.cab`) | 零堆分配 CAB 归档头、文件夹与文件条目解析器 |
 | 只读镜像 | `lib/pack/squashfs.cp` | Linux SquashFS v4.0 | 零堆分配 SquashFS v4.0 超级块与元数据解析器 |
 | 内容定义分块与去重 | `lib/pack/cdc_chunker.cp` | FastCDC (Gear Hash) | 零堆分配双掩码归一化 FastCDC 分块器与开放寻址去重索引（`FastCdcChunker` / `CdcDedupTable`） |
+| 倒排表与时序整数压缩 | `lib/pack/delta_varint.cp` | ZigZag / ULEB128 / Delta / DoD | 零堆分配 ZigZag Varint、单调 DocID Delta 与 Gorilla 风格时序 Delta-of-Delta 编解码器 |
 | 参考归档（不导出） | `lib/pack/{zstd,brotli,tar,zip}_.cp` | Zstd / Brotli / Tar / ZIP（仅参考） | 与 `lib/pack/` 权威实现功能重叠，保留供对比分析，不在 `cap:pack` 重复导出 |
 
 ### FastCDC 内容定义分块与去重 QuickStart 示例 (`cdc_chunker.cp`)
@@ -504,6 +505,43 @@ pub fn demoFastCdcDedup(dataset: []const u8) {
         * = dedup.observe(spans[i]);
     }
     * = dedup.dedupRatio(); // [0.0, 1.0] 字节去重率
+}
+```
+
+### ZigZag Varint / Delta / Delta-of-Delta 倒排表与时序压缩 QuickStart 示例 (`delta_varint.cp`)
+
+面向倒排索引 DocID 列表（Lucene / BM25）、时序数据库时间戳（Gorilla / Prometheus）、列式存储（Parquet / Arrow）与 WAL 的 100% 零动态堆分配整数序列编解码内核：
+
+- **导出符号**：`VARINT_MAX_U64_BYTES` (`10`)、`VarintDecodeResult`、`SignedVarintDecodeResult`、`DeltaBlockStats`、`zigzagEncodeI64`/`zigzagDecodeU64`、`encodeUvarint64`/`decodeUvarint64`（严格拦截截断、超 10 字节与第 10 字节 `> 0x01` 溢出）、`encodeSvarint64`/`decodeSvarint64`、`encodeDeltaU64`/`decodeDeltaU64`（拒绝非单调序列）、`encodeDeltaOfDeltaI64`/`decodeDeltaOfDeltaI64`、`computeDeltaCompressionStats`。
+
+```cp
+import {
+    encodeDeltaU64,
+    decodeDeltaU64,
+    encodeDeltaOfDeltaI64,
+    decodeDeltaOfDeltaI64,
+    computeDeltaCompressionStats,
+} from "cap:pack";
+
+pub fn demoDeltaVarintCompression() {
+    // 1. 单调递增 DocID 倒排表 Delta + ULEB128 压缩
+    const doc_ids: [5]u64 = [100, 103, 105, 112, 120];
+    let enc_buf: [64]u8 = [0; 64];
+    let enc_s: []u8 = enc_buf[0..];
+    if (n_bytes := encodeDeltaU64(doc_ids[0..], enc_s)) {
+        let out_ids: [5]u64 = [0; 5];
+        let out_s: []u64 = out_ids[0..];
+        * = decodeDeltaU64(enc_buf[0..n_bytes], out_s);
+        * = computeDeltaCompressionStats(doc_ids.len, n_bytes);
+    }
+
+    // 2. 固定周期带微抖动时序时间戳 Delta-of-Delta + ZigZag 压缩
+    const ts: [5]i64 = [1700000000000, 1700000001000, 1700000002001, 1700000002999, 1700000004000];
+    if (n_ts := encodeDeltaOfDeltaI64(ts[0..], enc_s)) {
+        let out_ts: [5]i64 = [0; 5];
+        let out_ts_s: []i64 = out_ts[0..];
+        * = decodeDeltaOfDeltaI64(enc_buf[0..n_ts], out_ts_s);
+    }
 }
 ```
 

@@ -348,3 +348,22 @@ export {
     CdcDedupStats,
     CdcDedupTable,
 } from "./cdc_chunker.cp";
+
+// --- delta_varint ---
+export {
+    VARINT_MAX_U64_BYTES,
+    VarintDecodeResult,
+    SignedVarintDecodeResult,
+    DeltaBlockStats,
+    zigzagEncodeI64,
+    zigzagDecodeU64,
+    encodeUvarint64,
+    decodeUvarint64,
+    encodeSvarint64,
+    decodeSvarint64,
+    encodeDeltaU64,
+    decodeDeltaU64,
+    encodeDeltaOfDeltaI64,
+    decodeDeltaOfDeltaI64,
+    computeDeltaCompressionStats,
+} from "./delta_varint.cp";
