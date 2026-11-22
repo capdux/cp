@@ -14,7 +14,7 @@ import {
     parseLasHeader,
     LasVlrIter,
     LasPointIter,
-} from "cap:las";
+} from "cap:science";
 
 fn zeroBytes(buf: []u8) {
     let i: usize = 0;

@@ -14,7 +14,7 @@ import {
     writeStlBinary,
     computeStlBinaryBounds,
     countAsciiStlFacets,
-} from "cap:stl";
+} from "cap:science";
 
 const SAMPLE_ASCII_STL: []const u8 =
     "solid unit_quad\n" ++

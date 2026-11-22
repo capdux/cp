@@ -19,7 +19,7 @@ import {
     parseMol2AtomLine,
     parseMol2BondLine,
     summarizeMol2,
-} from "cap:mol2";
+} from "cap:science";
 
 fn approxEq(a: f64, b: f64, eps: f64): bool {
     const diff = if (a > b) (a - b) else (b - a);

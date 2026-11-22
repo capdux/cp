@@ -34,7 +34,7 @@ import {
     findSamHeaderTag,
     parseSamLine,
     summarizeSam,
-} from "cap:sam";
+} from "cap:science";
 
 const SAMPLE_SAM: []const u8 =
     "@HD\tVN:1.6\tSO:coordinate\r\n" ++

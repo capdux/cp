@@ -10,7 +10,7 @@ import {
     parsePlyHeader,
     PlyElementIter,
     plyScalarSize,
-} from "cap:ply";
+} from "cap:science";
 
 const SAMPLE_PLY_ASCII: []const u8 =
     "ply\n" ++

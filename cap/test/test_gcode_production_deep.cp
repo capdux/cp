@@ -12,7 +12,7 @@ import {
     parseGcodeLine,
     GcodeIter,
     summarizeGcode,
-} from "cap:gcode";
+} from "cap:science";
 
 fn approxEq(a: f64, b: f64): bool {
     const diff = if (a > b) (a - b) else (b - a);

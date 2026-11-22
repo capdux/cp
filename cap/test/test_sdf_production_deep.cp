@@ -16,7 +16,7 @@ import {
     parseMolHeader,
     findSdfProp,
     summarizeSdf,
-} from "cap:sdf";
+} from "cap:science";
 
 fn approxEq(a: f64, b: f64, eps: f64): bool {
     const diff = if (a > b) (a - b) else (b - a);

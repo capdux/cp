@@ -7,7 +7,7 @@ import {
     PidController,
     zieglerNicholsPid,
     rateLimit,
-} from "cap:pid";
+} from "cap:science";
 
 fn absF(x: f64): f64 {
     return if (x < 0.0) -x else x;

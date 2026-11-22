@@ -9,7 +9,7 @@ import {
     isGff3,
     parseGffLine,
     summarizeGff,
-} from "cap:gff";
+} from "cap:science";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

@@ -12,7 +12,7 @@ import {
     parseObjVec3,
     parseObjFaceVertex,
     summarizeObj,
-} from "cap:obj";
+} from "cap:science";
 
 const SAMPLE_OBJ: []const u8 =
     "# Wavefront OBJ sample mesh\r\n" ++
