@@ -163,6 +163,7 @@ pub fn demoPhaseASys(): !void {
 | 服务编排与架构（Batch 40） | `lib/sys/pipeline.cp` | Onion Middleware Pipeline | 可组合洋葱中间件与多阶段流水线 (`Pipeline`, `PipelineContext`, `StageSpec`) |
 | 服务编排与架构（Batch 40） | `lib/sys/pubsub_topic.cp` / `lib/sys/pubsub_broker.cp` | NATS / MQTT Wildcard Pub/Sub | 进程内通配符发布订阅代理、背压丢弃策略与 Retained 消息重放 |
 | 并发与批量通道 | `lib/sys/byte_ring.cp` | 2-Pow Bitmask Byte/Frame Ring | `ByteRingQueue` / `ByteRingStats`：零堆分配 2 的幂位掩码批量环形字节队列与 4B 小端长度前缀帧原语 |
+| 句柄池与资源表 | `lib/sys/gen_slab.cp` | ABA-Safe Generational Slab | `GenSlabPool` / `GenHandle` / `GenSlabStats`：零堆分配 O(1) 代次安全定长对象句柄池（防 ABA 与 double-free） |
 
 ---
 
@@ -189,5 +190,34 @@ pub fn demoByteRingQueue() {
         * = frame_buf[0..n2]; // "agent-event-2"
     }
     * = ring.stats();
+}
+```
+
+### 零堆分配代次安全（Generational）Slab 对象句柄池示例 (`gen_slab.cp`)
+
+面向 Actor 运行时、连接句柄表与无 GC 资源注册表的 100% 纯 CP 零动态堆分配 O(1) 代次安全定长句柄池（最高 256 槽位，LIFO 空闲栈 + Bump 游标 + 非零 32 位代次防 ABA / Double-Free）：
+
+- **导出符号**：`GEN_SLAB_MAX_SLOTS` (`256`)、`GEN_SLAB_NO_FREE` (`0xFFFF`)、`GenHandle`（`index: u16`, `generation: u32`, `toU64()`, `fromU64(raw)`, `eql(other)`）、`GenSlabStats`、`GenSlabPool`（`init`, `alloc`, `get`, `set`, `free`, `is_alive`, `clear`, `stats`）。
+
+```cp
+import {
+    GenHandle,
+    GenSlabPool,
+} from "cap:sys";
+
+pub fn demoGenSlabPool() {
+    let pool = GenSlabPool.init(64) ?? return;
+
+    const h1 = pool.alloc(0xCAFE_0001) ?? return;
+    const raw_id = h1.toU64();
+    const decoded = GenHandle.fromU64(raw_id);
+    * = pool.set(decoded, 0xCAFE_0002);
+
+    // 释放 h1 后复用同一槽位 -> 新句柄 h2 代次递增，旧句柄 h1 严格失效（防 ABA）
+    * = pool.free(h1);
+    const h2 = pool.alloc(0xBEEF_0003) ?? return;
+    * = pool.is_alive(h1); // false
+    * = pool.is_alive(h2); // true
+    * = pool.stats();
 }
 ```

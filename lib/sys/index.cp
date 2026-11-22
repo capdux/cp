@@ -1255,3 +1255,12 @@ export {
     ByteRingStats,
     ByteRingQueue,
 } from "./byte_ring.cp";
+
+// --- gen_slab (ABA-Safe O(1) Generational Slab Object Handle Pool) ---
+export {
+    GEN_SLAB_MAX_SLOTS,
+    GEN_SLAB_NO_FREE,
+    GenHandle,
+    GenSlabStats,
+    GenSlabPool,
+} from "./gen_slab.cp";
