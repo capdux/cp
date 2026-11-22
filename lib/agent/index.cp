@@ -308,3 +308,13 @@ export {
     compareWithBaselineGate,
     renderEvalGateSummary,
 } from "./eval_gate.cp";
+
+export {
+    LlmProviderWire,
+    LlmDeltaKind,
+    LlmDeltaEvent,
+    LlmStreamStats,
+    parseOpenAiSseData,
+    parseAnthropicSseData,
+    LlmDeltaParser,
+} from "./llm_stream.cp";

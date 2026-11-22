@@ -1611,3 +1611,55 @@ fn runCiEvalGate() {
     }
 }
 ```
+
+---
+
+## 子模块：统一 LLM 流式增量解析器（OpenAI / Anthropic SSE 兼容）（`llm_stream.cp`）
+
+### 核心特性
+
+- **双协议统一抽象（`LlmProviderWire` / `LlmDeltaKind` / `LlmDeltaEvent`）**：将 OpenAI Chat Completions SSE 与 Anthropic Messages SSE 归一化为统一的 `TextDelta | ReasoningDelta | ToolCallStart | ToolCallArgsDelta | Usage | Done | Ignore` 事件模型，一次对接覆盖主流大模型流式输出。
+- **100% 零堆分配栈缓冲解码**：所有字符串切片（`text`、`tool_call_id`、`tool_name`、`finish_reason`）全部写入调用方提供的单一 `[]u8` 缓冲，自动解码 `\"` / `\n` / `\r` / `\t` / `\\` / `\/` / `\b` / `\f` / `\uXXXX`（UTF-8）转义序列，缓冲不足时安全截断并置位 `truncated = true`，绝不越界。
+- **全特性协议兼容**：
+  - **OpenAI（`parseOpenAiSseData`）**：支持 `choices[0].delta.content`、`reasoning_content`、`tool_calls`（`index`/`id`/`function.name`/`function.arguments`）、`finish_reason`、顶层 `usage`（`prompt_tokens`/`completion_tokens`）与 `data: [DONE]` 哨兵。
+  - **Anthropic（`parseAnthropicSseData`）**：支持 `message_start`（`input_tokens`）、`content_block_start`（`tool_use`）、`content_block_delta`（`text_delta` / `thinking_delta` / `input_json_delta`）、`message_delta`（`stop_reason` / `usage`）与 `message_stop`；支持显式 `event_type` 或自动回退 JSON 顶层 `"type"` 字段。
+- **统计状态机（`LlmDeltaParser` / `LlmStreamStats`）**：内置流式事件计数、字节量、Token 用量、截断与畸形 JSON 错误统计，支持 `reset()` 复用，可与 `SseStreamParser` 无缝串联。
+
+### 导出清单
+
+- **协议与事件模型**：`LlmProviderWire`（`OpenAi | Anthropic`）、`LlmDeltaKind`（`TextDelta | ReasoningDelta | ToolCallStart | ToolCallArgsDelta | Usage | Done | Ignore`）、`LlmDeltaEvent`、`LlmStreamStats`
+- **解析函数与状态机**：`parseOpenAiSseData`、`parseAnthropicSseData`、`LlmDeltaParser`（`init`, `reset`, `stats`, `isDone`, `parseEvent`, `parseData`）
+
+### QuickStart 示例
+
+```cp
+import {
+    LlmProviderWire,
+    LlmDeltaKind,
+    LlmDeltaParser,
+} from "cap:agent";
+
+fn streamLlmQuickStart() {
+    let parser = LlmDeltaParser.init(LlmProviderWire.OpenAi);
+    let scratch: [512]u8 = [0; 512];
+    let out_buf: []u8 = scratch[0..];
+
+    const frames: [4]string = [
+        "data: {\"choices\":[{\"delta\":{\"reasoning_content\":\"Plan first\\n\"}}]}",
+        "data: {\"choices\":[{\"delta\":{\"content\":\"Hello, \\\"world\\\"!\"}}]}",
+        "data: {\"choices\":[],\"usage\":{\"prompt_tokens\":42,\"completion_tokens\":18}}",
+        "data: [DONE]",
+    ];
+
+    let i: usize = 0;
+    while (i < frames.len) : (i += 1) {
+        if (ev := parser.parseData(frames[i], out_buf)) {
+            if (ev.kind == LlmDeltaKind.TextDelta) {
+                * = ev.text; // "Hello, \"world\"!"
+            }
+        }
+    }
+    const stats = parser.stats();
+    * = stats; // done == true, input_tokens == 42, output_tokens == 18
+}
+```
