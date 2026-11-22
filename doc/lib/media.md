@@ -555,6 +555,55 @@ pub fn demoH264RtpPipeline(sps_nal: []const u8, pps_nal: []const u8, idr_nal: []
 }
 ```
 
+### 10. WebM/EBML 流式实时封装解封装、VP8/VP9/AV1 OBU 帧头解析与 RFC 7741 VP8 RTP 引擎 (`webmMux.cp`)
+
+面向 WebRTC 录制、浏览器 MediaSource 实时流与免专利视频编码管线的 100% 纯 CP 零动态堆分配、外部切片驱动核心：
+
+- **RFC 8794 EBML VINT 与元素 ID**：
+  - `encodeEbmlVint` / `encodeEbmlVintFixed` / `decodeEbmlVint`（完整支持 1..8 字节变长整数与流式未知长度哨兵 `WEBM_EBML_UNKNOWN_SIZE_RAW = 0x01FFFFFFFFFFFFFF`）；
+  - `encodeEbmlElementId` / `decodeEbmlElementId`（1..4 字节元素 ID）。
+- **流式 WebM 封装与零拷贝解封装**：
+  - `WebmMuxer`（支持已知长度回填与直播未知长度双模式）：写入合标 `EBML`（`DocType="webm"`, version 4/2）、`Segment`、`Info`（`TimecodeScale`、`MuxingApp`、`WritingApp`）、多轨 `Tracks`（`V_VP8`/`V_VP9`/`V_AV1` + `A_OPUS` 含 `OpusHead` `CodecPrivate`）及自动按 `i16` 相对时间码切分 `Cluster`/`SimpleBlock`；
+  - `WebmDemuxIter`：零拷贝遍历已知/未知长度 `Segment` 与 `Cluster`，解析轨道元数据与逐帧 `WebmDemuxFrame`（`track_number`、`timestamp_ms`、`is_keyframe`、`payload`）。
+- **VP8 / VP9 / AV1 OBU 比特流帧头解析**：
+  - `parseVp8FrameHeader`（RFC 6386 3 字节未压缩头、关键帧 `0x9D 0x01 0x2A` 同步码与宽高/缩放因子）；
+  - `parseVp9FrameHeader`（`frame_marker==0b10`、profile 0..3、`show_existing_frame`、`0x49 0x83 0x42` 同步码、色彩配置与帧宽高）；
+  - `Av1ObuIter`（LEB128 尺寸与扩展头 `temporal_id`/`spatial_id`）与 `parseAv1SequenceHeaderBasic`（解析 `seq_profile`、`still_picture`、`reduced_still_picture_header` 与最大帧宽高）。
+- **WebRTC VP8 RTP 分包与抗丢包重组（RFC 7741）**：
+  - `Vp8RtpDescriptor` / `encodeVp8RtpDescriptor` / `decodeVp8RtpDescriptor`（完整支持 `X/N/S/PID` 及 `I` 7/15-bit `PictureID`、`L` `TL0PICIDX`、`T/K` `TID/Y/KEYIDX`）；
+  - `packetizeVp8Rtp`（按 MTU 切分，首包 `S=1`、续包 `S=0`）与 `Vp8RtpDepacketizer`（跨 16-bit 序列号回绕重组，丢包/残缺帧自动丢弃并统计）。
+
+```cp
+import {
+    WEBM_DEFAULT_TIMECODE_SCALE_NS,
+    WebmVideoCodec,
+    WebmTrackConfig,
+    WebmMuxer,
+    WebmDemuxTrackInfo,
+    WebmDemuxIter,
+} from "cap:media";
+
+pub fn demoWebmMuxRoundtrip(vp9_keyframe: []const u8, opus_pkt: []const u8)! {
+    let wire: [4096]u8 = [0; 4096];
+    let mux = WebmMuxer.init(wire[0..], WEBM_DEFAULT_TIMECODE_SCALE_NS, false)?;
+    const tracks: [2]WebmTrackConfig = [
+        WebmTrackConfig.video(1, WebmVideoCodec.vp9, 1280, 720),
+        WebmTrackConfig.opusAudio(2, 48000.0, 2, "OpusHead\x01\x02\x38\x01\x80\xBB\x00\x00\x00\x00\x00"),
+    ];
+    * = mux.writeHeader(tracks[0..], "cp-mux", "cap:media")?;
+    * = mux.writeSimpleBlock(1, 0, true, false, false, vp9_keyframe)?;
+    * = mux.writeSimpleBlock(2, 20, true, false, false, opus_pkt)?;
+    const total = mux.finish()?;
+
+    let out_tracks: [4]WebmDemuxTrackInfo = [WebmDemuxTrackInfo{}; 4];
+    let demux = WebmDemuxIter.init(wire[0..total], out_tracks[0..])?;
+    while (true) {
+        const opt = demux.nextFrame()?;
+        if (f := opt) { * = f.timestamp_ms; } else { break; }
+    }
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
