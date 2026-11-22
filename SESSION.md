@@ -1195,3 +1195,11 @@
 ### 2026-11-22（分类合并交付：lib/agent/cost_ledger.cp + 满 10 项轮换 | 2026-11-22 13:34:02）
 - **执行与结单汇报**：
   > 子智能体交付 lib/agent/cost_ledger.cp（多智能体层级 Token 与微美元成本归因账本及 Prompt-Cache 折扣核算，5/5 PASS），归入 cap:agent 并同步 cp_lib_ref.md；满 10 项回收 0ea48e08 并启全新 AI & Agent Runtime Absorber 推进 lib/mcp/resource_router.cp。
+
+### 2026-11-22（分类合并交付：lib/vector/kmeans.cp | 2026-11-22 13:37:59）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/vector/kmeans.cp（基于 @l2sq/@fma 8-lane SIMD 的零堆分配 K-Means++ 聚类与 IVF/PQ 码本训练器，5/5 PASS），归入 cap:vector 并同步 cp_lib_ref.md；续派 lib/attention/tiled_gemm.cp（综合实战 @dot/@fma/@splitAtMut 与 noalias）。
+
+### 2026-11-22（第 1 批历史重叠目录安全收敛验收（cap:pkg & cap:css） | 2026-11-22 13:38:44）
+- **执行与结单汇报**：
+  > 按用户确立的「Bun 优先 + 冲突留 xxx_.cp 参考」铁律完成第 1 批治理：1) lib/pkg/catalog.cp、lib/css/css_modules.cp、lib/css/keyframes.cp 零冲突归并入主包（旧目录保留薄向后兼容 re-export）；2) lib/mediaquery 涉及与权威 lib/css/media.cp 功能冲突，严格归档为 lib/css/media_query_.cp 并标注 Reference Only 头，0 覆盖/0 删除；3) 10/10 cpc check 与 8/8 cap test 全部 PASS；已续派第 2 批 cap:http 领域收敛。

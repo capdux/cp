@@ -274,3 +274,31 @@ export {
     PaletteOverrideColor,
     CssFontPaletteValuesRule,
 } from "./font_palette_values.cp";
+
+export {
+    CssModuleConfig,
+    PatternKind,
+    PatternSegment,
+    Pattern,
+    ReferenceKind,
+    CssModuleRef,
+    isValidCssIdent,
+    extractFileStemSanitized,
+    computeModuleHash,
+    scopeClassName,
+    parseComposesValue,
+} from "./css_modules.cp";
+
+import _keyframes from "./keyframes.cp";
+pub const VendorPrefix = _keyframes.VendorPrefix;
+pub const KeyframesNameKind = _keyframes.KeyframesNameKind;
+pub const KeyframesName = _keyframes.KeyframesName;
+pub const SelectorKind = _keyframes.SelectorKind;
+pub const CssKeyframeRuleSelector = _keyframes.KeyframeSelector;
+pub const KeyframeStop = _keyframes.KeyframeStop;
+pub const ParsedKeyframes = _keyframes.ParsedKeyframes;
+pub const KeyframeSegment = _keyframes.KeyframeSegment;
+pub const isReservedCssKeyword = _keyframes.isReservedCssKeyword;
+pub const parseKeyframesRule = _keyframes.parseKeyframesRule;
+pub const sortStopsByOffset = _keyframes.sortStopsByOffset;
+pub const sampleKeyframeSegment = _keyframes.sampleKeyframeSegment;

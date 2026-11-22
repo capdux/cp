@@ -186,6 +186,22 @@ map.sort();
 // map.get("react") == "^19.0.0", map.get("chalk") == "5.3.0"
 ```
 
+### 零分配 Monorepo `catalog:` 协议解析与静态映射（`catalog.cp`）
+
+> 归并自原 `lib/catalog/`（Bun `src/install/lockfile/CatalogMap.cp`）；为避免与 `workspace.cp` 既有堆分配 `CatalogMap`/`CatalogEntry` 重名冲突，主包以 `StaticCatalogMap` / `CatalogProtocolEntry` 别名导出，协议工具函数保持原名。
+
+- 核心导出：`CatalogError`, `CatalogRef`, `CatalogProtocolEntry`, `StaticCatalogMap`, `isCatalogProtocol`, `isValidCatalogName`, `parseCatalogRef`, `formatCatalogRef`。
+
+```typescript
+import { StaticCatalogMap, parseCatalogRef, isCatalogProtocol } from "cap:pkg";
+
+const ref = parseCatalogRef("catalog:react19")?;
+// ref.is_default == false, ref.catalog_name == "react19"
+let map = StaticCatalogMap.init();
+map.set("react19", "react", "^19.0.0")?;
+// map.resolve("react", "catalog:react19") == "^19.0.0"
+```
+
 ---
 
 ## 上游 Bun 包管理行为契约与边界注意事项

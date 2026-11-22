@@ -290,6 +290,20 @@ const minified = rule.toCssMinified(buf[0..])?;
 // "@property --brand-accent{syntax:\"<color>\";inherits:true;initial-value:#3b82f6}"
 ```
 
+### CSS Modules 命名模式、哈希与 `composes` 解析（`css_modules.cp`）
+
+> 归并自原 `lib/cssmodules/`（Bun `src/css/css_modules.cp`）。
+
+- 核心导出：`CssModuleConfig`, `PatternKind`, `PatternSegment`, `Pattern`, `ReferenceKind`, `CssModuleRef`, `isValidCssIdent`, `extractFileStemSanitized`, `computeModuleHash`, `scopeClassName`, `parseComposesValue`。
+
+### `@keyframes` 规则解析、排序与时间线采样（`keyframes.cp`）
+
+> 归并自原 `lib/keyframes/`（Bun `src/css/rules/keyframes.cp`）；为避免与 `atrules.cp` 既有 `KeyframeSelector` 冲突，`KeyframeSelector` 在主包中别名为 `CssKeyframeRuleSelector`。
+
+- 核心导出：`VendorPrefix`, `KeyframesNameKind`, `KeyframesName`, `SelectorKind`, `CssKeyframeRuleSelector`, `KeyframeStop`, `ParsedKeyframes`, `KeyframeSegment`, `isReservedCssKeyword`, `parseKeyframesRule`, `sortStopsByOffset`, `sampleKeyframeSegment`。
+
+> 注：原 `lib/mediaquery/mediaquery.cp` 因与 `lib/css/media.cp` 存在 Media Queries Level 4 功能重叠，按参考归档规范保留为 `lib/css/media_query_.cp`（不从 `cap:css` 重复导出）。
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项

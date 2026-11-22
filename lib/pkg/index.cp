@@ -99,3 +99,13 @@ export {
     mustQuoteYarnKey,
     YarnLockPrinter,
 } from "./yarn_lock_printer.cp";
+
+import _catalog from "./catalog.cp";
+pub const CatalogError = _catalog.CatalogError;
+pub const CatalogRef = _catalog.CatalogRef;
+pub const CatalogProtocolEntry = _catalog.CatalogEntry;
+pub const StaticCatalogMap = _catalog.CatalogMap;
+pub const isCatalogProtocol = _catalog.isCatalogProtocol;
+pub const isValidCatalogName = _catalog.isValidCatalogName;
+pub const parseCatalogRef = _catalog.parseCatalogRef;
+pub const formatCatalogRef = _catalog.formatCatalogRef;

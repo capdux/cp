@@ -95,3 +95,11 @@ export {
     simdBatchTopKCosineF32,
     simdBatchTopKL2F32,
 } from "./simd_ops.cp";
+
+export {
+    KMeansConfig,
+    KMeansResult,
+    kmeansInitPlusPlusF32,
+    kmeansAssignF32,
+    kmeansFitF32,
+} from "./kmeans.cp";

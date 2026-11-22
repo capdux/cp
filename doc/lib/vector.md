@@ -24,6 +24,7 @@
 | `lib/vector/reranker.cp` | `// Origin: Pure-CP Stdlib (AI RAG Reranker: MMR, ColBERT MaxSim & IR Metrics) \| Created: 2026-11-22` | 零辅助缓冲 MMR (`mmrSelect`)、ColBERT Late-Interaction (`colbertMaxSim`)、原位 MinMax/ZScore 归一化与 `NDCG@K` / `MRR` / `Recall@K` IR 评测 |
 | `lib/vector/filter.cp` | `// Origin: Pure-CP Stdlib (AI Vector Search Metadata Bitset Filter & Selectivity Planner) \| Created: 2026-11-22` | 1024-bit 零堆分配位图 (`FilterBitset`)、数值/范围元数据谓词过滤、选择度自适应 Filtered ANN 路由规划器与位跳跃掩码 Top-K 余弦检索 |
 | `lib/vector/simd_ops.cp` | `// Origin: Pure-CP Stdlib (AI-Native SIMD Vector Distance & Batch Retrieval Kernels using @dot/@l2sq/@fma) \| Created: 2026-11-22` | 原生 8-lane SIMD 内建原语 (`@dot`/`@l2sq`/`@fma`) 驱动的向量距离、单舍入 AXPY 与零堆分配批量 Top-K Cosine / L2 检索核 |
+| `lib/vector/kmeans.cp` | `// Origin: Pure-CP Stdlib (AI-Native SIMD K-Means++ Clustering & IVF/PQ Codebook Trainer) \| Created: 2026-11-22` | 基于 `@l2sq`/`@fma` 原生 SIMD 与确定性 SplitMix64 的零堆分配 K-Means++ 聚类与 IVF/PQ 码本训练器 |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -485,5 +486,36 @@ pub fn demoSimdVectorOps() {
     let y_s: []f32 = y[0..];
     * = simdAxpyInPlaceF32(0.5, query[0..], y_s);
     * = simdCosineF32(query[0..], y[0..]);
+}
+```
+
+### 11. 原生 SIMD K-Means++ 向量聚类与码本训练 (`kmeans.cp`)
+
+面向 IVF 粗量化质心与 PQ 子空间码本训练的零堆分配 SIMD K-Means++ 聚类器，全程调用原生 `@l2sq` 与 `@fma` 内建原语：
+
+- **`KMeansConfig`**：`{ k: usize = 1, max_iters: u32 = 50, tol: f32 = 0.0001, seed: u64 = 42 }`
+- **`KMeansResult`**：`{ iters: u32, inertia: f64, converged: bool, empty_reseeded: u32 }`
+- **`kmeansInitPlusPlusF32(data, n, dim, k, seed, centroids: *[]f32, min_dists_buf: *[]f32): bool`**：确定性 SplitMix64 + `@l2sq` 距离加权 K-Means++ 初始质心采样。
+- **`kmeansAssignF32(data, n, dim, centroids, k, assignments: *[]usize): f64?`**：基于 `@l2sq` 分配最近质心并返回总 inertia。
+- **`kmeansFitF32(data, n, dim, cfg, centroids: *[]f32, assignments: *[]usize, counts_buf: *[]usize, scratch_dists: *[]f32): KMeansResult?`**：完整 Lloyd 迭代 + `@fma` 原位质心更新 + 空簇最远点重采样防退化 + 收敛早停。
+
+```typescript
+import { KMeansConfig, kmeansFitF32 } from "cap:vector";
+
+pub fn demoSimdKMeans(data: []const f32, n: usize, dim: usize) {
+    let centroids: [16]f32 = undefined; // k=4, dim=4
+    let assignments: [64]usize = undefined;
+    let counts: [4]usize = undefined;
+    let scratch: [64]f32 = undefined;
+
+    let cent_s: []f32 = centroids[0..];
+    let assign_s: []usize = assignments[0..];
+    let counts_s: []usize = counts[0..];
+    let scratch_s: []f32 = scratch[0..];
+
+    const cfg = KMeansConfig{ k: 4, max_iters: 30, tol: 0.0001, seed: 2026 };
+    if (res := kmeansFitF32(data, n, dim, cfg, cent_s, assign_s, counts_s, scratch_s)) {
+        * = res;
+    }
 }
 ```
