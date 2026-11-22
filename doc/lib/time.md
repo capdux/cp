@@ -467,6 +467,48 @@ pub fn demoWatchdog() {
 
 ---
 
+## 零分配分布式层次请求截止时间与 RPC 超时传播引擎 (`deadlines.cp`)
+
+面向微服务 RPC 链式调用与多阶段 Agent 执行预算控制的 100% 纯 CP 零动态堆分配截止时间与 `grpc-timeout` 线缆协议引擎：
+
+- **常量与枚举**：
+  - `DEADLINE_MAX_NODES = 64`、`DEADLINE_NO_NODE = 0xFFFF`、`DEADLINE_TAG_MAX_LEN = 32`、`GRPC_TIMEOUT_MAX_DIGITS = 8`
+  - `DeadlineStatus`（`active | expired | cancelled | parent_cancelled | exhausted_reserve`；配套 `formatDeadlineStatus`）
+  - `DeadlineUnit`（`ns | us | ms | sec | min | hour`；配套 `formatDeadlineUnit`）
+- **`grpc-timeout` 线缆编解码**：
+  - `parseGrpcTimeoutHeader(header): i64?`：解析 `<1..8位数字><n|u|m|S|M|H>` 为微秒，严格拒绝负值、超长数字、非法后缀与溢出。
+  - `formatGrpcTimeoutHeader(remaining_us, *out_buf): usize?`：自动挑选符合 gRPC 8 位数字上限的最优紧凑单位。
+- **值对象 `RequestDeadline`**：
+  - `fromTimeoutUs(now_us, timeout_us)` / `deriveChild(local_timeout_us, now_us)`（单调不增截断：`<=` 父截止时间）
+  - `remainingUs(now_us)` / `isExpired(now_us)` / `canFitStage(now_us, min_stage_us)` / `reserveForRetry(now_us, reserve_us)`
+- **层次取消树 `DeadlineTree`**：
+  - `init()` / `createRoot(*_, now_us, timeout_us, tag)` / `createChild(*_, parent_id, now_us, local_timeout_us, tag)`
+  - `statusAt(id, now_us)` / `remainingUs(id, now_us)` / `getNode(id)`
+  - `cancel(*_, id)`（纯迭代零递归级联传播 `parent_cancelled`）/ `release(*_, id)` / `sweepExpired(*_, now_us)` / `stats()`
+
+```cp
+import {
+    parseGrpcTimeoutHeader,
+    formatGrpcTimeoutHeader,
+    DeadlineTree,
+} from "cap:time";
+
+pub fn demoDeadlines() {
+    const budget_us = parseGrpcTimeoutHeader("500m") ?? return; // 500_000 us
+    let tree = DeadlineTree.init();
+    const root = tree.createRoot(1_000_000, budget_us, "api.checkout") ?? return;
+    const child = tree.createChild(root, 1_100_000, 1_000_000, "rpc.pay") ?? return; // 自动截断至父截止时间
+
+    const rem = tree.remainingUs(child, 1_200_000) ?? 0; // 300_000 us
+    let hdr_buf: [16]u8 = [0; 16];
+    let hdr_s: []u8 = hdr_buf[0..];
+    * = formatGrpcTimeoutHeader(rem, *hdr_s); // "300m"
+    * = tree.cancel(root); // 级联取消 child (parent_cancelled)
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [health.md](time/health.md)

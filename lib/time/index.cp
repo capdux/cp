@@ -301,3 +301,20 @@ export {
     computePhiAccrual,
     HeartbeatWatchdog,
 } from "./watchdog.cp";
+
+export {
+    DEADLINE_MAX_NODES,
+    DEADLINE_NO_NODE,
+    DEADLINE_TAG_MAX_LEN,
+    GRPC_TIMEOUT_MAX_DIGITS,
+    DeadlineStatus,
+    DeadlineUnit,
+    RequestDeadline,
+    DeadlineNode,
+    DeadlineTreeStats,
+    formatDeadlineStatus,
+    formatDeadlineUnit,
+    parseGrpcTimeoutHeader,
+    formatGrpcTimeoutHeader,
+    DeadlineTree,
+} from "./deadlines.cp";
