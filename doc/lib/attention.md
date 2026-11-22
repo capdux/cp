@@ -31,6 +31,7 @@
 - **`gemmTransposedBF32` / `gemmF32` / `batchedGemmTransposedBF32` / `splitGemmRowsF32`** (`tiled_gemm.cp`)：零堆分配 Cache-Friendly 分块矩阵乘法 GEMM 与多头批量 QK^T MatMul 核，基于 CP 原生 8-lane SIMD `@dot`、`@fma` 与零拷贝互斥分片 `@splitAtMut` 实现。
 - **`conv1dCausalF32` / `depthwiseConv1dF32` / `hzToMel` / `melToHz` / `buildMelFilterbankF32` / `applyMelFilterbankF32`** (`conv1d.cp`)：零堆分配 AI 语音/状态空间 1D 因果空洞卷积、深度可分离 1D 卷积、HTK 梅尔频率变换、三角梅尔滤波器组构建与 `@dot` SIMD 对数梅尔谱投影核（对标 Whisper / Mamba / ConvNeXt-1D）。
 - **`ImageNormParams` / `normalizeRgbU8ToF32` / `patchifyHwcF32` / `patchEmbedLinearF32` / `build2dSinCosPosEmbF32` / `applyRope2dInPlaceF32`** (`vision_patch.cp`)：零堆分配多模态视觉大模型（ViT / CLIP / Qwen2-VL / Flux）前端核，覆盖 `@fma` RGB 归一化、HWC Patchify、`@dot` 线性补丁投影、MAE/ViT 2D 正弦位置编码与严格保范数的 2D 空间 RoPE。
+- **`FP8_E4M3_MAX_FINITE` / `Fp8BlockScale` / `computeBlockAmaxF32` / `quantizeBlockFp8E4m3` / `dequantizeBlockFp8E4m3` / `gemvBlockFp8E4m3`** (`quant_fp8.cp`)：零堆分配 DeepSeek-V3 / H100 风格块级动态缩放 FP8 E4M3FN 量化与尺度外提融合混合精度 GEMV 核（支持任意非整除尾部块与全零块零除防护）。
 
 ## 3. API 速查
 
@@ -134,6 +135,8 @@
 | `patchifyHwcF32` / `patchEmbedLinearF32` | `(img_hwc, h, w, c, ps, out): usize?` / `(patches, w, b, np, pdim, edim, out): bool` | 零堆分配 HWC 图像分块切分与 `@dot` 8-lane SIMD 线性补丁嵌入投影 |
 | `build2dSinCosPosEmbF32` | `(grid_h, grid_w, embed_dim, out_pos): bool` | MAE / ViT 2D 正弦余弦位置编码（前一半编 `y`、后一半编 `x`，要求 `embed_dim % 4 == 0`） |
 | `applyRope2dInPlaceF32` | `(vec: *[]f32, row, col, theta_base): bool` | Qwen2-VL / Flux 原位 2D 空间旋转位置编码（严格保 L2 范数不变） |
+| `computeBlockAmaxF32` / `quantizeBlockFp8E4m3` / `dequantizeBlockFp8E4m3` | `(src, block_size, out_q, out_scales): bool` | DeepSeek-V3 / H100 风格块级动态缩放（`amax / 448.0`）FP8 E4M3FN 量化与反量化（支持非整除尾块与全零块防护） |
+| `gemvBlockFp8E4m3` | `(x, w_q, w_scales, rows, cols, block_size, out_y): bool` | 零临时反量化大矩阵的块级 FP8 尺度外提融合 GEMV（块内 `@fma` 累加、块外乘加 `w_scale`） |
 
 ## 4. 示例
 
@@ -843,5 +846,26 @@ pub fn demoVisionPatchFrontend() {
     let q_tok: [8]f32 = [1.0, 0.5, -0.5, 0.25, 0.8, -0.4, 0.2, 0.6];
     let q_s: []f32 = q_tok[0..];
     * = applyRope2dInPlaceF32(q_s, 1, 2, 10000.0);
+}
+```
+
+### DeepSeek-V3 / H100 块级 FP8 E4M3 量化与融合 GEMV 示例 (`quant_fp8.cp`)
+
+```cp
+import {
+    quantizeBlockFp8E4m3,
+    gemvBlockFp8E4m3,
+} from "cap:attention";
+
+pub fn demoBlockFp8Gemv(w_row0: []const f32, x: []const f32) {
+    let w_q: [64]u8 = [0; 64];
+    let w_scales: [2]f32 = [0.0; 2]; // cols=64, block_size=32 -> 2 blocks
+    let w_q_s: []u8 = w_q[0..];
+    let w_s: []f32 = w_scales[0..];
+    * = quantizeBlockFp8E4m3(w_row0, 32, w_q_s, w_s);
+
+    let y: [1]f32 = [0.0];
+    let y_s: []f32 = y[0..];
+    * = gemvBlockFp8E4m3(x, w_q[0..], w_scales[0..], 1, 64, 32, y_s);
 }
 ```

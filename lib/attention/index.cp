@@ -204,3 +204,12 @@ export {
     build2dSinCosPosEmbF32,
     applyRope2dInPlaceF32,
 } from "./vision_patch.cp";
+
+export {
+    FP8_E4M3_MAX_FINITE,
+    Fp8BlockScale,
+    computeBlockAmaxF32,
+    quantizeBlockFp8E4m3,
+    dequantizeBlockFp8E4m3,
+    gemvBlockFp8E4m3,
+} from "./quant_fp8.cp";

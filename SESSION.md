@@ -1372,3 +1372,7 @@
 ### 2026-11-22（分类合并交付：lib/agentmem/consolidation.cp | 2026-11-22 14:32:53）
 - **执行与结单汇报**：
   > 子智能体交付 lib/agentmem/consolidation.cp（AI Agent 长期记忆睡眠期巩固、重复去重合并、指数半衰期衰减与 pinned 保护剪枝引擎，5/5 PASS），归入 cap:agentmem 并同步 cp_lib_ref.md；续派 lib/text/unified_diff.cp。
+
+### 2026-11-22（分类合并交付：lib/attention/quant_fp8.cp | 2026-11-22 14:34:40）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/attention/quant_fp8.cp（DeepSeek-V3 风格块级动态缩放 FP8 E4M3FN 量化与 @fma 融合 GEMV，误差 < 2%，5/5 PASS），归入 cap:attention 并同步 cp_lib_ref.md；续派 lib/attention/constrained_mask.cp。
