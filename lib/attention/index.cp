@@ -51,3 +51,11 @@ export {
     moeLoadBalanceLoss,
     moeCombineOutputs,
 } from "./moe.cp";
+
+export {
+    LoraAdapter,
+    loraApplyAdd,
+    loraApplyWeightedSum,
+    loraMergeIntoBase,
+    loraUnmergeFromBase,
+} from "./lora.cp";

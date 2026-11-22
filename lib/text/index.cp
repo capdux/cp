@@ -69,3 +69,12 @@ export {
     bpeDecode,
     bpeCountTokens,
 } from "./bpe.cp";
+
+export {
+    WordPieceConfig,
+    WordPieceVocab,
+    EncodedSequenceStats,
+    wordPieceEncodeWord,
+    wordPieceEncodeText,
+    wordPieceEncodePair,
+} from "./wordpiece.cp";

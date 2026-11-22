@@ -15,6 +15,7 @@
 - **`QUANT_BLOCK_SIZE` / `BlockQ8_0` / `BlockQ4_0` / GEMV** (`quant_matmul.cp`)：零堆分配 GGML 风格 32 元素分块量化与整型累加矩阵向量乘法（`W_q8 * x_q8` 与经典 llama.cpp `W_q4 * x_q8` 混合量化推理核）。
 - **`OnlineSoftmaxState` / `FlashAttnConfig` / `flashAttentionForward` / `flashAttentionSingleQuery`** (`flash.cp`)：零堆分配 O(1) 额外内存 FlashAttention-2 分块在线 Softmax 前向核，绝不物化 $N \times N$ 分数矩阵，原生支持因果掩码、Mistral 滑动窗口注意力与单 token 自回归解码热路径。
 - **`MoeGateKind` / `MoeRouteEntry` / `MoeDispatchStats` / `moeRouteToken` / `moeDispatchBatch` / `moeLoadBalanceLoss` / `moeCombineOutputs`** (`moe.cp`)：零堆分配稀疏混合专家（Sparse MoE）推理调度核，对标 Mixtral / Switch Transformer / Qwen3-MoE / DeepSeek-V3，支持 Softmax 与 Sigmoid 门控、无辅助损失 `expert_bias` 均衡偏置、容量受限 CSR 分桶派发（含溢出丢弃统计）、负载均衡辅助损失 $L_{\text{aux}}$ 与多专家加权输出合并。
+- **`LoraAdapter` / `loraApplyAdd` / `loraApplyWeightedSum` / `loraMergeIntoBase` / `loraUnmergeFromBase`** (`lora.cp`)：零堆分配多租户 LoRA 低秩适配器前向推理与权重热融合核，支持零拷贝借用 `A/B` 低秩矩阵、$O(r(d_{\text{in}} + d_{\text{out}}))$ 动态增量叠加、多 LoRA 加权混合以及零推理开销的静态热合并与在线热卸载。
 
 ## 3. API 速查
 
@@ -55,6 +56,10 @@
 | `moeDispatchBatch` | `(token_routes, n_tokens, top_k, n_experts, expert_capacity, expert_offsets_out, expert_tokens_out, expert_weights_out, counts_scratch): MoeDispatchStats?` | 容量受限批量 Token-to-Expert CSR 分桶派发，按到达顺序截断溢出并统计 `dispatched`/`dropped` |
 | `moeLoadBalanceLoss` | `(router_probs_flat, chosen_experts_flat, n_tokens, n_experts, top_k, frac_scratch, prob_scratch): f64?` | Switch/Mixtral 负载均衡辅助损失 $L_{\text{aux}} = E \sum f_e P_e$（完美均匀为 `1.0`，单专家坍缩为 `E`） |
 | `moeCombineOutputs` | `(expert_outs_flat, routes, hidden_dim, out_vec): bool` | 按 Top-K 路由权重加权合并多专家隐藏层输出 |
+| `LoraAdapter.init` / `scaling` | `(id, in_dim, out_dim, rank, alpha, a_mat, b_mat): LoraAdapter?` / `(): f64` | 零拷贝构造并校验 LoRA 适配器描述符，返回缩放因子 `alpha / rank` |
+| `loraApplyAdd` | `(adapter, x, y_inout, hidden_scratch): bool` | 单适配器增量前向 `y += (alpha / r) * B * (A * x)`，延迟 $O(r(d_{\text{in}} + d_{\text{out}}))$ |
+| `loraApplyWeightedSum` | `(adapters, weights, x, y_inout, hidden_scratch): bool` | 多租户多 LoRA 加权组合叠加（原子校验，支持零权重跳过） |
+| `loraMergeIntoBase` / `loraUnmergeFromBase` | `(base_weight_inout, adapter): bool` | 静态权重热合并 `W += (alpha / r) * B * A` 与精确逆操作热卸载 `W -= (alpha / r) * B * A` |
 
 ## 4. 示例
 
@@ -254,5 +259,36 @@ pub fn demoSparseMoeRouting() {
     let combined_buf: [4]f64 = [0.0; 4];
     let combined: []f64 = combined_buf[0..];
     * = moeCombineOutputs(expert_outs[0..], routes_buf[0..], 4, combined);
+}
+```
+
+### 多租户 LoRA 低秩适配器增量推理与权重热融合示例 (`lora.cp`)
+
+```cp
+import {
+    LoraAdapter,
+    loraApplyAdd,
+    loraMergeIntoBase,
+    loraUnmergeFromBase,
+} from "cap:attention";
+
+pub fn demoMultiTenantLora(
+    base_w: *[]f64,
+    a_mat: []const f64,
+    b_mat: []const f64,
+    x: []const f64,
+    y_inout: *[]f64,
+) {
+    // 1. 零拷贝绑定 LoRA 适配器（in_dim=4, out_dim=3, rank=2, alpha=4.0）
+    if (ad := LoraAdapter.init(101, 4, 3, 2, 4.0, a_mat, b_mat)) {
+        // 2. 多租户动态增量前向：y += (alpha / r) * B * (A * x)
+        let scratch_buf: [2]f64 = [0.0; 2];
+        let scratch: []f64 = scratch_buf[0..];
+        * = loraApplyAdd(ad, x, y_inout, scratch);
+
+        // 3. 单租户部署热合并到基础权重，切换适配器时热卸载还原
+        * = loraMergeIntoBase(base_w, ad);
+        * = loraUnmergeFromBase(base_w, ad);
+    }
 }
 ```

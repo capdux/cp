@@ -183,6 +183,56 @@ pub fn demoBpeTokenizer() {
 
 ---
 
+## 零堆分配 WordPiece 子词分词与编码器输入打包器 (`lib/text/wordpiece.cp`)
+
+专为 BERT / 语义嵌入（Embedding）与交叉编码器重排（Cross-Encoder Reranker）打造的纯 CP 零堆分配 WordPiece 分词与张量输入打包器：
+
+- **`WordPieceConfig`**：`{ unk_id: u32 = 100, cls_id: u32 = 101, sep_id: u32 = 102, pad_id: u32 = 0, lowercase: bool = true, max_word_chars: usize = 100 }`（提供 `WordPieceConfig.default()`）
+- **`WordPieceVocab`**：`{ tokens: []const string }`（索引即 token ID），提供 `WordPieceVocab.init(tokens)` 与只读查找方法 `lookup(piece: string): u32?`
+- **`EncodedSequenceStats`**：`{ total_len: usize, real_tokens: usize, truncated: bool }`
+- **`wordPieceEncodeWord(vocab, word, cfg, out_ids, work_buf): usize?`**：对单个基础词执行贪心最长子词切分（非首子词自动拼接 `"##"` 前缀），超 `max_word_chars` 或任意子段未登录时整个词回退单个 `cfg.unk_id`；缓冲不足返回 `null`。
+- **`wordPieceEncodeText(vocab, text, cfg, out_ids, work_buf): usize?`**：按空白符与 ASCII 标点预分词（标点独立作为单字符 token），逐词执行 WordPiece 切分。
+- **`wordPieceEncodePair(vocab, text_a, text_b, cfg, max_seq_len, pad_to_max, input_ids_out, attention_mask_out, token_type_ids_out, work_buf): EncodedSequenceStats?`**：
+  - 单句模式（`text_b == ""`）：打包 `[CLS] A [SEP]`；
+  - 双句模式（`text_b != ""`）：打包 `[CLS] A [SEP] B [SEP]`；
+  - 精确生成 `attention_mask`（有效 token 为 `1`，`[PAD]` 为 `0`）与 `token_type_ids`（A 段及首个 `[SEP]` 为 `0`，B 段及末尾 `[SEP]` 为 `1`，`[PAD]` 为 `0`）；
+  - 超长时采用 BERT 标准 `longest_first` 截断策略并严格保留 `[CLS]` 与 `[SEP]`，可选 `[PAD]` 填充至 `max_seq_len`。
+
+```typescript
+import {
+    WordPieceConfig,
+    WordPieceVocab,
+    wordPieceEncodePair,
+} from "cap:text";
+
+pub fn demoWordPieceReranker() {
+    const tokens: [10]string = [
+        "[PAD]", "[UNK]", "[CLS]", "[SEP]",
+        "un", "##aff", "##able", "hello", "world", "!",
+    ];
+    const vocab = WordPieceVocab.init(tokens[0..]);
+    const cfg = WordPieceConfig{
+        unk_id: 1, cls_id: 2, sep_id: 3, pad_id: 0,
+        lowercase: true, max_word_chars: 100,
+    };
+
+    let ids_arr: [12]u32 = undefined;
+    let mask_arr: [12]u8 = undefined;
+    let types_arr: [12]u8 = undefined;
+    let work_arr: [64]u8 = undefined;
+    let ids: []u32 = ids_arr[0..];
+    let mask: []u8 = mask_arr[0..];
+    let types: []u8 = types_arr[0..];
+    let work: []u8 = work_arr[0..];
+
+    if (stats := wordPieceEncodePair(vocab, "Unaffable!", "Hello world", cfg, 12, true, ids, mask, types, work)) {
+        * = stats; // total_len=12, real_tokens=9, truncated=false
+    }
+}
+```
+
+---
+
 ## 上游行为契约与文本处理边界注意事项
 
 1. **UTF-8 码点边界安全不变式**：
