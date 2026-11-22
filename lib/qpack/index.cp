@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/uws_sys/quic/Header.cp | Synced: 2026-11-22T00:10:49Z
+// Source: Absorbed from /data/dev/bun/src/uws_sys/quic/Header.cp | Synced: 2026-11-22T10:39:50Z
 // Backward-compatible re-export: canonical implementation consolidated into lib/http/h3/qpack.cp
 
 export {

@@ -282,3 +282,18 @@ export {
     parseGitConfigFlags,
     resolveNonInteractiveGitEnv,
 } from "./repository.cp";
+
+export {
+    ISOLATED_LINK_MAX_OPS,
+    IsolatedSymlinkError,
+    IsolatedLinkStrategy,
+    IsolatedLinkPlatform,
+    IsolatedDestEntryKind,
+    IsolatedLinkAction,
+    IsolatedLinkOp,
+    IsolatedLinkPlanStats,
+    stripTrailingSlash,
+    reconcileIsolatedSymlink,
+    computeRelativeSymlinkTarget,
+    IsolatedLinkPlan,
+} from "./isolated_symlink.cp";

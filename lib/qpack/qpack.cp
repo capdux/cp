@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/uws_sys/quic/Header.cp | Synced: 2026-11-22T00:10:49Z
+// Source: Absorbed from /data/dev/bun/src/uws_sys/quic/Header.cp | Synced: 2026-11-22T10:39:50Z
 
 /// Sentinel indicating a header has no QPACK static table index.
 pub const QPACK_NO_INDEX: i32 = -1;

@@ -533,3 +533,46 @@ const env = resolveNonInteractiveGitEnv(cfg, false, false);
 * = n;
 * = env;
 ```
+
+14. **隔离安装符号链接对账状态机与相对路径规划器（`lib/pkg/isolated_symlink.cp`，吸收自 `/data/dev/bun/src/install/isolated_install/Symlinker.cp` & `/data/dev/bun/docs/pm/isolated-installs.mdx`）**：
+    - **双层隔离 `node_modules/.bun/` 链接模型**：顶层 `node_modules/<pkg>`（及作用域 `node_modules/@scope/<pkg>`）均通过相对符号链接指向中央隔离存储 `node_modules/.bun/<pkg>@<ver>/node_modules/<pkg>`（Workspace 包直接软链至其源码目录），彻底杜绝幽灵依赖（phantom dependencies）；`computeRelativeSymlinkTarget` 零分配自动处理作用域层深（`../.bun/...`）、跨 Workspace 路径（`../../core`）与 Windows 反斜杠规范化。
+    - **非破坏性 `bun patch <pkg>` 工作区保护与跨平台对账（`reconcileIsolatedSymlink`）**：
+      - `ExpectExisting`（增量安装）：当目标路径为实体目录（`RealDirectory`）时返回 `PreservePatchedDir`，严禁删除用户正在 `bun patch <pkg>` 编辑中的独立副本；当目标为符号链接时自动剥离 libuv Windows Junction 附加的尾斜杠（`stripTrailingSlash`），Windows 平台下同时比对 `fallback_junction_target` 绝对路径，目标不一致时 POSIX 返回 `UnlinkAndCreateSymlink`、Windows 返回 `RmdirAndCreateSymlink`；
+      - `ExpectMissing`（冷安装）与 `IgnoreFailure`（非关键链接）严格对齐上游策略；`IsolatedLinkPlan` 支持批量记录并统计 `noop_count` / `create_count` / `replace_count` / `preserved_patch_count`。
+
+### 隔离安装符号链接对账与相对目标计算示例（`lib/pkg/isolated_symlink.cp`）
+
+```cp
+import {
+    IsolatedLinkStrategy,
+    IsolatedLinkPlatform,
+    IsolatedDestEntryKind,
+    IsolatedLinkAction,
+    computeRelativeSymlinkTarget,
+    IsolatedLinkPlan,
+} from "cap:pkg";
+
+let rel_buf: [160]u8 = [0; 160];
+const rn = computeRelativeSymlinkTarget(
+    "node_modules/@scope",
+    "node_modules/.bun/@scope+ui@2.0.0/node_modules/@scope/ui",
+    rel_buf[0..],
+)?;
+// rel_buf[0..rn] == "../.bun/@scope+ui@2.0.0/node_modules/@scope/ui"
+
+let plan = IsolatedLinkPlan.init(IsolatedLinkPlatform.Posix);
+// 保护正在 bun patch 编辑中的实体目录
+const a1 = plan.planLink(
+    IsolatedLinkStrategy.ExpectExisting,
+    "node_modules/lodash",
+    IsolatedDestEntryKind.RealDirectory,
+    "",
+    ".bun/lodash@4.17.21/node_modules/lodash",
+    "",
+)?;
+// a1 == IsolatedLinkAction.PreservePatchedDir
+const st = plan.stats(); // st.preserved_patch_count == 1
+* = rn;
+* = a1;
+* = st;
+```
