@@ -56,6 +56,22 @@ const n = tag.format(buf[0..])?;
 // buf[0..n] == "INSERT 0 42"
 ```
 
+### `NegotiateProtocolVersion`（`'v'`）协议协商报文编解码（`negotiate_protocol.cp`）
+
+> 吸收自 `/data/dev/bun/src/sql/postgres/protocol/NegotiateProtocolVersion.cp`，零堆分配实现 PostgreSQL v3.0 协议版本协商响应报文（Tag `'v' = 0x76`）的大端序编解码、版本拆解与异常边界防护。
+
+- 核心导出：`PG_TAG_NEGOTIATE_PROTOCOL_VERSION` (`'v'`)、`PG_NEGOTIATE_MAX_OPTIONS` (`32`)、`PgNegotiateError`、`PgNegotiateProtocolVersion`（`init` / `addOption` / `count` / `optionAt` / `containsOption` / `majorVersion` / `minorVersion` / `encodedPayloadLen` / `encodedFrameLen` / `encodePayload` / `encodeFrame` / `decodePayload` / `decodeFrame` / `eql`）。
+
+```typescript
+import { PgNegotiateProtocolVersion } from "cap:pgwire";
+
+let msg = PgNegotiateProtocolVersion.init(0);
+* = msg.addOption("_pq_.foo")?;
+let frame: [64]u8 = [0; 64];
+const n = msg.encodeFrame(frame[0..])?;
+const decoded = PgNegotiateProtocolVersion.decodeFrame(frame[0..n])?;
+```
+
 ---
 
 ## 4. 示例

@@ -41,3 +41,10 @@ export {
     PgCommandKind,
     PgCommandTag,
 } from "./command_tag.cp";
+
+export {
+    PG_TAG_NEGOTIATE_PROTOCOL_VERSION,
+    PG_NEGOTIATE_MAX_OPTIONS,
+    PgNegotiateError,
+    PgNegotiateProtocolVersion,
+} from "./negotiate_protocol.cp";
