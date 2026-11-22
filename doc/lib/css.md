@@ -862,3 +862,20 @@ const n = o.toCss(buf[0..])?;
 // buf[0..n] == "2px solid rgb(0, 128, 255)"
 * = n;
 ```
+
+21. **CSS Values Level 4 `<number>` 与 `<integer>` 解析与最小化序列化（`number.cp`，吸收自 `/data/dev/bun/src/css/values/number.cp` & `/data/dev/bun/docs/bundler/css.mdx`）**：
+    - **导出符号**：`CSS_INT_MIN` (`-2147483648`)、`CSS_INT_MAX` (`2147483647`)、`CssNumberError`、`CssNumber`（`fromF64`/`parse`/`sign`/`isZero`/`isNegative`/`abs`/`clamp`/`approxEql`/`toCss`）、`CssInteger`（`fromI32`/`parse`/`sign`/`clamp`/`toCss`/`eql`）；
+    - **Bun CSS 数值压缩实践（吸收自 `bundler/css.mdx`）**：
+      - `CssNumber.toCss` 零分配执行标准 CSS 最小化：将 `-0.0` 归一化为 `"0"`，对 `0 < |x| < 1` 省略前导零（`0.5` -> `".5"`、`-0.25` -> `"-.25"`），并剥离多余小数尾零（`12.500` -> `"12.5"`）；
+      - `CssInteger.parse` 严格遵循 W3C `<integer>` 语法（拒绝小数点与指数）并精确守卫 `i32` 边界。
+
+```cp
+import { CssNumber, CssInteger } from "cap:css";
+
+const n = CssNumber.parse("-0.250")?;
+let buf: [32]u8 = [0; 32];
+const len = n.toCss(buf[0..])?; // "-.25"
+const z = CssInteger.parse("+1024")?;
+* = len;
+* = z;
+```

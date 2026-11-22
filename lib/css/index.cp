@@ -626,3 +626,11 @@ export {
     CssOutlineWidth,
     CssOutline,
 } from "./outline.cp";
+
+export {
+    CSS_INT_MIN,
+    CSS_INT_MAX,
+    CssNumberError,
+    CssNumber,
+    CssInteger,
+} from "./number.cp";
