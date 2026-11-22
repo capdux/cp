@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/css_parser.cp | Synced: 2026-11-22T11:59:44Z
+// Source: Absorbed from /data/dev/bun/src/css/css_parser.cp | Synced: 2026-11-22T12:01:38Z
 // lib/css/index.cp
 // Unified Public Exports for cap:css
 // Zero-Bun, Pure CP Industrial CSS Engine
@@ -490,3 +490,13 @@ export {
     CssUnknownAtRule,
     CssUnknownAtRuleList,
 } from "./unknown_rule.cp";
+
+export {
+    CSS_DOCUMENT_MAX_CONDITIONS,
+    CSS_DOCUMENT_MAX_RULES,
+    CssDocumentRuleError,
+    CssDocumentMatchKind,
+    CssDocumentCondition,
+    CssMozDocumentRule,
+    CssMozDocumentRuleList,
+} from "./document_rule.cp";

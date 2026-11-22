@@ -616,6 +616,24 @@ const list = CssUnknownAtRuleList.extractUnknownFromStylesheet(
 * = list;
 ```
 
+### CSS `@-moz-document` 条件文档规则解析与 URL 匹配（`document_rule.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/rules/document.cp` 与 `/data/dev/bun/docs/bundler/css.mdx`，零堆分配实现 W3C CSS Conditional Rules Level 3 `@-moz-document` 规则解析（完整支持 `url()` / `url-prefix()` / `domain()` / `media-document()` / `regexp()`）、对齐 Firefox/Bun 规范的严格无参 `url-prefix()` 模式（`parseStrict`）、域名子域边界安全的 URL 实时匹配器、美化/压缩序列化及样式表批量提取。
+
+- 核心导出：`CSS_DOCUMENT_MAX_CONDITIONS` (`16`)、`CSS_DOCUMENT_MAX_RULES` (`16`)、`CssDocumentRuleError`、`CssDocumentMatchKind`（`Url`/`UrlPrefix`/`Domain`/`MediaDocument`/`Regexp`）、`CssDocumentCondition`（`isEmptyUrlPrefix`/`matchesUrl`/`eql`/`writeCss`）、`CssMozDocumentRule`（`urlPrefixEmpty`/`parse`/`parseStrict`/`conditionCount`/`conditionAt`/`isFirefoxHack`/`matchesUrl`/`eql`/`toCss`/`toCssMinified`）、`CssMozDocumentRuleList`（`extractFromStylesheet`/`count`/`at`）。
+
+```cp
+import { CssMozDocumentRule } from "cap:css";
+
+const strict_rule = CssMozDocumentRule.parseStrict("@-moz-document url-prefix() { .ff { gap: 4px; } }")?;
+const hit = strict_rule.matchesUrl("https://example.com/app"); // true
+let out: [128]u8 = [0; 128];
+const n = strict_rule.toCssMinified(out[0..])?;
+// "@-moz-document url-prefix(){.ff { gap: 4px; }}"
+* = hit;
+* = n;
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项
@@ -647,3 +665,6 @@ const list = CssUnknownAtRuleList.extractUnknownFromStylesheet(
 10. **未知与工具链扩展 `@-rule` 保留透传契约（`unknown_rule.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
     - 现代 CSS 生态与 Bun CSS Bundler 插件（如 Tailwind v4 的 `@tailwind` / `@theme` / `@utility` / `@custom-variant`，以及 CSS Anchor Positioning `@position-try` / `@view-transition`）依赖解析器无损保留未知 `@-rule` 的原始 prelude 与块内容；
     - 词法边界：语句型未知规则必须以顶层 `;` 终止，块型规则的 `{...}` 及内部 `()`/`[]` 必须严格平衡；序列化时 at-keyword 统一规范为小写 ASCII，prelude 与块内容保持原样不破坏下游插件语法。
+11. **`@-moz-document` 严格模式与域名匹配安全边界（`document_rule.cp`）**：
+    - 仅 Firefox 曾实现该规则且现代版本出于隐私限制仅保留无参 `@-moz-document url-prefix()`（用作 Firefox 特性检测）；与 Bun/LightningCSS 保持一致，默认拒绝非 `-moz` 前缀（如 `@document` / `@-webkit-document` 返回 `UnsupportedPrefix`），生产打包推荐使用 `parseStrict()` 强制约束；
+    - `domain("example.com")` 匹配器严格校验点号边界，匹配 `example.com` 与 `sub.example.com`，绝不误匹配 `evil-example.com`；自动剥离 URL 中的 `userinfo@` 与 `:port`。
