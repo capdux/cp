@@ -86,3 +86,11 @@ export {
     validateToolArgs,
     formatValidationHint,
 } from "./tool_schema.cp";
+
+export {
+    SamplerConfig,
+    SampledToken,
+    applyRepetitionPenalties,
+    greedyArgmax,
+    sampleToken,
+} from "./sampler.cp";

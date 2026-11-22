@@ -9,6 +9,7 @@
 - **`AttnError`**: 统一错误集合（`InvalidDimension`, `HeadMismatch`, `InvalidStartPos`, `EmptyInput`, `CacheFull`, `InvalidLayer`, `InvalidTemperature`, `InvalidTopK`, `InvalidTopP`, `OutOfMemory`）。
 - **`PagedKvSlot`**: 单步追加返回的槽位元信息（`layer`, `seq_offset`, `num_tokens`）。
 - **`KvCache`**: 多层自回归 KV 缓存容器，按 `[layer][seq_pos][kv_head][head_dim]` 布局存储，支持 `appendStep`、`truncateTo` 回滚与 `reset`。
+- **`KV_INVALID_BLOCK` / `KvBlockMeta` / `KvAllocStats` / `PagedKvAllocator` / `BlockTable`** (`kv_cache.cp`)：零堆分配 PagedAttention 物理块管理器，支持系统提示词前缀哈希零拷贝共享、释放后缓存复用与 LRU 驱逐、Beam Search `retainBlock` + 引用计数 CoW（共享态分配新块，独占态零拷贝原地返回）以及 `BlockTable` 逻辑到物理槽位映射。
 - **`SamplingConfig`**: 采样配置（`temperature`, `top_k`, `top_p`, `repetition_penalty`, `seed`）。
 
 ## 3. API 速查
@@ -26,6 +27,13 @@
 | `KvCache.reset` | `(*_)` | 清空所有层缓存长度 |
 | `sampleGreedy` | `(logits): AttnError!usize` | 贪心 Argmax 采样 |
 | `sampleToken` | `(alloc, logits, recent_tokens, config): AttnError!usize` | 支持 RepPenalty + Temp + Top-K + Top-P + SplitMix64 采样 |
+| `PagedKvAllocator.init` | `(blocks: *[]KvBlockMeta, block_size: u16): PagedKvAllocator?` | 零堆分配初始化固定物理块池（校验 `blocks.len > 0` 与 `block_size > 0`） |
+| `PagedKvAllocator.allocateOrSharePrefix` | `(*_, prefix_hash: u64, tick: u64): u32?` | 命中相同 `prefix_hash` 直接 `ref_count += 1` 零拷贝共享；否则分配空闲块或 LRU 驱逐 `ref_count == 0` 缓存块 |
+| `PagedKvAllocator.allocateFresh` | `(*_, tick: u64): u32?` | 分配独占无哈希新块（`ref_count = 1`） |
+| `PagedKvAllocator.retainBlock` / `releaseBlock` | `(*_, block_id: u32, tick: u64): bool` | 引用计数递增（Beam Search 共享）与递减（归零后带哈希块自动保留为可复用缓存） |
+| `PagedKvAllocator.copyOnWrite` | `(*_, block_id: u32, tick: u64): u32?` | `ref_count > 1` 时分配新块并递增 `cow_copies`；`ref_count == 1` 时零拷贝原地返回 `block_id` |
+| `PagedKvAllocator.stats` | `(): KvAllocStats` | 返回总块数、空闲块、可驱逐缓存块、前缀命中/未命中与 CoW 次数 |
+| `BlockTable.init` / `appendBlock` / `mapTokenToPhys` | `(phys_blocks, block_size)` / `(phys_id)` / `(logical_pos): ([2]u32)?` | 序列逻辑块表与 `[phys_block_id, slot_offset]` 映射 |
 
 ## 4. 示例
 
@@ -55,4 +63,43 @@ const tok = try sampleToken(alloc, logits, &[_]usize{1, 4}, SamplingConfig{
     .repetition_penalty = 1.1,
     .seed = 12345,
 });
+```
+
+### PagedAttention 前缀共享、CoW 与逻辑块表映射示例 (`kv_cache.cp`)
+
+```cp
+import {
+    KV_INVALID_BLOCK,
+    KvBlockMeta,
+    PagedKvAllocator,
+    BlockTable,
+} from "cap:attention";
+
+pub fn demoPagedKvPrefixSharing() {
+    let pool_buf: [16]KvBlockMeta = [KvBlockMeta{}; 16];
+    let pool: []KvBlockMeta = pool_buf[0..];
+    if (alloc_init := PagedKvAllocator.init(pool, 16)) {
+        let kv_alloc = alloc_init;
+        const sys_prefix_hash: u64 = 0xDEADBEEF0001;
+
+        // 请求 1 与请求 2 零拷贝共享系统提示词前缀块
+        const b1 = kv_alloc.allocateOrSharePrefix(sys_prefix_hash, 10) ?? KV_INVALID_BLOCK;
+        const b2 = kv_alloc.allocateOrSharePrefix(sys_prefix_hash, 12) ?? KV_INVALID_BLOCK; // prefix_hits += 1
+
+        // 请求 2 修改块内容触发 CoW，自动分配独占新块
+        const b2_cow = kv_alloc.copyOnWrite(b2, 15) ?? KV_INVALID_BLOCK;
+
+        let phys_buf: [8]u32 = [0; 8];
+        let phys: []u32 = phys_buf[0..];
+        if (bt_init := BlockTable.init(phys, 16)) {
+            let bt = bt_init;
+            * = bt.appendBlock(b1);
+            * = bt.appendBlock(b2_cow);
+            if (mapped := bt.mapTokenToPhys(19)) {
+                // mapped == [b2_cow, 3]
+                * = mapped;
+            }
+        }
+    }
+}
 ```

@@ -1,6 +1,6 @@
 # `cap:agent` — AI Agent 核心运行时标准库
 
-`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏（`budget.cp`）、多智能体任务图 DAG 调度器（`dag.cp`）、评测基准与轨迹打分（`eval.cp`）、ReAct 执行状态机与确定性检查点（`react.cp`）、LLM 流式 SSE 解析与遥测（`sse.cp`）、多模型网关路由与限流故障转移（`model_router.cp`）、输入/输出安全护栏与策略引擎（`guardrail.cp`）、连续批处理与前缀缓存亲和调度器（`scheduler.cp`）以及工具调用参数 JSON Schema 校验器（`tool_schema.cp`）九个子模块。
+`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏（`budget.cp`）、多智能体任务图 DAG 调度器（`dag.cp`）、评测基准与轨迹打分（`eval.cp`）、ReAct 执行状态机与确定性检查点（`react.cp`）、LLM 流式 SSE 解析与遥测（`sse.cp`）、多模型网关路由与限流故障转移（`model_router.cp`）、输入/输出安全护栏与策略引擎（`guardrail.cp`）、连续批处理与前缀缓存亲和调度器（`scheduler.cp`）、工具调用参数 JSON Schema 校验器（`tool_schema.cp`）以及词表 Logits 采样器（`sampler.cp`）十个子模块。
 
 ---
 
@@ -488,5 +488,46 @@ fn toolSchemaDemo() {
     let hint_buf: [128]u8 = std.mem.zeroes([128]u8);
     let hint_s: []u8 = hint_buf[0..];
     * = formatValidationHint(rep, &hint_s);
+}
+```
+
+---
+
+## 子模块：LLM 词表 Logits 采样器（`sampler.cp`）
+
+### 核心特性
+
+- **完整零堆分配采样流水线（`sampleToken`）**：基于调用方工作区切片（`work_logits` / `work_indices` / `work_probs`），依次执行：重复/频率/存在惩罚 -> `temperature == 0` 贪心快捷路径 -> Temperature 缩放与数值稳定 Softmax -> Top-K 截断 -> Top-P 核采样截断 -> Min-P 相对峰值截断 -> 重归一化与确定性 SplitMix64 采样。
+- **独立可组合原语**：`applyRepetitionPenalties` 严格遵循 Keskar（正 logit 除以 `repeat_penalty`、负 logit 乘以 `repeat_penalty`）与 OpenAI（`frequency_penalty * count + presence_penalty`）规范；`greedyArgmax` 确定性返回最大非 `NaN` logit 索引。
+
+### 导出清单
+
+- **配置与结果**：`SamplerConfig`（`greedy`, `default`）、`SampledToken`
+- **采样原语**：`applyRepetitionPenalties`、`greedyArgmax`、`sampleToken`
+
+### 使用示例
+
+```typescript
+import std from "std";
+import { SamplerConfig, sampleToken } from "cap:agent";
+
+fn logitsSamplerDemo() {
+    const logits: [5]f64 = [4.2, 3.8, 1.5, -0.5, -4.0];
+    const recent: [2]usize = [0, 0];
+    let w_logits: [5]f64 = std.mem.zeroes([5]f64);
+    let w_indices: [5]usize = std.mem.zeroes([5]usize);
+    let w_probs: [5]f64 = std.mem.zeroes([5]f64);
+    let wl_s: []f64 = w_logits[0..];
+    let wi_s: []usize = w_indices[0..];
+    let wp_s: []f64 = w_probs[0..];
+
+    let cfg = SamplerConfig.default(2026);
+    cfg.repeat_penalty = 1.2;
+    cfg.top_k = 3;
+    cfg.top_p = 0.9;
+    cfg.min_p = 0.05;
+
+    const tok = sampleToken(logits[0..], recent[0..], cfg, &wl_s, &wi_s, &wp_s) ?? return;
+    * = tok;
 }
 ```
