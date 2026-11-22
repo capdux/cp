@@ -33,6 +33,7 @@
 | 缓存协议编解码 | `lib/db/valkey.cp` | RESP2/RESP3 零拷贝增量流式解析器、内联命令解析与编码器（`RespStreamParser` / `RespValue` / `encodeCommand`） | — |
 | SQL 查询构建器 | `lib/db/query_types.cp` / `lib/db/query_builder.cp` | 参数化 SQL 查询构建器（PostgreSQL `$1..$N`、MySQL/SQLite `?` 防注入 `SelectBuilder`/`InsertBuilder`/`UpdateBuilder`/`DeleteBuilder`） | — |
 | Schema 校验引擎 | `lib/db/schema.cp` / `lib/db/schema_validator.cp` | JSON Schema Draft 2020-12 & AI Tool Calling 运行时结构化校验器（`Schema` / `SchemaValidator`） | — |
+| 连接池生命周期引擎 | `lib/db/conn_pool.cp` | 零堆分配数据库连接池状态机（LIFO 温连接复用、空闲/最大寿命淘汰、不健康连续错误摘除与满载背压 `DbConnPool`） | — |
 
 ---
 
@@ -70,5 +71,30 @@ fn main()! {
     // 5. HyperLogLog 基数估算
     let hll = HyperLogLog.init(alloc, 10)?;
     defer hll.deinit();
+}
+```
+
+### 零堆分配数据库连接池状态机示例 (`conn_pool.cp`)
+
+```cp
+import {
+    DbPoolConfig,
+    DbConnSlot,
+    DbAcquireKind,
+    DbConnPool,
+} from "cap:db";
+
+pub fn demoDbConnPool() {
+    let slots: [8]DbConnSlot = [DbConnSlot{}; 8];
+    const cfg = DbPoolConfig.init(4, 1, 60000, 600000, 2) ?? return;
+    let pool = DbConnPool.init(slots[0..], cfg) ?? return;
+
+    const acq = pool.acquire(1000);
+    if (acq.kind == DbAcquireKind.Created) {
+        * = pool.bindHandle(acq.slot_index, 42); // 绑定底层连接句柄
+    }
+    * = pool.release(acq.slot_index, true, 1200); // 健康归还以供下次 LIFO 复用
+    * = pool.evictExpired(90000);                 // 批量清理过期空闲连接
+    * = pool.stats();
 }
 ```

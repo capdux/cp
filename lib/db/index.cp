@@ -257,3 +257,14 @@ export {
     ValidationResult,
     SchemaValidator,
 } from "./schema_validator.cp";
+
+// --- conn_pool ---
+export {
+    DbPoolConfig,
+    DbConnState,
+    DbConnSlot,
+    DbAcquireKind,
+    DbAcquireOutcome,
+    DbPoolStats,
+    DbConnPool,
+} from "./conn_pool.cp";
