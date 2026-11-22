@@ -226,3 +226,14 @@ export {
     GcraStats,
     GcraLimiter,
 } from "./gcra_limiter.cp";
+
+export {
+    TW_SLOTS_PER_LEVEL,
+    TW_LEVELS,
+    TW_MAX_TIMERS,
+    TW_INVALID_IDX,
+    TimerHandle,
+    WheelTimerEntry,
+    TimingWheelStats,
+    HierarchicalTimingWheel,
+} from "./timing_wheel.cp";

@@ -246,3 +246,36 @@ pub fn demoGcraRateLimiter() {
     * = d4;
 }
 ```
+
+---
+
+## 零分配分层哈希时间轮 O(1) 定时器引擎（`timing_wheel.cp`）
+
+面向百万级并发 Agent 超时控制、RPC 截止时间与 TCP Keepalive 的 Kafka / Netty / Linux 内核级 100% 纯 CP 零动态堆分配 3 级 64 槽分层哈希时间轮（总跨度 `64^3 = 262,144` ticks，O(1) 调度、O(1) ABA 防护取消、自动级联降级）：
+
+- **常量与模型**：`TW_SLOTS_PER_LEVEL` (`64`)、`TW_LEVELS` (`3`)、`TW_MAX_TIMERS` (`256`)、`TW_INVALID_IDX` (`0xFFFF`)、`TimerHandle`（`slot_idx` + `generation` 防 ABA）、`WheelTimerEntry`、`TimingWheelStats`。
+- **核心引擎 `HierarchicalTimingWheel`**：
+  - `init(start_tick: u64): HierarchicalTimingWheel`
+  - `schedule(*_, delay_ticks, user_tag): TimerHandle?` / `schedule_periodic(*_, delay_ticks, interval_ticks, user_tag): TimerHandle?`（O(1) 侵入式入桶，超 `262,143` ticks 或满 256 槽安全返回 `null`）
+  - `cancel(*_, handle): bool`（严格校验 `generation` 防 ABA，O(1) 双向链表摘除并归还空闲栈）
+  - `advance_to(*_, target_tick, out_fired_tags): usize`（逐 tick 推进并自动触发 Level 2 -> Level 1 -> Level 0 级联降级，到期输出 `user_tag`，周期定时器自动重新入轮；时间倒退安全空操作）
+  - `next_expiry_tick(): u64?` / `stats(): TimingWheelStats`
+
+### QuickStart 示例
+
+```cp
+import { HierarchicalTimingWheel } from "cap:time";
+
+pub fn demoTimingWheel() {
+    let tw = HierarchicalTimingWheel.init(0);
+    const h1 = tw.schedule(5, 1001) ?? return;
+    const h2 = tw.schedule_periodic(10, 10, 2002) ?? return;
+    * = tw.schedule(5000, 3003); // Level 2 远程定时器
+
+    let fired: [8]u64 = [0; 8];
+    let fired_s: []u64 = fired[0..];
+    * = tw.advance_to(25, fired_s); // 触发 1001(@5), 2002(@10), 2002(@20)
+    * = tw.cancel(h2);              // O(1) 停止周期定时器
+    * = h1;
+}
+```

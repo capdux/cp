@@ -269,3 +269,16 @@ export {
     computePeerSetHash,
     computeGlobalEntryClosureHash,
 } from "./isolated_store.cp";
+
+export {
+    GIT_DEFAULT_ASKPASS,
+    GIT_DEFAULT_SSH_COMMAND,
+    GitRepoError,
+    GitRepoHost,
+    GitConfigFlags,
+    GitNonInteractiveEnv,
+    GitRepoSpec,
+    isScpLikeGitPath,
+    parseGitConfigFlags,
+    resolveNonInteractiveGitEnv,
+} from "./repository.cp";

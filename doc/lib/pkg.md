@@ -509,3 +509,27 @@ if (ui := g.entryAt(ui_id)) {
     * = gn;
 }
 ```
+
+13. **Git / GitHub 依赖规范解析与非交互式 `.gitconfig` 防挂起策略（`lib/pkg/repository.cp`，吸收自 `/data/dev/bun/src/install/repository.cp` & `/data/dev/bun/docs/pm/cli/add.mdx`）**：
+    - **多格式 Git 依赖解析（`GitRepoSpec`）**：统一支持 `github:owner/repo#ref`、`gitlab:`、`bitbucket:`、`owner/repo` 简写、`git+https://...#tag` 与 SCP 风格（`git@github.com:owner/repo.git`）；`formatCanonical` 与 `formatStorePath` 自动为 SCP 路径补全 `ssh://` / `ssh++` 并从 `<prefix>-<sha>` 中提取提交哈希尾段。
+    - **防 CI 挂起的 `.gitconfig` 探测（`parseGitConfigFlags` & `resolveNonInteractiveGitEnv`）**：轻量扫描用户 `.gitconfig` 中的 `[core]` `askpass`/`sshCommand` 及全局 `core.askpass`/`core.sshCommand`；若未配置且未设置环境变量，自动推导注入 `GIT_ASKPASS=echo` 与 `GIT_SSH_COMMAND="ssh -oStrictHostKeyChecking=accept-new"`，防止子进程交互提示密码或确认主机密钥导致自动化安装挂起。
+
+### Git 依赖规范与防挂起环境推导示例（`GitRepoSpec`）
+
+```cp
+import {
+    GitRepoSpec,
+    parseGitConfigFlags,
+    resolveNonInteractiveGitEnv,
+} from "cap:pkg";
+
+const spec = GitRepoSpec.parseAny("github:oven-sh/bun#v1.3.0")?;
+let buf: [128]u8 = [0; 128];
+const n = spec.formatCanonical("github:", buf[0..])?; // "github:oven-sh/bun#v1.3.0"
+
+const cfg = parseGitConfigFlags("[core]\n  editor = vim\n");
+const env = resolveNonInteractiveGitEnv(cfg, false, false);
+// env.set_askpass == true ("echo"), env.set_ssh_command == true ("ssh -oStrictHostKeyChecking=accept-new")
+* = n;
+* = env;
+```
