@@ -15,6 +15,15 @@ import {
     ConsolidationReport,
     halfLifeDecayFactor,
     consolidateMemoriesInPlace,
+    EpisodeMemoryTier,
+    ConsolidationConfig,
+    MemoryEpisodeMeta,
+    ConsolidationDecisionKind,
+    ConsolidationAction,
+    ConsolidationSummary,
+    computeRetentionScore,
+    cosineSimEpisodeF32,
+    planMemoryConsolidation,
 } from "../../lib/agentmem/index.cp";
 
 fn approxEq(a: f32, b: f32, eps: f32): bool {
@@ -368,3 +377,202 @@ test("agentmem consolidation: exponential half-life decay, clock-skew safety and
 test("agentmem consolidation: ShortTerm -> Episodic -> Semantic graduated promotion and prune immunity", testGraduatedPromotionPathShortTermToEpisodicToSemantic);
 test("agentmem consolidation: max-age archiving and strict pinned protection", testMaxAgeArchivingAndStrictPinnedProtection);
 test("agentmem consolidation: invalid policies, zero side-effects and empty slice guards", testInvalidPoliciesAndEmptySliceGuards);
+
+// ============================================================================
+// Part 2 Tests: SIMD Episodic Consolidation Planner (Wave 5 Round 9)
+// ============================================================================
+
+fn testRetentionCurveAndAccessFrequencyBoost()! {
+    const recent_hi = MemoryEpisodeMeta{
+        episode_id: 1, last_access_ms: 10000, access_count: 10, importance_f32: 0.8,
+        tier: EpisodeMemoryTier.episodic,
+    };
+    const recent_lo = MemoryEpisodeMeta{
+        episode_id: 2, last_access_ms: 10000, access_count: 1, importance_f32: 0.8,
+        tier: EpisodeMemoryTier.episodic,
+    };
+    const old_ep = MemoryEpisodeMeta{
+        episode_id: 3, last_access_ms: 0, access_count: 1, importance_f32: 0.8,
+        tier: EpisodeMemoryTier.episodic,
+    };
+
+    const s_hi = computeRetentionScore(recent_hi, 10000, 2000);
+    const s_lo = computeRetentionScore(recent_lo, 10000, 2000);
+    const s_old = computeRetentionScore(old_ep, 10000, 2000); // 5 half-lives -> 1/32 decay
+
+    expect_eq(s_hi > s_lo, true);
+    expect_eq(s_lo > s_old, true);
+    expect_eq(s_old < 0.05, true);
+    expect_eq(computeRetentionScore(recent_hi, 10000, 0), 0.0);
+}
+
+fn testSimdCosineDedupAndRepresentativeSelection()! {
+    const va: [4]f32 = [1.0, 0.0, 0.0, 0.0];
+    const vb: [4]f32 = [0.99, 0.05, 0.0, 0.0];
+    const vc: [4]f32 = [0.0, 1.0, 0.0, 0.0];
+    expect_eq(cosineSimEpisodeF32(va[0..], vb[0..]) > 0.99, true);
+    expect_eq(approxEq(cosineSimEpisodeF32(va[0..], vc[0..]), 0.0, 0.0001), true);
+    expect_eq(cosineSimEpisodeF32(va[0..2], vb[0..]) == 0.0, true); // mismatched len
+
+    // Episode 0 (lower retention) and Episode 1 (higher retention) are near-duplicates ->
+    // Episode 0 must merge into Episode 1 (higher retention representative)!
+    const eps: [3]MemoryEpisodeMeta = [
+        MemoryEpisodeMeta{ episode_id: 10, last_access_ms: 8000, access_count: 1, importance_f32: 0.4, tier: EpisodeMemoryTier.episodic },
+        MemoryEpisodeMeta{ episode_id: 11, last_access_ms: 10000, access_count: 5, importance_f32: 0.9, tier: EpisodeMemoryTier.episodic },
+        MemoryEpisodeMeta{ episode_id: 12, last_access_ms: 10000, access_count: 1, importance_f32: 0.7, tier: EpisodeMemoryTier.episodic },
+    ];
+    const embs: [12]f32 = [
+        1.0, 0.0, 0.0, 0.0,
+        0.99, 0.05, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+    ];
+    const cfg = ConsolidationConfig{
+        decay_half_life_ms: 5000,
+        merge_cosine_threshold: 0.95,
+        promote_access_count: 4,
+        promote_importance_min: 0.80,
+        evict_retention_threshold: 0.15,
+        max_retained_entries: 10,
+    };
+    let actions: [3]ConsolidationAction = [ConsolidationAction{}; 3];
+    let actions_s: []ConsolidationAction = actions[0..];
+    const sum: ConsolidationSummary = planMemoryConsolidation(eps[0..], embs[0..], 4, 10000, cfg, actions_s);
+
+    expect_eq(sum.total_input, 3);
+    expect_eq(sum.merged_count, 1);
+    expect_eq(sum.promoted_count, 1);
+    expect_eq(sum.kept_count, 1);
+    expect_eq(actions[0].kind == ConsolidationDecisionKind.merged_into, true);
+    expect_eq(actions[0].target_idx, 1);
+    expect_eq(actions[1].kind == ConsolidationDecisionKind.promote_semantic, true);
+    expect_eq(actions[2].kind == ConsolidationDecisionKind.keep, true);
+}
+
+fn testSemanticPromotionAndDecayEviction()! {
+    const eps: [3]MemoryEpisodeMeta = [
+        // Qualifying episodic -> promote_semantic
+        MemoryEpisodeMeta{ episode_id: 1, last_access_ms: 10000, access_count: 5, importance_f32: 0.85, tier: EpisodeMemoryTier.episodic },
+        // Old low-retention working memory -> evict_decay
+        MemoryEpisodeMeta{ episode_id: 2, last_access_ms: 0, access_count: 1, importance_f32: 0.2, tier: EpisodeMemoryTier.working },
+        // Already semantic_long_term -> immune to decay eviction even if old
+        MemoryEpisodeMeta{ episode_id: 3, last_access_ms: 0, access_count: 1, importance_f32: 0.5, tier: EpisodeMemoryTier.semantic_long_term },
+    ];
+    const embs: [12]f32 = [
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+    ];
+    const cfg = ConsolidationConfig{
+        decay_half_life_ms: 1000,
+        merge_cosine_threshold: 0.95,
+        promote_access_count: 3,
+        promote_importance_min: 0.70,
+        evict_retention_threshold: 0.15,
+        max_retained_entries: 10,
+    };
+    let actions: [3]ConsolidationAction = [ConsolidationAction{}; 3];
+    let actions_s: []ConsolidationAction = actions[0..];
+    const sum = planMemoryConsolidation(eps[0..], embs[0..], 4, 10000, cfg, actions_s);
+
+    expect_eq(sum.promoted_count, 1);
+    expect_eq(sum.evicted_decay_count, 1);
+    expect_eq(sum.kept_count, 1);
+    expect_eq(actions[0].kind == ConsolidationDecisionKind.promote_semantic, true);
+    expect_eq(actions[1].kind == ConsolidationDecisionKind.evict_decay, true);
+    expect_eq(actions[2].kind == ConsolidationDecisionKind.keep, true);
+}
+
+fn testPinnedProtectionAgainstDecayAndBudget()! {
+    const eps: [3]MemoryEpisodeMeta = [
+        // Very old pinned memory: must survive BOTH decay and tight budget (max_retained_entries = 1)
+        MemoryEpisodeMeta{ episode_id: 1, last_access_ms: 0, access_count: 1, importance_f32: 0.1, tier: EpisodeMemoryTier.working, pinned: true },
+        // Second pinned memory: also must NEVER be evicted even if budget is 1
+        MemoryEpisodeMeta{ episode_id: 2, last_access_ms: 0, access_count: 1, importance_f32: 0.1, tier: EpisodeMemoryTier.episodic, pinned: true },
+        // Fresh unpinned memory: evicted by budget because 2 pinned already exceed budget=1
+        MemoryEpisodeMeta{ episode_id: 3, last_access_ms: 10000, access_count: 2, importance_f32: 0.9, tier: EpisodeMemoryTier.working, pinned: false },
+    ];
+    const embs: [12]f32 = [
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+    ];
+    const cfg = ConsolidationConfig{
+        decay_half_life_ms: 1000,
+        merge_cosine_threshold: 0.95,
+        promote_access_count: 5,
+        promote_importance_min: 0.9,
+        evict_retention_threshold: 0.5,
+        max_retained_entries: 1,
+    };
+    let actions: [3]ConsolidationAction = [ConsolidationAction{}; 3];
+    let actions_s: []ConsolidationAction = actions[0..];
+    const sum = planMemoryConsolidation(eps[0..], embs[0..], 4, 10000, cfg, actions_s);
+
+    expect_eq(sum.kept_count, 2);
+    expect_eq(sum.evicted_budget_count, 1);
+    expect_eq(sum.evicted_decay_count, 0);
+    expect_eq(actions[0].kind == ConsolidationDecisionKind.keep, true);
+    expect_eq(actions[1].kind == ConsolidationDecisionKind.keep, true);
+    expect_eq(actions[2].kind == ConsolidationDecisionKind.evict_budget, true);
+}
+
+fn testBudgetPruningByLowestRetentionScore()! {
+    const eps: [4]MemoryEpisodeMeta = [
+        MemoryEpisodeMeta{ episode_id: 1, last_access_ms: 10000, access_count: 1, importance_f32: 0.2, tier: EpisodeMemoryTier.working },
+        MemoryEpisodeMeta{ episode_id: 2, last_access_ms: 10000, access_count: 8, importance_f32: 0.95, tier: EpisodeMemoryTier.working },
+        MemoryEpisodeMeta{ episode_id: 3, last_access_ms: 10000, access_count: 1, importance_f32: 0.5, tier: EpisodeMemoryTier.working },
+        MemoryEpisodeMeta{ episode_id: 4, last_access_ms: 10000, access_count: 5, importance_f32: 0.8, tier: EpisodeMemoryTier.working },
+    ];
+    const embs: [16]f32 = [
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        0.0, 0.0, 0.0, 1.0,
+    ];
+    const cfg = ConsolidationConfig{
+        decay_half_life_ms: 10000,
+        merge_cosine_threshold: 0.95,
+        promote_access_count: 100,
+        promote_importance_min: 0.99,
+        evict_retention_threshold: 0.05,
+        max_retained_entries: 2, // Keep top-2 (indices 1 & 3), evict bottom-2 (indices 0 & 2)
+    };
+    let actions: [4]ConsolidationAction = [ConsolidationAction{}; 4];
+    let actions_s: []ConsolidationAction = actions[0..];
+    const sum = planMemoryConsolidation(eps[0..], embs[0..], 4, 10000, cfg, actions_s);
+
+    expect_eq(sum.kept_count, 2);
+    expect_eq(sum.evicted_budget_count, 2);
+    expect_eq(actions[0].kind == ConsolidationDecisionKind.evict_budget, true);
+    expect_eq(actions[1].kind == ConsolidationDecisionKind.keep, true);
+    expect_eq(actions[2].kind == ConsolidationDecisionKind.evict_budget, true);
+    expect_eq(actions[3].kind == ConsolidationDecisionKind.keep, true);
+}
+
+fn testPlanConsolidationBoundaryGuards()! {
+    const eps: [2]MemoryEpisodeMeta = [MemoryEpisodeMeta{}, MemoryEpisodeMeta{}];
+    const embs: [8]f32 = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0];
+    let actions: [2]ConsolidationAction = [ConsolidationAction{}; 2];
+    let actions_s: []ConsolidationAction = actions[0..];
+    const ok_cfg = ConsolidationConfig{};
+
+    // Invalid configs
+    expect_eq((ConsolidationConfig{ decay_half_life_ms: 0 }).isValid(), false);
+    expect_eq((ConsolidationConfig{ merge_cosine_threshold: 0.0 }).isValid(), false);
+    expect_eq((ConsolidationConfig{ merge_cosine_threshold: 1.5 }).isValid(), false);
+    expect_eq((ConsolidationConfig{ max_retained_entries: 0 }).isValid(), false);
+
+    // Empty input, zero dim, truncated embeddings, undersized out_actions all return zeroed summary
+    expect_eq(planMemoryConsolidation(eps[0..0], embs[0..], 4, 1000, ok_cfg, actions_s).total_input, 0);
+    expect_eq(planMemoryConsolidation(eps[0..], embs[0..], 0, 1000, ok_cfg, actions_s).total_input, 0);
+    expect_eq(planMemoryConsolidation(eps[0..], embs[0..4], 4, 1000, ok_cfg, actions_s).total_input, 0);
+    expect_eq(planMemoryConsolidation(eps[0..], embs[0..], 4, 1000, ok_cfg, actions_s[0..1]).total_input, 0);
+    expect_eq(planMemoryConsolidation(eps[0..], embs[0..], 4, 1000, ConsolidationConfig{ decay_half_life_ms: 0 }, actions_s).total_input, 0);
+}
+
+test("agentmem consolidation: retention decay curve & access frequency boost", testRetentionCurveAndAccessFrequencyBoost);
+test("agentmem consolidation: @dot SIMD near-duplicate clustering & representative selection", testSimdCosineDedupAndRepresentativeSelection);
+test("agentmem consolidation: semantic promotion & decay eviction immunity", testSemanticPromotionAndDecayEviction);
+test("agentmem consolidation: strict pinned protection against decay & budget", testPinnedProtectionAgainstDecayAndBudget);
+test("agentmem consolidation: budget pruning by lowest retention score", testBudgetPruningByLowestRetentionScore);
+test("agentmem consolidation: planMemoryConsolidation boundary & invalid config guards", testPlanConsolidationBoundaryGuards);

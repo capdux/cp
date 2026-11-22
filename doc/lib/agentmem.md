@@ -441,3 +441,41 @@ pub fn demoTemporalEntityGraph() {
     * = n_now;
 }
 ```
+
+### 9. 零堆分配情景记忆巩固、遗忘衰减与 `@dot` SIMD 去重压缩规划器 (`consolidation.cp` Part 2)
+
+在原有 `consolidateMemoriesInPlace` 基础上，新增面向嵌入向量的零堆分配情景记忆巩固规划器：
+
+- **导出符号**：`EpisodeMemoryTier`（`working | episodic | semantic_long_term | evicted`）、`ConsolidationConfig`（`decay_half_life_ms`, `merge_cosine_threshold`, `promote_access_count`, `promote_importance_min`, `evict_retention_threshold`, `max_retained_entries`，提供 `isValid()`）、`MemoryEpisodeMeta`、`ConsolidationDecisionKind`（`keep | promote_semantic | merged_into | evict_decay | evict_budget`）、`ConsolidationAction`、`ConsolidationSummary`。
+- **核心纯函数与引擎**：
+  - `computeRetentionScore(meta, now_ms, half_life_ms): f32`：融合半衰期指数衰减、对数访问频次增益与重要度计算 `[0.0, 1.0]` 确定性留存分。
+  - `cosineSimEpisodeF32(a, b): f32`：直接调用 CP 原生 8-lane SIMD `@dot` 计算嵌入余弦相似度（防零向量/NaN/维度不匹配）。
+  - `planMemoryConsolidation(episodes, embeddings, dim, now_ms, cfg, out_actions): ConsolidationSummary`：100% 零堆分配五阶段规划（`@dot` 近重复合并至最高留存分或 `pinned` 代表 -> 低留存分衰减驱逐 -> 高频高重要度 `episodic` 晋升 `semantic_long_term` -> 预算超限按留存分从低到高裁剪，严格保护 `pinned` 永不驱逐）。
+
+```cp
+import {
+    EpisodeMemoryTier,
+    ConsolidationConfig,
+    MemoryEpisodeMeta,
+    ConsolidationAction,
+    planMemoryConsolidation,
+} from "cap:agentmem";
+
+pub fn demoSimdMemoryConsolidation() {
+    const eps: [3]MemoryEpisodeMeta = [
+        MemoryEpisodeMeta{ episode_id: 1, last_access_ms: 9000, access_count: 5, importance_f32: 0.9, tier: EpisodeMemoryTier.episodic },
+        MemoryEpisodeMeta{ episode_id: 2, last_access_ms: 8000, access_count: 1, importance_f32: 0.5, tier: EpisodeMemoryTier.episodic },
+        MemoryEpisodeMeta{ episode_id: 3, last_access_ms: 0,    access_count: 1, importance_f32: 0.2, tier: EpisodeMemoryTier.working },
+    ];
+    const embs: [12]f32 = [
+        1.0, 0.0, 0.0, 0.0,
+        0.99, 0.05, 0.0, 0.0, // 近重复 -> merged_into episode 0
+        0.0, 1.0, 0.0, 0.0,   // 陈旧低分 -> evict_decay
+    ];
+    let actions: [3]ConsolidationAction = [ConsolidationAction{}; 3];
+    let actions_s: []ConsolidationAction = actions[0..];
+    const cfg = ConsolidationConfig{ decay_half_life_ms: 1000, merge_cosine_threshold: 0.95, max_retained_entries: 4 };
+    const summary = planMemoryConsolidation(eps[0..], embs[0..], 4, 10000, cfg, actions_s);
+    * = summary; // episode 0 promoted, episode 1 merged_into 0, episode 2 evicted_decay
+}
+```

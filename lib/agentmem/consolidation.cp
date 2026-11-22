@@ -207,3 +207,277 @@ pub fn consolidateMemoriesInPlace(
 
     return report;
 }
+
+// ============================================================================
+// Part 2: Zero-Alloc Episodic Memory Consolidation Planner & SIMD Dedup Engine
+// ============================================================================
+
+fn isFiniteF32(x: f32): bool {
+    return !std.math.isNan(x) && !std.math.isInf(x);
+}
+
+/// Four-level memory lifecycle tier for episodic consolidation planning.
+pub enum EpisodeMemoryTier {
+    working,
+    episodic,
+    semantic_long_term,
+    evicted,
+}
+
+/// Configuration for zero-alloc episodic memory consolidation, SIMD dedup & budget pruning.
+pub struct ConsolidationConfig {
+    decay_half_life_ms: u64 = 86400000;
+    merge_cosine_threshold: f32 = 0.92;
+    promote_access_count: u32 = 3;
+    promote_importance_min: f32 = 0.70;
+    evict_retention_threshold: f32 = 0.15;
+    max_retained_entries: usize = 64;
+
+    /// Validates half-life, cosine threshold `(0, 1]`, unit thresholds `[0, 1]`, and budget `> 0`.
+    fn isValid(): bool {
+        if (_.decay_half_life_ms == 0 || _.promote_access_count == 0 || _.max_retained_entries == 0) {
+            return false;
+        }
+        if (!isFiniteF32(_.merge_cosine_threshold) || _.merge_cosine_threshold <= 0.0 || _.merge_cosine_threshold > 1.0) {
+            return false;
+        }
+        if (!isFiniteF32(_.promote_importance_min) || _.promote_importance_min < 0.0 || _.promote_importance_min > 1.0) {
+            return false;
+        }
+        if (!isFiniteF32(_.evict_retention_threshold) || _.evict_retention_threshold < 0.0 || _.evict_retention_threshold > 1.0) {
+            return false;
+        }
+        return true;
+    }
+}
+
+/// Metadata descriptor for an episodic memory entry participating in consolidation planning.
+pub struct MemoryEpisodeMeta {
+    episode_id: u64 = 0;
+    created_ms: u64 = 0;
+    last_access_ms: u64 = 0;
+    access_count: u32 = 0;
+    importance_f32: f32 = 0.0;
+    tier: EpisodeMemoryTier = EpisodeMemoryTier.episodic;
+    merged_source_count: u32 = 1;
+    pinned: bool = false;
+}
+
+/// Action assigned to each episode by `planMemoryConsolidation`.
+pub enum ConsolidationDecisionKind {
+    keep,
+    promote_semantic,
+    merged_into,
+    evict_decay,
+    evict_budget,
+}
+
+/// Per-episode consolidation action with target representative index and retention score.
+pub struct ConsolidationAction {
+    episode_idx: usize = 0;
+    kind: ConsolidationDecisionKind = ConsolidationDecisionKind.keep;
+    target_idx: usize = 0;
+    retention_score_f32: f32 = 0.0;
+}
+
+/// Aggregate summary returned by `planMemoryConsolidation`.
+pub struct ConsolidationSummary {
+    total_input: usize = 0;
+    kept_count: usize = 0;
+    promoted_count: usize = 0;
+    merged_count: usize = 0;
+    evicted_decay_count: usize = 0;
+    evicted_budget_count: usize = 0;
+}
+
+/// Computes deterministic retention score in `[0.0, 1.0]` combining exponential half-life decay,
+/// logarithmic access-frequency boost, and clamped importance.
+pub fn computeRetentionScore(meta: MemoryEpisodeMeta, now_ms: u64, half_life_ms: u64): f32 {
+    if (half_life_ms == 0) {
+        return 0.0;
+    }
+    const age_ms: u64 = if (now_ms > meta.last_access_ms) now_ms - meta.last_access_ms else 0;
+    const decay: f32 = halfLifeDecayFactor(age_ms, half_life_ms);
+    const freq_boost: f64 = 1.0 + 0.25 * std.math.log(f64, std.math.e, 1.0 + (meta.access_count as f64));
+    const imp: f32 = clampUnitStrength(meta.importance_f32);
+    const base: f32 = 0.4 + 0.6 * imp;
+    const raw: f32 = decay * (freq_boost as f32) * base;
+    return clampUnitStrength(raw);
+}
+
+/// Computes cosine similarity in `[-1.0, 1.0]` between two equal-length `f32` episode embeddings
+/// using CP's native 8-lane SIMD `@dot` builtin. Returns `0.0` on empty/mismatched/zero/NaN input.
+pub fn cosineSimEpisodeF32(a: []const f32, b: []const f32): f32 {
+    if (a.len == 0 || a.len != b.len) {
+        return 0.0;
+    }
+    const na: f32 = @dot(a, a);
+    const nb: f32 = @dot(b, b);
+    const ab: f32 = @dot(a, b);
+    if (!isFiniteF32(na) || !isFiniteF32(nb) || !isFiniteF32(ab)) {
+        return 0.0;
+    }
+    if (na <= 0.000000000001 || nb <= 0.000000000001) {
+        return 0.0;
+    }
+    const denom: f32 = @sqrt(na) * @sqrt(nb);
+    if (!isFiniteF32(denom) || denom <= 0.0) {
+        return 0.0;
+    }
+    const cos_val: f32 = ab / denom;
+    if (cos_val > 1.0) {
+        return 1.0;
+    }
+    if (cos_val < -1.0) {
+        return -1.0;
+    }
+    return cos_val;
+}
+
+/// Zero-heap-allocation episodic memory consolidation planner:
+/// 1. Computes retention score for every episode
+/// 2. Merges near-duplicate episodes (`cosineSimEpisodeF32 >= merge_cosine_threshold`) into the
+///    higher-retention (or pinned) representative via `@dot` SIMD
+/// 3. Evicts low-retention non-pinned, non-semantic episodes (`evict_decay`) and promotes
+///    qualifying `episodic` memories to `semantic_long_term` (`promote_semantic`)
+/// 4. Enforces `max_retained_entries` budget by evicting lowest-retention non-pinned episodes (`evict_budget`)
+///
+/// Returns zeroed `ConsolidationSummary` if input is empty, invalid, or buffers are undersized.
+pub fn planMemoryConsolidation(
+    episodes: []const MemoryEpisodeMeta,
+    embeddings: []const f32,
+    dim: usize,
+    now_ms: u64,
+    cfg: ConsolidationConfig,
+    out_actions: *[]ConsolidationAction,
+): ConsolidationSummary {
+    const n: usize = episodes.len;
+    if (n == 0 || dim == 0 || !cfg.isValid() || out_actions.len < n) {
+        return ConsolidationSummary{};
+    }
+    if (n > std.math.maxInt(usize) / dim) {
+        return ConsolidationSummary{};
+    }
+    if (embeddings.len < n * dim) {
+        return ConsolidationSummary{};
+    }
+
+    // Pass 1: Initialize actions & compute retention scores
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        out_actions[i] = ConsolidationAction{
+            episode_idx: i,
+            kind: ConsolidationDecisionKind.keep,
+            target_idx: i,
+            retention_score_f32: computeRetentionScore(episodes[i], now_ms, cfg.decay_half_life_ms),
+        };
+    }
+
+    // Pass 2: @dot SIMD near-duplicate clustering & merging into best representative
+    let idx_i: usize = 0;
+    while (idx_i < n) : (idx_i += 1) {
+        if (out_actions[idx_i].kind == ConsolidationDecisionKind.merged_into) {
+            continue;
+        }
+        const emb_i = embeddings[idx_i * dim .. (idx_i + 1) * dim];
+        let j: usize = idx_i + 1;
+        while (j < n) : (j += 1) {
+            if (out_actions[j].kind == ConsolidationDecisionKind.merged_into) {
+                continue;
+            }
+            const emb_j = embeddings[j * dim .. (j + 1) * dim];
+            const sim: f32 = cosineSimEpisodeF32(emb_i, emb_j);
+            if (sim >= cfg.merge_cosine_threshold) {
+                const i_pin = episodes[idx_i].pinned;
+                const j_pin = episodes[j].pinned;
+                const j_better: bool = (!i_pin && j_pin) ||
+                    (i_pin == j_pin && out_actions[j].retention_score_f32 > out_actions[idx_i].retention_score_f32);
+
+                if (j_better) {
+                    out_actions[idx_i].kind = ConsolidationDecisionKind.merged_into;
+                    out_actions[idx_i].target_idx = j;
+                    // Redirect any prior episodes that merged into idx_i directly to j
+                    let k: usize = 0;
+                    while (k < n) : (k += 1) {
+                        if (out_actions[k].kind == ConsolidationDecisionKind.merged_into && out_actions[k].target_idx == idx_i) {
+                            out_actions[k].target_idx = j;
+                        }
+                    }
+                    break;
+                } else {
+                    out_actions[j].kind = ConsolidationDecisionKind.merged_into;
+                    out_actions[j].target_idx = idx_i;
+                }
+            }
+        }
+    }
+
+    // Pass 3: Decay eviction & semantic promotion
+    let retained: usize = 0;
+    let p: usize = 0;
+    while (p < n) : (p += 1) {
+        if (out_actions[p].kind == ConsolidationDecisionKind.merged_into) {
+            continue;
+        }
+        const ep = episodes[p];
+        if (!ep.pinned &&
+            ep.tier != EpisodeMemoryTier.semantic_long_term &&
+            out_actions[p].retention_score_f32 < cfg.evict_retention_threshold)
+        {
+            out_actions[p].kind = ConsolidationDecisionKind.evict_decay;
+            continue;
+        }
+        if (ep.tier == EpisodeMemoryTier.episodic &&
+            ep.access_count >= cfg.promote_access_count &&
+            ep.importance_f32 >= cfg.promote_importance_min)
+        {
+            out_actions[p].kind = ConsolidationDecisionKind.promote_semantic;
+        }
+        retained += 1;
+    }
+
+    // Pass 4: Budget pruning (evict lowest-retention non-pinned episodes until retained <= max_retained_entries)
+    while (retained > cfg.max_retained_entries) {
+        let victim_opt: usize? = null;
+        let min_score: f32 = 2.0;
+        let c: usize = 0;
+        while (c < n) : (c += 1) {
+            const knd = out_actions[c].kind;
+            if (knd != ConsolidationDecisionKind.keep && knd != ConsolidationDecisionKind.promote_semantic) {
+                continue;
+            }
+            if (episodes[c].pinned) {
+                continue;
+            }
+            if (victim_opt == null || out_actions[c].retention_score_f32 < min_score) {
+                victim_opt = c;
+                min_score = out_actions[c].retention_score_f32;
+            }
+        }
+        if (v_idx := victim_opt) {
+            out_actions[v_idx].kind = ConsolidationDecisionKind.evict_budget;
+            retained -= 1;
+        } else {
+            // All remaining entries are pinned -> never evict pinned memories
+            break;
+        }
+    }
+
+    // Pass 5: Aggregate summary
+    let summary = ConsolidationSummary{ total_input: n };
+    let s: usize = 0;
+    while (s < n) : (s += 1) {
+        if (out_actions[s].kind == ConsolidationDecisionKind.keep) {
+            summary.kept_count += 1;
+        } else if (out_actions[s].kind == ConsolidationDecisionKind.promote_semantic) {
+            summary.promoted_count += 1;
+        } else if (out_actions[s].kind == ConsolidationDecisionKind.merged_into) {
+            summary.merged_count += 1;
+        } else if (out_actions[s].kind == ConsolidationDecisionKind.evict_decay) {
+            summary.evicted_decay_count += 1;
+        } else {
+            summary.evicted_budget_count += 1;
+        }
+    }
+    return summary;
+}

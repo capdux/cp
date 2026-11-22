@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/paths/EnvPath.cp | Synced: 2026-11-22T06:23:36Z
+// Source: Absorbed from /data/dev/bun/src/paths/EnvPath.cp | Synced: 2026-11-22T07:59:33Z
 //! Cross-platform `PATH` environment variable builder & zero-allocation entry iterator
 //! with `~init()` deterministic RAII cleanup.
 

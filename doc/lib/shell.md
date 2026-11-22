@@ -230,3 +230,6 @@ const n = plan.resolveDestPath(0, true, dst[0..])?; // "dist/a.cp"
 5. **重定向、管道、工作目录与流式按行读取（吸收自 `/data/dev/bun/docs/runtime/shell.mdx` 与 `/data/dev/bun/docs/guides/runtime/shell.mdx`）**：
    - 完整支持标准文件描述符重定向（`<`、`>`/`1>`、`2>`、`&>`、`>>`/`2>>`/`&>>`、`1>&2`、`2>&1`）及内存缓冲/流对象互连，无需落地临时文件；
    - 工作目录切换支持单命令局部 `.cwd(dir)` 覆盖与会话级 `ShellDirState`（`~` / `~/sub` 家目录展开、`-` 与 `OLDPWD` 往返切换及词法规范化），避免 `process.chdir()` 污染多线程进程全局状态；大输出命令推荐逐行流式消费（对应 Bun `.lines()`）并显式检查 `exit_code`。
+6. **POSIX `touch` 选项解析与时间戳校验（`lib/shell/touch_opts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/touch.cp`）**：
+   - 零堆分配支持 `-a`、`-m`、`-c`/`--no-create`、`-h`/`--no-dereference`、`-d`/`--date`、`-r`/`--reference`、`-t [[CC]YY]MMDDhhmm[.ss]`、`--time=access|atime|use|modify|mtime`、短选项聚合（如 `-acm`）与 `--` 终止符；
+   - `TouchTimestamp.parse()` 遵循 POSIX 两位年份窗规则（`69..99 => 1969..1999`，`00..68 => 2000..2068`）、闰年 2 月天数校验与闰秒 `60` 支持；互斥时间源（`-d`/`-r`/`-t` 混用）自动抛出 `ShellTouchError.ConflictingTimeSource`。

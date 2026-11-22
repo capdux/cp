@@ -173,6 +173,14 @@ export {
     MvPlan,
 } from "./mv_opts.cp";
 
+export {
+    SHELL_TOUCH_MAX_PATHS,
+    ShellTouchError,
+    TouchTimeTarget,
+    TouchTimestamp,
+    TouchOpts,
+} from "./touch_opts.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);

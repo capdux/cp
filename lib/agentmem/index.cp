@@ -51,6 +51,15 @@ export {
     ConsolidationReport,
     halfLifeDecayFactor,
     consolidateMemoriesInPlace,
+    EpisodeMemoryTier,
+    ConsolidationConfig,
+    MemoryEpisodeMeta,
+    ConsolidationDecisionKind,
+    ConsolidationAction,
+    ConsolidationSummary,
+    computeRetentionScore,
+    cosineSimEpisodeF32,
+    planMemoryConsolidation,
 } from "./consolidation.cp";
 
 export {
