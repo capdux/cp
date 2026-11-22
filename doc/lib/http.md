@@ -789,3 +789,21 @@ const sleep_now = timer.onTick(784111779000, 0)?;    // false -> transitions to 
 * = keep_running;
 * = sleep_now;
 ```
+
+9. **零分配 HTTP/3 在途请求流状态机（`h3/stream.cp`，吸收自 `/data/dev/bun/src/http/h3_client/Stream.cp`）**：
+   - 导出：`H3_REQ_STREAM_MAX_HEADERS` (`32`)、`H3_REQ_STREAM_MAX_BODY_BUF` (`4096`)、`H3RequestStreamError`、`H3StreamPhase`（`Open`/`RequestBodySending`/`HeadersReceived`/`ReceivingBody`/`Completed`/`Aborted`）、`H3DecodedHeader`、`H3RequestStream`；
+   - 完整跟踪单条 QUIC 双向请求流的生命周期：待发请求体分片推进（`setPendingBody`/`advancePendingBody`/`markRequestBodyDone`）、1xx 信息响应头过渡与最终响应头交付（`onStatusCode`/`addDecodedHeader`/`findHeader`/`deliverHeaders`）、缓冲或流式响应体累计（`appendResponseBody`/`responseBody`）及幂等中止（`abort`）。
+
+```cp
+import { H3RequestStream, H3StreamPhase } from "cap:http";
+
+let s = H3RequestStream.init(4, 1, false);
+* = s.setPendingBody("{\"ping\":1}")?;
+* = s.advancePendingBody(10)?; // request_body_done == true
+* = s.onStatusCode(200)?;
+* = s.addDecodedHeader("Content-Type", "application/json")?;
+* = s.deliverHeaders()?;
+* = s.appendResponseBody("{\"ok\":true}")?;
+* = s.complete()?;
+* = s.phase == H3StreamPhase.Completed;
+```

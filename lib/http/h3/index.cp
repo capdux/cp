@@ -110,3 +110,12 @@ export {
     H3PendingDnsEntry,
     H3PendingConnectQueue,
 } from "./pendingConn";
+
+export {
+    H3_REQ_STREAM_MAX_HEADERS,
+    H3_REQ_STREAM_MAX_BODY_BUF,
+    H3RequestStreamError,
+    H3StreamPhase,
+    H3DecodedHeader,
+    H3RequestStream,
+} from "./stream";
