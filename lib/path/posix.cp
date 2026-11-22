@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/paths/Path.cp | Synced: 2026-11-22T07:42:24Z
+// Source: Absorbed from /data/dev/bun/src/paths/Path.cp | Synced: 2026-11-22T08:02:36Z
 // ============================================================================
 // lib/path/posix.cp — POSIX Path Implementation (cap:path)
 // ============================================================================

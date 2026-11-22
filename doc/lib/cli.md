@@ -262,3 +262,26 @@ const mn = formatPmCommitMessage("Release beta: %s", ver_buf[0..vn], msg_buf[0..
 // msg_buf[0..mn] == "Release beta: 1.0.1-beta.0"
 * = mn;
 ```
+
+9. **`package.json` 点号/方括号路径与赋值解析（`lib/cli/pm_pkg.cp`，吸收自 `/data/dev/bun/src/cli/pm_pkg_command.cp` & `/data/dev/bun/docs/pm/cli/pm.mdx`）**：
+   - **四类子命令**：`get` / `set` / `delete` / `fix`（`PmPkgSubCommand`）；
+   - **完整路径语法（参考 `/data/dev/bun/docs/pm/cli/pm.mdx`）**：支持点分属性（`scripts.build`）、方括号数组下标（`contributors[0]`）、点分数字下标（`workspaces.0`）、特殊字符方括号键（`scripts[test:watch]`、`exports["./utils"]`）及多维嵌套（`matrix[0][1].name`）；
+   - **赋值与 `--json` 类型判定**：`PmPkgAssignment.parse()` 在跳过方括号内 `=` 后拆分 `key=value`；`classifyPmPkgValue(val, true)` 严格区分 `null` / `boolean` / `number` / `string` / `array` / `object` 并拦截畸形 JSON。
+
+### `pm pkg` 路径与赋值解析示例（`lib/cli/pm_pkg.cp`）
+
+```cp
+import {
+    PmPkgKeyPath,
+    PmPkgAssignment,
+    classifyPmPkgValue,
+} from "cap:cli";
+
+const assign = PmPkgAssignment.parse("scripts[test:watch]=bun test --watch")?;
+const kind = classifyPmPkgValue("true", true)?; // PmPkgValueKind.json_bool
+let buf: [64]u8 = [0; 64];
+const n = assign.path.formatCanonical(buf[0..])?;
+// buf[0..n] == "scripts[test:watch]"
+* = kind;
+* = n;
+```

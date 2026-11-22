@@ -136,3 +136,15 @@ export {
     formatPmCommitMessage,
     formatPmGitTag,
 } from "./pm_version.cp";
+
+export {
+    PM_PKG_MAX_SEGMENTS,
+    PmPkgError,
+    PmPkgSubCommand,
+    PmPkgSegmentKind,
+    PmPkgPathSegment,
+    PmPkgKeyPath,
+    PmPkgAssignment,
+    PmPkgValueKind,
+    classifyPmPkgValue,
+} from "./pm_pkg.cp";

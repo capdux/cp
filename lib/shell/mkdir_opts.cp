@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/builtin/mkdir.cp | Synced: 2026-11-22T07:59:33Z
+// Source: Absorbed from /data/dev/bun/src/shell/builtin/mkdir.cp | Synced: 2026-11-22T08:02:36Z
 // Pure-CP zero-allocation POSIX `mkdir` flag parser (`-p`/`--parents`,
 // `-v`/`--verbose`, `-m`/`--mode`, combined short flags, `--` terminator),
 // octal permission mode parser, and zero-alloc `-p` parent-directory prefix iterator.

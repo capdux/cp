@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/paths/EnvPath.cp | Synced: 2026-11-22T07:59:33Z
+// Source: Absorbed from /data/dev/bun/src/paths/EnvPath.cp | Synced: 2026-11-22T08:02:36Z
 // ============================================================================
 // lib/path/env_path.cp — Cross-platform PATH Environment Variable Engine
 // ============================================================================
