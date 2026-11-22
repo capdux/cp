@@ -377,3 +377,18 @@ export {
     ThoughtTreeStats,
     ThoughtTree,
 } from "./thought_tree.cp";
+
+export {
+    MAX_SANDBOX_RULES,
+    MAX_RULE_ID_LEN,
+    MAX_SCOPE_PATTERN_LEN,
+    MAX_NORMALIZED_PATH_LEN,
+    CapabilityKind,
+    RiskTier,
+    PolicyAction,
+    SandboxRule,
+    SandboxRequest,
+    SandboxPolicyDecision,
+    SandboxAuditStats,
+    ToolSandboxPolicy,
+} from "./sandbox_policy.cp";

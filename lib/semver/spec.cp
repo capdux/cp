@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/semver/SemverQuery.cp | Synced: 2026-11-22T07:01:25Z
+// Source: Absorbed from /data/dev/bun/src/semver/SemverQuery.cp | Synced: 2026-11-22T07:44:11Z
 
 /// 依赖协议/描述符类别
 pub enum DependencyKind: u8 {

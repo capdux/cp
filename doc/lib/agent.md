@@ -1967,3 +1967,59 @@ fn thoughtTreeQuickStart() {
     * = b1;
 }
 ```
+
+---
+
+## 子模块：零分配工具权限沙箱与能力策略引擎（`sandbox_policy.cp`）
+
+### 核心特性
+
+- **零堆分配确定性能力策略内核（`ToolSandboxPolicy`）**：内联固定 32 条策略槽位与定长字节缓冲，覆盖 `fs_read` / `fs_write` / `net_egress` / `exec_cmd` / `env_read` / `secret_access` / `mcp_tool` 七大能力域。
+- **严格四层安全求值优先级**：
+  1. **路径边界硬拦截**：对 `fs_read` / `fs_write` 零分配规范化路径，硬拦截任何 `..` 目录穿越、NUL (`0x00`) 字节与 `allowed_root` 根前缀逃逸（防 `/workspace_evil` 兄弟目录绕过）；
+  2. **显式 `deny` 无条件压倒 `allow` / `require_approval` / `audit_only`**；
+  3. **高优先级规则胜出**（支持 `*`、`*.domain.com`、`prefix/*`、`cmd *` 通配及域名大小写无关匹配）；
+  4. **默认闭拒绝（default-deny）**。
+- **人工审批门禁与单会话配额**：`require_approval` 在未获 `human_approved` 前拒绝且不扣配额；支持每条规则独立 `max_calls` 配额扣减、`reset_session_quotas()` 与 `SandboxAuditStats` 零分配审计统计。
+
+### 导出清单
+
+- **常量与枚举**：`MAX_SANDBOX_RULES`（`32`）、`CapabilityKind`、`RiskTier`、`PolicyAction`
+- **数据模型**：`SandboxRule`、`SandboxRequest`、`SandboxPolicyDecision`、`SandboxAuditStats`
+- **策略引擎（`ToolSandboxPolicy`）**：`init`、`set_allowed_root`、`normalize_path_raw`、`normalize_and_check_path`、`find_rule`、`add_rule`、`evaluate`、`reset_session_quotas`、`stats`
+
+### QuickStart 示例
+
+```cp
+import {
+    CapabilityKind,
+    RiskTier,
+    PolicyAction,
+    SandboxRequest,
+    ToolSandboxPolicy,
+} from "cap:agent";
+
+fn sandboxPolicyQuickStart() {
+    let policy = ToolSandboxPolicy.init();
+    * = policy.set_allowed_root("/workspace");
+
+    * = policy.add_rule("allow-ws-read", CapabilityKind.fs_read, "/workspace/*", RiskTier.low, PolicyAction.allow, 100, 10);
+    * = policy.add_rule("deny-secrets", CapabilityKind.fs_read, "/workspace/.env*", RiskTier.critical, PolicyAction.deny, 0, 5);
+    * = policy.add_rule("approve-shell", CapabilityKind.exec_cmd, "rm *", RiskTier.critical, PolicyAction.require_approval, 3, 20);
+
+    // 显式 deny 压倒高优先级 allow -> deny
+    const d1 = policy.evaluate(SandboxRequest{
+        tool_name: "read_file",
+        capability: CapabilityKind.fs_read,
+        target: "/workspace/.env.prod",
+    });
+    // 路径穿越硬拦截 -> path_violation = true
+    const d2 = policy.evaluate(SandboxRequest{
+        tool_name: "read_file",
+        capability: CapabilityKind.fs_read,
+        target: "/workspace/../etc/passwd",
+    });
+    * = d1;
+    * = d2;
+}
+```

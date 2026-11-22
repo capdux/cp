@@ -399,3 +399,15 @@ export {
     CssImportRule,
     CssImportRuleList,
 } from "./import_rule.cp";
+
+export {
+    CSS_COUNTER_MAX_SYMBOLS,
+    CSS_COUNTER_MAX_RANGES,
+    CssCounterStyleError,
+    CssCounterSystemKind,
+    CssCounterSystem,
+    CssAdditiveTuple,
+    CssCounterRange,
+    CssCounterSpeakAs,
+    CssCounterStyleRule,
+} from "./counter_style.cp";

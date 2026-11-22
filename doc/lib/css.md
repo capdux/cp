@@ -456,6 +456,26 @@ const list = CssImportRuleList.extractFromStylesheet(
 * = n;
 ```
 
+### CSS `@counter-style` 规则解析、校验与实时计数器渲染（`counter_style.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/rules/counter_style.cp`，零堆分配实现 W3C CSS Counter Styles Level 3 `@counter-style` 全套描述符解析器（`system`、`symbols`、`additive-symbols`、`negative`、`prefix`、`suffix`、`range`、`pad`、`fallback`、`speak-as`）、规范序列化器与实时计数器/列表标记格式化引擎。
+
+- 核心导出：`CSS_COUNTER_MAX_SYMBOLS` (`32`)、`CSS_COUNTER_MAX_RANGES` (`8`)、`CssCounterStyleError`、`CssCounterSystemKind`、`CssCounterSystem`、`CssAdditiveTuple`、`CssCounterRange`、`CssCounterSpeakAs`、`CssCounterStyleRule`（`initEmpty` / `parse` / `isInRange` / `formatCounter` / `formatMarker` / `toCss` / `eql`）。
+- 算法覆盖：完整支持 `cyclic`、`fixed <integer>`、`symbolic`、`alphabetic`（Excel 列名式双射进制）、`numeric`（任意进制）、`additive`（贪心降序加权，如罗马数字 `upper-roman`）以及 `negative` 前后缀、`pad` 最小宽度补齐（含 UTF-8 码点计数与负号计宽）和 `prefix`/`suffix` 标记拼装。
+- 规范防线：禁止 `none` 及 CSS-wide 关键字作为 `<counter-style-name>`；`numeric`/`alphabetic` 强制至少 2 个符号；`additive-symbols` 强制权重非负且严格降序；`extends` 禁止声明 `symbols`/`additive-symbols`；超界数值返回 `OutOfRange` 以提示调用方切入 `fallback` 样式。
+
+```cp
+import { CssCounterStyleRule } from "cap:css";
+
+const roman = CssCounterStyleRule.parse(
+    "@counter-style upper-roman { system: additive; range: 1 3999; additive-symbols: 1000 M, 900 CM, 500 D, 400 CD, 100 C, 90 XC, 50 L, 40 XL, 10 X, 9 IX, 5 V, 4 IV, 1 I; suffix: \". \"; }"
+)?;
+let buf: [64]u8 = [0; 64];
+const n = roman.formatMarker(2026, buf[0..])?;
+// "MMXXVI. "
+* = n;
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项
