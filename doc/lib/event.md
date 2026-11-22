@@ -272,6 +272,27 @@ const aid = t.asyncID();
 * = aid;
 ```
 
+### 3.13 外部切片驱动一次性可取消托管任务池 (`oneShotTask.cp`)
+
+吸收自 `/data/dev/bun/src/event_loop/ManagedTask.cp`：
+
+- **导出符号**：`OneShotTaskError`（`PoolFull`/`InvalidHandle`/`StaleHandle`）、`OneShotTaskState`（`Empty`/`Pending`/`Cancelled`）、`OneShotTaskFn`、`OneShotTaskHandle`、`OneShotTaskSlot`、`OneShotRunOutcome`、`OneShotTaskPool`（`init`/`capacity`/`activeCount`/`pendingCount`/`completedTotal`/`cancelledTotal`/`isAlive`/`stateOf`/`schedule`/`cancel`/`run`/`runAllPending`）；
+- **核心语义**：由调用方传入任意长度 `[]OneShotTaskSlot` 后备切片（无硬编码槽位上限、零堆分配）；`cancel(h)` 复刻 Bun `ManagedTask.cancel()` 将回调替换为 `noop`，`run(h)` 在调用用户回调前先原子回收槽位并递增 `generation` 防止二次运行与 ABA 重用冲突。
+
+```cp
+import { OneShotTaskPool, OneShotTaskSlot } from "cap:event";
+
+fn onWork(ctx: u64, payload: u64): i32 {
+    return @as(i32, @intCast(ctx + payload));
+}
+
+let slots: [16]OneShotTaskSlot = [OneShotTaskSlot{}; 16];
+let pool = OneShotTaskPool.init(slots[0..]);
+const h = pool.schedule(10, 32, onWork)?;
+const res = pool.run(h)?; // res.executed == true, res.result_code == 42
+* = res;
+```
+
 ---
 
 ## 四、 上游 Bun 事件循环行为契约与并发边界

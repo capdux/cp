@@ -103,4 +103,14 @@ export {
     TimerObjectInternals,
 } from "./timerInternals.cp";
 
+export {
+    OneShotTaskError,
+    OneShotTaskState,
+    OneShotTaskFn,
+    OneShotTaskHandle,
+    OneShotTaskSlot,
+    OneShotRunOutcome,
+    OneShotTaskPool,
+} from "./oneShotTask.cp";
+
 export * from "./emitter.cp";
