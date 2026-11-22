@@ -3,8 +3,8 @@
 import std from "std";
 import { test, expect_eq } from "cap:test";
 import {
-    Point2,
-    Bounds2,
+    VoronoiPoint2 as Point2,
+    VoronoiBounds2 as Bounds2,
     CellMetrics,
     clipPolygonHalfPlane,
     polygonArea,
@@ -12,7 +12,7 @@ import {
     computeVoronoiCell,
     lloydRelaxationStep,
     nearestSite,
-} from "cap:voronoi";
+} from "cap:graph";
 
 fn absDiff(a: f64, b: f64): f64 {
     const d = a - b;

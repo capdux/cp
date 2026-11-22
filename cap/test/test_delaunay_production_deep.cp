@@ -17,7 +17,7 @@ import {
     triangulate,
     verifyDelaunayEmptyCircle,
     locateTriangle,
-} from "cap:delaunay";
+} from "cap:graph";
 
 fn absF64(x: f64): f64 {
     return if (x < 0.0) 0.0 - x else x;

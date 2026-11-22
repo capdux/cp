@@ -6,12 +6,12 @@ import {
     CsrGraph,
     TarjanWorkspace,
     TwoSatClause,
-    tarjanScc,
+    csrTarjanScc as tarjanScc,
     topoSort,
     isDag,
     dagLongestPath,
     solve2Sat,
-} from "cap:scc";
+} from "cap:graph";
 
 fn evalLiteral(lit: i32, assignment: []const u8): bool {
     if (lit > 0) {

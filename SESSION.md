@@ -1481,3 +1481,7 @@
 ### 2026-11-22（根目录分域收敛第 9 批完成：lib/math/ 第 2 波（净减 16 个顶层目录，累计 -107） | 2026-11-22 14:56:24）
 - **执行与结单汇报**：
   > Stdlib Root Consolidator (math) 完成第 2 波信号/时序/随机过程收敛：16 个纯 CP 小目录（biquad/iir/savitzky/holt/cusum/dtw/hmm/markov/particle/fft/wavelet/spline/ode/fir/hilbert/cholesky）零冲突归并入 lib/math/ 并物理清理旧目录（17/17 PASS，严格保护 Bun bigint 与避免 quat 冲突）；累计已安全削减 107 个顶层目录（846 -> 739）；续派 lib/ds/ 数据结构领域收敛。
+
+### 2026-11-22（根目录分域收敛第 7 批完成：lib/graph/（净减 10 个顶层目录，累计 -117） | 2026-11-22 14:56:51）
+- **执行与结单汇报**：
+  > Stdlib Root Consolidator 完成 lib/graph/ 收敛：10 个图论与计算几何小目录（dijkstra/mst/maxflow/scc/bipartite/hungarian/delaunay/voronoi/octree/rrt）零冲突归并入 lib/graph/ 并物理清理旧目录（11/11 PASS）；累计已安全削减 117 个顶层目录（846 -> 729）；续派 lib/binfmt/ 二进制格式领域收敛。

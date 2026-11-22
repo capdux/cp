@@ -11,12 +11,12 @@ import {
     DijkstraResult,
     BellmanFordResult,
     FloydWarshallResult,
-    dijkstra,
-    reconstructPath,
-    bellmanFord,
+    csrDijkstra as dijkstra,
+    reconstructCsrPath as reconstructPath,
+    csrBellmanFord as bellmanFord,
     floydWarshall,
     reconstructFloydPath,
-} from "cap:dijkstra";
+} from "cap:graph";
 
 fn absDiff(a: f64, b: f64): f64 {
     const d = a - b;

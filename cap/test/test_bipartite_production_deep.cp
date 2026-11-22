@@ -8,7 +8,7 @@ import {
     isBipartite,
     hopcroftKarp,
     konigMinVertexCover,
-} from "cap:bipartite";
+} from "cap:graph";
 
 fn verifyMatchingAndCover(
     g: BipartiteGraph,

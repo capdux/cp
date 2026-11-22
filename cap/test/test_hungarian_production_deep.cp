@@ -13,7 +13,7 @@ import {
     solveMaxF64,
     solveMinI64,
     solveMaxI64,
-} from "cap:hungarian";
+} from "cap:graph";
 
 fn absF64(x: f64): f64 {
     return if (x < 0.0) 0.0 - x else x;

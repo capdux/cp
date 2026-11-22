@@ -4,8 +4,8 @@ import std from "std";
 import { test, expect_eq } from "cap:test";
 import {
     RRT_NO_PARENT,
-    Point2,
-    Bounds2,
+    RrtPoint2 as Point2,
+    RrtBounds2 as Bounds2,
     CircleObstacle,
     RectObstacle,
     RrtNode,
@@ -18,7 +18,7 @@ import {
     planRrt2D,
     smoothPath,
     pathLength,
-} from "cap:rrt";
+} from "cap:graph";
 
 fn absF64(v: f64): f64 {
     return if (v < 0.0) -v else v;

@@ -16,6 +16,16 @@
 | `lib/graph/directed_graph.cp` | `// Source: cp/lib/graph/directed_graph.cp (Indexed Weighted Directed Graph & Adjacency List)` | `WeightedEdge`、`DirectedGraph` |
 | `lib/graph/dag_algorithms.cp` | `// Source: cp/lib/graph/dag_algorithms.cp (DAG Topological Sort, Cycle Detection, Tarjan SCC, Shortest Paths)` | `topologicalSort`、`findCycle`、`reachableFrom`、`transitiveClosure`、`tarjanScc`、`dijkstra`、`bellmanFord`、`reconstructPath` |
 | `lib/graph/algorithms.cp` | `// Source: cp/lib/graph/algorithms.cp (Dijkstra, Tarjan SCC, Topological Sort, Kruskal MST & PageRank)` | `ShortestPathResult`、`SccResult`、`MstEdge`、`MstResult`、`PageRankEntry`、`GraphAlgo` |
+| `lib/graph/dijkstra.cp` | `// Origin: Pure-CP Stdlib (Zero-Alloc CSR Shortest Paths)` | `WeightedCsrGraph`、`csrDijkstra`、`reconstructCsrPath`、`csrBellmanFord`、`floydWarshall`、`reconstructFloydPath` |
+| `lib/graph/mst.cp` | `// Origin: Pure-CP Stdlib (Zero-Alloc Kruskal/Prim MST & DisjointSet)` | `MstWeightedEdge`、`PrimEdge`、`DenseMstResult`、`DisjointSet`、`kruskalMst`、`maxSpanningTree`、`primDenseMst`、`isValidSpanningTree` |
+| `lib/graph/maxflow.cp` | `// Origin: Pure-CP Stdlib (Zero-Alloc Dinic Max-Flow & Min-Cost Max-Flow)` | `FlowEdge`、`FlowGraph`、`MinCostResult`、`dinicMaxFlow`、`minCutReachable`、`minCostMaxFlow` |
+| `lib/graph/scc.cp` | `// Origin: Pure-CP Stdlib (Zero-Alloc CSR Tarjan SCC, Kahn TopoSort, DAG Longest Path & 2-SAT)` | `CsrGraph`、`TarjanWorkspace`、`TwoSatClause`、`csrTarjanScc`、`topoSort`、`isDag`、`dagLongestPath`、`solve2Sat` |
+| `lib/graph/bipartite.cp` | `// Origin: Pure-CP Stdlib (Zero-Alloc Hopcroft-Karp Matching & Konig Vertex Cover)` | `UNMATCHED`、`BipartiteGraph`、`isBipartite`、`hopcroftKarp`、`konigMinVertexCover` |
+| `lib/graph/hungarian.cp` | `// Origin: Pure-CP Stdlib (Zero-Alloc O(n^3) Hungarian Linear Assignment Solver)` | `AssignmentResultF64`/`I64`、`HungarianWorkspaceF64`/`I64`、`solveMinF64`/`solveMaxF64`/`solveMinI64`/`solveMaxI64` |
+| `lib/graph/delaunay.cp` | `// Origin: Pure-CP Stdlib (Zero-Alloc 2D Bowyer-Watson Delaunay Triangulation)` | `Point2`、`Triangle`、`Edge2`、`Circumcircle`、`DelaunayWorkspace`、`triangulate`、`locateTriangle` |
+| `lib/graph/voronoi.cp` | `// Origin: Pure-CP Stdlib (Zero-Alloc 2D Voronoi Cell Clipping & Lloyd Relaxation)` | `VoronoiPoint2`、`VoronoiBounds2`、`CellMetrics`、`computeVoronoiCell`、`lloydRelaxationStep`、`nearestSite` |
+| `lib/graph/octree.cp` | `// Origin: Pure-CP Stdlib (Zero-Alloc 3D Octree Spatial Index & Ray-AABB Queries)` | `Vec3`、`Aabb3`、`Ray3`、`rayIntersectsAabb`、`Octree`、`NearestResult` |
+| `lib/graph/rrt.cp` | `// Origin: Pure-CP Stdlib (Zero-Alloc 2D RRT Motion Planner & Path Smoothing)` | `RrtPoint2`、`RrtBounds2`、`CircleObstacle`、`RectObstacle`、`planRrt2D`、`smoothPath`、`pathLength` |
 | `lib/graph/index.cp` | `// Source: cp/lib/graph/index.cp (Unified Exports for cap:graph)` | `cap:graph` 与 `cap.graph` 统一公开导出入口 |
 
 ---
@@ -53,6 +63,22 @@
 
 - **`Graph`**：支持字符串节点 ID 的有向/无向图，提供 `addNode`、`addEdge`、`bfs`、`dfs`、`kHopSubgraph`。
 - **`GraphAlgo`**：提供 `dijkstra`、`topologicalSort`、`tarjanScc`、`kruskalMst`、`pageRank`。
+
+### 5. 零堆分配图论扩展算法集（已收敛至 `cap:graph`）
+
+- **CSR 最短路径（`dijkstra.cp`）**：`WeightedCsrGraph`、`DijkstraWorkspace`、`csrDijkstra`、`reconstructCsrPath`、`csrBellmanFord`、`floydWarshall`、`reconstructFloydPath`（为避免与 `dag_algorithms.cp` 的 `DirectedGraph` 版本重名，CSR 版本使用 `csr*` 别名）。
+- **最小/最大生成树与并查集（`mst.cp`）**：`MstWeightedEdge`、`PrimEdge`、`DenseMstResult`、`DisjointSet`、`kruskalMst`、`maxSpanningTree`、`primDenseMst`、`isValidSpanningTree`。
+- **网络流与最小费用最大流（`maxflow.cp`）**：`FlowGraph`、`FlowEdge`、`dinicMaxFlow`、`minCutReachable`、`minCostMaxFlow`。
+- **CSR 强连通分量与 2-SAT（`scc.cp`）**：`CsrGraph`、`TarjanWorkspace`、`TwoSatClause`、`csrTarjanScc`、`topoSort`、`isDag`、`dagLongestPath`、`solve2Sat`。
+- **二分图最大匹配与最小点覆盖（`bipartite.cp`）**：`BipartiteGraph`、`isBipartite`、`hopcroftKarp`、`konigMinVertexCover`。
+- **线性指派匈牙利算法（`hungarian.cp`）**：`HungarianWorkspaceF64`/`I64`、`solveMinF64`/`solveMaxF64`/`solveMinI64`/`solveMaxI64`。
+
+### 6. 零堆分配计算几何与空间规划（已收敛至 `cap:graph`）
+
+- **2D Delaunay 三角剖分（`delaunay.cp`）**：`Point2`、`Triangle`、`Edge2`、`Circumcircle`、`DelaunayWorkspace`、`orient2d`、`circumcircle`、`inCircumcircle`、`pointInTriangle`、`triangulate`、`verifyDelaunayEmptyCircle`、`locateTriangle`。
+- **2D Voronoi 单元裁剪与 Lloyd 松弛（`voronoi.cp`）**：`VoronoiPoint2`、`VoronoiBounds2`、`CellMetrics`、`clipPolygonHalfPlane`、`polygonArea`、`polygonCentroid`、`computeVoronoiCell`、`lloydRelaxationStep`、`nearestSite`。
+- **3D Octree 空间索引（`octree.cp`）**：`Vec3`、`Aabb3`、`Ray3`、`rayIntersectsAabb`、`Octree`、`OctreeNode`、`NearestResult`。
+- **2D RRT 运动规划与路径平滑（`rrt.cp`）**：`RrtPoint2`、`RrtBounds2`、`CircleObstacle`、`RectObstacle`、`RrtNode`、`RrtConfig`、`RrtResult`、`planRrt2D`、`smoothPath`、`pathLength`。
 
 ---
 

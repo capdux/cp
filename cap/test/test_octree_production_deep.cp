@@ -14,7 +14,7 @@ import {
     OctreeEntry,
     OctreeNode,
     Octree,
-} from "cap:octree";
+} from "cap:graph";
 
 fn approxEq(a: f64, b: f64, eps: f64): bool {
     const d = a - b;

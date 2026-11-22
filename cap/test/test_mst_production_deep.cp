@@ -4,14 +4,14 @@ import std from "std";
 import { test, expect_eq } from "cap:test";
 import {
     MST_INF_WEIGHT,
-    WeightedEdge,
+    MstWeightedEdge as WeightedEdge,
     PrimEdge,
     DisjointSet,
     kruskalMst,
     maxSpanningTree,
     primDenseMst,
     isValidSpanningTree,
-} from "cap:mst";
+} from "cap:graph";
 
 fn approxEq(a: f64, b: f64, eps: f64): bool {
     const d = a - b;

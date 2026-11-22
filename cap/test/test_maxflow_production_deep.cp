@@ -11,7 +11,7 @@ import {
     dinicMaxFlow,
     minCutReachable,
     minCostMaxFlow,
-} from "cap:maxflow";
+} from "cap:graph";
 
 fn computeCutCapacity(g: FlowGraph, reachable: []const u8): i64 {
     let cut_cap: i64 = 0;
