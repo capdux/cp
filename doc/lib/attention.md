@@ -12,6 +12,7 @@
 - **`KV_INVALID_BLOCK` / `KvBlockMeta` / `KvAllocStats` / `PagedKvAllocator` / `BlockTable`** (`kv_cache.cp`)：零堆分配 PagedAttention 物理块管理器，支持系统提示词前缀哈希零拷贝共享、释放后缓存复用与 LRU 驱逐、Beam Search `retainBlock` + 引用计数 CoW（共享态分配新块，独占态零拷贝原地返回）以及 `BlockTable` 逻辑到物理槽位映射。
 - **`SamplingConfig`**: 采样配置（`temperature`, `top_k`, `top_p`, `repetition_penalty`, `seed`）。
 - **`RopeConfig` / RoPE / RMSNorm / LayerNorm / SwiGLU / GeLU** (`rope.cp`)：零堆分配 Transformer 基础推理核，支持 NTK-Aware 长上下文缩放的 RoPE 旋转位置编码、RMSNorm/LayerNorm 归一化与 SiLU/GeLU/SwiGLU 激活函数。
+- **`QUANT_BLOCK_SIZE` / `BlockQ8_0` / `BlockQ4_0` / GEMV** (`quant_matmul.cp`)：零堆分配 GGML 风格 32 元素分块量化与整型累加矩阵向量乘法（`W_q8 * x_q8` 与经典 llama.cpp `W_q4 * x_q8` 混合量化推理核）。
 
 ## 3. API 速查
 
@@ -40,6 +41,10 @@
 | `ropeApplyInPlace` | `(vec_inout, pos, head_dim, cos_table, sin_table): bool` | 对单头 Q/K 向量执行严格保范数的半切分旋转位置编码 |
 | `rmsNorm` / `layerNorm` | `(x, weight, eps, out): bool` / `(x, gamma, beta, eps, out): bool` | 零堆分配 RMSNorm（支持原地与空权重）与 LayerNorm 归一化核 |
 | `silu` / `geluTanh` / `swigluForward` | `(x): f64` / `(x): f64` / `(gate, up, out): bool` | 现代 LLM FFN 激活核（`swigluForward`: `out[i] = silu(gate[i]) * up[i]`） |
+| `quantizeRowQ8_0` / `dequantizeRowQ8_0` | `(src, blocks_out): bool` / `(blocks, dst): bool` | Q8_0 32 元素分块量化/反量化（要求 `src.len % 32 == 0`，~4x 压缩） |
+| `dotQ8_0` / `gemvQ8_0` | `(a, b): f64?` / `(w_q8, x_q8, rows, bpr, y_out): bool` | 块内 `i32` 纯整型累加点积与 Q8_0 GEMV（`y = W * x`） |
+| `quantizeRowQ4_0` / `dequantizeRowQ4_0` | `(src, blocks_out): bool` / `(blocks, dst): bool` | Q4_0 32 元素 4-bit 打包/解包（16B/块，~8x 压缩） |
+| `gemvQ4_0_Q8_0` | `(w_q4, x_q8, rows, bpr, y_out): bool` | 经典 llama.cpp `W_q4 * x_q8` 混合量化推理 GEMV（块内 `i32` 乘加） |
 
 ## 4. 示例
 
@@ -142,5 +147,31 @@ pub fn demoTransformerKernels() {
     const empty_w: []const f64 = q_buf[0..0];
     * = rmsNorm(q_buf[0..], empty_w, 0.00001, norm_s);
     * = swigluForward(norm_buf[0..], q_buf[0..], ffn_s);
+}
+```
+
+### GGML 风格 Q8_0 / Q4_0 分块量化与混合推理 GEMV 示例 (`quant_matmul.cp`)
+
+```cp
+import {
+    BlockQ8_0,
+    BlockQ4_0,
+    quantizeRowQ8_0,
+    quantizeRowQ4_0,
+    gemvQ4_0_Q8_0,
+} from "cap:attention";
+
+pub fn demoQuantizedGemv(w_row_32: []const f64, x_32: []const f64) {
+    let w_q4_buf: [1]BlockQ4_0 = [BlockQ4_0{}; 1];
+    let x_q8_buf: [1]BlockQ8_0 = [BlockQ8_0{}; 1];
+    let w_q4: []BlockQ4_0 = w_q4_buf[0..];
+    let x_q8: []BlockQ8_0 = x_q8_buf[0..];
+
+    * = quantizeRowQ4_0(w_row_32, w_q4);
+    * = quantizeRowQ8_0(x_32, x_q8);
+
+    let y_buf: [1]f64 = [0.0];
+    let y: []f64 = y_buf[0..];
+    * = gemvQ4_0_Q8_0(w_q4_buf[0..], x_q8_buf[0..], 1, 1, y);
 }
 ```

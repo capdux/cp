@@ -21,3 +21,16 @@ export {
     geluTanh,
     swigluForward,
 } from "./rope.cp";
+
+export {
+    QUANT_BLOCK_SIZE,
+    BlockQ8_0,
+    BlockQ4_0,
+    quantizeRowQ8_0,
+    dequantizeRowQ8_0,
+    dotQ8_0,
+    gemvQ8_0,
+    quantizeRowQ4_0,
+    dequantizeRowQ4_0,
+    gemvQ4_0_Q8_0,
+} from "./quant_matmul.cp";
