@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/webcore/TextDecoder.cp | Synced: 2026-11-22T06:57:00Z
+// Source: Absorbed from /data/dev/bun/src/runtime/webcore/TextDecoder.cp | Synced: 2026-11-22T07:55:13Z
 
 export {
     TextEncoding,

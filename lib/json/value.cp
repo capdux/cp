@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/interchange/json.cp | Synced: 2026-11-22T05:55:50Z
+// Source: Absorbed from /data/dev/bun/src/interchange/json.cp | Synced: 2026-11-22T07:55:13Z
 // Zero-copy JSON value representation, RFC 6901 JSON Pointer & Deep Equality in CP
 // String keys and string values borrow directly from source slice when unescaped
 

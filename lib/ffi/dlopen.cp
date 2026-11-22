@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/ffi/ffi.cp | Synced: 2026-11-22T07:51:03Z
+// Source: Absorbed from /data/dev/bun/src/runtime/ffi/ffi.cp | Synced: 2026-11-22T07:55:13Z
 // lib/ffi/dlopen.cp
 // POSIX Dynamic Library Loader (dlopen/dlsym/dlclose/dlerror), C-ABI Type Matrix & Callback Descriptors
 

@@ -1778,3 +1778,15 @@ export {
     MuxSessionStats,
     MuxSession,
 } from "./stream_mux.cp";
+
+// --- p2c_balancer ---
+export {
+    MAX_P2C_BACKENDS,
+    MAX_BACKEND_ID_LEN,
+    BackendHealthState,
+    P2cBalancerConfig,
+    BackendSlot,
+    P2cPickDecision,
+    P2cBalancerStats,
+    P2cLoadBalancer,
+} from "./p2c_balancer.cp";

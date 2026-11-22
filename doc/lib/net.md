@@ -418,3 +418,44 @@ pub fn demoStreamMuxQuickStart()! {
     * = client.onWindowUpdate(sid, 1024, MuxFlags.NONE);
 }
 ```
+
+---
+
+## 十、 零分配 P2C + Peak-EWMA 自适应负载均衡器与异常摘除引擎（`p2c_balancer.cp`）
+
+面向微服务网关、RPC 集群与多节点 LLM 推理后端的 Linkerd / Envoy 级 Power-of-Two-Choices (P2C) + Peak-EWMA 自适应负载均衡与被动异常摘除（Outlier Ejection）引擎，100% 纯 CP 零动态堆分配（固定 64 节点内联数组 `MAX_P2C_BACKENDS = 64`）：
+
+- **核心类型**：`BackendHealthState`（`healthy | ejected | half_open`）、`P2cBalancerConfig`（`ewma_alpha_f32`, `max_consecutive_errors`, `ejection_cooldown_ms`, `max_ejection_percent`, `inflight_penalty_us`）、`BackendSlot`、`P2cPickDecision`（含 `used_fallback_panic_mode`）、`P2cBalancerStats`、`P2cLoadBalancer`。
+- **核心算法**：
+  - `pick_backend(*_, now_ms, rng_seed): P2cPickDecision`：自动将冷却到期 `ejected` 节点转为 `half_open` 探活；通过 SplitMix64 抽样两个不同可用节点并按 `effective_load = ewma_latency_us * (1 + inflight) / weight + inflight * inflight_penalty_us`（`@fma` 计算）择低路由并递增 `inflight`；若所有节点不可用则自动进入 **Panic Mode** 降级兜底路由。
+  - `report_outcome(*_, slot_idx, ok, latency_us, now_ms): bool`：递减 `inflight`，采用 Peak-EWMA（延迟尖峰立即跃升、恢复时按 `@fma` 指数衰减）平滑延迟；连续失败达 `max_consecutive_errors` 且未超 `max_ejection_percent` 防雪崩上限时自动摘除；`half_open` 探活成功立即恢复 `healthy`。
+
+### QuickStart 示例
+
+```cp
+import {
+    P2cBalancerConfig,
+    P2cLoadBalancer,
+} from "cap:net";
+
+pub fn demoP2cLoadBalancer() {
+    let lb = P2cLoadBalancer.init(P2cBalancerConfig{
+        ewma_alpha_f32: 0.25,
+        max_consecutive_errors: 3,
+        ejection_cooldown_ms: 10000,
+        max_ejection_percent: 50,
+        inflight_penalty_us: 5000.0,
+    }) ?? return;
+
+    const n1 = lb.register_backend("gpu-node-1", 2) ?? return;
+    const n2 = lb.register_backend("gpu-node-2", 1) ?? return;
+
+    const pick = lb.pick_backend(1000, 42);
+    if (pick.found) {
+        * = lb.report_outcome(pick.slot_idx, true, 12000, 1012);
+    }
+    * = n1;
+    * = n2;
+    * = lb.stats();
+}
+```

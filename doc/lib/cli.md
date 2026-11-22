@@ -233,3 +233,32 @@ const fn_len = completionFilename(CompletionShell.zsh, "cap", fname[0..])?;
 * = dirs;
 * = fn_len;
 ```
+
+8. **包版本递进与 Git 提交消息格式化（`lib/cli/pm_version.cp`，吸收自 `/data/dev/bun/src/cli/pm_version_command.cp` & `/data/dev/bun/docs/pm/cli/pm.mdx`）**：
+   - **完整支持 9 类版本策略**：`patch`、`minor`、`major`、`prepatch`、`preminor`、`premajor`、`prerelease`、`from-git` 与具体 Semver（支持剥离可选前导 `v`/`=`）；
+   - **预发布标识推导（`--preid`）**：未显式指定 `--preid` 时自动继承当前版本号预发布首段（如 `1.2.3-beta.0` 执行 `prerelease` 递进为 `1.2.3-beta.1`）；对稳定版执行 `prerelease` 时先递进 `patch` 再附 `-0` 或 `-<preid>.0`（参考 `/data/dev/bun/docs/pm/cli/pm.mdx`：`1.0.0` + `prerelease --preid beta` → `1.0.1-beta.0`）；
+   - **防误操作与 Git 集成最佳实践**：指定具体版本号且与当前版本一致时默认抛出 `PmVersionError.SameVersion`（需显式开启 `allow_same_version` 放行，对应 `--allow-same-version`）；`formatPmCommitMessage()` 将提交消息模板中所有 `%s` 替换为新版本号（空模板默认输出 `v<version>`）；`normalizeGitTagVersion()` 规范化 `git describe --tags` 输出供 `from-git` 使用。
+
+### 包版本递进与提交消息格式化示例（`lib/cli/pm_version.cp`）
+
+```cp
+import {
+    PmVersionOptions,
+    parsePmVersionArg,
+    computeNextPmVersion,
+    formatPmCommitMessage,
+} from "cap:cli";
+
+const arg = parsePmVersionArg("prerelease")?;
+let opts = PmVersionOptions.defaults();
+opts.preid = "beta";
+
+let ver_buf: [64]u8 = [0; 64];
+const vn = computeNextPmVersion("1.0.0", arg, opts, ver_buf[0..])?;
+// ver_buf[0..vn] == "1.0.1-beta.0"
+
+let msg_buf: [128]u8 = [0; 128];
+const mn = formatPmCommitMessage("Release beta: %s", ver_buf[0..vn], msg_buf[0..])?;
+// msg_buf[0..mn] == "Release beta: 1.0.1-beta.0"
+* = mn;
+```

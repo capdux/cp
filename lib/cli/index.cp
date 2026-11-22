@@ -123,3 +123,16 @@ export {
     collectAliasSymlinkTargets,
     isWindowsInstallerBinDir,
 } from "./install_completions.cp";
+
+export {
+    PmVersionError,
+    PmVersionType,
+    PmSemver,
+    PmParsedVersionArg,
+    PmVersionOptions,
+    parsePmVersionArg,
+    normalizeGitTagVersion,
+    computeNextPmVersion,
+    formatPmCommitMessage,
+    formatPmGitTag,
+} from "./pm_version.cp";
