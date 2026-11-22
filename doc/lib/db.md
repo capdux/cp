@@ -273,6 +273,54 @@ pub fn demoMvccSnapshot() {
 }
 ```
 
+### 零分配数据库槽页二进制布局、原地紧凑化与 CRC32 校验引擎 (`slotted_page.cp`)
+
+面向 PostgreSQL / SQLite 经典存储引擎的 100% 纯 CP 零动态堆分配 4KB/8KB（任意 `64..65535B`）槽页二进制布局引擎，直接操作调用方持有的 `page_buf: *[]u8` 实现零拷贝读写与 O(1) 额外内存原地紧凑化：
+
+- **二进制布局与常量**：
+  - `SLOTTED_PAGE_MAGIC = 0x31535043` (`"CPS1"`)、`SLOTTED_PAGE_HEADER_SIZE = 32`、`SLOTTED_SLOT_SIZE = 6`、`SLOTTED_PAGE_MIN_SIZE = 64`、`SLOTTED_PAGE_MAX_SIZE = 65535`
+  - `SLOT_FLAG_ALIVE = 0x0001`、`SLOT_FLAG_DELETED = 0x0002`
+  - 32B 固定小端页头：`magic` / `page_id` / `lsn` / `flags` / `slot_count` / `free_start` / `free_end` / `fragmented_bytes` / `crc32`；槽目录自偏移 `32` 向高地址增长，记录载荷自页尾向低地址增长。
+- **元数据与校验状态**：
+  - `SlottedPageStatus`（`ok` | `invalid_page_size` | `invalid_magic` | `checksum_mismatch` | `corrupt_header` | `corrupt_slot_bounds` | `overlapping_records`）
+  - `SlottedPageHeader`、`SlottedSlotMeta`（`isAlive()`, `isDeleted()`）、`SlottedFreeSpace`
+- **核心函数**：
+  - `initPage(*page, page_id, lsn, flags)` / `readPageHeader(page)` / `readSlotMeta(page, slot_id)` / `freeSpaceBytes(page)` / `setPageLsn(*page, lsn)`
+  - `insertRecord(*page, record): u16?`：优先复用墓碑槽；连续空间不足但碎片可回收时自动触发原地 `compactPage`。
+  - `getRecord(page, slot_id): ([]const u8)?`：零拷贝返回存活记录只读切片。
+  - `updateRecordInPlace(*page, slot_id, new_record): bool`：等长/缩小原地覆写并累计碎片；扩容原子校验容量并在必要时自动紧凑化，失败不破坏原记录。
+  - `deleteRecord(*page, slot_id): bool` / `compactPage(*page): bool`（O(1) 额外内存反向无重叠搬移）
+  - `slottedPageCrc32(page)` / `sealChecksum(*page)` / `verifyPageIntegrity(page)`（全面校验页大小、Magic、CRC32、页头指针、槽边界与记录非重叠）
+
+```cp
+import {
+    SlottedPageStatus,
+    initPage,
+    insertRecord,
+    getRecord,
+    deleteRecord,
+    sealChecksum,
+    verifyPageIntegrity,
+} from "cap:db";
+
+pub fn demoSlottedPage() {
+    let page_arr: [4096]u8 = [0; 4096];
+    let page: []u8 = page_arr[0..];
+    * = initPage(*page, 42, 1001, 0);
+
+    const s0 = insertRecord(*page, "row:alpha:100") ?? return;
+    const s1 = insertRecord(*page, "row:beta:200") ?? return;
+    * = deleteRecord(*page, s0); // 墓碑标记，后续插入可自动复用槽 0 并按需紧凑化
+
+    if (rec := getRecord(page[0..], s1)) {
+        * = rec; // 零拷贝切片 "row:beta:200"
+    }
+    * = sealChecksum(*page);
+    const st = verifyPageIntegrity(page[0..]);
+    * = (st == SlottedPageStatus.ok); // true
+}
+```
+
 ---
 
 ## 收敛子模块深度文档

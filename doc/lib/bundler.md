@@ -651,3 +651,19 @@ const r3 = map.getOrPut("src/config.json", 99)?; // 命中已有, source_index=1
 * = r2;
 * = r3;
 ```
+
+- **Bundler 延迟插件批次协调器（`deferred_batch.cp`，吸收自 `/data/dev/bun/src/bundler/DeferredBatchTask.cp` & `/data/dev/bun/docs/bundler/plugins.mdx`）**：
+    - 导出：`DEFERRED_BATCH_MAX_TASKS` (`64`)、`DeferredBatchError`、`DeferredBatchState`（`Idle`/`Scheduled`/`Running`）、`DeferredTaskOutcome`（`Pending`/`Resumed`/`Rejected`）、`DeferredPluginTask`、`DeferredDrainSummary`、`DeferredBatchCoordinator`（`init`/`isIdle`/`isScheduled`/`isRunning`/`pendingCount`/`hasPending`/`hasDeferredSource`/`enqueueDeferred`/`schedule`/`beginRun`/`drainDeferred`/`runBatchNow`/`reset`）；
+    - **`onLoad` `.defer()` 多波次唤醒与异常快速失败契约（参考 `/data/dev/bun/docs/bundler/plugins.mdx`）**：当 `BundlerGraph` 迁移至 `WakeDeferredPlugins` 时，协调器按严格非重入状态机 `Idle -> Scheduled -> Running -> Idle` 唤醒当前波次全部挂起的 `.defer()` 任务；若构建已出现致命错误，调用 `drainDeferred(true, ...)` 将整批任务标记为 `Rejected` 避免插件 Promise 永久悬空；同一 `source_index` 跨波次重复 `.defer()` 将被 `DuplicateSourceIndex` 拦截。
+
+```cp
+import { DeferredBatchCoordinator, DeferredPluginTask, DeferredTaskOutcome } from "cap:bundler";
+
+let coord = DeferredBatchCoordinator.init();
+* = coord.enqueueDeferred(10, 1)?;
+* = coord.enqueueDeferred(11, 2)?;
+let out: [8]DeferredPluginTask = [DeferredPluginTask{}; 8];
+const summary = coord.runBatchNow(false, out[0..])?;
+// summary.drained_count == 2, out[0].outcome == DeferredTaskOutcome.Resumed, coord.isIdle() == true
+* = summary;
+```

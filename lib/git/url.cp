@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/repository.zig | Synced: 2026-11-21T22:18:22Z (Git Remote URL Parser & Formatter)
+// Source: Absorbed from /data/dev/bun/src/install/repository.cp | Synced: 2026-11-22T12:18:49Z (Git Remote URL Parser & Formatter)
 
 /// Git 远程传输协议枚举
 pub enum GitProtocol: u8 {

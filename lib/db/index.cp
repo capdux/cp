@@ -335,3 +335,31 @@ export {
     MvccSnapshotStats,
     MvccSnapshotManager,
 } from "./mvcc_snapshot.cp";
+
+// --- slotted_page ---
+export {
+    SLOTTED_PAGE_MAGIC,
+    SLOTTED_PAGE_HEADER_SIZE,
+    SLOTTED_SLOT_SIZE,
+    SLOTTED_PAGE_MIN_SIZE,
+    SLOTTED_PAGE_MAX_SIZE,
+    SLOT_FLAG_ALIVE,
+    SLOT_FLAG_DELETED,
+    SlottedPageStatus,
+    SlottedPageHeader,
+    SlottedSlotMeta,
+    SlottedFreeSpace,
+    slottedPageCrc32,
+    initPage,
+    readPageHeader,
+    readSlotMeta,
+    freeSpaceBytes,
+    compactPage,
+    insertRecord,
+    getRecord,
+    updateRecordInPlace,
+    deleteRecord,
+    setPageLsn,
+    sealChecksum,
+    verifyPageIntegrity,
+} from "./slotted_page.cp";

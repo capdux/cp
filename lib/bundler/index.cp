@@ -394,3 +394,13 @@ export {
     GetOrPutSourceResult,
     PathToSourceIndexMap,
 } from "./path_source_map";
+
+export {
+    DEFERRED_BATCH_MAX_TASKS,
+    DeferredBatchError,
+    DeferredBatchState,
+    DeferredTaskOutcome,
+    DeferredPluginTask,
+    DeferredDrainSummary,
+    DeferredBatchCoordinator,
+} from "./deferred_batch";
