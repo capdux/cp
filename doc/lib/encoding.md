@@ -204,3 +204,22 @@ pub fn demoHex(): !void {
    - 聚合导出的 `Utf8`、`Utf16`、`Utf16BE` 遇到非法代理项或截断多字节序列时统一替换为 `REPLACEMENT_CHAR`（`U+FFFD`），避免未校验外部字节流引发越界读取；`Ascii` 原语针对纯 ASCII/Latin-1 快路径优化，零堆分配完成大小写转换与 Latin-1 到 UTF-8 展开。
 4. **百分号编码复用**：
    - `cap:encoding` 直接重导出 `PercentEncoding`（别名 `Percent`），适合在同一模块内同时处理 Base64/Hex/UTF 与 URI 百分号编解码而无需额外引入 `cap:url`。
+
+### 6. WHATWG 编码标签规范化与 BOM 探测 (`encodingLabel.cp`)
+
+> 吸收自 `/data/dev/bun/src/runtime/webcore/EncodingLabel.cp`（参考 WHATWG Encoding Standard §4.2 及 `/data/dev/bun/docs/runtime/web-apis.mdx` 中 `TextDecoder` 编码标签规范）
+
+- **导出符号**：`EncodingLabel`（24 种 WHATWG 标准编码枚举；方法 `getLabel`/`isUnicode`/`isCjk`/`isSingleByte`/`isAsciiCompatible`/`which`）、`lookupEncodingLabel`、`canonicalEncodingName`、`detectBomEncoding`；
+- **关键行为契约**：
+  - 自动裁剪首尾 WHATWG ASCII 空白（`" \t\r\n\x0C"`）并执行大小写不敏感查表，覆盖 135+ 标准别名（如 `latin1`/`us-ascii`/`iso-8859-1` 归一为 `windows-1252`，`gb2312`/`chinese` 归一为 `gbk`，`ms932`/`windows-31j` 归一为 `shift_jis`，`utf-16`/`ucs-2` 归一为 `utf-16le`）；
+  - `detectBomEncoding(bytes)` 零分配识别 UTF-8 (`EF BB BF`)、UTF-16BE (`FE FF`) 与 UTF-16LE (`FF FE`) 字节序标记。
+
+```cp
+import { EncodingLabel, canonicalEncodingName, detectBomEncoding } from "cap:encoding";
+
+const lbl = EncodingLabel.which("  US-ASCII "); // EncodingLabel.Windows1252
+const name = canonicalEncodingName("ms932");    // "shift_jis"
+const bom_bytes: [3]u8 = [0xEF, 0xBB, 0xBF];
+const bom = detectBomEncoding(bom_bytes[0..]);  // EncodingLabel.Utf8
+* = lbl; * = name; * = bom;
+```

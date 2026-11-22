@@ -26,3 +26,9 @@ export {
     Utf16,
     UnicodeWidth,
 } from "../string/utf.cp";
+export {
+    EncodingLabel,
+    lookupEncodingLabel,
+    canonicalEncodingName,
+    detectBomEncoding,
+} from "./encodingLabel.cp";
