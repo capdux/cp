@@ -222,6 +222,44 @@ pub fn demoDinicMaxFlowAndMatching() {
 
 ---
 
+## 六、 零分配迭代式 Tarjan 强连通分量（SCC）与缩点 DAG 拓扑求解器（`scc_condensation.cp`）
+
+面向模块打包器循环依赖分析、包管理器环路折叠、编译器调用图内联与死锁检测的 100% 纯 CP 零动态堆分配、纯迭代式（零递归防栈溢出）Tarjan SCC 与缩点 DAG 求解器：
+
+- **常量与数据模型**：
+  - `SCC_MAX_NODES = 64`、`SCC_MAX_EDGES = 512`、`SCC_NO_EDGE = 0xFFFF`
+  - `CondensedDagEdge`：`{ from_scc: u16, to_scc: u16 }`（严格满足 Tarjan 逆拓扑序 `from_scc > to_scc`）
+  - `SccCondensationResult`：`{ valid, node_count, scc_count, node_to_scc, scc_sizes, cyclic_scc_count, has_any_cycle, condensed_edges, condensed_edge_count }`，提供 `sameScc(u, v): bool` 与 `isNodeInCycle(u): bool`（精准识别多节点环与单节点自环）
+- **核心求解器（`IterativeTarjanGraph`）**：
+  - `init(node_count): IterativeTarjanGraph?`：校验 `1 <= node_count <= 64`，零堆初始化链式前向星。
+  - `add_edge(*_, u, v): bool`：记录有向边与自环标记，防越界与超 512 边上限。
+  - `compute_scc_and_condensation(): SccCondensationResult`：纯显式栈迭代式 Tarjan 算法求解全部 SCC，并基于 O(1) 64-bit 邻接位图构建去重后的严格无环缩点 DAG。
+
+### QuickStart 示例
+
+```cp
+import { IterativeTarjanGraph } from "cap:graph";
+
+pub fn demoIterativeTarjanScc() {
+    let g = IterativeTarjanGraph.init(5) ?? return;
+    // 3 节点环 (0->1->2->0) 经桥边 (2->3) 指向 2 节点环 (3<->4)
+    * = g.add_edge(0, 1);
+    * = g.add_edge(1, 2);
+    * = g.add_edge(2, 0);
+    * = g.add_edge(2, 3);
+    * = g.add_edge(3, 4);
+    * = g.add_edge(4, 3);
+
+    const res = g.compute_scc_and_condensation();
+    // res.scc_count == 2, res.cyclic_scc_count == 2, res.condensed_edge_count == 1
+    // res.sameScc(0, 2) == true, res.sameScc(2, 3) == false
+    // 缩点边满足逆拓扑序: res.condensed_edges[0].from_scc > res.condensed_edges[0].to_scc
+    * = res;
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [bipartite.md](graph/bipartite.md)
