@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/image/Image.cp | Synced: 2026-11-21T18:35:47Z
+// Source: Absorbed from /data/dev/bun/src/runtime/image/Image.cp | Synced: 2026-11-22T09:26:14Z
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/Image.cp
 // Upstream Sync: Refer to bun/src/runtime/image/Image.zig for future upstream updates.

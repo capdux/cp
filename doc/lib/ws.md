@@ -129,6 +129,22 @@ const r = broker.collectRecipients("the-group-chat", 1, targets[0..]);
 * = r;
 ```
 
+### WebSocket 客户端 URL 解析与 HTTP/1.1 升级状态机（`lib/ws/client_upgrade.cp`，吸收自 `/data/dev/bun/src/http/websocket_http_client.cp` & `/data/dev/bun/docs/runtime/http/websockets.mdx`）
+
+- 核心导出：`WS_CLIENT_MAX_CUSTOM_HEADERS` (`16`)、`WS_CLIENT_MAX_PROTOCOLS` (`8`)、`WsClientUpgradeError`、`WsUrlScheme`（`Ws`/`Wss`）、`WsUpgradePhase`（`Idle`/`AwaitingResponse`/`Upgraded`/`Failed`）、`WsClientUrl`（`parse`/`isTls`/`isDefaultPort`/`formatHostHeader`/`formatCanonicalUrl`）、`WsClientHeader`、`WsClientUpgradeConfig`（`addHeader`/`addProtocol`/`containsProtocol`）、`WsClientUpgradeMachine`（`init`/`buildUpgradeRequest`/`verifyUpgradeResponse`/`negotiatedProtocol`）。
+
+```cp
+import { WsClientUrl, WsClientUpgradeConfig, WsClientUpgradeMachine } from "cap:ws";
+
+const url = WsClientUrl.parse("wss://realtime.example.com/v1/stream?room=42")?;
+let cfg = WsClientUpgradeConfig{ enable_permessage_deflate: true };
+cfg.addProtocol("chat.v1")?;
+let machine = WsClientUpgradeMachine.init(url);
+let req_buf: [512]u8 = [0; 512];
+const n = machine.buildUpgradeRequest("dGhlIHNhbXBsZSBub25jZQ==", cfg, req_buf[0..])?;
+* = n;
+```
+
 ---
 
 ## 上游 Bun WebSocket 行为契约与安全边界注意事项
@@ -144,3 +160,6 @@ const r = broker.collectRecipients("the-group-chat", 1, targets[0..]);
 5. **原生 Pub-Sub 主题生命周期与 `publish_to_self` 契约（吸收自 `/data/dev/bun/docs/guides/websocket/pubsub.mdx`）**：
    - 默认 `publish_to_self == false` 时，单连接广播（`ws.publish`，传入 `sender_id`）自动排除发送者自身，而服务端广播（`server.publish`，传入 `sender_id = null`）投递给主题内全部订阅者；
    - 连接断开（`close` 回调）时务必调用 `unsubscribeAll(client_id)` 清理订阅并自动回收空主题槽位，防止长周期服务出现孤儿订阅泄漏。
+6. **客户端 URL 合规性与升级握手安全防线（吸收自 `/data/dev/bun/src/http/websocket_http_client.cp` & `/data/dev/bun/docs/runtime/http/websockets.mdx`）**：
+   - 遵循 RFC 6455 Section 3：`WsClientUrl.parse` 严格拒绝包含 `#fragment` 或控制字符/CRLF 的 URL，支持 IPv6 字面量 `[::1]:port` 并按默认端口（`ws` 80 / `wss` 443）规范化 `Host` 头；
+   - `WsClientUpgradeConfig.addHeader` 禁止注入 `\r`/`\n` 并拒绝覆盖核心握手头（`Host`/`Upgrade`/`Connection`/`Sec-WebSocket-Key`/`Sec-WebSocket-Version`）；`WsClientUpgradeMachine.verifyUpgradeResponse` 严格校验 `101 Switching Protocols`、`Sec-WebSocket-Accept` 28 字节 SHA-1 Base64 摘要以及协商子协议白名单，任意不匹配立即置状态为 `Failed`。

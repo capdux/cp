@@ -47,6 +47,17 @@ export {
     WsPublishResult,
     WsPubSubBroker,
 } from "./pubsub";
+export {
+    WS_CLIENT_MAX_CUSTOM_HEADERS,
+    WS_CLIENT_MAX_PROTOCOLS,
+    WsClientUpgradeError,
+    WsUrlScheme,
+    WsUpgradePhase,
+    WsClientUrl,
+    WsClientHeader,
+    WsClientUpgradeConfig,
+    WsClientUpgradeMachine,
+} from "./client_upgrade";
 
 import { FrameBuilder } from "./frame";
 import { Mask } from "./mask";
