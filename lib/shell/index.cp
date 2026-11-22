@@ -465,6 +465,15 @@ export {
     CmdStateMachine,
 } from "./cmdState.cp";
 
+export {
+    REF_STR_MAX_SLOTS,
+    REF_STR_MAX_LEN,
+    RefStrError,
+    RefStrHandle,
+    RefStrSlot,
+    RefStrPool,
+} from "./refStr.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);

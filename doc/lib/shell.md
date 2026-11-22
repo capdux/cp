@@ -702,3 +702,21 @@ let cmd = CmdStateMachine.init(CmdParentKind.Pipeline, false, 0, 1);
 const done = cmd.onSubprocessIoClosed(CmdIoChannel.Stdout)?; // true -> Done
 * = done;
 ```
+
+### Shell 引用计数共享字符串池（`refStr.cp`）
+
+- 吸收自 `/data/dev/bun/src/shell/RefCountedStr.cp`；
+- 导出：`REF_STR_MAX_SLOTS` (`64`)、`REF_STR_MAX_LEN` (`256`)、`RefStrError`（`PoolFull`/`StringTooLong`/`InvalidHandle`/`StaleHandle`/`RefCountOverflow`）、`RefStrHandle`（4 字节 `(index, generation)` 紧凑句柄）、`RefStrSlot`、`RefStrPool`（`init`/`activeCount`/`capacity`/`isAlive`/`alloc`/`intern`/`ref`/`deref`/`refCount`/`byteSlice`）；
+- 为 Shell 环境变量在父子 Shell 间共享提供零堆分配、带代次防 ABA 悬垂访问保护的引用计数字符串池：`intern()` 自动命中相同存活值并递增计数，`deref()` 归零时即时回收槽位并递增 `generation` 令旧句柄失效。
+
+```cp
+import { RefStrPool } from "cap:shell";
+
+let pool = RefStrPool.init();
+const h1 = pool.intern("/usr/local/bin:/usr/bin")?;
+const h2 = pool.intern("/usr/local/bin:/usr/bin")?; // 复用同一槽位, refcount == 2
+assert(h1.eql(h2));
+const freed1 = pool.deref(h1)?; // false (refcount == 1)
+const freed2 = pool.deref(h2)?; // true  (槽位已回收，旧句柄失效)
+* = freed1; * = freed2;
+```
