@@ -239,3 +239,20 @@ export {
     labelValueOrOverflow,
     CardinalityGuard,
 } from "./cardinality.cp";
+
+// --- Zero-Alloc Sampling Profiler Stack Aggregator & Brendan Gregg Folded Flamegraph Exporter ---
+
+export {
+    FLAME_MAX_SYMBOLS,
+    FLAME_SYMBOL_POOL_BYTES,
+    FLAME_MAX_STACKS,
+    FLAME_MAX_DEPTH,
+    FlameRecordStatus,
+    FlameSymbolEntry,
+    FlameStackEntry,
+    FlameHotspot,
+    FlameHotspotDiff,
+    FlameFoldStats,
+    FlameFoldProfiler,
+    diffHotspots,
+} from "./flameFold.cp";

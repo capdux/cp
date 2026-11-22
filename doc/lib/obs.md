@@ -390,6 +390,39 @@ pub fn demoCardinalityGuard() {
 }
 ```
 
+### 零分配调用栈采样聚合器与 Folded Flamegraph 导出器 (`flameFold.cp`)
+
+面向 CPU/耗时性能剖析的 100% 纯 CP 零动态堆分配采样聚合器与 Brendan Gregg Folded Flamegraph 导出器：
+
+- **常量与模型**：
+  - `FLAME_MAX_SYMBOLS = 128`、`FLAME_SYMBOL_POOL_BYTES = 4096`、`FLAME_MAX_STACKS = 128`、`FLAME_MAX_DEPTH = 32`
+  - `FlameRecordStatus`（`ok | ok_truncated | empty_stack | zero_weight | table_full`）、`FlameSymbolEntry`、`FlameStackEntry`、`FlameHotspot`（`self_weight`, `inclusive_weight`, `self_bps`, `inclusive_bps`）、`FlameHotspotDiff`、`FlameFoldStats`
+- **核心引擎 `FlameFoldProfiler` 与差分函数**：
+  - `registerSymbol(*_, symbol_id, name)` / `resolveSymbolName(symbol_id)`：紧凑内联符号字符串池。
+  - `recordStack(*_, frame_ids, sample_weight)`：基于 FNV-1a 64-bit 栈签名自动聚合相同调用栈权重，自动截断超深栈。
+  - `topHotspots(by_self, out_hotspots)`：精确计算 Self-Time 与递归去重 Inclusive-Time，输出确定性 Top-K 热点榜。
+  - `exportFoldedText(out_buf)`：导出标准 `frameA;frameB;frameC <weight>\n` 文本，未注册符号自动回退 `sym#<id>`。
+  - `diffHotspots(baseline, current, by_self, out_diffs)`：差分火焰图热点回归对比，按回归增量降序输出。
+
+```cp
+import {
+    FlameHotspot,
+    FlameFoldProfiler,
+} from "cap:obs";
+
+pub fn demoFlameFold() {
+    let prof = FlameFoldProfiler.init();
+    * = prof.registerSymbol(1, "main");
+    * = prof.registerSymbol(2, "parseJson");
+    const stack: [2]u32 = [1, 2];
+    * = prof.recordStack(stack[0..], 50);
+
+    let out: [256]u8 = [0; 256];
+    let out_s: []u8 = out[0..];
+    * = prof.exportFoldedText(*out_s); // "main;parseJson 50\n"
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
