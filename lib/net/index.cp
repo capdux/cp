@@ -1799,3 +1799,20 @@ export {
     CongestionStats,
     Rfc9002CongestionController,
 } from "./congestion_ctrl.cp";
+
+// --- happy_eyeballs ---
+export {
+    HE_MAX_CANDIDATES,
+    HE_DEFAULT_RESOLUTION_DELAY_MS,
+    HE_DEFAULT_ATTEMPT_DELAY_MS,
+    HE_DEFAULT_FIRST_FAMILY_COUNT,
+    HE_INVALID_ATTEMPT_ID,
+    HeAddressFamily,
+    HeAttemptState,
+    HeActionKind,
+    HeCandidate,
+    HeConfig,
+    HeAction,
+    HeStats,
+    HappyEyeballsEngine,
+} from "./happy_eyeballs.cp";

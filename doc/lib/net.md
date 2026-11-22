@@ -511,6 +511,54 @@ pub fn demoRfc9002CongestionCtrl() {
 
 ---
 
+## RFC 8305 Happy Eyeballs v2 双栈 IPv6/IPv4 连接竞速状态机 (`happy_eyeballs.cp`)
+
+面向现代双栈 TCP/QUIC 客户端的 100% 纯 CP 零动态堆分配 RFC 8305 Happy Eyeballs v2 竞速与回退调度状态机（固定容量 `HE_MAX_CANDIDATES = 32`）：
+
+- **常量与枚举**：
+  - `HE_MAX_CANDIDATES = 32`、`HE_DEFAULT_RESOLUTION_DELAY_MS = 50`、`HE_DEFAULT_ATTEMPT_DELAY_MS = 250`、`HE_DEFAULT_FIRST_FAMILY_COUNT = 1`、`HE_INVALID_ATTEMPT_ID = 0xFFFF`
+  - `HeAddressFamily`（`ipv6 | ipv4`）、`HeAttemptState`（`pending | in_flight | succeeded | failed | cancel_pending | canceled`）、`HeActionKind`（`start_attempt | wait_until | connected | all_failed`）
+- **数据模型**：`HeCandidate`（`fromIpv4` / `fromIpv6` POD 端点）、`HeConfig`（`defaults()` / `isValid()`）、`HeAction`、`HeStats`
+- **核心引擎 `HappyEyeballsEngine`**：
+  - `init(cfg, start_ms): HappyEyeballsEngine?`
+  - `addResolvedAddresses(*_, family, candidates, dns_complete, now_ms)` / `markDnsComplete(*_, family, now_ms)`：异步分批接收 AAAA / A 记录、自动去重与满容量防护；非首选族先到达时自动触发 RFC 8305 §3 Resolution Delay（默认 50ms），首选族到达或 DNS 结束时立即解除等待。
+  - `previewInterleavedOrder(out_order)`：预览 RFC 8305 §4 首选族优先 + 双栈交替排序结果。
+  - `nextAction(*_, now_ms): HeAction`：单调时间片推进决策（`start_attempt` / `wait_until(deadline_ms)` / `connected` / `all_failed`），默认按 250ms Connection Attempt Delay 错峰并发拨号。
+  - `markAttemptFailed(*_, attempt_id, now_ms)`：单路失败立即清零错峰等待计时器，第一时间触发下一候选。
+  - `markAttemptSucceeded(*_, attempt_id)` / `collectAttemptsToCancel(*_, out_attempt_ids)`：任一连接成功即胜出并自动将所有其他 `in_flight` 尝试标记为待取消，支持分批收集取消列表。
+
+```cp
+import {
+    HeAddressFamily,
+    HeActionKind,
+    HeCandidate,
+    HeConfig,
+    HappyEyeballsEngine,
+} from "cap:net";
+
+pub fn demoHappyEyeballs() {
+    let he = HappyEyeballsEngine.init(HeConfig.defaults(), 1000) ?? return;
+
+    const v6: [1]HeCandidate = [HeCandidate.fromIpv6([0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], 443, 1)];
+    const v4: [1]HeCandidate = [HeCandidate.fromIpv4([93, 184, 216, 34], 443, 2)];
+    * = he.addResolvedAddresses(HeAddressFamily.ipv6, v6[0..], true, 1000);
+    * = he.addResolvedAddresses(HeAddressFamily.ipv4, v4[0..], true, 1000);
+
+    const a1 = he.nextAction(1000); // start_attempt IPv6
+    const a2 = he.nextAction(1250); // 250ms 后错峰 start_attempt IPv4
+    if (a2.kind == HeActionKind.start_attempt) {
+        * = he.markAttemptSucceeded(a2.attempt_id);
+        let to_cancel: [4]u16 = [0; 4];
+        let cancel_s: []u16 = to_cancel[0..];
+        const n_cancel = he.collectAttemptsToCancel(*cancel_s); // 1 (a1.attempt_id)
+        * = n_cancel;
+    }
+    * = a1;
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [amqp.md](net/amqp.md)
