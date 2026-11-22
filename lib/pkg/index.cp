@@ -129,3 +129,14 @@ export {
     matchFilterGlob,
     WorkspaceFilter,
 } from "./filter.cp";
+
+export {
+    PKG_CONFIG_VERSION_CURRENT,
+    PKG_ISOLATED_STORE_DIR,
+    ConfigVersionError,
+    LockfileMigrationSource,
+    PkgLinkerStrategy,
+    PkgConfigVersion,
+    formatIsolatedStoreEntry,
+    formatIsolatedStorePath,
+} from "./config_version.cp";

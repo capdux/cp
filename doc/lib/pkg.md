@@ -234,17 +234,37 @@ pub fn demoFilter(allocator: std.mem.Allocator): ! {
 }
 ```
 
+### 锁文件 `configVersion`、默认链接器策略与 Isolated Store 路径编码（`config_version.cp`，吸收自 `/data/dev/bun/src/install/ConfigVersion.cp`）
+
+- 常量与类型：`PKG_CONFIG_VERSION_CURRENT` (`1`)、`PKG_ISOLATED_STORE_DIR` (`".bun"`)、`ConfigVersionError`、`LockfileMigrationSource`（`none`/`legacy_bun`/`npm`/`yarn`/`pnpm` -> `defaultConfigVersion()`）、`PkgLinkerStrategy`（`hoisted`/`isolated` + `fromStr`/`asStr`）、`PkgConfigVersion`（`v0`/`v1` + `current`/`fromInt`/`fromFloat`/`defaultLinker`）；
+- 零堆路径编码：`formatIsolatedStoreEntry`（`@scope/pkg` + `2.1.0` -> `@scope+pkg@2.1.0`）、`formatIsolatedStorePath`（`node_modules/.bun/@scope+pkg@2.1.0/node_modules/@scope/pkg`），内置路径穿越与控制字符校验。
+
+```typescript
+import {
+    PkgConfigVersion,
+    LockfileMigrationSource,
+    formatIsolatedStorePath,
+} from "cap:pkg";
+
+const ver = LockfileMigrationSource.pnpm.defaultConfigVersion(); // v1
+const linker = ver.defaultLinker(true); // isolated (v1 + workspaces)
+let buf: [128]u8 = [0; 128];
+const store_path = formatIsolatedStorePath(buf[0..], "@scope/pkg", "2.1.0")?;
+// "node_modules/.bun/@scope+pkg@2.1.0/node_modules/@scope/pkg"
+* = linker;
+* = store_path;
+```
+
 ---
 
 ## 上游 Bun 包管理行为契约与边界注意事项
 
 1. **全局缓存与版本目录去重策略**：
    - 参考 `/data/dev/bun/docs/pm/global-cache.mdx`：缓存目录按 `${name}@${version}` 组织以支持多版本并存；当版本包含超长预发布（pre-release）或构建元数据（`+build`）后缀时通过哈希缩短路径避免超长文件名错误；`RegistryHttpClient` 通过 `If-None-Match` / HTTP `304` 校验磁盘缓存元数据最小化重复下载。
-2. **Hoisted vs Isolated 链接策略（`NodeLinker` / `InstallStrategy`）**：
-   - 参考 `/data/dev/bun/docs/pm/isolated-installs.mdx`：
-     - `Isolated`（隔离安装）采用两层结构（中心存储 + 仅暴露显式声明依赖），杜绝幽灵依赖（Phantom Dependencies），是 Monorepo / Workspace 项目的推荐策略；
-     - `Hoisted`（提升安装）将兼容版本扁平化至顶层模块目录，兼容传统 Node/npm 布局；
-     - 跨文件系统链接时，优先使用硬链接（Linux）/ 拷贝回退，并对 `file:`/`link:` 软链跳过嵌套 `node_modules` 以防止符号链接环路。
+2. **Hoisted vs Isolated 链接策略与 `configVersion` 矩阵（参考 `/data/dev/bun/docs/pm/{isolated-installs,lockfile}.mdx`）**：
+   - **默认策略矩阵**：仅当 `configVersion == 1` 且启用 Workspaces 时默认采用 `isolated`（中心存储 `node_modules/.bun/<entry>/node_modules/<pkg>` + 顶层符号链接，Scoped 包在 store 目录中以 `+` 替换 `/`）；`configVersion == 0` 或非 Workspace 项目默认采用 `hoisted`；
+   - **锁文件迁移与前向兼容**：新建工程与从 `pnpm-lock.yaml` 迁移默认 `configVersion = 1`，旧版 Bun 锁文件与从 `package-lock.json` / `yarn.lock` 迁移默认 `configVersion = 0` 以保持向后兼容；解析高于当前版本的 `configVersion` 整数时前向兼容钳位至 `current`。
+   - 跨文件系统链接时，优先使用硬链接（Linux）/ 拷贝回退，并对 `file:`/`link:` 软链跳过嵌套 `node_modules` 以防止符号链接环路。
 3. **零信任生命周期脚本安全模型（`LifecycleRunner` & `TrustedPolicy`）**：
    - 默认拦截未列入 `trustedDependencies` 白名单的包安装脚本（记入 `blocked_scripts`），避免供应链恶意 `postinstall` 静默执行。
 4. **Tarball 解包安全防线（`TarballExtractor`）**：
