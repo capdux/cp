@@ -1,5 +1,7 @@
 # CP 标准库：INI / Systemd / Gitconfig 无损解析与增量编辑手册 (`cap:ini`)
 
+> 参考来源：`/data/dev/bun/src/ini/ini.cp` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:ini` 是 CP 语言官方内置的纯 CP INI / Systemd Unit (`.service`) / `.gitconfig` 解析与增量编辑引擎，**零外部依赖、零 `std.posix`、零 `@import("bun")`**。通过保留原始行序列与注释/空行 AST 节点（`IniLineKind`），实现“修改任意键值或删除节后，未改动的 `#` / `;` 注释、空行、原始分隔符与节顺序 100% 无损回写”。既可通过 `import { ... } from "cap:ini"` 导入，也支持 `import cap from "cap"; cap.ini.*` 动态懒挂载调用。
@@ -89,3 +91,14 @@ pub fn demoIni(): ! {
 
 - **`lib/ini/writer.cp`**（INI 安全写入与转义）：`isValidIniKey`、`needsIniQuotes`、`appendIniSection`、`appendIniSubsection`、`appendIniPair`、`appendIniComment`
 - **`lib/ini/properties.cp`**（Java `.properties` 零分配流式解析）：`PropertyEntry`、`PropertiesIter`、`getProperty`
+
+---
+
+## 上游 Bun `ini` 行为契约与边界注意事项
+
+1. **无损增量回写（`IniDoc`）**：
+   - `IniDoc` 完整保留注释、空行与节顺序节点，修改单个键值后 `stringify()` 仅更新目标行，避免污染 Git diff 或破坏 Systemd `.service` / `.gitconfig` 人工注释。
+2. **重复键策略（`allow_duplicate_keys`）**：
+   - Systemd Unit 中 `Environment=`、`ExecStartPre=` 常合法重复出现，默认 `allow_duplicate_keys: true` 保留全部多值；传统单值 INI 可设为 `false` 启用后者覆盖前者语义。
+3. **跨格式安全写入与 `.properties` 兼容**：
+   - 写入含 `#`/`;`/前导空格或换行的配置值前，通过 `needsIniQuotes` / `appendIniPair` 自动加引号转义；处理 Java `.properties` 文件时使用 `PropertiesIter` 支持 `=`、`:` 与空格分隔符。

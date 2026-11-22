@@ -1,5 +1,7 @@
 # CP 标准库：OpenSSH 公钥与 authorized_keys 策略引擎手册 (`cap:ssh`)
 
+> 参考来源：`/data/dev/bun/src/install/hosted_git_info.cp`, OpenSSH RFC 4251/4253 | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:ssh` 是 CP 语言官方内置的纯 CP **OpenSSH 公钥 Wire 格式解析、标准 `SHA256:` 指纹计算与 `authorized_keys` 策略解析引擎**，**零 C 依赖、零 `std.posix`、零 `@import("bun")`**，复用 `cap:crypto`（SHA-256）与 `cap:encoding`（Base64），为 CP Git 服务端、DevOps 自动化与零信任访问网关提供工业级安全实现。既可通过 `import { ... } from "cap:ssh"` 导入，也支持 `import cap from "cap"; cap.ssh.*` 动态懒挂载调用。
@@ -83,3 +85,14 @@ pub fn demoSsh(): ! {
 
 - **`lib/ssh/config.cp`**（OpenSSH `ssh_config` 解析与 Host 匹配）：`SshHostConfig`、`matchHostPatterns`、`resolveSshConfig`、`getSshOption`
 - **`lib/ssh/pubkey.cp`**（OpenSSH 公钥与 `authorized_keys` 零分配迭代）：`PubKeyType`、`parseKeyType`、`SshPubKey`、`AuthorizedKeysIter`
+
+---
+
+## 上游行为契约与安全边界注意事项
+
+1. **外层与 Wire 内层算法名双重一致校验（`AlgorithmMismatch`）**：
+   - `SshPublicKey` 解析时同时比对文本前缀算法名与 RFC 4251 二进制 Wire 负载首字段算法名，拒绝伪装算法头的畸形公钥；对 `ssh-ed25519` 严格校验 32 字节原始公钥长度。
+2. **OpenSSH `SHA256:` 指纹无填充约定**：
+   - `fingerprintSha256` 按 OpenSSH 标准输出 `SHA256:<base64-no-pad>`（去除末尾 `=` 填充），与 `ssh-keygen -lf` 输出 100% 一致。
+3. **`ssh_config` 首次匹配优先（First-Match-Wins）**：
+   - `resolveSshConfig` 遵循 OpenSSH 官方规则：多个匹配 `Host` 块中对同一选项**首个出现的值生效**，否定模式（`!pattern`）优先排除。

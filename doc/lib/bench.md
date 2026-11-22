@@ -1,6 +1,6 @@
 # CP 标准库：纳秒级计时器、微基准统计对比与内存剖析手册 (`cap:bench`)
 
-> **上游溯源**: `/data/dev/bun/src/perf/hw_timer.cp`, `/data/dev/bun/src/perf/perf.cp`, `/data/dev/bun/src/perf/tracy.cp`, `cp/lib/bench/`  
+> 参考来源：`/data/dev/bun/src/perf/hw_timer.cp`, `/data/dev/bun/src/perf/perf.cp`, `/data/dev/bun/src/perf/tracy.cp` | 吸收日期：2026-11-22
 > **模块路径**: `lib/bench/`  
 > **导入协议**: `import { HwTimer, Stopwatch, BenchStats, LatencyHistogram, TracePhase, TraceEvent, TraceRingBuffer, PerfTrace, BenchCaseResult, BenchSuite, blackBox, BenchOptions, BenchResult, BenchRunner, BenchVerdict, BenchComparison, BenchTableFormatter, AllocSnapshot, CountingAllocator } from "cap:bench";`
 
@@ -120,3 +120,14 @@ pub fn demoLegacy() {
     * = trace.endSpan(span);
 }
 ```
+
+---
+
+## 上游 Bun `perf` 行为契约与基准测量注意事项
+
+1. **防止死代码消除（`blackBox`）**：
+   - 在 Release 优化模式下，未消费的纯计算结果会被 LLVM 完全消除导致“0 ns 假象”；微基准回调的输入与返回值必须包裹 `blackBox(val)` 强制建立优化屏障。
+2. **Welch t-test 显著性对比阈值（`BenchComparison.compare`）**：
+   - 仅凭单次均值对比极易受系统噪声误导；`BenchComparison.compare(baseline, candidate, threshold_pct)` 结合 Welford 方差与 Welch-Satterthwaite 自由度做 95% 置信度检验，噪声过大时稳健裁决为 `BenchVerdict.NoChange`。
+3. **零干扰内存计数（`CountingAllocator`）与火焰图导出**：
+   - 基准循环外包装 `CountingAllocator` 可精确观测单次调用的分配次数与峰值字节数；`TraceRingBuffer<CAP>` 固定容量环形记录埋点，满载时覆写最旧事件，支持导出 Chrome Trace JSON 导入 Perfetto 分析。

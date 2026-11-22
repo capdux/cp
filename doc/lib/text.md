@@ -1,5 +1,7 @@
 # CP 标准库：AI 文本分块、模糊匹配与 Token 预算引擎手册 (`cap:text` / `cap.text`)
 
+> 参考来源：`/data/dev/bun/src/string/`, `/data/dev/bun/src/unicode/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:text` 是 CP 语言官方内置的纯原生文本处理与 AI Agent 上下文工程标准库，专为 RAG 文档切分、命令面板模糊搜索与 LLM 上下文窗口预算控制打造。包含三大核心子模块：
@@ -96,3 +98,14 @@ pub fn demoTextEngine(alloc: std.mem.Allocator): ! {
 
 - **`lib/text/caseconv.cp`**：`WordIter`, `toSnakeCase`, `toScreamingSnakeCase`, `toKebabCase`, `toCamelCase`, `toPascalCase`
 - **`lib/text/casefold.cp`**：`FoldInfo`, `caseFold`, `caseFoldEqual`
+
+---
+
+## 上游行为契约与文本处理边界注意事项
+
+1. **UTF-8 码点边界安全不变式**：
+   - `TextChunker`、`TokenEstimator.truncateToTokenBudget` 与 `truncateEllipsis` 在任意多字节 UTF-8（中文/Emoji）输入下均严格对齐码点起始字节，绝不产出非法半截 UTF-8 字节序列。
+2. **RAG 块重叠约束（`ChunkOptions`）**：
+   - `overlap_chars` 必须严格小于目标块大小，避免切分游标原地踏步；Markdown 模式下围栏代码块（```` ``` ````）内部的 `#` 注释行不会被误判为章节标题（`TextChunk.heading`）。
+3. **Unicode 完整大小写折叠（`caseFoldEqual`）**：
+   - 相比仅限 ASCII 的大小写比较，`caseFoldEqual` 正确处理德语 `ß == SS`、希腊语与多码点折叠映射，适合国际化搜索与标识符去重。

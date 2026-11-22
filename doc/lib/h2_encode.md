@@ -1,5 +1,7 @@
 # `cap:h2_encode` — 零堆分配 HTTP/2 出站请求与流控帧编码库
 
+> 参考来源：`/data/dev/bun/src/http/h2_client/encode.cp` | 吸收日期：2026-11-22
+
 `cap:h2_encode` 吸收自 Bun 上游 `src/http/h2_client/encode.cp`，剥离了底层 I/O 与分配器耦合，提供 100% 纯 CP、零堆分配（zero-alloc）的 RFC 9113 HTTP/2 出站请求头过滤、RFC 7541 HPACK 动态表大小更新编码、客户端连接序言编排、`HEADERS`/`CONTINUATION` 自动分片以及双窗口流控 `DATA` 帧编码。
 
 ## 核心特性
@@ -71,3 +73,14 @@ fn h2EncodeDemo() {
     * = dres;
 }
 ```
+
+---
+
+## 上游 Bun HTTP/2 编码契约与安全边界注意事项
+
+1. **RFC 9113 禁止头自动过滤与小写化（`classifyRequestHeader` / `lowercaseHeaderName`）**：
+   - HTTP/2 严格要求所有头部名称全小写且禁止携带 HTTP/1.1 连接控制头（`Connection`、`Keep-Alive`、`Transfer-Encoding`、`Upgrade`、`Proxy-Connection`），发送非法头会导致对端立即回送 `PROTOCOL_ERROR`；`TE` 仅允许 `"trailers"`。
+2. **敏感凭据防动态表索引（`isSensitiveHeader`）**：
+   - `Authorization`、`Cookie`、`Set-Cookie` 等敏感头部自动标记为 `ForwardNeverIndex`，强制 HPACK 使用 Never-Indexed 编码，防止跨租户代理动态表泄露凭据。
+3. **双窗口流控与 `CONTINUATION` 原子性**：
+   - `encodeDataWindowed` 严格遵守 `min(stream_window, conn_window)` 上限避免触发 `FLOW_CONTROL_ERROR`；`HEADERS` 与后续 `CONTINUATION` 分片必须连续发送，期间不可穿插其他流的帧。

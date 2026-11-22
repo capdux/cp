@@ -1,5 +1,7 @@
 # CP 标准库：XML 1.0 协议解析、路径查询与双向序列化手册 (`cap:xml`)
 
+> 参考来源：`/data/dev/bun/src/s3_signing/`, `/data/dev/bun/src/test_runner/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:xml` 是 CP 语言官方内置的纯 CP XML 1.0 协议解析与序列化标准库，**零外部依赖、零 `std.posix`、零 `@import("bun")`**，专为 S3 / RSS / Atom / SVG / JUnit XML 等数据交换场景设计。既可通过 `import { ... } from "cap:xml"` 导入，也支持 `import cap from "cap"; cap.xml.*` 动态懒挂载调用。
@@ -115,3 +117,14 @@ pub fn demoXmlPipeline(): ! {
 - `escapeXmlAttr(src: []const u8, out: []u8): ([]const u8)?`
 - `wrapXmlCdata(src: []const u8, out: []u8): ([]const u8)?`
 - `unescapeXml(src: []const u8, out: []u8): ([]const u8)?`
+
+---
+
+## 上游行为契约与安全防御注意事项
+
+1. **XXE 与深层嵌套防护（`MAX_DEPTH = 128`）**：
+   - `XmlParser` 仅支持 XML 1.0 内置 5 命名实体（`&amp;`、`&lt;`、`&gt;`、`&quot;`、`&apos;`）与十进制/十六进制数字字符引用，**天然免疫外部实体注入（XXE）与实体膨胀攻击**；超过 128 层嵌套标签直接报错中止。
+2. **CDATA 终止序列安全分割（`wrapXmlCdata`）**：
+   - XML 1.0 禁止 CDATA 段内直接出现 `]]>`；写入任意二进制或代码片段时使用 `wrapXmlCdata` 自动检测/拆分 `]]>` 序列，防止闭合注入破坏文档结构。
+3. **合法 XML 1.0 字符过滤（`isValidXmlChar`）**：
+   - XML 1.0 禁止 NUL 与多数 ASCII 控制字符（仅允许 `0x09`/`0x0A`/`0x0D` 及 `>= 0x20`），序列化日志或 JUnit 报告前可通过 `isValidXmlChar` 与 `escapeXmlText`/`escapeXmlAttr` 保证输出严格合规。

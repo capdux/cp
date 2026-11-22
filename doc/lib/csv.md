@@ -1,5 +1,7 @@
 # CP 标准库：RFC 4180 CSV & TSV 流式解析、写入与表格查询手册 (`cap:csv`)
 
+> 参考来源：`/data/dev/bun/src/interchange/`, `/data/dev/bun/docs/runtime/utils.mdx` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:csv` 是 CP 语言官方内置的工业生产级纯 CP 表格数据交换与流式处理标准库，**零外部依赖、零 `std.posix`、零 `@import("bun")`**，既可通过 `import { ... } from "cap:csv"` 导入，也支持 `import cap from "cap"; cap.csv.*` 懒挂载调用。
@@ -96,3 +98,14 @@ pub fn demoCsvPipeline(): !void {
 ## 附加零分配子模块
 
 - **`lib/csv/escape.cp`**（RFC 4180 CSV/TSV 字段转义、行构造与公式注入防护）：`needsCsvQuotes`、`escapeCsvField`、`unescapeCsvField`、`formatCsvRow`、`isFormulaInjectionRisk`
+
+---
+
+## 上游行为契约与安全防御注意事项
+
+1. **电子表格公式注入防护（`escape_formula` / `isFormulaInjectionRisk`）**：
+   - 导出供 Excel / Google Sheets 打开的 CSV 时，凡以 `=`、`+`、`-`、`@`、`Tab` 或 `\r` 开头的用户可控单元格均存在公式注入风险；开启 `CsvWriteOptions{ escape_formula: true }` 自动加注安全前缀中和执行风险。
+2. **引号内嵌换行与流式分片（`StreamingCsvReader`）**：
+   - RFC 4180 允许带引号字段内部包含物理换行符（`\n` / `\r\n`）与双引号转义 `""`；处理网络/文件流时必须使用 4 状态机 `StreamingCsvReader` 而非按 `\n` 粗暴分行。
+3. **TSV 模式与 NDJSON 转换**：
+   - 解析制表符分隔文件使用 `CsvOptions.tsv()`；`CsvTable.toJsonLines` 将表头自动映射为每行 JSON 对象键名，无缝衔接 `cap:json` 的 `NdjsonReader`。

@@ -1,5 +1,7 @@
 # `cap:pg` — 纯 CP PostgreSQL Wire Protocol v3 全栈协议与类型工具库
 
+> 参考来源：`/data/dev/bun/src/sql/postgres/`, `/data/dev/bun/docs/runtime/sql.mdx` | 吸收日期：2026-11-22
+
 ## 概述
 
 `cap:pg` 吸收自 Bun `src/sql/postgres/` 系列核心模块，将 PostgreSQL Wire Protocol v3 线协议基础类型、认证握手、COPY/SASL/协议协商、扩展查询构建器、后端控制与诊断消息、零拷贝帧读取器、内置 OID 类型目录与 SQLSTATE 错误码统一收敛至单一领域主包 `cap:pg`。纯 CP 零外部依赖，堆分配缓冲类型均内置 RAII `~init()` 零泄漏释放。
@@ -50,3 +52,16 @@ fn example(): bool {
     return false;
 }
 ```
+
+---
+
+## 上游 Bun PostgreSQL 线协议契约与边界注意事项
+
+1. **大端长度前缀包含自身 4 字节（`PgWireWriter` / `PgMessageReader`）**：
+   - PostgreSQL Wire Protocol v3 所有常规消息头为 `1B tag + 4B big-endian length`（其中 `length` 包含自身 4 字节，不含 `tag` 字节）；`StartupMessage`、`SSLRequest` 与 `CancelRequest` 无 `1B tag`，首 4 字节即为总长度。
+2. **Extended Query 流水线同步边界（`ExtendedQueryBuilder`）**：
+   - 批量发送 `Parse -> Bind -> Describe -> Execute` 后必须以 `Sync` 结束事务/查询同步点；服务端返回 `ReadyForQuery`（`'I'` 空闲 / `'T'` 事务中 / `'E'` 失败事务）标志着当前查询管线完整收束。
+3. **SQLSTATE 错误分类重试策略（`SqlStateCode`）**：
+   - `40001`（serialization_failure）与 `40P01`（deadlock_detected）属可安全重试的并发事务冲突；`23505`（unique_violation）等 `integrity_constraint_violation` 属业务约束冲突不可盲目重试。
+4. **COPY 流异常中止（`CopyFail`）**：
+   - 在 `CopyInResponse` 写入阶段遇到本地错误时，发送 `encodeCopyFail` 通知服务端安全回滚 COPY 状态，避免连接陷入协议失步。
