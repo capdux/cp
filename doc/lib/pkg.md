@@ -576,3 +576,40 @@ const st = plan.stats(); // st.preserved_patch_count == 1
 * = a1;
 * = st;
 ```
+
+15. **包清单内存/磁盘缓存状态机与全局缓存路径策略（`lib/pkg/manifest_cache.cp`，吸收自 `/data/dev/bun/src/install/PackageManifestMap.cp` & `/data/dev/bun/docs/pm/global-cache.mdx`）**：
+    - **三态清单缓存与扩展清单自动降级（`PackageManifestCache`）**：
+      - 维护 `Fresh` / `Expired` / `NotFound` 三种槽位状态：命中 `NotFound` 负缓存直接短路避免重复磁盘探测；当需要完整扩展元数据（`needs_extended_manifest = true`）而缓存仅含精简 corgi 清单（`has_extended_manifest = false`）时，自动将条目从 `Fresh` 降级为 `Expired`（`demoted_for_extended = true`），并支持 `allow_expired = true` 保留 ETag 用于 `If-None-Match` 条件重验；
+      - `ingestDiskManifest` 严格遵循 `Cache-Control` 过期时间（`public_max_age > now_sec`）与 `disableManifest`（`enable_manifest_cache = false`）开关。
+    - **全局缓存子目录名与复制后端解析（`formatGlobalCacheEntryDir` & `parseInstallCopyBackend`）**：
+      - 全局缓存默认位于 `~/.bun/install/cache/<name>@<version>`；若版本含 pre-release（`-`）或 build（`+`）后缀，自动将后缀替换为确定性 8 位十六进制哈希以规避深路径过长错误，并拦截 `..` 路径穿越；
+      - `parseInstallCopyBackend` 支持 `hardlink`（Linux/Windows 默认）、`clonefile`（macOS CoW 默认）、`clonefile_each_dir`、`copyfile` 与 `symlink`。
+
+### 清单缓存状态机与全局缓存路径示例（`lib/pkg/manifest_cache.cp`）
+
+```cp
+import {
+    ManifestCacheBehavior,
+    ManifestLookupOutcome,
+    PackageManifestCache,
+    formatGlobalCacheEntryDir,
+} from "cap:pkg";
+
+let cache = PackageManifestCache.init(true, true);
+* = cache.insertFresh("react", "\"etag-1\"", "19.0.0", 2_000_000, false)?;
+
+// 普通安装命中 Fresh 缓存
+const r1 = cache.lookup("react", ManifestCacheBehavior.LoadFromMemoryFallbackToDisk, true, false);
+// r1.outcome == ManifestLookupOutcome.HitFresh
+
+// 需要扩展清单时自动降级为 Expired 并保留 ETag 供条件请求
+const r2 = cache.lookup("react", ManifestCacheBehavior.LoadFromMemoryFallbackToDisk, true, true);
+// r2.outcome == ManifestLookupOutcome.HitExpired, r2.demoted_for_extended == true
+
+let dir_buf: [64]u8 = [0; 64];
+const dn = formatGlobalCacheEntryDir("react", "19.0.0-rc.1", dir_buf[0..])?;
+// dir_buf[0..dn] == "react@19.0.0-<8hex>"
+* = r1;
+* = r2;
+* = dn;
+```

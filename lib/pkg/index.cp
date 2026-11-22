@@ -297,3 +297,20 @@ export {
     computeRelativeSymlinkTarget,
     IsolatedLinkPlan,
 } from "./isolated_symlink.cp";
+
+export {
+    MANIFEST_CACHE_MAX_ENTRIES,
+    MANIFEST_DEFAULT_CACHE_SUBDIR,
+    ManifestCacheError,
+    ManifestCacheBehavior,
+    ManifestCacheState,
+    ManifestLookupOutcome,
+    InstallCopyBackend,
+    ManifestCacheRecord,
+    ManifestLookupResult,
+    ManifestCacheStats,
+    hashPackageManifestName,
+    parseInstallCopyBackend,
+    formatGlobalCacheEntryDir,
+    PackageManifestCache,
+} from "./manifest_cache.cp";

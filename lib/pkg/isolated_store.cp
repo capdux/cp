@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/isolated_install/Store.cp | Synced: 2026-11-22T08:40:00Z
+// Source: Absorbed from /data/dev/bun/src/install/isolated_install/Store.cp | Synced: 2026-11-22T10:52:02Z
 // Ported from Bun: /data/dev/bun/src/install/isolated_install/Store.cp & /data/dev/bun/docs/pm/isolated-installs.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation isolated `node_modules/.bun/` store path formatter,
