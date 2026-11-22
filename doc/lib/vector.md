@@ -1643,3 +1643,64 @@ pub fn demoIvfPq()! {
     * = idx.search(train_vecs[0..8], 2, *hits_s); // Top-1 == doc 101
 }
 ```
+
+### 35. 无上限外部缓冲多层 HNSW 检索与 CRC32 二进制快照持久化引擎 (`hnswFlat.cp`)
+
+彻底解除小容量上限的 100% 纯 CP 零动态堆分配多层 HNSW 检索引擎。节点向量池、元数据、L0/上层邻接表与零清零访问戳全部由调用方以外部切片传入，原生使用 `@l2sq`/`@dot` SIMD 加速，支持十万级向量检索与零重训二进制快照热加载：
+
+- **常量与错误集**：
+  - `HNSW_FLAT_MAGIC` (`0x57534E48` `"HNSW"`), `HNSW_FLAT_VERSION` (`1`), `HNSW_FLAT_INVALID_ID` (`0xFFFF_FFFF`), `HNSW_FLAT_MAX_LEVELS` (`16`)
+  - `HnswFlatError`（`InvalidConfig | DimMismatch | CapacityFull | BufferTooSmall | InvalidSnapshot | ChecksumMismatch | NodeNotFound`）
+- **配置与外部缓冲容量规划**：
+  - `HnswFlatMetric`（`l2_sq | cosine | neg_dot`）、`HnswFlatConfig`（`dim`, `max_nodes`, `m`, `m_max0`, `ef_construction`, `metric`, `seed`; `isValid()`）
+  - `hnswVecBufLen(cfg)`, `hnswL0AdjBufLen(cfg)`, `hnswUpperAdjBufLen(cfg)`, `hnswSnapshotMaxBytes(cfg, node_count)`
+- **核心引擎 `HnswFlatIndex`**：
+  - `init(cfg, *vecs, *nodes, *l0_neighbors, *upper_neighbors, *visited_marks): HnswFlatIndex ! HnswFlatError`
+  - `insert(*_, doc_id, vec): u32 ! HnswFlatError`：SplitMix64 几何层级采样 + 上层贪心下降 + `searchLayerEf` + Malkov-Yashunin **Algorithm 4 `SELECT-NEIGHBORS-HEURISTIC`** 启发式多样性选边 + 双向边维护与溢出裁剪。
+  - `search(*_, query_vec, top_k, ef_search, *out_hits): usize ! HnswFlatError`：自动过滤软删除墓碑节点并输出严格升序 Top-K。
+  - `markDeleted(*_, doc_id): bool` / `isDeleted(node_idx): bool` / `computeRecallAtK(...)` / `stats(): HnswFlatStats`
+  - `serializeSnapshot(*out_bytes): usize ! HnswFlatError` & `deserializeSnapshot(bytes, *vecs, *nodes, *l0_neighbors, *upper_neighbors, *visited_marks): HnswFlatIndex ! HnswFlatError`：小端二进制编码 + IEEE 802.3 CRC32 校验，单字节篡改即报 `ChecksumMismatch`，支持零重训秒级热加载。
+
+```cp
+import {
+    HnswFlatMetric,
+    HnswFlatConfig,
+    HnswFlatNode,
+    HnswFlatHit,
+    HnswFlatIndex,
+} from "cap:vector";
+
+pub fn demoHnswFlatSnapshot()! {
+    const cfg = HnswFlatConfig{
+        dim: 8,
+        max_nodes: 64,
+        m: 8,
+        m_max0: 16,
+        ef_construction: 32,
+        metric: HnswFlatMetric.cosine,
+    };
+    let vecs: [512]f32 = [0.0; 512];
+    let nodes: [64]HnswFlatNode = [HnswFlatNode{}; 64];
+    let l0: [1024]u32 = [0; 1024];
+    let up: [1024]u32 = [0; 1024];
+    let marks: [64]u32 = [0; 64];
+    let v_s: []f32 = vecs[0..];
+    let n_s: []HnswFlatNode = nodes[0..];
+    let l0_s: []u32 = l0[0..];
+    let up_s: []u32 = up[0..];
+    let m_s: []u32 = marks[0..];
+
+    let idx = HnswFlatIndex.init(cfg, *v_s, *n_s, *l0_s, *up_s, *m_s)?;
+    const doc_v: [8]f32 = [1.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    * = idx.insert(1001, doc_v[0..])?;
+
+    let snap: [8192]u8 = [0; 8192];
+    let snap_s: []u8 = snap[0..];
+    const written = idx.serializeSnapshot(*snap_s)?;
+
+    let reloaded = HnswFlatIndex.deserializeSnapshot(snap[0..written], *v_s, *n_s, *l0_s, *up_s, *m_s)?;
+    let hits: [4]HnswFlatHit = [HnswFlatHit{}; 4];
+    let hits_s: []HnswFlatHit = hits[0..];
+    * = reloaded.search(doc_v[0..], 1, 16, *hits_s)?;
+}
+```

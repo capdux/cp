@@ -370,3 +370,21 @@ export {
     IvfPqStats,
     IvfPqIndex,
 } from "./ivfPq.cp";
+
+export {
+    HNSW_FLAT_MAGIC,
+    HNSW_FLAT_VERSION,
+    HNSW_FLAT_INVALID_ID,
+    HNSW_FLAT_MAX_LEVELS,
+    HnswFlatError,
+    HnswFlatMetric,
+    HnswFlatConfig,
+    hnswVecBufLen,
+    hnswL0AdjBufLen,
+    hnswUpperAdjBufLen,
+    hnswSnapshotMaxBytes,
+    HnswFlatNode,
+    HnswFlatHit,
+    HnswFlatStats,
+    HnswFlatIndex,
+} from "./hnswFlat.cp";
