@@ -175,3 +175,32 @@ const prop = PmPropertyPath.parse("maintainers[0].email")?;
 5. **`bun info` / `bun pm view` 元数据查询与别名契约（吸收自 `/data/dev/bun/docs/pm/cli/info.mdx`）**：
    - `bun pm view` 为 `bun info` 的等价别名；未指定版本时默认查询 `latest`，支持 `<pkg>@<version>` 精确版本或范围查询，并可通过点分/数组下标路径（如 `version`、`dependencies`、`repository.url`、`maintainers[0].email`）直接提取单一字段；
    - 面向脚本消费时推荐使用 `--json` 输出结构化 JSON（缺失版本或缺失属性时通过 `formatPmViewJsonError` 输出带转义的标准错误 JSON），终端交互模式下缺失版本时自动展示最近 5 个可用版本提示（`formatRecentVersionsHint`）。
+6. **编辑器自动探测与行/列跳转命令生成（`lib/cli/open.cp`，吸收自 `/data/dev/bun/src/cli/open.cp` 与 `/data/dev/bun/docs/runtime/utils.mdx`）**：
+   - **探测优先级**：先采用显式配置（如 `bunfig.toml` 的 `[debug] editor = "code"` 或函数 `editor` 参数，绝对路径直接作为覆盖二进制），再依次回退环境变量 `$EDITOR` → `$VISUAL`，最后按默认优先级表（`vscode` → `sublime` → `atom` → `neovim` → `webstorm` → `intellij` → `textmate` → `vim`）结合 macOS `.app` 常见捆绑路径探测。
+   - **编辑器行/列跳转参数差异**：VS Code 在提供行号时附加 `--goto file:line[:column]`；Sublime/Atom 使用 `file:line[:column]`；JetBrains（IntelliJ/WebStorm）使用 `file:line`（省略列号）；TextMate 使用 `--line line[:column] file`；终端编辑器（`vim`/`nvim`/`emacs`）自动包装平台打开器（macOS 附加 `--args`）。
+   - **跨平台 URL 打开与 `.bun` 临时文件高亮**：macOS 使用 `/usr/bin/open`、Linux 使用 `xdg-open`、Windows 使用 `start`、Android 使用 `am start -a android.intent.action.VIEW -d <url>`、WASI 安全降级为文本打印；`.bun` 结尾的临时文件自动补 `.js` 后缀（`normalizeEditorTempFilename`）以获得编辑器语法高亮。
+
+### 编辑器探测与跳转命令示例（`lib/cli/open.cp`）
+
+```cp
+import {
+    EditorKind,
+    OpenerPlatform,
+    resolveEditorFromPreference,
+    buildOpenEditorCommand,
+} from "cap:cli";
+
+const resolved = resolveEditorFromPreference("", "code --wait", "vim");
+let scratch: [256]u8 = [0; 256];
+const cmd = buildOpenEditorCommand(
+    resolved.kind,
+    resolved.binary,
+    "/src/main.cp",
+    "42",
+    "7",
+    OpenerPlatform.Linux,
+    scratch[0..],
+)?;
+// cmd.args[0..cmd.argc] => ["code", "--goto", "/src/main.cp:42:7"]
+* = cmd;
+```

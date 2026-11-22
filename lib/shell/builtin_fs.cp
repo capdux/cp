@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/builtin/ls.cp | Synced: 2026-11-21T16:52:14Z
+// Source: Absorbed from /data/dev/bun/src/shell/builtin/ls.cp | Synced: 2026-11-22T07:05:10Z
 // ============================================================================
 // lib/shell/builtin_fs.cp
 // Filesystem Built-in Commands for CP Shell (cap:shell)

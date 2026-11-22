@@ -91,3 +91,20 @@ export {
     formatRecentVersionsHint,
     formatPmViewJsonError,
 } from "./pm_view.cp";
+
+export {
+    EDITOR_MAX_ARGS,
+    EDITOR_DEFAULT_PREFERENCE_COUNT,
+    EditorOpenError,
+    OpenerPlatform,
+    platformOpener,
+    UrlOpenCommand,
+    buildOpenUrlCommand,
+    EditorKind,
+    defaultEditorPreferenceAt,
+    EditorResolution,
+    resolveEditorFromPreference,
+    EditorOpenCommand,
+    buildOpenEditorCommand,
+    normalizeEditorTempFilename,
+} from "./open.cp";
