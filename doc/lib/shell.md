@@ -647,3 +647,23 @@ const res = pwd.start(args[0..], "/home/user/link", "/data/real", out[0..])?;
 // out[0..res.bytes_written] == "/data/real\n", res.exit_code == 0, res.mode == PwdMode.Physical
 * = res;
 ```
+
+### Shell 语句子表达式顺序分派状态机（`stmtState.cp`）
+
+- 吸收自 `/data/dev/bun/src/shell/states/Stmt.cp`；
+- 导出：`SHELL_STMT_MAX_CHILDREN` (`32`)、`StmtParentKind`（`Script` / `If`）、`StmtChildKind`（`Async` / `Binary` / `Pipeline` / `Cmd` / `Assign` / `If` / `CondExpr` / `Subshell`）、`StmtError`（`TooManyChildren` / `ChildInFlight` / `NoChildInFlight` / `AlreadyFinished`）、`StmtAction`（`DispatchChild` / `Finish`）、`StmtStep`、`StmtState`（`init` / `pushChild` / `remaining` / `finalExitCode` / `next` / `childDone` / `reset`）；
+- 精确建模 `Script` / `If` 父上下文下的多子表达式顺序调度：空语句直接返回 `Finish(exit_code=0)`，非空语句按序分派并在全部完成后传播最后一个子表达式的退出码，支持 `reset()` 零分配复用。
+
+```cp
+import { StmtState, StmtParentKind, StmtChildKind, StmtAction } from "cap:shell";
+
+let st = StmtState.init(StmtParentKind.Script);
+* = st.pushChild(StmtChildKind.Assign)?;
+* = st.pushChild(StmtChildKind.Pipeline)?;
+const s0 = st.next()?; // DispatchChild(0, Assign)
+* = st.childDone(0)?;
+const s1 = st.next()?; // DispatchChild(1, Pipeline)
+* = st.childDone(2)?;
+const s2 = st.next()?; // Finish(exit_code=2)
+* = s0; * = s1; * = s2;
+```

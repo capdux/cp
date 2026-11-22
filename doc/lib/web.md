@@ -532,6 +532,49 @@ pub fn demoSignedUrlKeyring() {
 }
 ```
 
+### W3C Content-Security-Policy (CSP Level 3) 解析、源匹配裁决与策略构建器 (`cspPolicy.cp`)
+
+100% 纯 CP、零动态堆分配的 W3C CSP Level 3 响应头解析、资源与内联脚本安全裁决及规范序列化引擎：
+
+- **常量与枚举**：
+  - `CSP_MAX_DIRECTIVES = 16`、`CSP_MAX_SOURCES_PER_DIR = 16`、`CSP_MAX_TOKEN_LEN = 96`
+  - `CspDirectiveKind`（`default_src | script_src | style_src | img_src | connect_src | font_src | frame_src | frame_ancestors | object_src | base_uri | form_action | upgrade_insecure_requests`）
+  - `CspSourceKind`（`kw_none | kw_self | kw_unsafe_inline | kw_unsafe_eval | kw_strict_dynamic | wildcard | scheme | host_expr | nonce | hash_sha256 | hash_sha384 | hash_sha512`）
+  - `CspEvalVerdict`（`allowed | blocked_by_none | blocked_no_match | blocked_unsafe_inline | invalid_input`）
+- **核心模型与引擎**：
+  - `CspSourceExpr`（`kind`, `token()`, `parse(raw): CspSourceExpr?`）
+  - `CspDirective`（`kind`, `source_count`, `sources`, `hasNone()`, `hasStrictDynamic()`, `hasUnsafeInline()`, `hasNonceOrHash()`）
+  - `CspPolicy`：
+    - `init()` / `parseHeader(header): CspPolicy?`（按 `;` 拆解指令、遵循 W3C 首条生效原则忽略重复指令、阻断 CRLF/控制字符注入）
+    - `addSource(*_, dir, raw_source): bool` / `setUpgradeInsecure(*_, enabled)`
+    - `effectiveDirective(dir): CspDirective?`（严格遵循 W3C 回退链：fetch 指令缺失时回退 `default-src`，`base-uri`/`form-action`/`frame-ancestors` 绝不回退 `default-src`）
+    - `checkResourceUrl(dir, page_origin, target_url): CspEvalVerdict`（支持 `'none'`、`'self'`、`*`、协议源、精确主机及严格 `*.example.com` 子域通配匹配）
+    - `checkInlineScript(nonce_val, sha256_b64): CspEvalVerdict`（严格遵循 CSP3：存在 `nonce`/`hash`/`'strict-dynamic'` 时 `'unsafe-inline'` 自动失效）
+    - `formatHeader(*out_buf): usize?`
+
+```cp
+import {
+    CspDirectiveKind,
+    CspEvalVerdict,
+    CspPolicy,
+} from "cap:web";
+
+pub fn demoCspPolicy() {
+    let pol = CspPolicy.init();
+    * = pol.addSource(CspDirectiveKind.default_src, "'self'");
+    * = pol.addSource(CspDirectiveKind.script_src, "'nonce-r4nd0m'");
+    * = pol.addSource(CspDirectiveKind.script_src, "'strict-dynamic'");
+    pol.setUpgradeInsecure(true);
+
+    * = (pol.checkInlineScript("r4nd0m", "") == CspEvalVerdict.allowed);
+    * = (pol.checkInlineScript("", "") == CspEvalVerdict.blocked_unsafe_inline);
+
+    let hdr_buf: [256]u8 = [0; 256];
+    let hdr_s: []u8 = hdr_buf[0..];
+    * = pol.formatHeader(*hdr_s);
+}
+```
+
 ---
 
 ## 收敛子模块深度文档

@@ -432,6 +432,16 @@ export {
     runPwdBuiltin,
 } from "./pwdBuiltin.cp";
 
+export {
+    SHELL_STMT_MAX_CHILDREN,
+    StmtParentKind,
+    StmtChildKind,
+    StmtError,
+    StmtAction,
+    StmtStep,
+    StmtState,
+} from "./stmtState.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);

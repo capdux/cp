@@ -423,3 +423,16 @@ export {
     verifySignedUrl,
     SignedUrlKeyring,
 } from "./signedUrl.cp";
+
+// --- Zero-Alloc W3C Content-Security-Policy (CSP Level 3) Parser, Evaluator & Builder ---
+export {
+    CSP_MAX_DIRECTIVES,
+    CSP_MAX_SOURCES_PER_DIR,
+    CSP_MAX_TOKEN_LEN,
+    CspDirectiveKind,
+    CspSourceKind,
+    CspEvalVerdict,
+    CspSourceExpr,
+    CspDirective,
+    CspPolicy,
+} from "./cspPolicy.cp";
