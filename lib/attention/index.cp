@@ -443,3 +443,17 @@ export {
     computeProportionalLogBias,
     unmergeTokensF32,
 } from "./tokenMerge.cp";
+
+export {
+    KV_FORK_MAX_PHYS_BLOCKS,
+    KV_FORK_MAX_SEQS,
+    KV_FORK_MAX_LOGICAL_BLOCKS,
+    KV_FORK_INVALID_BLOCK,
+    KvForkOpStatus,
+    KvForkPhysBlock,
+    KvForkSequence,
+    KvForkAppendOutcome,
+    KvForkWritePlan,
+    KvForkStats,
+    KvForkManager,
+} from "./kvFork.cp";

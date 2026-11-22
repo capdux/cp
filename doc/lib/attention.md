@@ -1763,3 +1763,42 @@ pub fn demoTokenMerge() {
     * = unmergeTokensF32(out_toks[0 .. rep.output_tokens * 2], merge_map[0..], 5, rep.output_tokens, 2, *rs_s);
 }
 ```
+
+---
+
+### 零分配 Best-of-N / Tree-of-Thoughts 共享 KV-Cache 引用计数与 Copy-on-Write 分叉管理器 (`kvFork.cp`)
+
+面向 Best-of-N 采样、Beam Search 与 Tree-of-Thoughts 并行探索的 100% 纯 CP 零动态堆分配共享 KV-Cache 分叉与写时复制管理器：
+
+- **常量与枚举**：
+  - `KV_FORK_MAX_PHYS_BLOCKS = 256`、`KV_FORK_MAX_SEQS = 32`、`KV_FORK_MAX_LOGICAL_BLOCKS = 32`、`KV_FORK_INVALID_BLOCK = 0xFFFF`
+  - `KvForkOpStatus`（`ok | invalid_arg | seq_not_found | duplicate_seq_id | seq_capacity_full | seq_blocks_full | out_of_phys_blocks | invalid_logical_index`）
+- **数据模型**：
+  - `KvForkPhysBlock`（`refcount`, `block_hash`）、`KvForkSequence`、`KvForkAppendOutcome`（`status`, `phys_block`, `reused_by_hash`）、`KvForkWritePlan`（`status`, `old_phys`, `new_phys`, `copied`）、`KvForkStats`
+- **核心引擎 `KvForkManager`**：
+  - `init(pool_blocks): KvForkManager?` / `initDefault()` / `createSequence(*_, seq_id)`
+  - `appendBlock(*_, seq_id, block_hash): KvForkAppendOutcome`：非零 `block_hash` 自动执行内容哈希零拷贝去重并递增 `refcount`。
+  - `forkSequence(*_, src_seq_id, new_seq_id): KvForkOpStatus`：O(1) 逻辑块表复制并递增全部共享物理块 `refcount`。
+  - `prepareWriteBlock(*_, seq_id, logical_idx): KvForkWritePlan`：`refcount == 1` 原地可写（并清除过期内容哈希）；`refcount > 1` 原子分配新物理块并递减旧块引用，返回 `{ old_phys, new_phys, copied: true }`。
+  - `sealBlockHash(*_, seq_id, logical_idx, block_hash)` / `releaseSequence(*_, seq_id)`（归零物理块立即回收到空闲栈，零泄漏）/ `getPhysicalBlock` / `blockRefcount` / `sequenceLength` / `memorySavingsPermille()` / `stats()`。
+
+```cp
+import { KvForkManager } from "cap:attention";
+
+pub fn demoKvForkCow() {
+    let mgr = KvForkManager.init(64) ?? return;
+    * = mgr.createSequence(1);
+    * = mgr.appendBlock(1, 0xAAAA);
+    * = mgr.appendBlock(1, 0xBBBB);
+
+    // Best-of-4 零拷贝分叉（仅占 2 块物理 KV，节省 750‰ 显存！）
+    * = mgr.forkSequence(1, 2);
+    * = mgr.forkSequence(1, 3);
+    * = mgr.forkSequence(1, 4);
+
+    // 序列 2 改写末尾块触发 CoW，其余 3 条序列仍共享原物理块
+    const plan = mgr.prepareWriteBlock(2, 1);
+    * = plan.copied; // true
+    * = mgr.releaseSequence(1);
+}
+```
