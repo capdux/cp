@@ -240,7 +240,7 @@ export struct ProxyV1Header {
     header_len: usize;
 
     /// 严格按 HAProxy PROXY v1 规范解析头部（最大 107 字节，以 `"PROXY "` 开头与 `\r\n` 结尾）
-    fn parse(buf: []const u8): ProxyV1Header? {
+    static fn parse(buf: []const u8): ProxyV1Header? {
         // 最短合法头为 "PROXY UNKNOWN\r\n"（15 字节）
         if (buf.len < 15) {
             return null;

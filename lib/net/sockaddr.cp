@@ -91,7 +91,7 @@ export struct SocketAddr {
 
     /// Parse a strict `host:port` or `[ipv6]:port` endpoint (allows port 0 when `allow_port_zero == true`, e.g. bind `:0`).
     /// Also accepts Go-style `":8080"` as `"0.0.0.0"` + port `8080` when `allow_port_zero == true` (bind mode).
-    pub fn parseWithOptions(raw: []const u8, allow_port_zero: bool, allow_empty_host: bool): SocketAddr? {
+    pub static fn parseWithOptions(raw: []const u8, allow_port_zero: bool, allow_empty_host: bool): SocketAddr? {
         if (raw.len == 0) return null;
         let wi: usize = 0;
         while (wi < raw.len) {
@@ -140,7 +140,7 @@ export struct SocketAddr {
     }
 
     /// Parse a strict remote endpoint `host:port` or `[ipv6]:port` (requires non-empty host and port 1..=65535).
-    pub fn parse(raw: []const u8): SocketAddr? {
+    pub static fn parse(raw: []const u8): SocketAddr? {
         return SocketAddr.parseWithOptions(raw, false, false);
     }
 

@@ -1849,3 +1849,21 @@ export {
     CircuitPoolStats,
     CircuitBreakerPool,
 } from "./circuitPool.cp";
+
+// --- hedged_req (Adaptive Tail-Latency Hedged Requests & Amplification Budget Scheduler) ---
+export {
+    HEDGE_MAX_INFLIGHT,
+    HEDGE_MAX_REPLICAS,
+    HEDGE_LATENCY_WINDOW,
+    HEDGE_BPS_DENOM,
+    HedgeAttemptState,
+    HedgeReqState,
+    HedgeCompletionKind,
+    HedgeSchedulerConfig,
+    TailLatencyEstimator,
+    HedgeAmplificationBudget,
+    HedgeLaunchEvent,
+    HedgeCompletionResult,
+    HedgeSchedulerStats,
+    HedgedRequestScheduler,
+} from "./hedgedReq.cp";

@@ -647,6 +647,42 @@ pub fn demoCircuitPool() {
 
 ---
 
+## 自适应尾延迟对冲请求与放大预算调度器 (`hedgedReq.cp`)
+
+面向 *"The Tail at Scale"* 尾延迟优化的 100% 纯 CP 零动态堆分配自适应对冲请求与放大预算控制引擎：
+
+- **常量与枚举**：
+  - `HEDGE_MAX_INFLIGHT = 64`、`HEDGE_MAX_REPLICAS = 4`（1 主 + 3 备选）、`HEDGE_LATENCY_WINDOW = 64`、`HEDGE_BPS_DENOM = 10000`
+  - `HedgeAttemptState`（`pending | in_flight | succeeded | failed | cancelled`）、`HedgeReqState`（`in_flight | completed_primary | completed_hedged | failed_all | timed_out`）、`HedgeCompletionKind`（`winner_primary | winner_hedged | attempt_failed_continue | all_attempts_failed | ignored_stale`）
+- **核心组件与调度器**：
+  - `TailLatencyEstimator`：定长 64 样本环形窗，冷启动返回 `default_delay_ms`，满样本后动态计算 P95/P99 并钳位至 `[min_delay_ms, max_delay_ms]`。
+  - `HedgeAmplificationBudget`：高精度基点令牌桶，默认限制额外对冲流量不超过主请求流量的 10%（`1000 bps`），过载时自动抑制对冲防雪崩。
+  - `HedgedRequestScheduler`：`init(cfg)`、`startRequest(*_, req_id, candidate_nodes, timeout_ms, now_ms)`、`pollDueHedges(*_, now_ms, *out_launches)`、`completeAttempt(*_, req_id, attempt_idx, succeeded, now_ms)`（首胜自动返回待取消的慢副本列表 `cancelNodesSlice()`，主副本失败立即触发备选 Fail-Fast）、`reapTimedOut(*_, now_ms, *out_ids)`、`currentHedgeDelayMs()`、`recordLatencySample(*_, lat_ms)`、`stats()`。
+
+```cp
+import {
+    HedgeCompletionKind,
+    HedgeSchedulerConfig,
+    HedgeLaunchEvent,
+    HedgedRequestScheduler,
+} from "cap:net";
+
+pub fn demoHedgedRequestScheduler() {
+    let sched = HedgedRequestScheduler.init(HedgeSchedulerConfig.defaults()) ?? return;
+    const nodes: [2]u64 = [101, 102];
+    * = sched.startRequest(1, nodes[0..], 500, 1000);
+
+    let launches: [4]HedgeLaunchEvent = [HedgeLaunchEvent{}; 4];
+    let launches_s: []HedgeLaunchEvent = launches[0..];
+    if (sched.pollDueHedges(1050, *launches_s) > 0) {
+        const res = sched.completeAttempt(1, 1, true, 1065);
+        if (res.kind == HedgeCompletionKind.winner_hedged) {
+            * = res.cancelNodesSlice(); // [101] (取消慢主副本)
+        }
+    }
+}
+```
+
 ## 收敛子模块深度文档
 
 - [amqp.md](net/amqp.md)

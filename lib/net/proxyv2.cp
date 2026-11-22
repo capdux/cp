@@ -110,7 +110,7 @@ export struct ProxyV2Header {
     header_len: usize;
 
     /// 解析 PROXY v2 二进制头部（校验 12 字节签名、ver==2、合法命令/族/传输协议与长度边界）
-    fn parse(buf: []const u8): ProxyV2Header? {
+    static fn parse(buf: []const u8): ProxyV2Header? {
         if (buf.len < 16 || !hasProxyV2Signature(buf)) {
             return null;
         }
@@ -223,7 +223,7 @@ export struct ProxyV2Header {
     }
 
     /// 编码 PROXY v2 IPv4/TCP（`PROXY` + `AF_INET` + `STREAM`）28 字节头部
-    fn encodeIpv4(
+    static fn encodeIpv4(
         src: [4]u8,
         dst: [4]u8,
         src_port: u16,
