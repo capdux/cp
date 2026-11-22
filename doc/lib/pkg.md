@@ -400,3 +400,37 @@ opts.minimum_release_age_secs = 86400; // 24h 冷却期
 opts.publish.access = PkgPublishAccess.Restricted;
 opts.publish.validateForPackage("@acme/sdk")?;
 ```
+
+10. **安装前供应链安全扫描协议与决策引擎（`lib/pkg/security_scanner.cp`，吸收自 `/data/dev/bun/src/install/PackageManager/security_scanner.cp` & `/data/dev/bun/docs/pm/security-scanner-api.mdx`）**：
+    - **双级严重度与运行环境决策矩阵（`SecurityInstallDecision`）**：
+      - `fatal`：无论交互终端或 CI，一律立即中止安装（`cancel_fatal`）；
+      - `warn`：交互式非 CI 终端提示 `[y/N]` 确认（`prompt_user`，配合 `parseWarningConfirmation` 仅放行显式 `y`/`Y` 单字符输入），在 CI 或非 TTY 管道环境下自动安全取消（`cancel_non_interactive_warn`）；
+      - 配置安全扫描器后，包管理器应自动禁用 `auto-install` 以强化供应链防护。
+    - **协议版本与严格 JSON 通告解析（`parseSecurityAdvisoriesJson`）**：
+      - `validateScannerProtocolVersion("1")` 严格校验 Bun Security Scanner API v1 协议；
+      - 零堆分配解析扫描器返回的顶层数组或 `{"advisories":[...]}` 结构，强制校验 `package` 非空字符串、`level` 仅允许 `"fatal"`/`"warn"`、`description`/`url` 仅允许字符串或 `null`，拦截畸形字段与类型注入；
+      - `formatScanRequestJson` 负责将待扫描包清单安全转义为 JSON 请求，`formatReport` / `formatSummaryLine` 渲染含依赖链（`via a > b > pkg` 或 `(direct dependency)`）与单复数精确统计的可读报告。
+
+### 安全扫描通告解析与安装决策示例（`SecurityScanResults`）
+
+```cp
+import {
+    SecurityInstallDecision,
+    parseSecurityAdvisoriesJson,
+    validateScannerProtocolVersion,
+    parseWarningConfirmation,
+} from "cap:pkg";
+
+validateScannerProtocolVersion("1")?;
+const raw = "[{\"package\":\"left-pad\",\"level\":\"warn\",\"description\":\"Deprecated\",\"url\":\"https://example.com/adv/1\"}]";
+const res = parseSecurityAdvisoriesJson(raw, "@acme/security-scanner")?;
+const ci_decision = res.evaluateInstallDecision(false, true);  // cancel_non_interactive_warn
+const tty_decision = res.evaluateInstallDecision(true, false); // prompt_user
+const ok = parseWarningConfirmation("y\n");                    // true
+let summary: [64]u8 = [0; 64];
+const sn = res.formatSummaryLine(summary[0..])?;               // "1 advisory (1 warning)"
+* = ci_decision;
+* = tty_decision;
+* = ok;
+* = sn;
+```

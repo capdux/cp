@@ -217,3 +217,20 @@ export {
     PkgDepOmitFlags,
     PkgInstallOptions,
 } from "./install_options.cp";
+
+export {
+    SECURITY_SCANNER_PROTOCOL_VERSION,
+    SECURITY_SCANNER_MAX_ADVISORIES,
+    SECURITY_SCANNER_MAX_PATH_DEPTH,
+    SecurityScannerError,
+    SecurityScannerErrorCode,
+    SecurityAdvisoryLevel,
+    SecurityInstallDecision,
+    SecurityScanPackageInput,
+    SecurityAdvisory,
+    SecurityScanResults,
+    validateScannerProtocolVersion,
+    parseWarningConfirmation,
+    formatScanRequestJson,
+    parseSecurityAdvisoriesJson,
+} from "./security_scanner.cp";
