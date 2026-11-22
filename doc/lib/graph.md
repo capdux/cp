@@ -414,6 +414,38 @@ pub fn demoArticulationSpof() {
 
 ---
 
+## 十一、 零分配纯迭代 Cooper-Harvey-Kennedy 支配树与支配边界引擎 (`dominator.cp`)
+
+面向编译器 SSA Phi 节点放置、自然循环识别与 DAG/工作流汇聚点分析的 100% 纯 CP 零动态堆分配控制流支配分析器（显式栈后序遍历 + CHK 迭代定点交集，严禁递归）：
+
+- **常量与数据模型**：
+  - `DOM_MAX_NODES = 64`、`DOM_MAX_EDGES = 256`、`DOM_NO_NODE = 0xFFFF`、`DOM_NO_EDGE = 0xFFFF`
+  - `DomEdge`（有向边 `(u -> v)`）
+  - `DominatorResult`（`valid`, `node_count`, `entry`, `reachable_count`, `iterations`；查询 API：`isReachable(node)`, `idom(node)`, `domDepth(node)`, `dominates(a, b)`, `strictlyDominates(a, b)`, `isBackEdge(u, v)`, `inFrontier(node, target)`, `frontierMask(node)`, `collectDomChildren(node, *out_children)`, `collectFrontier(node, *out_nodes)`, `collectBackEdges(*out_edges)`）
+- **核心引擎 `DominatorGraph`**：
+  - `init(node_count): DominatorGraph?` / `addEdge(*_, u, v): usize?`（支持自环、多重平行边、不可达死代码隔离与不可约多入口环）
+  - `compute(entry): DominatorResult`：100% 纯迭代显式栈后序遍历 + Cooper-Harvey-Kennedy 定点交集 + O(V) 支配深度 + 64 位位图支配边界 `DF(n)`。
+
+```cp
+import { DominatorGraph } from "cap:graph";
+
+pub fn demoDominatorTree() {
+    // 经典菱形分支：0 -> {1, 2} -> 3
+    let cfg = DominatorGraph.init(4) ?? return;
+    * = cfg.addEdge(0, 1);
+    * = cfg.addEdge(0, 2);
+    * = cfg.addEdge(1, 3);
+    * = cfg.addEdge(2, 3);
+
+    const dom = cfg.compute(0);
+    * = (dom.idom(3) ?? 99) == 0;   // true: 0 直接支配汇合点 3
+    * = dom.inFrontier(1, 3);       // true: DF(1) = {3}
+    * = dom.inFrontier(2, 3);       // true: DF(2) = {3}
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [bipartite.md](graph/bipartite.md)

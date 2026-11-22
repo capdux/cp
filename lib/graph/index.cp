@@ -249,3 +249,13 @@ export {
     ArticulationResult,
     ArticulationGraph,
 } from "./articulation.cp";
+
+export {
+    DOM_MAX_NODES,
+    DOM_MAX_EDGES,
+    DOM_NO_NODE,
+    DOM_NO_EDGE,
+    DomEdge,
+    DominatorResult,
+    DominatorGraph,
+} from "./dominator.cp";
