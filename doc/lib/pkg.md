@@ -1098,3 +1098,25 @@ const info = LockbFrameCodec.inspectFrame(buf[0..total], core.len)?;
 // info.trailing.hasExtension(LOCKB_EXT_CATALOGS) == true, info.trailing.config_version == 1
 * = info;
 ```
+
+### Lockfile 包元数据、平台掩码过滤与生命周期脚本三态守卫（`pkgMeta.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/lockfile/Package/Meta.cp` 与 `/data/dev/bun/docs/pm/lifecycle.mdx`；
+- 导出：`PKG_META_INVALID_ID`、`PKG_META_MAX_MAN_DIR`、`PKG_META_MAX_INTEGRITY_LEN`、`PKG_OS_*`（`NONE`/`ALL`/`LINUX`/`DARWIN`/`WIN32`/`FREEBSD`/`OPENBSD`/`SUNOS`/`AIX`/`ANDROID`）、`PKG_ARCH_*`（`NONE`/`ALL`/`X64`/`ARM64`/`ARM`/`IA32`/`PPC64`/`S390X`/`RISCV64`/`MIPS`/`LOONG64`）、`PkgMetaOrigin`、`HasInstallScript`（`Old`/`False`/`True`）、`PkgMetaError`、`parseNpmOsBit`、`parseNpmArchBit`、`applyNpmOsList`、`applyNpmArchList`、`PkgMeta`；
+- **Bun 安全生命周期与平台过滤最佳实践（参考 `/data/dev/bun/docs/pm/lifecycle.mdx`）**：
+  - **默认安全策略**：Bun 默认不执行任意依赖的 `preinstall`/`postinstall` 生命周期脚本，仅对白名单 `trustedDependencies`（及默认前 500 个受信任 npm 包）放行；`HasInstallScript` 三态（`Old`/`False`/`True`）用于在锁文件升级期间检测未记录脚本标记的旧条目（`needsUpdate()`），并在落盘前通过 `validateForSave()` 强制拦截 `.Old` 遗留态；
+  - **OS/CPU 平台过滤**：`applyNpmOsList` / `applyNpmArchList` 完整支持正向白名单（`["linux", "darwin"]`）与 `!` 取反排除（`["!win32"]`），`isDisabled(cpu, os)` 决定当前平台是否跳过该可选原生二进制包。
+
+```cp
+import { PkgMeta, applyNpmOsList, applyNpmArchList, PKG_ARCH_X64, PKG_OS_LINUX } from "cap:pkg";
+
+let meta = PkgMeta.init();
+const os_rule: [1][]const u8 = ["!win32"];
+const cpu_rule: [2][]const u8 = ["x64", "arm64"];
+meta.os = applyNpmOsList(os_rule[0..]);
+meta.arch = applyNpmArchList(cpu_rule[0..]);
+meta.setHasInstallScript(false);
+meta.validateForSave()?;
+const ok = meta.matchesPlatform(PKG_ARCH_X64, PKG_OS_LINUX); // true
+* = ok;
+```
