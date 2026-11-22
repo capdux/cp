@@ -399,3 +399,32 @@ const expected: [2][]const u8 = ["role", "id"];
 let m = ExpectKeysMatcher.init();
 assert(m.checkContainAllKeys(obj[0..], expected[0..]));
 ```
+
+13. **零分配测试执行树形缩进调试追踪器（`lib/test_runner/debugTree.cp`，吸收自 `/data/dev/bun/src/test_runner/debug.cp` & `/data/dev/bun/docs/test/lifecycle.mdx`）**：
+    - **导出符号**：`DEBUG_TREE_MAX_DEPTH` (`32`)、`DEBUG_TREE_DEFAULT_INDENT` (`"│ "`)、`DebugTreeError`（`BufferTooSmall`/`MaxDepthExceeded`/`UnbalancedEnd`）、`DebugRunMode`（`Normal`/`Skip`/`Todo`/`Only`/`Fail`）、`DebugHookPhase`（`BeforeAll`/`BeforeEach`/`Test`/`AfterEach`/`AfterAll`/`OnTestFinished`）、`DebugEntryMeta`、`DebugSequenceMeta`、`DebugTreeWriter`（`init`/`isEnabled`/`depth`/`len`/`remaining`/`slice`/`reset`/`begin`/`beginLocation`/`log`/`end`/`dumpTest`/`dumpDescribeHeader`/`dumpExecutionEntry`/`dumpConcurrentGroupHeader`/`dumpSequenceHeader`）；
+    - **核心特性与 Bun `lifecycle.mdx` 钩子执行顺序指南**：
+      - **空分组自动抑制闭合行**：严格复刻 Bun `group.begin/log/end` 的 `last_was_start` 状态机——若分组打开后未输出任何子日志，调用 `end()` 仅回退缩进而不打印冗余 `--`，保持嵌套调试树紧凑清晰；
+      - **生命周期钩子执行顺序**：遵循 `beforeAll` → `beforeEach` → `test` → `afterEach` → `onTestFinished` → `afterAll`；注意 `onTestFinished` 在全部 `afterEach` 之后执行，且不支持并发测试（需使用串行 `test.serial`）；
+      - **异常安全与原子回滚**：缓冲不足时原子恢复写指针 `pos` 与缩进深度 `indent`，不产生半截畸形行；空测试名自动回退 `"(unnamed)"` 并对引号/换行/反斜杠进行安全转义。
+
+```cp
+import {
+    DebugTreeWriter,
+    DebugEntryMeta,
+    DebugSequenceMeta,
+    DebugRunMode,
+} from "cap:test_runner";
+
+let buf: [512]u8 = [0; 512];
+let w = DebugTreeWriter.init(buf[0..], true, false);
+* = w.dumpDescribeHeader(DebugEntryMeta{ name: "auth", mode: .Normal })?;
+* = w.dumpTest(DebugEntryMeta{ name: "login", label: "test" })?;
+* = w.end()?;
+* = w.dumpConcurrentGroupHeader(DebugSequenceMeta{ concurrent_group_id: 0, sequence_start: 0, sequence_end: 2 })?;
+* = w.dumpSequenceHeader(DebugSequenceMeta{ index: 0, repeat_count: 1 })?;
+* = w.dumpExecutionEntry(DebugEntryMeta{ name: "login", mode: .Normal })?;
+* = w.end()?;
+* = w.end()?;
+const trace = w.slice();
+* = trace;
+```

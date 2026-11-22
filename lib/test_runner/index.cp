@@ -206,3 +206,14 @@ export {
     toContainAnyValues,
     ExpectKeysMatcher,
 } from "./expectKeys";
+
+export {
+    DEBUG_TREE_MAX_DEPTH,
+    DEBUG_TREE_DEFAULT_INDENT,
+    DebugTreeError,
+    DebugRunMode,
+    DebugHookPhase,
+    DebugEntryMeta,
+    DebugSequenceMeta,
+    DebugTreeWriter,
+} from "./debugTree";
