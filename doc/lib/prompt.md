@@ -98,6 +98,17 @@
 | `sanitizeControlTokens(input, out_buf: *[]u8): usize?` | 将用户输入中的 `<\|im_start\|>`、`<\|im_end\|>`、`<\|eot_id\|>`、`<\|start_header_id\|>`、`<\|end_header_id\|>`、`[INST]`、`[/INST]`、`<s>`、`</s>` 等特殊控制标签安全转义，防止边界标签混淆 |
 | `formatChatPrompt(kind, messages, add_generation_prompt, sanitize_user_content, out_buf: *[]u8): usize?` | 零堆分配按模型家族规范渲染完整对话 Prompt；开启 `sanitize_user_content` 时自动净化 `User`/`Tool` 内容与工具名，同时保持 `System`/`Assistant` 及模板控制标签原样不变 |
 
+### 6. 零堆分配动态 Few-Shot 少样本选择器 (`lib/prompt/fewshot.cp`)
+
+| 符号 / 方法 | 签名与说明 |
+| :--- | :--- |
+| `FewShotExample` | `{ id: u32, input: string, output: string, label: i32, est_tokens: u32 }` |
+| `FewShotSelection` | `{ example_index: usize, score: f64 }` |
+| `FewShotConfig` | `{ max_examples: usize = 5, max_tokens: u32 = 1024, max_per_label: usize = 0, dedup_threshold: f64 = 0.9 }`（提供 `FewShotConfig.default()`） |
+| `tokenJaccardSimilarity(a, b, hashes_a_s: *[]u64, hashes_b_s: *[]u64): f64` | 零堆分配大小写无关 ASCII 词袋 Jaccard 相似度（64 位 FNV-1a 词哈希 + 排序去重集合交并比），返回 `[0.0, 1.0]` |
+| `selectFewShotExamples(query, pool, cfg, out_selected, scores_s, order_s, hashes_a_s, hashes_b_s): usize?` | 按与 `query` 的相关性降序稳定排序候选池，贪心装入满足 `max_tokens`、`max_per_label` 类别均衡与 `dedup_threshold` 相似度去重约束的最多 `max_examples` 条示例 |
+| `renderFewShotBlock(pool, selected, input_prefix, output_prefix, separator, out_buf: *[]u8): usize?` | 零堆分配按 `<input_prefix><input><output_prefix><output>` 与 `separator` 渲染最终少样本 Prompt 块 |
+
 ---
 
 ## 三、 使用示例
@@ -231,6 +242,49 @@ fn renderForModel(kind: ChatTemplateKind) {
     let out_buf: []u8 = out_arr[0..];
     if (n := formatChatPrompt(kind, msgs[0..], true, true, out_buf)) {
         * = out_buf[0..n];
+    }
+}
+```
+
+### 5. 零堆分配动态 Few-Shot 少样本选择与渲染示例 (`fewshot.cp`)
+
+```typescript
+import {
+    FewShotExample,
+    FewShotSelection,
+    FewShotConfig,
+    selectFewShotExamples,
+    renderFewShotBlock,
+} from "cap:prompt";
+
+fn buildFewShotContext(query: string) {
+    const pool: [3]FewShotExample = [
+        FewShotExample{ id: 1, input: "refund order delayed", output: "billing", label: 1, est_tokens: 20 },
+        FewShotExample{ id: 2, input: "reset login password", output: "auth", label: 2, est_tokens: 20 },
+        FewShotExample{ id: 3, input: "order payment invoice", output: "billing", label: 1, est_tokens: 25 },
+    ];
+    const cfg = FewShotConfig{
+        max_examples: 2,
+        max_tokens: 50,
+        max_per_label: 1,
+        dedup_threshold: 0.9,
+    };
+
+    let sel_arr: [3]FewShotSelection = undefined;
+    let scores_arr: [3]f64 = undefined;
+    let order_arr: [3]usize = undefined;
+    let ha_arr: [32]u64 = undefined;
+    let hb_arr: [32]u64 = undefined;
+    let sel: []FewShotSelection = sel_arr[0..];
+    let scores: []f64 = scores_arr[0..];
+    let order: []usize = order_arr[0..];
+    let ha: []u64 = ha_arr[0..];
+    let hb: []u64 = hb_arr[0..];
+
+    if (k := selectFewShotExamples(query, pool[0..], cfg, sel, scores, order, ha, hb)) {
+        let block_arr: [256]u8 = undefined;
+        let block: []u8 = block_arr[0..];
+        * = renderFewShotBlock(pool[0..], sel[0..k], "Input: ", "\nLabel: ", "\n\n", block);
     }
 }
 ```

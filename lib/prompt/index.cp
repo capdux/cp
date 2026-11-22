@@ -46,3 +46,12 @@ export {
     sanitizeControlTokens,
     formatChatPrompt,
 } from "./chat_format.cp";
+
+export {
+    FewShotExample,
+    FewShotSelection,
+    FewShotConfig,
+    tokenJaccardSimilarity,
+    selectFewShotExamples,
+    renderFewShotBlock,
+} from "./fewshot.cp";
