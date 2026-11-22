@@ -1,6 +1,6 @@
 # `cap:agent` — AI Agent 核心运行时标准库
 
-`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏（`budget.cp`）、多智能体任务图 DAG 调度器（`dag.cp`）、评测基准与轨迹打分（`eval.cp`）以及 ReAct 执行状态机与确定性检查点（`react.cp`）四个子模块。
+`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏（`budget.cp`）、多智能体任务图 DAG 调度器（`dag.cp`）、评测基准与轨迹打分（`eval.cp`）、ReAct 执行状态机与确定性检查点（`react.cp`）以及 LLM 流式 SSE 解析与遥测（`sse.cp`）五个子模块。
 
 ---
 
@@ -251,5 +251,68 @@ fn reactCheckpointResumeDemo() {
     * = resumed.recordToolResult(0xAABBCCDD, true, 120, 1170);
     * = resumed.recordThought(180, 30, 1200);
     * = resumed.finishWithAnswer(210, 1250);
+}
+```
+
+---
+
+## 子模块：LLM 流式 SSE 解析与 Token 吞吐遥测（`sse.cp`）
+
+### 核心特性
+
+- **零分配增量 SSE 解析器（`SseStreamParser`）**：完整兼容 WHATWG EventSource 规范与 OpenAI / Anthropic 流式响应协议；支持任意单字节或半行分块投喂、`\n`/`\r\n`/`\r` 三种换行符、UTF-8 BOM 自动剥离、`:comment` 心跳注释跳过、多行 `data:` 以 `\n` 自动拼接、首字节可选空格剥离与 `data: [DONE]` 终止哨兵自动识别。
+- **TTFT / TPS 流式遥测（`StreamTelemetry`）**：精确记录首字延迟（`ttft_ms`）、总耗时（`total_ms`）、吞吐（`tokens_per_sec`）与平均帧间隔（`inter_token_avg_ms`）。
+- **轻量 JSON Delta 字符串提取（`extractJsonStringField`）**：零分配扫描 OpenAI `"content"` 或 Anthropic `"text"` 字段并解码 `\n`/`\r`/`\t`/`\"`/`\\`/`\/`/`\uXXXX` 转义序列。
+
+### 导出清单
+
+- **SSE 解析**：`SseEvent`、`SseFeedResult`、`SseStreamParser`（`init`, `reset`, `nextEvent`）
+- **流式遥测**：`StreamMetrics`、`StreamTelemetry`（`init`, `onTokenChunk`, `finish`）
+- **JSON Delta 辅助**：`extractJsonStringField`
+
+### 使用示例（OpenAI / Anthropic 流式分块消费 + 遥测）
+
+```typescript
+import std from "std";
+import {
+    SseEvent,
+    SseStreamParser,
+    StreamTelemetry,
+    extractJsonStringField,
+} from "cap:agent";
+
+fn llmStreamingDemo() {
+    let line_b: [256]u8 = std.mem.zeroes([256]u8);
+    let data_b: [512]u8 = std.mem.zeroes([512]u8);
+    let ev_b: [64]u8 = std.mem.zeroes([64]u8);
+    let id_b: [64]u8 = std.mem.zeroes([64]u8);
+    let line_s: []u8 = line_b[0..];
+    let data_s: []u8 = data_b[0..];
+    let ev_s: []u8 = ev_b[0..];
+    let id_s: []u8 = id_b[0..];
+
+    let parser = SseStreamParser.init(&line_s, &data_s, &ev_s, &id_s);
+    let tel = StreamTelemetry.init(1000);
+
+    const payload: string = "data: {\"delta\":{\"content\":\"Hello\\n\"}}\n\ndata: [DONE]\n\n";
+    let rest: []const u8 = payload;
+    let ev = SseEvent { event_type: "", data: "", id: "", is_done: false };
+    let out_b: [128]u8 = std.mem.zeroes([128]u8);
+    let out_s: []u8 = out_b[0..];
+
+    while (rest.len > 0) {
+        const res = parser.nextEvent(rest, &ev);
+        rest = rest[res.consumed..];
+        if (res.overflow) break;
+        if (res.has_event && !ev.is_done) {
+            if (n := extractJsonStringField(ev.data, "content", &out_s)) {
+                tel.onTokenChunk(1120, 2);
+                * = n;
+            }
+        }
+    }
+
+    const metrics = tel.finish(1250);
+    * = metrics;
 }
 ```
