@@ -927,6 +927,81 @@ pub fn demoQuicTransportLoop()! {
 }
 ```
 
+### 20. WebRTC / WHEP 实时流媒体信令与 ICE/STUN 引擎（`webrtcIce.cp`）
+
+`webrtcIce.cp` 是 100% 纯 CP、零动态堆分配、外部切片驱动的 WebRTC / WHEP（RFC 9725）核心协议栈，整合 RFC 8489 STUN 二进制线协议编解码、RFC 8445 ICE 候选配对/连通性检查状态机，以及 RFC 8866 WebRTC SDP Offer/Answer 编解码协商器：
+
+- **常量与错误集**：
+  - `STUN_MAGIC_COOKIE = 0x2112A442`、`STUN_HEADER_LEN = 20`、`STUN_FINGERPRINT_XOR = 0x5354554E`、`ICE_PRIORITY_HOST = 126`、`ICE_PRIORITY_PRFLX = 110`、`ICE_PRIORITY_SRFLX = 100`、`ICE_PRIORITY_RELAY = 0`
+  - `WebRtcIceError`（`PacketTooShort | InvalidMagicCookie | InvalidMessageLength | InvalidAttribute | InvalidFingerprint | BufferTooSmall | InvalidCandidate | InvalidSdp | OutputSliceTooSmall`）
+- **RFC 8489 STUN 线协议编解码（含 `XOR-MAPPED-ADDRESS` 与 IEEE CRC32 `FINGERPRINT`）**：
+  - `StunMsgType`、`StunAttrType`、`StunIpv4Addr`、`StunPacket`、`computeStunCrc32`、`computeStunFingerprint`
+  - `encodeStunBindingRequest(tx_id, username, priority, controlling_tie, use_candidate, out_buf)`：自动 4 字节对齐填充并附加标准 IEEE CRC32 `^ 0x5354554E` `FINGERPRINT`
+  - `encodeStunBindingResponse(tx_id, mapped, out_buf)`：按 RFC 8489 §14.2 编码 `XOR-MAPPED-ADDRESS`（`port ^ (magic >> 16)`、`ip ^ magic`）与 `FINGERPRINT`
+  - `encodeStunBindingError(tx_id, error_code, reason, out_buf)`、`parseStunPacket(raw)`（校验 Magic Cookie、20 字节头、4 字节对齐与 `FINGERPRINT` 完整性）
+- **RFC 8445 ICE 候选优先级、配对排序与连通性检查状态机（外部切片驱动）**：
+  - `IceCandidateKind`、`IceRole`、`IcePairState`、`WebRtcIceCandidate`、`IceCandidatePair`、`IceCheckList`
+  - `computeIceCandidatePriority(kind, local_pref, component_id)`（`(2^24)*type_pref + (2^8)*local_pref + (256 - comp)`）
+  - `computeIcePairPriority(controlling_prio, controlled_prio)`（`2^32 * min(G,D) + 2 * max(G,D) + (G>D ? 1 : 0)`）
+  - `parseIceCandidateAttr(attr_line)`、`buildAndSortIcePairs(locals, remotes, role, out_pairs)`（O(N log N) 原地堆排序降序排优）、`selectBestNominatedPair(pairs)`
+- **RFC 8866 / WebRTC SDP 编解码协商与 RFC 9725 WHEP 请求构造**：
+  - `SdpMediaKind`、`SdpDirection`、`SdpCodecSpec`、`SdpSessionSummary`
+  - `parseWebRtcSdp(raw, out_codecs)`：解析 `a=ice-ufrag`、`a=ice-pwd`、`a=fingerprint:sha-256`、`a=group:BUNDLE`、`a=rtcp-mux`、`a=rtpmap`、`a=fmtp` 与媒体方向
+  - `negotiateCommonCodecs(offer_codecs, offer_raw, local_supported_names, out_matched_indices)`：按 Offer 优先级求共同编解码器交集
+  - `formatWhepOfferRequest(endpoint_path, host, bearer_token, sdp_body, out_buf)`：生成标准 RFC 9725 WHEP HTTP/1.1 `POST` 请求报文
+
+```cp
+import {
+    StunIpv4Addr,
+    encodeStunBindingRequest,
+    encodeStunBindingResponse,
+    parseStunPacket,
+    parseIceCandidateAttr,
+    IceRole,
+    IceCandidatePair,
+    IceCheckList,
+    WebRtcIceCandidate,
+    SdpCodecSpec,
+    parseWebRtcSdp,
+    negotiateCommonCodecs,
+    formatWhepOfferRequest,
+} from "cap:net";
+
+pub fn demoWebRtcWhepHandshake(offer_sdp: []const u8)! {
+    // 1. 解析远端 Offer SDP 并协商共同编解码器
+    let codecs: [16]SdpCodecSpec = [SdpCodecSpec{}; 16];
+    const summary = parseWebRtcSdp(offer_sdp, codecs[0..])?;
+    const supported: [2][]const u8 = ["opus", "H264"];
+    let matched: [16]usize = [0; 16];
+    const n_matched = negotiateCommonCodecs(codecs[0..summary.codec_count], offer_sdp, supported[0..], matched[0..]);
+
+    // 2. 生成 RFC 9725 WHEP POST 请求
+    let http_buf: [2048]u8 = [0; 2048];
+    const http_len = formatWhepOfferRequest("/whep/live/stream1", "edge.example.com", "tok_live", offer_sdp, http_buf[0..])?;
+
+    // 3. STUN Binding Request/Response 连通性检查与 ICE 提名
+    const tx_id: [12]u8 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    let stun_buf: [256]u8 = [0; 256];
+    const req_len = encodeStunBindingRequest(tx_id, "rUfrag:lUfrag", 1853824767, 0x1122334455667788, true, stun_buf[0..])?;
+    const req = parseStunPacket(stun_buf[0..req_len])?;
+    const resp_len = encodeStunBindingResponse(tx_id, StunIpv4Addr.init(203, 0, 113, 42, 54321), stun_buf[0..])?;
+    const resp = parseStunPacket(stun_buf[0..resp_len])?;
+
+    let locals: [1]WebRtcIceCandidate = [parseIceCandidateAttr("candidate:1 1 udp 2122260223 192.168.1.10 54321 typ host")?];
+    let remotes: [1]WebRtcIceCandidate = [parseIceCandidateAttr("candidate:2 1 udp 1686052607 203.0.113.42 40000 typ srflx")?];
+    let pair_buf: [4]IceCandidatePair = [IceCandidatePair{}; 4];
+    let cl = IceCheckList.init(locals[0..], remotes[0..], IceRole.controlling, 42, pair_buf[0..])?;
+    if (idx := cl.nextCheckPair()) {
+        * = cl.markInProgress(idx, 1_000);
+        * = cl.onCheckSucceeded(idx, 12_500, true);
+    }
+    * = n_matched;
+    * = http_len;
+    * = req.fingerprint_valid;
+    * = resp.xor_mapped.port;
+}
+```
+
 ## 收敛子模块深度文档
 
 - [amqp.md](net/amqp.md)
