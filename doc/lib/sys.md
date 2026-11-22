@@ -414,6 +414,49 @@ const sym = mode.formatSymbolic(buf[0..]); // "drwxr-xr-x"
 * = sym;
 ```
 
+---
+
+## 零分配多租户隔板并发隔离器与 AIMD 自适应并发守卫 (`bulkhead.cp`)
+
+面向多租户服务端与上游依赖故障隔离的 100% 纯 CP 零动态堆分配 Bulkhead 隔板隔离器与 AIMD（Additive Increase / Multiplicative Decrease）自适应并发守卫：
+
+- **常量与枚举**：
+  - `BULKHEAD_MAX_COMPARTMENTS = 32`、`BULKHEAD_MAX_QUEUE_PER_COMP = 32`
+  - `BulkheadAcquireStatus`（`granted | queued | rejected_full | unknown_compartment | invalid_arg`）
+- **配置与数据模型**：
+  - `BulkheadConfig`（`max_concurrent`, `max_queue`, `wait_timeout_ms`, `adaptive`, `min_concurrent`, `hard_max_concurrent`, `target_latency_ms`, `backoff_permille`, `healthy_streak_for_inc`；提供 `fixed(...)`, `adaptiveDefaults(...)`, `isValid()`）
+  - `BulkheadAcquireResult`（`status`, `queue_position`, `in_flight`, `current_limit`）
+  - `BulkheadReleaseResult`（`released`, `promoted_req_id`, `expired_skipped`, `in_flight`, `current_limit`）
+  - `BulkheadCompartmentSnapshot` / `BulkheadGlobalStats`
+- **核心引擎 `BulkheadGuard`**：
+  - `init()` / `reset(*_)` / `registerCompartment(*_, comp_id, cfg)` / `removeCompartment(*_, comp_id)`
+  - `tryAcquire(*_, comp_id, req_id, now_ms)`: 申请许可；自动清扫已超时排队者，并发满时按 FIFO 入队，队满返回 `rejected_full`，单舱饱和绝不影响其他隔板。
+  - `release(*_, comp_id, req_id, latency_ms, failed, now_ms)`: 归还许可，按需执行 AIMD 自适应调参（低延迟健康连续达标加性递增 `+1`，高延迟或失败乘性回退至 `min_concurrent`），并自动按 FIFO 跳过已超时者提拔下一等待者返回 `promoted_req_id`。
+  - `reapExpiredWaiters(*_, comp_id, now_ms)` / `compartmentSnapshot(comp_id)` / `stats()`。
+
+```cp
+import {
+    BulkheadConfig,
+    BulkheadAcquireStatus,
+    BulkheadGuard,
+} from "cap:sys";
+
+pub fn demoBulkheadGuard() {
+    let guard = BulkheadGuard.init();
+    * = guard.registerCompartment(1, BulkheadConfig.fixed(2, 4, 1000));
+    * = guard.registerCompartment(2, BulkheadConfig.adaptiveDefaults(4, 2, 16, 150));
+
+    const r1 = guard.tryAcquire(1, 101, 100); // granted
+    const r2 = guard.tryAcquire(1, 102, 100); // granted
+    const r3 = guard.tryAcquire(1, 103, 100); // queued (pos=1)
+    if (r3.status == BulkheadAcquireStatus.queued) {
+        const rel = guard.release(1, 101, 50, false, 150);
+        * = rel.promoted_req_id; // 103 自动提拔!
+    }
+    * = r1; * = r2;
+}
+```
+
 ## 收敛子模块深度文档
 
 - [acpi.md](sys/acpi.md)

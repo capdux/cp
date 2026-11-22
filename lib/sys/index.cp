@@ -1376,3 +1376,16 @@ export {
     FileMode,
 } from "./fsConstants.cp";
 
+// --- bulkhead (Zero-Alloc Multi-Tenant Bulkhead Isolation & AIMD Adaptive Concurrency Guard) ---
+export {
+    BULKHEAD_MAX_COMPARTMENTS,
+    BULKHEAD_MAX_QUEUE_PER_COMP,
+    BulkheadAcquireStatus,
+    BulkheadConfig,
+    BulkheadAcquireResult,
+    BulkheadReleaseResult,
+    BulkheadCompartmentSnapshot,
+    BulkheadGlobalStats,
+    BulkheadGuard,
+} from "./bulkhead.cp";
+
