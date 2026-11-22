@@ -98,3 +98,14 @@ export {
     parseNoticeSeverity,
     PgNoticeResponse,
 } from "./noticeResponse.cp";
+
+export {
+    PG_TAG_PASSWORD_MESSAGE,
+    PG_SASL_SCRAM_SHA256,
+    PG_SASL_SCRAM_SHA256_PLUS,
+    PG_SASL_NO_INITIAL_DATA,
+    PgAuthFrameError,
+    PgPasswordMessage,
+    PgSaslInitialResponse,
+    PgSaslResponse,
+} from "./saslFrames.cp";

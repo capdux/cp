@@ -182,6 +182,32 @@ const decoded = PgNoticeResponse.decodeFrame(buf[0..written])?;
 * = decoded.severityLevel() == PgNoticeSeverity.Notice;
 ```
 
+### Frontend 认证响应帧编解码（`PasswordMessage` / `SASLInitialResponse` / `SASLResponse`，`saslFrames.cp`）
+
+吸收自 `/data/dev/bun/src/sql/postgres/protocol/SASLInitialResponse.cp`，零堆分配编解码 PostgreSQL v3.0 前端 `'p'` 认证响应三件套：
+
+- **常量**：`PG_TAG_PASSWORD_MESSAGE` (`'p'`)、`PG_SASL_SCRAM_SHA256` (`"SCRAM-SHA-256"`)、`PG_SASL_SCRAM_SHA256_PLUS` (`"SCRAM-SHA-256-PLUS"`)、`PG_SASL_NO_INITIAL_DATA` (`-1`)。
+- **`PgPasswordMessage`**：明文或 MD5 密码帧（`['p'][len][password\0]`），提供 `init` / `encodedLen` / `encodeFrame` / `decodeFrame` / `isMd5Prefixed` / `eql`（拒绝内嵌 NUL 字节）。
+- **`PgSaslInitialResponse`**：SASL 初始响应帧（`['p'][len][mechanism\0][data_len: i32 BE][initial_data?]`），支持 `initial_data == null`（规范编码为 `-1` / `0xFFFFFFFF`），提供 `init` / `scramSha256` / `encodedLen` / `encodeFrame` / `decodeFrame` / `isScramSha256` / `isScramSha256Plus` / `eql`。
+- **`PgSaslResponse`**：SASL 后续挑战响应帧（`['p'][len][data]`），提供 `init` / `encodedLen` / `encodeFrame` / `decodeFrame` / `eql`。
+
+```cp
+import {
+    PgPasswordMessage,
+    PgSaslInitialResponse,
+    PgSaslResponse,
+} from "cap:pgwire";
+
+let buf: [256]u8 = [0; 256];
+const n1 = PgSaslInitialResponse.scramSha256("n,,n=,r=rOprNGfwEbeRWgbNEkqO").encodeFrame(buf[0..])?;
+const init_msg = PgSaslInitialResponse.decodeFrame(buf[0..n1])?;
+const n2 = PgSaslResponse.init("c=biws,r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,p=dHzbZapWIk4jUhN+Ute9ytag9zjfMHgsqmmiz7AndVQ=").encodeFrame(buf[0..])?;
+const resp_msg = PgSaslResponse.decodeFrame(buf[0..n2])?;
+const n3 = PgPasswordMessage.init("md50123456789abcdef0123456789abcdef").encodeFrame(buf[0..])?;
+const pw_msg = PgPasswordMessage.decodeFrame(buf[0..n3])?;
+* = init_msg.isScramSha256(); * = resp_msg.data; * = pw_msg.isMd5Prefixed();
+```
+
 ---
 
 ## 4. 示例
