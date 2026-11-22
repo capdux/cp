@@ -36,6 +36,7 @@
 | 连接池生命周期引擎 | `lib/db/conn_pool.cp` | 零堆分配数据库连接池状态机（LIFO 温连接复用、空闲/最大寿命淘汰、不健康连续错误摘除与满载背压 `DbConnPool`） | — |
 | 崩溃恢复 WAL 引擎 | `lib/db/wal_recovery.cp` | 零堆分配 IEEE CRC32 防撕裂写 WAL 帧编解码与崩溃恢复引擎（`WalFrameWriter` / `WalRecoveryScanner`） | — |
 | LSM 分层压缩规划器 | `lib/db/lsm_compactor.cp` | 零堆分配 RocksDB/Pebble 级 LSM-Tree 分层压缩规划器与 SSTable 键区间重叠选择器（`LsmCompactionPlanner`） | — |
+| MVCC 快照与水位线 GC | `lib/db/mvcc_gc.cp` | 零堆分配 MVCC 多版本链、快照隔离时间旅行读与 Low-Watermark 安全水位线垃圾回收引擎（`MvccVersionGcStore`） | — |
 
 ---
 
@@ -164,5 +165,37 @@ pub fn demoLsmCompactionPlanner() {
     if (plan.valid && plan.is_trivial_move) {
         * = planner.mark_compacting(plan.source_file_ids[0], true);
     }
+}
+```
+
+### 零堆分配 MVCC 快照隔离与安全水位线 GC 引擎示例 (`mvcc_gc.cp`)
+
+面向 PostgreSQL / TiKV / RocksDB 事务存储引擎的 100% 纯 CP 零堆分配 MVCC 多版本链、快照读可见性判定与 Low-Watermark 安全水位线垃圾回收内核（固定 `MVCC_GC_MAX_VERSIONS = 256` 版本槽、`MVCC_GC_MAX_READERS = 32` 活跃读事务槽）：
+
+- **类型**：`MvccVersionRecord`、`MvccReadSnapshot`、`MvccReadResult`、`MvccGcReport`、`MvccGcStats`、`MvccVersionGcStore`。
+- **核心方法**：`init()`、`begin_read_tx(*_, tx_id, read_ts)`、`end_read_tx(*_, tx_id)`、`safe_horizon_ts()`、`write_version(*_, key_hash, commit_ts, val_tag, is_tombstone)`（同键严格递增 `commit_ts` 防历史覆写）、`read_visible(key_hash, snapshot_ts)`、`collect_garbage(*_): MvccGcReport`（安全回收水位线之下的冗余覆盖版本及无新版本的孤立墓碑）、`stats()`。
+
+```cp
+import { MvccVersionGcStore } from "cap:db";
+
+pub fn demoMvccSafeHorizonGc() {
+    let store = MvccVersionGcStore.init();
+    const k: u64 = 0x1001;
+
+    * = store.write_version(k, 10, 100, false);
+    * = store.write_version(k, 20, 200, false);
+    * = store.write_version(k, 30, 300, false);
+
+    // 长运行读事务钉住安全水位线于 ts=25：保护 ts=20 基底版本不被回收，仅回收 ts=10
+    * = store.begin_read_tx(1, 25);
+    const rep1 = store.collect_garbage(); // safe_horizon_ts=25, reclaimed=1
+    const snap = store.read_visible(k, 25); // val_tag == 200
+
+    // 读事务结束后水位线推进至 30，安全回收 ts=20
+    * = store.end_read_tx(1);
+    const rep2 = store.collect_garbage(); // safe_horizon_ts=30, reclaimed=1
+    * = rep1;
+    * = snap;
+    * = rep2;
 }
 ```

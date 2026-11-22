@@ -214,6 +214,19 @@ export {
     formatCatBytes,
 } from "./cat_opts.cp";
 
+export {
+    SHELL_LS_MAX_PATHS,
+    ShellLsError,
+    LsSortKey,
+    LsEntryKind,
+    LsOpts,
+    LsPlan,
+    LsEntryMeta,
+    formatLsMode,
+    formatLsHumanSize,
+    sortLsEntries,
+} from "./ls_opts.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);

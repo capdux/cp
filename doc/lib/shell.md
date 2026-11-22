@@ -242,6 +242,9 @@ const n = plan.resolveDestPath(0, true, dst[0..])?; // "dist/a.cp"
 9. **POSIX/GNU `cat` 选项解析与流式行格式化器（`lib/shell/cat_opts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/cat.cp` & `/data/dev/bun/docs/runtime/shell.mdx`）**：
    - 零堆分配支持 `-b`/`--number-nonblank`、`-n`/`--number`（`-b` 优先覆盖 `-n`）、`-s`/`--squeeze-blank`、`-E`/`--show-ends`、`-T`/`--show-tabs`、`-v`/`--show-nonprinting`、`-e`（`-vE`）、`-t`（`-vT`）、`-A`/`--show-all`（`-vET`）、`-u`、`--` 终止哨兵与 `-` 标准输入操作数（无操作数默认读取 stdin）；同时提供 `CatPlan.parseWithMode(args, true)` 对齐 Bun 当前严格兼容模式；
    - `CatLineFormatter` 为有状态流式格式化器，可在管道或分块读取（如 `cat < response | wc -c` 跨 chunk 场景）中保持连续行号与连续空行压缩状态，无内容改写选项时自动走零变换快速拷贝路径。
+10. **POSIX/GNU `ls` 选项解析、权限/尺寸格式化与原地稳定排序器（`lib/shell/ls_opts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/ls.cp` & `/data/dev/bun/docs/runtime/shell.mdx`）**：
+    - 零堆分配支持 `-a`/`-A`/`-B`/`-d`/`-f`/`-F`/`-h`/`-l`/`-1`/`-p`/`-r`/`-R`/`-S`/`-t`/`-U` 短标志聚合、`--all`/`--almost-all`/`--ignore-backups`/`--group-directories-first` 等长选项与 `--` 终止符（无路径操作数默认列出 `"."`）；
+    - `formatLsMode` 支持全部 7 类文件首字符与 setuid/setgid/sticky 特殊权限位；`formatLsHumanSize` 纯整数实现 `K`/`M`/`G`/`T`/`P` 尺寸格式化；`sortLsEntries` 原地稳定排序支持目录优先分组、大小/修改时间/名称排序及 `-r` 反转。
 
 ### POSIX `rm` 选项解析与根目录防误删示例（`RmPlan`）
 

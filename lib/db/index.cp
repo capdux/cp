@@ -296,3 +296,15 @@ export {
     LsmLevelStats,
     LsmCompactionPlanner,
 } from "./lsm_compactor.cp";
+
+// --- mvcc_gc ---
+export {
+    MVCC_GC_MAX_VERSIONS,
+    MVCC_GC_MAX_READERS,
+    MvccVersionRecord,
+    MvccReadSnapshot,
+    MvccReadResult,
+    MvccGcReport,
+    MvccGcStats,
+    MvccVersionGcStore,
+} from "./mvcc_gc.cp";
