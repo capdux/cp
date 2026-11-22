@@ -1264,3 +1264,19 @@ export {
     GenSlabStats,
     GenSlabPool,
 } from "./gen_slab.cp";
+
+// --- proc_supervisor (Zero-Alloc Process / Sidecar Supervisor & Health-Probe FSM) ---
+export {
+    PROC_SUP_MAX_SLOTS,
+    PROC_SUP_WINDOW_HISTORY,
+    PROC_SUP_INVALID_SLOT,
+    ProcSupState,
+    ProcSupActionKind,
+    ProcSupRestartPolicy,
+    ProcSupStatus,
+    ProcSupConfig,
+    ProcSupSlot,
+    ProcSupAction,
+    ProcSupStats,
+    ProcSupervisor,
+} from "./proc_supervisor.cp";

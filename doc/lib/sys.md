@@ -222,6 +222,39 @@ pub fn demoGenSlabPool() {
 }
 ```
 
+### 零堆分配服务/子进程监督退避与健康探针状态机示例 (`proc_supervisor.cp`)
+
+面向守护进程、Sidecar 与 Worker 生命周期编排的 100% 纯 CP 零动态堆分配监督状态机（支持 32 槽位、7 态生命周期、指数退避+确定性抖动、健康探针阈值裁决、滑动窗口隔离态与时间片动作调度）：
+
+- **导出符号**：`PROC_SUP_MAX_SLOTS` (`32`)、`PROC_SUP_WINDOW_HISTORY` (`16`)、`PROC_SUP_INVALID_SLOT` (`0xFFFF`)、`ProcSupState`（`stopped | starting | healthy | degraded | backoff_waiting | quarantined | stopping`）、`ProcSupActionKind`（`none | spawn | send_graceful_stop | force_stop_after_grace`）、`ProcSupRestartPolicy`（`always | on_failure | never`）、`ProcSupStatus`、`ProcSupConfig`（`isValid`）、`ProcSupSlot`、`ProcSupAction`、`ProcSupStats`、`ProcSupervisor`（`init`, `registerService`, `startService`, `requestGracefulStop`, `recordProbeResult`, `recordProcessExit`, `resetQuarantine`, `pollNextAction`, `getSlot`, `stats`）。
+
+```cp
+import {
+    ProcSupConfig,
+    ProcSupActionKind,
+    ProcSupervisor,
+} from "cap:sys";
+
+pub fn demoProcSupervisor() {
+    let sup = ProcSupervisor.init();
+    const slot = sup.registerService(ProcSupConfig{
+        service_id: 101,
+        initial_backoff_ms: 1000,
+        max_backoff_ms: 30000,
+        probe_success_threshold: 2,
+        probe_failure_threshold: 3,
+    }) ?? return;
+
+    * = sup.startService(slot, 1000);
+    const act = sup.pollNextAction(1000);
+    if (act.kind == ProcSupActionKind.spawn) {
+        // 拉起子进程后上报健康探针
+        * = sup.recordProbeResult(slot, true, 1500);
+        * = sup.recordProbeResult(slot, true, 2000); // 转 healthy
+    }
+}
+```
+
 ## 收敛子模块深度文档
 
 - [acpi.md](sys/acpi.md)
