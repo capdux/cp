@@ -413,3 +413,21 @@ export {
     PnpmMigrationStats,
     PnpmMigrationIndex,
 } from "./pnpm_lock.cp";
+
+export {
+    PKG_JSON_MAX_DEPS_PER_GROUP,
+    PKG_JSON_MAX_TRUSTED_DEPS,
+    PKG_JSON_MAX_PATCHED_DEPS,
+    PkgJsonEditError,
+    PkgJsonDepGroup,
+    pkgJsonDepGroupFieldName,
+    parsePkgJsonDepGroup,
+    PkgJsonVersionPin,
+    detectPkgJsonVersionPin,
+    formatEditedVersionSpec,
+    PkgJsonEditOptions,
+    PkgJsonDepEntry,
+    PkgJsonPatchEntry,
+    PkgJsonEditStats,
+    PkgJsonEditor,
+} from "./package_json_editor.cp";

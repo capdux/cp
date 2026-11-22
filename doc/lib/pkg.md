@@ -786,3 +786,39 @@ const spec = parsePnpmImporterVersion("my-lodash", "npm:lodash@4.17.21")?;
 * = pk;
 * = spec;
 ```
+
+### `package.json` 依赖/信任列表/补丁编辑器（`lib/pkg/package_json_editor.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/PackageManager/PackageJSONEditor.cp` 与 `/data/dev/bun/docs/pm/cli/add.mdx`；
+- 导出：`PKG_JSON_MAX_DEPS_PER_GROUP` (`64`)、`PKG_JSON_MAX_TRUSTED_DEPS` (`64`)、`PKG_JSON_MAX_PATCHED_DEPS` (`64`)、`PkgJsonEditError`、`PkgJsonDepGroup`（`Optional`/`Dev`/`Prod`/`Peer`）、`pkgJsonDepGroupFieldName`、`parsePkgJsonDepGroup`、`PkgJsonVersionPin`（`Patch`/`Minor`/`Major`）、`detectPkgJsonVersionPin`、`formatEditedVersionSpec`、`PkgJsonEditOptions`、`PkgJsonDepEntry`、`PkgJsonPatchEntry`、`PkgJsonEditStats`、`PkgJsonEditor`；
+- **`bun add` / `trustedDependencies` / `--exact` 最佳实践与边界约束（参考 `/data/dev/bun/docs/pm/cli/add.mdx`）**：
+  - 依赖分组解析优先级严格遵循 `optionalDependencies > devDependencies > dependencies > peerDependencies`；同一包跨组重装（如从 `dependencies` 移至 `devDependencies`）默认开启 `move_between_groups = true` 自动清理旧组条目，避免多组版本冲突；
+  - 版本号更新遵循 `detectPkgJsonVersionPin` 语义：默认新装或 `^` 沿用主版本范围 `^1.2.3`，`~` 沿用次版本范围 `~1.2.3`，无前缀精确版本或开启 `--exact`（`-E`）则严格固定为 `1.2.3`，且完整保留 `npm:@scope/pkg@` 别名前缀；
+  - 默认禁止执行任意第三方包的 `postinstall` 生命周期脚本，仅显式列入 `trustedDependencies` 的受信任包才放行；`addTrustedDependency()` 自动去重并按 ASCII 字母序重排，保障 `package.json` 差异最小化与确定性输出。
+
+```cp
+import {
+    PkgJsonDepGroup,
+    PkgJsonEditOptions,
+    formatEditedVersionSpec,
+    PkgJsonEditor,
+} from "cap:pkg";
+
+let ver_buf: [64]u8 = [0; 64];
+const vn = formatEditedVersionSpec("npm:@scope/react@~18.2.0", "18.3.1", false, ver_buf[0..])?;
+// ver_buf[0..vn] == "npm:@scope/react@~18.3.1"
+
+let ed = PkgJsonEditor.init();
+* = ed.upsertDep(PkgJsonDepGroup.Prod, "zod", "^3.23.0", PkgJsonEditOptions{})?;
+* = ed.upsertDep(
+    PkgJsonDepGroup.Dev,
+    "esbuild",
+    "0.24.0",
+    PkgJsonEditOptions{ exact_versions: true, add_trusted_dependencies: true },
+)?;
+* = ed.setPatchedDependency("zod@3.23.0", "patches/zod+3.23.0.patch")?;
+let json_buf: [128]u8 = [0; 128];
+const jn = ed.formatTrustedJson(json_buf[0..])?; // ["esbuild"]
+* = vn;
+* = jn;
+```
