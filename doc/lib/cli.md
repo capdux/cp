@@ -674,3 +674,40 @@ if (tag := CliCommandTag.fromName("i")) {
     * = caps;
 }
 ```
+
+### 声明式 CLI 命令路由、参数解析、拼写纠错与帮助渲染引擎（`lib/cli/capArgs.cp`，吸收自 `/data/dev/bun/src/cli/Arguments.cp`）
+
+- **纯 CP、零堆分配、全外部切片驱动**，面向 `cap` 全工具链 CLI；
+- **核心导出**：
+  - 声明式标志与值解析：`CapArgsError`、`CliFlagValueKind`（`Bool`/`Count`/`String`/`Int`/`Uint`/`ByteSize`/`Enum`/`StringList`）、`CliFlagValueSource`（`Cli > Env > Default > Unset`）、`CliFlagSpec`、`CapEnvBinding`、`CliParsedFlag`、`parseCliInt`、`parseCliUint`、`parseCliByteSize`（支持 `64k`/`16MB`/`2g`/`1tib`）、`isAllowedEnumValue`；
+  - 子命令路由与 `--` 透传：`CapSubcommand`（17 个核心子命令及短别名 `i`/`rm`/`x`/`b`/`t`/`r`/`a`/`up`/`c`）、`resolveCapSubcommand`、`capSubcommandName`、`capSubcommandSummary`、`CapArgsResult`、`getParsedFlag`、`parseCapArgs`（支持全局前置标志、组合短标志 `-vvp8080`、`--no-*` 布尔取反、`--` 透传参数与必填校验）；
+  - AI-First Levenshtein 拼写纠错：`levenshteinDistance`、`suggestClosestSubcommand`、`suggestClosestFlag`、`CapArgsDiagnostic`、`formatCapArgsDiagnostic`（输出 `"did you mean '--frozen-lockfile'?"`）；
+  - 帮助渲染与 Shell 补全：`formatCommandHelp`（自动对齐列宽的 Usage / Commands / Options 帮助文本）、`CapCompletionShell`、`formatShellCompletion`（Bash / Zsh 补全脚本）。
+
+```cp
+import {
+    CliFlagSpec,
+    CliFlagValueKind,
+    CliParsedFlag,
+    CapEnvBinding,
+    CapArgsDiagnostic,
+    CapSubcommand,
+    parseCapArgs,
+    getParsedFlag,
+} from "cap:cli";
+
+const specs: [2]CliFlagSpec = [
+    CliFlagSpec{ long_name: "frozen-lockfile", short_name: 'f', kind: CliFlagValueKind.Bool, allow_negation: true },
+    CliFlagSpec{ long_name: "max-mem", kind: CliFlagValueKind.ByteSize, default_val: "64m" },
+];
+const argv: [4][]const u8 = ["i", "--frozen-lockfile", "--max-mem=2g", "lodash"];
+const env_vars: [0]CapEnvBinding = [];
+let flags: [4]CliParsedFlag = [CliParsedFlag.empty(); 4];
+let lists: [4][]const u8 = [""; 4];
+let pos: [4][]const u8 = [""; 4];
+let pass: [4][]const u8 = [""; 4];
+let diag = CapArgsDiagnostic.none();
+const res = parseCapArgs(argv[0..], specs[0..], env_vars[0..], true, flags[0..], lists[0..], pos[0..], pass[0..], &diag)?;
+* = res;
+* = getParsedFlag(specs[0..], flags[0..], "max-mem");
+```
