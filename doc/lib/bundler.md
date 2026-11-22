@@ -874,3 +874,38 @@ const n = p.formatJsCode(NsExportEmitOptions{ exports_var_name: "exports_mod" },
 // "var exports_mod = {};\n__export(exports_mod, { zeta: () => zeta_val, alpha: () => alpha_fn });\n"
 * = n;
 ```
+
+- **Dev Server / HMR 语句转换器、紧凑导入编码器与 `import.meta.hot` 契约校验（`hmrStmts.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/convertStmtsForChunkForDevServer.cp` & `/data/dev/bun/docs/bundler/hot-reloading.mdx`）**：
+    - 导出：`HMR_MAX_STMTS` (`64`)、`HMR_MAX_IMPORTS` (`32`)、`HMR_MAX_NAMED_ITEMS` (`16`)、`HmrStmtsError`、`HmrImportTag`（`UserModule`/`Builtin`/`Bun`/`Runtime`/`Css`）、`HmrImportRecord`、`HmrStmtKind`、`HmrStmtInput`、`HmrPrefixDeclKind`、`HmrPrefixDecl`、`HmrEsmBindingSlot`、`HmrConvertOptions`、`HmrConvertStats`、`HmrBuiltinEvent`、`parseHmrBuiltinEvent`、`hmrBuiltinEventName`、`isDirectImportMetaHotCall`、`HmrChunkStmtConverter`（`init`/`addImportRecord`/`addStmt`/`getImportRecord`/`outsidePrefixIndices`/`insidePrefixDecls`/`insideSuffixIndices`/`esmSlots`/`convert`/`formatPackedImports`/`formatInsideWrapperPrefix`/`formatInsideWrapperSuffix`）；
+    - **Dev Server HMR 包装与热更新最佳实践（参考 `/data/dev/bun/docs/bundler/hot-reloading.mdx`）**：
+      - **三段式语句分流与零 TDZ 绑定**：CommonJS 模块全部语句直通 `inside_wrapper_suffix`；ESM 模块自动禁用 `.css` loader 导入记录，将 barrel 优化未用子模块重写为 `var <ns> = {};`，将 `builtin`/`bun`/`runtime` 重写为 `hmr.builtin(...)` / `hmr.require("bun:wrap")`，将用户 ESM 依赖压缩为紧凑数组 `['mod', N, "a", ...]` 并生成 `var [...] = hmr.imports;` 与 `hmr.updateImport = [...];`（使用 `var` 消除 TDZ，裸导入保留数组空位与 `() => {}` 占位回调，`<= 2` 项单行输出）；
+      - **`import.meta.hot` 生产死代码消除直调约束**：`import.meta.hot.<API>()` 必须完整直调（禁止 `const hot = import.meta.hot; hot.accept()` 或将 `dispose` 作为高阶回调传参），仅 `import.meta.hot.data` 允许作为值传递（生产构建会被内联为 `{}`，推荐 `import.meta.hot.data.x ??= init()` 以便压缩器消除）；
+      - **内置事件与 Vite 兼容前缀**：支持全部 8 个 HMR 生命周期事件（`beforeUpdate`/`afterUpdate`/`beforeFullReload`/`beforePrune`/`invalidate`/`error`/`ws:disconnect`/`ws:connect`），同时兼容 `bun:*` 与 `vite:*` 前缀；`prune` 适用于模块被完全移除时释放长连接资源，而 `dispose` 每次热替换前均会触发。
+
+```cp
+import {
+    HmrChunkStmtConverter,
+    HmrImportRecord,
+    HmrStmtInput,
+    HmrConvertOptions,
+    parseHmrBuiltinEvent,
+    isDirectImportMetaHotCall,
+} from "cap:bundler";
+
+let conv = HmrChunkStmtConverter.init();
+const r0 = conv.addImportRecord(HmrImportRecord{ resolved_path: "module_1", tag: .UserModule })?;
+let s0 = HmrStmtInput{ kind: .Import, import_record_index: r0, namespace_ident: "module_1" };
+* = s0.addNamedItem("add")?;
+* = conv.addStmt(s0)?;
+* = conv.addStmt(HmrStmtInput{ kind: .Body, body_code: "console.log(module_1.add(1, 2));" })?;
+
+const st = conv.convert(HmrConvertOptions{})?;
+let buf: [256]u8 = [0; 256];
+const n = conv.formatPackedImports(buf[0..])?; // "['module_1', 1, \"add\"]"
+const ok = isDirectImportMetaHotCall("import.meta.hot.accept()"); // true
+const ev = parseHmrBuiltinEvent("vite:beforeUpdate"); // .BeforeUpdate
+* = st;
+* = n;
+* = ok;
+* = ev;
+```

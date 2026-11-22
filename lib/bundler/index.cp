@@ -523,3 +523,24 @@ export {
     NsExportPlanner,
     isSimpleJsIdent,
 } from "./nsExport";
+
+export {
+    HMR_MAX_STMTS,
+    HMR_MAX_IMPORTS,
+    HMR_MAX_NAMED_ITEMS,
+    HmrStmtsError,
+    HmrImportTag,
+    HmrImportRecord,
+    HmrStmtKind,
+    HmrStmtInput,
+    HmrPrefixDeclKind,
+    HmrPrefixDecl,
+    HmrEsmBindingSlot,
+    HmrConvertOptions,
+    HmrConvertStats,
+    HmrBuiltinEvent,
+    parseHmrBuiltinEvent,
+    hmrBuiltinEventName,
+    isDirectImportMetaHotCall,
+    HmrChunkStmtConverter,
+} from "./hmrStmts";
