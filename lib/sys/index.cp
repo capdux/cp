@@ -1444,3 +1444,28 @@ export {
     evaluateCgroupBudget,
 } from "./cgroupLimit.cp";
 
+// --- drfSched (Unbounded-Slice Weighted DRF, Vector Bin-Packing, Preemption & EDF Scheduler) ---
+export {
+    DRF_MAX_RES_DIMS,
+    DrfError,
+    ResourceVec,
+    validateClusterCapacity,
+    DrfTenant,
+    DrfAllocDecision,
+    drfScheduleNext,
+    drfScheduleBatch,
+    computeJainFairnessIndex,
+    PlacementStrategy,
+    ClusterNode,
+    PlacementOutcome,
+    placeTaskOnNodes,
+    placeTasksBatch,
+    RunningWorkload,
+    PreemptionPlan,
+    planNodePreemption,
+    EdfTask,
+    EdfScheduleReport,
+    checkLiuLaylandSchedulable,
+    simulateEdfSchedule,
+} from "./drfSched.cp";
+

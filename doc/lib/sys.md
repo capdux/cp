@@ -600,6 +600,67 @@ pub fn demoCgroupBudget() {
 }
 ```
 
+### 无上限外部切片异构集群 Weighted DRF、多维向量装箱、抢占驱逐与 EDF 实时调度内核 (`drfSched.cp`)
+
+面向多租户 GPU/CPU 异构集群编排与实时任务调度的 100% 纯 CP 零动态堆分配调度内核。租户列表、集群节点列表、任务队列与抢占候选全部通过调用方外部切片传入，支持数百节点/数千任务规模零堆调度：
+
+- **多维资源向量（最高 8 维）**：
+  - `DRF_MAX_RES_DIMS = 8`、`DrfError`（`InvalidDimensions | ZeroClusterCapacity | InvalidWeight | BufferTooSmall`）
+  - `ResourceVec`（`zero`, `from2`, `from3`, `from4`, `isZero`, `add`, `sub`, `scale`, `fitsWithin`, `dominantShare`, `utilizationRatio`）、`validateClusterCapacity(cap)`
+- **Weighted DRF（Ghodsi et al. NSDI 2011）多租户公平分配**：
+  - `DrfTenant`（`tenant_id`, `weight`, `min_guarantee`, `max_quota`, `allocated`, `pending_demand`, `tasks_assigned`, `effectiveDominantShare`, `isBelowMinGuarantee`, `respectsMaxQuotaAfter`）
+  - `DrfAllocDecision`、`drfScheduleNext(*tenants, cluster_cap, *remaining_cap)`、`drfScheduleBatch(...)`、`computeJainFairnessIndex(tenants, cluster_cap)`
+- **多维异构节点装箱 Placement**：
+  - `PlacementStrategy`（`first_fit | best_fit_remaining | dot_product_align | worst_fit_spread`）
+  - `ClusterNode`（`node_id`, `capacity`, `used`, `cordoned`, `taint_mask`, `tasks_running`, `remaining()`, `canFit(req, toleration_mask)`）
+  - `PlacementOutcome`、`placeTaskOnNodes(*nodes, req, toleration_mask, strategy)`、`placeTasksBatch(...)`
+- **最小代价优先级抢占驱逐规划**：
+  - `RunningWorkload`、`PreemptionPlan`（`feasible`, `victim_count`, `freed_resources`, `min_victim_priority`）
+  - `planNodePreemption(node, incoming_req, incoming_priority, running_on_node, *out_victim_ids)`（仅驱逐低优先级可抢占任务，按优先级升序贪心构造最小驱逐集）
+- **EDF 实时截止时间调度器与 Liu-Layland 检验**：
+  - `EdfTask`、`EdfScheduleReport`（`total_tasks`, `completed_on_time`, `missed_deadlines`, `total_busy_ms`, `utilization_bps`）
+  - `checkLiuLaylandSchedulable(exec_ms_list, period_ms_list)`、`simulateEdfSchedule(*tasks, horizon_ms)`（事件驱动精确推进）
+
+```cp
+import {
+    ResourceVec,
+    DrfTenant,
+    DrfAllocDecision,
+    drfScheduleBatch,
+    computeJainFairnessIndex,
+    PlacementStrategy,
+    ClusterNode,
+    placeTaskOnNodes,
+} from "cap:sys";
+
+pub fn demoHeterogeneousClusterSched() {
+    // 1. Ghodsi DRF 经典算例: 集群 <9 CPU, 18 GB>, 租户 A 需求 <1, 4>, 租户 B 需求 <3, 1>
+    const cluster = ResourceVec.from2(9.0, 18.0);
+    let rem = cluster;
+    let tenants: [2]DrfTenant = [
+        DrfTenant{ tenant_id: 1, weight: 1.0, allocated: ResourceVec.zero(2), pending_demand: ResourceVec.from2(1.0, 4.0) },
+        DrfTenant{ tenant_id: 2, weight: 1.0, allocated: ResourceVec.zero(2), pending_demand: ResourceVec.from2(3.0, 1.0) },
+    ];
+    let decs: [16]DrfAllocDecision = [DrfAllocDecision{}; 16];
+    let t_s: []DrfTenant = tenants[0..];
+    let d_s: []DrfAllocDecision = decs[0..];
+    const n_alloc = drfScheduleBatch(*t_s, cluster, *rem, *d_s);
+    const jain = computeJainFairnessIndex(tenants[0..], cluster); // ~1.0 (A 获 3 任务, B 获 2 任务, 主导份额均为 2/3)
+
+    // 2. 多维向量对齐装箱 (CPU, RAM, GPU)
+    let nodes: [2]ClusterNode = [
+        ClusterNode{ node_id: 101, capacity: ResourceVec.from3(16.0, 64.0, 4.0), used: ResourceVec.from3(12.0, 8.0, 3.0) },
+        ClusterNode{ node_id: 102, capacity: ResourceVec.from3(16.0, 64.0, 4.0), used: ResourceVec.from3(2.0, 48.0, 0.0) },
+    ];
+    let n_s: []ClusterNode = nodes[0..];
+    // GPU/CPU 密集任务自动对齐到节点 102
+    const placed = placeTaskOnNodes(*n_s, ResourceVec.from3(4.0, 4.0, 2.0), 0, PlacementStrategy.dot_product_align);
+    * = n_alloc;
+    * = jain;
+    * = placed;
+}
+```
+
 ## 收敛子模块深度文档
 
 - [acpi.md](sys/acpi.md)
