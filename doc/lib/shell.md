@@ -588,3 +588,23 @@ let exp = ShellWordExpander.init(.Array, "/home/alice");
 const st = exp.step(*out)?; // .Done, out.wordAt(0) == "/home/alice/docs"
 * = st;
 ```
+
+### POSIX `basename` / `dirname` 路径内建命令（`pathBuiltin.cp`）
+
+- 吸收自 `/data/dev/bun/src/shell/builtin/basename.cp`（参考 `/data/dev/bun/docs/runtime/shell.mdx` Builtin Commands）；
+- 导出：`SHELL_PATH_BUILTIN_MAX_ARGS` (`64`)、`PathBuiltinError`、`BasenameOpts`、`DirnameOpts`、`posixBasename`、`posixBasenameStripSuffix`、`posixDirname`、`runBasenameBuiltin`、`runDirnameBuiltin`；
+- **POSIX 规范与零分配契约**：
+  - `posixBasename` / `posixDirname` 直接返回输入切片的子视图（零堆分配），严格处理空路径（`dirname("") == "."`）、全斜杠（`basename("///") == "/"`、`dirname("///") == "/"`）与尾随斜杠剥离；
+  - `posixBasenameStripSuffix` 在后缀与完整文件名相等时按 POSIX 规范保留完整文件名；
+  - `runBasenameBuiltin` / `runDirnameBuiltin` 支持 `-a`/`--multiple`、`-s SUFFIX`/`--suffix=`、`-z`/`--zero`（NUL 分隔，适合管道配合 `xargs -0` 处理含空白路径）与 `--` 选项终止符。
+
+```cp
+import { runBasenameBuiltin, runDirnameBuiltin } from "cap:shell";
+
+let out: [128]u8 = [0; 128];
+const b_args: [4][]const u8 = ["-s", ".cp", "lib/a.cp", "lib/b.cp"];
+const n1 = runBasenameBuiltin(b_args[0..], out[0..])?; // "a\nb\n"
+const d_args: [1][]const u8 = ["/usr/local/bin/"];
+const n2 = runDirnameBuiltin(d_args[0..], out[0..])?;  // "/usr/local\n"
+* = n1; * = n2;
+```

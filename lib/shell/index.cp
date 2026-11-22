@@ -401,6 +401,18 @@ export {
     ShellWordExpander,
 } from "./wordExpand.cp";
 
+export {
+    SHELL_PATH_BUILTIN_MAX_ARGS,
+    PathBuiltinError,
+    BasenameOpts,
+    DirnameOpts,
+    posixBasename,
+    posixBasenameStripSuffix,
+    posixDirname,
+    runBasenameBuiltin,
+    runDirnameBuiltin,
+} from "./pathBuiltin.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);
