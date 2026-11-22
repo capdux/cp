@@ -254,6 +254,24 @@ const fired = t.fire(RunLoopTimeSpec.init(101, 250_000_000)); // true
 * = fired;
 ```
 
+### 3.12 定时器公共内核与 32-bit 紧凑标志位 (`timerInternals.cp`)
+
+吸收自 `/data/dev/bun/src/runtime/timer/TimerObjectInternals.cp`：
+
+- **导出符号**：`TIMER_INTERNALS_MAX_EPOCH` (`33_554_431`)、`TIMER_INTERNALS_MAX_INTERVAL_MS` (`2_147_483_647`)、`TimerInternalsKind`（`SetTimeout` / `SetInterval` / `SetImmediate`）、`TimerInternalsState`（`Active` / `Fired` / `Cancelled` / `Destroyed`）、`TimerObjectFlags`（`toU32` / `fromU32`）、`TimerObjectInternals`（`init` / `asyncID` / `toPrimitive` / `doRef` / `doUnref` / `hasRef` / `shouldFire` / `beginFire` / `endFire` / `reschedule` / `cancel` / `finalize` / `getDestroyed`）；
+- **核心语义**：提供 `TimeoutObject` 与 `ImmediateObject` 共享的 32-bit 位域标志位编码（含 `u25 epoch`、`kind`、`has_cleared_timer`、`is_keeping_event_loop_alive`、`has_accessed_primitive`、`has_js_ref`、`in_callback`）、64-bit `asyncID()` 追踪标识、`generation` 测试隔离代数防护以及回调重入安全的 `beginFire` / `endFire` 生命周期状态机。
+
+```cp
+import { TimerObjectInternals, TimerInternalsKind } from "cap:event";
+
+let t = TimerObjectInternals.init(42, TimerInternalsKind.SetInterval, 100, 1, 7);
+if (t.beginFire(7, true)) {
+    t.endFire(); // 自动重武装为 Active
+}
+const aid = t.asyncID();
+* = aid;
+```
+
 ---
 
 ## 四、 上游 Bun 事件循环行为契约与并发边界

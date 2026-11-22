@@ -94,4 +94,13 @@ export {
     RunLoopTimer,
 } from "./runLoopTimer.cp";
 
+export {
+    TIMER_INTERNALS_MAX_EPOCH,
+    TIMER_INTERNALS_MAX_INTERVAL_MS,
+    TimerInternalsKind,
+    TimerInternalsState,
+    TimerObjectFlags,
+    TimerObjectInternals,
+} from "./timerInternals.cp";
+
 export * from "./emitter.cp";
