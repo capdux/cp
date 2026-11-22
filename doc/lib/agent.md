@@ -1,6 +1,6 @@
 # `cap:agent` — AI Agent 核心运行时标准库
 
-`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏（`budget.cp`）、多智能体任务图 DAG 调度器（`dag.cp`）、评测基准与轨迹打分（`eval.cp`）、ReAct 执行状态机与确定性检查点（`react.cp`）、LLM 流式 SSE 解析与遥测（`sse.cp`）、多模型网关路由与限流故障转移（`model_router.cp`）以及输入/输出安全护栏与策略引擎（`guardrail.cp`）七个子模块。
+`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏（`budget.cp`）、多智能体任务图 DAG 调度器（`dag.cp`）、评测基准与轨迹打分（`eval.cp`）、ReAct 执行状态机与确定性检查点（`react.cp`）、LLM 流式 SSE 解析与遥测（`sse.cp`）、多模型网关路由与限流故障转移（`model_router.cp`）、输入/输出安全护栏与策略引擎（`guardrail.cp`）以及连续批处理与前缀缓存亲和调度器（`scheduler.cp`）八个子模块。
 
 ---
 
@@ -401,5 +401,51 @@ fn guardrailDemo() {
 
     const depth_report = inspectJsonPayloadDepth("{\"args\":{\"query\":\"{nested}\"}}", 16);
     * = depth_report;
+}
+```
+
+---
+
+## 子模块：LLM 连续批处理与前缀缓存亲和调度器（`scheduler.cp`）
+
+### 核心特性
+
+- **vLLM / SGLang 风格连续批处理核心（`BatchScheduler`）**：每轮 `stepSchedule` 严格遵守 `max_batch_reqs`、`max_batch_tokens` 与 `total_kv_blocks` 硬约束，优先保障进行中 `Decode` 请求的持续推进，并将剩余预算分配给等待队列中的 `Prefill` 请求。
+- **前缀缓存亲和（Prefix-Cache Affinity）与防饥饿老化**：与当前活跃 `active_prefix_hash` 匹配的等待请求自动获得前缀亲和加分以复用 KV Cache；同时支持按等待时长 `aging_ms_per_priority` 线性老化提升低优先级请求的有效优先级，杜绝饥饿。
+- **动态 KV-Block 抢占与自动回收**：当高优先级请求到达或 `Decode` 序列增长导致 KV-Block 不足时，自动按最低有效优先级抢占（`Preempted`）并回收其持有的 KV-Block；请求生成达 `max_new_tokens` 或调用 `cancel` 时立即 `Finished`/`Cancelled` 并归还全部块。
+
+### 导出清单
+
+- **请求与配置**：`ReqState`（`Queued | Prefill | Decode | Finished | Preempted | Cancelled`）、`InferRequest`、`BatchLimits`、`ScheduleStep`
+- **调度器**：`BatchScheduler`（`init`, `enqueue`, `stepSchedule`, `advanceDecode`, `cancel`, `freeKvBlocks`, `requestAt`）
+
+### 使用示例
+
+```typescript
+import std from "std";
+import { InferRequest, BatchLimits, BatchScheduler } from "cap:agent";
+
+fn continuousBatchingDemo() {
+    let slots: [8]InferRequest = std.mem.zeroes([8]InferRequest);
+    let slots_s: []InferRequest = slots[0..];
+    const limits = BatchLimits {
+        max_batch_reqs: 4,
+        max_batch_tokens: 512,
+        total_kv_blocks: 32,
+        tokens_per_kv_block: 16,
+        aging_ms_per_priority: 1000,
+    };
+
+    let sched = BatchScheduler.init(&slots_s, limits) ?? return;
+    * = sched.enqueue(1, 0xCAFE, 64, 10, 50, 1000);
+    * = sched.enqueue(2, 0xCAFE, 64, 10, 50, 1005);
+
+    let prefill_ids: [4]u64 = std.mem.zeroes([4]u64);
+    let decode_ids: [4]u64 = std.mem.zeroes([4]u64);
+    let pf_s: []u64 = prefill_ids[0..];
+    let dc_s: []u64 = decode_ids[0..];
+
+    const step = sched.stepSchedule(1010, 0xCAFE, &pf_s, &dc_s);
+    * = step;
 }
 ```
