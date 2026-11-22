@@ -22,7 +22,7 @@ import {
     encodeVxlan,
     encodeVxlanGpe,
     encodeVxlanGbp,
-} from "cap:vxlan";
+} from "cap:iot";
 
 test("1. Classic RFC 7348 VXLAN 24-bit VNI (0, 100, 16777215) roundtrip and zero-copy Ethernet payload", () => {
     expect_eq(VXLAN_HEADER_SIZE, 8);

@@ -34,7 +34,7 @@ import {
     extractSignalIntel,
     extractSignalMotorola,
     signExtend,
-} from "cap:can";
+} from "cap:iot";
 
 fn expectBytesEq(actual: []const u8, expected: []const u8) {
     expect_eq(std.mem.eql(u8, actual, expected), true);

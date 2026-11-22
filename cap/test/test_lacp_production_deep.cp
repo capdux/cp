@@ -24,7 +24,7 @@ import {
     isLacp,
     parseLacp,
     encodeLacp,
-} from "cap:lacp";
+} from "cap:iot";
 
 test("1. Standard LACPDU encode/parse roundtrip (110B) with Actor, Partner & Collector Max Delay", () => {
     expect_eq(SLOW_PROTO_ETHERTYPE, 0x8809);

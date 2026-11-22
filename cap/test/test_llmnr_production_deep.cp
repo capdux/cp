@@ -8,14 +8,14 @@ import {
     LLMNR_MULTICAST_V6,
     LLMNR_HEADER_SIZE,
     LLMNR_DEFAULT_TTL,
-    CLASS_IN,
-    TYPE_A,
-    TYPE_PTR,
-    TYPE_AAAA,
-    TYPE_ANY,
+    LLMNR_CLASS_IN,
+    LLMNR_TYPE_A,
+    LLMNR_TYPE_PTR,
+    LLMNR_TYPE_AAAA,
+    LLMNR_TYPE_ANY,
     FLAG_QR,
     FLAG_CONFLICT,
-    FLAG_TC,
+    LLMNR_FLAG_TC,
     FLAG_TENTATIVE,
     LlmnrHeader,
     LlmnrQuestion,
@@ -27,7 +27,7 @@ import {
     encodeLlmnrQuery,
     encodeLlmnrResponseA,
     encodeLlmnrResponseAaaa,
-} from "cap:llmnr";
+} from "cap:iot";
 
 fn expectBytesEq(actual: []const u8, expected: []const u8) {
     expect_eq(std.mem.eql(u8, actual, expected), true);
@@ -41,7 +41,7 @@ test("1. Protocol constants & LLMNR Query encode/parse round-trip", () => {
     expect_eq(LLMNR_DEFAULT_TTL, 30 as u32);
 
     let buf: [128]u8 = [0; 128];
-    const n = encodeLlmnrQuery(0xABCD, "nas-box", TYPE_A, buf[0..]) ?? unreachable;
+    const n = encodeLlmnrQuery(0xABCD, "nas-box", LLMNR_TYPE_A, buf[0..]) ?? unreachable;
     expect_eq(isLlmnr(buf[0..n]), true);
 
     const pkt = parseLlmnr(buf[0..n]) ?? unreachable;
@@ -52,8 +52,8 @@ test("1. Protocol constants & LLMNR Query encode/parse round-trip", () => {
     expect_eq(pkt.header.an_count, 0 as u16);
 
     const q = pkt.question() ?? unreachable;
-    expect_eq(q.qtype, TYPE_A);
-    expect_eq(q.qclass, CLASS_IN);
+    expect_eq(q.qtype, LLMNR_TYPE_A);
+    expect_eq(q.qclass, LLMNR_CLASS_IN);
 
     let name_buf: [64]u8 = [0; 64];
     const name_len = pkt.decodeName(q.name_offset, name_buf[0..]) ?? unreachable;
@@ -71,8 +71,8 @@ test("2. LLMNR IPv4 A & IPv6 AAAA Response encode/parse round-trip with 0xC0 com
 
     let it4 = pkt4.answers();
     const rr4 = it4.next() ?? unreachable;
-    expect_eq(rr4.rtype, TYPE_A);
-    expect_eq(rr4.rclass, CLASS_IN);
+    expect_eq(rr4.rtype, LLMNR_TYPE_A);
+    expect_eq(rr4.rclass, LLMNR_CLASS_IN);
     expect_eq(rr4.ttl, 30 as u32);
     const decoded_ip4 = rr4.asIpv4() ?? unreachable;
     expect_eq(decoded_ip4[0], 169 as u8);
@@ -97,7 +97,7 @@ test("2. LLMNR IPv4 A & IPv6 AAAA Response encode/parse round-trip with 0xC0 com
     const pkt6 = parseLlmnr(wire[0..n6]) ?? unreachable;
     let it6 = pkt6.answers();
     const rr6 = it6.next() ?? unreachable;
-    expect_eq(rr6.rtype, TYPE_AAAA);
+    expect_eq(rr6.rtype, LLMNR_TYPE_AAAA);
     expect_eq(rr6.ttl, 60 as u32);
     const decoded_ip6 = rr6.asIpv6() ?? unreachable;
     expectBytesEq(decoded_ip6[0..16], ip6[0..16]);
@@ -105,7 +105,7 @@ test("2. LLMNR IPv4 A & IPv6 AAAA Response encode/parse round-trip with 0xC0 com
 });
 
 test("3. LLMNR Response C (Conflict), TC (Truncated), T (Tentative) flags decoding", () => {
-    const resp_flags: u16 = FLAG_QR | FLAG_CONFLICT | FLAG_TC | FLAG_TENTATIVE | 0x0003;
+    const resp_flags: u16 = FLAG_QR | FLAG_CONFLICT | LLMNR_FLAG_TC | FLAG_TENTATIVE | 0x0003;
     const raw: [24]u8 = [
         0x55, 0x66,                                 // id
         ((resp_flags >> 8) & 0xFF) as u8,
@@ -175,7 +175,7 @@ test("5. Strict RFC 4795 rejection: opcode!=0, query with C/TC/T, qd_count!=1, a
     // Encoder guards: empty name, double dot, tiny buffer
     let tiny: [10]u8 = [0; 10];
     let ok_buf: [64]u8 = [0; 64];
-    expect_eq(encodeLlmnrQuery(1, "", TYPE_A, ok_buf[0..]) == null, true);
-    expect_eq(encodeLlmnrQuery(1, "a..b", TYPE_A, ok_buf[0..]) == null, true);
-    expect_eq(encodeLlmnrQuery(1, "host", TYPE_A, tiny[0..]) == null, true);
+    expect_eq(encodeLlmnrQuery(1, "", LLMNR_TYPE_A, ok_buf[0..]) == null, true);
+    expect_eq(encodeLlmnrQuery(1, "a..b", LLMNR_TYPE_A, ok_buf[0..]) == null, true);
+    expect_eq(encodeLlmnrQuery(1, "host", LLMNR_TYPE_A, tiny[0..]) == null, true);
 });

@@ -32,7 +32,7 @@ import {
     parseMdnsA,
     parseMdnsAaaa,
     encodeMdnsQuery,
-} from "cap:mdns";
+} from "cap:iot";
 
 test("1. Protocol constants, encodeMdnsQuery + parseMdns roundtrip, and QU bit verification", () => {
     expect_eq(MDNS_UDP_PORT, 5353 as u16);

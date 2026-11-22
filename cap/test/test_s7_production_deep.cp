@@ -41,7 +41,7 @@ import {
     parseS7OverTpkt,
     S7AnyItem,
     S7AnyItemIter,
-} from "cap:s7";
+} from "cap:iot";
 
 test("1. TPKT encode/parse + COTP DT + S7 Job ReadVar with 12-byte S7-Any address (DB10.DBX12.3)", () => {
     expect_eq(S7_TCP_PORT, 102 as u16);

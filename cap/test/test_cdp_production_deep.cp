@@ -10,21 +10,21 @@ import {
     CDP_TLV_HEADER_SIZE,
     TLV_DEVICE_ID,
     TLV_ADDRESSES,
-    TLV_PORT_ID,
+    CDP_TLV_PORT_ID,
     TLV_CAPABILITIES,
     TLV_VERSION,
     TLV_PLATFORM,
     TLV_VTP_DOMAIN,
     TLV_NATIVE_VLAN,
     TLV_DUPLEX,
-    TLV_MGMT_ADDR,
-    CAP_ROUTER,
+    CDP_TLV_MGMT_ADDR,
+    CDP_CAP_ROUTER,
     CAP_TRANSPARENT_BRIDGE,
     CAP_SOURCE_ROUTE_BRIDGE,
     CAP_SWITCH,
     CAP_HOST,
     CAP_IGMP,
-    CAP_REPEATER,
+    CDP_CAP_REPEATER,
     cdpChecksum,
     verifyCdpChecksum,
     CdpHeader,
@@ -34,7 +34,7 @@ import {
     isCdp,
     parseCdp,
     CdpWriter,
-} from "cap:cdp";
+} from "cap:iot";
 
 test("1. CDPv2 full TLV suite encode/decode roundtrip and checksum verification", () => {
     expect_eq(CDP_SNAP_PID, 0x2000 as u16);
@@ -44,11 +44,11 @@ test("1. CDPv2 full TLV suite encode/decode roundtrip and checksum verification"
     let buf: [256]u8 = std.mem.zeroes([256]u8);
     let w = CdpWriter.init(buf[0..], CDP_V2, 180);
     expect_eq(w.writeTlv(TLV_DEVICE_ID, "edge-rtr-01"), true);
-    expect_eq(w.writeTlv(TLV_PORT_ID, "Eth1/1"), true);
+    expect_eq(w.writeTlv(CDP_TLV_PORT_ID, "Eth1/1"), true);
     expect_eq(w.writeTlv(TLV_PLATFORM, "Cisco N9K"), true);
     expect_eq(w.writeTlv(TLV_VERSION, "NX-OS 10.3"), true);
     expect_eq(w.writeTlv(TLV_VTP_DOMAIN, "dc-east"), true);
-    expect_eq(w.writeCapabilities(CAP_ROUTER | CAP_SWITCH | CAP_IGMP), true);
+    expect_eq(w.writeCapabilities(CDP_CAP_ROUTER | CAP_SWITCH | CAP_IGMP), true);
     expect_eq(w.writeNativeVlan(200), true);
     expect_eq(w.writeDuplex(true), true);
 
@@ -71,7 +71,7 @@ test("1. CDPv2 full TLV suite encode/decode roundtrip and checksum verification"
     expect_eq(std.mem.eql(u8, ver, "NX-OS 10.3"), true);
     const vtp = pkt.vtpDomain() ?? unreachable;
     expect_eq(std.mem.eql(u8, vtp, "dc-east"), true);
-    expect_eq(pkt.capabilities() ?? 0, (CAP_ROUTER | CAP_SWITCH | CAP_IGMP));
+    expect_eq(pkt.capabilities() ?? 0, (CDP_CAP_ROUTER | CAP_SWITCH | CAP_IGMP));
     expect_eq(pkt.nativeVlan() ?? 0, 200 as u16);
     expect_eq(pkt.isFullDuplex() ?? false, true);
 
@@ -93,8 +93,8 @@ test("1. CDPv2 full TLV suite encode/decode roundtrip and checksum verification"
 test("2. Capabilities bitmasks, Native VLAN, and Half/Full Duplex decoding", () => {
     let buf: [128]u8 = std.mem.zeroes([128]u8);
     let w = CdpWriter.init(buf[0..], CDP_V1, 120);
-    const all_caps = CAP_ROUTER | CAP_TRANSPARENT_BRIDGE | CAP_SOURCE_ROUTE_BRIDGE |
-        CAP_SWITCH | CAP_HOST | CAP_IGMP | CAP_REPEATER;
+    const all_caps = CDP_CAP_ROUTER | CAP_TRANSPARENT_BRIDGE | CAP_SOURCE_ROUTE_BRIDGE |
+        CAP_SWITCH | CAP_HOST | CAP_IGMP | CDP_CAP_REPEATER;
     expect_eq(w.writeCapabilities(all_caps), true);
     expect_eq(w.writeNativeVlan(4094), true);
     expect_eq(w.writeDuplex(false), true);
@@ -142,7 +142,7 @@ test("4. Management Address and Addresses TLV lookup via findTlv", () => {
     const addr_val: [4]u8 = [0, 0, 0, 1];
     const mgmt_val: [4]u8 = [10, 1, 2, 3];
     expect_eq(w.writeTlv(TLV_ADDRESSES, addr_val[0..]), true);
-    expect_eq(w.writeTlv(TLV_MGMT_ADDR, mgmt_val[0..]), true);
+    expect_eq(w.writeTlv(CDP_TLV_MGMT_ADDR, mgmt_val[0..]), true);
     const wire = w.finish() ?? unreachable;
 
     const pkt = parseCdp(wire) ?? unreachable;
@@ -150,7 +150,7 @@ test("4. Management Address and Addresses TLV lookup via findTlv", () => {
     expect_eq(t_addr.length, 8 as u16);
     expect_eq(t_addr.value[3], 1 as u8);
 
-    const t_mgmt = pkt.findTlv(TLV_MGMT_ADDR) ?? unreachable;
+    const t_mgmt = pkt.findTlv(CDP_TLV_MGMT_ADDR) ?? unreachable;
     expect_eq(t_mgmt.value[0], 10 as u8);
     expect_eq(t_mgmt.value[3], 3 as u8);
     expect_eq(pkt.findTlv(0x9999) == null, true);

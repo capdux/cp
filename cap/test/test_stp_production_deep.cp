@@ -28,7 +28,7 @@ import {
     isBpdu,
     parseBpdu,
     encodeConfigBpdu,
-} from "cap:stp";
+} from "cap:iot";
 
 test("1. Classic 35B IEEE 802.1D STP Config BPDU roundtrip and 1/256s timer conversions", () => {
     expect_eq(STP_PROTOCOL_ID, 0 as u16);

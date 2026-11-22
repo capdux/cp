@@ -36,7 +36,7 @@ import {
     isPim,
     parsePim,
     PimWriter,
-} from "cap:pim";
+} from "cap:iot";
 
 test("1. PIM Hello multi-option TLV iteration and IPv4 checksum roundtrip", () => {
     expect_eq(PIM_IP_PROTO, 103 as u8);

@@ -19,7 +19,7 @@ import {
     parseSrecLine,
     encodeSrecLine,
     summarizeSrec,
-} from "cap:srec";
+} from "cap:iot";
 
 fn testFullS0ToS9Parsing() {
     // Address byte widths

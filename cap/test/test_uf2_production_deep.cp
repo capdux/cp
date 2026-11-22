@@ -20,7 +20,7 @@ import {
     Uf2Iter,
     encodeUf2Block,
     summarizeUf2,
-} from "cap:uf2";
+} from "cap:iot";
 
 fn writeU32LE(buf: []u8, offset: usize, val: u32) {
     buf[offset] = (val & 0xFF) as u8;

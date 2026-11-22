@@ -37,7 +37,7 @@ import {
     parseKnxConnHeader,
     parseKnxCemi,
     decodeDpt9,
-} from "cap:knx";
+} from "cap:iot";
 
 fn expectApproxEq(actual: f64, expected: f64, eps: f64) {
     const diff = if (actual >= expected) actual - expected else expected - actual;

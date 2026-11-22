@@ -39,7 +39,7 @@ import {
     parseWriteSingle,
     encodeWriteSingle,
     parseReadRegsResp,
-} from "cap:modbus";
+} from "cap:iot";
 
 test("1. Protocol constants and Modbus TCP MBAP encode/parse roundtrip (ReadReq & WriteSingle)", () => {
     expect_eq(MODBUS_TCP_PORT, 502 as u16);

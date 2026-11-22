@@ -27,7 +27,7 @@ import {
     parseFlowSample,
     parseRawPacketHeader,
     parseExtendedSwitch,
-} from "cap:sflow";
+} from "cap:iot";
 
 fn writeBeU32(buf: *[]u8, off: usize, v: u32) {
     buf.*[off] = ((v >> 24) & 0xFF) as u8;

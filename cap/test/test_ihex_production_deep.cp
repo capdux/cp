@@ -13,7 +13,7 @@ import {
     parseIhexLine,
     encodeIhexLine,
     summarizeIhex,
-} from "cap:ihex";
+} from "cap:iot";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
