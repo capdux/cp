@@ -27,3 +27,11 @@ export {
     KgTriple,
     KgStore,
 } from "./kg.cp";
+
+export {
+    MemSlotRole,
+    EvictionPolicy,
+    WorkingMemItem,
+    WorkingMemStats,
+    WorkingMemory,
+} from "./working_mem.cp";

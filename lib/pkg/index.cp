@@ -69,3 +69,13 @@ export {
     PostinstallOptimizerConfig,
     findNativeBinlinkReplacement,
 } from "./postinstall_optimizer.cp";
+
+export {
+    MAX_OVERRIDE_RULES,
+    OverrideError,
+    OverrideSourceKind,
+    RootDepSpec,
+    OverrideRule,
+    normalizeOverrideKey,
+    OverrideMap,
+} from "./overrides.cp";

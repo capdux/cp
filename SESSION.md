@@ -663,3 +663,11 @@
 ### 2026-11-22（分类合并交付：lib/prompt/safety.cp | 2026-11-22 13:00:46）
 - **执行与结单汇报**：
   > 子智能体交付 lib/prompt/safety.cp（AI Prompt 边界风险检测与零堆 PII 脱敏净化器，5/5 PASS），归入 cap:prompt 并同步 cp_lib_ref.md；续派 lib/text/markdown_chunk.cp。
+
+### 2026-11-22（分类合并交付：lib/agentmem/working_mem.cp | 2026-11-22 13:02:25）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/agentmem/working_mem.cp（AI Agent 工作记忆、pinned 保护、FIFO/LRU/LowestScore 驱逐与原子摘要折叠，6/6 PASS），归入 cap:agentmem 并同步 cp_lib_ref.md；续派 lib/attention/quant_int4.cp。
+
+### 2026-11-22（分类合并交付：lib/pkg/overrides.cp | 2026-11-22 13:02:51）
+- **执行与结单汇报**：
+  > 子智能体从 Bun src/install/lockfile/OverrideMap.cp 吸收并归类合并 lib/pkg/overrides.cp 至 cap:pkg（npm overrides / yarn resolutions 解析与  根依赖解引用，6/6 PASS，upstream_newer=0），同步 cp_lib_ref.md；续派下一项 Bun 纯逻辑子模块合并。

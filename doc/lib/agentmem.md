@@ -27,6 +27,7 @@
 | `lib/agentmem/memory.cp` | `// Source: cp/lib/agentmem/memory.cp (Hierarchical Agent Memory Engine)` | `AgentMemError`、`MemoryTier`、`RecallWeights`、`MemoryItem`、`RecallHit`、`AgentMemory` |
 | `lib/agentmem/episodic.cp` | `// Origin: Pure-CP Stdlib (AI Agent Episodic Memory: Park 2023 Recency-Importance-Relevance & Ebbinghaus Decay)` | `MemoryWeights`、`EpisodeMeta`、`ScoredEpisode`、`ebbinghausRetention`、`reinforceStability`、`scoreEpisode`、`rankTopEpisodes`、`selectEvictionVictim`、`touchEpisode` |
 | `lib/agentmem/kg.cp` | `// Origin: Pure-CP Stdlib (AI Agent Temporal Knowledge Graph Memory: SPO Triples & 2-Hop Recall)` | `KgEntity`、`KgTriple`、`KgStore`（时序三元组、事实版本失效与 1~2 跳 GraphRAG 邻域检索） |
+| `lib/agentmem/working_mem.cp` | `// Origin: Pure-CP Stdlib (AI Agent Working Memory & Token-Budget Context Window Manager)` | `MemSlotRole`、`EvictionPolicy`、`WorkingMemItem`、`WorkingMemStats`、`WorkingMemory`（零堆分配工作记忆与 Token 预算滑动上下文窗） |
 | `lib/agentmem/index.cp` | `// Source: cp/lib/agentmem/index.cp (Unified Exports for cap:agentmem)` | `cap:agentmem` 与 `cap.agentmem` 统一公开导出入口 |
 
 ---
@@ -84,6 +85,22 @@
   - `supersedeFact(*_, subject, predicate, new_object, confidence, now_ms): usize?`（将同一 `(subject, predicate)` 旧事实标记 `valid_until_ms = now_ms, active = false` 并写入新事实，不丢失历史）
   - `queryFactsAt(subject, predicate, at_ms, out_indices: *[]usize): usize`（`predicate == ""` 匹配全部关系，`at_ms == 0` 查当前有效事实，非零查半开区间 `[valid_from_ms, valid_until_ms)` 历史快照）
   - `queryTwoHopNeighbors(start_entity, at_ms, out_entities: *[]u32, visited_s: *[]u8): usize`（零堆分配 1~2 跳去重邻域召回，排除起始点与失效边）
+
+### 5. 零堆分配工作记忆与 Token 预算滑动上下文窗 (`working_mem.cp`)
+
+面向 AI Agent 对话与工具调用上下文窗管理，在固定槽位池与硬性 `token_budget` 上限下提供 `pinned` 提示词保护、三种可切换驱逐策略及原子摘要压缩：
+
+- **`MemSlotRole`**：`System` | `User` | `Assistant` | `Tool` | `Summary`
+- **`EvictionPolicy`**：`FifoOldest`（按 `created_turn` 最早淘汰）| `Lru`（按 `last_accessed_turn` 最久未访问淘汰）| `LowestScore`（按 `0.65 * importance + 0.35 / (1 + 0.15 * age_turns)` 综合得分最低淘汰）
+- **`WorkingMemItem`**：`{ id: u32, role: MemSlotRole, tokens: u32, importance: f32, created_turn: u32, last_accessed_turn: u32, pinned: bool, content_hash: u64, occupied: bool }`
+- **`WorkingMemStats`**：`{ active_items: u32, pinned_items: u32, used_tokens: u32, budget_tokens: u32, evicted_total: u64, compacted_total: u64, utilization_pct: f32 }`
+- **`WorkingMemory`**：
+  - `WorkingMemory.init(slots: *[]WorkingMemItem, token_budget: u32, policy: EvictionPolicy): WorkingMemory`（重置并接管固定槽位池）
+  - `push(*_, role, tokens, importance, turn, pinned, content_hash): u32?`（前置原子可行性预检：单条超预算、非法 `importance` 或 `pinned_tokens + tokens > token_budget` 时直接返回 `null` 且零副作用；否则按 `policy` 驱逐非 `pinned` 条目后写入）
+  - `touch(*_, id, turn): bool` / `pin(*_, id): bool` / `unpin(*_, id): bool` / `remove(*_, id): bool`
+  - `get(id): WorkingMemItem?` / `contains(id): bool` / `setPolicy(*_, policy)`
+  - `compactOldestIntoSummary(*_, count, summary_tokens, turn, summary_hash): u32?`（将最早的至多 `count` 条非 `pinned` 条目原子折叠为一条 `.Summary` 槽位；若折叠后仍超预算则返回 `null` 且零副作用）
+  - `stats(): WorkingMemStats`
 
 ---
 
@@ -193,5 +210,39 @@ pub fn demoTemporalKg() {
     let nb_slice: []u32 = nb_buf[0..];
     let vis_slice: []u8 = vis_buf[0..];
     * = kg.queryTwoHopNeighbors(alice, 0, nb_slice, vis_slice);
+}
+```
+
+### 4. 工作记忆与 Token 预算滑动上下文窗 (`working_mem.cp`) 示例
+
+```typescript
+import {
+    MemSlotRole,
+    EvictionPolicy,
+    WorkingMemItem,
+    WorkingMemory,
+} from "cap:agentmem";
+
+pub fn demoWorkingMemory() {
+    let pool: [8]WorkingMemItem = undefined;
+    let pool_slice: []WorkingMemItem = pool[0..];
+
+    let wm = WorkingMemory.init(pool_slice, 1000, .Lru);
+
+    // 1. 写入 pinned System Prompt（永不被自动驱逐或折叠）
+    * = wm.push(.System, 200, 1.0, 1, true, 0x1111);
+
+    // 2. 写入对话与工具消息
+    const usr_msg = wm.push(.User, 300, 0.6, 2, false, 0x2222) ?? 0;
+    * = wm.push(.Assistant, 300, 0.7, 3, false, 0x3333);
+
+    // 3. 刷新 usr_msg 访问轮次，使其在 LRU 下免于优先淘汰
+    * = wm.touch(usr_msg, 4);
+
+    // 4. 原子折叠最早的 2 条非 pinned 消息为一条 120 token 的 Summary
+    * = wm.compactOldestIntoSummary(2, 120, 5, 0x9999);
+
+    const st = wm.stats();
+    * = st;
 }
 ```
