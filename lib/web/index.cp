@@ -365,3 +365,26 @@ export {
     negotiateLanguage,
     formatVaryHeader,
 } from "./contentNeg.cp";
+
+// --- Zero-Alloc IETF RateLimit / RateLimit-Policy / Retry-After Codec & Retry Planner ---
+export {
+    RATE_HDR_MAX_NAME_LEN,
+    RATE_HDR_MAX_PK_LEN,
+    RateLimitHeader,
+    RateLimitPolicyHeader,
+    RetryAfterKind,
+    RetryAfterValue,
+    RetryDelaySource,
+    RateLimitHeaderInfo,
+    RetryPlan,
+    parseRateLimitHeader,
+    formatRateLimitHeader,
+    parseRateLimitPolicyHeader,
+    formatRateLimitPolicyHeader,
+    parseRetryAfter,
+    formatRetryAfterDelta,
+    formatRetryAfterHttpDate,
+    parseLegacyRateLimitHeaders,
+    formatLegacyRateLimitHeaders,
+    planRateLimitRetry,
+} from "./rateHeader.cp";

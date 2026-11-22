@@ -403,6 +403,51 @@ pub fn demoContentNeg() {
 
 ---
 
+### 零分配 IETF `RateLimit`/`RateLimit-Policy` 与 `Retry-After` 限流响应头编解码与退避规划器 (`rateHeader.cp`)
+
+面向 HTTP API 网关、代理与高可靠 HTTP 客户端的 100% 纯 CP 零动态堆分配限流响应头编解码与重试退避规划引擎：
+
+- **常量与数据模型**：
+  - `RATE_HDR_MAX_NAME_LEN = 48`、`RATE_HDR_MAX_PK_LEN = 64`
+  - `RateLimitHeader`（`policyNameSlice`, `setPolicyName`, `limit`, `remaining`, `reset_s`）
+  - `RateLimitPolicyHeader`（`policyNameSlice`, `partitionKeySlice`, `quota`, `window_s`, `concurrency`）
+  - `RetryAfterKind`（`delta_seconds | http_date`）、`RetryAfterValue`
+  - `RetryDelaySource`（`retry_after_delta | retry_after_date | rate_limit_reset | exponential_backoff`）、`RateLimitHeaderInfo`、`RetryPlan`
+- **IETF `RateLimit` / `RateLimit-Policy` 编解码**：
+  - `parseRateLimitHeader(raw): RateLimitHeader?` / `formatRateLimitHeader(hdr, structured_sf, *out_buf): usize?`：双向兼容 `limit=100, remaining=42, reset=15` 与结构化字段引号策略 `"default";r=42;t=15`。
+  - `parseRateLimitPolicyHeader(raw): RateLimitPolicyHeader?` / `formatRateLimitPolicyHeader(pol, structured_sf, *out_buf): usize?`：支持 `100;w=60` 与 `"burst";q=100;w=60;c=10;pk=:shard1:`（含并发与分区参数）。
+- **RFC 9110 `Retry-After` 与传统 `X-RateLimit-*` 编解码**：
+  - `parseRetryAfter(raw): RetryAfterValue?` / `formatRetryAfterDelta(seconds, *out_buf)` / `formatRetryAfterHttpDate(epoch_s, *out_buf)`：同时支持非负 delta-seconds 与 IMF-fixdate HTTP 日期（精确星期与闰年校验）。
+  - `parseLegacyRateLimitHeaders(limit_hdr, remaining_hdr, reset_hdr, now_epoch_s)` / `formatLegacyRateLimitHeaders(hdr, reset_as_epoch, now_epoch_s, *out_buf)`：自动区分 Unix epoch 与相对秒数。
+- **统一客户端退避规划器**：
+  - `planRateLimitRetry(info, attempt, now_epoch_s, max_delay_ms): RetryPlan`：严格按 `Retry-After` > `RateLimit.reset` > 指数退避优先级计算等待时间并施加 `max_delay_ms` 上限钳制。
+
+```cp
+import {
+    RateLimitHeaderInfo,
+    parseRateLimitHeader,
+    parseRetryAfter,
+    planRateLimitRetry,
+} from "cap:web";
+
+pub fn demoRateHeader() {
+    let info = RateLimitHeaderInfo{};
+    if (rl := parseRateLimitHeader("\"default\";r=0;t=15")) {
+        info.has_rate_limit = true;
+        info.rate_limit = rl;
+    }
+    if (ra := parseRetryAfter("30")) {
+        info.has_retry_after = true;
+        info.retry_after = ra;
+    }
+    // 优先尊重 Retry-After (30s)，并钳制在 max_delay_ms=20000ms
+    const plan = planRateLimitRetry(info, 1, 1700000000, 20000);
+    * = plan.delay_ms; // 20000 (clamped = true)
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [circuit.md](web/circuit.md)
