@@ -622,47 +622,77 @@ pub fn demoRaftElection() {
 }
 ```
 
-### 零分配关系查询代价估算、谓词选择率与多表左深连接顺序规划器 (`queryCost.cp`)
+### 零分配关系查询优化器内核：MCV+等深直方图、System-R/Selinger DP 与无上限多表连接规划 (`queryCost.cp`)
 
-面向关系型数据库与分析型查询优化器（System R / PostgreSQL 成本模型）的 100% 纯 CP 零动态堆分配查询代价估算与多表连接顺序规划引擎：
+面向关系型数据库与分析型查询优化器（System R / PostgreSQL `pg_statistic` 成本模型）的 100% 纯 CP 零动态堆分配查询优化器引擎，支持外部切片驱动的无上限直方图与多表连接规划：
 
-- **常量与枚举**：
-  - `QCOST_MAX_TABLES = 8`、`QCOST_BPS_SCALE = 10000`
-  - `PredicateKind`（`eq | neq | range_half | range_between | is_null | is_not_null | like_prefix | in_list`）
-  - `AccessPathKind`（`seq_scan | index_scan | index_only_scan`）
-  - `JoinAlgoKind`（`nested_loop | hash_join | merge_join`）
-- **代价模型与计划结构**：
-  - `CostModelParams`（`seq_page_cost`, `random_page_cost`, `cpu_tuple_cost`, `cpu_index_tuple_cost`, `hash_build_cost`, `sort_cost_factor`, `defaults()`）
-  - `TableStats`、`AccessPathCost`、`JoinPlanCost`、`JoinOrderPlan`
-- **核心估算与规划函数**：
-  - `estimatePredicateSelectivity(kind, ndv, null_frac_bps, in_list_len, range_frac): f64`（严格钳位 `[1e-6, 1.0]`）
-  - `combineSelectivityAnd(s1, s2)` / `combineSelectivityOr(s1, s2)`
-  - `chooseBestAccessPath(tbl, selectivity, params): AccessPathCost`（低选择率优先 `index_only_scan`/`index_scan`，高选择率自动切换 `seq_scan`）
-  - `chooseBestJoinAlgo(left_rows, right_rows, join_selectivity, right_indexed, both_sorted, params): JoinPlanCost`（在 `nested_loop` / `hash_join` / `merge_join` 间择优）
-  - `planLeftDeepJoinOrder(tables, join_selectivity, params): JoinOrderPlan`（零堆贪心左深树连接规划，优先小基数表做驱动端，输出连接顺序、每步物理算子与总代价）
+- **常量、错误集与枚举**：
+  - `QCOST_MAX_TABLES = 8`、`QCOST_DP_MAX_TABLES = 14`（`1 << 14 = 16,384` DP 状态）、`QCOST_BPS_SCALE = 10000`
+  - `QueryOptError`（`InvalidHistogram | InvalidTables | BufferTooSmall | UnsupportedDpTableCount | InvalidEdge`）
+  - `PredicateKind`、`AccessPathKind`、`JoinAlgoKind`
+- **基础选择率与物理路径择优**：
+  - `CostModelParams`、`TableStats`、`AccessPathCost`、`JoinPlanCost`、`JoinOrderPlan`
+  - `estimatePredicateSelectivity` / `combineSelectivityAnd` / `combineSelectivityOr`
+  - `chooseBestAccessPath`（`seq_scan` / `index_scan` / `index_only_scan`）与 `chooseBestJoinAlgo`（`nested_loop` / `hash_join` / `merge_join`）
+  - `planLeftDeepJoinOrder(tables, join_selectivity, params)`（向后兼容 8 表固定缓冲左深贪心规划）
+- **PostgreSQL `pg_statistic` 风格 MCV + Equi-Depth 等深直方图引擎**：
+  - `McvEntry`、`HistBucket`、`ColumnHistogram`（外部传入 `mcvs` 与 `buckets` 切片）
+  - `buildEquiDepthHistogram(sorted_values, num_buckets, out_buckets): usize ! QueryOptError`（从任意长度已排序样本构建等深桶与桶内精确 NDV）
+  - `estimateEqSelectivityHist(hist, target): f64`（先命中 MCV 精确返回倾斜频率，未命中按剩余非 MCV 概率质量均摊）
+  - `estimateRangeSelectivityHist(hist, low, high, include_low, include_high): f64`（叠加区间内 MCV 频率 + 全覆盖桶贡献 + 边界桶线性插值，消除倾斜数据 10x~100x 误估）
+- **System-R / Selinger 位掩码动态规划连接规划器（Left-Deep & Bushy）**：
+  - `JoinGraphEdge`、`DpJoinState`、`DpJoinPlanResult`、`dpJoinWorkRequiredLen(num_tables)`
+  - `planOptimalJoinOrderDp(tables, edges, allow_bushy, params, dp_work, out_eval_order): DpJoinPlanResult ! QueryOptError`（词典序优先最小化笛卡尔积再最小化总代价，支持左深树与 Bushy 树全局最优搜索）
+- **无上限外部切片贪心连接规划器（32 / 64+ 表大查询）**：
+  - `planGreedyJoinOrderUnbounded(tables, edges, params, used_flags, out_order, out_algos): DpJoinPlanResult ! QueryOptError`
 
 ```cp
 import {
     CostModelParams,
-    PredicateKind,
     TableStats,
-    estimatePredicateSelectivity,
-    chooseBestAccessPath,
-    planLeftDeepJoinOrder,
+    McvEntry,
+    HistBucket,
+    ColumnHistogram,
+    buildEquiDepthHistogram,
+    estimateEqSelectivityHist,
+    estimateRangeSelectivityHist,
+    JoinGraphEdge,
+    DpJoinState,
+    planOptimalJoinOrderDp,
 } from "cap:db";
 
-pub fn demoQueryCostPlanner() {
-    const params = CostModelParams.defaults();
-    const sel = estimatePredicateSelectivity(PredicateKind.eq, 10000.0, 0, 0, 0.0);
+pub fn demoQueryCostPlanner()! {
+    // 1. MCV + Equi-Depth 直方图精准处理倾斜数据
+    const sorted_tail: [8]f64 = [10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0];
+    let buckets: [4]HistBucket = [HistBucket{}; 4];
+    const nb = buildEquiDepthHistogram(sorted_tail[0..], 4, buckets[0..])?;
+    const mcvs: [1]McvEntry = [McvEntry{ value: 1.0, freq: 0.60 }];
+    const hist = ColumnHistogram{
+        mcvs: mcvs[0..],
+        buckets: buckets[0..nb],
+        null_frac: 0.0,
+        ndv: 1000.0,
+        total_rows: 1_000_000.0,
+    };
+    * = estimateEqSelectivityHist(hist, 1.0); // ~0.60 (精确命中 MCV)
+    * = estimateRangeSelectivityHist(hist, 0.0, 45.0, true, true);
 
-    const tables: [3]TableStats = [
-        TableStats{ table_id: 1, row_count: 50000.0, page_count: 1000.0, has_index: true },
-        TableStats{ table_id: 2, row_count: 80.0, page_count: 2.0, has_index: true, is_covering_index: true },
-        TableStats{ table_id: 3, row_count: 4000.0, page_count: 80.0, has_index: true },
+    // 2. System-R / Selinger Bushy DP 全局最优连接规划
+    const tables: [4]TableStats = [
+        TableStats{ table_id: 1, row_count: 10000.0, page_count: 200.0 },
+        TableStats{ table_id: 2, row_count: 5000.0, page_count: 100.0 },
+        TableStats{ table_id: 3, row_count: 10000.0, page_count: 200.0 },
+        TableStats{ table_id: 4, row_count: 5000.0, page_count: 100.0 },
     ];
-    * = chooseBestAccessPath(tables[1], sel, params);
-    const plan = planLeftDeepJoinOrder(tables[0..], 0.001, params);
-    * = plan.order[0]; // 2 (最小基数驱动表)
+    const edges: [3]JoinGraphEdge = [
+        JoinGraphEdge{ left_idx: 0, right_idx: 1, selectivity: 0.0001 },
+        JoinGraphEdge{ left_idx: 2, right_idx: 3, selectivity: 0.0001 },
+        JoinGraphEdge{ left_idx: 1, right_idx: 2, selectivity: 0.01 },
+    ];
+    let dp_work: [16]DpJoinState = [DpJoinState{}; 16];
+    let order: [4]u16 = [0; 4];
+    const res = planOptimalJoinOrderDp(tables[0..], edges[0..], true, CostModelParams.defaults(), dp_work[0..], order[0..])?;
+    * = res.total_cost;
 }
 ```
 

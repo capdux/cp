@@ -486,10 +486,12 @@ export {
     RaftElectionNode,
 } from "./raftVote.cp";
 
-// --- query_cost (Zero-Alloc Relational Query Cost Estimator & Left-Deep Join Planner) ---
+// --- query_cost (Zero-Alloc Relational Query Optimizer: MCV+Equi-Depth Histograms, Selinger DP & Unbounded Join Planner) ---
 export {
     QCOST_MAX_TABLES,
+    QCOST_DP_MAX_TABLES,
     QCOST_BPS_SCALE,
+    QueryOptError,
     CostModelParams,
     PredicateKind,
     AccessPathKind,
@@ -504,4 +506,16 @@ export {
     chooseBestAccessPath,
     chooseBestJoinAlgo,
     planLeftDeepJoinOrder,
+    McvEntry,
+    HistBucket,
+    ColumnHistogram,
+    buildEquiDepthHistogram,
+    estimateEqSelectivityHist,
+    estimateRangeSelectivityHist,
+    JoinGraphEdge,
+    DpJoinState,
+    DpJoinPlanResult,
+    dpJoinWorkRequiredLen,
+    planOptimalJoinOrderDp,
+    planGreedyJoinOrderUnbounded,
 } from "./queryCost.cp";
