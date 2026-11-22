@@ -673,3 +673,41 @@ pub fn demoBiTemporalFactLedger() {
     * = ledger.queryAsOf(1, 150, 150, *out_s);    // 回溯命中 0x11
 }
 ```
+
+
+### 15. 零分配程序性技能记忆库 (`skillBank.cp`)
+
+面向 Voyager / Reflexion 自主 AI Agent 架构的 100% 纯 CP 零动态堆分配 **Procedural Skill Memory Bank**，深度融合原生 `@dot`、`@fma` 与 `@popCount` 硬件原语：
+
+- **常量与数据模型**：
+  - `SKILL_BANK_MAX_SLOTS = 64`、`SKILL_BANK_MAX_DIM = 32`、`SKILL_BANK_MAX_BPS = 10000`
+  - `SkillRecord`（`skill_id`、L2 归一化触发意图向量 `vec`、工具能力掩码 `tool_mask: u64`、`success_count`、`failure_count`、`avg_latency_ms`、`last_used_ms`、`pinned`；提供 `totalTrials()`, `reliability()`, `reliabilityBps()`, `isExecutableWith(mask)`）
+  - `SkillRetrievalConfig`（`reliability_weight`, `tool_overlap_weight`, `min_cosine`；提供 `defaults()`, `isValid()`）
+  - `SkillRecallHit`（含 `total_score` 及 `cosine_sim`, `reliability`, `tool_overlap`, `tool_mask`, `avg_latency_ms`）、`SkillBankStats`
+- **核心引擎 `SkillBank`**：
+  - `init(dim): SkillBank?`（校验 `1 <= dim <= 32`）
+  - `registerSkill(*_, skill_id, intent_vec, tool_mask, pinned, now_ms): bool`：自动 L2 归一化触发向量，拦截 `skill_id == 0`、零/NaN 向量、重复 ID 与满池。
+  - `retrieveSkills(query_vec, available_tools_mask, cfg, *out_hits): usize`：硬过滤不可执行技能 `(skill.tool_mask & ~available_tools_mask) == 0`，结合 `@dot` 余弦、拉普拉斯贝叶斯可靠性 `(success + 1) / (success + failure + 2)`、`@popCount` 工具重合度与 `@fma` 综合打分输出确定性 Top-K。
+  - `recordExecution(*_, skill_id, succeeded, latency_ms, now_ms): bool`：记录执行成败、通过 `@fma` 更新增量平均延迟并维护单调 `last_used_ms`。
+  - `pruneUnreliable(*_, min_trials, min_reliability_bps): usize`：自动淘汰达到最小试验次数且可靠性低于阈值的非 `pinned` 失效技能，严格保护 `pinned == true` 核心技能。
+  - `setPinned` / `removeSkill` / `getSkill` / `len` / `clear` / `stats`。
+
+```cp
+import {
+    SkillRetrievalConfig,
+    SkillRecallHit,
+    SkillBank,
+} from "cap:agentmem";
+
+pub fn demoSkillBank() {
+    let bank = SkillBank.init(4) ?? return;
+    const v_code: [4]f32 = [1.0, 0.0, 0.0, 0.0];
+    * = bank.registerSkill(101, v_code[0..], 0b0011, false, 1000);
+    * = bank.recordExecution(101, true, 42.0, 1100);
+
+    let hits: [4]SkillRecallHit = [SkillRecallHit{}; 4];
+    let hits_s: []SkillRecallHit = hits[0..];
+    const n = bank.retrieveSkills(v_code[0..], 0b0111, SkillRetrievalConfig.defaults(), *hits_s);
+    * = n; // 1 (命中 skill 101)
+}
+```

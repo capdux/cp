@@ -582,3 +582,21 @@ export {
     containsCssVarRef,
     CssFallbackHandler,
 } from "./fallback.cp";
+
+export {
+    CSS_MARGIN_PAD_MAX_DECLS,
+    CSS_MARGIN_PAD_MAX_DIR_DECLS,
+    CSS_MARGIN_PAD_MAX_VAL_BYTES,
+    CssMarginPadError,
+    CssBoxSpacingFamily,
+    CssSpacingSide,
+    CssSpacingCategory,
+    CssSpacingPropRef,
+    CssSpacingValue,
+    CssSpacingRect,
+    CssSpacingAxis,
+    CssSpacingTarget,
+    CssSpacingDecl,
+    CssSpacingOutput,
+    CssBoxSpacingHandler,
+} from "./marginPad.cp";

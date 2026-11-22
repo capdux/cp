@@ -138,3 +138,14 @@ export {
     FactLedgerStats,
     BiTemporalFactLedger,
 } from "./factLedger.cp";
+
+export {
+    SKILL_BANK_MAX_SLOTS,
+    SKILL_BANK_MAX_DIM,
+    SKILL_BANK_MAX_BPS,
+    SkillRecord,
+    SkillRetrievalConfig,
+    SkillRecallHit,
+    SkillBankStats,
+    SkillBank,
+} from "./skillBank.cp";

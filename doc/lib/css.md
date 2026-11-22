@@ -782,3 +782,33 @@ const n = dest.formatCss(buf[0..], true)?;
 16. **CSS 现代色域渐进增强 Fallback 策略（`fallback.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
     - 当目标浏览器不支持 `oklab()`/`oklch()`/`lab()`/`lch()`/`display-p3`/`color-mix()`/`light-dark()` 时，首次遇到该属性自动前置注入兼容 sRGB fallback，再保留现代声明形成渐进增强链；若目标浏览器已原生支持，则跳过冗余 fallback；
     - 同一规则块内若开发者手动书写了 fallback + 现代色值（如 `background-color: #ff0000; background-color: oklch(...)`），处理器必须保留前一条 fallback 而不原地覆盖；仅当后续声明对目标浏览器完全兼容时才原地覆盖旧槽位，并在块结束时调用 `finalize()` 复位槽位。
+17. **盒模型物理/逻辑间距简写合并与 LTR/RTL 降级（`marginPad.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx` 与 `/data/dev/bun/src/css/properties/margin_padding.cp`）**：
+    - 统一管理 `margin`、`padding`、`inset`、`scroll-margin`、`scroll-padding` 共 5 大族 55 个物理与逻辑属性（`CssBoxSpacingHandler`、`CssSpacingRect`、`CssSpacingAxis`、`CssSpacingTarget`、`CssSpacingOutput`）；
+    - **级联保序 Flush**：同一规则块内物理属性与逻辑属性交错出现时（如 `margin-left` 后接 `margin-inline-start`），立即 `flush()` 锁定先前的声明，绝不错误重排或覆盖；
+    - **对称 Inline 轴零分支优化**：目标浏览器不支持逻辑属性时（`CssSpacingTarget.legacy()`），`*-block-start`/`end` 降级为物理 `top`/`bottom`；当 `*-inline-start` 与 `*-inline-end` 均非 `var()` 且值相等（如 `margin-inline: 1rem`）时，直接输出普通物理 `left` + `right`，无需生成 `:dir(ltr)` / `:dir(rtl)` 规则；仅当不对称或含 `var()` 时才分别写入 `ltr_decls` 与 `rtl_decls`；
+    - **`inset` 简写兼容门控**：针对旧版 Safari 14 等不支持 `inset` 四边简写的目标（`CssSpacingTarget.safari14()`），即使 4 边全齐也保持物理长写 `top`/`bottom`/`left`/`right` 而不合并为 `inset:`；含 `var()`/`env()` 的单值简写原样透传避免错误拆分。
+
+### 盒模型物理/逻辑间距处理示例（`marginPad.cp`）
+
+```typescript
+import {
+    CssBoxSpacingFamily,
+    CssSpacingTarget,
+    CssSpacingOutput,
+    CssBoxSpacingHandler,
+} from "cap:css";
+
+let out = CssSpacingOutput.init();
+let h = CssBoxSpacingHandler.init(.margin, CssSpacingTarget.legacy());
+* = h.handleProperty("margin-block", "1rem 2rem", *out)?;
+* = h.handleProperty("margin-inline-start", "1rem", *out)?;
+* = h.finalize(*out)?;
+
+let main_buf: [128]u8 = [0; 128];
+let ltr_buf: [128]u8 = [0; 128];
+let rtl_buf: [128]u8 = [0; 128];
+const n_main = out.formatDeclsCss(main_buf[0..], true)?; // "margin-top:1rem;margin-bottom:2rem"
+const n_ltr = out.formatLtrCss(ltr_buf[0..], true)?;     // "margin-left:1rem"
+const n_rtl = out.formatRtlCss(rtl_buf[0..], true)?;     // "margin-right:1rem"
+* = n_main; * = n_ltr; * = n_rtl;
+```
