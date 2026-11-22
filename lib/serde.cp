@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/interchange/interchange.cp | Synced: 2026-11-19T22:23:14Z
+// Source: Absorbed from /data/dev/bun/src/interchange/interchange.cp | Synced: 2026-11-22T11:07:59Z
 /**
  * CP Standard Serialization & Deserialization (cap:serde)
  */

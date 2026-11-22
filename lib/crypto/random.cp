@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/boringssl/boringssl.cp | Synced: 2026-11-22T01:14:17Z
+// Source: Absorbed from /data/dev/bun/src/boringssl/boringssl.cp | Synced: 2026-11-22T11:07:59Z
 // lib/crypto/random.cp
 // Cryptographically secure pseudorandom number generator (CSPRNG) & RFC 4122 v4 UUID
 

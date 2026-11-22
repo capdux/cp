@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/interchange/interchange.cp | Synced: 2026-11-19T20:30:33Z
+// Source: Absorbed from /data/dev/bun/src/interchange/interchange.cp | Synced: 2026-11-22T11:07:59Z
 // lib/conf/getter.cp
 // Type-Safe Configuration Value Parser & Unified ConfGetter (Booleans, Numbers, Ports, Durations & Byte Sizes)
 

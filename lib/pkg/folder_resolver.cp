@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/resolvers/folder_resolver.cp | Synced: 2026-11-22T10:58:52Z
+// Source: Absorbed from /data/dev/bun/src/install/resolvers/folder_resolver.cp | Synced: 2026-11-22T11:04:32Z
 // Ported from Bun: /data/dev/bun/src/install/resolvers/folder_resolver.cp & /data/dev/bun/docs/pm/workspaces.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation local folder / symlink / workspace package resolver utilities:

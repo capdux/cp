@@ -503,3 +503,22 @@ const decoded = decodeMySqlStmtExecuteFrame(wire[0..n], 3)?;
 // decoded.statement_id == 42, decoded.isParamNull(1) == true, decoded.params[2].bytes_val == "Alice"
 * = decoded;
 ```
+
+7. **PostgreSQL 后端认证质询与 SCRAM-SHA-256 握手编解码（`lib/sql/pg_auth_challenge.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/Authentication.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
+   - **完整覆盖 `'R'` 认证子码**：与客户端上行帧 `pg_auth_copy.cp` 对称，实现后端下行的 `AuthenticationOk` (0)、`Cleartext` (3)、`MD5Password` (5, 4 字节 salt)、`GSS`/`SSPI`、`AuthenticationSASL` (10, NUL 分隔机制列表迭代器 `PgSaslMechanismIter`)、`AuthenticationSASLContinue` (11) 与 `AuthenticationSASLFinal` (12) 零拷贝编解码；
+   - **SCRAM-SHA-256 质询严格校验**：`parsePgSaslContinue` 强制要求 `r=`、`s=`、`i=` 三元组齐全且迭代次数 `i` 为严格正 `u32`；`parsePgSaslFinal` 解析服务端校验签名 `v=<base64>` 或 RFC 5802 错误 `e=<reason>`；`decodePgAuthChallenge` 强制验证各类认证码对应的消息长度不变量与零尾随字节。
+
+```cp
+import {
+    PgAuthChallengeKind,
+    encodePgAuthSaslContinue,
+    decodePgAuthChallenge,
+} from "cap:sql";
+
+let wire: [128]u8 = [0; 128];
+const n = encodePgAuthSaslContinue("r=clientnonce+servernonce,s=c2FsdA==,i=4096", wire[0..])?;
+const view = decodePgAuthChallenge(wire[0..n])?;
+// view.kind == PgAuthChallengeKind.SASLContinue
+// view.sasl_continue.iterations == 4096, view.sasl_continue.salt_b64 == "c2FsdA=="
+* = view;
+```

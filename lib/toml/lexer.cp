@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/interchange/toml/lexer.cp | Synced: 2026-11-22T10:04:14Z
+// Source: Absorbed from /data/dev/bun/src/interchange/toml/lexer.cp | Synced: 2026-11-22T11:07:59Z
 
 /// TOML v1.0 词法 Token 种类
 pub enum TomlTokenKind: u8 {

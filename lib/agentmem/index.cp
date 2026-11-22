@@ -100,3 +100,17 @@ export {
     MemoryRouteSummary,
     fuseAndPackMemoryRecalls,
 } from "./memory_router.cp";
+
+export {
+    MEM_CONSOL_MAX_EPISODIC,
+    MEM_CONSOL_MAX_SEMANTIC,
+    MEM_CONSOL_MAX_DIM,
+    MEM_CONSOL_NO_ID,
+    MemConsolStatus,
+    MemConsolEntry,
+    MemConsolPassConfig,
+    MemConsolPassReport,
+    MemConsolEngineStats,
+    computeEntryRetentionScore,
+    AgentMemoryConsolidator,
+} from "./consolidation_engine.cp";

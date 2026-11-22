@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/interchange/interchange.cp | Synced: 2026-11-20T09:48:03Z
+// Source: Absorbed from /data/dev/bun/src/interchange/interchange.cp | Synced: 2026-11-22T11:07:59Z
 // lib/conf/value.cp
 // Native CP Configuration AST (ConfValue, ConfField, ConfDateTime) with RFC 3339 Date/Time Validation
 

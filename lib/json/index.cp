@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/interchange/interchange.cp | Synced: 2026-11-21T16:45:28Z
+// Source: Absorbed from /data/dev/bun/src/interchange/interchange.cp | Synced: 2026-11-22T11:07:59Z
 /**
  * CP Standard JSON & Serde (cap:json / cap:serde)
  * 工业级 SIMD 零拷贝流式与编译期强类型序列化与反序列化体系

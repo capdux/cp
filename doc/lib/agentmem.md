@@ -562,3 +562,40 @@ pub fn demoMemoryFusionRouter() {
     * = summary;
 }
 ```
+
+### 12. 零分配长程 AI Agent 情景-语义记忆归并、冲突替代与衰减强化引擎 (`consolidation_engine.cp`)
+
+面向长程自主 AI Agent 记忆睡眠归并周期的 100% 纯 CP 零动态堆分配情景-语义记忆融合与衰减强化引擎：
+
+- **常量与枚举**：
+  - `MEM_CONSOL_MAX_EPISODIC = 64`、`MEM_CONSOL_MAX_SEMANTIC = 64`、`MEM_CONSOL_MAX_DIM = 32`、`MEM_CONSOL_NO_ID = 0`
+  - `MemConsolStatus`（`active | merged | archived | evicted | superseded`）
+- **数据模型与衰减评分**：
+  - `MemConsolEntry`（含低维 L2 归一化向量 `vec`、`entity_key_hash`、`source_tag`、`importance`、`access_count`、`created_ms`/`last_access_ms`、`pinned`、`superseded_by_id`、`merged_into_semantic_id`、`cluster_members`）
+  - `MemConsolPassConfig`（`defaults()` / `isValid()`）、`MemConsolPassReport`、`MemConsolEngineStats`
+  - `computeEntryRetentionScore(entry, now_ms, half_life_ms): f32`：结合 Ebbinghaus 指数衰减（访问频次提升记忆稳定性）与重要度计算 `[0.0, 1.0]` 留存分，`pinned` 恒为 `1.0`。
+- **核心引擎 `AgentMemoryConsolidator`**：
+  - `init(dim): AgentMemoryConsolidator?` / `addEpisodic` / `addSemantic` / `touchEpisodic` / `touchSemantic` / `getEpisodic` / `getSemantic` / `stats()`
+  - `runConsolidationPass(*_, now_ms, cfg): MemConsolPassReport`：三阶段一键归并：
+    1. **实体冲突覆写检测**：同 `entity_key_hash` 且新条目与旧条目 `@dot` 余弦低于 `conflict_threshold` 时，将非锁定旧条目标记为 `superseded`。
+    2. **近重复聚类与 `@fma` 质心融合晋升**：识别 `@dot >= merge_threshold` 的情景记忆簇，经 `@fma` 重要度加权融合质心并强化重要度，晋升或融入长期语义池，原情景成员标为 `merged`。
+    3. **低分剪枝归档与硬 TTL 淘汰**：对超 TTL 或留存分 `< prune_threshold` 的非锁定条目执行 `evicted` / `archived`，`pinned` 条目永不淘汰。
+
+```cp
+import {
+    MemConsolPassConfig,
+    AgentMemoryConsolidator,
+} from "cap:agentmem";
+
+pub fn demoAgentMemoryConsolidator() {
+    let eng = AgentMemoryConsolidator.init(4) ?? return;
+    const e1: [4]f32 = [1.0, 0.05, 0.0, 0.0];
+    const e2: [4]f32 = [0.99, 0.10, 0.0, 0.0];
+    * = eng.addEpisodic(1, 0, 10, 0.70, 1000, false, e1[0..]);
+    * = eng.addEpisodic(2, 0, 10, 0.75, 2000, false, e2[0..]);
+
+    const rep = eng.runConsolidationPass(3000, MemConsolPassConfig.defaults());
+    * = rep.clusters_merged;         // 1
+    * = rep.semantic_promoted_count; // 1 (自动晋升为长期语义记忆)
+}
+```

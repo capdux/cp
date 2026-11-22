@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/io/PipeReader.cp | Synced: 2026-11-22T10:52:02Z
+// Source: Absorbed from /data/dev/bun/src/io/PipeReader.cp | Synced: 2026-11-22T11:04:32Z
 /**
  * CP Native OS Pipe (cap:io)
  * 生产级非阻塞/阻塞管道状态机（支持 pipe2、EAGAIN 感知、部分写续传、BrokenPipe 与 MaxBuf 守卫）
