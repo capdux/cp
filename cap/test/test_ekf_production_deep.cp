@@ -11,7 +11,7 @@ import {
     ekfUpdate,
     generateSigmaPoints,
     ukfPredict,
-} from "cap:ekf";
+} from "cap:math";
 
 fn absF64(v: f64): f64 {
     return if (v < 0.0) -v else v;

@@ -10,7 +10,7 @@ import {
     luInverse,
     matVecResidualInf,
     solveTridiagonal,
-} from "cap:lu";
+} from "cap:math";
 
 fn absDiff(a: f64, b: f64): f64 {
     const d = a - b;

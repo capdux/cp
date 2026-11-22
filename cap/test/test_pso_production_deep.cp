@@ -9,7 +9,7 @@ import {
     DeWorkspace,
     psoMinimize,
     deMinimize,
-} from "cap:pso";
+} from "cap:math";
 
 const PI: f64 = 3.14159265358979323846;
 

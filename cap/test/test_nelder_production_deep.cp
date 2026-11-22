@@ -8,7 +8,7 @@ import {
     nelderMead,
     goldenSectionMin,
     brentRoot,
-} from "cap:nelder";
+} from "cap:math";
 
 fn absF64(v: f64): f64 {
     return if (v < 0.0) -v else v;

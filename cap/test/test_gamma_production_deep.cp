@@ -15,7 +15,7 @@ import {
     erfc,
     logFactorial,
     logBinomial,
-} from "cap:gamma";
+} from "cap:math";
 
 const PI: f64 = 3.14159265358979323846;
 const EULER_GAMMA: f64 = 0.57721566490153286061;

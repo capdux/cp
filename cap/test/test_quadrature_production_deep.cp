@@ -11,7 +11,7 @@ import {
     gaussKronrod15,
     adaptiveGk15,
     romberg,
-} from "cap:quadrature";
+} from "cap:math";
 
 const PI: f64 = 3.14159265358979323846;
 

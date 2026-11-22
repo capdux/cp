@@ -11,7 +11,7 @@ import {
     qrSolveLeastSquares,
     qrOrthogonalityError,
     qrReconstructionError,
-} from "cap:qr";
+} from "cap:math";
 
 fn absF64(v: f64): f64 {
     return if (v < 0.0) -v else v;
