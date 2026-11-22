@@ -1765,3 +1765,53 @@ fn semanticToolRouterQuickStart() {
     }
 }
 ```
+
+---
+
+## 子模块：LLM 模型能力目录与成本择优器（`model_catalog.cp`）
+
+### 核心特性
+
+- **五维能力位图与模型规格（`ModelSpec`）**：以 64 位掩码精确建模 `MODEL_CAP_TOOLS`、`MODEL_CAP_VISION`、`MODEL_CAP_THINKING`、`MODEL_CAP_STRUCTURED_JSON`、`MODEL_CAP_PROMPT_CACHE`，同时记录 `context_window`、`max_output_tokens`、每百万 Token 微美元单价（常规输入 / 缓存命中输入 / 输出）及 Batch 折扣基点 `batch_discount_bps`（如 `5000` = 50% 折扣）。
+- **防溢出固定点计费（`estimateCallCost`）**：内部全程使用 `u128` 算术并在极值处安全饱和到 `u64` 上限，精准拆分 `regular_input_micro_usd`、`cached_input_micro_usd`、`output_micro_usd`、`cache_savings_micro_usd`、`batch_savings_micro_usd` 与 `total_micro_usd`。
+- **零堆最低成本择优（`ModelCatalog.selectCheapestCapable`）**：根据所需能力位图、最小上下文窗口、预估输入/输出 Token 与是否走 Batch 模式，在毫秒内确定性选出单次调用总成本最低的合规模型（同成本优先更大上下文窗口）。
+
+### 导出清单
+
+- **能力常量**：`MODEL_CAP_TOOLS`、`MODEL_CAP_VISION`、`MODEL_CAP_THINKING`、`MODEL_CAP_STRUCTURED_JSON`、`MODEL_CAP_PROMPT_CACHE`
+- **规格与目录**：`ModelSpec`（`supports`）、`ModelCostEstimate`、`estimateCallCost`、`ModelCatalog`（`init`, `registerModel`, `findById`, `estimateCallCost`, `selectCheapestCapable`, `count`, `capacity`, `clear`）
+
+### QuickStart 示例
+
+```cp
+import {
+    MODEL_CAP_TOOLS,
+    MODEL_CAP_THINKING,
+    MODEL_CAP_PROMPT_CACHE,
+    ModelSpec,
+    ModelCatalog,
+    estimateCallCost,
+} from "cap:agent";
+
+fn modelCatalogQuickStart() {
+    let slots: [4]ModelSpec = [ModelSpec{}; 4];
+    let catalog = ModelCatalog.init(slots[0..]);
+
+    * = catalog.registerModel(ModelSpec{
+        model_id: "claude-sonnet",
+        provider: "anthropic",
+        context_window: 200000,
+        max_output_tokens: 16384,
+        input_micro_usd_per_mtok: 3000000,
+        output_micro_usd_per_mtok: 15000000,
+        cached_input_micro_usd_per_mtok: 300000,
+        batch_discount_bps: 5000,
+        cap_mask: MODEL_CAP_TOOLS | MODEL_CAP_THINKING | MODEL_CAP_PROMPT_CACHE,
+    });
+
+    if (best := catalog.selectCheapestCapable(MODEL_CAP_TOOLS | MODEL_CAP_THINKING, 128000, 10000, 2000, true)) {
+        const est = estimateCallCost(best, 2000, 8000, 2000, true);
+        * = est.total_micro_usd;
+    }
+}
+```

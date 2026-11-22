@@ -339,3 +339,15 @@ export {
     ToolRouteReport,
     SemanticToolRouter,
 } from "./tool_router.cp";
+
+export {
+    MODEL_CAP_TOOLS,
+    MODEL_CAP_VISION,
+    MODEL_CAP_THINKING,
+    MODEL_CAP_STRUCTURED_JSON,
+    MODEL_CAP_PROMPT_CACHE,
+    ModelSpec,
+    ModelCostEstimate,
+    estimateCallCost,
+    ModelCatalog,
+} from "./model_catalog.cp";
