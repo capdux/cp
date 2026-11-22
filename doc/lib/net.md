@@ -872,6 +872,61 @@ pub fn demoActiveHealthProber() {
 }
 ```
 
+## 无上限外部切片 RFC 9002 QUIC 丢包探测/PTO、ACK 区间合并与 CUBIC + BBRv1 拥塞控制引擎 (`quicLoss.cp`)
+
+面向高 BDP 现代传输层的 100% 纯 CP 零动态堆分配传输控制内核，在途包追踪表与 ACK 区间数组均由调用方外部切片驱动，无小容量硬上限：
+
+- **常量与错误集**：
+  - `QUIC_PACKET_THRESHOLD = 3`、`QUIC_INITIAL_RTT_US = 333_000`、`QUIC_GRANULARITY_US = 1_000`、`QUIC_MAX_DATAGRAM_DEFAULT = 1200`
+  - `QuicLossError`（`InvalidRange | TableFull | BufferTooSmall | InvalidConfig`）
+- **RFC 9000 ACK 区间合并与二分集合 (`QuicAckRange` / `QuicAckSet`)**：
+  - `QuicAckSet.init(*buf)` / `insertPacket(*_, pn)`（自动合并相邻/重叠区间并维持严格降序）/ `contains(pn)`（O(log R) 二分查找）/ `largestAcked()` / `rangeCount()` / `gapCount()` / `activeRanges()`
+- **RFC 9002 RTT 估计器与丢包/PTO 探测 (`QuicRttState` / `QuicLossDetector`)**：
+  - `QuicRttState`：`update(*_, latest_rtt, ack_delay_us, max_ack_delay_us)`（按 §5.3 钳位 `ack_delay` 并保护 `min_rtt`）、`ptoDurationUs(max_ack_delay_us, pto_count)`（指数退避 `2^pto_count`）
+  - `QuicLossDetector`：`init(*sent_packets, max_ack_delay_us)` / `onPacketSent(...)`（表满自动压缩已结包）/ `onAckReceived(...)`（包门槛 `>= 3` + 时间门槛 `9/8 * max(srtt, latest_rtt)`）/ `nextTimerDeadlineUs(now_us)` / `onLossDetectionTimeout(*_, now_us)`
+- **RFC 9438 CUBIC (`CubicState`) & BBRv1 (`BbrController`) & 令牌桶发包 (`QuicPacer`)**：
+  - `CubicState`：`init(mss, init_cwnd)` / `onAck(*_, acked_bytes, rtt_us, now_us)`（慢启动 + 立方凹/凸曲线与 TCP 友好区取大）/ `onCongestionEvent(*_, sent_time_us, now_us)`（`0.7x` 乘性减 + 同周期防重复惩罚）/ `pacingRateBps(rtt_us)`
+  - `BbrController`：`BbrMode`（`startup | drain | probe_bw | probe_rtt`）、10 轮滑窗 `max_bw_bps` + `min_rtt_us`、`onDeliverySample(...)` / `onInFlightUpdate(...)` / `bdpBytes()` / `pacingRateBps()` / `cwndBytes()`
+  - `QuicPacer`：`init` / `updateRate` / `canSendNow` / `onPacketSent` / `nextSendTimeUs`
+
+```cp
+import {
+    QuicAckRange,
+    QuicAckSet,
+    QuicSentPacket,
+    QuicLossDetector,
+    CubicState,
+} from "cap:net";
+
+pub fn demoQuicTransportLoop()! {
+    let sent_buf: [256]QuicSentPacket = [QuicSentPacket{}; 256];
+    let sent_s: []QuicSentPacket = sent_buf[0..];
+    let det = QuicLossDetector.init(*sent_s, 25_000)?;
+    let cubic = CubicState.init(1200, 12000);
+
+    let ack_buf: [32]QuicAckRange = [QuicAckRange{}; 32];
+    let ack_s: []QuicAckRange = ack_buf[0..];
+    let acks = QuicAckSet.init(*ack_s)?;
+
+    det.onPacketSent(0, 1_000, 1200, true)?;
+    det.onPacketSent(1, 2_000, 1200, true)?;
+    det.onPacketSent(2, 3_000, 1200, true)?;
+    det.onPacketSent(3, 4_000, 1200, true)?;
+
+    // 乱序 ACK 1..3 (跳过 0 -> 触发包门槛丢包判定)
+    acks.insertPacket(3)?;
+    acks.insertPacket(1)?;
+    acks.insertPacket(2)?;
+    const out = det.onAckReceived(acks.activeRanges(), 2_000, 24_000);
+    if (out.newly_acked_bytes > 0) {
+        cubic.onAck(out.newly_acked_bytes, det.rtt.smoothed_rtt_us, 24_000);
+    }
+    if (out.newly_lost_packets > 0) {
+        cubic.onCongestionEvent(1_000, 24_000);
+    }
+}
+```
+
 ## 收敛子模块深度文档
 
 - [amqp.md](net/amqp.md)

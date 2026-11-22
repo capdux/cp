@@ -1941,3 +1941,22 @@ export {
     ClusterHealthSummary,
     ActiveHealthProber,
 } from "./healthProbe.cp";
+
+// --- quicLoss (Unbounded-Slice RFC 9002 QUIC Loss/PTO, RFC 9000 ACK Set, RFC 9438 CUBIC, BBRv1 & Pacer) ---
+export {
+    QUIC_PACKET_THRESHOLD,
+    QUIC_INITIAL_RTT_US,
+    QUIC_GRANULARITY_US,
+    QUIC_MAX_DATAGRAM_DEFAULT,
+    QuicLossError,
+    QuicAckRange,
+    QuicAckSet,
+    QuicRttState,
+    QuicSentPacket,
+    QuicAckOutcome,
+    QuicLossDetector,
+    CubicState,
+    BbrMode,
+    BbrController,
+    QuicPacer,
+} from "./quicLoss.cp";
