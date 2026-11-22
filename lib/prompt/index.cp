@@ -103,3 +103,16 @@ export {
     AgentPromptBuildReport,
     AgentPromptComposer,
 } from "./agent_composer.cp";
+
+export {
+    FIREWALL_FLAG_DELIMITER_OVERRIDE,
+    FIREWALL_FLAG_SECRET_LEAK,
+    FIREWALL_FLAG_PATH_TRAVERSAL,
+    FIREWALL_FLAG_UNSAFE_URL,
+    FirewallAction,
+    FirewallPolicy,
+    FirewallFinding,
+    FirewallVerdict,
+    evaluatePromptFirewall,
+    redactFirewallSecrets,
+} from "./firewall.cp";

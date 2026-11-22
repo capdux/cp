@@ -497,3 +497,31 @@ fn demoAgentPromptComposer() {
     }
 }
 ```
+
+### 10. 提示词边界防火墙与凭证防泄漏扫描器 (`firewall.cp`)
+
+100% 纯 CP 零堆分配的多层输入/输出边界扫描与凭证脱敏器，单遍检测角色分隔符越界（`<|im_start|>`/`<|system|>`/`[INST]`/`### System:`）、凭证泄漏（`sk-`/`ghp_`/`AKIA`/`-----BEGIN`）、路径穿越（`../`/`%2e%2e/`）与危险 URL Scheme（`file://`/`javascript:`/`data:text/html`），输出 `0..100` 风险分与 `Allow | Redact | Block` 裁决，并支持零堆替换为 `[REDACTED_SECRET]`：
+
+- **导出符号**：`FIREWALL_FLAG_DELIMITER_OVERRIDE`、`FIREWALL_FLAG_SECRET_LEAK`、`FIREWALL_FLAG_PATH_TRAVERSAL`、`FIREWALL_FLAG_UNSAFE_URL`、`FirewallAction`、`FirewallPolicy`（`default`, `strict`）、`FirewallFinding`、`FirewallVerdict`、`evaluatePromptFirewall`、`redactFirewallSecrets`。
+
+```cp
+import {
+    FirewallAction,
+    FirewallPolicy,
+    FirewallFinding,
+    evaluatePromptFirewall,
+    redactFirewallSecrets,
+} from "cap:prompt";
+
+fn demoPromptFirewall(text: string) {
+    let findings: [8]FirewallFinding = [FirewallFinding{}; 8];
+    const verdict = evaluatePromptFirewall(text, FirewallPolicy.default(), findings[0..]);
+
+    if (verdict.action == FirewallAction.Redact) {
+        let safe_buf: [512]u8 = [0; 512];
+        if (n := redactFirewallSecrets(text, safe_buf[0..])) {
+            * = safe_buf[0..n];
+        }
+    }
+}
+```
