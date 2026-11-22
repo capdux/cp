@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/net/cidr.cp | Kept for comparison/analysis
 // Source: cp/lib/cidr/cidr.cp (Pure CP IPv4/IPv6 CIDR Parsing, Subnetting, Summarization & LPM Router)
 // Zero-C-dependency IPv4/IPv6 address, CIDR block, subnetting, summarization, and LPM routing engine.
 

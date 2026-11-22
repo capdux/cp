@@ -15,7 +15,7 @@ import {
     matchesEntry,
     parseDn,
     freeDn,
-} from "cap:ldap";
+} from "cap:net";
 import cap from "cap";
 
 fn expectTrue(cond: bool): ! {
@@ -181,15 +181,15 @@ test("4. Malformed inputs: UnbalancedParens, InvalidEscape, MaxDepthExceeded(65)
 test("5. cap.ldap dynamic mount & std.testing.allocator zero memory leak") {
     const alloc = std.testing.allocator;
 
-    let f = cap.ldap.parseFilter(alloc, "(|(uid=root)(uid=admin*))") catch unreachable;
+    let f = cap.net.parseFilter(alloc, "(|(uid=root)(uid=admin*))") catch unreachable;
     defer f.deinit(alloc);
 
-    const s = cap.ldap.formatFilter(alloc, f) catch unreachable;
+    const s = cap.net.formatFilter(alloc, f) catch unreachable;
     defer alloc.free(s);
     expectStrEq(s, "(|(uid=root)(uid=admin*))") catch unreachable;
 
-    const dn = cap.ldap.parseDn(alloc, "uid=admin,dc=example,dc=com") catch unreachable;
-    defer cap.ldap.freeDn(alloc, dn);
+    const dn = cap.net.parseDn(alloc, "uid=admin,dc=example,dc=com") catch unreachable;
+    defer cap.net.freeDn(alloc, dn);
     expect_eq(dn.len, 3);
     expectStrEq(dn[0].rdn_value, "admin") catch unreachable;
 }

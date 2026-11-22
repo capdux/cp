@@ -25,7 +25,7 @@ import {
     parseIpfix,
     IpfixVarLenValue,
     decodeIpfixVarLen,
-} from "cap:ipfix";
+} from "cap:net";
 
 test("1. 16B IPFIX v10 message with Template Set + Data Set zero-copy iteration", () => {
     expect_eq(IPFIX_PORT, 4739 as u16);

@@ -10,7 +10,7 @@ import {
     HaDirectiveIter,
     findHaSection,
     findHaDirective,
-} from "cap:haproxy";
+} from "cap:net";
 
 const SAMPLE_HAPROXY: []const u8 =
     "# HAProxy production config\n" ++

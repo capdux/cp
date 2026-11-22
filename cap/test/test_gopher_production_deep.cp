@@ -27,7 +27,7 @@ import {
     parseGopherItem,
     encodeGopherItem,
     GopherMenuIter,
-} from "cap:gopher";
+} from "cap:net";
 
 test("1. Constants, empty root request, selector request, and TAB search request roundtrip", () => {
     expect_eq(GOPHER_TCP_PORT, 70 as u16);

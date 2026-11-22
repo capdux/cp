@@ -31,7 +31,7 @@ import {
     parseBgpOpen,
     parseBgpUpdate,
     parseBgpNotification,
-} from "cap:bgp";
+} from "cap:net";
 
 fn writeBgpHeader(buf: *[]u8, off: usize, length: u16, msg_type: u8) {
     let i: usize = 0;

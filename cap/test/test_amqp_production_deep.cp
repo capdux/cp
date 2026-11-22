@@ -30,7 +30,7 @@ import {
     encodeContentHeader,
     decodeContentHeader,
     encodeHeartbeat,
-} from "cap:amqp";
+} from "cap:net";
 import cap from "cap";
 
 test("1. Method (Basic.Publish), ContentHeader, Body & Heartbeat Frame Round-Trip") {
@@ -306,23 +306,23 @@ test("4. Malformed Frame & Security Guards (InvalidFrameEnd, FrameTooLarge, Inva
 test("5. Dynamic `cap.amqp` Namespace Mounting & Zero-Leak Round-Trip") {
     const alloc = std.testing.allocator;
 
-    let headers: [1]cap.amqp.AmqpField = [
-        cap.amqp.AmqpField.init("x-app", cap.amqp.AmqpValue{ long_str: "cp-amqp" }),
+    let headers: [1]cap.net.AmqpField = [
+        cap.net.AmqpField.init("x-app", cap.net.AmqpValue{ long_str: "cp-amqp" }),
     ];
-    const wire = cap.amqp.encodeContentHeader(alloc, 5, 60, 42, "text/plain", &headers) catch unreachable;
+    const wire = cap.net.encodeContentHeader(alloc, 5, 60, 42, "text/plain", &headers) catch unreachable;
     defer alloc.free(wire);
 
-    let decoder = cap.amqp.AmqpStreamDecoder.init(alloc, 8192);
+    let decoder = cap.net.AmqpStreamDecoder.init(alloc, 8192);
     defer decoder.deinit();
     decoder.feed(wire) catch unreachable;
 
     if (fr := decoder.nextFrame() catch unreachable) {
         defer fr.deinit(alloc);
         expect_eq(fr.channel, 5 as u16);
-        const ch = cap.amqp.decodeContentHeader(alloc, fr.payload) catch unreachable;
+        const ch = cap.net.decodeContentHeader(alloc, fr.payload) catch unreachable;
         defer ch.deinit(alloc);
         expect_eq(ch.body_size, 42 as u64);
-        expect_eq(cap.amqp.eqlFieldTable(ch.headers, &headers), true);
+        expect_eq(cap.net.eqlFieldTable(ch.headers, &headers), true);
     } else {
         expect_eq(true, false);
     }

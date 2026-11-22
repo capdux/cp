@@ -16,7 +16,7 @@ import {
     NatsOp,
     NatsEncoder,
     NatsParser,
-} from "cap:nats";
+} from "cap:net";
 import cap from "cap";
 
 test("1. NatsEncoder All Client Commands & NatsParser Full Protocol Coverage") {
@@ -302,13 +302,13 @@ test("4. Security Guards: InvalidSubject, CommandInjection, InvalidNatsHeaders &
 test("5. Dynamic `cap.nats` Namespace Mounting & Zero-Leak Round-Trip") {
     const alloc = std.testing.allocator;
 
-    let hdrs: [1]cap.nats.NatsHeader = [
-        cap.nats.NatsHeader.init("X-Source", "cp-nats"),
+    let hdrs: [1]cap.net.NatsHeader = [
+        cap.net.NatsHeader.init("X-Source", "cp-nats"),
     ];
-    const wire = cap.nats.NatsEncoder.encodeHpub(alloc, "sys.health", "reply.sys", &hdrs, "ok") catch unreachable;
+    const wire = cap.net.NatsEncoder.encodeHpub(alloc, "sys.health", "reply.sys", &hdrs, "ok") catch unreachable;
     defer alloc.free(wire);
 
-    let parser = cap.nats.NatsParser.init(alloc, 8192);
+    let parser = cap.net.NatsParser.init(alloc, 8192);
     defer parser.deinit();
 
     // Feed equivalent HMSG from server

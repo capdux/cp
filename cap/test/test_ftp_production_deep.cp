@@ -33,7 +33,7 @@ import {
     encodeFtpCommand,
     encodePortCommand,
     encodeEprtCommand,
-} from "cap:ftp";
+} from "cap:net";
 
 test("1. FTP command & single/multi-line reply parsing and reply class helpers", () => {
     expect_eq(FTP_CONTROL_PORT, 21 as u16);

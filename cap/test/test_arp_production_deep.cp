@@ -22,7 +22,7 @@ import {
     encodeArpReply,
     encodeArpProbe,
     encodeGratuitousArp,
-} from "cap:arp";
+} from "cap:net";
 
 test("1. ARP Request and Reply 28-byte encode/decode roundtrip", () => {
     expect_eq(ARP_ETHERTYPE, 0x0806 as u16);

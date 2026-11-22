@@ -199,3 +199,31 @@ pub fn demoProductionNet() {
 3. **长连接超时分级与连接池双 TTL 淘汰**：
    - `SafeSocket` 遵循 uSockets 规范：当超时设置超过 240 秒时自动升级为分钟级长超时刻度；
    - `ConnectionPool` 按 `host:port` 采用 LIFO（最近归还优先）策略最大化热连接命中率，并在 `acquire`/`release` 时自动淘汰超过 `idle_timeout_ms` 或 `max_lifetime_ms` 的陈旧套接字，避免复用半关闭失效连接。
+
+---
+
+## 六、 收敛集成的网络层、路由、流量遥测与应用层协议栈
+
+以下纯 CP 零外部依赖协议模块已统一聚合导出至 `cap:net`（`lib/net/index.cp`），零符号冲突：
+
+| 分类 | 文件路径 | 协议 / 标准 | 说明 |
+| :--- | :--- | :--- | :--- |
+| L2/L3/L4 与地址/安全 | `lib/net/arp.cp` | RFC 826 / RFC 5227 | 零堆分配 ARP 报文编解码与免费 ARP/探针检测 |
+| L2/L3/L4 与地址/安全 | `lib/net/bgp.cp` | RFC 4271 | 零堆分配 BGP-4 协议帧与路径属性解析器 |
+| L2/L3/L4 与地址/安全 | `lib/net/dhcp.cp` | RFC 2131 / RFC 2132 | 零堆分配 DHCPv4 线缆报文与 Option 编解码 |
+| L2/L3/L4 与地址/安全 | `lib/net/icmp.cp` | RFC 792 / RFC 4443 | 零堆分配 ICMPv4 / ICMPv6 报文与校验和编解码 |
+| L2/L3/L4 与地址/安全 | `lib/net/ipsec.cp` | RFC 4302 / 4303 / 7296 | 零堆分配 IPsec AH / ESP 与 IKEv2 报文解析 |
+| 流量遥测与负载均衡 | `lib/net/ipfix.cp` | RFC 7011 | 零堆分配 IPFIX v10 流量遥测线缆解析器 |
+| 流量遥测与负载均衡 | `lib/net/netflow.cp` | Cisco NetFlow v5 / RFC 3954 v9 | 零堆分配 NetFlow v5/v9 流量记录解析器 |
+| 流量遥测与负载均衡 | `lib/net/haproxy.cp` | HAProxy Config | 零堆分配 HAProxy 配置文件分节与指令解析器 |
+| 消息与物联网协议 | `lib/net/amqp.cp` | AMQP 0-9-1 | 二进制帧编解码、FieldTable 与增量流解码器 |
+| 消息与物联网协议 | `lib/net/nats.cp` | NATS Wire Protocol | NATS 命令编解码、HPUB/HMSG 头与增量流解析器 |
+| 消息与物联网协议 | `lib/net/coap.cp` | RFC 7252 | 零堆分配 CoAP 受限应用协议线缆编解码 |
+| 工业控制协议 | `lib/net/bacnet.cp` | ASHRAE 135 | 零堆分配 BACnet/IP BVLC / NPDU / APDU / TLV 编解码 |
+| 经典应用与凭证协议 | `lib/net/ftp.cp` | RFC 959 / 2428 / 3659 | 零堆分配 FTP 控制报文、EPSV/PASV 与 MLSD 编解码 |
+| 经典应用与凭证协议 | `lib/net/gopher.cp` | RFC 1436 | 零堆分配 Gopher 协议与目录菜单编解码 |
+| 经典应用与凭证协议 | `lib/net/imap.cp` | RFC 3501 / RFC 9051 | IMAP4rev1/2 命令编解码、Literal 帧与响应解析 |
+| 经典应用与凭证协议 | `lib/net/irc.cp` | RFC 1459 / 2812 / IRCv3 | 零堆分配 IRC 与 IRCv3 Message Tags 线缆编解码 |
+| 经典应用与凭证协议 | `lib/net/ldap.cp` | RFC 4514 / RFC 4515 | LDAP 搜索过滤器解析/求值与 DN 编解码 |
+| 经典应用与凭证协议 | `lib/net/netrc.cp` | `.netrc` (Absorbed from Bun `npm_client.zig`) | `.netrc` 凭证迭代与主机查找（`NetrcIter` / `lookupNetrc`） |
+| 参考归档（不导出） | `lib/net/cidr_.cp` | CIDR / LPM 路由（仅参考） | 与权威 `lib/net/cidr.cp` 功能重叠，保留供对比分析，不在 `cap:net` 重复导出 |

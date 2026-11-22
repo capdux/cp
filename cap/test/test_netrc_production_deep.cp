@@ -1,6 +1,6 @@
 import std from "std";
 import { test, expect_eq } from "cap:test";
-import { NetrcIter, lookupNetrc } from "cap:netrc";
+import { NetrcIter, lookupNetrc } from "cap:net";
 
 test("1. NetrcIter parses multi-line, single-line, comments, and account fields", () => {
     const src =

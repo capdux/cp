@@ -50,7 +50,7 @@ import {
     parseAh,
     parseIkev2,
     isIkev2,
-} from "cap:ipsec";
+} from "cap:net";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

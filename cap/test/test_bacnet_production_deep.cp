@@ -39,7 +39,7 @@ import {
     encodeObjectId,
     BacnetTag,
     BacnetTagIter,
-} from "cap:bacnet";
+} from "cap:net";
 
 test("1. Constants and BVLC Original-Unicast, Broadcast, and Forwarded-NPDU parse/encode", () => {
     expect_eq(BACNET_UDP_PORT, 47808 as u16);

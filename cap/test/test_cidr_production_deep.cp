@@ -3,7 +3,6 @@
 
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import cap from "cap";
 import {
     CidrError,
     Ipv4Addr,
@@ -11,7 +10,7 @@ import {
     Cidr4,
     Cidr6,
     LpmTable4,
-} from "cap:cidr";
+} from "../../lib/net/cidr_.cp";
 
 fn runTest1(): !void {
     const alloc = std.testing.allocator;
@@ -199,29 +198,29 @@ fn runTest4(): !void {
 fn runTest5(): !void {
     const alloc = std.testing.allocator;
 
-    // Dynamic mount: import cap from "cap"; cap.cidr
-    const c4 = cap.cidr.Cidr4.parse("172.16.0.5/12")?;
+    // Reference-archived cidr_.cp direct verification with std.testing.allocator
+    const c4 = Cidr4.parse("172.16.0.5/12")?;
     expect_eq(c4.network().isPrivate(), true);
 
     const subs = c4.splitSubnets(alloc, 14)?;
     defer alloc.free(subs);
     expect_eq(subs.len, 4 as usize);
 
-    const agg = cap.cidr.Cidr4.summarize(alloc, subs)?;
+    const agg = Cidr4.summarize(alloc, subs)?;
     defer alloc.free(agg);
     expect_eq(agg.len, 1 as usize);
     expect_eq(agg[0].eql(c4), true);
 
-    const ip6 = cap.cidr.Ipv6Addr.parse("fe80::1")?;
+    const ip6 = Ipv6Addr.parse("fe80::1")?;
     const s6 = ip6.formatCanonical(alloc)?;
     defer alloc.free(s6);
     expect_eq(std.mem.eql(u8, s6, "fe80::1"), true);
 
-    let lpm = cap.cidr.LpmTable4<u16>.init(alloc);
+    let lpm = LpmTable4<u16>.init(alloc);
     defer lpm.deinit();
     lpm.insert(c4, 42)?;
-    expect_eq(lpm.lookup(cap.cidr.Ipv4Addr.parse("172.20.1.1")?).?, 42 as u16);
-    expect_eq(lpm.lookup(cap.cidr.Ipv4Addr.parse("192.168.1.1")?) == null, true);
+    expect_eq(lpm.lookup(Ipv4Addr.parse("172.20.1.1")?).?, 42 as u16);
+    expect_eq(lpm.lookup(Ipv4Addr.parse("192.168.1.1")?) == null, true);
 }
 
 test("cap:cidr Ipv4Addr/Cidr4 parsing, normalization, RFC1918 & /0,/31,/32 boundaries") {

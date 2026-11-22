@@ -14,7 +14,7 @@ import {
     parseSearchUids,
     parseExistsCount,
     parseFetchFlags,
-} from "cap:imap";
+} from "cap:net";
 
 fn freeStringSlice(alloc: std.mem.Allocator, items: [][]const u8) {
     let i: usize = 0;
@@ -268,12 +268,12 @@ fn runTest5(): !void {
     const alloc = std.testing.allocator;
 
     // Dynamic mount: import cap from "cap"; cap.imap
-    let codec = cap.imap.ImapCommandCodec.init();
+    let codec = cap.net.ImapCommandCodec.init();
     const cmd = codec.login(alloc, "bot@cp.dev", "tok")?;
     defer alloc.free(cmd);
     expect_eq(std.mem.eql(u8, cmd, "A0001 LOGIN \"bot@cp.dev\" \"tok\"\r\n"), true);
 
-    let parser = cap.imap.ImapStreamParser.init(alloc);
+    let parser = cap.net.ImapStreamParser.init(alloc);
     defer parser.deinit();
     parser.feed("* CAPABILITY IMAP4rev1 IDLE\r\nA0001 OK logged in\r\n")?;
 
@@ -281,7 +281,7 @@ fn runTest5(): !void {
     defer r1.deinit(alloc);
     switch (r1) {
         .untagged_data d => {
-            const caps = cap.imap.parseCapability(alloc, d.rest)?;
+            const caps = cap.net.parseCapability(alloc, d.rest)?;
             defer freeStringSlice(alloc, caps);
             expect_eq(caps.len, 2 as usize);
             expect_eq(std.mem.eql(u8, caps[0], "IMAP4rev1"), true);
@@ -294,7 +294,7 @@ fn runTest5(): !void {
     defer r2.deinit(alloc);
     switch (r2) {
         .tagged t => {
-            expect_eq(t.status == cap.imap.ImapStatus.Ok, true);
+            expect_eq(t.status == cap.net.ImapStatus.Ok, true);
             expect_eq(std.mem.eql(u8, t.text, "logged in"), true);
         },
         else => expect_eq(true, false),
