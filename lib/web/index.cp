@@ -332,3 +332,19 @@ export {
     CorsGuard,
     formatCorsResponseHeaders,
 } from "./corsGuard.cp";
+
+// --- Zero-Alloc RFC 9111 HTTP Cache Freshness, Cache-Control Parser & SWR/SIE Evaluator ---
+export {
+    CACHE_MAX_DELTA_SECONDS,
+    CacheScope,
+    CacheLookupVerdict,
+    CacheControl,
+    StoredResponseMeta,
+    CacheLookupRequest,
+    CacheLookupDecision,
+    parseCacheControl,
+    isResponseStorable,
+    computeFreshnessLifetime,
+    computeCurrentAge,
+    evaluateCacheLookup,
+} from "./cachePolicy.cp";

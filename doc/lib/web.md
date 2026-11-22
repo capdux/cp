@@ -315,6 +315,46 @@ pub fn demoCorsGuard() {
 }
 ```
 
+### 零分配 RFC 9111 HTTP 缓存新鲜度与 `Cache-Control` 裁决引擎 (`cachePolicy.cp`)
+
+面向 CDN、API 网关与 HTTP 客户端缓存的 100% 纯 CP 零动态堆分配 RFC 9111 + RFC 5861 缓存策略与新鲜度裁决引擎：
+
+- **常量、枚举与数据模型**：
+  - `CACHE_MAX_DELTA_SECONDS = 2147483648`
+  - `CacheScope`（`private_cache | shared_cache`）、`CacheLookupVerdict`（`fresh_hit | stale_while_revalidate | stale_if_error | revalidate_required | miss_bypass`）
+  - `CacheControl`、`StoredResponseMeta`、`CacheLookupRequest`、`CacheLookupDecision`
+- **核心函数**：
+  - `parseCacheControl(header: string): CacheControl?`：大小写无关解析全部 RFC 9111 / RFC 5861 指令（`no-store`, `no-cache`, `private`, `public`, `must-revalidate`, `proxy-revalidate`, `immutable`, `only-if-cached`, `max-age`, `s-maxage`, `min-fresh`, `max-stale[=N]`, `stale-while-revalidate`, `stale-if-error`），支持引号值与未知扩展跳过，拦截负数/溢出秒数、未闭合引号与 CRLF 注入。
+  - `isResponseStorable(resp, scope): bool`：RFC 9111 §3/§3.5 可存储性判定（拦截 `no-store`、共享缓存拦截 `private` 与未授权缓存的 `Authorization` 响应）。
+  - `computeFreshnessLifetime(resp, scope): u64` / `computeCurrentAge(resp, now_sec): u64`：RFC 9111 §4.2 精确新鲜度寿命（共享缓存 `s-maxage > max-age > Expires - Date > 10% (Date - Last-Modified)`；私有缓存忽略 `s-maxage`）与饱和当前年龄计算。
+  - `evaluateCacheLookup(resp, req): CacheLookupDecision`：综合请求/响应指令、`must-revalidate`/`proxy-revalidate`、`stale-while-revalidate`、`stale-if-error` 与 `max-stale` 输出精确裁决。
+
+```cp
+import {
+    CacheScope,
+    CacheLookupVerdict,
+    StoredResponseMeta,
+    CacheLookupRequest,
+    parseCacheControl,
+    evaluateCacheLookup,
+} from "cap:web";
+
+pub fn demoCachePolicy() {
+    const cc = parseCacheControl("public, s-maxage=60, stale-while-revalidate=30, stale-if-error=300") ?? return;
+    const resp = StoredResponseMeta{
+        status_code: 200,
+        cache_control: cc,
+        request_time_sec: 1000,
+        response_time_sec: 1000,
+    };
+    const decision = evaluateCacheLookup(resp, CacheLookupRequest{
+        scope: CacheScope.shared_cache,
+        now_sec: 1075, // 过期 15s，位于 SWR 30s 窗口内
+    });
+    * = (decision.verdict == CacheLookupVerdict.stale_while_revalidate); // true
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
