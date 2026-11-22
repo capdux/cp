@@ -71,3 +71,19 @@ export {
     appendXmlEscaped,
     mergeJUnitFragments,
 } from "./aggregate";
+
+export {
+    TEST_SUFFIX_DOT_TEST,
+    TEST_SUFFIX_UNDER_TEST,
+    TEST_SUFFIX_DOT_SPEC,
+    TEST_SUFFIX_UNDER_SPEC,
+    TEST_DEFAULT_IGNORE_DIR,
+    TEST_DISCOVERY_MAX_PATH,
+    isSupportedTestExt,
+    hasBunTestSuffix,
+    hasTestNameSuffix,
+    isExplicitPathArg,
+    shouldSkipDirectory,
+    matchesDiscoveryGlob,
+    TestDiscoveryFilter,
+} from "./discovery";

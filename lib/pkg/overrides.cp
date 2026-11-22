@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/lockfile/OverrideMap.cp | Synced: 2026-11-22T01:59:10Z
+// Source: Absorbed from /data/dev/bun/src/install/lockfile/OverrideMap.cp | Synced: 2026-11-22T05:48:05Z
 // Pure-CP zero-allocation npm `overrides` & Yarn `resolutions` dependency
 // version override resolver with `$pkg` root-dependency reference expansion,
 // single-level key normalization, deterministic lexicographical sorting, and

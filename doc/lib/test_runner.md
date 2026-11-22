@@ -163,10 +163,37 @@ pub fn demoAggregate(allocator: std.mem.Allocator): ! {
     defer allocator.free(merged_lcov);
 }
 ```
+8. **测试文件发现、过滤与目录剪枝引擎（`lib/test_runner/discovery.cp`，吸收自 `/data/dev/bun/src/cli/test/Scanner.cp`）**：
+   - 常量与函数：`TEST_SUFFIX_DOT_TEST` (`.test`)、`TEST_SUFFIX_UNDER_TEST` (`_test`)、`TEST_SUFFIX_DOT_SPEC` (`.spec`)、`TEST_SUFFIX_UNDER_SPEC` (`_spec`)、`TEST_DEFAULT_IGNORE_DIR` (`node_modules`)、`TEST_DISCOVERY_MAX_PATH` (`4096`)、`isSupportedTestExt`、`hasBunTestSuffix`、`hasTestNameSuffix`、`isExplicitPathArg`、`shouldSkipDirectory`、`matchesDiscoveryGlob`；
+   - 核心类型：`TestDiscoveryFilter`（`couldBeTestFile` / `doesAbsolutePathMatchFilter` / `doesPathMatchFilter` / `matchesPathIgnorePattern` / `shouldPruneDirectory` / `shouldRunFile`）。
 
-### 上游 Bun Test Reporters 与 Code Coverage 生产最佳实践（吸收自 `/data/dev/bun/docs/test/{reporters,code-coverage}.mdx`）
+```typescript
+import { TestDiscoveryFilter, isExplicitPathArg } from "cap:test_runner";
 
-1. **多形态 CI 报告协同**：
+const excludes: [1][]const u8 = ["fixtures"];
+const filters: [1][]const u8 = ["utils"];
+const ignores: [1][]const u8 = ["vendor/**"];
+const disc = TestDiscoveryFilter{
+    exclusion_names: excludes[0..],
+    filter_names: filters[0..],
+    path_ignore_patterns: ignores[0..],
+    include_cp_prefix: true,
+};
+const run_it = disc.shouldRunFile("/repo/src/utils/str.test.cp", "src/utils/str.test.cp", true); // true
+const prune_vendor = disc.shouldPruneDirectory("vendor", "vendor"); // true
+const explicit = isExplicitPathArg("./test/specific.test.cp"); // true
+* = run_it;
+* = prune_vendor;
+* = explicit;
+```
+
+### 上游 Bun Test Discovery、Reporters 与 Code Coverage 生产最佳实践（吸收自 `/data/dev/bun/docs/test/{discovery,reporters,code-coverage}.mdx`）
+
+1. **测试文件发现与过滤契约（参考 `/data/dev/bun/docs/test/discovery.mdx`）**：
+   - **默认匹配模式**：递归扫描 `*.test.{js|jsx|ts|tsx|cp}`、`*_test.*`、`*.spec.*`、`*_spec.*`（CP 工程默认兼容 `test_*.cp` 前缀约定），自动忽略 `node_modules` 与隐藏目录（`.` 开头）。
+   - **位置参数过滤 vs 显式路径**：位置过滤参数按**子串匹配**工作（非 glob），如 `utils` 可命中 `src/utils/string.test.ts` 与 `lib/utils/array_test.js`；若需运行精确文件，路径必须以 `./`、`../` 或 `/` 开头（`isExplicitPathArg`）。
+   - **目录剪枝防误杀原则**：`path_ignore_patterns` 仅对包含 `**` 的模式（如 `vendor/**`）追加末尾 `/` 尝试提前剪枝整棵子树；单星号模式（如 `vendor/*`）不跨目录边界，因此绝不误剪枝子目录。
+2. **多形态 CI 报告协同**：
    - 终端交互与大套件推荐精简进度输出（如 dots 模式，仅打印 `.` / `F` 减少日志刷屏）；无颜色终端环境自动降级为纯 ASCII（`(pass)` / `(fail)`）。
    - CI 流水线（GitLab CI / Jenkins / GitHub Actions）可同时输出控制台摘要与 JUnit XML 文件，并在并发执行时通过 `mergeJUnitFragments` 汇总多 Worker 产物。
 2. **代码覆盖率阈值门禁与持久化报告**：
