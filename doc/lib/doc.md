@@ -168,6 +168,14 @@ pub fn demoCsvTable() {
 - **零堆表格公式求值器 (`evalXlsxFormula`)**：
   - 支持 `+ - * /` 括号优先级、单元格引用（`$A$1`）、范围聚合（`SUM`/`AVERAGE`/`MIN`/`MAX`/`COUNT`）、条件分支（`IF` 含 `= <> < <= > >=`）、`ABS`/`ROUND`，内置除零（`DivisionByZero`）、无效引用（`InvalidReference`）与循环引用（`CycleDetected`）防护。
 
+### 生产级零堆 OOXML DOCX 富文本/表格/超链接/批注解析与生成及 Markdown 互转 (`docx.cp`)
+
+在 100% 向下兼容既有 `DocxCoreProps`/`DocxParagraphIter`/`extractDocxText`/`summarizeDocx` 的基础上，新增全套零堆外部切片 WordprocessingML 引擎：
+
+- **关系表与超链接解析/生成**：`DocxRel`、`parseDocxRelsXml`、`lookupDocxRelTarget`、`buildDocxRelsXml`；
+- **富文本/表格/批注解析**：`parseDocxDocumentXml`（保留段落与表格交错顺序，解析 `Heading1..6`、列表 `<w:numPr>`、对齐 `<w:jc>`、加粗/斜体/下划线/删除线/字号、`<w:tab/>`/`<w:br/>`、XML 实体解码、`<w:hyperlink>` URL 关联及 `<w:tbl>` 含 `gridSpan` 跨列合并）与 `parseDocxCommentsXml`（审阅批注 `id`/`author`/`date`/正文）；
+- **XML 生成与 Markdown 双向互转**：`buildDocxDocumentXml`、`docxXmlToMarkdown`、`markdownToDocxXml` 及中英文字数统计 `computeDocxWordStats`（`paragraph_count`/`table_count`/`char_count`/`english_word_count`/`cjk_char_count`）。
+
 ---
 
 ## 收敛子模块深度文档

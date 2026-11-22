@@ -60,6 +60,8 @@ export {
 // --- OOXML DOCX WordprocessingML & CoreProps ---
 export {
     DOCX_MAIN_CONTENT_TYPE,
+    DOCX_HYPERLINK_REL_TYPE,
+    DocxError,
     DocxCoreProps,
     DocxParagraph,
     DocxStats,
@@ -70,6 +72,26 @@ export {
     extractDocxParagraphText,
     extractDocxText,
     summarizeDocx,
+    DocxRel,
+    parseDocxRelsXml,
+    lookupDocxRelTarget,
+    buildDocxRelsXml,
+    DocxAlign,
+    DocxRun,
+    DocxRichParagraph,
+    DocxTableCell,
+    DocxTable,
+    DocxBlockKind,
+    DocxBlockRef,
+    DocxParsedDocument,
+    DocxComment,
+    parseDocxDocumentXml,
+    parseDocxCommentsXml,
+    buildDocxDocumentXml,
+    docxXmlToMarkdown,
+    markdownToDocxXml,
+    DocxWordStats,
+    computeDocxWordStats,
 } from "./docx.cp";
 
 // --- OOXML XLSX SpreadsheetML ---
