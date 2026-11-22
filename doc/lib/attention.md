@@ -11,6 +11,7 @@
 - **`KvCache`**: 多层自回归 KV 缓存容器，按 `[layer][seq_pos][kv_head][head_dim]` 布局存储，支持 `appendStep`、`truncateTo` 回滚与 `reset`。
 - **`KV_INVALID_BLOCK` / `KvBlockMeta` / `KvAllocStats` / `PagedKvAllocator` / `BlockTable`** (`kv_cache.cp`)：零堆分配 PagedAttention 物理块管理器，支持系统提示词前缀哈希零拷贝共享、释放后缓存复用与 LRU 驱逐、Beam Search `retainBlock` + 引用计数 CoW（共享态分配新块，独占态零拷贝原地返回）以及 `BlockTable` 逻辑到物理槽位映射。
 - **`SamplingConfig`**: 采样配置（`temperature`, `top_k`, `top_p`, `repetition_penalty`, `seed`）。
+- **`RopeConfig` / RoPE / RMSNorm / LayerNorm / SwiGLU / GeLU** (`rope.cp`)：零堆分配 Transformer 基础推理核，支持 NTK-Aware 长上下文缩放的 RoPE 旋转位置编码、RMSNorm/LayerNorm 归一化与 SiLU/GeLU/SwiGLU 激活函数。
 
 ## 3. API 速查
 
@@ -34,6 +35,11 @@
 | `PagedKvAllocator.copyOnWrite` | `(*_, block_id: u32, tick: u64): u32?` | `ref_count > 1` 时分配新块并递增 `cow_copies`；`ref_count == 1` 时零拷贝原地返回 `block_id` |
 | `PagedKvAllocator.stats` | `(): KvAllocStats` | 返回总块数、空闲块、可驱逐缓存块、前缀命中/未命中与 CoW 次数 |
 | `BlockTable.init` / `appendBlock` / `mapTokenToPhys` | `(phys_blocks, block_size)` / `(phys_id)` / `(logical_pos): ([2]u32)?` | 序列逻辑块表与 `[phys_block_id, slot_offset]` 映射 |
+| `RopeConfig.default` | `(head_dim: usize): RopeConfig` | 构造默认 RoPE 配置（`base_theta = 10000.0`, `ntk_scale = 1.0`） |
+| `ropePrecomputeTables` | `(cfg, max_seq_len, cos_out, sin_out): bool` | 预计算 `[max_seq_len][head_dim / 2]` RoPE cos/sin 查找表（支持 NTK 缩放） |
+| `ropeApplyInPlace` | `(vec_inout, pos, head_dim, cos_table, sin_table): bool` | 对单头 Q/K 向量执行严格保范数的半切分旋转位置编码 |
+| `rmsNorm` / `layerNorm` | `(x, weight, eps, out): bool` / `(x, gamma, beta, eps, out): bool` | 零堆分配 RMSNorm（支持原地与空权重）与 LayerNorm 归一化核 |
+| `silu` / `geluTanh` / `swigluForward` | `(x): f64` / `(x): f64` / `(gate, up, out): bool` | 现代 LLM FFN 激活核（`swigluForward`: `out[i] = silu(gate[i]) * up[i]`） |
 
 ## 4. 示例
 
@@ -101,5 +107,40 @@ pub fn demoPagedKvPrefixSharing() {
             }
         }
     }
+}
+```
+
+### RoPE（含 NTK 缩放）、RMSNorm 与 SwiGLU 推理核示例 (`rope.cp`)
+
+```cp
+import {
+    RopeConfig,
+    ropePrecomputeTables,
+    ropeApplyInPlace,
+    rmsNorm,
+    swigluForward,
+} from "cap:attention";
+
+pub fn demoTransformerKernels() {
+    // 1. 预计算 NTK-Aware RoPE 表并对 Q 向量应用位置编码
+    const cfg = RopeConfig{ head_dim: 4, base_theta: 10000.0, ntk_scale: 2.0 };
+    let cos_buf: [16]f64 = [0.0; 16]; // max_seq_len=8 * (head_dim/2)=2
+    let sin_buf: [16]f64 = [0.0; 16];
+    let cos_s: []f64 = cos_buf[0..];
+    let sin_s: []f64 = sin_buf[0..];
+    * = ropePrecomputeTables(cfg, 8, cos_s, sin_s);
+
+    let q_buf: [4]f64 = [1.0, -0.5, 0.25, 0.75];
+    let q_s: []f64 = q_buf[0..];
+    * = ropeApplyInPlace(q_s, 5, 4, cos_buf[0..], sin_buf[0..]);
+
+    // 2. RMSNorm 与 SwiGLU FFN
+    let norm_buf: [4]f64 = [0.0; 4];
+    let ffn_buf: [4]f64 = [0.0; 4];
+    let norm_s: []f64 = norm_buf[0..];
+    let ffn_s: []f64 = ffn_buf[0..];
+    const empty_w: []const f64 = q_buf[0..0];
+    * = rmsNorm(q_buf[0..], empty_w, 0.00001, norm_s);
+    * = swigluForward(norm_buf[0..], q_buf[0..], ffn_s);
 }
 ```
