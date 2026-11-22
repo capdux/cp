@@ -92,3 +92,16 @@ export {
     isBarePackageSpecifier,
     stripNodeModulesPrefix,
 } from "./pathName";
+
+export {
+    IMPORT_RECORD_INVALID_SOURCE,
+    IMPORT_RECORD_MAX_COUNT,
+    ImportRecordError,
+    ImportKind,
+    ImportRecordFlags,
+    ImportRecordTag,
+    ImportRecordPrintMode,
+    ImportSourceRange,
+    ImportRecord,
+    ImportRecordList,
+} from "./importRecord";

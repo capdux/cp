@@ -168,3 +168,22 @@ const rel = stripNodeModulesPrefix("/proj/node_modules/a/node_modules/@acme/ui/i
 * = spec;
 * = rel;
 ```
+
+6. **导入记录元数据、15 位语义标志打包与插件命名空间路由（`lib/resolver/importRecord.cp`，吸收自 `/data/dev/bun/src/options_types/import_record.cp` & `/data/dev/bun/docs/bundler/plugins.mdx`）**：
+   - **导出符号**：`IMPORT_RECORD_INVALID_SOURCE`、`IMPORT_RECORD_MAX_COUNT` (`256`)、`ImportRecordError`、`ImportKind`（12 种导入种类含 `label`/`errorLabel`/`fromLabel`/`isCommonJS`/`isFromCSS`/`isEntryPoint`）、`ImportRecordFlags`（15-bit `toBits`/`fromBits`/`canSuppressResolveError`/`canPruneWhenUnused`/`needsModuleInteropWrap`）、`ImportRecordTag`（`fromSpecifier`/`isRuntime`/`isInternal`）、`ImportRecordPrintMode`、`ImportSourceRange`、`ImportRecord`（`init`/`resolveTo`/`isResolved`/`shouldPrintNamespace`/`formatPrintablePath`）、`ImportRecordList`；
+   - **Bun 插件命名空间与解析实战最佳实践（吸收自 `plugins.mdx`）**：
+     - 每个模块都带有命名空间（默认为 `"file"`，无需在路径中显式打印）；当 `onResolve` 插件为自定义资源（如 `yaml:`、`macro:`、`virtual:`）分配非 `"file"` 命名空间时，`ImportRecord.resolveTo()` 自动置位 `print_namespace_in_path`，通过 `formatPrintablePath` 输出 `"ns:path"`，避免同一路径重复触发解析插件；
+     - `original_path` 在解析改写 `path` 之前完整保留源码中的原始说明符，供 metafile 生成与诊断报错回溯；
+     - 包裹在 `try { require('x') } catch {}` 或 `import('x').catch(...)` 中的导入通过 `canSuppressResolveError()` 抑制静态解析致命错误；标记为 `is_unused && is_external_without_side_effects` 的记录可通过 `canPruneWhenUnused()` 安全裁剪。
+
+```cp
+import { ImportKind, ImportRecord, ImportRecordList } from "cap:resolver";
+
+let rec = ImportRecord.init("./config.yaml", ImportKind.Stmt, 0, 13);
+rec.resolveTo("/app/config.yaml", "yaml", 7);
+let buf: [64]u8 = [0; 64];
+const printable = rec.formatPrintablePath(buf[0..])?; // "yaml:/app/config.yaml"
+let list = ImportRecordList.init();
+* = list.push(rec)?;
+* = printable;
+```
