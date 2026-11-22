@@ -1076,3 +1076,24 @@ let q: [2]u32 = [0; 2];
 const lsum = computeLiveModules(mods[0..], edges[0..], live[0..], q[0..])?;
 * = lsum;
 ```
+
+- **构建管线配置、Loader 路由、External 匹配与增量缓存失效传播引擎（`buildPipeline.cp`，吸收自 `/data/dev/bun/src/bundler/transpiler.cp`）**：
+    - 导出：`BUILD_PIPELINE_FINGERPRINT_VERSION`、`BuildPipelineError`、`BuildTargetKind`（`NativeExe`/`NativeLib`/`NestContainer`/`Browser`/`Node`/`Wasm`）、`BuildLoaderKind`（14 种加载器）、`BuildLoaderOverride`、`parseBuildTargetKind`、`buildTargetName`、`parseBuildLoaderKind`、`buildLoaderName`、`resolveBuildLoader`（用户覆盖优先 + 扩展名路由）、`BuildDefinePair`、`BuildPipelineFlags`、`isCapBuiltinSpecifier`、`matchExternalPattern`、`isExternalSpecifier`、`lookupBuildDefine`、`computeBuildFlagsFingerprint`、`BuildCacheStatus`、`BuildCacheUnit`、`BuildDepEdge`、`InvalidationSummary`、`IncrementalBuildCache`（`init`/`registerUnit`/`evaluateAndPropagate`/`commitCompiledUnit`，外部队列 BFS 反向依赖精确传播最小重编闭包）、`BuildPipelineStage`、`BuildPipelineMetrics`、`BuildPipelineSession`、`formatBuildPipelineReport`。
+
+```cp
+import {
+    BuildTargetKind,
+    BuildLoaderKind,
+    BuildLoaderOverride,
+    BuildPipelineFlags,
+    BuildDefinePair,
+    resolveBuildLoader,
+    computeBuildFlagsFingerprint,
+} from "cap:bundler";
+
+const ov: [1]BuildLoaderOverride = [BuildLoaderOverride{ extension: ".svg", loader: BuildLoaderKind.DataUrl }];
+const ldr = resolveBuildLoader("assets/logo.svg", ov[0..]); // BuildLoaderKind.DataUrl
+const defs: [1]BuildDefinePair = [BuildDefinePair{ key: "DEBUG", value: "false" }];
+const fp = computeBuildFlagsFingerprint(BuildPipelineFlags.defaults(), defs[0..], ov[0..]);
+* = ldr; * = fp;
+```
