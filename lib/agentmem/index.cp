@@ -63,3 +63,10 @@ export {
     mergeRedundantMemoriesF32,
     packMemoriesForPrompt,
 } from "./retrieval.cp";
+
+export {
+    TemporalFactEdge,
+    GraphHopHit,
+    EntityGraphStats,
+    TemporalEntityGraph,
+} from "./entity_graph.cp";

@@ -30,6 +30,8 @@
 | `lib/agentmem/working_mem.cp` | `// Origin: Pure-CP Stdlib (AI Agent Working Memory & Token-Budget Context Window Manager)` | `MemSlotRole`、`EvictionPolicy`、`WorkingMemItem`、`WorkingMemStats`、`WorkingMemory`（零堆分配工作记忆与 Token 预算滑动上下文窗） |
 | `lib/agentmem/activation.cp` | `// Origin: Pure-CP Stdlib (AI GraphRAG Spreading Activation & Personalized PageRank Memory Recall)` | `MemGraphEdge`、`ActivatedNode`、`SpreadingConfig`、`spreadActivation`、`personalizedPageRank`（零堆分配 GraphRAG 扩散激活与个性化 PageRank 记忆召回） |
 | `lib/agentmem/consolidation.cp` | `// Origin: Pure-CP Stdlib (AI Agent Memory Consolidation, Dedup & Retention Pruning Engine)` | `MemConsolidationTier`、`ConsolidatableRecord`、`ConsolidationPolicy`、`ConsolidationReport`、`halfLifeDecayFactor`、`consolidateMemoriesInPlace`（零堆分配睡眠期记忆巩固、去重合并、半衰期衰减、分级晋升与遗忘剪枝归档） |
+| `lib/agentmem/retrieval.cp` | `// Origin: Pure-CP Stdlib (AI Agent Three-Factor Memory Retrieval, SIMD Dedup Merge & Prompt Packing)` | `MemoryRetrievalConfig`、`MemoryCandidate`、`MemoryScoredHit`、`MemoryMergeStats`、`MemoryPackResult`、`scoreAndRankMemoriesF32`、`mergeRedundantMemoriesF32`、`packMemoriesForPrompt` |
+| `lib/agentmem/entity_graph.cp` | `// Origin: Pure-CP Stdlib (AI Agent Zero-Alloc Temporal Entity Knowledge Graph & Two-Hop Recall Engine)` | `TemporalFactEdge`、`GraphHopHit`、`EntityGraphStats`、`TemporalEntityGraph`（半开时序区间事实管理、原子新旧事实更替 `supersedeFact`、时间点历史快照回溯与 1~2 跳环路去重扩展） |
 | `lib/agentmem/index.cp` | `// Source: cp/lib/agentmem/index.cp (Unified Exports for cap:agentmem)` | `cap:agentmem` 与 `cap.agentmem` 统一公开导出入口 |
 
 ---
@@ -398,5 +400,44 @@ pub fn demoThreeFactorMemoryRetrieval() {
             * = prompt_buf[0..pack_res.bytes_written];
         }
     }
+}
+```
+
+### 8. 零堆分配时序实体关系图谱与 1~2 跳多跳召回器 (`entity_graph.cp`)
+
+面向 GraphRAG 与长程事实记忆演化的 100% 纯 CP、零堆分配时序实体关系图谱引擎，通过半开时间区间 `[valid_from_ms, valid_to_ms)`（`valid_to_ms == 0` 表示至今有效）彻底解决 Agent 记忆“新旧事实冲突”痛点并保留完整可回溯历史：
+
+- **`TemporalFactEdge`**：`{ edge_id, src_entity_id, rel_type_id, dst_entity_id, confidence: f32, valid_from_ms, valid_to_ms, active }`
+- **`GraphHopHit`**：`{ entity_id, hop_depth, path_confidence: f32, via_edge_id }`
+- **`EntityGraphStats`**：`{ capacity, total_edges, current_valid_edges, superseded_edges, total_assertions, total_supersedes }`
+- **`TemporalEntityGraph`**：
+  - `init(edges_buf: *[]TemporalFactEdge): TemporalEntityGraph?`（复用调用方栈/静态切片，零堆分配）
+  - `assertFact(*_, src_id, rel_id, dst_id, confidence, valid_from_ms): u32?`（校验非零 ID、`confidence ∈ (0.0, 1.0]` 与 `valid_from_ms >= 0`）
+  - `supersedeFact(*_, src_id, rel_id, new_dst_id, confidence, now_ms): u32?`（原子将同 `(src, rel)` 的旧有效事实设置 `valid_to_ms = now_ms` 并写入新事实；满槽或参数非法时保证不修改旧事实）
+  - `invalidateEdge(*_, edge_id, valid_to_ms): bool`
+  - `queryFactsAt(src_id, rel_id_opt: u32?, at_ms, out_edges): usize`（按时间点 `at_ms` 精确回溯历史快照，按 `confidence` 降序输出）
+  - `traverseTwoHop(start_entity_id, at_ms, min_confidence, out_hits): usize`（零堆 1 跳 + 2 跳扩展，2 跳置信度为 `e1.confidence * e2.confidence`，自动规避环路、按实体去重保留最高置信度路径并按 `(path_confidence 降序, entity_id 升序)` 输出）
+  - `stats(): EntityGraphStats` / `reset(*_)`
+
+```cp
+import { TemporalFactEdge, GraphHopHit, TemporalEntityGraph } from "cap:agentmem";
+
+pub fn demoTemporalEntityGraph() {
+    let edges: [16]TemporalFactEdge = [TemporalFactEdge{}; 16];
+    let edges_s: []TemporalFactEdge = edges[0..];
+    let g = TemporalEntityGraph.init(edges_s) ?? return;
+
+    // t=1000: Alice(1) --lives_in(10)--> Tokyo(100), Tokyo(100) --in_country(11)--> Japan(200)
+    * = g.assertFact(1, 10, 100, 0.90, 1000);
+    * = g.assertFact(100, 11, 200, 0.95, 1000);
+    // t=2000: Alice 搬到 Sydney(101)，自动使 Tokyo 事实失效
+    * = g.supersedeFact(1, 10, 101, 0.98, 2000);
+
+    let hits: [8]GraphHopHit = [GraphHopHit{}; 8];
+    let hits_s: []GraphHopHit = hits[0..];
+    const n_past = g.traverseTwoHop(1, 1500, 0.5, hits_s); // 命中 Tokyo(0.90) + Japan(0.855)
+    const n_now  = g.traverseTwoHop(1, 2500, 0.5, hits_s); // 命中 Sydney(0.98)
+    * = n_past;
+    * = n_now;
 }
 ```
