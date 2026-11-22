@@ -1144,3 +1144,59 @@ pub fn demoBinaryVectorIndex(query: []const f32, raw_pool: []const f32) {
     * = idx.stats().compression_ratio_x; // 32.0
 }
 ```
+
+---
+
+## 零分配 SIMD 语义意图路由器（Semantic Intent Router，`semantic_router.cp`）
+
+面向 AI Agent 微秒级前置意图分类的 100% 纯 CP 零动态堆分配 SIMD 语义路由器（无需等待 500ms LLM 推理即可完成高频工具/技能路由与歧义降级）：
+
+- **常量与枚举**：
+  - `SEM_ROUTER_MAX_ROUTES = 32`、`SEM_ROUTER_MAX_EXEMPLARS = 128`、`SEM_ROUTER_NAME_MAX_LEN = 48`
+  - `SemanticAggMode`（`max_exemplar` 取同路由全部例句最大余弦 | `centroid_mean` 取同路由例句均值余弦）
+  - `SemanticRouteStatus`（`matched | below_threshold | ambiguous_margin | no_routes | invalid_query`）
+- **数据模型**：
+  - `SemanticRouterConfig`（`dim`, `agg_mode`, `min_margin_f32`；提供 `isValid()`）
+  - `SemanticRouteHit`（`route_id`, `score_f32`, `passed_threshold`）
+  - `SemanticRouteDecision`（`status`, `route_id`, `best_score_f32`, `second_score_f32`, `margin_f32`）
+  - `SemanticRouterStats`（`route_count`, `exemplar_count`, `dim`, `total_queries`, `matched_count`, `fallback_count`）
+- **核心路由器（`SemanticIntentRouter`）**：
+  - `init(cfg, vec_pool: *[]f32): SemanticIntentRouter?`：复用调用方扁平 `f32` 例句缓冲，零动态堆分配。
+  - `register_route(*_, route_id, name, min_threshold_f32): bool`：唯一 ID 去重、独立置信度阈值 `[-1, 1]` 与 32 路由上限校验。
+  - `add_exemplar(*_, route_id, embedding): bool`：自动 `@dot` + `@sqrt` L2 归一化写入扁平池，支持每路由多例句。
+  - `route_query(*_, query_embedding, out_top_hits: *[]SemanticRouteHit): SemanticRouteDecision`：对查询向量缩放不变归一化，基于 8-lane SIMD `@dot` 计算每路由聚合分，按 `(score_f32 降序, route_id 升序)` 填充 `out_top_hits`，并严格执行每路由 `min_threshold_f32` 与 Top-1/Top-2 `min_margin_f32` 歧义防误路由守卫。
+
+### SIMD 语义意图路由器 QuickStart 示例
+
+```cp
+import {
+    SemanticAggMode,
+    SemanticRouteStatus,
+    SemanticRouterConfig,
+    SemanticRouteHit,
+    SemanticIntentRouter,
+} from "cap:vector";
+
+pub fn demoSemanticIntentRouter() {
+    let pool: [64]f32 = [0.0; 64]; // 16 exemplars x 4D
+    let pool_s: []f32 = pool[0..];
+    const cfg = SemanticRouterConfig{ dim: 4, agg_mode: SemanticAggMode.max_exemplar, min_margin_f32: 0.08 };
+    let router = SemanticIntentRouter.init(cfg, pool_s) ?? return;
+
+    * = router.register_route(10, "billing_refund", 0.75);
+    * = router.register_route(20, "code_review", 0.75);
+
+    const ex_bill: [4]f32 = [1.0, 0.0, 0.0, 0.0];
+    const ex_code: [4]f32 = [0.0, 1.0, 0.0, 0.0];
+    * = router.add_exemplar(10, ex_bill[0..]);
+    * = router.add_exemplar(20, ex_code[0..]);
+
+    const q: [4]f32 = [0.95, 0.10, 0.0, 0.0];
+    let hits: [2]SemanticRouteHit = [SemanticRouteHit{}; 2];
+    let hits_s: []SemanticRouteHit = hits[0..];
+    const decision = router.route_query(q[0..], hits_s);
+    if (decision.status == SemanticRouteStatus.matched) {
+        * = decision.route_id; // 10 ("billing_refund")
+    }
+}
+```

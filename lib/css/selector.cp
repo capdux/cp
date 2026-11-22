@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/selectors/parser.cp | Synced: 2026-11-22T10:11:20Z
+// Source: Absorbed from /data/dev/bun/src/css/selectors/parser.cp | Synced: 2026-11-22T10:21:35Z
 // lib/css/selector.cp
 // CSS Selectors Level 4 Parser, Specificity Calculator, SelectorList & Element Matcher
 // Absorbed from Bun src/css/selectors/{parser,selector,builder}.cp

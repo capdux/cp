@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/PackageManager/patchPackage.cp | Synced: 2026-11-22T08:37:00Z
+// Source: Absorbed from /data/dev/bun/src/install/PackageManager/patchPackage.cp | Synced: 2026-11-22T10:27:34Z
 // Ported from Bun: /data/dev/bun/src/install/PackageManager/patchPackage.cp & /data/dev/bun/src/install/patch_install.cp & /data/dev/bun/docs/pm/cli/patch.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation `bun patch` / `bun patch --commit` target argument parser,

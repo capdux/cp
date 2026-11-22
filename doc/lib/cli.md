@@ -475,3 +475,56 @@ pkg_git.addScript(PmLifecyclePhase.Postinstall);
 const decision = pol.evaluate(pkg_git);
 * = decision;
 ```
+
+15. **Monorepo 工作区脚本 DAG 调度器与输出折叠器（`lib/cli/filter_run.cp`，吸收自 `/data/dev/bun/src/cli/filter_run.cp` & `/data/dev/bun/docs/pm/filter.mdx`）**：
+    - **依赖拓扑顺序与环回退（`FilterRunGraph`）**：
+      - 忠实还原 Bun `bun --filter <pattern> <script>` / `--workspaces` 执行调度模型：若工作区包 `app` 依赖 `core`，则 `core` 的脚本全部完成后才启动 `app`；
+      - 内置**迭代式三色 DFS 环检测**（零递归，免疫深链栈溢出）：当跨包依赖存在循环时，`resolveDependencies()` 标记 `cycle_detected = true` 并清除跨包依赖边回退为并行启动，同时**始终保留**同包内 `pre<script>` -> `<script>` -> `post<script>` 串行生命周期顺序；
+      - 支持三种调度模式：`FilterRunMode.Topological`（默认拓扑并发）、`FilterRunMode.Parallel`（对应 `--parallel`，忽略跨包边全并发）与 `FilterRunMode.Sequential`（对应 `--sequential`，按序逐一串行）；
+      - 支持 `exit_on_error` 开关：默认为 `true`（任一脚本非零退出/信号终止即中止所有 `Pending` 任务），设为 `false` 时对齐 `--no-exit-on-error` 继续完成其余独立包脚本；`finalizeExitCode()` 按 Bun 语义聚合最终退出码（非零退出码优先，信号终止映射为 `128 + signal`，错误映射为 `1`）。
+    - **输出尾部行折叠与框线渲染（`elideScriptOutput` / `formatFilterOutputBlock`）**：
+      - `elideScriptOutput(data, max_lines)` 零分配剥离末尾单个 `\n` 并保留最后 `max_lines` 行（默认 10 行），返回被折叠行数 `elided_count`；`is_abort = true` 时展开完整日志便于排障；
+      - `formatFilterDuration`（`> 1000 ms` 渲染 `Done in X.YY s`，否则 `Done in N ms`）、`formatFilterStatusLine` 与 `formatFilterOutputBlock` 生成标准 `│` / `└─` 框线输出块。
+
+### Monorepo 拓扑调度与输出折叠示例（`lib/cli/filter_run.cp`）
+
+```cp
+import {
+    FilterRunMode,
+    FilterScriptPhase,
+    FilterRunGraph,
+    elideScriptOutput,
+    formatFilterOutputBlock,
+} from "cap:cli";
+
+let g = FilterRunGraph.init(FilterRunMode.Topological, true);
+const core_pre = g.addScript("@ws/core", "prebuild", "rm -rf dist", FilterScriptPhase.Pre)?;
+const core_main = g.addScript("@ws/core", "build", "tsc -b", FilterScriptPhase.Main)?;
+const app_main = g.addScript("@ws/app", "build", "vite build", FilterScriptPhase.Main)?;
+
+// app 依赖 core：core 的 prebuild -> build 全部完成后才会就绪 app:build
+* = g.addPackageDependency("@ws/core", "@ws/app")?;
+const has_cycle = g.resolveDependencies()?; // false
+
+let ready: [8]usize = [0; 8];
+const n1 = g.collectReady(ready[0..]); // 仅 core_pre 就绪 (n1 == 1)
+g.markStarted(core_pre)?;
+g.markExited(core_pre, 0, 120_000_000)?; // 120 ms
+
+g.markStarted(core_main)?;
+g.markExited(core_main, 0, 1_450_000_000)?; // 1.45 s -> 释放 app_main
+
+const n2 = g.collectReady(ready[0..]); // app_main 就绪 (n2 == 1)
+g.markStarted(app_main)?;
+g.markExited(app_main, 0, 800_000_000)?;
+
+const elided = elideScriptOutput("l1\nl2\nl3\nl4\n", 2);
+// elided.content == "l3\nl4", elided.elided_count == 2
+let box_buf: [512]u8 = [0; 512];
+const bn = formatFilterOutputBlock(g.nodes[core_main], "ok\n", false, box_buf[0..])?;
+* = has_cycle;
+* = n1;
+* = n2;
+* = elided;
+* = bn;
+```

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/cli.cp | Synced: 2026-11-22T04:32:45Z
+// Source: Absorbed from /data/dev/bun/src/cli/cli.cp | Synced: 2026-11-22T10:27:34Z
 // lib/cli/index.cp
 // Unified Public Exports for cap:cli
 
@@ -221,3 +221,22 @@ export {
     PmLifecyclePackage,
     PmTrustPolicy,
 } from "./pm_trusted.cp";
+
+export {
+    FILTER_RUN_MAX_SCRIPTS,
+    FILTER_RUN_MAX_EDGES,
+    FILTER_RUN_DEFAULT_ELIDE_LINES,
+    FILTER_RUN_SIGINT,
+    FilterRunError,
+    FilterScriptPhase,
+    FilterRunMode,
+    FilterScriptStatus,
+    FilterElideResult,
+    FilterScriptNode,
+    elideScriptOutput,
+    formatLifecycleScriptName,
+    formatFilterDuration,
+    formatFilterStatusLine,
+    formatFilterOutputBlock,
+    FilterRunGraph,
+} from "./filter_run.cp";

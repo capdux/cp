@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/cli.cp | Synced: 2026-11-22T04:32:45Z
+// Source: Absorbed from /data/dev/bun/src/cli/cli.cp | Synced: 2026-11-22T10:27:34Z
 // lib/cli/subcommand.cp
 // Multi-level SubcommandRouter (auto-aligned colored --help & Levenshtein didYouMean) and MultiProgress task tree
 

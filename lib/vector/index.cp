@@ -227,3 +227,16 @@ export {
     BinaryIndexStats,
     BinaryVectorIndex,
 } from "./binary_index.cp";
+
+export {
+    SEM_ROUTER_MAX_ROUTES,
+    SEM_ROUTER_MAX_EXEMPLARS,
+    SEM_ROUTER_NAME_MAX_LEN,
+    SemanticAggMode,
+    SemanticRouteStatus,
+    SemanticRouterConfig,
+    SemanticRouteHit,
+    SemanticRouteDecision,
+    SemanticRouterStats,
+    SemanticIntentRouter,
+} from "./semantic_router.cp";
