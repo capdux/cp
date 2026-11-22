@@ -455,3 +455,17 @@ export {
     PrefixBlockReader,
     SstSparseIndex,
 } from "./sstableIndex.cp";
+
+// --- wal_checkpt (ARIES Fuzzy WAL Checkpoint & Safe Log Truncation Coordinator) ---
+export {
+    WAL_CKPT_MAX_DIRTY_PAGES,
+    WAL_CKPT_MAX_ACTIVE_TXNS,
+    WAL_CKPT_MAX_SEGMENTS,
+    WalCheckptOpStatus,
+    WalDirtyPageEntry,
+    WalActiveTxnEntry,
+    WalSegmentEntry,
+    WalCheckpointPlan,
+    WalCheckpointStats,
+    WalCheckpointCoordinator,
+} from "./walCheckpt.cp";

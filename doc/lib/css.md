@@ -931,3 +931,18 @@ const n = c.toCss(buf[0..])?;
 // buf[0..n] == "background elevated from \"./background.module.css\""
 * = n;
 ```
+
+25. **CSS Positioning Level 3 `position` 属性与 `-webkit-sticky` 自动前缀降级（`positionProp.cp`，吸收自 `/data/dev/bun/src/css/properties/position.cp` & `/data/dev/bun/docs/bundler/css.mdx`）**：
+    - **导出符号**：`CSS_STICKY_PREFIX_NONE` (`0x01`)、`CSS_STICKY_PREFIX_WEBKIT` (`0x02`)、`CSS_STICKY_PREFIX_BOTH` (`0x03`)、`CssPositionPropError`、`CssPositionKind`（`static_pos`/`relative`/`absolute`/`fixed`/`sticky`）、`CssPositionProp`（`default`/`sticky`/`parse`/`isPositioned`/`isOutOfFlow`/`isSticky`/`createsContainingBlockForAbsolute`/`withSafariCompat`/`eql`/`toCss`/`toCssDecls`）；
+    - **Bun CSS 自动厂商前缀实践（吸收自 `bundler/css.mdx`）**：
+      - Bun CSS bundler 默认启用浏览器兼容降级与厂商前缀注入；当目标浏览器包含需要 `-webkit-sticky` 的旧版 Safari 时，通过 `withSafariCompat(true)` 自动合并 `CSS_STICKY_PREFIX_BOTH`，并由 `toCssDecls(minify, out)` 先输出 `position:-webkit-sticky` 回退声明、再输出标准 `position:sticky` 声明，零动态堆分配完成兼容降级。
+
+```cp
+import { CssPositionProp } from "cap:css";
+
+const p = CssPositionProp.parse("sticky")?.withSafariCompat(true);
+let buf: [64]u8 = [0; 64];
+const n = p.toCssDecls(true, buf[0..])?;
+// buf[0..n] == "position:-webkit-sticky;position:sticky"
+* = n;
+```

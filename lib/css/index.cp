@@ -661,3 +661,12 @@ export {
     CssComposesSpecifier,
     CssComposesProp,
 } from "./composes.cp";
+
+export {
+    CSS_STICKY_PREFIX_NONE,
+    CSS_STICKY_PREFIX_WEBKIT,
+    CSS_STICKY_PREFIX_BOTH,
+    CssPositionPropError,
+    CssPositionKind,
+    CssPositionProp,
+} from "./positionProp.cp";

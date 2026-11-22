@@ -551,6 +551,40 @@ pub fn demoSstablePrefixIndex() {
 
 ---
 
+### 零分配 ARIES 风格 WAL 模糊检查点与安全日志截断协调器 (`walCheckpt.cp`)
+
+面向关系型/KV 存储引擎崩溃恢复与 WAL 日志安全回收的 100% 纯 CP 零动态堆分配 ARIES 模糊检查点协调器：
+
+- **常量与枚举**：
+  - `WAL_CKPT_MAX_DIRTY_PAGES = 128`、`WAL_CKPT_MAX_ACTIVE_TXNS = 32`、`WAL_CKPT_MAX_SEGMENTS = 32`
+  - `WalCheckptOpStatus`（`ok | invalid_arg | duplicate_id | capacity_full | not_found | segment_not_reclaimable`）
+- **数据模型**：
+  - `WalDirtyPageEntry`（`page_id`, `rec_lsn`, `last_lsn`）、`WalActiveTxnEntry`（`tx_id`, `pinned_lsn`）、`WalSegmentEntry`（`seg_id`, `start_lsn`, `end_lsn`, `size_bytes`, `closed`）
+  - `WalCheckpointPlan`（`redo_lsn`, `min_active_tx_lsn`, `safe_truncate_lsn`, `reclaimable_seg_count`, `reclaimable_bytes`, `reclaimableIds()`）、`WalCheckpointStats`
+- **核心引擎 `WalCheckpointCoordinator`**：
+  - 脏页表管理：`markPageDirty(*_, page_id, lsn)`（保留首次 `rec_lsn`、推进 `last_lsn`）、`markPageFlushed(*_, page_id, flushed_lsn)`（仅当 `flushed_lsn >= last_lsn` 清除脏页，防止模糊刷盘期间并发新写丢失）、`getDirtyPage(page_id)`。
+  - 活跃事务/快照钉住：`beginTxn(*_, tx_id, pinned_lsn)` / `endTxn(*_, tx_id)`。
+  - WAL 段注册与安全回收：`registerSegment` / `closeSegment` / `reclaimSegment` / `reclaimSafeSegments`。
+  - ARIES 水位规划与提交：`computeCheckpointPlan(current_flushed_lsn)`（`redo_lsn = min(DPT.rec_lsn)`，`safe_truncate_lsn = min(redo_lsn, min(active_tx.pinned_lsn))`，自动按 `end_lsn` 升序列出全部已关闭且 `end_lsn < safe_truncate_lsn` 的可回收段）、`commitCheckpoint(*_, checkpoint_lsn, current_flushed_lsn)`、`stats(current_flushed_lsn)`。
+
+```cp
+import { WalCheckpointCoordinator } from "cap:db";
+
+pub fn demoWalCheckpoint() {
+    let ckpt = WalCheckpointCoordinator.init();
+    * = ckpt.registerSegment(1, 1, 100, 4096, true);
+    * = ckpt.registerSegment(2, 101, 200, 4096, true);
+    * = ckpt.markPageDirty(10, 120);
+    * = ckpt.beginTxn(1, 150);
+
+    const plan = ckpt.commitCheckpoint(220, 220);
+    // redo_lsn == 120, safe_truncate_lsn == 120 -> 段 1 (end_lsn 100 < 120) 可安全回收!
+    * = ckpt.reclaimSafeSegments(plan.safe_truncate_lsn);
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [bloom_cuckoo.md](db/bloom_cuckoo.md)
