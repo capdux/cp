@@ -179,6 +179,20 @@ const line = formatExportLine(buf[0..], entry.name, entry.value)?; // "APP_ENV=p
 * = line;
 ```
 
+### POSIX `cd` 目标解析、路径规范化与 `(cwd, prev_cwd)` 状态机（`cd_path.cp`，吸收自 `/data/dev/bun/src/shell/builtin/cd.cp`）
+
+- 导出：`SHELL_CD_MAX_PATH` (`1024`)、`SHELL_CD_MAX_SEGMENTS` (`64`)、`ShellCdError`、`CdTargetKind`（`Home` / `Previous` / `Path`）、`CdTarget`（`parseArgs`）、`normalizePosixPath`、`resolveCdTarget`、`formatCdError`、`ShellDirState`（`init` / `cwd` / `prevCwd` / `applyCd`）。
+
+```typescript
+import { ShellDirState } from "cap:shell";
+
+let dir = ShellDirState.init("/workspace/app")?;
+const args1: [1][]const u8 = ["../shared/./lib"];
+* = dir.applyCd(args1[0..], "/home/dev")?; // "/workspace/shared/lib"
+const args2: [1][]const u8 = ["-"];
+* = dir.applyCd(args2[0..], "/home/dev")?; // "/workspace/app"
+```
+
 
 ---
 
@@ -199,6 +213,6 @@ const line = formatExportLine(buf[0..], entry.name, entry.value)?; // "APP_ENV=p
    - 括号子 Shell `(...)` 会克隆当前 `ShellSession` 的环境变量与目录栈，内部 `cd`/`export` 不会泄漏至父会话；花括号命令组 `{ ...; }` 则在当前会话中直接执行。
 4. **POSIX 展开顺序契约**：
    - 严格遵循 `大括号展开 -> 波浪号 -> 参数/算术/命令替换 -> 无引号分词 -> Glob 展开 -> 去引号` 顺序；单引号 `'...'` 禁止一切展开，双引号 `"..."` 允许变量替换但禁止 Glob 与分词。
-5. **重定向、管道与非零退出码治理（吸收自 `/data/dev/bun/docs/runtime/shell.mdx`）**：
+5. **重定向、管道、工作目录与流式按行读取（吸收自 `/data/dev/bun/docs/runtime/shell.mdx` 与 `/data/dev/bun/docs/guides/runtime/shell.mdx`）**：
    - 完整支持标准文件描述符重定向（`<`、`>`/`1>`、`2>`、`&>`、`>>`/`2>>`/`&>>`、`1>&2`、`2>&1`）及内存缓冲/流对象互连，无需落地临时文件；
-   - 自动化脚本与 CI 流水线中应显式检查每条命令的 `exit_code`（对应 Bun `.nothrow()` 与 `.throws(bool)` 策略），避免吞掉上游管道失败状态。
+   - 工作目录切换支持单命令局部 `.cwd(dir)` 覆盖与会话级 `ShellDirState`（`~` / `~/sub` 家目录展开、`-` 与 `OLDPWD` 往返切换及词法规范化），避免 `process.chdir()` 污染多线程进程全局状态；大输出命令推荐逐行流式消费（对应 Bun `.lines()`）并显式检查 `exit_code`。
