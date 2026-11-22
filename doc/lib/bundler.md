@@ -1047,3 +1047,32 @@ let pkg_map = BundlePackageMap.init();
 const bundle_fs = pkg_map.shouldBundle("fsevents", BundlePackageMode.Always); // false
 * = fmt; * = win; * = bundle_fs;
 ```
+
+- **模块链接图、Code-Splitting Chunk 划分与并行编译波次引擎（`chunkGraph.cp`，吸收自 `/data/dev/bun/src/bundler/LinkerContext.cp`）**：
+    - 导出：`CHUNK_GRAPH_INVALID_ID`、`CHUNK_GRAPH_HASH_HEX_LEN`、`ChunkGraphError`、`BundleEdgeKind`（`StaticImport`/`DynamicImport`/`ReExport`/`SideEffectOnly`）、`SplitChunkRole`（`EntryChunk`/`DynamicAsyncChunk`/`SharedCommonChunk`）、`BundleModuleNode`、`BundleImportEdge`、`LiveModuleSummary`、`computeLiveModules`（外部队列 BFS Tree-Shaking 活性与副作用剪枝）、`ChunkSplitOptions`、`ChunkGraphNode`、`ChunkDepEdge`、`ChunkSplitResult`、`formatChunkFilename`（`[name]-[hash8].js/.wasm/.nest`）、`computeCodeSplitChunks`（支持任意入口数 `>64` 的外部多字位图 Code-Splitting 与跨 Chunk 依赖图）、`CompileWaveEntry`、`CycleReport`、`CompileWavePlan`、`planParallelCompileWaves`（Kahn 分层拓扑并行编译波次 + 循环依赖诊断）、`formatChunkGraphReport`（JSON Metafile 摘要）；
+    - 全零堆分配、外部切片驱动，彻底消除 64 入口硬编码上限。
+
+```cp
+import {
+    BundleModuleNode,
+    BundleImportEdge,
+    BundleEdgeKind,
+    ChunkSplitOptions,
+    ChunkGraphNode,
+    ChunkDepEdge,
+    computeLiveModules,
+    computeCodeSplitChunks,
+} from "cap:bundler";
+
+const mods: [2]BundleModuleNode = [
+    BundleModuleNode{ id: 0, path: "src/app.cp", byte_size: 1024, is_entry: true, content_hash64: 0x1111 },
+    BundleModuleNode{ id: 1, path: "src/util.cp", byte_size: 512, is_entry: false, content_hash64: 0x2222 },
+];
+const edges: [1]BundleImportEdge = [
+    BundleImportEdge{ from_module: 0, to_module: 1, kind: BundleEdgeKind.StaticImport, is_used_export: true },
+];
+let live: [2]bool = [false; 2];
+let q: [2]u32 = [0; 2];
+const lsum = computeLiveModules(mods[0..], edges[0..], live[0..], q[0..])?;
+* = lsum;
+```

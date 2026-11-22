@@ -633,3 +633,26 @@ export {
     BundlePackageRule,
     BundlePackageMap,
 } from "./bundleEnums";
+
+export {
+    CHUNK_GRAPH_INVALID_ID,
+    CHUNK_GRAPH_HASH_HEX_LEN,
+    ChunkGraphError,
+    BundleEdgeKind,
+    SplitChunkRole,
+    BundleModuleNode,
+    BundleImportEdge,
+    LiveModuleSummary,
+    ChunkSplitOptions,
+    ChunkGraphNode,
+    ChunkDepEdge,
+    ChunkSplitResult,
+    CompileWaveEntry,
+    CycleReport,
+    CompileWavePlan,
+    computeLiveModules,
+    formatChunkFilename,
+    computeCodeSplitChunks,
+    planParallelCompileWaves,
+    formatChunkGraphReport,
+} from "./chunkGraph";
