@@ -1087,3 +1087,52 @@ fn demoModelGatewayRoute() {
     }
 }
 ```
+
+### 零堆分配工具调用配对安全上下文窗口压缩与前缀缓存规划器 (`contextWindow.cp`)
+
+面向长程工具调用 AI Agent 的 100% 纯 CP 零动态堆分配多轮上下文窗口治理与 Prompt Cache 命中优化器，彻底杜绝因截断导致孤立 `tool_call`/`tool_result` 引发上游 LLM API 400 错误：
+
+- **常量与枚举**：
+  - `CTX_WIN_MAX_TURNS = 64`、`CTX_WIN_MAX_GROUPS = 64`、`CTX_WIN_BPS_SCALE = 10000`
+  - `CtxTurnRole`（`system | user | assistant | tool_call | tool_result | summary`）
+  - `CtxEvictStrategy`（`sliding_recent | preserve_prefix_and_tail | drop_tool_outputs_first`）
+- **数据模型**：
+  - `CtxTurnMeta`（`turn_id`, `role`, `group_id` [非零值将 `tool_call` 与配对 `tool_result` 绑定为不可拆分原子组], `tokens`, `pinned`, `priority`, `content_hash`）
+  - `CtxWindowConfig`（`max_input_tokens`, `reserve_output_tokens`, `min_recent_turns`, `prefix_anchor_turns`, `strategy`；提供 `defaults()` 与 `effectiveInputBudget()`）
+  - `CtxCompactionPlan`（`kept_count`, `evicted_count`, `kept_indices`, `kept_tokens`, `evicted_tokens`, `preserved_prefix_tokens`, `prefix_cache_ratio_bps` [0..10000], `atomic_groups_evicted`, `needs_summary`）
+- **核心纯函数与状态追踪器**：
+  - `validateToolPairIntegrity(turns, kept_indices, kept_count): bool`：强校验所有被保留的 `tool_call`/`tool_result` 成对出现且无半拆分原子组。
+  - `planContextCompaction(turns, cfg): CtxCompactionPlan`：按原子组整体保留或淘汰，始终保护 `system` 与 `pinned` 轮次；支持 `preserve_prefix_and_tail`（保住前缀锚点与尾部近期轮次以最大化前缀缓存命中率）、`drop_tool_outputs_first`（优先淘汰旧工具组）与 `sliding_recent`，按严格原始时序升序输出 `kept_indices`。
+  - `ContextWindowTracker`：`init(cfg)` / `pushTurn(*_, role, group_id, tokens, pinned, priority, content_hash)` / `totalTokens()` / `utilizationBps()` / `shouldCompact(threshold_bps)` / `planCompaction()` / `applyCompaction(*_, summary_tokens, summary_hash)`（在首个淘汰空隙原子注入单条 `summary` 轮次，保护前缀 KV Cache 并累计压缩计数）。
+
+```cp
+import {
+    CtxTurnRole,
+    CtxEvictStrategy,
+    CtxWindowConfig,
+    ContextWindowTracker,
+    validateToolPairIntegrity,
+} from "cap:prompt";
+
+fn demoContextWindowCompactor() {
+    let cfg = CtxWindowConfig.defaults();
+    cfg.max_input_tokens = 1200;
+    cfg.reserve_output_tokens = 200; // effective budget = 1000
+    cfg.prefix_anchor_turns = 2;
+    cfg.min_recent_turns = 2;
+    cfg.strategy = CtxEvictStrategy.preserve_prefix_and_tail;
+
+    let tracker = ContextWindowTracker.init(cfg);
+    * = tracker.pushTurn(CtxTurnRole.system, 0, 300, false, 10, 0xA1);
+    * = tracker.pushTurn(CtxTurnRole.user, 0, 200, false, 8, 0xA2);
+    * = tracker.pushTurn(CtxTurnRole.tool_call, 10, 150, false, 5, 0xA3);
+    * = tracker.pushTurn(CtxTurnRole.tool_result, 10, 350, false, 5, 0xA4);
+    * = tracker.pushTurn(CtxTurnRole.assistant, 0, 250, false, 6, 0xA5);
+
+    if (tracker.shouldCompact(8000)) {
+        const plan = tracker.applyCompaction(120, 0xBEEF);
+        * = plan.prefix_cache_ratio_bps; // 前缀锚点完整保留
+    }
+    * = validateToolPairIntegrity;
+}
+```

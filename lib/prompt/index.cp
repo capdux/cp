@@ -318,3 +318,17 @@ export {
     estimateRequestCostMicros,
     ModelGatewayRouter,
 } from "./modelRoute.cp";
+
+export {
+    CTX_WIN_MAX_TURNS,
+    CTX_WIN_MAX_GROUPS,
+    CTX_WIN_BPS_SCALE,
+    CtxTurnRole,
+    CtxEvictStrategy,
+    CtxTurnMeta,
+    CtxWindowConfig,
+    CtxCompactionPlan,
+    validateToolPairIntegrity,
+    planContextCompaction,
+    ContextWindowTracker,
+} from "./contextWindow.cp";
