@@ -101,3 +101,8 @@ export {
     PgLengthPatch,
     PgWireWriter,
 } from "./pg_wire_writer.cp";
+
+export {
+    MySqlWireReaderError,
+    MySqlWireReader,
+} from "./mysql_wire_reader.cp";

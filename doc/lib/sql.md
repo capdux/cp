@@ -162,6 +162,19 @@ const frame = w.beginTaggedFrame('Q')?;
 const frame_len = w.finishLength(frame)?; // 4 + 9 = 13 bytes
 const wire = w.written(); // ['Q', 0, 0, 0, 13, 'S', 'E', ..., 0]
 ```
+- **MySQL 线协议零堆分配二进制读取器 (`mysql_wire_reader.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/NewReader.cp`)**：
+  - 错误集与结构体：`MySqlWireReaderError`（`ShortRead` / `InvalidEncodedInteger` / `InvalidEncodedLength` / `UnterminatedString` / `InvalidOffset`）、`MySqlWireReader`（`init` / `markMessageStart` / `offset` / `offsetFromStart` / `setOffsetFromStart` / `rewindToMessageStart` / `remaining` / `peek` / `ensureCapacity` / `skip` / `readBytes` / `readByte` / `readZ` / `readU16` / `readU24` / `readU32` / `readU64` / `readI32` / `readI64` / `readF32` / `readF64` / `readLenEncInt` / `readLenEncIntWithSize` / `readLenEncString` / `readLenEncStringOrNull`）
+
+```typescript
+import { MySqlWireReader } from "cap:sql";
+
+const wire: [12]u8 = [0x03, 'd', 'e', 'f', 0x05, 'u', 's', 'e', 'r', 's', 0xfb, 0x2a];
+let r = MySqlWireReader.init(wire[0..]);
+const catalog = r.readLenEncString()?; // "def"
+const table = r.readLenEncString()?;   // "users"
+const opt = r.readLenEncStringOrNull()?; // null (0xfb)
+const tag = r.readByte()?; // 0x2a
+```
 
 ---
 
