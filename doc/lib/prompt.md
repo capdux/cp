@@ -664,3 +664,45 @@ fn demoRagCitationGrounder() {
     * = report; // passed_gate == true, grounded_sentences == 2, out_of_bounds_refs == 0
 }
 ```
+
+### 15. 零分配多段优先级 Prompt Token 预算打包与 Middle-Out 裁剪引擎 (`token_budget_packer.cp`)
+
+面向长上下文 AI Agent（系统指令 + Tool Schema + RAG 检索块 + 对话历史 + 当前用户输入）的 100% 纯 CP 零动态堆分配 Token 预算规划与 Middle-Out 裁剪内核（有效缓解长上下文 "Lost in the Middle" 注意力衰减）：
+
+- **常量与枚举**：
+  - `BUDGET_PACKER_MAX_ITEMS` (`64`)
+  - `BudgetItemKind`（`system_pinned | tool_schema | rag_context | history_turn | user_query`）
+  - `BudgetTruncatePolicy`（`must_keep | drop_whole | keep_head | keep_tail | keep_middle_out`）
+- **数据模型**：
+  - `BudgetPackConfig`（`max_context_tokens`, `reserved_output_tokens`, `ellipsis_overhead_tokens` [默认 `4`]；提供 `effectiveBudget()` 与 `isValid()`）
+  - `BudgetedPromptItem`（`item_id`, `kind`, `priority`, `token_count`, `min_tokens`, `policy`, `recency_seq`）
+  - `PackedSlotDecision`（`item_id`, `included`, `allocated_tokens`, `truncated`, `head_tokens`, `tail_tokens`）
+  - `BudgetPackReport`（`effective_budget`, `allocated_total`, `remaining_tokens`, `included_count`, `truncated_count`, `dropped_count`, `pinned_overflow`）
+- **核心纯函数**：
+  - `packPromptWithinBudget(items, cfg, out_decisions): BudgetPackReport`：两阶段零堆分配预算规划——第一阶段优先锁定全部 `must_keep` 项（若超预算置 `pinned_overflow = true` 且仍不越界）；第二阶段按 `(priority 降序, recency_seq 降序, 输入索引 升序)` 确定性排序并依次打包或按策略执行 `keep_head` / `keep_tail` / `keep_middle_out`（对半切分头尾并扣除 `ellipsis_overhead_tokens`），所有决策严格按输入原序写出至 `out_decisions`。
+
+```cp
+import {
+    BudgetItemKind,
+    BudgetTruncatePolicy,
+    BudgetPackConfig,
+    BudgetedPromptItem,
+    PackedSlotDecision,
+    packPromptWithinBudget,
+} from "cap:prompt";
+
+fn demoTokenBudgetPacker() {
+    const items: [3]BudgetedPromptItem = [
+        BudgetedPromptItem{ item_id: 1, kind: BudgetItemKind.system_pinned, priority: 100, token_count: 200, min_tokens: 200, policy: BudgetTruncatePolicy.must_keep, recency_seq: 1 },
+        BudgetedPromptItem{ item_id: 2, kind: BudgetItemKind.rag_context,   priority: 50,  token_count: 500, min_tokens: 40,  policy: BudgetTruncatePolicy.keep_middle_out, recency_seq: 2 },
+        BudgetedPromptItem{ item_id: 3, kind: BudgetItemKind.user_query,    priority: 100, token_count: 100, min_tokens: 100, policy: BudgetTruncatePolicy.must_keep, recency_seq: 3 },
+    ];
+    const cfg = BudgetPackConfig{ max_context_tokens: 500, reserved_output_tokens: 100, ellipsis_overhead_tokens: 4 };
+    let decisions: [3]PackedSlotDecision = [PackedSlotDecision{}; 3];
+    let dec_s: []PackedSlotDecision = decisions[0..];
+
+    const rep = packPromptWithinBudget(items[0..], cfg, dec_s);
+    // effective_budget == 400; system(200) + user(100) 锁定，rag 获剩余 100 -> head=48, tail=48, ellipsis=4
+    * = rep;
+}
+```

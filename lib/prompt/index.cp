@@ -167,3 +167,14 @@ export {
     computeClaimSupportBps,
     auditRagCitations,
 } from "./citation_grounder.cp";
+
+export {
+    BUDGET_PACKER_MAX_ITEMS,
+    BudgetItemKind,
+    BudgetTruncatePolicy,
+    BudgetPackConfig,
+    BudgetedPromptItem,
+    PackedSlotDecision,
+    BudgetPackReport,
+    packPromptWithinBudget,
+} from "./token_budget_packer.cp";
