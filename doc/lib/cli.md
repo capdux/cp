@@ -450,3 +450,28 @@ const n = tbl.formatMarkdownTable(out[0..], true)?;
 // 包含 "| eslint (dev) | 8.57.1  | 8.57.1 | 9.20.0 | catalog:testing (@app/web) |"
 * = n;
 ```
+
+14. **生命周期脚本信任策略与 `trustedDependencies` 供应链防护引擎（`lib/cli/pm_trusted.cp`，吸收自 `/data/dev/bun/src/cli/pm_trusted_command.cp` & `/data/dev/bun/docs/pm/lifecycle.mdx`）**：
+    - **默认安全（Default-Secure）原则**：不默认执行第三方依赖的 `preinstall` / `install` / `postinstall` / `prepare` 等任意脚本，仅当包命中显式 `trustedDependencies` 或（仅限 npm Registry 源）默认信任白名单时才允许运行；
+    - **非 Registry 源防伪造红线**：对 `file:`、`link:`、`git:`、`github:`、`tarball` 来源的包，即便包名与默认白名单（如 `esbuild`）重名，也强制返回 `PmTrustDecision.BlockedNonRegistrySpoof`，必须由用户显式加入 `trustedDependencies` 才可放行；
+    - **全局 `--ignore-scripts` 覆盖与白名单持久化**：`ignore_scripts = true` 拥有最高阻断优先级；支持作用域包与版本锁定条目（`"@swc/core@1.7.0"`）、字典序排序（`sortExplicitAllowlist`）、JSON 数组序列化（`formatTrustedJsonArray`）与 `pm untrusted` 审阅报告格式化（`formatUntrustedReport`）。
+
+### 生命周期脚本信任评估与报告示例（`lib/cli/pm_trusted.cp`）
+
+```cp
+import {
+    PmDepSourceKind,
+    PmLifecyclePhase,
+    PmLifecyclePackage,
+    PmTrustPolicy,
+} from "cap:cli";
+
+let pol = PmTrustPolicy.initWithBuiltins(false);
+* = pol.addExplicitTrust("node-sass")?;
+
+let pkg_git = PmLifecyclePackage{ name: "esbuild", version: "0.24.0", source: PmDepSourceKind.Git };
+pkg_git.addScript(PmLifecyclePhase.Postinstall);
+// 非 npm 源伪造同名默认信任包 -> PmTrustDecision.BlockedNonRegistrySpoof
+const decision = pol.evaluate(pkg_git);
+* = decision;
+```

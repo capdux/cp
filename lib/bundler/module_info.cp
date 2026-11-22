@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/analyze_transpiled_module.cp | Synced: 2026-11-22T09:59:21Z
+// Source: Absorbed from /data/dev/bun/src/bundler/analyze_transpiled_module.cp | Synced: 2026-11-22T10:11:03Z
 // Pure-CP zero-allocation transpiled ESM/TypeScript module analysis metadata builder,
 // `finalize()` local-to-indirect re-export promoter (with TS type-only import elision safety),
 // cross-chunk `replaceStringId` specifier remapper, and aligned binary cache serializer/deserializer.

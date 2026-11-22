@@ -210,3 +210,14 @@ export {
     PmOutdatedEntry,
     PmOutdatedTable,
 } from "./pm_outdated.cp";
+
+export {
+    PM_TRUST_MAX_ALLOWLIST,
+    PmTrustError,
+    PmDepSourceKind,
+    PmLifecyclePhase,
+    PmTrustDecision,
+    PmTrustSpec,
+    PmLifecyclePackage,
+    PmTrustPolicy,
+} from "./pm_trusted.cp";

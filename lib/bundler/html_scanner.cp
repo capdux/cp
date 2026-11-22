@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/HTMLScanner.cp | Synced: 2026-11-22T08:33:00Z
+// Source: Absorbed from /data/dev/bun/src/bundler/HTMLScanner.cp | Synced: 2026-11-22T10:11:28Z
 // Ported from Bun: /data/dev/bun/src/bundler/HTMLScanner.cp & /data/dev/bun/docs/bundler/html-static.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation HTML entry static asset scanner, WHATWG srcset candidate parser,

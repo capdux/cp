@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bun.cp | Synced: 2026-11-22T10:00:30Z
+// Source: Absorbed from /data/dev/bun/src/bun.cp | Synced: 2026-11-22T10:11:14Z
 // ============================================================================
 // lib/_cap/core.cp — Zero-Dependency Micro-Core for `import cap from "cap"`
 // ============================================================================
