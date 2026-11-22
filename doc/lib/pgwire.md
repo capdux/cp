@@ -208,6 +208,38 @@ const pw_msg = PgPasswordMessage.decodeFrame(buf[0..n3])?;
 * = init_msg.isScramSha256(); * = resp_msg.data; * = pw_msg.isMd5Prefixed();
 ```
 
+### 会话控制与查询取消帧编解码（`BackendKeyData` / `CancelRequest` / `ParameterStatus` / `ReadyForQuery`，`sessionFrames.cp`）
+
+吸收自 `/data/dev/bun/src/sql/postgres/protocol/BackendKeyData.cp`，零堆分配编解码 PostgreSQL v3.0 会话生命周期 4 大核心帧：
+
+- **常量**：`PG_TAG_BACKEND_KEY_DATA` (`'K'`)、`PG_TAG_PARAMETER_STATUS` (`'S'`)、`PG_TAG_READY_FOR_QUERY` (`'Z'`)、`PG_CANCEL_REQUEST_CODE` (`80877102`)、`PG_BACKEND_KEY_FRAME_LEN` (`13`)、`PG_CANCEL_REQUEST_FRAME_LEN` (`16`)、`PG_READY_FOR_QUERY_FRAME_LEN` (`6`)。
+- **`PgBackendKeyFrame` (`'K'`) & `PgCancelRequestFrame`**：编码/解码后端进程号与取消密钥，`backend_key.toCancelRequest()` 直接构造 16 字节独立短连接 `CancelRequest` 帧（无 tag 字节），用于生产级慢查询/超时取消。
+- **`PgParameterStatusFrame` (`'S'`)**：零拷贝解析运行时参数键值对（如 `server_version`、`client_encoding`、`server_encoding`、`TimeZone`、`standard_conforming_strings`），内置常用参数识别器与内嵌 NUL / 空键名防护。
+- **`PgReadyForQueryFrame` (`'Z'`) & `PgTransactionState`**：解析 `'I'`（`Idle`）、`'T'`（`InTransaction`）、`'E'`（`FailedTransaction`）状态，提供 `.isIdle()` / `.inTransaction()` / `.isFailedTransaction()` / `.canSendQuery()` / `.needsRollback()` 辅助连接池判定会话复用。
+
+```cp
+import {
+    PgBackendKeyFrame,
+    PgCancelRequestFrame,
+    PgParameterStatusFrame,
+    PgReadyForQueryFrame,
+    PgTransactionState,
+} from "cap:pgwire";
+
+let buf: [128]u8 = [0; 128];
+const n_key = PgBackendKeyFrame.init(42195, 0xDEADBEEF).encodeFrame(buf[0..])?;
+const key = PgBackendKeyFrame.decodeFrame(buf[0..n_key])?;
+const n_cancel = key.toCancelRequest().encodeFrame(buf[0..])?;
+const cancel = PgCancelRequestFrame.decodeFrame(buf[0..n_cancel])?;
+
+const n_ps = PgParameterStatusFrame.init("server_version", "16.4").encodeFrame(buf[0..])?;
+const ps = PgParameterStatusFrame.decodeFrame(buf[0..n_ps])?;
+
+const n_rfq = PgReadyForQueryFrame.init(PgTransactionState.Idle).encodeFrame(buf[0..])?;
+const rfq = PgReadyForQueryFrame.decodeFrame(buf[0..n_rfq])?;
+* = cancel.process_id; * = ps.isServerVersion(); * = rfq.isIdle();
+```
+
 ---
 
 ## 4. 示例

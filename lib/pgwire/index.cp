@@ -109,3 +109,20 @@ export {
     PgSaslInitialResponse,
     PgSaslResponse,
 } from "./saslFrames.cp";
+
+export {
+    PG_TAG_BACKEND_KEY_DATA,
+    PG_TAG_PARAMETER_STATUS,
+    PG_TAG_READY_FOR_QUERY,
+    PG_CANCEL_REQUEST_CODE,
+    PG_BACKEND_KEY_FRAME_LEN,
+    PG_CANCEL_REQUEST_FRAME_LEN,
+    PG_READY_FOR_QUERY_FRAME_LEN,
+    PgSessionFrameError,
+    PgTransactionState,
+    parseTransactionState,
+    PgCancelRequestFrame,
+    PgBackendKeyFrame,
+    PgParameterStatusFrame,
+    PgReadyForQueryFrame,
+} from "./sessionFrames.cp";
