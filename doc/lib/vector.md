@@ -1751,3 +1751,100 @@ pub fn demoHnswFlatSnapshot()! {
     * = reloaded.search(doc_v[0..], 1, 16, *hits_s)?;
 }
 ```
+
+---
+
+## 无上限零堆多字段全文检索引擎（`fullTextIndex.cp`）
+
+面向本地知识库、代码检索与混合 RAG 的 100% 纯 CP 零动态堆分配、调用方外部切片驱动全文检索引擎（无固定文档数/词项数/字段数小容量硬编码上限）：
+
+- **多语言分词与词干预处理**：
+  - `tokenizeText(text, enable_stemming, enable_stopwords, enable_cjk_bigrams, *out_spans): usize`
+  - `porterLiteStemInPlace(*buf, in_len): usize` / `isEnglishStopword(word): bool` / `isCjkCodepoint(cp): bool`
+  - 支持 ASCII 大小写折叠、Unicode 空白与全半角标点切分、CJK 字符级 unigram + 相邻 2-gram 切分、英文高频停用词过滤与 Porter-lite 英文词干归并。
+- **无上限外部切片倒排索引（`FullTextIndex`）**：
+  - 通过 `FullTextBuffers` 注入 `field_specs`、`field_len_sums`、`docs`、`doc_field_lens`、`terms`、`term_hash_table`、`term_bytes`、`postings`、`positions` 外部切片；通过 `FullTextScratch` 注入查询与构建临时切片。
+  - `init(cfg, bufs)`、`beginDocument(doc_id)`、`addDocumentField(doc_slot, field_id, text, *scratch)`、`addDocument(doc_id, fields, *scratch)`、`markDeleted(doc_id)`（Tombstone 软删除并实时同步活跃文档数、字段总长与 `df`）、`isDeleted(doc_id)`、`stats()`、`avgFieldLen(field_id)`。
+- **多字段 BM25F 相关性打分**：
+  - `computeBm25fIdf(active_docs, df): f64` 与 `computeBm25fTermScore(idf, pseudo_tf, k1): f64`，严格实现 Robertson/Zaragoza 多字段归一化伪词频与 Lucene 非负平滑 IDF。
+- **高级查询引擎**：
+  - `searchQuery(query, *scratch, *out_hits)`: 零堆递归下降布尔解析器与执行器，支持 `AND` / `OR` / `NOT` / 任意括号嵌套 `( ... )` / `+must` / `-exclude` / 短语与邻近 `"quick brown fox"~2` / 前缀 `comp*` / 模糊纠错 `term~1|2`。
+  - `searchPhrase(phrase, slop, *scratch, *out_hits)`: 基于位置列表的精确短语与邻近 slop 滑动窗口验证。
+  - `searchPrefix(prefix, *scratch, *out_hits)` & `searchFuzzy(term, max_edits, *scratch, *out_hits)`（内置 `damerauLevenshteinBounded` 支持插删改与相邻换位）。
+- **关键词高亮摘要提取**：
+  - `extractBestSnippet(text, query_terms, max_bytes, open_tag, close_tag, enable_stemming, *out_buf): usize ! FullTextError`：按命中密度滑动窗口选取最优上下文并合并重叠区间输出 `<mark>...</mark>` 高亮标签。
+- **CRC32 校验二进制快照**：
+  - `snapshotByteSize()` / `serializeSnapshot(*out)` / `deserializeSnapshot(data, bufs)`：全量小端二进制编码 + IEEE CRC32 校验，拦截任意比特损坏并自动原地重建开放定址词典哈希表。
+
+### 全文检索引擎 QuickStart 示例
+
+```cp
+import {
+    FullTextConfig,
+    FullTextFieldSpec,
+    FullTextBuffers,
+    FullTextScratch,
+    FtDocMeta,
+    FtTermEntry,
+    FtPosting,
+    FtHit,
+    FullTextIndex,
+    extractBestSnippet,
+} from "cap:vector";
+
+pub fn demoFullTextIndex() {
+    let field_specs: [2]FullTextFieldSpec = [
+        FullTextFieldSpec{ weight: 3.0, b: 0.75 },
+        FullTextFieldSpec{ weight: 1.0, b: 0.75 },
+    ];
+    let field_sums: [2]u64 = [0; 2];
+    let docs: [16]FtDocMeta = [FtDocMeta{}; 16];
+    let doc_flens: [32]u32 = [0; 32];
+    let terms: [256]FtTermEntry = [FtTermEntry{}; 256];
+    let hash_tbl: [512]u32 = [0; 512];
+    let term_bytes: [4096]u8 = [0; 4096];
+    let postings: [512]FtPosting = [FtPosting{}; 512];
+    let positions: [1024]u32 = [0; 1024];
+
+    let bufs = FullTextBuffers{
+        field_specs: field_specs[0..],
+        field_len_sums: field_sums[0..],
+        docs: docs[0..],
+        doc_field_lens: doc_flens[0..],
+        terms: terms[0..],
+        term_hash_table: hash_tbl[0..],
+        term_bytes: term_bytes[0..],
+        postings: postings[0..],
+        positions: positions[0..],
+    };
+
+    let idx = FullTextIndex.init(FullTextConfig{ k1: 1.2, field_count: 2 }, bufs) catch return;
+
+    let sc_tids: [256]u32 = [0; 256];
+    let sc_pos: [256]u32 = [0; 256];
+    let sc_scores: [16]f64 = [0.0; 16];
+    let sc_mask: [16]u8 = [0; 16];
+    let sc_aux: [128]u8 = [0; 128];
+    let sc_cnt: [16]u32 = [0; 16];
+    let scratch = FullTextScratch{
+        term_ids: sc_tids[0..],
+        token_positions: sc_pos[0..],
+        scores: sc_scores[0..],
+        doc_mask: sc_mask[0..],
+        doc_mask_aux: sc_aux[0..],
+        matched_terms_cnt: sc_cnt[0..],
+    };
+
+    const doc1: [2][]const u8 = ["Zig Compiler Engine", "The quick brown fox jumps over the lazy dog"];
+    * = idx.addDocument(101, doc1[0..], *scratch) catch return;
+
+    let hits: [4]FtHit = [FtHit{}; 4];
+    let hits_s: []FtHit = hits[0..];
+    * = idx.searchQuery("\"quick fox\"~1 AND comp*", *scratch, *hits_s) catch return;
+
+    let snip_buf: [256]u8 = [0; 256];
+    let snip_s: []u8 = snip_buf[0..];
+    const qterms: [2][]const u8 = ["quick", "fox"];
+    * = extractBestSnippet(doc1[1], qterms[0..], 64, "<mark>", "</mark>", true, *snip_s) catch return;
+}
+```
