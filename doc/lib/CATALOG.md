@@ -5,18 +5,18 @@
 
 ## 总体统计与领域分布
 
-- **标准库模块总数**：**844** 个（`[Bun]` **161** 个 / `[Pure-CP]` **683** 个）
+- **标准库模块总数**：**852** 个（`[Bun]` **169** 个 / `[Pure-CP]` **683** 个）
 
 | 领域分类 | 英文域 | 模块数 | `[Bun]` | `[Pure-CP]` |
 | :--- | :--- | :---: | :---: | :---: |
-| [1. 核心运行时、并发与系统原语](#1-核心运行时并发与系统原语) | Core Runtime, Concurrency & OS | 57 | 32 | 25 |
+| [1. 核心运行时、并发与系统原语](#1-核心运行时并发与系统原语) | Core Runtime, Concurrency & OS | 59 | 34 | 25 |
 | [2. 基础数据结构、容器与经典算法](#2-基础数据结构容器与经典算法) | Collections, Data Structures & Algorithms | 69 | 12 | 57 |
-| [3. Web、HTTP、路由与微服务生态](#3-webhttp路由与微服务生态) | Web, HTTP, Routing & Microservices | 56 | 29 | 27 |
-| [4. 网络协议、传输层与分布式通信](#4-网络协议传输层与分布式通信) | Networking, Protocols & Messaging | 95 | 7 | 88 |
+| [3. Web、HTTP、路由与微服务生态](#3-webhttp路由与微服务生态) | Web, HTTP, Routing & Microservices | 59 | 32 | 27 |
+| [4. 网络协议、传输层与分布式通信](#4-网络协议传输层与分布式通信) | Networking, Protocols & Messaging | 94 | 6 | 88 |
 | [5. 密码学、哈希与安全认证](#5-密码学哈希与安全认证) | Cryptography, Hashing & Security | 45 | 3 | 42 |
-| [6. 存储、数据库、文件系统与可观测性](#6-存储数据库文件系统与可观测性) | Storage, Databases, Filesystems & Observability | 65 | 5 | 60 |
+| [6. 存储、数据库、文件系统与可观测性](#6-存储数据库文件系统与可观测性) | Storage, Databases, Filesystems & Observability | 66 | 6 | 60 |
 | [7. 压缩、归档与二进制编解码](#7-压缩归档与二进制编解码) | Compression, Archiving & Binary Codecs | 80 | 7 | 73 |
-| [8. 文本、文档格式与模板引擎](#8-文本文档格式与模板引擎) | Text, Document Formats & Templating | 74 | 28 | 46 |
+| [8. 文本、文档格式与模板引擎](#8-文本文档格式与模板引擎) | Text, Document Formats & Templating | 75 | 29 | 46 |
 | [9. 图像、音视频与多媒体图形](#9-图像音视频与多媒体图形) | Media, Audio, Video & 3D Graphics | 80 | 5 | 75 |
 | [10. 编译原理、构建系统与开发者工具链](#10-编译原理构建系统与开发者工具链) | Compilers, Build Systems & DevTools | 60 | 29 | 31 |
 | [11. 数值计算、线性代数与微积分](#11-数值计算线性代数与微积分) | Numerical Analysis, Linear Algebra & Calculus | 36 | 2 | 34 |
@@ -24,12 +24,13 @@
 | [13. 信号处理、频谱分析与自动控制](#13-信号处理频谱分析与自动控制) | Signal Processing, Spectral Analysis & Control | 8 | 0 | 8 |
 | [14. 图论、计算几何与地理空间（GIS）](#14-图论计算几何与地理空间gis) | Graphs, Computational Geometry & Geospatial | 37 | 0 | 37 |
 | [15. 工控、硬件固件与垂直行业协议](#15-工控硬件固件与垂直行业协议) | Industrial, Embedded, Firmware & Domain Protocols | 38 | 1 | 37 |
+| [16. 其他通用工具与扩展模块](#16-其他通用工具与扩展模块) | Other Utilities & Extensions | 2 | 2 | 0 |
 
 ---
 
 ## 1. 核心运行时、并发与系统原语
 
-*Core Runtime, Concurrency & OS* — 共 **57** 个模块（`[Bun]`: 32，`[Pure-CP]`: 25）
+*Core Runtime, Concurrency & OS* — 共 **59** 个模块（`[Bun]`: 34，`[Pure-CP]`: 25）
 
 | 模块 | 来源 | 职责摘要 |
 | :--- | :---: | :--- |
@@ -56,6 +57,7 @@
 | [`cap:ffi`](./ffi.md) | `[Bun]` | POSIX 动态库加载、TinyCC 内存编译与 C-ABI 布局计算标准库 |
 | [`cap:fs`](./fs.md) | `[Pure-CP]` | cap:fs 是 CP 语言官方内置的高阶文件系统标准库，采用 双模编译期分发（@is_nest） 架构：在 BEAM/Nest 分布式调度模式下，异步文件操作通过 SystemAction.FS_* 挂起当前协程并委托 |
 | [`cap:fsm`](./fsm.md) | `[Pure-CP]` | 确定性有限状态机、守卫、拓扑分析与熔断/DAG 引擎 |
+| [`cap:h2stream`](./h2stream.md) | `[Bun]` | 零堆分配 HTTP/2 流状态机与流控窗口库 |
 | [`cap:health`](./health.md) | `[Pure-CP]` | cap:health 是 CP 语言官方内置的纯 CP 云原生健康检查探针汇聚（Liveness / Readiness / Startup）与优雅停机生命周期协调器（ShutdownCoordinator），零 C 依 |
 | [`cap:io`](./io.md) | `[Bun]` | cap:io 是 CP 语言官方内置的统一流式 I/O 标准库，基于 Reader / Writer / Closer / Seeker 四大解耦 Trait 契约，完整移植 Bun src/io/ 的生产级流式与非阻塞 |
 | [`cap:lock`](./lock.md) | `[Pure-CP]` | cap:lock 是 CP 语言官方内置的纯 CP 逻辑协调与并发控制标准库，零 C 依赖、零 std.posix、零 @import("bun")，专为多 Agent 工具互斥访问、状态分区并发控制与分布式租约协调打造 |
@@ -83,6 +85,7 @@
 | [`cap:sync`](./sync.md) | `[Bun]` | cap:sync（与底层 cap:threading 共享同步原语）是 CP 语言专为多核低延迟并发、用户态快速锁（Futex）、无锁队列（Lock-Free MPMC / Unbounded Batch Queue）、 |
 | [`cap:sys`](./sys.md) | `[Bun]` | cap:sys 是 CP 语言官方内置的底层系统调用与操作系统原语标准库，深度吸收 Bun 生产级 src/sys/ 实现，并完全基于 Zig 0.17 原生 std.c.* 与 std.os.linux.* 构建（零  |
 | [`cap:tagged_ptr`](./tagged_ptr.md) | `[Bun]` | 64 位高位标签指针与紧凑标签联合体 |
+| [`cap:textstream`](./textstream.md) | `[Bun]` | 零堆分配 WHATWG 流式 UTF-8 编码器（TextEncoderStream） |
 | [`cap:threading`](./threading.md) | `[Pure-CP]` | cap:threading（源码位于 lib/threading/）是纯 CP 实现的工业级并发同步原语标准库，完全基于 std.atomic.Value 与 std.Thread.Futex 构建，零堆分配、无 std |
 | [`cap:time`](./time.md) | `[Bun]` | cap:time 是 CP 语言官方内置的工业生产级纯 CP 时间、日历转换、Cron 调度与限流退避标准库，零外部依赖、零 std.posix、零 @import("bun")、零堆分配，适用于 BEAM 调度器、分布 |
 | [`cap:timeseries`](./timeseries.md) | `[Pure-CP]` | cap:timeseries 是 CP 语言官方内置的纯 CP 时序数据存储、时间对齐 Rollup 降采样、滑动平均与异常尖峰检测引擎，零 C 依赖、零 std.posix、零 @import("bun")，为系统遥测 |
@@ -169,7 +172,7 @@
 
 ## 3. Web、HTTP、路由与微服务生态
 
-*Web, HTTP, Routing & Microservices* — 共 **56** 个模块（`[Bun]`: 29，`[Pure-CP]`: 27）
+*Web, HTTP, Routing & Microservices* — 共 **59** 个模块（`[Bun]`: 32，`[Pure-CP]`: 27）
 
 | 模块 | 来源 | 职责摘要 |
 | :--- | :---: | :--- |
@@ -179,7 +182,8 @@
 | [`cap:content_range`](./content_range.md) | `[Bun]` | 纯 CP 零堆分配 RFC 9110 §14 HTTP Range 请求头与 Content-Range 响应头解析/格式化库（用于 206 Partial Content 与 416 Range Not Satisfi |
 | [`cap:cors_policy`](./cors_policy.md) | `[Bun]` | WHATWG Fetch CORS 策略与预检评估引擎 |
 | [`cap:css`](./css.md) | `[Bun]` | cap:css 是 CP 语言官方内置的工业级 CSS 解析、词法分析、颜色空间与数学求值、选择器权重匹配、变量解析、厂商前缀/逻辑属性展开、CSS 嵌套展平与样式表压缩/美化标准库。整体架构吸收自 Bun 内置的 Li |
-| [`cap:data_url`](./data_url.md) | `[Bun]` | 纯 CP 零堆分配 RFC 2397 Data URL（data:[<mediatype>][;base64],<data>）解析、解码与最短编码器，吸收自 /data/dev/bun/src/resolver/data |
+| [`cap:cssmodules`](./cssmodules.md) | `[Bun]` | 纯 CP 零分配 CSS Modules 局部类名哈希与 `composes` 解析库 |
+| [`cap:data_url`](./data_url.md) | `[Bun]` | RFC 2397 Data URL 零分配解析与最短编码器 |
 | [`cap:etag`](./etag.md) | `[Bun]` | 纯 CP 零堆分配 RFC 9110 / RFC 7232 HTTP ETag 解析、强/弱比较、If-None-Match / If-Match 条件请求求值与 FNV-1a 64-bit 内容 ETag 生成库，吸收 |
 | [`cap:exe_format`](./exe_format.md) | `[Pure-CP]` | 可执行二进制格式零拷贝探测与解析库 |
 | [`cap:feed`](./feed.md) | `[Pure-CP]` | cap:feed 是 CP 语言官方内置的纯 CP 聚合订阅源解析与生成标准库，零外部 C 依赖、零 std.posix、零 @import("bun")，基于 cap:xml 与 cap:json 构建，专为 AI A |
@@ -200,6 +204,7 @@
 | [`cap:http3`](./http3.md) | `[Pure-CP]` | RFC 9114 HTTP/3 二进制分帧、流类型与 RFC 9204 QPACK 编解码引擎 |
 | [`cap:jwt`](./jwt.md) | `[Bun]` | RFC 7519 JWT Claims Zero-Allocation Parser |
 | [`cap:mcp`](./mcp.md) | `[Pure-CP]` | Model Context Protocol (MCP 2025-03-26) 标准库 |
+| [`cap:mediaquery`](./mediaquery.md) | `[Bun]` | 纯 CP 零分配 CSS Media Queries Level 4 解析与求值库 |
 | [`cap:mime`](./mime.md) | `[Bun]` | cap:mime 是 CP 语言官方内置的纯 CP RFC 6838 MediaType 解析/格式化、RFC 9110 HTTP Accept 内容协商（Content Negotiation）与全量扩展名双向数据库， |
 | [`cap:multipart`](./multipart.md) | `[Pure-CP]` | RFC 7578 `multipart/form-data` 解析、边界提取与构建库 |
 | [`cap:netrc`](./netrc.md) | `[Bun]` | - machine: ([]const u8)?：主机名（default 条目为 null） |
@@ -211,6 +216,7 @@
 | [`cap:pe_format`](./pe_format.md) | `[Bun]` | Windows PE64 可执行文件头与节表解析/校验/构建库 |
 | [`cap:picohttp`](./picohttp.md) | `[Pure-CP]` | 纯 CP 零堆分配 HTTP/1.1 & Chunked 流式解析器 |
 | [`cap:platform`](./platform.md) | `[Bun]` | cap:platform 是 CP 语言官方内置的跨平台操作系统探测、内核版本解析与系统能力检测标准库，吸收自 Bun src/platform/（linux.zig、darwin.zig）。该库向事件循环、文件 I/O |
+| [`cap:qpack`](./qpack.md) | `[Bun]` | 零堆分配 HTTP/3 QPACK 静态表与 Field Section 编解码库 |
 | [`cap:rfc7807_problem`](./rfc7807_problem.md) | `[Bun]` | RFC 9457 / RFC 7807 HTTP Problem Details |
 | [`cap:robots_txt`](./robots_txt.md) | `[Bun]` | RFC 9309 `robots.txt` 解析与 URL 匹配引擎 |
 | [`cap:route_params`](./route_params.md) | `[Bun]` | HTTP 路由参数映射表与 URLPath 零分配解析器 |
@@ -232,7 +238,7 @@
 
 ## 4. 网络协议、传输层与分布式通信
 
-*Networking, Protocols & Messaging* — 共 **95** 个模块（`[Bun]`: 7，`[Pure-CP]`: 88）
+*Networking, Protocols & Messaging* — 共 **94** 个模块（`[Bun]`: 6，`[Pure-CP]`: 88）
 
 | 模块 | 来源 | 职责摘要 |
 | :--- | :---: | :--- |
@@ -293,7 +299,6 @@
 | [`cap:pim`](./pim.md) | `[Pure-CP]` | RFC 7761 PIM-SM v2 组播协议零分配编解码库 |
 | [`cap:pop3`](./pop3.md) | `[Pure-CP]` | RFC 1939 / RFC 2449 POP3 邮局协议 v3 零分配编解码库 |
 | [`cap:pppoe`](./pppoe.md) | `[Pure-CP]` | RFC 2516 PPPoE Discovery & Session 零分配编解码库 |
-| [`cap:progress_tree`](./progress_tree.md) | `[Bun]` | 纯 CP 零堆分配层级进度树与节流渲染引擎，吸收自 /data/dev/bun/src/bun_core/Progress.cp。 |
 | [`cap:ptp`](./ptp.md) | `[Pure-CP]` | IEEE 1588-2008 / 1588-2019 PTPv2/v2.1 零分配线协议编解码库 |
 | [`cap:pubsub`](./pubsub.md) | `[Pure-CP]` | cap:pubsub 是 CP 语言官方内置的纯原生进程内通配符主题消息代理（In-Process Wildcard Pub/Sub Broker），专为百万级 AI Agent 本地主题扇出、NATS/MQTT 双协议 |
 | [`cap:quic`](./quic.md) | `[Pure-CP]` | cap:quic 是 CP 语言官方内置的纯 CP RFC 9000 QUIC 协议底层线缆编解码引擎，涵盖 §16 变长整数（Varint）、§17 长/短包头（Long/Short Header）以及 §19 核心帧 |
@@ -386,7 +391,7 @@
 
 ## 6. 存储、数据库、文件系统与可观测性
 
-*Storage, Databases, Filesystems & Observability* — 共 **65** 个模块（`[Bun]`: 5，`[Pure-CP]`: 60）
+*Storage, Databases, Filesystems & Observability* — 共 **66** 个模块（`[Bun]`: 6，`[Pure-CP]`: 60）
 
 | 模块 | 来源 | 职责摘要 |
 | :--- | :---: | :--- |
@@ -396,6 +401,7 @@
 | [`cap:arrow_ipc`](./arrow_ipc.md) | `[Pure-CP]` | Apache Arrow IPC 列式内存批处理与零拷贝读写标准库 |
 | [`cap:avro`](./avro.md) | `[Pure-CP]` | cap:avro 是 CP 语言官方内置的纯 CP Apache Avro Schema 驱动二进制编解码与 Object Container File (OCF "Obj\x01") 容器引擎。零外部依赖、零 std. |
 | [`cap:blob`](./blob.md) | `[Bun]` | cap:blob 是 CP 语言官方内置的 Web 标准二进制大对象（Blob）与具名文件（File）抽象库，吸收自 Bun 的 WebCore Blob/Store 子系统（/data/dev/bun/src/runt |
+| [`cap:bloburl`](./bloburl.md) | `[Bun]` | 零堆分配 W3C Blob Object URL 解析与注册表库 |
 | [`cap:btrfs`](./btrfs.md) | `[Pure-CP]` | Linux Btrfs Zero-Allocation Filesystem Parser |
 | [`cap:cef`](./cef.md) | `[Pure-CP]` | 零分配 ArcSight Common Event Format (CEF Rev 25) SIEM 日志解析库 |
 | [`cap:cpio`](./cpio.md) | `[Pure-CP]` | 纯 CP 零分配 Unix CPIO (`newc`/`crc`/`odc`) 归档解析库 |
@@ -545,7 +551,7 @@
 
 ## 8. 文本、文档格式与模板引擎
 
-*Text, Document Formats & Templating* — 共 **74** 个模块（`[Bun]`: 28，`[Pure-CP]`: 46）
+*Text, Document Formats & Templating* — 共 **75** 个模块（`[Bun]`: 29，`[Pure-CP]`: 46）
 
 | 模块 | 来源 | 职责摘要 |
 | :--- | :---: | :--- |
@@ -614,6 +620,7 @@
 | [`cap:table`](./table.md) | `[Pure-CP]` | cap:table 是 CP 语言官方内置的工业级纯 CP 终端与文本表格渲染引擎，零外部依赖、零 std.posix、零 @import("bun")，既可通过 import { ... } from "cap:tab |
 | [`cap:template`](./template.md) | `[Pure-CP]` | 纯 CP Mustache 模板引擎（AI Prompt / HTML / 代码生成） |
 | [`cap:text`](./text.md) | `[Bun]` | cap:text 是 CP 语言官方内置的纯原生文本处理与 AI Agent 上下文工程标准库，专为 RAG 文档切分、命令面板模糊搜索与 LLM 上下文窗口预算控制打造。包含三大核心子模块： |
+| [`cap:textdecode`](./textdecode.md) | `[Bun]` | 零堆分配 WHATWG 流式文本解码器（TextDecoder） |
 | [`cap:toml`](./toml.md) | `[Bun]` | cap:toml 是 CP 语言官方内置的纯 CP TOML v1.0.0 配置解析与序列化引擎，零外部依赖、零 std.posix、零 @import("bun")，全面覆盖 Cargo.toml、pyproject. |
 | [`cap:tui`](./tui.md) | `[Pure-CP]` | cap:tui 是 CP 语言官方内置的纯原生终端用户界面（TUI）输入解析、弹性矩形布局与零闪烁差分渲染引擎，专为交互式 CLI AI Agent、状态仪表盘与全屏终端应用打造。全模块零 C 依赖、零 std.posi |
 | [`cap:unicode`](./unicode.md) | `[Bun]` | Unicode / UTF-8 / UTF-16 / Grapheme 与终端显示宽度标准库 |
@@ -772,7 +779,7 @@
 | [`cap:test_runner`](./test_runner.md) | `[Bun]` | cap:test_runner 是零 JSC 耦合的纯 CP 生产级测试套件编排、快照管理、值格式化与 CI 报告引擎，完整直迁自 Bun src/test_runner/ 核心无 JS 引擎逻辑（Order.cp、Co |
 | [`cap:trx`](./trx.md) | `[Pure-CP]` | 零分配 Visual Studio / .NET `.trx` 测试结果解析标准库 |
 | [`cap:ts`](./ts.md) | `[Pure-CP]` | 纯 CP ISO/IEC 13818-1 MPEG-TS 传输流零分配解析库 |
-| [`cap:tsconfig_paths`](./tsconfig_paths.md) | `[Bun]` | 纯 CP 零堆分配 TSConfig compilerOptions.paths 通配符路径映射解析器与 ${configDir} 模板展开器，吸收自 /data/dev/bun/src/resolver/tsconfi |
+| [`cap:tsconfig_paths`](./tsconfig_paths.md) | `[Bun]` | TSConfig `paths` 通配符映射与 `${configDir}` 展开器 |
 | [`cap:wasm`](./wasm.md) | `[Pure-CP]` | cap:wasm 是 CP 语言官方内置的 WebAssembly 1.0 二进制模块解析、校验与构造标准库，专为沙盒插件内省、WASM 工具模块验证与二进制编码打造。零外部依赖、零 std.posix、零 @impor |
 | [`cap:wasm_fmt`](./wasm_fmt.md) | `[Pure-CP]` | WebAssembly `.wasm` 二进制解析与构建标准库 |
 | [`cap:wat`](./wat.md) | `[Pure-CP]` | 零分配 WebAssembly Text (`.wat`) 词法器、导出提取器与结构校验器 |
@@ -975,3 +982,12 @@
 | [`cap:uf2`](./uf2.md) | `[Pure-CP]` | Microsoft UF2 (USB Flashing Format) 零分配固件编解码库 |
 | [`cap:vcd`](./vcd.md) | `[Pure-CP]` | 零分配 IEEE 1364 VCD 硬件仿真波形解析库 |
 | [`cap:vcf`](./vcf.md) | `[Pure-CP]` | 生物信息学 VCF 4.2/4.3 基因变异零分配解析库 |
+
+## 16. 其他通用工具与扩展模块
+
+*Other Utilities & Extensions* — 共 **2** 个模块（`[Bun]`: 2，`[Pure-CP]`: 0）
+
+| 模块 | 来源 | 职责摘要 |
+| :--- | :---: | :--- |
+| `cap:catalog` | `[Bun]` | Zero-Alloc Monorepo Dependency Catalogs Protocol & Map |
+| [`cap:progress_tree`](./progress_tree.md) | `[Bun]` | 零分配层级进度树与节流渲染引擎 |
