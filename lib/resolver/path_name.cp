@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/resolver/fs.cp | Synced: 2026-11-22T09:22:00Z
+// Source: Absorbed from /data/dev/bun/src/resolver/fs.cp | Synced: 2026-11-22T12:23:53Z
 // Ported from Bun: /data/dev/bun/src/resolver/fs.cp & /data/dev/bun/docs/runtime/module-resolution.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation Module Resolver Path Decomposition & Package Specifier Engine:

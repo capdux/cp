@@ -683,3 +683,18 @@ const n = map.collectSortedEntries(sorted[0..])?;
 // n == 2, sorted[0] == (1, "chunk-a.js"), sorted[1] == (2, "chunk-b.js")
 * = n;
 ```
+
+- **Bundler 构建产物模型与安全落盘路径解析（`output_file.cp`，吸收自 `/data/dev/bun/src/bundler/OutputFile.cp` & `/data/dev/bun/docs/bundler/index.mdx`）**：
+    - 导出：`OUTPUT_FILE_MAX_COLLECTION` (`64`)、`OutputFileError`、`OutputFileKind`（`EntryPoint`/`Chunk`/`Asset`/`Sourcemap`/`Bytecode`）、`OutputValueKind`（`Move`/`Copy`/`Noop`/`Buffer`/`Pending`/`Saved`）、`OutputLoaderKind`（含 `inferFromPath` 与 `mimeType`）、`OutputBakeExtra`、`BuildOutputFile`（`fromBuffer`/`fromMove`/`fromCopy`/`noop`/`asSlice`/`mimeType`/`markSaved`/`resolveFullPath`/`formatSummaryLine`）、`BuildOutputCollection`（`init`/`push`/`count`/`at`/`findByPath`/`totalBytes`/`countByKind`）；
+    - **落盘安全防线与内存态产物语义（参考 `/data/dev/bun/docs/bundler/index.mdx`）**：不指定 `outdir` 时构建产物以 `OutputValueKind.Buffer` 驻留内存并通过 `asSlice()` 零拷贝读取；指定 `outdir` 落盘时，所有构造方法及 `resolveFullPath(outdir, ...)` 均严格拦截含 `..` 段、NUL 字节或绝对路径逃逸的 `dest_path`（返回 `UnsafePathTraversal`），防止恶意包名或自定义 naming 模板向目标目录外写入文件。
+
+```cp
+import { BuildOutputFile, OutputFileKind, BuildOutputCollection } from "cap:bundler";
+
+const f = BuildOutputFile.fromBuffer("assets/app.js", OutputFileKind.EntryPoint, "console.log(1);")?;
+let full: [128]u8 = [0; 128];
+const n = f.resolveFullPath("./dist/", full[0..])?; // "./dist/assets/app.js"
+let col = BuildOutputCollection.init();
+* = col.push(f)?;
+* = n;
+```

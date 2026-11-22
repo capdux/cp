@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/dns_jsc/dns.cp | Synced: 2026-11-22T11:08:40Z
+// Source: Absorbed from /data/dev/bun/src/runtime/dns_jsc/dns.cp | Synced: 2026-11-22T12:24:11Z
 // Pure-CP zero-allocation Bun-compatible DNS prefetch & in-flight deduplicating cache:
 // 255-entry bounded LRU/TTL store (default 30s), in-flight lookup coalescing (`cacheHitsInflight`),
 // connection-error eviction, `dns.prefetch`, `dns.getCacheStats()`, and TTL env parser.

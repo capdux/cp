@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/md/unicode.cp | Synced: 2026-11-21T17:06:09Z
+// Source: Absorbed from /data/dev/bun/src/md/unicode.cp | Synced: 2026-11-22T12:23:53Z
 //! Full Unicode Case Folding (1-to-1, 1-to-2, and 1-to-3 codepoint mappings)
 //! with zero-allocation range-compressed binary search tables.
 

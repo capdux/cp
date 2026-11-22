@@ -413,3 +413,14 @@ export {
     IndexStringEntry,
     IndexStringMap,
 } from "./index_string_map";
+
+export {
+    OUTPUT_FILE_MAX_COLLECTION,
+    OutputFileError,
+    OutputFileKind,
+    OutputValueKind,
+    OutputLoaderKind,
+    OutputBakeExtra,
+    BuildOutputFile,
+    BuildOutputCollection,
+} from "./output_file";
