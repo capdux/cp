@@ -311,3 +311,12 @@ export {
     RadixKvStats,
     RadixKvCacheTree,
 } from "./radix_kv_tree.cp";
+
+export {
+    SPEC_REJECT_MAX_DRAFT_K,
+    SpecRejectionOutcome,
+    SpecStepSchedulerConfig,
+    SpecStepScheduler,
+    sampleResidualDistributionF32,
+    verifySpeculativeRejectionF32,
+} from "./spec_rejection.cp";

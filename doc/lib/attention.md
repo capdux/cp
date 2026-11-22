@@ -1303,3 +1303,48 @@ pub fn demoRadixAttentionKvTree() {
     * = tree.unlock_path(m.last_node_idx);
 }
 ```
+
+### 零分配 Leviathan 无损推测解码拒绝采样与残差重采样引擎 (`spec_rejection.cp`)
+
+面向生产级 LLM 推测解码（Leviathan et al. 2023 / DeepMind / vLLM Lossless Speculative Decoding）的 100% 纯 CP 零动态堆分配精确拒绝采样、两遍 O(V) 残差分布重采样与 `@fma` EWMA 自适应草稿步长控制器：
+
+- **常量与数据模型**：
+  - `SPEC_REJECT_MAX_DRAFT_K` (`16`，单步最多校验 16 个草稿 Token，全接受时含 Bonus Token 最多产出 `17` 个 Token)
+  - `SpecRejectionOutcome`（`ok`, `accepted_draft_count`, `emitted_tokens: [17]u32`, `emitted_count`, `rejected_at_idx`, `used_bonus_token`, `acceptance_rate_f32`）
+  - `SpecStepSchedulerConfig`（`min_k`, `max_k`, `initial_k`, `ewma_alpha`, `grow_threshold`, `shrink_threshold`；提供 `defaults()` 与 `isValid()`）
+- **核心纯函数与自适应控制器**：
+  - `sampleResidualDistributionF32(target_probs, draft_probs, rng_u01): u32?`：两遍 O(V) 零堆分配扫描，从归一化残差分布 `norm(max(0, p(x) - q(x)))` 精确采样修正 Token；若残差质量近似为 `0`（如 `p == q`），安全退化为直接从 `target_probs` 采样。
+  - `verifySpeculativeRejectionF32(draft_tokens, draft_probs_flat, target_probs_flat, vocab_size, rng_seed): SpecRejectionOutcome`：逐位置以接受概率 `min(1, p_i(x_i) / q_i(x_i))` 执行无损拒绝采样；首次拒绝立即从残差分布输出修正 Token 并终止；若全部 `k` 个草稿均被接受，则从第 `k + 1` 组目标分布采样额外 Bonus Token（`used_bonus_token = true`，单步产出 `k + 1` 个 Token）。
+  - `SpecStepScheduler`（`init`, `observe_round`, `current_k`, `ewma_acceptance_rate`）：基于硬件 `@fma` 追踪 EWMA 接受率，高接受率自动扩容草稿步长 `K`、低接受率自动缩容并严格夹紧在 `[min_k, max_k]` 内。
+
+```cp
+import {
+    SpecStepSchedulerConfig,
+    SpecStepScheduler,
+    verifySpeculativeRejectionF32,
+} from "cap:attention";
+
+pub fn demoSpeculativeRejection() {
+    // 2 个草稿 token (vocab_size = 4)，target 含第 k+1 组 bonus 分布
+    const draft_tokens: [2]u32 = [1, 2];
+    const q_flat: [8]f32 = [
+        0.1, 0.7, 0.1, 0.1,
+        0.1, 0.1, 0.7, 0.1,
+    ];
+    const p_flat: [12]f32 = [
+        0.1, 0.7, 0.1, 0.1, // 与 q_0 一致 -> 100% 接受 token 1
+        0.1, 0.1, 0.7, 0.1, // 与 q_1 一致 -> 100% 接受 token 2
+        0.0, 0.0, 0.0, 1.0, // bonus 分布 -> 必产出 token 3
+    ];
+
+    const out = verifySpeculativeRejectionF32(draft_tokens[0..], q_flat[0..], p_flat[0..], 4, 42);
+    // out.ok == true, out.emitted_count == 3 ([1, 2, 3]), out.used_bonus_token == true
+    * = out;
+
+    if (sched := SpecStepScheduler.init(SpecStepSchedulerConfig.defaults())) {
+        let s = sched;
+        const next_k = s.observe_round(out.accepted_draft_count, 2);
+        * = next_k;
+    }
+}
+```
