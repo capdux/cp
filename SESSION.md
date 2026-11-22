@@ -659,3 +659,7 @@
 ### 2026-11-22（全量补录完成 + GEMINI.md 固化零遗漏铁律 + 3 项分类合并交付验收 | 2026-11-22 12:58:00）
 - **执行与结单汇报**：
   > 1. 通过 scripts/sync_session_audit.py 完成全量无损审计补录：SESSION_H.md 补录 2 条历史工单 + 187 条历史用户原始指令，SESSION.md 补录 24 条当日工单 + 36 条当日用户原始指令，复检结果 tickets_total=55/missing=0、user_turns_total=223/missing=0；2. 将「脚本与手工均不得遗漏用户原始指令、下游 AGY 工单及结单汇报」铁律写入 GEMINI.md 永久固化；3. 同步验收提交 lib/vector/filter.cp (5/5 PASS)、lib/mcp/session.cp (5/5 PASS)、lib/css/property_rule.cp (6/6 PASS) 及 8 份 Bun 上游同步戳刷新 (upstream_newer=0)。
+
+### 2026-11-22（分类合并交付：lib/prompt/safety.cp | 2026-11-22 13:00:46）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/prompt/safety.cp（AI Prompt 边界风险检测与零堆 PII 脱敏净化器，5/5 PASS），归入 cap:prompt 并同步 cp_lib_ref.md；续派 lib/text/markdown_chunk.cp。

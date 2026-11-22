@@ -55,3 +55,13 @@ export {
     selectFewShotExamples,
     renderFewShotBlock,
 } from "./fewshot.cp";
+
+export {
+    PromptRiskFlags,
+    PromptSafetyReport,
+    PiiKind,
+    PiiSpan,
+    scanPiiSpans,
+    redactPii,
+    inspectPromptSafety,
+} from "./safety.cp";

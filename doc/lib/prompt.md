@@ -109,6 +109,18 @@
 | `selectFewShotExamples(query, pool, cfg, out_selected, scores_s, order_s, hashes_a_s, hashes_b_s): usize?` | 按与 `query` 的相关性降序稳定排序候选池，贪心装入满足 `max_tokens`、`max_per_label` 类别均衡与 `dedup_threshold` 相似度去重约束的最多 `max_examples` 条示例 |
 | `renderFewShotBlock(pool, selected, input_prefix, output_prefix, separator, out_buf: *[]u8): usize?` | 零堆分配按 `<input_prefix><input><output_prefix><output>` 与 `separator` 渲染最终少样本 Prompt 块 |
 
+### 7. 零堆分配 Prompt 启发式边界校验与 PII 脱敏 (`lib/prompt/safety.cp`)
+
+| 符号 / 方法 | 签名与说明 |
+| :--- | :--- |
+| `PromptRiskFlags` | 风险位掩码结构体（`NONE`、`ROLE_OVERRIDE`、`SYSTEM_LEAK_PROBE`、`DELIMITER_ESCAPE`、`CONTROL_CHAR_SMUGGLING`、`PII_DETECTED`、`ALL_KNOWN`；支持 `fromBits`/`has`/`hasAny`/`with`/`isEmpty`） |
+| `PromptSafetyReport` | `{ flags: PromptRiskFlags, risk_score: u32, matched_rules: u32, pii_hits: u32, blocked: bool }`（`risk_score` 上限钳位 `100`） |
+| `inspectPromptSafety(input, block_threshold)` | 零堆分配大小写无关启发式边界检测：识别角色覆写模式、系统提示探测、模板控制分隔符逃逸、不可见 ASCII/UTF-8 零宽与双向控制符及 PII 命中；`block_threshold > 0 && risk_score >= block_threshold` 时置 `blocked = true`（`0` 为仅审计模式） |
+| `PiiKind` | `Email` \| `ApiKey` \| `Ipv4` \| `Phone` |
+| `PiiSpan` | `{ kind: PiiKind, start: usize, end: usize }`（半开字节区间） |
+| `scanPiiSpans(input, out_spans: *[]PiiSpan): usize` | 单遍零堆分配扫描不重叠 PII 跨度（识别邮箱、`sk-`/`ghp_`/`AKIA`/`xoxb-`/`xoxp-` 凭证前缀、严格 IPv4 与 10..15 位电话号码），返回总命中数且输出切片截断安全 |
+| `redactPii(input, out_buf: *[]u8): usize?` | 零堆分配流式脱敏器，将所有检测到的 PII 跨度替换为 `[REDACTED]`，输出缓冲不足时返回 `null` |
+
 ---
 
 ## 三、 使用示例
@@ -286,5 +298,39 @@ fn buildFewShotContext(query: string) {
         let block: []u8 = block_arr[0..];
         * = renderFewShotBlock(pool[0..], sel[0..k], "Input: ", "\nLabel: ", "\n\n", block);
     }
+}
+```
+
+### 6. 零堆分配 Prompt 启发式边界检测与 PII 脱敏示例 (`safety.cp`)
+
+```typescript
+import {
+    PromptRiskFlags,
+    PiiSpan,
+    inspectPromptSafety,
+    scanPiiSpans,
+    redactPii,
+} from "cap:prompt";
+
+fn guardAndRedactUserPrompt(user_input: string): bool {
+    // 1. 启发式边界校验（阈值 40 触发拦截）
+    const report = inspectPromptSafety(user_input, 40);
+    if (report.blocked) {
+        return false;
+    }
+
+    // 2. 定位并零堆分配脱敏 PII 与凭证片段
+    if (report.flags.has(PromptRiskFlags.PII_DETECTED)) {
+        let spans_arr: [8]PiiSpan = [PiiSpan{}; 8];
+        let spans: []PiiSpan = spans_arr[0..];
+        * = scanPiiSpans(user_input, spans);
+
+        let clean_arr: [512]u8 = [0; 512];
+        let clean_buf: []u8 = clean_arr[0..];
+        if (written := redactPii(user_input, clean_buf)) {
+            * = clean_buf[0..written];
+        }
+    }
+    return true;
 }
 ```
