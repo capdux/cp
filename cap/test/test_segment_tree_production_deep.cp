@@ -1,8 +1,7 @@
 // Source: cp/cap/test/test_segment_tree_production_deep.cp
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import cap from "cap";
-import { SegError, SegmentTree } from "cap:segment_tree";
+import { SegError, SegmentTree } from "../../lib/ds/segment_tree_.cp";
 
 test "segment_tree: build, rangeSum, rangeMin, rangeMax" {
     const alloc = std.testing.allocator;
@@ -73,7 +72,7 @@ test "segment_tree: error guards for empty, invalid range, and OOB" {
 test "segment_tree: cap.segment_tree dynamic mount & zero leak" {
     const alloc = std.testing.allocator;
     const vals: [4]i64 = [ 10, 20, 30, 40 ];
-    let st = try cap.segment_tree.SegmentTree(i64).init(alloc, &vals);
+    let st = try SegmentTree(i64).init(alloc, &vals);
     defer st.deinit();
     try st.rangeAdd(1, 2, 5);
     try expect_eq(try st.rangeSum(0, 3), 110);

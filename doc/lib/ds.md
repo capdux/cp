@@ -104,3 +104,21 @@ pub fn demoDs(alloc: std.mem.Allocator): !void {
     * = hll.estimate();
 }
 ```
+
+---
+
+## 第 2 波收敛集成的数据结构、CRDT 与检索组件
+
+以下纯 CP 零外部依赖数据结构模块已统一聚合导出至 `cap:ds`（`lib/ds/index.cp`），零符号冲突：
+
+| 分类 | 文件路径 | 核心能力 | 说明 |
+| :--- | :--- | :--- | :--- |
+| 树与有序集合 | `lib/ds/bptree.cp` | Ordered B+ Tree Index | 泛型 B+ Tree 键值索引 |
+| 树与有序集合 | `lib/ds/zset.cp` | SkipList + HashMap SortedSet | 双索引有序集合引擎 |
+| 树与有序集合 | `lib/ds/radix.cp` / `lib/ds/radix_router.cp` | Compressed Patricia Radix Tree & Router | 压缩基数树与路由表 |
+| 分布式状态与哈希 | `lib/ds/crdt_pn.cp` | GCounter / PNCounter / GSet / LWWRegister | 状态型 CRDT 集合 |
+| 分布式状态与哈希 | `lib/ds/ringhash.cp` | ConsistentRing / Jump / Rendezvous HRW | 一致性哈希环与 HRW 路由 |
+| 文本驻留/模糊/校验 | `lib/ds/intern.cp` | StringInterner & `InternStringBiMap` | 字符串驻留池与双向映射（别名避让 `bimap.cp`） |
+| 文本驻留/模糊/校验 | `lib/ds/fuzzy.cp` | Levenshtein / Damerau / Jaro-Winkler | 模糊匹配与候选排序 |
+| 文本驻留/模糊/校验 | `lib/ds/merkle_tree.cp` | SHA-256 Merkle Tree | 默克尔树构建与包容证明验证 |
+| 参考归档（不导出） | `lib/ds/{bitset,disjoint_set,fenwick,segment_tree,skip_list,suffix_array,rope,trie_radix}_.cp` | 重叠数据结构（仅参考） | 与 `lib/ds/` 权威实现功能重叠，保留供对比分析，不在 `cap:ds` 重复导出 |

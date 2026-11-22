@@ -8,7 +8,7 @@ import {
     hashLeaf,
     hashInternal,
     verifyProof,
-} from "cap:merkle_tree";
+} from "cap:ds";
 import cap from "cap";
 
 const std = @import("std");
@@ -142,14 +142,14 @@ test("cap.merkle_tree dynamic mount and out-of-bounds error") {
     const alloc = std.testing.allocator;
 
     const leaves: [3][]const u8 = [ "alice", "bob", "carol" ];
-    let tree = try cap.merkle_tree.MerkleTree.init(alloc, &leaves);
+    let tree = try cap.ds.MerkleTree.init(alloc, &leaves);
     defer tree.deinit();
 
     const root = tree.rootHash();
     let proof = try tree.generateProof(alloc, 1);
     defer proof.deinit(alloc);
 
-    expect_eq(cap.merkle_tree.verifyProof(root, "bob", proof), true);
+    expect_eq(cap.ds.verifyProof(root, "bob", proof), true);
 
     const oob_res = tree.generateProof(alloc, 3);
     expect_eq(std.meta.isError(oob_res), true);

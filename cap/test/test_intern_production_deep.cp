@@ -3,8 +3,8 @@
 // Covers:
 //   1. StringInterner deduplication (1000x repeats over 10 words -> 10 unique bytes), SymbolId equality & read-only lookup
 //   2. resolve / resolveOpt exact restoration, out-of-bounds InvalidSymbolId, large >4KB strings & std.testing.allocator zero-leak
-//   3. StringBiMap.insert strict 1:1 bijection enforcement (KeyAlreadyExists & ValueAlreadyExists)
-//   4. StringBiMap.forcePut atomic replacement & bidirectional removeByKey/removeByVal cleanup
+//   3. InternStringBiMap.insert strict 1:1 bijection enforcement (KeyAlreadyExists & ValueAlreadyExists)
+//   4. InternStringBiMap.forcePut atomic replacement & bidirectional removeByKey/removeByVal cleanup
 //   5. `import cap from "cap"; cap.intern` dynamic mounting
 
 const std = @import("std");
@@ -14,8 +14,8 @@ import {
     InternError,
     SymbolId,
     StringInterner,
-    StringBiMap,
-} from "cap:intern";
+    InternStringBiMap,
+} from "cap:ds";
 
 test("cap:intern - StringInterner 1000x deduplication, SymbolId equality & read-only lookup") {
     const alloc = std.testing.allocator;
@@ -103,9 +103,9 @@ test("cap:intern - resolve, resolveOpt, InvalidSymbolId & std.testing.allocator 
     expect_eq(caught_invalid, true);
 }
 
-test("cap:intern - StringBiMap.insert strict 1:1 bijection enforcement") {
+test("cap:intern - InternStringBiMap.insert strict 1:1 bijection enforcement") {
     const alloc = std.testing.allocator;
-    let bm = StringBiMap.init(alloc);
+    let bm = InternStringBiMap.init(alloc);
     defer bm.deinit();
 
     bm.insert("k1", "v1") catch unreachable;
@@ -143,9 +143,9 @@ test("cap:intern - StringBiMap.insert strict 1:1 bijection enforcement") {
     expect_eq(bm.containsVal("v_other"), false);
 }
 
-test("cap:intern - StringBiMap.forcePut atomic replacement & bidirectional removal") {
+test("cap:intern - InternStringBiMap.forcePut atomic replacement & bidirectional removal") {
     const alloc = std.testing.allocator;
-    let bm = StringBiMap.init(alloc);
+    let bm = InternStringBiMap.init(alloc);
     defer bm.deinit();
 
     bm.insert("A", "1") catch unreachable;
@@ -179,14 +179,14 @@ test("cap:intern - StringBiMap.forcePut atomic replacement & bidirectional remov
 test("cap.intern - dynamic mounting via import cap from cap") {
     const alloc = std.testing.allocator;
 
-    let pool = cap.intern.StringInterner.init(alloc);
+    let pool = cap.ds.StringInterner.init(alloc);
     defer pool.deinit();
     const id_a = pool.intern("dyn_symbol") catch unreachable;
     const id_b = pool.intern("dyn_symbol") catch unreachable;
     expect_eq(id_a, id_b);
     expect_eq(std.mem.eql(u8, pool.resolveOpt(id_a).?, "dyn_symbol"), true);
 
-    let bm = cap.intern.StringBiMap.init(alloc);
+    let bm = cap.ds.InternStringBiMap.init(alloc);
     defer bm.deinit();
     bm.insert("alias", "target") catch unreachable;
     expect_eq(std.mem.eql(u8, bm.getByVal("target").?, "alias"), true);

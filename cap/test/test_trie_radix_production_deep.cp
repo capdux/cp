@@ -1,8 +1,7 @@
 // Source: native-cp-stdlib (Compressed Radix / Patricia Trie)
 
 import std from "std";
-import cap from "cap";
-import { RadixTree, StrSlice } from "cap:trie_radix";
+import { RadixTree, StrSlice } from "../../lib/ds/trie_radix_.cp";
 import { test, expect_eq } from "cap:test";
 
 fn containsKey(keys: []StrSlice, target: []const u8) -> bool {
@@ -155,7 +154,7 @@ test "radix tree remove merges single child compressed edge" {
 
 test "cap.trie_radix dynamic mount and zero leak verification" {
     const alloc = std.testing.allocator;
-    let tree = try cap.trie_radix.RadixTree<u64>.init(alloc);
+    let tree = try RadixTree<u64>.init(alloc);
     defer tree.deinit();
 
     * = try tree.insert("", 999);

@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/ds/suffix.cp | Kept for comparison/analysis
 // Source: native-cp-stdlib (Suffix Array & Kasai LCP)
 import std from "std";
 

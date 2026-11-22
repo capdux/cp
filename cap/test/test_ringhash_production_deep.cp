@@ -15,7 +15,7 @@ import {
     ConsistentRing,
     RendezvousHasher,
     jumpConsistentHash,
-} from "cap:ringhash";
+} from "cap:ds";
 
 fn formatKey(buf: []u8, prefix: string, num: usize): []const u8 {
     let pos: usize = 0;
@@ -285,7 +285,7 @@ test("cap:ringhash - RendezvousHasher HRW determinism, weight skew & error inter
 test("cap:ringhash - dynamic cap.ringhash mounting & std.testing.allocator zero-leak") {
     const t_alloc = std.testing.allocator;
 
-    let ring = cap.ringhash.ConsistentRing.init(t_alloc, 32) catch unreachable;
+    let ring = cap.ds.ConsistentRing.init(t_alloc, 32) catch unreachable;
     defer ring.deinit();
     ring.addNode("dyn-1", 1) catch unreachable;
     ring.addNode("dyn-2", 2) catch unreachable;
@@ -299,7 +299,7 @@ test("cap:ringhash - dynamic cap.ringhash mounting & std.testing.allocator zero-
     ring.removeNode("dyn-2") catch unreachable;
     expect_eq(ring.nodeCount(), 2);
 
-    let hrw = cap.ringhash.RendezvousHasher.init(t_alloc);
+    let hrw = cap.ds.RendezvousHasher.init(t_alloc);
     defer hrw.deinit();
     hrw.addNode("hrw-1", 2) catch unreachable;
     hrw.addNode("hrw-2", 1) catch unreachable;
@@ -307,6 +307,6 @@ test("cap:ringhash - dynamic cap.ringhash mounting & std.testing.allocator zero-
     defer t_alloc.free(hrw_reps);
     expect_eq(hrw_reps.len, 2);
 
-    const j = cap.ringhash.jumpConsistentHash(0xdeadbeefcafebabe, 8) catch unreachable;
+    const j = cap.ds.jumpConsistentHash(0xdeadbeefcafebabe, 8) catch unreachable;
     expect_eq(j < 8, true);
 }

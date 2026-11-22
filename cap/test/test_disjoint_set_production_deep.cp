@@ -1,8 +1,7 @@
 // Source: cp/cap/test/test_disjoint_set_production_deep.cp
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import cap from "cap";
-import { DsuError, DisjointSet } from "cap:disjoint_set";
+import { DsuError, DisjointSet } from "../../lib/ds/disjoint_set_.cp";
 
 test "disjoint_set: union, path compression, and component tracking" {
     const alloc = std.testing.allocator;
@@ -55,7 +54,7 @@ test "disjoint_set: IndexOutOfBounds guard" {
 
 test "disjoint_set: cap.disjoint_set dynamic mount & zero leak" {
     const alloc = std.testing.allocator;
-    let dsu = try cap.disjoint_set.DisjointSet.init(alloc, 5);
+    let dsu = try DisjointSet.init(alloc, 5);
     defer dsu.deinit();
     * = try dsu.unite(2, 4);
     try expect_eq(try dsu.connected(2, 4), true);

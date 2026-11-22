@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/ds/segtree.cp (LazySegmentTree) | Kept for comparison/analysis
 // Source: cp/lib/segment_tree/segment_tree.cp (Pure CP Lazy-Propagation Segment Tree)
 const std = @import("std");
 

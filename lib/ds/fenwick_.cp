@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/ds/segtree.cp (FenwickTree) | Kept for comparison/analysis
 // Source: cp/lib/fenwick/fenwick.cp (Pure CP 1D & 2D Fenwick / Binary Indexed Tree)
 const std = @import("std");
 

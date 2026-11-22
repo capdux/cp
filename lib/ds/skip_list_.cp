@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/ds/skiplist.cp | Kept for comparison/analysis
 // Source: native-cp-stdlib (Ordered SkipList Key-Value Engine)
 
 const std = @import("std");

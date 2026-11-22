@@ -1,8 +1,7 @@
 // Source: cp/cap/test/test_fenwick_production_deep.cp
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import cap from "cap";
-import { FenwickError, FenwickTree } from "cap:fenwick";
+import { FenwickError, FenwickTree } from "../../lib/ds/fenwick_.cp";
 
 test "fenwick: initFromSlice, prefixSum, rangeSum, add, set" {
     const alloc = std.testing.allocator;
@@ -62,7 +61,7 @@ test "fenwick: large 1000-element stress accuracy" {
 
 test "fenwick: cap.fenwick dynamic mount & zero leak" {
     const alloc = std.testing.allocator;
-    let ft = try cap.fenwick.FenwickTree(i64).init(alloc, 8);
+    let ft = try FenwickTree(i64).init(alloc, 8);
     defer ft.deinit();
     try ft.add(3, 42);
     try expect_eq(try ft.prefixSum(7), 42);

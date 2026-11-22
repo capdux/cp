@@ -1,7 +1,7 @@
 // Source: native-cp-stdlib (Ordered B+ Tree Index)
 import std from "std";
 import cap from "cap";
-import { BPlusTree } from "cap:bptree";
+import { BPlusTree } from "cap:ds";
 import { test, expect_eq } from "cap:test";
 
 test "bptree: out-of-order 300 inserts trigger multi-level splits and exact lookup" {
@@ -135,7 +135,7 @@ test "bptree: remove half of keys with borrow/merge and verify remaining & range
 
 test "bptree: cap.bptree dynamic mount and testing allocator zero-leak" {
     const alloc = std.testing.allocator;
-    let tree = cap.bptree.BPlusTree(u32, u64).init(alloc);
+    let tree = cap.ds.BPlusTree(u32, u64).init(alloc);
     defer tree.deinit();
 
     let i: u32 = 1;

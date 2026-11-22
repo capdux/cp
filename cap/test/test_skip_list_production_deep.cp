@@ -1,8 +1,7 @@
 // Source: native-cp-stdlib (Ordered SkipList Key-Value Engine)
 
 import { test, expect_eq } from "cap:test";
-import { SkipList } from "cap:skip_list";
-import cap from "cap";
+import { SkipList } from "../../lib/ds/skip_list_.cp";
 
 const std = @import("std");
 
@@ -120,7 +119,7 @@ test "skip_list lowerBound floor ceiling boundary lookups" {
 
 test "skip_list cap.skip_list dynamic mount and zero leak with testing allocator" {
     const alloc = std.testing.allocator;
-    let sl = cap.skip_list.SkipList([]const u8, i32).init(alloc);
+    let sl = SkipList([]const u8, i32).init(alloc);
     defer sl.deinit();
 
     * = try sl.insert("banana", 2);

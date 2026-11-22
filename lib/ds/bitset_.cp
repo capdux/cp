@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/ds/bitset.cp | Kept for comparison/analysis
 // Source: cp/lib/bitset/bitset.cp (64-bit Word-Level Dynamic BitSet & Stack FixedBitSet)
 // Pure CP zero-C-dependency bitset engine with hardware @popCount/@ctz acceleration,
 // set algebra operations, range manipulation, and compact hex serialization.

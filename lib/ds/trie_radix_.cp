@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/ds/radix.cp | Kept for comparison/analysis
 // Source: native-cp-stdlib (Compressed Radix / Patricia Trie)
 
 import std from "std";

@@ -20,7 +20,7 @@ import {
     fuzzyScore,
     rankCandidates,
     freeMatches,
-} from "cap:fuzzy";
+} from "cap:ds";
 
 fn approxEq(a: f64, b: f64, tol: f64): bool {
     const diff = if (a > b) a - b else b - a;
@@ -181,15 +181,15 @@ test("cap:fuzzy - rankCandidates batch ranking and empty query boundary") {
 test("cap.fuzzy - dynamic namespace mounting and zero-leak verification") {
     const alloc = std.testing.allocator;
 
-    expect_eq(cap.fuzzy.levenshtein(alloc, "abc", "axc") catch unreachable, 1);
-    expect_eq(cap.fuzzy.damerauLevenshtein(alloc, "ab", "ba") catch unreachable, 1);
+    expect_eq(cap.ds.levenshtein(alloc, "abc", "axc") catch unreachable, 1);
+    expect_eq(cap.ds.damerauLevenshtein(alloc, "ab", "ba") catch unreachable, 1);
 
-    const sim = cap.fuzzy.jaroWinkler(alloc, "MARTHA", "MARHTA", 0.1) catch unreachable;
+    const sim = cap.ds.jaroWinkler(alloc, "MARTHA", "MARHTA", 0.1) catch unreachable;
     expect_eq(approxEq(sim, 0.9611111111, 1e-6), true);
 
     const items: [2][]const u8 = [ "cap/test/fuzzy.cp", "cap/src/other.cp" ];
-    const res = cap.fuzzy.rankCandidates(alloc, "fuzzy", &items, false) catch unreachable;
-    defer cap.fuzzy.freeMatches(alloc, res);
+    const res = cap.ds.rankCandidates(alloc, "fuzzy", &items, false) catch unreachable;
+    defer cap.ds.freeMatches(alloc, res);
     expect_eq(res.len, 1);
     expect_eq(res[0].index, 0);
     expect_eq(res[0].positions.len, 5);

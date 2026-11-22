@@ -9,12 +9,11 @@
 
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import cap from "cap";
 import {
     BitSetError,
     BitSet,
     FixedBitSet,
-} from "cap:bitset";
+} from "../../lib/ds/bitset_.cp";
 
 test("cap:bitset - dynamic growth, single bit ops & cross-word range boundaries") {
     const alloc = std.heap.page_allocator;
@@ -271,7 +270,7 @@ test("cap:bitset - toHex/fromHex roundtrip, InvalidHex & stack FixedBitSet(256)"
 
 test("cap.bitset - dynamic mounting via import cap from cap") {
     const alloc = std.heap.page_allocator;
-    let bs = cap.bitset.BitSet.init(alloc);
+    let bs = BitSet.init(alloc);
     defer bs.deinit();
 
     bs.set(10) catch unreachable;
@@ -279,7 +278,7 @@ test("cap.bitset - dynamic mounting via import cap from cap") {
     expect_eq(bs.count(), 2);
     expect_eq(bs.testBit(200), true);
 
-    let fbs = cap.bitset.FixedBitSet(128).init();
+    let fbs = FixedBitSet(128).init();
     fbs.set(127);
     expect_eq(fbs.count(), 1);
     expect_eq(fbs.testBit(127), true);

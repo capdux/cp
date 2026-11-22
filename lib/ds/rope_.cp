@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/ds/rope.cp | Kept for comparison/analysis
 // Source: cp/lib/rope/piece_table.cp (Piece Table / Rope core engine with line/col mapping & undo/redo)
 const std = @import("std");
 

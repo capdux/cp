@@ -1,7 +1,6 @@
 // Source: native-cp-stdlib (Suffix Array & Kasai LCP)
 import std from "std";
-import cap from "cap";
-import { SuffixArray } from "cap:suffix_array";
+import { SuffixArray } from "../../lib/ds/suffix_array_.cp";
 import { test, expect_eq } from "cap:test";
 
 test "SuffixArray: banana SA and Kasai LCP exact match" {
@@ -96,7 +95,7 @@ test "SuffixArray: empty, single char, identical chars, and cap.suffix_array dyn
     const alloc = std.testing.allocator;
 
     // Empty string boundary
-    let sa_empty = try cap.suffix_array.SuffixArray.init(alloc, "");
+    let sa_empty = try SuffixArray.init(alloc, "");
     defer sa_empty.deinit();
     expect_eq(sa_empty.len(), @as(usize, 0));
     expect_eq(sa_empty.saSlice().len, @as(usize, 0));
@@ -106,7 +105,7 @@ test "SuffixArray: empty, single char, identical chars, and cap.suffix_array dyn
     expect_eq(sa_empty.longestRepeatedSubstring().len, @as(usize, 0));
 
     // Single character boundary
-    let sa_one = try cap.suffix_array.SuffixArray.init(alloc, "x");
+    let sa_one = try SuffixArray.init(alloc, "x");
     defer sa_one.deinit();
     expect_eq(sa_one.len(), @as(usize, 1));
     expect_eq(sa_one.saSlice()[0], @as(usize, 0));
@@ -115,7 +114,7 @@ test "SuffixArray: empty, single char, identical chars, and cap.suffix_array dyn
     expect_eq(sa_one.longestRepeatedSubstring().len, @as(usize, 0));
 
     // Identical characters boundary ("aaaaa")
-    let sa_same = try cap.suffix_array.SuffixArray.init(alloc, "aaaaa");
+    let sa_same = try SuffixArray.init(alloc, "aaaaa");
     defer sa_same.deinit();
     const same_sa = sa_same.saSlice();
     const same_lcp = sa_same.lcpSlice();

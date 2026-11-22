@@ -1,7 +1,7 @@
 // Source: native-cp-stdlib (State-Based CRDTs: GCounter, PNCounter, GSet, LWW)
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import { GCounter, PNCounter, LWWRegister, GSet } from "cap:crdt_pn";
+import { GCounter, PNCounter, LWWRegister, GSet } from "cap:ds";
 import cap from "cap";
 
 test("GCounter: multi-node concurrent increments and semilattice merge properties") {
@@ -130,24 +130,24 @@ test("GSet: deduplicated union convergence") {
 test("cap.crdt_pn dynamic mount and zero-leak verification") {
     const alloc = std.testing.allocator;
 
-    let gc = cap.crdt_pn.GCounter.init(alloc);
+    let gc = cap.ds.GCounter.init(alloc);
     defer gc.deinit();
     try gc.increment(7, 12);
     try expect_eq(gc.value(), 12);
 
-    let pn = cap.crdt_pn.PNCounter.init(alloc);
+    let pn = cap.ds.PNCounter.init(alloc);
     defer pn.deinit();
     try pn.increment(1, 8);
     try pn.decrement(1, 3);
     try expect_eq(pn.value(), 5);
 
-    let gs = cap.crdt_pn.GSet(i32).init(alloc);
+    let gs = cap.ds.GSet(i32).init(alloc);
     defer gs.deinit();
     try gs.add(-1);
     try gs.add(1);
     try expect_eq(gs.len(), 2);
 
-    let reg = cap.crdt_pn.LWWRegister(i32).init(5, 1, 1);
+    let reg = cap.ds.LWWRegister(i32).init(5, 1, 1);
     reg.set(9, 2, 1);
     try expect_eq(reg.get(), 9);
 }

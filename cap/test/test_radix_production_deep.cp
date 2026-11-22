@@ -18,7 +18,7 @@ import {
     RouteParam,
     RouteMatch,
     RadixRouter,
-} from "cap:radix";
+} from "cap:ds";
 
 test("cap:radix - insert, split, exact get, DuplicateKey, upsert & empty-key boundary") {
     const alloc = std.testing.allocator;
@@ -256,7 +256,7 @@ test("cap:radix - RadixRouter static, :param, *wildcard & priority resolution") 
 
 test("cap:radix - dynamic cap.radix mount & zero memory leaks") {
     const alloc = std.testing.allocator;
-    let tree = cap.radix.RadixTree<u64>.init(alloc);
+    let tree = cap.ds.RadixTree<u64>.init(alloc);
     defer tree.deinit();
 
     let buf: [32]u8 = undefined;
@@ -275,7 +275,7 @@ test("cap:radix - dynamic cap.radix mount & zero memory leaks") {
     expect_eq(tree.count(), 100);
     expect_eq(tree.verifyInvariants(), true);
 
-    let dyn_router = cap.radix.RadixRouter<u64>.init(alloc);
+    let dyn_router = cap.ds.RadixRouter<u64>.init(alloc);
     defer dyn_router.deinit();
     dyn_router.addRoute("/api/:ver/health", 200) catch unreachable;
     if (rm := dyn_router.matchRoute(alloc, "/api/v2/health") catch unreachable) {

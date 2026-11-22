@@ -1,8 +1,7 @@
 // Source: cp/cap/test/test_rope_production_deep.cp (Deep production tests for cap:rope & cap.rope)
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import { RopeText, RopeError, LineCol } from "cap:rope";
-import cap from "cap";
+import { RopeText, RopeError, LineCol } from "../../lib/ds/rope_.cp";
 
 fn naiveInsert(alloc: std.mem.Allocator, list: *std.ArrayList(u8), offset: usize, text: []const u8): !void {
     const old_len = list.items.len;
@@ -206,7 +205,7 @@ test("4. OutOfBounds Guards, Empty Boundaries & Tail-Append Coalescing") {
 
 test("5. Dynamic cap.rope Namespace Mounting & Zero-Leak Verification") {
     const alloc = std.testing.allocator;
-    let rope = try cap.rope.RopeText.initFromText(alloc, "module:\n");
+    let rope = try RopeText.initFromText(alloc, "module:\n");
     defer rope.deinit();
 
     try rope.insert(rope.len(), "cap.rope");

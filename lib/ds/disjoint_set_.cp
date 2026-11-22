@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/ds/dsu.cp | Kept for comparison/analysis
 // Source: cp/lib/disjoint_set/disjoint_set.cp (Pure CP Disjoint Set Union / Union-Find with Path Compression & Rank)
 const std = @import("std");
 

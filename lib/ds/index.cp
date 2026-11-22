@@ -149,3 +149,74 @@ export {
     Centroid,
     TDigest,
 } from "./tdigest.cp";
+
+// === Consolidated Wave-2 Data Structures, CRDTs, Consistent Hashing & Graph/Text Indexes ===
+
+// --- bptree ---
+export { BPlusTree } from "./bptree.cp";
+
+// --- crdt_pn ---
+pub import { GCounter, PNCounter, LWWRegister, GSet, CounterEntry } from "./crdt_pn.cp";
+
+// --- ringhash ---
+export {
+    RingHashError,
+    ConsistentRing,
+    RendezvousHasher,
+    jumpConsistentHash,
+} from "./ringhash.cp";
+
+// --- zset ---
+export {
+    ZSetError,
+    ZSetEntry,
+    ZSetAgg,
+    SortedSet,
+} from "./zset.cp";
+
+// --- radix ---
+export {
+    RadixError,
+    RadixMatch,
+    RadixEntry,
+    RadixTree,
+} from "./radix.cp";
+
+export {
+    RouteParam,
+    RouteMatch,
+    RadixRouter,
+} from "./radix_router.cp";
+
+// --- intern ---
+pub const _intern = @import("./intern.cp");
+pub const InternStringBiMap = _intern.StringBiMap;
+export {
+    InternError,
+    SymbolId,
+    StringInterner,
+
+} from "./intern.cp";
+
+// --- fuzzy ---
+export {
+    FuzzyError,
+    FuzzyMatch,
+    levenshtein,
+    damerauLevenshtein,
+    jaro,
+    jaroWinkler,
+    fuzzyScore,
+    rankCandidates,
+    freeMatches,
+} from "./fuzzy.cp";
+
+// --- merkle_tree ---
+export {
+    ProofStep,
+    MerkleProof,
+    MerkleTree,
+    hashLeaf,
+    hashInternal,
+    verifyProof,
+} from "./merkle_tree.cp";

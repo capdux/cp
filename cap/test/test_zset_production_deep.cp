@@ -15,7 +15,7 @@ import {
     ZSetEntry,
     ZSetAgg,
     SortedSet,
-} from "cap:zset";
+} from "cap:ds";
 
 test("cap:zset - zadd, zincrby, tie-breaking, NaN guard & update re-sort") {
     const alloc = std.testing.allocator;
@@ -224,7 +224,7 @@ test("cap:zset - unionInto (Sum / Min / Max) & clean memory release") {
 
 test("cap.zset - dynamic mounting via import cap from \"cap\"") {
     const alloc = std.testing.allocator;
-    let zs = cap.zset.SortedSet.init(alloc);
+    let zs = cap.ds.SortedSet.init(alloc);
     defer zs.deinit();
 
     expect_eq(zs.zadd("task_b", 200.0) catch unreachable, true);
@@ -234,7 +234,7 @@ test("cap.zset - dynamic mounting via import cap from \"cap\"") {
     expect_eq(zs.zrank("task_b").?, 1);
 
     const popped = zs.zpopMin(alloc, 1) catch unreachable;
-    defer cap.zset.SortedSet.freeEntries(alloc, popped);
+    defer cap.ds.SortedSet.freeEntries(alloc, popped);
     expect_eq(popped.len, 1);
     expect_eq(std.mem.eql(u8, popped[0].member, "task_a"), true);
     expect_eq(popped[0].score, 100.0);
