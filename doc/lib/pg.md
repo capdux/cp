@@ -19,6 +19,7 @@
 | `lib/pg/sqlstate.cp` | 5 字符 `SqlStateCode` 严格解析/分类与 15 类 `SqlStateClass` |
 | `lib/pg/wiretypes.cp` | 线协议 v3.0 常量、大端整数编解码、`MessageHeader`、`FieldDescription` 与 `StartupMessage` |
 | `lib/pg/paramDesc.cp` | 零分配 `ParameterDescription`（`'t'`）参数 OID 数组编解码器与无界零拷贝视图（`ParameterDescriptionView`、`ParameterDescription`） |
+| `lib/pg/stackReader.cp` | 零分配有界大端协议游标与原子半包回滚后端帧读取器（`PgStackReader`、`PgWireFrameSlice`） |
 
 ## 核心 API 摘要
 
@@ -82,4 +83,17 @@ const n = pd.encodeFrame(wire[0..])?;
 const view = ParameterDescriptionView.decodeFrame(wire[0..n])?;
 * = view.allBinaryFriendly(); // true
 * = PgOid.INT4;
+```
+
+6. **零分配有界流式游标与半包原子回滚（`stackReader.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/StackReader.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
+   - 面向 PostgreSQL 高吞吐管线（Query Pipelining）接收缓冲区提供零拷贝 `PgStackReader`：支持消息书签（`markMessageStart`/`rewindMessage`）、饱和前进（`skip`）、NUL 终止 C 字符串零拷贝读取（`readZ`）与大端定长标量解码；
+   - `readBackendFrame()` 在 TCP 分片未收齐完整后端消息时自动回滚至 `message_start` 并返回 `PgStackReaderError.ShortRead`，避免局部消费破坏后续帧边界。
+
+```cp
+import { PgStackReader } from "cap:pg";
+
+const wire: [6]u8 = ['Z', 0, 0, 0, 5, 'I'];
+let r = PgStackReader.init(wire[0..]);
+const frame = r.readBackendFrame()?; // tag='Z', payload_len=1, payload="I"
+* = frame;
 ```

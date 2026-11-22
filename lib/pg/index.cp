@@ -145,3 +145,9 @@ export {
     ParameterDescriptionView,
     ParameterDescription,
 } from "./paramDesc.cp";
+
+export {
+    PgStackReaderError,
+    PgWireFrameSlice,
+    PgStackReader,
+} from "./stackReader.cp";
