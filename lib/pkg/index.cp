@@ -496,3 +496,17 @@ export {
     PkgCliParsedArgs,
     parsePkgCliArgs,
 } from "./cliArgs.cp";
+
+export {
+    BIN_LINK_MAX_ENTRIES,
+    BIN_LINK_MAX_PLANNED,
+    BinLinkError,
+    PkgBinKind,
+    PkgBinEntry,
+    normalizedBinName,
+    validateSafeBinName,
+    normalizeBinTargetRel,
+    PkgBinSpec,
+    BinLinkPlanItem,
+    BinLinkPlanner,
+} from "./binLink.cp";

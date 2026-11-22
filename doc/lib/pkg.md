@@ -918,3 +918,25 @@ const parsed = parsePkgCliArgs(PkgCliSubcommand.Install, argv[0..])?;
 // parsed.canModifyLockfile() == false, parsed.omit_dev == true, parsed.network_concurrency == 32
 * = parsed;
 ```
+
+### `package.json` `bin` 字段规范化与 `node_modules/.bin` 链接规划器（`lib/pkg/binLink.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/bin.cp` 与 `/data/dev/bun/docs/pm/cli/install.mdx`；
+- 导出：`BIN_LINK_MAX_ENTRIES` (`32`)、`BIN_LINK_MAX_PLANNED` (`64`)、`BinLinkError`、`PkgBinKind`（`None`/`File`/`NamedFile`/`Dir`/`Map`）、`PkgBinEntry`、`normalizedBinName`、`validateSafeBinName`、`normalizeBinTargetRel`、`PkgBinSpec`（`init`/`fromSingleFile`/`fromDir`/`addMapEntry`/`slice`/`eql`/`toJson`）、`BinLinkPlanItem`、`BinLinkPlanner`（`init`/`hasBinName`/`planSpec`/`slice`/`formatDestPath`/`formatRelativeSymlinkTarget`）；
+- **`node_modules/.bin` 安全边界与优先级最佳实践**：
+  - **名称与路径安全清洗**：遵循 `npm-normalize-package-bin` 规范，`normalizedBinName()` 对 Scoped 包（如 `@acme/my-cli`）自动截取末段 `my-cli`；`validateSafeBinName()` 与 `normalizeBinTargetRel()` 严格拦截 `.`/`..` 路径穿越段、绝对路径、Windows 盘符、反斜杠与控制字符，防止恶意包通过 `bin` 字段覆盖包外文件；
+  - **直接依赖优先去重**：`BinLinkPlanner` 按注册顺序去重同名命令，先注册的直接依赖胜出，防止传递依赖在 `node_modules/.bin/` 中劫持顶层同名 CLI；本地安装统一生成相对软链目标 `../<pkg>/<rel>`，确保项目目录移动后链接依然有效。
+
+```cp
+import { PkgBinSpec, BinLinkPlanner } from "cap:pkg";
+
+let planner = BinLinkPlanner.init();
+const spec = PkgBinSpec.fromSingleFile("@acme/cli", "./dist/cli.js")?;
+* = planner.planSpec("@acme/cli", spec, false)?;
+
+let buf: [128]u8 = [0; 128];
+const dlen = planner.formatDestPath(0, "node_modules", buf[0..])?;      // "node_modules/.bin/cli"
+const tlen = planner.formatRelativeSymlinkTarget(0, buf[0..])?;         // "../@acme/cli/dist/cli.js"
+* = dlen;
+* = tlen;
+```
