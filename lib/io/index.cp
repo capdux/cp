@@ -83,3 +83,11 @@ export {
     StaticPipeStep,
     StaticPipeWriter,
 } from "./staticPipeWriter";
+
+export {
+    SUBPROCESS_READABLE_BUF_CAP,
+    SUBPROCESS_PIPE_OVERHEAD_BYTES,
+    SubprocessReadableKind,
+    SubprocessReadableError,
+    SubprocessReadable,
+} from "./subprocessReadable";

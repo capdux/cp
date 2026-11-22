@@ -127,6 +127,19 @@ const n1 = w.drainToBuf(chunk[0..])?; // 5 ("hello")
 const n2 = w.drainToBuf(chunk[0..])?; // 5 (" pipe"), 自动转入 Closed
 * = n1; * = n2;
 ```
+7. **子进程输出流七态读取状态机（`subprocessReadable.cp`，吸收自 `/data/dev/bun/src/runtime/api/bun/subprocess/Readable.cp`）**：
+   - 导出：`SUBPROCESS_READABLE_BUF_CAP` (`4096`)、`SUBPROCESS_PIPE_OVERHEAD_BYTES` (`64`)、`SubprocessReadableKind`（`Fd` / `Memfd` / `Pipe` / `Inherit` / `Ignore` / `Closed` / `Buffer`）、`SubprocessReadableError`（`NotPipe` / `BufferOverflow` / `AlreadyClosed`）、`SubprocessReadable`（`initInherit`/`initIgnore`/`initFd`/`initMemfd`/`initPipe`/`initBuffer`/`memoryCost`/`hasPendingActivity`/`ref`/`unref`/`appendPipeChunk`/`finishPipeToBuffer`/`slice`/`close`/`isClosed`）；
+   - 完整还原 Bun 子进程 `stdout`/`stderr` 读取生命周期：活跃管道态（`Pipe`）持续 `appendPipeChunk` 并在 EOF 时通过 `finishPipeToBuffer()` 零分配收敛为只读 `Buffer` 态，自动释放 `pending_activity` 与事件循环 `ref`，同时提供精确 `memoryCost()` 账本统计与 `max_bytes` 溢出防护。
+
+```cp
+import { SubprocessReadable, SubprocessReadableKind } from "cap:io";
+
+let r = SubprocessReadable.initPipe(7, 1024);
+* = r.appendPipeChunk("out: ")?;
+* = r.appendPipeChunk("ok")?;
+const data = r.finishPipeToBuffer()?; // "out: ok", r.kind == SubprocessReadableKind.Buffer
+* = data;
+```
 
 ---
 
