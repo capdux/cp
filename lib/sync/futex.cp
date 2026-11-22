@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/threading/Futex.cp | Synced: 2026-11-21T12:31:30Z
+// Source: Absorbed from /data/dev/bun/src/threading/Futex.cp | Synced: 2026-11-22T07:18:20Z
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/futex.cp
 // Upstream Sync: Refer to bun/src/threading/futex.zig for future upstream updates.

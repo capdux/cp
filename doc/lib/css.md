@@ -413,6 +413,25 @@ const cmp = reg.comparePriority(CssLayerName.parse("reset")?, CssLayerName.parse
 // cmp == -1（reset 优先级低于 utilities）
 ```
 
+### CSS Grid Level 2 轨道列表与模板区域解析/校验（`grid.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/properties/grid.cp`，零堆分配实现 W3C CSS Grid Layout Level 2 `grid-template-columns` / `grid-template-rows`（`none`、`<track-size>`、`minmax()`、`fit-content()`、`repeat(N | auto-fill | auto-fit, ...)`、命名网格线 `[line-a line-b]`）与 `grid-template-areas`（多行模板、`.`/`...` 空单元格、列数一致性与实心矩形校验）。
+
+- 核心导出：`CSS_GRID_MAX_TRACKS` (`32`)、`CSS_GRID_MAX_LINE_NAMES` (`8`)、`CSS_GRID_MAX_AREA_CELLS` (`128`)、`CssGridError`、`CssGridTrackBreadthKind`、`CssGridTrackBreadth`、`CssGridTrackSizeKind`、`CssGridTrackSize`、`CssGridRepeatCountKind`、`CssGridRepeatCount`、`CssGridLineNameSet`、`CssGridTrackRepeat`、`CssGridTrackItemKind`、`CssGridTrackItem`、`CssGridTrackSizing`（`parse` / `toCss` / `toCssMinified`）、`CssGridTemplateAreas`（`parse` / `cellAt` / `validateRectangles` / `toCss`）。
+- 规范防线：`minmax(min, max)` 的 `min` 位置严格禁止 `<flex>`（如 `1fr`）；`repeat()` 仅允许正整数、`auto-fill` 或 `auto-fit`；`grid-template-areas` 自动拦截行列不齐与非矩形（L 形/分裂）命名区域。
+
+```cp
+import { CssGridTrackSizing, CssGridTemplateAreas } from "cap:css";
+
+const cols = CssGridTrackSizing.parse("[sidebar-start] 240px [sidebar-end main-start] repeat(auto-fit, minmax(200px, 1fr)) [main-end]")?;
+const areas = CssGridTemplateAreas.parse("\"header header\" \"nav main\" \"footer ...\"")?;
+let buf: [256]u8 = [0; 256];
+const n1 = cols.toCssMinified(buf[0..])?;
+const n2 = areas.toCss(buf[0..])?;
+* = n1;
+* = n2;
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项

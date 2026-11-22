@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys/tmp.cp | Synced: 2026-11-21T12:28:10Z
+// Source: Absorbed from /data/dev/bun/src/sys/tmp.cp | Synced: 2026-11-22T07:17:50Z
 // ============================================================================
 // lib/sys/tmp.cp — Cross-platform Temporary Files & Directory Utilities
 // ============================================================================

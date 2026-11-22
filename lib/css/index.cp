@@ -367,3 +367,22 @@ export {
     CssLayerRuleList,
     CssLayerOrderRegistry,
 } from "./layer_rule.cp";
+
+export {
+    CSS_GRID_MAX_TRACKS,
+    CSS_GRID_MAX_LINE_NAMES,
+    CSS_GRID_MAX_AREA_CELLS,
+    CssGridError,
+    CssGridTrackBreadthKind,
+    CssGridTrackBreadth,
+    CssGridTrackSizeKind,
+    CssGridTrackSize,
+    CssGridRepeatCountKind,
+    CssGridRepeatCount,
+    CssGridLineNameSet,
+    CssGridTrackRepeat,
+    CssGridTrackItemKind,
+    CssGridTrackItem,
+    CssGridTrackSizing,
+    CssGridTemplateAreas,
+} from "./grid.cp";

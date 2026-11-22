@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys/fd.cp | Synced: 2026-11-22T02:15:38Z
+// Source: Absorbed from /data/dev/bun/src/sys/fd.cp | Synced: 2026-11-22T07:18:20Z
 // ============================================================================
 // lib/sys/fd.cp — Cross-platform File Descriptor Abstraction & Flags
 // ============================================================================
