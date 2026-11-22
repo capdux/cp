@@ -1041,6 +1041,60 @@ pub fn demoDtlsSrtpMedia(ekm_60: []const u8, rtp_pkt: []const u8)! {
 }
 ```
 
+---
+
+## 十二、 WebRTC DataChannel 传输核心：RFC 4960 SCTP / RFC 3758 PR-SCTP / RFC 8832 DCEP（`lib/net/sctpDataChannel.cp`）
+
+`lib/net/sctpDataChannel.cp` 提供 100% 纯 CP、零动态堆分配、外部切片驱动的 WebRTC DataChannel 传输协议栈，与 `webrtcIce.cp`（ICE/STUN/SDP）和 `srtpCodec.cp`（SRTP/SRTCP）共同构成完整 WebRTC 传输核心：
+
+1. **Castagnoli CRC32C 与分组头**：
+   - `computeSctpCrc32c` / `updateSctpCrc32c`：256 项查表 Castagnoli CRC32C（多项式 `0x82F63B78`，官方向量 `"123456789"` = `0xE3069283`）；
+   - `SctpCommonHeader`（12 字节，`checksum` 小端存储）、`computeSctpPacketCrc32c`、`stampSctpPacketCrc32c`、`verifySctpPacketCrc32c`；
+   - `SctpWireChunkIter`（4 字节对齐填充跳过与严格长度守卫）与 `SctpPacketBuilder`（零分配多 Chunk 组包与 CRC32C 签章）。
+2. **全量核心 Chunk 编解码**：
+   - `DATA` (`0`，含 `U/B/E/I` 与 WebRTC PPID `50/51/53/56/57`)、`INIT` (`1`) / `INIT_ACK` (`2`，含 TLV 迭代 `SctpTlvIter`、`State Cookie`、`Forward-TSN-Supported`)、`SACK` (`3`，外部切片 `GapAckBlock` 与重复 TSN)、`HEARTBEAT` (`4`) / `HEARTBEAT_ACK` (`5`)、`ABORT` (`6`)、`SHUTDOWN` (`7`) / `SHUTDOWN_ACK` (`8`) / `SHUTDOWN_COMPLETE` (`14`)、`COOKIE_ECHO` (`10`) / `COOKIE_ACK` (`11`)、`FORWARD_TSN` (`192`，RFC 3758 PR-SCTP)。
+3. **无上限外部切片 TSN 接收窗口与分片重组**：
+   - `SctpRecvTracker`：基于 RFC 1982 32-bit 回绕比较（`tsnLt`/`tsnLe`/`tsnGt`/`tsnGe`/`tsnDiff`），以调用方传入的任意长度 `bitmap: []u64` 追踪乱序 TSN、记录重复 TSN、生成 `GapAckBlock` 与 `SACK` Chunk，并支持 `applyForwardTsn` 跳过过期部分可靠消息并级联推进连续已收 TSN；
+   - `SctpFragmentReassembler`：支持 `B=1,E=1` 单片与 `B=1,E=0` / `B=0,E=0` / `B=0,E=1` 跨 TSN 多片重组（外部切片存储，无硬编码消息长度上限）。
+4. **RFC 8832 WebRTC DCEP 与 4-Way 关联状态机**：
+   - `DcepChannelType`（全 6 种可靠/部分可靠与有序/无序通道类型）、`DcepOpenMessage`、`encodeDcepOpen` / `decodeDcepOpen`、`encodeDcepAck` / `decodeDcepAck`；
+   - `SctpAssociationState` & `SctpAssociation`：完整 4 步握手（`INIT -> INIT_ACK (Stateless Cookie) -> COOKIE_ECHO -> COOKIE_ACK`）、DCEP/DATA/SACK/FORWARD_TSN/HEARTBEAT 构造与 3 步优雅关闭。
+
+```typescript
+import {
+    SctpAssociationConfig,
+    SctpAssociation,
+    DcepChannelType,
+    DcepOpenMessage,
+} from "cap:net";
+
+pub fn demoWebRtcDataChannel()! {
+    let client = SctpAssociation.init(SctpAssociationConfig{ local_port: 5000, remote_port: 5000, local_tag: 0x1001, initial_tsn: 100 })?;
+    let server = SctpAssociation.init(SctpAssociationConfig{ local_port: 5000, remote_port: 5000, local_tag: 0x2002, initial_tsn: 500 })?;
+
+    let p1: [256]u8 = [0; 256];
+    let p2: [256]u8 = [0; 256];
+    let p3: [256]u8 = [0; 256];
+    let p4: [256]u8 = [0; 256];
+    const n1 = client.buildInit(p1[0..])?;
+    const n2 = server.onInit(p1[0..n1], p2[0..])?;
+    const n3 = client.onInitAck(p2[0..n2], p3[0..])?;
+    const n4 = server.onCookieEcho(p3[0..n3], p4[0..])?;
+    * = client.onCookieAck(p4[0..n4])?;
+
+    let scratch: [128]u8 = [0; 128];
+    let open_pkt: [256]u8 = [0; 256];
+    const n_open = client.buildDcepOpenPacket(0, DcepOpenMessage{
+        channel_type: DcepChannelType.reliable,
+        priority: 256,
+        reliability_parameter: 0,
+        label: "chat",
+        protocol: "json",
+    }, scratch[0..], open_pkt[0..])?;
+    * = n_open;
+}
+```
+
 ## 收敛子模块深度文档
 
 - [amqp.md](net/amqp.md)
