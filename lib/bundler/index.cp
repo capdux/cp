@@ -490,3 +490,19 @@ export {
     WritePlanStats,
     DiskWritePlanner,
 } from "./writePlan";
+
+export {
+    CSS_PREP_MAX_RULES,
+    CSS_PREP_MAX_CONDITIONS,
+    CSS_PREP_SCRATCH_CAP,
+    CssChunkPrepError,
+    CssPrepRuleKind,
+    CssPrepRule,
+    CssPrepRuleList,
+    CssPrepCondition,
+    CssPrepPrefixStats,
+    stripCssPrefixImportsPreservingLayers,
+    wrapCssBodyWithConditions,
+    formatNestedExternalImport,
+    dedupCssChunkRulesReverse,
+} from "./cssChunkPrep";

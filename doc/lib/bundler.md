@@ -822,3 +822,34 @@ let wp = DiskWritePlanner.init(false);
 const st = wp.stats(); // dirs_to_create == 1 ("bin"), files_to_write == 3, executable_count == 1
 * = st;
 ```
+
+- **CSS Chunk AST 预处理、条件包装与逆序去重引擎（`cssChunkPrep.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/prepareCssAstsForChunk.cp` & `/data/dev/bun/docs/bundler/css.mdx`）**：
+    - 导出：`CSS_PREP_MAX_RULES` (`64`)、`CSS_PREP_MAX_CONDITIONS` (`8`)、`CSS_PREP_SCRATCH_CAP` (`1024`)、`CssChunkPrepError`、`CssPrepRuleKind`（`Import`/`Ignored`/`LayerStatement`/`StyleRule`/`AtRule`）、`CssPrepRule`、`CssPrepRuleList`、`CssPrepCondition`、`CssPrepPrefixStats`、`stripCssPrefixImportsPreservingLayers`、`wrapCssBodyWithConditions`、`formatNestedExternalImport`、`dedupCssChunkRulesReverse`；
+    - **CSS 打包级联保序与边界最佳实践（参考 `/data/dev/bun/docs/bundler/css.mdx` & Bun Regression #28914）**：
+      - **交错 `@layer` 语句保护**：内联 CSS 文件剥离头部 `@import` 时，必须无损保留与 `@import` 交错声明的 `@layer` 顺序声明（如 Tailwind v4 的 `@layer theme, base, components, utilities;`），且严禁原地修改共享源规则数组；
+      - **空主体条件包装语义**：按 `layer` -> `supports` -> `media` 由内向外包装时，空匿名 `@layer {}` 及空 `@supports`/`@media` 应省略，但空**具名** `@layer foo {}` 必须降级为 `@layer foo;` 语句以保留声明层顺序的级联副作用；
+      - **多层嵌套外部 `@import` 与逆序去重**：多层条件无法扁平合并为单条 `@import` 时，按 Bun 策略通过 `data:text/css,` 嵌套 `@import` 链完整保留条件与层序；跨文件重复规则必须按**从后往前（后声明胜出）**顺序串行去重以保证 CSS 级联语义不变。
+
+```cp
+import {
+    CssPrepRule,
+    CssPrepRuleList,
+    CssPrepCondition,
+    stripCssPrefixImportsPreservingLayers,
+    wrapCssBodyWithConditions,
+} from "cap:bundler";
+
+const src: [3]CssPrepRule = [
+    CssPrepRule{ kind: .LayerStatement, text: "@layer base, utilities;" },
+    CssPrepRule{ kind: .Import, text: "@import \"./base.css\";" },
+    CssPrepRule{ kind: .StyleRule, text: ".a{color:blue}" },
+];
+let kept = CssPrepRuleList.init();
+const st = stripCssPrefixImportsPreservingLayers(src[0..], &kept)?; // kept.count == 2
+
+const conds: [1]CssPrepCondition = [CssPrepCondition{ has_layer: true, layer_name: "base", media: "screen" }];
+let out: [128]u8 = [0; 128];
+const n = wrapCssBodyWithConditions("", conds[0..], out[0..])?; // "@media screen{@layer base;}"
+* = st;
+* = n;
+```
