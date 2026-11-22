@@ -652,6 +652,25 @@ const applied = CssTailwindApplyRule.parse("@apply flex items-center bg-[#1da1f2
 * = applied;
 ```
 
+### CSS Values & Units Level 4 数学函数与常量求值引擎（`mathFunc.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/values/calc.cp`，零堆分配实现 W3C CSS Values & Units Level 4 全部 21 种数学函数（`calc`/`min`/`max`/`clamp`/`round`/`mod`/`rem`/`abs`/`sign`/`sin`/`cos`/`tan`/`asin`/`acos`/`atan`/`atan2`/`pow`/`sqrt`/`hypot`/`log`/`exp`）、5 种数学常量（`pi`/`e`/`infinity`/`-infinity`/`NaN`）与 4 种角度单位（`deg`/`rad`/`grad`/`turn`）的递归下降求值与编译期常量折叠。
+
+- 核心导出：`CSS_MATH_MAX_DEPTH` (`32`)、`CSS_MATH_MAX_ARGS` (`16`)、`CSS_MATH_PI`、`CSS_MATH_E`、`CssMathFuncError`、`CssMathRoundingStrategy`（`Nearest`/`Up`/`Down`/`ToZero`）、`CssMathConstant`（`E`/`Pi`/`Infinity`/`NegInfinity`/`NaN`）、`CssMathFuncKind`（21 种函数 + `parse`/`asStr`/`isTrig`/`isStepped`/`isExponential`）、`cssMathRound`、`cssMathMod`、`cssMathRem`、`cssMathSign`、`cssMathClamp`、`cssMathHypot`、`cssMathLog`、`cssMathAngleToRad`、`evalCssMathExpr`。
+
+```cp
+import { evalCssMathExpr, cssMathMod, cssMathRem } from "cap:css";
+
+const v1 = evalCssMathExpr("calc(round(up, hypot(3, 4) * 2 + 1, 5) + abs(-3))")?; // 18.0
+const v2 = evalCssMathExpr("sin(90deg) + cos(0.5turn)")?;                         // 0.0
+const m = cssMathMod(-18.0, 5.0)?;                                                // 2.0 (与 divisor 同号)
+const r = cssMathRem(-18.0, 5.0)?;                                                // -3.0 (与 dividend 同号)
+* = v1;
+* = v2;
+* = m;
+* = r;
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项
@@ -689,3 +708,6 @@ const applied = CssTailwindApplyRule.parse("@apply flex items-center bg-[#1da1f2
 12. **Tailwind `@tailwind` / `@apply` 指令级联与插件透传契约（`tailwind.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
     - `@tailwind` 仅允许 `base` / `components` / `utilities` / `variants` 四种标准层名且严禁附带块 `{...}`；推荐按 `base -> components -> utilities -> variants` 严格递增顺序声明并通过 `isCanonicalOrder()` 与 `hasDuplicateLayers()` 在打包预处理阶段执行静态诊断；
     - `@apply` 的 `!important` 修饰符必须位于实用类列表末尾，方括号任意值（如 `grid-cols-[1fr_2fr]`）内部括号须严格平衡。
+13. **CSS Math Level 4 编译期求值与降级边界（`mathFunc.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
+    - 当 `round()`、`mod()`、`rem()`、`sin()`/`cos()`/`tan()`、`pow()`/`sqrt()`/`hypot()`/`log()`/`exp()` 仅含静态数值、数学常量（`pi`/`e`）或已知角度单位（`deg`/`rad`/`grad`/`turn`）时，打包器应在构建期直接求值折叠为静态数值，以兼容未原生支持 CSS Math Level 4 的旧浏览器（Chrome < 111 / Safari < 15.4）；
+    - W3C 关键语义约束：`mod(a, b)` 结果与除数 `b` 同号，而 `rem(a, b)` 结果与被除数 `a` 同号；`clamp(min, val, max)` 等价于 `max(min, min(val, max))`，当 `min > max` 时恒由 `min` 胜出；`round()` 首参可省略策略关键字（默认 `nearest`），当首参为数学常量（如 `round(pi, 1)`）时必须识别为被取整值而非非法策略。

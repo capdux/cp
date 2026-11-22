@@ -510,3 +510,23 @@ export {
     CssTailwindApplyRule,
     CssTailwindDirectiveList,
 } from "./tailwind.cp";
+
+export {
+    CSS_MATH_MAX_DEPTH,
+    CSS_MATH_MAX_ARGS,
+    CSS_MATH_PI,
+    CSS_MATH_E,
+    CssMathFuncError,
+    CssMathRoundingStrategy,
+    CssMathConstant,
+    CssMathFuncKind,
+    cssMathRound,
+    cssMathMod,
+    cssMathRem,
+    cssMathSign,
+    cssMathClamp,
+    cssMathHypot,
+    cssMathLog,
+    cssMathAngleToRad,
+    evalCssMathExpr,
+} from "./mathFunc.cp";
