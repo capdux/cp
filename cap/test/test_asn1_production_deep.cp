@@ -31,7 +31,7 @@ import {
     OidCodec,
     X509CertInfo,
     X509Inspector,
-} from "cap:asn1";
+} from "cap:auth";
 import cap from "cap";
 
 fn writeRdnAttr(alloc: std.mem.Allocator, out: *DerWriter, oid: []const u8, val: []const u8, is_printable: bool)! {
@@ -475,31 +475,31 @@ fn testX509V3CertificateInspection()! {
 fn testCapAsn1DynamicMount()! {
     const alloc = std.heap.page_allocator;
 
-    // 1. Use cap.asn1.OidCodec & cap.asn1.DerWriter to synthesize a minimal X.509 v1 certificate
-    const oid_bytes = cap.asn1.OidCodec.encode(alloc, "1.3.101.112")?;
+    // 1. Use cap.auth.OidCodec & cap.auth.DerWriter to synthesize a minimal X.509 v1 certificate
+    const oid_bytes = cap.auth.OidCodec.encode(alloc, "1.3.101.112")?;
     defer alloc.free(oid_bytes);
-    expect_eq(std.mem.eql(u8, cap.asn1.OidCodec.knownName("1.3.101.112").?, "Ed25519"), true);
+    expect_eq(std.mem.eql(u8, cap.auth.OidCodec.knownName("1.3.101.112").?, "Ed25519"), true);
 
-    let name_w = cap.asn1.DerWriter.init(alloc);
+    let name_w = cap.auth.DerWriter.init(alloc);
     defer name_w.deinit();
     writeRdnAttr(alloc, &name_w, "2.5.4.3", "v1.cp.local", false)?;
 
-    let alg_w = cap.asn1.DerWriter.init(alloc);
+    let alg_w = cap.auth.DerWriter.init(alloc);
     defer alg_w.deinit();
     alg_w.writeOid("1.3.101.112")?;
 
-    let val_w = cap.asn1.DerWriter.init(alloc);
+    let val_w = cap.auth.DerWriter.init(alloc);
     defer val_w.deinit();
     val_w.writeUtcTime("260101000000Z")?;
     val_w.writeUtcTime("270101000000Z")?;
 
-    let spki_w = cap.asn1.DerWriter.init(alloc);
+    let spki_w = cap.auth.DerWriter.init(alloc);
     defer spki_w.deinit();
     spki_w.writeSequence(alg_w.asSlice())?;
     const ed_pub: [32]u8 = [0x11; 32];
     spki_w.writeBitString(0, &ed_pub)?;
 
-    let tbs_w = cap.asn1.DerWriter.init(alloc);
+    let tbs_w = cap.auth.DerWriter.init(alloc);
     defer tbs_w.deinit();
     tbs_w.writeUint64(7)?;
     tbs_w.writeSequence(alg_w.asSlice())?;
@@ -508,20 +508,20 @@ fn testCapAsn1DynamicMount()! {
     tbs_w.writeSequence(name_w.asSlice())?;
     tbs_w.writeSequence(spki_w.asSlice())?;
 
-    let cert_inner = cap.asn1.DerWriter.init(alloc);
+    let cert_inner = cap.auth.DerWriter.init(alloc);
     defer cert_inner.deinit();
     cert_inner.writeSequence(tbs_w.asSlice())?;
     cert_inner.writeSequence(alg_w.asSlice())?;
     const sig: [4]u8 = [1, 2, 3, 4];
     cert_inner.writeBitString(0, &sig)?;
 
-    let cert_outer = cap.asn1.DerWriter.init(alloc);
+    let cert_outer = cap.auth.DerWriter.init(alloc);
     defer cert_outer.deinit();
     cert_outer.writeSequence(cert_inner.asSlice())?;
     const der = cert_outer.toOwnedSlice()?;
     defer alloc.free(der);
 
-    let info = cap.asn1.X509Inspector.parseDer(alloc, der)?;
+    let info = cap.auth.X509Inspector.parseDer(alloc, der)?;
     defer info.deinit();
 
     expect_eq(info.version, 1 as u8);

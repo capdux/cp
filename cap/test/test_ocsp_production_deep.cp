@@ -21,7 +21,7 @@ import {
     OcspReqIter,
     parseOcspResponseDer,
     parseOcspRequestDer,
-} from "cap:ocsp";
+} from "cap:auth";
 
 const OID_SHA1: []const u8 = "\x2B\x0E\x03\x02\x1A";
 const OID_SHA256_RSA: []const u8 = "\x2A\x86\x48\x86\xF7\x0D\x01\x01\x0B";

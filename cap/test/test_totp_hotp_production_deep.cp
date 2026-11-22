@@ -18,7 +18,7 @@ import {
     base32Decode,
     buildOtpAuthUri,
     parseOtpAuthUri,
-} from "cap:totp_hotp";
+} from "cap:auth";
 
 test "RFC 4226 Appendix D official HOTP test vectors (SHA-1 counter 0..9)" {
     const secret = "12345678901234567890";
@@ -145,17 +145,17 @@ test "cap.totp_hotp dynamic mount and std.testing.allocator zero leak check" {
     const alloc = std.testing.allocator;
     const secret = "12345678901234567890";
 
-    const h0 = cap.totp_hotp.hotpAt(secret, 0, 6);
+    const h0 = cap.auth.hotpAt(secret, 0, 6);
     expect_eq(h0, 755224);
 
-    const t59 = cap.totp_hotp.totpAt(secret, 59, 30, 8, cap.totp_hotp.HashAlg.Sha1);
+    const t59 = cap.auth.totpAt(secret, 59, 30, 8, cap.auth.HashAlg.Sha1);
     expect_eq(t59, 94287082);
 
-    const b32 = cap.totp_hotp.base32Encode(alloc, "foobar", true).?;
+    const b32 = cap.auth.base32Encode(alloc, "foobar", true).?;
     defer alloc.free(b32);
     expect_eq(std.mem.eql(u8, b32, "MZXW6YTBOI======"), true);
 
-    const raw = cap.totp_hotp.base32Decode(alloc, b32).?;
+    const raw = cap.auth.base32Decode(alloc, b32).?;
     defer alloc.free(raw);
     expect_eq(std.mem.eql(u8, raw, "foobar"), true);
 }

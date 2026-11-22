@@ -15,7 +15,7 @@ import {
     PermissionMatcher,
     AccessDecision,
     RbacEngine,
-} from "cap:rbac";
+} from "cap:auth";
 import cap from "cap";
 
 fn strEq(a: string, b: string): bool {
@@ -312,10 +312,10 @@ fn testCapRbacDynamicMount(): !void {
     const alloc = std.heap.page_allocator;
 
     // Verify PermissionMatcher and RbacEngine via `cap.rbac` lazy namespace mounting
-    expect_eq(cap.rbac.PermissionMatcher.isValid("agent:tool:read"), true);
-    expect_eq(cap.rbac.PermissionMatcher.matches("agent:**", "agent:tool:search:web"), true);
+    expect_eq(cap.auth.PermissionMatcher.isValid("agent:tool:read"), true);
+    expect_eq(cap.auth.PermissionMatcher.matches("agent:**", "agent:tool:search:web"), true);
 
-    let engine = cap.rbac.RbacEngine.init(alloc);
+    let engine = cap.auth.RbacEngine.init(alloc);
     defer engine.deinit();
 
     engine.defineRole("tenant_admin")?;
@@ -329,7 +329,7 @@ fn testCapRbacDynamicMount(): !void {
 
     const d1 = engine.check("bot-77", "workspace:docs:read");
     expect_eq(d1.allowed, true);
-    expect_eq(d1.effect, cap.rbac.PolicyEffect.Allow);
+    expect_eq(d1.effect, cap.auth.PolicyEffect.Allow);
     expect_eq(strEq(d1.matched_role, "tenant_member"), true);
 
     const d2 = engine.check("bot-77", "workspace:docs:write");
@@ -338,7 +338,7 @@ fn testCapRbacDynamicMount(): !void {
 
     const d3 = engine.check("bot-77", "workspace:audit:write");
     expect_eq(d3.allowed, false);
-    expect_eq(d3.effect, cap.rbac.PolicyEffect.Deny);
+    expect_eq(d3.effect, cap.auth.PolicyEffect.Deny);
     expect_eq(strEq(d3.matched_rule, "workspace:audit:write"), true);
 }
 

@@ -4,8 +4,8 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { DerWriter, TAG_UTC_TIME, TAG_GENERALIZED_TIME } from "cap:asn1";
-import { encode as encodePem } from "cap:pem";
+import { DerWriter, TAG_UTC_TIME, TAG_GENERALIZED_TIME } from "cap:auth";
+import { encode as encodePem } from "cap:auth";
 import {
     X509Certificate,
     X509Error,
@@ -13,7 +13,7 @@ import {
     SanEntry,
     BasicConstraints,
     parseAsn1Time,
-} from "cap:x509";
+} from "cap:auth";
 
 fn buildX500Name(alloc: std.mem.Allocator, cn: []const u8): ([]u8) ! X509Error {
     let oid_w = DerWriter.init(alloc);
@@ -437,11 +437,11 @@ fn runTest5(): !void {
     defer alloc.free(pem_text);
 
     // Dynamic mounting via import cap from "cap"; cap.x509
-    let cert = cap.x509.X509Certificate.parsePem(alloc, pem_text)?;
+    let cert = cap.auth.X509Certificate.parsePem(alloc, pem_text)?;
     defer cert.deinit(alloc);
 
     expect_eq(cert.matchesHostname("dynamic.cp.dev"), true);
-    const t = cap.x509.parseAsn1Time(TAG_UTC_TIME, "260601120000Z")?;
+    const t = cap.auth.parseAsn1Time(TAG_UTC_TIME, "260601120000Z")?;
     expect_eq(cert.isValidAt(t), true);
 }
 

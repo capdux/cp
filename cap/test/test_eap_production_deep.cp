@@ -36,7 +36,7 @@ import {
     parseEap,
     isEap,
     parseEapExpanded,
-} from "cap:eap";
+} from "cap:auth";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

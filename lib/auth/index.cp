@@ -1,0 +1,302 @@
+// Source: cp/lib/auth/index.cp (Unified Exports for cap:auth)
+// Unified Public Exports for Authentication, Authorization, Access Control & PKI/X.509 Subsystem (cap:auth & cap.auth)
+
+// --- OAuth 2.0, OIDC, RBAC, OPA Rego & TOTP/HOTP ---
+
+export {
+    OAuthError,
+    PkceChallenge,
+    Pkce,
+} from "./oauth_pkce.cp";
+
+export {
+    OAuthConfig,
+    OAuthFlow,
+    OAuthTokenResponse,
+    BasicCredentials,
+    AuthHeader,
+} from "./oauth_flow.cp";
+
+export {
+    RbacError,
+    PolicyEffect,
+    PermissionMatcher,
+} from "./rbac_permission.cp";
+
+export {
+    AccessDecision,
+    RbacEngine,
+} from "./rbac_engine.cp";
+
+export {
+    REGO_MAX_DEPTH,
+    RegoTokenKind,
+    RegoToken,
+    RegoIter,
+    RegoImportIter,
+    RegoRuleIter,
+    extractRegoPackage,
+    validateRegoDelimiters,
+} from "./rego.cp";
+
+export {
+    HashAlg,
+    OtpType,
+    OtpAuthUri,
+    hotpAtWithAlg,
+    hotpAt,
+    totpAt,
+    formatCode,
+    constantTimeEq,
+    verifyHotp,
+    verifyTotp,
+    base32Encode,
+    base32Decode,
+    generateSecret,
+    buildOtpAuthUri,
+    parseOtpAuthUri,
+} from "./totp_hotp.cp";
+
+// --- Enterprise Network Authentication Protocols (Kerberos, NTLM, TACACS+, EAP/802.1X) ---
+
+export {
+    KRB_PORT,
+    KRB_VERSION,
+    MSG_AS_REQ,
+    MSG_AS_REP,
+    MSG_TGS_REQ,
+    MSG_TGS_REP,
+    MSG_AP_REQ,
+    MSG_AP_REP,
+    MSG_KRB_SAFE,
+    MSG_KRB_PRIV,
+    MSG_KRB_CRED,
+    MSG_KRB_ERROR,
+    ETYPE_AES128_CTS_HMAC_SHA1,
+    ETYPE_AES256_CTS_HMAC_SHA1,
+    ETYPE_RC4_HMAC,
+    NT_UNKNOWN,
+    NT_PRINCIPAL,
+    NT_SRV_INST,
+    NT_SRV_HST,
+    NT_ENTERPRISE,
+    KDC_ERR_NONE,
+    KDC_ERR_C_PRINCIPAL_UNKNOWN,
+    KDC_ERR_S_PRINCIPAL_UNKNOWN,
+    KDC_ERR_PREAUTH_FAILED,
+    KDC_ERR_PREAUTH_REQUIRED,
+    KRB_AP_ERR_TKT_EXPIRED,
+    KRB_AP_ERR_SKEW,
+    KrbStringIter,
+    KrbPrincipalName,
+    KrbEncryptedData,
+    KrbTicket,
+    KrbMessageInfo,
+    KrbError,
+    unwrapKrbTcpRecord,
+    peekKrbAppTag,
+    isKerberos,
+    parseKrbMessageInfo,
+    parseKrbTicket,
+    parseKrbError,
+} from "./kerberos.cp";
+
+export {
+    NTLM_SIGNATURE,
+    NTLM_MSG_NEGOTIATE,
+    NTLM_MSG_CHALLENGE,
+    NTLM_MSG_AUTHENTICATE,
+    NTLMSSP_NEGOTIATE_UNICODE,
+    NTLMSSP_NEGOTIATE_OEM,
+    NTLMSSP_REQUEST_TARGET,
+    NTLMSSP_NEGOTIATE_SIGN,
+    NTLMSSP_NEGOTIATE_SEAL,
+    NTLMSSP_NEGOTIATE_NTLM,
+    NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY,
+    NTLMSSP_NEGOTIATE_TARGET_INFO,
+    NTLMSSP_NEGOTIATE_VERSION,
+    NTLMSSP_NEGOTIATE_128,
+    NTLMSSP_NEGOTIATE_56,
+    MsvAvEOL,
+    MsvAvNbComputerName,
+    MsvAvNbDomainName,
+    MsvAvDnsComputerName,
+    MsvAvDnsDomainName,
+    MsvAvDnsTreeName,
+    MsvAvFlags,
+    MsvAvTimestamp,
+    MsvAvSingleHost,
+    MsvAvTargetName,
+    MsvAvChannelBindings,
+    NtlmVersion,
+    NtlmAvPair,
+    NtlmAvPairIter,
+    NtlmNegotiate,
+    NtlmChallenge,
+    NtlmAuthenticate,
+    peekNtlmType,
+    isNtlm,
+    parseNtlmNegotiate,
+    parseNtlmChallenge,
+    parseNtlmAuthenticate,
+} from "./ntlm.cp";
+
+export {
+    TACACS_TCP_PORT,
+    TACACS_HEADER_SIZE,
+    TACACS_MAJOR_VER,
+    TACACS_MINOR_VER_DEFAULT,
+    TACACS_MINOR_VER_ONE,
+    TAC_PLUS_UNENCRYPTED_FLAG,
+    TAC_PLUS_SINGLE_CONNECT_FLAG,
+    TacacsType,
+    TacacsAuthenStatus,
+    TacacsAuthorStatus,
+    TacacsAcctStatus,
+    TacacsHeader,
+    TacacsPacket,
+    TacacsArgIter,
+    TacacsAuthenStart,
+    TacacsAuthenReply,
+    TacacsAuthorRequest,
+    TacacsAuthorResponse,
+    TacacsAcctRequest,
+    TacacsAcctReply,
+    parseTacacs,
+    isTacacs,
+    parseAuthenStart,
+    parseAuthenReply,
+    parseAuthorRequest,
+    parseAuthorResponse,
+    parseAcctRequest,
+    parseAcctReply,
+} from "./tacacs.cp";
+
+export {
+    EAPOL_ETHERTYPE,
+    EAPOL_HEADER_SIZE,
+    EAP_HEADER_SIZE,
+    EAP_EXPANDED_HEADER_SIZE,
+    EAP_TYPE_IDENTITY,
+    EAP_TYPE_NOTIFICATION,
+    EAP_TYPE_NAK,
+    EAP_TYPE_MD5_CHALLENGE,
+    EAP_TYPE_OTP,
+    EAP_TYPE_GTC,
+    EAP_TYPE_TLS,
+    EAP_TYPE_TTLS,
+    EAP_TYPE_AKA,
+    EAP_TYPE_PEAP,
+    EAP_TYPE_MSCHAPV2,
+    EAP_TYPE_EXPANDED,
+    EapolType,
+    EapCode,
+    EapolFrame,
+    EapPacket,
+    EapExpanded,
+    parseEapol,
+    isEapol,
+    parseEap,
+    isEap,
+    parseEapExpanded,
+} from "./eap.cp";
+
+// --- PKI, X.509, CSR, CRL, OCSP, PEM & ASN.1 DER ---
+
+export {
+    ASN1_MAX_DEPTH,
+    TAG_BOOLEAN,
+    TAG_INTEGER,
+    TAG_BIT_STRING,
+    TAG_OCTET_STRING,
+    TAG_NULL,
+    TAG_OID,
+    TAG_UTF8_STRING,
+    TAG_PRINTABLE_STRING,
+    TAG_T61_STRING,
+    TAG_IA5_STRING,
+    TAG_UTC_TIME,
+    TAG_GENERALIZED_TIME,
+    TAG_BMP_STRING,
+    TAG_SEQUENCE,
+    TAG_SET,
+    Asn1Error,
+    DerElement,
+    DerReader,
+    DerWriter,
+    OidCodec,
+} from "./asn1_der.cp";
+
+export {
+    X509CertInfo,
+    X509Inspector,
+} from "./asn1_x509.cp";
+
+export {
+    PemError,
+    PemHeader,
+    PemBlock,
+    parse,
+    parseWithMaxBlocks,
+    parseFirst,
+    encode,
+    encodeWithHeaders,
+    encodeChain,
+    freeBlocks,
+} from "./pem.cp";
+
+export {
+    X509Error,
+    X509Time,
+    SanEntry,
+    BasicConstraints,
+    X509Certificate,
+    parseAsn1Time,
+} from "./x509.cp";
+
+export {
+    OID_CN,
+    OID_C,
+    OID_L,
+    OID_ST,
+    OID_O,
+    OID_OU,
+    OID_EXTENSION_REQUEST,
+    OID_SAN,
+    CsrRdnAttr,
+    CsrSanEntry,
+    CsrParsed,
+    CsrSubjectIter,
+    CsrSanIter,
+    parseCsrDer,
+    isCsrDer,
+} from "./csr.cp";
+
+export {
+    OID_CRL_NUMBER,
+    OID_CRL_REASON,
+    CrlReason,
+    crlReasonFromU8,
+    CrlRevokedEntry,
+    CrlParsed,
+    CrlStats,
+    CrlRevokedIter,
+    parseCrlDer,
+    isCrlDer,
+    summarizeCrl,
+} from "./crl.cp";
+
+export {
+    OID_OCSP_BASIC,
+    OcspResponseStatus,
+    ocspResponseStatusFromU8,
+    OcspCertStatus,
+    OcspCertId,
+    OcspSingleResponse,
+    OcspResponse,
+    OcspSingleIter,
+    OcspRequest,
+    OcspReqIter,
+    parseOcspResponseDer,
+    parseOcspRequestDer,
+} from "./ocsp.cp";

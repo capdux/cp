@@ -13,13 +13,13 @@ import {
     TAG_SEQUENCE,
     TAG_UTC_TIME,
     TAG_GENERALIZED_TIME,
-} from "cap:asn1";
+} from "./asn1_der.cp";
 import {
     PemError,
     PemBlock,
     parse as parsePemBlocks,
     freeBlocks,
-} from "cap:pem";
+} from "./pem.cp";
 
 const HEX_LOWER: []const u8 = "0123456789abcdef";
 

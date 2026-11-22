@@ -4,7 +4,7 @@
 // semantics across subject/role/inherited layers, and structured audit decisions.
 
 const std = @import("std");
-import { RbacError, PolicyEffect, PermissionMatcher } from "./permission.cp";
+import { RbacError, PolicyEffect, PermissionMatcher } from "./rbac_permission.cp";
 
 /// Structured access decision returned by `RbacEngine.check` for auditability.
 /// `matched_rule` and `matched_role` borrow immutable strings owned by `RbacEngine`

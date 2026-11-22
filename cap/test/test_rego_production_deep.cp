@@ -11,7 +11,7 @@ import {
     RegoRuleIter,
     extractRegoPackage,
     validateRegoDelimiters,
-} from "cap:rego";
+} from "cap:auth";
 
 test("1. RegoIter tokenizes strings, raw strings, :=, numbers, bools, null, and skips # comments", () => {
     const src =

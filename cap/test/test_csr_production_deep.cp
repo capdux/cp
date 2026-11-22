@@ -24,7 +24,7 @@ import {
     CsrSanIter,
     parseCsrDer,
     isCsrDer,
-} from "cap:csr";
+} from "cap:auth";
 
 const OID_ED25519: []const u8 = "\x2B\x65\x70"; // 1.3.101.112
 

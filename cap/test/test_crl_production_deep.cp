@@ -20,7 +20,7 @@ import {
     parseCrlDer,
     isCrlDer,
     summarizeCrl,
-} from "cap:crl";
+} from "cap:auth";
 
 const OID_SHA256_RSA: []const u8 = "\x2A\x86\x48\x86\xF7\x0D\x01\x01\x0B";
 

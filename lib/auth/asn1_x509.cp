@@ -11,7 +11,7 @@ import {
     TAG_BOOLEAN,
     TAG_UTC_TIME,
     TAG_GENERALIZED_TIME,
-} from "./der.cp";
+} from "./asn1_der.cp";
 
 const HEX_LOWER: []const u8 = "0123456789abcdef";
 

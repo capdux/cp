@@ -19,7 +19,7 @@ import {
     OAuthTokenResponse,
     BasicCredentials,
     AuthHeader,
-} from "cap:oauth";
+} from "cap:auth";
 
 fn strEql(a: string, b: string): bool {
     return std.mem.eql(u8, a, b);
@@ -302,28 +302,28 @@ fn testAuthHeaderCodec(): !void {
 fn testCapOAuthDynamicMount(): !void {
     const alloc = std.heap.page_allocator;
 
-    // Verify `import cap from "cap"; cap.oauth.*` automatic dynamic mounting
-    let pkce = cap.oauth.Pkce.generate(alloc)?;
+    // Verify `import cap from "cap"; cap.auth.*` automatic dynamic mounting
+    let pkce = cap.auth.Pkce.generate(alloc)?;
     defer pkce.deinit();
-    expect_eq(cap.oauth.Pkce.verifyS256(pkce.verifier, pkce.challenge), true);
+    expect_eq(cap.auth.Pkce.verifyS256(pkce.verifier, pkce.challenge), true);
 
-    const state = cap.oauth.Pkce.generateState(alloc)?;
+    const state = cap.auth.Pkce.generateState(alloc)?;
     defer alloc.free(state);
 
     const scopes: [2]string = ["openid", "email"];
-    const cfg = cap.oauth.OAuthConfig{
+    const cfg = cap.auth.OAuthConfig{
         client_id: "hub_app",
         authorize_url: "https://auth.cp-lang.org/authorize",
         redirect_uri: "https://app.cp-lang.org/callback",
         scopes: &scopes,
     };
 
-    const url = cap.oauth.OAuthFlow.buildAuthorizeUrl(alloc, cfg, state, pkce)?;
+    const url = cap.auth.OAuthFlow.buildAuthorizeUrl(alloc, cfg, state, pkce)?;
     defer alloc.free(url);
     expect_eq(hasSubstr(url, "code_challenge_method=S256"), true);
     expect_eq(hasSubstr(url, "scope=openid%20email"), true);
 
-    let tok = cap.oauth.OAuthTokenResponse.parseJson(
+    let tok = cap.auth.OAuthTokenResponse.parseJson(
         alloc,
         "{\"access_token\":\"hub_tok\",\"token_type\":\"Bearer\",\"expires_in\":120,\"scope\":\"openid email\"}",
     )?;
@@ -331,9 +331,9 @@ fn testCapOAuthDynamicMount(): !void {
     expect_eq(tok.hasScope("email"), true);
     expect_eq(tok.isExpiredAt(1000, 1100, 30), true);
 
-    const hdr = cap.oauth.AuthHeader.formatBearer(alloc, tok.access_token)?;
+    const hdr = cap.auth.AuthHeader.formatBearer(alloc, tok.access_token)?;
     defer alloc.free(hdr);
-    expect_eq(strEql(cap.oauth.AuthHeader.parseBearer(hdr).?, "hub_tok"), true);
+    expect_eq(strEql(cap.auth.AuthHeader.parseBearer(hdr).?, "hub_tok"), true);
 }
 
 fn main() {

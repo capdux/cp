@@ -15,7 +15,7 @@ import {
     encodeWithHeaders,
     encodeChain,
     freeBlocks,
-} from "cap:pem";
+} from "cap:auth";
 
 fn emptyBlocks(): []PemBlock {
     return std.heap.page_allocator.alloc(PemBlock, 0) catch unreachable;
@@ -206,18 +206,18 @@ fn runTest5(): !void {
 
     // Dynamic mounting via import cap from "cap"; cap.pem
     const secret = "cap-pem-dynamic-mount-payload";
-    const encoded = cap.pem.encode(alloc, "PRIVATE KEY", secret)?;
+    const encoded = cap.auth.encode(alloc, "PRIVATE KEY", secret)?;
     defer alloc.free(encoded);
 
-    const blocks = cap.pem.parse(alloc, encoded)?;
-    defer cap.pem.freeBlocks(alloc, blocks);
+    const blocks = cap.auth.parse(alloc, encoded)?;
+    defer cap.auth.freeBlocks(alloc, blocks);
     expect_eq(blocks.len, 1 as usize);
     expect_eq(std.mem.eql(u8, blocks[0].label, "PRIVATE KEY"), true);
     expect_eq(std.mem.eql(u8, blocks[0].bytes, secret), true);
 
     // Empty input returns 0 blocks cleanly
-    const no_blocks = cap.pem.parse(alloc, "just plain comment text\n")?;
-    defer cap.pem.freeBlocks(alloc, no_blocks);
+    const no_blocks = cap.auth.parse(alloc, "just plain comment text\n")?;
+    defer cap.auth.freeBlocks(alloc, no_blocks);
     expect_eq(no_blocks.len, 0 as usize);
 }
 

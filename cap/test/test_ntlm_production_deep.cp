@@ -40,7 +40,7 @@ import {
     parseNtlmNegotiate,
     parseNtlmChallenge,
     parseNtlmAuthenticate,
-} from "cap:ntlm";
+} from "cap:auth";
 
 fn putU16Le(buf: []u8, off: usize, v: u16) {
     buf[off] = (v & 0xFF) as u8;

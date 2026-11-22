@@ -42,7 +42,7 @@ import {
     parseKrbMessageInfo,
     parseKrbTicket,
     parseKrbError,
-} from "cap:kerberos";
+} from "cap:auth";
 
 // Minimal zero-alloc DER test builder (supports short < 128 and 1-byte long 128..255 lengths)
 fn writeDerTlv(out: []u8, pos: usize, tag: u8, payload: []const u8): usize {

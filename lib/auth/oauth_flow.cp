@@ -4,7 +4,7 @@
 
 const std = @import("std");
 import { JSON, JsonValue } from "cap:json";
-import { OAuthError, Pkce, PkceChallenge } from "./pkce.cp";
+import { OAuthError, Pkce, PkceChallenge } from "./oauth_pkce.cp";
 
 const HEX_UPPER: []const u8 = "0123456789ABCDEF";
 
