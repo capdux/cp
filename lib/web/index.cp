@@ -388,3 +388,21 @@ export {
     formatLegacyRateLimitHeaders,
     planRateLimitRetry,
 } from "./rateHeader.cp";
+
+// --- Zero-Alloc Stateless HMAC-SHA256 CSRF Token & Sec-Fetch-Site/Origin Guard ---
+export {
+    CSRF_NONCE_LEN,
+    CSRF_TOKEN_LEN,
+    CSRF_MAX_TRUSTED_ORIGINS,
+    CSRF_MAX_ORIGIN_LEN,
+    CSRF_DEFAULT_TTL_S,
+    CsrfTokenStatus,
+    CsrfVerdict,
+    CsrfRequest,
+    CsrfDecision,
+    CsrfGuardStats,
+    csrfConstantTimeEq,
+    mintCsrfToken,
+    verifyCsrfToken,
+    CsrfGuard,
+} from "./csrfGuard.cp";

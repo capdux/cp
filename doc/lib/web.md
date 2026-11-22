@@ -448,6 +448,53 @@ pub fn demoRateHeader() {
 
 ---
 
+### 零分配无状态 HMAC-SHA256 CSRF 令牌与 `Sec-Fetch-Site`/`Origin` 纵深防护引擎 (`csrfGuard.cp`)
+
+面向现代 Web 应用纵深防御的 100% 纯 CP 零动态堆分配、零 C 依赖 CSRF 防护引擎：
+
+- **常量与枚举**：
+  - `CSRF_NONCE_LEN = 16`、`CSRF_TOKEN_LEN = 76`、`CSRF_MAX_TRUSTED_ORIGINS = 16`、`CSRF_MAX_ORIGIN_LEN = 128`、`CSRF_DEFAULT_TTL_S = 3600`
+  - `CsrfTokenStatus`（`valid | invalid | expired`）
+  - `CsrfVerdict`（`allowed_safe_method | allowed_verified | denied_cross_site | denied_origin_mismatch | denied_missing_token | denied_invalid_token | denied_expired_token`）
+- **无状态令牌签发与验签**：
+  - `mintCsrfToken(secret, session_id, issued_at_s, nonce, out_buf: *[]u8): usize?`：内联纯 CP FIPS 180-4 SHA-256 + RFC 2104 HMAC-SHA256 + 无填充 Base64URL，输出 76 字节会话绑定令牌。
+  - `verifyCsrfToken(secret, session_id, token, now_s, ttl_s): CsrfTokenStatus`：常量时间验签 + 会话绑定防跨会话重放 + TTL 时效窗口检查。
+  - `csrfConstantTimeEq(a, b): bool`：常量时间字节切片比对。
+- **纵深防御裁决引擎 `CsrfGuard`**：
+  - `init(ttl_s, allow_same_site, require_origin_header)` / `addTrustedOrigin(*_, origin)` / `stats()` / `resetStats(*_)`
+  - `evaluateCsrfRequest(*_, req, secret, now_s): CsrfDecision`：安全幂等方法（`GET`/`HEAD`/`OPTIONS`）自动放行；非安全方法依次校验 `Sec-Fetch-Site`、`Origin` 白名单/`Host` 同源、可选双提交 Cookie 常量时间一致及 HMAC-SHA256 会话令牌。
+
+```cp
+import {
+    CsrfRequest,
+    CsrfVerdict,
+    CsrfGuard,
+    mintCsrfToken,
+} from "cap:web";
+
+pub fn demoCsrfGuard() {
+    const secret = "prod-hmac-secret-32-bytes-minimum";
+    let tok_buf: [80]u8 = [0; 80];
+    let tok_s: []u8 = tok_buf[0..];
+    const n = mintCsrfToken(secret, "sess-42", 1_700_000_000, "0123456789abcdef", *tok_s) ?? return;
+
+    let guard = CsrfGuard.init(3600, false, true);
+    const req = CsrfRequest{
+        method: "POST",
+        session_id: "sess-42",
+        sec_fetch_site: "same-origin",
+        origin: "https://app.cap.dev",
+        host: "app.cap.dev",
+        submitted_token: tok_buf[0..n],
+        cookie_token: tok_buf[0..n],
+    };
+    const res = guard.evaluateCsrfRequest(req, secret, 1_700_000_100);
+    * = (res.verdict == CsrfVerdict.allowed_verified);
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [circuit.md](web/circuit.md)
