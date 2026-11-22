@@ -62,3 +62,6 @@
   - `lib/agent/tracer.cp`（`cap:agent` 链路追踪器，5/5 PASS）
   - `lib/attention/loss.cp`（`cap:attention` CrossEntropy/Perplexity/KL/DPO/InfoNCE 损失函数，5/5 PASS）
   - `lib/css/diagnostics.cp`（吸收自 Bun `src/css/error.cp`，归入 `cap:css`，6/6 PASS）
+
+### 2026-11-22（分类合并交付：`lib/agent/skill_registry.cp`）
+- **执行成果**：子智能体交付 `lib/agent/skill_registry.cp`（AI Agent Skill 注册中心、能力掩码/标签 Top-K 匹配、Kahn 依赖拓扑排序与并发配额限流，5/5 PASS + `tracer` 回归 5/5 PASS），已同步 `cp_lib_ref.md` 并提交；继续派发 `lib/a2a/task_queue.cp`。
