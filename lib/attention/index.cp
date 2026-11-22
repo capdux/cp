@@ -320,3 +320,16 @@ export {
     sampleResidualDistributionF32,
     verifySpeculativeRejectionF32,
 } from "./spec_rejection.cp";
+
+export {
+    PRC_MAX_NODES,
+    PRC_MAX_POOL_SLOTS,
+    PRC_NO_NODE,
+    PRC_ROOT_NODE,
+    PrefixRadixNode,
+    PrefixRadixMatch,
+    PrefixRadixInsertResult,
+    PrefixRadixEvictReport,
+    PrefixRadixStats,
+    PrefixRadixCache,
+} from "./prefix_radix_cache.cp";

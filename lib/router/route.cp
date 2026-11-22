@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/router/Route.cp | Synced: 2026-11-22T02:31:34Z
+// Source: Absorbed from /data/dev/bun/src/router/Route.cp | Synced: 2026-11-22T11:02:38Z
 // lib/router/route.cp
 import { ParamMap } from "./param_map";
 

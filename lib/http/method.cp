@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http_types/Method.cp | Synced: 2026-11-22T10:18:27Z
+// Source: Absorbed from /data/dev/bun/src/http_types/Method.cp | Synced: 2026-11-22T11:02:25Z
 // lib/http/method.cp
 // HTTP Method enumeration and helper functions
 

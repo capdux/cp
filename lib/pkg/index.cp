@@ -314,3 +314,21 @@ export {
     formatGlobalCacheEntryDir,
     PackageManifestCache,
 } from "./manifest_cache.cp";
+
+export {
+    FOLDER_RESOLVER_MAX_ENTRIES,
+    FolderResolverError,
+    FolderResolverKind,
+    FolderResolutionTag,
+    FolderResolutionFailKind,
+    FolderNormalizedLengths,
+    FolderResolutionEntry,
+    FolderResolverStats,
+    hashFolderPath,
+    stripFolderProtocolPrefix,
+    shouldCheckBundledDependencies,
+    normalizeFolderPackageJsonPath,
+    formatWorkspaceSearchPath,
+    resolveWorkspacePublishVersion,
+    FolderResolverCache,
+} from "./folder_resolver.cp";

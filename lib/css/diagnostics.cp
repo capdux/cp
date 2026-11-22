@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/error.cp | Synced: 2026-11-22T10:52:02Z
+// Source: Absorbed from /data/dev/bun/src/css/error.cp | Synced: 2026-11-22T10:58:52Z
 // Pure-CP zero-allocation LightningCSS / Bun CSS structured diagnostics:
 // parser & printer error codes, source locations, human-readable formatter, and bounded diagnostic bag.
 

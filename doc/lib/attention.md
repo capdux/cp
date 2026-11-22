@@ -1348,3 +1348,42 @@ pub fn demoSpeculativeRejection() {
     }
 }
 ```
+
+### 零分配 SGLang RadixAttention 前缀 KV-Cache 压缩前缀树与 LRU 驱逐引擎 (`prefix_radix_cache.cp`)
+
+面向 SGLang RadixAttention 风格长前缀共享 KV-Cache 复用的 100% 纯 CP 零动态堆分配压缩前缀树（Radix Tree）与自底向上 LRU 驱逐引擎：
+
+- **常量与数据模型**：
+  - `PRC_MAX_NODES = 128`（节点 0 为虚拟根）、`PRC_MAX_POOL_SLOTS = 2048`（连续 Token / KV-Page 槽位池，带零堆原地碎片紧缩）、`PRC_NO_NODE = 0xFFFF`、`PRC_ROOT_NODE = 0`
+  - `PrefixRadixNode`（`node_id`, `parent_idx`, `first_child_idx`, `next_sibling_idx`, `child_count`, `token_offset`, `token_len`, `ref_count`, `last_access_tick`, `active`）
+  - `PrefixRadixMatch`（`matched_tokens`, `matched_pages`, `leaf_node_id`, `split_offset`）、`PrefixRadixInsertResult`、`PrefixRadixEvictReport`、`PrefixRadixStats`
+- **核心引擎 `PrefixRadixCache`**：
+  - `init(): PrefixRadixCache` / `getNode(node_id)` / `stats()`
+  - `matchPrefix(*_, tokens, now_tick, out_matched_pages: *[]u32): PrefixRadixMatch`：纯迭代最长前缀匹配，支持边中间部分命中（`split_offset > 0`），自动刷新命中路径 `last_access_tick`。
+  - `insertPrefix(*_, tokens, kv_pages, now_tick): PrefixRadixInsertResult`：纯迭代前缀插入与 **O(1) 零拷贝偏移边分裂**；池尾不足时自动原地紧缩回收已驱逐碎片。
+  - `pinNode(*_, node_id)` / `unpinNode(*_, node_id)`：沿祖先链原子递增/递减 `ref_count`，保护在途请求共享前缀不被驱逐。
+  - `evictPages(*_, needed_pages, out_freed_pages: *[]u32): PrefixRadixEvictReport`：自底向上 LRU 叶子驱逐（仅淘汰 `ref_count == 0` 的最冷叶子，级联回收空父节点）。
+
+```cp
+import { PrefixRadixCache } from "cap:attention";
+
+pub fn demoPrefixRadixCache() {
+    let cache = PrefixRadixCache.init();
+    const t1: [4]u32 = [10, 20, 30, 40];
+    const p1: [4]u32 = [100, 101, 102, 103];
+    const r1 = cache.insertPrefix(t1[0..], p1[0..], 1);
+
+    // 共享前缀 [10, 20] 分叉 -> 自动 O(1) 偏移边分裂
+    const t2: [4]u32 = [10, 20, 99, 100];
+    const p2: [4]u32 = [100, 101, 202, 203];
+    * = cache.insertPrefix(t2[0..], p2[0..], 2);
+
+    // Pin 保护分支 1，驱逐未锁定的冷分支
+    * = cache.pinNode(r1.leaf_node_id);
+    let freed: [4]u32 = [0; 4];
+    let freed_s: []u32 = freed[0..];
+    const ev = cache.evictPages(2, *freed_s);
+    * = ev.freed_pages; // 2 (202, 203)
+    * = cache.unpinNode(r1.leaf_node_id);
+}
+```

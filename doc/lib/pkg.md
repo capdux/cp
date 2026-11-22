@@ -613,3 +613,42 @@ const dn = formatGlobalCacheEntryDir("react", "19.0.0-rc.1", dir_buf[0..])?;
 * = r2;
 * = dn;
 ```
+
+16. **本地目录 / 软链 / Workspace 解析与发布版本替换（`lib/pkg/folder_resolver.cp`，吸收自 `/data/dev/bun/src/install/resolvers/folder_resolver.cp` & `/data/dev/bun/docs/pm/workspaces.mdx`）**：
+    - **`package.json` 路径规范化与去重缓存（`normalizeFolderPackageJsonPath` / `FolderResolverCache`）**：
+      - 统一解析 `file:`、`link:`、`workspace:`、全局软链（`GlobalLink`）与缓存目录（`CacheFolder`）路径，自动剥离协议前缀、统一 POSIX `/` 分隔符、折叠 `.`/`..` 段并同步输出绝对 `package.json` 路径与相对项目根的目录路径；
+      - `shouldCheckBundledDependencies` 遵循 Bun 契约：`Folder`/`Symlink`/`CacheFolder` 检查 `bundledDependencies`，`Workspace` 跳过；`formatWorkspaceSearchPath` 自动为非 `.`/`/` 相对路径前置 `./` 并支持 JSON 转义引号输出。
+    - **发布阶段 `workspace:` 协议版本替换（`resolveWorkspacePublishVersion`）**：
+      - 严格对齐 `docs/pm/workspaces.mdx`：`workspace:*` -> `<version>`、`workspace:^` -> `^<version>`、`workspace:~` -> `~<version>`，显式版本（如 `workspace:1.0.2`）优先覆盖当前 `package.json` 版本号。
+
+### Workspace 路径规范化与发布版本替换示例（`lib/pkg/folder_resolver.cp`）
+
+```cp
+import {
+    FolderResolverKind,
+    normalizeFolderPackageJsonPath,
+    resolveWorkspacePublishVersion,
+    FolderResolverCache,
+} from "cap:pkg";
+
+let abs_buf: [160]u8 = [0; 160];
+let rel_buf: [128]u8 = [0; 128];
+const lens = normalizeFolderPackageJsonPath(
+    FolderResolverKind.Workspace,
+    "/repo",
+    "",
+    "workspace:packages/pkg-a/",
+    abs_buf[0..],
+    rel_buf[0..],
+)?;
+// abs_buf[0..lens.abs_len] == "/repo/packages/pkg-a/package.json"
+// rel_buf[0..lens.rel_len] == "packages/pkg-a"
+
+let ver_buf: [32]u8 = [0; 32];
+const vn = resolveWorkspacePublishVersion("workspace:^", "1.0.1", ver_buf[0..])?;
+// ver_buf[0..vn] == "^1.0.1"
+
+let cache = FolderResolverCache.init();
+* = cache.putResolved(rel_buf[0..lens.rel_len], 7, true)?;
+* = vn;
+```
