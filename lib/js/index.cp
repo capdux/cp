@@ -173,3 +173,17 @@ export {
     JsFindSymbolResult,
     JsSymbolResolver,
 } from "./symbolResolve.cp";
+
+export {
+    JS_SOURCE_INDEX_INVALID,
+    JS_SOURCE_INDEX_RUNTIME,
+    JS_SOURCE_INDEX_BAKE_SERVER_DATA,
+    JS_SOURCE_INDEX_BAKE_CLIENT_DATA,
+    JS_AST_REF_MAX_INDEX,
+    JsAstRefError,
+    JsSourceIndex,
+    JsAstRefTag,
+    JsAstRef,
+    JsSourceTableSpan,
+    JsMergedSymbolMap,
+} from "./astRef.cp";

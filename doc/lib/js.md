@@ -348,3 +348,26 @@ const res = resolver.findSymbol(with_sc, 42, "x")?;
 assert(res.sym_id == x_id && res.is_inside_with_scope);
 assert((resolver.getSymbol(x_id)?).must_not_be_renamed);
 ```
+
+### 64 位紧凑 AST `Ref`、强类型 `SourceIndex` 与并行解析 2D 符号表归并器 (`astRef.cp`)
+
+吸收自 `/data/dev/bun/src/js_parser/ast/base.cp`：
+
+- **导出符号**：`JS_SOURCE_INDEX_{INVALID,RUNTIME,BAKE_SERVER_DATA,BAKE_CLIENT_DATA}`、`JS_AST_REF_MAX_INDEX` (`0x7FFFFFFF`)、`JsAstRefError`、`JsSourceIndex`、`JsAstRefTag`（`invalid`/`allocated_name`/`source_contents_slice`/`symbol`）、`JsAstRef`（`none`/`fromU64`/`pack`/`init`/`initSymbol`/`asU64`/`innerIndex`/`sourceIndex`/`tag`/`isEmpty`/`isValid`/`isSymbol`/`isSourceContentsSlice`/`isAllocatedName`/`isSourceIndexNull`/`hash64`/`hash32`/`eql`/`compare`/`format`/`formatJsonPair`）、`JsSourceTableSpan`、`JsMergedSymbolMap`；
+- **并行打包器符号寻址架构**：
+  - `JsAstRef` 将 `(inner_index: u31, tag: u2, source_index: u31)` 紧凑编码为单字 `u64`（`NONE == 0`），提供 SplitMix64 哈希与对齐 Bun 的 `Ref[inner=..., src=..., .tag]` / JSON `[src,inner]` 零分配格式化；
+  - `JsMergedSymbolMap` 基于外部切片 `[]JsSourceTableSpan` 与 `[]u32` 实现 O(1) 跨文件二维 `(source_index, inner_index)` 符号槽归并寻址，零动态堆分配。
+
+```cp
+import { JsAstRef, JsSourceTableSpan, JsMergedSymbolMap } from "cap:js";
+
+let spans: [4]JsSourceTableSpan = [JsSourceTableSpan.empty(); 4];
+let entries: [16]u32 = [0; 16];
+let map = JsMergedSymbolMap.init(spans[0..], entries[0..]);
+map.registerSource(0, 4, 0)?;
+map.registerSource(1, 6, 0)?;
+
+const r = JsAstRef.initSymbol(3, 1)?;
+map.set(r, 42)?;
+assert((map.get(r)?) == 42);
+```
