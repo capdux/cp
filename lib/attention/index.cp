@@ -238,3 +238,12 @@ export {
     buildTreeAttentionMask,
     verifyDraftTreeGreedy,
 } from "./spec_tree.cp";
+
+export {
+    PAGED_KV_INVALID_BLOCK,
+    PagedKvPoolStats,
+    PagedKvBlockPool,
+    PagedTokenSlot,
+    SeqBlockTable,
+    pagedAttentionDecodeF32,
+} from "./paged_kv.cp";

@@ -962,3 +962,61 @@ pub fn demoSpeculativeTreeVerify() {
     }
 }
 ```
+
+### vLLM 风格 PagedAttention 物理块池、Copy-on-Write 分叉与 SIMD 解码核 (`paged_kv.cp`)
+
+面向高吞吐 LLM 推理引擎的 100% 零堆分配 Paged KV-Cache 管理与 SIMD `@dot`/`@fma` 注意力解码核：
+
+- **`PAGED_KV_INVALID_BLOCK` (`0xFFFFFFFF`)** / **`PagedKvPoolStats`** / **`PagedKvBlockPool`**：
+  - `init(ref_counts: *[]u32): PagedKvBlockPool?` / `allocBlock(*_): u32?` / `retainBlock(*_, block_id): bool` / `releaseBlock(*_, block_id): bool` / `refCount(block_id)` / `freeBlocks()` / `allocatedBlocks()` / `stats()`（含高水位 `high_watermark`、利用率与 CoW 次数统计）。
+- **`PagedTokenSlot`** / **`SeqBlockTable`**：
+  - `init(block_ids: *[]u32, block_size: usize): SeqBlockTable?` / `physicalBlockAt(logical_idx)`
+  - `appendTokenSlot(*_, pool, k_cache_flat, v_cache_flat, head_dim): PagedTokenSlot?`（跨块自动分配新物理块；向共享尾块追加时自动触发 Copy-on-Write 分离）
+  - `forkSequence(pool, child_block_ids): SeqBlockTable?`（零拷贝分叉，共享前缀物理块并递增引用计数）
+  - `ensureWritableBlock(*_, logical_idx, pool, k_cache_flat, v_cache_flat, head_dim): PagedTokenSlot?`（写时复制分离，绝不污染父序列）
+  - `writeKvToken(slot, k_vec, v_vec, k_cache_flat, v_cache_flat, head_dim)` / `releaseAll(*_, pool)`（零泄漏回收）
+- **`pagedAttentionDecodeF32(query, seq_table, k_cache_flat, v_cache_flat, head_dim, scale, out_vec): bool`**：按逻辑块表非连续索引物理 K/V 块，使用 8-lane SIMD `@dot` 计算缩放点积、单遍数值稳定 online Softmax 与 `@fma` 加权累加 V 输出。
+
+```cp
+import {
+    PagedKvBlockPool,
+    SeqBlockTable,
+    pagedAttentionDecodeF32,
+} from "cap:attention";
+
+pub fn demoPagedAttentionCow() {
+    // 4 个物理块，每块 block_size = 2，head_dim = 4
+    let ref_counts: [4]u32 = [0; 4];
+    let k_cache: [32]f32 = [0.0; 32];
+    let v_cache: [32]f32 = [0.0; 32];
+    let pool = PagedKvBlockPool.init(ref_counts[0..]) ?? return;
+
+    let parent_blks: [4]u32 = [0; 4];
+    let parent = SeqBlockTable.init(parent_blks[0..], 2) ?? return;
+
+    // 追加 3 个前缀 token（占用 2 个物理块，尾块半满）
+    const k0: [4]f32 = [1.0, 0.0, 0.0, 0.0];
+    const v0: [4]f32 = [10.0, 0.0, 0.0, 0.0];
+    if (s0 := parent.appendTokenSlot(&pool, k_cache[0..], v_cache[0..], 4)) {
+        * = parent.writeKvToken(s0, k0[0..], v0[0..], k_cache[0..], v_cache[0..], 4);
+    }
+
+    // 零拷贝 CoW 分叉子序列（共享物理块，refcount 递增为 2）
+    let child_blks: [4]u32 = [0; 4];
+    let child = parent.forkSequence(&pool, child_blks[0..]) ?? return;
+
+    // 子序列向共享尾块追加 token 触发 Copy-on-Write，不污染 parent
+    const k1: [4]f32 = [0.0, 1.0, 0.0, 0.0];
+    const v1: [4]f32 = [0.0, 20.0, 0.0, 0.0];
+    if (s1 := child.appendTokenSlot(&pool, k_cache[0..], v_cache[0..], 4)) {
+        * = child.writeKvToken(s1, k1[0..], v1[0..], k_cache[0..], v_cache[0..], 4);
+    }
+
+    // SIMD PagedAttention 单头解码
+    let out: [4]f32 = [0.0; 4];
+    * = pagedAttentionDecodeF32(k0[0..], child, k_cache[0..], v_cache[0..], 4, 0.0, out[0..]);
+
+    child.releaseAll(&pool);
+    parent.releaseAll(&pool); // 全部物理块零泄漏归还
+}
+```
