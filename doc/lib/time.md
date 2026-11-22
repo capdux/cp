@@ -319,6 +319,45 @@ pub fn demoRRuleScheduler() {
 
 ---
 
+## 零分配分布式租约锁表与单调递增 Fencing Token 管理器（`leaseLock.cp`）
+
+面向分布式协调、选主、任务抢占与防脑裂存储写入门禁的 100% 纯 CP 零动态堆分配租约锁管理器：
+
+- **常量与枚举**：
+  - `LEASE_LOCK_MAX_LOCKS = 64`
+  - `LeaseAcquireStatus`（`acquired | reentered_renewed | already_held | table_full | invalid_arg`）
+  - `LeaseOpStatus`（`ok | not_found | expired | owner_mismatch | token_mismatch | invalid_arg`）
+  - `FencingCheckStatus`（`valid | stale_token | invalid_token`）
+- **数据模型**：
+  - `LeaseSlot`、`LeaseAcquireResult`、`LeaseView`、`LeaseSweepResult`、`LeaseManagerStats`
+- **核心引擎 `LeaseLockManager`**：
+  - `init()`
+  - `acquire(*_, resource_id, owner_id, ttl_ms, now_ms): LeaseAcquireResult`：空闲/过期授予严格递增 `fencing_token`；同 `owner_id` 重入自动续期；冲突返回 `already_held` 与剩余 TTL；满表时先自动清扫过期锁再重试。
+  - `renew(*_, resource_id, owner_id, fencing_token, ttl_ms, now_ms): LeaseOpStatus` / `release(*_, resource_id, owner_id, fencing_token, now_ms): LeaseOpStatus`：严格校验持有者与 `fencing_token` 且未过期，释放后保留最高 `last_fencing_token`。
+  - `validateFencingToken(resource_id, fencing_token): FencingCheckStatus`：存储层防脑裂写门禁，拒绝所有 `< last_fencing_token` 的迟到旧写。
+  - `sweepExpired(*_, now_ms): LeaseSweepResult` / `inspect(resource_id): LeaseView?` / `stats(): LeaseManagerStats`：批量过期回收与单调时钟防回退、防 `now_ms + ttl_ms` 溢出保护。
+
+### QuickStart 示例
+
+```cp
+import {
+    LeaseAcquireStatus,
+    FencingCheckStatus,
+    LeaseLockManager,
+} from "cap:time";
+
+pub fn demoLeaseLock() {
+    let mgr = LeaseLockManager.init();
+    const res = mgr.acquire(100, 1, 5_000, 1_000);
+    if (res.status == LeaseAcquireStatus.acquired) {
+        const verdict = mgr.validateFencingToken(100, res.fencing_token);
+        * = verdict == FencingCheckStatus.valid;
+    }
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [health.md](time/health.md)

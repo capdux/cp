@@ -255,3 +255,16 @@ export {
     rruleNextOccurrence,
     rruleExpandOccurrences,
 } from "./rrule.cp";
+
+export {
+    LEASE_LOCK_MAX_LOCKS,
+    LeaseAcquireStatus,
+    LeaseOpStatus,
+    FencingCheckStatus,
+    LeaseSlot,
+    LeaseAcquireResult,
+    LeaseView,
+    LeaseSweepResult,
+    LeaseManagerStats,
+    LeaseLockManager,
+} from "./leaseLock.cp";
