@@ -194,3 +194,21 @@ export {
     ReflexionBank,
     formatLessonsPromptBlock,
 } from "./reflexion.cp";
+
+export {
+    LOOP_GUARD_MAX_STEPS,
+    LOOP_GUARD_MAX_COOLDOWNS,
+    LOOP_GUARD_DEFAULT_MAX_STEPS,
+    LOOP_GUARD_DEFAULT_MAX_TOKENS,
+    LoopAction,
+    LoopTriggerReason,
+    TrajectoryStep,
+    LoopGuardConfig,
+    LoopGuardDecision,
+    ToolCooldownEntry,
+    LoopGuardStats,
+    hashTrajectoryBytes,
+    formatLoopAction,
+    formatLoopReason,
+    AgentLoopGuard,
+} from "./loopGuard.cp";

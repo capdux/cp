@@ -849,3 +849,45 @@ pub fn demoReflexionBank() {
     * = formatLessonsPromptBlock(hits[0..n], *buf_s);
 }
 ```
+
+### 18. 零分配智能体 ReAct 执行轨迹与死循环/震荡熔断守卫 (`loopGuard.cp`)
+
+面向自主 ReAct AI Agent 的 100% 纯 CP 零动态堆分配执行轨迹环形记录器与多维死循环/震荡熔断守卫：
+
+- **常量与枚举**：
+  - `LOOP_GUARD_MAX_STEPS = 64`、`LOOP_GUARD_MAX_COOLDOWNS = 32`、`LOOP_GUARD_DEFAULT_MAX_STEPS = 64`、`LOOP_GUARD_DEFAULT_MAX_TOKENS = 128000`
+  - `LoopAction`（`continue_run | inject_reflection | forbid_tool | escalate_human | abort_loop`）
+  - `LoopTriggerReason`（`none | exact_repeat | cycle_2_oscillation | cycle_3_oscillation | consecutive_failures | stalled_progress | tool_in_cooldown | max_steps_exceeded | token_budget_exceeded`）
+- **数据模型与纯函数**：
+  - `TrajectoryStep`、`LoopGuardConfig`（`defaults()`）、`LoopGuardDecision`、`ToolCooldownEntry`、`LoopGuardStats`
+  - `hashTrajectoryBytes(data)`（64 位 FNV-1a 确定性指纹）、`formatLoopAction(action)`、`formatLoopReason(reason)`
+- **核心引擎 `AgentLoopGuard`**：
+  - `init()` / `initWithConfig(cfg)` / `reset(*_)` / `getRecentStep(offset_from_latest)`
+  - `recordStep(*_, tool_id, args_hash, obs_hash, obs_ok, made_progress, tokens_spent): LoopGuardDecision`：实时检测精确重复循环（连续 N 次同 `(tool_id, args_hash)`）、A-B-A-B 二周期震荡、A-B-C-A-B-C 三周期震荡、连续工具失败、无进展停滞、工具冷却违规以及最大步数/Token 预算上限。
+  - `forbidTool(*_, tool_id, cooldown_steps)` / `isToolForbidden(tool_id)` / `toolCooldownRemaining(tool_id)` / `clearToolCooldown(*_, tool_id)`：工具临时冷却黑名单，强制引导换路并按步自动衰减解除。
+  - `stats(): LoopGuardStats` / `formatAuditSummary(out_buf: *[]u8): usize?`：零堆统计快照与紧凑轨迹审计摘要格式化。
+
+```cp
+import {
+    LoopAction,
+    hashTrajectoryBytes,
+    AgentLoopGuard,
+} from "cap:agentmem";
+
+pub fn demoAgentLoopGuard() {
+    let guard = AgentLoopGuard.init();
+    const h_args = hashTrajectoryBytes("{\"q\":\"status\"}");
+    const h_obs = hashTrajectoryBytes("empty");
+
+    * = guard.recordStep(1, h_args, h_obs, true, false, 300);
+    * = guard.recordStep(1, h_args, h_obs, true, false, 300);
+    // 第 3 次精确重复触发 forbid_tool 并自动加入临时冷却黑名单
+    const dec = guard.recordStep(1, h_args, h_obs, true, false, 300);
+    * = (dec.action == LoopAction.forbid_tool);
+    * = guard.isToolForbidden(1);
+
+    let summary_buf: [256]u8 = [0; 256];
+    let summary_s: []u8 = summary_buf[0..];
+    * = guard.formatAuditSummary(*summary_s);
+}
+```
