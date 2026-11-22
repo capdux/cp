@@ -575,3 +575,39 @@ const res = ren.rename(ChunkRenameOptions{ minify_identifiers: true })?;
     - 当 `splitting: true` 且多个入口点共享模块时，`ChunkPlanner.computeChunks` 自动按精确 `entry_bits` 位掩码抽离共享 Chunk，而 `splitting: false` 时将共享模块内联扇出到每个引用入口以产出单文件自包含产物；
     - `naming` 支持 `[dir]`、`[name]`、`[hash]`、`[ext]` 与服务端多目标场景下的 `[target]` 占位符；在同时存在服务端入口与 HTML 浏览器入口的构建中，未显式指定 `entry_naming` / `chunk_naming` 时自动启用 `EntryFileWithTarget` / `SharedChunkWithTarget`，避免服务端与浏览器同名产物相互覆盖；
     - 开启 `cssChunking` 时，引用完全相同有序 CSS 依赖序列的多个入口会复用同一 CSS Chunk，排序后通过重映射表同步更新 JS Chunk 的 `css_chunk_index`，保证跨平台构建产物顺序与唯一键（`<hex>C<08d>`）100% 确定性可复现。
+12. **延迟分段组装、Standalone HTML 内联转义与 `//# debugId` 发射（`lib/bundler/chunk_output.cp`，吸收自 `/data/dev/bun/src/bundler/Chunk.cp` & `/data/dev/bun/docs/bundler/standalone-html.mdx`）**：
+    - **两遍零分配组装（`ChunkPieceAssembler`）**：在最终内容哈希文件名尚未确定前，代码生成器将源码切分为若干 `ChunkPiece`（前置字面量 + `ChunkPieceQuery{Chunk/Asset/Scb/HtmlImport}`）；待路径或内联内容就绪后，`estimateOutputSize()` 精确预计算总字节数，`assemble()` 单遍零拷贝拼接输出；
+    - **Standalone HTML 闭合标签安全转义（`countClosingTagOccurrences` / `escapeClosingTagsInto`）**：当 `standalone_mode = true` 时，`.Chunk` 引用直接内联对应 JS/CSS 正文并将任意大小写变体（`</script`、`</SCRIPT`、`</style`）的 `</` 转义为 `<\/`（同时保留 `</div>` 等非匹配标签不变），`.Asset` 引用直接内联 `data:` URI；
+    - **跨平台路径前缀规范化与 Debug ID 注释**：`normalizeChunkImportPath` 自动将 Windows `\` 转为 POSIX `/` 并消除重复 `./` 与多余双斜杠；开启 `emit_debug_id = true` 时在 `//# sourceMappingURL` 之前追加确定性 50 字节 `\n//# debugId=00000000-0000-0000-XXXX-XXXXXXXXXXXX\n`。
+
+```cp
+import {
+    ChunkPieceQueryKind,
+    ChunkPieceQuery,
+    ChunkInlineKind,
+    ChunkRefTarget,
+    ChunkOutputAssembleOptions,
+    ChunkPieceAssembler,
+} from "cap:bundler";
+
+let asm = ChunkPieceAssembler.init();
+asm.addPiece("<style>", ChunkPieceQuery.init(ChunkPieceQueryKind.Chunk, 0))?;
+asm.addPiece("</style><img src=\"", ChunkPieceQuery.init(ChunkPieceQueryKind.Asset, 0))?;
+asm.addPiece("\"><script type=\"module\">", ChunkPieceQuery.init(ChunkPieceQueryKind.Chunk, 1))?;
+asm.addLiteral("</script>")?;
+
+const chunks: [2]ChunkRefTarget = [
+    ChunkRefTarget{ rel_path: "styles.css", inline_content: "body{content:'</STYLE>'}", kind: ChunkInlineKind.Css },
+    ChunkRefTarget{ rel_path: "app.js", inline_content: "console.log('</script>')", kind: ChunkInlineKind.JavaScript },
+];
+const assets: [1]ChunkRefTarget = [
+    ChunkRefTarget{ rel_path: "logo.png", inline_content: "data:image/png;base64,iVBORw0KGgo=", kind: ChunkInlineKind.Html },
+];
+const empty: [0]ChunkRefTarget = [];
+const opts = ChunkOutputAssembleOptions{ standalone_mode: true };
+
+let out: [512]u8 = [0; 512];
+const n = asm.assemble(chunks[0..], assets[0..], empty[0..], empty[0..], opts, out[0..])?;
+// out[0..n] 中 </STYLE> 与 </script> 均已安全转义为 <\/STYLE> 与 <\/script>，且 logo.png 内联为 data: URI
+* = n;
+```

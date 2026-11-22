@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/test/parallel/Channel.cp | Synced: 2026-11-22T07:08:00Z
+// Source: Absorbed from /data/dev/bun/src/cli/test/parallel/Channel.cp | Synced: 2026-11-22T10:29:17Z
 // Pure-CP zero-allocation bidirectional IPC framing channel state machine for parallel test workers:
 // - Incoming partial-read reassembly (`rx_buf`) with 5-byte LE frame header boundary detection
 // - Unknown `IpcFrameKind` forward-compatible skip vs `> 64 MiB` corrupt-frame protocol abort

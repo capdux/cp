@@ -347,3 +347,24 @@ export {
     ChunkRenameResult,
     ChunkSymbolRenamer,
 } from "./chunk_renamer";
+
+export {
+    CHUNK_OUTPUT_MAX_PIECES,
+    CHUNK_OUTPUT_MAX_REFS,
+    CHUNK_DEBUG_ID_COMMENT_LEN,
+    ChunkOutputError,
+    ChunkPieceQueryKind,
+    ChunkPieceQuery,
+    ChunkPiece,
+    ChunkInlineKind,
+    ChunkRefTarget,
+    ChunkOutputAssembleOptions,
+    chunkClosingTagForKind,
+    chunkExtensionForKind,
+    countClosingTagOccurrences,
+    escapeClosingTagsInto,
+    normalizedChunkImportPathLen,
+    normalizeChunkImportPath,
+    formatChunkDebugIdComment,
+    ChunkPieceAssembler,
+} from "./chunk_output";
