@@ -61,3 +61,17 @@ fn demo() {
    - MySQL 4 字节包头采用 24-bit 小端长度（最大 `0xFFFFFF = 16 MiB - 1`）+ 8-bit 递增序号 `seq_id`；单条载荷超过 `MAX_PACKET_PAYLOAD` 时须分多包发送并以不足 16 MiB 的末包收尾。
 3. **长度编码整数与 NULL 哨兵（`decodeLenEncInt`）**：
    - 在文本结果集 `TextResultRow` 中，`0xFB` 表示 SQL `NULL`（区别于空字符串 `0x00`），`0xFC`/`0xFD`/`0xFE` 分别引导 2/3/8 字节无符号长度。
+4. **`LOCAL INFILE Request`（`0xFB`）客户端路径策略防护（`localInfile.cp`）**：
+   - 吸收自 `/data/dev/bun/src/sql/mysql/protocol/LocalInfileRequest.cp`（参考 `/data/dev/bun/docs/runtime/sql.mdx` MySQL 协议安全边界）：在 `COM_QUERY` 响应阶段，首字节 `0xFB` 表示服务端请求客户端上传指定路径文件；
+   - **安全铁律**：默认禁用 `CLIENT_LOCAL_FILES`（`allow_local_files = false`），即使显式启用也必须先调用 `req.checkPolicy(true, false)` 拦截 `..` 路径遍历、绝对路径与内嵌 NUL 字节，数据流发送完毕后使用 `LocalInfileRequest.encodeEmptyTerminatorFrame(seq_id, out)` 发送 4 字节空帧结束传输。
+
+```cp
+import { LocalInfileRequest } from "cap:mysql";
+
+const req = LocalInfileRequest.init("imports/users.csv", 1);
+* = req.checkPolicy(true, false)?;
+let frame: [64]u8 = [0; 64];
+const n = req.encodeFrame(frame[0..])?;
+const decoded = LocalInfileRequest.decodeFrame(frame[0..n])?;
+* = decoded.isSafeRelativeFilename(); // true
+```

@@ -179,3 +179,11 @@ export {
 } from "./wire.cp";
 export const WireHandshakeV10 = wireMod.HandshakeV10;
 export const WireHandshakeResponse41 = wireMod.HandshakeResponse41;
+
+// --- 9. LOCAL INFILE Request (0xFB) codec & path policy (./localInfile.cp) ---
+export {
+    LOCAL_INFILE_HEADER,
+    LOCAL_INFILE_MAX_FILENAME,
+    LocalInfileError,
+    LocalInfileRequest,
+} from "./localInfile.cp";

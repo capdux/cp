@@ -476,7 +476,7 @@ pub struct HandshakeResponse41 {
         return try out.toOwnedSlice(alloc);
     }
 
-    pub fn decode(alloc: std.mem.Allocator, payload: []const u8): !HandshakeResponse41 {
+    pub static fn decode(alloc: std.mem.Allocator, payload: []const u8): !HandshakeResponse41 {
         if (payload.len < 32) {
             return error.UnexpectedEof;
         }
@@ -575,7 +575,7 @@ pub struct OkPacket {
         return try out.toOwnedSlice(alloc);
     }
 
-    pub fn decode(alloc: std.mem.Allocator, payload: []const u8): !OkPacket {
+    pub static fn decode(alloc: std.mem.Allocator, payload: []const u8): !OkPacket {
         if (payload.len < 7 or payload[0] != OK_HEADER) {
             return error.InvalidPacketType;
         }
@@ -773,7 +773,7 @@ pub struct ColumnDef41 {
         return try out.toOwnedSlice(alloc);
     }
 
-    pub fn decode(alloc: std.mem.Allocator, payload: []const u8): !ColumnDef41 {
+    pub static fn decode(alloc: std.mem.Allocator, payload: []const u8): !ColumnDef41 {
         let offset: usize = 0;
         const catalog_s = (try readLenEncStr(payload, &offset)) orelse "";
         const schema_s = (try readLenEncStr(payload, &offset)) orelse "";

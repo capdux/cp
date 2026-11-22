@@ -269,7 +269,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:jwt` | `JwtClaims`, `parseJwtClaims`, ... | JWT 声明解析统一主包（同步收敛 `cap:ssh`/`cap:git`/`cap:pkg`） |
 | `cap:rate` | `TokenBucket`, `GcraLimiter`, `SlidingGcraLimiter`, `SimpleTokenBucket`, `FixedWindowLimiter` | 令牌桶/GCRA/滑动窗口限流统一主包（同步收敛 `cap:cron`/`cap:time`） |
 | `cap:pg` | `PgAuth`, `PgCopySasl`, `PgExtendedQuery`, `DiagSqlStateClass`, `PgOid`, `PgReader`, `SqlStateClass`, `PgWireType` | PostgreSQL 线协议全套认证、SASL/COPY、扩展查询、OID、SQLSTATE 与二进制流解析统一主包（`lib/pg_*` 全仓清零） |
-| `cap:mysql` | `AuthError`, `CapsCapabilities`, `ControlError`, `HandshakeV10`, `HandshakeResponse41`, `StatusFlag`, `WireHandshakeV10`, ... | MySQL 线协议全套认证、能力位、握手、字段类型、控制报文与二进制帧解析统一主包（`lib/mysql_*` 全仓清零） |
+| `cap:mysql` | `AuthError`, `CapsCapabilities`, `ControlError`, `HandshakeV10`, `HandshakeResponse41`, `StatusFlag`, `WireHandshakeV10`, `localInfile.cp`（`LOCAL_INFILE_HEADER`/`LOCAL_INFILE_MAX_FILENAME`/`LocalInfileError`/`LocalInfileRequest`）, ... | MySQL 线协议全套认证、能力位、握手、字段类型、控制报文、`LOCAL INFILE` 路径安全门禁与二进制帧解析统一主包（详见 `doc/lib/mysql.md`） |
 | `cap:markdown` | `LineAnalysis`, `MarkdownLink`, `RefDef`, ... | Markdown 行分析、链接与引用定义统一主包（同步收敛 `cap:unicode`/`cap:s3`/`cap:shell`） |
 | `cap:js` | `JsIdent`, `JsOp`, `useDirective.cp`（`UseDirectiveBoundering`/`UseDirectiveFlags`/`UseDirective`/`scanUseDirectives`）, ... | JS 标识符、运算符与 `"use client"`/`"use server"`/`"use strict"` 指令序言解析统一主包（详见 `doc/lib/js.md`） |
 | `cap:json5` | `Json5TokenKind`, `Json5Token`, `Json5Iter`, `toStandardJson`, `isValidJson5` | 零分配 JSON5 1.0 词法扫描、语法校验与标准 RFC 8259 JSON 转换器 |
