@@ -95,6 +95,31 @@ export {
 } from "./rtpJitter.cp";
 
 export {
+    ImageOpsError,
+    ColorMatrixKind,
+    ResizeFilterKind,
+    ImageViewMeta,
+    resizeRgbaScratchLen,
+    rgbaToGrayscale,
+    rgbaToYuv420p,
+    yuv420pToRgba,
+    rgbaToNv12,
+    nv12ToRgba,
+    cropRgba,
+    flipRgbaHorizontal,
+    flipRgbaVertical,
+    rotateRgba90Cw,
+    resizeRgba,
+    gaussianBlurRgba,
+    sobelEdgeMagnitude,
+    encodePpmP6,
+    decodePpmP6,
+    encodeBmpRgba,
+    decodeBmpToRgba,
+    computePsnrRgba,
+} from "./imageOps.cp";
+
+export {
     FLAC_MAGIC_SIZE,
     FLAC_BLOCK_HEADER_SIZE,
     FLAC_STREAMINFO_SIZE,

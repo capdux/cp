@@ -267,6 +267,62 @@ pub fn demoRealtimeVoicePipeline(pcm_frame: []const i16)! {
 }
 ```
 
+### 无上限外部切片图像处理、YUV420p/NV12 色彩互转、可分离缩放/卷积与 BMP/PPM 编解码引擎 (`imageOps.cp`)
+
+面向 WebRTC 视频帧处理、摄像头 NV12/I420 转换与 VLM 视觉前处理（如 `336x336` / `1024x1024` / 4K 缩放）的 100% 纯 CP 零动态堆分配图像内核，全部像素与行缓冲由调用方外部切片传入：
+
+- **错误集、枚举与视图元数据**：
+  - `ImageOpsError`（`InvalidDimensions | OddDimensionsForYuv420 | BufferTooSmall | InvalidFormat | UnsupportedBitsPerPixel | InvalidKernel | InvalidCrop`）
+  - `ColorMatrixKind`（`bt601_limited | bt601_full | bt709_limited | bt709_full`）
+  - `ResizeFilterKind`（`nearest | bilinear | bicubic_catmull_rom | lanczos3`）
+  - `ImageViewMeta`（`width`, `height`, `channels`, `stride_bytes`, `requiredBytes()`, `isValid()`）、`resizeRgbaScratchLen(src_h, dst_w)`
+- **视频帧色彩空间互转**：
+  - `rgbaToGrayscale`（BT.709 亮度）、`rgbaToYuv420p` / `yuv420pToRgba`（2x2 色度均值下采样）、`rgbaToNv12` / `nv12ToRgba`（半平面 Y + 交错 UV）
+- **几何变换与两趟可分离缩放**：
+  - `cropRgba` / `flipRgbaHorizontal` / `flipRgbaVertical` / `rotateRgba90Cw`
+  - `resizeRgba(src, src_w, src_h, dst_w, dst_h, filter, *dst, *scratch_f32)`（水平+垂直两趟可分离滤波，下采样自动抗混叠缩放，零纯色漂移）
+- **空间卷积与边缘检测**：
+  - `gaussianBlurRgba(src, width, height, sigma, radius, *dst, *scratch_f32)`（归一化 1D 高斯核水平+垂直可分离卷积）
+  - `sobelEdgeMagnitude(gray, width, height, *out_mag)`（3x3 Sobel Gx/Gy 梯度幅值）
+- **无损容器编解码 & 客观画质**：
+  - `encodePpmP6` / `decodePpmP6`（支持 `#` 注释与任意空白分隔）
+  - `encodeBmpRgba` / `decodeBmpToRgba`（支持 24-bit BGR 4 字节对齐填充与 32-bit BGRA，同时支持正/负高度 bottom-up / top-down）
+  - `computePsnrRgba(a, b, width, height): f64`
+
+```cp
+import {
+    ColorMatrixKind,
+    ResizeFilterKind,
+    rgbaToNv12,
+    nv12ToRgba,
+    resizeRgba,
+    encodeBmpRgba,
+} from "cap:media";
+
+pub fn demoVideoAndVlmPreprocess(src_rgba: []const u8)! {
+    // 1. 16x16 RGBA -> NV12 (BT.709 Full) -> RGBA
+    let y_buf: [256]u8 = [0; 256];
+    let uv_buf: [128]u8 = [0; 128];
+    let out_rgba: [1024]u8 = [0; 1024];
+    let y_s: []u8 = y_buf[0..];
+    let uv_s: []u8 = uv_buf[0..];
+    let rgba_s: []u8 = out_rgba[0..];
+    rgbaToNv12(src_rgba, 16, 16, ColorMatrixKind.bt709_full, *y_s, *uv_s)?;
+    nv12ToRgba(y_buf[0..], uv_buf[0..], 16, 16, ColorMatrixKind.bt709_full, *rgba_s)?;
+
+    // 2. Lanczos-3 缩放到 8x8 并导出 32-bit BMP
+    let dst_8x8: [256]u8 = [0; 256];
+    let scratch: [512]f32 = [0.0; 512]; // >= 16 * 8 * 4
+    let dst_s: []u8 = dst_8x8[0..];
+    let sc_s: []f32 = scratch[0..];
+    resizeRgba(out_rgba[0..], 16, 16, 8, 8, ResizeFilterKind.lanczos3, *dst_s, *sc_s)?;
+
+    let bmp: [512]u8 = [0; 512];
+    let bmp_s: []u8 = bmp[0..];
+    * = encodeBmpRgba(dst_8x8[0..], 8, 8, *bmp_s)?;
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
