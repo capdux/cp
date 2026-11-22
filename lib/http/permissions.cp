@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T20:23:41Z (W3C Permissions-Policy Header Parser)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T05:31:41Z (W3C Permissions-Policy Header Parser)
 
 fn isSpace(c: u8): bool {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';

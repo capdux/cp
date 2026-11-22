@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T20:23:41Z (RFC 9530 Content-Digest / Repr-Digest / Want-Digest)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T05:31:41Z (RFC 9530 Content-Digest / Repr-Digest / Want-Digest)
 // Pure-CP zero-allocation RFC 9530 HTTP Digest Fields Structured-Field dictionary parser and formatter.
 
 fn isWs(b: u8): bool {

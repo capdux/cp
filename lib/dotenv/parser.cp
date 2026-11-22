@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/dotenv/env_loader.cp | Synced: 2026-11-21T15:11:43Z
+// Source: Absorbed from /data/dev/bun/src/dotenv/env_loader.cp | Synced: 2026-11-22T05:30:30Z
 // lib/dotenv/parser.cp
 // Zero-heap .env parser, quote unescaping, BOM/CRLF handling & variable expansion
 

@@ -150,3 +150,14 @@ export {
     isPgSslRequestFrame,
     encodePgCancelFrame,
 } from "./pg_startup.cp";
+
+export {
+    PG_ROW_DESCRIPTION_TAG,
+    PG_MAX_ROW_FIELDS,
+    PgRowDescError,
+    PgFieldFormatCode,
+    PgFieldDescription,
+    PgRowDescriptionIter,
+    encodePgRowDescription,
+    decodePgRowDescription,
+} from "./pg_row_desc.cp";

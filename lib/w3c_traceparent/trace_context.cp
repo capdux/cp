@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T20:23:41Z (W3C Trace Context traceparent / tracestate)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T05:31:41Z (W3C Trace Context traceparent / tracestate)
 
 const HEX_LOWER: []const u8 = "0123456789abcdef";
 

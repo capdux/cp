@@ -239,6 +239,22 @@ const wire = encodePgStartup(buf[0..], PgStartupConfig{
 })?;
 const decoded = decodePgStartup(wire)?; // database 自动回退为 "postgres", client_encoding == "UTF8"
 ```
+- **PostgreSQL v3 `RowDescription` (`'T'`) 与 `FieldDescription` 零分配流式编解码器 (`pg_row_desc.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/RowDescription.cp` & `FieldDescription.cp`)**：
+  - 常量与类型：`PG_ROW_DESCRIPTION_TAG` (`'T'`)、`PG_MAX_ROW_FIELDS` (`1664`)、`PgRowDescError`、`PgFieldFormatCode`（`text = 0` / `binary = 1`）、`PgFieldDescription`（含 `isBinary()` 与匿名数字列识别 `numericColumnIndex()`）、`PgRowDescriptionIter`（零堆流式列元数据迭代器）；
+  - 编解码函数：`encodePgRowDescription`、`decodePgRowDescription`。
+
+```typescript
+import { PgFieldDescription, PgFieldFormatCode, encodePgRowDescription, decodePgRowDescription } from "cap:sql";
+
+let buf: [256]u8 = [0; 256];
+const cols: [2]PgFieldDescription = [
+    PgFieldDescription{ name: "id", type_oid: 23, type_size: 4, format_code: PgFieldFormatCode.binary },
+    PgFieldDescription{ name: "email", type_oid: 25, type_size: -1, format_code: PgFieldFormatCode.text },
+];
+const wire = encodePgRowDescription(buf[0..], cols[0..])?;
+let it = decodePgRowDescription(wire)?; // it.count() == 2
+while (col := it.next()?) { * = col.name; }
+```
 
 ---
 

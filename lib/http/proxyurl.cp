@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-21T20:23:41Z (HTTP / SOCKS Proxy URL Parser & Env Selector)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T05:31:41Z (HTTP / SOCKS Proxy URL Parser & Env Selector)
 // Pure-CP zero-allocation proxy URL parser (http/https/socks5/socks5h with credentials) and env proxy selector.
 
 fn toLowerAscii(b: u8): u8 {
