@@ -380,3 +380,22 @@ assert(spy.toHaveBeenNthCalledWith(1, 1, "getUser"));
 assert(spy.toHaveLastReturnedWith(201, "ok"));
 spy.mockRestore();
 ```
+
+12. **零分配对象键/值集合与成员断言匹配器（`lib/test_runner/expectKeys.cp`，吸收自 `/data/dev/bun/src/test_runner/expect/toContainAllKeys.cp` & `/data/dev/bun/docs/test/writing-tests.mdx`）**：
+    - **导出符号**：`ExpectKvEntry`、`toBeOneOfStr`、`toBeOneOfI64`、`toContainKey`、`toContainKeys`、`toContainAllKeys`、`toContainAnyKeys`、`toContainValue`、`toContainValues`、`toContainAllValues`、`toContainAnyValues`、`ExpectKeysMatcher`（`init`/`negate`/`checkContainKey`/`checkContainKeys`/`checkContainAllKeys`/`checkContainAnyKeys`/`checkContainAllValues`/`checkBeOneOfStr`）；
+    - **Bun `bun:test` / `jest-extended` 语义对齐**：
+      - `toContainKeys` 允许对象拥有额外未列出的键；`toContainAllKeys` 要求键集合严格一致（顺序无关、数量一致、互为子集）；`toContainAnyKeys` 要求至少命中一个候选键；
+      - `toContainAllValues` 执行多重集（multiset）精确频次比对，避免 `["a", "a", "b"]` 与 `["a", "b", "b"]` 被误判相等；
+      - `ExpectKeysMatcher.negate()` 提供单次 `.not` 反转并在断言完成后自动复位，精确统计 `assertions` / `passed` / `failed`。
+
+```cp
+import { ExpectKvEntry, toContainAllKeys, ExpectKeysMatcher } from "cap:test_runner";
+
+const obj: [2]ExpectKvEntry = [
+    ExpectKvEntry{ key: "id", val: "1" },
+    ExpectKvEntry{ key: "role", val: "admin" },
+];
+const expected: [2][]const u8 = ["role", "id"];
+let m = ExpectKeysMatcher.init();
+assert(m.checkContainAllKeys(obj[0..], expected[0..]));
+```

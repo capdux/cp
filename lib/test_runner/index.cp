@@ -191,3 +191,18 @@ export {
     MockCallRecord,
     MockSpy,
 } from "./mockSpy";
+
+export {
+    ExpectKvEntry,
+    toBeOneOfStr,
+    toBeOneOfI64,
+    toContainKey,
+    toContainKeys,
+    toContainAllKeys,
+    toContainAnyKeys,
+    toContainValue,
+    toContainValues,
+    toContainAllValues,
+    toContainAnyValues,
+    ExpectKeysMatcher,
+} from "./expectKeys";

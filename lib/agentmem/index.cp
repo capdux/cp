@@ -212,3 +212,21 @@ export {
     formatLoopReason,
     AgentLoopGuard,
 } from "./loopGuard.cp";
+
+export {
+    TOOL_HISTORY_MAX_ENTRIES,
+    TOOL_HISTORY_NAME_MAX_LEN,
+    TOOL_HISTORY_PREVIEW_MAX_LEN,
+    TOOL_HISTORY_NO_REF,
+    TOOL_HISTORY_DEFAULT_STUB_TOKENS,
+    TOOL_HISTORY_BPS_SCALE,
+    ToolOutputStatus,
+    ToolOutputEntry,
+    ToolHistoryConfig,
+    ToolCompactReport,
+    ToolHistoryStats,
+    hashToolPayload,
+    estimateToolTokens,
+    formatToolStatus,
+    ToolHistoryStore,
+} from "./toolHistory.cp";

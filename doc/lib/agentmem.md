@@ -891,3 +891,50 @@ pub fn demoAgentLoopGuard() {
     * = guard.formatAuditSummary(*summary_s);
 }
 ```
+
+### 19. 零分配智能体工具调用输出压缩与引用句柄缓存器 (`toolHistory.cp`)
+
+面向长程工具调用 AI Agent 的 100% 纯 CP 零动态堆分配工具输出压缩器与引用句柄表（Agent Tool-Output Compactor & Reference Store），解决多步工具调用返回巨型文件/日志瞬间撑爆 LLM 上下文窗口的问题：
+
+- **常量与枚举**：
+  - `TOOL_HISTORY_MAX_ENTRIES = 64`、`TOOL_HISTORY_NAME_MAX_LEN = 32`、`TOOL_HISTORY_PREVIEW_MAX_LEN = 256`、`TOOL_HISTORY_NO_REF = 0`、`TOOL_HISTORY_DEFAULT_STUB_TOKENS = 12`、`TOOL_HISTORY_BPS_SCALE = 10000`
+  - `ToolOutputStatus`（`full | compacted | pinned`）
+- **数据模型与纯函数**：
+  - `ToolOutputEntry`（含 `ref_id`、`seq`、`status`、`original_bytes`、`original_tokens`、`active_tokens`、`content_hash` [64 位 FNV-1a]、`is_error`、`preview_truncated` 以及内联工具名/预览缓冲；提供 `toolName()`、`preview()`、`savedTokens()`、`isPinned()`、`isCompacted()`）
+  - `ToolHistoryConfig`（`keep_recent_full = 4`、`keep_errors_full = true`、`stub_tokens = 12`；提供 `defaults()`）
+  - `ToolCompactReport`（`compacted_count`、`tokens_freed`、`active_tokens_before`、`active_tokens_after`、`within_budget`）
+  - `ToolHistoryStats`（`total_entries`、`capacity`、`full_count`、`compacted_count`、`pinned_count`、`error_count`、`active_tokens`、`original_tokens_total`、`saved_tokens`、`savings_bps`、`recorded_total`、`evicted_total`）
+  - `hashToolPayload(data)`、`estimateToolTokens(payload)`、`formatToolStatus(status)`
+- **核心引擎 `ToolHistoryStore`**：
+  - `init()` / `initWithConfig(cfg)` / `reset(*_)` / `len()` / `activeTokens()`
+  - `recordOutput(*_, tool_name, payload, token_count, is_error, pin): u64?`：记录工具调用输出并分配单调递增 `ref_id`；64 槽满时优先淘汰最旧 `compacted` 条目，其次最旧非 `pinned` 条目（全 `pinned` 时返回 `null` 零副作用）。
+  - `compactToBudget(*_, max_active_tokens): ToolCompactReport`：预算驱动由旧到新自动压缩，始终保护 `pinned` 条目、最近 `keep_recent_full` 条调用及（开启 `keep_errors_full` 时）报错输出，将被压缩条目替换为紧凑引用桩（如 `[ref#1: read_file, 4096B, ok]`）并精确返回释放 Token 数。
+  - `getEntry(ref_id)` / `pinRef(*_, ref_id)` / `unpinRef(*_, ref_id)` / `removeRef(*_, ref_id)`
+  - `renderEntry(ref_id, *out_buf): usize?` / `renderAll(*out_buf): usize?` / `stats(): ToolHistoryStats`
+
+```cp
+import {
+    ToolHistoryConfig,
+    ToolHistoryStore,
+} from "cap:agentmem";
+
+pub fn demoToolHistoryStore() {
+    let cfg = ToolHistoryConfig.defaults();
+    cfg.keep_recent_full = 2;
+    let store = ToolHistoryStore.initWithConfig(cfg);
+
+    const r1 = store.recordOutput("read_file", "fn main() { ... large file ... }", 1000, false, false) ?? return;
+    const r2 = store.recordOutput("grep_search", "error: undefined symbol", 400, true, false) ?? return;
+    * = store.recordOutput("run_tests", "PASS 12/12", 200, false, false);
+    * = store.recordOutput("git_diff", "+42 -3", 150, false, false);
+
+    // 预算 800 tokens：r1 被压缩为紧凑引用桩，r2（错误输出）与最近 2 条完整保留
+    const rep = store.compactToBudget(800);
+    * = rep.tokens_freed; // 988 (1000 -> 12)
+    * = r2;
+
+    let buf: [256]u8 = [0; 256];
+    let buf_s: []u8 = buf[0..];
+    * = store.renderEntry(r1, *buf_s); // "[ref#1: read_file, 32B, ok]"
+}
+```
