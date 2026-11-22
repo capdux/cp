@@ -581,3 +581,26 @@ export {
     ScopedRegistryRouter,
     ResolutionVerifier,
 } from "./resVerify.cp";
+
+export {
+    LOCK_DEBUG_MAX_INDEX_ENTRIES,
+    LOCK_DEBUG_MAX_IDS_PER_NAME,
+    LOCK_DEBUG_MAX_DEPS,
+    LOCK_DEBUG_MAX_PKGS,
+    LOCK_DEBUG_INVALID_PKG_ID,
+    LOCK_BEH_NORMAL,
+    LOCK_BEH_OPTIONAL,
+    LOCK_BEH_DEV,
+    LOCK_BEH_PEER,
+    LOCK_BEH_WORKSPACE,
+    LOCK_BEH_BUNDLED,
+    LockDebugJsonError,
+    LockDebugFormat,
+    LockDebugDepKind,
+    LockDebugIndexEntry,
+    LockDebugDep,
+    LockDebugPkg,
+    formatLowerHexBytes,
+    stringifyLockDebugDep,
+    LockDebugSnapshot,
+} from "./lockDebugJson.cp";

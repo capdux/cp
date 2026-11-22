@@ -1040,3 +1040,27 @@ const report = v.verifyResolutions(); // report.isOk() == true
 * = root;
 * = report;
 ```
+
+### Lockfile 调试与差异审查 JSON 序列化器（`lib/pkg/lockDebugJson.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/lockfile/lockfile_json_stringify_for_debugging.cp` 与 `/data/dev/bun/docs/guides/install/git-diff-bun-lockfile.mdx`；
+- 导出：`LOCK_DEBUG_MAX_INDEX_ENTRIES` (`32`)、`LOCK_DEBUG_MAX_IDS_PER_NAME` (`8`)、`LOCK_DEBUG_MAX_DEPS` (`64`)、`LOCK_DEBUG_MAX_PKGS` (`64`)、`LOCK_DEBUG_INVALID_PKG_ID`、`LOCK_BEH_*` 掩码常量、`LockDebugJsonError`、`LockDebugFormat`、`LockDebugDepKind`、`LockDebugIndexEntry`、`LockDebugDep`、`LockDebugPkg`、`formatLowerHexBytes`、`stringifyLockDebugDep`、`LockDebugSnapshot`（`init`/`setMetaHash`/`addPackageIndex`/`addPackage`/`addDependency`/`stringify`）；
+- **Lockfile 可读性与 Git Diff 最佳实践（参考 `/data/dev/bun/docs/guides/install/git-diff-bun-lockfile.mdx`）**：
+  - **优先采用文本锁文件 `bun.lock`（JSONC）**：Bun v1.2+ 默认生成人类可读、原生支持 `git diff` 且不损性能的 `bun.lock`；若历史仓库仍使用二进制 `.lockb`，可在 `.gitattributes` 配置 `*.lockb binary diff=lockb` 并配合 `git config diff.lockb.textconv bun`；
+  - **结构化调试输出契约**：`LockDebugSnapshot.stringify()` 零堆分配输出严格合法 RFC 8259 JSON：`package_index` 单版本输出整数、多版本输出数组；未解析 `package_id` 输出 `null`；`meta_hash` 输出小写十六进制；支持全部 10 种依赖标签（含 `is_alias` 与 `catalog:` 前缀）。
+
+```cp
+import { LockDebugSnapshot, LockDebugFormat, LockDebugDep, LockDebugPkg, LOCK_BEH_NORMAL } from "cap:pkg";
+
+let snap = LockDebugSnapshot.init(LockDebugFormat.TextV1);
+const hash: [4]u8 = [0xde, 0xad, 0xbe, 0xef];
+snap.setMetaHash(hash[0..]);
+const ids: [1]u32 = [1];
+* = snap.addPackageIndex("zod", ids[0..])?;
+* = snap.addPackage(LockDebugPkg{ pkg_id: 1, name: "zod", version: "3.23.8" })?;
+* = snap.addDependency(LockDebugDep{ dep_id: 0, name: "zod", literal: "^3.23.0", kind: .Npm, resolved_pkg_id: 1, behavior_mask: LOCK_BEH_NORMAL, version_or_tag: "^3.23.0" })?;
+
+let out: [1024]u8 = [0; 1024];
+const n = snap.stringify(out[0..])?;
+* = n;
+```
