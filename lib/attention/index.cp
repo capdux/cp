@@ -143,3 +143,23 @@ export {
     adamWStepInPlace,
     lionStepInPlace,
 } from "./optimizer.cp";
+
+export {
+    Int4QuantMode,
+    Int4GroupParams,
+    packInt4Pair,
+    unpackInt4Lo,
+    unpackInt4Hi,
+    quantizeGroupInt4Sym,
+    quantizeGroupInt4Asym,
+    dequantizeGroupInt4,
+    gemvInt4Group,
+} from "./quant_int4.cp";
+
+export {
+    KvQuantParams,
+    quantizeTokenKvI8,
+    dequantizeTokenKvI8,
+    dotQueryQuantKeyI8,
+    quantizedAttentionSingleQuery,
+} from "./kv_quant.cp";

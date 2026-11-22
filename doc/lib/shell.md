@@ -106,6 +106,17 @@ fn demoMixedPipeline(): void {
 - **`lib/shell/envparse.cp`**（POSIX Shell 环境变量赋值解析）：`ShellEnvEntry`、`ShellEnvIter`、`getShellEnv`
 - **`lib/shell/quote.cp`**（POSIX Shell 引用转义与参数切分）：`needsQuoting`、`quotePosix`、`joinArgs`、`ShellArgIter`
 - **`lib/shell/brace.cp`**（Bash 风格花括号展开零分配迭代器）：`BraceExpandIter`
+- **`lib/shell/cond_expr.cp`**（吸收自 `/data/dev/bun/src/shell/states/CondExpr.cp`，零堆分配 Bash `[[ ... ]]` 条件表达式解析与求值器）：`MAX_COND_DEPTH`、`POSIX_S_*`、`CondExprError`、`CondOp`、`CondFileStat`、`CondStatFn`、`condToExitCode`、`CondExprEvaluator`（支持 `-e/-f/-d/-c/-L/-s/-r/-w/-x` 文件测试、`-z/-n/==/!=/</>` 字符串测试、`-eq/-ne/-lt/-le/-gt/-ge` 64 位整数比较、`&&`/`||`/`!`/`(...)` 逻辑组合与递归深度防护）
+
+### Bash `[[ ... ]]` 条件表达式求值示例（`cond_expr.cp`）
+
+```typescript
+import { CondExprEvaluator, CondFileStat, condToExitCode } from "cap:shell";
+
+const tokens = ["(", "hello", "==", "hello", ")", "&&", "42", "-ge", "10"];
+const ok = CondExprEvaluator.evalTokens(tokens[0..], null)?;
+const exit_code = condToExitCode(ok); // 0
+```
 
 
 ---

@@ -171,3 +171,21 @@ export {
     parseRetryAfterMs,
     decideLlmRetry,
 } from "./retry_policy.cp";
+
+export {
+    ToolCacheKey,
+    computeToolCacheKey,
+    ToolSideEffectMode,
+    ToolCacheEntry,
+    ToolCacheStats,
+    ToolCallCache,
+} from "./tool_cache.cp";
+
+export {
+    QuotaRejectReason,
+    TenantQuotaConfig,
+    QuotaDecision,
+    TenantQuotaStats,
+    TenantQuotaSlot,
+    LlmQuotaLimiter,
+} from "./quota_limiter.cp";

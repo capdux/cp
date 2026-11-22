@@ -79,6 +79,24 @@ import sutil from "./util.cp";
 pub const quotePosixBuf = sutil.quotePosix;
 pub const joinCommandBuf = sutil.joinCommand;
 
+export {
+    MAX_COND_DEPTH,
+    POSIX_S_IFMT,
+    POSIX_S_IFREG,
+    POSIX_S_IFDIR,
+    POSIX_S_IFCHR,
+    POSIX_S_IFLNK,
+    POSIX_S_IRUSR,
+    POSIX_S_IWUSR,
+    POSIX_S_IXUSR,
+    CondExprError,
+    CondOp,
+    CondFileStat,
+    CondStatFn,
+    condToExitCode,
+    CondExprEvaluator,
+} from "./cond_expr.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);

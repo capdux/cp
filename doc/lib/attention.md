@@ -24,6 +24,8 @@
 - **`PoolKind` / `embeddingLookup` / `poolHiddenStates` / `l2NormalizeInPlace` / `matryoshkaProject` / `cosineSimilarityMatrix`** (`embedding.cp`)：零堆分配词嵌入查表、带 `attention_mask` 掩码的四流派序列池化（`Mean`/`Cls`/`LastToken`/`Max`，覆盖 BGE/E5/Nomic/Qwen3-Embedding）、Matryoshka 套娃维度截断重归一化与批量余弦相似度矩阵计算。
 - **`DpoResult` / `logSumExp` / `crossEntropyLoss` / `sequencePerplexity` / `klDivergenceFromLogits` / `dpoLoss` / `infoNceLoss`** (`loss.cp`)：零堆分配数值稳定大模型训练与偏好对齐损失函数库，覆盖 Cross-Entropy（含 Label Smoothing）、带 `ignore_index` 序列困惑度、零概率缓冲 KL 散度、防溢出 DPO 偏好对齐损失（Rafailov et al. 2023）与 InfoNCE 对比学习损失。
 - **`LrScheduleConfig` / `AdamWConfig` / `LionConfig` / `cosineWarmupLr` / `linearWarmupDecayLr` / `gradGlobalL2Norm` / `clipGradNormInPlace` / `adamWStepInPlace` / `lionStepInPlace`** (`optimizer.cp`)：零堆分配 AI 大模型训练优化器与学习率调度引擎，提供线性 Warmup + 余弦/线性退火、全局 L2 梯度范数裁剪、解耦权重衰减 AdamW（含偏差修正）与 Google Brain Lion 符号动量优化器。
+- **`Int4QuantMode` / `Int4GroupParams` / `packInt4Pair` / `unpackInt4Lo` / `unpackInt4Hi` / `quantizeGroupInt4Sym` / `quantizeGroupInt4Asym` / `dequantizeGroupInt4` / `gemvInt4Group`** (`quant_int4.cp`)：零堆分配 GPTQ / AWQ 风格 Per-Group INT4 权重压缩与混合精度融合 GEMV 引擎，支持对称 `[-8, 7]` 与非对称 `[0, 15] + zero_point` 分组量化、4-bit nibble 紧致打包以及尺度外提（Scale Hoisting）零临时反量化矩阵乘加。
+- **`KvQuantParams` / `quantizeTokenKvI8` / `dequantizeTokenKvI8` / `dotQueryQuantKeyI8` / `quantizedAttentionSingleQuery`** (`kv_quant.cp`)：零堆分配长上下文 KV-Cache 在线 INT8 逐 Token 对称量化压缩（4x 显存压缩，对标 vLLM/KIVI）、尺度外提 Query-Key 点积以及 O(1) 额外内存 Online Softmax 融合单 Query 注意力核。
 
 ## 3. API 速查
 
@@ -102,6 +104,13 @@
 | `gradGlobalL2Norm` / `clipGradNormInPlace` | `(grads): f64?` / `(grads, max_norm): f64?` | 全局 L2 梯度范数与原位范数裁剪（返回裁剪前范数） |
 | `adamWStepInPlace` | `(params, grads, m, v, step, lr, cfg): bool` | 解耦权重衰减 AdamW 单步更新（1-based `step` 偏差修正 `1 - beta^t`） |
 | `lionStepInPlace` | `(params, grads, m, lr, cfg): bool` | Google Brain Lion 符号动量单步更新（仅需单份动量缓冲，显存减半） |
+| `packInt4Pair` / `unpackInt4Lo` / `unpackInt4Hi` | `(lo: u8, hi: u8): u8` / `(byte: u8): u8` | 4-bit Nibble 打包/解包原语（低 4 位为偶索引，高 4 位为奇索引） |
+| `quantizeGroupInt4Sym` / `quantizeGroupInt4Asym` | `(src, group_size, out_packed, out_params): bool` | Per-Group INT4 对称（`[-8, 7]`）与非对称（`[0, 15] + zero_point`）分组量化（要求偶数 `group_size >= 2`） |
+| `dequantizeGroupInt4` | `(packed, params, mode, out_dst): bool` | 按分组参数反量化还原为 `f32` 切片 |
+| `gemvInt4Group` | `(x, packed_weights, group_params, rows, cols, group_size, mode, out_y): bool` | 零临时反量化矩阵的 Per-Group INT4 尺度外提融合 GEMV（`y = W * x`，内部 `f64` 累加） |
+| `quantizeTokenKvI8` / `dequantizeTokenKvI8` | `(vec, out_q): KvQuantParams?` / `(q, params, out_vec): bool` | 逐 Token 对称 INT8（`[-127, 127]`）在线 KV 量化与反量化（4x 显存压缩，记录 `min_val`/`max_val`） |
+| `dotQueryQuantKeyI8` | `(q_vec, k_q, k_params): f64?` | 零反量化临时缓冲的尺度外提 Query-Key INT8 点积（内部 `f64` 累加） |
+| `quantizedAttentionSingleQuery` | `(query, keys_q, k_params, vals_q, v_params, seq_len, head_dim, out): bool` | 基于 Online Softmax 的 O(1) 额外内存 INT8 KV-Cache 单 Query 融合注意力核 |
 
 ## 4. 示例
 
@@ -589,5 +598,78 @@ pub fn demoAdamWTrainingStep(
         * = clipGradNormInPlace(grads, 1.0);
         * = adamWStepInPlace(params, grads, m, v, step, lr, AdamWConfig.default());
     }
+}
+```
+
+### Per-Group INT4 分组量化与融合 GEMV 示例 (`quant_int4.cp`)
+
+```cp
+import {
+    Int4QuantMode,
+    Int4GroupParams,
+    quantizeGroupInt4Asym,
+    gemvInt4Group,
+} from "cap:attention";
+
+pub fn demoPerGroupInt4Gemv() {
+    // 2x8 权重矩阵按 group_size=4 分组非对称 INT4 量化（仅占 8 字节 + 4 组参数）
+    const weights: [16]f32 = [
+        -1.0, 2.0, 5.0, 14.0,   0.0, 0.5, 1.0, 1.5,
+         3.0, 1.0, 0.0, -2.0,  -4.0, -2.0, 0.0, 2.0,
+    ];
+    const x: [8]f32 = [1.0, 0.5, -0.5, 0.25, 2.0, -1.0, 0.5, 1.0];
+
+    let packed_buf: [8]u8 = undefined;
+    let params: [4]Int4GroupParams = undefined;
+    let y: [2]f32 = undefined;
+
+    let packed_s: []u8 = packed_buf[0..];
+    let params_s: []Int4GroupParams = params[0..];
+    let y_s: []f32 = y[0..];
+
+    if (quantizeGroupInt4Asym(weights[0..], 4, packed_s, params_s)) {
+        * = gemvInt4Group(x[0..], packed_buf[0..], params[0..], 2, 8, 4, .Asymmetric, y_s);
+    }
+}
+```
+
+### 在线 INT8 KV-Cache 量化与融合单 Query 注意力示例 (`kv_quant.cp`)
+
+```cp
+import {
+    KvQuantParams,
+    quantizeTokenKvI8,
+    quantizedAttentionSingleQuery,
+} from "cap:attention";
+
+pub fn demoQuantizedKvAttention() {
+    const query: [4]f32 = [0.8, -0.4, 0.5, 0.2];
+    const k0: [4]f32 = [0.9, -0.3, 0.4, 0.1];
+    const v0: [4]f32 = [1.0, 2.0, -1.0, 0.5];
+    const k1: [4]f32 = [-0.5, 0.7, -0.2, 0.6];
+    const v1: [4]f32 = [-0.5, 0.25, 1.5, -1.0];
+
+    let keys_q: [8]i8 = undefined;
+    let vals_q: [8]i8 = undefined;
+    let k_params: [2]KvQuantParams = undefined;
+    let v_params: [2]KvQuantParams = undefined;
+    let out: [4]f32 = undefined;
+
+    k_params[0] = quantizeTokenKvI8(k0[0..], keys_q[0..4]) ?? KvQuantParams{};
+    v_params[0] = quantizeTokenKvI8(v0[0..], vals_q[0..4]) ?? KvQuantParams{};
+    k_params[1] = quantizeTokenKvI8(k1[0..], keys_q[4..8]) ?? KvQuantParams{};
+    v_params[1] = quantizeTokenKvI8(v1[0..], vals_q[4..8]) ?? KvQuantParams{};
+
+    let out_s: []f32 = out[0..];
+    * = quantizedAttentionSingleQuery(
+        query[0..],
+        keys_q[0..],
+        k_params[0..],
+        vals_q[0..],
+        v_params[0..],
+        2,
+        4,
+        out_s,
+    );
 }
 ```

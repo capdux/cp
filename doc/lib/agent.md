@@ -907,3 +907,51 @@ fn llmRetryDecisionDemo(http_status: u16, retry_after_header: string, attempt: u
     * = decision;
 }
 ```
+
+---
+
+## 子模块：幂等工具调用结果记忆化缓存与副作用门控器（`tool_cache.cp`）
+
+### 核心特性
+
+- **作用域隔离复合键（`ToolCacheKey` / `computeToolCacheKey`）**：基于 64 位 FNV-1a 哈希将 `(tool_name, args_canonical, scope_id)` 映射为固定大小键，按会话/任务作用域隔离读写。
+- **副作用门控（`ToolSideEffectMode`）**：
+  - `ReadOnlyCacheable`：允许写入并命中缓存，支持 TTL 过期与覆盖更新；
+  - `MutatingBypass`：写操作拒绝入缓存，累计 `bypassed_mutating`；
+  - `MutatingInvalidateScope`：写操作拒绝入缓存并自动失效同一 `scope_id` 下的所有读缓存。
+- **零堆分配负载池与 LRU 驱逐（`ToolCallCache`）**：由调用方提供固定 `ToolCacheEntry` 槽位切片与扁平 `[]u8` 负载缓冲；槽位满时按 `(last_hit_ms, last_access_seq)` 执行精确 LRU 驱逐；字节池满时执行原地前向紧缩（`compactPayload`）并按需 LRU 驱逐，同时累计 `hits`/`misses`/`evictions`/`invalidations`/`total_saved_latency_ms`。
+
+### 导出清单
+
+- **键与模式**：`ToolCacheKey`、`computeToolCacheKey(tool_name, args_canonical, scope_id)`、`ToolSideEffectMode`
+- **缓存与遥测**：`ToolCacheEntry`、`ToolCacheStats`、`ToolCallCache`（`init`, `lookup`, `put`, `invalidateScope`, `invalidateTool`, `purgeExpired`, `clear`, `stats`）
+
+### 使用示例
+
+```typescript
+import {
+    ToolCacheEntry,
+    ToolSideEffectMode,
+    ToolCallCache,
+    computeToolCacheKey,
+} from "cap:agent";
+
+fn toolCacheDemo() {
+    let slots_arr: [8]ToolCacheEntry = [ToolCacheEntry{}; 8];
+    let payload_arr: [512]u8 = [0; 512];
+    let slots: []ToolCacheEntry = slots_arr[0..];
+    let payload: []u8 = payload_arr[0..];
+    let cache = ToolCallCache.init(slots, payload);
+
+    const k_read = computeToolCacheKey("read_file", "{\"path\":\"main.cp\"}", 1);
+    * = cache.put(k_read, ToolSideEffectMode.ReadOnlyCacheable, "fn main() {}", 60000, 120, 1000);
+
+    if (cached := cache.lookup(k_read, 1500)) {
+        * = cached; // 命中并累计 120ms 节省延迟
+    }
+
+    // 同作用域写操作自动失效该作用域所有读缓存
+    const k_write = computeToolCacheKey("write_file", "{\"path\":\"main.cp\"}", 1);
+    * = cache.put(k_write, ToolSideEffectMode.MutatingInvalidateScope, "ok", 0, 30, 1600);
+}
+```

@@ -89,16 +89,27 @@ def load_transcript_turns(tpath: Path):
             body = extract_user_body(obj.get("content", ""))
             if not body:
                 continue
-            # Find the last non-empty PLANNER_RESPONSE before the next USER_EXPLICIT
+            # Find the EXACT response to THIS USER_EXPLICIT turn:
+            # Take the FIRST terminal PLANNER_RESPONSE (no tool_calls & non-empty content)
+            # before the next USER_EXPLICIT, so later subagent SYSTEM_MESSAGE wakeups
+            # never overwrite the user's actual reply.
             reply = ""
+            fallback_reply = ""
             for j in range(i + 1, len(steps)):
                 nxt = steps[j]
                 if nxt.get("type") == "USER_INPUT" and nxt.get("source") == "USER_EXPLICIT":
                     break
                 if nxt.get("type") == "PLANNER_RESPONSE":
                     c = (nxt.get("content") or "").strip()
+                    has_tools = bool(nxt.get("tool_calls"))
                     if c:
-                        reply = c
+                        if not fallback_reply:
+                            fallback_reply = c
+                        if not has_tools:
+                            reply = c
+                            break
+            if not reply:
+                reply = fallback_reply
             turns.append((step_idx, day, ts, body, reply))
     return turns
 
@@ -132,12 +143,65 @@ def append_entries(target: Path, entries: list[str]):
     target.write_text(orig + sep + payload, encoding="utf-8")
 
 
+def repair_existing_replies(target: Path, turn_map: dict[int, tuple[str, str, str, str]]) -> int:
+    """In-place repair of existing [step:<N>] sections so each pairs with its exact reply."""
+    text = target.read_text(encoding="utf-8")
+    lines = text.splitlines(keepends=True)
+    # Split into header + ### sections
+    out_parts = []
+    cur = []
+    repaired = 0
+
+    def flush(sec_lines: list[str]):
+        nonlocal repaired
+        if not sec_lines:
+            return
+        sec = "".join(sec_lines)
+        m = re.search(r"\[step:(\d+)\]", sec_lines[0])
+        if m:
+            step_idx = int(m.group(1))
+            if step_idx in turn_map:
+                day, ts, body, reply = turn_map[step_idx]
+                reply_snip = sanitize_block(reply or "(正在执行/待本轮结束落盘)", 800)
+                new_sec = (
+                    f"### {day}（用户原始指令与汇报记录 {ts}）[step:{step_idx}]\n"
+                    f"- **用户完整原始指令**：\n"
+                    f"{indent_quote(body)}\n"
+                    f"- **执行与汇报摘要**：\n"
+                    f"{indent_quote(reply_snip)}\n\n"
+                )
+                if new_sec.strip() != sec.strip():
+                    repaired += 1
+                out_parts.append(new_sec)
+                return
+        out_parts.append(sec)
+
+    for ln in lines:
+        if ln.startswith("### "):
+            flush(cur)
+            cur = [ln]
+        else:
+            cur.append(ln)
+    flush(cur)
+    if repaired > 0:
+        target.write_text("".join(out_parts).rstrip("\n") + "\n", encoding="utf-8")
+    return repaired
+
+
 def main():
     parser = argparse.ArgumentParser(description="Audit and losslessly backfill SESSION.md & SESSION_H.md.")
     parser.add_argument("--transcript", type=Path, default=DEFAULT_TRANSCRIPT)
     parser.add_argument("--today", type=str, default=datetime.datetime.now(LOCAL_TZ).strftime("%Y-%m-%d"))
     parser.add_argument("--check", action="store_true", help="Only audit and print missing counts without writing.")
+    parser.add_argument("--repair-replies", action="store_true", help="Repair existing [step:N] reply pairings in-place.")
     args = parser.parse_args()
+
+    turns = load_transcript_turns(args.transcript)
+    if args.repair_replies:
+        turn_map = {step_idx: (day, ts, body, reply) for step_idx, day, ts, body, reply in turns}
+        r_hist = repair_existing_replies(SESSION_HIST, turn_map)
+        r_hot = repair_existing_replies(SESSION_HOT, turn_map)
+        print(f"[REPAIR_OK] repaired replies: SESSION_H.md={r_hist}, SESSION.md={r_hot}")
 
     combined = SESSION_HOT.read_text(encoding="utf-8") + "\n" + SESSION_HIST.read_text(encoding="utf-8")
 
