@@ -1057,6 +1057,32 @@ pub fn from_compiler_error_msg(raw_msg: &str, source_code: Option<&str>) -> Diag
             .with_cause("attempted to move a value that is currently borrowed.")
             .with_help("values cannot be moved or transferred while active borrows exist.")
             .with_suggestion("ensure all borrows end before moving the value.")
+    } else if msg.contains("Cannot return 'null' from function") {
+        let fn_name = msg
+            .split("from function '")
+            .nth(1)
+            .and_then(|s| s.split('\'').next())
+            .unwrap_or("function");
+        if msg.contains("Array(Optional(") {
+            Diagnostic::new("E0200", format!("compile error: {}", msg))
+                .with_cause(format!(
+                    "function '{}' has a slice-of-optionals return type (e.g. '[]const T?' parses as '[]const (?T)'), not an optional slice.",
+                    fn_name
+                ))
+                .with_help("in CP, postfix '?' binds tighter than prefix '[]' / '[]const'. Wrap the slice type in parentheses or use prefix '?' for an optional slice.")
+                .with_suggestion("change the return type from '[]const T?' to '([]const T)?' or '?[]const T'")
+        } else {
+            Diagnostic::new("E0200", format!("compile error: {}", msg))
+                .with_cause(format!(
+                    "function '{}' does not have an optional return type ('?T' or 'T?').",
+                    fn_name
+                ))
+                .with_help("only functions returning an optional type can return 'null'.")
+                .with_suggestion(format!(
+                    "change the return type of '{}' to optional (e.g. 'T?' or '?T')",
+                    fn_name
+                ))
+        }
     } else {
         Diagnostic::new("E0200", format!("compile error: {}", msg))
             .with_help("check CP language ownership, borrowing and semantic rules.")
@@ -1064,12 +1090,37 @@ pub fn from_compiler_error_msg(raw_msg: &str, source_code: Option<&str>) -> Diag
 
     // If source code is present, try locating the symbol in source code for pinpoint span
     if let Some(code) = source_code {
-        if let Some(target) = msg.split('\'').nth(1).and_then(|s| s.split('\'').next()) {
-            if let Some(pos) = code.find(target) {
-                diag.span = Some(crate::Span {
-                    start: pos,
-                    end: pos + target.len(),
-                });
+        if msg.contains("Cannot return 'null' from function") {
+            if let Some(fn_name) = msg
+                .split("from function '")
+                .nth(1)
+                .and_then(|s| s.split('\'').next())
+            {
+                let fn_needle = format!("fn {}(", fn_name);
+                if let Some(fn_pos) = code.find(&fn_needle) {
+                    if let Some(rel_null) = code[fn_pos..].find("return null") {
+                        let start = fn_pos + rel_null;
+                        diag.span = Some(crate::Span {
+                            start,
+                            end: start + "return null".len(),
+                        });
+                    } else {
+                        diag.span = Some(crate::Span {
+                            start: fn_pos,
+                            end: fn_pos + fn_needle.len(),
+                        });
+                    }
+                }
+            }
+        }
+        if diag.span.is_none() {
+            if let Some(target) = msg.split('\'').nth(1).and_then(|s| s.split('\'').next()) {
+                if let Some(pos) = code.find(target) {
+                    diag.span = Some(crate::Span {
+                        start: pos,
+                        end: pos + target.len(),
+                    });
+                }
             }
         }
     }

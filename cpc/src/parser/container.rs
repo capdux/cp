@@ -107,7 +107,7 @@ impl<'a> Parser<'a> {
                 extra_zig.push(code);
                 continue;
             }
-            let meta_list = self.parse_meta_list()?;
+            let mut meta_list = self.parse_meta_list()?;
             let mut member_is_pub = true;
             let mut has_pub_or_priv = false;
             while self.peek() == Some(&Token::Export)
@@ -403,6 +403,22 @@ impl<'a> Parser<'a> {
                 if matches!(ty, Type::BorrowType { .. }) {
                     is_ref = true;
                 }
+                if matches!(self.peek(), Some(Token::Ident(s)) if s == "align")
+                    && self.peek_next() == Some(&Token::LParen)
+                {
+                    let align_ident = self.parse_ident()?;
+                    self.expect(Token::LParen)?;
+                    let align_expr = self.parse_expr()?;
+                    let end_span = self.expect(Token::RParen)?;
+                    meta_list.push(MetaItem {
+                        span: Span {
+                            start: align_ident.span.start,
+                            end: end_span.end,
+                        },
+                        name: align_ident,
+                        args: vec![MetaArg::Positional(align_expr)],
+                    });
+                }
                 let default = if self.peek() == Some(&Token::Assign) {
                     self.bump()?;
                     Some(self.parse_expr()?)
@@ -599,7 +615,7 @@ impl<'a> Parser<'a> {
                 extra_zig.push(code);
                 continue;
             }
-            let meta_list = self.parse_meta_list()?;
+            let mut meta_list = self.parse_meta_list()?;
             let mut method_is_pub = true;
             while self.peek() == Some(&Token::Export)
                 || self.peek() == Some(&Token::Pub)

@@ -1287,11 +1287,28 @@ impl<'a> Parser<'a> {
                 let f_ident = self.parse_ident()?;
                 self.expect(Token::Colon)?;
                 let ty = self.parse_type()?;
+                let mut f_meta = Vec::new();
+                if matches!(self.peek(), Some(Token::Ident(s)) if s == "align")
+                    && self.peek_next() == Some(&Token::LParen)
+                {
+                    let align_ident = self.parse_ident()?;
+                    self.expect(Token::LParen)?;
+                    let align_expr = self.parse_expr()?;
+                    let end_span = self.expect(Token::RParen)?;
+                    f_meta.push(MetaItem {
+                        span: Span {
+                            start: align_ident.span.start,
+                            end: end_span.end,
+                        },
+                        name: align_ident,
+                        args: vec![MetaArg::Positional(align_expr)],
+                    });
+                }
                 fields.push(Field {
                     span: f_ident.span,
                     ident: f_ident,
                     ty,
-                    meta: Vec::new(),
+                    meta: f_meta,
                     default: None,
                     is_pub: true,
                     is_static: false,

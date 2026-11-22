@@ -5,6 +5,32 @@ use crate::lexer::{Lexer, Token};
 use crate::Span;
 
 impl<'a> Parser<'a> {
+    fn expr_to_type_for_err_union(&self, expr: &Expr) -> Option<Type> {
+        match expr {
+            Expr::TypeVal { ty, .. } => Some(ty.clone()),
+            Expr::Ident(id) => Some(Type::Ref(id.clone())),
+            Expr::Member(m) => {
+                if let Some(Type::Ref(mut base)) = self.expr_to_type_for_err_union(&m.obj) {
+                    base.sym.push('.');
+                    base.sym.push_str(&m.prop.sym);
+                    base.span.end = m.prop.span.end;
+                    Some(Type::Ref(base))
+                } else {
+                    None
+                }
+            }
+            Expr::Zig(z) => Some(Type::Ref(Ident {
+                span: z.span,
+                sym: z.code.clone(),
+            })),
+            Expr::Call(c) => Some(Type::Ref(Ident {
+                span: c.span,
+                sym: self.input[c.span.start..c.span.end].trim().to_string(),
+            })),
+            _ => None,
+        }
+    }
+
     pub(super) fn parse_expr(&mut self) -> ParseResult<Expr> {
         self.parse_bin_expr(0)
     }
@@ -20,6 +46,79 @@ impl<'a> Parser<'a> {
                             self.bump()?;
                             is_comptime = true;
                         } else {
+                            let next_start = self.peek_span().start;
+                            let same_line = !(next_start >= self.prev_token_end
+                                && self.input[self.prev_token_end..next_start].contains('\n'));
+                            if same_line {
+                                if let Some(ok_ty) = self.expr_to_type_for_err_union(&left) {
+                                    if matches!(
+                                        self.peek_next(),
+                                        Some(
+                                            Token::Ident(_)
+                                                | Token::ErrorKw
+                                                | Token::LParen
+                                                | Token::LBrace
+                                        )
+                                    ) {
+                                        let checkpoint = self.lexer.clone();
+                                        let p1 = self.peeked.clone();
+                                        let p2 = self.peeked2.clone();
+                                        let prev_end = self.prev_token_end;
+                                        self.bump()?; // consume '!'
+                                        if matches!(&ok_ty, Type::Ref(id) if id.sym == "anyerror" || id.sym == "AnyErr")
+                                        {
+                                            let inner = self.parse_type()?;
+                                            left = Expr::TypeVal {
+                                                span: Span {
+                                                    start: left_span(&left).start,
+                                                    end: self.prev_token_end,
+                                                },
+                                                ty: Type::ResultType {
+                                                    ok: Box::new(inner),
+                                                    err: ErrorType::AnyErr,
+                                                },
+                                            };
+                                            continue;
+                                        } else if self.is_error_type_rhs_start() {
+                                            let err = self.parse_error_type_rhs()?;
+                                            left = Expr::TypeVal {
+                                                span: Span {
+                                                    start: left_span(&left).start,
+                                                    end: self.prev_token_end,
+                                                },
+                                                ty: Type::ResultType {
+                                                    ok: Box::new(ok_ty),
+                                                    err,
+                                                },
+                                            };
+                                            continue;
+                                        } else {
+                                            self.lexer = checkpoint;
+                                            self.peeked = p1;
+                                            self.peeked2 = p2;
+                                            self.prev_token_end = prev_end;
+                                        }
+                                    } else if matches!(
+                                        self.peek_next(),
+                                        Some(
+                                            Token::Semicolon
+                                                | Token::RParen
+                                                | Token::Comma
+                                                | Token::RBrace
+                                        )
+                                    ) {
+                                        let bang_span = self.bump()?.1;
+                                        left = Expr::TypeVal {
+                                            span: Span {
+                                                start: left_span(&left).start,
+                                                end: bang_span.end,
+                                            },
+                                            ty: Type::ErrorUnion(Box::new(ok_ty)),
+                                        };
+                                        continue;
+                                    }
+                                }
+                            }
                             break;
                         }
                     }
@@ -295,11 +394,16 @@ impl<'a> Parser<'a> {
                         };
                         continue;
                     }
-                    let is_prop_type_like =
-                        prop.sym.chars().next().map_or(false, |c| c.is_uppercase());
+                    let is_prop_type_like = prop
+                        .sym
+                        .trim_start_matches('_')
+                        .chars()
+                        .next()
+                        .map_or(false, |c| c.is_uppercase());
                     let is_enum_variant_init = if let Expr::Ident(ref obj_id) = left {
                         obj_id
                             .sym
+                            .trim_start_matches('_')
                             .chars()
                             .next()
                             .map_or(false, |c| c.is_uppercase())
@@ -1306,11 +1410,16 @@ impl<'a> Parser<'a> {
                         };
                         continue;
                     }
-                    let is_prop_type_like =
-                        prop.sym.chars().next().map_or(false, |c| c.is_uppercase());
+                    let is_prop_type_like = prop
+                        .sym
+                        .trim_start_matches('_')
+                        .chars()
+                        .next()
+                        .map_or(false, |c| c.is_uppercase());
                     let is_enum_variant_init = if let Expr::Ident(ref obj_id) = left {
                         obj_id
                             .sym
+                            .trim_start_matches('_')
                             .chars()
                             .next()
                             .map_or(false, |c| c.is_uppercase())

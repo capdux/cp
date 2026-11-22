@@ -1650,3 +1650,91 @@
   > 收到新的编译器待处理工单(1条: task-bun-20261122-return-this-struct-lit)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
 - **完整回复与执行汇报**：
   > (正在执行/待本轮结束落盘)
+
+### 2026-11-22（下游工单全量补录：`task-capsurf-20261122-layer-rule-e0200`）[ticket:task-capsurf-20261122-layer-rule-e0200]
+- **工单来源**：`capsurf_agy`（项目 `capsurf` / 分类 `compiler_bug`） | 创建：`2026-11-22 17:16:57` | 状态：`resolved` | 结单：`2026-11-22T17:29:21`
+- **报错/需求摘要**：cap build -m -d -o bin_dev src/main.cp fails with E0200 at /data/dev/cp/lib/css/layer_rule.cp:172:16 (Cannot return 'null' from function 'at' whose return type is Array(Optional(U8))) inside fn findMatchingDelim(...): usize?
+- **结单与处理汇报**：已验证 lib/css/layer_rule.cp 已修复为 ([]const u8)? 且 capsurf main.cp 构建通过；同步修复 diagnostic.rs 中 E0200 误指向首个 return null 行号的缺陷，新增针对 []const T? vs ([]const T)? 的 AI-First 诊断提示。回归测试 test_layer_rule_e0200.cp + 原始 repro 100% PASS。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-switch-multitag-capture`）[ticket:task-bun-20261122-switch-multitag-capture]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 17:17:10` | 状态：`resolved` | 结单：`2026-11-22T17:29:21`
+- **报错/需求摘要**：switch 多 tag 合并分支 .a, .b v => v.x 丢失载荷绑定 v，生成 if (cp_match_tag(.a) or cp_match_tag(.b)) { v.x } 导致 zig ast-check 报 undeclared identifier 'v'
+- **结单与处理汇报**：已修复 codegen/pattern.rs：新增 extract_or_enum_capture 支持 switch 多 tag 合并分支 .a, .b v => v.x 在原生 Zig switch (.a, .b => |v| v.x) 与回退路径均正确绑定载荷 v。回归测试 test_switch_multitag_capture.cp + 原始 repro 100% PASS。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-c-struct-align`）[ticket:task-bun-20261122-c-struct-align]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 17:17:10` | 状态：`resolved` | 结单：`2026-11-22T17:29:21`
+- **报错/需求摘要**：@c pub struct 字段声明不支持 align(1)（如 tag: u8 align(1)），parser 报 E0111: expected token 'Colon', found 'LParen'
+- **结单与处理汇报**：已修复 parser/container.rs 与 parser/types.rs：结构体字段声明支持后缀 align(expr)（含默认值），复用 codegen field_align_str 生成 Zig align(N)。回归测试 test_c_struct_align.cp + 原始 repro 100% PASS。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-expr-fn-ret-opt`）[ticket:task-bun-20261122-expr-fn-ret-opt]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 17:22:08` | 状态：`resolved` | 结单：`2026-11-22T17:29:21`
+- **报错/需求摘要**：表达式位函数类型返回后缀可选类型 fn(val: u64): (*T)? 未被 lower 为 ?*T，原样输出导致 zig ast-check 报 expected ')', found '?'
+- **结单与处理汇报**：已修复 parser/primary.rs：表达式位函数类型 fn (params): RetType 改为生成 Expr::TypeVal(Type::Fn)，经 map_type 正确 lower 后缀可选返回类型 (*T)? -> ?*T。回归测试 test_expr_fn_ret_opt.cp + 原始 repro 100% PASS。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-switch-type-dot-opt`）[ticket:task-bun-20261122-switch-type-dot-opt]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 17:22:08` | 状态：`resolved` | 结单：`2026-11-22T17:29:21`
+- **报错/需求摘要**：comptime switch(T) 分支不支持多级点表达式（B.C =>）或后缀可选类型（A? =>），parser 报 E0111 expected token 'FatArrow'
+- **结单与处理汇报**：已修复 parser/pattern.rs：switch 类型分支支持多级点路径（B.C / B.Nested.Leaf）及后缀可选/切片类型修饰（A? / B.C?）。回归测试 test_switch_type_dot_opt.cp + 原始 repro 100% PASS。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-comptime-err-union-ret`）[ticket:task-bun-20261122-comptime-err-union-ret]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 17:28:28` | 状态：`resolved` | 结单：`2026-11-22T17:34:12`
+- **报错/需求摘要**：comptime 函数返回错误联合类型构造 return T ! MyErr; 被 cpc 误拆分为 return T; _ = (!MyErr); 导致 zig ast-check 报 unreachable code
+- **结单与处理汇报**：已修复 parser/expr.rs：parse_bin_expr 在表达式位支持同行错误联合类型构造 T ! MyErr 与 T!，返回 Expr::TypeVal(ResultType/ErrorUnion)，正确生成 MyErr!T / anyerror!T。回归测试 test_comptime_err_union_ret.cp + 原始 repro 100% PASS。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-underscore-struct-lit`）[ticket:task-bun-20261122-underscore-struct-lit]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 17:29:53` | 状态：`resolved` | 结单：`2026-11-22T17:34:12`
+- **报错/需求摘要**：下划线开头的结构体类型名 _S 在结构体字面量 _S{ x: 1 } 中未被识别为类型名，parser 报 E0100 unexpected token 'Colon'
+- **结单与处理汇报**：已修复 parser/primary.rs、parser/expr.rs 与 parser/pattern.rs：类型名首字母大写判定改用 trim_start_matches('_')，支持 _S{ x: 1 }、__Inner{...} 等下划线前缀结构体字面量与模式。回归测试 test_underscore_struct_lit.cp + 原始 repro 100% PASS。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 17:16:58）[step:15529]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-capsurf-20261122-layer-rule-e0200)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已同步读取并打包 3 条新到达的紧急编译器工单，交由独立热修子智能体 **`cc643cae`**（`CPC Hotfix Engineer`）统一修复、发布 `sync_cpc.sh release`、补齐回归测试并逐一 `resolve` 结单：
+  >
+  > 1. **`task-capsurf-20261122-layer-rule-e0200`**（来自 `capsurf_agy`）：`cap build -m -d` 在 `lib/css/layer_rule.cp:172:16` 的 `fn findMatchingDelim(...): usize?` 内误报 `E0200`；
+  > 2. **`task-bun-20261122-switch-multitag-capture`**（来自 `bun_agy`）：`switch` 多 tag 合并分支 `.a, .b v => v.x` 丢失载荷绑定 `v`；
+  > 3. **`task-bun-20261122-c-struct-align`**（来自 `bun_agy`）：`@c pub struct` 字段声明 `tag: u8 align(1)` 报 `E0111`。
+  >
+  > 同时已完成 **Priority ① 第 3 波第 1 轮** 验收提交（Commit `445d6f8a`）：吸收 W3C CSS Cascade Level 5 `@layer` 规则与级联层优先级注册表 [layer_rule.cp](file:///data/dev/cp/lib/css/layer_rule.cp) 至 [lib/css/index.cp](file:///data/dev/cp/lib/css/index.cp)（6/6 PASS，`bun_sourced=895, upstream_newer=0`），同步更新 [doc/lib/css.md](file:///data/dev/cp/doc/lib/css.md) 与 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md)，并已派发第 2 轮。
+  >
+  > 当前 3 路并行运转中：**紧急热修 3 条工单（`cc643cae`）+ Priority ① 第 3 波第 2 轮（`e7adabc2`）+ Priority ② 第 3 波第 2 轮 `lib/agent/replay.cp`（`0e1f5c0c`）**。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 17:18:16）[step:15542]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(2条: task-bun-20261122-switch-multitag-capture,task-bun-20261122-c-struct-align)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 收到！刚才巡检 `task_queue.py` 时已第一时间捕获这 2 条工单（`task-bun-20261122-switch-multitag-capture` 与 `task-bun-20261122-c-struct-align`），并已同 `task-capsurf-20261122-layer-rule-e0200` 一并打包派发给独立热修子智能体 **`cc643cae`**（`CPC Hotfix Engineer`）统一修复、发布 `sync_cpc.sh release`、补齐回归测试并逐一 `resolve` 结单。
+  >
+  > 原有 2 路第 3 波常驻生态子智能体（Priority ① `e7adabc2` + Priority ② `0e1f5c0c`）继续并行运转不受影响，待热修完成后立即验收提交并同步 `SESSION.md`。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 17:23:32）[step:15563]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(2条: task-bun-20261122-expr-fn-ret-opt,task-bun-20261122-switch-type-dot-opt)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取 2 条新编译器阻断工单并同步追加派发给正在 `cpc/src/` 作业的热修子智能体 **`cc643cae`** 一并打包修复（避免并发修改编译器源码与构建冲突）：
+  >
+  > 1. **`task-bun-20261122-expr-fn-ret-opt`**（复现：[repro_expr_fn_ret_opt.cp](file:///data/dev/cp/temp/repro_expr_fn_ret_opt.cp)）：表达式位函数类型返回后缀可选类型 `fn(val: u64): (*T)?` 未 lower 为 `?*T`；
+  > 2. **`task-bun-20261122-switch-type-dot-opt`**（复现：[repro_switch_type_dot_opt.cp](file:///data/dev/cp/temp/repro_switch_type_dot_opt.cp)）：`comptime switch(T)` 分支不支持多级点表达式（`B.C =>`）或后缀可选类型（`A? =>`）。
+  >
+  > 当前 `cc643cae` 正统一攻坚这 5 条工单并将在验证通过后统一发布 `sync_cpc.sh release`、逐一 `resolve` 结单；原有 2 路第 3 波生态子智能体（Priority ① `e7adabc2` + Priority ② `0e1f5c0c`）继续并行运转不受影响。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 17:28:28）[step:15583]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261122-comptime-err-union-ret)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已将新到达的第 6 条紧急编译器工单 **`task-bun-20261122-comptime-err-union-ret`**（复现：[repro_comptime_err_union_ret.cp](file:///data/dev/cp/temp/repro_comptime_err_union_ret.cp)：`comptime` 函数 `return T ! MyErr;` 被误拆分）同步追加给正在 `cpc/src/` 作业的热修子智能体 **`cc643cae`** 统一打包修复与结单。
+  >
+  > 同时已完成 **Priority ③ 第 3 波第 5 轮** 验收、文档同步与 Git 提交（Commit `15463931`），并派发第 6 轮任务：
+  > - 新增 `cap:pack` 零堆分配 FastCDC 内容定义分块器（256 项 Gear Rolling Hash + 双掩码归一化，73B 头部插入后 >70% 抗位移块复用）与开放寻址去重索引 [cdc_chunker.cp](file:///data/dev/cp/lib/pack/cdc_chunker.cp)，同步更新 [doc/lib/pack.md](file:///data/dev/cp/doc/lib/pack.md)、[cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md) 与 [test_pack_cdc_chunker_production_deep.cp](file:///data/dev/cp/cap/test/test_pack_cdc_chunker_production_deep.cp)（6/6 PASS）；
+  > - 已向 `0e1f5c0c` 派发 **Priority ② 第 3 波第 6 轮**：`cap:agent` 零堆分配 LLM 模型能力目录、缓存/批处理折扣计费与最低成本择优器 `lib/agent/model_catalog.cp`。
+  >
+  > 当前 3 路并行运转中：**紧急热修 6 条工单（`cc643cae`）+ Priority ① 第 3 波第 4 轮（`e7adabc2`）+ Priority ② 第 3 波第 6 轮 `lib/agent/model_catalog.cp`（`0e1f5c0c`）**。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 17:29:54）[step:15595]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261122-underscore-struct-lit)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取第 7 条新工单 **`task-bun-20261122-underscore-struct-lit`**（复现：[repro_underscore_struct_lit.cp](file:///data/dev/cp/temp/repro_underscore_struct_lit.cp)：下划线开头结构体类型名 `_S` 在 `_S{ x: 1 }` 字面量中未被识别导致报 `E0100`），并已同步追加派发给正在 `cpc/src/` 作业的热修子智能体 **`cc643cae`** 统一打包修复、发布 `sync_cpc.sh release` 与逐一 `resolve` 结单。
+  >
+  > 原有 2 路第 3 波常驻生态子智能体（Priority ① `e7adabc2` + Priority ② `0e1f5c0c`）继续并行运转不受影响。

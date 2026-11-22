@@ -430,7 +430,29 @@ impl<'a> Parser<'a> {
                 }
                 if self.peek() == Some(&Token::Dot) {
                     self.bump()?;
-                    let variant_name = self.parse_ident()?;
+                    let mut enum_name = first_id;
+                    let mut variant_name = self.parse_ident()?;
+                    while self.peek() == Some(&Token::Dot) {
+                        self.bump()?;
+                        let next = self.parse_ident()?;
+                        enum_name.sym.push('.');
+                        enum_name.sym.push_str(&variant_name.sym);
+                        variant_name = next;
+                    }
+                    if self.in_switch_arm > 0
+                        && self.in_paren_pattern == 0
+                        && self.peek() == Some(&Token::Question)
+                    {
+                        let full_id = Ident {
+                            span: Span {
+                                start: enum_name.span.start,
+                                end: variant_name.span.end,
+                            },
+                            sym: format!("{}.{}", enum_name.sym, variant_name.sym),
+                        };
+                        let ty = self.parse_postfix_type_modifiers(Type::Ref(full_id))?;
+                        return Ok(Pattern::Type(ty));
+                    }
                     let mut fields = None;
                     let mut tuple_pats = None;
                     if self.peek() == Some(&Token::LParen) {
@@ -516,15 +538,23 @@ impl<'a> Parser<'a> {
                         tuple_pats = Some(vec![Pattern::Ident(key)]);
                     }
                     return Ok(Pattern::Enum(EnumPattern {
-                        span: first_id.span,
-                        enum_name: first_id,
+                        span: enum_name.span,
+                        enum_name,
                         variant_name,
                         fields,
                         tuple_pats,
                     }));
                 }
+                if self.in_switch_arm > 0
+                    && self.in_paren_pattern == 0
+                    && self.peek() == Some(&Token::Question)
+                {
+                    let ty = self.parse_postfix_type_modifiers(Type::Ref(first_id))?;
+                    return Ok(Pattern::Type(ty));
+                }
                 if first_id
                     .sym
+                    .trim_start_matches('_')
                     .chars()
                     .next()
                     .map_or(false, |c| c.is_uppercase())

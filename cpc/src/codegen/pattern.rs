@@ -5,6 +5,45 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 
 impl Codegen {
+    pub(crate) fn extract_or_enum_capture(pats: &[Pattern]) -> Option<Option<&Ident>> {
+        if pats.is_empty() {
+            return None;
+        }
+        let mut caps: Vec<Option<&Ident>> = Vec::with_capacity(pats.len());
+        for p in pats {
+            match p {
+                Pattern::Enum(ep) if ep.fields.is_none() => match &ep.tuple_pats {
+                    None => caps.push(None),
+                    Some(tp) if tp.len() == 1 => {
+                        if let Pattern::Ident(id) = &tp[0] {
+                            caps.push(Some(id));
+                        } else {
+                            return None;
+                        }
+                    }
+                    _ => return None,
+                },
+                _ => return None,
+            }
+        }
+        if caps.iter().all(|c| c.is_none()) {
+            return Some(None);
+        }
+        // `.a, .b v =>` parses as `[Enum(.a, None), Enum(.b, Some([Ident(v)]))]`
+        if let Some(Some(last_id)) = caps.last().copied() {
+            if caps[..caps.len() - 1].iter().all(|c| c.is_none()) {
+                return Some(Some(last_id));
+            }
+            if caps
+                .iter()
+                .all(|c| matches!(c, Some(id) if id.sym == last_id.sym))
+            {
+                return Some(Some(last_id));
+            }
+        }
+        None
+    }
+
     pub fn is_simple_literal_switch(m: &MatchExpr) -> bool {
         if m.arms.is_empty() {
             return false;
@@ -27,21 +66,23 @@ impl Codegen {
                                 p.len() == 1 && matches!(&p[0], Pattern::Ident(_))
                             })) => {}
                 Pattern::Or(pats) => {
-                    if !pats.iter().all(|p| {
-                        matches!(
-                            p,
-                            Pattern::Lit(_)
-                                | Pattern::Range { .. }
-                                | Pattern::Expr(_)
-                                | Pattern::Type(_)
-                                | Pattern::Ident(_)
-                                | Pattern::Enum(crate::ast::EnumPattern {
-                                    fields: None,
-                                    tuple_pats: None,
-                                    ..
-                                })
-                        )
-                    }) {
+                    if Self::extract_or_enum_capture(pats).is_none()
+                        && !pats.iter().all(|p| {
+                            matches!(
+                                p,
+                                Pattern::Lit(_)
+                                    | Pattern::Range { .. }
+                                    | Pattern::Expr(_)
+                                    | Pattern::Type(_)
+                                    | Pattern::Ident(_)
+                                    | Pattern::Enum(crate::ast::EnumPattern {
+                                        fields: None,
+                                        tuple_pats: None,
+                                        ..
+                                    })
+                            )
+                        })
+                    {
                         return false;
                     }
                 }
@@ -924,7 +965,39 @@ impl Codegen {
                     );
                     conds.push(c);
                 }
-                (format!("({})", conds.join(" or ")), String::new())
+                let bind = if let Some(Some(cap)) = Self::extract_or_enum_capture(pats) {
+                    if cap.sym != "_" {
+                        let tag_arms: Vec<String> = pats
+                            .iter()
+                            .filter_map(|p| match p {
+                                Pattern::Enum(ep) => {
+                                    let tag = if ep.enum_name.sym.is_empty() {
+                                        format!(".{}", ep.variant_name.sym)
+                                    } else {
+                                        format!("{}.{}", ep.enum_name.sym, ep.variant_name.sym)
+                                    };
+                                    Some(format!("{} => |__cp_or_p| __cp_or_p", tag))
+                                }
+                                _ => None,
+                            })
+                            .collect();
+                        if !tag_arms.is_empty() {
+                            format!(
+                                "const {0} = switch ({1}) {{ {2}, else => unreachable }}; _ = &{0}; ",
+                                cap.sym,
+                                val_expr,
+                                tag_arms.join(", ")
+                            )
+                        } else {
+                            String::new()
+                        }
+                    } else {
+                        String::new()
+                    }
+                } else {
+                    String::new()
+                };
+                (format!("({})", conds.join(" or ")), bind)
             }
             Pattern::Type(ty) => {
                 let t_str = self.map_type(ty);
@@ -1036,7 +1109,13 @@ impl Codegen {
                 "else".to_string()
             }
             Pattern::Ident(id) => id.sym.clone(),
-            Pattern::Enum(ep) if ep.fields.is_none() && ep.tuple_pats.is_none() => {
+            Pattern::Enum(ep)
+                if ep.fields.is_none()
+                    && (ep.tuple_pats.is_none()
+                        || ep.tuple_pats.as_ref().map_or(false, |p| {
+                            p.len() == 1 && matches!(&p[0], Pattern::Ident(_))
+                        })) =>
+            {
                 if ep.enum_name.sym.is_empty() {
                     format!(".{}", ep.variant_name.sym)
                 } else if ep.enum_name.sym == "err" || ep.enum_name.sym == "error" {
@@ -1326,7 +1405,14 @@ impl Codegen {
                     other => {
                         let s = Self::format_simple_pat(other, &mut has_else);
                         let inline_prefix = if arm.is_inline { "inline " } else { "" };
-                        let cap_suffix = if let Some(cap) = &arm.capture {
+                        let effective_cap = arm.capture.as_ref().or_else(|| {
+                            if let Pattern::Or(pats) = other {
+                                Self::extract_or_enum_capture(pats).flatten()
+                            } else {
+                                None
+                            }
+                        });
+                        let cap_suffix = if let Some(cap) = effective_cap {
                             if cap.sym == "_" {
                                 "".to_string()
                             } else {

@@ -45,7 +45,12 @@ impl<'a> Parser<'a> {
                         Some(Token::Ident(_)) | Some(Token::ErrorKw) | Some(Token::Auto)
                     ) {
                         let prop = self.parse_ident()?;
-                        if prop.sym.chars().next().map_or(false, |c| c.is_uppercase())
+                        if prop
+                            .sym
+                            .trim_start_matches('_')
+                            .chars()
+                            .next()
+                            .map_or(false, |c| c.is_uppercase())
                             && self.peek() == Some(&Token::LBrace)
                         {
                             self.bump()?;
@@ -275,7 +280,11 @@ impl<'a> Parser<'a> {
                     }))
                 } else {
                     let sym = text.to_string();
-                    if sym.chars().next().map_or(false, |c| c.is_uppercase())
+                    if sym
+                        .trim_start_matches('_')
+                        .chars()
+                        .next()
+                        .map_or(false, |c| c.is_uppercase())
                         && self.peek() == Some(&Token::LBrace)
                     {
                         self.bump()?;
@@ -777,7 +786,12 @@ impl<'a> Parser<'a> {
                     self.expect(Token::RParen)?;
                     return Ok(Expr::ErrWrap(Box::new(inner)));
                 }
-                if sym.chars().next().map_or(false, |c| c.is_uppercase()) {
+                if sym
+                    .trim_start_matches('_')
+                    .chars()
+                    .next()
+                    .map_or(false, |c| c.is_uppercase())
+                {
                     if self.peek() == Some(&Token::Less) {
                         let mut probe = self.clone_lookahead();
                         if probe.bump().is_ok() {
@@ -1278,6 +1292,16 @@ impl<'a> Parser<'a> {
 
                 if self.peek() != Some(&Token::LBrace) {
                     let end_idx = self.peek_span().start;
+                    if let Some(ret_ty) = _return_type {
+                        let param_types: Vec<Type> = params.into_iter().map(|p| p.ty).collect();
+                        return Ok(Expr::TypeVal {
+                            span: Span {
+                                start: span.start,
+                                end: end_idx,
+                            },
+                            ty: Type::Fn(param_types, Box::new(ret_ty)),
+                        });
+                    }
                     let raw_code = self.input[span.start..end_idx].trim().to_string();
                     let clean_code = raw_code.replace("): ", ") ").replace(") : ", ") ");
                     return Ok(Expr::Zig(ZigEscapeExpr {
