@@ -1253,3 +1253,53 @@ pub fn demoNucleusSamplerPipeline() {
     * = outcome; // outcome.ok == true, 附带 selected_prob, kept_candidates, entropy_nats
 }
 ```
+
+### 零分配 SGLang 风格 RadixAttention 前缀共享 KV-Cache 树与叶优先 LRU 驱逐引擎 (`radix_kv_tree.cp`)
+
+面向多轮 AI Agent 对话与多租户共享系统提示词（System Prompt / Few-Shot / Tool Schema）的 100% 纯 CP 零动态堆分配 **SGLang RadixAttention** 前缀压缩树（LCRS 布局）与叶优先 LRU 驱逐引擎：
+
+- **常量与数据模型**：
+  - `RADIX_KV_MAX_NODES` (`128`，槽位 `0` 为永久虚拟根，槽位 `1..127` 为可复用压缩边节点)、`RADIX_KV_MAX_EDGE_TOKENS` (`16`，单边最多压缩 16 个 token 与 KV 块 ID)、`RADIX_KV_NO_NODE` (`0xFFFF`)
+  - `RadixKvNode`（`tokens: [16]u32`, `kv_blocks: [16]u32`, `token_len: u8`, `parent`, `first_child`, `next_sibling`, `lock_ref: u32`, `last_access_step: u64`, `occupied: bool`）
+  - `RadixMatchResult`（`matched_tokens`, `last_node_idx`, `out_blocks_written`）
+  - `RadixKvStats`（`active_nodes`, `cached_tokens`, `locked_nodes`, `total_hits`, `total_splits`, `total_evicted_tokens`）
+- **核心引擎（`RadixKvCacheTree`）**：
+  - `init(): RadixKvCacheTree`：初始化含虚拟根节点（`index = 0`）的空前缀共享树（零堆分配）。
+  - `match_prefix(*_, query_tokens: []const u32, now_step: u64, out_kv_blocks: *[]u32): RadixMatchResult`：自根向下执行最长公共前缀匹配（完整边遍历 + 边内部分前缀匹配），刷新命中路径 `last_access_step`，写出对应 KV 块 ID 并累计 `total_hits`。
+  - `insert_prefix(*_, tokens: []const u32, kv_blocks: []const u32, now_step: u64): usize`：共享已有公共前缀；在边中间分叉时自动执行 Radix Edge Split（`total_splits += 1`），并由后缀节点完整继承原节点的 `lock_ref` 与 `last_access_step`；长序列（`> 16` tokens）自动切分链式存储；原子容量预检确保满池零副作用返回 `0`；重复序列幂等返回 `0`。
+  - `lock_path(*_, leaf_node_idx: u16): bool` / `unlock_path(*_, leaf_node_idx: u16): bool`：沿 `parent` 链对整条前缀路径递增/两阶段原子防下溢递减 `lock_ref`，保护在途推理分支不被 LRU 驱逐。
+  - `evict_lru_tokens(*_, needed_tokens: usize, out_freed_blocks: *[]u32): usize`：严格叶优先 LRU 驱逐——每轮仅淘汰 `first_child == RADIX_KV_NO_NODE && lock_ref == 0` 且 `last_access_step` 最小的冷叶子节点；摘除后若父节点变为无子且未锁定则自动进入下一轮级联回收，并释放槽位供后续复用。
+  - `stats(): RadixKvStats`：返回当前活跃数据节点数、已缓存 Token 总数、已锁定节点数以及累计命中/分裂/驱逐统计。
+
+```cp
+import {
+    RadixKvCacheTree,
+} from "cap:attention";
+
+pub fn demoRadixAttentionKvTree() {
+    let tree = RadixKvCacheTree.init();
+
+    // 1. 写入多租户共享系统提示词 + 对话分支 A
+    const seq_a: [6]u32 = [101, 102, 103, 104, 201, 202];
+    const kv_a: [6]u32 = [10, 11, 12, 13, 20, 21];
+    * = tree.insert_prefix(seq_a[0..], kv_a[0..], 1);
+
+    // 2. 分支 B 共享 [101..104] 并在边中间分叉 -> 自动触发 Radix Edge Split
+    const seq_b: [6]u32 = [101, 102, 103, 104, 301, 302];
+    const kv_b: [6]u32 = [10, 11, 12, 13, 30, 31];
+    * = tree.insert_prefix(seq_b[0..], kv_b[0..], 2);
+
+    // 3. 匹配分支 A 并锁定在途路径，防止被 LRU 驱逐
+    let matched_blocks: [8]u32 = [0; 8];
+    let matched_s: []u32 = matched_blocks[0..];
+    const m = tree.match_prefix(seq_a[0..], 5, matched_s);
+    * = tree.lock_path(m.last_node_idx);
+
+    // 4. 内存压力下按叶优先 LRU 驱逐：仅淘汰未锁定的冷分支 B，保护在途分支 A
+    let freed_buf: [8]u32 = [0; 8];
+    let freed_s: []u32 = freed_buf[0..];
+    const freed = tree.evict_lru_tokens(2, freed_s);
+    * = freed; // 2 (释放 kv_b 尾部块 30, 31)
+    * = tree.unlock_path(m.last_node_idx);
+}
+```

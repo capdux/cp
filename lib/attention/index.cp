@@ -301,3 +301,13 @@ export {
     softmaxAndTruncateNucleus,
     sampleFromLogits,
 } from "./nucleus_sampler.cp";
+
+export {
+    RADIX_KV_MAX_NODES,
+    RADIX_KV_MAX_EDGE_TOKENS,
+    RADIX_KV_NO_NODE,
+    RadixKvNode,
+    RadixMatchResult,
+    RadixKvStats,
+    RadixKvCacheTree,
+} from "./radix_kv_tree.cp";
