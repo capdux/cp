@@ -41,6 +41,14 @@ export {
     parentPointer,
 } from "./ptr.cp";
 
+export {
+    JSON_LINE_DEFAULT_COMPACTION_THRESHOLD,
+    JsonLineBufferError,
+    JsonLineNext,
+    JsonLineBuffer,
+    stripUtf8Bom,
+} from "./lineBuffer.cp";
+
 const std = @import("std");
 import { JsonParser, JsonParseOptions } from "./parser";
 import { JsonValue } from "./value";

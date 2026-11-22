@@ -126,6 +126,9 @@ pub fn demoJsonRfcAndNdjson(): !void {
   - `minifyJson`、`minifyJsonc`、`minifyJsoncWithOptions`。
 - **RFC 6901 JSON Pointer 零分配工具 (`ptr.cp`)**：
   - `isValidPointer`、`parseArrayIndex`、`unescapeToken`、`escapeToken`、`PointerIter`、`appendToken`、`parentPointer`。
+- **O(n) 单遍扫描换行流缓冲区 (`lineBuffer.cp`，吸收自 `/data/dev/bun/src/jsc/JSONLineBuffer.cp`)**：
+  - `JsonLineBuffer`（`init`、`initWithThreshold`、`append`、`unusedCapacitySlice`、`notifyWritten`、`next`、`consume`、`skipLine`、`compact`、`activeSlice`、`activeLen`、`isEmpty`、`hasCompleteLine`、`reset`）、`JsonLineNext`（`payload`、`consumedBytes`）、`JsonLineBufferError`、`JSON_LINE_DEFAULT_COMPACTION_THRESHOLD`、`stripUtf8Bom`。
+  - 零动态堆分配：由调用方传入 `[]u8` 后端缓冲区，通过 `head` / `scanned_pos` / `newline_pos` 三游标确保每个入队字节至多被扫描一次（彻底避免增量分片下的 O(n^2) 重复查找），消费时 O(1) 推进 `head` 并在超过 `compaction_threshold` 或尾部空间不足时自动懒压缩；同时提供 `stripUtf8Bom` 对标 `Bun.JSONL.parse` 的 UTF-8 BOM 自动剥离语义。
 
 ---
 
