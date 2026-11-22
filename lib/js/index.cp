@@ -84,3 +84,13 @@ export {
     TsTypeArgLookaheadToken,
     canFollowTsTypeArguments,
 } from "./tsMetadata.cp";
+
+export {
+    JsToken,
+    lookupJsKeyword,
+    isStrictModeReserved,
+    remapStrictModeReserved,
+    JsPropertyModifier,
+    isTsAccessibilityModifier,
+    lookupJsxEntity,
+} from "./lexerTables.cp";

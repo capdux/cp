@@ -202,3 +202,25 @@ assert(canFollowTsTypeArguments(TsTypeArgLookaheadToken.open_paren, false));
 assert(!canFollowTsTypeArguments(TsTypeArgLookaheadToken.plus, false));
 * = meta;
 ```
+
+### JS/TS 词法 Token 分类表与 JSX 实体解码 (`lexerTables.cp`)
+
+吸收自 `/data/dev/bun/src/js_parser/lexer_tables.cp`：
+
+- **导出符号**：`JsToken`（完整 107 项 JS/TS 词法 Token 枚举，含 `isAssign`/`isReservedWord`/`isString`/`isCloseBraceOrEOF`/`asStr`）、`lookupJsKeyword`（36 个保留关键字精确匹配）、`isStrictModeReserved` / `remapStrictModeReserved`（9 个严格模式保留字识别与 `_xxx` 降级重映射）、`JsPropertyModifier`（12 个类成员修饰符，含 `parse`/`isTsAccessibility`）、`isTsAccessibilityModifier`、`lookupJsxEntity`（高频 JSX HTML 命名实体到 Unicode 码点零分配查表）。
+
+```cp
+import { JsToken, lookupJsKeyword, remapStrictModeReserved, lookupJsxEntity } from "cap:js";
+
+if (tok := lookupJsKeyword("instanceof")) {
+    assert(tok.isReservedWord());
+}
+if (safe := remapStrictModeReserved("implements")) {
+    // safe == "_implements"
+    * = safe;
+}
+if (cp := lookupJsxEntity("rarr")) {
+    assert(cp == 0x2192);
+}
+assert(JsToken.t_question_question_equals.isAssign());
+```
