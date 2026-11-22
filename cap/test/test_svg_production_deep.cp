@@ -10,7 +10,7 @@ import {
     ChartDatum,
     LineSeries,
     SvgCharts,
-} from "cap:svg";
+} from "cap:image";
 import { XmlParser } from "cap:xml";
 import cap from "cap";
 
@@ -208,9 +208,9 @@ fn casePieChart(): ! {
 
 fn caseDynamicCapSvg(): ! {
     const alloc = std.heap.page_allocator;
-    let canvas = cap.svg.SvgCanvas.init(alloc, 200.0, 100.0)?;
+    let canvas = cap.image.SvgCanvas.init(alloc, 200.0, 100.0)?;
     defer canvas.deinit();
-    canvas.rect(0.0, 0.0, 200.0, 100.0, 4.0, cap.svg.SvgStyle{ fill: "#0ea5e9" })?;
+    canvas.rect(0.0, 0.0, 200.0, 100.0, 4.0, cap.image.SvgStyle{ fill: "#0ea5e9" })?;
     const out = canvas.render(alloc)?;
     defer alloc.free(out);
     expect_eq(containsSubstr(out, "viewBox=\"0 0 200 100\""), true);

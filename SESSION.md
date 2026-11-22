@@ -1457,3 +1457,7 @@
 ### 2026-11-22（分类合并交付：lib/text/code_outline.cp & lib/attention/rope_yarn.cp | 2026-11-22 14:43:35）
 - **执行与结单汇报**：
   > 1. 交付 lib/text/code_outline.cp (多语言源码符号大纲与 Repo-Map 格式化, 5/5 PASS)；2. 交付 lib/attention/rope_yarn.cp (Linear PI / NTK-Aware / YaRN 长上下文 RoPE 扩展与 mscale, 5/5 PASS)；均已同步 cp_lib_ref.md 并提交。
+
+### 2026-11-22（根目录分域收敛第 1 批完成：lib/image/（净减 13 个顶层目录） | 2026-11-22 14:45:56）
+- **执行与结单汇报**：
+  > Stdlib Root Consolidator 完成 lib/image/ 全量收敛：1) 13 个独立图形/图像小目录（avif/exr/heif/ico/pnm/psd/qoi/tga/tiff/dicom/barcode/svg/qrcode，精准排除线性代数 lib/qr）零冲突归并入 lib/image/ 并物理清理冗余旧目录，13/13 测试 + 存量图像测试全部 100% PASS；2) 6 个重叠目录（bmp/gif/png/exif/thumbhash/image_probe）严格按 Bun 优先与 xxx_.cp 参考归档（0 覆盖/0 丢失 Bun 资产）；3) lib/ 顶层目录 846 -> 833（-13）；续派 lib/conf/ 领域收敛。

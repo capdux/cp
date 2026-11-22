@@ -10,7 +10,7 @@ import {
     parseIcoHeader,
     IcoEntryIter,
     findBestIcoEntry,
-} from "cap:ico";
+} from "cap:image";
 
 fn writeU16Le(buf: []u8, pos: usize, v: u16) {
     buf[pos] = u8(v & 0xFF);

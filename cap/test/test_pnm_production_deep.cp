@@ -9,7 +9,7 @@ import {
     pnmRawPixels,
     encodePpmP6,
     encodePgmP5,
-} from "cap:pnm";
+} from "cap:image";
 
 test("1. parsePnmHeader parses P1..P6 with # comments, 16-bit maxval, and computes expectedRawBytes", () => {
     const p1 = parsePnmHeader("P1\n# ascii bitmap\n4 2\n0 1 0 1\n1 0 1 0\n") ?? unreachable;

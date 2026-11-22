@@ -15,7 +15,7 @@ import {
     encodeMultiPage,
     decode,
     decodeWithLimits,
-} from "cap:tiff";
+} from "cap:image";
 
 fn buildPatternPixels(alloc: std.mem.Allocator, width: u32, height: u32, spp: usize): []u8 {
     const total = (width as usize) * (height as usize) * spp;
@@ -325,18 +325,18 @@ fn runTest5(): !void {
     const alloc = std.testing.allocator;
     const raw_rgb: [12]u8 = [255, 0, 0, 0, 255, 0, 0, 0, 255, 128, 128, 128];
 
-    const tiff_bytes = cap.tiff.encodeSingle(
+    const tiff_bytes = cap.image.encodeSingle(
         alloc,
         2,
         2,
-        cap.tiff.TiffPixelFormat.Rgb24,
-        cap.tiff.TiffCompression.Deflate,
-        cap.tiff.TiffEndian.Little,
+        cap.image.TiffPixelFormat.Rgb24,
+        cap.image.TiffCompression.Deflate,
+        cap.image.TiffEndian.Little,
         raw_rgb[0..12],
     )?;
     defer alloc.free(tiff_bytes);
 
-    let doc = cap.tiff.decode(alloc, tiff_bytes)?;
+    let doc = cap.image.decode(alloc, tiff_bytes)?;
     defer doc.deinit(alloc);
 
     expect_eq(doc.pages.len, 1);

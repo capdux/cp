@@ -10,7 +10,7 @@ import {
     SvgPathBuilder,
     SvgCanvas,
     appendFmtNum,
-} from "./canvas.cp";
+} from "./svg_canvas.cp";
 
 /// Single labeled datum for bar and pie/donut charts.
 pub struct ChartDatum {

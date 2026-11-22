@@ -30,7 +30,7 @@ import {
     DicomSummary,
     isDicom,
     parseDicomSummary,
-} from "cap:dicom";
+} from "cap:image";
 
 struct DicomBuilder {
     buf: [2048]u8 = [0; 2048],

@@ -19,7 +19,7 @@ import {
     parsePsdSections,
     PsdResourceIter,
     findPsdResource,
-} from "cap:psd";
+} from "cap:image";
 
 fn putU16BE(buf: []u8, off: usize, val: u16): usize {
     buf[off] = ((val >> 8) & 0xFF) as u8;

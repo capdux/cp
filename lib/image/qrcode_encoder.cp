@@ -4,7 +4,7 @@
 // 15-bit BCH format info, and 8-mask penalty minimization.
 
 const std = @import("std");
-import { ReedSolomon } from "./ecc.cp";
+import { ReedSolomon } from "./qrcode_ecc.cp";
 
 pub const QR_MIN_VERSION: u8 = 1;
 pub const QR_MAX_VERSION: u8 = 10;

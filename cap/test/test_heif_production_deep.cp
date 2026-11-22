@@ -12,7 +12,7 @@ import {
     parseHeifBrand,
     parseHvcC,
     parseHeifInfo,
-} from "cap:heif";
+} from "cap:image";
 
 fn writeU16BE(buf: []u8, off: usize, val: u16) {
     buf[off] = ((val >> 8) & 0xFF) as u8;

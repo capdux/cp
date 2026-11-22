@@ -11,7 +11,7 @@ import {
     QrMatrix,
     QrCode,
     QrRenderer,
-} from "cap:qrcode";
+} from "cap:image";
 import { Totp, TotpConfig } from "cap:security";
 
 fn strEql(a: string, b: string): bool {
@@ -226,18 +226,18 @@ fn testRenderers(): !void {
 fn testCapQrcodeDynamicMount(): !void {
     const alloc = std.heap.page_allocator;
 
-    expect_eq(cap.qrcode.ReedSolomon.gfMul(0x8E, 2), 1);
+    expect_eq(cap.image.ReedSolomon.gfMul(0x8E, 2), 1);
 
-    let mat = cap.qrcode.QrCode.encode(alloc, "https://cp-lang.org", .Quartile)?;
+    let mat = cap.image.QrCode.encode(alloc, "https://cp-lang.org", .Quartile)?;
     defer mat.deinit();
     expect_eq(mat.version >= 1, true);
     verifyQrFunctionPatterns(mat)?;
 
-    const term = cap.qrcode.QrRenderer.toTerminal(alloc, mat, 1)?;
+    const term = cap.image.QrRenderer.toTerminal(alloc, mat, 1)?;
     defer alloc.free(term);
     expect_eq(countNewlines(term), (mat.size + 3) / 2);
 
-    const svg = cap.qrcode.QrRenderer.toSvg(alloc, mat, 2, 1)?;
+    const svg = cap.image.QrRenderer.toSvg(alloc, mat, 2, 1)?;
     defer alloc.free(svg);
     expect_eq(std.mem.startsWith(u8, svg, "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\""), true);
     expect_eq(strEql(svg[svg.len - 7 ..], "</svg>\n"), true);

@@ -3,11 +3,8 @@
 
 const std = @import("std");
 import {
-    LzwBitOrder,
-    LzwConfig,
-    LzwError,
-    compress as lzwCompress,
-    decompressWithMaxSize as lzwDecompressWithMaxSize,
+    lzwCompressTiff,
+    lzwDecompressTiff,
 } from "cap:lzw";
 import {
     DeflateError,
@@ -281,17 +278,15 @@ fn compressStrip(alloc: std.mem.Allocator, raw: []const u8, compression: TiffCom
         return encodePackBits(alloc, raw);
     }
     if (compression == TiffCompression.Lzw) {
-        const cfg = LzwConfig{
-            min_code_size: 8,
-            bit_order: LzwBitOrder.MsbFirst,
-            max_code_size: 12,
-        };
-        return lzwCompress(alloc, raw, cfg) catch |e| {
-            if (e == LzwError.OutOfMemory) {
-                return TiffError.OutOfMemory;
-            }
-            return TiffError.InvalidHeader;
-        };
+        const cap_len = raw.len * 2 + 64;
+        let tmp = alloc.alloc(u8, cap_len) catch return TiffError.OutOfMemory;
+        defer alloc.free(tmp);
+        if (written := lzwCompressTiff(raw, *tmp)) {
+            const exact = alloc.alloc(u8, written) catch return TiffError.OutOfMemory;
+            @memcpy(exact, tmp[0..written]);
+            return exact;
+        }
+        return TiffError.InvalidHeader;
     }
     if (compression == TiffCompression.Deflate) {
         return compressZlib(alloc, raw) catch |e| {
@@ -324,23 +319,14 @@ fn decompressStrip(
         return decodePackBits(alloc, compressed, max_bytes);
     }
     if (compression == TiffCompression.Lzw) {
-        const cfg = LzwConfig{
-            min_code_size: 8,
-            bit_order: LzwBitOrder.MsbFirst,
-            max_code_size: 12,
-        };
-        return lzwDecompressWithMaxSize(alloc, compressed, cfg, max_bytes) catch |e| {
-            if (e == LzwError.OutOfMemory) {
-                return TiffError.OutOfMemory;
-            }
-            if (e == LzwError.OutputTooLarge) {
-                return TiffError.ImageTooLarge;
-            }
-            if (e == LzwError.TruncatedInput || e == LzwError.MissingEoiCode) {
-                return TiffError.TruncatedData;
-            }
-            return TiffError.InvalidHeader;
-        };
+        let tmp = alloc.alloc(u8, max_bytes) catch return TiffError.OutOfMemory;
+        defer alloc.free(tmp);
+        if (written := lzwDecompressTiff(compressed, *tmp)) {
+            const exact = alloc.alloc(u8, written) catch return TiffError.OutOfMemory;
+            @memcpy(exact, tmp[0..written]);
+            return exact;
+        }
+        return TiffError.TruncatedData;
     }
     if (compression == TiffCompression.Deflate) {
         return decompressZlib(alloc, compressed) catch |e| {

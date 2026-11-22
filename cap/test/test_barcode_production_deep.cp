@@ -10,7 +10,7 @@ import {
     BarcodeBitPattern,
     BarcodeEncoder,
     BarcodeRenderer,
-} from "cap:barcode";
+} from "cap:image";
 import { XmlParser } from "cap:xml";
 
 fn strEql(a: string, b: string): bool {
@@ -194,16 +194,16 @@ fn testRenderersXmlAndZeroLeak(): !void {
 fn testCapBarcodeDynamicMount(): !void {
     const alloc = std.heap.page_allocator;
 
-    let pat = cap.barcode.BarcodeEncoder.encodeEan13(alloc, "4006381333931")?;
+    let pat = cap.image.BarcodeEncoder.encodeEan13(alloc, "4006381333931")?;
     defer pat.deinit();
-    expect_eq(pat.format, cap.barcode.BarcodeFormat.Ean13);
+    expect_eq(pat.format, cap.image.BarcodeFormat.Ean13);
     expect_eq(pat.modules.len, 95);
 
-    const svg = cap.barcode.BarcodeRenderer.toSvg(alloc, pat, 2, 40, false)?;
+    const svg = cap.image.BarcodeRenderer.toSvg(alloc, pat, 2, 40, false)?;
     defer alloc.free(svg);
     expect_eq(std.mem.indexOf(u8, svg, "<rect ") != null, true);
 
-    const ascii = cap.barcode.BarcodeRenderer.toAscii(alloc, pat)?;
+    const ascii = cap.image.BarcodeRenderer.toAscii(alloc, pat)?;
     defer alloc.free(ascii);
     expect_eq(countNewlines(ascii), 4);
 }

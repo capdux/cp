@@ -8,7 +8,7 @@ import {
     parseTgaHeader,
     encodeTgaTrueColor,
     decodeTgaToRgba,
-} from "cap:tga";
+} from "cap:image";
 
 test("1. parseTgaHeader decodes fields, helper methods, id_length, and color_map offset", () => {
     // 18 header + 4 id + 2*3 colormap (6 bytes) = 28 bytes

@@ -11,7 +11,7 @@ import {
     parseAvifBrand,
     parseAv1C,
     parseAvifInfo,
-} from "cap:avif";
+} from "cap:image";
 
 fn writeU16BE(buf: []u8, off: usize, val: u16) {
     buf[off] = ((val >> 8) & 0xFF) as u8;

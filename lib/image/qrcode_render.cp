@@ -3,7 +3,7 @@
 // double-wide ASCII grid, and crisp-edges run-length-merged SVG vector output.
 
 const std = @import("std");
-import { QrError, QrMatrix } from "./encoder.cp";
+import { QrError, QrMatrix } from "./qrcode_encoder.cp";
 
 fn appendUsizeDecimal(out: *std.ArrayList(u8), alloc: std.mem.Allocator, val: usize): ! {
     let tmp: [24]u8 = [0; 24];

@@ -8,7 +8,7 @@ import {
     parseQoiHeader,
     encodeQoi,
     decodeQoi,
-} from "cap:qoi";
+} from "cap:image";
 
 test("1. parseQoiHeader and isQoi validate magic, dimensions, channels, and colorspace", () => {
     const valid_hdr: [14]u8 = [

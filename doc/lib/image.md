@@ -145,3 +145,27 @@ pub fn demoImagePipeline() {
 3. **色彩量化与 ThumbHash 边界**：
    - `Quantizer.quantize` 将 `max_colors` 限制在 256 色以内以适配索引调色板格式；
    - `ThumbHash.encode` 适合生成约 25 字节的极低开销占位图（LQIP），并通过 `ThumbHash.toDataUrl` 输出内联 `data:image/png;base64,...` 供前端首屏即时渲染。
+
+---
+
+## 六、 扩展图像、矢量绘图与条码格式（Pure-CP 零冲突归并）
+
+以下 13 个纯 CP 图像/容器/矢量/条码格式模块已统一收敛至 `lib/image/` 并零冲突导出至 `cap:image`：
+
+| 子模块文件 | 领域分类 | 核心导出符号 |
+| :--- | :--- | :--- |
+| `avif.cp` | AVIF / MIAF 容器解析 | `isAvif`, `parseAvifBrand`, `parseAv1C`, `parseAvifInfo`, `AvifInfo`, `Av1Config` |
+| `exr.cp` | OpenEXR HDR 头部解析 | `isExr`, `parseExrHeader`, `ExrAttrIter`, `ExrHeader`, `ExrCompression`, `ExrBox2i` |
+| `heif.cp` | HEIF / HEIC 容器解析 | `isHeif`, `parseHeifBrand`, `parseHvcC`, `parseHeifInfo`, `HeifInfo`, `HevcConfig` |
+| `ico.cp` | Windows ICO / CUR 容器 | `isIcoOrCur`, `parseIcoHeader`, `IcoEntryIter`, `findBestIcoEntry`, `IcoKind`, `IcoHeader` |
+| `pnm.cp` | Netpbm P1–P6 编解码 | `parsePnmHeader`, `pnmRawPixels`, `encodePpmP6`, `encodePgmP5`, `PnmFormat`, `PnmHeader` |
+| `psd.cp` | Adobe PSD / PSB 解析 | `isPsd`, `parsePsdHeader`, `parsePsdSections`, `PsdResourceIter`, `findPsdResource`, `PsdHeader` |
+| `qoi.cp` | QOI 无损图像编解码 | `isQoi`, `parseQoiHeader`, `encodeQoi`, `decodeQoi`, `QoiHeader` |
+| `tga.cp` | Truevision TGA 编解码 | `parseTgaHeader`, `encodeTgaTrueColor`, `decodeTgaToRgba`, `TgaImageType`, `TgaHeader` |
+| `tiff.cp` | Baseline / Multi-Page TIFF | `encodeSingle`, `encodeMultiPage`, `decode`, `decodeWithLimits`, `TiffDocument`, `TiffPage` |
+| `dicom.cp` | DICOM PS3.10 医学影像 | `isDicom`, `parseDicomSummary`, `DicomIter`, `DicomTag`, `DicomElement`, `DicomSummary` |
+| `svg_canvas.cp` / `svg_charts.cp` | SVG 1.1 画布与统计图表 | `SvgCanvas`, `SvgPathBuilder`, `SvgStyle`, `SvgCharts`, `ChartDatum`, `LineSeries` |
+| `barcode.cp` | 1D 条码 (Code128/EAN13/UPCA) | `BarcodeEncoder`, `BarcodeRenderer`, `BarcodeFormat`, `BarcodeBitPattern`, `BarcodeError` |
+| `qrcode_ecc.cp` / `qrcode_encoder.cp` / `qrcode_render.cp` | ISO/IEC 18004 二维码 | `QrCode`, `QrMatrix`, `QrRenderer`, `QrEccLevel`, `ReedSolomon`, `QrError` |
+
+> **重叠参考归档说明**：`bmp_.cp`、`gif_.cp`、`png_.cp`、`exif_.cp`、`thumbhash_.cp`、`image_probe_.cp` 为与 Bun 权威实现功能重叠的对照参考副本（文件首行带 `// Reference Only:` 声明），不在 `lib/image/index.cp` 冲突导出。
