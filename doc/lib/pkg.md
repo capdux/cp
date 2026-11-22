@@ -217,6 +217,23 @@ wm.sortByName();
 // hasIgnoredWorkspaceSegment("packages/app/node_modules/pkg") == true
 ```
 
+### Monorepo `--filter` 包名与路径通配过滤器（`filter.cp`，吸收自 `/data/dev/bun/src/cli/filter_arg.cp`）
+
+- 核心导出：`WorkspaceFilterError`、`WorkspaceFilterKind`（`name` / `path`）、`WorkspaceFilterPattern`、`isIgnoredFilterDir`（跳过隐藏目录与 `node_modules`）、`normalizeFilterPath`、`matchFilterGlob`（支持 `*`、`**`、`?` 与路径段隔离）、`WorkspaceFilter`（`init` / `patternCount` / `matchesPath` / `matches` + RAII `~init()`）。
+
+```typescript
+import { WorkspaceFilter } from "cap:pkg";
+
+pub fn demoFilter(allocator: std.mem.Allocator): ! {
+    const rules: [2][]const u8 = ["!./", "./packages/*"];
+    let wf = WorkspaceFilter.init(allocator, rules[0..], "")?;
+    defer wf.deinit();
+
+    * = wf.matches("packages/core", "@acme/core"); // true
+    * = wf.matches(".", "root-pkg");               // false（被 !./ 排除）
+}
+```
+
 ---
 
 ## 上游 Bun 包管理行为契约与边界注意事项
@@ -232,3 +249,6 @@ wm.sortByName();
    - 默认拦截未列入 `trustedDependencies` 白名单的包安装脚本（记入 `blocked_scripts`），避免供应链恶意 `postinstall` 静默执行。
 4. **Tarball 解包安全防线（`TarballExtractor`）**：
    - 解包前校验 W3C SRI 完整性摘要（`Integrity`），并在写入每个归档条目时拦截 `..` 路径穿越与绝对路径逃逸。
+5. **Monorepo `--filter` 匹配与排除约定（吸收自 `/data/dev/bun/docs/pm/filter.mdx`）**：
+   - 以 `./` 或 `/` 开头的模式按工作区路径匹配（`./` 仅匹配根 `package.json`，`./packages/**` 递归匹配子目录）；其余模式按 `package.json` 的 `name` 字段匹配（支持 `*` 通配）；
+   - 否定规则（`!pkg-c`、`!./`）优先级高于正向规则：当全部规则均为否定规则时，默认先选中全部工作区包再执行排除；当正负规则混用时，须命中至少一条正向规则且不命中任何否定规则。

@@ -119,3 +119,13 @@ export {
     WorkspaceMapEntry,
     WorkspaceMap,
 } from "./workspace_map.cp";
+
+export {
+    WorkspaceFilterError,
+    WorkspaceFilterKind,
+    WorkspaceFilterPattern,
+    isIgnoredFilterDir,
+    normalizeFilterPath,
+    matchFilterGlob,
+    WorkspaceFilter,
+} from "./filter.cp";

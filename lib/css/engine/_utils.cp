@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/css_parser.cp | Synced: 2026-11-22T05:15:25Z
+// Source: Absorbed from /data/dev/bun/src/css/css_parser.cp | Synced: 2026-11-22T05:18:22Z
 // lib/css/engine/_utils.cp
 // Internal Shared Zero-Allocation String & Scanning Utilities for lib/css/engine/
 
