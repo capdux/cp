@@ -25,6 +25,7 @@
 | 文件路径 | 谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
 | `lib/agentmem/memory.cp` | `// Source: cp/lib/agentmem/memory.cp (Hierarchical Agent Memory Engine)` | `AgentMemError`、`MemoryTier`、`RecallWeights`、`MemoryItem`、`RecallHit`、`AgentMemory` |
+| `lib/agentmem/episodic.cp` | `// Origin: Pure-CP Stdlib (AI Agent Episodic Memory: Park 2023 Recency-Importance-Relevance & Ebbinghaus Decay)` | `MemoryWeights`、`EpisodeMeta`、`ScoredEpisode`、`ebbinghausRetention`、`reinforceStability`、`scoreEpisode`、`rankTopEpisodes`、`selectEvictionVictim`、`touchEpisode` |
 | `lib/agentmem/index.cp` | `// Source: cp/lib/agentmem/index.cp (Unified Exports for cap:agentmem)` | `cap:agentmem` 与 `cap.agentmem` 统一公开导出入口 |
 
 ---
@@ -55,9 +56,25 @@
 - `exportJsonl(alloc): ([]u8) ! AgentMemError`
 - `AgentMemory.importJsonl(alloc, jsonl_text: string): AgentMemory ! AgentMemError` / `AgentMemory.importJsonlWithCapacity(alloc, jsonl_text: string, max_working_items: usize): AgentMemory ! AgentMemError`
 
+### 3. 零堆分配情景记忆衰减与三维检索打分 (`episodic.cp`)
+
+面向无 GC / 固定池高并发 AI Agent 运行时，提供 Park et al. (2023) 三维检索模型与 Ebbinghaus 遗忘衰减的纯值类型零堆分配实现：
+
+- **`MemoryWeights`**：`{ recency: f64 = 1.0, importance: f64 = 1.0, relevance: f64 = 1.0, decay_rate: f64 = 0.05 }`，提供 `MemoryWeights.default()`。有效记忆稳定性 $S = \text{strength} / \text{decay\_rate}$。
+- **`EpisodeMeta`**：`{ id: u32, created_at_sec: i64, last_accessed_sec: i64, access_count: u32, importance: f64, strength: f64, pinned: bool }`。
+- **`ScoredEpisode`**：`{ id: u32, total_score: f64, recency_score: f64, importance_score: f64, relevance_score: f64 }`。
+- **`ebbinghausRetention(elapsed_hours: f64, stability_hours: f64): f64`**：计算 $R = e^{-t / S} \in [0, 1]$，内置 `NaN` / `Inf` / 非正稳定性防御。
+- **`reinforceStability(stability: f64, access_count: u32): f64`**：按边际递减间隔重复增益强化记忆稳定性。
+- **`scoreEpisode(ep: EpisodeMeta, now_sec: i64, relevance_01: f64, w: MemoryWeights): ScoredEpisode?`**：计算归一化三维联合得分；非法权重、越界分数或 `NaN` 返回 `null`。
+- **`rankTopEpisodes(episodes, relevances, now_sec, w, top_k, out_scored: *[]ScoredEpisode): usize?`**：零堆分配按 `total_score` 降序输出 Top-K（同分按 `id` 升序确定性打破平局）。
+- **`selectEvictionVictim(episodes, now_sec, w): usize?`**：按最低 `retention * importance` 挑选非 `pinned` 淘汰槽位（全 `pinned` 或空池返回 `null`）。
+- **`touchEpisode(ep: *EpisodeMeta, now_sec: i64)`**：命中召回时刷新 `last_accessed_sec`、递增 `access_count` 并通过 `reinforceStability` 强化 `strength`。
+
 ---
 
 ## 三、 使用示例
+
+### 1. 分层长期记忆引擎 (`AgentMemory`) 示例
 
 ```typescript
 const std = @import("std");
@@ -87,5 +104,44 @@ pub fn demoAgentMemory()! {
 
     let restored = cap.agentmem.AgentMemory.importJsonl(alloc, jsonl)?;
     defer restored.deinit();
+}
+```
+
+### 2. 零堆分配情景记忆检索与淘汰 (`episodic.cp`) 示例
+
+```typescript
+import {
+    MemoryWeights,
+    EpisodeMeta,
+    ScoredEpisode,
+    rankTopEpisodes,
+    selectEvictionVictim,
+    touchEpisode,
+} from "cap:agentmem";
+
+pub fn demoEpisodicPool() {
+    const now_sec: i64 = 1700000000;
+    const w = MemoryWeights.default();
+
+    let pool: [3]EpisodeMeta = [
+        EpisodeMeta{ id: 1, created_at_sec: now_sec - 3600, last_accessed_sec: now_sec - 3600, access_count: 1, importance: 0.9, strength: 1.0, pinned: true },
+        EpisodeMeta{ id: 2, created_at_sec: now_sec - 7200, last_accessed_sec: now_sec - 7200, access_count: 0, importance: 0.6, strength: 1.0, pinned: false },
+        EpisodeMeta{ id: 3, created_at_sec: now_sec - 86400, last_accessed_sec: now_sec - 86400, access_count: 0, importance: 0.2, strength: 1.0, pinned: false },
+    ];
+    const rels: [3]f64 = [0.7, 0.95, 0.1];
+
+    // 1. 零堆分配 Top-2 检索
+    let top_buf: [2]ScoredEpisode = undefined;
+    let top_slice: []ScoredEpisode = top_buf[0..];
+    if (n := rankTopEpisodes(pool[0..], rels[0..], now_sec, w, 2, top_slice)) {
+        * = n;
+        // 2. 命中召回后强化记忆稳定性
+        touchEpisode(*pool[1], now_sec);
+    }
+
+    // 3. 池满时跳过 pinned 槽位挑选最该淘汰的旧记忆
+    if (victim_idx := selectEvictionVictim(pool[0..], now_sec, w)) {
+        * = victim_idx;
+    }
 }
 ```

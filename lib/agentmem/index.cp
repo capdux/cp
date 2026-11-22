@@ -9,3 +9,15 @@ export {
     RecallHit,
     AgentMemory,
 } from "./memory.cp";
+
+export {
+    MemoryWeights,
+    EpisodeMeta,
+    ScoredEpisode,
+    ebbinghausRetention,
+    reinforceStability,
+    scoreEpisode,
+    rankTopEpisodes,
+    selectEvictionVictim,
+    touchEpisode,
+} from "./episodic.cp";
