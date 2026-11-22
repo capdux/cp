@@ -318,3 +318,20 @@ export {
     BufferPoolStats,
     ClockPageBufferPool,
 } from "./page_buffer_pool.cp";
+
+// --- mvcc_snapshot ---
+export {
+    MVCC_SNAP_MAX_ACTIVE_TXNS,
+    MVCC_SNAP_MAX_TX_HISTORY,
+    MVCC_SNAP_MAX_VERSIONS,
+    MVCC_SNAP_INVALID_TX,
+    MVCC_SNAP_INF_TX,
+    MVCC_SNAP_NO_SLOT,
+    MvccTxStatus,
+    MvccConflictKind,
+    MvccReadView,
+    MvccTupleVersion,
+    MvccWriteConflict,
+    MvccSnapshotStats,
+    MvccSnapshotManager,
+} from "./mvcc_snapshot.cp";

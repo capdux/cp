@@ -230,6 +230,49 @@ pub fn demoClockPageBufferPool() {
 }
 ```
 
+### 零分配 MVCC 快照隔离与版本可见性 / GC 水位线引擎 (`mvcc_snapshot.cp`)
+
+面向 PostgreSQL / InnoDB 级事务存储引擎的 100% 纯 CP 零动态堆分配 MVCC Snapshot Isolation（`MvccReadView`）与多版本元组链 GC 引擎：
+
+- **常量与枚举**：
+  - `MVCC_SNAP_MAX_ACTIVE_TXNS = 64`、`MVCC_SNAP_MAX_TX_HISTORY = 512`、`MVCC_SNAP_MAX_VERSIONS = 256`、`MVCC_SNAP_INVALID_TX = 0`、`MVCC_SNAP_INF_TX = 0xFFFFFFFFFFFFFFFF`、`MVCC_SNAP_NO_SLOT = 0xFFFF`
+  - `MvccTxStatus`（`unknown | active | committed | aborted`）
+  - `MvccConflictKind`（`none | active_writer_conflict | committed_after_snapshot | invalid_tx`）
+- **核心数据模型**：
+  - `MvccReadView`（`viewer_tx_id`, `xmin`, `xmax`, 升序 `active_tx_ids`, `active_count`；内置二分查找 `isTxInActiveSet(tx_id)`）
+  - `MvccTupleVersion`（`key_hash`, `value`, `begin_tx`, `end_tx`, `prev_version_slot`, `deleted`, `occupied`）
+  - `MvccWriteConflict`（`has_conflict`, `kind`, `conflicting_tx_id`, `version_slot`）、`MvccSnapshotStats`
+- **核心引擎 `MvccSnapshotManager`**：
+  - 事务生命周期：`beginTx(*_): u64?`（单调分配）、`commitTx(*_, tx_id): bool`、`abortTx(*_, tx_id): bool`、`txStatus(tx_id): MvccTxStatus`。
+  - 快照与可见性：`captureReadView(viewer_tx_id): MvccReadView?`、`isTxVisibleInView(tx_id, view)`、`isVersionVisible(version, view)`（严格实现自写可见、`< xmax` 且不在活跃集合的已提交版本可见、已回滚版本/终止符不可见）。
+  - 写写冲突检测：`detectWriteConflict(key_hash, writer_tx_id, view): MvccWriteConflict`（标准 First-Committer-Wins 冲突检测，区分 `active_writer_conflict` 与 `committed_after_snapshot`）。
+  - 多版本元组链与 GC：`insertVersion`、`deleteKey`、`readVisibleVersion`、`computeGcWatermark()`（最小活跃事务 ID 或 `next_tx_id`）、`canReclaimVersion(version, gc_watermark)`、`reclaimDeadVersions(*_): usize`（回收时自动旁路重连 `prev_version_slot` 不断链）。
+
+```cp
+import { MvccSnapshotManager } from "cap:db";
+
+pub fn demoMvccSnapshot() {
+    let mgr = MvccSnapshotManager.init();
+    const t1 = mgr.beginTx() ?? return;
+    * = mgr.insertVersion(0xA1, 100, t1);
+    * = mgr.commitTx(t1);
+
+    const reader = mgr.beginTx() ?? return;
+    const view = mgr.captureReadView(reader) ?? return;
+
+    const t2 = mgr.beginTx() ?? return;
+    * = mgr.insertVersion(0xA1, 200, t2);
+    * = mgr.commitTx(t2);
+
+    // Snapshot Isolation: reader 仍看到 100，不受后续提交的 t2 影响
+    if (v := mgr.readVisibleVersion(0xA1, view)) {
+        * = v.value; // 100
+    }
+    * = mgr.commitTx(reader);
+    * = mgr.reclaimDeadVersions(); // 回收已被覆盖的旧版本 100
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
