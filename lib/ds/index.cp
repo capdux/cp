@@ -265,3 +265,16 @@ export {
     TinyLfuStats,
     WTinyLfuCache,
 } from "./tinyLfu.cp";
+
+// --- prefixTrie (Zero-Alloc Path-Compressed Byte Prefix Trie / Patricia-Radix KV) ---
+export {
+    PREFIX_TRIE_MAX_NODES,
+    PREFIX_TRIE_BYTE_POOL_SIZE,
+    PREFIX_TRIE_MAX_KEY_LEN,
+    PREFIX_TRIE_NO_NODE,
+    PrefixMatch,
+    PrefixScanHit,
+    PrefixScanReport,
+    PrefixTrieStats,
+    PrefixTrie,
+} from "./prefixTrie.cp";

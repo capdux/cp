@@ -278,3 +278,25 @@ const reaped = w.reap();            // true
 const is_par = matchesConcurrentTestGlob("**/concurrent-*.test.ts", "tests/integration/concurrent-api.test.ts");
 * = ready1; * = act; * = reaped; * = is_par;
 ```
+7. **并行测试启动规划、字典序局部性分区与 Worker 参数/环境构造器（`lib/test_runner/parallelRun.cp`，吸收自 `/data/dev/bun/src/cli/test/parallel/runner.cp` & `/data/dev/bun/docs/guides/test/run-tests.mdx`）**：
+   - **导出符号**：`DEFAULT_PARALLEL_SCALE_UP_MS` (`5`)、`WORKER_FILE_DELTA_BYTES` (`36`)、`PARALLEL_RUN_MAX_FILES`、`PARALLEL_RUN_MAX_WORKERS`、`WORKER_ARGV_MAX_ARGS`、`WORKER_ARGV_ARENA_CAP`、`ParallelRunError`、`effectiveWorkerCount`、`shouldUseParallelPool`、`resolveScaleUpDelayMs`、`ParallelSliceRange`、`ParallelFilePartition`、`WorkerSummarySnapshot`、`WorkerFileDelta`、`WorkerCliOptions`、`WorkerArgSpan`、`WorkerArgvBuilder`、`WorkerEnvPlan`；
+   - **串行回退与 1-indexed Worker ID 契约**：当 `K = min(parallel, file_count) <= 1` 时直接走零开销串行路径并仍注入 `JEST_WORKER_ID=1` / `BUN_TEST_WORKER_ID=1`；多 Worker 模式下为每个 Worker 分配唯一 1-indexed ID（便于独立端口/数据库隔离）；
+   - **目录局部性连续分区**：非 `--randomize` 模式下先对测试文件执行 ASCII 字典序排序，再按 `[idx * N / K, (idx + 1) * N / K)` 切分连续区间，使同目录共享导入的测试落在同一 Worker 中提升模块缓存命中率；
+   - **9 元组 `file_done` 增量回报**：`WorkerFileDelta` 精确编码/解码 36 字节 little-endian 增量计数（`file_idx`/`pass`/`fail`/`skip`/`todo`/`expectations`/`skipped_because_label`/`files`/`unhandled_errors`）。
+
+```cp
+import {
+    ParallelFilePartition,
+    WorkerArgvBuilder,
+    WorkerCliOptions,
+    WorkerFileDelta,
+    WorkerSummarySnapshot,
+} from "cap:test_runner";
+
+const files: [4][]const u8 = ["b/2.test.cp", "a/2.test.cp", "a/1.test.cp", "b/1.test.cp"];
+const part = ParallelFilePartition.build(files[0..], 2, false)?;
+// Worker 0 -> ["a/1.test.cp", "a/2.test.cp"], Worker 1 -> ["b/1.test.cp", "b/2.test.cp"]
+const argv = WorkerArgvBuilder.build(WorkerCliOptions{ default_timeout_ms: 3000, retry: 2 })?;
+const delta = WorkerFileDelta.diff(0, WorkerSummarySnapshot{}, WorkerSummarySnapshot{ pass: 5, files: 1 });
+* = part; * = argv; * = delta;
+```

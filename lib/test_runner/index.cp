@@ -122,3 +122,24 @@ export {
     WorkerProcessSlot,
     matchesConcurrentTestGlob,
 } from "./workerProc";
+
+export {
+    DEFAULT_PARALLEL_SCALE_UP_MS,
+    WORKER_FILE_DELTA_BYTES,
+    PARALLEL_RUN_MAX_FILES,
+    PARALLEL_RUN_MAX_WORKERS,
+    WORKER_ARGV_MAX_ARGS,
+    WORKER_ARGV_ARENA_CAP,
+    ParallelRunError,
+    effectiveWorkerCount,
+    shouldUseParallelPool,
+    resolveScaleUpDelayMs,
+    ParallelSliceRange,
+    ParallelFilePartition,
+    WorkerSummarySnapshot,
+    WorkerFileDelta,
+    WorkerCliOptions,
+    WorkerArgSpan,
+    WorkerArgvBuilder,
+    WorkerEnvPlan,
+} from "./parallelRun";

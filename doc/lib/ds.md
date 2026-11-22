@@ -313,6 +313,43 @@ pub fn demoWTinyLfu() {
 }
 ```
 
+### 零分配路径压缩字节前缀树 (`prefixTrie.cp`)
+
+面向路由表最长前缀匹配（LPM）、策略前缀索引与字典序前缀范围枚举的 100% 纯 CP 零动态堆分配 **Path-Compressed Byte Prefix Trie (Patricia/Radix KV)**：
+
+- **常量与数据模型**：
+  - `PREFIX_TRIE_MAX_NODES = 256`、`PREFIX_TRIE_BYTE_POOL_SIZE = 4096`（4 KiB 内联边字节池）、`PREFIX_TRIE_MAX_KEY_LEN = 128`、`PREFIX_TRIE_NO_NODE = 0xFFFF`
+  - `PrefixMatch`（`matched_len`, `value`）、`PrefixScanHit`（`key_buf`, `key_len`, `value`, `keySlice()`）、`PrefixScanReport`（`written`, `total_matched`, `truncated`）、`PrefixTrieStats`
+- **核心引擎 `PrefixTrie`**（纯迭代无递归）：
+  - `init()`、`insert(*_, key, value): bool`（自动边分裂、零字节浪费原地缩短、满池前置原子检查、同键覆盖更新）
+  - `get(key): u64?`（O(L) 精确查找）
+  - `remove(*_, key): bool`（O(L) 删除终止标记，自动回收空叶并压缩合并单分支空内部节点）
+  - `longestPrefixMatch(query): PrefixMatch?`（O(L) 最长前缀匹配）
+  - `scanPrefix(prefix, *out_hits): PrefixScanReport`（纯迭代显式栈，按严格字典序枚举前缀匹配键值并报告缓冲截断统计）
+  - `len()` / `isEmpty()` / `clear(*_)` / `stats()`
+
+```cp
+import {
+    PrefixScanHit,
+    PrefixTrie,
+} from "cap:ds";
+
+pub fn demoPrefixTrie() {
+    let trie = PrefixTrie.init();
+    * = trie.insert("/api", 10);
+    * = trie.insert("/api/v1/users", 20);
+    * = trie.insert("/api/v1/orders", 30);
+
+    if (m := trie.longestPrefixMatch("/api/v1/users/42")) {
+        * = m.value; // 20 (matched_len == 13)
+    }
+    let hits: [4]PrefixScanHit = [PrefixScanHit{}; 4];
+    let hits_s: []PrefixScanHit = hits[0..];
+    const rep = trie.scanPrefix("/api/v1/", *hits_s);
+    * = rep.written; // 2 (字典序: orders, users)
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
