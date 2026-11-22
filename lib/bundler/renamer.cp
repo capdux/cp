@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/js_printer/renamer.cp | Synced: 2026-11-21T23:02:06Z
+// Source: Absorbed from /data/dev/bun/src/js_printer/renamer.cp | Synced: 2026-11-22T06:05:31Z
 // Pure-CP zero-allocation JS Bundler Symbol Renamer & Minifier:
 // - ECMAScript reserved word & CJS/ESM reserved identifier checks
 // - Base54/Base64 minified identifier encoder (supports custom char-freq alphabets)

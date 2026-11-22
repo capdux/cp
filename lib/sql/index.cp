@@ -276,3 +276,23 @@ export {
     encodeMySqlStmtIdCommand,
     decodeMySqlStmtIdCommand,
 } from "./mysql_stmt_control.cp";
+
+export {
+    MYSQL_AUTH_SWITCH_HEADER,
+    MYSQL_LOCAL_INFILE_HEADER,
+    MYSQL_SSL_REQUEST_PAYLOAD_LEN,
+    MYSQL_CAP_CLIENT_SSL,
+    MySqlAuthFrameError,
+    MySqlAuthSwitchReqView,
+    MySqlAuthSwitchRespView,
+    MySqlSslRequestView,
+    MySqlLocalInfileReqView,
+    encodeMySqlAuthSwitchRequest,
+    decodeMySqlAuthSwitchRequest,
+    encodeMySqlAuthSwitchResponse,
+    decodeMySqlAuthSwitchResponse,
+    encodeMySqlSslRequestFrame,
+    decodeMySqlSslRequestFrame,
+    encodeMySqlLocalInfileRequest,
+    decodeMySqlLocalInfileRequest,
+} from "./mysql_auth_frames.cp";

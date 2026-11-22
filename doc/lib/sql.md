@@ -398,6 +398,40 @@ const closed_id = decodeMySqlStmtIdCommand(close_wire, MySqlWireCmd.com_stmt_clo
 * = rs;
 * = closed_id;
 ```
+- **MySQL 4.1/8.0 `AuthSwitch`、`SSLRequest` 与 `LOCAL_INFILE_Request` 零分配编解码器 (`mysql_auth_frames.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/{AuthSwitchRequest,AuthSwitchResponse,SSLRequest,LocalInfileRequest}.cp`)**：
+  - 常量与类型：`MYSQL_AUTH_SWITCH_HEADER` (`0xFE`)、`MYSQL_LOCAL_INFILE_HEADER` (`0xFB`)、`MYSQL_SSL_REQUEST_PAYLOAD_LEN` (`32`)、`MYSQL_CAP_CLIENT_SSL` (`0x0800`)、`MySqlAuthFrameError`、`MySqlAuthSwitchReqView`、`MySqlAuthSwitchRespView`、`MySqlSslRequestView`、`MySqlLocalInfileReqView`（内置 `isSafeRelativeFilename()` 拦截绝对路径与 `..` 目录穿越）；
+  - 编解码函数：`encodeMySqlAuthSwitchRequest`/`decodeMySqlAuthSwitchRequest`、`encodeMySqlAuthSwitchResponse`/`decodeMySqlAuthSwitchResponse`、`encodeMySqlSslRequestFrame`/`decodeMySqlSslRequestFrame`、`encodeMySqlLocalInfileRequest`/`decodeMySqlLocalInfileRequest`。
+
+```typescript
+import {
+    MYSQL_CAP_CLIENT_SSL,
+    MySqlSslRequestView,
+    encodeMySqlAuthSwitchRequest,
+    decodeMySqlAuthSwitchRequest,
+    encodeMySqlSslRequestFrame,
+    decodeMySqlSslRequestFrame,
+    encodeMySqlLocalInfileRequest,
+    decodeMySqlLocalInfileRequest,
+} from "cap:sql";
+
+let buf: [128]u8 = [0; 128];
+const sw_wire = encodeMySqlAuthSwitchRequest(buf[0..], 2, "caching_sha2_password", "salt1234567890123456")?;
+const sw = decodeMySqlAuthSwitchRequest(sw_wire)?; // sw.plugin_name == "caching_sha2_password"
+
+const ssl_wire = encodeMySqlSslRequestFrame(buf[0..], MySqlSslRequestView{
+    sequence_id: 1,
+    capabilities: MYSQL_CAP_CLIENT_SSL | 0x00000200,
+    max_packet_size: 16777216,
+    character_set: 45,
+})?;
+const ssl = decodeMySqlSslRequestFrame(ssl_wire)?; // ssl.hasSslFlag() == true
+
+const li_wire = encodeMySqlLocalInfileRequest(buf[0..], 1, "imports/batch.csv")?;
+const li = decodeMySqlLocalInfileRequest(li_wire)?; // li.isSafeRelativeFilename() == true
+* = sw;
+* = ssl;
+* = li;
+```
 
 ---
 
