@@ -12,7 +12,7 @@ import {
     fbHasIdentifier,
     fbStripSizePrefix,
     fbRootTable,
-} from "cap:flatbuf";
+} from "cap:compiler";
 
 fn putU16LE(buf: *[]u8, off: usize, v: u16) {
     buf[off] = (v & 0xFF) as u8;

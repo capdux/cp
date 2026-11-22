@@ -9,7 +9,7 @@ import {
     validateSexp,
     maxSexpDepth,
     formatSexpCompact,
-} from "cap:sexp";
+} from "cap:compiler";
 
 test("1. SexpIter tokenizes parens, atoms, quoted strings with escapes, and skips comments", () => {
     const src = " ; header comment\n (func $add (param \"a \\\"quoted\\\" b\") 42) ; tail";

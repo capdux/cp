@@ -8,7 +8,7 @@ import {
     WatExport,
     WatExportIter,
     validateWatStructure,
-} from "cap:wat";
+} from "cap:compiler";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

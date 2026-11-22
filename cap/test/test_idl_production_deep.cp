@@ -10,7 +10,7 @@ import {
     WebIdlIter,
     WebIdlDeclIter,
     validateWebIdlBraces,
-} from "cap:idl";
+} from "cap:compiler";
 
 const SAMPLE_IDL: []const u8 =
     "// W3C Fetch & Streams excerpt\n" ++

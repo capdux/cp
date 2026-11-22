@@ -17,7 +17,7 @@ import {
     GrpcFrameCodec,
     GrpcStatus,
     GrpcTimeout,
-} from "cap:protobuf";
+} from "cap:compiler";
 
 fn testVarintZigZagFixedFloatAndStrings(): !void {
     let gpa: std.heap.DebugAllocator(.{}) = .init;
@@ -277,17 +277,17 @@ fn testCapNamespaceDynamicMountingAndZeroLeak(): !void {
     defer std.debug.assert(gpa.deinit() == .ok);
     const alloc = gpa.allocator();
 
-    // Verify `import cap from "cap"; cap.protobuf.*` dynamic lazy mounting + zero-leak
-    let pw = cap.protobuf.ProtoWriter.init(alloc);
+    // Verify `import cap from "cap"; cap.compiler.*` dynamic lazy mounting + zero-leak
+    let pw = cap.compiler.ProtoWriter.init(alloc);
     defer pw.deinit();
     pw.writeString(1, "cap-protobuf-mounted")?;
     pw.writeSint32(2, -777)?;
 
-    const frame_bytes = cap.protobuf.GrpcFrameCodec.encode(alloc, false, pw.slice())?;
+    const frame_bytes = cap.compiler.GrpcFrameCodec.encode(alloc, false, pw.slice())?;
     defer alloc.free(frame_bytes);
 
-    const decoded_frame = cap.protobuf.GrpcFrameCodec.decode(frame_bytes)?;
-    let pr = cap.protobuf.ProtoReader.init(decoded_frame.payload);
+    const decoded_frame = cap.compiler.GrpcFrameCodec.decode(frame_bytes)?;
+    let pr = cap.compiler.ProtoReader.init(decoded_frame.payload);
 
     const f1 = (pr.next()?).?;
     expect_eq(f1.field_number, 1 as u32);
@@ -298,10 +298,10 @@ fn testCapNamespaceDynamicMountingAndZeroLeak(): !void {
     expect_eq(f2.asSint32(), -777 as i32);
     expect_eq(pr.next()? == null, true);
 
-    expect_eq(cap.protobuf.GrpcStatus.Unavailable.isRetryable(), true);
-    expect_eq(cap.protobuf.GrpcTimeout.parse("5S")?, 5000000000 as u64);
-    expect_eq(cap.protobuf.zigzagEncode32(-1), 1 as u32);
-    expect_eq(cap.protobuf.zigzagDecode32(1), -1 as i32);
+    expect_eq(cap.compiler.GrpcStatus.Unavailable.isRetryable(), true);
+    expect_eq(cap.compiler.GrpcTimeout.parse("5S")?, 5000000000 as u64);
+    expect_eq(cap.compiler.zigzagEncode32(-1), 1 as u32);
+    expect_eq(cap.compiler.zigzagDecode32(1), -1 as i32);
 }
 
 pub fn main()! {

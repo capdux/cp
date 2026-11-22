@@ -10,7 +10,7 @@ import {
     NginxBlockIter,
     findNginxDirective,
     validateNginxConfig,
-} from "cap:nginx";
+} from "cap:compiler";
 
 const SAMPLE_CONF: []const u8 =
     "# Main nginx configuration\n" ++

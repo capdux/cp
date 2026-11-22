@@ -15,7 +15,7 @@ import {
     SatStatus,
     SatSolver,
     ConstraintModel,
-} from "cap:sat";
+} from "cap:compiler";
 
 test("cap:sat - 3-SAT satisfiable verification and Pigeonhole PHP(4,3) UNSAT") {
     const alloc = std.testing.allocator;
@@ -249,7 +249,7 @@ test("cap:sat - 4-Queens problem with std.testing.allocator zero leaks") {
 test("cap:sat - cap.sat dynamic mounting") {
     const alloc = std.testing.allocator;
 
-    let solver = cap.sat.SatSolver.init(alloc);
+    let solver = cap.compiler.SatSolver.init(alloc);
     defer solver.deinit();
 
     const a = solver.newVar();
@@ -260,10 +260,10 @@ test("cap:sat - cap.sat dynamic mounting") {
     let sol = solver.solve() catch unreachable;
     defer sol.deinit();
 
-    expect_eq(sol.status == cap.sat.SatStatus.Satisfiable, true);
+    expect_eq(sol.status == cap.compiler.SatStatus.Satisfiable, true);
     expect_eq(sol.isTrue(b), true);
 
-    let model = cap.sat.ConstraintModel.init(alloc);
+    let model = cap.compiler.ConstraintModel.init(alloc);
     defer model.deinit();
     model.requireTrue("enable_tls") catch unreachable;
     model.implies("enable_tls", "cert_ready") catch unreachable;

@@ -12,7 +12,7 @@ import {
     compile,
     compileWithMaxDepth,
     eval,
-} from "cap:expr";
+} from "cap:compiler";
 
 fn expectNumClose(actual: f64, expected: f64) {
     const diff = @abs(actual - expected);
@@ -202,14 +202,14 @@ fn testErrorGuardsAndMaxDepth(): !void {
 
 fn testCapNamespaceAndZeroLeak(): !void {
     const alloc = std.testing.allocator;
-    let ctx = cap.expr.ExprContext.init(alloc);
+    let ctx = cap.compiler.ExprContext.init(alloc);
     defer ctx.deinit();
 
     ctx.setNumber("agent.score", 92.0)?;
     ctx.setBool("agent.enabled", true)?;
     ctx.setString("agent.mode", "production")?;
 
-    let compiled = cap.expr.compile(
+    let compiled = cap.compiler.compile(
         alloc,
         "agent.enabled && cap_check_ok ? 1 : 0",
     )?;
@@ -221,7 +221,7 @@ fn testCapNamespaceAndZeroLeak(): !void {
     };
     expect_eq(err_tag, "undef");
 
-    let valid = cap.expr.compile(
+    let valid = cap.compiler.compile(
         alloc,
         "agent.enabled && clamp(agent.score, 0, 100) >= 90 && contains(agent.mode, 'prod') ? max(10, 20) : min(1, 2)",
     )?;
@@ -230,7 +230,7 @@ fn testCapNamespaceAndZeroLeak(): !void {
     const r1 = valid.eval(ctx)?;
     expectNumClose(r1.asNumber().?, 20.0);
 
-    const r2 = cap.expr.eval("startsWith(agent.mode, 'pro') && len(agent.mode) == 10", ctx)?;
+    const r2 = cap.compiler.eval("startsWith(agent.mode, 'pro') && len(agent.mode) == 10", ctx)?;
     expect_eq(r2.asBool().?, true);
 }
 

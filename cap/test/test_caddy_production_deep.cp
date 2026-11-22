@@ -9,7 +9,7 @@ import {
     CaddySiteBlock,
     CaddySiteIter,
     validateCaddyfile,
-} from "cap:caddy";
+} from "cap:compiler";
 
 const SAMPLE_CADDYFILE: []const u8 =
     "# Global Caddy options\n" ++

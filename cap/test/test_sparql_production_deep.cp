@@ -12,7 +12,7 @@ import {
     detectSparqlQueryForm,
     isReadOnlySparql,
     validateSparqlDelimiters,
-} from "cap:sparql";
+} from "cap:compiler";
 
 const SAMPLE_SELECT: []const u8 =
     "# Knowledge graph query with BASE & multiple PREFIXes\n" ++

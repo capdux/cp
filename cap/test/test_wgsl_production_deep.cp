@@ -12,7 +12,7 @@ import {
     WgslEntryPointIter,
     WgslBindingIter,
     validateWgslDelimiters,
-} from "cap:wgsl";
+} from "cap:compiler";
 
 const SAMPLE_SHADER: []const u8 =
     "// WebGPU compute + render shader\n" ++

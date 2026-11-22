@@ -21,7 +21,7 @@ import {
     SpvInstIter,
     parseSpvEntryPoint,
     summarizeSpv,
-} from "cap:spv";
+} from "cap:compiler";
 
 fn pushWordLe(buf: []u8, word_idx: usize, v: u32) {
     const p = word_idx * 4;

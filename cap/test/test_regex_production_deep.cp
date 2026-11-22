@@ -9,7 +9,7 @@
 
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import { Regex, RegexError, MatchSpan, Captures } from "cap:regex";
+import { Regex, RegexError, MatchSpan, Captures } from "cap:compiler";
 import cap from "cap";
 
 fn strEq(a: string, b: string): bool {
@@ -163,7 +163,7 @@ fn testAntiRedosAndMalformedPatterns(): ! {
 fn testCapRegexDynamicMount(): ! {
     const alloc = std.heap.page_allocator;
 
-    let re = cap.regex.Regex.compile(alloc, "^cap_([a-z]+)_(\\d+)$")?;
+    let re = cap.compiler.Regex.compile(alloc, "^cap_([a-z]+)_(\\d+)$")?;
     defer re.deinit();
 
     const m = re.find("cap_regex_01");

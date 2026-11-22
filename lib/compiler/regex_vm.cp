@@ -11,7 +11,7 @@ import {
     Opcode,
     CharClass,
     MAX_SLOTS,
-} from "./compiler.cp";
+} from "./regex_compiler.cp";
 
 const UNSET_POS: usize = std.math.maxInt(usize);
 

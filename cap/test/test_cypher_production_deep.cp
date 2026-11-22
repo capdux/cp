@@ -12,7 +12,7 @@ import {
     classifyCypherKeyword,
     validateCypherDelimiters,
     isReadOnlyCypher,
-} from "cap:cypher";
+} from "cap:compiler";
 
 test("1. CypherIter tokenizes arrows, strings, backticks, params, numbers, and skips comments", () => {
     const query =

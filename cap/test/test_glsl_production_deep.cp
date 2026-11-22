@@ -12,7 +12,7 @@ import {
     parseGlslVersion,
     GlslDeclIter,
     validateGlslBraces,
-} from "cap:glsl";
+} from "cap:compiler";
 
 const VERT_SHADER: []const u8 =
     "// Vertex shader\n" ++
