@@ -1,6 +1,6 @@
 # `cap:elf` — 跨平台可执行二进制格式嗅探与完整 ELF64 / Mach-O / PE 解析标准库
 
-> **上游溯源**: `/data/dev/bun/src/exe_format/` (`elf.cp`, `macho.cp`, `pe.cp`)  
+> 参考来源：`/data/dev/bun/src/exe_format/elf.cp`, `/data/dev/bun/src/exe_format/macho.cp`, `/data/dev/bun/src/exe_format/pe.cp` | 吸收日期：2026-11-22
 > **模块路径**: `lib/elf/`  
 > **导入协议**: `import { ExeFormat, ExeFormatKind, ElfClass, ElfEndian, ElfType, ElfMachine, Elf64HeaderInfo, Elf64Phdr, Elf64Shdr, Elf64Sym, Elf64Dyn, Elf64File, Elf64Parser, ExeInspector, MachHeader64, MachoInspector, PeCoffHeader, PeInspector } from "cap:elf";`
 
@@ -77,3 +77,14 @@ fn inspectBinary(bytes: []const u8): void {
     * = elf.findPhdr(PT_LOAD);
 }
 ```
+
+---
+
+## 上游 Bun `exe_format` 行为契约与安全边界注意事项
+
+1. **零拷贝视图与畸形二进制边界防护**：
+   - `Elf64File`、`MachoInspector` 与 `PeInspector` 均直接基于只读字节切片进行边界检查与零拷贝字段读取；面对外部不可信或截断的二进制文件，所有 `sh_offset + sh_size`、`p_offset + p_filesz` 与 `e_lfanew` 偏移均经过无溢出范围校验，防止越界切片读取。
+2. **动态符号表与常规符号表区分（`findSymbol`）**：
+   - `elf.findSymbol(name, true)` 检索 `.dynsym`（剥离后的生产发布二进制仍保留导出动态符号），`findSymbol(name, false)` 检索 `.symtab`（包含本地与调试符号，经 `strip` 后可能不存在）。
+3. **跨平台单文件可执行体（Standalone Executable）检测**：
+   - 结合 `ExeFormat.detect`、`getNeededLibs`（`DT_NEEDED`）与 `findSectionData`，可用于工具链自检、动态库依赖审计（类 `ldd`/`readelf`）及跨平台分发产物校验。

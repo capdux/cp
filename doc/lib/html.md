@@ -1,5 +1,7 @@
 # CP 标准库：HTML5 解析、实体编解码、白名单清洗与 AI 网页提取手册 (`cap:html`)
 
+> 参考来源：`/data/dev/bun/docs/runtime/html-rewriter.mdx`, `/data/dev/bun/docs/guides/util/escape-html.mdx`, `/data/dev/bun/src/lolhtml_sys/lol_html.cp` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:html` 是 CP 语言官方内置的工业生产级 HTML5 解析、内容安全清洗与 AI Agent 网页语义提取标准库，对标 Bun 的 `HTMLRewriter`（`/data/dev/bun/src/lolhtml_sys/lol_html.cp`）与 WHATWG HTML5 字符引用 / 安全清洗规范，提供纯 CP 零外部依赖的完整工具链：
@@ -108,3 +110,16 @@ pub fn demoHtmlSecurityAndExtract(): !void {
 - `needsHtmlEscape(src: []const u8): bool`
 - `escapeHtml(src: []const u8, out: []u8): ([]const u8)?`
 - `unescapeHtml(src: []const u8, out: []u8): ([]const u8)?`
+
+---
+
+## 上游 Bun 行为契约与安全防御注意事项
+
+1. **流式重写与零 DOM 开销（参考 `/data/dev/bun/docs/runtime/html-rewriter.mdx`）**：
+   - `HtmlRewriter` 对标 Cloudflare `lol-html` / Bun `HTMLRewriter` 架构：基于单遍 `HtmlTokenizer` 流式匹配 `CssSelector` 并即时改写标签属性或注入前后内容，无需在内存中构建完整 DOM 树，适合反向代理、边缘计算与高频 HTML 改写。
+2. **零拷贝快速转义路径（`needsHtmlEscape` / `escapeHtml`）**：
+   - 对标 `Bun.escapeHTML`：先用 `needsHtmlEscape` 扫描输入是否包含 `&`、`<`、`>`、`"`、`'` 五类危险字符，无特殊字符时可零拷贝直接透传原文，显著提升模板渲染吞吐。
+3. **白名单清洗与 URL 协议防线（`HtmlSanitizer`）**：
+   - 渲染用户提交或第三方抓取的富文本 HTML 时，使用 `SanitizerPolicy.defaultSafe()` 自动移除 `<script>`、`<iframe>`、`on*` 事件属性，并通过 `isSafeUrl` 阻断 `javascript:` / `vbscript:` / 畸形 `data:` URI。
+4. **WHATWG C1 控制区与非法码点替换（`HtmlEntities`）**：
+   - 解码数字字符引用（`&#...;` / `&#x...;`）时严格遵循 WHATWG HTML5 规范：自动映射 Windows-1252 C1 替换表（`0x80..0x9F`）并将 `0x00`、孤立代理项与超界码点替换为 `U+FFFD`。

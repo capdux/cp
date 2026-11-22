@@ -1,5 +1,7 @@
 # CP 标准库：MIME 媒体类型、内容协商与扩展名数据库手册 (`cap:mime`)
 
+> 参考来源：`/data/dev/bun/docs/guides/read-file/mime.mdx`, `/data/dev/bun/src/http/MimeType.cp` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:mime` 是 CP 语言官方内置的纯 CP **RFC 6838 MediaType 解析/格式化、RFC 9110 HTTP `Accept` 内容协商（Content Negotiation）与全量扩展名双向数据库**，**零 C 依赖、零 `std.posix`、零 `@import("bun")`**，专为 CP Web 框架、静态资源服务器、OpenAPI 路由与文件/邮件网关打造。既可通过 `import { ... } from "cap:mime"` 导入，也支持 `import cap from "cap"; cap.mime.*` 动态懒挂载调用。
@@ -109,3 +111,16 @@ pub fn demoMime(): ! {
 
 - **`lib/mime/lookup.cp`**：`MimeCategory`, `ContentType`, `mimeFromExtension`, `categoryFromMime`
 - **`lib/mime/type.cp`**：`Category`, `classifyMime`, `byExtension`, `byPath`
+
+---
+
+## 上游 Bun 行为契约与安全边界注意事项
+
+1. **扩展名映射与未知类型默认回退（参考 `/data/dev/bun/docs/guides/read-file/mime.mdx`）**：
+   - `MimeDb.fromExtension`、`mimeFromExtension`、`byExtension` 与 `byPath` 均执行 ASCII 大小写不敏感查表（兼容带前导 `.` 与不带 `.` 的扩展名）；对未知扩展名安全回退至 `application/octet-stream`，避免静态文件服务泄漏错误内容类型。
+2. **WHATWG MIME 内容嗅探与防 MIME 混淆（`sniff.cp`）**：
+   - `sniffMime` 依据魔数字节识别常见图像、音视频、压缩/可执行文件与纯文本；在对外提供用户上传文件下载时，应结合 `Content-Type` 与 `X-Content-Type-Options: nosniff` 及 `ContentDisposition` 防止浏览器嗅探执行脚本。
+3. **下载文件名净化（`disposition.cp`）**：
+   - 构造 `Content-Disposition: attachment` 响应头前，务必通过 `sanitizeFilename` 剥离路径分隔符（`/`、`\`）、控制字符与引号，并使用 `formatAttachment` / `decodeRfc5987` 安全处理非 ASCII 文件名（`filename*=UTF-8''...`）。
+4. **RFC 9110 `Accept` 内容协商质量权重（`ContentNegotiator`）**：
+   - 严格校验 `q` 权重范围 `[0.0, 1.0]`（`q=0` 表示显式拒绝该媒体类型），并按精确类型 > 子类型通配（`text/*`）> 全局通配（`*/*`）的特异性择优匹配。

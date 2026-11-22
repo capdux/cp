@@ -1,5 +1,7 @@
 # CP 标准库：POSIX ustar 归档打包与安全解包 (`cap:tar`)
 
+> 参考来源：`/data/dev/bun/docs/runtime/archive.mdx`, `/data/dev/bun/src/libarchive/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:tar` 是 CP 语言官方内置的零 OS 依赖、纯 CP 内存流式 **POSIX.1-1988 ustar** 归档编解码标准库，面向容器镜像层、包管理器分发归档及内存文件系统快照设计。
@@ -76,3 +78,16 @@ pub fn demoTar()! {
     cap.tar.freeEntries(alloc, entries2);
 }
 ```
+
+---
+
+## 上游 Bun Archive 行为契约与安全边界注意事项
+
+1. **严格路径穿越防护（`UnsafePathTraversal`）**：
+   - 参考 `/data/dev/bun/docs/runtime/archive.mdx` 安全解包原则：`TarReader` 与 `parseArchive` 在解析阶段即自动拒绝以 `/` 开头的绝对路径以及包含 `..` 段的路径，无需调用方二次手写路径清洗即可免疫 Tar-Slip 越界写入。
+2. **USTAR 长度边界与扩展选择**：
+   - POSIX.1-1988 ustar 通过 `prefix`（155B）+ `/` + `name`（100B）支持最长 256 字节路径，符号链接目标上限为 100 字节；超出限制时 `TarBuilder` 明确返回 `TarError.PathTooLong`，若业务需要支持超长路径或大文件（> 8 GiB）请使用 `cap:pack` 中的 `PaxTarWriter` / `PaxTarReader`。
+3. **512 字节块对齐与严格八进制校验和**：
+   - 所有条目头与载荷均按 `TAR_BLOCK_SIZE = 512` 字节对齐填充零字节；解析器严格校验每条头的 512 字节无符号校验和，损坏或截断的归档流立即返回 `InvalidChecksum` 或 `TruncatedArchive`。
+4. **确定性内存释放**：
+   - `parseArchive` 返回的条目列表必须配对 `defer freeEntries(alloc, entries);`，`TarBuilder` 必须配对 `defer builder.deinit();`。

@@ -1,5 +1,7 @@
 # CP 标准库：DNS 协议套件、记录编解码、DoH 与解析配置手册 (`cap:dns`)
 
+> 参考来源：`/data/dev/bun/docs/runtime/networking/dns.mdx`, `/data/dev/bun/src/dns/`, `/data/dev/bun/src/dns.zig` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:dns` 是 CP 语言官方内置的工业生产级域名解析（DNS）协议套件，涵盖 RFC 1035/2782/3596/8484/8659 报文与资源记录编解码、DNS-over-HTTPS（DoH）、POSIX `/etc/resolv.conf` 解析器、`/etc/hosts` 静态表解析、泛型 TTL 缓存与 `c-ares` 异步解析绑定。
@@ -138,3 +140,16 @@ pub fn demoDnsProduction(): !void {
     // candidates => ["api.svc.corp.internal", "api.svc"]
 }
 ```
+
+---
+
+## 上游 Bun DNS 行为契约与安全边界注意事项
+
+1. **有界 TTL 缓存与失败驱逐（参考 `/data/dev/bun/docs/runtime/networking/dns.mdx`）**：
+   - 上游 Bun DNS 缓存采用固定条目上限（默认 255 条）与有界 TTL（默认 30s），连接失败时主动驱逐失效缓存；在 CP 中可使用 `DnsCache<256>` 零堆分配实现同等有界缓存，并在高并发建连前合并重复域名查询。
+2. **DNS 压缩指针防环与标签长度边界（RFC 1035）**：
+   - `DnsWireCodec` 与 `DnsNameCodec` 解码 `0xC0` 压缩指针时强制限制最大跳转深度（16 跳）并校验单标签长度 `<= 63`、总域名长度 `<= 253`（`isValidDnsLabel` / `isValidHostname`），彻底拦截畸形压缩指针死循环。
+3. **DoH（RFC 8484）无填充 Base64URL 约定**：
+   - `DohQueryBuilder.buildDnsQueryGetUrl` 生成 GET 请求时严格使用**无 `=` 填充**的 Base64URL 编码 `dns=` 参数，POST 请求使用 `Content-Type: application/dns-message`。
+4. **`/etc/resolv.conf` `ndots` 搜索域展开顺序**：
+   - 当查询主机名中的点号 `.` 数量少于 `ndots` 时，优先拼接 `search` 列表逐一尝试，最后回退原名；超过或等于 `ndots` 时优先按绝对域名直接解析。

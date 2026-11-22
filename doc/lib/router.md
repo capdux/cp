@@ -1,5 +1,7 @@
 # CP 标准库：高性能 Radix-Tree 与文件系统路由引擎手册 (`cap:router`)
 
+> 参考来源：`/data/dev/bun/docs/runtime/file-system-router.mdx`, `/data/dev/bun/src/router/router.cp`, `/data/dev/bun/src/router/ParamMap.cp` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:router` 是 CP 语言官方内置的泛型 Radix-Tree（前缀字典树）与 Next.js/Bun 风格 `FileSystemRouter` 路由标准库，支持按 HTTP 方法隔离路由树、5 级严格优先级匹配（静态段 > 混合前缀/后缀段 > `:param`/`[param]` 参数段 > `*`/`**`/`[...all]` 通配段 > `[[...opt]]` 可选捕获段）、回溯多参数提取、冲突/重复检测、尾随斜杠模式、栈内联零堆分配 `ParamMap` 以及 `RouteFormatter`。核心架构吸收自 Bun 路由子系统（`/data/dev/bun/src/router/`）。
@@ -134,3 +136,16 @@ pub fn demoRouter(): !void {
 | **冲突与重复检测** | `RouteLoader` 重复路径报错 | 启动期抛异常 | `tryInsert` 返回 `DuplicateRoute` / `RouteConflict` |
 | **参数容器** | `req.params` (JS Object) | `req.params` (JS Object) | `ParamMap`（16 槽栈内联零堆分配） |
 | **反向路径渲染** | — | `path-to-regexp` `compile()` | `RouteFormatter.formatPath` / `extractParamNames` |
+
+---
+
+## 五、 上游 Bun 行为契约与路由边界注意事项
+
+1. **文件系统路由约定（参考 `/data/dev/bun/docs/runtime/file-system-router.mdx`）**：
+   - `FileSystemRouter` 遵循 Next.js / Bun Pages Router 风格：`index.*` 映射至父目录根路径、`[slug]` 映射动态单段、`[...all]` 映射必选多段捕获、`[[...opt]]` 映射可选 0..N 段捕获、`(group)` 路由分组目录不出现在最终 URL 路径中。
+2. **五级优先级与回溯确定性**：
+   - 路由查找严格按 `静态段 > 混合前缀/后缀段 (HybridSegment) > 动态参数 (:id/[id]) > 必选通配 (* / [...all]) > 可选捕获 ([[...opt]])` 顺序匹配；当静态分支部分命中但后续路径不匹配时，引擎自动回溯尝试参数或通配分支，避免漏匹配。
+3. **启动期冲突校验与 `ParamMap` 槽位边界**：
+   - 使用 `tryInsert` 在注册期捕获重复路由（`DuplicateRoute`）与同层参数名冲突（`RouteConflict`）；`ParamMap` 固定 16 槽栈内联实现零堆分配，单条路由参数超过 16 个时应通过通配捕获后按需切分。
+4. **尾随斜杠模式一致性（`TrailingSlashMode`）**：
+   - 生产服务建议在 `RouterOptions` 中显式固定尾随斜杠策略（严格区分或自动归一化），防止 `/users` 与 `/users/` 在鉴权中间件与业务路由间产生匹配分歧。

@@ -1,5 +1,7 @@
 # CP 标准库：RFC 6455 / RFC 7692 WebSocket 协议栈、扩展协商与会话状态机手册 (`cap:ws`)
 
+> 参考来源：`/data/dev/bun/docs/runtime/http/websockets.mdx`, `/data/dev/bun/src/http/websocket.cp`, `/data/dev/bun/src/http_jsc/websocket_client/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:ws` 是 CP 语言官方内置的工业生产级 RFC 6455 / RFC 7692 WebSocket 协议引擎，在保留既有高性能帧编解码、SIMD 掩码与握手校验的基础上，新增子协议与扩展头协商、RFC 6455 §7.4.1 关闭码严格校验、RFC 7692 `permessage-deflate` 消息压缩/解压以及完整的 `WsSession` 会话生命周期状态机。
@@ -109,3 +111,16 @@ pub fn demoProductionWs(): !void {
     * = res;
 }
 ```
+
+---
+
+## 上游 Bun WebSocket 行为契约与安全边界注意事项
+
+1. **RFC 6455 强制掩码与方向校验（`WsSession`）**：
+   - 客户端发往服务端的帧**必须**携带 4 字节随机掩码（`is_server: true` 时收到未掩码帧立即触发协议错误 `1002`），服务端发往客户端的帧不得掩码；`Mask.apply` 利用 16 字节 SIMD 向量化异或加速掩码编解码。
+2. **控制帧交错与载荷上限**：
+   - RFC 6455 规定 `Ping` / `Pong` / `Close` 控制帧长度不得超过 `125` 字节且**禁止分片**（`FIN` 必须为 `1`），但允许在数据帧分片流中间交错插入；`WebSocketMessageAssembler` 自动处理控制帧交错并在开启 `auto_pong: true` 时即时生成匹配载荷的 `Pong` 帧。
+3. **关闭码合法性与状态机（`CloseCodeValidator`）**：
+   - `1005`（No Status）、`1006`（Abnormal Closure）与 `1015`（TLS Handshake）为保留内部状态码，**禁止在线路 `Close` 帧中发送**；`CloseCodeValidator` 严格拦截非法关闭码并校验关闭原因的 UTF-8 合法性。
+4. **`permessage-deflate` 压缩与防解压膨胀（RFC 7692）**：
+   - 开启 `PerMessageDeflate` 时，压缩消息须正确附加/剥离 `0x00 0x00 0xFF 0xFF` 同步尾（`PMD_SYNC_TRAILER`）；服务端务必在 `WsSessionConfig` 中设置合理的 `max_frame_bytes` 与 `max_message_bytes`，防止高压缩比载荷耗尽内存。

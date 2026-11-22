@@ -1,5 +1,7 @@
 # `cap:macho` — 纯 CP Apple Mach-O 32/64-bit 与 Fat Universal 二进制解析库
 
+> 参考来源：`/data/dev/bun/src/exe_format/macho.cp`, `/data/dev/bun/src/standalone_module_graph.zig` | 吸收日期：2026-11-22
+
 ## 概述
 
 `cap:macho` 提供纯 CP、零外部依赖、零堆分配的 Apple Mach-O（Thin 32/64-bit，支持大端与小端字节序）及 Fat Universal Binary（32/64-bit）二进制魔数探测、头部解码、Load Command 安全迭代与架构切片列表解析器，全面防护畸形 `cmdsize` 与缓冲区越界。
@@ -30,3 +32,14 @@ fn isArm64Executable(bin: []const u8): bool {
     return false;
 }
 ```
+
+---
+
+## 上游行为契约与安全边界注意事项
+
+1. **大端/小端字节序与 8 种标准魔数区分**：
+   - `detectMachoKind` 严格区分 32/64-bit Thin Mach-O（`0xFEEDFACE`/`0xFEEDFACF` 及其反字节序）与 32/64-bit Fat Universal Binary（`0xCAFEBABE`/`0xCAFEBABF` 及其反字节序）；`parseMachoHeader` 自动按探测到的字节序解码全部头部字段，注意 Fat 头在 macOS 规范中始终按大端序编码。
+2. **畸形 Load Command 防护（`MachoLoadCmdIter`）**：
+   - 每步迭代严格校验 `cmdsize >= 8` 且 `offset + cmdsize <= headerSize + sizeofcmds <= data.len`，彻底防止 `cmdsize == 0` 触发的无限循环或越界切片访问。
+3. **Fat Universal Binary 切片提取（`FatArchIter`）**：
+   - 在 macOS 通用二进制（同时包含 `CPU_TYPE_ARM64` 与 `CPU_TYPE_X86_64`）中，通过 `FatArchIter` 遍历每个架构条目的 `offset` 与 `size`，校验范围合法后再将子切片 `bin[offset .. offset + size]` 递归送入 `parseMachoHeader` 解析具体架构段。
