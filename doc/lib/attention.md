@@ -26,6 +26,7 @@
 - **`LrScheduleConfig` / `AdamWConfig` / `LionConfig` / `cosineWarmupLr` / `linearWarmupDecayLr` / `gradGlobalL2Norm` / `clipGradNormInPlace` / `adamWStepInPlace` / `lionStepInPlace`** (`optimizer.cp`)：零堆分配 AI 大模型训练优化器与学习率调度引擎，提供线性 Warmup + 余弦/线性退火、全局 L2 梯度范数裁剪、解耦权重衰减 AdamW（含偏差修正）与 Google Brain Lion 符号动量优化器。
 - **`Int4QuantMode` / `Int4GroupParams` / `packInt4Pair` / `unpackInt4Lo` / `unpackInt4Hi` / `quantizeGroupInt4Sym` / `quantizeGroupInt4Asym` / `dequantizeGroupInt4` / `gemvInt4Group`** (`quant_int4.cp`)：零堆分配 GPTQ / AWQ 风格 Per-Group INT4 权重压缩与混合精度融合 GEMV 引擎，支持对称 `[-8, 7]` 与非对称 `[0, 15] + zero_point` 分组量化、4-bit nibble 紧致打包以及尺度外提（Scale Hoisting）零临时反量化矩阵乘加。
 - **`KvQuantParams` / `quantizeTokenKvI8` / `dequantizeTokenKvI8` / `dotQueryQuantKeyI8` / `quantizedAttentionSingleQuery`** (`kv_quant.cp`)：零堆分配长上下文 KV-Cache 在线 INT8 逐 Token 对称量化压缩（4x 显存压缩，对标 vLLM/KIVI）、尺度外提 Query-Key 点积以及 O(1) 额外内存 Online Softmax 融合单 Query 注意力核。
+- **`SwaConfig` / `RingKvCache` / `swaAttentionSingleQuery` / `ringKvAttentionSingleQuery`** (`sliding_window.cp`)：零堆分配滑动窗口注意力（SWA，对标 Mistral / Gemma 2）与 StreamingLLM Attention Sink 固定容量环形 KV-Cache，支持前 `sink_tokens` 永久锚定、窗口环形覆盖与 $O((S+W)\cdot d)$ 无界流式解码。
 
 ## 3. API 速查
 
@@ -111,6 +112,9 @@
 | `quantizeTokenKvI8` / `dequantizeTokenKvI8` | `(vec, out_q): KvQuantParams?` / `(q, params, out_vec): bool` | 逐 Token 对称 INT8（`[-127, 127]`）在线 KV 量化与反量化（4x 显存压缩，记录 `min_val`/`max_val`） |
 | `dotQueryQuantKeyI8` | `(q_vec, k_q, k_params): f64?` | 零反量化临时缓冲的尺度外提 Query-Key INT8 点积（内部 `f64` 累加） |
 | `quantizedAttentionSingleQuery` | `(query, keys_q, k_params, vals_q, v_params, seq_len, head_dim, out): bool` | 基于 Online Softmax 的 O(1) 额外内存 INT8 KV-Cache 单 Query 融合注意力核 |
+| `RingKvCache.init` / `appendToken` / `activeLen` / `totalSeen` / `clear` | `(cfg, keys_buf, vals_buf): RingKvCache?` / `(*_, k, v): bool` | 固定容量 `(sink_tokens + window_size) * head_dim` StreamingLLM 环形 KV-Cache，前 `sink_tokens` 永久锚定不被覆盖 |
+| `swaAttentionSingleQuery` | `(query, keys, vals, seq_len, query_pos, cfg, out): bool` | $O((S+W)\cdot d)$ 滑动窗口 + Attention Sink 单 Query Online Softmax 融合注意力 |
+| `ringKvAttentionSingleQuery` | `(query, cache, out): bool` | 直接在 `RingKvCache` 上按时间顺序执行无界流式 StreamingLLM 单 Query 注意力 |
 
 ## 4. 示例
 
@@ -671,5 +675,39 @@ pub fn demoQuantizedKvAttention() {
         4,
         out_s,
     );
+}
+```
+
+### 滑动窗口注意力与 StreamingLLM Attention Sink 环形缓存示例 (`sliding_window.cp`)
+
+```cp
+import {
+    SwaConfig,
+    RingKvCache,
+    ringKvAttentionSingleQuery,
+} from "cap:attention";
+
+pub fn demoStreamingLlmRingKv() {
+    const cfg = SwaConfig{
+        sink_tokens: 2,
+        window_size: 4,
+        head_dim: 4,
+        causal: true,
+    };
+    let k_buf: [24]f32 = undefined; // (2 + 4) * 4
+    let v_buf: [24]f32 = undefined;
+    let k_s: []f32 = k_buf[0..];
+    let v_s: []f32 = v_buf[0..];
+
+    if (mut_cache := RingKvCache.init(cfg, k_s, v_s)) {
+        let cache = mut_cache;
+        const tok_k: [4]f32 = [0.5, -0.2, 0.8, 0.1];
+        const tok_v: [4]f32 = [1.0, 0.5, -0.5, 0.25];
+        * = cache.appendToken(tok_k[0..], tok_v[0..]);
+
+        let out: [4]f32 = undefined;
+        let out_s: []f32 = out[0..];
+        * = ringKvAttentionSingleQuery(tok_k[0..], cache, out_s);
+    }
 }
 ```

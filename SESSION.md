@@ -1096,3 +1096,45 @@
   > 回复,你提供的是摘要, 要全部回复, 这对我们复盘/了解系统研发过程至关重要,不可省略!
 - **完整回复与执行汇报**：
   > (正在执行/待本轮结束落盘)
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 13:19:08）[step:14425]
+- **用户完整原始指令**：
+  > 另外一个问题, 你在吸收外部库时,肯定会遇到 与 bun中吸收的重复和冲突, 你是如何解决这个的, 以bun优先,还是做了合并,还是重复存在?
+- **完整回复与执行汇报**：
+  > 这个问题问到点子上了，我直接按 `/data/dev/cp/lib/` 的真实盘点结果如实回答——**既有“已合并/以 Bun 优先”的现行机制，也诚实存在少量早期遗留的重叠目录**：
+  >
+  > ### 1. 冲突与重复的真实盘点（如实说明）
+  > 当前 `/data/dev/cp/lib/` 共 845 个顶层目录，按领域排查发现**早期快速扩张阶段确实留下了少量“重叠并存”的目录**：
+  > - **HTTP/H2/H3 族**：除主包 `lib/http/` 外，早期还独立建了 `http2`、`http2_frame`、`h2_frame`、`h2_encode`、`h2stream`、`http3`、`qpack`、`byterange`、`sse`、`sse_parser`；
+  > - **CSS 族**：除主包 `lib/css/` 外，早期还独立建了 `cssmodules`、`keyframes`、`mediaquery`、`selector`；
+  > - **包管理族**：除主包 `lib/pkg/` 外，早期还独立建了 `catalog`、`semver`；
+  > - **AI/模型族**：`lib/attention/safetensors.cp` 与早期独立的 `lib/safetensors/` 存在功能重叠。
+  >
+  > **原因**：前期采取“每吸收一个模块就新建独立顶层包”的节奏，一边从 Bun 吸收底层模块、一边又用纯 CP 做了面向用户的上层封装，导致同一领域出现多个平行入口。
+  >
+  > ---
+  >
+  > ### 2. 我们当前的处理原则（已严格落地）
+  > 1. **以 Bun 真实工程实现为最高权威源（Bun 优先）**：
+  >    - 凡是 `/data/dev/bun/src/` 已具备工业级纯逻辑实现的领域（HTTP/CSS/Shell/Pkg/Bundler/Resolver/SQL/Sourcemap 等），**一律优先以 Bun 源码为权威基线吸收并持续跟踪增量**（通过 [scripts/audit_bun_sync.py](file:///data/dev/cp/scripts/audit_bun_sync.py) 保持 `upstream_newer=0`），不再用纯 CP 重复造轮子；
+  > 2. **禁止平行新建，统一“合并进现有顶层主包 + 符号查重”**：
+  >    - 现在所有新吸收的 Bun 子模块（如 `lib/css/diagnostics.cp`、`lib/css/property_rule.cp`、`lib/css/font_palette_values.cp`、`lib/pkg/overrides.cp`、`lib/pkg/update_request.cp`、`lib/http/h3/encode.cp`、`lib/shell/cond_expr.cp`、`lib/shell/echo.cp`）以及纯 CP AI 模块（`lib/agent/*`、`lib/attention/*`、`lib/vector/*`、`lib/prompt/*`），在写入前都**强制先读取 `<pkg>/index.cp` 检查已有导出符号**，确认零冲突后以子模块形式合并入主包，绝不制造新的平行顶层目录；
+  > 3. **纯 CP 原创聚焦 Bun 没有的空白域（互补零冲突）**：
+  >    - AI Agent 运行时、LLM 推理量化、RAG 检索、MCP/A2A 协议属于 Bun 原生缺失的领域，与 Bun 资产天然互补、零冲突。
+  >
+  > ---
+  >
+  > ### 3. 对历史遗留重叠目录的治理建议
+  > 如果你同意，我可以在保持 3 路吸收不中断的同时，顺手安排一轮**“重叠目录收敛清理”**（沿用之前消除 182 个长下划线目录的方案）：
+  > - 将 `h2_encode`/`h2stream`/`qpack`/`byterange` 等并入 `lib/http/`；
+  > - 将 `cssmodules`/`keyframes`/`mediaquery` 并入 `lib/css/`；
+  > - 将 `catalog` 并入 `lib/pkg/`；
+  > - 对已完全被 `lib/attention/safetensors.cp` 覆盖的重复目录去重（或保留极薄的向后兼容别名），彻底消除“重复存在”，让每个领域只保留唯一权威入口。
+  >
+  > ---
+  >
+  > *(附：本轮同步验收提交 `c5af3c09`：[lib/shell/echo.cp](file:///data/dev/cp/lib/shell/echo.cp)（吸收自 Bun，6/6 PASS）+ 7 份 Bun 同步戳清零（`upstream_newer=0`）+ [lib/agent/tool_stream.cp](file:///data/dev/cp/lib/agent/tool_stream.cp)（流式 Tool-Call JSON 组装器，5/5 PASS），已同步更新 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md)；RFC Phase 1 `@fma`/`@dot`/`@l2sq` SIMD 编译器工程师与 3 路吸收子智能体继续全速并行中。)*
+
+### 2026-11-22（分类合并交付：lib/attention/sliding_window.cp | 2026-11-22 13:22:18）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/attention/sliding_window.cp（长上下文 SWA 滑动窗口注意力 + StreamingLLM Attention Sink 环形缓存，5/5 PASS），归入 cap:attention 并同步 cp_lib_ref.md；续派 lib/attention/prefix_cache.cp。

@@ -163,3 +163,10 @@ export {
     dotQueryQuantKeyI8,
     quantizedAttentionSingleQuery,
 } from "./kv_quant.cp";
+
+export {
+    SwaConfig,
+    RingKvCache,
+    swaAttentionSingleQuery,
+    ringKvAttentionSingleQuery,
+} from "./sliding_window.cp";
