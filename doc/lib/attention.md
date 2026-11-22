@@ -1629,3 +1629,49 @@ pub fn demoBeamSearch() {
     }
 }
 ```
+
+---
+
+### 零分配 LLM 分块 Prefill + 优先级抢占连续批调度器 (`batchSched.cp`)
+
+面向 Sarathi / vLLM 风格高吞吐低尾延迟推理引擎的 100% 纯 CP 零动态堆分配连续批调度器（Token 预算 + KV 块池联合调度）：
+
+- **常量与枚举**：
+  - `BATCH_SCHED_MAX_REQS = 64`、`BATCH_SCHED_MAX_STEP_ITEMS = 64`
+  - `BatchReqState`（`waiting | running | preempted | finished | aborted`）
+  - `BatchExecPhase`（`prefill_chunk | decode`）
+- **配置与数据模型**：
+  - `BatchSchedConfig`（`max_batch_tokens`, `chunk_size`, `total_kv_blocks`, `kv_block_size`, `max_running_seqs`, `ttft_urgency_window_ms`；提供 `defaults()` 与 `isValid()`）
+  - `BatchRequestSlot`（含 `isPrefillComplete()`, `committedTokens()`, `kv_blocks_held`, `preempt_count`, `first_token_ms`）
+  - `BatchStepEntry` / `BatchStepPlan`（单步调度的 Decode/Prefill 项列表、总 Token 数、新分配 KV 块、被抢占 `preempted_ids` 与剩余空闲 KV 块）
+  - `BatchSchedStats`（状态分布、KV 池使用/空闲块、累计步数/Prefill/Decode Token、抢占次数、完成数与平均 TTFT）
+- **核心引擎 `ChunkedBatchScheduler`**：
+  - `init(cfg)` / `reset(*_)` / `submitRequest(*_, req_id, prompt_tokens, max_output_tokens, priority, arrival_ms, ttft_deadline_ms)` / `abortRequest(*_, req_id)` / `reapTerminal(*_)`
+  - `scheduleStep(*_, now_ms, *out_plan)`：三阶段联合调度——① 优先保障运行中 Decode（1 token/步），KV 块不足时按最低优先级 + 最晚到达原则抢占并归还 KV 块；② 推进在途分块 Prefill；③ 在剩余 Token 预算与并发槽位内优先唤醒 `preempted` 请求，再按 TTFT 截止期紧迫度 + 优先级 + 到达顺序接纳 `waiting` 请求并按 `chunk_size` 切片。
+  - `commitStepResult(*_, req_id, tokens_processed, reached_eos, now_ms)`：推进 Prefill/Decode 进度、记录首次 Token 延迟（TTFT），并在达到 EOS 或 `max_output_tokens` 时自动释放全部 KV 块。
+
+```cp
+import {
+    BatchSchedConfig,
+    BatchStepPlan,
+    ChunkedBatchScheduler,
+} from "cap:attention";
+
+pub fn demoChunkedBatchScheduler() {
+    let cfg = BatchSchedConfig.defaults();
+    cfg.max_batch_tokens = 256;
+    cfg.chunk_size = 128;
+    cfg.total_kv_blocks = 64;
+    cfg.kv_block_size = 16;
+
+    if (s := ChunkedBatchScheduler.init(cfg)) {
+        let sched = s;
+        * = sched.submitRequest(1001, 300, 32, 10, 1000, 2000);
+        let plan = BatchStepPlan{};
+        sched.scheduleStep(1050, *plan);
+        // 300-token Prompt 按 chunk_size=128 自动切片，首步调度 128 tokens (8 KV blocks)
+        * = sched.commitStepResult(1001, 128, false, 1100);
+        * = sched.stats();
+    }
+}
+```

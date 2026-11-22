@@ -405,3 +405,16 @@ export {
     BeamSearchStats,
     BeamSearchDecoder,
 } from "./beamSearch.cp";
+
+export {
+    BATCH_SCHED_MAX_REQS,
+    BATCH_SCHED_MAX_STEP_ITEMS,
+    BatchReqState,
+    BatchExecPhase,
+    BatchSchedConfig,
+    BatchRequestSlot,
+    BatchStepEntry,
+    BatchStepPlan,
+    BatchSchedStats,
+    ChunkedBatchScheduler,
+} from "./batchSched.cp";
