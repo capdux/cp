@@ -606,3 +606,15 @@ export {
     CssQuoteStyle,
     CssString,
 } from "./cssString.cp";
+
+export {
+    CSS_NESTING_MAX_DECLS,
+    CssNestingError,
+    CssNestingSyntax,
+    CssNestingLoc,
+    CssNestingDecl,
+    hasNestingSelectorAmp,
+    isValidAtNestSelector,
+    resolveNestedSelector,
+    CssNestingRule,
+} from "./nestingRule.cp";

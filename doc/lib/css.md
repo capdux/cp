@@ -828,3 +828,21 @@ const n2 = CssString.parse(encoded[0..n1], decoded[0..])?;
 // decoded[0..n2] == "hello \"css\"\nline2"
 * = n2;
 ```
+
+19. **CSS Nesting `@nest` 规则与选择器语法降级展平（`nestingRule.cp`，吸收自 `/data/dev/bun/src/css/rules/nesting.cp` & `/data/dev/bun/docs/bundler/css.mdx`）**：
+    - **导出符号**：`CSS_NESTING_MAX_DECLS` (`32`)、`CssNestingError`、`CssNestingSyntax`（`AtNest`/`Implicit`）、`CssNestingLoc`、`CssNestingDecl`、`hasNestingSelectorAmp`、`isValidAtNestSelector`、`resolveNestedSelector`、`CssNestingRule`（`initAtNest`/`initImplicit`/`addDecl`/`declCount`/`toCss`/`toLoweredCss`）；
+    - **Bun CSS Bundler 语法降级实践（吸收自 `bundler/css.mdx`）**：
+      - Bun CSS 打包器默认面向 Firefox 78+ / Chrome 87+ / Safari 14+ 自动降级现代 CSS Nesting 语法；
+      - `CssNestingRule.toCss(in_parent_context, minify, out)` 精确对齐 Bun `NestingRule.toCss`：仅在无父级上下文且为 `@nest` 规则时输出 `"@nest "` 前缀；
+      - `resolveNestedSelector` / `toLoweredCss` 以零动态堆分配完成逗号分隔选择器列表的笛卡尔积展平（含引号内 `&` 安全跳过），将嵌套规则直接降级为旧浏览器兼容的扁平 CSS。
+
+```cp
+import { CssNestingRule, CssNestingLoc } from "cap:css";
+
+let rule = CssNestingRule.initAtNest("&:hover, &.active", CssNestingLoc{ line: 4, column: 2 })?;
+* = rule.addDecl("color", "#fff", false)?;
+let buf: [128]u8 = [0; 128];
+const flat = rule.toLoweredCss(".btn, .link", true, buf[0..])?;
+// ".btn:hover,.btn.active,.link:hover,.link.active{color:#fff}"
+* = flat;
+```

@@ -508,6 +508,49 @@ pub fn demoArenaSkipList() {
 
 ---
 
+### 零分配 RocksDB/LevelDB 前缀压缩数据块与稀疏块索引二分查找引擎 (`sstableIndex.cp`)
+
+面向 LSM-Tree SSTable 磁盘数据块格式的 100% 纯 CP 零动态堆分配前缀压缩编解码与稀疏块索引引擎：
+
+- **常量与枚举**：
+  - `PREFIX_BLOCK_DEFAULT_RESTART_INTERVAL = 16`、`PREFIX_BLOCK_MAX_BYTES = 4096`、`PREFIX_BLOCK_MAX_RESTARTS = 128`、`PREFIX_BLOCK_MAX_KEY_LEN = 256`、`SST_INDEX_MAX_BLOCKS = 64`、`SST_INDEX_MAX_KEY_LEN = 256`
+  - `PrefixBlockStatus`（`ok | empty_key | key_too_long | out_of_order_key | already_finished | restarts_full | buffer_full | index_full`）
+  - `PrefixBlockLookupStatus`（`found | not_found | buffer_too_small | corrupt_block`）
+- **核心类型**：
+  - `PrefixBlockBuilder`：每 `restart_interval` 条写入完整 Restart Point，中间记录以 `(shared_len, unshared_len, val_len)` LEB128 varint 前缀压缩编码，封口 `finish()` 写入 4B 小端 Restart Offset 数组与 4B count；强制严格递增键校验与前置空间原子预检，提供 `stats(): PrefixBlockStats` 压缩率遥测。
+  - `PrefixBlockReader` / `PrefixBlockCursor`：`open(data)` 完整校验截断、越界/非单调 Restart Offset 与 `shared_len == 0` 约束；`get(key, out_key, out_val)` 与 `seek(lower_key)` 执行 O(log R) Restart Point 二分查找 + 线性精确定位，零动态堆分配前向迭代。
+  - `SstSparseIndex`：定长 64 块围栏键（`last_key`）稀疏索引，支持 `addBlock` 严格递增围栏键写入、O(log B) 二分 `locateBlock(key)` 与区间裁剪 `locateRange(start_key, end_key)`。
+
+```cp
+import {
+    PrefixBlockBuilder,
+    PrefixBlockReader,
+    SstSparseIndex,
+} from "cap:db";
+
+pub fn demoSstablePrefixIndex() {
+    let builder = PrefixBlockBuilder.init(4);
+    * = builder.add("tenant:acme:user:001", "alice");
+    * = builder.add("tenant:acme:user:002", "bob");
+    * = builder.add("tenant:acme:user:003", "carol");
+    const block = builder.finish();
+
+    let idx = SstSparseIndex.init();
+    * = idx.addBlock(builder.lastKeySlice(), 0, @as(u32, @intCast(block.len)), builder.stats().entry_count);
+
+    if (reader := PrefixBlockReader.open(block)) {
+        let kbuf: [64]u8 = [0; 64];
+        let vbuf: [64]u8 = [0; 64];
+        let ks: []u8 = kbuf[0..];
+        let vs: []u8 = vbuf[0..];
+        const hit = reader.get("tenant:acme:user:002", *ks, *vs);
+        * = hit.found;
+    }
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [bloom_cuckoo.md](db/bloom_cuckoo.md)

@@ -433,3 +433,25 @@ export {
     SkipListStats,
     ArenaSkipList,
 } from "./skipList.cp";
+
+// --- sstable_index ---
+export {
+    PREFIX_BLOCK_DEFAULT_RESTART_INTERVAL,
+    PREFIX_BLOCK_MAX_BYTES,
+    PREFIX_BLOCK_MAX_RESTARTS,
+    PREFIX_BLOCK_MAX_KEY_LEN,
+    SST_INDEX_MAX_BLOCKS,
+    SST_INDEX_MAX_KEY_LEN,
+    PrefixBlockStatus,
+    PrefixBlockLookupStatus,
+    PrefixBlockLookup,
+    PrefixBlockStats,
+    SstIndexEntry,
+    SstIndexRange,
+    SstSparseIndexStats,
+    compareLexBytes,
+    PrefixBlockBuilder,
+    PrefixBlockCursor,
+    PrefixBlockReader,
+    SstSparseIndex,
+} from "./sstableIndex.cp";
