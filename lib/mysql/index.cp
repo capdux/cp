@@ -218,3 +218,21 @@ export {
     MySqlErrorCategory,
     MySqlErrorKind,
 } from "./mysqlError.cp";
+
+// --- 13. ResultSetHeader, Query Response Classifier & AuthSwitchResponse Codec (./resultSetHeader.cp) ---
+export {
+    MYSQL_PKT_OK,
+    MYSQL_PKT_MORE_DATA,
+    MYSQL_PKT_HANDSHAKE,
+    MYSQL_PKT_LOCAL_INFILE,
+    MYSQL_PKT_EOF,
+    MYSQL_PKT_ERR,
+    MYSQL_METADATA_NONE,
+    MYSQL_METADATA_FOLLOWS,
+    MYSQL_MAX_PACKET_PAYLOAD,
+    ResultSetHeaderError,
+    MySqlResponsePacketKind,
+    classifyQueryResponse,
+    MySqlResultSetHeader,
+    AuthSwitchResponseCodec,
+} from "./resultSetHeader.cp";

@@ -126,3 +126,28 @@ const k = MySqlErrorKind.fromServerErrno(1045);
 * = k.code();
 * = MySqlErrorCategory.Auth;
 ```
+
+8. **结果集头、查询响应首包判别与认证切换响应帧（`resultSetHeader.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/ResultSetHeader.cp`）**：
+   - `classifyQueryResponse(payload)` 严格按 MySQL 线协议规则区分 `Ok`（`0x00` 且 `len >= 7`）、`Error`（`0xFF`）、`LocalInfile`（`0xFB`）、`Eof`（`0xFE` 且 `len < 9`）与 `ResultSetHeader`；
+   - `MySqlResultSetHeader` 零堆分配编解码 1/3/4/9 字节 `lenenc-int` 列计数，并完整支持 MySQL 8.0+ `CLIENT_OPTIONAL_RESULTSET_METADATA`（`metadata_follows = 0 | 1`），通过 `expectedColumnDefPackets()` 计算后续 `ColumnDefinition41` 包数；
+   - `AuthSwitchResponseCodec` 零堆分配编解码客户端 `AuthSwitchResponse` 4 字节帧头 + 认证响应负载。
+
+```cp
+import {
+    classifyQueryResponse,
+    MySqlResponsePacketKind,
+    MySqlResultSetHeader,
+    AuthSwitchResponseCodec,
+} from "cap:mysql";
+
+let buf: [64]u8 = [0; 64];
+const hdr = MySqlResultSetHeader.initWithMetadata(12, true);
+const n = hdr.encodeFrame(1, buf[0..])?;
+const decoded = MySqlResultSetHeader.decodeFrame(buf[0..n], true)?;
+* = decoded.expectedColumnDefPackets(); // 12
+
+const kind = classifyQueryResponse(buf[4..n])?;
+* = kind == MySqlResponsePacketKind.ResultSetHeader;
+const auth_n = AuthSwitchResponseCodec.encodeFrame("scrambled_20_bytes!!", 3, buf[0..])?;
+* = auth_n;
+```
