@@ -393,3 +393,27 @@ export {
     MemTableStats,
     SortedMemTable,
 } from "./memTable.cp";
+
+// --- write_batch ---
+export {
+    WRITE_BATCH_HEADER_SIZE,
+    WRITE_BATCH_TRAILER_SIZE,
+    WRITE_BATCH_MAX_BYTES,
+    WRITE_BATCH_MAX_SAVEPOINTS,
+    GROUP_COMMIT_MAX_WRITERS,
+    GROUP_COMMIT_MAX_BYTES,
+    writeBatchCrc32,
+    WriteBatchOp,
+    WriteBatchStatus,
+    WriteBatchRecord,
+    verifyWriteBatchRaw,
+    verifyWriteBatchFramed,
+    WriteBatchIter,
+    WriteBatch,
+    GroupCommitConfig,
+    GroupCommitWriterStatus,
+    GroupCommitReceipt,
+    GroupCommitFlushResult,
+    GroupCommitStats,
+    GroupCommitCoordinator,
+} from "./writeBatch.cp";

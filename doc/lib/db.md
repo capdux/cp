@@ -406,6 +406,66 @@ pub fn demoSortedMemTable() {
 
 ---
 
+### 零分配原子写批次与 LSM Group Commit 合并协调器 (`writeBatch.cp`)
+
+面向 LSM-Tree / RocksDB 风格持久化引擎的 100% 纯 CP 零动态堆分配原子写批次（`WriteBatch`）与多写者组提交（`GroupCommitCoordinator`）协调器：
+
+- **常量与枚举**：
+  - `WRITE_BATCH_HEADER_SIZE = 12`（8B LE `seq` + 4B LE `count`）、`WRITE_BATCH_TRAILER_SIZE = 4`（4B LE CRC32-IEEE）、`WRITE_BATCH_MAX_BYTES = 4096`、`WRITE_BATCH_MAX_SAVEPOINTS = 16`、`GROUP_COMMIT_MAX_WRITERS = 16`、`GROUP_COMMIT_MAX_BYTES = 8192`
+  - `WriteBatchOp`（`put | delete | single_delete | merge`）
+  - `WriteBatchStatus`（`ok | buffer_full | empty_key | savepoint_stack_full | no_savepoint | truncated | invalid_tag | malformed_varint | count_mismatch | checksum_mismatch | invalid_batch`）
+  - `GroupCommitWriterStatus`（`committed | empty_noop | rejected_invalid | rejected_oversize | rejected_queue_full`）
+- **原子 `WriteBatch` 与零拷贝解码**：
+  - `WriteBatch.init()` / `setSequence(*_, seq)` / `put(*_, k, v)` / `delete(*_, k)` / `singleDelete(*_, k)` / `merge(*_, k, operand)` / `clear(*_)`
+  - 嵌套保存点事务回滚：`setSavePoint(*_)` / `popSavePoint(*_)` / `rollbackToSavePoint(*_)`（最多 16 层嵌套）
+  - 帧编码与完整性校验：`encodeFramed(*out_buf): usize?`、`checksum(): u32`、`verify()`、`verifyWriteBatchRaw(raw)`、`verifyWriteBatchFramed(framed)`、`writeBatchCrc32(data)`
+  - 零拷贝正向迭代器：`WriteBatchIter.fromRaw(raw)` / `WriteBatchIter.fromFramed(framed)` / `next(*_): WriteBatchRecord?`（直接返回指向原字节切片的零拷贝 `key`/`value` 与递增 `seq`）
+- **多写者 `GroupCommitCoordinator`**：
+  - `GroupCommitConfig`（`max_writers`, `max_batch_bytes`, `initial_seq`；`defaults()` / `isValid()`）
+  - `GroupCommitCoordinator.init(cfg)` / `enqueueBatch(*_, writer_id, batch)` / `enqueueRaw(*_, writer_id, raw)`：首位入队写者自动成为 Leader，后续写者作为 Follower 顺序零拷贝合并载荷
+  - `flush(*_, *out_framed, *out_receipts): GroupCommitFlushResult?`：为全组分配严格单调连续 `seq` 区间，生成单块带 CRC32 校验和的落盘帧，并逐一返回每位写者的 `GroupCommitReceipt`（含 `is_leader`, `[start_seq, end_seq)`, `payload_offset`, `payload_bytes`）
+  - `stats(): GroupCommitStats`：统计落盘轮次、累计提交写者数、累计操作数、落盘字节数、待提交队列与拒绝次数。
+
+```cp
+import {
+    WriteBatch,
+    WriteBatchIter,
+    GroupCommitConfig,
+    GroupCommitReceipt,
+    GroupCommitCoordinator,
+} from "cap:db";
+
+pub fn demoGroupCommit() {
+    let wb1 = WriteBatch.init();
+    * = wb1.put("k1", "v1");
+    * = wb1.merge("cnt", "+1");
+
+    let wb2 = WriteBatch.init();
+    * = wb2.delete("k_old");
+    * = wb2.singleDelete("k_tmp");
+
+    if (c := GroupCommitCoordinator.init(GroupCommitConfig.defaults())) {
+        let coord = c;
+        * = coord.enqueueBatch(101, wb1);
+        * = coord.enqueueBatch(102, wb2);
+
+        let framed: [4096]u8 = [0; 4096];
+        let framed_s: []u8 = framed[0..];
+        let receipts: [4]GroupCommitReceipt = [GroupCommitReceipt{}; 4];
+        let receipts_s: []GroupCommitReceipt = receipts[0..];
+
+        if (res := coord.flush(*framed_s, *receipts_s)) {
+            let it = WriteBatchIter.fromFramed(framed[0..res.merged_framed_bytes]);
+            while (rec := it.next()) {
+                * = rec.seq;
+            }
+        }
+    }
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [bloom_cuckoo.md](db/bloom_cuckoo.md)

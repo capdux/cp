@@ -21,6 +21,7 @@
 
 - `lib/js/ident.cp`：JS/TS 关键字分类、保留字判定、ASCII 标识符与私有字段校验、属性引号判定及字符串转义
 - `lib/js/op.cp`：JS AST 运算符枚举、优先级层级、赋值目标类型及元信息表
+- `lib/js/useDirective.cp`：JS/RSC 顶层指令序言（`"use client"` / `"use server"` / `"use strict"`）解析器与边界切换判定（吸收自 `/data/dev/bun/src/js_parser/ast/UseDirective.cp`）
 - `lib/js/index.cp`：`cap:js` 统一聚合导出入口
 
 ## 核心 API
@@ -61,4 +62,22 @@ fn demo() {
     * = valid;
     * = info;
 }
+```
+
+### 顶层指令序言与 RSC 边界判定 (`useDirective.cp`)
+
+吸收自 `/data/dev/bun/src/js_parser/ast/UseDirective.cp`（参考 `/data/dev/bun/docs/bundler/index.mdx` 与 `/data/dev/bun/docs/snippets/cli/build.mdx` 中 `--banner '"use client";'` 打包器实战指南）：
+
+- **导出符号**：`UseDirectiveBoundering`（`Client`/`Server`）、`UseDirectiveFlags`（`record`/`hasAnyBoundary`）、`UseDirective`（`None`/`Client`/`Server`/`Strict`；方法 `isBoundary`/`boundering`/`asLiteral`/`asBanner`/`parse`）、`scanUseDirectives(contents)`；
+- **打包器实战最佳实践**：
+  - React Server Components 模块可通过文件顶部 `"use client";` 或 `"use server";` 声明执行边界；当打包输出需要保留顶层指令时，可配合 `UseDirective.Client.asBanner()`（`'"use client";'`）注入 `--banner`；
+  - `UseDirective.parse` 自动跳过前导 UTF-8 BOM、空白、分号与 `//` / `/* ... */` 注释，区分非指令代码（`.None`）与未知引号指令（`null`）；`scanUseDirectives` 可扫描连续指令序言（如 `"use strict";\n"use client";`）。
+
+```cp
+import { UseDirective, scanUseDirectives } from "cap:js";
+
+const dir = UseDirective.parse("\"use client\";\nexport default function Btn() {}");
+const crosses = UseDirective.Server.isBoundary(.Client); // true
+const flags = scanUseDirectives("\"use strict\";\n'use client';");
+* = dir; * = crosses; * = flags;
 ```

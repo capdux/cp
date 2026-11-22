@@ -17,3 +17,10 @@ export {
     OpInfo,
     opInfo,
 } from "./op.cp";
+
+export {
+    UseDirectiveBoundering,
+    UseDirectiveFlags,
+    UseDirective,
+    scanUseDirectives,
+} from "./useDirective.cp";
