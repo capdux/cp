@@ -444,3 +444,20 @@ export {
     CssComposeEdge,
     CssComposeGraph,
 } from "./lazyExport";
+
+export {
+    JS_CHUNK_MAX_PARTS,
+    JsPostprocessError,
+    JsChunkOutputFormat,
+    JsChunkWrapKind,
+    JsChunkCommentStyle,
+    JsEntryTailDecision,
+    shouldGenerateEsmBytecodeModuleInfo,
+    validateBytecodeConfig,
+    decideEntryPointTail,
+    JsLineOffsetTracker,
+    JsChunkPartInput,
+    JsChunkAssemblyOptions,
+    JsChunkAssemblyResult,
+    assembleJsChunk,
+} from "./jsPostprocess";

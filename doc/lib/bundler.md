@@ -727,3 +727,39 @@ let cls_buf: [64]u8 = [0; 64];
 const n = g.formatExpandedClassExpr(btn, cls_buf[0..])?; // "u-reset base_a1 btn_b2"
 * = n;
 ```
+
+- **Bundler JS Chunk 后处理与拼装引擎（`jsPostprocess.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/postProcessJSChunk.cp` & `/data/dev/bun/docs/bundler/bytecode.mdx`）**：
+    - 导出：`JS_CHUNK_MAX_PARTS` (`64`)、`JsPostprocessError`、`JsChunkOutputFormat`（`Esm`/`Cjs`/`Iife`/`InternalBakeDev`）、`JsChunkWrapKind`（`None`/`Cjs`/`Esm`）、`JsChunkCommentStyle`（`Multiline`/`Single`）、`JsEntryTailDecision`（`None`/`ExportDefaultRequire`/`AwaitInit`/`SyncInit`/`ModuleExports`）、`shouldGenerateEsmBytecodeModuleInfo`、`validateBytecodeConfig`、`decideEntryPointTail`、`JsLineOffsetTracker`、`JsChunkPartInput`、`JsChunkAssemblyOptions`、`JsChunkAssemblyResult`、`assembleJsChunk`；
+    - **Bytecode Caching 与 Chunk 拼装最佳实践（参考 `/data/dev/bun/docs/bundler/bytecode.mdx`）**：
+      - `--bytecode` 预编译字节码缓存可为 CLI/构建工具带来 2x~4x 启动加速；其中 **ESM 字节码必须搭配 `--compile` 单文件可执行构建**（需要向可执行文件内嵌模块静态导入导出元数据 `ModuleInfo`），否则 `validateBytecodeConfig()` 返回 `BytecodeRequiresCompileForEsm`；CJS 字节码则兼容普通输出与 `--compile`；
+      - `.jsc` 字节码与运行时版本强绑定，不可跨版本复用，建议在 CI/CD 构建期生成而非提交至 Git；
+      - `assembleJsChunk()` 严格遵循 `Shebang -> Banner -> Format Wrapper Prefix -> Cross-Chunk Prefix -> Parts -> Entry Tail -> Cross-Chunk Suffix -> Format Wrapper Suffix -> Footer` 顺序，保证 Shebang 永远位于文件第 1 行并置位 `is_executable = true`，`InternalBakeDev` 自动跳过内嵌 runtime 段，并同步维护 `JsLineOffsetTracker` 供 SourceMap 偏移对齐。
+
+```cp
+import {
+    JsChunkOutputFormat,
+    JsChunkPartInput,
+    JsChunkAssemblyOptions,
+    validateBytecodeConfig,
+    assembleJsChunk,
+} from "cap:bundler";
+
+* = validateBytecodeConfig(true, JsChunkOutputFormat.Esm, true)?; // OK with --compile
+const parts: [2]JsChunkPartInput = [
+    JsChunkPartInput{ label: "src/util.ts", code: "const x = 1;" },
+    JsChunkPartInput{ label: "src/index.ts", code: "console.log(x);" },
+];
+let out: [512]u8 = [0; 512];
+const res = assembleJsChunk(
+    JsChunkAssemblyOptions{
+        format: JsChunkOutputFormat.Iife,
+        shebang: "#!/usr/bin/env bun",
+        banner: "// built by cap",
+        emit_part_comments: true,
+    },
+    parts[0..],
+    out[0..],
+)?;
+// res.is_executable == true, res.parts_emitted == 2
+* = res;
+```

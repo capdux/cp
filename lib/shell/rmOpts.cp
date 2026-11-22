@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/builtin/rm.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/shell/builtin/rm.cp | Synced: 2026-11-22T12:53:50Z
 // Ported from Bun: /data/dev/bun/src/shell/builtin/rm.cp & /data/dev/bun/docs/runtime/shell.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation POSIX `rm` flag parser (`-f`/`-r`/`-R`/`-v`/`-d`/`-i`/`-I`,
