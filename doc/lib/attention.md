@@ -23,6 +23,7 @@
 - **`MlaConfig` / `alibiSlopes` / `alibiAttentionSingleQuery` / `mlaCompressKv` / `mlaDecodeSingleHead`** (`mla.cp`)：零堆分配 DeepSeek-V2/V3 多头潜在注意力（MLA：低秩 KV 潜空间压缩 + 矩阵吸收优化 + 解耦 RoPE）与 ALiBi 线性距离偏置注意力核，推理期无需重建完整 K/V 缓存，大幅降低 KV-Cache 显存占用。
 - **`PoolKind` / `embeddingLookup` / `poolHiddenStates` / `l2NormalizeInPlace` / `matryoshkaProject` / `cosineSimilarityMatrix`** (`embedding.cp`)：零堆分配词嵌入查表、带 `attention_mask` 掩码的四流派序列池化（`Mean`/`Cls`/`LastToken`/`Max`，覆盖 BGE/E5/Nomic/Qwen3-Embedding）、Matryoshka 套娃维度截断重归一化与批量余弦相似度矩阵计算。
 - **`DpoResult` / `logSumExp` / `crossEntropyLoss` / `sequencePerplexity` / `klDivergenceFromLogits` / `dpoLoss` / `infoNceLoss`** (`loss.cp`)：零堆分配数值稳定大模型训练与偏好对齐损失函数库，覆盖 Cross-Entropy（含 Label Smoothing）、带 `ignore_index` 序列困惑度、零概率缓冲 KL 散度、防溢出 DPO 偏好对齐损失（Rafailov et al. 2023）与 InfoNCE 对比学习损失。
+- **`LrScheduleConfig` / `AdamWConfig` / `LionConfig` / `cosineWarmupLr` / `linearWarmupDecayLr` / `gradGlobalL2Norm` / `clipGradNormInPlace` / `adamWStepInPlace` / `lionStepInPlace`** (`optimizer.cp`)：零堆分配 AI 大模型训练优化器与学习率调度引擎，提供线性 Warmup + 余弦/线性退火、全局 L2 梯度范数裁剪、解耦权重衰减 AdamW（含偏差修正）与 Google Brain Lion 符号动量优化器。
 
 ## 3. API 速查
 
@@ -97,6 +98,10 @@
 | `klDivergenceFromLogits` | `(p_logits, q_logits): f64?` | 直接从 logits 计算非负 $D_{\text{KL}}(P \| Q)$（无需分配概率缓冲） |
 | `dpoLoss` | `(pi_chosen, pi_rejected, ref_chosen, ref_rejected, beta): DpoResult?` | Direct Preference Optimization 对齐损失与隐式奖励/准确率诊断（极限大负 margin 防溢出） |
 | `infoNceLoss` | `(similarities, positive_idx, temperature): f64?` | 对比学习 InfoNCE 损失（Embedding 微调与检索重排） |
+| `cosineWarmupLr` / `linearWarmupDecayLr` | `(step, cfg): f64?` | 线性 Warmup + 余弦退火 / 线性衰减至 `min_lr` 学习率调度器 |
+| `gradGlobalL2Norm` / `clipGradNormInPlace` | `(grads): f64?` / `(grads, max_norm): f64?` | 全局 L2 梯度范数与原位范数裁剪（返回裁剪前范数） |
+| `adamWStepInPlace` | `(params, grads, m, v, step, lr, cfg): bool` | 解耦权重衰减 AdamW 单步更新（1-based `step` 偏差修正 `1 - beta^t`） |
+| `lionStepInPlace` | `(params, grads, m, lr, cfg): bool` | Google Brain Lion 符号动量单步更新（仅需单份动量缓冲，显存减半） |
 
 ## 4. 示例
 
@@ -552,6 +557,37 @@ pub fn demoAlignmentAndEvalLosses(logits_flat: []const f64, targets: []const i32
     const sims: [4]f64 = [0.92, 0.41, 0.15, -0.10];
     if (nce := infoNceLoss(sims[0..], 0, 0.05)) {
         * = nce;
+    }
+}
+```
+
+### 训练优化器（AdamW / Lion / Cosine Warmup / 梯度裁剪）示例 (`optimizer.cp`)
+
+```cp
+import {
+    LrScheduleConfig,
+    AdamWConfig,
+    cosineWarmupLr,
+    clipGradNormInPlace,
+    adamWStepInPlace,
+} from "cap:attention";
+
+pub fn demoAdamWTrainingStep(
+    params: *[]f64,
+    grads: *[]f64,
+    m: *[]f64,
+    v: *[]f64,
+    step: usize,
+) {
+    const sched = LrScheduleConfig{
+        peak_lr: 0.0003,
+        min_lr: 0.00003,
+        warmup_steps: 100,
+        total_steps: 10000,
+    };
+    if (lr := cosineWarmupLr(step, sched)) {
+        * = clipGradNormInPlace(grads, 1.0);
+        * = adamWStepInPlace(params, grads, m, v, step, lr, AdamWConfig.default());
     }
 }
 ```

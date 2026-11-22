@@ -65,3 +65,6 @@
 
 ### 2026-11-22（分类合并交付：`lib/agent/skill_registry.cp`）
 - **执行成果**：子智能体交付 `lib/agent/skill_registry.cp`（AI Agent Skill 注册中心、能力掩码/标签 Top-K 匹配、Kahn 依赖拓扑排序与并发配额限流，5/5 PASS + `tracer` 回归 5/5 PASS），已同步 `cp_lib_ref.md` 并提交；继续派发 `lib/a2a/task_queue.cp`。
+
+### 2026-11-22（分类合并交付：`lib/attention/optimizer.cp`）
+- **执行成果**：子智能体交付 `lib/attention/optimizer.cp`（AI 训练优化器 AdamW / Lion、Cosine/Linear Warmup 学习率调度与原位 L2 梯度范数裁剪，5/5 PASS + `loss` 回归 5/5 PASS），已同步 `cp_lib_ref.md` 并提交；继续派发 `lib/vector/reranker.cp`。

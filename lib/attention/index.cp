@@ -131,3 +131,15 @@ export {
     dpoLoss,
     infoNceLoss,
 } from "./loss.cp";
+
+export {
+    LrScheduleConfig,
+    AdamWConfig,
+    LionConfig,
+    cosineWarmupLr,
+    linearWarmupDecayLr,
+    gradGlobalL2Norm,
+    clipGradNormInPlace,
+    adamWStepInPlace,
+    lionStepInPlace,
+} from "./optimizer.cp";
