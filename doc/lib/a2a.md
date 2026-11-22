@@ -550,3 +550,48 @@ pub fn demoContractNet() {
     * = broker.reportExecutionOutcome(100, fb.winner_worker_id, true, 3000); // 递补成功!
 }
 ```
+
+---
+
+### 零分配多智能体层次成本/Token 预算账本与级联熔断控制器 (`swarmBudget.cp`)
+
+面向多智能体蜂群（Multi-Agent Swarm）防无限递归烧钱、成本隔离与截止期硬熔断的 100% 纯 CP 零动态堆分配层次预算账本：
+
+- **常量与枚举**：
+  - `SWARM_BUDGET_MAX_NODES = 64`、`SWARM_BUDGET_NO_NODE = 0xFFFF`
+  - `SwarmAgentState`（`active | completed | halted_budget | halted_deadline`）
+  - `SwarmBudgetViolation`（`none | agent_not_found | agent_not_active | ancestor_halted | token_limit_exceeded | cost_limit_exceeded | tool_limit_exceeded | deadline_exceeded`）
+  - `SwarmSpawnStatus`（`ok | parent_not_found | parent_not_active | duplicate_agent_id | invalid_agent_id | capacity_full | exceeds_parent_remaining | deadline_exceeds_parent`）
+- **数据模型**：
+  - `SwarmBudgetLimits`（`max_tokens`, `max_cost_micros`, `max_tool_calls`, `deadline_ms`, `reserve_from_parent`）
+  - `SwarmAgentNode`、`SwarmChargeOutcome`、`SwarmRemainingBudget`、`SwarmBudgetStats`
+- **核心引擎 `SwarmBudgetLedger`**：
+  - `init(root_id, root_limits): SwarmBudgetLedger?` / `spawnChild(*_, parent_id, child_id, sub_limits)`：支持独立子配额、截止期单调收紧与可选父池预留（`reserve_from_parent = true`）。
+  - `charge(*_, agent_id, tokens, cost_micros, tool_calls, now_ms): SwarmChargeOutcome`：两阶段原子级联记账（先沿父链全量校验、再统一提交）；任一节点或祖先超配额/超截止期时拒绝扣减，并通过纯迭代 BFS 将违约节点及其全部活跃子树级联熔断为 `halted_budget` / `halted_deadline`。
+  - `completeAgent(*_, agent_id)`：完工并精确归还未使用的保留额度至父节点自由池。
+  - `remainingBudget(agent_id, now_ms)` / `getAgent(agent_id)` / `stats()`。
+
+```cp
+import {
+    SwarmBudgetLimits,
+    SwarmBudgetLedger,
+} from "cap:a2a";
+
+pub fn demoSwarmBudget() {
+    let ledger = SwarmBudgetLedger.init(1, SwarmBudgetLimits{
+        max_tokens: 10000,
+        max_cost_micros: 500_000,
+        max_tool_calls: 20,
+        deadline_ms: 60_000,
+    }) ?? return;
+
+    * = ledger.spawnChild(1, 2, SwarmBudgetLimits{
+        max_tokens: 4000,
+        max_cost_micros: 200_000,
+        max_tool_calls: 8,
+        reserve_from_parent: true,
+    });
+    * = ledger.charge(2, 1500, 75_000, 2, 10_000);
+    * = ledger.completeAgent(2); // 归还剩余 2500 tokens 预留给根节点
+}
+```

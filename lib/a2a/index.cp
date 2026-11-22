@@ -192,3 +192,17 @@ export {
     CnpStats,
     ContractNetBroker,
 } from "./contractNet.cp";
+
+export {
+    SWARM_BUDGET_MAX_NODES,
+    SWARM_BUDGET_NO_NODE,
+    SwarmAgentState,
+    SwarmBudgetViolation,
+    SwarmSpawnStatus,
+    SwarmBudgetLimits,
+    SwarmAgentNode,
+    SwarmChargeOutcome,
+    SwarmRemainingBudget,
+    SwarmBudgetStats,
+    SwarmBudgetLedger,
+} from "./swarmBudget.cp";
