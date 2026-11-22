@@ -404,3 +404,12 @@ export {
     DeferredDrainSummary,
     DeferredBatchCoordinator,
 } from "./deferred_batch";
+
+export {
+    INDEX_STR_MAP_BUCKETS,
+    INDEX_STR_MAP_MAX_LOAD,
+    INDEX_STR_MAP_ARENA_CAP,
+    IndexStringMapError,
+    IndexStringEntry,
+    IndexStringMap,
+} from "./index_string_map";

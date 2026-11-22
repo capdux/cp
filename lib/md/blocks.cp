@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/md/blocks.cp | Synced: 2026-11-21T17:36:07Z
+// Source: Absorbed from /data/dev/bun/src/md/blocks.cp | Synced: 2026-11-22T12:23:23Z
 // lib/md/blocks.cp
 // CommonMark & GFM Block-Level Parser (Two-Pass Line Analysis, Container Nesting, Setext/Tables)
 

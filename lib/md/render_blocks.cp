@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/md/render_blocks.cp | Synced: 2026-11-22T02:32:55Z
+// Source: Absorbed from /data/dev/bun/src/md/render_blocks.cp | Synced: 2026-11-22T12:23:28Z
 // lib/md/render_blocks.cp
 // MD4C Block-Level Rendering Dispatch (Code, HTML, Tables & Leaf Blocks)
 

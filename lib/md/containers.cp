@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/md/containers.cp | Synced: 2026-11-20T09:22:43Z
+// Source: Absorbed from /data/dev/bun/src/md/containers.cp | Synced: 2026-11-22T12:23:32Z
 // lib/md/containers.cp
 // MD4C Container Stack Management, Loose List Patching & Block Dispatch Loop
 

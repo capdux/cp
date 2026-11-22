@@ -667,3 +667,19 @@ const summary = coord.runBatchNow(false, out[0..])?;
 // summary.drained_count == 2, out[0].outcome == DeferredTaskOutcome.Resumed, coord.isIdle() == true
 * = summary;
 ```
+
+- **Bundler 索引 → 字符串零堆映射表（`index_string_map.cp`，吸收自 `/data/dev/bun/src/bundler/IndexStringMap.cp` & `/data/dev/bun/docs/bundler/index.mdx`）**：
+    - 导出：`INDEX_STR_MAP_BUCKETS` (`256`)、`INDEX_STR_MAP_MAX_LOAD` (`192`)、`INDEX_STR_MAP_ARENA_CAP` (`8192`)、`IndexStringMapError`、`IndexStringEntry`、`IndexStringMap`（`init`/`count`/`isEmpty`/`arenaUsed`/`arenaRemaining`/`get`/`contains`/`put`/`putCopy`/`getOrPut`/`remove`/`findIndexByValue`/`collectSortedEntries`/`clear`）；
+    - **双模式零堆所有权与确定性输出**：静态/长生命周期字符串使用 `put()` 零拷贝存储；由路径模板或插件动态拼接的临时栈缓冲字符串使用 `putCopy()` 拷贝入内置 8 KiB 定长字节池，避免悬垂引用且完全零堆分配；生成 Metafile / HTML Manifest 时通过 `collectSortedEntries()` 按 `SourceIndex` 严格升序导出，保证跨平台构建产物字节级确定性。
+
+```cp
+import { IndexStringMap, IndexStringEntry } from "cap:bundler";
+
+let map = IndexStringMap.init();
+* = map.put(2, "chunk-b.js")?;
+* = map.putCopy(1, "chunk-a.js")?;
+let sorted: [4]IndexStringEntry = [IndexStringEntry{}; 4];
+const n = map.collectSortedEntries(sorted[0..])?;
+// n == 2, sorted[0] == (1, "chunk-a.js"), sorted[1] == (2, "chunk-b.js")
+* = n;
+```
