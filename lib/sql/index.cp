@@ -256,3 +256,23 @@ export {
     encodePgParameterStatus,
     decodePgParameterStatus,
 } from "./pg_control.cp";
+
+export {
+    MYSQL_STMT_PREPARE_OK_STATUS,
+    MYSQL_STMT_PREPARE_OK_MIN_LEN,
+    MYSQL_STMT_PREPARE_OK_STD_LEN,
+    MySqlStmtControlError,
+    MySqlWireCmd,
+    MySqlWirePacketHeader,
+    MySqlStmtPrepareOkView,
+    MySqlResultSetHeaderView,
+    MySqlSimpleCommandView,
+    encodeMySqlStmtPrepareOk,
+    decodeMySqlStmtPrepareOk,
+    encodeMySqlResultSetHeader,
+    decodeMySqlResultSetHeader,
+    encodeMySqlSimpleCommand,
+    decodeMySqlSimpleCommand,
+    encodeMySqlStmtIdCommand,
+    decodeMySqlStmtIdCommand,
+} from "./mysql_stmt_control.cp";

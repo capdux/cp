@@ -363,6 +363,41 @@ const cc = decodePgCommandComplete(cc_wire)?; // cc.rowsAffected() == 5
 * = key;
 * = cc;
 ```
+- **MySQL 4.1/8.0 命令帧头、`COM_STMT_PREPARE_OK` 与 `ResultSetHeader` 零分配编解码器 (`mysql_stmt_control.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/{CommandType,PacketHeader,StmtPrepareOKPacket,ResultSetHeader}.cp`)**：
+  - 常量与类型：`MYSQL_STMT_PREPARE_OK_STATUS` (`0x00`)、`MYSQL_STMT_PREPARE_OK_MIN_LEN` (`10`)、`MYSQL_STMT_PREPARE_OK_STD_LEN` (`12`)、`MySqlStmtControlError`、`MySqlWireCmd`（完整 31 种 `COM_*` 命令枚举 + `fromByte`/`isPreparedCommand`/`isConnectionControl`）、`MySqlWirePacketHeader`（24 位小端长度 + 16 MiB 分片延续判定 `isContinuationChunk()`）、`MySqlStmtPrepareOkView`、`MySqlResultSetHeaderView`、`MySqlSimpleCommandView`；
+  - 编解码函数：`encodeMySqlStmtPrepareOk`/`decodeMySqlStmtPrepareOk`（兼容 10B 与 12B 标准含 `warning_count` 载荷）、`encodeMySqlResultSetHeader`/`decodeMySqlResultSetHeader`（支持 `CLIENT_OPTIONAL_RESULTSET_METADATA` 可选元数据标志）、`encodeMySqlSimpleCommand`/`decodeMySqlSimpleCommand`、`encodeMySqlStmtIdCommand`/`decodeMySqlStmtIdCommand`。
+
+```typescript
+import {
+    MySqlWireCmd,
+    MySqlStmtPrepareOkView,
+    encodeMySqlStmtPrepareOk,
+    decodeMySqlStmtPrepareOk,
+    encodeMySqlResultSetHeader,
+    decodeMySqlResultSetHeader,
+    encodeMySqlStmtIdCommand,
+    decodeMySqlStmtIdCommand,
+} from "cap:sql";
+
+let buf: [64]u8 = [0; 64];
+const prep_wire = encodeMySqlStmtPrepareOk(buf[0..], MySqlStmtPrepareOkView{
+    sequence_id: 1,
+    statement_id: 42,
+    num_columns: 3,
+    num_params: 2,
+    warning_count: 0,
+})?;
+const prep = decodeMySqlStmtPrepareOk(prep_wire)?; // prep.statement_id == 42
+
+const rs_wire = encodeMySqlResultSetHeader(buf[0..], 1, 5, true, false)?;
+const rs = decodeMySqlResultSetHeader(rs_wire)?; // rs.field_count == 5, rs.metadata_follows == false
+
+const close_wire = encodeMySqlStmtIdCommand(buf[0..], 0, MySqlWireCmd.com_stmt_close, 42)?;
+const closed_id = decodeMySqlStmtIdCommand(close_wire, MySqlWireCmd.com_stmt_close)?; // 42
+* = prep;
+* = rs;
+* = closed_id;
+```
 
 ---
 
