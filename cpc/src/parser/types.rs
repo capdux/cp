@@ -247,8 +247,23 @@ impl<'a> Parser<'a> {
                     ty = Type::FixedArray(Box::new(ty), size);
                 } else if let Some(Token::Ident(_)) = self.peek() {
                     let id = self.parse_ident()?;
-                    self.expect(Token::RBracket)?;
-                    ty = Type::FixedArray(Box::new(ty), ArraySize::Ident(id));
+                    if self.peek() == Some(&Token::Dot) {
+                        let start = id.span.start;
+                        let mut end = id.span.end;
+                        while self.peek() == Some(&Token::Dot) {
+                            self.bump()?;
+                            let seg = self.parse_ident()?;
+                            end = seg.span.end;
+                        }
+                        self.expect(Token::RBracket)?;
+                        ty = Type::FixedArray(
+                            Box::new(ty),
+                            ArraySize::Expr(self.input[start..end].to_string()),
+                        );
+                    } else {
+                        self.expect(Token::RBracket)?;
+                        ty = Type::FixedArray(Box::new(ty), ArraySize::Ident(id));
+                    }
                 } else {
                     self.expect(Token::RBracket)?;
                     ty = Type::Array(Box::new(ty));
@@ -1041,7 +1056,8 @@ impl<'a> Parser<'a> {
             let (_, span) = self.bump()?;
             if let Some(Token::IntLiteral(_)) | Some(Token::Ident(_)) = self.peek() {
                 let (size_tok, size_span) = self.bump()?;
-                let (array_size, size_str) = match size_tok {
+                let mut expr_end = size_span.end;
+                let (mut array_size, mut size_str) = match size_tok {
                     Token::IntLiteral(n) => (ArraySize::Literal(n as usize), n.to_string()),
                     Token::Ident(s) => (
                         ArraySize::Ident(Ident {
@@ -1052,7 +1068,68 @@ impl<'a> Parser<'a> {
                     ),
                     _ => unreachable!(),
                 };
-                if self.peek() == Some(&Token::RBracket) {
+                let mut size_ok = true;
+                if matches!(array_size, ArraySize::Ident(_)) && self.peek() == Some(&Token::Dot) {
+                    while self.peek() == Some(&Token::Dot) {
+                        self.bump()?;
+                        if let Some(Token::Ident(_)) = self.peek() {
+                            let (_, seg_span) = self.bump()?;
+                            expr_end = seg_span.end;
+                        } else {
+                            size_ok = false;
+                            break;
+                        }
+                    }
+                    if size_ok {
+                        size_str = self.input[size_span.start..expr_end].to_string();
+                        array_size = ArraySize::Expr(size_str.clone());
+                    }
+                }
+                if size_ok
+                    && matches!(
+                        self.peek(),
+                        Some(
+                            Token::Plus
+                                | Token::Minus
+                                | Token::Star
+                                | Token::Slash
+                                | Token::Percent
+                                | Token::Shl
+                                | Token::Shr
+                        )
+                    )
+                {
+                    let mut depth = 0usize;
+                    while let Some(tok) = self.peek() {
+                        if *tok == Token::RBracket && depth == 0 {
+                            break;
+                        }
+                        if matches!(tok, Token::Comma | Token::Semicolon) && depth == 0 {
+                            size_ok = false;
+                            break;
+                        }
+                        let (t, t_span) = self.bump()?;
+                        match t {
+                            Token::LBracket | Token::LParen => depth += 1,
+                            Token::RBracket | Token::RParen => {
+                                if depth == 0 {
+                                    size_ok = false;
+                                    break;
+                                }
+                                depth -= 1;
+                            }
+                            _ => {}
+                        }
+                        expr_end = t_span.end;
+                    }
+                    if size_ok && depth == 0 {
+                        size_str = self.input[size_span.start..expr_end].to_string();
+                        array_size = ArraySize::Expr(size_str.clone());
+                    } else {
+                        size_ok = false;
+                    }
+                }
+                if size_ok && self.peek() == Some(&Token::RBracket) {
                     self.bump()?;
                     let can_start_elem = !matches!(
                         self.peek(),
@@ -1066,6 +1143,10 @@ impl<'a> Parser<'a> {
                                 | Token::Colon
                                 | Token::FatArrow
                                 | Token::LBrace
+                                | Token::Greater
+                                | Token::Shr
+                                | Token::Pipe
+                                | Token::Pipeline
                         ) | None
                     );
                     if matches!(array_size, ArraySize::Literal(_)) || can_start_elem {

@@ -1827,3 +1827,159 @@
   > 已读取新工单 **`task-bun-20261122-while-break-expr`**（复现：[repro_const_while_break_val.cp](file:///data/dev/cp/temp/repro_const_while_break_val.cp)：`while` 循环作为表达式赋值 `const val = while (true) { if (flag) break 42; };` 报 `E0100 unexpected token 'While'`），并已同步追加派发给正在 `cpc/src/` 作业的热修子智能体 **`0e0e271d`** 一并打包修复、发布 `sync_cpc.sh release` 与逐一 `resolve` 结单。
   >
   > 原有 2 路常驻生态子智能体（Priority ① `5f0d7a3a` + Priority ③ `6b28440c`）继续并行运转不受影响。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-union-method-dotted-arr-len`）[ticket:task-bun-20261122-union-method-dotted-arr-len]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 20:32:06` | 状态：`resolved` | 结单：`2026-11-22T20:37:31`
+- **报错/需求摘要**：pub union(enum) 内部方法形参使用带点路径定长数组指针 buf: *[inet.LEN]u8 时，cpc 误拆分为 buf: *struct { inet.LEN }, u8: *anyopaque 导致 zig ast-check 报错
+- **结单与处理汇报**：根因：cpc/src/parser/types.rs 中 parse_base_type 处理 [N]T 定长数组前缀时仅支持单个 IntLiteral 或单段 Ident，遇到点分路径（如 *[inet.LEN]u8）时回溯并误解析为元组类型 *struct { inet.LEN } 且残留 u8 为下一形参。修复：在 cpc/src/parser/types.rs 扩展定长数组长度解析（支持多级点分路径 A.B.C 及常量算术表达式 A.B + 1 -> ArraySize::Expr，并在 can_start_elem 中排除 Greater/Shr/Pipe/Pipeline 避免误伤泛型内单元素元组，同时补齐后缀 T[A.B] 支持）。验证：已执行 bash scripts/sync_cpc.sh release 部署优化版；repro_union_method_arr_ptr_param.cp 转译输出 pub fn fmt(buf: *[inet.LEN]u8) void 并通过 zig ast-check；新增回归测试 cap/test/test_union_metho ...(截断)
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 20:02:17）[step:16254]
+- **用户完整原始指令**：
+  > 进度汇报
+- **完整回复与执行汇报**：
+  > ## CP 生态持续演进进度汇报（2026-11-22 20:02）
+  >
+  > ### 1. 总体健康度与关键指标
+  > - **仓库分支与最新提交**：`main` @ `275e79ca`，所有已交付模块均已同步 `doc/lib/<pkg>.md` 与 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md) 并完成干净 Git 提交。
+  > - **Bun 上游同步状态**：`bun_sourced=935, missing_synced_tag=0, upstream_newer=0`（零漂移、零覆盖）。
+  > - **下游编译器工单队列**：`unacked = 0`（全部历史工单已结单清零，随时待命热修）。
+  > - **顶层目录约束**：严格保持零新增细碎顶层目录，所有新增能力全部落位现有伞包，且 100% 为纯 CP 零动态堆分配实现。
+  >
+  > ---
+  >
+  > ### 2. 已完成波次与本阶段最新成果（Wave 5–7）
+  > **Wave 5（20/20 轮）与 Wave 6（20/20 轮）已全部圆满收官并完成 10 轮轮换**，当前已推进至 **Wave 7**：
+  >
+  > - **Priority ①（Bun 上游增量同步 + 纯逻辑子模块 + 原生文档）** — 近期已提交（`bun_sourced` 914 → **935**）：
+  >   - `cap:bundler`：[path_template.cp](file:///data/dev/cp/lib/bundler/path_template.cp)、[pure_globals.cp](file:///data/dev/cp/lib/bundler/pure_globals.cp)、[html_scanner.cp](file:///data/dev/cp/lib/bundler/html_scanner.cp)、[js_order.cp](file:///data/dev/cp/lib/bundler/js_order.cp)（W7 R1）
+  >   - `cap:pkg`：[security_scanner.cp](file:///data/dev/cp/lib/pkg/security_scanner.cp)、[patch_spec.cp](file:///data/dev/cp/lib/pkg/patch_spec.cp)、[isolated_store.cp](file:///data/dev/cp/lib/pkg/isolated_store.cp)、[repository.cp](file:///data/dev/cp/lib/pkg/repository.cp)
+  >   - `cap:css`：[import_rule.cp](file:///data/dev/cp/lib/css/import_rule.cp)、[counter_style.cp](file:///data/dev/cp/lib/css/counter_style.cp)、[starting_style.cp](file:///data/dev/cp/lib/css/starting_style.cp)、[logical.cp](file:///data/dev/cp/lib/css/logical.cp)、[font_face.cp](file:///data/dev/cp/lib/css/font_face.cp)
+  >   - `cap:cli`：[pm_version.cp](file:///data/dev/cp/lib/cli/pm_version.cp)、[pm_pkg.cp](file:///data/dev/cp/lib/cli/pm_pkg.cp)、[filter_arg.cp](file:///data/dev/cp/lib/cli/filter_arg.cp)、[test_scanner.cp](file:///data/dev/cp/lib/cli/test_scanner.cp)
+  >   - `cap:shell`：[touch_opts.cp](file:///data/dev/cp/lib/shell/touch_opts.cp)、[cp_opts.cp](file:///data/dev/cp/lib/shell/cp_opts.cp)、[rm_opts.cp](file:///data/dev/cp/lib/shell/rm_opts.cp)（补齐 POSIX 文件操作家族）
+  >   - `cap:http`：[async_http.cp](file:///data/dev/cp/lib/http/async_http.cp)
+  >
+  > - **Priority ②（AI Agent / LLM / RAG / Vector / Attention / MCP / A2A / Prompt）** — 近期已提交：
+  >   - `cap:attention`：[kv_eviction.cp](file:///data/dev/cp/lib/attention/kv_eviction.cp)（StreamingLLM+H2O）、[lora_router.cp](file:///data/dev/cp/lib/attention/lora_router.cp)（Multi-LoRA SGMV）、[guided_trie.cp](file:///data/dev/cp/lib/attention/guided_trie.cp)（受限解码前缀树，W7 R1）
+  >   - `cap:vector`：[colbert_index.cp](file:///data/dev/cp/lib/vector/colbert_index.cp)（ColBERT MaxSim 多向量索引）、[simhash_dedup.cp](file:///data/dev/cp/lib/vector/simhash_dedup.cp)（64-bit SimHash + 4-Band LSH 去重，W7 R2）
+  >   - `cap:agent`：[sandbox_policy.cp](file:///data/dev/cp/lib/agent/sandbox_policy.cp)（工具权限沙箱）、[supervisor_tree.cp](file:///data/dev/cp/lib/agent/supervisor_tree.cp)（OTP 风格容错监督树）、[tool_batcher.cp](file:///data/dev/cp/lib/agent/tool_batcher.cp)（工具批合并与读写冒险调度，W7 R4）
+  >   - `cap:prompt`：[version_registry.cp](file:///data/dev/cp/lib/prompt/version_registry.cp)（灰度 A/B 注册表）、[json_stream_scanner.cp](file:///data/dev/cp/lib/prompt/json_stream_scanner.cp)（流式 JSON Tool-Call 提取）
+  >   - `cap:mcp` / `cap:a2a` / `cap:agentmem`：[capability_negotiator.cp](file:///data/dev/cp/lib/mcp/capability_negotiator.cp)、[task_lifecycle.cp](file:///data/dev/cp/lib/a2a/task_lifecycle.cp)、[consolidation.cp](file:///data/dev/cp/lib/agentmem/consolidation.cp)（`@dot` SIMD 情景记忆巩固）
+  >
+  > - **Priority ③（高价值系统核心库）** — 近期已提交：
+  >   - `cap:net`：[p2c_balancer.cp](file:///data/dev/cp/lib/net/p2c_balancer.cp)（P2C+Peak-EWMA）、[congestion_ctrl.cp](file:///data/dev/cp/lib/net/congestion_ctrl.cp)（RFC 9002 拥塞控制，W7 R3）
+  >   - `cap:time`：[gcra_limiter.cp](file:///data/dev/cp/lib/time/gcra_limiter.cp)（多租户 GCRA 限流）、[timing_wheel.cp](file:///data/dev/cp/lib/time/timing_wheel.cp)（3 级分层哈希时间轮 O(1) 定时器）
+  >   - `cap:db` / `cap:obs` / `cap:crypto` / `cap:web`：[lsm_compactor.cp](file:///data/dev/cp/lib/db/lsm_compactor.cp)、[hdr_histogram.cp](file:///data/dev/cp/lib/obs/hdr_histogram.cp)、[merkle_tree.cp](file:///data/dev/cp/lib/crypto/merkle_tree.cp)、[sse_broker.cp](file:///data/dev/cp/lib/web/sse_broker.cp)
+  >
+  > ---
+  >
+  > ### 3. 当前双线并发运行状态（Wave 7）
+  > - **`32f3499c`（Priority ① Bun Sync & Docs Absorber W7）**：正在执行 **W7 R2**（Bun 上游增量同步 + 新纯逻辑子模块与文档吸收）。
+  > - **`78c9adf0`（Priority ② & ③ AI/Core Builder W7）**：正在执行 **W7 R5**（`cap:graph` 零分配 Dinic 最大流/最小割与二分图最大匹配求解器 `lib/graph/max_flow.cp`）。
+  >
+  > 主控将继续保持每批交付即验收、同步索引文档并提交 Git 的节奏自动推进。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 20:05:28）[step:16267]
+- **用户完整原始指令**：
+  > 进度汇报
+- **完整回复与执行汇报**：
+  > ## 最新进度汇报（2026-11-22 20:06）
+  >
+  > - **最新提交**：`38508a3e`（`main` 分支）
+  >   - 刚完成 **Priority ① Wave 7 R2**：新增 [cat_opts.cp](file:///data/dev/cp/lib/shell/cat_opts.cp)（POSIX/GNU `cat` 选项解析与跨 chunk 流式行号/空行压缩/控制字符格式化器），同步更新 [index.cp](file:///data/dev/cp/lib/shell/index.cp)、[shell.md](file:///data/dev/cp/doc/lib/shell.md) 与 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md)，深度测试 [test_shell_cat_opts_production_deep.cp](file:///data/dev/cp/cap/test/test_shell_cat_opts_production_deep.cp) 7/7 PASS。
+  >   - 紧接前一批 **Priority ③ Wave 7 R5**（`392226fb`）：新增 [max_flow.cp](file:///data/dev/cp/lib/graph/max_flow.cp)（Dinic 最大流/最小割与二分图最大匹配求解器，7/7 PASS）。
+  > - **核心指标**：
+  >   - Bun 上游同步：`bun_sourced=936, missing_synced_tag=0, upstream_newer=0`（零漂移）。
+  >   - 下游编译器工单队列：`unacked = 0`。
+  > - **当前双线并发运行中（Wave 7）**：
+  >   - `32f3499c`（Priority ① W7）：已派发 **W7 R3**（继续同步 Bun 上游并吸收下一高价值纯逻辑子模块与原生文档）。
+  >   - `78c9adf0`（Priority ② & ③ W7）：正在执行 **W7 R6**（`cap:agentmem` 零分配 AI Agent 分层对话摘要树与渐进式上下文压缩引擎 `lib/agentmem/summary_tree.cp`）。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 20:17:33）[step:16315]
+- **用户完整原始指令**：
+  > 进度统计与汇报
+- **完整回复与执行汇报**：
+  > ## CP 生态演进进度统计与汇报（2026-11-22 20:17）
+  >
+  > ### 1. 全局核心量化指标
+  > | 维度 | 当前数值 | 状态说明 |
+  > | :--- | :---: | :--- |
+  > | **仓库分支 / HEAD** | `main` @ `f1c90ec5` | 今日累计 **887** 次提交，每批交付均实时提交 |
+  > | **标准库顶层目录** | **271** 个（自 846 收敛 -68.0%） | 严格保持 **0 新增细碎顶层目录**，全部落位现有伞包 |
+  > | **标准库 `.cp` 源码文件** | **2,229** 个 | 100% 纯 CP 零动态堆分配新模块，零符号冲突 |
+  > | **正式回归测试套件** | **1,613** 个（`cap/test/test_*.cp`） | 全部新增模块 100% 通过 `cpc check` + `cap test -m` |
+  > | **标准库手册文档** | **868** 篇（`doc/lib/*.md`） | 同步更新至 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md)（302 行全量索引） |
+  > | **Bun 上游同步审计** | **`bun_sourced=939`** | `missing_synced_tag=0` / `upstream_newer=0`（零漂移） |
+  > | **下游编译器工单队列** | **`unacked=0`** | 本窗口 16+ 项 `task-bun-*` / `task-capsurf-*` 全部热修发布并结单 |
+  >
+  > ---
+  >
+  > ### 2. 波次执行进度（Wave 5 → Wave 7）
+  > 按「主控协调 + 双路持久子智能体并发 + 每 10 轮平滑轮换」机制持续推进：
+  >
+  > | 波次 | Priority ①（Bun 同步 + 纯逻辑 + 文档） | Priority ② & ③（AI Agent + 系统核心库） | 状态 |
+  > | :--- | :---: | :---: | :--- |
+  > | **Wave 5** | 10 / 10 轮 | 10 / 10 轮 | **100% 完结并轮换** |
+  > | **Wave 6** | 10 / 10 轮 | 10 / 10 轮 | **100% 完结并轮换** |
+  > | **Wave 7** | **4 / 10 轮**（R5 进行中） | **8 / 10 轮**（R9 进行中） | **双线全速推进中** |
+  >
+  > ---
+  >
+  > ### 3. Wave 7 已交付模块清单（共 12 个生产级零堆模块，100% PASS）
+  > - **Priority ①（Bun 上游吸收，4/10）**：
+  >   1. `cap:bundler` — [js_order.cp](file:///data/dev/cp/lib/bundler/js_order.cp)（JS 依赖后序线性化与 `PartRange` 合并）
+  >   2. `cap:shell` — [cat_opts.cp](file:///data/dev/cp/lib/shell/cat_opts.cp)（POSIX/GNU `cat` 选项解析与流式行号/控制字符格式化）
+  >   3. `cap:bundler` — [html_chunk.cp](file:///data/dev/cp/lib/bundler/html_chunk.cp)（Standalone HTML 单文件编译与防闭合标签注入）
+  >   4. `cap:bundler` — [css_import_order.cp](file:///data/dev/cp/lib/bundler/css_import_order.cp)（CSS `@import` 拓扑与 `@layer` 首次声明去重）
+  > - **Priority ②（AI Agent / LLM / RAG / Vector，5/10）**：
+  >   1. `cap:attention` — [guided_trie.cp](file:///data/dev/cp/lib/attention/guided_trie.cp)（受限解码前缀树与 O(V+B) Logit 掩码）
+  >   2. `cap:vector` — [simhash_dedup.cp](file:///data/dev/cp/lib/vector/simhash_dedup.cp)（64-bit Charikar SimHash + 4-Band LSH 近重复去重）
+  >   3. `cap:agent` — [tool_batcher.cp](file:///data/dev/cp/lib/agent/tool_batcher.cp)（工具调用批合并、只读去重与 RAW/WAR/WAW 冒险调度）
+  >   4. `cap:agentmem` — [summary_tree.cp](file:///data/dev/cp/lib/agentmem/summary_tree.cp)（分层对话摘要树与渐进式上下文前沿压缩）
+  >   5. `cap:attention` — [nucleus_sampler.cp](file:///data/dev/cp/lib/attention/nucleus_sampler.cp)（Repetition/Freq/Presence 惩罚 + Top-K + Min-P + Top-P 采样管线）
+  > - **Priority ③（高价值系统核心库，3/10）**：
+  >   1. `cap:net` — [congestion_ctrl.cp](file:///data/dev/cp/lib/net/congestion_ctrl.cp)（RFC 9002 拥塞控制与 SRTT/PTO/Pacing 调度）
+  >   2. `cap:graph` — [max_flow.cp](file:///data/dev/cp/lib/graph/max_flow.cp)（Dinic 最大流/最小割与二分图最大匹配求解器）
+  >   3. `cap:ds` — [fenwick_order.cp](file:///data/dev/cp/lib/ds/fenwick_order.cp)（Fenwick 树状数组与 O(log N) 动态顺序统计/加权采样）
+  >
+  > ---
+  >
+  > ### 4. 当前活跃并发任务
+  > - **`32f3499c`（Priority ① W7）**：正在完成 **W7 R5** 收尾验收（Bun 同步已达 `bun_sourced=939`）。
+  > - **`78c9adf0`（Priority ② & ③ W7）**：正在构建 **W7 R9**（`cap:vector` 零分配 BM25F 多字段加权倒排检索索引 `lib/vector/bm25f_index.cp`）。
+  >
+  > 主控将继续保持自动验收、同步索引文档并提交 Git 的节奏推进，并在收到任何下游编译器工单时第一时间拉起热修专线处理。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 20:32:25）[step:16378]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261122-union-method-dotted-arr-len)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已拉起独立编译器热修专线子智能体 `d52d8e9f`（`CPC Hotfix Engineer`）处理工单 `task-bun-20261122-union-method-dotted-arr-len`（读取详情 → 根因定位与修复 → `sync_cpc.sh release` 正式发布 → 回归验证 → `resolve` 结单），双路生态建设子智能体继续并行不受阻断。修复结单后主控将立即同步 `SESSION.md` 并完成 Git 提交。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 20:36:25）[step:16395]
+- **用户完整原始指令**：
+  > 271 个（自 846 收敛 -68.0%）     , 文档为何还是 868个, 没有按目录收敛吗? 应该按目录收敛吗?
+- **完整回复与执行汇报**：
+  > 非常敏锐！刚实测了 [doc/lib/](file:///data/dev/cp/doc/lib/) 与 [lib/](file:///data/dev/cp/lib/) 的精确对齐情况：
+  >
+  > ### 1. 为什么还有 868 个文档？
+  > 此前完成 40 批 `lib/` 目录收敛（`846 -> 271`）后，已同步更新了 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md) 和 [CATALOG.md](file:///data/dev/cp/doc/lib/CATALOG.md)，但 `doc/lib/` 下的旧单模块文档尚未做物理迁移：
+  > - **匹配当前 271 个活跃主包**：`270` 份（另有 `1` 份 `CATALOG.md`）
+  > - **历史已归并旧目录的遗留文档**：**`597` 份**（例如 `aac.md` 已归入 `lib/media/aac.cp`、`arp.md` 已归入 `lib/net/arp.cp`、`aho_corasick.md` 已归入 `lib/ds/aho_corasick.cp` 等）
+  >
+  > ---
+  >
+  > ### 2. 应该按目录收敛吗？
+  > **强烈建议收敛！** 保留 597 份平铺旧文档有 3 个明显问题：
+  > 1. **误导导入路径**：旧文档里仍写着 `import ... from "cap:aac"` 等已收敛的旧包名，会误导用户与 AI Agent。
+  > 2. **检索噪音大**：`doc/lib/` 顶层文件数是真实包的 3.2 倍。
+  > 3. **与索引脱节**：`lib/`（271）、`cp_lib_ref.md`（271）、`CATALOG.md`（271）均已收敛，唯有 `doc/lib/` 顶层未对齐。
+  >
+  > ---
+  >
+  > ### 3. 推荐收敛方案
+  > - **方案 A（推荐 · 伞包子目录收敛，零细节丢失）**：
+  >   - 将 597 份旧文档按归属迁移到 `doc/lib/<umbrella>/<submod>.md`（例如 `doc/lib/media/aac.md`、`doc/lib/net/arp.md`、`doc/lib/ds/aho_corasick.md`），并批量修正其中的 `cap:<old>` 导入示例为 `cap:<umbrella>`，在对应主包 `doc/lib/<umbrella>.md` 中挂载子文档索引链接。
+  >   - **效果**：`doc/lib/` 顶层严格收敛为 **271 份主包文档 + `CATALOG.md` = 272 项**，与 `lib/` **1:1 精确对齐**；同时避免把 54 个协议硬塞进一个几千行的 `net.md` 导致阅读与 Token 过载。
+  > - **方案 B（合并删除）**：将旧文档内容全部追加进 `doc/lib/<umbrella>.md` 后删除旧文件（缺点是 `net.md`/`binfmt.md` 等会膨胀到数千行，不利于按需检索）。
+  >
+  > 如果认可 **方案 A**，回复一声我立刻安排执行收敛、修正导入路径并提交（不影响当前热修与 Wave 8 双线并发）。
