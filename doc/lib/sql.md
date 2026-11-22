@@ -136,6 +136,18 @@ let wire: [64]u8 = [0; 64];
 const n = encodeLengthString("users_table", wire[0..])?;
 const str = decodeLengthString(wire[0..n])?; // data="users_table", bytes_read=12
 ```
+- **MySQL `ERR_Packet` 编解码与错误分类 (`mysql_error_packet.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/ErrorPacket.cp`)**：
+  - 常量与错误集：`MYSQL_ERR_PACKET_HEADER` (`0xff`)、`MYSQL_SQL_STATE_MARKER` (`'#'`)、`MySqlErrorPacketError`（`InvalidHeader` / `TruncatedPacket` / `BufferTooSmall` / `InvalidSqlState`）
+  - 结构体与方法：`MySqlErrorPacket`（`initWithSqlState` / `initLegacy` / `decode` / `encode` / `encodedSize` / `sqlStateSlice` / `sqlStateClass` / `isRetryable`，兼容 MySQL 4.1+ `#SQLSTATE` 与 4.0 旧版错误包，零拷贝提取错误消息）
+
+```typescript
+import { MySqlErrorPacket } from "cap:sql";
+
+const pkt = MySqlErrorPacket.initWithSqlState(1213, "40001", "Deadlock found")?;
+let wire: [64]u8 = [0; 64];
+const n = pkt.encode(wire[0..])?;
+const decoded = MySqlErrorPacket.decode(wire[0..n])?; // error_code=1213, isRetryable()==true
+```
 
 ---
 

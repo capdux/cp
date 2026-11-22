@@ -86,3 +86,10 @@ export {
     encodeLengthString,
     decodeLengthString,
 } from "./mysql_lenenc.cp";
+
+export {
+    MYSQL_ERR_PACKET_HEADER,
+    MYSQL_SQL_STATE_MARKER,
+    MySqlErrorPacketError,
+    MySqlErrorPacket,
+} from "./mysql_error_packet.cp";

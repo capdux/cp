@@ -28,6 +28,7 @@
 | `lib/vector/nav_graph.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc Vamana/NSW Navigable Graph ANN using @l2sq) \| Created: 2026-11-22` | 零堆分配 Vamana / NSW 单层近邻导航图近似检索索引 (`NavGraphIndex`)，基于 `@l2sq` 8-lane SIMD 贪心束搜索、双向建边与按距离剪枝 |
 | `lib/vector/sparse_vec.cp` | `// Origin: Pure-CP Stdlib (AI Learned Sparse Retrieval: SPLADE/BGE-M3 Sparse Vector & Merge-Join Scorer) \| Created: 2026-11-22` | SPLADE / BGE-M3 学习型稀疏词法向量表示、原位规范化、O(m+n) `@fma` 归并点积、Top-K 稀疏裁剪与零堆分配 CSR 批量 Top-K 检索核 |
 | `lib/vector/eval_harness.cp` | `// Origin: Pure-CP Stdlib (AI Vector ANN Evaluation Harness: SIMD Ground-Truth, Recall@K & Latency Percentiles) \| Created: 2026-11-22` | ANN 向量索引离线评测与延迟分位数统计套件：原位堆排序 P50/P95/P99、原生 `@l2sq` SIMD 暴力 Ground-Truth、去重 Recall@K 与批量汇总 |
+| `lib/vector/quant_sq4.cp` | `// Origin: Pure-CP Stdlib (AI Vector Search 4-bit Asymmetric Scalar Quantization SQ4) \| Created: 2026-11-22` | 4-bit 非对称标量量化（SQ4）：`f32` 向量 8x 显存压缩、奇偶维 Nibble 打包、无临时解码缓冲 `@fma` 非对称 L2 距离与批量 Top-K 检索 |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -650,5 +651,44 @@ pub fn demoAnnEvalHarness(query: []const f32, corpus: []const f32, n_docs: usize
     if (pct := computeLatencyPercentilesInPlace(lat_s)) {
         * = pct.p99_us;
     }
+}
+```
+
+### 15. 4-Bit 非对称标量量化（SQ4 — 8x 显存压缩）(`quant_sq4.cp`)
+
+对标 Qdrant / Faiss SQ4 的零堆分配 4-bit 标量量化与非对称 L2 距离检索核，将 `f32` 向量压缩 8 倍（每字节打包 2 个 4-bit Nibble `[0..15]`）：
+
+- **`Sq4Codebook`**：`{ mins: []f32, scales: []f32, dim: usize }`，提供 `Sq4Codebook.init(mins, scales, dim): Sq4Codebook?`。
+- **`sq4PackedBytes(dim: usize): usize`**：返回 `ceil(dim / 2)` 打包字节数。
+- **`sq4FitCodebook(corpus_flat, n_docs, dim, out_mins: *[]f32, out_scales: *[]f32): bool`**：按维拟合 `[min, (max - min) / 15.0]`（常量维 `min == max` 自动置 `scale = 0.0` 防零除）。
+- **`sq4EncodeVector(vec, mins, scales, out_packed: *[]u8): bool`** / **`sq4DecodeVector(packed_code, mins, scales, out_vec: *[]f32): bool`**：偶维低 4 位、奇维高 4 位打包编码与 `@fma` 反量化重建。
+- **`sq4AsymmetricL2Sq(query, packed_code, mins, scales): f32?`**：无需临时解码向量，直接基于硬件 `@fma` 计算全精度查询与 4-bit 编码向量的非对称平方 L2 距离。
+- **`sq4BatchTopK(query, packed_corpus, n_docs, mins, scales, k, out_ids: *[]usize, out_dists: *[]f32): usize?`**：8x 压缩语料库零堆分配 Top-K 近似检索（按 `(dist_sq 升序, doc_id 升序)` 输出）。
+
+```typescript
+import {
+    sq4FitCodebook,
+    sq4EncodeVector,
+    sq4BatchTopK,
+} from "cap:vector";
+
+pub fn demoSq4Retrieval(corpus: []const f32, query: []const f32) {
+    let mins: [4]f32 = [0.0; 4];
+    let scales: [4]f32 = [0.0; 4];
+    let mins_s: []f32 = mins[0..];
+    let scales_s: []f32 = scales[0..];
+    * = sq4FitCodebook(corpus, 2, 4, mins_s, scales_s);
+
+    let packed_buf: [4]u8 = [0; 4]; // 2 docs * 2 bytes (8x smaller than 32 bytes f32)
+    let p0: []u8 = packed_buf[0..2];
+    let p1: []u8 = packed_buf[2..4];
+    * = sq4EncodeVector(corpus[0..4], mins[0..], scales[0..], p0);
+    * = sq4EncodeVector(corpus[4..8], mins[0..], scales[0..], p1);
+
+    let ids: [2]usize = [0; 2];
+    let dists: [2]f32 = [0.0; 2];
+    let ids_s: []usize = ids[0..];
+    let dists_s: []f32 = dists[0..];
+    * = sq4BatchTopK(query, packed_buf[0..], 2, mins[0..], scales[0..], 2, ids_s, dists_s);
 }
 ```
