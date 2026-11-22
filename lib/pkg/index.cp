@@ -156,3 +156,14 @@ export {
     WhyOptions,
     WhyGraph,
 } from "./why.cp";
+
+export {
+    PKG_SCRIPT_SLOT_COUNT,
+    PkgScriptListError,
+    PkgScriptSlotKind,
+    PkgScriptFormatMode,
+    PkgScriptTrustSource,
+    isScriptExecutionAllowed,
+    formatNodeModulesRelativeCwd,
+    PkgScriptList,
+} from "./script_list.cp";

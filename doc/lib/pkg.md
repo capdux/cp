@@ -274,6 +274,22 @@ const n = g.renderExplain("react", WhyOptions{}, out[0..])?;
 // out[0..n] == "react@18.2.0\n  └─ my-app@1.0.0 (requires ^18.0.0)\n"
 ```
 
+### 生命周期脚本清单、路径裁剪与来源感知信任白名单（`script_list.cp`，吸收自 `/data/dev/bun/src/install/lockfile/Package/Scripts.cp`）
+
+- 常量与类型：`PKG_SCRIPT_SLOT_COUNT` (`6`)、`PkgScriptListError`、`PkgScriptSlotKind`（`Preinstall`/`Install`/`Postinstall`/`Preprepare`/`Prepare`/`Postprepare`）、`PkgScriptFormatMode`（`Completed` `✓` / `Untrusted` `»` / `Info`）、`PkgScriptTrustSource`（`NpmRegistry`/`LocalFile`/`Symlink`/`Git`/`Tarball`）、`isScriptExecutionAllowed`、`formatNodeModulesRelativeCwd`、`PkgScriptList`（`init` / `set` / `get` / `count` / `isEmpty` / `first` / `eql` / `format`）。
+
+```typescript
+import { PkgScriptList, PkgScriptTrustSource, isScriptExecutionAllowed } from "cap:pkg";
+
+const explicit: [0][]const u8 = [];
+const defaults: [1][]const u8 = ["esbuild"];
+// 默认白名单仅对 npm Registry 生效；file:/git: 来源同名包必须显式加入 trustedDependencies
+const ok_npm = isScriptExecutionAllowed("esbuild", .NpmRegistry, false, explicit[0..], defaults[0..]); // true
+const ok_git = isScriptExecutionAllowed("esbuild", .Git, false, explicit[0..], defaults[0..]);         // false
+* = ok_npm;
+* = ok_git;
+```
+
 ---
 
 ## 上游 Bun 包管理行为契约与边界注意事项
@@ -284,8 +300,9 @@ const n = g.renderExplain("react", WhyOptions{}, out[0..])?;
    - **默认策略矩阵**：仅当 `configVersion == 1` 且启用 Workspaces 时默认采用 `isolated`（中心存储 `node_modules/.bun/<entry>/node_modules/<pkg>` + 顶层符号链接，Scoped 包在 store 目录中以 `+` 替换 `/`）；`configVersion == 0` 或非 Workspace 项目默认采用 `hoisted`；
    - **锁文件迁移与前向兼容**：新建工程与从 `pnpm-lock.yaml` 迁移默认 `configVersion = 1`，旧版 Bun 锁文件与从 `package-lock.json` / `yarn.lock` 迁移默认 `configVersion = 0` 以保持向后兼容；解析高于当前版本的 `configVersion` 整数时前向兼容钳位至 `current`。
    - 跨文件系统链接时，优先使用硬链接（Linux）/ 拷贝回退，并对 `file:`/`link:` 软链跳过嵌套 `node_modules` 以防止符号链接环路。
-3. **零信任生命周期脚本安全模型（`LifecycleRunner` & `TrustedPolicy`）**：
-   - 默认拦截未列入 `trustedDependencies` 白名单的包安装脚本（记入 `blocked_scripts`），避免供应链恶意 `postinstall` 静默执行。
+3. **零信任生命周期脚本与 `trustedDependencies` 来源隔离（吸收自 `/data/dev/bun/docs/pm/lifecycle.mdx` & `/data/dev/bun/docs/guides/install/trusted.mdx`）**：
+   - 默认不执行任意依赖的 `preinstall`/`install`/`postinstall`/`prepare` 脚本（未授权脚本记入 `blocked_scripts`）；`--ignore-scripts`（或 `install.ignoreScripts = true`）具备最高优先级，全局禁用全部安装脚本；
+   - 默认内置白名单（Top 500 常见原生扩展包）**仅适用于 npm Registry 来源**，`file:`、`link:`、`git:`、`github:` 等非 Registry 来源必须显式写入根 `package.json` 的 `trustedDependencies` 才允许执行，防止本地路径或外部仓库仿冒知名包名绕过检查；且 `trustedDependencies` 仅授权指定包自身，**不传递**至其子依赖。
 4. **Tarball 解包安全防线（`TarballExtractor`）**：
    - 解包前校验 W3C SRI 完整性摘要（`Integrity`），并在写入每个归档条目时拦截 `..` 路径穿越与绝对路径逃逸。
 5. **Monorepo `--filter` 匹配与排除约定（吸收自 `/data/dev/bun/docs/pm/filter.mdx`）**：
