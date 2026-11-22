@@ -640,3 +640,45 @@ pub fn demoMcpPromptCatalog() {
     * = cr.count; // 2 ("rust", "ruby")
 }
 ```
+
+
+---
+
+## 十六、 零堆分配 MCP RFC 5424 日志级别路由器与通知环形缓冲区 (`logRouter.cp`)
+
+面向 MCP `logging/setLevel` 与 `notifications/message` 规范的 100% 纯 CP 零动态堆分配 8 级严重度过滤、Logger 前缀路由、日志风暴限流与环形通知缓冲引擎：
+
+- **常量与 RFC 5424 级别编解码**：
+  - `MCP_LOG_MAX_RULES = 32`、`MCP_LOG_MAX_RATE_TRACKERS = 32`、`MCP_LOG_RING_CAPACITY = 64`、`MCP_LOG_LOGGER_MAX_LEN = 64`、`MCP_LOG_MSG_MAX_LEN = 256`
+  - `McpLogLevel`（`Debug < Info < Notice < Warning < Error < Critical < Alert < Emergency`）
+  - `mcpLogLevelRank(level): u8`、`parseMcpLogLevel(name): McpLogLevel?`（大小写不敏感解析）、`formatMcpLogLevel(level): []const u8`（标准小写线缆名）
+- **数据模型**：
+  - `McpLogEmitStatus`（`enqueued | filtered_level | rate_limited | invalid_input`）
+  - `McpLogRateLimitConfig`（`max_per_window`, `window_ms`；`unlimited()` / `isValid()`）
+  - `McpLogPrefixRule`、`McpLogRateTracker`、`McpLogNotification`（`loggerSlice()` / `messageSlice()`）、`McpLogRouterStats`
+- **核心引擎 `McpLogRouter`**：
+  - `init(global_level, rate_cfg)` / `setGlobalLevel(*_, level)` / `setGlobalLevelByName(*_, level_name)`
+  - `setLoggerPrefixLevel(*_, prefix, min_level)` / `removeLoggerPrefixLevel(*_, prefix)` / `effectiveLevel(logger)`：最长前缀匹配优先，严格按 `.` / `/` / `:` 分隔符边界匹配（`"db"` 不误匹配 `"debugger"`）。
+  - `emitLog(*_, level, logger, message, now_ms)`：依次执行参数校验、级别过滤、每 Logger 窗口防风暴限流（含单调时钟回退防护）与 64 槽位环形缓冲入队（满环覆盖最旧并累计 `ring_overwrites`）。
+  - `drainNotifications(*_, *out_notifs)` / `pendingCount()` / `stats()`：按 FIFO 分批排空待下发通知。
+
+```cp
+import {
+    McpLogLevel,
+    McpLogRateLimitConfig,
+    McpLogNotification,
+    McpLogRouter,
+} from "cap:mcp";
+
+pub fn demoMcpLogRouter() {
+    const rl = McpLogRateLimitConfig{ max_per_window: 50, window_ms: 1_000 };
+    let router = McpLogRouter.init(McpLogLevel.Warning, rl) ?? return;
+    * = router.setLoggerPrefixLevel("db.pool", McpLogLevel.Debug);
+    * = router.emitLog(McpLogLevel.Debug, "db.pool.conn", "checked out", 1_000);
+
+    let out: [8]McpLogNotification = [McpLogNotification{}; 8];
+    let out_s: []McpLogNotification = out[0..];
+    const n = router.drainNotifications(*out_s);
+    * = n; // 1
+}
+```

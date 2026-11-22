@@ -197,3 +197,22 @@ export {
     McpCompletionResult,
     McpPromptCatalog,
 } from "./promptCatalog.cp";
+
+export {
+    MCP_LOG_MAX_RULES,
+    MCP_LOG_MAX_RATE_TRACKERS,
+    MCP_LOG_RING_CAPACITY,
+    MCP_LOG_LOGGER_MAX_LEN,
+    MCP_LOG_MSG_MAX_LEN,
+    McpLogLevel,
+    mcpLogLevelRank,
+    parseMcpLogLevel,
+    formatMcpLogLevel,
+    McpLogEmitStatus,
+    McpLogRateLimitConfig,
+    McpLogPrefixRule,
+    McpLogRateTracker,
+    McpLogNotification,
+    McpLogRouterStats,
+    McpLogRouter,
+} from "./logRouter.cp";
