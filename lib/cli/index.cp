@@ -305,3 +305,9 @@ export {
     splitLongOption,
     parseArgsTokens,
 } from "./parseArgsUtils.cp";
+
+export {
+    CLI_COMMAND_TAG_COUNT,
+    CliCommandCapabilities,
+    CliCommandTag,
+} from "./cmdTag.cp";

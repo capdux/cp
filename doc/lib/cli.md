@@ -656,3 +656,21 @@ const n = parseArgsTokens(
 )?;
 * = n;
 ```
+
+### 顶层 CLI 子命令判别与配置加载契约（`lib/cli/cmdTag.cp`，吸收自 `/data/dev/bun/src/options_types/CommandTag.cp` & `/data/dev/bun/docs/pm/cli/pm.mdx`）
+
+- **导出符号**：`CLI_COMMAND_TAG_COUNT` (`32`)、`CliCommandCapabilities`、`CliCommandTag`（全 32 个子命令判别式，含 `crashReportChar`/`canonicalName`/`fromName`/`readGlobalConfig`/`isNpmRelated`/`loadsConfig`/`alwaysLoadsConfig`/`usesGlobalOptions`/`capabilities`）；
+- **配置加载与全局参数隔离最佳实践**：
+  - 包管理类命令（`install`/`add`/`remove`/`update`/`pm`/`publish`/`audit` 等）通过 `usesGlobalOptions() == false` 与运行时全局参数隔离，避免 `--production` 等参数语义冲突，同时通过 `readGlobalConfig()` 合并全局与项目配置；
+  - `run` / `auto` / `node` 属于按需加载配置（`loadsConfig() == true && alwaysLoadsConfig() == false`），而 `build` / `test` 与包管理子命令始终在启动期预加载项目配置（`alwaysLoadsConfig() == true`）；
+  - `crashReportChar()` 精确对齐 `bun.report` 32 个单字符子命令标识码。
+
+```cp
+import { CliCommandTag } from "cap:cli";
+
+if (tag := CliCommandTag.fromName("i")) {
+    const caps = tag.capabilities();
+    // tag == .InstallCommand, caps.is_npm_related == true, caps.uses_global_options == false, caps.crash_report_char == 'i'
+    * = caps;
+}
+```
