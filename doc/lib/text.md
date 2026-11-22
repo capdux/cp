@@ -332,6 +332,44 @@ pub fn demoMarkdownStructuredChunk(doc: string) {
 
 ---
 
+## 零堆分配 Unified Diff 补丁解析与原子应用器 (`lib/text/unified_diff.cp`)
+
+专为 AI 编程智能体代码补丁验证与安全落盘打造，采用两遍原子设计（Pass 1 全量校验并测算输出字节数，Pass 2 写入），失败时保证 `out_buf` 零污染：
+
+- **`DiffHunkHeader`**：`{ old_start: u32, old_count: u32, new_start: u32, new_count: u32 }`
+- **`parseHunkHeader(line: string): DiffHunkHeader?`**：解析 `@@ -a,b +c,d @@`（支持省略 `,count` 默认 1 如 `@@ -10 +10,2 @@`、空文件插入 `@@ -0,0 +1,2 @@` 与可选函数名尾注）
+- **`DiffLineKind`**：`Context` | `Remove` | `Add`；**`DiffOp`**：`{ kind: DiffLineKind, text: string }`（零拷贝行视图）；**`parseDiffOp(line: string): DiffOp?`**
+- **`PatchApplyStatus`**：`Ok` | `ContextMismatch` | `LineOutOfRange` | `InvalidHunk` | `BufferTooSmall`
+- **`PatchApplyResult`**：`{ status, written_bytes, hunks_applied, lines_added, lines_removed }`
+- **`applyUnifiedPatch(original: string, patch: string, *out_buf: []u8): PatchApplyResult`**：支持多 Hunk 顺序应用、严格校验上下文与待删除行匹配、自动忽略 `---`/`+++`/`diff`/`index` 文件头与处理 `\ No newline at end of file`，任一错误时返回 `written_bytes == 0` 且不修改 `out_buf`。
+
+```cp
+import { PatchApplyStatus, applyUnifiedPatch } from "cap:text";
+
+pub fn demoUnifiedDiffApply() {
+    const orig = "fn main() {\n    let x = 1;\n    return x;\n}\n";
+    const patch =
+        "--- a/main.cp\n" ++
+        "+++ b/main.cp\n" ++
+        "@@ -1,4 +1,4 @@\n" ++
+        " fn main() {\n" ++
+        "-    let x = 1;\n" ++
+        "+    let x = 42;\n" ++
+        "     return x;\n" ++
+        " }\n";
+
+    let out_buf: [256]u8 = [0; 256];
+    let out: []u8 = out_buf[0..];
+    const res = applyUnifiedPatch(orig, patch, out);
+    if (res.status == PatchApplyStatus.Ok) {
+        const patched = out[0..res.written_bytes];
+        * = patched;
+    }
+}
+```
+
+---
+
 ## 上游行为契约与文本处理边界注意事项
 
 1. **UTF-8 码点边界安全不变式**：
