@@ -353,6 +353,45 @@ pub fn demoEnvelopeSeal() {
 }
 ```
 
+### 零分配 GF(256) Shamir `(k, n)` 门限密钥分片与拉格朗日插值重构引擎 (`shamir_secret.cp`)
+
+面向密钥托管、分布式钱包与零信任秘密恢复的 100% 纯 CP 零动态堆分配、零 C FFI 依赖 Shamir `(k, n)` 门限秘密共享引擎：
+
+- **常量时间 GF(256) 有限域原语（AES 不可约多项式 `0x11B`）**：
+  - `gf256Mul(a, b)`（无分支常数时间乘法）、`gf256Inv(a)`（无查表 `a^254` 常数时间求逆）、`gf256Div(a, b): u8?`（除零返回 `null`）。
+- **常量、状态与数据结构**：
+  - `SHAMIR_MAX_SECRET_LEN = 64`、`SHAMIR_MIN_THRESHOLD = 2`、`SHAMIR_MAX_SHARES = 32`、`SHAMIR_TAG_LEN = 32`
+  - `ShamirStatus`（`ok | invalid_threshold | invalid_share_count | invalid_secret_len | insufficient_entropy | insufficient_shares | invalid_x_zero | duplicate_x | mismatched_share_len | output_too_small | tag_mismatch`）
+  - `ShamirShare`（`x`, `threshold`, `secret_len`, `has_tag`, `share_tag`, `y`, `payloadSlice()`）、`ShamirSplitResult`、`ShamirCombineResult`
+- **核心纯函数**：
+  - `shamirRequiredEntropyBytes(secret_len, threshold)`：计算外部熵所需精确字节数 `secret_len * (threshold - 1)`。
+  - `splitSecretWithEntropy(secret, k, n, entropy_bytes, attach_tag, out_shares)` / `splitSecretDeterministic(secret, k, n, rng_seed, attach_tag, out_shares)`：Horner 多项式求值拆分 `1..64B` 秘密为 `2 <= k <= n <= 32` 份分片。
+  - `combineShamirShares(shares, out_secret)`：任意 `>= k` 份不同非零坐标分片在 `x = 0` 处拉格朗日插值无损重构；若分片携带 SHA-256 秘密承诺摘要则自动常数时间校验并拦截篡改分片（`tag_mismatch`）。
+  - `computeSecretTagSha256(secret)` / `verifyReconstructedSecret(secret, expected_tag)`：域分离 SHA-256 承诺摘要与常数时间比对。
+
+```cp
+import {
+    ShamirStatus,
+    ShamirShare,
+    splitSecretDeterministic,
+    combineShamirShares,
+} from "cap:crypto";
+
+pub fn demoShamirSecretSharing() {
+    const secret: []const u8 = "master-vault-key-2026";
+    let shares: [5]ShamirShare = [ShamirShare{}; 5];
+    let shares_s: []ShamirShare = shares[0..];
+    * = splitSecretDeterministic(secret, 3, 5, 4242, true, *shares_s);
+
+    // 任意 3 份分片无损重构并自动校验 SHA-256 承诺摘要
+    const subset: [3]ShamirShare = [shares[4], shares[0], shares[2]];
+    let out: [32]u8 = [0; 32];
+    let out_s: []u8 = out[0..];
+    const res = combineShamirShares(subset[0..], *out_s);
+    * = (res.status == ShamirStatus.ok && res.tag_verified); // true
+}
+```
+
 ---
 
 ## 收敛子模块深度文档

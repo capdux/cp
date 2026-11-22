@@ -468,3 +468,25 @@ export {
     sealEnvelope,
     openEnvelope,
 } from "./envelope_seal.cp";
+
+// --- Zero-Alloc GF(256) Shamir (k, n) Threshold Secret Sharing ---
+
+export {
+    SHAMIR_MAX_SECRET_LEN,
+    SHAMIR_MIN_THRESHOLD,
+    SHAMIR_MAX_SHARES,
+    SHAMIR_TAG_LEN,
+    gf256Mul,
+    gf256Inv,
+    gf256Div,
+    ShamirStatus,
+    ShamirShare,
+    ShamirSplitResult,
+    ShamirCombineResult,
+    shamirRequiredEntropyBytes,
+    computeSecretTagSha256,
+    verifyReconstructedSecret,
+    splitSecretWithEntropy,
+    splitSecretDeterministic,
+    combineShamirShares,
+} from "./shamir_secret.cp";
