@@ -631,7 +631,15 @@ impl Codegen {
                         }
                     }
                     let base_name = target_sym.split('<').next().unwrap_or(&target_sym);
-                    let cls_opt = self.class_defs.get(base_name).cloned();
+                    let cls_opt = self.class_defs.get(base_name).cloned().or_else(|| {
+                        if base_name == "@This()" {
+                            self.current_class_name
+                                .as_deref()
+                                .and_then(|cn| self.class_defs.get(cn).cloned())
+                        } else {
+                            None
+                        }
+                    });
                     if let Some(ref cls) = cls_opt {
                         if cls.is_static {
                             panic!(

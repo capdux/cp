@@ -876,11 +876,59 @@ impl<'a> Parser<'a> {
                             self.bump()?;
                         }
                     }
-                    self.expect(Token::RParen)?;
+                    let end = self.expect(Token::RParen)?.end;
+                    if name == "@This" && args.is_empty() && self.peek() == Some(&Token::LBrace) {
+                        self.bump()?; // consume '{'
+                        let mut fields = Vec::new();
+                        while self.peek() != Some(&Token::RBrace) && self.peek().is_some() {
+                            if self.peek() == Some(&Token::Dot) {
+                                self.bump()?;
+                            }
+                            let key = self.parse_ident()?;
+                            let val = if self.peek() == Some(&Token::Colon)
+                                || self.peek() == Some(&Token::Assign)
+                            {
+                                self.bump()?;
+                                self.parse_expr()?
+                            } else if matches!(
+                                self.peek(),
+                                Some(Token::Comma) | Some(Token::RBrace)
+                            ) {
+                                Expr::Ident(key.clone())
+                            } else {
+                                self.expect(Token::Colon)?;
+                                self.parse_expr()?
+                            };
+                            fields.push(EnumInitField { key, val });
+                            if self.peek() == Some(&Token::Comma) {
+                                self.bump()?;
+                            }
+                        }
+                        let init_end = self.expect(Token::RBrace)?.end;
+                        return Ok(Expr::EnumInit(EnumInitExpr {
+                            span: Span {
+                                start: span.start,
+                                end: init_end,
+                            },
+                            enum_name: Ident {
+                                span: Span {
+                                    start: span.start,
+                                    end,
+                                },
+                                sym: "@This()".to_string(),
+                            },
+                            variant_name: Ident {
+                                span: Span { start: end, end },
+                                sym: String::new(),
+                            },
+                            fields: Some(fields),
+                            tuple_args: None,
+                        }));
+                    }
                     Ok(Expr::Builtin(BuiltinCall {
                         span: Span {
                             start: span.start,
-                            end: self.peek_span().end,
+                            end,
                         },
                         name,
                         args,
@@ -1084,6 +1132,51 @@ impl<'a> Parser<'a> {
                     }
                 }
                 let end = self.expect(Token::RParen)?.end;
+                if name == "@This" && args.is_empty() && self.peek() == Some(&Token::LBrace) {
+                    self.bump()?; // consume '{'
+                    let mut fields = Vec::new();
+                    while self.peek() != Some(&Token::RBrace) && self.peek().is_some() {
+                        if self.peek() == Some(&Token::Dot) {
+                            self.bump()?;
+                        }
+                        let key = self.parse_ident()?;
+                        let val = if self.peek() == Some(&Token::Colon)
+                            || self.peek() == Some(&Token::Assign)
+                        {
+                            self.bump()?;
+                            self.parse_expr()?
+                        } else if matches!(self.peek(), Some(Token::Comma) | Some(Token::RBrace)) {
+                            Expr::Ident(key.clone())
+                        } else {
+                            self.expect(Token::Colon)?;
+                            self.parse_expr()?
+                        };
+                        fields.push(EnumInitField { key, val });
+                        if self.peek() == Some(&Token::Comma) {
+                            self.bump()?;
+                        }
+                    }
+                    let init_end = self.expect(Token::RBrace)?.end;
+                    return Ok(Expr::EnumInit(EnumInitExpr {
+                        span: Span {
+                            start: span.start,
+                            end: init_end,
+                        },
+                        enum_name: Ident {
+                            span: Span {
+                                start: span.start,
+                                end,
+                            },
+                            sym: "@This()".to_string(),
+                        },
+                        variant_name: Ident {
+                            span: Span { start: end, end },
+                            sym: String::new(),
+                        },
+                        fields: Some(fields),
+                        tuple_args: None,
+                    }));
+                }
                 let _is_known_builtin = matches!(
                     name.as_str(),
                     "@print"

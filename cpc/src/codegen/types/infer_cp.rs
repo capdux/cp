@@ -3,6 +3,40 @@ use crate::ast::*;
 use std::collections::HashMap;
 
 impl Codegen {
+    fn resolve_this_type(ty: Type, concrete: &str) -> Type {
+        match ty {
+            Type::Ref(mut id) if id.sym == "@This()" || id.sym == "Self" || id.sym == "This" => {
+                id.sym = concrete.to_string();
+                Type::Ref(id)
+            }
+            Type::Optional(inner) => {
+                Type::Optional(Box::new(Self::resolve_this_type(*inner, concrete)))
+            }
+            Type::ErrorUnion(inner) => {
+                Type::ErrorUnion(Box::new(Self::resolve_this_type(*inner, concrete)))
+            }
+            Type::ResultType { ok, err } => Type::ResultType {
+                ok: Box::new(Self::resolve_this_type(*ok, concrete)),
+                err,
+            },
+            Type::RawPtr { inner, depth } => Type::RawPtr {
+                inner: Box::new(Self::resolve_this_type(*inner, concrete)),
+                depth,
+            },
+            Type::BorrowType {
+                inner,
+                is_mut,
+                lifetimes,
+            } => Type::BorrowType {
+                inner: Box::new(Self::resolve_this_type(*inner, concrete)),
+                is_mut,
+                lifetimes,
+            },
+            Type::Array(inner) => Type::Array(Box::new(Self::resolve_this_type(*inner, concrete))),
+            other => other,
+        }
+    }
+
     pub(crate) fn infer_cp_type(&self, expr: &Expr) -> Option<Type> {
         self.infer_cp_type_with_mock(expr, &HashMap::new())
     }
@@ -608,7 +642,10 @@ impl Codegen {
                                 if let Some(m) =
                                     en.methods.iter().find(|m| m.ident.sym == mem.prop.sym)
                                 {
-                                    return m.return_type.clone();
+                                    return m
+                                        .return_type
+                                        .clone()
+                                        .map(|rt| Self::resolve_this_type(rt, &oid.sym));
                                 }
                                 if en.variants.iter().any(|v| v.ident.sym == mem.prop.sym)
                                     || en.variants.is_empty()
@@ -645,6 +682,7 @@ impl Codegen {
                             if let Some((_, Some(rt), _)) =
                                 self.lookup_method(&tname, &mem.prop.sym)
                             {
+                                let rt = Self::resolve_this_type(rt, &tname);
                                 if self.in_try_region {
                                     if let Type::ResultType { ok, .. } = &rt {
                                         return Some((**ok).clone());
