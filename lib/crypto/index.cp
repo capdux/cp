@@ -414,3 +414,19 @@ export {
     KeyRingStats,
     KeyRing,
 } from "./keyring.cp";
+
+// --- Zero-Alloc RFC 6962 Domain-Separated Merkle Tree & Inclusion Proofs ---
+
+export {
+    MERKLE_HASH_LEN,
+    MERKLE_MAX_LEAVES,
+    MERKLE_MAX_PROOF_DEPTH,
+    MerkleHash,
+    MerkleProofStep,
+    MerkleInclusionProof,
+    merkleHashEmpty,
+    merkleHashLeaf,
+    merkleHashNode,
+    Rfc6962MerkleTree,
+    verifyMerkleInclusionProof,
+} from "./merkle_tree.cp";

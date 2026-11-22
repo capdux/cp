@@ -236,3 +236,39 @@ pub fn demoKeyRingRotation() {
     * = old_still_valid; // true
 }
 ```
+
+---
+
+## 七、 零分配 RFC 6962 域分离 Merkle Tree 与包含性证明引擎 (`merkle_tree.cp`)
+
+面向透明审计日志、包管理器构件校验、AI Agent 执行轨迹存证与分布式快照一致性的 100% 纯 CP 零动态堆分配 RFC 6962 SHA-256 二叉 Merkle Tree（规避与 Allocator 版 `merkle.cp::MerkleTree` 冲突，导出为 `Rfc6962MerkleTree`）：
+
+- **常量与模型**：`MERKLE_HASH_LEN` (`32`)、`MERKLE_MAX_LEAVES` (`128`)、`MERKLE_MAX_PROOF_DEPTH` (`8`)、`MerkleHash`（内置常量时间 `eql`）、`MerkleProofStep`、`MerkleInclusionProof`。
+- **域分离哈希原语（防第二原像混淆）**：
+  - `merkleHashEmpty(): [32]u8` -> `SHA256("")`
+  - `merkleHashLeaf(data): [32]u8` -> `SHA256(0x00 || data)`
+  - `merkleHashNode(left, right): [32]u8` -> `SHA256(0x01 || left || right)`
+- **零堆构树与证明生成 (`Rfc6962MerkleTree`)**：
+  - `init()`、`append_leaf(data)`、`append_leaf_hash(h)`、`leaf_count()`、`compute_root()`（按 RFC 6962 `largestPowerOfTwoLessThan(n)` 规范切分，支持 0..128 任意非 2 次幂叶子数）、`generate_inclusion_proof(leaf_index): MerkleInclusionProof?`。
+- **独立无状态常量时间验证器**：
+  - `verifyMerkleInclusionProof(leaf_data, proof, expected_root): bool`（严格校验路径深度、`sibling_is_left` 与 `(leaf_index, leaf_count)` 结构一致性，并以常量时间比对根哈希）。
+
+```cp
+import {
+    Rfc6962MerkleTree,
+    verifyMerkleInclusionProof,
+} from "cap:crypto";
+
+pub fn demoRfc6962Merkle() {
+    let tree = Rfc6962MerkleTree.init();
+    * = tree.append_leaf("step-1:tool-call");
+    * = tree.append_leaf("step-2:rag-query");
+    * = tree.append_leaf("step-3:final-answer");
+
+    const root = tree.compute_root();
+    if (proof := tree.generate_inclusion_proof(1)) {
+        const ok = verifyMerkleInclusionProof("step-2:rag-query", proof, root);
+        * = ok; // true
+    }
+}
+```
