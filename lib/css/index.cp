@@ -433,3 +433,16 @@ export {
     mapLogicalToPhysical,
     formatLogicalFallbackRule,
 } from "./logical.cp";
+
+export {
+    CSS_UNICODE_MAX_CODEPOINT,
+    CSS_FONT_FACE_MAX_SOURCES,
+    CSS_FONT_FACE_MAX_RANGES,
+    CssFontFaceError,
+    CssFontFormat,
+    CssFontDisplay,
+    CssFontSourceKind,
+    CssUnicodeRange,
+    CssFontFaceSource,
+    CssFontFaceRule,
+} from "./font_face.cp";

@@ -509,6 +509,27 @@ const n = formatLogicalFallbackRule(".card", "margin-inline-start", "16px", buf[
 * = n;
 ```
 
+### CSS `@font-face` 规则解析与 `<urange>` 问号压缩（`font_face.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/rules/font_face.cp` 与 `/data/dev/bun/docs/bundler/css.mdx`，零堆分配实现 `@font-face` 描述符解析（`font-family`/`src`/`font-weight`/`font-style`/`font-display`/`unicode-range`）、`url(...) format(...) tech(...)` 与 `local(...)` 来源解析，以及 W3C `<urange>` 问号通配最优压缩（如 `U+0000-00FF` → `U+??`、`U+4000-4FFF` → `U+4???`）。
+
+- 核心导出：`CSS_UNICODE_MAX_CODEPOINT` (`0x10FFFF`)、`CSS_FONT_FACE_MAX_SOURCES` (`16`)、`CSS_FONT_FACE_MAX_RANGES` (`32`)、`CssFontFaceError`、`CssFontFormat`、`CssFontDisplay`、`CssFontSourceKind`、`CssUnicodeRange`（`parse`/`contains`/`eql`/`toCss`）、`CssFontFaceSource`、`CssFontFaceRule`（`parse`/`sourceAt`/`rangeAt`/`matchesCodePoint`/`toCss`）。
+
+```cp
+import { CssFontFaceRule, CssUnicodeRange } from "cap:css";
+
+const r = CssUnicodeRange.parse("U+0000-00FF")?;
+let ubuf: [32]u8 = [0; 32];
+const un = r.toCss(ubuf[0..])?; // "U+??"
+
+const ff = CssFontFaceRule.parse(
+    "@font-face { font-family: 'Inter'; src: local('Inter'), url('./inter.woff2') format('woff2') tech(variations); font-display: swap; unicode-range: U+0000-00FF, U+4E00-4FFF; }"
+)?;
+const hit = ff.matchesCodePoint(0x4E2D); // true
+* = un;
+* = hit;
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项
