@@ -144,6 +144,21 @@ const banner = formatPmStageBanner(buf[0..], PmStage.install, "lodash@4.17.21", 
 * = mapped;
 * = banner;
 ```
+- **零分配 `bun info` / `bun pm view` 包元数据查询与卡片渲染 (`lib/cli/pm_view.cp`，吸收自 `/data/dev/bun/src/cli/pm_view_command.cp`)**：
+  - 常量与类型：`PM_VIEW_MAX_PATH_SEGMENTS` (`16`)、`PM_VIEW_RECENT_VERSIONS_LIMIT` (`5`)、`PmViewError`、`PmViewSpec`（`parse` / `isScoped` / `buildRegistryUrl`，自动编码作用域 `/` 为 `%2F`）、`PmPropertyPathSegment`、`PmPropertyPath`（支持 `repository.url`、`maintainers[0].email`、`keywords.0` 点分与数组下标查询）、`PmViewDistInfo`、`PmViewKv`、`PmViewMaintainer`、`PmViewSummary`（`formatCard`）、`formatRecentVersionsHint`、`formatPmViewJsonError`。
+
+```typescript
+import { PmViewSpec, PmPropertyPath } from "cap:cli";
+
+const spec = PmViewSpec.parse("@types/react@18.2.15")?;
+let url_buf: [128]u8 = [0; 128];
+const n = spec.buildRegistryUrl("https://registry.npmjs.org/", url_buf[0..])?;
+// url_buf[0..n] == "https://registry.npmjs.org/@types%2Freact"
+const prop = PmPropertyPath.parse("maintainers[0].email")?;
+// prop.count() == 3 ("maintainers", [0], "email")
+* = n;
+* = prop;
+```
 
 ---
 
@@ -157,3 +172,6 @@ const banner = formatPmStageBanner(buf[0..], PmStage.install, "lodash@4.17.21", 
    - 当标准输出被重定向至文件或管道时，`Terminal.isTty(fd)` 返回 `false`，`Terminal.getSize(fd)` 安全回退至 `80x24`，避免 `ioctl(TIOCGWINSZ)` 失败引发异常。
 4. **宽字符与 ANSI 转义宽度剥离**：
    - `CliTable` 与 `renderTable` 在计算列宽前先剥离 ANSI 色彩转义序列（`AnsiColor.stripAnsi`），再按 Unicode 显示宽度对齐 CJK 双宽字符，避免彩色表格边框错位。
+5. **`bun info` / `bun pm view` 元数据查询与别名契约（吸收自 `/data/dev/bun/docs/pm/cli/info.mdx`）**：
+   - `bun pm view` 为 `bun info` 的等价别名；未指定版本时默认查询 `latest`，支持 `<pkg>@<version>` 精确版本或范围查询，并可通过点分/数组下标路径（如 `version`、`dependencies`、`repository.url`、`maintainers[0].email`）直接提取单一字段；
+   - 面向脚本消费时推荐使用 `--json` 输出结构化 JSON（缺失版本或缺失属性时通过 `formatPmViewJsonError` 输出带转义的标准错误 JSON），终端交互模式下缺失版本时自动展示最近 5 个可用版本提示（`formatRecentVersionsHint`）。

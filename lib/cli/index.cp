@@ -76,3 +76,18 @@ export {
     pmStageLabel,
     formatPmStageBanner,
 } from "./pm_commands.cp";
+
+export {
+    PM_VIEW_MAX_PATH_SEGMENTS,
+    PM_VIEW_RECENT_VERSIONS_LIMIT,
+    PmViewError,
+    PmViewSpec,
+    PmPropertyPathSegment,
+    PmPropertyPath,
+    PmViewDistInfo,
+    PmViewKv,
+    PmViewMaintainer,
+    PmViewSummary,
+    formatRecentVersionsHint,
+    formatPmViewJsonError,
+} from "./pm_view.cp";
