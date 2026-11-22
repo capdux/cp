@@ -26,6 +26,7 @@
 | `lib/vector/simd_ops.cp` | `// Origin: Pure-CP Stdlib (AI-Native SIMD Vector Distance & Batch Retrieval Kernels using @dot/@l2sq/@fma) \| Created: 2026-11-22` | 原生 8-lane SIMD 内建原语 (`@dot`/`@l2sq`/`@fma`) 驱动的向量距离、单舍入 AXPY 与零堆分配批量 Top-K Cosine / L2 检索核 |
 | `lib/vector/kmeans.cp` | `// Origin: Pure-CP Stdlib (AI-Native SIMD K-Means++ Clustering & IVF/PQ Codebook Trainer) \| Created: 2026-11-22` | 基于 `@l2sq`/`@fma` 原生 SIMD 与确定性 SplitMix64 的零堆分配 K-Means++ 聚类与 IVF/PQ 码本训练器 |
 | `lib/vector/nav_graph.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc Vamana/NSW Navigable Graph ANN using @l2sq) \| Created: 2026-11-22` | 零堆分配 Vamana / NSW 单层近邻导航图近似检索索引 (`NavGraphIndex`)，基于 `@l2sq` 8-lane SIMD 贪心束搜索、双向建边与按距离剪枝 |
+| `lib/vector/sparse_vec.cp` | `// Origin: Pure-CP Stdlib (AI Learned Sparse Retrieval: SPLADE/BGE-M3 Sparse Vector & Merge-Join Scorer) \| Created: 2026-11-22` | SPLADE / BGE-M3 学习型稀疏词法向量表示、原位规范化、O(m+n) `@fma` 归并点积、Top-K 稀疏裁剪与零堆分配 CSR 批量 Top-K 检索核 |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -559,5 +560,58 @@ pub fn demoNavGraphAnn() {
         const n = idx.search(v0[0..], 2, 16, hits_s) ?? 0;
         * = n;
     }
+}
+```
+
+### 13. 学习型稀疏词法向量与 CSR 批量检索 (`sparse_vec.cp`)
+
+面向 SPLADE / BGE-M3 混合检索的零堆分配稀疏词法向量算子与 CSR 语料库批量 Top-K 检索核：
+
+- **`SparseEntry`**：`{ term_id: u32, weight: f32 }`
+- **`SparseHit`**：`{ doc_id: u32, score: f32 }`
+- **`sparseNormalizeInPlace(entries: *[]SparseEntry): usize`**：过滤 `NaN`/`Inf`，原位 $O(n \log n)$ 堆排序按 `term_id` 升序排列、累加合并重复 `term_id` 权重并剔除 `<= 0` 项，返回有效规范化长度。
+- **`sparseDot(a: []const SparseEntry, b: []const SparseEntry): f32`**：严格升序稀疏向量的 $O(|a| + |b|)$ 双指针归并点积，使用硬件 `@fma` 累加。
+- **`sparseCosine(a: []const SparseEntry, b: []const SparseEntry): f32`**：稀疏余弦相似度（钳位至 `[-1.0, 1.0]`，空向量或零范数安全返回 `0.0`）。
+- **`sparsePruneTopK(src: []const SparseEntry, k: usize, out_dst: *[]SparseEntry): usize`**：按 `|weight|` 保留 Top-K 词项（同权按 `term_id` 升序决胜）并重新按 `term_id` 升序输出，用于 SPLADE 稀疏度控制。
+- **`sparseBatchTopK(query: []const SparseEntry, corpus_entries: []const SparseEntry, doc_offsets: []const usize, k: usize, out_hits: *[]SparseHit): usize?`**：基于 CSR 紧凑偏移数组零堆分配批量检索 Top-K（跳过零重叠文档，按 `score` 降序、同分 `doc_id` 升序输出；非法偏移或缓冲不足返回 `null`）。
+
+```typescript
+import {
+    SparseEntry,
+    SparseHit,
+    sparseNormalizeInPlace,
+    sparseDot,
+    sparseCosine,
+    sparsePruneTopK,
+    sparseBatchTopK,
+} from "cap:vector";
+
+pub fn demoLearnedSparseRetrieval() {
+    let raw_q: [4]SparseEntry = [
+        SparseEntry{ term_id: 42, weight: 1.5 },
+        SparseEntry{ term_id: 7, weight: 0.8 },
+        SparseEntry{ term_id: 42, weight: 0.5 },
+        SparseEntry{ term_id: 99, weight: 0.0 },
+    ];
+    let q_s: []SparseEntry = raw_q[0..];
+    const q_len = sparseNormalizeInPlace(q_s); // [(7, 0.8), (42, 2.0)]
+
+    const corpus: [4]SparseEntry = [
+        SparseEntry{ term_id: 7, weight: 1.0 },
+        SparseEntry{ term_id: 42, weight: 1.0 },
+        SparseEntry{ term_id: 42, weight: 3.0 },
+        SparseEntry{ term_id: 100, weight: 2.0 },
+    ];
+    const offsets: [3]usize = [0, 2, 4]; // doc 0: [0..2], doc 1: [2..4]
+    let hits: [2]SparseHit = [SparseHit{}; 2];
+    let hits_s: []SparseHit = hits[0..];
+
+    const n = sparseBatchTopK(raw_q[0..q_len], corpus[0..], offsets[0..], 2, hits_s) ?? 0;
+    * = sparseDot(raw_q[0..q_len], corpus[0..2]);
+    * = sparseCosine(raw_q[0..q_len], corpus[0..2]);
+    let pruned: [1]SparseEntry = [SparseEntry{}; 1];
+    let pruned_s: []SparseEntry = pruned[0..];
+    * = sparsePruneTopK(raw_q[0..q_len], 1, pruned_s);
+    * = n;
 }
 ```

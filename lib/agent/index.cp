@@ -250,3 +250,11 @@ export {
     ContextBudgetSummary,
     allocateContextBudget,
 } from "./context_budget.cp";
+
+export {
+    AgentHealthState,
+    LivenessConfig,
+    AgentLivenessSlot,
+    LivenessSummary,
+    AgentLivenessMonitor,
+} from "./liveness.cp";

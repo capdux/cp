@@ -96,3 +96,18 @@ export {
     encodeWindowUpdateFrame,
     H2Stream as H2StreamMachine,
 } from "./stream";
+
+export {
+    H2_DISPATCH_HEADER_SIZE,
+    H2_DISPATCH_DEFAULT_MAX_FRAME_SIZE,
+    H2_DISPATCH_MAX_FRAME_SIZE_LIMIT,
+    H2_DISPATCH_DEFAULT_WINDOW_SIZE,
+    H2_DISPATCH_MAX_WINDOW_SIZE,
+    H2_DISPATCH_DEFAULT_MAX_HEADER_LIST,
+    H2DispatchError,
+    H2DispatchEventKind,
+    H2ParsedFrameHeader,
+    stripH2Padding,
+    H2DispatchEvent,
+    H2FrameDispatcher,
+} from "./dispatch";

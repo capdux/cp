@@ -1318,3 +1318,48 @@ fn contextBudgetDemo() {
     }
 }
 ```
+
+---
+
+## 子模块：高并发 Agent 集群心跳存活监视与重启风暴隔离熔断器（`liveness.cp`）
+
+### 核心特性
+
+- **两阶段心跳租约超时探测（`sweepTimeouts`）**：`Healthy` 超过 `heartbeat_timeout_ms` 自动进入 `Suspect` 宽限态，再超过 `suspect_grace_ms` 进入 `Unreachable` 并批量输出失联 Agent ID（输出截断安全）；收到新心跳立即恢复 `Healthy`，内置时钟回拨防护。
+- **BEAM 风格重启风暴滑动窗口隔离（`recordRestart`）**：统计 `restart_window_ms` 窗口内重启次数，超过 `max_restarts_in_window` 立即熔断进入 `Quarantined` 隔离态（隔离期内拒绝心跳续期），隔离满 `quarantine_duration_ms` 后由 `sweepTimeouts` 或心跳自动解除并重置窗口计数。
+
+### 导出清单
+
+- **状态与配置**：`AgentHealthState`（`Healthy | Suspect | Unreachable | Quarantined | Stopped`）、`LivenessConfig`、`AgentLivenessSlot`、`LivenessSummary`
+- **监视器**：`AgentLivenessMonitor`（`init`, `registerAgent`, `unregisterAgent`, `stopAgent`, `heartbeat`, `recordRestart`, `sweepTimeouts`, `getState`, `getSlot`, `summary`）
+
+### 使用示例
+
+```cp
+import {
+    LivenessConfig,
+    AgentLivenessSlot,
+    AgentLivenessMonitor,
+} from "cap:agent";
+
+fn livenessMonitorDemo() {
+    let slots_buf: [16]AgentLivenessSlot = [AgentLivenessSlot{}; 16];
+    let slots: []AgentLivenessSlot = slots_buf[0..];
+    const cfg = LivenessConfig{
+        heartbeat_timeout_ms: 5000,
+        suspect_grace_ms: 3000,
+        max_restarts_in_window: 3,
+        restart_window_ms: 60000,
+        quarantine_duration_ms: 30000,
+    };
+
+    let mon = AgentLivenessMonitor.init(slots, cfg) ?? return;
+    * = mon.registerAgent(101, 1000);
+    * = mon.heartbeat(101, 4000);
+
+    let unreach_buf: [8]u32 = [0; 8];
+    let unreach: []u32 = unreach_buf[0..];
+    * = mon.sweepTimeouts(15000, unreach); // Agent 101 -> Unreachable
+    * = mon.summary();
+}
+```

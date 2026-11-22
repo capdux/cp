@@ -639,6 +639,17 @@ pub fn demoWebPrimitives(): !void {
 
 - **HTTP/2 请求编码与窗口分帧（`h2/encode.cp`）**：归并自 `lib/h2_encode/`（Bun `src/http/h2_client/encode.cp`），提供 `encodeClientPreface`、`encodeFrameHeader`、`encodeHeaderBlockFrames`、`encodeDataWindowed`、`classifyRequestHeader`、`isSensitiveHeader`、`DataWindowState` 等零分配编码原语。
 - **HTTP/2 流状态机与控制帧（`h2/stream.cp`）**：归并自 `lib/h2stream/`（Bun `src/http/h2_client/Stream.cp`），在主包以 `H2StreamMachine`（避开 `h2/client.cp` 的 `H2Stream`）、`StreamState`、`H2ErrorCode`、`encodeRstStreamFrame`、`encodeWindowUpdateFrame` 导出。
+- **HTTP/2 帧协议校验与连接级分发器（`h2/dispatch.cp`，吸收自 `/data/dev/bun/src/http/h2_client/dispatch.cp`）**：提供零堆分配的 `H2ParsedFrameHeader`、`stripH2Padding`、`H2DispatchError`、`H2DispatchEventKind`、`H2DispatchEvent`、`H2FrameDispatcher`（`dispatchOne` / `parseNext`，覆盖 RFC 7540 首帧 SETTINGS 强制校验、CONTINUATION 序列锁、WINDOW_UPDATE 2^31-1 溢出防护、PING/GOAWAY/RST_STREAM/HEADERS/DATA PADDED+PRIORITY 零拷贝解析）。
+
+```typescript
+import { H2FrameDispatcher } from "cap:http";
+
+let disp = H2FrameDispatcher.init();
+let consumed: usize = 0;
+if (ev := disp.parseNext(wire_buf, &consumed)?) {
+    // 处理 ev.kind / ev.stream_id / ev.payload_slice，并推进 wire_buf[consumed..]
+}
+```
 - **HTTP/3 QPACK 静态表与字段段编解码（`h3/qpack.cp`）**：归并自 `lib/qpack/`（Bun `src/uws_sys/quic/Header.cp`），导出 `QPACK_IDX_*`、`QpackHeader`、`classifyHeader`、`encodePrefixedInt`、`decodePrefixedInt`、`buildHttp3RequestHeaders`、`encodeFieldSection`、`decodeFieldSection`。
 - **服务端 HTTP Byte Range 区间求值与 206/416 响应格式化（`byterange.cp`）**：归并自 `lib/byterange/`（Bun `src/runtime/server/RangeRequest.cp`），导出 `ByteRange`、`RangeStatus`、`parseRange`、`parseMultiRange`、`formatUnsatisfiableContentRange`，以及 `ByteRangeContentRange` / `formatByteContentRange` / `parseByteContentRange`（避开 `contentrange.cp` 原导出）。
 - **SSE 零堆分配参考实现（`sse_parser_.cp`）**：原 `lib/sse_parser/sse.cp`（Bun `src/http/HTTPRequestBody.cp`）与 `lib/http/sse.cp` 存在 `SseEvent`/`SseParser` 功能重叠，按参考归档规范保留为 `lib/http/sse_parser_.cp`（不从 `cap:http` 重复导出）。

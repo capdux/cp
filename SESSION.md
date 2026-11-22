@@ -1313,3 +1313,7 @@
 ### 2026-11-22（分类合并交付：lib/agent/context_budget.cp | 2026-11-22 14:03:58）
 - **执行与结单汇报**：
   > 子智能体交付 lib/agent/context_budget.cp（多来源上下文窗口按优先级保底 + 加权水填充 Token 预算分配器，5/5 PASS），归入 cap:agent 并同步 cp_lib_ref.md；续派 lib/agent/liveness.cp。
+
+### 2026-11-22（分类合并交付：lib/vector/sparse_vec.cp & lib/http/h2/dispatch.cp | 2026-11-22 14:06:43）
+- **执行与结单汇报**：
+  > 1. 交付 lib/vector/sparse_vec.cp (SPLADE/BGE-M3 稀疏词法向量规范化、@fma 双指针归并点积与 CSR 批量检索, 5/5 PASS)；2. 从 Bun src/http/h2_client/dispatch.cp 吸收归入 lib/http/h2/dispatch.cp (HTTP/2 流式帧分派器与 SETTINGS/WINDOW_UPDATE/CONTINUATION 协议状态机, 6/6 PASS)；均已同步 cp_lib_ref.md 并提交。

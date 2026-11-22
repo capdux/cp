@@ -111,3 +111,13 @@ export {
     NavNodeAdj,
     NavGraphIndex,
 } from "./nav_graph.cp";
+
+export {
+    SparseEntry,
+    SparseHit,
+    sparseNormalizeInPlace,
+    sparseDot,
+    sparseCosine,
+    sparsePruneTopK,
+    sparseBatchTopK,
+} from "./sparse_vec.cp";
