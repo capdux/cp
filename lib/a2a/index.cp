@@ -67,3 +67,15 @@ export {
     ReplayResult,
     A2aEventStreamRing,
 } from "./event_stream.cp";
+
+export {
+    A2aModalityMask,
+    A2aFeatureMask,
+    A2aRequirement,
+    A2aPeerOffer,
+    NegotiationRejectReason,
+    NegotiationMatch,
+    checkPeerCompatibility,
+    scoreCompatiblePeer,
+    negotiateBestPeers,
+} from "./negotiation.cp";

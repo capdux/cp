@@ -202,6 +202,21 @@ map.set("react19", "react", "^19.0.0")?;
 // map.resolve("react", "catalog:react19") == "^19.0.0"
 ```
 
+### 零分配 Monorepo 工作区双向映射与确定性排序（`workspace_map.cp`，吸收自 `/data/dev/bun/src/install/lockfile/Package/WorkspaceMap.cp`）
+
+- 核心导出：`MAX_WORKSPACE_MAP_ENTRIES` (128)、`WorkspaceMapError`（`EmptyPathOrName` / `DuplicateWorkspacePath` / `DuplicateWorkspaceName` / `CapacityExceeded`）、`isIgnoredWorkspacePath`、`hasIgnoredWorkspaceSegment`、`normalizeWorkspacePath`、`WorkspaceMapEntry`、`WorkspaceMap`（`init` / `put` / `getByPath` / `getByName` / `containsPath` / `containsName` / `sortByName` / `at` / `count` / `isEmpty`）。
+
+```typescript
+import { WorkspaceMap, hasIgnoredWorkspaceSegment } from "cap:pkg";
+
+let wm = WorkspaceMap.init();
+* = wm.put("./packages/core/", "@acme/core", "1.2.0", 0)?;
+* = wm.put("apps/web", "web-app", null, 0)?;
+wm.sortByName();
+// wm.getByPath("packages/core")?.name == "@acme/core"
+// hasIgnoredWorkspaceSegment("packages/app/node_modules/pkg") == true
+```
+
 ---
 
 ## 上游 Bun 包管理行为契约与边界注意事项

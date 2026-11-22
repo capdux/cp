@@ -150,3 +150,11 @@ export {
     rabitqEstimateDot,
     rabitqEstimateL2Sq,
 } from "./rabitq.cp";
+
+export {
+    computeMeanF32,
+    subtractMeanInPlaceF32,
+    fitTopKPrincipalAxesF32,
+    projectEmbeddingsF32,
+    jlRandomProjectF32,
+} from "./proj_reduce.cp";

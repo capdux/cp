@@ -1349,3 +1349,7 @@
 ### 2026-11-22（分类合并交付：lib/vector/rabitq.cp | 2026-11-22 14:24:21）
 - **执行与结单汇报**：
   > 子智能体交付 lib/vector/rabitq.cp（SIGMOD 2024 RaBitQ 32x 无偏 1-bit 随机正交二值量化与 FWHT/@fma/@popCount 距离估算核，5/5 PASS），归入 cap:vector 并同步 cp_lib_ref.md；续派 lib/vector/proj_reduce.cp。
+
+### 2026-11-22（分类合并交付：lib/pkg/workspace_map.cp + 3 项 Bun 清零 + 满 10 项轮换 | 2026-11-22 14:27:19）
+- **执行与结单汇报**：
+  > 子智能体核查清零 3 项 Bun 上游变动并从 Bun WorkspaceMap.cp 吸收归入 lib/pkg/workspace_map.cp (6/6 PASS)，满 10 项（累计清零 66 项 Bun 变动、吸收 10 个子模块 60/60 PASS）回收 6b80f1d4 并启全新 Bun Upstream Sync Absorber。

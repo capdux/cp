@@ -109,3 +109,13 @@ pub const isCatalogProtocol = _catalog.isCatalogProtocol;
 pub const isValidCatalogName = _catalog.isValidCatalogName;
 pub const parseCatalogRef = _catalog.parseCatalogRef;
 pub const formatCatalogRef = _catalog.formatCatalogRef;
+
+export {
+    MAX_WORKSPACE_MAP_ENTRIES,
+    WorkspaceMapError,
+    isIgnoredWorkspacePath,
+    hasIgnoredWorkspaceSegment,
+    normalizeWorkspacePath,
+    WorkspaceMapEntry,
+    WorkspaceMap,
+} from "./workspace_map.cp";
