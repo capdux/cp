@@ -452,6 +452,62 @@ pub fn demoFmp4AndOggOpus()! {
 }
 ```
 
+### 8. 实时语音 ASR/TTS 声学特征前端与端点检测引擎 (`asrFeature.cp`)
+
+对标 OpenAI Whisper / Conformer 与 Kaldi/HTK 的 100% 纯 CP 零动态堆分配、外部切片驱动声学特征前端，直接复用 `fftRadix2InPlace` 并以原生 SIMD `@dot` 加速 Mel 投影与 DCT-II：
+
+- **错误集、标度与配置**：
+  - `AsrFeatureError`（`InvalidSampleRate | InvalidFftSize | InvalidHopLength | InvalidMelBins | InvalidMfccCount | InvalidFreqRange | BufferTooSmall | InputTooShort`）
+  - `MelScaleKind`（`htk | slaney`）
+  - `AsrFrontendConfig`（`whisperDefaults()` 80-bin / `whisperLargeV3Defaults()` 128-bin / `isValid()` / `effectiveWinLen()` / `nBins()`）
+  - 精确缓冲容量计算：`asrFrameCount(num_samples, n_fft, hop_length)`、`asrMelBankLen(n_mels, n_fft)`、`asrMelOutLen(num_frames, n_mels)`
+- **Mel 标度换算与 Whisper/Conformer Log-Mel 频谱图**：
+  - `hzToMelScale(hz, kind)` / `melScaleToHz(mel, kind)`
+  - `buildMelFilterbankMatrix(cfg, out_weights)`（支持 Slaney 等面积归一化 `2.0 / (f_r - f_l)`）
+  - `extractLogMelSpectrogram(pcm, cfg, mel_weights, fft_re, fft_im, power_buf, out_log_mel)`（预加重 -> 周期 Hann 窗 -> `fftRadix2InPlace` -> `@dot` 投影 -> Whisper 标准 `log10` 动态范围钳位 `(max(v, max_v - 8) + 4) / 4`）
+- **MFCC + Delta/Delta-Delta + CMVN + SpecAugment**：
+  - `computeMfccFromLogMel` / `buildDct2Matrix` + `computeMfccFastDot`（`@dot` 加速）
+  - `applyCepstralLifteringInPlace`、`computeDeltaFeatures`（HTK/Kaldi 回归斜率）、`packMfccWithDeltas`（打包 39 维 `[MFCC, Δ, ΔΔ]`）
+  - `applyCmvnInPlace`（帧维零均值单位方差归一化）、`StreamingCmvnNormalizer`（Welford 因果在线流式归一化）、`applySpecAugmentInPlace`（确定性时频遮蔽）
+- **实时双门限端点检测器（ASR Endpointing VAD）**：
+  - `EndpointState`（`silence | speech_onset | speech_active | speech_hangover`）、`SpeechSegmentSpan`、`EndpointVadConfig`
+  - `StreamingEndpointVad`（自适应底噪跟踪 + RMS 能量 + 过零率 + Wiener 频谱平坦度 + 迟滞状态机）与批量切分 `detectSpeechSegments`
+
+```cp
+import {
+    AsrFrontendConfig,
+    buildMelFilterbankMatrix,
+    extractLogMelSpectrogram,
+    computeMfccFromLogMel,
+    computeDeltaFeatures,
+    applyCmvnInPlace,
+    EndpointVadConfig,
+    SpeechSegmentSpan,
+    detectSpeechSegments,
+} from "cap:media";
+
+pub fn demoWhisperAsrFrontend(pcm_1s_16k: []const f32)! {
+    const cfg = AsrFrontendConfig.whisperDefaults(); // 16kHz, n_fft=512, win=400, hop=160, 80-bin Slaney
+    let mel_w: [20560]f32 = [0.0; 20560]; // 80 * 257
+    * = buildMelFilterbankMatrix(cfg, mel_w[0..])?;
+
+    let fft_re: [512]f64 = [0.0; 512];
+    let fft_im: [512]f64 = [0.0; 512];
+    let power: [257]f32 = [0.0; 257];
+    let log_mel: [8000]f32 = [0.0; 8000]; // up to 100 frames x 80 bins
+    const n_frames = extractLogMelSpectrogram(pcm_1s_16k, cfg, mel_w[0..], fft_re[0..], fft_im[0..], power[0..], log_mel[0..])?;
+
+    let mfcc: [1300]f32 = [0.0; 1300];
+    let delta: [1300]f32 = [0.0; 1300];
+    computeMfccFromLogMel(log_mel[0..n_frames * 80], n_frames, 80, 13, mfcc[0..])?;
+    computeDeltaFeatures(mfcc[0..n_frames * 13], n_frames, 13, 2, delta[0..])?;
+    applyCmvnInPlace(mfcc[0..n_frames * 13], n_frames, 13, true)?;
+
+    let segs: [8]SpeechSegmentSpan = [SpeechSegmentSpan{}; 8];
+    * = detectSpeechSegments(pcm_1s_16k, cfg, EndpointVadConfig.defaults(), fft_re[0..], fft_im[0..], power[0..], segs[0..])?;
+}
+```
+
 ---
 
 ## 收敛子模块深度文档

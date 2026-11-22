@@ -190,6 +190,33 @@ export {
 } from "./fmp4Mux.cp";
 
 export {
+    AsrFeatureError,
+    MelScaleKind,
+    AsrFrontendConfig,
+    asrFrameCount,
+    asrMelBankLen,
+    asrMelOutLen,
+    hzToMelScale,
+    melScaleToHz,
+    buildMelFilterbankMatrix,
+    extractLogMelSpectrogram,
+    computeMfccFromLogMel,
+    computeDeltaFeatures,
+    applyCmvnInPlace,
+    applyCepstralLifteringInPlace,
+    buildDct2Matrix,
+    computeMfccFastDot,
+    packMfccWithDeltas,
+    applySpecAugmentInPlace,
+    StreamingCmvnNormalizer,
+    EndpointState,
+    SpeechSegmentSpan,
+    EndpointVadConfig,
+    StreamingEndpointVad,
+    detectSpeechSegments,
+} from "./asrFeature.cp";
+
+export {
     FLAC_MAGIC_SIZE,
     FLAC_BLOCK_HEADER_SIZE,
     FLAC_STREAMINFO_SIZE,
