@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T11:12:13Z (RFC 6265 Cookie Domain/Path Match & Send Policy)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:17:21Z (RFC 6265 Cookie Domain/Path Match & Send Policy)
 
 fn toLowerAscii(c: u8): u8 {
     if (c >= 'A' && c <= 'Z') {

@@ -384,3 +384,13 @@ export {
     GraphScanStats,
     BundlerGraph,
 } from "./graph";
+
+export {
+    PATH_SRC_MAP_BUCKETS,
+    PATH_SRC_MAP_MAX_LOAD,
+    PATH_SRC_INVALID_INDEX,
+    PathSourceMapError,
+    BundlerModulePath,
+    GetOrPutSourceResult,
+    PathToSourceIndexMap,
+} from "./path_source_map";

@@ -634,3 +634,20 @@ const t3 = g.decrementScanCounter()?; // ReadyToLink (pending=0, deferred=0)
 * = t2;
 * = t3;
 ```
+
+- **Bundler 路径 → `SourceIndex` 命名空间隔离映射表（`path_source_map.cp`，吸收自 `/data/dev/bun/src/bundler/PathToSourceIndexMap.cp` & `/data/dev/bun/docs/bundler/plugins.mdx`）**：
+    - 导出：`PATH_SRC_MAP_BUCKETS` (`256`)、`PATH_SRC_MAP_MAX_LOAD` (`192`)、`PATH_SRC_INVALID_INDEX` (`0xFFFF_FFFF`)、`PathSourceMapError`、`BundlerModulePath`（`file`/`withNamespace`/`isFileNamespace`/`isVirtual`/`eql`/`hash64`/`formatInto`）、`GetOrPutSourceResult`、`PathToSourceIndexMap`（`init`/`count`/`isEmpty`/`get`/`getPath`/`contains`/`containsPath`/`put`/`putPath`/`getOrPut`/`getOrPutPath`/`remove`/`removePath`/`reverseLookup`/`clear`）；
+    - **插件 `namespace` 隔离最佳实践（参考 `/data/dev/bun/docs/bundler/plugins.mdx`）**：`onResolve` 返回 `{ path, namespace }` 时，不同命名空间（如 `"file"` vs `"virtual"` / `"env"`）下的同名路径（如 `config.json`）在 `BundlerModulePath.hash64()` 中通过 `namespace + 0xFF + text` 严格隔离，避免虚拟模块与磁盘文件发生 `SourceIndex` 碰撞；
+    - **零堆分配与墓碑安全删除**：采用 256 槽开放寻址哈希表（75% 负载上限 192），支持 `remove` / `removePath` 墓碑回收而不破坏探测链，并支持 `reverseLookup(source_index)` 诊断反查。
+
+```cp
+import { BundlerModulePath, PathToSourceIndexMap } from "cap:bundler";
+
+let map = PathToSourceIndexMap.init();
+const r1 = map.getOrPut("src/config.json", 1)?; // source_index=1, found_existing=false
+const r2 = map.getOrPutPath(BundlerModulePath.withNamespace("virtual", "src/config.json"), 2)?; // 命名空间隔离, source_index=2
+const r3 = map.getOrPut("src/config.json", 99)?; // 命中已有, source_index=1, found_existing=true
+* = r1;
+* = r2;
+* = r3;
+```

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/values/image.cp | Synced: 2026-11-22T05:25:45Z
+// Source: Absorbed from /data/dev/bun/src/css/values/image.cp | Synced: 2026-11-22T12:15:38Z
 
 /// CSS `<resolution>` 单位枚举
 pub enum ResolutionUnit: u8 {

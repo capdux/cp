@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T11:12:13Z (W3C Server-Timing Header Parser & Builder)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:17:21Z (W3C Server-Timing Header Parser & Builder)
 
 const U64_MAX: u64 = 0xFFFF_FFFF_FFFF_FFFF;
 

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T11:12:13Z (RFC 9110 Content-Encoding Stack Parser)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:17:21Z (RFC 9110 Content-Encoding Stack Parser)
 
 /// RFC 9110 §8.4 HTTP Content-Encoding 编码类型
 export enum ContentCoding {

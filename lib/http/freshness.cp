@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T11:12:13Z (RFC 9111 §4.2 HTTP Cache Freshness & Age Calculator)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:17:21Z (RFC 9111 §4.2 HTTP Cache Freshness & Age Calculator)
 // Pure-CP zero-allocation RFC 9111 §4.2 HTTP cache freshness lifetime, current age, and stale-while-revalidate evaluator.
 
 export enum CacheFreshness {

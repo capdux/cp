@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T11:12:13Z (RFC 9110 Host Header Validator & Parser)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:17:21Z (RFC 9110 Host Header Validator & Parser)
 
 fn isDigit(c: u8): bool {
     return c >= '0' && c <= '9';

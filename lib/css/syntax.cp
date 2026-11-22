@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/values/syntax.cp | Synced: 2026-11-21T17:10:30Z
+// Source: Absorbed from /data/dev/bun/src/css/values/syntax.cp | Synced: 2026-11-22T12:15:35Z
 
 pub err Error {
     EmptySyntax,

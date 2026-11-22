@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/values/url.cp | Synced: 2026-11-22T04:23:03Z
+// Source: Absorbed from /data/dev/bun/src/css/values/url.cp | Synced: 2026-11-22T12:15:30Z
 // Pure-CP zero-allocation W3C CSS Values Level 4 `url(...)` parser, RFC 3986 / WHATWG
 // URL classification (`isAbsolute` / `kind`), and shortest-form minified CSS serializer.
 

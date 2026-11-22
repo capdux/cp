@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T11:12:13Z (HTTP User-Agent Product Token Parser & Classifier)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T12:17:21Z (HTTP User-Agent Product Token Parser & Classifier)
 // Pure-CP zero-allocation RFC 9110 User-Agent product token iterator, browser/OS/bot classifier.
 
 fn isWs(b: u8): bool {
