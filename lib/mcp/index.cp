@@ -280,3 +280,22 @@ export {
     encodeRootsListChangedNotification,
     McpRootsRegistry,
 } from "./rootsSync.cp";
+
+export {
+    MCP_AUTH_MAX_POLICIES,
+    MCP_AUTH_MAX_SCOPES,
+    MCP_AUTH_METHOD_MAX_LEN,
+    MCP_AUTH_URI_MAX_LEN,
+    MCP_AUTH_SCOPE_NAME_MAX_LEN,
+    MCP_AUTH_DEFAULT_CLOCK_SKEW_S,
+    McpAuthStatus,
+    McpAuthOpStatus,
+    McpScopeDef,
+    McpScopePolicy,
+    McpTokenClaims,
+    McpAuthDecision,
+    McpAuthScopeStats,
+    isSafeHeaderParamValue,
+    formatWwwAuthenticateHeader,
+    McpAuthScopeEngine,
+} from "./authScope.cp";

@@ -828,3 +828,53 @@ pub fn demoMcpRootsSync() {
     * = reg.encodePendingListChanged(*buf_s);
 }
 ```
+
+---
+
+## 二十、 零堆分配 MCP 2025-03-26 OAuth 2.1 资源服务器作用域策略与 RFC 9728 质询头引擎 (`authScope.cp`)
+
+面向 MCP 2025-03-26 OAuth 2.1 资源服务器授权规范（RFC 6749 / RFC 6750 / RFC 9728）的 100% 纯 CP 零动态堆分配作用域策略表、令牌声明校验器与 `WWW-Authenticate` 质询头格式化引擎：
+
+- **常量与枚举**：
+  - `MCP_AUTH_MAX_POLICIES = 64`、`MCP_AUTH_MAX_SCOPES = 64`、`MCP_AUTH_METHOD_MAX_LEN = 96`、`MCP_AUTH_URI_MAX_LEN = 192`、`MCP_AUTH_SCOPE_NAME_MAX_LEN = 48`、`MCP_AUTH_DEFAULT_CLOCK_SKEW_S = 30`
+  - `McpAuthStatus`（`allowed | missing_token | invalid_audience | token_expired | token_not_yet_valid | insufficient_scope | unknown_policy`）
+  - `McpAuthOpStatus`（`ok | invalid_input | already_exists | not_found | capacity_full`）
+- **核心数据结构**：
+  - `McpScopeDef`（64 位命名作用域定义）、`McpScopePolicy`（方法/工具策略项）、`McpTokenClaims`（零拷贝令牌声明，支持 `missing()` / `make(...)` / `makeWithSubject(...)`）、`McpAuthDecision`（含 `status` / `allowed` / `http_status` / `required_scopes` / `granted_scopes` / `missing_scopes`）、`McpAuthScopeStats`（放行/401/403/受众不匹配/过期/未生效/作用域不足/未知策略累计计数）
+- **纯函数工具**：
+  - `isSafeHeaderParamValue(s): bool`：校验引号参数值不含 `\r`/`\n`/NUL/控制字符/`"`/`\`，防止 HTTP 响应头拆分与引号逃逸注入。
+  - `formatWwwAuthenticateHeader(resource_metadata_url, error_code, error_description, scope_str, *out_buf): usize?`：零分配格式化 RFC 9728 / RFC 6750 `WWW-Authenticate: Bearer ...` 响应头，自动省略空字段并强制执行注入防护。
+- **核心引擎 `McpAuthScopeEngine`**：
+  - `init(default_audience, resource_metadata_url, clock_skew_s)` / `setClockSkew(*_, skew_s)` / `setResourceMetadataUrl(*_, url)`
+  - `registerScope(*_, name): u64?` / `resolveScopeBit(name): u64` / `parseScopesToMask(scope_list): u64` / `formatScopeMask(mask, *out_buf): usize?`
+  - `addPolicy(*_, method_or_tool, required_scopes, require_all, expected_audience)` / `upsertPolicy(...)` / `removePolicy(*_, method_or_tool)` / `clearPolicies(*_)` / `findPolicy` / `getPolicy`
+  - `authorizeCall(*_, method_or_tool, token_claims, now_epoch_s): McpAuthDecision`：依次校验策略存在性（fail-closed）、令牌存在性、严格受众绑定（防 Confused-Deputy 透传）、`nbf`/`exp` 时效窗口（防溢出 + `clock_skew_s`）及作用域位图覆盖（AND/ANY 模式），精确输出 `missing_scopes`。
+  - `formatChallengeForDecision(decision, *out_buf): usize?`：依据鉴权拒绝决策自动生成标准 RFC 9728 / RFC 6750 `WWW-Authenticate` 质询头。
+  - `stats(): McpAuthScopeStats` / `resetStats(*_)`
+
+```cp
+import {
+    McpAuthStatus,
+    McpTokenClaims,
+    McpAuthScopeEngine,
+} from "cap:mcp";
+
+pub fn demoMcpAuthScope() {
+    let eng = McpAuthScopeEngine.init(
+        "https://mcp.cap.dev",
+        "https://mcp.cap.dev/.well-known/oauth-protected-resource",
+        30,
+    );
+    const s_read = eng.registerScope("mcp:tools.read") ?? 0;
+    const s_exec = eng.registerScope("mcp:tools.exec") ?? 0;
+    * = eng.addPolicy("tools/call:deploy", s_read | s_exec, true, "");
+
+    const tok = McpTokenClaims.make("https://mcp.cap.dev", "mcp:tools.read", 1_700_000_600, 1_700_000_000);
+    const dec = eng.authorizeCall("tools/call:deploy", tok, 1_700_000_100);
+    * = dec.status == McpAuthStatus.insufficient_scope; // missing s_exec
+
+    let hdr_buf: [512]u8 = [0; 512];
+    let hdr_s: []u8 = hdr_buf[0..];
+    * = eng.formatChallengeForDecision(dec, *hdr_s);
+}
+```

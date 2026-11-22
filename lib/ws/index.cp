@@ -58,6 +58,25 @@ export {
     WsClientUpgradeConfig,
     WsClientUpgradeMachine,
 } from "./clientUp";
+export {
+    HMR_VERSION_FRAME_LEN,
+    HMR_INIT_FRAME_LEN,
+    HMR_MAX_REFERENCED_SOURCEMAPS,
+    HMR_TOPIC_MAX_COUNT,
+    HmrSocketError,
+    HmrIncomingOpcode,
+    HmrOutgoingOpcode,
+    HmrTopicBits,
+    HmrTopicDiff,
+    HmrInitPayload,
+    HmrCloseSummary,
+    isHmrLocalhostIp,
+    encodeHmrVersionFrame,
+    decodeHmrVersionFrame,
+    encodeHmrInitFrame,
+    decodeHmrInitFrame,
+    HmrSocketSession,
+} from "./hmrSocket";
 
 import { FrameBuilder } from "./frame";
 import { Mask } from "./mask";

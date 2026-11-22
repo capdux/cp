@@ -163,3 +163,23 @@ const n = machine.buildUpgradeRequest("dGhlIHNhbXBsZSBub25jZQ==", cfg, req_buf[0
 6. **客户端 URL 合规性与升级握手安全防线（吸收自 `/data/dev/bun/src/http/websocket_http_client.cp` & `/data/dev/bun/docs/runtime/http/websockets.mdx`）**：
    - 遵循 RFC 6455 Section 3：`WsClientUrl.parse` 严格拒绝包含 `#fragment` 或控制字符/CRLF 的 URL，支持 IPv6 字面量 `[::1]:port` 并按默认端口（`ws` 80 / `wss` 443）规范化 `Host` 头；
    - `WsClientUpgradeConfig.addHeader` 禁止注入 `\r`/`\n` 并拒绝覆盖核心握手头（`Host`/`Upgrade`/`Connection`/`Sec-WebSocket-Key`/`Sec-WebSocket-Version`）；`WsClientUpgradeMachine.verifyUpgradeResponse` 严格校验 `101 Switching Protocols`、`Sec-WebSocket-Accept` 28 字节 SHA-1 Base64 摘要以及协商子协议白名单，任意不匹配立即置状态为 `Failed`。
+7. **DevServer HMR WebSocket 协议帧与连接会话管理（`lib/ws/hmrSocket.cp`，吸收自 `/data/dev/bun/src/bake/DevServer/HmrSocket.cp` & `/data/dev/bun/docs/bundler/hot-reloading.mdx`）**：
+   - **导出符号**：`HMR_VERSION_FRAME_LEN` (`17`)、`HMR_INIT_FRAME_LEN` (`9`)、`HMR_MAX_REFERENCED_SOURCEMAPS` (`32`)、`HMR_TOPIC_MAX_COUNT` (`8`)、`HmrSocketError`、`HmrIncomingOpcode`、`HmrOutgoingOpcode`、`HmrTopicBits`、`HmrTopicDiff`、`HmrInitPayload`、`HmrCloseSummary`、`isHmrLocalhostIp`、`encodeHmrVersionFrame`、`decodeHmrVersionFrame`、`encodeHmrInitFrame`、`decodeHmrInitFrame`、`HmrSocketSession`；
+   - **安全与零泄漏最佳实践**：
+     - **环回地址鉴权（`isHmrLocalhostIp` / `requireLocalhost`）**：仅来自 `127.0.0.1` 或 `::1` 的 HMR WebSocket 连接允许执行敏感 DevServer 状态检视或变更操作；
+     - **二进制精简握手**：建连即发送 17 字节版本帧（`'V'` + 16 字节配置哈希），客户端上报 9 字节初始化帧（`'i'` + 8 位十六进制 `generation_id`）并将对应 SourceMap 强引用登记到 `HmrSocketSession`；
+     - **增量主题位掩码差分与 `closeAndDrain`**：`applySubscribePayload` 精确计算新增/取消订阅差分位，断连时 `closeAndDrain` 一次性排出全部 SourceMap 引用键、旧路由 ID 与已订阅主题，确保长周期开发服务器零引用泄漏。
+
+```cp
+import { HmrSocketSession, encodeHmrInitFrame, decodeHmrInitFrame } from "cap:ws";
+
+let sess = HmrSocketSession.init("127.0.0.1", false);
+let frame_buf: [16]u8 = [0; 16];
+const wire = encodeHmrInitFrame(0x0000002a, frame_buf[0..])?;
+const parsed = decodeHmrInitFrame(wire)?;
+* = sess.trackSourceMap(parsed.source_map_key)?;
+const diff = sess.applySubscribePayload("he")?; // added: hot_update + errors
+let drain: [32]u64 = [0; 32];
+const summary = sess.closeAndDrain(drain[0..]);
+* = diff; * = summary;
+```
