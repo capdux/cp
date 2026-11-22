@@ -39,3 +39,11 @@ export {
     PromptBuilder,
     McpServer,
 } from "./server.cp";
+
+export {
+    ToolRiskLevel,
+    ToolPolicy,
+    PolicyDecision,
+    RegisteredTool,
+    McpToolRegistry,
+} from "./registry.cp";
