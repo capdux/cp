@@ -1919,3 +1919,51 @@ fn planExecuteReplanQuickStart() {
     * = prog.isAllSucceeded(); // true
 }
 ```
+
+---
+
+## 子模块：思维树（Tree-of-Thoughts）与多分支搜索管理器（`thought_tree.cp`）
+
+### 核心特性
+
+- **100% 零堆分配固定节点池（`ThoughtTree`）**：基于调用方固定 `[]ThoughtNode` 缓冲实现树状推理扩展、最大深度守卫（`max_depth`）及终态/剪枝节点防误扩展保护。
+- **Best-First 前沿选择与非递归 O(N) 子树剪枝**：`selectBestOpenNode()` 在 `Open` 前沿中按最高 `agg_score`（平局按升序 `node_id`）确定性择优；`pruneSubtree()` 利用拓扑创建序在单遍 O(N) 无递归扫描中将整棵子树标记为 `Pruned`。
+- **沿父链得分回传与根到叶路径提取**：`backpropagateScore()` 沿父链更新每个祖先节点的 `visit_count` 与滑动平均 `agg_score`；`extractPathToRoot()` 按从根到目标的正序零堆输出完整推理路径。
+
+### 导出清单
+
+- **常量与类型**：`THOUGHT_NO_PARENT`（`0xFFFF_FFFF`）、`ThoughtNodeState`（`Open | Expanded | Pruned | Terminal`）、`ThoughtNode`、`ThoughtTreeStats`
+- **树管理器（`ThoughtTree`）**：`init`、`setRoot`、`addChild`、`selectBestOpenNode`、`pruneSubtree`、`backpropagateScore`、`extractPathToRoot`、`getNode`、`stats`
+
+### QuickStart 示例
+
+```cp
+import {
+    ThoughtNode,
+    ThoughtTree,
+} from "cap:agent";
+
+fn thoughtTreeQuickStart() {
+    let pool: [16]ThoughtNode = [ThoughtNode{}; 16];
+    let tree = ThoughtTree.init(pool[0..], 4) ?? return;
+
+    const root = tree.setRoot("Solve 24-game: [4, 7, 8, 8]", 0.5) ?? return;
+    const b1 = tree.addChild(root, "Try (7 - 8/8) * 4", 0.9, false) ?? return;
+    const b2 = tree.addChild(root, "Try 8 + 8 + 4 + 7", 0.2, false) ?? return;
+
+    // 剪除低分死胡同分支
+    * = tree.pruneSubtree(b2);
+
+    // Best-First 选中 b1 并展开出终态解答节点
+    if (best := tree.selectBestOpenNode()) {
+        if (ans := tree.addChild(best, "6 * 4 = 24 (verified)", 1.0, true)) {
+            * = tree.backpropagateScore(ans, 1.0);
+            let path: [8]u32 = [0; 8];
+            if (plen := tree.extractPathToRoot(ans, path[0..])) {
+                * = path[0..plen]; // [root, b1, ans]
+            }
+        }
+    }
+    * = b1;
+}
+```
