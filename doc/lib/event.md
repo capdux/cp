@@ -158,6 +158,28 @@ pub fn demoEventLoop() {
 | **FD 多路复用器** | `event_loop/AnyEventLoop.cp` | `PollEngine`, `PollEvents`, `FilePollRegistration` | 懒初始化 POSIX `poll` 监听 |
 | **类型擦除与受管任务** | `event_loop/AnyTask.cp`, `ManagedTask.cp` | `AnyTask`, `AnyTaskWithExtraContext`, `ManagedTask` | 栈/堆双模安全释放，支持 `cancel()` |
 | **统一事件循环内核** | `event_loop/MiniEventLoop.cp` | `EventLoop` | 零堆碎片 64 槽定时/任务池 + 四阶段 `tick` |
+| **事件循环延迟监控器** | `runtime/timer/EventLoopDelayMonitor.cp` | `EventLoopDelayMonitor`, `DelayHistogram`, `DelayMonitorError` | 64 桶 2^k 纳秒对数直方图，零分配统计 P50/P95/P99/Max 与调度抖动 |
+
+### 6. 事件循环延迟监控器 (`EventLoopDelayMonitor` & `DelayHistogram`)
+
+吸收自 `/data/dev/bun/src/runtime/timer/EventLoopDelayMonitor.cp`（对应 `node:perf_hooks` 的 `monitorEventLoopDelay` 能力，参考 `/data/dev/bun/docs/runtime/nodejs-compat.mdx` 与 `/data/dev/bun/docs/runtime/workers.mdx`）：
+
+- **导出符号**：`DELAY_HISTOGRAM_BUCKETS` (`64`)、`DELAY_DEFAULT_RESOLUTION_MS` (`10`)、`DELAY_NS_PER_MS` (`1_000_000`)、`DelayMonitorError`（`InvalidResolution`/`InvalidPercentile`）、`DelayHistogram`（`init`/`initWithMax`/`bucketIndex`/`bucketUpperBoundNs`/`record`/`reset`/`meanNs`/`percentile`）、`EventLoopDelayMonitor`（`init`/`initWithMax`/`expectedIntervalNs`/`enable`/`disable`/`isEnabled`/`shouldFire`/`onFire`/`reset`）；
+- **实战最佳实践**：
+  - 默认采样分辨率 `10ms`（`DELAY_DEFAULT_RESOLUTION_MS`），过小的分辨率（如 1ms）会增加定时器唤醒频率；首次 `onFire` 仅建立基准时间戳并返回 `null`，从第二次触发开始计算 `actual_ns - expected_ns` 延迟；
+  - 结合 `EventLoop` 或工作线程心跳，在每次事件循环推进时检查 `shouldFire(now_ns)` 并调用 `onFire(now_ns)`，通过 `histogram.percentile(99.0)` 与 `histogram.max_ns` 定位阻塞主线程的长同步任务；
+  - 若需要有界告警统计，使用 `initWithMax(resolution_ms, max_recordable_ns)` 自动截断极端离群值并通过 `histogram.exceeds_count` 追踪超限次数。
+
+```cp
+import { EventLoopDelayMonitor } from "cap:event";
+
+let mon = EventLoopDelayMonitor.init(10)?; // 10ms 分辨率
+* = mon.enable(1_000_000_000);             // t0 = 1.000s，计划在 1.010s 触发
+* = mon.onFire(1_010_000_000);             // 首次触发建立基线，返回 null
+const d1 = mon.onFire(1_025_000_000);      // 间隔 15ms -> 记录 5ms (5_000_000ns) 延迟
+const p99 = mon.histogram.percentile(99.0)?;
+* = d1; * = p99;
+```
 
 ---
 

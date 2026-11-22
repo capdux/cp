@@ -51,4 +51,13 @@ export {
     EventLoop,
 } from "./loop.cp";
 
+export {
+    DELAY_HISTOGRAM_BUCKETS,
+    DELAY_DEFAULT_RESOLUTION_MS,
+    DELAY_NS_PER_MS,
+    DelayMonitorError,
+    DelayHistogram,
+    EventLoopDelayMonitor,
+} from "./delayMonitor.cp";
+
 export * from "./emitter.cp";
