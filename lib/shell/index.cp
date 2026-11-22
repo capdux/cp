@@ -203,6 +203,17 @@ export {
     isRmDotOrDotDotTarget,
 } from "./rm_opts.cp";
 
+export {
+    SHELL_CAT_MAX_INPUTS,
+    ShellCatError,
+    CatInputKind,
+    CatInputEntry,
+    CatOpts,
+    CatPlan,
+    CatLineFormatter,
+    formatCatBytes,
+} from "./cat_opts.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);

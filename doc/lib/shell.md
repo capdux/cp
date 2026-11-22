@@ -239,6 +239,9 @@ const n = plan.resolveDestPath(0, true, dst[0..])?; // "dist/a.cp"
 8. **POSIX `rm` 选项解析与根目录/`.` 防误删守卫（`lib/shell/rm_opts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/rm.cp` & `/data/dev/bun/docs/runtime/shell.mdx`）**：
    - 零堆分配支持 `-f`/`--force`、`-r`/`-R`/`--recursive`（自动隐含 `-d`）、`-d`/`--dir`、`-v`/`--verbose`、`-i`/`-I`/`--interactive=never|once|always`、`--preserve-root`/`--no-preserve-root`、短标志聚合（如 `-rfv`）与 `--` 操作数终止哨兵（支持删除 `-weird` 开头文件名）；
    - **安全删除防线**：默认启用 `preserve_root = true`，`isRmRootPath(cwd, target)` 结合当前工作目录词法规范化折叠 `..` 后拦截 `/` 及 Windows 驱动器根 `C:/`（返回 `RefusingToRemoveRoot`）；`isRmDotOrDotDotTarget()` 严格拦截 `.` / `..` 尾段（返回 `RefusingToRemoveDotOrDotDot`）；`rm -f` 无操作数时按 POSIX 约定静默成功。
+9. **POSIX/GNU `cat` 选项解析与流式行格式化器（`lib/shell/cat_opts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/cat.cp` & `/data/dev/bun/docs/runtime/shell.mdx`）**：
+   - 零堆分配支持 `-b`/`--number-nonblank`、`-n`/`--number`（`-b` 优先覆盖 `-n`）、`-s`/`--squeeze-blank`、`-E`/`--show-ends`、`-T`/`--show-tabs`、`-v`/`--show-nonprinting`、`-e`（`-vE`）、`-t`（`-vT`）、`-A`/`--show-all`（`-vET`）、`-u`、`--` 终止哨兵与 `-` 标准输入操作数（无操作数默认读取 stdin）；同时提供 `CatPlan.parseWithMode(args, true)` 对齐 Bun 当前严格兼容模式；
+   - `CatLineFormatter` 为有状态流式格式化器，可在管道或分块读取（如 `cat < response | wc -c` 跨 chunk 场景）中保持连续行号与连续空行压缩状态，无内容改写选项时自动走零变换快速拷贝路径。
 
 ### POSIX `rm` 选项解析与根目录防误删示例（`RmPlan`）
 
@@ -251,4 +254,18 @@ const decision = plan.validateTarget("/workspace/app", "-temp.log", RmPathKind.F
 // decision == RmTargetDecision.Remove
 // plan.validateTarget("/workspace/app", "../..", RmPathKind.NonEmptyDir) -> ShellRmError.RefusingToRemoveRoot
 * = decision;
+```
+
+### POSIX `cat` 选项解析与流式行格式化示例（`CatPlan` / `CatLineFormatter`）
+
+```cp
+import { CatPlan, CatLineFormatter } from "cap:shell";
+
+const args: [3]([]const u8) = ["-bsE", "a.txt", "-"];
+const plan = CatPlan.parse(args[0..])?;
+let fmt = CatLineFormatter.init(plan.opts);
+let out: [128]u8 = [0; 128];
+const n = fmt.formatChunk("hello\n\n\nworld\n", out[0..])?;
+// 输出: "     1\thello$\n$\n     2\tworld$\n"
+* = n;
 ```
