@@ -245,3 +245,18 @@ const next_id = q.nextDispatchableId(true); // 102 (自动流水线并发派发)
 * = q.finishCurrent();
 * = next_id;
 ```
+
+14. **预处理语句生命周期与列去重状态机（`stmtLifecycle.cp`，吸收自 `/data/dev/bun/src/sql_jsc/mysql/MySQLStatement.cp`）**：
+    - `MySqlStmtLifecycle` 实现零动态堆分配的 `COM_STMT_PREPARE_OK` 元数据接收进度（`params_received` / `columns_received`）、单次执行标志（`MySqlStmtExecutionFlags`）、结果行计数（`result_count`）、`ERR_Packet` 错误码记录与右向左重复列去重（`checkForDuplicateFields`）；
+    - `resetExecution()` 仅清零单次执行状态并保留 `statement_id` 与 `Prepared` 状态，支持预处理语句高频复用。
+
+```cp
+import { MySqlStmtLifecycle, MySqlStmtColumnMeta } from "cap:mysql";
+
+let st = MySqlStmtLifecycle.init();
+* = st.onPrepareOk(42, 2, 1)?;
+* = st.onParamDefReceived()?;
+* = st.onColumnDefReceived(MySqlStmtColumnMeta.named("id", 0x03, true, 63))?;
+* = st.onColumnDefReceived(MySqlStmtColumnMeta.named("name", 0xFD, false, 45))?;
+* = st.isReadyForExecute(); // true
+```

@@ -325,3 +325,16 @@ export {
     MySqlRequestEntry,
     MySqlRequestQueue,
 } from "./requestQueue.cp";
+
+// --- 19. Prepared Statement Lifecycle, ExecutionFlags & Column Deduplication (./stmtLifecycle.cp) ---
+export {
+    MYSQL_STMT_MAX_COLUMNS,
+    MYSQL_STMT_MAX_PARAMS,
+    MySqlStmtLifecycleError,
+    MySqlStmtStatus,
+    MySqlStmtExecutionFlags,
+    MySqlStmtColumnKeyKind,
+    MySqlStmtColumnMeta,
+    MySqlStmtFieldsFlags,
+    MySqlStmtLifecycle,
+} from "./stmtLifecycle.cp";
