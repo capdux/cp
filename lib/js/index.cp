@@ -117,3 +117,18 @@ export {
     ReplTransformPlan,
     planReplTransform,
 } from "./replTransform.cp";
+
+export {
+    JS_BINDING_NONE,
+    JS_BINDING_MAX_DEPTH,
+    JS_BINDING_PROP_NONE,
+    JS_BINDING_PROP_IS_SPREAD,
+    JS_BINDING_PROP_IS_COMPUTED,
+    JS_BINDING_PROP_IS_SHORTHAND,
+    JsBindingError,
+    JsBindingTag,
+    JsArrayBindingItem,
+    JsObjectBindingProp,
+    JsBindingNode,
+    JsBindingArena,
+} from "./bindingPattern.cp";

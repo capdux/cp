@@ -266,3 +266,35 @@ const plan = planReplTransform(prog)?;
 assert(plan.mode == ReplWrapMode.async_iife);
 assert(plan.captures_last_expr && plan.hasHoistedVar("x"));
 ```
+
+### ECMAScript 解构绑定模式 AST、静态 `BoundNames` 与赋值目标降级 (`bindingPattern.cp`)
+
+吸收自 `/data/dev/bun/src/js_parser/ast/Binding.cp`：
+
+- **导出符号**：`JS_BINDING_NONE`、`JS_BINDING_MAX_DEPTH` (`64`)、`JS_BINDING_PROP_*`、`JsBindingError`、`JsBindingTag`（`b_identifier`/`b_array`/`b_object`/`b_missing`）、`JsArrayBindingItem`、`JsObjectBindingProp`、`JsBindingNode`、`JsBindingArena`（`init`/`addMissing`/`addIdentifier`/`addArray`/`addObject`/`collectBoundNames`/`hasDuplicateBoundNames`/`hasDefaultValues`/`hasRestElement`/`formatPattern`/`formatAsAssignmentTarget`）；
+- **外部切片零堆分配架构**：所有 AST 节点、数组元素与对象属性均由调用方传入的外部切片承载，无硬编码小容量上限；
+- **ECMAScript 静态语义校验与 `toExpr` 降级**：
+  - 严格强制数组/对象 `...rest` 必须位于末尾、禁止附带默认值，且对象 rest 目标必须为标识符；
+  - `collectBoundNames` 按左到右深度优先顺序提取全部绑定名，`hasDuplicateBoundNames` 检测非法重名绑定；
+  - `formatAsAssignmentTarget` 将解构绑定降级为合法 JS 赋值表达式，并对顶层对象解构自动补全外层括号 `({ ... } = rhs)`。
+
+```cp
+import { JsBindingArena, JsBindingNode, JsArrayBindingItem, JsObjectBindingProp } from "cap:js";
+
+let nodes: [16]JsBindingNode = [JsBindingNode.empty(); 16];
+let arr_items: [8]JsArrayBindingItem = [JsArrayBindingItem{}; 8];
+let obj_props: [8]JsObjectBindingProp = [JsObjectBindingProp{}; 8];
+let arena = JsBindingArena.init(nodes[0..], arr_items[0..], obj_props[0..]);
+
+const a = arena.addIdentifier("a", 0)?;
+const rest = arena.addIdentifier("rest", 5)?;
+const props: [2]JsObjectBindingProp = [
+    JsObjectBindingProp.shorthand("a", a, "1"),
+    JsObjectBindingProp.spread(rest),
+];
+const root = arena.addObject(props[0..], 0)?;
+let buf: [64]u8 = [0; 64];
+const n = arena.formatAsAssignmentTarget(root, "src", buf[0..], false)?;
+// buf[0..n] == "({ a = 1, ...rest } = src)"
+* = n;
+```
