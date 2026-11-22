@@ -258,3 +258,12 @@ export {
     LivenessSummary,
     AgentLivenessMonitor,
 } from "./liveness.cp";
+
+export {
+    MailPriority,
+    BackpressurePolicy,
+    MailEnvelope,
+    SendOutcome,
+    MailboxStats,
+    AgentMailbox,
+} from "./mailbox.cp";

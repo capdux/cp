@@ -1363,3 +1363,44 @@ fn livenessMonitorDemo() {
     * = mon.summary();
 }
 ```
+
+---
+
+## 子模块：多优先级有界 Agent 信箱与背压丢弃/按键合并引擎（`mailbox.cp`）
+
+### 核心特性
+
+- **4 级优先级 + 同级 FIFO 确定性出队（`AgentMailbox`）**：支持 `System > High > Normal > Low` 四级优先级调度，同优先级严格按 `enqueue_seq` FIFO 升序出队，支持 `peekNext()` 只读预览与 `recvNext()` 出队。
+- **三种生产级背压策略（`BackpressurePolicy`）**：
+  - `RejectNew`：满箱直接返回 `RejectedFull` 并累计 `rejected_total`；
+  - `DropLowestOldest`：满箱时驱逐优先级最低且最旧的消息并返回 `EvictedAndEnqueued`，但**严格保护更高优先级消息（如 `System`）绝不被低优消息驱逐**；
+  - `CoalesceByKey`：对相同非零 `coalesce_key` 原地覆盖最新载荷（满箱亦可合并、优先级只升不降并保留原队位防饥饿）。
+
+### 导出清单
+
+- **类型与策略**：`MailPriority`（`Low | Normal | High | System`）、`BackpressurePolicy`（`RejectNew | DropLowestOldest | CoalesceByKey`）、`MailEnvelope`、`SendOutcome`、`MailboxStats`
+- **有界信箱**：`AgentMailbox`（`init`, `send`, `recvNext`, `peekNext`, `len`, `isEmpty`, `stats`, `clear`）
+
+### 使用示例
+
+```cp
+import {
+    MailPriority,
+    BackpressurePolicy,
+    MailEnvelope,
+    AgentMailbox,
+} from "cap:agent";
+
+fn agentMailboxDemo() {
+    let slots_buf: [8]MailEnvelope = [MailEnvelope{}; 8];
+    let slots: []MailEnvelope = slots_buf[0..];
+    let mbox = AgentMailbox.init(slots, BackpressurePolicy.DropLowestOldest);
+
+    * = mbox.send(1, MailPriority.Low, 0, 10, 100);
+    * = mbox.send(2, MailPriority.System, 0, 99, 999);
+    if (msg := mbox.recvNext()) {
+        // 优先取出 System 消息 (payload_u64 == 999)
+        * = msg;
+    }
+}
+```

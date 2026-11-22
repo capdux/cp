@@ -187,6 +187,19 @@ const plan = mod.computePlan(); // active: 0 & 2, deferred: 1
 const wake = mod.requestExport("Modal")?; // newly_activated=true, propagate_alias="ModalDialog"
 ```
 
+### 3.10 React Server Components 边界注册表（`lib/bundler/server_components.cp`，吸收自 `/data/dev/bun/src/js_parser/ast/ServerComponentBoundary.cp`）
+- **常量与错误集**：`MAX_SCB_BOUNDARIES` (128)、`MAX_SCB_BITSET_WORDS` (16)、`MAX_SCB_BITSET_BITS` (1024)、`ScbError`（`DuplicateSourceIndex` / `BoundaryCapacityExceeded` / `SourceIndexOutOfRange`）
+- **数据模型与注册表**：`UseDirective`（`none` / `use_client` / `use_server`，含 `parse` 与 `asStr`）、`ServerComponentBoundary`（`source_index` / `reference_source_index` / `ssr_source_index` / `hasSeparateSsr`）、`ScbBitSet`（1024 位零堆分配边界索引位图）、`ServerComponentBoundaryTable`（`put` / `putSharedSsr` / `getIndex` / `get` / `getReferenceSourceIndex` / `getSsrSourceIndex` / `getByReferenceIndex` / `countByDirective` / `buildBitSet`）
+
+```typescript
+import { UseDirective, ServerComponentBoundaryTable } from "cap:bundler";
+
+const dir = UseDirective.parse("'use client';"); // UseDirective.use_client
+let tbl = ServerComponentBoundaryTable.init();
+* = tbl.put(10, dir, 100, 200)?; // source=10 -> ref=100, ssr=200
+const bs = tbl.buildBitSet()?;   // bs.isSet(10) == true
+```
+
 ---
 
 ## 四、 上游行为契约、边界与安全注意事项

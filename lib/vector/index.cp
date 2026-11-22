@@ -121,3 +121,12 @@ export {
     sparsePruneTopK,
     sparseBatchTopK,
 } from "./sparse_vec.cp";
+
+export {
+    LatencyPercentiles,
+    AnnEvalSummary,
+    computeLatencyPercentilesInPlace,
+    computeGroundTruthL2TopK,
+    annRecallAtK,
+    evaluateAnnBatch,
+} from "./eval_harness.cp";

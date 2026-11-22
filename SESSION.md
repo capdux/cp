@@ -1317,3 +1317,11 @@
 ### 2026-11-22（分类合并交付：lib/vector/sparse_vec.cp & lib/http/h2/dispatch.cp | 2026-11-22 14:06:43）
 - **执行与结单汇报**：
   > 1. 交付 lib/vector/sparse_vec.cp (SPLADE/BGE-M3 稀疏词法向量规范化、@fma 双指针归并点积与 CSR 批量检索, 5/5 PASS)；2. 从 Bun src/http/h2_client/dispatch.cp 吸收归入 lib/http/h2/dispatch.cp (HTTP/2 流式帧分派器与 SETTINGS/WINDOW_UPDATE/CONTINUATION 协议状态机, 6/6 PASS)；均已同步 cp_lib_ref.md 并提交。
+
+### 2026-11-22（分类合并交付：lib/bundler/server_components.cp + 7 项 Bun 上游清零 | 2026-11-22 14:10:36）
+- **执行与结单汇报**：
+  > 子智能体核查清零 7 项 Bun 上游变动并从 Bun src/js_parser/ast/ServerComponentBoundary.cp 吸收归入 lib/bundler/server_components.cp (RSC 'use client'/'use server' 边界表与位图索引, 6/6 PASS)，同步 cp_lib_ref.md 并提交。
+
+### 2026-11-22（分类合并交付：lib/agent/mailbox.cp & lib/vector/eval_harness.cp | 2026-11-22 14:12:29）
+- **执行与结单汇报**：
+  > 1. 交付 lib/agent/mailbox.cp (多优先级有界 Agent 信箱与背压/按键合并引擎, 5/5 PASS)；2. 交付 lib/vector/eval_harness.cp (ANN 评测与 P50/P95/P99 延迟分位数套件，实战使用 @l2sq SIMD 与 slice.split(k) 方法糖, 5/5 PASS)；均已同步 cp_lib_ref.md 并与 server_components.cp 一并提交。

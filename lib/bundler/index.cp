@@ -136,3 +136,14 @@ export {
     BarrelWakeupResult,
     BarrelModule,
 } from "./barrel_imports";
+
+export {
+    MAX_SCB_BOUNDARIES,
+    MAX_SCB_BITSET_WORDS,
+    MAX_SCB_BITSET_BITS,
+    ScbError,
+    UseDirective,
+    ServerComponentBoundary,
+    ScbBitSet,
+    ServerComponentBoundaryTable,
+} from "./server_components";

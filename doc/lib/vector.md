@@ -27,6 +27,7 @@
 | `lib/vector/kmeans.cp` | `// Origin: Pure-CP Stdlib (AI-Native SIMD K-Means++ Clustering & IVF/PQ Codebook Trainer) \| Created: 2026-11-22` | 基于 `@l2sq`/`@fma` 原生 SIMD 与确定性 SplitMix64 的零堆分配 K-Means++ 聚类与 IVF/PQ 码本训练器 |
 | `lib/vector/nav_graph.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc Vamana/NSW Navigable Graph ANN using @l2sq) \| Created: 2026-11-22` | 零堆分配 Vamana / NSW 单层近邻导航图近似检索索引 (`NavGraphIndex`)，基于 `@l2sq` 8-lane SIMD 贪心束搜索、双向建边与按距离剪枝 |
 | `lib/vector/sparse_vec.cp` | `// Origin: Pure-CP Stdlib (AI Learned Sparse Retrieval: SPLADE/BGE-M3 Sparse Vector & Merge-Join Scorer) \| Created: 2026-11-22` | SPLADE / BGE-M3 学习型稀疏词法向量表示、原位规范化、O(m+n) `@fma` 归并点积、Top-K 稀疏裁剪与零堆分配 CSR 批量 Top-K 检索核 |
+| `lib/vector/eval_harness.cp` | `// Origin: Pure-CP Stdlib (AI Vector ANN Evaluation Harness: SIMD Ground-Truth, Recall@K & Latency Percentiles) \| Created: 2026-11-22` | ANN 向量索引离线评测与延迟分位数统计套件：原位堆排序 P50/P95/P99、原生 `@l2sq` SIMD 暴力 Ground-Truth、去重 Recall@K 与批量汇总 |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -613,5 +614,41 @@ pub fn demoLearnedSparseRetrieval() {
     let pruned_s: []SparseEntry = pruned[0..];
     * = sparsePruneTopK(raw_q[0..q_len], 1, pruned_s);
     * = n;
+}
+```
+
+### 14. ANN 向量索引离线评测与延迟分位数套件 (`eval_harness.cp`)
+
+零堆分配的 ANN 召回评测与延迟分位数统计套件，内置基于原生 8-lane SIMD `@l2sq` 的暴力 Ground-Truth 生成器与切片 `slice.split(k)` 批量评测：
+
+- **`LatencyPercentiles`**：`{ count, min_us, p50_us, p95_us, p99_us, max_us, mean_us }`
+- **`computeLatencyPercentilesInPlace(samples_us: *[]u64): LatencyPercentiles?`**：原位 $O(n \log n)$ 堆排序并计算精确 Nearest-Rank P50/P95/P99 分位数与均值；空样本返回 `null`。
+- **`AnnEvalSummary`**：`{ queries, k, mean_recall_at_k, min_recall_at_k, exact_top1_rate }`
+- **`computeGroundTruthL2TopK(query, corpus_flat, n_docs, dim, k, out_gt_ids: *[]u32): usize?`**：基于 `@l2sq` 原生 SIMD 生成精确 Top-K L2 最近邻 Ground-Truth ID（按 `(dist_sq 升序, doc_id 升序)` 确定性打破平局）。
+- **`annRecallAtK(predicted_ids, ground_truth_ids, k): f64?`**：自动去重预测 ID 与真值 ID 计算严格落在 `[0.0, 1.0]` 的精确 `Recall@K`。
+- **`evaluateAnnBatch(pred_flat, gt_flat, num_queries, k): AnnEvalSummary?`**：批量汇总 `mean_recall_at_k`、`min_recall_at_k` 与 `exact_top1_rate`。
+
+```typescript
+import {
+    computeLatencyPercentilesInPlace,
+    computeGroundTruthL2TopK,
+    evaluateAnnBatch,
+} from "cap:vector";
+
+pub fn demoAnnEvalHarness(query: []const f32, corpus: []const f32, n_docs: usize, dim: usize) {
+    let gt_buf: [5]u32 = [0; 5];
+    let gt_s: []u32 = gt_buf[0..];
+    * = computeGroundTruthL2TopK(query, corpus, n_docs, dim, 5, gt_s);
+
+    const pred: [5]u32 = [gt_buf[0], gt_buf[1], gt_buf[2], gt_buf[3], gt_buf[4]];
+    if (summary := evaluateAnnBatch(pred[0..], gt_buf[0..], 1, 5)) {
+        * = summary.mean_recall_at_k;
+    }
+
+    let lat: [5]u64 = [120, 45, 310, 80, 95];
+    let lat_s: []u64 = lat[0..];
+    if (pct := computeLatencyPercentilesInPlace(lat_s)) {
+        * = pct.p99_us;
+    }
 }
 ```
