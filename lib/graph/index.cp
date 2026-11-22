@@ -239,3 +239,13 @@ export {
     MinCostFlowNetwork,
     solveMinCostTransport,
 } from "./minCostFlow.cp";
+
+export {
+    ARTIC_MAX_NODES,
+    ARTIC_MAX_EDGES,
+    ARTIC_NO_EDGE,
+    ARTIC_NO_BCC,
+    ArticEdge,
+    ArticulationResult,
+    ArticulationGraph,
+} from "./articulation.cp";

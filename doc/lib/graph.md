@@ -378,6 +378,42 @@ pub fn demoMinCostFlow() {
 
 ---
 
+## 十、 零分配纯迭代 Tarjan 割点/桥边与网络拓扑 SPOF 分析器 (`articulation.cp`)
+
+面向微服务拓扑、网络链路容灾与单点故障（SPOF）诊断的 100% 纯 CP 零动态堆分配纯迭代显式栈 Tarjan 分析器（严禁递归，零栈溢出风险）：
+
+- **常量与数据模型**：
+  - `ARTIC_MAX_NODES = 64`、`ARTIC_MAX_EDGES = 256`、`ARTIC_NO_EDGE = 0xFFFF`、`ARTIC_NO_BCC = 0xFFFF`
+  - `ArticEdge`（无向边 `(u, v)`）
+  - `ArticulationResult`（`connected_components`, `articulation_count`, `bridge_count`, `bcc_count`, `max_bcc_edges`, `is_two_edge_connected`, `is_biconnected`；便捷查询 `isArticulation(node)`, `isBridge(edge_idx)`, `edgeBcc(edge_idx)`, `nodeComponent(node)`, `collectArticulations(*out_nodes)`, `collectBridges(*out_edges)`）
+- **核心引擎 `ArticulationGraph`**：
+  - `init(node_count): ArticulationGraph?` / `addEdge(*_, u, v): usize?`（支持多重平行边且绝不误判为桥边，安全处理自环与越界防护）
+  - `analyze(): ArticulationResult`：O(V + E) 单遍纯迭代 Tarjan DFS，精确识别全部割点、桥边、连通分量、边双连通分量 ID 及 2-边连通/双连通性。
+
+```cp
+import { ArticulationGraph } from "cap:graph";
+
+pub fn demoArticulationSpof() {
+    // 双环哑铃图：环 (0-1-2-0) 与环 (3-4-5-3) 由单条桥边 (2-3) 连接
+    let g = ArticulationGraph.init(6) ?? return;
+    * = g.addEdge(0, 1);
+    * = g.addEdge(1, 2);
+    * = g.addEdge(2, 0);
+    const bridge = g.addEdge(2, 3) ?? 0;
+    * = g.addEdge(3, 4);
+    * = g.addEdge(4, 5);
+    * = g.addEdge(5, 3);
+
+    const res = g.analyze();
+    * = res.isArticulation(2); // true (SPOF)
+    * = res.isArticulation(3); // true (SPOF)
+    * = res.isBridge(bridge);  // true (关键链路)
+    * = res.bcc_count;         // 3
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [bipartite.md](graph/bipartite.md)
