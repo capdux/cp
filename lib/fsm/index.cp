@@ -3,5 +3,5 @@
 // Resilience Circuit Breaker & Workflow DAG Scheduler.
 
 export * from "./fsm.cp";
-export * from "./circuit_breaker.cp";
+export * from "./breaker.cp";
 export * from "./dag.cp";

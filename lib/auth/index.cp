@@ -7,7 +7,7 @@ export {
     OAuthError,
     PkceChallenge,
     Pkce,
-} from "./oauth_pkce.cp";
+} from "./oauthPkce.cp";
 
 export {
     OAuthConfig,
@@ -15,18 +15,18 @@ export {
     OAuthTokenResponse,
     BasicCredentials,
     AuthHeader,
-} from "./oauth_flow.cp";
+} from "./oauthFlow.cp";
 
 export {
     RbacError,
     PolicyEffect,
     PermissionMatcher,
-} from "./rbac_permission.cp";
+} from "./rbacPermission.cp";
 
 export {
     AccessDecision,
     RbacEngine,
-} from "./rbac_engine.cp";
+} from "./rbacEngine.cp";
 
 export {
     REGO_MAX_DEPTH,
@@ -55,7 +55,7 @@ export {
     generateSecret,
     buildOtpAuthUri,
     parseOtpAuthUri,
-} from "./totp_hotp.cp";
+} from "./totpHotp.cp";
 
 // --- Enterprise Network Authentication Protocols (Kerberos, NTLM, TACACS+, EAP/802.1X) ---
 
@@ -225,12 +225,12 @@ export {
     DerReader,
     DerWriter,
     OidCodec,
-} from "./asn1_der.cp";
+} from "./asn1Der.cp";
 
 export {
     X509CertInfo,
     X509Inspector,
-} from "./asn1_x509.cp";
+} from "./asn1X509.cp";
 
 export {
     PemError,

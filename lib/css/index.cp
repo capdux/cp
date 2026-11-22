@@ -264,7 +264,7 @@ export {
     isValidDashedIdent,
     PropertySyntax,
     CssPropertyRule,
-} from "./property_rule.cp";
+} from "./propRule.cp";
 
 export {
     MAX_PALETTE_OVERRIDES,
@@ -273,7 +273,7 @@ export {
     BasePalette,
     PaletteOverrideColor,
     CssFontPaletteValuesRule,
-} from "./font_palette_values.cp";
+} from "./fontPalette.cp";
 
 export {
     CssModuleConfig,
@@ -287,7 +287,7 @@ export {
     computeModuleHash,
     scopeClassName,
     parseComposesValue,
-} from "./css_modules.cp";
+} from "./cssModules.cp";
 
 import _keyframes from "./keyframes.cp";
 pub const VendorPrefix = _keyframes.VendorPrefix;
@@ -309,7 +309,7 @@ export {
     CustomMediaValueKind,
     CustomMediaRule,
     CustomMediaRegistry,
-} from "./custom_media.cp";
+} from "./customMedia.cp";
 
 export {
     CSS_NAMESPACE_MAX_RULES,
@@ -319,7 +319,7 @@ export {
     CssNamespaceError,
     NamespaceRule,
     NamespaceRegistry,
-} from "./namespace_rule.cp";
+} from "./nsRule.cp";
 
 export {
     CSS_SCOPE_MAX_SELECTORS,
@@ -328,7 +328,7 @@ export {
     ScopeSelectorList,
     ScopeRule,
     ScopeRuleList,
-} from "./scope_rule.cp";
+} from "./scopeRule.cp";
 
 export {
     CssIdentError,
@@ -345,13 +345,13 @@ export {
     CssUrlError,
     CssUrlKind,
     CssUrlValue,
-} from "./url_value.cp";
+} from "./urlVal.cp";
 
 export {
     CssBoxRectError,
     CssBoxRect,
     CssSize2D,
-} from "./box_rect.cp";
+} from "./boxRect.cp";
 
 export {
     CSS_LAYER_MAX_SEGMENTS,
@@ -366,7 +366,7 @@ export {
     CssLayerRule,
     CssLayerRuleList,
     CssLayerOrderRegistry,
-} from "./layer_rule.cp";
+} from "./layerRule.cp";
 
 export {
     CSS_GRID_MAX_TRACKS,
@@ -398,7 +398,7 @@ export {
     CssImportConditions,
     CssImportRule,
     CssImportRuleList,
-} from "./import_rule.cp";
+} from "./importRule.cp";
 
 export {
     CSS_COUNTER_MAX_SYMBOLS,
@@ -410,7 +410,7 @@ export {
     CssCounterRange,
     CssCounterSpeakAs,
     CssCounterStyleRule,
-} from "./counter_style.cp";
+} from "./counter.cp";
 
 export {
     CSS_STARTING_STYLE_MAX_ENTRIES,
@@ -420,7 +420,7 @@ export {
     CssStartingStyleEntry,
     CssStartingStyleRule,
     CssStartingStyleRuleList,
-} from "./starting_style.cp";
+} from "./startStyle.cp";
 
 export {
     CssLogicalError,
@@ -445,7 +445,7 @@ export {
     CssUnicodeRange,
     CssFontFaceSource,
     CssFontFaceRule,
-} from "./font_face.cp";
+} from "./fontFace.cp";
 
 export {
     CSS_DECL_MAX_NORMAL,
@@ -454,7 +454,7 @@ export {
     CssDeclItem,
     CssDeclParseOptions,
     CssDeclarationBlock,
-} from "./declaration_block.cp";
+} from "./declBlock.cp";
 
 export {
     CSS_CTX_MAX_SUPPORTS,
@@ -463,7 +463,7 @@ export {
     CssDeclarationContext,
     CssSupportsFallbackBucket,
     CssPropertyHandlerContext,
-} from "./handler_context.cp";
+} from "./handlerCtx.cp";
 
 export {
     CSS_VIEWPORT_MAX_DECLS,
@@ -478,7 +478,7 @@ export {
     CssViewportDeclaration,
     CssViewportRule,
     CssViewportRuleList,
-} from "./viewport_rule.cp";
+} from "./viewport.cp";
 
 export {
     CSS_UNKNOWN_AT_MAX_RULES,
@@ -489,7 +489,7 @@ export {
     CssUnknownPreludeTokens,
     CssUnknownAtRule,
     CssUnknownAtRuleList,
-} from "./unknown_rule.cp";
+} from "./unknown.cp";
 
 export {
     CSS_DOCUMENT_MAX_CONDITIONS,
@@ -499,7 +499,7 @@ export {
     CssDocumentCondition,
     CssMozDocumentRule,
     CssMozDocumentRuleList,
-} from "./document_rule.cp";
+} from "./document.cp";
 
 export {
     CSS_TAILWIND_MAX_RULES,
@@ -509,4 +509,4 @@ export {
     CssTailwindAtRule,
     CssTailwindApplyRule,
     CssTailwindDirectiveList,
-} from "./tailwind_rule.cp";
+} from "./tailwind.cp";

@@ -115,13 +115,13 @@ export {
     SvgStyle,
     SvgPathBuilder,
     SvgCanvas,
-} from "./svg_canvas.cp";
+} from "./svgCanvas.cp";
 
 export {
     ChartDatum,
     LineSeries,
     SvgCharts,
-} from "./svg_charts.cp";
+} from "./svgCharts.cp";
 
 export {
     TgaImageType,
@@ -179,7 +179,7 @@ export {
 export {
     QR_GF_PRIMITIVE,
     ReedSolomon,
-} from "./qrcode_ecc.cp";
+} from "./qrcodeEcc.cp";
 
 export {
     QR_MIN_VERSION,
@@ -188,11 +188,11 @@ export {
     QrEccLevel,
     QrMatrix,
     QrCode,
-} from "./qrcode_encoder.cp";
+} from "./qrcodeEncoder.cp";
 
 export {
     QrRenderer,
-} from "./qrcode_render.cp";
+} from "./qrcodeRender.cp";
 
 export {
     JxlContainerKind,

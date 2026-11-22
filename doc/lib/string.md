@@ -16,11 +16,11 @@
 | `lib/string/utf.cp` | `// Source: /data/dev/bun/src/string/wtf.cp` | `Utf8`、`Utf16`、`Wtf8`（孤立代理对兼容）、`EncodeIntoResult`、`copyLatin1IntoUTF8`、`elementLengthLatin1IntoUTF8`、`copyUTF16IntoUTF8`、`elementLengthUTF16IntoUTF8`、`convertUTF8toUTF16*`、`convertUTF16toUTF8*`、`utf8ByteSequenceLength`、`decodeUTF8`、`encodeUTF8`、`withoutUTF8BOM` |
 | `lib/string/unicode.cp` | `// Source: /data/dev/bun/src/unicode/ & /data/dev/bun/src/js_parser/lexer/identifier.cp` | `Unicode`、`CodepointIterator`、`CodepointCursor`、`isWhitespaceCodepoint`/`isNewlineCodepoint`/`isLineTerminator`/`isIdentifierStart`/`isIdentifierContinue`/`isAlphabeticCodepoint`/`toLowerCodepoint`/`toUpperCodepoint`/`caseFoldCodepoint` |
 | `lib/string/builder.cp` | `// Source: /data/dev/bun/src/string/StringBuilder.cp` | 两阶段零重分配 `StringBuilder`（支持 `init`/`initWithAllocator`/`initCapacity`/`count`/`countZ`/`count16`/`allocate`/`allocateIn`/`append`/`appendZ`/`append16`/`appendFmt`/`fmt`/`writable`/`allocatedSlice`/`toOwnedSlice`/`length`/`capacity`） |
-| `lib/string/mutable_string.cp` | `// Source: /data/dev/bun/src/string/MutableString.cp` | `MutableString` 可增长字符串缓冲（`init`/`initEmpty`/`init2048`/`initCopy`/`ensureUnusedCapacity`/`growIfNeeded`/`append`/`appendChar*`/`appendInt`/`appendSignedInt`/`appendFmt`/`writableNBytes*`/`reset`/`toOwnedSlice*`） |
+| `lib/string/mutableString.cp` | `// Source: /data/dev/bun/src/string/MutableString.cp` | `MutableString` 可增长字符串缓冲（`init`/`initEmpty`/`init2048`/`initCopy`/`ensureUnusedCapacity`/`growIfNeeded`/`append`/`appendChar*`/`appendInt`/`appendSignedInt`/`appendFmt`/`writableNBytes*`/`reset`/`toOwnedSlice*`） |
 | `lib/string/escape.cp` | `// Source: /data/dev/bun/src/string/escapeRegExp.cp` | `StringEscape` 与顶层导出 `escapeHtml` / `escapeHtmlAlloc` / `escapeRegExp` / `escapeRegExpAlloc` / `escapeJs` / `escapeJsAlloc` |
 | `lib/string/wcwidth.cp` | `// Source: /data/dev/bun/src/unicode/uucode_lib/src/x/config_x/wcwidth.cp` | `wcwidth`、`stringWidth`、`StringWidth` |
 | `lib/string/grapheme.cp` | `// Source: /data/dev/bun/src/unicode/` | UAX #29 `GraphemeIterator`、`graphemeCount`、`Utf8Grapheme` |
-| `lib/string/simd_scan.cp` | `// Source: /data/dev/bun/src/highway/` | 16 字节 `@Vector(16, u8)` `SimdScanner` |
+| `lib/string/simdScan.cp` | `// Source: /data/dev/bun/src/highway/` | 16 字节 `@Vector(16, u8)` `SimdScanner` |
 | `lib/string/smol.cp` | `// Source: /data/dev/bun/src/string/SmolStr.cp` | `SmolStr` 15 字节栈内联短字符串优化 (SSO) |
 | `lib/string/hashed.cp` | `// Source: /data/dev/bun/src/string/HashedString.cp` | `HashedString` FNV-1a 预计算哈希视图 |
 | `lib/string/case.cp` | `// Source: /data/dev/bun/src/string/` | `CaseConverter`（snake/kebab/camel/Pascal/SCREAMING） |

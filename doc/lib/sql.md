@@ -24,10 +24,10 @@
 | :--- | :--- | :--- |
 | `lib/sql/index.cp` | `// Source: /data/dev/bun/src/sql/` | `cap:sql` 统一公开导出入口 |
 | `lib/sql/shared.cp` | `// Source: /data/dev/bun/src/sql/shared/Data.cp` | `SQLQueryResultMode`、`ConnectionFlags`、15B 小对象优化 `SqlData`、`ColumnIdentifier` |
-| `lib/sql/pg_types.cp` | `// Source: /data/dev/bun/src/sql/postgres/types/Tag.cp` | `AnyPostgresError`、90+ `PgTypeTag` OID 映射、`PgCommandTag`、`PgErrorClassifier`、`PgBinaryCodec`（int2/int4/int8/float4/float8/bool/bytea/uuid/jsonb/date/timestamp/numeric/int4_array） |
-| `lib/sql/pg_protocol.cp` | `// Source: /data/dev/bun/src/sql/postgres/PostgresProtocol.cp` | `PgBufferReader`/`PgBufferWriter`、`PgParameterDescription`、`PgNotificationResponse`、`PgNoticeResponse`、`PgNegotiateProtocolVersion`、`PgCopyResponse`、`PgProtocol`（SSL/Cancel/StartupUTF8/Copy） |
-| `lib/sql/mysql_types.cp` | `// Source: /data/dev/bun/src/sql/mysql/MySQLTypes.cp` | `AnyMySQLError`、`MySqlAuthMethod`、`MySqlCapabilityFlags`、`MySqlStatusFlags`、`MySqlCharacterSet`、`MySqlFieldType`、`MySqlErrorClassifier`、`MySqlValueDateTime`、`MySqlValueTime` |
-| `lib/sql/mysql_protocol.cp` | `// Source: /data/dev/bun/src/sql/mysql/protocol/Auth.cp` | `MySqlBufferReader`、`MySqlAuthNative` (SHA-1)、`MySqlAuthCachingSha2` (SHA-256)、`MySqlAuthSwitchRequest`、`MySqlSSLRequest`、`MySqlColumnDefinition41`、`MySqlResultSetHeader`、`MySqlPrepareOK`、`MySqlPreparedProtocol`、`MySqlBinaryRowDecoder` |
+| `lib/sql/pgTypes.cp` | `// Source: /data/dev/bun/src/sql/postgres/types/Tag.cp` | `AnyPostgresError`、90+ `PgTypeTag` OID 映射、`PgCommandTag`、`PgErrorClassifier`、`PgBinaryCodec`（int2/int4/int8/float4/float8/bool/bytea/uuid/jsonb/date/timestamp/numeric/int4_array） |
+| `lib/sql/pgProtocol.cp` | `// Source: /data/dev/bun/src/sql/postgres/PostgresProtocol.cp` | `PgBufferReader`/`PgBufferWriter`、`PgParameterDescription`、`PgNotificationResponse`、`PgNoticeResponse`、`PgNegotiateProtocolVersion`、`PgCopyResponse`、`PgProtocol`（SSL/Cancel/StartupUTF8/Copy） |
+| `lib/sql/mysqlTypes.cp` | `// Source: /data/dev/bun/src/sql/mysql/MySQLTypes.cp` | `AnyMySQLError`、`MySqlAuthMethod`、`MySqlCapabilityFlags`、`MySqlStatusFlags`、`MySqlCharacterSet`、`MySqlFieldType`、`MySqlErrorClassifier`、`MySqlValueDateTime`、`MySqlValueTime` |
+| `lib/sql/mysqlProtocol.cp` | `// Source: /data/dev/bun/src/sql/mysql/protocol/Auth.cp` | `MySqlBufferReader`、`MySqlAuthNative` (SHA-1)、`MySqlAuthCachingSha2` (SHA-256)、`MySqlAuthSwitchRequest`、`MySqlSSLRequest`、`MySqlColumnDefinition41`、`MySqlResultSetHeader`、`MySqlPrepareOK`、`MySqlPreparedProtocol`、`MySqlBinaryRowDecoder` |
 | `lib/sql/protocol.cp` | `// Source: /data/dev/bun/src/sql/` | 向后兼容：`SqlDialect`、`SqlType`、`SqlValue`、`SqlParam`、`SqlStatement`、`PostgresWire`、`MySqlPacketHeader`、`SqlConnectionPool`、`SqlTransactionStateMachine` |
 | `lib/sql/postgres.cp` | `// Source: /data/dev/bun/src/sql/` | 向后兼容：`PostgresBackendTag`、`PostgresBackendFrame`、`PostgresAuthChallenge`、`ScramSha256Client`、`PostgresRowDescription`、`PostgresDataRow`、`PostgresErrorResponse` 等 |
 | `lib/sql/mysql.cp` | `// Source: /data/dev/bun/src/sql/` | 向后兼容：`MySqlLenEnc`、`MySqlLenEncStr`、`MySqlCapabilities`、`MySqlHandshakeV10`、`MySqlCommandEncoder`、`MySqlOkPacket`、`MySqlErrPacket`、`MySqlEofPacket` |
@@ -122,7 +122,7 @@ pub fn demoSqlCodecs(): ! {
   - `countQuestionMarks`、`maxDollarParam`、`rewriteQuestionToDollar`、`NamedParamIter`。
 - **多语句脚本切分与分类 (`splitter.cp`)**：
   - `SqlSplitStmtKind`、`SqlStmtIter`、`classifySqlStmt`、`isReadOnlySql`、`countSqlStatements`。
-- **MySQL 变长整数与长度前缀字符串编解码 (`mysql_lenenc.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/EncodeInt.cp`)**：
+- **MySQL 变长整数与长度前缀字符串编解码 (`mysqlLenenc.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/EncodeInt.cp`)**：
   - 常量与错误集：`MYSQL_LENENC_NULL_MARKER` (`0xfb`)、`MYSQL_LENENC_U16_MARKER` (`0xfc`)、`MYSQL_LENENC_U24_MARKER` (`0xfd`)、`MYSQL_LENENC_U64_MARKER` (`0xfe`)、`MYSQL_LENENC_ERR_MARKER` (`0xff`)、`MySqlLenEncError`（`BufferTooSmall`/`TruncatedInput`/`NullMarker`/`ErrMarker`/`LengthOverflow`）
   - 数据模型与编解码函数：`EncodedLengthInt`、`DecodeLengthIntResult`、`DecodeLengthStringResult`、`encodedLengthIntSize`、`encodeLengthInt`、`encodeLengthIntInto`、`decodeLengthInt`、`decodeLengthIntStrict`、`encodeLengthString`、`decodeLengthString`（零堆分配、1/3/4/9 字节小端编解码与零拷贝字符串切片解码）
 
@@ -136,7 +136,7 @@ let wire: [64]u8 = [0; 64];
 const n = encodeLengthString("users_table", wire[0..])?;
 const str = decodeLengthString(wire[0..n])?; // data="users_table", bytes_read=12
 ```
-- **MySQL `ERR_Packet` 编解码与错误分类 (`mysql_error_packet.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/ErrorPacket.cp`)**：
+- **MySQL `ERR_Packet` 编解码与错误分类 (`mysqlErr.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/ErrorPacket.cp`)**：
   - 常量与错误集：`MYSQL_ERR_PACKET_HEADER` (`0xff`)、`MYSQL_SQL_STATE_MARKER` (`'#'`)、`MySqlErrorPacketError`（`InvalidHeader` / `TruncatedPacket` / `BufferTooSmall` / `InvalidSqlState`）
   - 结构体与方法：`MySqlErrorPacket`（`initWithSqlState` / `initLegacy` / `decode` / `encode` / `encodedSize` / `sqlStateSlice` / `sqlStateClass` / `isRetryable`，兼容 MySQL 4.1+ `#SQLSTATE` 与 4.0 旧版错误包，零拷贝提取错误消息）
 
@@ -148,7 +148,7 @@ let wire: [64]u8 = [0; 64];
 const n = pkt.encode(wire[0..])?;
 const decoded = MySqlErrorPacket.decode(wire[0..n])?; // error_code=1213, isRetryable()==true
 ```
-- **PostgreSQL 线协议零堆分配二进制帧写入器 (`pg_wire_writer.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/NewWriter.cp`)**：
+- **PostgreSQL 线协议零堆分配二进制帧写入器 (`pgWriter.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/NewWriter.cp`)**：
   - 常量与错误集：`PG_NULL_LENGTH_U32` (`0xffffffff`)、`PG_NULL_LENGTH_I32` (`-1`)、`PgWireWriterError`（`BufferTooSmall` / `TooManyParameters` / `InvalidPatchOffset` / `FrameLengthOverflow`）
   - 结构体与方法：`PgLengthPatch`、`PgWireWriter`（`init` / `offset` / `remaining` / `written` / `reset` / `writeByte` / `writeBytes` / `pwrite` / `writeU16` / `writeShort` / `writeU32` / `writeI32` / `writeI64` / `writeF32` / `writeF64` / `writeCString` / `writeBoolText` / `writeNull` / `writeLengthPrefixed` / `beginLength` / `beginTaggedFrame` / `finishLength` / `finishLengthExcludingSelf`）
 
@@ -162,7 +162,7 @@ const frame = w.beginTaggedFrame('Q')?;
 const frame_len = w.finishLength(frame)?; // 4 + 9 = 13 bytes
 const wire = w.written(); // ['Q', 0, 0, 0, 13, 'S', 'E', ..., 0]
 ```
-- **MySQL 线协议零堆分配二进制读取器 (`mysql_wire_reader.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/NewReader.cp`)**：
+- **MySQL 线协议零堆分配二进制读取器 (`mysqlReader.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/NewReader.cp`)**：
   - 错误集与结构体：`MySqlWireReaderError`（`ShortRead` / `InvalidEncodedInteger` / `InvalidEncodedLength` / `UnterminatedString` / `InvalidOffset`）、`MySqlWireReader`（`init` / `markMessageStart` / `offset` / `offsetFromStart` / `setOffsetFromStart` / `rewindToMessageStart` / `remaining` / `peek` / `ensureCapacity` / `skip` / `readBytes` / `readByte` / `readZ` / `readU16` / `readU24` / `readU32` / `readU64` / `readI32` / `readI64` / `readF32` / `readF64` / `readLenEncInt` / `readLenEncIntWithSize` / `readLenEncString` / `readLenEncStringOrNull`）
 
 ```typescript
@@ -175,7 +175,7 @@ const table = r.readLenEncString()?;   // "users"
 const opt = r.readLenEncStringOrNull()?; // null (0xfb)
 const tag = r.readByte()?; // 0x2a
 ```
-- **MySQL 线协议零堆分配二进制包写入器 (`mysql_wire_writer.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/NewWriter.cp`)**：
+- **MySQL 线协议零堆分配二进制包写入器 (`mysqlWriter.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/NewWriter.cp`)**：
   - 常量与错误集：`MYSQL_PACKET_HEADER_SIZE` (`4`)、`MYSQL_MAX_PACKET_PAYLOAD` (`0xffffff`)、`MySqlWireWriterError`（`BufferTooSmall` / `InvalidPatchOffset` / `PacketLengthOverflow`）
   - 结构体与方法：`MySqlPacketPatch`、`MySqlWireWriter`（`init` / `offset` / `remaining` / `written` / `reset` / `writeByte` / `writeBytes` / `pwrite` / `writeU16` / `writeU24` / `writeU32` / `writeU64` / `writeI32` / `writeI64` / `writeF32` / `writeF64` / `writeZ` / `writeLenEncInt` / `writeLenEncString` / `writeLenEncNull` / `writeNullBitmap` / `beginPacket` / `finishPacket`）
 
@@ -191,7 +191,7 @@ const payload_len = w.finishPacket(pkt)?; // 9 bytes
 let r = MySqlWireReader.init(w.written());
 const hdr_len = r.readU24()?; // 9
 ```
-- **PostgreSQL 线协议零堆分配二进制读取器 (`pg_wire_reader.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/NewReader.cp`)**：
+- **PostgreSQL 线协议零堆分配二进制读取器 (`pgReader.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/NewReader.cp`)**：
   - 错误集与结构体：`PgWireReaderError`（`ShortRead` / `InvalidMessage` / `InvalidMessageLength` / `UnterminatedString`）、`PgFrameView`、`PgWireReader`（`init` / `markMessageStart` / `offset` / `offsetFromStart` / `rewindToMessageStart` / `remaining` / `peek` / `ensureCapacity` / `skip` / `readByte` / `readBytes` / `readZ` / `peekU32` / `peekI32` / `readU16` / `readI16` / `readU32` / `readI32` / `readI64` / `readF32` / `readF64` / `readMessageLength` / `readTaggedFrame` / `readLengthPrefixedOrNull` / `eatBytes`）
 
 ```typescript
@@ -208,7 +208,7 @@ const frame = r.readTaggedFrame()?; // tag='Q', payload="SELECT 1\0"
 let body = PgWireReader.init(frame.payload);
 const sql = body.readZ()?; // "SELECT 1"
 ```
-- **MySQL `COM_QUERY` 与 8.0.23+ Query Attributes 零分配编解码器 (`mysql_query.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/Query.cp`)**：
+- **MySQL `COM_QUERY` 与 8.0.23+ Query Attributes 零分配编解码器 (`mysqlQuery.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/Query.cp`)**：
   - 常量与类型：`MYSQL_COM_QUERY_CMD` (`0x03`)、`MYSQL_MAX_QUERY_PARAMS` (`64`)、`MySqlQueryCodecError`、`MySqlQueryParamKind`、`MySqlQueryParam`（支持 `nullParam`/`int32Param`/`int64Param`/`uint64Param`/`float64Param`/`stringParam`/`blobParam`，空参数名自动生成 `:p1`、`:p2`…）、`MySqlDecodedQuery`；
   - 编解码函数：`encodeMySqlSimpleQuery`、`encodeMySqlQueryWithAttrs`、`decodeMySqlSimpleQuery`、`decodeMySqlQueryWithAttrs`。
 
@@ -223,7 +223,7 @@ const params: [2]MySqlQueryParam = [
 const wire = encodeMySqlQueryWithAttrs(buf[0..], 0, "SELECT * FROM users WHERE id = ? AND status = ?", params[0..])?;
 const decoded = decodeMySqlQueryWithAttrs(wire)?; // decoded.param_count == 2, decoded.query == "SELECT ..."
 ```
-- **PostgreSQL v3 `StartupMessage` / `SSLRequest` / `CancelRequest` 零分配编解码器 (`pg_startup.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/StartupMessage.cp`)**：
+- **PostgreSQL v3 `StartupMessage` / `SSLRequest` / `CancelRequest` 零分配编解码器 (`pgStartup.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/StartupMessage.cp`)**：
   - 常量与类型：`PG_PROTOCOL_V3_0` (`196608`)、`PG_SSL_REQUEST_CODE` (`80877103`)、`PG_CANCEL_REQUEST_CODE` (`80877102`)、`PG_MAX_STARTUP_PARAMS` (`32`)、`PgStartupCodecError`、`PgStartupParam`、`PgStartupConfig`（`database` 为空自动回退为 `user`，`client_encoding` 默认 `"UTF8"`）、`PgStartupParamIter`、`PgDecodedStartup`；
   - 编解码函数：`encodePgStartup`、`decodePgStartup`、`encodePgSslRequestFrame`、`isPgSslRequestFrame`、`encodePgCancelFrame`。
 
@@ -239,7 +239,7 @@ const wire = encodePgStartup(buf[0..], PgStartupConfig{
 })?;
 const decoded = decodePgStartup(wire)?; // database 自动回退为 "postgres", client_encoding == "UTF8"
 ```
-- **PostgreSQL v3 `RowDescription` (`'T'`) 与 `FieldDescription` 零分配流式编解码器 (`pg_row_desc.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/RowDescription.cp` & `FieldDescription.cp`)**：
+- **PostgreSQL v3 `RowDescription` (`'T'`) 与 `FieldDescription` 零分配流式编解码器 (`pgRowDesc.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/RowDescription.cp` & `FieldDescription.cp`)**：
   - 常量与类型：`PG_ROW_DESCRIPTION_TAG` (`'T'`)、`PG_MAX_ROW_FIELDS` (`1664`)、`PgRowDescError`、`PgFieldFormatCode`（`text = 0` / `binary = 1`）、`PgFieldDescription`（含 `isBinary()` 与匿名数字列识别 `numericColumnIndex()`）、`PgRowDescriptionIter`（零堆流式列元数据迭代器）；
   - 编解码函数：`encodePgRowDescription`、`decodePgRowDescription`。
 
@@ -255,7 +255,7 @@ const wire = encodePgRowDescription(buf[0..], cols[0..])?;
 let it = decodePgRowDescription(wire)?; // it.count() == 2
 while (col := it.next()?) { * = col.name; }
 ```
-- **MySQL `OK_Packet` (`0x00`/`0xFE`)、`EOF_Packet` (`0xFE`) 与 16 位服务器状态标志编解码器 (`mysql_ok_eof.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/{OKPacket,EOFPacket}.cp` & `StatusFlags.cp`)**：
+- **MySQL `OK_Packet` (`0x00`/`0xFE`)、`EOF_Packet` (`0xFE`) 与 16 位服务器状态标志编解码器 (`mysqlOkEof.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/{OKPacket,EOFPacket}.cp` & `StatusFlags.cp`)**：
   - 常量与类型：`MYSQL_OK_HEADER` (`0x00`)、`MYSQL_EOF_HEADER` (`0xFE`)、`MYSQL_FLAG_*`（14 项 16 位状态位常量）、`MySqlOkEofError`、`MySqlServerStatusFlags`（`inTransaction` / `isAutoCommit` / `hasMoreResults` / `wasSlowQuery` / `hasSessionStateChanged`）、`MySqlOkPacketView`、`MySqlEofPacketView`；
   - 编解码函数：`encodeMySqlOkPacket` / `decodeMySqlOkPacket`、`encodeMySqlEofPacket` / `decodeMySqlEofPacket`（严格校验 `EOF_Packet` 载荷长度 `< 9` 字节以区分 `CLIENT_DEPRECATE_EOF` 下的长 `OK_Packet`）。
 
@@ -281,7 +281,7 @@ const wire = encodeMySqlOkPacket(buf[0..], MySqlOkPacketView{
 })?;
 const decoded = decodeMySqlOkPacket(wire)?; // decoded.status_flags.inTransaction() == true
 ```
-- **PostgreSQL v3 Extended Query 协议零分配编解码器 (`pg_extended.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/{Parse,Describe,Execute,Close,PortalOrPreparedStatement}.cp`)**：
+- **PostgreSQL v3 Extended Query 协议零分配编解码器 (`pgExtended.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/{Parse,Describe,Execute,Close,PortalOrPreparedStatement}.cp`)**：
   - 常量与类型：`PG_PARSE_TAG` (`'P'`)、`PG_DESCRIBE_TAG` (`'D'`)、`PG_EXECUTE_TAG` (`'E'`)、`PG_CLOSE_TAG` (`'C'`)、`PG_SYNC_TAG` (`'S'`)、`PG_FLUSH_TAG` (`'H'`)、`PG_TARGET_PORTAL` (`'P'`)、`PG_TARGET_STATEMENT` (`'S'`)、`PG_MAX_PARSE_PARAMS` (`65535`)、`PgExtendedError`、`PgTargetKind`、`PgTargetRef`（`portal`/`statement`/`tag`/`isUnnamed`）、`PgParamOidIter`（零堆参数 OID 迭代器）、`PgDecodedParse`、`PgExecuteMsg`；
   - 编解码函数：`encodePgParse` / `decodePgParse`、`encodePgDescribe` / `decodePgDescribe`、`encodePgExecute` / `decodePgExecute`、`encodePgClose` / `decodePgClose`、`encodePgSync` / `decodePgSync`、`encodePgFlush` / `decodePgFlush`。
 
@@ -311,7 +311,7 @@ const sync_wire = encodePgSync(buf[0..])?; // 5 字节定长同步帧 ['S', 0, 0
 * = close_wire;
 * = sync_wire;
 ```
-- **PostgreSQL v3 `ErrorResponse` (`'E'`) 与 `NoticeResponse` (`'N'`) 诊断帧零分配编解码器 (`pg_error_notice.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/{ErrorResponse,NoticeResponse,FieldMessage,FieldType}.cp`)**：
+- **PostgreSQL v3 `ErrorResponse` (`'E'`) 与 `NoticeResponse` (`'N'`) 诊断帧零分配编解码器 (`pgErrNotice.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/{ErrorResponse,NoticeResponse,FieldMessage,FieldType}.cp`)**：
   - 常量与类型：`PG_ERROR_RESPONSE_TAG` (`'E'`)、`PG_NOTICE_RESPONSE_TAG` (`'N'`)、`PG_MAX_DIAGNOSTIC_FIELDS` (`64`)、`PgErrorNoticeError`、`PgDiagnosticFieldKind`（完整覆盖 18 种 PostgreSQL 标准诊断字段 `'S'`/`'V'`/`'C'`/`'M'`/`'D'`/`'H'`/`'P'`/`'p'`/`'q'`/`'W'`/`'s'`/`'t'`/`'c'`/`'d'`/`'n'`/`'F'`/`'L'`/`'R'`）、`PgDiagnosticField`、`PgDiagnosticIter`（零堆流式迭代器）、`PgErrorNoticeView`（聚合视图 + `effectiveSeverity`/`isFatal`/`isConstraintViolation`/`isRetryableSqlState` 分类）；
   - 编解码函数：`encodePgErrorResponse`、`encodePgNoticeResponse`、`decodePgErrorNoticeIter`、`decodePgErrorOrNotice`、`decodePgErrorResponse`、`decodePgNoticeResponse`。
 
@@ -334,7 +334,7 @@ const wire = encodePgErrorResponse(buf[0..], fields[0..])?;
 const view = decodePgErrorResponse(wire)?; // view.isConstraintViolation() == true, view.constraint == "users_email_key"
 * = view;
 ```
-- **PostgreSQL v3 后端生命周期控制帧零分配编解码器 (`pg_control.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/{ReadyForQuery,BackendKeyData,CommandComplete,ParameterStatus,TransactionStatusIndicator}.cp`)**：
+- **PostgreSQL v3 后端生命周期控制帧零分配编解码器 (`pgControl.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/{ReadyForQuery,BackendKeyData,CommandComplete,ParameterStatus,TransactionStatusIndicator}.cp`)**：
   - 常量与类型：`PG_READY_FOR_QUERY_TAG` (`'Z'`)、`PG_BACKEND_KEY_DATA_TAG` (`'K'`)、`PG_COMMAND_COMPLETE_TAG` (`'C'`)、`PG_PARAMETER_STATUS_TAG` (`'S'`)、`PG_BACKEND_KEY_DATA_FRAME_LEN` (`12`)、`PgControlError`、`PgTxStatus`（`idle = 'I'` / `in_transaction = 'T'` / `failed_transaction = 'E'`）、`PgBackendKeyData`（`process_id` + `secret_key`）、`PgParameterStatusView`、`PgCommandCompleteView`（含 `rowsAffected()` 行数解析）；
   - 编解码函数：`encodePgReadyForQuery`/`decodePgReadyForQuery`、`encodePgBackendKeyData`/`decodePgBackendKeyData`、`encodePgCommandComplete`/`decodePgCommandComplete`、`encodePgParameterStatus`/`decodePgParameterStatus`。
 
@@ -363,7 +363,7 @@ const cc = decodePgCommandComplete(cc_wire)?; // cc.rowsAffected() == 5
 * = key;
 * = cc;
 ```
-- **MySQL 4.1/8.0 命令帧头、`COM_STMT_PREPARE_OK` 与 `ResultSetHeader` 零分配编解码器 (`mysql_stmt_control.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/{CommandType,PacketHeader,StmtPrepareOKPacket,ResultSetHeader}.cp`)**：
+- **MySQL 4.1/8.0 命令帧头、`COM_STMT_PREPARE_OK` 与 `ResultSetHeader` 零分配编解码器 (`mysqlStmt.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/{CommandType,PacketHeader,StmtPrepareOKPacket,ResultSetHeader}.cp`)**：
   - 常量与类型：`MYSQL_STMT_PREPARE_OK_STATUS` (`0x00`)、`MYSQL_STMT_PREPARE_OK_MIN_LEN` (`10`)、`MYSQL_STMT_PREPARE_OK_STD_LEN` (`12`)、`MySqlStmtControlError`、`MySqlWireCmd`（完整 31 种 `COM_*` 命令枚举 + `fromByte`/`isPreparedCommand`/`isConnectionControl`）、`MySqlWirePacketHeader`（24 位小端长度 + 16 MiB 分片延续判定 `isContinuationChunk()`）、`MySqlStmtPrepareOkView`、`MySqlResultSetHeaderView`、`MySqlSimpleCommandView`；
   - 编解码函数：`encodeMySqlStmtPrepareOk`/`decodeMySqlStmtPrepareOk`（兼容 10B 与 12B 标准含 `warning_count` 载荷）、`encodeMySqlResultSetHeader`/`decodeMySqlResultSetHeader`（支持 `CLIENT_OPTIONAL_RESULTSET_METADATA` 可选元数据标志）、`encodeMySqlSimpleCommand`/`decodeMySqlSimpleCommand`、`encodeMySqlStmtIdCommand`/`decodeMySqlStmtIdCommand`。
 
@@ -398,7 +398,7 @@ const closed_id = decodeMySqlStmtIdCommand(close_wire, MySqlWireCmd.com_stmt_clo
 * = rs;
 * = closed_id;
 ```
-- **MySQL 4.1/8.0 `AuthSwitch`、`SSLRequest` 与 `LOCAL_INFILE_Request` 零分配编解码器 (`mysql_auth_frames.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/{AuthSwitchRequest,AuthSwitchResponse,SSLRequest,LocalInfileRequest}.cp`)**：
+- **MySQL 4.1/8.0 `AuthSwitch`、`SSLRequest` 与 `LOCAL_INFILE_Request` 零分配编解码器 (`mysqlAuth.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/{AuthSwitchRequest,AuthSwitchResponse,SSLRequest,LocalInfileRequest}.cp`)**：
   - 常量与类型：`MYSQL_AUTH_SWITCH_HEADER` (`0xFE`)、`MYSQL_LOCAL_INFILE_HEADER` (`0xFB`)、`MYSQL_SSL_REQUEST_PAYLOAD_LEN` (`32`)、`MYSQL_CAP_CLIENT_SSL` (`0x0800`)、`MySqlAuthFrameError`、`MySqlAuthSwitchReqView`、`MySqlAuthSwitchRespView`、`MySqlSslRequestView`、`MySqlLocalInfileReqView`（内置 `isSafeRelativeFilename()` 拦截绝对路径与 `..` 目录穿越）；
   - 编解码函数：`encodeMySqlAuthSwitchRequest`/`decodeMySqlAuthSwitchRequest`、`encodeMySqlAuthSwitchResponse`/`decodeMySqlAuthSwitchResponse`、`encodeMySqlSslRequestFrame`/`decodeMySqlSslRequestFrame`、`encodeMySqlLocalInfileRequest`/`decodeMySqlLocalInfileRequest`。
 
@@ -432,7 +432,7 @@ const li = decodeMySqlLocalInfileRequest(li_wire)?; // li.isSafeRelativeFilename
 * = ssl;
 * = li;
 ```
-- **PostgreSQL v3 鉴权 (`PasswordMessage`/`SASLInitialResponse`/`SASLResponse`)、`COPY` 流与 `Terminate` 零分配编解码器 (`pg_auth_copy.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/{SASLInitialResponse,SASLResponse,PasswordMessage,CopyData,CopyFail}.cp`)**：
+- **PostgreSQL v3 鉴权 (`PasswordMessage`/`SASLInitialResponse`/`SASLResponse`)、`COPY` 流与 `Terminate` 零分配编解码器 (`pgAuthCopy.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/{SASLInitialResponse,SASLResponse,PasswordMessage,CopyData,CopyFail}.cp`)**：
   - 常量与类型：`PG_PASSWORD_TAG` (`'p'`)、`PG_COPY_DATA_TAG` (`'d'`)、`PG_COPY_DONE_TAG` (`'c'`)、`PG_COPY_FAIL_TAG` (`'f'`)、`PG_TERMINATE_TAG` (`'X'`)、`PgAuthCopyError`、`PgSaslInitialResponseView`（支持 `data == null` 编码线协议 `-1` 无初始载荷）；
   - 编解码函数：`encodePgPasswordMessage`/`decodePgPasswordMessage`、`encodePgSaslInitialResponse`/`decodePgSaslInitialResponse`、`encodePgSaslResponse`/`decodePgSaslResponse`、`encodePgCopyData`/`decodePgCopyData`、`encodePgCopyDone`/`decodePgCopyDone`、`encodePgCopyFail`/`decodePgCopyFail`、`encodePgTerminate`/`decodePgTerminate`。
 
@@ -479,7 +479,7 @@ const term_wire = encodePgTerminate(buf[0..])?;     // ['X', 0, 0, 0, 4]
    - PostgreSQL 事务内一旦单条语句出错，`ReadyForQuery` (`'Z'`) 返回 `PgTxStatus.failed_transaction` (`'E'`)，须执行 `ROLLBACK`（或回滚至 `SAVEPOINT` 以实现局部错误恢复）待状态恢复为 `idle` (`'I'`) / `in_transaction` (`'T'`) 后方可继续新查询；`SqlTransactionStateMachine`、`PgBackendKeyData`（配合 `CancelRequest`）与 `SqliteDatabase`（`begin`/`commit`/`rollback`）配合 `defer` 可确保异常路径下确定性回滚，防止连接池归还脏事务连接；跨会话分布式事务在 PostgreSQL 走 Prepared Transactions (2PC)，在 MySQL 走 XA Transactions。
 5. **15 字节小对象优化（`SqlData`）**：
    - 继承自 Bun `src/sql/shared/Data.cp`，短列值直接内联存储于 15 字节槽位，显著降低宽表批量扫描时的堆分配压力。
-6. **MySQL 预处理二进制协议执行帧编解码（`lib/sql/mysql_stmt_execute.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/PreparedStatement.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
+6. **MySQL 预处理二进制协议执行帧编解码（`lib/sql/mysqlExec.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/PreparedStatement.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
    - **二进制参数绑定防注入与性能优势**：对齐 `Bun.SQL` MySQL 5.7+/8.0+ 预处理管线（`COM_STMT_PREPARE` -> `COM_STMT_EXECUTE` `0x17` -> `COM_STMT_CLOSE`），通过独立的 NULL 位图（`(param_count + 7) / 8` 字节，无偏移）与类型元数据头（`field_type` + `0x80` 无符号标志）传递参数，避免文本 SQL 拼接与转义开销；
    - **全类型覆盖与零拷贝往返解码**：支持 `Tiny`/`Short`/`Long`/`LongLong`（有符号/无符号小端）、IEEE-754 `Float`/`Double`、`VarString`/`String`/`Blob`/`Json`/`NewDecimal`（Length-Encoded String）与 `Null`；`encodeMySqlStmtExecute` / `decodeMySqlStmtExecuteFrame` 自动封装与校验 4 字节 MySQL 包头，严格拦截截断报文、非法命令字节、非法 `new_params_bind_flag` 与尾随垃圾字节。
 
@@ -504,8 +504,8 @@ const decoded = decodeMySqlStmtExecuteFrame(wire[0..n], 3)?;
 * = decoded;
 ```
 
-7. **PostgreSQL 后端认证质询与 SCRAM-SHA-256 握手编解码（`lib/sql/pg_auth_challenge.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/Authentication.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
-   - **完整覆盖 `'R'` 认证子码**：与客户端上行帧 `pg_auth_copy.cp` 对称，实现后端下行的 `AuthenticationOk` (0)、`Cleartext` (3)、`MD5Password` (5, 4 字节 salt)、`GSS`/`SSPI`、`AuthenticationSASL` (10, NUL 分隔机制列表迭代器 `PgSaslMechanismIter`)、`AuthenticationSASLContinue` (11) 与 `AuthenticationSASLFinal` (12) 零拷贝编解码；
+7. **PostgreSQL 后端认证质询与 SCRAM-SHA-256 握手编解码（`lib/sql/pgAuthChal.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/Authentication.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
+   - **完整覆盖 `'R'` 认证子码**：与客户端上行帧 `pgAuthCopy.cp` 对称，实现后端下行的 `AuthenticationOk` (0)、`Cleartext` (3)、`MD5Password` (5, 4 字节 salt)、`GSS`/`SSPI`、`AuthenticationSASL` (10, NUL 分隔机制列表迭代器 `PgSaslMechanismIter`)、`AuthenticationSASLContinue` (11) 与 `AuthenticationSASLFinal` (12) 零拷贝编解码；
    - **SCRAM-SHA-256 质询严格校验**：`parsePgSaslContinue` 强制要求 `r=`、`s=`、`i=` 三元组齐全且迭代次数 `i` 为严格正 `u32`；`parsePgSaslFinal` 解析服务端校验签名 `v=<base64>` 或 RFC 5802 错误 `e=<reason>`；`decodePgAuthChallenge` 强制验证各类认证码对应的消息长度不变量与零尾随字节。
 
 ```cp
@@ -523,7 +523,7 @@ const view = decodePgAuthChallenge(wire[0..n])?;
 * = view;
 ```
 
-8. **PostgreSQL 后端数据行（`'D'` DataRow）零拷贝流式编解码（`lib/sql/pg_data_row.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/DataRow.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
+8. **PostgreSQL 后端数据行（`'D'` DataRow）零拷贝流式编解码（`lib/sql/pgDataRow.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/DataRow.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
    - **精确区分 `SQL NULL` 与空字符串 `""`**：PostgreSQL `'D'` 帧使用 `0xffff_ffff`（`-1`）哨兵表示 `SQL NULL`，长度 `0` 表示非空零字节值（空串/空 `bytea`）；`decodePgDataRowIter` 返回零拷贝流式迭代器 `PgDataRowIter`（支持任意列数宽表与 `columnAt` 随机访问），`decodePgDataRowFrame` 提供最多 64 列的定长视图；
    - **严格帧安全校验**：自动拦截除 `-1` 以外的任意负列长（`InvalidColumnLength`）、列数据截断（`TruncatedFrame`）与行尾垃圾字节（`TrailingBytes`）。
 
@@ -546,7 +546,7 @@ const row = decodePgDataRowFrame(wire[0..n])?;
 * = row;
 ```
 
-9. **MySQL 5.7+/8.0+ 完整字符集与 Collation 注册表（`lib/sql/mysql_charset.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/CharacterSet.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
+9. **MySQL 5.7+/8.0+ 完整字符集与 Collation 注册表（`lib/sql/mysqlCharset.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/CharacterSet.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
    - **完整 1..255+ Collation ID 查找与编码族分类**：零堆分配 O(1) 映射 Bun `CharacterSet` 全部 Collation ID 与 MySQL 8.0+ `utf8mb4_0900_*`（`255`/`278`/`305`/`309`），提供 `maxBytesPerChar()`（1/2/3/4 字节宽度）、`isUtf8Compatible()` 与大小写无关名称/别名解析（`lookupMySqlCollationByName`）；
    - **MySQL 协议握手与二进制列边界契约**：HandshakeResponse41 仅含 1 字节 `character_set` 字段，对于 `id > 255`（如 `309` `utf8mb4_0900_bin`）须通过 `handshakeByte()` 回落为 `255` 并在连接后按需设置 collation；判定 `ColumnDefinition41` 列是否为原始字节流（`BLOB`/`VARBINARY`）时必须用 `isMySqlBinaryColumn(id)` / `isRawBinary()`（仅 `63`），切勿与文本二进制排序 `utf8mb4_bin` (`46`) 混淆。
 

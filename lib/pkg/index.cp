@@ -13,7 +13,7 @@ export * from "./tarball.cp";
 export * from "./linker.cp";
 export * from "./manager.cp";
 export * from "./workspace.cp";
-export * from "./registry_client.cp";
+export * from "./registry.cp";
 export * from "./lifecycle.cp";
 export * from "./migration.cp";
 
@@ -68,7 +68,7 @@ export {
     DynamicOptimizerRule,
     PostinstallOptimizerConfig,
     findNativeBinlinkReplacement,
-} from "./postinstall_optimizer.cp";
+} from "./postinstall.cp";
 
 export {
     MAX_OVERRIDE_RULES,
@@ -87,7 +87,7 @@ export {
     UpdateSpecKind,
     UpdateRequest,
     UpdateRequestList,
-} from "./update_request.cp";
+} from "./updateReq.cp";
 
 export {
     MAX_YARN_LOCK_PACKAGES,
@@ -98,7 +98,7 @@ export {
     mustQuoteYarnName,
     mustQuoteYarnKey,
     YarnLockPrinter,
-} from "./yarn_lock_printer.cp";
+} from "./yarnLock.cp";
 
 import _catalog from "./catalog.cp";
 pub const CatalogError = _catalog.CatalogError;
@@ -118,7 +118,7 @@ export {
     normalizeWorkspacePath,
     WorkspaceMapEntry,
     WorkspaceMap,
-} from "./workspace_map.cp";
+} from "./wsMap.cp";
 
 export {
     WorkspaceFilterError,
@@ -139,7 +139,7 @@ export {
     PkgConfigVersion,
     formatIsolatedStoreEntry,
     formatIsolatedStorePath,
-} from "./config_version.cp";
+} from "./configVer.cp";
 
 export {
     WHY_MAX_PACKAGES,
@@ -166,7 +166,7 @@ export {
     isScriptExecutionAllowed,
     formatNodeModulesRelativeCwd,
     PkgScriptList,
-} from "./script_list.cp";
+} from "./scripts.cp";
 
 export {
     TREE_PRINTER_MAX_PACKAGES,
@@ -186,7 +186,7 @@ export {
     formatUpdatedPackageLine,
     formatInstalledPackageLine,
     InstallTreePrinter,
-} from "./tree_printer.cp";
+} from "./treePrint.cp";
 
 export {
     BIN_SHIM_VERSION_V1,
@@ -204,7 +204,7 @@ export {
     DecodedBinShim,
     decodeShimUtf16LeToUtf8,
     BinLinkingShim,
-} from "./bin_shim.cp";
+} from "./binShim.cp";
 
 export {
     PkgOptionsError,
@@ -216,7 +216,7 @@ export {
     PkgEnableFlags,
     PkgDepOmitFlags,
     PkgInstallOptions,
-} from "./install_options.cp";
+} from "./options.cp";
 
 export {
     SECURITY_SCANNER_PROTOCOL_VERSION,
@@ -233,7 +233,7 @@ export {
     parseWarningConfirmation,
     formatScanRequestJson,
     parseSecurityAdvisoriesJson,
-} from "./security_scanner.cp";
+} from "./scanner.cp";
 
 export {
     PATCH_DEFAULT_DIR,
@@ -250,7 +250,7 @@ export {
     formatPatchCacheSubpath,
     parsePatchCacheHash,
     validateUnifiedPatchText,
-} from "./patch_spec.cp";
+} from "./patchSpec.cp";
 
 export {
     ISOLATED_STORE_MAX_ENTRIES,
@@ -268,7 +268,7 @@ export {
     formatGlobalStorePath,
     computePeerSetHash,
     computeGlobalEntryClosureHash,
-} from "./isolated_store.cp";
+} from "./isoStore.cp";
 
 export {
     GIT_DEFAULT_ASKPASS,
@@ -296,7 +296,7 @@ export {
     reconcileIsolatedSymlink,
     computeRelativeSymlinkTarget,
     IsolatedLinkPlan,
-} from "./isolated_symlink.cp";
+} from "./symlink.cp";
 
 export {
     MANIFEST_CACHE_MAX_ENTRIES,
@@ -313,7 +313,7 @@ export {
     parseInstallCopyBackend,
     formatGlobalCacheEntryDir,
     PackageManifestCache,
-} from "./manifest_cache.cp";
+} from "./manifest.cp";
 
 export {
     FOLDER_RESOLVER_MAX_ENTRIES,
@@ -331,7 +331,7 @@ export {
     formatWorkspaceSearchPath,
     resolveWorkspacePublishVersion,
     FolderResolverCache,
-} from "./folder_resolver.cp";
+} from "./folder.cp";
 
 export {
     WORKSPACE_PKG_CACHE_MAX_ENTRIES,
@@ -347,7 +347,7 @@ export {
     guessJsonIndentation,
     analyzeWorkspacePackageJson,
     WorkspacePkgJsonCache,
-} from "./workspace_pkg_cache.cp";
+} from "./wsCache.cp";
 
 export {
     ISOLATED_MAX_SKIP_DIRS,
@@ -367,7 +367,7 @@ export {
     decideMaterializeRecovery,
     resolveMaterializeDestPath,
     IsolatedMaterializer,
-} from "./isolated_materializer.cp";
+} from "./materializer.cp";
 
 export {
     INSTALL_PROGRESS_NAME_CAP,
@@ -377,7 +377,7 @@ export {
     stageEmojiPrefix,
     stageBannerLabel,
     InstallProgressTracker,
-} from "./install_progress.cp";
+} from "./progress.cp";
 
 export {
     VERSIONED_URL_MAX_ENTRIES,
@@ -386,7 +386,7 @@ export {
     LegacyV2VersionedUrl,
     VersionedUrl,
     VersionedUrlSet,
-} from "./versioned_url.cp";
+} from "./verUrl.cp";
 
 export {
     PNPM_LOCK_MIN_SUPPORTED_MAJOR,
@@ -412,7 +412,7 @@ export {
     PnpmImporterRecord,
     PnpmMigrationStats,
     PnpmMigrationIndex,
-} from "./pnpm_lock.cp";
+} from "./pnpmLock.cp";
 
 export {
     PKG_JSON_MAX_DEPS_PER_GROUP,
@@ -430,4 +430,26 @@ export {
     PkgJsonPatchEntry,
     PkgJsonEditStats,
     PkgJsonEditor,
-} from "./package_json_editor.cp";
+} from "./editor.cp";
+
+export {
+    PKG_CACHE_VERSION_CURRENT,
+    PKG_CACHE_MAX_HOSTNAME_INLINE,
+    PKG_CACHE_LINKS_SUBDIR,
+    PKG_CACHE_FALLBACK_TMP_SUBDIR,
+    PkgCacheDirError,
+    hashCacheKey64,
+    PkgCacheDirSource,
+    PkgCacheEnv,
+    PkgResolvedCacheDir,
+    resolvePkgCacheDirPath,
+    resolvePkgTempDirFallback,
+    PkgCacheSemver,
+    formatCachedNpmFolderName,
+    formatCachedGitHubFolderName,
+    formatCachedTarballFolderName,
+    PkgGlobalStoreEligibility,
+    PkgGlobalStoreInput,
+    checkGlobalStoreEligibility,
+    formatGlobalStoreLinkDir,
+} from "./cacheDir.cp";

@@ -40,14 +40,14 @@ export {
     PgCommandTagError,
     PgCommandKind,
     PgCommandTag,
-} from "./command_tag.cp";
+} from "./commandTag.cp";
 
 export {
     PG_TAG_NEGOTIATE_PROTOCOL_VERSION,
     PG_NEGOTIATE_MAX_OPTIONS,
     PgNegotiateError,
     PgNegotiateProtocolVersion,
-} from "./negotiate_protocol.cp";
+} from "./negotiateProtocol.cp";
 
 export {
     PG_MAX_DIAGNOSTIC_FIELDS,
@@ -57,4 +57,4 @@ export {
     diagnosticFieldName,
     PgDiagnosticField,
     PgDiagnosticFields,
-} from "./field_message.cp";
+} from "./fieldMessage.cp";

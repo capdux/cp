@@ -72,7 +72,7 @@ export {
     HtmlManifestFile,
     encodeHashEtag,
     HtmlImportManifest,
-} from "./html_manifest";
+} from "./htmlManifest";
 
 export {
     MAX_OUTPUT_FILES,
@@ -85,7 +85,7 @@ export {
     OutputFileRecord,
     calculateOutputFileListCapacity,
     OutputFileListBuilder,
-} from "./output_file_list";
+} from "./outputList";
 
 export {
     EntryPointError,
@@ -98,7 +98,7 @@ export {
     generateClientEntryCode,
     generateServerEntryCode,
     generateMacroEntryId,
-} from "./entry_points";
+} from "./entryPoints";
 
 export {
     INLINE_NAME_CAP,
@@ -135,7 +135,7 @@ export {
     BarrelPlanResult,
     BarrelWakeupResult,
     BarrelModule,
-} from "./barrel_imports";
+} from "./barrel";
 
 export {
     MAX_SCB_BOUNDARIES,
@@ -146,7 +146,7 @@ export {
     ServerComponentBoundary,
     ScbBitSet,
     ServerComponentBoundaryTable,
-} from "./server_components";
+} from "./rsc";
 
 export {
     MAX_STATIC_ROUTE_NODES,
@@ -156,7 +156,7 @@ export {
     StaticRouteEdge,
     StaticRouteGraph,
     StaticRouteVisitor,
-} from "./static_route_visitor";
+} from "./staticRoute";
 
 export {
     ChangedFilterError,
@@ -165,13 +165,13 @@ export {
     ReverseImportGraph,
     parseChangedPathLines,
     freeChangedPathList,
-} from "./changed_filter";
+} from "./changedFilt";
 
 export {
     CssOrderError,
     CssOrderLoaderKind,
     CssOrderGraph,
-} from "./css_order";
+} from "./cssOrder";
 
 export {
     CSS_CHUNK_MAX_PARTS,
@@ -182,7 +182,7 @@ export {
     CssSourceMapEntry,
     CssChunkPostProcessResult,
     postProcessCssChunk,
-} from "./css_chunk_postprocess";
+} from "./cssPost";
 
 export {
     MODULE_INFO_MAX_STRINGS,
@@ -200,7 +200,7 @@ export {
     ModuleRecordKind,
     ModuleInfoFlags,
     TranspiledModuleInfo,
-} from "./module_info";
+} from "./modInfo";
 
 export {
     CROSS_CHUNK_MAX_CHUNKS,
@@ -215,7 +215,7 @@ export {
     CrossChunkExportEntry,
     CrossChunkResult,
     CrossChunkAnalyzer,
-} from "./cross_chunk_deps";
+} from "./crossChunk";
 
 export {
     PathTemplateError,
@@ -225,7 +225,7 @@ export {
     PathTemplatePlaceholder,
     PathTemplate,
     formatBundlerNaming,
-} from "./path_template";
+} from "./pathTpl";
 
 export {
     PureGlobalKind,
@@ -237,7 +237,7 @@ export {
     isPureGlobalPropertyChain,
     isPureGlobalCallSafeForString,
     classifyGlobalExpr,
-} from "./pure_globals";
+} from "./pureGlobals";
 
 export {
     HTML_SCANNER_MAX_ASSETS,
@@ -253,7 +253,7 @@ export {
     parseSrcsetCandidates,
     scanHtmlAssets,
     rewriteHtmlAssetUrls,
-} from "./html_scanner";
+} from "./htmlScan";
 
 export {
     JS_ORDER_MAX_FILES,
@@ -273,7 +273,7 @@ export {
     JsChunkOrderEntry,
     JsOrderResult,
     JsOrderGraph,
-} from "./js_order";
+} from "./jsOrder";
 
 export {
     HTML_CHUNK_MAX_PRELOADS,
@@ -286,7 +286,7 @@ export {
     writeEscapedInlineScript,
     writeEscapedInlineStyle,
     compileHtmlChunk,
-} from "./html_chunk";
+} from "./htmlChunk";
 
 export {
     CSS_IMPORT_MAX_FILES,
@@ -304,7 +304,7 @@ export {
     CssImportOrderEntry,
     CssImportOrderResult,
     CssImportGraph,
-} from "./css_import_order";
+} from "./cssImpOrder";
 
 export {
     CHUNK_PLAN_MAX_ENTRIES,
@@ -329,7 +329,7 @@ export {
     hashCssOrderKey,
     formatChunkUniqueKey,
     ChunkPlanner,
-} from "./chunk_planner";
+} from "./chunkPlan";
 
 export {
     CHUNK_RENAME_MAX_SYMBOLS,
@@ -346,7 +346,7 @@ export {
     ChunkRenameOptions,
     ChunkRenameResult,
     ChunkSymbolRenamer,
-} from "./chunk_renamer";
+} from "./chunkRename";
 
 export {
     CHUNK_OUTPUT_MAX_PIECES,
@@ -367,7 +367,7 @@ export {
     normalizeChunkImportPath,
     formatChunkDebugIdComment,
     ChunkPieceAssembler,
-} from "./chunk_output";
+} from "./chunkOut";
 
 export {
     GRAPH_MAX_INPUT_FILES,
@@ -393,7 +393,7 @@ export {
     BundlerModulePath,
     GetOrPutSourceResult,
     PathToSourceIndexMap,
-} from "./path_source_map";
+} from "./pathSrcMap";
 
 export {
     DEFERRED_BATCH_MAX_TASKS,
@@ -403,7 +403,7 @@ export {
     DeferredPluginTask,
     DeferredDrainSummary,
     DeferredBatchCoordinator,
-} from "./deferred_batch";
+} from "./deferBatch";
 
 export {
     INDEX_STR_MAP_BUCKETS,
@@ -412,7 +412,7 @@ export {
     IndexStringMapError,
     IndexStringEntry,
     IndexStringMap,
-} from "./index_string_map";
+} from "./idxStrMap";
 
 export {
     OUTPUT_FILE_MAX_COLLECTION,
@@ -423,4 +423,4 @@ export {
     OutputBakeExtra,
     BuildOutputFile,
     BuildOutputCollection,
-} from "./output_file";
+} from "./outputFile";

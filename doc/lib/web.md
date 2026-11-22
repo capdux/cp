@@ -14,9 +14,9 @@
 
 | 子模块文件 | 领域分类 | 核心导出符号 |
 | :--- | :--- | :--- |
-| `lib/web/openapi_spec.cp` / `openapi_router.cp` | OpenAPI 3.1.0 AST、路由匹配与契约校验 | `OpenApiDoc`, `OpenApiValidator`, `OpenApiEndpoint`, `OpenApiOperation`, `RouteMatchResult`, `ValidationReport`, `HttpMethod` |
-| `lib/web/msgpack_rpc.cp` | MessagePack-RPC 编解码与流式帧解码 | `encodeRpcMessage`, `decodeRpcMessage`, `encodeRpcValue`, `RpcStreamDecoder`, `RpcRequest`, `RpcResponse`, `RpcNotification`, `RpcValue` |
-| `lib/web/webhook_sign.cp` / `webhook_idempotency.cp` | Webhook HMAC 验签 (Standard/GitHub/Stripe) 与幂等存储 | `StandardWebhook`, `GitHubWebhook`, `StripeWebhook`, `IdempotencyStore`, `WebhookError` |
+| `lib/web/openapiSpec.cp` / `openapiRoute.cp` | OpenAPI 3.1.0 AST、路由匹配与契约校验 | `OpenApiDoc`, `OpenApiValidator`, `OpenApiEndpoint`, `OpenApiOperation`, `RouteMatchResult`, `ValidationReport`, `HttpMethod` |
+| `lib/web/msgpackRpc.cp` | MessagePack-RPC 编解码与流式帧解码 | `encodeRpcMessage`, `decodeRpcMessage`, `encodeRpcValue`, `RpcStreamDecoder`, `RpcRequest`, `RpcResponse`, `RpcNotification`, `RpcValue` |
+| `lib/web/webhookSign.cp` / `webhookIdem.cp` | Webhook HMAC 验签 (Standard/GitHub/Stripe) 与幂等存储 | `StandardWebhook`, `GitHubWebhook`, `StripeWebhook`, `IdempotencyStore`, `WebhookError` |
 
 ### 2. HTTP/1.1、HTTP/2、HTTP/3、SSE、Multipart 与 URI 模板（6 个子模块）
 
@@ -44,9 +44,9 @@
 | 子模块文件 | 领域分类 | 核心导出符号 |
 | :--- | :--- | :--- |
 | `lib/web/ratelimit.cp` | 确定性限流器 (令牌桶/滑动窗口/GCRA/分键限流) | `TokenBucket`, `SlidingWindowCounter`, `GcraLimiter`, `KeyedRateLimiter`, `RateDecision`, `RateLimitError` |
-| `lib/web/circuit_breaker.cp` / `circuit_policy.cp` | 熔断器、指数退避抖动与舱壁隔离 | `CircuitBreaker`, `CircuitConfig`, `CircuitState`, `CircuitStats`, `BackoffPolicy`, `Bulkhead`, `JitterMode` |
+| `lib/web/breaker.cp` / `breakerPol.cp` | 熔断器、指数退避抖动与舱壁隔离 | `CircuitBreaker`, `CircuitConfig`, `CircuitState`, `CircuitStats`, `BackoffPolicy`, `Bulkhead`, `JitterMode` |
 | `lib/web/middleware.cp` | 零堆分配 HTTP 洋葱中间件链、CORS/Bearer 鉴权/413 守卫与指标统计 | `WebContext`, `WebMiddlewareConfig`, `WebMiddlewareOutcome`, `WebMiddlewareStats`, `WebMiddlewarePipeline`, `renderJsonErrorBody` |
-| `lib/web/hedged_policy.cp` | Google "The Tail at Scale" 对冲请求（Hedged Requests）与重试预算防风暴控制器 | `HEDGED_MAX_ATTEMPTS`, `RetryBudgetConfig`, `RetryBudgetStats`, `RetryBudget`, `HedgedRequestConfig`, `HedgedAction`, `HedgedAttemptState`, `HedgedWinResult`, `HedgedRequestTracker` |
+| `lib/web/hedged.cp` | Google "The Tail at Scale" 对冲请求（Hedged Requests）与重试预算防风暴控制器 | `HEDGED_MAX_ATTEMPTS`, `RetryBudgetConfig`, `RetryBudgetStats`, `RetryBudget`, `HedgedRequestConfig`, `HedgedAction`, `HedgedAttemptState`, `HedgedWinResult`, `HedgedRequestTracker` |
 
 ---
 
@@ -119,7 +119,7 @@ pub fn demoWebMiddleware() {
 }
 ```
 
-### 对冲请求（Hedged Requests）与重试预算防风暴示例 (`hedged_policy.cp`)
+### 对冲请求（Hedged Requests）与重试预算防风暴示例 (`hedged.cp`)
 
 ```cp
 import {
@@ -160,7 +160,7 @@ pub fn demoHedgedRequestPolicy() {
 }
 ```
 
-### 零分配 SSE 流式事件扇出代理与 `Last-Event-ID` 断线续传示例 (`sse_broker.cp`)
+### 零分配 SSE 流式事件扇出代理与 `Last-Event-ID` 断线续传示例 (`sseBroker.cp`)
 
 面向 LLM Token 流、实时通知推送与 MCP/A2A 流式事件的 100% 纯 CP 零动态堆分配 WHATWG/RFC 8895 SSE 扇出代理：
 
@@ -197,7 +197,7 @@ pub fn demoSseFanoutBroker() {
 }
 ```
 
-### 零分配 Stripe 风格 API 幂等键并发锁与响应重放存储引擎 (`idempotency_store.cp`)
+### 零分配 Stripe 风格 API 幂等键并发锁与响应重放存储引擎 (`idempotency.cp`)
 
 面向支付网关、计费 API、分布式 RPC 与 AI Agent 工具防重执行的 100% 纯 CP 零动态堆分配 Stripe 风格 `Idempotency-Key` 并发锁与响应重放引擎：
 
@@ -241,7 +241,7 @@ pub fn demoApiIdempotencyStore() {
 
 ---
 
-### RFC 9110 §13 HTTP 条件请求与 ETag 强弱比较裁决引擎（`etag_precondition.cp`）
+### RFC 9110 §13 HTTP 条件请求与 ETag 强弱比较裁决引擎（`etagPrecond.cp`）
 
 面向 CDN、API 网关与对象存储的 100% 纯 CP 零动态堆分配 RFC 9110 §8.8.3 & §13 条件请求状态机：
 

@@ -81,7 +81,7 @@ export {
     encodeCheck,
     CheckDecoded,
     decodeCheck,
-} from "./base58_check.cp";
+} from "./base58Check.cp";
 
 // --- Declarative Business & Risk Rule Engine ---
 

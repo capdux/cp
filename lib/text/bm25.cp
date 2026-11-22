@@ -1,6 +1,6 @@
 // Source: cp/lib/bm25/bm25.cp (Okapi BM25 Inverted Index & Phrase Search)
 const std = @import("std");
-import { TokenizerConfig, tokenizeTerms, freeTerms, lowercaseTerm } from "./bm25_tokenizer.cp";
+import { TokenizerConfig, tokenizeTerms, freeTerms, lowercaseTerm } from "./bm25Tokenizer.cp";
 
 pub const Bm25Error = error {
     InvalidConfig,

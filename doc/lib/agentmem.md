@@ -27,12 +27,12 @@
 | `lib/agentmem/memory.cp` | `// Source: cp/lib/agentmem/memory.cp (Hierarchical Agent Memory Engine)` | `AgentMemError`、`MemoryTier`、`RecallWeights`、`MemoryItem`、`RecallHit`、`AgentMemory` |
 | `lib/agentmem/episodic.cp` | `// Origin: Pure-CP Stdlib (AI Agent Episodic Memory: Park 2023 Recency-Importance-Relevance & Ebbinghaus Decay)` | `MemoryWeights`、`EpisodeMeta`、`ScoredEpisode`、`ebbinghausRetention`、`reinforceStability`、`scoreEpisode`、`rankTopEpisodes`、`selectEvictionVictim`、`touchEpisode` |
 | `lib/agentmem/kg.cp` | `// Origin: Pure-CP Stdlib (AI Agent Temporal Knowledge Graph Memory: SPO Triples & 2-Hop Recall)` | `KgEntity`、`KgTriple`、`KgStore`（时序三元组、事实版本失效与 1~2 跳 GraphRAG 邻域检索） |
-| `lib/agentmem/working_mem.cp` | `// Origin: Pure-CP Stdlib (AI Agent Working Memory & Token-Budget Context Window Manager)` | `MemSlotRole`、`EvictionPolicy`、`WorkingMemItem`、`WorkingMemStats`、`WorkingMemory`（零堆分配工作记忆与 Token 预算滑动上下文窗） |
+| `lib/agentmem/workingMem.cp` | `// Origin: Pure-CP Stdlib (AI Agent Working Memory & Token-Budget Context Window Manager)` | `MemSlotRole`、`EvictionPolicy`、`WorkingMemItem`、`WorkingMemStats`、`WorkingMemory`（零堆分配工作记忆与 Token 预算滑动上下文窗） |
 | `lib/agentmem/activation.cp` | `// Origin: Pure-CP Stdlib (AI GraphRAG Spreading Activation & Personalized PageRank Memory Recall)` | `MemGraphEdge`、`ActivatedNode`、`SpreadingConfig`、`spreadActivation`、`personalizedPageRank`（零堆分配 GraphRAG 扩散激活与个性化 PageRank 记忆召回） |
 | `lib/agentmem/consolidation.cp` | `// Origin: Pure-CP Stdlib (AI Agent Memory Consolidation, Dedup & Retention Pruning Engine)` | `MemConsolidationTier`、`ConsolidatableRecord`、`ConsolidationPolicy`、`ConsolidationReport`、`halfLifeDecayFactor`、`consolidateMemoriesInPlace`（零堆分配睡眠期记忆巩固、去重合并、半衰期衰减、分级晋升与遗忘剪枝归档） |
 | `lib/agentmem/retrieval.cp` | `// Origin: Pure-CP Stdlib (AI Agent Three-Factor Memory Retrieval, SIMD Dedup Merge & Prompt Packing)` | `MemoryRetrievalConfig`、`MemoryCandidate`、`MemoryScoredHit`、`MemoryMergeStats`、`MemoryPackResult`、`scoreAndRankMemoriesF32`、`mergeRedundantMemoriesF32`、`packMemoriesForPrompt` |
-| `lib/agentmem/entity_graph.cp` | `// Origin: Pure-CP Stdlib (AI Agent Zero-Alloc Temporal Entity Knowledge Graph & Two-Hop Recall Engine)` | `TemporalFactEdge`、`GraphHopHit`、`EntityGraphStats`、`TemporalEntityGraph`（半开时序区间事实管理、原子新旧事实更替 `supersedeFact`、时间点历史快照回溯与 1~2 跳环路去重扩展） |
-| `lib/agentmem/summary_tree.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc Hierarchical Conversation Summary Tree & Context Compactor)` | `SUMMARY_TREE_MAX_NODES`、`SUMMARY_NO_NODE`、`SummaryNodeKind`、`SummaryTreeNode`、`ContextFrontierPlan`、`SummaryTreeStats`、`HierarchicalSummaryTree`（多级递归对话摘要折叠与零重叠 Token 预算上下文前沿规划） |
+| `lib/agentmem/entityGraph.cp` | `// Origin: Pure-CP Stdlib (AI Agent Zero-Alloc Temporal Entity Knowledge Graph & Two-Hop Recall Engine)` | `TemporalFactEdge`、`GraphHopHit`、`EntityGraphStats`、`TemporalEntityGraph`（半开时序区间事实管理、原子新旧事实更替 `supersedeFact`、时间点历史快照回溯与 1~2 跳环路去重扩展） |
+| `lib/agentmem/summaryTree.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc Hierarchical Conversation Summary Tree & Context Compactor)` | `SUMMARY_TREE_MAX_NODES`、`SUMMARY_NO_NODE`、`SummaryNodeKind`、`SummaryTreeNode`、`ContextFrontierPlan`、`SummaryTreeStats`、`HierarchicalSummaryTree`（多级递归对话摘要折叠与零重叠 Token 预算上下文前沿规划） |
 | `lib/agentmem/index.cp` | `// Source: cp/lib/agentmem/index.cp (Unified Exports for cap:agentmem)` | `cap:agentmem` 与 `cap.agentmem` 统一公开导出入口 |
 
 ---
@@ -91,7 +91,7 @@
   - `queryFactsAt(subject, predicate, at_ms, out_indices: *[]usize): usize`（`predicate == ""` 匹配全部关系，`at_ms == 0` 查当前有效事实，非零查半开区间 `[valid_from_ms, valid_until_ms)` 历史快照）
   - `queryTwoHopNeighbors(start_entity, at_ms, out_entities: *[]u32, visited_s: *[]u8): usize`（零堆分配 1~2 跳去重邻域召回，排除起始点与失效边）
 
-### 5. 零堆分配工作记忆与 Token 预算滑动上下文窗 (`working_mem.cp`)
+### 5. 零堆分配工作记忆与 Token 预算滑动上下文窗 (`workingMem.cp`)
 
 面向 AI Agent 对话与工具调用上下文窗管理，在固定槽位池与硬性 `token_budget` 上限下提供 `pinned` 提示词保护、三种可切换驱逐策略及原子摘要压缩：
 
@@ -243,7 +243,7 @@ pub fn demoTemporalKg() {
 }
 ```
 
-### 4. 工作记忆与 Token 预算滑动上下文窗 (`working_mem.cp`) 示例
+### 4. 工作记忆与 Token 预算滑动上下文窗 (`workingMem.cp`) 示例
 
 ```typescript
 import {
@@ -404,7 +404,7 @@ pub fn demoThreeFactorMemoryRetrieval() {
 }
 ```
 
-### 8. 零堆分配时序实体关系图谱与 1~2 跳多跳召回器 (`entity_graph.cp`)
+### 8. 零堆分配时序实体关系图谱与 1~2 跳多跳召回器 (`entityGraph.cp`)
 
 面向 GraphRAG 与长程事实记忆演化的 100% 纯 CP、零堆分配时序实体关系图谱引擎，通过半开时间区间 `[valid_from_ms, valid_to_ms)`（`valid_to_ms == 0` 表示至今有效）彻底解决 Agent 记忆“新旧事实冲突”痛点并保留完整可回溯历史：
 
@@ -481,7 +481,7 @@ pub fn demoSimdMemoryConsolidation() {
 }
 ```
 
-### 10. 零分配分层对话摘要树与渐进式上下文压缩引擎 (`summary_tree.cp`)
+### 10. 零分配分层对话摘要树与渐进式上下文压缩引擎 (`summaryTree.cp`)
 
 面向 MemGPT / Letta 风格长周期对话 AI Agent 的 100% 纯 CP 零动态堆分配分层摘要树（Hierarchical Summary Tree）与 Token 预算前沿规划引擎：
 
@@ -517,7 +517,7 @@ pub fn demoHierarchicalSummaryTree() {
 }
 ```
 
-### 11. 零分配多层级 AI Agent 记忆融合路由器 (`memory_router.cp`)
+### 11. 零分配多层级 AI Agent 记忆融合路由器 (`memRouter.cp`)
 
 面向多层 AI Agent 记忆系统（Working Memory / Episodic Memory / Semantic Long-Term / Entity Graph）的 100% 纯 CP 零动态堆分配跨层加权 RRF 融合、跨层共识激励与 Token 预算打包内核：
 
@@ -563,7 +563,7 @@ pub fn demoMemoryFusionRouter() {
 }
 ```
 
-### 12. 零分配长程 AI Agent 情景-语义记忆归并、冲突替代与衰减强化引擎 (`consolidation_engine.cp`)
+### 12. 零分配长程 AI Agent 情景-语义记忆归并、冲突替代与衰减强化引擎 (`consolidator.cp`)
 
 面向长程自主 AI Agent 记忆睡眠归并周期的 100% 纯 CP 零动态堆分配情景-语义记忆融合与衰减强化引擎：
 
@@ -601,7 +601,7 @@ pub fn demoAgentMemoryConsolidator() {
 ```
 
 
-### 13. 零分配时间窗口 + 实体位图 + `@dot` 向量三模联合情景记忆索引 (`episode_index.cp`)
+### 13. 零分配时间窗口 + 实体位图 + `@dot` 向量三模联合情景记忆索引 (`episodes.cp`)
 
 面向长程自主 AI Agent 情景记忆多维检索的 100% 纯 CP 零动态堆分配三模联合索引引擎，深度融合原生 `@dot`、`@popCount` 与 `@fma` 硬件原语：
 

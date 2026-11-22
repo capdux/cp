@@ -8,7 +8,7 @@
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                   CP 多进制与校验编码套件 (cap:codec & cap.codec)            │
 ├──────────────────────────────────────┬──────────────────────────────────────┤
-│ Base58 / Base85 (base58_85.cp)       │ Bech32 / Crockford32 (bech32_*.cp)   │
+│ Base58 / Base85 (base5885.cp)       │ Bech32 / Crockford32 (bech32_*.cp)   │
 │ · Base58 (Bitcoin/IPFS/Solana)       │ · Bech32 / Bech32m (BIP-173/BIP-350) │
 │ · Base58Check (复用 cap:crypto SHA256)│ · convertBits / hrpExpand / polymod  │
 │ · Adobe ASCII85 (<~...~> + 'z' 压缩) │ · encodeBytes / decodeBytes 8-bit 包装│
@@ -20,8 +20,8 @@
 
 | 文件路径 | 谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
-| `lib/codec/base58_85.cp` | `// Source: cp/lib/codec/base58_85.cp (...)` | `CodecError`、`Base58`（含 `Base58Check`）、`Base85`（Adobe ASCII85 & RFC 1924） |
-| `lib/codec/bech32_crockford.cp` | `// Source: cp/lib/codec/bech32_crockford.cp (...)` | `Bech32Variant`、`Bech32Decoded`、`Bech32`、`Crockford32` |
+| `lib/codec/base5885.cp` | `// Source: cp/lib/codec/base5885.cp (...)` | `CodecError`、`Base58`（含 `Base58Check`）、`Base85`（Adobe ASCII85 & RFC 1924） |
+| `lib/codec/bech32Crockford.cp` | `// Source: cp/lib/codec/bech32Crockford.cp (...)` | `Bech32Variant`、`Bech32Decoded`、`Bech32`、`Crockford32` |
 | `lib/codec/index.cp` | `// Source: cp/lib/codec/index.cp (...)` | `cap:codec` 与 `cap.codec` 统一公开导出入口 |
 
 ---
@@ -147,8 +147,8 @@ pub fn demoCodec(): ! {
 | 一维条码 | `lib/codec/ean.cp` | ISO/IEC 15420 (EAN-13 / EAN-8 / UPC-A) | L/G/R 模块编解码与校验位计算 |
 | 一维条码 | `lib/codec/code128.cp` | ISO/IEC 15417 Code 128 | 零堆分配 Code 128 条码编解码 |
 | 一维条码 | `lib/codec/code39.cp` | ISO/IEC 16388 Code 39 | 零堆分配 3-of-9 条码编解码与 Mod-43 校验 |
-| 参考归档（不导出） | `lib/codec/{base58,base85,bech32}_.cp` | Base58 / Base85 / Bech32（仅参考） | 与权威 `base58_85.cp` / `bech32_crockford.cp` 功能重叠，保留供对比分析 |
-| 纠错码与有限域（Batch 38） | `lib/codec/elias.cp`, `gf256.cp`, `golay.cp`, `hamming.cp`, `reed_solomon.cp`, `dct.cp` | Elias 通用前缀码、GF(2^8) 有限域、Golay [24,12,8]/[23,12,7]、Hamming(7,4)/SECDED(8,4)/(72,64)、Cauchy Reed-Solomon 纠删码、8x8 DCT-II/IDCT-III | 零冲突导出至 `cap:codec`（原 `elias`/`gf256`/`golay`/`hamming`/`reed_solomon`/`dct` 已收敛） |
+| 参考归档（不导出） | `lib/codec/{base58,base85,bech32}_.cp` | Base58 / Base85 / Bech32（仅参考） | 与权威 `base5885.cp` / `bech32Crockford.cp` 功能重叠，保留供对比分析 |
+| 纠错码与有限域（Batch 38） | `lib/codec/elias.cp`, `gf256.cp`, `golay.cp`, `hamming.cp`, `reedSolomon.cp`, `dct.cp` | Elias 通用前缀码、GF(2^8) 有限域、Golay [24,12,8]/[23,12,7]、Hamming(7,4)/SECDED(8,4)/(72,64)、Cauchy Reed-Solomon 纠删码、8x8 DCT-II/IDCT-III | 零冲突导出至 `cap:codec`（原 `elias`/`gf256`/`golay`/`hamming`/`reed_solomon`/`dct` 已收敛） |
 
 ---
 

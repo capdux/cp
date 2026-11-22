@@ -91,7 +91,7 @@ export {
     DEFAULT_TIMEOUT,
     DEFAULT_ATTEMPTS,
     ResolvConf,
-} from "./resolv_conf.cp";
+} from "./resolvConf.cp";
 
 export {
     CaaTag,
@@ -192,4 +192,4 @@ export {
     DnsLookupOutcome,
     DnsPrefetchEntry,
     DnsPrefetchCache,
-} from "./prefetch_cache.cp";
+} from "./prefetch.cp";

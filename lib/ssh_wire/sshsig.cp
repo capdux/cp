@@ -2,7 +2,7 @@
 const std = @import("std");
 import { SshError, SshReader, SshWriter } from "./wire.cp";
 import { buildEd25519PublicKeyBlob } from "./keys.cp";
-import { decodePemArmoring, encodePemArmoring } from "./openssh_key.cp";
+import { decodePemArmoring, encodePemArmoring } from "./opensshKey.cp";
 
 const SSHSIG_MAGIC = "SSHSIG";
 const SSHSIG_VERSION: u32 = 1;

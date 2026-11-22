@@ -7,4 +7,4 @@ export * from "./histogram.cp";
 export * from "./trace.cp";
 export * from "./suite.cp";
 export * from "./compare.cp";
-export * from "./alloc_tracker.cp";
+export * from "./allocTracker.cp";

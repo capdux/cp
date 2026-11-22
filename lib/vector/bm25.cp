@@ -3,7 +3,7 @@
 // term deduplication, document deletion, and exact IDF/TF-saturation scoring.
 
 const std = @import("std");
-import { SearchHit } from "./flat_index.cp";
+import { SearchHit } from "./flatIndex.cp";
 
 /// Configuration parameters for Okapi BM25 scoring.
 pub struct Bm25Config {

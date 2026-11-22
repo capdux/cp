@@ -26,4 +26,4 @@ export {
     RecordBatch,
     encodeRecordBatch,
     decodeRecordBatch,
-} from "./record_batch.cp";
+} from "./recordBatch.cp";

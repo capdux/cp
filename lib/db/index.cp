@@ -65,7 +65,7 @@ export {
 } from "./sstable.cp";
 
 // --- kv ---
-pub const _kv_wal = @import("./kv_wal.cp");
+pub const _kv_wal = @import("./kvWal.cp");
 pub const KV_WAL_MAGIC = _kv_wal.WAL_MAGIC;
 pub const KV_WAL_HEADER_SIZE = _kv_wal.WAL_HEADER_SIZE;
 pub const KvWalRecord = _kv_wal.WalRecord;
@@ -76,22 +76,22 @@ export {
     WalFrame,
     WalDecodeResult,
     WalCodec,
-} from "./kv_wal.cp";
+} from "./kvWal.cp";
 
 export {
     KvStoreOptions,
     KvStats,
     KvStore,
-} from "./kv_store.cp";
+} from "./kvStore.cp";
 
 // --- mvcc ---
-export { MvccError, TxnState, VersionValue, WriteEntry, ActiveTxnInfo } from "./mvcc_types.cp";
-export { MvccStore, MvccTxn } from "./mvcc_store.cp";
+export { MvccError, TxnState, VersionValue, WriteEntry, ActiveTxnInfo } from "./mvccTypes.cp";
+export { MvccStore, MvccTxn } from "./mvccStore.cp";
 
 // --- lock ---
 export {
     WaitForGraph,
-} from "./lock_wait_graph.cp";
+} from "./lockGraph.cp";
 
 export {
     LockError,
@@ -107,7 +107,7 @@ export {
     LogEntry,
     LogEntryInput,
     RaftLog,
-} from "./raft_log.cp";
+} from "./raftLog.cp";
 
 // --- lru ---
 export {
@@ -117,7 +117,7 @@ export {
 } from "./lru.cp";
 
 // --- lru_k ---
-import { LruKCache as _LruKCache, LruKError as _LruKError } from "./lru_k.cp";
+import { LruKCache as _LruKCache, LruKError as _LruKError } from "./lruK.cp";
 
 pub const LruKCache = _LruKCache;
 pub const LruKError = _LruKError;
@@ -132,26 +132,26 @@ export {
 } from "./lfu.cp";
 
 // --- slab_pool ---
-export { Handle, SlabError, SlabPool } from "./slab_pool.cp";
+export { Handle, SlabError, SlabPool } from "./slabPool.cp";
 
 // --- hnsw ---
-export { HnswError, DistanceMetric, HnswConfig, SearchHit as HnswSearchHit, computeDistance } from "./hnsw_metric.cp";
-export { HnswIndex } from "./hnsw_graph.cp";
+export { HnswError, DistanceMetric, HnswConfig, SearchHit as HnswSearchHit, computeDistance } from "./hnswMetric.cp";
+export { HnswIndex } from "./hnswGraph.cp";
 
 // --- search ---
 export {
     SearchError,
     PrefixSuggestion,
     PrefixTrie,
-} from "./search_trie.cp";
+} from "./searchTrie.cp";
 
 export {
     SearchHit,
     SearchIndex,
-} from "./search_engine.cp";
+} from "./searchEng.cp";
 
 // --- roaring_bitmap ---
-pub const roaring = @import("./roaring_bitmap.cp");
+pub const roaring = @import("./roaring.cp");
 
 pub const ARRAY_MAX_SIZE = roaring.ARRAY_MAX_SIZE;
 pub const BITSET_WORDS = roaring.BITSET_WORDS;
@@ -163,7 +163,7 @@ pub const RoaringBucket = roaring.Bucket;
 pub const RoaringBitmap = roaring.RoaringBitmap;
 
 // --- bloom_cuckoo ---
-pub const bc = @import("./bloom_cuckoo.cp");
+pub const bc = @import("./bloomCuckoo.cp");
 pub const MAX_KICKS = bc.MAX_KICKS;
 pub const FilterError = bc.FilterError;
 pub const BloomFilter = bc.BloomFilter;
@@ -194,7 +194,7 @@ export {
     extractHashTag,
     keySlot,
     ensureSameSlot,
-} from "./redis_cluster_crc16.cp";
+} from "./redisClusterCrc16.cp";
 
 export {
     ClusterError,
@@ -204,7 +204,7 @@ export {
     ClusterRedirect,
     ClusterTopology,
     parseRedirectError,
-} from "./redis_cluster_topology.cp";
+} from "./redisClusterTopology.cp";
 
 // --- valkey ---
 export {
@@ -234,14 +234,14 @@ export {
     QueryParam,
     BuiltQuery,
     IdentCodec,
-} from "./query_types.cp";
+} from "./queryTypes.cp";
 
 export {
     SelectBuilder,
     InsertBuilder,
     UpdateBuilder,
     DeleteBuilder,
-} from "./query_builder.cp";
+} from "./queryBuilder.cp";
 
 // --- schema ---
 export {
@@ -256,7 +256,7 @@ export {
     ValidationIssue,
     ValidationResult,
     SchemaValidator,
-} from "./schema_validator.cp";
+} from "./schemaValidator.cp";
 
 // --- conn_pool ---
 export {
@@ -267,7 +267,7 @@ export {
     DbAcquireOutcome,
     DbPoolStats,
     DbConnPool,
-} from "./conn_pool.cp";
+} from "./connPool.cp";
 
 // --- wal_recovery ---
 export {
@@ -280,7 +280,7 @@ export {
     WalRecoveryReport,
     WalFrameWriter,
     WalRecoveryScanner,
-} from "./wal_recovery.cp";
+} from "./walRecover.cp";
 
 // --- lsm_compactor ---
 export {
@@ -295,7 +295,7 @@ export {
     CompactionPlan,
     LsmLevelStats,
     LsmCompactionPlanner,
-} from "./lsm_compactor.cp";
+} from "./compactor.cp";
 
 // --- mvcc_gc ---
 export {
@@ -307,7 +307,7 @@ export {
     MvccGcReport,
     MvccGcStats,
     MvccVersionGcStore,
-} from "./mvcc_gc.cp";
+} from "./mvccGc.cp";
 
 // --- page_buffer_pool ---
 export {
@@ -317,7 +317,7 @@ export {
     PageFetchOutcome,
     BufferPoolStats,
     ClockPageBufferPool,
-} from "./page_buffer_pool.cp";
+} from "./bufferPool.cp";
 
 // --- mvcc_snapshot ---
 export {
@@ -334,7 +334,7 @@ export {
     MvccWriteConflict,
     MvccSnapshotStats,
     MvccSnapshotManager,
-} from "./mvcc_snapshot.cp";
+} from "./mvccSnap.cp";
 
 // --- slotted_page ---
 export {
@@ -362,4 +362,4 @@ export {
     setPageLsn,
     sealChecksum,
     verifyPageIntegrity,
-} from "./slotted_page.cp";
+} from "./slottedPage.cp";

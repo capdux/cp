@@ -201,16 +201,16 @@ pub fn demoFixedAndSlabPool() {
 
 新增源自 `/data/dev/bun/src/bun_alloc/` 的三大生产级组件：
 
-- **`AllocationScope`** (`lib/mem/allocation_scope.cp`)：
+- **`AllocationScope`** (`lib/mem/allocationScope.cp`)：
   - 完整包装 `std.mem.Allocator` 虚表（`scope.allocator()`），同时提供直调方法 `allocBytes` / `freeBytes` / `trackExternalAlloc` / `trackExternalFree`；
   - 实时统计 `liveAllocations()`、`liveBytes()`、`totalAllocatedBytes()`、`peakBytes()`、`totalFrees()`；
   - 精准拦截重复释放（`ScopeError.DoubleFree` + `doubleFrees()`）与悬空/未登记指针释放（`ScopeError.InvalidFree` + `invalidFrees()`）；
   - 提供 `assertNoLeaks()`、`isOwned()`、`formatReport()` / `formatReportAlloc()`。
-- **`BufferFallbackAllocator<const N: usize>`** (`lib/mem/fallback_allocator.cp`)：
+- **`BufferFallbackAllocator<const N: usize>`** (`lib/mem/fallbackAllocator.cp`)：
   - 内置 `N` 字节栈定长缓冲，热路径优先栈上 bump 分配（`allocStack` / `allocBytes` / `allocAligned` / `allocator()`），溢出自动无缝回退至堆分配器并记录 `heapAllocs()` / `heapBytes()`。
-- **`MaybeOwned<T>`** (`lib/mem/fallback_allocator.cp`)：
+- **`MaybeOwned<T>`** (`lib/mem/fallbackAllocator.cp`)：
   - 泛型零成本统一借用切片（`initBorrowed`）与堆拥有切片（`initOwned` / `initOwnedCopy`），支持 `asSlice()`、`toOwned()`（原地按需克隆提升为拥有态）与 `deinit()`。
-- **`MemFdBuffer`** (`lib/mem/fallback_allocator.cp`)：
+- **`MemFdBuffer`** (`lib/mem/fallbackAllocator.cp`)：
   - 基于 Linux `memfd_create` + `ftruncate` + `pwrite` + `mmap(MAP.SHARED)` 的匿名内存文件缓冲区，支持 `asSlice()` / `asMutSlice()`、`readFd()` / `writeFd()`、`cloneView()` 零拷贝共享视图映射与 `fd()` 文件描述符传递。
 
 ```typescript

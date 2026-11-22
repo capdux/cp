@@ -10,7 +10,7 @@
 
 | 文件路径 | 上游谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
-| `lib/platform/os_info.cp` | `// Source: /data/dev/bun/src/platform/linux.cp` | `OsKind`、`ArchKind`、`Endianness`、`KernelVersion` 与 `PlatformInfo` 探测引擎 |
+| `lib/platform/osInfo.cp` | `// Source: /data/dev/bun/src/platform/linux.cp` | `OsKind`、`ArchKind`、`Endianness`、`KernelVersion` 与 `PlatformInfo` 探测引擎 |
 | `lib/platform/index.cp` | `// Source: /data/dev/bun/src/platform/linux.cp` | `cap:platform` 对外统一导出入口 |
 
 ---

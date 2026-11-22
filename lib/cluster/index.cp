@@ -5,7 +5,7 @@ export {
     ClusterErr,
     RingVNode,
     ConsistentHashRing,
-} from "./hash_ring.cp";
+} from "./hashRing.cp";
 
 export {
     MemberState,

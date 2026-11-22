@@ -3,4 +3,4 @@ export {
     parseByteSize,
     formatBytesIec,
     formatBytesSi,
-} from "./byte_size.cp";
+} from "./byteSize.cp";

@@ -7,7 +7,7 @@
 const std = @import("std");
 import { FD, O_NONBLOCK } from "../sys/fd";
 import { fstatMaybe, FileKind } from "../sys/fstat";
-import { PollFd, POLLIN, POLLOUT, POLLERR, POLLHUP, poll } from "../sys/io_ops";
+import { PollFd, POLLIN, POLLOUT, POLLERR, POLLHUP, poll } from "../sys/ioOps";
 
 pub enum IoStatus: u8 {
     Ok,

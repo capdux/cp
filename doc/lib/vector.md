@@ -14,36 +14,36 @@
 
 | 文件路径 | 谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
-| `lib/vector/flat_index.cp` | `// Source: cp/lib/vector/flat_index.cp (In-Memory Vector Index with Cosine/Dot/L2 Metrics)` | `DistanceMetric`、`SearchHit`、`VectorError`、`VectorIndex` |
+| `lib/vector/flatIndex.cp` | `// Source: cp/lib/vector/flatIndex.cp (In-Memory Vector Index with Cosine/Dot/L2 Metrics)` | `DistanceMetric`、`SearchHit`、`VectorError`、`VectorIndex` |
 | `lib/vector/bm25.cp` | `// Source: cp/lib/vector/bm25.cp (Okapi BM25 Full-Text Inverted Index)` | `Bm25Config`、`Bm25Index` 倒排索引与分词器 |
 | `lib/vector/hybrid.cp` | `// Origin: Pure-CP Stdlib (RAG Hybrid Retrieval: RRF, MMR Rerank & Int8 Scalar Quantization) \| Created: 2026-11-22` | `RrfFusion` + 零堆分配多路 RRF (`rrfFuse`)、线性归一化融合 (`normalizeScoresMinMax`/`normalizeScoresZScore`/`weightedScoreFuse`)、MMR 多样性重排 (`mmrRerank`) 与 U8 标量量化 (`quantizeVectorU8`/`dequantizeVectorU8`/`quantizedDotU8`) |
-| `lib/vector/semantic_cache.cp` | `// Origin: Pure-CP Stdlib (AI Agent Semantic Cache: Cosine Threshold Lookup, TTL & LRU Eviction) \| Created: 2026-11-22` | `SemanticCache` 零堆分配 LLM 语义缓存（余弦阈值命中、TTL 过期与过期优先 + LRU 淘汰） |
-| `lib/vector/binary_quant.cp` | `// Origin: Pure-CP Stdlib (RAG 1-Bit Binary Vector Quantization, Hamming Search & Two-Stage Rescore) \| Created: 2026-11-22` | 1-bit 二值量化（32x 压缩）、`@popCount` 汉明距离、Charikar 余弦估计与两阶段粗排+全精度精排 (`twoStageSearch`) |
+| `lib/vector/semanticCache.cp` | `// Origin: Pure-CP Stdlib (AI Agent Semantic Cache: Cosine Threshold Lookup, TTL & LRU Eviction) \| Created: 2026-11-22` | `SemanticCache` 零堆分配 LLM 语义缓存（余弦阈值命中、TTL 过期与过期优先 + LRU 淘汰） |
+| `lib/vector/binaryQuant.cp` | `// Origin: Pure-CP Stdlib (RAG 1-Bit Binary Vector Quantization, Hamming Search & Two-Stage Rescore) \| Created: 2026-11-22` | 1-bit 二值量化（32x 压缩）、`@popCount` 汉明距离、Charikar 余弦估计与两阶段粗排+全精度精排 (`twoStageSearch`) |
 | `lib/vector/ivf.cp` | `// Origin: Pure-CP Stdlib (RAG IVF-Flat Coarse-Quantized Inverted File ANN Index) \| Created: 2026-11-22` | `IvfFlatIndex` 零堆分配 CSR 倒排文件近似最近邻索引（L2 / Cosine 多探针 `nprobe` 亚线性检索） |
 | `lib/vector/pq.cp` | `// Origin: Pure-CP Stdlib (RAG Product Quantization & Asymmetric Distance Computation ADC) \| Created: 2026-11-22` | `PqCodebook` 乘积量化编码/解码与 `O(m)` 查表非对称距离（ADC）Top-K 检索 |
 | `lib/vector/reranker.cp` | `// Origin: Pure-CP Stdlib (AI RAG Reranker: MMR, ColBERT MaxSim & IR Metrics) \| Created: 2026-11-22` | 零辅助缓冲 MMR (`mmrSelect`)、ColBERT Late-Interaction (`colbertMaxSim`)、原位 MinMax/ZScore 归一化与 `NDCG@K` / `MRR` / `Recall@K` IR 评测 |
 | `lib/vector/filter.cp` | `// Origin: Pure-CP Stdlib (AI Vector Search Metadata Bitset Filter & Selectivity Planner) \| Created: 2026-11-22` | 1024-bit 零堆分配位图 (`FilterBitset`)、数值/范围元数据谓词过滤、选择度自适应 Filtered ANN 路由规划器与位跳跃掩码 Top-K 余弦检索 |
-| `lib/vector/simd_ops.cp` | `// Origin: Pure-CP Stdlib (AI-Native SIMD Vector Distance & Batch Retrieval Kernels using @dot/@l2sq/@fma) \| Created: 2026-11-22` | 原生 8-lane SIMD 内建原语 (`@dot`/`@l2sq`/`@fma`) 驱动的向量距离、单舍入 AXPY 与零堆分配批量 Top-K Cosine / L2 检索核 |
+| `lib/vector/simdOps.cp` | `// Origin: Pure-CP Stdlib (AI-Native SIMD Vector Distance & Batch Retrieval Kernels using @dot/@l2sq/@fma) \| Created: 2026-11-22` | 原生 8-lane SIMD 内建原语 (`@dot`/`@l2sq`/`@fma`) 驱动的向量距离、单舍入 AXPY 与零堆分配批量 Top-K Cosine / L2 检索核 |
 | `lib/vector/kmeans.cp` | `// Origin: Pure-CP Stdlib (AI-Native SIMD K-Means++ Clustering & IVF/PQ Codebook Trainer) \| Created: 2026-11-22` | 基于 `@l2sq`/`@fma` 原生 SIMD 与确定性 SplitMix64 的零堆分配 K-Means++ 聚类与 IVF/PQ 码本训练器 |
-| `lib/vector/nav_graph.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc Vamana/NSW Navigable Graph ANN using @l2sq) \| Created: 2026-11-22` | 零堆分配 Vamana / NSW 单层近邻导航图近似检索索引 (`NavGraphIndex`)，基于 `@l2sq` 8-lane SIMD 贪心束搜索、双向建边与按距离剪枝 |
-| `lib/vector/sparse_vec.cp` | `// Origin: Pure-CP Stdlib (AI Learned Sparse Retrieval: SPLADE/BGE-M3 Sparse Vector & Merge-Join Scorer) \| Created: 2026-11-22` | SPLADE / BGE-M3 学习型稀疏词法向量表示、原位规范化、O(m+n) `@fma` 归并点积、Top-K 稀疏裁剪与零堆分配 CSR 批量 Top-K 检索核 |
-| `lib/vector/eval_harness.cp` | `// Origin: Pure-CP Stdlib (AI Vector ANN Evaluation Harness: SIMD Ground-Truth, Recall@K & Latency Percentiles) \| Created: 2026-11-22` | ANN 向量索引离线评测与延迟分位数统计套件：原位堆排序 P50/P95/P99、原生 `@l2sq` SIMD 暴力 Ground-Truth、去重 Recall@K 与批量汇总 |
-| `lib/vector/quant_sq4.cp` | `// Origin: Pure-CP Stdlib (AI Vector Search 4-bit Asymmetric Scalar Quantization SQ4) \| Created: 2026-11-22` | 4-bit 非对称标量量化（SQ4）：`f32` 向量 8x 显存压缩、奇偶维 Nibble 打包、无临时解码缓冲 `@fma` 非对称 L2 距离与批量 Top-K 检索 |
+| `lib/vector/navGraph.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc Vamana/NSW Navigable Graph ANN using @l2sq) \| Created: 2026-11-22` | 零堆分配 Vamana / NSW 单层近邻导航图近似检索索引 (`NavGraphIndex`)，基于 `@l2sq` 8-lane SIMD 贪心束搜索、双向建边与按距离剪枝 |
+| `lib/vector/sparseVec.cp` | `// Origin: Pure-CP Stdlib (AI Learned Sparse Retrieval: SPLADE/BGE-M3 Sparse Vector & Merge-Join Scorer) \| Created: 2026-11-22` | SPLADE / BGE-M3 学习型稀疏词法向量表示、原位规范化、O(m+n) `@fma` 归并点积、Top-K 稀疏裁剪与零堆分配 CSR 批量 Top-K 检索核 |
+| `lib/vector/evalHarness.cp` | `// Origin: Pure-CP Stdlib (AI Vector ANN Evaluation Harness: SIMD Ground-Truth, Recall@K & Latency Percentiles) \| Created: 2026-11-22` | ANN 向量索引离线评测与延迟分位数统计套件：原位堆排序 P50/P95/P99、原生 `@l2sq` SIMD 暴力 Ground-Truth、去重 Recall@K 与批量汇总 |
+| `lib/vector/quantSq4.cp` | `// Origin: Pure-CP Stdlib (AI Vector Search 4-bit Asymmetric Scalar Quantization SQ4) \| Created: 2026-11-22` | 4-bit 非对称标量量化（SQ4）：`f32` 向量 8x 显存压缩、奇偶维 Nibble 打包、无临时解码缓冲 `@fma` 非对称 L2 距离与批量 Top-K 检索 |
 | `lib/vector/rabitq.cp` | `// Origin: Pure-CP Stdlib (AI Vector Search RaBitQ Unbiased 1-bit Binary Quantization & Estimator) \| Created: 2026-11-22` | SIGMOD 2024 RaBitQ 无偏 1-bit 随机正交二值量化（32x 压缩）：$O(D \log D)$ 归一化 FWHT、确定性符号翻转、精确几何修正元数据与无偏内积/L2 距离估算核 |
-| `lib/vector/proj_reduce.cp` | `// Origin: Pure-CP Stdlib (AI Embedding Dimensionality Reduction: Power-Iter PCA & JL Random Projection using @dot/@fma) \| Created: 2026-11-22` | 高维 Embedding 降维与随机投影核：均值中心化、无协方差矩阵幂迭代 Top-K 主成分求解、`@dot` 批量投影与 Achlioptas 稀疏 JL 随机投影 |
-| `lib/vector/hybrid_rag.cp` | `// Origin: Pure-CP Stdlib (AI Hybrid RAG Pipeline: Weighted RRF Fusion, SIMD @dot/@l2sq MMR Rerank & Token Budget Pruning) \| Created: 2026-11-22` | 生产级零堆分配混合 RAG 管线：可配权重双路/多路 RRF (`HybridRrfFusion`)、`@dot`/`@fma` SIMD MMR 多样性重排 (`mmrRerankSimdF32`)、`@l2sq` 近重复去重 (`dedupNearDuplicatesL2F32`) 与 Prompt Token 预算裁剪 (`selectWithinTokenBudget`) |
-| `lib/vector/rag_store.cp` | `// Origin: Pure-CP Stdlib (Zero-Heap Local RAG Store, 64-Bit Tag Filter & SIMD Cosine Top-K Facade) \| Created: 2026-11-22` | 零堆分配一站式本地 RAG 存储与检索门面 (`InMemoryRagStore`)：L2 归一化写入、墓碑槽位复用、64 位标签位图预过滤与 Token 预算上下文拼装 |
+| `lib/vector/projReduce.cp` | `// Origin: Pure-CP Stdlib (AI Embedding Dimensionality Reduction: Power-Iter PCA & JL Random Projection using @dot/@fma) \| Created: 2026-11-22` | 高维 Embedding 降维与随机投影核：均值中心化、无协方差矩阵幂迭代 Top-K 主成分求解、`@dot` 批量投影与 Achlioptas 稀疏 JL 随机投影 |
+| `lib/vector/hybridRag.cp` | `// Origin: Pure-CP Stdlib (AI Hybrid RAG Pipeline: Weighted RRF Fusion, SIMD @dot/@l2sq MMR Rerank & Token Budget Pruning) \| Created: 2026-11-22` | 生产级零堆分配混合 RAG 管线：可配权重双路/多路 RRF (`HybridRrfFusion`)、`@dot`/`@fma` SIMD MMR 多样性重排 (`mmrRerankSimdF32`)、`@l2sq` 近重复去重 (`dedupNearDuplicatesL2F32`) 与 Prompt Token 预算裁剪 (`selectWithinTokenBudget`) |
+| `lib/vector/ragStore.cp` | `// Origin: Pure-CP Stdlib (Zero-Heap Local RAG Store, 64-Bit Tag Filter & SIMD Cosine Top-K Facade) \| Created: 2026-11-22` | 零堆分配一站式本地 RAG 存储与检索门面 (`InMemoryRagStore`)：L2 归一化写入、墓碑槽位复用、64 位标签位图预过滤与 Token 预算上下文拼装 |
 | `lib/vector/matryoshka.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc Matryoshka Multi-Resolution Two-Stage SIMD Vector Retrieval) \| Created: 2026-11-22` | 零堆分配 Matryoshka 嵌套维多分辨率粗召回 + 精排重打分管线：前 `k` 维截断归一化 (`truncateAndNormalizeF32`)、紧凑粗向量库构建 (`buildCoarseEmbeddingsF32`)、8-lane SIMD `@dot` / `@l2sq` 两阶段检索与计算压缩比统计 |
-| `lib/vector/colbert_index.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc ColBERT Multi-Vector Late-Interaction MaxSim Retrieval Index) \| Created: 2026-11-22` | 零堆分配 ColBERTv2 / ColPali 多向量 Token 级延迟交互（MaxSim）检索索引 (`ColbertLiteIndex`)：调用方扁平 Token 池、可选插入期 L2 归一化、8-lane SIMD `@dot` MaxSim 精确打分、确定性 Top-K 检索与 `@l2sq` 低范数噪声 Token 裁剪 (`prune_low_norm_tokens`) |
-| `lib/vector/simhash_dedup.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc 64-bit Charikar SimHash & 4-Band LSH Near-Duplicate RAG Dedup) \| Created: 2026-11-22` | 零堆分配 64-bit Charikar SimHash 指纹与鸽巢 4x16-bit LSH 分带近重复 RAG 文档去重索引 (`SimHashDedupIndex`)：硬件 `@popCount` 汉明距离、零堆大小写折叠分词 + 2-shingle 哈希、256 槽位内联去重与槽位复用 |
-| `lib/vector/bm25f_index.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc BM25F Multi-Field Weighted Inverted Index) \| Created: 2026-11-22` | 零堆分配 Robertson/Zaragoza **BM25F** 多字段加权倒排检索索引 (`Bm25fIndex`)：每字段独立长度归一化 `b_f` 与权重 `w_f` 聚合虚拟词频后统一 `k1` 饱和、平滑非负 IDF 与 4 字段代码检索预设 |
+| `lib/vector/colbert.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc ColBERT Multi-Vector Late-Interaction MaxSim Retrieval Index) \| Created: 2026-11-22` | 零堆分配 ColBERTv2 / ColPali 多向量 Token 级延迟交互（MaxSim）检索索引 (`ColbertLiteIndex`)：调用方扁平 Token 池、可选插入期 L2 归一化、8-lane SIMD `@dot` MaxSim 精确打分、确定性 Top-K 检索与 `@l2sq` 低范数噪声 Token 裁剪 (`prune_low_norm_tokens`) |
+| `lib/vector/simhash.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc 64-bit Charikar SimHash & 4-Band LSH Near-Duplicate RAG Dedup) \| Created: 2026-11-22` | 零堆分配 64-bit Charikar SimHash 指纹与鸽巢 4x16-bit LSH 分带近重复 RAG 文档去重索引 (`SimHashDedupIndex`)：硬件 `@popCount` 汉明距离、零堆大小写折叠分词 + 2-shingle 哈希、256 槽位内联去重与槽位复用 |
+| `lib/vector/bm25f.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc BM25F Multi-Field Weighted Inverted Index) \| Created: 2026-11-22` | 零堆分配 Robertson/Zaragoza **BM25F** 多字段加权倒排检索索引 (`Bm25fIndex`)：每字段独立长度归一化 `b_f` 与权重 `w_f` 聚合虚拟词频后统一 `k1` 饱和、平滑非负 IDF 与 4 字段代码检索预设 |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
 
 ## 二、 核心 API 详解
 
-### 1. 内存稠密向量索引 (`flat_index.cp`)
+### 1. 内存稠密向量索引 (`flatIndex.cp`)
 
 - **`VectorError`**：`DimensionMismatch`、`InvalidDimension`、`OutOfMemory`
 - **`DistanceMetric`**：`Cosine` | `Dot` | `Euclidean`
@@ -106,7 +106,7 @@
 - **`quantizedDotU8(qa: []const u8, pa: ScalarQuantParams, qb: []const u8, pb: ScalarQuantParams): f64?`**
   - 基于纯整型内循环累计 `sum(qa)`、`sum(qb)`、`sum(qa * qb)` 直接计算近似内积，避免逐维反量化开销且数值等价于反量化内积。
 
-### 4. 零堆分配 LLM 语义缓存 (`semantic_cache.cp`)
+### 4. 零堆分配 LLM 语义缓存 (`semanticCache.cp`)
 
 - **`SemanticEntry`**：`{ occupied, key_id, payload_id, created_ms, last_hit_ms, expires_ms, hit_count, norm }`
 - **`SemanticLookupHit`**：`{ slot: usize, key_id: u64, payload_id: u64, similarity: f64 }`
@@ -117,7 +117,7 @@
   - `lookup(*_, query_embedding, now_ms): SemanticLookupHit?`（跳过过期条目，返回最高余弦相似度 `>= similarity_threshold` 的命中项并原子刷新 `last_hit_ms` 与 `hit_count`）
   - `invalidate(*_, key_id: u64): bool` / `purgeExpired(*_, now_ms: i64): usize` / `stats(): SemanticCacheStats`
 
-### 5. 1-Bit 二值向量量化与两阶段粗排+精排检索 (`binary_quant.cp`)
+### 5. 1-Bit 二值向量量化与两阶段粗排+精排检索 (`binaryQuant.cp`)
 
 - **`BinaryCandidate`**：`{ index: usize, hamming: u32 }`
 - **`RescoredHit`**：`{ index: usize, cosine: f64, hamming: u32 }`
@@ -286,7 +286,7 @@ pub fn demoSemanticCache() {
 }
 ```
 
-### 1-Bit 二值量化与两阶段粗排+精排示例 (`binary_quant.cp`)
+### 1-Bit 二值量化与两阶段粗排+精排示例 (`binaryQuant.cp`)
 
 ```typescript
 import {
@@ -460,7 +460,7 @@ pub fn demoMetadataBitsetFilter(corpus: []const f64, query: []const f64) {
 }
 ```
 
-### 10. 原生 SIMD 内建原语向量距离与批量 Top-K 检索 (`simd_ops.cp`)
+### 10. 原生 SIMD 内建原语向量距离与批量 Top-K 检索 (`simdOps.cp`)
 
 直接基于 CP 编译器原生 8-lane SIMD 内建原语 `@dot`、`@l2sq`、`@fma` 的零堆分配向量算子与批量检索核：
 
@@ -532,7 +532,7 @@ pub fn demoSimdKMeans(data: []const f32, n: usize, dim: usize) {
 }
 ```
 
-### 12. 零堆分配 Vamana / NSW 近邻导航图近似检索索引 (`nav_graph.cp`)
+### 12. 零堆分配 Vamana / NSW 近邻导航图近似检索索引 (`navGraph.cp`)
 
 面向大规模高维嵌入向量亚线性近似最近邻（ANN）检索的单层可导航小世界图索引，对标 DiskANN / HNSW Layer-0 贪心束搜索，零堆分配并直接调用原生 8-lane SIMD `@l2sq` 内建原语：
 
@@ -573,7 +573,7 @@ pub fn demoNavGraphAnn() {
 }
 ```
 
-### 13. 学习型稀疏词法向量与 CSR 批量检索 (`sparse_vec.cp`)
+### 13. 学习型稀疏词法向量与 CSR 批量检索 (`sparseVec.cp`)
 
 面向 SPLADE / BGE-M3 混合检索的零堆分配稀疏词法向量算子与 CSR 语料库批量 Top-K 检索核：
 
@@ -626,7 +626,7 @@ pub fn demoLearnedSparseRetrieval() {
 }
 ```
 
-### 14. ANN 向量索引离线评测与延迟分位数套件 (`eval_harness.cp`)
+### 14. ANN 向量索引离线评测与延迟分位数套件 (`evalHarness.cp`)
 
 零堆分配的 ANN 召回评测与延迟分位数统计套件，内置基于原生 8-lane SIMD `@l2sq` 的暴力 Ground-Truth 生成器与切片 `slice.split(k)` 批量评测：
 
@@ -662,7 +662,7 @@ pub fn demoAnnEvalHarness(query: []const f32, corpus: []const f32, n_docs: usize
 }
 ```
 
-### 15. 4-Bit 非对称标量量化（SQ4 — 8x 显存压缩）(`quant_sq4.cp`)
+### 15. 4-Bit 非对称标量量化（SQ4 — 8x 显存压缩）(`quantSq4.cp`)
 
 对标 Qdrant / Faiss SQ4 的零堆分配 4-bit 标量量化与非对称 L2 距离检索核，将 `f32` 向量压缩 8 倍（每字节打包 2 个 4-bit Nibble `[0..15]`）：
 
@@ -746,7 +746,7 @@ pub fn demoRabitq(x_in: []const f32, q_in: []const f32) {
 }
 ```
 
-### 17. 高维 Embedding 降维与随机投影 (`proj_reduce.cp`)
+### 17. 高维 Embedding 降维与随机投影 (`projReduce.cp`)
 
 面向高维语义嵌入降维、去均值与保距稀疏投影的零堆分配算子，基于 `@dot`/`@fma` 8-lane SIMD 与 `slice.split` 实现：
 
@@ -785,7 +785,7 @@ pub fn demoProjReduce(data_in: *[]f32, n: usize) {
 }
 ```
 
-### 18. 生产级零堆分配混合检索、SIMD MMR 多样性重排与 Token 预算裁剪 (`hybrid_rag.cp`)
+### 18. 生产级零堆分配混合检索、SIMD MMR 多样性重排与 Token 预算裁剪 (`hybridRag.cp`)
 
 面向 AI Agent RAG 上下文构造的端到端零堆分配、8-lane SIMD（`@dot` / `@l2sq` / `@fma`）加速混合检索与上下文裁剪管线：
 
@@ -851,7 +851,7 @@ pub fn demoHybridRagPipeline() {
 
 ---
 
-## 零堆分配一站式本地 RAG 向量库门面（`rag_store.cp`）
+## 零堆分配一站式本地 RAG 向量库门面（`ragStore.cp`）
 
 面向人类与 AI 程序员的 15 行开箱即用本地 RAG 存储与检索门面，100% 纯 CP 零堆分配：
 
@@ -948,7 +948,7 @@ pub fn demoMatryoshkaTwoStage() {
 
 ---
 
-## ColBERT 多向量延迟交互（MaxSim）检索索引（`colbert_index.cp`）
+## ColBERT 多向量延迟交互（MaxSim）检索索引（`colbert.cp`）
 
 面向 ColBERTv2 / ColPali 等现代高精度代码、文档与表格多向量 RAG 场景的 100% 纯 CP 零动态堆分配 Token 级延迟交互（Late-Interaction MaxSim）检索引擎：
 
@@ -1014,7 +1014,7 @@ pub fn demoColbertMaxSim() {
 
 ---
 
-## 零分配 64-bit Charikar SimHash 与 4-Band LSH 近重复 RAG 文档去重索引（`simhash_dedup.cp`）
+## 零分配 64-bit Charikar SimHash 与 4-Band LSH 近重复 RAG 文档去重索引（`simhash.cp`）
 
 面向 RAG 语料摄取、AI Agent 网页抓取记忆与代码分块入库的 100% 纯 CP 零动态堆分配近重复文本检测与去重索引：
 
@@ -1064,7 +1064,7 @@ pub fn demoSimHashRagDedup() {
 
 ---
 
-## 零分配 BM25F 多字段加权倒排检索索引（`bm25f_index.cp`）
+## 零分配 BM25F 多字段加权倒排检索索引（`bm25f.cp`）
 
 面向代码检索、结构化文档 RAG 与多字段元数据搜索的 100% 纯 CP 零动态堆分配 Robertson/Zaragoza **BM25F** 多字段加权倒排检索内核：
 
@@ -1107,7 +1107,7 @@ pub fn demoBm25fCodeSearch() {
 
 ---
 
-## 零分配 1-Bit 二值量化向量检索索引（`@popCount` 汉明粗排 + `@dot` Float32 精排，`binary_index.cp`）
+## 零分配 1-Bit 二值量化向量检索索引（`@popCount` 汉明粗排 + `@dot` Float32 精排，`binIndex.cp`）
 
 面向 OpenAI `text-embedding-3` / Cohere v3 / BGE-M3 **32x 显存/内存压缩**的 100% 纯 CP 零动态堆分配 1-Bit 二值量化向量索引与两阶段检索内核（固定 256 文档位图内联池，支持最高 1024 维）：
 
@@ -1147,7 +1147,7 @@ pub fn demoBinaryVectorIndex(query: []const f32, raw_pool: []const f32) {
 
 ---
 
-## 零分配 SIMD 语义意图路由器（Semantic Intent Router，`semantic_router.cp`）
+## 零分配 SIMD 语义意图路由器（Semantic Intent Router，`semRouter.cp`）
 
 面向 AI Agent 微秒级前置意图分类的 100% 纯 CP 零动态堆分配 SIMD 语义路由器（无需等待 500ms LLM 推理即可完成高频工具/技能路由与歧义降级）：
 
@@ -1203,7 +1203,7 @@ pub fn demoSemanticIntentRouter() {
 
 ---
 
-## 零分配 RAPTOR 分层摘要树与多层级联合检索器（RAPTOR Tree，`raptor_tree.cp`）
+## 零分配 RAPTOR 分层摘要树与多层级联合检索器（RAPTOR Tree，`raptor.cp`）
 
 面向长文档层次化 RAG 的 100% 纯 CP 零动态堆分配 RAPTOR（Recursive Abstractive Processing for Tree-Organized Retrieval）分层摘要树与双模式联合检索引擎：
 
@@ -1263,7 +1263,7 @@ pub fn demoRaptorTree() {
 
 ---
 
-## 零分配单阶段谓词感知过滤图检索与自适应回退引擎（Filtered HNSW，`filtered_hnsw.cp`）
+## 零分配单阶段谓词感知过滤图检索与自适应回退引擎（Filtered HNSW，`filtHnsw.cp`）
 
 面向多租户、多标签 RAG 元数据过滤的 100% 纯 CP 零动态堆分配 ACORN / Filtered-DiskANN 风格图检索引擎（原生 `@dot`、`@l2sq` 与 `@popCount` 驱动）：
 

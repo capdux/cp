@@ -8,7 +8,7 @@
 
 export {
     SimdScanner,
-} from "./simd_scan.cp";
+} from "./simdScan.cp";
 
 export {
     REPLACEMENT_CHAR,
@@ -38,7 +38,7 @@ export {
 
 export {
     MutableString,
-} from "./mutable_string.cp";
+} from "./mutableString.cp";
 
 export {
     StringEscape,

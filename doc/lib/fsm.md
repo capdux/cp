@@ -17,7 +17,7 @@
    - 全量审计轨迹 `history()`（`TransitionRecord { from, event, to, accepted }`），守卫拒绝时记录 `accepted: false` 且保持原状态；
    - 基于 BFS 的图拓扑分析（`reachableStates` / `findDeadEndStates`）自动发现可达状态与非终态死胡同；
    - 标准 GraphViz `digraph` 导出（`toDot`，含初始态入口箭头、终态 `doublecircle` 与事件边标签）。
-2. **弹性熔断器 (`lib/fsm/circuit_breaker.cp` -> `CircuitBreaker`)**：`Closed` / `Open` / `HalfOpen` 三态自动流转与探针限流。
+2. **弹性熔断器 (`lib/fsm/breaker.cp` -> `CircuitBreaker`)**：`Closed` / `Open` / `HalfOpen` 三态自动流转与探针限流。
 3. **工作流 DAG 并行调度器 (`lib/fsm/dag.cp` -> `WorkflowDag`)**：Kahn 分层拓扑排序与失败级联跳过传播。
 
 ---

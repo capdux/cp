@@ -4,8 +4,8 @@
 
 const std = @import("std");
 import { isAlpha, isAlphaNum, isBlank, isWhitespace } from "./helpers.cp";
-import { countBackticks, emitText, findCodeSpanEnd, findHtmlTag } from "./inline_core.cp";
-import { lookupRefDef } from "./ref_defs.cp";
+import { countBackticks, emitText, findCodeSpanEnd, findHtmlTag } from "./inlineCore.cp";
+import { lookupRefDef } from "./refDefs.cp";
 import { Md4cParserState, MdRefDef, SpanDetail } from "./types.cp";
 
 pub struct BracketLinkResult {

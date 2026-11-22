@@ -58,7 +58,7 @@ export {
     chunkDocumentRag,
     estimateRagTokens,
     locateLineRange,
-} from "./rag_chunker.cp";
+} from "./ragChunker.cp";
 
 export {
     BpeMerge,
@@ -94,7 +94,7 @@ export {
     MdHeadingTrail,
     MdChunkSpan,
     chunkMarkdownStructured,
-} from "./markdown_chunk.cp";
+} from "./markdownChunk.cp";
 
 export {
     DiffHunkHeader,
@@ -105,7 +105,7 @@ export {
     parseHunkHeader,
     parseDiffOp,
     applyUnifiedPatch,
-} from "./unified_diff.cp";
+} from "./unifiedDiff.cp";
 
 export {
     SymbolKind,
@@ -113,7 +113,7 @@ export {
     extractCodeOutline,
     findSymbolByName,
     formatRepoMapLine,
-} from "./code_outline.cp";
+} from "./codeOutline.cp";
 
 export {
     CodeTokenKind,
@@ -122,7 +122,7 @@ export {
     PatternMatchHit,
     tokenizeCodeLite,
     findCodePatternMatches,
-} from "./code_pattern.cp";
+} from "./codePattern.cp";
 
 // ============================================================================
 // Pure-CP Templates, NLP, Full-Text Search, String Algorithms & Formatting
@@ -136,8 +136,8 @@ export {
     renderMustache,
 } from "./mustache.cp";
 
-export * from "./template_value.cp";
-export * from "./template_engine.cp";
+export * from "./templateValue.cp";
+export * from "./templateEngine.cp";
 
 export {
     SOUNDEX_LEN,
@@ -162,7 +162,7 @@ export {
     defaultStopwords,
     tokenizeTerms,
     freeTerms,
-} from "./bm25_tokenizer.cp";
+} from "./bm25Tokenizer.cp";
 
 export {
     Bm25Error,
@@ -175,13 +175,13 @@ export {
 export {
     RankedDoc,
     rrfFuse,
-} from "./bm25_rrf.cp";
+} from "./bm25Rrf.cp";
 
 export {
     TextAlign,
     TableError,
     DisplayWidth,
-} from "./table_width.cp";
+} from "./tableWidth.cp";
 
 export {
     TableStyle,
@@ -206,7 +206,7 @@ export {
     RegexError,
     MatchSpan,
     NfaRegex,
-} from "./nfa_regex.cp";
+} from "./nfaRegex.cp";
 
 export {
     AhoError,
@@ -216,7 +216,7 @@ export {
     AhoCorasick,
 } from "./aho.cp";
 
-export * from "./kmp_z_algo.cp";
+export * from "./kmpZAlgo.cp";
 
 export {
     SuffixArrayError,
@@ -251,14 +251,14 @@ export {
     IntlError,
     NumberFormatOptions,
     NumberFormatter,
-} from "./intl_number.cp";
+} from "./intlNumber.cp";
 
 export {
     UnitError,
     ByteSize,
     HumanDuration,
     RelativeTime,
-} from "./intl_units.cp";
+} from "./intlUnits.cp";
 
 // --- idna ---
 export {

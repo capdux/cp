@@ -13,4 +13,4 @@ export {
     computeModuleHash,
     scopeClassName,
     parseComposesValue,
-} from "../css/css_modules.cp";
+} from "../css/cssModules.cp";

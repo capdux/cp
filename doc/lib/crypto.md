@@ -239,7 +239,7 @@ pub fn demoKeyRingRotation() {
 
 ---
 
-## 七、 零分配 RFC 6962 域分离 Merkle Tree 与包含性证明引擎 (`merkle_tree.cp`)
+## 七、 零分配 RFC 6962 域分离 Merkle Tree 与包含性证明引擎 (`merkleTree.cp`)
 
 面向透明审计日志、包管理器构件校验、AI Agent 执行轨迹存证与分布式快照一致性的 100% 纯 CP 零动态堆分配 RFC 6962 SHA-256 二叉 Merkle Tree（规避与 Allocator 版 `merkle.cp::MerkleTree` 冲突，导出为 `Rfc6962MerkleTree`）：
 
@@ -273,7 +273,7 @@ pub fn demoRfc6962Merkle() {
 }
 ```
 
-### 零堆分配前向安全对称密钥棘轮与乱序跳步密钥缓存引擎 (`key_ratchet.cp`)
+### 零堆分配前向安全对称密钥棘轮与乱序跳步密钥缓存引擎 (`ratchet.cp`)
 
 面向安全多 Agent 通信通道、TLS 1.3 密钥更新与 Signal 风格前向安全（Forward Secrecy）的 100% 零动态堆分配对称密钥棘轮内核（基于 RFC 5869 HKDF-SHA256 与 HMAC-SHA256）：
 
@@ -315,7 +315,7 @@ pub fn demoSymmetricKeyRatchet() {
 
 ---
 
-### 16. 零分配版本化信封加密与密钥轮换环（`envelope_seal.cp`）
+### 16. 零分配版本化信封加密与密钥轮换环（`envelope.cp`）
 
 纯 CP 零动态堆分配、零 C FFI 依赖的版本化信封加密头编解码、多版本 KEK 轮换密钥环与 Encrypt-then-MAC 端到端加解密引擎：
 
@@ -353,7 +353,7 @@ pub fn demoEnvelopeSeal() {
 }
 ```
 
-### 零分配 GF(256) Shamir `(k, n)` 门限密钥分片与拉格朗日插值重构引擎 (`shamir_secret.cp`)
+### 零分配 GF(256) Shamir `(k, n)` 门限密钥分片与拉格朗日插值重构引擎 (`shamirSecret.cp`)
 
 面向密钥托管、分布式钱包与零信任秘密恢复的 100% 纯 CP 零动态堆分配、零 C FFI 依赖 Shamir `(k, n)` 门限秘密共享引擎：
 

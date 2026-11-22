@@ -5,7 +5,7 @@
 const std = @import("std");
 import { Method } from "./method";
 import { Headers } from "./headers";
-import { FetchRedirect } from "./fetch_modes";
+import { FetchRedirect } from "./fetchModes";
 
 pub const MAX_REDIRECT_HOPS: u8 = 20;
 pub const MAX_REDIRECT_HISTORY: usize = 32;

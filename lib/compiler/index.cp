@@ -33,13 +33,13 @@ export {
     Inst,
     Program,
     Compiler,
-} from "./regex_compiler.cp";
+} from "./regexCompiler.cp";
 
 export {
     MatchSpan,
     Captures,
     Regex,
-} from "./regex_vm.cp";
+} from "./regexVm.cp";
 
 // --- Language Frontends, WebAssembly, Shaders & IDL ---
 export {
@@ -182,7 +182,7 @@ export {
     GrpcFrameCodec,
     GrpcFrameStream,
     GrpcTimeout,
-} from "./protobuf_grpc.cp";
+} from "./protobufGrpc.cp";
 
 export {
     FB_SIZE_PREFIX_BYTES,

@@ -8,9 +8,9 @@ import { Method } from "./method";
 import { Headers } from "./headers";
 import { Encoding } from "./encoding";
 import { Decompressor } from "./decompressor";
-import { InternalState } from "./internal_state";
+import { InternalState } from "./state";
 import { Signals } from "./signals";
-import { URLPath } from "./url_path";
+import { URLPath } from "./urlPath";
 
 pub struct HTTPClientResult {
     pub status: u16 = 200;

@@ -13,19 +13,19 @@ export {
     DecrementResult,
     PtrThreadLock,
     RawRefCount,
-} from "./raw_ref_count.cp";
+} from "./rawRefCount.cp";
 
 export {
     RefCount,
     ThreadSafeRefCount,
     RefPtr,
     RefCountOptions,
-} from "./ref_count.cp";
+} from "./refCount.cp";
 
 export {
     WeakPtrData,
     WeakPtr,
-} from "./weak_ptr.cp";
+} from "./weakPtr.cp";
 
 export {
     Shared,
@@ -50,7 +50,7 @@ export {
     CowSliceZ,
     CowString,
     CowSliceFlags,
-} from "./cow_slice.cp";
+} from "./cowSlice.cp";
 
 export {
     Owned,
@@ -65,8 +65,8 @@ export {
     ADDR_MASK,
     TAG_MASK,
     LOW_TAG_MASK,
-} from "./tagged_pointer.cp";
+} from "./taggedPointer.cp";
 
 export {
     ExternalShared,
-} from "./external_shared.cp";
+} from "./externalShared.cp";

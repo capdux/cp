@@ -27,7 +27,7 @@
 | `lib/dns/cache.cp` | `// Source: /data/dev/bun/src/dns/` | `DnsCache<const CAP: usize>` 零堆分配 TTL 缓存、`HostsTable` `/etc/hosts` 静态映射解析器、`ResolveOptions`、`DnsFamily` |
 | `lib/dns/records.cp` | `// Source: cp/lib/dns/records.cp (...)` | `DnsNameCodec`（16 跳防环解压 + IPv4/IPv6 PTR `.arpa` 构造）、`SoaRecord`、`SrvRecord`、`SrvSelector`、`CaaRecord` |
 | `lib/dns/doh.cp` | `// Source: cp/lib/dns/doh.cp (...)` | RFC 8484 `DohQueryBuilder`（Base64URL 无填充 GET URL / POST 头）与 `DohJsonResponse` / `DohJsonAnswer` 解析器 |
-| `lib/dns/resolv_conf.cp` | `// Source: cp/lib/dns/resolv_conf.cp (...)` | POSIX `/etc/resolv.conf` 解析器、`loadSystem` / `loadFromFile`、`expandSearchDomains`（`ndots` 展开） |
+| `lib/dns/resolvConf.cp` | `// Source: cp/lib/dns/resolvConf.cp (...)` | POSIX `/etc/resolv.conf` 解析器、`loadSystem` / `loadFromFile`、`expandSearchDomains`（`ndots` 展开） |
 | `lib/dns/caa.cp` | `// Source: Absorbed from /data/dev/bun/src/dns.zig (...)` | RFC 8659 CAA 记录文本/二进制解析与 CA 签发策略裁定（`CaaTag`、`CaaPolicyRecord`、`isCaAuthorized`） |
 | `lib/dns/name.cp` | `// Source: Absorbed from /data/dev/bun/src/dns.zig (...)` | RFC 1035/1123 域名标签校验、线格式编解码、子域判定与规范化（`isValidDnsLabel`、`isValidHostname`、`encodeWireName`、`decodeWireName`、`isSubdomainOf`、`normalizeHostname`） |
 | `lib/dns/rtype.cp` | `// Source: Absorbed from /data/dev/bun/src/dns.zig (...)` | IANA RRType/Class/RCODE 枚举与 SRV/MX 记录辅助（`DnsRrType`、`DnsRcode`、`DnsClass`、`RrSrvRecord`、`MxRecord`） |
@@ -79,7 +79,7 @@
 
 ---
 
-## 五、 POSIX `/etc/resolv.conf` 解析器 (`resolv_conf.cp`) 与缓存/Hosts
+## 五、 POSIX `/etc/resolv.conf` 解析器 (`resolvConf.cp`) 与缓存/Hosts
 
 - **`ResolvConf.parse(text)`**：零堆分配解析：
   - 自动剥离 `#` 与 `;` 行内注释；
@@ -158,7 +158,7 @@ const q = GetAddrInfoQuery.init("API.Example.COM", 443, opts)?;
 const cache_key = q.hash(); // case-insensitive deterministic u64 key
 ```
 
-- **`lib/dns/prefetch_cache.cp`**（吸收自 `/data/dev/bun/src/runtime/dns_jsc/dns.cp`，零堆分配 255 槽预取与在途去重缓存）：`DNS_PREFETCH_DEFAULT_TTL_MS` (`30000`)、`DNS_PREFETCH_MAX_TTL_MS`、`DNS_PREFETCH_MAX_ENTRIES` (`255`)、`DnsPrefetchError`、`parseDnsTtlEnvSeconds`、`DnsCacheStats`、`DnsLookupState`、`DnsLookupOutcomeKind`、`DnsLookupOutcome`、`DnsPrefetchEntry`、`DnsPrefetchCache`（`init` / `stats` / `lookup` / `prefetch` / `complete` / `failLookup` / `onConnectionError` / `pruneExpired`）。
+- **`lib/dns/prefetch.cp`**（吸收自 `/data/dev/bun/src/runtime/dns_jsc/dns.cp`，零堆分配 255 槽预取与在途去重缓存）：`DNS_PREFETCH_DEFAULT_TTL_MS` (`30000`)、`DNS_PREFETCH_MAX_TTL_MS`、`DNS_PREFETCH_MAX_ENTRIES` (`255`)、`DnsPrefetchError`、`parseDnsTtlEnvSeconds`、`DnsCacheStats`、`DnsLookupState`、`DnsLookupOutcomeKind`、`DnsLookupOutcome`、`DnsPrefetchEntry`、`DnsPrefetchCache`（`init` / `stats` / `lookup` / `prefetch` / `complete` / `failLookup` / `onConnectionError` / `pruneExpired`）。
 
 ```typescript
 import { DnsPrefetchCache, parseDnsTtlEnvSeconds } from "cap:dns";

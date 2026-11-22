@@ -9,10 +9,10 @@
 - **`AttnError`**: 统一错误集合（`InvalidDimension`, `HeadMismatch`, `InvalidStartPos`, `EmptyInput`, `CacheFull`, `InvalidLayer`, `InvalidTemperature`, `InvalidTopK`, `InvalidTopP`, `OutOfMemory`）。
 - **`PagedKvSlot`**: 单步追加返回的槽位元信息（`layer`, `seq_offset`, `num_tokens`）。
 - **`KvCache`**: 多层自回归 KV 缓存容器，按 `[layer][seq_pos][kv_head][head_dim]` 布局存储，支持 `appendStep`、`truncateTo` 回滚与 `reset`。
-- **`KV_INVALID_BLOCK` / `KvBlockMeta` / `KvAllocStats` / `PagedKvAllocator` / `BlockTable`** (`kv_cache.cp`)：零堆分配 PagedAttention 物理块管理器，支持系统提示词前缀哈希零拷贝共享、释放后缓存复用与 LRU 驱逐、Beam Search `retainBlock` + 引用计数 CoW（共享态分配新块，独占态零拷贝原地返回）以及 `BlockTable` 逻辑到物理槽位映射。
+- **`KV_INVALID_BLOCK` / `KvBlockMeta` / `KvAllocStats` / `PagedKvAllocator` / `BlockTable`** (`kvCache.cp`)：零堆分配 PagedAttention 物理块管理器，支持系统提示词前缀哈希零拷贝共享、释放后缓存复用与 LRU 驱逐、Beam Search `retainBlock` + 引用计数 CoW（共享态分配新块，独占态零拷贝原地返回）以及 `BlockTable` 逻辑到物理槽位映射。
 - **`SamplingConfig`**: 采样配置（`temperature`, `top_k`, `top_p`, `repetition_penalty`, `seed`）。
 - **`RopeConfig` / RoPE / RMSNorm / LayerNorm / SwiGLU / GeLU** (`rope.cp`)：零堆分配 Transformer 基础推理核，支持 NTK-Aware 长上下文缩放的 RoPE 旋转位置编码、RMSNorm/LayerNorm 归一化与 SiLU/GeLU/SwiGLU 激活函数。
-- **`QUANT_BLOCK_SIZE` / `BlockQ8_0` / `BlockQ4_0` / GEMV** (`quant_matmul.cp`)：零堆分配 GGML 风格 32 元素分块量化与整型累加矩阵向量乘法（`W_q8 * x_q8` 与经典 llama.cpp `W_q4 * x_q8` 混合量化推理核）。
+- **`QUANT_BLOCK_SIZE` / `BlockQ8_0` / `BlockQ4_0` / GEMV** (`quantMatmul.cp`)：零堆分配 GGML 风格 32 元素分块量化与整型累加矩阵向量乘法（`W_q8 * x_q8` 与经典 llama.cpp `W_q4 * x_q8` 混合量化推理核）。
 - **`OnlineSoftmaxState` / `FlashAttnConfig` / `flashAttentionForward` / `flashAttentionSingleQuery`** (`flash.cp`)：零堆分配 O(1) 额外内存 FlashAttention-2 分块在线 Softmax 前向核，绝不物化 $N \times N$ 分数矩阵，原生支持因果掩码、Mistral 滑动窗口注意力与单 token 自回归解码热路径。
 - **`MoeGateKind` / `MoeRouteEntry` / `MoeDispatchStats` / `moeRouteToken` / `moeDispatchBatch` / `moeLoadBalanceLoss` / `moeCombineOutputs`** (`moe.cp`)：零堆分配稀疏混合专家（Sparse MoE）推理调度核，对标 Mixtral / Switch Transformer / Qwen3-MoE / DeepSeek-V3，支持 Softmax 与 Sigmoid 门控、无辅助损失 `expert_bias` 均衡偏置、容量受限 CSR 分桶派发（含溢出丢弃统计）、负载均衡辅助损失 $L_{\text{aux}}$ 与多专家加权输出合并。
 - **`LoraAdapter` / `loraApplyAdd` / `loraApplyWeightedSum` / `loraMergeIntoBase` / `loraUnmergeFromBase`** (`lora.cp`)：零堆分配多租户 LoRA 低秩适配器前向推理与权重热融合核，支持零拷贝借用 `A/B` 低秩矩阵、$O(r(d_{\text{in}} + d_{\text{out}}))$ 动态增量叠加、多 LoRA 加权混合以及零推理开销的静态热合并与在线热卸载。
@@ -24,18 +24,18 @@
 - **`PoolKind` / `embeddingLookup` / `poolHiddenStates` / `l2NormalizeInPlace` / `matryoshkaProject` / `cosineSimilarityMatrix`** (`embedding.cp`)：零堆分配词嵌入查表、带 `attention_mask` 掩码的四流派序列池化（`Mean`/`Cls`/`LastToken`/`Max`，覆盖 BGE/E5/Nomic/Qwen3-Embedding）、Matryoshka 套娃维度截断重归一化与批量余弦相似度矩阵计算。
 - **`DpoResult` / `logSumExp` / `crossEntropyLoss` / `sequencePerplexity` / `klDivergenceFromLogits` / `dpoLoss` / `infoNceLoss`** (`loss.cp`)：零堆分配数值稳定大模型训练与偏好对齐损失函数库，覆盖 Cross-Entropy（含 Label Smoothing）、带 `ignore_index` 序列困惑度、零概率缓冲 KL 散度、防溢出 DPO 偏好对齐损失（Rafailov et al. 2023）与 InfoNCE 对比学习损失。
 - **`LrScheduleConfig` / `AdamWConfig` / `LionConfig` / `cosineWarmupLr` / `linearWarmupDecayLr` / `gradGlobalL2Norm` / `clipGradNormInPlace` / `adamWStepInPlace` / `lionStepInPlace`** (`optimizer.cp`)：零堆分配 AI 大模型训练优化器与学习率调度引擎，提供线性 Warmup + 余弦/线性退火、全局 L2 梯度范数裁剪、解耦权重衰减 AdamW（含偏差修正）与 Google Brain Lion 符号动量优化器。
-- **`Int4QuantMode` / `Int4GroupParams` / `packInt4Pair` / `unpackInt4Lo` / `unpackInt4Hi` / `quantizeGroupInt4Sym` / `quantizeGroupInt4Asym` / `dequantizeGroupInt4` / `gemvInt4Group`** (`quant_int4.cp`)：零堆分配 GPTQ / AWQ 风格 Per-Group INT4 权重压缩与混合精度融合 GEMV 引擎，支持对称 `[-8, 7]` 与非对称 `[0, 15] + zero_point` 分组量化、4-bit nibble 紧致打包以及尺度外提（Scale Hoisting）零临时反量化矩阵乘加。
-- **`KvQuantParams` / `quantizeTokenKvI8` / `dequantizeTokenKvI8` / `dotQueryQuantKeyI8` / `quantizedAttentionSingleQuery`** (`kv_quant.cp`)：零堆分配长上下文 KV-Cache 在线 INT8 逐 Token 对称量化压缩（4x 显存压缩，对标 vLLM/KIVI）、尺度外提 Query-Key 点积以及 O(1) 额外内存 Online Softmax 融合单 Query 注意力核。
-- **`SwaConfig` / `RingKvCache` / `swaAttentionSingleQuery` / `ringKvAttentionSingleQuery`** (`sliding_window.cp`)：零堆分配滑动窗口注意力（SWA，对标 Mistral / Gemma 2）与 StreamingLLM Attention Sink 固定容量环形 KV-Cache，支持前 `sink_tokens` 永久锚定、窗口环形覆盖与 $O((S+W)\cdot d)$ 无界流式解码。
-- **`PREFIX_INVALID_BLOCK` / `computePrefixBlockHash` / `PrefixBlockEntry` / `PrefixMatchResult` / `PrefixCacheStats` / `KvPrefixCache`** (`prefix_cache.cp`)：零堆分配多智能体共享提示词块级 KV 前缀缓存（对标 SGLang RadixAttention / vLLM Automatic Prefix Caching），支持链式 FNV-1a 64-bit 哈希防分叉误命中、最长前缀匹配、在途引用计数 `pinBlock`/`unpinBlock` 保护与未 pin 槽位 LRU 驱逐。
-- **`gemmTransposedBF32` / `gemmF32` / `batchedGemmTransposedBF32` / `splitGemmRowsF32`** (`tiled_gemm.cp`)：零堆分配 Cache-Friendly 分块矩阵乘法 GEMM 与多头批量 QK^T MatMul 核，基于 CP 原生 8-lane SIMD `@dot`、`@fma` 与零拷贝互斥分片 `@splitAtMut` 实现。
+- **`Int4QuantMode` / `Int4GroupParams` / `packInt4Pair` / `unpackInt4Lo` / `unpackInt4Hi` / `quantizeGroupInt4Sym` / `quantizeGroupInt4Asym` / `dequantizeGroupInt4` / `gemvInt4Group`** (`quantInt4.cp`)：零堆分配 GPTQ / AWQ 风格 Per-Group INT4 权重压缩与混合精度融合 GEMV 引擎，支持对称 `[-8, 7]` 与非对称 `[0, 15] + zero_point` 分组量化、4-bit nibble 紧致打包以及尺度外提（Scale Hoisting）零临时反量化矩阵乘加。
+- **`KvQuantParams` / `quantizeTokenKvI8` / `dequantizeTokenKvI8` / `dotQueryQuantKeyI8` / `quantizedAttentionSingleQuery`** (`kvQuant.cp`)：零堆分配长上下文 KV-Cache 在线 INT8 逐 Token 对称量化压缩（4x 显存压缩，对标 vLLM/KIVI）、尺度外提 Query-Key 点积以及 O(1) 额外内存 Online Softmax 融合单 Query 注意力核。
+- **`SwaConfig` / `RingKvCache` / `swaAttentionSingleQuery` / `ringKvAttentionSingleQuery`** (`slidingWin.cp`)：零堆分配滑动窗口注意力（SWA，对标 Mistral / Gemma 2）与 StreamingLLM Attention Sink 固定容量环形 KV-Cache，支持前 `sink_tokens` 永久锚定、窗口环形覆盖与 $O((S+W)\cdot d)$ 无界流式解码。
+- **`PREFIX_INVALID_BLOCK` / `computePrefixBlockHash` / `PrefixBlockEntry` / `PrefixMatchResult` / `PrefixCacheStats` / `KvPrefixCache`** (`prefixCache.cp`)：零堆分配多智能体共享提示词块级 KV 前缀缓存（对标 SGLang RadixAttention / vLLM Automatic Prefix Caching），支持链式 FNV-1a 64-bit 哈希防分叉误命中、最长前缀匹配、在途引用计数 `pinBlock`/`unpinBlock` 保护与未 pin 槽位 LRU 驱逐。
+- **`gemmTransposedBF32` / `gemmF32` / `batchedGemmTransposedBF32` / `splitGemmRowsF32`** (`tiledGemm.cp`)：零堆分配 Cache-Friendly 分块矩阵乘法 GEMM 与多头批量 QK^T MatMul 核，基于 CP 原生 8-lane SIMD `@dot`、`@fma` 与零拷贝互斥分片 `@splitAtMut` 实现。
 - **`conv1dCausalF32` / `depthwiseConv1dF32` / `hzToMel` / `melToHz` / `buildMelFilterbankF32` / `applyMelFilterbankF32`** (`conv1d.cp`)：零堆分配 AI 语音/状态空间 1D 因果空洞卷积、深度可分离 1D 卷积、HTK 梅尔频率变换、三角梅尔滤波器组构建与 `@dot` SIMD 对数梅尔谱投影核（对标 Whisper / Mamba / ConvNeXt-1D）。
-- **`ImageNormParams` / `normalizeRgbU8ToF32` / `patchifyHwcF32` / `patchEmbedLinearF32` / `build2dSinCosPosEmbF32` / `applyRope2dInPlaceF32`** (`vision_patch.cp`)：零堆分配多模态视觉大模型（ViT / CLIP / Qwen2-VL / Flux）前端核，覆盖 `@fma` RGB 归一化、HWC Patchify、`@dot` 线性补丁投影、MAE/ViT 2D 正弦位置编码与严格保范数的 2D 空间 RoPE。
-- **`FP8_E4M3_MAX_FINITE` / `Fp8BlockScale` / `computeBlockAmaxF32` / `quantizeBlockFp8E4m3` / `dequantizeBlockFp8E4m3` / `gemvBlockFp8E4m3`** (`quant_fp8.cp`)：零堆分配 DeepSeek-V3 / H100 风格块级动态缩放 FP8 E4M3FN 量化与尺度外提融合混合精度 GEMV 核（支持任意非整除尾部块与全零块零除防护）。
-- **`VocabBitset` / `DfaEdge` / `ConstrainedDfa` / `applyVocabMaskInPlace` / `applyTemperatureAndTopKMaskInPlace`** (`constrained_mask.cp`)：零堆分配 LLM 结构化受限解码 Logits 位图掩码与 DFA 状态引导词表过滤器（对标 xgrammar / Outlines，支持硬件 `@popCount`、尾位自动清零、`-inf` 掩码与零堆分配温度 + Top-K 过滤）。
-- **`RopeScalingKind` / `YarnConfig` / `yarnAttentionMscale` / `computeRopeInvFreqs` / `applyScaledRopeInPlaceF32`** (`rope_yarn.cp`)：零堆分配长上下文大模型 RoPE 扩展引擎，统一支持标准 RoPE、Linear PI、NTK-Aware 与 YaRN（Peng et al. 2023）波长频段斜坡插值以及 `mscale` 注意力温度缩放。
-- **`SPEC_TREE_NO_PARENT` / `DraftTreeNode` / `TreeVerifyResult` / `validateDraftTree` / `buildTreeAttentionMask` / `verifyDraftTreeGreedy`** (`spec_tree.cp`)：零堆分配 Medusa / Eagle 树状推测解码注意力拓扑掩码构造与贪心最长接受路径验证器，支持单次前向并行验证整棵多分支草稿树并提取奖励 Token。
-- **`IterSchedulerConfig` / `SeqRunState` / `SeqSchedEntry` / `ScheduledStepItem` / `IterStepPlan` / `IterSchedulerStats` / `ContinuousIterScheduler`** (`iter_scheduler.cp`)：零堆分配 vLLM / Sarathi-Serve 风格 Chunked-Prefill + Decode 连续批处理迭代调度器，优先保障在途解码低延迟（TPOT）、KV 块紧张时按低优先级/最新入队抢占释放防止死锁，并利用剩余 Token 预算对等待/预填充请求执行分块预填充。
+- **`ImageNormParams` / `normalizeRgbU8ToF32` / `patchifyHwcF32` / `patchEmbedLinearF32` / `build2dSinCosPosEmbF32` / `applyRope2dInPlaceF32`** (`vision.cp`)：零堆分配多模态视觉大模型（ViT / CLIP / Qwen2-VL / Flux）前端核，覆盖 `@fma` RGB 归一化、HWC Patchify、`@dot` 线性补丁投影、MAE/ViT 2D 正弦位置编码与严格保范数的 2D 空间 RoPE。
+- **`FP8_E4M3_MAX_FINITE` / `Fp8BlockScale` / `computeBlockAmaxF32` / `quantizeBlockFp8E4m3` / `dequantizeBlockFp8E4m3` / `gemvBlockFp8E4m3`** (`quantFp8.cp`)：零堆分配 DeepSeek-V3 / H100 风格块级动态缩放 FP8 E4M3FN 量化与尺度外提融合混合精度 GEMV 核（支持任意非整除尾部块与全零块零除防护）。
+- **`VocabBitset` / `DfaEdge` / `ConstrainedDfa` / `applyVocabMaskInPlace` / `applyTemperatureAndTopKMaskInPlace`** (`constrain.cp`)：零堆分配 LLM 结构化受限解码 Logits 位图掩码与 DFA 状态引导词表过滤器（对标 xgrammar / Outlines，支持硬件 `@popCount`、尾位自动清零、`-inf` 掩码与零堆分配温度 + Top-K 过滤）。
+- **`RopeScalingKind` / `YarnConfig` / `yarnAttentionMscale` / `computeRopeInvFreqs` / `applyScaledRopeInPlaceF32`** (`ropeYarn.cp`)：零堆分配长上下文大模型 RoPE 扩展引擎，统一支持标准 RoPE、Linear PI、NTK-Aware 与 YaRN（Peng et al. 2023）波长频段斜坡插值以及 `mscale` 注意力温度缩放。
+- **`SPEC_TREE_NO_PARENT` / `DraftTreeNode` / `TreeVerifyResult` / `validateDraftTree` / `buildTreeAttentionMask` / `verifyDraftTreeGreedy`** (`specTree.cp`)：零堆分配 Medusa / Eagle 树状推测解码注意力拓扑掩码构造与贪心最长接受路径验证器，支持单次前向并行验证整棵多分支草稿树并提取奖励 Token。
+- **`IterSchedulerConfig` / `SeqRunState` / `SeqSchedEntry` / `ScheduledStepItem` / `IterStepPlan` / `IterSchedulerStats` / `ContinuousIterScheduler`** (`iterSched.cp`)：零堆分配 vLLM / Sarathi-Serve 风格 Chunked-Prefill + Decode 连续批处理迭代调度器，优先保障在途解码低延迟（TPOT）、KV 块紧张时按低优先级/最新入队抢占释放防止死锁，并利用剩余 Token 预算对等待/预填充请求执行分块预填充。
 
 ## 3. API 速查
 
@@ -187,7 +187,7 @@ const tok = try sampleToken(alloc, logits, &[_]usize{1, 4}, SamplingConfig{
 });
 ```
 
-### PagedAttention 前缀共享、CoW 与逻辑块表映射示例 (`kv_cache.cp`)
+### PagedAttention 前缀共享、CoW 与逻辑块表映射示例 (`kvCache.cp`)
 
 ```cp
 import {
@@ -261,7 +261,7 @@ pub fn demoTransformerKernels() {
 }
 ```
 
-### GGML 风格 Q8_0 / Q4_0 分块量化与混合推理 GEMV 示例 (`quant_matmul.cp`)
+### GGML 风格 Q8_0 / Q4_0 分块量化与混合推理 GEMV 示例 (`quantMatmul.cp`)
 
 ```cp
 import {
@@ -646,7 +646,7 @@ pub fn demoAdamWTrainingStep(
 }
 ```
 
-### Per-Group INT4 分组量化与融合 GEMV 示例 (`quant_int4.cp`)
+### Per-Group INT4 分组量化与融合 GEMV 示例 (`quantInt4.cp`)
 
 ```cp
 import {
@@ -678,7 +678,7 @@ pub fn demoPerGroupInt4Gemv() {
 }
 ```
 
-### 在线 INT8 KV-Cache 量化与融合单 Query 注意力示例 (`kv_quant.cp`)
+### 在线 INT8 KV-Cache 量化与融合单 Query 注意力示例 (`kvQuant.cp`)
 
 ```cp
 import {
@@ -719,7 +719,7 @@ pub fn demoQuantizedKvAttention() {
 }
 ```
 
-### 滑动窗口注意力与 StreamingLLM Attention Sink 环形缓存示例 (`sliding_window.cp`)
+### 滑动窗口注意力与 StreamingLLM Attention Sink 环形缓存示例 (`slidingWin.cp`)
 
 ```cp
 import {
@@ -753,7 +753,7 @@ pub fn demoStreamingLlmRingKv() {
 }
 ```
 
-### 块级 KV 前缀缓存与多 Agent 共享 System Prompt 示例 (`prefix_cache.cp`)
+### 块级 KV 前缀缓存与多 Agent 共享 System Prompt 示例 (`prefixCache.cp`)
 
 ```cp
 import {
@@ -782,7 +782,7 @@ pub fn demoKvPrefixCache() {
 }
 ```
 
-### 分块 SIMD GEMM、多头 Batched QK^T 与 `@splitAtMut` 分片示例 (`tiled_gemm.cp`)
+### 分块 SIMD GEMM、多头 Batched QK^T 与 `@splitAtMut` 分片示例 (`tiledGemm.cp`)
 
 ```cp
 import {
@@ -833,7 +833,7 @@ pub fn demoAudioMelAndCausalConv() {
 }
 ```
 
-### 多模态 ViT 图像分块、2D 位置编码与 2D-RoPE 示例 (`vision_patch.cp`)
+### 多模态 ViT 图像分块、2D 位置编码与 2D-RoPE 示例 (`vision.cp`)
 
 ```cp
 import {
@@ -868,7 +868,7 @@ pub fn demoVisionPatchFrontend() {
 }
 ```
 
-### DeepSeek-V3 / H100 块级 FP8 E4M3 量化与融合 GEMV 示例 (`quant_fp8.cp`)
+### DeepSeek-V3 / H100 块级 FP8 E4M3 量化与融合 GEMV 示例 (`quantFp8.cp`)
 
 ```cp
 import {
@@ -889,7 +889,7 @@ pub fn demoBlockFp8Gemv(w_row0: []const f32, x: []const f32) {
 }
 ```
 
-### 结构化受限解码 Logits 掩码与 DFA 状态引导示例 (`constrained_mask.cp`)
+### 结构化受限解码 Logits 掩码与 DFA 状态引导示例 (`constrain.cp`)
 
 ```cp
 import {
@@ -915,7 +915,7 @@ pub fn demoConstrainedDfaDecode(logits_in: *[]f32) {
 }
 ```
 
-### 长上下文 YaRN / NTK-Aware / Linear PI RoPE 扩展示例 (`rope_yarn.cp`)
+### 长上下文 YaRN / NTK-Aware / Linear PI RoPE 扩展示例 (`ropeYarn.cp`)
 
 ```cp
 import {
@@ -938,7 +938,7 @@ pub fn demoYarnLongContextRope(q_head: *[]f32, pos: usize) {
 }
 ```
 
-### Medusa / Eagle 树状推测解码掩码与贪心验证示例 (`spec_tree.cp`)
+### Medusa / Eagle 树状推测解码掩码与贪心验证示例 (`specTree.cp`)
 
 ```cp
 import {
@@ -969,7 +969,7 @@ pub fn demoSpeculativeTreeVerify() {
 }
 ```
 
-### vLLM 风格 PagedAttention 物理块池、Copy-on-Write 分叉与 SIMD 解码核 (`paged_kv.cp`)
+### vLLM 风格 PagedAttention 物理块池、Copy-on-Write 分叉与 SIMD 解码核 (`pagedKv.cp`)
 
 面向高吞吐 LLM 推理引擎的 100% 零堆分配 Paged KV-Cache 管理与 SIMD `@dot`/`@fma` 注意力解码核：
 
@@ -1027,7 +1027,7 @@ pub fn demoPagedAttentionCow() {
 }
 ```
 
-### vLLM / Sarathi 风格 Chunked-Prefill + Decode 连续批处理迭代调度器 (`iter_scheduler.cp`)
+### vLLM / Sarathi 风格 Chunked-Prefill + Decode 连续批处理迭代调度器 (`iterSched.cp`)
 
 面向高吞吐 LLM 推理引擎的 100% 零堆分配迭代级连续批处理调度器：
 
@@ -1080,7 +1080,7 @@ pub fn demoContinuousIterScheduler() {
 }
 ```
 
-### 零分配长上下文 KV-Cache 驱逐引擎：StreamingLLM Attention Sink + H2O Heavy-Hitter Oracle (`kv_eviction.cp`)
+### 零分配长上下文 KV-Cache 驱逐引擎：StreamingLLM Attention Sink + H2O Heavy-Hitter Oracle (`kvEvict.cp`)
 
 面向长上下文 LLM 推理与多轮 AI Agent 对话的 100% 纯 CP 零堆分配 KV-Cache 淘汰策略内核（内联固定容量 `MAX_KV_EVICTION_SLOTS = 256`）：
 
@@ -1124,7 +1124,7 @@ pub fn demoKvEvictionHybrid() {
 }
 ```
 
-### 零分配多租户 Multi-LoRA 适配器缓存路由与 SGMV 批处理编排引擎 (`lora_router.cp`)
+### 零分配多租户 Multi-LoRA 适配器缓存路由与 SGMV 批处理编排引擎 (`loraRouter.cp`)
 
 面向 S-LoRA / Punica / vLLM 多租户 LLM 推理服务的 100% 纯 CP 零动态堆分配 Multi-LoRA 适配器驻留缓存、引用计数 LRU 驱逐、混合批 SGMV 编排与 SIMD 增量核：
 
@@ -1167,7 +1167,7 @@ pub fn demoMultiLoraSgmv() {
 }
 ```
 
-### 零分配受限解码前缀树（Prefix-Trie）与 Logit 掩码处理器 (`guided_trie.cp`)
+### 零分配受限解码前缀树（Prefix-Trie）与 Logit 掩码处理器 (`guidedTrie.cp`)
 
 面向生产级 LLM 受限解码（工具名白名单、枚举值约束、JSON 键名约束、vLLM / SGLang Guided Decoding）的 100% 纯 CP 零动态堆分配 Token-ID 前缀树与 $O(V + B)$ Logit 掩码引擎：
 
@@ -1216,7 +1216,7 @@ pub fn demoGuidedTokenTrie() {
 }
 ```
 
-### 零分配生产级 LLM Logit 采样管线：Penalties + Top-K + Min-P + Top-P Nucleus (`nucleus_sampler.cp`)
+### 零分配生产级 LLM Logit 采样管线：Penalties + Top-K + Min-P + Top-P Nucleus (`nucleus.cp`)
 
 面向 llama.cpp / vLLM / SGLang 级推理引擎的 100% 纯 CP 零动态堆分配全栈 Logit 后处理与随机采样管线（栈上固定候选池 `SAMPLER_MAX_CANDIDATES = 256`）：
 
@@ -1254,7 +1254,7 @@ pub fn demoNucleusSamplerPipeline() {
 }
 ```
 
-### 零分配 SGLang 风格 RadixAttention 前缀共享 KV-Cache 树与叶优先 LRU 驱逐引擎 (`radix_kv_tree.cp`)
+### 零分配 SGLang 风格 RadixAttention 前缀共享 KV-Cache 树与叶优先 LRU 驱逐引擎 (`radixKv.cp`)
 
 面向多轮 AI Agent 对话与多租户共享系统提示词（System Prompt / Few-Shot / Tool Schema）的 100% 纯 CP 零动态堆分配 **SGLang RadixAttention** 前缀压缩树（LCRS 布局）与叶优先 LRU 驱逐引擎：
 
@@ -1304,7 +1304,7 @@ pub fn demoRadixAttentionKvTree() {
 }
 ```
 
-### 零分配 Leviathan 无损推测解码拒绝采样与残差重采样引擎 (`spec_rejection.cp`)
+### 零分配 Leviathan 无损推测解码拒绝采样与残差重采样引擎 (`specReject.cp`)
 
 面向生产级 LLM 推测解码（Leviathan et al. 2023 / DeepMind / vLLM Lossless Speculative Decoding）的 100% 纯 CP 零动态堆分配精确拒绝采样、两遍 O(V) 残差分布重采样与 `@fma` EWMA 自适应草稿步长控制器：
 
@@ -1349,7 +1349,7 @@ pub fn demoSpeculativeRejection() {
 }
 ```
 
-### 零分配 SGLang RadixAttention 前缀 KV-Cache 压缩前缀树与 LRU 驱逐引擎 (`prefix_radix_cache.cp`)
+### 零分配 SGLang RadixAttention 前缀 KV-Cache 压缩前缀树与 LRU 驱逐引擎 (`radixCache.cp`)
 
 面向 SGLang RadixAttention 风格长前缀共享 KV-Cache 复用的 100% 纯 CP 零动态堆分配压缩前缀树（Radix Tree）与自底向上 LRU 驱逐引擎：
 
@@ -1389,7 +1389,7 @@ pub fn demoPrefixRadixCache() {
 ```
 
 
-### 零分配 LLM Prompt 边界 Token Healing 与字节前缀 Logits 掩码引擎 (`token_healing.cp`)
+### 零分配 LLM Prompt 边界 Token Healing 与字节前缀 Logits 掩码引擎 (`tokenHeal.cp`)
 
 面向大语言模型推理（Guidance / llama.cpp 风格）的 100% 纯 CP 零动态堆分配 Prompt 末尾边界 Token Healing 与字节前缀 Logits `-Inf` 掩码引擎，彻底消除 BPE 切分边界伪影（如 `"http:"` 切分阻断生成 `"http://"`）：
 

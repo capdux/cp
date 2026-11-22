@@ -29,7 +29,7 @@ export {
     mortonEncode3D,
     mortonDecode3D,
     quantizeEncode3D,
-} from "./geohash_3d.cp";
+} from "./geohash3d.cp";
 
 export {
     GeoJsonError,
@@ -184,4 +184,4 @@ export {
     Rect,
     PointItem,
     QuadTree,
-} from "./geo_quadtree.cp";
+} from "./geoQuadtree.cp";

@@ -4,9 +4,9 @@
 // ============================================================================
 
 export * from "./vlq.cp";
-export * from "./line_offset.cp";
+export * from "./lineOffset.cp";
 export * from "./mapping.cp";
-export * from "./internal_source_map.cp";
+export * from "./internalSourceMap.cp";
 export * from "./chunk.cp";
-export * from "./parsed_source_map.cp";
+export * from "./parsedSourceMap.cp";
 export * from "./sourcemap.cp";

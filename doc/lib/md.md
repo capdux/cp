@@ -28,16 +28,16 @@
 | `lib/md/unicode.cp` | `// Source: /data/dev/bun/src/md/unicode.cp` | 完整 MD4C Unicode Case-Folding 映射表（1/2/3 码点 `fold_map_1/2/3`）与 `caseFold()` |
 | `lib/md/helpers.cp` | `// Source: /data/dev/bun/src/md/helpers.cp` | 335 组 Unicode 标点范围、UTF-8 编解码、数字/命名实体转 UTF-8、`HeadingIdTracker` |
 | `lib/md/autolinks.cp` | `// Source: /data/dev/bun/src/md/autolinks.cp` | GFM 宽松 URL/Email/www 自动链接扫描与括号/尾部标点配平裁剪 |
-| `lib/md/line_analysis.cp` | `// Source: /data/dev/bun/src/md/line_analysis.cp` | ATX/Setext 标题、围栏/缩进代码块、HR、HTML 块（1-7 类）、GFM 表格下划线与容器行分析 |
-| `lib/md/ref_defs.cp` | `// Source: /data/dev/bun/src/md/ref_defs.cp` | CommonMark 链接引用定义解析、Unicode 归一化与哈希查找 `lookupRefDef()` |
-| `lib/md/inline_core.cp` | `// Source: /data/dev/bun/src/md/inlines.cp` | 内联 Span 调度、反引号代码跨度、左右侧翼规则、HTML 标签扫描 |
+| `lib/md/lineAnalysis.cp` | `// Source: /data/dev/bun/src/md/line_analysis.cp` | ATX/Setext 标题、围栏/缩进代码块、HR、HTML 块（1-7 类）、GFM 表格下划线与容器行分析 |
+| `lib/md/refDefs.cp` | `// Source: /data/dev/bun/src/md/ref_defs.cp` | CommonMark 链接引用定义解析、Unicode 归一化与哈希查找 `lookupRefDef()` |
+| `lib/md/inlineCore.cp` | `// Source: /data/dev/bun/src/md/inlines.cp` | 内联 Span 调度、反引号代码跨度、左右侧翼规则、HTML 标签扫描 |
 | `lib/md/links.cp` | `// Source: /data/dev/bun/src/md/links.cp` | 行内链接、引用/简写链接、图片、Wiki 链接与尖括号自动链接解析 |
 | `lib/md/inlines.cp` | `// Source: /data/dev/bun/src/md/inlines.cp` | CommonMark $O(N)$ 强调分隔符栈匹配算法、删除线与全行内元素分发 |
-| `lib/md/render_blocks.cp` | `// Source: /data/dev/bun/src/md/render_blocks.cp` | 代码块、HTML 块、GFM 表格行/单元格渲染分发 |
+| `lib/md/renderBlocks.cp` | `// Source: /data/dev/bun/src/md/render_blocks.cp` | 代码块、HTML 块、GFM 表格行/单元格渲染分发 |
 | `lib/md/containers.cp` | `// Source: /data/dev/bun/src/md/containers.cp` | 嵌套容器栈、紧缩/松散列表回溯修补与块字节流遍历循环 |
 | `lib/md/blocks.cp` | `// Source: /data/dev/bun/src/md/blocks.cp` | MD4C 双遍块级解析状态机（`processDoc` / `analyzeLine` / `processLine`） |
-| `lib/md/html_renderer.cp` | `// Source: /data/dev/bun/src/md/html_renderer.cp` | MD4C `HtmlRenderer`（标题锚点、自链接标题、GFM 标签过滤、`sanitize_html` XSS 防护） |
-| `lib/md/ansi_renderer.cp` | `// Source: /data/dev/bun/src/md/ansi_renderer.cp` | 终端 `AnsiRenderer`（自动折行、东亚宽字符、Unicode 方框表格、OSC 8 超链接、Kitty 图片、`ImageUrlCollector`） |
+| `lib/md/htmlRenderer.cp` | `// Source: /data/dev/bun/src/md/html_renderer.cp` | MD4C `HtmlRenderer`（标题锚点、自链接标题、GFM 标签过滤、`sanitize_html` XSS 防护） |
+| `lib/md/ansiRenderer.cp` | `// Source: /data/dev/bun/src/md/ansi_renderer.cp` | 终端 `AnsiRenderer`（自动折行、东亚宽字符、Unicode 方框表格、OSC 8 超链接、Kitty 图片、`ImageUrlCollector`） |
 | `lib/md/engine.cp` | `// Source: /data/dev/bun/src/md/root.cp` | `MdEngineOptions`、`renderToHtml`、`renderToHtmlWithOptions`、`renderWithRenderer`、`renderToAnsi` |
 | `lib/md/markdown.cp` | `// Source: /data/dev/bun/src/md/root.cp` | `Markdown` 统一门面（含 `toHtmlEngine` / `toAnsi` / `lookupEntity` / `caseFold` 与兼容 API） |
 | `lib/md/ast.cp` | `// Source: /data/dev/bun/src/md/types.cp` | 向后兼容：`MarkdownOptions`、`MdBlockKind`、`MdBlock`、`MdLinkDef`、`MdRenderer` |
@@ -111,6 +111,6 @@ pub fn demoMd4c(): ! {
 2. **不可信 Markdown 渲染安全防线（`tag_filter` & `sanitize_html`）**：
    - 渲染用户提交的 Markdown 为 HTML 时，务必开启 `tag_filter: true`（GFM 规范过滤 `<title>`、`<textarea>`、`<style>`、`<xmp>`、`<iframe>`、`<noembed>`、`<noframes>`、`<script>`、`<plaintext>` 等危险原始标签）与 `sanitize_html: true`，防止 XSS 注入。
 3. **双遍解析与自定义流式渲染器（`renderWithRenderer`）**：
-   - MD4C 引擎第一遍扫描全部链接引用定义（`ref_defs.cp`）与块结构，第二遍解析内联并通过 `RendererVTable` 流式派发事件，可直接接入自定义 `HtmlRenderer`、`AnsiRenderer` 或 `ImageUrlCollector`，无需构建完整 DOM 树。
+   - MD4C 引擎第一遍扫描全部链接引用定义（`refDefs.cp`）与块结构，第二遍解析内联并通过 `RendererVTable` 流式派发事件，可直接接入自定义 `HtmlRenderer`、`AnsiRenderer` 或 `ImageUrlCollector`，无需构建完整 DOM 树。
 4. **Unicode 大小写折叠与 HTML5 实体完备性**：
    - 引用链接标签匹配遵循 CommonMark Unicode Case-Folding（支持 1/2/3 码点折叠映射），完整内置 2,125 条 W3C HTML5 命名字符实体（二分查找）。

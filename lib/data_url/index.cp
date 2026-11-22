@@ -7,4 +7,4 @@ pub import {
     encodeShortestDataUrl,
     base64Encode,
     base64Decode,
-} from "./data_url.cp";
+} from "./dataUrl.cp";

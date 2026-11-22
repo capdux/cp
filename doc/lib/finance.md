@@ -8,7 +8,7 @@
 3. **复式记账总账与试算平衡表**（`ledger.cp`）
 4. **电子表格公式 DAG 依赖图与拓扑重算引擎**（`formula.cp`, `sheet.cp`）
 5. **防篡改哈希链合规审计日志**（`audit.cp`）
-6. **Bitcoin Base58 / Base58Check 双重 SHA-256 编解码**（`base58_check.cp`）
+6. **Bitcoin Base58 / Base58Check 双重 SHA-256 编解码**（`base58Check.cp`）
 7. **声明式业务与风控规则引擎**（`rule.cp`）
 
 全模块**零 C 依赖、零 `std.posix`、零 `@import("bun")`**，支持 `import ... from "cap:finance"` 与 `import cap from "cap"; cap.finance.*` 编译期自动惰性挂载。
@@ -24,7 +24,7 @@
 | `lib/finance/formula.cp` | 电子表格单元格坐标解析、值类型与公式求值器 |
 | `lib/finance/sheet.cp` | 双向依赖图、Kahn 拓扑排序环检测与级联重算 `Spreadsheet` |
 | `lib/finance/audit.cp` | SHA-256 哈希链防篡改合规审计日志 `AuditTrail` 与整链校验 |
-| `lib/finance/base58_check.cp` | Bitcoin Base58 与 Base58Check（版本号 + 双重 SHA-256 校验和） |
+| `lib/finance/base58Check.cp` | Bitcoin Base58 与 Base58Check（版本号 + 双重 SHA-256 校验和） |
 | `lib/finance/rule.cp` | 声明式生产/风控规则引擎（`FactMap`、`Condition` AST、`RuleEngine`） |
 | `lib/finance/index.cp` | `cap:finance` 与 `cap.finance` 统一零冲突公开导出入口 |
 
@@ -37,7 +37,7 @@
 - **复式记账（`ledger.cp`）**：`LedgerError`, `AccountType`, `EntrySide`, `Account`, `JournalLine`, `JournalEntry`, `StatementLine`, `TrialBalance`, `Ledger`
 - **电子表格（`formula.cp`, `sheet.cp`）**：`MAX_FORMULA_DEPTH`, `MAX_ROW_COUNT`, `MAX_COL_COUNT`, `SheetError`, `CellCoord`, `CellValue`, `Spreadsheet`
 - **合规审计（`audit.cp`）**：`GENESIS_HASH`, `AuditError`, `AuditOutcome`, `AuditSeverity`, `AuditEntry`, `ChainVerifyResult`, `AuditTrail`
-- **Base58Check（`base58_check.cp`）**：`Base58Error`, `encode`, `decode`, `encodeCheck`, `CheckDecoded`, `decodeCheck`
+- **Base58Check（`base58Check.cp`）**：`Base58Error`, `encode`, `decode`, `encodeCheck`, `CheckDecoded`, `decodeCheck`
 - **风控规则引擎（`rule.cp`）**：`MAX_CONDITION_DEPTH`, `RuleError`, `FactValue`, `FactMap`, `CompareOp`, `CompareSpec`, `InListSpec`, `Condition`, `RuleSpec`, `FiredRule`, `RuleEvalReport`, `RuleEngine`
 
 ---

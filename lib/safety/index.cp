@@ -3,7 +3,7 @@
 // High-performance thread safety, race condition detection, ASAN integration, CPU features & crash diagnostics
 import std from "std";
 
-import { invalid, getCurrent, isCurrent, isValid } from "./thread_id.cp";
+import { invalid, getCurrent, isCurrent, isValid } from "./threadId.cp";
 import { ThreadLock } from "./ThreadLock.cp";
 import { CriticalSection } from "./CriticalSection.cp";
 import { CheckedAllocator, assertEq, assertAllocatorEq, assertEqFmt } from "./alloc.cp";
@@ -19,7 +19,7 @@ import {
     unregisterRootRegion,
 } from "./asan.cp";
 import { assert, safety_assert, safety_panic, unreachable_code } from "./safety.cp";
-import { CpuFeatures } from "./cpu_features.cp";
+import { CpuFeatures } from "./cpuFeatures.cp";
 import { OomPolicy, OomHookFn, OomGuard, CrashReport } from "./crash.cp";
 
 export {

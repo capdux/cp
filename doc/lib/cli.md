@@ -78,7 +78,7 @@ pub fn demoWidgets() {
 
 源自 `/data/dev/bun/src/cli/ci_info.cp`、`/data/dev/bun/src/cli/cli.cp` 与 `/data/dev/bun/src/bun_core/Progress.cp`：
 
-- **`CiInfo` & `CiVendor`** (`lib/cli/ci_info.cp`)：
+- **`CiInfo` & `CiVendor`** (`lib/cli/ciInfo.cp`)：
   - 探测 GitHub Actions、GitLab CI、CircleCI、Travis CI、Jenkins、Buildkite、Azure Pipelines、Vercel、Netlify、Cloudflare Pages、Bitbucket Pipelines、TeamCity、AWS CodeBuild、Drone 与 Generic CI；
   - 自动解析 Pull Request 状态（`is_pr`）、ANSI/TrueColor/OSC-8 超链接支持能力（尊重 `NO_COLOR`、`FORCE_COLOR`、`TERM=dumb`）以及 Linux `ioctl(TIOCGWINSZ)` 真实终端宽高（兼容 `COLUMNS` 覆盖）；
   - 提供 `CiInfo.detect()`、`CiInfo.detectWithEnv(...)` 与 Bun 兼容函数 `isCI()` / `detectCIName()`。
@@ -99,11 +99,11 @@ pub fn demoWidgets() {
   - `ProgressMeter`（`init`/`set`/`inc`/`percent`/`isComplete`/`etaMs`/`render`）、`ProgressSpinnerStyle`、`spinnerFrame`。
 - **加载动画帧序列渲染器 (`lib/cli/spinner.cp`)**：
   - `SpinnerPreset`（`dots`/`line`/`arc`/`arrows`/`bouncing_bar`）、`SpinnerSpec`（`forPreset`/`frameAt`/`frameAtMs`）、`formatSpinnerFrame`、`formatSpinnerDone`。
-- **零分配表格边框与列宽渲染器 (`lib/cli/table_render.cp`)**：
+- **零分配表格边框与列宽渲染器 (`lib/cli/tableRender.cp`)**：
   - `TableBorderStyle`（`ascii`/`compact`/`unicode_light`）、`CellAlign`（`left`/`right`/`center`）、`computeColumnWidths`、`renderBorderLine`、`renderTableRow`、`renderTable`。
 - **零分配树形 / 依赖树渲染器 (`lib/cli/tree.cp`)**：
   - `TreeStyle`（`unicode`/`ascii`/`rounded`）、`TreePrefix`（64 层祖先位掩码）、`TreeNode`、`renderFlatTree`。
-- **零分配冒号/等号键值列表解析器 (`lib/cli/colon_list.cp`，吸收自 `/data/dev/bun/src/cli/colon_list_type.cp`)**：
+- **零分配冒号/等号键值列表解析器 (`lib/cli/colonList.cp`，吸收自 `/data/dev/bun/src/cli/colon_list_type.cp`)**：
   - 错误集与结构体：`ColonListError`（`InvalidSeparator` / `EmptyKey` / `InvalidExtensionPrefix` / `OutputBufferTooSmall`）、`ColonPair`
   - 解析与查询函数：`parseColonPair`、`parseColonPairNonEmptyKey`、`parseLoaderMapping`、`parseColonList`、`parseLoaderMappingList`、`findColonValue`（优先匹配先出现的 `:` 或 `=`，兼容 Bun/esbuild CLI `--define`/`--loader` 语法，支持 last-wins 查询）
 
@@ -129,7 +129,7 @@ const items: [2]CompletionItem = [
 let buf: [128]u8 = [0; 128];
 const n = formatCompletionItems(sh, items[0..], "bu", buf[0..])?; // "build\tBuild project"
 ```
-- **Yarn v1/v2 命令分类与包管理进度标签渲染 (`lib/cli/pm_commands.cp`，吸收自 `/data/dev/bun/src/cli/list-of-yarn-commands.cp` & `src/install/PackageManager/ProgressStrings.cp`)**：
+- **Yarn v1/v2 命令分类与包管理进度标签渲染 (`lib/cli/pmCmds.cp`，吸收自 `/data/dev/bun/src/cli/list-of-yarn-commands.cp` & `src/install/PackageManager/ProgressStrings.cp`)**：
   - 类型与函数：`PmCommandsError` (`BufferTooSmall`)、`YarnCommandEra`（`none`/`v1_only`/`v2_only`/`both`）、`PmStage`（`resolve`/`extract`/`install`/`save_lockfile`/`run_script`）、`yarnCommandEra`、`isYarnCommand`、`mapYarnToCapSubcommand`、`pmStagePlainName`、`pmStageLabel`、`formatPmStageBanner`。
 
 ```typescript
@@ -144,7 +144,7 @@ const banner = formatPmStageBanner(buf[0..], PmStage.install, "lodash@4.17.21", 
 * = mapped;
 * = banner;
 ```
-- **零分配 `bun info` / `bun pm view` 包元数据查询与卡片渲染 (`lib/cli/pm_view.cp`，吸收自 `/data/dev/bun/src/cli/pm_view_command.cp`)**：
+- **零分配 `bun info` / `bun pm view` 包元数据查询与卡片渲染 (`lib/cli/pmView.cp`，吸收自 `/data/dev/bun/src/cli/pm_view_command.cp`)**：
   - 常量与类型：`PM_VIEW_MAX_PATH_SEGMENTS` (`16`)、`PM_VIEW_RECENT_VERSIONS_LIMIT` (`5`)、`PmViewError`、`PmViewSpec`（`parse` / `isScoped` / `buildRegistryUrl`，自动编码作用域 `/` 为 `%2F`）、`PmPropertyPathSegment`、`PmPropertyPath`（支持 `repository.url`、`maintainers[0].email`、`keywords.0` 点分与数组下标查询）、`PmViewDistInfo`、`PmViewKv`、`PmViewMaintainer`、`PmViewSummary`（`formatCard`）、`formatRecentVersionsHint`、`formatPmViewJsonError`。
 
 ```typescript
@@ -164,8 +164,8 @@ const prop = PmPropertyPath.parse("maintainers[0].email")?;
 
 ## 上游 Bun 行为契约与终端边界注意事项
 
-1. **色彩降级与环境变量优先级（`lib/cli/color.cp` & `lib/cli/pm_commands.cp`）**：
-   - `detectColorLevel` 严格遵循标准终端环境变量契约：`NO_COLOR` 非空或 `TERM=dumb` 时强制关闭色彩；`FORCE_COLOR`（`0`/`1`/`2`/`3`）优先覆盖非 TTY 重定向探测；`COLORTERM=truecolor|24bit` 启用 24-bit TrueColor；在 CI 环境（`lib/cli/ci_info.cp`）中自动识别非交互流水线，并通过 `pmStageLabel(stage, false)` / `formatPmStageBanner(..., false)` 自动降级为无 Emoji 的纯文本进度输出（配合 `/data/dev/bun/docs/pm/cli/pm.mdx` 的 `--quiet` 脚本静默输出规范）。
+1. **色彩降级与环境变量优先级（`lib/cli/color.cp` & `lib/cli/pmCmds.cp`）**：
+   - `detectColorLevel` 严格遵循标准终端环境变量契约：`NO_COLOR` 非空或 `TERM=dumb` 时强制关闭色彩；`FORCE_COLOR`（`0`/`1`/`2`/`3`）优先覆盖非 TTY 重定向探测；`COLORTERM=truecolor|24bit` 启用 24-bit TrueColor；在 CI 环境（`lib/cli/ciInfo.cp`）中自动识别非交互流水线，并通过 `pmStageLabel(stage, false)` / `formatPmStageBanner(..., false)` 自动降级为无 Emoji 的纯文本进度输出（配合 `/data/dev/bun/docs/pm/cli/pm.mdx` 的 `--quiet` 脚本静默输出规范）。
 2. **参数解析 `--` 终止哨兵（`CliArgs`）**：
    - 遇到独立 `--` 标志后，其后所有参数无论是否以 `-` 开头均按位置参数透传，与 POSIX `getopt` 及 Bun CLI 参数规范完全一致。
 3. **非 TTY 与管道重定向安全回退**：
@@ -205,12 +205,12 @@ const cmd = buildOpenEditorCommand(
 * = cmd;
 ```
 
-7. **Shell 补全安装路径探测与 Zsh 启动脚本提示（`lib/cli/install_completions.cp`，吸收自 `/data/dev/bun/src/cli/install_completions_command.cp`）**：
+7. **Shell 补全安装路径探测与 Zsh 启动脚本提示（`lib/cli/installComp.cp`，吸收自 `/data/dev/bun/src/cli/install_completions_command.cp`）**：
    - **三类 Shell 补全文件名**：Fish → `<tool>.fish`，Zsh → `_<tool>`，Bash → `<tool>.completion.bash`；
    - **探测优先级链**：Fish 优先 `$XDG_CONFIG_HOME` → `$XDG_DATA_HOME` → `$HOME/.config/fish/completions` → macOS Homebrew（ARM64 `/opt/homebrew` / x64 `/usr/local`）→ `/etc/fish/completions`；Zsh 优先解析空格分隔的 `$fpath` 再回退 `$XDG_DATA_HOME/zsh-completions` / `$HOME/.oh-my-zsh/completions`；Bash 优先 `$XDG_DATA_HOME` / `$XDG_CONFIG_HOME` / `$HOME/.oh-my-bash/custom/completions` / `$HOME/.bash_completion.d`；
    - **Zsh `$ZDOTDIR` 兼容**：`resolveZshrcPath` 优先定位 `$ZDOTDIR/.zshrc` 再回退 `$HOME/.zshrc`，配合 `zshrcNeedsCompletionHint` 与 `formatZshrcSourceLine` 避免重复追加 `source` 行。
 
-### Shell 补全目录规划示例（`lib/cli/install_completions.cp`）
+### Shell 补全目录规划示例（`lib/cli/installComp.cp`）
 
 ```cp
 import {
@@ -234,12 +234,12 @@ const fn_len = completionFilename(CompletionShell.zsh, "cap", fname[0..])?;
 * = fn_len;
 ```
 
-8. **包版本递进与 Git 提交消息格式化（`lib/cli/pm_version.cp`，吸收自 `/data/dev/bun/src/cli/pm_version_command.cp` & `/data/dev/bun/docs/pm/cli/pm.mdx`）**：
+8. **包版本递进与 Git 提交消息格式化（`lib/cli/pmVersion.cp`，吸收自 `/data/dev/bun/src/cli/pm_version_command.cp` & `/data/dev/bun/docs/pm/cli/pm.mdx`）**：
    - **完整支持 9 类版本策略**：`patch`、`minor`、`major`、`prepatch`、`preminor`、`premajor`、`prerelease`、`from-git` 与具体 Semver（支持剥离可选前导 `v`/`=`）；
    - **预发布标识推导（`--preid`）**：未显式指定 `--preid` 时自动继承当前版本号预发布首段（如 `1.2.3-beta.0` 执行 `prerelease` 递进为 `1.2.3-beta.1`）；对稳定版执行 `prerelease` 时先递进 `patch` 再附 `-0` 或 `-<preid>.0`（参考 `/data/dev/bun/docs/pm/cli/pm.mdx`：`1.0.0` + `prerelease --preid beta` → `1.0.1-beta.0`）；
    - **防误操作与 Git 集成最佳实践**：指定具体版本号且与当前版本一致时默认抛出 `PmVersionError.SameVersion`（需显式开启 `allow_same_version` 放行，对应 `--allow-same-version`）；`formatPmCommitMessage()` 将提交消息模板中所有 `%s` 替换为新版本号（空模板默认输出 `v<version>`）；`normalizeGitTagVersion()` 规范化 `git describe --tags` 输出供 `from-git` 使用。
 
-### 包版本递进与提交消息格式化示例（`lib/cli/pm_version.cp`）
+### 包版本递进与提交消息格式化示例（`lib/cli/pmVersion.cp`）
 
 ```cp
 import {
@@ -263,12 +263,12 @@ const mn = formatPmCommitMessage("Release beta: %s", ver_buf[0..vn], msg_buf[0..
 * = mn;
 ```
 
-9. **`package.json` 点号/方括号路径与赋值解析（`lib/cli/pm_pkg.cp`，吸收自 `/data/dev/bun/src/cli/pm_pkg_command.cp` & `/data/dev/bun/docs/pm/cli/pm.mdx`）**：
+9. **`package.json` 点号/方括号路径与赋值解析（`lib/cli/pmPkg.cp`，吸收自 `/data/dev/bun/src/cli/pm_pkg_command.cp` & `/data/dev/bun/docs/pm/cli/pm.mdx`）**：
    - **四类子命令**：`get` / `set` / `delete` / `fix`（`PmPkgSubCommand`）；
    - **完整路径语法（参考 `/data/dev/bun/docs/pm/cli/pm.mdx`）**：支持点分属性（`scripts.build`）、方括号数组下标（`contributors[0]`）、点分数字下标（`workspaces.0`）、特殊字符方括号键（`scripts[test:watch]`、`exports["./utils"]`）及多维嵌套（`matrix[0][1].name`）；
    - **赋值与 `--json` 类型判定**：`PmPkgAssignment.parse()` 在跳过方括号内 `=` 后拆分 `key=value`；`classifyPmPkgValue(val, true)` 严格区分 `null` / `boolean` / `number` / `string` / `array` / `object` 并拦截畸形 JSON。
 
-### `pm pkg` 路径与赋值解析示例（`lib/cli/pm_pkg.cp`）
+### `pm pkg` 路径与赋值解析示例（`lib/cli/pmPkg.cp`）
 
 ```cp
 import {
@@ -286,7 +286,7 @@ const n = assign.path.formatCanonical(buf[0..])?;
 * = n;
 ```
 
-10. **Monorepo `--filter` / `-F` 工作区包过滤与脚本前缀格式化（`lib/cli/filter_arg.cp`，吸收自 `/data/dev/bun/src/cli/filter_arg.cp` & `/data/dev/bun/docs/pm/filter.mdx`）**：
+10. **Monorepo `--filter` / `-F` 工作区包过滤与脚本前缀格式化（`lib/cli/filterArg.cp`，吸收自 `/data/dev/bun/src/cli/filter_arg.cp` & `/data/dev/bun/docs/pm/filter.mdx`）**：
     - **包名与路径双模式匹配**：
       - 包名模式（如 `pkg-*`、`@scope/*`、`*`）匹配 `package.json` 的 `name` 字段；
       - 路径模式（以 `.`、`/` 或 `\` 开头，如 `./packages/*`、`./packages/**`、`./`）自动结合 `cwd` 规范化路径（折叠 `.`/`..`、统一 Windows `\` 为 `/`）后进行 Glob 匹配；
@@ -299,7 +299,7 @@ const n = assign.path.formatCanonical(buf[0..])?;
     - **Foreman 风格并行/串行脚本输出前缀（`formatFilterScriptPrefix`）**：
       - 配合 `--parallel` / `--sequential` 运行多包脚本时，输出 `<pkg_name>:<script>`（包名为空时自动回退 `<rel_path>:<script>`，均为空时输出 `<script>`）；下游执行器应按工作区依赖拓扑顺序调度（被依赖包先完成）。
 
-### Monorepo `--filter` 过滤集合与脚本前缀示例（`lib/cli/filter_arg.cp`）
+### Monorepo `--filter` 过滤集合与脚本前缀示例（`lib/cli/filterArg.cp`）
 
 ```cp
 import {
@@ -326,7 +326,7 @@ const fn_len = formatFilterScriptPrefix("pkg-a", "packages/pkg-a", "build", pfx_
 * = fn_len;
 ```
 
-11. **`bun test` / `cap test` 测试文件发现与路径过滤引擎（`lib/cli/test_scanner.cp`，吸收自 `/data/dev/bun/src/cli/test/Scanner.cp` & `/data/dev/bun/docs/test/discovery.mdx`）**：
+11. **`bun test` / `cap test` 测试文件发现与路径过滤引擎（`lib/cli/testScan.cp`，吸收自 `/data/dev/bun/src/cli/test/Scanner.cp` & `/data/dev/bun/docs/test/discovery.mdx`）**：
     - **默认发现规则（参考 `/data/dev/bun/docs/test/discovery.mdx`）**：
       - 匹配 `*.test.{js,jsx,ts,tsx,mjs,cjs,mts,cts,cp}`、`*_test.*`、`*.spec.*` 与 `*_spec.*`（`couldBeTestFile` / `hasTestNameSuffix`）；
       - 默认跳过隐藏目录（`.` 开头）与 `node_modules`（`TestFileScanner.shouldScanDir`）。
@@ -358,7 +358,7 @@ const n = formatScopedTestName(labels[0..], "should add", name_buf[0..])?;
 * = n;
 ```
 
-12. **包安全漏洞审计引擎与报告格式化（`lib/cli/pm_audit.cp`，吸收自 `/data/dev/bun/src/cli/audit_command.cp` & `/data/dev/bun/docs/pm/cli/audit.mdx`）**：
+12. **包安全漏洞审计引擎与报告格式化（`lib/cli/pmAudit.cp`，吸收自 `/data/dev/bun/src/cli/audit_command.cp` & `/data/dev/bun/docs/pm/cli/audit.mdx`）**：
     - **严重性分级与阈值过滤（`--audit-level=<low|moderate|high|critical>`）**：
       - `PmAuditSeverity.parse` 严格大小写无关解析 4 个等级，`parseOrDefault` 遵循上游宽容策略将未知级别归为 `Moderate`；`meetsThreshold` 按 `Low < Moderate < High < Critical` 过滤低危条目。
     - **CVE/GHSA 忽略与生产依赖范围（`--ignore` / `--prod`）**：
@@ -368,7 +368,7 @@ const n = formatScopedTestName(labels[0..], "should add", name_buf[0..])?;
       - 对齐 `/data/dev/bun/docs/pm/cli/audit.mdx` 规范：无论是否启用 `--json`，无漏洞返回退出码 `0`（摘要 `"No vulnerabilities found"`），存在任意漏洞返回退出码 `1` 并附带 `cap update` / `cap update --latest` 升级建议；
       - `PmAuditDepGraph.findDependentChain` 以访问集守卫反向追踪引入漏洞包的依赖链，安全免疫循环依赖。
 
-### 包安全审计与 Bulk Advisory 请求构建示例（`lib/cli/pm_audit.cp`）
+### 包安全审计与 Bulk Advisory 请求构建示例（`lib/cli/pmAudit.cp`）
 
 ```cp
 import {
@@ -409,7 +409,7 @@ const sn = report.formatSummaryLine(sum_buf[0..])?;
 * = sn;
 ```
 
-13. **依赖过期分析、Catalog 分组与对齐表格引擎（`lib/cli/pm_outdated.cp`，吸收自 `/data/dev/bun/src/cli/outdated_command.cp` & `/data/dev/bun/docs/pm/cli/outdated.mdx`）**：
+13. **依赖过期分析、Catalog 分组与对齐表格引擎（`lib/cli/pmOutdated.cp`，吸收自 `/data/dev/bun/src/cli/outdated_command.cp` & `/data/dev/bun/docs/pm/cli/outdated.mdx`）**：
     - **三列版本语义（Current / Update / Latest）**：
       - `Current` 为当前已安装版本，`Update` 为满足 `package.json` 范围约束的最新兼容版本，`Latest` 为 Registry 发布的最新版本；
       - `PmOutdatedSemver.classifyUpgradeTo` 精确区分 `UpToDate` / `Patch` / `Minor` / `Major` / `Prerelease`，`PmOutdatedTable.addEntry` 自动剔除已为最新的依赖项。
@@ -419,7 +419,7 @@ const sn = report.formatSummaryLine(sum_buf[0..])?;
       - 同一个默认或命名 Catalog（如 `catalog:testing`）在多个 Workspace 中被引用时，`PmOutdatedTable.addEntry` 自动按 `(package_name, catalog_name, dep_kind)` 合并去重并格式化为 `catalog:testing (@app/a, @app/b)`；
       - `sortDeterministic()` 按依赖类别（`Normal < Dev < Peer < Optional`）与包名字母序稳定排列，`formatMarkdownTable()` 动态计算列宽输出对齐表格。
 
-### 依赖过期检查与 Catalog 表格渲染示例（`lib/cli/pm_outdated.cp`）
+### 依赖过期检查与 Catalog 表格渲染示例（`lib/cli/pmOutdated.cp`）
 
 ```cp
 import {
@@ -451,12 +451,12 @@ const n = tbl.formatMarkdownTable(out[0..], true)?;
 * = n;
 ```
 
-14. **生命周期脚本信任策略与 `trustedDependencies` 供应链防护引擎（`lib/cli/pm_trusted.cp`，吸收自 `/data/dev/bun/src/cli/pm_trusted_command.cp` & `/data/dev/bun/docs/pm/lifecycle.mdx`）**：
+14. **生命周期脚本信任策略与 `trustedDependencies` 供应链防护引擎（`lib/cli/pmTrusted.cp`，吸收自 `/data/dev/bun/src/cli/pm_trusted_command.cp` & `/data/dev/bun/docs/pm/lifecycle.mdx`）**：
     - **默认安全（Default-Secure）原则**：不默认执行第三方依赖的 `preinstall` / `install` / `postinstall` / `prepare` 等任意脚本，仅当包命中显式 `trustedDependencies` 或（仅限 npm Registry 源）默认信任白名单时才允许运行；
     - **非 Registry 源防伪造红线**：对 `file:`、`link:`、`git:`、`github:`、`tarball` 来源的包，即便包名与默认白名单（如 `esbuild`）重名，也强制返回 `PmTrustDecision.BlockedNonRegistrySpoof`，必须由用户显式加入 `trustedDependencies` 才可放行；
     - **全局 `--ignore-scripts` 覆盖与白名单持久化**：`ignore_scripts = true` 拥有最高阻断优先级；支持作用域包与版本锁定条目（`"@swc/core@1.7.0"`）、字典序排序（`sortExplicitAllowlist`）、JSON 数组序列化（`formatTrustedJsonArray`）与 `pm untrusted` 审阅报告格式化（`formatUntrustedReport`）。
 
-### 生命周期脚本信任评估与报告示例（`lib/cli/pm_trusted.cp`）
+### 生命周期脚本信任评估与报告示例（`lib/cli/pmTrusted.cp`）
 
 ```cp
 import {
@@ -476,7 +476,7 @@ const decision = pol.evaluate(pkg_git);
 * = decision;
 ```
 
-15. **Monorepo 工作区脚本 DAG 调度器与输出折叠器（`lib/cli/filter_run.cp`，吸收自 `/data/dev/bun/src/cli/filter_run.cp` & `/data/dev/bun/docs/pm/filter.mdx`）**：
+15. **Monorepo 工作区脚本 DAG 调度器与输出折叠器（`lib/cli/filterRun.cp`，吸收自 `/data/dev/bun/src/cli/filter_run.cp` & `/data/dev/bun/docs/pm/filter.mdx`）**：
     - **依赖拓扑顺序与环回退（`FilterRunGraph`）**：
       - 忠实还原 Bun `bun --filter <pattern> <script>` / `--workspaces` 执行调度模型：若工作区包 `app` 依赖 `core`，则 `core` 的脚本全部完成后才启动 `app`；
       - 内置**迭代式三色 DFS 环检测**（零递归，免疫深链栈溢出）：当跨包依赖存在循环时，`resolveDependencies()` 标记 `cycle_detected = true` 并清除跨包依赖边回退为并行启动，同时**始终保留**同包内 `pre<script>` -> `<script>` -> `post<script>` 串行生命周期顺序；
@@ -486,7 +486,7 @@ const decision = pol.evaluate(pkg_git);
       - `elideScriptOutput(data, max_lines)` 零分配剥离末尾单个 `\n` 并保留最后 `max_lines` 行（默认 10 行），返回被折叠行数 `elided_count`；`is_abort = true` 时展开完整日志便于排障；
       - `formatFilterDuration`（`> 1000 ms` 渲染 `Done in X.YY s`，否则 `Done in N ms`）、`formatFilterStatusLine` 与 `formatFilterOutputBlock` 生成标准 `│` / `└─` 框线输出块。
 
-### Monorepo 拓扑调度与输出折叠示例（`lib/cli/filter_run.cp`）
+### Monorepo 拓扑调度与输出折叠示例（`lib/cli/filterRun.cp`）
 
 ```cp
 import {
@@ -569,14 +569,14 @@ const cn = formatBunxCreatePackageName("@acme/app@2", create_buf[0..])?;
 * = cn;
 ```
 
-17. **Foreman 风格多脚本并行/顺序调度与流式行前缀引擎（`lib/cli/multi_run.cp`，吸收自 `/data/dev/bun/src/cli/multi_run.cp` & `/data/dev/bun/docs/snippets/cli/run.mdx`）**：
+17. **Foreman 风格多脚本并行/顺序调度与流式行前缀引擎（`lib/cli/multiRun.cp`，吸收自 `/data/dev/bun/src/cli/multi_run.cp` & `/data/dev/bun/docs/snippets/cli/run.mdx`）**：
     - **Foreman 6 色对齐前缀与流式行缓冲（`MultiRunLineBuffer` / `formatMultiRunPrefix`）**：
       - 按 6 色 ANSI 循环调色板（`cyan`/`yellow`/`magenta`/`green`/`blue`/`red`）与 `max_label_len` 动态右补空格输出 `<label>   | <line>`；
       - `feedChunk` 支持跨分片拼接半行数据并按 `\n` 逐行发射前缀，`flushRemaining` 在子进程退出时刷出末尾未换行数据并自动补齐 `\n`。
     - **双层依赖级联（`MultiRunScheduler`：`GroupChain` vs `NextGroup`）**：
       - 忠实还原 `bun run --parallel` / `--sequential` / `--no-exit-on-error` 语义：同组生命周期链（`pre -> main -> post`，`GroupChain`）中前置脚本失败时，即便开启 `--no-exit-on-error` 也必须跳过同组剩余步骤（`MultiRunStatus.Skipped`），但跨组顺序边（`NextGroup`）仍被迭代释放，确保后续独立脚本组继续运行。
 
-### Foreman 流式前缀与双层依赖级联示例（`lib/cli/multi_run.cp`）
+### Foreman 流式前缀与双层依赖级联示例（`lib/cli/multiRun.cp`）
 
 ```cp
 import {

@@ -15,7 +15,7 @@ lib/elf/
 ├── index.cp       # 统一公开导出入口
 ├── format.cp      # 多格式魔数识别 (ExeFormat.detect / ExeInspector.detectFormat) 与 ELF64 Header 解析
 ├── elf64.cp       # 完整 ELF64 解析器 (Elf64File, Elf64Phdr, Elf64Shdr, Elf64Sym, Elf64Dyn)
-└── macho_pe.cp    # Mach-O 64-bit 与 PE/COFF 帧头解析器
+└── machoPe.cp    # Mach-O 64-bit 与 PE/COFF 帧头解析器
 ```
 
 ### 1. 多格式魔数识别 (`ExeFormat.detect` & `ExeInspector.detectFormat`)

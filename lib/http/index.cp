@@ -7,7 +7,7 @@ export { Headers, HeaderEntry } from "./headers";
 export { ETag, ParsedETag } from "./etag";
 export { MimeCategory, MimeEntry, MIME_DATABASE_COUNT, MIME_DATABASE, MimeType } from "./mime";
 export { HttpStatusEntry, HTTP_STATUS_TABLE, HTTPStatus } from "./status";
-export { MAX_BUILDER_HEADERS, HeaderSpan, HeaderBuilder } from "./header_builder";
+export { MAX_BUILDER_HEADERS, HeaderSpan, HeaderBuilder } from "./hdrBuilder";
 export {
     CacheControl,
     DispositionType,
@@ -19,19 +19,19 @@ export {
     MAX_RANGE_SPECS,
     RangeHeader,
     ContentRange
-} from "./header_parsers";
+} from "./hdrParsers";
 export { Request } from "./request";
 export { Response } from "./response";
 export { HttpServer, fetch, json, serve } from "./server";
 
 // --- Step 1: HTTP Infrastructure Types & Enums ---
 export { Encoding, AcceptEncodingItem, ContentEncodingNegotiator } from "./encoding";
-export { FetchCacheMode, FetchRedirect, FetchRequestMode } from "./fetch_modes";
+export { FetchCacheMode, FetchRedirect, FetchRequestMode } from "./fetchModes";
 export { HTTPCertError, CertificateInfo, InitError } from "./cert";
-export { URLPath } from "./url_path";
+export { URLPath } from "./urlPath";
 export { SignalStore, Signals } from "./signals";
-export { HeaderValueIterator } from "./header_iterator";
-export { HTTPRequestBody, HTTPRequestBodyTag } from "./request_body";
+export { HeaderValueIterator } from "./hdrIter";
+export { HTTPRequestBody, HTTPRequestBodyTag } from "./reqBody";
 export {
     HTTPVerboseLevel,
     HTTPUpgradeState,
@@ -42,7 +42,7 @@ export {
     Flags,
     InternalStateFlags,
     InternalState
-} from "./internal_state";
+} from "./state";
 export {
     MAX_CHUNK_TRAILERS,
     ChunkedDecoderState,
@@ -289,7 +289,7 @@ export {
     HttpResponseStage,
     ParsedHttpResponse,
     HttpResponseParser
-} from "./wire_http";
+} from "./wireHttp";
 
 // --- Step 4: Low-level PicoHTTPParser C-FFI & Zero-Copy Wire Parser ---
 export {
@@ -309,7 +309,7 @@ export {
 
 // --- Step 5: RFC 6265 CookieMap & RFC 7578 FormData ---
 export * from "./cookie.cp";
-export * from "./form_data.cp";
+export * from "./formData.cp";
 
 // --- Step 6: RFC Web Primitives (SSE, Multipart FormData, RFC 6265 CookieJar) ---
 export * from "./sse.cp";
@@ -817,7 +817,7 @@ export {
     StreamDrainCallback,
     StreamBuffer,
     ThreadSafeStreamBuffer,
-} from "./stream_buffer.cp";
+} from "./streamBuf.cp";
 
 // --- Async HTTP Task Orchestration & Concurrency Limiter ---
 export {
@@ -829,7 +829,7 @@ export {
     AsyncHttpOptions,
     AsyncHttpConcurrencyLimiter,
     AsyncHttpTask,
-} from "./async_http.cp";
+} from "./asyncHttp.cp";
 
 // --- HTTP/2 In-Flight TLS Connect Coalescer ---
 export {
@@ -841,4 +841,4 @@ export {
     H2ConnectJoinResult,
     H2PendingConnectEntry,
     H2PendingConnectTable,
-} from "./h2/pending_connect.cp";
+} from "./h2/pendingConn.cp";

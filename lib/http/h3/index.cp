@@ -5,7 +5,7 @@
 export {
     AltSvcEntry,
     AltSvc
-} from "./alt_svc";
+} from "./altSvc";
 
 export {
     H3StreamType,
@@ -78,7 +78,7 @@ export {
     H3PendingRequest,
     H3PooledSession,
     H3SessionPool,
-} from "./session_pool";
+} from "./sessionPool";
 
 export {
     H3_DISPATCH_MAX_STREAMS,
@@ -92,7 +92,7 @@ export {
     H3HeaderDispatchResult,
     H3ConnCloseSummary,
     H3CallbackDispatcher,
-} from "./stream_dispatch";
+} from "./streamDisp";
 
 export {
     H3_DNS_PENDING_MAX_CONNECTS,
@@ -109,4 +109,4 @@ export {
     parseH3DnsTtlSeconds,
     H3PendingDnsEntry,
     H3PendingConnectQueue,
-} from "./pending_connect";
+} from "./pendingConn";

@@ -139,15 +139,15 @@ pub fn demoTimeSuite() {
 | `lib/time/hlc.cp` | `lib/hlc` | `HlcTimestamp`, `HlcClock`, `formatHlc`, `parseHlc`（Kulkarni 混合逻辑时钟 HLC） |
 | `lib/time/ptp.cp` | `lib/ptp` | `PtpTimestamp`, `PtpPortIdentity`, `PtpHeader`, `PtpPacket`, `parsePtp`, `encodePtpHeader` 等（IEEE 1588-2008/2019 PTPv2/v2.1 精密时间协议编解码） |
 | `lib/time/supervisor.cp` | `lib/supervisor` | `SupervisorError`, `RestartStrategy`, `ChildRestartPolicy`, `SupervisorConfig`, `SupervisorTree`（OTP 监督树与重启风暴防护） |
-| `lib/time/supervisor_resilience.cp` | `lib/supervisor` | `BackoffKind`, `BackoffPolicy`, `Bulkhead`, `RetryBudget`（退避策略、舱壁隔离与重试预算） |
+| `lib/time/supervisorResilience.cp` | `lib/supervisor` | `BackoffKind`, `BackoffPolicy`, `Bulkhead`, `RetryBudget`（退避策略、舱壁隔离与重试预算） |
 | `lib/time/timeseries.cp` | `lib/timeseries` | `TimeSeriesError`, `AggOp`, `DataPoint`, `AnomalyPoint`, `SeriesSummary`, `TimeSeries`（时序存储、对齐降采样、SMA/EMA 与 Z-Score 异常检测） |
 | `lib/time/prometheus.cp` | `lib/prometheus` | `PromError`, `MetricType`, `LabelPair`, `ParsedSample`, `PromRegistry`, `parseExposition`, `freeParsedSamples`（Prometheus 时序指标与 Exposition 解析） |
 | `lib/time/promql.cp` | `lib/promql` | `PromqlError`, `MatchOp`, `VectorSelector`, `MatrixSelector`, `AggregationExpr`, `BinaryExpr`, `Expr`, `parseDuration`, `parse`（PromQL 时序查询词法与 AST 解析） |
 | `lib/time/interval.cp` | `lib/interval` | `IntervalError`, `Interval`, `IntervalSet`, `IntervalEntry`, `IntervalTree`（半开区间集合代数与增广区间树） |
 | `lib/time/tween.cp` | `lib/tween` | `TweenError`, `EaseKind`, `Easing`, `Tween`, `Keyframe`, `KeyframeTrack`, `SpringDamper`（时间轴缓动、关键帧轨道与弹簧阻尼引擎） |
 | `lib/time/health.cp` | `lib/health` | `HealthError`, `ProbeKind`, `HealthStatus`, `CheckOutcome`, `ProbeReport`, `HealthRegistry`, `ShutdownCoordinator`（探针聚合器与优雅停机协调） |
-| `lib/time/uuid_v7.cp` | `lib/uuid_v7` | `UuidError`, `Uuid`, `NAMESPACE_DNS` 等（RFC 9562 单调时间戳 UUID v7 / v4 / v5） |
-| `lib/time/job.cp`, `lib/time/job_scheduler.cp` | `lib/queue` | `QueueError`, `JobPriority`, `JobState`, `RetryPolicy`, `Job`, `QueueStats`, `JobQueue`（优先级、延迟调度、租约超时与死信作业队列） |
+| `lib/time/uuidV7.cp` | `lib/uuid_v7` | `UuidError`, `Uuid`, `NAMESPACE_DNS` 等（RFC 9562 单调时间戳 UUID v7 / v4 / v5） |
+| `lib/time/job.cp`, `lib/time/jobSched.cp` | `lib/queue` | `QueueError`, `JobPriority`, `JobState`, `RetryPolicy`, `Job`, `QueueStats`, `JobQueue`（优先级、延迟调度、租约超时与死信作业队列） |
 | `lib/time/vcd.cp` | `lib/vcd` | `VcdTimeUnit`, `VcdVarType`, `VcdEventKind`, `VcdTimescale`, `VcdHeader`, `VcdEvent`, `parseVcdTimescale`, `parseVcdHeader`, `VcdVarIter`, `VcdValueIter`（IEEE 1364 VCD 时序波形解析） |
 | `lib/time/pqueue.cp` | `lib/pqueue` | `PQueueError`, `PriorityItem`, `TopKEntry`, `IndexedMinHeap`, `BoundedTopK`, `StreamingMedian`（可索引最小堆与流式分位数） |
 | `lib/time/pool.cp` | `lib/pool` | `PoolError`, `BorrowOrder`, `PoolConfig`, `PooledHandle`, `PoolStats`, `ResourcePool`（带空闲/生命周期超时的有界资源池） |
@@ -168,7 +168,7 @@ pub fn demoTimeSuite() {
 
 ---
 
-## 零堆分配确定性定时与周期调度器（`recurring_scheduler.cp`）
+## 零堆分配确定性定时与周期调度器（`recurring.cp`）
 
 面向服务端定时任务、事件循环超时计算与 AI Agent 周期巡检的 100% 纯 CP 零堆分配调度引擎：
 
@@ -209,7 +209,7 @@ pub fn demoRecurringScheduler() {
 
 ---
 
-## 高精度多租户 GCRA 速率限流器（`gcra_limiter.cp`）
+## 高精度多租户 GCRA 速率限流器（`gcra.cp`）
 
 对标 Stripe / Cloudflare 工业级限流架构的 100% 纯 CP、零堆分配 GCRA（Generic Cell Rate Algorithm）平滑突发限流与多租户配额表：单租户仅需单个 `tat_ms`（Theoretical Arrival Time）时间戳槽位，零后台定时器，内置开放寻址与最旧 TAT 淘汰防止多租户内存膨胀：
 
@@ -249,7 +249,7 @@ pub fn demoGcraRateLimiter() {
 
 ---
 
-## 零分配分层哈希时间轮 O(1) 定时器引擎（`timing_wheel.cp`）
+## 零分配分层哈希时间轮 O(1) 定时器引擎（`timingWheel.cp`）
 
 面向百万级并发 Agent 超时控制、RPC 截止时间与 TCP Keepalive 的 Kafka / Netty / Linux 内核级 100% 纯 CP 零动态堆分配 3 级 64 槽分层哈希时间轮（总跨度 `64^3 = 262,144` ticks，O(1) 调度、O(1) ABA 防护取消、自动级联降级）：
 
@@ -282,7 +282,7 @@ pub fn demoTimingWheel() {
 
 ---
 
-## 零分配 RFC 5545 重复日程规则 `RRULE` 解析与迭代触发调度器（`rrule_scheduler.cp`）
+## 零分配 RFC 5545 重复日程规则 `RRULE` 解析与迭代触发调度器（`rrule.cp`）
 
 面向日历同步、定时提醒、周期计费与 AI Agent 长期日程编排的 100% 纯 CP 零动态堆分配 RFC 5545 `RRULE` 解析、规范化往返格式化与纯整数公历调度器：
 

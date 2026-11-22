@@ -18,16 +18,16 @@
 //   - hash_map.cp      : Fixed-capacity zero-heap StaticHashMap<K, V, CAP>
 //   - soa.cp           : High-performance SoA (Struct of Arrays) Soa<T> with SIMD column slices
 
-export * from "./bounded_array.cp";
-export * from "./baby_list.cp";
-export * from "./linear_fifo.cp";
-export * from "./hive_array.cp";
-export * from "./bit_set.cp";
-export * from "./string_map.cp";
-export * from "./object_pool.cp";
-export * from "./hash_map.cp";
+export * from "./boundedArray.cp";
+export * from "./babyList.cp";
+export * from "./linearFifo.cp";
+export * from "./hiveArray.cp";
+export * from "./bitSet.cp";
+export * from "./stringMap.cp";
+export * from "./objectPool.cp";
+export * from "./hashMap.cp";
 export * from "./soa.cp";
 
-export * from "./priority_queue.cp";
+export * from "./priorityQueue.cp";
 export * from "./leb128.cp";
 export * from "./treap.cp";

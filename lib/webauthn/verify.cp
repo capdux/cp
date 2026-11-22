@@ -7,12 +7,12 @@ import {
     RegistrationResult,
     AssertionResult,
 } from "./types.cp";
-import { parseAuthenticatorData } from "./auth_data.cp";
+import { parseAuthenticatorData } from "./authData.cp";
 import {
     constantTimeEql,
     parseClientDataJson,
     verifyClientData,
-} from "./client_data.cp";
+} from "./clientData.cp";
 
 pub fn computeRpIdHash(rp_id: []const u8): [32]u8 {
     let out: [32]u8 = undefined;

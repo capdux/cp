@@ -139,7 +139,7 @@ export {
     copyFile,
     copyFileByFd,
     copyFileWithState,
-} from "./copy_file";
+} from "./copyFile";
 
 export {
     POLLIN,
@@ -154,7 +154,7 @@ export {
     poll,
     copyFileRange,
     sendfile,
-} from "./io_ops";
+} from "./ioOps";
 
 export {
     Signal,
@@ -236,7 +236,7 @@ export {
     chdir,
     readFile,
     writeFile,
-} from "./fs_ops";
+} from "./fsOps";
 
 export {
     WNOHANG,
@@ -451,7 +451,7 @@ export {
     resolveRuntimeDir,
 } from "./xdg";
 
-import { pipe2 as sysPipe2, createPipe as sysCreatePipe } from "./fs_ops";
+import { pipe2 as sysPipe2, createPipe as sysCreatePipe } from "./fsOps";
 
 pub struct Sys {
     static fn dup(fd: FD): !FD {
@@ -1240,7 +1240,7 @@ export {
 export {
     TopicStyle,
     TopicMatcher,
-} from "./pubsub_topic.cp";
+} from "./pubsubTopic.cp";
 
 export {
     PubSubError,
@@ -1248,13 +1248,13 @@ export {
     BrokerMessage,
     BrokerStats,
     PubSubBroker,
-} from "./pubsub_broker.cp";
+} from "./pubsubBroker.cp";
 
 // --- byte_ring (Power-of-Two Bitmask Batch Ring Byte & Framed Queue) ---
 export {
     ByteRingStats,
     ByteRingQueue,
-} from "./byte_ring.cp";
+} from "./byteRing.cp";
 
 // --- gen_slab (ABA-Safe O(1) Generational Slab Object Handle Pool) ---
 export {
@@ -1263,7 +1263,7 @@ export {
     GenHandle,
     GenSlabStats,
     GenSlabPool,
-} from "./gen_slab.cp";
+} from "./genSlab.cp";
 
 // --- proc_supervisor (Zero-Alloc Process / Sidecar Supervisor & Health-Probe FSM) ---
 export {
@@ -1279,4 +1279,4 @@ export {
     ProcSupAction,
     ProcSupStats,
     ProcSupervisor,
-} from "./proc_supervisor.cp";
+} from "./supervisor.cp";

@@ -28,7 +28,7 @@
 | :--- | :--- | :--- |
 | `lib/url/url.cp` | `// Source: /data/dev/bun/src/url/url.cp` | WHATWG 规范 `URL`（别名 `Url`）结构体、组件拆解、特殊协议识别与路径归一化 |
 | `lib/url/url_.cp` | `// Source: /data/dev/bun/src/url/url.cp` | 底层字符串切片搜索、IPv4/IPv6 地址判定、Localhost 识别与端口号安全解析原语 |
-| `lib/url/search_params.cp` | `// Source: /data/dev/bun/src/url/url.cp` | `URLSearchParams`（别名 `SearchParams` / `Query`）双轨查询参数表与 `Scanner` 零分配分词器 |
+| `lib/url/searchParams.cp` | `// Source: /data/dev/bun/src/url/url.cp` | `URLSearchParams`（别名 `SearchParams` / `Query`）双轨查询参数表与 `Scanner` 零分配分词器 |
 | `lib/url/query.cp` | `// Source: /data/dev/bun/src/url/url.cp` | 查询参数子模块聚合重导出入口 |
 | `lib/url/percent.cp` | `// Source: /data/dev/bun/src/url/url.cp` | `PercentEncoding`（别名 `Percent`）RFC 3986 URI 组件百分号编解码器 |
 | `lib/url/index.cp` | `// Source: /data/dev/bun/src/url/url.cp` | `cap:url` 标准库对外统一导出入口 |

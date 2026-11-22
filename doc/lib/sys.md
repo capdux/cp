@@ -30,8 +30,8 @@
 | `lib/sys/stat.cp` | `// Source: /data/dev/bun/src/sys/PosixStat.cp & /data/dev/bun/src/sys/sys.cp` | `FileKind`、`StatxField`、`Stat`/`PosixStat`（含纳秒时间戳与 `kind`/`isSymLink`/`isSymlink`），以及 `stat`/`lstat`/`fstat`/`fstatat`/`lstatat`/`statx`（含 `*Maybe` 变体） |
 | `lib/sys/dir.cp` | `// Source: /data/dev/bun/src/runtime/node/dir_iterator.cp & /data/dev/bun/src/sys/dir.cp` | 基于 Linux `getdents64` 与 8KB 栈内联缓冲的零堆目录迭代器 `DirIterator`、`DirEntry`、`DirEntryKind` 与 `Dir` |
 | `lib/sys/file.cp` | `// Source: /data/dev/bun/src/sys/File.cp` | `File` 高阶句柄（`open`/`create`/`openReadOnly`/`openat`/`openMaybe`/`openatMaybe`/`makeOpen`/`makeOpenat`/`fromFd`/`readAll`/`pwriteAll`/`readToEndAlloc`/`fdatasync`/`flock`/`fchmod`/`setNonblocking`/`isTty`/`getPath`） |
-| `lib/sys/copy_file.cp` | `// Source: /data/dev/bun/src/sys/copy_file.cp & /data/dev/bun/src/sys/sys.cp` | `CopyFileState`、`copyFileRange`、`sendfile`、`copyFileWithState`（三级自适应：`copy_file_range` -> `sendfile` -> 32KB R/W）、`copyFileByFd`、`copyFile` |
-| `lib/sys/fs_ops.cp` | `// Source: /data/dev/bun/src/sys/sys.cp` | POSIX/Linux 系统调用全集：`openat`/`mkdirat`/`mkdirAll`/`mkdirAllAt`/`unlinkat`/`rmdirat`/`rmdirRecursive`/`renameat`/`renameat2`/`symlinkat`/`readlinkat`/`link`/`linkat`/`fchmod`/`chown`/`fchown`/`fsync`/`fdatasync`/`flock`/`fcntl`/`ioctl`/`createPipe`/`pipe2`/`poll`/`epollCreate`/`epollCtl`/`epollWait`/`exists`/`readFile`/`writeFile` |
+| `lib/sys/copyFile.cp` | `// Source: /data/dev/bun/src/sys/copy_file.cp & /data/dev/bun/src/sys/sys.cp` | `CopyFileState`、`copyFileRange`、`sendfile`、`copyFileWithState`（三级自适应：`copy_file_range` -> `sendfile` -> 32KB R/W）、`copyFileByFd`、`copyFile` |
+| `lib/sys/fsOps.cp` | `// Source: /data/dev/bun/src/sys/sys.cp` | POSIX/Linux 系统调用全集：`openat`/`mkdirat`/`mkdirAll`/`mkdirAllAt`/`unlinkat`/`rmdirat`/`rmdirRecursive`/`renameat`/`renameat2`/`symlinkat`/`readlinkat`/`link`/`linkat`/`fchmod`/`chown`/`fchown`/`fsync`/`fdatasync`/`flock`/`fcntl`/`ioctl`/`createPipe`/`pipe2`/`poll`/`epollCreate`/`epollCtl`/`epollWait`/`exists`/`readFile`/`writeFile` |
 | `lib/sys/process.cp` | `// Source: /data/dev/bun/src/runtime/api/bun/spawn.cp & /data/dev/bun/src/platform/linux.cp` | `PosixSpawn`（支持 `cwd`/`envp`/`stdin_fd`/`stdout_fd`/`stderr_fd`/`detached`/`new_process_group`/`pdeathsig`/`search_path` 与子进程 errno 管道回传）、`WaitPidResult`/`waitpid`/`kill`、时钟与硬件自省 |
 | `lib/sys/tmp.cp` | `// Source: /data/dev/bun/src/sys/tmp.cp` | `getTempDir` / `makeTempFile` / `makeTempDir` / `removeFile` / `removeDir` |
 | `lib/sys/signal.cp` | `// Source: /data/dev/bun/src/sys/SignalCode.cp` | 30 个标准 POSIX `Signal` 枚举、`description`、`toExitCode`、`fromNumber`、`fromName` |
@@ -161,13 +161,13 @@ pub fn demoPhaseASys(): !void {
 | 并发缓冲 | `lib/sys/ringbuf.cp` | RingBuffer / ByteRing / MicroBatcher | 零拷贝环形缓冲与微批聚合器 |
 | 服务编排与架构（Batch 40） | `lib/sys/di.cp` | Dependency Injection & IoC | `ServiceContainer`、`ServiceScope`、Singleton/Scoped/Transient 生命周期与循环依赖检测 |
 | 服务编排与架构（Batch 40） | `lib/sys/pipeline.cp` | Onion Middleware Pipeline | 可组合洋葱中间件与多阶段流水线 (`Pipeline`, `PipelineContext`, `StageSpec`) |
-| 服务编排与架构（Batch 40） | `lib/sys/pubsub_topic.cp` / `lib/sys/pubsub_broker.cp` | NATS / MQTT Wildcard Pub/Sub | 进程内通配符发布订阅代理、背压丢弃策略与 Retained 消息重放 |
-| 并发与批量通道 | `lib/sys/byte_ring.cp` | 2-Pow Bitmask Byte/Frame Ring | `ByteRingQueue` / `ByteRingStats`：零堆分配 2 的幂位掩码批量环形字节队列与 4B 小端长度前缀帧原语 |
-| 句柄池与资源表 | `lib/sys/gen_slab.cp` | ABA-Safe Generational Slab | `GenSlabPool` / `GenHandle` / `GenSlabStats`：零堆分配 O(1) 代次安全定长对象句柄池（防 ABA 与 double-free） |
+| 服务编排与架构（Batch 40） | `lib/sys/pubsubTopic.cp` / `lib/sys/pubsubBroker.cp` | NATS / MQTT Wildcard Pub/Sub | 进程内通配符发布订阅代理、背压丢弃策略与 Retained 消息重放 |
+| 并发与批量通道 | `lib/sys/byteRing.cp` | 2-Pow Bitmask Byte/Frame Ring | `ByteRingQueue` / `ByteRingStats`：零堆分配 2 的幂位掩码批量环形字节队列与 4B 小端长度前缀帧原语 |
+| 句柄池与资源表 | `lib/sys/genSlab.cp` | ABA-Safe Generational Slab | `GenSlabPool` / `GenHandle` / `GenSlabStats`：零堆分配 O(1) 代次安全定长对象句柄池（防 ABA 与 double-free） |
 
 ---
 
-### 零堆分配 2 的幂掩码批量环形字节/帧队列示例 (`byte_ring.cp`)
+### 零堆分配 2 的幂掩码批量环形字节/帧队列示例 (`byteRing.cp`)
 
 ```cp
 import {
@@ -193,7 +193,7 @@ pub fn demoByteRingQueue() {
 }
 ```
 
-### 零堆分配代次安全（Generational）Slab 对象句柄池示例 (`gen_slab.cp`)
+### 零堆分配代次安全（Generational）Slab 对象句柄池示例 (`genSlab.cp`)
 
 面向 Actor 运行时、连接句柄表与无 GC 资源注册表的 100% 纯 CP 零动态堆分配 O(1) 代次安全定长句柄池（最高 256 槽位，LIFO 空闲栈 + Bump 游标 + 非零 32 位代次防 ABA / Double-Free）：
 
@@ -222,7 +222,7 @@ pub fn demoGenSlabPool() {
 }
 ```
 
-### 零堆分配服务/子进程监督退避与健康探针状态机示例 (`proc_supervisor.cp`)
+### 零堆分配服务/子进程监督退避与健康探针状态机示例 (`supervisor.cp`)
 
 面向守护进程、Sidecar 与 Worker 生命周期编排的 100% 纯 CP 零动态堆分配监督状态机（支持 32 槽位、7 态生命周期、指数退避+确定性抖动、健康探针阈值裁决、滑动窗口隔离态与时间片动作调度）：
 

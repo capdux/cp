@@ -32,7 +32,7 @@ export {
     PerMessageDeflateConfig,
     PerMessageDeflateNegotiation,
     PerMessageDeflate,
-} from "./permessage_deflate";
+} from "./permessageDeflate";
 export {
     WsSessionState,
     WsSessionConfig,
@@ -57,7 +57,7 @@ export {
     WsClientHeader,
     WsClientUpgradeConfig,
     WsClientUpgradeMachine,
-} from "./client_upgrade";
+} from "./clientUp";
 
 import { FrameBuilder } from "./frame";
 import { Mask } from "./mask";

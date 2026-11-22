@@ -4,7 +4,7 @@
 // Absorbed from /data/dev/bun/src/string/immutable.cp & /data/dev/bun/src/highway/
 
 const std = @import("std");
-import { SimdScanner } from "./simd_scan.cp";
+import { SimdScanner } from "./simdScan.cp";
 import { StringEscape } from "./escape.cp";
 
 type StrVec16u8 = @Vector(16, u8);

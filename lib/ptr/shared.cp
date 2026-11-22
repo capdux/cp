@@ -2,7 +2,7 @@
 // Thread-safe and single-threaded reference counted shared pointer体系 (Shared<T>, AtomicShared<T>, Weak<T>)
 import std from "std";
 import { PointerInfo, PointerKind } from "./meta.cp";
-import { PtrThreadLock } from "./raw_ref_count.cp";
+import { PtrThreadLock } from "./rawRefCount.cp";
 
 fn parsePointer(comptime Pointer: type): PointerInfo {
     const parse_opts = PointerInfo.ParseOptions{

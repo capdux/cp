@@ -24,9 +24,9 @@ import {
     isOpeningCodeFence,
     isSetextUnderline,
     isTableUnderline,
-} from "./line_analysis.cp";
-import { buildRefDefHashtable, normalizeLabel, parseRefDef } from "./ref_defs.cp";
-import { enterBlock, leaveBlock } from "./render_blocks.cp";
+} from "./lineAnalysis.cp";
+import { buildRefDefHashtable, normalizeLabel, parseRefDef } from "./refDefs.cp";
+import { enterBlock, leaveBlock } from "./renderBlocks.cp";
 import {
     OFF,
     BLOCK_CONTAINER_CLOSER,

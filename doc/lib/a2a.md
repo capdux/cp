@@ -39,7 +39,7 @@
 | `router.releaseTask(*_, id)` | 任务完成后递减节点 `active_tasks` |
 | `router.listCapablePeers(required_skills, now_ms, out_ids)` | 列出满足技能且存活可路由的节点 ID |
 | `HandoffTrace.init(buf, max_hops)` | 初始化零堆分配交接链防环与跳数守卫（`recordHop` / `hasVisited` / `hops`） |
-| `A2aEventStreamRing.init(slots)` | 初始化零堆分配任务事件流环形回放缓冲（`event_stream.cp`） |
+| `A2aEventStreamRing.init(slots)` | 初始化零堆分配任务事件流环形回放缓冲（`events.cp`） |
 | `ring.publish(*_, task_id, kind, timestamp_ms, is_final, payload_hash, payload_len)` | 分配单调递增 `event_id` 并写入事件，环满自动覆盖最旧槽位 |
 | `ring.replayAfter(last_event_id, task_filter, out_events)` | 按 `Last-Event-ID` 游标与可选 `task_id` 过滤回放事件，返回 `ReplayResult`（含 `gap_detected` 覆盖缺口检测与截断安全） |
 | `ring.latestEventId()` / `ring.oldestEventId()` / `ring.count()` / `ring.clear()` | 查询最新/最旧保留事件 ID、有效数量与清空缓冲 |
@@ -94,7 +94,7 @@ pub fn demoHandoffRouting() {
 }
 ```
 
-### 4.3 零堆分配 A2A 任务生命周期状态机与租约优先级队列 (`task_queue.cp`)
+### 4.3 零堆分配 A2A 任务生命周期状态机与租约优先级队列 (`taskQueue.cp`)
 
 - **核心类型**：`A2aTaskState`（`Submitted | Working | InputRequired | Completed | Failed | Canceled | DeadLetter`）、`A2aTaskItem`、`A2aQueueStats`
 - **状态机校验**：`canTransition(from, to): bool`（终态 `Completed`/`Failed`/`Canceled`/`DeadLetter` 严格不可逆）
@@ -122,7 +122,7 @@ pub fn demoA2aLeaseQueue() {
 }
 ```
 
-### 4.4 零堆分配任务事件流环形回放与 `Last-Event-ID` 断线续传示例 (`event_stream.cp`)
+### 4.4 零堆分配任务事件流环形回放与 `Last-Event-ID` 断线续传示例 (`events.cp`)
 
 ```cp
 import {
@@ -247,7 +247,7 @@ pub fn demoA2aDelegationQuickStart() {
 }
 ```
 
-### 4.7 零堆分配 A2A 任务生命周期状态机与 Artifact 流式分片路由器 (`task_lifecycle.cp`)
+### 4.7 零堆分配 A2A 任务生命周期状态机与 Artifact 流式分片路由器 (`lifecycle.cp`)
 
 面向 Google Agent2Agent (A2A) 多智能体异步任务编排与流式产物交付的 100% 零动态堆分配内核：
 
@@ -285,7 +285,7 @@ pub fn demoA2aTaskLifecycle() {
 }
 ```
 
-### 4.8 零堆分配 A2A AgentCard 能力发现注册表与健康加权路由器 (`card_registry.cp`)
+### 4.8 零堆分配 A2A AgentCard 能力发现注册表与健康加权路由器 (`cards.cp`)
 
 面向多智能体网络（Agent2Agent Mesh）的 100% 纯 CP 零动态堆分配 AgentCard 服务发现、技能/模态位图过滤、TTL 心跳过期摘除与健康加权路由择优内核（固定 64 槽位内联数组）：
 
@@ -344,7 +344,7 @@ pub fn demoA2aCardRegistry() {
 
 ---
 
-### 4.9 零堆分配 A2A 多智能体加权法定人数投票与离群估计聚合引擎 (`consensus_quorum.cp`)
+### 4.9 零堆分配 A2A 多智能体加权法定人数投票与离群估计聚合引擎 (`quorum.cp`)
 
 面向多智能体委员会评审、共识表决与多模型数值估计融合的 100% 纯 CP 零动态堆分配投票裁决引擎：
 

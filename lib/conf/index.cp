@@ -6,7 +6,7 @@ export * from "./value.cp";
 export * from "./dotenv.cp";
 export * from "./ini.cp";
 export * from "./toml.cp";
-export * from "./yaml_parser.cp";
+export * from "./yamlParser.cp";
 export * from "./yaml.cp";
 export * from "./json5.cp";
 export * from "./getter.cp";
@@ -31,14 +31,14 @@ export {
 } from "./editorconfig.cp";
 
 export * from "./frontmatter.cp";
-export * from "./makefile_parse.cp";
+export * from "./makefileParse.cp";
 
 export {
     PathMapping,
     ResolvedCandidate,
     expandConfigDir,
     TsConfigPaths,
-} from "./tsconfig_paths.cp";
+} from "./tsconfigPaths.cp";
 
 // ============================================================================
 // Pure-CP Extended Config, JSON Extensions & DSL Modules (Zero-Conflict)

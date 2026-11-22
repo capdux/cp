@@ -116,7 +116,7 @@ pub fn demoTestRunner(): !void {
    - CI 流水线应始终使用 `SnapshotUpdateMode.Check`（严禁静默写入新快照）；本地显式更新时切换至 `Update` 或 `CreateNew`，不匹配时自动联动 `cap:patch` 的 `DiffFormatter` 输出彩色差异。
 4. **CI 报告格式（`TestReporter`）**：
    - 原生支持 `TAP` v13、`JUnit` XML 与 `JSON` 三种标准格式，可直接对接 GitHub Actions / GitLab CI 测试结果归档。
-5. **并行测试 IPC 二进制帧编解码（`lib/test_runner/ipc_frame.cp`，吸收自 `/data/dev/bun/src/cli/test/parallel/Frame.cp`）**：
+5. **并行测试 IPC 二进制帧编解码（`lib/test_runner/ipcFrame.cp`，吸收自 `/data/dev/bun/src/cli/test/parallel/Frame.cp`）**：
    - 线协议格式：`[u32 LE payload_len][u8 kind][payload]`，嵌入式字符串为 `[u32 LE len][bytes]`，强制 64 MiB (`IPC_FRAME_MAX_PAYLOAD`) 单帧载荷上限，防止 `5 + len` 整数溢出与异常大包内存膨胀。
    - 核心符号：`IPC_FRAME_HEADER_SIZE` (`5`)、`IPC_FRAME_MAX_PAYLOAD`、`IPC_TRUNC_MARKER`、`IpcFrameError`、`IpcFrameKind`（`ready` / `file_start` / `test_done` / `file_done` / `repeat_bufs` / `junit_file` / `coverage_file` / `run` / `shutdown`）、`IpcDecodedFrame`、`IpcPayloadReader`、`IpcFrameWriter`、`decodeIpcFrame`。
 
@@ -135,7 +135,7 @@ let r = IpcPayloadReader.init(frame.payload);
 const file_idx = r.readU32Checked()?; // 7
 const path = r.readStrChecked()?;     // "test/math.test.cp"
 ```
-6. **并行工作窃取区间调度器（`lib/test_runner/work_stealing.cp`，吸收自 `/data/dev/bun/src/cli/test/parallel/FileRange.cp`）**：
+6. **并行工作窃取区间调度器（`lib/test_runner/workSteal.cp`，吸收自 `/data/dev/bun/src/cli/test/parallel/FileRange.cp`）**：
    - 常量与类型：`WORK_STEAL_MAX_WORKERS` (`64`)、`FileRange`（`init` / `len` / `isEmpty` / `contains` / `popFront` / `popBack` / `stealBackHalf`）、`WorkStealPool`（`partition` / `rangeOf` / `totalRemaining` / `stealFromBusiest` / `nextFor`）。
    - 本地派发从区间头部拉取（cache-hot 局部性），窃取从最忙同伴尾部切分后半段连续区间，兼顾负载均衡与目录局部性。
 
@@ -205,7 +205,7 @@ const added = coord.applyScaleUp(1200); // 3
 * = d0;
 * = added;
 ```
-10. **并行测试双向背压 IPC 通道（`lib/test_runner/ipc_channel.cp`，吸收自 `/data/dev/bun/src/cli/test/parallel/Channel.cp`）**：
+10. **并行测试双向背压 IPC 通道（`lib/test_runner/ipcChan.cp`，吸收自 `/data/dev/bun/src/cli/test/parallel/Channel.cp`）**：
    - 常量与类型：`IPC_CHANNEL_BUF_CAP` (`8192`)、`IpcChannelError`、`IpcChannelCloseReason`、`IpcChannelPollStatus`、`IpcChannelPollResult`、`IpcChannel`（`init` / `isAttached` / `isDone` / `isProtocolError` / `hasPendingWrites` / `queueSend` / `peekTxChunk` / `advanceTx` / `submitInflight` / `completeInflight` / `ingest` / `pollFrame` / `onPeerEof` / `close`）。
    - 同时支持 POSIX 部分写入背压队列与 Windows/异步 `tx_buf → inflight_buf` 双缓冲切换；入站支持任意分片重组、粘包连续解帧、未知 `IpcFrameKind` 前向跳过，以及 `> 64 MiB` 畸形帧触发 `ProtocolError`（保持 `isAttached() == true` 以与对端 `PeerEof` 精准区分）。
 

@@ -8,7 +8,7 @@
 //   5. Asymmetric U8/Int8 scalar quantization & fast integer-accumulated dot product (quantizeVectorU8, dequantizeVectorU8, quantizedDotU8)
 
 const std = @import("std");
-import { SearchHit } from "./flat_index.cp";
+import { SearchHit } from "./flatIndex.cp";
 
 struct FusedAcc {
     score: f32 = 0.0;

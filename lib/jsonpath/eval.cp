@@ -1,7 +1,7 @@
 // Source: cp/lib/jsonpath/eval.cp (RFC 9535 Evaluation Engine & Normalized Path)
 
 const std = @import("std");
-const jv = @import("./json_val.cp");
+const jv = @import("./jsonVal.cp");
 const ast = @import("./ast.cp");
 
 const JsonKind = jv.JsonKind;

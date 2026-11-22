@@ -39,8 +39,8 @@ export * from "./_archive.cp";
 export * from "./tar.cp";
 export * from "./zip.cp";
 export * from "./native.cp";
-export * from "./zip_writer.cp";
-export * from "./tar_pax.cp";
+export * from "./zipWriter.cp";
+export * from "./tarPax.cp";
 export * from "./magic.cp";
 
 // === Consolidated Pure-CP Compression Algorithms & Archive Containers ===
@@ -347,7 +347,7 @@ export {
     CdcDedupSlot,
     CdcDedupStats,
     CdcDedupTable,
-} from "./cdc_chunker.cp";
+} from "./cdcChunker.cp";
 
 // --- delta_varint ---
 export {
@@ -366,7 +366,7 @@ export {
     encodeDeltaOfDeltaI64,
     decodeDeltaOfDeltaI64,
     computeDeltaCompressionStats,
-} from "./delta_varint.cp";
+} from "./deltaVarint.cp";
 
 // --- for_bitpack ---
 export {
@@ -389,4 +389,4 @@ export {
     decodeForBlockU32,
     encodeDeltaForBlockU32,
     decodeDeltaForBlockU32,
-} from "./for_bitpack.cp";
+} from "./forBitpack.cp";

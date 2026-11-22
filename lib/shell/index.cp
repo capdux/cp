@@ -15,8 +15,8 @@ export * from "./braces.cp";
 export * from "./env.cp";
 export * from "./arith.cp";
 export * from "./parser.cp";
-export * from "./builtin_fs.cp";
-export * from "./builtin_text.cp";
+export * from "./builtinFs.cp";
+export * from "./builtinText.cp";
 export * from "./builtin.cp";
 export * from "./exec.cp";
 
@@ -95,7 +95,7 @@ export {
     CondStatFn,
     condToExitCode,
     CondExprEvaluator,
-} from "./cond_expr.cp";
+} from "./condExpr.cp";
 
 export {
     EchoError,
@@ -124,7 +124,7 @@ export {
     parseOctalMode,
     MkdirOpts,
     ParentDirIter,
-} from "./mkdir_opts.cp";
+} from "./mkdirOpts.cp";
 
 export {
     DEFAULT_SEQ_MAX_STEPS,
@@ -151,7 +151,7 @@ export {
     isSignalExitCode,
     parseExportArg,
     formatExportLine,
-} from "./exit_export.cp";
+} from "./exitExport.cp";
 
 export {
     SHELL_CD_MAX_PATH,
@@ -163,7 +163,7 @@ export {
     resolveCdTarget,
     formatCdError,
     ShellDirState,
-} from "./cd_path.cp";
+} from "./cdPath.cp";
 
 export {
     SHELL_MV_MAX_SOURCES,
@@ -171,7 +171,7 @@ export {
     MvOverwritePolicy,
     MvOpts,
     MvPlan,
-} from "./mv_opts.cp";
+} from "./mvOpts.cp";
 
 export {
     SHELL_TOUCH_MAX_PATHS,
@@ -179,7 +179,7 @@ export {
     TouchTimeTarget,
     TouchTimestamp,
     TouchOpts,
-} from "./touch_opts.cp";
+} from "./touchOpts.cp";
 
 export {
     SHELL_CP_MAX_SOURCES,
@@ -188,7 +188,7 @@ export {
     CpSymlinkPolicy,
     CpOpts,
     CpPlan,
-} from "./cp_opts.cp";
+} from "./cpOpts.cp";
 
 export {
     SHELL_RM_MAX_TARGETS,
@@ -201,7 +201,7 @@ export {
     RmPlan,
     isRmRootPath,
     isRmDotOrDotDotTarget,
-} from "./rm_opts.cp";
+} from "./rmOpts.cp";
 
 export {
     SHELL_CAT_MAX_INPUTS,
@@ -212,7 +212,7 @@ export {
     CatPlan,
     CatLineFormatter,
     formatCatBytes,
-} from "./cat_opts.cp";
+} from "./catOpts.cp";
 
 export {
     SHELL_LS_MAX_PATHS,
@@ -225,7 +225,7 @@ export {
     formatLsMode,
     formatLsHumanSize,
     sortLsEntries,
-} from "./ls_opts.cp";
+} from "./lsOpts.cp";
 
 export {
     SHELL_WHICH_MAX_ARGS,
@@ -241,7 +241,7 @@ export {
     formatWhichNotFound,
     resolveWhichSingle,
     evaluateWhichExitCode,
-} from "./which_plan.cp";
+} from "./which.cp";
 
 export {
     SHELL_PIPELINE_MAX_STAGES,
@@ -256,7 +256,7 @@ export {
     PipeStagePlan,
     PipeCleanupAction,
     ShellPipelinePlanner,
-} from "./pipeline_plan.cp";
+} from "./pipePlan.cp";
 
 export {
     YES_BUFSIZ,
@@ -270,7 +270,7 @@ export {
     computeYesLayout,
     fillYesChunk,
     YesStreamState,
-} from "./yes_stream.cp";
+} from "./yesStream.cp";
 
 export {
     SHELL_IF_MAX_STMTS,
@@ -280,7 +280,7 @@ export {
     IfStepKind,
     IfStepResult,
     ShellIfStateMachine,
-} from "./if_state.cp";
+} from "./ifState.cp";
 
 export {
     SHELL_BINARY_MAX_TERMS,
@@ -291,7 +291,7 @@ export {
     BinaryStepResult,
     shouldShortCircuitBinary,
     ShellBinaryStateMachine,
-} from "./binary_state.cp";
+} from "./binaryState.cp";
 
 export {
     SHELL_ASSIGNS_MAX_ITEMS,
@@ -306,7 +306,7 @@ export {
     canSkipPipelineAssigns,
     joinExpandedWords,
     ShellAssignsStateMachine,
-} from "./assigns_state.cp";
+} from "./assigns.cp";
 
 export {
     SHELL_SCRIPT_MAX_EXPRS,
@@ -318,7 +318,7 @@ export {
     ScriptStepResult,
     scriptPropagatesEnvToParent,
     ShellScriptStateMachine,
-} from "./script_state.cp";
+} from "./scriptState.cp";
 
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {

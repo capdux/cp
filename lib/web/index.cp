@@ -20,7 +20,7 @@ export {
     OpenApiComponentSchema,
     OpenApiEndpoint,
     OpenApiDoc,
-} from "./openapi_spec.cp";
+} from "./openapiSpec.cp";
 
 export {
     KeyValuePair,
@@ -30,7 +30,7 @@ export {
     ValidationErrorItem,
     ValidationReport,
     OpenApiValidator,
-} from "./openapi_router.cp";
+} from "./openapiRoute.cp";
 
 export {
     MAX_RPC_DEPTH,
@@ -47,18 +47,18 @@ export {
     encodeRpcValue,
     encodeRpcMessage,
     decodeRpcMessage,
-} from "./msgpack_rpc.cp";
+} from "./msgpackRpc.cp";
 
 export {
     WebhookError,
     StandardWebhook,
     GitHubWebhook,
     StripeWebhook,
-} from "./webhook_sign.cp";
+} from "./webhookSign.cp";
 
 export {
     IdempotencyStore,
-} from "./webhook_idempotency.cp";
+} from "./webhookIdem.cp";
 
 // --- HTTP/1.1, HTTP/2, HTTP/3, SSE, Multipart & URI Templates ---
 export {
@@ -232,13 +232,13 @@ export {
     CircuitConfig,
     CircuitStats,
     CircuitBreaker,
-} from "./circuit_breaker.cp";
+} from "./breaker.cp";
 
 export {
     JitterMode,
     BackoffPolicy,
     Bulkhead,
-} from "./circuit_policy.cp";
+} from "./breakerPol.cp";
 
 export {
     WebContext,
@@ -259,7 +259,7 @@ export {
     HedgedAttemptState,
     HedgedWinResult,
     HedgedRequestTracker,
-} from "./hedged_policy.cp";
+} from "./hedged.cp";
 
 // --- Zero-Alloc SSE Fanout Broker & Last-Event-ID Resumption Ring ---
 export {
@@ -274,7 +274,7 @@ export {
     SseBrokerStats,
     formatSseEventWire,
     SseFanoutBroker,
-} from "./sse_broker.cp";
+} from "./sseBroker.cp";
 
 // --- Zero-Alloc Stripe-Style API Idempotency-Key Lock & Response Replay Store ---
 export {
@@ -288,7 +288,7 @@ export {
     IdemAcquireDecision,
     IdemStoreStats,
     ApiIdempotencyStore,
-} from "./idempotency_store.cp";
+} from "./idempotency.cp";
 
 // --- Zero-Alloc RFC 9110 §13 Conditional Request & ETag Precondition Evaluator ---
 export {
@@ -306,4 +306,4 @@ export {
     etagListMatchesWeak,
     validateEtagList,
     evaluatePreconditions,
-} from "./etag_precondition.cp";
+} from "./etagPrecond.cp";

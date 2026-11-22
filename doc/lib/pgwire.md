@@ -40,7 +40,7 @@
 | `PgCommandTag.rowCount` | `(): u64?` — 返回 8 类标准命令影响/返回行数，`.other` 返回 `null` |
 | `PgCommandTag.isDml` / `isQueryOrCursor` | `(): bool` — 判断是否为 DML（`INSERT`/`DELETE`/`UPDATE`/`MERGE`）或查询/游标（`SELECT`/`MOVE`/`FETCH`）命令 |
 
-### `CommandComplete` 命令标签解析（`command_tag.cp`）
+### `CommandComplete` 命令标签解析（`commandTag.cp`）
 
 > 吸收自 `/data/dev/bun/src/sql/postgres/CommandTag.cp`，零堆分配解析并格式化 PostgreSQL v3.0 `CommandComplete` 报文携带的命令标签，严格校验 64 位无符号整数溢出与异常格式。
 
@@ -56,7 +56,7 @@ const n = tag.format(buf[0..])?;
 // buf[0..n] == "INSERT 0 42"
 ```
 
-### `NegotiateProtocolVersion`（`'v'`）协议协商报文编解码（`negotiate_protocol.cp`）
+### `NegotiateProtocolVersion`（`'v'`）协议协商报文编解码（`negotiateProtocol.cp`）
 
 > 吸收自 `/data/dev/bun/src/sql/postgres/protocol/NegotiateProtocolVersion.cp`，零堆分配实现 PostgreSQL v3.0 协议版本协商响应报文（Tag `'v' = 0x76`）的大端序编解码、版本拆解与异常边界防护。
 
@@ -72,7 +72,7 @@ const n = msg.encodeFrame(frame[0..])?;
 const decoded = PgNegotiateProtocolVersion.decodeFrame(frame[0..n])?;
 ```
 
-### `ErrorResponse` / `NoticeResponse` 18 字段诊断消息编解码（`field_message.cp`）
+### `ErrorResponse` / `NoticeResponse` 18 字段诊断消息编解码（`fieldMessage.cp`）
 
 > 吸收自 `/data/dev/bun/src/sql/postgres/protocol/FieldMessage.cp`，零堆分配完整支持 PostgreSQL v3.0 协议全部 18 种诊断字段（`S`/`V`/`C`/`M`/`D`/`H`/`P`/`p`/`q`/`W`/`s`/`t`/`c`/`d`/`n`/`F`/`L`/`R`）、SQLSTATE 分类提取与可重试事务冲突判定（`40001` / `40P01`）。
 

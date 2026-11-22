@@ -87,14 +87,14 @@ export {
     EvalError,
     MatchMode,
     EvalScorer,
-} from "./eval_metrics.cp";
+} from "./evalMetrics.cp";
 
 export {
     EvalCase,
     EvalSummary,
     RegressionDiff,
     EvalReport,
-} from "./eval_suite.cp";
+} from "./evalSuite.cp";
 
 // --- Kernel eBPF BTF Type Graph Inspector ---
 
@@ -147,7 +147,7 @@ export {
     LatencyBucketHistogram,
     OtlpSpanRecord,
     OtlpSpanBatch,
-} from "./telemetry_export.cp";
+} from "./telemetry.cp";
 
 // --- Zero-Alloc Structured Logger (JSONL / Logfmt + Trace Correlation) ---
 
@@ -161,7 +161,7 @@ export {
     ObsLoggerConfig,
     ObsLoggerStats,
     ObsStructuredLogger,
-} from "./structured_log.cp";
+} from "./structLog.cp";
 
 // --- Zero-Alloc Online Welford/EWMA Anomaly Detector & Alert Cooldown Controller ---
 
@@ -171,7 +171,7 @@ export {
     AnomalyEval,
     AnomalyDetectorStats,
     OnlineAnomalyDetector,
-} from "./anomaly_detector.cp";
+} from "./anomaly.cp";
 
 // --- Zero-Alloc HDR Log-Linear High-Dynamic-Range Latency Histogram ---
 
@@ -182,7 +182,7 @@ export {
     HDR_MAX_SUPPORTED_VALUE,
     HdrQuantileSummary,
     HdrHistogram,
-} from "./hdr_histogram.cp";
+} from "./hdrHist.cp";
 
 // --- Zero-Alloc OpenTelemetry Tail-Based Trace Sampler ---
 
@@ -194,7 +194,7 @@ export {
     TailSampleDecision,
     TailSamplerStats,
     TailTraceSampler,
-} from "./trace_sampler.cp";
+} from "./traceSample.cp";
 
 // --- Zero-Alloc Google SRE Multi-Window Multi-Burn-Rate SLO Monitor ---
 
@@ -205,7 +205,7 @@ export {
     SloWindowMetrics,
     SloBurnEvaluation,
     SloBurnMonitor,
-} from "./slo_burn_rate.cp";
+} from "./sloBurn.cp";
 
 // --- Zero-Alloc OpenTelemetry / Prometheus Histogram Exemplar Reservoir ---
 
@@ -220,7 +220,7 @@ export {
     ExemplarReservoirStats,
     formatExemplarOpenMetrics,
     AlignedHistogramExemplarReservoir,
-} from "./exemplar_reservoir.cp";
+} from "./exemplar.cp";
 
 // --- Zero-Alloc Prometheus / OpenTelemetry High-Cardinality Guard & __overflow__ Rollup ---
 
@@ -238,4 +238,4 @@ export {
     computeSeriesFingerprint,
     labelValueOrOverflow,
     CardinalityGuard,
-} from "./cardinality_guard.cp";
+} from "./cardinality.cp";

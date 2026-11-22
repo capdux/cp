@@ -18,8 +18,8 @@
 | [lib/pkg/linker.cp](file:///data/dev/cp/lib/pkg/linker.cp) | 331 | `install/hoisted_install.cp` | 模块树链接与补丁引擎 `InstallStrategy`（`Hoisted`/`Isolated`）、`BinLinker`（`.bin` 软链与 `0o755`）、`PackageLinker`（硬链/拷贝/软链与 `cap:patch` 补丁注入） |
 | [lib/pkg/manager.cp](file:///data/dev/cp/lib/pkg/manager.cp) | 615 | `install/PackageManager.cp` | 端到端包管理引擎 `PackageManager`（`package.json` → 增量 `cap.lock` → 解析 → 缓存/解包+SRI → Hoisted/Isolated 链接 + `.bin` + 补丁 → Lockfile 落盘） |
 | [lib/pkg/workspace.cp](file:///data/dev/cp/lib/pkg/workspace.cp) | 723 | `install/lockfile.cp` & `PnpmMatcher.cp` | Monorepo Workspaces 引擎 `WorkspaceGraph`/`WorkspaceMember`/`CatalogMap`（`cap:glob` 扫描、`workspace:*`/`^`/`~`、`catalog:`/`catalog:<name>`、成员 DAG `topoSortMembers()` 与环检测） |
-| [lib/pkg/registry_client.cp](file:///data/dev/cp/lib/pkg/registry_client.cp) | 894 | `install/NetworkTask.cp` & `PackageManifestMap.cp` | 工业级 Registry HTTP 客户端与缓存层 `RegistryHttpClient`/`RegistryCacheEntry`/`RetryPolicy`/`MockRegistryTransport`（`Accept`、`If-None-Match`/304、`Bearer`/`Basic`、`<cache_dir>/manifests/<hash>.{json,etag,meta}` 磁盘缓存、429/5xx + `Retry-After` 退避） |
-| [lib/pkg/lifecycle.cp](file:///data/dev/cp/lib/pkg/lifecycle.cp) | 567 | `install/lifecycle_script_runner.cp` & `postinstall_optimizer.cp` | 零信任生命周期脚本执行器 `LifecycleRunner`/`TrustedPolicy`/`LifecyclePhase`（`trustedDependencies` 白名单拦截 `blocked_scripts`、`PosixSpawn` + `Pipe` 捕获、注入 `PATH` + `npm_*` + `INIT_CWD`） |
+| [lib/pkg/registry.cp](file:///data/dev/cp/lib/pkg/registry.cp) | 894 | `install/NetworkTask.cp` & `PackageManifestMap.cp` | 工业级 Registry HTTP 客户端与缓存层 `RegistryHttpClient`/`RegistryCacheEntry`/`RetryPolicy`/`MockRegistryTransport`（`Accept`、`If-None-Match`/304、`Bearer`/`Basic`、`<cache_dir>/manifests/<hash>.{json,etag,meta}` 磁盘缓存、429/5xx + `Retry-After` 退避） |
+| [lib/pkg/lifecycle.cp](file:///data/dev/cp/lib/pkg/lifecycle.cp) | 567 | `install/lifecycle_script_runner.cp` & `postinstall.cp` | 零信任生命周期脚本执行器 `LifecycleRunner`/`TrustedPolicy`/`LifecyclePhase`（`trustedDependencies` 白名单拦截 `blocked_scripts`、`PosixSpawn` + `Pipe` 捕获、注入 `PATH` + `npm_*` + `INIT_CWD`） |
 | [lib/pkg/migration.cp](file:///data/dev/cp/lib/pkg/migration.cp) | 1248 | `install/migration.cp` & `yarn.cp` & `pnpm.cp` | 多生态 Lockfile 迁移器 `LockfileMigrator`（`package-lock.json` v2/v3、`yarn.lock` v1、`pnpm-lock.yaml` v6-v9 YAML AST）与依赖图诊断引擎 `DependencyAnalyzer`（`why`/`findDuplicates`/`auditIntegrity`） |
 | [lib/pkg/index.cp](file:///data/dev/cp/lib/pkg/index.cp) | 18 | `install/install.cp` | `cap:pkg` 统一导出入口（重导出全部 12 个核心子模块及 `Integrity`/`IntegrityTag`） |
 | **核心库合计** | **7,948** | — | **13 个模块全部 `cpc check` 0 报错** |
@@ -93,7 +93,7 @@
   - 支持 `catalog:` 与 `catalog:<name>` 版本查表解析；
   - 提供 `hasCycle()` 环检测与 `topoSortMembers()` 成员依赖 DAG 拓扑排序（确保被依赖包优先构建/安装），并支持 `applyToLockfile()` 落盘。
 
-### 10. Registry HTTP 客户端与磁盘元数据缓存 (`lib/pkg/registry_client.cp`)
+### 10. Registry HTTP 客户端与磁盘元数据缓存 (`lib/pkg/registry.cp`)
 - **`RegistryHttpClient` / `RegistryCacheEntry` / `RetryPolicy` / `MockRegistryTransport`**：
   - 自动生成标准 HTTP/1.1 请求（`Accept: application/vnd.npm.install-v1+json; q=1.0, application/json; q=0.8, */*`、`If-None-Match`、`Authorization: Bearer/Basic`）；
   - 持久化磁盘元数据缓存（`<cache_dir>/manifests/<hash>.{json,etag,meta}`），支持 `Cache-Control: max-age` TTL 新鲜度短路与 `304 Not Modified` 零流量复用；
@@ -139,12 +139,12 @@
 - **`lib/pkg/exports.cp`**（`package.json` `exports` 条件导出解析）：`ExportTargetKind`、`ExportConditionRule`、`ExportSubpathEntry`、`ResolveStatus`、`ResolveResult`、`ExportsMap`
 - **`lib/pkg/matcher.cp`**（包模式通配符匹配器）：`MatcherBehavior`、`PackagePattern`、`PackageMatcher`、`wildcardMatch`
 - **`lib/pkg/spdx.cp`**（SPDX 2.3 许可证表达式词法解析与校验）：`SpdxTokenKind`、`SpdxToken`、`SpdxLexer`、`isValidSpdxExpression`、`SpdxIdIter`、`isCommonPermissive`
-- **`lib/pkg/postinstall_optimizer.cp`**（吸收自 `/data/dev/bun/src/install/postinstall_optimizer.cp`，零分配 Postinstall 脚本优化器与原生二进制替代包匹配）：`MAX_DYNAMIC_OPTIMIZER_RULES`、`PostinstallMode`、`SemverTriple`、`PostinstallPkgInfo`、`DynamicOptimizerRule`、`PostinstallOptimizerConfig`、`findNativeBinlinkReplacement`（内置 `esbuild` / `@anthropic-ai/claude-code` 原生二进制直连替换与 `sharp >= 0.33.0` 版本门限跳过，Windows 平台自动禁用 Unix binlink 替换，支持 `configureNativeDependencies` / `configureIgnoreScripts` 动态覆盖与根安装树 `tree_id == 0` 约束）
+- **`lib/pkg/postinstall.cp`**（吸收自 `/data/dev/bun/src/install/postinstall_optimizer.cp`，零分配 Postinstall 脚本优化器与原生二进制替代包匹配）：`MAX_DYNAMIC_OPTIMIZER_RULES`、`PostinstallMode`、`SemverTriple`、`PostinstallPkgInfo`、`DynamicOptimizerRule`、`PostinstallOptimizerConfig`、`findNativeBinlinkReplacement`（内置 `esbuild` / `@anthropic-ai/claude-code` 原生二进制直连替换与 `sharp >= 0.33.0` 版本门限跳过，Windows 平台自动禁用 Unix binlink 替换，支持 `configureNativeDependencies` / `configureIgnoreScripts` 动态覆盖与根安装树 `tree_id == 0` 约束）
 - **`lib/pkg/overrides.cp`**（吸收自 `/data/dev/bun/src/install/lockfile/OverrideMap.cp`，零堆分配 npm `overrides` 与 Yarn `resolutions` 依赖版本覆写映射）：`MAX_OVERRIDE_RULES`、`OverrideError`、`OverrideSourceKind`、`RootDepSpec`、`OverrideRule`、`normalizeOverrideKey`、`OverrideMap`（支持 `$pkg` 根依赖版本解引用、npm 单层 `{ ".": "ver" }` 语法、Yarn `**/` 通配前缀剥离、多级嵌套与 `patch:` 拦截、按包名字典序确定性排序与 JSON 序列化）
-- **`lib/pkg/update_request.cp`**（吸收自 `/data/dev/bun/src/install/PackageManager/UpdateRequest.cp`，零堆分配 CLI `add/remove/update/link/unlink` 位置参数说明符解析与去重列表）：`MAX_UPDATE_REQUESTS`、`UpdateRequestError`、`PackageSubcommand`、`UpdateSpecKind`、`UpdateRequest`、`UpdateRequestList`（支持 scoped/unscoped semver、dist-tag、`npm:` 别名、`link:` 自动补全、`file:`/`workspace:`/tarball/git/GitHub 简写与批量去重）
-- **`lib/pkg/yarn_lock_printer.cp`**（吸收自 `/data/dev/bun/src/install/lockfile/printer/Yarn.cp`，零堆分配 Yarn Lockfile v1 确定性序列化打印器）：`MAX_YARN_LOCK_PACKAGES`、`YarnPrintError`、`YarnLockDepKind`、`YarnLockDep`、`YarnLockPackage`、`mustQuoteYarnName`、`mustQuoteYarnKey`、`YarnLockPrinter`（支持 YAML 安全键名引号判定、多版本请求去重合并、`integrity` 无引号输出、依赖分组与字典序稳定排序）
+- **`lib/pkg/updateReq.cp`**（吸收自 `/data/dev/bun/src/install/PackageManager/UpdateRequest.cp`，零堆分配 CLI `add/remove/update/link/unlink` 位置参数说明符解析与去重列表）：`MAX_UPDATE_REQUESTS`、`UpdateRequestError`、`PackageSubcommand`、`UpdateSpecKind`、`UpdateRequest`、`UpdateRequestList`（支持 scoped/unscoped semver、dist-tag、`npm:` 别名、`link:` 自动补全、`file:`/`workspace:`/tarball/git/GitHub 简写与批量去重）
+- **`lib/pkg/yarnLock.cp`**（吸收自 `/data/dev/bun/src/install/lockfile/printer/Yarn.cp`，零堆分配 Yarn Lockfile v1 确定性序列化打印器）：`MAX_YARN_LOCK_PACKAGES`、`YarnPrintError`、`YarnLockDepKind`、`YarnLockDep`、`YarnLockPackage`、`mustQuoteYarnName`、`mustQuoteYarnKey`、`YarnLockPrinter`（支持 YAML 安全键名引号判定、多版本请求去重合并、`integrity` 无引号输出、依赖分组与字典序稳定排序）
 
-### Yarn Lockfile v1 打印示例（`yarn_lock_printer.cp`）
+### Yarn Lockfile v1 打印示例（`yarnLock.cp`）
 
 ```typescript
 import { YarnLockPrinter, YarnLockPackage } from "cap:pkg";
@@ -162,7 +162,7 @@ let buf: [512]u8 = undefined;
 const out = printer.printToBuffer(buf[0..])?;
 ```
 
-### CLI `UpdateRequest` 批量解析与去重示例（`update_request.cp`）
+### CLI `UpdateRequest` 批量解析与去重示例（`updateReq.cp`）
 
 ```typescript
 import { UpdateRequestList, PackageSubcommand } from "cap:pkg";
@@ -202,7 +202,7 @@ map.set("react19", "react", "^19.0.0")?;
 // map.resolve("react", "catalog:react19") == "^19.0.0"
 ```
 
-### 零分配 Monorepo 工作区双向映射与确定性排序（`workspace_map.cp`，吸收自 `/data/dev/bun/src/install/lockfile/Package/WorkspaceMap.cp`）
+### 零分配 Monorepo 工作区双向映射与确定性排序（`wsMap.cp`，吸收自 `/data/dev/bun/src/install/lockfile/Package/WorkspaceMap.cp`）
 
 - 核心导出：`MAX_WORKSPACE_MAP_ENTRIES` (128)、`WorkspaceMapError`（`EmptyPathOrName` / `DuplicateWorkspacePath` / `DuplicateWorkspaceName` / `CapacityExceeded`）、`isIgnoredWorkspacePath`、`hasIgnoredWorkspaceSegment`、`normalizeWorkspacePath`、`WorkspaceMapEntry`、`WorkspaceMap`（`init` / `put` / `getByPath` / `getByName` / `containsPath` / `containsName` / `sortByName` / `at` / `count` / `isEmpty`）。
 
@@ -234,7 +234,7 @@ pub fn demoFilter(allocator: std.mem.Allocator): ! {
 }
 ```
 
-### 锁文件 `configVersion`、默认链接器策略与 Isolated Store 路径编码（`config_version.cp`，吸收自 `/data/dev/bun/src/install/ConfigVersion.cp`）
+### 锁文件 `configVersion`、默认链接器策略与 Isolated Store 路径编码（`configVer.cp`，吸收自 `/data/dev/bun/src/install/ConfigVersion.cp`）
 
 - 常量与类型：`PKG_CONFIG_VERSION_CURRENT` (`1`)、`PKG_ISOLATED_STORE_DIR` (`".bun"`)、`ConfigVersionError`、`LockfileMigrationSource`（`none`/`legacy_bun`/`npm`/`yarn`/`pnpm` -> `defaultConfigVersion()`）、`PkgLinkerStrategy`（`hoisted`/`isolated` + `fromStr`/`asStr`）、`PkgConfigVersion`（`v0`/`v1` + `current`/`fromInt`/`fromFloat`/`defaultLinker`）；
 - 零堆路径编码：`formatIsolatedStoreEntry`（`@scope/pkg` + `2.1.0` -> `@scope+pkg@2.1.0`）、`formatIsolatedStorePath`（`node_modules/.bun/@scope+pkg@2.1.0/node_modules/@scope/pkg`），内置路径穿越与控制字符校验。
@@ -274,7 +274,7 @@ const n = g.renderExplain("react", WhyOptions{}, out[0..])?;
 // out[0..n] == "react@18.2.0\n  └─ my-app@1.0.0 (requires ^18.0.0)\n"
 ```
 
-### 生命周期脚本清单、路径裁剪与来源感知信任白名单（`script_list.cp`，吸收自 `/data/dev/bun/src/install/lockfile/Package/Scripts.cp`）
+### 生命周期脚本清单、路径裁剪与来源感知信任白名单（`scripts.cp`，吸收自 `/data/dev/bun/src/install/lockfile/Package/Scripts.cp`）
 
 - 常量与类型：`PKG_SCRIPT_SLOT_COUNT` (`6`)、`PkgScriptListError`、`PkgScriptSlotKind`（`Preinstall`/`Install`/`Postinstall`/`Preprepare`/`Prepare`/`Postprepare`）、`PkgScriptFormatMode`（`Completed` `✓` / `Untrusted` `»` / `Info`）、`PkgScriptTrustSource`（`NpmRegistry`/`LocalFile`/`Symlink`/`Git`/`Tarball`）、`isScriptExecutionAllowed`、`formatNodeModulesRelativeCwd`、`PkgScriptList`（`init` / `set` / `get` / `count` / `isEmpty` / `first` / `eql` / `format`）。
 
@@ -362,7 +362,7 @@ const stats = printer.render(
 * = stats;
 ```
 
-8. **包可执行文件 Shebang、`.bunx` 垫片编解码与 `bunx` 运行契约（`lib/pkg/bin_shim.cp`，吸收自 `/data/dev/bun/src/install/windows-shim/BinLinkingShim.cp` 与 `/data/dev/bun/docs/pm/bunx.mdx`）**：
+8. **包可执行文件 Shebang、`.bunx` 垫片编解码与 `bunx` 运行契约（`lib/pkg/binShim.cp`，吸收自 `/data/dev/bun/src/install/windows-shim/BinLinkingShim.cp` 与 `/data/dev/bun/docs/pm/bunx.mdx`）**：
    - **Shebang 尊重与 `--bun` 覆盖**：默认尊重包可执行文件头部的 `#!` Shebang（如 `#!/usr/bin/env node` 标记 `is_node = true` 并在缺少 `node` 时可自动回退至 `bun`）；无 Shebang 时按扩展名回退启动器（`.js`/`.mjs`/`.cjs`/`.ts`/`.tsx`/`.sh` → `bun run`，`.cmd`/`.bat` → `cmd /c`，`.ps1` → `powershell -ExecutionPolicy Bypass -File`）。使用 `bunx --bun <cli>` 时 `--bun` 必须位于可执行文件名之前（其后的标志透传给目标 CLI）；当包名与可执行名不同时使用 `-p <pkg>` / `--package <pkg>`。
    - **`.bunx` 二进制布局与抗损坏校验**：尾部 16 位 `BinShimFlags` 携带 `v1=5474..v5=5478` 非零魔数版本标签（防偏移错位读取），配合 `bin_path_byte_len` / `arg_byte_len` 偶数字节长度与边界校验实现零分配安全解码。
 
@@ -382,7 +382,7 @@ const pn = decodeShimUtf16LeToUtf8(decoded.bin_path_utf16_bytes, path_utf8[0..])
 * = pn;
 ```
 
-9. **安装/发布运行选项、全局虚拟存储与供应链冷却期门禁（`lib/pkg/install_options.cp`，吸收自 `/data/dev/bun/src/install/PackageManager/PackageManagerOptions.cp`、`/data/dev/bun/docs/pm/cli/publish.mdx` 与 `/data/dev/bun/docs/pm/global-store.mdx`）**：
+9. **安装/发布运行选项、全局虚拟存储与供应链冷却期门禁（`lib/pkg/options.cp`，吸收自 `/data/dev/bun/src/install/PackageManager/PackageManagerOptions.cp`、`/data/dev/bun/docs/pm/cli/publish.mdx` 与 `/data/dev/bun/docs/pm/global-store.mdx`）**：
    - **`bun publish` 规范校验**：默认 dist-tag 为 `latest`；非 scoped 包（不以 `@` 开头）始终公开，尝试以 `--access restricted` 发布会被 `PkgPublishConfig.validateForPackage` 拒绝（`UnscopedRestrictedPublish`）；CI 重跑场景建议启用 `--tolerate-republish` 以幂等退出码 0 忽略已存在版本；直接传入预打包 `.tgz` 路径发布时不执行 `prepublishOnly`/`prepack` 等生命周期脚本。
    - **全局虚拟存储（Global Virtual Store）**：默认关闭且**仅在 `isolated` 链接器下生效**（`enableGlobalVirtualStore(true)`，hoisted 下自动拒绝或禁用）；热安装路径将逐文件 `clonefileat` 替换为单次 `symlink()` 指向共享 `<cache>/links/` 目录，显著缩短 CI 温缓存安装耗时并压缩单项目 `node_modules` 体积。
    - **供应链冷却期门禁（`--minimum-release-age`）**：通过 `isReleaseAgeSatisfied(published_unix_sec, now_unix_sec)` 拒绝发布未满设定秒数的新版本，缓解供应链恶意抢发风险。
@@ -401,7 +401,7 @@ opts.publish.access = PkgPublishAccess.Restricted;
 opts.publish.validateForPackage("@acme/sdk")?;
 ```
 
-10. **安装前供应链安全扫描协议与决策引擎（`lib/pkg/security_scanner.cp`，吸收自 `/data/dev/bun/src/install/PackageManager/security_scanner.cp` & `/data/dev/bun/docs/pm/security-scanner-api.mdx`）**：
+10. **安装前供应链安全扫描协议与决策引擎（`lib/pkg/scanner.cp`，吸收自 `/data/dev/bun/src/install/PackageManager/security_scanner.cp` & `/data/dev/bun/docs/pm/security-scanner-api.mdx`）**：
     - **双级严重度与运行环境决策矩阵（`SecurityInstallDecision`）**：
       - `fatal`：无论交互终端或 CI，一律立即中止安装（`cancel_fatal`）；
       - `warn`：交互式非 CI 终端提示 `[y/N]` 确认（`prompt_user`，配合 `parseWarningConfirmation` 仅放行显式 `y`/`Y` 单字符输入），在 CI 或非 TTY 管道环境下自动安全取消（`cancel_non_interactive_warn`）；
@@ -435,7 +435,7 @@ const sn = res.formatSummaryLine(summary[0..])?;               // "1 advisory (1
 * = sn;
 ```
 
-11. **`bun patch` 持久化补丁定位、命名规范与全局缓存隔离标签（`lib/pkg/patch_spec.cp`，吸收自 `/data/dev/bun/src/install/PackageManager/patchPackage.cp`、`/data/dev/bun/src/install/patch_install.cp` & `/data/dev/bun/docs/pm/cli/patch.mdx`）**：
+11. **`bun patch` 持久化补丁定位、命名规范与全局缓存隔离标签（`lib/pkg/patchSpec.cp`，吸收自 `/data/dev/bun/src/install/PackageManager/patchPackage.cp`、`/data/dev/bun/src/install/patch_install.cp` & `/data/dev/bun/docs/pm/cli/patch.mdx`）**：
     - **三步持久化补丁工作流（参考 `/data/dev/bun/docs/pm/cli/patch.mdx`）**：
       1. `bun patch <pkg>`：必须先执行准备步骤以创建与 Global Cache 解除硬链接/软链接的独立副本，避免直接修改污染全局共享缓存；
       2. 本地编辑 `node_modules/<pkg>` 并验证；
@@ -473,7 +473,7 @@ const roundtrip_h = parsePatchCacheHash(cache_buf[0..cn])?; // == h
 * = roundtrip_h;
 ```
 
-12. **严格隔离安装存储路径编码、Peer 哈希与全局虚拟存储闭包图（`lib/pkg/isolated_store.cp`，吸收自 `/data/dev/bun/src/install/isolated_install/Store.cp` & `/data/dev/bun/docs/pm/isolated-installs.mdx`）**：
+12. **严格隔离安装存储路径编码、Peer 哈希与全局虚拟存储闭包图（`lib/pkg/isoStore.cp`，吸收自 `/data/dev/bun/src/install/isolated_install/Store.cp` & `/data/dev/bun/docs/pm/isolated-installs.mdx`）**：
     - **两层隔离布局防幽灵依赖（参考 `/data/dev/bun/docs/pm/isolated-installs.mdx`）**：
       - 实际包内容落盘于 `node_modules/.bun/<store_key>/node_modules/<pkg_name>`（`formatIsolatedStoreDir`），顶层 `node_modules` 仅创建指向隔离存储的相对软链接（`formatIsolatedSymlinkTarget`，作用域包自动补 `../.bun/...`）；
       - 新建 Workspace 工程（`configVersion = 1`）默认启用 `isolated` 链接器；Workspace 包直接软链至源码目录而不进入中央存储。
@@ -534,13 +534,13 @@ const env = resolveNonInteractiveGitEnv(cfg, false, false);
 * = env;
 ```
 
-14. **隔离安装符号链接对账状态机与相对路径规划器（`lib/pkg/isolated_symlink.cp`，吸收自 `/data/dev/bun/src/install/isolated_install/Symlinker.cp` & `/data/dev/bun/docs/pm/isolated-installs.mdx`）**：
+14. **隔离安装符号链接对账状态机与相对路径规划器（`lib/pkg/symlink.cp`，吸收自 `/data/dev/bun/src/install/isolated_install/Symlinker.cp` & `/data/dev/bun/docs/pm/isolated-installs.mdx`）**：
     - **双层隔离 `node_modules/.bun/` 链接模型**：顶层 `node_modules/<pkg>`（及作用域 `node_modules/@scope/<pkg>`）均通过相对符号链接指向中央隔离存储 `node_modules/.bun/<pkg>@<ver>/node_modules/<pkg>`（Workspace 包直接软链至其源码目录），彻底杜绝幽灵依赖（phantom dependencies）；`computeRelativeSymlinkTarget` 零分配自动处理作用域层深（`../.bun/...`）、跨 Workspace 路径（`../../core`）与 Windows 反斜杠规范化。
     - **非破坏性 `bun patch <pkg>` 工作区保护与跨平台对账（`reconcileIsolatedSymlink`）**：
       - `ExpectExisting`（增量安装）：当目标路径为实体目录（`RealDirectory`）时返回 `PreservePatchedDir`，严禁删除用户正在 `bun patch <pkg>` 编辑中的独立副本；当目标为符号链接时自动剥离 libuv Windows Junction 附加的尾斜杠（`stripTrailingSlash`），Windows 平台下同时比对 `fallback_junction_target` 绝对路径，目标不一致时 POSIX 返回 `UnlinkAndCreateSymlink`、Windows 返回 `RmdirAndCreateSymlink`；
       - `ExpectMissing`（冷安装）与 `IgnoreFailure`（非关键链接）严格对齐上游策略；`IsolatedLinkPlan` 支持批量记录并统计 `noop_count` / `create_count` / `replace_count` / `preserved_patch_count`。
 
-### 隔离安装符号链接对账与相对目标计算示例（`lib/pkg/isolated_symlink.cp`）
+### 隔离安装符号链接对账与相对目标计算示例（`lib/pkg/symlink.cp`）
 
 ```cp
 import {
@@ -577,7 +577,7 @@ const st = plan.stats(); // st.preserved_patch_count == 1
 * = st;
 ```
 
-15. **包清单内存/磁盘缓存状态机与全局缓存路径策略（`lib/pkg/manifest_cache.cp`，吸收自 `/data/dev/bun/src/install/PackageManifestMap.cp` & `/data/dev/bun/docs/pm/global-cache.mdx`）**：
+15. **包清单内存/磁盘缓存状态机与全局缓存路径策略（`lib/pkg/manifest.cp`，吸收自 `/data/dev/bun/src/install/PackageManifestMap.cp` & `/data/dev/bun/docs/pm/global-cache.mdx`）**：
     - **三态清单缓存与扩展清单自动降级（`PackageManifestCache`）**：
       - 维护 `Fresh` / `Expired` / `NotFound` 三种槽位状态：命中 `NotFound` 负缓存直接短路避免重复磁盘探测；当需要完整扩展元数据（`needs_extended_manifest = true`）而缓存仅含精简 corgi 清单（`has_extended_manifest = false`）时，自动将条目从 `Fresh` 降级为 `Expired`（`demoted_for_extended = true`），并支持 `allow_expired = true` 保留 ETag 用于 `If-None-Match` 条件重验；
       - `ingestDiskManifest` 严格遵循 `Cache-Control` 过期时间（`public_max_age > now_sec`）与 `disableManifest`（`enable_manifest_cache = false`）开关。
@@ -585,7 +585,7 @@ const st = plan.stats(); // st.preserved_patch_count == 1
       - 全局缓存默认位于 `~/.bun/install/cache/<name>@<version>`；若版本含 pre-release（`-`）或 build（`+`）后缀，自动将后缀替换为确定性 8 位十六进制哈希以规避深路径过长错误，并拦截 `..` 路径穿越；
       - `parseInstallCopyBackend` 支持 `hardlink`（Linux/Windows 默认）、`clonefile`（macOS CoW 默认）、`clonefile_each_dir`、`copyfile` 与 `symlink`。
 
-### 清单缓存状态机与全局缓存路径示例（`lib/pkg/manifest_cache.cp`）
+### 清单缓存状态机与全局缓存路径示例（`lib/pkg/manifest.cp`）
 
 ```cp
 import {
@@ -614,14 +614,14 @@ const dn = formatGlobalCacheEntryDir("react", "19.0.0-rc.1", dir_buf[0..])?;
 * = dn;
 ```
 
-16. **本地目录 / 软链 / Workspace 解析与发布版本替换（`lib/pkg/folder_resolver.cp`，吸收自 `/data/dev/bun/src/install/resolvers/folder_resolver.cp` & `/data/dev/bun/docs/pm/workspaces.mdx`）**：
+16. **本地目录 / 软链 / Workspace 解析与发布版本替换（`lib/pkg/folder.cp`，吸收自 `/data/dev/bun/src/install/resolvers/folder_resolver.cp` & `/data/dev/bun/docs/pm/workspaces.mdx`）**：
     - **`package.json` 路径规范化与去重缓存（`normalizeFolderPackageJsonPath` / `FolderResolverCache`）**：
       - 统一解析 `file:`、`link:`、`workspace:`、全局软链（`GlobalLink`）与缓存目录（`CacheFolder`）路径，自动剥离协议前缀、统一 POSIX `/` 分隔符、折叠 `.`/`..` 段并同步输出绝对 `package.json` 路径与相对项目根的目录路径；
       - `shouldCheckBundledDependencies` 遵循 Bun 契约：`Folder`/`Symlink`/`CacheFolder` 检查 `bundledDependencies`，`Workspace` 跳过；`formatWorkspaceSearchPath` 自动为非 `.`/`/` 相对路径前置 `./` 并支持 JSON 转义引号输出。
     - **发布阶段 `workspace:` 协议版本替换（`resolveWorkspacePublishVersion`）**：
       - 严格对齐 `docs/pm/workspaces.mdx`：`workspace:*` -> `<version>`、`workspace:^` -> `^<version>`、`workspace:~` -> `~<version>`，显式版本（如 `workspace:1.0.2`）优先覆盖当前 `package.json` 版本号。
 
-### Workspace 路径规范化与发布版本替换示例（`lib/pkg/folder_resolver.cp`）
+### Workspace 路径规范化与发布版本替换示例（`lib/pkg/folder.cp`）
 
 ```cp
 import {
@@ -653,7 +653,7 @@ let cache = FolderResolverCache.init();
 * = vn;
 ```
 
-### Monorepo Workspace `package.json` 缓存与缩进/JSONC 探测（`lib/pkg/workspace_pkg_cache.cp`）
+### Monorepo Workspace `package.json` 缓存与缩进/JSONC 探测（`lib/pkg/wsCache.cp`）
 
 - 吸收自 `/data/dev/bun/src/install/PackageManager/WorkspacePackageJSONCache.cp` 与 `/data/dev/bun/docs/pm/workspaces.mdx`；
 - 导出：`WORKSPACE_PKG_CACHE_MAX_ENTRIES` (`32`)、`WORKSPACE_PKG_PATH_MAX_LEN` (`256`)、`WorkspacePkgCacheError`、`JsonIndentation`、`WorkspacePkgJsonOptions`、`WorkspacePkgJsonSummary`、`WorkspacePkgCacheEntry`、`WorkspacePkgCacheStats`、`isAbsoluteWorkspacePath`、`normalizeWorkspacePkgJsonPath`、`guessJsonIndentation`、`analyzeWorkspacePackageJson`、`WorkspacePkgJsonCache`；
@@ -679,7 +679,7 @@ const e2 = cache.getOrInsert("C:/repo/packages/pkg-a/package.json", pkg_src, Wor
 * = e2;
 ```
 
-### Isolated Install 文件物化策略、错误自愈与后端降级协调器（`lib/pkg/isolated_materializer.cp`）
+### Isolated Install 文件物化策略、错误自愈与后端降级协调器（`lib/pkg/materializer.cp`）
 
 - 吸收自 `/data/dev/bun/src/install/isolated_install/FileCloner.cp`、`Hardlinker.cp` 与 `/data/dev/bun/docs/pm/isolated-installs.mdx`；
 - 导出：`ISOLATED_MAX_SKIP_DIRS` (`16`)、`ISOLATED_MAX_DIRNAME_LEN` (`64`)、`IsolatedMaterializeError`、`IsolatedLinkerMode`、`MaterializePlatform`、`MaterializeBackend`、`MaterializeErrno`、`MaterializeRecoveryAction`、`MaterializeDecision`、`MaterializeStats`、`resolveDefaultLinkerMode`、`parseLinkerModeFlag`、`defaultMaterializeBackend`、`fallbackMaterializeBackend`、`decideMaterializeRecovery`、`resolveMaterializeDestPath`、`IsolatedMaterializer`；
@@ -710,7 +710,7 @@ const d3 = mat.recordAttempt(MaterializeErrno.Ok, true, false);    // hardlinked
 * = d3;
 ```
 
-### 包安装 5 阶段进度条渲染与节点计数器（`lib/pkg/install_progress.cp`）
+### 包安装 5 阶段进度条渲染与节点计数器（`lib/pkg/progress.cp`）
 
 - 吸收自 `/data/dev/bun/src/install/PackageManager/ProgressStrings.cp` 与 `/data/dev/bun/docs/pm/cli/install.mdx`；
 - 导出：`INSTALL_PROGRESS_NAME_CAP` (`128`)、`InstallProgressError`、`InstallProgressStage`（`Download`/`Extract`/`Install`/`Save`/`Script`）、`stagePlainLabel`、`stageEmojiPrefix`、`stageBannerLabel`、`InstallProgressTracker`；
@@ -731,7 +731,7 @@ const n = pt.formatStatusLine(line[0..])?; // "Installing [15/25]"
 * = n;
 ```
 
-### 锁文件版本化 URL 绑定与候选版本集合（`lib/pkg/versioned_url.cp`）
+### 锁文件版本化 URL 绑定与候选版本集合（`lib/pkg/verUrl.cp`）
 
 - 吸收自 `/data/dev/bun/src/install/versioned_url.cp` 与 `/data/dev/bun/docs/pm/lockfile.mdx`；
 - 导出：`VERSIONED_URL_MAX_ENTRIES` (`64`)、`VersionedUrlError`、`PkgSemverTriple`（`parse`/`isPrerelease`/`compare`/`eql`/`formatInto`）、`LegacyV2VersionedUrl`（`migrate`）、`VersionedUrl`（`init`/`parse`/`eql`/`eqlStrict`/`order`/`isHttps`/`isTarball`/`formatLockEntry`）、`VersionedUrlSet`（`init`/`count`/`at`/`push`/`sortAsc`/`sortDesc`/`latestStable`/`latestAny`/`findByVersion`）；
@@ -753,7 +753,7 @@ const any_latest = set.latestAny(); // 2.0.0-beta.1
 * = any_latest;
 ```
 
-### pnpm-lock.yaml (v7/v8/v9) 依赖路径解析与迁移索引（`lib/pkg/pnpm_lock.cp`）
+### pnpm-lock.yaml (v7/v8/v9) 依赖路径解析与迁移索引（`lib/pkg/pnpmLock.cp`）
 
 - 吸收自 `/data/dev/bun/src/install/pnpm.cp` 与 `/data/dev/bun/docs/pm/lockfile.mdx`；
 - 导出：`PNPM_LOCK_MIN_SUPPORTED_MAJOR` (`7`)、`PNPM_LOCK_MAX_PATCHES` (`64`)、`PNPM_LOCK_MAX_SNAPSHOTS` (`128`)、`PNPM_LOCK_MAX_IMPORTERS` (`64`)、`PnpmLockError`、`PnpmLockVersion`、`parsePnpmLockfileVersion`、`PnpmDepPathSuffix`、`indexOfPnpmDepPathSuffix`、`removePnpmDepPathSuffix`、`extractPnpmPatchHash`、`extractPnpmPeersSuffix`、`PnpmPackageKey`、`parsePnpmPackageKey`、`PnpmDepResolutionKind`、`PnpmImporterDepSpec`、`parsePnpmImporterVersion`、`formatPnpmCanonicalKey`、`PnpmPatchEntry`、`PnpmSnapshotRecord`、`PnpmImporterRecord`、`PnpmMigrationStats`、`PnpmMigrationIndex`；
@@ -787,7 +787,7 @@ const spec = parsePnpmImporterVersion("my-lodash", "npm:lodash@4.17.21")?;
 * = spec;
 ```
 
-### `package.json` 依赖/信任列表/补丁编辑器（`lib/pkg/package_json_editor.cp`）
+### `package.json` 依赖/信任列表/补丁编辑器（`lib/pkg/editor.cp`）
 
 - 吸收自 `/data/dev/bun/src/install/PackageManager/PackageJSONEditor.cp` 与 `/data/dev/bun/docs/pm/cli/add.mdx`；
 - 导出：`PKG_JSON_MAX_DEPS_PER_GROUP` (`64`)、`PKG_JSON_MAX_TRUSTED_DEPS` (`64`)、`PKG_JSON_MAX_PATCHED_DEPS` (`64`)、`PkgJsonEditError`、`PkgJsonDepGroup`（`Optional`/`Dev`/`Prod`/`Peer`）、`pkgJsonDepGroupFieldName`、`parsePkgJsonDepGroup`、`PkgJsonVersionPin`（`Patch`/`Minor`/`Major`）、`detectPkgJsonVersionPin`、`formatEditedVersionSpec`、`PkgJsonEditOptions`、`PkgJsonDepEntry`、`PkgJsonPatchEntry`、`PkgJsonEditStats`、`PkgJsonEditor`；
@@ -821,4 +821,46 @@ let json_buf: [128]u8 = [0; 128];
 const jn = ed.formatTrustedJson(json_buf[0..])?; // ["esbuild"]
 * = vn;
 * = jn;
+```
+
+### 包缓存目录多级解析、缓存命名与全局虚拟存储布局（`lib/pkg/cacheDir.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/PackageManager/PackageManagerDirectories.cp` 与 `/data/dev/bun/docs/pm/global-store.mdx`；
+- 导出：`PKG_CACHE_VERSION_CURRENT` (`1`)、`PKG_CACHE_MAX_HOSTNAME_INLINE` (`32`)、`PKG_CACHE_LINKS_SUBDIR` (`"links"`)、`PKG_CACHE_FALLBACK_TMP_SUBDIR` (`".tmp"`)、`PkgCacheDirError`、`hashCacheKey64`、`PkgCacheDirSource`、`PkgCacheEnv`、`PkgResolvedCacheDir`、`resolvePkgCacheDirPath`、`resolvePkgTempDirFallback`、`PkgCacheSemver`、`formatCachedNpmFolderName`、`formatCachedGitHubFolderName`、`formatCachedTarballFolderName`、`PkgGlobalStoreEligibility`、`PkgGlobalStoreInput`、`checkGlobalStoreEligibility`、`formatGlobalStoreLinkDir`；
+- **Global Virtual Store 与缓存目录最佳实践（参考 `/data/dev/bun/docs/pm/global-store.mdx`）**：
+  - 缓存目录解析严格按优先级回退：`explicit_cache_dir` > `BUN_INSTALL_CACHE_DIR` > `$BUN_INSTALL/install/cache` > `$XDG_CACHE_HOME/bun/install/cache` > `$HOME/.bun/install/cache` > `<project_root>/node_modules/.cache`；若解压阶段跨挂载点 `renameat` 触发 `EXDEV`，必须回退至 `<cache_dir>/.tmp` 确保同文件系统原子重命名；
+  - 缓存文件夹命名统一携带 `@@@1` 版本号与可选 `_patch_hash=<hex>`；自定义 registry hostname 超过 32 字节时截断至 12 字节并附带 `__<url_hash>` 防止路径超长；
+  - Global Virtual Store（`<cache_dir>/links/<storepath>-<16-hex-entry-hash>/node_modules`）仅适用于可安全跨项目共享的包；任何带 `bun patch` 补丁、被列入 `trustedDependencies`、本身为 `workspace:`/`file:`/`link:`、或传递依赖了本地协议的包，均必须通过 `checkGlobalStoreEligibility()` 回退至项目本地 `node_modules/.bun/`。
+
+```cp
+import {
+    PkgCacheEnv,
+    resolvePkgCacheDirPath,
+    PkgCacheSemver,
+    formatCachedNpmFolderName,
+    PkgGlobalStoreInput,
+    checkGlobalStoreEligibility,
+    formatGlobalStoreLinkDir,
+} from "cap:pkg";
+
+let dir_buf: [128]u8 = [0; 128];
+const resolved = resolvePkgCacheDirPath(PkgCacheEnv{ home_dir: "/home/dev" }, dir_buf[0..])?;
+// dir_buf[0..resolved.len] == "/home/dev/.bun/install/cache"
+
+let name_buf: [128]u8 = [0; 128];
+const nn = formatCachedNpmFolderName(
+    "react",
+    PkgCacheSemver{ major: 18, minor: 3, patch: 1 },
+    null,
+    null,
+    null,
+    name_buf[0..],
+)?; // "react@18.3.1@@@1"
+
+const elig = checkGlobalStoreEligibility(PkgGlobalStoreInput{});
+let link_buf: [256]u8 = [0; 256];
+const ln = formatGlobalStoreLinkDir(dir_buf[0..resolved.len], "react@18.3.1", 0x5664d3cd670b3205, link_buf[0..])?;
+* = nn;
+* = elig;
+* = ln;
 ```

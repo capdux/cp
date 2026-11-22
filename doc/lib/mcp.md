@@ -8,7 +8,7 @@
 - **能力路由器 (`server.cp`)**：`McpServer` 内置 `initialize`、`notifications/initialized`、`ping`、`tools/list`、`tools/call`、`resources/list`、`resources/read`、`prompts/list`、`prompts/get` 路由分发，并自动将工具执行错误封装为 `isError: true`。
 - **零堆分配工具注册表与权限治理 (`registry.cp`)**：`McpToolRegistry` 基于调用方固定槽位缓冲实现工具注册、能力风险分级（`ReadOnly`/`WriteLocal`/`Network`/`Destructive`）、网络 ACL、高危人工审批门槛（`RequireApproval`）、固定 60 秒窗口限流与动态 `tools/list` 可见集过滤。
 - **零堆分配会话生命周期与请求追踪器 (`session.cp`)**：`McpSession` 提供协议版本解析/格式化与兼容性降级协商（`V2024_11_05` / `V2025_03_26`）、能力位掩码交集协商（`McpCapabilityFlags`）、严格五态生命周期门控（`Disconnected` -> `Initializing` -> `Ready` -> `Closing` -> `Closed`）及固定槽位 JSON-RPC 2.0 在途请求追踪（注册、完成、取消、批量超时回收与统计）。
-- **零堆分配资源 URI 模板路由与订阅分发器 (`resource_router.cp`)**：`McpResourceRouter` 与 `matchUriTemplate` 提供 RFC 6570 简单 `{var}` 路径段零拷贝参数提取、静态路由优先于模板路由的分级解析、幂等去重客户端资源订阅/退订以及变更广播订阅者扇出收集。
+- **零堆分配资源 URI 模板路由与订阅分发器 (`resRouter.cp`)**：`McpResourceRouter` 与 `matchUriTemplate` 提供 RFC 6570 简单 `{var}` 路径段零拷贝参数提取、静态路由优先于模板路由的分级解析、幂等去重客户端资源订阅/退订以及变更广播订阅者扇出收集。
 - **零堆分配反向采样模型路由、递归守卫与进度追踪器 (`sampling.cp`)**：提供 MCP 2025-03-26 `sampling/createMessage` 三维偏好（`cost` / `speed` / `intelligence`）加权模型路由（`selectSamplingModel`）、嵌套采样递归深度与单树 Token 总预算硬拦截守卫（`SamplingDepthGuard`），以及固定槽位 `notifications/progress` 单调进度令牌追踪器（`McpProgressTracker`）。
 
 ## 2. 核心类型
@@ -19,7 +19,7 @@
 - **服务端**：`ToolHandler`、`ResourceReader`、`PromptBuilder`、`McpServer`
 - **工具治理注册表 (`registry.cp`)**：`ToolRiskLevel`、`ToolPolicy`、`PolicyDecision`、`RegisteredTool`、`McpToolRegistry`
 - **会话状态机与请求追踪 (`session.cp`)**：`McpProtocolVersion`、`McpCapabilityFlags`、`McpSessionState`、`McpSessionOpError`、`McpInflightRequest`、`McpSessionStats`、`McpSession`
-- **资源路由与订阅分发 (`resource_router.cp`)**：`UriParamCapture`、`McpResourceRoute`、`McpResourceMatch`、`McpSubscription`、`McpResourceRouterStats`、`McpResourceRouter`
+- **资源路由与订阅分发 (`resRouter.cp`)**：`UriParamCapture`、`McpResourceRoute`、`McpResourceMatch`、`McpSubscription`、`McpResourceRouterStats`、`McpResourceRouter`
 - **反向采样路由、递归守卫与进度追踪 (`sampling.cp`)**：`ModelPreferences`、`ModelCandidate`、`SamplingDepthGuard`、`ProgressEntry`、`ProgressUpdateStatus`、`McpProgressTracker`
 
 ## 3. API 速查
@@ -187,7 +187,7 @@ pub fn demoMcpSessionLifecycle() {
 }
 ```
 
-### MCP 资源 URI 模板路由与变更订阅广播示例 (`resource_router.cp`)
+### MCP 资源 URI 模板路由与变更订阅广播示例 (`resRouter.cp`)
 
 ```cp
 import {
@@ -290,7 +290,7 @@ pub fn demoMcpSamplingAndProgress() {
 
 ---
 
-## 九、 生产级 MCP 工具目录、策略门控分发与 `CallToolResult` 构造器 (`tool_dispatch.cp`)
+## 九、 生产级 MCP 工具目录、策略门控分发与 `CallToolResult` 构造器 (`dispatch.cp`)
 
 面向 AI Agent MCP Tool Server 的 100% 零堆分配工具注册、策略路由与标准结果响应构造引擎（30 行内构建类型安全、可观测 MCP 工具服务）：
 
@@ -350,7 +350,7 @@ pub fn demoMcpToolDispatch() {
 
 ---
 
-## 十、 零堆分配 MCP 工具参数严格约束校验与 AI 友好错误提示器 (`arg_validator.cp`)
+## 十、 零堆分配 MCP 工具参数严格约束校验与 AI 友好错误提示器 (`argValid.cp`)
 
 面向生产级 MCP Tool Server 的零拷贝顶层 JSON 参数校验器与 LLM 自愈提示渲染器：
 
@@ -397,7 +397,7 @@ pub fn demoMcpArgValidator() {
 
 ---
 
-## 十一、 零堆分配 MCP 协议版本/能力协商与资源订阅路由引擎 (`capability_negotiator.cp`)
+## 十一、 零堆分配 MCP 协议版本/能力协商与资源订阅路由引擎 (`capNeg.cp`)
 
 面向多版本 MCP（`2024-11-05` / `2025-03-26` / `2025-06-18`）服务端与多 Agent 客户端的 100% 纯 CP 零动态堆分配协议握手、能力位图交集协商、会话五态门禁与通配符资源订阅广播引擎：
 
@@ -456,7 +456,7 @@ pub fn demoMcpCapabilityNegotiator() {
 
 ---
 
-## 十二、 零堆分配 MCP 在途请求并发门控、取消令牌注册表与超时清扫器 (`inflight_gate.cp`)
+## 十二、 零堆分配 MCP 在途请求并发门控、取消令牌注册表与超时清扫器 (`inflight.cp`)
 
 面向高并发 MCP 服务端/客户端的 100% 纯 CP 零动态堆分配在途 JSON-RPC 请求生命周期、分方法并发限流、`notifications/cancelled` 取消令牌与超时清扫内核（固定 64 槽位内联池）：
 
@@ -503,7 +503,7 @@ pub fn demoMcpInflightGate() {
 
 ---
 
-## 十三、 零堆分配 MCP 资源订阅注册表、RFC 6570 URI 模板匹配与增量变更扇出通知器 (`resource_subscription.cp`)
+## 十三、 零堆分配 MCP 资源订阅注册表、RFC 6570 URI 模板匹配与增量变更扇出通知器 (`resSub.cp`)
 
 面向 MCP 2025-03-26 `resources/subscribe` 与 `notifications/resources/updated` 协议的 100% 纯 CP 零动态堆分配资源订阅与变更扇出引擎：
 
@@ -548,7 +548,7 @@ pub fn demoMcpResourceSubHub() {
 
 ---
 
-## 十四、 零堆分配 JSON-RPC 2.0 / MCP 批处理请求关联器与乱序响应重排引擎 (`batch_dispatcher.cp`)
+## 十四、 零堆分配 JSON-RPC 2.0 / MCP 批处理请求关联器与乱序响应重排引擎 (`batch.cp`)
 
 面向 JSON-RPC 2.0 §6 与 MCP 2025-03-26 批处理请求的 100% 纯 CP 零动态堆分配关联器、乱序响应重排器与超时清扫聚合引擎：
 

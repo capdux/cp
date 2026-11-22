@@ -4,7 +4,7 @@
 // Absorbed from Bun src/router/
 
 const std = @import("std");
-import { ParamMap } from "./param_map.cp";
+import { ParamMap } from "./paramMap.cp";
 
 pub struct RouteFormatter {
     pub static fn appendSlice(out: []u8, pos: usize, s: []const u8): usize! {

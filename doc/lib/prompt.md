@@ -88,7 +88,7 @@
 | `PackSummary` | `{ selected_count: usize, dropped_count: usize, used_tokens: u32, truncated_pinned: bool }` |
 | `packContextWindow(messages, max_tokens, reserve_output_tokens, out_indices: *[]usize): PackSummary?` | 先锁定保留全部 `pinned` 与 `System` 消息，再从最新消息逆序贪心装入剩余预算，最后按原始时间正序输出选中索引（内部采用 `u64` 防溢出） |
 
-### 5. 零堆分配多模型对话模板格式化与控制标签净化 (`lib/prompt/chat_format.cp`)
+### 5. 零堆分配多模型对话模板格式化与控制标签净化 (`lib/prompt/chatFmt.cp`)
 
 | 符号 / 方法 | 签名与说明 |
 | :--- | :--- |
@@ -121,7 +121,7 @@
 | `scanPiiSpans(input, out_spans: *[]PiiSpan): usize` | 单遍零堆分配扫描不重叠 PII 跨度（识别邮箱、`sk-`/`ghp_`/`AKIA`/`xoxb-`/`xoxp-` 凭证前缀、严格 IPv4 与 10..15 位电话号码），返回总命中数且输出切片截断安全 |
 | `redactPii(input, out_buf: *[]u8): usize?` | 零堆分配流式脱敏器，将所有检测到的 PII 跨度替换为 `[REDACTED]`，输出缓冲不足时返回 `null` |
 
-### 8. 零堆分配 Structured Outputs JSON Schema 与工具声明发射器 (`lib/prompt/json_schema.cp`)
+### 8. 零堆分配 Structured Outputs JSON Schema 与工具声明发射器 (`lib/prompt/jsonSchema.cp`)
 
 | 符号 / 方法 | 签名与说明 |
 | :--- | :--- |
@@ -132,7 +132,7 @@
 | `emitOpenAiToolJson(spec, out_buf: *[]u8): usize?` | 零堆分配发射 OpenAI Function Calling `{"type":"function","function":{...}}` 工具声明 |
 | `emitAnthropicToolJson(spec, out_buf: *[]u8): usize?` | 零堆分配发射 Anthropic `{"name":...,"description":...,"input_schema":{...}}` 工具声明 |
 
-### 9. 零堆分配推理模型流式 `<think>` / `<tool_call>` 标签分流状态机 (`lib/prompt/reasoning_stream.cp`)
+### 9. 零堆分配推理模型流式 `<think>` / `<tool_call>` 标签分流状态机 (`lib/prompt/reasoning.cp`)
 
 | 符号 / 方法 | 签名与说明 |
 | :--- | :--- |
@@ -257,7 +257,7 @@ fn buildAgentRequestContext() {
 }
 ```
 
-### 4. 零堆分配多模型对话模板切换与控制标签净化示例 (`chat_format.cp`)
+### 4. 零堆分配多模型对话模板切换与控制标签净化示例 (`chatFmt.cp`)
 
 ```typescript
 import {
@@ -358,7 +358,7 @@ fn guardAndRedactUserPrompt(user_input: string): bool {
 }
 ```
 
-### 7. 零堆分配 OpenAI / Anthropic 工具 JSON Schema 声明发射示例 (`json_schema.cp`)
+### 7. 零堆分配 OpenAI / Anthropic 工具 JSON Schema 声明发射示例 (`jsonSchema.cp`)
 
 ```typescript
 import {
@@ -392,7 +392,7 @@ fn emitToolSpecs() {
 }
 ```
 
-### 7. 推理模型流式 `<think>` / `<tool_call>` 增量分流示例 (`reasoning_stream.cp`)
+### 7. 推理模型流式 `<think>` / `<tool_call>` 增量分流示例 (`reasoning.cp`)
 
 ```cp
 import {
@@ -421,7 +421,7 @@ fn demoReasoningStream() {
 }
 ```
 
-### 8. LLM 结构化输出提取、容错 JSON 修复与自动纠错提示器 (`structured_output.cp`)
+### 8. LLM 结构化输出提取、容错 JSON 修复与自动纠错提示器 (`structuredOutput.cp`)
 
 面向生产级 LLM 结构化输出解析与自愈重试的 100% 零堆分配管线：
 
@@ -470,7 +470,7 @@ fn demoStructuredOutputRepair() {
 }
 ```
 
-### 9. Agent 系统提示词与工具/记忆/RAG 一体化编排器 (`agent_composer.cp`)
+### 9. Agent 系统提示词与工具/记忆/RAG 一体化编排器 (`composer.cp`)
 
 100% 纯 CP 零堆分配的 Agent Prompt 编排器，在总 `max_tokens` 预算下按优先级分配预算、支持超预算按比例截断与丢弃，并按标准 LLM 分段顺序（`SystemRole -> ToolCatalog -> MemoryContext -> RagContext -> UserQuery`）输出结构化提示词与 `AgentPromptBuildReport` 分段计数报告：
 
@@ -564,7 +564,7 @@ fn demoMultimodalBudgetAudit() {
 }
 ```
 
-### 12. 零堆分配 Prompt 版本注册表与灰度 A/B 流量分配器 (`version_registry.cp`)
+### 12. 零堆分配 Prompt 版本注册表与灰度 A/B 流量分配器 (`versions.cp`)
 
 面向生产级 AI Agent Prompt 运维与实验平台的 100% 纯 CP 零堆分配版本管理与灰度切流内核（内联固定容量 `MAX_PROMPT_VERSIONS = 16` 与定长字节缓冲，零动态内存分配）：
 
@@ -600,7 +600,7 @@ fn demoPromptCanaryRollout() {
 }
 ```
 
-### 13. 零分配 LLM 流式 JSON 增量字段解析器与 Tool-Call 实时提取引擎 (`json_stream_scanner.cp`)
+### 13. 零分配 LLM 流式 JSON 增量字段解析器与 Tool-Call 实时提取引擎 (`jsonStream.cp`)
 
 面向流式 LLM Tool-Call 参数（分片到达的 JSON 对象）的 100% 纯 CP 零动态堆分配逐字节/分片可恢复状态机解析器：
 
@@ -629,7 +629,7 @@ fn demoJsonStreamScanner() {
 }
 ```
 
-### 14. 零分配 RAG 回答引用解析与忠实度/幻觉溯源校验引擎 (`citation_grounder.cp`)
+### 14. 零分配 RAG 回答引用解析与忠实度/幻觉溯源校验引擎 (`citations.cp`)
 
 面向 Perplexity / 企业级 RAG 问答与 AI Agent 输出校验的 100% 纯 CP 零动态堆分配内联引用解析、越界幻觉拦截与源文词元忠实度门禁内核：
 
@@ -665,7 +665,7 @@ fn demoRagCitationGrounder() {
 }
 ```
 
-### 15. 零分配多段优先级 Prompt Token 预算打包与 Middle-Out 裁剪引擎 (`token_budget_packer.cp`)
+### 15. 零分配多段优先级 Prompt Token 预算打包与 Middle-Out 裁剪引擎 (`budgetPack.cp`)
 
 面向长上下文 AI Agent（系统指令 + Tool Schema + RAG 检索块 + 对话历史 + 当前用户输入）的 100% 纯 CP 零动态堆分配 Token 预算规划与 Middle-Out 裁剪内核（有效缓解长上下文 "Lost in the Middle" 注意力衰减）：
 
@@ -707,7 +707,7 @@ fn demoTokenBudgetPacker() {
 }
 ```
 
-### 16. 零分配 Prompt 输入输出合规校验与敏感凭证脱敏扫描器 (`guardrail_scanner.cp`)
+### 16. 零分配 Prompt 输入输出合规校验与敏感凭证脱敏扫描器 (`guardrail.cp`)
 
 面向 AI Agent 输入/输出合规边界校验与敏感凭证脱敏的 100% 纯 CP 零动态堆分配扫描与脱敏引擎：
 
@@ -742,5 +742,47 @@ fn demoGuardrailScanner() {
     let out_s: []u8 = out[0..];
     * = redactSensitiveSpans(text, findings[0..rep.finding_count], *out_s);
     // "Contact [REDACTED:EMAIL] from [REDACTED:PRIVATE_IP]"
+}
+```
+
+
+### 17. 零分配编译型 Prompt 模板字节码引擎 (`compiler.cp`)
+
+面向 AI Agent 系统提示词与动态上下文编排的 100% 纯 CP 零动态堆分配编译型模板引擎，支持单遍词法编译为紧凑字节码、线性零堆执行与静态元数据内省：
+
+- **常量与枚举**：
+  - `TPL_MAX_INSTRUCTIONS = 128`、`TPL_MAX_NESTING_DEPTH = 16`、`TPL_MAX_CONTEXT_VARS = 32`、`TPL_MAX_CONTEXT_LISTS = 16`、`TPL_MAX_LIST_ITEMS = 32`、`TPL_MAX_MISSING_NAME = 64`
+  - `TplOpKind`（`literal | var_lookup | if_jump_false | else_jump_end | each_begin | each_end`）
+  - `TplCompileStatus`（`ok | unclosed_tag | empty_tag | mismatched_close_tag | unclosed_block | nesting_too_deep | instruction_overflow`）
+  - `TplExecStatus`（`ok | invalid_template | missing_variable | buffer_too_small | runtime_stack_error`）
+- **数据模型**：
+  - `TplInstruction`、`CompiledPromptTemplate`（`isValid()`, `error_offset`, `inst_count`, `max_depth_seen`）
+  - `TplRenderContext`（`init`, `setVar`, `setBool`, `setList`, `getVar`, `isTruthy`）
+  - `TplExecResult`（`status`, `bytes_written`, `substitutions`, `missingVarSlice()`）
+- **核心纯函数**：
+  - `compilePromptTemplate(src): CompiledPromptTemplate`：单遍编译 `{{name}}`、`{{name|fallback}}`、嵌套 `{{#if flag}}...{{else}}...{{/if}}` 与 `{{#each items}}...{{@index}}...{{.}}...{{/each}}`。
+  - `renderCompiledTemplate(tpl, ctx, strict_missing, out_buf: *[]u8): TplExecResult`：线性零堆执行字节码；严格模式拦截缺失变量并报告变量名，宽松模式输出空串或默认值。
+  - `collectRequiredVars(tpl, out_names)` / `collectAllReferencedVars(tpl, out_names)`：编译后零扫描静态提取全部唯一引用变量名（自动排除 `.` 与 `@index`）。
+
+```cp
+import {
+    TplRenderContext,
+    compilePromptTemplate,
+    renderCompiledTemplate,
+} from "cap:prompt";
+
+fn demoPromptCompiler() {
+    const tpl = compilePromptTemplate(
+        "Hello {{user}}, role={{role|assistant}}.{{#if tools}} Tools:{{#each tools}} [{{@index}}]{{.}}{{/each}}{{/if}}",
+    );
+    let ctx = TplRenderContext.init();
+    * = ctx.setVar("user", "Alice");
+    const tools: [2][]const u8 = ["search", "calc"];
+    * = ctx.setList("tools", tools[0..]);
+
+    let out: [128]u8 = [0; 128];
+    let out_s: []u8 = out[0..];
+    const res = renderCompiledTemplate(tpl, ctx, true, *out_s);
+    * = res.bytes_written; // "Hello Alice, role=assistant. Tools: [0]search [1]calc"
 }
 ```

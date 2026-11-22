@@ -220,8 +220,8 @@ fn demoJson5(): !void {
 | `jsonc.cp` | JSONC 注释与尾随逗号净化 | `stripJsonc`, `stripJsoncPreserveLines`, `hasJsoncComments`, `countJsoncTrailingCommas` |
 | `editorconfig.cp` | `.editorconfig` 解析与属性计算 | `resolveEditorConfig`, `matchSectionPattern`, `EditorConfigProps`, `IndentStyle`, `EndOfLine`, `Charset` |
 | `frontmatter.cp` | Markdown YAML/TOML Frontmatter 提取 | `splitFrontmatter`, `getFrontmatterField`, `FrontmatterKind`, `FrontmatterSplit` |
-| `makefile_parse.cp` | Makefile 目标与变量解析 | `MakeRuleIter`, `MakeVarIter`, `isPhonyTarget`, `MakeRule`, `MakeVar`, `MakeAssignOp` |
-| `tsconfig_paths.cp` | `tsconfig.json` paths 映射解析 | `TsConfigPaths`, `PathMapping`, `ResolvedCandidate`, `expandConfigDir` |
+| `makefileParse.cp` | Makefile 目标与变量解析 | `MakeRuleIter`, `MakeVarIter`, `isPhonyTarget`, `MakeRule`, `MakeVar`, `MakeAssignOp` |
+| `tsconfigPaths.cp` | `tsconfig.json` paths 映射解析 | `TsConfigPaths`, `PathMapping`, `ResolvedCandidate`, `expandConfigDir` |
 
 ### 2. Pure-CP 现代配置与 JSON 扩展模块（12 个）
 

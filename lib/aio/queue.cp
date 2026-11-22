@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/aio/posix_event_loop.zig | Synced: 2026-11-22T04:43:06Z
+// Source: Absorbed from /data/dev/bun/src/aio/posix_event_loop.zig | Synced: 2026-11-22T12:43:45Z
 // lib/aio/queue.cp
 // Zero-Heap Submission/Completion Ring Queue for Synchronous/Async-Style POSIX File I/O
 

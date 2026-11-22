@@ -6,7 +6,7 @@ export {
     DistanceMetric,
     SearchHit,
     VectorIndex,
-} from "./flat_index.cp";
+} from "./flatIndex.cp";
 
 export {
     Bm25Config,
@@ -32,7 +32,7 @@ export {
     SemanticLookupHit,
     SemanticCacheStats,
     SemanticCache,
-} from "./semantic_cache.cp";
+} from "./semanticCache.cp";
 
 export {
     BinaryCandidate,
@@ -43,7 +43,7 @@ export {
     binaryCosineApprox,
     searchBinaryTopK,
     twoStageSearch,
-} from "./binary_quant.cp";
+} from "./binaryQuant.cp";
 
 export {
     IvfHit,
@@ -94,7 +94,7 @@ export {
     simdAxpyInPlaceF32,
     simdBatchTopKCosineF32,
     simdBatchTopKL2F32,
-} from "./simd_ops.cp";
+} from "./simdOps.cp";
 
 export {
     KMeansConfig,
@@ -110,7 +110,7 @@ export {
     NavGraphHit,
     NavNodeAdj,
     NavGraphIndex,
-} from "./nav_graph.cp";
+} from "./navGraph.cp";
 
 export {
     SparseEntry,
@@ -120,7 +120,7 @@ export {
     sparseCosine,
     sparsePruneTopK,
     sparseBatchTopK,
-} from "./sparse_vec.cp";
+} from "./sparseVec.cp";
 
 export {
     LatencyPercentiles,
@@ -129,7 +129,7 @@ export {
     computeGroundTruthL2TopK,
     annRecallAtK,
     evaluateAnnBatch,
-} from "./eval_harness.cp";
+} from "./evalHarness.cp";
 
 export {
     Sq4Codebook,
@@ -139,7 +139,7 @@ export {
     sq4DecodeVector,
     sq4AsymmetricL2Sq,
     sq4BatchTopK,
-} from "./quant_sq4.cp";
+} from "./quantSq4.cp";
 
 export {
     RabitqCodeMeta,
@@ -157,7 +157,7 @@ export {
     fitTopKPrincipalAxesF32,
     projectEmbeddingsF32,
     jlRandomProjectF32,
-} from "./proj_reduce.cp";
+} from "./projReduce.cp";
 
 export {
     HybridRagHit,
@@ -167,14 +167,14 @@ export {
     mmrRerankSimdF32,
     dedupNearDuplicatesL2F32,
     selectWithinTokenBudget,
-} from "./hybrid_rag.cp";
+} from "./hybridRag.cp";
 
 export {
     RagDocMeta,
     RagSearchHit,
     RagStoreStats,
     InMemoryRagStore,
-} from "./rag_store.cp";
+} from "./ragStore.cp";
 
 export {
     MatryoshkaConfig,
@@ -194,7 +194,7 @@ export {
     ColbertIndexStats,
     ColbertLiteIndex,
     prune_low_norm_tokens,
-} from "./colbert_index.cp";
+} from "./colbert.cp";
 
 export {
     SIMHASH_MAX_DOCS,
@@ -206,7 +206,7 @@ export {
     hammingDistanceU64,
     computeSimHash64,
     SimHashDedupIndex,
-} from "./simhash_dedup.cp";
+} from "./simhash.cp";
 
 export {
     BM25F_MAX_FIELDS,
@@ -217,7 +217,7 @@ export {
     Bm25fHit,
     Bm25fIndexStats,
     Bm25fIndex,
-} from "./bm25f_index.cp";
+} from "./bm25f.cp";
 
 export {
     BIN_IDX_MAX_DOCS,
@@ -226,7 +226,7 @@ export {
     BinaryIndexHit,
     BinaryIndexStats,
     BinaryVectorIndex,
-} from "./binary_index.cp";
+} from "./binIndex.cp";
 
 export {
     SEM_ROUTER_MAX_ROUTES,
@@ -239,7 +239,7 @@ export {
     SemanticRouteDecision,
     SemanticRouterStats,
     SemanticIntentRouter,
-} from "./semantic_router.cp";
+} from "./semRouter.cp";
 
 export {
     RAPTOR_MAX_NODES,
@@ -254,7 +254,7 @@ export {
     RaptorClusterAssignment,
     RaptorTreeStats,
     RaptorTree,
-} from "./raptor_tree.cp";
+} from "./raptor.cp";
 
 export {
     FHNSW_MAX_NODES,
@@ -270,4 +270,4 @@ export {
     FilteredSearchReport,
     FilteredGraphStats,
     FilteredHnswIndex,
-} from "./filtered_hnsw.cp";
+} from "./filtHnsw.cp";

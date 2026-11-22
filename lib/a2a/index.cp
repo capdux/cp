@@ -59,14 +59,14 @@ export {
     A2aTaskItem,
     A2aQueueStats,
     A2aTaskQueue,
-} from "./task_queue.cp";
+} from "./taskQueue.cp";
 
 export {
     A2aEventKind,
     A2aStreamEvent,
     ReplayResult,
     A2aEventStreamRing,
-} from "./event_stream.cp";
+} from "./events.cp";
 
 export {
     A2aModalityMask,
@@ -98,7 +98,7 @@ export {
     A2aTransitionOutcome,
     A2aLifecycleStats,
     A2aTaskLifecycleManager,
-} from "./task_lifecycle.cp";
+} from "./lifecycle.cp";
 
 export {
     A2A_REGISTRY_MAX_CARDS,
@@ -117,7 +117,7 @@ export {
     A2aDiscoveryHit,
     A2aCardRegistryStats,
     A2aCardRegistry,
-} from "./card_registry.cp";
+} from "./cards.cp";
 
 export {
     QUORUM_MAX_VOTES,
@@ -135,4 +135,4 @@ export {
     NumericAggregateReport,
     A2aQuorumSession,
     aggregateNumericEstimates,
-} from "./consensus_quorum.cp";
+} from "./quorum.cp";

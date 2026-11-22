@@ -11,13 +11,13 @@ import {
     S3UploadResult,
     S3DeleteResult,
     S3PartResult
-} from "./simple_request";
+} from "./simpleRequest";
 import {
     S3ListObjectsOptions,
     S3ListObjectsV2Result,
     formatListObjectsQuery,
     parseS3ListObjectsResult
-} from "./list_objects";
+} from "./listObjects";
 import {
     MultiPartUpload,
     MultiPartUploadOptions,
@@ -35,7 +35,7 @@ import {
     S3DownloadStreamOptions,
     formatRangeHeader,
     parseContentRange
-} from "./download_stream";
+} from "./downloadStream";
 const std = @import("std");
 
 pub struct S3Client {

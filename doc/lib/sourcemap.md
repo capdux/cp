@@ -36,14 +36,14 @@
   - `find(generated_line, generated_col)` / `findIndex(...)` / `findOnLine(...)`：在 $O(\log N)$ 时间内二分定位最近左侧映射项（若尚未排序则自动先排序）；
   - `parseMappings(allocator, str)` / `toMappingsString(allocator)`：标准 SourceMap v3 `"mappings"` 双向编解码。
 
-### 3. `LineOffsetTable` 字节偏移与行列双向转换 (`line_offset.cp`)
+### 3. `LineOffsetTable` 字节偏移与行列双向转换 (`lineOffset.cp`)
 
 - 同时提供栈内零堆分配 **`LineOffsetTable<MAX_LINES>`** 与动态 **`DynamicLineOffsetTable`**：
   - `resolveLocation(byte_offset)` / `resolveByteOffset(line, column)` / `resolveByteOffsetClamped(line, column)`；
   - `lineRange(line)` / `lineLength(line)` / `lineText(contents, line)` / `lineCount()`；
   - `utf8ToUtf16Column` / `utf16ToUtf8Column` / `resolveUtf16Location`：精确处理多字节 UTF-8（CJK 与 4 字节 Emoji 代理对）与 SourceMap v3 UTF-16 码元列号换算。
 
-### 4. SourceMap v3 JSON 解析/序列化与 `SourceMapChunk` 多段拼接 (`parsed_source_map.cp`, `chunk.cp`)
+### 4. SourceMap v3 JSON 解析/序列化与 `SourceMapChunk` 多段拼接 (`parsedSourceMap.cp`, `chunk.cp`)
 
 - **`ParsedSourceMapRecord.parse` / `toJSON`**：完整顶层 JSON 状态机扫描，正确处理字符串转义（`\"`, `\\`, `\n`, `\r`, `\t`, `\uXXXX`）、`sourcesContent` 中的 `null` 占位符、`sourceRoot` 与 `version: 3`。
 - **`SourceMapChunk` (`Chunk`)**：

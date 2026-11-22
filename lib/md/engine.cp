@@ -3,10 +3,10 @@
 // High-Level Entry Points for the Ported Bun MD4C Engine (HTML, ANSI & Custom Callback Renderer)
 
 const std = @import("std");
-import { AnsiRenderer, AnsiTheme } from "./ansi_renderer.cp";
+import { AnsiRenderer, AnsiTheme } from "./ansiRenderer.cp";
 import { processDoc } from "./blocks.cp";
 import { skipUtf8Bom } from "./helpers.cp";
-import { HtmlRenderer } from "./html_renderer.cp";
+import { HtmlRenderer } from "./htmlRenderer.cp";
 import { processInlineContent } from "./inlines.cp";
 import { MdFlags, Md4cParserState, RenderOptions, Renderer } from "./types.cp";
 

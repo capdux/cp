@@ -12,10 +12,10 @@ export * from "./mysql.cp";
 export * from "./sqlite.cp";
 
 export * from "./shared.cp";
-export * from "./pg_types.cp";
-export * from "./pg_protocol.cp";
-export * from "./mysql_types.cp";
-export * from "./mysql_protocol.cp";
+export * from "./pgTypes.cp";
+export * from "./pgProtocol.cp";
+export * from "./mysqlTypes.cp";
+export * from "./mysqlProtocol.cp";
 
 // Converged SQL AST, URI, Escape, Params, and Splitter sub-modules
 export {
@@ -85,14 +85,14 @@ export {
     decodeLengthIntStrict,
     encodeLengthString,
     decodeLengthString,
-} from "./mysql_lenenc.cp";
+} from "./mysqlLenenc.cp";
 
 export {
     MYSQL_ERR_PACKET_HEADER,
     MYSQL_SQL_STATE_MARKER,
     MySqlErrorPacketError,
     MySqlErrorPacket,
-} from "./mysql_error_packet.cp";
+} from "./mysqlErr.cp";
 
 export {
     PG_NULL_LENGTH_U32,
@@ -100,12 +100,12 @@ export {
     PgWireWriterError,
     PgLengthPatch,
     PgWireWriter,
-} from "./pg_wire_writer.cp";
+} from "./pgWriter.cp";
 
 export {
     MySqlWireReaderError,
     MySqlWireReader,
-} from "./mysql_wire_reader.cp";
+} from "./mysqlReader.cp";
 
 export {
     MYSQL_PACKET_HEADER_SIZE,
@@ -113,13 +113,13 @@ export {
     MySqlWireWriterError,
     MySqlPacketPatch,
     MySqlWireWriter,
-} from "./mysql_wire_writer.cp";
+} from "./mysqlWriter.cp";
 
 export {
     PgWireReaderError,
     PgFrameView,
     PgWireReader,
-} from "./pg_wire_reader.cp";
+} from "./pgReader.cp";
 
 export {
     MYSQL_COM_QUERY_CMD,
@@ -132,7 +132,7 @@ export {
     encodeMySqlQueryWithAttrs,
     decodeMySqlSimpleQuery,
     decodeMySqlQueryWithAttrs,
-} from "./mysql_query.cp";
+} from "./mysqlQuery.cp";
 
 export {
     PG_PROTOCOL_V3_0,
@@ -149,7 +149,7 @@ export {
     encodePgSslRequestFrame,
     isPgSslRequestFrame,
     encodePgCancelFrame,
-} from "./pg_startup.cp";
+} from "./pgStartup.cp";
 
 export {
     PG_ROW_DESCRIPTION_TAG,
@@ -160,7 +160,7 @@ export {
     PgRowDescriptionIter,
     encodePgRowDescription,
     decodePgRowDescription,
-} from "./pg_row_desc.cp";
+} from "./pgRowDesc.cp";
 
 export {
     MYSQL_OK_HEADER,
@@ -187,7 +187,7 @@ export {
     decodeMySqlOkPacket,
     encodeMySqlEofPacket,
     decodeMySqlEofPacket,
-} from "./mysql_ok_eof.cp";
+} from "./mysqlOkEof.cp";
 
 export {
     PG_PARSE_TAG,
@@ -217,7 +217,7 @@ export {
     decodePgSync,
     encodePgFlush,
     decodePgFlush,
-} from "./pg_extended.cp";
+} from "./pgExtended.cp";
 
 export {
     PG_ERROR_RESPONSE_TAG,
@@ -234,7 +234,7 @@ export {
     decodePgErrorOrNotice,
     decodePgErrorResponse,
     decodePgNoticeResponse,
-} from "./pg_error_notice.cp";
+} from "./pgErrNotice.cp";
 
 export {
     PG_READY_FOR_QUERY_TAG,
@@ -255,7 +255,7 @@ export {
     decodePgCommandComplete,
     encodePgParameterStatus,
     decodePgParameterStatus,
-} from "./pg_control.cp";
+} from "./pgControl.cp";
 
 export {
     MYSQL_STMT_PREPARE_OK_STATUS,
@@ -275,7 +275,7 @@ export {
     decodeMySqlSimpleCommand,
     encodeMySqlStmtIdCommand,
     decodeMySqlStmtIdCommand,
-} from "./mysql_stmt_control.cp";
+} from "./mysqlStmt.cp";
 
 export {
     MYSQL_AUTH_SWITCH_HEADER,
@@ -295,7 +295,7 @@ export {
     decodeMySqlSslRequestFrame,
     encodeMySqlLocalInfileRequest,
     decodeMySqlLocalInfileRequest,
-} from "./mysql_auth_frames.cp";
+} from "./mysqlAuth.cp";
 
 export {
     PG_PASSWORD_TAG,
@@ -319,7 +319,7 @@ export {
     decodePgCopyFail,
     encodePgTerminate,
     decodePgTerminate,
-} from "./pg_auth_copy.cp";
+} from "./pgAuthCopy.cp";
 
 export {
     MYSQL_COM_STMT_EXECUTE_CMD,
@@ -340,7 +340,7 @@ export {
     encodeMySqlStmtExecute,
     decodeMySqlStmtExecutePayload,
     decodeMySqlStmtExecuteFrame,
-} from "./mysql_stmt_execute.cp";
+} from "./mysqlExec.cp";
 
 export {
     PG_AUTHENTICATION_TAG,
@@ -369,7 +369,7 @@ export {
     encodePgAuthSaslContinue,
     encodePgAuthSaslFinal,
     decodePgAuthChallenge,
-} from "./pg_auth_challenge.cp";
+} from "./pgAuthChal.cp";
 
 export {
     PG_DATA_ROW_TAG,
@@ -384,7 +384,7 @@ export {
     encodePgDataRowFrame,
     decodePgDataRowIter,
     decodePgDataRowFrame,
-} from "./pg_data_row.cp";
+} from "./pgDataRow.cp";
 
 export {
     MYSQL_CHARSET_DEFAULT_ID,
@@ -403,4 +403,4 @@ export {
     lookupMySqlCollationByName,
     isMySqlBinaryColumn,
     mysqlMaxCharLen,
-} from "./mysql_charset.cp";
+} from "./mysqlCharset.cp";

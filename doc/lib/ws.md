@@ -29,7 +29,7 @@
 | `lib/ws/handshake.cp` | `// Source: /data/dev/bun/src/http/websocket.cp` | `WebSocketHandshake`（SHA-1 + Base64 `Sec-WebSocket-Accept` 与 Upgrade 报文校验） |
 | `lib/ws/assembler.cp` | `// Source: /data/dev/bun/src/http_jsc/websocket_client/` | `WebSocketMessageAssembler` 分片重组、控制帧交错、UTF-8 校验与 Auto-Pong |
 | `lib/ws/subprotocol.cp` | `// Source: cp/lib/ws/subprotocol.cp (RFC 6455 Subprotocol, Extensions & Close Validation)` | `SubprotocolNegotiator`、`WsExtensionHeader` 解析/序列化、`CloseCodeValidator` |
-| `lib/ws/permessage_deflate.cp` | `// Source: cp/lib/ws/permessage_deflate.cp (RFC 7692 permessage-deflate)` | `PerMessageDeflateConfig`、`PerMessageDeflate` 协商与 `0x00 0x00 0xFF 0xFF` 编解码 |
+| `lib/ws/permessageDeflate.cp` | `// Source: cp/lib/ws/permessageDeflate.cp (RFC 7692 permessage-deflate)` | `PerMessageDeflateConfig`、`PerMessageDeflate` 协商与 `0x00 0x00 0xFF 0xFF` 编解码 |
 | `lib/ws/session.cp` | `// Source: cp/lib/ws/session.cp (RFC 6455 WebSocket Session State Machine)` | `WsSessionState`、`WsSessionConfig`、`WsSession` 完整协议状态机与安全防护 |
 | `lib/ws/index.cp` | `// Source: /data/dev/bun/src/http_jsc/websocket_client/` | `cap:ws` 统一导出与便捷命名空间 `ws` |
 
@@ -49,7 +49,7 @@
 | `CloseCodeValidator.isValidWireCloseCode(code)` | 严格遵循 RFC 6455 §7.4.1：拒绝 `0-999`、`1004`、`1005`、`1006`、`1015`、`1016-2999` 及 `>=5000`，允许 `1000-1003`、`1007-1014`、`3000-4999` |
 | `CloseCodeValidator.isValidUtf8(bytes)` | 校验 Close 原因文本是否为合法 UTF-8 |
 
-### 2. RFC 7692 `permessage-deflate` (`lib/ws/permessage_deflate.cp`)
+### 2. RFC 7692 `permessage-deflate` (`lib/ws/permessageDeflate.cp`)
 
 | 类型 / API | 说明 |
 | :--- | :--- |
@@ -129,7 +129,7 @@ const r = broker.collectRecipients("the-group-chat", 1, targets[0..]);
 * = r;
 ```
 
-### WebSocket 客户端 URL 解析与 HTTP/1.1 升级状态机（`lib/ws/client_upgrade.cp`，吸收自 `/data/dev/bun/src/http/websocket_http_client.cp` & `/data/dev/bun/docs/runtime/http/websockets.mdx`）
+### WebSocket 客户端 URL 解析与 HTTP/1.1 升级状态机（`lib/ws/clientUp.cp`，吸收自 `/data/dev/bun/src/http/websocket_http_client.cp` & `/data/dev/bun/docs/runtime/http/websockets.mdx`）
 
 - 核心导出：`WS_CLIENT_MAX_CUSTOM_HEADERS` (`16`)、`WS_CLIENT_MAX_PROTOCOLS` (`8`)、`WsClientUpgradeError`、`WsUrlScheme`（`Ws`/`Wss`）、`WsUpgradePhase`（`Idle`/`AwaitingResponse`/`Upgraded`/`Failed`）、`WsClientUrl`（`parse`/`isTls`/`isDefaultPort`/`formatHostHeader`/`formatCanonicalUrl`）、`WsClientHeader`、`WsClientUpgradeConfig`（`addHeader`/`addProtocol`/`containsProtocol`）、`WsClientUpgradeMachine`（`init`/`buildUpgradeRequest`/`verifyUpgradeResponse`/`negotiatedProtocol`）。
 

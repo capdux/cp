@@ -11,7 +11,7 @@ export {
 export {
     WeightedEdge,
     DirectedGraph,
-} from "./directed_graph.cp";
+} from "./directedGraph.cp";
 
 export {
     NO_PREV,
@@ -26,7 +26,7 @@ export {
     dijkstra,
     bellmanFord,
     reconstructPath,
-} from "./dag_algorithms.cp";
+} from "./dagAlgorithms.cp";
 
 export {
     ShortestPathResult,
@@ -183,7 +183,7 @@ export {
     planParallelWaves,
     analyzeCriticalPath,
     findCycleNodes,
-} from "./workflow_dag.cp";
+} from "./workflowDag.cp";
 
 export {
     FLOW_MAX_NODES,
@@ -194,7 +194,7 @@ export {
     BipartiteMatchPair,
     DinicFlowNetwork,
     solveBipartiteMatching,
-} from "./max_flow.cp";
+} from "./maxFlow.cp";
 
 export {
     SCC_MAX_NODES,
@@ -203,7 +203,7 @@ export {
     CondensedDagEdge,
     SccCondensationResult,
     IterativeTarjanGraph,
-} from "./scc_condensation.cp";
+} from "./sccDag.cp";
 
 export {
     HUNGARIAN_MAX_DIM,
@@ -213,4 +213,4 @@ export {
     HungarianAssignment,
     solveMinCostAssignment,
     solveMaxProfitAssignment,
-} from "./hungarian_assign.cp";
+} from "./hungarianAssign.cp";

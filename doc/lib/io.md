@@ -28,10 +28,10 @@
 | :--- | :--- | :--- |
 | `lib/io/traits.cp` | `// Source: /data/dev/bun/src/io/pipes.cp` | `IOError` 错误集（含 `WouldBlock`/`BrokenPipe`/`AccessDenied`）、`SeekOrigin` 与 `Reader`/`Writer`/`Closer`/`Seeker` |
 | `lib/io/source.cp` | `// Source: /data/dev/bun/src/io/source.cp & /data/dev/bun/src/io/pipes.cp` | `IoStatus`、`ReadState`、`WriteStatus`、`PollState`、`FileType`、`PollResult` 与 `IoSource`（`detectFileType`/`pollReadable`/`pollWritable`/`setNonblocking`） |
-| `lib/io/max_buf.cp` | `// Source: /data/dev/bun/src/io/MaxBuf.cp` | `MaxBufKind`、`MaxBuf`（`unlimited()`、`consumed()`、`getLimit()`、`onReadBytes()`、`onReadBytesStatus()`、`reset()`、`isExceeded()`） |
+| `lib/io/maxBuf.cp` | `// Source: /data/dev/bun/src/io/MaxBuf.cp` | `MaxBufKind`、`MaxBuf`（`unlimited()`、`consumed()`、`getLimit()`、`onReadBytes()`、`onReadBytesStatus()`、`reset()`、`isExceeded()`） |
 | `lib/io/pipe.cp` | `// Source: /data/dev/bun/src/io/PipeReader.cp & /data/dev/bun/src/io/PipeWriter.cp` | `Pipe.create()`、`Pipe.createNonblocking()`、`PipeReader`（`attemptRead`/`readToEnd`/`attachMaxBuf`/`pollReadable`）、`PipeWriter`（`attemptWrite`/`writeAll`/`pollWritable`/`isBrokenPipe`） |
-| `lib/io/file_stream.cp` | `// Source: /data/dev/bun/src/io/openForWriting.cp & /data/dev/bun/src/sys/File.cp` | `FileReader`（`open`/`pread`/`seek`/`size`/`remaining`/`readToEnd`/`copyFileRangeTo`/`sendfileTo`）、`FileWriter`（`open`/`create`/`openAppend`/`openForWriting`/`pwrite`/`writeAll`/`sync`/`fdatasync`/`ftruncate`） |
-| `lib/io/buffer_stream.cp` | `// Source: /data/dev/bun/src/io/pipes.cp` | `BufferReader`、`BufferWriter`、`BufferedReader<R>`（含 `readUntilDelimiter`/`unreadSlice`/`shift`/`fill`/`clear`）、`BufferedWriter<W>`、`LimitedReader<R>`、`MultiReader<R>`、`TeeReader<R, W>`、`DiscardWriter`、`CountingWriter<W>`、`ChunkedBuffer`、`copyStream` / `copyN` |
+| `lib/io/fileStream.cp` | `// Source: /data/dev/bun/src/io/openForWriting.cp & /data/dev/bun/src/sys/File.cp` | `FileReader`（`open`/`pread`/`seek`/`size`/`remaining`/`readToEnd`/`copyFileRangeTo`/`sendfileTo`）、`FileWriter`（`open`/`create`/`openAppend`/`openForWriting`/`pwrite`/`writeAll`/`sync`/`fdatasync`/`ftruncate`） |
+| `lib/io/bufferStream.cp` | `// Source: /data/dev/bun/src/io/pipes.cp` | `BufferReader`、`BufferWriter`、`BufferedReader<R>`（含 `readUntilDelimiter`/`unreadSlice`/`shift`/`fill`/`clear`）、`BufferedWriter<W>`、`LimitedReader<R>`、`MultiReader<R>`、`TeeReader<R, W>`、`DiscardWriter`、`CountingWriter<W>`、`ChunkedBuffer`、`copyStream` / `copyN` |
 | `lib/io/stdio.cp` | `// Source: /data/dev/bun/src/io/source.cp` | `Console`、`Stdio`、`print` / `println` / `eprint` / `eprintln` |
 | `lib/io/index.cp` | `// Source: /data/dev/bun/src/io/io.cp` | `cap:io` 统一公开导出入口 |
 

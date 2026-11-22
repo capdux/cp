@@ -30,7 +30,7 @@
 | `lib/bundler/metafile.cp` | `// Source: /data/dev/bun/src/bundler/linker_context/MetafileBuilder.cp` | `Metafile`、`MetafileInput`、`MetafileOutput`、`MetafileImport` JSON 生成与彩色树状体积分析表 |
 | `lib/bundler/splitting.cp` | `// Source: /data/dev/bun/src/bundler/LinkerGraph.cp & Chunk.cp` | `CodeSplitter` 多入口 `u64` 位掩码代码分割、共享 Chunk 抽取、内容哈希与 `AssetManifest` |
 | `lib/bundler/defines.cp` | `// Source: /data/dev/bun/src/bundler/defines.cp` | 零堆分配编译期 `--define` / `--drop` 常量替换表 `DefineTable`、`DefineValue`、`DefineFlags`、`CallUnwrapKind` 与点分属性链前缀剪枝 |
-| `lib/bundler/html_manifest.cp` | `// Source: /data/dev/bun/src/bundler/HTMLImportManifest.cp` | 零堆分配 HTML Import 清单构建器 `HtmlImportManifest`、`HtmlManifestFile`、`HtmlManifestLoader`、11 字符 URL-safe Base64 `encodeHashEtag` 与 RFC 8259 JSON 序列化 |
+| `lib/bundler/htmlManifest.cp` | `// Source: /data/dev/bun/src/bundler/HTMLImportManifest.cp` | 零堆分配 HTML Import 清单构建器 `HtmlImportManifest`、`HtmlManifestFile`、`HtmlManifestLoader`、11 字符 URL-safe Base64 `encodeHashEtag` 与 RFC 8259 JSON 序列化 |
 | `lib/bundler/index.cp` | `// Source: /data/dev/bun/src/bundler/` | `cap:bundler` 对外统一导出入口 |
 
 ---
@@ -120,10 +120,10 @@ pub fn demoBundlerDeep(): !void {
 
 - **`Metafile`**：esbuild / Bun 兼容的输入输出依赖图分析模型，支持 `addInput` / `addInputImport` / `addOutput` / `addOutputInput` / `addOutputImport` / `addOutputExport` / `setOutputCssBundle`，通过 `toJsonAlloc(alloc)` 导出标准 JSON，并通过 `formatAnalysisTable(alloc, use_color)` 输出按 `bytesInOutput` 降序排列的彩色体积占比树状报告。
 - **`CodeSplitter` & `AssetManifest`**：基于 `ModuleGraph` 对最多 64 个入口点执行 `u64` 可达位掩码遍历，自动剔除死模块、将多入口公共依赖合并抽取为 `chunk-<hash>.<ext>` 共享 Chunk、计算确定性 8 位 Hex 内容哈希并构建跨 Chunk 导入边与 `AssetManifest`。
-- **`OutputFileListBuilder` (`lib/bundler/output_file_list.cp`)**：吸收自 `/data/dev/bun/src/bundler/linker_context/OutputFileListBuilder.cp`，零堆分配三段式构建产物布局器（`[chunks | sourcemaps/bytecode/module_info | additional]`），保证 `outputIndexForChunk(chunk[i]) == i` 的 O(1) 零映射不变量，并在 `--compile` ESM 字节码与 standalone HTML 模式下精确预计算分区容量。
-- **`entry_points.cp` (`lib/bundler/entry_points.cp`)**：吸收自 `/data/dev/bun/src/bundler/entry_points.cp`，零堆分配虚拟入口路径编解码器与框架引导代码生成器（`EntryPointError`、`EntryPointNamespace`、`MacroEntryId`、`isEntryPointPath`、`encodeEntryPointPath`、`decodeEntryPointPath`、`generateFallbackEntryCode`、`generateClientEntryCode`、`generateServerEntryCode`、`generateMacroEntryId`），支持 JS 字符串安全转义防注入与确定性 `macro://<16-hex>.js` 宏入口 ID 生成。
+- **`OutputFileListBuilder` (`lib/bundler/outputList.cp`)**：吸收自 `/data/dev/bun/src/bundler/linker_context/OutputFileListBuilder.cp`，零堆分配三段式构建产物布局器（`[chunks | sourcemaps/bytecode/module_info | additional]`），保证 `outputIndexForChunk(chunk[i]) == i` 的 O(1) 零映射不变量，并在 `--compile` ESM 字节码与 standalone HTML 模式下精确预计算分区容量。
+- **`entryPoints.cp` (`lib/bundler/entryPoints.cp`)**：吸收自 `/data/dev/bun/src/bundler/entry_points.cp`，零堆分配虚拟入口路径编解码器与框架引导代码生成器（`EntryPointError`、`EntryPointNamespace`、`MacroEntryId`、`isEntryPointPath`、`encodeEntryPointPath`、`decodeEntryPointPath`、`generateFallbackEntryCode`、`generateClientEntryCode`、`generateServerEntryCode`、`generateMacroEntryId`），支持 JS 字符串安全转义防注入与确定性 `macro://<16-hex>.js` 宏入口 ID 生成。
 
-### 6. 虚拟入口点与宏 ID 生成示例（`entry_points.cp`）
+### 6. 虚拟入口点与宏 ID 生成示例（`entryPoints.cp`）
 
 ```typescript
 import { encodeEntryPointPath, decodeEntryPointPath, generateMacroEntryId } from "cap:bundler";
@@ -170,7 +170,7 @@ assigner.assignByFrequency(.default)?;
 // assigner.assignedName(s0) == "b", assigner.assignedName(s1) == "A"
 ```
 
-### 3.9 Barrel 文件按需延迟加载优化引擎（`lib/bundler/barrel_imports.cp`，吸收自 `/data/dev/bun/src/bundler/barrel_imports.cp`）
+### 3.9 Barrel 文件按需延迟加载优化引擎（`lib/bundler/barrel.cp`，吸收自 `/data/dev/bun/src/bundler/barrel_imports.cp`）
 - **常量与错误集**：`MAX_BARREL_REQUESTED_EXPORTS` (64)、`MAX_BARREL_REEXPORTS` (64)、`MAX_BARREL_IMPORT_RECORDS` (64)、`BarrelError`（`RequestedCapacityExceeded` / `ReExportCapacityExceeded` / `ImportRecordOutOfRange`）
 - **数据模型与优化器**：`RequestedExportsKind`（`partial` / `all`）、`BarrelReExport`、`BarrelExportResolution`、`RequestedExportsSet`（跨调用去重与环路检测）、`BarrelEligibility`（`isEligible()` 纯重导出资格判定）、`BarrelPlanResult`（64 位 `active_mask` / `deferred_mask` 位图）、`BarrelWakeupResult`、`BarrelModule`（`addReExport` / `markExportStar` / `resolveExport` / `computePlan` / `requestExport` / `requestAll`，永不延迟 `export *` 记录并支持命名空间 `*` 下游全量传播）
 
@@ -187,7 +187,7 @@ const plan = mod.computePlan(); // active: 0 & 2, deferred: 1
 const wake = mod.requestExport("Modal")?; // newly_activated=true, propagate_alias="ModalDialog"
 ```
 
-### 3.10 React Server Components 边界注册表（`lib/bundler/server_components.cp`，吸收自 `/data/dev/bun/src/js_parser/ast/ServerComponentBoundary.cp`）
+### 3.10 React Server Components 边界注册表（`lib/bundler/rsc.cp`，吸收自 `/data/dev/bun/src/js_parser/ast/ServerComponentBoundary.cp`）
 - **常量与错误集**：`MAX_SCB_BOUNDARIES` (128)、`MAX_SCB_BITSET_WORDS` (16)、`MAX_SCB_BITSET_BITS` (1024)、`ScbError`（`DuplicateSourceIndex` / `BoundaryCapacityExceeded` / `SourceIndexOutOfRange`）
 - **数据模型与注册表**：`UseDirective`（`none` / `use_client` / `use_server`，含 `parse` 与 `asStr`）、`ServerComponentBoundary`（`source_index` / `reference_source_index` / `ssr_source_index` / `hasSeparateSsr`）、`ScbBitSet`（1024 位零堆分配边界索引位图）、`ServerComponentBoundaryTable`（`put` / `putSharedSsr` / `getIndex` / `get` / `getReferenceSourceIndex` / `getSsrSourceIndex` / `getByReferenceIndex` / `countByDirective` / `buildBitSet`）
 
@@ -200,7 +200,7 @@ let tbl = ServerComponentBoundaryTable.init();
 const bs = tbl.buildBitSet()?;   // bs.isSet(10) == true
 ```
 
-### 3.11 静态路由与 SSG 可达性分析器（`lib/bundler/static_route_visitor.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/StaticRouteVisitor.cp`）
+### 3.11 静态路由与 SSG 可达性分析器（`lib/bundler/staticRoute.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/StaticRouteVisitor.cp`）
 - **常量与错误集**：`MAX_STATIC_ROUTE_NODES` (256)、`MAX_STATIC_ROUTE_EDGES` (1024)、`INVALID_ROUTE_SOURCE`、`StaticRouteError`（`NodeIndexOutOfRange` / `EdgeCapacityExceeded`）
 - **数据模型与分析器**：`StaticRouteEdge`、`StaticRouteGraph`（`init` / `addImport`）、`StaticRouteVisitor`（`init` / `resetCache` / `isClientBoundary` / `hasTransitiveUseClient` / `isFullyStatic`，采用零堆分配迭代 DFS + 环路安全访问位图 + 三态记忆化缓存，直接联动 `ServerComponentBoundaryTable`）
 
@@ -218,7 +218,7 @@ let visitor = StaticRouteVisitor.init();
 const is_ssg = visitor.isFullyStatic(&graph, &scb, 0)?; // false（传递依赖 client 边界）
 ```
 
-### 3.12 反向导入图与变更影响分析器（`lib/bundler/changed_filter.cp`，吸收自 `/data/dev/bun/src/cli/test/ChangedFilesFilter.cp`）
+### 3.12 反向导入图与变更影响分析器（`lib/bundler/changedFilt.cp`，吸收自 `/data/dev/bun/src/cli/test/ChangedFilesFilter.cp`）
 - **错误集与结果类型**：`ChangedFilterError`（`OutOfMemory` / `ModuleIndexOutOfRange`）、`ChangedFilterSummary`、`AffectedEntryResult`（RAII `~init()` 确定性释放 `indices`）
 - **核心引擎**：`ReverseImportGraph`（`init` / `addModule` / `addImport` / `addImportByPath` / `moduleCount` / `indexOf` / `importerCount` / `computeAffectedModules` / `filterAffectedEntries`）与 Git 输出路径解析辅助 `parseChangedPathLines` / `freeChangedPathList`
 - **算法特性**：采用多源环路安全反向 BFS，自动去重反向边、忽略自环、支持未入图入口直接变更兜底保留，完整覆盖增量打包、HMR 失效冒泡与 `test --changed` 入口筛选场景。
@@ -241,7 +241,7 @@ pub fn demoChangedFilter(allocator: std.mem.Allocator): ! {
 }
 ```
 
-### 3.13 JS 后序 CSS 级联导入收集器（`lib/bundler/css_order.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/findImportedCSSFilesInJSOrder.cp`）
+### 3.13 JS 后序 CSS 级联导入收集器（`lib/bundler/cssOrder.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/findImportedCSSFilesInJSOrder.cp`）
 - **错误集与枚举**：`CssOrderError`（`OutOfMemory` / `SourceIndexOutOfRange`）、`CssOrderLoaderKind`（`js` / `css` / `other`，含 `isCss()`）
 - **核心引擎**：`CssOrderGraph`（`init` / `addFile` / `addImport` / `fileCount` / `findImportedCssInJsOrder` / `findImportedCssForEntries` / `findAllInJsPostorder` + RAII `~init()`），采用显式迭代栈深度优先后序（DFS Postorder）遍历，环路安全且无深层递归栈溢出风险，保证共享基础样式始终先于上层组件样式输出。
 
@@ -263,7 +263,7 @@ pub fn demoCssOrder(allocator: std.mem.Allocator): ! {
 }
 ```
 
-### 3.14 CSS Chunk 后处理与 SourceMap 相对行列偏移引擎（`lib/bundler/css_chunk_postprocess.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/postProcessCSSChunk.cp`）
+### 3.14 CSS Chunk 后处理与 SourceMap 相对行列偏移引擎（`lib/bundler/cssPost.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/postProcessCSSChunk.cp`）
 - **常量与错误集**：`CSS_CHUNK_MAX_PARTS` (`64`)、`CssChunkPostProcessError`（`BufferTooSmall` / `TooManyParts`）
 - **核心类型与函数**：`CssChunkSourceOffset`（`advance` / `reset` / `eql`，支持 `\n` 与 `\r\n`）、`CssChunkCompileResult`、`CssChunkPostProcessOptions`（`is_bundle` / `minify_whitespace` / `emit_source_maps` / `banner` / `footer`）、`CssSourceMapEntry`、`CssChunkPostProcessResult`（`sourceMapAt`）、`postProcessCssChunk`（零堆分配合并 CSS 片段、自动生成 `/* <path> */` 注释与空行分隔、追踪并重置 SourceMap 相对行列偏移、确保非空输出以 `\n` 结尾）。
 
@@ -284,7 +284,7 @@ const res = postProcessCssChunk(parts[0..], CssChunkPostProcessOptions{ emit_sou
 * = res;
 ```
 
-### 3.15 转译模块分析元数据与对齐二进制缓存（`lib/bundler/module_info.cp`，吸收自 `/data/dev/bun/src/bundler/analyze_transpiled_module.cp`）
+### 3.15 转译模块分析元数据与对齐二进制缓存（`lib/bundler/modInfo.cp`，吸收自 `/data/dev/bun/src/bundler/analyze_transpiled_module.cp`）
 - **常量与错误集**：`MODULE_INFO_MAX_STRINGS` (`128`)、`MODULE_INFO_STRING_BUF_CAP` (`4096`)、`MODULE_INFO_MAX_RECORDS` (`128`)、`MODULE_INFO_MAX_BUFFER_IDS` (`384`)、`MODULE_INFO_MAX_REQUESTED` (`64`)、`MODULE_STRING_STAR_DEFAULT`、`MODULE_STRING_STAR_NAMESPACE`、`MODULE_FETCH_{NONE,JAVASCRIPT,WEBASSEMBLY,JSON}`、`ModuleInfoError`
 - **核心类型与方法**：`ModuleRecordKind`（9 种 ESM/TS 记录类型）、`ModuleInfoFlags`（`contains_import_meta` / `is_typescript` / `has_tla` 单字节位打包）、`TranspiledModuleInfo`（`init` / `internString` / `getString` / `addDeclaredVariable` / `addLexicalVariable` / `addImportSingle` / `addImportNamespace` / `addExportIndirect` / `addExportLocal` / `addExportNamespace` / `addExportStar` / `requestModule` / `replaceStringId` / `finalize` / `serialize` / `deserialize`）。
 
@@ -308,7 +308,7 @@ const restored = TranspiledModuleInfo.deserialize(cache_buf[0..n])?;
 * = restored;
 ```
 
-### 3.16 跨 Chunk 依赖分析与代码分割导入/导出表（`lib/bundler/cross_chunk_deps.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/computeCrossChunkDependencies.cp` 与 `/data/dev/bun/docs/bundler/index.mdx`）
+### 3.16 跨 Chunk 依赖分析与代码分割导入/导出表（`lib/bundler/crossChunk.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/computeCrossChunkDependencies.cp` 与 `/data/dev/bun/docs/bundler/index.mdx`）
 - **常量与错误集**：`CROSS_CHUNK_MAX_CHUNKS` (`32`)、`CROSS_CHUNK_MAX_SYMBOLS` (`128`)、`CROSS_CHUNK_MAX_USES` (`256`)、`CROSS_CHUNK_MAX_EDGES` (`128`)、`CrossChunkError`
 - **核心类型与方法**：`CrossChunkImportKind`（`Stmt` / `SideEffect` / `Dynamic`）、`CrossChunkNode`、`CrossChunkSymbol`、`CrossChunkImportEdge`、`CrossChunkExportEntry`、`CrossChunkResult`（`hasImportEdge` / `hasAnyStaticImportBetween` / `isSymbolExportedByChunk` / `importCountForChunk` / `exportCountForChunk`）、`CrossChunkAnalyzer`（`init` / `addChunk` / `addSymbol` / `recordSymbolUse` / `recordDynamicImport` / `compute`）。
 - **代码分割（`--splitting`）契约**：多入口共享模块拆分为独立 chunk 后，自动将跨 chunk 符号引用汇总为去重且确定性排序的导入/导出表；遵循 CJS `namespace_alias` 重定向；对属于某入口点但无直接符号引用的共享 JS chunk 自动注入 `SideEffect` 导入以保证副作用按序执行；并追踪动态 `import()` 跨 chunk 依赖纳入最终内容哈希。
@@ -327,7 +327,7 @@ const res = analyzer.compute()?;
 * = res;
 ```
 
-### 3.17 产物命名路径模板引擎（`lib/bundler/path_template.cp`，吸收自 `/data/dev/bun/src/bundler/options.cp` 与 `/data/dev/bun/docs/bundler/index.mdx`）
+### 3.17 产物命名路径模板引擎（`lib/bundler/pathTpl.cp`，吸收自 `/data/dev/bun/src/bundler/options.cp` 与 `/data/dev/bun/docs/bundler/index.mdx`）
 - **错误集与枚举**：`PathTemplateError`、`PathTemplateField`（`dir` / `name` / `ext` / `hash` / `target`）、`PathSeparatorStyle`（`posix` / `windows`）
 - **核心类型与方法**：`PathTemplatePlaceholder`、`PathTemplate`（6 大官方预设 `file` / `fileWithTarget` / `chunk` / `chunkWithTarget` / `asset` / `assetWithTarget`、`fromString` / `withValues` / `needs` / `validate` / `format` / `formatWithStyle`）、`formatTruncatedHashHex`、`formatBundlerNaming`。
 - **上游 `naming` 契约（参考 `/data/dev/bun/docs/bundler/index.mdx`）**：
@@ -351,7 +351,7 @@ const n = tpl.formatWithStyle(PathSeparatorStyle.posix, true, buf[0..])?;
 * = n;
 ```
 
-### 3.18 全局无副作用属性访问与树摇纯净度判定表（`lib/bundler/pure_globals.cp`，吸收自 `/data/dev/bun/src/bundler/defines-table.cp` 与 `/data/dev/bun/docs/bundler/minifier.mdx`）
+### 3.18 全局无副作用属性访问与树摇纯净度判定表（`lib/bundler/pureGlobals.cp`，吸收自 `/data/dev/bun/src/bundler/defines-table.cp` 与 `/data/dev/bun/docs/bundler/minifier.mdx`）
 - **核心类型与函数**：`PureGlobalKind`（`unknown` / `nan_literal` / `infinity_literal` / `strict_undefined` / `pure_identifier`）、`PureGlobalFlags`、`lookupPureGlobalIdentifier`、`isPureGlobalIdentifier`、`isConstantFoldableGlobal`、`isPureGlobalPropertyAccess`、`isPureGlobalPropertyChain`、`isPureGlobalCallSafeForString`、`classifyGlobalExpr`。
 - **DCE 与表达式重排契约**：
   - `NaN` / `Infinity` / `undefined` 标记为可常量折叠；明确将 `eval` 排除在纯全局白名单外以防破坏 direct eval 词法作用域语义；
@@ -371,7 +371,7 @@ const ok = isPureGlobalPropertyChain("Object.prototype.hasOwnProperty"); // true
 * = ok;
 ```
 
-### 3.19 HTML 入口静态资源扫描器与无损 URL 改写引擎（`lib/bundler/html_scanner.cp`，吸收自 `/data/dev/bun/src/bundler/HTMLScanner.cp` 与 `/data/dev/bun/docs/bundler/html-static.mdx`）
+### 3.19 HTML 入口静态资源扫描器与无损 URL 改写引擎（`lib/bundler/htmlScan.cp`，吸收自 `/data/dev/bun/src/bundler/HTMLScanner.cp` 与 `/data/dev/bun/docs/bundler/html-static.mdx`）
 - **常量与错误集**：`HTML_SCANNER_MAX_ASSETS` (`64`)、`HTML_SCANNER_MAX_SRCSET_CANDIDATES` (`16`)、`HtmlScannerError`
 - **核心类型与函数**：`HtmlImportKind`（`stmt` / `at` / `url`）、`HtmlTagKind`（`script` / `link` / `img` / `video` / `audio` / `source`）、`HtmlAssetRef`（含 `isLocalBundleable()` 与精确字节偏移 `url_start`..`url_end`）、`SrcsetCandidate`、`HtmlRewritePair`、`HtmlScanResult`、`isExternalHtmlUrl`、`parseSrcsetCandidates`、`scanHtmlAssets`、`rewriteHtmlAssetUrls`。
 - **HTML 打包契约（参考 `/data/dev/bun/docs/bundler/html-static.mdx`）**：
@@ -396,7 +396,7 @@ const n = rewriteHtmlAssetUrls(html, pairs[0..], out[0..])?;
 * = n;
 ```
 
-### 3.20 JS Chunk 部件拓扑排序与线性化引擎（`lib/bundler/js_order.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/findAllImportedPartsInJSOrder.cp` 与 `/data/dev/bun/docs/bundler/index.mdx`）
+### 3.20 JS Chunk 部件拓扑排序与线性化引擎（`lib/bundler/jsOrder.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/findAllImportedPartsInJSOrder.cp` 与 `/data/dev/bun/docs/bundler/index.mdx`）
 - **常量与错误集**：`JS_ORDER_MAX_FILES` (`64`)、`JS_ORDER_MAX_PARTS_PER_FILE` (`16`)、`JS_ORDER_MAX_IMPORTS_PER_PART` (`8`)、`JS_ORDER_MAX_RANGES` (`256`)、`JS_ORDER_RUNTIME_SOURCE_INDEX` (`0`)、`JS_ORDER_INVALID_SOURCE_INDEX` (`0xFFFFFFFF`)、`JS_ORDER_NAMESPACE_EXPORT_PART` (`0`)、`JsOrderError`
 - **核心类型与方法**：`JsPartWrapKind`（`None` / `Cjs` / `Esm`）、`JsOrderImportKind`（`Stmt` / `Require` / `DynamicImport`）、`JsOrderImportRecord`、`JsOrderPart`、`JsOrderFile`、`JsPartRange`（`len()` / `canExtend()`）、`JsChunkOrderEntry`（`isBefore()`）、`JsOrderResult`（`filesSlice()` / `partRangesSlice()` / `prefixRangesSlice()` / `mainRangesSlice()` / `totalParts()`）、`JsOrderGraph`（`init()` / `addFile()` / `setFileFlags()` / `addPart()` / `addPartImport()` / `findSlotBySourceIndex()` / `getScbChunkIndex()` / `computeChunkOrder()`）。
 - **核心算法契约**：
@@ -424,7 +424,7 @@ const res = g.computeChunkOrder(0b1, files[0..], 0, false, false)?;
 * = res;
 ```
 
-### 3.21 HTML Chunk 编译注入与单文件 Standalone HTML 打包引擎（`lib/bundler/html_chunk.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/generateCompileResultForHtmlChunk.cp` 与 `/data/dev/bun/docs/bundler/standalone-html.mdx`）
+### 3.21 HTML Chunk 编译注入与单文件 Standalone HTML 打包引擎（`lib/bundler/htmlChunk.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/generateCompileResultForHtmlChunk.cp` 与 `/data/dev/bun/docs/bundler/standalone-html.mdx`）
 - **常量与错误集**：`HTML_CHUNK_MAX_PRELOADS` (`32`)、`HtmlChunkError`（`BufferTooSmall` / `TooManyPreloads` / `InvalidAssetUrl`）
 - **核心类型与函数**：`HtmlEndTagIndices`（`headInsertOffset()` / `bodyInsertOffset()`）、`HtmlChunkCompileOptions`（`addModulePreload()`）、`HtmlChunkCompileResult`、`findHtmlEndTagIndices`、`writeEscapedAttrUrl`、`writeEscapedInlineScript`、`writeEscapedInlineStyle`、`compileHtmlChunk`。
 - **核心编译契约**：
@@ -448,7 +448,7 @@ const compiled = compileHtmlChunk(html, opts, out[0..])?;
 * = compiled;
 ```
 
-### 3.22 CSS `@import` 依赖排序与 Last-Wins 层叠去重引擎（`lib/bundler/css_import_order.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/findImportedFilesInCSSOrder.cp` 与 `/data/dev/bun/docs/bundler/css.mdx`）
+### 3.22 CSS `@import` 依赖排序与 Last-Wins 层叠去重引擎（`lib/bundler/cssImpOrder.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/findImportedFilesInCSSOrder.cp` 与 `/data/dev/bun/docs/bundler/css.mdx`）
 - **常量与错误集**：`CSS_IMPORT_MAX_FILES` (`64`)、`CSS_IMPORT_MAX_RULES_PER_FILE` (`16`)、`CSS_IMPORT_MAX_CONDITIONS` (`8`)、`CSS_IMPORT_MAX_ORDER_ENTRIES` (`256`)、`CSS_IMPORT_MAX_DEPTH` (`32`)、`CssImportOrderError`
 - **核心类型与方法**：`CssImportCondition`、`CssConditionStack`（`push()` / `eql()` / `isRedundantBefore()`）、`CssImportRuleKind`（`Internal` / `External` / `Composes`）、`CssImportRule`、`CssImportFile`、`CssImportEntryKind`（`SourceFile` / `ExternalUrl` / `LayersOnly`）、`CssImportOrderEntry`、`CssImportOrderResult`、`CssImportGraph`（`init()` / `addFile()` / `addImport()` / `addExternalImport()` / `addComposes()` / `computeCssOrder()`）。
 - **核心算法契约**：
@@ -476,7 +476,7 @@ const res = g.computeCssOrder(entries[0..])?;
 * = res;
 ```
 
-### 3.23 Bundler Chunk 规划与确定性排序引擎（`lib/bundler/chunk_planner.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/computeChunks.cp` 与 `/data/dev/bun/docs/bundler/index.mdx`）
+### 3.23 Bundler Chunk 规划与确定性排序引擎（`lib/bundler/chunkPlan.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/computeChunks.cp` 与 `/data/dev/bun/docs/bundler/index.mdx`）
 - **常量与错误集**：`CHUNK_PLAN_MAX_ENTRIES` (`32`)、`CHUNK_PLAN_MAX_FILES` (`64`)、`CHUNK_PLAN_MAX_CHUNKS` (`64`)、`CHUNK_PLAN_MAX_FILES_PER_CHUNK` (`64`)、`CHUNK_PLAN_MAX_CSS_DEPS` (`16`)、`CHUNK_PLAN_INVALID_INDEX` (`0xFFFFFFFF`)、`CHUNK_PLAN_KEY_CAP` (`32`)、`ChunkPlanError`
 - **核心类型与函数**：`ChunkPlanContentKind`（`Javascript` / `Css` / `Html`，含 `ext()`）、`ChunkPlanLoaderKind`、`ChunkPlanEntryKind`（`UserSpecified` / `DynamicImport` / `ServerComponent`）、`ChunkPlanTarget`（`Browser` / `Bun` / `Node` / `BunMacro` / `BakeSsr`，含 `isServerSide()` / `asLabel()`）、`ChunkPlanTemplateKind`（`EntryFile` / `EntryFileWithTarget` / `SharedChunk` / `SharedChunkWithTarget`）、`ChunkPlanOptions`、`ChunkPlanFileInput`、`ChunkPlanUniqueKey`、`PlannedChunk`、`EntryChunkMapping`、`ChunkPlanResult`、`hashCssOrderKey()`、`formatChunkUniqueKey()`、`ChunkPlanner`（`init()` / `addFile()` / `addEntryPoint()` / `attachCssDep()` / `setFileEntryBits()` / `computeChunks()`）。
 - **核心算法契约**：
@@ -506,7 +506,7 @@ const plan = planner.computeChunks(ChunkPlanOptions{
 * = plan;
 ```
 
-### 3.24 Chunk 级符号重命名与字符频次压缩协调器（`lib/bundler/chunk_renamer.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/renameSymbolsInChunk.cp` 与 `/data/dev/bun/docs/bundler/minifier.mdx`）
+### 3.24 Chunk 级符号重命名与字符频次压缩协调器（`lib/bundler/chunkRename.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/renameSymbolsInChunk.cp` 与 `/data/dev/bun/docs/bundler/minifier.mdx`）
 - **常量与错误集**：`CHUNK_RENAME_MAX_SYMBOLS` (`64`)、`CHUNK_RENAME_MAX_RESERVED` (`32`)、`CHUNK_RENAME_NAME_CAP` (`48`)、`ChunkRenameError`
 - **核心类型与方法**：`ChunkStableRef`（`eql`/`lessThan`）、`ChunkSlotCounts`（`unionMax`）、`ChunkCharFreq`（`init`/`scan`/`include`/`compileAlphabets`）、`ChunkRenameSymbolKind`（`TopLevel` / `CrossChunkImport` / `CjsWrapper` / `CjsHoistedExternalImport`）、`ChunkRenameSymbolInput`、`ChunkRenamedName`、`ChunkRenameEntry`、`ChunkRenameOptions`、`ChunkRenameResult`（`slice`/`lookupName`）、`ChunkSymbolRenamer`（`init`/`addReservedName`/`mergeNestedSlots`/`includeCharFreq`/`addSymbol`/`rename`）。
 - **核心算法契约**：
@@ -575,7 +575,7 @@ const res = ren.rename(ChunkRenameOptions{ minify_identifiers: true })?;
     - 当 `splitting: true` 且多个入口点共享模块时，`ChunkPlanner.computeChunks` 自动按精确 `entry_bits` 位掩码抽离共享 Chunk，而 `splitting: false` 时将共享模块内联扇出到每个引用入口以产出单文件自包含产物；
     - `naming` 支持 `[dir]`、`[name]`、`[hash]`、`[ext]` 与服务端多目标场景下的 `[target]` 占位符；在同时存在服务端入口与 HTML 浏览器入口的构建中，未显式指定 `entry_naming` / `chunk_naming` 时自动启用 `EntryFileWithTarget` / `SharedChunkWithTarget`，避免服务端与浏览器同名产物相互覆盖；
     - 开启 `cssChunking` 时，引用完全相同有序 CSS 依赖序列的多个入口会复用同一 CSS Chunk，排序后通过重映射表同步更新 JS Chunk 的 `css_chunk_index`，保证跨平台构建产物顺序与唯一键（`<hex>C<08d>`）100% 确定性可复现。
-12. **延迟分段组装、Standalone HTML 内联转义与 `//# debugId` 发射（`lib/bundler/chunk_output.cp`，吸收自 `/data/dev/bun/src/bundler/Chunk.cp` & `/data/dev/bun/docs/bundler/standalone-html.mdx`）**：
+12. **延迟分段组装、Standalone HTML 内联转义与 `//# debugId` 发射（`lib/bundler/chunkOut.cp`，吸收自 `/data/dev/bun/src/bundler/Chunk.cp` & `/data/dev/bun/docs/bundler/standalone-html.mdx`）**：
     - **两遍零分配组装（`ChunkPieceAssembler`）**：在最终内容哈希文件名尚未确定前，代码生成器将源码切分为若干 `ChunkPiece`（前置字面量 + `ChunkPieceQuery{Chunk/Asset/Scb/HtmlImport}`）；待路径或内联内容就绪后，`estimateOutputSize()` 精确预计算总字节数，`assemble()` 单遍零拷贝拼接输出；
     - **Standalone HTML 闭合标签安全转义（`countClosingTagOccurrences` / `escapeClosingTagsInto`）**：当 `standalone_mode = true` 时，`.Chunk` 引用直接内联对应 JS/CSS 正文并将任意大小写变体（`</script`、`</SCRIPT`、`</style`）的 `</` 转义为 `<\/`（同时保留 `</div>` 等非匹配标签不变），`.Asset` 引用直接内联 `data:` URI；
     - **跨平台路径前缀规范化与 Debug ID 注释**：`normalizeChunkImportPath` 自动将 Windows `\` 转为 POSIX `/` 并消除重复 `./` 与多余双斜杠；开启 `emit_debug_id = true` 时在 `//# sourceMappingURL` 之前追加确定性 50 字节 `\n//# debugId=00000000-0000-0000-XXXX-XXXXXXXXXXXX\n`。
@@ -635,7 +635,7 @@ const t3 = g.decrementScanCounter()?; // ReadyToLink (pending=0, deferred=0)
 * = t3;
 ```
 
-- **Bundler 路径 → `SourceIndex` 命名空间隔离映射表（`path_source_map.cp`，吸收自 `/data/dev/bun/src/bundler/PathToSourceIndexMap.cp` & `/data/dev/bun/docs/bundler/plugins.mdx`）**：
+- **Bundler 路径 → `SourceIndex` 命名空间隔离映射表（`pathSrcMap.cp`，吸收自 `/data/dev/bun/src/bundler/PathToSourceIndexMap.cp` & `/data/dev/bun/docs/bundler/plugins.mdx`）**：
     - 导出：`PATH_SRC_MAP_BUCKETS` (`256`)、`PATH_SRC_MAP_MAX_LOAD` (`192`)、`PATH_SRC_INVALID_INDEX` (`0xFFFF_FFFF`)、`PathSourceMapError`、`BundlerModulePath`（`file`/`withNamespace`/`isFileNamespace`/`isVirtual`/`eql`/`hash64`/`formatInto`）、`GetOrPutSourceResult`、`PathToSourceIndexMap`（`init`/`count`/`isEmpty`/`get`/`getPath`/`contains`/`containsPath`/`put`/`putPath`/`getOrPut`/`getOrPutPath`/`remove`/`removePath`/`reverseLookup`/`clear`）；
     - **插件 `namespace` 隔离最佳实践（参考 `/data/dev/bun/docs/bundler/plugins.mdx`）**：`onResolve` 返回 `{ path, namespace }` 时，不同命名空间（如 `"file"` vs `"virtual"` / `"env"`）下的同名路径（如 `config.json`）在 `BundlerModulePath.hash64()` 中通过 `namespace + 0xFF + text` 严格隔离，避免虚拟模块与磁盘文件发生 `SourceIndex` 碰撞；
     - **零堆分配与墓碑安全删除**：采用 256 槽开放寻址哈希表（75% 负载上限 192），支持 `remove` / `removePath` 墓碑回收而不破坏探测链，并支持 `reverseLookup(source_index)` 诊断反查。
@@ -652,7 +652,7 @@ const r3 = map.getOrPut("src/config.json", 99)?; // 命中已有, source_index=1
 * = r3;
 ```
 
-- **Bundler 延迟插件批次协调器（`deferred_batch.cp`，吸收自 `/data/dev/bun/src/bundler/DeferredBatchTask.cp` & `/data/dev/bun/docs/bundler/plugins.mdx`）**：
+- **Bundler 延迟插件批次协调器（`deferBatch.cp`，吸收自 `/data/dev/bun/src/bundler/DeferredBatchTask.cp` & `/data/dev/bun/docs/bundler/plugins.mdx`）**：
     - 导出：`DEFERRED_BATCH_MAX_TASKS` (`64`)、`DeferredBatchError`、`DeferredBatchState`（`Idle`/`Scheduled`/`Running`）、`DeferredTaskOutcome`（`Pending`/`Resumed`/`Rejected`）、`DeferredPluginTask`、`DeferredDrainSummary`、`DeferredBatchCoordinator`（`init`/`isIdle`/`isScheduled`/`isRunning`/`pendingCount`/`hasPending`/`hasDeferredSource`/`enqueueDeferred`/`schedule`/`beginRun`/`drainDeferred`/`runBatchNow`/`reset`）；
     - **`onLoad` `.defer()` 多波次唤醒与异常快速失败契约（参考 `/data/dev/bun/docs/bundler/plugins.mdx`）**：当 `BundlerGraph` 迁移至 `WakeDeferredPlugins` 时，协调器按严格非重入状态机 `Idle -> Scheduled -> Running -> Idle` 唤醒当前波次全部挂起的 `.defer()` 任务；若构建已出现致命错误，调用 `drainDeferred(true, ...)` 将整批任务标记为 `Rejected` 避免插件 Promise 永久悬空；同一 `source_index` 跨波次重复 `.defer()` 将被 `DuplicateSourceIndex` 拦截。
 
@@ -668,7 +668,7 @@ const summary = coord.runBatchNow(false, out[0..])?;
 * = summary;
 ```
 
-- **Bundler 索引 → 字符串零堆映射表（`index_string_map.cp`，吸收自 `/data/dev/bun/src/bundler/IndexStringMap.cp` & `/data/dev/bun/docs/bundler/index.mdx`）**：
+- **Bundler 索引 → 字符串零堆映射表（`idxStrMap.cp`，吸收自 `/data/dev/bun/src/bundler/IndexStringMap.cp` & `/data/dev/bun/docs/bundler/index.mdx`）**：
     - 导出：`INDEX_STR_MAP_BUCKETS` (`256`)、`INDEX_STR_MAP_MAX_LOAD` (`192`)、`INDEX_STR_MAP_ARENA_CAP` (`8192`)、`IndexStringMapError`、`IndexStringEntry`、`IndexStringMap`（`init`/`count`/`isEmpty`/`arenaUsed`/`arenaRemaining`/`get`/`contains`/`put`/`putCopy`/`getOrPut`/`remove`/`findIndexByValue`/`collectSortedEntries`/`clear`）；
     - **双模式零堆所有权与确定性输出**：静态/长生命周期字符串使用 `put()` 零拷贝存储；由路径模板或插件动态拼接的临时栈缓冲字符串使用 `putCopy()` 拷贝入内置 8 KiB 定长字节池，避免悬垂引用且完全零堆分配；生成 Metafile / HTML Manifest 时通过 `collectSortedEntries()` 按 `SourceIndex` 严格升序导出，保证跨平台构建产物字节级确定性。
 
@@ -684,7 +684,7 @@ const n = map.collectSortedEntries(sorted[0..])?;
 * = n;
 ```
 
-- **Bundler 构建产物模型与安全落盘路径解析（`output_file.cp`，吸收自 `/data/dev/bun/src/bundler/OutputFile.cp` & `/data/dev/bun/docs/bundler/index.mdx`）**：
+- **Bundler 构建产物模型与安全落盘路径解析（`outputFile.cp`，吸收自 `/data/dev/bun/src/bundler/OutputFile.cp` & `/data/dev/bun/docs/bundler/index.mdx`）**：
     - 导出：`OUTPUT_FILE_MAX_COLLECTION` (`64`)、`OutputFileError`、`OutputFileKind`（`EntryPoint`/`Chunk`/`Asset`/`Sourcemap`/`Bytecode`）、`OutputValueKind`（`Move`/`Copy`/`Noop`/`Buffer`/`Pending`/`Saved`）、`OutputLoaderKind`（含 `inferFromPath` 与 `mimeType`）、`OutputBakeExtra`、`BuildOutputFile`（`fromBuffer`/`fromMove`/`fromCopy`/`noop`/`asSlice`/`mimeType`/`markSaved`/`resolveFullPath`/`formatSummaryLine`）、`BuildOutputCollection`（`init`/`push`/`count`/`at`/`findByPath`/`totalBytes`/`countByKind`）；
     - **落盘安全防线与内存态产物语义（参考 `/data/dev/bun/docs/bundler/index.mdx`）**：不指定 `outdir` 时构建产物以 `OutputValueKind.Buffer` 驻留内存并通过 `asSlice()` 零拷贝读取；指定 `outdir` 落盘时，所有构造方法及 `resolveFullPath(outdir, ...)` 均严格拦截含 `..` 段、NUL 字节或绝对路径逃逸的 `dest_path`（返回 `UnsafePathTraversal`），防止恶意包名或自定义 naming 模板向目标目录外写入文件。
 

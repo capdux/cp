@@ -5,7 +5,7 @@
 // ============================================================================
 
 import { SourceMapping, binarySearchMappings, sortMappingsSlice, encodeMappingsList } from "./mapping.cp";
-import { ParsedSourceMapRecord, appendBytes, appendJsonQuoted } from "./parsed_source_map.cp";
+import { ParsedSourceMapRecord, appendBytes, appendJsonQuoted } from "./parsedSourceMap.cp";
 import { VLQ } from "./vlq.cp";
 const std = @import("std");
 

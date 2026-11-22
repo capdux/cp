@@ -50,7 +50,7 @@
 | `lib/math/spline.cp` | 自然/钳位三次样条、单调保形 PCHIP 样条与 Catmull-Rom 插值 |
 | `lib/math/ode.cp` | RK2 中点、经典 RK4、自适应 Dormand-Prince RK45 与 Velocity Verlet 积分器 |
 | `lib/math/cholesky.cp` | SPD 矩阵 Cholesky `LL^T` 与无开方 `LDL^T` 分解、求解、对数行列式与求逆 |
-| `lib/math/simd_stats.cp` | 原生 8-lane SIMD（`@dot`/`@l2sq`/`@fma`/`slice.split`）零堆描述统计、相关/余弦/欧氏距离、Z-Score、Softmax、GEMV 与 AXPY |
+| `lib/math/simdStats.cp` | 原生 8-lane SIMD（`@dot`/`@l2sq`/`@fma`/`slice.split`）零堆描述统计、相关/余弦/欧氏距离、Z-Score、Softmax、GEMV 与 AXPY |
 | `lib/math/index.cp` | `cap:math` 与 `cap.math` 统一零冲突公开导出入口 |
 
 ---
@@ -142,10 +142,10 @@
 - **ODE 数值积分（`ode.cp`）**：`OdeRhsFn`, `AccelFn`, `Rk45Result`, `rk2MidpointStep`, `rk4Step`, `rk4Integrate`, `rk45Step`, `rk45Integrate`, `verletStep`
 - **Cholesky 与 LDL^T（`cholesky.cp`）**：`choleskyDecompose`, `forwardSubstitute`, `backwardSubstituteT`, `choleskySolve`, `choleskyLogDet`, `choleskyDet`, `choleskyInvert`, `ldltDecompose`, `ldltSolve`
 
-### 12. 128 位定点高精度十进制与 ISO 4217 货币引擎（`decimal.cp` / `decimal_money.cp`）
+### 12. 128 位定点高精度十进制与 ISO 4217 货币引擎（`decimal.cp` / `decimalMoney.cp`）
 
 - **128 位定点十进制（`decimal.cp`）**：`MAX_SCALE`, `DecimalError`, `RoundingMode`（HalfUp/HalfEven/Floor/Ceil/Trunc）, `Decimal`（精确十进制加减乘除、科学计数法解析与归一化）。
-- **ISO 4217 货币引擎（`decimal_money.cp`）**：`MoneyError`, `Money`（币种隔离算术与分精度无损分摊）。
+- **ISO 4217 货币引擎（`decimalMoney.cp`）**：`MoneyError`, `Money`（币种隔离算术与分精度无损分摊）。
 - **参考归档（不导出）**：`lib/math/decimal_fp_.cp`（原 `lib/decimal_fp`，与 `decimal.cp` 功能重叠，首行带 `// Reference Only:` 声明，保留供对比分析）。
 
 ---
@@ -216,7 +216,7 @@ pub fn demoMath(): !void {
 }
 ```
 
-### 原生 SIMD 向量化统计与线性代数极速算子示例 (`simd_stats.cp`)
+### 原生 SIMD 向量化统计与线性代数极速算子示例 (`simdStats.cp`)
 
 ```cp
 import {

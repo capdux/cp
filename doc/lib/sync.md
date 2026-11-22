@@ -66,7 +66,7 @@ pub fn demoLocksAndWaitGroup() {
 
 ### 2. 无锁有界 MPMC 环形队列与侵入式无界批次队列 (`MpmcQueue` / `RingBuffer` & `UnboundedQueue`)
 
-源自 `/data/dev/bun/src/threading/channel.cp` 与 `unbounded_queue.cp`：
+源自 `/data/dev/bun/src/threading/channel.cp` 与 `unboundedQueue.cp`：
 - **`MpmcQueue(T, CAP)` / `RingBuffer(T, CAP)`**：基于 Dmitry Vyukov 的多生产者多消费者无锁有界队列，每个槽位维护独立的原子轮次号 `turn`，彻底消除伪共享与 ABA 问题；
 - **`UnboundedQueue(T, .next)`**：按 CPU 缓存行（x86_64/ARM64 下 64~128 字节 `align`）物理隔离 `front` 与 `back` 指针的侵入式无界无锁队列，支持 `push`、`pushBatch`、`pop` 以及单次原子 `swap` 整链摘除的 `popBatch()`。
 

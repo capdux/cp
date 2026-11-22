@@ -45,7 +45,7 @@ export {
     ChatMessage,
     sanitizeControlTokens,
     formatChatPrompt,
-} from "./chat_format.cp";
+} from "./chatFmt.cp";
 
 export {
     FewShotExample,
@@ -73,14 +73,14 @@ export {
     emitJsonSchemaObject,
     emitOpenAiToolJson,
     emitAnthropicToolJson,
-} from "./json_schema.cp";
+} from "./jsonSchema.cp";
 
 export {
     StreamChannel,
     DemuxEvent,
     DemuxStats,
     ReasoningStreamDemuxer,
-} from "./reasoning_stream.cp";
+} from "./reasoning.cp";
 
 export {
     JsonCandidateSpan,
@@ -94,7 +94,7 @@ export {
     repairLlmJson,
     checkRequiredJsonFields,
     formatRepairRetryPrompt,
-} from "./structured_output.cp";
+} from "./structuredOutput.cp";
 
 export {
     MAX_COMPOSER_BLOCKS,
@@ -102,7 +102,7 @@ export {
     AgentPromptBlock,
     AgentPromptBuildReport,
     AgentPromptComposer,
-} from "./agent_composer.cp";
+} from "./composer.cp";
 
 export {
     FIREWALL_FLAG_DELIMITER_OVERRIDE,
@@ -142,7 +142,7 @@ export {
     RolloutGuardConfig,
     RegistrySummaryStats,
     PromptVersionRegistry,
-} from "./version_registry.cp";
+} from "./versions.cp";
 
 export {
     JSON_STREAM_MAX_DEPTH,
@@ -154,7 +154,7 @@ export {
     JsonStreamEvent,
     JsonStreamStats,
     JsonStreamScanner,
-} from "./json_stream_scanner.cp";
+} from "./jsonStream.cp";
 
 export {
     CITATION_MAX_REFS,
@@ -166,7 +166,7 @@ export {
     extractInlineCitations,
     computeClaimSupportBps,
     auditRagCitations,
-} from "./citation_grounder.cp";
+} from "./citations.cp";
 
 export {
     BUDGET_PACKER_MAX_ITEMS,
@@ -177,7 +177,7 @@ export {
     PackedSlotDecision,
     BudgetPackReport,
     packPromptWithinBudget,
-} from "./token_budget_packer.cp";
+} from "./budgetPack.cp";
 
 export {
     GUARDRAIL_MAX_FINDINGS,
@@ -191,4 +191,24 @@ export {
     luhnCheckDigits,
     redactSensitiveSpans,
     PromptGuardrailScanner,
-} from "./guardrail_scanner.cp";
+} from "./guardrail.cp";
+
+export {
+    TPL_MAX_INSTRUCTIONS,
+    TPL_MAX_NESTING_DEPTH,
+    TPL_MAX_CONTEXT_VARS,
+    TPL_MAX_CONTEXT_LISTS,
+    TPL_MAX_LIST_ITEMS,
+    TPL_MAX_MISSING_NAME,
+    TplOpKind,
+    TplCompileStatus,
+    TplExecStatus,
+    TplInstruction,
+    CompiledPromptTemplate,
+    TplRenderContext,
+    TplExecResult,
+    compilePromptTemplate,
+    renderCompiledTemplate,
+    collectRequiredVars,
+    collectAllReferencedVars,
+} from "./compiler.cp";

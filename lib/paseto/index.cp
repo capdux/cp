@@ -18,11 +18,11 @@ export {
     generateV4PublicKeyPair,
     signV4Public,
     verifyV4Public,
-} from "./v4_public.cp";
+} from "./v4Public.cp";
 
 export {
     HEADER_LOCAL,
     generateV4LocalKey,
     encryptV4Local,
     decryptV4Local,
-} from "./v4_local.cp";
+} from "./v4Local.cp";

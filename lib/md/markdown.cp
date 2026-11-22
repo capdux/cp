@@ -6,7 +6,7 @@
 const std = @import("std");
 import { MarkdownOptions, MdBlock, MdRenderer } from "./ast.cp";
 import { MdDocument, MdParser } from "./parser.cp";
-import { AnsiTheme } from "./ansi_renderer.cp";
+import { AnsiTheme } from "./ansiRenderer.cp";
 import { lookup } from "./entity.cp";
 import { FoldInfo, foldCodepoint } from "./unicode.cp";
 import {

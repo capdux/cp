@@ -3,7 +3,7 @@
 const std = @import("std");
 const deflate = @import("cap:deflate");
 import { ZlibFormat, ZlibLevel, ZlibOptions, ZlibError, mapDeflateError } from "./types.cp";
-import { decompressDeflatePrefix, compressStoredDeflate } from "./deflate_stream.cp";
+import { decompressDeflatePrefix, compressStoredDeflate } from "./deflateStream.cp";
 
 /// Computes IEEE 802.3 CRC-32 checksum.
 pub fn crc32(data: []const u8): u32 {

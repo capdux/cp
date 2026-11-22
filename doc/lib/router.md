@@ -29,10 +29,10 @@
 
 | 文件路径 | 上游谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
-| `lib/router/param_map.cp` | `// Source: /data/dev/bun/src/router/ParamMap.cp` | `Param` 与 `ParamMap`（固定 16 槽位栈内联存储，提供只读 `get`/`has`/`at`/`count`/`isEmpty` 与写入 `append`） |
+| `lib/router/paramMap.cp` | `// Source: /data/dev/bun/src/router/ParamMap.cp` | `Param` 与 `ParamMap`（固定 16 槽位栈内联存储，提供只读 `get`/`has`/`at`/`count`/`isEmpty` 与写入 `append`） |
 | `lib/router/route.cp` | `// Source: /data/dev/bun/src/router/Route.cp` | 泛型匹配结果 `RouteMatch(comptime T: type)`，封装 `handler: T` 与 `params: ParamMap` |
 | `lib/router/radix.cp` | `// Source: /data/dev/bun/src/router/Router.cp` | 泛型 `RadixNode(T)`、`HybridSegment`、`RouterOptions`、`TrailingSlashMode` 与 `Router(T)` |
-| `lib/router/fs_router.cp` | `// Source: /data/dev/bun/src/router/router.cp` | `FileSystemRouter`：支持 `[slug].cp`、`[...catchall].cp`、`[[...optional]].cp`、`(group)` 分组忽略、`scanDir` 与优先级自动排序 |
+| `lib/router/fsRouter.cp` | `// Source: /data/dev/bun/src/router/router.cp` | `FileSystemRouter`：支持 `[slug].cp`、`[...catchall].cp`、`[[...optional]].cp`、`(group)` 分组忽略、`scanDir` 与优先级自动排序 |
 | `lib/router/pattern.cp` | `// Source: /data/dev/bun/src/router/Router.cp` | `RouteFormatter`：占位符提取 `extractParamNames` 与反向路径渲染 `formatPath` |
 | `lib/router/index.cp` | `// Source: /data/dev/bun/src/router/router.cp` | `cap:router` 统一对外导出入口 |
 

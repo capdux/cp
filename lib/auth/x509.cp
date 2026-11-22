@@ -13,7 +13,7 @@ import {
     TAG_SEQUENCE,
     TAG_UTC_TIME,
     TAG_GENERALIZED_TIME,
-} from "./asn1_der.cp";
+} from "./asn1Der.cp";
 import {
     PemError,
     PemBlock,

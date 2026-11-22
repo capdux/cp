@@ -13,7 +13,7 @@ export {
     jsonEqual,
     parseJson,
     stringifyJson,
-} from "./json_val.cp";
+} from "./jsonVal.cp";
 
 export {
     JsonPathError,

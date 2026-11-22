@@ -6,7 +6,7 @@
 
 const std = @import("std");
 import { SemverRange } from "cap:semver";
-import { HostedGitInfo } from "../resolver/hosted_git.cp";
+import { HostedGitInfo } from "../resolver/hostedGit.cp";
 import { JsonValue } from "cap:json";
 import {
     Behavior,

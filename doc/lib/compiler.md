@@ -16,7 +16,7 @@
 | :--- | :--- | :--- |
 | `lib/compiler/expr.cp` | 安全确定性表达式编译与求值 | `compile`, `compileWithMaxDepth`, `eval`, `CompiledExpr`, `ExprContext`, `ExprValue`, `ExprError`, `DEFAULT_MAX_DEPTH` |
 | `lib/compiler/sat.cp` | DPLL 布尔可满足性求解器与 DIMACS CNF | `SatSolver`, `ConstraintModel`, `SatSolution`, `NamedSolution`, `SatStatus`, `SatError` |
-| `lib/compiler/regex_compiler.cp` / `regex_vm.cp` | Anti-ReDoS Pike VM / Thompson NFA 正则引擎 | `Regex`, `Compiler`, `Program`, `Inst`, `Opcode`, `Captures`, `MatchSpan`, `RegexError` |
+| `lib/compiler/regexCompiler.cp` / `regexVm.cp` | Anti-ReDoS Pike VM / Thompson NFA 正则引擎 | `Regex`, `Compiler`, `Program`, `Inst`, `Opcode`, `Captures`, `MatchSpan`, `RegexError` |
 
 ### 2. 语言前端、WebAssembly、着色器与 IDL（6 个子模块）
 
@@ -42,7 +42,7 @@
 
 | 子模块文件 | 领域分类 | 核心导出符号 |
 | :--- | :--- | :--- |
-| `lib/compiler/protobuf.cp` / `protobuf_grpc.cp` | Protocol Buffers Wire & gRPC Framing | `ProtoWriter`, `ProtoReader`, `ProtoField`, `WireType`, `PROTO_DEFAULT_MAX_DEPTH`, `GrpcFrameCodec`, `GrpcFrameStream`, `GrpcStatus` |
+| `lib/compiler/protobuf.cp` / `protobufGrpc.cp` | Protocol Buffers Wire & gRPC Framing | `ProtoWriter`, `ProtoReader`, `ProtoField`, `WireType`, `PROTO_DEFAULT_MAX_DEPTH`, `GrpcFrameCodec`, `GrpcFrameStream`, `GrpcStatus` |
 | `lib/compiler/flatbuf.cp` | Google FlatBuffers 零分配二进制解析 | `fbRootTable`, `fbFileIdentifier`, `fbHasIdentifier`, `fbStripSizePrefix`, `FbTable`, `FbVector` |
 | `lib/compiler/flexbuf.cp` | Google FlexBuffers 无模式二进制解析 | `parseFlexRoot`, `FlexRef`, `FlexType`, `unpackFlexType`, `packFlexType` |
 

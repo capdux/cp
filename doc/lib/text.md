@@ -101,7 +101,7 @@ pub fn demoTextEngine(alloc: std.mem.Allocator): ! {
 
 ---
 
-## 零堆分配 RAG 递归文档分块与引用定位 (`lib/text/rag_chunker.cp`)
+## 零堆分配 RAG 递归文档分块与引用定位 (`lib/text/ragChunker.cp`)
 
 专为高并发 AI Agent / RAG 管线打造的零堆分配、零拷贝 Markdown 感知分块器：
 
@@ -284,7 +284,7 @@ pub fn demoUnigramViterbi() {
 
 ---
 
-## 零堆分配 RAG Markdown 结构感知分块与标题面包屑索引器 (`lib/text/markdown_chunk.cp`)
+## 零堆分配 RAG Markdown 结构感知分块与标题面包屑索引器 (`lib/text/markdownChunk.cp`)
 
 专为 RAG 知识库索引打造的纯 CP 零堆分配 Markdown 结构分块器，在切分同时自动维护 6 级标题层级路径（面包屑），并保护围栏代码块与 GFM 表格不被撕裂：
 
@@ -332,7 +332,7 @@ pub fn demoMarkdownStructuredChunk(doc: string) {
 
 ---
 
-## 零堆分配 Unified Diff 补丁解析与原子应用器 (`lib/text/unified_diff.cp`)
+## 零堆分配 Unified Diff 补丁解析与原子应用器 (`lib/text/unifiedDiff.cp`)
 
 专为 AI 编程智能体代码补丁验证与安全落盘打造，采用两遍原子设计（Pass 1 全量校验并测算输出字节数，Pass 2 写入），失败时保证 `out_buf` 零污染：
 
@@ -370,7 +370,7 @@ pub fn demoUnifiedDiffApply() {
 
 ---
 
-## 零堆分配多语言源码符号大纲与 Repo-Map 提取器 (`lib/text/code_outline.cp`)
+## 零堆分配多语言源码符号大纲与 Repo-Map 提取器 (`lib/text/codeOutline.cp`)
 
 专为 AI 编程智能体构建紧凑代码仓库地图（Repo-Map）与精准行号定位打造，单遍零堆分配扫描 CP / TypeScript / Rust / Zig 源码：
 
@@ -406,7 +406,7 @@ pub fn demoRepoMap(src: string) {
 
 ---
 
-## 零堆分配 Token 感知代码模式匹配与 `$VAR` 捕获器 (`lib/text/code_pattern.cp`)
+## 零堆分配 Token 感知代码模式匹配与 `$VAR` 捕获器 (`lib/text/codePattern.cp`)
 
 面向 AI 编程智能体结构化代码审计与重构检索（轻量对标 ast-grep / semgrep），忽略注释与排版空白差异，支持同名元变量跨位置一致性约束：
 
@@ -463,15 +463,15 @@ pub fn demoCodePatternMatch(src: string) {
 | 子模块文件 | 领域分类 | 核心导出符号 |
 | :--- | :--- | :--- |
 | `lib/text/mustache.cp` | 零分配 Mustache 模板引擎 | `renderMustache`, `validateMustache`, `MustacheIter`, `MustacheVar`, `MustacheToken` |
-| `lib/text/template_value.cp` / `template_engine.cp` | Mustache 兼容 Prompt/HTML/代码生成模板 | `TemplateEngine`, `CompiledTemplate`, `TemplateContext`, `TemplateValue`, `TemplateError` |
+| `lib/text/templateValue.cp` / `templateEngine.cp` | Mustache 兼容 Prompt/HTML/代码生成模板 | `TemplateEngine`, `CompiledTemplate`, `TemplateContext`, `TemplateValue`, `TemplateError` |
 | `lib/text/soundex.cp` | 语音编码 (Soundex/Metaphone/NYSIIS/Cologne) | `soundex`, `soundexEquals`, `soundexDifference`, `metaphone`, `nysiis`, `colognePhonetic` |
 | `lib/text/porter.cp` | Porter 英文词干提取器 | `porterStem`, `porterStemEquals`, `porterMeasure`, `PORTER_MAX_WORD_LEN` |
-| `lib/text/bm25_tokenizer.cp` / `bm25.cp` / `bm25_rrf.cp` | BM25 全文检索、分词与 RRF 融合排序 | `Bm25Index`, `Bm25Config`, `Bm25Hit`, `rrfFuse`, `tokenizeTerms`, `defaultStopwords` |
-| `lib/text/table_width.cp` / `table.cp` | ANSI & 东亚宽字符感知表格渲染 | `Table`, `ColumnSpec`, `TableStyle`, `DisplayWidth`, `TextAlign`, `TableError` |
+| `lib/text/bm25Tokenizer.cp` / `bm25.cp` / `bm25Rrf.cp` | BM25 全文检索、分词与 RRF 融合排序 | `Bm25Index`, `Bm25Config`, `Bm25Hit`, `rrfFuse`, `tokenizeTerms`, `defaultStopwords` |
+| `lib/text/tableWidth.cp` / `table.cp` | ANSI & 东亚宽字符感知表格渲染 | `Table`, `ColumnSpec`, `TableStyle`, `DisplayWidth`, `TextAlign`, `TableError` |
 | `lib/text/diff3.cp` | 三路文本合并与冲突块检测 | `mergeLines`, `mergeTexts`, `hasConflicts`, `MergeResult`, `MergeHunk`, `ConflictBlock`, `ConflictStyle` |
-| `lib/text/nfa_regex.cp` | 线性时间 Thompson NFA 正则引擎 | `NfaRegex`, `MatchSpan`, `RegexError`, `MAX_NFA_STATES` |
+| `lib/text/nfaRegex.cp` | 线性时间 Thompson NFA 正则引擎 | `NfaRegex`, `MatchSpan`, `RegexError`, `MAX_NFA_STATES` |
 | `lib/text/aho.cp` | Aho-Corasick 多模式字符串匹配自动机 | `AhoCorasick`, `AhoBuilder`, `AhoMatch`, `MatchKind`, `AhoError` |
-| `lib/text/kmp_z_algo.cp` | KMP / Z-Algorithm / 最长回文子串 | `computeLps`, `kmpFindFirst`, `kmpFindAll`, `zArray`, `longestPalindrome`, `PalindromeSpan` |
+| `lib/text/kmpZAlgo.cp` | KMP / Z-Algorithm / 最长回文子串 | `computeLps`, `kmpFindFirst`, `kmpFindAll`, `zArray`, `longestPalindrome`, `PalindromeSpan` |
 | `lib/text/suffixarray.cp` | 后缀数组、Kasai LCP 与子串索引 | `SuffixArray`, `SuffixArrayError` |
 | `lib/text/spell.cp` | SymSpell / BK-Tree 拼写纠错 | `SymSpellIndex`, `BkTree`, `SpellSuggestion`, `SuggestVerbosity`, `spellDamerauLevenshtein`, `spellSoundex` |
 
@@ -486,7 +486,7 @@ pub fn demoCodePatternMatch(src: string) {
 | 子模块文件 | 原目录 | 核心职责 |
 | :--- | :--- | :--- |
 | `lib/text/i18n.cp` | `lib/i18n` | Locale Negotiator、CLDR 复数规则与层级消息目录 (`I18nCatalog`) |
-| `lib/text/intl_number.cp`, `intl_units.cp` | `lib/intl` | 分组/紧凑/序数/百分比数字格式化与双向人类可读单位解析 |
+| `lib/text/intlNumber.cp`, `intlUnits.cp` | `lib/intl` | 分组/紧凑/序数/百分比数字格式化与双向人类可读单位解析 |
 | `lib/text/punycode.cp`, `idna.cp` | `lib/idna` | RFC 3492 Punycode 与 IDNA 国际化域名编解码及 RFC 1034/1123 校验 |
 | `lib/text/highlight.cp` | `lib/highlight` | 多语言词法语法高亮器 |
 | `lib/text/glob.cp`, `globset.cp` | `lib/globset` | 单模式与多模式 Glob NFA 编译器与匹配集 |

@@ -10,14 +10,14 @@ export {
     AssertionResult,
 } from "./types.cp";
 
-export { parseAuthenticatorData } from "./auth_data.cp";
+export { parseAuthenticatorData } from "./authData.cp";
 
 export {
     encodeChallengeB64u,
     constantTimeEql,
     parseClientDataJson,
     verifyClientData,
-} from "./client_data.cp";
+} from "./clientData.cp";
 
 export {
     computeRpIdHash,

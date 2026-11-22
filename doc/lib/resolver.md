@@ -22,15 +22,15 @@
 
 | 文件路径 | 上游谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
-| `lib/resolver/data_url.cp` | `// Source: /data/dev/bun/src/resolver/data_url.zig` | RFC 2397 `DataURL` 解析、`mime_type` / `charset` / `is_base64` 提取及 `decodeAlloc` |
-| `lib/resolver/package_json.cp` | `// Source: /data/dev/bun/src/resolver/package_json.zig` | `PackageJson` 结构化解析、`exports` 条件路由与通配映射、`#imports` 私有导入及依赖查询 |
+| `lib/resolver/dataUrl.cp` | `// Source: /data/dev/bun/src/resolver/data_url.zig` | RFC 2397 `DataURL` 解析、`mime_type` / `charset` / `is_base64` 提取及 `decodeAlloc` |
+| `lib/resolver/pkgJson.cp` | `// Source: /data/dev/bun/src/resolver/package_json.zig` | `PackageJson` 结构化解析、`exports` 条件路由与通配映射、`#imports` 私有导入及依赖查询 |
 | `lib/resolver/tsconfig.cp` | `// Source: /data/dev/bun/src/resolver/tsconfig_json.zig` | JSONC `TsConfigJson` 解析（支持 `//`、`/* */` 与尾逗号）及 `paths` 通配别名展开 `resolveAlias` |
 | `lib/resolver/resolver.cp` | `// Source: /data/dev/bun/src/resolver/resolver.zig` | `ResolveKind`、`ResolveConditions`、`StatHash`（64 位文件指纹）与 `ModuleResolver` |
-| `lib/resolver/dir_cache.cp` | `// Source: /data/dev/bun/src/resolver/dir_info.cp` | `DirEntryCache`、`DirInfo`（`isStale()` 失效检测）与 `RealpathResolver`（多级软链 + `ELOOP` 防护） |
+| `lib/resolver/dirCache.cp` | `// Source: /data/dev/bun/src/resolver/dir_info.cp` | `DirEntryCache`、`DirInfo`（`isStale()` 失效检测）与 `RealpathResolver`（多级软链 + `ELOOP` 防护） |
 | `lib/resolver/advanced.cp` | `// Source: /data/dev/bun/src/resolver/tsconfig_json.cp & .../package_json.cp` | `TsConfigChainLoader`、`BrowserFieldMap`、`SideEffectsMatcher`、`SelfReferenceResolver` |
 | `lib/resolver/integrity.cp` | `// Source: /data/dev/bun/src/install/integrity.cp` | W3C SRI 完整性校验（`IntegrityTag` / `Integrity` 解析、多算法择强、SHA256/512 计算与恒定时间比对） |
-| `lib/resolver/hosted_git.cp` | `// Source: /data/dev/bun/src/install/hosted_git_info.cp` | Git 托管地址解析（`GitHost` / `HostedGitInfo`，支持简写、HTTPS、SSH 与 Tarball URL 生成） |
-| `lib/resolver/node_fallbacks.cp` | `// Source: /data/dev/bun/src/resolver/node_fallbacks.cp` | 面向浏览器打包目标的 23 个 Node.js 核心模块虚拟 Polyfill 路由注册表（`NodeFallbackModule`、`lookupNodeFallback`、`hasNodeFallback`、`isNodeFallbackVfsPath`、`resolveNodeFallbackFromVfsPath`、`formatNodeFallbackEntryPath`、`formatNodeFallbackPackageJsonPath`） |
+| `lib/resolver/hostedGit.cp` | `// Source: /data/dev/bun/src/install/hosted_git_info.cp` | Git 托管地址解析（`GitHost` / `HostedGitInfo`，支持简写、HTTPS、SSH 与 Tarball URL 生成） |
+| `lib/resolver/fallbacks.cp` | `// Source: /data/dev/bun/src/resolver/node_fallbacks.cp` | 面向浏览器打包目标的 23 个 Node.js 核心模块虚拟 Polyfill 路由注册表（`NodeFallbackModule`、`lookupNodeFallback`、`hasNodeFallback`、`isNodeFallbackVfsPath`、`resolveNodeFallbackFromVfsPath`、`formatNodeFallbackEntryPath`、`formatNodeFallbackPackageJsonPath`） |
 | `lib/resolver/index.cp` | `// Source: /data/dev/bun/src/resolver/` | `cap:resolver` 对外统一导出入口 |
 
 ---
@@ -150,7 +150,7 @@ pub fn demoResolver(): !void {
    - `RealpathResolver` 严格限制最大软链接跳转次数（`MAX_SYMLINK_DEPTH = 40`），遇环路立即返回 `ELOOP` 错误而非无限递归；`DirEntryCache` 通过 `DirInfo.isStale()` 与 `StatHash` 探测目录变更，兼顾高频解析性能与热更新一致性。
 4. **W3C SRI 多算法择强与恒定时间校验（`Integrity`）**：
    - 当完整性字符串包含多个算法摘要（如 `sha256-... sha512-...`）时，按 W3C SRI 规范自动选择最强支持算法进行校验，并采用恒定时间字节比对防止侧信道泄露。
-5. **无扩展名导入探测顺序与零拷贝路径拆解（`lib/resolver/path_name.cp`，吸收自 `/data/dev/bun/src/resolver/fs.cp` & `/data/dev/bun/docs/runtime/module-resolution.mdx`）**：
+5. **无扩展名导入探测顺序与零拷贝路径拆解（`lib/resolver/pathName.cp`，吸收自 `/data/dev/bun/src/resolver/fs.cp` & `/data/dev/bun/docs/runtime/module-resolution.mdx`）**：
    - **导出符号**：`PathPlatform`、`ResolverPathError`、`ResolverPathName`（`init`/`findExtname`/`extWithoutLeadingDot`/`dirOrDot`/`nonUniqueNameStringBase`/`formatValidIdentifier`）、`NodeJSPathName`、`PackageSpecifier`、`isRelativeModuleSpecifier`、`isBarePackageSpecifier`、`stripNodeModulesPrefix`（100% 零动态堆分配、零拷贝切片视图）；
    - **Bun 模块扩展名探测基线**：无扩展名相对导入（如 `./hello`）按 `.tsx` -> `.jsx` -> `.ts` -> `.mjs` -> `.js` -> `.cjs` -> `.json` 顺序探测文件，再按同顺序探测目录下 `index.*`；若导入路径已显式携带扩展名，则仅精确匹配该扩展名；
    - `PackageSpecifier.parse()` 严格区分裸包（含 `@scope/pkg/subpath`）、相对路径（`./`/`../`）、子路径导入（`#...`）与协议说明符（`node:`/`bun:`/`cap:`/`https:`），配合 `stripNodeModulesPrefix()` 可直接定位最深层 `node_modules` 包名。

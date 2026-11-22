@@ -8,7 +8,7 @@
 
 ## 上游行为契约与 CP 增强
 
-- **显式关闭优先（`CI=false` / `CI=0`）**：严格遵循 Bun `ci_info.cp` 逻辑（`if (bun.env_var.CI.get() == false) return null;`）——当环境变量中显式设置 `CI=false` 或 `CI=0` 时，即使存在其他供应商特征变量，也会覆盖并判定为非 CI 环境（`is_ci == false`、`vendor == .unknown`）。
+- **显式关闭优先（`CI=false` / `CI=0`）**：严格遵循 Bun `ciInfo.cp` 逻辑（`if (bun.env_var.CI.get() == false) return null;`）——当环境变量中显式设置 `CI=false` 或 `CI=0` 时，即使存在其他供应商特征变量，也会覆盖并判定为非 CI 环境（`is_ci == false`、`vendor == .unknown`）。
 - **通用 CI 兜底与 `name()` 可空语义**：遵循上游注释提示——`is_ci` 可以为 `true` 而 `name()` 返回 `null`（例如仅设置了通用的 `CI=true`、`CONTINUOUS_INTEGRATION=true` 或 `BUILD_ID`，但未匹配到 31 个已知供应商之一）。
 - **CP 确定性纯函数与 `is_pr` 补全**：
   - 上游 Bun 仅实现 `isCI()` 与 `detectCIName()`，未实现 `isPR`，且通过 `bun.once` 缓存全局进程环境；

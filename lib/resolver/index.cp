@@ -6,14 +6,14 @@
 export {
     DataURL,
     DataUrlError,
-} from "./data_url";
+} from "./dataUrl";
 
 export {
     ModuleType,
     ExportResolveStatus,
     ExportResolveResult,
     PackageJson,
-} from "./package_json";
+} from "./pkgJson";
 
 export {
     TsPathMapping,
@@ -41,7 +41,7 @@ export {
     HostedGitError,
     GitHost,
     HostedGitInfo,
-} from "./hosted_git";
+} from "./hostedGit";
 
 export {
     MAX_SYMLINK_DEPTH,
@@ -52,7 +52,7 @@ export {
     DirEntryCache,
     RealpathResult,
     RealpathResolver,
-} from "./dir_cache";
+} from "./dirCache";
 
 export {
     MAX_EXTENDS_DEPTH,
@@ -80,7 +80,7 @@ export {
     resolveNodeFallbackFromVfsPath,
     formatNodeFallbackEntryPath,
     formatNodeFallbackPackageJsonPath,
-} from "./node_fallbacks";
+} from "./fallbacks";
 
 export {
     PathPlatform,
@@ -91,4 +91,4 @@ export {
     isRelativeModuleSpecifier,
     isBarePackageSpecifier,
     stripNodeModulesPrefix,
-} from "./path_name";
+} from "./pathName";

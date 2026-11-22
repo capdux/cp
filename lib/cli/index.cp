@@ -5,7 +5,7 @@
 export * from "./args.cp";
 export * from "./tty.cp";
 export * from "./table.cp";
-export * from "./ci_info.cp";
+export * from "./ciInfo.cp";
 export * from "./subcommand.cp";
 
 export {
@@ -37,7 +37,7 @@ export {
     renderBorderLine,
     renderTableRow,
     renderTable,
-} from "./table_render.cp";
+} from "./tableRender.cp";
 
 export {
     TreeStyle,
@@ -55,7 +55,7 @@ export {
     parseColonList,
     parseLoaderMappingList,
     findColonValue,
-} from "./colon_list.cp";
+} from "./colonList.cp";
 
 export {
     CompletionError,
@@ -75,7 +75,7 @@ export {
     pmStagePlainName,
     pmStageLabel,
     formatPmStageBanner,
-} from "./pm_commands.cp";
+} from "./pmCmds.cp";
 
 export {
     PM_VIEW_MAX_PATH_SEGMENTS,
@@ -90,7 +90,7 @@ export {
     PmViewSummary,
     formatRecentVersionsHint,
     formatPmViewJsonError,
-} from "./pm_view.cp";
+} from "./pmView.cp";
 
 export {
     EDITOR_MAX_ARGS,
@@ -122,7 +122,7 @@ export {
     formatZshrcSourceLine,
     collectAliasSymlinkTargets,
     isWindowsInstallerBinDir,
-} from "./install_completions.cp";
+} from "./installComp.cp";
 
 export {
     PmVersionError,
@@ -135,7 +135,7 @@ export {
     computeNextPmVersion,
     formatPmCommitMessage,
     formatPmGitTag,
-} from "./pm_version.cp";
+} from "./pmVersion.cp";
 
 export {
     PM_PKG_MAX_SEGMENTS,
@@ -147,7 +147,7 @@ export {
     PmPkgAssignment,
     PmPkgValueKind,
     classifyPmPkgValue,
-} from "./pm_pkg.cp";
+} from "./pmPkg.cp";
 
 export {
     FILTER_MAX_PATTERNS,
@@ -161,7 +161,7 @@ export {
     normalizeFilterPath,
     matchFilterGlob,
     formatFilterScriptPrefix,
-} from "./filter_arg.cp";
+} from "./filterArg.cp";
 
 export {
     TEST_SCANNER_MAX_FILTERS,
@@ -174,7 +174,7 @@ export {
     isExactTestPathArg,
     formatScopedTestName,
     TestFileScanner,
-} from "./test_scanner.cp";
+} from "./testScan.cp";
 
 export {
     PM_AUDIT_MAX_IGNORE,
@@ -193,7 +193,7 @@ export {
     PmAuditReport,
     PmAuditDepEdge,
     PmAuditDepGraph,
-} from "./pm_audit.cp";
+} from "./pmAudit.cp";
 
 export {
     PM_OUTDATED_MAX_ENTRIES,
@@ -209,7 +209,7 @@ export {
     PmOutdatedFilter,
     PmOutdatedEntry,
     PmOutdatedTable,
-} from "./pm_outdated.cp";
+} from "./pmOutdated.cp";
 
 export {
     PM_TRUST_MAX_ALLOWLIST,
@@ -220,7 +220,7 @@ export {
     PmTrustSpec,
     PmLifecyclePackage,
     PmTrustPolicy,
-} from "./pm_trusted.cp";
+} from "./pmTrusted.cp";
 
 export {
     FILTER_RUN_MAX_SCRIPTS,
@@ -239,7 +239,7 @@ export {
     formatFilterStatusLine,
     formatFilterOutputBlock,
     FilterRunGraph,
-} from "./filter_run.cp";
+} from "./filterRun.cp";
 
 export {
     BUNX_CACHE_TTL_SECS,
@@ -270,4 +270,4 @@ export {
     formatMultiRunExitStatus,
     MultiRunLineBuffer,
     MultiRunScheduler,
-} from "./multi_run.cp";
+} from "./multiRun.cp";

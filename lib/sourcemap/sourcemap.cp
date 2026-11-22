@@ -5,11 +5,11 @@
 // ============================================================================
 
 import { VLQ } from "./vlq.cp";
-import { LineOffsetTable, DynamicLineOffsetTable, SourceLocation } from "./line_offset.cp";
+import { LineOffsetTable, DynamicLineOffsetTable, SourceLocation } from "./lineOffset.cp";
 import { SourceMapping, MappingList, ParsedSourceMap } from "./mapping.cp";
-import { InternalSourceMap } from "./internal_source_map.cp";
+import { InternalSourceMap } from "./internalSourceMap.cp";
 import { Chunk, SourceMapChunk } from "./chunk.cp";
-import { ParsedSourceMapRecord, OriginalPosition } from "./parsed_source_map.cp";
+import { ParsedSourceMapRecord, OriginalPosition } from "./parsedSourceMap.cp";
 const std = @import("std");
 
 pub struct SourceMapState {

@@ -5,7 +5,7 @@
 `cap:obs` 是 CP 语言官方内置的纯原生零 C 依赖可观测性、指标、安全日志、诊断报告与内核类型追踪标准库，覆盖：
 1. **OpenMetrics / Prometheus 文本指标格式**（`openmetrics.cp`）
 2. **SIEM 安全事件与 HTTP 访问日志**（`cef.cp`, `leef.cp`, `clf.cp`）
-3. **静态分析诊断、CI 测试报告与 LLM 评测门禁**（`sarif.cp`, `junit.cp`, `tap.cp`, `eval_metrics.cp`, `eval_suite.cp`）
+3. **静态分析诊断、CI 测试报告与 LLM 评测门禁**（`sarif.cp`, `junit.cp`, `tap.cp`, `evalMetrics.cp`, `evalSuite.cp`）
 4. **Linux eBPF BTF 内核类型图解析**（`btf.cp`）
 
 全模块**零 C 依赖、零 `std.posix`、零 `@import("bun")`**，支持 `import ... from "cap:obs"` 与 `import cap from "cap"; cap.obs.*` 编译期自动惰性挂载。
@@ -21,12 +21,12 @@
 | `lib/obs/sarif.cp` | OASIS SARIF 2.1.0 静态分析结果解析与级别统计 |
 | `lib/obs/junit.cp` | JUnit XML CI 测试套件与用例结果解析汇总 |
 | `lib/obs/tap.cp` | TAP v12/v13/v14（Test Anything Protocol）事件流解析与统计 |
-| `lib/obs/eval_metrics.cp` | LLM / AI Agent 评测打分器（Exact/Token F1/JSON 字段匹配/`pass@k`） |
-| `lib/obs/eval_suite.cp` | 评测报告聚合与 CI 回归门禁对比（`EvalReport`, `RegressionDiff`） |
+| `lib/obs/evalMetrics.cp` | LLM / AI Agent 评测打分器（Exact/Token F1/JSON 字段匹配/`pass@k`） |
+| `lib/obs/evalSuite.cp` | 评测报告聚合与 CI 回归门禁对比（`EvalReport`, `RegressionDiff`） |
 | `lib/obs/btf.cp` | Linux 内核 `.BTF`（BPF Type Format）类型图与成员布局零分配解析器 |
-| `lib/obs/telemetry_export.cp` | 零堆分配 16 桶对数延迟直方图（`LatencyBucketHistogram`、p50/p95/p99 与 Prometheus 文本导出）及 OTLP/HTTP JSON 链路 Span 批导出器（`OtlpSpanRecord`, `OtlpSpanBatch`） |
-| `lib/obs/structured_log.cp` | 零堆分配 JSONL / Logfmt 结构化日志与链路追踪关联引擎（`ObsStructuredLogger`） |
-| `lib/obs/anomaly_detector.cp` | 零堆分配流式 Welford/EWMA 在线异常检测、连续违约防抖与冷却防风暴控制器（`OnlineAnomalyDetector`） |
+| `lib/obs/telemetry.cp` | 零堆分配 16 桶对数延迟直方图（`LatencyBucketHistogram`、p50/p95/p99 与 Prometheus 文本导出）及 OTLP/HTTP JSON 链路 Span 批导出器（`OtlpSpanRecord`, `OtlpSpanBatch`） |
+| `lib/obs/structLog.cp` | 零堆分配 JSONL / Logfmt 结构化日志与链路追踪关联引擎（`ObsStructuredLogger`） |
+| `lib/obs/anomaly.cp` | 零堆分配流式 Welford/EWMA 在线异常检测、连续违约防抖与冷却防风暴控制器（`OnlineAnomalyDetector`） |
 | `lib/obs/index.cp` | `cap:obs` 与 `cap.obs` 统一零冲突公开导出入口 |
 
 ---
@@ -36,7 +36,7 @@
 - **OpenMetrics（`openmetrics.cp`）**：`MetricType`, `Label`, `Sample`, `MetricFamily`, `MetricsDocument`, `parse`
 - **SIEM & Access Logs（`cef.cp`, `leef.cp`, `clf.cp`）**：`CEF_PREFIX`, `CefEvent`, `parseCefLine`, `findCefExt`, `LEEF_PREFIX`, `LeefEvent`, `parseLeefLine`, `findLeefAttr`, `ClfEntry`, `ClfStats`, `parseClfLine`, `summarizeClf`
 - **Static Analysis & CI Reports（`sarif.cp`, `junit.cp`, `tap.cp`）**：`SarifLevel`, `SarifHeader`, `SarifRun`, `SarifResult`, `summarizeSarif`, `JunitOutcome`, `JunitSuite`, `JunitCase`, `summarizeJunit`, `TapEventKind`, `TapDirective`, `TapEvent`, `summarizeTap`
-- **LLM Eval & Regression Gate（`eval_metrics.cp`, `eval_suite.cp`）**：`EvalError`, `MatchMode`, `EvalScorer`, `EvalCase`, `EvalSummary`, `RegressionDiff`, `EvalReport`
+- **LLM Eval & Regression Gate（`evalMetrics.cp`, `evalSuite.cp`）**：`EvalError`, `MatchMode`, `EvalScorer`, `EvalCase`, `EvalSummary`, `RegressionDiff`, `EvalReport`
 - **eBPF BTF（`btf.cp`）**：`BTF_MAGIC`, `BtfHeader`, `BtfType`, `BtfIntInfo`, `BtfArray`, `BtfMember`, `BtfTypeIter`, `BtfSection`, `isBtf`, `parseBtf`, `parseBtfInt`, `parseBtfArray`, `btfMemberAt`
 
 ---
@@ -67,7 +67,7 @@ pub fn demoObs(alloc: std.mem.Allocator): !void {
 }
 ```
 
-### 零堆分配对数延迟直方图与 OTLP JSON Span 批导出示例 (`telemetry_export.cp`)
+### 零堆分配对数延迟直方图与 OTLP JSON Span 批导出示例 (`telemetry.cp`)
 
 ```cp
 import {
@@ -110,7 +110,7 @@ pub fn demoTelemetryExport() {
 }
 ```
 
-### 零堆分配结构化日志与 JSONL / Logfmt 双格式渲染示例 (`structured_log.cp`)
+### 零堆分配结构化日志与 JSONL / Logfmt 双格式渲染示例 (`structLog.cp`)
 
 面向生产服务与 AI Agent 链路可观测性的 100% 纯 CP 零堆分配结构化日志门面：
 
@@ -155,7 +155,7 @@ pub fn demoStructuredLogger() {
 }
 ```
 
-### 零堆分配流式在线异常检测与告警防抖示例 (`anomaly_detector.cp`)
+### 零堆分配流式在线异常检测与告警防抖示例 (`anomaly.cp`)
 
 面向微服务延迟突刺与 AI Agent 成本/错误率监控的 100% 纯 CP 零堆分配流式异常检测器：
 
@@ -192,7 +192,7 @@ pub fn demoOnlineAnomalyDetector() {
 }
 ```
 
-### 零堆分配 HDR 对数线性高精度延迟直方图与协同遗漏校正示例 (`hdr_histogram.cp`)
+### 零堆分配 HDR 对数线性高精度延迟直方图与协同遗漏校正示例 (`hdrHist.cp`)
 
 面向高并发微服务、存储引擎与 AI Agent 推理网关的 100% 纯 CP 零动态堆分配 HdrHistogram 风格延迟直方图内核（恒定 1920 桶内联存储，覆盖 `[0, 34_359_738_367]` 动态范围，相对误差 `<= 1.5625%`）：
 
@@ -226,7 +226,7 @@ pub fn demoHdrHistogram() {
 }
 ```
 
-### 零堆分配 OpenTelemetry 尾部链路采样器与决策引擎 (`trace_sampler.cp`)
+### 零堆分配 OpenTelemetry 尾部链路采样器与决策引擎 (`traceSample.cp`)
 
 面向高吞吐微服务与百万级 AI Agent 分布式链路追踪（对标 OpenTelemetry Collector / Jaeger Tail-Based Sampling）的 100% 纯 CP 零动态堆分配尾部采样决策引擎（内联 128 槽位在途 Trace 聚合池）：
 
@@ -268,7 +268,7 @@ pub fn demoTailTraceSampler() {
 }
 ```
 
-### 零分配 Google SRE 多窗口多燃烧率 SLO 错误预算与告警引擎 (`slo_burn_rate.cp`)
+### 零分配 Google SRE 多窗口多燃烧率 SLO 错误预算与告警引擎 (`sloBurn.cp`)
 
 面向云原生服务、API 网关与 AI Agent 推理集群的 100% 纯 CP 零动态堆分配 Google SRE Workbook 第 5 章多窗口多燃烧率（Multi-Window Multi-Burn-Rate）SLO 错误预算与告警内核（固定 360 个 1 分钟环形桶）：
 
@@ -308,7 +308,7 @@ pub fn demoSloBurnMonitor() {
 }
 ```
 
-### 零分配 OpenTelemetry / Prometheus 直方图 Exemplar 蓄水池采样器 (`exemplar_reservoir.cp`)
+### 零分配 OpenTelemetry / Prometheus 直方图 Exemplar 蓄水池采样器 (`exemplar.cp`)
 
 面向云原生 Prometheus / OpenTelemetry 指标与链路追踪（Trace/Span）打通的 100% 纯 CP 零动态堆分配直方图 Exemplar 蓄水池采样器：
 
@@ -351,7 +351,7 @@ pub fn demoExemplarReservoir() {
 }
 ```
 
-### 零分配指标高基数防护与 `__overflow__` 自动归并守卫 (`cardinality_guard.cp`)
+### 零分配指标高基数防护与 `__overflow__` 自动归并守卫 (`cardinality.cp`)
 
 面向 Prometheus / OpenTelemetry 生产可观测性管道的 100% 纯 CP 零动态堆分配高基数防护与溢出归并控制器：
 

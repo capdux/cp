@@ -164,7 +164,7 @@ export {
     encode as cborDiagEncode,
     encodeCanonical as cborDiagEncodeCanonical,
     toDiag as cborDiagToDiag,
-} from "./cbor_diag.cp";
+} from "./cborDiag.cp";
 
 export {
     BSON_MAX_DEPTH,
@@ -897,7 +897,7 @@ export {
 } from "./ts.cp";
 
 
-export * from "./varint_leb128.cp";
+export * from "./varintLeb128.cp";
 
 export {
     BitStreamError,

@@ -6,8 +6,8 @@
 const std = @import("std");
 import { exists, isDirectory, readFileSync } from "cap:fs";
 import { PosixPath, normalizePosix } from "cap:path";
-import { DataURL } from "./data_url";
-import { PackageJson, ModuleType, ExportResolveStatus } from "./package_json";
+import { DataURL } from "./dataUrl";
+import { PackageJson, ModuleType, ExportResolveStatus } from "./pkgJson";
 import { TsConfigJson } from "./tsconfig";
 
 pub enum ResolveKind: u8 {

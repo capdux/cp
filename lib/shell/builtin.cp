@@ -29,7 +29,7 @@ import {
     runBuiltinBasename,
     runBuiltinDirname,
     runBuiltinMktemp,
-} from "./builtin_fs.cp";
+} from "./builtinFs.cp";
 import {
     runBuiltinSeq,
     runBuiltinHead,
@@ -39,7 +39,7 @@ import {
     runBuiltinYes,
     runBuiltinSort,
     runBuiltinUniq,
-} from "./builtin_text.cp";
+} from "./builtinText.cp";
 
 fn checkAccess(path: []const u8, mode: i32): bool {
     access(path, mode) catch return false;

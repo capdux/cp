@@ -58,7 +58,7 @@ export {
     TaggedPointer,
     LowTagPointer,
     TaggedPtr,
-} from "./tagged_ptr.cp";
+} from "./taggedPtr.cp";
 
 export {
     CowBytes,
@@ -84,7 +84,7 @@ export {
 
 export {
     FixedBufferAllocator,
-} from "./fixed_buffer.cp";
+} from "./fixedBuffer.cp";
 
 export {
     SlabPool,
@@ -95,7 +95,7 @@ export {
     ScopeStats,
     TrackedAllocation,
     AllocationScope,
-} from "./allocation_scope.cp";
+} from "./allocationScope.cp";
 
 export {
     FallbackAllocError,
@@ -103,4 +103,4 @@ export {
     MaybeOwned,
     MemFdError,
     MemFdBuffer,
-} from "./fallback_allocator.cp";
+} from "./fallbackAllocator.cp";

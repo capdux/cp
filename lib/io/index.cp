@@ -36,7 +36,7 @@ export {
     ChunkedBuffer,
     copyStream,
     copyN
-} from "./buffer_stream";
+} from "./bufferStream";
 
 export {
     Console,
@@ -52,7 +52,7 @@ export {
 export {
     MaxBuf,
     MaxBufKind
-} from "./max_buf";
+} from "./maxBuf";
 
 export {
     PipeReadResult,
@@ -65,4 +65,4 @@ export {
 export {
     FileReader,
     FileWriter
-} from "./file_stream";
+} from "./fileStream";

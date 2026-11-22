@@ -3,7 +3,7 @@
 // lazy worker scale-up, work-stealing dispatch, `--bail[=N]` early abort,
 // worker crash accounting, and interleaved per-file header deduplication.
 
-import { WORK_STEAL_MAX_WORKERS, WorkStealPool } from "./work_stealing";
+import { WORK_STEAL_MAX_WORKERS, WorkStealPool } from "./workSteal";
 
 /// 协调器支持的最大并发 Worker 槽位数
 pub const COORDINATOR_MAX_WORKERS: usize = WORK_STEAL_MAX_WORKERS;

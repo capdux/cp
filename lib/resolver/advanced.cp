@@ -9,7 +9,7 @@ import { PosixPath, normalizePosix, relativePosix, isAbsolutePosix } from "cap:p
 import { Glob } from "cap:glob";
 import { JSON, JsonValue, JsonTag } from "cap:json";
 import { TsConfigJson, TsPathMapping } from "./tsconfig";
-import { PackageJson, ModuleType, ExportResolveStatus } from "./package_json";
+import { PackageJson, ModuleType, ExportResolveStatus } from "./pkgJson";
 
 pub const MAX_EXTENDS_DEPTH: usize = 16;
 

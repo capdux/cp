@@ -57,7 +57,7 @@ export {
     STREAM_CORK_BUFFER_SIZE,
     StreamBuffer,
     TcpStream
-} from "./tcp_stream";
+} from "./tcpStream";
 
 export {
     ListenConfig,
@@ -65,7 +65,7 @@ export {
     Server,
     listen,
     connect
-} from "./tcp_server";
+} from "./tcpServer";
 
 export {
     UdpPacket,
@@ -978,7 +978,7 @@ export {
     WgError,
     Tai64n,
     ReplayWindow,
-} from "./wg_replay.cp";
+} from "./wgReplay.cp";
 
 export {
     MSG_INITIATION_TYPE,
@@ -1005,7 +1005,7 @@ export {
     consumeResponse,
     encryptTransport,
     decryptTransport,
-} from "./wg_noise.cp";
+} from "./wgNoise.cp";
 
 // --- stomp ---
 export {
@@ -1745,7 +1745,7 @@ export {
     WeightedDrrScheduler,
     AimdConfig,
     AimdLimiter,
-} from "./traffic_shaper.cp";
+} from "./shaper.cp";
 
 // --- consistent_ring ---
 export {
@@ -1754,7 +1754,7 @@ export {
     RingVirtualSlot,
     RingStats,
     ConsistentHashRing,
-} from "./consistent_ring.cp";
+} from "./hashRing.cp";
 
 // --- stream_mux ---
 export {
@@ -1777,7 +1777,7 @@ export {
     MuxStreamSlot,
     MuxSessionStats,
     MuxSession,
-} from "./stream_mux.cp";
+} from "./streamMux.cp";
 
 // --- p2c_balancer ---
 export {
@@ -1789,7 +1789,7 @@ export {
     P2cPickDecision,
     P2cBalancerStats,
     P2cLoadBalancer,
-} from "./p2c_balancer.cp";
+} from "./p2c.cp";
 
 // --- congestion_ctrl ---
 export {
@@ -1798,7 +1798,7 @@ export {
     RttEstimate,
     CongestionStats,
     Rfc9002CongestionController,
-} from "./congestion_ctrl.cp";
+} from "./congestion.cp";
 
 // --- happy_eyeballs ---
 export {
@@ -1815,7 +1815,7 @@ export {
     HeAction,
     HeStats,
     HappyEyeballsEngine,
-} from "./happy_eyeballs.cp";
+} from "./happyEye.cp";
 
 // --- adaptive_retry ---
 export {
@@ -1832,4 +1832,4 @@ export {
     isRetryableError,
     computeBackoffDelayMs,
     AdaptiveRetryController,
-} from "./adaptive_retry.cp";
+} from "./retry.cp";

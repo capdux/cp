@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/test/parallel/aggregate.cp | Synced: 2026-11-22T05:05:00Z
+// Source: Absorbed from /data/dev/bun/src/cli/test/parallel/aggregate.cp | Synced: 2026-11-22T12:43:45Z
 // ============================================================================
 // Parallel Test Worker Aggregator: JUnit XML & LCOV Coverage Fragment Merging
 // Absorbed from Bun: src/cli/test/parallel/aggregate.cp

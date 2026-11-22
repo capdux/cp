@@ -1,2 +1,2 @@
 // Source: native-cp-stdlib (RFC 6902 JSON Patch & RFC 6901 Pointer)
-export * from "./json_patch.cp";
+export * from "./jsonPatch.cp";

@@ -5,11 +5,11 @@
 
 import std from "std";
 import { Timer, TimerHeap, TimerState, getNowMs } from "./timer.cp";
-import { ConcurrentTask, ConcurrentTaskQueue } from "./concurrent_task.cp";
-import { DeferredTaskQueue } from "./deferred_task.cp";
+import { ConcurrentTask, ConcurrentTaskQueue } from "./concurrentTask.cp";
+import { DeferredTaskQueue } from "./deferredTask.cp";
 import { AnyTask, ManagedTask } from "./task.cp";
-import { AutoFlusher } from "./auto_flusher.cp";
-import { PollEngine, PollEvents, PollCallback } from "./file_poll.cp";
+import { AutoFlusher } from "./autoFlusher.cp";
+import { PollEngine, PollEvents, PollCallback } from "./filePoll.cp";
 
 pub const MAX_LOOP_TIMERS: usize = 64;
 pub const MAX_LOOP_TASKS: usize = 64;

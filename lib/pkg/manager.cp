@@ -6,7 +6,7 @@
 
 const std = @import("std");
 import { JSON, JsonValue } from "cap:json";
-import { PackageJson } from "../resolver/package_json.cp";
+import { PackageJson } from "../resolver/pkgJson.cp";
 import { Integrity } from "../resolver/integrity.cp";
 import { readFile, exists, mkdirAll } from "cap:sys";
 import {

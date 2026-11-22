@@ -106,7 +106,7 @@ export {
     H2ConnectJoinResult,
     H2PendingConnectEntry,
     H2PendingConnectTable,
-} from "./pending_connect";
+} from "./pendingConn";
 
 export {
     H2_DISPATCH_HEADER_SIZE,

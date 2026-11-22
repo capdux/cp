@@ -34,7 +34,7 @@ export {
     WorkingMemItem,
     WorkingMemStats,
     WorkingMemory,
-} from "./working_mem.cp";
+} from "./workingMem.cp";
 
 export {
     MemGraphEdge,
@@ -78,7 +78,7 @@ export {
     GraphHopHit,
     EntityGraphStats,
     TemporalEntityGraph,
-} from "./entity_graph.cp";
+} from "./entityGraph.cp";
 
 export {
     SUMMARY_TREE_MAX_NODES,
@@ -88,7 +88,7 @@ export {
     ContextFrontierPlan,
     SummaryTreeStats,
     HierarchicalSummaryTree,
-} from "./summary_tree.cp";
+} from "./summaryTree.cp";
 
 export {
     MEM_ROUTER_MAX_CANDIDATES,
@@ -99,7 +99,7 @@ export {
     FusedMemoryPick,
     MemoryRouteSummary,
     fuseAndPackMemoryRecalls,
-} from "./memory_router.cp";
+} from "./memRouter.cp";
 
 export {
     MEM_CONSOL_MAX_EPISODIC,
@@ -113,7 +113,7 @@ export {
     MemConsolEngineStats,
     computeEntryRetentionScore,
     AgentMemoryConsolidator,
-} from "./consolidation_engine.cp";
+} from "./consolidator.cp";
 
 export {
     EP_INDEX_MAX_SLOTS,
@@ -124,4 +124,4 @@ export {
     EpisodeHybridHit,
     EpisodeIndexStats,
     HybridEpisodeIndex,
-} from "./episode_index.cp";
+} from "./episodes.cp";

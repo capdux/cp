@@ -3,7 +3,7 @@
 // Markdown GFM, and Borderless styles, column alignment, wrapping, sorting & footer.
 
 const std = @import("std");
-import { TextAlign, TableError, DisplayWidth } from "./table_width.cp";
+import { TextAlign, TableError, DisplayWidth } from "./tableWidth.cp";
 
 type ByteSlice = []u8;
 type LineList = [][]u8;

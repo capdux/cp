@@ -53,26 +53,26 @@
 | `lib/http/_picohttp.cp` | PicoHTTPParser C-FFI 绑定与纯 CP 零拷贝 HTTP/1.x 报文解析 | `src/picohttp/picohttp.cp` |
 | `lib/http/method.cp` | HTTP 方法枚举（34 种）、幂等性与请求体属性 | `src/http_types/Method.cp` |
 | `lib/http/headers.cp` | 大小写不敏感 `Headers` 集合（32 槽栈内联 + 堆动态扩容，支持 `getAll` 多值提取） | `src/http/Headers.cp` |
-| `lib/http/header_builder.cp` | 零拷贝连续线协议 `HeaderBuilder`（栈缓冲/堆扩容、span 索引、请求行/状态行生成） | `src/http/HeaderBuilder.cp` |
-| `lib/http/header_parsers.cp` | 标准头解析器：`CacheControl`、`ContentDisposition`、`AcceptParser`、`RangeHeader`、`ContentRange` | `src/http/Headers.cp` |
-| `lib/http/header_iterator.cp` | 逗号分隔 HTTP Header 值零拷贝迭代器 | `src/http/HeaderValueIterator.cp` |
+| `lib/http/hdrBuilder.cp` | 零拷贝连续线协议 `HeaderBuilder`（栈缓冲/堆扩容、span 索引、请求行/状态行生成） | `src/http/HeaderBuilder.cp` |
+| `lib/http/hdrParsers.cp` | 标准头解析器：`CacheControl`、`ContentDisposition`、`AcceptParser`、`RangeHeader`、`ContentRange` | `src/http/Headers.cp` |
+| `lib/http/hdrIter.cp` | 逗号分隔 HTTP Header 值零拷贝迭代器 | `src/http/HeaderValueIterator.cp` |
 | `lib/http/status.cp` | `HTTP_STATUS_TABLE`（64 项）与 `HTTPStatus` 状态码短语/语义判定工具 | `src/http/http.cp` |
 | `lib/http/etag.cp` | Wyhash ETag 生成与强/弱 `If-None-Match` 校验 | `src/http_types/ETag.cp` |
 | `lib/http/mime.cp` | 201 项完整 `MIME_DATABASE` 映射、压缩/文本/字符集判定与二进制 `sniffMagic` 嗅探 | `src/http_types/MimeType.cp` |
 | `lib/http/cookie.cp` | RFC 6265 `CookieMap`、`CookieCodec`（`parseSetCookie`/`formatSetCookie`/`parseCookieHeader`）与 `HttpCookieJar`（域名/路径/Secure/过期/公共后缀防护） | `src/runtime/webcore/CookieMap.cp` |
-| `lib/http/form_data.cp` | `x-www-form-urlencoded` 解析与 `multipart/form-data` 边界提取 | `src/runtime/webcore/FormData.cp` |
+| `lib/http/formData.cp` | `x-www-form-urlencoded` 解析与 `multipart/form-data` 边界提取 | `src/runtime/webcore/FormData.cp` |
 | `lib/http/sse.cp` | WHATWG Server-Sent Events 增量流式状态机 (`SseParser`) 与编码器 (`SseEncoder`)，适配 AI/LLM 流式输出 | `cp/lib/http/sse.cp` |
 | `lib/http/multipart.cp` | RFC 7578 二进制安全 `MultipartBuilder`、`MultipartParser` 与 `MultipartBoundary` | `cp/lib/http/multipart.cp` |
 | `lib/http/request.cp` / `response.cp` / `server.cp` | 高层 `Request` / `Response` / `HttpServer`、`serve` / `fetch` / `json` | `src/http/http.cp` |
 | `lib/http/client.cp` | 工业级 HTTP/1.1 `HTTPClient`（URL 解析、请求格式化、Chunked 解码） | `src/http/http.cp` |
-| `lib/http/wire_http.cp` | 工业级 `HttpRequestBuilder` 与 `HttpResponseParser`（`100-continue`、`obs-fold`、Chunked+解压） | `src/http/http.cp` |
+| `lib/http/wireHttp.cp` | 工业级 `HttpRequestBuilder` 与 `HttpResponseParser`（`100-continue`、`obs-fold`、Chunked+解压） | `src/http/http.cp` |
 | `lib/http/chunked.cp` | RFC 9112 §7.1 流式 `ChunkedDecoder`（hex size/extensions/trailers/`0\r\n\r\n`）与 `ChunkedEncoder` | `src/http/http.cp` |
 | `lib/http/redirect.cp` | `RedirectPolicy` 自动重定向策略引擎（301/302/303/307/308 方法重写、URL 合并、循环检测、跨域敏感头剥离） | `src/http/http.cp` |
 | `lib/http/context.cp` | `HTTPContext` 与 `HttpConnectionPool`（按 host:port 复用、空闲超时驱逐、最大连接数与健康检查） | `src/http/HTTPContext.cp` |
 | `lib/http/proxy.cp` / `sendfile.cp` / `decompressor.cp` | `ProxyTunnel` / `HttpProxyTunnel`（Basic 认证与 `NoProxyMatcher`）、`SendFile`、与 `cap:pack` 协同的 `Decompressor` / `StreamingDecompressor` | `ProxyTunnel.cp` / `SendFile.cp` / `Decompressor.cp` |
-| `lib/http/url_path.cp` / `encoding.cp` / `fetch_modes.cp` / `signals.cp` / `internal_state.cp` / `request_body.cp` / `cert.cp` | 路径解析、`ContentEncodingNegotiator` (`Accept-Encoding` q-value 协商)、Fetch 模式枚举、原子中止信号、状态机与证书信息 | `src/http/` & `src/http_types/` |
+| `lib/http/urlPath.cp` / `encoding.cp` / `fetchModes.cp` / `signals.cp` / `state.cp` / `reqBody.cp` / `cert.cp` | 路径解析、`ContentEncodingNegotiator` (`Accept-Encoding` q-value 协商)、Fetch 模式枚举、原子中止信号、状态机与证书信息 | `src/http/` & `src/http_types/` |
 | `lib/http/h2/frame.cp` / `client.cp` / `hpack.cp` | RFC 7540 二进制帧与流控（`WINDOW_UPDATE`/`RST_STREAM`/`PING`/`GOAWAY`）、多路复用流状态机、RFC 7541 完整 HPACK（61 项静态表 + 257 项 Huffman + 动态表） | `H2FrameParser.cp` / `h2_client/ClientSession.cp` / `lshpack.cp` |
-| `lib/http/h3/alt_svc.cp` / `client.cp` / `encode.cp` | RFC 7838 `Alt-Svc` 升级头解析、HTTP/3 QUIC 会话与双向流、RFC 9114 HTTP/3 请求伪头部（`:method`/`:scheme`/`:authority`/`:path`）与 QPACK 静态索引零分配规范化编码（`encodeH3RequestHeaders`） | `h3_client/AltSvc.cp` / `ClientSession.cp` / `encode.cp` |
+| `lib/http/h3/altSvc.cp` / `client.cp` / `encode.cp` | RFC 7838 `Alt-Svc` 升级头解析、HTTP/3 QUIC 会话与双向流、RFC 9114 HTTP/3 请求伪头部（`:method`/`:scheme`/`:authority`/`:path`）与 QPACK 静态索引零分配规范化编码（`encodeH3RequestHeaders`） | `h3_client/AltSvc.cp` / `ClientSession.cp` / `encode.cp` |
 | `lib/http/accept.cp` / `acceptenc.cp` / `acceptlang.cp` / `acceptranges.cp` | RFC 9110 内容协商（`Accept` / `Accept-Encoding` / `Accept-Language` / `Accept-Ranges`）零分配解析与协商器 | `src/http/` |
 | `lib/http/allow.cp` / `altsvc.cp` / `auth.cp` | RFC 9110 `Allow` 方法集、RFC 7838 `Alt-Svc` 编解码、RFC 7617/6750 Basic/Bearer 认证编解码 | `src/http/` |
 | `lib/http/cache.cp` / `cachectrl.cp` / `cachekey.cp` | RFC 9111 缓存策略与新鲜度评估（`HttpCacheEvaluator`）、`Cache-Control` 指令迭代、缓存键规范化 | `src/http/` |
@@ -186,7 +186,7 @@ pub fn demoETagMimeAndStatus() {
 ### 3.1 `HeaderBuilder` 与标准 HTTP 头部解析器家族
 
 - **`HeaderBuilder`**：零拷贝连续线协议缓冲写入器（栈缓冲 `HeaderBuilder.init(&buf)` 或堆扩容 `HeaderBuilder.initAlloc(alloc, 1024)`），内置最多 `MAX_BUILDER_HEADERS`（64）个 `HeaderSpan` 索引，支持 `writeRequestLine`、`writeStatusLine`、`append`、`appendInt`、`appendHeaders`、`get`、`at` 与 `finish()`。
-- **标准头部解析器 (`header_parsers.cp`)**：
+- **标准头部解析器 (`hdrParsers.cp`)**：
   - `CacheControl`：RFC 9111 解析与格式化（`max-age`、`s-maxage`、`no-cache`、`no-store`、`must-revalidate`、`stale-while-revalidate`、`immutable` 等）；
   - `ContentDisposition`：RFC 6266 + RFC 5987 `filename*` 扩展名提取与 `effectiveFilename()`；
   - `AcceptParser`：RFC 9110 §12.5.1 `q` 权重与特异度降序稳定排序及 `negotiate(accept_header, supported)` 内容协商；
@@ -497,7 +497,7 @@ pub fn demoHttp3() {
 5. **Content-Encoding 协商与 `cap:pack` 流式解压 (`ContentEncodingNegotiator` / `Decompressor` / `StreamingDecompressor`)**：
    - `ContentEncodingNegotiator.parseAcceptEncoding` 与 `negotiate` 解析 `;q=0.x` 权重并按降序匹配服务器支持编码（支持显式 `q=0` 拒绝与 `*` 通配符）。
    - `Decompressor.decompressStrict` 与 `StreamingDecompressor`（`feed` / `finish`）直接桥接 `cap:pack`（`gunzip`/`inflate`/`inflateRaw` 与 `GunzipStream`/`InflateStream`）完成真实 Gzip/Deflate 解压。
-6. **高阶线协议请求构建与响应解析 (`HttpRequestBuilder` / `HttpResponseParser` in `wire_http.cp`)**：
+6. **高阶线协议请求构建与响应解析 (`HttpRequestBuilder` / `HttpResponseParser` in `wireHttp.cp`)**：
    - `HttpRequestBuilder` 集成 URL 拆解、自动填充 `Host` / `Content-Length` / `Connection` / `Accept-Encoding`、`Expect: 100-continue` 握手与 `applyRedirect` 重定向应用。
    - `HttpResponseParser.parse` 自动跳过 `100 Continue` 中间响应、展开多行 `obs-fold` 折叠头、解码 `Transfer-Encoding: chunked`（保留 Trailers）并按 `Content-Encoding` 自动解压响应体。
 
@@ -653,7 +653,7 @@ if (ev := disp.parseNext(wire_buf, &consumed)?) {
 - **HTTP/3 QPACK 静态表与字段段编解码（`h3/qpack.cp`）**：归并自 `lib/qpack/`（Bun `src/uws_sys/quic/Header.cp`），导出 `QPACK_IDX_*`、`QpackHeader`、`classifyHeader`、`encodePrefixedInt`、`decodePrefixedInt`、`buildHttp3RequestHeaders`、`encodeFieldSection`、`decodeFieldSection`。
 - **服务端 HTTP Byte Range 区间求值与 206/416 响应格式化（`byterange.cp`）**：归并自 `lib/byterange/`（Bun `src/runtime/server/RangeRequest.cp`），导出 `ByteRange`、`RangeStatus`、`parseRange`、`parseMultiRange`、`formatUnsatisfiableContentRange`，以及 `ByteRangeContentRange` / `formatByteContentRange` / `parseByteContentRange`（避开 `contentrange.cp` 原导出）。
 - **SSE 零堆分配参考实现（`sse_parser_.cp`）**：原 `lib/sse_parser/sse.cp`（Bun `src/http/HTTPRequestBody.cp`）与 `lib/http/sse.cp` 存在 `SseEvent`/`SseParser` 功能重叠，按参考归档规范保留为 `lib/http/sse_parser_.cp`（不从 `cap:http` 重复导出）。
-- **线程安全 HTTP 流缓冲区与背压控制（`stream_buffer.cp`，吸收自 `/data/dev/bun/src/http/ThreadSafeStreamBuffer.cp`）**：导出 `DEFAULT_STREAM_SHRINK_THRESHOLD`、`StreamBufferError`、`StreamDrainCallback`、`StreamBuffer`、`ThreadSafeStreamBuffer`。
+- **线程安全 HTTP 流缓冲区与背压控制（`streamBuf.cp`，吸收自 `/data/dev/bun/src/http/ThreadSafeStreamBuffer.cp`）**：导出 `DEFAULT_STREAM_SHRINK_THRESHOLD`、`StreamBufferError`、`StreamDrainCallback`、`StreamBuffer`、`ThreadSafeStreamBuffer`。
   - `StreamBuffer` 提供游标式零拷贝读切片（`slice()`）、`write()`/`writeByte()`/`wrote()`/`consume()`、自动头部空洞压缩（`compact()`）、超阈值释放收缩（`maybeShrink()`/`reset()`）及可选容量上限防护（`initBounded` 防资源耗尽返回 `err.BufferOverflow`）；
   - `ThreadSafeStreamBuffer` 使用 `std.Thread.Mutex` 保护内部 `StreamBuffer`，支持与 Bun 对齐的 `acquire()`/`release()` 零拷贝锁区间访问，也提供细粒度线程安全方法（`write`/`read`/`size`/`isEmpty`/`isBackpressured`）与 **解锁后触发排空回调**（`reportDrain()`，彻底避免回调重入死锁）。
 
@@ -677,7 +677,7 @@ pub fn demoStreamBuffer(allocator: std.mem.Allocator): ! {
     * = ts_buf.reportDrain(); // 缓冲区为空时在解锁后安全触发回调
 }
 ```
-- **HTTP/3 客户端会话池与连接复用调度（`h3/session_pool.cp`，吸收自 `/data/dev/bun/src/http/h3_client/ClientContext.cp`）**：
+- **HTTP/3 客户端会话池与连接复用调度（`h3/sessionPool.cp`，吸收自 `/data/dev/bun/src/http/h3_client/ClientContext.cp`）**：
   - 导出：`H3_POOL_MAX_SESSIONS` (`32`)、`H3_SESSION_MAX_STREAMS` (`32`)、`H3PoolError`、`H3ConnectOutcomeKind`（`ReusedExisting` / `OpenedNew`）、`H3ConnectOutcome`、`H3PendingRequest`、`H3PooledSession`（`matches` / `hasHeadroom` / `enqueue` / `findRequest` / `detachByHttpId` / `markBodyEnded` / `activeCount`）、`H3SessionPool`（`init` / `count` / `connect` / `findSessionIndex` / `unregister` / `abortByHttpId` / `streamBodyByHttpId` / `failSession`）。
   - 严格按 `(hostname[大小写无关], port, reject_unauthorized)` 三元组执行连接合并复用，确保 TLS 校验策略隔离与并发流余量溢出自动开新会话，并支持 `O(1)` swap-remove 注销与按 `http_id` 路由中止/体流结束事件。
 
@@ -701,10 +701,10 @@ const c2 = pool.connect("API.EXAMPLE.COM", 443, true, 102, 4)?;  // ReusedExisti
    - 服务端应提供统一的错误处理回调（对应 Bun `error(err)` handler），在开发模式输出详细诊断信息，在生产环境返回脱敏的 5xx 响应并记录结构化错误日志；自定义错误回调返回响应时优先覆盖框架默认 500 错误页。
 3. **TLS 证书载荷、CA 覆盖与 SNI 隔离（吸收自 `/data/dev/bun/docs/runtime/http/tls.mdx`）**：
    - TLS 配置中的 `key` 与 `cert` 均期望传入**证书/私钥文件内容本身**（而非文件路径字符串），且必须同时提供；自定义 `ca` 会覆盖内置的 Mozilla 根证书列表，客户端连接池复用时必须严格隔离 `reject_unauthorized` 策略（`H3PooledSession.matches` 强制比对），并通过 SNI（`serverName`）支持多域名证书托管。
-4. **异步 HTTP 并发限流与任务状态机编排（`async_http.cp`，吸收自 `/data/dev/bun/src/http/AsyncHTTP.cp` 与 `/data/dev/bun/docs/guides/http/{fetch,proxy,fetch-unix}.mdx`）**：
+4. **异步 HTTP 并发限流与任务状态机编排（`asyncHttp.cp`，吸收自 `/data/dev/bun/src/http/AsyncHTTP.cp` 与 `/data/dev/bun/docs/guides/http/{fetch,proxy,fetch-unix}.mdx`）**：
    - 导出：`ASYNC_HTTP_DEFAULT_MAX_SIMULTANEOUS` (`256`)、`ASYNC_HTTP_MAX_CONFIG_LIMIT` (`65536`)、`AsyncHttpError`、`AsyncHttpState`、`AsyncHttpVerboseLevel`、`AsyncHttpOptions`、`AsyncHttpConcurrencyLimiter`、`AsyncHttpTask`；
    - 默认最大同时请求数对齐上游 `BUN_CONFIG_MAX_HTTP_REQUESTS = 256`（通过 `parseMaxRequestsEnv()` 校验 `1..65536`）；`AsyncHttpOptions.validate()` 拦截代理与 Unix Domain Socket 传输冲突；`AsyncHttpTask` 强制 `pending -> scheduled -> sending -> success|fail` 合法迁移及有界 `resetForRetry()`。
-5. **HTTP/2 在途 TLS 握手合并器（`h2/pending_connect.cp`，吸收自 `/data/dev/bun/src/http/h2_client/PendingConnect.cp` & `/data/dev/bun/docs/runtime/http/tls.mdx`）**：
+5. **HTTP/2 在途 TLS 握手合并器（`h2/pendingConn.cp`，吸收自 `/data/dev/bun/src/http/h2_client/PendingConnect.cp` & `/data/dev/bun/docs/runtime/http/tls.mdx`）**：
    - 导出：`H2_PENDING_MAX_CONNECTS` (`32`)、`H2_PENDING_MAX_WAITERS` (`32`)、`H2_PENDING_MAX_HOST_LEN` (`255`)、`H2PendingConnectError`、`H2ConnectJoinKind`、`H2ConnectJoinResult`、`H2PendingConnectEntry`、`H2PendingConnectTable`；
    - 按 `(hostname[大小写不敏感], port, ssl_config_id)` 三元组执行 Singleflight 连接合并，防止高并发冷启动时对同一源站发起重复 TLS/ALPN 握手；严格隔离不同 `ssl_config_id` 的 TLS 证书/CA 策略，支持请求取消自动回收空槽位与 `O(1)` `swapRemove` 批量唤醒。
 
@@ -720,7 +720,7 @@ const n = tbl.resolveAndDrain(j1.connect_id, waiters[0..])?; // n == 2, waiters 
 * = n;
 ```
 
-6. **HTTP/3 QUIC 客户端回调事件调度器（`h3/stream_dispatch.cp`，吸收自 `/data/dev/bun/src/http/h3_client/callbacks.cp` & `/data/dev/bun/docs/guides/http/fetch.mdx`）**：
+6. **HTTP/3 QUIC 客户端回调事件调度器（`h3/streamDisp.cp`，吸收自 `/data/dev/bun/src/http/h3_client/callbacks.cp` & `/data/dev/bun/docs/guides/http/fetch.mdx`）**：
    - 导出：`H3_DISPATCH_MAX_STREAMS` (`32`)、`H3_DISPATCH_MAX_HEADERS` (`32`)、`H3_DISPATCH_NO_STREAM` (`0`)、`H3DispatchError`、`H3ConnCloseReason`（`HandshakeFailed`/`ConnectionClosed`/`GoawayReceived`）、`H3HeaderEventKind`、`H3RawHeader`、`H3StreamSlot`、`H3HeaderDispatchResult`、`H3ConnCloseSummary`、`H3CallbackDispatcher`；
    - 100% 零堆分配建模 `onHandshakeDone` / `onGoaway` / `onConnClose` / `onStreamOpen` / `onStreamHeaders` / `onStreamData` / `onStreamClose` 全生命周期：自动过滤 `:*` 伪头部并解析 `:status`，忽略 `1xx` 信息响应与响应后 trailer，首帧缺失 `:status` 判定为协议错误，连接关闭时按握手完成态区分 `HandshakeFailed` 与 `ConnectionClosed` 并批量排空在途请求。
 
@@ -744,7 +744,7 @@ const hr = d.onStreamHeaders(4, hdrs[0..])?;
 * = hr;
 ```
 
-7. **HTTP/3 DNS-Pending QUIC 连接协调队列（`h3/pending_connect.cp`，吸收自 `/data/dev/bun/src/http/h3_client/PendingConnect.cp` & `/data/dev/bun/docs/runtime/networking/dns.mdx`）**：
+7. **HTTP/3 DNS-Pending QUIC 连接协调队列（`h3/pendingConn.cp`，吸收自 `/data/dev/bun/src/http/h3_client/PendingConnect.cp` & `/data/dev/bun/docs/runtime/networking/dns.mdx`）**：
    - 导出：`H3_DNS_PENDING_MAX_CONNECTS` (`32`)、`H3_DNS_MAX_HOST_LEN` (`255`)、`H3_DNS_DEFAULT_TTL_SECS` (`30`)、`H3_DNS_MAX_TTL_SECS` (`86400`)、`H3PendingConnectError`、`H3DnsConnectState`、`H3DnsDrainAction`、`H3SessionFailReason`、`H3RegisterResult`、`H3DrainOutcome`、`H3DnsPendingStats`、`parseH3DnsTtlSeconds`、`H3PendingDnsEntry`、`H3PendingConnectQueue`；
    - **上游 DNS 最佳实践与边界约束（源自 Bun `docs/runtime/networking/dns.mdx`）**：
      - 默认 DNS 缓存 TTL 为 `30s`（对齐 `BUN_CONFIG_DNS_TIME_TO_LIVE_SECONDS`，可通过 `parseH3DnsTtlSeconds` 校验 `1..86400`，AWS 等云环境可按需缩短至 `5s`）；

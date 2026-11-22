@@ -8,7 +8,7 @@ export {
     KvAllocStats,
     PagedKvAllocator,
     BlockTable,
-} from "./kv_cache.cp";
+} from "./kvCache.cp";
 export { SamplingConfig, sampleGreedy, sampleToken } from "./sampler.cp";
 
 export {
@@ -33,7 +33,7 @@ export {
     quantizeRowQ4_0,
     dequantizeRowQ4_0,
     gemvQ4_0_Q8_0,
-} from "./quant_matmul.cp";
+} from "./quantMatmul.cp";
 
 export {
     OnlineSoftmaxState,
@@ -154,7 +154,7 @@ export {
     quantizeGroupInt4Asym,
     dequantizeGroupInt4,
     gemvInt4Group,
-} from "./quant_int4.cp";
+} from "./quantInt4.cp";
 
 export {
     KvQuantParams,
@@ -162,14 +162,14 @@ export {
     dequantizeTokenKvI8,
     dotQueryQuantKeyI8,
     quantizedAttentionSingleQuery,
-} from "./kv_quant.cp";
+} from "./kvQuant.cp";
 
 export {
     SwaConfig,
     RingKvCache,
     swaAttentionSingleQuery,
     ringKvAttentionSingleQuery,
-} from "./sliding_window.cp";
+} from "./slidingWin.cp";
 
 export {
     PREFIX_INVALID_BLOCK,
@@ -178,14 +178,14 @@ export {
     PrefixMatchResult,
     PrefixCacheStats,
     KvPrefixCache,
-} from "./prefix_cache.cp";
+} from "./prefixCache.cp";
 
 export {
     gemmTransposedBF32,
     gemmF32,
     batchedGemmTransposedBF32,
     splitGemmRowsF32,
-} from "./tiled_gemm.cp";
+} from "./tiledGemm.cp";
 
 export {
     conv1dCausalF32,
@@ -203,7 +203,7 @@ export {
     patchEmbedLinearF32,
     build2dSinCosPosEmbF32,
     applyRope2dInPlaceF32,
-} from "./vision_patch.cp";
+} from "./vision.cp";
 
 export {
     FP8_E4M3_MAX_FINITE,
@@ -212,7 +212,7 @@ export {
     quantizeBlockFp8E4m3,
     dequantizeBlockFp8E4m3,
     gemvBlockFp8E4m3,
-} from "./quant_fp8.cp";
+} from "./quantFp8.cp";
 
 export {
     VocabBitset,
@@ -220,7 +220,7 @@ export {
     ConstrainedDfa,
     applyVocabMaskInPlace,
     applyTemperatureAndTopKMaskInPlace,
-} from "./constrained_mask.cp";
+} from "./constrain.cp";
 
 export {
     RopeScalingKind,
@@ -228,7 +228,7 @@ export {
     yarnAttentionMscale,
     computeRopeInvFreqs,
     applyScaledRopeInPlaceF32,
-} from "./rope_yarn.cp";
+} from "./ropeYarn.cp";
 
 export {
     SPEC_TREE_NO_PARENT,
@@ -237,7 +237,7 @@ export {
     validateDraftTree,
     buildTreeAttentionMask,
     verifyDraftTreeGreedy,
-} from "./spec_tree.cp";
+} from "./specTree.cp";
 
 export {
     PAGED_KV_INVALID_BLOCK,
@@ -246,7 +246,7 @@ export {
     PagedTokenSlot,
     SeqBlockTable,
     pagedAttentionDecodeF32,
-} from "./paged_kv.cp";
+} from "./pagedKv.cp";
 
 export {
     IterSchedulerConfig,
@@ -256,7 +256,7 @@ export {
     IterStepPlan,
     IterSchedulerStats,
     ContinuousIterScheduler,
-} from "./iter_scheduler.cp";
+} from "./iterSched.cp";
 
 export {
     MAX_KV_EVICTION_SLOTS,
@@ -267,7 +267,7 @@ export {
     KvEvictionResult,
     KvEvictionStats,
     KvEvictionManager,
-} from "./kv_eviction.cp";
+} from "./kvEvict.cp";
 
 export {
     LORA_ROUTER_MAX_ADAPTERS,
@@ -280,7 +280,7 @@ export {
     MultiLoraRouter,
     planLoraSgmvBatch,
     applyLoraDeltaSimdF32,
-} from "./lora_router.cp";
+} from "./loraRouter.cp";
 
 export {
     GUIDED_TRIE_MAX_NODES,
@@ -289,7 +289,7 @@ export {
     GuidedTrieCursor,
     GuidedTrieStats,
     GuidedTokenTrie,
-} from "./guided_trie.cp";
+} from "./guidedTrie.cp";
 
 export {
     SAMPLER_MAX_CANDIDATES,
@@ -300,7 +300,7 @@ export {
     selectTopKCandidates,
     softmaxAndTruncateNucleus,
     sampleFromLogits,
-} from "./nucleus_sampler.cp";
+} from "./nucleus.cp";
 
 export {
     RADIX_KV_MAX_NODES,
@@ -310,7 +310,7 @@ export {
     RadixMatchResult,
     RadixKvStats,
     RadixKvCacheTree,
-} from "./radix_kv_tree.cp";
+} from "./radixKv.cp";
 
 export {
     SPEC_REJECT_MAX_DRAFT_K,
@@ -319,7 +319,7 @@ export {
     SpecStepScheduler,
     sampleResidualDistributionF32,
     verifySpeculativeRejectionF32,
-} from "./spec_rejection.cp";
+} from "./specReject.cp";
 
 export {
     PRC_MAX_NODES,
@@ -332,7 +332,7 @@ export {
     PrefixRadixEvictReport,
     PrefixRadixStats,
     PrefixRadixCache,
-} from "./prefix_radix_cache.cp";
+} from "./radixCache.cp";
 
 export {
     HEAL_MAX_VOCAB_TOKENS,
@@ -352,4 +352,4 @@ export {
     applyHealingLogitsMaskInPlace,
     planTokenHealing,
     planTokenHealingWithConfig,
-} from "./token_healing.cp";
+} from "./tokenHeal.cp";

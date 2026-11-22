@@ -260,10 +260,10 @@ const disp = Display.parse("inline flex").?;
 | `lib/css/units.cp` | `bun/src/css/values/{angle,resolution}.cp` | `UnitAngleUnit`, `UnitAngle`, `UnitResolutionUnit`, `UnitResolution` |
 | `lib/css/dependencies.cp` | `bun/src/css/dependencies.cp` | `CssDependencyOptions`, `CssDependencyLocation`, `CssSourceRange`, `CssDependencyKind`, `CssDependency`, `formatDependencyPlaceholder`, `CssDependencyIter`（零分配 `@import` / `url(...)` 依赖提取、1-based 行列追踪、`supports(...)`/media 识别与确定性 16 字符占位符哈希） |
 | `lib/css/diagnostics.cp` | `bun/src/css/error.cp` | `MAX_CSS_DIAGNOSTICS`, `CssDiagnosticSeverity`, `CssErrorLocation`, `CssParserErrorKind`（17 项解析错误码）, `CssPrinterErrorKind`（6 项 CSS Modules/打印错误码）, `CssDiagnosticDomain`, `CssDiagnostic`, `CssDiagnosticBag`（零分配诊断收集器与格式化） |
-| `lib/css/property_rule.cp` | `bun/src/css/rules/property.cp` | `MAX_PROPERTY_SYNTAX_COMPONENTS`, `CssPropertyRuleError`, `isValidDashedIdent`, `PropertySyntax`, `CssPropertyRule`（零堆分配 W3C CSS Properties and Values API Level 1 `@property` 自定义属性注册解析、`syntax`/`inherits`/`initial-value` 规范校验与美化/压缩序列化） |
-| `lib/css/font_palette_values.cp` | `bun/src/css/rules/font_palette_values.cp` | `MAX_PALETTE_OVERRIDES`, `CssFontPaletteError`, `BasePaletteKind`, `BasePalette`, `PaletteOverrideColor`, `CssFontPaletteValuesRule`（零堆分配 W3C CSS Fonts Level 4 `@font-palette-values` 彩色字体调色板解析、泛型字体族与 `currentColor` 拒绝、非负槽位覆写查询与格式化/压缩序列化） |
+| `lib/css/propRule.cp` | `bun/src/css/rules/property.cp` | `MAX_PROPERTY_SYNTAX_COMPONENTS`, `CssPropertyRuleError`, `isValidDashedIdent`, `PropertySyntax`, `CssPropertyRule`（零堆分配 W3C CSS Properties and Values API Level 1 `@property` 自定义属性注册解析、`syntax`/`inherits`/`initial-value` 规范校验与美化/压缩序列化） |
+| `lib/css/fontPalette.cp` | `bun/src/css/rules/font_palette_values.cp` | `MAX_PALETTE_OVERRIDES`, `CssFontPaletteError`, `BasePaletteKind`, `BasePalette`, `PaletteOverrideColor`, `CssFontPaletteValuesRule`（零堆分配 W3C CSS Fonts Level 4 `@font-palette-values` 彩色字体调色板解析、泛型字体族与 `currentColor` 拒绝、非负槽位覆写查询与格式化/压缩序列化） |
 
-### `@font-palette-values` 彩色字体调色板示例（`font_palette_values.cp`）
+### `@font-palette-values` 彩色字体调色板示例（`fontPalette.cp`）
 
 ```typescript
 import { CssFontPaletteValuesRule } from "cap:css";
@@ -276,7 +276,7 @@ let buf: [256]u8 = undefined;
 const minified = palette.toCssMinified(buf[0..])?;
 ```
 
-### `@property` 自定义属性注册规则示例（`property_rule.cp`）
+### `@property` 自定义属性注册规则示例（`propRule.cp`）
 
 ```typescript
 import { CssPropertyRule, PropertySyntax, isValidDashedIdent } from "cap:css";
@@ -290,7 +290,7 @@ const minified = rule.toCssMinified(buf[0..])?;
 // "@property --brand-accent{syntax:\"<color>\";inherits:true;initial-value:#3b82f6}"
 ```
 
-### CSS Modules 命名模式、哈希与 `composes` 解析（`css_modules.cp`）
+### CSS Modules 命名模式、哈希与 `composes` 解析（`cssModules.cp`）
 
 > 归并自原 `lib/cssmodules/`（Bun `src/css/css_modules.cp`）。
 
@@ -304,7 +304,7 @@ const minified = rule.toCssMinified(buf[0..])?;
 
 > 注：原 `lib/mediaquery/mediaquery.cp` 因与 `lib/css/media.cp` 存在 Media Queries Level 4 功能重叠，按参考归档规范保留为 `lib/css/media_query_.cp`（不从 `cap:css` 重复导出）。
 
-### `@custom-media` 规则解析、序列化与媒体查询展开（`custom_media.cp`）
+### `@custom-media` 规则解析、序列化与媒体查询展开（`customMedia.cp`）
 
 > 吸收自 `/data/dev/bun/src/css/rules/custom_media.cp`，零堆分配支持 W3C Media Queries Level 5 `@custom-media` 声明、`true`/`false` 布尔媒体值、级联覆盖注册表与 `(--custom-name)` 媒体查询展开。
 
@@ -320,7 +320,7 @@ const n = reg.resolveMediaQuery("screen and (--narrow)", out[0..])?;
 // out[0..n] == "screen and (max-width: 30em)"
 ```
 
-### `@namespace` 规则解析、序列化与命名空间注册表（`namespace_rule.cp`）
+### `@namespace` 规则解析、序列化与命名空间注册表（`nsRule.cp`）
 
 > 吸收自 `/data/dev/bun/src/css/rules/namespace.cp`，零堆分配支持 W3C CSS Namespaces Level 3 默认/前缀命名空间声明（字符串与 `url(...)` 双语法）、规范序列化及选择器前缀解析。
 
@@ -334,7 +334,7 @@ let reg = NamespaceRegistry.init();
 const uri = reg.resolveSelectorPrefix("svg") ?? ""; // CSS_SVG_NS
 ```
 
-### `@scope` 规则解析、序列化与样式表提取（`scope_rule.cp`）
+### `@scope` 规则解析、序列化与样式表提取（`scopeRule.cp`）
 
 > 吸收自 `/data/dev/bun/src/css/rules/scope.cp`，零堆分配支持 W3C CSS Cascading and Inheritance Level 6 `@scope [(<scope-start>)]? [to (<scope-end>)]? { <body> }` 规则解析（隐式/单根/仅下限/甜甜圈作用域）、嵌套括号与属性引号安全选择器拆分、美化与压缩 CSS 序列化及样式表批量提取。
 
@@ -365,7 +365,7 @@ const n = serializeCssIdentifier("1a:b", buf[0..])?;
 // buf[0..n] == "\\31 a\\:b"
 ```
 
-### CSS `url(...)` 解析、路径分类与最短化序列化（`url_value.cp`）
+### CSS `url(...)` 解析、路径分类与最短化序列化（`urlVal.cp`）
 
 > 吸收自 `/data/dev/bun/src/css/values/url.cp`，零堆分配实现 W3C CSS Values Level 4 `url(...)` 解析、RFC 3986 / WHATWG `isAbsolute()` 分类（相对路径、根相对 `/`、片段 `#`、`data:`、绝对 scheme），以及对齐 Bun 的最短化压缩序列化（在带引号与反斜杠转义无引号形式间自动择短）。
 
@@ -380,7 +380,7 @@ const n = u.toCssMinified(buf[0..])?;
 // buf[0..n] == "url(./assets/logo.svg)"
 ```
 
-### CSS 盒模型四边简写（`CssBoxRect`）与二维简写（`CssSize2D`）（`box_rect.cp`）
+### CSS 盒模型四边简写（`CssBoxRect`）与二维简写（`CssSize2D`）（`boxRect.cp`）
 
 > 吸收自 `/data/dev/bun/src/css/values/rect.cp`，零堆分配实现 CSS 1/2/3/4 边盒模型简写（`margin` / `padding` / `inset` / `border-width`）与 1/2 值属性（`gap` / `overflow` / `border-spacing`）的函数安全解析（保护 `calc(...)`/`var(...)` 内部空白）与最短化折叠序列化。
 
@@ -395,7 +395,7 @@ const n = r.toCss(buf[0..])?;
 // buf[0..n] == "10px 20px"
 ```
 
-### CSS `@layer` 级联层规则解析、序列化与优先级注册表（`layer_rule.cp`）
+### CSS `@layer` 级联层规则解析、序列化与优先级注册表（`layerRule.cp`）
 
 > 吸收自 `/data/dev/bun/src/css/rules/layer.cp`，零堆分配实现 W3C CSS Cascading and Inheritance Level 5 `@layer` 语句声明（`@layer reset, base, theme.dark;`）、命名/匿名 `@layer` 块规则（`@layer framework.layout { ... }` / `@layer { ... }`）、样式表批量提取（`CssLayerRuleList`）与级联优先级排序注册表（`CssLayerOrderRegistry`）。
 
@@ -432,7 +432,7 @@ const n2 = areas.toCss(buf[0..])?;
 * = n2;
 ```
 
-### CSS `@import` 规则解析、条件组合与依赖提取（`import_rule.cp`）
+### CSS `@import` 规则解析、条件组合与依赖提取（`importRule.cp`）
 
 > 吸收自 `/data/dev/bun/src/css/rules/import.cp`，零堆分配实现 W3C CSS Cascading and Inheritance Level 5 `@import` 规则解析器、组合条件模型（`layer` / `layer(<layer-name>)`、`supports(<cond> | <declaration>)`、`<media-query-list>`）、带 bundler 占位符改写的规范序列化器与样式表前置 `@import` 批量提取器。
 
@@ -456,7 +456,7 @@ const list = CssImportRuleList.extractFromStylesheet(
 * = n;
 ```
 
-### CSS `@counter-style` 规则解析、校验与实时计数器渲染（`counter_style.cp`）
+### CSS `@counter-style` 规则解析、校验与实时计数器渲染（`counter.cp`）
 
 > 吸收自 `/data/dev/bun/src/css/rules/counter_style.cp`，零堆分配实现 W3C CSS Counter Styles Level 3 `@counter-style` 全套描述符解析器（`system`、`symbols`、`additive-symbols`、`negative`、`prefix`、`suffix`、`range`、`pad`、`fallback`、`speak-as`）、规范序列化器与实时计数器/列表标记格式化引擎。
 
@@ -476,7 +476,7 @@ const n = roman.formatMarker(2026, buf[0..])?;
 * = n;
 ```
 
-### CSS `@starting-style` 入场过渡规则与嵌套提升（`starting_style.cp`）
+### CSS `@starting-style` 入场过渡规则与嵌套提升（`startStyle.cp`）
 
 > 吸收自 `/data/dev/bun/src/css/rules/starting_style.cp`，零堆分配实现 W3C CSS Transitions Level 2 `@starting-style` 规则解析、块内声明/子规则拆解、压缩与规范序列化、嵌套父选择器提升（`liftForParent`）与样式表批量提取。
 
@@ -509,7 +509,7 @@ const n = formatLogicalFallbackRule(".card", "margin-inline-start", "16px", buf[
 * = n;
 ```
 
-### CSS `@font-face` 规则解析与 `<urange>` 问号压缩（`font_face.cp`）
+### CSS `@font-face` 规则解析与 `<urange>` 问号压缩（`fontFace.cp`）
 
 > 吸收自 `/data/dev/bun/src/css/rules/font_face.cp` 与 `/data/dev/bun/docs/bundler/css.mdx`，零堆分配实现 `@font-face` 描述符解析（`font-family`/`src`/`font-weight`/`font-style`/`font-display`/`unicode-range`）、`url(...) format(...) tech(...)` 与 `local(...)` 来源解析，以及 W3C `<urange>` 问号通配最优压缩（如 `U+0000-00FF` → `U+??`、`U+4000-4FFF` → `U+4???`）。
 
@@ -530,7 +530,7 @@ const hit = ff.matchesCodePoint(0x4E2D); // true
 * = hit;
 ```
 
-### CSS 声明块解析、去重压缩与序列化（`declaration_block.cp`）
+### CSS 声明块解析、去重压缩与序列化（`declBlock.cp`）
 
 > 吸收自 `/data/dev/bun/src/css/declaration.cp` 与 `/data/dev/bun/docs/bundler/css.mdx`，采用普通声明与 `!important` 声明双桶分离布局，零堆分配实现词法感知解析、`error_recovery` 容错恢复、级联安全去重压缩（`minifyDeduplicate`）、`propertyIdHash` 规则合并签名以及美化/压缩双模式序列化。
 
@@ -551,7 +551,7 @@ const n = blk.toCssBlock(out[0..], true)?;
 * = n;
 ```
 
-### CSS 属性渐进降级上下文（`handler_context.cp`）
+### CSS 属性渐进降级上下文（`handlerCtx.cp`）
 
 > 吸收自 `/data/dev/bun/src/css/context.cp` 与 `/data/dev/bun/docs/bundler/css.mdx`，零堆分配追踪声明语法上下文（`StyleRule`/`Keyframes`/`StyleAttribute`）、聚合 `@supports` 条件回退桶、生成 `:dir(ltr)`/`:dir(rtl)` 逻辑属性降级规则与 `@media (prefers-color-scheme: dark)` 深色主题降级规则，并支持 CSS Modules 未使用符号表继承与死规则剪枝。
 
@@ -575,7 +575,7 @@ const an = ctx.formatAdditionalRules(".card", abuf[0..], true)?;
 * = an;
 ```
 
-### CSS `@viewport` 规则解析、校验与多前缀降级输出（`viewport_rule.cp`）
+### CSS `@viewport` 规则解析、校验与多前缀降级输出（`viewport.cp`）
 
 > 吸收自 `/data/dev/bun/src/css/rules/viewport.cp` 与 `/data/dev/bun/docs/bundler/css.mdx`，零堆分配实现 W3C CSS Device Adaptation Level 1 `@viewport` 与供应商前缀变体（`@-ms-viewport` / `@-webkit-viewport` / `@-o-viewport` / `@-moz-viewport`）的解析、标准描述符语义校验、`width`/`height` 简写展开、级联安全去重、美化/压缩序列化、多前缀降级输出及样式表批量提取。
 
@@ -594,7 +594,7 @@ const n = rule.toCssWithPrefixes(out[0..], prefixes[0..], true)?;
 * = n;
 ```
 
-### CSS 未知 / 扩展 `@-rule` 通用保留与提取（`unknown_rule.cp`）
+### CSS 未知 / 扩展 `@-rule` 通用保留与提取（`unknown.cp`）
 
 > 吸收自 `/data/dev/bun/src/css/rules/unknown.cp` 与 `/data/dev/bun/docs/bundler/css.mdx`，零堆分配实现 W3C CSS Syntax Level 3 未知及工具链扩展 `@-rule`（如 `@tailwind`、`@theme`、`@utility`、`@position-try`、`@view-transition`、`@-moz-document`）的语句/块双形态解析、括号安全 prelude 词法切分、标准/扩展分类、带源码行列号追踪的样式表批量提取及美化/压缩序列化。
 
@@ -616,7 +616,7 @@ const list = CssUnknownAtRuleList.extractUnknownFromStylesheet(
 * = list;
 ```
 
-### CSS `@-moz-document` 条件文档规则解析与 URL 匹配（`document_rule.cp`）
+### CSS `@-moz-document` 条件文档规则解析与 URL 匹配（`document.cp`）
 
 > 吸收自 `/data/dev/bun/src/css/rules/document.cp` 与 `/data/dev/bun/docs/bundler/css.mdx`，零堆分配实现 W3C CSS Conditional Rules Level 3 `@-moz-document` 规则解析（完整支持 `url()` / `url-prefix()` / `domain()` / `media-document()` / `regexp()`）、对齐 Firefox/Bun 规范的严格无参 `url-prefix()` 模式（`parseStrict`）、域名子域边界安全的 URL 实时匹配器、美化/压缩序列化及样式表批量提取。
 
@@ -634,7 +634,7 @@ const n = strict_rule.toCssMinified(out[0..])?;
 * = n;
 ```
 
-### CSS Tailwind 指令（`@tailwind` / `@apply`）解析与级联诊断（`tailwind_rule.cp`）
+### CSS Tailwind 指令（`@tailwind` / `@apply`）解析与级联诊断（`tailwind.cp`）
 
 > 吸收自 `/data/dev/bun/src/css/rules/tailwind.cp` 与 `/data/dev/bun/docs/bundler/css.mdx`，零堆分配实现 Tailwind `@tailwind <base|components|utilities|variants>;` 指令解析与序列化、`@apply` 实用类列表解析（支持方括号任意值如 `bg-[#1da1f2]` 与末尾 `!important`）、样式表批量提取（含行列号追踪）、重复层检测及标准级联顺序校验（`base < components < utilities < variants`）。
 
@@ -674,18 +674,18 @@ const applied = CssTailwindApplyRule.parse("@apply flex items-center bg-[#1da1f2
 7. **`@import` 条件顺序、外链保留与打包占位符改写（参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
    - W3C CSS Cascading Level 5 规定 `@import` 必须位于样式表头部（仅允许出现在 `@charset` 与前置 `@layer` 语句之后、任何普通规则之前）；出现在普通规则之后的 `@import` 必须被忽略（`CssImportRuleList.ignored_after_rules` 可用于静态诊断告警）。
    - `@import` 条件严格遵循 `layer` → `supports(...)` → `<media-query-list>` 顺序；打包器在内联本地样式表时应通过 `isExternalUrl()` 跳过 `http://` / `https://` / `//` / `data:` 外链资源，并使用 `toCssWithPlaceholder()` 生成稳定的依赖占位符。
-8. **声明块 `!important` 双桶分离与自定义属性大小写规则（`declaration_block.cp`）**：
+8. **声明块 `!important` 双桶分离与自定义属性大小写规则（`declBlock.cp`）**：
    - 对齐 LightningCSS/Bun 的 `DeclarationBlock` 布局，普通声明与 `!important` 声明分别存储在独立数组中，序列化时先输出普通声明再输出 `!important` 声明；压缩模式下省略块内末条声明的分号与冒号后空格；
    - 标准 CSS 属性名按 ASCII 大小写无关比对（`Color` 与 `color` 视为同一属性），而 `--` 开头的 CSS 自定义属性（CSS Variables）严格区分大小写（`--Theme` 与 `--theme` 互不覆盖）。
-9. **`@viewport` 供应商前缀降级与描述符边界约束（`viewport_rule.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
+9. **`@viewport` 供应商前缀降级与描述符边界约束（`viewport.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
    - 遵循 Bun CSS Bundler 的默认浏览器目标与厂商前缀注入策略：`@viewport` 规则块不接受任何 prelude token（`@viewport screen { ... }` 属于非法语法），标准描述符仅接受规范定义的值域（`user-zoom` 仅限 `zoom | fixed`，`orientation` 仅限 `auto | portrait | landscape`，`viewport-fit` 仅限 `auto | contain | cover`，`zoom`/`min-zoom`/`max-zoom` 禁止负值）；
    - `width`/`height` 简写按 W3C 规范接收 1~2 个 `<viewport-length>` 值（单值同时展开为 `min-*` 与 `max-*`，双值分别对应 `min-*` 与 `max-*`）；针对旧版 Edge/IE 兼容场景，推荐使用 `toCssWithPrefixes()` 同时输出 `@-ms-viewport` 与标准 `@viewport`。
-10. **未知与工具链扩展 `@-rule` 保留透传契约（`unknown_rule.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
+10. **未知与工具链扩展 `@-rule` 保留透传契约（`unknown.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
     - 现代 CSS 生态与 Bun CSS Bundler 插件（如 Tailwind v4 的 `@tailwind` / `@theme` / `@utility` / `@custom-variant`，以及 CSS Anchor Positioning `@position-try` / `@view-transition`）依赖解析器无损保留未知 `@-rule` 的原始 prelude 与块内容；
     - 词法边界：语句型未知规则必须以顶层 `;` 终止，块型规则的 `{...}` 及内部 `()`/`[]` 必须严格平衡；序列化时 at-keyword 统一规范为小写 ASCII，prelude 与块内容保持原样不破坏下游插件语法。
-11. **`@-moz-document` 严格模式与域名匹配安全边界（`document_rule.cp`）**：
+11. **`@-moz-document` 严格模式与域名匹配安全边界（`document.cp`）**：
     - 仅 Firefox 曾实现该规则且现代版本出于隐私限制仅保留无参 `@-moz-document url-prefix()`（用作 Firefox 特性检测）；与 Bun/LightningCSS 保持一致，默认拒绝非 `-moz` 前缀（如 `@document` / `@-webkit-document` 返回 `UnsupportedPrefix`），生产打包推荐使用 `parseStrict()` 强制约束；
     - `domain("example.com")` 匹配器严格校验点号边界，匹配 `example.com` 与 `sub.example.com`，绝不误匹配 `evil-example.com`；自动剥离 URL 中的 `userinfo@` 与 `:port`。
-12. **Tailwind `@tailwind` / `@apply` 指令级联与插件透传契约（`tailwind_rule.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
+12. **Tailwind `@tailwind` / `@apply` 指令级联与插件透传契约（`tailwind.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
     - `@tailwind` 仅允许 `base` / `components` / `utilities` / `variants` 四种标准层名且严禁附带块 `{...}`；推荐按 `base -> components -> utilities -> variants` 严格递增顺序声明并通过 `isCanonicalOrder()` 与 `hasDuplicateLayers()` 在打包预处理阶段执行静态诊断；
     - `@apply` 的 `!important` 修饰符必须位于实用类列表末尾，方括号任意值（如 `grid-cols-[1fr_2fr]`）内部括号须严格平衡。

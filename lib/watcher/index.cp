@@ -22,7 +22,7 @@ export {
 export {
     WatchEntry,
     FileWatcher,
-} from "./file_watcher.cp";
+} from "./fileWatcher.cp";
 
 export {
     MAX_DEBOUNCE_ENTRIES,

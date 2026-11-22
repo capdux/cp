@@ -1,10 +1,10 @@
-// Source: Absorbed from /data/dev/bun/src/crash_handler/crash_handler.zig | Synced: 2026-11-22T10:58:52Z
+// Source: Absorbed from /data/dev/bun/src/crash_handler/crash_handler.zig | Synced: 2026-11-22T12:43:45Z
 // Also absorbs: /data/dev/bun/src/crash_handler/handle_oom.zig
 // lib/safety/crash.cp
 // OOM Policy Guard & Bun-Style Signal Crash Diagnostic Report Formatter
 
 const std = @import("std");
-import { CpuFeatures } from "./cpu_features.cp";
+import { CpuFeatures } from "./cpuFeatures.cp";
 
 pub enum OomPolicy: u8 {
     Abort = 0,

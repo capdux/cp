@@ -164,9 +164,9 @@ pub fn demoImagePipeline() {
 | `tga.cp` | Truevision TGA 编解码 | `parseTgaHeader`, `encodeTgaTrueColor`, `decodeTgaToRgba`, `TgaImageType`, `TgaHeader` |
 | `tiff.cp` | Baseline / Multi-Page TIFF | `encodeSingle`, `encodeMultiPage`, `decode`, `decodeWithLimits`, `TiffDocument`, `TiffPage` |
 | `dicom.cp` | DICOM PS3.10 医学影像 | `isDicom`, `parseDicomSummary`, `DicomIter`, `DicomTag`, `DicomElement`, `DicomSummary` |
-| `svg_canvas.cp` / `svg_charts.cp` | SVG 1.1 画布与统计图表 | `SvgCanvas`, `SvgPathBuilder`, `SvgStyle`, `SvgCharts`, `ChartDatum`, `LineSeries` |
+| `svgCanvas.cp` / `svgCharts.cp` | SVG 1.1 画布与统计图表 | `SvgCanvas`, `SvgPathBuilder`, `SvgStyle`, `SvgCharts`, `ChartDatum`, `LineSeries` |
 | `barcode.cp` | 1D 条码 (Code128/EAN13/UPCA) | `BarcodeEncoder`, `BarcodeRenderer`, `BarcodeFormat`, `BarcodeBitPattern`, `BarcodeError` |
-| `qrcode_ecc.cp` / `qrcode_encoder.cp` / `qrcode_render.cp` | ISO/IEC 18004 二维码 | `QrCode`, `QrMatrix`, `QrRenderer`, `QrEccLevel`, `ReedSolomon`, `QrError` |
+| `qrcodeEcc.cp` / `qrcodeEncoder.cp` / `qrcodeRender.cp` | ISO/IEC 18004 二维码 | `QrCode`, `QrMatrix`, `QrRenderer`, `QrEccLevel`, `ReedSolomon`, `QrError` |
 | `jxl.cp` | JPEG XL 码流与 ISOBMFF 容器 | `JxlContainerKind`, `JxlSizeHeader`, `JxlBox`, `JxlInfo`, `isJxl`, `detectJxlKind`, `parseJxlSizeHeader`, `JxlBoxIter`, `parseJxlInfo` |
 | `xcf.cp` | GIMP XCF 多图层图像解析 | `XCF_MAGIC`, `XcfBaseType`, `XcfCompression`, `XcfPrecision`, `XcfHeader`, `XcfLayerInfo`, `XcfPropIter`, `XcfPointerIter`, `isXcf`, `parseXcfHeader`, `parseXcfLayerHeader` |
 

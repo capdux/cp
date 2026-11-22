@@ -53,13 +53,13 @@ export {
     IpcPayloadReader,
     IpcFrameWriter,
     decodeIpcFrame,
-} from "./ipc_frame";
+} from "./ipcFrame";
 
 export {
     WORK_STEAL_MAX_WORKERS,
     FileRange,
     WorkStealPool,
-} from "./work_stealing";
+} from "./workSteal";
 
 export {
     JUnitTotals,
@@ -108,4 +108,4 @@ export {
     IpcChannelPollStatus,
     IpcChannelPollResult,
     IpcChannel,
-} from "./ipc_channel";
+} from "./ipcChan";

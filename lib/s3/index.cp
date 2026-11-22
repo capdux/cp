@@ -6,10 +6,10 @@
 export * from "./types";
 export * from "./credentials";
 export * from "./signing";
-export * from "./simple_request";
-export * from "./list_objects";
+export * from "./simpleRequest";
+export * from "./listObjects";
 export * from "./multipart";
-export * from "./download_stream";
+export * from "./downloadStream";
 export * from "./client";
 
 export {
@@ -44,7 +44,7 @@ export {
     S3XmlErrorRecord,
     parseS3XmlError,
     formatS3XmlError,
-} from "./xml_error.cp";
+} from "./xmlErr.cp";
 
 export {
     S3_PRESIGN_MIN_EXPIRES,

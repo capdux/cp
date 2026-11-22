@@ -3,4 +3,4 @@
 export {
     GitProvider,
     HostedGitInfo,
-} from "./git_info.cp";
+} from "./gitInfo.cp";

@@ -4,6 +4,6 @@
 // ============================================================================
 
 export * from "./percent";
-export * from "./search_params";
+export * from "./searchParams";
 export * from "./url";
 export * from "./url_";

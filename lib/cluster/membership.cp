@@ -3,7 +3,7 @@
 // and explicit now_ms timeout progression (Alive -> Suspect -> Dead).
 
 const std = @import("std");
-import { ClusterErr } from "./hash_ring.cp";
+import { ClusterErr } from "./hashRing.cp";
 
 /// Lifecycle state of a cluster member in SWIM failure detection.
 pub enum MemberState: u8 {

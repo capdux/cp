@@ -14,29 +14,29 @@
 | 存储引擎与 KV | `lib/db/lsm.cp` | LSM-Tree 内存表/分级合并存储引擎 | — |
 | 存储引擎与 KV | `lib/db/wal.cp` | CRC32C 校验预写日志（WAL）与严格崩溃恢复 | — |
 | 存储引擎与 KV | `lib/db/sstable.cp` | 零堆分配 LevelDB / RocksDB SSTable 解析器 | — |
-| 存储引擎与 KV | `lib/db/kv_wal.cp` / `lib/db/kv_store.cp` | 嵌入式持久化 KV 存储引擎与日志编解码 | `KV_WAL_MAGIC`, `KV_WAL_HEADER_SIZE`, `KvWalRecord` |
-| 事务、锁与日志 | `lib/db/mvcc_types.cp` / `lib/db/mvcc_store.cp` | MVCC 快照隔离事务存储 | — |
-| 事务、锁与日志 | `lib/db/lock_wait_graph.cp` / `lib/db/lock.cp` | 命名锁表、租约锁管理器与死锁等待图检测 | — |
-| 事务、锁与日志 | `lib/db/raft_log.cp` | Raft 复制日志与快照压缩 | — |
+| 存储引擎与 KV | `lib/db/kvWal.cp` / `lib/db/kvStore.cp` | 嵌入式持久化 KV 存储引擎与日志编解码 | `KV_WAL_MAGIC`, `KV_WAL_HEADER_SIZE`, `KvWalRecord` |
+| 事务、锁与日志 | `lib/db/mvccTypes.cp` / `lib/db/mvccStore.cp` | MVCC 快照隔离事务存储 | — |
+| 事务、锁与日志 | `lib/db/lockGraph.cp` / `lib/db/lock.cp` | 命名锁表、租约锁管理器与死锁等待图检测 | — |
+| 事务、锁与日志 | `lib/db/raftLog.cp` | Raft 复制日志与快照压缩 | — |
 | 缓存与内存池 | `lib/db/lru.cp` | O(1) LRU 缓存（支持 TTL） | — |
-| 缓存与内存池 | `lib/db/lru_k.cp` | 抗全表扫描 LRU-K 缓存 | — |
+| 缓存与内存池 | `lib/db/lruK.cp` | 抗全表扫描 LRU-K 缓存 | — |
 | 缓存与内存池 | `lib/db/lfu.cp` | 零堆分配 LFU 缓存与 4-bit W-TinyLFU Count-Min Sketch | — |
-| 缓存与内存池 | `lib/db/slab_pool.cp` | 代际 O(1) Slab 对象池（防 ABA 句柄） | — |
-| 向量与全文索引 | `lib/db/hnsw_metric.cp` / `lib/db/hnsw_graph.cp` | 多层可导航小世界图（HNSW）向量近似最近邻检索 | `HnswSearchHit` |
-| 向量与全文索引 | `lib/db/search_trie.cp` / `lib/db/search_engine.cp` | 多字段 BM25F 全文检索、布尔/短语查询、前缀 Trie 与高亮摘要 | — |
-| 位图与概率索引 | `lib/db/roaring_bitmap.cp` | Roaring Bitmap 压缩整数集合与位运算 | — |
-| 位图与概率索引 | `lib/db/bloom_cuckoo.cp` | Bloom、Counting Bloom 与 Cuckoo 过滤器 | — |
+| 缓存与内存池 | `lib/db/slabPool.cp` | 代际 O(1) Slab 对象池（防 ABA 句柄） | — |
+| 向量与全文索引 | `lib/db/hnswMetric.cp` / `lib/db/hnswGraph.cp` | 多层可导航小世界图（HNSW）向量近似最近邻检索 | `HnswSearchHit` |
+| 向量与全文索引 | `lib/db/searchTrie.cp` / `lib/db/searchEng.cp` | 多字段 BM25F 全文检索、布尔/短语查询、前缀 Trie 与高亮摘要 | — |
+| 位图与概率索引 | `lib/db/roaring.cp` | Roaring Bitmap 压缩整数集合与位运算 | — |
+| 位图与概率索引 | `lib/db/bloomCuckoo.cp` | Bloom、Counting Bloom 与 Cuckoo 过滤器 | — |
 | 位图与概率索引 | `lib/db/xorfilter.cp` | Xor8 / Xor16 静态低空间成员过滤器 | — |
 | 位图与概率索引 | `lib/db/sketch.cp` | 流式概率草图（`HyperLogLog` / `QuantileDigest` / `ReservoirSampler`） | — |
 | 参考归档（不导出） | `lib/db/hyperloglog_.cp` | 独立 64-bit HyperLogLog 实现（仅参考） | 与 `sketch.cp` 中 `HyperLogLog` 重叠，不在 `cap:db` 重复导出 |
-| 缓存集群路由 | `lib/db/redis_cluster_crc16.cp` / `lib/db/redis_cluster_topology.cp` | Redis/Valkey Cluster CRC16-CCITT 槽位路由、Hash Tag、拓扑映射与 MOVED/ASK 重定向解析 | — |
+| 缓存集群路由 | `lib/db/redisClusterCrc16.cp` / `lib/db/redisClusterTopology.cp` | Redis/Valkey Cluster CRC16-CCITT 槽位路由、Hash Tag、拓扑映射与 MOVED/ASK 重定向解析 | — |
 | 缓存协议编解码 | `lib/db/valkey.cp` | RESP2/RESP3 零拷贝增量流式解析器、内联命令解析与编码器（`RespStreamParser` / `RespValue` / `encodeCommand`） | — |
-| SQL 查询构建器 | `lib/db/query_types.cp` / `lib/db/query_builder.cp` | 参数化 SQL 查询构建器（PostgreSQL `$1..$N`、MySQL/SQLite `?` 防注入 `SelectBuilder`/`InsertBuilder`/`UpdateBuilder`/`DeleteBuilder`） | — |
-| Schema 校验引擎 | `lib/db/schema.cp` / `lib/db/schema_validator.cp` | JSON Schema Draft 2020-12 & AI Tool Calling 运行时结构化校验器（`Schema` / `SchemaValidator`） | — |
-| 连接池生命周期引擎 | `lib/db/conn_pool.cp` | 零堆分配数据库连接池状态机（LIFO 温连接复用、空闲/最大寿命淘汰、不健康连续错误摘除与满载背压 `DbConnPool`） | — |
-| 崩溃恢复 WAL 引擎 | `lib/db/wal_recovery.cp` | 零堆分配 IEEE CRC32 防撕裂写 WAL 帧编解码与崩溃恢复引擎（`WalFrameWriter` / `WalRecoveryScanner`） | — |
-| LSM 分层压缩规划器 | `lib/db/lsm_compactor.cp` | 零堆分配 RocksDB/Pebble 级 LSM-Tree 分层压缩规划器与 SSTable 键区间重叠选择器（`LsmCompactionPlanner`） | — |
-| MVCC 快照与水位线 GC | `lib/db/mvcc_gc.cp` | 零堆分配 MVCC 多版本链、快照隔离时间旅行读与 Low-Watermark 安全水位线垃圾回收引擎（`MvccVersionGcStore`） | — |
+| SQL 查询构建器 | `lib/db/queryTypes.cp` / `lib/db/queryBuilder.cp` | 参数化 SQL 查询构建器（PostgreSQL `$1..$N`、MySQL/SQLite `?` 防注入 `SelectBuilder`/`InsertBuilder`/`UpdateBuilder`/`DeleteBuilder`） | — |
+| Schema 校验引擎 | `lib/db/schema.cp` / `lib/db/schemaValidator.cp` | JSON Schema Draft 2020-12 & AI Tool Calling 运行时结构化校验器（`Schema` / `SchemaValidator`） | — |
+| 连接池生命周期引擎 | `lib/db/connPool.cp` | 零堆分配数据库连接池状态机（LIFO 温连接复用、空闲/最大寿命淘汰、不健康连续错误摘除与满载背压 `DbConnPool`） | — |
+| 崩溃恢复 WAL 引擎 | `lib/db/walRecover.cp` | 零堆分配 IEEE CRC32 防撕裂写 WAL 帧编解码与崩溃恢复引擎（`WalFrameWriter` / `WalRecoveryScanner`） | — |
+| LSM 分层压缩规划器 | `lib/db/compactor.cp` | 零堆分配 RocksDB/Pebble 级 LSM-Tree 分层压缩规划器与 SSTable 键区间重叠选择器（`LsmCompactionPlanner`） | — |
+| MVCC 快照与水位线 GC | `lib/db/mvccGc.cp` | 零堆分配 MVCC 多版本链、快照隔离时间旅行读与 Low-Watermark 安全水位线垃圾回收引擎（`MvccVersionGcStore`） | — |
 
 ---
 
@@ -77,7 +77,7 @@ fn main()! {
 }
 ```
 
-### 零堆分配数据库连接池状态机示例 (`conn_pool.cp`)
+### 零堆分配数据库连接池状态机示例 (`connPool.cp`)
 
 ```cp
 import {
@@ -102,7 +102,7 @@ pub fn demoDbConnPool() {
 }
 ```
 
-### 零堆分配 CRC32 防撕裂写 WAL 崩溃恢复示例 (`wal_recovery.cp`)
+### 零堆分配 CRC32 防撕裂写 WAL 崩溃恢复示例 (`walRecover.cp`)
 
 ```cp
 import {
@@ -132,7 +132,7 @@ pub fn demoWalCrashRecovery() {
 }
 ```
 
-### 零堆分配 LSM-Tree 分层压缩规划器示例 (`lsm_compactor.cp`)
+### 零堆分配 LSM-Tree 分层压缩规划器示例 (`compactor.cp`)
 
 面向 RocksDB / Pebble 级存储引擎的 100% 纯 CP 零堆分配分层压缩规划内核（固定 128 SSTable 内联槽位）：支持 L0 重叠簇展开 + L1 扇出、Ln->Ln+1 空间超限与零写放大 `trivial_move` 快路径、高墓碑率 `tombstone_reclaim` 回收及 `being_compacted` 并发冲突跳过。
 
@@ -168,7 +168,7 @@ pub fn demoLsmCompactionPlanner() {
 }
 ```
 
-### 零堆分配 MVCC 快照隔离与安全水位线 GC 引擎示例 (`mvcc_gc.cp`)
+### 零堆分配 MVCC 快照隔离与安全水位线 GC 引擎示例 (`mvccGc.cp`)
 
 面向 PostgreSQL / TiKV / RocksDB 事务存储引擎的 100% 纯 CP 零堆分配 MVCC 多版本链、快照读可见性判定与 Low-Watermark 安全水位线垃圾回收内核（固定 `MVCC_GC_MAX_VERSIONS = 256` 版本槽、`MVCC_GC_MAX_READERS = 32` 活跃读事务槽）：
 
@@ -200,7 +200,7 @@ pub fn demoMvccSafeHorizonGc() {
 }
 ```
 
-### 零分配 CLOCK 二次机会数据库页缓冲池管理器示例 (`page_buffer_pool.cp`)
+### 零分配 CLOCK 二次机会数据库页缓冲池管理器示例 (`bufferPool.cp`)
 
 面向 PostgreSQL `shared_buffers` / SQLite Pager / InnoDB Buffer Pool 级存储引擎的 100% 纯 CP 零动态堆分配 CLOCK（Second-Chance）引用计数页帧缓冲池与脏页刷盘管理器（固定内联上限 `BUFFER_POOL_MAX_FRAMES = 128`）：
 
@@ -230,7 +230,7 @@ pub fn demoClockPageBufferPool() {
 }
 ```
 
-### 零分配 MVCC 快照隔离与版本可见性 / GC 水位线引擎 (`mvcc_snapshot.cp`)
+### 零分配 MVCC 快照隔离与版本可见性 / GC 水位线引擎 (`mvccSnap.cp`)
 
 面向 PostgreSQL / InnoDB 级事务存储引擎的 100% 纯 CP 零动态堆分配 MVCC Snapshot Isolation（`MvccReadView`）与多版本元组链 GC 引擎：
 
@@ -273,7 +273,7 @@ pub fn demoMvccSnapshot() {
 }
 ```
 
-### 零分配数据库槽页二进制布局、原地紧凑化与 CRC32 校验引擎 (`slotted_page.cp`)
+### 零分配数据库槽页二进制布局、原地紧凑化与 CRC32 校验引擎 (`slottedPage.cp`)
 
 面向 PostgreSQL / SQLite 经典存储引擎的 100% 纯 CP 零动态堆分配 4KB/8KB（任意 `64..65535B`）槽页二进制布局引擎，直接操作调用方持有的 `page_buf: *[]u8` 实现零拷贝读写与 O(1) 额外内存原地紧凑化：
 

@@ -17,7 +17,7 @@ import {
     findHtmlTag,
     leaveSpan,
     normalizeCodeSpanContent,
-} from "./inline_core.cp";
+} from "./inlineCore.cp";
 import {
     findAutolink,
     labelContainsLink,

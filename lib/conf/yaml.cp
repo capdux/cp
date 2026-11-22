@@ -4,7 +4,7 @@
 
 const std = @import("std");
 import { ConfTag, ConfField, ConfValue } from "./value";
-import { YamlParser, YamlStream } from "./yaml_parser";
+import { YamlParser, YamlStream } from "./yamlParser";
 
 pub enum YamlChomp: u8 {
     Clip = 0,

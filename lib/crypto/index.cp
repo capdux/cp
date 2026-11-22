@@ -429,7 +429,7 @@ export {
     merkleHashNode,
     Rfc6962MerkleTree,
     verifyMerkleInclusionProof,
-} from "./merkle_tree.cp";
+} from "./merkleTree.cp";
 
 // --- Zero-Alloc Forward-Secret Symmetric Key Ratchet & Out-of-Order Key Cache ---
 
@@ -439,7 +439,7 @@ export {
     RatchetDerivedKey,
     RatchetStats,
     SymmetricKeyRatchet,
-} from "./key_ratchet.cp";
+} from "./ratchet.cp";
 
 // --- Zero-Alloc Versioned Envelope Encryption & Key-Rotation Keyring ---
 
@@ -467,7 +467,7 @@ export {
     decodeEnvelopeHeader,
     sealEnvelope,
     openEnvelope,
-} from "./envelope_seal.cp";
+} from "./envelope.cp";
 
 // --- Zero-Alloc GF(256) Shamir (k, n) Threshold Secret Sharing ---
 
@@ -489,4 +489,4 @@ export {
     splitSecretWithEntropy,
     splitSecretDeterministic,
     combineShamirShares,
-} from "./shamir_secret.cp";
+} from "./shamirSecret.cp";

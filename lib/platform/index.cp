@@ -10,4 +10,4 @@ export {
     Endianness,
     KernelVersion,
     PlatformInfo,
-} from "./os_info";
+} from "./osInfo";

@@ -12,12 +12,12 @@ export {
     PageSize,
     PdfPage,
     PdfDocument,
-} from "./pdf_writer.cp";
+} from "./pdfWriter.cp";
 
 export {
     PdfInfo,
     PdfInspector,
-} from "./pdf_inspector.cp";
+} from "./pdfInspector.cp";
 
 // --- OOXML DOCX WordprocessingML & CoreProps ---
 export {
@@ -174,7 +174,7 @@ export {
     needsCsvQuoting,
     formatCsvField,
     formatCsvRow,
-} from "./csv_stream.cp";
+} from "./csvStream.cp";
 
 // --- Zero-Alloc RFC 4180 CSV/TSV Table Header Mapping & Typed Row Decoder ---
 export {
@@ -187,4 +187,4 @@ export {
     parseCsvF64,
     parseCsvBool,
     writeCsvRow,
-} from "./csv_table.cp";
+} from "./csvTable.cp";

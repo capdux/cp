@@ -36,8 +36,8 @@
 | `lib/net/pool.cp` | `// Source: cp/lib/net/pool.cp (Production TCP Connection Pool)` | `ConnPoolConfig`、`PoolEntry`、`PoolStats` 与 `ConnectionPool`（`host:port` 分桶复用、TTL 空闲超时、最大生存期淘汰与容量上限驱逐） |
 | `lib/net/proxy.cp` | `// Source: /data/dev/bun/src/http/ProxyTunnel.cp` | 向后兼容 `HttpConnectTunnel`（RFC 7231 `CONNECT` 报文构造与响应解析）及重导出 `Socks5AddrType`、`Socks5Codec` |
 | `lib/net/socket.cp` | `// Source: /data/dev/bun/src/uws_sys/socket.cp` | `SafeSocket` 状态机、读写统计 `SocketStats`、`>240s` 自动升级分钟级长超时、半关闭与 RAII `release()`，以及兼容型 `Socket` |
-| `lib/net/tcp_stream.cp` | `// Source: /data/dev/bun/src/uws/uws.cp` | 16KB `StreamBuffer`（`STREAM_CORK_BUFFER_SIZE = 16384`）与支持 `cork()` / `uncork()` / `flush()` 批聚合发送的 `TcpStream` |
-| `lib/net/tcp_server.cp` | `// Source: /data/dev/bun/src/runtime/socket/Listener.cp` | `ListenConfig`（`toLibusOptions()` 位掩码生成）、`TcpServer` 连接接入计数与生命周期，以及兼容型 `Server` / `listen()` / `connect()` |
+| `lib/net/tcpStream.cp` | `// Source: /data/dev/bun/src/uws/uws.cp` | 16KB `StreamBuffer`（`STREAM_CORK_BUFFER_SIZE = 16384`）与支持 `cork()` / `uncork()` / `flush()` 批聚合发送的 `TcpStream` |
+| `lib/net/tcpServer.cp` | `// Source: /data/dev/bun/src/runtime/socket/Listener.cp` | `ListenConfig`（`toLibusOptions()` 位掩码生成）、`TcpServer` 连接接入计数与生命周期，以及兼容型 `Server` / `listen()` / `connect()` |
 | `lib/net/udp.cp` | `// Source: /data/dev/bun/src/uws_sys/udp.cp` | `UdpPacket`、`UdpSocket` 绑定、对端关联（`connectPeer`）、广播/单播 TTL/组播 TTL 与回环选项控制 |
 | `lib/net/ipaddr.cp` | `// Source: Absorbed from /data/dev/bun/src/http/http.cp (RFC 5952 IPv4 / IPv6 Barrel)` | RFC 5952 IPv4/IPv6 地址编解码：`RfcIpv4Addr`、`RfcIpv6Addr`、`IpVersion`、`RfcIpAddr` |
 | `lib/net/mac.cp` | `// Source: Absorbed from /data/dev/bun/src/sys.zig (IEEE 802 MAC-48 Barrel)` | IEEE 802 MAC-48 硬件地址解析与格式化：`MacAddr` |
@@ -234,7 +234,7 @@ pub fn demoProductionNet() {
 | 时间/路由/传输（第 2 波） | `lib/net/ntp.cp` | RFC 5905 | 零堆分配 NTPv4 / SNTP 线缆编解码与时钟偏移计算 |
 | 时间/路由/传输（第 2 波） | `lib/net/ospf.cp` | RFC 2328 | 零堆分配 OSPFv2 路由协议报文解析器 |
 | 时间/路由/传输（第 2 波） | `lib/net/sctp.cp` | RFC 4960 | 零堆分配 SCTP 报文与 Chunk 解析器 |
-| 安全隧道（第 2 波） | `lib/net/wg_replay.cp` / `lib/net/wg_noise.cp` | WireGuard Noise_IKpsk2 | TAI64N 时间戳、滑动窗口重放保护与 BLAKE2s/Noise 握手原语 |
+| 安全隧道（第 2 波） | `lib/net/wgReplay.cp` / `lib/net/wgNoise.cp` | WireGuard Noise_IKpsk2 | TAI64N 时间戳、滑动窗口重放保护与 BLAKE2s/Noise 握手原语 |
 | 实时通信与流媒体（第 2 波） | `lib/net/stun.cp` / `lib/net/turn.cp` | RFC 5389 / RFC 5766 | STUN 绑定/完整性/指纹与 TURN 中继协议编解码 |
 | 实时通信与流媒体（第 2 波） | `lib/net/sip.cp` / `lib/net/rtsp.cp` | RFC 3261 / RFC 2326 | SIP 请求响应构建/解析与 RTSP 传输头/交错帧编解码（`RTSP_DEFAULT_MAX_PAYLOAD_BYTES` 别名） |
 | 实时通信与流媒体（第 2 波） | `lib/net/rtp.cp` / `lib/net/rtcp.cp` | RFC 3550 | RTP 封包/抖动缓冲与 RTCP 复合报文解析（`RtcpByePacket` 别名） |
@@ -251,7 +251,7 @@ pub fn demoProductionNet() {
 
 ---
 
-## 七、 零堆分配流量整形、WDRR 公平调度与 AIMD 拥塞控制（`traffic_shaper.cp`）
+## 七、 零堆分配流量整形、WDRR 公平调度与 AIMD 拥塞控制（`shaper.cp`）
 
 面向高并发 API 网关、多租户 Agent 通信与 LLM 客户端自适应背压的三大零堆分配确定性原语：
 
@@ -315,7 +315,7 @@ pub fn demoTrafficShaperQuickStart() {
 
 ---
 
-## 八、 一致性哈希环、Bounded-Load 防热点与多副本路由器（`consistent_ring.cp`）
+## 八、 一致性哈希环、Bounded-Load 防热点与多副本路由器（`hashRing.cp`）
 
 面向分布式缓存、AI Agent 集群分片与微服务负载均衡的 100% 纯 CP、零堆分配、O(log V) 二分查找一致性哈希环：
 
@@ -365,7 +365,7 @@ pub fn demoConsistentHashRingQuickStart() {
 
 ---
 
-## 九、 二进制多路复用流帧编解码与流控状态机（Yamux 风格，`stream_mux.cp`）
+## 九、 二进制多路复用流帧编解码与流控状态机（Yamux 风格，`streamMux.cp`）
 
 面向高性能 RPC、跨节点 Agent 通信与单 TCP 连接多路复用的 100% 纯 CP、零堆分配 12 字节大端帧编解码与信用窗口流控引擎：
 
@@ -421,7 +421,7 @@ pub fn demoStreamMuxQuickStart()! {
 
 ---
 
-## 十、 零分配 P2C + Peak-EWMA 自适应负载均衡器与异常摘除引擎（`p2c_balancer.cp`）
+## 十、 零分配 P2C + Peak-EWMA 自适应负载均衡器与异常摘除引擎（`p2c.cp`）
 
 面向微服务网关、RPC 集群与多节点 LLM 推理后端的 Linkerd / Envoy 级 Power-of-Two-Choices (P2C) + Peak-EWMA 自适应负载均衡与被动异常摘除（Outlier Ejection）引擎，100% 纯 CP 零动态堆分配（固定 64 节点内联数组 `MAX_P2C_BACKENDS = 64`）：
 
@@ -462,7 +462,7 @@ pub fn demoP2cLoadBalancer() {
 
 ---
 
-## 十一、 零分配 RFC 9002 拥塞控制与 SRTT/PTO/Pacing 传输调度引擎（`congestion_ctrl.cp`）
+## 十一、 零分配 RFC 9002 拥塞控制与 SRTT/PTO/Pacing 传输调度引擎（`congestion.cp`）
 
 面向 QUIC / HTTP/3、自定义 UDP 传输与高并发 AI Agent RPC 的 100% 纯 CP 零动态堆分配 RFC 9002 NewReno 拥塞控制、Jacobson/Karels RTT 估算与字节级 Pacing 速率调度引擎：
 
@@ -511,7 +511,7 @@ pub fn demoRfc9002CongestionCtrl() {
 
 ---
 
-## RFC 8305 Happy Eyeballs v2 双栈 IPv6/IPv4 连接竞速状态机 (`happy_eyeballs.cp`)
+## RFC 8305 Happy Eyeballs v2 双栈 IPv6/IPv4 连接竞速状态机 (`happyEye.cp`)
 
 面向现代双栈 TCP/QUIC 客户端的 100% 纯 CP 零动态堆分配 RFC 8305 Happy Eyeballs v2 竞速与回退调度状态机（固定容量 `HE_MAX_CANDIDATES = 32`）：
 
@@ -557,7 +557,7 @@ pub fn demoHappyEyeballs() {
 }
 ```
 
-## 自适应网络重试退避与全局防重试风暴预算门控 (`adaptive_retry.cp`)
+## 自适应网络重试退避与全局防重试风暴预算门控 (`retry.cp`)
 
 面向 Google SRE / Envoy / AWS Architecture 防级联雪崩模型的 100% 纯 CP 零动态堆分配自适应重试退避、服务端 `Retry-After` 夹紧与令牌桶式全局重试预算门控引擎：
 

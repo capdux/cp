@@ -10,13 +10,13 @@ export {
     WavAudio,
     WavFloatAudio,
     WavCodec,
-} from "./audio_wav.cp";
+} from "./audioWav.cp";
 
 export {
     SpeechSegment,
     EnergyVad,
     AudioDsp,
-} from "./audio_dsp.cp";
+} from "./audioDsp.cp";
 
 export {
     AudioFrameStats,
@@ -29,7 +29,7 @@ export {
     applyHannWindowF32,
     normalizePeakF32,
     resampleLinearF32,
-} from "./dsp_pipeline.cp";
+} from "./dspPipeline.cp";
 
 export {
     FLAC_MAGIC_SIZE,

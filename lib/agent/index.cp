@@ -57,7 +57,7 @@ export {
     ModelRoutePolicy,
     ModelEndpoint,
     ModelRouter,
-} from "./model_router.cp";
+} from "./modelRouter.cp";
 
 export {
     GuardAction,
@@ -85,7 +85,7 @@ export {
     ValidationReport,
     validateToolArgs,
     formatValidationHint,
-} from "./tool_schema.cp";
+} from "./toolSchema.cp";
 
 export {
     SamplerConfig,
@@ -159,7 +159,7 @@ export {
     SkillRegistryStats,
     skillTagHash,
     SkillRegistry,
-} from "./skill_registry.cp";
+} from "./skills.cp";
 
 export {
     LlmErrorClass,
@@ -170,7 +170,7 @@ export {
     classifyHttpStatus,
     parseRetryAfterMs,
     decideLlmRetry,
-} from "./retry_policy.cp";
+} from "./retry.cp";
 
 export {
     ToolCacheKey,
@@ -179,7 +179,7 @@ export {
     ToolCacheEntry,
     ToolCacheStats,
     ToolCallCache,
-} from "./tool_cache.cp";
+} from "./toolCache.cp";
 
 export {
     QuotaRejectReason,
@@ -188,14 +188,14 @@ export {
     TenantQuotaStats,
     TenantQuotaSlot,
     LlmQuotaLimiter,
-} from "./quota_limiter.cp";
+} from "./quota.cp";
 
 export {
     ToolStreamState,
     ToolStreamAssembler,
     closePartialJson,
     peekStreamingStringField,
-} from "./tool_stream.cp";
+} from "./toolStream.cp";
 
 export {
     WorkflowNodeKind,
@@ -205,7 +205,7 @@ export {
     WorkflowStepResult,
     ReachabilityReport,
     AgentWorkflowFsm,
-} from "./workflow_fsm.cp";
+} from "./workflow.cp";
 
 export {
     ModelRateCard,
@@ -215,7 +215,7 @@ export {
     computeUsageCostMicroUsd,
     computeCacheSavingsMicroUsd,
     CostLedger,
-} from "./cost_ledger.cp";
+} from "./costLedger.cp";
 
 export {
     FailureCategory,
@@ -233,7 +233,7 @@ export {
     ParallelPlanStats,
     callsConflict,
     planToolWaves,
-} from "./tool_parallel.cp";
+} from "./toolPar.cp";
 
 export {
     PromptBlockKind,
@@ -242,14 +242,14 @@ export {
     CachePlanResult,
     planPromptCacheBreakpoints,
     computePrefixMatchTokens,
-} from "./prompt_cache_plan.cp";
+} from "./cachePlan.cp";
 
 export {
     ContextSectionRequest,
     ContextSectionAlloc,
     ContextBudgetSummary,
     allocateContextBudget,
-} from "./context_budget.cp";
+} from "./ctxBudget.cp";
 
 export {
     AgentHealthState,
@@ -274,7 +274,7 @@ export {
     WorkerQueue,
     WorkStealStats,
     WorkStealPool,
-} from "./work_steal.cp";
+} from "./workSteal.cp";
 
 export {
     HandoffStatus,
@@ -297,7 +297,7 @@ export {
     TurnStepEntry,
     TurnOutcome,
     AgentTurnRunner,
-} from "./turn_runner.cp";
+} from "./turnRunner.cp";
 
 export {
     EvalGateThresholds,
@@ -307,7 +307,7 @@ export {
     evaluateAgentGate,
     compareWithBaselineGate,
     renderEvalGateSummary,
-} from "./eval_gate.cp";
+} from "./evalGate.cp";
 
 export {
     LlmProviderWire,
@@ -317,7 +317,7 @@ export {
     parseOpenAiSseData,
     parseAnthropicSseData,
     LlmDeltaParser,
-} from "./llm_stream.cp";
+} from "./llmStream.cp";
 
 export {
     computeReplayArgsHash,
@@ -338,7 +338,7 @@ export {
     ToolRouteHit,
     ToolRouteReport,
     SemanticToolRouter,
-} from "./tool_router.cp";
+} from "./toolRouter.cp";
 
 export {
     MODEL_CAP_TOOLS,
@@ -350,7 +350,7 @@ export {
     ModelCostEstimate,
     estimateCallCost,
     ModelCatalog,
-} from "./model_catalog.cp";
+} from "./models.cp";
 
 export {
     AGENT_SNAPSHOT_MAGIC,
@@ -360,7 +360,7 @@ export {
     encodedSnapshotSize,
     encodeSessionSnapshot,
     decodeSessionSnapshot,
-} from "./session_codec.cp";
+} from "./sessionCodec.cp";
 
 export {
     PLAN_NO_PARENT,
@@ -368,7 +368,7 @@ export {
     PlanStepNode,
     PlanProgress,
     PlanExecutor,
-} from "./plan_executor.cp";
+} from "./planner.cp";
 
 export {
     THOUGHT_NO_PARENT,
@@ -376,7 +376,7 @@ export {
     ThoughtNode,
     ThoughtTreeStats,
     ThoughtTree,
-} from "./thought_tree.cp";
+} from "./thoughtTree.cp";
 
 export {
     MAX_SANDBOX_RULES,
@@ -391,7 +391,7 @@ export {
     SandboxPolicyDecision,
     SandboxAuditStats,
     ToolSandboxPolicy,
-} from "./sandbox_policy.cp";
+} from "./sandboxPol.cp";
 
 export {
     SUPERVISOR_MAX_CHILDREN,
@@ -406,7 +406,7 @@ export {
     SupervisorDecision,
     SupervisorStats,
     AgentSupervisorTree,
-} from "./supervisor_tree.cp";
+} from "./supervisor.cp";
 
 export {
     TOOL_BATCH_MAX_CALLS,
@@ -415,7 +415,7 @@ export {
     ToolBatchScheduleEntry,
     ToolBatchPlanSummary,
     planToolCallBatch,
-} from "./tool_batcher.cp";
+} from "./toolBatch.cp";
 
 export {
     PROVIDER_POOL_MAX_ENDPOINTS,
@@ -425,7 +425,7 @@ export {
     ProviderLeaseResult,
     ProviderPoolStats,
     LlmProviderPool,
-} from "./provider_pool.cp";
+} from "./providers.cp";
 
 export {
     AbVerdictKind,
@@ -434,7 +434,7 @@ export {
     AbComparisonReport,
     computeWilsonInterval95,
     AgentAbEvaluator,
-} from "./ab_evaluator.cp";
+} from "./abEval.cp";
 
 export {
     DURABLE_JOURNAL_MAX_STEPS,
@@ -446,7 +446,7 @@ export {
     DurableStepDecision,
     DurableJournalStats,
     DurableExecutionJournal,
-} from "./durable_journal.cp";
+} from "./journal.cp";
 
 export {
     TOOL_CALL_MAX_SLOTS,
@@ -461,7 +461,7 @@ export {
     AssembledToolCall,
     ToolCallStreamReport,
     ToolCallAssembler,
-} from "./tool_call_assembler.cp";
+} from "./toolCall.cp";
 
 export {
     COMPACTOR_MAX_MESSAGES,
@@ -477,7 +477,7 @@ export {
     validateToolPairIntegrity,
     markOrphanToolMessages,
     planContextCompaction,
-} from "./context_compactor.cp";
+} from "./compactor.cp";
 
 export {
     BUDGET_TREE_MAX_NODES,
@@ -492,7 +492,7 @@ export {
     BudgetSpendResult,
     BudgetTreeStats,
     AgentBudgetTree,
-} from "./budget_tree.cp";
+} from "./budgetTree.cp";
 
 export {
     TOOL_GOV_MAX_TOOLS,
@@ -509,4 +509,4 @@ export {
     ToolGovToolSnapshot,
     ToolGovernorStats,
     AgentToolGovernor,
-} from "./tool_governor.cp";
+} from "./governor.cp";

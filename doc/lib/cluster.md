@@ -4,7 +4,7 @@
 
 `cap:cluster` 是 CP 语言官方内置的纯原生分布式集群协调与分片路由标准库，专为百万级 AI Agent 集群分片路由、SWIM Gossip 健康成员表与防脑裂选主租约打造。包含三大核心组件：
 
-1. **`ConsistentHashRing`**（`lib/cluster/hash_ring.cp`）：基于 FNV-1a 64 + SplitMix64 雪崩双阶段散列与有序虚拟节点环的 $O(\log(N \cdot V))$ 二分路由环，支持物理节点动态增删、最小键迁移、所有权安全深拷贝与顺时针物理节点去重副本选取 (`getReplicaNodes`)。
+1. **`ConsistentHashRing`**（`lib/cluster/hashRing.cp`）：基于 FNV-1a 64 + SplitMix64 雪崩双阶段散列与有序虚拟节点环的 $O(\log(N \cdot V))$ 二分路由环，支持物理节点动态增删、最小键迁移、所有权安全深拷贝与顺时针物理节点去重副本选取 (`getReplicaNodes`)。
 2. **`MembershipTable`**（`lib/cluster/membership.cp`）：基于 SWIM Incarnation CRDT 语义的确定性集群成员健康状态表，支持外部注入 `now_ms` 时钟驱动 (`tick`) 自动推进 `Alive -> Suspect -> Dead`，并严格遵循「高 `incarnation` 胜出，同 `incarnation` 按 `Dead > Suspect > Alive` 收敛」的防震荡合并法则。
 3. **`LeaderLease`**（`lib/cluster/lease.cp`）：支持确定性时钟与单调递增屏障令牌（`fencing_token`）的防脑裂选主租约协调器，通过 `validateToken(token)` 严格拦截旧主过时写入。
 
@@ -14,7 +14,7 @@
 
 | 文件路径 | 谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
-| `lib/cluster/hash_ring.cp` | `// Source: cp/lib/cluster/hash_ring.cp (Virtual-Node Consistent Hashing Ring)` | `ClusterErr`、`RingVNode`、`ConsistentHashRing` |
+| `lib/cluster/hashRing.cp` | `// Source: cp/lib/cluster/hashRing.cp (Virtual-Node Consistent Hashing Ring)` | `ClusterErr`、`RingVNode`、`ConsistentHashRing` |
 | `lib/cluster/membership.cp` | `// Source: cp/lib/cluster/membership.cp (SWIM-Style Gossip Membership & Incarnation CRDT)` | `MemberState`、`MemberInfo`、`MembershipTable` |
 | `lib/cluster/lease.cp` | `// Source: cp/lib/cluster/lease.cp (Monotonic Fencing-Token Leader Lease Coordinator)` | `LeaseInfo`、`LeaderLease` |
 | `lib/cluster/index.cp` | `// Source: cp/lib/cluster/index.cp (Unified Exports for cap:cluster)` | `cap:cluster` 与 `cap.cluster` 统一公开导出入口 |
@@ -23,7 +23,7 @@
 
 ## 二、 核心 API 详解
 
-### 1. 虚拟节点一致性哈希环（`hash_ring.cp`）
+### 1. 虚拟节点一致性哈希环（`hashRing.cp`）
 
 - **`ClusterErr`**：`OutOfMemory`、`InvalidParameter`、`DuplicateNode`、`NodeNotFound`
 - **`RingVNode`**：`hash: u64`、`node_id: string`

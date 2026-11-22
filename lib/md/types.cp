@@ -3,7 +3,7 @@
 // Core MD4C-compatible AST, Block, Span, Renderer VTable, Flags, Marks & Parser State
 
 const std = @import("std");
-import { BitSet256 } from "../col/bit_set.cp";
+import { BitSet256 } from "../col/bitSet.cp";
 
 pub type OFF = u32;
 pub type SZ = u32;

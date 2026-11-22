@@ -3,7 +3,7 @@
 // High-speed UTF-8 / UTF-16 / WTF-8 codecs & East-Asian / ANSI visible display width
 // Absorbed from bun/src/string/immutable/unicode.zig, wtf.zig, visible.zig & unicode/uucode/
 
-import { SimdScanner } from "./simd_scan.cp";
+import { SimdScanner } from "./simdScan.cp";
 const std = @import("std");
 
 pub const REPLACEMENT_CHAR: u32 = 0xFFFD;

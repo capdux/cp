@@ -6,14 +6,14 @@ export {
     CodecError,
     Base58,
     Base85,
-} from "./base58_85.cp";
+} from "./base5885.cp";
 
 export {
     Bech32Variant,
     Bech32Decoded,
     Bech32,
     Crockford32,
-} from "./bech32_crockford.cp";
+} from "./bech32Crockford.cp";
 
 // === Consolidated Radix/Text Encodings, Distributed IDs, Check-Digits & 1D Barcodes ===
 
@@ -344,7 +344,7 @@ export {
     gfInv,
     gfDiv,
     ReedSolomon,
-} from "./reed_solomon.cp";
+} from "./reedSolomon.cp";
 
 // --- dct ---
 export {

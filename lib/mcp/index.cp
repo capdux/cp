@@ -74,7 +74,7 @@ export {
     isStaticUriTemplate,
     matchUriTemplate,
     McpResourceRouter,
-} from "./resource_router.cp";
+} from "./resRouter.cp";
 
 export {
     isValidUnitWeight,
@@ -97,7 +97,7 @@ export {
     McpDispatchDecision,
     McpToolDispatcher,
     McpToolResultBuilder,
-} from "./tool_dispatch.cp";
+} from "./dispatch.cp";
 
 export {
     McpArgType,
@@ -107,7 +107,7 @@ export {
     McpArgValidationReport,
     validateMcpToolArgs,
     formatMcpArgErrorHint,
-} from "./arg_validator.cp";
+} from "./argValid.cp";
 
 export {
     MCP_CAP_TOOLS,
@@ -129,7 +129,7 @@ export {
     McpSessionNegotiator,
     McpSubscriptionSlot,
     McpResourceSubscriptionRegistry,
-} from "./capability_negotiator.cp";
+} from "./capNeg.cp";
 
 export {
     MCP_GATE_MAX_INFLIGHT,
@@ -140,7 +140,7 @@ export {
     McpInflightSlot,
     McpGateStats,
     McpInflightGate,
-} from "./inflight_gate.cp";
+} from "./inflight.cp";
 
 export {
     MCP_RSUB_MAX_SUBSCRIPTIONS,
@@ -159,7 +159,7 @@ export {
     McpResourceNotifyReport,
     McpResourceSubStats,
     McpResourceSubHub,
-} from "./resource_subscription.cp";
+} from "./resSub.cp";
 
 export {
     MCP_BATCH_MAX_ITEMS,
@@ -174,4 +174,4 @@ export {
     McpBatchResponseItem,
     McpBatchSummary,
     McpBatchDispatcher,
-} from "./batch_dispatcher.cp";
+} from "./batch.cp";

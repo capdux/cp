@@ -6,7 +6,7 @@
 
 - **可执行文件与系统容器**：Apple Mach-O / Fat Binary（`macho.cp`）、PCAPng 抓包容器（`pcapng.cp`）、VMware VMDK 稀疏镜像（`vmdk.cp`）
 - **分析列存与科学数据格式**：Unidata NetCDF CDF-1/2/5（`netcdf.cp`）、Apache Avro & OCF（`avro.cp`）、Apache Arrow IPC（`arrow.cp`）、Apache ORC（`orc.cp`）
-- **通用与嵌入式线协议序列化**：MessagePack（`msgpack.cp`）、CBOR & Diagnostic Notation（`cbor_diag.cp`）、MongoDB BSON 1.1（`bson.cp`）、UBJSON Draft 12（`ubjson.cp`）、Postcard + COBS（`postcard.cp`）
+- **通用与嵌入式线协议序列化**：MessagePack（`msgpack.cp`）、CBOR & Diagnostic Notation（`cborDiag.cp`）、MongoDB BSON 1.1（`bson.cp`）、UBJSON Draft 12（`ubjson.cp`）、Postcard + COBS（`postcard.cp`）
 - **诊断、覆盖率与日志格式**：JVM HPROF（`hprof.cp`）、Java Flight Recorder v2.0（`jfr.cp`）、LCOV `.info`（`lcov.cp`）、Redis AOF RESP（`aof.cp`）
 
 ## 2. 模块清单与核心符号
@@ -21,7 +21,7 @@
 | `arrow.cp` | Apache Arrow IPC Stream / File 与 FlatBuffers 元数据解析 | `ARROW_MAGIC`, `ArrowMessageMeta`, `ArrowFooterInfo`, `ArrowMessageIter`, `isArrowFile`, `isArrowStream`, `parseArrowFileFooter` |
 | `orc.cp` | Apache ORC 列存 PostScript 与压缩块迭代 | `ORC_MAGIC`, `OrcCompression`, `OrcPostScript`, `OrcLayout`, `parseOrcPostScript`, `parseOrcLayout`, `OrcBlockIter` |
 | `msgpack.cp` | MessagePack 二进制编解码器 | `MSGPACK_DEFAULT_MAX_DEPTH`, `MsgPackError`, `MsgValue`, `MsgPackWriter`, `MsgPackReader`, `msgpackEncode`, `msgpackDecode`, `msgpackDecodeWithMaxDepth` |
-| `cbor_diag.cp` | RFC 8949 CBOR 编解码与规范诊断表示法 | `CBOR_DIAG_MAX_DEPTH`, `CborError`, `CborValue`, `CborEntry`, `CborTag`, `cborDiagEncode`, `cborDiagDecode`, `cborDiagEncodeCanonical`, `cborDiagToDiag` |
+| `cborDiag.cp` | RFC 8949 CBOR 编解码与规范诊断表示法 | `CBOR_DIAG_MAX_DEPTH`, `CborError`, `CborValue`, `CborEntry`, `CborTag`, `cborDiagEncode`, `cborDiagDecode`, `cborDiagEncodeCanonical`, `cborDiagToDiag` |
 | `bson.cp` | MongoDB BSON 1.1 文档与 12 字节 ObjectId 编解码 | `BSON_MAX_DEPTH`, `ObjectId`, `BsonValue`, `BsonField`, `encodeDocument`, `decodeDocument`, `decodeDocumentWithMaxDepth`, `getField` |
 | `ubjson.cp` | UBJSON Draft 12 零分配二进制编解码器 | `MAX_UBJ_DEPTH`, `UbjsonContainerHeader`, `UbjsonWriter`, `UbjsonReader` |
 | `postcard.cp` | Postcard 嵌入式线协议、ZigZag 变长整数与 COBS 帧编解码 | `zigzagEncodeI32`/`I64`, `PostcardWriter`, `PostcardReader`, `cobsEncode`, `cobsEncodeFramed`, `cobsDecode` |
@@ -91,7 +91,7 @@ pub fn demoBinfmt() {
 | `lib/binfmt/segy.cp` | SEG-Y Rev 1/2 地震勘探二进制格式 | `parseSegyBinaryHeader`, `parseSegyTraceHeader`, `SegyTraceIter` |
 | `lib/binfmt/shp.cp` | ESRI Shapefile `.shp` 二进制矢量 | `isShapefile`, `parseShpHeader`, `ShpRecordIter` |
 | `lib/binfmt/ts.cp` | ISO/IEC 13818-1 MPEG-TS 传输流 | `isMpegTs`, `MpegTsPacketIter`, `parseTsPacket` |
-| `lib/binfmt/varint_leb128.cp` | LEB128 & ZigZag 变长整数编解码 | `encodeUleb128`, `decodeUleb128`, `encodeSleb128`, `decodeSleb128`, `zigzagEncode64`, `zigzagDecode64` |
+| `lib/binfmt/varintLeb128.cp` | LEB128 & ZigZag 变长整数编解码 | `encodeUleb128`, `decodeUleb128`, `encodeSleb128`, `decodeSleb128`, `zigzagEncode64`, `zigzagDecode64` |
 | `lib/binfmt/bitstream.cp` | LSB/MSB 比特流读写器与 Leb128 | `BitReader`, `BitWriter`, `BitOrder`, `Leb128`, `BitstreamUleb128Result` |
 
 ---

@@ -18,8 +18,8 @@ lib/shell/
 ├── env.cp           # 进程内环境变量表 (ShellEnv)、目录栈 (DirStack)、ShellOptions、AliasMap 与词展开引擎
 ├── arith.cp         # POSIX 整数算术求值器 $(( ... )) (四则/幂/位运算/比较/逻辑/三目/赋值/自增自减与环境读写)
 ├── parser.cp        # 复合 AST 解析器 (AstPool, Script, Pipeline, Command, if/elif/else/fi, for, while/until, (...), {...;})
-├── builtin_fs.cp    # 文件系统 Builtins (ls, cat, mkdir, rmdir, rm, cp, mv, touch, basename, dirname, mktemp)
-├── builtin_text.cp  # 文本与流处理 Builtins (seq, head, tail, wc, grep, yes, sort, uniq)
+├── builtinFs.cp    # 文件系统 Builtins (ls, cat, mkdir, rmdir, rm, cp, mv, touch, basename, dirname, mktemp)
+├── builtinText.cp  # 文本与流处理 Builtins (seq, head, tail, wc, grep, yes, sort, uniq)
 ├── builtin.cp       # 控制/环境 Builtins (echo, printf, pwd, cd, pushd, popd, dirs, env, export, unset, which, true, :, false, test/[, exit) 与统一调度器
 └── exec.cp          # 会话执行与混合管道引擎 (ShellSession, Executor, GlobWalker 集成, Subshell 隔离, PosixSpawn 外部进程管道)
 ```
@@ -106,7 +106,7 @@ fn demoMixedPipeline(): void {
 - **`lib/shell/envparse.cp`**（POSIX Shell 环境变量赋值解析）：`ShellEnvEntry`、`ShellEnvIter`、`getShellEnv`
 - **`lib/shell/quote.cp`**（POSIX Shell 引用转义与参数切分）：`needsQuoting`、`quotePosix`、`joinArgs`、`ShellArgIter`
 - **`lib/shell/brace.cp`**（Bash 风格花括号展开零分配迭代器）：`BraceExpandIter`
-- **`lib/shell/cond_expr.cp`**（吸收自 `/data/dev/bun/src/shell/states/CondExpr.cp`，零堆分配 Bash `[[ ... ]]` 条件表达式解析与求值器）：`MAX_COND_DEPTH`、`POSIX_S_*`、`CondExprError`、`CondOp`、`CondFileStat`、`CondStatFn`、`condToExitCode`、`CondExprEvaluator`（支持 `-e/-f/-d/-c/-L/-s/-r/-w/-x` 文件测试、`-z/-n/==/!=/</>` 字符串测试、`-eq/-ne/-lt/-le/-gt/-ge` 64 位整数比较、`&&`/`||`/`!`/`(...)` 逻辑组合与递归深度防护）
+- **`lib/shell/condExpr.cp`**（吸收自 `/data/dev/bun/src/shell/states/CondExpr.cp`，零堆分配 Bash `[[ ... ]]` 条件表达式解析与求值器）：`MAX_COND_DEPTH`、`POSIX_S_*`、`CondExprError`、`CondOp`、`CondFileStat`、`CondStatFn`、`condToExitCode`、`CondExprEvaluator`（支持 `-e/-f/-d/-c/-L/-s/-r/-w/-x` 文件测试、`-z/-n/==/!=/</>` 字符串测试、`-eq/-ne/-lt/-le/-gt/-ge` 64 位整数比较、`&&`/`||`/`!`/`(...)` 逻辑组合与递归深度防护）
 - **`lib/shell/echo.cp`**（吸收自 `/data/dev/bun/src/shell/builtin/echo.cp`，零堆分配 GNU/Bash `echo` 标志解析与反斜杠转义展开引擎）：`EchoError`、`EchoOptions`、`EchoEscapeResult`、`expandEchoEscapes`、`formatEchoArgs`（支持 `-n`/`-e`/`-E` 组合标志、`\\`/`\a`/`\b`/`\c`/`\e`/`\f`/`\n`/`\r`/`\t`/`\v`/`\0NNN`/`\xHH` 转义与 `\c` 提前截断）
 - **`lib/shell/trampoline.cp`**（吸收自 `/data/dev/bun/src/shell/Yield.cp`，零堆分配栈安全 Shell Trampoline & Continuation 调度内核）：`MAX_TRAMPOLINE_REENTRY`、`MAX_PIPELINE_STACK_DEPTH`、`DEFAULT_MAX_TRAMPOLINE_STEPS`、`TrampolineError`、`YieldKind`、`PipelinePhase`、`ShellYield`、`PipelineStack`、`TrampolineResult`、`ShellTrampoline`（支持非递归状态机步进、嵌套管道栈自顶向下 `drainPipelines` 排空、`io_writer_chunk` 续跑、RAII `~init()` 重入深度守卫与步数上限防护）
 
@@ -120,7 +120,7 @@ const res = tramp.run(MyCtx, &ctx, ShellYield.forNode(.pipeline, 1), myStepFn, m
 // res.final_yield, res.steps_executed, res.pipelines_drained, res.max_pipeline_depth
 ```
 
-- **`lib/shell/mkdir_opts.cp`**（吸收自 `/data/dev/bun/src/shell/builtin/mkdir.cp`，零堆分配 POSIX `mkdir` 选项解析与父目录规划器）：`DEFAULT_MKDIR_MODE` (`0o777`)、`MkdirParseError`、`parseOctalMode`、`MkdirOpts`（支持 `-p`/`--parents`、`-v`/`--verbose`、`-m`/`--mode` 组合短标志与 `--` 终结符）、`ParentDirIter`（零分配逐级父目录前缀迭代器）
+- **`lib/shell/mkdirOpts.cp`**（吸收自 `/data/dev/bun/src/shell/builtin/mkdir.cp`，零堆分配 POSIX `mkdir` 选项解析与父目录规划器）：`DEFAULT_MKDIR_MODE` (`0o777`)、`MkdirParseError`、`parseOctalMode`、`MkdirOpts`（支持 `-p`/`--parents`、`-v`/`--verbose`、`-m`/`--mode` 组合短标志与 `--` 终结符）、`ParentDirIter`（零分配逐级父目录前缀迭代器）
 
 ```typescript
 import { MkdirOpts, ParentDirIter } from "cap:shell";
@@ -140,7 +140,7 @@ let buf: [64]u8 = undefined;
 const out = formatEchoArgs(args[0..], buf[0..])?; // "hello\tworld!"
 ```
 
-### Bash `[[ ... ]]` 条件表达式求值示例（`cond_expr.cp`）
+### Bash `[[ ... ]]` 条件表达式求值示例（`condExpr.cp`）
 
 ```typescript
 import { CondExprEvaluator, CondFileStat, condToExitCode } from "cap:shell";
@@ -164,7 +164,7 @@ pub fn demoSeq(allocator: std.mem.Allocator): ! {
 }
 ```
 
-### POSIX `exit` 退出码解析与 `export` 环境变量声明编解码（`exit_export.cp`，吸收自 `/data/dev/bun/src/shell/builtin/{exit,export}.cp`）
+### POSIX `exit` 退出码解析与 `export` 环境变量声明编解码（`exitExport.cp`，吸收自 `/data/dev/bun/src/shell/builtin/{exit,export}.cp`）
 
 - 导出：`SHELL_EXIT_SUCCESS` (`0`)、`SHELL_EXIT_GENERAL_ERROR` (`1`)、`SHELL_EXIT_MISUSE` (`2`)、`SHELL_EXIT_NOT_EXECUTABLE` (`126`)、`SHELL_EXIT_NOT_FOUND` (`127`)、`SHELL_EXIT_SIGNAL_BASE` (`128`)、`ShellExitExportError`、`ExportEntry`、`isValidShellIdentifier`、`parseExitCodeStr`（逐位模 256 解析，支持任意大十进制与负整数永不溢出）、`parseExitArgs`、`exitCodeFromSignal`、`isSignalExitCode`、`parseExportArg`、`formatExportLine`。
 
@@ -179,7 +179,7 @@ const line = formatExportLine(buf[0..], entry.name, entry.value)?; // "APP_ENV=p
 * = line;
 ```
 
-### POSIX `cd` 目标解析、路径规范化与 `(cwd, prev_cwd)` 状态机（`cd_path.cp`，吸收自 `/data/dev/bun/src/shell/builtin/cd.cp`）
+### POSIX `cd` 目标解析、路径规范化与 `(cwd, prev_cwd)` 状态机（`cdPath.cp`，吸收自 `/data/dev/bun/src/shell/builtin/cd.cp`）
 
 - 导出：`SHELL_CD_MAX_PATH` (`1024`)、`SHELL_CD_MAX_SEGMENTS` (`64`)、`ShellCdError`、`CdTargetKind`（`Home` / `Previous` / `Path`）、`CdTarget`（`parseArgs`）、`normalizePosixPath`、`resolveCdTarget`、`formatCdError`、`ShellDirState`（`init` / `cwd` / `prevCwd` / `applyCd`）。
 
@@ -193,7 +193,7 @@ const args2: [1][]const u8 = ["-"];
 * = dir.applyCd(args2[0..], "/home/dev")?; // "/workspace/app"
 ```
 
-### POSIX `mv` 标志解析与多源目标路径规划器（`mv_opts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/mv.cp`）
+### POSIX `mv` 标志解析与多源目标路径规划器（`mvOpts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/mv.cp`）
 
 - 导出：`SHELL_MV_MAX_SOURCES` (`64`)、`ShellMvError`、`MvOverwritePolicy`（`Force` / `Interactive` / `NoClobber`）、`MvOpts`（`forceOverwrite` / `interactiveMode` / `noOverwrite` / `applyShortFlag`）、`MvPlan`（`parse` / `requiresDirectoryTarget` / `resolveDestPath` / `formatVerboseLine`）。
 - 遵循 POSIX/Bun 互斥覆盖策略规则：`-f`、`-i`、`-n` 后出现者覆盖先出现者；支持合并短标志（如 `-fvn`）与 `--` 选项终止哨兵（允许移动 `-` 开头的畸形文件名）；当源数量大于 1 且目标非目录时确定性返回 `TargetMustBeDirectory`。
@@ -230,24 +230,24 @@ const n = plan.resolveDestPath(0, true, dst[0..])?; // "dist/a.cp"
 5. **重定向、管道、工作目录与流式按行读取（吸收自 `/data/dev/bun/docs/runtime/shell.mdx` 与 `/data/dev/bun/docs/guides/runtime/shell.mdx`）**：
    - 完整支持标准文件描述符重定向（`<`、`>`/`1>`、`2>`、`&>`、`>>`/`2>>`/`&>>`、`1>&2`、`2>&1`）及内存缓冲/流对象互连，无需落地临时文件；
    - 工作目录切换支持单命令局部 `.cwd(dir)` 覆盖与会话级 `ShellDirState`（`~` / `~/sub` 家目录展开、`-` 与 `OLDPWD` 往返切换及词法规范化），避免 `process.chdir()` 污染多线程进程全局状态；大输出命令推荐逐行流式消费（对应 Bun `.lines()`）并显式检查 `exit_code`。
-6. **POSIX `touch` 选项解析与时间戳校验（`lib/shell/touch_opts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/touch.cp`）**：
+6. **POSIX `touch` 选项解析与时间戳校验（`lib/shell/touchOpts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/touch.cp`）**：
    - 零堆分配支持 `-a`、`-m`、`-c`/`--no-create`、`-h`/`--no-dereference`、`-d`/`--date`、`-r`/`--reference`、`-t [[CC]YY]MMDDhhmm[.ss]`、`--time=access|atime|use|modify|mtime`、短选项聚合（如 `-acm`）与 `--` 终止符；
    - `TouchTimestamp.parse()` 遵循 POSIX 两位年份窗规则（`69..99 => 1969..1999`，`00..68 => 2000..2068`）、闰年 2 月天数校验与闰秒 `60` 支持；互斥时间源（`-d`/`-r`/`-t` 混用）自动抛出 `ShellTouchError.ConflictingTimeSource`。
-7. **POSIX `cp` 选项解析、符号链接策略与自拷贝环路防线（`lib/shell/cp_opts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/cp.cp`）**：
+7. **POSIX `cp` 选项解析、符号链接策略与自拷贝环路防线（`lib/shell/cpOpts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/cp.cp`）**：
    - 零堆分配支持 `-r`/`-R`/`--recursive`、`-f`/`-i`/`-n`（后出现覆盖前者）、`-p`/`--preserve`、`-v`/`--verbose`、`-a`/`--archive`（等价 `-RPp`）与 `-H`/`-L`/`-P` 符号链接解析策略；
    - `CpPlan.resolveTargetFor()` 强制校验目录源必须开启递归标志（否则返回 `OmittingDirectory`）、多源或尾斜杠目标必须为目录（`DestinationMustBeDir`），并自动阻断自拷贝及目录递归拷贝至自身子目录（`CannotCopyIntoSelf`）。
-8. **POSIX `rm` 选项解析与根目录/`.` 防误删守卫（`lib/shell/rm_opts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/rm.cp` & `/data/dev/bun/docs/runtime/shell.mdx`）**：
+8. **POSIX `rm` 选项解析与根目录/`.` 防误删守卫（`lib/shell/rmOpts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/rm.cp` & `/data/dev/bun/docs/runtime/shell.mdx`）**：
    - 零堆分配支持 `-f`/`--force`、`-r`/`-R`/`--recursive`（自动隐含 `-d`）、`-d`/`--dir`、`-v`/`--verbose`、`-i`/`-I`/`--interactive=never|once|always`、`--preserve-root`/`--no-preserve-root`、短标志聚合（如 `-rfv`）与 `--` 操作数终止哨兵（支持删除 `-weird` 开头文件名）；
    - **安全删除防线**：默认启用 `preserve_root = true`，`isRmRootPath(cwd, target)` 结合当前工作目录词法规范化折叠 `..` 后拦截 `/` 及 Windows 驱动器根 `C:/`（返回 `RefusingToRemoveRoot`）；`isRmDotOrDotDotTarget()` 严格拦截 `.` / `..` 尾段（返回 `RefusingToRemoveDotOrDotDot`）；`rm -f` 无操作数时按 POSIX 约定静默成功。
-9. **POSIX/GNU `cat` 选项解析与流式行格式化器（`lib/shell/cat_opts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/cat.cp` & `/data/dev/bun/docs/runtime/shell.mdx`）**：
+9. **POSIX/GNU `cat` 选项解析与流式行格式化器（`lib/shell/catOpts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/cat.cp` & `/data/dev/bun/docs/runtime/shell.mdx`）**：
    - 零堆分配支持 `-b`/`--number-nonblank`、`-n`/`--number`（`-b` 优先覆盖 `-n`）、`-s`/`--squeeze-blank`、`-E`/`--show-ends`、`-T`/`--show-tabs`、`-v`/`--show-nonprinting`、`-e`（`-vE`）、`-t`（`-vT`）、`-A`/`--show-all`（`-vET`）、`-u`、`--` 终止哨兵与 `-` 标准输入操作数（无操作数默认读取 stdin）；同时提供 `CatPlan.parseWithMode(args, true)` 对齐 Bun 当前严格兼容模式；
    - `CatLineFormatter` 为有状态流式格式化器，可在管道或分块读取（如 `cat < response | wc -c` 跨 chunk 场景）中保持连续行号与连续空行压缩状态，无内容改写选项时自动走零变换快速拷贝路径。
-10. **POSIX/GNU `ls` 选项解析、权限/尺寸格式化与原地稳定排序器（`lib/shell/ls_opts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/ls.cp` & `/data/dev/bun/docs/runtime/shell.mdx`）**：
+10. **POSIX/GNU `ls` 选项解析、权限/尺寸格式化与原地稳定排序器（`lib/shell/lsOpts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/ls.cp` & `/data/dev/bun/docs/runtime/shell.mdx`）**：
     - 零堆分配支持 `-a`/`-A`/`-B`/`-d`/`-f`/`-F`/`-h`/`-l`/`-1`/`-p`/`-r`/`-R`/`-S`/`-t`/`-U` 短标志聚合、`--all`/`--almost-all`/`--ignore-backups`/`--group-directories-first` 等长选项与 `--` 终止符（无路径操作数默认列出 `"."`）；
     - `formatLsMode` 支持全部 7 类文件首字符与 setuid/setgid/sticky 特殊权限位；`formatLsHumanSize` 纯整数实现 `K`/`M`/`G`/`T`/`P` 尺寸格式化；`sortLsEntries` 原地稳定排序支持目录优先分组、大小/修改时间/名称排序及 `-r` 反转。
-11. **跨平台 `which` 路径扫描器与退出码评估（`lib/shell/which_plan.cp`，吸收自 `/data/dev/bun/src/shell/builtin/which.cp` & `/data/dev/bun/docs/runtime/shell.mdx`）**：
+11. **跨平台 `which` 路径扫描器与退出码评估（`lib/shell/which.cp`，吸收自 `/data/dev/bun/src/shell/builtin/which.cp` & `/data/dev/bun/docs/runtime/shell.mdx`）**：
     - 零堆分配提供 `PathEnvIter`（POSIX `:` / Windows `;` 分隔，自动将空段规范化为当前目录 `.`）、`WhichPlan`（支持 `-a`/`-s`/`--` 与多命令顺序解析）、`resolveWhichSingle`（含路径分隔符命令跳过 `PATH` 直接相对 `cwd` 解析）及 `evaluateWhichExitCode`（空参数或任一命令未命中均返回退出码 `1`，全部命中返回 `0`）。
-12. **Shell 管道拓扑规划器与执行状态机（`lib/shell/pipeline_plan.cp`，吸收自 `/data/dev/bun/src/shell/states/Pipeline.cp` & `/data/dev/bun/docs/runtime/shell.mdx`）**：
+12. **Shell 管道拓扑规划器与执行状态机（`lib/shell/pipePlan.cp`，吸收自 `/data/dev/bun/src/shell/states/Pipeline.cp` & `/data/dev/bun/docs/runtime/shell.mdx`）**：
     - **零堆分配 `N` 阶段 `N-1` 管道布线**：自动跳过管道中的纯赋值项（`PipeStageKind.Assigns`），首阶段继承 `stdin`、末阶段继承 `stdout`、中间阶段按 `pipe[i-1]` 读 / `pipe[i]` 写串联；
     - **生命周期与防 FD 泄漏**：严格遵循 `StartingCmds -> Pending -> Done` 状态机，支持任意乱序子阶段完成（`onStageDone`），并在中途子进程创建失败时通过 `computeAbortCleanup(failed_stage_idx)` 计算精确的未移交管道读/写端清理区间；
     - **退出码策略与管道取反（参考 `/data/dev/bun/docs/runtime/shell.mdx`）**：默认 POSIX `PipeExitPolicy.LastStage` 取最后阶段退出码，`PipeExitPolicy.Pipefail` 取最右侧非零退出码，配合 `negated = true`（`! cmd1 | cmd2`）实现 `0 <-> 1` 逻辑取反；配合上层 `.nothrow()` 可在不抛出异常的前提下显式检查 `final_exit_code`。
@@ -304,7 +304,7 @@ const done = pp.onStageDone(1, 2)?; // grep 退出码 2 -> Pipefail 汇总为 2
 * = done;
 ```
 
-### POSIX / Bun Shell `yes` 高速 8KiB 块倍增生成器与协同让出状态机（`yes_stream.cp`）
+### POSIX / Bun Shell `yes` 高速 8KiB 块倍增生成器与协同让出状态机（`yesStream.cp`）
 
 - 吸收自 `/data/dev/bun/src/shell/builtin/yes.cp` 与 `/data/dev/bun/docs/runtime/shell.mdx`（跨平台内建 `yes` 命令）；
 - 导出：`YES_BUFSIZ` (`8192`)、`YES_HALF_BUFSIZ` (`4096`)、`YES_CHUNKS_PER_TICK` (`4`)、`ShellYesError`、`YesState`、`YesTickAction`、`YesLayout`、`computeYesLineLen`、`computeYesLayout`、`fillYesChunk`、`YesStreamState`；
@@ -328,7 +328,7 @@ while (ys.nextStep() == YesTickAction.WriteChunk) {
 * = ys.onWriteError(true); // EPIPE -> exit_code == 0
 ```
 
-### POSIX / Bun Shell `if / elif / else` 多分支控制流状态机（`if_state.cp`）
+### POSIX / Bun Shell `if / elif / else` 多分支控制流状态机（`ifState.cp`）
 
 - 吸收自 `/data/dev/bun/src/shell/states/If.cp` 与 `/data/dev/bun/docs/runtime/shell.mdx`；
 - 导出：`SHELL_IF_MAX_STMTS` (`32`)、`SHELL_IF_MAX_ELSE_PARTS` (`16`)、`ShellIfError`、`IfBranchPhase`（`Idle`/`Cond`/`Then`/`ElifCond`/`ElseBranch`/`Done`）、`IfStepKind`（`RunStmt`/`Completed`）、`IfStepResult`、`ShellIfStateMachine`；
@@ -356,7 +356,7 @@ const s3 = sm.nextStep()?; // Completed(exit_code == 42)
 * = s3;
 ```
 
-### POSIX / Bun Shell `&&` / `||` 短路二元逻辑链状态机（`binary_state.cp`）
+### POSIX / Bun Shell `&&` / `||` 短路二元逻辑链状态机（`binaryState.cp`）
 
 - 吸收自 `/data/dev/bun/src/shell/states/Binary.cp` 与 `/data/dev/bun/docs/runtime/shell.mdx`；
 - 导出：`SHELL_BINARY_MAX_TERMS` (`32`)、`ShellBinaryError`、`BinaryLogicOp`（`None`/`And`/`Or`）、`BinaryStepKind`（`RunTerm`/`Completed`）、`BinaryTerm`、`BinaryStepResult`、`shouldShortCircuitBinary`、`ShellBinaryStateMachine`；
@@ -391,7 +391,7 @@ const done = bm.nextStep()?; // Completed(exit_code == 0)
 * = done;
 ```
 
-### POSIX / Bun Shell 环境变量赋值展开与作用域提交状态机（`assigns_state.cp`）
+### POSIX / Bun Shell 环境变量赋值展开与作用域提交状态机（`assigns.cp`）
 
 - 吸收自 `/data/dev/bun/src/shell/states/Assigns.cp` 与 `/data/dev/bun/docs/runtime/shell.mdx`；
 - 导出：`SHELL_ASSIGNS_MAX_ITEMS` (`16`)、`SHELL_ASSIGN_MAX_LABEL_LEN` (`64`)、`SHELL_ASSIGN_MAX_VALUE_LEN` (`256`)、`ShellAssignsError`、`AssignScopeCtx`（`Cmd`/`Shell`/`Exported`）、`AssignStepKind`（`ExpandValue`/`Completed`/`Failed`）、`AssignStepResult`、`CommittedAssign`、`isValidAssignLabel`、`canSkipPipelineAssigns`、`joinExpandedWords`、`ShellAssignsStateMachine`；
@@ -421,7 +421,7 @@ const done = am.nextStep()?; // Completed(exit_code == 0), FLAGS == "--fast --st
 * = done;
 ```
 
-### POSIX / Bun Shell 顶层脚本与语句序列状态机（`script_state.cp`）
+### POSIX / Bun Shell 顶层脚本与语句序列状态机（`scriptState.cp`）
 
 - 吸收自 `/data/dev/bun/src/shell/states/Script.cp`、`Stmt.cp` 与 `/data/dev/bun/docs/runtime/shell.mdx`；
 - 导出：`SHELL_SCRIPT_MAX_EXPRS` (`64`)、`ShellScriptError`、`ScriptHostKind`（`TopLevel`/`Subshell`/`CommandSubstitution`）、`ShellExprKind`（8 种表达式）、`ScriptStepKind`（`RunExpr`/`Completed`/`AbortedOnError`）、`ScriptExprItem`、`ScriptStepResult`、`scriptPropagatesEnvToParent`、`ShellScriptStateMachine`；

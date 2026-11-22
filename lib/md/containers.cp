@@ -5,7 +5,7 @@
 const std = @import("std");
 import { isListBullet } from "./autolinks.cp";
 import { processLeafBlock } from "./inlines.cp";
-import { enterBlock, leaveBlock, processCodeBlock, processHtmlBlock, processTableBlock } from "./render_blocks.cp";
+import { enterBlock, leaveBlock, processCodeBlock, processHtmlBlock, processTableBlock } from "./renderBlocks.cp";
 import {
     BLOCK_CONTAINER_CLOSER,
     BLOCK_CONTAINER_OPENER,

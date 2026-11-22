@@ -4,4 +4,4 @@ pub import {
     AltSvcEntry,
     AltSvcHeader,
     AltSvcCache,
-} from "./alt_svc.cp";
+} from "./altSvc.cp";

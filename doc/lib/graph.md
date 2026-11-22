@@ -13,8 +13,8 @@
 | 文件路径 | 谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
 | `lib/graph/graph.cp` | `// Source: cp/lib/graph/graph.cp (Weighted Directed/Undirected Adjacency Graph)` | `GraphError`、`GraphEdge`、`Graph` |
-| `lib/graph/directed_graph.cp` | `// Source: cp/lib/graph/directed_graph.cp (Indexed Weighted Directed Graph & Adjacency List)` | `WeightedEdge`、`DirectedGraph` |
-| `lib/graph/dag_algorithms.cp` | `// Source: cp/lib/graph/dag_algorithms.cp (DAG Topological Sort, Cycle Detection, Tarjan SCC, Shortest Paths)` | `topologicalSort`、`findCycle`、`reachableFrom`、`transitiveClosure`、`tarjanScc`、`dijkstra`、`bellmanFord`、`reconstructPath` |
+| `lib/graph/directedGraph.cp` | `// Source: cp/lib/graph/directedGraph.cp (Indexed Weighted Directed Graph & Adjacency List)` | `WeightedEdge`、`DirectedGraph` |
+| `lib/graph/dagAlgorithms.cp` | `// Source: cp/lib/graph/dagAlgorithms.cp (DAG Topological Sort, Cycle Detection, Tarjan SCC, Shortest Paths)` | `topologicalSort`、`findCycle`、`reachableFrom`、`transitiveClosure`、`tarjanScc`、`dijkstra`、`bellmanFord`、`reconstructPath` |
 | `lib/graph/algorithms.cp` | `// Source: cp/lib/graph/algorithms.cp (Dijkstra, Tarjan SCC, Topological Sort, Kruskal MST & PageRank)` | `ShortestPathResult`、`SccResult`、`MstEdge`、`MstResult`、`PageRankEntry`、`GraphAlgo` |
 | `lib/graph/dijkstra.cp` | `// Origin: Pure-CP Stdlib (Zero-Alloc CSR Shortest Paths)` | `WeightedCsrGraph`、`csrDijkstra`、`reconstructCsrPath`、`csrBellmanFord`、`floydWarshall`、`reconstructFloydPath` |
 | `lib/graph/mst.cp` | `// Origin: Pure-CP Stdlib (Zero-Alloc Kruskal/Prim MST & DisjointSet)` | `MstWeightedEdge`、`PrimEdge`、`DenseMstResult`、`DisjointSet`、`kruskalMst`、`maxSpanningTree`、`primDenseMst`、`isValidSpanningTree` |
@@ -32,7 +32,7 @@
 
 ## 二、 核心 API 详解
 
-### 1. 错误集与稠密索引有向图（`graph.cp` / `directed_graph.cp`）
+### 1. 错误集与稠密索引有向图（`graph.cp` / `directedGraph.cp`）
 
 - **`GraphError`**：`NodeNotFound`、`InvalidVertex`、`NegativeWeight`、`CycleDetected`、`Disconnected`、`DuplicateEdge`、`OutOfMemory`
 - **`WeightedEdge`**：`to: usize`、`weight: f64`
@@ -45,14 +45,14 @@
   - `vertexCount(): usize`、`edgeCount(): usize`
   - `transpose(alloc): DirectedGraph!`：构造所有边反转后的反向图
 
-### 2. DAG 拓扑排序、环检测与可达性（`dag_algorithms.cp`）
+### 2. DAG 拓扑排序、环检测与可达性（`dagAlgorithms.cp`）
 
 - **`topologicalSort(alloc, graph): ([]usize)!`**：Kahn 算法；若存在环路返回 `GraphError.CycleDetected`。
 - **`findCycle(alloc, graph): ([]usize)?!`**：非递归三色 DFS 环检测；若存在环路返回闭合顶点序列 `[v0, ..., v0]`，无环返回 `null`。
 - **`reachableFrom(alloc, graph, start): ([]usize)!`**：BFS 计算从 `start` 出发的可达顶点集合。
 - **`transitiveClosure(alloc, graph): ReachabilityMatrix!`**：计算全图传递闭包；提供 `canReach(u, v): bool` 与 `deinit(*_)`。
 
-### 3. Tarjan 强连通分量与最短路径（`dag_algorithms.cp`）
+### 3. Tarjan 强连通分量与最短路径（`dagAlgorithms.cp`）
 
 - **`tarjanScc(alloc, graph): TarjanSccResult!`**：显式栈迭代式 Tarjan 算法（$O(V+E)$，免疫深图栈溢出），按凝聚图逆拓扑序返回 SCC 分组；提供 `count(): usize` 与 `deinit(*_)`。
 - **`dijkstra(alloc, graph, source): PathResult!`**：二叉最小堆单源最短路径，遇到负权或 NaN 边返回 `GraphError.NegativeWeight`。
@@ -66,7 +66,7 @@
 
 ### 5. 零堆分配图论扩展算法集（已收敛至 `cap:graph`）
 
-- **CSR 最短路径（`dijkstra.cp`）**：`WeightedCsrGraph`、`DijkstraWorkspace`、`csrDijkstra`、`reconstructCsrPath`、`csrBellmanFord`、`floydWarshall`、`reconstructFloydPath`（为避免与 `dag_algorithms.cp` 的 `DirectedGraph` 版本重名，CSR 版本使用 `csr*` 别名）。
+- **CSR 最短路径（`dijkstra.cp`）**：`WeightedCsrGraph`、`DijkstraWorkspace`、`csrDijkstra`、`reconstructCsrPath`、`csrBellmanFord`、`floydWarshall`、`reconstructFloydPath`（为避免与 `dagAlgorithms.cp` 的 `DirectedGraph` 版本重名，CSR 版本使用 `csr*` 别名）。
 - **最小/最大生成树与并查集（`mst.cp`）**：`MstWeightedEdge`、`PrimEdge`、`DenseMstResult`、`DisjointSet`、`kruskalMst`、`maxSpanningTree`、`primDenseMst`、`isValidSpanningTree`。
 - **网络流与最小费用最大流（`maxflow.cp`）**：`FlowGraph`、`FlowEdge`、`dinicMaxFlow`、`minCutReachable`、`minCostMaxFlow`。
 - **CSR 强连通分量与 2-SAT（`scc.cp`）**：`CsrGraph`、`TarjanWorkspace`、`TwoSatClause`、`csrTarjanScc`、`topoSort`、`isDag`、`dagLongestPath`、`solve2Sat`。
@@ -123,7 +123,7 @@ pub fn demoDagAndShortestPath(alloc: std.mem.Allocator): !void {
 
 ---
 
-## 四、 零堆分配 DAG 拓扑波次规划与关键路径分析器（`workflow_dag.cp`）
+## 四、 零堆分配 DAG 拓扑波次规划与关键路径分析器（`workflowDag.cp`）
 
 面向构建系统、数据流水线与多智能体任务编排的 100% 纯 CP 零堆分配 DAG 规划原语：
 
@@ -172,7 +172,7 @@ pub fn demoWorkflowDagCpm() {
 
 ---
 
-## 五、 零分配 Dinic 最大流 / 最小割与二分图最大匹配求解器（`max_flow.cp`）
+## 五、 零分配 Dinic 最大流 / 最小割与二分图最大匹配求解器（`maxFlow.cp`）
 
 面向网络带宽分配、多 Agent 任务-算力二分图最优匹配与最小割图划分的 100% 纯 CP 零动态堆分配 Dinic 最大流/最小割内核（带当前弧优化 Current-Arc Optimization）：
 
@@ -222,7 +222,7 @@ pub fn demoDinicMaxFlowAndMatching() {
 
 ---
 
-## 六、 零分配迭代式 Tarjan 强连通分量（SCC）与缩点 DAG 拓扑求解器（`scc_condensation.cp`）
+## 六、 零分配迭代式 Tarjan 强连通分量（SCC）与缩点 DAG 拓扑求解器（`sccDag.cp`）
 
 面向模块打包器循环依赖分析、包管理器环路折叠、编译器调用图内联与死锁检测的 100% 纯 CP 零动态堆分配、纯迭代式（零递归防栈溢出）Tarjan SCC 与缩点 DAG 求解器：
 
@@ -260,7 +260,7 @@ pub fn demoIterativeTarjanScc() {
 
 ---
 
-## 七、 零分配匈牙利（Kuhn-Munkres）最小代价与最大收益指派求解器（`hungarian_assign.cp`）
+## 七、 零分配匈牙利（Kuhn-Munkres）最小代价与最大收益指派求解器（`hungarianAssign.cp`）
 
 面向多智能体任务分配、资源调度、目标跟踪匹配（MOT）与物流派单的 100% 纯 CP 零动态堆分配 O(N³) 势函数增广路指派求解器：
 

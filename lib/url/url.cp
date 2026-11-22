@@ -2,7 +2,7 @@
 // ============================================================================
 // lib/url/url.cp — WHATWG URL Parser & Representation
 // ============================================================================
-import { URLSearchParams, QueryParam } from "./search_params";
+import { URLSearchParams, QueryParam } from "./searchParams";
 import { PercentEncoding } from "./percent";
 import {
     findSubstr,

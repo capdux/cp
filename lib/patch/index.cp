@@ -4,4 +4,4 @@
 
 export * from "./diff.cp";
 export * from "./myers.cp";
-export * from "./diff_format.cp";
+export * from "./diffFormat.cp";

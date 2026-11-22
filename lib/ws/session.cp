@@ -9,7 +9,7 @@ import { Mask } from "./mask";
 import { FrameHeader, FrameBuilder } from "./frame";
 import { WebSocketMessageKind, WebSocketMessage, WebSocketMessageAssembler } from "./assembler";
 import { CloseCodeValidator } from "./subprotocol";
-import { PerMessageDeflate } from "./permessage_deflate";
+import { PerMessageDeflate } from "./permessageDeflate";
 
 pub enum WsSessionState: u8 {
     Connecting = 0,

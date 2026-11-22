@@ -43,9 +43,9 @@
 | `lib/pack/zstd.cp` | RFC 8478 Zstandard 帧头解析（`ZstdFrameHeader`）、压缩上界与编解码接口 | `/data/dev/bun/src/zstd/zstd.cp` |
 | `lib/pack/brotli.cp` | RFC 7932 Brotli 模式枚举（`BrotliMode`）、窗口位数解析（`BrotliHeader`）与上界 | `/data/dev/bun/src/brotli/brotli.cp` |
 | `lib/pack/tar.cp` | POSIX.1-1988 USTAR 512 字节块编解码（`TarHeader`）与零拷贝读取器（`TarReader`） | `/data/dev/bun/src/libarchive/libarchive.cp` |
-| `lib/pack/tar_pax.cp` | POSIX.1-2001 PAX 扩展头（`'x'`）安全归档读写器（`PaxTarWriter` / `PaxTarReader`）与 `validateArchivePath` | `cp/lib/pack/tar_pax.cp` (POSIX.1-2001 PAX & USTAR) |
+| `lib/pack/tarPax.cp` | POSIX.1-2001 PAX 扩展头（`'x'`）安全归档读写器（`PaxTarWriter` / `PaxTarReader`）与 `validateArchivePath` | `cp/lib/pack/tarPax.cp` (POSIX.1-2001 PAX & USTAR) |
 | `lib/pack/zip.cp` | PKZIP Local Header / Central Directory / EOCD 反向扫描与零拷贝读取器（`ZipReader`） | `/data/dev/bun/src/libarchive/` |
-| `lib/pack/zip_writer.cp` | PKWARE APPNOTE 6.3.10 内存/流式 ZIP 归档写入器（`ZipWriter` / `ZipCompressionMethod`） | `cp/lib/pack/zip_writer.cp` (PKWARE APPNOTE 6.3.10) |
+| `lib/pack/zipWriter.cp` | PKWARE APPNOTE 6.3.10 内存/流式 ZIP 归档写入器（`ZipWriter` / `ZipCompressionMethod`） | `cp/lib/pack/zipWriter.cp` (PKWARE APPNOTE 6.3.10) |
 | `lib/pack/magic.cp` | 归档与压缩容器魔数嗅探器（`ArchiveSniffer` / `ArchiveMagicFormat`）与 MIME / 扩展名映射 | `cp/lib/pack/magic.cp` (Format Sniffer) |
 | `lib/pack/checksum.cp` | IEEE 802.3 `Crc32` 与 RFC 1950 `Adler32` 流式增量及单次校验器 | `/data/dev/bun/src/zlib/` & IEEE 802.3 / RFC 1950 specs |
 | `lib/pack/_codecs.cp` | Zlib / Zstd / Brotli C-FFI 声明、状态枚举与 `CompressBoundEstimator` | `/data/dev/bun/src/zlib/zlib.cp`, `brotli.cp`, `zstd.cp` |
@@ -333,7 +333,7 @@ pub fn demoChecksums() {
 
 ### 7. 工业级 ZIP 写入器 (`ZipWriter` / `ZipWriteEntry` / `ZipCompressionMethod`)
 
-`lib/pack/zip_writer.cp` 实现了符合 PKWARE APPNOTE 6.3.10 的完整内存 ZIP 构造器，并与 `ZipReader` 无缝互通：
+`lib/pack/zipWriter.cp` 实现了符合 PKWARE APPNOTE 6.3.10 的完整内存 ZIP 构造器，并与 `ZipReader` 无缝互通：
 
 - 支持 `Stored`（0）与 `Deflate`（8，基于 `deflateRaw` / `vendor/zlib`）两种压缩方式；
 - 自动计算 IEEE CRC-32、设置 UTF-8 文件名标志位（bit 11 = `0x0800`）、生成 Local File Header（`0x04034b50`）、Central Directory（`0x02014b50`）与 EOCD（`0x06054b50`）；
@@ -361,7 +361,7 @@ pub fn demoZipWriter() {
 
 ### 8. POSIX.1-2001 PAX 安全 Tar 归档引擎 (`PaxTarWriter` / `PaxTarReader` / `validateArchivePath`)
 
-`lib/pack/tar_pax.cp` 在 USTAR 基础上完整支持 **POSIX.1-2001 PAX 扩展头（`typeflag = 'x'`）** 与路径安全校验：
+`lib/pack/tarPax.cp` 在 USTAR 基础上完整支持 **POSIX.1-2001 PAX 扩展头（`typeflag = 'x'`）** 与路径安全校验：
 
 - 自动突破 USTAR 100 字节路径限制与 8GiB 文件体积上限，支持超长路径（>150 字节）、超长符号链接目标（>100 字节）及 POSIX 权限位保留；
 - 内置 `validateArchivePath(path)`：严格拦截空路径、空字节（`\0`）、绝对路径（`/`、`\` 或驱动器前缀 `C:`）以及 `..` 路径穿越段；
@@ -447,7 +447,7 @@ pub fn demoSniffer() {
 ## 六、 上游 Bun 行为契约与安全防御注意事项
 
 1. **归档解包路径穿越防线（Zip-Slip / Tar-Slip 防护）**：
-   - 参考 `/data/dev/bun/docs/runtime/archive.mdx` 与 `lib/pack/tar_pax.cp`：在解压外部 Tar / ZIP 归档至磁盘前，必须通过 `validateArchivePath(entry.name)` 校验每一条路径，严格拦截绝对路径（`/` 开头或 Windows 盘符）以及含 `..` 的父目录逃逸路径。
+   - 参考 `/data/dev/bun/docs/runtime/archive.mdx` 与 `lib/pack/tarPax.cp`：在解压外部 Tar / ZIP 归档至磁盘前，必须通过 `validateArchivePath(entry.name)` 校验每一条路径，严格拦截绝对路径（`/` 开头或 Windows 盘符）以及含 `..` 的父目录逃逸路径。
 2. **纯内存只读遍历（无落盘解析）**：
    - 对标 `Bun.Archive.files()` 语义，使用 `TarReader` / `PaxTarReader` / `ZipReader` 可直接在内存切片上零拷贝遍历条目并读取内容，无需先解压到临时目录，适合包校验、代码审计与无状态 Serverless 场景。
 3. **长路径与 PAX 扩展头**：
@@ -476,11 +476,11 @@ pub fn demoSniffer() {
 | 归档容器 | `lib/pack/cpio.cp` | CPIO `newc` / `crc` / `odc` | 零堆分配 Unix CPIO 归档解析器 |
 | 归档容器 | `lib/pack/cab.cp` | Microsoft Cabinet (`.cab`) | 零堆分配 CAB 归档头、文件夹与文件条目解析器 |
 | 只读镜像 | `lib/pack/squashfs.cp` | Linux SquashFS v4.0 | 零堆分配 SquashFS v4.0 超级块与元数据解析器 |
-| 内容定义分块与去重 | `lib/pack/cdc_chunker.cp` | FastCDC (Gear Hash) | 零堆分配双掩码归一化 FastCDC 分块器与开放寻址去重索引（`FastCdcChunker` / `CdcDedupTable`） |
-| 倒排表与时序整数压缩 | `lib/pack/delta_varint.cp` | ZigZag / ULEB128 / Delta / DoD | 零堆分配 ZigZag Varint、单调 DocID Delta 与 Gorilla 风格时序 Delta-of-Delta 编解码器 |
+| 内容定义分块与去重 | `lib/pack/cdcChunker.cp` | FastCDC (Gear Hash) | 零堆分配双掩码归一化 FastCDC 分块器与开放寻址去重索引（`FastCdcChunker` / `CdcDedupTable`） |
+| 倒排表与时序整数压缩 | `lib/pack/deltaVarint.cp` | ZigZag / ULEB128 / Delta / DoD | 零堆分配 ZigZag Varint、单调 DocID Delta 与 Gorilla 风格时序 Delta-of-Delta 编解码器 |
 | 参考归档（不导出） | `lib/pack/{zstd,brotli,tar,zip}_.cp` | Zstd / Brotli / Tar / ZIP（仅参考） | 与 `lib/pack/` 权威实现功能重叠，保留供对比分析，不在 `cap:pack` 重复导出 |
 
-### FastCDC 内容定义分块与去重 QuickStart 示例 (`cdc_chunker.cp`)
+### FastCDC 内容定义分块与去重 QuickStart 示例 (`cdcChunker.cp`)
 
 ```cp
 import {
@@ -508,7 +508,7 @@ pub fn demoFastCdcDedup(dataset: []const u8) {
 }
 ```
 
-### ZigZag Varint / Delta / Delta-of-Delta 倒排表与时序压缩 QuickStart 示例 (`delta_varint.cp`)
+### ZigZag Varint / Delta / Delta-of-Delta 倒排表与时序压缩 QuickStart 示例 (`deltaVarint.cp`)
 
 面向倒排索引 DocID 列表（Lucene / BM25）、时序数据库时间戳（Gorilla / Prometheus）、列式存储（Parquet / Arrow）与 WAL 的 100% 零动态堆分配整数序列编解码内核：
 
@@ -547,7 +547,7 @@ pub fn demoDeltaVarintCompression() {
 
 ---
 
-### Frame-of-Reference (FOR) 与 Sorted Delta-FOR 紧致位打包 QuickStart 示例 (`for_bitpack.cp`)
+### Frame-of-Reference (FOR) 与 Sorted Delta-FOR 紧致位打包 QuickStart 示例 (`forBitpack.cp`)
 
 面向列式存储、倒排索引 DocID 块与向量 ID 列表的 100% 零动态堆分配位打包编解码内核（原生 `@clz` 计算最小位宽）：
 

@@ -4,4 +4,4 @@
 
 export * from "./format.cp";
 export * from "./elf64.cp";
-export * from "./macho_pe.cp";
+export * from "./machoPe.cp";

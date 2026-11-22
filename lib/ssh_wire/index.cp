@@ -15,5 +15,5 @@ export {
     encodePemArmoring,
     parseOpenSshPrivateKey,
     encodeOpenSshPrivateKeyEd25519,
-} from "./openssh_key.cp";
+} from "./opensshKey.cp";
 export { signSshSigEd25519, verifySshSigEd25519 } from "./sshsig.cp";

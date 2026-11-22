@@ -47,7 +47,7 @@ export {
     IntervalError,
     Interval,
     IntervalTree,
-} from "./interval_tree.cp";
+} from "./intervalTree.cp";
 
 // --- Spatial Indexes ---
 
@@ -101,7 +101,7 @@ export {
 export {
     Match,
     AhoCorasick,
-} from "./aho_corasick.cp";
+} from "./ahoCorasick.cp";
 
 export {
     Rope,
@@ -121,7 +121,7 @@ export {
 export {
     RingError,
     RingBuffer,
-} from "./circ_buf.cp";
+} from "./circBuf.cp";
 
 export {
     BitSet,
@@ -156,7 +156,7 @@ export {
 export { BPlusTree } from "./bptree.cp";
 
 // --- crdt_pn ---
-pub import { GCounter, PNCounter, LWWRegister, GSet, CounterEntry } from "./crdt_pn.cp";
+pub import { GCounter, PNCounter, LWWRegister, GSet, CounterEntry } from "./crdtPn.cp";
 
 // --- ringhash ---
 export {
@@ -186,7 +186,7 @@ export {
     RouteParam,
     RouteMatch,
     RadixRouter,
-} from "./radix_router.cp";
+} from "./radixRouter.cp";
 
 // --- intern ---
 pub const _intern = @import("./intern.cp");
@@ -219,7 +219,7 @@ export {
     hashLeaf,
     hashInternal,
     verifyProof,
-} from "./merkle_tree.cp";
+} from "./merkle.cp";
 
 // --- heavy_hitter ---
 export {
@@ -227,7 +227,7 @@ export {
     HeavyHitterTracker,
     CmsSketchConfig,
     ConservativeCms,
-} from "./heavy_hitter.cp";
+} from "./heavyHitter.cp";
 
 // --- fenwick_order ---
 export {
@@ -235,7 +235,7 @@ export {
     FenwickStats,
     FenwickTreeI64,
     FenwickOrderStat,
-} from "./fenwick_order.cp";
+} from "./fenwick.cp";
 
 // --- augmented_interval_tree ---
 export {
@@ -247,4 +247,4 @@ export {
     coalesceIntervals,
     findGaps,
     AugmentedIntervalTree,
-} from "./augmented_interval_tree.cp";
+} from "./augInterval.cp";

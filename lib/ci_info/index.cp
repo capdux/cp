@@ -4,4 +4,4 @@ pub import {
     EnvEntry,
     CiInfo,
     detectFromEntries,
-} from "./ci_info.cp";
+} from "./ciInfo.cp";

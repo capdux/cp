@@ -12,4 +12,4 @@ export {
     PAGE_FOOTER_SIZE,
     SLOT_SIZE,
     MAX_PAYLOAD_SIZE,
-} from "./slotted_page.cp";
+} from "./slottedPage.cp";

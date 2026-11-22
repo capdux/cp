@@ -10,7 +10,7 @@
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                              cap:patch 差分、补丁与测试渲染架构                          │
 ├─────────────────────────────────┬─────────────────────────────┬────────────────────────┤
-│  Myers O(ND) 差分 (myers.cp)    │  Unified Diff (diff.cp)     │ 测试 Diff 渲染 (diff_format.cp) │
+│  Myers O(ND) 差分 (myers.cp)    │  Unified Diff (diff.cp)     │ 测试 Diff 渲染 (diffFormat.cp) │
 │  • LineDiffer.diffLines         │  • UnifiedDiff.parse        │  • DiffFormatOptions   │
 │  • LineDiffer.diffLinesAlloc    │  • PatchFileEntry           │  • DiffFormatter       │
 │  • LineDiffer.generateUnifiedDiff│ • UnifiedDiff.apply        │    (绿色 + Expected /  │

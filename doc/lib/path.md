@@ -46,8 +46,8 @@ lib/path/
 ├── posix.cp         # POSIX 规范路径实现 (PosixPath，含 parse/format/toNamespacedPath)
 ├── windows.cp       # Windows (Win32/UNC) 规范路径实现 (WindowsPath，含 parse/format/toNamespacedPath)
 ├── resolve.cp       # 核心算法实现：normalize, join, resolve, relative, toNamespacedPath, longestCommonPath
-├── env_path.cp      # PATH 环境变量构建器与零拷贝分词迭代器 (EnvPath, EnvPathIterator)
-└── buffer_pool.cp   # 4KB 预分配路径缓冲池 (PathBufferPool, MAX_PATH_BYTES)
+├── envPath.cp      # PATH 环境变量构建器与零拷贝分词迭代器 (EnvPath, EnvPathIterator)
+└── bufferPool.cp   # 4KB 预分配路径缓冲池 (PathBufferPool, MAX_PATH_BYTES)
 ```
 
 ---

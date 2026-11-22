@@ -18,7 +18,7 @@ export {
     ConcurrentTask,
     ConcurrentTaskQueue,
     ConcurrentQueue,
-} from "./concurrent_task.cp";
+} from "./concurrentTask.cp";
 
 export {
     MAX_DEFERRED_TASKS,
@@ -26,7 +26,7 @@ export {
     DeferredEntry,
     DeferredFn,
     DeferredTaskQueue,
-} from "./deferred_task.cp";
+} from "./deferredTask.cp";
 
 export {
     AnyTask,
@@ -36,14 +36,14 @@ export {
 
 export {
     AutoFlusher,
-} from "./auto_flusher.cp";
+} from "./autoFlusher.cp";
 
 export {
     PollEngine,
     PollEvents,
     PollCallback,
     FilePollRegistration,
-} from "./file_poll.cp";
+} from "./filePoll.cp";
 
 export {
     MAX_LOOP_TIMERS,

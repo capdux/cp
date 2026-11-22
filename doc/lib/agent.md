@@ -1,6 +1,6 @@
 # `cap:agent` — AI Agent 核心运行时标准库
 
-`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏（`budget.cp`）、多智能体任务图 DAG 调度器（`dag.cp`）、评测基准与轨迹打分（`eval.cp`）、ReAct 执行状态机与确定性检查点（`react.cp`）、LLM 流式 SSE 解析与遥测（`sse.cp`）、多模型网关路由与限流故障转移（`model_router.cp`）、输入/输出安全护栏与策略引擎（`guardrail.cp`）、连续批处理与前缀缓存亲和调度器（`scheduler.cp`）、工具调用参数 JSON Schema 校验器（`tool_schema.cp`）、词表 Logits 采样器（`sampler.cp`）、推测解码校验与自适应草稿步长控制（`speculative.cp`）以及束搜索解码器（`beam.cp`）十二个子模块。
+`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏（`budget.cp`）、多智能体任务图 DAG 调度器（`dag.cp`）、评测基准与轨迹打分（`eval.cp`）、ReAct 执行状态机与确定性检查点（`react.cp`）、LLM 流式 SSE 解析与遥测（`sse.cp`）、多模型网关路由与限流故障转移（`modelRouter.cp`）、输入/输出安全护栏与策略引擎（`guardrail.cp`）、连续批处理与前缀缓存亲和调度器（`scheduler.cp`）、工具调用参数 JSON Schema 校验器（`toolSchema.cp`）、词表 Logits 采样器（`sampler.cp`）、推测解码校验与自适应草稿步长控制（`speculative.cp`）以及束搜索解码器（`beam.cp`）十二个子模块。
 
 ---
 
@@ -319,7 +319,7 @@ fn llmStreamingDemo() {
 
 ---
 
-## 子模块：多模型 LLM 网关路由、RPM/TPM 限流与故障转移（`model_router.cp`）
+## 子模块：多模型 LLM 网关路由、RPM/TPM 限流与故障转移（`modelRouter.cp`）
 
 ### 核心特性
 
@@ -452,7 +452,7 @@ fn continuousBatchingDemo() {
 
 ---
 
-## 子模块：LLM 工具调用参数 JSON Schema 零分配校验器（`tool_schema.cp`）
+## 子模块：LLM 工具调用参数 JSON Schema 零分配校验器（`toolSchema.cp`）
 
 ### 核心特性
 
@@ -823,7 +823,7 @@ fn agentTracerDemo() {
 
 ---
 
-## 子模块：AI Agent Skill / Plugin 注册中心与能力匹配引擎（`skill_registry.cp`）
+## 子模块：AI Agent Skill / Plugin 注册中心与能力匹配引擎（`skills.cp`）
 
 ### 核心特性
 
@@ -873,7 +873,7 @@ fn skillRegistryDemo() {
 
 ---
 
-## 子模块：LLM API 自适应重试、限流感知与故障分类引擎（`retry_policy.cp`）
+## 子模块：LLM API 自适应重试、限流感知与故障分类引擎（`retry.cp`）
 
 ### 核心特性
 
@@ -910,7 +910,7 @@ fn llmRetryDecisionDemo(http_status: u16, retry_after_header: string, attempt: u
 
 ---
 
-## 子模块：幂等工具调用结果记忆化缓存与副作用门控器（`tool_cache.cp`）
+## 子模块：幂等工具调用结果记忆化缓存与副作用门控器（`toolCache.cp`）
 
 ### 核心特性
 
@@ -958,7 +958,7 @@ fn toolCacheDemo() {
 
 ---
 
-## 子模块：多租户 LLM 双维度 TPM/RPM 滑动窗口配额限流与预留/回退引擎（`quota_limiter.cp`）
+## 子模块：多租户 LLM 双维度 TPM/RPM 滑动窗口配额限流与预留/回退引擎（`quota.cp`）
 
 ### 核心特性
 
@@ -1003,7 +1003,7 @@ fn multiTenantQuotaDemo() {
 
 ---
 
-## 子模块：LLM 流式 Tool-Call JSON 参数增量组装与半完成闭合器（`tool_stream.cp`）
+## 子模块：LLM 流式 Tool-Call JSON 参数增量组装与半完成闭合器（`toolStream.cp`）
 
 ### 核心特性
 
@@ -1050,7 +1050,7 @@ fn streamingToolCallDemo() {
 
 ---
 
-## 子模块：确定性多步骤 AI Agent 编排有限状态机与审计回滚引擎（`workflow_fsm.cp`）
+## 子模块：确定性多步骤 AI Agent 编排有限状态机与审计回滚引擎（`workflow.cp`）
 
 ### 核心特性
 
@@ -1098,7 +1098,7 @@ fn workflowFsmDemo() {
 
 ---
 
-## 子模块：多智能体层级 Token 与微美元成本归因账本（`cost_ledger.cp`）
+## 子模块：多智能体层级 Token 与微美元成本归因账本（`costLedger.cp`）
 
 ### 核心特性
 
@@ -1189,7 +1189,7 @@ fn reflexionLoopDemo() {
 
 ---
 
-## 子模块：LLM 批量 Tool-Call 读写锁冲突分析与最大并发波次调度器（`tool_parallel.cp`）
+## 子模块：LLM 批量 Tool-Call 读写锁冲突分析与最大并发波次调度器（`toolPar.cp`）
 
 ### 核心特性
 
@@ -1230,7 +1230,7 @@ fn parallelToolWavesDemo() {
 
 ---
 
-## 子模块：多轮对话 Prompt-Cache 缓存断点规划与前缀稳定性优化器（`prompt_cache_plan.cp`）
+## 子模块：多轮对话 Prompt-Cache 缓存断点规划与前缀稳定性优化器（`cachePlan.cp`）
 
 ### 核心特性
 
@@ -1281,7 +1281,7 @@ fn promptCachePlanDemo() {
 
 ---
 
-## 子模块：多来源上下文窗口 Token 预算水填充分配器（`context_budget.cp`）
+## 子模块：多来源上下文窗口 Token 预算水填充分配器（`ctxBudget.cp`）
 
 ### 核心特性
 
@@ -1407,7 +1407,7 @@ fn agentMailboxDemo() {
 
 ---
 
-## 子模块：多核 Agent 调度器 Work-Stealing 双端队列池与负载均衡引擎（`work_steal.cp`）
+## 子模块：多核 Agent 调度器 Work-Stealing 双端队列池与负载均衡引擎（`workSteal.cp`）
 
 ### 核心特性
 
@@ -1504,7 +1504,7 @@ fn multiAgentHandoffDemo() {
 
 ---
 
-## 子模块：端到端 Agent 回合编排状态机（`turn_runner.cp`）
+## 子模块：端到端 Agent 回合编排状态机（`turnRunner.cp`）
 
 ### 核心特性
 
@@ -1558,7 +1558,7 @@ fn runAgentQuickStart(): TurnStopReason {
 
 ---
 
-## 子模块：自动化评测门禁与基线回归对比器（`eval_gate.cp`）
+## 子模块：自动化评测门禁与基线回归对比器（`evalGate.cp`）
 
 ### 核心特性
 
@@ -1614,7 +1614,7 @@ fn runCiEvalGate() {
 
 ---
 
-## 子模块：统一 LLM 流式增量解析器（OpenAI / Anthropic SSE 兼容）（`llm_stream.cp`）
+## 子模块：统一 LLM 流式增量解析器（OpenAI / Anthropic SSE 兼容）（`llmStream.cp`）
 
 ### 核心特性
 
@@ -1722,7 +1722,7 @@ fn offlineReplayQuickStart() {
 
 ---
 
-## 子模块：SIMD 语义 + 标签混合工具路由器（`tool_router.cp`）
+## 子模块：SIMD 语义 + 标签混合工具路由器（`toolRouter.cp`）
 
 ### 核心特性
 
@@ -1768,7 +1768,7 @@ fn semanticToolRouterQuickStart() {
 
 ---
 
-## 子模块：LLM 模型能力目录与成本择优器（`model_catalog.cp`）
+## 子模块：LLM 模型能力目录与成本择优器（`models.cp`）
 
 ### 核心特性
 
@@ -1818,7 +1818,7 @@ fn modelCatalogQuickStart() {
 
 ---
 
-## 子模块：长程 Agent 会话快照二进制编解码器（`session_codec.cp`）
+## 子模块：长程 Agent 会话快照二进制编解码器（`sessionCodec.cp`）
 
 ### 核心特性
 
@@ -1864,7 +1864,7 @@ fn sessionSnapshotQuickStart()! {
 
 ---
 
-## 子模块：层级 Plan-Execute-Replan 任务树执行引擎（`plan_executor.cp`）
+## 子模块：层级 Plan-Execute-Replan 任务树执行引擎（`planner.cp`）
 
 ### 核心特性
 
@@ -1922,7 +1922,7 @@ fn planExecuteReplanQuickStart() {
 
 ---
 
-## 子模块：思维树（Tree-of-Thoughts）与多分支搜索管理器（`thought_tree.cp`）
+## 子模块：思维树（Tree-of-Thoughts）与多分支搜索管理器（`thoughtTree.cp`）
 
 ### 核心特性
 
@@ -1970,7 +1970,7 @@ fn thoughtTreeQuickStart() {
 
 ---
 
-## 子模块：零分配工具权限沙箱与能力策略引擎（`sandbox_policy.cp`）
+## 子模块：零分配工具权限沙箱与能力策略引擎（`sandboxPol.cp`）
 
 ### 核心特性
 
@@ -2026,7 +2026,7 @@ fn sandboxPolicyQuickStart() {
 
 ---
 
-## 子模块：OTP 风格零分配 AI Agent 容错监督树内核（`supervisor_tree.cp`）
+## 子模块：OTP 风格零分配 AI Agent 容错监督树内核（`supervisor.cp`）
 
 ### 核心特性
 
@@ -2078,7 +2078,7 @@ fn supervisorTreeQuickStart() {
 
 ---
 
-## 子模块：零分配 AI Agent 工具调用批合并、去重与读写冒险波次调度器（`tool_batcher.cp`）
+## 子模块：零分配 AI Agent 工具调用批合并、去重与读写冒险波次调度器（`toolBatch.cp`）
 
 ### 核心特性
 
@@ -2121,7 +2121,7 @@ fn toolBatcherQuickStart() {
 
 ---
 
-## 子模块：零分配多模型 LLM 供应商 RPM/TPM 双维配额与 429 故障转移池（`provider_pool.cp`）
+## 子模块：零分配多模型 LLM 供应商 RPM/TPM 双维配额与 429 故障转移池（`providers.cp`）
 
 ### 核心特性
 
@@ -2165,7 +2165,7 @@ fn providerPoolQuickStart() {
 
 ---
 
-## 子模块：零分配 AI Agent 统计显著性 A/B 评测与发布门禁引擎（`ab_evaluator.cp`）
+## 子模块：零分配 AI Agent 统计显著性 A/B 评测与发布门禁引擎（`abEval.cp`）
 
 ### 核心特性
 
@@ -2213,7 +2213,7 @@ fn abEvaluatorQuickStart() {
 
 ---
 
-## 子模块：零分配 AI Agent 持久化执行日志与崩溃恢复防重放分叉引擎（`durable_journal.cp`）
+## 子模块：零分配 AI Agent 持久化执行日志与崩溃恢复防重放分叉引擎（`journal.cp`）
 
 ### 核心特性
 
@@ -2263,7 +2263,7 @@ fn durableJournalQuickStart() {
 
 ---
 
-## 子模块：零分配流式 LLM Tool-Call 增量分片组装器（`tool_call_assembler.cp`）
+## 子模块：零分配流式 LLM Tool-Call 增量分片组装器（`toolCall.cp`）
 
 ### 核心特性
 
@@ -2312,7 +2312,7 @@ fn toolCallAssemblerQuickStart() {
 
 ---
 
-## 子模块：零分配多轮对话原子工具对保护与上下文压缩编排器（`context_compactor.cp`）
+## 子模块：零分配多轮对话原子工具对保护与上下文压缩编排器（`compactor.cp`）
 
 ### 核心特性
 
@@ -2366,7 +2366,7 @@ fn contextCompactorQuickStart() {
 
 ---
 
-## 子模块：零分配多智能体层级预算树与级联止损控制器（`budget_tree.cp`）
+## 子模块：零分配多智能体层级预算树与级联止损控制器（`budgetTree.cp`）
 
 ### 核心特性
 
@@ -2413,7 +2413,7 @@ fn budgetTreeQuickStart() {
 
 ---
 
-## 子模块：零分配 AI Agent 工具调用多维配额治理器（`tool_governor.cp`）
+## 子模块：零分配 AI Agent 工具调用多维配额治理器（`governor.cp`）
 
 ### 核心特性
 

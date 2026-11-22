@@ -6,4 +6,4 @@ export {
     formatOrdinal,
     formatRadixU64,
     formatFixedPoint,
-} from "./number_format.cp";
+} from "./numberFormat.cp";
