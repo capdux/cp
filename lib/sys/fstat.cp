@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys/PosixStat.cp | Synced: 2026-11-20T11:12:41Z
+// Source: Absorbed from /data/dev/bun/src/sys/PosixStat.cp | Synced: 2026-11-22T07:13:20Z
 // ============================================================================
 // lib/sys/fstat.cp — FD-based File Metadata & statx Introspection
 // (Isolated from path-based `stat()` so `cap:io` + `cap:fs` never collide

@@ -284,6 +284,30 @@ const res = postProcessCssChunk(parts[0..], CssChunkPostProcessOptions{ emit_sou
 * = res;
 ```
 
+### 3.15 转译模块分析元数据与对齐二进制缓存（`lib/bundler/module_info.cp`，吸收自 `/data/dev/bun/src/bundler/analyze_transpiled_module.cp`）
+- **常量与错误集**：`MODULE_INFO_MAX_STRINGS` (`128`)、`MODULE_INFO_STRING_BUF_CAP` (`4096`)、`MODULE_INFO_MAX_RECORDS` (`128`)、`MODULE_INFO_MAX_BUFFER_IDS` (`384`)、`MODULE_INFO_MAX_REQUESTED` (`64`)、`MODULE_STRING_STAR_DEFAULT`、`MODULE_STRING_STAR_NAMESPACE`、`MODULE_FETCH_{NONE,JAVASCRIPT,WEBASSEMBLY,JSON}`、`ModuleInfoError`
+- **核心类型与方法**：`ModuleRecordKind`（9 种 ESM/TS 记录类型）、`ModuleInfoFlags`（`contains_import_meta` / `is_typescript` / `has_tla` 单字节位打包）、`TranspiledModuleInfo`（`init` / `internString` / `getString` / `addDeclaredVariable` / `addLexicalVariable` / `addImportSingle` / `addImportNamespace` / `addExportIndirect` / `addExportLocal` / `addExportNamespace` / `addExportStar` / `requestModule` / `replaceStringId` / `finalize` / `serialize` / `deserialize`）。
+
+```cp
+import {
+    TranspiledModuleInfo,
+    MODULE_FETCH_JAVASCRIPT,
+} from "cap:bundler";
+
+let mi = TranspiledModuleInfo.init(true);
+const mod_id = mi.internString("./dep.ts")?;
+const sym_id = mi.internString("User")?;
+mi.requestModule(mod_id, MODULE_FETCH_JAVASCRIPT)?;
+mi.addImportSingle(mod_id, sym_id, sym_id, false)?;
+mi.addExportLocal(sym_id, sym_id)?;
+mi.finalize()?; // 自动将 ExportInfoLocal 提升为 ExportInfoIndirect，并将 TS 导入标记为 ImportInfoSingleTypeScript
+
+let cache_buf: [512]u8 = [0; 512];
+const n = mi.serialize(cache_buf[0..])?;
+const restored = TranspiledModuleInfo.deserialize(cache_buf[0..n])?;
+* = restored;
+```
+
 ---
 
 ## 四、 上游行为契约、边界与安全注意事项
@@ -306,3 +330,6 @@ const res = postProcessCssChunk(parts[0..], CssChunkPostProcessOptions{ emit_sou
 6. **生产压缩三模态与死代码消除策略（吸收自 `/data/dev/bun/docs/bundler/minifier.mdx`）**：
    - 打包压缩分为三类可独立开关的粒度：`--minify-whitespace`（移除空白、换行与打包注释头，配合 `postProcessCssChunk` 自动省略 `/* path */` 注释）、`--minify-syntax`（常量折叠、死代码消除、布尔字面量 `true`/`false` 缩短为 `!0`/`!1` 及布尔代数化简）与 `--minify-identifiers`（基于频次的局部标识符短名重命名，对应 `NumberScopeRenamer`）；
    - 生产模式（`--production`）默认同时启用全部三类压缩、注入 `process.env.NODE_ENV="production"` 并切换至生产态 JSX 转换；需注意 SourceMap 开启时 `postProcessCssChunk` 按带 SourceMap 的片段边界重置相对行列偏移，确保下游 VLQ 拼接零漂移。
+7. **转译器扫描与 TypeScript 类型消除（吸收自 `/data/dev/bun/docs/runtime/transpiler.mdx`）**：
+   - 除非同时转译大量超大文件，优先使用同步转译（`.transformSync()`）以避免线程池调度开销高于转译本身；异步转译（`.transform()`）按 `Math.floor(cpu_count * 0.8)` 分配 Worker 线程；
+   - `.scan()` 静态扫描模块导入/导出元数据时自动忽略 TypeScript 的 `type-only` 导入导出；在 `TranspiledModuleInfo.finalize()` 中，若模块标记为 `is_typescript = true` 且本地重导出引用了导入符号，会自动将该导入升级为 `ImportInfoSingleTypeScript`，防止链接期因类型导出被消除而误报符号缺失。

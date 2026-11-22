@@ -183,3 +183,21 @@ export {
     CssChunkPostProcessResult,
     postProcessCssChunk,
 } from "./css_chunk_postprocess";
+
+export {
+    MODULE_INFO_MAX_STRINGS,
+    MODULE_INFO_STRING_BUF_CAP,
+    MODULE_INFO_MAX_RECORDS,
+    MODULE_INFO_MAX_BUFFER_IDS,
+    MODULE_INFO_MAX_REQUESTED,
+    MODULE_STRING_STAR_DEFAULT,
+    MODULE_STRING_STAR_NAMESPACE,
+    MODULE_FETCH_NONE,
+    MODULE_FETCH_JAVASCRIPT,
+    MODULE_FETCH_WEBASSEMBLY,
+    MODULE_FETCH_JSON,
+    ModuleInfoError,
+    ModuleRecordKind,
+    ModuleInfoFlags,
+    TranspiledModuleInfo,
+} from "./module_info";

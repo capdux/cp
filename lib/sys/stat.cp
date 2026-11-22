@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys/PosixStat.cp | Synced: 2026-11-20T11:12:43Z
+// Source: Absorbed from /data/dev/bun/src/sys/PosixStat.cp | Synced: 2026-11-22T07:13:20Z
 // ============================================================================
 // lib/sys/stat.cp — Path-based File Metadata, statx & Status Introspection
 // ============================================================================
