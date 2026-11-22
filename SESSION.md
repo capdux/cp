@@ -25,3 +25,6 @@
 
 ### 2026-11-22（`cap:bloburl` 验收，子智能体吸收 Bun 上游 ObjectURLRegistry.cp 为 cap:bloburl（5/5 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/bloburl/`（5/5 PASS，`doc/lib/bloburl.md`）经 `verify_module.sh` 一次性验收回收；子智能体吸收 Bun 上游 ObjectURLRegistry.cp 为 cap:bloburl（5/5 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:catalog` 验收，子智能体吸收 Bun 上游 CatalogMap.cp 为 cap:catalog（5/5 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/catalog/`（5/5 PASS，`doc/lib/catalog.md`）经 `verify_module.sh` 一次性验收回收；子智能体吸收 Bun 上游 CatalogMap.cp 为 cap:catalog（5/5 PASS），主协调器统一登记并提交

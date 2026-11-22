@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:catalog` 吸收自 Bun install/lockfile/CatalogMap.cp 的纯 CP 零分配 Monorepo 依赖目录协议库：catalog:/catalog:<group> 解析、默认与命名分组管理及确定性 Lockfile 输出（5/5 PASS，文档直写 `doc/lib/catalog.md`）
+从 /data/dev/bun/src/install/lockfile/CatalogMap.cp 吸收纯 CP 零分配 Monorepo catalog: 协议库 cap:catalog（lib/catalog/{catalog,index}.cp），cpc check 0 错误，cap test 5/5 PASS (779ms)
+
 
 
 ## 2026-11-22: 新建 `cap:bloburl` 吸收自 Bun runtime/webcore/ObjectURLRegistry.cp 的纯 CP 零分配 W3C blob: Object URL 解析、RFC 4122 UUID v4 生成与固定池注册表库（5/5 PASS，文档直写 `doc/lib/bloburl.md`）
