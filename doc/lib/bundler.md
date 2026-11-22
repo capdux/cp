@@ -506,6 +506,37 @@ const plan = planner.computeChunks(ChunkPlanOptions{
 * = plan;
 ```
 
+### 3.24 Chunk 级符号重命名与字符频次压缩协调器（`lib/bundler/chunk_renamer.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/renameSymbolsInChunk.cp` 与 `/data/dev/bun/docs/bundler/minifier.mdx`）
+- **常量与错误集**：`CHUNK_RENAME_MAX_SYMBOLS` (`64`)、`CHUNK_RENAME_MAX_RESERVED` (`32`)、`CHUNK_RENAME_NAME_CAP` (`48`)、`ChunkRenameError`
+- **核心类型与方法**：`ChunkStableRef`（`eql`/`lessThan`）、`ChunkSlotCounts`（`unionMax`）、`ChunkCharFreq`（`init`/`scan`/`include`/`compileAlphabets`）、`ChunkRenameSymbolKind`（`TopLevel` / `CrossChunkImport` / `CjsWrapper` / `CjsHoistedExternalImport`）、`ChunkRenameSymbolInput`、`ChunkRenamedName`、`ChunkRenameEntry`、`ChunkRenameOptions`、`ChunkRenameResult`（`slice`/`lookupName`）、`ChunkSymbolRenamer`（`init`/`addReservedName`/`mergeNestedSlots`/`includeCharFreq`/`addSymbol`/`rename`）。
+- **核心算法契约**：
+  - 100% 零动态堆分配：通过 `ChunkSlotCounts.unionMax` 合并嵌套作用域槽位上界，保证顶层压缩槽位与任意嵌套作用域零冲突；
+  - 频次优化短名与压缩友好字母表：`minify_identifiers = true` 时按符号使用频次降序分配短名（同频按 `ChunkStableRef` 稳定破平局），并基于 `ChunkCharFreq` 生成更利于 Gzip/Brotli 压缩的自定义字母表；
+  - 非压缩可读重命名与保留字防线：`minify_identifiers = false` 时跨 Chunk 导入符号优先占位，同名冲突自动递增数字后缀（`foo` / `foo2` / `foo3`），自动规避 JS 保留字、CJS 保留全局（`exports`/`module`/`require`）及 `must_not_be_renamed` 锁定符号。
+
+```cp
+import {
+    ChunkStableRef,
+    ChunkCharFreq,
+    ChunkRenameSymbolInput,
+    ChunkRenameOptions,
+    ChunkSymbolRenamer,
+} from "cap:bundler";
+
+let ren = ChunkSymbolRenamer.init();
+let freq = ChunkCharFreq.init();
+freq.scan("zzzzzzzzz");
+ren.includeCharFreq(freq);
+* = ren.addSymbol(ChunkRenameSymbolInput{
+    sym_ref: ChunkStableRef{ stable_source_index: 1, inner_index: 0 },
+    original_name: "heavyCounter",
+    use_count: 100,
+})?;
+const res = ren.rename(ChunkRenameOptions{ minify_identifiers: true })?;
+// res.lookupName({1, 0}) == "z"（最高频字符优先分配给最高频符号）
+* = res;
+```
+
 ---
 
 ## 四、 上游行为契约、边界与安全注意事项

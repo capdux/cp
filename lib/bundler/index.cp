@@ -330,3 +330,20 @@ export {
     formatChunkUniqueKey,
     ChunkPlanner,
 } from "./chunk_planner";
+
+export {
+    CHUNK_RENAME_MAX_SYMBOLS,
+    CHUNK_RENAME_MAX_RESERVED,
+    CHUNK_RENAME_NAME_CAP,
+    ChunkRenameError,
+    ChunkStableRef,
+    ChunkSlotCounts,
+    ChunkCharFreq,
+    ChunkRenameSymbolKind,
+    ChunkRenameSymbolInput,
+    ChunkRenamedName,
+    ChunkRenameEntry,
+    ChunkRenameOptions,
+    ChunkRenameResult,
+    ChunkSymbolRenamer,
+} from "./chunk_renamer";

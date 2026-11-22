@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/css_parser.cp | Synced: 2026-11-22T10:03:38Z
+// Source: Absorbed from /data/dev/bun/src/css/css_parser.cp | Synced: 2026-11-22T10:16:05Z
 // lib/css/tokenizer.cp
 // CSS Syntax Level 3 Tokenizer (Zero-Heap Allocation)
 // Absorbed from Bun src/css/css_parser.cp Tokenizer
