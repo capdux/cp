@@ -206,3 +206,18 @@ export {
     SloBurnEvaluation,
     SloBurnMonitor,
 } from "./slo_burn_rate.cp";
+
+// --- Zero-Alloc OpenTelemetry / Prometheus Histogram Exemplar Reservoir ---
+
+export {
+    EXEMPLAR_MAX_BOUNDS,
+    EXEMPLAR_MAX_BUCKETS,
+    EXEMPLAR_MAX_RESERVOIR_SLOTS,
+    EXEMPLAR_FLAG_SAMPLED,
+    ExemplarStrategy,
+    ExemplarRecord,
+    ExemplarBucketSummary,
+    ExemplarReservoirStats,
+    formatExemplarOpenMetrics,
+    AlignedHistogramExemplarReservoir,
+} from "./exemplar_reservoir.cp";

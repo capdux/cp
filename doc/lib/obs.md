@@ -308,6 +308,49 @@ pub fn demoSloBurnMonitor() {
 }
 ```
 
+### 零分配 OpenTelemetry / Prometheus 直方图 Exemplar 蓄水池采样器 (`exemplar_reservoir.cp`)
+
+面向云原生 Prometheus / OpenTelemetry 指标与链路追踪（Trace/Span）打通的 100% 纯 CP 零动态堆分配直方图 Exemplar 蓄水池采样器：
+
+- **常量与枚举**：
+  - `EXEMPLAR_MAX_BOUNDS = 31`、`EXEMPLAR_MAX_BUCKETS = 32`（含 `+Inf` 尾桶）、`EXEMPLAR_MAX_RESERVOIR_SLOTS = 32`、`EXEMPLAR_FLAG_SAMPLED = 0x01`
+  - `ExemplarStrategy`（`aligned_histogram_bucket` 每桶独立留存确保 P99 长尾样本不丢 | `simple_fixed_size` 确定性 SplitMix64 Algorithm R 均匀蓄水池采样）
+- **数据模型与格式化**：
+  - `ExemplarRecord`（`value`, `timestamp_ns`, `trace_id_hi`, `trace_id_lo`, `span_id`, `sampled_flags`, `bucket_idx`, `occupied`）
+  - `ExemplarBucketSummary`、`ExemplarReservoirStats`
+  - `formatExemplarOpenMetrics(ex, out_buf: *[]u8): usize?`：按 OpenMetrics 1.0 规范输出 `# {trace_id="<32-hex>",span_id="<16-hex>"} <val> <ts>`，缓冲区不足或非法记录返回 `null`。
+- **核心引擎 `AlignedHistogramExemplarReservoir`**：
+  - `initAligned(bounds, require_sampled_flag)` / `initSimpleFixed(bounds, reservoir_size, rng_seed, require_sampled_flag)`
+  - `findBucketIndex(value)`（O(log B) 二分查找）
+  - `observe(*_, value, timestamp_ns, trace_id_hi, trace_id_lo, span_id, sampled_flags): bool`：自动拦截 NaN/Inf，过滤 `trace_id == 0` / `span_id == 0` 或未采样标志（仍累计直方图桶计数与总和）。
+  - `evictOlderThan(*_, cutoff_ns)` / `collectAndReset(*_, out_exemplars)` / `getBucketSummary(bucket_idx)` / `stats()`
+
+```cp
+import {
+    EXEMPLAR_FLAG_SAMPLED,
+    ExemplarRecord,
+    formatExemplarOpenMetrics,
+    AlignedHistogramExemplarReservoir,
+} from "cap:obs";
+
+pub fn demoExemplarReservoir() {
+    const bounds: [4]f64 = [0.05, 0.25, 1.0, 5.0];
+    let res = AlignedHistogramExemplarReservoir.initAligned(bounds[0..], true) ?? return;
+
+    * = res.observe(0.02, 1_700_000_000_000_000_000, 0x01, 0x02, 0xAA, EXEMPLAR_FLAG_SAMPLED);
+    * = res.observe(6.25, 1_700_000_001_500_000_000, 0xDEADBEEF, 0xCAFEBABE, 0x1234, EXEMPLAR_FLAG_SAMPLED);
+
+    let out: [8]ExemplarRecord = [ExemplarRecord{}; 8];
+    let out_s: []ExemplarRecord = out[0..];
+    const n = res.collectAndReset(*out_s); // 2 (桶 0 与 +Inf 慢请求桶各留存 1 条)
+    if (n > 0) {
+        let txt: [128]u8 = [0; 128];
+        let txt_s: []u8 = txt[0..];
+        * = formatExemplarOpenMetrics(out[n - 1], *txt_s);
+    }
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
