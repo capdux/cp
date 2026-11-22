@@ -290,3 +290,14 @@ export {
     GuidedTrieStats,
     GuidedTokenTrie,
 } from "./guided_trie.cp";
+
+export {
+    SAMPLER_MAX_CANDIDATES,
+    NucleusSamplerConfig,
+    SamplerCandidate,
+    NucleusSampleOutcome,
+    applyTokenPenaltiesInPlace,
+    selectTopKCandidates,
+    softmaxAndTruncateNucleus,
+    sampleFromLogits,
+} from "./nucleus_sampler.cp";

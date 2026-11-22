@@ -1215,3 +1215,41 @@ pub fn demoGuidedTokenTrie() {
     * = allowed; // 2 (token 31 与 eos_id 2)
 }
 ```
+
+### 零分配生产级 LLM Logit 采样管线：Penalties + Top-K + Min-P + Top-P Nucleus (`nucleus_sampler.cp`)
+
+面向 llama.cpp / vLLM / SGLang 级推理引擎的 100% 纯 CP 零动态堆分配全栈 Logit 后处理与随机采样管线（栈上固定候选池 `SAMPLER_MAX_CANDIDATES = 256`）：
+
+- **常量与数据模型**：
+  - `SAMPLER_MAX_CANDIDATES = 256`
+  - `NucleusSamplerConfig`（`temperature` [`0.0` 贪心], `top_k` [`0` 不限], `top_p` [`(0, 1]`], `min_p` [`[0, 1]`], `repeat_penalty` [`>= 1.0`], `frequency_penalty`, `presence_penalty`；提供 `defaults()` 与 `isValid()`）
+  - `SamplerCandidate`（`token_id`, `logit`, `prob`）、`NucleusSampleOutcome`（`ok`, `token_id`, `selected_prob`, `kept_candidates`, `entropy_nats`）
+- **核心纯函数**：
+  - `applyTokenPenaltiesInPlace(logits, recent_tokens, repeat_penalty, freq_penalty, presence_penalty)`：Keskar 正/负 logit 双向重复惩罚 + OpenAI `freq_penalty * count + presence_penalty`（自动去重统计频次，安全跳过越界 ID 与非有限 logit）。
+  - `selectTopKCandidates(logits, top_k, out_cands): usize`：原地最小堆 $O(V \log K)$ 提取降序 Top-K 有限候选，自动过滤 `NaN`/`±Inf`，平局按 `token_id` 升序决胜。
+  - `softmaxAndTruncateNucleus(cands, count, temperature, top_p, min_p): usize`：数值稳定温度 Softmax -> **Min-P** 自适应长尾截断（`prob >= min_p * max_prob`）-> **Top-P (Nucleus)** 累计概率截断（至少保留 1 候选）-> 重归一化概率和为 `1.0`。
+  - `sampleFromLogits(logits, recent_tokens, cfg, rng_seed): NucleusSampleOutcome`：端到端零堆管线（含 `temperature == 0` 贪心快路径、53-bit SplitMix64 确定性采样与香农熵 `entropy_nats` 遥测）。
+
+```cp
+import {
+    NucleusSamplerConfig,
+    sampleFromLogits,
+} from "cap:attention";
+
+pub fn demoNucleusSamplerPipeline() {
+    let logits_buf: [6]f32 = [3.5, 3.2, 1.0, -0.5, -2.0, -5.0];
+    const recent: [2]u32 = [0, 0]; // token 0 重复出现 2 次
+    let logits: []f32 = logits_buf[0..];
+
+    let cfg = NucleusSamplerConfig.defaults();
+    cfg.temperature = 0.8;
+    cfg.top_k = 4;
+    cfg.min_p = 0.05;
+    cfg.top_p = 0.90;
+    cfg.repeat_penalty = 1.25;
+    cfg.frequency_penalty = 0.2;
+
+    const outcome = sampleFromLogits(logits, recent[0..], cfg, 2026);
+    * = outcome; // outcome.ok == true, 附带 selected_prob, kept_candidates, entropy_nats
+}
+```
