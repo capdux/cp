@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/barrel_imports.cp | Synced: 2026-11-21T20:01:31Z
+// Source: Absorbed from /data/dev/bun/src/bundler/barrel_imports.cp | Synced: 2026-11-22T08:16:01Z
 // Pure-CP zero-allocation Barrel File Optimization Engine (inspired by Bun & Rolldown):
 // - Detects pure re-export barrel modules (`sideEffects: false` / explicit allowlist)
 // - Tracks persistent `RequestedExportsSet` (`partial` vs `all`) with deduplication

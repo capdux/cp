@@ -701,3 +701,6 @@ const c2 = pool.connect("API.EXAMPLE.COM", 443, true, 102, 4)?;  // ReusedExisti
    - 服务端应提供统一的错误处理回调（对应 Bun `error(err)` handler），在开发模式输出详细诊断信息，在生产环境返回脱敏的 5xx 响应并记录结构化错误日志；自定义错误回调返回响应时优先覆盖框架默认 500 错误页。
 3. **TLS 证书载荷、CA 覆盖与 SNI 隔离（吸收自 `/data/dev/bun/docs/runtime/http/tls.mdx`）**：
    - TLS 配置中的 `key` 与 `cert` 均期望传入**证书/私钥文件内容本身**（而非文件路径字符串），且必须同时提供；自定义 `ca` 会覆盖内置的 Mozilla 根证书列表，客户端连接池复用时必须严格隔离 `reject_unauthorized` 策略（`H3PooledSession.matches` 强制比对），并通过 SNI（`serverName`）支持多域名证书托管。
+4. **异步 HTTP 并发限流与任务状态机编排（`async_http.cp`，吸收自 `/data/dev/bun/src/http/AsyncHTTP.cp` 与 `/data/dev/bun/docs/guides/http/{fetch,proxy,fetch-unix}.mdx`）**：
+   - 导出：`ASYNC_HTTP_DEFAULT_MAX_SIMULTANEOUS` (`256`)、`ASYNC_HTTP_MAX_CONFIG_LIMIT` (`65536`)、`AsyncHttpError`、`AsyncHttpState`、`AsyncHttpVerboseLevel`、`AsyncHttpOptions`、`AsyncHttpConcurrencyLimiter`、`AsyncHttpTask`；
+   - 默认最大同时请求数对齐上游 `BUN_CONFIG_MAX_HTTP_REQUESTS = 256`（通过 `parseMaxRequestsEnv()` 校验 `1..65536`）；`AsyncHttpOptions.validate()` 拦截代理与 Unix Domain Socket 传输冲突；`AsyncHttpTask` 强制 `pending -> scheduled -> sending -> success|fail` 合法迁移及有界 `resetForRetry()`。

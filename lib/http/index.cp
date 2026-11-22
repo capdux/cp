@@ -793,3 +793,15 @@ export {
     StreamBuffer,
     ThreadSafeStreamBuffer,
 } from "./stream_buffer.cp";
+
+// --- Async HTTP Task Orchestration & Concurrency Limiter ---
+export {
+    ASYNC_HTTP_DEFAULT_MAX_SIMULTANEOUS,
+    ASYNC_HTTP_MAX_CONFIG_LIMIT,
+    AsyncHttpError,
+    AsyncHttpState,
+    AsyncHttpVerboseLevel,
+    AsyncHttpOptions,
+    AsyncHttpConcurrencyLimiter,
+    AsyncHttpTask,
+} from "./async_http.cp";

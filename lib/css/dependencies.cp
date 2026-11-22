@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/dependencies.cp | Synced: 2026-11-22T01:33:00Z
+// Source: Absorbed from /data/dev/bun/src/css/dependencies.cp | Synced: 2026-11-22T08:16:01Z
 // Pure-CP zero-allocation CSS `@import` & `url(...)` dependency analyzer,
 // source range tracker, and deterministic placeholder hash generator.
 
