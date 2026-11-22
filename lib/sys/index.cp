@@ -1414,3 +1414,18 @@ export {
     DeficitRoundRobinScheduler,
 } from "./fairSched.cp";
 
+// --- procTree (Zero-Alloc Process Tree, Subreaper Orphan Adoption & Shutdown Planner) ---
+export {
+    PROC_TREE_MAX_NODES,
+    PROC_TREE_NO_PID,
+    PROC_TREE_DEFAULT_INIT_PID,
+    ProcNodeState,
+    ProcTreeOpStatus,
+    ProcNode,
+    ReapedProcInfo,
+    ProcExitReport,
+    ProcTreeStats,
+    formatProcNodeState,
+    ProcessTree,
+} from "./procTree.cp";
+

@@ -520,6 +520,49 @@ pub fn demoFairScheduler() {
 }
 ```
 
+### 零分配进程树、Subreaper 孤儿托管与自底向上优雅停机编排器 (`procTree.cp`)
+
+面向容器初始化进程、Agent 沙箱与多级子进程监管的 100% 纯 CP 零动态堆分配进程树管理与停机编排引擎：
+
+- **常量与枚举**：
+  - `PROC_TREE_MAX_NODES = 64`、`PROC_TREE_NO_PID = 0`、`PROC_TREE_DEFAULT_INIT_PID = 1`
+  - `ProcNodeState`（`running | stopping | zombie | reaped`；配套 `formatProcNodeState(state)`）
+  - `ProcTreeOpStatus`（`ok | invalid_pid | duplicate_pid | parent_not_found | parent_not_alive | cycle_detected | capacity_full | not_found | invalid_state`）
+- **数据模型**：
+  - `ProcNode`（`pid`, `ppid`, `pgid`, `state`, `exit_code`, `is_subreaper`, `started_at_ms`, `exited_at_ms`; `isAlive()`）
+  - `ReapedProcInfo`、`ProcExitReport`、`ProcTreeStats`
+- **核心引擎 `ProcessTree`**：
+  - `init(root_pid, now_ms): ProcessTree?` / `spawn(*_, pid, ppid, pgid, is_subreaper, now_ms)` / `reparent(*_, pid, new_ppid)`（含显式祖先链环路防护）/ `setSubreaper(*_, pid, enabled)` / `markStopping(*_, pid)` / `getNode(pid)`
+  - `planShutdownOrder(subtree_root_pid, *out_pids): usize`：纯迭代零递归 BFS + 层次反转，按由深到浅“先子后父”确定性顺序输出优雅停机列表。
+  - `collectProcessGroup(pgid, *out_pids): usize`：按升序 PID 批量筛选进程组内全部存活进程。
+  - `markExited(*_, pid, exit_code, now_ms): ProcExitReport`：进入 `zombie` 状态并将全部直系子进程原子重挂到祖先链上最近的存活 `is_subreaper`（或根 init）节点，彻底杜绝孤儿逃逸。
+  - `reapZombies(*_, parent_pid, *out_reaped): usize` / `stats(): ProcTreeStats`
+
+```cp
+import {
+    ReapedProcInfo,
+    ProcessTree,
+} from "cap:sys";
+
+pub fn demoProcessTree() {
+    let tree = ProcessTree.init(1, 1000) ?? return;
+    * = tree.spawn(10, 1, 10, true, 1010);  // subreaper
+    * = tree.spawn(20, 10, 10, false, 1020);
+    * = tree.spawn(30, 20, 10, false, 1030);
+
+    // 1. 纯迭代自底向上优雅停机顺序: [30, 20, 10]
+    let order: [8]u32 = [0; 8];
+    let order_s: []u32 = order[0..];
+    * = tree.planShutdownOrder(10, *order_s);
+
+    // 2. 中间父进程 20 退出 -> 孤儿 30 自动重挂至最近的 subreaper (10)
+    * = tree.markExited(20, 1, 2000);
+    let reaped: [4]ReapedProcInfo = [ReapedProcInfo{}; 4];
+    let reaped_s: []ReapedProcInfo = reaped[0..];
+    * = tree.reapZombies(10, *reaped_s);
+}
+```
+
 ## 收敛子模块深度文档
 
 - [acpi.md](sys/acpi.md)
