@@ -612,6 +612,15 @@ impl<'a> Parser<'a> {
             self.in_switch_arm += 1;
             let pat = self.parse_pattern()?;
             self.in_switch_arm -= 1;
+            let (pre_capture, pre_is_capture_ptr) = if self.peek() == Some(&Token::Star)
+                && matches!(self.peek_next(), Some(Token::Ident(_)))
+            {
+                self.bump()?; // consume '*'
+                let cap_id = self.parse_ident()?;
+                (Some(cap_id), true)
+            } else {
+                (None, false)
+            };
             let guard = if self.peek() == Some(&Token::If) {
                 self.bump()?;
                 let prev = self.in_match_guard;
@@ -623,7 +632,9 @@ impl<'a> Parser<'a> {
                 None
             };
             self.expect(Token::FatArrow)?;
-            let (capture, is_capture_ptr) = if self.peek() == Some(&Token::Pipe) {
+            let (capture, is_capture_ptr) = if pre_capture.is_some() {
+                (pre_capture, pre_is_capture_ptr)
+            } else if self.peek() == Some(&Token::Pipe) {
                 self.bump()?; // consume '|'
                 let is_ptr =
                     if self.peek() == Some(&Token::Star) || self.peek() == Some(&Token::Mut) {

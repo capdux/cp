@@ -1738,3 +1738,16 @@
   > 已读取第 7 条新工单 **`task-bun-20261122-underscore-struct-lit`**（复现：[repro_underscore_struct_lit.cp](file:///data/dev/cp/temp/repro_underscore_struct_lit.cp)：下划线开头结构体类型名 `_S` 在 `_S{ x: 1 }` 字面量中未被识别导致报 `E0100`），并已同步追加派发给正在 `cpc/src/` 作业的热修子智能体 **`cc643cae`** 统一打包修复、发布 `sync_cpc.sh release` 与逐一 `resolve` 结单。
   >
   > 原有 2 路第 3 波常驻生态子智能体（Priority ① `e7adabc2` + Priority ② `0e1f5c0c`）继续并行运转不受影响。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-switch-mut-payload`）[ticket:task-bun-20261122-switch-mut-payload]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 17:41:45` | 状态：`resolved` | 结单：`2026-11-22T17:47:29`
+- **报错/需求摘要**：switch 分支无管道可变载荷捕获 .a *v => { ... } 报 E0111: expected token 'FatArrow', found 'Star'（对比 if (*v := opt) 已支持 *v）
+- **结单与处理汇报**：已支持 switch 分支无管道可变载荷捕获 .a *v => / .a, .b *v => / 带 guard .a *v if ... =>，并同步修复复杂 switch 路径的指针捕获代码生成；已发布 release 版 cpc，原始 repro 与 cap/test/test_switch_mut_payload.cp (3/3)、test_switch_multitag_capture.cp (1/1) 全部 PASS。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 17:41:46）[step:15648]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261122-switch-mut-payload)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取工单 **`task-bun-20261122-switch-mut-payload`**（复现：[repro_switch_mut_payload.cp](file:///data/dev/cp/temp/repro_switch_mut_payload.cp)：`switch` 分支无管道可变载荷捕获 `.a *v => { ... }` 报 `E0111: expected token 'FatArrow', found 'Star'`），并立即启动独立热修子智能体 **`49d5d09e`**（`CPC Hotfix Engineer`）专职修复、发布 `sync_cpc.sh release`、补齐回归测试并执行 `resolve` 结单。
+  >
+  > 原有 2 路第 3 波常驻生态子智能体（Priority ① `e7adabc2` + Priority ③ `0e1f5c0c`）继续并行运转不受影响。待热修回报后将立即验收提交并同步 `SESSION.md`。

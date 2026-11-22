@@ -1516,7 +1516,17 @@ impl Codegen {
             }
         };
         let blk_label = format!("__sw_blk_{}", sw_id);
-        let disc_var = format!("__disc_{}", sw_id);
+        let has_ptr_capture = m.arms.iter().any(|a| a.is_capture_ptr);
+        let disc_decl_var = if has_ptr_capture {
+            format!("__disc_ptr_{}", sw_id)
+        } else {
+            format!("__disc_{}", sw_id)
+        };
+        let disc_var = if has_ptr_capture {
+            format!("{}.*", disc_decl_var)
+        } else {
+            disc_decl_var.clone()
+        };
 
         let (ok_cp_ty, err_cp_ty, err_variants) = match &disc_cp_ty {
             Some(Type::ResultType { ok, err }) => {
@@ -1591,7 +1601,7 @@ impl Codegen {
                 }
             };
 
-            let (outer_cond, inner_setup, pat_cond, pat_binds) = match &arm.pat {
+            let (outer_cond, inner_setup, pat_cond, mut pat_binds) = match &arm.pat {
                 Pattern::Wildcard => (
                     "true".to_string(),
                     String::new(),
@@ -1661,6 +1671,65 @@ impl Codegen {
                     }
                 }
             };
+
+            if let Some(cap) = &arm.capture {
+                if cap.sym != "_" {
+                    let ptr_prefix = if arm.is_capture_ptr { "*" } else { "" };
+                    let cap_bind = match &arm.pat {
+                        Pattern::Enum(ep) if ep.fields.is_none() && ep.tuple_pats.is_none() => {
+                            let tag = if ep.enum_name.sym.is_empty() {
+                                format!(".{}", ep.variant_name.sym)
+                            } else {
+                                format!("{}.{}", ep.enum_name.sym, ep.variant_name.sym)
+                            };
+                            format!(
+                                "const {0} = switch ({1}) {{ {2} => |{3}__cp_cap| __cp_cap, else => unreachable }}; _ = &{0}; ",
+                                cap.sym, disc_var, tag, ptr_prefix
+                            )
+                        }
+                        Pattern::Or(pats) if pats.iter().all(|p| matches!(p, Pattern::Enum(_))) => {
+                            let tag_arms: Vec<String> = pats
+                                .iter()
+                                .filter_map(|p| match p {
+                                    Pattern::Enum(ep) => {
+                                        let tag = if ep.enum_name.sym.is_empty() {
+                                            format!(".{}", ep.variant_name.sym)
+                                        } else {
+                                            format!("{}.{}", ep.enum_name.sym, ep.variant_name.sym)
+                                        };
+                                        Some(format!(
+                                            "{} => |{}__cp_cap| __cp_cap",
+                                            tag, ptr_prefix
+                                        ))
+                                    }
+                                    _ => None,
+                                })
+                                .collect();
+                            if !tag_arms.is_empty() {
+                                format!(
+                                    "const {0} = switch ({1}) {{ {2}, else => unreachable }}; _ = &{0}; ",
+                                    cap.sym,
+                                    disc_var,
+                                    tag_arms.join(", ")
+                                )
+                            } else {
+                                String::new()
+                            }
+                        }
+                        _ => {
+                            if arm.is_capture_ptr {
+                                format!("const {0} = &({1}); _ = &{0}; ", cap.sym, disc_var)
+                            } else {
+                                format!("const {0} = {1}; _ = &{0}; ", cap.sym, disc_var)
+                            }
+                        }
+                    };
+                    if !cap_bind.is_empty() {
+                        pat_binds.push_str(&cap_bind);
+                        self.block_locals.insert(cap.sym.clone());
+                    }
+                }
+            }
 
             let old_var_cp_types = self.var_cp_types.clone();
             for (b_name, b_ty) in &bound_types {
@@ -1745,6 +1814,9 @@ impl Codegen {
             for (b_name, _) in &bound_types {
                 self.block_locals.remove(b_name);
             }
+            if let Some(cap) = &arm.capture {
+                self.block_locals.remove(&cap.sym);
+            }
             self.var_cp_types = old_var_cp_types;
 
             let inner_check = if pat_cond == "true" && guard_cond == "true" {
@@ -1773,15 +1845,20 @@ impl Codegen {
             }
         }
 
+        let disc_init = if has_ptr_capture {
+            format!("&({})", disc_code)
+        } else {
+            disc_code
+        };
         if is_expr {
             format!(
                 "({}: {{ const {} = {}; _ = &{}; {} unreachable; }})",
-                blk_label, disc_var, disc_code, disc_var, arms_code
+                blk_label, disc_decl_var, disc_init, disc_decl_var, arms_code
             )
         } else {
             format!(
                 "{}: {{ const {} = {}; _ = &{}; {} }}",
-                blk_label, disc_var, disc_code, disc_var, arms_code
+                blk_label, disc_decl_var, disc_init, disc_decl_var, arms_code
             )
         }
     }
