@@ -532,3 +532,21 @@ export {
     EloRankEntry,
     ArenaEloTable,
 } from "./evalJudge.cp";
+
+export {
+    TRACE_EVAL_MAX_EXPECTED,
+    TRACE_EVAL_MAX_FORBIDDEN,
+    TRACE_EVAL_MAX_STEPS,
+    TRACE_EVAL_BPS_DENOM,
+    traceToolHash,
+    TraceMatchMode,
+    TraceFailReason,
+    TraceToolStep,
+    TraceExpectedTool,
+    TraceContract,
+    TraceAssertionReport,
+    TraceSuiteSummary,
+    evaluateTraceContract,
+    evaluateTraceBatch,
+    TraceSuiteAccumulator,
+} from "./traceEval.cp";

@@ -2509,3 +2509,51 @@ fn evalJudgeQuickStart() {
     }
 }
 ```
+
+
+---
+
+## 子模块：零分配 AI Agent 工具调用轨迹契约断言与 CI 回归门禁（`traceEval.cp`）
+
+### 核心特性
+
+- **4 种轨迹匹配模式（`TraceMatchMode`）**：支持 `exact_sequence`（严格逐一顺序一致）、`ordered_subsequence`（允许探索步骤穿插，里程碑按序出现）、`unordered_subset`（无序集合覆盖，支持重复调用次数校验）与 `any_of`（命中任一目标工具即通过）。
+- **安全与回归硬门禁**：内置禁用工具黑名单（`forbidden_tool_invoked` 最高优先级拦截）、可选精确参数指纹校验（`addExpectedWithArgs` -> `args_hash_mismatch`），以及最大步数、总耗时（ms）与总 Token 三维预算门禁（`0` 表示不限制）。
+- **批量断言与多用例 CI 门禁（`evaluateTraceBatch` / `TraceSuiteAccumulator`）**：汇总多用例通过率 `pass_rate_bps`（`0..=10_000`）、按禁用/预算/契约三类拆分失败统计，并提供 `meetsMinPassRate(min_pass_rate_bps)` 一键门禁判定。
+
+### 导出清单
+
+- **常量与辅助**：`TRACE_EVAL_MAX_EXPECTED` (`32`)、`TRACE_EVAL_MAX_FORBIDDEN` (`32`)、`TRACE_EVAL_MAX_STEPS` (`128`)、`TRACE_EVAL_BPS_DENOM` (`10_000`)、`traceToolHash(bytes): u64`
+- **枚举与模型**：`TraceMatchMode`、`TraceFailReason`、`TraceToolStep`、`TraceExpectedTool`、`TraceContract`、`TraceAssertionReport`、`TraceSuiteSummary`
+- **评估与门禁**：`evaluateTraceContract(contract, steps)`、`evaluateTraceBatch(contracts, steps, *out_reports)`、`TraceSuiteAccumulator`
+
+### QuickStart 示例
+
+```cp
+import {
+    traceToolHash,
+    TraceMatchMode,
+    TraceToolStep,
+    TraceContract,
+    evaluateTraceContract,
+    TraceSuiteAccumulator,
+} from "cap:agent";
+
+fn traceEvalQuickStart() {
+    let contract = TraceContract.init(TraceMatchMode.ordered_subsequence);
+    * = contract.addExpected(traceToolHash("search"));
+    * = contract.addExpected(traceToolHash("edit_file"));
+    * = contract.addForbidden(traceToolHash("rm_rf"));
+    contract.setBudgets(10, 5_000, 4_000);
+
+    const steps: [2]TraceToolStep = [
+        TraceToolStep{ tool_id_hash: traceToolHash("search"), latency_ms: 80, tokens_used: 200 },
+        TraceToolStep{ tool_id_hash: traceToolHash("edit_file"), latency_ms: 60, tokens_used: 300 },
+    ];
+    const rep = evaluateTraceContract(contract, steps[0..]);
+
+    let suite = TraceSuiteAccumulator.init();
+    suite.record(rep);
+    * = suite.meetsMinPassRate(9_500); // true (10000 bps)
+}
+```
