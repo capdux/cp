@@ -1200,3 +1200,62 @@ pub fn demoSemanticIntentRouter() {
     }
 }
 ```
+
+---
+
+## 零分配 RAPTOR 分层摘要树与多层级联合检索器（RAPTOR Tree，`raptor_tree.cp`）
+
+面向长文档层次化 RAG 的 100% 纯 CP 零动态堆分配 RAPTOR（Recursive Abstractive Processing for Tree-Organized Retrieval）分层摘要树与双模式联合检索引擎：
+
+- **常量与枚举**：
+  - `RAPTOR_MAX_NODES = 256`、`RAPTOR_MAX_LEVELS = 8`、`RAPTOR_NO_NODE = 0xFFFF`
+  - `RaptorNodeKind`（`leaf_chunk` | `cluster_summary` | `root_abstraction`）
+  - `RaptorSearchMode`（`collapsed_tree` 全层级扁平联合检索 | `tree_traversal` 自顶向下逐层剪枝路由）
+  - `RaptorScoreFusion`（`linear_weighted` 按层线性加权 | `reciprocal_rank` 按层权重倒数排名融合 RRF）
+- **数据模型**：
+  - `RaptorTreeConfig`（`dim`, `max_nodes`, `level_weights`, `rrf_k`, `cluster_sim_threshold`；提供 `isValid()`）
+  - `RaptorNode`（`node_id`, `slot_idx`, `level`, `kind`, `parent_idx`, `first_child_idx`, `next_sibling_idx`, `child_count`, `token_count`, `cluster_size`, `active`）
+  - `RaptorSearchHit`（`node_id`, `slot_idx`, `level`, `kind`, `raw_similarity`, `fused_score`, `l2_sq_dist`, `token_count`）
+  - `RaptorClusterAssignment`（`leaf_slot`, `target_parent_slot`, `similarity`, `l2_sq_dist`, `matched_existing`）
+  - `RaptorTreeStats`（`total_nodes`, `capacity`, `dim`, `max_level`, `level_counts`, `leaf_count`, `summary_count`, `root_count`, `total_tokens`）
+- **核心引擎（`RaptorTree`）**：
+  - `init(cfg, vecs_flat_buf: *[]f32): RaptorTree?`：复用调用方扁平 `f32` 向量缓冲，零动态堆分配。
+  - `addLeaf(*_, node_id, embedding, token_count): u16?` / `addSummaryNode(...)` / `addSummaryFromChildrenMean(...)` / `attachChild(...)`：构建多层父子摘要树（采用 O(1) First-Child/Next-Sibling/Parent 链，自动 L2 归一化与跨层防环校验）。
+  - `findBestClusterAtLevel(embedding, target_level)` / `assignLeafIncremental(*_, node_id, embedding, token_count, target_summary_level, update_centroid)`：基于原生 `@dot` / `@l2sq` 增量余弦相似度聚类归属，并可选通过 `@fma` 原地更新父质心。
+  - `traverseBfs(start_slot, out_slots)` / `traverseDfs(start_slot, out_slots)` / `collectChildren(...)` / `collectAncestors(...)`：纯迭代零递归遍历与父子/祖先路径收集。
+  - `searchCollapsed(...)` / `searchTreeTraversal(...)` / `search(...)`：支持 Collapsed Tree 全层级扁平 Top-K 与 Tree Traversal 自顶向下 beam 剪枝 Top-K 双模式检索，内置按层权重融合与防重复命中去重。
+
+### RAPTOR 分层摘要树 QuickStart 示例
+
+```cp
+import {
+    RaptorNodeKind,
+    RaptorSearchMode,
+    RaptorScoreFusion,
+    RaptorTreeConfig,
+    RaptorSearchHit,
+    RaptorTree,
+} from "cap:vector";
+
+pub fn demoRaptorTree() {
+    let vec_buf: [128]f32 = [0.0; 128]; // up to 32 nodes x 4D
+    let vec_slice: []f32 = vec_buf[0..];
+    const cfg = RaptorTreeConfig{ dim: 4, max_nodes: 32 };
+    let tree = RaptorTree.init(cfg, *vec_slice) ?? return;
+
+    const e0: [4]f32 = [1.0, 0.1, 0.0, 0.0];
+    const e1: [4]f32 = [0.9, 0.2, 0.0, 0.0];
+    const l0 = tree.addLeaf(100, e0[0..], 120) ?? return;
+    const l1 = tree.addLeaf(101, e1[0..], 110) ?? return;
+    const ch: [2]u16 = [l0, l1];
+    const s0 = tree.addSummaryFromChildrenMean(200, 1, RaptorNodeKind.cluster_summary, 64, ch[0..]) ?? return;
+    const rch: [1]u16 = [s0];
+    * = tree.addSummaryFromChildrenMean(300, 2, RaptorNodeKind.root_abstraction, 32, rch[0..]);
+
+    const q: [4]f32 = [0.98, 0.12, 0.0, 0.0];
+    let hits: [4]RaptorSearchHit = [RaptorSearchHit{}; 4];
+    let hits_s: []RaptorSearchHit = hits[0..];
+    const n = tree.search(q[0..], RaptorSearchMode.tree_traversal, RaptorScoreFusion.linear_weighted, 3, 2, *hits_s);
+    * = n;
+}
+```

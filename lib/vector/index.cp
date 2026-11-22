@@ -240,3 +240,18 @@ export {
     SemanticRouterStats,
     SemanticIntentRouter,
 } from "./semantic_router.cp";
+
+export {
+    RAPTOR_MAX_NODES,
+    RAPTOR_MAX_LEVELS,
+    RAPTOR_NO_NODE,
+    RaptorNodeKind,
+    RaptorSearchMode,
+    RaptorScoreFusion,
+    RaptorTreeConfig,
+    RaptorNode,
+    RaptorSearchHit,
+    RaptorClusterAssignment,
+    RaptorTreeStats,
+    RaptorTree,
+} from "./raptor_tree.cp";
