@@ -139,3 +139,14 @@ export {
     PgStartupMessage,
     PgTlsUpgradeRequest,
 } from "./startupFrame.cp";
+
+export {
+    PG_TAG_DATA_ROW,
+    PG_DATA_ROW_NULL_LEN,
+    PG_DATA_ROW_HEADER_LEN,
+    PgDataRowError,
+    PgDataRowCell,
+    PgDataRowIter,
+    PgDataRowView,
+    PgDataRowEncoder,
+} from "./dataRow.cp";

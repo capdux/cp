@@ -269,6 +269,35 @@ const decoded = PgStartupMessage.decodeFrame(buf[0..n_start])?;
 * = n_ssl; * = decoded.database();
 ```
 
+### `DataRow`（`'D'`）零拷贝行视图与流式编码器（`dataRow.cp`）
+
+吸收自 `/data/dev/bun/src/sql/postgres/protocol/DataRow.cp`，零堆分配编解码 PostgreSQL v3.0 结果集热路径 `DataRow`（`'D' = 0x44`）报文：
+
+- **常量**：`PG_TAG_DATA_ROW` (`'D'`)、`PG_DATA_ROW_NULL_LEN` (`-1` / `0xFFFFFFFF`)、`PG_DATA_ROW_HEADER_LEN` (`7`)。
+- **`PgDataRowView` & `PgDataRowIter` & `PgDataRowCell`**：
+  - `PgDataRowView.decodeFrame(frame)` / `.decodePayload(payload)` 在构造时单遍校验全部列长度与帧边界，精确区分 SQL `NULL`（`value == null`）与空字节切片 `""`（`value.len == 0`）；
+  - `.iter()` 返回零拷贝顺序迭代器（`.next()` / `.remaining()`）；
+  - `.columnAt(idx)` / `.columnCount()` / `.isEmpty()` / `.nullCount()` / `.nonNullCount()`。
+- **`PgDataRowEncoder`**：写入外部 `[]u8` 缓冲区的流式帧编码器，提供 `init(buf)` / `writeNull()` / `writeBytes(data)` / `writeCell(opt)` / `columnCount()` / `writtenLen()` / `finish()`（自动回填 `'D'` 帧头、4B 总长度与 2B 列数）。
+
+```cp
+import { PgDataRowEncoder, PgDataRowView } from "cap:pgwire";
+
+let buf: [256]u8 = [0; 256];
+let enc = PgDataRowEncoder.init(buf[0..])?;
+* = enc.writeBytes("42")?;
+* = enc.writeBytes("alice")?;
+* = enc.writeNull()?;
+* = enc.writeBytes("")?;
+const frame_len = enc.finish()?;
+
+const row = PgDataRowView.decodeFrame(buf[0..frame_len])?;
+let it = row.iter();
+while (cell := it.next()) {
+    * = cell.isNull();
+}
+```
+
 ---
 
 ## 4. 示例
