@@ -479,3 +479,27 @@ const term_wire = encodePgTerminate(buf[0..])?;     // ['X', 0, 0, 0, 4]
    - PostgreSQL 事务内一旦单条语句出错，`ReadyForQuery` (`'Z'`) 返回 `PgTxStatus.failed_transaction` (`'E'`)，须执行 `ROLLBACK`（或回滚至 `SAVEPOINT` 以实现局部错误恢复）待状态恢复为 `idle` (`'I'`) / `in_transaction` (`'T'`) 后方可继续新查询；`SqlTransactionStateMachine`、`PgBackendKeyData`（配合 `CancelRequest`）与 `SqliteDatabase`（`begin`/`commit`/`rollback`）配合 `defer` 可确保异常路径下确定性回滚，防止连接池归还脏事务连接；跨会话分布式事务在 PostgreSQL 走 Prepared Transactions (2PC)，在 MySQL 走 XA Transactions。
 5. **15 字节小对象优化（`SqlData`）**：
    - 继承自 Bun `src/sql/shared/Data.cp`，短列值直接内联存储于 15 字节槽位，显著降低宽表批量扫描时的堆分配压力。
+6. **MySQL 预处理二进制协议执行帧编解码（`lib/sql/mysql_stmt_execute.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/PreparedStatement.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
+   - **二进制参数绑定防注入与性能优势**：对齐 `Bun.SQL` MySQL 5.7+/8.0+ 预处理管线（`COM_STMT_PREPARE` -> `COM_STMT_EXECUTE` `0x17` -> `COM_STMT_CLOSE`），通过独立的 NULL 位图（`(param_count + 7) / 8` 字节，无偏移）与类型元数据头（`field_type` + `0x80` 无符号标志）传递参数，避免文本 SQL 拼接与转义开销；
+   - **全类型覆盖与零拷贝往返解码**：支持 `Tiny`/`Short`/`Long`/`LongLong`（有符号/无符号小端）、IEEE-754 `Float`/`Double`、`VarString`/`String`/`Blob`/`Json`/`NewDecimal`（Length-Encoded String）与 `Null`；`encodeMySqlStmtExecute` / `decodeMySqlStmtExecuteFrame` 自动封装与校验 4 字节 MySQL 包头，严格拦截截断报文、非法命令字节、非法 `new_params_bind_flag` 与尾随垃圾字节。
+
+```cp
+import {
+    MySqlExecParam,
+    MySqlStmtExecuteRequest,
+    encodeMySqlStmtExecute,
+    decodeMySqlStmtExecuteFrame,
+} from "cap:sql";
+
+const req = MySqlStmtExecuteRequest{ statement_id: 42, iteration_count: 1, new_params_bind_flag: true };
+const params: [3]MySqlExecParam = [
+    MySqlExecParam.longUnsigned(1001),
+    MySqlExecParam.nullParam(),
+    MySqlExecParam.text("Alice"),
+];
+let wire: [128]u8 = [0; 128];
+const n = encodeMySqlStmtExecute(req, params[0..], 0, wire[0..])?;
+const decoded = decodeMySqlStmtExecuteFrame(wire[0..n], 3)?;
+// decoded.statement_id == 42, decoded.isParamNull(1) == true, decoded.params[2].bytes_val == "Alice"
+* = decoded;
+```

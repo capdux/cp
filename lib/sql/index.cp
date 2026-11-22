@@ -320,3 +320,24 @@ export {
     encodePgTerminate,
     decodePgTerminate,
 } from "./pg_auth_copy.cp";
+
+export {
+    MYSQL_COM_STMT_EXECUTE_CMD,
+    MYSQL_STMT_MAX_PARAMS,
+    MYSQL_CURSOR_TYPE_NO_CURSOR,
+    MYSQL_CURSOR_TYPE_READ_ONLY,
+    MYSQL_CURSOR_TYPE_FOR_UPDATE,
+    MYSQL_CURSOR_TYPE_SCROLLABLE,
+    MYSQL_PARAM_UNSIGNED_FLAG,
+    MySqlStmtExecuteError,
+    MySqlExecFieldType,
+    MySqlExecParam,
+    MySqlStmtExecuteRequest,
+    MySqlStmtExecuteDecoded,
+    mysqlNullBitmapLen,
+    mysqlIsNullBitmapSet,
+    encodeMySqlStmtExecutePayload,
+    encodeMySqlStmtExecute,
+    decodeMySqlStmtExecutePayload,
+    decodeMySqlStmtExecuteFrame,
+} from "./mysql_stmt_execute.cp";
