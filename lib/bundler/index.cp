@@ -201,3 +201,18 @@ export {
     ModuleInfoFlags,
     TranspiledModuleInfo,
 } from "./module_info";
+
+export {
+    CROSS_CHUNK_MAX_CHUNKS,
+    CROSS_CHUNK_MAX_SYMBOLS,
+    CROSS_CHUNK_MAX_USES,
+    CROSS_CHUNK_MAX_EDGES,
+    CrossChunkError,
+    CrossChunkImportKind,
+    CrossChunkNode,
+    CrossChunkSymbol,
+    CrossChunkImportEdge,
+    CrossChunkExportEntry,
+    CrossChunkResult,
+    CrossChunkAnalyzer,
+} from "./cross_chunk_deps";

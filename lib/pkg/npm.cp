@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/npm.cp | Synced: 2026-11-22T06:02:00Z
+// Source: Absorbed from /data/dev/bun/src/install/npm.cp | Synced: 2026-11-22T07:33:00Z
 // ============================================================================
 // lib/pkg/npm.cp — NPM Registry Config (.npmrc), Auth & Packument Manifest Parser
 // Absorbed from Bun src/install/npm.cp

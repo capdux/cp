@@ -308,6 +308,25 @@ const restored = TranspiledModuleInfo.deserialize(cache_buf[0..n])?;
 * = restored;
 ```
 
+### 3.16 跨 Chunk 依赖分析与代码分割导入/导出表（`lib/bundler/cross_chunk_deps.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/computeCrossChunkDependencies.cp` 与 `/data/dev/bun/docs/bundler/index.mdx`）
+- **常量与错误集**：`CROSS_CHUNK_MAX_CHUNKS` (`32`)、`CROSS_CHUNK_MAX_SYMBOLS` (`128`)、`CROSS_CHUNK_MAX_USES` (`256`)、`CROSS_CHUNK_MAX_EDGES` (`128`)、`CrossChunkError`
+- **核心类型与方法**：`CrossChunkImportKind`（`Stmt` / `SideEffect` / `Dynamic`）、`CrossChunkNode`、`CrossChunkSymbol`、`CrossChunkImportEdge`、`CrossChunkExportEntry`、`CrossChunkResult`（`hasImportEdge` / `hasAnyStaticImportBetween` / `isSymbolExportedByChunk` / `importCountForChunk` / `exportCountForChunk`）、`CrossChunkAnalyzer`（`init` / `addChunk` / `addSymbol` / `recordSymbolUse` / `recordDynamicImport` / `compute`）。
+- **代码分割（`--splitting`）契约**：多入口共享模块拆分为独立 chunk 后，自动将跨 chunk 符号引用汇总为去重且确定性排序的导入/导出表；遵循 CJS `namespace_alias` 重定向；对属于某入口点但无直接符号引用的共享 JS chunk 自动注入 `SideEffect` 导入以保证副作用按序执行；并追踪动态 `import()` 跨 chunk 依赖纳入最终内容哈希。
+
+```cp
+import { CrossChunkAnalyzer, CrossChunkImportKind } from "cap:bundler";
+
+let analyzer = CrossChunkAnalyzer.init();
+const entry_a = analyzer.addChunk(true, true, 0, 1)?;
+const shared = analyzer.addChunk(true, false, 0, 1)?;
+const sym_util = analyzer.addSymbol("sharedUtil", shared, false, false, null)?;
+analyzer.recordSymbolUse(entry_a, sym_util)?;
+const res = analyzer.compute()?;
+// res.hasImportEdge(entry_a, shared, CrossChunkImportKind.Stmt, sym_util) == true
+// res.isSymbolExportedByChunk(shared, sym_util) == true
+* = res;
+```
+
 ---
 
 ## 四、 上游行为契约、边界与安全注意事项
