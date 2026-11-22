@@ -121,6 +121,17 @@
 | `scanPiiSpans(input, out_spans: *[]PiiSpan): usize` | 单遍零堆分配扫描不重叠 PII 跨度（识别邮箱、`sk-`/`ghp_`/`AKIA`/`xoxb-`/`xoxp-` 凭证前缀、严格 IPv4 与 10..15 位电话号码），返回总命中数且输出切片截断安全 |
 | `redactPii(input, out_buf: *[]u8): usize?` | 零堆分配流式脱敏器，将所有检测到的 PII 跨度替换为 `[REDACTED]`，输出缓冲不足时返回 `null` |
 
+### 8. 零堆分配 Structured Outputs JSON Schema 与工具声明发射器 (`lib/prompt/json_schema.cp`)
+
+| 符号 / 方法 | 签名与说明 |
+| :--- | :--- |
+| `JsonSchemaType` | `String` \| `Integer` \| `Number` \| `Boolean` \| `Array` \| `Object` |
+| `SchemaProp` | `{ name, kind, description, required: bool, enum_csv: string, item_kind: JsonSchemaType }`（`enum_csv` 支持逗号分隔枚举值如 `"asc,desc"`） |
+| `ToolSchemaSpec` | `{ tool_name, description, strict: bool, props: []const SchemaProp }` |
+| `emitJsonSchemaObject(props, strict, out_buf: *[]u8): usize?` | 零堆分配发射标准 JSON Schema Draft 2020-12 对象（含 `type`/`properties`/`items`/`enum`/`required`/`additionalProperties: false` 与完整 RFC 8259 转义），空属性名或缓冲不足返回 `null` |
+| `emitOpenAiToolJson(spec, out_buf: *[]u8): usize?` | 零堆分配发射 OpenAI Function Calling `{"type":"function","function":{...}}` 工具声明 |
+| `emitAnthropicToolJson(spec, out_buf: *[]u8): usize?` | 零堆分配发射 Anthropic `{"name":...,"description":...,"input_schema":{...}}` 工具声明 |
+
 ---
 
 ## 三、 使用示例
@@ -332,5 +343,39 @@ fn guardAndRedactUserPrompt(user_input: string): bool {
         }
     }
     return true;
+}
+```
+
+### 7. 零堆分配 OpenAI / Anthropic 工具 JSON Schema 声明发射示例 (`json_schema.cp`)
+
+```typescript
+import {
+    JsonSchemaType,
+    SchemaProp,
+    ToolSchemaSpec,
+    emitOpenAiToolJson,
+    emitAnthropicToolJson,
+} from "cap:prompt";
+
+fn emitToolSpecs() {
+    const props: [2]SchemaProp = [
+        SchemaProp{ name: "query", kind: JsonSchemaType.String, description: "Search query", required: true },
+        SchemaProp{ name: "order", kind: JsonSchemaType.String, description: "Sort order", required: false, enum_csv: "asc,desc" },
+    ];
+    const spec = ToolSchemaSpec{
+        tool_name: "search_docs",
+        description: "Search indexed workspace documents",
+        strict: true,
+        props: props[0..],
+    };
+
+    let buf: [512]u8 = [0; 512];
+    let out: []u8 = buf[0..];
+    if (n := emitOpenAiToolJson(spec, out)) {
+        * = out[0..n];
+    }
+    if (m := emitAnthropicToolJson(spec, out)) {
+        * = out[0..m];
+    }
 }
 ```

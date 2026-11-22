@@ -73,3 +73,16 @@ export {
     encodeHashEtag,
     HtmlImportManifest,
 } from "./html_manifest";
+
+export {
+    MAX_OUTPUT_FILES,
+    OutputFileListError,
+    ChunkContentKind,
+    ChunkDescriptor,
+    OutputLayoutOptions,
+    OutputFileCapacity,
+    OutputFileSlotKind,
+    OutputFileRecord,
+    calculateOutputFileListCapacity,
+    OutputFileListBuilder,
+} from "./output_file_list";

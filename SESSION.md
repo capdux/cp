@@ -1138,3 +1138,11 @@
 ### 2026-11-22（分类合并交付：lib/attention/sliding_window.cp | 2026-11-22 13:22:18）
 - **执行与结单汇报**：
   > 子智能体交付 lib/attention/sliding_window.cp（长上下文 SWA 滑动窗口注意力 + StreamingLLM Attention Sink 环形缓存，5/5 PASS），归入 cap:attention 并同步 cp_lib_ref.md；续派 lib/attention/prefix_cache.cp。
+
+### 2026-11-22（分类合并交付：lib/bundler/output_file_list.cp | 2026-11-22 13:23:19）
+- **执行与结单汇报**：
+  > 子智能体从 Bun src/bundler/linker_context/OutputFileListBuilder.cp 吸收并归类合并 lib/bundler/output_file_list.cp 至 cap:bundler（三段式构建产物容量预计算与 O(1) 零映射布局器，6/6 PASS，upstream_newer=0），同步 cp_lib_ref.md；续派下一项 Bun 纯逻辑子模块合并。
+
+### 2026-11-22（里程碑：RFC Phase 1 (@fma/@dot/@l2sq 8-lane SIMD 向量原语) 落地发布 + 推进 Phase 2 | 2026-11-22 13:23:58）
+- **执行与结单汇报**：
+  > CPC Compiler Engineer 完成 AI-Native RFC Phase 1：在 cpc/src 实现 @fma/@dot/@l2sq 8-lane SIMD 内建原语（按需发射零污染 + E0320/E0321/E0322 AI-First 诊断），release 部署生效，test_builtin_simd_dot_fma.cp (含硬件单舍入与 0/1/7/8/19/1024 向量基准) 与 test_raii_local_alias_errinit.cp 全部 100% PASS；已顺势启动 Phase 2 (@splitAtMut + noalias 借用优化)。

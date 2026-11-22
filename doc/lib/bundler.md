@@ -120,6 +120,21 @@ pub fn demoBundlerDeep(): !void {
 
 - **`Metafile`**：esbuild / Bun 兼容的输入输出依赖图分析模型，支持 `addInput` / `addInputImport` / `addOutput` / `addOutputInput` / `addOutputImport` / `addOutputExport` / `setOutputCssBundle`，通过 `toJsonAlloc(alloc)` 导出标准 JSON，并通过 `formatAnalysisTable(alloc, use_color)` 输出按 `bytesInOutput` 降序排列的彩色体积占比树状报告。
 - **`CodeSplitter` & `AssetManifest`**：基于 `ModuleGraph` 对最多 64 个入口点执行 `u64` 可达位掩码遍历，自动剔除死模块、将多入口公共依赖合并抽取为 `chunk-<hash>.<ext>` 共享 Chunk、计算确定性 8 位 Hex 内容哈希并构建跨 Chunk 导入边与 `AssetManifest`。
+- **`OutputFileListBuilder` (`lib/bundler/output_file_list.cp`)**：吸收自 `/data/dev/bun/src/bundler/linker_context/OutputFileListBuilder.cp`，零堆分配三段式构建产物布局器（`[chunks | sourcemaps/bytecode/module_info | additional]`），保证 `outputIndexForChunk(chunk[i]) == i` 的 O(1) 零映射不变量，并在 `--compile` ESM 字节码与 standalone HTML 模式下精确预计算分区容量。
+
+### 5. 三段式 `OutputFileListBuilder` 示例
+
+```typescript
+import { ChunkDescriptor, OutputLayoutOptions, OutputFileListBuilder, OutputFileRecord } from "cap:bundler";
+
+const chunks = [
+    ChunkDescriptor{ content_kind: .javascript, has_external_sourcemap: true, is_js_like_loader: true },
+    ChunkDescriptor{ content_kind: .css, has_external_sourcemap: true, is_js_like_loader: false },
+];
+const opts = OutputLayoutOptions{ external_source_maps: true, additional_output_files_count: 1 };
+let list = OutputFileListBuilder.initFromLayout(opts, chunks[0..])?;
+const idx0 = list.insertForChunk(OutputFileRecord{ path: "index.js", slot_kind: .chunk, byte_size: 2048 })?; // idx0 == 0
+```
 
 ---
 

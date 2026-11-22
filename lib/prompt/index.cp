@@ -65,3 +65,12 @@ export {
     redactPii,
     inspectPromptSafety,
 } from "./safety.cp";
+
+export {
+    JsonSchemaType,
+    SchemaProp,
+    ToolSchemaSpec,
+    emitJsonSchemaObject,
+    emitOpenAiToolJson,
+    emitAnthropicToolJson,
+} from "./json_schema.cp";
