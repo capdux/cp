@@ -717,3 +717,59 @@ fn hitlApprovalDemo() {
     * = q.approve(2, 3000); // Approved (2/2)
 }
 ```
+
+---
+
+## 子模块：AI Agent 沙箱策略裁决器（`sandbox.cp`）
+
+### 核心特性
+
+- **工作区路径边界裁决（`checkPathSandbox`）**：零堆分配词法路径归一化（消解 `.`/`..`/`//`），按路径段边界精确匹配 `allowed_roots`（杜绝 `/data/app` 与 `/data/app2` 前缀伪匹配）与 `denied_prefixes`（优先拦截工作区内 `.env`/`.git/config` 等受保护文件），严格执行 `Read`/`Write`/`Delete` 只读权限及 NUL 字节拦截。
+- **命令与参数白名单/元字符策略（`checkCommandSandbox`）**：黑名单优先、白名单按完整路径与基名匹配，开启 `forbid_shell_metachars` 时拦截 `;`/`|`/`&`/`$`/`` ` ``/`>`/`<`/`\n`/`\x00` 等控制字符。
+- **子进程环境变量脱敏过滤（`isSensitiveEnvKey` / `filterEnvIndices`）**：大小写不敏感识别 `_KEY`/`_SECRET`/`_TOKEN`/`_PASSWORD`/`_CREDENTIAL` 等敏感凭据键，支持白名单与敏感键剥离组合过滤。
+
+### 导出清单
+
+- **路径策略**：`PathAccessMode`、`SandboxDecision`、`PathRule`、`checkPathSandbox`
+- **命令策略**：`CommandPolicy`、`checkCommandSandbox`
+- **环境变量过滤**：`isSensitiveEnvKey`、`filterEnvIndices`
+
+### 使用示例
+
+```typescript
+import {
+    PathAccessMode,
+    PathRule,
+    CommandPolicy,
+    checkPathSandbox,
+    checkCommandSandbox,
+    filterEnvIndices,
+} from "cap:agent";
+
+fn codingAgentSandboxDemo() {
+    const roots: [1]PathRule = [
+        PathRule{ root: "/data/app", allow_write: true, allow_delete: false },
+    ];
+    const denied: [2]string = [".env", ".git/config"];
+    let scratch_arr: [256]u8 = undefined;
+    let scratch: []u8 = scratch_arr[0..];
+
+    * = checkPathSandbox("/data/app/src/main.cp", PathAccessMode.Write, roots[0..], denied[0..], scratch);
+
+    const allowed_bins: [2]string = ["git", "cap"];
+    const denied_bins: [1]string = ["sh"];
+    const cmd_pol = CommandPolicy{
+        allowed_binaries: allowed_bins[0..],
+        denied_binaries: denied_bins[0..],
+        forbid_shell_metachars: true,
+    };
+    const args: [2]string = ["status", "--short"];
+    * = checkCommandSandbox("git", args[0..], cmd_pol);
+
+    const env_keys: [3]string = ["PATH", "OPENAI_API_KEY", "HOME"];
+    const allow_env: []const string = [];
+    let keep_arr: [3]usize = undefined;
+    let keep: []usize = keep_arr[0..];
+    * = filterEnvIndices(env_keys[0..], allow_env, true, keep);
+}
+```

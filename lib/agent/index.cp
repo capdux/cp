@@ -129,3 +129,14 @@ export {
     HitlPolicy,
     HitlQueue,
 } from "./hitl.cp";
+
+export {
+    PathAccessMode,
+    SandboxDecision,
+    PathRule,
+    CommandPolicy,
+    checkPathSandbox,
+    checkCommandSandbox,
+    isSensitiveEnvKey,
+    filterEnvIndices,
+} from "./sandbox.cp";
