@@ -233,3 +233,6 @@ const n = plan.resolveDestPath(0, true, dst[0..])?; // "dist/a.cp"
 6. **POSIX `touch` 选项解析与时间戳校验（`lib/shell/touch_opts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/touch.cp`）**：
    - 零堆分配支持 `-a`、`-m`、`-c`/`--no-create`、`-h`/`--no-dereference`、`-d`/`--date`、`-r`/`--reference`、`-t [[CC]YY]MMDDhhmm[.ss]`、`--time=access|atime|use|modify|mtime`、短选项聚合（如 `-acm`）与 `--` 终止符；
    - `TouchTimestamp.parse()` 遵循 POSIX 两位年份窗规则（`69..99 => 1969..1999`，`00..68 => 2000..2068`）、闰年 2 月天数校验与闰秒 `60` 支持；互斥时间源（`-d`/`-r`/`-t` 混用）自动抛出 `ShellTouchError.ConflictingTimeSource`。
+7. **POSIX `cp` 选项解析、符号链接策略与自拷贝环路防线（`lib/shell/cp_opts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/cp.cp`）**：
+   - 零堆分配支持 `-r`/`-R`/`--recursive`、`-f`/`-i`/`-n`（后出现覆盖前者）、`-p`/`--preserve`、`-v`/`--verbose`、`-a`/`--archive`（等价 `-RPp`）与 `-H`/`-L`/`-P` 符号链接解析策略；
+   - `CpPlan.resolveTargetFor()` 强制校验目录源必须开启递归标志（否则返回 `OmittingDirectory`）、多源或尾斜杠目标必须为目录（`DestinationMustBeDir`），并自动阻断自拷贝及目录递归拷贝至自身子目录（`CannotCopyIntoSelf`）。

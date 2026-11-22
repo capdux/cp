@@ -181,6 +181,15 @@ export {
     TouchOpts,
 } from "./touch_opts.cp";
 
+export {
+    SHELL_CP_MAX_SOURCES,
+    ShellCpError,
+    CpOverwritePolicy,
+    CpSymlinkPolicy,
+    CpOpts,
+    CpPlan,
+} from "./cp_opts.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);
