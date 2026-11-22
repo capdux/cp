@@ -331,6 +331,28 @@ const desc = PgRowDescView.decodeFrame(buf[0..n])?;
 * = desc.indexOfName("email");
 ```
 
+### Extended Query `Parse`（`'P'`）与 5 字节控制信号帧编解码（`parseFrame.cp`）
+
+吸收自 `/data/dev/bun/src/sql/postgres/protocol/Parse.cp`，零堆分配编解码 PostgreSQL v3.0 扩展查询协议的 `Parse`（`'P'`）语句预编译帧以及全部 7 种 5 字节无载荷控制信号帧：
+
+- **常量**：`PG_TAG_PARSE` (`'P'`)、`PG_TAG_SYNC` (`'S'`)、`PG_TAG_FLUSH` (`'H'`)、`PG_TAG_PARSE_COMPLETE` (`'1'`)、`PG_TAG_BIND_COMPLETE` (`'2'`)、`PG_TAG_NO_DATA` (`'n'`)、`PG_TAG_EMPTY_QUERY` (`'I'`)、`PG_TAG_PORTAL_SUSPENDED` (`'s'`)、`PG_EMPTY_FRAME_LEN` (`5`)、`PG_PARSE_MAX_PARAM_OIDS` (`64`)。
+- **`PgParseFrame`**：固定容量 64 个参数类型 OID，提供 `init(stmt_name, sql)` / `unnamed(sql)` / `addParamOid(oid)` / `isUnnamed()` / `paramCount()` / `paramOidAt(idx)` / `encodedLen()` / `encodeFrame(out)` / `decodeFrame(frame)` / `eql(other)`。
+- **`PgEmptySignalFrame` & `PgEmptySignalKind`**：统一编解码 5 字节控制信号帧（`Sync` / `Flush` / `ParseComplete` / `BindComplete` / `NoData` / `EmptyQueryResponse` / `PortalSuspended`），提供 `init` / `encodeFrame` / `decodeAny` / `decodeFrame(frame, expected_kind)` / `parseEmptySignalKind`。
+
+```cp
+import { PgParseFrame, PgEmptySignalFrame, PgEmptySignalKind } from "cap:pgwire";
+
+let buf: [256]u8 = [0; 256];
+let p = PgParseFrame.init("stmt_user_by_id", "SELECT id, email FROM users WHERE id = $1");
+* = p.addParamOid(23)?; // INT4
+const n_p = p.encodeFrame(buf[0..])?;
+const dec_p = PgParseFrame.decodeFrame(buf[0..n_p])?;
+
+const n_sync = PgEmptySignalFrame.init(PgEmptySignalKind.Sync).encodeFrame(buf[0..])?;
+const sync_sig = PgEmptySignalFrame.decodeFrame(buf[0..n_sync], PgEmptySignalKind.Sync)?;
+* = dec_p.paramCount(); * = sync_sig.kind;
+```
+
 ---
 
 ## 4. 示例

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/EnvStr.cp | Synced: 2026-11-22T20:41:10Z
+// Source: Absorbed from /data/dev/bun/src/shell/EnvStr.cp | Synced: 2026-11-22T20:46:01Z
 // Pure-CP zero-allocation Shell Environment String (`EnvStr`) & Reference-Counted String Pool.
 // Aligned with Bun `src/shell/EnvStr.cp` and `docs/runtime/shell.mdx`:
 // - Three-state representation (`Empty`, `Slice`, `RefCounted`):

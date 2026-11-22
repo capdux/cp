@@ -163,3 +163,21 @@ export {
     PgRowDescView,
     PgRowDescEncoder,
 } from "./rowDesc.cp";
+
+export {
+    PG_TAG_PARSE,
+    PG_TAG_SYNC,
+    PG_TAG_FLUSH,
+    PG_TAG_PARSE_COMPLETE,
+    PG_TAG_BIND_COMPLETE,
+    PG_TAG_NO_DATA,
+    PG_TAG_EMPTY_QUERY,
+    PG_TAG_PORTAL_SUSPENDED,
+    PG_EMPTY_FRAME_LEN,
+    PG_PARSE_MAX_PARAM_OIDS,
+    PgParseFrameError,
+    PgEmptySignalKind,
+    parseEmptySignalKind,
+    PgParseFrame,
+    PgEmptySignalFrame,
+} from "./parseFrame.cp";
