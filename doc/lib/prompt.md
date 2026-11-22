@@ -786,3 +786,45 @@ fn demoPromptCompiler() {
     * = res.bytes_written; // "Hello Alice, role=assistant. Tools: [0]search [1]calc"
 }
 ```
+
+
+### 18. 零分配流式 Chain-of-Thought 多通道标签分流与思考预算守卫 (`cotParser.cp`)
+
+面向推理模型（DeepSeek-R1、Qwen3、Claude、o 系列）的 100% 纯 CP 零动态堆分配流式 CoT 标签解析与思考预算守卫引擎，支持跨任意分片（含单字节切片）精准分流与代码围栏防误触发：
+
+- **标签族位掩码与枚举**：
+  - `COT_TAG_THINK` (`1`)、`COT_TAG_THINKING` (`2`)、`COT_TAG_REFLECTION` (`4`)、`COT_TAG_ANSWER` (`8`)、`COT_TAG_ALL` (`15`)
+  - `CotSegmentKind`（`thinking | answer | code_fence | budget_exceeded`）
+- **数据模型**：
+  - `CotParserConfig`（`tag_mask`、`max_thinking_bytes`、`respect_code_fences`；提供 `defaults()` / `isValid()`）
+  - `CotSegmentEvent`（零拷贝 `out_buf` 区间 `kind`, `start`, `len`）
+  - `CotFeedResult`（`bytes_consumed`, `bytes_written`, `events_emitted`, `budget_exceeded`, `needs_drain`）
+  - `CotParseSummary`（`thinking_bytes`, `estimated_thinking_tokens`, `dropped_thinking_bytes`, `answer_bytes`, `code_fence_bytes`, `thinking_blocks`, `answer_blocks`, `code_fence_blocks`, `unclosed_tags_repaired`, `orphan_close_tags`, `nested_open_tags`, `ignored_code_fence_tags`, `thinking_budget_exceeded`）
+- **核心引擎 `CotStreamParser`**：
+  - `init(config)` / `reset(*_)` / `currentKind()` / `isBudgetExceeded()` / `summary()`
+  - `feed(*_, chunk, *out_buf, *out_events): CotFeedResult`：增量消费任意分片，处理跨分片开/闭标签与 ` ``` ` 代码围栏（围栏内伪 `<think>` 自动忽略并计数）；超出 `max_thinking_bytes` 时触发 `budget_exceeded` 信号并丢弃超额思考字节；输出缓冲满时通过 `needs_drain` + `bytes_consumed` 支持零丢字节分批排空。
+  - `finish(*_, *out_buf, *out_events): CotFeedResult`：排空末尾残留缓冲并自动修复未闭合标签。
+
+```cp
+import {
+    COT_TAG_ALL,
+    CotParserConfig,
+    CotSegmentEvent,
+    CotStreamParser,
+} from "cap:prompt";
+
+fn demoCotStreamParser() {
+    const cfg = CotParserConfig{ tag_mask: COT_TAG_ALL, max_thinking_bytes: 256, respect_code_fences: true };
+    let parser = CotStreamParser.init(cfg) ?? return;
+
+    let out_buf: [256]u8 = [0; 256];
+    let out_s: []u8 = out_buf[0..];
+    let ev_buf: [16]CotSegmentEvent = [CotSegmentEvent{}; 16];
+    let ev_s: []CotSegmentEvent = ev_buf[0..];
+
+    * = parser.feed("<thi", *out_s, *ev_s);
+    * = parser.feed("nk>plan</think>Final answer", *out_s, *ev_s);
+    * = parser.finish(*out_s, *ev_s);
+    * = parser.summary();
+}
+```

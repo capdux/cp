@@ -212,3 +212,17 @@ export {
     collectRequiredVars,
     collectAllReferencedVars,
 } from "./compiler.cp";
+
+export {
+    COT_TAG_THINK,
+    COT_TAG_THINKING,
+    COT_TAG_REFLECTION,
+    COT_TAG_ANSWER,
+    COT_TAG_ALL,
+    CotSegmentKind,
+    CotParserConfig,
+    CotSegmentEvent,
+    CotFeedResult,
+    CotParseSummary,
+    CotStreamParser,
+} from "./cotParser.cp";
