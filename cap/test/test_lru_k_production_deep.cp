@@ -1,7 +1,7 @@
 // Source: native-cp-stdlib (Scan-Resistant LRU-K Cache)
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import { LruKCache, LruKError } from "cap:lru_k";
+import { LruKCache, LruKError } from "cap:db";
 import cap from "cap";
 
 test("lru_k: scan resistance protects hot keys from cold scan pollution", () => {
@@ -130,7 +130,7 @@ test("lru_k: invalid capacity and invalid k parameter interception", () => {
 });
 
 test("lru_k: cap.lru_k dynamic mounting and k=1 direct caching", () => {
-    let cache = try cap.lru_k.LruKCache(u64, u64).init(std.testing.allocator, 2, 2, 1);
+    let cache = try cap.db.LruKCache(u64, u64).init(std.testing.allocator, 2, 2, 1);
     defer cache.deinit();
 
     try cache.put(1, 111);

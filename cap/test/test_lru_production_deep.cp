@@ -4,7 +4,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { LruCache, LruStats, LruError } from "cap:lru";
+import { LruCache, LruStats, LruError } from "cap:db";
 
 test("1. basic put/get/peek eviction order: get refreshes LRU while peek does not") {
     const alloc = std.testing.allocator;
@@ -177,7 +177,7 @@ test("4. overwrite update, removeEntry, resize shrink eviction, InvalidCapacity 
 
 test("5. cap.lru dynamic mounting and std.testing.allocator zero-leak verification") {
     const alloc = std.testing.allocator;
-    let cache = cap.lru.LruCache<i64>.init(alloc, 2, 0)?;
+    let cache = cap.db.LruCache<i64>.init(alloc, 2, 0)?;
     defer cache.deinit();
 
     cache.put("x", 10)?;

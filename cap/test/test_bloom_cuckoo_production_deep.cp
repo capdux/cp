@@ -3,7 +3,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { BloomFilter, CountingBloomFilter, CuckooFilter, FilterError } from "cap:bloom_cuckoo";
+import { BloomFilter, CountingBloomFilter, CuckooFilter, FilterError } from "cap:db";
 
 test "BloomFilter optimal bit/hash params, 5000 keys zero FN and FP < 2%" {
     const alloc = std.testing.allocator;
@@ -141,7 +141,7 @@ test "BloomFilter merge union, incompatible error, and clear" {
 
 test "cap.bloom_cuckoo dynamic mount and error validation" {
     const alloc = std.testing.allocator;
-    const mod = cap.bloom_cuckoo;
+    const mod = cap.db;
 
     let invalid_cap = false;
     if (f := mod.BloomFilter.initWithRate(alloc, 0, 0.01)) {

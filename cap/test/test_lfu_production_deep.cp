@@ -8,7 +8,7 @@ import {
     TinyLfuSketch,
     LfuSlot,
     LfuCache,
-} from "cap:lfu";
+} from "cap:db";
 
 test("1. LfuCache evicts lowest frequency first & breaks equal-frequency ties by LRU", () => {
     let slots: [3]LfuSlot = std.mem.zeroes([3]LfuSlot);

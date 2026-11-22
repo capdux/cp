@@ -14,7 +14,7 @@ import {
     XorFilterError,
     Xor8Filter,
     Xor16Filter,
-} from "cap:xorfilter";
+} from "cap:db";
 
 fn formatKey(buf: []u8, prefix: string, num: usize): []const u8 {
     let pos: usize = 0;
@@ -292,7 +292,7 @@ test("cap.xorfilter - dynamic mounting via import cap from \"cap\" & zero-leak c
         "route:/v1/health",
     ];
 
-    let f8 = cap.xorfilter.Xor8Filter.build(alloc, &routes) catch unreachable;
+    let f8 = cap.db.Xor8Filter.build(alloc, &routes) catch unreachable;
     defer f8.deinit();
     expect_eq(f8.len(), 4);
     expect_eq(f8.contains("route:/v1/chat"), true);
@@ -300,11 +300,11 @@ test("cap.xorfilter - dynamic mounting via import cap from \"cap\" & zero-leak c
 
     const raw8 = f8.serialize(alloc) catch unreachable;
     defer alloc.free(raw8);
-    let f8_copy = cap.xorfilter.Xor8Filter.deserialize(alloc, raw8) catch unreachable;
+    let f8_copy = cap.db.Xor8Filter.deserialize(alloc, raw8) catch unreachable;
     defer f8_copy.deinit();
     expect_eq(f8_copy.contains("route:/v1/models"), true);
 
-    let f16 = cap.xorfilter.Xor16Filter.build(alloc, &routes) catch unreachable;
+    let f16 = cap.db.Xor16Filter.build(alloc, &routes) catch unreachable;
     defer f16.deinit();
     expect_eq(f16.len(), 4);
     expect_eq(f16.contains("route:/v1/embed"), true);

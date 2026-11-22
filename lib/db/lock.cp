@@ -3,7 +3,7 @@
 // and monotonic fencing-token TTL lease lock manager for multi-agent coordination.
 
 const std = @import("std");
-import { WaitForGraph } from "./wait_graph.cp";
+import { WaitForGraph } from "./lock_wait_graph.cp";
 
 /// Error set returned by `NamedLockTable` and `LeaseLockManager` operations.
 pub err LockError {

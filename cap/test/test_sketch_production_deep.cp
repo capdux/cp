@@ -15,7 +15,7 @@ import {
     HyperLogLog,
     QuantileDigest,
     ReservoirSampler,
-} from "cap:sketch";
+} from "cap:db";
 
 test("cap:sketch - HyperLogLog small, 20k cardinality with duplicates & lossless merge") {
     const alloc = std.heap.page_allocator;
@@ -233,14 +233,14 @@ test("cap:sketch - boundary & error validation") {
 test("cap:sketch - import cap from \"cap\"; cap.sketch dynamic mounting") {
     const alloc = std.heap.page_allocator;
 
-    let hll = cap.sketch.HyperLogLog.init(alloc, 10) catch unreachable;
+    let hll = cap.db.HyperLogLog.init(alloc, 10) catch unreachable;
     defer hll.deinit();
     hll.add("alpha");
     hll.add("beta");
     hll.add("alpha");
     expect_eq(hll.count(), 2);
 
-    let qd = cap.sketch.QuantileDigest.init(alloc, 32) catch unreachable;
+    let qd = cap.db.QuantileDigest.init(alloc, 32) catch unreachable;
     defer qd.deinit();
     qd.add(10.0) catch unreachable;
     qd.add(20.0) catch unreachable;
@@ -248,7 +248,7 @@ test("cap:sketch - import cap from \"cap\"; cap.sketch dynamic mounting") {
     const med = (qd.quantile(0.5) catch unreachable).?;
     expect_eq(med >= 18.0 && med <= 22.0, true);
 
-    let rs = cap.sketch.ReservoirSampler(i32).init(alloc, 4, 99) catch unreachable;
+    let rs = cap.db.ReservoirSampler(i32).init(alloc, 4, 99) catch unreachable;
     defer rs.deinit();
     rs.observe(11);
     rs.observe(22);

@@ -1,6 +1,6 @@
 // Source: cp/lib/hnsw/graph.cp (Pure CP HNSW multi-layer navigable small-world graph index)
 const std = @import("std");
-import { HnswError, DistanceMetric, HnswConfig, SearchHit, computeDistance } from "./metric.cp";
+import { HnswError, DistanceMetric, HnswConfig, SearchHit, computeDistance } from "./hnsw_metric.cp";
 
 const NO_NODE: usize = std.math.maxInt(usize);
 const SNAPSHOT_VERSION: u32 = 1;

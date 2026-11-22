@@ -1,7 +1,7 @@
 // Source: native-cp-stdlib (Roaring Bitmap Compressed Set)
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import { RoaringBitmap, ARRAY_MAX_SIZE } from "cap:roaring_bitmap";
+import { RoaringBitmap, ARRAY_MAX_SIZE } from "cap:db";
 import cap from "cap";
 
 test "roaring: auto upgrade ArrayContainer to BitsetContainer and downgrade back" {
@@ -198,7 +198,7 @@ test "roaring: cap.roaring_bitmap dynamic mounting and zero-leak cleanup" {
     const alloc = std.testing.allocator;
     expect_eq(ARRAY_MAX_SIZE, 4096);
 
-    let bm = cap.roaring_bitmap.RoaringBitmap.init(alloc);
+    let bm = cap.db.RoaringBitmap.init(alloc);
     defer bm.deinit();
 
     * = try bm.add(1);

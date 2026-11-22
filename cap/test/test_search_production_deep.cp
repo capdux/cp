@@ -16,7 +16,7 @@ import {
     PrefixTrie,
     SearchHit,
     SearchIndex,
-} from "../../lib/search/index.cp";
+} from "cap:db";
 
 fn containsSubstr(haystack: string, needle: string): bool {
     return std.mem.indexOf(u8, haystack, needle) != null;
@@ -173,12 +173,12 @@ fn testHighlightSnippetDenseWindow()! {
 fn testDynamicCapNamespaceMounting()! {
     const alloc = std.heap.page_allocator;
 
-    let idx = cap.search.SearchIndex.init(alloc);
+    let idx = cap.db.SearchIndex.init(alloc);
     defer idx.deinit();
 
     idx.addDocument("cap1", "Cap Search Module", "Dynamic namespace mounting for cap.search works cleanly.")?;
     const hits = idx.search(alloc, "namespace", 3)?;
-    defer cap.search.SearchIndex.freeHits(alloc, hits);
+    defer cap.db.SearchIndex.freeHits(alloc, hits);
 
     expect_eq(hits.len, 1);
     expect_eq(std.mem.eql(u8, hits[0].doc_id, "cap1"), true);

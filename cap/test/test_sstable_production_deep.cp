@@ -24,7 +24,7 @@ import {
     isSst,
     extractSstBlock,
     parseSstBlockInfo,
-} from "cap:sstable";
+} from "cap:db";
 
 fn putU32LE(buf: *[]u8, off: usize, v: u32) {
     buf[off] = (v & 0xFF) as u8;

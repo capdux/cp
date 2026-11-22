@@ -3,7 +3,7 @@
 // and atomic temp-write + fsync + rename compaction using native std.c / std.os.linux I/O.
 
 const std = @import("std");
-import { KvError, WalOp, WalRecord, WalCodec } from "./wal.cp";
+import { KvError, WalOp, WalRecord, WalCodec } from "./kv_wal.cp";
 
 const EINTR: i32 = 4;
 const SEEK_SET: i32 = 0;

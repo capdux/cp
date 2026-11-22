@@ -18,7 +18,7 @@ import {
     SstLookup,
     SsTable,
     LsmEngine,
-} from "cap:lsm";
+} from "cap:db";
 
 test("cap:lsm - put/delete/overwrite across auto-flushes, latest seq wins & tombstone isolation") {
     const alloc = std.testing.allocator;
@@ -235,7 +235,7 @@ test("cap:lsm - SsTable sparse index lookup, CorruptSst tampering guard & zero l
 
 test("cap:lsm - dynamic mount via import cap from \"cap\"; cap.lsm") {
     const alloc = std.testing.allocator;
-    let engine = cap.lsm.LsmEngine.init(alloc, 256);
+    let engine = cap.db.LsmEngine.init(alloc, 256);
     defer engine.deinit();
 
     engine.put("dyn:1", "alpha") catch unreachable;

@@ -16,7 +16,7 @@ import {
     NamedLockTable,
     LeaseToken,
     LeaseLockManager,
-} from "cap:lock";
+} from "cap:db";
 import cap from "cap";
 
 fn strEq(a: string, b: string): bool {
@@ -196,7 +196,7 @@ fn testLeaseRenewReleaseAndSplitBrainGuard(): !void {
 fn testCapLockDynamicMount(): !void {
     const alloc = std.heap.page_allocator;
 
-    let wg = cap.lock.WaitForGraph.init(alloc);
+    let wg = cap.db.WaitForGraph.init(alloc);
     defer wg.deinit();
     wg.addEdge("t1", "t2")?;
     wg.addEdge("t2", "t3")?;
@@ -204,14 +204,14 @@ fn testCapLockDynamicMount(): !void {
     wg.addEdge("t3", "t1")?;
     expect_eq(wg.hasCycle(alloc)?, true);
 
-    let table = cap.lock.NamedLockTable.init(alloc);
+    let table = cap.db.NamedLockTable.init(alloc);
     defer table.deinit();
-    expect_eq(table.tryAcquire("tool:fs", "agent-x", cap.lock.LockMode.Exclusive)?, true);
+    expect_eq(table.tryAcquire("tool:fs", "agent-x", cap.db.LockMode.Exclusive)?, true);
     expect_eq(table.isResourceLocked("tool:fs"), true);
     table.unlock("tool:fs", "agent-x")?;
     expect_eq(table.isResourceLocked("tool:fs"), false);
 
-    let mgr = cap.lock.LeaseLockManager.init(alloc);
+    let mgr = cap.db.LeaseLockManager.init(alloc);
     defer mgr.deinit();
     const tok = mgr.acquireLease("kv:slot1", "agent-x", 2000, 5000)?;
     expect_eq(mgr.validateToken("kv:slot1", tok.fencing_token, 6999), true);

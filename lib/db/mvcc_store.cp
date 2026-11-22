@@ -1,7 +1,7 @@
 // Source: cp/lib/mvcc/store.cp (MVCC timestamp oracle, snapshot isolation store, txn handle, and GC)
 
 const std = @import("std");
-import { MvccError, TxnState, VersionValue, WriteEntry, ActiveTxnInfo } from "./types.cp";
+import { MvccError, TxnState, VersionValue, WriteEntry, ActiveTxnInfo } from "./mvcc_types.cp";
 
 pub struct MvccStore {
     pub alloc: std.mem.Allocator,

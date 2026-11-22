@@ -1,7 +1,7 @@
 // Source: cp/cap/test/test_hnsw_production_deep.cp (Production deep test suite for cap:hnsw)
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import { HnswIndex, HnswConfig, DistanceMetric, HnswError, SearchHit, computeDistance } from "cap:hnsw";
+import { HnswIndex, HnswConfig, DistanceMetric, HnswError, HnswSearchHit as SearchHit, computeDistance } from "cap:db";
 import cap from "cap";
 
 fn approxEq(a: f32, b: f32, eps: f32): bool {
@@ -227,11 +227,11 @@ test("4. saveBytes / loadBytes binary snapshot round-trip and CorruptSnapshot") 
 
 test("5. cap.hnsw dynamic mount and std.testing.allocator zero-leak check") {
     const alloc = std.testing.allocator;
-    let idx = try cap.hnsw.HnswIndex.init(
+    let idx = try cap.db.HnswIndex.init(
         alloc,
         4,
-        cap.hnsw.DistanceMetric.InnerProduct,
-        cap.hnsw.HnswConfig{ .m = 4, .m0 = 8, .ef_construction = 16, .seed = 1 },
+        cap.db.DistanceMetric.InnerProduct,
+        cap.db.HnswConfig{ .m = 4, .m0 = 8, .ef_construction = 16, .seed = 1 },
     );
     defer idx.deinit();
 

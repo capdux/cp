@@ -2,7 +2,7 @@
 const std = @import("std");
 import cap from "cap";
 import { test, expect_eq } from "cap:test";
-import { SlabPool, Handle, SlabError } from "cap:slab_pool";
+import { SlabPool, Handle, SlabError } from "cap:db";
 
 test "slab_pool O(1) sequential insert and PoolFull" {
     let pool = SlabPool(u64).init(std.testing.allocator, 3)?;
@@ -135,7 +135,7 @@ test "slab_pool forEachActive and reset" {
 }
 
 test "slab_pool dynamic cap.slab_pool mount and zero-leak" {
-    let pool = cap.slab_pool.SlabPool(i64).init(std.testing.allocator, 4)?;
+    let pool = cap.db.SlabPool(i64).init(std.testing.allocator, 4)?;
     defer pool.deinit();
 
     const h0 = pool.insert(1234)?;

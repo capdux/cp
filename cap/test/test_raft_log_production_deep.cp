@@ -1,7 +1,7 @@
 // Source: native-cp-stdlib (Raft Replicated Log & Snapshot Compaction)
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import { RaftLog, RaftLogError, LogEntryInput } from "cap:raft_log";
+import { RaftLog, RaftLogError, LogEntryInput } from "cap:db";
 import cap from "cap";
 
 test "raft_log: 1-based append and termAt/entryAt queries" {
@@ -124,7 +124,7 @@ test "raft_log: compactTo prefix truncation and snapshot metadata retention" {
 }
 
 test "raft_log: cap.raft_log dynamic mount and isUpToDate comparison" {
-    let log = cap.raft_log.RaftLog.init(std.testing.allocator);
+    let log = cap.db.RaftLog.init(std.testing.allocator);
     defer log.deinit();
 
     * = try log.append(2, "x1");

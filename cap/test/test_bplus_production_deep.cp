@@ -14,7 +14,7 @@ import {
     BPlusError,
     BPlusEntry,
     BPlusTree,
-} from "cap:bplus";
+} from "cap:db";
 
 test("cap:bplus - 1000 out-of-order inserts, multi-level splits & verifyInvariants") {
     const alloc = std.testing.allocator;
@@ -239,7 +239,7 @@ test("cap:bplus - InvalidOrder, InvalidRange, empty range & zero-leak check") {
 
 test("cap.bplus - dynamic mounting via import cap from \"cap\"") {
     const alloc = std.testing.allocator;
-    let tree = cap.bplus.BPlusTree.init(alloc, 5) catch unreachable;
+    let tree = cap.db.BPlusTree.init(alloc, 5) catch unreachable;
     defer tree.deinit();
 
     expect_eq(tree.put("alpha", "1") catch unreachable, true);

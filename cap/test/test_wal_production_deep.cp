@@ -18,7 +18,7 @@ import {
     WalRecoveryResult,
     WalLog,
     crc32c,
-} from "cap:wal";
+} from "cap:db";
 import cap from "cap";
 
 fn testAppendBatchAndStrictRecover()! {
@@ -250,16 +250,16 @@ fn testCompactionAndBoundaryGuards()! {
 fn testCapDynamicNamespaceMount()! {
     const alloc = std.testing.allocator;
 
-    expect_eq(cap.wal.WAL_HEADER_SIZE, 24 as usize);
-    expect_eq(cap.wal.crc32c("123456789"), 0xE3069283 as u32);
-    expect_eq(std.mem.eql(u8, &cap.wal.WAL_MAGIC, &WAL_MAGIC), true);
+    expect_eq(cap.db.WAL_HEADER_SIZE, 24 as usize);
+    expect_eq(cap.db.crc32c("123456789"), 0xE3069283 as u32);
+    expect_eq(std.mem.eql(u8, &cap.db.WAL_MAGIC, &WAL_MAGIC), true);
 
-    let wal = cap.wal.WalLog.init(alloc, 1024);
+    let wal = cap.db.WalLog.init(alloc, 1024);
     defer wal.deinit();
-    const lsn = wal.appendTyped(cap.wal.WalRecordType.Checkpoint, "cap-wal-mount")?;
+    const lsn = wal.appendTyped(cap.db.WalRecordType.Checkpoint, "cap-wal-mount")?;
     expect_eq(lsn, 1 as u64);
 
-    let res = cap.wal.WalLog.recoverStrict(alloc, wal.bytes())?;
+    let res = cap.db.WalLog.recoverStrict(alloc, wal.bytes())?;
     defer res.deinit(alloc);
     expect_eq(res.records.len, 1 as usize);
     expect_eq(std.mem.eql(u8, res.records[0].payload, "cap-wal-mount"), true);

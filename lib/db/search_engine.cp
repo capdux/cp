@@ -4,7 +4,7 @@
 // dense-window keyword snippet highlighting, and integrated PrefixTrie autocomplete.
 
 const std = @import("std");
-import { SearchError, PrefixSuggestion, PrefixTrie } from "./trie.cp";
+import { SearchError, PrefixSuggestion, PrefixTrie } from "./search_trie.cp";
 
 /// Search result entry returned by `SearchIndex.search`.
 /// `doc_id` borrows from the index; `snippet` is owned by the caller's allocator

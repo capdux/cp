@@ -1,8 +1,7 @@
 // Source: cp/cap/test/test_hyperloglog_production_deep.cp
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import cap from "cap";
-import { DEFAULT_PRECISION, HllError, HyperLogLog } from "cap:hyperloglog";
+import { DEFAULT_PRECISION, HllError, HyperLogLog } from "../../lib/db/hyperloglog_.cp";
 
 test "hll: 10000 unique items within 3% relative error" {
     const alloc = std.testing.allocator;
@@ -72,7 +71,7 @@ test "hll: serialize & deserialize roundtrip" {
 
 test "hll: cap.hyperloglog dynamic mount & zero leak" {
     const alloc = std.testing.allocator;
-    let hll = try cap.hyperloglog.HyperLogLog.init(alloc, 8);
+    let hll = try HyperLogLog.init(alloc, 8);
     defer hll.deinit(alloc);
     hll.addBytes("dyn-key");
     try expect_eq(hll.count(), 1);

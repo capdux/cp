@@ -2,7 +2,7 @@
 
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import { MvccStore, MvccError, TxnState } from "cap:mvcc";
+import { MvccStore, MvccError, TxnState } from "cap:db";
 import cap from "cap";
 
 test("mvcc snapshot isolation repeatable read and read-your-own-writes") {
@@ -195,7 +195,7 @@ test("mvcc minActiveReadTs and gcVersions safe version pruning") {
 }
 
 test("mvcc cap.mvcc dynamic mount and zero-leak check") {
-    let store = cap.mvcc.MvccStore.init(std.testing.allocator);
+    let store = cap.db.MvccStore.init(std.testing.allocator);
     defer store.deinit();
 
     let txn = try store.beginTxn(false);

@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/db/sketch.cp (HyperLogLog) | Kept for comparison/analysis
 // Source: cp/lib/hyperloglog/hll.cp (Pure CP HyperLogLog 64-bit Cardinality Estimator)
 const std = @import("std");
 

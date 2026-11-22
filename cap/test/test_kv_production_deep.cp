@@ -10,17 +10,17 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import {
-    WAL_MAGIC,
-    WAL_HEADER_SIZE,
+    KV_WAL_MAGIC,
+    KV_WAL_HEADER_SIZE,
     KvError,
     WalOp,
-    WalRecord,
+    KvWalRecord,
     WalDecodeResult,
     WalCodec,
     KvStoreOptions,
     KvStats,
     KvStore,
-} from "cap:kv";
+} from "cap:db";
 import cap from "cap";
 
 let test_seq: std.atomic.Value(u64) = std.atomic.Value(u64).init(1);
@@ -113,21 +113,21 @@ fn testWalCodecCrc32TamperAndTornTail()! {
 
     // 1. Empty key rejected with InvalidKey
     let invalid_key_hit = false;
-    * = WalCodec.encode(alloc, WalRecord.put("", "v")) catch |e| {
+    * = WalCodec.encode(alloc, KvWalRecord.put("", "v")) catch |e| {
         if (e == @as(anyerror, KvError.InvalidKey)) invalid_key_hit = true;
     };
     expect_eq(invalid_key_hit, true);
 
     // 2. Encode Put & Delete records and verify exact frame layout
-    const f1 = WalCodec.encode(alloc, WalRecord.put("agent:1:goal", "persist-state"))?;
+    const f1 = WalCodec.encode(alloc, KvWalRecord.put("agent:1:goal", "persist-state"))?;
     defer alloc.free(f1);
-    const f2 = WalCodec.encode(alloc, WalRecord.del("agent:1:tmp"))?;
+    const f2 = WalCodec.encode(alloc, KvWalRecord.del("agent:1:tmp"))?;
     defer alloc.free(f2);
 
-    expect_eq(f1.len, WAL_HEADER_SIZE + "agent:1:goal".len + "persist-state".len);
-    expect_eq(f2.len, WAL_HEADER_SIZE + "agent:1:tmp".len);
+    expect_eq(f1.len, KV_WAL_HEADER_SIZE + "agent:1:goal".len + "persist-state".len);
+    expect_eq(f2.len, KV_WAL_HEADER_SIZE + "agent:1:tmp".len);
     expect_eq(std.mem.eql(u8, f1[0..4], "CPKV"), true);
-    expect_eq(f1[0], WAL_MAGIC[0]);
+    expect_eq(f1[0], KV_WAL_MAGIC[0]);
 
     // Verify CRC32 covers [op + key_len + val_len + key + val]
     const expected_crc = WalCodec.crc32(f1[8..f1.len]);
@@ -158,7 +158,7 @@ fn testWalCodecCrc32TamperAndTornTail()! {
     expect_eq(d_eof.isEof(), true);
 
     // 4. Single-byte tamper detection at magic, crc, op, key, and value positions
-    const tamper_offsets: [5]usize = [1, 5, 8, WAL_HEADER_SIZE + 2, f1.len - 1];
+    const tamper_offsets: [5]usize = [1, 5, 8, KV_WAL_HEADER_SIZE + 2, f1.len - 1];
     for (off of tamper_offsets[0..5]) {
         let corrupted = alloc.dupe(u8, combined) catch unreachable;
         defer alloc.free(corrupted);
@@ -273,7 +273,7 @@ fn testCrashTornTailRecoveryAndMidCorruptionGuard()! {
     }
 
     // Simulate crash: append half-written WAL frame bytes at tail
-    const torn_frame = WalCodec.encode(alloc, WalRecord.put("ckpt:uncommitted", "partial-payload"))?;
+    const torn_frame = WalCodec.encode(alloc, KvWalRecord.put("ckpt:uncommitted", "partial-payload"))?;
     defer alloc.free(torn_frame);
     appendRawBytes(db_path, torn_frame[0..19])?;
     expect_eq(fileSizeBytes(db_path) > valid_size, true);
@@ -311,7 +311,7 @@ fn testCrashTornTailRecoveryAndMidCorruptionGuard()! {
     }
 
     // 3. Mid-file corruption (flip byte in record #1) MUST fail even with recover_torn_tail: true
-    flipFileByte(db_path, WAL_HEADER_SIZE + 1)?;
+    flipFileByte(db_path, KV_WAL_HEADER_SIZE + 1)?;
     let mid_corrupt = false;
     * = KvStore.open(alloc, db_path, KvStoreOptions{ recover_torn_tail: true }) catch |e| {
         if (e == @as(anyerror, KvError.CorruptRecord)) mid_corrupt = true;
@@ -407,14 +407,14 @@ fn testCapKvDynamicLazyMount()! {
     defer removeFile(db_path);
 
     // Test WalCodec via cap.kv
-    const raw = cap.kv.WalCodec.encode(alloc, cap.kv.WalRecord.put("hub:k", "hub:v"))?;
+    const raw = cap.db.WalCodec.encode(alloc, cap.db.KvWalRecord.put("hub:k", "hub:v"))?;
     defer alloc.free(raw);
-    const dec_hub = cap.kv.WalCodec.decodeNext(raw, 0);
+    const dec_hub = cap.db.WalCodec.decodeNext(raw, 0);
     expect_eq(dec_hub.asRecord().?.record.op == .Put, true);
 
     // Test KvStore via cap.kv
     {
-        let store = cap.kv.KvStore.open(alloc, db_path, cap.kv.KvStoreOptions{ sync_on_write: true })?;
+        let store = cap.db.KvStore.open(alloc, db_path, cap.db.KvStoreOptions{ sync_on_write: true })?;
         defer store.deinit();
         store.put("memory:01", "active")?;
         store.put("memory:02", "standby")?;
@@ -423,7 +423,7 @@ fn testCapKvDynamicLazyMount()! {
         expect_eq(store.stats().compactions, 1 as u64);
     }
 
-    let reopened = cap.kv.KvStore.open(alloc, db_path, cap.kv.KvStoreOptions{})?;
+    let reopened = cap.db.KvStore.open(alloc, db_path, cap.db.KvStoreOptions{})?;
     defer reopened.deinit();
     expect_eq(reopened.len(), 2 as usize);
     expect_eq(std.mem.eql(u8, reopened.get("memory:01").?, "committed"), true);
