@@ -140,3 +140,19 @@ export {
     formatIsolatedStoreEntry,
     formatIsolatedStorePath,
 } from "./config_version.cp";
+
+export {
+    WHY_MAX_PACKAGES,
+    WHY_MAX_EDGES,
+    WHY_MAX_DEPTH,
+    WhyError,
+    WhyDepType,
+    specifierSpecificity,
+    WhyGlobKind,
+    WhyGlobPattern,
+    WhyPackage,
+    WhyDependent,
+    compareWhyDependents,
+    WhyOptions,
+    WhyGraph,
+} from "./why.cp";

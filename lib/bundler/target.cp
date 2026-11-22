@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/options_types/CompileTarget.zig | Synced: 2026-11-21T22:55:45Z
+// Source: Absorbed from /data/dev/bun/src/options_types/CompileTarget.cp | Synced: 2026-11-22T06:21:55Z
 // ============================================================================
 // lib/bundler/target.cp — Cross-Compilation Target Triple Parser & Formatter
 // ============================================================================

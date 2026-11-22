@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/md/types.cp | Synced: 2026-11-20T11:08:45Z
+// Source: Absorbed from /data/dev/bun/src/md/types.cp | Synced: 2026-11-22T06:21:30Z
 // lib/md/types.cp
 // Core MD4C-compatible AST, Block, Span, Renderer VTable, Flags, Marks & Parser State
 

@@ -255,6 +255,25 @@ const store_path = formatIsolatedStorePath(buf[0..], "@scope/pkg", "2.1.0")?;
 * = store_path;
 ```
 
+### 依赖反向解释与 `why` 树形渲染引擎（`why.cp`，吸收自 `/data/dev/bun/src/cli/why_command.cp`）
+
+- 常量与错误集：`WHY_MAX_PACKAGES` (`64`)、`WHY_MAX_EDGES` (`256`)、`WHY_MAX_DEPTH` (`32`)、`WhyError`；
+- 通配与版本匹配：`WhyGlobKind`（`Exact`/`Prefix`/`Suffix`/`Middle`/`Contains`/`Invalid`）、`WhyGlobPattern`（`parse` / `matchesName` / `matchesVersion` / `matches`，支持 `@types/*`、`*-lodash`、`*react*` 与 `@scope/pkg@^18.0.0`）；
+- 确定性排序与图引擎：`WhyDepType`（`Prod`/`Peer`/`OptionalPeer`/`Optional`/`Dev`）、`specifierSpecificity`（精确版本 `10` > `workspace:` `9` > `^` `8` > `~` `7` > `<>=` `6` > `.x` `5` > `*` `1`）、`compareWhyDependents`、`WhyOptions`（`top_only` / `max_depth`）、`WhyGraph`（`init` / `addPackage` / `addDependency` / `findMatchingPackages` / `collectDependents` / `renderExplain`，内置环路检测与 `(deeper dependencies hidden)` 截断）。
+
+```typescript
+import { WhyGraph, WhyDepType, WhyOptions } from "cap:pkg";
+
+let g = WhyGraph.init();
+const app = g.addPackage("my-app", "1.0.0", false)?;
+const react = g.addPackage("react", "18.2.0", false)?;
+g.addDependency(app, react, "^18.0.0", .Prod)?;
+
+let out: [512]u8 = [0; 512];
+const n = g.renderExplain("react", WhyOptions{}, out[0..])?;
+// out[0..n] == "react@18.2.0\n  └─ my-app@1.0.0 (requires ^18.0.0)\n"
+```
+
 ---
 
 ## 上游 Bun 包管理行为契约与边界注意事项
@@ -272,3 +291,7 @@ const store_path = formatIsolatedStorePath(buf[0..], "@scope/pkg", "2.1.0")?;
 5. **Monorepo `--filter` 匹配与排除约定（吸收自 `/data/dev/bun/docs/pm/filter.mdx`）**：
    - 以 `./` 或 `/` 开头的模式按工作区路径匹配（`./` 仅匹配根 `package.json`，`./packages/**` 递归匹配子目录）；其余模式按 `package.json` 的 `name` 字段匹配（支持 `*` 通配）；
    - 否定规则（`!pkg-c`、`!./`）优先级高于正向规则：当全部规则均为否定规则时，默认先选中全部工作区包再执行排除；当正负规则混用时，须命中至少一条正向规则且不命中任何否定规则。
+6. **`bun why` 依赖反向解释输出契约与选项（吸收自 `/data/dev/bun/docs/pm/cli/why.mdx`）**：
+   - 默认展示从目标包到顶层依赖的完整嵌套依赖树，缩进符号明确区分中间节点（`├─` / `│`）与末位节点（`└─`），并在节点前标注依赖类型（`dev`、`peer`、`optional`、`optional peer`，生产依赖省略前缀）与 `(requires <spec>)` 版本约束；
+   - `--top`（`WhyOptions{ top_only: true }`）仅展示直接顶层依赖方（等效 `max_depth = 1`）；`--depth <N>` 限制最大递归深度并在超深子树位置输出 `(deeper dependencies hidden)`；
+   - 查询参数支持单通配符模式（如 `@types/*`、`*-lodash`、`*react*`）以及 `@version` 后缀（如 `@types/react@^18.0.0`），同层多个依赖方按「版本说明符精确度降序 → 依赖类型优先级降序 → 包名字典序升序」确定性排列。
