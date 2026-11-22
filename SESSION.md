@@ -2010,3 +2010,14 @@
   > 收到新的编译器待处理工单(1条: task-bun-20261122-double-ptr-addr-of)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
 - **完整回复与执行汇报**：
   > 已拉起独立编译器热修专线子智能体 `a081a92a`（`CPC Hotfix Engineer`）处理工单 `task-bun-20261122-double-ptr-addr-of`（读取详情 → 根因定位与修复 → `sync_cpc.sh release` 正式发布 → 回归验证 → `resolve` 结单），Wave 8 双路生态子智能体继续并行不受阻断。修复结单后主控将立即同步 `SESSION.md` 并完成 Git 提交。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-builtin-regexp-collision`）[ticket:task-bun-20261122-builtin-regexp-collision]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 21:31:30` | 状态：`resolved` | 结单：`2026-11-22T21:36:08`
+- **报错/需求摘要**：cpc 无条件在生成文件顶部注入内置 pub const RegExp = struct，导致源码自身定义 pub struct RegExp 时（如 src/js_parser/ast/E.cp）在 zig ast-check 报 duplicate struct member name 'RegExp'
+- **结单与处理汇报**：已修复并部署 cpc (release)。根因：ModuleFeatures::scan 在扫描到用户自定义 struct/type/const RegExp 的自引用（Type::Ref/Expr::Ident）时会置 needs_regex=true，且 emit_runtime_preludes 无条件调用 emit_regex_prelude() 注入内置 pub const RegExp = struct，导致 zig ast-check 报 duplicate struct member name 'RegExp'。修复：(1) cpc/src/codegen/prelude.rs 新增 ModuleFeatures::has_top_decl，顶层已声明/导入 RegExp 时自动抑制 needs_regex；(2) cpc/src/codegen/runtime_emit.rs 在 emit_runtime_preludes 增加 !class_defs/!enum_defs/!type_aliases/!trait_defs 双保险。验证：bun src/js_par ...(截断)
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 21:31:31）[step:16601]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261122-builtin-regexp-collision)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已拉起独立编译器热修专线子智能体 `577e86ba`（`CPC Hotfix Engineer`）处理工单 `task-bun-20261122-builtin-regexp-collision`（读取详情 → 根因定位与修复 → `sync_cpc.sh release` 正式发布 → 回归验证 → `resolve` 结单），Wave 9 双路生态子智能体继续并行不受阻断。修复结单后主控将立即同步 `SESSION.md` 并完成 Git 提交。

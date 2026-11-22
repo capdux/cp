@@ -121,6 +121,9 @@ impl ModuleFeatures {
                 }
             }
         }
+        if f.needs_regex && Self::has_top_decl(module, "RegExp") {
+            f.needs_regex = false;
+        }
         if f.needs_collections || f.needs_actors {
             f.needs_string_helpers = true;
             f.needs_equality = true;
@@ -148,6 +151,46 @@ impl ModuleFeatures {
             f.needs_string_helpers = true;
         }
         f
+    }
+
+    fn has_top_decl(module: &Module, name: &str) -> bool {
+        let escaped = format!("@\"{}\"", name);
+        let zig_eq = format!("const {} =", name);
+        let zig_col = format!("const {}:", name);
+        module.body.iter().any(|item| match item {
+            ModuleItem::Stmt(Stmt::Var(v)) => match &v.pat {
+                Pattern::Ident(id) => id.sym == name || id.sym == escaped,
+                _ => false,
+            },
+            ModuleItem::Decl(Decl::TypeAlias(ta)) => {
+                ta.ident.sym == name || ta.ident.sym == escaped
+            }
+            ModuleItem::Decl(Decl::Class(c)) => c.ident.sym == name || c.ident.sym == escaped,
+            ModuleItem::Decl(Decl::Enum(e)) => e.ident.sym == name || e.ident.sym == escaped,
+            ModuleItem::Decl(Decl::Trait(t)) => t.ident.sym == name || t.ident.sym == escaped,
+            ModuleItem::Decl(Decl::ErrorSet(e)) => e.ident.sym == name || e.ident.sym == escaped,
+            ModuleItem::Decl(Decl::Func(f)) => f.ident.sym == name || f.ident.sym == escaped,
+            ModuleItem::Import(imp) => {
+                imp.default_specifier
+                    .as_ref()
+                    .map_or(false, |id| id.sym == name || id.sym == escaped)
+                    || imp
+                        .specifiers
+                        .iter()
+                        .any(|id| id.sym == name || id.sym == escaped)
+            }
+            ModuleItem::Export(exp) => {
+                exp.source.is_some()
+                    && exp
+                        .specifiers
+                        .iter()
+                        .any(|id| id.sym == name || id.sym == escaped)
+            }
+            ModuleItem::Stmt(Stmt::Expr(Expr::Zig(z))) => {
+                z.code.contains(&zig_eq) || z.code.contains(&zig_col)
+            }
+            _ => false,
+        })
     }
 
     fn scan_decl(&mut self, d: &Decl) {

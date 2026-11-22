@@ -59,7 +59,12 @@ impl Codegen {
     }
 
     pub(crate) fn emit_runtime_preludes(&mut self, features: &ModuleFeatures) {
-        if features.needs_regex {
+        if features.needs_regex
+            && !self.class_defs.contains_key("RegExp")
+            && !self.enum_defs.contains_key("RegExp")
+            && !self.type_aliases.contains_key("RegExp")
+            && !self.trait_defs.contains_key("RegExp")
+        {
             self.emit_regex_prelude();
         }
 
