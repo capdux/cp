@@ -621,6 +621,24 @@ impl ModuleFeatures {
                         "slice" | "substring" if !c.args.is_empty() => {
                             self.needs_iter_helpers = true
                         }
+                        "split" if c.args.len() == 1 => {
+                            let is_non_int_lit = matches!(
+                                &c.args[0],
+                                Expr::Lit(Lit::Str(_) | Lit::Float(_) | Lit::Bool(_) | Lit::Null)
+                            );
+                            let is_static_type_recv = matches!(
+                                &*m.obj,
+                                Expr::Ident(id)
+                                    if id
+                                        .sym
+                                        .chars()
+                                        .next()
+                                        .map_or(false, |ch| ch.is_ascii_uppercase())
+                            );
+                            if !is_non_int_lit && !is_static_type_recv {
+                                self.needs_split_at_mut = true;
+                            }
+                        }
                         "withLock" | "withRead" | "withWrite" => self.needs_sync = true,
                         _ => {}
                     }

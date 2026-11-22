@@ -288,6 +288,76 @@ impl Analyzer {
                     if mem.prop.sym == "toString" && call.args.is_empty() {
                         return Ok(Type::String);
                     }
+                    if mem.prop.sym == "split" && call.args.len() == 1 {
+                        let arg_is_int = matches!(&call.args[0], Expr::Lit(Lit::Int(_)))
+                            || matches!(
+                                self.infer_type(&call.args[0]),
+                                Ok(Type::U8
+                                    | Type::I8
+                                    | Type::U16
+                                    | Type::I16
+                                    | Type::I32
+                                    | Type::U32
+                                    | Type::I64
+                                    | Type::U64
+                                    | Type::I128
+                                    | Type::U128
+                                    | Type::ISize
+                                    | Type::USize)
+                            );
+                        if arg_is_int {
+                            if let Ok(obj_ty) = self.infer_type(&mem.obj) {
+                                let mut cur = &obj_ty;
+                                let mut is_const = false;
+                                let mut is_fixed_arr = false;
+                                let mut elem_opt: Option<Box<Type>> = None;
+                                loop {
+                                    match cur {
+                                        Type::BorrowType { inner, is_mut, .. } => {
+                                            if !*is_mut {
+                                                is_const = true;
+                                            }
+                                            cur = inner;
+                                        }
+                                        Type::RawPtr { inner, depth: 1 } => cur = inner,
+                                        Type::Array(elem) => {
+                                            elem_opt = Some(elem.clone());
+                                            break;
+                                        }
+                                        Type::FixedArray(elem, _) => {
+                                            is_fixed_arr = true;
+                                            elem_opt = Some(elem.clone());
+                                            break;
+                                        }
+                                        _ => break,
+                                    }
+                                }
+                                if let Some(elem) = elem_opt {
+                                    if is_fixed_arr && !is_const {
+                                        if let Expr::Ident(id) = &*mem.obj {
+                                            if let Some(SymbolKind::Var {
+                                                kind: VarDeclKind::Const,
+                                                ..
+                                            }) = self.resolve(&id.sym)
+                                            {
+                                                is_const = true;
+                                            }
+                                        }
+                                    }
+                                    let slice_ty = if is_const {
+                                        Type::BorrowType {
+                                            inner: Box::new(Type::Array(elem)),
+                                            is_mut: false,
+                                            lifetimes: vec![],
+                                        }
+                                    } else {
+                                        Type::Array(elem)
+                                    };
+                                    return Ok(Type::Tuple(vec![slice_ty.clone(), slice_ty]));
+                                }
+                            }
+                        }
+                    }
                     if let Expr::Ident(oid) = &*mem.obj {
                         if (oid.sym == "string" || oid.sym == "String") && mem.prop.sym == "from" {
                             return Ok(Type::String);

@@ -567,6 +567,41 @@ impl Codegen {
                         let obj = self.generate_expr(&mem.obj);
                         let arg = self.generate_expr(&call.args[0]);
                         return format!("@import(\"std\").mem.endsWith(u8, {}, {})", obj, arg);
+                    } else if prop == "split"
+                        && call.args.len() == 1
+                        && matches!(
+                            &raw_obj_ty,
+                            Some(Type::Array(_)) | Some(Type::FixedArray(_, _))
+                        )
+                        && (matches!(&call.args[0], Expr::Lit(Lit::Int(_)))
+                            || matches!(
+                                self.infer_cp_type(&call.args[0]),
+                                Some(
+                                    Type::U8
+                                        | Type::I8
+                                        | Type::U16
+                                        | Type::I16
+                                        | Type::I32
+                                        | Type::U32
+                                        | Type::I64
+                                        | Type::U64
+                                        | Type::I128
+                                        | Type::U128
+                                        | Type::ISize
+                                        | Type::USize
+                                )
+                            ))
+                    {
+                        self.check_read_allowed(&mem.obj);
+                        let orig_ty = self.infer_cp_type(&mem.obj);
+                        let obj = self.generate_expr(&mem.obj);
+                        let mid = self.generate_expr(&call.args[0]);
+                        let s_arg = if matches!(orig_ty, Some(Type::FixedArray(_, _))) {
+                            format!("&({})", obj)
+                        } else {
+                            obj
+                        };
+                        return format!("__cp_split_at_mut({}, {})", s_arg, mid);
                     } else if (prop == "slice" || prop == "substring")
                         && !call.args.is_empty()
                         && call.args.len() <= 2

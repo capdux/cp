@@ -1289,3 +1289,7 @@
 ### 2026-11-22（分类合并交付：lib/attention/vision_patch.cp + 满 10 项轮换 | 2026-11-22 13:53:24）
 - **执行与结单汇报**：
   > 子智能体交付 lib/attention/vision_patch.cp（多模态 ViT/CLIP/Qwen2-VL Patchify、2D 正弦位置编码与 2D-RoPE，使用 @dot/@fma SIMD，6/6 PASS），归入 cap:attention 并同步 cp_lib_ref.md；满 10 项回收 625e9687 并启全新 AI & Tensor Compute Absorber 推进 lib/vector/nav_graph.cp。
+
+### 2026-11-22（里程碑：切片方法糖 buf.split(mid) 落地发布并回收编译器子智能体 | 2026-11-22 13:54:28）
+- **执行与结单汇报**：
+  > 按用户采纳的方案 A 完成 buf.split(mid) 切片零拷贝互斥拆分方法糖（同时保留 @splitAtMut 兼容）：支持 []T / []const T / [N]T 自动保留只读/可变性，按整数实参路由确保 Strings.split/string.split 100% 零回归，按需发射零污染，release 部署生效，test_builtin_split_at_mut.cp 与 test_builtin_simd_dot_fma.cp 全部 PASS，已回收编译器子智能体。

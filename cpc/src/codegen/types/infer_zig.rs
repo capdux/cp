@@ -165,6 +165,64 @@ impl Codegen {
                             }
                         }
                         let prop = mem.prop.sym.as_str();
+                        if prop == "split" && call.args.len() == 1 {
+                            let arg_is_int = matches!(&call.args[0], Expr::Lit(Lit::Int(_)))
+                                || matches!(
+                                    self.infer_cp_type(&call.args[0]),
+                                    Some(
+                                        Type::U8
+                                            | Type::I8
+                                            | Type::U16
+                                            | Type::I16
+                                            | Type::I32
+                                            | Type::U32
+                                            | Type::I64
+                                            | Type::U64
+                                            | Type::I128
+                                            | Type::U128
+                                            | Type::ISize
+                                            | Type::USize
+                                    )
+                                );
+                            if arg_is_int {
+                                if let Some(obj_ty) = self.infer_cp_type(&mem.obj) {
+                                    let mut cur = &obj_ty;
+                                    let mut is_const = false;
+                                    let mut elem_opt: Option<Box<Type>> = None;
+                                    loop {
+                                        match cur {
+                                            Type::BorrowType { inner, is_mut, .. } => {
+                                                if !*is_mut {
+                                                    is_const = true;
+                                                }
+                                                cur = inner;
+                                            }
+                                            Type::RawPtr { inner, depth: 1 } => cur = inner,
+                                            Type::Shared(inner) => cur = inner,
+                                            Type::Array(elem) | Type::FixedArray(elem, _) => {
+                                                elem_opt = Some(elem.clone());
+                                                break;
+                                            }
+                                            _ => break,
+                                        }
+                                    }
+                                    if let Some(elem) = elem_opt {
+                                        let elem_z = self.map_type(&elem);
+                                        if is_const {
+                                            return format!(
+                                                "struct {{ []const {}, []const {} }}",
+                                                elem_z, elem_z
+                                            );
+                                        } else {
+                                            return format!(
+                                                "struct {{ []{}, []{} }}",
+                                                elem_z, elem_z
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         if (prop == "indexOf" || prop == "lastIndexOf" || prop == "charCodeAt")
                             && call.args.len() == 1
                         {

@@ -459,6 +459,63 @@ impl Codegen {
                             }
                         }
                     }
+                    if mem.prop.sym == "split" && c.args.len() == 1 {
+                        let arg_is_int = matches!(&c.args[0], Expr::Lit(Lit::Int(_)))
+                            || matches!(
+                                self.infer_cp_type_with_mock(&c.args[0], mock_types),
+                                Some(
+                                    Type::U8
+                                        | Type::I8
+                                        | Type::U16
+                                        | Type::I16
+                                        | Type::I32
+                                        | Type::U32
+                                        | Type::I64
+                                        | Type::U64
+                                        | Type::I128
+                                        | Type::U128
+                                        | Type::ISize
+                                        | Type::USize
+                                )
+                            );
+                        if arg_is_int {
+                            if let Some(obj_ty) = self.infer_cp_type_with_mock(&mem.obj, mock_types)
+                            {
+                                let mut cur = &obj_ty;
+                                let mut is_const = false;
+                                let mut elem_opt: Option<Box<Type>> = None;
+                                loop {
+                                    match cur {
+                                        Type::BorrowType { inner, is_mut, .. } => {
+                                            if !*is_mut {
+                                                is_const = true;
+                                            }
+                                            cur = inner;
+                                        }
+                                        Type::RawPtr { inner, depth: 1 } => cur = inner,
+                                        Type::Shared(inner) => cur = inner,
+                                        Type::Array(elem) | Type::FixedArray(elem, _) => {
+                                            elem_opt = Some(elem.clone());
+                                            break;
+                                        }
+                                        _ => break,
+                                    }
+                                }
+                                if let Some(elem) = elem_opt {
+                                    let slice_ty = if is_const {
+                                        Type::BorrowType {
+                                            inner: Box::new(Type::Array(elem)),
+                                            is_mut: false,
+                                            lifetimes: vec![],
+                                        }
+                                    } else {
+                                        Type::Array(elem)
+                                    };
+                                    return Some(Type::Tuple(vec![slice_ty.clone(), slice_ty]));
+                                }
+                            }
+                        }
+                    }
                     if let Expr::Ident(oid) = &*mem.obj {
                         if (oid.sym == "string" || oid.sym == "String") && mem.prop.sym == "from" {
                             return Some(Type::String);
