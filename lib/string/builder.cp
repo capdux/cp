@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string/StringBuilder.cp | Synced: 2026-11-22T12:57:27Z
+// Source: Absorbed from /data/dev/bun/src/string/StringBuilder.cp | Synced: 2026-11-22T13:00:28Z
 // ============================================================================
 // Absorbed from Bun: /data/dev/bun/src/string/StringBuilder.cp
 // Upstream Sync: Refer to /data/dev/bun/src/string/StringBuilder.zig for future upstream updates.

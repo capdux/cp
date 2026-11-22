@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/test_runner/ | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/test_runner/ | Synced: 2026-11-22T13:00:28Z
 // ============================================================================
 // lib/test_runner/index.cp — Unified Public Exports for cap:test_runner
 // ============================================================================

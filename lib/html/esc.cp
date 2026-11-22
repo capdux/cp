@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string/immutable.zig | Synced: 2026-11-22T12:49:17Z (HTML Entity Escape & Unescape)
+// Source: Absorbed from /data/dev/bun/src/string/immutable.zig | Synced: 2026-11-22T13:00:28Z (HTML Entity Escape & Unescape)
 // Pure-CP zero-allocation HTML text/attribute escaper and named/numeric character reference unescaper.
 
 fn writeByte(out: []u8, pos: *usize, b: u8): bool {

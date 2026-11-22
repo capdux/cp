@@ -363,3 +363,21 @@ export {
     sealChecksum,
     verifyPageIntegrity,
 } from "./slottedPage.cp";
+
+// --- bloom_block ---
+export {
+    BLOOM_BLOCK_MAGIC,
+    BLOOM_BLOCK_HEADER_SIZE,
+    BLOOM_BLOCK_WORDS,
+    BLOOM_BLOCK_BITS,
+    BLOOM_BLOCK_BYTES,
+    BLOOM_BLOCK_MAX_BLOCKS,
+    BLOOM_BLOCK_MAX_PROBES,
+    bloomSplitMix64,
+    bloomHashBytes,
+    BloomBlockParams,
+    BloomBlockStats,
+    recommendBloomParams,
+    BloomBlock,
+    BlockedBloomFilter,
+} from "./bloomBlock.cp";

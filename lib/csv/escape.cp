@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string/immutable.zig | Synced: 2026-11-22T12:49:17Z (RFC 4180 CSV / TSV Escaper & Row Builder)
+// Source: Absorbed from /data/dev/bun/src/string/immutable.zig | Synced: 2026-11-22T13:00:28Z (RFC 4180 CSV / TSV Escaper & Row Builder)
 
 /// 判断字段值在 RFC 4180 CSV/TSV 编码中是否需要双引号包裹
 export fn needsCsvQuotes(field: []const u8, delim: u8): bool {

@@ -321,6 +321,48 @@ pub fn demoSlottedPage() {
 }
 ```
 
+### 零分配 64B 缓存行对齐 Blocked Bloom Filter (`bloomBlock.cp`)
+
+面向 SSTable / LSM-Tree 存储引擎的 100% 纯 CP 零动态堆分配 **Cache-Line Aligned Blocked Bloom Filter**（RocksDB / Parquet Split-Block 经典架构）：
+
+- **常量与数据模型**：
+  - `BLOOM_BLOCK_MAGIC = 0x31425043`（`"CPB1"`）、`BLOOM_BLOCK_HEADER_SIZE = 12`、`BLOOM_BLOCK_WORDS = 8`、`BLOOM_BLOCK_BITS = 512`、`BLOOM_BLOCK_BYTES = 64`、`BLOOM_BLOCK_MAX_BLOCKS = 256`、`BLOOM_BLOCK_MAX_PROBES = 16`。
+  - `BloomBlockParams`（`num_blocks`, `num_probes`, `bits_per_key`, `estimated_fpr`）、`BloomBlockStats`、`BloomBlock`（单 64B 缓存行 512-bit 块，内建 `@popCount`）。
+- **核心函数与 `BlockedBloomFilter` 方法**：
+  - `recommendBloomParams(expected_keys, target_fpr): BloomBlockParams?`：按目标误判率与预期键数自动规划最优块数与块内探测次数。
+  - `bloomSplitMix64(x)` / `bloomHashBytes(data)`：FNV-1a + SplitMix64 双哈希原语。
+  - `BlockedBloomFilter.init(num_blocks, num_probes)` / `fromParams(params)`：校验几何合法性（`1..=256` 块、`1..=16` 次探测）。
+  - `insertHash(*_, h)` / `insertBytes(*_, key)` / `mayContainHash(h)` / `mayContainBytes(key)`：单次探测仅访问 1 个 64B 缓存行，零假阴性。
+  - `unionInPlace(*_, other): bool`：同构过滤器按位合并（异构原子拒绝无副作用）。
+  - `setBitCount()` / `fillRatio()` / `estimateFalsePositiveRate()` / `stats()` / `clear(*_)`：硬件 `@popCount` 精确置位密度与实时误判率估算。
+  - `serializedSize()` / `serialize(out: *[]u8): usize?` / `verifySerializedBytes(data): bool` / `deserialize(data): BlockedBloomFilter?`：紧凑 SSTable Filter Block 落盘与零拷贝头校验。
+
+```cp
+import {
+    recommendBloomParams,
+    BlockedBloomFilter,
+} from "cap:db";
+
+pub fn demoBloomBlock() {
+    if (params := recommendBloomParams(1000, 0.01)) {
+        if (let bf := BlockedBloomFilter.fromParams(params)) {
+            bf.insertBytes("user:1001");
+            bf.insertBytes("user:1002");
+            * = bf.mayContainBytes("user:1001"); // true
+            * = bf.estimateFalsePositiveRate();
+
+            let buf: [2048]u8 = [0; 2048];
+            let s: []u8 = buf[0..];
+            if (n := bf.serialize(*s)) {
+                if (restored := BlockedBloomFilter.deserialize(buf[0..n])) {
+                    * = restored.mayContainBytes("user:1002"); // true
+                }
+            }
+        }
+    }
+}
+```
+
 ---
 
 ## 收敛子模块深度文档

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string/ | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/string/ | Synced: 2026-11-22T13:00:28Z
 // lib/string/case.cp
 // Zero-heap Identifier Naming Case Converter (snake_case, kebab-case, camelCase, PascalCase, SCREAMING_SNAKE_CASE)
 // Absorbed from Bun src/string/

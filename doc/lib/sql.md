@@ -566,3 +566,32 @@ const by_name = lookupMySqlCollationByName("utf8mb4_0900_bin"); // id == 309, ha
 * = is_bin;
 * = by_name;
 ```
+
+10. **MySQL 5.7+/8.0+ 会话握手、能力协商与 TLS/认证状态机（`lib/sql/mysqlSession.cp`，吸收自 `/data/dev/bun/src/sql/mysql/{ConnectionState,Capabilities,StatusFlags,SSLMode,AuthMethod}.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
+    - **协议握手与能力协商**：`negotiateMySqlCapabilities()` 强制要求服务端支持 `CLIENT_PROTOCOL_41`，自动按 `MYSQL_SESSION_CAP_REJECT_MASK` 剔除 13 个不安全或客户端不支持的能力位（如 `CLIENT_LOCAL_FILES`/`CLIENT_COMPRESS`/`CLIENT_ZSTD_COMPRESSION_ALGORITHM`），并与默认客户端能力集求交集；
+    - **TLS 升级与认证插件路由（参考 `/data/dev/bun/docs/runtime/sql.mdx`）**：支持 `Disable` / `Prefer` / `Require` / `VerifyCa` / `VerifyFull` 五种 TLS 模式（`Require` 及以上在服务端不支持 SSL 时立即返回 `TlsRequiredByClient`），完整覆盖 `mysql_native_password`（20B scramble）、`caching_sha2_password`（32B）与 `sha256_password`（32B），并在明文模式下支持 `AwaitingPublicKey` RSA 公钥交换及 `AuthSwitchRequest` 插件切换；
+    - **服务器状态标志追踪**：通过 `MySqlSessionServerStatus` 实时感知事务态（`inTransaction()` / `isReadOnlyTransaction()`）、`isAutoCommit()`、`hasMoreResults()`、`isQuerySlow()` 与 `isNoBackslashEscapes()`。
+
+```cp
+import {
+    MYSQL_SESSION_CAP_PROTOCOL_41,
+    MYSQL_SESSION_CAP_SSL,
+    MYSQL_SESSION_CAP_PLUGIN_AUTH,
+    MYSQL_SESSION_CAP_SECURE_CONNECTION,
+    MYSQL_SESSION_CAP_DEPRECATE_EOF,
+    MYSQL_SESSION_STATUS_AUTOCOMMIT,
+    MySqlSessionSslMode,
+    MySqlSessionMachine,
+} from "cap:sql";
+
+let sess = MySqlSessionMachine.init(MySqlSessionSslMode.Require, true);
+* = sess.beginConnect()?;
+* = sess.onTcpConnected()?;
+const caps = MYSQL_SESSION_CAP_PROTOCOL_41 | MYSQL_SESSION_CAP_SSL | MYSQL_SESSION_CAP_PLUGIN_AUTH | MYSQL_SESSION_CAP_SECURE_CONNECTION | MYSQL_SESSION_CAP_DEPRECATE_EOF;
+const use_tls = sess.onServerGreeting(caps, "caching_sha2_password", MYSQL_SESSION_STATUS_AUTOCOMMIT)?;
+if (use_tls) {
+    * = sess.onTlsUpgraded()?;
+}
+* = sess.onAuthOk(MYSQL_SESSION_STATUS_AUTOCOMMIT)?;
+// sess.isReadyForQuery() == true, sess.usesDeprecateEof() == true
+```

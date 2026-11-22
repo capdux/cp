@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/standalone_graph/StandaloneModuleGraph.zig | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/standalone_graph/StandaloneModuleGraph.zig | Synced: 2026-11-22T13:00:28Z
 // ============================================================================
 // lib/bundler/standalone.cp — Single-File Executable Virtual Module Graph (VFS)
 // ============================================================================
