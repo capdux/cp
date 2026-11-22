@@ -1,6 +1,6 @@
 # `cap:agent` — AI Agent 核心运行时标准库
 
-`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏子模块（`budget.cp`）与多智能体任务图 DAG 调度器子模块（`dag.cp`）。
+`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏子模块（`budget.cp`）、多智能体任务图 DAG 调度器子模块（`dag.cp`）与评测基准/轨迹打分子模块（`eval.cp`）。
 
 ---
 
@@ -134,5 +134,71 @@ fn multiAgentWorkflowDemo() {
     }
     const snap = dag.summary();
     * = snap;
+}
+```
+
+---
+
+## 子模块：Agent 评测基准与轨迹打分（`eval.cp`）
+
+### 核心特性
+
+- **无偏 Pass@k 估计器（`passAtK`）**：实现 Chen et al. HumanEval 精确无溢出连乘公式 $1 - \prod_{i=0}^{k-1} \frac{n-c-i}{n-i}$，即使在大样本 `n=200, k=10` 场景下仍零溢出且精确处理 `c == 0 -> 0.0` 与 `n - c < k -> 1.0`。
+- **零分配文本问答评测（`exactMatchNormalized` / `tokenOverlapF1`）**：ASCII 大小写无关 + 标点/空白自动分词；`tokenOverlapF1` 基于调用方缓冲与原地堆排序实现 SQuAD 语义多重集 Token 交集 Precision/Recall/F1。
+- **工具调用轨迹匹配评估（`scoreToolTrajectory`）**：基于两行滚动 DP 与零分配去重集合扫描，输出严格顺序匹配（`exact_order_match`）、LCS 有序比率（`order_lcs_ratio`）以及无序集合 `set_precision` / `set_recall` / `set_f1`。
+- **批量评测汇总与延迟分位数（`summarizeEvalRun`）**：支持显式 `passed` 标记或按 `pass_threshold` 阈值判定，线性插值计算精确 P50 / P95 / P99 延迟并饱和累加微美元成本，内置 `NaN`、负延迟与缓冲越界防御。
+
+### 导出清单
+
+- **Pass@k 与文本评测**：`passAtK`、`exactMatchNormalized`、`TextF1Result`、`tokenOverlapF1`
+- **工具轨迹评测**：`TrajectoryScore`、`scoreToolTrajectory`
+- **评测运行汇总**：`EvalSummary`、`summarizeEvalRun`
+
+### 使用示例
+
+```typescript
+import std from "std";
+import {
+    passAtK,
+    exactMatchNormalized,
+    tokenOverlapF1,
+    scoreToolTrajectory,
+    summarizeEvalRun,
+} from "cap:agent";
+
+fn agentEvalDemo() {
+    // 1. HumanEval Pass@k
+    const p10 = passAtK(200, 20, 10) ?? return;
+    * = p10;
+
+    // 2. QA Exact Match & Multiset Token-F1
+    const em = exactMatchNormalized("The Quick, Brown Fox!", "the quick brown fox");
+    * = em;
+    let ph_arr: [32]u64 = std.mem.zeroes([32]u64);
+    let gh_arr: [32]u64 = std.mem.zeroes([32]u64);
+    let ph_s: []u64 = ph_arr[0..];
+    let gh_s: []u64 = gh_arr[0..];
+    const f1_res = tokenOverlapF1("cat cat dog", "cat dog bird", &ph_s, &gh_s) ?? return;
+    * = f1_res;
+
+    // 3. Tool Trajectory Eval
+    const actual: [3]u64 = [101, 202, 303];
+    const expected: [3]u64 = [101, 303, 202];
+    let dp_prev: [8]usize = std.mem.zeroes([8]usize);
+    let dp_curr: [8]usize = std.mem.zeroes([8]usize);
+    let prev_s: []usize = dp_prev[0..];
+    let curr_s: []usize = dp_curr[0..];
+    const traj = scoreToolTrajectory(actual[0..], expected[0..], &prev_s, &curr_s) ?? return;
+    * = traj;
+
+    // 4. Summarize Eval Run with P50/P95/P99 latencies
+    const scores: [4]f64 = [1.0, 0.8, 0.4, 0.9];
+    const passed: [4]u8 = [1, 1, 0, 1];
+    const lats: [4]f64 = [120.0, 45.0, 310.0, 80.0];
+    const costs: [4]u64 = [1500, 1200, 2300, 1800];
+    let scratch: [4]f64 = std.mem.zeroes([4]f64);
+    let scratch_s: []f64 = scratch[0..];
+    const summary = summarizeEvalRun(scores[0..], passed[0..], lats[0..], costs[0..], 0.7, &scratch_s) ?? return;
+    * = summary;
 }
 ```
