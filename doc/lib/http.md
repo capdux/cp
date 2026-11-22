@@ -807,3 +807,18 @@ let s = H3RequestStream.init(4, 1, false);
 * = s.complete()?;
 * = s.phase == H3StreamPhase.Completed;
 ```
+
+10. **零分配 HTTP/2 写缓冲双水位背压预算与活跃度账本（`h2/backpressure.cp`，吸收自 `/data/dev/bun/src/http/H2Client.cp`）**：
+    - 导出：`H2_LOCAL_INITIAL_WINDOW_SIZE` (`16 MiB`)、`H2_LOCAL_MAX_HEADER_LIST_SIZE` (`256 KiB`)、`H2_WRITE_BUFFER_HIGH_WATER` (`256 KiB`)、`H2_WRITE_BUFFER_CONTROL_LIMIT` (`1 MiB`)、`H2BackpressureError`、`H2WriteAdmission`（`Allow`/`ApplyBackpressure`/`DropConnection`）、`H2WriteBufferBudget`、`H2ClientMetrics`；
+    - 区分普通 `DATA` 帧高水位（触发背压暂停发送，并在刷出回落至 `high_water / 2` 以下时滞回解除）与高优先级控制帧硬上限（允许越过高水位但严禁越过 1 MiB 防 OOM 失控）。
+
+```cp
+import { H2WriteBufferBudget, H2WriteAdmission, H2ClientMetrics } from "cap:http";
+
+let budget = H2WriteBufferBudget.initDefault();
+const adm = budget.queueData(300 * 1024); // H2WriteAdmission.ApplyBackpressure
+const resumed = budget.onFlushed(250 * 1024); // true (queued <= 128 KiB)
+let metrics = H2ClientMetrics.init();
+* = metrics.onSessionOpened();
+* = adm; * = resumed;
+```

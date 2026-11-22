@@ -155,6 +155,14 @@ export {
     stripH2Padding,
     H2DispatchEvent,
     H2FrameDispatcher,
+    H2_LOCAL_INITIAL_WINDOW_SIZE,
+    H2_LOCAL_MAX_HEADER_LIST_SIZE,
+    H2_WRITE_BUFFER_HIGH_WATER,
+    H2_WRITE_BUFFER_CONTROL_LIMIT,
+    H2BackpressureError,
+    H2WriteAdmission,
+    H2WriteBufferBudget,
+    H2ClientMetrics,
 } from "./h2/index";
 
 export {
