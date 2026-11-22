@@ -1227,3 +1227,45 @@ const parsed = parseUnifiedPatch(patch_text, PatchParseOptions.defaults(), files
 const res = applyUnifiedPatch(src, files[0], hunks[0..parsed.hunks_len], ops[0..parsed.ops_len], lines[0..], out_buf[0..], &conflict)?;
 * = res;
 ```
+
+### 多层级工具链配置解析、合并与 Scoped Registry 路由引擎（`toolConfig.cp`）
+
+- 吸收自 `/data/dev/bun/src/cli/bunfig.cp`（纯 CP 零堆分配、全外部切片驱动、对标 `capfig.toml` / `bunfig.toml`）；
+- **核心导出**：
+  - 全段 TOML 解析与环境变量插值：`ToolConfigError`、`ToolConfigLayer`（`System`/`User`/`Project`/`CliOverride`）、`ToolConfigLogLevel`、`ToolConfigLinker`、`ToolConfigAutoInstall`、`ToolConfigShell`、`ToolEnvVar`、`ToolScopeRegistry`、`ToolKeyValueEntry`、`ToolConfigDiagnostic`、`ToolInstallConfig`、`ToolTestConfig`、`ToolRunConfig`、`ToolDebugConfig`、`ToolConfig`、`ToolConfigParseOptions`、`ToolConfigStorage`、`expandEnvVars`（支持 `$VAR`/`${VAR}`/`$$`）、`unescapeTomlString`、`parseToolConfig`（支持顶层、`[install]`、`[install.cache]`、`[install.lockfile]`、`[install.scopes]`、`[install.security]`、`[test]`、`[run]`、`[define]`、`[loader]`、`[debug]`、`[console]`、`[serve]`、数组、行内表与 URL 嵌入凭据）；
+  - 四层优先级合并：`mergeToolConfig`（字段级 `T?` 精准区分未设置与显式 `false`/`0`）、`mergeScopeRegistries`、`mergeKeyValueEntries`；
+  - Scoped Registry 路由、脱敏与语义校验：`ResolvedRegistryRoute`、`resolveScopedRegistry`（最长前缀/精确 `@scope` 匹配）、`redactSecretToken`、`formatRedactedRegistryRoute`、`isValidRegistryUrl`、`validateToolConfig`。
+
+```cp
+import {
+    ToolConfigLayer,
+    ToolConfigParseOptions,
+    ToolConfigStorage,
+    ToolScopeRegistry,
+    ToolKeyValueEntry,
+    ToolConfigDiagnostic,
+    ToolEnvVar,
+    parseToolConfig,
+    mergeToolConfig,
+    resolveScopedRegistry,
+} from "cap:pkg";
+
+let scopes: [8]ToolScopeRegistry = [ToolScopeRegistry.empty(); 8];
+let defines: [8]ToolKeyValueEntry = [ToolKeyValueEntry.empty(); 8];
+let loaders: [8]ToolKeyValueEntry = [ToolKeyValueEntry.empty(); 8];
+let preloads: [8]ToolKeyValueEntry = [ToolKeyValueEntry.empty(); 8];
+let diags: [8]ToolConfigDiagnostic = [ToolConfigDiagnostic.empty(); 8];
+let arena: [2048]u8 = [0; 2048];
+let storage = ToolConfigStorage{
+    scopes: scopes[0..],
+    defines: defines[0..],
+    loaders: loaders[0..],
+    preloads: preloads[0..],
+    diags: diags[0..],
+    str_arena: arena[0..],
+};
+const env_vars: [1]ToolEnvVar = [ToolEnvVar{ key: "NPM_TOKEN", value: "npm_secret_123456" }];
+const cfg = parseToolConfig(toml_src, env_vars[0..], ToolConfigParseOptions.defaults(), &storage)?;
+const route = resolveScopedRegistry(cfg, scopes[0..cfg.scopes_len], "@acme/core");
+* = route;
+```
