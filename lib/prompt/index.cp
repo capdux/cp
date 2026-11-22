@@ -74,3 +74,10 @@ export {
     emitOpenAiToolJson,
     emitAnthropicToolJson,
 } from "./json_schema.cp";
+
+export {
+    StreamChannel,
+    DemuxEvent,
+    DemuxStats,
+    ReasoningStreamDemuxer,
+} from "./reasoning_stream.cp";

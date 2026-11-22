@@ -132,6 +132,18 @@
 | `emitOpenAiToolJson(spec, out_buf: *[]u8): usize?` | 零堆分配发射 OpenAI Function Calling `{"type":"function","function":{...}}` 工具声明 |
 | `emitAnthropicToolJson(spec, out_buf: *[]u8): usize?` | 零堆分配发射 Anthropic `{"name":...,"description":...,"input_schema":{...}}` 工具声明 |
 
+### 9. 零堆分配推理模型流式 `<think>` / `<tool_call>` 标签分流状态机 (`lib/prompt/reasoning_stream.cp`)
+
+| 符号 / 方法 | 签名与说明 |
+| :--- | :--- |
+| `StreamChannel` | `Answer` \| `Thinking` \| `ToolCall` |
+| `DemuxEvent` | `{ channel: StreamChannel, start: usize, len: usize }`（指向当次 `out_buf` 的零拷贝分片跨度） |
+| `DemuxStats` | `{ thinking_bytes, tool_bytes, answer_bytes, thought_blocks, tool_blocks }` |
+| `ReasoningStreamDemuxer.init()` | 初始化状态机（默认 `Answer` 通道，固定 16 字节标签前缀缓冲） |
+| `demux.feed(*_, chunk, *out_buf, *out_events): usize?` | 逐 chunk（支持 1 字节任意切分如 `"<thi"` + `"nk>"`）实时分流至三通道并合并相邻同通道字节，遇假标签前缀自动安全回退为正文，缓冲不足返回 `null` |
+| `demux.flush(*_, *out_buf, *out_events): usize?` | 流结束时将未闭合尾缓冲吐出至当前通道 |
+| `demux.channel()` / `demux.pendingLen()` / `demux.stats()` / `demux.reset(*_)` | 查询当前通道、尾缓冲长度、累计统计或重置复用 |
+
 ---
 
 ## 三、 使用示例
@@ -377,5 +389,34 @@ fn emitToolSpecs() {
     if (m := emitAnthropicToolJson(spec, out)) {
         * = out[0..m];
     }
+}
+```
+
+### 7. 推理模型流式 `<think>` / `<tool_call>` 增量分流示例 (`reasoning_stream.cp`)
+
+```cp
+import {
+    StreamChannel,
+    DemuxEvent,
+    ReasoningStreamDemuxer,
+} from "cap:prompt";
+
+fn demoReasoningStream() {
+    let demux = ReasoningStreamDemuxer.init();
+    let out_buf: [256]u8 = [0; 256];
+    let ev_buf: [8]DemuxEvent = [DemuxEvent{}; 8];
+
+    // 跨 chunk 拆分标签 "<thi" + "nk>"
+    if (n1 := demux.feed("Hi <thi", out_buf[0..], ev_buf[0..])) {
+        * = n1; // Answer: "Hi "，"<thi" 暂存待定
+    }
+    if (n2 := demux.feed("nk>plan</think><tool_call>{\"id\":1}</tool_call>Done", out_buf[0..], ev_buf[0..])) {
+        * = n2; // 依次产生 Thinking("plan")、ToolCall("{\"id\":1}")、Answer("Done")
+    }
+    if (nf := demux.flush(out_buf[0..], ev_buf[0..])) {
+        * = nf;
+    }
+    const st = demux.stats();
+    * = st;
 }
 ```

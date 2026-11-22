@@ -1469,3 +1469,7 @@
 ### 2026-11-22（根目录分域收敛第 3 批完成：lib/conf/（净减 12 个顶层目录，累计 -39） | 2026-11-22 14:51:17）
 - **执行与结单汇报**：
   > Stdlib Root Consolidator 完成 lib/conf/ 收敛：1) 12 个纯 CP 配置/JSON 扩展小目录零冲突归并入 lib/conf/ 并物理清理冗余旧目录（12/12 PASS）；2) 5 个 Bun 扩展模块同步导出至 cap:conf 并保留 Bun 权威独立目录（5/5 PASS）；3) 4 个重叠模块严格按 xxx_.cp 参考归档（0 覆盖/0 丢失 Bun 资产，4/4 PASS）；4) 顶层目录 819 -> 807（累计 -39）；续派 lib/ml/ 领域收敛。
+
+### 2026-11-22（根目录分域收敛第 4/5 批完成：lib/net/ (-19 目录) & lib/math/ (-16 目录) + prompt/reasoning_stream.cp | 2026-11-22 14:53:04）
+- **执行与结单汇报**：
+  > 1. Batch 4 lib/net/：18 个网络协议归并入 lib/net/ + cidr_.cp 参考归档，物理清理 19 个冗余顶层目录（21/21 PASS）；2. Batch 5 lib/math/：16 个数值/优化/滤波算法归并入 lib/math/，物理清理 16 个冗余顶层目录（17/17 PASS）；累计已安全削减 74 个顶层目录（846 -> 772），0 覆盖/0 丢失 Bun 资产；3. 同步提交 lib/prompt/reasoning_stream.cp (5/5 PASS)。
