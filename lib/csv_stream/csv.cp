@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bun_core/fmt.cp | Synced: 2026-11-21T14:24:41Z (RFC 4180 CSV/TSV streaming)
+// Source: Absorbed from /data/dev/bun/src/bun_core/fmt.cp | Synced: 2026-11-21T23:47:58Z (RFC 4180 CSV/TSV streaming)
 
 /// 单个 CSV/TSV 字段切片描述（零堆分配）
 export struct CsvField {

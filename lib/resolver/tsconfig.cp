@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/resolver/tsconfig_json.cp | Synced: 2026-11-21T12:28:09Z
+// Source: Absorbed from /data/dev/bun/src/resolver/tsconfig_json.cp | Synced: 2026-11-21T23:11:30Z
 // ============================================================================
 // lib/resolver/tsconfig.cp — JSONC tsconfig.json Parser & Path Alias Rewriter
 // ============================================================================

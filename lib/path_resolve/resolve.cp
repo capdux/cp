@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/paths/resolve_path.cp | Synced: 2026-11-21T13:58:58Z
+// Source: Absorbed from /data/dev/bun/src/paths/resolve_path.cp | Synced: 2026-11-21T23:32:03Z
 // Pure-CP zero-allocation POSIX path resolution utilities: normalizePosix,
 // joinNormalized, relativePosix, longestCommonPath, isParentOrEqual, isPathInside.
 

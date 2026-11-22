@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/lockfile.cp | Synced: 2026-11-21T20:23:39Z
+// Source: Absorbed from /data/dev/bun/src/install/lockfile.cp | Synced: 2026-11-21T23:27:01Z
 // ============================================================================
 // lib/pkg/lockfile.cp — Dependency Graph, Cycle/Topo Engine & Dual Lockfile Persistence
 // Absorbed from Bun src/install/{lockfile.cp,lockfile/bun.lock.cp,lockfile/bun.lockb.cp}

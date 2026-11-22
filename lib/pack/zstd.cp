@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/zstd/zstd.cp | Synced: 2026-11-21T15:51:12Z
+// Source: Absorbed from /data/dev/bun/src/zstd/zstd.cp | Synced: 2026-11-21T23:17:03Z
 // ============================================================================
 // lib/pack/zstd.cp — Zstandard (RFC 8478) 压缩/解压缩与帧解析引擎
 // 吸收自 Bun src/zstd/zstd.cp，适配 CP 现代强类型与原生内存生命周期

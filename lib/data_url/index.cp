@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/resolver/data_url.cp | Synced: 2026-11-21T13:52:10Z
+// Source: Absorbed from /data/dev/bun/src/resolver/data_url.cp | Synced: 2026-11-21T23:32:33Z
 pub import {
     DataUrl,
     percentDecode,

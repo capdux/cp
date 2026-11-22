@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/resolver/package_json.cp | Synced: 2026-11-21T13:56:04Z
+// Source: Absorbed from /data/dev/bun/src/resolver/package_json.cp | Synced: 2026-11-21T23:34:18Z
 
 /// 导出目标类别（路径映射或 `null` 显式阻断）
 pub enum ExportTargetKind: u8 {
