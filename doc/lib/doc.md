@@ -176,6 +176,14 @@ pub fn demoCsvTable() {
 - **富文本/表格/批注解析**：`parseDocxDocumentXml`（保留段落与表格交错顺序，解析 `Heading1..6`、列表 `<w:numPr>`、对齐 `<w:jc>`、加粗/斜体/下划线/删除线/字号、`<w:tab/>`/`<w:br/>`、XML 实体解码、`<w:hyperlink>` URL 关联及 `<w:tbl>` 含 `gridSpan` 跨列合并）与 `parseDocxCommentsXml`（审阅批注 `id`/`author`/`date`/正文）；
 - **XML 生成与 Markdown 双向互转**：`buildDocxDocumentXml`、`docxXmlToMarkdown`、`markdownToDocxXml` 及中英文字数统计 `computeDocxWordStats`（`paragraph_count`/`table_count`/`char_count`/`english_word_count`/`cjk_char_count`）。
 
+### 生产级零堆 OOXML PPTX 幻灯片/表格/演讲者备注解析生成与大纲导出 (`pptx.cp`)
+
+在 100% 向下兼容既有 `PptxSlideSize`/`PptxSlideRefIter`/`PptxParagraphIter`/`extractSlideText`/`summarizeSlide` 的基础上，新增全套零堆外部切片 PresentationML 引擎：
+
+- **演示文稿尺寸与 EMU/磅换算**：`EMU_PER_PT` (`12700`)、`PPTX_SLIDE_16_9_CX/CY`、`emuToPt`/`ptToEmu`、`parsePptxPresentationXml`、`buildPptxPresentationXml`；
+- **富文本形状/原生表格/备注解析与生成**：`parsePptxSlideXml`（解析占位符 `title`/`ctrTitle`/`subTitle`/`body`/`ftr`/`sldNum`、EMU 几何 `<a:off>`/`<a:ext>`、多级项目符号 `lvl`、粗斜体/字号/RGB 颜色与原生 `<a:tbl>` 表格）、`parsePptxNotesXml`、`buildPptxSlideXml`、`buildPptxNotesXml`；
+- **大纲 Markdown 导出与多语言统计**：`pptxSlideXmlToMarkdown`（`## Slide N: ...` + 缩进项目符号 + GFM 表格 + `> Notes: ...`）与 `computePptxSlideStats`（中英文词/字数 + 备注字数）。
+
 ---
 
 ## 收敛子模块深度文档

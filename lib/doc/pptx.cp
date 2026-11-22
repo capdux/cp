@@ -820,3 +820,906 @@ pub fn summarizeSlide(slide_xml: []const u8): PptxSlideStats {
 
     return stats;
 }
+
+
+// ============================================================================
+// 5. Production Extension: EMU/Pt Codec, Presentation/Slide/Table/Notes Parser,
+//    PresentationML Builders, Markdown Outline Exporter & Detailed Stats
+// ============================================================================
+
+/// OOXML EMU per typographic point (`1 pt = 12700 EMU`).
+pub const EMU_PER_PT: u64 = 12700;
+
+/// Standard widescreen 16:9 slide width in EMU (`13.333 in = 960 pt = 12192000 EMU`).
+pub const PPTX_SLIDE_16_9_CX: u64 = 12192000;
+
+/// Standard widescreen 16:9 slide height in EMU (`7.5 in = 540 pt = 6858000 EMU`).
+pub const PPTX_SLIDE_16_9_CY: u64 = 6858000;
+
+/// Error set returned by extended PPTX presentation, slide, notes, builder, and Markdown routines.
+pub err PptxError {
+    BufferTooSmall,
+    SlotOverflow,
+    InvalidXml,
+    InvalidPresentation,
+    InvalidSlide,
+    InvalidNotes,
+    InvalidParameter,
+}
+
+/// Converts OOXML EMU to typographic points (`emu / 12700.0`).
+pub fn emuToPt(emu: u64): f64 {
+    return (emu as f64) / (EMU_PER_PT as f64);
+}
+
+/// Converts typographic points to OOXML EMU (`round(pt * 12700.0)`).
+pub fn ptToEmu(pt: f64): u64 {
+    if (pt <= 0.0) return 0;
+    return (pt * (EMU_PER_PT as f64) + 0.5) as u64;
+}
+
+fn pptxLocalName(qname: []const u8): []const u8 {
+    let i: usize = 0;
+    while (i < qname.len) : (i += 1) {
+        if (qname[i] == ':') return qname[(i + 1)..qname.len];
+    }
+    return qname;
+}
+
+fn appendPptxBytes(out: []u8, pos: usize, src: []const u8): usize ! PptxError {
+    if (pos + src.len > out.len) return PptxError.BufferTooSmall;
+    let i: usize = 0;
+    while (i < src.len) : (i += 1) {
+        out[pos + i] = src[i];
+    }
+    return pos + src.len;
+}
+
+fn appendPptxU64(out: []u8, pos: usize, v: u64): usize ! PptxError {
+    let digs: [20]u8 = [0; 20];
+    let n: usize = 0;
+    let x: u64 = v;
+    if (x == 0) {
+        digs[0] = '0';
+        n = 1;
+    } else {
+        while (x > 0) {
+            digs[n] = ('0' as u8) + ((x % 10) as u8);
+            x /= 10;
+            n += 1;
+        }
+    }
+    if (pos + n > out.len) return PptxError.BufferTooSmall;
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        out[pos + i] = digs[n - 1 - i];
+    }
+    return pos + n;
+}
+
+fn appendPptxI64(out: []u8, pos: usize, v: i64): usize ! PptxError {
+    let cur: usize = pos;
+    if (v < 0) {
+        cur = appendPptxBytes(out, cur, "-")?;
+        return appendPptxU64(out, cur, (-v) as u64);
+    }
+    return appendPptxU64(out, cur, v as u64);
+}
+
+fn appendPptxXmlEsc(out: []u8, pos: usize, text: []const u8): usize ! PptxError {
+    let cur: usize = pos;
+    let i: usize = 0;
+    while (i < text.len) : (i += 1) {
+        const b = text[i];
+        if (b == '&') { cur = appendPptxBytes(out, cur, "&amp;")?; }
+        else if (b == '<') { cur = appendPptxBytes(out, cur, "&lt;")?; }
+        else if (b == '>') { cur = appendPptxBytes(out, cur, "&gt;")?; }
+        else if (b == '"') { cur = appendPptxBytes(out, cur, "&quot;")?; }
+        else if (b == '\'') { cur = appendPptxBytes(out, cur, "&apos;")?; }
+        else {
+            if (cur >= out.len) return PptxError.BufferTooSmall;
+            out[cur] = b;
+            cur += 1;
+        }
+    }
+    return cur;
+}
+
+fn parseI64Dec(s: []const u8): i64? {
+    if (s.len == 0) return null;
+    let i: usize = 0;
+    let neg: bool = false;
+    if (s[0] == '-') { neg = true; i = 1; }
+    if (i >= s.len) return null;
+    const u = parseU64Dec(s[i..s.len]) ?? return null;
+    return if (neg) -(u as i64) else (u as i64);
+}
+
+struct PptxCloseSpan {
+    inner_end: usize = 0;
+    after_close: usize = 0;
+}
+
+fn findPptxMatchingClose(xml: []const u8, body_start: usize, target_local: []const u8): PptxCloseSpan? {
+    let pos: usize = body_start;
+    let depth: usize = 1;
+    while (pos < xml.len) {
+        if (xml[pos] != '<') { pos += 1; continue; }
+        if (startsWith(xml[pos..xml.len], "<!--")) { pos = skipComment(xml, pos); continue; }
+        if (startsWith(xml[pos..xml.len], "<![CDATA[")) { pos = skipCdata(xml, pos); continue; }
+        if (startsWith(xml[pos..xml.len], "<?")) { pos = skipPi(xml, pos); continue; }
+        if (startsWith(xml[pos..xml.len], "<!")) { pos = skipDecl(xml, pos); continue; }
+        const gt = findTagEnd(xml, pos) ?? return null;
+        if (pos + 1 < gt && xml[pos + 1] == '/') {
+            const cname = pptxLocalName(parseTagName(xml, pos + 2, gt));
+            if (strEql(cname, target_local)) {
+                depth -= 1;
+                if (depth == 0) {
+                    return PptxCloseSpan{ inner_end: pos, after_close: gt + 1 };
+                }
+            }
+        } else if (pos + 1 < gt) {
+            const oname = pptxLocalName(parseTagName(xml, pos + 1, gt));
+            if (strEql(oname, target_local) && !isSelfClosingTag(xml, pos, gt)) {
+                depth += 1;
+            }
+        }
+        pos = gt + 1;
+    }
+    return null;
+}
+
+// --- 5.1 Presentation (`ppt/presentation.xml`) Parser & Builder ---
+
+/// Parsed presentation dimensions and slide list count.
+pub struct PptxPresentationInfo {
+    slide_size: PptxSlideSize = PptxSlideSize{ cx: 0, cy: 0 },
+    has_slide_size: bool = false;
+    slide_count: usize = 0;
+}
+
+/// Parses `ppt/presentation.xml` extracting `<p:sldSz>` and ordered `<p:sldId>` entries into `out_slides`.
+pub fn parsePptxPresentationXml(
+    pres_xml: []const u8,
+    out_slides: []PptxSlideRef,
+): PptxPresentationInfo ! PptxError {
+    if (!isPresentationXml(pres_xml)) return PptxError.InvalidPresentation;
+    let info = PptxPresentationInfo{};
+    if (sz := parsePptxSlideSize(pres_xml)) {
+        info.slide_size = sz;
+        info.has_slide_size = true;
+    }
+    let it = PptxSlideRefIter.init(pres_xml);
+    while (sr := it.next()) {
+        if (info.slide_count >= out_slides.len) return PptxError.SlotOverflow;
+        out_slides[info.slide_count] = sr;
+        info.slide_count += 1;
+    }
+    return info;
+}
+
+/// Builds a valid OOXML `ppt/presentation.xml` with slide dimensions and ordered `<p:sldIdLst>`.
+pub fn buildPptxPresentationXml(
+    size: PptxSlideSize,
+    slides: []const PptxSlideRef,
+    out_xml: []u8,
+): usize ! PptxError {
+    let pos: usize = 0;
+    pos = appendPptxBytes(out_xml, pos, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>")?;
+    pos = appendPptxBytes(out_xml, pos, "<p:presentation xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"><p:sldIdLst>")?;
+    let i: usize = 0;
+    while (i < slides.len) : (i += 1) {
+        pos = appendPptxBytes(out_xml, pos, "<p:sldId id=\"")?;
+        pos = appendPptxU64(out_xml, pos, slides[i].id as u64)?;
+        pos = appendPptxBytes(out_xml, pos, "\" r:id=\"")?;
+        pos = appendPptxXmlEsc(out_xml, pos, slides[i].r_id)?;
+        pos = appendPptxBytes(out_xml, pos, "\"/>")?;
+    }
+    pos = appendPptxBytes(out_xml, pos, "</p:sldIdLst><p:sldSz cx=\"")?;
+    pos = appendPptxU64(out_xml, pos, size.cx)?;
+    pos = appendPptxBytes(out_xml, pos, "\" cy=\"")?;
+    pos = appendPptxU64(out_xml, pos, size.cy)?;
+    if (size.size_type.len > 0) {
+        pos = appendPptxBytes(out_xml, pos, "\" type=\"")?;
+        pos = appendPptxXmlEsc(out_xml, pos, size.size_type)?;
+    }
+    pos = appendPptxBytes(out_xml, pos, "\"/></p:presentation>")?;
+    return pos;
+}
+
+// --- 5.2 Rich Slide & Table Structures, Parser & Notes Parser ---
+
+/// OOXML `<p:ph type="..."/>` placeholder role.
+pub enum PptxPlaceholderKind {
+    none,
+    title,
+    ctr_title,
+    sub_title,
+    body,
+    footer,
+    slide_num,
+    other,
+}
+
+fn parsePlaceholderKind(t: []const u8): PptxPlaceholderKind {
+    if (strEql(t, "title")) return PptxPlaceholderKind.title;
+    if (strEql(t, "ctrTitle")) return PptxPlaceholderKind.ctr_title;
+    if (strEql(t, "subTitle")) return PptxPlaceholderKind.sub_title;
+    if (strEql(t, "body")) return PptxPlaceholderKind.body;
+    if (strEql(t, "ftr")) return PptxPlaceholderKind.footer;
+    if (strEql(t, "sldNum")) return PptxPlaceholderKind.slide_num;
+    if (t.len == 0) return PptxPlaceholderKind.body;
+    return PptxPlaceholderKind.other;
+}
+
+fn placeholderTypeStr(k: PptxPlaceholderKind): []const u8 {
+    return match (k) {
+        PptxPlaceholderKind.title => "title",
+        PptxPlaceholderKind.ctr_title => "ctrTitle",
+        PptxPlaceholderKind.sub_title => "subTitle",
+        PptxPlaceholderKind.body => "body",
+        PptxPlaceholderKind.footer => "ftr",
+        PptxPlaceholderKind.slide_num => "sldNum",
+        else => "",
+    };
+}
+
+/// DrawingML shape bounding box in EMU (`<a:off x y>` & `<a:ext cx cy>`).
+pub struct PptxRectEmu {
+    x: i64 = 0;
+    y: i64 = 0;
+    cx: u64 = 0;
+    cy: u64 = 0;
+}
+
+/// Styled DrawingML text run (`<a:r>`).
+pub struct PptxTextRun {
+    text: []const u8 = "";
+    bold: bool = false;
+    italic: bool = false;
+    font_size_centipt: u32 = 0;
+    color_hex: [6]u8 = ['0'; 6];
+    has_color: bool = false;
+}
+
+/// DrawingML paragraph (`<a:p>`) with bullet level, alignment, and run slice range.
+pub struct PptxTextParagraph {
+    level: u8 = 0;
+    alignment: []const u8 = "";
+    run_start: usize = 0;
+    run_count: usize = 0;
+}
+
+/// PresentationML shape (`<p:sp>`) with placeholder role, EMU geometry, and paragraph range.
+pub struct PptxShape {
+    placeholder: PptxPlaceholderKind = PptxPlaceholderKind.none;
+    rect: PptxRectEmu = PptxRectEmu{},
+    has_rect: bool = false;
+    para_start: usize = 0;
+    para_count: usize = 0;
+}
+
+/// DrawingML table cell (`<a:tc>`).
+pub struct PptxTableCell {
+    row_index: usize = 0;
+    col_index: usize = 0;
+    text: []const u8 = "";
+}
+
+/// DrawingML native table (`<a:tbl>`) referencing its cells in `out_cells`.
+pub struct PptxTable {
+    row_count: usize = 0;
+    col_count: usize = 0;
+    cell_start: usize = 0;
+    cell_count: usize = 0;
+}
+
+/// Summary counts returned by `parsePptxSlideXml`.
+pub struct PptxParsedSlide {
+    shape_count: usize = 0;
+    para_count: usize = 0;
+    run_count: usize = 0;
+    table_count: usize = 0;
+    cell_count: usize = 0;
+}
+
+fn parseDrawingRun(run_inner: []const u8, text_slab: []u8, slab_pos: *usize): PptxTextRun ! PptxError {
+    let run = PptxTextRun{};
+    const tstart: usize = slab_pos.*;
+    let pos: usize = 0;
+    let in_rpr: bool = false;
+
+    while (pos < run_inner.len) {
+        if (run_inner[pos] != '<') { pos += 1; continue; }
+        const gt = findTagEnd(run_inner, pos) orelse break;
+        if (pos + 1 < gt && run_inner[pos + 1] == '/') {
+            if (strEql(pptxLocalName(parseTagName(run_inner, pos + 2, gt)), "rPr")) in_rpr = false;
+            pos = gt + 1;
+            continue;
+        }
+        const tag = run_inner[pos..(gt + 1)];
+        const lname = pptxLocalName(parseTagName(run_inner, pos + 1, gt));
+        const sc = isSelfClosingTag(run_inner, pos, gt);
+
+        if (strEql(lname, "rPr")) {
+            if (bv := extractAttrExact(tag, "b")) {
+                run.bold = strEql(bv, "1") || strEql(bv, "true");
+            }
+            if (iv := extractAttrExact(tag, "i")) {
+                run.italic = strEql(iv, "1") || strEql(iv, "true");
+            }
+            if (sv := extractAttrExact(tag, "sz")) {
+                if (sz := parseU32Dec(sv)) run.font_size_centipt = sz;
+            }
+            in_rpr = !sc;
+        } else if (in_rpr && strEql(lname, "srgbClr")) {
+            if (cv := extractAttrExact(tag, "val")) {
+                if (cv.len == 6) {
+                    let ci: usize = 0;
+                    while (ci < 6) : (ci += 1) {
+                        run.color_hex[ci] = cv[ci];
+                    }
+                    run.has_color = true;
+                }
+            }
+        } else if (strEql(lname, "t") && !sc) {
+            if (cl := findPptxMatchingClose(run_inner, gt + 1, "t")) {
+                if (!emitUnescapedText(run_inner[(gt + 1)..cl.inner_end], text_slab, slab_pos)) {
+                    return PptxError.BufferTooSmall;
+                }
+                pos = cl.after_close;
+                continue;
+            }
+        }
+        pos = gt + 1;
+    }
+    run.text = text_slab[tstart..slab_pos.*];
+    return run;
+}
+
+fn parseDrawingParagraph(
+    p_inner: []const u8,
+    out_runs: []PptxTextRun,
+    run_cnt: *usize,
+    text_slab: []u8,
+    slab_pos: *usize,
+): PptxTextParagraph ! PptxError {
+    let para = PptxTextParagraph{ run_start: run_cnt.* };
+    let pos: usize = 0;
+
+    while (pos < p_inner.len) {
+        if (p_inner[pos] != '<') { pos += 1; continue; }
+        const gt = findTagEnd(p_inner, pos) orelse break;
+        if (pos + 1 < gt && p_inner[pos + 1] != '/') {
+            const tag = p_inner[pos..(gt + 1)];
+            const lname = pptxLocalName(parseTagName(p_inner, pos + 1, gt));
+            const sc = isSelfClosingTag(p_inner, pos, gt);
+            if (strEql(lname, "pPr")) {
+                if (lv := extractAttrExact(tag, "lvl")) {
+                    if (n := parseU32Dec(lv)) para.level = n as u8;
+                }
+                if (al := extractAttrExact(tag, "algn")) {
+                    para.alignment = al;
+                }
+            } else if (strEql(lname, "r") && !sc) {
+                if (cl := findPptxMatchingClose(p_inner, gt + 1, "r")) {
+                    if (run_cnt.* >= out_runs.len) return PptxError.SlotOverflow;
+                    const r = parseDrawingRun(p_inner[(gt + 1)..cl.inner_end], text_slab, slab_pos)?;
+                    if (r.text.len > 0) {
+                        out_runs[run_cnt.*] = r;
+                        run_cnt.* += 1;
+                        para.run_count += 1;
+                    }
+                    pos = cl.after_close;
+                    continue;
+                }
+            }
+        }
+        pos = gt + 1;
+    }
+    return para;
+}
+
+fn parsePptxShapeElement(
+    sp_inner: []const u8,
+    out_paras: []PptxTextParagraph,
+    para_cnt: *usize,
+    out_runs: []PptxTextRun,
+    run_cnt: *usize,
+    text_slab: []u8,
+    slab_pos: *usize,
+): PptxShape ! PptxError {
+    let sh = PptxShape{ para_start: para_cnt.* };
+    let pos: usize = 0;
+
+    while (pos < sp_inner.len) {
+        if (sp_inner[pos] != '<') { pos += 1; continue; }
+        const gt = findTagEnd(sp_inner, pos) orelse break;
+        if (pos + 1 < gt && sp_inner[pos + 1] != '/') {
+            const tag = sp_inner[pos..(gt + 1)];
+            const lname = pptxLocalName(parseTagName(sp_inner, pos + 1, gt));
+            const sc = isSelfClosingTag(sp_inner, pos, gt);
+            if (strEql(lname, "ph")) {
+                const pt = extractAttrExact(tag, "type") ?? "";
+                sh.placeholder = parsePlaceholderKind(pt);
+            } else if (strEql(lname, "off")) {
+                if (xs := extractAttrExact(tag, "x")) {
+                    if (xv := parseI64Dec(xs)) sh.rect.x = xv;
+                }
+                if (ys := extractAttrExact(tag, "y")) {
+                    if (yv := parseI64Dec(ys)) sh.rect.y = yv;
+                }
+                sh.has_rect = true;
+            } else if (strEql(lname, "ext")) {
+                if (cxs := extractAttrExact(tag, "cx")) {
+                    if (cxv := parseU64Dec(cxs)) sh.rect.cx = cxv;
+                }
+                if (cys := extractAttrExact(tag, "cy")) {
+                    if (cyv := parseU64Dec(cys)) sh.rect.cy = cyv;
+                }
+                sh.has_rect = true;
+            } else if (strEql(lname, "p") && !sc) {
+                if (cl := findPptxMatchingClose(sp_inner, gt + 1, "p")) {
+                    if (para_cnt.* >= out_paras.len) return PptxError.SlotOverflow;
+                    const p = parseDrawingParagraph(sp_inner[(gt + 1)..cl.inner_end], out_runs, run_cnt, text_slab, slab_pos)?;
+                    if (p.run_count > 0) {
+                        out_paras[para_cnt.*] = p;
+                        para_cnt.* += 1;
+                        sh.para_count += 1;
+                    }
+                    pos = cl.after_close;
+                    continue;
+                }
+            }
+        }
+        pos = gt + 1;
+    }
+    return sh;
+}
+
+fn parseDrawingTable(
+    tbl_inner: []const u8,
+    out_cells: []PptxTableCell,
+    cell_cnt: *usize,
+    text_slab: []u8,
+    slab_pos: *usize,
+): PptxTable ! PptxError {
+    let tbl = PptxTable{ cell_start: cell_cnt.* };
+    let pos: usize = 0;
+
+    while (pos < tbl_inner.len) {
+        if (tbl_inner[pos] != '<') { pos += 1; continue; }
+        const gt = findTagEnd(tbl_inner, pos) orelse break;
+        if (pos + 1 < gt && tbl_inner[pos + 1] != '/') {
+            const lname = pptxLocalName(parseTagName(tbl_inner, pos + 1, gt));
+            if (strEql(lname, "tr") && !isSelfClosingTag(tbl_inner, pos, gt)) {
+                if (tr_cl := findPptxMatchingClose(tbl_inner, gt + 1, "tr")) {
+                    const tr_body = tbl_inner[(gt + 1)..tr_cl.inner_end];
+                    let rpos: usize = 0;
+                    let col_i: usize = 0;
+                    while (rpos < tr_body.len) {
+                        if (tr_body[rpos] != '<') { rpos += 1; continue; }
+                        const cgt = findTagEnd(tr_body, rpos) orelse break;
+                        if (rpos + 1 < cgt && tr_body[rpos + 1] != '/') {
+                            const cln = pptxLocalName(parseTagName(tr_body, rpos + 1, cgt));
+                            if (strEql(cln, "tc") && !isSelfClosingTag(tr_body, rpos, cgt)) {
+                                if (tc_cl := findPptxMatchingClose(tr_body, cgt + 1, "tc")) {
+                                    if (cell_cnt.* >= out_cells.len) return PptxError.SlotOverflow;
+                                    const tstart: usize = slab_pos.*;
+                                    const wn = extractDrawingParagraphText(tr_body[(cgt + 1)..tc_cl.inner_end], text_slab[tstart..text_slab.len]) orelse return PptxError.BufferTooSmall;
+                                    slab_pos.* = tstart + wn;
+                                    out_cells[cell_cnt.*] = PptxTableCell{
+                                        row_index: tbl.row_count,
+                                        col_index: col_i,
+                                        text: text_slab[tstart..slab_pos.*],
+                                    };
+                                    cell_cnt.* += 1;
+                                    tbl.cell_count += 1;
+                                    col_i += 1;
+                                    rpos = tc_cl.after_close;
+                                    continue;
+                                }
+                            }
+                        }
+                        rpos = cgt + 1;
+                    }
+                    if (col_i > tbl.col_count) tbl.col_count = col_i;
+                    tbl.row_count += 1;
+                    pos = tr_cl.after_close;
+                    continue;
+                }
+            }
+        }
+        pos = gt + 1;
+    }
+    return tbl;
+}
+
+/// Zero-heap structured parser for `ppt/slides/slideN.xml`, extracting shapes, placeholders,
+/// EMU geometry, bullet paragraphs, styled runs, and native DrawingML `<a:tbl>` tables.
+pub fn parsePptxSlideXml(
+    slide_xml: []const u8,
+    out_shapes: []PptxShape,
+    out_paras: []PptxTextParagraph,
+    out_runs: []PptxTextRun,
+    out_tables: []PptxTable,
+    out_cells: []PptxTableCell,
+    text_slab: []u8,
+): PptxParsedSlide ! PptxError {
+    if (!isSlideXml(slide_xml)) return PptxError.InvalidSlide;
+    let res = PptxParsedSlide{};
+    let slab_pos: usize = 0;
+    let pos: usize = skipProlog(slide_xml);
+
+    while (pos < slide_xml.len) {
+        if (slide_xml[pos] != '<') { pos += 1; continue; }
+        if (startsWith(slide_xml[pos..slide_xml.len], "<!--")) { pos = skipComment(slide_xml, pos); continue; }
+        const gt = findTagEnd(slide_xml, pos) orelse return PptxError.InvalidXml;
+        if (pos + 1 < gt && slide_xml[pos + 1] != '/') {
+            const qname = parseTagName(slide_xml, pos + 1, gt);
+            const sc = isSelfClosingTag(slide_xml, pos, gt);
+            if (isNsTag(qname, 'p', "sp") && !sc) {
+                const cl = findPptxMatchingClose(slide_xml, gt + 1, "sp") orelse return PptxError.InvalidXml;
+                if (res.shape_count >= out_shapes.len) return PptxError.SlotOverflow;
+                out_shapes[res.shape_count] = parsePptxShapeElement(
+                    slide_xml[(gt + 1)..cl.inner_end],
+                    out_paras,
+                    *res.para_count,
+                    out_runs,
+                    *res.run_count,
+                    text_slab,
+                    *slab_pos,
+                )?;
+                res.shape_count += 1;
+                pos = cl.after_close;
+                continue;
+            } else if (isNsTag(qname, 'a', "tbl") && !sc) {
+                const cl = findPptxMatchingClose(slide_xml, gt + 1, "tbl") orelse return PptxError.InvalidXml;
+                if (res.table_count >= out_tables.len) return PptxError.SlotOverflow;
+                out_tables[res.table_count] = parseDrawingTable(
+                    slide_xml[(gt + 1)..cl.inner_end],
+                    out_cells,
+                    *res.cell_count,
+                    text_slab,
+                    *slab_pos,
+                )?;
+                res.table_count += 1;
+                pos = cl.after_close;
+                continue;
+            }
+        }
+        pos = gt + 1;
+    }
+    return res;
+}
+
+/// Extracts speaker notes body text from `ppt/notesSlides/notesSlideN.xml` into `out_text`.
+pub fn parsePptxNotesXml(notes_xml: []const u8, out_text: []u8): usize ! PptxError {
+    if (!isNotesSlideXml(notes_xml)) return PptxError.InvalidNotes;
+    return extractSlideText(notes_xml, out_text) orelse return PptxError.BufferTooSmall;
+}
+
+// --- 5.3 Zero-Heap PresentationML Slide & Notes Builders ---
+
+/// Builds a valid OOXML `ppt/slides/slideN.xml` from structured shapes/paragraphs/runs and native tables.
+pub fn buildPptxSlideXml(
+    shapes: []const PptxShape,
+    paras: []const PptxTextParagraph,
+    runs: []const PptxTextRun,
+    tables: []const PptxTable,
+    cells: []const PptxTableCell,
+    out_xml: []u8,
+): usize ! PptxError {
+    let pos: usize = 0;
+    pos = appendPptxBytes(out_xml, pos, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>")?;
+    pos = appendPptxBytes(out_xml, pos, "<p:sld xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\"><p:cSld><p:spTree>")?;
+
+    let si: usize = 0;
+    while (si < shapes.len) : (si += 1) {
+        const sh = shapes[si];
+        pos = appendPptxBytes(out_xml, pos, "<p:sp><p:nvSpPr><p:cNvPr id=\"")?;
+        pos = appendPptxU64(out_xml, pos, (si + 2) as u64)?;
+        pos = appendPptxBytes(out_xml, pos, "\" name=\"Shape")?;
+        pos = appendPptxU64(out_xml, pos, (si + 1) as u64)?;
+        pos = appendPptxBytes(out_xml, pos, "\"/><p:cNvSpPr/><p:nvPr>")?;
+        const ph_str = placeholderTypeStr(sh.placeholder);
+        if (ph_str.len > 0) {
+            pos = appendPptxBytes(out_xml, pos, "<p:ph type=\"")?;
+            pos = appendPptxBytes(out_xml, pos, ph_str)?;
+            pos = appendPptxBytes(out_xml, pos, "\"/>")?;
+        }
+        pos = appendPptxBytes(out_xml, pos, "</p:nvPr></p:nvSpPr>")?;
+
+        if (sh.has_rect) {
+            pos = appendPptxBytes(out_xml, pos, "<p:spPr><a:xfrm><a:off x=\"")?;
+            pos = appendPptxI64(out_xml, pos, sh.rect.x)?;
+            pos = appendPptxBytes(out_xml, pos, "\" y=\"")?;
+            pos = appendPptxI64(out_xml, pos, sh.rect.y)?;
+            pos = appendPptxBytes(out_xml, pos, "\"/><a:ext cx=\"")?;
+            pos = appendPptxU64(out_xml, pos, sh.rect.cx)?;
+            pos = appendPptxBytes(out_xml, pos, "\" cy=\"")?;
+            pos = appendPptxU64(out_xml, pos, sh.rect.cy)?;
+            pos = appendPptxBytes(out_xml, pos, "\"/></a:xfrm></p:spPr>")?;
+        }
+
+        pos = appendPptxBytes(out_xml, pos, "<p:txBody><a:bodyPr/>")?;
+        let pi: usize = 0;
+        while (pi < sh.para_count) : (pi += 1) {
+            const p = paras[sh.para_start + pi];
+            pos = appendPptxBytes(out_xml, pos, "<a:p>")?;
+            if (p.level > 0 || p.alignment.len > 0) {
+                pos = appendPptxBytes(out_xml, pos, "<a:pPr")?;
+                if (p.level > 0) {
+                    pos = appendPptxBytes(out_xml, pos, " lvl=\"")?;
+                    pos = appendPptxU64(out_xml, pos, p.level as u64)?;
+                    pos = appendPptxBytes(out_xml, pos, "\"")?;
+                }
+                if (p.alignment.len > 0) {
+                    pos = appendPptxBytes(out_xml, pos, " algn=\"")?;
+                    pos = appendPptxXmlEsc(out_xml, pos, p.alignment)?;
+                    pos = appendPptxBytes(out_xml, pos, "\"")?;
+                }
+                pos = appendPptxBytes(out_xml, pos, "/>")?;
+            }
+            let ri: usize = 0;
+            while (ri < p.run_count) : (ri += 1) {
+                const r = runs[p.run_start + ri];
+                pos = appendPptxBytes(out_xml, pos, "<a:r>")?;
+                if (r.bold || r.italic || r.font_size_centipt > 0 || r.has_color) {
+                    pos = appendPptxBytes(out_xml, pos, "<a:rPr")?;
+                    if (r.bold) pos = appendPptxBytes(out_xml, pos, " b=\"1\"")?;
+                    if (r.italic) pos = appendPptxBytes(out_xml, pos, " i=\"1\"")?;
+                    if (r.font_size_centipt > 0) {
+                        pos = appendPptxBytes(out_xml, pos, " sz=\"")?;
+                        pos = appendPptxU64(out_xml, pos, r.font_size_centipt as u64)?;
+                        pos = appendPptxBytes(out_xml, pos, "\"")?;
+                    }
+                    if (r.has_color) {
+                        pos = appendPptxBytes(out_xml, pos, "><a:solidFill><a:srgbClr val=\"")?;
+                        pos = appendPptxBytes(out_xml, pos, r.color_hex[0..6])?;
+                        pos = appendPptxBytes(out_xml, pos, "\"/></a:solidFill></a:rPr>")?;
+                    } else {
+                        pos = appendPptxBytes(out_xml, pos, "/>")?;
+                    }
+                }
+                pos = appendPptxBytes(out_xml, pos, "<a:t>")?;
+                pos = appendPptxXmlEsc(out_xml, pos, r.text)?;
+                pos = appendPptxBytes(out_xml, pos, "</a:t></a:r>")?;
+            }
+            pos = appendPptxBytes(out_xml, pos, "</a:p>")?;
+        }
+        pos = appendPptxBytes(out_xml, pos, "</p:txBody></p:sp>")?;
+    }
+
+    let ti: usize = 0;
+    while (ti < tables.len) : (ti += 1) {
+        const t = tables[ti];
+        pos = appendPptxBytes(out_xml, pos, "<p:graphicFrame><a:graphic><a:graphicData><a:tbl>")?;
+        let r_i: usize = 0;
+        while (r_i < t.row_count) : (r_i += 1) {
+            pos = appendPptxBytes(out_xml, pos, "<a:tr h=\"370840\">")?;
+            let ci: usize = 0;
+            while (ci < t.cell_count) : (ci += 1) {
+                const c = cells[t.cell_start + ci];
+                if (c.row_index != r_i) continue;
+                pos = appendPptxBytes(out_xml, pos, "<a:tc><a:txBody><a:p><a:r><a:t>")?;
+                pos = appendPptxXmlEsc(out_xml, pos, c.text)?;
+                pos = appendPptxBytes(out_xml, pos, "</a:t></a:r></a:p></a:txBody></a:tc>")?;
+            }
+            pos = appendPptxBytes(out_xml, pos, "</a:tr>")?;
+        }
+        pos = appendPptxBytes(out_xml, pos, "</a:tbl></a:graphicData></a:graphic></p:graphicFrame>")?;
+    }
+
+    pos = appendPptxBytes(out_xml, pos, "</p:spTree></p:cSld></p:sld>")?;
+    return pos;
+}
+
+/// Builds a valid OOXML `ppt/notesSlides/notesSlideN.xml` carrying `notes_text`.
+pub fn buildPptxNotesXml(notes_text: []const u8, out_xml: []u8): usize ! PptxError {
+    let pos: usize = 0;
+    pos = appendPptxBytes(out_xml, pos, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>")?;
+    pos = appendPptxBytes(out_xml, pos, "<p:notes xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\"><p:cSld><p:spTree><p:sp><p:nvSpPr><p:cNvPr id=\"2\" name=\"Notes\"/><p:cNvSpPr/><p:nvPr><p:ph type=\"body\"/></p:nvPr></p:nvSpPr><p:txBody><a:bodyPr/><a:p><a:r><a:t>")?;
+    pos = appendPptxXmlEsc(out_xml, pos, notes_text)?;
+    pos = appendPptxBytes(out_xml, pos, "</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:notes>")?;
+    return pos;
+}
+
+// --- 5.4 Markdown Outline Exporter & Multilingual Slide Statistics ---
+
+/// Renders one slide (and optional speaker notes XML) into clean GFM Markdown outline.
+pub fn pptxSlideXmlToMarkdown(
+    slide_number: u32,
+    slide_xml: []const u8,
+    notes_xml: []const u8,
+    scratch_shapes: []PptxShape,
+    scratch_paras: []PptxTextParagraph,
+    scratch_runs: []PptxTextRun,
+    scratch_tables: []PptxTable,
+    scratch_cells: []PptxTableCell,
+    text_slab: []u8,
+    notes_scratch: []u8,
+    out_md: []u8,
+): usize ! PptxError {
+    const parsed = parsePptxSlideXml(
+        slide_xml,
+        scratch_shapes,
+        scratch_paras,
+        scratch_runs,
+        scratch_tables,
+        scratch_cells,
+        text_slab,
+    )?;
+
+    let pos: usize = 0;
+    // Find primary title shape if present
+    let title_shape_idx: usize = parsed.shape_count;
+    let si: usize = 0;
+    while (si < parsed.shape_count) : (si += 1) {
+        const ph = scratch_shapes[si].placeholder;
+        if (ph == PptxPlaceholderKind.title || ph == PptxPlaceholderKind.ctr_title) {
+            title_shape_idx = si;
+            break;
+        }
+    }
+
+    pos = appendPptxBytes(out_md, pos, "## Slide ")?;
+    pos = appendPptxU64(out_md, pos, slide_number as u64)?;
+    if (title_shape_idx < parsed.shape_count && scratch_shapes[title_shape_idx].para_count > 0) {
+        pos = appendPptxBytes(out_md, pos, ": ")?;
+        const tp = scratch_paras[scratch_shapes[title_shape_idx].para_start];
+        let ri: usize = 0;
+        while (ri < tp.run_count) : (ri += 1) {
+            pos = appendPptxBytes(out_md, pos, scratch_runs[tp.run_start + ri].text)?;
+        }
+    }
+    pos = appendPptxBytes(out_md, pos, "\n")?;
+
+    // Emit body/subtitle shapes
+    si = 0;
+    while (si < parsed.shape_count) : (si += 1) {
+        if (si == title_shape_idx) continue;
+        const sh = scratch_shapes[si];
+        let pi: usize = 0;
+        while (pi < sh.para_count) : (pi += 1) {
+            const p = scratch_paras[sh.para_start + pi];
+            let ind: u8 = 0;
+            while (ind < p.level) : (ind += 1) {
+                pos = appendPptxBytes(out_md, pos, "  ")?;
+            }
+            pos = appendPptxBytes(out_md, pos, "- ")?;
+            let ri: usize = 0;
+            while (ri < p.run_count) : (ri += 1) {
+                const r = scratch_runs[p.run_start + ri];
+                if (r.bold) pos = appendPptxBytes(out_md, pos, "**")?;
+                if (r.italic) pos = appendPptxBytes(out_md, pos, "*")?;
+                pos = appendPptxBytes(out_md, pos, r.text)?;
+                if (r.italic) pos = appendPptxBytes(out_md, pos, "*")?;
+                if (r.bold) pos = appendPptxBytes(out_md, pos, "**")?;
+            }
+            pos = appendPptxBytes(out_md, pos, "\n")?;
+        }
+    }
+
+    // Emit native tables as GFM pipe tables
+    let ti: usize = 0;
+    while (ti < parsed.table_count) : (ti += 1) {
+        const t = scratch_tables[ti];
+        let r_i: usize = 0;
+        while (r_i < t.row_count) : (r_i += 1) {
+            pos = appendPptxBytes(out_md, pos, "|")?;
+            let ci: usize = 0;
+            while (ci < t.cell_count) : (ci += 1) {
+                const c = scratch_cells[t.cell_start + ci];
+                if (c.row_index != r_i) continue;
+                pos = appendPptxBytes(out_md, pos, " ")?;
+                pos = appendPptxBytes(out_md, pos, c.text)?;
+                pos = appendPptxBytes(out_md, pos, " |")?;
+            }
+            pos = appendPptxBytes(out_md, pos, "\n")?;
+            if (r_i == 0 && t.col_count > 0) {
+                pos = appendPptxBytes(out_md, pos, "|")?;
+                let cc: usize = 0;
+                while (cc < t.col_count) : (cc += 1) {
+                    pos = appendPptxBytes(out_md, pos, " --- |")?;
+                }
+                pos = appendPptxBytes(out_md, pos, "\n")?;
+            }
+        }
+    }
+
+    // Optional speaker notes
+    if (notes_xml.len > 0 && isNotesSlideXml(notes_xml)) {
+        const nlen = parsePptxNotesXml(notes_xml, notes_scratch)?;
+        if (nlen > 0) {
+            pos = appendPptxBytes(out_md, pos, "> Notes: ")?;
+            pos = appendPptxBytes(out_md, pos, notes_scratch[0..nlen])?;
+            pos = appendPptxBytes(out_md, pos, "\n")?;
+        }
+    }
+    return pos;
+}
+
+/// Detailed multilingual slide & speaker notes statistics.
+pub struct PptxDetailedStats {
+    shape_count: usize = 0;
+    table_count: usize = 0;
+    paragraph_count: usize = 0;
+    char_count: usize = 0;
+    english_word_count: usize = 0;
+    cjk_char_count: usize = 0;
+    notes_word_count: usize = 0;
+}
+
+fn isPptxAsciiAlnum(b: u8): bool {
+    return (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z') || (b >= '0' && b <= '9');
+}
+
+fn countTextWordsAndCjk(text: []const u8, chars: *usize, en_words: *usize, cjk: *usize) {
+    let in_word: bool = false;
+    let i: usize = 0;
+    while (i < text.len) {
+        const b0 = text[i];
+        if (b0 < 0x80) {
+            if (b0 != '\n' && b0 != '\r') chars.* += 1;
+            if (isPptxAsciiAlnum(b0)) {
+                if (!in_word) {
+                    en_words.* += 1;
+                    in_word = true;
+                }
+            } else {
+                in_word = false;
+            }
+            i += 1;
+        } else if ((b0 & 0xE0) == 0xC0 && i + 1 < text.len) {
+            chars.* += 1;
+            in_word = false;
+            i += 2;
+        } else if ((b0 & 0xF0) == 0xE0 && i + 2 < text.len) {
+            const cp: u32 = (((b0 & 0x0F) as u32) << 12)
+                | (((text[i + 1] & 0x3F) as u32) << 6)
+                | ((text[i + 2] & 0x3F) as u32);
+            chars.* += 1;
+            if ((cp >= 0x4E00 && cp <= 0x9FFF) || (cp >= 0x3400 && cp <= 0x4DBF) || (cp >= 0x3040 && cp <= 0x30FF)) {
+                cjk.* += 1;
+            }
+            in_word = false;
+            i += 3;
+        } else if ((b0 & 0xF8) == 0xF0 && i + 3 < text.len) {
+            chars.* += 1;
+            in_word = false;
+            i += 4;
+        } else {
+            in_word = false;
+            i += 1;
+        }
+    }
+}
+
+/// Computes shape/table/paragraph counts, English/CJK character & word counts, and speaker notes word count.
+pub fn computePptxSlideStats(
+    slide_xml: []const u8,
+    notes_xml: []const u8,
+    text_scratch: []u8,
+): PptxDetailedStats ! PptxError {
+    if (!isSlideXml(slide_xml)) return PptxError.InvalidSlide;
+    const base = summarizeSlide(slide_xml);
+    const tlen = extractSlideText(slide_xml, text_scratch) orelse return PptxError.BufferTooSmall;
+
+    let st = PptxDetailedStats{
+        shape_count: base.shape_count,
+        table_count: base.table_count,
+        paragraph_count: base.paragraph_count,
+    };
+    countTextWordsAndCjk(text_scratch[0..tlen], *st.char_count, *st.english_word_count, *st.cjk_char_count);
+
+    if (notes_xml.len > 0 && isNotesSlideXml(notes_xml)) {
+        const nlen = parsePptxNotesXml(notes_xml, text_scratch)?;
+        let nc: usize = 0;
+        let nw: usize = 0;
+        let ncjk: usize = 0;
+        countTextWordsAndCjk(text_scratch[0..nlen], *nc, *nw, *ncjk);
+        st.notes_word_count = nw + ncjk;
+    }
+    return st;
+}
