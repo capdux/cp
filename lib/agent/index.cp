@@ -33,3 +33,13 @@ export {
     EvalSummary,
     summarizeEvalRun,
 } from "./eval.cp";
+
+export {
+    CHECKPOINT_MAGIC,
+    ReactPhase,
+    StepKind,
+    TraceEntry,
+    ReactSession,
+    saveCheckpoint,
+    loadCheckpoint,
+} from "./react.cp";

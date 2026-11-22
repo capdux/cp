@@ -1,6 +1,6 @@
 # `cap:agent` — AI Agent 核心运行时标准库
 
-`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏子模块（`budget.cp`）、多智能体任务图 DAG 调度器子模块（`dag.cp`）与评测基准/轨迹打分子模块（`eval.cp`）。
+`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏（`budget.cp`）、多智能体任务图 DAG 调度器（`dag.cp`）、评测基准与轨迹打分（`eval.cp`）以及 ReAct 执行状态机与确定性检查点（`react.cp`）四个子模块。
 
 ---
 
@@ -200,5 +200,56 @@ fn agentEvalDemo() {
     let scratch_s: []f64 = scratch[0..];
     const summary = summarizeEvalRun(scores[0..], passed[0..], lats[0..], costs[0..], 0.7, &scratch_s) ?? return;
     * = summary;
+}
+```
+
+---
+
+## 子模块：ReAct 执行状态机与确定性检查点（`react.cp`）
+
+### 核心特性
+
+- **严格 ReAct 生命周期状态机（`ReactSession`）**：完整建模 `Idle -> Thinking -> AwaitingTool -> Observing -> Thinking -> Completed | Failed | Halted` 跃迁约束，精准拒收非法状态跃迁，并在工具步数达到 `max_steps` 硬上限时自动转入 `Halted`。
+- **固定环缓冲轨迹记录（`TraceEntry`）**：所有推理思考、工具调用、工具返回、最终答案与异常记录写入调用方提供的固定环形缓冲，容量溢出时自动覆盖最旧记录并保留最新轨迹，`traceAt(idx)` 按时间正序访问。
+- **确定性二进制检查点（`saveCheckpoint` / `loadCheckpoint`）**：小端紧凑编码（`CHECKPOINT_MAGIC = 0x43504147` `"CPAG"` + 版本号 + 会话状态 + ZigZag 编码时间戳轨迹 + 64-bit FNV-1a 校验和），专为 BEAM Actor 崩溃重启与长任务断点续跑设计，可精准拦截任意字节篡改或截断。
+
+### 导出清单
+
+- **常量与枚举**：`CHECKPOINT_MAGIC`、`ReactPhase`、`StepKind`
+- **会话与轨迹**：`TraceEntry`、`ReactSession`（`init`, `phase`, `stepCount`, `isTerminal`, `traceLen`, `traceAt`, `startTurn`, `recordThought`, `requestToolCall`, `recordToolResult`, `finishWithAnswer`, `failSession`, `haltSession`）
+- **检查点序列化**：`saveCheckpoint`、`loadCheckpoint`
+
+### 使用示例（`AwaitingTool` 挂起保存检查点并断点续跑）
+
+```typescript
+import std from "std";
+import {
+    TraceEntry,
+    ReactSession,
+    saveCheckpoint,
+    loadCheckpoint,
+} from "cap:agent";
+
+fn reactCheckpointResumeDemo() {
+    let trace_buf: [16]TraceEntry = std.mem.zeroes([16]TraceEntry);
+    let trace_s: []TraceEntry = trace_buf[0..];
+
+    let sess = ReactSession.init(42, 8, &trace_s);
+    * = sess.startTurn(1000);
+    * = sess.recordThought(320, 45, 1045);
+    * = sess.requestToolCall(0xAABBCCDD, 1050);
+
+    // 挂起等待外部工具响应：将状态序列化为二进制检查点
+    let ckpt: [1024]u8 = std.mem.zeroes([1024]u8);
+    let ckpt_s: []u8 = ckpt[0..];
+    const written = saveCheckpoint(sess, &ckpt_s) ?? return;
+
+    // 重启后从检查点无损恢复并继续完成会话
+    let restored_trace: [16]TraceEntry = std.mem.zeroes([16]TraceEntry);
+    let restored_s: []TraceEntry = restored_trace[0..];
+    let resumed = loadCheckpoint(ckpt_s[0..written], &restored_s) ?? return;
+    * = resumed.recordToolResult(0xAABBCCDD, true, 120, 1170);
+    * = resumed.recordThought(180, 30, 1200);
+    * = resumed.finishWithAnswer(210, 1250);
 }
 ```
