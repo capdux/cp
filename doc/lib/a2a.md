@@ -645,3 +645,49 @@ pub fn demoGossipHealth() {
     * = sent;
 }
 ```
+
+---
+
+### 零分配多智能体控制权交接防环门禁与回滚状态机 (`handoffGate.cp`)
+
+面向多智能体编排与控制权交接（Swarm Handoff）的 100% 纯 CP 零动态堆分配防环门禁与安全回滚状态机：
+
+- **常量与枚举**：
+  - `HANDOFF_GATE_MAX_HOPS = 16`、`HANDOFF_GATE_DEFAULT_MAX_DEPTH = 8`、`HANDOFF_GATE_DEFAULT_MAX_REVISITS = 2`、`HANDOFF_GATE_NO_AGENT = 0`
+  - `HandoffReason`（`specialist_escalation | load_shed | fallback_recovery | user_request | completion_return`）
+  - `HandoffHopState`（`committed | rolled_back`）
+  - `HandoffDecisionKind`（`allowed | self_handoff | ping_pong_loop | revisit_limit_exceeded | max_depth_exceeded | capability_mismatch | invalid_agent_id | history_full`）
+- **数据模型与纯函数**：
+  - `HandoffGateConfig`（`max_depth`, `max_revisits_per_agent`, `block_ping_pong`; `defaults()`）
+  - `HandoffHopRecord`、`HandoffDecision`（含精确缺失位图 `missing_caps`）、`HandoffRollbackResult`、`HandoffGateStats`
+  - `formatHandoffReason(reason)`、`formatHandoffDecision(kind)`、`formatHandoffHopState(state)`
+- **核心引擎 `HandoffGate`**：
+  - `init(initial_agent_id)` / `initWithConfig(initial_agent_id, cfg)` / `currentOwner()` / `originAgent()` / `activeDepth()` / `historyLen()` / `getHop(index)` / `visitCount(agent_id)`
+  - `requestHandoff(*_, target_agent_id, target_caps, required_caps, context_hash, reason, now_ms): HandoffDecision`：依次拦截非法 ID、自交接（`self_handoff`）、能力位图不满足（`capability_mismatch`）、直接乒乓往返 A->B->A（`ping_pong_loop`）、单智能体访问次数超限（`revisit_limit_exceeded`）、最大深度超限（`max_depth_exceeded`）与审计表容量满。
+  - `rollbackLast(*_, now_ms): HandoffRollbackResult`：目标智能体拒收或故障时将控制权安全回滚给上一个有效持有者，并将该跳标记 `rolled_back` 保留审计历史。
+  - `formatTrace(*out_buf): usize?` / `stats(): HandoffGateStats`
+
+```cp
+import {
+    HandoffReason,
+    HandoffDecisionKind,
+    HandoffGate,
+} from "cap:a2a";
+
+pub fn demoHandoffGate() {
+    let gate = HandoffGate.init(1) ?? return;
+    const d1 = gate.requestHandoff(2, 0b111, 0b011, 0xABCD, HandoffReason.specialist_escalation, 1000);
+    * = d1.allowed; // true
+
+    // 直接乒乓往返 2->1 被门禁拦截
+    const d2 = gate.requestHandoff(1, 0b111, 0b001, 0xABCD, HandoffReason.load_shed, 1100);
+    * = (d2.kind == HandoffDecisionKind.ping_pong_loop);
+
+    // 若目标智能体 #2 故障，安全回滚控制权给 #1 并保留审计记录
+    * = gate.rollbackLast(1200);
+
+    let trace_buf: [256]u8 = [0; 256];
+    let trace_s: []u8 = trace_buf[0..];
+    * = gate.formatTrace(*trace_s);
+}
+```

@@ -677,3 +677,14 @@ export {
     CssOverflowProp,
     CssTextOverflowProp,
 } from "./overflowProp.cp";
+
+export {
+    CssPercentageError,
+    CssPercentage,
+    CssNumberOrPercentageKind,
+    CssNumberOrPercentage,
+    CssLengthUnitTag,
+    cssLengthUnitName,
+    CssLengthOrPercentageKind,
+    CssLengthOrPercentage,
+} from "./percentage.cp";

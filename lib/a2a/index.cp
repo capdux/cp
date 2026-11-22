@@ -223,3 +223,22 @@ export {
     GossipHealthStats,
     GossipHealthMachine,
 } from "./gossipHealth.cp";
+
+export {
+    HANDOFF_GATE_MAX_HOPS,
+    HANDOFF_GATE_DEFAULT_MAX_DEPTH,
+    HANDOFF_GATE_DEFAULT_MAX_REVISITS,
+    HANDOFF_GATE_NO_AGENT,
+    HandoffReason,
+    HandoffHopState,
+    HandoffDecisionKind,
+    HandoffGateConfig,
+    HandoffHopRecord,
+    HandoffDecision,
+    HandoffRollbackResult,
+    HandoffGateStats,
+    formatHandoffReason,
+    formatHandoffDecision,
+    formatHandoffHopState,
+    HandoffGate,
+} from "./handoffGate.cp";

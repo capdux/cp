@@ -962,3 +962,29 @@ const n1 = o.toCssDecls(false, true, buf[0..])?; // "overflow-x:hidden;overflow-
 const n2 = o.toCssDecls(true, true, buf[0..])?;  // "overflow:hidden auto"
 * = n1; * = n2;
 ```
+
+27. **CSS Values Level 4 `<percentage>`、`<number-or-percentage>` 与 `<length-percentage>` 零分配解析、静态化简与最小化序列化（`percentage.cp`，吸收自 `/data/dev/bun/src/css/values/percentage.cp` & `/data/dev/bun/docs/bundler/css.mdx`）**：
+    - **导出符号**：`CssPercentageError`、`CssPercentage`（`zero`/`fromUnitValue`/`fromPercent`/`parse`/`toPercent`/`isZero`/`sign`/`isSignPositive`/`isSignNegative`/`add`/`sub`/`mulF64`/`clamp`/`clampZeroOne`/`resolve`/`eql`/`partialCmp`/`toCss`）、`CssNumberOrPercentageKind`、`CssNumberOrPercentage`（`fromNumber`/`fromPercentage`/`fromPercent`/`parse`/`isNumber`/`isPercentage`/`isZero`/`intoF64`/`asPercentage`/`clampZeroOne`/`eql`/`toCss`）、`CssLengthUnitTag`、`cssLengthUnitName`、`CssLengthOrPercentageKind`、`CssLengthOrPercentage`（`zero`/`fromLength`/`fromPercentage`/`fromCalcSum`/`parse`/`isZero`/`mulF64`/`tryAdd`/`trySign`/`partialCmp`/`eql`/`toCss`）；
+    - **Bun CSS 构建期常量折叠与最小化实践（吸收自 `bundler/css.mdx`）**：
+      - Bun CSS bundler 会在构建期对已知常量的数学表达式进行静态折叠（如同单位长度或百分比直接合并，异类 `<length>` 与 `<percentage>` 折叠为 `calc(100% - 16px)` 且自动将正项前置、零项自动退化为单一值），并在最小化输出时对 `0 < |pct| < 1` 省略前导 `0`（如 `0.5%` -> `.5%`、`-0.25%` -> `-.25%`）且将 `-0` 规范化为 `0%`；
+      - `CssNumberOrPercentage` 将数字与百分比统一为归一化标量（`0.5` 与 `50%` 经 `intoF64()` 均返回 `0.5`），便于透明度、颜色通道混合（`color-mix()`）等场景零分配直接参与计算。
+
+```cp
+import { CssPercentage, CssNumberOrPercentage, CssLengthOrPercentage } from "cap:css";
+
+const p = CssPercentage.parse("-0.25%")?;
+let buf: [64]u8 = [0; 64];
+const n1 = p.toCss(true, buf[0..])?; // "-.25%"
+
+const alpha = CssNumberOrPercentage.parse("50%")?;
+assert(alpha.intoF64() == 0.5);
+
+const a = CssLengthOrPercentage.parse("100%")?;
+const b = CssLengthOrPercentage.parse("-16px")?;
+if (sum := a.tryAdd(b)) {
+    const n2 = sum.toCss(true, buf[0..])?; // "calc(100% - 16px)"
+    * = n2;
+}
+* = n1;
+```
+
