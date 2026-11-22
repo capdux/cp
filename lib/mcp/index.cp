@@ -130,3 +130,14 @@ export {
     McpSubscriptionSlot,
     McpResourceSubscriptionRegistry,
 } from "./capability_negotiator.cp";
+
+export {
+    MCP_GATE_MAX_INFLIGHT,
+    McpMethodClass,
+    McpInflightState,
+    McpGateLimits,
+    McpAdmitOutcome,
+    McpInflightSlot,
+    McpGateStats,
+    McpInflightGate,
+} from "./inflight_gate.cp";

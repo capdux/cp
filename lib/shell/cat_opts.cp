@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/builtin/cat.cp | Synced: 2026-11-22T09:30:29Z
+// Source: Absorbed from /data/dev/bun/src/shell/builtin/cat.cp | Synced: 2026-11-22T09:42:32Z
 // Ported from Bun: /data/dev/bun/src/shell/builtin/cat.cp & /data/dev/bun/docs/runtime/shell.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation POSIX/GNU `cat` option parser & streaming line formatter:

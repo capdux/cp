@@ -453,3 +453,50 @@ pub fn demoMcpCapabilityNegotiator() {
     }
 }
 ```
+
+---
+
+## 十二、 零堆分配 MCP 在途请求并发门控、取消令牌注册表与超时清扫器 (`inflight_gate.cp`)
+
+面向高并发 MCP 服务端/客户端的 100% 纯 CP 零动态堆分配在途 JSON-RPC 请求生命周期、分方法并发限流、`notifications/cancelled` 取消令牌与超时清扫内核（固定 64 槽位内联池）：
+
+- **常量与枚举**：
+  - `MCP_GATE_MAX_INFLIGHT` (`64`)
+  - `McpMethodClass`（`tools_call | resources_read | prompts_get | sampling_create | other`）
+  - `McpInflightState`（`running | cancel_requested | completed | timed_out`）
+- **数据模型**：`McpGateLimits`（`defaults()`, `isValid()`）、`McpAdmitOutcome`、`McpInflightSlot`、`McpGateStats`
+- **核心引擎 `McpInflightGate`**：
+  - `init(limits: McpGateLimits): McpInflightGate?`：校验总上限 `1..=64` 与分方法上限不超过总上限。
+  - `admit_request(*_, req_id, batch_id, method_class, timeout_ms, now_ms): McpAdmitOutcome`：校验 `req_id != 0 && timeout_ms > 0`、活跃 ID 去重、总并发上限与分方法并发上限。
+  - `request_cancel(*_, req_id): bool` / `is_canceled(req_id): bool` / `cancel_batch(*_, batch_id): usize`：幂等单请求取消与按 `batch_id` 批量取消。
+  - `complete_request(*_, req_id): bool`：完成请求并立即释放总/分方法并发配额。
+  - `sweep_expired(*_, now_ms, out_expired_ids: *[]u64): usize`：清扫 `now_ms >= deadline_ms` 的超时请求，输出缓冲满时自动暂停以支持分批清扫不丢数据。
+  - `stats(): McpGateStats`：实时返回活跃总数、`tools_call` 活跃数、待取消数以及累计准入/完成/取消/超时/拒绝统计。
+
+```cp
+import {
+    McpMethodClass,
+    McpGateLimits,
+    McpInflightGate,
+} from "cap:mcp";
+
+pub fn demoMcpInflightGate() {
+    let limits = McpGateLimits.defaults();
+    limits.max_total_inflight = 16;
+    limits.max_tools_call = 4;
+    let gate = McpInflightGate.init(limits) ?? return;
+
+    * = gate.admit_request(101, 1, McpMethodClass.tools_call, 5_000, 1_000);
+    * = gate.admit_request(102, 1, McpMethodClass.resources_read, 1_000, 1_000);
+
+    // 响应 notifications/cancelled
+    * = gate.request_cancel(101);
+    * = gate.complete_request(101);
+
+    // 清扫 t=2500 时已超时的请求 102
+    let expired: [8]u64 = [0; 8];
+    let exp_s: []u64 = expired[0..];
+    const n_exp = gate.sweep_expired(2_500, exp_s);
+    * = n_exp; // 1 (req_id == 102)
+}
+```

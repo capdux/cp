@@ -175,3 +175,22 @@ export {
     formatScopedTestName,
     TestFileScanner,
 } from "./test_scanner.cp";
+
+export {
+    PM_AUDIT_MAX_IGNORE,
+    PM_AUDIT_MAX_PACKAGES,
+    PM_AUDIT_MAX_VERSIONS_PER_PKG,
+    PM_AUDIT_MAX_ADVISORIES,
+    PM_AUDIT_MAX_DEP_EDGES,
+    PM_AUDIT_MAX_PATH_DEPTH,
+    PmAuditError,
+    PmAuditSeverity,
+    PmAuditFilter,
+    PmAuditPackageEntry,
+    PmAuditRequestBuilder,
+    PmAuditAdvisory,
+    PmAuditCounts,
+    PmAuditReport,
+    PmAuditDepEdge,
+    PmAuditDepGraph,
+} from "./pm_audit.cp";

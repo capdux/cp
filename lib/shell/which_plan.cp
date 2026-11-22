@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/builtin/which.cp | Synced: 2026-11-22T09:35:00Z
+// Source: Absorbed from /data/dev/bun/src/shell/builtin/which.cp | Synced: 2026-11-22T09:45:23Z
 // Ported from Bun: /data/dev/bun/src/shell/builtin/which.cp & /data/dev/bun/docs/runtime/shell.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation POSIX/Windows `which` Command Resolver & PATH Scanner:
