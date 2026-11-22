@@ -151,3 +151,25 @@ const kind = classifyQueryResponse(buf[4..n])?;
 const auth_n = AuthSwitchResponseCodec.encodeFrame("scrambled_20_bytes!!", 3, buf[0..])?;
 * = auth_n;
 ```
+
+9. **`COM_QUERY`（简单与参数化 NULL-bitmap 绑定）与单字节会话命令帧（`queryPacket.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/Query.cp`）**：
+   - `MySqlQueryPacket` 支持无参 `COM_QUERY` 与携带最多 32 个 `MySqlQueryParam`（`nullParam` / `varString` / `fixedBinary`）的零堆分配参数化帧编码，自动计算并写入 NULL-bitmap（`mysqlNullBitmapLen` / `isNullInBitmap`）、参数类型+无符号标志位（`0x80`）、`:p1`..`:p32` 命名属性以及固定二进制 / `lenenc-str` 参数值；
+   - 配套 `decodeSimpleFrame`、`encodeInitDbFrame`（`COM_INIT_DB`）与 `encodeSingleCmdFrame`（`COM_PING` / `COM_QUIT`）。
+
+```cp
+import {
+    MySqlQueryPacket,
+    MySqlQueryParam,
+    MYSQL_FTYPE_LONG,
+    MYSQL_CMD_PING,
+} from "cap:mysql";
+
+let buf: [256]u8 = [0; 256];
+let q = MySqlQueryPacket.init("SELECT * FROM users WHERE id = ? AND email = ?");
+const id_le: [4]u8 = [42, 0, 0, 0];
+* = q.addParam(MySqlQueryParam.fixedBinary(MYSQL_FTYPE_LONG, true, id_le[0..]))?;
+* = q.addParam(MySqlQueryParam.varString("alice@example.com"))?;
+const n = q.encodeFrame(0, buf[0..])?;
+const n_ping = MySqlQueryPacket.encodeSingleCmdFrame(MYSQL_CMD_PING, 0, buf[0..])?;
+* = n; * = n_ping;
+```

@@ -236,3 +236,25 @@ export {
     MySqlResultSetHeader,
     AuthSwitchResponseCodec,
 } from "./resultSetHeader.cp";
+
+// --- 14. COM_QUERY (Simple & Parameterized) & Session Command Codec (./queryPacket.cp) ---
+export {
+    MYSQL_CMD_QUIT,
+    MYSQL_CMD_INIT_DB,
+    MYSQL_CMD_QUERY,
+    MYSQL_CMD_PING,
+    MYSQL_FTYPE_LONG,
+    MYSQL_FTYPE_DOUBLE,
+    MYSQL_FTYPE_NULL,
+    MYSQL_FTYPE_LONGLONG,
+    MYSQL_FTYPE_VAR_STRING,
+    MYSQL_QUERY_MAX_PARAMS,
+    MYSQL_PARAM_UNSIGNED_FLAG,
+    MYSQL_NEW_PARAMS_BOUND_FLAG,
+    MYSQL_QUERY_MAX_PAYLOAD,
+    QueryPacketError,
+    mysqlNullBitmapLen,
+    isNullInBitmap,
+    MySqlQueryParam,
+    MySqlQueryPacket,
+} from "./queryPacket.cp";
