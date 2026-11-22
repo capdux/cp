@@ -349,3 +349,19 @@ export {
     parseBaggageHeader,
     formatBaggageHeader,
 } from "./baggage.cp";
+
+// --- Zero-Alloc W3C Trace Context Level 1/2 (traceparent & tracestate) ---
+
+export {
+    TRACEPARENT_HEADER_LEN,
+    TRACE_FLAG_SAMPLED,
+    TRACE_FLAG_RANDOM,
+    TRACESTATE_MAX_ENTRIES,
+    TRACESTATE_KEY_MAX_LEN,
+    TRACESTATE_VAL_MAX_LEN,
+    TraceContextError,
+    TraceParent,
+    TraceStateEntry,
+    isValidTraceStateKey,
+    TraceState,
+} from "./traceParent.cp";

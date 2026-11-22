@@ -650,6 +650,43 @@ pub fn demoW3cBaggage() {
 }
 ```
 
+### 零分配 W3C Trace Context Level 1/2 (`traceparent` & `tracestate`) 传播引擎 (`traceParent.cp`)
+
+严格遵循 W3C Trace Context Level 1/2 规范、与 `baggage.cp` 配套的 100% 纯 CP 零动态堆分配分布式追踪上下文编解码与传播引擎：
+
+- **常量与错误集**：
+  - `TRACEPARENT_HEADER_LEN = 55`、`TRACE_FLAG_SAMPLED = 0x01`、`TRACE_FLAG_RANDOM = 0x02`
+  - `TRACESTATE_MAX_ENTRIES = 32`、`TRACESTATE_KEY_MAX_LEN = 64`、`TRACESTATE_VAL_MAX_LEN = 128`
+  - `TraceContextError`（`InvalidLength | InvalidVersion | InvalidHex | AllZeroTraceId | AllZeroParentId | InvalidSeparator | InvalidKey | InvalidValue | CrlfRejected | BufferTooSmall`）
+- **`TraceParent` (`version`, `trace_id: [16]u8`, `parent_id: [8]u8`, `trace_flags`)**：
+  - `parse(header): TraceParent ! TraceContextError`：严格拒绝 `version == 0xff`、大写 hex、全 0 `trace_id`/`parent_id` 及 CRLF/NUL 畸形报文；对 `version > 0x00` 自动前向兼容尾部 `-<ext>` 扩展字段。
+  - `format(*out_buf): usize ! TraceContextError`：输出固定 55 字节规范小写 hex（`00-<32hex>-<16hex>-<2hex>`）。
+  - `isSampled()` / `isRandom()` / `withSampled(sampled)` / `deriveChild(new_parent_id: [8]u8)`：保持 `trace_id` 与 `trace_flags` 继承，安全派生下游子 Span 上下文。
+- **`TraceState`（保序 32 条厂商键值对链表）**：
+  - `TraceStateEntry`（`key()`, `value()`）、`isValidTraceStateKey(key)`（校验单段 `vendor` 及多租户 `tenant@vendor` 规范字符集与长度上限）。
+  - `parse(header)`：支持逗号分隔、OWS 裁剪、空成员跳过、左端优先重复键去重与 CRLF 防护。
+  - `get(key)` / `entryAt(idx)` / `setFront(*_, key, value)`（W3C 规范更新/插入强制置顶，满 32 条时从尾部淘汰最旧条目）/ `remove(*_, key)` / `len()` / `format(*out_buf)`。
+
+```cp
+import { TraceParent, TraceState } from "cap:obs";
+
+pub fn demoW3cTraceContext() {
+    const parent = TraceParent.parse("00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01") catch return;
+    const child_id: [8]u8 = [0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88];
+    const child = parent.deriveChild(child_id) catch return;
+
+    let tp_buf: [64]u8 = [0; 64];
+    let tp_s: []u8 = tp_buf[0..];
+    * = child.format(*tp_s) catch 0;
+
+    let ts = TraceState.parse("rojo=00f067aa0ba902b7, acme@congo=t61rcWkgMzE") catch return;
+    ts.setFront("cp_agent", "span-2") catch return;
+    let ts_buf: [256]u8 = [0; 256];
+    let ts_s: []u8 = ts_buf[0..];
+    * = ts.format(*ts_s) catch 0;
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
