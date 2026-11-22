@@ -158,3 +158,18 @@ export {
     JsFnParamDesc,
     JsFnSignature,
 } from "./classAst.cp";
+
+export {
+    JS_RESOLVE_NONE,
+    JS_RESOLVE_MAX_DEPTH,
+    JsSymbolResolveError,
+    JsResolveScopeKind,
+    JsResolveSymKind,
+    hashJsSymbolName,
+    JsResolveSymbol,
+    JsResolveScope,
+    JsResolveMember,
+    JsTsNsExport,
+    JsFindSymbolResult,
+    JsSymbolResolver,
+} from "./symbolResolve.cp";

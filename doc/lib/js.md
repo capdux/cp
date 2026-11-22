@@ -320,3 +320,31 @@ const cls = JsClassDesc{ name: "Widget", members: members[0..] };
 assert(cls.canBeMoved());
 assert(cls.moveBlocker() == JsClassMoveBlocker.none);
 ```
+
+### JS/TS 词法符号解析器、`with` 作用域重命名保护与 TS 命名空间延迟别名 (`symbolResolve.cp`)
+
+吸收自 `/data/dev/bun/src/js_parser/ast/symbols.cp`：
+
+- **导出符号**：`JS_RESOLVE_NONE`、`JS_RESOLVE_MAX_DEPTH`、`JsSymbolResolveError`、`JsResolveScopeKind`、`JsResolveSymKind`、`hashJsSymbolName`、`JsResolveSymbol`、`JsResolveScope`、`JsResolveMember`、`JsTsNsExport`、`JsFindSymbolResult`、`JsSymbolResolver`（`init`/`pushScope`/`attachTsNamespace`/`declareSymbol`/`addTsNamespaceExport`/`findSymbol`/`probeSymbol`/`findSymbolWithRecordUsage`/`getSymbol`）；
+- **核心词法解析语义**：
+  - 单次 FNV-1a 哈希沿父作用域链逐级查找，避免每层重复计算哈希；
+  - 经过 `with_scope` 解析到的外部符号自动置 `must_not_be_renamed = true`，防止 minifier 破坏 `with` 动态属性遮蔽语义；
+  - 经过 `class_body` 作用域查找 `"arguments"` 时触发 `forbid_arguments_error = true` 诊断标记；
+  - TypeScript `namespace` / `enum` 导出成员在首次命中时延迟生成并缓存 `ts_namespace_alias` 属性访问代理符号；
+  - 未绑定全局引用在 `findSymbol` 时自动在 `module_root` 物化并去重为 `unbound` 符号，在 `probeSymbol` 时无副作用返回 `JS_RESOLVE_NONE`。
+
+```cp
+import { JsSymbolResolver, JsResolveScope, JsResolveMember, JsResolveSymbol, JsTsNsExport, JsResolveScopeKind } from "cap:js";
+
+let scopes: [8]JsResolveScope = [JsResolveScope.empty(); 8];
+let members: [16]JsResolveMember = [JsResolveMember.empty(); 16];
+let syms: [16]JsResolveSymbol = [JsResolveSymbol.empty(); 16];
+let exports_buf: [8]JsTsNsExport = [JsTsNsExport.empty(); 8];
+let resolver = JsSymbolResolver.init(scopes[0..], members[0..], syms[0..], exports_buf[0..])?;
+
+const x_id = resolver.declareSymbol(resolver.moduleScope(), "x", 10)?;
+const with_sc = resolver.pushScope(resolver.moduleScope(), JsResolveScopeKind.with_scope)?;
+const res = resolver.findSymbol(with_sc, 42, "x")?;
+assert(res.sym_id == x_id && res.is_inside_with_scope);
+assert((resolver.getSymbol(x_id)?).must_not_be_renamed);
+```
