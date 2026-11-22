@@ -179,3 +179,18 @@ export {
     GoalTreeStats,
     GoalTree,
 } from "./goalTree.cp";
+
+export {
+    REFLEXION_MAX_LESSONS,
+    REFLEXION_TEXT_MAX_LEN,
+    REFLEXION_NO_ID,
+    REFLEXION_BPS_SCALE,
+    ReflexionErrorKind,
+    ReflexionStatus,
+    ReflexionConfig,
+    ReflexionLesson,
+    ReflexionRecallHit,
+    ReflexionBankStats,
+    ReflexionBank,
+    formatLessonsPromptBlock,
+} from "./reflexion.cp";

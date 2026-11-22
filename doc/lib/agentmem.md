@@ -799,3 +799,53 @@ pub fn demoGoalTree() {
     * = (tree.rootStatus() == GoalStatus.achieved);
 }
 ```
+
+### 17. 零分配智能体 Reflexion 自我反思与语言强化经验库 (`reflexion.cp`)
+
+面向自主纠错型 AI Agent（Reflexion: Language Agents with Verbal Reinforcement Learning）的 100% 纯 CP 零动态堆分配经验沉淀、多信号检索与贝叶斯反馈淘汰引擎：
+
+- **常量与枚举**：
+  - `REFLEXION_MAX_LESSONS = 64`、`REFLEXION_TEXT_MAX_LEN = 160`、`REFLEXION_NO_ID = 0`、`REFLEXION_BPS_SCALE = 10000`
+  - `ReflexionErrorKind`（`tool_failure | schema_mismatch | timeout | permission_denied | hallucination | logic_error | other`）
+  - `ReflexionStatus`（`active | deprecated | retired`）
+- **数据模型**：
+  - `ReflexionConfig`（`defaults()`, `isValid()`；可调半衰期、自动降级阈值与五维权重）
+  - `ReflexionLesson`（`textSlice()`, `totalTrials()`, `posteriorEfficiency()`, `posteriorBps()`，采用 Beta(1,1) 拉普拉斯平滑贝叶斯后验 `(helped + 1) / (helped + failed + 2)`）
+  - `ReflexionRecallHit`（`textSlice()`, `score`, `posterior_bps`, `domain_overlap_bits`, `exact_error_match`, `exact_action_match`）
+  - `ReflexionBankStats`
+- **核心引擎 `ReflexionBank` 与格式化器**：
+  - `init()` / `initWithConfig(cfg)` / `recordLesson(*_, domain_mask, error_kind, action_hash, text, now_ms): u32?`（满 64 槽优先淘汰 `retired` -> `deprecated` -> 最低效/最久未命中 `active`）
+  - `recallLessons(*_, domain_mask, error_kind, action_hash, now_ms, top_k, *out_hits): usize`：综合 `@popCount` 领域位图重合度、精确错误类型、动作指纹、贝叶斯后验有效率与半衰期衰减召回 Top-K 活跃教训。
+  - `recordFeedback(*_, lesson_id, helped, now_ms): ReflexionStatus?`：闭环更新后验，低效或连续无效自动降级 `deprecated`，正向反馈回升可重新激活。
+  - `retireLesson(*_, lesson_id)` / `getLesson(lesson_id)` / `stats()`
+  - `formatLessonsPromptBlock(hits, *out_buf): usize?`：零分配格式化 LLM Prompt 反思注入块。
+
+```cp
+import {
+    ReflexionErrorKind,
+    ReflexionRecallHit,
+    ReflexionBank,
+    formatLessonsPromptBlock,
+} from "cap:agentmem";
+
+pub fn demoReflexionBank() {
+    const DOM_SQL: u64 = 1 << 0;
+    let bank = ReflexionBank.init();
+    const id = bank.recordLesson(
+        DOM_SQL,
+        ReflexionErrorKind.schema_mismatch,
+        0xCAFE,
+        "Always inspect table columns via PRAGMA before running UPDATE.",
+        1000,
+    ) ?? return;
+    * = bank.recordFeedback(id, true, 2000);
+
+    let hits: [4]ReflexionRecallHit = [ReflexionRecallHit{}; 4];
+    let hits_s: []ReflexionRecallHit = hits[0..];
+    const n = bank.recallLessons(DOM_SQL, ReflexionErrorKind.schema_mismatch, 0xCAFE, 3000, 3, *hits_s);
+
+    let buf: [512]u8 = [0; 512];
+    let buf_s: []u8 = buf[0..];
+    * = formatLessonsPromptBlock(hits[0..n], *buf_s);
+}
+```

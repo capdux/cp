@@ -317,3 +317,29 @@ let m = ExpectMatcher.init();
 const pass = m.toIncludeRepeated("ok,ok,ok", "ok", 3);                             // true
 * = same_html; * = approx_ok; * = pass;
 ```
+
+9. **零分配虚拟时钟与假定时器引擎（`lib/test_runner/fakeTimers.cp`，吸收自 `/data/dev/bun/src/test_runner/timers/FakeTimers.cp` & `/data/dev/bun/docs/guides/test/mock-clock.mdx` & `/data/dev/bun/docs/test/dates-times.mdx`）**：
+   - **导出符号**：`FAKE_TIMERS_MAX_SLOTS` (`256`)、`FAKE_TIMERS_MAX_ADVANCE_MS` (`u32::MAX`)、`FAKE_TIMERS_DEFAULT_RUN_LIMIT` (`10000`)、`FakeTimerError`、`FakeTimerKind`、`FakeTimerSlot`、`FakeTimerFired`、`FakeTimerAdvanceResult`、`normalizeFakeDelayMs`、`FakeTimerClock`（`init`/`isFakeTimers`/`useFakeTimers`/`useRealTimers`/`setSystemTime`/`now`/`monotonicNow`/`setRunLimit`/`getTimerCount`/`peekNextDueMs`/`peekLastDueMs`/`setTimeout`/`setInterval`/`clearTimer`/`clearAllTimers`/`advanceTimersToNextTimer`/`advanceTimersByTime`/`runOnlyPendingTimers`/`runAllTimers`）；
+   - **Bun/HTML 规范对齐**：
+     - **激活状态门禁（`NotActive`）**：未调用 `useFakeTimers()` 前调用任意定时器操作均返回 `FakeTimerError.NotActive`，杜绝静默误用真实时钟；
+     - **即时定时器 1ms 规范化**：`setTimeout(0, tag)` 按 HTML/Bun 规范以 `1ms` 调度，且 `advanceTimersByTime(0, ...)` 自动按 `1ms` 推进以立即触发“零延迟”定时器，与 Jest/testing-library 期望完全一致；
+     - **单调时钟与系统时间解耦（`setSystemTime`）**：调用 `setSystemTime(ms)` 仅调整 `date_now_offset_ms = ms - monotonic_ms`，不会偏移已调度定时器的单调到期时间；调用 `useRealTimers()` 复位全部虚拟时钟状态与待触发队列；
+     - **同毫秒 FIFO 与周期定时器防死循环**：同一 `due_ms` 严格按插入序号 `seq` 先进先出触发；`runOnlyPendingTimers()` 锁定当前最大到期时间作为推进上界，`runAllTimers()` 配备 `max_run_limit` 上限保护，遇无限 `setInterval` 时返回 `FakeTimerError.RunLimitExceeded`；
+   - **Bun `mock-clock.mdx` & `dates-times.mdx` 实战最佳实践**：
+     - 结合生命周期钩子 `beforeEach` / `afterEach` 在用例前 `useFakeTimers(epoch_ms)`、用例后 `useRealTimers()`，确保时间敏感测试 100% 确定性且零跨用例污染；
+     - 在涉及日期/时区校验的测试中优先使用固定 UTC 时间戳（例如 `1999-01-01T00:00:00.000Z` = `915148800000` 或 `2020-01-01T00:00:00.000Z` = `1577836800000`），避免宿主时区或墙钟抖动导致偶发失败。
+
+```cp
+import { FakeTimerClock, FakeTimerFired } from "cap:test_runner";
+
+let clock = FakeTimerClock.init();
+clock.useFakeTimers(1577836800000); // 2020-01-01T00:00:00.000Z
+const t1 = clock.setTimeout(100, 1)?;
+const t2 = clock.setInterval(50, 2)?;
+let log: [8]FakeTimerFired = [FakeTimerFired{}; 8];
+const res = clock.advanceTimersByTime(100, log[0..])?;
+// res.fired_count == 3 (interval@50, timeout@100, interval@100), clock.now() == 1577836800100
+* = clock.clearTimer(t2)?;
+clock.useRealTimers();
+* = t1; * = res;
+```

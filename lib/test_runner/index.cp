@@ -162,3 +162,16 @@ export {
     isOddI64,
     ExpectMatcher,
 } from "./expectMatch";
+
+export {
+    FAKE_TIMERS_MAX_SLOTS,
+    FAKE_TIMERS_MAX_ADVANCE_MS,
+    FAKE_TIMERS_DEFAULT_RUN_LIMIT,
+    FakeTimerError,
+    FakeTimerKind,
+    FakeTimerSlot,
+    FakeTimerFired,
+    FakeTimerAdvanceResult,
+    normalizeFakeDelayMs,
+    FakeTimerClock,
+} from "./fakeTimers";
