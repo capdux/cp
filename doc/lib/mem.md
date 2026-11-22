@@ -277,3 +277,17 @@ if (h1 := pool.append("bun-lockfile")) {
 const inv = ExternalSlice<u8>.invalid();
 * = inv.isInvalid(); // true
 ```
+6. **可空栈缓冲分配器与借用/自有切片视图（`NullableBump` / `OwnedOrBorrowed`，`nullable.cp`）**：
+   - 吸收自 `/data/dev/bun/src/bun_alloc/NullableAllocator.cp`；
+   - 导出：`NullableAllocError`（`NullAllocator`/`OutOfMemory`/`InvalidAlignment`）、`AllocOrigin`（`Borrowed`/`BumpOwned`/`CustomTag`）、`NullableBump`（`empty`/`init`/`initWithTag`/`isNull`/`customTag`/`isCustomTag`/`capacity`/`usedBytes`/`remainingBytes`/`allocCount`/`freeCount`/`alloc`/`allocAligned`/`dupe`/`freeBytes`/`freeTail`/`reset`）、`OwnedOrBorrowed`（`borrowed`/`fromAlloc`/`slice`/`len`/`isEmpty`/`isOwned`/`origin`/`release`）；
+   - `NullableBump.empty()` 构造空分配器时，所有 `free*`/`release` 均安全降级为 no-op；绑定栈缓冲后支持 2 的幂对齐分配、LIFO 尾部回收与自定义来源标签判别。
+
+```cp
+import { NullableBump, OwnedOrBorrowed } from "cap:mem";
+
+let buf: [128]u8 = [0; 128];
+let alloc = NullableBump.initWithTag(buf[0..], 7);
+let owned = OwnedOrBorrowed.fromAlloc(&alloc, "hello")?;
+assert(owned.isOwned());
+owned.release(&alloc);
+```

@@ -112,3 +112,10 @@ export {
     ExternalSliceMap,
     ExternalBytePool,
 } from "./externalSlice.cp";
+
+export {
+    NullableAllocError,
+    AllocOrigin,
+    NullableBump,
+    OwnedOrBorrowed,
+} from "./nullable.cp";
