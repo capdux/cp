@@ -378,3 +378,12 @@ export {
     stageBannerLabel,
     InstallProgressTracker,
 } from "./install_progress.cp";
+
+export {
+    VERSIONED_URL_MAX_ENTRIES,
+    VersionedUrlError,
+    PkgSemverTriple,
+    LegacyV2VersionedUrl,
+    VersionedUrl,
+    VersionedUrlSet,
+} from "./versioned_url.cp";

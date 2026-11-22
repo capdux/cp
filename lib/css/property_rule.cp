@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/property.cp | Synced: 2026-11-22T04:58:31Z
+// Source: Absorbed from /data/dev/bun/src/css/rules/property.cp | Synced: 2026-11-22T12:14:00Z
 // Pure-CP zero-allocation W3C CSS Properties and Values API Level 1 `@property`
 // rule parser, `<syntax>` validator, computationally-independent `initial-value`
 // checker, and canonical/minified serializer.

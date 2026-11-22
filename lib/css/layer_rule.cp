@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/layer.cp | Synced: 2026-11-22T11:52:09Z
+// Source: Absorbed from /data/dev/bun/src/css/rules/layer.cp | Synced: 2026-11-22T12:14:05Z
 // Pure-CP zero-allocation W3C CSS Cascading and Inheritance Level 5 `@layer` rule parser,
 // dotted sublayer name validator, statement/block serializer, stylesheet extractor,
 // and cascade layer precedence ordering registry.

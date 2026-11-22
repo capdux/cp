@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/font.cp | Synced: 2026-11-22T08:18:41Z
+// Source: Absorbed from /data/dev/bun/src/css/properties/font.cp | Synced: 2026-11-22T12:13:43Z
 
 /// CSS Fonts Level 4 属性族解析错误集
 pub err CssFontError {

@@ -730,3 +730,25 @@ const n = pt.formatStatusLine(line[0..])?; // "Installing [15/25]"
 * = pt.finish();
 * = n;
 ```
+
+### 锁文件版本化 URL 绑定与候选版本集合（`lib/pkg/versioned_url.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/versioned_url.cp` 与 `/data/dev/bun/docs/pm/lockfile.mdx`；
+- 导出：`VERSIONED_URL_MAX_ENTRIES` (`64`)、`VersionedUrlError`、`PkgSemverTriple`（`parse`/`isPrerelease`/`compare`/`eql`/`formatInto`）、`LegacyV2VersionedUrl`（`migrate`）、`VersionedUrl`（`init`/`parse`/`eql`/`eqlStrict`/`order`/`isHttps`/`isTarball`/`formatLockEntry`）、`VersionedUrlSet`（`init`/`count`/`at`/`push`/`sortAsc`/`sortDesc`/`latestStable`/`latestAny`/`findByVersion`）；
+- **Lockfile 迁移与 Semver 2.0 最佳实践（参考 `/data/dev/bun/docs/pm/lockfile.mdx`）**：
+  - Bun v1.2+ 默认使用文本格式 `bun.lock` 替代旧版二进制 `bun.lockb`（`LegacyV2VersionedUrl` 32 位版本可通过 `migrate()` 无损升级为 64 位 `VersionedUrl`）；支持从 `yarn.lock` / `package-lock.json` / `pnpm-lock.yaml` 自动迁移；
+  - `VersionedUrl.eql()` 与 `order()` 严格遵循 Semver 2.0 优先级（正式版 > 预发布版、数字预发布段按数值比较、忽略 `+build` 元数据）；候选解析推荐使用 `latestStable()` 跳过预发布版选出最高稳定版本，URL 校验严格限定 `https://` / `http://` / `file://` 且拒绝控制字符。
+
+```cp
+import { VersionedUrl, VersionedUrlSet } from "cap:pkg";
+
+let set = VersionedUrlSet.init();
+* = set.push(VersionedUrl.parse("https://registry.npmjs.org/foo/-/foo-2.0.0-beta.1.tgz", "2.0.0-beta.1")?)?;
+* = set.push(VersionedUrl.parse("https://registry.npmjs.org/foo/-/foo-1.9.0.tgz", "1.9.0")?)?;
+* = set.push(VersionedUrl.parse("https://registry.npmjs.org/foo/-/foo-1.10.0.tgz", "1.10.0")?)?;
+set.sortAsc();
+const stable = set.latestStable(); // 1.10.0
+const any_latest = set.latestAny(); // 2.0.0-beta.1
+* = stable;
+* = any_latest;
+```

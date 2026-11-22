@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/custom_media.cp | Synced: 2026-11-22T04:01:25Z
+// Source: Absorbed from /data/dev/bun/src/css/rules/custom_media.cp | Synced: 2026-11-22T12:14:06Z
 // Pure-CP zero-allocation CSS Media Queries Level 5 `@custom-media` rule parser,
 // serializer, fixed-capacity cascade registry, and `(--custom-name)` media query expander.
 
