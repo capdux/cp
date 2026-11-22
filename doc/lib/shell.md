@@ -247,6 +247,10 @@ const n = plan.resolveDestPath(0, true, dst[0..])?; // "dist/a.cp"
     - `formatLsMode` 支持全部 7 类文件首字符与 setuid/setgid/sticky 特殊权限位；`formatLsHumanSize` 纯整数实现 `K`/`M`/`G`/`T`/`P` 尺寸格式化；`sortLsEntries` 原地稳定排序支持目录优先分组、大小/修改时间/名称排序及 `-r` 反转。
 11. **跨平台 `which` 路径扫描器与退出码评估（`lib/shell/which_plan.cp`，吸收自 `/data/dev/bun/src/shell/builtin/which.cp` & `/data/dev/bun/docs/runtime/shell.mdx`）**：
     - 零堆分配提供 `PathEnvIter`（POSIX `:` / Windows `;` 分隔，自动将空段规范化为当前目录 `.`）、`WhichPlan`（支持 `-a`/`-s`/`--` 与多命令顺序解析）、`resolveWhichSingle`（含路径分隔符命令跳过 `PATH` 直接相对 `cwd` 解析）及 `evaluateWhichExitCode`（空参数或任一命令未命中均返回退出码 `1`，全部命中返回 `0`）。
+12. **Shell 管道拓扑规划器与执行状态机（`lib/shell/pipeline_plan.cp`，吸收自 `/data/dev/bun/src/shell/states/Pipeline.cp` & `/data/dev/bun/docs/runtime/shell.mdx`）**：
+    - **零堆分配 `N` 阶段 `N-1` 管道布线**：自动跳过管道中的纯赋值项（`PipeStageKind.Assigns`），首阶段继承 `stdin`、末阶段继承 `stdout`、中间阶段按 `pipe[i-1]` 读 / `pipe[i]` 写串联；
+    - **生命周期与防 FD 泄漏**：严格遵循 `StartingCmds -> Pending -> Done` 状态机，支持任意乱序子阶段完成（`onStageDone`），并在中途子进程创建失败时通过 `computeAbortCleanup(failed_stage_idx)` 计算精确的未移交管道读/写端清理区间；
+    - **退出码策略与管道取反（参考 `/data/dev/bun/docs/runtime/shell.mdx`）**：默认 POSIX `PipeExitPolicy.LastStage` 取最后阶段退出码，`PipeExitPolicy.Pipefail` 取最右侧非零退出码，配合 `negated = true`（`! cmd1 | cmd2`）实现 `0 <-> 1` 逻辑取反；配合上层 `.nothrow()` 可在不抛出异常的前提下显式检查 `final_exit_code`。
 
 ### POSIX `rm` 选项解析与根目录防误删示例（`RmPlan`）
 
@@ -273,4 +277,29 @@ let out: [128]u8 = [0; 128];
 const n = fmt.formatChunk("hello\n\n\nworld\n", out[0..])?;
 // 输出: "     1\thello$\n$\n     2\tworld$\n"
 * = n;
+```
+
+### Shell 管道拓扑布线与乱序退出状态机示例（`ShellPipelinePlanner`）
+
+```cp
+import {
+    PipeStageKind,
+    PipeExitPolicy,
+    ShellPipelinePlanner,
+} from "cap:shell";
+
+let pp = ShellPipelinePlanner.init(false, PipeExitPolicy.Pipefail);
+* = pp.addItem(PipeStageKind.Cmd, "cat")?;
+* = pp.addItem(PipeStageKind.Cmd, "grep")?;
+* = pp.addItem(PipeStageKind.Cmd, "wc")?;
+pp.finalizeWiring();
+
+while (sid := pp.nextStageToStart()) {
+    * = sid;
+}
+* = pp.onStageDone(2, 0)?; // wc 先退出
+* = pp.onStageDone(0, 0)?; // cat 退出
+const done = pp.onStageDone(1, 2)?; // grep 退出码 2 -> Pipefail 汇总为 2
+// done == true, pp.final_exit_code == 2
+* = done;
 ```

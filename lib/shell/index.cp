@@ -243,6 +243,21 @@ export {
     evaluateWhichExitCode,
 } from "./which_plan.cp";
 
+export {
+    SHELL_PIPELINE_MAX_STAGES,
+    SHELL_PIPELINE_NO_PIPE,
+    ShellPipelineError,
+    PipeStageKind,
+    PipeIoSource,
+    PipeIoSink,
+    PipeMachineState,
+    PipeExitPolicy,
+    PipeChannelSlot,
+    PipeStagePlan,
+    PipeCleanupAction,
+    ShellPipelinePlanner,
+} from "./pipeline_plan.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);

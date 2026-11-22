@@ -218,3 +218,12 @@ export {
     Bm25fIndexStats,
     Bm25fIndex,
 } from "./bm25f_index.cp";
+
+export {
+    BIN_IDX_MAX_DOCS,
+    BIN_IDX_MAX_WORDS,
+    BinaryIndexConfig,
+    BinaryIndexHit,
+    BinaryIndexStats,
+    BinaryVectorIndex,
+} from "./binary_index.cp";

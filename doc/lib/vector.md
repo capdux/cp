@@ -1104,3 +1104,43 @@ pub fn demoBm25fCodeSearch() {
     * = n;
 }
 ```
+
+---
+
+## 零分配 1-Bit 二值量化向量检索索引（`@popCount` 汉明粗排 + `@dot` Float32 精排，`binary_index.cp`）
+
+面向 OpenAI `text-embedding-3` / Cohere v3 / BGE-M3 **32x 显存/内存压缩**的 100% 纯 CP 零动态堆分配 1-Bit 二值量化向量索引与两阶段检索内核（固定 256 文档位图内联池，支持最高 1024 维）：
+
+- **常量与数据模型**：
+  - `BIN_IDX_MAX_DOCS = 256`、`BIN_IDX_MAX_WORDS = 16`（支持 `1..=1024` 维）
+  - `BinaryIndexConfig`（`dim`, `threshold_f32`, `wordsPerVec()`, `isValid()`）、`BinaryIndexHit`（`doc_id`, `hamming_dist`, `approx_cosine_f32`, `exact_score_f32`）、`BinaryIndexStats`（`active_docs`, `dim`, `words_per_vec`, `bytes_per_vec`, `compression_ratio_x`）
+- **核心引擎（`BinaryVectorIndex`）**：
+  - `init(cfg): BinaryVectorIndex?`
+  - `quantize_vec(vec, out_words): bool`：按 `vec[i] >= threshold_f32` 打包为小端 64 位字（拦截非有限值与维度不匹配）。
+  - `add_document(*_, doc_id, vec): bool` / `remove_document(*_, doc_id): bool`：ID 去重写入、逻辑摘除与槽位复用。
+  - `search_hamming_topk(query, k, out_hits): usize`：Stage 1 硬件 `@popCount(q_word ^ d_word)` 汉明粗排（同步计算 `approx_cosine_f32 = 1.0 - 2.0 * hamming / dim`，按 `(hamming_dist 升序, doc_id 升序)` 输出 Top-K）。
+  - `search_two_stage_rescore(query, raw_doc_pool, k, oversample_k, out_hits): usize`：先汉明粗排取 `oversample_k` 候选，再利用 CP 原生 `@dot` SIMD 在调用方 `raw_doc_pool`（按槽位索引）上精排输出精确 Top-K。
+  - `stats(): BinaryIndexStats`：返回活跃文档数、每向量字节数与精确压缩比（64 的倍数维精确 `32.0x`）。
+
+### 1-Bit 二值量化两阶段检索 QuickStart 示例
+
+```cp
+import {
+    BinaryIndexConfig,
+    BinaryIndexHit,
+    BinaryVectorIndex,
+} from "cap:vector";
+
+pub fn demoBinaryVectorIndex(query: []const f32, raw_pool: []const f32) {
+    let idx = BinaryVectorIndex.init(BinaryIndexConfig{ dim: 64, threshold_f32: 0.0 }) ?? return;
+    * = idx.add_document(101, raw_pool[0..64]);
+    * = idx.add_document(102, raw_pool[64..128]);
+
+    let hits: [2]BinaryIndexHit = [BinaryIndexHit{}; 2];
+    let hits_s: []BinaryIndexHit = hits[0..];
+    // Stage 1 粗排 + Stage 2 @dot SIMD 精排
+    const n = idx.search_two_stage_rescore(query, raw_pool, 2, 8, hits_s);
+    * = n;
+    * = idx.stats().compression_ratio_x; // 32.0
+}
+```
