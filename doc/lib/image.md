@@ -1,5 +1,7 @@
 # CP 标准库：全栈原生图像编解码与处理管线手册 (`cap:image`)
 
+> 参考来源：`/data/dev/bun/src/runtime/image/Image.cp`、`codecs.cp`、`exif.cp`、`thumbhash.cp` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:image` 是 CP 语言官方内置的纯原生图像处理标准库，全面吸收自 Bun 图像处理子系统（`/data/dev/bun/src/runtime/image/`），集 **魔数格式探测、多格式编解码（PNG/BMP/GIF/JPEG/WebP）、EXIF 方向解析、调色板色彩量化、ThumbHash 极速占位图生成与流式几何变换管线** 于一体，专为 CapSurf 截图渲染、AI 视觉预处理与边缘媒体服务打造。
@@ -130,3 +132,16 @@ pub fn demoImagePipeline() {
 | **调色板量化** | `quantize.cp` | `Quantizer.quantize(rgba, w, h, max_colors)` |
 | **ThumbHash LQIP** | `thumbhash.cp` | `ThumbHash.encode` / `ThumbHash.decode` / `ThumbHash.toDataUrl` |
 | **链式图像管线** | `Image.cp` (`flop`, `flip`, `rotate`, `crop`, `resize`) | `Image` (`flop`, `flip`, `rotate`, `crop`, `resize`, `toPng`, `toBmp`) |
+
+---
+
+## 五、 上游行为契约、边界防御与性能注意事项
+
+1. **零像素全量解码的元数据探测（防解压内存耗尽）**：
+   - 在解码外部不可信图片之前，强烈建议先调用 `Codecs.sniff(bytes)` + `probeDimensions(bytes)`（或 `Jpeg.probe` / `Webp.probe` / `Gif.probe`）校验宽高上限，仅解析文件头而不分配全量 RGBA8 帧缓冲，避免畸形大尺寸图片触发资源耗尽。
+2. **EXIF 方向自动矫正顺序**：
+   - `Exif.readJpeg` 自动扫描 JPEG `APP1` 段落并兼容大端（`MM`）与小端（`II`）TIFF IFD0 `0x0112` 标签；
+   - 对相机直出图片应使用 `img.applyExifOrientation(ori)`（内部遵循 `Codecs.getOrientationTransform` 的 `flop`/`flip`/`rotate` 精确组合顺序），避免手动二次旋转导致镜像错乱。
+3. **色彩量化与 ThumbHash 边界**：
+   - `Quantizer.quantize` 将 `max_colors` 限制在 256 色以内以适配索引调色板格式；
+   - `ThumbHash.encode` 适合生成约 25 字节的极低开销占位图（LQIP），并通过 `ThumbHash.toDataUrl` 输出内联 `data:image/png;base64,...` 供前端首屏即时渲染。

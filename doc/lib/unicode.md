@@ -1,5 +1,6 @@
-// Source: cp/doc/lib/unicode.md
 # `cap:unicode` — Unicode / UTF-8 / UTF-16 / Grapheme 与终端显示宽度标准库
+
+> 参考来源：`/data/dev/bun/src/unicode/uucode/lut.cp`、`/data/dev/bun/src/unicode/uucode_lib/src/root.cp` | 吸收日期：2026-11-22
 
 纯 CP、零 C/Posix 依赖的工业级 Unicode 基础库，提供 RFC 3629 UTF-8 与 UTF-16 代理对严格编解码、Unicode 码点属性与大小写映射、UAX #29 Extended Grapheme Cluster 零分配分割迭代器，以及 East Asian Width / Emoji 终端显示宽度计算与安全截断。
 
@@ -89,3 +90,16 @@ import cap from "cap";
 - **三级压缩查找表 (`lut.cp`)**：`BLOCK_SIZE`, `MAX_UNICODE_CODEPOINT`, `MAX_UNIQUE_ELEMENTS`, `Error`, `Tables<Elem>`, `Generator<Elem, Context>`，实现 O(1) Stage 1 -> Stage 2 -> Stage 3 Unicode 属性压缩表生成与查询。
 - **CSS `@font-face` Unicode 区间 (`range.cp`)**：`MAX_CODEPOINT`, `UnicodeRangeError`, `UnicodeRange`（`U+XXXX` / `U+XXXX-YYYY` / `U+??` 通配符区间解析、规范化与格式化）。
 - **终端列宽扩展 (`wcwidth.cp`)**：`wcwidth`（原 `codepointWidth` 别名）、`isZeroWidth`、`isWideChar`、`strDisplayWidth`、`sliceToDisplayWidth`。
+
+---
+
+## 上游性能架构与安全边界注意事项
+
+1. **严格 RFC 3629 校验与 8 字节 ASCII 快速路径**：
+   - `isValidUtf8` 对纯 ASCII 文本走 8 字节批扫描快速路径；遇到非 ASCII 字节时严格拒绝超长编码（Overlong Encoding）、代理区码点（`U+D800..U+DFFF`）、孤立续字节及超出 `U+10FFFF` 的非法序列；
+   - `utf16ToUtf8` 遇到未配对的高/低代理单元直接返回 `UnicodeError.UnpairedSurrogate`，防止静默产出非法 UTF-8。
+2. **三级压缩查找表（`lut.cp`）原理与约束**：
+   - 源自 Bun `uucode` 的 3-Stage Lookup Table 算法：将 `0..0x10FFFF` 码点空间按 `BLOCK_SIZE = 256` 分块并对重复块去重（Stage 1 -> Stage 2 -> Stage 3），实现 $O(1)$ 码点属性检索同时大幅压缩静态表体积；
+   - 构造自定义 `Generator<Elem, Context>` 时，去重后的唯一属性值种类不得超过 `MAX_UNIQUE_ELEMENTS`。
+3. **终端列宽与 Grapheme 安全截断**：
+   - `displayWidth` 与 `truncateByWidth` 自动跳过 ANSI CSI/OSC 控制序列，并严格在 UAX #29 Extended Grapheme Cluster 边界执行截断，绝不把 Emoji ZWJ 组合、国旗 Regional Indicator 或多字节 UTF-8 字符从中间腰斩。

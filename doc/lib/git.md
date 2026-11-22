@@ -1,5 +1,7 @@
 # CP 标准库：Git 底层对象、`.gitignore` 引擎与 `.git` 只读内省 (`cap:git` / `cap.git`)
 
+> 参考来源：`/data/dev/bun/docs/guides/install/add-git.mdx`、`/data/dev/bun/src/install/repository.cp`、`/data/dev/bun/src/glob.zig` | 吸收日期：2026-11-22
+
 ## 一、 架构总览
 
 `cap:git` 是 CP 语言官方内置的零外部依赖 Git 底层原语库，专为 AI Coding Agent、CI 工具链与包管理器提供 Git 对象 SHA-1 内容寻址哈希与二进制编解码、完整 `.gitignore` 规则匹配引擎以及 `.git` 只读 `HEAD`/引用解析能力。全模块**零 `std.posix`、零 `@import("bun")`**，SHA-1 直接调用 Zig 0.17 `std.crypto.hash.Sha1`，文件读取仅使用 `std.c`，支持 `import { ... } from "cap:git"` 与 `import cap from "cap"; cap.git.*` 编译期按需惰性挂载。
@@ -85,3 +87,16 @@ pub fn demoGit(): !void {
     defer head.deinit();
 }
 ```
+
+---
+
+## 四、 上游行为契约与边界防御注意事项
+
+1. **Git 对象内容寻址与 Tree 规范排序（`object.cp`）**：
+   - `GitObject.hashBlob` / `hashObject` 严格按照 `<kind> <byte_len>\0<payload>` 拼接后计算 SHA-1，与 `git hash-object` 逐字节一致；
+   - `GitTreeCodec.encode` 遵循 Git 官方目录排序规则（对 `040000` 目录条目虚拟追加 `/` 后按字节序比较），避免与原生 Git 计算出不同 Tree OID；`decode` 零拷贝借用 `raw_tree` 切片。
+2. **`.gitignore` 匹配优先级与祖先目录短路（`ignore.cp` & `ignorematch.cp`）**：
+   - 同级规则遵循 **last-match-wins**，后出现的 `!` 取反规则可重新包含先前被忽略的文件；但若某文件的**父目录**已被忽略，Git 语义下无法仅通过子路径 `!` 重新包含。
+3. **引用名、远程 URL 与 Worktree 安全校验（`refcheck.cp` / `url.cp` / `repo.cp`）**：
+   - `isValidGitRefName` / `isValidBranchName` 严格遵循 `git check-ref-format` 规则，拦截 `..`、`@{`、控制字符、尾随 `.` 或 `.lock` 与前导/连续 `/`；
+   - `GitRepo.readHead` 自动兼容标准 `.git/` 目录与 Worktree 的 `.git` 文本指针文件（`gitdir: ...`），并在松散引用不存在时自动回退检索 `packed-refs`。

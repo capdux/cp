@@ -1,5 +1,7 @@
 # CP 标准库：全栈现代密码学、非对称签名、KDF 与 JWT/PEM 手册 (`cap:crypto`)
 
+> 参考来源：`/data/dev/bun/docs/runtime/hashing.mdx`、`/data/dev/bun/src/boringssl/boringssl.cp`、`/data/dev/bun/src/sha_hmac/hmac.cp` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:crypto` 是 CP 语言官方内置的生产级零 C 依赖全栈现代密码学子系统标准库，结合 Zig 0.17 原生 `std.crypto` 与 Bun `src/boringssl/`、`src/sha_hmac/` 现代密码学 API 契约，覆盖**消息摘要、HMAC、KDF/口令哈希、AEAD 对称加密、非对称签名/密钥协商、JWT/PEM 编解码、CSPRNG 与 TLS 身份校验**。
@@ -155,3 +157,17 @@ pub fn demoModernCrypto(): !void {
 | **JWT & PEM** | `jose` / `crypto.KeyObject` | — | `Jwt` (`signHs256/384/512/EdDsa`, `verify*`) / `Pem` (`encode`/`decode`) |
 | **CSPRNG & UUIDv4** | `crypto.randomBytes` / `randomUUID` | `crypto.getRandomValues` / `randomUUID` | `randomBytes` / `fillRandom` / `randomUUID` / `randomInt` |
 | **TLS 主机名校验** | `tls.checkServerIdentity` | `BoringSSL.checkServerIdentity` | `TlsHostnameVerifier.verify` / `matchDnsName` |
+
+---
+
+## 五、 上游安全边界与性能注意事项
+
+1. **口令哈希（`argon2idHash` / `scryptDerive` / `pbkdf2Sync`）的 CPU 与内存成本**：
+   - `argon2idHash` 自动通过内核 `getrandom` 生成随机盐并编码为标准 PHC 字符串（`$argon2id$v=19$m=...,t=...,p=...$<salt>$<hash>`），与 Bun `Bun.password.hash`（Argon2id）格式互通；
+   - 口令 KDF 属于计算密集型同步操作，生产高并发服务应放在独立工作线程/Actor 中执行，避免阻塞事件循环主线程。
+2. **AEAD Nonce 唯一性红线**：
+   - `Aes128Gcm`、`Aes256Gcm`、`ChaCha20Poly1305` 使用 12 字节 Nonce，**同一密钥下严禁重复使用相同 Nonce**（否则会直接泄露认证密钥与明文异或）；
+   - 需要无状态随机生成 Nonce 时，优先选用 24 字节扩展 Nonce 的 `XChaCha20Poly1305`。
+3. **非对称密钥协商与 JWT 防降级**：
+   - `X25519KeyPair.computeShared` / `sharedSecret` 自动检测并拒绝 RFC 7748 低阶点导致的全零共享密钥（返回 `null`）；
+   - `Jwt.verify*` 强制执行恒定时间 MAC 比对（`constantTimeEql`）并严格校验 Header 中的 `alg` 字段，彻底阻断 `alg: "none"` 与非对称转对称（RS/EdDSA -> HS）算法混淆攻击。

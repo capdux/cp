@@ -1,5 +1,7 @@
 # CP 标准库：高性能网络传输、套接字抽象、CIDR/SSRF 防护、代理隧道与连接池手册 (`cap:net`)
 
+> 参考来源：`/data/dev/bun/docs/runtime/networking/tcp.mdx`、`/data/dev/bun/docs/runtime/networking/udp.mdx`、`/data/dev/bun/src/uws/uws.cp` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:net` 是 CP 语言官方内置的工业生产级网络传输标准库，涵盖 IPv4/IPv6 地址与 CIDR/SSRF 边界校验、Linux 原生套接字选项与 `poll` 就绪轮询、RAII 风格 `SafeSocket` 生命周期管理、带 16KB 软塞（Corking）缓冲的 `TcpStream`、多选项监听配置的 `TcpServer`、无连接 `UdpSocket` 数据报传输、完整 RFC 1928/1929 SOCKS5 与 HTTP `CONNECT` 代理隧道编解码器，以及工业级 TCP 连接池 `ConnectionPool`。核心传输层吸收自 Bun 原生 uSockets 与 Socket 子系统，新增基础设施层 100% 纯 CP 零外部依赖实现。
@@ -183,3 +185,17 @@ pub fn demoProductionNet() {
 | **UDP 数据报套接字** | `Bun.udpSocket({ port, socket })` | `dgram.createSocket('udp4')` | `UdpSocket.bind(addr)` / `sendTo` / `setMulticastTTL` |
 | **HTTP CONNECT / SOCKS5 代理** | `src/http/ProxyTunnel.cp` | 第三方库（`https-proxy-agent` / `socks`） | `HttpConnectCodec` / `HttpConnectTunnel` / `Socks5Codec` (RFC 1928/1929) |
 | **TCP 连接池** | 内置 `HTTPClient` 连接池 | `http.Agent({ keepAlive, maxSockets })` | `ConnectionPool` / `ConnPoolConfig` / `PoolStats` |
+
+---
+
+## 五、 上游高性能设计、安全防护与边界注意事项
+
+1. **16KB 软塞（Corking）批聚合与共享回调模型**：
+   - 继承自 Bun / uSockets 的高性能设计：`TcpStream` 内置 `STREAM_CORK_BUFFER_SIZE = 16384`（16KB）软塞缓冲，将多次小包写入在 `cork()` / `uncork()` 间合并为单次系统调用，显著降低内核态切换与 TCP 小包开销；
+   - `pollSingleFd` / `pollManyFds` 自动处理 `EINTR` 信号中断重试，避免高并发场景下虚假超时或提前返回。
+2. **出站 SSRF 与 IPv4-Mapped IPv6 绕过防护（`CidrAllowlist` & `IpClass`）**：
+   - `CidrAllowlist.isAllowedOutbound` / `isAllowedOutboundStr` 默认拦截回环（`127.0.0.0/8`, `::1`）、RFC 1918 私网、链路本地（含云元数据 `169.254.169.254`）、RFC 6598 CGNAT（`100.64.0.0/10`）与组播地址；
+   - `IpAddrCodec` 与 `Ipv6Addr.fromIpv4Mapped` 完整识别 `::ffff:a.b.c.d` 内嵌 IPv4 地址，防止利用 IPv6 映射地址绕过 IPv4 黑白名单。
+3. **长连接超时分级与连接池双 TTL 淘汰**：
+   - `SafeSocket` 遵循 uSockets 规范：当超时设置超过 240 秒时自动升级为分钟级长超时刻度；
+   - `ConnectionPool` 按 `host:port` 采用 LIFO（最近归还优先）策略最大化热连接命中率，并在 `acquire`/`release` 时自动淘汰超过 `idle_timeout_ms` 或 `max_lifetime_ms` 的陈旧套接字，避免复用半关闭失效连接。

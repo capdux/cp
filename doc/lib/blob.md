@@ -1,5 +1,7 @@
 # CP 标准库：二进制大对象与文件抽象手册 (`cap:blob`)
 
+> 参考来源：`/data/dev/bun/docs/runtime/file-io.mdx`、`/data/dev/bun/src/runtime/webcore/Blob.cp`、`/data/dev/bun/src/runtime/webcore/blob/Store.cp` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:blob` 是 CP 语言官方内置的 Web 标准二进制大对象（`Blob`）与具名文件（`File`）抽象库，吸收自 Bun 的 WebCore Blob/Store 子系统（`/data/dev/bun/src/runtime/webcore/Blob.cp` 与 `blob/Store.cp`），以 **共享引用计数底层存储（`BlobStore`）+ 零拷贝逻辑切片视图** 为核心，无缝衔接内存缓冲区与磁盘文件 I/O。
@@ -112,7 +114,7 @@ pub fn demoBlobAndFile() {
         if (loaded := File.fromPath("temp/payload.json", "")) {
             // loaded.name == "payload.json", loaded.type == "application/json"
             const txt = loaded.text();
-            _ = txt;
+            * = txt;
             loaded.release();
         }
     }
@@ -137,3 +139,17 @@ pub fn demoBlobAndFile() {
 | **独立缓冲区拷贝** | `await blob.arrayBuffer()` | `blob.arrayBuffer()` |
 | **文件持久化写出** | `await Bun.write(dest, file)` | `file.save(dest_path)` / `file.writeTo(dest_path)` |
 | **底层零拷贝拷贝引擎** | `src/runtime/webcore/blob/copy_file.cp` | 已解耦至 `cap:sys` (`lib/sys/copy_file.cp`) |
+
+---
+
+## 五、 上游行为契约与边界注意事项
+
+1. **惰性文件句柄语义（对齐 `Bun.file(path)`）**：
+   - `File.at(path, mime_type)` 可安全构造指向磁盘上**尚不存在路径**的文件句柄（不会报错），可先调用 `file.exists()` 探测存在性，或直接调用 `file.write(data)` 创建并落盘；
+   - `File.fromPath(path, mime_type)` 则立即执行磁盘读取与 `statx` 元数据探测，路径不存在时安全返回 `null`。
+2. **零拷贝切片与可变性隔离**：
+   - `blob.slice` 与 `blob.sliceSigned`（完整支持 W3C 负索引如 `-4, -1` 及反转范围返回 0 字节空视图）仅递增 `BlobStore.ref_count` 并调整 `offset`/`size`，不复制底层字节；
+   - `blob.bytes()` / `blob.text()` 返回只读视图；需要修改内容而不影响其他共享切片时，必须调用 `blob.arrayBuffer()` 获取独立堆副本。
+3. **MIME 推导、分块流式读取与底层零拷贝系统调用**：
+   - 未显式传入 `mime_type` 时，`Blob.fromString` 默认 `"text/plain;charset=utf-8"`，`Blob.fromBytes` 默认 `"application/octet-stream"`，`Blob.fromFile` / `File.fromPath` 按文件扩展名自动推导并可被显式参数覆写；
+   - 处理大文件或大块数据时，可使用 `blob.stream(chunk_size)` 返回的 `BlobChunkReader` 迭代消费，避免一次性构造多余拷贝；跨文件零拷贝系统调用（如 Linux `copy_file_range` / `sendfile`）由 `cap:sys` 提供。
