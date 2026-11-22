@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sourcemap/Chunk.cp | Synced: 2026-11-20T07:53:26Z
+// Source: Absorbed from /data/dev/bun/src/sourcemap/Chunk.cp | Synced: 2026-11-22T01:52:38Z
 // ============================================================================
 // lib/sourcemap/chunk.cp — 构建产物分块（Chunk / SourceMapChunk）与 SourceMap v3 拼接引擎
 // 吸收自 Bun src/sourcemap/Chunk.cp

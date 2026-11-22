@@ -283,7 +283,10 @@ hello/
 
 #### 2.1 **📝 操作记录规范（必须牢记并严格执行）：**
 
-1. **SESSION.md**: 排除执行过程中输出的日志，将我发给你的完整指令和你执行的结果汇报，按日期及执行顺序追加到文件底部，记录我们之间交互。**绝不允许遗漏我发给你的指令，绝不允许覆盖、删除或丢失之前的内容！**
+1. **SESSION.md（零遗漏铁律 — 最高优先级）**:
+   - 排除执行过程中输出的冗长工具日志，将**① 用户发送的每一条完整原始指令（严禁仅写笼统摘要或跳过）**、**② 收到的每一条下游 AGY 工单（含 `task_id`、来源智能体、报错/需求摘要与结单结果）**、**③ 主智能体的结单与阶段执行汇报**，按日期及执行顺序完整追加到文件底部。
+   - **脚本操作零遗漏约束**：凡使用脚本进行历史迁移、热冷归档或新增记录（如 `scripts/archive_hot_logs.py`、`scripts/register_stdlib.py`、`scripts/sync_session_audit.py`、`scripts/log_session.py`），脚本逻辑中必须完整包含上述三类内容（用户完整原始指令 + 下游 AGY 工单 + 主智能体结单与汇报），**绝不允许遗漏、覆盖、删除或丢失任何一条记录！**
+   - 定期及每次里程碑提交前，必须运行 `python3 scripts/sync_session_audit.py --check` 校验遗漏数为 0；若存在遗漏须立即补录后再提交。
 2. **CHANGELOG.md**: 对每个文件的修改、删除、新增，按日期追加记录，让我知道你新增、删除、修改了什么文件。**之前的记录绝不能丢失！**
 3. **DEVLOG.md**: 开发日志文件。按日期往后追加你每次执行任务解决问题的思路、原理及规划的执行方案与步骤，让我知道你为何这样执行。**绝不能删除之前的记录！**
 4. **三轨解耦规范手册体系（低 Token 高效架构）**：
@@ -307,7 +310,7 @@ hello/
 1. **紧急热修（Hotfix 极速通道）**：
    - 当处理下游 Bun AGY 的编译阻断或紧急缺陷时，以“秒级消除阻断”为第一目标；
    - 主智能体直接在 `cpc/src` 正式版本极速修复，调用 `bash scripts/sync_cpc.sh` 原子构建部署，执行 `task_queue.py resolve` 瞬间结单，并将修改直通同步（Write-Through）回 `cpc_dev/src`；
-   - **紧急热修不强制每个小修复都记录全套四线文档和做 Git 提交**，确保 Bun AGY 零等待恢复开发。
+   - **紧急热修不强制每个小修复都写全套 `CHANGELOG.md`/`DEVLOG.md` 或单独做 Git 提交**，但**必须**在 `task_queue.py resolve` 结单后，通过 `python3 scripts/sync_session_audit.py` 或 `python3 scripts/log_session.py` 将收到的下游工单与结单汇报完整追加至 `SESSION.md`，确保零工单遗漏。
 2. **阶段性里程碑（Milestone 集中归档）**：
    - 当完成一组特定报错的彻底消除、或完成标准库/核心特性并通过全量回归测试后，执行阶段性成果交付：
      1. 集中更新当日轻量热文档（`SESSION.md`、`CHANGELOG.md`、`DEVLOG.md`，超过 ~300 行时及时滚动归档至 `*_H.md`）与 `cp_lib_ref.md`（标准库变更）或 `cp_agent_ref.md`（语法变更，标题加 `[SYNC_PENDING: YYYY-MM-DD]`），**日常不读写 `cp_ref.md`**；

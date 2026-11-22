@@ -22,6 +22,7 @@
 | `lib/vector/ivf.cp` | `// Origin: Pure-CP Stdlib (RAG IVF-Flat Coarse-Quantized Inverted File ANN Index) \| Created: 2026-11-22` | `IvfFlatIndex` 零堆分配 CSR 倒排文件近似最近邻索引（L2 / Cosine 多探针 `nprobe` 亚线性检索） |
 | `lib/vector/pq.cp` | `// Origin: Pure-CP Stdlib (RAG Product Quantization & Asymmetric Distance Computation ADC) \| Created: 2026-11-22` | `PqCodebook` 乘积量化编码/解码与 `O(m)` 查表非对称距离（ADC）Top-K 检索 |
 | `lib/vector/reranker.cp` | `// Origin: Pure-CP Stdlib (AI RAG Reranker: MMR, ColBERT MaxSim & IR Metrics) \| Created: 2026-11-22` | 零辅助缓冲 MMR (`mmrSelect`)、ColBERT Late-Interaction (`colbertMaxSim`)、原位 MinMax/ZScore 归一化与 `NDCG@K` / `MRR` / `Recall@K` IR 评测 |
+| `lib/vector/filter.cp` | `// Origin: Pure-CP Stdlib (AI Vector Search Metadata Bitset Filter & Selectivity Planner) \| Created: 2026-11-22` | 1024-bit 零堆分配位图 (`FilterBitset`)、数值/范围元数据谓词过滤、选择度自适应 Filtered ANN 路由规划器与位跳跃掩码 Top-K 余弦检索 |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -140,6 +141,14 @@
 - **`minMaxNormalizeInPlace(scores: *[]f64): bool` / `zScoreNormalizeInPlace(scores: *[]f64): bool`**：原位多路检索分数归一化（零方差/常数序列安全归零，不触发除零 NaN）
 - **`ndcgAtK(relevances, k): f64?`**：零堆分配 `O(1)` 栈空间精确计算 `NDCG@K`（标准 $2^{\text{rel}} - 1$ 增益，完整处理重复相关性等级）
 - **`mrrScore(ranked_ids, relevant_ids): f64?` / `recallAtK(ranked_ids, relevant_ids, k): f64?`**：生产级 RAG 召回与排序质量评测指标（`recallAtK` 自动对 ground-truth 去重防止 Recall > 1.0）
+
+### 9. 元数据位图过滤与选择度自适应路由引擎 (`filter.cp`)
+
+- **`FILTER_BITSET_WORDS` (`16`) / `FILTER_BITSET_MAX_BITS` (`1024`) / `FilterBitset`**：固定 1024-bit（16×u64）零堆分配位图，提供 `empty`/`full`/`set`/`clear`/`testBit`/`popcount`（硬件 `@popCount`）/`andWith`/`orWith`/`notInPlace`/`andNotWith`/`firstSetBit`（硬件 `@ctz`）
+- **`FilterOp` (`Eq | Neq | Gt | Gte | Lt | Lte | Range`) / `NumericFilter`**：数值与闭区间范围谓词描述符
+- **`evalInt64Filter(values, filter, *out_mask): usize?` / `evalFloat64Filter(values, filter, *out_mask): usize?`**：单遍将数值列谓词编译为 `FilterBitset` 位图并返回命中数
+- **`FilterStrategy` (`PreFilterBrute | InlineGraphFilter | PostFilterExpand`) / `FilterPlan` / `planFilterStrategy(total_docs, matching_docs, top_k): FilterPlan?`**：基于选择度 `selectivity = matching / total` 与 `top_k` 自动规划最优过滤执行路径与 `oversample_factor`
+- **`maskedTopKCosine(query, corpus_flat, n_docs, dim, mask, k, *out_ids, *out_scores): usize?`**：使用 `@ctz` 位跳跃仅扫描位图置位子集的零堆分配 Top-K 余弦检索
 
 ---
 
@@ -402,5 +411,37 @@ pub fn demoRerankerAndIrMetrics() {
     * = mrrScore(ranked[0..], truth[0..]); // 0.5
     * = recallAtK(ranked[0..], truth[0..], 2); // 0.5
     * = maxsim;
+}
+```
+
+### 元数据位图过滤与选择度自适应 Filtered ANN 示例 (`filter.cp`)
+
+```typescript
+import {
+    FilterBitset,
+    FilterOp,
+    NumericFilter,
+    evalInt64Filter,
+    planFilterStrategy,
+    maskedTopKCosine,
+} from "cap:vector";
+
+pub fn demoMetadataBitsetFilter(corpus: []const f64, query: []const f64) {
+    const years: [4]i64 = [2021, 2023, 2024, 2025];
+    let mask = FilterBitset.empty();
+    const matched = evalInt64Filter(
+        years[0..],
+        NumericFilter{ op: FilterOp.Range, i64_lo: 2023, i64_hi: 2025 },
+        &mask,
+    ) ?? 0;
+
+    if (plan := planFilterStrategy(4, matched, 2)) {
+        * = plan.strategy;
+        let ids_buf: [2]usize = [0; 2];
+        let scores_buf: [2]f64 = [0.0; 2];
+        let ids: []usize = ids_buf[0..];
+        let scores: []f64 = scores_buf[0..];
+        * = maskedTopKCosine(query, corpus, 4, 2, mask, 2, ids, scores);
+    }
 }
 ```

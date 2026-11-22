@@ -7,6 +7,7 @@
 - **增量传输分帧 (`framer.cp`)**：`McpStreamFramer` 支持 `Ndjson` 与 LSP 风格 `Content-Length: N\r\n\r\n` 双模式，支持任意 `1..7` 字节半包/黏包跨 chunk `feed()` 拆帧与 `max_frame_bytes` 上限拦截。
 - **能力路由器 (`server.cp`)**：`McpServer` 内置 `initialize`、`notifications/initialized`、`ping`、`tools/list`、`tools/call`、`resources/list`、`resources/read`、`prompts/list`、`prompts/get` 路由分发，并自动将工具执行错误封装为 `isError: true`。
 - **零堆分配工具注册表与权限治理 (`registry.cp`)**：`McpToolRegistry` 基于调用方固定槽位缓冲实现工具注册、能力风险分级（`ReadOnly`/`WriteLocal`/`Network`/`Destructive`）、网络 ACL、高危人工审批门槛（`RequireApproval`）、固定 60 秒窗口限流与动态 `tools/list` 可见集过滤。
+- **零堆分配会话生命周期与请求追踪器 (`session.cp`)**：`McpSession` 提供协议版本解析/格式化与兼容性降级协商（`V2024_11_05` / `V2025_03_26`）、能力位掩码交集协商（`McpCapabilityFlags`）、严格五态生命周期门控（`Disconnected` -> `Initializing` -> `Ready` -> `Closing` -> `Closed`）及固定槽位 JSON-RPC 2.0 在途请求追踪（注册、完成、取消、批量超时回收与统计）。
 
 ## 2. 核心类型
 
@@ -15,6 +16,7 @@
 - **分帧器**：`FrameMode` (`Ndjson` | `ContentLength`)、`McpStreamFramer`
 - **服务端**：`ToolHandler`、`ResourceReader`、`PromptBuilder`、`McpServer`
 - **工具治理注册表 (`registry.cp`)**：`ToolRiskLevel`、`ToolPolicy`、`PolicyDecision`、`RegisteredTool`、`McpToolRegistry`
+- **会话状态机与请求追踪 (`session.cp`)**：`McpProtocolVersion`、`McpCapabilityFlags`、`McpSessionState`、`McpSessionOpError`、`McpInflightRequest`、`McpSessionStats`、`McpSession`
 
 ## 3. API 速查
 
@@ -39,6 +41,17 @@
 | `reg.authorizeAndConsume(name, policy, now_ms)` | 综合校验存在性、启用状态、网络 ACL、风险分级、高危人工审批与 60s 速率限制，仅 `Allow` 时累加调用计数 |
 | `reg.recordError(name)` | 累加指定工具的错误计数 |
 | `reg.listAllowedTools(policy, out_indices)` | 按 `ToolPolicy` 过滤出可见工具索引，用于动态构造 `tools/list` |
+| `parseMcpVersion(raw)` / `formatMcpVersion(ver)` | 在字符串（`"2024-11-05"` / `"2025-03-26"`）与 `McpProtocolVersion` 间互转 |
+| `negotiateMcpVersion(client_ver, server_max_ver)` | 协商双方兼容的最高协议版本，任一方 `Unknown` 返回 `null` |
+| `negotiateCapabilities(client_caps, server_caps)` | 计算客户端与服务端 `McpCapabilityFlags` 位掩码交集并屏蔽未知高位 |
+| `hashMethodName(method)` | 计算 MCP JSON-RPC 方法名的确定性 64 位 FNV-1a 哈希 |
+| `McpSession.init(slots)` | 使用调用方固定 `McpInflightRequest` 槽位缓冲初始化 `Disconnected` 会话 |
+| `sess.beginInitialize(cli_ver, srv_ver, cli_caps, srv_caps)` | `Disconnected -> Initializing`，校验版本与能力协商，返回 `McpSessionOpError?` |
+| `sess.markReady()` / `sess.beginClose()` / `sess.finishClose()` / `sess.forceClose()` / `sess.reset()` | 严格执行会话状态机转换与在途槽位清理 |
+| `sess.checkMethodAllowed(method)` / `sess.canDispatchMethod(method)` | 按当前生命周期状态与协商能力门控 JSON-RPC 方法（如未 `Ready` 拒绝 `tools/call`） |
+| `sess.beginRequest(id, method_hash, sent_ms, timeout_ms)` / `sess.beginMethodRequest(...)` | 注册在途请求（拒绝非 `Ready`、0 ID、重复 ID 与满槽） |
+| `sess.completeRequest(id)` / `sess.cancelRequest(id)` / `sess.purgeCancelled(out_ids)` | 完成并释放请求（返回副本供识别迟到已取消响应）、标记取消与批量清理已取消槽位 |
+| `sess.collectTimedOut(now_ms, out_ids)` | 批量回收超时在途请求（支持 `timeout_ms == 0` 豁免、时钟回拨防护与输出截断安全） |
 
 ## 4. 示例
 
@@ -101,5 +114,49 @@ pub fn demoAgentToolGovernance() {
     * = d2;
     * = d3;
     * = visible_count;
+}
+```
+
+### MCP 会话状态机、能力协商与在途请求追踪示例 (`session.cp`)
+
+```cp
+import {
+    McpProtocolVersion,
+    McpCapabilityFlags,
+    McpInflightRequest,
+    McpSession,
+} from "cap:mcp";
+
+pub fn demoMcpSessionLifecycle() {
+    let slots_buf: [8]McpInflightRequest = [McpInflightRequest{}; 8];
+    let slots: []McpInflightRequest = slots_buf[0..];
+    let sess = McpSession.init(slots);
+
+    const cli_caps = McpCapabilityFlags.fromBits(
+        McpCapabilityFlags.TOOLS | McpCapabilityFlags.RESOURCES,
+    );
+    const srv_caps = McpCapabilityFlags.fromBits(
+        McpCapabilityFlags.TOOLS | McpCapabilityFlags.PROMPTS,
+    );
+
+    // 1. 握手协商：Disconnected -> Initializing -> Ready
+    * = sess.beginInitialize(
+        McpProtocolVersion.V2025_03_26,
+        McpProtocolVersion.V2025_03_26,
+        cli_caps,
+        srv_caps,
+    );
+    * = sess.markReady();
+
+    // 2. 注册并追踪在途请求（自动校验 Ready 状态与 TOOLS 能力）
+    * = sess.beginMethodRequest(1, "tools/call", 1000, 5000);
+    * = sess.beginMethodRequest(2, "tools/list", 1200, 1000);
+
+    // 3. 完成正常响应，并批量回收超时请求
+    * = sess.completeRequest(1);
+    let timed_out_buf: [4]u64 = [0; 4];
+    let timed_out: []u64 = timed_out_buf[0..];
+    const expired_count = sess.collectTimedOut(2500, timed_out); // 回收请求 2
+    * = expired_count;
 }
 ```

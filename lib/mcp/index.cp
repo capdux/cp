@@ -47,3 +47,18 @@ export {
     RegisteredTool,
     McpToolRegistry,
 } from "./registry.cp";
+
+export {
+    McpProtocolVersion,
+    parseMcpVersion,
+    formatMcpVersion,
+    negotiateMcpVersion,
+    McpCapabilityFlags,
+    negotiateCapabilities,
+    McpSessionState,
+    McpSessionOpError,
+    McpInflightRequest,
+    McpSessionStats,
+    hashMethodName,
+    McpSession,
+} from "./session.cp";

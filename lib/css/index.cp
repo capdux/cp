@@ -257,3 +257,11 @@ export {
     CssDiagnostic,
     CssDiagnosticBag,
 } from "./diagnostics.cp";
+
+export {
+    MAX_PROPERTY_SYNTAX_COMPONENTS,
+    CssPropertyRuleError,
+    isValidDashedIdent,
+    PropertySyntax,
+    CssPropertyRule,
+} from "./property_rule.cp";

@@ -260,6 +260,21 @@ const disp = Display.parse("inline flex").?;
 | `lib/css/units.cp` | `bun/src/css/values/{angle,resolution}.cp` | `UnitAngleUnit`, `UnitAngle`, `UnitResolutionUnit`, `UnitResolution` |
 | `lib/css/dependencies.cp` | `bun/src/css/dependencies.cp` | `CssDependencyOptions`, `CssDependencyLocation`, `CssSourceRange`, `CssDependencyKind`, `CssDependency`, `formatDependencyPlaceholder`, `CssDependencyIter`（零分配 `@import` / `url(...)` 依赖提取、1-based 行列追踪、`supports(...)`/media 识别与确定性 16 字符占位符哈希） |
 | `lib/css/diagnostics.cp` | `bun/src/css/error.cp` | `MAX_CSS_DIAGNOSTICS`, `CssDiagnosticSeverity`, `CssErrorLocation`, `CssParserErrorKind`（17 项解析错误码）, `CssPrinterErrorKind`（6 项 CSS Modules/打印错误码）, `CssDiagnosticDomain`, `CssDiagnostic`, `CssDiagnosticBag`（零分配诊断收集器与格式化） |
+| `lib/css/property_rule.cp` | `bun/src/css/rules/property.cp` | `MAX_PROPERTY_SYNTAX_COMPONENTS`, `CssPropertyRuleError`, `isValidDashedIdent`, `PropertySyntax`, `CssPropertyRule`（零堆分配 W3C CSS Properties and Values API Level 1 `@property` 自定义属性注册解析、`syntax`/`inherits`/`initial-value` 规范校验与美化/压缩序列化） |
+
+### `@property` 自定义属性注册规则示例（`property_rule.cp`）
+
+```typescript
+import { CssPropertyRule, PropertySyntax, isValidDashedIdent } from "cap:css";
+
+const rule = CssPropertyRule.parse(
+    "@property --brand-accent { syntax: '<color>'; inherits: true; initial-value: #3b82f6; }"
+)?;
+// rule.name == "--brand-accent", rule.inherits == true, rule.acceptsValue("oklch(0.7 0.15 240)") == true
+let buf: [256]u8 = undefined;
+const minified = rule.toCssMinified(buf[0..])?;
+// "@property --brand-accent{syntax:\"<color>\";inherits:true;initial-value:#3b82f6}"
+```
 
 ---
 

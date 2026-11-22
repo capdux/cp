@@ -70,3 +70,17 @@ export {
     mrrScore,
     recallAtK,
 } from "./reranker.cp";
+
+export {
+    FILTER_BITSET_WORDS,
+    FILTER_BITSET_MAX_BITS,
+    FilterBitset,
+    FilterOp,
+    NumericFilter,
+    FilterStrategy,
+    FilterPlan,
+    evalInt64Filter,
+    evalFloat64Filter,
+    planFilterStrategy,
+    maskedTopKCosine,
+} from "./filter.cp";
