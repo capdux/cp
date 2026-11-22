@@ -21,3 +21,9 @@ export {
     selectEvictionVictim,
     touchEpisode,
 } from "./episodic.cp";
+
+export {
+    KgEntity,
+    KgTriple,
+    KgStore,
+} from "./kg.cp";

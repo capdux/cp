@@ -26,6 +26,7 @@
 | :--- | :--- | :--- |
 | `lib/agentmem/memory.cp` | `// Source: cp/lib/agentmem/memory.cp (Hierarchical Agent Memory Engine)` | `AgentMemError`、`MemoryTier`、`RecallWeights`、`MemoryItem`、`RecallHit`、`AgentMemory` |
 | `lib/agentmem/episodic.cp` | `// Origin: Pure-CP Stdlib (AI Agent Episodic Memory: Park 2023 Recency-Importance-Relevance & Ebbinghaus Decay)` | `MemoryWeights`、`EpisodeMeta`、`ScoredEpisode`、`ebbinghausRetention`、`reinforceStability`、`scoreEpisode`、`rankTopEpisodes`、`selectEvictionVictim`、`touchEpisode` |
+| `lib/agentmem/kg.cp` | `// Origin: Pure-CP Stdlib (AI Agent Temporal Knowledge Graph Memory: SPO Triples & 2-Hop Recall)` | `KgEntity`、`KgTriple`、`KgStore`（时序三元组、事实版本失效与 1~2 跳 GraphRAG 邻域检索） |
 | `lib/agentmem/index.cp` | `// Source: cp/lib/agentmem/index.cp (Unified Exports for cap:agentmem)` | `cap:agentmem` 与 `cap.agentmem` 统一公开导出入口 |
 
 ---
@@ -69,6 +70,20 @@
 - **`rankTopEpisodes(episodes, relevances, now_sec, w, top_k, out_scored: *[]ScoredEpisode): usize?`**：零堆分配按 `total_score` 降序输出 Top-K（同分按 `id` 升序确定性打破平局）。
 - **`selectEvictionVictim(episodes, now_sec, w): usize?`**：按最低 `retention * importance` 挑选非 `pinned` 淘汰槽位（全 `pinned` 或空池返回 `null`）。
 - **`touchEpisode(ep: *EpisodeMeta, now_sec: i64)`**：命中召回时刷新 `last_accessed_sec`、递增 `access_count` 并通过 `reinforceStability` 强化 `strength`。
+
+### 4. 零堆分配时序知识图谱三元组记忆库 (`kg.cp`)
+
+对标 Zep / Graphiti 时序事实失效模型，支持实体去重、版本化 SPO 三元组、时间点回溯与 1~2 跳 GraphRAG 上下文扩展：
+
+- **`KgEntity`**：`{ id: u32, name: string, kind: string, name_hash: u64 }`
+- **`KgTriple`**：`{ subject: u32, predicate_hash: u64, predicate: string, object: u32, confidence: f64, valid_from_ms: i64, valid_until_ms: i64, active: bool }`（`valid_until_ms == 0` 表示当前仍有效）
+- **`KgStore`**：
+  - `KgStore.init(entities: *[]KgEntity, triples: *[]KgTriple): KgStore`
+  - `upsertEntity(*_, name, kind): u32?` / `findEntity(name): u32?`
+  - `addFact(*_, subject, predicate, object, confidence, now_ms): usize?`
+  - `supersedeFact(*_, subject, predicate, new_object, confidence, now_ms): usize?`（将同一 `(subject, predicate)` 旧事实标记 `valid_until_ms = now_ms, active = false` 并写入新事实，不丢失历史）
+  - `queryFactsAt(subject, predicate, at_ms, out_indices: *[]usize): usize`（`predicate == ""` 匹配全部关系，`at_ms == 0` 查当前有效事实，非零查半开区间 `[valid_from_ms, valid_until_ms)` 历史快照）
+  - `queryTwoHopNeighbors(start_entity, at_ms, out_entities: *[]u32, visited_s: *[]u8): usize`（零堆分配 1~2 跳去重邻域召回，排除起始点与失效边）
 
 ---
 
@@ -143,5 +158,40 @@ pub fn demoEpisodicPool() {
     if (victim_idx := selectEvictionVictim(pool[0..], now_sec, w)) {
         * = victim_idx;
     }
+}
+```
+
+### 3. 时序知识图谱事实更新与 2 跳 GraphRAG 召回 (`kg.cp`) 示例
+
+```typescript
+import { KgEntity, KgTriple, KgStore } from "cap:agentmem";
+
+pub fn demoTemporalKg() {
+    let ents: [8]KgEntity = undefined;
+    let tris: [16]KgTriple = undefined;
+    let ent_slice: []KgEntity = ents[0..];
+    let tri_slice: []KgTriple = tris[0..];
+
+    let kg = KgStore.init(ent_slice, tri_slice);
+    const alice = kg.upsertEntity("Alice", "person") ?? 0;
+    const org_a = kg.upsertEntity("OrgA", "org") ?? 0;
+    const org_b = kg.upsertEntity("OrgB", "org") ?? 0;
+
+    // t=100 写入旧事实，t=200 更新事实（旧事实自动失效但保留历史）
+    * = kg.addFact(alice, "works_at", org_a, 0.9, 100);
+    * = kg.supersedeFact(alice, "works_at", org_b, 0.95, 200);
+
+    // 回溯 t=150 查到 OrgA，查当前 (at_ms=0) 查到 OrgB
+    let idx_buf: [4]usize = undefined;
+    let idx_slice: []usize = idx_buf[0..];
+    * = kg.queryFactsAt(alice, "works_at", 150, idx_slice);
+    * = kg.queryFactsAt(alice, "works_at", 0, idx_slice);
+
+    // 2 跳 GraphRAG 关联实体召回
+    let nb_buf: [8]u32 = undefined;
+    let vis_buf: [8]u8 = undefined;
+    let nb_slice: []u32 = nb_buf[0..];
+    let vis_slice: []u8 = vis_buf[0..];
+    * = kg.queryTwoHopNeighbors(alice, 0, nb_slice, vis_slice);
 }
 ```
