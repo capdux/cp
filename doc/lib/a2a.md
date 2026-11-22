@@ -340,3 +340,44 @@ pub fn demoA2aCardRegistry() {
     * = n; // 1 (agent_id == 101)
 }
 ```
+
+
+---
+
+### 4.9 零堆分配 A2A 多智能体加权法定人数投票与离群估计聚合引擎 (`consensus_quorum.cp`)
+
+面向多智能体委员会评审、共识表决与多模型数值估计融合的 100% 纯 CP 零动态堆分配投票裁决引擎：
+
+- **容量与策略常量/枚举**：
+  - `QUORUM_MAX_VOTES = 64`、`QUORUM_MAX_OPTIONS = 16`、`QUORUM_MAX_ESTIMATES = 64`、`QUORUM_NO_OPTION = 0xFFFFFFFF`
+  - `QuorumPolicy`（`simple_majority | supermajority_two_thirds | weighted_threshold_bps | ranked_borda`）
+  - `QuorumDuplicatePolicy`（`reject_duplicate | allow_revote`）、`QuorumVerdict`（`pending | reached | unreachable_early_stop | tie`）、`QuorumVoteStatus`
+- **多智能体投票会话（`A2aQuorumSession`）**：
+  - `init(cfg)` / `reset(*_)` / `castVote(*_, vote)` / `evaluateQuorum(total_eligible_weight)`：支持按 `agent_id` 防重/改票、可选置信度加权、以及数学可证明的实时早停（当领先者提前过线返回 `reached`，或剩余未投权重已无法逆转达标时返回 `unreachable_early_stop`）。
+- **稳健数值估计聚合（`aggregateNumericEstimates`）**：
+  - 零堆计算多 Agent 数值估计的 `median`、稳健离散度 `mad`、对称去极值 + `3*MAD` 离群剔除后的 `trimmed_mean` 以及 `consensus_tight` 收敛判定。
+
+```cp
+import {
+    QuorumPolicy,
+    QuorumVerdict,
+    QuorumConfig,
+    QuorumVote,
+    A2aQuorumSession,
+} from "cap:a2a";
+
+pub fn demoA2aConsensusQuorum() {
+    let session = A2aQuorumSession.init(QuorumConfig{
+        proposal_id: 1,
+        policy: QuorumPolicy.supermajority_two_thirds,
+    }) ?? return;
+
+    // 3 个等权 Agent（总权 30000），前 2 票均投选项 7 即刻达到 2/3 早停，无需等待第 3 个 LLM 推理！
+    * = session.castVote(QuorumVote{ agent_id: 1, option_id: 7, weight_bps: 10000, confidence_bps: 9500 });
+    * = session.castVote(QuorumVote{ agent_id: 2, option_id: 7, weight_bps: 10000, confidence_bps: 9200 });
+    const ev = session.evaluateQuorum(30000);
+    if (ev.verdict == QuorumVerdict.reached) {
+        * = ev.winning_option_id; // 7 (remaining_weight == 10000 提前早停)
+    }
+}
+```

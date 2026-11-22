@@ -118,3 +118,21 @@ export {
     A2aCardRegistryStats,
     A2aCardRegistry,
 } from "./card_registry.cp";
+
+export {
+    QUORUM_MAX_VOTES,
+    QUORUM_MAX_OPTIONS,
+    QUORUM_MAX_ESTIMATES,
+    QUORUM_NO_OPTION,
+    QuorumPolicy,
+    QuorumDuplicatePolicy,
+    QuorumVerdict,
+    QuorumVoteStatus,
+    QuorumConfig,
+    QuorumVote,
+    QuorumEvaluation,
+    NumericEstimate,
+    NumericAggregateReport,
+    A2aQuorumSession,
+    aggregateNumericEstimates,
+} from "./consensus_quorum.cp";
