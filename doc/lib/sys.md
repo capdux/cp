@@ -159,3 +159,6 @@ pub fn demoPhaseASys(): !void {
 | 虚拟磁盘与块存储 | `lib/sys/qcow2.cp` / `lib/sys/vhdx.cp` | QEMU QCOW2 v2/v3 & VHDX | 虚拟磁盘镜像头与映射表解析器 |
 | 虚拟磁盘与块存储 | `lib/sys/scsi.cp` | SCSI SPC / SBC | SCSI CDB、Inquiry 与 Sense 数据编解码 |
 | 并发缓冲 | `lib/sys/ringbuf.cp` | RingBuffer / ByteRing / MicroBatcher | 零拷贝环形缓冲与微批聚合器 |
+| 服务编排与架构（Batch 40） | `lib/sys/di.cp` | Dependency Injection & IoC | `ServiceContainer`、`ServiceScope`、Singleton/Scoped/Transient 生命周期与循环依赖检测 |
+| 服务编排与架构（Batch 40） | `lib/sys/pipeline.cp` | Onion Middleware Pipeline | 可组合洋葱中间件与多阶段流水线 (`Pipeline`, `PipelineContext`, `StageSpec`) |
+| 服务编排与架构（Batch 40） | `lib/sys/pubsub_topic.cp` / `lib/sys/pubsub_broker.cp` | NATS / MQTT Wildcard Pub/Sub | 进程内通配符发布订阅代理、背压丢弃策略与 Retained 消息重放 |

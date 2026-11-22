@@ -17,7 +17,7 @@ import {
     ServiceInstance,
     ServiceContainer,
     ServiceScope,
-} from "cap:di";
+} from "cap:sys";
 
 // ============================================================================
 // Shared test fixtures & destruction log
@@ -437,10 +437,10 @@ fn testMultiImplementationAndFreeze(): !void {
 
 fn testCapDiDynamicMount(): !void {
     const alloc = std.heap.page_allocator;
-    let container = cap.di.ServiceContainer.init(alloc);
+    let container = cap.sys.ServiceContainer.init(alloc);
     defer container.deinit();
 
-    expect_eq(cap.di.MAX_RESOLUTION_DEPTH, 32);
+    expect_eq(cap.sys.MAX_RESOLUTION_DEPTH, 32);
 
     container.registerSingleton("dynamic_svc", "TrackedService", createSingletonSvc, destroySingletonSvc)?;
     container.build()?;

@@ -16,7 +16,7 @@ import {
     Decimal,
     MoneyError,
     Money,
-} from "cap:decimal";
+} from "cap:math";
 import cap from "cap";
 
 fn expectDecimalFmt(alloc: std.mem.Allocator, d: Decimal, expected: []const u8)! {
@@ -278,21 +278,21 @@ fn testMoneySafetyAndPennyExactAllocation()! {
 fn testCapDecimalDynamicLazyMount()! {
     const alloc = std.heap.page_allocator;
 
-    const a = cap.decimal.Decimal.parse("0.1")?;
-    const b = cap.decimal.Decimal.parse("0.2")?;
+    const a = cap.math.Decimal.parse("0.1")?;
+    const b = cap.math.Decimal.parse("0.2")?;
     const c = a.add(b)?;
-    expect_eq(c.eql(cap.decimal.Decimal.parse("0.3")?), true);
+    expect_eq(c.eql(cap.math.Decimal.parse("0.3")?), true);
 
-    const raw_25 = cap.decimal.Decimal.parse("2.5")?;
-    const rounded = raw_25.round(0, cap.decimal.RoundingMode.HalfEven)?;
-    expect_eq(rounded.eql(cap.decimal.Decimal.fromInt(2)), true);
+    const raw_25 = cap.math.Decimal.parse("2.5")?;
+    const rounded = raw_25.round(0, cap.math.RoundingMode.HalfEven)?;
+    expect_eq(rounded.eql(cap.math.Decimal.fromInt(2)), true);
 
-    const pot = cap.decimal.Money.init("USD", cap.decimal.Decimal.parse("10.00")?, 2)?;
+    const pot = cap.math.Money.init("USD", cap.math.Decimal.parse("10.00")?, 2)?;
     const parts = pot.allocateEven(alloc, 3)?;
     defer alloc.free(parts);
-    expect_eq(parts[0].amount.eql(cap.decimal.Decimal.parse("3.34")?), true);
-    expect_eq(parts[1].amount.eql(cap.decimal.Decimal.parse("3.33")?), true);
-    expect_eq(parts[2].amount.eql(cap.decimal.Decimal.parse("3.33")?), true);
+    expect_eq(parts[0].amount.eql(cap.math.Decimal.parse("3.34")?), true);
+    expect_eq(parts[1].amount.eql(cap.math.Decimal.parse("3.33")?), true);
+    expect_eq(parts[2].amount.eql(cap.math.Decimal.parse("3.33")?), true);
 }
 
 fn main() {

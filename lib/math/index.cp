@@ -418,3 +418,18 @@ export {
     ldltDecompose,
     ldltSolve,
 } from "./cholesky.cp";
+
+// ============================================================================
+// Batch 40: 128-bit Fixed-Point Decimal Arithmetic & ISO 4217 Money
+// ============================================================================
+export {
+    MAX_SCALE,
+    DecimalError,
+    RoundingMode,
+    Decimal,
+} from "./decimal.cp";
+
+export {
+    MoneyError,
+    Money,
+} from "./decimal_money.cp";

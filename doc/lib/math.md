@@ -141,6 +141,12 @@
 - **ODE 数值积分（`ode.cp`）**：`OdeRhsFn`, `AccelFn`, `Rk45Result`, `rk2MidpointStep`, `rk4Step`, `rk4Integrate`, `rk45Step`, `rk45Integrate`, `verletStep`
 - **Cholesky 与 LDL^T（`cholesky.cp`）**：`choleskyDecompose`, `forwardSubstitute`, `backwardSubstituteT`, `choleskySolve`, `choleskyLogDet`, `choleskyDet`, `choleskyInvert`, `ldltDecompose`, `ldltSolve`
 
+### 12. 128 位定点高精度十进制与 ISO 4217 货币引擎（`decimal.cp` / `decimal_money.cp`）
+
+- **128 位定点十进制（`decimal.cp`）**：`MAX_SCALE`, `DecimalError`, `RoundingMode`（HalfUp/HalfEven/Floor/Ceil/Trunc）, `Decimal`（精确十进制加减乘除、科学计数法解析与归一化）。
+- **ISO 4217 货币引擎（`decimal_money.cp`）**：`MoneyError`, `Money`（币种隔离算术与分精度无损分摊）。
+- **参考归档（不导出）**：`lib/math/decimal_fp_.cp`（原 `lib/decimal_fp`，与 `decimal.cp` 功能重叠，首行带 `// Reference Only:` 声明，保留供对比分析）。
+
 ---
 
 ## 三、 使用示例

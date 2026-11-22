@@ -18,7 +18,7 @@ import {
     BrokerMessage,
     BrokerStats,
     PubSubBroker,
-} from "cap:pubsub";
+} from "cap:sys";
 
 fn testNatsAndMqttWildcardMatching(): !void {
     // 1. NATS matching: `.` separator, `*` single-level, `>` tail multi-level (1+ levels)
@@ -308,18 +308,18 @@ fn testRetainedMessagesAndEmptyPayloadClear(): !void {
 fn testCapPubsubDynamicMount(): !void {
     const alloc = std.heap.page_allocator;
 
-    // 1. cap.pubsub.TopicMatcher & cap.pubsub.TopicStyle
-    expect_eq(cap.pubsub.TopicMatcher.matches(cap.pubsub.TopicStyle.Nats, "ai.agent.*", "ai.agent.42"), true);
-    expect_eq(cap.pubsub.TopicMatcher.isValidPublishTopic(cap.pubsub.TopicStyle.Nats, "ai.agent.*"), false);
+    // 1. cap.sys.TopicMatcher & cap.sys.TopicStyle
+    expect_eq(cap.sys.TopicMatcher.matches(cap.sys.TopicStyle.Nats, "ai.agent.*", "ai.agent.42"), true);
+    expect_eq(cap.sys.TopicMatcher.isValidPublishTopic(cap.sys.TopicStyle.Nats, "ai.agent.*"), false);
 
-    // 2. cap.pubsub.PubSubBroker + DropPolicy + BrokerMessage + BrokerStats + PubSubError
-    let broker = cap.pubsub.PubSubBroker.init(alloc, cap.pubsub.TopicStyle.Nats);
+    // 2. cap.sys.PubSubBroker + DropPolicy + BrokerMessage + BrokerStats + PubSubError
+    let broker = cap.sys.PubSubBroker.init(alloc, cap.sys.TopicStyle.Nats);
     defer broker.deinit();
 
     * = broker.publishRetained("ai.boot.ready", "ok")?;
-    const sid = broker.subscribe("ai.boot.>", 4, cap.pubsub.DropPolicy.DropOldest)?;
+    const sid = broker.subscribe("ai.boot.>", 4, cap.sys.DropPolicy.DropOldest)?;
     if (msg := broker.poll(sid)) {
-        let owned: cap.pubsub.BrokerMessage = msg;
+        let owned: cap.sys.BrokerMessage = msg;
         defer owned.deinit();
         expect_eq(owned.retained, true);
         expect_eq(std.mem.eql(u8, owned.payload, "ok"), true);
@@ -328,12 +328,12 @@ fn testCapPubsubDynamicMount(): !void {
     }
 
     let caught_err = false;
-    * = broker.subscribe("ai..invalid", 4, cap.pubsub.DropPolicy.DropNewest) catch |e| {
-        if (e == cap.pubsub.PubSubError.InvalidPattern) caught_err = true;
+    * = broker.subscribe("ai..invalid", 4, cap.sys.DropPolicy.DropNewest) catch |e| {
+        if (e == cap.sys.PubSubError.InvalidPattern) caught_err = true;
     };
     expect_eq(caught_err, true);
 
-    const st: cap.pubsub.BrokerStats = broker.stats();
+    const st: cap.sys.BrokerStats = broker.stats();
     expect_eq(st.active_subscriptions, 1 as usize);
     expect_eq(st.retained_topics, 1 as usize);
     expect_eq(broker.unsubscribe(sid), true);

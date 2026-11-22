@@ -1,7 +1,7 @@
 // Source: native-cp-stdlib (Exact Fixed-Point Financial Decimal)
 const std = @import("std");
 import cap from "cap";
-import { Decimal, DecimalError, RoundingMode, MAX_SCALE } from "cap:decimal_fp";
+import { Decimal, DecimalError, RoundingMode, MAX_SCALE } from "../../lib/math/decimal_fp_.cp";
 import { test, expect_eq } from "cap:test";
 
 test "decimal_fp classic 0.1 + 0.2 == 0.3 and exact sub mul" {
@@ -131,16 +131,16 @@ test "decimal_fp parse edges and error interception" {
 test "decimal_fp dynamic cap mount and zero leak verification" {
     const alloc = std.testing.allocator;
 
-    const a = cap.decimal_fp.Decimal.parse("19.995")?;
-    const b = cap.decimal_fp.Decimal.fromParts(2000, 2)?;
-    const rounded = a.rescale(2, cap.decimal_fp.RoundingMode.HalfEven)?;
+    const a = Decimal.parse("19.995")?;
+    const b = Decimal.fromParts(2000, 2)?;
+    const rounded = a.rescale(2, RoundingMode.HalfEven)?;
     expect_eq(rounded.equals(b), true);
 
     const s1 = rounded.formatAlloc(alloc)?;
     defer alloc.free(s1);
     expect_eq(std.mem.eql(u8, s1, "20.00"), true);
 
-    const z = cap.decimal_fp.Decimal.fromParts(0, 3)?;
+    const z = Decimal.fromParts(0, 3)?;
     const z_str = z.formatAlloc(alloc)?;
     defer alloc.free(z_str);
     expect_eq(std.mem.eql(u8, z_str, "0.000"), true);

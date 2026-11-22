@@ -4,7 +4,7 @@
 // and O(1) subscription lookup.
 
 const std = @import("std");
-import { TopicStyle, TopicMatcher } from "./topic.cp";
+import { TopicStyle, TopicMatcher } from "./pubsub_topic.cp";
 
 /// Error set returned by `PubSubBroker` operations.
 pub err PubSubError {

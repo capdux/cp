@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/math/decimal.cp | Kept for comparison/analysis
 // Source: native-cp-stdlib (Exact Fixed-Point Financial Decimal)
 const std = @import("std");
 
@@ -250,16 +251,16 @@ pub struct Decimal {
         };
     }
 
-    pub fn formatAlloc(self: Decimal, alloc: std.mem.Allocator): ![]u8 {
+    pub fn formatAlloc(_: Decimal, alloc: std.mem.Allocator): ![]u8 {
         let out = std.ArrayList(u8).empty;
         errdefer out.deinit(alloc);
 
-        if (self.mantissa == 0) {
+        if (_.mantissa == 0) {
             out.append(alloc, '0')?;
-            if (self.scale > 0) {
+            if (_.scale > 0) {
                 out.append(alloc, '.')?;
                 let z: u8 = 0;
-                while (z < self.scale) {
+                while (z < _.scale) {
                     out.append(alloc, '0')?;
                     z += 1;
                 }
@@ -267,12 +268,12 @@ pub struct Decimal {
             return out.toOwnedSlice(alloc);
         }
 
-        const is_neg = self.mantissa < 0;
+        const is_neg = _.mantissa < 0;
         if (is_neg) {
             out.append(alloc, '-')?;
         }
 
-        let mag = absU128(self.mantissa);
+        let mag = absU128(_.mantissa);
         let rev_buf: [48]u8 = undefined;
         let rev_len: usize = 0;
         while (mag > 0) {
@@ -282,7 +283,7 @@ pub struct Decimal {
             mag = mag / 10;
         }
 
-        const s_len: usize = @intCast(self.scale);
+        const s_len: usize = @intCast(_.scale);
         if (s_len == 0) {
             let i: usize = 0;
             while (i < rev_len) {
@@ -324,13 +325,13 @@ pub struct Decimal {
         return out.toOwnedSlice(alloc);
     }
 
-    pub fn add(self: Decimal, other: Decimal): DecimalError!Decimal {
-        const target_scale: u8 = if (self.scale >= other.scale) self.scale else other.scale;
-        let a_mant = self.mantissa;
+    pub fn add(_: Decimal, other: Decimal): DecimalError!Decimal {
+        const target_scale: u8 = if (_.scale >= other.scale) _.scale else other.scale;
+        let a_mant = _.mantissa;
         let b_mant = other.mantissa;
 
-        if (self.scale < target_scale) {
-            const factor = pow10I128(target_scale - self.scale)?;
+        if (_.scale < target_scale) {
+            const factor = pow10I128(target_scale - _.scale)?;
             a_mant = checkedMulI128(a_mant, factor)?;
         }
         if (other.scale < target_scale) {
@@ -345,13 +346,13 @@ pub struct Decimal {
         };
     }
 
-    pub fn sub(self: Decimal, other: Decimal): DecimalError!Decimal {
-        const target_scale: u8 = if (self.scale >= other.scale) self.scale else other.scale;
-        let a_mant = self.mantissa;
+    pub fn sub(_: Decimal, other: Decimal): DecimalError!Decimal {
+        const target_scale: u8 = if (_.scale >= other.scale) _.scale else other.scale;
+        let a_mant = _.mantissa;
         let b_mant = other.mantissa;
 
-        if (self.scale < target_scale) {
-            const factor = pow10I128(target_scale - self.scale)?;
+        if (_.scale < target_scale) {
+            const factor = pow10I128(target_scale - _.scale)?;
             a_mant = checkedMulI128(a_mant, factor)?;
         }
         if (other.scale < target_scale) {
@@ -366,10 +367,10 @@ pub struct Decimal {
         };
     }
 
-    pub fn mul(self: Decimal, other: Decimal): DecimalError!Decimal {
-        const total_scale: u16 = @as(u16, self.scale) + @as(u16, other.scale);
+    pub fn mul(_: Decimal, other: Decimal): DecimalError!Decimal {
+        const total_scale: u16 = @as(u16, _.scale) + @as(u16, other.scale);
         if (total_scale <= @as(u16, MAX_SCALE)) {
-            const prod = checkedMulI128(self.mantissa, other.mantissa)?;
+            const prod = checkedMulI128(_.mantissa, other.mantissa)?;
             return Decimal{
                 .mantissa = prod,
                 .scale = @intCast(total_scale),
@@ -377,8 +378,8 @@ pub struct Decimal {
         }
 
         const drop_scale: u8 = @intCast(total_scale - @as(u16, MAX_SCALE));
-        const is_neg = (self.mantissa < 0) != (other.mantissa < 0);
-        const prod_u256 = @as(u256, absU128(self.mantissa)) * @as(u256, absU128(other.mantissa));
+        const is_neg = (_.mantissa < 0) != (other.mantissa < 0);
+        const prod_u256 = @as(u256, absU128(_.mantissa)) * @as(u256, absU128(other.mantissa));
         const den = pow10U256(drop_scale);
         const q = prod_u256 / den;
         const rem = prod_u256 % den;
@@ -389,25 +390,25 @@ pub struct Decimal {
         };
     }
 
-    pub fn divRound(self: Decimal, other: Decimal, target_scale: u8, mode: RoundingMode): DecimalError!Decimal {
+    pub fn divRound(_: Decimal, other: Decimal, target_scale: u8, mode: RoundingMode): DecimalError!Decimal {
         if (other.mantissa == 0) {
             return DecimalError.DivisionByZero;
         }
         if (target_scale > MAX_SCALE) {
             return DecimalError.ScaleOutOfRange;
         }
-        if (self.mantissa == 0) {
+        if (_.mantissa == 0) {
             return Decimal{
                 .mantissa = 0,
                 .scale = target_scale,
             };
         }
 
-        const is_neg = (self.mantissa < 0) != (other.mantissa < 0);
-        const ua: u256 = @as(u256, absU128(self.mantissa));
+        const is_neg = (_.mantissa < 0) != (other.mantissa < 0);
+        const ua: u256 = @as(u256, absU128(_.mantissa));
         const ub: u256 = @as(u256, absU128(other.mantissa));
 
-        const exp_diff: i16 = @as(i16, target_scale) + @as(i16, other.scale) - @as(i16, self.scale);
+        const exp_diff: i16 = @as(i16, target_scale) + @as(i16, other.scale) - @as(i16, _.scale);
         let num: u256 = ua;
         let den: u256 = ub;
         if (exp_diff >= 0) {
@@ -427,25 +428,25 @@ pub struct Decimal {
         };
     }
 
-    pub fn rescale(self: Decimal, target_scale: u8, mode: RoundingMode): DecimalError!Decimal {
+    pub fn rescale(_: Decimal, target_scale: u8, mode: RoundingMode): DecimalError!Decimal {
         if (target_scale > MAX_SCALE) {
             return DecimalError.ScaleOutOfRange;
         }
-        if (target_scale == self.scale) {
-            return self;
+        if (target_scale == _.scale) {
+            return _;
         }
-        if (target_scale > self.scale) {
-            const factor = pow10I128(target_scale - self.scale)?;
-            const scaled = checkedMulI128(self.mantissa, factor)?;
+        if (target_scale > _.scale) {
+            const factor = pow10I128(target_scale - _.scale)?;
+            const scaled = checkedMulI128(_.mantissa, factor)?;
             return Decimal{
                 .mantissa = scaled,
                 .scale = target_scale,
             };
         }
 
-        const drop_scale = self.scale - target_scale;
-        const is_neg = self.mantissa < 0;
-        const ua: u256 = @as(u256, absU128(self.mantissa));
+        const drop_scale = _.scale - target_scale;
+        const is_neg = _.mantissa < 0;
+        const ua: u256 = @as(u256, absU128(_.mantissa));
         const den = pow10U256(drop_scale);
         const q = ua / den;
         const rem = ua % den;
@@ -456,22 +457,22 @@ pub struct Decimal {
         };
     }
 
-    pub fn compare(self: Decimal, other: Decimal): i8 {
-        if (self.mantissa == 0 and other.mantissa == 0) {
+    pub fn compare(_: Decimal, other: Decimal): i8 {
+        if (_.mantissa == 0 and other.mantissa == 0) {
             return 0;
         }
-        if (self.mantissa < 0 and other.mantissa >= 0) {
+        if (_.mantissa < 0 and other.mantissa >= 0) {
             return -1;
         }
-        if (self.mantissa >= 0 and other.mantissa < 0) {
+        if (_.mantissa >= 0 and other.mantissa < 0) {
             return 1;
         }
 
-        const max_s: u8 = if (self.scale >= other.scale) self.scale else other.scale;
-        let a_val: i256 = @as(i256, self.mantissa);
+        const max_s: u8 = if (_.scale >= other.scale) _.scale else other.scale;
+        let a_val: i256 = @as(i256, _.mantissa);
         let b_val: i256 = @as(i256, other.mantissa);
-        if (self.scale < max_s) {
-            a_val = a_val * pow10I256(max_s - self.scale);
+        if (_.scale < max_s) {
+            a_val = a_val * pow10I256(max_s - _.scale);
         }
         if (other.scale < max_s) {
             b_val = b_val * pow10I256(max_s - other.scale);
@@ -486,24 +487,24 @@ pub struct Decimal {
         return 0;
     }
 
-    pub fn equals(self: Decimal, other: Decimal): bool {
-        return self.compare(other) == 0;
+    pub fn equals(_: Decimal, other: Decimal): bool {
+        return _.compare(other) == 0;
     }
 
-    pub fn neg(self: Decimal): Decimal {
+    pub fn neg(_: Decimal): Decimal {
         return Decimal{
-            .mantissa = -self.mantissa,
-            .scale = self.scale,
+            .mantissa = -_.mantissa,
+            .scale = _.scale,
         };
     }
 
-    pub fn abs(self: Decimal): Decimal {
-        if (self.mantissa < 0) {
+    pub fn abs(_: Decimal): Decimal {
+        if (_.mantissa < 0) {
             return Decimal{
-                .mantissa = -self.mantissa,
-                .scale = self.scale,
+                .mantissa = -_.mantissa,
+                .scale = _.scale,
             };
         }
-        return self;
+        return _;
     }
 }

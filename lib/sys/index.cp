@@ -1210,3 +1210,42 @@ export {
     ByteRing,
     MicroBatcher,
 } from "./ringbuf.cp";
+
+// ============================================================================
+// Batch 40: Application Architecture & Service Orchestration (di, pipeline, pubsub)
+// ============================================================================
+export {
+    MAX_RESOLUTION_DEPTH,
+    DiError,
+    ServiceLifetime,
+    DestructorFn,
+    FactoryFn,
+    ServiceInstance,
+    ServiceContainer,
+    ServiceScope,
+} from "./di.cp";
+
+export {
+    PipelineError,
+    StageOutcome,
+    StageTrace,
+    PipelineContext,
+    StageFn,
+    ErrorHookFn,
+    PredicateFn,
+    StageSpec,
+    Pipeline,
+} from "./pipeline.cp";
+
+export {
+    TopicStyle,
+    TopicMatcher,
+} from "./pubsub_topic.cp";
+
+export {
+    PubSubError,
+    DropPolicy,
+    BrokerMessage,
+    BrokerStats,
+    PubSubBroker,
+} from "./pubsub_broker.cp";

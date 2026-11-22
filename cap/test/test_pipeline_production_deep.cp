@@ -16,7 +16,7 @@ import {
     StageTrace,
     PipelineContext,
     Pipeline,
-} from "cap:pipeline";
+} from "cap:sys";
 
 fn appendOrder(ctx: *PipelineContext, tag: string): !PipelineError {
     const cur = ctx.get("order") ?? "";
@@ -255,13 +255,13 @@ test("cap:pipeline - conditional stages, dynamic toggle, and error guards") {
 
 test("cap:pipeline - dynamic cap.pipeline mounting") {
     const alloc = std.heap.page_allocator;
-    let pipe = cap.pipeline.Pipeline.init(alloc, "dynamic-hub");
+    let pipe = cap.sys.Pipeline.init(alloc, "dynamic-hub");
     defer pipe.deinit();
 
     pipe.useOnion("A", stageABefore, stageAAfter) catch unreachable;
     pipe.use("C", stageCBefore) catch unreachable;
 
-    let ctx = cap.pipeline.PipelineContext.init(alloc, "hub-payload");
+    let ctx = cap.sys.PipelineContext.init(alloc, "hub-payload");
     defer ctx.deinit();
 
     pipe.execute(&ctx) catch unreachable;
