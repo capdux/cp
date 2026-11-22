@@ -102,3 +102,13 @@ export {
     SpecStats,
     AdaptiveDraftController,
 } from "./speculative.cp";
+
+export {
+    gnmtLengthPenalty,
+    normalizedBeamScore,
+    wouldRepeatNgram,
+    BeamConfig,
+    BeamHyp,
+    BeamCandidate,
+    BeamSearch,
+} from "./beam.cp";

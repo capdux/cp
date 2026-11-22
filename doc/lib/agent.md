@@ -1,6 +1,6 @@
 # `cap:agent` — AI Agent 核心运行时标准库
 
-`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏（`budget.cp`）、多智能体任务图 DAG 调度器（`dag.cp`）、评测基准与轨迹打分（`eval.cp`）、ReAct 执行状态机与确定性检查点（`react.cp`）、LLM 流式 SSE 解析与遥测（`sse.cp`）、多模型网关路由与限流故障转移（`model_router.cp`）、输入/输出安全护栏与策略引擎（`guardrail.cp`）、连续批处理与前缀缓存亲和调度器（`scheduler.cp`）、工具调用参数 JSON Schema 校验器（`tool_schema.cp`）、词表 Logits 采样器（`sampler.cp`）以及推测解码校验与自适应草稿步长控制（`speculative.cp`）十一个子模块。
+`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏（`budget.cp`）、多智能体任务图 DAG 调度器（`dag.cp`）、评测基准与轨迹打分（`eval.cp`）、ReAct 执行状态机与确定性检查点（`react.cp`）、LLM 流式 SSE 解析与遥测（`sse.cp`）、多模型网关路由与限流故障转移（`model_router.cp`）、输入/输出安全护栏与策略引擎（`guardrail.cp`）、连续批处理与前缀缓存亲和调度器（`scheduler.cp`）、工具调用参数 JSON Schema 校验器（`tool_schema.cp`）、词表 Logits 采样器（`sampler.cp`）、推测解码校验与自适应草稿步长控制（`speculative.cp`）以及束搜索解码器（`beam.cp`）十二个子模块。
 
 ---
 
@@ -572,5 +572,55 @@ fn speculativeDemo() {
     let ctrl = AdaptiveDraftController.init(1, 8, 2, 0.3) ?? return;
     const next_k = ctrl.recordStep(2, res.accepted_count, res.emitted_count);
     * = next_k;
+}
+```
+
+---
+
+## 子模块：束搜索解码器（`beam.cp`）
+
+### 核心特性
+
+- **双缓冲零堆分配束搜索引擎（`BeamSearch`）**：基于调用方提供的乒乓双缓冲（`tokens_a`/`tokens_b`、`hyps_a`/`hyps_b`）与完成序列池（`finished_tokens`/`finished_hyps`），支持有界 Top-K 扩展、遇 `eos_token` 自动归档与早停（`early_stopping`）。
+- **GNMT 长度惩罚与 N-gram 防重复阻塞**：内置 Wu et al. (2016) 长度惩罚公式 `((5 + L) / 6)^alpha`（`gnmtLengthPenalty` / `normalizedBeamScore`），以及零分配 `wouldRepeatNgram` 严格阻止生成循环重复 N-gram。
+
+### 导出清单
+
+- **长度惩罚与 N-gram 原语**：`gnmtLengthPenalty`、`normalizedBeamScore`、`wouldRepeatNgram`
+- **束搜索状态机**：`BeamConfig`、`BeamHyp`、`BeamCandidate`、`BeamSearch`（`init`, `stepLogProbs`, `bestSequence`, `activeBeamTokens`, `activeCount`, `finishedCount`）
+
+### 使用示例
+
+```typescript
+import std from "std";
+import { BeamConfig, BeamHyp, BeamCandidate, BeamSearch } from "cap:agent";
+
+fn beamSearchDemo() {
+    const cfg = BeamConfig {
+        beam_width: 2,
+        max_len: 4,
+        eos_token: 0,
+        length_penalty_alpha: 0.6,
+        no_repeat_ngram: 2,
+    };
+    let ta: [8]u32 = std.mem.zeroes([8]u32);
+    let tb: [8]u32 = std.mem.zeroes([8]u32);
+    let ha: [2]BeamHyp = std.mem.zeroes([2]BeamHyp);
+    let hb: [2]BeamHyp = std.mem.zeroes([2]BeamHyp);
+    let ft: [8]u32 = std.mem.zeroes([8]u32);
+    let fh: [2]BeamHyp = std.mem.zeroes([2]BeamHyp);
+    let ta_s: []u32 = ta[0..];
+    let tb_s: []u32 = tb[0..];
+    let ha_s: []BeamHyp = ha[0..];
+    let hb_s: []BeamHyp = hb[0..];
+    let ft_s: []u32 = ft[0..];
+    let fh_s: []BeamHyp = fh[0..];
+
+    let bs = BeamSearch.init(cfg, &ta_s, &tb_s, &ha_s, &hb_s, &ft_s, &fh_s) ?? return;
+    let cands: [4]BeamCandidate = std.mem.zeroes([4]BeamCandidate);
+    let cand_s: []BeamCandidate = cands[0..];
+
+    const step1: [3]f64 = [-10.0, -0.2, -0.5];
+    * = bs.stepLogProbs(step1[0..], 3, &cand_s);
 }
 ```
