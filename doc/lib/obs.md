@@ -24,6 +24,7 @@
 | `lib/obs/eval_metrics.cp` | LLM / AI Agent 评测打分器（Exact/Token F1/JSON 字段匹配/`pass@k`） |
 | `lib/obs/eval_suite.cp` | 评测报告聚合与 CI 回归门禁对比（`EvalReport`, `RegressionDiff`） |
 | `lib/obs/btf.cp` | Linux 内核 `.BTF`（BPF Type Format）类型图与成员布局零分配解析器 |
+| `lib/obs/telemetry_export.cp` | 零堆分配 16 桶对数延迟直方图（`LatencyBucketHistogram`、p50/p95/p99 与 Prometheus 文本导出）及 OTLP/HTTP JSON 链路 Span 批导出器（`OtlpSpanRecord`, `OtlpSpanBatch`） |
 | `lib/obs/index.cp` | `cap:obs` 与 `cap.obs` 统一零冲突公开导出入口 |
 
 ---
@@ -61,5 +62,48 @@ pub fn demoObs(alloc: std.mem.Allocator): !void {
     // 3. LLM 评测打分
     const score = EvalScorer.exactMatch("cp", " cp ", MatchMode.ExactTrimmed);
     * = score;
+}
+```
+
+### 零堆分配对数延迟直方图与 OTLP JSON Span 批导出示例 (`telemetry_export.cp`)
+
+```cp
+import {
+    LatencyBucketHistogram,
+    OtlpSpanRecord,
+    OtlpSpanBatch,
+} from "cap:obs";
+
+pub fn demoTelemetryExport() {
+    // 1. 16 桶对数延迟直方图 + 分位数估算 + Prometheus 文本导出
+    let hist = LatencyBucketHistogram.init();
+    hist.observe(120);
+    hist.observe(850);
+    hist.observe(4200);
+    * = hist.quantile(0.95);
+
+    let prom_buf: [1024]u8 = [0; 1024];
+    if (n_prom := hist.renderPrometheus("agent_step_latency_us", prom_buf[0..])) {
+        * = prom_buf[0..n_prom];
+    }
+
+    // 2. 固定槽位 OTLP/HTTP JSON 链路 Span 批导出
+    let slots: [4]OtlpSpanRecord = [OtlpSpanRecord{}; 4];
+    let batch = OtlpSpanBatch.init(slots[0..]);
+    * = batch.push(OtlpSpanRecord{
+        trace_id_hex: "4bf92f3577b34da6a3ce929d0e0e4736",
+        span_id_hex: "00f067aa0ba902b7",
+        parent_span_id_hex: "",
+        name: "POST /v1/chat",
+        start_us: 1000000,
+        end_us: 1004200,
+        status_code: 200,
+        is_error: false,
+    });
+
+    let otlp_buf: [1024]u8 = [0; 1024];
+    if (n_otlp := batch.renderOtlpJson("cp-agent-gateway", otlp_buf[0..])) {
+        * = otlp_buf[0..n_otlp];
+    }
 }
 ```

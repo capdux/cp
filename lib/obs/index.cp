@@ -139,3 +139,12 @@ export {
     parseBtfArray,
     btfMemberAt,
 } from "./btf.cp";
+
+// --- Zero-Alloc OTLP Span Exporter & Logarithmic Latency Histogram ---
+
+export {
+    HISTOGRAM_BUCKET_COUNT,
+    LatencyBucketHistogram,
+    OtlpSpanRecord,
+    OtlpSpanBatch,
+} from "./telemetry_export.cp";
