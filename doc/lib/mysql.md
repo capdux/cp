@@ -17,6 +17,7 @@
 - `lib/mysql/localInfile.cp`：零分配 `LOCAL INFILE Request`（`0xFB`）编解码与客户端路径穿越策略防护
 - `lib/mysql/stackReader.cp`：零拷贝有界协议游标与原子半包回滚帧读取器（`StackReader`、`MysqlFrameSlice`）
 - `lib/mysql/stmtPrepareOk.cp`：零分配 `COM_STMT_PREPARE_OK` 预处理响应编解码与预处理语句生命周期帧编码（`StmtPrepareOKPacket`、`StmtCommandCodec`）
+- `lib/mysql/mysqlError.cp`：统一 MySQL 协议错误集 `AnyMySqlError`、错误分类器（`MySqlErrorKind` / `MySqlErrorCategory`）、重试与连接重置策略及服务端 `errno` 映射
 - `lib/mysql/index.cp`：`cap:mysql` 统一聚合导出入口
 
 ## 核心导出摘要
@@ -34,6 +35,7 @@
 | LOCAL INFILE (`localInfile.cp`) | `LOCAL_INFILE_HEADER`, `LOCAL_INFILE_MAX_FILENAME`, `LocalInfileError`, `LocalInfileRequest` |
 | 有界游标 (`stackReader.cp`) | `StackReaderError`, `MysqlFrameSlice`, `StackReader` |
 | 预处理语句响应 (`stmtPrepareOk.cp`) | `STMT_PREPARE_OK_STATUS`, `STMT_PREPARE_OK_MIN_LEN`, `STMT_PREPARE_OK_STD_LEN`, `STMT_PREPARE_OK_META_LEN`, `COM_STMT_PREPARE_CMD`, `COM_STMT_CLOSE_CMD`, `COM_STMT_RESET_CMD`, `StmtPrepareOkError`, `StmtPrepareOKPacket`, `StmtCommandCodec` |
+| 统一错误分类 (`mysqlError.cp`) | `AnyMySqlError`, `MySqlErrorCategory`, `MySqlErrorKind` |
 
 ## 使用示例
 
@@ -110,4 +112,17 @@ const req_n = StmtCommandCodec.encodePrepareFrame("SELECT id FROM users WHERE id
 const ok = StmtPrepareOKPacket.initWithMetadata(42, 1, 1, 0, true);
 const followup = ok.expectedFollowupPackets(true); // CLIENT_DEPRECATE_EOF: 1 param + 1 col = 2
 * = followup;
+```
+
+7. **统一 MySQL 错误分类、重试与连接重置策略（`mysqlError.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/AnyMySQLError.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
+   - `AnyMySqlError` 收敛 31 项纯协议/驱动错误；`MySqlErrorKind` 提供标准化错误码（`ERR_MYSQL_*`）、可读诊断消息、7 大错误类别（`Connection`/`Timeout`/`Auth`/`Protocol`/`Query`/`Resource`/`State`）及 `fromServerErrno(errno_code)` 服务端错误码映射；
+   - **连接池自愈准则**：`isRetryable()` 仅对断连/超时/半包返回 `true`；若触发 `requiresConnectionReset()`（如畸形包、`CR_COMMANDS_OUT_OF_SYNC` 等线缆失步错误），必须立即销毁当前连接而非归还连接池。
+
+```cp
+import { MySqlErrorKind, MySqlErrorCategory } from "cap:mysql";
+
+const k = MySqlErrorKind.fromServerErrno(1045);
+// k == MySqlErrorKind.AuthenticationFailed, k.category() == MySqlErrorCategory.Auth
+* = k.code();
+* = MySqlErrorCategory.Auth;
 ```

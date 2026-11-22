@@ -211,3 +211,10 @@ export {
     StmtPrepareOKPacket,
     StmtCommandCodec,
 } from "./stmtPrepareOk.cp";
+
+// --- 12. Unified MySQL Error Taxonomy & Diagnostics (./mysqlError.cp) ---
+export {
+    AnyMySqlError,
+    MySqlErrorCategory,
+    MySqlErrorKind,
+} from "./mysqlError.cp";
