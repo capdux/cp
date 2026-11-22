@@ -15,4 +15,14 @@ export {
 
 export {
     RrfFusion,
+    RankedDoc,
+    ScalarQuantParams,
+    rrfFuse,
+    normalizeScoresMinMax,
+    normalizeScoresZScore,
+    weightedScoreFuse,
+    mmrRerank,
+    quantizeVectorU8,
+    dequantizeVectorU8,
+    quantizedDotU8,
 } from "./hybrid.cp";

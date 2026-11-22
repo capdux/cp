@@ -16,7 +16,7 @@
 | :--- | :--- | :--- |
 | `lib/vector/flat_index.cp` | `// Source: cp/lib/vector/flat_index.cp (In-Memory Vector Index with Cosine/Dot/L2 Metrics)` | `DistanceMetric`、`SearchHit`、`VectorError`、`VectorIndex` |
 | `lib/vector/bm25.cp` | `// Source: cp/lib/vector/bm25.cp (Okapi BM25 Full-Text Inverted Index)` | `Bm25Config`、`Bm25Index` 倒排索引与分词器 |
-| `lib/vector/hybrid.cp` | `// Source: cp/lib/vector/hybrid.cp (Reciprocal Rank Fusion Hybrid RAG Ranker)` | `RrfFusion.fuse` 混合检索 RRF 融合排序 |
+| `lib/vector/hybrid.cp` | `// Origin: Pure-CP Stdlib (RAG Hybrid Retrieval: RRF, MMR Rerank & Int8 Scalar Quantization) \| Created: 2026-11-22` | `RrfFusion` + 零堆分配多路 RRF (`rrfFuse`)、线性归一化融合 (`normalizeScoresMinMax`/`normalizeScoresZScore`/`weightedScoreFuse`)、MMR 多样性重排 (`mmrRerank`) 与 U8 标量量化 (`quantizeVectorU8`/`dequantizeVectorU8`/`quantizedDotU8`) |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -50,11 +50,41 @@
   - `search(alloc, query: string, top_k: usize): ([]SearchHit)!`（计算精确 Okapi BM25 得分并按降序返回 `[]SearchHit`）
   - `deinit(*_)`
 
-### 3. Reciprocal Rank Fusion 混合重排 (`hybrid.cp`)
+### 3. Reciprocal Rank Fusion 混合重排与零堆分配 RAG 原语 (`hybrid.cp`)
 
+#### 3.1 Allocator 版字符串 ID 融合 (`RrfFusion`)
 - **`RrfFusion.fuse(alloc, vector_hits, text_hits, rrf_k: f32 = 60.0, top_k: usize = 10): ([]SearchHit)!`**
   - 采用 1-based 排名（`rank = 1, 2, ...`）累加融合分数：`score(doc) = sum(1.0 / (rrf_k + rank))`。
   - 自动按 `id` 去重（单路内部重复亦仅计首次最高排名），保留非空 `meta`（优先向量路元信息），按融合分数降序输出最多 `top_k` 条结果。
+
+#### 3.2 零堆分配多路 RRF 融合
+- **`RankedDoc`**：`{ doc_id: u32 = 0, score: f64 = 0.0 }`
+- **`rrfFuse(lists_doc_ids: []const u32, list_offsets: []const usize, k_const: f64, out_docs: *[]RankedDoc, work_ids: *[]u32, work_scores: *[]f64): usize?`**
+  - 支持任意 `M` 路召回列表（CSR 偏移 `list_offsets`，长度 `M + 1`），例如 BM25 + Dense + Sparse 三路融合。
+  - 按 $\sum_m \frac{1}{k + \text{rank}_m(d)}$（1-based 排名，单路内部重复只计首次最高排名）融合去重，按 `score` 降序、同分按 `doc_id` 升序确定性输出到 `out_docs`。
+  - 零堆分配，所有输出与工作区缓冲由调用方提供；参数非法（负/`NaN` `k_const`、非法偏移、缓冲不足）返回 `null`。
+
+#### 3.3 分数归一化与线性加权融合
+- **`normalizeScoresMinMax(scores: []const f64, out: *[]f64): bool`**
+  - 将任意有限浮点分数线性映射到 `[0.0, 1.0]`（常数输入映射为 `0.0`）；含 `NaN`/`Inf` 或输出缓冲不足返回 `false`。
+- **`normalizeScoresZScore(scores: []const f64, out: *[]f64): bool`**
+  - 零均值单位方差标准化（常数输入映射为 `0.0`）；含 `NaN`/`Inf` 或输出缓冲不足返回 `false`。
+- **`weightedScoreFuse(dense_docs: []const RankedDoc, sparse_docs: []const RankedDoc, alpha: f64, out_docs: *[]RankedDoc): usize?`**
+  - 计算 `alpha * dense + (1.0 - alpha) * sparse`，自动去重合并双路文档并按得分降序（同分 `doc_id` 升序）写入 `out_docs`。`alpha` 超出 `[0.0, 1.0]`、含非有限分数或缓冲不足返回 `null`。
+
+#### 3.4 Maximal Marginal Relevance 多样性去冗余重排 (`mmrRerank`)
+- **`mmrRerank(query_sims: []const f64, embeddings: []const f64, n_docs: usize, dim: usize, top_k: usize, lambda: f64, out_indices: *[]usize, selected_mask: *[]u8): usize?`**
+  - 贪心迭代选择 $\arg\max_{d \notin S} [\lambda \cdot \text{sim}(q, d) - (1 - \lambda) \max_{s \in S} \cos(d, s)]$，在 AI Agent RAG 上下文拼装阶段自动剔除近重复片段、保留多主题覆盖。
+  - `lambda = 1.0` 时退化为纯相关性排序；`lambda = 0.5` 兼顾相关性与多样性；`selected_mask` 内部自动清零。
+
+#### 3.5 U8/Int8 非对称标量量化与快速量化内积
+- **`ScalarQuantParams`**：`{ min_val: f64 = 0.0, scale: f64 = 0.0, inv_scale: f64 = 0.0 }`
+- **`quantizeVectorU8(vec: []const f64, q_out: *[]u8): ScalarQuantParams?`**
+  - 将浮点向量非对称均匀量化到 `[0, 255]`（`f32` 4x / `f64` 8x 压缩），常数向量安全返回 `scale = 0.0`。
+- **`dequantizeVectorU8(q: []const u8, params: ScalarQuantParams, out: *[]f64): bool`**
+  - 按 `min_val + q[i] * scale` 重构浮点向量，典型 128D 嵌入相对 L2 重构误差 `< 1%`。
+- **`quantizedDotU8(qa: []const u8, pa: ScalarQuantParams, qb: []const u8, pb: ScalarQuantParams): f64?`**
+  - 基于纯整型内循环累计 `sum(qa)`、`sum(qb)`、`sum(qa * qb)` 直接计算近似内积，避免逐维反量化开销且数值等价于反量化内积。
 
 ---
 
@@ -90,5 +120,60 @@ pub fn demoHybridRag(): !void {
     // 等价动态懒加载挂载用法：
     const fused2 = cap.vector.RrfFusion.fuse(alloc, v_hits, t_hits, 60.0, 5)?;
     defer alloc.free(fused2);
+}
+```
+
+### 零堆分配 RAG 混合重排与标量量化示例
+
+```typescript
+import {
+    RankedDoc,
+    rrfFuse,
+    mmrRerank,
+    quantizeVectorU8,
+    quantizedDotU8,
+} from "cap:vector";
+
+pub fn demoZeroHeapRagPipeline() {
+    // 1. 3 路召回（BM25 + Dense + Sparse）零堆分配 RRF 融合
+    const lists_ids: [9]u32 = [100, 42, 200, 300, 42, 100, 42, 400, 300];
+    const offsets: [4]usize = [0, 3, 6, 9];
+    let out_docs_buf: [8]RankedDoc = [RankedDoc{}; 8];
+    let w_ids_buf: [8]u32 = [0; 8];
+    let w_scores_buf: [8]f64 = [0.0; 8];
+    let out_docs: []RankedDoc = out_docs_buf[0..];
+    let w_ids: []u32 = w_ids_buf[0..];
+    let w_scores: []f64 = w_scores_buf[0..];
+    const n_fused = rrfFuse(lists_ids[0..], offsets[0..], 60.0, out_docs, w_ids, w_scores) ?? 0;
+
+    // 2. MMR 多样性重排（lambda = 0.5 去冗余）
+    const q_sims: [4]f64 = [0.95, 0.94, 0.85, 0.80];
+    const embs: [12]f64 = [
+        1.0, 0.0, 0.0,
+        0.999, 0.01, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 0.0, 1.0,
+    ];
+    let sel_idx_buf: [3]usize = [0; 3];
+    let mask_buf: [4]u8 = [0; 4];
+    let sel_idx: []usize = sel_idx_buf[0..];
+    let mask: []u8 = mask_buf[0..];
+    const k = mmrRerank(q_sims[0..], embs[0..], 4, 3, 3, 0.5, sel_idx, mask) ?? 0;
+
+    // 3. U8 非对称标量量化与快速内积
+    const va: [4]f64 = [-0.5, 0.25, 0.75, 1.25];
+    const vb: [4]f64 = [-0.4, 0.30, 0.80, 1.10];
+    let qa_buf: [4]u8 = [0; 4];
+    let qb_buf: [4]u8 = [0; 4];
+    let qa: []u8 = qa_buf[0..];
+    let qb: []u8 = qb_buf[0..];
+    if (pa := quantizeVectorU8(va[0..], qa)) {
+        if (pb := quantizeVectorU8(vb[0..], qb)) {
+            const approx_dot = quantizedDotU8(qa_buf[0..], pa, qb_buf[0..], pb) ?? 0.0;
+            * = approx_dot;
+        }
+    }
+    * = n_fused;
+    * = k;
 }
 ```
