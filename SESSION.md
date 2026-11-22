@@ -1461,3 +1461,7 @@
 ### 2026-11-22（根目录分域收敛第 1 批完成：lib/image/（净减 13 个顶层目录） | 2026-11-22 14:45:56）
 - **执行与结单汇报**：
   > Stdlib Root Consolidator 完成 lib/image/ 全量收敛：1) 13 个独立图形/图像小目录（avif/exr/heif/ico/pnm/psd/qoi/tga/tiff/dicom/barcode/svg/qrcode，精准排除线性代数 lib/qr）零冲突归并入 lib/image/ 并物理清理冗余旧目录，13/13 测试 + 存量图像测试全部 100% PASS；2) 6 个重叠目录（bmp/gif/png/exif/thumbhash/image_probe）严格按 Bun 优先与 xxx_.cp 参考归档（0 覆盖/0 丢失 Bun 资产）；3) lib/ 顶层目录 846 -> 833（-13）；续派 lib/conf/ 领域收敛。
+
+### 2026-11-22（根目录收敛第 2 批 lib/doc/ (-14 目录) + 3 项子模块交付 | 2026-11-22 14:49:53）
+- **执行与结单汇报**：
+  > 1. Stdlib Root Consolidator (doc) 完成 lib/doc/ 建立与收敛：13 组文档模块零冲突归入 lib/doc/ + markdown_table_.cp 参考归档，物理清理 14 个冗余顶层目录 (833 -> 819)，16/16 cpc check 与 14/14 cap test 全部 PASS；2. 验收交付 lib/attention/spec_tree.cp (5/5 PASS，原 AI & Tensor Compute Absorber 满 10 项轮换为第 3 路根目录收敛专员推进 lib/math/)、lib/text/code_pattern.cp (5/5 PASS)、lib/sql/pg_wire_reader.cp (吸收自 Bun NewReader.cp, 6/6 PASS)。

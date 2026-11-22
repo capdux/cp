@@ -114,3 +114,9 @@ export {
     MySqlPacketPatch,
     MySqlWireWriter,
 } from "./mysql_wire_writer.cp";
+
+export {
+    PgWireReaderError,
+    PgFrameView,
+    PgWireReader,
+} from "./pg_wire_reader.cp";

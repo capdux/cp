@@ -406,6 +406,45 @@ pub fn demoRepoMap(src: string) {
 
 ---
 
+## 零堆分配 Token 感知代码模式匹配与 `$VAR` 捕获器 (`lib/text/code_pattern.cp`)
+
+面向 AI 编程智能体结构化代码审计与重构检索（轻量对标 ast-grep / semgrep），忽略注释与排版空白差异，支持同名元变量跨位置一致性约束：
+
+- **`CodeTokenKind`**：`Ident` | `Number` | `String` | `Punct` | `MetaVar`（`$NAME`）
+- **`CodeToken`**：`{ kind, start, end, line }`，提供零拷贝 `slice(src: string): string`
+- **`tokenizeCodeLite(src: string, *out_tokens: []CodeToken): usize`**：跳过空白与 `//`/`/* ... */` 注释，切分标识符、数字、字符串、多字符操作符（`==`/`!=`/`<=`/`>=`/`->`/`=>`/`::` 等）与 `$VAR` 元变量（截断安全并返回总 Token 数）
+- **`MetaCapture`**：`{ var_name: string, captured_text: string }`；**`PatternMatchHit`**：`{ start_byte, end_byte, start_line, end_line, capture_start, capture_count }`
+- **`findCodePatternMatches(src, pattern, *src_tok_buf, *pat_tok_buf, *out_hits, *out_captures): usize`**：非重叠扫描全部匹配，支持 `$X = $X + 1` 同名元变量一致性约束与 `$_` 单 Token 通配符，返回总命中数（截断安全）。
+
+```cp
+import {
+    CodeToken,
+    MetaCapture,
+    PatternMatchHit,
+    findCodePatternMatches,
+} from "cap:text";
+
+pub fn demoCodePatternMatch(src: string) {
+    let src_toks: [128]CodeToken = [CodeToken{}; 128];
+    let pat_toks: [16]CodeToken = [CodeToken{}; 16];
+    let hits: [8]PatternMatchHit = [PatternMatchHit{}; 8];
+    let caps: [16]MetaCapture = [MetaCapture{}; 16];
+
+    // 匹配自增赋值 `$X = $X + 1`（自动要求两处 $X 文本一致，忽略注释与换行）
+    const n = findCodePatternMatches(
+        src,
+        "$X = $X + 1",
+        src_toks[0..],
+        pat_toks[0..],
+        hits[0..],
+        caps[0..],
+    );
+    * = n;
+}
+```
+
+---
+
 ## 上游行为契约与文本处理边界注意事项
 
 1. **UTF-8 码点边界安全不变式**：

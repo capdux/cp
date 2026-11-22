@@ -191,6 +191,23 @@ const payload_len = w.finishPacket(pkt)?; // 9 bytes
 let r = MySqlWireReader.init(w.written());
 const hdr_len = r.readU24()?; // 9
 ```
+- **PostgreSQL 线协议零堆分配二进制读取器 (`pg_wire_reader.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/NewReader.cp`)**：
+  - 错误集与结构体：`PgWireReaderError`（`ShortRead` / `InvalidMessage` / `InvalidMessageLength` / `UnterminatedString`）、`PgFrameView`、`PgWireReader`（`init` / `markMessageStart` / `offset` / `offsetFromStart` / `rewindToMessageStart` / `remaining` / `peek` / `ensureCapacity` / `skip` / `readByte` / `readBytes` / `readZ` / `peekU32` / `peekI32` / `readU16` / `readI16` / `readU32` / `readI32` / `readI64` / `readF32` / `readF64` / `readMessageLength` / `readTaggedFrame` / `readLengthPrefixedOrNull` / `eatBytes`）
+
+```typescript
+import { PgWireWriter, PgWireReader } from "cap:sql";
+
+let buf: [64]u8 = [0; 64];
+let w = PgWireWriter.init(buf[0..]);
+const p = w.beginTaggedFrame('Q')?;
+* = w.writeCString("SELECT 1")?;
+* = w.finishLength(p)?;
+
+let r = PgWireReader.init(w.written());
+const frame = r.readTaggedFrame()?; // tag='Q', payload="SELECT 1\0"
+let body = PgWireReader.init(frame.payload);
+const sql = body.readZ()?; // "SELECT 1"
+```
 
 ---
 

@@ -34,6 +34,7 @@
 - **`FP8_E4M3_MAX_FINITE` / `Fp8BlockScale` / `computeBlockAmaxF32` / `quantizeBlockFp8E4m3` / `dequantizeBlockFp8E4m3` / `gemvBlockFp8E4m3`** (`quant_fp8.cp`)：零堆分配 DeepSeek-V3 / H100 风格块级动态缩放 FP8 E4M3FN 量化与尺度外提融合混合精度 GEMV 核（支持任意非整除尾部块与全零块零除防护）。
 - **`VocabBitset` / `DfaEdge` / `ConstrainedDfa` / `applyVocabMaskInPlace` / `applyTemperatureAndTopKMaskInPlace`** (`constrained_mask.cp`)：零堆分配 LLM 结构化受限解码 Logits 位图掩码与 DFA 状态引导词表过滤器（对标 xgrammar / Outlines，支持硬件 `@popCount`、尾位自动清零、`-inf` 掩码与零堆分配温度 + Top-K 过滤）。
 - **`RopeScalingKind` / `YarnConfig` / `yarnAttentionMscale` / `computeRopeInvFreqs` / `applyScaledRopeInPlaceF32`** (`rope_yarn.cp`)：零堆分配长上下文大模型 RoPE 扩展引擎，统一支持标准 RoPE、Linear PI、NTK-Aware 与 YaRN（Peng et al. 2023）波长频段斜坡插值以及 `mscale` 注意力温度缩放。
+- **`SPEC_TREE_NO_PARENT` / `DraftTreeNode` / `TreeVerifyResult` / `validateDraftTree` / `buildTreeAttentionMask` / `verifyDraftTreeGreedy`** (`spec_tree.cp`)：零堆分配 Medusa / Eagle 树状推测解码注意力拓扑掩码构造与贪心最长接受路径验证器，支持单次前向并行验证整棵多分支草稿树并提取奖励 Token。
 
 ## 3. API 速查
 
@@ -146,6 +147,9 @@
 | `yarnAttentionMscale` | `(scale_factor: f64, mscale_coeff: f64): f64` | YaRN 注意力温度缩放系数 `0.1 * mscale_coeff * ln(scale_factor) + 1.0` |
 | `computeRopeInvFreqs` | `(kind: RopeScalingKind, cfg: YarnConfig, out_inv_freqs: *[]f64): bool` | 计算 `None` / `Linear` / `NtkAware` / `Yarn`（高频保留、低频线性插值、中频斜坡混合）逆频率表 |
 | `applyScaledRopeInPlaceF32` | `(vec: *[]f32, pos: usize, inv_freqs: []const f64, mscale: f32): bool` | 支持 `mscale` 的原位半切分 RoPE 旋转（严格保范数 `mscale * ||vec||`） |
+| `validateDraftTree` | `(nodes: []const DraftTreeNode): bool` | 校验 Medusa/Eagle 草稿树单根、严格拓扑序（`parent < i`）、深度一致与无环 |
+| `buildTreeAttentionMask` | `(nodes, out_mask_u8: *[]u8): bool` | 构造 `N×N` 树状因果注意力掩码（仅祖先与自身可见、兄弟分支互不可见） |
+| `verifyDraftTreeGreedy` | `(nodes, target_argmax, out_accepted_tokens: *[]u32): TreeVerifyResult?` | 沿草稿树贪心匹配最长连续接受路径并返回末节点奖励 Token |
 
 ## 4. 示例
 
@@ -925,5 +929,36 @@ pub fn demoYarnLongContextRope(q_head: *[]f32, pos: usize) {
 
     const mscale: f32 = yarnAttentionMscale(cfg.scale_factor, 1.0) as f32;
     * = applyScaledRopeInPlaceF32(q_head, pos, inv_freqs[0..], mscale);
+}
+```
+
+### Medusa / Eagle 树状推测解码掩码与贪心验证示例 (`spec_tree.cp`)
+
+```cp
+import {
+    SPEC_TREE_NO_PARENT,
+    DraftTreeNode,
+    buildTreeAttentionMask,
+    verifyDraftTreeGreedy,
+} from "cap:attention";
+
+pub fn demoSpeculativeTreeVerify() {
+    const nodes: [4]DraftTreeNode = [
+        DraftTreeNode{ token_id: 1, parent_idx: SPEC_TREE_NO_PARENT, depth: 0 },
+        DraftTreeNode{ token_id: 10, parent_idx: 0, depth: 1 },
+        DraftTreeNode{ token_id: 20, parent_idx: 0, depth: 1 },
+        DraftTreeNode{ token_id: 30, parent_idx: 2, depth: 2 },
+    ];
+    let mask: [16]u8 = [0; 16];
+    let mask_s: []u8 = mask[0..];
+    * = buildTreeAttentionMask(nodes[0..], mask_s);
+
+    const target_argmax: [4]u32 = [20, 99, 30, 42];
+    let accepted: [4]u32 = [0; 4];
+    let accepted_s: []u32 = accepted[0..];
+    if (res := verifyDraftTreeGreedy(nodes[0..], target_argmax[0..], accepted_s)) {
+        // accepted == [20, 30], res.accepted_len == 2, res.bonus_token_id == 42
+        * = res;
+    }
 }
 ```

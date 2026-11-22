@@ -229,3 +229,12 @@ export {
     computeRopeInvFreqs,
     applyScaledRopeInPlaceF32,
 } from "./rope_yarn.cp";
+
+export {
+    SPEC_TREE_NO_PARENT,
+    DraftTreeNode,
+    TreeVerifyResult,
+    validateDraftTree,
+    buildTreeAttentionMask,
+    verifyDraftTreeGreedy,
+} from "./spec_tree.cp";

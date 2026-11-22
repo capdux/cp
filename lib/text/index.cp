@@ -114,3 +114,12 @@ export {
     findSymbolByName,
     formatRepoMapLine,
 } from "./code_outline.cp";
+
+export {
+    CodeTokenKind,
+    CodeToken,
+    MetaCapture,
+    PatternMatchHit,
+    tokenizeCodeLite,
+    findCodePatternMatches,
+} from "./code_pattern.cp";
