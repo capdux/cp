@@ -79,3 +79,13 @@ export {
     EntityGraphStats,
     TemporalEntityGraph,
 } from "./entity_graph.cp";
+
+export {
+    SUMMARY_TREE_MAX_NODES,
+    SUMMARY_NO_NODE,
+    SummaryNodeKind,
+    SummaryTreeNode,
+    ContextFrontierPlan,
+    SummaryTreeStats,
+    HierarchicalSummaryTree,
+} from "./summary_tree.cp";

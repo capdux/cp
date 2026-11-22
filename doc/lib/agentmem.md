@@ -32,6 +32,7 @@
 | `lib/agentmem/consolidation.cp` | `// Origin: Pure-CP Stdlib (AI Agent Memory Consolidation, Dedup & Retention Pruning Engine)` | `MemConsolidationTier`、`ConsolidatableRecord`、`ConsolidationPolicy`、`ConsolidationReport`、`halfLifeDecayFactor`、`consolidateMemoriesInPlace`（零堆分配睡眠期记忆巩固、去重合并、半衰期衰减、分级晋升与遗忘剪枝归档） |
 | `lib/agentmem/retrieval.cp` | `// Origin: Pure-CP Stdlib (AI Agent Three-Factor Memory Retrieval, SIMD Dedup Merge & Prompt Packing)` | `MemoryRetrievalConfig`、`MemoryCandidate`、`MemoryScoredHit`、`MemoryMergeStats`、`MemoryPackResult`、`scoreAndRankMemoriesF32`、`mergeRedundantMemoriesF32`、`packMemoriesForPrompt` |
 | `lib/agentmem/entity_graph.cp` | `// Origin: Pure-CP Stdlib (AI Agent Zero-Alloc Temporal Entity Knowledge Graph & Two-Hop Recall Engine)` | `TemporalFactEdge`、`GraphHopHit`、`EntityGraphStats`、`TemporalEntityGraph`（半开时序区间事实管理、原子新旧事实更替 `supersedeFact`、时间点历史快照回溯与 1~2 跳环路去重扩展） |
+| `lib/agentmem/summary_tree.cp` | `// Origin: Pure-CP Stdlib (AI-Native Zero-Alloc Hierarchical Conversation Summary Tree & Context Compactor)` | `SUMMARY_TREE_MAX_NODES`、`SUMMARY_NO_NODE`、`SummaryNodeKind`、`SummaryTreeNode`、`ContextFrontierPlan`、`SummaryTreeStats`、`HierarchicalSummaryTree`（多级递归对话摘要折叠与零重叠 Token 预算上下文前沿规划） |
 | `lib/agentmem/index.cp` | `// Source: cp/lib/agentmem/index.cp (Unified Exports for cap:agentmem)` | `cap:agentmem` 与 `cap.agentmem` 统一公开导出入口 |
 
 ---
@@ -477,5 +478,41 @@ pub fn demoSimdMemoryConsolidation() {
     const cfg = ConsolidationConfig{ decay_half_life_ms: 1000, merge_cosine_threshold: 0.95, max_retained_entries: 4 };
     const summary = planMemoryConsolidation(eps[0..], embs[0..], 4, 10000, cfg, actions_s);
     * = summary; // episode 0 promoted, episode 1 merged_into 0, episode 2 evicted_decay
+}
+```
+
+### 10. 零分配分层对话摘要树与渐进式上下文压缩引擎 (`summary_tree.cp`)
+
+面向 MemGPT / Letta 风格长周期对话 AI Agent 的 100% 纯 CP 零动态堆分配分层摘要树（Hierarchical Summary Tree）与 Token 预算前沿规划引擎：
+
+- **常量与数据模型**：
+  - `SUMMARY_TREE_MAX_NODES = 128`、`SUMMARY_NO_NODE = 0xFFFF`
+  - `SummaryNodeKind`（`raw_turn | compacted_summary`）
+  - `SummaryTreeNode`（`node_id`, `kind`, `level` [0 为原始叶子，1+ 为摘要层], `start_turn`, `end_turn`, `token_count`, `importance_bps` [0..=10000], `parent_idx`, `covered_by_summary`, `pinned`, `active`）
+  - `ContextFrontierPlan`（`selected_node_indices`, `selected_count`, `total_tokens`, `raw_turns_kept`, `summaries_used`, `dropped_nodes`, `covered_turns`）
+  - `SummaryTreeStats`（`total_nodes`, `raw_leaf_count`, `summary_node_count`, `max_level`, `raw_tokens_total`, `compacted_tokens_total`）
+- **核心引擎（`HierarchicalSummaryTree`）**：
+  - `init(): HierarchicalSummaryTree`
+  - `append_raw_turn(*_, turn_seq, token_count, importance_bps, pinned): u16?`：严格校验单调递增 `turn_seq`、`importance_bps <= 10000` 与 128 节点容量。
+  - `compact_range(*_, start_turn, end_turn, summary_tokens, importance_bps): u16?`：将覆盖 `[start_turn, end_turn]` 的现有顶层节点递归折叠为高层 `compacted_summary` 父节点，建立 `parent_idx` 关联并标记 `covered_by_summary = true`；拒绝跨界部分重叠。
+  - `select_context_frontier(token_budget, min_recent_raw_turns): ContextFrontierPlan`：按「`pinned` 原始轮次 -> 最近 `min_recent_raw_turns` 原始轮次 -> 最高层不重叠摘要（自动下钻）-> 剩余高重要度原始轮次」四级策略在 `token_budget` 内规划零重复覆盖的上下文前沿，并按 `start_turn` 升序输出。
+  - `stats(): SummaryTreeStats`
+
+```cp
+import { HierarchicalSummaryTree } from "cap:agentmem";
+
+pub fn demoHierarchicalSummaryTree() {
+    let tree = HierarchicalSummaryTree.init();
+    // 追加 6 轮原始对话（每轮 100 tokens），并将前 4 轮压缩为 50 tokens 摘要
+    let t: u32 = 1;
+    while (t <= 6) : (t += 1) {
+        * = tree.append_raw_turn(t, 100, 5000, t == 1);
+    }
+    * = tree.compact_range(2, 4, 50, 8000);
+
+    // 预算 360 tokens、至少保留最近 2 轮原文：无缝拼装 [pinned turn 1, summary(2..4), turn 5, turn 6]
+    const plan = tree.select_context_frontier(360, 2);
+    * = plan.total_tokens;  // 350
+    * = plan.covered_turns; // 6
 }
 ```
