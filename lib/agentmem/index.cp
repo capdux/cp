@@ -52,3 +52,14 @@ export {
     halfLifeDecayFactor,
     consolidateMemoriesInPlace,
 } from "./consolidation.cp";
+
+export {
+    MemoryRetrievalConfig,
+    MemoryCandidate,
+    MemoryScoredHit,
+    MemoryMergeStats,
+    MemoryPackResult,
+    scoreAndRankMemoriesF32,
+    mergeRedundantMemoriesF32,
+    packMemoriesForPrompt,
+} from "./retrieval.cp";

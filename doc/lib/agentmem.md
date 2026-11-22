@@ -352,3 +352,51 @@ pub fn demoMemoryConsolidation() {
     }
 }
 ```
+
+### 7. 三因子记忆检索、SIMD 近重复归并与 Prompt 打包 (`retrieval.cp`)
+
+融合 Stanford Generative Agents 经典 **Recency（指数时间衰减）+ Importance（重要度）+ SIMD `@dot` Relevance（语义余弦相关性）** 三因子打分、近重复情景记忆归并与 Token 预算上下文打包（100% 纯 CP、零堆分配）：
+
+- **`MemoryRetrievalConfig`**：`{ w_recency, w_importance, w_relevance, decay_rate_per_hour, min_score, required_tag }`，提供 `init(w_recency, w_importance, w_relevance, decay_rate_per_hour): MemoryRetrievalConfig?`
+- **`MemoryCandidate`** / **`MemoryScoredHit`** / **`scoreAndRankMemoriesF32(query_emb, candidates, embeddings_flat, dim, now_ms, cfg, top_k, out_hits): usize?`**：按 `exp(-decay_rate_per_hour * age_hours)`、归一化重要度与 8-lane SIMD `@dot` 余弦相似度加权融合，支持按 `required_tag` 与 `min_score` 过滤并按总分降序返回 Top-K。
+- **`MemoryMergeStats`** / **`mergeRedundantMemoriesF32(candidates, embeddings_flat, dim, similarity_threshold): MemoryMergeStats?`**：基于 `@dot` 余弦相似度阈值原位合并高重复情景记忆，保留更高重要度与摘要、最新访问时间戳并饱和累加 `access_count`。
+- **`MemoryPackResult`** / **`packMemoriesForPrompt(ranked_hits, candidates, max_tokens, out_buf): MemoryPackResult?`**：在 `max_tokens` 预算内贪心打包高分记忆并格式化为简洁的 `[mem#<id>] <summary>\n` LLM 提示块。
+
+```cp
+import {
+    MemoryRetrievalConfig,
+    MemoryCandidate,
+    MemoryScoredHit,
+    scoreAndRankMemoriesF32,
+    mergeRedundantMemoriesF32,
+    packMemoriesForPrompt,
+} from "cap:agentmem";
+
+pub fn demoThreeFactorMemoryRetrieval() {
+    let mems: [3]MemoryCandidate = [
+        MemoryCandidate{ mem_id: 101, importance: 0.9, last_access_ms: 7200000, access_count: 2, token_count: 40, tag: "pref", summary: "User prefers concise Rust/CP code" },
+        MemoryCandidate{ mem_id: 102, importance: 0.7, last_access_ms: 7200000, access_count: 1, token_count: 35, tag: "pref", summary: "User likes concise code" },
+        MemoryCandidate{ mem_id: 103, importance: 0.8, last_access_ms: 0,       access_count: 1, token_count: 50, tag: "fact", summary: "Workspace root is /data/dev/cp" },
+    ];
+    const embs: [12]f32 = [
+        1.0,  0.0,  0.0, 0.0,
+        0.99, 0.01, 0.0, 0.0, // 近重复记忆
+        0.0,  1.0,  0.0, 0.0,
+    ];
+    let mems_s: []MemoryCandidate = mems[0..];
+    * = mergeRedundantMemoriesF32(mems_s, embs[0..], 4, 0.95); // 合并 mem#102 到 mem#101
+
+    const query: [4]f32 = [0.95, 0.1, 0.0, 0.0];
+    if (cfg := MemoryRetrievalConfig.init(1.0, 1.0, 2.0, 0.1)) {
+        let hits: [3]MemoryScoredHit = [MemoryScoredHit{}; 3];
+        let hits_s: []MemoryScoredHit = hits[0..];
+        const n = scoreAndRankMemoriesF32(query[0..], mems[0..], embs[0..], 4, 7200000, cfg, 3, hits_s) ?? 0;
+
+        let prompt_buf: [256]u8 = [0; 256];
+        let prompt_s: []u8 = prompt_buf[0..];
+        if (pack_res := packMemoriesForPrompt(hits[0..n], mems[0..], 100, prompt_s)) {
+            * = prompt_buf[0..pack_res.bytes_written];
+        }
+    }
+}
+```
