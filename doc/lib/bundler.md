@@ -396,6 +396,34 @@ const n = rewriteHtmlAssetUrls(html, pairs[0..], out[0..])?;
 * = n;
 ```
 
+### 3.20 JS Chunk 部件拓扑排序与线性化引擎（`lib/bundler/js_order.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/findAllImportedPartsInJSOrder.cp` 与 `/data/dev/bun/docs/bundler/index.mdx`）
+- **常量与错误集**：`JS_ORDER_MAX_FILES` (`64`)、`JS_ORDER_MAX_PARTS_PER_FILE` (`16`)、`JS_ORDER_MAX_IMPORTS_PER_PART` (`8`)、`JS_ORDER_MAX_RANGES` (`256`)、`JS_ORDER_RUNTIME_SOURCE_INDEX` (`0`)、`JS_ORDER_INVALID_SOURCE_INDEX` (`0xFFFFFFFF`)、`JS_ORDER_NAMESPACE_EXPORT_PART` (`0`)、`JsOrderError`
+- **核心类型与方法**：`JsPartWrapKind`（`None` / `Cjs` / `Esm`）、`JsOrderImportKind`（`Stmt` / `Require` / `DynamicImport`）、`JsOrderImportRecord`、`JsOrderPart`、`JsOrderFile`、`JsPartRange`（`len()` / `canExtend()`）、`JsChunkOrderEntry`（`isBefore()`）、`JsOrderResult`（`filesSlice()` / `partRangesSlice()` / `prefixRangesSlice()` / `mainRangesSlice()` / `totalParts()`）、`JsOrderGraph`（`init()` / `addFile()` / `setFileFlags()` / `addPart()` / `addPartImport()` / `findSlotBySourceIndex()` / `getScbChunkIndex()` / `computeChunkOrder()`）。
+- **核心算法契约**：
+  - 100% 零动态堆分配：所有文件、部件、导入记录与输出区间均驻留于定长栈/结构体数组中，环路安全且无深层递归风险；
+  - 确定性排序：先按 `(distance_from_entry, stable_tie_breaker)` 稳定排序 Chunk 内文件，再优先遍历 Runtime 模块并执行依赖优先 DFS；
+  - 紧凑区间合并：同一可拆分 ESM 模块的相邻存活部件自动合并为连续 `JsPartRange`；Runtime 部件及不可拆分的 CommonJS/ESM 包装模块整体归入 `parts_prefix` 置于主区间之前。
+
+```cp
+import { JsOrderGraph, JsPartWrapKind, JsOrderImportKind } from "cap:bundler";
+
+let g = JsOrderGraph.init();
+const s_dep = g.addFile(2, 1, 2, 0b1, JsPartWrapKind.None)?;
+* = g.addPart(s_dep, false, true)?; // namespace export part (inactive)
+* = g.addPart(s_dep, true, true)?;  // part 1
+* = g.addPart(s_dep, true, true)?;  // part 2 (merged with part 1 -> [1, 3))
+
+const s_entry = g.addFile(1, 0, 1, 0b1, JsPartWrapKind.None)?;
+* = g.addPart(s_entry, false, true)?;
+const p_entry = g.addPart(s_entry, true, true)?;
+g.addPartImport(s_entry, p_entry, 2, JsOrderImportKind.Stmt, false)?;
+
+const files: [2]u32 = [1, 2];
+const res = g.computeChunkOrder(0b1, files[0..], 0, false, false)?;
+// res.filesSlice() == [2, 1], res.totalParts() == 3
+* = res;
+```
+
 ---
 
 ## 四、 上游行为契约、边界与安全注意事项
@@ -421,3 +449,6 @@ const n = rewriteHtmlAssetUrls(html, pairs[0..], out[0..])?;
 7. **转译器扫描与 TypeScript 类型消除（吸收自 `/data/dev/bun/docs/runtime/transpiler.mdx`）**：
    - 除非同时转译大量超大文件，优先使用同步转译（`.transformSync()`）以避免线程池调度开销高于转译本身；异步转译（`.transform()`）按 `Math.floor(cpu_count * 0.8)` 分配 Worker 线程；
    - `.scan()` 静态扫描模块导入/导出元数据时自动忽略 TypeScript 的 `type-only` 导入导出；在 `TranspiledModuleInfo.finalize()` 中，若模块标记为 `is_typescript = true` 且本地重导出引用了导入符号，会自动将该导入升级为 `ImportInfoSingleTypeScript`，防止链接期因类型导出被消除而误报符号缺失。
+8. **代码分割（`splitting`）与模块格式（`esm` / `cjs`）Chunk 线性化实践（吸收自 `/data/dev/bun/docs/bundler/index.mdx`）**：
+   - 当启用 `--splitting`（`splitting: true`）且多个入口点共享同一模块时，共享代码会被提取至带内容哈希的独立 Chunk（如 `chunk-[hash].js`）；此时 `JsOrderGraph.computeChunkOrder(..., code_splitting = true)` 严格要求文件的 `entry_bits` 与目标 Chunk 完全相等，确保共享模块仅在对应共享 Chunk 中发射一次，避免跨入口重复打包；
+   - 选择 `format: "cjs"` 时默认目标切换为 `node`（`target: "bun"` 与 `format: "cjs"` 组合会附加 `// @bun @bun-cjs` 标记，其 CommonJS 包装器不兼容 Node.js）；被 `__commonJS` / `__esm` 包装的模块（`JsPartWrapKind.Cjs` / `.Esm`）不可按 Part 拆解，线性化器会将其全部部件作为单一连续区间提升至 `parts_prefix`，保证运行时延迟初始化闭包在任意消费方之前完成定义；外部动态 `import()` 边在静态 DFS 中自动截断，防止将按需懒加载分支错误内联进首屏同步 Chunk。

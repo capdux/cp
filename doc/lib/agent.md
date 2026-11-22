@@ -2075,3 +2075,46 @@ fn supervisorTreeQuickStart() {
     * = decision.restart_count; // 2 (20, 30)
 }
 ```
+
+---
+
+## 子模块：零分配 AI Agent 工具调用批合并、去重与读写冒险波次调度器（`tool_batcher.cp`）
+
+### 核心特性
+
+- **同波次只读自动合并去重（Read Coalescing）**：相同 `tool_hash` + `args_hash` + `resource_hash` 的 `pure_read` 调用（且中间未穿插对该资源的写或 `global_barrier`）自动合并至同波次主调用（`is_coalesced = true`, `coalesced_into_idx = primary_idx`），**零并发槽占用、零冗余执行**。
+- **程序序 RAW / WAR / WAW 读写冒险防护**：同资源只读-只读可全并行；同资源写-读（RAW）、读-写（WAR）、写-写（WAW）严格推入后继波次，且写后读绝不与写前读错误合并。
+- **全局屏障独占波次（`global_barrier`）**：Shell 命令或全局状态变更自动独占独立波次（前后均设屏障）。
+- **并发限流拆波与关键路径加速比**：支持 `max_parallel_per_wave`（`0` 为不限）按波次限制最大并发执行数，自动计算串行耗时、关键路径并行耗时与 `speedup_x100`。
+
+### 导出清单
+
+- **常量与枚举**：`TOOL_BATCH_MAX_CALLS` (`64`)、`ToolAccessKind`（`pure_read | resource_write | global_barrier`）
+- **数据模型**：`ToolBatchItem`、`ToolBatchScheduleEntry`、`ToolBatchPlanSummary`
+- **规划器**：`planToolCallBatch(items: []const ToolBatchItem, max_parallel_per_wave: usize, out_schedule: *[]ToolBatchScheduleEntry): ToolBatchPlanSummary`
+
+### QuickStart 示例
+
+```cp
+import {
+    ToolAccessKind,
+    ToolBatchItem,
+    ToolBatchScheduleEntry,
+    planToolCallBatch,
+} from "cap:agent";
+
+fn toolBatcherQuickStart() {
+    const calls: [4]ToolBatchItem = [
+        ToolBatchItem{ call_id: 1, tool_hash: 10, args_hash: 100, resource_hash: 1, access: ToolAccessKind.pure_read, estimated_ms: 50 },
+        ToolBatchItem{ call_id: 2, tool_hash: 10, args_hash: 100, resource_hash: 1, access: ToolAccessKind.pure_read, estimated_ms: 50 }, // 合并到 call 0
+        ToolBatchItem{ call_id: 3, tool_hash: 20, args_hash: 200, resource_hash: 1, access: ToolAccessKind.resource_write, estimated_ms: 80 }, // WAR -> wave 1
+        ToolBatchItem{ call_id: 4, tool_hash: 10, args_hash: 100, resource_hash: 1, access: ToolAccessKind.pure_read, estimated_ms: 50 }, // RAW -> wave 2 (不与 call 0 合并)
+    ];
+    let sched_buf: [4]ToolBatchScheduleEntry = [ToolBatchScheduleEntry{}; 4];
+    let sched: []ToolBatchScheduleEntry = sched_buf[0..];
+
+    const summary = planToolCallBatch(calls[0..], 4, sched);
+    // unique_executions == 3, coalesced_duplicates == 1, wave_count == 3
+    * = summary;
+}
+```

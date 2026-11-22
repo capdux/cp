@@ -407,3 +407,12 @@ export {
     SupervisorStats,
     AgentSupervisorTree,
 } from "./supervisor_tree.cp";
+
+export {
+    TOOL_BATCH_MAX_CALLS,
+    ToolAccessKind,
+    ToolBatchItem,
+    ToolBatchScheduleEntry,
+    ToolBatchPlanSummary,
+    planToolCallBatch,
+} from "./tool_batcher.cp";

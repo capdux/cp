@@ -254,3 +254,23 @@ export {
     scanHtmlAssets,
     rewriteHtmlAssetUrls,
 } from "./html_scanner";
+
+export {
+    JS_ORDER_MAX_FILES,
+    JS_ORDER_MAX_PARTS_PER_FILE,
+    JS_ORDER_MAX_IMPORTS_PER_PART,
+    JS_ORDER_MAX_RANGES,
+    JS_ORDER_RUNTIME_SOURCE_INDEX,
+    JS_ORDER_INVALID_SOURCE_INDEX,
+    JS_ORDER_NAMESPACE_EXPORT_PART,
+    JsOrderError,
+    JsPartWrapKind,
+    JsOrderImportKind,
+    JsOrderImportRecord,
+    JsOrderPart,
+    JsOrderFile,
+    JsPartRange,
+    JsChunkOrderEntry,
+    JsOrderResult,
+    JsOrderGraph,
+} from "./js_order";
