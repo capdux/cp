@@ -289,3 +289,21 @@ export {
     IdemStoreStats,
     ApiIdempotencyStore,
 } from "./idempotency_store.cp";
+
+// --- Zero-Alloc RFC 9110 §13 Conditional Request & ETag Precondition Evaluator ---
+export {
+    PreconditionMethod,
+    PreconditionVerdict,
+    PreconditionTrigger,
+    EntityTag,
+    PreconditionRequest,
+    ResourceValidators,
+    PreconditionResult,
+    parseEntityTag,
+    etagStrongEqual,
+    etagWeakEqual,
+    etagListMatchesStrong,
+    etagListMatchesWeak,
+    validateEtagList,
+    evaluatePreconditions,
+} from "./etag_precondition.cp";

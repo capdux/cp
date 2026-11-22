@@ -241,6 +241,44 @@ pub fn demoApiIdempotencyStore() {
 
 ---
 
+### RFC 9110 §13 HTTP 条件请求与 ETag 强弱比较裁决引擎（`etag_precondition.cp`）
+
+面向 CDN、API 网关与对象存储的 100% 纯 CP 零动态堆分配 RFC 9110 §8.8.3 & §13 条件请求状态机：
+
+- **ETag 解析与强弱比较**：`parseEntityTag`（严格区分强标签 `"abc"` 与弱标签 `W/"abc"`，拒绝小写 `w/`、未闭合引号及非法 `etagc` 字节）、`etagStrongEqual`、`etagWeakEqual`。
+- **逗号列表与通配符 `*`**：`etagListMatchesStrong`、`etagListMatchesWeak`、`validateEtagList`（正确处理双引号内含逗号如 `"a,b", W/"c"` 与资源不存在时 `*` 语义）。
+- **RFC 9110 §13.2.2 精确五步裁决（`evaluatePreconditions`）**：
+  1. `If-Match`（强比较 -> 失败返回 `precondition_failed_412`）；
+  2. 无 `If-Match` 时校验 `If-Unmodified-Since`（`last_modified > ius` -> `412`）；
+  3. `If-None-Match`（弱比较 -> `GET/HEAD` 命中返回 `not_modified_304`，写方法命中返回 `412`）；
+  4. 无 `If-None-Match` 且 `GET/HEAD` 时校验 `If-Modified-Since`（`last_modified <= ims` -> `304`）；
+  5. `GET` + `Range` 时校验 `If-Range`（强 ETag 或精确时间戳匹配返回 `serve_range_206`，否则返回 `fallback_full_200`）。
+
+```cp
+import {
+    PreconditionMethod,
+    PreconditionRequest,
+    ResourceValidators,
+    evaluatePreconditions,
+} from "cap:web";
+
+pub fn demoEtagPrecondition() {
+    const res = ResourceValidators{
+        resource_exists: true,
+        etag: "\"v42\"",
+        last_modified_sec: 1700000000,
+    };
+    const req = PreconditionRequest{
+        method: PreconditionMethod.get,
+        if_none_match: "\"v41\", W/\"v42\"",
+    };
+    const out = evaluatePreconditions(req, res);
+    * = out.http_status; // 304 (Not Modified via weak comparison)
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [circuit.md](web/circuit.md)
