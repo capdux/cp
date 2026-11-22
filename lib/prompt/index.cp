@@ -178,3 +178,17 @@ export {
     BudgetPackReport,
     packPromptWithinBudget,
 } from "./token_budget_packer.cp";
+
+export {
+    GUARDRAIL_MAX_FINDINGS,
+    GUARDRAIL_MAX_CUSTOM_TERMS,
+    GUARDRAIL_MAX_TERM_LEN,
+    GuardrailCategory,
+    GuardrailAction,
+    GuardrailFinding,
+    GuardrailPolicy,
+    GuardrailScanReport,
+    luhnCheckDigits,
+    redactSensitiveSpans,
+    PromptGuardrailScanner,
+} from "./guardrail_scanner.cp";

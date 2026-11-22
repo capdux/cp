@@ -706,3 +706,41 @@ fn demoTokenBudgetPacker() {
     * = rep;
 }
 ```
+
+### 16. 零分配 Prompt 输入输出合规校验与敏感凭证脱敏扫描器 (`guardrail_scanner.cp`)
+
+面向 AI Agent 输入/输出合规边界校验与敏感凭证脱敏的 100% 纯 CP 零动态堆分配扫描与脱敏引擎：
+
+- **常量与枚举**：
+  - `GUARDRAIL_MAX_FINDINGS = 64`、`GUARDRAIL_MAX_CUSTOM_TERMS = 16`、`GUARDRAIL_MAX_TERM_LEN = 64`
+  - `GuardrailCategory`（`email | api_secret | jwt_token | payment_card | private_ipv4 | control_anomaly | custom_term | length_exceeded`）
+  - `GuardrailAction`（`allow | redact | block`）
+- **数据模型与纯函数**：
+  - `GuardrailFinding`（`category`, `start`, `end`, `weight`）、`GuardrailPolicy`（`defaults()` / `isValid()`，可配置最大字节上限、控制/零宽字符占比阈值 `max_control_ratio_bps` 与各类规则权重）、`GuardrailScanReport`
+  - `luhnCheckDigits(digits): bool`：标准 Luhn 校验（13..19 位数字）。
+  - `redactSensitiveSpans(input, findings, out_buf: *[]u8): usize?`：零分配脱敏重写，自动排序并合并重叠区间（保留高权重类别标签），替换为 `[REDACTED:EMAIL]`、`[REDACTED:SECRET]`、`[REDACTED:JWT]`、`[REDACTED:CARD]`、`[REDACTED:PRIVATE_IP]`、`[REDACTED:TERM]`；缓冲区不足安全返回 `null`。
+- **核心引擎 `PromptGuardrailScanner`**：
+  - `init(policy)` / `addCustomTerm(*_, term)`（大小写不敏感自定义词组）
+  - `scan(input, out_findings: *[]GuardrailFinding): GuardrailScanReport`：识别 Email、API 凭证前缀（`sk-` / `ghp_` / `AKIA` / `Bearer `）、JWT 三段式令牌、Luhn 校验银行卡号、RFC 1918/回环私有 IPv4、控制/UTF-8 零宽字符异常比例与超长截断，聚合风险分值输出 `allow | redact | block`。
+
+```cp
+import {
+    GuardrailPolicy,
+    GuardrailFinding,
+    redactSensitiveSpans,
+    PromptGuardrailScanner,
+} from "cap:prompt";
+
+fn demoGuardrailScanner() {
+    let scanner = PromptGuardrailScanner.init(GuardrailPolicy.defaults()) ?? return;
+    const text = "Contact ops@example.com from 10.0.1.25";
+    let findings: [16]GuardrailFinding = [GuardrailFinding{}; 16];
+    let f_s: []GuardrailFinding = findings[0..];
+
+    const rep = scanner.scan(text, *f_s);
+    let out: [128]u8 = [0; 128];
+    let out_s: []u8 = out[0..];
+    * = redactSensitiveSpans(text, findings[0..rep.finding_count], *out_s);
+    // "Contact [REDACTED:EMAIL] from [REDACTED:PRIVATE_IP]"
+}
+```
