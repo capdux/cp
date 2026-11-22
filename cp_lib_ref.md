@@ -1,6 +1,7 @@
 # CP 官方标准库协议契约手册 (`cp_lib_ref.md`)
 
 > **定位与维护规则**：本手册独立承载 CP 官方标准库（`lib/*` / `cap:*` / `import cap from "cap"`）的高密度 API 契约索引。
+> - **按领域分类总览目录**：全部 844 个标准库模块的 15 大领域分类导航（含 `[Bun]` / `[Pure-CP]` 溯源标签）请参阅 [`doc/lib/CATALOG.md`](file:///data/dev/cp/doc/lib/CATALOG.md)（可由 `python3 scripts/gen_lib_catalog.py` 自动刷新）；
 > - **新增或升级任何 `lib/<mod>/` 标准库时**：只需更新本文件（`cp_lib_ref.md`）与对应模块详解文档 `doc/lib/<mod>.md`，**严禁**为此读写 `cp_ref.md` 或 `cp_agent_ref.md`；
 > - **语法规范请查阅**：[`cp_agent_ref.md`](file:///data/dev/cp/cp_agent_ref.md)（纯语法与 Top 29 禁手清单）。
 
