@@ -107,6 +107,17 @@ fn demoMixedPipeline(): void {
 - **`lib/shell/quote.cp`**（POSIX Shell 引用转义与参数切分）：`needsQuoting`、`quotePosix`、`joinArgs`、`ShellArgIter`
 - **`lib/shell/brace.cp`**（Bash 风格花括号展开零分配迭代器）：`BraceExpandIter`
 - **`lib/shell/cond_expr.cp`**（吸收自 `/data/dev/bun/src/shell/states/CondExpr.cp`，零堆分配 Bash `[[ ... ]]` 条件表达式解析与求值器）：`MAX_COND_DEPTH`、`POSIX_S_*`、`CondExprError`、`CondOp`、`CondFileStat`、`CondStatFn`、`condToExitCode`、`CondExprEvaluator`（支持 `-e/-f/-d/-c/-L/-s/-r/-w/-x` 文件测试、`-z/-n/==/!=/</>` 字符串测试、`-eq/-ne/-lt/-le/-gt/-ge` 64 位整数比较、`&&`/`||`/`!`/`(...)` 逻辑组合与递归深度防护）
+- **`lib/shell/echo.cp`**（吸收自 `/data/dev/bun/src/shell/builtin/echo.cp`，零堆分配 GNU/Bash `echo` 标志解析与反斜杠转义展开引擎）：`EchoError`、`EchoOptions`、`EchoEscapeResult`、`expandEchoEscapes`、`formatEchoArgs`（支持 `-n`/`-e`/`-E` 组合标志、`\\`/`\a`/`\b`/`\c`/`\e`/`\f`/`\n`/`\r`/`\t`/`\v`/`\0NNN`/`\xHH` 转义与 `\c` 提前截断）
+
+### GNU/Bash `echo` 格式化与转义示例（`echo.cp`）
+
+```typescript
+import { formatEchoArgs } from "cap:shell";
+
+const args = ["-ne", "hello\\tworld\\x21"];
+let buf: [64]u8 = undefined;
+const out = formatEchoArgs(args[0..], buf[0..])?; // "hello\tworld!"
+```
 
 ### Bash `[[ ... ]]` 条件表达式求值示例（`cond_expr.cp`）
 

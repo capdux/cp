@@ -1000,3 +1000,50 @@ fn multiTenantQuotaDemo() {
     }
 }
 ```
+
+---
+
+## 子模块：LLM 流式 Tool-Call JSON 参数增量组装与半完成闭合器（`tool_stream.cp`）
+
+### 核心特性
+
+- **零堆分配增量组装器（`ToolStreamAssembler`）**：基于调用方固定字节缓冲与 64 层嵌套栈逐 chunk 喂入流式 Delta；实时追踪字符串引号、`\` 转义序列与 `{}`/`[]` 平衡深度，精准识别 `Idle` / `Streaming` / `Complete` / `Overflow` / `Malformed`。
+- **半完成 JSON 自动闭合（`closePartialJson`）**：将截断的流式 JSON（未闭合字符串与悬空反斜杠、未写值的对象键、尾随逗号/冒号、截断的 `true`/`false`/`null`/小数点及任意层未闭合 `{}`/`[]`）零堆分配补全为语法合法 JSON，便于提前渲染 UI 或做参数预检。
+- **顶层流式字符串增量提取（`peekStreamingStringField`）**：跳过嵌套子对象内的同名字段，按 JSON 转义规则实时解码并提取指定顶层字符串字段当前已到达的前缀内容。
+
+### 导出清单
+
+- **状态与组装器**：`ToolStreamState`、`ToolStreamAssembler`（`init`, `feedDelta`, `state`, `isComplete`, `payload`, `nestingDepth`, `reset`）
+- **半完成处理辅助**：`closePartialJson(partial, out_buf: *[]u8)`、`peekStreamingStringField(partial, key, out_val: *[]u8)`
+
+### 使用示例
+
+```typescript
+import {
+    ToolStreamAssembler,
+    closePartialJson,
+    peekStreamingStringField,
+} from "cap:agent";
+
+fn streamingToolCallDemo() {
+    let raw_arr: [256]u8 = [0; 256];
+    let raw_buf: []u8 = raw_arr[0..];
+    let asm_inst = ToolStreamAssembler.init(raw_buf);
+
+    * = asm_inst.feedDelta("{\"path\":\"src/main");
+
+    // 1. 提前提取已到达的顶层 "path" 字段前缀
+    let path_arr: [64]u8 = [0; 64];
+    let path_buf: []u8 = path_arr[0..];
+    if (n := peekStreamingStringField(asm_inst.payload(), "path", path_buf)) {
+        * = path_buf[0..n]; // "src/main"
+    }
+
+    // 2. 自动闭合为合法 JSON 供下游预校验
+    let closed_arr: [256]u8 = [0; 256];
+    let closed_buf: []u8 = closed_arr[0..];
+    if (m := closePartialJson(asm_inst.payload(), closed_buf)) {
+        * = closed_buf[0..m]; // "{\"path\":\"src/main\"}"
+    }
+}
+```

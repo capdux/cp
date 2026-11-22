@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sourcemap/Mapping.cp | Synced: 2026-11-21T14:12:55Z
+// Source: Absorbed from /data/dev/bun/src/sourcemap/Mapping.cp | Synced: 2026-11-22T02:15:38Z
 // Pure-CP zero-allocation SourceMap v3 VLQ `mappings` decoder and O(log N)
 // binary-search original-position lookup index.
 
