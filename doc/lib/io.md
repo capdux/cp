@@ -155,6 +155,21 @@ let out: [32]u8 = [0; 32];
 const n = w.flushTo(out[0..])?; // n == 12, w.kind == SubprocessWritableKind.Ignore
 * = n;
 ```
+9. **子进程带引用计数与限额的非阻塞管道读取器（`subprocessPipeReader.cp`，吸收自 `/data/dev/bun/src/runtime/api/bun/subprocess/SubprocessPipeReader.cp` & `/data/dev/bun/docs/guides/process/spawn-stdout.mdx`）**：
+   - 导出：`SUBPROCESS_PIPE_READER_BUF_CAP` (`4096`)、`SUBPROCESS_PIPE_READER_OVERHEAD_BYTES` (`64`)、`SubprocessPipeStreamKind`（`Stdout` / `Stderr`）、`SubprocessPipeReaderState`（`Pending` / `Done` / `Errored`）、`SubprocessPipeReaderError`（`AlreadyStarted` / `NotPending` / `NotDone` / `BufferOverflow` / `MaxBufExceeded` / `InvalidFd` / `AlreadyConsumed`）、`SubprocessPipeReader`（`init`/`ref`/`deref`/`updateRef`/`memoryCost`/`hasPendingActivity`/`start`/`watch`/`detach`/`onReadChunk`/`onReaderDone`/`onReaderError`/`close`/`peekSlice`/`takeBuffer`/`takeStreamSnapshot`/`isTerminal`）；
+   - 完整还原 Bun 子进程 `stdout`/`stderr` 管道异步读取与所有权消费：`start()` 获取活跃引用并开启事件循环监听，`onReadChunk()` 受 `max_buf` 与内联缓冲双重限额保护，EOF 时 `onReaderDone()` 自动 `detach()` 并允许单次 `takeBuffer()` 或 `takeStreamSnapshot()` 零堆分配消费，异常时 `onReaderError()` 丢弃半包并释放引用。
+
+```cp
+import { SubprocessPipeReader, SubprocessPipeStreamKind } from "cap:io";
+
+let pr = SubprocessPipeReader.init(SubprocessPipeStreamKind.Stdout, 9, 1024)?;
+* = pr.start()?;
+* = pr.onReadChunk("hello\n")?;
+pr.onReaderDone();
+let out: [32]u8 = [0; 32];
+const n = pr.takeBuffer(out[0..])?; // n == 6 ("hello\n")
+* = n;
+```
 
 ---
 

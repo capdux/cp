@@ -100,3 +100,12 @@ export {
     SubprocessWritableError,
     SubprocessWritable,
 } from "./subprocessWritable";
+
+export {
+    SUBPROCESS_PIPE_READER_BUF_CAP,
+    SUBPROCESS_PIPE_READER_OVERHEAD_BYTES,
+    SubprocessPipeStreamKind,
+    SubprocessPipeReaderState,
+    SubprocessPipeReaderError,
+    SubprocessPipeReader,
+} from "./subprocessPipeReader";
