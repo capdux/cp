@@ -109,3 +109,16 @@ export {
     IpcChannelPollResult,
     IpcChannel,
 } from "./ipcChan";
+
+export {
+    WORKER_PROC_CAPTURE_CAP,
+    WorkerProcError,
+    WorkerPipeRole,
+    WorkerExitKind,
+    WorkerExitStatus,
+    WorkerLifecyclePhase,
+    WorkerIpcAction,
+    WorkerSpawnPolicy,
+    WorkerProcessSlot,
+    matchesConcurrentTestGlob,
+} from "./workerProc";

@@ -16,7 +16,7 @@ pub const EnvPath = struct {
         };
     }
 
-    pub fn initCapacity(allocator: std.mem.Allocator, capacity: usize): !EnvPath {
+    pub static fn initCapacity(allocator: std.mem.Allocator, capacity: usize): !EnvPath {
         return EnvPath{
             allocator: allocator,
             buf: try std.ArrayListUnmanaged(u8).initCapacity(allocator, capacity),

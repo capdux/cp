@@ -251,3 +251,30 @@ const res = ch.pollFrame(payload[0..])?;
    - **确定性环境变量**：测试运行器默认注入 `NODE_ENV=test`（除非外部环境或 `.env` 显式覆盖）并固定时区为 `TZ=Etc/UTC`，避免跨机器日期/时区差异引发偶发失败；
    - **分级超时配置**：支持全局 `--timeout`、单测第三参数覆盖，以及传入 `0`/`Infinity` 禁用超时；
    - **测试间未处理异常计入退出码**：即便所有 `test(...)` 用例均通过，测试间隙发生的未捕获异常或未处理异步拒绝仍会导致最终退出码非零（等于未处理错误数），防止异步泄漏被静默掩盖。
+6. **并行 Worker 进程槽位、双门槛回收与 `concurrentTestGlob` 选择性并发（`lib/test_runner/workerProc.cp`，吸收自 `/data/dev/bun/src/cli/test/parallel/Worker.cp` & `/data/dev/bun/docs/guides/test/concurrent-test-glob.mdx`）**：
+   - **导出符号**：`WORKER_PROC_CAPTURE_CAP` (`2048`)、`WorkerProcError`、`WorkerPipeRole`、`WorkerExitKind`、`WorkerExitStatus`、`WorkerLifecyclePhase`、`WorkerIpcAction`、`WorkerSpawnPolicy`、`WorkerProcessSlot`（`init`/`beginStart`/`commitStart`/`abortStart`/`dispatchFile`/`completeInflight`/`requestShutdown`/`onPipeChunk`/`onPipeDone`/`capturedSlice`/`takeCaptured`/`onProcessExit`/`onChannelDone`/`canReap`/`reap`）、`matchesConcurrentTestGlob`；
+   - **双门槛 Reap 屏障与原子捕获**：回收 Worker 必须同时满足 `exit_status != null && ipc_done == true`，确保内核管道缓冲区中的尾部 `test_done`/JUnit/Coverage 帧先被完整解码；每文件 stdout/stderr 合并暂存于 `captured` 并在 `file_done` 时原子刷出，彻底消除并发测试日志交错；
+   - **启动回滚与畸形帧防护**：`abortStart()` 原子复位槽位而不触发 `onProcessExit`，避免 `EMFILE` 场景下递归拉起进程风暴；IPC 结束时若仍处于 `still_attached` 则返回 `WorkerIpcAction.KillAndReap`；
+   - **选择性并发最佳实践**：默认顺序执行以保护共享状态测试，可通过 `concurrentTestGlob = "**/concurrent-*.test.ts"`（`matchesConcurrentTestGlob`）仅对独立无状态集成测试开启并发。
+
+```cp
+import {
+    WorkerProcessSlot,
+    WorkerExitStatus,
+    WorkerIpcAction,
+    matchesConcurrentTestGlob,
+} from "cap:test_runner";
+
+let w = WorkerProcessSlot.init(0);
+* = w.beginStart()?;
+* = w.commitStart(true)?;
+* = w.dispatchFile(3, 1000)?;
+* = w.onPipeChunk(.Stdout, "ok\n");
+* = w.completeInflight();
+* = w.requestShutdown()?;
+const ready1 = w.onProcessExit(WorkerExitStatus.exited(0)); // false (IPC still open)
+const act = w.onChannelDone(false); // WorkerIpcAction.ReadyToReap
+const reaped = w.reap();            // true
+const is_par = matchesConcurrentTestGlob("**/concurrent-*.test.ts", "tests/integration/concurrent-api.test.ts");
+* = ready1; * = act; * = reaped; * = is_par;
+```
