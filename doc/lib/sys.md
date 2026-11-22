@@ -457,6 +457,30 @@ pub fn demoBulkheadGuard() {
 }
 ```
 
+### 哈希加速目录遍历跳过过滤器与单缓冲路径栈 (`walkerSkip.cp`)
+
+> 吸收自 `/data/dev/bun/src/sys/walker_skippable.cp`，同步参考 `/data/dev/bun/docs/runtime/file-io.mdx` 文件系统遍历最佳实践
+
+- **导出符号**：`WALKER_MAX_SKIP_RULES` (64)、`WALKER_MAX_DEPTH` (64)、`WALKER_PATH_BUF_CAP` (4096)、`WalkerEntryKind`、`WalkerDecision`、`WalkerSkipError`、`walkerHashName`、`WalkerSkipFilter`、`WalkerPathStack`；
+- **核心设计**：
+  1. **零哈希快速短路**：`WalkerSkipFilter` 维护 `skip_dirnames`、`skip_filenames`、`skip_all` 三张定长 64 位种子哈希表；当对应规则表为空时直接跳过哈希计算；符号链接（`SymLink`）同时匹配目录与文件黑名单（`skip_all`）；
+  2. **NFS / FUSE `DT_UNKNOWN` 降级**：开启 `setResolveUnknown(true)` 后，遇到 `WalkerEntryKind.Unknown` 返回 `WalkerDecision.ResolveUnknown`，提示上层回退 `lstatat` 解析真实类型；
+  3. **单缓冲零堆分配路径栈**：`WalkerPathStack` 复用单个 4096 字节缓冲区，通过 `pushDir` / `joinEntry` / `popDir` 收缩复写 `dir_len`，杜绝深层目录扫描时的重复字符串分配；
+  4. **文件 I/O 实战提示（同步自 Bun `file-io.mdx`）**：对大规模目录树扫描优先使用延迟加载与过滤前置（`withCommonIgnores` 跳过 `.git`、`node_modules`、`.cap`），避免对忽略目录触发不必要的 `open` / `stat` 系统调用。
+
+```cp
+import { WalkerSkipFilter, WalkerPathStack, WalkerEntryKind, WalkerDecision } from "cap:sys";
+
+let filter = WalkerSkipFilter.withCommonIgnores(42);
+const d1 = filter.evaluate(WalkerEntryKind.Directory, "node_modules"); // WalkerDecision.Skip
+let stack = WalkerPathStack.initPosix();
+stack.pushDir("src")?;
+if (full := stack.joinEntry("main.cp")) {
+    * = full; // "src/main.cp"
+}
+* = d1;
+```
+
 ## 收敛子模块深度文档
 
 - [acpi.md](sys/acpi.md)

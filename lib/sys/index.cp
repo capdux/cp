@@ -1389,3 +1389,16 @@ export {
     BulkheadGuard,
 } from "./bulkhead.cp";
 
+// --- walkerSkip (Zero-Alloc Hash-Accelerated Directory Walker Skip Filter & Path Stack) ---
+export {
+    WALKER_MAX_SKIP_RULES,
+    WALKER_MAX_DEPTH,
+    WALKER_PATH_BUF_CAP,
+    WalkerEntryKind,
+    WalkerDecision,
+    WalkerSkipError,
+    walkerHashName,
+    WalkerSkipFilter,
+    WalkerPathStack,
+} from "./walkerSkip.cp";
+
