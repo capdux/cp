@@ -592,3 +592,51 @@ pub fn demoMcpBatchDispatcher() {
     * = n; // 2
 }
 ```
+
+
+---
+
+## 十五、 零堆分配 MCP Prompt 目录注册表、参数契约校验与前缀自动补全引擎 (`promptCatalog.cp`)
+
+面向 MCP 2025-03-26 `prompts/list`、`prompts/get`、`completion/complete` 的 100% 纯 CP 零动态堆分配核心逻辑引擎：
+
+- **常量与数据模型**：
+  - `MCP_PROMPT_MAX_ENTRIES = 32`、`MCP_PROMPT_MAX_ARGS = 8`、`MCP_PROMPT_MAX_ENUM_CHOICES = 8`、`MCP_PROMPT_NAME_MAX_LEN = 64`、`MCP_PROMPT_DESC_MAX_LEN = 128`、`MCP_PROMPT_ARG_NAME_MAX_LEN = 48`、`MCP_PROMPT_CHOICE_MAX_LEN = 32`、`MCP_PROMPT_DEFAULT_MAX_VALUE_LEN = 1024`。
+  - `McpPromptRegisterStatus`（`ok | empty_name | name_too_long | desc_too_long | duplicate_name | capacity_full | too_many_args | invalid_arg_spec`）。
+  - `McpPromptArgSpec`（`plain(name, required)`、`withChoices(name, required, enforce_enum, choice_list)`）、`McpStoredPromptArg`、`McpPromptEntry`。
+  - `McpPromptListPage`（`valid`, `count`, `total`, `has_more`, `next_cursor`）。
+  - `McpPromptArgValue`、`McpPromptViolationKind`（`none | prompt_not_found | missing_required_arg | unknown_arg | duplicate_arg | value_too_long | invalid_enum_value`）、`McpPromptGetValidation`。
+  - `McpCompletionCandidate`、`McpCompletionResult`（`found`, `count`, `total_matches`, `has_more`）。
+- **核心引擎 `McpPromptCatalog`**：
+  - `registerPrompt(*_, name, description, args)`：原子校验名称/描述长度、重复 Prompt、满容、>8 参数及参数契约合法性，内联零堆拷贝存储。
+  - `listPrompts(cursor, limit, out_indices: *[]usize): McpPromptListPage`：游标分页，非法游标或 `limit == 0` 返回 `valid = false`。
+  - `validatePromptGet(prompt_name, provided_args): McpPromptGetValidation`：一站式校验必填参数缺失、未知参数、重复参数、超长值与枚举越界，返回首个违规参数名与总违规数。
+  - `completePromptArg(prompt_name, arg_name, prefix, out_candidates: *[]McpCompletionCandidate): McpCompletionResult`：大小写无关 ASCII 前缀匹配，自动设置截断 `has_more` 标志。
+
+```cp
+import {
+    McpPromptArgSpec,
+    McpPromptArgValue,
+    McpCompletionCandidate,
+    McpPromptCatalog,
+} from "cap:mcp";
+
+pub fn demoMcpPromptCatalog() {
+    let cat = McpPromptCatalog.init();
+    const langs: [3][]const u8 = ["rust", "ruby", "python"];
+    const args: [2]McpPromptArgSpec = [
+        McpPromptArgSpec.withChoices("lang", true, true, langs[0..]),
+        McpPromptArgSpec.plain("topic", false),
+    ];
+    * = cat.registerPrompt("code_review", "Review code snippet", args[0..]);
+
+    const vals: [1]McpPromptArgValue = [McpPromptArgValue{ name: "lang", value: "rust" }];
+    const vr = cat.validatePromptGet("code_review", vals[0..]);
+    * = vr.ok; // true
+
+    let cands: [4]McpCompletionCandidate = [McpCompletionCandidate{}; 4];
+    let cands_s: []McpCompletionCandidate = cands[0..];
+    const cr = cat.completePromptArg("code_review", "lang", "RU", *cands_s);
+    * = cr.count; // 2 ("rust", "ruby")
+}
+```

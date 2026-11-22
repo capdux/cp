@@ -175,3 +175,25 @@ export {
     McpBatchSummary,
     McpBatchDispatcher,
 } from "./batch.cp";
+
+export {
+    MCP_PROMPT_MAX_ENTRIES,
+    MCP_PROMPT_MAX_ARGS,
+    MCP_PROMPT_MAX_ENUM_CHOICES,
+    MCP_PROMPT_NAME_MAX_LEN,
+    MCP_PROMPT_DESC_MAX_LEN,
+    MCP_PROMPT_ARG_NAME_MAX_LEN,
+    MCP_PROMPT_CHOICE_MAX_LEN,
+    MCP_PROMPT_DEFAULT_MAX_VALUE_LEN,
+    McpPromptRegisterStatus,
+    McpPromptArgSpec,
+    McpStoredPromptArg,
+    McpPromptEntry,
+    McpPromptListPage,
+    McpPromptArgValue,
+    McpPromptViolationKind,
+    McpPromptGetValidation,
+    McpCompletionCandidate,
+    McpCompletionResult,
+    McpPromptCatalog,
+} from "./promptCatalog.cp";
