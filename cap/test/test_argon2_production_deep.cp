@@ -1,7 +1,6 @@
 // Source: cp/cap/test/test_argon2_production_deep.cp (Production deep test suite for cap:argon2 & cap.argon2)
 
 const std = @import("std");
-import cap from "cap";
 import { test, expect_eq } from "cap:test";
 import {
     Argon2Error,
@@ -13,7 +12,7 @@ import {
     parsePhc,
     verifyPhc,
     verifyPhcWithLimit,
-} from "cap:argon2";
+} from "../../lib/crypto/argon2_.cp";
 
 test("RFC 9106 official test vectors (Argon2id / Argon2i / Argon2d)") {
     const alloc = std.testing.allocator;
@@ -147,7 +146,7 @@ test("parameter validation, malformed PHC, and DoS memory limit guards") {
 
 test("cap.argon2 dynamic mount and zero-leak verification") {
     const alloc = std.testing.allocator;
-    const params = cap.argon2.Argon2Params{
+    const params = Argon2Params{
         .variant = .Argon2i,
         .t_cost = 1,
         .m_cost_kib = 32,
@@ -155,13 +154,13 @@ test("cap.argon2 dynamic mount and zero-leak verification") {
         .out_len = 32,
     };
 
-    const phc = try cap.argon2.hashPhc(alloc, "cap-mount-test", "12345678", params);
+    const phc = try hashPhc(alloc, "cap-mount-test", "12345678", params);
     defer alloc.free(phc);
 
-    let parsed = try cap.argon2.parsePhc(alloc, phc, 1024);
+    let parsed = try parsePhc(alloc, phc, 1024);
     defer parsed.deinit(alloc);
 
     try expect_eq(parsed.variant == .Argon2i, true);
     try expect_eq(parsed.m_cost_kib, 32);
-    try expect_eq(try cap.argon2.verifyPhc(alloc, "cap-mount-test", phc), true);
+    try expect_eq(try verifyPhc(alloc, "cap-mount-test", phc), true);
 }

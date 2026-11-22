@@ -9,8 +9,7 @@ import {
     deriveKey,
     hashHex,
     verifyKeyedMac,
-} from "../../lib/blake3/index.cp";
-import cap from "cap";
+} from "../../lib/crypto/blake3_.cp";
 
 const std = @import("std");
 
@@ -144,10 +143,10 @@ test("BLAKE3 cap.blake3 dynamic mount and zero-heap-allocation verification") {
     fillPattern(data[0..]);
 
     const direct = hash(data[0..]);
-    const mounted = cap.blake3.hash(data[0..]);
+    const mounted = hash(data[0..]);
     expectBytesEq(mounted[0..], direct[0..]);
 
-    let hasher = cap.blake3.Blake3Hasher.init();
+    let hasher = Blake3Hasher.init();
     hasher.update(data[0..1024]);
     hasher.update(data[1024..]);
     let streamed: [32]u8 = undefined;

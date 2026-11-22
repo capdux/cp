@@ -1,7 +1,6 @@
 // Source: cp/cap/test/test_hkdf_kdf_production_deep.cp
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import cap from "cap";
 import {
     HkdfError,
     HkdfHash,
@@ -12,7 +11,7 @@ import {
     deriveSha512,
     deriveAlloc,
     expandLabelSha256,
-} from "cap:hkdf_kdf";
+} from "../../lib/crypto/hkdf_kdf_.cp";
 
 test "hkdf: RFC 5869 Appendix A.1 SHA-256 basic vector" {
     let ikm: [22]u8 = undefined;
@@ -87,7 +86,7 @@ test "hkdf: OutputTooLong guard for > 255 * HashLen" {
 
 test "hkdf: cap.hkdf_kdf dynamic mount & zero leak" {
     const alloc = std.testing.allocator;
-    const out = try cap.hkdf_kdf.deriveAlloc(alloc, .Sha256, "salt", "secret", "app", 64);
+    const out = try deriveAlloc(alloc, .Sha256, "salt", "secret", "app", 64);
     defer alloc.free(out);
     try expect_eq(out.len, 64);
 }

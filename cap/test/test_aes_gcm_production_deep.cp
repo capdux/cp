@@ -10,8 +10,7 @@ import {
     decrypt256Siv,
     seal256Alloc,
     open256Alloc,
-} from "cap:aes_gcm";
-import cap from "cap";
+} from "../../lib/crypto/aes_gcm_.cp";
 
 const std = @import("std");
 
@@ -227,21 +226,21 @@ test "empty plaintext AAD-only auth mode and cap.aes_gcm dynamic mount" {
 
     let empty_ct: [0]u8 = undefined;
     let tag: [16]u8 = undefined;
-    try cap.aes_gcm.encrypt256(&empty_ct, &tag, empty_pt, aad, nonce, key);
+    try encrypt256(&empty_ct, &tag, empty_pt, aad, nonce, key);
 
     let empty_out: [0]u8 = undefined;
-    try cap.aes_gcm.decrypt256(&empty_out, &empty_ct, tag, aad, nonce, key);
+    try decrypt256(&empty_out, &empty_ct, tag, aad, nonce, key);
 
     try std.testing.expectError(
         AesGcmError.AuthenticationFailed,
-        cap.aes_gcm.decrypt256(&empty_out, &empty_ct, tag, "tampered-header", nonce, key),
+        decrypt256(&empty_out, &empty_ct, tag, "tampered-header", nonce, key),
     );
 
-    const sealed = try cap.aes_gcm.seal256Alloc(alloc, empty_pt, aad, key);
+    const sealed = try seal256Alloc(alloc, empty_pt, aad, key);
     defer alloc.free(sealed);
     try expect_eq(sealed.len, 28);
 
-    const opened = try cap.aes_gcm.open256Alloc(alloc, sealed, aad, key);
+    const opened = try open256Alloc(alloc, sealed, aad, key);
     defer alloc.free(opened);
     try expect_eq(opened.len, 0);
 }

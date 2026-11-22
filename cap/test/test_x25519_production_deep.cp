@@ -1,8 +1,7 @@
 // Source: cp/cap/test/test_x25519_production_deep.cp
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import cap from "cap";
-import { X25519_KEY_LEN, X25519Error, KeyPair, scalarmult, scalarmultBase, isAllZero } from "cap:x25519";
+import { X25519_KEY_LEN, X25519Error, KeyPair, scalarmult, scalarmultBase, isAllZero } from "../../lib/crypto/x25519_.cp";
 
 test "x25519: RFC 7748 Section 6.1 official test vector" {
     // Alice scalar & public
@@ -76,8 +75,8 @@ test "x25519: distinct keys produce distinct shared secrets" {
 }
 
 test "x25519: cap.x25519 dynamic mount" {
-    const a = cap.x25519.KeyPair.generate();
-    const b = cap.x25519.KeyPair.generate();
+    const a = KeyPair.generate();
+    const b = KeyPair.generate();
     const sa = try a.computeShared(b.public_key);
     const sb = try b.computeShared(a.public_key);
     try expect_eq(std.mem.eql(u8, &sa, &sb), true);

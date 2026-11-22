@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/crypto/cipher.cp & lib/crypto/kdf.cp | Kept for comparison/analysis
 // Source: cp/lib/chacha20/chacha20.cp (Pure CP RFC 8439 ChaCha20-Poly1305 & XChaCha20-Poly1305 AEAD)
 const std = @import("std");
 const aead = std.crypto.aead.chacha_poly;

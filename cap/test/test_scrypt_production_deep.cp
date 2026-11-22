@@ -2,8 +2,7 @@
 
 import * as std from "std";
 import { test, expect_eq } from "cap:test";
-import * as scrypt from "cap:scrypt";
-import cap from "cap";
+import * as scrypt from "../../lib/crypto/scrypt_.cp";
 
 fn hexEncode(alloc: std.mem.Allocator, bytes: []const u8): ![]u8 {
     const hex_chars = "0123456789abcdef";
@@ -155,11 +154,11 @@ test "DoS protection: reject non-power-of-two N and excessive max_mem_bytes" {
 
 test "cap.scrypt dynamic mount and std.testing.allocator zero leaks" {
     const alloc = std.testing.allocator;
-    const params = cap.scrypt.ScryptParams.init(10, 8, 1, cap.scrypt.DEFAULT_MAX_MEM_BYTES);
+    const params = scrypt.ScryptParams.init(10, 8, 1, scrypt.DEFAULT_MAX_MEM_BYTES);
 
-    const phc = try cap.scrypt.hashPhcRandom(alloc, "dynamic-mount-pw", params);
+    const phc = try scrypt.hashPhcRandom(alloc, "dynamic-mount-pw", params);
     defer alloc.free(phc);
 
-    try expect_eq(try cap.scrypt.verifyPhc(alloc, "dynamic-mount-pw", phc), true);
-    try expect_eq(try cap.scrypt.verifyPhc(alloc, "bad-pw", phc), false);
+    try expect_eq(try scrypt.verifyPhc(alloc, "dynamic-mount-pw", phc), true);
+    try expect_eq(try scrypt.verifyPhc(alloc, "bad-pw", phc), false);
 }

@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/crypto/asymmetric.cp | Kept for comparison/analysis
 // Source: cp/lib/x25519/x25519.cp (Pure CP RFC 7748 X25519 ECDH Key Exchange)
 const std = @import("std");
 const X25519 = std.crypto.dh.X25519;

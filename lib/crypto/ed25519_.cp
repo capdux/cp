@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/crypto/asymmetric.cp | Kept for comparison/analysis
 // Source: native-cp-stdlib (RFC 8032 Ed25519 Signatures)
 
 const std = @import("std");

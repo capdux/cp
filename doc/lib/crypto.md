@@ -56,6 +56,23 @@
 | `lib/crypto/minhash.cp` | `// Origin: Pure-CP Stdlib` | MinHash 集合 Jaccard 相似度、LSH Band 与基数估算 |
 | `lib/crypto/index.cp` | `// Source: /data/dev/bun/src/boringssl/boringssl.cp` | `cap:crypto` 标准库对外统一零冲突导出入口（共 315 符号） |
 
+### 2. 归档参考实现（Reference Only，不从 `cap:crypto` 导出）
+
+以下纯 CP 参考实现与上述权威模块存在功能重叠，已按 `*_ .cp` 约定归档于 `lib/crypto/` 供对比分析（不从 `lib/crypto/index.cp` 重导出，生产代码请统一使用 `cap:crypto` 权威 API）：
+
+| 归档文件 | 对应权威模块 | 说明 |
+| :--- | :--- | :--- |
+| `lib/crypto/aes_gcm_.cp` | `cipher.cp` / `kdf.cp` | AES-128/256-GCM 与 AES-256-GCM-SIV 纯 CP 参考实现 |
+| `lib/crypto/argon2_.cp` | `kdf.cp` | RFC 9106 Argon2d/2i/2id 与 PHC 编解码参考实现 |
+| `lib/crypto/blake3_.cp` | `kdf.cp` | 纯 CP BLAKE3 压缩/Merkle/XOF 流式参考实现 |
+| `lib/crypto/chacha20_.cp` | `cipher.cp` / `kdf.cp` | RFC 8439 ChaCha20-Poly1305 / XChaCha20-Poly1305 参考实现 |
+| `lib/crypto/ed25519_.cp` | `asymmetric.cp` | RFC 8032 Ed25519 签名与批验证参考实现 |
+| `lib/crypto/hkdf_kdf_.cp` | `kdf.cp` | RFC 5869 HKDF-SHA256/384/512 Extract & Expand 参考实现 |
+| `lib/crypto/scrypt_.cp` | `kdf.cp` | RFC 7914 scrypt 与 PHC 编解码参考实现 |
+| `lib/crypto/x25519_.cp` | `asymmetric.cp` | RFC 7748 X25519 ECDH 密钥协商参考实现 |
+
+> 注：Java KeyStore (`.jks`) 与 TCG TPM 2.0 二进制结构解析器已统一收敛归属至 `cap:binfmt`（`lib/binfmt/jks.cp`、`lib/binfmt/tpm.cp`）。
+
 ---
 
 ## 二、 核心密码学原语详解

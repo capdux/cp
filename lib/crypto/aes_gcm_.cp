@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/crypto/cipher.cp & lib/crypto/kdf.cp | Kept for comparison/analysis
 // Source: native-cp-stdlib (NIST SP 800-38D AES-GCM & AES-GCM-SIV)
 const std = @import("std");
 

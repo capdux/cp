@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/crypto/kdf.cp | Kept for comparison/analysis
 // Source: cp/lib/hkdf_kdf/hkdf.cp (Pure CP RFC 5869 HKDF Extract & Expand)
 const std = @import("std");
 const hmac = std.crypto.auth.hmac;

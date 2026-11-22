@@ -1,7 +1,6 @@
 // Source: cp/cap/test/test_chacha20_production_deep.cp
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import cap from "cap";
 import {
     KEY_LEN,
     NONCE_LEN,
@@ -14,7 +13,7 @@ import {
     decryptX,
     sealXAlloc,
     openXAlloc,
-} from "cap:chacha20";
+} from "../../lib/crypto/chacha20_.cp";
 
 test "chacha20: RFC 8439 Section 2.8.2 AEAD official test vector" {
     const key: [32]u8 = [
@@ -96,9 +95,9 @@ test "chacha20: cap.chacha20 dynamic mount & constants" {
     const alloc = std.testing.allocator;
     let key: [32]u8 = undefined;
     @memset(&key, 0x55);
-    const sealed = try cap.chacha20.sealXAlloc(alloc, key, "", "dyn");
+    const sealed = try sealXAlloc(alloc, key, "", "dyn");
     defer alloc.free(sealed);
-    const pt = try cap.chacha20.openXAlloc(alloc, key, "", sealed);
+    const pt = try openXAlloc(alloc, key, "", sealed);
     defer alloc.free(pt);
     try expect_eq(std.mem.eql(u8, pt, "dyn"), true);
 }

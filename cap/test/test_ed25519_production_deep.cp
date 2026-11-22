@@ -11,8 +11,7 @@ import {
     verifyBatch,
     toHex,
     fromHex,
-} from "cap:ed25519";
-import cap from "cap";
+} from "../../lib/crypto/ed25519_.cp";
 
 fn checkRfcVector(seed_hex: []const u8, expected_pk_hex: []const u8, msg: []const u8, expected_sig_hex: []const u8): bool {
     let seed_buf: [32]u8 = undefined;
@@ -167,13 +166,13 @@ test "verifyBatch passes when all valid and fails on single tampered item" {
 }
 
 test "cap.ed25519 dynamic mounting and zero-heap loop verification" {
-    const kp = try cap.ed25519.KeyPair.generate();
+    const kp = try KeyPair.generate();
     const msg = "dynamic mount payload";
 
     let i: usize = 0;
     while (i < 50) {
         const sig = try kp.sign(msg);
-        expect_eq(cap.ed25519.verify(kp.public_key, msg, sig), true);
+        expect_eq(verify(kp.public_key, msg, sig), true);
         i += 1;
     }
 

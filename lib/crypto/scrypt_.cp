@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/crypto/kdf.cp | Kept for comparison/analysis
 // Source: native-cp-stdlib (RFC 7914 scrypt KDF)
 
 import * as std from "std";
