@@ -157,3 +157,12 @@ export {
     StaticRouteGraph,
     StaticRouteVisitor,
 } from "./static_route_visitor";
+
+export {
+    ChangedFilterError,
+    ChangedFilterSummary,
+    AffectedEntryResult,
+    ReverseImportGraph,
+    parseChangedPathLines,
+    freeChangedPathList,
+} from "./changed_filter";

@@ -218,6 +218,29 @@ let visitor = StaticRouteVisitor.init();
 const is_ssg = visitor.isFullyStatic(&graph, &scb, 0)?; // false（传递依赖 client 边界）
 ```
 
+### 3.12 反向导入图与变更影响分析器（`lib/bundler/changed_filter.cp`，吸收自 `/data/dev/bun/src/cli/test/ChangedFilesFilter.cp`）
+- **错误集与结果类型**：`ChangedFilterError`（`OutOfMemory` / `ModuleIndexOutOfRange`）、`ChangedFilterSummary`、`AffectedEntryResult`（RAII `~init()` 确定性释放 `indices`）
+- **核心引擎**：`ReverseImportGraph`（`init` / `addModule` / `addImport` / `addImportByPath` / `moduleCount` / `indexOf` / `importerCount` / `computeAffectedModules` / `filterAffectedEntries`）与 Git 输出路径解析辅助 `parseChangedPathLines` / `freeChangedPathList`
+- **算法特性**：采用多源环路安全反向 BFS，自动去重反向边、忽略自环、支持未入图入口直接变更兜底保留，完整覆盖增量打包、HMR 失效冒泡与 `test --changed` 入口筛选场景。
+
+```typescript
+import { ReverseImportGraph } from "cap:bundler";
+
+pub fn demoChangedFilter(allocator: std.mem.Allocator): ! {
+    let g = ReverseImportGraph.init(allocator);
+    defer g.deinit();
+
+    g.addImportByPath("test/a.test.cp", "src/service.cp")?;
+    g.addImportByPath("src/service.cp", "src/math.cp")?;
+    g.addImportByPath("test/b.test.cp", "src/str.cp")?;
+
+    const entries: [2][]const u8 = ["test/a.test.cp", "test/b.test.cp"];
+    const changed: [1][]const u8 = ["src/math.cp"];
+    let res = g.filterAffectedEntries(allocator, entries[0..], changed[0..])?;
+    defer res.deinit(); // res.indices == [0] ("test/a.test.cp")
+}
+```
+
 ---
 
 ## 四、 上游行为契约、边界与安全注意事项
@@ -231,3 +254,6 @@ const is_ssg = visitor.isFullyStatic(&graph, &scb, 0)?; // false（传递依赖 
 3. **单文件虚拟文件系统反序列化防越界（`StandaloneModuleGraph.deserialize`）**：
    - 反序列化完全零拷贝（模块路径、源码与 SourceMap 切片直接借用原始字节缓冲，调用方需保证底层缓冲生命周期长于 `StandaloneModuleGraph`）；
    - 严格校验 `CPSG0001` Header Magic、`"\n---- CP! -----\n"` 40B Footer Trailer、条目表总长、入口索引范围及每条 Payload 偏移区间，任何截断或畸形映像均安全报错退出。
+4. **HMR 边界冒泡与失效传播实践（吸收自 `/data/dev/bun/docs/bundler/hot-reloading.mdx`）**：
+   - 热更新从变更叶节点沿反向导入图（`ReverseImportGraph`）向上冒泡，直至命中调用 `import.meta.hot.accept()` 的模块边界（仅重评估边界模块并修补其引用方，保留未变更兄弟模块状态）；若冒泡至入口仍无接受边界，则触发整页重载；
+   - 生产构建应对 `import.meta.hot` 分支执行死代码消除（DCE），因此业务代码中必须直接书写完整 `import.meta.hot.<API>` 调用，禁止将其赋值给中间变量或作为高阶回调传递。

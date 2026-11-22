@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/border.cp | Synced: 2026-11-22T04:56:13Z
+// Source: Absorbed from /data/dev/bun/src/css/properties/border.cp | Synced: 2026-11-22T05:09:42Z
 // Pure-CP CSS Border properties: LineStyle, BorderSideWidth, BorderColorValue,
 // Border shorthand, BorderWidth/BorderStyle/BorderColor rect shorthands, and
 // logical start/end border shorthands.

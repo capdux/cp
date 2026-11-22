@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/custom.cp | Synced: 2026-11-22T05:01:00Z
+// Source: Absorbed from /data/dev/bun/src/css/properties/custom.cp | Synced: 2026-11-22T05:09:41Z
 // lib/css/variables.cp
 // CSS Custom Properties Registry & var(--name, fallback) Recursive Resolver
 // Absorbed from Bun src/css/properties/custom.cp
