@@ -1644,6 +1644,53 @@ pub fn demoIvfPq()! {
 }
 ```
 
+#### 无上限外部切片 Residual IVF-PQ 与 CRC32 二进制快照持久化 (`IvfPqFlatIndex`)
+
+面向大规模高维向量检索（任意维 `dim`、任意 `nlist`、任意 `m_subspaces`、`ksub <= 256`、任意 `max_docs`）的无上限外部缓冲引擎，内置确定性 **K-Means++** 初始中心选择、软删除过滤与 IEEE CRC32 二进制快照热加载：
+
+- **常量与错误**：`IVFPQ_SNAPSHOT_MAGIC = 0x51505649` (`"IVPQ"`)、`IVFPQ_SNAPSHOT_VERSION = 1`、`IVFPQ_INVALID_LINK = 0xFFFF_FFFF`、`IvfPqFlatError`（`InvalidConfig | DimMismatch | NotTrained | CapacityFull | BufferTooSmall | InvalidSnapshot | ChecksumMismatch`）
+- **配置与容量规划**：`IvfPqFlatConfig`、`ivfPqCoarseBufLen`、`ivfPqCodebookBufLen`、`ivfPqCodesBufLen`、`ivfPqTrainWorkF32Len`、`ivfPqTrainWorkU32Len`、`ivfPqSearchWorkF32Len`、`ivfPqSnapshotMaxBytes`
+- **引擎与持久化 API**：
+  - `IvfPqFlatIndex.init(cfg, coarse_centroids, pq_codebooks, codes, doc_ids, deleted_flags, list_heads, list_next, list_counts)`
+  - `train(*_, flat_vecs, num_vecs, work_f32, work_u32)`（两阶段 K-Means++ + Lloyd 迭代）
+  - `add(*_, doc_id, vec): u32 ! IvfPqFlatError`、`markDeleted(*_, doc_id): bool`、`reconstruct(doc_idx, out_vec): bool`、`search(*_, query_vec, nprobe, adc_lut_work, out_hits): usize ! IvfPqFlatError`、`stats(): IvfPqStats`
+  - `serializeIvfPqSnapshot(idx, out_bytes)` / `deserializeIvfPqSnapshot(bytes, ...)`（魔数/版本/边界/IEEE CRC32 全量校验，零重训秒级热加载）
+
+```cp
+import {
+    IvfPqFlatConfig,
+    IvfPqFlatIndex,
+    IvfPqHit,
+    serializeIvfPqSnapshot,
+    deserializeIvfPqSnapshot,
+} from "cap:vector";
+
+pub fn demoIvfPqFlatSnapshot(flat_vecs: []const f32)! {
+    const cfg = IvfPqFlatConfig{ dim: 32, max_docs: 1024, nlist: 16, m_subspaces: 8, ksub: 16, train_iters: 8, seed: 42 };
+    let coarse: [512]f32 = [0.0; 512];
+    let cb: [512]f32 = [0.0; 512];
+    let codes: [8192]u8 = [0; 8192];
+    let ids: [1024]u64 = [0; 1024];
+    let del: [1024]u8 = [0; 1024];
+    let heads: [16]u32 = [0; 16];
+    let next: [1024]u32 = [0; 1024];
+    let cnts: [16]u32 = [0; 16];
+    let idx = IvfPqFlatIndex.init(cfg, coarse[0..], cb[0..], codes[0..], ids[0..], del[0..], heads[0..], next[0..], cnts[0..])?;
+
+    let wf: [2048]f32 = [0.0; 2048];
+    let wu: [1040]u32 = [0; 1040];
+    idx.train(flat_vecs, 1024, wf[0..], wu[0..])?;
+    * = idx.add(1001, flat_vecs[0..32])?;
+
+    let snap: [32768]u8 = [0; 32768];
+    const snap_len = serializeIvfPqSnapshot(idx, snap[0..])?;
+    let restored = deserializeIvfPqSnapshot(snap[0..snap_len], coarse[0..], cb[0..], codes[0..], ids[0..], del[0..], heads[0..], next[0..], cnts[0..])?;
+    let adc: [256]f32 = [0.0; 256];
+    let hits: [4]IvfPqHit = [IvfPqHit{}; 4];
+    * = restored.search(flat_vecs[0..32], 4, adc[0..], hits[0..])?;
+}
+```
+
 ### 35. 无上限外部缓冲多层 HNSW 检索与 CRC32 二进制快照持久化引擎 (`hnswFlat.cp`)
 
 彻底解除小容量上限的 100% 纯 CP 零动态堆分配多层 HNSW 检索引擎。节点向量池、元数据、L0/上层邻接表与零清零访问戳全部由调用方以外部切片传入，原生使用 `@l2sq`/`@dot` SIMD 加速，支持十万级向量检索与零重训二进制快照热加载：

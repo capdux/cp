@@ -369,6 +369,21 @@ export {
     IvfPqHit,
     IvfPqStats,
     IvfPqIndex,
+    IVFPQ_SNAPSHOT_MAGIC,
+    IVFPQ_SNAPSHOT_VERSION,
+    IVFPQ_INVALID_LINK,
+    IvfPqFlatError,
+    IvfPqFlatConfig,
+    ivfPqCoarseBufLen,
+    ivfPqCodebookBufLen,
+    ivfPqCodesBufLen,
+    ivfPqTrainWorkF32Len,
+    ivfPqTrainWorkU32Len,
+    ivfPqSearchWorkF32Len,
+    ivfPqSnapshotMaxBytes,
+    IvfPqFlatIndex,
+    serializeIvfPqSnapshot,
+    deserializeIvfPqSnapshot,
 } from "./ivfPq.cp";
 
 export {
