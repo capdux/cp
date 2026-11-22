@@ -327,6 +327,30 @@ const res = analyzer.compute()?;
 * = res;
 ```
 
+### 3.17 产物命名路径模板引擎（`lib/bundler/path_template.cp`，吸收自 `/data/dev/bun/src/bundler/options.cp` 与 `/data/dev/bun/docs/bundler/index.mdx`）
+- **错误集与枚举**：`PathTemplateError`、`PathTemplateField`（`dir` / `name` / `ext` / `hash` / `target`）、`PathSeparatorStyle`（`posix` / `windows`）
+- **核心类型与方法**：`PathTemplatePlaceholder`、`PathTemplate`（6 大官方预设 `file` / `fileWithTarget` / `chunk` / `chunkWithTarget` / `asset` / `assetWithTarget`、`fromString` / `withValues` / `needs` / `validate` / `format` / `formatWithStyle`）、`formatTruncatedHashHex`、`formatBundlerNaming`。
+- **上游 `naming` 契约（参考 `/data/dev/bun/docs/bundler/index.mdx`）**：
+  - 入口文件默认 `"[dir]/[name].[ext]"`，共享 chunk 默认 `"./chunk-[hash].[ext]"`，静态资源默认 `"./[name]-[hash].[ext]"`；当 `[dir]` 为空时自动回退为 `"."`；
+  - `needs(PathTemplateField.hash)` 可在打包期静态跳过不必要的内容哈希计算；`formatWithStyle(.windows, true, ...)` 自动将 `/` 规范化为 `\`，并在严格模式下拦截未闭合 `[`、未知占位符、缺失哈希值以及 `..` 路径穿越。
+
+```cp
+import { PathTemplate, PathTemplatePlaceholder, PathSeparatorStyle } from "cap:bundler";
+
+const vals = PathTemplatePlaceholder{
+    dir: "pages/auth",
+    name: "login",
+    ext: "js",
+    hash: 0x1234_5678_9abc_def0,
+    target: "browser",
+};
+const tpl = PathTemplate.fromString("files/[dir]/[name]-[hash].[ext]").withValues(vals);
+let buf: [128]u8 = [0; 128];
+const n = tpl.formatWithStyle(PathSeparatorStyle.posix, true, buf[0..])?;
+// "files/pages/auth/login-88888888.js"
+* = n;
+```
+
 ---
 
 ## 四、 上游行为契约、边界与安全注意事项

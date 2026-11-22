@@ -216,3 +216,13 @@ export {
     CrossChunkResult,
     CrossChunkAnalyzer,
 } from "./cross_chunk_deps";
+
+export {
+    PathTemplateError,
+    PathTemplateField,
+    PathSeparatorStyle,
+    formatTruncatedHashHex,
+    PathTemplatePlaceholder,
+    PathTemplate,
+    formatBundlerNaming,
+} from "./path_template";

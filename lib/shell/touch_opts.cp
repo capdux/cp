@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/builtin/touch.cp | Synced: 2026-11-22T07:57:00Z
+// Source: Absorbed from /data/dev/bun/src/shell/builtin/touch.cp | Synced: 2026-11-22T08:04:12Z
 // Pure-CP zero-allocation POSIX `touch` option parser (`-a`, `-c`/`--no-create`,
 // `-m`, `-h`/`--no-dereference`, `-d`/`--date`, `-r`/`--reference`, `-t`, `--time`,
 // combined short flags, `--` terminator) and POSIX `[[CC]YY]MMDDhhmm[.ss]` timestamp parser/formatter.
