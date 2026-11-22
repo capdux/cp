@@ -499,7 +499,7 @@ pub fn decodeFrames(allocator: std.mem.Allocator, payload: []const u8): ([]QuicF
             pos += first_dec.len;
 
             const range_count: usize = @intCast(count_dec.value);
-            let ranges: []AckRange = @constCast(&EMPTY_ACK_RANGES);
+            let ranges: []AckRange = unsafe { @constCast(&EMPTY_ACK_RANGES) };
             if (range_count > 0) {
                 ranges = allocator.alloc(AckRange, range_count) catch return QuicError.OutOfMemory;
                 errdefer allocator.free(ranges);

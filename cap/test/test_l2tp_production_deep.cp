@@ -21,7 +21,7 @@ import {
     FLAG_OFFSET,
     FLAG_PRIORITY,
     AVP_MESSAGE_TYPE,
-    AVP_RESULT_CODE,
+    L2TP_AVP_RESULT_CODE,
     AVP_PROTOCOL_VERSION,
     AVP_FRAMING_CAPS,
     AVP_BEARER_CAPS,
@@ -38,7 +38,7 @@ import {
     parseL2tpv2,
     parseL2tpv3Control,
     isL2tp,
-} from "cap:l2tp";
+} from "cap:net";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

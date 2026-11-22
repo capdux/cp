@@ -23,7 +23,7 @@ import {
     igmpDecodeFloatCode,
     parseIgmp,
     encodeIgmpV2,
-} from "cap:igmp";
+} from "cap:net";
 
 fn ip4Eq(a: [4]u8, b: [4]u8): bool {
     return a[0] == b[0] && a[1] == b[1] && a[2] == b[2] && a[3] == b[3];

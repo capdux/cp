@@ -16,7 +16,7 @@ import {
     NFS_V4,
     NFS3_FHSIZE,
     NFS3_FATTR_SIZE,
-    AUTH_NONE,
+    NFS_AUTH_NONE,
     AUTH_SYS,
     MSG_ACCEPTED,
     MSG_DENIED,
@@ -39,7 +39,7 @@ import {
     Nfs3Fattr,
     parseNfs3FileHandle,
     parseNfs3Fattr,
-} from "cap:nfs";
+} from "cap:net";
 
 fn expectBytesEq(actual: []const u8, expected: []const u8) {
     expect_eq(std.mem.eql(u8, actual, expected), true);
@@ -88,7 +88,7 @@ test("1. TCP Record Marking multi-fragment parsing and encodeRpcRecordMark round
 });
 
 test("2. ONC RPC v2 Call with AUTH_SYS and encodeRpcCallHeader round-trip", () => {
-    // 40-byte AUTH_NONE Call header round-trip
+    // 40-byte NFS_AUTH_NONE Call header round-trip
     let hdr40: [44]u8 = [0; 44];
     const hlen = encodeRpcCallHeader(0x11223344, RPC_PROG_NFS, NFS_V3, NFS3_GETATTR, hdr40[0..]) ?? unreachable;
     expect_eq(hlen, RPC_CALL_NONE_HEADER_SIZE);
@@ -100,9 +100,9 @@ test("2. ONC RPC v2 Call with AUTH_SYS and encodeRpcCallHeader round-trip", () =
     expect_eq(call0.prog, RPC_PROG_NFS);
     expect_eq(call0.vers, NFS_V3);
     expect_eq(call0.proc, NFS3_GETATTR);
-    expect_eq(call0.cred.flavor, AUTH_NONE);
+    expect_eq(call0.cred.flavor, NFS_AUTH_NONE);
     expect_eq(call0.cred.body.len, 0);
-    expect_eq(call0.verf.flavor, AUTH_NONE);
+    expect_eq(call0.verf.flavor, NFS_AUTH_NONE);
     expect_eq(call0.params.len, 4);
 
     // RPC Call with AUTH_SYS cred (5 bytes + 3 zero pad) + params ("data")
@@ -121,8 +121,8 @@ test("2. ONC RPC v2 Call with AUTH_SYS and encodeRpcCallHeader round-trip", () =
     buf[34] = 's';
     buf[35] = '0';
     buf[36] = '1';
-    // verf: AUTH_NONE, len=0 at offset 40
-    writeU32BeTest(buf[0..], 40, AUTH_NONE);
+    // verf: NFS_AUTH_NONE, len=0 at offset 40
+    writeU32BeTest(buf[0..], 40, NFS_AUTH_NONE);
     writeU32BeTest(buf[0..], 44, 0);
     // params at offset 48..52
     buf[48] = 'd';
@@ -142,7 +142,7 @@ test("3. ONC RPC v2 Reply parsing for MSG_ACCEPTED (success & error) and MSG_DEN
     writeU32BeTest(ok_reply[0..], 0, 0x55443322);
     writeU32BeTest(ok_reply[0..], 4, RPC_REPLY);
     writeU32BeTest(ok_reply[0..], 8, MSG_ACCEPTED);
-    writeU32BeTest(ok_reply[0..], 12, AUTH_NONE);
+    writeU32BeTest(ok_reply[0..], 12, NFS_AUTH_NONE);
     writeU32BeTest(ok_reply[0..], 16, 0);
     writeU32BeTest(ok_reply[0..], 20, ACCEPT_SUCCESS);
     writeU32BeTest(ok_reply[0..], 24, NFS3_OK);

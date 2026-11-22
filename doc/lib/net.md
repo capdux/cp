@@ -242,3 +242,9 @@ pub fn demoProductionNet() {
 | 消息与网管/AAA（第 2 波） | `lib/net/snmp.cp` | RFC 1157 / 3416 | 零堆分配 SNMP v1/v2c PDU 与 VarBind 解析器 |
 | 消息与网管/AAA（第 2 波） | `lib/net/radius.cp` / `lib/net/diameter.cp` | RFC 2865 / RFC 6733 | 零堆分配 RADIUS 与 Diameter AAA 认证计费协议编解码 |
 | 参考归档（不导出） | `lib/net/socks_.cp` / `lib/net/socks5_.cp` | SOCKS4/4a/5（仅参考） | 与权威 `lib/net/socks5.cp` 功能重叠，保留供对比分析，不在 `cap:net` 重复导出 |
+| 隧道与封装（第 3 波） | `lib/net/gre.cp` / `lib/net/geneve.cp` / `lib/net/l2tp.cp` | RFC 2784/8926/2661/3931 | GRE、Geneve 与 L2TPv2/v3 隧道编解码（`L2TP_AVP_RESULT_CODE` 别名） |
+| 隧道与封装（第 3 波） | `lib/net/mpls.cp` / `lib/net/pppoe.cp` | RFC 3032/4385/5586 & RFC 2516 | MPLS 标签栈/PW-CW/G-ACh 与 PPPoE 发现/会话编解码 |
+| 路由与高可用（第 3 波） | `lib/net/isis.cp` / `lib/net/rip.cp` / `lib/net/igmp.cp` / `lib/net/vrrp.cp` | ISO 10589 / RFC 2453 / 3376 / 5798 | IS-IS、RIPv1/v2/RIPng、IGMP v1-v3 与 VRRPv2/v3 编解码 |
+| 名称与远程存储（第 3 波） | `lib/net/nbns.cp` / `lib/net/smb.cp` / `lib/net/nfs.cp` / `lib/net/iscsi.cp` | RFC 1001 / MS-SMB2/3 / ONC RPC-NFSv3 / RFC 7143 | NetBIOS、SMB2/3、NFSv3（`NFS_AUTH_NONE` 别名）与 iSCSI 线缆解析 |
+| 现代传输与实时通信（第 3 波） | `lib/net/quic.cp` / `lib/net/sdp.cp` | RFC 9000 QUIC & RFC 8866 WebRTC SDP | QUIC 变长整数/帧编解码（`encodeQuicFrame` 别名）与 WebRTC SDP 解析构建 |
+| 内容与目录协议（第 3 波） | `lib/net/gemini.cp` / `lib/net/nntp.cp` / `lib/net/ldif.cp` | Gemini / RFC 3977 / RFC 2849 | Gemini/Gemtext、NNTP 与 LDIF 线缆与目录解析 |

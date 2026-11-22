@@ -29,7 +29,7 @@ import {
     parseMplsGach,
     MplsPwCw,
     parseMplsPwCw,
-} from "cap:mpls";
+} from "cap:net";
 
 test("1. Single and multi-label MPLS stack encode/decode roundtrip and zero-copy iteration", () => {
     expect_eq(MPLS_ETHERTYPE_UNICAST, 0x8847 as u16);

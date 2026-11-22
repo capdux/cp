@@ -24,10 +24,10 @@ import {
     decodeLongHeader,
     encodeShortHeader,
     decodeShortHeader,
-    encodeFrame,
+    encodeQuicFrame,
     decodeFrames,
     freeFrames,
-} from "cap:quic";
+} from "cap:net";
 
 fn runTestVarint(): !void {
     const alloc = std.testing.allocator;
@@ -179,11 +179,11 @@ fn runTestFrames(): !void {
         AckRange { gap: 0, ack_range_len: 2 },
     ];
 
-    const f_pad = encodeFrame(alloc, QuicFrame { padding: 3 })?;
+    const f_pad = encodeQuicFrame(alloc, QuicFrame { padding: 3 })?;
     defer alloc.free(f_pad);
-    const f_ping = encodeFrame(alloc, QuicFrame.ping)?;
+    const f_ping = encodeQuicFrame(alloc, QuicFrame.ping)?;
     defer alloc.free(f_ping);
-    const f_ack = encodeFrame(alloc, QuicFrame {
+    const f_ack = encodeQuicFrame(alloc, QuicFrame {
         ack: AckFrame {
             largest_acked: 100,
             ack_delay: 25,
@@ -192,14 +192,14 @@ fn runTestFrames(): !void {
         },
     })?;
     defer alloc.free(f_ack);
-    const f_crypto = encodeFrame(alloc, QuicFrame {
+    const f_crypto = encodeQuicFrame(alloc, QuicFrame {
         crypto: CryptoFrame {
             offset: 0,
             data: "ClientHelloBytes",
         },
     })?;
     defer alloc.free(f_crypto);
-    const f_stream = encodeFrame(alloc, QuicFrame {
+    const f_stream = encodeQuicFrame(alloc, QuicFrame {
         stream: StreamFrame {
             stream_id: 4,
             offset: 1024,
@@ -208,9 +208,9 @@ fn runTestFrames(): !void {
         },
     })?;
     defer alloc.free(f_stream);
-    const f_max = encodeFrame(alloc, QuicFrame { max_data: 65536 })?;
+    const f_max = encodeQuicFrame(alloc, QuicFrame { max_data: 65536 })?;
     defer alloc.free(f_max);
-    const f_close = encodeFrame(alloc, QuicFrame {
+    const f_close = encodeQuicFrame(alloc, QuicFrame {
         connection_close: ConnectionCloseFrame {
             is_app_error: false,
             error_code: 0x0a,
@@ -334,14 +334,14 @@ fn runTestValidationErrors(): !void {
 fn runTestDynamicCapMount(): !void {
     const alloc = std.testing.allocator;
 
-    const encoded = cap.quic.encodeVarint(alloc, 16383)?;
+    const encoded = cap.net.encodeVarint(alloc, 16383)?;
     defer alloc.free(encoded);
     expect_eq(encoded.len, 2 as usize);
-    const decoded = cap.quic.decodeVarint(encoded)?;
+    const decoded = cap.net.decodeVarint(encoded)?;
     expect_eq(decoded.value, 16383 as u64);
 
-    const frame_wire = cap.quic.encodeFrame(alloc, cap.quic.QuicFrame {
-        reset_stream: cap.quic.ResetStreamFrame {
+    const frame_wire = cap.net.encodeQuicFrame(alloc, cap.net.QuicFrame {
+        reset_stream: cap.net.ResetStreamFrame {
             stream_id: 8,
             error_code: 42,
             final_size: 2048,
@@ -349,8 +349,8 @@ fn runTestDynamicCapMount(): !void {
     })?;
     defer alloc.free(frame_wire);
 
-    const frames = cap.quic.decodeFrames(alloc, frame_wire)?;
-    defer cap.quic.freeFrames(alloc, frames);
+    const frames = cap.net.decodeFrames(alloc, frame_wire)?;
+    defer cap.net.freeFrames(alloc, frames);
     expect_eq(frames.len, 1 as usize);
     switch (frames[0]) {
         .reset_stream => |rst| {

@@ -11,7 +11,7 @@ import {
     IceCandidate,
     MediaSection,
     SdpSession,
-} from "cap:sdp";
+} from "cap:net";
 
 fn runTest1(): !void {
     const alloc = std.testing.allocator;
@@ -236,7 +236,7 @@ fn runTest5(): !void {
         "a=rtpmap:0 PCMU/8000\r\n" ++
         "a=sendrecv\r\n";
 
-    let sess = cap.sdp.SdpSession.parse(alloc, raw)?;
+    let sess = cap.net.SdpSession.parse(alloc, raw)?;
     defer sess.deinit(alloc);
 
     expect_eq(sess.version, 0 as u32);

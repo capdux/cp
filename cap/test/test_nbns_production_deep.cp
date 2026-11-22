@@ -34,7 +34,7 @@ import {
     isNbns,
     parseNbns,
     encodeNbnsQuery,
-} from "cap:nbns";
+} from "cap:net";
 
 fn putU16Be(buf: []u8, off: usize, v: u16) {
     buf[off] = ((v >> 8) & 0xFF) as u8;

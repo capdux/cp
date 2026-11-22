@@ -23,7 +23,7 @@ import {
     verifyVrrp3ChecksumIpv4,
     vrrp3ChecksumIpv6,
     verifyVrrp3ChecksumIpv6,
-} from "cap:vrrp";
+} from "cap:net";
 
 fn writeBeU16(buf: *[]u8, off: usize, v: u16) {
     buf.*[off] = ((v >> 8) & 0xFF) as u8;

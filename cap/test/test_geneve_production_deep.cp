@@ -19,7 +19,7 @@ import {
     GeneveWriter,
     isGeneve,
     parseGeneve,
-} from "cap:geneve";
+} from "cap:net";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

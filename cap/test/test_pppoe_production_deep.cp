@@ -32,7 +32,7 @@ import {
     isPppoe,
     parsePppoe,
     PppoeWriter,
-} from "cap:pppoe";
+} from "cap:net";
 
 test("1. PADI / PADO / PADR / PADS / PADT Discovery TLV roundtrip", () => {
     expect_eq(PPPOE_ETHERTYPE_DISCOVERY, 0x8863 as u16);

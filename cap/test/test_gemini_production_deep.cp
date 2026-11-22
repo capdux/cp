@@ -35,7 +35,7 @@ import {
     encodeGeminiResponseHeader,
     GemtextLine,
     GemtextIter,
-} from "cap:gemini";
+} from "cap:net";
 
 test("1. Protocol constants, request encode/parse roundtrip, and response header roundtrip", () => {
     expect_eq(GEMINI_TCP_PORT, 1965 as u16);

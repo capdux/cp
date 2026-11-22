@@ -35,7 +35,7 @@ import {
     isIsis,
     parseIsis,
     parseIsisLsp,
-} from "cap:isis";
+} from "cap:net";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

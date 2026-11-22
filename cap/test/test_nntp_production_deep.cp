@@ -30,7 +30,7 @@ import {
     parseNntpOverview,
     NntpMultiLineIter,
     encodeNntpCommand,
-} from "cap:nntp";
+} from "cap:net";
 
 test("1. NNTP constants & 3-digit status response classification (1xx..5xx)", () => {
     expect_eq(NNTP_TCP_PORT, 119 as u16);

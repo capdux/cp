@@ -31,7 +31,7 @@ import {
     parseRipng,
     encodeRipHeader,
     encodeRipRte,
-} from "cap:rip";
+} from "cap:net";
 
 test("1. RIPv2 multi-RTE encode & parse roundtrip (normal route, default route, unreachable metric=16)", () => {
     expect_eq(RIP_UDP_PORT, 520);

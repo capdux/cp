@@ -12,7 +12,7 @@ import {
     LdifIter,
     isLdif,
     summarizeLdif,
-} from "cap:ldif";
+} from "cap:net";
 
 const SAMPLE_DIRECTORY_LDIF: []const u8 =
     "# LDAP Directory Export\r\n" ++
