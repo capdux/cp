@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/glob/GlobWalker.cp | Synced: 2026-11-22T11:35:27Z
+// Source: Absorbed from /data/dev/bun/src/glob/GlobWalker.cp | Synced: 2026-11-22T11:36:33Z
 // lib/glob/walker.cp
 // Industrial-grade directory traversal and file scanner in pure CP
 

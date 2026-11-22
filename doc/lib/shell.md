@@ -355,3 +355,38 @@ const s3 = sm.nextStep()?; // Completed(exit_code == 42)
 * = s2;
 * = s3;
 ```
+
+### POSIX / Bun Shell `&&` / `||` 短路二元逻辑链状态机（`binary_state.cp`）
+
+- 吸收自 `/data/dev/bun/src/shell/states/Binary.cp` 与 `/data/dev/bun/docs/runtime/shell.mdx`；
+- 导出：`SHELL_BINARY_MAX_TERMS` (`32`)、`ShellBinaryError`、`BinaryLogicOp`（`None`/`And`/`Or`）、`BinaryStepKind`（`RunTerm`/`Completed`）、`BinaryTerm`、`BinaryStepResult`、`shouldShortCircuitBinary`、`ShellBinaryStateMachine`；
+- **POSIX AND-OR 列表规范与边界约束**：
+  - `&&` 与 `||` 具有**相同优先级且严格左结合**（`cmd1 && cmd2 || cmd3 && cmd4` 按 `(((cmd1 && cmd2) || cmd3) && cmd4)` 顺序求值）；
+  - `&&` 在前序退出码 `!= 0` 时短路跳过右操作数，`||` 在前序退出码 `== 0` 时短路跳过右操作数；
+  - 对齐 Bun `Binary.makeChild == null` 语义：空子节点（`is_empty = true`）不派发执行并直接以退出码 `0` 继续推进。
+
+```cp
+import {
+    BinaryLogicOp,
+    BinaryStepKind,
+    ShellBinaryStateMachine,
+} from "cap:shell";
+
+let bm = ShellBinaryStateMachine.init();
+* = bm.setFirstTerm(10, false)?;                    // cmd10 (将返回 1)
+* = bm.pushTerm(BinaryLogicOp.And, 20, false)?;     // && cmd20 (被短路跳过)
+* = bm.pushTerm(BinaryLogicOp.Or, 30, false)?;      // || cmd30 (执行并返回 0)
+* = bm.pushTerm(BinaryLogicOp.And, 40, false)?;     // && cmd40 (执行并返回 0)
+
+const r1 = bm.nextStep()?; // RunTerm(10)
+* = bm.onTermDone(1)?;
+const r2 = bm.nextStep()?; // RunTerm(30), skipped_count == 1
+* = bm.onTermDone(0)?;
+const r3 = bm.nextStep()?; // RunTerm(40)
+* = bm.onTermDone(0)?;
+const done = bm.nextStep()?; // Completed(exit_code == 0)
+* = r1;
+* = r2;
+* = r3;
+* = done;
+```

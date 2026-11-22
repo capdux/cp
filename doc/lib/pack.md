@@ -547,6 +547,41 @@ pub fn demoDeltaVarintCompression() {
 
 ---
 
+### Frame-of-Reference (FOR) 与 Sorted Delta-FOR 紧致位打包 QuickStart 示例 (`for_bitpack.cp`)
+
+面向列式存储、倒排索引 DocID 块与向量 ID 列表的 100% 零动态堆分配位打包编解码内核（原生 `@clz` 计算最小位宽）：
+
+- **导出符号**：`FOR_BLOCK_HEADER_LEN` (`14`)、`FOR_MAX_BIT_WIDTH` (`32`)、`ForBlockMode`、`ForPackStatus`、`ForBlockHeader`（`payloadBytes`, `totalEncodedBytes`）、`ForPackResult`、`ForDecodeResult`、`ForSingleResult`、`bitWidthU32`、`packedByteLen`、`blockMayContain`、`decodeForBlockHeader`、`packBitsU32`、`unpackBitsU32`、`unpackSingleU32`（O(1) 单点随机访问）、`encodeForBlockU32`、`decodeForBlockU32`、`encodeDeltaForBlockU32`、`decodeDeltaForBlockU32`。
+
+```cp
+import {
+    ForPackStatus,
+    decodeForBlockHeader,
+    blockMayContain,
+    encodeDeltaForBlockU32,
+    decodeDeltaForBlockU32,
+} from "cap:pack";
+
+pub fn demoForBitpack() {
+    const doc_ids: [8]u32 = [10000, 10002, 10005, 10006, 10010, 10011, 10015, 10018];
+    let buf: [64]u8 = [0; 64];
+    let buf_s: []u8 = buf[0..];
+
+    const enc = encodeDeltaForBlockU32(doc_ids[0..], *buf_s);
+    if (enc.status != ForPackStatus.ok) return;
+
+    // O(1) 跳表头范围剪枝：不解包即可判定目标 DocID 是否可能落在该块
+    const hdr = decodeForBlockHeader(buf[0..enc.bytes_written]).header;
+    if (blockMayContain(hdr, 10010)) {
+        let out: [8]u32 = [0; 8];
+        let out_s: []u32 = out[0..];
+        * = decodeDeltaForBlockU32(buf[0..enc.bytes_written], *out_s);
+    }
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [ar.md](pack/ar.md)

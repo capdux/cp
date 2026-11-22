@@ -282,6 +282,17 @@ export {
     ShellIfStateMachine,
 } from "./if_state.cp";
 
+export {
+    SHELL_BINARY_MAX_TERMS,
+    ShellBinaryError,
+    BinaryLogicOp,
+    BinaryStepKind,
+    BinaryTerm,
+    BinaryStepResult,
+    shouldShortCircuitBinary,
+    ShellBinaryStateMachine,
+} from "./binary_state.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);

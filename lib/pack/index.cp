@@ -367,3 +367,26 @@ export {
     decodeDeltaOfDeltaI64,
     computeDeltaCompressionStats,
 } from "./delta_varint.cp";
+
+// --- for_bitpack ---
+export {
+    FOR_BLOCK_HEADER_LEN,
+    FOR_MAX_BIT_WIDTH,
+    ForBlockMode,
+    ForPackStatus,
+    ForBlockHeader,
+    ForPackResult,
+    ForDecodeResult,
+    ForSingleResult,
+    bitWidthU32,
+    packedByteLen,
+    blockMayContain,
+    decodeForBlockHeader,
+    packBitsU32,
+    unpackBitsU32,
+    unpackSingleU32,
+    encodeForBlockU32,
+    decodeForBlockU32,
+    encodeDeltaForBlockU32,
+    decodeDeltaForBlockU32,
+} from "./for_bitpack.cp";
