@@ -10,3 +10,4 @@ export * from "./internalSourceMap.cp";
 export * from "./chunk.cp";
 export * from "./parsedSourceMap.cp";
 export * from "./sourcemap.cp";
+export * from "./sourceMapStore.cp";

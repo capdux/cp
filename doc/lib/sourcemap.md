@@ -147,3 +147,20 @@ pub fn demoChunkMerge()! {
    - 对标 Bun 运行时异常堆栈反解机制：`InternalSourceMap` 每 64 条映射记录一个稀疏检查点，在极低内存占用下先二分定位检查点再线性推进至多 64 步，适合嵌入 AOT 二进制或长驻服务中做毫秒级错误堆栈还原。
 4. **多 Chunk 拼接与偏移重定位**：
    - 使用 `SourceMapChunk.appendChunk(alloc, &chunk, line_offset, col_offset)` 合并多份打包产物时，自动按目标行/列偏移重算生成坐标并重映射 `sources` / `names` 索引，支持直接通过 `printSourceMapJSON` 输出标准 v3 JSON。
+5. **DevServer SourceMap 强弱引用缓存与延迟拉取（`lib/sourcemap/sourceMapStore.cp`，吸收自 `/data/dev/bun/src/bake/DevServer/SourceMapStore.cp` & `/data/dev/bun/docs/bundler/index.mdx`）**：
+   - **导出符号**：`SOURCEMAP_WEAK_REF_EXPIRY_SECS` (`10`)、`SOURCEMAP_WEAK_REF_MAX` (`16`)、`SOURCEMAP_STORE_MAX_ENTRIES` (`128`)、`SOURCEMAP_URL_PREFIX` (`"/_bun/client/"`)、`SOURCEMAP_URL_SUFFIX` (`".js.map"`)、`SourceMapStoreError`、`SourceMapChunkKind`（`InitialResponse`/`HmrChunk`）、`SourceMapStoreId`（64-bit 打包键值：`forInitialResponse`/`forHmrChunk`/`kind`/`generationId`/`contentHash`/`formatUrl`）、`SourceMapStoreEntry`、`SourceMapStore`（`init`/`totalCount`/`strongCount`/`weakCount`/`totalMemoryBytes`/`putOrRef`/`get`/`unref`/`pruneExpired`/`removeImmediate`）；
+   - **Bun Bundler `sourcemap` 策略与 HMR 弱引用宽限期最佳实践**：
+     - 生产打包按需选择 `none` / `linked`（推荐，外置 `.map` 文件并附带 `//# sourceMappingURL=`）/ `external`（不注入注释）/ `inline`（DataURL 内联）；
+     - 开发期热重载失效时，浏览器 DevTools 往往在数秒后才异步请求 `/_bun/client/{id}.js.map`：`SourceMapStore.unref()` 在强引用归零时不立即销毁条目，而是转入上限 16 条、宽限期 10 秒的弱引用缓存池；再次 `putOrRef()` 可原地复活，超时由 `pruneExpired(now_sec)` 回收，避免 HMR 频繁刷新引发内存泄漏。
+
+```cp
+import { SourceMapStore, SourceMapStoreId } from "cap:sourcemap";
+
+let store = SourceMapStore.init();
+const id = SourceMapStoreId.forInitialResponse(7);
+* = store.putOrRef(id, 12, 8192)?;
+* = store.unref(id, 100)?;                // 转入弱引用宽限期（100s..110s）
+const still_ok = store.get(id, 105);      // 仍在 10s 宽限期内，DevTools 命中！
+const pruned = store.pruneExpired(110);   // 110s 过期自动物理回收 (pruned == 1)
+* = still_ok; * = pruned;
+```
