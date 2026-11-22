@@ -18667,3 +18667,12 @@ bun agy 按你的建议,优化了方案, 更新了 GEMINI.md 和 脚本文件
   > 3. **当前并行进行中**
   >    - 主控已落盘 [content_disposition](file:///data/dev/cp/lib/content_disposition/index.cp) 待新版 `cpc` 发布后验收；
   >    - 2 个常驻吸收子智能体正在并行吸收 `cap:cors_policy` 与 `cap:csv_stream`。待各路回报后将自动唤醒继续验证、提交并推进下一批次。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 23:41:25）[step:17136]
+- **用户完整原始指令**：
+  > 新增 lib/pkg/package_json_editor.cp, 这个名称太长了, 并且有下划线, 不符合 cp的简洁/ts 风格,
+  > 除这个之外,还有很多其他的, 都要简化并去掉下划线
+- **完整回复与执行汇报**：
+  > 已收到并立即执行！
+  > 1. 已通知双路并发子智能体立即切换为**简洁无下划线 TS/camelCase 命名规范**（本轮新产出的 `lib/pkg/cacheDir.cp` 与 `lib/prompt/compiler.cp` 已直接按新规范命名）。
+  > 2. 已启动批量重构脚本，正在对 `lib/` 下全部非私有/非归档的 **492 个带下划线内部子模块**执行简化去下划线重命名（如 `package_json_editor.cp -> editor.cp`、`pnpm_lock.cp -> pnpmLock.cp`、`isolated_materializer.cp -> materializer.cp` 等），并同步更新全量相对导入、`doc/lib/*.md` 与 `cp_lib_ref.md` 及 `cpc check` 校验。待批处理完成后立即汇报完整验收结果。
