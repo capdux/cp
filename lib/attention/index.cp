@@ -66,3 +66,18 @@ export {
     ssmSelectiveScan,
     causalConv1dStep,
 } from "./ssm.cp";
+
+export {
+    GGUF_MAGIC,
+    GGUF_DEFAULT_ALIGNMENT,
+    GgufValueType,
+    GgmlType,
+    GgufHeader,
+    GgufKvEntry,
+    GgufTensorInfo,
+    parseGgufHeader,
+    parseGgufFile,
+    ggufFindKv,
+    ggufFindTensor,
+    ggufTensorByteSize,
+} from "./gguf.cp";

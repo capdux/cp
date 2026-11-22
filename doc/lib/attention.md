@@ -17,6 +17,7 @@
 - **`MoeGateKind` / `MoeRouteEntry` / `MoeDispatchStats` / `moeRouteToken` / `moeDispatchBatch` / `moeLoadBalanceLoss` / `moeCombineOutputs`** (`moe.cp`)：零堆分配稀疏混合专家（Sparse MoE）推理调度核，对标 Mixtral / Switch Transformer / Qwen3-MoE / DeepSeek-V3，支持 Softmax 与 Sigmoid 门控、无辅助损失 `expert_bias` 均衡偏置、容量受限 CSR 分桶派发（含溢出丢弃统计）、负载均衡辅助损失 $L_{\text{aux}}$ 与多专家加权输出合并。
 - **`LoraAdapter` / `loraApplyAdd` / `loraApplyWeightedSum` / `loraMergeIntoBase` / `loraUnmergeFromBase`** (`lora.cp`)：零堆分配多租户 LoRA 低秩适配器前向推理与权重热融合核，支持零拷贝借用 `A/B` 低秩矩阵、$O(r(d_{\text{in}} + d_{\text{out}}))$ 动态增量叠加、多 LoRA 加权混合以及零推理开销的静态热合并与在线热卸载。
 - **`softplus` / `ssmSelectiveStep` / `ssmSelectiveScan` / `causalConv1dStep`** (`ssm.cp`)：零堆分配 Mamba / S6 选择性状态空间模型（Selective SSM）$O(N)$ 线性复杂度长上下文推理核与深度可分离因果一维卷积，支持 ZOH 离散化（$A = -\exp(a_{\log}) < 0$ 严格稳定）、分块预填充无缝续接自回归单步生成以及固定环形历史缓存因果卷积。
+- **`GGUF_MAGIC` / `GgufValueType` / `GgmlType` / `GgufHeader` / `GgufKvEntry` / `GgufTensorInfo` / `parseGgufHeader` / `parseGgufFile` / `ggufFindKv` / `ggufFindTensor` / `ggufTensorByteSize`** (`gguf.cp`)：零堆分配零拷贝 GGUF v2/v3 大模型权重文件解析器，直接面向 mmap 缓冲区解析头、元数据 KV（自动提取 `general.alignment`）、张量描述符与对齐 `data_offset`，并精确计算 F32/F16/BF16/Q4_0/Q8_0/K-Quants 张量物理字节数。
 
 ## 3. API 速查
 
@@ -65,6 +66,10 @@
 | `ssmSelectiveStep` | `(x, dt, a_log, b_vec, c_vec, d_skip, d_inner, d_state, state_inout, y_out): bool` | Mamba S6 单步 ZOH 选择性状态空间递推（$A = -\exp(a_{\log}) < 0$） |
 | `ssmSelectiveScan` | `(x_seq, dt_seq, a_log, b_seq, c_seq, d_skip, seq_len, d_inner, d_state, state_inout, y_seq_out): bool` | 整序列 $O(N)$ 选择性扫描，支持分块预填充后无缝续接单步解码 |
 | `causalConv1dStep` | `(x, weight, bias, d_inner, kernel_size, conv_state_inout, y_out): bool` | Mamba 深度可分离因果 1D 卷积单步核（带 `[d_inner, kernel_size - 1]` 历史状态） |
+| `parseGgufHeader` | `(data: []const u8): GgufHeader?` | 快速校验 GGUF 24B 文件头、`GGUF_MAGIC` 与 `version ∈ {2, 3}` |
+| `parseGgufFile` | `(data, kvs_out, tensors_out): GgufHeader?` | 单遍零拷贝解析全部元数据 KV（自动应用 `general.alignment`）与张量描述符并计算对齐 `data_offset` |
+| `ggufFindKv` / `ggufFindTensor` | `(kvs, key): usize?` / `(tensors, name): usize?` | 按键名或张量名检索元数据与张量描述符索引 |
+| `ggufTensorByteSize` | `(dtype, dims, n_dims): u64?` | 精确计算 `F32`/`F16`/`BF16`/`Q4_0`/`Q8_0`/`K-Quants` 张量物理字节数并校验分块对齐 |
 
 ## 4. 示例
 
@@ -329,5 +334,41 @@ pub fn demoMambaS6Step(
     let y_buf: [2]f64 = [0.0; 2];
     let y_out: []f64 = y_buf[0..];
     * = ssmSelectiveStep(conv_out_buf[0..], dt_buf[0..], a_log, b_vec, c_vec, d_skip, 2, 4, ssm_state, y_out);
+}
+```
+
+### GGUF v2/v3 大模型权重零拷贝解析示例 (`gguf.cp`)
+
+```cp
+import {
+    GgufKvEntry,
+    GgufTensorInfo,
+    parseGgufFile,
+    ggufFindKv,
+    ggufFindTensor,
+    ggufTensorByteSize,
+} from "cap:attention";
+
+pub fn demoParseGgufWeights(mmap_bytes: []const u8) {
+    let kvs_buf: [64]GgufKvEntry = [GgufKvEntry{}; 64];
+    let tensors_buf: [128]GgufTensorInfo = [GgufTensorInfo{}; 128];
+    let kvs: []GgufKvEntry = kvs_buf[0..];
+    let tensors: []GgufTensorInfo = tensors_buf[0..];
+
+    if (hdr := parseGgufFile(mmap_bytes, kvs, tensors)) {
+        const kv_slice = kvs_buf[0 .. (hdr.kv_count as usize)];
+        const tensor_slice = tensors_buf[0 .. (hdr.tensor_count as usize)];
+        if (arch_i := ggufFindKv(kv_slice, "general.architecture")) {
+            * = kv_slice[arch_i].str_val; // e.g. "llama" / "qwen2"
+        }
+        if (t_i := ggufFindTensor(tensor_slice, "blk.0.attn_q.weight")) {
+            const info = tensor_slice[t_i];
+            if (n_bytes := ggufTensorByteSize(info.dtype, info.dims, info.n_dims)) {
+                const payload_start = hdr.data_offset + (info.offset as usize);
+                * = payload_start;
+                * = n_bytes;
+            }
+        }
+    }
 }
 ```
