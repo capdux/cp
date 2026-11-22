@@ -131,6 +131,73 @@ pub fn demoVoiceAiFrontend(pcm_48k: []const f32) {
 }
 ```
 
+### 无上限外部切片驱动 Radix-2 FFT/IFFT、RBJ Biquad IIR/SOS、加窗 Sinc 重采样与 K-Weighted 响度引擎 (`fftFilter.cp`)
+
+面向专业音频 DSP、频谱分析、实时均衡滤波、高质量重采样与广播级响度计量的 100% 纯 CP 零动态堆分配引擎。全部算子直接作用于调用方传入的任意长度外部切片（支持任意 2 的幂 FFT `64..65536+` 与任意时长 PCM 缓冲）：
+
+- **错误集**：`DspKernelError`（`NotPowerOfTwo | LengthMismatch | InvalidSampleRate | InvalidCutoff | InvalidQ | InvalidRatio | OutputTooSmall`）
+- **窗函数族**：
+  - `DspWindowKind`（`rectangular | hann | hamming | blackman_harris`）
+  - `windowSampleAt(kind, index, len)` / `windowCoherentGain(kind)` / `applyDspWindowF64(*buf, kind)` / `applyDspWindowF32(*buf, kind)`
+- **Radix-2 Cooley-Tukey 迭代 FFT / IFFT 与频谱分析**：
+  - `fftRadix2InPlace(*re, *im): void ! DspKernelError`（位反转置换 + 周期性旋转因子重锚，零递归零堆分配）
+  - `ifftRadix2InPlace(*re, *im): void ! DspKernelError`（共轭对称 + `1/N` 归一化，往返精度 `< 1e-12`）
+  - `computeMagnitudeSpectrum(re, im, *out_mag)` / `computePowerDbSpectrum(re, im, floor_db, *out_db)`（兼容 `N/2 + 1` 单边与 `N` 双边缓冲）
+  - `findPeakFrequencyHz(mag, sample_rate_hz): f64 ! DspKernelError`（三点抛物线亚频点插值精确测频）
+  - `computeStftFrameMagnitude(frame_f32, window, *work_re, *work_im, *out_mag)`（单帧 STFT 加窗 + FFT + 幅度谱）
+- **RBJ Audio EQ Cookbook Biquad IIR 滤波器与 SOS 级联**：
+  - `BiquadFilterKind`（`low_pass | high_pass | band_pass | notch | peaking_eq | low_shelf | high_shelf | all_pass`）
+  - `BiquadCoeffs`（`b0, b1, b2, a1, a2`；提供 `identity()`、`magnitudeResponseAt(freq_hz, sample_rate_hz)` 与 `magnitudeDbAt(...)`）
+  - `designBiquad(kind, sample_rate_hz, freq_hz, q, gain_db): BiquadCoeffs ! DspKernelError`
+  - `BiquadFilter`（Direct Form II Transposed 稳定结构：`init`, `reset`, `setCoeffs`, `processSample`, `processSliceInPlaceF32`, `processSliceF32`）
+  - `BiquadCascade`（最多 `BIQUAD_CASCADE_MAX_STAGES = 8` 阶串联 SOS：`init`, `addStage`, `stageCount`, `reset`, `processSample`, `processSliceInPlaceF32`, `processSliceF32`, `magnitudeResponseAt`, `designButterworthLowPass`, `designKWeighting`）
+- **加窗 Sinc 抗混叠重采样器**：
+  - `resampleSincF32(src, src_rate_hz, *dst, dst_rate_hz, half_taps): usize ! DspKernelError`（Hann 加窗 sinc 核 + 下采样自动抗混叠截止缩放 + 直流增益归一化）
+- **专业响度与动态计量**：
+  - `LoudnessMetrics`（`rms_dbfs`, `peak_dbfs`, `crest_factor_db`, `k_weighted_lufs`, `dc_offset`, `clipped_samples`）
+  - `measureAudioLoudnessF32(samples, sample_rate_hz): LoudnessMetrics ! DspKernelError`（ITU-R BS.1770 两级 K-Weighting 预滤波 + `-70 LUFS` 400ms 块绝对门控）
+
+```cp
+import {
+    DspWindowKind,
+    BiquadFilterKind,
+    designBiquad,
+    BiquadFilter,
+    computeStftFrameMagnitude,
+    findPeakFrequencyHz,
+    resampleSincF32,
+    measureAudioLoudnessF32,
+} from "cap:media";
+
+pub fn demoDspMasteringPipeline(pcm_48k: []const f32) {
+    // 1. 高质量抗混叠重采样 48kHz -> 16kHz
+    let pcm_16k_buf: [1024]f32 = [0.0; 1024];
+    let pcm_16k_s: []f32 = pcm_16k_buf[0..];
+    const n16 = resampleSincF32(pcm_48k, 48000, *pcm_16k_s, 16000, 12) catch return;
+
+    // 2. 施加 80Hz 高通滤除低频直流/风噪
+    const hp_c = designBiquad(BiquadFilterKind.high_pass, 16000.0, 80.0, 0.7071, 0.0) catch return;
+    let hp = BiquadFilter.init(hp_c);
+    let active_16k: []f32 = pcm_16k_buf[0..n16];
+    hp.processSliceInPlaceF32(*active_16k);
+
+    // 3. STFT 频谱与抛物线精确主频检测
+    let re: [512]f64 = [0.0; 512];
+    let im: [512]f64 = [0.0; 512];
+    let mag: [257]f64 = [0.0; 257];
+    let re_s: []f64 = re[0..];
+    let im_s: []f64 = im[0..];
+    let mag_s: []f64 = mag[0..];
+    const bins = computeStftFrameMagnitude(active_16k, DspWindowKind.hann, *re_s, *im_s, *mag_s) catch return;
+    const peak_hz = findPeakFrequencyHz(mag[0..bins], 16000.0) catch 0.0;
+
+    // 4. ITU-R BS.1770 K-Weighted 响度与削波计量
+    const loudness = measureAudioLoudnessF32(active_16k, 16000.0) catch return;
+    * = peak_hz;
+    * = loudness;
+}
+```
+
 ---
 
 ## 收敛子模块深度文档

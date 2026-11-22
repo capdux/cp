@@ -117,7 +117,7 @@ pub struct RiffChunkIter {
     }
 
     // Iterate subchunks inside a LIST chunk payload (automatically skips the 4-byte listType)
-    fn initSubchunks(list_payload: []const u8, is_big_endian: bool): RiffChunkIter {
+    static fn initSubchunks(list_payload: []const u8, is_big_endian: bool): RiffChunkIter {
         if (list_payload.len < 4) {
             return RiffChunkIter{
                 .buf = list_payload[0..0],

@@ -32,6 +32,30 @@ export {
 } from "./dspPipeline.cp";
 
 export {
+    BIQUAD_CASCADE_MAX_STAGES,
+    DspKernelError,
+    DspWindowKind,
+    windowSampleAt,
+    windowCoherentGain,
+    applyDspWindowF64,
+    applyDspWindowF32,
+    fftRadix2InPlace,
+    ifftRadix2InPlace,
+    computeMagnitudeSpectrum,
+    computePowerDbSpectrum,
+    findPeakFrequencyHz,
+    computeStftFrameMagnitude,
+    BiquadFilterKind,
+    BiquadCoeffs,
+    designBiquad,
+    BiquadFilter,
+    BiquadCascade,
+    resampleSincF32,
+    LoudnessMetrics,
+    measureAudioLoudnessF32,
+} from "./fftFilter.cp";
+
+export {
     FLAC_MAGIC_SIZE,
     FLAC_BLOCK_HEADER_SIZE,
     FLAC_STREAMINFO_SIZE,
