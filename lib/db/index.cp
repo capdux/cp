@@ -308,3 +308,13 @@ export {
     MvccGcStats,
     MvccVersionGcStore,
 } from "./mvcc_gc.cp";
+
+// --- page_buffer_pool ---
+export {
+    BUFFER_POOL_MAX_FRAMES,
+    BUFFER_POOL_INVALID_PAGE,
+    PageFrameMeta,
+    PageFetchOutcome,
+    BufferPoolStats,
+    ClockPageBufferPool,
+} from "./page_buffer_pool.cp";

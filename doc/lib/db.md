@@ -200,6 +200,36 @@ pub fn demoMvccSafeHorizonGc() {
 }
 ```
 
+### 零分配 CLOCK 二次机会数据库页缓冲池管理器示例 (`page_buffer_pool.cp`)
+
+面向 PostgreSQL `shared_buffers` / SQLite Pager / InnoDB Buffer Pool 级存储引擎的 100% 纯 CP 零动态堆分配 CLOCK（Second-Chance）引用计数页帧缓冲池与脏页刷盘管理器（固定内联上限 `BUFFER_POOL_MAX_FRAMES = 128`）：
+
+- **常量与模型**：`BUFFER_POOL_MAX_FRAMES` (`128`)、`BUFFER_POOL_INVALID_PAGE` (`0xFFFFFFFFFFFFFFFF`)、`PageFrameMeta`、`PageFetchOutcome`、`BufferPoolStats`。
+- **核心引擎 `ClockPageBufferPool`**：
+  - `init(capacity): ClockPageBufferPool?`：校验 `1 <= capacity <= 128`，零堆初始化。
+  - `fetch_page(*_, page_id): PageFetchOutcome`：命中则递增 `pin_count` 并置 `ref_bit = true`；未命中优先分配空帧；满池时推进 `clock_hand` 执行最多两圈 CLOCK 二次机会扫描（跳过 `pin_count > 0` 固定页，对 `ref_bit == true` 清零给二次机会，淘汰首个冷未固定页并报告 `evicted_page_id` 与 `evicted_was_dirty`；全部固定则返回 `ok = false, all_pinned = true`）。
+  - `unpin_page(*_, page_id, mark_dirty): bool`：递减 `pin_count`（防下溢）并可选标脏。
+  - `flush_dirty_pages(*_, out_dirty_page_ids): usize`：收集脏页号并清零已写出帧的 `dirty` 位，天然支持小缓冲分批刷盘不丢页。
+  - `invalidate_page(*_, page_id): bool`：仅允许释放 `pin_count == 0` 的空闲驻留页；`stats(): BufferPoolStats`。
+
+```cp
+import { ClockPageBufferPool } from "cap:db";
+
+pub fn demoClockPageBufferPool() {
+    let pool = ClockPageBufferPool.init(4) ?? return;
+
+    const f1 = pool.fetch_page(10); // miss -> frame 0, pin=1
+    * = pool.unpin_page(10, true);  // pin=0, dirty=true
+
+    // 分批刷盘：收集所有脏页号并清零 dirty 位
+    let dirty_buf: [4]u64 = [0; 4];
+    let dirty_s: []u64 = dirty_buf[0..];
+    const flushed = pool.flush_dirty_pages(dirty_s);
+    * = f1;
+    * = flushed; // 1 (dirty_buf[0] == 10)
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
