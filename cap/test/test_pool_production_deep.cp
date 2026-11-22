@@ -11,7 +11,7 @@ import {
     PooledHandle,
     PoolStats,
     ResourcePool,
-} from "cap:pool";
+} from "cap:time";
 
 struct MockConn {
     id: u64;
@@ -349,14 +349,14 @@ fn testCapPoolDynamicLazyMount(): ! {
     let ctx = MockPoolCtx{};
 
     unsafe {
-        let pool = cap.pool.ResourcePool.init(
+        let pool = cap.time.ResourcePool.init(
             alloc,
-            cap.pool.PoolConfig{
+            cap.time.PoolConfig{
                 min_idle: 1,
                 max_size: 2,
                 idle_timeout_ms: 1000,
                 max_lifetime_ms: 5000,
-                borrow_order: cap.pool.BorrowOrder.Fifo,
+                borrow_order: cap.time.BorrowOrder.Fifo,
             },
             *ctx as *anyopaque!,
             mockCreate,

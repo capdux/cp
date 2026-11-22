@@ -39,7 +39,7 @@ import {
     parsePtpAnnounce,
     parsePtpDelayResp,
     encodePtpHeader,
-} from "cap:ptp";
+} from "cap:time";
 
 fn writeTs(buf: *[]u8, off: usize, secs: u64, nanos: u32) {
     buf.*[off] = ((secs >> 40) & 0xFF) as u8;

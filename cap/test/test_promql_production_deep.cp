@@ -1,7 +1,7 @@
 // Source: native-cp-stdlib (PromQL Lexer & AST Parser)
 import std from "std";
 import cap from "cap";
-import { parse, parseDuration, MatchOp, AggregationOp, BinaryOp, VectorMatchCardinality } from "cap:promql";
+import { parse, parseDuration, MatchOp, AggregationOp, BinaryOp, VectorMatchCardinality } from "cap:time";
 import { test, expect_eq } from "cap:test";
 
 test "promql instant and matrix vector selectors with matchers and offset" {
@@ -154,7 +154,7 @@ test "promql invalid syntax interception without memory leaks" {
 test "promql cap.promql dynamic mounting and topk aggregation" {
     const alloc = std.testing.allocator;
 
-    let expr = cap.promql.parse(alloc, "topk(5, sum without (instance) (rate(cpu_seconds_total[1m])))")?;
+    let expr = cap.time.parse(alloc, "topk(5, sum without (instance) (rate(cpu_seconds_total[1m])))")?;
     defer expr.deinit(alloc);
 
     switch (expr) {

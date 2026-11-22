@@ -18,7 +18,7 @@ import {
     Keyframe,
     KeyframeTrack,
     SpringDamper,
-} from "cap:tween";
+} from "cap:time";
 
 fn expectNear(actual: f64, expected: f64, tol: f64) {
     expect_eq(@abs(actual - expected) <= tol, true);
@@ -251,10 +251,10 @@ test("cap:tween - SpringDamper underdamped, critically damped, large dt stabilit
 test("cap:tween - import cap from 'cap'; cap.tween dynamic lazy mounting") {
     const tol: f64 = 0.000000001;
 
-    const eased = cap.tween.Easing.lerpEased(0.0, 200.0, 0.5, cap.tween.EaseKind.OutQuad);
+    const eased = cap.time.Easing.lerpEased(0.0, 200.0, 0.5, cap.time.EaseKind.OutQuad);
     expectNear(eased, 150.0, tol);
 
-    let tw = cap.tween.Tween.init(100.0, cap.tween.EaseKind.Linear, false, 0) catch unreachable;
+    let tw = cap.time.Tween.init(100.0, cap.time.EaseKind.Linear, false, 0) catch unreachable;
     expectNear(tw.update(50.0), 0.5, tol);
     expect_eq(tw.isFinished(), false);
 }

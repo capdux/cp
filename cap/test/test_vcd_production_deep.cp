@@ -13,7 +13,7 @@ import {
     parseVcdHeader,
     VcdVarIter,
     VcdValueIter,
-} from "cap:vcd";
+} from "cap:time";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

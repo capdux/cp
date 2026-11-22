@@ -129,6 +129,32 @@ pub fn demoTimeSuite() {
 
 ---
 
+## Batch 21 时间/时钟/时区/时序/调度域收敛子模块
+
+以下 16 个纯 CP 子模块已统一收敛至 `lib/time/`（0 覆盖、0 符号冲突，Bun 资产 `duration.cp` / `rfc3339.cp` 保持最高优先权）：
+
+| 目标文件 | 原目录 | 核心导出符号与职责 |
+| :--- | :--- | :--- |
+| `lib/time/tz.cp` | `lib/tz` | `TzError`, `DstRule`, `LocalDateTime`, `Timezone`, `isValidDateTime`, `daysFromCivil`, `weekdayFromDays`（POSIX TZ & DST 规则引擎；`isLeapYear`/`daysInMonth` 沿用 `rfc3339.cp`） |
+| `lib/time/hlc.cp` | `lib/hlc` | `HlcTimestamp`, `HlcClock`, `formatHlc`, `parseHlc`（Kulkarni 混合逻辑时钟 HLC） |
+| `lib/time/ptp.cp` | `lib/ptp` | `PtpTimestamp`, `PtpPortIdentity`, `PtpHeader`, `PtpPacket`, `parsePtp`, `encodePtpHeader` 等（IEEE 1588-2008/2019 PTPv2/v2.1 精密时间协议编解码） |
+| `lib/time/supervisor.cp` | `lib/supervisor` | `SupervisorError`, `RestartStrategy`, `ChildRestartPolicy`, `SupervisorConfig`, `SupervisorTree`（OTP 监督树与重启风暴防护） |
+| `lib/time/supervisor_resilience.cp` | `lib/supervisor` | `BackoffKind`, `BackoffPolicy`, `Bulkhead`, `RetryBudget`（退避策略、舱壁隔离与重试预算） |
+| `lib/time/timeseries.cp` | `lib/timeseries` | `TimeSeriesError`, `AggOp`, `DataPoint`, `AnomalyPoint`, `SeriesSummary`, `TimeSeries`（时序存储、对齐降采样、SMA/EMA 与 Z-Score 异常检测） |
+| `lib/time/prometheus.cp` | `lib/prometheus` | `PromError`, `MetricType`, `LabelPair`, `ParsedSample`, `PromRegistry`, `parseExposition`, `freeParsedSamples`（Prometheus 时序指标与 Exposition 解析） |
+| `lib/time/promql.cp` | `lib/promql` | `PromqlError`, `MatchOp`, `VectorSelector`, `MatrixSelector`, `AggregationExpr`, `BinaryExpr`, `Expr`, `parseDuration`, `parse`（PromQL 时序查询词法与 AST 解析） |
+| `lib/time/interval.cp` | `lib/interval` | `IntervalError`, `Interval`, `IntervalSet`, `IntervalEntry`, `IntervalTree`（半开区间集合代数与增广区间树） |
+| `lib/time/tween.cp` | `lib/tween` | `TweenError`, `EaseKind`, `Easing`, `Tween`, `Keyframe`, `KeyframeTrack`, `SpringDamper`（时间轴缓动、关键帧轨道与弹簧阻尼引擎） |
+| `lib/time/health.cp` | `lib/health` | `HealthError`, `ProbeKind`, `HealthStatus`, `CheckOutcome`, `ProbeReport`, `HealthRegistry`, `ShutdownCoordinator`（探针聚合器与优雅停机协调） |
+| `lib/time/uuid_v7.cp` | `lib/uuid_v7` | `UuidError`, `Uuid`, `NAMESPACE_DNS` 等（RFC 9562 单调时间戳 UUID v7 / v4 / v5） |
+| `lib/time/job.cp`, `lib/time/job_scheduler.cp` | `lib/queue` | `QueueError`, `JobPriority`, `JobState`, `RetryPolicy`, `Job`, `QueueStats`, `JobQueue`（优先级、延迟调度、租约超时与死信作业队列） |
+| `lib/time/vcd.cp` | `lib/vcd` | `VcdTimeUnit`, `VcdVarType`, `VcdEventKind`, `VcdTimescale`, `VcdHeader`, `VcdEvent`, `parseVcdTimescale`, `parseVcdHeader`, `VcdVarIter`, `VcdValueIter`（IEEE 1364 VCD 时序波形解析） |
+| `lib/time/pqueue.cp` | `lib/pqueue` | `PQueueError`, `PriorityItem`, `TopKEntry`, `IndexedMinHeap`, `BoundedTopK`, `StreamingMedian`（可索引最小堆与流式分位数） |
+| `lib/time/pool.cp` | `lib/pool` | `PoolError`, `BorrowOrder`, `PoolConfig`, `PooledHandle`, `PoolStats`, `ResourcePool`（带空闲/生命周期超时的有界资源池） |
+| `lib/time/union_interval_.cp` *(Reference Only)* | `lib/union_interval` | 参考归档（与 `lib/time/interval.cp` 功能重叠，不从 `index.cp` 导出，保留用于对比分析） |
+
+---
+
 ## 上游行为契约与时间边界注意事项
 
 1. **单调时钟 vs 墙钟严格区分（`WallClock` / `Duration`）**：

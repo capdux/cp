@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { UuidError, Uuid, NAMESPACE_DNS } from "cap:uuid_v7";
+import { UuidError, Uuid, NAMESPACE_DNS } from "cap:time";
 
 test "uuid_v7: RFC 9562 UUID v7 timestamp ordering & format roundtrip" {
     const u1 = Uuid.v7At(1700000000000);
@@ -41,7 +41,7 @@ test "uuid_v7: parse error guards" {
 }
 
 test "uuid_v7: cap.uuid_v7 dynamic mount" {
-    const id = cap.uuid_v7.Uuid.v7();
+    const id = cap.time.Uuid.v7();
     try expect_eq(id.version(), 7);
     try expect_eq(id.variantRfc9562(), true);
 }

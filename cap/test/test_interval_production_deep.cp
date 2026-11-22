@@ -16,7 +16,7 @@ import {
     IntervalSet,
     IntervalEntry,
     IntervalTree,
-} from "cap:interval";
+} from "cap:time";
 
 test("cap:interval - IntervalSet merge, subtract split & gaps extraction") {
     const alloc = std.testing.allocator;
@@ -283,14 +283,14 @@ test("cap:interval - InvalidInterval & empty [x, x) boundary semantics") {
 test("cap.interval - dynamic mounting via import cap from \"cap\" & zero leaks") {
     const alloc = std.testing.allocator;
 
-    let set = cap.interval.IntervalSet.init(alloc);
+    let set = cap.time.IntervalSet.init(alloc);
     defer set.deinit();
     * = set.add(100, 150) catch unreachable;
     * = set.add(150, 200) catch unreachable;
     expect_eq(set.totalLength(), 100);
     expect_eq(set.containsRange(110, 190) catch unreachable, true);
 
-    let tree = cap.interval.IntervalTree<i32>.init(alloc);
+    let tree = cap.time.IntervalTree<i32>.init(alloc);
     defer tree.deinit();
     * = tree.insert(10, 50, 101) catch unreachable;
     * = tree.insert(30, 70, 102) catch unreachable;

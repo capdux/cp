@@ -11,7 +11,7 @@ import {
     AnomalyPoint,
     SeriesSummary,
     TimeSeries,
-} from "cap:timeseries";
+} from "cap:time";
 
 fn approxEq(a: f64, b: f64, eps: f64): bool {
     const diff = if (a >= b) (a - b) else (b - a);
@@ -199,13 +199,13 @@ fn testSmaEmaAndZScoreAnomalies(): !void {
 
 fn testCapTimeseriesDynamicMountAndJson(): !void {
     const alloc = std.heap.page_allocator;
-    let ts = cap.timeseries.TimeSeries.init(alloc, "mesh.rtt", 0);
+    let ts = cap.time.TimeSeries.init(alloc, "mesh.rtt", 0);
     defer ts.deinit();
 
     ts.push(100, 1.5)?;
     ts.push(200, 2.5)?;
 
-    const pts = ts.downsample(alloc, 100, 200, 100, cap.timeseries.AggOp.Last)?;
+    const pts = ts.downsample(alloc, 100, 200, 100, cap.time.AggOp.Last)?;
     defer alloc.free(pts);
     expect_eq(pts.len, 2 as usize);
     expect_eq(approxEq(pts[1].value, 2.5, 0.000001), true);

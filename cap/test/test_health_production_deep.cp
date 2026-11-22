@@ -13,7 +13,7 @@ import {
     ProbeReport,
     HealthRegistry,
     ShutdownCoordinator,
-} from "cap:health";
+} from "cap:time";
 
 struct ProbeState {
     db_status: HealthStatus = .Up;
@@ -308,20 +308,20 @@ fn testShutdownCoordinatorPriorityAndIdempotency(): ! {
 
 fn testCapHealthDynamicMounting(): ! {
     const alloc = std.heap.page_allocator;
-    let reg = cap.health.HealthRegistry.init(alloc);
+    let reg = cap.time.HealthRegistry.init(alloc);
     defer reg.deinit();
 
     let st = ProbeState{};
     unsafe {
         const ctx = *st as *anyopaque!;
-        reg.registerCheck("dyn_db", cap.health.ProbeKind.Readiness, true, checkDb, ctx)?;
+        reg.registerCheck("dyn_db", cap.time.ProbeKind.Readiness, true, checkDb, ctx)?;
     }
-    let report = reg.evaluate(cap.health.ProbeKind.Readiness)?;
+    let report = reg.evaluate(cap.time.ProbeKind.Readiness)?;
     defer report.deinit();
-    expect_eq(report.overall == cap.health.HealthStatus.Up, true);
+    expect_eq(report.overall == cap.time.HealthStatus.Up, true);
     expect_eq(report.http_status, 200 as u16);
 
-    let coord = cap.health.ShutdownCoordinator.init(alloc);
+    let coord = cap.time.ShutdownCoordinator.init(alloc);
     defer coord.deinit();
     let tr = ShutdownTrace{};
     unsafe {

@@ -11,7 +11,7 @@ import {
     HlcClock,
     formatHlc,
     parseHlc,
-} from "cap:hlc";
+} from "cap:time";
 
 fn slicesCmp(a: []const u8, b: []const u8): i8 {
     let n: usize = a.len;

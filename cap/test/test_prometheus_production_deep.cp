@@ -12,7 +12,7 @@ import {
     PromRegistry,
     parseExposition,
     freeParsedSamples,
-} from "cap:prometheus";
+} from "cap:time";
 
 fn runTest1(): !void {
     const alloc = std.testing.allocator;
@@ -219,24 +219,24 @@ fn runTest5(): !void {
     const alloc = std.testing.allocator;
 
     // Dynamic mount: import cap from "cap"; cap.prometheus
-    let reg = cap.prometheus.PromRegistry.init(alloc);
+    let reg = cap.time.PromRegistry.init(alloc);
     defer reg.deinit();
 
     reg.registerCounter("cap_dyn_requests_total", "Dynamic mount counter")?;
-    const lbl: [1]cap.prometheus.LabelPair = [
-        cap.prometheus.LabelPair{ name: "service", value: "gateway" },
+    const lbl: [1]cap.time.LabelPair = [
+        cap.time.LabelPair{ name: "service", value: "gateway" },
     ];
     reg.incCounter("cap_dyn_requests_total", &lbl, 9.0)?;
 
     const text = reg.exportText(alloc)?;
     defer alloc.free(text);
 
-    const samples = cap.prometheus.parseExposition(alloc, text)?;
-    defer cap.prometheus.freeParsedSamples(alloc, samples);
+    const samples = cap.time.parseExposition(alloc, text)?;
+    defer cap.time.freeParsedSamples(alloc, samples);
 
     expect_eq(samples.len, 1 as usize);
     expect_eq(std.mem.eql(u8, samples[0].name, "cap_dyn_requests_total"), true);
-    expect_eq(samples[0].metric_type.? == cap.prometheus.MetricType.Counter, true);
+    expect_eq(samples[0].metric_type.? == cap.time.MetricType.Counter, true);
     expect_eq(samples[0].value, 9.0);
 }
 

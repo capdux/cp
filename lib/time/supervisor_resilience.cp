@@ -2,7 +2,7 @@
 // Pure CP distributed resilience primitives: deterministic SplitMix64 BackoffPolicy,
 // concurrency-limiting Bulkhead, and Envoy/Finagle sliding-window RetryBudget.
 
-import { SupervisorError } from "./strategy.cp";
+import { SupervisorError } from "./supervisor.cp";
 
 /// Backoff delay calculation mode.
 pub enum BackoffKind: u8 {

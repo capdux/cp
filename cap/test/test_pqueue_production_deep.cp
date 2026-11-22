@@ -11,7 +11,7 @@ import {
     IndexedMinHeap,
     BoundedTopK,
     StreamingMedian,
-} from "cap:pqueue";
+} from "cap:time";
 
 test("1. IndexedMinHeap out-of-order push, peek/pop strict ordering, negative priorities and multi-round stress") {
     const alloc = std.testing.allocator;
@@ -230,7 +230,7 @@ test("4. StreamingMedian odd/even, out-of-order & negative values and EmptyQueue
 test("5. Dynamic cap.pqueue namespace mount and std.testing.allocator zero-leak verification") {
     const alloc = std.testing.allocator;
 
-    let pq = cap.pqueue.IndexedMinHeap<i32>.init(alloc);
+    let pq = cap.time.IndexedMinHeap<i32>.init(alloc);
     defer pq.deinit();
     const h1 = pq.push(20, 200)?;
     const h2 = pq.push(10, 100)?;
@@ -238,7 +238,7 @@ test("5. Dynamic cap.pqueue namespace mount and std.testing.allocator zero-leak 
     expect_eq(pq.pop().?.value, 100 * 2); // h1 with prio 5
     expect_eq(pq.pop().?.handle, h2);
 
-    let topk = cap.pqueue.BoundedTopK<i32>.init(alloc, 2)?;
+    let topk = cap.time.BoundedTopK<i32>.init(alloc, 2)?;
     defer topk.deinit();
     topk.push(1.0, 10)?;
     topk.push(9.0, 90)?;
@@ -249,7 +249,7 @@ test("5. Dynamic cap.pqueue namespace mount and std.testing.allocator zero-leak 
     expect_eq(res[0].value, 90);
     expect_eq(res[1].value, 50);
 
-    let sm = cap.pqueue.StreamingMedian.init(alloc);
+    let sm = cap.time.StreamingMedian.init(alloc);
     defer sm.deinit();
     sm.push(100.0)?;
     sm.push(200.0)?;

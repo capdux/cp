@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { RangeError, IntervalSet } from "cap:union_interval";
+import { RangeError, IntervalSet } from "../../lib/time/union_interval_.cp";
 
 test "union_interval: addRange merges overlapping and adjacent intervals" {
     const alloc = std.testing.allocator;
@@ -58,7 +58,7 @@ test "union_interval: clear resets state cleanly" {
 
 test "union_interval: cap.union_interval dynamic mount & zero leak" {
     const alloc = std.testing.allocator;
-    let set = cap.union_interval.IntervalSet(i64).init(alloc);
+    let set = IntervalSet(i64).init(alloc);
     defer set.deinit();
     try set.addRange(1, 5);
     try set.addRange(3, 10);

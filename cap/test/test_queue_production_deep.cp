@@ -12,7 +12,7 @@ import {
     Job,
     QueueStats,
     JobQueue,
-} from "cap:queue";
+} from "cap:time";
 
 fn testPriorityOrderingAndFifo(): ! {
     const alloc = std.heap.page_allocator;
@@ -275,17 +275,17 @@ fn testZombieLeaseTimeoutRecoveryAndCapacity(): ! {
 fn testCapQueueAutomaticLazyMount(): ! {
     const alloc = std.heap.page_allocator;
 
-    let hq = cap.queue.JobQueue.init(alloc, cap.queue.RetryPolicy.init(2, 500, 4000), 1000)?;
+    let hq = cap.time.JobQueue.init(alloc, cap.time.RetryPolicy.init(2, 500, 4000), 1000)?;
     defer hq.deinit();
 
-    const prio: cap.queue.JobPriority = .Critical;
+    const prio: cap.time.JobPriority = .Critical;
     const j_id = hq.enqueue("cap.hub.test", "payload_ok", prio, 100)?;
-    const got: cap.queue.Job = hq.dequeue(100).?;
+    const got: cap.time.Job = hq.dequeue(100).?;
     expect_eq(got.id, j_id);
-    expect_eq(got.state == cap.queue.JobState.Running, true);
+    expect_eq(got.state == cap.time.JobState.Running, true);
 
     hq.nack(j_id, "transient", 100)?;
-    const st: cap.queue.QueueStats = hq.stats();
+    const st: cap.time.QueueStats = hq.stats();
     expect_eq(st.delayed, 1 as usize);
     expect_eq(st.total_retried, 1 as u64);
 

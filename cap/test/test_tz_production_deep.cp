@@ -11,7 +11,7 @@ import {
     isLeapYear,
     daysInMonth,
     daysFromCivil,
-} from "cap:tz";
+} from "cap:time";
 import cap from "cap";
 
 fn expectStrEq(actual: []const u8, expected: []const u8): ! {
@@ -222,7 +222,7 @@ pub fn main() {
 
     test("5. cap.tz Dynamic Mount Verification", () => {
         const alloc: std.mem.Allocator = std.heap.page_allocator;
-        let tokyo: Timezone = cap.tz.Timezone.lookup("Asia/Tokyo") catch unreachable;
+        let tokyo: Timezone = cap.time.Timezone.lookup("Asia/Tokyo") catch unreachable;
         expect_eq(tokyo.std_offset_sec, 32400);
 
         let ts = tokyo.toUnix(2026, 5, 1, 9, 0, 0) catch unreachable;
@@ -230,7 +230,7 @@ pub fn main() {
         defer alloc.free(rfc);
         expectStrEq(rfc, "2026-05-01T09:00:00+09:00") catch unreachable;
 
-        let fixed: Timezone = cap.tz.Timezone.fixedOffset("IST", 19800);
+        let fixed: Timezone = cap.time.Timezone.fixedOffset("IST", 19800);
         let dt = fixed.toLocal(ts) catch unreachable;
         expect_eq(dt.hour, 5);
         expect_eq(dt.minute, 30);

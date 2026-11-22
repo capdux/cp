@@ -1,3 +1,4 @@
+// Reference Only: Functional overlap with lib/time/interval.cp | Kept for comparison/analysis
 // Source: cp/lib/union_interval/interval_set.cp (Pure CP Merged Disjoint Interval Set)
 const std = @import("std");
 

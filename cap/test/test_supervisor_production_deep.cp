@@ -19,7 +19,7 @@ import {
     BackoffPolicy,
     Bulkhead,
     RetryBudget,
-} from "cap:supervisor";
+} from "cap:time";
 
 fn testChildRestartPoliciesAndErrors(): !void {
     const alloc = std.heap.page_allocator;
@@ -387,35 +387,35 @@ fn testResiliencePrimitives(): !void {
 fn testCapSupervisorDynamicMount(): !void {
     const alloc = std.heap.page_allocator;
 
-    let tree = cap.supervisor.SupervisorTree.init(alloc, cap.supervisor.SupervisorConfig{
-        strategy: cap.supervisor.RestartStrategy.RestForOne,
+    let tree = cap.time.SupervisorTree.init(alloc, cap.time.SupervisorConfig{
+        strategy: cap.time.RestartStrategy.RestForOne,
         max_restarts: 2,
         period_ms: 3000,
     })?;
     defer tree.deinit();
 
-    tree.addChild(cap.supervisor.ChildSpec{ id: "router", restart_policy: .Permanent })?;
-    tree.addChild(cap.supervisor.ChildSpec{ id: "agent", restart_policy: .Permanent })?;
+    tree.addChild(cap.time.ChildSpec{ id: "router", restart_policy: .Permanent })?;
+    tree.addChild(cap.time.ChildSpec{ id: "agent", restart_policy: .Permanent })?;
 
-    let decision = tree.handleChildExit("router", cap.supervisor.ExitReason.Abnormal, 500)?;
+    let decision = tree.handleChildExit("router", cap.time.ExitReason.Abnormal, 500)?;
     defer decision.deinit();
-    expect_eq(decision.kind, cap.supervisor.SupervisionDecisionKind.RestartChildren);
+    expect_eq(decision.kind, cap.time.SupervisionDecisionKind.RestartChildren);
     expect_eq(decision.stop_order.len, 1 as usize);
     expect_eq(decision.stop_order[0], "agent");
     expect_eq(decision.restart_order.len, 2 as usize);
     expect_eq(decision.restart_order[0], "router");
     expect_eq(decision.restart_order[1], "agent");
 
-    let bh = cap.supervisor.Bulkhead.init(1, 0);
+    let bh = cap.time.Bulkhead.init(1, 0);
     expect_eq(bh.tryAcquire(), true);
     expect_eq(bh.tryAcquire(), false);
     bh.releaseSlot();
     expect_eq(bh.availableSlots(), 1 as u32);
 
-    let pol = cap.supervisor.BackoffPolicy.init(cap.supervisor.BackoffKind.Exponential, 50, 200, 200, 7);
+    let pol = cap.time.BackoffPolicy.init(cap.time.BackoffKind.Exponential, 50, 200, 200, 7);
     expect_eq(pol.nextDelayMs(1, 0), 100 as u64);
 
-    let rb = cap.supervisor.RetryBudget.init(1000, 1, 1000);
+    let rb = cap.time.RetryBudget.init(1000, 1, 1000);
     rb.recordRequest(100);
     expect_eq(rb.tryConsumeRetry(110), true);
     expect_eq(rb.tryConsumeRetry(120), false);
