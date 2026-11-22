@@ -51,3 +51,11 @@ export {
     caseFold,
     caseFoldEqual,
 } from "./casefold.cp";
+
+export {
+    RagChunkConfig,
+    RagChunkSpan,
+    chunkDocumentRag,
+    estimateRagTokens,
+    locateLineRange,
+} from "./rag_chunker.cp";

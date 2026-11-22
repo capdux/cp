@@ -101,6 +101,35 @@ pub fn demoTextEngine(alloc: std.mem.Allocator): ! {
 
 ---
 
+## 零堆分配 RAG 递归文档分块与引用定位 (`lib/text/rag_chunker.cp`)
+
+专为高并发 AI Agent / RAG 管线打造的零堆分配、零拷贝 Markdown 感知分块器：
+
+- **`RagChunkConfig`**：`{ max_bytes: usize = 512, overlap_bytes: usize = 64, respect_code_fences: bool = true, split_on_headings: bool = true }`（提供 `RagChunkConfig.default()`）
+- **`RagChunkSpan`**：`{ start: usize, end: usize, index: u32, est_tokens: u32, line_start: u32, line_end: u32 }`（方法 `slice(doc: string): string` 返回零拷贝原文切片）
+- **`chunkDocumentRag(doc: string, cfg: RagChunkConfig, out_spans: *[]RagChunkSpan): usize?`**：按 Markdown 标题 `\n#` -> 段落 `\n\n` -> 换行 `\n` -> 句末标点 `. `/`。` -> 空格 -> UTF-8 码点边界递归切分；`respect_code_fences == true` 时避免从 ```` ``` ```` / `~~~` 代码块中间腰斩；非法配置（`max_bytes == 0` 或 `overlap_bytes >= max_bytes`）或缓冲不足返回 `null`。
+- **`estimateRagTokens(text: string): u32`**：零堆分配估算近似 Token 数，精准区分 ASCII 词、标点与 3-4 字节 CJK/Emoji 字符密度。
+- **`locateLineRange(doc: string, start: usize, end: usize): [2]u32`**：返回 1-based `[line_start, line_end]` 引用行号范围。
+
+```typescript
+import { RagChunkConfig, RagChunkSpan, chunkDocumentRag } from "cap:text";
+
+pub fn demoRagChunking(doc: string) {
+    let spans_buf: [32]RagChunkSpan = undefined;
+    let spans: []RagChunkSpan = spans_buf[0..];
+    const cfg = RagChunkConfig{ max_bytes: 256, overlap_bytes: 32, respect_code_fences: true, split_on_headings: true };
+    if (n := chunkDocumentRag(doc, cfg, spans)) {
+        let i: usize = 0;
+        while (i < n) : (i += 1) {
+            const text = spans[i].slice(doc);
+            * = text;
+        }
+    }
+}
+```
+
+---
+
 ## 上游行为契约与文本处理边界注意事项
 
 1. **UTF-8 码点边界安全不变式**：
