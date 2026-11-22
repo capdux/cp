@@ -332,3 +332,10 @@ export {
     ReplayDiffSummary,
     diffReplayTrajectories,
 } from "./replay.cp";
+
+export {
+    RoutableToolEntry,
+    ToolRouteHit,
+    ToolRouteReport,
+    SemanticToolRouter,
+} from "./tool_router.cp";

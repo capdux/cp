@@ -1719,3 +1719,49 @@ fn offlineReplayQuickStart() {
     * = summary.fidelity_score; // 1.0
 }
 ```
+
+---
+
+## 子模块：SIMD 语义 + 标签混合工具路由器（`tool_router.cp`）
+
+### 核心特性
+
+- **CP 原生 8-lane SIMD `@dot` 语义路由（`SemanticToolRouter`）**：面向大规模 MCP / 函数工具集（50~200+ 工具），注册时自动使用 `@dot` + `@sqrt` 对工具 Embedding 做 L2 归一化并紧凑存入调用方提供的扁平 `vecs_flat` 缓冲，查询时零堆分配计算余弦相似度并降序贪心选出最相关 Top-K 工具，大幅压缩送入 LLM 的 Prompt Schema Token 成本。
+- **`pinned` 保底机制 + 64 位标签过滤 + 动态启停**：
+  - `pinned = true` 的关键工具无视 `min_score` 阈值优先保底入选（并按语义分降序）；
+  - 通过 64 位 `required_tag_mask` 实现 O(1) 权限/领域/环境标签硬过滤；
+  - 支持 `setEnabled(tool_id, bool)` 运行时动态启停工具。
+- **双重预算精确裁剪**：同时强制执行 `max_tools`（最大工具数）与 `max_schema_tokens`（最大 Schema Token 预算），返回精确的 `selected_count`、`pinned_count`、`used_schema_tokens`、`filtered_out_count` 与 `truncated_by_budget`。
+
+### 导出清单
+
+- **描述符与报告**：`RoutableToolEntry`、`ToolRouteHit`、`ToolRouteReport`
+- **语义路由器**：`SemanticToolRouter`（`init`, `registerTool`, `setEnabled`, `routeTools`, `toolCount`, `capacity`, `dimension`, `entryAt`, `clear`）
+
+### QuickStart 示例
+
+```cp
+import {
+    RoutableToolEntry,
+    ToolRouteHit,
+    SemanticToolRouter,
+} from "cap:agent";
+
+fn semanticToolRouterQuickStart() {
+    let entries: [8]RoutableToolEntry = [RoutableToolEntry{}; 8];
+    let vecs: [64]f32 = [0.0; 64]; // 8 tools * dim 8
+    let router = SemanticToolRouter.init(entries[0..], vecs[0..], 8) ?? return;
+
+    const TAG_CODE: u64 = 1;
+    const v_search: [8]f32 = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    const v_deploy: [8]f32 = [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    * = router.registerTool(1, "search_code", TAG_CODE, 120, false, v_search[0..]);
+    * = router.registerTool(2, "deploy_prod", TAG_CODE, 180, false, v_deploy[0..]);
+
+    const query: [8]f32 = [0.95, 0.05, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    let hits: [4]ToolRouteHit = [ToolRouteHit{}; 4];
+    if (report := router.routeTools(query[0..], TAG_CODE, 4, 250, 0.5, hits[0..])) {
+        * = report.selected_count; // 1 ("search_code")
+    }
+}
+```
