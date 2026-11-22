@@ -300,6 +300,44 @@ pub fn demoHungarianAssign() {
 
 ---
 
+## 八、 零分配 Yen's 前 K 条无环最短路径求解器（`yenKPaths.cp`）
+
+面向网络容灾路由、AI Agent 备选工具路径规划、交通导航多路线推荐的 100% 纯 CP 零动态堆分配 Yen's K-Shortest Simple Paths 求解器：
+
+- **常量与数据模型**：
+  - `YEN_MAX_NODES = 32`、`YEN_MAX_EDGES = 256`、`YEN_MAX_CANDIDATES = 128`、`YEN_NO_EDGE = 0xFFFF`、`YEN_INF_COST = 0xFFFFFFFFFFFFFFFF`
+  - `YenEdge`（`u`, `to`, `weight`, `next_edge`）
+  - `YenPath`（`nodes[32]`, `len`, `total_cost`；提供 `nodeSlice()`, `equals(other)`, `isBetterThan(other)`, `isLoopless()`）
+- **核心引擎 `YenGraph`**：
+  - `init(node_count): YenGraph?`：校验 `1 <= node_count <= 32`。
+  - `addEdge(*_, u, v, weight: u64): bool` / `addSignedEdge(*_, u, v, weight: i64): bool`：自动拦截负权、自环、越界节点、哨兵无穷权与满边容量。
+  - `shortestPath(src, dst): YenPath?`：内置纯迭代掩码 Dijkstra 单条最短路。
+  - `findKShortestPaths(src, dst, k, *out_paths): usize?`：经典 Yen 偏离点算法（屏蔽同前缀已定路径出边与根路径节点保证严格无环），按 `(total_cost 升序, 节点序列字典序升序)` 确定性输出前 K 条无环最短路径。
+
+### QuickStart 示例
+
+```cp
+import {
+    YenPath,
+    YenGraph,
+} from "cap:graph";
+
+pub fn demoYenKShortestPaths() {
+    let g = YenGraph.init(4) ?? return;
+    * = g.addEdge(0, 1, 2);
+    * = g.addEdge(1, 3, 2);
+    * = g.addEdge(0, 2, 3);
+    * = g.addEdge(2, 3, 3);
+
+    let out: [2]YenPath = [YenPath{}; 2];
+    let out_s: []YenPath = out[0..];
+    const n = g.findKShortestPaths(0, 3, 2, *out_s) ?? 0;
+    * = n; // 2: [0,1,3](cost=4), [0,2,3](cost=6)
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [bipartite.md](graph/bipartite.md)

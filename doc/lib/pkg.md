@@ -1006,3 +1006,37 @@ const trusted = isLifecycleScriptTrusted(TrustSourceKind.Git, false, true); // f
 * = n;
 * = trusted;
 ```
+
+### 包解析赋值、Scoped Registry 路由与解析完整性验证器（`lib/pkg/resVerify.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/PackageManager/PackageManagerResolution.cp` 与 `/data/dev/bun/docs/guides/install/registry-scope.mdx`；
+- 导出：`RES_VERIFY_MAX_PKGS` (`64`)、`RES_VERIFY_MAX_DEPS` (`128`)、`RES_VERIFY_MAX_SCOPES` (`16`)、`RES_VERIFY_MAX_FAILURES` (`32`)、`RES_VERIFY_INVALID_PKG_ID`、`RES_FEAT_*` 掩码常量、`ResVerifyError`、`ResParentKind`、`ResPkgEntry`、`ResDepEntry`、`UnresolvedDepFailure`、`ResVerifyReport`、`ScopedRegistryEntry`、`CachedSemverCandidate`、`pkgNameHash64`、`extractPackageScope`、`formatUnresolvedDepError`、`selectBestCachedSemver`、`ScopedRegistryRouter`、`ResolutionVerifier`；
+- **Scoped Registry 路由与解析验证最佳实践（参考 `/data/dev/bun/docs/guides/install/registry-scope.mdx`）**：
+  - **推荐通过 `bunfig.toml` `[install.scopes]` 配置私有源**：支持字符串 URL 或对象配置（`url`/`token`/`username`/`password`，并自动加载 `.env.local`/`.env.[NODE_ENV]`/`.env` 中的环境变量）；`ScopedRegistryRouter` 自动剥离 `@` 前缀匹配 `@scope/pkg`，非 scoped 或未命中包回退默认 npmjs 源；
+  - **本地包 vs 远程包特性掩码隔离**：`verifyResolutions()` 对 `.Root`/`.Workspace`/`.Folder` 启用 `local_features`（校验 `devDependencies`），对远程依赖启用 `remote_features`（跳过未安装的 `devDependencies`），并自动豁免 `peerDependencies` 与 `optionalDependencies`；
+  - **根依赖防覆写与别名自动回填**：`assignRootResolution()` 拒绝覆盖已解析槽位；当依赖初始 `name` 为空或与 `version_literal` 相同（如 `github:user/repo`）时自动回填目标包真实名称与哈希。
+
+```cp
+import {
+    ScopedRegistryRouter,
+    ResolutionVerifier,
+    ResPkgEntry,
+    ResDepEntry,
+    RES_FEAT_LOCAL_DEFAULT,
+    RES_FEAT_REMOTE_DEFAULT,
+} from "cap:pkg";
+
+let router = ScopedRegistryRouter.init("https://registry.npmjs.org/");
+* = router.addScope("@myorg", "https://registry.myorg.com/", true)?;
+const url = router.resolveRegistryUrl("@myorg/sdk"); // "https://registry.myorg.com/"
+
+let v = ResolutionVerifier.init(RES_FEAT_LOCAL_DEFAULT, RES_FEAT_REMOTE_DEFAULT);
+const root = v.addPackage(ResPkgEntry{ name: "app", kind: .Root, dep_begin: 0, dep_len: 1 })?;
+const sdk = v.addPackage(ResPkgEntry{ name: "@myorg/sdk", kind: .Npm })?;
+const d0 = v.addDependency(ResDepEntry{ name: "", version_literal: "github:myorg/sdk" })?;
+* = v.assignRootResolution(d0, sdk)?;
+const report = v.verifyResolutions(); // report.isOk() == true
+* = url;
+* = root;
+* = report;
+```
