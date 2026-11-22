@@ -70,3 +70,24 @@ pub fn main() {
     formatCrashTextFixed(1024, &report, &writer);
 }
 ```
+
+## 5. CPU 指令集特性诊断 (`cpuFeatures.cp`)
+
+吸收自 `/data/dev/bun/src/crash_handler/CPUFeatures.cp`（参考 `/data/dev/bun/docs/installation.mdx#cpu-requirements`）：
+
+- **导出符号**：
+  - 常量与错误集：`CPU_FEATURES_FORMAT_BUF_CAP` (`64`)、`X86_BIT_SSE42` / `X86_BIT_POPCNT` / `X86_BIT_AVX` / `X86_BIT_AVX2` / `X86_BIT_AVX512`、`AARCH64_BIT_NEON` / `AARCH64_BIT_FP` / `AARCH64_BIT_AES` / `AARCH64_BIT_CRC32` / `AARCH64_BIT_ATOMICS` / `AARCH64_BIT_SVE`、`CpuFeaturesError`（`BufferTooSmall`/`UnknownFeatureToken`）
+  - 类型：`CpuArchKind`（`X86_64`/`Aarch64`）、`X86CpuFlags`（`fromMask`/`toMask`/`isEmpty`/`hasAnyAvx`/`meetsBaseline`/`meetsHaswell`/`formatToBuf`/`parseFromStr`/`eql`）、`Aarch64CpuFlags`（`fromMask`/`toMask`/`isEmpty`/`hasCryptoAndCrc`/`formatToBuf`/`parseFromStr`/`eql`）、`CpuFeatures`（`fromX86`/`fromAarch64`/`fromRawMask`/`toRawMask`/`isEmpty`/`hasAnyAvx`/`formatToBuf`）
+- **CPU 架构要求与崩溃诊断最佳实践（来自 Bun 官方文档）**：
+  - **标准 x64 二进制**目标为 Haswell 架构，要求 `sse42 + popcnt + avx + avx2`（`meetsHaswell()`）；在无 AVX2 的老旧 CPU 上运行非 baseline 产物会触发 `SIGILL`（非法指令）；
+  - **x64-baseline 二进制**目标为 Nehalem 架构，最低强制要求 `sse42 + popcnt`（`meetsBaseline()`）；
+  - 在崩溃报告元数据中零分配调用 `CpuFeatures.formatToBuf(&buf)` 可输出空格分隔的指令集摘要（如 `"sse42 popcnt avx avx2"` 或 `"neon fp aes crc32 atomics"`），快速排查跨机非法指令故障。
+
+```cp
+import { CpuArchKind, CpuFeatures } from "cap:crash_handler";
+
+const feats = CpuFeatures.fromRawMask(CpuArchKind.X86_64, (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4));
+let buf: [64]u8 = [0; 64];
+const n = feats.formatToBuf(buf[0..])?; // "sse42 popcnt avx avx2"
+* = n;
+```

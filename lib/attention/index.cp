@@ -389,3 +389,19 @@ export {
     flashDecodeSplitK,
     flashDecodeSplitKGqa,
 } from "./flashDecode.cp";
+
+export {
+    BEAM_MAX_WIDTH,
+    BEAM_MAX_SEQ_LEN,
+    BEAM_MAX_GROUPS,
+    BEAM_MAX_FINISHED,
+    beamLengthPenalty,
+    beamNormalizedScore,
+    beamHasRepeatedNgram,
+    BeamCandidate,
+    BeamSearchConfig,
+    BeamHypothesis,
+    BeamStepOutcome,
+    BeamSearchStats,
+    BeamSearchDecoder,
+} from "./beamSearch.cp";

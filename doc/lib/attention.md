@@ -1573,3 +1573,59 @@ pub fn demoFlashDecode(q: []const f32, k_all: []const f32, v_all: []const f32, n
     * = flashDecodeSplitK(q, k_all, v_all, num_kv, head_dim, 4, 0.0, *out_b_s);
 }
 ```
+
+
+### 零分配束搜索与多样性束解码引擎 (`beamSearch.cp`)
+
+面向大模型高质量序列生成的 100% 纯 CP 零动态堆分配 **Beam Search & Diverse Beam Search (Vijayakumar et al. 2016)** 解码引擎：
+
+- **常量与数据模型**：
+  - `BEAM_MAX_WIDTH = 16`、`BEAM_MAX_SEQ_LEN = 128`、`BEAM_MAX_GROUPS = 8`、`BEAM_MAX_FINISHED = 32`
+  - `BeamCandidate`：单步候选 `(token_id: u32, log_prob: f32)`。
+  - `BeamSearchConfig`：束解码配置（`beam_width`, `max_seq_len`, `num_groups`, `diversity_penalty`, `length_penalty_alpha`, `no_repeat_ngram_size`, `early_stopping`, `eos_token_id`, `min_len`；提供 `defaults()` 与 `isValid()`）。
+  - `BeamHypothesis`：定长序列假设（`tokens: [128]u32`, `len`, `log_prob`, `normalized_score`, `group_id`, `finished`；提供 `empty()` 与 `tokenSlice()`）。
+  - `BeamStepOutcome` / `BeamSearchStats`：单步扩展结果与全链路诊断统计快照（步数、活跃束数、已完成假设数、拦截重复 N-gram 次数、多样性惩罚触发次数、早停/达到最大长度状态）。
+- **核心评分、拦截与解码 API**：
+  - `beamLengthPenalty(seq_len, alpha): f32` / `beamNormalizedScore(log_prob, seq_len, alpha): f32`：Google NMT 长度归一化 `((5 + len) / 6)^alpha` 与归一化得分。
+  - `beamHasRepeatedNgram(tokens, next_token, ngram_size): bool`：精确 N-gram 禁止重复阻断检测（支持 unigram/bigram/trigram 及任意 N）。
+  - `BeamSearchDecoder.init(cfg, prompt_tokens): BeamSearchDecoder?` / `reset(*_, prompt_tokens): bool`：零堆分配初始化与会话复用。
+  - `step(*_, beam_candidates, candidates_per_beam, eos_token_id): BeamStepOutcome?`：从每条活跃束的 Top-K log-prob 候选中无堆选出下一轮活跃束，支持多组组间 Hamming 多样性惩罚、N-gram 阻断、`min_len` 护栏、EOS 自动归档与 `early_stopping` 收敛判定。
+  - `stepFromLogits(*_, beam_logits, vocab_size, eos_token_id): BeamStepOutcome?`：直接输入稠密词表原始 logits，自动执行数值稳定 Log-Softmax + 栈上 Top-K 筛选并推进束搜索。
+  - `bestHypothesis(): BeamHypothesis?` / `topHypotheses(*out_hyps): usize` / `finishedHypotheses(*out_hyps): usize`：按长度归一化得分降序提取最佳假设与 Top-N 假设。
+
+```cp
+import {
+    BeamCandidate,
+    BeamSearchConfig,
+    BeamHypothesis,
+    BeamSearchDecoder,
+} from "cap:attention";
+
+pub fn demoBeamSearch() {
+    let cfg = BeamSearchConfig.defaults();
+    cfg.beam_width = 4;
+    cfg.num_groups = 2;
+    cfg.diversity_penalty = 1.5;
+    cfg.no_repeat_ngram_size = 3;
+    cfg.eos_token_id = 2;
+
+    const prompt: [1]u32 = [1];
+    if (d := BeamSearchDecoder.init(cfg, prompt[0..])) {
+        let decoder = d;
+        const cands: [8]BeamCandidate = [
+            BeamCandidate{ token_id: 10, log_prob: -0.1 },
+            BeamCandidate{ token_id: 11, log_prob: -0.2 },
+            BeamCandidate{ token_id: 12, log_prob: -0.3 },
+            BeamCandidate{ token_id: 13, log_prob: -0.4 },
+            BeamCandidate{ token_id: 10, log_prob: -0.1 },
+            BeamCandidate{ token_id: 11, log_prob: -0.2 },
+            BeamCandidate{ token_id: 12, log_prob: -0.3 },
+            BeamCandidate{ token_id: 13, log_prob: -0.4 },
+        ];
+        * = decoder.step(cands[0..], 4, 2);
+        let top: [4]BeamHypothesis = [BeamHypothesis.empty(); 4];
+        let top_s: []BeamHypothesis = top[0..];
+        * = decoder.topHypotheses(*top_s);
+    }
+}
+```
