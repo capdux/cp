@@ -720,3 +720,22 @@ const freed1 = pool.deref(h1)?; // false (refcount == 1)
 const freed2 = pool.deref(h2)?; // true  (槽位已回收，旧句柄失效)
 * = freed1; * = freed2;
 ```
+
+### Shell 作用域内存所有权与泄漏检测器（`allocScope.cp`）
+
+- 吸收自 `/data/dev/bun/src/shell/AllocScope.cp`；
+- 导出：`ALLOC_SCOPE_MAX_ENTRIES` (`64`)、`AllocScopeError`（`ScopeTableFull`/`InvalidAllocation`/`DuplicateAllocation`/`NotOwnedByScope`/`DoubleFree`/`LeaksDetected`）、`AllocTrackEntry`、`AllocScopeReport`（`isClean`）、`AllocScope`（`beginScope`/`isEnabled`/`liveCount`/`liveBytes`/`peakBytes`/`isOwned`/`trackAlloc`/`trackFree`/`leakSlice`/`assertInScope`/`report`/`endScope`）；
+- 精确复刻 Bun Shell 调试期 `AllocationScope` 语义：支持 `leakSlice()` 将特定缓冲区所有权显式移交给外部调用方、`assertInScope()` 校验跨模块归属、`endScope()` 零容忍拦截泄漏，同时支持 `enabled = false` 零开销发布模式。
+
+```cp
+import { AllocScope } from "cap:shell";
+
+let scope = AllocScope.beginScope(true);
+* = scope.trackAlloc(101, 256, 1)?;
+* = scope.trackAlloc(102, 512, 2)?;
+* = scope.assertInScope(101)?;
+* = scope.trackFree(101)?;
+* = scope.leakSlice(102)?; // 显式移交所有权给外部作用域
+const rep = scope.endScope()?; // rep.isClean() == true, rep.peak_bytes == 768
+* = rep;
+```
