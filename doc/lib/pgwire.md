@@ -149,6 +149,39 @@ const n_fail = PgCopyFail.init("upstream csv parse error").encodeFrame(buf[0..])
 * = d.data; * = n_fail;
 ```
 
+### `NoticeResponse`（`'N'`）异步诊断报文编解码（`noticeResponse.cp`）
+
+吸收自 `/data/dev/bun/src/sql/postgres/protocol/NoticeResponse.cp`，零堆分配编解码 PostgreSQL v3.0 Backend `NoticeResponse`（`'N' = 0x4E`）异步诊断帧，直接复用 `PgDiagnosticFields` 18 字段容器：
+
+- **常量**：`PG_TAG_NOTICE_RESPONSE` (`'N'`)、`PG_NOTICE_HEADER_LEN` (`5`)。
+- **严重级别**：`PgNoticeSeverity`（`Notice` / `Warning` / `Info` / `Log` / `Debug` / `Unknown`）及 `parseNoticeSeverity(s)`（自动识别 `NOTICE` / `WARNING` / `INFO` / `LOG` / `DEBUG`..`DEBUG5`）。
+- **编解码**：
+  - `PgNoticeResponse.init()` / `.fromFields(fields)` / `.addField(field_type, value)`（拒绝内嵌 `0x00` 字节）；
+  - `.encodeFrame(out)` / `.encodedLen()` / `.payloadLen()`；
+  - `PgNoticeResponse.decodeFrame(frame)` / `.decodeFrameStrict(frame)` / `.decodePayload(payload)` / `.decodePayloadStrict(payload)`（兼容最小空载荷帧 `len == 4`，宽容模式自动跳过未来扩展字段，严格模式校验 18 种已知字段）。
+- **便捷读取**：`.severity()`（优先 `'V'` 非本地化严重级别，回退 `'S'`）、`.severityLevel()`、`.isWarning()`、`.isNotice()`、`.code()`、`.sqlstateClass()`、`.message()`、`.detail()`、`.hint()`、`.schema()`、`.table()`、`.column()`、`.constraint()`、`.whereContext()`、`.file()`、`.line()`、`.routine()`。
+- **生产实践**：
+  - PostgreSQL 可在任意查询阶段异步推送 `NoticeResponse`（如 `RAISE NOTICE`、`CREATE TABLE IF NOT EXISTS` 跳过提示、连接池告警），客户端事件循环收到 `'N'` 帧时应消费并转发给日志回调，而**不应中断当前查询状态机**。
+
+```cp
+import {
+    PgDiagnosticFieldType,
+    PgNoticeResponse,
+    PgNoticeSeverity,
+} from "cap:pgwire";
+
+let n = PgNoticeResponse.init();
+* = n.addField(PgDiagnosticFieldType.Severity, "NOTICE")?;
+* = n.addField(PgDiagnosticFieldType.LocalizedSeverity, "NOTICE")?;
+* = n.addField(PgDiagnosticFieldType.Code, "42P07")?;
+* = n.addField(PgDiagnosticFieldType.Message, "relation \"users\" already exists, skipping")?;
+
+let buf: [256]u8 = [0; 256];
+const written = n.encodeFrame(buf[0..])?;
+const decoded = PgNoticeResponse.decodeFrame(buf[0..written])?;
+* = decoded.severityLevel() == PgNoticeSeverity.Notice;
+```
+
 ---
 
 ## 4. 示例

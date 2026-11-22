@@ -89,3 +89,12 @@ export {
     PgCopyDone,
     PgCopyFail,
 } from "./copyFrames.cp";
+
+export {
+    PG_TAG_NOTICE_RESPONSE,
+    PG_NOTICE_HEADER_LEN,
+    PgNoticeError,
+    PgNoticeSeverity,
+    parseNoticeSeverity,
+    PgNoticeResponse,
+} from "./noticeResponse.cp";
