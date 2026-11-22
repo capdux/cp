@@ -598,6 +598,28 @@ pub fn demoAeadNonce() {
 
 ---
 
+## X.509 Subject Alternative Name 安全校验与防注入序列化器（`x509AltName.cp`）
+
+吸收自 `/data/dev/bun/src/runtime/api/bun/x509.cp`，提供 100% 纯 CP、零动态堆分配的 RFC 5280 SAN 安全校验、解析与防分隔符注入格式化能力：
+
+- **导出符号**：`X509_ALT_NAME_MAX_ENTRIES` (`32`)、`X509AltNameKind`（`Dns` / `Ip` / `Email` / `Uri` / `DirName` / `RegisteredId`）、`X509AltNameError`（`BufferTooSmall` / `UnsafeAltName` / `InvalidEntry` / `UnknownPrefix`）、`isSafeAltName`、`X509AltNameEntry`（`init` / `initUtf8` / `isSafe` / `formatStrictInto` / `formatInto`）、`parseX509AltNameEntry`、`formatX509AltNameList`、`countSafeX509AltNames`；
+- **安全边界**：`isSafeAltName(name, utf8)` 严格拦截 `"`、`\`、`,`、`'` 及控制字符（`< 32` / `127`，ASCII 模式同时拦截 `> 126`）；`formatInto` 对包含逗号或引号的畸形 SAN 值自动包裹引号并十六进制转义，阻断逗号分隔 `subjectaltname` 伪造。
+
+```cp
+import { isSafeAltName, X509AltNameEntry, X509AltNameKind, formatX509AltNameList } from "cap:crypto";
+
+const ok = isSafeAltName("api.example.com", false); // true
+const entries: [2]X509AltNameEntry = [
+    X509AltNameEntry.init(X509AltNameKind.Dns, "api.example.com"),
+    X509AltNameEntry.init(X509AltNameKind.Ip, "127.0.0.1"),
+];
+let out: [128]u8 = [0; 128];
+const n = formatX509AltNameList(entries[0..], out[0..])?; // "DNS:api.example.com, IP Address:127.0.0.1"
+* = ok; * = n;
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [aes_gcm.md](crypto/aes_gcm.md)

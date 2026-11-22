@@ -584,3 +584,16 @@ export {
     AntiReplayWindow128,
     AeadNonceReceiver,
 } from "./aeadNonce.cp";
+
+// --- Zero-Alloc X.509 Subject Alternative Name Safety Validator & Serializer ---
+
+export {
+    X509_ALT_NAME_MAX_ENTRIES,
+    X509AltNameKind,
+    X509AltNameError,
+    isSafeAltName,
+    X509AltNameEntry,
+    parseX509AltNameEntry,
+    formatX509AltNameList,
+    countSafeX509AltNames,
+} from "./x509AltName.cp";
