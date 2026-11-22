@@ -20,7 +20,7 @@ import {
     StatementLine,
     TrialBalance,
     Ledger,
-} from "cap:ledger";
+} from "cap:finance";
 
 test("cap:ledger - full business cycle, accounting equation & verifyTrialBalance") {
     const alloc = std.testing.allocator;
@@ -251,16 +251,16 @@ test("cap:ledger - statementForAccount running balance & zero memory leaks") {
 
 test("cap:ledger - dynamic mount via import cap from 'cap'; cap.ledger") {
     const alloc = std.testing.allocator;
-    let ledger = cap.ledger.Ledger.init(alloc);
+    let ledger = cap.finance.Ledger.init(alloc);
     defer ledger.deinit();
 
     const jpy: [3]u8 = ['J', 'P', 'Y'];
-    ledger.createAccount("wallet", "Agent Wallet", cap.ledger.AccountType.Asset, jpy, false) catch unreachable;
-    ledger.createAccount("tokens", "Token Revenue", cap.ledger.AccountType.Revenue, jpy, false) catch unreachable;
+    ledger.createAccount("wallet", "Agent Wallet", cap.finance.AccountType.Asset, jpy, false) catch unreachable;
+    ledger.createAccount("tokens", "Token Revenue", cap.finance.AccountType.Revenue, jpy, false) catch unreachable;
 
     const lines = [
-        cap.ledger.JournalLine{ account_id: "wallet", side: cap.ledger.EntrySide.Debit, amount: 50_000 },
-        cap.ledger.JournalLine{ account_id: "tokens", side: cap.ledger.EntrySide.Credit, amount: 50_000 },
+        cap.finance.JournalLine{ account_id: "wallet", side: cap.finance.EntrySide.Debit, amount: 50_000 },
+        cap.finance.JournalLine{ account_id: "tokens", side: cap.finance.EntrySide.Credit, amount: 50_000 },
     ];
     const tx = ledger.post(9000, "cap-dyn-1", "Dynamic mount test", &lines) catch unreachable;
     expect_eq(tx, 1);

@@ -16,7 +16,7 @@ import {
     Money,
     FxRate,
     FxBook,
-} from "cap:fx";
+} from "cap:finance";
 import cap from "cap";
 
 fn expectMoneyFmt(alloc: std.mem.Allocator, m: Money, expected: []const u8)! {
@@ -281,16 +281,16 @@ test("4. InvalidAmountFormat, InvalidRate, RateNotFound, UnknownCurrency & DivBy
 test("5. Dynamic `cap.fx` Namespace Mounting & std.testing.allocator Zero-Leak") {
     const alloc = std.testing.allocator;
 
-    const a = cap.fx.Money.parse("25.50", "SGD")?;
-    const b = cap.fx.Money.parse("4.50", "SGD")?;
+    const a = cap.finance.Money.parse("25.50", "SGD")?;
+    const b = cap.finance.Money.parse("4.50", "SGD")?;
     const total = a.add(b)?;
     expectMoneyFmt(alloc, total, "30.00 SGD")?;
 
-    let book = cap.fx.FxBook.init(alloc);
+    let book = cap.finance.FxBook.init(alloc);
     defer book.deinit();
     book.setRate("USD", "SGD", 1.35)?;
 
-    const usd = book.convert(total, "USD", cap.fx.RoundingMode.HalfEven)?;
+    const usd = book.convert(total, "USD", cap.finance.RoundingMode.HalfEven)?;
     // 30.00 / 1.35 = 22.2222... -> 22.22 USD
     expectMoneyFmt(alloc, usd, "22.22 USD")?;
 

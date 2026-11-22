@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { Base58Error, encode, decode, encodeCheck, decodeCheck } from "cap:base58_check";
+import { Base58Error, encode, decode, encodeCheck, decodeCheck } from "cap:finance";
 
 test "base58_check: raw Base58 encode/decode with leading zero bytes" {
     const alloc = std.testing.allocator;
@@ -59,9 +59,9 @@ test "base58_check: empty input and versioned WIF-style payload" {
 
 test "base58_check: cap.base58_check dynamic mount & zero leak" {
     const alloc = std.testing.allocator;
-    const enc = try cap.base58_check.encodeCheck(alloc, 0x05, "p2sh-payload-20bytes");
+    const enc = try cap.finance.encodeCheck(alloc, 0x05, "p2sh-payload-20bytes");
     defer alloc.free(enc);
-    const dec_res = try cap.base58_check.decodeCheck(alloc, enc);
+    const dec_res = try cap.finance.decodeCheck(alloc, enc);
     defer dec_res.deinit(alloc);
     try expect_eq(dec_res.version, 0x05);
     try expect_eq(std.mem.eql(u8, dec_res.payload, "p2sh-payload-20bytes"), true);

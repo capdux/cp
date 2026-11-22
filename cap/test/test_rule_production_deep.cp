@@ -21,7 +21,7 @@ import {
     FiredRule,
     RuleEvalReport,
     RuleEngine,
-} from "cap:rule";
+} from "cap:finance";
 
 test("cap:rule - composite condition AST & Int vs Float numeric comparison") {
     const alloc = std.testing.allocator;
@@ -275,19 +275,19 @@ test("cap:rule - MaxDepthExceeded (>32 nested layers) & zero memory leaks") {
 
 test("cap:rule - dynamic mounting via `import cap from \"cap\"; cap.rule`") {
     const alloc = std.testing.allocator;
-    let engine = cap.rule.RuleEngine.init(alloc);
+    let engine = cap.finance.RuleEngine.init(alloc);
     defer engine.deinit();
 
-    engine.addRule(cap.rule.RuleSpec{
+    engine.addRule(cap.finance.RuleSpec{
         id: "dyn-1",
         name: "Dynamic Mount Rule",
         salience: 99,
-        condition: cap.rule.Condition.cmp("env", .Eq, cap.rule.FactValue.Str("prod")),
+        condition: cap.finance.Condition.cmp("env", .Eq, cap.finance.FactValue.Str("prod")),
         action_tag: "ROUTE_PROD",
         action_payload: "cluster-a",
     })?;
 
-    let facts = cap.rule.FactMap.init(alloc);
+    let facts = cap.finance.FactMap.init(alloc);
     defer facts.deinit();
     facts.setStr("env", "prod")?;
 

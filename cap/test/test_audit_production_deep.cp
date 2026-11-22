@@ -18,7 +18,7 @@ import {
     AuditEntry,
     ChainVerifyResult,
     AuditTrail,
-} from "cap:audit";
+} from "cap:finance";
 
 test("cap:audit - append events, GENESIS_HASH, prev_hash chaining & verifyChain") {
     const alloc = std.heap.page_allocator;
@@ -230,7 +230,7 @@ test("cap:audit - exportJsonl / importJsonl roundtrip & tampered JSONL detection
 
 test("cap:audit - dynamic cap.audit mounting") {
     const alloc = std.heap.page_allocator;
-    let trail = cap.audit.AuditTrail.init(alloc);
+    let trail = cap.finance.AuditTrail.init(alloc);
     defer trail.deinit();
 
     const e1 = trail.append(
@@ -238,8 +238,8 @@ test("cap:audit - dynamic cap.audit mounting") {
         "agent:orchestrator",
         "spawn.worker",
         "worker:audit",
-        cap.audit.AuditOutcome.Success,
-        cap.audit.AuditSeverity.Info,
+        cap.finance.AuditOutcome.Success,
+        cap.finance.AuditSeverity.Info,
         "{}",
     ) catch unreachable;
 
@@ -247,13 +247,13 @@ test("cap:audit - dynamic cap.audit mounting") {
         9002,
         "agent:orchestrator",
         "policy.check",
-        "cap:audit",
-        cap.audit.AuditOutcome.Success,
-        cap.audit.AuditSeverity.Critical,
+        "cap:finance",
+        cap.finance.AuditOutcome.Success,
+        cap.finance.AuditSeverity.Critical,
         "{}",
     ) catch unreachable;
 
-    expect_eq(e1.prev_hash, cap.audit.GENESIS_HASH);
+    expect_eq(e1.prev_hash, cap.finance.GENESIS_HASH);
     expect_eq(e2.prev_hash, e1.entry_hash);
 
     const res = trail.verifyChain();

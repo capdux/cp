@@ -9,7 +9,7 @@ import {
     CellCoord,
     CellValue,
     Spreadsheet,
-} from "cap:sheet";
+} from "cap:finance";
 
 fn approxEq(a: f64, b: f64): bool {
     return @abs(a - b) < 0.000000001;
@@ -196,10 +196,10 @@ test("4. CycleDetected, DivisionByZero, CSV Export & Zero-Leak Allocator") {
 
 test("5. Dynamic Lazy Namespace Mounting via `import cap from \"cap\"; cap.sheet`") {
     const alloc = std.testing.allocator;
-    let sheet = cap.sheet.Spreadsheet.init(alloc);
+    let sheet = cap.finance.Spreadsheet.init(alloc);
     defer sheet.deinit();
 
-    const coord = cap.sheet.CellCoord.parseRef("B2")?;
+    const coord = cap.finance.CellCoord.parseRef("B2")?;
     expect_eq(coord.row, 1 as usize);
     expect_eq(coord.col, 1 as usize);
 

@@ -19,7 +19,7 @@ import {
     InvoiceLineItem,
     Invoice,
     BillingCalculator,
-} from "cap:billing";
+} from "cap:finance";
 import cap from "cap";
 
 fn testGraduatedVsVolumeAndInvalidTiers()! {
@@ -256,22 +256,22 @@ fn testCapBillingDynamicLazyMount()! {
     const alloc = gpa.allocator();
 
     {
-        const tiers: []const cap.billing.PriceTier = [
-            cap.billing.PriceTier{ up_to_units: 100, unit_price_micros: 10000, flat_fee_micros: 0 },
-            cap.billing.PriceTier{ up_to_units: null, unit_price_micros: 5000, flat_fee_micros: 0 },
+        const tiers: []const cap.finance.PriceTier = [
+            cap.finance.PriceTier{ up_to_units: 100, unit_price_micros: 10000, flat_fee_micros: 0 },
+            cap.finance.PriceTier{ up_to_units: null, unit_price_micros: 5000, flat_fee_micros: 0 },
         ];
-        const micros = cap.billing.BillingCalculator.priceMeteredUsage(200, tiers, cap.billing.TierMode.Graduated)?;
+        const micros = cap.finance.BillingCalculator.priceMeteredUsage(200, tiers, cap.finance.TierMode.Graduated)?;
         expect_eq(micros, 1500000 as i64); // 100*10000 + 100*5000 = 1,500,000 micros ($1.50)
 
-        const prorated = cap.billing.BillingCalculator.calculateProration(1000, 5000, 0, 1000, 750)?;
+        const prorated = cap.finance.BillingCalculator.calculateProration(1000, 5000, 0, 1000, 750)?;
         expect_eq(prorated, 1000 as i64); // 25% remaining * 4000 = 1000
 
-        const items: []const cap.billing.InvoiceLineItem = [
-            cap.billing.InvoiceLineItem{ description: "Metered API", quantity: 200, amount_cents: cap.billing.BillingCalculator.microsToCents(micros) },
-            cap.billing.InvoiceLineItem{ description: "Proration", quantity: 1, amount_cents: prorated },
+        const items: []const cap.finance.InvoiceLineItem = [
+            cap.finance.InvoiceLineItem{ description: "Metered API", quantity: 200, amount_cents: cap.finance.BillingCalculator.microsToCents(micros) },
+            cap.finance.InvoiceLineItem{ description: "Proration", quantity: 1, amount_cents: prorated },
         ];
-        const coupon = cap.billing.Coupon{ code: "FLAT150", kind: cap.billing.CouponKind.FixedAmount, value: 150 };
-        let inv = cap.billing.BillingCalculator.buildInvoice(alloc, "cust_cap", "USD", items, coupon, 0)?;
+        const coupon = cap.finance.Coupon{ code: "FLAT150", kind: cap.finance.CouponKind.FixedAmount, value: 150 };
+        let inv = cap.finance.BillingCalculator.buildInvoice(alloc, "cust_cap", "USD", items, coupon, 0)?;
         defer inv.deinit();
 
         // 150 + 1000 - 150 = 1000
