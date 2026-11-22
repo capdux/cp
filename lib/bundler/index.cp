@@ -596,3 +596,18 @@ export {
     ChunkConvertStats,
     ChunkStmtConverter,
 } from "./chunkStmts";
+
+export {
+    HMR_FAILURE_MAX_MSGS,
+    HMR_FAILURE_MAX_NOTES,
+    HMR_FAILURE_MAX_OWNER_INDEX,
+    HmrFailureError,
+    HmrFailureOwnerKind,
+    HmrFailureOwner,
+    HmrFailureErrorKind,
+    HmrSourceLoc,
+    HmrFailureData,
+    HmrFailureMsg,
+    HmrFailureFrame,
+    HmrFailureCodec,
+} from "./hmrFailure";

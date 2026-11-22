@@ -983,3 +983,35 @@ const n = conv.formatPreview(buf[0..], "init_app")?;
 * = st;
 * = n;
 ```
+
+- **HMR DevServer 二进制错误覆盖层编解码器（`hmrFailure.cp`，吸收自 `/data/dev/bun/src/bake/DevServer/SerializedFailure.cp` & `/data/dev/bun/docs/bundler/hot-reloading.mdx`）**：
+    - 导出：`HMR_FAILURE_MAX_MSGS` (`16`)、`HMR_FAILURE_MAX_NOTES` (`8`)、`HMR_FAILURE_MAX_OWNER_INDEX` (`0x3FFF_FFFF`)、`HmrFailureError`、`HmrFailureOwnerKind`（`None`/`Route`/`Client`/`Server`）、`HmrFailureOwner`（32-bit 紧凑位打包 `pack`/`unpack`）、`HmrFailureErrorKind`（12 变体：5 种打包日志级别 + 7 种 JS 异常类型）、`HmrSourceLoc`、`HmrFailureData`、`HmrFailureMsg`、`HmrFailureFrame`、`HmrFailureCodec`（`peekOwner`/`encode`/`decode`）；
+    - **HMR 错误隔离与热更新边界最佳实践（参考 `/data/dev/bun/docs/bundler/hot-reloading.mdx`）**：
+      - **按增量图归属句柄去重**：每个 `HmrFailureOwner`（30-bit 文件/路由索引 + 2-bit 归属类别）在 DevServer 错误表中仅维护唯一一条 `HmrFailureFrame`（可聚合多条消息与附注），通过 O(1) `peekOwner()` 直接路由更新或清除浏览器错误覆盖层；
+      - **`import.meta.hot` 直接调用约束**：`import.meta.hot.accept()` / `dispose()` / `on()` 必须直接静态书写，严禁赋值给中间变量，以确保生产构建可完全死代码消除；若文件未建立热更新边界则自动回退整页刷新。
+
+```cp
+import {
+    HmrFailureOwner,
+    HmrFailureFrame,
+    HmrFailureMsg,
+    HmrFailureData,
+    HmrSourceLoc,
+    HmrFailureCodec,
+} from "cap:bundler";
+
+const owner = HmrFailureOwner.init(.Client, 7)?;
+let frame = HmrFailureFrame.init(owner, "src/App.tsx");
+* = frame.addMsg(HmrFailureMsg{
+    kind: .BundlerLogErr,
+    data: HmrFailureData{
+        text: "Unexpected token",
+        location: HmrSourceLoc{ line: 12, column: 4, length: 3, line_text: "const = 1;" },
+    },
+})?;
+
+let wire: [512]u8 = [0; 512];
+const n = HmrFailureCodec.encode(frame, wire[0..])?;
+const decoded = HmrFailureCodec.decode(wire[0..n])?;
+* = decoded;
+```
