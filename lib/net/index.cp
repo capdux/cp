@@ -1867,3 +1867,16 @@ export {
     HedgeSchedulerStats,
     HedgedRequestScheduler,
 } from "./hedgedReq.cp";
+
+// --- blockList (Node/Bun net.BlockList: IPv4/IPv6 Address/Range/Subnet Rules) ---
+export {
+    BLOCKLIST_MAX_RULES,
+    BLOCKLIST_IPV4_MAX_PREFIX,
+    BLOCKLIST_IPV6_MAX_PREFIX,
+    BlockListFamily,
+    BlockListRuleKind,
+    BlockListError,
+    BlockListAddr,
+    BlockListRule,
+    BlockList,
+} from "./blockList.cp";

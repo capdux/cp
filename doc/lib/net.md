@@ -46,6 +46,7 @@
 | `lib/net/proxyv2.cp` | `// Source: Absorbed from /data/dev/bun/src/http/http.cp (HAProxy PROXY Protocol v2 Binary Codec)` | HAProxy PROXY Protocol v2 二进制编解码与 TLV 迭代：`PROXY_V2_SIGNATURE`、`hasProxyV2Signature`、`ProxyV2Command`、`ProxyV2Family`、`ProxyV2Transport`、`ProxyV2Tlv`、`ProxyV2TlvIter`、`ProxyV2Header` |
 | `lib/net/hosts.cp` | `// Source: Absorbed from /data/dev/bun/src/dns.zig (/etc/hosts Parser Barrel)` | `/etc/hosts` 正向/反向零分配查询：`HostsLine`、`HostsIter`、`lookupHost`、`lookupHostV4`、`lookupHostV6`、`reverseLookup` |
 | `lib/net/noproxy.cp` | `// Source: Absorbed from /data/dev/bun/src/http/ProxyTunnel.cp` | `NO_PROXY` 规则匹配与 CIDR 绕过：`NoProxyIpv4Addr`、`NoProxyIpv4Cidr`、`shouldBypassProxy` |
+| `lib/net/blockList.cp` | `// Source: Absorbed from /data/dev/bun/src/runtime/node/net/BlockList.cp` | Node/Bun `net.BlockList` 纯 CP 零分配 IP 访问控制表：`BlockListFamily`、`BlockListRuleKind`、`BlockListError`、`BlockListAddr`、`BlockListRule`、`BlockList`（单地址/范围/CIDR 子网规则、IPv4-mapped IPv6 双向匹配、规则格式化导出） |
 | `lib/net/index.cp` | `// Source: /data/dev/bun/src/uws/uws.cp & /data/dev/bun/src/runtime/socket/` | `cap:net` 统一公开导出入口 |
 
 ---
@@ -682,6 +683,45 @@ pub fn demoHedgedRequestScheduler() {
     }
 }
 ```
+
+---
+
+## IP 访问控制表 (`blockList.cp`) 与 Bun TCP 实战指南
+
+> 同步自 `/data/dev/bun/src/runtime/node/net/BlockList.cp` 与 `/data/dev/bun/docs/runtime/networking/tcp.mdx`
+
+### 1. `BlockList` 零分配 IPv4/IPv6 访问控制表
+
+`lib/net/blockList.cp` 提供与 Node.js / Bun `net.BlockList` 语义对齐的 100% 纯 CP 零堆分配实现（固定容量 `BLOCKLIST_MAX_RULES = 256`）：
+
+- **规则类型与 LIFO 优先级**：支持单地址（`addAddress` / `addAddressAuto`）、闭区间范围（`addRange` / `addRangeAuto`，严格校验 `start <= end` 与同协议族）以及 CIDR 子网（`addSubnet` / `addSubnetCidr`，IPv4 `0..32`、IPv6 `0..128`，含 `/0` 移位溢出防护）。新规则按 LIFO 顺序头插至索引 `0`，与 Bun `da_rules.insert(0, ...)` 一致。
+- **IPv4-Mapped IPv6 双向互通**：`::ffff:a.b.c.d` 与原生 IPv4 在单地址、范围、子网匹配中自动互通；`check` 对畸形 IP 字符串返回 `false` 而不触发异常。
+- **规则格式化导出**：`formatRule(idx, out)` 与 `formatAllRules(out)` 严格输出 Node/Bun 标准格式：`"Address: IPv4 127.0.0.1"`、`"Range: IPv4 10.0.0.1-10.0.0.10"`、`"Subnet: IPv6 2001:db8::/32"`。
+
+```typescript
+import { BlockList, BlockListFamily } from "cap:net";
+
+let bl = BlockList.init();
+bl.addAddress("127.0.0.1", BlockListFamily.Ipv4)?;
+bl.addRange("10.0.0.1", "10.0.0.10", BlockListFamily.Ipv4)?;
+bl.addSubnetCidr("2001:db8::/32")?;
+
+const hit_v4 = bl.check("10.0.0.5", BlockListFamily.Ipv4);          // true
+const hit_mapped = bl.check("::ffff:127.0.0.1", BlockListFamily.Ipv6); // true
+const hit_v6 = bl.check("2001:db8::cafe", BlockListFamily.Ipv6);    // true
+
+let buf: [256]u8 = [0; 256];
+if (n := bl.formatAllRules(buf[0..])) {
+    const summary = buf[0..n]; // 换行分隔的规范规则列表
+    * = summary;
+}
+```
+
+### 2. 高性能 TCP 服务端与客户端最佳实践（同步自 Bun `tcp.mdx`）
+
+1. **按服务器共享事件处理器（避免单连接闭包分配）**：在高频连接场景中，将 `open` / `data` / `drain` / `close` / `error` 回调声明在服务器级共享结构中，而非为每个连接分配独立监听器；连接上下文通过 `open` 阶段绑定的轻量句柄数据结构承载。
+2. **发送批聚合（Corking）与背压控制（Drain）**：避免逐字节或高频碎片化 `write()`（如拆分成多次 1 字节写），优先使用 `TcpStream` 的 16KB `StreamBuffer`（`cork()` / `uncork()` / `flush()`）合并小包；当底层返回短写（`wrote < payload.len`）时，将剩余切片保留在缓冲中，等待 `drain` 可写事件再续传。
+3. **连接准入防护**：在 `TcpServer` 接受新连接后，优先用 `BlockList.checkAuto` / `CidrAllowlist` 对对端地址执行零分配 O(N) 准入校验，在应用层解析前即可拦截受限来源。
 
 ## 收敛子模块深度文档
 
