@@ -1,5 +1,7 @@
 # CP 标准库：时间、RFC 3339 / ISO 8601、Cron 调度与限流套件手册 (`cap:time`)
 
+> 参考来源：`/data/dev/bun/docs/runtime/utils.mdx`, `/data/dev/bun/src/bun_core/time.cp` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:time` 是 CP 语言官方内置的工业生产级纯 CP 时间、日历转换、Cron 调度与限流退避标准库，**零外部依赖、零 `std.posix`、零 `@import("bun")`、零堆分配**，适用于 BEAM 调度器、分布式定时任务、API 网关限流与重试退避场景。
@@ -124,3 +126,16 @@ pub fn demoTimeSuite() {
 
 - **人类可读时长解析与格式化 (`duration.cp`)**：`NS_PER_US`..`NS_PER_WEEK`、`parseDurationNs`、`parseDurationMs`、`formatDurationNs`、`formatDurationCompact`。
 - **RFC 3339 / ISO 8601 时间戳编解码 (`rfc3339.cp`)**：`isLeapYear`、`daysInMonth`、`Rfc3339Time`。
+
+---
+
+## 上游行为契约与时间边界注意事项
+
+1. **单调时钟 vs 墙钟严格区分（`WallClock` / `Duration`）**：
+   - 测量耗时、限流窗口（`TokenBucket` / `SlidingWindowLimiter`）与超时控制必须使用单调递增时间戳，避免 NTP 校时或夏令时回拨导致负耗时或限流误判；仅在日志与外部协议序列化时使用墙钟 UTC 时间戳。
+2. **公历闰年与 RFC 3339 严格校验（`CivilDateTime` / `Iso8601` / `Rfc3339Time`）**：
+   - 采用 Howard Hinnant 纯算法实现公历与 Unix Epoch 双向转换，精确处理 400 年闰年周期（`isLeapYear` / `daysInMonth`）并拦截 `2025-02-29` 等非法日期与越界时区偏移。
+3. **POSIX Cron 日/周并集与跳步推进（`CronExpr`）**：
+   - 遵循 POSIX Cron 规范：当“日（DOM）”与“星期（DOW）”均非通配符 `*` 时，满足任一即触发；`nextAfter` 按月/日/时/分位掩码跳步推进，无需逐分钟空转扫描。
+4. **抖动退避防惊群（`ExponentialBackoff`）**：
+   - 分布式重试场景推荐传入确定性随机种子启用抖动（Jitter），避免多节点在故障恢复瞬间同步重连引发雪崩。

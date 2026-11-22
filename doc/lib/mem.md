@@ -1,5 +1,7 @@
 # CP 标准库：区域内存分配器、配额管理与引用计数子系统使用手册 (`cap:mem`)
 
+> 参考来源：`/data/dev/bun/src/bun_alloc/bun_alloc.cp`, `/data/dev/bun/src/bun_alloc/MaxHeapAllocator.cp`, `/data/dev/bun/src/ptr/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计哲学
 
 `cap:mem` 是 CP 语言官方内置的**高性能内存分配器（`MaxHeapAllocator`、`StackFallbackAllocator`、`BumpArena`、`Arena`）、Mimalloc C-FFI 底层绑定、跨 Actor 零拷贝共享张量（`SharedTensor`）、所有权感知缓冲区（`MaybeOwnedBuf`、`CowBytes`、`CowSlice`、`Cow`）、引用计数器（`RefCounter`、`AtomicRefCounter`、`WeakControlBlock`、`Rc`）与 64 位打标指针（`TaggedPointer`、`LowTagPointer`、`TaggedPtr`）**标准库。完整吸收自 Bun（`/data/dev/bun/src/bun_alloc/` 与 `/data/dev/bun/src/ptr/`）。
@@ -245,3 +247,16 @@ pub fn demoPhaseE1Mem(): ! {
     defer mfd.deinit();
 }
 ```
+
+---
+
+## 上游 Bun 内存分配器行为契约与安全边界
+
+1. **`MaxHeapAllocator` 高水位复用与配额拦截**：
+   - 当请求大小 `<= capacity()` 时直接复用已有块（零系统调用）；超过 `max_limit` 时返回 `null` 而不崩溃，适合解析外部未知长度报文的硬上限防护。
+2. **`StackFallbackAllocator` 栈热路径与堆回退**：
+   - 小对象优先从固定栈缓冲线性分配，超容量后无缝回退至后备堆分配器；注意栈内联切片的生命周期严格绑定分配器实例所在栈帧，不得逃逸返回至外层作用域。
+3. **`TaggedPointer` / `LowTagPointer` 对齐与地址位宽约束**：
+   - 低位打标（`LowTagPointer`）依赖目标指针自然对齐产生的低位全零位；高位打标（`TaggedPointer`）利用 64 位虚拟地址高 16 位空闲位，解引用前必须先还原掩码（`ADDR_MASK`）。
+4. **Mimalloc 线程本地堆隔离（`MiHeap`）**：
+   - `mi_heap_new()` 创建的专属堆支持 `mi_heap_destroy()` 一次性 O(1) 整体回收，适合请求级或任务级短暂生命周期批处理。

@@ -1,5 +1,7 @@
 # CP 标准库：并发同步原语、无锁队列与多线程池使用手册 (`cap:sync` & `cap:threading`)
 
+> 参考来源：`/data/dev/bun/src/threading/threading.cp`, `/data/dev/bun/src/threading/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计哲学
 
 `cap:sync`（与底层 `cap:threading` 共享同步原语）是 CP 语言专为**多核低延迟并发、用户态快速锁（Futex）、无锁队列（Lock-Free MPMC / Unbounded Batch Queue）、分片并发字典（Striped ConcurrentMap）与零拷贝跨线程共享切片（ArcSlice）**设计的工业级并发标准库。完整吸收自 Bun（`/data/dev/bun/src/threading/`），在非竞争快路径下实现 **0 系统调用** 的纯原子寄存器操作。
@@ -170,3 +172,16 @@ pub fn demoConcurrentMapAndArcSlice()! {
 | **32 分片并发哈希表** | `ConcurrentMap` | `ConcurrentMap(K, V)` | Wyhash 分片路由，支持整型与字符串键 |
 | **原子引用计数切片** | `ArcSlice` | `ArcSlice(T)` | 零拷贝跨 Actor/线程只读载荷共享 |
 | **工作窃取线程池** | `ThreadPool` / `WorkPool` | `WorkPool`, `TaskDesc`, `Guarded<T>` | 线程本地缓冲 + 全局队列 + 远程窃取 |
+
+---
+
+## 四、 上游 Bun `threading` 并发契约与安全边界
+
+1. **`Mutex` 不可重入与死锁检测**：
+   - `Mutex` 为非递归 3 态用户态 Futex 锁（非竞争路径 0 系统调用）；同一线程重复 `lock()` 会触发死锁（Debug 模式下自动检测并拦截），优先使用 `withLock` 或 `Guarded<T>` 保证异常路径下确定性解锁。
+2. **`Condition.wait` 虚假唤醒防护**：
+   - 遵循 POSIX / Futex 条件变量契约：`Condition.wait` / `timedWait` 必须置于 `while (!predicate)` 循环中调用，不可使用单次 `if`，以防系统虚假唤醒或多线程竞争消耗信号。
+3. **`MpmcQueue` 2 的幂容量与 `ArcSlice` 生命周期**：
+   - `MpmcQueue` / `RingBuffer` 依赖 2 的幂容量与 Vyukov 序列号实现无锁多生产者多消费者通信；`ArcSlice<T>` 跨线程传递只读大数据块时每次 `clone()` 必须配对一次 `release()`，引用计数归零时自动释放底层堆内存。
+4. **`WaitGroup` 计数守卫**：
+   - 务必在派生工作线程之前调用 `wg.add(1)`（而非在子线程内部调用），避免主线程 `wg.wait()` 在子线程尚未执行 `add` 前提前返回。

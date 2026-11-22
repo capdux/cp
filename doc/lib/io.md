@@ -1,5 +1,7 @@
 # CP 标准库：统一流式 I/O、非阻塞管道与文件流手册 (`cap:io`)
 
+> 参考来源：`/data/dev/bun/docs/runtime/file-io.mdx`, `/data/dev/bun/src/io/` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:io` 是 CP 语言官方内置的统一流式 I/O 标准库，基于 `Reader` / `Writer` / `Closer` / `Seeker` 四大解耦 Trait 契约，完整移植 Bun `src/io/` 的生产级流式与非阻塞状态机能力：包含 `IoSource` / `IoStatus` / `FileType` / `PollResult`、原生匿名与非阻塞管道（`Pipe.createNonblocking()` / `PipeReader` / `PipeWriter` 的 `EAGAIN` 与 `BrokenPipe` 状态机）、面向文件偏移与零拷贝的流式封装（`FileReader` / `FileWriter` / `openForWriting`）、防资源耗尽守卫 `MaxBuf`，以及增强型 `BufferedReader<R>` / `BufferedWriter<W>` 与组合流装饰器。
@@ -83,3 +85,16 @@ pub fn demoPhaseAIo(): !void {
     * = try br.readUntilDelimiter('\n', line_buf[0..32]);
 }
 ```
+
+---
+
+## 上游 Bun I/O 行为契约与边界注意事项
+
+1. **非阻塞管道状态机（`EAGAIN` / `EPIPE`）**：
+   - `Pipe.createNonblocking()` 创建的 `PipeReader` / `PipeWriter` 遵循 Bun `src/io/PipeReader.cp` 契约：缓冲区暂无数据时 `attemptRead` 返回 `IoStatus.WouldBlock`（不视为错误）；对端关闭后写入返回 `BrokenPipe`，可通过 `pollReadable` / `pollWritable` 配合事件循环无阻塞驱动。
+2. **防资源耗尽限额（`MaxBuf`）**：
+   - 读取不可信网络流、子进程输出或未知大小文件时，务必通过 `attachMaxBuf(new MaxBuf(limit))` 绑定上限；超过限额时 `onReadBytesStatus` 立即中止读取，避免无限流耗尽内存。
+3. **短读/短写与 `BufferedWriter` 刷盘**：
+   - 底层 `Reader.read` 允许返回少于请求长度的字节数（返回 `0` 表示 EOF），循环聚合请使用 `copyStream` / `copyN` / `PipeReader.readToEnd`；使用 `BufferedWriter` 时在关闭流前必须调用 `flush()` 避免尾部缓冲数据丢失。
+4. **标准流与惰性文件引用（参考 `/data/dev/bun/docs/runtime/file-io.mdx`）**：
+   - `Stdio` / `Console` 封装标准输入输出与错误流；面向文件偏移的 `FileReader` (`pread`) 与 `FileWriter` (`pwrite`) 支持定位读写且不影响内核共享文件偏移指针。

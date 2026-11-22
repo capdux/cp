@@ -1,6 +1,6 @@
 # `cap:string` — 工业级字符串引擎、Unicode 码表与可变缓冲标准库
 
-> **上游溯源**: `/data/dev/bun/src/string/` & `/data/dev/bun/src/unicode/` (`immutable.cp`, `immutable/unicode.cp`, `wtf.cp`, `StringBuilder.cp`, `MutableString.cp`, `SmolStr.cp`, `HashedString.cp`, `StringJoiner.cp`, `PathString.cp`, `escapeRegExp.cp`, `js_parser/lexer/identifier.cp`, `uucode`)  
+> 参考来源：`/data/dev/bun/src/string/`, `/data/dev/bun/src/unicode/`, `/data/dev/bun/docs/runtime/utils.mdx` | 吸收日期：2026-11-22
 > **模块路径**: `lib/string/`  
 > **导入协议**: `import { strings, Strings, StringBuilder, MutableString, Unicode, CodepointIterator, Wtf8, Utf8, Utf16, SmolStr, HashedString, StringJoiner, CaseConverter, StringEscape, SimdScanner, wcwidth, stringWidth, ... } from "cap:string";`
 
@@ -72,3 +72,16 @@ pub fn demoPhaseAString(): !void {
     }
 }
 ```
+
+---
+
+## 上游 Bun 字符串引擎行为契约与性能边界
+
+1. **两阶段零重分配构建（`StringBuilder`）**：
+   - 继承自 Bun `src/string/StringBuilder.cp`：先通过 `count` / `countZ` / `count16` 精确累加最终字节数，调用一次 `allocateIn(alloc)` 分配精确容量后再依次 `append`，全程 0 次中间 `realloc` 与内存搬迁；动态未知长度场景再选用 `MutableString`。
+2. **UTF-8 / UTF-16 / WTF-8 边界与 BOM 剥离**：
+   - `Wtf8` 保留来自 Windows 文件路径或 JS 字符串的孤立 UTF-16 代理对，而标准 `Utf8` 将非法序列替换为 `REPLACEMENT_CHAR`（`U+FFFD`）；解析外部文本文件前可用 `withoutUTF8BOM` 零拷贝剥离前导 `EF BB BF`。
+3. **终端显示宽度与字素簇对齐（`stringWidth` / `GraphemeIterator`）**：
+   - 对标 `Bun.stringWidth`：`stringWidth` 综合处理 CJK 双宽字符、零宽组合音标、Emoji 与 ANSI 控制序列；截断用户可见文本时优先按 `GraphemeIterator`（UAX #29）边界切分，避免把多码点 Emoji 或组合字符截断成乱码。
+4. **15 字节短字符串内联（`SmolStr`）与 16B SIMD 扫描（`SimdScanner`）**：
+   - 长度 `<= 15` 字节的标识符/短键使用 `SmolStr` 零堆内联；大缓冲区查找分隔符、引号或换行符优先走 `SimdScanner` 16 字节向量快路径。

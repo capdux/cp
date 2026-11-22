@@ -1,5 +1,7 @@
 # CP 标准库：跨平台系统调用、文件句柄、元数据与进程控制手册 (`cap:sys`)
 
+> 参考来源：`/data/dev/bun/src/sys/sys.zig`, `/data/dev/bun/src/sys/`, `/data/dev/bun/docs/runtime/file-io.mdx` | 吸收日期：2026-11-22
+
 ## 一、 架构总览与设计准则
 
 `cap:sys` 是 CP 语言官方内置的底层系统调用与操作系统原语标准库，深度吸收 Bun 生产级 `src/sys/` 实现，并完全基于 Zig 0.17 原生 `std.c.*` 与 `std.os.linux.*` 构建（零 `@import("bun")` 与零废弃 `std.posix` 依赖）。
@@ -116,3 +118,16 @@ pub fn demoPhaseASys(): !void {
     * = res.exited();
 }
 ```
+
+---
+
+## 上游 Bun `sys` 行为契约与系统调用安全边界
+
+1. **`*at` 家族原子操作与 `O_CLOEXEC` 默认防泄漏**：
+   - 继承自 Bun `src/sys/`：打开文件与目录操作优先使用 `openat` / `mkdirat` / `unlinkat` / `renameat2` / `fstatat` 并附加 `O_CLOEXEC`（或 `FD.dupCloexec`），避免 TOCTOU 路径竞态以及子进程 `PosixSpawn` 意外继承父进程文件描述符。
+2. **`EINTR` 自动重试与 `Maybe<T>` 结构化错误**：
+   - 阻塞型系统调用（读写、`waitpid`、`poll` 等）内部自动重试 `EINTR` 信号中断；`Maybe<T>` 完整保留原始操作系统 `errno`、触发调用 `SyscallTag` 与关联路径，便于精确区分 `ENOENT`、`EACCES`、`EEXIST`、`EXDEV`（跨文件系统重命名回退拷贝）与 `EAGAIN`。
+3. **内核零拷贝文件复制回退链（`copyFileRange` / `sendfile`）**：
+   - `copyFileWithState` 优先尝试 Linux `copy_file_range` / `sendfile` 内核零拷贝路径，在目标文件系统返回 `EXDEV` / `ENOSYS` / `EINVAL` 时平滑回退至用户态缓冲读写。
+4. **`DirIterator` 零堆 `getdents64` 遍历**：
+   - 使用 8KB 栈内联缓冲批量读取内核目录项，调用方须配对 `defer it.close();` 并在遍历期间消费当前 `entry.name` 切片（下次 `next()` 会复用同一缓冲）。
