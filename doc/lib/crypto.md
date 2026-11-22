@@ -394,6 +394,46 @@ pub fn demoShamirSecretSharing() {
 
 ---
 
+## 零分配稀疏默克尔树（Sparse Merkle Tree，`sparseMerkle.cp`）
+
+面向可验证键值存储、零知识状态承诺与撤销列表的 100% 纯 CP 零动态堆分配、零 C FFI 依赖稀疏默克尔树引擎（基于 `std.crypto.hash.sha2.Sha256` 严格域分离 `0x00` 叶子 / `0x01` 内部节点）：
+
+- **常量与原语**：
+  - `SMT_HASH_LEN = 32`、`SMT_MAX_DEPTH = 32`、`SMT_MAX_LEAVES = 64`
+  - `smtEmptyLeafHash()`（32 字节全零空叶，与 `smtHashLeaf("") = SHA256(0x00)` 密码学可区分）、`smtHashLeaf(value_bytes)`、`smtHashNode(left, right)`
+- **数据模型**：
+  - `SmtLeafEntry`、`SmtProof`（`depth`, `key`, `leaf_present`, `value_hash`, `siblings[32][32]`）、`SmtStats`
+- **核心引擎 `SparseMerkleTree`**：
+  - `init(depth: u8): SparseMerkleTree?`：支持 `depth ∈ 1..=32` 并预计算 `default_hashes[0..=depth]`（零存储全空子树）。
+  - `put(*_, key, value_bytes): bool` / `delete(*_, key): bool` / `contains(key)` / `getLeafHash(key): ([32]u8)?` / `clear(*_)`：插入/原位更新与幂等删除（删除自动剪枝回退默认空哈希）。
+  - `rootHash(): [32]u8` / `defaultRootHash(): [32]u8` / `generateProof(key): SmtProof?` / `stats(): SmtStats`。
+- **无状态常数时间验证器**：
+  - `verifySmtInclusionProof(root, key, value_bytes, proof): bool`：验证存在性证明。
+  - `verifySmtNonInclusionProof(root, key, proof): bool`：验证非存在性证明（任意 sibling/root/value/key 篡改严格拒绝）。
+
+```cp
+import {
+    SparseMerkleTree,
+    verifySmtInclusionProof,
+    verifySmtNonInclusionProof,
+} from "cap:crypto";
+
+pub fn demoSparseMerkleTree() {
+    let tree = SparseMerkleTree.init(16) ?? return;
+    * = tree.put(42, "verified-state");
+    const root = tree.rootHash();
+
+    if (inc := tree.generateProof(42)) {
+        * = verifySmtInclusionProof(root, 42, "verified-state", inc); // true
+    }
+    if (non_inc := tree.generateProof(99)) {
+        * = verifySmtNonInclusionProof(root, 99, non_inc); // true
+    }
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [aes_gcm.md](crypto/aes_gcm.md)

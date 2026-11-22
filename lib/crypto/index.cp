@@ -490,3 +490,20 @@ export {
     splitSecretDeterministic,
     combineShamirShares,
 } from "./shamirSecret.cp";
+
+// --- Zero-Alloc Fixed-Depth Sparse Merkle Tree (SMT) ---
+
+export {
+    SMT_HASH_LEN,
+    SMT_MAX_DEPTH,
+    SMT_MAX_LEAVES,
+    smtEmptyLeafHash,
+    smtHashLeaf,
+    smtHashNode,
+    SmtLeafEntry,
+    SmtProof,
+    SmtStats,
+    SparseMerkleTree,
+    verifySmtInclusionProof,
+    verifySmtNonInclusionProof,
+} from "./sparseMerkle.cp";
