@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { CronError, DateTime, CronExpr } from "cap:crontab";
+import { CronError, DateTime, CronExpr } from "cap:conf";
 
 test "crontab: step, range, list, and named months/weekdays" {
     const cron = try CronExpr.parse("*/15 9-17 * NOV MON-FRI");
@@ -54,8 +54,8 @@ test "crontab: fromUnixSeconds and error guards" {
 }
 
 test "crontab: cap.crontab dynamic mount" {
-    const cron = try cap.crontab.CronExpr.parse("@hourly");
-    const next = cron.nextAfter(cap.crontab.DateTime{ .year = 2026, .month = 5, .day = 10, .hour = 14, .minute = 45 }) orelse return error.TestFailed;
+    const cron = try cap.conf.CronExpr.parse("@hourly");
+    const next = cron.nextAfter(cap.conf.DateTime{ .year = 2026, .month = 5, .day = 10, .hour = 14, .minute = 45 }) orelse return error.TestFailed;
     try expect_eq(next.hour, 15);
     try expect_eq(next.minute, 0);
 }

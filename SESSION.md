@@ -1465,3 +1465,7 @@
 ### 2026-11-22（根目录收敛第 2 批 lib/doc/ (-14 目录) + 3 项子模块交付 | 2026-11-22 14:49:53）
 - **执行与结单汇报**：
   > 1. Stdlib Root Consolidator (doc) 完成 lib/doc/ 建立与收敛：13 组文档模块零冲突归入 lib/doc/ + markdown_table_.cp 参考归档，物理清理 14 个冗余顶层目录 (833 -> 819)，16/16 cpc check 与 14/14 cap test 全部 PASS；2. 验收交付 lib/attention/spec_tree.cp (5/5 PASS，原 AI & Tensor Compute Absorber 满 10 项轮换为第 3 路根目录收敛专员推进 lib/math/)、lib/text/code_pattern.cp (5/5 PASS)、lib/sql/pg_wire_reader.cp (吸收自 Bun NewReader.cp, 6/6 PASS)。
+
+### 2026-11-22（根目录分域收敛第 3 批完成：lib/conf/（净减 12 个顶层目录，累计 -39） | 2026-11-22 14:51:17）
+- **执行与结单汇报**：
+  > Stdlib Root Consolidator 完成 lib/conf/ 收敛：1) 12 个纯 CP 配置/JSON 扩展小目录零冲突归并入 lib/conf/ 并物理清理冗余旧目录（12/12 PASS）；2) 5 个 Bun 扩展模块同步导出至 cap:conf 并保留 Bun 权威独立目录（5/5 PASS）；3) 4 个重叠模块严格按 xxx_.cp 参考归档（0 覆盖/0 丢失 Bun 资产，4/4 PASS）；4) 顶层目录 819 -> 807（累计 -39）；续派 lib/ml/ 领域收敛。

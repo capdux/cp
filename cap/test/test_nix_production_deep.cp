@@ -10,7 +10,7 @@ import {
     NixIter,
     NixAttrIter,
     validateNixDelimiters,
-} from "cap:nix";
+} from "cap:conf";
 
 test("1. NixIter tokenizes strings with ${...}, indented strings, paths, URIs, numbers, ellipsis, and comments", () => {
     const src =

@@ -16,7 +16,7 @@ import {
     ValidationIssue,
     ValidationResult,
     SchemaValidator,
-} from "cap:jsonschema";
+} from "cap:conf";
 import cap from "cap";
 
 test("1. Nested Object properties, required, additionalProperties & Path Diagnostics") {
@@ -269,7 +269,7 @@ test("5. Dynamic cap.jsonschema Mounting, validateValue & Zero Memory Leaks") {
     expect_eq(JSONSCHEMA_MAX_DEPTH, 64);
 
     const schema_src = "{\"type\":\"object\",\"required\":[\"ok\"],\"properties\":{\"ok\":{\"type\":\"boolean\"}}}";
-    let validator = cap.jsonschema.SchemaValidator.compile(alloc, schema_src) catch unreachable;
+    let validator = cap.conf.SchemaValidator.compile(alloc, schema_src) catch unreachable;
     defer validator.deinit();
 
     let inst_arena = std.heap.ArenaAllocator.init(alloc);

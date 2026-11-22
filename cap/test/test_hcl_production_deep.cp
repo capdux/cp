@@ -8,7 +8,7 @@ import {
     HclBlockHeader,
     HclBlockIter,
     validateHcl,
-} from "cap:hcl";
+} from "cap:conf";
 
 const SAMPLE_TF =
     "# Terraform config\n" ++

@@ -11,7 +11,7 @@ import {
     findPlistInt,
     findPlistBool,
     formatPlistStringEntry,
-} from "cap:plist";
+} from "cap:conf";
 
 const INFO_PLIST: []const u8 =
     "\xEF\xBB\xBF<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" ++

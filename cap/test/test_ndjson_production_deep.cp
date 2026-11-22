@@ -16,7 +16,7 @@ import {
     NdjsonWriter,
     parseAll,
     stringifyAll,
-} from "cap:ndjson";
+} from "cap:conf";
 import cap from "cap";
 
 fn freeRecords(alloc: std.mem.Allocator, recs: []NdjsonRecord) {
@@ -158,18 +158,18 @@ fn testWriterFrameBoundaryProtection(): ! {
 fn testDynamicCapNamespaceAndZeroLeaks(): ! {
     const alloc = std.testing.allocator;
 
-    let parser = cap.ndjson.NdjsonStreamParser.init(alloc, 2048)?;
+    let parser = cap.conf.NdjsonStreamParser.init(alloc, 2048)?;
     defer parser.deinit();
 
     * = parser.feed("{\"ns\":\"cap.ndjson\"}\n")?;
     * = parser.finish(false)?;
     expect_eq(parser.parsedCount(), 1);
 
-    let writer = cap.ndjson.NdjsonWriter.init(alloc);
+    let writer = cap.conf.NdjsonWriter.init(alloc);
     defer writer.deinit();
     writer.writeRawJson("[1,2,3]")?;
 
-    const recs = cap.ndjson.parseAll(alloc, writer.bytes())?;
+    const recs = cap.conf.parseAll(alloc, writer.bytes())?;
     defer freeRecords(alloc, recs);
     expect_eq(recs.len, 1);
     expect_eq(recs[0].parsed.value.array.items.len, 3);

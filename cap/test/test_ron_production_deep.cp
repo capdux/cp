@@ -7,7 +7,7 @@ import {
     RonIter,
     validateRon,
     extractRonField,
-} from "cap:ron";
+} from "cap:conf";
 
 fn main() {
     test("1. RonIter scans identifiers, bools, numbers, strings, raw strings and char literals", () => {

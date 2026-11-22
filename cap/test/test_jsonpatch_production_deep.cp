@@ -18,7 +18,7 @@ import {
     jsonValuesEqual,
     applyPatch,
     createDiffPatch,
-} from "cap:jsonpatch";
+} from "cap:conf";
 import cap from "cap";
 
 fn testRfc6901PointerEscapingAndValidation(): ! {
@@ -148,17 +148,17 @@ fn testCreateDiffPatchRoundTrip(): ! {
 fn testDynamicCapNamespaceAndZeroLeaks(): ! {
     const alloc = std.testing.allocator;
 
-    expect_eq(cap.jsonpatch.PatchOpKind.fromStr("move") == cap.jsonpatch.PatchOpKind.Move, true);
-    expect_eq(std.mem.eql(u8, cap.jsonpatch.PatchOpKind.Copy.toStr(), "copy"), true);
+    expect_eq(cap.conf.PatchOpKind.fromStr("move") == cap.conf.PatchOpKind.Move, true);
+    expect_eq(std.mem.eql(u8, cap.conf.PatchOpKind.Copy.toStr(), "copy"), true);
 
     const doc = "{\"k\":10}";
     const patch = "[{\"op\":\"add\",\"path\":\"/k2\",\"value\":20}]";
-    const out = cap.jsonpatch.applyPatch(alloc, doc, patch)?;
+    const out = cap.conf.applyPatch(alloc, doc, patch)?;
     defer alloc.free(out);
 
     const parsed = std.json.parseFromSlice(std.json.Value, alloc, out, .{})?;
     defer parsed.deinit();
-    expect_eq((cap.jsonpatch.resolvePointer(parsed.value, "/k2")?).integer, 20);
+    expect_eq((cap.conf.resolvePointer(parsed.value, "/k2")?).integer, 20);
 }
 
 test("1. RFC 6901 Pointer Escaping, Array Indexing & InvalidPointer Rejection", () => {

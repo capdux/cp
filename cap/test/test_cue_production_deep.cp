@@ -7,7 +7,7 @@ import {
     CueIter,
     validateCue,
     extractCuePackage,
-} from "cap:cue";
+} from "cap:conf";
 
 fn main() {
     test("1. CueIter scans definitions, hidden fields, bottom, ellipsis, disjunction/conjunction and attrs", () => {

@@ -206,3 +206,38 @@ fn demoJson5(): !void {
    - `ConfDateTime` 在解析 TOML 日期时间字面量时严格校验闰年与月/日/时/分/秒边界；`TomlParser.parse` 对重复表定义与非法点分键直接返回错误，符合 TOML 1.0 规范。
 4. **JSON5 净化快路径**：
    - 对仅需兼容注释与尾随逗号的配置文件（如 `tsconfig.json`），优先调用零分配 `JSON5.stripCommentsAndTrailingCommas(src, out_buf)` 将其净化为标准 JSON 后交由 `cap:json` 极速解析。
+
+---
+
+## 六、 扩展配置格式与 JSON 生态家族（零冲突归并）
+
+以下 17 个配置/结构化文本与 JSON 扩展模块已统一收敛至 `lib/conf/` 并零冲突导出至 `cap:conf`：
+
+### 1. Bun 吸收扩展配置模块（5 个）
+
+| 子模块文件 | 职责说明 | 核心导出符号 |
+| :--- | :--- | :--- |
+| `jsonc.cp` | JSONC 注释与尾随逗号净化 | `stripJsonc`, `stripJsoncPreserveLines`, `hasJsoncComments`, `countJsoncTrailingCommas` |
+| `editorconfig.cp` | `.editorconfig` 解析与属性计算 | `resolveEditorConfig`, `matchSectionPattern`, `EditorConfigProps`, `IndentStyle`, `EndOfLine`, `Charset` |
+| `frontmatter.cp` | Markdown YAML/TOML Frontmatter 提取 | `splitFrontmatter`, `getFrontmatterField`, `FrontmatterKind`, `FrontmatterSplit` |
+| `makefile_parse.cp` | Makefile 目标与变量解析 | `MakeRuleIter`, `MakeVarIter`, `isPhonyTarget`, `MakeRule`, `MakeVar`, `MakeAssignOp` |
+| `tsconfig_paths.cp` | `tsconfig.json` paths 映射解析 | `TsConfigPaths`, `PathMapping`, `ResolvedCandidate`, `expandConfigDir` |
+
+### 2. Pure-CP 现代配置与 JSON 扩展模块（12 个）
+
+| 子模块文件 | 职责说明 | 核心导出符号 |
+| :--- | :--- | :--- |
+| `hjson.cp` | Hjson 词法分析与 JSON 转换 | `hjsonToJson`, `isValidHjson`, `stripHjsonComments`, `HjsonToken`, `HjsonTokenKind` |
+| `jsonl.cp` | 零分配 JSONL 流式行分帧器 | `JsonlIter`, `scanCompleteJsonlChunk`, `isBalancedJsonRecord`, `appendJsonlRecord`, `JsonlChunkResult` |
+| `ndjson.cp` | NDJSON 流式解析校验与写入 | `NdjsonStreamParser`, `NdjsonWriter`, `parseAll`, `stringifyAll`, `NdjsonRecord`, `NdjsonError` |
+| `jsonpatch.cp` | RFC 6901 Pointer & RFC 6902 Patch | `applyPatch`, `createDiffPatch`, `resolvePointer`, `jsonValuesEqual`, `escapeSegment`, `unescapeSegment`, `PatchOpKind` |
+| `jsonschema.cp` | JSON Schema Draft-07/2020-12 校验器 | `SchemaValidator`, `ValidationResult`, `ValidationIssue`, `JsonSchemaError`, `JSONSCHEMA_MAX_DEPTH` |
+| `kdl.cp` | KDL 文档词法与节点扫描器 | `KdlIter`, `KdlNodeIter`, `validateKdl`, `KdlToken`, `KdlNodeSummary` |
+| `hcl.cp` | HCL / Terraform 块扫描与校验 | `HclIter`, `HclBlockIter`, `validateHcl`, `HclToken`, `HclBlockHeader` |
+| `cue.cp` | CUE 配置语言词法与校验 | `CueIter`, `validateCue`, `extractCuePackage`, `CueToken`, `CueTokenKind` |
+| `ron.cp` | Rust Object Notation (RON) 解析 | `RonIter`, `validateRon`, `extractRonField`, `RonToken`, `RonTokenKind` |
+| `nix.cp` | Nix 表达式与 Flake 扫描器 | `NixIter`, `NixAttrIter`, `validateNixDelimiters`, `NixToken`, `NixAttrBinding` |
+| `plist.cp` | Apple XML Plist 解析与格式化 | `isXmlPlist`, `PlistDictIter`, `findPlistString`, `findPlistInt`, `findPlistBool`, `formatPlistStringEntry` |
+| `crontab.cp` | 5-Field & Macro Cron 解析与下次触发 | `CronExpr`, `DateTime`, `CronError` |
+
+> **重叠对照参考归档说明**：`json5_.cp`、`json5_lexer_.cp`、`dotenv_parse_.cp`、`json_patch_.cp` 为与权威实现功能重叠的对照参考副本（文件首行带 `// Reference Only:` 声明），不在 `lib/conf/index.cp` 冲突导出。

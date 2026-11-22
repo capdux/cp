@@ -5,7 +5,7 @@ import {
     scanCompleteJsonlChunk,
     isBalancedJsonRecord,
     appendJsonlRecord,
-} from "cap:jsonl";
+} from "cap:conf";
 
 test("1. JsonlIter skips UTF-8 BOM, blank lines, handles LF and CRLF, and preserves line content", () => {
     const input = "\xEF\xBB\xBF{\"a\":1}\r\n\r\n   \t  \n  {\"b\":\"hi\"}  \n[1,2,3]";
