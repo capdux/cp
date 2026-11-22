@@ -1775,3 +1775,29 @@
   > - 已向 `e7adabc2` 派发 **Priority ① 第 3 波第 10 轮（收官轮）**。
   >
   > 当前 3 路并行运转中：**紧急热修 2 条工单（`98d22122`）+ Priority ① 第 3 波第 10 轮收官（`e7adabc2`）+ Priority ② 第 4 波第 1 轮 `lib/attention/iter_scheduler.cp`（`a71d0cb8`）**。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-discard-underscore-receiver`）[ticket:task-bun-20261122-discard-underscore-receiver]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 18:06:11` | 状态：`resolved` | 结单：`2026-11-22T18:12:43`
+- **报错/需求摘要**：省略只读接收者的方法中写 * = _; 被 cpc 丢弃未生成 _ = self;，导致 zig ast-check 报 unused function parameter
+- **结单与处理汇报**：已修复 cpc/src/codegen/stmt.rs 中 * = _ 在类方法体内被丢弃未生成 _ = self; 的问题（同时修复状态机内 * = ident 未走 expr_code 的问题）；已发布 release 版 cpc，repro zig ast-check 与回归测试 cap/test/test_discard_underscore_receiver.cp 100% PASS。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-comptime-generic-param-discard`）[ticket:task-bun-20261122-comptime-generic-param-discard]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 18:12:09` | 状态：`resolved` | 结单：`2026-11-22T18:15:50`
+- **报错/需求摘要**：fn wrap(comptime W: type): i32 { return S<W>.f(); } 中 W 被 cpc 插入 _ = W;，导致 zig ast-check 报 pointless discard of function parameter
+- **结单与处理汇报**：已修复 cpc/src/ast_visitor.rs 中 find_referenced_vars_in_expr 对带泛型实参标识符（如 S<W>）及 EnumInit/Downcast/ComptimeMap 未提取内部类型标识导致误插 _ = W; 的问题；已发布 release 版 cpc，repro 与回归测试 cap/test/test_comptime_generic_param_discard.cp 100% PASS。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 18:06:49）[step:15752]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261122-discard-underscore-receiver)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取工单 **`task-bun-20261122-discard-underscore-receiver`**（复现：[repro_discard_underscore_receiver.cp](file:///data/dev/cp/temp/repro_discard_underscore_receiver.cp)：省略只读接收者的方法中写 `* = _;` 被 `cpc` 丢弃未生成 `_ = self;` 导致 Zig 报 `unused function parameter`），并立即启动独立热修子智能体 **`589e1163`**（`CPC Hotfix Engineer`）专职排查修复、发布 `sync_cpc.sh release`、补齐回归测试并执行 `resolve` 结单。
+  >
+  > 原有 2 路第 4 波常驻生态子智能体（Priority ① `5f0d7a3a` + Priority ② `a71d0cb8`）继续并行运转不受影响。待热修回报后将立即验收提交并同步 `SESSION.md`。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 18:12:10）[step:15779]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261122-comptime-generic-param-discard)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取新工单 **`task-bun-20261122-comptime-generic-param-discard`**（复现：[repro_comptime_generic_param_discard.cp](file:///data/dev/cp/temp/repro_comptime_generic_param_discard.cp)：`fn wrap(comptime W: type): i32 { return S<W>.f(); }` 中 `W` 被误插 `_ = W;` 导致 Zig 报 `pointless discard of function parameter`），并已同步追加派发给正在 `cpc/src/` 处理同类弃用参数逻辑的热修子智能体 **`589e1163`** 一并打包修复、发布 `sync_cpc.sh release` 与逐一 `resolve` 结单。
+  >
+  > 原有 2 路第 4 波常驻生态子智能体（Priority ① `5f0d7a3a` + Priority ② `a71d0cb8`）继续并行运转不受影响。

@@ -147,8 +147,14 @@ impl Codegen {
                         || matches!(&var.pat, Pattern::Ident(ident) if ident.sym == "_")
                     {
                         if let Expr::Ident(id) = init {
-                            if id.sym != "_" {
-                                self.write_to_case(&format!("_ = &{};", id.sym));
+                            if id.sym == "_" || id.sym == "this" {
+                                if self.is_class_method {
+                                    self.write_to_case(&format!("_ = {};", expr_code));
+                                } else if id.sym == "this" {
+                                    self.write_to_case(&format!("_ = &{};", expr_code));
+                                }
+                            } else {
+                                self.write_to_case(&format!("_ = &{};", expr_code));
                             }
                             return;
                         }

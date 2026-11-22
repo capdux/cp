@@ -84,7 +84,7 @@ pub fn find_referenced_vars_in_expr(expr: &Expr, vars: &mut HashSet<String>) {
     match expr {
         Expr::Ident(i) => {
             vars.insert(i.sym.clone());
-            if i.sym.contains(',') || i.sym.contains(' ') || i.sym.contains('.') {
+            if !i.sym.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
                 extract_words_from_str(&i.sym, vars);
             }
         }
@@ -160,8 +160,9 @@ pub fn find_referenced_vars_in_expr(expr: &Expr, vars: &mut HashSet<String>) {
             find_referenced_vars_in_expr(expr, vars);
             find_referenced_vars_in_stmt(body, vars);
         }
-        Expr::Downcast { obj, .. } => {
+        Expr::Downcast { obj, target_ty, .. } => {
             find_referenced_vars_in_expr(obj, vars);
+            extract_words_from_str(&target_ty.sym, vars);
         }
         Expr::Array(arr) => {
             for a in arr {
@@ -182,6 +183,7 @@ pub fn find_referenced_vars_in_expr(expr: &Expr, vars: &mut HashSet<String>) {
             find_referenced_vars_in_expr(index, vars);
         }
         Expr::EnumInit(e) => {
+            extract_words_from_str(&e.enum_name.sym, vars);
             if let Some(f) = &e.fields {
                 for a in f {
                     find_referenced_vars_in_expr(&a.val, vars);
@@ -258,7 +260,12 @@ pub fn find_referenced_vars_in_expr(expr: &Expr, vars: &mut HashSet<String>) {
         }
         Expr::LabeledBlock { block, .. } => find_referenced_vars_in_block(block, vars),
         Expr::InlineAsm { .. } => {}
-        Expr::ComptimeMap { entries, .. } => {
+        Expr::ComptimeMap {
+            target_ty, entries, ..
+        } => {
+            if let Some(ty) = target_ty {
+                find_referenced_vars_in_type(ty, vars);
+            }
             for f in entries {
                 find_referenced_vars_in_expr(&f.val, vars);
             }
