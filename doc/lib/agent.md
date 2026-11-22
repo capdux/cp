@@ -2023,3 +2023,55 @@ fn sandboxPolicyQuickStart() {
     * = d2;
 }
 ```
+
+---
+
+## 子模块：OTP 风格零分配 AI Agent 容错监督树内核（`supervisor_tree.cp`）
+
+### 核心特性
+
+- **OTP 三大监督策略（`AgentSupervisorStrategy`）**：
+  - `one_for_one`：仅重启发生退出的单个子 Agent；
+  - `one_for_all`：按 `start_order` 升序重启全部非 `temporary` 存活子 Agent；
+  - `rest_for_one`：按 `start_order` 升序重启自身及所有后继依赖子 Agent（`start_order > target`）。
+- **三种子 Agent 重启策略（`AgentRestartPolicy`）**：`permanent`（任何退出均重启）、`transient`（仅非 `normal`/`shutdown` 异常退出重启）、`temporary`（永不重启，退出即置 `terminated`）。
+- **滑动窗口重启强度熔断与指数退避**：基于内联 64 槽位时间戳数组维护 `[now_ms - intensity_window_ms, now_ms]` 滑动重启计数，超过 `max_restarts` 立即触发 `escalate_shutdown` 熔断防重启风暴；退避按 `min(base_backoff_ms << min(consecutive-1, 16), max_backoff_ms)` 防溢出计算，健康运行满窗后自动重置连续崩溃计数。
+
+### 导出清单
+
+- **常量与枚举**：`SUPERVISOR_MAX_CHILDREN` (`32`)、`SUPERVISOR_MAX_RESTART_HISTORY` (`64`)、`AgentSupervisorStrategy`、`AgentRestartPolicy`、`AgentExitReason`、`AgentChildState`、`SupervisorActionKind`
+- **数据模型**：`AgentSupervisorConfig`（`isValid`）、`SupervisedChildSlot`、`SupervisorDecision`、`SupervisorStats`
+- **监督树内核（`AgentSupervisorTree`）**：`init`、`register_child`、`mark_started`、`report_exit`、`get_child`、`stats`
+
+### QuickStart 示例
+
+```cp
+import {
+    AgentSupervisorStrategy,
+    AgentRestartPolicy,
+    AgentExitReason,
+    AgentSupervisorConfig,
+    AgentSupervisorTree,
+} from "cap:agent";
+
+fn supervisorTreeQuickStart() {
+    let sup = AgentSupervisorTree.init(AgentSupervisorConfig{
+        strategy: AgentSupervisorStrategy.rest_for_one,
+        max_restarts: 3,
+        intensity_window_ms: 5000,
+        base_backoff_ms: 100,
+        max_backoff_ms: 4000,
+    }) ?? return;
+
+    * = sup.register_child(10, AgentRestartPolicy.permanent, 1); // Router Agent
+    * = sup.register_child(20, AgentRestartPolicy.permanent, 2); // Planner Agent
+    * = sup.register_child(30, AgentRestartPolicy.transient, 3); // Worker Agent
+    * = sup.mark_started(10, 1000);
+    * = sup.mark_started(20, 1000);
+    * = sup.mark_started(30, 1000);
+
+    // Planner (order=2) 崩溃 -> rest_for_one 按 [20, 30] 顺序级联重启，Router (10) 不受影响
+    const decision = sup.report_exit(20, AgentExitReason.crash_error, 1500);
+    * = decision.restart_count; // 2 (20, 30)
+}
+```

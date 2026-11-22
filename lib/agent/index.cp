@@ -392,3 +392,18 @@ export {
     SandboxAuditStats,
     ToolSandboxPolicy,
 } from "./sandbox_policy.cp";
+
+export {
+    SUPERVISOR_MAX_CHILDREN,
+    SUPERVISOR_MAX_RESTART_HISTORY,
+    AgentSupervisorStrategy,
+    AgentRestartPolicy,
+    AgentExitReason,
+    AgentChildState,
+    SupervisorActionKind,
+    AgentSupervisorConfig,
+    SupervisedChildSlot,
+    SupervisorDecision,
+    SupervisorStats,
+    AgentSupervisorTree,
+} from "./supervisor_tree.cp";
