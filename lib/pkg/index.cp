@@ -234,3 +234,20 @@ export {
     formatScanRequestJson,
     parseSecurityAdvisoriesJson,
 } from "./security_scanner.cp";
+
+export {
+    PATCH_DEFAULT_DIR,
+    PATCH_CACHE_HASH_TAG,
+    PATCH_HEX_HASH_LEN,
+    PatchSpecError,
+    PatchTargetKind,
+    PatchTargetArg,
+    PatchCommitSpec,
+    escapePatchFilenameSegment,
+    formatPatchFilename,
+    normalizePatchesDir,
+    computePatchContentHash,
+    formatPatchCacheSubpath,
+    parsePatchCacheHash,
+    validateUnifiedPatchText,
+} from "./patch_spec.cp";

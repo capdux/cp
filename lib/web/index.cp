@@ -260,3 +260,18 @@ export {
     HedgedWinResult,
     HedgedRequestTracker,
 } from "./hedged_policy.cp";
+
+// --- Zero-Alloc SSE Fanout Broker & Last-Event-ID Resumption Ring ---
+export {
+    SSE_BROKER_MAX_HISTORY,
+    SSE_BROKER_MAX_CLIENTS,
+    SSE_EVENT_TYPE_MAX_LEN,
+    SSE_DATA_MAX_LEN,
+    SseStoredEvent,
+    SseClientCursor,
+    SsePollStatus,
+    SsePollResult,
+    SseBrokerStats,
+    formatSseEventWire,
+    SseFanoutBroker,
+} from "./sse_broker.cp";

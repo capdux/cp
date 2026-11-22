@@ -434,3 +434,41 @@ const sn = res.formatSummaryLine(summary[0..])?;               // "1 advisory (1
 * = ok;
 * = sn;
 ```
+
+11. **`bun patch` 持久化补丁定位、命名规范与全局缓存隔离标签（`lib/pkg/patch_spec.cp`，吸收自 `/data/dev/bun/src/install/PackageManager/patchPackage.cp`、`/data/dev/bun/src/install/patch_install.cp` & `/data/dev/bun/docs/pm/cli/patch.mdx`）**：
+    - **三步持久化补丁工作流（参考 `/data/dev/bun/docs/pm/cli/patch.mdx`）**：
+      1. `bun patch <pkg>`：必须先执行准备步骤以创建与 Global Cache 解除硬链接/软链接的独立副本，避免直接修改污染全局共享缓存；
+      2. 本地编辑 `node_modules/<pkg>` 并验证；
+      3. `bun patch --commit <pkg|path>`（支持 pnpm 兼容别名 `bun patch-commit` 及自定义 `--patches-dir=<dir>`）：生成 `.patch` 文件并写入 `package.json` `"patchedDependencies"`。
+    - **三种定位入参解析（`PatchTargetArg.parse`）**：统一解析纯包名（`react`、`@scope/pkg`）、精确版本（`react@17.0.2`）与目录路径（`node_modules/a/node_modules/@scope/pkg`）。
+    - **补丁文件名、目录穿越防护与 `__buntag_<16hex>` 缓存隔离**：
+      - `PatchCommitSpec.formatPatchFilePath()` 自动将作用域包 `/` 映射为 `+`（如 `patches/@scope+pkg@1.2.3.patch`），`normalizePatchesDir()` 拦截绝对路径与 `..` 穿越；
+      - `formatPatchCacheSubpath()` / `parsePatchCacheHash()` 配合 `computePatchContentHash()` 为已打补丁的包生成 `__buntag_<16hex>` 隔离缓存目录名，确保同一原包不同补丁互不污染且相同补丁跨项目共享 Global Cache。
+
+### 持久化补丁定位与缓存标签示例（`PatchTargetArg` & `PatchCommitSpec`）
+
+```cp
+import {
+    PatchTargetArg,
+    PatchCommitSpec,
+    computePatchContentHash,
+    formatPatchCacheSubpath,
+    parsePatchCacheHash,
+} from "cap:pkg";
+
+const arg = PatchTargetArg.parse("node_modules/@acme/ui")?;
+const spec = PatchCommitSpec{
+    package_name: arg.package_name,
+    version: "2.1.0",
+    patches_dir: "patches",
+};
+let path_buf: [128]u8 = [0; 128];
+const pn = spec.formatPatchFilePath(path_buf[0..])?; // "patches/@acme+ui@2.1.0.patch"
+
+const h = computePatchContentHash("--- a/index.js\n+++ b/index.js\n@@ -1 +1 @@\n-a\n+b\n");
+let cache_buf: [128]u8 = [0; 128];
+const cn = formatPatchCacheSubpath("@acme/ui@2.1.0", h, cache_buf[0..])?;
+const roundtrip_h = parsePatchCacheHash(cache_buf[0..cn])?; // == h
+* = pn;
+* = roundtrip_h;
+```

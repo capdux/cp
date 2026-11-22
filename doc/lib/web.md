@@ -159,3 +159,40 @@ pub fn demoHedgedRequestPolicy() {
     * = a1;
 }
 ```
+
+### 零分配 SSE 流式事件扇出代理与 `Last-Event-ID` 断线续传示例 (`sse_broker.cp`)
+
+面向 LLM Token 流、实时通知推送与 MCP/A2A 流式事件的 100% 纯 CP 零动态堆分配 WHATWG/RFC 8895 SSE 扇出代理：
+
+- **常量与模型**：`SSE_BROKER_MAX_HISTORY` (`64`)、`SSE_BROKER_MAX_CLIENTS` (`32`)、`SSE_EVENT_TYPE_MAX_LEN` (`32`)、`SSE_DATA_MAX_LEN` (`256`)、`SseStoredEvent`、`SseClientCursor`、`SsePollStatus`（`has_event | empty | lagged_resynced | client_not_found`）、`SsePollResult`、`SseBrokerStats`。
+- **核心引擎 `SseFanoutBroker`**：
+  - `publish(*_, topic_hash, event_type, data, retry_ms): u64?`：拦截 `event_type` 中的 `\r`/`\n`/`\0` 头注入字符，写入 64 槽位环形历史并返回单调递增 `event_id`。
+  - `subscribe(*_, client_id, topic_filter_hash, last_event_id): bool`：支持全量（`topic_filter_hash == 0`）或按主题过滤，支持 `last_event_id` 断线精确补发（`0` 从当前队尾开始）。
+  - `unsubscribe(*_, client_id): bool`：回收客户端槽位。
+  - `poll_next(*_, client_id): SsePollResult`：慢消费者落后于环形最旧事件时自动报告 `lagged_resynced` + `skipped_events` 并对齐续传。
+  - `SseFanoutBroker.formatEventWire(ev, out_buf): usize?`（及顶层 `formatSseEventWire`）：严格按 WHATWG SSE 线缆格式输出 `id:`、可选 `event:`/`retry:` 与多行拆分 `data:` 字段，防缓冲溢出。
+
+```cp
+import {
+    SsePollStatus,
+    SseFanoutBroker,
+} from "cap:web";
+
+pub fn demoSseFanoutBroker() {
+    let broker = SseFanoutBroker.init();
+    const id1 = broker.publish(10, "token", "hello\nworld", 3000) ?? return;
+    const id2 = broker.publish(10, "token", "done", 0) ?? return;
+
+    // 断线客户端携带 Last-Event-ID = id1 重连 -> 精准续传 id2
+    * = broker.subscribe(1001, 10, id1);
+    const res = broker.poll_next(1001);
+    if (res.status == SsePollStatus.has_event) {
+        if (ev := broker.get_event(res.event_idx)) {
+            let wire: [512]u8 = [0; 512];
+            let wire_s: []u8 = wire[0..];
+            * = SseFanoutBroker.formatEventWire(ev, wire_s);
+        }
+    }
+    * = id2;
+}
+```
