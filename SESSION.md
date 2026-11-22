@@ -1301,3 +1301,7 @@
 ### 2026-11-22（分类合并交付：lib/agent/prompt_cache_plan.cp | 2026-11-22 13:58:59）
 - **执行与结单汇报**：
   > 子智能体交付 lib/agent/prompt_cache_plan.cp（多轮对话 Prompt-Cache 缓存断点规划与成本收益优化器，5/5 PASS），归入 cap:agent 并同步 cp_lib_ref.md；续派 lib/agent/context_budget.cp。
+
+### 2026-11-22（分类合并交付：lib/bundler/barrel_imports.cp | 2026-11-22 14:00:12）
+- **执行与结单汇报**：
+  > 子智能体从 Bun src/bundler/barrel_imports.cp 吸收并归类合并 lib/bundler/barrel_imports.cp 至 cap:bundler（Barrel 模块按需延迟导入与增量唤醒优化，6/6 PASS，upstream_newer=0），同步 cp_lib_ref.md；续派下一项 Bun 纯逻辑子模块合并。

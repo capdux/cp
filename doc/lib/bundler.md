@@ -170,6 +170,23 @@ assigner.assignByFrequency(.default)?;
 // assigner.assignedName(s0) == "b", assigner.assignedName(s1) == "A"
 ```
 
+### 3.9 Barrel 文件按需延迟加载优化引擎（`lib/bundler/barrel_imports.cp`，吸收自 `/data/dev/bun/src/bundler/barrel_imports.cp`）
+- **常量与错误集**：`MAX_BARREL_REQUESTED_EXPORTS` (64)、`MAX_BARREL_REEXPORTS` (64)、`MAX_BARREL_IMPORT_RECORDS` (64)、`BarrelError`（`RequestedCapacityExceeded` / `ReExportCapacityExceeded` / `ImportRecordOutOfRange`）
+- **数据模型与优化器**：`RequestedExportsKind`（`partial` / `all`）、`BarrelReExport`、`BarrelExportResolution`、`RequestedExportsSet`（跨调用去重与环路检测）、`BarrelEligibility`（`isEligible()` 纯重导出资格判定）、`BarrelPlanResult`（64 位 `active_mask` / `deferred_mask` 位图）、`BarrelWakeupResult`、`BarrelModule`（`addReExport` / `markExportStar` / `resolveExport` / `computePlan` / `requestExport` / `requestAll`，永不延迟 `export *` 记录并支持命名空间 `*` 下游全量传播）
+
+```typescript
+import { BarrelModule } from "cap:bundler";
+
+let mod = BarrelModule.init(3)?;
+mod.addReExport("Button", "Btn", 0, false)?;
+mod.addReExport("Modal", "ModalDialog", 1, false)?;
+mod.markExportStar(2)?; // export * 永不延迟
+
+* = mod.requested.recordPartial("Button")?;
+const plan = mod.computePlan(); // active: 0 & 2, deferred: 1
+const wake = mod.requestExport("Modal")?; // newly_activated=true, propagate_alias="ModalDialog"
+```
+
 ---
 
 ## 四、 上游行为契约、边界与安全注意事项

@@ -121,3 +121,18 @@ export {
     MinifySymbolSlot,
     MinifySlotAssigner,
 } from "./renamer";
+
+export {
+    MAX_BARREL_REQUESTED_EXPORTS,
+    MAX_BARREL_REEXPORTS,
+    MAX_BARREL_IMPORT_RECORDS,
+    BarrelError,
+    RequestedExportsKind,
+    BarrelReExport,
+    BarrelExportResolution,
+    RequestedExportsSet,
+    BarrelEligibility,
+    BarrelPlanResult,
+    BarrelWakeupResult,
+    BarrelModule,
+} from "./barrel_imports";
