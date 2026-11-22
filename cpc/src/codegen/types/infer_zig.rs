@@ -313,6 +313,29 @@ impl Codegen {
                             }
                         }
                     }
+                    if call.name == "@splitAtMut" {
+                        if let Some(first) = call.args.first() {
+                            let z = self.infer_zig_type(None, Some(first));
+                            let trimmed = z
+                                .strip_prefix("*const ")
+                                .or_else(|| z.strip_prefix('*'))
+                                .unwrap_or(&z);
+                            if let Some(elem) = trimmed
+                                .strip_prefix("[]const ")
+                                .or_else(|| trimmed.strip_prefix("[]"))
+                            {
+                                return format!("struct {{ []{}, []{} }}", elem, elem);
+                            }
+                            if trimmed.starts_with('[') {
+                                if let Some(idx) = trimmed.find(']') {
+                                    let elem = &trimmed[idx + 1..];
+                                    if !elem.is_empty() {
+                                        return format!("struct {{ []{}, []{} }}", elem, elem);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 Expr::Await(inner) => {
                     let inner_type = self.infer_zig_type(None, Some(inner));

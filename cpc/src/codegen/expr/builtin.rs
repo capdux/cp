@@ -533,6 +533,11 @@ impl Codegen {
                     let b = self.generate_expr(&call.args[1]);
                     format!("__cp_simd_l2sq({}, {})", a, b)
                 }
+                "@splitAtMut" if call.args.len() == 2 => {
+                    let s = self.generate_expr(&call.args[0]);
+                    let mid = self.generate_expr(&call.args[1]);
+                    format!("__cp_split_at_mut({}, {})", s, mid)
+                }
                 "@alignOf" => {
                     let t = self.generate_expr(&call.args[0]);
                     format!("@alignOf({})", t)

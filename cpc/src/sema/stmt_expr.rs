@@ -1164,6 +1164,106 @@ impl Analyzer {
                             }
                         }
                     }
+                    "@splitAtMut" => {
+                        if call.args.len() != 2 {
+                            self.errors.push(SemaError::Diagnostic(
+                                Diagnostic::new(
+                                    "E0320",
+                                    format!(
+                                        "builtin '@splitAtMut' expects 2 arguments (slice, mid), found {}",
+                                        call.args.len()
+                                    ),
+                                )
+                                .with_span(call.span)
+                                .with_cause("'@splitAtMut' splits a mutable slice into two disjoint mutable sub-slices [0..mid) and [mid..len).")
+                                .with_help("pass a mutable slice (e.g., []f32 or *[]f32) and an integer split index.")
+                                .with_suggestion("usage: let [left, right] = @splitAtMut(buf, mid);"),
+                            ));
+                        } else {
+                            let t0 = self.infer_type(&call.args[0]).unwrap_or(Type::Unknown);
+                            if !matches!(t0, Type::Unknown | Type::Any | Type::Ref(_)) {
+                                let is_const_borrow =
+                                    matches!(t0, Type::BorrowType { is_mut: false, .. });
+                                if is_const_borrow {
+                                    self.errors.push(SemaError::Diagnostic(
+                                        Diagnostic::new(
+                                            "E0323",
+                                            format!(
+                                                "builtin '@splitAtMut' cannot mutably split read-only borrow '{}'",
+                                                Self::type_repr(&t0)
+                                            ),
+                                        )
+                                        .with_span(call.span)
+                                        .with_cause("'@splitAtMut' returns two mutable slices and requires a mutable slice or mutable borrow.")
+                                        .with_help("declare the parameter or variable as mutable slice '[]T' or mutable borrow '*[]T'.")
+                                        .with_suggestion("change '[]const T' to '*[]T' (or '[]T') before calling '@splitAtMut'."),
+                                    ));
+                                } else {
+                                    let mut cur = &t0;
+                                    let mut is_slice_or_arr = false;
+                                    loop {
+                                        match cur {
+                                            Type::BorrowType { inner, .. } => cur = inner,
+                                            Type::RawPtr { inner, depth: 1 } => cur = inner,
+                                            Type::Array(_) | Type::FixedArray(_, _) => {
+                                                is_slice_or_arr = true;
+                                                break;
+                                            }
+                                            _ => break,
+                                        }
+                                    }
+                                    if !is_slice_or_arr {
+                                        self.errors.push(SemaError::Diagnostic(
+                                            Diagnostic::new(
+                                                "E0321",
+                                                format!(
+                                                    "builtin '@splitAtMut' expects a mutable slice or array, found '{}'",
+                                                    Self::type_repr(&t0)
+                                                ),
+                                            )
+                                            .with_span(call.span)
+                                            .with_cause("'@splitAtMut' operates on contiguous mutable slices ([]T or *[]T).")
+                                            .with_help("pass a mutable slice (e.g., buf[0..]) as the first argument.")
+                                            .with_suggestion("usage: let [left, right] = @splitAtMut(buf[0..], mid);"),
+                                        ));
+                                    }
+                                }
+                            }
+                            let t1 = self.infer_type(&call.args[1]).unwrap_or(Type::Unknown);
+                            if !matches!(
+                                t1,
+                                Type::Unknown
+                                    | Type::Any
+                                    | Type::Ref(_)
+                                    | Type::U8
+                                    | Type::I8
+                                    | Type::U16
+                                    | Type::I16
+                                    | Type::I32
+                                    | Type::U32
+                                    | Type::I64
+                                    | Type::U64
+                                    | Type::I128
+                                    | Type::U128
+                                    | Type::ISize
+                                    | Type::USize
+                            ) {
+                                self.errors.push(SemaError::Diagnostic(
+                                    Diagnostic::new(
+                                        "E0321",
+                                        format!(
+                                            "builtin '@splitAtMut' split index 'mid' must be an integer, found '{}'",
+                                            Self::type_repr(&t1)
+                                        ),
+                                    )
+                                    .with_span(call.span)
+                                    .with_cause("the second argument to '@splitAtMut(slice, mid)' is the element index to split at.")
+                                    .with_help("pass a usize or integer index.")
+                                    .with_suggestion("cast the index to usize, e.g., @splitAtMut(buf, mid as usize)."),
+                                ));
+                            }
+                        }
+                    }
                     _ => {}
                 }
             }

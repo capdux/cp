@@ -1233,6 +1233,11 @@ impl Codegen {
             self.writeln("inline fn __cp_simd_l2sq(a_in: anytype, b_in: anytype) __cp_simd_elem_type(@TypeOf(a_in)) { const T = __cp_simd_elem_type(@TypeOf(a_in)); const a: []const T = switch (@typeInfo(@TypeOf(a_in))) { .array => &a_in, .pointer => |p| if (p.size == .one and @typeInfo(p.child) == .pointer) a_in.* else a_in, else => a_in }; const b: []const T = switch (@typeInfo(@TypeOf(b_in))) { .array => &b_in, .pointer => |p| if (p.size == .one and @typeInfo(p.child) == .pointer) b_in.* else b_in, else => b_in }; const n = @min(a.len, b.len); const V: usize = 8; var acc: @Vector(V, T) = @splat(0); var i: usize = 0; while (i + V <= n) : (i += V) { const va: @Vector(V, T) = a[i..][0..V].*; const vb: @Vector(V, T) = b[i..][0..V].*; const diff = va - vb; acc = @mulAdd(@Vector(V, T), diff, diff, acc); } var sum: T = @reduce(.Add, acc); while (i < n) : (i += 1) { const diff = a[i] - b[i]; sum = @mulAdd(T, diff, diff, sum); } return sum; }");
             self.writeln("");
         }
+        if features.needs_split_at_mut {
+            self.writeln("inline fn __cp_split_mut_slice_type(comptime __T: type) type { const __ti = @typeInfo(__T); if (__ti == .pointer) { if (__ti.pointer.size == .slice) return []__ti.pointer.child; if (__ti.pointer.size == .one) { const __sub = @typeInfo(__ti.pointer.child); if (__sub == .array) return []__sub.array.child; if (__sub == .pointer and __sub.pointer.size == .slice) return []__sub.pointer.child; } } @compileError(\"@splitAtMut requires a mutable slice []T or pointer to array *[N]T\"); }");
+            self.writeln("inline fn __cp_split_at_mut(s_in: anytype, mid_in: anytype) struct { __cp_split_mut_slice_type(@TypeOf(s_in)), __cp_split_mut_slice_type(@TypeOf(s_in)) } { const S = __cp_split_mut_slice_type(@TypeOf(s_in)); const s: S = switch (@typeInfo(@TypeOf(s_in))) { .pointer => |p| if (p.size == .one and @typeInfo(p.child) == .pointer) s_in.* else s_in, else => s_in }; const mid: usize = if (comptime @TypeOf(mid_in) == usize) mid_in else if (mid_in < 0) 0 else @intCast(mid_in); const m: usize = @min(mid, s.len); return .{ s[0..m], s[m..] }; }");
+            self.writeln("");
+        }
     }
 
     pub fn generate_shared_runtime() -> String {
@@ -1261,6 +1266,7 @@ impl Codegen {
             needs_sync: true,
             needs_json: true,
             needs_simd_math: true,
+            needs_split_at_mut: true,
             has_imported_json: false,
             has_imported_ptr: false,
             is_lib_mode: false,
@@ -1577,6 +1583,11 @@ impl Codegen {
                 if !has_top_decl(s) {
                     emit_alias(self, s, false);
                 }
+            }
+        }
+        if features.needs_split_at_mut {
+            if !has_top_decl("__cp_split_at_mut") {
+                emit_alias(self, "__cp_split_at_mut", false);
             }
         }
     }

@@ -621,6 +621,36 @@ impl Codegen {
             let c_meta = func.meta.iter().find(|m| m.name.sym == "c");
             let is_c = c_meta.is_some() || func.meta.iter().any(|m| m.name.sym == "extern");
             let is_extern_decl = is_c && func.body.body.is_empty();
+            let has_callconv_meta = func.meta.iter().any(|m| m.name.sym == "callconv");
+            let explicit_noalias = func.meta.iter().any(|m| m.name.sym == "noalias");
+            let has_exclusive_mut_slice = func.params.iter().any(|p| {
+                !p.is_comptime
+                    && matches!(
+                        &p.ty,
+                        Type::BorrowType {
+                            is_mut: true,
+                            inner,
+                            ..
+                        } if matches!(&**inner, Type::Array(_))
+                    )
+            });
+            let has_readonly_slice = func.params.iter().any(|p| {
+                !p.is_comptime
+                    && matches!(
+                        &p.ty,
+                        Type::BorrowType {
+                            is_mut: false,
+                            inner,
+                            ..
+                        } if matches!(&**inner, Type::Array(_))
+                    )
+            });
+            let fn_allows_noalias = class_name.is_none()
+                && !is_c
+                && !is_extern_decl
+                && !has_callconv_meta
+                && !func.is_unsafe
+                && (explicit_noalias || (has_exclusive_mut_slice && has_readonly_slice));
             let mut mutable_copy_params: Vec<String> = Vec::new();
             let mut receiver_skipped = false;
             for (idx, p) in func.params.iter().enumerate() {
@@ -697,7 +727,19 @@ impl Codegen {
                 } else {
                     p.ident.sym.clone()
                 };
-                params_str.push_str(&format!("{}{}: {}", comptime_prefix, emit_name, mapped_ty));
+                let noalias_prefix = if fn_allows_noalias
+                    && !p.is_comptime
+                    && matches!(&p.ty, Type::BorrowType { .. } | Type::Array(_))
+                    && (mapped_ty.starts_with("[]") || mapped_ty.starts_with('*'))
+                {
+                    "noalias "
+                } else {
+                    ""
+                };
+                params_str.push_str(&format!(
+                    "{}{}{}: {}",
+                    comptime_prefix, noalias_prefix, emit_name, mapped_ty
+                ));
             }
             self.extract_locals_simple(&func.body);
             let is_inline = func.meta.iter().any(|m| m.name.sym == "inline");

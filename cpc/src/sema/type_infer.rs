@@ -705,6 +705,25 @@ impl Analyzer {
                     }
                     Ok(Type::Unknown)
                 }
+                "@splitAtMut" => {
+                    if let Some(first) = call.args.first() {
+                        if let Ok(ty) = self.infer_type(first) {
+                            let mut cur = &ty;
+                            loop {
+                                match cur {
+                                    Type::BorrowType { inner, .. } => cur = inner,
+                                    Type::RawPtr { inner, depth: 1 } => cur = inner,
+                                    Type::Array(elem) | Type::FixedArray(elem, _) => {
+                                        let slice_ty = Type::Array(elem.clone());
+                                        return Ok(Type::Tuple(vec![slice_ty.clone(), slice_ty]));
+                                    }
+                                    _ => break,
+                                }
+                            }
+                        }
+                    }
+                    Ok(Type::Tuple(vec![Type::Unknown, Type::Unknown]))
+                }
                 _ => Ok(Type::Unknown),
             },
             Expr::ReflectType { span, .. } | Expr::ReflectOf { span, .. } => Ok(Type::Ref(Ident {

@@ -1158,3 +1158,7 @@
 ### 2026-11-22（分类合并交付：lib/pkg/yarn_lock_printer.cp & lib/vector/simd_ops.cp | 2026-11-22 13:31:05）
 - **执行与结单汇报**：
   > 1. 吸收 Bun src/install/lockfile/printer/Yarn.cp 归入 lib/pkg/yarn_lock_printer.cp (6/6 PASS, upstream_newer=0)；2. 交付 lib/vector/simd_ops.cp (5/5 PASS，首个直接使用 CP 原生 8-lane SIMD @dot/@l2sq/@fma 的标准库向量核)；均已同步 cp_lib_ref.md 并提交。
+
+### 2026-11-22（里程碑：RFC Phase 2 (@splitAtMut + noalias 借用优化) 落地发布并回收编译器子智能体 | 2026-11-22 13:32:26）
+- **执行与结单汇报**：
+  > CPC Compiler Engineer 完成 AI-Native RFC Phase 2：1) 实现 @splitAtMut(slice, mid) 零拷贝互斥分片原语（含 E0321/E0323 AI-First 诊断与按需零污染发射）；2) 实测 Zig 0.17.0 原生支持 slice noalias，对同时含独占可变借用 *[]T 与只读借用 []const T 的纯 CP 函数自动注入 noalias 优化（零回调/既有测试回归）；3) release 部署生效，test_builtin_split_at_mut.cp、test_builtin_simd_dot_fma.cp、test_raii_local_alias_errinit.cp 全部 100% PASS，并回收编译器子智能体。
