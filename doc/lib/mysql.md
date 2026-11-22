@@ -17,6 +17,7 @@
 - `lib/mysql/localInfile.cp`：零分配 `LOCAL INFILE Request`（`0xFB`）编解码与客户端路径穿越策略防护
 - `lib/mysql/stackReader.cp`：零拷贝有界协议游标与原子半包回滚帧读取器（`StackReader`、`MysqlFrameSlice`）
 - `lib/mysql/stmtPrepareOk.cp`：零分配 `COM_STMT_PREPARE_OK` 预处理响应编解码与预处理语句生命周期帧编码（`StmtPrepareOKPacket`、`StmtCommandCodec`）
+- `lib/mysql/stmtExecute.cp`：零分配 `COM_STMT_EXECUTE`（`0x17`）预处理执行请求编解码、NULL-bitmap 与二进制参数序列化（`StmtExecutePacket`、`StmtExecParam`、`StmtExecuteHeader`、`StmtCursorType`）
 - `lib/mysql/mysqlError.cp`：统一 MySQL 协议错误集 `AnyMySqlError`、错误分类器（`MySqlErrorKind` / `MySqlErrorCategory`）、重试与连接重置策略及服务端 `errno` 映射
 - `lib/mysql/index.cp`：`cap:mysql` 统一聚合导出入口
 
@@ -35,6 +36,7 @@
 | LOCAL INFILE (`localInfile.cp`) | `LOCAL_INFILE_HEADER`, `LOCAL_INFILE_MAX_FILENAME`, `LocalInfileError`, `LocalInfileRequest` |
 | 有界游标 (`stackReader.cp`) | `StackReaderError`, `MysqlFrameSlice`, `StackReader` |
 | 预处理语句响应 (`stmtPrepareOk.cp`) | `STMT_PREPARE_OK_STATUS`, `STMT_PREPARE_OK_MIN_LEN`, `STMT_PREPARE_OK_STD_LEN`, `STMT_PREPARE_OK_META_LEN`, `COM_STMT_PREPARE_CMD`, `COM_STMT_CLOSE_CMD`, `COM_STMT_RESET_CMD`, `StmtPrepareOkError`, `StmtPrepareOKPacket`, `StmtCommandCodec` |
+| 预处理语句执行 (`stmtExecute.cp`) | `STMT_EXECUTE_CMD`, `STMT_EXECUTE_HEADER_LEN`, `STMT_EXECUTE_MAX_PARAMS`, `STMT_CURSOR_TYPE_*`, `StmtExecuteError`, `StmtCursorType`, `isStmtBinaryFixedType`, `stmtNullBitmapLen`, `isStmtNullInBitmap`, `StmtExecParam`, `StmtExecuteHeader`, `StmtExecutePacket` |
 | 统一错误分类 (`mysqlError.cp`) | `AnyMySqlError`, `MySqlErrorCategory`, `MySqlErrorKind` |
 
 ## 使用示例
@@ -172,4 +174,25 @@ const id_le: [4]u8 = [42, 0, 0, 0];
 const n = q.encodeFrame(0, buf[0..])?;
 const n_ping = MySqlQueryPacket.encodeSingleCmdFrame(MYSQL_CMD_PING, 0, buf[0..])?;
 * = n; * = n_ping;
+```
+
+10. **预处理语句二进制执行请求（`stmtExecute.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/PreparedStatement.cp`）**：
+    - `StmtExecutePacket` 实现零堆分配 `COM_STMT_EXECUTE`（`0x17`）请求帧编解码，内置 64 槽位 `StmtExecParam` 数组与 8 字节内联小端标量缓存，支持 `int8`/`uint8`/`int32`/`uint32`/`int64`/`uint64`/`float64`/`varString`/`blob`/`fixedBinary`/`nullParam`；
+    - 自动生成 NULL-bitmap（`stmtNullBitmapLen` / `isStmtNullInBitmap`）、`new_params_bind_flag`、`UNSIGNED` 类型标志位（`0x80`）以及定长二进制 / `lenenc-str` 参数值区；配合 `decodeFrameHeader` 可零拷贝校验帧头、游标模式（`StmtCursorType`）与 NULL 位图。
+
+```cp
+import {
+    StmtExecutePacket,
+    StmtExecParam,
+    STMT_CURSOR_TYPE_READ_ONLY,
+} from "cap:mysql";
+
+let buf: [256]u8 = [0; 256];
+let exec = StmtExecutePacket.initWithFlags(7, STMT_CURSOR_TYPE_READ_ONLY, true);
+* = exec.addParam(StmtExecParam.uint32(1024))?;
+* = exec.addParam(StmtExecParam.nullParam())?;
+* = exec.addParam(StmtExecParam.varString("bob"))?;
+const frame_n = exec.encodeFrame(0, buf[0..])?;
+const hdr = StmtExecutePacket.decodeFrameHeader(buf[0..frame_n], 3)?;
+* = hdr.isParamNull(1); // true
 ```
