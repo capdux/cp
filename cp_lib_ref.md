@@ -873,3 +873,4 @@ const h = cap.hash.wyhash("hello");
 | `cap:cusum` | ShiftDirection, ChangePoint, CusumDetector, PageHinkleyDetector, EwmaControlChart, StreamingZScore, scanCusum | 纯 CP 零分配在线变点与流式异常检测库：双边 Page CUSUM、无先验 Page-Hinkley 漂移检测、Roberts 时变控制限 EWMA 控制图与 Welford 流式 Z-Score |
 | `cap:spectral` | LaplacianKind, FiedlerResult, buildLaplacian, fiedlerBisection, spectralEmbedding, normalizedCut, rbfAffinityMatrix | 纯 CP 零分配谱图聚类与图拉普拉斯分析库：非归一化/对称归一化拉普拉斯、Fiedler 代数连通度与谱二分、NJW k-路谱嵌入、NCut 图割度量与高斯 RBF 亲和矩阵 |
 | `cap:particle` | ResampleKind, PropagateFn, LogLikelihoodFn, normalizeLogWeights, effectiveSampleSize, resampleIndices, ParticleFilter | 纯 CP 零分配序贯蒙特卡洛与粒子滤波库：log-sum-exp 权重更新、ESS 有效样本数、Systematic/Stratified/Multinomial 重采样与非线性多信标追踪 |
+| `cap:mds` | MdsResult, SmacofResult, pairwiseEuclidean, kruskalStress1, doubleCenterGram, classicalMds, smacofRefine | 纯 CP 零分配多维尺度分析（MDS）降维嵌入库：Torgerson-Gower 双中心化 Classical MDS、SMACOF 迭代应力最小化与 Kruskal Stress-1 评估 |

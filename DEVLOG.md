@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:mds` 纯 CP 零分配多维尺度分析（MDS）降维嵌入库：Torgerson-Gower 双中心化 Classical MDS、SMACOF 迭代应力最小化与 Kruskal Stress-1 评估（5/5 PASS，文档直写 `doc/lib/mds.md`）
+新增 cap:mds（lib/mds/{mds,index}.cp）：零分配 Torgerson-Gower 双中心化 Classical MDS 与 SMACOF 迭代应力精修，2D/3D 还原 stress1 < 1e-12，cpc check 0 错误，cap test 5/5 PASS (714ms)
+
 ## 2026-11-22: 新建 `cap:particle` 纯 CP 零分配序贯蒙特卡洛与粒子滤波库：log-sum-exp 权重更新、ESS 有效样本数、Systematic/Stratified/Multinomial 重采样与非线性多信标追踪（5/5 PASS，文档直写 `doc/lib/particle.md`）
 新增 cap:particle（lib/particle/{particle,index}.cp）：零分配确定性 SplitMix64 粒子滤波器，支持 log-sum-exp 防下溢与双信标非线性测距追踪，cpc check 0 错误，cap test 5/5 PASS (911ms)
 

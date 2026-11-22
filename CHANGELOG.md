@@ -2,6 +2,9 @@
 
 > 历史变更记录已完整归档至 [CHANGELOG_H.md](file:///data/dev/cp/CHANGELOG_H.md)。本文件仅保留最新活跃记录。
 
+## [2026-11-22] - 新建 `cap:mds` 纯 CP 零分配多维尺度分析（MDS）降维嵌入库：Torgerson-Gower 双中心化 Classical MDS、SMACOF 迭代应力最小化与 Kruskal Stress-1 评估（5/5 PASS，自动动态挂载 `cap.mds`）
+新增纯 CP 零分配多维尺度分析库 cap:mds（Classical MDS、SMACOF 迭代精修、Kruskal Stress-1），含文档与 5 项深度生产测试
+
 ## [2026-11-22] - 新建 `cap:particle` 纯 CP 零分配序贯蒙特卡洛与粒子滤波库：log-sum-exp 权重更新、ESS 有效样本数、Systematic/Stratified/Multinomial 重采样与非线性多信标追踪（5/5 PASS，自动动态挂载 `cap.particle`）
 新增纯 CP 零分配序贯蒙特卡洛/粒子滤波库 cap:particle（Systematic/Stratified/Multinomial 重采样与 ESS 自适应粒子滤波），含文档与 5 项深度生产测试
 
