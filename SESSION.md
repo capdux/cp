@@ -1309,3 +1309,7 @@
 ### 2026-11-22（分类合并交付：lib/vector/nav_graph.cp | 2026-11-22 14:02:19）
 - **执行与结单汇报**：
   > 子智能体交付 lib/vector/nav_graph.cp（基于 @l2sq SIMD 与 RobustPrune 多样性剪枝的零堆分配 Vamana/NSW 导航图近似检索索引，64D Recall@5 >= 0.90，5/5 PASS），归入 cap:vector 并同步 cp_lib_ref.md；续派 lib/vector/sparse_vec.cp。
+
+### 2026-11-22（分类合并交付：lib/agent/context_budget.cp | 2026-11-22 14:03:58）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/agent/context_budget.cp（多来源上下文窗口按优先级保底 + 加权水填充 Token 预算分配器，5/5 PASS），归入 cap:agent 并同步 cp_lib_ref.md；续派 lib/agent/liveness.cp。

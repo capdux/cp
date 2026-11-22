@@ -243,3 +243,10 @@ export {
     planPromptCacheBreakpoints,
     computePrefixMatchTokens,
 } from "./prompt_cache_plan.cp";
+
+export {
+    ContextSectionRequest,
+    ContextSectionAlloc,
+    ContextBudgetSummary,
+    allocateContextBudget,
+} from "./context_budget.cp";

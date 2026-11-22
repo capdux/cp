@@ -1278,3 +1278,43 @@ fn promptCachePlanDemo() {
     * = computePrefixMatchTokens(blocks[0..], blocks[0..]);
 }
 ```
+
+---
+
+## 子模块：多来源上下文窗口 Token 预算水填充分配器（`context_budget.cp`）
+
+### 核心特性
+
+- **两阶段零堆分配预算分配（`allocateContextBudget`）**：先扣除 `reserved_output` 得到可用输入预算 `usable_input_budget`：
+  1. **保底阶段**：严格按 `priority` 降序满足各来源（System、ToolDefs、RAG 文档、历史对话、Memory）的 `min_tokens` 保底配额；若保底之和超预算则优先保高优先级段并置 `min_floors_met = false`；
+  2. **加权水填充阶段**：剩余预算按 `priority` 分层，同层内按 `weight` 比例多轮水填充至 `desired_tokens`，触顶段多余配额自动回流同层未满段，余数逐 Token 补齐实现零浪费。
+
+### 导出清单
+
+- **类型**：`ContextSectionRequest`、`ContextSectionAlloc`、`ContextBudgetSummary`
+- **分配器**：`allocateContextBudget(total_window, reserved_output, requests, out_allocs): ContextBudgetSummary?`
+
+### 使用示例
+
+```cp
+import {
+    ContextSectionRequest,
+    ContextSectionAlloc,
+    allocateContextBudget,
+} from "cap:agent";
+
+fn contextBudgetDemo() {
+    const reqs: [3]ContextSectionRequest = [
+        ContextSectionRequest{ section_id: 1, priority: 100, min_tokens: 500, desired_tokens: 500, weight: 1 },  // System
+        ContextSectionRequest{ section_id: 2, priority: 50, min_tokens: 400, desired_tokens: 2000, weight: 3 },  // RAG Docs
+        ContextSectionRequest{ section_id: 3, priority: 50, min_tokens: 200, desired_tokens: 1000, weight: 1 },  // History
+    ];
+    let alloc_buf: [3]ContextSectionAlloc = [ContextSectionAlloc{}; 3];
+    let allocs: []ContextSectionAlloc = alloc_buf[0..];
+
+    if (summary := allocateContextBudget(4096, 1096, reqs[0..], allocs)) {
+        // usable_input_budget = 3000 -> System=500, RAG & History 按 3:1 水填充零浪费
+        * = summary;
+    }
+}
+```
