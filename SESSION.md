@@ -250,3 +250,6 @@
 
 ### 2026-11-22（`cap:h2_encode` 验收，子智能体同步 lib/shell/builtin_text.cp（seq 修复）并吸收 Bun 上游 h2_client/encode.cp 为 cap:h2_encode（6/6 PASS），主协调器统一登记提交）
 - **执行成果**：`lib/h2_encode/`（5/5 PASS，`doc/lib/h2_encode.md`）经 `verify_module.sh` 一次性验收回收；子智能体同步 lib/shell/builtin_text.cp（seq 修复）并吸收 Bun 上游 h2_client/encode.cp 为 cap:h2_encode（6/6 PASS），主协调器统一登记提交
+
+### 2026-11-22（`cap:qpack` 验收，子智能体吸收 Bun 上游 quic/Header.cp + h3_client/encode.cp 为 cap:qpack（5/5 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/qpack/`（5/5 PASS，`doc/lib/qpack.md`）经 `verify_module.sh` 一次性验收回收；子智能体吸收 Bun 上游 quic/Header.cp + h3_client/encode.cp 为 cap:qpack（5/5 PASS），主协调器统一登记并提交

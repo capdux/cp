@@ -1,3 +1,6 @@
+## 2026-11-22: 新建 `cap:qpack` 吸收自 Bun uws_sys/quic/Header.cp 与 http/h3_client/encode.cp 的纯 CP 零分配 HTTP/3 QPACK（RFC 9204）编解码库：静态表分类、多前缀整数编解码、请求伪头部编排与 Field Section 零拷贝往返（5/5 PASS，文档直写 `doc/lib/qpack.md`）
+从 /data/dev/bun/src/uws_sys/quic/Header.cp 吸收纯 CP 零分配 HTTP/3 QPACK 库 cap:qpack（lib/qpack/{qpack,index}.cp），cpc check 0 错误，cap test 5/5 PASS (776ms)
+
 ## 2026-11-22: 新建 `cap:h2_encode` 吸收自 Bun http/h2_client/encode.cp 的纯 CP 零分配 HTTP/2 出站编码库：RFC 9113 请求头过滤、HPACK 动态表更新、客户端序言、HEADERS/CONTINUATION 分片与双窗口 DATA 帧编码（5/5 PASS，文档直写 `doc/lib/h2_encode.md`）
 从 /data/dev/bun/src/http/h2_client/encode.cp 吸收纯 CP 零分配 HTTP/2 出站编码库 cap:h2_encode（lib/h2_encode/{h2_encode,index}.cp），cpc check 0 错误，cap test 6/6 PASS (886ms)
 
