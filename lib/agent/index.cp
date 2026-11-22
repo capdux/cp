@@ -52,3 +52,9 @@ export {
     StreamTelemetry,
     extractJsonStringField,
 } from "./sse.cp";
+
+export {
+    ModelRoutePolicy,
+    ModelEndpoint,
+    ModelRouter,
+} from "./model_router.cp";

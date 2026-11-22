@@ -1,6 +1,6 @@
 # `cap:agent` — AI Agent 核心运行时标准库
 
-`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏（`budget.cp`）、多智能体任务图 DAG 调度器（`dag.cp`）、评测基准与轨迹打分（`eval.cp`）、ReAct 执行状态机与确定性检查点（`react.cp`）以及 LLM 流式 SSE 解析与遥测（`sse.cp`）五个子模块。
+`cap:agent` 是 CP 标准库面向生产级 AI Agent 运行时的统一聚合主包，100% 纯 CP 零堆分配实现，当前包含执行预算/护栏（`budget.cp`）、多智能体任务图 DAG 调度器（`dag.cp`）、评测基准与轨迹打分（`eval.cp`）、ReAct 执行状态机与确定性检查点（`react.cp`）、LLM 流式 SSE 解析与遥测（`sse.cp`）以及多模型网关路由与限流故障转移（`model_router.cp`）六个子模块。
 
 ---
 
@@ -314,5 +314,52 @@ fn llmStreamingDemo() {
 
     const metrics = tel.finish(1250);
     * = metrics;
+}
+```
+
+---
+
+## 子模块：多模型 LLM 网关路由、RPM/TPM 限流与故障转移（`model_router.cp`）
+
+### 核心特性
+
+- **三种确定性选路策略（`ModelRoutePolicy`）**：支持 `PriorityOrder`（高优先级优先）、`LowestCost`（每百万 Token 微美元单价最低优先）与 `LowestLatency`（EWMA 延迟最低优先），同指标按优先级与最小 ID 打破平局。
+- **RPM + TPM 双速率 60s 滑动窗口限流**：`selectEndpoint` 自动刷新跨 60 秒窗口的请求与 Token 计数，并原子预扣 1 次请求与 `est_tokens`；请求完成后 `recordSuccess` 按真实消耗差值 `actual_tokens_delta` 精确回补/补扣 `window_tokens`。
+- **429 Retry-After 与 5xx 指数退避冷却**：`recordRateLimitOrFailure` 在 `retry_after_ms > 0` 时严格遵守上游冷却时间，否则执行 `1s -> 2s -> 4s -> ... -> 60s` 封顶指数退避，冷却期内自动无缝故障转移至备选模型，冷却到期自动回切。
+
+### 导出清单
+
+- **策略与描述符**：`ModelRoutePolicy`（`PriorityOrder | LowestCost | LowestLatency`）、`ModelEndpoint`
+- **网关路由器**：`ModelRouter`（`init`, `addEndpoint`, `setEnabled`, `endpointAt`, `selectEndpoint`, `recordSuccess`, `recordRateLimitOrFailure`, `availableCount`）
+
+### 使用示例（多模型 429 自动故障转移与回切）
+
+```typescript
+import std from "std";
+import { ModelRoutePolicy, ModelEndpoint, ModelRouter } from "cap:agent";
+
+fn multiModelFailoverDemo() {
+    let pool: [4]ModelEndpoint = std.mem.zeroes([4]ModelEndpoint);
+    let pool_s: []ModelEndpoint = pool[0..];
+    let router = ModelRouter.init(&pool_s);
+
+    const primary = router.addEndpoint(1, "claude-sonnet", 100, 3000000, 60, 100000) ?? return;
+    const backup = router.addEndpoint(2, "gpt-4o-mini", 50, 150000, 120, 200000) ?? return;
+    * = backup;
+
+    // 1. 优先命中主模型
+    const slot1 = router.selectEndpoint(ModelRoutePolicy.PriorityOrder, 2000, 10000) ?? return;
+    if (slot1 == primary) {
+        // 模拟主模型返回 429 Retry-After: 5000ms
+        * = router.recordRateLimitOrFailure(slot1, 10000, 5000);
+    }
+
+    // 2. 冷却期内自动故障转移至备选模型
+    const slot2 = router.selectEndpoint(ModelRoutePolicy.PriorityOrder, 2000, 11000) ?? return;
+    * = router.recordSuccess(slot2, 240.0, -300);
+
+    // 3. 冷却期过后（15000ms）自动回切主模型
+    const slot3 = router.selectEndpoint(ModelRoutePolicy.PriorityOrder, 2000, 15000) ?? return;
+    * = slot3;
 }
 ```
