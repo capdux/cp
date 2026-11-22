@@ -251,3 +251,21 @@ export {
     parsePatchCacheHash,
     validateUnifiedPatchText,
 } from "./patch_spec.cp";
+
+export {
+    ISOLATED_STORE_MAX_ENTRIES,
+    ISOLATED_STORE_MAX_DEPS_PER_ENTRY,
+    ISOLATED_STORE_MAX_PEERS,
+    IsolatedStoreError,
+    IsolatedEntryKind,
+    IsolatedPeerRef,
+    IsolatedStoreEntry,
+    IsolatedStoreGraph,
+    formatStorePathSegment,
+    formatIsolatedStoreKey,
+    formatIsolatedStoreDir,
+    formatIsolatedSymlinkTarget,
+    formatGlobalStorePath,
+    computePeerSetHash,
+    computeGlobalEntryClosureHash,
+} from "./isolated_store.cp";

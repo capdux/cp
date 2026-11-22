@@ -599,3 +599,32 @@ fn demoPromptCanaryRollout() {
     }
 }
 ```
+
+### 13. 零分配 LLM 流式 JSON 增量字段解析器与 Tool-Call 实时提取引擎 (`json_stream_scanner.cp`)
+
+面向流式 LLM Tool-Call 参数（分片到达的 JSON 对象）的 100% 纯 CP 零动态堆分配逐字节/分片可恢复状态机解析器：
+
+- **常量与枚举**：`JSON_STREAM_MAX_DEPTH` (`16`)、`JSON_STREAM_MAX_KEY_LEN` (`64`)、`JSON_STREAM_MAX_VAL_LEN` (`256`)、`JSON_STREAM_MAX_EVENTS` (`32`)、`JsonStreamEventKind`（`key_ready | string_delta | field_complete | object_complete | syntax_error`）、`JsonStreamValueKind`（`string | number | boolean | null_val | nested_object | nested_array`）。
+- **数据模型**：`JsonStreamEvent`（提供 `keySlice()` 与 `dataSlice()`）、`JsonStreamStats`。
+- **核心引擎 `JsonStreamScanner`**：
+  - `init()` / `reset()` / `is_complete()` / `has_error()` / `stats()`
+  - `feed(*_, chunk: []const u8, out_events: *[]JsonStreamEvent): usize`：支持任意 1 字节到任意分片跨 chunk 恢复；完整解码跨 chunk 转义（`\"`/`\\`/`\/`/`\n`/`\r`/`\t`）；顶层字符串值到达时立即流式发射 `string_delta` 供前端零延迟预览/推测预取，字段结束发射 `field_complete`（支持 `string`/`number`/`boolean`/`null`/嵌套 `{...}`/`[...]`）；顶层 `}` 闭合发射 `object_complete`；非对象根、非法转义、括号不匹配、未转义控制字符或嵌套超 16 层立即发射 `syntax_error` 并锁定错误态。
+
+```cp
+import {
+    JsonStreamEventKind,
+    JsonStreamEvent,
+    JsonStreamScanner,
+} from "cap:prompt";
+
+fn demoJsonStreamScanner() {
+    let sc = JsonStreamScanner.init();
+    let evs: [16]JsonStreamEvent = [JsonStreamEvent{}; 16];
+    let evs_s: []JsonStreamEvent = evs[0..];
+
+    // 模拟 LLM Token 分片流式到达
+    * = sc.feed("{\"tool\":\"search\",\"q\":\"hello ", evs_s); // 已发射 key_ready("q") + string_delta("hello ")
+    * = sc.feed("world\",\"limit\":10}", evs_s);              // 发射 string_delta("world") + field_complete + object_complete
+    * = sc.is_complete(); // true
+}
+```

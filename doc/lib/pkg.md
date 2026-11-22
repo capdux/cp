@@ -472,3 +472,40 @@ const roundtrip_h = parsePatchCacheHash(cache_buf[0..cn])?; // == h
 * = pn;
 * = roundtrip_h;
 ```
+
+12. **严格隔离安装存储路径编码、Peer 哈希与全局虚拟存储闭包图（`lib/pkg/isolated_store.cp`，吸收自 `/data/dev/bun/src/install/isolated_install/Store.cp` & `/data/dev/bun/docs/pm/isolated-installs.mdx`）**：
+    - **两层隔离布局防幽灵依赖（参考 `/data/dev/bun/docs/pm/isolated-installs.mdx`）**：
+      - 实际包内容落盘于 `node_modules/.bun/<store_key>/node_modules/<pkg_name>`（`formatIsolatedStoreDir`），顶层 `node_modules` 仅创建指向隔离存储的相对软链接（`formatIsolatedSymlinkTarget`，作用域包自动补 `../.bun/...`）；
+      - 新建 Workspace 工程（`configVersion = 1`）默认启用 `isolated` 链接器；Workspace 包直接软链至源码目录而不进入中央存储。
+    - **Peer 依赖哈希与去重**：`computePeerSetHash()` 对 Peer 依赖集合执行顺序无关去重哈希，相同 `(kind, name, resolution, peer_hash)` 在 `IsolatedStoreGraph.addOrFindEntry()` 中自动去重共享。
+    - **Global Virtual Store 闭包哈希（`formatGlobalStorePath`）**：`IsolatedStoreGraph.computeAllEntryHashes()` 迭代计算每个 `Registry` 条目的 `(store_key + sorted resolved dependency hashes)` 闭包哈希（`<store_key>-<16hex>`），使跨项目相同依赖闭包共享 `<cache>/links/` 条目，而 `Root`/`Workspace`/`Folder`/`Patched` 条目自动排除在全局共享之外。
+
+### 隔离存储图与闭包哈希示例（`IsolatedStoreGraph`）
+
+```cp
+import {
+    IsolatedEntryKind,
+    IsolatedPeerRef,
+    IsolatedStoreGraph,
+    computePeerSetHash,
+    formatIsolatedStoreDir,
+    formatGlobalStorePath,
+} from "cap:pkg";
+
+let g = IsolatedStoreGraph.init();
+const peers: [1]IsolatedPeerRef = [IsolatedPeerRef{ name: "react", version: "19.0.0" }];
+const ph = computePeerSetHash(peers[0..])?;
+const react_id = g.addOrFindEntry(IsolatedEntryKind.Registry, "react", "19.0.0", 0, false)?;
+const ui_id = g.addOrFindEntry(IsolatedEntryKind.Registry, "@acme/ui", "2.0.0", ph, false)?;
+g.addDependency(ui_id, react_id)?;
+g.computeAllEntryHashes()?;
+
+if (ui := g.entryAt(ui_id)) {
+    let dir_buf: [160]u8 = [0; 160];
+    let g_buf: [160]u8 = [0; 160];
+    const dn = formatIsolatedStoreDir(ui, dir_buf[0..])?;
+    const gn = formatGlobalStorePath(ui, g_buf[0..])?;
+    * = dn;
+    * = gn;
+}
+```

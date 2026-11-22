@@ -143,3 +143,15 @@ export {
     RegistrySummaryStats,
     PromptVersionRegistry,
 } from "./version_registry.cp";
+
+export {
+    JSON_STREAM_MAX_DEPTH,
+    JSON_STREAM_MAX_KEY_LEN,
+    JSON_STREAM_MAX_VAL_LEN,
+    JSON_STREAM_MAX_EVENTS,
+    JsonStreamEventKind,
+    JsonStreamValueKind,
+    JsonStreamEvent,
+    JsonStreamStats,
+    JsonStreamScanner,
+} from "./json_stream_scanner.cp";
