@@ -21,6 +21,7 @@
 - **`SafeDtype` / `SafeTensorDesc` / `SafeTensorsInfo` / `parseSafeTensors` / `safeTensorFind` / `safeTensorBytes`** (`safetensors.cp`)：零堆分配零拷贝 HuggingFace Safetensors 模型权重解析器，直接面向 mmap 缓冲区解析 `[8B LE header_len][JSON header][payload]`，跳过 `__metadata__`，严格校验 `shape * dtype.byteSize() == data_end - data_start` 与载荷边界，并返回只读零拷贝权重切片。
 - **FP16 / BF16 / FP8 E4M3FN 低精度浮点编解码核** (`fp16.cp`)：零堆分配位级精确 AI 浮点转换与批量小端解包/打包核，完整覆盖 IEEE-754 Binary16（含次正规与 RNE 舍入）、Brain Float16（RNE 防截断偏差）与 OCP/NVIDIA Hopper FP8 E4M3FN（偏置 7、饱和至 `±448.0`、张量级 `scale` 批量反量化）。
 - **`MlaConfig` / `alibiSlopes` / `alibiAttentionSingleQuery` / `mlaCompressKv` / `mlaDecodeSingleHead`** (`mla.cp`)：零堆分配 DeepSeek-V2/V3 多头潜在注意力（MLA：低秩 KV 潜空间压缩 + 矩阵吸收优化 + 解耦 RoPE）与 ALiBi 线性距离偏置注意力核，推理期无需重建完整 K/V 缓存，大幅降低 KV-Cache 显存占用。
+- **`PoolKind` / `embeddingLookup` / `poolHiddenStates` / `l2NormalizeInPlace` / `matryoshkaProject` / `cosineSimilarityMatrix`** (`embedding.cp`)：零堆分配词嵌入查表、带 `attention_mask` 掩码的四流派序列池化（`Mean`/`Cls`/`LastToken`/`Max`，覆盖 BGE/E5/Nomic/Qwen3-Embedding）、Matryoshka 套娃维度截断重归一化与批量余弦相似度矩阵计算。
 
 ## 3. API 速查
 
@@ -85,6 +86,11 @@
 | `alibiAttentionSingleQuery` | `(q_heads, k_heads, v_heads, seq_kv, n_heads, head_dim, slopes, out_heads): bool` | O(1) 在线 Softmax 多头单查询 ALiBi 注意力，自动叠加 `-m_h * ((seq_kv - 1) - j)` 偏置 |
 | `mlaCompressKv` | `(x, w_dkv, d_model, d_latent, latent_out): bool` | 将隐藏层向量压缩为 `d_latent` 维 KV 潜向量存入缓存 |
 | `mlaDecodeSingleHead` | `(q_nope, q_rope, c_kv_cache, k_rope_cache, w_uk, w_uv, seq_kv, d_latent, d_nope, d_rope, d_v, scale, q_absorbed_s, out_latent_s, out_v): bool` | DeepSeek-V2/V3 MLA 矩阵吸收解码核（`q_abs = q_nope^T * W_UK` 直接点积潜缓存 + 解耦 RoPE + 单次 `W_UV` 上投影） |
+| `embeddingLookup` | `(table, vocab_size, dim, token_ids, out_seq): bool` | Token ID 词表嵌入查表（原子校验每个 `token_id < vocab_size`） |
+| `poolHiddenStates` | `(hidden_seq, attention_mask, seq_len, dim, kind, out_vec): bool` | 带 `attention_mask` 掩码的 `Mean`/`Cls`/`LastToken`/`Max` 序列池化（全 0 mask 返回 `false`） |
+| `l2NormalizeInPlace` | `(vec, eps): f64?` | 原地 L2 单位化并返回归一化前原始范数（零向量返回 `null`） |
+| `matryoshkaProject` | `(full_vec, target_dim, out_vec): bool` | Matryoshka (MRL) 套娃维度截断并重新 L2 归一化为单位向量 |
+| `cosineSimilarityMatrix` | `(queries, n_q, docs, n_d, dim, out_mat): bool` | 批量计算 `[n_q, n_d]` 查询-文档余弦相似度矩阵 |
 
 ## 4. 示例
 
@@ -481,5 +487,35 @@ pub fn demoMlaWeightAbsorption(
         out_lat,
         out_v,
     );
+}
+```
+
+### 词表嵌入查表 -> 掩码池化 -> Matryoshka 套娃截断示例 (`embedding.cp`)
+
+```cp
+import {
+    PoolKind,
+    embeddingLookup,
+    poolHiddenStates,
+    matryoshkaProject,
+} from "cap:attention";
+
+pub fn demoEmbeddingPipeline(vocab_table: []const f64) {
+    // 1. 查表：[token 1, token 3, PAD=0] (vocab_size=8, dim=4)
+    const token_ids: [3]u32 = [1, 3, 0];
+    let seq_buf: [12]f64 = [0.0; 12];
+    let seq: []f64 = seq_buf[0..];
+    * = embeddingLookup(vocab_table, 8, 4, token_ids[0..], seq);
+
+    // 2. 带掩码的 LastToken 池化（跳过末尾 PAD）
+    const mask: [3]u8 = [1, 1, 0];
+    let pooled_buf: [4]f64 = [0.0; 4];
+    let pooled: []f64 = pooled_buf[0..];
+    * = poolHiddenStates(seq_buf[0..], mask[0..], 3, 4, PoolKind.LastToken, pooled);
+
+    // 3. Matryoshka (MRL) 截断至前 2 维并重新 L2 单位化
+    let mrl_buf: [2]f64 = [0.0; 2];
+    let mrl: []f64 = mrl_buf[0..];
+    * = matryoshkaProject(pooled_buf[0..], 2, mrl);
 }
 ```

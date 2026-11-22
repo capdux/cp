@@ -112,3 +112,12 @@ export {
     mlaCompressKv,
     mlaDecodeSingleHead,
 } from "./mla.cp";
+
+export {
+    PoolKind,
+    embeddingLookup,
+    poolHiddenStates,
+    l2NormalizeInPlace,
+    matryoshkaProject,
+    cosineSimilarityMatrix,
+} from "./embedding.cp";

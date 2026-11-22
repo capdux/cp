@@ -65,3 +65,11 @@ export {
     isValidDefineKey,
     DefineTable,
 } from "./defines";
+
+export {
+    MAX_HTML_MANIFEST_FILES,
+    HtmlManifestLoader,
+    HtmlManifestFile,
+    encodeHashEtag,
+    HtmlImportManifest,
+} from "./html_manifest";

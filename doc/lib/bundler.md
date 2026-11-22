@@ -30,6 +30,7 @@
 | `lib/bundler/metafile.cp` | `// Source: /data/dev/bun/src/bundler/linker_context/MetafileBuilder.cp` | `Metafile`、`MetafileInput`、`MetafileOutput`、`MetafileImport` JSON 生成与彩色树状体积分析表 |
 | `lib/bundler/splitting.cp` | `// Source: /data/dev/bun/src/bundler/LinkerGraph.cp & Chunk.cp` | `CodeSplitter` 多入口 `u64` 位掩码代码分割、共享 Chunk 抽取、内容哈希与 `AssetManifest` |
 | `lib/bundler/defines.cp` | `// Source: /data/dev/bun/src/bundler/defines.cp` | 零堆分配编译期 `--define` / `--drop` 常量替换表 `DefineTable`、`DefineValue`、`DefineFlags`、`CallUnwrapKind` 与点分属性链前缀剪枝 |
+| `lib/bundler/html_manifest.cp` | `// Source: /data/dev/bun/src/bundler/HTMLImportManifest.cp` | 零堆分配 HTML Import 清单构建器 `HtmlImportManifest`、`HtmlManifestFile`、`HtmlManifestLoader`、11 字符 URL-safe Base64 `encodeHashEtag` 与 RFC 8259 JSON 序列化 |
 | `lib/bundler/index.cp` | `// Source: /data/dev/bun/src/bundler/` | `cap:bundler` 对外统一导出入口 |
 
 ---
