@@ -483,3 +483,22 @@ let sub = SubshellStateMachine.init(
 const done = sub.nextStep()?;       // Completed, exit_code == 0
 * = done;
 ```
+
+### POSIX / Bun Shell 后台异步 (`&`) 作业状态机与排空追踪器（`asyncState.cp`）
+
+- 吸收自 `/data/dev/bun/src/shell/states/Async.cp` 与 `/data/dev/bun/docs/runtime/shell.mdx`；
+- 导出：`SHELL_ASYNC_MAX_JOBS` (`32`)、`ShellAsyncError`、`AsyncParentKind`（`Binary`/`Stmt`）、`AsyncChildKind`（`Pipeline`/`Cmd`/`If`/`CondExpr`）、`AsyncRunPhase`（`Idle`/`Scheduled`/`Executing`/`Done`）、`AsyncStepKind`（`EnqueueAndReturnParentZero`/`StartChild`/`Suspended`/`Finished`）、`AsyncStepAction`、`ShellAsyncStateMachine`（`init`/`start`/`onEventLoopTick`/`onChildDone`/`isInFlight`）、`ShellAsyncJobTracker`（`init`/`spawn`/`tickJob`/`finishJob`/`inFlightCount`/`canFinishShell`）；
+- **后台异步任务排空与非阻塞语义最佳实践（参考 `/data/dev/bun/docs/runtime/shell.mdx` & `Async.cp`）**：
+  - 前台遇到 `cmd &` 时，`start()` 立即将后台作业入队事件循环并向父状态返回退出码 `0`（不阻塞前台语句继续执行），后台执行严格按 `Idle -> Scheduled -> Executing -> Done` 推进；
+  - 解释器通过 `ShellAsyncJobTracker.inFlightCount()`（对应 Bun `async_commands_executing`）追踪所有在途后台作业；即使前台脚本已结束，也必须等待 `canFinishShell() == true`（所有后台 `&` 作业均已排空）后再释放解释器上下文；已完成的槽位自动回收复用。
+
+```cp
+import { AsyncParentKind, AsyncChildKind, ShellAsyncJobTracker } from "cap:shell";
+
+let tracker = ShellAsyncJobTracker.init();
+const j = tracker.spawn(AsyncParentKind.Stmt, AsyncChildKind.Pipeline, 10)?;
+// j.parent_exit_code == 0, tracker.canFinishShell() == false
+* = tracker.tickJob(j.job_id)?;
+* = tracker.finishJob(j.job_id, 0)?;
+// tracker.canFinishShell() == true
+```

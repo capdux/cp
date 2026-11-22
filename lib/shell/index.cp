@@ -334,6 +334,18 @@ export {
     SubshellStateMachine,
 } from "./subshellState.cp";
 
+export {
+    SHELL_ASYNC_MAX_JOBS,
+    ShellAsyncError,
+    AsyncParentKind,
+    AsyncChildKind,
+    AsyncRunPhase,
+    AsyncStepKind,
+    AsyncStepAction,
+    ShellAsyncStateMachine,
+    ShellAsyncJobTracker,
+} from "./asyncState.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);
