@@ -923,3 +923,52 @@ pub fn demoMcpAsyncTask() {
     }
 }
 ```
+
+---
+
+## 二十二、 零堆分配 MCP 工具执行策略与出网/路径沙箱安全门禁 (`toolSandbox.cp`)
+
+面向 AI Agent 工具调用前置安全裁决与边界防护的 100% 纯 CP 零动态堆分配沙箱门禁引擎：
+
+- **常量与枚举**：
+  - `MCP_SANDBOX_MAX_TOOLS = 64`、`MCP_SANDBOX_TOOL_NAME_MAX_LEN = 48`、`MCP_SANDBOX_CONFIRM_TOKEN_MAX_LEN = 64`
+  - `SandboxPermissionLevel`（`read_only | workspace_write | network_egress | destructive`；配套 `formatSandboxPermission`）
+  - `SandboxVerdict`（`allowed | require_confirmation | denied_unknown_tool | denied_quota | denied_egress | denied_path | denied_invalid_arg`；配套 `formatSandboxVerdict`）
+- **出网与路径安全纯函数**：
+  - `isBlockedEgressHost(host)`：拦截 `localhost`、`127.0.0.0/8`、`10.0.0.0/8`、`172.16.0.0/12`、`192.168.0.0/16`、`169.254.0.0/16`（云元数据地址）、`0.0.0.0/8`、`100.64.0.0/10`、`::1`、`fe80::/10`、`fc00::/7` 及 IPv4-mapped 私网 IPv6。
+  - `isAllowedEgressUrl(url, allow_private_net)`：仅放行 `https://`/`http://`，拒绝 `file://`/`gopher://` 及含 `@` userinfo 混淆 URL。
+  - `isSafeSandboxPath(path)`：拦截 `..` 路径穿越段及 `.env`/`.pem`/`.key`/`id_rsa`/`/etc/shadow` 等敏感文件。
+- **核心引擎 `McpToolSandbox`**：
+  - `init()` / `setExpectedConfirmToken(*_, token)` / `registerTool(*_, tool_name, permission, require_confirmation, allow_private_net, max_calls_per_session)` / `removeTool(*_, tool_name)` / `getToolRule(tool_name)` / `resetSessionQuotas(*_)`
+  - `evaluateToolCall(*_, req: SandboxCallRequest): SandboxDecision` / `stats(): SandboxStats`
+
+```cp
+import {
+    SandboxPermissionLevel,
+    SandboxCallRequest,
+    SandboxVerdict,
+    McpToolSandbox,
+} from "cap:mcp";
+
+pub fn demoMcpToolSandbox() {
+    let sb = McpToolSandbox.init();
+    * = sb.setExpectedConfirmToken("approve-42");
+    * = sb.registerTool("http_fetch", SandboxPermissionLevel.network_egress, false, false, 10);
+    * = sb.registerTool("rm_file", SandboxPermissionLevel.destructive, true, false, 5);
+
+    // 拦截云元数据私网出网
+    const d1 = sb.evaluateToolCall(SandboxCallRequest{
+        tool_name: "http_fetch",
+        egress_url: "http://169.254.169.254/latest/meta-data/",
+    });
+    * = (d1.verdict == SandboxVerdict.denied_egress);
+
+    // 破坏性操作需人工确认令牌
+    const d2 = sb.evaluateToolCall(SandboxCallRequest{
+        tool_name: "rm_file",
+        target_path: "workspace/tmp.log",
+        confirmation_token: "approve-42",
+    });
+    * = d2.allowed;
+}
+```

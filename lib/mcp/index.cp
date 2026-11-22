@@ -318,3 +318,21 @@ export {
     formatTaskStatusJson,
     McpAsyncTaskManager,
 } from "./taskAsync.cp";
+
+export {
+    MCP_SANDBOX_MAX_TOOLS,
+    MCP_SANDBOX_TOOL_NAME_MAX_LEN,
+    MCP_SANDBOX_CONFIRM_TOKEN_MAX_LEN,
+    SandboxPermissionLevel,
+    SandboxVerdict,
+    SandboxToolRule,
+    SandboxCallRequest,
+    SandboxDecision,
+    SandboxStats,
+    isBlockedEgressHost,
+    isAllowedEgressUrl,
+    isSafeSandboxPath,
+    formatSandboxPermission,
+    formatSandboxVerdict,
+    McpToolSandbox,
+} from "./toolSandbox.cp";
