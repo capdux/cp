@@ -196,3 +196,20 @@ const frame_n = exec.encodeFrame(0, buf[0..])?;
 const hdr = StmtExecutePacket.decodeFrameHeader(buf[0..frame_n], 3)?;
 * = hdr.isParamNull(1); // true
 ```
+
+11. **预处理语句缓存签名生成器（`stmtSignature.cp`，吸收自 `/data/dev/bun/src/sql_jsc/mysql/protocol/Signature.cp`）**：
+    - `MySqlStmtSignature` 实现零动态堆分配的 MySQL 预处理语句签名键与确定性 64 位缓存哈希生成器（支持最多 32 个参数、512 字节签名缓冲）；
+    - `MySqlSigFieldType` 覆盖 17 种标准 `MYSQL_TYPE_*` 字段类型，配合 `MySqlSigParam`（`nullParam`/`signed`/`unsigned`/`wireFlagByte`）严格区分有符号与无符号参数（`UMYSQL_TYPE_*` vs `MYSQL_TYPE_*`，`Null` 生成 `.null`）。
+
+```cp
+import { MySqlSigFieldType, MySqlSigParam, MySqlStmtSignature } from "cap:mysql";
+
+const params: [3]MySqlSigParam = [
+    MySqlSigParam.unsigned(MySqlSigFieldType.Long),
+    MySqlSigParam.nullParam(),
+    MySqlSigParam.signed(MySqlSigFieldType.VarString),
+];
+const sig = MySqlStmtSignature.build("SELECT * FROM t WHERE id=? AND x=? AND s=?", params[0..])?;
+* = sig.nameSlice(); // "SELECT * FROM t WHERE id=? AND x=? AND s=?UMYSQL_TYPE_LONG.nullMYSQL_TYPE_VAR_STRING"
+* = sig.hash();
+```

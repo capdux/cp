@@ -292,3 +292,13 @@ export {
     StmtExecuteHeader,
     StmtExecutePacket,
 } from "./stmtExecute.cp";
+
+// --- 16. Prepared Statement Cache Signature Generator (./stmtSignature.cp) ---
+export {
+    MYSQL_STMT_SIG_MAX_PARAMS,
+    MYSQL_STMT_SIG_MAX_NAME_LEN,
+    MySqlStmtSignatureError,
+    MySqlSigFieldType,
+    MySqlSigParam,
+    MySqlStmtSignature,
+} from "./stmtSignature.cp";
