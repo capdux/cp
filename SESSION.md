@@ -1376,3 +1376,7 @@
 ### 2026-11-22（分类合并交付：lib/attention/quant_fp8.cp | 2026-11-22 14:34:40）
 - **执行与结单汇报**：
   > 子智能体交付 lib/attention/quant_fp8.cp（DeepSeek-V3 风格块级动态缩放 FP8 E4M3FN 量化与 @fma 融合 GEMV，误差 < 2%，5/5 PASS），归入 cap:attention 并同步 cp_lib_ref.md；续派 lib/attention/constrained_mask.cp。
+
+### 2026-11-22（分类合并交付：lib/sql/pg_wire_writer.cp + 4 项 Bun 清零 + 启动 lib/ 根目录大收敛 | 2026-11-22 14:37:03）
+- **执行与结单汇报**：
+  > 1. 从 Bun src/sql/postgres/protocol/NewWriter.cp 吸收归入 lib/sql/pg_wire_writer.cp (6/6 PASS, upstream_newer=0) 并同步 cp_lib_ref.md；2. 按用户指令启动专职 Stdlib Root Consolidator，按 image -> doc -> conf -> net 四个领域批次安全收敛 lib/ 根目录小包（严格遵守 Bun 优先、不覆盖/不丢失、冲突留 xxx_.cp 参考铁律）。

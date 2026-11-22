@@ -148,6 +148,20 @@ let wire: [64]u8 = [0; 64];
 const n = pkt.encode(wire[0..])?;
 const decoded = MySqlErrorPacket.decode(wire[0..n])?; // error_code=1213, isRetryable()==true
 ```
+- **PostgreSQL 线协议零堆分配二进制帧写入器 (`pg_wire_writer.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/NewWriter.cp`)**：
+  - 常量与错误集：`PG_NULL_LENGTH_U32` (`0xffffffff`)、`PG_NULL_LENGTH_I32` (`-1`)、`PgWireWriterError`（`BufferTooSmall` / `TooManyParameters` / `InvalidPatchOffset` / `FrameLengthOverflow`）
+  - 结构体与方法：`PgLengthPatch`、`PgWireWriter`（`init` / `offset` / `remaining` / `written` / `reset` / `writeByte` / `writeBytes` / `pwrite` / `writeU16` / `writeShort` / `writeU32` / `writeI32` / `writeI64` / `writeF32` / `writeF64` / `writeCString` / `writeBoolText` / `writeNull` / `writeLengthPrefixed` / `beginLength` / `beginTaggedFrame` / `finishLength` / `finishLengthExcludingSelf`）
+
+```typescript
+import { PgWireWriter } from "cap:sql";
+
+let buf: [128]u8 = [0; 128];
+let w = PgWireWriter.init(buf[0..]);
+const frame = w.beginTaggedFrame('Q')?;
+* = w.writeCString("SELECT 1")?;
+const frame_len = w.finishLength(frame)?; // 4 + 9 = 13 bytes
+const wire = w.written(); // ['Q', 0, 0, 0, 13, 'S', 'E', ..., 0]
+```
 
 ---
 

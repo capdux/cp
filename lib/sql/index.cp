@@ -93,3 +93,11 @@ export {
     MySqlErrorPacketError,
     MySqlErrorPacket,
 } from "./mysql_error_packet.cp";
+
+export {
+    PG_NULL_LENGTH_U32,
+    PG_NULL_LENGTH_I32,
+    PgWireWriterError,
+    PgLengthPatch,
+    PgWireWriter,
+} from "./pg_wire_writer.cp";

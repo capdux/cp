@@ -95,3 +95,14 @@ export {
     MdChunkSpan,
     chunkMarkdownStructured,
 } from "./markdown_chunk.cp";
+
+export {
+    DiffHunkHeader,
+    DiffLineKind,
+    DiffOp,
+    PatchApplyStatus,
+    PatchApplyResult,
+    parseHunkHeader,
+    parseDiffOp,
+    applyUnifiedPatch,
+} from "./unified_diff.cp";
