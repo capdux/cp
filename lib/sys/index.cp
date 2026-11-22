@@ -1313,3 +1313,20 @@ export {
     WorkQueueStats,
     WorkQueue,
 } from "./workQueue.cp";
+
+// --- statFs (Zero-Alloc POSIX / Node fs.statfs Filesystem Capacity & Inode Model) ---
+export {
+    FS_MAGIC_EXT4,
+    FS_MAGIC_TMPFS,
+    FS_MAGIC_BTRFS,
+    FS_MAGIC_XFS,
+    FS_MAGIC_OVERLAYFS,
+    FS_MAGIC_NFS,
+    FS_MAGIC_PROC,
+    FS_MAGIC_SYSFS,
+    FS_MAGIC_ZFS,
+    StatFsError,
+    statFsTypeName,
+    StatFsSmall,
+    StatFsBig,
+} from "./statFs.cp";

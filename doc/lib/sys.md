@@ -338,6 +338,31 @@ pub fn demoWorkQueue() {
 }
 ```
 
+### 零分配 POSIX / Node `fs.statfs` 文件系统容量与 Inode 模型 (`statFs.cp`)
+
+吸收自 `/data/dev/bun/src/runtime/node/StatFS.cp`（参考 `/data/dev/bun/docs/runtime/nodejs-compat.mdx` 中 `node:fs` 兼容说明）：
+
+- **常量与错误集**：`FS_MAGIC_EXT4` / `FS_MAGIC_TMPFS` / `FS_MAGIC_BTRFS` / `FS_MAGIC_XFS` / `FS_MAGIC_OVERLAYFS` / `FS_MAGIC_NFS` / `FS_MAGIC_PROC` / `FS_MAGIC_SYSFS` / `FS_MAGIC_ZFS`、`StatFsError`（`InvalidBlockSize`/`InconsistentCounts`）；
+- **核心类型与函数**：`statFsTypeName(fstype)`、`StatFsSmall`（32 位紧凑快照）、`StatFsBig`（64 位无截断快照：`validate`/`toSmall`/`fsTypeName`/`totalBytes`/`freeBytes`/`availableBytes`/`usedBytes`/`usedPermille`/`availablePermille`/`inodeUsedPermille`/`isLowSpace`）；
+- **运维最佳实践**：在大容量磁盘（> 8 TiB，4 KiB 块）场景下始终优先使用 `StatFsBig`（对应 `fs.statfs(..., { bigint: true })`）避免 32 位块数截断；磁盘告警应基于 `bavail`（非特权用户可用块）而非 `bfree`（含 root 保留块），使用 `isLowSpace(100)` 检测可用空间低于 10%。
+
+```cp
+import { FS_MAGIC_EXT4, StatFsBig } from "cap:sys";
+
+const fs_info = StatFsBig{
+    fstype: FS_MAGIC_EXT4,
+    bsize: 4096,
+    blocks: 1_000_000,
+    bfree: 200_000,
+    bavail: 150_000,
+    files: 500_000,
+    ffree: 400_000,
+};
+* = fs_info.validate()?;
+const low = fs_info.isLowSpace(100); // false (150 permille >= 100)
+* = low;
+```
+
 ## 收敛子模块深度文档
 
 - [acpi.md](sys/acpi.md)
