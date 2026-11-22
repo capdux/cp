@@ -968,3 +968,55 @@ fn demoEvalJudge() {
     * = formatReleaseGateSummary(eval_rep, arena.stats(), 1500, *buf_s);
 }
 ```
+
+### 22. 零分配 LLM Prompt 前缀缓存断点规划与失效诊断器 (`cacheBreak.cp`)
+
+面向 Anthropic / OpenAI Prompt Caching 成本优化的 100% 纯 CP 零动态堆分配断点规划器与跨回合缓存失效根因诊断引擎：
+
+- **常量与枚举**：
+  - `CACHE_BREAK_MAX_BLOCKS = 32`、`CACHE_BREAK_MAX_BREAKPOINTS = 4`、`CACHE_BREAK_BPS_SCALE = 10000`
+  - `CacheBlockRole`（`system | tools | docs | few_shot | history | user_query`）
+  - `CacheBustReason`（`none | content_changed | role_changed | volatile_inserted | prefix_shortened | below_min_tokens`）
+- **数据模型与纯函数**：
+  - `PromptCacheBlock`（`make(...)`）、`CacheBreakConfig`（`anthropicDefaults()` / `openAiDefaults()`）、`CacheBreakpointPlan`、`CacheTurnDiff`、`PromptCacheStats`
+  - `hashCacheBlockBytes(data)`（FNV-1a 64 位内容哈希）、`cacheRoleRank(role)`
+  - `planCacheBreakpoints(blocks, cfg, out_plan: *CacheBreakpointPlan)`：遵循 `max_breakpoints <= 4` 与 `min_cache_tokens`，遇到 `volatile_hint` / `user_query` 停止，自动检测动态块位于静态稳定前缀之前的排序反模式（`has_order_anti_pattern`）。
+  - `diffWithPrevTurn(prev_blocks, curr_blocks, cfg): CacheTurnDiff`：精确计算 `cached_read_tokens`、`cache_write_tokens`、`uncached_tokens`、首个失效块索引 `first_bust_index`、`bust_reason` 及按厂商费率模型的净成本节省基点 `savings_bps`。
+- **多轮状态追踪器 `PromptCacheTracker`**：
+  - `init(cfg)` / `recordTurn(*_, curr_blocks)` / `stats()` / `reset(*_)`：自动保留上一轮快照并累计多轮命中率、失效次数、反模式告警与累计成本节省基点。
+
+```cp
+import {
+    CacheBlockRole,
+    PromptCacheBlock,
+    CacheBreakConfig,
+    CacheBreakpointPlan,
+    PromptCacheTracker,
+    hashCacheBlockBytes,
+    planCacheBreakpoints,
+} from "cap:prompt";
+
+fn demoPromptCacheBreak() {
+    const cfg = CacheBreakConfig.anthropicDefaults();
+    const h_sys = hashCacheBlockBytes("You are a CP compiler expert.");
+    const h_tools = hashCacheBlockBytes("[{\"name\":\"run_test\"}]");
+
+    const turn1: [3]PromptCacheBlock = [
+        PromptCacheBlock.make(1, CacheBlockRole.system, h_sys, 800, false),
+        PromptCacheBlock.make(2, CacheBlockRole.tools, h_tools, 600, false),
+        PromptCacheBlock.make(3, CacheBlockRole.user_query, 0x11, 100, true),
+    ];
+    let plan = CacheBreakpointPlan{};
+    planCacheBreakpoints(turn1[0..], cfg, *plan);
+
+    let tracker = PromptCacheTracker.init(cfg);
+    * = tracker.recordTurn(turn1[0..]); // 首轮冷写 1400 tokens
+    const turn2: [3]PromptCacheBlock = [
+        PromptCacheBlock.make(1, CacheBlockRole.system, h_sys, 800, false),
+        PromptCacheBlock.make(2, CacheBlockRole.tools, h_tools, 600, false),
+        PromptCacheBlock.make(3, CacheBlockRole.user_query, 0x22, 120, true),
+    ];
+    const diff2 = tracker.recordTurn(turn2[0..]); // 命中 1400 cached_read_tokens，大幅省费!
+    * = diff2.savings_bps;
+}
+```

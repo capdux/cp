@@ -276,3 +276,21 @@ export {
     JudgeArena,
     formatReleaseGateSummary,
 } from "./evalJudge.cp";
+
+export {
+    CACHE_BREAK_MAX_BLOCKS,
+    CACHE_BREAK_MAX_BREAKPOINTS,
+    CACHE_BREAK_BPS_SCALE,
+    CacheBlockRole,
+    CacheBustReason,
+    PromptCacheBlock,
+    CacheBreakConfig,
+    CacheBreakpointPlan,
+    CacheTurnDiff,
+    PromptCacheStats,
+    hashCacheBlockBytes,
+    cacheRoleRank,
+    planCacheBreakpoints,
+    diffWithPrevTurn,
+    PromptCacheTracker,
+} from "./cacheBreak.cp";
