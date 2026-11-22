@@ -149,3 +149,15 @@ pub fn demoRouter(): !void {
    - 使用 `tryInsert` 在注册期捕获重复路由（`DuplicateRoute`）与同层参数名冲突（`RouteConflict`）；`ParamMap` 固定 16 槽栈内联实现零堆分配，单条路由参数超过 16 个时应通过通配捕获后按需切分。
 4. **尾随斜杠模式一致性（`TrailingSlashMode`）**：
    - 生产服务建议在 `RouterOptions` 中显式固定尾随斜杠策略（严格区分或自动归一化），防止 `/users` 与 `/users/` 在鉴权中间件与业务路由间产生匹配分歧。
+5. **Next.js 方括号路由模式严格校验与零分配匹配（`lib/router/routeTypes.cp`，吸收自 `/data/dev/bun/src/router/route_types.cp` & `/data/dev/bun/docs/runtime/file-system-router.mdx`）**：
+   - 导出：`ROUTE_PATTERN_MAX_PARAMS` (`16`)、`RoutePatternError`、`RoutePatternTag`（`Static`/`Dynamic`/`CatchAll`/`OptionalCatchAll`）、`RouteTinyPtr`（32-bit 紧凑 `(u16 offset, u16 len)` 指针）、`RoutePatternToken`、`RoutePatternValidation`、`RouteCapturedParam`、`RouteCapturedParams`、`RoutePatternEngine`（`validate`/`match`/`diagnosticMessage`）；
+   - **严格语法边界**：`[...slug]` 与 `[[...slug]]` 必须位于路径末尾（否则报错 `CatchAllMustBeAtTheEnd`）；仅接受纯 ASCII 路由名（否则报错 `NonAsciiRoute`）；空参数名 `[]`/`[...]` 报错 `MissingParamName`；未闭合方括号报错 `PatternMissingClosingBracket`。
+
+```cp
+import { RoutePatternEngine, RouteCapturedParams } from "cap:router";
+
+let params = RouteCapturedParams.init();
+const ok = RoutePatternEngine.match("/blog/[slug]/[[...rest]]", "/blog/hello-cp/a/b", true, *params)?;
+// ok == true, params.get("slug") == "hello-cp", params.get("rest") == "a/b"
+* = ok;
+```

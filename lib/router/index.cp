@@ -14,3 +14,15 @@ export {
     FsRouteMatch,
     FileSystemRouter
 } from "./fsRouter";
+
+export {
+    ROUTE_PATTERN_MAX_PARAMS,
+    RoutePatternError,
+    RoutePatternTag,
+    RouteTinyPtr,
+    RoutePatternToken,
+    RoutePatternValidation,
+    RouteCapturedParam,
+    RouteCapturedParams,
+    RoutePatternEngine,
+} from "./routeTypes";

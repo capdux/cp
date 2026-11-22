@@ -105,7 +105,7 @@ pub fn RadixNode(comptime T: type): type {
         wildcard_child: (*Self)? = null,
         optional_catch_all_child: (*Self)? = null,
 
-        pub fn create(allocator: std.mem.Allocator, segment: []const u8) *Self {
+        pub static fn create(allocator: std.mem.Allocator, segment: []const u8) *Self {
             let node = allocator.create(Self) catch unreachable;
             node.segment = segment;
             node.is_param = false;
@@ -196,7 +196,7 @@ pub fn Router(comptime T: type): type {
             return Self.initWithOptions(allocator, RouterOptions{});
         }
 
-        pub fn initWithOptions(allocator: std.mem.Allocator, options: RouterOptions) Self {
+        pub static fn initWithOptions(allocator: std.mem.Allocator, options: RouterOptions) Self {
             let r = Self{
                 trees: undefined,
                 allocator: allocator,
@@ -476,11 +476,11 @@ pub fn Router(comptime T: type): type {
             return segs[idx];
         }
 
-        fn matchNode(node: *Node, segs: [][]const u8, full_path: []const u8, params: *ParamMap): Match? {
+        static fn matchNode(node: *Node, segs: [][]const u8, full_path: []const u8, params: *ParamMap): Match? {
             return matchNodeAt(node, segs, 0, full_path, params);
         }
 
-        fn matchNodeAt(node: *Node, segs: [][]const u8, idx: usize, full_path: []const u8, params: *ParamMap): Match? {
+        static fn matchNodeAt(node: *Node, segs: [][]const u8, idx: usize, full_path: []const u8, params: *ParamMap): Match? {
             if (idx >= segs.len) {
                 if (node.is_terminal && node.handler != null) {
                     return Match{ handler: node.handler.?, params: params.* };
